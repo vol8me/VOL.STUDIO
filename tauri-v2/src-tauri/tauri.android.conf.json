@@ -1,0 +1,10 @@
+{
+  "app": {
+    "security": {
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$RESOURCE/**", "$APPDATA/**"]
+      }
+    }
+  }
+}

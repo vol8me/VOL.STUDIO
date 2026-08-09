@@ -1,0 +1,37 @@
+{
+  "menu": {
+    "start": "START",
+    "exit": "EXIT",
+    "settings": "SETTINGS",
+    "title": "VOL.HELL",
+    "subtitle": "Survive as long as you can"
+  },
+  "loading": {
+    "title": "LOADING"
+  },
+  "hud": {
+    "health": "Health",
+    "dash": "Dash"
+  },
+  "settings": {
+    "title": "SETTINGS",
+    "language": "Language",
+    "sound": "Sound",
+    "volume": "Volume",
+    "mute": "Mute",
+    "back": "BACK"
+  },
+  "pause": {
+    "title": "PAUSED",
+    "resume": "RESUME",
+    "restart": "RESTART",
+    "settings": "SETTINGS",
+    "mainMenu": "MAIN MENU",
+    "button": "Pause"
+  },
+  "death": {
+    "title": "YOU DIED",
+    "restart": "RESTART",
+    "mainMenu": "MAIN MENU"
+  }
+}

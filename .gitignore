@@ -1,0 +1,48 @@
+# Agent kuralları — yalnızca yerel/dahili kullanım, GitHub'a gönderilmez
+CLAUDE.md
+.claude/
+AGENTS.md
+**/AGENTS.md
+
+# Secrets / credentials — asla commit edilmez
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.keystore
+*.jks
+secrets.json
+
+# Dependencies
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+target/
+*.tsbuildinfo
+
+# Tauri mobile/desktop generated projects
+/tauri-v2/src-tauri/gen/
+/tauri-v2/src-tauri/target/
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+tauri-v2/src-tauri/android-*.log
+tauri-v2/src-tauri/android-*.png
+tauri-v2/src-tauri/chromium.log

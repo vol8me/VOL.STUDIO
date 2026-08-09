@@ -1,0 +1,14 @@
+{
+  "bundle": {
+    "active": true,
+    "targets": ["ipa"]
+  },
+  "app": {
+    "security": {
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$RESOURCE/**", "$APPDATA/**"]
+      }
+    }
+  }
+}

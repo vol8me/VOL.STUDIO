@@ -1,0 +1,92 @@
+{
+  "carousel": {
+    "prev": "Önceki",
+    "next": "Sonraki",
+    "page": "Sayfa {{n}}"
+  },
+  "dpad": {
+    "up": "Yukarı",
+    "down": "Aşağı",
+    "left": "Sol",
+    "right": "Sağ"
+  },
+  "swipe": {
+    "reject": "Reddet",
+    "accept": "Kabul Et"
+  },
+  "pause": {
+    "pause": "Duraklat",
+    "resume": "Devam Et"
+  },
+  "eventlog": {
+    "tone": {
+      "default": "Genel",
+      "success": "Başarı",
+      "warning": "Uyarı",
+      "danger": "Tehlike",
+      "info": "Bilgi"
+    },
+    "filter": {
+      "all": "Tümü"
+    },
+    "pin": "Sabitle",
+    "unpin": "Sabitlemeyi kaldır"
+  },
+  "kanban": {
+    "priority": {
+      "low": "Düşük",
+      "medium": "Orta",
+      "high": "Yüksek"
+    },
+    "search": "Kart ara…",
+    "moving": "taşınıyor",
+    "grabbed": "{{card}} kavrandı. Ok tuşlarıyla taşı, Enter ile bırak, Escape ile iptal et.",
+    "released": "{{card}} bırakıldı.",
+    "cancelled": "{{card}} taşıma iptal edildi.",
+    "columnFull": "{{column}} sütunu dolu, taşıma yapılamadı.",
+    "moved": "{{card}}, {{column}}, {{index}}/{{total}}"
+  },
+  "resourcebar": {
+    "label": "Kaynaklar"
+  },
+  "bar": {
+    "ariaLabel": "{{variant}} bar"
+  },
+  "datatable": {
+    "empty": "Kayıt yok"
+  },
+  "commandPalette": {
+    "empty": "Sonuç yok",
+    "noMatch": "\"{{query}}\" için sonuç yok",
+    "placeholder": "Komut ara…",
+    "general": "Genel"
+  },
+  "confirm": {
+    "yes": "Evet",
+    "no": "Hayır"
+  },
+  "select": {
+    "placeholder": "Seçiniz"
+  },
+  "stepper": {
+    "decrement": "Azalt",
+    "increment": "Artır"
+  },
+  "wizard": {
+    "back": "Geri",
+    "next": "İleri",
+    "finish": "Bitir"
+  },
+  "wavecounter": {
+    "wave": "Dalga {{wave}}",
+    "waveTotal": "Dalga {{wave}} / {{total}}",
+    "next": "Sonraki dalga: {{seconds}}s"
+  },
+  "minimap": {
+    "label": "Harita",
+    "interactive": "{{label}}, etkileşimli — Enter ile merkeze zıpla"
+  },
+  "selectionInfo": {
+    "emptyState": "Seçili öğe yok"
+  }
+}

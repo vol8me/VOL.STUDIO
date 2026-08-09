@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@volstudio/core": ["../../core/src"],
+      "@volstudio/tauri-v2": ["../../tauri-v2/src"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "tests"]
+}

@@ -1,0 +1,25 @@
+{
+  "extends": "stylelint-config-standard",
+  "rules": {
+    "custom-property-pattern": null,
+    "custom-property-empty-line-before": null,
+    "selector-class-pattern": "^[a-z0-9]+(-[a-z0-9]+)*(__[a-z0-9]+(-[a-z0-9]+)*)?(--[a-z0-9]+(-[a-z0-9]+)*)?$",
+    "value-keyword-case": ["lower", { "ignoreKeywords": ["currentColor"] }],
+    "declaration-property-value-disallowed-list": {
+      "/^(color|background|background-color|border|border-color|border-top-color|border-right-color|border-bottom-color|border-left-color|outline|outline-color|fill|stroke)$/": [
+        "/^#/",
+        "/^rgb/",
+        "/^hsl/"
+      ]
+    },
+    "property-no-vendor-prefix": [true, { "ignoreProperties": ["appearance", "user-select"] }]
+  },
+  "overrides": [
+    {
+      "files": ["core/src/ui/theme.css"],
+      "rules": {
+        "declaration-property-value-disallowed-list": null
+      }
+    }
+  ]
+}

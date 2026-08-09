@@ -1,0 +1,294 @@
+﻿.vol-build-menu {
+  pointer-events: auto;
+  gap: var(--vol-space-sm);
+  padding: var(--vol-space-md);
+  background: var(--vol-ui-overlay-panel);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  display: grid;
+}
+
+.vol-build-menu__item {
+  pointer-events: auto;
+  padding: var(--vol-space-sm);
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  display: flex;
+  position: relative;
+}
+
+.vol-build-menu__item:hover {
+  background: var(--vol-ui-hover-fill);
+  border-color: var(--vol-ui-border-strong);
+}
+
+.vol-build-menu__item:active {
+  background: var(--vol-ui-pressed-fill);
+  border-color: var(--vol-ui-border-strong);
+  transform: scale(0.96);
+}
+
+.vol-build-menu__item--selected {
+  background: var(--vol-ui-brand-subtle);
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-build-menu__item--selected:hover {
+  background: var(--vol-ui-brand-subtle);
+}
+
+.vol-build-menu__item:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.vol-build-menu__icon {
+  width: 24px;
+  height: 24px;
+  color: var(--vol-ui-icon);
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+}
+
+.vol-build-menu__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-build-menu__label {
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  text-align: center;
+  font-size: 11px;
+}
+
+.vol-build-menu__cost {
+  color: var(--vol-ui-text-muted);
+  font-size: 10px;
+}
+
+.vol-build-menu__hotkey {
+  color: var(--vol-ui-text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  position: absolute;
+  top: 2px;
+  left: 4px;
+}
+
+.vol-minimap {
+  pointer-events: auto;
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  align-self: flex-start;
+  display: inline-flex;
+  overflow: hidden;
+}
+
+.vol-minimap__canvas {
+  cursor: pointer;
+  display: block;
+}
+
+.vol-minimap__canvas:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.vol-skill-tree {
+  pointer-events: auto;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.vol-skill-tree__viewport {
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.vol-skill-tree--zoomable .vol-skill-tree__viewport {
+  cursor: grab;
+}
+
+.vol-skill-tree__viewport--panning {
+  cursor: grabbing;
+}
+
+.vol-skill-tree__canvas {
+  transform-origin: 50% 0;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.vol-skill-tree__canvas--resetting {
+  transition: transform 0.4s cubic-bezier(0.34, 1.2, 0.4, 1);
+}
+
+.vol-skill-tree__connections {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+.vol-skill-tree__connection {
+  stroke: var(--vol-ui-border-soft);
+  stroke-width: 2px;
+}
+
+.vol-skill-tree__connection--active {
+  stroke: var(--vol-ui-brand-solid);
+}
+
+.vol-skill-tree__connection--branch-primary.vol-skill-tree__connection--active {
+  stroke: var(--vol-ui-danger-border);
+}
+
+.vol-skill-tree__connection--branch-support.vol-skill-tree__connection--active {
+  stroke: var(--vol-ui-support-border);
+}
+
+.vol-skill-tree__connection--branch-accent.vol-skill-tree__connection--active {
+  stroke: var(--vol-ui-accent-border);
+}
+
+.vol-skill-tree__connection--filling {
+  transition: stroke-dashoffset 0.5s ease-out;
+}
+
+.vol-skill-tree__nodes {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.vol-skill-tree__node {
+  pointer-events: auto;
+  cursor: pointer;
+  min-width: 88px;
+  height: 44px;
+  padding: 0 var(--vol-space-sm);
+  border-radius: var(--vol-radius-sm);
+  font-family: var(--vol-font-family);
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-soft);
+  transition:
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast),
+    opacity var(--vol-transition-fast),
+    left 0.3s ease,
+    top 0.3s ease,
+    width 0.3s ease;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.vol-skill-tree__node--locked {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.vol-skill-tree__node--available {
+  border-color: var(--vol-ui-brand-border);
+  background: var(--vol-ui-brand-subtle);
+  box-shadow: 0 0 0 3px var(--vol-ui-focus-halo);
+}
+
+.vol-skill-tree__node--available:hover {
+  background: var(--vol-ui-brand-pressed);
+}
+
+.vol-skill-tree__node--unlocked {
+  border-color: var(--vol-ui-brand-solid);
+  background: var(--vol-ui-brand-solid);
+}
+
+.vol-skill-tree__node--branch-primary.vol-skill-tree__node--unlocked {
+  border-color: var(--vol-ui-danger-border);
+  background: var(--vol-ui-danger-solid);
+}
+
+.vol-skill-tree__node--branch-support.vol-skill-tree__node--unlocked {
+  border-color: var(--vol-ui-support-border);
+  background: var(--vol-ui-support-solid);
+}
+
+.vol-skill-tree__node--branch-accent.vol-skill-tree__node--unlocked {
+  border-color: var(--vol-ui-accent-border);
+  background: var(--vol-ui-accent-solid);
+}
+
+.vol-skill-tree__node:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-skill-tree__node-label {
+  color: var(--vol-ui-text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.vol-skill-tree__node--unlocked .vol-skill-tree__node-label {
+  color: var(--vol-ui-on-brand);
+}
+
+@keyframes vol-skill-tree-unlock-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--vol-ui-focus-halo);
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  35% {
+    box-shadow: 0 0 0 10px var(--vol-ui-focus-halo);
+    transform: translate(-50%, -50%) scale(1.14);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 0 16px #0000;
+  }
+}
+
+.vol-skill-tree__node--unlock-pulse {
+  animation: 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) vol-skill-tree-unlock-pulse;
+}
+
+@keyframes vol-skill-tree-become-available {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.vol-skill-tree__node--become-available {
+  animation: 0.4s vol-skill-tree-become-available;
+}

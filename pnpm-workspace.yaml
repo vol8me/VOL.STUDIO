@@ -1,0 +1,8 @@
+packages:
+  - 'core'
+  - 'games/*'
+  - 'tauri-v2'
+publicHoistPattern:
+  - '@tauri-apps/*'
+allowBuilds:
+  esbuild: true

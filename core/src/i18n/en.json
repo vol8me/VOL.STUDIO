@@ -1,0 +1,92 @@
+{
+  "carousel": {
+    "prev": "Previous",
+    "next": "Next",
+    "page": "Page {{n}}"
+  },
+  "dpad": {
+    "up": "Up",
+    "down": "Down",
+    "left": "Left",
+    "right": "Right"
+  },
+  "swipe": {
+    "reject": "Reject",
+    "accept": "Accept"
+  },
+  "pause": {
+    "pause": "Pause",
+    "resume": "Resume"
+  },
+  "eventlog": {
+    "tone": {
+      "default": "General",
+      "success": "Success",
+      "warning": "Warning",
+      "danger": "Danger",
+      "info": "Info"
+    },
+    "filter": {
+      "all": "All"
+    },
+    "pin": "Pin",
+    "unpin": "Unpin"
+  },
+  "kanban": {
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "search": "Search cards…",
+    "moving": "moving",
+    "grabbed": "{{card}} grabbed. Use arrow keys to move, Enter to drop, Escape to cancel.",
+    "released": "{{card}} released.",
+    "cancelled": "{{card}} move cancelled.",
+    "columnFull": "{{column}} column is full, cannot move.",
+    "moved": "{{card}}, {{column}}, {{index}}/{{total}}"
+  },
+  "resourcebar": {
+    "label": "Resources"
+  },
+  "bar": {
+    "ariaLabel": "{{variant}} bar"
+  },
+  "datatable": {
+    "empty": "No records"
+  },
+  "commandPalette": {
+    "empty": "No results",
+    "noMatch": "No results for \"{{query}}\"",
+    "placeholder": "Search commands…",
+    "general": "General"
+  },
+  "confirm": {
+    "yes": "Yes",
+    "no": "No"
+  },
+  "select": {
+    "placeholder": "Select…"
+  },
+  "stepper": {
+    "decrement": "Decrease",
+    "increment": "Increase"
+  },
+  "wizard": {
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish"
+  },
+  "wavecounter": {
+    "wave": "Wave {{wave}}",
+    "waveTotal": "Wave {{wave}} / {{total}}",
+    "next": "Next wave: {{seconds}}s"
+  },
+  "minimap": {
+    "label": "Map",
+    "interactive": "{{label}}, interactive — press Enter to jump to center"
+  },
+  "selectionInfo": {
+    "emptyState": "No selection"
+  }
+}

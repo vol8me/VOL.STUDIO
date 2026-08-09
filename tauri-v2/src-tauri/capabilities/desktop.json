@@ -1,0 +1,16 @@
+{
+  "identifier": "desktop-capability",
+  "description": "Permissions for the desktop main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-close",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "dialog:allow-message",
+    "dialog:allow-ask",
+    "log:default",
+    "store:default",
+    "sql:default"
+  ]
+}

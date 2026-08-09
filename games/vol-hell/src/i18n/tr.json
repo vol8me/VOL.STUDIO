@@ -1,0 +1,37 @@
+{
+  "menu": {
+    "start": "BAŞLA",
+    "exit": "ÇIKIŞ",
+    "settings": "AYARLAR",
+    "title": "VOL.HELL",
+    "subtitle": "Hayatta kalabildiğin kadar hayatta kal"
+  },
+  "loading": {
+    "title": "YÜKLENİYOR"
+  },
+  "hud": {
+    "health": "Can",
+    "dash": "Dash"
+  },
+  "settings": {
+    "title": "AYARLAR",
+    "language": "Dil",
+    "sound": "Ses",
+    "volume": "Ses Seviyesi",
+    "mute": "Sesi Kapat",
+    "back": "GERİ"
+  },
+  "pause": {
+    "title": "DURAKLATILDI",
+    "resume": "DEVAM ET",
+    "restart": "YENİDEN BAŞLA",
+    "settings": "AYARLAR",
+    "mainMenu": "ANA MENÜ",
+    "button": "Duraklat"
+  },
+  "death": {
+    "title": "ÖLDÜN",
+    "restart": "YENİDEN BAŞLA",
+    "mainMenu": "ANA MENÜ"
+  }
+}

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+target/
+build/
+**/pnpm-lock.yaml
+**/*.min.js
+**/*.min.css
+core/public/assets/fonts/

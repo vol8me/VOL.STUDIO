@@ -1,0 +1,57 @@
+.main-menu-panel {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.pause-panel {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.vol-pause-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--vol-ui-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--vol-transition-medium) ease;
+  z-index: 200;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+}
+
+.vol-pause-overlay--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.vol-death-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--vol-ui-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--vol-transition-medium) ease;
+  z-index: 200;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+}
+
+.vol-death-overlay--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.death-panel {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

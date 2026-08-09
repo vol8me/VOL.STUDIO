@@ -1,0 +1,14 @@
+VOL.STUDIO
+Copyright 2026 vol8me
+
+This product is licensed under the Apache License, Version 2.0.
+See the LICENSE file for the full license text.
+
+Per Section 4 of the Apache License 2.0, this NOTICE file must be
+retained, unmodified, in any redistribution of this work or derivative
+works, in any medium.
+
+Third-party components retain their own licenses:
+
+- Fonts (Jura, Exo 2): SIL Open Font License 1.1.
+  See public/assets/fonts/OFL-*.txt (core, games/vol-hell, games/vol-ui) for the full text.
