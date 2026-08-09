@@ -27,7 +27,7 @@ function toCssVarName(key: string): string {
 }
 
 describe('Renk sync — colors.ts ↔ theme.css', () => {
-  it('colors.ts\'teki her token theme.css\'te --vol-ui-* olarak var', () => {
+  it("colors.ts'teki her token theme.css'te --vol-ui-* olarak var", () => {
     const themeVars = extractThemeVars(themeContent);
 
     for (const [tsKey, hex] of Object.entries(VOL_COLORS)) {
@@ -38,7 +38,7 @@ describe('Renk sync — colors.ts ↔ theme.css', () => {
     }
   });
 
-  it('theme.css\'teki --vol-ui-* değişkenleri colors.ts\'te karşılığı var', () => {
+  it("theme.css'teki --vol-ui-* değişkenleri colors.ts'te karşılığı var", () => {
     const themeVars = extractThemeVars(themeContent);
     const tsKeys = new Set(Object.keys(VOL_COLORS).map(toCssVarName));
 

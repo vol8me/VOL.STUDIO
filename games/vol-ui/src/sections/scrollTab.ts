@@ -31,7 +31,14 @@ function buildHorizontalCardsDemo(disposables: Destroyable[]): HTMLElement {
   scroll.element.classList.add('vol-showcase-scroll-cards');
   disposables.push(scroll);
 
-  const cards = [i18next.t('volui:scroll.pistol'), i18next.t('volui:scroll.rifle'), i18next.t('volui:scroll.rocketLauncher'), i18next.t('volui:scroll.laser'), i18next.t('volui:scroll.plasmaCannon'), i18next.t('volui:scroll.novaBomb')];
+  const cards = [
+    i18next.t('volui:scroll.pistol'),
+    i18next.t('volui:scroll.rifle'),
+    i18next.t('volui:scroll.rocketLauncher'),
+    i18next.t('volui:scroll.laser'),
+    i18next.t('volui:scroll.plasmaCannon'),
+    i18next.t('volui:scroll.novaBomb'),
+  ];
   for (const card of cards) {
     const el = document.createElement('div');
     el.className = 'vol-showcase-scroll-card';
@@ -121,7 +128,10 @@ function buildCarouselDemo(disposables: Destroyable[]): HTMLElement {
     { name: i18next.t('volui:scroll.draven'), desc: i18next.t('volui:scroll.dravenDesc') },
   ];
 
-  const resultText = new Text(i18next.t('volui:scroll.selectedChar', { name: characters[0].name }), { variant: 'body' });
+  const resultText = new Text(
+    i18next.t('volui:scroll.selectedChar', { name: characters[0].name }),
+    { variant: 'body' },
+  );
   disposables.push(resultText);
 
   const slides = characters.map((c) => {
@@ -138,7 +148,9 @@ function buildCarouselDemo(disposables: Destroyable[]): HTMLElement {
   const carousel = new Carousel({
     slides,
     onSlideChange: (index) => {
-      resultText.setContent(i18next.t('volui:scroll.selectedChar', { name: characters[index].name }));
+      resultText.setContent(
+        i18next.t('volui:scroll.selectedChar', { name: characters[index].name }),
+      );
     },
   });
   disposables.push(carousel);
@@ -159,7 +171,9 @@ export function buildScrollTab(): { element: HTMLElement; destroy: () => void } 
     card(i18next.t('volui:scroll.verticalText'), buildVerticalTextDemo(disposables)),
     card(i18next.t('volui:scroll.horizontalCards'), buildHorizontalCardsDemo(disposables)),
     card(i18next.t('volui:scroll.carousel'), buildCarouselDemo(disposables), { span: 2 }),
-    card(i18next.t('volui:scroll.virtualList'), buildVirtualListDemo(disposables), { spanAll: true }),
+    card(i18next.t('volui:scroll.virtualList'), buildVirtualListDemo(disposables), {
+      spanAll: true,
+    }),
   ];
 
   container.appendChild(cardGrid(cards));

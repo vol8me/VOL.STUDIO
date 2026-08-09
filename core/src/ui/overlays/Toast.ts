@@ -53,7 +53,9 @@ export class ToastManager {
     }
 
     const toast = document.createElement('div');
-    toast.className = [`vol-toast vol-toast--${variant}`, options.className].filter(Boolean).join(' ');
+    toast.className = [`vol-toast vol-toast--${variant}`, options.className]
+      .filter(Boolean)
+      .join(' ');
     toast.textContent = message;
 
     this.container.appendChild(toast);

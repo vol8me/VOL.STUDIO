@@ -25,7 +25,7 @@ async function changeLanguage(lang: string): Promise<void> {
 }
 
 describe('languageChanged — canli dil degisimi', () => {
-  it('NumberStepper aria-label\'leri dil degisiminde guncellenir', async () => {
+  it("NumberStepper aria-label'leri dil degisiminde guncellenir", async () => {
     const stepper = track(new NumberStepper());
     const dec = stepper.element.querySelector<HTMLButtonElement>('[aria-label]');
     expect(dec?.getAttribute('aria-label')).toBe(i18next.t('core:stepper.decrement'));
@@ -49,16 +49,51 @@ describe('languageChanged — canli dil degisimi', () => {
 
   it('Bar aria-label (label yoksa) dil degisiminde guncellenir', async () => {
     const bar = track(new Bar({ max: 100, value: 50 }));
-    expect(bar.element.getAttribute('aria-label')).toBe(i18next.t('core:bar.ariaLabel', { variant: 'health' }));
+    expect(bar.element.getAttribute('aria-label')).toBe(
+      i18next.t('core:bar.ariaLabel', { variant: 'health' }),
+    );
 
     await changeLanguage('en');
-    expect(bar.element.getAttribute('aria-label')).toBe(i18next.t('core:bar.ariaLabel', { variant: 'health' }));
+    expect(bar.element.getAttribute('aria-label')).toBe(
+      i18next.t('core:bar.ariaLabel', { variant: 'health' }),
+    );
 
     await changeLanguage('tr');
   });
 
+  it('Bar label (fonksiyon) dil degisiminde guncellenir', async () => {
+    const bar = track(
+      new Bar({
+        max: 100,
+        value: 50,
+        label: () => i18next.t('core:select.placeholder'),
+      }),
+    );
+    const labelEl = bar.element.querySelector<HTMLSpanElement>('.vol-bar__label');
+    expect(labelEl?.textContent).toBe(i18next.t('core:select.placeholder'));
+
+    await changeLanguage('en');
+    expect(labelEl?.textContent).toBe(i18next.t('core:select.placeholder'));
+
+    await changeLanguage('tr');
+  });
+
+  it('Bar setLabel etiketini degistirir', () => {
+    const bar = track(new Bar({ max: 100, value: 50, label: 'Eski' }));
+    const labelEl = bar.element.querySelector<HTMLSpanElement>('.vol-bar__label');
+    expect(labelEl?.textContent).toBe('Eski');
+
+    bar.setLabel('Yeni');
+    expect(labelEl?.textContent).toBe('Yeni');
+
+    bar.setLabel((value, max) => `${value}/${max}`);
+    expect(labelEl?.textContent).toBe('50/100');
+  });
+
   it('ResourceBar aria-label dil degisiminde guncellenir', async () => {
-    const rb = track(new ResourceBar({ resources: [{ key: 'gold', label: 'Altin', value: 100, icon: '💰' }] }));
+    const rb = track(
+      new ResourceBar({ resources: [{ key: 'gold', label: 'Altin', value: 100, icon: '💰' }] }),
+    );
     expect(rb.element.getAttribute('aria-label')).toBe(i18next.t('core:resourcebar.label'));
 
     await changeLanguage('en');
@@ -71,10 +106,14 @@ describe('languageChanged — canli dil degisimi', () => {
     const wc = track(new WaveCounter({ totalWaves: 10 }));
     wc.setWave(3);
     const waveEl = wc.element.querySelector<HTMLSpanElement>('.vol-wave-counter__wave');
-    expect(waveEl?.textContent).toBe(i18next.t('core:wavecounter.waveTotal', { wave: 3, total: 10 }));
+    expect(waveEl?.textContent).toBe(
+      i18next.t('core:wavecounter.waveTotal', { wave: 3, total: 10 }),
+    );
 
     await changeLanguage('en');
-    expect(waveEl?.textContent).toBe(i18next.t('core:wavecounter.waveTotal', { wave: 3, total: 10 }));
+    expect(waveEl?.textContent).toBe(
+      i18next.t('core:wavecounter.waveTotal', { wave: 3, total: 10 }),
+    );
 
     await changeLanguage('tr');
   });
@@ -89,7 +128,7 @@ describe('languageChanged — canli dil degisimi', () => {
     await changeLanguage('tr');
   });
 
-  it('Carousel arrow aria-label\'leri dil degisiminde guncellenir', async () => {
+  it("Carousel arrow aria-label'leri dil degisiminde guncellenir", async () => {
     const carousel = track(
       new Carousel({
         slides: [{ id: 's1', element: document.createElement('div') }],
@@ -98,7 +137,9 @@ describe('languageChanged — canli dil degisimi', () => {
     const arrows = carousel.element.querySelectorAll<HTMLButtonElement>('.vol-carousel__arrow');
     expect(arrows.length).toBeGreaterThanOrEqual(1);
 
-    const leftArrow = Array.from(arrows).find((a) => a.classList.contains('vol-carousel__arrow--left'));
+    const leftArrow = Array.from(arrows).find((a) =>
+      a.classList.contains('vol-carousel__arrow--left'),
+    );
     expect(leftArrow?.getAttribute('aria-label')).toBe(i18next.t('core:carousel.prev'));
 
     await changeLanguage('en');
@@ -107,7 +148,7 @@ describe('languageChanged — canli dil degisimi', () => {
     await changeLanguage('tr');
   });
 
-  it('DPad direction button label\'lari dil degisiminde guncellenir', async () => {
+  it("DPad direction button label'lari dil degisiminde guncellenir", async () => {
     const dpad = track(new DPad());
     const upBtn = dpad.element.querySelector<HTMLButtonElement>('.vol-dpad__slot--up');
     expect(upBtn?.getAttribute('aria-label')).toBe(i18next.t('core:dpad.up'));
@@ -135,7 +176,7 @@ describe('languageChanged — canli dil degisimi', () => {
     await changeLanguage('tr');
   });
 
-  it('EventLog filter button label\'lari dil degisiminde guncellenir', async () => {
+  it("EventLog filter button label'lari dil degisiminde guncellenir", async () => {
     const log = track(new EventLog({ showFilters: true }));
     const buttons = log.element.querySelectorAll<HTMLButtonElement>('.vol-event-log__filter');
     expect(buttons.length).toBe(5);

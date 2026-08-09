@@ -4,20 +4,33 @@
     "exit": "ÇIKIŞ",
     "settings": "AYARLAR",
     "title": "VOL.HELL",
-    "subtitle": "Hayatta kalabildiğin kadar hayatta kal"
+    "subtitle": "Hayatta kalabildiğin kadar hayatta kal",
+    "bestScore": "En Yüksek Skor: {{score}}",
+    "bestTime": "En Uzun Süre: {{time}}"
   },
   "loading": {
     "title": "YÜKLENİYOR"
   },
   "hud": {
     "health": "Can",
-    "dash": "Dash"
+    "dash": "Dash",
+    "score": "Skor",
+    "kills": "Öldürme",
+    "time": "Süre",
+    "best": "Rekor"
   },
   "settings": {
     "title": "AYARLAR",
     "language": "Dil",
     "sound": "Ses",
     "volume": "Ses Seviyesi",
+    "master": "Genel Ses",
+    "sfx": "Efekt Sesi",
+    "music": "Müzik Sesi",
+    "ambient": "Ambiyans Sesi",
+    "mainMenuTrack": "Ana Menü Müziği",
+    "shake": "Ekran Sarsıntısı",
+    "shakeIntensity": "Sarsıntı Şiddeti",
     "mute": "Sesi Kapat",
     "back": "GERİ"
   },
@@ -32,6 +45,13 @@
   "death": {
     "title": "ÖLDÜN",
     "restart": "YENİDEN BAŞLA",
-    "mainMenu": "ANA MENÜ"
+    "mainMenu": "ANA MENÜ",
+    "score": "Skor",
+    "bestScore": "En Yüksek Skor",
+    "kills": "Öldürme",
+    "bestKills": "En Yüksek Öldürme",
+    "time": "Süre",
+    "bestTime": "En Uzun Süre",
+    "totalKills": "Toplam Öldürme"
   }
 }

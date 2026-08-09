@@ -67,7 +67,7 @@ describe('LoadingScreen — constructor & DOM yapısı', () => {
         'energy-core': 'vol-loading__indicator--energy',
         'particle-orbit': 'vol-loading__indicator--particle',
         'hexagon-pulse': 'vol-loading__indicator--hexagon',
-        'bar': 'vol-loading__indicator--bar',
+        bar: 'vol-loading__indicator--bar',
       };
       expect(indicator?.classList.contains(classMap[type])).toBe(true);
     }

@@ -9,7 +9,8 @@ export class SaveManager {
 
   async load<T>(key: string, defaultValue: T): Promise<T> {
     const value = await this.adapter.get<T>(key);
-    return value !== undefined ? value : defaultValue;
+    // `null` depolanmış geçersiz kayıt olarak varsayılan değere düş.
+    return value ?? defaultValue;
   }
 
   async save<T>(key: string, value: T): Promise<void> {

@@ -1,7 +1,16 @@
 import Phaser from 'phaser';
-import { AudioManager, Button, Checkbox, Panel, Select, Slider, Text, UIRoot, i18n, i18next } from '@volstudio/core';
-import { soundAssets, soundKeys } from '@/config';
-import { audioSettings } from '@/app/bootstrap';
+import {
+  Button,
+  Checkbox,
+  Panel,
+  Select,
+  Slider,
+  Text,
+  UIRoot,
+  i18n,
+  i18next,
+} from '@volstudio/core';
+import { audioSettings, gameAudio } from '@/app/bootstrap';
 
 export class SettingsScene extends Phaser.Scene {
   private ui!: UIRoot;
@@ -11,43 +20,33 @@ export class SettingsScene extends Phaser.Scene {
   private titleText!: Text;
   private languageText!: Text;
   private soundText!: Text;
-  private volumeSlider!: Slider;
+  private masterSlider!: Slider;
+  private sfxSlider!: Slider;
+  private musicSlider!: Slider;
+  private ambientSlider!: Slider;
+  private shakeCheckbox!: Checkbox;
+  private shakeSlider!: Slider;
   private muteCheckbox!: Checkbox;
   private showRafId: number | null = null;
-  private audio!: AudioManager;
-  private unsubscribeAudio: (() => void) | null = null;
   private readonly onLanguageChanged = (): void => {
     this.titleText.setContent(i18next.t('volhell:settings.title'));
     this.languageText.setContent(i18next.t('volhell:settings.language'));
     this.soundText.setContent(i18next.t('volhell:settings.sound'));
-    this.volumeSlider.setLabel(i18next.t('volhell:settings.volume'));
-    this.muteCheckbox.setLabel(i18next.t('volhell:settings.mute'));
     this.backButton.setLabel(i18next.t('volhell:settings.back'));
+    this.updateSliderLabels();
   };
 
   constructor() {
     super({ key: 'Settings' });
   }
 
-  preload(): void {
-    this.load.audio(soundKeys.menuBlip, soundAssets.menuBlip);
-  }
-
   create(): void {
     const container = this.game.canvas.parentElement ?? document.body;
     this.ui = new UIRoot(container);
 
-    this.audio = new AudioManager(this);
-    this.audio.setSfxVolume(audioSettings.getSfxVolume());
-    this.audio.setMute(audioSettings.isMuted());
-    this.unsubscribeAudio = audioSettings.onChange((data) => {
-      this.audio.setSfxVolume(data.sfxVolume);
-      this.audio.setMute(data.muted);
-    });
-
     this.backButton = new Button(i18next.t('volhell:settings.back'), {
       onClick: () => {
-        this.audio.play(soundKeys.menuBlip, { volume: 0.5 });
+        void gameAudio.playSfx('back', { volume: 0.5 });
         this.scene.start('MainMenu');
       },
     });
@@ -68,15 +67,72 @@ export class SettingsScene extends Phaser.Scene {
     this.languageText = new Text(i18next.t('volhell:settings.language'), { variant: 'muted' });
     this.soundText = new Text(i18next.t('volhell:settings.sound'), { variant: 'muted' });
 
-    this.volumeSlider = new Slider({
+    this.masterSlider = new Slider({
+      min: 0,
+      max: 1,
+      step: 0.05,
+      value: audioSettings.getMasterVolume(),
+      label: i18next.t('volhell:settings.master'),
+      onChange: (value) => {
+        void audioSettings.setMasterVolume(value);
+        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+      },
+    });
+
+    this.sfxSlider = new Slider({
       min: 0,
       max: 1,
       step: 0.05,
       value: audioSettings.getSfxVolume(),
-      label: i18next.t('volhell:settings.volume'),
+      label: i18next.t('volhell:settings.sfx'),
       onChange: (value) => {
         void audioSettings.setSfxVolume(value);
-        this.audio.play(soundKeys.menuBlip, { volume: 0.5 });
+        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+      },
+    });
+
+    this.musicSlider = new Slider({
+      min: 0,
+      max: 1,
+      step: 0.05,
+      value: audioSettings.getMusicVolume(),
+      label: i18next.t('volhell:settings.music'),
+      onChange: (value) => {
+        void audioSettings.setMusicVolume(value);
+        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+      },
+    });
+
+    this.ambientSlider = new Slider({
+      min: 0,
+      max: 1,
+      step: 0.05,
+      value: audioSettings.getAmbientVolume(),
+      label: i18next.t('volhell:settings.ambient'),
+      onChange: (value) => {
+        void audioSettings.setAmbientVolume(value);
+        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+      },
+    });
+
+    this.shakeCheckbox = new Checkbox({
+      checked: audioSettings.isScreenShakeEnabled(),
+      label: i18next.t('volhell:settings.shake'),
+      onChange: (checked) => {
+        void audioSettings.setScreenShakeEnabled(checked);
+        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+      },
+    });
+
+    this.shakeSlider = new Slider({
+      min: 0,
+      max: 1,
+      step: 0.05,
+      value: audioSettings.getScreenShakeIntensity(),
+      label: i18next.t('volhell:settings.shakeIntensity'),
+      onChange: (value) => {
+        void audioSettings.setScreenShakeIntensity(value);
+        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
       },
     });
 
@@ -86,7 +142,7 @@ export class SettingsScene extends Phaser.Scene {
       onChange: (checked) => {
         void audioSettings.setMuted(checked);
         if (!checked) {
-          this.audio.play(soundKeys.menuBlip, { volume: 0.5 });
+          void gameAudio.playSfx('menuBlip', { volume: 0.4 });
         }
       },
     });
@@ -96,7 +152,12 @@ export class SettingsScene extends Phaser.Scene {
       .add(this.languageText)
       .add(this.languageSelect)
       .add(this.soundText)
-      .add(this.volumeSlider)
+      .add(this.masterSlider)
+      .add(this.sfxSlider)
+      .add(this.musicSlider)
+      .add(this.ambientSlider)
+      .add(this.shakeCheckbox)
+      .add(this.shakeSlider)
       .add(this.muteCheckbox)
       .add(this.backButton);
 
@@ -112,24 +173,35 @@ export class SettingsScene extends Phaser.Scene {
     i18next.on('languageChanged', this.onLanguageChanged);
   }
 
+  private updateSliderLabels(): void {
+    this.masterSlider.setLabel(i18next.t('volhell:settings.master'));
+    this.sfxSlider.setLabel(i18next.t('volhell:settings.sfx'));
+    this.musicSlider.setLabel(i18next.t('volhell:settings.music'));
+    this.ambientSlider.setLabel(i18next.t('volhell:settings.ambient'));
+    this.shakeCheckbox.setLabel(i18next.t('volhell:settings.shake'));
+    this.shakeSlider.setLabel(i18next.t('volhell:settings.shakeIntensity'));
+    this.muteCheckbox.setLabel(i18next.t('volhell:settings.mute'));
+  }
+
   private async changeLanguage(locale: string): Promise<void> {
     await i18n.changeLanguage(locale);
   }
 
   private onShutdown(): void {
     i18next.off('languageChanged', this.onLanguageChanged);
-    if (this.unsubscribeAudio) {
-      this.unsubscribeAudio();
-      this.unsubscribeAudio = null;
-    }
     if (this.showRafId !== null) {
       cancelAnimationFrame(this.showRafId);
       this.showRafId = null;
     }
-    this.volumeSlider.destroy();
-    this.muteCheckbox.destroy();
     this.backButton.destroy();
     this.languageSelect.destroy();
+    this.masterSlider.destroy();
+    this.sfxSlider.destroy();
+    this.musicSlider.destroy();
+    this.ambientSlider.destroy();
+    this.shakeCheckbox.destroy();
+    this.shakeSlider.destroy();
+    this.muteCheckbox.destroy();
     this.panel.destroy();
     this.ui.destroy();
   }

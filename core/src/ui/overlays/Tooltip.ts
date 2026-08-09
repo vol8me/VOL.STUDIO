@@ -31,14 +31,20 @@ export class Tooltip {
   private boundHide: () => void;
 
   constructor(target: HTMLElement, text: string, options: TooltipOptions = {}) {
-    const { placement = 'top', delayMs = UI_TIMING.TOOLTIP_DEFAULT_DELAY, container = document.body } = options;
+    const {
+      placement = 'top',
+      delayMs = UI_TIMING.TOOLTIP_DEFAULT_DELAY,
+      container = document.body,
+    } = options;
     this.target = target;
     this.placement = placement;
     this.delayMs = delayMs;
     this.container = container;
 
     this.bubble = document.createElement('div');
-    this.bubble.className = [`vol-tooltip vol-tooltip--${placement}`, options.className].filter(Boolean).join(' ');
+    this.bubble.className = [`vol-tooltip vol-tooltip--${placement}`, options.className]
+      .filter(Boolean)
+      .join(' ');
     this.bubble.textContent = text;
     this.bubble.setAttribute('role', 'tooltip');
     // role="tooltip" tek başına hiçbir şey anons etmez — ekran okuyucu yalnızca

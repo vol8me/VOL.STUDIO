@@ -21,7 +21,7 @@ export type LoadingContentPosition =
   | 'bottom-right';
 
 const CONTENT_POSITION_MAP: Record<LoadingContentPosition, { align: string; justify: string }> = {
-  'center': { align: 'center', justify: 'center' },
+  center: { align: 'center', justify: 'center' },
   'top-left': { align: 'flex-start', justify: 'flex-start' },
   'top-right': { align: 'flex-start', justify: 'flex-end' },
   'bottom-left': { align: 'flex-end', justify: 'flex-start' },
@@ -52,10 +52,7 @@ export interface LoadingScreenOptions {
   minDisplayMs?: number;
 
   /** Arkaplan. Varsayılan: CSS gradient. */
-  background?:
-    | { type: 'image'; src: string }
-    | { type: 'video'; src: string }
-    | { type: 'css' };
+  background?: { type: 'image'; src: string } | { type: 'video'; src: string } | { type: 'css' };
 
   /** Arkaplan rengi — CSS custom property veya hex. CSS gradient modunda kullanılır. Varsayılan: --vol-ui-bg. */
   backgroundColor?: string;
@@ -255,7 +252,12 @@ export class LoadingScreen {
     this.element.setAttribute('aria-busy', 'true');
 
     // Exit class'ları temizle (önceki hide'tan kalmış olabilir)
-    this.element.classList.remove('vol-loading--enter', 'vol-loading--exit', 'vol-loading--visible');
+    this.element.classList.remove(
+      'vol-loading--enter',
+      'vol-loading--exit',
+      'vol-loading--visible',
+      'vol-loading--hidden',
+    );
 
     // Önceki show rAF'ı iptal et
     cancelAnimationFrame(this.showRafId);
@@ -343,14 +345,13 @@ export class LoadingScreen {
 
     this.transitionTimer = setTimeout(() => {
       this.element.classList.remove('vol-loading--enter', 'vol-loading--exit');
+      this.element.classList.add('vol-loading--hidden');
       this.onComplete?.();
     }, this.transitionMs);
   }
 
   /** Arkaplan uygular. */
-  private applyBackground(
-    background: LoadingScreenOptions['background'],
-  ): void {
+  private applyBackground(background: LoadingScreenOptions['background']): void {
     if (!background || background.type === 'css') {
       this.backgroundEl.classList.add('vol-loading__background--css');
       return;
@@ -398,12 +399,7 @@ export class LoadingScreen {
 
   /** Gösterge uygular. */
   private applyIndicator(indicator: LoadingIndicatorOptions | undefined): void {
-    const {
-      type = 'orbital-rings',
-      color,
-      size = 120,
-      customElement,
-    } = indicator ?? {};
+    const { type = 'orbital-rings', color, size = 120, customElement } = indicator ?? {};
 
     if (color) {
       this.element.style.setProperty('--vol-loading-color', color);

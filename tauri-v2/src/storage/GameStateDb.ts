@@ -51,13 +51,15 @@ export class GameStateDb {
       await this.migrate();
       this.initialized = true;
     } catch (error) {
-      throw new GameStateDbError(`Oyun kayit veritabani yuklenemedi: "${this.path}"`, { cause: error });
+      throw new GameStateDbError(`Oyun kayit veritabani yuklenemedi: "${this.path}"`, {
+        cause: error,
+      });
     }
   }
 
   private async migrate(): Promise<void> {
     const result = await this.db!.select<{ version: number }[]>(
-      'SELECT version FROM schema_version LIMIT 1'
+      'SELECT version FROM schema_version LIMIT 1',
     );
     const currentVersion = result[0]?.version ?? 0;
 
@@ -76,7 +78,9 @@ export class GameStateDb {
     try {
       await this.db.close();
     } catch (error) {
-      throw new GameStateDbError(`Oyun kayit veritabani kapatilamadi: "${this.path}"`, { cause: error });
+      throw new GameStateDbError(`Oyun kayit veritabani kapatilamadi: "${this.path}"`, {
+        cause: error,
+      });
     } finally {
       this.db = null;
       this.initialized = false;
@@ -96,7 +100,7 @@ export class GameStateDb {
          ON CONFLICT(slot) DO UPDATE SET
            data = excluded.data,
            updated_at = excluded.updated_at`,
-        [slot, json, now, now]
+        [slot, json, now, now],
       );
     } catch (error) {
       throw new GameStateDbError(`Kayit kaydedilemedi: "${slot}"`, { cause: error });
@@ -108,7 +112,7 @@ export class GameStateDb {
     try {
       const result = await this.db!.select<{ data: string }[]>(
         'SELECT data FROM saves WHERE slot = ?',
-        [slot]
+        [slot],
       );
       const first = result[0] as { data: string } | undefined;
       if (!first) return undefined;
@@ -131,7 +135,7 @@ export class GameStateDb {
     await this.init();
     try {
       const result = await this.db!.select<{ slot: string }[]>(
-        'SELECT slot FROM saves ORDER BY updated_at DESC'
+        'SELECT slot FROM saves ORDER BY updated_at DESC',
       );
       return result.map((row: { slot: string }) => row.slot);
     } catch (error) {
@@ -144,7 +148,7 @@ export class GameStateDb {
     try {
       const result = await this.db!.select<{ count: number }[]>(
         'SELECT COUNT(*) as count FROM saves WHERE slot = ?',
-        [slot]
+        [slot],
       );
       return ((result[0] as { count: number } | undefined)?.count ?? 0) > 0;
     } catch (error) {
@@ -157,7 +161,7 @@ export class GameStateDb {
     try {
       const result = await this.db!.select<SaveGame<string>[]>(
         'SELECT slot, data, created_at as createdAt, updated_at as updatedAt FROM saves WHERE slot = ?',
-        [slot]
+        [slot],
       );
       if (result.length === 0) return undefined;
       const row = result[0];

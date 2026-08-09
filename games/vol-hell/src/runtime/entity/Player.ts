@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import { PlayerController, Vector2 } from '@volstudio/core';
+import { PlayerController, Vector2, Diagnostics } from '@volstudio/core';
 import { playerConfig } from '@/config/player';
 import type { Border } from './Border';
 import type { ParticlePool } from '@/runtime/systems/ParticlePool';
@@ -38,8 +38,8 @@ export class Player extends PlayerController {
   private readonly particles: ParticlePool;
 
   constructor(scene: Phaser.Scene, x: number, y: number, particles: ParticlePool) {
-    const arc = scene.add.circle(x, y, playerConfig.hitboxRadius, 0x4488ff, 1);
-    arc.setStrokeStyle(2, 0x88ccff, 0.8);
+    const arc = scene.add.circle(x, y, playerConfig.hitboxRadius, playerConfig.color, 1);
+    arc.setStrokeStyle(2, playerConfig.dashColor, 0.8);
     super('player', arc);
     this.arc = arc;
     this.health = playerConfig.maxHealth;
@@ -82,7 +82,11 @@ export class Player extends PlayerController {
         this.invulnerable = false;
         this.arc.setVisible(true);
       } else {
-        this.arc.setVisible(Math.floor(this.invulnerabilityTimer / 80) % 2 === 0);
+        this.arc.setVisible(
+          Math.floor(this.invulnerabilityTimer / playerConfig.invulnerabilityFlashIntervalMs) %
+            2 ===
+            0,
+        );
       }
     }
 
@@ -90,7 +94,7 @@ export class Player extends PlayerController {
     if (this.hitFlashTimer > 0) {
       this.hitFlashTimer -= delta;
       if (this.hitFlashTimer <= 0 && !this.dashing) {
-        this.arc.setFillStyle(0x4488ff, 1);
+        this.arc.setFillStyle(playerConfig.color, playerConfig.fillAlpha);
       }
     }
 
@@ -116,9 +120,9 @@ export class Player extends PlayerController {
 
     // Dash görsel: dash sırasında renk değişimi (invulnerability yanıp sönmesi ile çakışmasın)
     if (this.dashing) {
-      this.arc.setFillStyle(0x88ccff, 0.7);
+      this.arc.setFillStyle(playerConfig.dashColor, playerConfig.dashAlpha);
     } else if (!this.invulnerable) {
-      this.arc.setFillStyle(0x4488ff, 1);
+      this.arc.setFillStyle(playerConfig.color, playerConfig.fillAlpha);
     }
   }
 
@@ -136,11 +140,17 @@ export class Player extends PlayerController {
     this.invulnerabilityTimer = Math.max(playerConfig.dashIFrameMs, this.invulnerabilityTimer);
 
     // Dash yönü — hareket yönü varsa onu kullan, yoksa aim
-    if (this.moveDirection.length() <= 0.01) {
+    if (this.moveDirection.length() <= playerConfig.moveDirectionThreshold) {
       this.moveDirection.copyFrom(aimDirection);
     }
     this.moveDirection.normalizeInPlace();
     this.ghostTimer = 0;
+
+    Diagnostics.getInstance()?.recordEvent('dash', {
+      x: this.arc.x,
+      y: this.arc.y,
+      direction: { x: this.moveDirection.x, y: this.moveDirection.y },
+    });
 
     return true;
   }
@@ -159,8 +169,16 @@ export class Player extends PlayerController {
   takeDamage(amount: number): boolean {
     if (this.invulnerable) return false;
     this.health = Math.max(0, this.health - amount);
-    this.hitFlashTimer = 150;
-    this.arc.setFillStyle(0xff4444, 1);
+    this.hitFlashTimer = playerConfig.hitFlashDurationMs;
+    this.arc.setFillStyle(playerConfig.hitColor, playerConfig.fillAlpha);
+
+    Diagnostics.getInstance()?.recordEvent('playerDamaged', {
+      x: this.arc.x,
+      y: this.arc.y,
+      amount,
+      health: this.health,
+    });
+
     return true;
   }
 
@@ -212,15 +230,19 @@ export class Player extends PlayerController {
       this.arc.x,
       this.arc.y,
       playerConfig.hitboxRadius,
-      0x88ccff,
+      playerConfig.dashColor,
       playerConfig.dashGhostAlpha,
     );
-    ghost.setStrokeStyle(2, 0xaaddff, playerConfig.dashGhostAlpha * 0.5);
+    ghost.setStrokeStyle(
+      playerConfig.dashGhostStrokeWidth,
+      playerConfig.ghostStrokeColor,
+      playerConfig.dashGhostAlpha * playerConfig.dashGhostStrokeAlphaFactor,
+    );
 
     scene.tweens.add({
       targets: ghost,
       alpha: 0,
-      scale: 0.5,
+      scale: playerConfig.dashGhostScaleEnd,
       duration: playerConfig.dashGhostLifespanMs,
       onComplete: () => this.particles.release(ghost),
     });

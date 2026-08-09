@@ -1,6 +1,8 @@
-import { createVolGame, VOL_COLORS, i18n } from '@volstudio/core';
+import { createVolGame, VOL_COLORS, i18n, isDiagnosticsEnabled } from '@volstudio/core';
 import { createSaveManager } from '@/app/storage';
 import { AudioSettings } from '@/app/AudioSettings';
+import { GameAudio } from '@/app/GameAudio';
+import { GameStats } from '@/app/GameStats';
 import { MainMenuScene } from '@/runtime/scene/MainMenuScene';
 import { GameScene } from '@/runtime/scene/GameScene';
 import { SettingsScene } from '@/runtime/scene/SettingsScene';
@@ -13,19 +15,25 @@ import '@/styles.css';
 const saveManager = createSaveManager();
 
 export const audioSettings = new AudioSettings(saveManager);
+export const gameStats = new GameStats(saveManager);
+export const gameAudio = new GameAudio(audioSettings);
 
 i18n.addResources('tr', 'volhell', volhellTr);
 i18n.addResources('en', 'volhell', volhellEn);
 
 await i18n.init({ saveManager });
 await audioSettings.load();
+await gameStats.load();
 
 document.title = gameConfig.title;
 
 createVolGame({
   backgroundColor: VOL_COLORS.uiBg,
   strategy: gameConfig.viewport.strategy,
+  maxDpr: gameConfig.viewport.maxDpr,
   scenes: [MainMenuScene, GameScene, SettingsScene],
+  gameId: 'vol-hell',
+  debug: isDiagnosticsEnabled(),
 }).catch((error: unknown) => {
   console.error('[bootstrap] Oyun başlatılamadı:', error);
   const div = document.createElement('div');

@@ -70,7 +70,8 @@ export class EventLog {
       const buttons = this.filterBar.querySelectorAll<HTMLButtonElement>('.vol-event-log__filter');
       buttons.forEach((btn, i) => {
         const tone = tones[i];
-        btn.textContent = tone === 'all' ? i18next.t('core:eventlog.filter.all') : i18next.t(TONE_I18N_KEYS[tone]);
+        btn.textContent =
+          tone === 'all' ? i18next.t('core:eventlog.filter.all') : i18next.t(TONE_I18N_KEYS[tone]);
       });
     }
     this.renderVisibleEntries();
@@ -197,7 +198,8 @@ export class EventLog {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'vol-event-log__filter';
-      button.textContent = tone === 'all' ? i18next.t('core:eventlog.filter.all') : i18next.t(TONE_I18N_KEYS[tone]);
+      button.textContent =
+        tone === 'all' ? i18next.t('core:eventlog.filter.all') : i18next.t(TONE_I18N_KEYS[tone]);
       button.classList.toggle('vol-event-log__filter--active', tone === this.activeFilter);
       button.addEventListener('click', () => {
         this.activeFilter = tone;
@@ -286,7 +288,10 @@ export class EventLog {
       pinButton.type = 'button';
       pinButton.className = 'vol-event-log__pin';
       pinButton.classList.toggle('vol-event-log__pin--active', item.pinned);
-      pinButton.setAttribute('aria-label', item.pinned ? i18next.t('core:eventlog.unpin') : i18next.t('core:eventlog.pin'));
+      pinButton.setAttribute(
+        'aria-label',
+        item.pinned ? i18next.t('core:eventlog.unpin') : i18next.t('core:eventlog.pin'),
+      );
       pinButton.appendChild(this.buildPinIcon());
       pinButton.addEventListener('click', () => {
         item.pinned = !item.pinned;

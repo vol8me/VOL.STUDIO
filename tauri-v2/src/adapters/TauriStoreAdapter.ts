@@ -18,7 +18,8 @@ export class TauriStoreAdapter implements IStorageAdapter {
   private readonly store: LazyStore;
 
   constructor(options: TauriStoreAdapterOptions = {}) {
-    const path = options.path ?? (options.gameId ? `${options.gameId}-store.json` : 'volstudio-store.json');
+    const path =
+      options.path ?? (options.gameId ? `${options.gameId}-store.json` : 'volstudio-store.json');
     this.store = new LazyStore(path, { autoSave: false });
   }
 

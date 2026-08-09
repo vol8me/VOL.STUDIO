@@ -1,10 +1,17 @@
 import type Phaser from 'phaser';
-import { Vector2 } from '@volstudio/core';
+import { Vector2, Diagnostics } from '@volstudio/core';
 import { enemyConfig } from '@/config/enemy';
 import { playerConfig } from '@/config/player';
 import type { Border } from './Border';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import type { ParticlePool } from '@/runtime/systems/ParticlePool';
+
+/** Bir düşmanın anlık istatistikleri — zorlukla ölçeklenebilir. */
+export interface EnemyStats {
+  maxHealth: number;
+  speed: number;
+  scoreValue: number;
+}
 
 /**
  * Düşman — oyuncuya doğru hareket eder, temasla hasar verir.
@@ -18,6 +25,7 @@ export class Enemy {
   private alive = true;
   private lastContactDamage = 0;
   private readonly velocity: Vector2 = Vector2.zero();
+  private readonly stats: EnemyStats;
   // Reusable buffer'lar — her frame yeni Vector2 yaratmaz
   private readonly toPlayerBuf: Vector2 = Vector2.zero();
   private readonly separationBuf: Vector2 = Vector2.zero();
@@ -27,15 +35,40 @@ export class Enemy {
     x: number,
     y: number,
     private readonly particles: ParticlePool,
+    stats?: Partial<EnemyStats>,
   ) {
-    this.arc = scene.add.circle(x, y, enemyConfig.radius, 0xcc3333, 1);
-    this.arc.setStrokeStyle(2, 0xff6666, 0.6);
+    this.stats = {
+      maxHealth: stats?.maxHealth ?? enemyConfig.health,
+      speed: stats?.speed ?? enemyConfig.speed,
+      scoreValue: stats?.scoreValue ?? enemyConfig.scoreValue,
+    };
 
-    this.health = enemyConfig.health;
+    this.arc = scene.add.circle(x, y, enemyConfig.radius, enemyConfig.color, enemyConfig.fillAlpha);
+    this.arc.setStrokeStyle(
+      enemyConfig.strokeWidth,
+      enemyConfig.strokeColor,
+      enemyConfig.strokeAlpha,
+    );
+
+    this.health = this.stats.maxHealth;
 
     const barY = y - enemyConfig.healthBarOffset;
-    this.healthBarBg = scene.add.rectangle(x, barY, enemyConfig.healthBarWidth, enemyConfig.healthBarHeight, 0x333333, 0.8);
-    this.healthBarFill = scene.add.rectangle(x, barY, enemyConfig.healthBarWidth, enemyConfig.healthBarHeight, 0xff4444, 1);
+    this.healthBarBg = scene.add.rectangle(
+      x,
+      barY,
+      enemyConfig.healthBarWidth,
+      enemyConfig.healthBarHeight,
+      enemyConfig.healthBarBgColor,
+      enemyConfig.healthBarBgAlpha,
+    );
+    this.healthBarFill = scene.add.rectangle(
+      x,
+      barY,
+      enemyConfig.healthBarWidth,
+      enemyConfig.healthBarHeight,
+      enemyConfig.healthBarFillColor,
+      1,
+    );
     this.updateHealthBar();
   }
 
@@ -55,11 +88,22 @@ export class Enemy {
     return enemyConfig.radius;
   }
 
+  get scoreValue(): number {
+    return this.stats.scoreValue;
+  }
+
   /** Düşmana hasar verir. Ölürsa true döner. */
   takeDamage(amount: number): boolean {
     if (!this.alive) return false;
     this.health = Math.max(0, this.health - amount);
     this.updateHealthBar();
+
+    Diagnostics.getInstance()?.recordEvent('enemyHit', {
+      x: this.arc.x,
+      y: this.arc.y,
+      amount,
+      health: this.health,
+    });
 
     if (this.health <= 0) {
       this.kill();
@@ -92,7 +136,10 @@ export class Enemy {
 
     if (dist > contactDist) {
       this.toPlayerBuf.normalizeInPlace();
-      this.velocity.set(this.toPlayerBuf.x * enemyConfig.speed, this.toPlayerBuf.y * enemyConfig.speed);
+      this.velocity.set(
+        this.toPlayerBuf.x * this.stats.speed,
+        this.toPlayerBuf.y * this.stats.speed,
+      );
     } else {
       // Temas mesafesinde — hareketi durdur
       this.velocity.reset();
@@ -120,25 +167,34 @@ export class Enemy {
     this.arc.x = border.clampX(this.arc.x, enemyConfig.radius);
     this.arc.y = border.clampY(this.arc.y, enemyConfig.radius);
 
-    // Can barını pozisyona güncelle
+    // Can barını pozisyona güncelle — ikisi de düşman merkezine sabitlenir
     this.healthBarBg.x = this.arc.x;
     this.healthBarBg.y = this.arc.y - enemyConfig.healthBarOffset;
-    this.healthBarFill.x = this.arc.x - (enemyConfig.healthBarWidth - this.healthBarFill.width) / 2;
+    this.healthBarFill.x = this.arc.x;
     this.healthBarFill.y = this.arc.y - enemyConfig.healthBarOffset;
   }
 
   private updateHealthBar(): void {
-    const ratio = this.health / enemyConfig.health;
-    this.healthBarFill.width = enemyConfig.healthBarWidth * ratio;
-    // Fill'i sol kenardan küçült: x offset
-    const offset = (enemyConfig.healthBarWidth - this.healthBarFill.width) / 2;
-    this.healthBarFill.x = this.arc.x - offset;
+    const ratio = this.health / this.stats.maxHealth;
+    const visible = this.alive;
+    this.healthBarBg.setVisible(visible);
+    this.healthBarFill.setVisible(visible && ratio > 0);
+
+    // Fill merkezde kalır, genişlikten küçülür — kayma hissi oluşmaz.
+    this.healthBarFill.width = Math.max(2, enemyConfig.healthBarWidth * ratio);
+    this.healthBarFill.x = this.arc.x;
   }
 
   /** Düşmanı öldürür — partikül patlaması + yok etme. */
   private kill(): void {
     if (!this.alive) return;
     this.alive = false;
+
+    Diagnostics.getInstance()?.recordEvent('enemyDeath', {
+      x: this.arc.x,
+      y: this.arc.y,
+    });
+
     this.spawnDeathParticles();
     this.arc.destroy();
     this.healthBarBg.destroy();
@@ -149,7 +205,13 @@ export class Enemy {
     for (let i = 0; i < enemyConfig.deathParticleCount; i++) {
       const angle = (i / enemyConfig.deathParticleCount) * Math.PI * 2;
       const speed = enemyConfig.deathParticleSpeed;
-      const px = this.particles.acquire(this.arc.x, this.arc.y, 3, 0xff4444, 0.9);
+      const px = this.particles.acquire(
+        this.arc.x,
+        this.arc.y,
+        enemyConfig.deathParticleSize,
+        enemyConfig.deathParticleColor,
+        enemyConfig.deathParticleAlpha,
+      );
       this.scene.tweens.add({
         targets: px,
         x: this.arc.x + Math.cos(angle) * speed * (enemyConfig.deathParticleLifespanMs / 1000),

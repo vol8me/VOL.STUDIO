@@ -54,7 +54,7 @@
     border-color var(--vol-transition-fast);
   background: 0 0;
   border: none;
-  border-bottom: 2px solid #0000;
+  border-bottom: 2px solid transparent;
   font-size: 15px;
   font-weight: 600;
 }
@@ -106,7 +106,7 @@
   text-align: left;
   padding: var(--vol-space-sm) var(--vol-space-lg);
   border-bottom: none;
-  border-right: 2px solid #0000;
+  border-right: 2px solid transparent;
 }
 
 .vol-tabs--vertical .vol-tabs__tab[aria-selected='true'] {

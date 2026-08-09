@@ -25,7 +25,7 @@ describe('TauriStoreAdapter', () => {
           set: mockSet,
           delete: mockDelete,
           save: mockSave,
-        }) as unknown as LazyStore
+        }) as unknown as LazyStore,
     );
   });
 

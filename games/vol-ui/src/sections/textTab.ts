@@ -88,19 +88,85 @@ export function buildTextTab(): { element: HTMLElement; destroy: () => void } {
   const disposables: Destroyable[] = [];
 
   const cards = [
-    sampleCard(i18next.t('volui:text.title'), 'title', i18next.t('volui:text.sampleTitle'), disposables, { spanAll: true }),
-    sampleCard(i18next.t('volui:text.heading'), 'heading', i18next.t('volui:text.sampleHeading'), disposables),
-    sampleCard(i18next.t('volui:text.body'), 'body', i18next.t('volui:text.sampleBody'), disposables),
-    sampleCard(i18next.t('volui:text.muted'), 'muted', i18next.t('volui:text.sampleMuted'), disposables),
-    triggeredEffectCard(i18next.t('volui:text.fade'), 'fade', i18next.t('volui:text.newRecord'), disposables),
-    triggeredEffectCard(i18next.t('volui:text.slideUp'), 'slide-up', i18next.t('volui:text.wave4'), disposables),
-    triggeredEffectCard(i18next.t('volui:text.pop'), 'pop', i18next.t('volui:text.comboX5'), disposables),
-    triggeredEffectCard(i18next.t('volui:text.glow'), 'glow', i18next.t('volui:text.legendary'), disposables),
-    continuousEffectCard(i18next.t('volui:text.wave'), 'wave', i18next.t('volui:text.waveEffect'), disposables),
-    continuousEffectCard(i18next.t('volui:text.jump'), 'jump', i18next.t('volui:text.jumpingText'), disposables),
-    continuousEffectCard(i18next.t('volui:text.shake'), 'shake', i18next.t('volui:text.danger'), disposables),
-    continuousEffectCard(i18next.t('volui:text.rainbow'), 'rainbow', i18next.t('volui:text.rainbowText'), disposables),
-    continuousEffectCard(i18next.t('volui:text.gradient'), 'gradient', i18next.t('volui:text.gradientText'), disposables),
+    sampleCard(
+      i18next.t('volui:text.title'),
+      'title',
+      i18next.t('volui:text.sampleTitle'),
+      disposables,
+      { spanAll: true },
+    ),
+    sampleCard(
+      i18next.t('volui:text.heading'),
+      'heading',
+      i18next.t('volui:text.sampleHeading'),
+      disposables,
+    ),
+    sampleCard(
+      i18next.t('volui:text.body'),
+      'body',
+      i18next.t('volui:text.sampleBody'),
+      disposables,
+    ),
+    sampleCard(
+      i18next.t('volui:text.muted'),
+      'muted',
+      i18next.t('volui:text.sampleMuted'),
+      disposables,
+    ),
+    triggeredEffectCard(
+      i18next.t('volui:text.fade'),
+      'fade',
+      i18next.t('volui:text.newRecord'),
+      disposables,
+    ),
+    triggeredEffectCard(
+      i18next.t('volui:text.slideUp'),
+      'slide-up',
+      i18next.t('volui:text.wave4'),
+      disposables,
+    ),
+    triggeredEffectCard(
+      i18next.t('volui:text.pop'),
+      'pop',
+      i18next.t('volui:text.comboX5'),
+      disposables,
+    ),
+    triggeredEffectCard(
+      i18next.t('volui:text.glow'),
+      'glow',
+      i18next.t('volui:text.legendary'),
+      disposables,
+    ),
+    continuousEffectCard(
+      i18next.t('volui:text.wave'),
+      'wave',
+      i18next.t('volui:text.waveEffect'),
+      disposables,
+    ),
+    continuousEffectCard(
+      i18next.t('volui:text.jump'),
+      'jump',
+      i18next.t('volui:text.jumpingText'),
+      disposables,
+    ),
+    continuousEffectCard(
+      i18next.t('volui:text.shake'),
+      'shake',
+      i18next.t('volui:text.danger'),
+      disposables,
+    ),
+    continuousEffectCard(
+      i18next.t('volui:text.rainbow'),
+      'rainbow',
+      i18next.t('volui:text.rainbowText'),
+      disposables,
+    ),
+    continuousEffectCard(
+      i18next.t('volui:text.gradient'),
+      'gradient',
+      i18next.t('volui:text.gradientText'),
+      disposables,
+    ),
   ];
 
   container.appendChild(cardGrid(cards));

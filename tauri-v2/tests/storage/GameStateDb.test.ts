@@ -30,9 +30,16 @@ describe('GameStateDb', () => {
     const db = new GameStateDb();
     await db.init();
 
-    expect(mockExecute).toHaveBeenCalledWith(expect.stringContaining('CREATE TABLE IF NOT EXISTS schema_version'));
-    expect(mockExecute).toHaveBeenCalledWith(expect.stringContaining('CREATE TABLE IF NOT EXISTS saves'));
-    expect(mockExecute).toHaveBeenCalledWith('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [1]);
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.stringContaining('CREATE TABLE IF NOT EXISTS schema_version'),
+    );
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.stringContaining('CREATE TABLE IF NOT EXISTS saves'),
+    );
+    expect(mockExecute).toHaveBeenCalledWith(
+      'INSERT OR REPLACE INTO schema_version (version) VALUES (?)',
+      [1],
+    );
   });
 
   it('init idempotent calisir', async () => {
@@ -51,7 +58,7 @@ describe('GameStateDb', () => {
 
     expect(mockExecute).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO saves'),
-      expect.arrayContaining(['slot-1', JSON.stringify(data)])
+      expect.arrayContaining(['slot-1', JSON.stringify(data)]),
     );
   });
 
@@ -65,10 +72,7 @@ describe('GameStateDb', () => {
     const result = await db.loadGame<{ level: number; health: number }>('slot-1');
 
     expect(result).toEqual(data);
-    expect(mockSelect).toHaveBeenCalledWith(
-      'SELECT data FROM saves WHERE slot = ?',
-      ['slot-1']
-    );
+    expect(mockSelect).toHaveBeenCalledWith('SELECT data FROM saves WHERE slot = ?', ['slot-1']);
   });
 
   it('loadGame bulunamayan slot icin undefined dondurur', async () => {

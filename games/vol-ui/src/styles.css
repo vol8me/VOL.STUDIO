@@ -29,7 +29,9 @@
   border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-sm);
   cursor: pointer;
-  transition: background var(--vol-transition-fast), border-color var(--vol-transition-fast);
+  transition:
+    background var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
 }
 
 .vol-showcase-lang-button:hover {

@@ -14,13 +14,17 @@ export class SpatialGrid {
     this.cellSize = cellSize;
   }
 
-  /** Numeric key — string allocation yok. cx/cy negatif olabilir, offset gerekir. */
+  /** Numeric key — string allocation yok. cx/cy negatif olabilir, offset gerekir.
+   * Base 1_000_000 yeterince büyük; oyun alanı sınırlı olduğu için çakışma yok. */
   private key(cx: number, cy: number): number {
-    return (cx + 100000) * 200000 + (cy + 100000);
+    return (cx + 1_000_000) * 1_000_000 + (cy + 1_000_000);
   }
 
+  /** Hücre dizilerini yeniden tahsis etmeden temizler; sonraki insertAll eski dizileri kullanır. */
   clear(): void {
-    this.cells.clear();
+    for (const cell of this.cells.values()) {
+      cell.length = 0;
+    }
   }
 
   insert(enemy: Enemy): void {
@@ -39,6 +43,23 @@ export class SpatialGrid {
     for (const enemy of enemies) {
       if (!enemy.isAlive) continue;
       this.insert(enemy);
+    }
+  }
+
+  /** Aktif hücre sayısını döndürür — diagnostic amaçlı. */
+  getCellCount(): number {
+    return this.cells.size;
+  }
+
+  /**
+   * Boş kalan hücreleri kaldırır — `insertAll` sonrası çağrılır.
+   * Böylece haritada düşmanı olmayan eski hücreler birikmez.
+   */
+  trim(): void {
+    for (const [key, cell] of this.cells) {
+      if (cell.length === 0) {
+        this.cells.delete(key);
+      }
     }
   }
 

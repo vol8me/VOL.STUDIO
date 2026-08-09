@@ -27,9 +27,10 @@ describe('vol-ui BEM naming', () => {
     expect(violations).toEqual([]);
   });
 
-  it('vol-showcase- class\'ları BEM yapısına uygun olmalı', () => {
-    const classes = extractClassSelectors(stylesContent)
-      .filter((cls) => cls.startsWith('vol-showcase-'));
+  it("vol-showcase- class'ları BEM yapısına uygun olmalı", () => {
+    const classes = extractClassSelectors(stylesContent).filter((cls) =>
+      cls.startsWith('vol-showcase-'),
+    );
 
     // En az bir tane olmalı
     expect(classes.length).toBeGreaterThan(0);
@@ -37,7 +38,9 @@ describe('vol-ui BEM naming', () => {
     // Her class en az bir -- veya __ içerebilir ama zorunlu değil
     // Sadece vol- prefix ve kebab-case yeterli
     for (const cls of classes) {
-      expect(cls).toMatch(/^vol-showcase-[a-z0-9]+(-[a-z0-9]+)*(__[a-z0-9]+(-[a-z0-9]+)*)?(--[a-z0-9]+(-[a-z0-9]+)*)?$/);
+      expect(cls).toMatch(
+        /^vol-showcase-[a-z0-9]+(-[a-z0-9]+)*(__[a-z0-9]+(-[a-z0-9]+)*)?(--[a-z0-9]+(-[a-z0-9]+)*)?$/,
+      );
     }
   });
 });

@@ -51,10 +51,7 @@ describe('SpatialGrid', () => {
 
   it('insertAll ölü düşmanları atlar', () => {
     const grid = new SpatialGrid(56);
-    const enemies = [
-      makeEnemy(100, 100, true),
-      makeEnemy(110, 110, false),
-    ];
+    const enemies = [makeEnemy(100, 100, true), makeEnemy(110, 110, false)];
     grid.insertAll(enemies);
 
     const nearby = grid.queryNearby(105, 105);
@@ -71,7 +68,7 @@ describe('SpatialGrid', () => {
     expect(nearby).toHaveLength(3);
   });
 
-  it('1000 düşmanda grid sorgusu brute-force\'tan çok daha az sonuç döndürür', () => {
+  it("1000 düşmanda grid sorgusu brute-force'tan çok daha az sonuç döndürür", () => {
     const cellSize = 56;
     const grid = new SpatialGrid(cellSize);
 
@@ -99,6 +96,21 @@ describe('SpatialGrid', () => {
     expect(nearby.length).toBeGreaterThanOrEqual(bruteForce.length);
   });
 
+  it('trim boş hücreleri kaldırır', () => {
+    const grid = new SpatialGrid(56);
+    grid.insert(makeEnemy(100, 100));
+    grid.insert(makeEnemy(500, 500));
+    expect(grid.getCellCount()).toBe(2);
+
+    grid.clear();
+    grid.insert(makeEnemy(100, 100));
+    grid.trim();
+
+    expect(grid.getCellCount()).toBe(1);
+    const nearby = grid.queryNearby(105, 105);
+    expect(nearby).toHaveLength(1);
+  });
+
   it('cellSize küçüldükçe sorgu sonucu azalır — ölçeklendiğini kanıtlar', () => {
     const enemies: ReturnType<typeof makeEnemy>[] = [];
     for (let i = 0; i < 500; i++) {
@@ -117,5 +129,15 @@ describe('SpatialGrid', () => {
 
     // Daha küçük hücre = daha dar sorgu = daha az sonuç
     expect(resultSmall.length).toBeLessThanOrEqual(resultLarge.length);
+  });
+
+  it('negatif koordinatlar çakışma yapmaz', () => {
+    const grid = new SpatialGrid(56);
+    grid.insert(makeEnemy(-100, -100));
+    grid.insert(makeEnemy(100, 100));
+
+    const nearby = grid.queryNearby(-100, -100);
+    expect(nearby).toHaveLength(1);
+    expect(nearby[0].x).toBe(-100);
   });
 });

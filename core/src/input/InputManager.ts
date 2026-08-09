@@ -3,6 +3,7 @@ import { Vector2 } from '../math/Vector2';
 import { PCController } from './PCController';
 import type { InputProvider } from './InputProvider';
 import type { InputState } from './InputState';
+import type { InputSnapshot } from './InputSnapshot';
 import { TouchController } from './TouchController';
 
 export class InputManager {
@@ -40,6 +41,15 @@ export class InputManager {
     }
 
     return { move: Vector2.zero(), aim: Vector2.zero(), fire: false, dash: false };
+  }
+
+  /** Aktif input provider'ın ham durum snapshot'ını döner. */
+  getDebugSnapshot(): InputSnapshot {
+    const active = this.providers.find((p) => p.isActive);
+    if (active && active.getDebugSnapshot) {
+      return active.getDebugSnapshot();
+    }
+    return { activeProvider: 'none' };
   }
 
   destroy(): void {

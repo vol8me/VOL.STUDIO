@@ -29,20 +29,26 @@ describe('isPCInputActive', () => {
   });
 
   it('gerçek (touch olmayan) pointer basılıyken true döner', () => {
-    expect(isPCInputActive(noKeys, { ...idlePointer, isDown: true, wasTouch: false }, noExtra)).toBe(true);
+    expect(
+      isPCInputActive(noKeys, { ...idlePointer, isDown: true, wasTouch: false }, noExtra),
+    ).toBe(true);
   });
 
   it('touch kaynaklı pointer basılıyken true DÖNMEZ (regresyon: eski hata her zaman true dönüyordu)', () => {
     // Eski hata: `!pointer.wasTouch` tek başına kontrol edildiği için,
     // dokunulmamış hiçbir tuş/pointer olmasa bile wasTouch=false olduğu
     // sürece isActive her zaman true dönüyordu (hiçbir girdi yokken bile).
-    expect(isPCInputActive(noKeys, { ...idlePointer, isDown: true, wasTouch: true }, noExtra)).toBe(false);
+    expect(isPCInputActive(noKeys, { ...idlePointer, isDown: true, wasTouch: true }, noExtra)).toBe(
+      false,
+    );
   });
 
   it('hiçbir girdi yokken ve pointer hiç dokunulmamışsa (wasTouch=false, isDown=false) false döner', () => {
     // Bu, eski `!pointer.wasTouch || ...` mantığının anlamsızlığını
     // doğrudan test eder: yalnızca "dokunulmamış" olmak aktiflik değildir.
-    expect(isPCInputActive(noKeys, { ...idlePointer, isDown: false, wasTouch: false }, noExtra)).toBe(false);
+    expect(
+      isPCInputActive(noKeys, { ...idlePointer, isDown: false, wasTouch: false }, noExtra),
+    ).toBe(false);
   });
 });
 

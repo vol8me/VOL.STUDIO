@@ -98,7 +98,10 @@ function buildDialogueDemo(uiRootElement: HTMLElement, disposables: Destroyable[
           speaker: i18next.t('volui:advanced.oracle'),
           text: i18next.t('volui:advanced.dialogue4Text'),
         },
-        { speaker: i18next.t('volui:advanced.you'), text: i18next.t('volui:advanced.dialogue5Text') },
+        {
+          speaker: i18next.t('volui:advanced.you'),
+          text: i18next.t('volui:advanced.dialogue5Text'),
+        },
       ]);
     },
   });
@@ -161,9 +164,17 @@ function buildAccordionDemo(disposables: Destroyable[]): HTMLElement {
 
   const accordion = new Accordion(
     [
-      { id: 'graphics', title: i18next.t('volui:advanced.graphics'), content: { element: graphics } },
+      {
+        id: 'graphics',
+        title: i18next.t('volui:advanced.graphics'),
+        content: { element: graphics },
+      },
       { id: 'audio', title: i18next.t('volui:advanced.audio'), content: { element: audio } },
-      { id: 'controls', title: i18next.t('volui:advanced.controls'), content: { element: controls } },
+      {
+        id: 'controls',
+        title: i18next.t('volui:advanced.controls'),
+        content: { element: controls },
+      },
     ],
     { defaultOpen: ['graphics'] },
   );
@@ -185,11 +196,41 @@ function buildDataTableDemo(disposables: Destroyable[]): HTMLElement {
   wrap.className = 'vol-showcase-panel-demo';
 
   const unitRows: UnitRow[] = [
-    { id: 'u1', name: i18next.t('volui:advanced.archerUnit'), type: i18next.t('volui:advanced.ranged'), power: 42, hp: 120 },
-    { id: 'u2', name: i18next.t('volui:advanced.armoredKnight'), type: i18next.t('volui:advanced.melee'), power: 68, hp: 340 },
-    { id: 'u3', name: i18next.t('volui:advanced.siegeTrebuchet'), type: i18next.t('volui:advanced.siege'), power: 95, hp: 80 },
-    { id: 'u4', name: i18next.t('volui:advanced.healer'), type: i18next.t('volui:advanced.support'), power: 12, hp: 150 },
-    { id: 'u5', name: i18next.t('volui:advanced.darkCavalry'), type: i18next.t('volui:advanced.melee'), power: 71, hp: 260 },
+    {
+      id: 'u1',
+      name: i18next.t('volui:advanced.archerUnit'),
+      type: i18next.t('volui:advanced.ranged'),
+      power: 42,
+      hp: 120,
+    },
+    {
+      id: 'u2',
+      name: i18next.t('volui:advanced.armoredKnight'),
+      type: i18next.t('volui:advanced.melee'),
+      power: 68,
+      hp: 340,
+    },
+    {
+      id: 'u3',
+      name: i18next.t('volui:advanced.siegeTrebuchet'),
+      type: i18next.t('volui:advanced.siege'),
+      power: 95,
+      hp: 80,
+    },
+    {
+      id: 'u4',
+      name: i18next.t('volui:advanced.healer'),
+      type: i18next.t('volui:advanced.support'),
+      power: 12,
+      hp: 150,
+    },
+    {
+      id: 'u5',
+      name: i18next.t('volui:advanced.darkCavalry'),
+      type: i18next.t('volui:advanced.melee'),
+      power: 71,
+      hp: 260,
+    },
   ];
 
   const result = new Text(i18next.t('volui:advanced.clickUnitHint'), { variant: 'muted' });
@@ -206,7 +247,9 @@ function buildDataTableDemo(disposables: Destroyable[]): HTMLElement {
     selectable: true,
     initialSort: { key: 'power', direction: 'desc' },
     onRowClick: (row) =>
-      result.setContent(i18next.t('volui:advanced.selectedUnit', { name: row.name, power: row.power, hp: row.hp })),
+      result.setContent(
+        i18next.t('volui:advanced.selectedUnit', { name: row.name, power: row.power, hp: row.hp }),
+      ),
   });
   disposables.push(table);
 
@@ -218,7 +261,12 @@ function buildDataTableDemo(disposables: Destroyable[]): HTMLElement {
 
 /** Pencerelemeli DataTable demosu için büyük veri seti. */
 function buildLargeUnitRows(count: number): UnitRow[] {
-  const types = [i18next.t('volui:advanced.ranged'), i18next.t('volui:advanced.melee'), i18next.t('volui:advanced.siege'), i18next.t('volui:advanced.support')];
+  const types = [
+    i18next.t('volui:advanced.ranged'),
+    i18next.t('volui:advanced.melee'),
+    i18next.t('volui:advanced.siege'),
+    i18next.t('volui:advanced.support'),
+  ];
   return Array.from({ length: count }, (_, i) => ({
     id: `bulk-${i}`,
     name: i18next.t('volui:advanced.unitN', { n: i + 1 }),
@@ -248,7 +296,10 @@ function buildVirtualizedDataTableDemo(disposables: Destroyable[]): HTMLElement 
     rows: buildLargeUnitRows(5000),
     selectable: true,
     virtualize: { rowHeight: 37, height: 260 },
-    onRowClick: (row) => result.setContent(i18next.t('volui:advanced.selectedUnitPower', { name: row.name, power: row.power })),
+    onRowClick: (row) =>
+      result.setContent(
+        i18next.t('volui:advanced.selectedUnitPower', { name: row.name, power: row.power }),
+      ),
   });
   disposables.push(table);
 
@@ -316,12 +367,23 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
     classStep.appendChild(classRadio.element);
 
     const appearanceStep = document.createElement('div');
-    const appearanceLabel = new Text(i18next.t('volui:advanced.appearanceHint'), { variant: 'muted' });
+    const appearanceLabel = new Text(i18next.t('volui:advanced.appearanceHint'), {
+      variant: 'muted',
+    });
     const appearanceRadio = new RadioGroup({
       options: [
-        { value: i18next.t('volui:advanced.appearanceClassic'), label: i18next.t('volui:advanced.classicArmor') },
-        { value: i18next.t('volui:advanced.appearanceDark'), label: i18next.t('volui:advanced.darkCape') },
-        { value: i18next.t('volui:advanced.appearanceNature'), label: i18next.t('volui:advanced.natureAttire') },
+        {
+          value: i18next.t('volui:advanced.appearanceClassic'),
+          label: i18next.t('volui:advanced.classicArmor'),
+        },
+        {
+          value: i18next.t('volui:advanced.appearanceDark'),
+          label: i18next.t('volui:advanced.darkCape'),
+        },
+        {
+          value: i18next.t('volui:advanced.appearanceNature'),
+          label: i18next.t('volui:advanced.natureAttire'),
+        },
       ],
       value: characterAppearance,
       onChange: (value) => {
@@ -332,12 +394,23 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
     appearanceStep.appendChild(appearanceRadio.element);
 
     const difficultyStep = document.createElement('div');
-    const difficultyLabel = new Text(i18next.t('volui:advanced.difficultyHint'), { variant: 'muted' });
+    const difficultyLabel = new Text(i18next.t('volui:advanced.difficultyHint'), {
+      variant: 'muted',
+    });
     const difficultyRadio = new RadioGroup({
       options: [
-        { value: i18next.t('volui:advanced.difficultyEasy'), label: i18next.t('volui:advanced.easyDesc') },
-        { value: i18next.t('volui:advanced.difficultyNormal'), label: i18next.t('volui:advanced.normalDesc') },
-        { value: i18next.t('volui:advanced.difficultyHard'), label: i18next.t('volui:advanced.hardDesc') },
+        {
+          value: i18next.t('volui:advanced.difficultyEasy'),
+          label: i18next.t('volui:advanced.easyDesc'),
+        },
+        {
+          value: i18next.t('volui:advanced.difficultyNormal'),
+          label: i18next.t('volui:advanced.normalDesc'),
+        },
+        {
+          value: i18next.t('volui:advanced.difficultyHard'),
+          label: i18next.t('volui:advanced.hardDesc'),
+        },
       ],
       value: characterDifficulty,
       onChange: (value) => {
@@ -361,9 +434,16 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
         : i18next.t('volui:advanced.notSelected');
 
     const buildSummary = (): string => {
-      const base = i18next.t('volui:advanced.summaryBase', { name: characterName || i18next.t('volui:advanced.namelessHero'), class: classDisplayName(characterClass) });
+      const base = i18next.t('volui:advanced.summaryBase', {
+        name: characterName || i18next.t('volui:advanced.namelessHero'),
+        class: classDisplayName(characterClass),
+      });
       return advancedSetup
-        ? i18next.t('volui:advanced.summaryAdvanced', { base, appearance: characterAppearance, difficulty: characterDifficulty })
+        ? i18next.t('volui:advanced.summaryAdvanced', {
+            base,
+            appearance: characterAppearance,
+            difficulty: characterDifficulty,
+          })
         : i18next.t('volui:advanced.summarySimple', { base });
     };
 
@@ -383,11 +463,23 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
       },
       ...(advancedSetup
         ? [
-            { id: 'appearance', title: i18next.t('volui:advanced.stepAppearance'), content: { element: appearanceStep } },
-            { id: 'difficulty', title: i18next.t('volui:advanced.stepDifficulty'), content: { element: difficultyStep } },
+            {
+              id: 'appearance',
+              title: i18next.t('volui:advanced.stepAppearance'),
+              content: { element: appearanceStep },
+            },
+            {
+              id: 'difficulty',
+              title: i18next.t('volui:advanced.stepDifficulty'),
+              content: { element: difficultyStep },
+            },
           ]
         : []),
-      { id: 'summary', title: i18next.t('volui:advanced.stepSummary'), content: { element: summaryStep } },
+      {
+        id: 'summary',
+        title: i18next.t('volui:advanced.stepSummary'),
+        content: { element: summaryStep },
+      },
     ];
 
     currentWizard = new Wizard({
@@ -399,7 +491,9 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
         }
       },
       onFinish: () => {
-        summaryText.setContent(i18next.t('volui:advanced.adventureBegins', { summary: buildSummary() }));
+        summaryText.setContent(
+          i18next.t('volui:advanced.adventureBegins', { summary: buildSummary() }),
+        );
       },
     });
 
@@ -443,7 +537,12 @@ function buildCommandPaletteDemo(
       description: i18next.t('volui:advanced.cmdBuildTurretDesc'),
       category: i18next.t('volui:advanced.catBuild'),
       shortcut: 'Q',
-      onSelect: () => result.setContent(i18next.t('volui:advanced.cmdExecuted', { cmd: i18next.t('volui:advanced.cmdBuildTurret') })),
+      onSelect: () =>
+        result.setContent(
+          i18next.t('volui:advanced.cmdExecuted', {
+            cmd: i18next.t('volui:advanced.cmdBuildTurret'),
+          }),
+        ),
     },
     {
       id: 'build-wall',
@@ -451,7 +550,12 @@ function buildCommandPaletteDemo(
       description: i18next.t('volui:advanced.cmdBuildWallDesc'),
       category: i18next.t('volui:advanced.catBuild'),
       shortcut: 'W',
-      onSelect: () => result.setContent(i18next.t('volui:advanced.cmdExecuted', { cmd: i18next.t('volui:advanced.cmdBuildWall') })),
+      onSelect: () =>
+        result.setContent(
+          i18next.t('volui:advanced.cmdExecuted', {
+            cmd: i18next.t('volui:advanced.cmdBuildWall'),
+          }),
+        ),
     },
     {
       id: 'build-barracks',
@@ -459,7 +563,12 @@ function buildCommandPaletteDemo(
       description: i18next.t('volui:advanced.cmdBuildBarracksDesc'),
       category: i18next.t('volui:advanced.catBuild'),
       shortcut: 'E',
-      onSelect: () => result.setContent(i18next.t('volui:advanced.cmdExecuted', { cmd: i18next.t('volui:advanced.cmdBuildBarracks') })),
+      onSelect: () =>
+        result.setContent(
+          i18next.t('volui:advanced.cmdExecuted', {
+            cmd: i18next.t('volui:advanced.cmdBuildBarracks'),
+          }),
+        ),
     },
     {
       id: 'camera-center',
@@ -467,7 +576,12 @@ function buildCommandPaletteDemo(
       description: i18next.t('volui:advanced.cmdCameraCenterDesc'),
       category: i18next.t('volui:advanced.catCamera'),
       shortcut: 'Home',
-      onSelect: () => result.setContent(i18next.t('volui:advanced.cmdExecuted', { cmd: i18next.t('volui:advanced.cmdCameraCenter') })),
+      onSelect: () =>
+        result.setContent(
+          i18next.t('volui:advanced.cmdExecuted', {
+            cmd: i18next.t('volui:advanced.cmdCameraCenter'),
+          }),
+        ),
     },
     {
       id: 'camera-follow',
@@ -475,7 +589,12 @@ function buildCommandPaletteDemo(
       description: i18next.t('volui:advanced.cmdCameraFollowDesc'),
       category: i18next.t('volui:advanced.catCamera'),
       shortcut: 'F',
-      onSelect: () => result.setContent(i18next.t('volui:advanced.cmdExecuted', { cmd: i18next.t('volui:advanced.cmdCameraFollow') })),
+      onSelect: () =>
+        result.setContent(
+          i18next.t('volui:advanced.cmdExecuted', {
+            cmd: i18next.t('volui:advanced.cmdCameraFollow'),
+          }),
+        ),
     },
     {
       id: 'start-wave',
@@ -483,7 +602,12 @@ function buildCommandPaletteDemo(
       description: i18next.t('volui:advanced.cmdStartWaveDesc'),
       category: i18next.t('volui:advanced.catSystem'),
       shortcut: 'N',
-      onSelect: () => result.setContent(i18next.t('volui:advanced.cmdExecuted', { cmd: i18next.t('volui:advanced.cmdStartWave') })),
+      onSelect: () =>
+        result.setContent(
+          i18next.t('volui:advanced.cmdExecuted', {
+            cmd: i18next.t('volui:advanced.cmdStartWave'),
+          }),
+        ),
     },
     {
       id: 'toggle-pause',
@@ -491,7 +615,12 @@ function buildCommandPaletteDemo(
       description: i18next.t('volui:advanced.cmdTogglePauseDesc'),
       category: i18next.t('volui:advanced.catSystem'),
       shortcut: i18next.t('volui:advanced.keySpace'),
-      onSelect: () => result.setContent(i18next.t('volui:advanced.cmdExecuted', { cmd: i18next.t('volui:advanced.cmdTogglePause') })),
+      onSelect: () =>
+        result.setContent(
+          i18next.t('volui:advanced.cmdExecuted', {
+            cmd: i18next.t('volui:advanced.cmdTogglePause'),
+          }),
+        ),
     },
     {
       id: 'open-settings',
@@ -499,7 +628,12 @@ function buildCommandPaletteDemo(
       description: i18next.t('volui:advanced.cmdOpenSettingsDesc'),
       category: i18next.t('volui:advanced.catSystem'),
       shortcut: 'Esc',
-      onSelect: () => result.setContent(i18next.t('volui:advanced.cmdExecuted', { cmd: i18next.t('volui:advanced.cmdOpenSettings') })),
+      onSelect: () =>
+        result.setContent(
+          i18next.t('volui:advanced.cmdExecuted', {
+            cmd: i18next.t('volui:advanced.cmdOpenSettings'),
+          }),
+        ),
     },
   ]);
 
@@ -521,7 +655,9 @@ function buildSkillTreeDemo(disposables: Destroyable[]): HTMLElement {
   wrap.className = 'vol-showcase-panel-demo';
 
   let skillPoints = 5;
-  const pointsText = new Text(i18next.t('volui:advanced.skillPoints', { n: skillPoints }), { variant: 'body' });
+  const pointsText = new Text(i18next.t('volui:advanced.skillPoints', { n: skillPoints }), {
+    variant: 'body',
+  });
   disposables.push(pointsText);
 
   const costs: Record<string, number> = {
@@ -627,12 +763,9 @@ function buildEventLogDemo(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
-  const pinResult = new Text(
-    i18next.t('volui:advanced.eventLogPinHint'),
-    {
-      variant: 'muted',
-    },
-  );
+  const pinResult = new Text(i18next.t('volui:advanced.eventLogPinHint'), {
+    variant: 'muted',
+  });
   disposables.push(pinResult);
 
   const eventLog = new EventLog({
@@ -643,7 +776,9 @@ function buildEventLogDemo(disposables: Destroyable[]): HTMLElement {
     maxEntries: 80,
     onPinChange: (entry, pinned) => {
       pinResult.setContent(
-        pinned ? i18next.t('volui:advanced.pinned', { text: entry.text }) : i18next.t('volui:advanced.unpinned', { text: entry.text }),
+        pinned
+          ? i18next.t('volui:advanced.pinned', { text: entry.text })
+          : i18next.t('volui:advanced.unpinned', { text: entry.text }),
       );
     },
   });
@@ -678,10 +813,18 @@ function buildEventLogDemo(disposables: Destroyable[]): HTMLElement {
   };
 
   const pushCriticalEvent = (): void => {
-    eventLog.push({ text: i18next.t('volui:advanced.evtBaseUnderAttack'), tone: 'danger', timestamp: formatNow() });
+    eventLog.push({
+      text: i18next.t('volui:advanced.evtBaseUnderAttack'),
+      tone: 'danger',
+      timestamp: formatNow(),
+    });
   };
 
-  eventLog.push({ text: i18next.t('volui:advanced.waveStarted', { n: wave }), tone: 'info', timestamp: '00:00:00' });
+  eventLog.push({
+    text: i18next.t('volui:advanced.waveStarted', { n: wave }),
+    tone: 'info',
+    timestamp: '00:00:00',
+  });
 
   const pushButton = new Button(i18next.t('volui:advanced.randomEvent'), {
     onClick: () => pushRandomEvent(),
@@ -736,10 +879,7 @@ function buildKanbanDemo(disposables: Destroyable[], uiRootElement: HTMLElement)
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
-  const result = new Text(
-    i18next.t('volui:advanced.kanbanHint'),
-    { variant: 'muted' },
-  );
+  const result = new Text(i18next.t('volui:advanced.kanbanHint'), { variant: 'muted' });
   disposables.push(result);
 
   const cards: Record<string, ProductionCard[]> = {
@@ -794,7 +934,12 @@ function buildKanbanDemo(disposables: Destroyable[], uiRootElement: HTMLElement)
     dragContainer: uiRootElement,
     columns: [
       { id: 'pending', title: i18next.t('volui:advanced.colPending'), cards: cards.pending },
-      { id: 'inProgress', title: i18next.t('volui:advanced.colInProgress'), cards: cards.inProgress, wipLimit: 2 },
+      {
+        id: 'inProgress',
+        title: i18next.t('volui:advanced.colInProgress'),
+        cards: cards.inProgress,
+        wipLimit: 2,
+      },
       { id: 'done', title: i18next.t('volui:advanced.colDone'), cards: cards.done },
     ],
     onCardMove: (cardId, from, to) => {
@@ -806,7 +951,13 @@ function buildKanbanDemo(disposables: Destroyable[], uiRootElement: HTMLElement)
     onCardClick: (card) => {
       const tagText = card.tags?.length ? ` [${card.tags.join(', ')}]` : '';
       const assigneeText = card.assignee ? ` — ${card.assignee}` : '';
-      result.setContent(i18next.t('volui:advanced.cardDetail', { title: card.title, tags: tagText, assignee: assigneeText }));
+      result.setContent(
+        i18next.t('volui:advanced.cardDetail', {
+          title: card.title,
+          tags: tagText,
+          assignee: assigneeText,
+        }),
+      );
     },
   });
   disposables.push(kanban);
@@ -818,7 +969,10 @@ function buildKanbanDemo(disposables: Destroyable[], uiRootElement: HTMLElement)
 }
 
 /** Pencerelemeli Kanban: sütun başına 300 kart, DOM'da yalnızca görünenler. virtualizeCards sabit kart yüksekliği varsayar. */
-function buildVirtualizedKanbanDemo(disposables: Destroyable[], uiRootElement: HTMLElement): HTMLElement {
+function buildVirtualizedKanbanDemo(
+  disposables: Destroyable[],
+  uiRootElement: HTMLElement,
+): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -842,7 +996,9 @@ function buildVirtualizedKanbanDemo(disposables: Destroyable[], uiRootElement: H
       { id: 'shipped', title: i18next.t('volui:advanced.colShipped'), cards: makeCards('s', 300) },
     ],
     onCardMove: (cardId, from, to, toIndex) => {
-      result.setContent(i18next.t('volui:advanced.cardMovedIndexed', { cardId, to, index: toIndex + 1, from }));
+      result.setContent(
+        i18next.t('volui:advanced.cardMovedIndexed', { cardId, to, index: toIndex + 1, from }),
+      );
     },
   });
   disposables.push(kanban);
@@ -909,19 +1065,32 @@ export function buildAdvancedTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:advanced.dialogue'), buildDialogueDemo(uiRootElement, disposables)),
     card(i18next.t('volui:advanced.richTooltip'), buildRichTooltipDemo(disposables, uiRootElement)),
     card(i18next.t('volui:advanced.tree'), buildTreeDemo(disposables)),
-    card(i18next.t('volui:advanced.commandPalette'), buildCommandPaletteDemo(uiRootElement, disposables)),
+    card(
+      i18next.t('volui:advanced.commandPalette'),
+      buildCommandPaletteDemo(uiRootElement, disposables),
+    ),
     card(i18next.t('volui:advanced.accordion'), buildAccordionDemo(disposables), { span: 2 }),
     card(i18next.t('volui:advanced.dataTable'), buildDataTableDemo(disposables), { span: 2 }),
-    card(i18next.t('volui:advanced.dataTableVirtualized'), buildVirtualizedDataTableDemo(disposables), {
-      span: 2,
-    }),
+    card(
+      i18next.t('volui:advanced.dataTableVirtualized'),
+      buildVirtualizedDataTableDemo(disposables),
+      {
+        span: 2,
+      },
+    ),
     card(i18next.t('volui:advanced.wizard'), buildWizardDemo(disposables), { span: 2 }),
     card(i18next.t('volui:advanced.skillTree'), buildSkillTreeDemo(disposables), { spanAll: true }),
     card(i18next.t('volui:advanced.eventLog'), buildEventLogDemo(disposables), { spanAll: true }),
-    card(i18next.t('volui:advanced.kanban'), buildKanbanDemo(disposables, uiRootElement), { spanAll: true }),
-    card(i18next.t('volui:advanced.kanbanVirtualized'), buildVirtualizedKanbanDemo(disposables, uiRootElement), {
+    card(i18next.t('volui:advanced.kanban'), buildKanbanDemo(disposables, uiRootElement), {
       spanAll: true,
     }),
+    card(
+      i18next.t('volui:advanced.kanbanVirtualized'),
+      buildVirtualizedKanbanDemo(disposables, uiRootElement),
+      {
+        spanAll: true,
+      },
+    ),
   ];
 
   container.appendChild(cardGrid(cards));

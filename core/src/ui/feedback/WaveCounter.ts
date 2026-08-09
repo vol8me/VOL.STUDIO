@@ -130,6 +130,8 @@ export class WaveCounter {
   }
 
   private renderCountdown(): void {
-    this.countdownElement.textContent = i18next.t('core:wavecounter.next', { seconds: this.remainingSeconds });
+    this.countdownElement.textContent = i18next.t('core:wavecounter.next', {
+      seconds: this.remainingSeconds,
+    });
   }
 }

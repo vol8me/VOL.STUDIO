@@ -26,7 +26,11 @@ export class I18n {
   private saveKey = 'vol-locale';
   private locales = new Set<string>(['tr', 'en']);
   /** init() öncesi addResources() ile eklenen bundle'lar — init sonrası uygulanır. */
-  private pendingResources: Array<{ locale: string; ns: string; resources: Record<string, unknown> }> = [];
+  private pendingResources: Array<{
+    locale: string;
+    ns: string;
+    resources: Record<string, unknown>;
+  }> = [];
   /** addResources() ile runtime'da eklenen bundle'lar — reset()'te temizlenir. */
   private addedResources: Array<{ locale: string; ns: string }> = [];
 

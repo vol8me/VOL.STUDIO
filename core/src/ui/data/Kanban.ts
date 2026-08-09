@@ -597,7 +597,8 @@ export class Kanban {
     const index = column ? column.cards.findIndex((c) => c.id === card.id) + 1 : 0;
     const total = column?.cards.length ?? 0;
     const position = column ? `, ${column.title}, ${index}/${total}` : '';
-    const hint = this.keyboardMove?.cardId === card.id ? ', ' + i18next.t('core:kanban.moving') : '';
+    const hint =
+      this.keyboardMove?.cardId === card.id ? ', ' + i18next.t('core:kanban.moving') : '';
     return `${card.title}${position}${hint}`;
   }
 
@@ -617,9 +618,7 @@ export class Kanban {
       this.keyboardMove = { cardId, originColumnId: located.column.id, originIndex: located.index };
       this.rerenderColumn(located.column.id);
       this.focusCard(cardId);
-      this.announce(
-        i18next.t('core:kanban.grabbed', { card: this.cardTitle(cardId) }),
-      );
+      this.announce(i18next.t('core:kanban.grabbed', { card: this.cardTitle(cardId) }));
       return;
     }
 

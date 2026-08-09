@@ -15,7 +15,11 @@ interface Destroyable {
 }
 
 /** Aktif loading preview'ı takip eder — aynı anda yalnızca bir tane olur. */
-let activePreview: { loading: LoadingScreen; interval: ReturnType<typeof setInterval> | null; hideTimeout: ReturnType<typeof setTimeout> | null } | null = null;
+let activePreview: {
+  loading: LoadingScreen;
+  interval: ReturnType<typeof setInterval> | null;
+  hideTimeout: ReturnType<typeof setTimeout> | null;
+} | null = null;
 
 function clearActivePreview(): void {
   if (!activePreview) return;
@@ -82,7 +86,7 @@ function buildIndicatorTypeDemo(disposables: Destroyable[]): HTMLElement {
     'energy-core': i18next.t('volui:loading.energyCore'),
     'particle-orbit': i18next.t('volui:loading.particleOrbit'),
     'hexagon-pulse': i18next.t('volui:loading.hexagonPulse'),
-    'bar': i18next.t('volui:loading.bar'),
+    bar: i18next.t('volui:loading.bar'),
   };
 
   const typeOrder: LoadingIndicatorType[] = [
@@ -105,9 +109,9 @@ function buildIndicatorTypeDemo(disposables: Destroyable[]): HTMLElement {
   btnRow.appendChild(typeBtn.element);
 
   const transLabels: Record<LoadingTransitionType, string> = {
-    'fade': i18next.t('volui:loading.fade'),
-    'slide': i18next.t('volui:loading.slide'),
-    'zoom': i18next.t('volui:loading.zoom'),
+    fade: i18next.t('volui:loading.fade'),
+    slide: i18next.t('volui:loading.slide'),
+    zoom: i18next.t('volui:loading.zoom'),
   };
 
   const transBtn = new Button(i18next.t('volui:loading.fade'), {
@@ -224,7 +228,7 @@ function buildContentPositionDemo(disposables: Destroyable[]): HTMLElement {
   let currentPos: LoadingContentPosition = 'bottom-right';
 
   const posLabels: Record<LoadingContentPosition, string> = {
-    'center': i18next.t('volui:loading.center'),
+    center: i18next.t('volui:loading.center'),
     'top-left': i18next.t('volui:loading.topLeft'),
     'top-right': i18next.t('volui:loading.topRight'),
     'bottom-left': i18next.t('volui:loading.bottomLeft'),
@@ -327,11 +331,17 @@ export function buildLoadingTab(): {
   const disposables: Destroyable[] = [];
 
   const cards = [
-    card(i18next.t('volui:loading.indicatorTypes'), buildIndicatorTypeDemo(disposables), { span: 4 }),
+    card(i18next.t('volui:loading.indicatorTypes'), buildIndicatorTypeDemo(disposables), {
+      span: 4,
+    }),
     card(i18next.t('volui:loading.minDisplayTime'), buildMinDisplayDemo(disposables), { span: 4 }),
     card(i18next.t('volui:loading.titleSubtitle'), buildTextDemo(disposables), { span: 4 }),
-    card(i18next.t('volui:loading.contentPosition'), buildContentPositionDemo(disposables), { span: 6 }),
-    card(i18next.t('volui:loading.progressSpeed'), buildProgressSpeedDemo(disposables), { span: 6 }),
+    card(i18next.t('volui:loading.contentPosition'), buildContentPositionDemo(disposables), {
+      span: 6,
+    }),
+    card(i18next.t('volui:loading.progressSpeed'), buildProgressSpeedDemo(disposables), {
+      span: 6,
+    }),
   ];
 
   container.appendChild(paletteGrid(cards));

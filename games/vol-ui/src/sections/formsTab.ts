@@ -40,7 +40,11 @@ function buildVerticalSliderDemo(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-vertical-sliders';
 
-  const channels = [i18next.t('volui:forms.music'), i18next.t('volui:forms.effects'), i18next.t('volui:forms.sound')];
+  const channels = [
+    i18next.t('volui:forms.music'),
+    i18next.t('volui:forms.effects'),
+    i18next.t('volui:forms.sound'),
+  ];
   for (const channel of channels) {
     const column = document.createElement('div');
     column.className = 'vol-showcase-vertical-sliders__column';
@@ -177,7 +181,10 @@ function buildTimerBarDemo(disposables: Destroyable[]): HTMLElement {
   return wrap;
 }
 
-export function buildFormsTab(uiRootElement: HTMLElement): { element: HTMLElement; destroy: () => void } {
+export function buildFormsTab(uiRootElement: HTMLElement): {
+  element: HTMLElement;
+  destroy: () => void;
+} {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
   const disposables: Destroyable[] = [];

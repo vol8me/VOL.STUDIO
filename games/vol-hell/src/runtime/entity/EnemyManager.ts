@@ -1,10 +1,13 @@
 import type Phaser from 'phaser';
 import type { Vector2 } from '@volstudio/core';
+import { Diagnostics } from '@volstudio/core';
 import { enemyConfig } from '@/config/enemy';
+import { bulletConfig } from '@/config/bullet';
 import type { Border } from './Border';
 import { Enemy } from './Enemy';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import type { ParticlePool } from '@/runtime/systems/ParticlePool';
+import type { DifficultyState } from '@/runtime/systems/DifficultyCalculator';
 
 /**
  * Düşman yöneticisi — sürekli spawn, sayı limiti, güncelleme ve temizlik.
@@ -19,15 +22,25 @@ export class EnemyManager {
     private readonly particles: ParticlePool,
   ) {}
 
-  update(delta: number, playerPos: Vector2, border: Border, _time: number, grid: SpatialGrid): void {
+  update(
+    delta: number,
+    playerPos: Vector2,
+    border: Border,
+    _time: number,
+    grid: SpatialGrid,
+    difficulty: DifficultyState,
+  ): void {
     this.spawnTimer += delta;
-    if (this.spawnTimer >= enemyConfig.spawnIntervalMs && this.enemies.length < enemyConfig.maxCount) {
-      const spawned = this.spawn(border, playerPos);
+    if (
+      this.spawnTimer >= difficulty.spawnIntervalMs &&
+      this.enemies.length < difficulty.maxEnemies
+    ) {
+      const spawned = this.spawn(border, playerPos, difficulty);
       if (spawned) {
         this.spawnTimer = 0;
       } else {
         // Spawn başarısız (oyuncuya çok yakın) — kısa bekleme sonra tekrar dene
-        this.spawnTimer = enemyConfig.spawnIntervalMs * 0.5;
+        this.spawnTimer = difficulty.spawnIntervalMs * enemyConfig.spawnRetryIntervalFactor;
       }
     }
 
@@ -37,8 +50,8 @@ export class EnemyManager {
 
       if (!enemy.isAlive) {
         // Swap-and-pop: O(1) kaldırma, kaydırma yok
-        const last = this.enemies.pop()!;
-        if (i < this.enemies.length) {
+        const last = this.enemies.pop();
+        if (last && i < this.enemies.length) {
           this.enemies[i] = last;
         }
       }
@@ -46,9 +59,9 @@ export class EnemyManager {
   }
 
   /** Border kenarından rastgele pozisyonda düşman doğurur. Başarılı true döner. */
-  private spawn(border: Border, playerPos: Vector2): boolean {
+  private spawn(border: Border, playerPos: Vector2, difficulty: DifficultyState): boolean {
     const b = border.bounds;
-    const side = Math.floor(Math.random() * 4);
+    const side = Math.floor(Math.random() * enemyConfig.spawnEdgeCount);
     let x: number;
     let y: number;
 
@@ -73,10 +86,21 @@ export class EnemyManager {
 
     // Oyuncuya çok yakın spawn etme
     const distToPlayer = Math.hypot(x - playerPos.x, y - playerPos.y);
-    if (distToPlayer < 120) return false;
+    if (distToPlayer < enemyConfig.spawnMinPlayerDistance) return false;
 
-    const enemy = new Enemy(this.scene, x, y, this.particles);
+    // Maksimum canı mermi hasarının katına yuvarla — can barı her vuruşta anlamlı ve can düşmanı yaşar görünür kalsın.
+    const roundedHealth =
+      Math.round(difficulty.enemyHealth / bulletConfig.damage) * bulletConfig.damage;
+
+    const enemy = new Enemy(this.scene, x, y, this.particles, {
+      maxHealth: roundedHealth,
+      speed: difficulty.enemySpeed,
+      scoreValue: enemyConfig.scoreValue * difficulty.scoreMultiplier,
+    });
     this.enemies.push(enemy);
+
+    Diagnostics.getInstance()?.recordEvent('enemySpawn', { x, y });
+
     return true;
   }
 

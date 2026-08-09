@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import type { Vector2 } from '@volstudio/core';
+import { Diagnostics } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
 import { Bullet } from './Bullet';
 import type { Border } from './Border';
@@ -25,6 +26,13 @@ export class BulletManager {
     const bullet = new Bullet(this.scene, origin.x, origin.y, direction, this.particles);
     this.bullets.push(bullet);
     this.fireCooldown = bulletConfig.fireCooldownMs;
+
+    Diagnostics.getInstance()?.recordEvent('bulletFire', {
+      x: origin.x,
+      y: origin.y,
+      direction: { x: direction.x, y: direction.y },
+    });
+
     return true;
   }
 
@@ -57,8 +65,8 @@ export class BulletManager {
     const idx = this.bullets.indexOf(bullet);
     if (idx >= 0) {
       // Swap-and-pop: O(1) kaldırma
-      const last = this.bullets.pop()!;
-      if (idx < this.bullets.length) {
+      const last = this.bullets.pop();
+      if (last && idx < this.bullets.length) {
         this.bullets[idx] = last;
       }
       bullet.destroy();

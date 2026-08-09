@@ -71,8 +71,14 @@ interface FakeScene {
 /** Border mock — clamp fonksiyonu pozisyonu sınır içine çeker. */
 interface FakeBorder {
   bounds: {
-    left: number; right: number; top: number; bottom: number;
-    width: number; height: number; centerX: number; centerY: number;
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+    width: number;
+    height: number;
+    centerX: number;
+    centerY: number;
   };
   clamp: (x: number, y: number, r: number) => { x: number; y: number };
   clampX: (x: number, r: number) => number;
@@ -83,7 +89,16 @@ function makeBorder(): FakeBorder {
   const clampX = (x: number, r: number) => Math.max(60 + r, Math.min(740 - r, x));
   const clampY = (y: number, r: number) => Math.max(60 + r, Math.min(540 - r, y));
   return {
-    bounds: { left: 60, right: 740, top: 60, bottom: 540, width: 680, height: 480, centerX: 400, centerY: 300 },
+    bounds: {
+      left: 60,
+      right: 740,
+      top: 60,
+      bottom: 540,
+      width: 680,
+      height: 480,
+      centerX: 400,
+      centerY: 300,
+    },
     clamp: (x: number, y: number, r: number) => ({ x: clampX(x, r), y: clampY(y, r) }),
     clampX,
     clampY,
@@ -93,15 +108,32 @@ function makeBorder(): FakeBorder {
 /** ParticlePool mock'u — acquire/release sadece stub döner. */
 function makeParticlePool(): ParticlePool {
   const fakeArc = {
-    x: 0, y: 0,
-    setPosition() { return this; },
-    setRadius() { return this; },
-    setFillStyle() { return this; },
-    setAlpha() { return this; },
-    setScale() { return this; },
-    setStrokeStyle() { return this; },
-    setVisible() { return this; },
-    setActive() { return this; },
+    x: 0,
+    y: 0,
+    setPosition() {
+      return this;
+    },
+    setRadius() {
+      return this;
+    },
+    setFillStyle() {
+      return this;
+    },
+    setAlpha() {
+      return this;
+    },
+    setScale() {
+      return this;
+    },
+    setStrokeStyle() {
+      return this;
+    },
+    setVisible() {
+      return this;
+    },
+    setActive() {
+      return this;
+    },
     destroy() {},
   };
   return {
@@ -116,12 +148,23 @@ describe('Player', () => {
   let particles: ParticlePool;
 
   beforeEach(() => {
-    const sceneRef: { tweens: { add: () => void }; add: { circle: (x: number, y: number) => FakeArc } } = {
+    const sceneRef: {
+      tweens: { add: () => void };
+      add: { circle: (x: number, y: number) => FakeArc };
+    } = {
       add: { circle: vi.fn() },
       tweens: { add: vi.fn() },
     };
     const arcFactory = (x: number, y: number): FakeArc => {
-      const arc: FakeArc = { x, y, scene: sceneRef as unknown as FakeScene, setStrokeStyle: () => arc, setFillStyle: () => arc, setVisible: () => arc, destroy: () => {} };
+      const arc: FakeArc = {
+        x,
+        y,
+        scene: sceneRef as unknown as FakeScene,
+        setStrokeStyle: () => arc,
+        setFillStyle: () => arc,
+        setVisible: () => arc,
+        destroy: () => {},
+      };
       return arc;
     };
     sceneRef.add.circle = vi.fn(arcFactory);
@@ -200,7 +243,7 @@ describe('Player', () => {
     expect(pos.x).toBeCloseTo(100 + playerConfig.dashSpeed * 0.1, 0);
   });
 
-  it("destroy — hata fırlatmaz", () => {
+  it('destroy — hata fırlatmaz', () => {
     const player = makePlayer(0, 0);
     player.tryDash(new Vector2(1, 0));
     expect(() => player.destroy()).not.toThrow();

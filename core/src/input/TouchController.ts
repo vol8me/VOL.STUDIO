@@ -4,6 +4,7 @@ import { VOL_COLORS } from '../ui/colors';
 import { TouchStickState } from './TouchStickState';
 import type { InputProvider } from './InputProvider';
 import type { InputState } from './InputState';
+import type { InputSnapshot, TouchStickSnapshot } from './InputSnapshot';
 import { UI_DEPTH, UI_RATIO, UI_ALPHA, UI_SIZE } from '../constants';
 
 // Graphics.fillStyle sayısal 0xRRGGBB bekler, VOL_COLORS '#rrggbb' string'leri taşır.
@@ -41,11 +42,31 @@ export class TouchController extends Phaser.GameObjects.Container implements Inp
     return this.sticks.isActive;
   }
 
+  getDebugSnapshot(): InputSnapshot {
+    const left = this.sticks.getLeftStick();
+    const right = this.sticks.getRightStick();
+    return {
+      activeProvider: 'touch',
+      touch: {
+        left: left ? this.toStickSnapshot(left) : undefined,
+        right: right ? this.toStickSnapshot(right) : undefined,
+      },
+    };
+  }
+
+  private toStickSnapshot(stick: { base: Vector2; current: Vector2 }): TouchStickSnapshot {
+    return {
+      base: { x: stick.base.x, y: stick.base.y },
+      current: { x: stick.current.x, y: stick.current.y },
+    };
+  }
+
   getState(_playerPosition: Vector2): InputState {
     return this.sticks.getState();
   }
 
   update(_delta: number): void {
+    if (!this.sticks.isActive) return;
     this.drawSticks();
   }
 

@@ -1,24 +1,28 @@
-import { Button, Checkbox, Panel, Slider, Text, i18next, type AudioManager } from '@volstudio/core';
+import { Button, Checkbox, Panel, Slider, Text, i18next } from '@volstudio/core';
 import type { AudioSettings } from '@/app/AudioSettings';
-import { soundKeys } from '@/config';
+import { gameAudio } from '@/app/bootstrap';
 
 /**
  * Oyun içi duraklatma ekranı — DOM tabanlı overlay.
  * ESC tuşu veya sağ üst pause butonu ile açılır/kapanır.
  * Phaser sahnesini pause yapar, DOM overlay gösterir.
- * Settings alt-panel: volume slider + mute toggle içerir.
+ * Settings alt-panel: ses seviyeleri + mute + ekran sarsıntısı.
  */
 export class PauseScreen {
   private readonly overlay: HTMLDivElement;
   private readonly panel: Panel;
   private readonly settingsPanel: Panel;
-  private readonly resumeButton: Button;
-  private readonly restartButton: Button;
-  private readonly settingsButton: Button;
-  private readonly mainMenuButton: Button;
-  private readonly titleText: Text;
-  private readonly settingsTitleText: Text;
-  private readonly volumeSlider: Slider;
+  private readonly resumeButton!: Button;
+  private readonly restartButton!: Button;
+  private readonly settingsButton!: Button;
+  private readonly mainMenuButton!: Button;
+  private readonly titleText!: Text;
+  private readonly settingsTitleText!: Text;
+  private readonly masterSlider: Slider;
+  private readonly sfxSlider: Slider;
+  private readonly musicSlider: Slider;
+  private readonly ambientSlider: Slider;
+  private readonly shakeCheckbox: Checkbox;
   private readonly muteCheckbox: Checkbox;
   private readonly settingsBackButton: Button;
   private readonly onLanguageChanged = (): void => {
@@ -28,7 +32,11 @@ export class PauseScreen {
     this.settingsButton.setLabel(i18next.t('volhell:pause.settings'));
     this.mainMenuButton.setLabel(i18next.t('volhell:pause.mainMenu'));
     this.settingsTitleText.setContent(i18next.t('volhell:settings.title'));
-    this.volumeSlider.setLabel(i18next.t('volhell:settings.volume'));
+    this.masterSlider.setLabel(i18next.t('volhell:settings.master'));
+    this.sfxSlider.setLabel(i18next.t('volhell:settings.sfx'));
+    this.musicSlider.setLabel(i18next.t('volhell:settings.music'));
+    this.ambientSlider.setLabel(i18next.t('volhell:settings.ambient'));
+    this.shakeCheckbox.setLabel(i18next.t('volhell:settings.shake'));
     this.muteCheckbox.setLabel(i18next.t('volhell:settings.mute'));
     this.settingsBackButton.setLabel(i18next.t('volhell:settings.back'));
   };
@@ -36,7 +44,6 @@ export class PauseScreen {
   constructor(
     parent: HTMLElement,
     private readonly audioSettings: AudioSettings,
-    private readonly audio: AudioManager,
     private readonly callbacks: {
       onResume: () => void;
       onRestart: () => void;
@@ -72,17 +79,57 @@ export class PauseScreen {
       .add(this.mainMenuButton);
 
     // Settings alt-paneli
-    this.settingsTitleText = new Text(i18next.t('volhell:settings.title'), { variant: 'title', tag: 'h1' });
+    this.settingsTitleText = new Text(i18next.t('volhell:settings.title'), {
+      variant: 'title',
+      tag: 'h1',
+    });
 
-    this.volumeSlider = new Slider({
-      min: 0,
-      max: 1,
-      step: 0.05,
-      value: audioSettings.getSfxVolume(),
-      label: i18next.t('volhell:settings.volume'),
-      onChange: (value) => {
-        void audioSettings.setSfxVolume(value);
-        this.audio.play(soundKeys.menuBlip, { volume: 0.5 });
+    const makeSlider = (
+      get: () => number,
+      set: (v: number) => Promise<void>,
+      label: string,
+    ): Slider =>
+      new Slider({
+        min: 0,
+        max: 1,
+        step: 0.05,
+        value: get(),
+        label,
+        onChange: (value) => {
+          void set(value).then(() => {
+            void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+          });
+        },
+      });
+
+    this.masterSlider = makeSlider(
+      () => audioSettings.getMasterVolume(),
+      (v) => audioSettings.setMasterVolume(v),
+      i18next.t('volhell:settings.master'),
+    );
+    this.sfxSlider = makeSlider(
+      () => audioSettings.getSfxVolume(),
+      (v) => audioSettings.setSfxVolume(v),
+      i18next.t('volhell:settings.sfx'),
+    );
+    this.musicSlider = makeSlider(
+      () => audioSettings.getMusicVolume(),
+      (v) => audioSettings.setMusicVolume(v),
+      i18next.t('volhell:settings.music'),
+    );
+    this.ambientSlider = makeSlider(
+      () => audioSettings.getAmbientVolume(),
+      (v) => audioSettings.setAmbientVolume(v),
+      i18next.t('volhell:settings.ambient'),
+    );
+
+    this.shakeCheckbox = new Checkbox({
+      checked: audioSettings.isScreenShakeEnabled(),
+      label: i18next.t('volhell:settings.shake'),
+      onChange: (checked) => {
+        void audioSettings.setScreenShakeEnabled(checked).then(() => {
+          void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+        });
       },
     });
 
@@ -90,10 +137,11 @@ export class PauseScreen {
       checked: audioSettings.isMuted(),
       label: i18next.t('volhell:settings.mute'),
       onChange: (checked) => {
-        void audioSettings.setMuted(checked);
-        if (!checked) {
-          this.audio.play(soundKeys.menuBlip, { volume: 0.5 });
-        }
+        void audioSettings.setMuted(checked).then(() => {
+          if (!checked) {
+            void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+          }
+        });
       },
     });
 
@@ -104,7 +152,11 @@ export class PauseScreen {
 
     this.settingsPanel = new Panel({ className: 'pause-panel' })
       .add(this.settingsTitleText)
-      .add(this.volumeSlider)
+      .add(this.masterSlider)
+      .add(this.sfxSlider)
+      .add(this.musicSlider)
+      .add(this.ambientSlider)
+      .add(this.shakeCheckbox)
       .add(this.muteCheckbox)
       .add(this.settingsBackButton);
 
@@ -147,7 +199,11 @@ export class PauseScreen {
     this.settingsButton.destroy();
     this.mainMenuButton.destroy();
     this.settingsBackButton.destroy();
-    this.volumeSlider.destroy();
+    this.masterSlider.destroy();
+    this.sfxSlider.destroy();
+    this.musicSlider.destroy();
+    this.ambientSlider.destroy();
+    this.shakeCheckbox.destroy();
     this.muteCheckbox.destroy();
     this.panel.destroy();
     this.settingsPanel.destroy();

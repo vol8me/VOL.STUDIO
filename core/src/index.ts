@@ -20,12 +20,24 @@ export { PlayerController, type MovableGameObject } from './entities/PlayerContr
 
 export type { InputState } from './input/InputState';
 export type { InputProvider } from './input/InputProvider';
+export type {
+  InputSnapshot,
+  PcInputSnapshot,
+  TouchInputSnapshot,
+  TouchStickSnapshot,
+} from './input/InputSnapshot';
 export { InputManager } from './input/InputManager';
 export * as InputUtils from './input/InputUtils';
 export { PCController } from './input/PCController';
 export { TouchController } from './input/TouchController';
 
 export { AudioManager } from './systems/AudioManager';
+export * as Synth from './audio/synth';
+export * as Music from './audio/music';
+export { MusicEngine } from './audio/music/engine';
+export { SidechainDucker } from './audio/sidechain';
+export type { DuckingProfile } from './audio/sidechain';
+export { Instrument, MelodicEngine } from './audio/music';
 export { SaveManager, LocalStorageAdapter } from './systems/SaveManager';
 export type { IStorageAdapter } from './systems/SaveManager';
 export { I18n, i18n, i18next, type I18nOptions } from './systems/I18n';
@@ -55,3 +67,4 @@ export * from './ui/controls';
 export * from './ui/hud';
 export { VOL_COLORS, type VolColorToken } from './ui/colors';
 export { Easing, animateValue, type AnimateValueOptions } from './ui/animation';
+export * from './debug';

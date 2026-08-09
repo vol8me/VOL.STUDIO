@@ -73,7 +73,10 @@ function buildDynamicContentDemo(disposables: Destroyable[]): HTMLElement {
     variant: 'primary',
     onClick: () => {
       counter += 1;
-      const item = new Text(i18next.t('volui:panels.itemN', { n: counter }), { variant: 'muted', tag: 'span' });
+      const item = new Text(i18next.t('volui:panels.itemN', { n: counter }), {
+        variant: 'muted',
+        tag: 'span',
+      });
       item.element.classList.add('vol-showcase-list-panel__item');
       listPanel.add(item);
       items.push({ text: item });
@@ -117,10 +120,7 @@ function buildStaticMenuDemo(disposables: Destroyable[]): HTMLElement {
   stage.appendChild(menuPanel.element);
   wrap.appendChild(stage);
 
-  const hint = new Text(
-    i18next.t('volui:panels.staticMenuHint'),
-    { variant: 'muted' },
-  );
+  const hint = new Text(i18next.t('volui:panels.staticMenuHint'), { variant: 'muted' });
   disposables.push(hint);
   wrap.appendChild(hint.element);
 
@@ -134,9 +134,9 @@ function buildModalDemo(uiRootElement: HTMLElement, disposables: Destroyable[]):
   const result = new Text(i18next.t('volui:panels.modalClosed'), { variant: 'muted' });
   disposables.push(result);
 
-  const modal = new Modal({ onClose: () => result.setContent(i18next.t('volui:panels.modalClosed')) }).add(
-    new Text(i18next.t('volui:panels.gamePaused'), { variant: 'heading', tag: 'h2' }),
-  );
+  const modal = new Modal({
+    onClose: () => result.setContent(i18next.t('volui:panels.modalClosed')),
+  }).add(new Text(i18next.t('volui:panels.gamePaused'), { variant: 'heading', tag: 'h2' }));
   disposables.push(modal);
 
   const resumeButton = new Button(i18next.t('volui:panels.resume'), {
@@ -211,7 +211,11 @@ function buildConfirmDemo(disposables: Destroyable[], uiRootElement: HTMLElement
         variant: 'danger',
         container: uiRootElement,
       });
-      result.setContent(confirmed ? i18next.t('volui:panels.resultConfirmed') : i18next.t('volui:panels.resultCancelled'));
+      result.setContent(
+        confirmed
+          ? i18next.t('volui:panels.resultConfirmed')
+          : i18next.t('volui:panels.resultCancelled'),
+      );
     },
   });
 
@@ -224,7 +228,11 @@ function buildConfirmDemo(disposables: Destroyable[], uiRootElement: HTMLElement
         cancelLabel: i18next.t('volui:panels.abort'),
         container: uiRootElement,
       });
-      result.setContent(confirmed ? i18next.t('volui:panels.resultConfirmed') : i18next.t('volui:panels.resultCancelled'));
+      result.setContent(
+        confirmed
+          ? i18next.t('volui:panels.resultConfirmed')
+          : i18next.t('volui:panels.resultCancelled'),
+      );
     },
   });
   disposables.push(deleteButton, saveButton);
@@ -250,7 +258,9 @@ function buildToastDemo(uiRootElement: HTMLElement, disposables: Destroyable[]):
 
   const buttons = document.createElement('div');
   buttons.className = 'vol-showcase-panel-demo__controls';
-  const infoButton = new Button(i18next.t('volui:panels.showInfo'), { onClick: () => toasts.show(i18next.t('volui:panels.waveStarted')) });
+  const infoButton = new Button(i18next.t('volui:panels.showInfo'), {
+    onClick: () => toasts.show(i18next.t('volui:panels.waveStarted')),
+  });
   const successButton = new Button(i18next.t('volui:panels.showSuccess'), {
     variant: 'primary',
     onClick: () => toasts.show(i18next.t('volui:panels.newWeapon'), { variant: 'success' }),
@@ -326,31 +336,35 @@ function buildContextMenuDemo(disposables: Destroyable[], uiRootElement: HTMLEle
   const trigger = new Button(i18next.t('volui:panels.actions'), { fullWidth: false });
   disposables.push(trigger);
 
-  const menu = new ContextMenu(trigger.element, [
-    {
-      label: i18next.t('volui:panels.rename'),
-      icon: svgIcon(ICON_EDIT),
-      onSelect: () => result.setContent(i18next.t('volui:panels.actionRename')),
-    },
-    {
-      label: i18next.t('volui:panels.copy'),
-      icon: svgIcon(ICON_COPY),
-      onSelect: () => result.setContent(i18next.t('volui:panels.actionCopy')),
-    },
-    {
-      label: i18next.t('volui:panels.share'),
-      icon: svgIcon(ICON_SHARE),
-      disabled: true,
-      onSelect: () => result.setContent(i18next.t('volui:panels.actionShare')),
-    },
-    { type: 'separator' },
-    {
-      label: i18next.t('volui:panels.delete'),
-      icon: svgIcon(ICON_TRASH),
-      danger: true,
-      onSelect: () => result.setContent(i18next.t('volui:panels.actionDelete')),
-    },
-  ], { container: uiRootElement });
+  const menu = new ContextMenu(
+    trigger.element,
+    [
+      {
+        label: i18next.t('volui:panels.rename'),
+        icon: svgIcon(ICON_EDIT),
+        onSelect: () => result.setContent(i18next.t('volui:panels.actionRename')),
+      },
+      {
+        label: i18next.t('volui:panels.copy'),
+        icon: svgIcon(ICON_COPY),
+        onSelect: () => result.setContent(i18next.t('volui:panels.actionCopy')),
+      },
+      {
+        label: i18next.t('volui:panels.share'),
+        icon: svgIcon(ICON_SHARE),
+        disabled: true,
+        onSelect: () => result.setContent(i18next.t('volui:panels.actionShare')),
+      },
+      { type: 'separator' },
+      {
+        label: i18next.t('volui:panels.delete'),
+        icon: svgIcon(ICON_TRASH),
+        danger: true,
+        onSelect: () => result.setContent(i18next.t('volui:panels.actionDelete')),
+      },
+    ],
+    { container: uiRootElement },
+  );
   disposables.push({ destroy: () => menu.destroy() });
 
   wrap.appendChild(trigger.element);
@@ -390,14 +404,14 @@ function buildPopupDemo(disposables: Destroyable[], uiRootElement: HTMLElement):
   disposables.push(popupTitle);
   popupContent.appendChild(popupTitle.element);
 
-  const popupDesc = new Text(
-    i18next.t('volui:panels.popupDesc'),
-    { variant: 'body' },
-  );
+  const popupDesc = new Text(i18next.t('volui:panels.popupDesc'), { variant: 'body' });
   disposables.push(popupDesc);
   popupContent.appendChild(popupDesc.element);
 
-  const closeBtn = new Button(i18next.t('volui:panels.close'), { variant: 'primary', fullWidth: false });
+  const closeBtn = new Button(i18next.t('volui:panels.close'), {
+    variant: 'primary',
+    fullWidth: false,
+  });
   disposables.push(closeBtn);
   closeBtn.element.addEventListener('click', () => popup.close());
   popupContent.appendChild(closeBtn.element);
@@ -437,7 +451,11 @@ export function buildPanelsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:panels.modal'), buildModalDemo(uiRootElement, disposables)),
     card(i18next.t('volui:panels.confirm'), buildConfirmDemo(disposables, uiRootElement)),
     card(i18next.t('volui:panels.toast'), buildToastDemo(uiRootElement, disposables)),
-    card(i18next.t('volui:panels.cornerNotification'), buildCornerNotificationDemo(uiRootElement, disposables), { span: 4 }),
+    card(
+      i18next.t('volui:panels.cornerNotification'),
+      buildCornerNotificationDemo(uiRootElement, disposables),
+      { span: 4 },
+    ),
   ];
 
   container.appendChild(cardGrid(cards));

@@ -192,7 +192,9 @@ export function buildPaletteTab(): { element: HTMLElement; destroy: () => void }
 
   const rootStyle = getComputedStyle(document.documentElement);
   const cards = GROUPS.map((group) =>
-    card(i18n.tDynamic(group.titleKey), buildGroupGrid(group, rootStyle, disposables), { span: group.span }),
+    card(i18n.tDynamic(group.titleKey), buildGroupGrid(group, rootStyle, disposables), {
+      span: group.span,
+    }),
   );
 
   container.appendChild(paletteGrid(cards));

@@ -246,9 +246,10 @@ export class CommandPalette {
 
     if (this.filtered.length === 0) {
       const query = this.input.value.trim();
-      const text = this.noMatchText !== undefined
-        ? this.noMatchText.replace('{query}', query)
-        : i18next.t('core:commandPalette.noMatch', { query });
+      const text =
+        this.noMatchText !== undefined
+          ? this.noMatchText.replace('{query}', query)
+          : i18next.t('core:commandPalette.noMatch', { query });
       this.renderEmptyState(text);
       return;
     }

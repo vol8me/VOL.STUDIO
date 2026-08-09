@@ -23,8 +23,18 @@ const fakeScene = {} as unknown as Phaser.Scene;
 
 describe('InputManager provider seçim önceliği', () => {
   it('touch (providers[0]) aktifken diğer provider aktif olsa bile touch kazanır', () => {
-    const touchState: InputState = { move: new Vector2(1, 0), aim: Vector2.zero(), fire: false, dash: false };
-    const pcState: InputState = { move: new Vector2(0, 1), aim: Vector2.zero(), fire: true, dash: false };
+    const touchState: InputState = {
+      move: new Vector2(1, 0),
+      aim: Vector2.zero(),
+      fire: false,
+      dash: false,
+    };
+    const pcState: InputState = {
+      move: new Vector2(0, 1),
+      aim: Vector2.zero(),
+      fire: true,
+      dash: false,
+    };
 
     const touch = makeProvider(true, touchState);
     const pc = makeProvider(true, pcState);
@@ -34,8 +44,18 @@ describe('InputManager provider seçim önceliği', () => {
   });
 
   it('touch aktif değilse ilk aktif provider (ör. PC) kazanır', () => {
-    const touchState: InputState = { move: new Vector2(1, 0), aim: Vector2.zero(), fire: false, dash: false };
-    const pcState: InputState = { move: new Vector2(0, 1), aim: Vector2.zero(), fire: true, dash: false };
+    const touchState: InputState = {
+      move: new Vector2(1, 0),
+      aim: Vector2.zero(),
+      fire: false,
+      dash: false,
+    };
+    const pcState: InputState = {
+      move: new Vector2(0, 1),
+      aim: Vector2.zero(),
+      fire: true,
+      dash: false,
+    };
 
     const touch = makeProvider(false, touchState);
     const pc = makeProvider(true, pcState);
@@ -45,8 +65,18 @@ describe('InputManager provider seçim önceliği', () => {
   });
 
   it('hiçbir provider aktif değilse sıfır InputState döner', () => {
-    const touch = makeProvider(false, { move: new Vector2(9, 9), aim: Vector2.zero(), fire: true, dash: false });
-    const pc = makeProvider(false, { move: new Vector2(9, 9), aim: Vector2.zero(), fire: true, dash: false });
+    const touch = makeProvider(false, {
+      move: new Vector2(9, 9),
+      aim: Vector2.zero(),
+      fire: true,
+      dash: false,
+    });
+    const pc = makeProvider(false, {
+      move: new Vector2(9, 9),
+      aim: Vector2.zero(),
+      fire: true,
+      dash: false,
+    });
     const manager = new InputManager(fakeScene, [touch, pc]);
 
     const result = manager.getState(Vector2.zero());
@@ -56,8 +86,18 @@ describe('InputManager provider seçim önceliği', () => {
   });
 
   it("update tüm provider'ların update'ini çağırır", () => {
-    const touch = makeProvider(false, { move: Vector2.zero(), aim: Vector2.zero(), fire: false, dash: false });
-    const pc = makeProvider(false, { move: Vector2.zero(), aim: Vector2.zero(), fire: false, dash: false });
+    const touch = makeProvider(false, {
+      move: Vector2.zero(),
+      aim: Vector2.zero(),
+      fire: false,
+      dash: false,
+    });
+    const pc = makeProvider(false, {
+      move: Vector2.zero(),
+      aim: Vector2.zero(),
+      fire: false,
+      dash: false,
+    });
     const manager = new InputManager(fakeScene, [touch, pc]);
 
     manager.update(16);
@@ -66,8 +106,18 @@ describe('InputManager provider seçim önceliği', () => {
   });
 
   it("destroy tüm provider'ların destroy'unu çağırır", () => {
-    const touch = makeProvider(false, { move: Vector2.zero(), aim: Vector2.zero(), fire: false, dash: false });
-    const pc = makeProvider(false, { move: Vector2.zero(), aim: Vector2.zero(), fire: false, dash: false });
+    const touch = makeProvider(false, {
+      move: Vector2.zero(),
+      aim: Vector2.zero(),
+      fire: false,
+      dash: false,
+    });
+    const pc = makeProvider(false, {
+      move: Vector2.zero(),
+      aim: Vector2.zero(),
+      fire: false,
+      dash: false,
+    });
     const manager = new InputManager(fakeScene, [touch, pc]);
 
     manager.destroy();

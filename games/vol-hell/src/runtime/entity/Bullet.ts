@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
-import { Vector2 } from '@volstudio/core';
+import { Vector2, Diagnostics } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
+import { gameAudio } from '@/app/bootstrap';
 import type { Border } from './Border';
 import type { ParticlePool } from '@/runtime/systems/ParticlePool';
 
@@ -14,6 +15,7 @@ export class Bullet {
   private age = 0;
   private alive = true;
   private lastTrailTime = 0;
+  private lastBounceSoundTime = -Infinity;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -22,8 +24,18 @@ export class Bullet {
     direction: Vector2,
     private readonly particles: ParticlePool,
   ) {
-    this.arc = scene.add.circle(x, y, bulletConfig.radius, 0xffee66, 1);
-    this.arc.setStrokeStyle(1, 0xffaa00, 0.8);
+    this.arc = scene.add.circle(
+      x,
+      y,
+      bulletConfig.radius,
+      bulletConfig.color,
+      bulletConfig.fillAlpha,
+    );
+    this.arc.setStrokeStyle(
+      bulletConfig.strokeWidth,
+      bulletConfig.strokeColor,
+      bulletConfig.strokeAlpha,
+    );
 
     this.velocity.copyFrom(direction).normalizeInPlace().scaleInPlace(bulletConfig.speed);
   }
@@ -76,8 +88,8 @@ export class Bullet {
       this.arc.x,
       this.arc.y,
       bulletConfig.trailParticleSize,
-      0xffee66,
-      0.6,
+      bulletConfig.color,
+      bulletConfig.trailAlpha,
     );
     this.scene.tweens.add({
       targets: px,
@@ -117,29 +129,42 @@ export class Bullet {
     }
 
     if (bounced) {
+      Diagnostics.getInstance()?.recordEvent('bulletBounce', {
+        x: this.arc.x,
+        y: this.arc.y,
+      });
+
+      const now = this.scene.time.now;
+      if (now - this.lastBounceSoundTime >= bulletConfig.bounceSoundCooldownMs) {
+        this.lastBounceSoundTime = now;
+        void gameAudio.playSfx('bulletBounce', { volume: 0.45 });
+      }
+
       this.spawnBounceParticles();
     }
   }
 
   /** Sekme anında küçük partikül patlaması. */
   private spawnBounceParticles(): void {
-    const colors = [0xffee66, 0xffaa00];
-    for (let i = 0; i < 4; i++) {
+    const colors = bulletConfig.bounceColors;
+    for (let i = 0; i < bulletConfig.bounceParticleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 20 + Math.random() * 40;
+      const speed =
+        bulletConfig.bounceParticleSpeedMin +
+        Math.random() * (bulletConfig.bounceParticleSpeedMax - bulletConfig.bounceParticleSpeedMin);
       const px = this.particles.acquire(
         this.arc.x,
         this.arc.y,
-        2,
+        bulletConfig.bounceParticleSize,
         colors[i % colors.length],
-        0.8,
+        bulletConfig.bounceParticleAlpha,
       );
       this.scene.tweens.add({
         targets: px,
         x: this.arc.x + Math.cos(angle) * speed,
         y: this.arc.y + Math.sin(angle) * speed,
         alpha: 0,
-        duration: 200,
+        duration: bulletConfig.bounceParticleLifespanMs,
         onComplete: () => this.particles.release(px),
       });
     }

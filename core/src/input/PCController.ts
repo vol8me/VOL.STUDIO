@@ -9,6 +9,7 @@ import {
 } from './PCInputState';
 import type { InputProvider } from './InputProvider';
 import type { InputState } from './InputState';
+import type { InputSnapshot } from './InputSnapshot';
 
 interface WasdKeys {
   up: Phaser.Input.Keyboard.Key;
@@ -79,6 +80,18 @@ export class PCController implements InputProvider {
 
   get isActive(): boolean {
     return isPCInputActive(this.wasdState, this.pointerState, this.extraKeysState);
+  }
+
+  getDebugSnapshot(): InputSnapshot {
+    const pointer = this.pointerState;
+    return {
+      activeProvider: 'pc',
+      pc: {
+        wasd: { ...this.wasdState },
+        pointer: { ...pointer },
+        dash: this.extraKeysState.dash,
+      },
+    };
   }
 
   getState(playerPosition: Vector2): InputState {

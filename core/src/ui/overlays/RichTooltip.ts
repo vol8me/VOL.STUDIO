@@ -47,7 +47,9 @@ export class RichTooltip {
     this.container = container;
 
     this.bubble = document.createElement('div');
-    this.bubble.className = [`vol-rich-tooltip vol-rich-tooltip--${placement}`, options.className].filter(Boolean).join(' ');
+    this.bubble.className = [`vol-rich-tooltip vol-rich-tooltip--${placement}`, options.className]
+      .filter(Boolean)
+      .join(' ');
     this.bubble.setAttribute('role', 'tooltip');
     this.renderContent(content);
 

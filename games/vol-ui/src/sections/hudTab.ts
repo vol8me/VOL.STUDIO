@@ -197,11 +197,19 @@ function buildResourceCounterCard(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
-  const ammo = new ResourceCounter({ icon: svgIcon(ICON_AMMO), label: i18next.t('volui:hud.ammo'), value: 30 });
+  const ammo = new ResourceCounter({
+    icon: svgIcon(ICON_AMMO),
+    label: i18next.t('volui:hud.ammo'),
+    value: 30,
+  });
   ammo.element.style.fontSize = '24px';
   disposables.push(ammo);
 
-  const mana = new ResourceCounter({ icon: svgIcon(ICON_MANA), label: i18next.t('volui:hud.mana'), value: 80 });
+  const mana = new ResourceCounter({
+    icon: svgIcon(ICON_MANA),
+    label: i18next.t('volui:hud.mana'),
+    value: 80,
+  });
   mana.element.style.fontSize = '24px';
   disposables.push(mana);
 
@@ -329,10 +337,7 @@ function buildWaveCounterCard(disposables: Destroyable[]): HTMLElement {
   disposables.push(waveCounter);
   wrap.appendChild(waveCounter.element);
 
-  const hint = new Text(
-    i18next.t('volui:hud.waveCounterHint'),
-    { variant: 'muted' },
-  );
+  const hint = new Text(i18next.t('volui:hud.waveCounterHint'), { variant: 'muted' });
   disposables.push(hint);
   wrap.appendChild(hint.element);
 
@@ -430,7 +435,10 @@ function buildBuildMenuCard(disposables: Destroyable[]): HTMLElement {
         label: i18next.t('volui:hud.arrowTower'),
         cost: i18next.t('volui:hud.cost50Gold'),
         hotkey: 'Q',
-        onSelect: () => result.setContent(i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.arrowTower') })),
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.arrowTower') }),
+          ),
         onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
       },
       {
@@ -439,7 +447,8 @@ function buildBuildMenuCard(disposables: Destroyable[]): HTMLElement {
         label: i18next.t('volui:hud.wall'),
         cost: i18next.t('volui:hud.cost20Wood'),
         hotkey: 'W',
-        onSelect: () => result.setContent(i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.wall') })),
+        onSelect: () =>
+          result.setContent(i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.wall') })),
         onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
       },
       {
@@ -449,7 +458,10 @@ function buildBuildMenuCard(disposables: Destroyable[]): HTMLElement {
         cost: i18next.t('volui:hud.cost100Gold'),
         hotkey: 'E',
         disabled: true,
-        onSelect: () => result.setContent(i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.barracks') })),
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.barracks') }),
+          ),
       },
       {
         id: 'fire-tower',
@@ -457,7 +469,10 @@ function buildBuildMenuCard(disposables: Destroyable[]): HTMLElement {
         label: i18next.t('volui:hud.fireTower'),
         cost: i18next.t('volui:hud.cost75Gold'),
         hotkey: 'R',
-        onSelect: () => result.setContent(i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.fireTower') })),
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.fireTower') }),
+          ),
         onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
       },
       {
@@ -466,7 +481,10 @@ function buildBuildMenuCard(disposables: Destroyable[]): HTMLElement {
         label: i18next.t('volui:hud.watchtower'),
         cost: i18next.t('volui:hud.cost60Wood'),
         hotkey: 'T',
-        onSelect: () => result.setContent(i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.watchtower') })),
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.watchtower') }),
+          ),
         onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
       },
       {
@@ -476,7 +494,10 @@ function buildBuildMenuCard(disposables: Destroyable[]): HTMLElement {
         cost: i18next.t('volui:hud.cost120Gold'),
         hotkey: 'Y',
         disabled: true,
-        onSelect: () => result.setContent(i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.guardTower') })),
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.guardTower') }),
+          ),
       },
     ],
   });
@@ -535,7 +556,9 @@ function buildMinimapCard(disposables: Destroyable[]): HTMLElement {
     worldOffsetX: -1000,
     worldOffsetY: -1000,
     onClick: (worldX, worldY) => {
-      result.setContent(i18next.t('volui:hud.cameraJumped', { x: Math.round(worldX), y: Math.round(worldY) }));
+      result.setContent(
+        i18next.t('volui:hud.cameraJumped', { x: Math.round(worldX), y: Math.round(worldY) }),
+      );
     },
   });
   disposables.push(minimap);

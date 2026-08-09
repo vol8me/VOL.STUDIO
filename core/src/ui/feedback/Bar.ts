@@ -14,7 +14,11 @@ export interface BarOptions {
   lowThreshold?: number;
   /** Değer değişimini akıcı gösterme süresi. 0 = anında. */
   animateMs?: number;
-  /** Sabit metin veya `(value, max) => string` formatter. Formatter her setValue()/setMax() çağrısında yeniden çalıştırılır; düz string statik kalır. */
+  /**
+   * Sabit metin veya `(value, max) => string` formatter.
+   * Formatter her setValue()/setMax() çağrısında yeniden çalıştırılır.
+   * Düz string dinamik olarak güncellenecekse `setLabel()` kullanılmalıdır.
+   */
   label?: BarLabel;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
@@ -25,17 +29,22 @@ let barInstanceCounter = 0;
 export class Bar {
   readonly element: HTMLDivElement;
   private readonly fillElement: HTMLDivElement;
-  private readonly labelElement: HTMLSpanElement | null;
+  private labelElement: HTMLSpanElement | null;
   private readonly variant: BarVariant;
   private max: number;
   private value: number;
   private readonly lowThreshold: number;
   private readonly animateMs: number;
-  private readonly label?: BarLabel;
+  private label?: BarLabel;
   private cancelAnimation?: () => void;
   private readonly onLanguageChanged = (): void => {
-    if (!this.labelElement) {
-      this.element.setAttribute('aria-label', i18next.t('core:bar.ariaLabel', { variant: this.variant }));
+    if (this.labelElement) {
+      this.renderFill(this.value);
+    } else {
+      this.element.setAttribute(
+        'aria-label',
+        i18next.t('core:bar.ariaLabel', { variant: this.variant }),
+      );
     }
   };
 
@@ -59,7 +68,9 @@ export class Bar {
     this.label = label;
 
     this.element = document.createElement('div');
-    this.element.className = [`vol-bar vol-bar--${variant}`, options.className].filter(Boolean).join(' ');
+    this.element.className = [`vol-bar vol-bar--${variant}`, options.className]
+      .filter(Boolean)
+      .join(' ');
     this.element.setAttribute('role', 'progressbar');
     this.element.setAttribute('aria-valuemin', '0');
 
@@ -116,6 +127,23 @@ export class Bar {
 
   getValue(): number {
     return this.value;
+  }
+
+  /** Etiketi runtime'da degistirir. Yeni etiket hemen render edilir. */
+  setLabel(label: BarLabel): void {
+    this.label = label;
+
+    if (!this.labelElement) {
+      const labelId = `vol-bar-label-${++barInstanceCounter}`;
+      this.labelElement = document.createElement('span');
+      this.labelElement.id = labelId;
+      this.labelElement.className = 'vol-bar__label';
+      this.element.appendChild(this.labelElement);
+      this.element.removeAttribute('aria-label');
+      this.element.setAttribute('aria-labelledby', labelId);
+    }
+
+    this.renderFill(this.value);
   }
 
   destroy(): void {

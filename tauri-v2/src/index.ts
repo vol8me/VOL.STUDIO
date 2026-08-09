@@ -7,4 +7,3 @@ export type { TauriStoreAdapterOptions } from './adapters/TauriStoreAdapter';
 export { GameStateDb } from './storage/GameStateDb';
 export type { GameStateDbOptions, SaveGame } from './storage/GameStateDb';
 export { GameStateDbError } from './storage/GameStateDbError';
-

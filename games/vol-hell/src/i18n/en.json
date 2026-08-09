@@ -4,20 +4,33 @@
     "exit": "EXIT",
     "settings": "SETTINGS",
     "title": "VOL.HELL",
-    "subtitle": "Survive as long as you can"
+    "subtitle": "Survive as long as you can",
+    "bestScore": "High Score: {{score}}",
+    "bestTime": "Best Time: {{time}}"
   },
   "loading": {
     "title": "LOADING"
   },
   "hud": {
     "health": "Health",
-    "dash": "Dash"
+    "dash": "Dash",
+    "score": "Score",
+    "kills": "Kills",
+    "time": "Time",
+    "best": "Best"
   },
   "settings": {
     "title": "SETTINGS",
     "language": "Language",
     "sound": "Sound",
     "volume": "Volume",
+    "master": "Master Volume",
+    "sfx": "SFX Volume",
+    "music": "Music Volume",
+    "ambient": "Ambient Volume",
+    "mainMenuTrack": "Main Menu Music",
+    "shake": "Screen Shake",
+    "shakeIntensity": "Shake Intensity",
     "mute": "Mute",
     "back": "BACK"
   },
@@ -32,6 +45,13 @@
   "death": {
     "title": "YOU DIED",
     "restart": "RESTART",
-    "mainMenu": "MAIN MENU"
+    "mainMenu": "MAIN MENU",
+    "score": "Score",
+    "bestScore": "High Score",
+    "kills": "Kills",
+    "bestKills": "Most Kills",
+    "time": "Time",
+    "bestTime": "Best Time",
+    "totalKills": "Total Kills"
   }
 }

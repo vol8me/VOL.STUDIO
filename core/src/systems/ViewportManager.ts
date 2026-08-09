@@ -13,6 +13,11 @@ export interface ViewportConfig {
   strategy?: ScaleStrategy;
   parent?: string | HTMLElement;
   backgroundColor?: string;
+  /**
+   * Yüksek DPR ekranlarda piksel fill-rate'i sınırlamak için maksimum DPR.
+   * Verilmezse `window.devicePixelRatio` olduğu gibi kullanılır.
+   */
+  maxDpr?: number;
 }
 
 export interface ViewportResult {
@@ -44,7 +49,8 @@ export class ViewportManager {
     const parent = this.config.parent ?? 'game-container';
 
     if (this.config.strategy === 'resize') {
-      const dpr = window.devicePixelRatio || TECH.DPR_FALLBACK;
+      const rawDpr = window.devicePixelRatio || TECH.DPR_FALLBACK;
+      const dpr = this.config.maxDpr ? Math.min(rawDpr, this.config.maxDpr) : rawDpr;
       const width = this.config.width ?? window.innerWidth;
       const height = this.config.height ?? window.innerHeight;
       return {

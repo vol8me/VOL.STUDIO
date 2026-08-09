@@ -45,8 +45,10 @@ export class SwipeableCardStack {
   private renderTimeoutId: number | null = null;
   private actionButtons: HTMLButtonElement[] = [];
   private readonly onLanguageChanged = (): void => {
-    if (this.actionButtons[0]) this.actionButtons[0].setAttribute('aria-label', i18next.t('core:swipe.reject'));
-    if (this.actionButtons[1]) this.actionButtons[1].setAttribute('aria-label', i18next.t('core:swipe.accept'));
+    if (this.actionButtons[0])
+      this.actionButtons[0].setAttribute('aria-label', i18next.t('core:swipe.reject'));
+    if (this.actionButtons[1])
+      this.actionButtons[1].setAttribute('aria-label', i18next.t('core:swipe.accept'));
   };
 
   constructor(options: SwipeableCardStackOptions) {

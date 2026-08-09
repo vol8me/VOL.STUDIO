@@ -190,10 +190,26 @@ function buildSwipeableCardStackDemo(disposables: Destroyable[]): HTMLElement {
   wrap.className = 'vol-showcase-panel-demo';
 
   const quests = [
-    { id: 'q1', title: i18next.t('volui:touch.quest1Title'), desc: i18next.t('volui:touch.quest1Desc') },
-    { id: 'q2', title: i18next.t('volui:touch.quest2Title'), desc: i18next.t('volui:touch.quest2Desc') },
-    { id: 'q3', title: i18next.t('volui:touch.quest3Title'), desc: i18next.t('volui:touch.quest3Desc') },
-    { id: 'q4', title: i18next.t('volui:touch.quest4Title'), desc: i18next.t('volui:touch.quest4Desc') },
+    {
+      id: 'q1',
+      title: i18next.t('volui:touch.quest1Title'),
+      desc: i18next.t('volui:touch.quest1Desc'),
+    },
+    {
+      id: 'q2',
+      title: i18next.t('volui:touch.quest2Title'),
+      desc: i18next.t('volui:touch.quest2Desc'),
+    },
+    {
+      id: 'q3',
+      title: i18next.t('volui:touch.quest3Title'),
+      desc: i18next.t('volui:touch.quest3Desc'),
+    },
+    {
+      id: 'q4',
+      title: i18next.t('volui:touch.quest4Title'),
+      desc: i18next.t('volui:touch.quest4Desc'),
+    },
   ];
 
   let accepted = 0;
@@ -297,9 +313,7 @@ function buildChargeButtonDemo(disposables: Destroyable[]): HTMLElement {
   wrap.style.alignItems = 'center';
 
   // Durum metni butonun altında — metin genişliği butonu kaydırmasın.
-  const { element: statusRow, text: result } = buildStatusRow(
-    i18next.t('volui:touch.chargeHint'),
-  );
+  const { element: statusRow, text: result } = buildStatusRow(i18next.t('volui:touch.chargeHint'));
   disposables.push(result);
 
   const chargeButton = new ChargeButton({
@@ -313,8 +327,15 @@ function buildChargeButtonDemo(disposables: Destroyable[]): HTMLElement {
     },
     onRelease: (progress) => {
       if (progress >= 1) return;
-      const strength = progress < 0.34 ? i18next.t('volui:touch.weak') : progress < 0.7 ? i18next.t('volui:touch.mediumStrength') : i18next.t('volui:touch.strong');
-      result.setContent(i18next.t('volui:touch.strengthHit', { strength, n: Math.round(progress * 100) }));
+      const strength =
+        progress < 0.34
+          ? i18next.t('volui:touch.weak')
+          : progress < 0.7
+          ? i18next.t('volui:touch.mediumStrength')
+          : i18next.t('volui:touch.strong');
+      result.setContent(
+        i18next.t('volui:touch.strengthHit', { strength, n: Math.round(progress * 100) }),
+      );
     },
   });
   disposables.push(chargeButton);
@@ -330,7 +351,9 @@ function buildPinchZoomDemo(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
-  const zoomLabel = new Text(i18next.t('volui:touch.zoomPercent', { n: 100 }), { variant: 'muted' });
+  const zoomLabel = new Text(i18next.t('volui:touch.zoomPercent', { n: 100 }), {
+    variant: 'muted',
+  });
   disposables.push(zoomLabel);
 
   const map = document.createElement('div');
@@ -385,10 +408,20 @@ function buildSlotGridDemo(disposables: Destroyable[]): HTMLElement {
     2: { id: 'i2', label: i18next.t('volui:touch.shield'), rarity: 'common' },
     3: { id: 'i3', label: i18next.t('volui:touch.potion'), quantity: 5, rarity: 'common' },
     4: { id: 'i4', label: i18next.t('volui:touch.scroll'), quantity: 2, rarity: 'epic' },
-    6: { id: 'i5', label: i18next.t('volui:touch.twoHandedSword'), rarity: 'epic', span: { cols: 2, rows: 1 } },
+    6: {
+      id: 'i5',
+      label: i18next.t('volui:touch.twoHandedSword'),
+      rarity: 'epic',
+      span: { cols: 2, rows: 1 },
+    },
     9: { id: 'i6', label: i18next.t('volui:touch.arrow'), quantity: 24, rarity: 'common' },
     11: { id: 'i7', label: i18next.t('volui:touch.armor'), rarity: 'rare' },
-    12: { id: 'i8', label: i18next.t('volui:touch.chest'), rarity: 'epic', span: { cols: 2, rows: 2 } },
+    12: {
+      id: 'i8',
+      label: i18next.t('volui:touch.chest'),
+      rarity: 'epic',
+      span: { cols: 2, rows: 2 },
+    },
   };
 
   const grid = new SlotGrid({
@@ -400,7 +433,9 @@ function buildSlotGridDemo(disposables: Destroyable[]): HTMLElement {
     },
     onSwapRequest: () => true,
     onSlotClick: (item) => {
-      result.setContent(i18next.t('volui:touch.itemDetail', { label: item.label, qty: item.quantity ?? 0 }));
+      result.setContent(
+        i18next.t('volui:touch.itemDetail', { label: item.label, qty: item.quantity ?? 0 }),
+      );
     },
   });
   disposables.push(grid);
@@ -429,13 +464,12 @@ function buildDPadDemo(disposables: Destroyable[]): HTMLElement {
   wrap.className = 'vol-showcase-panel-demo';
   wrap.style.alignItems = 'center';
 
-  const { element: statusRow, text: status } = buildStatusRow(
-    i18next.t('volui:touch.dpadHint'),
-  );
+  const { element: statusRow, text: status } = buildStatusRow(i18next.t('volui:touch.dpadHint'));
   disposables.push(status);
 
   const dpad = new DPad({
-    onDirectionDown: (direction) => status.setContent(i18next.t('volui:touch.pressedDir', { dir: direction })),
+    onDirectionDown: (direction) =>
+      status.setContent(i18next.t('volui:touch.pressedDir', { dir: direction })),
     onDirectionUp: () => status.setContent(i18next.t('volui:touch.dpadHint')),
   });
   disposables.push(dpad);
@@ -509,7 +543,11 @@ function buildPauseResumeDemo(disposables: Destroyable[]): HTMLElement {
     size: 64,
     counter: { direction: 'up' },
     onToggle: (isRunning) => {
-      status.setContent(isRunning ? i18next.t('volui:touch.simulationRunning') : i18next.t('volui:touch.simulationPaused'));
+      status.setContent(
+        isRunning
+          ? i18next.t('volui:touch.simulationRunning')
+          : i18next.t('volui:touch.simulationPaused'),
+      );
     },
   });
   disposables.push(pauseResumeButton);
@@ -539,9 +577,24 @@ function buildActionBarDemo(disposables: Destroyable[]): HTMLElement {
     showLabels: true,
     enableKeyboardShortcuts: true,
     slots: [
-      { id: 'tower', label: i18next.t('volui:touch.buildTower'), icon: svgIcon(ICON_TOWER), shortcut: '1' },
-      { id: 'wave', label: i18next.t('volui:touch.startWave'), icon: svgIcon(ICON_WAVE), shortcut: '2' },
-      { id: 'speed', label: i18next.t('volui:touch.speedX2'), icon: svgIcon(ICON_SPEED), shortcut: '3' },
+      {
+        id: 'tower',
+        label: i18next.t('volui:touch.buildTower'),
+        icon: svgIcon(ICON_TOWER),
+        shortcut: '1',
+      },
+      {
+        id: 'wave',
+        label: i18next.t('volui:touch.startWave'),
+        icon: svgIcon(ICON_WAVE),
+        shortcut: '2',
+      },
+      {
+        id: 'speed',
+        label: i18next.t('volui:touch.speedX2'),
+        icon: svgIcon(ICON_SPEED),
+        shortcut: '3',
+      },
     ],
     onActivate: (id) => {
       if (id === 'tower') {
@@ -656,7 +709,11 @@ function buildSwipeGestureZoneDemo(disposables: Destroyable[]): HTMLElement {
       const dirKey = `volui:touch.dir_${event.direction}`;
       const directionLabel = i18n.tDynamic(dirKey);
       result.setContent(
-        i18next.t('volui:touch.cameraPanned', { dir: directionLabel, distance: Math.round(event.distance), velocity: event.velocity.toFixed(2) }),
+        i18next.t('volui:touch.cameraPanned', {
+          dir: directionLabel,
+          distance: Math.round(event.distance),
+          velocity: event.velocity.toFixed(2),
+        }),
       );
     },
   });
@@ -693,7 +750,9 @@ function buildMultiTouchZoneDemo(disposables: Destroyable[]): HTMLElement {
       dot.style.top = `${point.y}px`;
       surface.appendChild(dot);
       dots.set(point.pointerId, dot);
-      result.setContent(i18next.t('volui:touch.activeTouches', { n: zone.getActivePointerIds().length }));
+      result.setContent(
+        i18next.t('volui:touch.activeTouches', { n: zone.getActivePointerIds().length }),
+      );
     },
     onTouchMove: (point) => {
       const dot = dots.get(point.pointerId);
@@ -704,7 +763,9 @@ function buildMultiTouchZoneDemo(disposables: Destroyable[]): HTMLElement {
     onTouchEnd: (pointerId) => {
       dots.get(pointerId)?.remove();
       dots.delete(pointerId);
-      result.setContent(i18next.t('volui:touch.activeTouches', { n: zone.getActivePointerIds().length }));
+      result.setContent(
+        i18next.t('volui:touch.activeTouches', { n: zone.getActivePointerIds().length }),
+      );
     },
   });
   disposables.push(zone);
@@ -722,15 +783,25 @@ export function buildTouchTab(): { element: HTMLElement; destroy: () => void } {
 
   const cards = [
     card(i18next.t('volui:touch.joystick'), buildJoystickDemo(disposables), { center: true }),
-    card(i18next.t('volui:touch.squareJoystick'), buildSquareJoystickDemo(disposables), { center: true }),
+    card(i18next.t('volui:touch.squareJoystick'), buildSquareJoystickDemo(disposables), {
+      center: true,
+    }),
     card(i18next.t('volui:touch.touchButton'), buildTouchButtonDemo(disposables)),
-    card(i18next.t('volui:touch.chargeButton'), buildChargeButtonDemo(disposables), { center: true }),
+    card(i18next.t('volui:touch.chargeButton'), buildChargeButtonDemo(disposables), {
+      center: true,
+    }),
     card(i18next.t('volui:touch.radialMenu'), buildRadialMenuDemo(disposables), { center: true }),
     card(i18next.t('volui:touch.dpad'), buildDPadDemo(disposables)),
-    card(i18next.t('volui:touch.directionJump'), buildJumpButtonDemo(disposables), { center: true }),
-    card(i18next.t('volui:touch.directionCrouch'), buildCrouchButtonDemo(disposables), { center: true }),
+    card(i18next.t('volui:touch.directionJump'), buildJumpButtonDemo(disposables), {
+      center: true,
+    }),
+    card(i18next.t('volui:touch.directionCrouch'), buildCrouchButtonDemo(disposables), {
+      center: true,
+    }),
     card(i18next.t('volui:touch.pauseResume'), buildPauseResumeDemo(disposables), { center: true }),
-    card(i18next.t('volui:touch.longPressButton'), buildLongPressButtonDemo(disposables), { center: true }),
+    card(i18next.t('volui:touch.longPressButton'), buildLongPressButtonDemo(disposables), {
+      center: true,
+    }),
 
     // Action Bar/Dual-Axis Scroll doğal kart genişliğine uyar; span:2 boşluk ekler.
     card(i18next.t('volui:touch.actionBar'), buildActionBarDemo(disposables)),
@@ -741,9 +812,15 @@ export function buildTouchTab(): { element: HTMLElement; destroy: () => void } {
     card(i18next.t('volui:touch.pullToRefresh'), buildPullToRefreshDemo(disposables), { span: 2 }),
     card(i18next.t('volui:touch.slotGrid'), buildSlotGridDemo(disposables), { span: 2 }),
 
-    card(i18next.t('volui:touch.swipeGestureZone'), buildSwipeGestureZoneDemo(disposables), { center: true }),
-    card(i18next.t('volui:touch.multiTouchZone'), buildMultiTouchZoneDemo(disposables), { center: true }),
-    card(i18next.t('volui:touch.swipeableCardStack'), buildSwipeableCardStackDemo(disposables), { spanAll: true }),
+    card(i18next.t('volui:touch.swipeGestureZone'), buildSwipeGestureZoneDemo(disposables), {
+      center: true,
+    }),
+    card(i18next.t('volui:touch.multiTouchZone'), buildMultiTouchZoneDemo(disposables), {
+      center: true,
+    }),
+    card(i18next.t('volui:touch.swipeableCardStack'), buildSwipeableCardStackDemo(disposables), {
+      spanAll: true,
+    }),
   ];
 
   container.appendChild(cardGrid(cards));

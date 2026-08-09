@@ -74,23 +74,31 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
 
   // Oyun akışı: duraklat/oynat + hızlandır + ses aç/kapat.
   let paused = false;
-  const pausePlay = new IconButton(svgIcon(ICON_PAUSE), { label: i18next.t('volui:buttons.pause') });
+  const pausePlay = new IconButton(svgIcon(ICON_PAUSE), {
+    label: i18next.t('volui:buttons.pause'),
+  });
   pausePlay.element.addEventListener('click', () => {
     paused = !paused;
     pausePlay.setIcon(svgIcon(paused ? ICON_PLAY : ICON_PAUSE));
-    pausePlay.setLabel(paused ? i18next.t('volui:buttons.resume') : i18next.t('volui:buttons.pause'));
+    pausePlay.setLabel(
+      paused ? i18next.t('volui:buttons.resume') : i18next.t('volui:buttons.pause'),
+    );
   });
 
   const speeds = [1, 2, 3];
   let speedIndex = 0;
-  const fastForward = new IconButton(svgIcon(ICON_FAST_FORWARD), { label: i18next.t('volui:buttons.fastForward', { n: 1 }) });
+  const fastForward = new IconButton(svgIcon(ICON_FAST_FORWARD), {
+    label: i18next.t('volui:buttons.fastForward', { n: 1 }),
+  });
   fastForward.element.addEventListener('click', () => {
     speedIndex = (speedIndex + 1) % speeds.length;
     fastForward.setLabel(i18next.t('volui:buttons.fastForward', { n: speeds[speedIndex] }));
   });
 
   let muted = false;
-  const volume = new IconButton(svgIcon(ICON_VOLUME_ON), { label: i18next.t('volui:buttons.mute') });
+  const volume = new IconButton(svgIcon(ICON_VOLUME_ON), {
+    label: i18next.t('volui:buttons.mute'),
+  });
   volume.element.addEventListener('click', () => {
     muted = !muted;
     volume.setIcon(svgIcon(muted ? ICON_VOLUME_OFF : ICON_VOLUME_ON));
@@ -98,28 +106,60 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
   });
 
   // Kamera/harita: zoom + merkezle.
-  const zoomIn = new IconButton(svgIcon(ICON_ZOOM_IN), { label: i18next.t('volui:buttons.zoomIn') });
-  const zoomOut = new IconButton(svgIcon(ICON_ZOOM_OUT), { label: i18next.t('volui:buttons.zoomOut') });
-  const recenter = new IconButton(svgIcon(ICON_CENTER), { label: i18next.t('volui:buttons.recenter') });
+  const zoomIn = new IconButton(svgIcon(ICON_ZOOM_IN), {
+    label: i18next.t('volui:buttons.zoomIn'),
+  });
+  const zoomOut = new IconButton(svgIcon(ICON_ZOOM_OUT), {
+    label: i18next.t('volui:buttons.zoomOut'),
+  });
+  const recenter = new IconButton(svgIcon(ICON_CENTER), {
+    label: i18next.t('volui:buttons.recenter'),
+  });
 
   // Birim komutları: dur, takip et, muhafız.
-  const stop = new IconButton(svgIcon(ICON_STOP), { variant: 'danger', label: i18next.t('volui:buttons.stop') });
+  const stop = new IconButton(svgIcon(ICON_STOP), {
+    variant: 'danger',
+    label: i18next.t('volui:buttons.stop'),
+  });
   const follow = new IconButton(svgIcon(ICON_FOLLOW), { label: i18next.t('volui:buttons.follow') });
-  const guard = new IconButton(svgIcon(ICON_GUARD), { label: i18next.t('volui:buttons.guardMode') });
+  const guard = new IconButton(svgIcon(ICON_GUARD), {
+    label: i18next.t('volui:buttons.guardMode'),
+  });
 
   // Envanter/ekonomi: kilitle, satın al, onayla, reddet.
   const lock = new IconButton(svgIcon(ICON_LOCK), { label: i18next.t('volui:buttons.lock') });
-  const buy = new IconButton(svgIcon(ICON_COIN), { variant: 'primary', label: i18next.t('volui:buttons.buy') });
-  const confirm = new IconButton(svgIcon(ICON_CHECK), { variant: 'success', label: i18next.t('volui:buttons.confirm') });
-  const reject = new IconButton(svgIcon(ICON_CLOSE), { variant: 'danger', label: i18next.t('volui:buttons.reject') });
+  const buy = new IconButton(svgIcon(ICON_COIN), {
+    variant: 'primary',
+    label: i18next.t('volui:buttons.buy'),
+  });
+  const confirm = new IconButton(svgIcon(ICON_CHECK), {
+    variant: 'success',
+    label: i18next.t('volui:buttons.confirm'),
+  });
+  const reject = new IconButton(svgIcon(ICON_CLOSE), {
+    variant: 'danger',
+    label: i18next.t('volui:buttons.reject'),
+  });
 
   // Boyut + tooltip: 3 boyut, her biri tooltip'li.
-  const small = new IconButton(svgIcon(ICON_GEAR), { label: i18next.t('volui:buttons.smallSm'), size: 'sm' });
+  const small = new IconButton(svgIcon(ICON_GEAR), {
+    label: i18next.t('volui:buttons.smallSm'),
+    size: 'sm',
+  });
   const gear = new IconButton(svgIcon(ICON_GEAR), { label: i18next.t('volui:buttons.mediumMd') });
-  const large = new IconButton(svgIcon(ICON_GEAR), { label: i18next.t('volui:buttons.largeLg'), size: 'lg' });
-  const smallTooltip = new Tooltip(small.element, i18next.t('volui:buttons.tooltipSmall'), { container: uiRootElement });
-  const gearTooltip = new Tooltip(gear.element, i18next.t('volui:buttons.tooltipMedium'), { container: uiRootElement });
-  const largeTooltip = new Tooltip(large.element, i18next.t('volui:buttons.tooltipLarge'), { container: uiRootElement });
+  const large = new IconButton(svgIcon(ICON_GEAR), {
+    label: i18next.t('volui:buttons.largeLg'),
+    size: 'lg',
+  });
+  const smallTooltip = new Tooltip(small.element, i18next.t('volui:buttons.tooltipSmall'), {
+    container: uiRootElement,
+  });
+  const gearTooltip = new Tooltip(gear.element, i18next.t('volui:buttons.tooltipMedium'), {
+    container: uiRootElement,
+  });
+  const largeTooltip = new Tooltip(large.element, i18next.t('volui:buttons.tooltipLarge'), {
+    container: uiRootElement,
+  });
 
   disposables.push(
     pausePlay,
@@ -143,10 +183,16 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
     largeTooltip,
   );
 
-  wrap.appendChild(iconButtonGroup(i18next.t('volui:buttons.gameFlow'), [pausePlay, fastForward, volume]));
-  wrap.appendChild(iconButtonGroup(i18next.t('volui:buttons.cameraMap'), [zoomIn, zoomOut, recenter]));
+  wrap.appendChild(
+    iconButtonGroup(i18next.t('volui:buttons.gameFlow'), [pausePlay, fastForward, volume]),
+  );
+  wrap.appendChild(
+    iconButtonGroup(i18next.t('volui:buttons.cameraMap'), [zoomIn, zoomOut, recenter]),
+  );
   wrap.appendChild(iconButtonGroup(i18next.t('volui:buttons.unitCommands'), [stop, follow, guard]));
-  wrap.appendChild(iconButtonGroup(i18next.t('volui:buttons.inventoryEconomy'), [lock, buy, confirm, reject]));
+  wrap.appendChild(
+    iconButtonGroup(i18next.t('volui:buttons.inventoryEconomy'), [lock, buy, confirm, reject]),
+  );
   wrap.appendChild(iconButtonGroup(i18next.t('volui:buttons.sizeTooltip'), [small, gear, large]));
 
   return wrap;
@@ -163,7 +209,10 @@ function buildFullWidthDemo(disposables: Destroyable[]): HTMLElement {
   return wrap;
 }
 
-export function buildButtonsTab(uiRootElement: HTMLElement): { element: HTMLElement; destroy: () => void } {
+export function buildButtonsTab(uiRootElement: HTMLElement): {
+  element: HTMLElement;
+  destroy: () => void;
+} {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
   const disposables: Destroyable[] = [];
@@ -212,14 +261,24 @@ export function buildButtonsTab(uiRootElement: HTMLElement): { element: HTMLElem
       i18next.t('volui:buttons.icon'),
       buttonGroup(
         [
-          new Button(i18next.t('volui:buttons.save'), { ...auto, iconLeft: svgIcon(ICON_SAVE), variant: 'primary' }),
-          new Button(i18next.t('volui:buttons.delete'), { ...auto, iconLeft: svgIcon(ICON_TRASH), variant: 'danger' }),
+          new Button(i18next.t('volui:buttons.save'), {
+            ...auto,
+            iconLeft: svgIcon(ICON_SAVE),
+            variant: 'primary',
+          }),
+          new Button(i18next.t('volui:buttons.delete'), {
+            ...auto,
+            iconLeft: svgIcon(ICON_TRASH),
+            variant: 'danger',
+          }),
           new Button(i18next.t('volui:buttons.forward'), { ...auto, iconRight: '→' }),
         ],
         disposables,
       ),
     ),
-    card(i18next.t('volui:buttons.iconButton'), buildIconButtonDemo(disposables, uiRootElement), { spanAll: true }),
+    card(i18next.t('volui:buttons.iconButton'), buildIconButtonDemo(disposables, uiRootElement), {
+      spanAll: true,
+    }),
     card(i18next.t('volui:buttons.fullWidth'), buildFullWidthDemo(disposables), { spanAll: true }),
   ];
 

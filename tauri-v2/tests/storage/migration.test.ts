@@ -25,7 +25,7 @@ describe('GameStateDb migration', () => {
     } as unknown as Database);
   });
 
-  it('v0 veritabanı v1\'e yükseltilir', async () => {
+  it("v0 veritabanı v1'e yükseltilir", async () => {
     // schema_version boş — currentVersion 0 döner
     mockSelect.mockResolvedValueOnce([]);
 
@@ -53,7 +53,7 @@ describe('GameStateDb migration', () => {
     expect(insertCalls).toHaveLength(0);
   });
 
-  it('init sonrası close + tekrar init migration\'ı tekrarlamaz', async () => {
+  it("init sonrası close + tekrar init migration'ı tekrarlamaz", async () => {
     mockSelect.mockResolvedValueOnce([{ version: 1 }]);
 
     const db = new GameStateDb();

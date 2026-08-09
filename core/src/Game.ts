@@ -3,6 +3,7 @@ import { FontManager, type FontFaceSpec } from './systems/FontManager';
 import { ViewportManager, type ScaleStrategy } from './systems/ViewportManager';
 import { VOL_FONTS, type VolFontFamily } from './systems/DefaultFonts';
 import { TECH } from './constants';
+import { Diagnostics } from './debug/Diagnostics';
 
 export interface VolGameConfig {
   /** Yalnızca strategy: 'resize' iken opsiyoneldir — bkz. ViewportConfig.width. */
@@ -11,11 +12,17 @@ export interface VolGameConfig {
   parent?: string | HTMLElement;
   backgroundColor?: string;
   strategy?: ScaleStrategy;
+  /** Yüksek DPR ekranlarda piksel fill-rate'i sınırlamak için maksimum DPR. */
+  maxDpr?: number;
   scenes: Phaser.Types.Core.GameConfig['scene'];
   physics?: Phaser.Types.Core.GameConfig['physics'];
   input?: Phaser.Types.Core.InputConfig;
   /** Yüklenecek font alt seti. Belirtilmezse tüm VOL fontları yüklenir. */
   fonts?: VolFontFamily[];
+  /** Oyun kimliği; debug/diagnostics log'ları için kullanılır. */
+  gameId?: string;
+  /** Diagnostics modülünü aktif et. Genellikle `isDiagnosticsEnabled()` ile verilir. */
+  debug?: boolean;
   /**
    * Sahneler init edilmeden (Phaser.Game oluşturulmadan) ÖNCE çalışır; native
    * state/save load için kullanılır (bkz. GDD 17.3). Hook reddedilirse oyun başlatılmaz.
@@ -45,7 +52,11 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
   const failed = loaded.filter((f) => f.status === 'error');
 
   if (failed.length > 0) {
-    console.warn(`[createVolGame] Fontlar yüklenemedi, sistem fontuna düşülüyor: ${failed.map((f) => f.family).join(', ')}`);
+    console.warn(
+      `[createVolGame] Fontlar yüklenemedi, sistem fontuna düşülüyor: ${failed
+        .map((f) => f.family)
+        .join(', ')}`,
+    );
   }
 
   await Promise.race([
@@ -63,6 +74,7 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     parent: config.parent,
     backgroundColor: config.backgroundColor,
     strategy: config.strategy,
+    maxDpr: config.maxDpr,
   });
 
   const gameConfig: Phaser.Types.Core.GameConfig = {
@@ -70,9 +82,18 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     scene: config.scenes,
     physics: config.physics,
     input: config.input,
+    audio: { noAudio: true },
   };
 
+  if (config.debug && config.gameId && !Diagnostics.getInstance()) {
+    new Diagnostics({ gameId: config.gameId });
+  }
+
   const game = new Phaser.Game(gameConfig);
+
+  game.events.once(Phaser.Core.Events.DESTROY, () => {
+    Diagnostics.getInstance()?.destroy();
+  });
 
   if (config.strategy === 'resize') {
     const detachResize = ViewportManager.attachResize(game);

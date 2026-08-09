@@ -32,7 +32,12 @@ export class Popup {
   private boundKeydown: (event: KeyboardEvent) => void;
 
   constructor(target: HTMLElement, options: PopupOptions = {}) {
-    const { placement = 'bottom-start', closeOnOutsideClick = true, onClose, container = document.body } = options;
+    const {
+      placement = 'bottom-start',
+      closeOnOutsideClick = true,
+      onClose,
+      container = document.body,
+    } = options;
     this.target = target;
     this.placement = placement;
     this.closeOnOutsideClick = closeOnOutsideClick;

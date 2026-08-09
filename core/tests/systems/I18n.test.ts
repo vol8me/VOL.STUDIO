@@ -136,7 +136,9 @@ describe('I18n — SaveManager entegrasyonu', () => {
   it('ozel saveKey desteklenir', async () => {
     const store = new Map<string, unknown>([['oyun-dili', 'en']]);
     const saveManager = {
-      load: vi.fn(<T>(key: string, def: T): Promise<T> => Promise.resolve((store.get(key) as T) ?? def)),
+      load: vi.fn(
+        <T>(key: string, def: T): Promise<T> => Promise.resolve((store.get(key) as T) ?? def),
+      ),
       save: vi.fn((key: string, value: unknown): Promise<void> => {
         store.set(key, value);
         return Promise.resolve();

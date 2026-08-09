@@ -29,11 +29,18 @@ export class ParticlePool {
    * Havuzdan bir partikül alır. Havuz boşsa yeni yaratır.
    * Partikül görünür ve aktif olarak işaretlenir.
    */
-  acquire(x: number, y: number, radius: number, color: number, alpha: number): Phaser.GameObjects.Arc {
+  acquire(
+    x: number,
+    y: number,
+    radius: number,
+    color: number,
+    alpha: number,
+  ): Phaser.GameObjects.Arc {
     let arc = this.pool.pop();
     if (!arc) {
       arc = this.create();
     }
+    this.scene.tweens.killTweensOf(arc);
     arc.setPosition(x, y);
     arc.setRadius(radius);
     arc.setFillStyle(color, alpha);
@@ -46,8 +53,9 @@ export class ParticlePool {
     return arc;
   }
 
-  /** Partikülü havuza geri verir — görünmez ve inaktif yapar. */
+  /** Partikülü havuza geri verir — görünmez, inaktif ve mevcut tween'lerden temizlenir. */
   release(arc: Phaser.GameObjects.Arc): void {
+    this.scene.tweens.killTweensOf(arc);
     arc.setVisible(false);
     arc.setActive(false);
     arc.setAlpha(0);
@@ -55,13 +63,20 @@ export class ParticlePool {
     this.pool.push(arc);
   }
 
+  /** Aktif partikül sayısını döndürür — diagnostic amaçlı. */
+  getActiveCount(): number {
+    return this.active.size;
+  }
+
   /** Tüm partikülleri yok eder — sahne kapanırken çağrılır. */
   destroy(): void {
     for (const arc of this.active) {
+      this.scene.tweens.killTweensOf(arc);
       arc.destroy();
     }
     this.active.clear();
     for (const arc of this.pool) {
+      this.scene.tweens.killTweensOf(arc);
       arc.destroy();
     }
     this.pool.length = 0;

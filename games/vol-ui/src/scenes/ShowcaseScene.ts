@@ -55,13 +55,29 @@ export class ShowcaseScene extends Phaser.Scene {
     header.appendChild(this.langButton);
 
     const tabDefs = [
-      { id: 'buttons', label: i18next.t('volui:tabs.buttons'), builder: () => buildButtonsTab(this.ui.element) },
+      {
+        id: 'buttons',
+        label: i18next.t('volui:tabs.buttons'),
+        builder: () => buildButtonsTab(this.ui.element),
+      },
       { id: 'text', label: i18next.t('volui:tabs.text'), builder: () => buildTextTab() },
-      { id: 'panels', label: i18next.t('volui:tabs.panels'), builder: () => buildPanelsTab(this.ui.element) },
+      {
+        id: 'panels',
+        label: i18next.t('volui:tabs.panels'),
+        builder: () => buildPanelsTab(this.ui.element),
+      },
       { id: 'hud', label: i18next.t('volui:tabs.hud'), builder: () => buildHudTab() },
-      { id: 'forms', label: i18next.t('volui:tabs.forms'), builder: () => buildFormsTab(this.ui.element) },
+      {
+        id: 'forms',
+        label: i18next.t('volui:tabs.forms'),
+        builder: () => buildFormsTab(this.ui.element),
+      },
       { id: 'palette', label: i18next.t('volui:tabs.palette'), builder: () => buildPaletteTab() },
-      { id: 'advanced', label: i18next.t('volui:tabs.advanced'), builder: () => buildAdvancedTab(this.ui.element) },
+      {
+        id: 'advanced',
+        label: i18next.t('volui:tabs.advanced'),
+        builder: () => buildAdvancedTab(this.ui.element),
+      },
       { id: 'scroll', label: i18next.t('volui:tabs.scroll'), builder: () => buildScrollTab() },
       { id: 'touch', label: i18next.t('volui:tabs.touch'), builder: () => buildTouchTab() },
       { id: 'loading', label: i18next.t('volui:tabs.loading'), builder: () => buildLoadingTab() },

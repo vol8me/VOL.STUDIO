@@ -39,7 +39,10 @@ export class Carousel {
     const arrows = this.element.querySelectorAll<HTMLButtonElement>('.vol-carousel__arrow');
     arrows.forEach((btn) => {
       const isLeft = btn.classList.contains('vol-carousel__arrow--left');
-      btn.setAttribute('aria-label', isLeft ? i18next.t('core:carousel.prev') : i18next.t('core:carousel.next'));
+      btn.setAttribute(
+        'aria-label',
+        isLeft ? i18next.t('core:carousel.prev') : i18next.t('core:carousel.next'),
+      );
     });
     if (this.dotsEl) {
       const dots = this.dotsEl.querySelectorAll<HTMLButtonElement>('.vol-carousel__dot');
@@ -119,7 +122,10 @@ export class Carousel {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `vol-carousel__arrow vol-carousel__arrow--${direction}`;
-    button.setAttribute('aria-label', direction === 'left' ? i18next.t('core:carousel.prev') : i18next.t('core:carousel.next'));
+    button.setAttribute(
+      'aria-label',
+      direction === 'left' ? i18next.t('core:carousel.prev') : i18next.t('core:carousel.next'),
+    );
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('fill', 'none');

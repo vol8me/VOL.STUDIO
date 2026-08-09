@@ -58,7 +58,10 @@ export class MinimapPanel {
   private readonly onLanguageChanged = (): void => {
     if (this.labelIsI18n) this.label = i18next.t('core:minimap.label');
     if (this.onClickHandler) {
-      this.canvas.setAttribute('aria-label', i18next.t('core:minimap.interactive', { label: this.label }));
+      this.canvas.setAttribute(
+        'aria-label',
+        i18next.t('core:minimap.interactive', { label: this.label }),
+      );
     } else {
       this.canvas.setAttribute('aria-label', this.label);
     }
@@ -111,7 +114,10 @@ export class MinimapPanel {
       // Tıklanabilir minimap "buton" semantiği taşır: klavye odaklanabilir, Enter/Space merkeze tıklamayı simüle eder.
       this.canvas.setAttribute('role', 'button');
       this.canvas.tabIndex = 0;
-      this.canvas.setAttribute('aria-label', i18next.t('core:minimap.interactive', { label: this.label }));
+      this.canvas.setAttribute(
+        'aria-label',
+        i18next.t('core:minimap.interactive', { label: this.label }),
+      );
 
       this.boundClick = (event) => {
         const rect = this.canvas.getBoundingClientRect();

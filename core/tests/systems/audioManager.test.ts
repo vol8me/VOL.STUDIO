@@ -98,7 +98,7 @@ describe('AudioManager', () => {
     expect((scene.sound as unknown as { mute: boolean }).mute).toBe(true);
   });
 
-  it('setSfxVolume play volume\'ini ölçekler', () => {
+  it("setSfxVolume play volume'ini ölçekler", () => {
     const scene = makeSceneStub({ hasKey: true });
     const manager = new AudioManager(scene);
 

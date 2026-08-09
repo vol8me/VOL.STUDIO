@@ -9,9 +9,15 @@ vi.mock('phaser', async () => {
     constructor(scene: FakeScene) {
       this.scene = scene;
     }
-    clear() { return this; }
-    lineStyle() { return this; }
-    strokeRect() { return this; }
+    clear() {
+      return this;
+    }
+    lineStyle() {
+      return this;
+    }
+    strokeRect() {
+      return this;
+    }
     destroy() {}
   }
 
@@ -100,7 +106,7 @@ describe('Border', () => {
     vi.restoreAllMocks();
   });
 
-  it('constructor — scale RESIZE listener\'ı ekler', () => {
+  it("constructor — scale RESIZE listener'ı ekler", () => {
     const border = new Border(scene as unknown as Phaser.Scene);
     expect(scene.scale.on).toHaveBeenCalledWith('resize', expect.any(Function), border);
   });
@@ -112,7 +118,7 @@ describe('Border', () => {
     expect(clamped.y).toBeGreaterThanOrEqual(0);
   });
 
-  it('destroy — scale RESIZE listener\'ını temizler', () => {
+  it("destroy — scale RESIZE listener'ını temizler", () => {
     const border = new Border(scene as unknown as Phaser.Scene);
     border.destroy();
     expect(scene.scale.off).toHaveBeenCalledWith('resize', expect.any(Function), border);
