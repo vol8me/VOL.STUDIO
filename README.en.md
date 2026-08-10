@@ -1,4 +1,4 @@
-# VOL.STUDIO
+<img src="./.github/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
 
 Cross-platform game monorepo built with Tauri v2 + Phaser 4. Produces Windows (MSI/NSIS) and Android (APK) builds from a single codebase.
 

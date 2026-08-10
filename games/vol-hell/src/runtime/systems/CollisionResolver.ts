@@ -58,7 +58,8 @@ export class CollisionResolver {
           this.bulletsToRemoveBuf.push(bullet);
 
           if (killed) {
-            void gameAudio.playSfx('enemyDeath', { volume: 0.7 });
+            // Killing blow — hit tail'ini kes, sadece death çalsın.
+            void gameAudio.playSfx('enemyDeath', { volume: 0.7, stopEvents: ['enemyHit'] });
             this.callbacks.onEnemyKilled?.(enemy.scoreValue);
           } else {
             void gameAudio.playSfx('enemyHit', { volume: 0.6 });

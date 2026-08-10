@@ -1,4 +1,4 @@
-# VOL.STUDIO
+<img src="./.github/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
 
 Tauri v2 + Phaser 4 ile geliştirilen çapraz platform oyun monoreposu. Tek kod tabanından Windows (MSI/NSIS) ve Android (APK) çıktısı üretir.
 

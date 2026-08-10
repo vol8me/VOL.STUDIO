@@ -50,18 +50,6 @@ describe('Synth engine', () => {
     }
   });
 
-  it('repeat ile daha uzun buffer üretir', () => {
-    const single = synth(0.1, { wave: 'sine', frequency: 440 });
-    const repeated = synthesize({
-      wave: 'sine',
-      frequency: 440,
-      duration: 0.1,
-      repeat: 3,
-      repeatTime: 0.05,
-    });
-    expect(repeated.channels[0]?.length).toBeGreaterThan(single.channels[0]?.length ?? 0);
-  });
-
   it('normalize hedef zirveye yaklaşır', () => {
     const buf = new Float32Array([0.1, 0.5, -0.9, 0.2]);
     const out = normalize(buf, 0.95);
@@ -93,25 +81,6 @@ describe('Synth engine', () => {
     expect(params.duration).toBe(0.1);
     expect(params.frequency).toBe(880);
     expect(params.wave).toBeDefined();
-  });
-
-  it('distortion sesi şekillendirir', () => {
-    const dry = synth(0.05, { wave: 'sine', frequency: 440, gain: 1 });
-    const distorted = synth(0.05, {
-      wave: 'sine',
-      frequency: 440,
-      gain: 1,
-      distortion: { amount: 1, type: 'hard' },
-    });
-    // Hard clip en azından zirveyi sınırlar
-    const peak = Math.max(...distorted.channels[0].map((s) => Math.abs(s)));
-    expect(peak).toBeLessThanOrEqual(1.01);
-    // Distortion harmonik ekler, bazı örnekler kuru sinyalden farklı olur
-    let diffCount = 0;
-    for (let i = 0; i < dry.channels[0].length; i++) {
-      if (Math.abs(dry.channels[0][i] - distorted.channels[0][i]) > 0.001) diffCount++;
-    }
-    expect(diffCount).toBeGreaterThan(0);
   });
 
   it('stereo width stereo kanalları genişletir', () => {
@@ -188,56 +157,6 @@ describe('Synth engine', () => {
       const result = synth(params.duration, params);
       expect(result.channels[0].length).toBeGreaterThan(0);
     }
-  });
-
-  it('sample layer synth ile karışır', () => {
-    const sampleData = new Float32Array(4410).fill(0.5);
-    const result = synth(0.1, {
-      wave: 'sine',
-      frequency: 440,
-      envelope: { attack: 0, hold: 0.1, release: 0 },
-      sample: { data: sampleData, gain: 0.2 },
-    });
-    const peak = Math.max(...result.channels[0].map(Math.abs));
-    expect(peak).toBeGreaterThan(0.2);
-  });
-
-  it('phaser sinyali değiştirir', () => {
-    const dry = synth(0.2, {
-      wave: 'sawtooth',
-      frequency: 440,
-      envelope: { attack: 0, hold: 0.2, release: 0 },
-    });
-    const wet = synth(0.2, {
-      wave: 'sawtooth',
-      frequency: 440,
-      phaser: { minFreq: 200, maxFreq: 2000, rate: 2, stages: 6, mix: 0.6 },
-      envelope: { attack: 0, hold: 0.2, release: 0 },
-    });
-    let diffCount = 0;
-    for (let i = 0; i < dry.channels[0].length; i++) {
-      if (Math.abs(dry.channels[0][i] - wet.channels[0][i]) > 0.001) diffCount++;
-    }
-    expect(diffCount).toBeGreaterThan(dry.channels[0].length * 0.1);
-  });
-
-  it('flanger sinyali değiştirir', () => {
-    const dry = synth(0.2, {
-      wave: 'sine',
-      frequency: 440,
-      envelope: { attack: 0, hold: 0.2, release: 0 },
-    });
-    const wet = synth(0.2, {
-      wave: 'sine',
-      frequency: 440,
-      flanger: { time: 1, depth: 0.5, rate: 2, feedback: 0.3, mix: 0.5 },
-      envelope: { attack: 0, hold: 0.2, release: 0 },
-    });
-    let diffCount = 0;
-    for (let i = 0; i < dry.channels[0].length; i++) {
-      if (Math.abs(dry.channels[0][i] - wet.channels[0][i]) > 0.001) diffCount++;
-    }
-    expect(diffCount).toBeGreaterThan(dry.channels[0].length * 0.1);
   });
 
   it('DelayLine istenen gecikme kadar sonra impulsu çıkarır', () => {

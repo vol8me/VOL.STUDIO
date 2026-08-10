@@ -21,7 +21,6 @@ export class PauseScreen {
   private readonly masterSlider: Slider;
   private readonly sfxSlider: Slider;
   private readonly musicSlider: Slider;
-  private readonly ambientSlider: Slider;
   private readonly shakeCheckbox: Checkbox;
   private readonly muteCheckbox: Checkbox;
   private readonly settingsBackButton: Button;
@@ -35,7 +34,6 @@ export class PauseScreen {
     this.masterSlider.setLabel(i18next.t('volhell:settings.master'));
     this.sfxSlider.setLabel(i18next.t('volhell:settings.sfx'));
     this.musicSlider.setLabel(i18next.t('volhell:settings.music'));
-    this.ambientSlider.setLabel(i18next.t('volhell:settings.ambient'));
     this.shakeCheckbox.setLabel(i18next.t('volhell:settings.shake'));
     this.muteCheckbox.setLabel(i18next.t('volhell:settings.mute'));
     this.settingsBackButton.setLabel(i18next.t('volhell:settings.back'));
@@ -117,11 +115,6 @@ export class PauseScreen {
       (v) => audioSettings.setMusicVolume(v),
       i18next.t('volhell:settings.music'),
     );
-    this.ambientSlider = makeSlider(
-      () => audioSettings.getAmbientVolume(),
-      (v) => audioSettings.setAmbientVolume(v),
-      i18next.t('volhell:settings.ambient'),
-    );
 
     this.shakeCheckbox = new Checkbox({
       checked: audioSettings.isScreenShakeEnabled(),
@@ -155,7 +148,6 @@ export class PauseScreen {
       .add(this.masterSlider)
       .add(this.sfxSlider)
       .add(this.musicSlider)
-      .add(this.ambientSlider)
       .add(this.shakeCheckbox)
       .add(this.muteCheckbox)
       .add(this.settingsBackButton);
@@ -183,11 +175,13 @@ export class PauseScreen {
   }
 
   private showSettings(): void {
+    void gameAudio.playSfx('menuBlip', { volume: 0.5 });
     this.panel.hide();
     this.settingsPanel.show();
   }
 
   private hideSettings(): void {
+    void gameAudio.playSfx('back', { volume: 0.5 });
     this.settingsPanel.hide();
     this.panel.show();
   }
@@ -202,7 +196,6 @@ export class PauseScreen {
     this.masterSlider.destroy();
     this.sfxSlider.destroy();
     this.musicSlider.destroy();
-    this.ambientSlider.destroy();
     this.shakeCheckbox.destroy();
     this.muteCheckbox.destroy();
     this.panel.destroy();

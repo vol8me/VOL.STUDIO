@@ -11,7 +11,7 @@ import { enemyConfig } from '@/config/enemy';
 import { uiConfig } from '@/config/ui';
 import { gameConfig } from '@/config/game';
 import { physicsConfig } from '@/config/physics';
-import { deathTrackKeys, musicTracks } from '@/config';
+import { ambientTrackKeys, deathTrackKeys, musicTracks } from '@/config';
 import { gameAudio, audioSettings, gameStats } from '@/app/bootstrap';
 import type { RunResult } from '@/app/GameStats';
 import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
@@ -61,9 +61,9 @@ export class GameScene extends Phaser.Scene {
   private deathScreen: DeathScreen | null = null;
   private isPaused = false;
   private escKey!: Phaser.Input.Keyboard.Key;
-  private combatMusicState: 'idle' | 'low' | 'high' = 'idle';
-  private combatStateTimer = 0;
-  private isCombatMusicPlaying = false;
+  private ambientState: 'calm' | 'tense' = 'calm';
+  private ambientStateTimer = 0;
+  private isAmbientLoaded = false;
   private readonly onLanguageChanged = (): void => {
     this.healthBar.setLabel(i18next.t('volhell:hud.health'));
     this.dashBar.setLabel(i18next.t('volhell:hud.dash'));
@@ -81,12 +81,13 @@ export class GameScene extends Phaser.Scene {
     for (const key of deathTrackKeys) {
       void gameAudio.loadMusic(musicTracks[key]);
     }
-    void gameAudio.loadMusic(musicTracks.combat);
-    void gameAudio.loadAmbient(musicTracks['gameplay-ambient']).then(() => {
+    // Her iki ambiyans track'ini de yükle — calm ve tense.
+    Promise.all(ambientTrackKeys.map((key) => gameAudio.loadAmbient(musicTracks[key]))).then(() => {
       // Oyuna hızlıca restart/MainMenu dönüşünde arka plan sesi çalmaya başlamasın.
       if (!this.scene.isActive(this.scene.key)) return;
+      this.isAmbientLoaded = true;
       gameAudio.stopMusic(2);
-      void gameAudio.playAmbient(musicTracks['gameplay-ambient'].id, { fadeIn: 2 });
+      void gameAudio.playAmbient(musicTracks['void-whisper'].id, { fadeIn: 2 });
     });
 
     // SFX'leri arka planda önbelleğe al.
@@ -265,7 +266,7 @@ export class GameScene extends Phaser.Scene {
     this.diagnostics?.setCount('particles', this.particlePool.getActiveCount());
     this.diagnostics?.setCount('gridCells', this.spatialGrid.getCellCount());
 
-    this.updateCombatMusic(delta);
+    this.updateAmbientState(delta);
 
     this.diagnostics?.endFrame();
   }
@@ -333,9 +334,8 @@ export class GameScene extends Phaser.Scene {
 
   private resetRun(): void {
     this.isDeathInProgress = false;
-    this.combatMusicState = 'idle';
-    this.combatStateTimer = 0;
-    this.isCombatMusicPlaying = false;
+    this.ambientState = 'calm';
+    this.ambientStateTimer = 0;
     this.score = 0;
     this.kills = 0;
     this.elapsedTimeMs = 0;
@@ -344,49 +344,26 @@ export class GameScene extends Phaser.Scene {
     this.hudStats?.setTime(0);
   }
 
-  private updateCombatMusic(delta: number): void {
-    if (this.isPaused || this.isDeathInProgress) return;
+  private updateAmbientState(delta: number): void {
+    if (this.isPaused || this.isDeathInProgress || !this.isAmbientLoaded) return;
 
     const enemyCount = this.enemyManager.getEnemies().length;
-    const desired = enemyCount >= 12 ? 'high' : enemyCount >= 5 ? 'low' : 'idle';
+    const desired: 'calm' | 'tense' = enemyCount >= 8 ? 'tense' : 'calm';
 
-    if (desired === this.combatMusicState) {
-      this.combatStateTimer = 0;
-      // Dikey adaptive layering: intensity'yi sürekli güncelle.
-      if (this.isCombatMusicPlaying) {
-        this.applyCombatIntensity(enemyCount);
-      }
+    if (desired === this.ambientState) {
+      this.ambientStateTimer = 0;
       return;
     }
 
-    this.combatStateTimer += delta;
-    const thresholdMs = desired === 'idle' ? 3000 : 1000;
-    if (this.combatStateTimer < thresholdMs) return;
+    this.ambientStateTimer += delta;
+    // Tense → calm: 5s bekleme (temkinli). Calm → tense: 1s (hızlı).
+    const thresholdMs = desired === 'calm' ? 5000 : 1000;
+    if (this.ambientStateTimer < thresholdMs) return;
 
-    this.combatStateTimer = 0;
-    if (desired === 'idle') {
-      this.exitCombatMusic();
-    } else {
-      if (!this.isCombatMusicPlaying) {
-        void gameAudio.playMusic(musicTracks.combat.id, { crossfade: true, fadeIn: 2 });
-        this.isCombatMusicPlaying = true;
-      }
-      this.combatMusicState = desired;
-      this.applyCombatIntensity(enemyCount);
-    }
-  }
-
-  private applyCombatIntensity(enemyCount: number): void {
-    // intensity 0-1 arası; 5 düşman = 0.3, 12+ = 1.0
-    const intensity = Math.max(0, Math.min(1, (enemyCount - 3) / 10));
-    gameAudio.setMusicState({ intensity }, 0.5);
-  }
-
-  private exitCombatMusic(): void {
-    if (this.combatMusicState === 'idle') return;
-    gameAudio.stopMusic(2);
-    this.combatMusicState = 'idle';
-    this.isCombatMusicPlaying = false;
+    this.ambientStateTimer = 0;
+    this.ambientState = desired;
+    const trackId = desired === 'tense' ? 'iron-tide' : 'void-whisper';
+    void gameAudio.playAmbient(trackId, { crossfade: true, fadeIn: 2 });
   }
 
   private onEnemyKilled(scoreValue: number): void {
@@ -458,7 +435,7 @@ export class GameScene extends Phaser.Scene {
       const deathKey = deathTrackKeys[Math.floor(Math.random() * deathTrackKeys.length)];
       const deathTrack = musicTracks[deathKey];
       void gameAudio.playMusic(deathTrack.id, { fadeIn: 1 });
-      void gameAudio.playSfx('death', { volume: 0.9 });
+      void gameAudio.playSfx('death', { volume: 0.9, stopEvents: ['hurt', 'fire'] });
 
       const result = await this.submitRunSafely();
       this.deathScreen?.show({

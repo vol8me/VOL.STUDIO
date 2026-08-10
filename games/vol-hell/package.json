@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "generate:sounds": "tsx scripts/generate-sounds.ts",
+    "generate:sounds": "tsx ../../core/scripts/generate-volhell-sounds.ts public/assets/audio/sfx",
+    "generate:music": "tsx ../../core/scripts/generate-iron-vein.ts public/assets/audio/music/main-menu/iron-vein.wav && tsx ../../core/scripts/generate-black-tide.ts public/assets/audio/music/main-menu/black-tide.wav && tsx ../../core/scripts/generate-crimson-horizon.ts public/assets/audio/music/main-menu/crimson-horizon.wav && tsx ../../core/scripts/generate-ambient-tracks.ts public/assets/audio/music",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

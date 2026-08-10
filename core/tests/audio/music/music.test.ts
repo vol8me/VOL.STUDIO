@@ -1,12 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import {
-  MusicEngine,
-  MusicScheduler,
-  resolveStemGain,
-  ProceduralStemGenerator,
-  droneParams,
-  bassParams,
-} from '../../../src/audio/music';
+import { MusicEngine, MusicScheduler, resolveStemGain } from '../../../src/audio/music';
 import { synth } from '../../../src/audio/synth';
 import { FakeAudioContext, createFakeAudioBufferFromResult } from './mock-audio';
 
@@ -37,9 +30,8 @@ describe('MusicEngine', () => {
     });
 
     await engine.play('main-menu');
-    expect(engine.getCurrentContext().bpm).toBe(120);
-    expect(engine.getCurrentContext().bar).toBe(1);
     expect(engine.getCurrentState().trackId).toBe('main-menu');
+    expect(engine.getCurrentState().playing).toBe(true);
   });
 
   it('setIntensity stem gainini günceller', async () => {
@@ -68,33 +60,13 @@ describe('MusicEngine', () => {
     await engine.play('combat', { state: { intensity: 0 } });
     engine.setIntensity(0.5, 0);
 
-    expect(engine.getStemGain('drums')).toBeCloseTo(0.5, 5);
-    expect(engine.getTargetStemGain('drums')).toBeCloseTo(0.5, 5);
-  });
-
-  it('setBossPhase sembolik state değişimini uygular', async () => {
-    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
-    const buffer = makeBuffer(fakeContext, 2);
-
-    await engine.loadTrack({
-      id: 'boss',
-      bpm: 100,
-      stems: [
-        {
-          id: 'lead',
-          buffer: buffer as unknown as AudioBuffer,
-          gain: 1,
-          gainMap: {
-            bossPhase: { '1': 0, '2': 1 },
-          },
-        },
-      ],
-    });
-
-    await engine.play('boss', { state: { bossPhase: '1' } });
-    engine.setBossPhase('2', 0);
-
-    expect(engine.getStemGain('lead')).toBeCloseTo(1, 5);
+    // Gain node'unun değeri 0.5'e yaklaşmalı
+    const activeStems = (engine as unknown as { activeStems: Map<string, { gain: GainNode; stem: { id: string } }> }).activeStems;
+    let drumsGain = 0;
+    for (const active of activeStems.values()) {
+      if (active.stem.id === 'drums') drumsGain = active.gain.gain.value;
+    }
+    expect(drumsGain).toBeCloseTo(0.5, 5);
   });
 
   it('master volume ve mute çalışır', () => {
@@ -120,19 +92,11 @@ describe('MusicEngine', () => {
     });
 
     await engine.play('test');
-    expect(engine.getCurrentContext()).toBeDefined();
-
     engine.stop({ fadeOut: 0.1 });
-    expect(() => engine.getCurrentContext()).toThrow();
     expect(engine.getCurrentState().playing).toBe(false);
   });
 
-  it('stinger çalınamazsa hata atar', async () => {
-    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
-    await expect(engine.triggerStinger('unknown')).rejects.toThrow();
-  });
-
-  it('crossfadeTo yeni track başlatır ve eski stemler ayrı kanaldan fade out olur', async () => {
+  it('crossfadeTo yeni track başlatır', async () => {
     const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
     const bufferA = makeBuffer(fakeContext, 2);
     const bufferB = makeBuffer(fakeContext, 2);
@@ -150,17 +114,8 @@ describe('MusicEngine', () => {
     });
 
     await engine.play('ambient');
-    const firstGain = engine.getStemGain('pad');
-    expect(firstGain).toBeCloseTo(0.7, 5);
-
     await engine.crossfadeTo('combat', 0.1);
-    // Yeni track pad'i hemen çalmaya başlamalı
     expect(engine.getCurrentState().trackId).toBe('combat');
-    expect(engine.getCurrentContext().bpm).toBe(130);
-
-    // Crossfade sonrası target gain yeni track değeri
-    await new Promise((r) => setTimeout(r, 5));
-    expect(engine.getTargetStemGain('pad')).toBeCloseTo(0.9, 5);
   });
 
   it('crossfadeTo bar sınırında geçiş yapar', async () => {
@@ -181,30 +136,10 @@ describe('MusicEngine', () => {
     });
 
     await engine.play('ambient');
-    fakeContext.currentTime = 0.5; // bar 1.25
+    fakeContext.currentTime = 0.5;
 
     await engine.crossfadeTo('combat', 0.1, { bars: 1 });
-    // now=0.5, duration=0.1 -> earliest=0.6; bar 1.3 -> floor=1 -> +1=2 -> time=2.0
-    expect(engine.getCurrentContext().bpm).toBe(120);
     expect(engine.getCurrentState().trackId).toBe('combat');
-  });
-
-  it('procedural stem AudioBuffer üretir', async () => {
-    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
-    const generator = new ProceduralStemGenerator(fakeContext as unknown as AudioContext);
-    const pad = generator.generatePad({ duration: 0.1, frequency: 220 });
-
-    expect(pad.length).toBeGreaterThan(0);
-    expect(pad.sampleRate).toBe(44100);
-
-    await engine.loadTrack({
-      id: 'procedural',
-      bpm: 120,
-      stems: [{ id: 'procedural-pad', buffer: pad, gain: 0.5 }],
-    });
-
-    await engine.play('procedural');
-    expect(engine.getCurrentState().trackId).toBe('procedural');
   });
 
   it('loopEnd buffer uzunluğunu aşmaz', async () => {
@@ -214,7 +149,7 @@ describe('MusicEngine', () => {
     await engine.loadTrack({
       id: 'loop-test',
       bpm: 120,
-      loopEnd: 10, // buffer.duration 2
+      loopEnd: 10,
       stems: [{ id: 'pad', buffer: buffer as unknown as AudioBuffer, gain: 1 }],
     });
 
@@ -246,27 +181,6 @@ describe('MusicScheduler', () => {
 });
 
 describe('resolveStemGain', () => {
-  it('gainFn önceliklidir', () => {
-    const stem = {
-      id: 'x',
-      gain: 0.5,
-      gainFn: () => 0.8,
-      gainMap: { intensity: [{ threshold: 0, gain: 1 }] },
-    };
-    const gain = resolveStemGain(
-      stem,
-      { intensity: 0 },
-      {
-        bpm: 120,
-        timeSignature: [4, 4],
-        bar: 1,
-        beat: 1,
-        time: 0,
-      },
-    );
-    expect(gain).toBeCloseTo(0.4, 5); // 0.5 * 0.8
-  });
-
   it('gainMap numeric interpolasyonu çalışır', () => {
     const stem = {
       id: 'x',
@@ -281,62 +195,18 @@ describe('resolveStemGain', () => {
     const gain = resolveStemGain(
       stem,
       { intensity: 0.5 },
-      {
-        bpm: 120,
-        timeSignature: [4, 4],
-        bar: 1,
-        beat: 1,
-        time: 0,
-      },
+      { bpm: 120, timeSignature: [4, 4], bar: 1, beat: 1, time: 0 },
     );
     expect(gain).toBeCloseTo(0.5, 5);
   });
 
-  it('gainMap sembolik exact match çalışır', () => {
-    const stem = {
-      id: 'x',
-      gain: 1,
-      gainMap: { bossPhase: { phase1: 0.3, phase2: 0.9 } },
-    };
+  it('gainMap olmadan base gain döner', () => {
+    const stem = { id: 'x', gain: 0.7 };
     const gain = resolveStemGain(
       stem,
-      { bossPhase: 'phase2' },
-      {
-        bpm: 120,
-        timeSignature: [4, 4],
-        bar: 1,
-        beat: 1,
-        time: 0,
-      },
+      {},
+      { bpm: 120, timeSignature: [4, 4], bar: 1, beat: 1, time: 0 },
     );
-    expect(gain).toBeCloseTo(0.9, 5);
-  });
-});
-
-describe('Procedural preset loopable envelopes', () => {
-  it('loop: true drone sustaini release ioturacak kadar kisaltir', () => {
-    const params = droneParams({ duration: 10, frequency: 100, loop: true });
-    expect(params.envelope?.attack).toBe(2);
-    expect(params.envelope?.release).toBe(3);
-    expect(params.envelope?.sustain).toBe(5); // 10 - 2 - 3
-  });
-
-  it('loop: true bass sustaini hesaplar', () => {
-    const params = bassParams({ duration: 4, frequency: 80, loop: true });
-    expect(params.envelope?.attack).toBe(0.05);
-    expect(params.envelope?.decay).toBe(0.1);
-    expect(params.envelope?.release).toBe(0.3);
-    expect(params.envelope?.sustain).toBeCloseTo(3.55, 5); // 4 - 0.05 - 0.1 - 0.3
-  });
-
-  it('loop: true buffer sonunda sinyal sifiraya iner', () => {
-    const result = synth(4, bassParams({ duration: 4, frequency: 80, wave: 'sine', loop: true }));
-    const last = result.channels[0]?.[result.channels[0].length - 1] ?? 1;
-    expect(Math.abs(last)).toBeLessThan(0.05);
-  });
-
-  it('loop: false drone sustaini oldugu gibi birakir', () => {
-    const params = droneParams({ duration: 10, frequency: 100 });
-    expect(params.envelope?.sustain).toBe(10);
+    expect(gain).toBeCloseTo(0.7, 5);
   });
 });

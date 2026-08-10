@@ -35,11 +35,9 @@ function resolveGainMap(map: StemGainMap, state: MusicState, key: string): numbe
   if (typeof entry === 'object') {
     const exact = entry[String(value)];
     if (exact !== undefined) return exact;
-    // Sayısal değerler için string key'e de bak
     if (typeof value === 'number' && entry[String(value)] !== undefined) {
       return entry[String(value)];
     }
-    // String state için numeric string key match
     if (typeof value === 'string' && !Number.isNaN(Number(value))) {
       const numeric = entry[String(Number(value))];
       if (numeric !== undefined) return numeric;
@@ -52,10 +50,6 @@ function resolveGainMap(map: StemGainMap, state: MusicState, key: string): numbe
 /** Stem'in hedef gain'ini state ve context'e göre hesaplar. */
 export function resolveStemGain(stem: Stem, state: MusicState, ctx: MusicContext): number {
   const baseGain = stem.gain ?? 1;
-
-  if (stem.gainFn) {
-    return Math.max(0, Math.min(1, stem.gainFn(state, ctx) * baseGain));
-  }
 
   if (stem.gainMap) {
     let factor = 1;

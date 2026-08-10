@@ -27,7 +27,6 @@
     "master": "Master Volume",
     "sfx": "SFX Volume",
     "music": "Music Volume",
-    "ambient": "Ambient Volume",
     "mainMenuTrack": "Main Menu Music",
     "shake": "Screen Shake",
     "shakeIntensity": "Shake Intensity",

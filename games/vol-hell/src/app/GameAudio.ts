@@ -71,8 +71,21 @@ class SfxBank {
       }
     });
 
-    const buffers = await Promise.all(tasks);
+    // allSettled: bir dosya eksik/bozuksa diğerleri yine de yüklenir.
+    // Promise.all kullansaydık tek 404 tüm SFX'i bozardı.
+    const results = await Promise.allSettled(tasks);
+    const buffers = results
+      .filter((r): r is PromiseFulfilledResult<AudioBuffer> => r.status === 'fulfilled')
+      .map((r) => r.value);
+
+    // Boş olsa bile cache'le — her play çağrısında tekrar fetch denemesini önler.
     this.buffers.set(key, buffers);
+
+    if (buffers.length === 0) {
+      console.warn(`[SfxBank] ${event}: tüm dosyalar başarısız, ses çalınamayacak`);
+    } else if (buffers.length < paths.length) {
+      console.warn(`[SfxBank] ${event}: ${paths.length - buffers.length} dosya atlandı`);
+    }
   }
 
   async play(
@@ -140,6 +153,23 @@ class SfxBank {
     };
   }
 
+  /** Belirli bir event'in tüm aktif seslerini durdurur.
+   *  Killing blow'da hit seslerinin tail'ini death sesine karışmadan önce keser. */
+  stopEvent(event: SoundEvent): void {
+    const key = soundKeys[event];
+    const state = this.voiceStates.get(key);
+    if (!state) return;
+    const now = this.context.currentTime;
+    for (const source of state.active) {
+      try {
+        source.stop(now);
+      } catch {
+        // Zaten bitmek üzereyse görmezden gel
+      }
+    }
+    state.active.clear();
+  }
+
   private resolveLimit(
     event: SoundEvent,
     options: { maxVoices?: number; minInterval?: number },
@@ -203,7 +233,10 @@ export class GameAudio {
     this.ambientDucker = new SidechainDucker(this.context, this.masterGain);
 
     this.music = this.createMusicBus(settings.getMusicVolume(), this.musicDucker.gain);
-    this.ambient = this.createMusicBus(settings.getAmbientVolume(), this.ambientDucker.gain);
+    this.ambient = this.createMusicBus(
+      settings.getMusicVolume() * settings.getAmbientVolume(),
+      this.ambientDucker.gain,
+    );
     this.sfx = new SfxBank(this.context, this.masterGain);
 
     this.apply(settings.getData());
@@ -271,11 +304,24 @@ export class GameAudio {
 
   async playSfx(
     event: SoundEvent,
-    options?: { volume?: number; pitchVar?: number; maxVoices?: number; minInterval?: number },
+    options?: {
+      volume?: number;
+      pitchVar?: number;
+      maxVoices?: number;
+      minInterval?: number;
+      /** Bu event çalmadan önce durdurulacak event'ler.
+       *  Örn: enemyDeath çalarken enemyHit tail'ini keser — ses kirliliğini önler. */
+      stopEvents?: SoundEvent[];
+    },
   ): Promise<void> {
     if (this.settings.isMuted()) return;
     try {
-      // SFX ana seviyesi `sfx.setBusVolume` ile uygulanır; burada yalnızca olay bazlı volume/offset geçilir.
+      // Önce durdurulacak event'leri kes — killing blow'da hit tail'ini temizler.
+      if (options?.stopEvents) {
+        for (const stopEvent of options.stopEvents) {
+          this.sfx.stopEvent(stopEvent);
+        }
+      }
       await this.sfx.play(event, options);
       this.duckForSfx(event);
     } catch (err) {
@@ -350,7 +396,9 @@ export class GameAudio {
 
     this.sfx.setBusVolume(data.sfxVolume, 0.05);
     this.music.setMasterVolume(data.musicVolume, 0.05);
-    this.ambient.setMasterVolume(data.ambientVolume, 0.05);
+    // Ambiyans, müzik slider'ına bağlı olarak kapanmalı:
+    // "Müzik" tüm arka plan müziğini, "Ambiyans" sadece ambiyansın göreceli seviyesini ayarlar.
+    this.ambient.setMasterVolume(data.musicVolume * data.ambientVolume, 0.05);
   }
 
   dispose(): void {

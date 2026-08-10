@@ -7,26 +7,19 @@ import type {
   MusicTrack,
   PlayOptions,
   Stem,
-  StingerOptions,
   StopOptions,
 } from './types';
 import { MusicMixer } from './mixer';
 import { MusicScheduler } from './scheduler';
 import { StemLoader } from './loader';
 import { resolveStemGain } from './gain-resolver';
-import type { Instrument } from './instrument';
-import type { MelodicPhrase } from './instrument';
-import { MelodicEngine } from './melodic';
-import type { MelodicPlayOptions } from './melodic';
 
-/** Web Audio API tabanlı profesyonel müzik motoru.
- *  Stem'leri senkron çalar, adaptive gain ve crossfade destekler.
- */
+/** Web Audio API tabanlı müzik motoru.
+ *  Önceden üretilmiş WAV stem'leri senkron çalar, adaptive gain ve crossfade destekler. */
 export class MusicEngine {
   readonly context: AudioContext;
   readonly mixer: MusicMixer;
   readonly loader: StemLoader;
-  readonly melodic: MelodicEngine;
 
   private readonly tracks = new Map<string, MusicTrack>();
   private readonly buffers = new Map<string, AudioBuffer>();
@@ -62,15 +55,13 @@ export class MusicEngine {
     this.mixer = new MusicMixer(this.context, { compressor: options.compressor });
     this.mixer.output.connect(this.context.destination);
     this.loader = new StemLoader(this.context);
-    this.melodic = new MelodicEngine(this.context, this.mixer.output);
     this.lookahead = Math.max(0.01, options.lookaheadSeconds ?? 0.1);
     this.masterVolume = Math.max(0, Math.min(1, options.masterVolume ?? 1));
     this.mixer.setMasterGain(this.masterVolume, 0);
   }
 
   /** Track'i buffer'ları ile önceden yükler.
-   *  Bir stem yüklenemezse diğerlerini engellemez, sadece uyarır.
-   */
+   *  Bir stem yüklenemezse diğerlerini engellemez, sadece uyarır. */
   async loadTrack(track: MusicTrack): Promise<void> {
     this.tracks.set(track.id, track);
     const tasks = track.stems.map(async (stem) => {
@@ -97,7 +88,6 @@ export class MusicEngine {
     if (!track) throw new Error(`Track bulunamadı: ${trackId}`);
     await this.loadTrack(track);
 
-    // Aktif kaynak varsa durdur
     if (this.isPlaying) {
       this.stop({ fadeOut: 0.05 });
     }
@@ -107,10 +97,8 @@ export class MusicEngine {
     this.scheduler = new MusicScheduler(track.bpm, track.timeSignature ?? [4, 4]);
     this.state = { ...track.defaultState, ...options.state };
     this.trackStartTime = this.context.currentTime + this.lookahead;
-    this.melodic.setScheduler(this.scheduler, this.trackStartTime);
 
     for (const stem of track.stems) {
-      if (stem.stinger) continue;
       const buffer = this.buffers.get(stem.id);
       if (!buffer) {
         console.warn(`[MusicEngine] Stem buffer bulunamadı: ${stem.id}`);
@@ -146,9 +134,6 @@ export class MusicEngine {
       }
     }
 
-    this.melodic.stopAll(fadeOut);
-    this.melodic.setScheduler(undefined, 0);
-
     this.isPlaying = false;
     this.currentTrackId = undefined;
     this.currentTrack = undefined;
@@ -166,7 +151,6 @@ export class MusicEngine {
     let transitionTime: number;
 
     if (options.bars && this.scheduler) {
-      // Geçiş, en erken now+duration sonrası bars kadar sonraki bar sınırında başlar.
       const bars = Math.max(1, options.bars);
       const earliest = now + duration;
       const currentBar = this.scheduler.getBarAtTime(earliest, this.trackStartTime);
@@ -195,10 +179,8 @@ export class MusicEngine {
     this.scheduler = new MusicScheduler(track.bpm, track.timeSignature ?? [4, 4]);
     this.state = { ...track.defaultState, ...options.state };
     this.trackStartTime = transitionTime;
-    this.melodic.setScheduler(this.scheduler, this.trackStartTime);
 
     for (const stem of track.stems) {
-      if (stem.stinger) continue;
       const buffer = this.buffers.get(stem.id);
       if (!buffer) {
         console.warn(`[MusicEngine] Stem buffer bulunamadı: ${stem.id}`);
@@ -223,24 +205,6 @@ export class MusicEngine {
     this.updateGains(fadeTime);
   }
 
-  /** Gerilim (0-1) ayarlar. */
-  setTension(value: number, fadeTime = 0.2): void {
-    this.state.tension = Math.max(0, Math.min(1, value));
-    this.updateGains(fadeTime);
-  }
-
-  /** Boss fazı ayarlar. */
-  setBossPhase(phase: number | string, fadeTime = 0.2): void {
-    this.state.bossPhase = phase;
-    this.updateGains(fadeTime);
-  }
-
-  /** Lokasyon / sahne state'i ayarlar. */
-  setLocation(location: string, fadeTime = 0.2): void {
-    this.state.location = location;
-    this.updateGains(fadeTime);
-  }
-
   /** Master ses seviyesini ayarlar. */
   setMasterVolume(value: number, fadeTime = 0.05): void {
     this.masterVolume = Math.max(0, Math.min(1, value));
@@ -253,95 +217,6 @@ export class MusicEngine {
   mute(muted: boolean, fadeTime = 0.2): void {
     this.isMuted = muted;
     this.mixer.setMasterGain(muted ? 0 : this.masterVolume, fadeTime);
-  }
-
-  /** One-shot stinger çalar. */
-  async triggerStinger(stemId: string, options: StingerOptions = {}): Promise<void> {
-    const track = this.currentTrack;
-    const stem = track?.stems.find((s) => s.id === stemId);
-
-    let buffer: AudioBuffer | undefined = this.buffers.get(stemId);
-    if (!buffer && stem?.buffer) buffer = stem.buffer;
-    if (!buffer && stem?.src) {
-      buffer = await this.loader.loadFromUrl(stem.src);
-    }
-    if (!buffer) {
-      throw new Error(`Stinger buffer bulunamadı: ${stemId}`);
-    }
-
-    const channelId = `__stinger__${stemId}__${this.stemCounter++}`;
-    const gain = this.mixer.createChannel(channelId);
-    const now = this.context.currentTime;
-    const when = options.when ?? now;
-
-    gain.gain.setValueAtTime(0, when);
-    gain.gain.linearRampToValueAtTime(options.volume ?? 1, when + 0.01);
-
-    const source = this.context.createBufferSource();
-    source.buffer = buffer;
-    source.loop = false;
-    source.connect(gain);
-    source.start(when, 0);
-
-    source.onended = () => {
-      try {
-        source.disconnect();
-        gain.disconnect();
-      } finally {
-        this.mixer.removeChannel(channelId);
-      }
-    };
-  }
-
-  /** Bir melodik fraze enstrümanla çalar; track grid'ine hizalanır. */
-  playPhrase(
-    phrase: MelodicPhrase,
-    instrument: Instrument,
-    options: MelodicPlayOptions = {},
-  ): number {
-    if (!this.scheduler) {
-      throw new Error('Fraze çalmak için aktif track gerekli.');
-    }
-    return this.melodic.playPhrase(phrase, instrument, options);
-  }
-
-  /** Aktif bir stem'in anlık gain değerini döner (debug / UI için). */
-  getStemGain(stemId: string): number {
-    let newest: ActiveStem | undefined;
-    for (const active of this.activeStems.values()) {
-      if (active.stem.id === stemId) {
-        if (!newest || active.startTime >= newest.startTime) {
-          newest = active;
-        }
-      }
-    }
-    return newest?.gain.gain.value ?? 0;
-  }
-
-  /** Son hesaplanan hedef gain'i döner. */
-  getTargetStemGain(stemId: string): number {
-    if (!this.scheduler) return 0;
-
-    let newest: ActiveStem | undefined;
-    for (const active of this.activeStems.values()) {
-      if (active.stem.id === stemId) {
-        if (!newest || active.startTime >= newest.startTime) {
-          newest = active;
-        }
-      }
-    }
-
-    if (!newest) return 0;
-    const ctx = this.scheduler.getContext(this.context.currentTime, this.trackStartTime);
-    return resolveStemGain(newest.stem, this.state, ctx);
-  }
-
-  /** Şu anki çalma bağlamını döner. */
-  getCurrentContext(): MusicContext {
-    if (!this.scheduler) {
-      throw new Error('Aktif track yok');
-    }
-    return this.scheduler.getContext(this.context.currentTime, this.trackStartTime);
   }
 
   /** Track ve state bilgilerini döner. */
@@ -374,14 +249,13 @@ export class MusicEngine {
       }
       this.mixer.removeChannel(active.channelId);
     }
-    this.melodic.stopAll(0);
     this.mixer.clear();
     this.mixer.output.disconnect();
   }
 
   private startStem(stem: Stem, buffer: AudioBuffer, when: number): void {
     const channelId = `${stem.id}__${this.stemCounter++}`;
-    const gain = this.mixer.createChannel(channelId, stem.pan ?? 0);
+    const gain = this.mixer.createChannel(channelId);
     gain.gain.setValueAtTime(0, when);
 
     const source = this.context.createBufferSource();

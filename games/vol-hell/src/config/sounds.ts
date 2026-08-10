@@ -1,9 +1,9 @@
 /**
  * Oyun ses efektleri — olay → kategorize edilmiş dosya yolları.
- * Dosyalar `public/assets/sounds/generated/<kategori>/` altında üretilir.
+ * Dosyalar `public/assets/audio/sfx/<kategori>/` altında üretilir.
  */
 
-const basePath = 'assets/sounds/generated';
+const basePath = 'assets/audio/sfx';
 
 const ui = `${basePath}/ui`;
 const player = `${basePath}/player`;
@@ -24,11 +24,7 @@ export const soundAssets = {
   death: [`${player}/death-0.wav`],
 
   enemyHit: [`${combat}/enemy-hit-0.wav`, `${combat}/enemy-hit-1.wav`],
-  enemyDeath: [
-    `${combat}/enemy-death-0.wav`,
-    `${combat}/enemy-death-1.wav`,
-    `${combat}/enemy-death-2.wav`,
-  ],
+  enemyDeath: [`${combat}/enemy-death-0.wav`, `${combat}/enemy-death-1.wav`],
   bulletBounce: [`${combat}/bullet-bounce-0.wav`],
 } as const;
 

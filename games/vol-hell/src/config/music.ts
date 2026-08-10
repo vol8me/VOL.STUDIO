@@ -1,94 +1,134 @@
 import type { MusicTrack } from '@volstudio/core/audio/music';
 
-const musicBasePath = 'assets/music/generated';
-const BPM = 50;
+const musicBasePath = 'assets/audio/music';
+const BPM = 72;
 const BEAT = 60 / BPM;
-const COMBAT_BPM = 58;
-const COMBAT_BEAT = 60 / COMBAT_BPM;
-const TAIL = 4; // reverb tail loop noktasina dahil
+const TAIL = 5;
 
-export const musicTrackIds = ['main-menu', 'gameplay-ambient', 'combat', 'death'] as const;
+// Iron Vein — ana menü teması 1: C minor, 85 BPM, 64 beat loop
+const MENU_BPM = 85;
+const MENU_BEAT = 60 / MENU_BPM;
+
+// Black Tide — ana menü teması 2: D minor, 90 BPM, 96 beat loop
+const MENU2_BPM = 90;
+const MENU2_BEAT = 60 / MENU2_BPM;
+
+// Crimson Horizon — ana menü teması 3: A minor, 85 BPM, 64 beat loop
+const MENU3_BPM = 85;
+const MENU3_BEAT = 60 / MENU3_BPM;
+
+export const musicTrackIds = [
+  'main-menu',
+  'main-menu-2',
+  'main-menu-3',
+  'void-whisper',
+  'iron-tide',
+  'last-ember',
+] as const;
 export type MusicTrackId = (typeof musicTrackIds)[number];
 
-/** Obsidian Silence tema muzik track'leri.
- *  Basit palet: 1 ana menu, 1 olum, 1 gameplay ambiyans,
- *  1 combat track (3 stem ile dikey adaptive).
- */
+/** Vol-Hell müzik track'leri.
+ *  3 ana menü, 2 oyun içi ambiyans (Void Whisper / Iron Tide), 1 ölüm (Last Ember).
+ *  Düşman 0-7 → Void Whisper, 8+ → Iron Tide. Iron Tide, combat'ın yerini tutar —
+ *  ritmik değil ama gerilimli, düşman yoğunluğunu yansıtır. */
 export const musicTracks: Record<MusicTrackId, MusicTrack> = {
   'main-menu': {
     id: 'main-menu',
-    bpm: BPM,
+    bpm: MENU_BPM,
     loopStart: 0,
-    loopEnd: 64 * BEAT + TAIL,
+    loopEnd: 64 * MENU_BEAT, // ~45.2s — Iron Vein
     stems: [
       {
-        id: 'main-menu-theme',
-        src: `${musicBasePath}/main-menu/main-menu.wav`,
+        id: 'iron-vein',
+        src: `${musicBasePath}/main-menu/iron-vein.wav`,
         gain: 0.8,
         loop: true,
       },
     ],
   },
 
-  'gameplay-ambient': {
-    id: 'gameplay-ambient',
-    bpm: BPM,
+  'main-menu-2': {
+    id: 'main-menu-2',
+    bpm: MENU2_BPM,
     loopStart: 0,
-    loopEnd: 32 * BEAT + TAIL,
-    stems: [
-      { id: 'ambience-bed', src: `${musicBasePath}/gameplay/ambience.wav`, gain: 0.65, loop: true },
-    ],
-  },
-
-  combat: {
-    id: 'combat',
-    bpm: COMBAT_BPM,
-    loopStart: 0,
-    loopEnd: 24 * COMBAT_BEAT + TAIL,
-    defaultState: { intensity: 0 },
+    loopEnd: 96 * MENU2_BEAT, // ~64s — Black Tide
     stems: [
       {
-        id: 'combat-drone',
-        src: `${musicBasePath}/combat/drone.wav`,
-        gain: 0.5,
-        loop: true,
-      },
-      {
-        id: 'combat-pulse',
-        src: `${musicBasePath}/combat/pulse.wav`,
-        gain: 0.65,
-        loop: true,
-      },
-      {
-        id: 'combat-bells',
-        src: `${musicBasePath}/combat/bells.wav`,
+        id: 'black-tide',
+        src: `${musicBasePath}/main-menu/black-tide.wav`,
         gain: 0.8,
         loop: true,
-        gainMap: {
-          intensity: [
-            { threshold: 0, gain: 0 },
-            { threshold: 0.35, gain: 0.15 },
-            { threshold: 0.7, gain: 0.75 },
-            { threshold: 1, gain: 1 },
-          ],
-        },
       },
     ],
   },
 
-  death: {
-    id: 'death',
+  'main-menu-3': {
+    id: 'main-menu-3',
+    bpm: MENU3_BPM,
+    loopStart: 0,
+    loopEnd: 64 * MENU3_BEAT, // ~45.2s — Crimson Horizon
+    stems: [
+      {
+        id: 'crimson-horizon',
+        src: `${musicBasePath}/main-menu/crimson-horizon.wav`,
+        gain: 0.8,
+        loop: true,
+      },
+    ],
+  },
+
+  'void-whisper': {
+    id: 'void-whisper',
     bpm: BPM,
     loopStart: 0,
-    loopEnd: 40 * BEAT + TAIL,
-    stems: [{ id: 'death-drone', src: `${musicBasePath}/death/death.wav`, gain: 0.75, loop: true }],
+    loopEnd: 64 * BEAT + TAIL, // ~58s — düşman az/yok
+    stems: [
+      {
+        id: 'void-whisper',
+        src: `${musicBasePath}/gameplay/void-whisper.wav`,
+        gain: 0.7,
+        loop: true,
+      },
+    ],
+  },
+
+  'iron-tide': {
+    id: 'iron-tide',
+    bpm: BPM,
+    loopStart: 0,
+    loopEnd: 64 * BEAT + TAIL, // ~58s — düşman çok
+    stems: [
+      {
+        id: 'iron-tide',
+        src: `${musicBasePath}/gameplay/iron-tide.wav`,
+        gain: 0.7,
+        loop: true,
+      },
+    ],
+  },
+
+  'last-ember': {
+    id: 'last-ember',
+    bpm: BPM,
+    loopStart: 0,
+    loopEnd: 32 * BEAT + TAIL, // ~32s — inen piyano
+    stems: [
+      {
+        id: 'last-ember',
+        src: `${musicBasePath}/death/last-ember.wav`,
+        gain: 0.75,
+        loop: false,
+      },
+    ],
   },
 };
 
-/** Ambiyans track'leri (looplu, arka planda az hissedilen). */
-export const ambientTracks = {
-  gameplay: musicTracks['gameplay-ambient'],
-} as const;
+/** Oyun içi ambiyans track'leri — Void Whisper ve Iron Tide, ambient engine'de crossfade ile geçer. */
+export const ambientTrackKeys = ['void-whisper', 'iron-tide'] as const;
+export type AmbientTrackKey = (typeof ambientTrackKeys)[number];
 
-/** Death ekrani rastgele secenekleri — simdi tek track. */
-export const deathTrackKeys: readonly MusicTrackId[] = ['death'];
+/** Death ekranı rastgele seçenekleri — tek track. */
+export const deathTrackKeys: readonly MusicTrackId[] = ['last-ember'];
+
+/** Ana menü rastgele seçenekleri — Iron Vein, Black Tide, Crimson Horizon. */
+export const menuTrackKeys: readonly MusicTrackId[] = ['main-menu', 'main-menu-2', 'main-menu-3'];

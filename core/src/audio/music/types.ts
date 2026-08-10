@@ -1,18 +1,14 @@
-import type { SynthParams, Waveform } from '../synth/types';
+/** Müzik motoru tipleri.
+ *  Runtime'da sadece önceden üretilmiş WAV'lar çalınır —
+ *  melodi/procedural üretim yok. */
 
 /** Müzik state'indeki bir değer (sayısal veya sembolik). */
 export type MusicStateValue = number | string;
 
-/** Müzik state'i; intensity, tension, bossPhase, location gibi boyutları tutar. */
+/** Müzik state'i; intensity gibi boyutları tutar. */
 export interface MusicState {
   /** Genel aksiyon / gerilim yoğunluğu (0-1). */
   intensity?: number;
-  /** Gerilim / tehdit hissi (0-1). */
-  tension?: number;
-  /** Boss fazı veya sahne aşaması. */
-  bossPhase?: number | string;
-  /** Mekan / sahne / track kimliği. */
-  location?: string;
   /** Ekstra kullanıcı state'i. */
   [key: string]: MusicStateValue | undefined;
 }
@@ -31,25 +27,18 @@ export interface MusicContext {
   time: number;
 }
 
-/** Yoğunluk / gerilim gibi sayısal state için gain eşleme noktası. */
+/** Yoğunluk gibi sayısal state için gain eşleme noktası. */
 export interface IntensityGainPoint {
   threshold: number;
   gain: number;
 }
 
-/** Stem'in farklı state değerlerine göre gain haritası.
- *  Sayısal state'ler (intensity, tension) için `IntensityGainPoint[]`,
- *  sembolik state'ler (bossPhase, location) için `Record<string, number>` kullanılır.
- */
+/** Stem'in farklı state değerlerine göre gain haritası. */
 export interface StemGainMap {
-  intensity?: IntensityGainPoint[];
-  tension?: IntensityGainPoint[];
-  bossPhase?: Record<string, number>;
-  location?: Record<string, number>;
   [key: string]: IntensityGainPoint[] | Record<string, number> | undefined;
 }
 
-/** Muzik track'inin bir katmanı (stem). */
+/** Müzik track'inin bir katmanı (stem). */
 export interface Stem {
   id: string;
   /** Sample / stem kaynak URL'si. */
@@ -58,20 +47,10 @@ export interface Stem {
   buffer?: AudioBuffer;
   /** Temel gain (0-1). Varsayılan 1. */
   gain?: number;
-  /** Bu stem stinger (one-shot) mi? */
-  stinger?: boolean;
   /** Loop yapsın mı? Track stem'leri için varsayılan true. */
   loop?: boolean;
-  /** Fade in süresi (saniye). */
-  fadeIn?: number;
-  /** Fade out süresi (saniye). */
-  fadeOut?: number;
-  /** Stereo pan (-1 sol, 0 merkez, 1 sağ). */
-  pan?: number;
   /** Adaptive gain haritası. */
   gainMap?: StemGainMap;
-  /** Adaptive gain fonksiyonu; gainMap'ten önceliklidir. */
-  gainFn?: (state: MusicState, ctx: MusicContext) => number;
 }
 
 /** Müzik parçası tanımı. */
@@ -81,8 +60,6 @@ export interface MusicTrack {
   bpm: number;
   /** Ölçü vuruş sayısı. Varsayılan [4, 4]. */
   timeSignature?: [number, number];
-  /** Parça uzunluğu ölçü sayısı (opsiyonel, scheduling için). */
-  bars?: number;
   /** Loop başlangıcı (saniye). */
   loopStart?: number;
   /** Loop bitişi (saniye). */
@@ -125,42 +102,6 @@ export interface CrossfadeOptions {
   state?: MusicState;
   /** Geçişin bar sınırında başlamasını sağlar; kaç bar atlanacağı (>=1). */
   bars?: number;
-}
-
-/** Stinger çalma seçenekleri. */
-export interface StingerOptions {
-  /** Stinger gain'i (0-1). */
-  volume?: number;
-  /** Ne zaman çalınacağı (AudioContext zamanı). */
-  when?: number;
-}
-
-/** Procedural stem üretim seçenekleri. */
-export interface ProceduralStemOptions {
-  /** Süre (saniye). */
-  duration: number;
-  /** Kök frekans (Hz). */
-  frequency?: number;
-  /** Dalga şekli. */
-  wave?: Waveform | Waveform[];
-  /** Zarf. */
-  envelope?: SynthParams['envelope'];
-  /** Lowpass filtre. */
-  lowpass?: SynthParams['lowpass'];
-  /** Highpass filtre. */
-  highpass?: SynthParams['highpass'];
-  /** Reverb. */
-  reverb?: SynthParams['reverb'];
-  /** Chorus. */
-  chorus?: SynthParams['chorus'];
-  /** Delay. */
-  delay?: SynthParams['delay'];
-  /** Genel gain. */
-  gain?: number;
-  /** Örnek oranı. */
-  sampleRate?: number;
-  /** Buffer döngüye girecekse attack/release tamponlu envelope hesapla. */
-  loop?: boolean;
 }
 
 /** Aktif stem kaynağı ve gain node'unu tutan iç yapı. */

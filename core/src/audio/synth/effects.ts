@@ -1,5 +1,4 @@
 import type {
-  BitcrushParams,
   ChorusParams,
   DelayParams,
   DistortionParams,
@@ -8,44 +7,6 @@ import type {
   ReverbParams,
   StereoWidthParams,
 } from './types';
-
-// -----------------------------------------------------------------------------
-// Bitcrush
-// -----------------------------------------------------------------------------
-
-export class Bitcrusher {
-  private readonly bits: number;
-  private readonly sampleRateFactor: number;
-  private readonly sampleRate: number;
-  private hold = 0;
-  private lastPhase = -1;
-
-  constructor(params: BitcrushParams, sampleRate: number) {
-    this.bits = params.bits ?? 8;
-    this.sampleRateFactor = Math.max(1, Math.floor(params.sampleRateFactor ?? 1));
-    this.sampleRate = sampleRate;
-  }
-
-  process(sample: number, t: number): number {
-    const levels = 2 ** (this.bits - 1);
-    const quantized = Math.max(-1, Math.min(1, sample));
-    const crushed = Math.round(quantized * levels) / levels;
-
-    if (this.sampleRateFactor <= 1) return crushed;
-
-    const phase = Math.floor(t * this.sampleRate) % this.sampleRateFactor;
-    if (phase !== this.lastPhase) {
-      this.hold = crushed;
-      this.lastPhase = phase;
-    }
-    return this.hold;
-  }
-
-  reset(): void {
-    this.hold = 0;
-    this.lastPhase = -1;
-  }
-}
 
 // -----------------------------------------------------------------------------
 // Panning
@@ -330,17 +291,79 @@ class AllpassFilter {
   }
 }
 
-export class Reverb {
+/** Tek kanal reverb çekirdeği — comb + allpass zinciri. */
+class ReverbCore {
   private readonly combFilters: CombFilter[];
   private readonly allpassFilters: AllpassFilter[];
   private readonly preDelayBuffer: Float32Array;
   private preDelayIndex = 0;
   private readonly preDelaySamples: number;
+
+  constructor(
+    combTimes: readonly number[],
+    allpassTimes: readonly number[],
+    sampleRate: number,
+    feedback: number,
+    damp: number,
+    preDelay: number,
+  ) {
+    this.combFilters = combTimes.map((time) => {
+      const size = Math.max(1, Math.floor(time * (sampleRate / 44100)));
+      return new CombFilter(size, feedback, damp);
+    });
+
+    this.allpassFilters = allpassTimes.map((time) => {
+      const size = Math.max(1, Math.floor(time * (sampleRate / 44100)));
+      return new AllpassFilter(size, 0.5);
+    });
+
+    this.preDelaySamples = Math.floor(preDelay * sampleRate);
+    this.preDelayBuffer = new Float32Array(Math.max(1, this.preDelaySamples));
+  }
+
+  process(input: number): number {
+    let delayedInput = input;
+    if (this.preDelaySamples > 0) {
+      const readIndex =
+        (this.preDelayIndex - this.preDelaySamples + this.preDelayBuffer.length) %
+        this.preDelayBuffer.length;
+      delayedInput = this.preDelayBuffer[readIndex]!;
+      this.preDelayBuffer[this.preDelayIndex] = input;
+      this.preDelayIndex = (this.preDelayIndex + 1) % this.preDelayBuffer.length;
+    }
+
+    let combSum = 0;
+    for (const comb of this.combFilters) {
+      combSum += comb.process(delayedInput);
+    }
+    let reverb = combSum / this.combFilters.length;
+
+    for (const allpass of this.allpassFilters) {
+      reverb = allpass.process(reverb);
+    }
+
+    return reverb;
+  }
+
+  reset(): void {
+    this.combFilters.forEach((c) => c.reset());
+    this.allpassFilters.forEach((a) => a.reset());
+    this.preDelayBuffer.fill(0);
+    this.preDelayIndex = 0;
+  }
+}
+
+/** Stereo reverb — L ve R için bağımsız çekirdekler, farklı delay süreleri.
+ *  Freeverb stereo yaklaşımı: R kanalı ~3% uzun delay → geniş stereo imaj. */
+export class Reverb {
+  private readonly left: ReverbCore;
+  private readonly right: ReverbCore;
   private readonly amount: number;
   private readonly sampleRate: number;
 
-  // Freeverb tarzı gecikme süreleri (44.1kHz için), örnek oranına göre ölçeklenir
-  private static readonly COMB_TIMES = [1557, 1617, 1491, 1422, 1277, 1356, 1188, 1116] as const;
+  // L ve R için farklı comb süreleri — stereo genişlik
+  private static readonly COMB_TIMES_L = [1557, 1617, 1491, 1422, 1277, 1356, 1188, 1116] as const;
+  private static readonly COMB_TIMES_R = [1601, 1665, 1537, 1463, 1313, 1393, 1223, 1151] as const;
   private static readonly ALLPASS_TIMES = [225, 556, 441, 341] as const;
 
   constructor(params: ReverbParams, sampleRate: number) {
@@ -350,57 +373,33 @@ export class Reverb {
     const roomSize = Math.max(0, Math.min(1, params.roomSize ?? 0.5));
     const decay = params.decay ?? 0.5 + roomSize * 0.5;
     const damp = Math.max(0, Math.min(1, params.damp ?? 0.5));
-
-    // Cızırtılı metallic zil oluşumunu önlemek için maksimum geri besleme sınırlandı.
     const feedback = Math.min(0.82, decay * 0.55 + 0.15);
-
-    this.combFilters = Reverb.COMB_TIMES.map((time) => {
-      const size = Math.floor(time * (sampleRate / 44100));
-      return new CombFilter(size, feedback, damp);
-    });
-
-    this.allpassFilters = Reverb.ALLPASS_TIMES.map((time) => {
-      const size = Math.floor(time * (sampleRate / 44100));
-      return new AllpassFilter(size, 0.5);
-    });
-
     const preDelay = Math.max(0, params.preDelay ?? 0);
-    this.preDelaySamples = Math.floor(preDelay * sampleRate);
-    this.preDelayBuffer = new Float32Array(Math.max(1, this.preDelaySamples));
+
+    this.left = new ReverbCore(Reverb.COMB_TIMES_L, Reverb.ALLPASS_TIMES, sampleRate, feedback, damp, preDelay);
+    this.right = new ReverbCore(Reverb.COMB_TIMES_R, Reverb.ALLPASS_TIMES, sampleRate, feedback, damp, preDelay);
   }
 
+  /** Mono işlem — geriye dönük uyum. L+R ortalaması. */
   process(input: number): number {
-    // Pre-delay
-    let delayedInput = input;
-    if (this.preDelaySamples > 0) {
-      const readIndex =
-        (this.preDelayIndex - this.preDelaySamples + this.preDelayBuffer.length) %
-        this.preDelayBuffer.length;
-      delayedInput = this.preDelayBuffer[readIndex];
-      this.preDelayBuffer[this.preDelayIndex] = input;
-      this.preDelayIndex = (this.preDelayIndex + 1) % this.preDelayBuffer.length;
-    }
+    const l = this.left.process(input);
+    const r = this.right.process(input);
+    return input * (1 - this.amount) + ((l + r) * 0.5) * this.amount;
+  }
 
-    // Comb filters parallel
-    let combSum = 0;
-    for (const comb of this.combFilters) {
-      combSum += comb.process(delayedInput);
-    }
-    let reverb = combSum / this.combFilters.length;
-
-    // Allpass filters series
-    for (const allpass of this.allpassFilters) {
-      reverb = allpass.process(reverb);
-    }
-
-    return input * (1 - this.amount) + reverb * this.amount;
+  /** Stereo işlem — L ve R bağımsız reverb kuyrukları. */
+  processStereo(leftIn: number, rightIn: number): [number, number] {
+    const l = this.left.process(leftIn);
+    const r = this.right.process(rightIn);
+    return [
+      leftIn * (1 - this.amount) + l * this.amount,
+      rightIn * (1 - this.amount) + r * this.amount,
+    ];
   }
 
   reset(): void {
-    this.combFilters.forEach((c) => c.reset());
-    this.allpassFilters.forEach((a) => a.reset());
-    this.preDelayBuffer.fill(0);
-    this.preDelayIndex = 0;
+    this.left.reset();
+    this.right.reset();
   }
 }
 
@@ -458,8 +457,9 @@ export class Distortion {
 export class StereoWidener {
   private readonly width: number;
 
-  constructor(params: StereoWidthParams) {
-    this.width = Math.max(0, Math.min(2, params.width));
+  constructor(params: StereoWidthParams | number) {
+    const w = typeof params === 'number' ? params : params.width;
+    this.width = Math.max(0, Math.min(2, w));
   }
 
   /** [left, right] çiftini alır, genişletilmiş çift döner. */

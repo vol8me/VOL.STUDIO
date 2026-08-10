@@ -28,7 +28,12 @@ export interface EnvelopeParams {
   sustainLevel?: number;
   /** Zarf eğrisi. */
   curve?: Curve;
+  /** Loop modu — ADSH kısmını döngüye al, release'i atla. Ritmik pattern'ler için. */
+  loop?: boolean;
 }
+
+/** Filtre tipleri. 1-kutuplu basit filtreler veya rezonanslı biquad. */
+export type FilterType = 'lowpass' | 'highpass' | 'bandpass' | 'notch';
 
 /** Filtre tanımı. */
 export interface FilterParams {
@@ -36,8 +41,21 @@ export interface FilterParams {
   cutoff: number;
   /** Süre boyunca kesim frekansında ne kadar değişim olacağı (Hz). Varsayılan 0. */
   slide?: number;
-  /** Rezonans (0-1). Şu an desteklenmiyor, gelecek için ayrılmış. */
+  /** Rezonans / Q (0-20). 0 = rezonans yok. Biquad filtrelerde tepe noktası gücü.
+   *  Eski 1-kutuplu filtrelerde yok sayılır. */
   resonance?: number;
+  /** Filtre tipi. Varsayılan 'lowpass'. Biquad kullanımı için.
+   *  Belirtilmezse ve resonance > 0 ise biquad lowpass kullanılır. */
+  type?: FilterType;
+  /** Kutup sayısı (1 veya 2). 1 = eski RC filtre (6dB/oct), 2 = biquad (12dB/oct).
+   *  Varsayılan: resonance > 0 ise 2, değilse 1 (geriye dönük uyum). */
+  poles?: 1 | 2;
+  /** Filtre zarfı — cutoff zamanla modüle edilir (filter sweep).
+   *  Zarf 0→1 arası: cutoff = baseCutoff * (1 - envAmount + envAmount * envValue). */
+  envelope?: EnvelopeParams;
+  /** Zarfın cutoff'a etkisi (0-1). 0 = etkisiz, 1 = tam kontrol.
+   *  Varsayılan 0. */
+  envAmount?: number;
 }
 
 /** Delay efekti. */
@@ -94,14 +112,14 @@ export interface FmParams {
   modulatorEnvelope?: EnvelopeParams;
 }
 
-/** Distortion / waveshaping efekti. */
-export interface DistortionParams {
-  /** Drive miktarı (0-1). */
-  amount: number;
-  /** Distortion tipi. Varsayılan 'soft'. */
-  type?: 'soft' | 'hard' | 'foldback';
-  /** Wet/dry mix (0-1). Varsayılan 1. */
-  mix?: number;
+/** Additive synthesis harmoniği — sine osilatör başına bir. */
+export interface HarmonicParams {
+  /** Frekans çarpanı (1 = temel, 2 = oktav, 1.5 = perfect 5th, 3 = oktav+5th). */
+  ratio: number;
+  /** Kazanç (0-1). Temel genelde 1, üst harmonikler daha düşük. */
+  gain: number;
+  /** Faz ofset (0-1). Varsayılan 0. Stereo yayılım için kullanışlı. */
+  phase?: number;
 }
 
 /** Stereo width / enhancer. */
@@ -166,12 +184,14 @@ export interface ReverbParams {
   preDelay?: number;
 }
 
-/** Bitcrush / örnekleme frekansı düşürme. */
-export interface BitcrushParams {
-  /** Bit derinliği (örn. 8). */
-  bits?: number;
-  /** Örnekleme frekansı düşürme katsayısı (örn. 4). */
-  sampleRateFactor?: number;
+/** Distortion / waveshaping efekti. */
+export interface DistortionParams {
+  /** Drive miktarı (0-1). */
+  amount: number;
+  /** Distortion tipi. Varsayılan 'soft'. */
+  type?: 'soft' | 'hard' | 'foldback';
+  /** Wet/dry mix (0-1). Varsayılan 1. */
+  mix?: number;
 }
 
 /** Frekans zıplaması. */
@@ -202,6 +222,10 @@ export interface SynthParams {
   pulseWidth?: number;
   /** FM / phase modulation. */
   fm?: FmParams;
+  /** Additive synthesis — harmonik serisi ile sıcak timbre.
+   *  wave/fm yerine kullanılır. Her harmonik ayrı sine osilatör, tek geçişte toplanır.
+   *  Sıcak piyano, yaylı, organ karakteri için ideal. */
+  harmonics?: HarmonicParams[];
   /** Sample mixing. */
   sample?: SampleParams;
   /** Frekans zıplaması. */
@@ -212,8 +236,6 @@ export interface SynthParams {
   lowpass?: FilterParams;
   /** Highpass filtre. */
   highpass?: FilterParams;
-  /** Bitcrush. */
-  bitcrush?: BitcrushParams;
   /** Vibrato derinliği (Hz). */
   vibratoDepth?: number;
   /** Vibrato hızı (Hz). */
@@ -224,8 +246,8 @@ export interface SynthParams {
   tremoloRate?: number;
   /** Distortion. */
   distortion?: DistortionParams;
-  /** Stereo width. */
-  stereoWidth?: StereoWidthParams;
+  /** Stereo width — sayı (width) veya { width: number } objesi. */
+  stereoWidth?: StereoWidthParams | number;
   /** Reverb. */
   reverb?: ReverbParams;
   /** Delay. */
@@ -246,6 +268,25 @@ export interface SynthParams {
   duration: number;
   /** Genel kazanç (0-1). */
   gain?: number;
+  /** LFO'lar — osilatör frekansı, filtre kesimi veya amplitüd'e modülasyon. */
+  lfos?: LfoParams[];
+}
+
+/** LFO hedef parametreleri. */
+export type LfoTarget = 'pitch' | 'filter' | 'amplitude';
+
+/** LFO parametreleri. */
+export interface LfoParams {
+  /** Hedef parametre. 'pitch' = frekans, 'filter' = lowpass cutoff, 'amplitude' = gain. */
+  target: LfoTarget;
+  /** LFO hızı (Hz). */
+  rate: number;
+  /** Derinlik. pitch: Hz, filter: Hz, amplitude: 0-1. */
+  depth: number;
+  /** LFO dalga şekli. Varsayılan 'sine'. */
+  wave?: Exclude<Waveform, 'noise' | 'pink' | 'brown'>;
+  /** Faz ofset (0-1). Varsayılan 0. */
+  phase?: number;
 }
 
 export interface SynthesisResult {

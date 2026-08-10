@@ -1,8 +1,8 @@
 /** @volstudio/core/audio/music
  *
- *  Profesyonel, Web Audio tabanlı müzik motoru.
- *  Stem (katman) tabanlı adaptive müzik, crossfade, stinger ve
- *  prosedürel ambient/drone/pad üretimi sağlar.
+ *  Web Audio tabanlı müzik motoru.
+ *  Önceden üretilmiş WAV stem'leri çalar, adaptive gain ve crossfade destekler.
+ *  Runtime melodi/procedural üretim yok — tüm müzik build-time'da üretilir.
  */
 
 export type * from './types';
@@ -12,9 +12,5 @@ export { MusicMixer } from './mixer';
 export { MusicScheduler } from './scheduler';
 export { StemLoader } from './loader';
 export { resolveStemGain } from './gain-resolver';
-export { ProceduralStemGenerator } from './procedural';
-export { ambientNoiseParams, bassParams, droneParams, padParams } from './procedural-presets';
 export { Instrument } from './instrument';
-export type { InstrumentName, MelodicPhrase, MelodicNote, InstrumentParams } from './instrument';
-export { MelodicEngine } from './melodic';
-export type { MelodicPlayOptions } from './melodic';
+export type { InstrumentName, InstrumentParams } from './instrument';

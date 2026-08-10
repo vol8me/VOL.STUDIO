@@ -11,9 +11,8 @@ export type * from './types';
 export { getWaveSample, getWaveSampleWithPhase } from './waveforms';
 export { WhiteNoise, PinkNoise, BrownNoise, createNoiseSource } from './noise';
 export { Envelope, applyCurve } from './envelope';
-export { LowpassFilter, HighpassFilter, getCutoffAtTime } from './filter';
+export { LowpassFilter, HighpassFilter, BiquadFilter, Cascade4Filter, createFilter, getCutoffAtTime } from './filter';
 export {
-  Bitcrusher,
   Chorus,
   DelayLine,
   Distortion,
@@ -23,7 +22,9 @@ export {
   StereoWidener,
   getPanGains,
 } from './effects';
-export { applyGlobalEffects, synthesize, synth, normalize, mix } from './engine';
+export { applyGlobalEffects, synthesize, synth, normalize, limitBuffer, mix } from './engine';
+export { pluck } from './physical';
+export type { PluckParams } from './physical';
 export { compose } from './sequencer';
 export {
   decodeWav,

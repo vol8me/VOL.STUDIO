@@ -38,13 +38,13 @@ import { writeWav } from '@volstudio/core/audio/synth/writer';
 
 const result = Presets.laser(880, 0.15);
 const sound = synth(result.duration, result);
-writeWav('public/assets/sounds/combat/laser.wav', sound);
+writeWav('public/assets/audio/sfx/combat/laser.wav', sound);
 ```
 
 ### 2. Paket scripti
 
 ```json
-"generate:sounds": "tsx scripts/generate-sounds.ts"
+"generate:sounds": "tsx ../../core/scripts/generate-volhell-sounds.ts public/assets/audio/sfx"
 ```
 
 ### 3. Çalıştırma
@@ -177,7 +177,7 @@ sustainLevel: 0.7
 import { compose, Presets } from '@volstudio/core/audio/synth';
 
 const result = compose(Presets.arpeggioUp(440), Presets.blip(440, 0.1));
-writeWav('public/assets/sounds/level-up.wav', result);
+writeWav('public/assets/audio/sfx/level-up.wav', result);
 ```
 
 ```typescript
@@ -240,7 +240,7 @@ Presets.getPreset('laser', 880, 0.15);
 
 ## Yeni Ses Ekleme
 
-1. `scripts/generate-sounds.ts`'e ekle:
+1. `core/scripts/generate-volhell-sounds.ts`'e ekle:
 
 ```typescript
 {
@@ -267,7 +267,7 @@ pnpm --filter @volstudio/<game> test
 
 ## Kategori Yapısı
 
-Sesler `public/assets/sounds/` altında gruplanır; path ile `sounds.ts` eşleşmesi yeterli:
+Sesler `public/assets/audio/sfx/` altında gruplanır; path ile `sounds.ts` eşleşmesi yeterli:
 
 - `combat/`
 - `player/`

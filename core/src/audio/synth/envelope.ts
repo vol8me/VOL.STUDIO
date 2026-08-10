@@ -1,16 +1,20 @@
 import type { Curve, EnvelopeParams } from './types';
 
-/** 0-1 arası eğri uygular. */
+/** 0-1 arası eğri uygular.
+ *  exponential: gerçek üstel eğri — başlangıçta hızlı, sonda yavaş (doğal decay). */
 export function applyCurve(x: number, curve: Curve): number {
+  const t = Math.max(0, Math.min(1, x));
   switch (curve) {
     case 'linear':
-      return x;
+      return t;
     case 'exponential':
-      return x * x; // daha yumuşak kalkış/sönüş
+      // 0 → 1 üstel: başta hızlı kalkış, sonda yavaş yaklaşım
+      // 1 - 10^(-3*t) : 3 birimlik zaman sabiti, doğal ses decay'sine yakın
+      return 1 - Math.pow(10, -3 * t);
     case 'cosine':
-      return (1 - Math.cos(x * Math.PI)) / 2;
+      return (1 - Math.cos(t * Math.PI)) / 2;
     default:
-      return x;
+      return t;
   }
 }
 
@@ -24,6 +28,7 @@ export class Envelope {
   private readonly sustainLevel: number;
   private readonly curve: Curve;
   private readonly total: number;
+  private readonly loop: boolean;
 
   constructor(params: EnvelopeParams, duration: number) {
     let attack = params.attack ?? 0;
@@ -50,6 +55,7 @@ export class Envelope {
     this.release = release;
     this.sustainLevel = params.sustainLevel ?? 0.5;
     this.curve = params.curve ?? 'exponential';
+    this.loop = params.loop ?? false;
 
     this.total = this.attack + this.hold + this.decay + this.sustain + this.release;
   }
@@ -58,38 +64,46 @@ export class Envelope {
   value(t: number): number {
     if (t < 0) return 0;
 
+    // Loop modunda: ADSH kısmını döngüye al (release hariç)
+    // Loop periyodu = attack + hold + decay + sustain
+    const loopPeriod = this.attack + this.hold + this.decay + this.sustain;
+    let evalT = t;
+    if (this.loop && loopPeriod > 0) {
+      evalT = t % loopPeriod;
+    }
+
     let pos = 0;
 
     // Attack
-    if (t < pos + this.attack) {
-      const ratio = this.attack > 0 ? (t - pos) / this.attack : 1;
+    if (evalT < pos + this.attack) {
+      const ratio = this.attack > 0 ? (evalT - pos) / this.attack : 1;
       return applyCurve(Math.max(0, Math.min(1, ratio)), this.curve);
     }
     pos += this.attack;
 
     // Hold
-    if (t < pos + this.hold) {
+    if (evalT < pos + this.hold) {
       return 1;
     }
     pos += this.hold;
 
     // Decay
-    if (t < pos + this.decay) {
-      const ratio = this.decay > 0 ? (t - pos) / this.decay : 1;
+    if (evalT < pos + this.decay) {
+      const ratio = this.decay > 0 ? (evalT - pos) / this.decay : 1;
       const curved = applyCurve(ratio, this.curve);
       return 1 - (1 - this.sustainLevel) * curved;
     }
     pos += this.decay;
 
     // Sustain
-    if (t < pos + this.sustain) {
+    if (evalT < pos + this.sustain) {
       return this.sustainLevel;
     }
     pos += this.sustain;
 
-    // Release
-    if (t < pos + this.release) {
-      const ratio = this.release > 0 ? (t - pos) / this.release : 1;
+    // Release — loop modunda atlanır
+    if (!this.loop && evalT < pos + this.release) {
+      const ratio = this.release > 0 ? (evalT - pos) / this.release : 1;
       const curved = applyCurve(ratio, this.curve);
       return this.sustainLevel * (1 - curved);
     }

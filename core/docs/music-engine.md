@@ -39,7 +39,7 @@ const mainMenu: MusicTrack = {
   stems: [
     {
       id: 'theme',
-      src: 'assets/music/generated/main-menu-theme.wav',
+      src: 'assets/audio/music/main-menu/main-menu-theme.wav',
       gain: 0.75,
       loop: true,
     },
@@ -200,7 +200,7 @@ await music.playStinger('level-up');
 
 ## Procedural Stem Üretimi
 
-Build zamanında WAV yazımak için `generate-volhell-music.ts` gibi script'ler kullanılır. Runtime'da `ProceduralStemGenerator` ile `AudioBuffer` üretilebilir.
+Build zamanında WAV yazımak için `generate-iron-vein.ts` gibi track başına script'ler kullanılır. Runtime'da `ProceduralStemGenerator` ile `AudioBuffer` üretilebilir.
 
 ```typescript
 import { ProceduralStemGenerator, droneParams } from '@volstudio/core/audio/music';
@@ -250,23 +250,27 @@ Track tanımları:
 games/vol-hell/src/config/music.ts
 ```
 
-Üretim script'i:
+Üretim script'leri (track başına ayrı):
 
 ```
-core/scripts/generate-volhell-music.ts
+core/scripts/generate-iron-vein.ts        — ana menü teması 1
+core/scripts/generate-black-tide.ts       — ana menü teması 2
+core/scripts/generate-crimson-horizon.ts  — ana menü teması 3
+core/scripts/generate-ambient-tracks.ts   — void-whisper + iron-tide (oyun içi ambiyans)
 ```
 
 Çalıştır:
 
 ```bash
-pnpm --filter @volstudio/core exec tsx scripts/generate-volhell-music.ts ../games/vol-hell/public/assets/music/generated
+pnpm --filter @volstudio/vol-hell generate:music
 ```
 
 ## Yeni Müzik Ekleme
 
-1. `core/scripts/generate-volhell-music.ts` veya benzeri script'e stem render fonksiyonu ekle.
-2. `games/vol-hell/public/assets/music/generated/` altına WAV yaz.
+1. `core/scripts/` altına track için render script'i ekle (mevcut `generate-iron-vein.ts` gibi).
+2. `games/vol-hell/public/assets/audio/music/<kategori>/` altına WAV yaz.
 3. `games/vol-hell/src/config/music.ts`'te track ve stem tanımını güncelle.
+4. `games/vol-hell/package.json` `generate:music` script'ine üretim komutunu ekle.
 4. Sahne kodunda `loadMusic`/`playMusic` ile bağla.
 5. Doğrula:
 

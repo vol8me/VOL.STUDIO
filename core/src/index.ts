@@ -37,7 +37,7 @@ export * as Music from './audio/music';
 export { MusicEngine } from './audio/music/engine';
 export { SidechainDucker } from './audio/sidechain';
 export type { DuckingProfile } from './audio/sidechain';
-export { Instrument, MelodicEngine } from './audio/music';
+export { Instrument } from './audio/music';
 export { SaveManager, LocalStorageAdapter } from './systems/SaveManager';
 export type { IStorageAdapter } from './systems/SaveManager';
 export { I18n, i18n, i18next, type I18nOptions } from './systems/I18n';

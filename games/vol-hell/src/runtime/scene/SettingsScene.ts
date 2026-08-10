@@ -23,7 +23,6 @@ export class SettingsScene extends Phaser.Scene {
   private masterSlider!: Slider;
   private sfxSlider!: Slider;
   private musicSlider!: Slider;
-  private ambientSlider!: Slider;
   private shakeCheckbox!: Checkbox;
   private shakeSlider!: Slider;
   private muteCheckbox!: Checkbox;
@@ -103,18 +102,6 @@ export class SettingsScene extends Phaser.Scene {
       },
     });
 
-    this.ambientSlider = new Slider({
-      min: 0,
-      max: 1,
-      step: 0.05,
-      value: audioSettings.getAmbientVolume(),
-      label: i18next.t('volhell:settings.ambient'),
-      onChange: (value) => {
-        void audioSettings.setAmbientVolume(value);
-        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
-      },
-    });
-
     this.shakeCheckbox = new Checkbox({
       checked: audioSettings.isScreenShakeEnabled(),
       label: i18next.t('volhell:settings.shake'),
@@ -155,7 +142,6 @@ export class SettingsScene extends Phaser.Scene {
       .add(this.masterSlider)
       .add(this.sfxSlider)
       .add(this.musicSlider)
-      .add(this.ambientSlider)
       .add(this.shakeCheckbox)
       .add(this.shakeSlider)
       .add(this.muteCheckbox)
@@ -177,7 +163,6 @@ export class SettingsScene extends Phaser.Scene {
     this.masterSlider.setLabel(i18next.t('volhell:settings.master'));
     this.sfxSlider.setLabel(i18next.t('volhell:settings.sfx'));
     this.musicSlider.setLabel(i18next.t('volhell:settings.music'));
-    this.ambientSlider.setLabel(i18next.t('volhell:settings.ambient'));
     this.shakeCheckbox.setLabel(i18next.t('volhell:settings.shake'));
     this.shakeSlider.setLabel(i18next.t('volhell:settings.shakeIntensity'));
     this.muteCheckbox.setLabel(i18next.t('volhell:settings.mute'));
@@ -198,7 +183,6 @@ export class SettingsScene extends Phaser.Scene {
     this.masterSlider.destroy();
     this.sfxSlider.destroy();
     this.musicSlider.destroy();
-    this.ambientSlider.destroy();
     this.shakeCheckbox.destroy();
     this.shakeSlider.destroy();
     this.muteCheckbox.destroy();

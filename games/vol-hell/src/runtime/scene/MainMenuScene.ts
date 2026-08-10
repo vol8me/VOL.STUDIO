@@ -4,7 +4,7 @@ import { isTauri } from '@tauri-apps/api/core';
 import { Button, Panel, Text, UIRoot, ToastManager, i18next } from '@volstudio/core';
 import { LoadingTransition } from './LoadingTransition';
 import { gameAudio } from '@/app/bootstrap';
-import { musicTracks } from '@/config';
+import { musicTracks, menuTrackKeys } from '@/config';
 import { gameStats } from '@/app/bootstrap';
 import { formatTimeMs } from '@/utils/time';
 
@@ -40,13 +40,21 @@ export class MainMenuScene extends Phaser.Scene {
     this.ui = new UIRoot(container);
     this.toasts = new ToastManager(container);
 
-    // Sabit ana menü teması.
-    const track = musicTracks['main-menu'];
-    void gameAudio.loadMusic(track).then(() => {
-      // Kullanıcı sahne kapanmadan önce başka bir ekrana geçtiyse müzik çalmaya devam etmesin.
-      if (!this.scene.isActive(this.scene.key)) return;
-      void gameAudio.playMusic(track.id, { fadeIn: 2 });
-    });
+    // Ana menüden ayrılıp geri dönüldüğünde müzik başa sarmasın;
+    // eğer zaten bir ana menü teması çalıyorsa onu sürdür.
+    const currentMusic = gameAudio.music.getCurrentState();
+    const menuTrackId = currentMusic.trackId as (typeof menuTrackKeys)[number] | undefined;
+    const isMenuMusicPlaying = currentMusic.playing && menuTrackId && menuTrackKeys.includes(menuTrackId);
+
+    if (!isMenuMusicPlaying) {
+      const trackKey = menuTrackKeys[Math.floor(Math.random() * menuTrackKeys.length)]!;
+      const track = musicTracks[trackKey];
+      void gameAudio.loadMusic(track).then(() => {
+        // Kullanıcı sahne kapanmadan önce başka bir ekrana geçtiyse müzik çalmaya devam etmesin.
+        if (!this.scene.isActive(this.scene.key)) return;
+        void gameAudio.playMusic(track.id, { fadeIn: 2 });
+      });
+    }
 
     this.startButton = new Button(i18next.t('volhell:menu.start'), {
       variant: 'primary',
