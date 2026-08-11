@@ -49,8 +49,7 @@ export class ViewportManager {
     const parent = this.config.parent ?? 'game-container';
 
     if (this.config.strategy === 'resize') {
-      const rawDpr = window.devicePixelRatio || TECH.DPR_FALLBACK;
-      const dpr = this.config.maxDpr ? Math.min(rawDpr, this.config.maxDpr) : rawDpr;
+      const dpr = this.resolveDpr();
       const width = this.config.width ?? window.innerWidth;
       const height = this.config.height ?? window.innerHeight;
       return {
@@ -86,13 +85,23 @@ export class ViewportManager {
     };
   }
 
+  /** getConfig() ve attachResize() aynı DPR'yi görmeli — `zoom` bu değere göre hesaplanır. */
+  private resolveDpr(): number {
+    const rawDpr = window.devicePixelRatio || TECH.DPR_FALLBACK;
+    return this.config.maxDpr ? Math.min(rawDpr, this.config.maxDpr) : rawDpr;
+  }
+
   /**
    * Yalnızca strategy: 'resize' oyunlarında çağrılmalıdır. Pencere boyutu değiştikçe
    * canvas ve kamera viewport'larını günceller. Dönen fonksiyon dinleyiciyi kaldırır.
+   *
+   * Örnek metodudur (statik değil): `maxDpr` kelepçesi getConfig()'in kurduğu
+   * `zoom` ile aynı olmak zorunda. Ham devicePixelRatio kullanılırsa canvas'ın
+   * CSS boyutu `rawDpr / maxDpr` oranında pencereyi taşar.
    */
-  static attachResize(game: Phaser.Game): () => void {
+  attachResize(game: Phaser.Game): () => void {
     const handler = (): void => {
-      const dpr = window.devicePixelRatio || TECH.DPR_FALLBACK;
+      const dpr = this.resolveDpr();
       const width = window.innerWidth * dpr;
       const height = window.innerHeight * dpr;
 

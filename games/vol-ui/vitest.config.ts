@@ -3,6 +3,20 @@ import { resolve } from 'node:path';
 
 export default defineConfig({
   test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'lcov'],
+      include: ['src/**/*.ts'],
+      // Tip-only ve barrel dosyalarında çalıştırılabilir satır yok; dahil
+      // edilirse kapsam oranını yapay olarak seyreltirler.
+      exclude: ['src/**/index.ts', 'src/**/*.d.ts', 'src/@types/**', 'src/vite-env.d.ts'],
+      thresholds: {
+        lines: 0,
+        functions: 0,
+        branches: 0,
+        statements: 0,
+      },
+    },
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./tests/setup.ts'],

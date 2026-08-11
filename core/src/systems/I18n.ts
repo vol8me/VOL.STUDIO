@@ -25,6 +25,8 @@ export class I18n {
   private saveManager: SaveManager | null = null;
   private saveKey = 'vol-locale';
   private locales = new Set<string>(['tr', 'en']);
+  /** Devam eden init'in promise'i — escanli cagrilarda ikinci init()'i engeller. */
+  private initPromise: Promise<void> | null = null;
   /** init() öncesi addResources() ile eklenen bundle'lar — init sonrası uygulanır. */
   private pendingResources: Array<{
     locale: string;
@@ -34,10 +36,24 @@ export class I18n {
   /** addResources() ile runtime'da eklenen bundle'lar — reset()'te temizlenir. */
   private addedResources: Array<{ locale: string; ns: string }> = [];
 
-  /** i18next'i başlatır. Birden fazla çağrılsa ilk çağrı geçerlidir. */
+  /**
+   * i18next'i başlatır. Birden fazla çağrılsa ilk çağrı geçerlidir.
+   *
+   * `initialized` bayragi tum await'lerden SONRA atandigi icin iki paralel
+   * init() ikisi de guard'i gecip i18next.init()'i iki kez cagirirdi; devam
+   * eden promise saklanarak escanlilik tekillestirilir.
+   */
   async init(options?: I18nOptions): Promise<void> {
     if (this.initialized) return;
+    if (this.initPromise) return this.initPromise;
 
+    this.initPromise = this.runInit(options).finally(() => {
+      this.initPromise = null;
+    });
+    return this.initPromise;
+  }
+
+  private async runInit(options?: I18nOptions): Promise<void> {
     this.fallbackLocale = options?.fallbackLocale ?? 'tr';
     this.saveManager = options?.saveManager ?? null;
     this.saveKey = options?.saveKey ?? 'vol-locale';
@@ -86,8 +102,15 @@ export class I18n {
     this.initialized = true;
   }
 
-  /** i18next'i tamamen sıfırlar. Sadece test amaçlı — production'da kullanmayın. */
+  /**
+   * Sarmalayici durumunu sifirlar ve runtime'da eklenen bundle'lari kaldirir.
+   *
+   * DIKKAT: i18next'in kendi ic durumu (baslatilmis olmasi, yuklu ana
+   * kaynaklar) KORUNUR — i18next tekrar init edilebilir bir kutuphane degil.
+   * Sadece test amaçlı; production'da kullanmayın.
+   */
   reset(): void {
+    this.initPromise = null;
     // Runtime'da eklenen resource bundle'ları i18next'ten temizle
     for (const { locale, ns } of this.addedResources) {
       i18next.removeResourceBundle(locale, ns);
@@ -122,7 +145,11 @@ export class I18n {
       throw new Error('[I18n] changeLanguage çağrıldı ama init() henüz yapılmadı');
     }
     await i18next.changeLanguage(locale);
-    this.locales.add(locale);
+    // Yalnizca gercekten kaynagi olan diller kayitli sayilir. Kosulsuz eklemek
+    // detectLocale()'in cevirisi olmayan bir dili secmesine yol acardi.
+    if (i18next.hasResourceBundle(locale, 'core')) {
+      this.locales.add(locale);
+    }
     if (this.saveManager) {
       await this.saveManager.save(this.saveKey, locale);
     }

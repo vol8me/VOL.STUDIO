@@ -32,9 +32,9 @@ describe('GameStateDb migration', () => {
     const db = new GameStateDb();
     await db.init();
 
-    // v0 → v1: INSERT OR REPLACE ile version=1 yazılır
+    // v0 -> v1: tek satirli semaya (id = 1) version = 1 yazilir
     expect(mockExecute).toHaveBeenCalledWith(
-      'INSERT OR REPLACE INTO schema_version (version) VALUES (?)',
+      expect.stringContaining('INSERT INTO schema_version'),
       [1],
     );
   });
@@ -48,7 +48,7 @@ describe('GameStateDb migration', () => {
 
     // v1 → v2 migration henüz yok, dolayısıyla ek INSERT çağrılmaz
     const insertCalls = mockExecute.mock.calls.filter(
-      ([sql]) => typeof sql === 'string' && sql.includes('INSERT OR REPLACE INTO schema_version'),
+      ([sql]) => typeof sql === 'string' && sql.includes('INSERT INTO schema_version'),
     );
     expect(insertCalls).toHaveLength(0);
   });
@@ -65,7 +65,7 @@ describe('GameStateDb migration', () => {
     await db.init();
 
     const insertCalls = mockExecute.mock.calls.filter(
-      ([sql]) => typeof sql === 'string' && sql.includes('INSERT OR REPLACE INTO schema_version'),
+      ([sql]) => typeof sql === 'string' && sql.includes('INSERT INTO schema_version'),
     );
     expect(insertCalls).toHaveLength(0);
   });

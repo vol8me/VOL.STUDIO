@@ -31,7 +31,8 @@
     "shake": "Ekran Sarsıntısı",
     "shakeIntensity": "Sarsıntı Şiddeti",
     "mute": "Sesi Kapat",
-    "back": "GERİ"
+    "back": "GERİ",
+    "ambient": "Ambiyans"
   },
   "pause": {
     "title": "DURAKLATILDI",

@@ -26,6 +26,10 @@ build/
 target/
 *.tsbuildinfo
 
+# Test coverage raporlari
+coverage/
+.nyc_output/
+
 # Tauri mobile/desktop generated projects
 /tauri-v2/src-tauri/gen/
 /tauri-v2/src-tauri/target/

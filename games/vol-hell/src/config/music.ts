@@ -127,6 +127,43 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
 export const ambientTrackKeys = ['void-whisper', 'iron-tide'] as const;
 export type AmbientTrackKey = (typeof ambientTrackKeys)[number];
 
+/**
+ * Müzik/ambiyans geçiş parametreleri. Eşikler ve süreler burada tek kaynaktan
+ * gelir; sahne kodunda track id'si veya süre yazılmaz.
+ */
+export const musicConfig = {
+  ambient: {
+    /** Bu sayı ve üzeri düşmanda gergin ambiyansa geçilir. */
+    tenseEnemyThreshold: 8,
+    /** Calm -> tense için gereken kararlılık süresi (ms). Tehlikeye hızlı tepki. */
+    tenseHoldMs: 1000,
+    /** Tense -> calm için gereken kararlılık süresi (ms). Temkinli, sık geçiş yapmaz. */
+    calmHoldMs: 5000,
+    /** Düşman az/yok iken çalan ambiyans. */
+    calmTrackId: 'void-whisper' satisfies AmbientTrackKey,
+    /** Düşman yoğunken çalan ambiyans. */
+    tenseTrackId: 'iron-tide' satisfies AmbientTrackKey,
+    /** Ambiyans giriş fade süresi (saniye). */
+    fadeInSec: 2,
+    /** Oyuna girerken menü müziğinin kapanma süresi (saniye). */
+    menuStopFadeSec: 2,
+    /** Ölüm anında ambiyansın kapanma süresi (saniye). */
+    deathStopFadeSec: 1,
+  },
+  /** Ölüm ekranı müziği. */
+  death: {
+    fadeInSec: 1,
+  },
+  /** Ana menü müziği. */
+  menu: {
+    fadeInSec: 2,
+    /** Menüden çıkarken müziğin kapanma süresi (saniye). */
+    stopFadeSec: 1,
+  },
+} as const;
+
+export type MusicConfig = typeof musicConfig;
+
 /** Death ekranı rastgele seçenekleri — tek track. */
 export const deathTrackKeys: readonly MusicTrackId[] = ['last-ember'];
 

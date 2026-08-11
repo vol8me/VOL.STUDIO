@@ -11,7 +11,8 @@
     "generate:music": "tsx ../../core/scripts/generate-iron-vein.ts public/assets/audio/music/main-menu/iron-vein.wav && tsx ../../core/scripts/generate-black-tide.ts public/assets/audio/music/main-menu/black-tide.wav && tsx ../../core/scripts/generate-crimson-horizon.ts public/assets/audio/music/main-menu/crimson-horizon.wav && tsx ../../core/scripts/generate-ambient-tracks.ts public/assets/audio/music",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

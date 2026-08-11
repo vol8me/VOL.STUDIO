@@ -36,7 +36,8 @@
     "download-fonts": "node scripts/download-fonts.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "generate:music": "tsx scripts/generate-music.ts"
+    "generate:music": "tsx scripts/generate-music.ts",
+    "test:coverage": "vitest run --coverage"
   },
   "peerDependencies": {
     "phaser": "^4.2.1"

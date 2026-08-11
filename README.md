@@ -32,7 +32,19 @@ pnpm --filter @volstudio/vol-ui dev        # UI component showcase'i
 pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # Oyun build
 pnpm build:tauri                           # PC installer build
+```
+
+### Doğrulama
+
+CI (`.github/workflows/ci.yml`) her push ve PR'da bu altı kapıyı koşar:
+
+```bash
 pnpm -r typecheck                          # Tüm paketlerde TS doğrulama
+pnpm -r test                               # Tüm paketlerde test
+pnpm lint                                  # ESLint
+pnpm format:check                          # Prettier (düzeltmek için: pnpm format)
+pnpm lint:css                              # Stylelint
+pnpm build:game                            # Oyun build
 ```
 
 ## Lisans

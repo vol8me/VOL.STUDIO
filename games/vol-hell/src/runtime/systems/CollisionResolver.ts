@@ -1,7 +1,8 @@
 import { bulletConfig } from '@/config/bullet';
 import { playerConfig } from '@/config/player';
 import { physicsConfig } from '@/config/physics';
-import { gameAudio } from '@/app/bootstrap';
+import { sfxVolumes } from '@/config/audio';
+import { gameAudio } from '@/app/services';
 import type { Player } from '@/runtime/entity/Player';
 import type { Bullet } from '@/runtime/entity/Bullet';
 import type { EnemyManager } from '@/runtime/entity/EnemyManager';
@@ -59,10 +60,13 @@ export class CollisionResolver {
 
           if (killed) {
             // Killing blow — hit tail'ini kes, sadece death çalsın.
-            void gameAudio.playSfx('enemyDeath', { volume: 0.7, stopEvents: ['enemyHit'] });
+            void gameAudio.playSfx('enemyDeath', {
+              volume: sfxVolumes.enemyDeath,
+              stopEvents: ['enemyHit'],
+            });
             this.callbacks.onEnemyKilled?.(enemy.scoreValue);
           } else {
-            void gameAudio.playSfx('enemyHit', { volume: 0.6 });
+            void gameAudio.playSfx('enemyHit', { volume: sfxVolumes.enemyHit });
           }
           break;
         }
@@ -87,7 +91,7 @@ export class CollisionResolver {
         const damage = enemy.tryContactDamage(time);
         if (damage > 0) {
           if (this.player.takeDamage(damage)) {
-            void gameAudio.playSfx('hurt', { volume: 0.85 });
+            void gameAudio.playSfx('hurt', { volume: sfxVolumes.hurt });
             this.callbacks.onPlayerDamaged?.();
           }
         }

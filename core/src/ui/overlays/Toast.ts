@@ -1,7 +1,11 @@
 import { UI_TIMING } from '../../constants';
 
-/** theme.css'teki .vol-toast geçiş süresiyle eşleşmelidir (--vol-transition-medium). */
-const TOAST_FADE_OUT_MS = 240;
+/**
+ * .vol-toast'un CSS geçiş süresi (--vol-transition-medium) kadar beklenir.
+ * Bu süreden KISA olamaz — toast fade bitmeden DOM'dan silinir.
+ * cssConstantSync.test.ts bu ilişkiyi doğrular.
+ */
+export const TOAST_FADE_OUT_MS = 240;
 
 /** Görünür sayı bu değeri aşınca en eski toast hemen kaldırılır. */
 const MAX_VISIBLE_TOASTS = 4;

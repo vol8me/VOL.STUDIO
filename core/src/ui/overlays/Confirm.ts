@@ -15,8 +15,12 @@ export interface ConfirmOptions {
   className?: string;
 }
 
-/** theme.css'teki .vol-modal geçiş süresiyle eşleşmelidir (--vol-transition-medium). */
-const MODAL_TRANSITION_MS = 240;
+/**
+ * .vol-modal'ın CSS geçiş süresi (--vol-transition-medium) kadar beklenir.
+ * Bu süreden KISA olamaz — modal animasyon bitmeden DOM'dan silinir.
+ * cssConstantSync.test.ts bu ilişkiyi doğrular.
+ */
+export const MODAL_TRANSITION_MS = 240;
 
 /**
  * Modal tabanlı Evet/Hayır onay akışı. Tek seferlik: `show()` kendi Modal'ını
@@ -41,10 +45,10 @@ export function showConfirm(options: ConfirmOptions): Promise<boolean> {
       resolved = true;
       resolve(result);
       modal.close();
-      setTimeout(() => {
-        i18next.off('languageChanged', onLanguageChanged);
-        modal.destroy();
-      }, MODAL_TRANSITION_MS);
+      // Dil dinleyicisi hemen cozulur; DOM temizligi gecis bitince yapilir.
+      // Boylece timeout atesmeden once sayfa degisse bile listener sizmaz.
+      i18next.off('languageChanged', onLanguageChanged);
+      window.setTimeout(() => modal.destroy(), MODAL_TRANSITION_MS);
     };
 
     const onLanguageChanged = (): void => {

@@ -12,7 +12,6 @@ const combat = `${basePath}/combat`;
 /** Olay başına varyasyon listesi (0, 1, ...). */
 export const soundAssets = {
   menuBlip: [`${ui}/menu-blip-0.wav`, `${ui}/menu-blip-1.wav`],
-  confirm: [`${ui}/confirm-0.wav`],
   back: [`${ui}/back-0.wav`],
   pause: [`${ui}/pause-0.wav`],
   resume: [`${ui}/resume-0.wav`],
@@ -31,7 +30,6 @@ export const soundAssets = {
 /** Olay → GameAudio SFX key eşlemesi. */
 export const soundKeys = {
   menuBlip: 'sfx-menu-blip',
-  confirm: 'sfx-confirm',
   back: 'sfx-back',
   pause: 'sfx-pause',
   resume: 'sfx-resume',
@@ -49,11 +47,3 @@ export const soundKeys = {
 
 export type SoundEvent = keyof typeof soundAssets;
 export type SoundKey = (typeof soundKeys)[SoundEvent];
-
-/** Ön yükleme için key → dosya yolu listesi. */
-export const soundLoadList: ReadonlyArray<readonly [string, string]> = Object.entries(
-  soundAssets,
-).flatMap(([event, files]) => {
-  const key = soundKeys[event as SoundEvent];
-  return files.map((file, index) => [`${key}--${index}`, file] as const);
-});

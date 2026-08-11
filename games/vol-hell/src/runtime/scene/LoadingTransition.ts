@@ -27,9 +27,13 @@ export class LoadingTransition {
     });
   }
 
-  /** Loading screen'i DOM'a ekler ve gösterir. Progress simülasyonu başlar. */
-  show(): void {
-    document.body.appendChild(this.loadingScreen.element);
+  /**
+   * Loading screen'i UIRoot içine ekler ve gösterir. Progress simülasyonu başlar.
+   * `document.body` yerine UIRoot: repo'daki diğer tüm UI orada yaşıyor ve
+   * box-sizing ile temel UI stilleri yalnızca o ağaçta uygulanıyor.
+   */
+  show(parent: HTMLElement): void {
+    parent.appendChild(this.loadingScreen.element);
     this.loadingScreen.show();
 
     this.interval = setInterval(() => {

@@ -1,29 +1,64 @@
 import type { SynthesisResult } from '../../../src/audio/synth/types';
 
+/**
+ * Zamanlamayi kabaca modelleyen AudioParam sahtesi.
+ *
+ * `when` parametresi ARTIK yok sayilmiyor: gelecege zamanlanan bir degisiklik
+ * `value`'yu aninda degistirmez. Onceki sahte, "simdi kis, 130 ms sonra ac"
+ * gibi iki asamali bir zamanlamayi tek adima indirgeyip son cagriyi aninda
+ * uyguluyordu — gercek Web Audio'da olmayan bir davranis.
+ *
+ * `ownerContext` currentTime'i okumak icin baglanir; verilmezse eski davranis
+ * (aninda uygula) korunur.
+ */
 class FakeAudioParam {
   value = 0;
   private scheduled: { when: number; value: number }[] = [];
+  private ownerContext?: { currentTime: number };
+
+  attachContext(context: { currentTime: number }): void {
+    this.ownerContext = context;
+  }
+
+  /** `when` simdiden sonraysa deger hemen degismez, yalnizca kuyruga girer. */
+  private applyAt(value: number, when: number): void {
+    this.scheduled.push({ when, value });
+    const now = this.ownerContext?.currentTime;
+    if (now === undefined || when <= now) {
+      this.value = value;
+    }
+  }
+
+  /** Test yardimcisi: saati ilerletip zamani gelen degisiklikleri uygular. */
+  advanceTo(time: number): void {
+    for (const entry of this.scheduled) {
+      if (entry.when <= time) this.value = entry.value;
+    }
+  }
 
   setValueAtTime(value: number, when: number): this {
-    this.value = value;
-    this.scheduled.push({ when, value });
+    this.applyAt(value, when);
     return this;
   }
 
   linearRampToValueAtTime(value: number, when: number): this {
-    this.value = value;
-    this.scheduled.push({ when, value });
+    this.applyAt(value, when);
     return this;
   }
 
   setTargetAtTime(target: number, when: number): this {
-    this.value = target;
-    this.scheduled.push({ when, value: target });
+    this.applyAt(target, when);
+    return this;
+  }
+
+  /** Zamanlanan olaylari iptal eder ama o andaki degeri korur. */
+  cancelAndHoldAtTime(when: number): this {
+    this.scheduled = this.scheduled.filter((s) => s.when < when);
     return this;
   }
 
   cancelScheduledValues(when: number): this {
-    this.scheduled = this.scheduled.filter((s) => s.when >= when);
+    this.scheduled = this.scheduled.filter((s) => s.when < when);
     return this;
   }
 
@@ -124,7 +159,10 @@ export class FakeAudioContext {
   }
 
   createGain(): AudioNode {
-    return new FakeGainNode() as unknown as GainNode;
+    const node = new FakeGainNode();
+    // Param'in `when` degerlendirmesi icin context saatine erisimi olmali.
+    node.gain.attachContext(this);
+    return node as unknown as GainNode;
   }
 
   createBufferSource(): AudioBufferSourceNode {

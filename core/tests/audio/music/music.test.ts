@@ -61,7 +61,9 @@ describe('MusicEngine', () => {
     engine.setIntensity(0.5, 0);
 
     // Gain node'unun değeri 0.5'e yaklaşmalı
-    const activeStems = (engine as unknown as { activeStems: Map<string, { gain: GainNode; stem: { id: string } }> }).activeStems;
+    const activeStems = (
+      engine as unknown as { activeStems: Map<string, { gain: GainNode; stem: { id: string } }> }
+    ).activeStems;
     let drumsGain = 0;
     for (const active of activeStems.values()) {
       if (active.stem.id === 'drums') drumsGain = active.gain.gain.value;
@@ -71,14 +73,52 @@ describe('MusicEngine', () => {
 
   it('master volume ve mute çalışır', () => {
     const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    // Gain değişimleri artık lineer rampa ile yapılıyor (hedefe TAM varır);
+    // değeri okumadan önce rampanın bitiş anına ilerlemek gerekir.
+    const gain = engine.mixer.masterGain.gain as unknown as {
+      value: number;
+      advanceTo(t: number): void;
+    };
+    const settle = (): void => {
+      fakeContext.currentTime += 1;
+      gain.advanceTo(fakeContext.currentTime);
+    };
+
     engine.setMasterVolume(0.5);
-    expect(engine.mixer.masterGain.gain.value).toBeCloseTo(0.5, 5);
+    settle();
+    expect(gain.value).toBeCloseTo(0.5, 5);
 
     engine.mute(true);
-    expect(engine.mixer.masterGain.gain.value).toBe(0);
+    settle();
+    expect(gain.value).toBe(0);
 
     engine.mute(false);
-    expect(engine.mixer.masterGain.gain.value).toBeCloseTo(0.5, 5);
+    settle();
+    expect(gain.value).toBeCloseTo(0.5, 5);
+  });
+
+  it('mute sonrası açma AYARLANAN seviyeye döner, 1.0 değil', () => {
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    const gain = engine.mixer.masterGain.gain as unknown as {
+      value: number;
+      advanceTo(t: number): void;
+    };
+    const settle = (): void => {
+      fakeContext.currentTime += 1;
+      gain.advanceTo(fakeContext.currentTime);
+    };
+
+    // Mixer'ın kendi mute()'u — önceden sabit 1 yazıyordu ve kullanıcının
+    // ayarladığı seviyeyi yok sayıp sesi %100'e fırlatıyordu.
+    engine.mixer.setMasterGain(0.3, 0);
+    engine.mixer.mute(true);
+    settle();
+    expect(gain.value).toBe(0);
+
+    engine.mixer.mute(false);
+    settle();
+    expect(gain.value).toBeCloseTo(0.3, 5);
+    expect(engine.mixer.getMasterGain()).toBeCloseTo(0.3, 5);
   });
 
   it('stop aktif kaynakları durdurur', async () => {
@@ -192,21 +232,13 @@ describe('resolveStemGain', () => {
         ],
       },
     };
-    const gain = resolveStemGain(
-      stem,
-      { intensity: 0.5 },
-      { bpm: 120, timeSignature: [4, 4], bar: 1, beat: 1, time: 0 },
-    );
+    const gain = resolveStemGain(stem, { intensity: 0.5 });
     expect(gain).toBeCloseTo(0.5, 5);
   });
 
   it('gainMap olmadan base gain döner', () => {
     const stem = { id: 'x', gain: 0.7 };
-    const gain = resolveStemGain(
-      stem,
-      {},
-      { bpm: 120, timeSignature: [4, 4], bar: 1, beat: 1, time: 0 },
-    );
+    const gain = resolveStemGain(stem, {});
     expect(gain).toBeCloseTo(0.7, 5);
   });
 });

@@ -26,8 +26,12 @@ export interface EventLogOptions {
   onPinChange?: (entry: EventLogEntry, pinned: boolean) => void;
 }
 
-/** vol-event-log__row--leave CSS animasyonunun süresiyle (theme.css) eşleşmelidir. */
-const EVENT_LOG_LEAVE_DURATION_MS = 220;
+/**
+ * .vol-event-log__row--leave animasyonu bitene kadar beklenir. CSS süresinden
+ * KISA olamaz — satır animasyon ortasında kaybolur. 20 ms'lik pay bilinçli:
+ * animationend yerine timer kullanıldığı için kare gecikmesini tolere eder.
+ */
+export const EVENT_LOG_LEAVE_DURATION_MS = 220;
 
 const TONE_I18N_KEYS = {
   default: 'core:eventlog.tone.default',

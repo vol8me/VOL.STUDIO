@@ -2,11 +2,41 @@
  *  Her kaynak kendi kanalıyla bağlanır; böylece crossfade ve
  *  aynı stem id'li farklı track'ler çakışmaz.
  */
+/**
+ * Bir AudioParam'ı hedefe RAMPA ile götürür.
+ *
+ * `setTargetAtTime` üsteldir ve hedefe asla varmaz: `fadeTime` sonunda hedefin
+ * yalnızca %95'ine gelinir. Fade-out'ta bu, kaynağın hâlâ −26 dB seviyedeyken
+ * `stop()` ile kesilmesi (duyulur tık) demekti. Lineer rampa hedefe TAM varır.
+ *
+ * `cancelAndHoldAtTime` varsa kullanılır: gelecekteki bir ana zamanlanan
+ * geçişte (crossfade) o andaki değeri sabitleyip oradan rampalamak gerekir.
+ */
+function rampParam(param: AudioParam, value: number, when: number, fadeTime: number): void {
+  if (fadeTime <= 0.001) {
+    param.cancelScheduledValues(when);
+    param.setValueAtTime(value, when);
+    return;
+  }
+
+  const holdable = param as AudioParam & { cancelAndHoldAtTime?: (t: number) => void };
+  if (typeof holdable.cancelAndHoldAtTime === 'function') {
+    holdable.cancelAndHoldAtTime(when);
+  } else {
+    param.cancelScheduledValues(when);
+    param.setValueAtTime(param.value, when);
+  }
+  param.linearRampToValueAtTime(value, when + fadeTime);
+}
+
 export class MusicMixer {
   private readonly channels = new Map<string, { gain: GainNode; panner?: StereoPannerNode }>();
   readonly masterGain: GainNode;
   readonly output: AudioNode;
   readonly compressor?: DynamicsCompressorNode;
+  /** Sustur/aç için saklanan seviye — mute(false) buraya döner, 1.0'a değil. */
+  private unmutedGain = 1;
+  private muted = false;
 
   constructor(
     private readonly context: AudioContext,
@@ -80,41 +110,47 @@ export class MusicMixer {
     }
   }
 
-  /** Kanal gain'ini belirli bir zamanda hedefe getirir. */
+  /** Kanal gain'ini belirli bir zamanda hedefe getirir. Rampa hedefe tam varır. */
   setChannelGain(id: string, value: number, fadeTime = 0.05, when?: number): void {
     const channel = this.channels.get(id);
     if (!channel) return;
 
     const now = when ?? this.context.currentTime;
-    const clamped = Math.max(0, Math.min(1, value));
-    if (fadeTime <= 0.001) {
-      channel.gain.gain.cancelScheduledValues(now);
-      channel.gain.gain.setValueAtTime(clamped, now);
-    } else {
-      channel.gain.gain.setTargetAtTime(clamped, now, fadeTime / 3);
-    }
+    rampParam(channel.gain.gain, Math.max(0, Math.min(1, value)), now, fadeTime);
   }
 
-  /** Master gain'i ayarlar. */
+  /** Master gain'i ayarlar. Sustur/aç bu değeri hatırlar. */
   setMasterGain(value: number, fadeTime = 0.05): void {
     const clamped = Math.max(0, Math.min(1, value));
-    const now = this.context.currentTime;
-    if (fadeTime <= 0.001) {
-      this.masterGain.gain.cancelScheduledValues(now);
-      this.masterGain.gain.setValueAtTime(clamped, now);
-    } else {
-      this.masterGain.gain.setTargetAtTime(clamped, now, fadeTime / 3);
-    }
+    this.unmutedGain = clamped;
+    if (this.muted) return;
+    rampParam(this.masterGain.gain, clamped, this.context.currentTime, fadeTime);
   }
 
-  /** Tüm çıkışı kapatır / açar. */
+  /**
+   * Tüm çıkışı kapatır / açar.
+   *
+   * Açarken AYARLANAN seviyeye dönülür. Önceki hali sabit `1` yazıyordu: müziği
+   * %30'a çekip sustur/aç yapan kullanıcı sesi %100'de buluyordu.
+   */
   mute(muted: boolean, fadeTime = 0.05): void {
-    this.setMasterGain(muted ? 0 : 1, fadeTime);
+    this.muted = muted;
+    rampParam(
+      this.masterGain.gain,
+      muted ? 0 : this.unmutedGain,
+      this.context.currentTime,
+      fadeTime,
+    );
+  }
+
+  /** Sustur/aç dışındaki ayarlanmış master seviyesi. */
+  getMasterGain(): number {
+    return this.unmutedGain;
   }
 
   /** Tüm kanalları kaldırır. */
   clear(): void {
-    for (const [id, channel] of this.channels) {
+    for (const channel of this.channels.values()) {
       try {
         channel.gain.disconnect();
       } catch {
@@ -125,7 +161,7 @@ export class MusicMixer {
       } catch {
         // Zaten ayrılmışsa görmezden gel
       }
-      this.channels.delete(id);
     }
+    this.channels.clear();
   }
 }

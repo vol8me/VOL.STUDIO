@@ -1,3 +1,4 @@
+import '../ui/debug.css';
 import type {
   DiagnosticsSnapshot,
   DiagnosticsOptions,
@@ -6,6 +7,9 @@ import type {
   StatsSummary,
   ScreenInfo,
 } from './types';
+
+/** Kayan istatistik penceresinin ornek sayisi. */
+const SAMPLE_WINDOW = 60;
 
 interface RollingStats {
   values: number[];
@@ -26,6 +30,8 @@ export class Diagnostics {
   private readonly sampleEvery: number;
   private readonly serverUrl: string;
   private readonly overlay: boolean;
+  /** Aktif asamalarin baslangic damgalari — sureden AYRI tutulur (bkz. endStage). */
+  private readonly stageStarts = new Map<string, number>();
   private readonly stageTimes = new Map<string, number>();
   private readonly counts = new Map<string, number>();
   private readonly pendingEvents: DiagnosticsEvent[] = [];
@@ -54,20 +60,9 @@ export class Diagnostics {
 
     if (this.overlay && typeof document !== 'undefined') {
       this.panel = document.createElement('div');
-      this.panel.style.cssText = [
-        'position:absolute',
-        'top:8px',
-        'right:8px',
-        'background:rgba(0,0,0,0.75)',
-        'color:#0f0',
-        'font:12px monospace',
-        'z-index:9999',
-        'padding:8px',
-        'border-radius:4px',
-        'pointer-events:none',
-        'white-space:pre',
-        'line-height:1.4',
-      ].join(';');
+      // Stil CSS'te (debug.css): satir ici cssText hem tasarim sistemini baypas
+      // ediyor hem Tauri CSP'sinde style-src 'unsafe-inline' tutmayi zorunlu kiliyordu.
+      this.panel.className = 'vol-diagnostics-panel';
       document.body.appendChild(this.panel);
     }
 
@@ -122,20 +117,26 @@ export class Diagnostics {
     }
 
     this.startTime = now;
+    this.stageStarts.clear();
     this.stageTimes.clear();
-    this.counts.clear();
   }
 
   /** Bir update aşamasını zamanla. */
   startStage(name: string): void {
-    this.stageTimes.set(name, performance.now());
+    this.stageStarts.set(name, performance.now());
   }
 
+  /**
+   * Asamayi bitirir. Baslangic damgasi ile sure AYRI map'lerde tutulur: tek
+   * map'te tutulup uzerine yazilirsa ikinci bir endStage() cagrisi
+   * `now - sure` hesaplayip devasa bir cop deger yazar ve overlay sessizce
+   * yanlis veri gosterir.
+   */
   endStage(name: string): void {
-    const start = this.stageTimes.get(name);
-    if (start !== undefined) {
-      this.stageTimes.set(name, performance.now() - start);
-    }
+    const start = this.stageStarts.get(name);
+    if (start === undefined) return;
+    this.stageStarts.delete(name);
+    this.stageTimes.set(name, performance.now() - start);
   }
 
   /** Sayısal metrik ekle. */
@@ -182,15 +183,43 @@ export class Diagnostics {
     }
   }
 
+  /**
+   * Ornek ekler. min/max her cagrida `Math.min(...values)` ile hesaplanmiyordu
+   * artik: 60 elemanlik spread x 3 istatistik x her kare, olcum aracinin kendi
+   * maliyetini olctugu metrigin mertebesine cikariyordu. Yalnizca pencereden
+   * eleman dustugunde tam tarama yapilir.
+   */
   private pushSample(stats: RollingStats, value: number): void {
     stats.values.push(value);
     stats.sum += value;
-    if (stats.values.length > 60) {
+
+    if (stats.values.length > SAMPLE_WINDOW) {
       const removed = stats.values.shift()!;
       stats.sum -= removed;
+      // Dusen deger uc degerlerden biriyse tam tarama kacinilmaz.
+      if (removed === stats.min || removed === stats.max) {
+        this.recomputeExtremes(stats);
+        return;
+      }
+    } else if (stats.values.length === 1) {
+      stats.min = value;
+      stats.max = value;
+      return;
     }
-    stats.min = Math.min(...stats.values);
-    stats.max = Math.max(...stats.values);
+
+    if (value < stats.min) stats.min = value;
+    if (value > stats.max) stats.max = value;
+  }
+
+  private recomputeExtremes(stats: RollingStats): void {
+    let min = Infinity;
+    let max = -Infinity;
+    for (const sample of stats.values) {
+      if (sample < min) min = sample;
+      if (sample > max) max = sample;
+    }
+    stats.min = Number.isFinite(min) ? min : 0;
+    stats.max = Number.isFinite(max) ? max : 0;
   }
 
   private avg(stats: RollingStats): number {

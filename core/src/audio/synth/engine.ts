@@ -1,9 +1,10 @@
 import type { FmParams, HarmonicParams, SynthesisResult, SynthParams, Waveform } from './types';
 import { Envelope } from './envelope';
-import { getWaveSample, getWaveSampleWithPhase } from './waveforms';
+import { getWaveSampleWithPhase } from './waveforms';
 import { mixSampleLayer, processSample } from './sample';
 import { createNoiseSource, type NoiseSource } from './noise';
-import { createFilter, getCutoffAtTime, type Filter } from './filter';
+import { DEFAULT_SEED } from './random';
+import { BiquadFilter, BUTTERWORTH_Q4, createFilter, getCutoffAtTime, type Filter } from './filter';
 import {
   Chorus,
   DelayLine,
@@ -17,31 +18,47 @@ import {
 
 const DEFAULT_SAMPLE_RATE = 44100;
 const OVERSAMPLE_FACTOR = 2;
+/** Normalize hedefi — 0.95 headroom bırakır (clipping payı). */
+const NORMALIZE_TARGET_PEAK = 0.95;
 
 type FmState = {
   params: FmParams;
   envelope?: Envelope;
   lastModSample: number;
+  /** Modülatörün birikmiş fazı (0-1). */
+  modPhase: number;
 };
 
+/**
+ * Bir osilatör sesi. `phase` alanları KRİTİK: faz her örnekte anlık frekansla
+ * ilerletilir. Faz `frekans * t` ile hesaplanırsa — önceki tasarım böyleydi —
+ * zamanla değişen frekansta (slide, vibrato, pitchJump, FM) duyulan frekans
+ * yanlış olur, çünkü faz frekansın İNTEGRALİDİR. Lineer bir slide'da nota
+ * sonunda `f₁` yerine `2·f₁ - f₀` duyuluyordu; vibrato derinliği de zamanla
+ * lineer büyüyordu.
+ */
 type Voice =
   | { type: 'noise'; noise: NoiseSource; detuneCents: 0 }
   | {
       type: 'tone';
       wave: Exclude<Waveform, 'noise' | 'pink' | 'brown'>;
       detuneCents: number;
+      /** Taşıyıcının birikmiş fazı (0-1). */
+      phase: number;
       fm?: FmState;
     }
   | {
       type: 'additive';
       harmonics: HarmonicParams[];
       detuneCents: number;
+      /** Harmonik başına birikmiş faz (0-1). */
+      phases: Float64Array;
     };
 
 function createFmState(fm: FmParams | undefined, duration: number): FmState | undefined {
   if (!fm || (fm.index ?? 0) <= 0) return undefined;
   const envelope = fm.modulatorEnvelope ? new Envelope(fm.modulatorEnvelope, duration) : undefined;
-  return { params: fm, envelope, lastModSample: 0 };
+  return { params: fm, envelope, lastModSample: 0, modPhase: 0 };
 }
 
 function createVoices(
@@ -49,29 +66,52 @@ function createVoices(
   detune: number | undefined,
   fm: FmParams | undefined,
   duration: number,
-  sampleRate: number,
   harmonics: HarmonicParams[] | undefined,
+  seed: number,
 ): Voice[] {
   const voices: Voice[] = [];
 
   // Additive synthesis — harmonik serisi varsa sine toplamı kullan
   if (harmonics && harmonics.length > 0) {
-    voices.push({ type: 'additive', harmonics, detuneCents: 0 });
-    // Detune varsa kopya ekle
+    voices.push({
+      type: 'additive',
+      harmonics,
+      detuneCents: 0,
+      phases: new Float64Array(harmonics.length),
+    });
     const detuneCents = detune ?? 0;
     if (detuneCents !== 0) {
-      voices.push({ type: 'additive', harmonics, detuneCents });
+      voices.push({
+        type: 'additive',
+        harmonics,
+        detuneCents,
+        phases: new Float64Array(harmonics.length),
+      });
     }
     return voices;
   }
 
   const waves = Array.isArray(wave) ? wave : [wave ?? 'sine'];
 
+  // Her gürültü sesi kendi seed'ini alır; aynı preset içinde iki gürültü
+  // katmanı birebir aynı diziyi üretip birbirini iki katına çıkarmasın.
+  let noiseIndex = 0;
+
   for (const w of waves) {
     if (w === 'noise' || w === 'pink' || w === 'brown') {
-      voices.push({ type: 'noise', noise: createNoiseSource(w), detuneCents: 0 });
+      voices.push({
+        type: 'noise',
+        noise: createNoiseSource(w, seed + noiseIndex++),
+        detuneCents: 0,
+      });
     } else {
-      voices.push({ type: 'tone', wave: w, detuneCents: 0, fm: createFmState(fm, duration) });
+      voices.push({
+        type: 'tone',
+        wave: w,
+        detuneCents: 0,
+        phase: 0,
+        fm: createFmState(fm, duration),
+      });
     }
   }
 
@@ -82,7 +122,13 @@ function createVoices(
     for (let i = 0; i < originalLength; i++) {
       const v = voices[i];
       if (v?.type === 'tone') {
-        voices.push({ type: 'tone', wave: v.wave, detuneCents, fm: createFmState(fm, duration) });
+        voices.push({
+          type: 'tone',
+          wave: v.wave,
+          detuneCents,
+          phase: 0,
+          fm: createFmState(fm, duration),
+        });
       }
     }
   }
@@ -94,7 +140,11 @@ function lerp(start: number, end: number, t: number): number {
   return start + (end - start) * t;
 }
 
-/** 2-operator phase modulation örneği üretir. */
+/**
+ * 2-operator phase modulation örneği üretir ve hem taşıyıcı hem modülatör
+ * fazını bir örnek ilerletir. Faz mutlak zamandan değil birikimden gelir —
+ * FM'de taşıyıcı frekansı sürekli değiştiği için bu şart.
+ */
 function getFmSample(
   voice: Extract<Voice, { type: 'tone' }>,
   carrierFreq: number,
@@ -126,18 +176,27 @@ function getFmSample(
     }
   }
 
-  // Feedback: bir önceki modulator çıktısı modulator phase'ine geri beslenir
-  // feedback radyan cinsinden faz sapması — direkt phase'e eklenir
-  const modPhase = (modFreq * t + feedback * fm.lastModSample) % 1;
+  // Feedback: bir önceki modulator çıktısı modulator fazına geri beslenir.
   const modInc = modFreq / sampleRate;
-  const modSample = getWaveSampleWithPhase(modWave, modPhase, pulseWidth, modInc);
+  const modSample = getWaveSampleWithPhase(
+    modWave,
+    fm.modPhase + feedback * fm.lastModSample,
+    pulseWidth,
+    modInc,
+  );
   fm.lastModSample = modSample;
+  fm.modPhase = (fm.modPhase + modInc) % 1;
 
-  // Carrier phase: index * modSample radyan cinsinden faz sapması
-  // 2π'ye bölerek normalize faz sapması elde edilir
-  const carrierPhase = (carrierFreq * t + (index * modSample) / (2 * Math.PI)) % 1;
+  // Taşıyıcı faz sapması: index radyan cinsinden, 2π ile normalize edilir.
   const carrierInc = carrierFreq / sampleRate;
-  return getWaveSampleWithPhase(voice.wave, carrierPhase, pulseWidth, carrierInc);
+  const out = getWaveSampleWithPhase(
+    voice.wave,
+    voice.phase + (index * modSample) / (2 * Math.PI),
+    pulseWidth,
+    carrierInc,
+  );
+  voice.phase = (voice.phase + carrierInc) % 1;
+  return out;
 }
 
 function expLerp(start: number, end: number, t: number): number {
@@ -155,6 +214,7 @@ function frequencyAtTime(
   vibratoRate: number,
   t: number,
   duration: number,
+  maxFreq: number,
 ): number {
   let baseFreq = frequency;
   const endFreq = frequency + slide;
@@ -188,7 +248,9 @@ function frequencyAtTime(
     baseFreq += vibratoDepth * Math.sin(2 * Math.PI * vibratoRate * t);
   }
 
-  return Math.max(1, baseFreq);
+  // Üst kelepçe şart: yukarı slide/derin vibrato frekansı Nyquist'in üstüne
+  // çıkarabiliyordu; oversampling pay bırakıyor ama garanti vermiyordu.
+  return Math.min(maxFreq, Math.max(1, baseFreq));
 }
 
 function renderDrySample(
@@ -217,61 +279,49 @@ function renderDrySample(
 ): number {
   let sample = 0;
   const lfoFreq = frequency + lfoValues.pitch;
+  const nyquistLimit = sampleRate * 0.45;
+
+  // Anlık frekans tüm sesler için ortak — bir kez hesaplanır.
+  const baseFreq = frequencyAtTime(
+    lfoFreq,
+    slide,
+    slideCurve,
+    pitchJump,
+    vibratoDepth,
+    vibratoRate,
+    t,
+    duration,
+    nyquistLimit,
+  );
 
   for (const voice of voices) {
     if (voice.type === 'noise') {
       sample += voice.noise?.next() ?? 0;
-    } else if (voice.type === 'additive') {
-      const baseFreq = frequencyAtTime(
-        lfoFreq,
-        slide,
-        slideCurve,
-        pitchJump,
-        vibratoDepth,
-        vibratoRate,
-        t,
-        duration,
-      );
-      const detunedFreq =
-        voice.detuneCents !== 0
-          ? baseFreq * Math.pow(2, voice.detuneCents / 1200)
-          : baseFreq;
+      continue;
+    }
+
+    const detunedFreq =
+      voice.detuneCents !== 0 ? baseFreq * Math.pow(2, voice.detuneCents / 1200) : baseFreq;
+
+    if (voice.type === 'additive') {
       let sum = 0;
-      for (const h of voice.harmonics) {
-        const hFreq = detunedFreq * h.ratio;
-        const hPhase = (hFreq * t + (h.phase ?? 0)) % 1;
-        sum += getWaveSampleWithPhase('sine', hPhase, pulseWidth, hFreq / sampleRate);
+      for (let hi = 0; hi < voice.harmonics.length; hi++) {
+        const h = voice.harmonics[hi];
+        const hFreq = Math.min(nyquistLimit, detunedFreq * h.ratio);
+        const inc = hFreq / sampleRate;
+        sum += getWaveSampleWithPhase('sine', voice.phases[hi] + (h.phase ?? 0), pulseWidth, inc);
+        voice.phases[hi] = (voice.phases[hi] + inc) % 1;
       }
       sample += sum;
-    } else {
-      const detunedFreq =
-        voice.detuneCents !== 0
-          ? frequencyAtTime(
-              lfoFreq,
-              slide,
-              slideCurve,
-              pitchJump,
-              vibratoDepth,
-              vibratoRate,
-              t,
-              duration,
-            ) * Math.pow(2, voice.detuneCents / 1200)
-          : frequencyAtTime(
-              lfoFreq,
-              slide,
-              slideCurve,
-              pitchJump,
-              vibratoDepth,
-              vibratoRate,
-              t,
-              duration,
-            );
+      continue;
+    }
 
-      if (voice.fm) {
-        sample += getFmSample(voice, detunedFreq, t, sampleRate, pulseWidth);
-      } else {
-        sample += getWaveSample(voice.wave, detunedFreq, t, pulseWidth, sampleRate);
-      }
+    if (voice.fm) {
+      sample += getFmSample(voice, detunedFreq, t, sampleRate, pulseWidth);
+    } else {
+      const inc = detunedFreq / sampleRate;
+      sample += getWaveSampleWithPhase(voice.wave, voice.phase, pulseWidth, inc);
+      voice.phase = (voice.phase + inc) % 1;
     }
   }
 
@@ -320,17 +370,28 @@ function renderDrySample(
   return sample;
 }
 
-/** 2x oversampling ile anti-aliasing lowpass + decimation.
- *  İç sentez 2x hızda yapılır, sonra Nyquist altına düşürülür. */
-function downsample2x(buffer: Float32Array, internalRate: number, targetRate: number): Float32Array {
+/**
+ * 2x oversampling ile anti-aliasing lowpass + decimation.
+ *
+ * Filtre 4. derece Butterworth: iki biquad kaskadı, Q değerleri 0.5412 ve
+ * 1.3066 (Butterworth kutup açılarından). Önceki kod `createFilter`'a
+ * `resonance: 0.707` geçiyordu — `resonance` 0-1 normalize bir değer olarak
+ * yorumlanıp Q = 0.707 + 0.707·19.293 ≈ 14.35'e haritalanıyordu ve cutoff'ta
+ * +23 dB'lik bir rezonans tepesi yaratıyordu. Aliasing temizlemesi gereken
+ * filtre, spektrumun tepesine devasa bir tepe ekliyordu.
+ */
+function downsample2x(
+  buffer: Float32Array,
+  internalRate: number,
+  targetRate: number,
+): Float32Array {
   const cutoff = targetRate * 0.45;
-  // İki geçişli biquad lowpass — steep rolloff, aliasing'i temizler
-  const f1 = createFilter({ cutoff, resonance: 0.707, poles: 2, type: 'lowpass' }, internalRate, 'lowpass');
-  const f2 = createFilter({ cutoff, resonance: 0.707, poles: 2, type: 'lowpass' }, internalRate, 'lowpass');
+  const f1 = new BiquadFilter(internalRate, 'lowpass', BUTTERWORTH_Q4[0]);
+  const f2 = new BiquadFilter(internalRate, 'lowpass', BUTTERWORTH_Q4[1]);
   const filtered = new Float32Array(buffer.length);
   for (let i = 0; i < buffer.length; i++) {
-    const s = buffer[i]!;
-    filtered[i] = f2!.process(f1!.process(s, cutoff), cutoff);
+    const s = buffer[i];
+    filtered[i] = f2.process(f1.process(s, cutoff), cutoff);
   }
   // Decimate by 2
   const outLen = Math.floor(buffer.length / OVERSAMPLE_FACTOR);
@@ -361,6 +422,7 @@ export function synthesize(params: SynthParams): SynthesisResult {
   const tremoloDepth = Math.max(0, Math.min(1, params.tremoloDepth ?? 0));
   const tremoloRate = Math.max(0, params.tremoloRate ?? 0);
   const gain = Math.max(0, Math.min(1, params.gain ?? 1));
+  const seed = params.seed ?? DEFAULT_SEED;
 
   // Zarf verilmemişse tüm süre boyunca duyulan varsayılan bir zarf kullan
   const envelopeParams = params.envelope ?? {
@@ -369,8 +431,6 @@ export function synthesize(params: SynthParams): SynthesisResult {
     release: duration * 0.4,
     sustainLevel: 0.7,
   };
-
-  const voices = createVoices(params.wave, params.detune, params.fm, duration, internalRate, params.harmonics);
 
   const pitchJump = params.pitchJump
     ? {
@@ -382,10 +442,18 @@ export function synthesize(params: SynthParams): SynthesisResult {
 
   // Filter envelope parametreleri
   const lowpassParams = params.lowpass
-    ? { cutoff: params.lowpass.cutoff, slide: params.lowpass.slide, envAmount: params.lowpass.envAmount }
+    ? {
+        cutoff: params.lowpass.cutoff,
+        slide: params.lowpass.slide,
+        envAmount: params.lowpass.envAmount,
+      }
     : undefined;
   const highpassParams = params.highpass
-    ? { cutoff: params.highpass.cutoff, slide: params.highpass.slide, envAmount: params.highpass.envAmount }
+    ? {
+        cutoff: params.highpass.cutoff,
+        slide: params.highpass.slide,
+        envAmount: params.highpass.envAmount,
+      }
     : undefined;
 
   // Filtre örnekleri her repeat için yeniden oluşturulur (stateful)
@@ -407,6 +475,18 @@ export function synthesize(params: SynthParams): SynthesisResult {
 
   for (let r = 0; r < repeat; r++) {
     const startOffset = Math.floor(r * repeatTime * internalRate);
+
+    // Sesler her tekrar için yeniden kurulur: faz artık birikimli olduğundan
+    // paylaşılan bir ses, tekrarları birbirine kaydırırdı. Zarf ve filtreler
+    // zaten bu deseni kullanıyordu.
+    const voices = createVoices(
+      params.wave,
+      params.detune,
+      params.fm,
+      duration,
+      params.harmonics,
+      seed + r * 1013,
+    );
 
     const envelope = new Envelope(envelopeParams, duration);
     const lowpass = lowpassFactory();
@@ -435,7 +515,12 @@ export function synthesize(params: SynthParams): SynthesisResult {
       for (const lfo of lfos) {
         const lfoWave = lfo.wave ?? 'sine';
         const lfoPhase = (lfo.rate * t + (lfo.phase ?? 0)) % 1;
-        const lfoValue = getWaveSampleWithPhase(lfoWave, lfoPhase, pulseWidth, lfo.rate / internalRate);
+        const lfoValue = getWaveSampleWithPhase(
+          lfoWave,
+          lfoPhase,
+          pulseWidth,
+          lfo.rate / internalRate,
+        );
         switch (lfo.target) {
           case 'pitch':
             lfoPitch += lfoValue * lfo.depth;
@@ -482,17 +567,27 @@ export function synthesize(params: SynthParams): SynthesisResult {
 
   // Sample layer
   if (params.sample) {
-    const sampleBuffer = processSample(params.sample, sampleRate, Math.floor(sampleRate * totalDuration));
+    const sampleBuffer = processSample(
+      params.sample,
+      sampleRate,
+      Math.floor(sampleRate * totalDuration),
+    );
     mixSampleLayer(dryBuffer, sampleBuffer, 0);
   }
 
   return applyGlobalEffects(dryBuffer, params, sampleRate, totalDuration, gain);
 }
 
-/** Mono kuru buffer'a master efektleri, pan, stereo reverb ve normalize uygular.
- *  Zinciri: delay → flanger → phaser → chorus → pan → stereo reverb →
- *  stereo width → normalize.
- *  Pan reverb öncesi — her kanal kendi reverb kuyruğuna girer, geniş imaj. */
+/**
+ * Mono kuru buffer'a master efektleri, pan, stereo reverb ve normalize uygular.
+ * Zincir: delay → flanger → phaser → chorus → pan → stereo reverb →
+ * stereo width → normalize. Pan reverb öncesi — her kanal kendi reverb
+ * kuyruğuna girer, geniş imaj.
+ *
+ * `dryBuffer` DEĞİŞTİRİLMEZ: fonksiyon kendi kopyasında çalışır. Önceki hali
+ * girdiyi yerinde eziyordu ve `export` edildiği için çağıranın verisini sessizce
+ * yok ediyordu.
+ */
 export function applyGlobalEffects(
   dryBuffer: Float32Array,
   params: Omit<SynthParams, 'duration'>,
@@ -500,7 +595,7 @@ export function applyGlobalEffects(
   totalDuration: number,
   gain: number,
 ): SynthesisResult {
-  let effected = dryBuffer;
+  const effected = dryBuffer.slice();
 
   if (params.delay) {
     const delay = new DelayLine(params.delay, sampleRate);
@@ -531,7 +626,8 @@ export function applyGlobalEffects(
   }
 
   // Pan reverb öncesi — stereo'ya böl, sonra reverb her kanalı bağımsız işler
-  const needsStereo = params.pan !== undefined || params.stereoWidth !== undefined || params.reverb !== undefined;
+  const needsStereo =
+    params.pan !== undefined || params.stereoWidth !== undefined || params.reverb !== undefined;
   let left: Float32Array;
   let right: Float32Array;
 
@@ -542,8 +638,8 @@ export function applyGlobalEffects(
     if (params.pan !== undefined) {
       const [leftGain, rightGain] = getPanGains(params.pan);
       for (let i = 0; i < effected.length; i++) {
-        left[i] = effected[i]! * leftGain;
-        right[i] = effected[i]! * rightGain;
+        left[i] = effected[i] * leftGain;
+        right[i] = effected[i] * rightGain;
       }
     } else {
       for (let i = 0; i < effected.length; i++) {
@@ -560,36 +656,48 @@ export function applyGlobalEffects(
   if (params.reverb) {
     const reverb = new Reverb(params.reverb, sampleRate);
     for (let i = 0; i < left.length; i++) {
-      [left[i], right[i]] = reverb.processStereo(left[i]!, right[i]!);
+      [left[i], right[i]] = reverb.processStereo(left[i], right[i]);
     }
   }
 
   // Stereo width — reverb sonrası
   if (params.stereoWidth !== undefined && needsStereo) {
-    const widthParam = typeof params.stereoWidth === 'number'
-      ? { width: params.stereoWidth }
-      : params.stereoWidth;
+    const widthParam =
+      typeof params.stereoWidth === 'number' ? { width: params.stereoWidth } : params.stereoWidth;
     const widener = new StereoWidener(widthParam);
     for (let i = 0; i < left.length; i++) {
-      [left[i], right[i]] = widener.process(left[i]!, right[i]!);
+      [left[i], right[i]] = widener.process(left[i], right[i]);
     }
   }
 
   // Kanal listesi — stereo ise iki kanal, değilse mono
   const channels: Float32Array[] = needsStereo ? [left, right] : [effected];
 
-  // Normalize (tüm kanallar üzerinden)
+  // Tepe normalizasyonu opsiyoneldir. Varsayılan `true` — mevcut tüm preset'ler
+  // ve üretilmiş asset'ler bu davranışa göre ayarlanmış durumda. Ama her sesi
+  // 0.95'e çekmek doğal seviye farklarını yok eder: bir UI blip'i ile bir
+  // patlama aynı tepeye çıkar. Mix dinamiği önemli olan yerlerde (bkz.
+  // sequencer'da nota bazlı sentez) `normalize: false` geçilmelidir.
   let peak = 0;
   for (const ch of channels) {
     for (const s of ch) {
       peak = Math.max(peak, Math.abs(s));
     }
   }
-  if (peak > 0) {
-    const scale = (0.95 * gain) / peak;
+
+  if (params.normalize !== false) {
+    if (peak > 0) {
+      const scale = (NORMALIZE_TARGET_PEAK * gain) / peak;
+      for (const ch of channels) {
+        for (let i = 0; i < ch.length; i++) {
+          ch[i] *= scale;
+        }
+      }
+    }
+  } else if (gain !== 1) {
     for (const ch of channels) {
       for (let i = 0; i < ch.length; i++) {
-        ch[i] *= scale;
+        ch[i] *= gain;
       }
     }
   }
@@ -612,23 +720,37 @@ export function normalize(buffer: Float32Array, target = 0.95): Float32Array {
   return out;
 }
 
-/** Brick-wall limiter — clipping'i önler, normalize öncesi kullanılır.
- *  0 dB threshold üstündeki sinyali soft-knee ile sınırlandırır. */
-export function limitBuffer(buffer: Float32Array, threshold = 0.95): Float32Array {
+/**
+ * Soft-knee brick-wall limiter. Tavan `threshold`, geçiş `knee` genişliğinde.
+ *
+ * Transfer eğrisi MONOTON ve C1-sürekli: knee bölgesinde
+ * `y = x - (x - T + W/2)² / (2W)`, üstünde `y = T`. Önceki uygulama
+ * `over·(1 - over/knee)` kullanıyordu — bu bir paraboldü ve `over = knee/2`'de
+ * tepe yapıp geri iniyordu: 0.90 → 0.875 iken 0.94 → 0.859 çıkıyordu. Yani
+ * yüksek girdi daha sessiz çıktı veriyordu (fold-back distortion). Ayrıca
+ * tavan `threshold` değil `threshold - knee`'de kalıyordu.
+ */
+export function limitBuffer(buffer: Float32Array, threshold = 0.95, knee = 0.1): Float32Array {
   const out = new Float32Array(buffer.length);
-  const knee = 0.1; // soft-knee genişliği
+  const w = Math.max(1e-6, knee);
+  const kneeStart = threshold - w / 2;
+  const kneeEnd = threshold + w / 2;
+
   for (let i = 0; i < buffer.length; i++) {
     const s = buffer[i];
     const abs = Math.abs(s);
-    if (abs > threshold - knee) {
-      // Soft-knee: threshold-knee ile threshold arası gradual, threshold üstü brick-wall
-      const over = abs - (threshold - knee);
-      const ratio = over > knee ? 0 : 1 - over / knee;
-      const limited = (threshold - knee) + over * ratio;
-      out[i] = Math.sign(s) * Math.min(threshold, limited);
+
+    let limited: number;
+    if (abs <= kneeStart) {
+      limited = abs;
+    } else if (abs >= kneeEnd) {
+      limited = threshold;
     } else {
-      out[i] = s;
+      const over = abs - kneeStart;
+      limited = abs - (over * over) / (2 * w);
     }
+
+    out[i] = s < 0 ? -limited : limited;
   }
   return out;
 }

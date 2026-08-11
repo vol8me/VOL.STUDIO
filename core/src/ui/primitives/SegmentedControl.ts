@@ -26,6 +26,8 @@ export class SegmentedControl {
   private onChangeHandler?: (value: string) => void;
   private boundResize: () => void;
   private resizeObserver?: ResizeObserver;
+  /** Ilk thumb konumlandirma karesi; destroy() iptal eder. */
+  private initialThumbFrame: number | null = null;
 
   constructor(options: SegmentedControlOptions) {
     const { options: items, value, disabled = false, onChange } = options;
@@ -71,7 +73,10 @@ export class SegmentedControl {
 
     // İlk konum: layout'un tamamlanmasını bekler (offsetLeft/Width ilk
     // çizimde 0 dönebilir), aksi halde thumb açılışta yanlış yerde belirir.
-    requestAnimationFrame(() => this.moveThumb());
+    this.initialThumbFrame = requestAnimationFrame(() => {
+      this.initialThumbFrame = null;
+      this.moveThumb();
+    });
   }
 
   getValue(): string | undefined {
@@ -93,6 +98,11 @@ export class SegmentedControl {
     for (const [value, button] of this.buttons) {
       const handler = this.boundClicks.get(value);
       if (handler) button.removeEventListener('click', handler);
+    }
+    // Ilk konumlandirma karesi destroy'dan once atesmezse kopmus element uzerinde calisirdi.
+    if (this.initialThumbFrame !== null) {
+      cancelAnimationFrame(this.initialThumbFrame);
+      this.initialThumbFrame = null;
     }
     this.resizeObserver?.disconnect();
     window.removeEventListener('resize', this.boundResize);

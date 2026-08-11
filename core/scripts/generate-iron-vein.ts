@@ -64,20 +64,20 @@ const { beatToSample, applyFades } = createBeatUtils(BEAT);
 
 // --- C minor paleti ---
 
-const C1 = 32.70;
+const C1 = 32.7;
 const C2 = 65.41;
 const Bb2 = 116.54;
 const C3 = 130.81;
 const Eb3 = 155.56;
-const G3 = 196.00;
+const G3 = 196.0;
 const Ab3 = 207.65;
 const Bb3 = 233.08;
 const C4 = 261.63;
 const D4 = 293.66;
 const Eb4 = 311.13;
 const F4 = 349.23;
-const G4 = 392.00;
-const Ab4 = 415.30;
+const G4 = 392.0;
+const Ab4 = 415.3;
 
 // --- Akor ilerlemesi: Cm - Ab - Eb - Bb - Cm - Ab - Eb - Cm
 //     i - VI - III - VII - i - VI - III - i (döngüye dönük son)
@@ -140,7 +140,12 @@ function renderDroneTrack(duration: number): SynthesisResult {
     const chord = chordAtBeat(CHORDS, beat);
     const dur = 8 * BEAT + 0.8;
     const bassFreq = chord.root / 2;
-    addToStereo(left, right, deepSubBass(bassFreq, dur, 0.16, Math.sin(beat * 0.5) * 0.25), beatToSample(beat));
+    addToStereo(
+      left,
+      right,
+      deepSubBass(bassFreq, dur, 0.16, Math.sin(beat * 0.5) * 0.25),
+      beatToSample(beat),
+    );
   }
 
   applyFades(left, right, 0, 4, 60, 64);
@@ -187,7 +192,7 @@ function renderBassTrack(duration: number): SynthesisResult {
     for (let b = 0; b < 8; b += 2) {
       const offset = beatToSample(beat + b);
       const freq = chord.root / 2;
-      const pan = (b % 4 === 0) ? -0.15 : 0.15;
+      const pan = b % 4 === 0 ? -0.15 : 0.15;
       addToStereo(left, right, bassPulse2(freq, BEAT * 1.3, 0.22, pan), offset);
     }
   }
@@ -206,7 +211,12 @@ function renderPercussionTrack(duration: number): SynthesisResult {
     if (offset >= left.length) break;
 
     if (b % 2 === 0) {
-      addToStereo(left, right, cinematicKick(50, BEAT * 0.9, 0.35, 0.05 * (b % 4 === 0 ? -1 : 1)), offset);
+      addToStereo(
+        left,
+        right,
+        cinematicKick(50, BEAT * 0.9, 0.35, 0.05 * (b % 4 === 0 ? -1 : 1)),
+        offset,
+      );
     }
     if (b % 4 === 2) {
       addToStereo(left, right, darkSnare2(BEAT * 0.45, 0.2, 0.1), offset);
@@ -277,7 +287,12 @@ function renderLeadTrack(duration: number): SynthesisResult {
     const offset = beatToSample(beatCounter);
     if (offset >= left.length) break;
     const noteDur = note.beats * BEAT;
-    addToStereo(left, right, bellLead(note.freq, noteDur, note.velocity ?? 1, note.pan ?? 0), offset);
+    addToStereo(
+      left,
+      right,
+      bellLead(note.freq, noteDur, note.velocity ?? 1, note.pan ?? 0),
+      offset,
+    );
     beatCounter += note.beats;
   }
 

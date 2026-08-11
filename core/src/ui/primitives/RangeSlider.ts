@@ -3,8 +3,8 @@ export interface RangeSliderValue {
   max: number;
 }
 
-/** .vol-range-slider__handle'ın CSS genişliğiyle (18px) eşleşmeli — render()'ın taşma önleme hesabında kullanılır. */
-const HANDLE_WIDTH_PX = 18;
+/** .vol-range-slider__handle'ın CSS genişliğiyle BİREBİR eşleşmeli — render()'ın taşma önleme hesabında kullanılır. */
+export const HANDLE_WIDTH_PX = 18;
 
 export interface RangeSliderOptions {
   min?: number;

@@ -32,7 +32,19 @@ pnpm --filter @volstudio/vol-ui dev        # UI component showcase
 pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # Build the game
 pnpm build:tauri                           # Build PC installers
+```
+
+### Verification
+
+CI (`.github/workflows/ci.yml`) runs these six gates on every push and pull request:
+
+```bash
 pnpm -r typecheck                          # Typecheck all packages
+pnpm -r test                               # Test all packages
+pnpm lint                                  # ESLint
+pnpm format:check                          # Prettier (fix with: pnpm format)
+pnpm lint:css                              # Stylelint
+pnpm build:game                            # Build the game
 ```
 
 ## License

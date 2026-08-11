@@ -1,16 +1,20 @@
 import Phaser from 'phaser';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isTauri } from '@tauri-apps/api/core';
-import { Button, Panel, Text, UIRoot, ToastManager, i18next } from '@volstudio/core';
+import { Button, Panel, Text, UIRoot, i18next } from '@volstudio/core';
 import { LoadingTransition } from './LoadingTransition';
-import { gameAudio } from '@/app/bootstrap';
-import { musicTracks, menuTrackKeys } from '@/config';
-import { gameStats } from '@/app/bootstrap';
+import { gameAudio } from '@/app/services';
+import { musicConfig, musicTracks, menuTrackKeys, sfxVolumes } from '@/config';
+import { gameStats } from '@/app/services';
 import { formatTimeMs } from '@/utils/time';
+
+/** trackId'nin bir ana menu parcasi olup olmadigini dogrular (cast yerine). */
+function isMenuTrack(trackId: string | undefined): boolean {
+  return trackId !== undefined && (menuTrackKeys as readonly string[]).includes(trackId);
+}
 
 export class MainMenuScene extends Phaser.Scene {
   private ui!: UIRoot;
-  private toasts!: ToastManager;
   private panel!: Panel;
   private startButton!: Button;
   private exitButton!: Button;
@@ -36,42 +40,47 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   create(): void {
+    // Phaser sahne ornegini yeniden kullanir; alan baslaticisi restart'ta
+    // calismaz. Sifirlanmazsa Ayarlar'dan donunce deger 'Settings' olarak asili
+    // kalir ve onShutdown muzigi yanlislikla durdurmaz.
+    this.nextScene = null;
+
     const container = this.game.canvas.parentElement ?? document.body;
     this.ui = new UIRoot(container);
-    this.toasts = new ToastManager(container);
 
     // Ana menüden ayrılıp geri dönüldüğünde müzik başa sarmasın;
     // eğer zaten bir ana menü teması çalıyorsa onu sürdür.
     const currentMusic = gameAudio.music.getCurrentState();
-    const menuTrackId = currentMusic.trackId as (typeof menuTrackKeys)[number] | undefined;
-    const isMenuMusicPlaying = currentMusic.playing && menuTrackId && menuTrackKeys.includes(menuTrackId);
+    // Cast yerine type guard: trackId duz bir string, literal union'a dogrulama
+    // olmadan cast etmek `any` kadar guvensizdir.
+    const isMenuMusicPlaying = currentMusic.playing && isMenuTrack(currentMusic.trackId);
 
     if (!isMenuMusicPlaying) {
-      const trackKey = menuTrackKeys[Math.floor(Math.random() * menuTrackKeys.length)]!;
+      const trackKey = menuTrackKeys[Math.floor(Math.random() * menuTrackKeys.length)];
       const track = musicTracks[trackKey];
       void gameAudio.loadMusic(track).then(() => {
         // Kullanıcı sahne kapanmadan önce başka bir ekrana geçtiyse müzik çalmaya devam etmesin.
         if (!this.scene.isActive(this.scene.key)) return;
-        void gameAudio.playMusic(track.id, { fadeIn: 2 });
+        void gameAudio.playMusic(track.id, { fadeIn: musicConfig.menu.fadeInSec });
       });
     }
 
     this.startButton = new Button(i18next.t('volhell:menu.start'), {
       variant: 'primary',
       onClick: () => {
-        void gameAudio.playSfx('menuBlip', { volume: 0.5 });
+        void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
         this.startGame();
       },
     });
     this.exitButton = new Button(i18next.t('volhell:menu.exit'), {
       onClick: () => {
-        void gameAudio.playSfx('menuBlip', { volume: 0.5 });
+        void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
         void this.exitGame();
       },
     });
     this.settingsButton = new Button(i18next.t('volhell:menu.settings'), {
       onClick: () => {
-        void gameAudio.playSfx('menuBlip', { volume: 0.5 });
+        void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
         this.nextScene = 'Settings';
         this.scene.start('Settings');
       },
@@ -117,12 +126,12 @@ export class MainMenuScene extends Phaser.Scene {
     this.startButton.setLoading(true);
 
     this.loadingTransition = new LoadingTransition();
-    this.loadingTransition.show();
+    this.loadingTransition.show(this.ui.element);
     this.loadingTransition.scheduleTransition((loadingScreen) => {
       this.loadingTransition = null;
       this.startButton.setLoading(false);
       this.nextScene = 'Game';
-      gameAudio.stopMusic(1);
+      gameAudio.stopMusic(musicConfig.menu.stopFadeSec);
       this.scene.start('Game', { loadingScreen });
     });
   }
@@ -143,7 +152,7 @@ export class MainMenuScene extends Phaser.Scene {
     i18next.off('languageChanged', this.onLanguageChanged);
     // Ayarlara geçerken müzik devam etsin; oyuna geçişte zaten transition'da durdurulur.
     if (this.nextScene !== 'Settings') {
-      gameAudio.stopMusic(1);
+      gameAudio.stopMusic(musicConfig.menu.stopFadeSec);
     }
     if (this.showRafId !== null) {
       cancelAnimationFrame(this.showRafId);
@@ -157,7 +166,6 @@ export class MainMenuScene extends Phaser.Scene {
     this.exitButton.destroy();
     this.settingsButton.destroy();
     this.panel.destroy();
-    this.toasts.destroy();
     this.ui.destroy();
   }
 }

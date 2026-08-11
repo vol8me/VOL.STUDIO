@@ -1,5 +1,8 @@
 import type { MusicContext } from './types';
 
+/** İki zamanın "aynı an" sayılması için tolerans (saniye). */
+const TIME_EPSILON = 1e-9;
+
 /** BPM ve ölçü bilgisi üzerinden zaman / bar / beat dönüşümleri yapar. */
 export class MusicScheduler {
   readonly beatDuration: number;
@@ -9,8 +12,24 @@ export class MusicScheduler {
     public readonly bpm: number,
     public readonly timeSignature: [number, number] = [4, 4],
   ) {
-    this.beatDuration = 60 / bpm;
-    this.barDuration = this.beatDuration * timeSignature[0];
+    if (!Number.isFinite(bpm) || bpm <= 0) {
+      throw new Error(`MusicScheduler: bpm pozitif olmalı (verilen: ${bpm})`);
+    }
+    const [beatsPerBar, beatUnit] = timeSignature;
+    if (
+      !Number.isFinite(beatsPerBar) ||
+      beatsPerBar <= 0 ||
+      !Number.isFinite(beatUnit) ||
+      beatUnit <= 0
+    ) {
+      throw new Error(`MusicScheduler: geçersiz ölçü (${beatsPerBar}/${beatUnit})`);
+    }
+
+    // Payda ARTIK hesaba katılıyor: bpm dörtlük nota cinsinden verilir, vuruş
+    // birimi paydadan gelir. 6/8'de vuruş sekizliktir — önceki kod paydayı hiç
+    // okumadığı için bar süresini iki katı hesaplıyordu.
+    this.beatDuration = (60 / bpm) * (4 / beatUnit);
+    this.barDuration = this.beatDuration * beatsPerBar;
   }
 
   /** Bar sayısını saniyeye çevirir. */
@@ -34,27 +53,36 @@ export class MusicScheduler {
     return 1 + this.secondsToBars(time - startTime);
   }
 
-  /** Verilen andan sonraki ilk bar başlangıç zamanını döner. */
+  /**
+   * Verilen andan SONRAKİ ilk bar başlangıç zamanını döner.
+   *
+   * Tam bir bar sınırındayken bir SONRAKİ barı döndürür. Önceki hali
+   * `Math.ceil` ile aynı barı döndürüyordu, yani `currentTime`'ın kendisini —
+   * bar sınırında crossfade planlarken sıfır gecikmeli geçişe yol açıyordu.
+   */
   getNextBarTime(currentTime: number, startTime: number): number {
     const currentBar = this.getBarAtTime(currentTime, startTime);
-    const nextBar = Math.ceil(currentBar);
+    const ceil = Math.ceil(currentBar);
+    const nextBar = ceil - currentBar < TIME_EPSILON ? ceil + 1 : ceil;
     return this.getTimeAtBar(nextBar, startTime);
   }
 
-  /** Verilen andan sonraki ilk vuruş zamanını döner. */
+  /** Verilen andan SONRAKİ ilk vuruş zamanını döner (sınırdayken bir sonraki). */
   getNextBeatTime(currentTime: number, startTime: number): number {
     const elapsed = Math.max(0, currentTime - startTime);
-    const currentBeat = 1 + elapsed / this.beatDuration;
-    const nextBeat = Math.ceil(currentBeat);
-    return startTime + (nextBeat - 1) * this.beatDuration;
+    const currentBeat = elapsed / this.beatDuration;
+    const ceil = Math.ceil(currentBeat);
+    const nextBeat = ceil - currentBeat < TIME_EPSILON ? ceil + 1 : ceil;
+    return startTime + nextBeat * this.beatDuration;
   }
 
   /** Belirli bir zamana göre MusicContext üretir. */
   getContext(time: number, startTime: number): MusicContext {
     const elapsed = Math.max(0, time - startTime);
     const totalBeats = elapsed / this.beatDuration;
-    const bar = 1 + Math.floor(totalBeats / this.timeSignature[0]);
-    const beat = 1 + (totalBeats % this.timeSignature[0]);
+    const beatsPerBar = this.timeSignature[0];
+    const bar = 1 + Math.floor(totalBeats / beatsPerBar);
+    const beat = 1 + (totalBeats % beatsPerBar);
     return {
       bpm: this.bpm,
       timeSignature: this.timeSignature,

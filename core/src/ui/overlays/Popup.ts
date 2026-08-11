@@ -29,6 +29,7 @@ export class Popup {
   private open = false;
   private destroyed = false;
   private boundOutsideClick: (event: MouseEvent) => void;
+  private readonly boundReposition: () => void;
   private boundKeydown: (event: KeyboardEvent) => void;
 
   constructor(target: HTMLElement, options: PopupOptions = {}) {
@@ -60,6 +61,10 @@ export class Popup {
         this.close();
       }
     };
+
+    // Popup viewport koordinatlariyla konumlanir; acikken sayfa kaydirilir veya
+    // pencere yeniden boyutlanirsa hedefinden kopup havada kalirdi.
+    this.boundReposition = () => this.reposition();
   }
 
   add(node: { element: HTMLElement }): this {
@@ -88,6 +93,9 @@ export class Popup {
       });
     }
     document.addEventListener('keydown', this.boundKeydown);
+    // capture: true — ic scroll konteynerlerinin kaydirmasi da yakalanmali.
+    window.addEventListener('scroll', this.boundReposition, { capture: true, passive: true });
+    window.addEventListener('resize', this.boundReposition);
   }
 
   close(): void {
@@ -97,6 +105,8 @@ export class Popup {
     this.element.classList.remove('vol-popup--visible');
     document.removeEventListener('click', this.boundOutsideClick);
     document.removeEventListener('keydown', this.boundKeydown);
+    window.removeEventListener('scroll', this.boundReposition, { capture: true });
+    window.removeEventListener('resize', this.boundReposition);
     this.onCloseHandler?.();
   }
 
@@ -116,6 +126,8 @@ export class Popup {
     this.destroyed = true;
     document.removeEventListener('click', this.boundOutsideClick);
     document.removeEventListener('keydown', this.boundKeydown);
+    window.removeEventListener('scroll', this.boundReposition, { capture: true });
+    window.removeEventListener('resize', this.boundReposition);
     this.element.remove();
   }
 

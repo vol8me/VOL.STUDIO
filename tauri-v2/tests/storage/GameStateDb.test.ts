@@ -36,8 +36,9 @@ describe('GameStateDb', () => {
     expect(mockExecute).toHaveBeenCalledWith(
       expect.stringContaining('CREATE TABLE IF NOT EXISTS saves'),
     );
+    // Tek satir garantisi: id = 1 sabit, ON CONFLICT ile guncellenir.
     expect(mockExecute).toHaveBeenCalledWith(
-      'INSERT OR REPLACE INTO schema_version (version) VALUES (?)',
+      expect.stringContaining('INSERT INTO schema_version'),
       [1],
     );
   });
@@ -177,5 +178,26 @@ describe('GameStateDb', () => {
     await db.init();
 
     expect(Database.load).toHaveBeenCalledWith('sqlite:custom-game.db');
+  });
+
+  it('K10: escanli cagrilar veritabanini yalnizca bir kez yukler', async () => {
+    const db = new GameStateDb();
+
+    await Promise.all([db.saveGame('a', { v: 1 }), db.saveGame('b', { v: 2 }), db.init()]);
+
+    expect(vi.mocked(Database.load)).toHaveBeenCalledTimes(1);
+    const createCalls = mockExecute.mock.calls.filter((c) =>
+      String(c[0]).includes('CREATE TABLE IF NOT EXISTS saves'),
+    );
+    expect(createCalls).toHaveLength(1);
+  });
+
+  it('K10: init basarisiz olursa sonraki cagri yeniden dener', async () => {
+    vi.mocked(Database.load).mockRejectedValueOnce(new Error('kilitli'));
+    const db = new GameStateDb();
+
+    await expect(db.init()).rejects.toBeInstanceOf(GameStateDbError);
+    await expect(db.init()).resolves.toBeUndefined();
+    expect(vi.mocked(Database.load)).toHaveBeenCalledTimes(2);
   });
 });

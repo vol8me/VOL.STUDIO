@@ -14,8 +14,6 @@ export const playerConfig = {
   dashChargeMs: 1500,
   /** Dash i-frame süresi (ms) — dash süresince hasar almaz. */
   dashIFrameMs: 350,
-  /** Hasar alınca invulnerability süresi (ms) — şu an kullanılmıyor, dash i-frame ayrı yönetilir. */
-  invulnerabilityMs: 500,
   /** Dash ghost sayısı — dash süresince bırakılan yarı saydam kopya. */
   dashGhostCount: 6,
   /** Dash ghost ömrü (ms). */

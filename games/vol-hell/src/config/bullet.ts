@@ -8,7 +8,10 @@ export const bulletConfig = {
   damage: 25,
   /** Mermi ömrü (ms) — süre dolunca yok edilir. */
   lifetimeMs: 2000,
-  /** Border duvarından sekme hız kaybı (0-1, 0=kayıp yok, 1=tam dur). */
+  /**
+   * Sekme sonrasi KORUNAN hiz orani (0-1). Hiz bu degerle carpilir:
+   * 1 = kayip yok, 0 = tam dur. 0.8 -> her sekmede %20 hiz kaybi.
+   */
   bounceDamping: 0.8,
   /** Ateşler arası bekleme süresi (ms) — tek tek ateş. */
   fireCooldownMs: 180,

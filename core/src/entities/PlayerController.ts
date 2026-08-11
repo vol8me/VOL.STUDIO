@@ -17,6 +17,8 @@ export type MovableGameObject = Phaser.GameObjects.GameObject &
  */
 export abstract class PlayerController implements BaseEntity {
   protected velocity = Vector2.zero();
+  /** move() çağıranın vektörünü bozmasın diye kullanılan yerel tampon. */
+  private readonly moveDirBuf = Vector2.zero();
 
   constructor(
     public id: string,
@@ -29,9 +31,23 @@ export abstract class PlayerController implements BaseEntity {
     this.sprite.destroy();
   }
 
+  /**
+   * `direction` ASLA yerinde değiştirilmez — çağıranlar (bkz. Player.moveDirection)
+   * burayı kalıcı bir alanla besliyor, normalize etmek o alanı kalıcı olarak birim
+   * uzunluğa çevirir ve analog girdiyi yok ederdi.
+   *
+   * Büyüklük yalnızca 1'i aşarsa kelepçelenir; altındaysa korunur. Yarıya kadar
+   * itilen bir çubuk yarım hız üretmelidir — InputUtils.normalizeAnalog() zaten
+   * 0..1 aralığında bir vektör döndürüyor.
+   */
   protected move(direction: Vector2, speed: number, delta: number): void {
-    direction.normalizeInPlace();
-    this.velocity.set(direction.x * speed, direction.y * speed);
+    this.moveDirBuf.copyFrom(direction);
+    const length = this.moveDirBuf.length();
+    if (length > 1) {
+      this.moveDirBuf.scaleInPlace(1 / length);
+    }
+
+    this.velocity.set(this.moveDirBuf.x * speed, this.moveDirBuf.y * speed);
     this.sprite.x += this.velocity.x * (delta / TECH.MS_PER_SECOND);
     this.sprite.y += this.velocity.y * (delta / TECH.MS_PER_SECOND);
   }

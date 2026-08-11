@@ -10,7 +10,6 @@ const FOCUSABLE_SELECTOR =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const BODY_LOCK_CLASS = 'vol-modal__body-locked';
-let bodyLockCount = 0;
 
 /**
  * Açık modalların yığını (son = en üstteki). Her modal `document` üzerinde
@@ -19,6 +18,16 @@ let bodyLockCount = 0;
  * sağlar.
  */
 const openModals: Modal[] = [];
+
+/**
+ * Govde kilidini acik modal yigininin uzunlugundan TURETIR. Onceki tasarim ayri
+ * bir sayac tutuyordu; modal acikken destroy() cagrilmadan sahne yikilirsa sayac
+ * hic azalmaz ve sayfa kalici olarak kaydirilamaz halde kalirdi. Yigin zaten tek
+ * dogruluk kaynagi — ikinci bir sayac tutmak bu ayrismaya davetiye cikariyordu.
+ */
+function syncBodyLock(): void {
+  document.body.classList.toggle(BODY_LOCK_CLASS, openModals.length > 0);
+}
 
 /**
  * `scrim` ile arka planı karartıp odağı içeride hapseden katman. Panel'den
@@ -81,9 +90,7 @@ export class Modal {
     this.element.inert = false;
     openModals.push(this);
     document.addEventListener('keydown', this.boundKeydown);
-    if (bodyLockCount++ === 0) {
-      document.body.classList.add(BODY_LOCK_CLASS);
-    }
+    syncBodyLock();
 
     const firstFocusable = this.content.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
     firstFocusable?.focus();
@@ -99,7 +106,7 @@ export class Modal {
     this.element.inert = true;
     this.removeFromStack();
     document.removeEventListener('keydown', this.boundKeydown);
-    this.unlockBody();
+    syncBodyLock();
     this.previouslyFocused?.focus();
     this.onClose?.();
   }
@@ -117,12 +124,6 @@ export class Modal {
     const index = openModals.indexOf(this);
     if (index !== -1) {
       openModals.splice(index, 1);
-    }
-  }
-
-  private unlockBody(): void {
-    if (bodyLockCount > 0 && --bodyLockCount === 0) {
-      document.body.classList.remove(BODY_LOCK_CLASS);
     }
   }
 

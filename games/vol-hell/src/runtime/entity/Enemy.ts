@@ -67,8 +67,10 @@ export class Enemy {
       enemyConfig.healthBarWidth,
       enemyConfig.healthBarHeight,
       enemyConfig.healthBarFillColor,
-      1,
+      enemyConfig.healthBarFillAlpha,
     );
+    // Sol kenara sabitlenir ki genislik azalinca bar soldan buyuyup sagdan kisalsin.
+    this.healthBarFill.setOrigin(0, 0.5);
     this.updateHealthBar();
   }
 
@@ -170,7 +172,7 @@ export class Enemy {
     // Can barını pozisyona güncelle — ikisi de düşman merkezine sabitlenir
     this.healthBarBg.x = this.arc.x;
     this.healthBarBg.y = this.arc.y - enemyConfig.healthBarOffset;
-    this.healthBarFill.x = this.arc.x;
+    this.healthBarFill.x = this.arc.x - enemyConfig.healthBarWidth / 2;
     this.healthBarFill.y = this.arc.y - enemyConfig.healthBarOffset;
   }
 
@@ -180,9 +182,15 @@ export class Enemy {
     this.healthBarBg.setVisible(visible);
     this.healthBarFill.setVisible(visible && ratio > 0);
 
-    // Fill merkezde kalır, genişlikten küçülür — kayma hissi oluşmaz.
-    this.healthBarFill.width = Math.max(2, enemyConfig.healthBarWidth * ratio);
-    this.healthBarFill.x = this.arc.x;
+    // setSize() kullanilir: `.width`'e dogrudan atamak geom'u ve displayOrigin'i
+    // guncellemez, yalnizca WebGL renderer'in src.width okumasi sayesinde
+    // tesadufen calisirdi. Origin sola sabitlenmis oldugu icin bar soldan
+    // sabit kalip sagdan kisalir — klasik can bari davranisi.
+    this.healthBarFill.setSize(
+      Math.max(enemyConfig.healthBarMinWidth, enemyConfig.healthBarWidth * ratio),
+      enemyConfig.healthBarHeight,
+    );
+    this.healthBarFill.x = this.arc.x - enemyConfig.healthBarWidth / 2;
   }
 
   /** Düşmanı öldürür — partikül patlaması + yok etme. */

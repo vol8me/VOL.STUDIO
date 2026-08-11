@@ -16,7 +16,7 @@
   },
   "overrides": [
     {
-      "files": ["core/src/ui/theme.css"],
+      "files": ["core/src/ui/theme.css", "core/src/ui/debug.css"],
       "rules": {
         "declaration-property-value-disallowed-list": null
       }

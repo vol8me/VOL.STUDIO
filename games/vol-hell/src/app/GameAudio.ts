@@ -19,12 +19,21 @@ interface SfxVoiceLimit {
 class SfxBank {
   private readonly context: AudioContext;
   private readonly buffers = new Map<string, AudioBuffer[]>();
+  /**
+   * Devam eden yuklemeler. Cache yalnizca fetch+decode bittikten SONRA
+   * doluyordu; loadAllSfx() ile ilk play() ayni anda cagrilinca ikisi de bos
+   * cache gorup ayni dosyalari paralel indiriyordu.
+   */
+  private readonly pendingLoads = new Map<string, Promise<void>>();
   private readonly busGain: GainNode;
   private readonly voiceStates = new Map<
     string,
     { active: Set<AudioBufferSourceNode>; lastStart: number }
   >();
   private readonly voiceLimits: Partial<Record<SoundEvent, SfxVoiceLimit>> = {
+    // Slider `input` olayında tetiklendiği için tek bir sürükleme onlarca blip
+    // üretir; limit olmadan hepsi üst üste binip makineli tüfek sesi veriyordu.
+    menuBlip: { maxVoices: 2, minInterval: 0.06 },
     fire: { maxVoices: 3, minInterval: 0.05 },
     dash: { maxVoices: 2, minInterval: 0.1 },
     hurt: { maxVoices: 2, minInterval: 0.08 },
@@ -53,6 +62,17 @@ class SfxBank {
     const key = soundKeys[event];
     if (this.buffers.has(key)) return;
 
+    const pending = this.pendingLoads.get(key);
+    if (pending) return pending;
+
+    const task = this.loadIntoCache(event, key).finally(() => {
+      this.pendingLoads.delete(key);
+    });
+    this.pendingLoads.set(key, task);
+    return task;
+  }
+
+  private async loadIntoCache(event: SoundEvent, key: string): Promise<void> {
     const paths = soundAssets[event];
     const tasks = paths.map(async (path) => {
       const response = await fetch(path);
@@ -114,6 +134,9 @@ class SfxBank {
       // En eski sesi durdur; böylece en yeni ses duyulur.
       const oldest = state.active.values().next().value;
       if (oldest) {
+        // Set'ten HEMEN silinir; onended asenkron oldugu icin ona birakilirsa
+        // aktif sayisi kisa sureligine maxVoices'i asar ve sayac yanlis olur.
+        state.active.delete(oldest);
         try {
           oldest.stop(now);
         } catch {
@@ -191,6 +214,7 @@ class SfxBank {
   release(): void {
     this.buffers.clear();
     this.voiceStates.clear();
+    this.pendingLoads.clear();
   }
 }
 
@@ -215,6 +239,11 @@ export class GameAudio {
     const Ctx =
       globalThis.AudioContext ??
       (globalThis as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    // Guard olmadan `new undefined()` TypeError'u bootstrap'in modül gövdesinde
+    // patlar ve hata ekranı devreye giremeden beyaz ekran bırakır.
+    if (!Ctx) {
+      throw new Error('Web Audio API desteklenmiyor; ses altyapısı başlatılamadı.');
+    }
     this.context = new Ctx();
 
     this.masterGain = this.context.createGain();
@@ -401,7 +430,12 @@ export class GameAudio {
     this.ambient.setMasterVolume(data.musicVolume * data.ambientVolume, 0.05);
   }
 
-  dispose(): void {
+  /**
+   * Tum ses kaynaklarini birakir ve AudioContext'i kapatir. Tarayicida
+   * escanli AudioContext sayisi sinirli; kapatmadan birakmak sayfa yasam
+   * dongusu boyunca sizinti yaratir.
+   */
+  async dispose(): Promise<void> {
     this.unsubscribe();
     this.cleanupResume();
     this.music.dispose();
@@ -411,5 +445,13 @@ export class GameAudio {
     this.sfx.release();
     this.masterGain.disconnect();
     this.limiter.disconnect();
+
+    if (this.context.state !== 'closed') {
+      try {
+        await this.context.close();
+      } catch (err) {
+        console.warn('[GameAudio] AudioContext kapatilamadi:', err);
+      }
+    }
   }
 }

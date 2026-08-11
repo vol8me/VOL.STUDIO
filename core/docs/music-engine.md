@@ -1,19 +1,26 @@
 # Music Engine
 
-`@volstudio/core/audio/music`, projenin Web Audio tabanlı müzik motorudur. Stem (katman) bazlı adaptive müzik, crossfade, stinger çalma ve prosedürel pad/drone/bass üretimi sağlar. SFX motorundan (`@volstudio/core/audio/synth`) ayrıdır; müzik uzun loop'lar ve çok kanallı stem mix'i için optimize edilmiştir.
+`@volstudio/core/audio/music`, projenin Web Audio tabanlı müzik motorudur. Stem
+(katman) bazlı adaptive müzik, crossfade ve state'e göre gain haritalama sağlar.
+SFX motorundan (`@volstudio/core/audio/synth`) ayrıdır; müzik uzun loop'lar ve
+çok kanallı stem mix'i için optimize edilmiştir.
+
+> **Runtime'da sentez YAPILMAZ.** Motor yalnızca önceden üretilmiş WAV stem'leri
+> çalar. Müzik ve SFX dosyaları build-time script'lerle (`core/scripts/generate-*.ts`)
+> üretilir. Bu bilinçli bir karardır: runtime sentez CPU maliyeti ve mobilde
+> öngörülemeyen zamanlama getirir.
 
 ## Mimari
 
 ```
 core/src/audio/music/
   types.ts             — MusicTrack, Stem, MusicState, MusicContext, gain map tipleri
-  engine.ts            — MusicEngine: yükleme, çalma, durdurma, crossfade, stinger
+  engine.ts            — MusicEngine: yükleme, çalma, durdurma, crossfade
   mixer.ts             — MusicMixer: her stem için ayrı GainNode + master kompresör
   scheduler.ts         — MusicScheduler: BPM/ölçü bazlı zaman/bar/beat dönüşümleri
   loader.ts            — StemLoader: URL'den WAV yükler, decode eder
   gain-resolver.ts     — state'e göre stem gain'ini çözer
-  procedural.ts        — ProceduralStemGenerator: runtime / build-time sentez
-  procedural-presets.ts— pad, drone, bass, ambientNoise hazır tarifleri
+  instrument.ts        — build-time SFX script'leri için enstrüman preset'leri
   index.ts             — public API
 ```
 
@@ -23,8 +30,30 @@ Pipeline:
 2. Her stem için `StemLoader.loadFromUrl(src)` ile `AudioBuffer` çözülür.
 3. `MusicEngine.play(trackId)` tüm stem'leri aynı `AudioContext` zamanında başlatır.
 4. Her stem kendi `GainNode` kanalından master mix'e bağlanır.
-5. `MusicEngine.setState()` / `setIntensity()` / `setTension()` ile stem gain'leri adaptif olarak değişir.
-6. `MusicEngine.crossfadeTo()` bar sınırında yeni track'e geçer.
+5. `MusicEngine.setState()` / `setIntensity()` ile stem gain'leri adaptif olarak değişir.
+6. `MusicEngine.crossfadeTo()` yeni track'e geçer — `bars` verilirse bar sınırında,
+   verilmezse hemen.
+
+## Davranış notları
+
+Bu maddeler kolayca yanlış varsayılan, ölçülerek doğrulanmış davranışlardır.
+
+- **`crossfadeTo()` varsayılan olarak HEMEN başlar.** `options.bars` verilirse geçiş
+  o kadar bar sonraki sınıra hizalanır. Daha önce `bars` yokken geçiş `duration`
+  kadar gecikiyordu: `fadeIn: 2` çağrısı 2 saniye hiçbir şey yapmayıp sonra 2
+  saniyede geçiyordu.
+- **`play()` çalan parçayı yeniden başlatmaz** ama verilen `state`'i uygular.
+  Yoğunluğu değiştirmek için ayrıca `setState()` çağırmak gerekmez.
+- **`mute(false)` ayarlanan seviyeye döner**, 1.0'a değil.
+- **Fade'ler lineer rampadır ve hedefe TAM varır.** Üstel yaklaşım (`setTargetAtTime`)
+  hedefe hiç varmadığı için fade-out sonunda kaynak duyulur seviyedeyken
+  kesiliyordu.
+- **`timeSignature` paydası hesaba katılır.** `[6, 8]` gerçekten sekizlik vuruş
+  demektir; bar süresi `[6, 4]`'ün yarısıdır.
+- **`bpm` pozitif olmalıdır.** Geçersiz tempo/ölçü `MusicScheduler` kurulurken
+  hata fırlatır, sessizce `Infinity` üretmez.
+- **Ducking zinciri `MusicEngineOptions.destination` ile verilir.** Motorun
+  çıkışını dışarıdan koparıp yeniden bağlamak gerekmez.
 
 ## Hızlı Başlangıç
 
@@ -162,21 +191,22 @@ gainFn: (state, ctx) => {
 
 ## MusicEngine API
 
-| Metot                                       | Açıklama                           |
-| ------------------------------------------- | ---------------------------------- |
-| `loadTrack(track)`                          | Track buffer'larını önceden yükler |
-| `play(trackId, options?)`                   | Track çalmaya başlar               |
-| `stop(options?)`                            | Çalmayı fade out ile durdurur      |
-| `crossfadeTo(trackId, duration?, options?)` | Bar sınırında diğer track'e geçer  |
-| `playStinger(stemId, options?)`             | One-shot stinger çalar             |
-| `setState(state, fadeTime?)`                | State günceller                    |
-| `setIntensity(value, fadeTime?)`            | Yoğunluk ayarlar                   |
-| `setTension(value, fadeTime?)`              | Gerilim ayarlar                    |
-| `setBossPhase(phase, fadeTime?)`            | Boss fazı ayarlar                  |
-| `setLocation(location, fadeTime?)`          | Lokasyon/state ayarlar             |
-| `setMasterVolume(value, fadeTime?)`         | Master ses seviyesi                |
-| `mute(muted, fadeTime?)`                    | Motoru susturur/açar               |
-| `dispose()`                                 | Tüm kaynakları temizler            |
+| Metot                                       | Açıklama                             |
+| ------------------------------------------- | ------------------------------------ |
+| `loadTrack(track)`                          | Track buffer'larını önceden yükler   |
+| `play(trackId, options?)`                   | Track çalmaya başlar                 |
+| `stop(options?)`                            | Çalmayı fade out ile durdurur        |
+| `crossfadeTo(trackId, duration?, options?)` | Diğer track'e geçer (bkz. aşağıda)   |
+| `setState(state, fadeTime?)`                | State günceller                      |
+| `setIntensity(value, fadeTime?)`            | Yoğunluk (0-1) ayarlar               |
+| `setMasterVolume(value, fadeTime?)`         | Master seviye ayarlar                |
+| `mute(muted, fadeTime?)`                    | Susturur / ayarlanan seviyeye açar   |
+| `getCurrentState()`                         | Track id, state ve çalma durumu      |
+| `dispose()`                                 | Kaynakları ve buffer cache'i bırakır |
+| `setLocation(location, fadeTime?)`          | Lokasyon/state ayarlar               |
+| `setMasterVolume(value, fadeTime?)`         | Master ses seviyesi                  |
+| `mute(muted, fadeTime?)`                    | Motoru susturur/açar                 |
+| `dispose()`                                 | Tüm kaynakları temizler              |
 
 ## Çapraz Geçiş (Crossfade)
 
@@ -187,41 +217,26 @@ await music.crossfadeTo('combat', 2, {
 });
 ```
 
-`bars` verilmezse hemen `now + duration` zamanında geçiş başlar.
+`bars` verilmezse geçiş HEMEN başlar (`duration` geçişin kendi süresidir, öncesinde bekleme yoktur).
 
-## Stinger
+## Ses üretimi (build-time)
 
-Track dışından one-shot ses:
+Motor runtime'da sentez YAPMAZ; yalnızca hazır WAV çalar. Müzik dosyaları
+`core/scripts/` altındaki track başına script'lerle üretilir:
 
-```typescript
-music.loadStinger({ id: 'level-up', src: '...', gain: 0.8 });
-await music.playStinger('level-up');
+```bash
+pnpm --filter @volstudio/vol-hell generate:music   # tüm müzik WAV'ları
+pnpm --filter @volstudio/vol-hell generate:sounds  # tüm SFX WAV'ları
 ```
 
-## Procedural Stem Üretimi
+Script'ler `@volstudio/core/audio/synth` motorunu kullanır (bkz. `sound-synth.md`).
+Üretim **deterministiktir**: aynı parametreler her zaman birebir aynı dosyayı
+verir, dolayısıyla üretilen asset'ler diff'lenebilir.
 
-Build zamanında WAV yazımak için `generate-iron-vein.ts` gibi track başına script'ler kullanılır. Runtime'da `ProceduralStemGenerator` ile `AudioBuffer` üretilebilir.
-
-```typescript
-import { ProceduralStemGenerator, droneParams } from '@volstudio/core/audio/music';
-
-const gen = new ProceduralStemGenerator(audioContext);
-const buffer = gen.generateDrone({
-  duration: 24,
-  frequency: 80,
-  wave: ['sine', 'sine'],
-  gain: 0.5,
-});
-```
-
-Hazır preset fonksiyonları:
-
-- `padParams(options)` — chord pad
-- `droneParams(options)` — uzun ambient drone
-- `bassParams(options)` — low bass
-- `ambientNoiseParams(options)` — tonal sine + modülasyon (gürültü değil)
-
-> Cızırtıyı önlemek için bu preset'ler yalnızca `sine` temelli osilatörler ve ılımlı reverb kullanır; brown/pink gürültü tercih edilmez.
+> Daha önce bu doküman `ProceduralStemGenerator`, `procedural-presets.ts`,
+> `playStinger()`, `setTension()` ve `setBossPhase()` belgeliyordu. Bunların
+> hiçbiri kodda yok — planlanmış ama yazılmamış bir API'ydi. One-shot ses
+> gerekiyorsa oyun tarafındaki SFX yolu (`GameAudio.playSfx`) kullanılır.
 
 ## VOL.HELL Kullanımı
 
@@ -271,8 +286,8 @@ pnpm --filter @volstudio/vol-hell generate:music
 2. `games/vol-hell/public/assets/audio/music/<kategori>/` altına WAV yaz.
 3. `games/vol-hell/src/config/music.ts`'te track ve stem tanımını güncelle.
 4. `games/vol-hell/package.json` `generate:music` script'ine üretim komutunu ekle.
-4. Sahne kodunda `loadMusic`/`playMusic` ile bağla.
-5. Doğrula:
+5. Sahne kodunda `loadMusic`/`playMusic` ile bağla.
+6. Doğrula:
 
 ```bash
 pnpm -r typecheck

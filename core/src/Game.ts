@@ -96,7 +96,7 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
   });
 
   if (config.strategy === 'resize') {
-    const detachResize = ViewportManager.attachResize(game);
+    const detachResize = viewportManager.attachResize(game);
     game.events.once(Phaser.Core.Events.DESTROY, detachResize);
   }
 

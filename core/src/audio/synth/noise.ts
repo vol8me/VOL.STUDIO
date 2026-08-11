@@ -1,5 +1,7 @@
 /** Gürültü jeneratörleri. */
 
+import { createRandom, DEFAULT_SEED, type Random } from './random';
+
 export interface NoiseSource {
   /** Sonraki örneği döner. */
   next(): number;
@@ -9,17 +11,27 @@ export interface NoiseSource {
 
 /** Beyaz gürültü. */
 export class WhiteNoise implements NoiseSource {
+  private readonly seed: number;
+  private random: Random;
+
+  constructor(seed: number = DEFAULT_SEED) {
+    this.seed = seed;
+    this.random = createRandom(seed);
+  }
+
   next(): number {
-    return Math.random() * 2 - 1;
+    return this.random.bipolar();
   }
 
   reset(): void {
-    // no state
+    this.random = createRandom(this.seed);
   }
 }
 
 /** Pink gürültü (Paul Kellet yaklaşımı). */
 export class PinkNoise implements NoiseSource {
+  private readonly seed: number;
+  private random: Random;
   private b0 = 0;
   private b1 = 0;
   private b2 = 0;
@@ -28,8 +40,13 @@ export class PinkNoise implements NoiseSource {
   private b5 = 0;
   private b6 = 0;
 
+  constructor(seed: number = DEFAULT_SEED) {
+    this.seed = seed;
+    this.random = createRandom(seed);
+  }
+
   next(): number {
-    const white = Math.random() * 2 - 1;
+    const white = this.random.bipolar();
     this.b0 = 0.99886 * this.b0 + white * 0.0555179;
     this.b1 = 0.99332 * this.b1 + white * 0.0750759;
     this.b2 = 0.969 * this.b2 + white * 0.153852;
@@ -43,35 +60,46 @@ export class PinkNoise implements NoiseSource {
   }
 
   reset(): void {
+    this.random = createRandom(this.seed);
     this.b0 = this.b1 = this.b2 = this.b3 = this.b4 = this.b5 = this.b6 = 0;
   }
 }
 
-/** Brown gürültü. */
+/** Brown gürültü — beyaz gürültünün sızıntılı integrali (-6 dB/oct). */
 export class BrownNoise implements NoiseSource {
+  private readonly seed: number;
+  private random: Random;
   private y = 0;
 
+  constructor(seed: number = DEFAULT_SEED) {
+    this.seed = seed;
+    this.random = createRandom(seed);
+  }
+
   next(): number {
-    const white = Math.random() * 2 - 1;
+    const white = this.random.bipolar();
     this.y = (this.y + white * 0.02) / 1.02;
     return this.y * 3.5;
   }
 
   reset(): void {
+    this.random = createRandom(this.seed);
     this.y = 0;
   }
 }
 
-/** İsme göre gürültü kaynağı üretir. */
-export function createNoiseSource(type: 'noise' | 'pink' | 'brown'): NoiseSource {
+/** İsme göre gürültü kaynağı üretir. Aynı seed her zaman aynı diziyi verir. */
+export function createNoiseSource(
+  type: 'noise' | 'pink' | 'brown',
+  seed: number = DEFAULT_SEED,
+): NoiseSource {
   switch (type) {
-    case 'noise':
-      return new WhiteNoise();
     case 'pink':
-      return new PinkNoise();
+      return new PinkNoise(seed);
     case 'brown':
-      return new BrownNoise();
+      return new BrownNoise(seed);
+    case 'noise':
     default:
-      return new WhiteNoise();
+      return new WhiteNoise(seed);
   }
 }

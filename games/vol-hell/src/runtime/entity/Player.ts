@@ -194,6 +194,12 @@ export class Player extends PlayerController {
     return this.health > 0;
   }
 
+  /**
+   * DIKKAT: Her cagrida AYNI Vector2 ornegi doner (GC baskisini azaltmak icin).
+   * Donen degeri SAKLAMA — bir sonraki getPosition() cagrisi uzerine yazar.
+   * Kalici bir kopya gerekiyorsa `.clone()` kullan.
+   * (Ayni sozlesme SpatialGrid.queryNearby() icin de gecerli.)
+   */
   getPosition(): Vector2 {
     this.positionBuf.set(this.arc.x, this.arc.y);
     return this.positionBuf;
@@ -202,11 +208,6 @@ export class Player extends PlayerController {
   /** Skalar X koordinatı — Vector2 yaratmaz. */
   getX(): number {
     return this.arc.x;
-  }
-
-  /** Skalar Y koordinatı — Vector2 yaratmaz. */
-  getY(): number {
-    return this.arc.y;
   }
 
   /**

@@ -48,12 +48,7 @@ function padEnvelope(duration: number): EnvelopeParams {
 
 /** Yüksek frekanslı, geniş, havadar tavan layer'ı.
  *  Menü parçalarına eksik olan 4-12 kHz içeriği katar. */
-export function shimmerAir(
-  freq: number,
-  duration: number,
-  gain = 0.18,
-  pan = 0,
-): SynthesisResult {
+export function shimmerAir(freq: number, duration: number, gain = 0.18, pan = 0): SynthesisResult {
   return synth(duration, {
     sampleRate: SAMPLE_RATE,
     wave: 'triangle',
@@ -75,12 +70,7 @@ export function shimmerAir(
 
 /** Çok yüksek frekanslı, neredeyse duyulmayan ama hava katan shimmer.
  *  8-16 kHz aralığını doldurur. */
-export function highShimmer(
-  freq: number,
-  duration: number,
-  gain = 0.05,
-  pan = 0,
-): SynthesisResult {
+export function highShimmer(freq: number, duration: number, gain = 0.05, pan = 0): SynthesisResult {
   return synth(duration, {
     sampleRate: SAMPLE_RATE,
     wave: 'triangle',
@@ -102,12 +92,7 @@ export function highShimmer(
 
 /** Isık, yumuşak, geniş additive pad.
  *  Sawtooth değil, harmonik seri ile daha temiz üst tını. */
-export function warmPad(
-  freq: number,
-  duration: number,
-  gain = 0.2,
-  pan = 0,
-): SynthesisResult {
+export function warmPad(freq: number, duration: number, gain = 0.2, pan = 0): SynthesisResult {
   return synth(duration, {
     sampleRate: SAMPLE_RATE,
     harmonics: [
@@ -135,12 +120,7 @@ export function warmPad(
 }
 
 /** Sürekli karanlık drone — sine/saw karışımı, derin, hareketli. */
-export function darkDrone(
-  freq: number,
-  duration: number,
-  gain = 0.15,
-  pan = 0,
-): SynthesisResult {
+export function darkDrone(freq: number, duration: number, gain = 0.15, pan = 0): SynthesisResult {
   return synth(duration, {
     sampleRate: SAMPLE_RATE,
     wave: 'sawtooth',
@@ -160,12 +140,7 @@ export function darkDrone(
 }
 
 /** Çok derin sub-bass — sine, hafif filter LFO, dar lowpass. */
-export function deepSubBass(
-  freq: number,
-  duration: number,
-  gain = 0.28,
-  pan = 0,
-): SynthesisResult {
+export function deepSubBass(freq: number, duration: number, gain = 0.28, pan = 0): SynthesisResult {
   return synth(duration, {
     sampleRate: SAMPLE_RATE,
     wave: 'sine',
@@ -276,12 +251,7 @@ export function cinematicStrings2(
 }
 
 /** Bass pulse — sawtooth, filter envelope, tok ama açık. */
-export function bassPulse2(
-  freq: number,
-  duration: number,
-  gain = 0.55,
-  pan = 0,
-): SynthesisResult {
+export function bassPulse2(freq: number, duration: number, gain = 0.55, pan = 0): SynthesisResult {
   return synth(duration, {
     sampleRate: SAMPLE_RATE,
     wave: 'sawtooth',
@@ -303,12 +273,7 @@ export function bassPulse2(
 }
 
 /** Arp notası — saw + hafif FM, açık filtre. */
-export function arpSaw(
-  freq: number,
-  duration: number,
-  velocity = 1,
-  pan = 0,
-): SynthesisResult {
+export function arpSaw(freq: number, duration: number, velocity = 1, pan = 0): SynthesisResult {
   return synth(duration, {
     sampleRate: SAMPLE_RATE,
     wave: 'sawtooth',
@@ -352,11 +317,7 @@ export function cinematicKick(
 }
 
 /** Koyu snare — noise + dar band, reverb. */
-export function darkSnare2(
-  duration: number,
-  gain = 0.32,
-  pan = 0,
-): SynthesisResult {
+export function darkSnare2(duration: number, gain = 0.32, pan = 0): SynthesisResult {
   return synth(duration, {
     sampleRate: SAMPLE_RATE,
     wave: 'noise',
@@ -370,11 +331,7 @@ export function darkSnare2(
 }
 
 /** Açık hi-hat — yüksek frekans, kısa. */
-export function openHiHat(
-  duration: number,
-  gain = 0.22,
-  pan = 0,
-): SynthesisResult {
+export function openHiHat(duration: number, gain = 0.22, pan = 0): SynthesisResult {
   return synth(duration, {
     sampleRate: SAMPLE_RATE,
     wave: 'noise',
@@ -387,12 +344,7 @@ export function openHiHat(
 }
 
 /** Brass swell — saw + FM, açılan filtre, basınç. */
-export function brassStab(
-  freq: number,
-  duration: number,
-  gain = 0.32,
-  pan = 0,
-): SynthesisResult {
+export function brassStab(freq: number, duration: number, gain = 0.32, pan = 0): SynthesisResult {
   const attack = 0.08;
   const release = 0.7;
   const sustain = Math.max(0.1, duration - attack - 0.3 - release);
@@ -428,7 +380,10 @@ export function brassStab(
 // --- Helpers ---
 
 /** Akor frekanslarını döndürür. */
-export function chordTones(chord: ChordDef, baseOctave = 1): { root: number; third: number; fifth: number; octave: number } {
+export function chordTones(
+  chord: ChordDef,
+  baseOctave = 1,
+): { root: number; third: number; fifth: number; octave: number } {
   const root = chord.root * baseOctave;
   const third = root * (chord.type === 'minor' ? MINOR_3 : MAJOR_3);
   const fifth = root * FIFTH;

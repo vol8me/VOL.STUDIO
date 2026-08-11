@@ -1,5 +1,6 @@
 import type { SequenceParams, SequenceNote, SynthesisResult, SynthParams } from './types';
 import { applyGlobalEffects, synth } from './engine';
+import { estimateDelayTail, Reverb } from './effects';
 import { mixSampleLayer, processSample } from './sample';
 
 const DEFAULT_SAMPLE_RATE = 44100;
@@ -52,8 +53,15 @@ export function compose(
   const loop = Math.max(1, Math.floor(sequence.loop ?? 1));
   const loopDelay = resolveTime(sequence.loopDelay ?? 0, bpm);
   const musicDuration = sequenceDuration * loop + (loop - 1) * loopDelay;
-  const reverbTail = baseParams.reverb?.decay ?? 0;
-  const delayTail = baseParams.delay ? baseParams.delay.time + (baseParams.delay.feedback ?? 0) : 0;
+  // Kuyruk süreleri GERÇEK sönüm süresinden hesaplanır.
+  //
+  // Önceki hesap iki ayrı birim hatası taşıyordu:
+  //  - `reverb.decay` 0-1 normalize bir değerdir (feedback'e haritalanır),
+  //    saniye değil — doğrudan kuyruk süresi sayılıyordu.
+  //  - `delay.time` (saniye) ile `delay.feedback` (oran) TOPLANIYORDU;
+  //    boyutsal olarak anlamsız bir sayı üretiyordu.
+  const reverbTail = baseParams.reverb ? new Reverb(baseParams.reverb, sampleRate).tailSeconds : 0;
+  const delayTail = baseParams.delay ? estimateDelayTail(baseParams.delay) : 0;
   const tail = Math.max(reverbTail, delayTail);
   const totalDuration = musicDuration + tail;
   const totalSamples = Math.floor(sampleRate * totalDuration);
@@ -63,6 +71,7 @@ export function compose(
   const noteBase = stripGlobalParams(baseParams);
   delete (noteBase as Record<string, unknown>).sample;
   let currentOffset = 0;
+  let noteIndex = 0;
 
   for (let l = 0; l < loop; l++) {
     for (const note of sequence.notes) {
@@ -77,7 +86,15 @@ export function compose(
         frequency: noteFreq,
         duration: noteDuration,
         sampleRate,
+        // Nota BAZINDA normalize edilmez: her notayı ayrı ayrı 0.95'e çekmek
+        // aralarındaki dinamik farkı yok ediyordu — crescendo, vurgulu nota veya
+        // sönümlenen kuyruk imkânsızdı. Normalize yalnızca final mix'e uygulanır.
+        normalize: false,
+        // Her nota farklı bir seed alır; aynı gürültü dizisi tekrarlanıp
+        // yapay bir "aynılık" oluşturmasın. Dizi yine deterministiktir.
+        seed: (baseParams.seed ?? 0) + noteIndex,
       };
+      noteIndex++;
 
       const result = synth(noteDuration, noteParams);
       const noteBuffer = result.channels[0];

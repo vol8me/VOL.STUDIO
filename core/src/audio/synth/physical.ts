@@ -56,7 +56,7 @@ class FractionalDelayLine {
     const idx0 = Math.floor(readPos) % this.buffer.length;
     const idx1 = (idx0 + 1) % this.buffer.length;
     const frac = readPos - Math.floor(readPos);
-    return this.buffer[idx0]! * (1 - frac) + this.buffer[idx1]! * frac;
+    return this.buffer[idx0] * (1 - frac) + this.buffer[idx1] * frac;
   }
 
   write(sample: number): void {
@@ -91,11 +91,7 @@ class OnePoleLowpass {
 
 /** Excitation — noise + harmonik karışımı.
  *  Saf noise klasik KS'tir; harmonik eklemek daha zengin atak verir. */
-function generateExcitation(
-  length: number,
-  harmonics: number,
-  mix: number,
-): Float32Array {
+function generateExcitation(length: number, harmonics: number, mix: number): Float32Array {
   const buffer = new Float32Array(length);
   for (let i = 0; i < length; i++) {
     const noise = Math.random() * 2 - 1;
@@ -164,8 +160,8 @@ export function pluck(params: PluckParams): SynthesisResult {
 
   // Excitation'ı delay line'lara yaz
   for (let i = 0; i < exciteLength; i++) {
-    dlLeft.write(excitation[i]!);
-    dlRight.write(excitation[i]!);
+    dlLeft.write(excitation[i]);
+    dlRight.write(excitation[i]);
   }
 
   // Sentez döngüsü

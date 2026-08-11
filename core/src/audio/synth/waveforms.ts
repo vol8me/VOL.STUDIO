@@ -1,25 +1,41 @@
 import type { Waveform } from './types';
 
-// Sine lookup table — Math.sin çağrılarını önler, tutarlı ve hızlı.
-// 4096 sample, linear interpolasyon yeterli doğruluk verir.
 const TABLE_SIZE = 4096;
+
+/** Sine lookup table — Math.sin çağrılarını önler, tutarlı ve hızlı. */
 const SINE_TABLE = new Float32Array(TABLE_SIZE);
 for (let i = 0; i < TABLE_SIZE; i++) {
   SINE_TABLE[i] = Math.sin((2 * Math.PI * i) / TABLE_SIZE);
 }
 
-// Bandlimited triangle — additive synthesis ile üretilmiş.
-// 200 tek harmonik (1/n² amplitüd) doğal triangle verir, aliasing yok.
-// Düşük frekanslarda zengin harmonik, yüksek frekanslarda doğal sönüm.
-const TRIANGLE_TABLE = new Float32Array(TABLE_SIZE);
-for (let i = 0; i < TABLE_SIZE; i++) {
-  const phase = i / TABLE_SIZE;
-  let s = 0;
-  for (let n = 1; n <= 200; n += 2) {
-    s += Math.sin(2 * Math.PI * n * phase) / (n * n);
+/**
+ * Bandlimited triangle tablosu — 200 tek harmonik (1/n² amplitüd).
+ *
+ * Tembel üretilir: 4096 × 100 = 819.200 `Math.sin()` çağrısı, modül import
+ * edilir edilmez çalışıyordu ve triangle hiç kullanılmasa bile tarayıcı
+ * açılışına gecikme ekliyordu. İlk triangle isteğinde bir kez üretilir.
+ *
+ * NOT: "aliasing yok" değil, "naive triangle'a göre çok daha az aliasing".
+ * Sabit harmonik sayılı bir tablo yalnızca tabloya göre bant sınırlıdır;
+ * yüksek f0'da üst harmonikler yine katlanır.
+ */
+let triangleTable: Float32Array | null = null;
+
+function getTriangleTable(): Float32Array {
+  if (triangleTable) return triangleTable;
+
+  const table = new Float32Array(TABLE_SIZE);
+  for (let i = 0; i < TABLE_SIZE; i++) {
+    const phase = i / TABLE_SIZE;
+    let s = 0;
+    for (let n = 1; n <= 200; n += 2) {
+      s += Math.sin(2 * Math.PI * n * phase) / (n * n);
+    }
+    // 8/π² normalizasyon → [-1, 1]
+    table[i] = (s * 8) / (Math.PI * Math.PI);
   }
-  // 8/π² normalizasyon → [-1, 1]
-  TRIANGLE_TABLE[i] = (s * 8) / (Math.PI * Math.PI);
+  triangleTable = table;
+  return table;
 }
 
 /** Lookup table'dan linear interpolasyon ile örnek okur. */
@@ -28,18 +44,20 @@ function tableLookup(table: Float32Array, phase: number): number {
   const i0 = Math.floor(idx) % table.length;
   const i1 = (i0 + 1) % table.length;
   const frac = idx - Math.floor(idx);
-  return table[i0]! + (table[i1]! - table[i0]!) * frac;
+  return table[i0] + (table[i1] - table[i0]) * frac;
 }
 
-/** PolyBLEP düzeltmesi — discontinuity noktasında anti-aliasing.
- *  Naive dalga şekline eklenerek aliasing'i azaltır. */
+/**
+ * PolyBLEP düzeltmesi — bir süreksizlik noktasındaki aliasing'i azaltır.
+ * Yükselen kenarda EKLENİR, düşen kenarda ÇIKARILIR.
+ */
 function polyblep(phase: number, inc: number): number {
-  // phase 0 civarında discontinuity
+  // Süreksizlikten hemen sonra
   if (phase < inc) {
     const t = phase / inc;
     return t + t - t * t - 1;
   }
-  // phase 1 civarında discontinuity
+  // Süreksizlikten hemen önce (faz sarmadan)
   if (phase > 1 - inc) {
     const t = (phase - 1) / inc;
     return t * t + t + t + 1;
@@ -47,8 +65,28 @@ function polyblep(phase: number, inc: number): number {
   return 0;
 }
 
-/** Verilen faz (0-1 döngü) ve dalga şekli için bir örnek döner.
- *  Sine ve triangle lookup table, sawtooth/square/pulse PolyBLEP kullanır. */
+/**
+ * Genişliği ayarlanabilir dikdörtgen dalga, PolyBLEP ile bant sınırlı.
+ *
+ * `square` bunun `pulseWidth = 0.5` özel hali — ayrı bir uygulaması YOK.
+ * Önceki ayrı `square` dalı iki hata taşıyordu: düşen kenarda BLEP'i çıkarmak
+ * yerine ekliyordu (çıktı ±2'ye taşıyordu) ve `phase > 1 - inc` bölgesini
+ * hiç düzeltmiyordu.
+ */
+function rectangleSample(phase: number, pulseWidth: number, phaseInc: number): number {
+  let sample = phase < pulseWidth ? 1 : -1;
+
+  if (phaseInc > 0) {
+    // 0'da yükselen kenar (+2 sıçrama) → BLEP eklenir.
+    sample += polyblep(phase, phaseInc);
+    // pulseWidth'te düşen kenar (-2 sıçrama) → BLEP çıkarılır.
+    sample -= polyblep((phase - pulseWidth + 1) % 1, phaseInc);
+  }
+
+  return sample;
+}
+
+/** Verilen faz (0-1 döngü) ve dalga şekli için bir örnek döner. */
 export function getWaveSampleWithPhase(
   wave: Exclude<Waveform, 'noise' | 'pink' | 'brown'>,
   phase: number,
@@ -68,45 +106,33 @@ export function getWaveSampleWithPhase(
         if (phase < 0.75) return 2 - 4 * phase;
         return -4 + 4 * phase;
       }
-      // Bandlimited triangle — lookup table, aliasing yok
-      return tableLookup(TRIANGLE_TABLE, phase);
+      return tableLookup(getTriangleTable(), phase);
     case 'sawtooth': {
       let sample = 2 * phase - 1;
       if (phaseInc > 0) {
-        sample += polyblep(phase, phaseInc);
+        sample -= polyblep(phase, phaseInc);
       }
       return sample;
     }
-    case 'square': {
-      let sample = phase < 0.5 ? 1 : -1;
-      if (phaseInc > 0) {
-        // 0.5 noktasında discontinuity
-        if (Math.abs(phase - 0.5) < phaseInc || phase < phaseInc) {
-          const blep = polyblep(phase, phaseInc);
-          const blepHalf = polyblep((phase - 0.5 + 1) % 1, phaseInc);
-          sample += blep + blepHalf;
-        }
-      }
-      return sample;
-    }
-    case 'pulse': {
-      let sample = phase < pulseWidth ? 1 : -1;
-      if (phaseInc > 0) {
-        // pulseWidth ve 0 noktalarında discontinuity
-        const blep0 = polyblep(phase, phaseInc);
-        const blepPw = polyblep((phase - pulseWidth + 1) % 1, phaseInc);
-        sample += blep0 - blepPw;
-      }
-      return sample;
-    }
+    case 'square':
+      return rectangleSample(phase, 0.5, phaseInc);
+    case 'pulse':
+      return rectangleSample(phase, pulseWidth, phaseInc);
     default:
       return 0;
   }
 }
 
-/** Verilen dalga şekli ve frekans için bir örnek döner.
- *  phaseInc otomatik hesaplanır — PolyBLEP için gerekli. */
-export function getWaveSample(
+/**
+ * SABİT frekanslı bir dalga için örnek döner (faz mutlak zamandan türetilir).
+ *
+ * DİKKAT: Yalnızca frekans zaman içinde DEĞİŞMEDİĞİNDE doğrudur. Değişen
+ * frekansta faz, frekansın integralidir; `freq * t` kullanmak duyulan frekansı
+ * bozar (lineer slide'da nota sonunda `2·f₁ - f₀` duyulur). Modülasyonlu
+ * sentez için `getWaveSampleWithPhase()` ile faz biriktirilmelidir —
+ * bkz. `engine.ts` içindeki `advancePhase()`.
+ */
+export function getWaveSampleConstantFreq(
   wave: Exclude<Waveform, 'noise' | 'pink' | 'brown'>,
   freq: number,
   t: number,

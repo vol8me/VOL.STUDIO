@@ -22,6 +22,8 @@ const STICK_THUMB_COLOR = hexColorToNumber(VOL_COLORS.supportSolid);
 export class TouchController extends Phaser.GameObjects.Container implements InputProvider {
   private readonly graphics: Phaser.GameObjects.Graphics;
   private readonly sticks = new TouchStickState();
+  /** Ekranda çizili stick var mı — parmak kalkınca tek bir clear() için. */
+  private hasDrawnSticks = false;
 
   constructor(scene: Phaser.Scene) {
     super(scene);
@@ -66,8 +68,19 @@ export class TouchController extends Phaser.GameObjects.Container implements Inp
   }
 
   update(_delta: number): void {
-    if (!this.sticks.isActive) return;
+    if (!this.sticks.isActive) {
+      // graphics.clear() yalnızca drawSticks() içinde çağrılıyor; erken dönmek
+      // son çizilen halkaları ekranda kalıcı olarak bırakırdı. Bayrak, parmak
+      // yokken her frame boşuna clear çağrılmasını engeller.
+      if (this.hasDrawnSticks) {
+        this.graphics.clear();
+        this.hasDrawnSticks = false;
+      }
+      return;
+    }
+
     this.drawSticks();
+    this.hasDrawnSticks = true;
   }
 
   /**

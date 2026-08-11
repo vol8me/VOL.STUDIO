@@ -41,15 +41,16 @@ export interface FilterParams {
   cutoff: number;
   /** Süre boyunca kesim frekansında ne kadar değişim olacağı (Hz). Varsayılan 0. */
   slide?: number;
-  /** Rezonans / Q (0-20). 0 = rezonans yok. Biquad filtrelerde tepe noktası gücü.
-   *  Eski 1-kutuplu filtrelerde yok sayılır. */
+  /** Rezonans (0-1 NORMALİZE, Q değeri değil). 0 → Q 0.707 (Butterworth),
+   *  1 → Q 20. Eski 1-kutuplu filtrelerde yok sayılır.
+   *  Ham Q gerekiyorsa `BiquadFilter` doğrudan kullanılmalıdır. */
   resonance?: number;
   /** Filtre tipi. Varsayılan 'lowpass'. Biquad kullanımı için.
    *  Belirtilmezse ve resonance > 0 ise biquad lowpass kullanılır. */
   type?: FilterType;
-  /** Kutup sayısı (1 veya 2). 1 = eski RC filtre (6dB/oct), 2 = biquad (12dB/oct).
+  /** Kutup sayısı. 1 = RC (6 dB/oct), 2 = biquad (12 dB/oct), 4 = kaskad (24 dB/oct).
    *  Varsayılan: resonance > 0 ise 2, değilse 1 (geriye dönük uyum). */
-  poles?: 1 | 2;
+  poles?: 1 | 2 | 4;
   /** Filtre zarfı — cutoff zamanla modüle edilir (filter sweep).
    *  Zarf 0→1 arası: cutoff = baseCutoff * (1 - envAmount + envAmount * envValue). */
   envelope?: EnvelopeParams;
@@ -176,7 +177,8 @@ export interface ReverbParams {
   amount?: number;
   /** Süre boyunca sönüm (saniye). */
   decay?: number;
-  /** Oda boyutu (0-1). */
+  /** Oda boyutu (0-1). Comb gecikme uzunluklarını ölçekler — fiziksel oda
+   *  büyüklüğü. `decay` sönüm süresini, `roomSize` odanın boyutunu belirler. */
   roomSize?: number;
   /** Yüksek frekans sönümü (0-1). */
   damp?: number;
@@ -208,6 +210,23 @@ export interface PitchJumpParams {
 export interface SynthParams {
   /** Örnek oranı. Varsayılan 44100. */
   sampleRate?: number;
+
+  /**
+   * Deterministik gürültü için seed. Verilmezse sabit bir varsayılan kullanılır —
+   * yani üretim varsayılan olarak TEKRARLANABİLİR. Aynı parametreler + aynı seed
+   * her zaman birebir aynı sesi verir.
+   */
+  seed?: number;
+
+  /**
+   * Sonucu tepe değerine göre normalize et. Varsayılan `true`.
+   *
+   * `false` yapıldığında sesin doğal seviyesi korunur. Bir mix içinde birden çok
+   * ses üretilirken (bkz. `compose()`) her birini ayrı ayrı normalize etmek
+   * aralarındaki dinamik farkı yok eder; o durumda `false` geçilip normalize
+   * yalnızca final mix'e bir kez uygulanmalıdır.
+   */
+  normalize?: boolean;
   /** Dalga şekli veya karışım. */
   wave?: Waveform | Waveform[];
   /** Temel frekans (Hz). */

@@ -1,0 +1,28 @@
+/*
+ * Diagnostics overlay stilleri.
+ *
+ * Panel yalnızca `?debug` / `?perf` ile oluşturulur. Stil burada tutulur çünkü
+ * TS içinde `style.cssText` ile yazmak hem tasarım sistemini baypas ediyor hem
+ * de Tauri CSP'sinde `style-src: 'unsafe-inline'` tutmayı zorunlu kılıyordu.
+ *
+ * Renkler bilinçli olarak theme token'ı DEĞİL: overlay canvas'ın üzerine, her
+ * oyunun kendi paletinden bağımsız olarak yüksek kontrastla çizilmeli. Ürün
+ * temasına bağlanırsa koyu bir sahnede okunamaz hale gelir. Bu yüzden
+ * `.stylelintrc.json` bu dosyayı — theme.css gibi — çıplak renk yasağından
+ * muaf tutar. Kural: bu muafiyet YALNIZCA dev araçları için, ürün UI'ı için değil.
+ */
+
+.vol-diagnostics-panel {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 9999;
+  padding: 8px;
+  border-radius: 4px;
+  background: #000000bf;
+  color: #0f0;
+  font: 12px monospace;
+  line-height: 1.4;
+  white-space: pre;
+  pointer-events: none;
+}

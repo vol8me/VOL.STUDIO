@@ -56,20 +56,26 @@ export interface SkillTreeOptions {
 
 type NodeState = 'unlocked' | 'available' | 'locked';
 
+/** .vol-skill-tree__canvas--resetting gecisi (hud.css: transform 0.4s) + kare payi. */
+const RESET_VIEW_TRANSITION_MS = 420;
+/** Baglanti dolum animasyonunun suresi; bittiginde --filling class'i kaldirilir. */
+const CONNECTION_FILL_MS = 500;
+
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
 /** Aynı satırdaki iki düğüm arasında bırakılacak minimum boşluk (piksel) — metin uzunluğu ne olursa olsun düğümler asla bu paydan daha yakın duramaz. */
 const MIN_NODE_GAP = 24;
 /** Düğüm etiketinin yatay iç boşluğu (px, her iki taraf toplamı) — genişlik hesaplanırken metnin ölçülen genişliğine eklenir. */
 const NODE_PADDING_X = 28;
-const MIN_NODE_WIDTH = 88;
+/** .vol-skill-tree__node'un CSS min-width'i ile BİREBİR eşleşmeli. */
+export const MIN_NODE_WIDTH = 88;
 /**
  * .vol-skill-tree__node-label'ın theme.css'teki gerçek font'uyla BİREBİR
  * eşleşmeli — measureLabelWidth() bu font'la bir canvas context üzerinden
  * ölçüm yapar (bkz. aşağıdaki yorum, DOM'a bağlı olma zorunluluğunu
  * ortadan kaldırmak için).
  */
-const NODE_LABEL_FONT = "600 12px 'Jura', sans-serif";
+export const NODE_LABEL_FONT = "600 12px 'Jura', sans-serif";
 
 interface NodeLayout {
   centerX: number;
@@ -143,6 +149,10 @@ export class SkillTree {
   private readonly tooltips = new Map<string, RichTooltip>();
   private readonly onUnlockHandler?: (id: string) => boolean | void;
   private readonly cleanups: (() => void)[] = [];
+  /** Bekleyen zamanlayici/rAF handle'lari — destroy() hepsini iptal eder. */
+  private readonly pendingTimers = new Set<number>();
+  private readonly pendingFrames = new Set<number>();
+  private destroyed = false;
   private layout = new Map<string, NodeLayout>();
   private zoom = 1;
   private panX = 0;
@@ -199,6 +209,29 @@ export class SkillTree {
     this.recomputeLayout();
     this.renderConnections();
     this.renderStates(false);
+
+    this.recomputeWhenFontReady();
+  }
+
+  /**
+   * measureLabelWidth() 'Jura' metriklerine gore olcum yapar, ama font
+   * createVolGame tarafindan asenkron yuklenir. SkillTree font hazir olmadan
+   * kurulursa olcumler sistem fontuyla yapilir ve dugum genislikleri kalici
+   * olarak yanlis kalir — uzun etiketler kutudan tasar. Font yerlesince tek
+   * seferlik yeniden olcum yapilir.
+   *
+   * Container yeniden boyutlanmasi dinlenmez: recomputeLayout() yalnizca
+   * etiket metnine ve cellSize'a bagli, container genisligini hic okumaz.
+   */
+  private recomputeWhenFontReady(): void {
+    if (typeof document === 'undefined' || !document.fonts) return;
+
+    void document.fonts.ready.then(() => {
+      if (this.destroyed) return;
+      this.recomputeLayout();
+      this.renderConnections();
+      this.renderStates(false);
+    });
   }
 
   /** Bir düğümü programatik olarak açar (onUnlock onayı olmadan) — ör. görev ödülü, hile menüsü. */
@@ -222,15 +255,38 @@ export class SkillTree {
     this.panX = 0;
     this.panY = 0;
     this.applyTransform();
-    window.setTimeout(() => {
+    this.trackTimeout(() => {
       this.canvas.classList.remove('vol-skill-tree__canvas--resetting');
-    }, 420);
+    }, RESET_VIEW_TRANSITION_MS);
   }
 
   destroy(): void {
+    this.destroyed = true;
+    for (const id of this.pendingTimers) window.clearTimeout(id);
+    this.pendingTimers.clear();
+    for (const id of this.pendingFrames) cancelAnimationFrame(id);
+    this.pendingFrames.clear();
     for (const cleanup of this.cleanups) cleanup();
     for (const tooltip of this.tooltips.values()) tooltip.destroy();
     this.element.remove();
+  }
+
+  /** destroy() sonrasi calismayan, handle'i takip edilen setTimeout. */
+  private trackTimeout(fn: () => void, delayMs: number): void {
+    const id = window.setTimeout(() => {
+      this.pendingTimers.delete(id);
+      if (!this.destroyed) fn();
+    }, delayMs);
+    this.pendingTimers.add(id);
+  }
+
+  /** destroy() sonrasi calismayan, handle'i takip edilen requestAnimationFrame. */
+  private trackFrame(fn: () => void): void {
+    const id = requestAnimationFrame(() => {
+      this.pendingFrames.delete(id);
+      if (!this.destroyed) fn();
+    });
+    this.pendingFrames.add(id);
   }
 
   private getState(node: SkillNodeDefinition): NodeState {
@@ -381,10 +437,11 @@ export class SkillTree {
 
     for (const node of this.nodes) {
       for (const reqId of node.requires ?? []) {
-        const from = this.nodes.find((n) => n.id === reqId);
+        // layout yalnizca tanimli dugumler icin doldurulur; ayrica nodes.find()
+        // ile aramak ayni kontrolu O(n) maliyetle tekrarlardi.
         const fromPos = this.layout.get(reqId);
         const toPos = this.layout.get(node.id);
-        if (!from || !fromPos || !toPos) continue;
+        if (!fromPos || !toPos) continue;
 
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', String(fromPos.centerX));
@@ -466,16 +523,16 @@ export class SkillTree {
     // Tarayıcının dashoffset:length durumunu boyamasını bekleyip (ilk kare)
     // sonra 0'a animasyonlamak gerekir — aksi halde başlangıç ve bitiş
     // değerleri aynı karede uygulanır, geçiş hiç görünmez.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
+    this.trackFrame(() => {
+      this.trackFrame(() => {
         line.style.strokeDashoffset = '0';
       });
     });
-    window.setTimeout(() => {
+    this.trackTimeout(() => {
       line.classList.remove('vol-skill-tree__connection--filling');
       line.style.strokeDasharray = '';
       line.style.strokeDashoffset = '';
-    }, 500);
+    }, CONNECTION_FILL_MS);
   }
 
   /** zoomable:true iken tekerlek ile yakınlaştırma, sürükleyerek kaydırma (pan) kurar. */

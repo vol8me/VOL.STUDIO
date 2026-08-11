@@ -9,6 +9,8 @@ export default tseslint.config(
       '**/dist/**',
       '**/target/**',
       '**/build/**',
+      // vitest v8 coverage raporu — üretilen HTML/JS, repoya girmez
+      '**/coverage/**',
       '**/*.config.{js,ts}',
       '**/vite-env.d.ts',
     ],
@@ -17,10 +19,7 @@ export default tseslint.config(
   // TypeScript dosyaları — core, games, tauri-v2 src ve tests
   {
     files: ['**/src/**/*.ts', '**/tests/**/*.ts'],
-    extends: [
-      ...tseslint.configs.recommendedTypeChecked,
-      prettierConfig,
-    ],
+    extends: [...tseslint.configs.recommendedTypeChecked, prettierConfig],
     languageOptions: {
       parserOptions: {
         projectService: true,

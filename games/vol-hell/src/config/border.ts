@@ -2,6 +2,8 @@
 export const borderConfig = {
   /** Viewport kenarından içeri boşluk (piksel). Border rect bu kadar içeride çizilir. */
   margin: 60,
+  /** Margin'in viewport boyutuna oranla ust siniri — dar pencerede sahanin ters donmesini onler. */
+  maxMarginRatio: 0.25,
   /** Çizgi kalınlığı (piksel). */
   lineWidth: 2,
   /** Çizgi rengi (0xRRGGBB, Phaser sayısal format). */

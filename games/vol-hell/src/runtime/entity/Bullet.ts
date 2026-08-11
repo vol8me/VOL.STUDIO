@@ -1,7 +1,8 @@
 import type Phaser from 'phaser';
 import { Vector2, Diagnostics } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
-import { gameAudio } from '@/app/bootstrap';
+import { sfxVolumes } from '@/config/audio';
+import { gameAudio } from '@/app/services';
 import type { Border } from './Border';
 import type { ParticlePool } from '@/runtime/systems/ParticlePool';
 
@@ -137,7 +138,7 @@ export class Bullet {
       const now = this.scene.time.now;
       if (now - this.lastBounceSoundTime >= bulletConfig.bounceSoundCooldownMs) {
         this.lastBounceSoundTime = now;
-        void gameAudio.playSfx('bulletBounce', { volume: 0.45 });
+        void gameAudio.playSfx('bulletBounce', { volume: sfxVolumes.bulletBounce });
       }
 
       this.spawnBounceParticles();

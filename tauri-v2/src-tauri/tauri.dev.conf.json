@@ -2,7 +2,7 @@
   "app": {
     "security": {
       "csp": {
-        "connect-src": "'self' ipc: http://ipc.localhost ws://*:1421"
+        "connect-src": "'self' ipc: http://ipc.localhost ws://localhost:1421 ws://127.0.0.1:1421 http://localhost:9876 http://127.0.0.1:9876"
       }
     }
   }

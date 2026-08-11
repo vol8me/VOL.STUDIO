@@ -37,7 +37,11 @@ export function emptyBuffer(duration: number): Float32Array {
   return new Float32Array(Math.floor(duration * SAMPLE_RATE));
 }
 
-export function toStereo(left: Float32Array, right: Float32Array, duration: number): SynthesisResult {
+export function toStereo(
+  left: Float32Array,
+  right: Float32Array,
+  duration: number,
+): SynthesisResult {
   return { channels: [left, right], sampleRate: SAMPLE_RATE, duration };
 }
 
@@ -66,8 +70,7 @@ export function chordAtBeat(chords: ChordDef[], beat: number): ChordDef {
 // Her script farklı BPM kullandığı için beatDuration parametre ile gelir.
 
 export function createBeatUtils(beatDuration: number) {
-  const beatToSample = (beat: number): number =>
-    Math.floor(beat * beatDuration * SAMPLE_RATE);
+  const beatToSample = (beat: number): number => Math.floor(beat * beatDuration * SAMPLE_RATE);
 
   /** Cosine fade in/out — pürüzsüz, tıkı yok. */
   const applyFades = (
@@ -121,8 +124,8 @@ export function masterMix(left: Float32Array, right: Float32Array): [Float32Arra
   for (let i = 0; i < left.length; i++) {
     const l = left[i]! * scale;
     const r = right[i]! * scale;
-    outL[i] = Math.max(-0.99, Math.min(0.99, l / (1 + 0.1 * Math.abs(l)) * 1.1));
-    outR[i] = Math.max(-0.99, Math.min(0.99, r / (1 + 0.1 * Math.abs(r)) * 1.1));
+    outL[i] = Math.max(-0.99, Math.min(0.99, (l / (1 + 0.1 * Math.abs(l))) * 1.1));
+    outR[i] = Math.max(-0.99, Math.min(0.99, (r / (1 + 0.1 * Math.abs(r))) * 1.1));
   }
   return [outL, outR];
 }

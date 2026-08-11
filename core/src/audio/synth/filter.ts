@@ -1,5 +1,15 @@
 import type { FilterParams, FilterType } from './types';
 
+/**
+ * 4. derece Butterworth'ün iki biquad kaskadı için Q değerleri.
+ * Kutup açıları 22.5° ve 67.5° → Q = 1/(2·cos θ).
+ * Rastgele seçilmiş bir `q * 0.6` bu tepkiyi vermez.
+ */
+export const BUTTERWORTH_Q4: readonly [number, number] = [0.5411961, 1.306563];
+
+/** Katsayı yeniden hesabı için minimum bağıl cutoff değişimi (%0.1). */
+const COEFF_UPDATE_EPSILON = 0.001;
+
 export interface Filter {
   process(sample: number, cutoff: number): number;
   reset(): void;
@@ -32,7 +42,8 @@ export class BiquadFilter implements Filter {
 
   /** Cutoff için katsayıları hesapla (cache'li). */
   private computeCoeffs(cutoff: number): void {
-    const w0 = (2 * Math.PI * Math.max(1, Math.min(this.sampleRate * 0.49, cutoff))) / this.sampleRate;
+    const w0 =
+      (2 * Math.PI * Math.max(1, Math.min(this.sampleRate * 0.49, cutoff))) / this.sampleRate;
     const cosW0 = Math.cos(w0);
     const sinW0 = Math.sin(w0);
     const alpha = sinW0 / (2 * this.q);
@@ -86,12 +97,24 @@ export class BiquadFilter implements Filter {
   }
 
   process(sample: number, cutoff: number): number {
-    // Cutoff değişmediğinde katsayıları yeniden hesaplama
-    if (cutoff !== this.lastCutoff) {
+    // Katsayılar yalnızca cutoff ANLAMLI ölçüde değiştiğinde yeniden hesaplanır.
+    // Tam eşitlik kontrolü, modüle edilen bir cutoff'ta (filtre zarfı/LFO) her
+    // örnekte tam trigonometrik hesap demekti; ayrıca durum değişkenleri
+    // korunurken katsayıyı her örnek oynatmak yüksek Q'da zipper gürültüsü
+    // üretiyordu.
+    if (
+      this.lastCutoff < 0 ||
+      Math.abs(cutoff - this.lastCutoff) > this.lastCutoff * COEFF_UPDATE_EPSILON
+    ) {
       this.computeCoeffs(cutoff);
     }
 
-    const y = this.nb0 * sample + this.nb1 * this.x1 + this.nb2 * this.x2 - this.na1 * this.y1 - this.na2 * this.y2;
+    const y =
+      this.nb0 * sample +
+      this.nb1 * this.x1 +
+      this.nb2 * this.x2 -
+      this.na1 * this.y1 -
+      this.na2 * this.y2;
 
     this.x2 = this.x1;
     this.x1 = sample;
@@ -110,15 +133,21 @@ export class BiquadFilter implements Filter {
   }
 }
 
-/** 4-kutuplu cascade — iki biquad seri, 24dB/oct slope. Analog synth karakteri. */
+/**
+ * 4-kutuplu kaskad — iki biquad seri, 24 dB/oct.
+ *
+ * Rezonans istenmediğinde (q ≈ 0.707) kademeler Butterworth Q'larını kullanır;
+ * düz bir geçiş bandı verir. Rezonans istendiğinde fazlalık ikinci kademeye
+ * verilir — tek kademede toplamak filtreyi kararsızlığa yaklaştırır.
+ */
 export class Cascade4Filter implements Filter {
   private readonly stage1: BiquadFilter;
   private readonly stage2: BiquadFilter;
 
   constructor(sampleRate: number, type: FilterType, q = 0.707) {
-    // İkinci stage'e biraz daha düşük Q — rezonans çok keskin olmasın
-    this.stage1 = new BiquadFilter(sampleRate, type, q);
-    this.stage2 = new BiquadFilter(sampleRate, type, q * 0.6);
+    const excess = Math.max(1, q / 0.707);
+    this.stage1 = new BiquadFilter(sampleRate, type, BUTTERWORTH_Q4[0]);
+    this.stage2 = new BiquadFilter(sampleRate, type, BUTTERWORTH_Q4[1] * excess);
   }
 
   process(sample: number, cutoff: number): number {
@@ -190,12 +219,21 @@ export function getCutoffAtTime(
   if (!params) return Number.MAX_VALUE;
   const start = params.cutoff;
   const slide = params.slide ?? 0;
-  const ratio = t / duration;
+  const ratio = duration > 0 ? Math.max(0, Math.min(1, t / duration)) : 0;
   return Math.max(1, start + slide * ratio);
 }
 
-/** FilterParams'tan uygun filtre örneği oluşturur.
- *  resonance > 0 veya poles === 2 ise biquad, değilse eski 1-kutuplu filtre. */
+/**
+ * FilterParams'tan uygun filtre örneği oluşturur.
+ *
+ * - `poles: 1` → tek kutuplu RC (6 dB/oct), rezonans yok
+ * - `poles: 2` → biquad (12 dB/oct)
+ * - `poles: 4` → iki biquad kaskadı (24 dB/oct)
+ *
+ * `resonance` 0-1 NORMALİZE bir değerdir, doğrudan Q değil: 0 → Q 0.707
+ * (Butterworth), 1 → Q 20 (güçlü rezonans). Q değeri doğrudan gerekiyorsa
+ * `BiquadFilter` sınıfı doğrudan kullanılmalıdır.
+ */
 export function createFilter(
   params: FilterParams | undefined,
   sampleRate: number,
@@ -203,16 +241,16 @@ export function createFilter(
 ): Filter | undefined {
   if (!params) return undefined;
 
-  const resonance = params.resonance ?? 0;
+  const resonance = Math.max(0, Math.min(1, params.resonance ?? 0));
   const poles = params.poles ?? (resonance > 0 ? 2 : 1);
   const filterType: FilterType = params.type ?? kind;
+  const q = resonance > 0 ? 0.707 + resonance * 19.293 : 0.707;
 
+  if (poles === 4) {
+    return new Cascade4Filter(sampleRate, filterType, q);
+  }
   if (poles === 2) {
-    // Q: resonance 0-1 → 0.707-20 aralığına haritala
-    const q = resonance > 0 ? 0.707 + resonance * 19.293 : 0.707;
-    if (poles === 2) {
-      return new BiquadFilter(sampleRate, filterType, q);
-    }
+    return new BiquadFilter(sampleRate, filterType, q);
   }
 
   // 1-kutuplu eski filtre (geriye dönük uyum)

@@ -123,4 +123,35 @@ describe('GameStats', () => {
     expect(stats.getBestKills()).toBe(3);
     expect(stats.getTotalKills()).toBe(6);
   });
+
+  it('K5: kısmi kayıt NaN üretmez, eksik alanlar varsayılana düşer', async () => {
+    const adapter = new MemoryAdapter();
+    await adapter.set('vol-hell:game-stats', { bestScore: 5 });
+    const partial = new GameStats(new SaveManager(adapter));
+    await partial.load();
+
+    expect(partial.getBestScore()).toBe(5);
+    expect(partial.getTotalKills()).toBe(0);
+
+    const result = await partial.submitRun(10, 20, 3);
+    expect(Number.isNaN(result.totalKills)).toBe(false);
+    expect(result.totalKills).toBe(3);
+  });
+
+  it('K5: geçersiz tipler ve NaN reddedilir', async () => {
+    const adapter = new MemoryAdapter();
+    await adapter.set('vol-hell:game-stats', {
+      bestScore: 'çok',
+      bestTimeMs: Number.NaN,
+      bestKills: -5,
+      totalKills: null,
+    });
+    const corrupt = new GameStats(new SaveManager(adapter));
+    await corrupt.load();
+
+    expect(corrupt.getBestScore()).toBe(0);
+    expect(corrupt.getBestTimeMs()).toBe(0);
+    expect(corrupt.getBestKills()).toBe(0);
+    expect(corrupt.getTotalKills()).toBe(0);
+  });
 });

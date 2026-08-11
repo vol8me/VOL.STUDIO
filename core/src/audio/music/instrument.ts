@@ -1,7 +1,9 @@
+import type { SynthParams } from '../synth/types';
+
 /** SFX üretiminde kullanılan enstrüman preset'leri.
  *  Müzik runtime'da çalınmaz — WAV'lar önceden üretilir.
  *  Bu sınıf sadece build-time SFX script'leri için preset sağlar. */
-export type InstrumentParams = Omit<import('../synth/types').SynthParams, 'frequency' | 'duration'>;
+export type InstrumentParams = Omit<SynthParams, 'frequency' | 'duration'>;
 
 /** SFX script'lerinde kullanılan hazır preset'ler. */
 export type InstrumentName = 'obsidianBell' | 'obsidianPluck';

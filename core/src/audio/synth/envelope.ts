@@ -1,16 +1,26 @@
 import type { Curve, EnvelopeParams } from './types';
 
-/** 0-1 arası eğri uygular.
- *  exponential: gerçek üstel eğri — başlangıçta hızlı, sonda yavaş (doğal decay). */
+/** `1 - 10^-3` — eğrinin normalize edilmemiş halinin t=1'deki değeri. */
+const SATURATING_SPAN = 1 - Math.pow(10, -3);
+
+/**
+ * 0-1 arası eğri uygular. Her eğri t=0'da tam 0, t=1'de tam 1 döner.
+ *
+ * `exponential` adı geriye dönük uyum için korunuyor ama eğri matematiksel
+ * olarak DOYGUN (logaritmik) bir eğridir: `1 - 10^(-3t)` — başta hızlı,
+ * sonda yavaş. Doğal sönümü iyi taklit eder, ama "üstel" bekleyen birinin
+ * sandığının tersidir.
+ *
+ * Normalizasyon şart: ham `1 - 10^(-3t)` t=1'de 0.999 dönüyordu, yani
+ * attack tam 1.0'a, release tam 0.0'a hiç ulaşmıyordu.
+ */
 export function applyCurve(x: number, curve: Curve): number {
   const t = Math.max(0, Math.min(1, x));
   switch (curve) {
     case 'linear':
       return t;
     case 'exponential':
-      // 0 → 1 üstel: başta hızlı kalkış, sonda yavaş yaklaşım
-      // 1 - 10^(-3*t) : 3 birimlik zaman sabiti, doğal ses decay'sine yakın
-      return 1 - Math.pow(10, -3 * t);
+      return (1 - Math.pow(10, -3 * t)) / SATURATING_SPAN;
     case 'cosine':
       return (1 - Math.cos(t * Math.PI)) / 2;
     default:

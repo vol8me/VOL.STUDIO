@@ -6,3 +6,6 @@ build/
 **/*.min.js
 **/*.min.css
 core/public/assets/fonts/
+
+# Test coverage raporlari
+coverage/

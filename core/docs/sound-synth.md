@@ -2,6 +2,21 @@
 
 `@volstudio/core/audio/synth` prosedürel ses sentezi üretir. Oyunlar build zamanında WAV çıktı alır; dış ses kütüphanesi veya DAW gerektirmez. Motor saf matematikle yazılmıştır; hem Node hem tarayıcıda çalışır. `writeWav` Node-only'dır.
 
+## Determinizm ve seviye kontrolü
+
+- **Üretim tekrarlanabilirdir.** Gürültü kaynakları `Math.random()` değil,
+  seed'lenebilir bir PRNG kullanır. Aynı parametreler + aynı `seed` her zaman
+  birebir aynı örnekleri verir; `seed` verilmezse sabit bir varsayılan kullanılır.
+  Üretilen WAV'lar diff'lenebilir.
+- **`normalize` opsiyoneldir** (varsayılan `true`). `true` iken sonuç tepe
+  değerine göre 0.95'e ölçeklenir. Bir mix içinde birden çok ses üretiliyorsa
+  (`compose()` gibi) her birini ayrı ayrı normalize etmek aralarındaki dinamik
+  farkı yok eder — o durumda `normalize: false` geçilip normalize yalnızca final
+  mix'e uygulanmalıdır. `compose()` bunu kendisi yapar.
+- **`writeWav()` ek kazanç uygulamaz** (varsayılan `targetGain: 1`). Headroom
+  kararı tek yerde, normalize adımındadır.
+- **16-bit dönüşümde TPDF dither** uygulanır; dither de deterministiktir.
+
 ## Mimari
 
 ```
@@ -385,7 +400,11 @@ envelope: { attack: 0.002, hold: 0.02, decay: 0.03, sustain: 0, release: 0.1, su
 
 ### Kısa seslerde dalga şekli
 
-Karanlık, profesyonel UI / SFX için `sine` tek başına en temiz ve en kontrollü seçenektir. `triangle`, `sawtooth`, `square` gibi dalgalarda anti-aliasing olmadığı için üst harmonikler `lowpass` ile kesilmedikçe cızırtı / pürüzlü ton üretebilir.
+Karanlık, profesyonel UI / SFX için `sine` tek başına en temiz ve en kontrollü
+seçenektir. `sawtooth`, `square` ve `pulse` PolyBLEP ile bant sınırlıdır ve tüm
+sentez 2x oversampling + 4. derece Butterworth alçak geçiren ile decimate edilir;
+yine de çok yüksek temel frekanslarda üst harmonikler katlanabilir, gerektiğinde
+`lowpass` ile kesilmelidir.
 
 ```typescript
 // Koyu, yumuşak UI blip

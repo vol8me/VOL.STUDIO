@@ -22,6 +22,8 @@ export const enemyConfig = {
   separationForce: 0.5,
   /** Düşman can barı genişliği (piksel). */
   healthBarWidth: 28,
+  /** Can barı dolu kısmının minimum genişliği (piksel) — sıfıra inip kaybolmasın. */
+  healthBarMinWidth: 2,
   /** Düşman can barı yüksekliği (piksel). */
   healthBarHeight: 4,
   /** Düşman can barı offset (piksel, düşman merkezinden yukarı). */

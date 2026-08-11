@@ -21,6 +21,28 @@ export const audioConfig = {
 
 export type AudioConfig = typeof audioConfig;
 
+/**
+ * Olay başına SFX kazancı (0-1). Sahne kodunda `playSfx(..., { volume: 0.45 })`
+ * gibi literal yazılmaz — mix dengesi tek yerden ayarlanabilmeli.
+ * Bu değerler `sfxVolume` slider'ıyla ayrıca ölçeklenir.
+ */
+export const sfxVolumes: Record<SoundEvent, number> = {
+  menuBlip: 0.4,
+  back: 0.5,
+  pause: 0.5,
+  resume: 0.5,
+  restart: 0.5,
+
+  fire: 0.45,
+  dash: 0.65,
+  hurt: 0.85,
+  death: 0.9,
+
+  enemyHit: 0.6,
+  enemyDeath: 0.7,
+  bulletBounce: 0.45,
+};
+
 /** SFX çaldığında müzik ve/veya ambiyansı geçici kısan sidechain ducking profilleri.
  *  Patlama/grinding seslerinin melodiyi boğmasını önlemek için;
  *  hedef 1 = kısmama, 0 = sessiz.

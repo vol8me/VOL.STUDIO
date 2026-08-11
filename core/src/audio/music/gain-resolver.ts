@@ -1,4 +1,4 @@
-import type { MusicContext, MusicState, Stem, StemGainMap } from './types';
+import type { MusicState, Stem, StemGainMap } from './types';
 
 /** İki `IntensityGainPoint` arasında linear interpolasyon yapar. */
 function interpolateGain(points: { threshold: number; gain: number }[], value: number): number {
@@ -47,8 +47,14 @@ function resolveGainMap(map: StemGainMap, state: MusicState, key: string): numbe
   return undefined;
 }
 
-/** Stem'in hedef gain'ini state ve context'e göre hesaplar. */
-export function resolveStemGain(stem: Stem, state: MusicState, ctx: MusicContext): number {
+/**
+ * Stem'in hedef gain'ini state'e göre hesaplar.
+ *
+ * Bar/beat bilgisi (MusicContext) bilinçli olarak alınmıyor: gain yalnızca
+ * state'e bağlı. Ritme duyarlı bir gain gerekirse parametre o zaman eklenir —
+ * kullanılmayan bir parametre imzayı yanıltıcı yapar.
+ */
+export function resolveStemGain(stem: Stem, state: MusicState): number {
   const baseGain = stem.gain ?? 1;
 
   if (stem.gainMap) {

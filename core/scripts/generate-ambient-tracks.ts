@@ -56,18 +56,18 @@ const { beatToSample, applyFades } = createBeatUtils(BEAT);
 
 const D1 = 36.71;
 const D2 = 73.42;
-const A2 = 110.00;
+const A2 = 110.0;
 const D3 = 146.83;
 const F3 = 174.61;
-const G3 = 196.00;
-const A3 = 220.00;
+const G3 = 196.0;
+const A3 = 220.0;
 const Bb3 = 233.08;
 const C4 = 261.63;
 const D4 = 293.66;
 const E4 = 329.63;
 const F4 = 349.23;
-const G4 = 392.00;
-const A4 = 440.00;
+const G4 = 392.0;
+const A4 = 440.0;
 const Bb4 = 466.16;
 const C5 = 523.25;
 const D5 = 587.33;
@@ -76,10 +76,10 @@ const D5 = 587.33;
 //     4 akor × 8 beat = 32 beat, 2 tekrar = 64 beat
 
 const CHORDS: ChordDef[] = [
-  { root: D4, type: 'minor' },  // Dm
+  { root: D4, type: 'minor' }, // Dm
   { root: Bb3, type: 'major' }, // Bb
-  { root: F3, type: 'major' },  // F
-  { root: C4, type: 'major' },  // C
+  { root: F3, type: 'major' }, // F
+  { root: C4, type: 'major' }, // C
 ];
 
 // --- Enstrümanlar ---
@@ -169,9 +169,7 @@ function tenseDrone(freq: number, duration: number, gain = 0.2): SynthesisResult
       curve: 'cosine',
     },
     lowpass: { cutoff: 300, resonance: 0, poles: 2, type: 'lowpass' },
-    lfos: [
-      { target: 'amplitude', rate: 0.08, depth: 0.08, wave: 'sine' },
-    ],
+    lfos: [{ target: 'amplitude', rate: 0.08, depth: 0.08, wave: 'sine' }],
     stereoWidth: { width: 0.6 },
     reverb: { amount: 0.25, decay: 4, roomSize: 0.7, damp: 0.5 },
     gain,

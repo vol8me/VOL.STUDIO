@@ -8,7 +8,7 @@ import type { BulletManager } from '@/runtime/entity/BulletManager';
 import type { EnemyManager } from '@/runtime/entity/EnemyManager';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 
-vi.mock('@/app/bootstrap', () => ({
+vi.mock('@/app/services', () => ({
   gameAudio: {
     playSfx: vi.fn(),
   },

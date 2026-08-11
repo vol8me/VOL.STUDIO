@@ -383,4 +383,8 @@ describe('Wizard', () => {
     wizard.destroy();
     expect(contentDestroy).toHaveBeenCalledTimes(1);
   });
+
+  it('K9: boş steps dizisi anlaşılır bir hata fırlatır', () => {
+    expect(() => new Wizard({ steps: [] })).toThrow(/en az bir adım/i);
+  });
 });

@@ -335,4 +335,41 @@ describe('Player', () => {
     // Pozisyon değişmemeli — dash henüz uygulanmadı
     expect(posAfterDash.x).toBe(posAfterUpdate.x);
   });
+
+  it('K1: analog hareket büyüklüğü korunur — yarım itilen çubuk yarım hız verir', () => {
+    const player = makePlayer(100, 100);
+    const border = makeBorder();
+    player.setBorder(border as unknown as never);
+
+    // normalizeAnalog çıktısı gibi 0..1 arası büyüklük taşıyan bir yön
+    const halfPush = new Vector2(0.5, 0);
+    player.setMoveDirection(halfPush);
+    player.update(1000);
+
+    expect(player.getPosition().x).toBeCloseTo(100 + playerConfig.moveSpeed * 0.5, 0);
+  });
+
+  it('K1: move() çağıranın vektörünü mutasyona uğratmaz', () => {
+    const player = makePlayer(100, 100);
+    const border = makeBorder();
+    player.setBorder(border as unknown as never);
+
+    const dir = new Vector2(0.5, 0);
+    player.setMoveDirection(dir);
+    player.update(16);
+
+    // Hem dışarıdaki vektör hem içerideki kopya birim uzunluğa çekilmemeli
+    expect(dir.length()).toBeCloseTo(0.5, 5);
+  });
+
+  it('K1: büyüklük 1i aşarsa hıza kelepçelenir', () => {
+    const player = makePlayer(100, 100);
+    const border = makeBorder();
+    player.setBorder(border as unknown as never);
+
+    player.setMoveDirection(new Vector2(5, 0));
+    player.update(1000);
+
+    expect(player.getPosition().x).toBeCloseTo(100 + playerConfig.moveSpeed, 0);
+  });
 });

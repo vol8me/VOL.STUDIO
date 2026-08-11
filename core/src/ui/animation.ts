@@ -30,13 +30,27 @@ export function animateValue(options: AnimateValueOptions): () => void {
   }
 
   let rafId: number;
+  let cancelled = false;
+  // Süre bilinçli olarak çağrı anından ölçülür (ilk kareden değil): bir TimerBar
+  // start()'tan tam `durationMs` sonra dolmalı, bir kare gecikmeyle değil.
   const startTime = performance.now();
 
   const step = (now: number): void => {
-    const elapsed = now - startTime;
+    // Bayrak şart: onUpdate içinden iptal edilirse `rafId` o an çalışan (zaten
+    // ateşlenmiş) frame'i gösterir, cancelAnimationFrame hiçbir şey yapmaz ve
+    // aşağıdaki satır yeni bir frame zamanlayarak animasyonu sürdürürdü.
+    if (cancelled) return;
+
+    // rAF damgası KARE BAŞLANGICINI taşır; requestAnimationFrame o karenin
+    // işlenmesi sırasında çağrıldıysa damga startTime'dan küçük olabilir.
+    // Kelepçesiz bırakılırsa t negatife düşer ve easeOutCubic ilk karede
+    // hedefin tersine taşar (1 - (1-t)^3, t<0 için negatif).
+    const elapsed = Math.max(0, now - startTime);
     const t = Math.min(1, elapsed / durationMs);
     const value = from + (to - from) * easing(t);
     onUpdate(value);
+
+    if (cancelled) return;
 
     if (t < 1) {
       rafId = requestAnimationFrame(step);
@@ -46,5 +60,8 @@ export function animateValue(options: AnimateValueOptions): () => void {
   };
 
   rafId = requestAnimationFrame(step);
-  return () => cancelAnimationFrame(rafId);
+  return () => {
+    cancelled = true;
+    cancelAnimationFrame(rafId);
+  };
 }

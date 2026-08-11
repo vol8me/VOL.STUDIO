@@ -1,6 +1,6 @@
 import { Button, Checkbox, Panel, Slider, Text, i18next } from '@volstudio/core';
 import type { AudioSettings } from '@/app/AudioSettings';
-import { gameAudio } from '@/app/bootstrap';
+import { gameAudio } from '@/app/services';
 
 /**
  * Oyun içi duraklatma ekranı — DOM tabanlı overlay.

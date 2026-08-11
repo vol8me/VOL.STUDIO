@@ -55,3 +55,56 @@
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+/*
+ * HUD ve açılış hatası katmanları. Önceden bu stiller TS içinde
+ * `element.style.cssText` ile yazılıyordu; bu hem tasarım sistemini (BEM +
+ * theme.css token'ları) baypas ediyor hem de Tauri CSP'sinde
+ * `style-src: 'unsafe-inline'` tutmayı zorunlu kılıyordu.
+ */
+
+.vol-hud__slot {
+  position: absolute;
+  left: var(--vol-space-md);
+  width: var(--vol-hud-bar-width);
+}
+
+.vol-hud__slot--health {
+  top: var(--vol-space-md);
+}
+
+.vol-hud__slot--dash {
+  top: calc(var(--vol-space-md) + var(--vol-hud-dash-offset));
+}
+
+.vol-hud-stats {
+  position: absolute;
+  top: var(--vol-space-md);
+  right: var(--vol-space-md);
+  z-index: 50;
+  flex-direction: column;
+  gap: var(--vol-space-xs);
+  display: flex;
+  pointer-events: none;
+  text-align: right;
+}
+
+.vol-hud-stats__line {
+  margin: 0;
+  text-align: right;
+}
+
+.vol-fatal-error {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  padding: calc(var(--vol-space-lg) * 2);
+  background: var(--vol-ui-bg);
+  color: var(--vol-ui-danger-solid);
+  font-family: monospace;
+  font-size: 14px;
+  text-align: center;
+}

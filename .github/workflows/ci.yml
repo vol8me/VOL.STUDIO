@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # TypeScript/CSS kapıları. Rust'tan bağımsız çalışır, hızlı geri bildirim verir.
+  web:
+    name: Typecheck · Test · Lint · Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.18.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Bağımlılıkları kur
+        run: pnpm install --frozen-lockfile
+
+      # Kapılar ayrı adımlarda: hangisinin düştüğü tek bakışta görülsün.
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      # Coverage eşikleri vitest.config.ts dosyalarında; düşerse job kırmızı olur.
+      - name: Test + coverage
+        run: pnpm -r --if-present test:coverage
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: CSS lint
+        run: pnpm lint:css
+
+      - name: Oyun build
+        run: pnpm build:game
+
+  # Rust tarafı ayrı job: web kapıları Rust toolchain'i beklemesin.
+  rust:
+    name: Cargo check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Tauri'nin Linux'ta ihtiyaç duyduğu sistem kütüphaneleri.
+      - name: Sistem bağımlılıkları
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libgtk-3-dev
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tauri-v2/src-tauri
+
+      - name: Cargo check
+        working-directory: tauri-v2/src-tauri
+        run: cargo check --locked
+
+      - name: Cargo fmt
+        working-directory: tauri-v2/src-tauri
+        run: cargo fmt --check
+
+      - name: Clippy
+        working-directory: tauri-v2/src-tauri
+        run: cargo clippy --locked -- -D warnings

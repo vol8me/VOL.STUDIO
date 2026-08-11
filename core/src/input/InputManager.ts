@@ -16,7 +16,24 @@ export class InputManager {
    */
   constructor(scene: Phaser.Scene, providers?: InputProvider[]) {
     this.providers = providers ?? [new TouchController(scene), new PCController(scene)];
-    this.touch = this.providers[0];
+
+    const touch = this.providers[0];
+    // noUncheckedIndexedAccess kapali oldugu icin TS bos diziyi yakalamiyor;
+    // guard olmadan getState() ilk satirda anlamsiz bir TypeError atardi.
+    if (!touch) {
+      throw new Error('InputManager: en az bir InputProvider gerekli (providers boş olamaz)');
+    }
+    this.touch = touch;
+  }
+
+  /**
+   * Aktif saglayiciyi secer. getState() ve getDebugSnapshot() AYNI secimi
+   * kullanmali — aksi halde debug overlay 'pc' gosterirken oyun touch state'i
+   * kullanir ve hata ayiklama araci yaniltir.
+   */
+  private resolveActiveProvider(): InputProvider | undefined {
+    if (this.touch.isActive) return this.touch;
+    return this.providers.find((provider) => provider.isActive);
   }
 
   update(delta: number): void {
@@ -30,14 +47,9 @@ export class InputManager {
    * (dokunuştan miras kalan) PC'ye yanlışlıkla öncelik verdirmemeli.
    */
   getState(playerPosition: Vector2): InputState {
-    if (this.touch.isActive) {
-      return this.touch.getState(playerPosition);
-    }
-
-    for (const provider of this.providers) {
-      if (provider.isActive) {
-        return provider.getState(playerPosition);
-      }
+    const active = this.resolveActiveProvider();
+    if (active) {
+      return active.getState(playerPosition);
     }
 
     return { move: Vector2.zero(), aim: Vector2.zero(), fire: false, dash: false };
@@ -45,8 +57,8 @@ export class InputManager {
 
   /** Aktif input provider'ın ham durum snapshot'ını döner. */
   getDebugSnapshot(): InputSnapshot {
-    const active = this.providers.find((p) => p.isActive);
-    if (active && active.getDebugSnapshot) {
+    const active = this.resolveActiveProvider();
+    if (active?.getDebugSnapshot) {
       return active.getDebugSnapshot();
     }
     return { activeProvider: 'none' };

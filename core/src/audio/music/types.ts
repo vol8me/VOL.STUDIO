@@ -80,6 +80,14 @@ export interface MusicEngineOptions {
   compressor?: boolean;
   /** Scheduling için lookahead (saniye). Varsayılan 0.1. */
   lookaheadSeconds?: number;
+  /**
+   * Motorun bağlanacağı çıkış düğümü. Verilmezse `context.destination`.
+   *
+   * Bir ducker/analiz zinciri araya girecekse burada verilmelidir; tüketicinin
+   * `mixer.output`'u sonradan koparıp yeniden bağlaması motorun kapsüllemesini
+   * dışarıdan deler.
+   */
+  destination?: AudioNode;
 }
 
 /** `play()` çağrısı seçenekleri. */

@@ -112,4 +112,48 @@ describe('AudioSettings', () => {
     expect(settings.getMasterVolume()).toBe(0.5);
     expect(warnSpy).toHaveBeenCalled();
   });
+
+  it('K5: geçersiz tipler ve aralık dışı değerler varsayılana/kelepçeye düşer', async () => {
+    const settings = new AudioSettings(
+      new SaveManager(
+        makeAdapter({
+          'vol-hell:audio-settings': {
+            masterVolume: 'yüksek',
+            sfxVolume: Number.NaN,
+            musicVolume: 5,
+            ambientVolume: -2,
+            muted: 'evet',
+            screenShakeIntensity: null,
+          },
+        }),
+      ),
+    );
+    await settings.load();
+
+    expect(settings.getMasterVolume()).toBe(audioConfig.masterVolume);
+    expect(settings.getSfxVolume()).toBe(audioConfig.sfxVolume);
+    expect(settings.getMusicVolume()).toBe(1);
+    expect(settings.getAmbientVolume()).toBe(0);
+    expect(settings.isMuted()).toBe(audioConfig.muted);
+    expect(settings.getScreenShakeIntensity()).toBe(audioConfig.screenShakeIntensity);
+  });
+
+  it('K8: hızlı ardışık yazmalar tek bir depo yazmasında birleşir', async () => {
+    const adapter = makeAdapter();
+    const settings = new AudioSettings(new SaveManager(adapter));
+    await settings.load();
+
+    const setSpy = vi.mocked(adapter.set);
+    setSpy.mockClear();
+
+    await Promise.all([
+      settings.setMasterVolume(0.1),
+      settings.setMasterVolume(0.2),
+      settings.setMasterVolume(0.3),
+      settings.setMasterVolume(0.4),
+    ]);
+
+    expect(setSpy).toHaveBeenCalledTimes(1);
+    expect(settings.getMasterVolume()).toBe(0.4);
+  });
 });

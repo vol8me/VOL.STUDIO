@@ -1,5 +1,13 @@
 import Phaser from 'phaser';
-import { Bar, InputManager, UIRoot, Vector2, i18next, type LoadingScreen } from '@volstudio/core';
+import {
+  Bar,
+  InputManager,
+  UIRoot,
+  Vector2,
+  i18next,
+  type InputState,
+  type LoadingScreen,
+} from '@volstudio/core';
 import { Player } from '@/runtime/entity/Player';
 import { Border } from '@/runtime/entity/Border';
 import { EnemyManager } from '@/runtime/entity/EnemyManager';
@@ -11,8 +19,8 @@ import { enemyConfig } from '@/config/enemy';
 import { uiConfig } from '@/config/ui';
 import { gameConfig } from '@/config/game';
 import { physicsConfig } from '@/config/physics';
-import { ambientTrackKeys, deathTrackKeys, musicTracks } from '@/config';
-import { gameAudio, audioSettings, gameStats } from '@/app/bootstrap';
+import { ambientTrackKeys, deathTrackKeys, musicConfig, musicTracks, sfxVolumes } from '@/config';
+import { gameAudio, audioSettings, gameStats } from '@/app/services';
 import type { RunResult } from '@/app/GameStats';
 import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import { ParticlePool } from '@/runtime/systems/ParticlePool';
@@ -74,7 +82,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(data: { loadingScreen?: LoadingScreen } = {}): void {
-    this.isPaused = false;
+    // Phaser sahne örneğini yeniden kullanır; alan başlatıcıları restart'ta
+    // ÇALIŞMAZ. Sıfırlanması gereken her alan tek bir yerde toplanır ki
+    // yeni alan eklendiğinde unutulmasın.
+    this.resetSceneState();
     this.loadingScreen = data.loadingScreen ?? null;
 
     // Müzik ve ambiyans track'lerini önceden yükler.
@@ -82,13 +93,20 @@ export class GameScene extends Phaser.Scene {
       void gameAudio.loadMusic(musicTracks[key]);
     }
     // Her iki ambiyans track'ini de yükle — calm ve tense.
-    Promise.all(ambientTrackKeys.map((key) => gameAudio.loadAmbient(musicTracks[key]))).then(() => {
-      // Oyuna hızlıca restart/MainMenu dönüşünde arka plan sesi çalmaya başlamasın.
-      if (!this.scene.isActive(this.scene.key)) return;
-      this.isAmbientLoaded = true;
-      gameAudio.stopMusic(2);
-      void gameAudio.playAmbient(musicTracks['void-whisper'].id, { fadeIn: 2 });
-    });
+    void Promise.all(ambientTrackKeys.map((key) => gameAudio.loadAmbient(musicTracks[key])))
+      .then(() => {
+        // Oyuna hızlıca restart/MainMenu dönüşünde arka plan sesi çalmaya başlamasın.
+        if (!this.scene.isActive(this.scene.key)) return;
+        this.isAmbientLoaded = true;
+        gameAudio.stopMusic(musicConfig.ambient.menuStopFadeSec);
+        void gameAudio.playAmbient(musicConfig.ambient.calmTrackId, {
+          fadeIn: musicConfig.ambient.fadeInSec,
+        });
+      })
+      .catch((error: unknown) => {
+        // Ambiyans yüklenemezse oyun sessiz devam eder; sahne durmaz.
+        console.warn('[GameScene] Ambiyans yüklenemedi:', error);
+      });
 
     // SFX'leri arka planda önbelleğe al.
     void gameAudio.loadAllSfx();
@@ -130,13 +148,16 @@ export class GameScene extends Phaser.Scene {
     // HUD — UIRoot canvas ile aynı konteyner'e monte edilir
     const container = this.game.canvas.parentElement ?? document.body;
     this.ui = new UIRoot(container);
+    // HUD olculeri config'te tek kaynak; CSS bunlari custom property olarak okur.
+    this.ui.element.style.setProperty('--vol-hud-bar-width', `${uiConfig.hud.barWidth}px`);
+    this.ui.element.style.setProperty(
+      '--vol-hud-dash-offset',
+      `${uiConfig.hud.dashBarTopOffset}px`,
+    );
 
     // Can barı
     this.healthBarContainer = document.createElement('div');
-    this.healthBarContainer.style.position = 'absolute';
-    this.healthBarContainer.style.top = 'var(--vol-space-md)';
-    this.healthBarContainer.style.left = 'var(--vol-space-md)';
-    this.healthBarContainer.style.width = `${uiConfig.hud.barWidth}px`;
+    this.healthBarContainer.className = 'vol-hud__slot vol-hud__slot--health';
 
     this.healthBar = new Bar({
       variant: 'health',
@@ -151,10 +172,7 @@ export class GameScene extends Phaser.Scene {
 
     // Dash barı
     this.dashBarContainer = document.createElement('div');
-    this.dashBarContainer.style.position = 'absolute';
-    this.dashBarContainer.style.top = `calc(var(--vol-space-md) + ${uiConfig.hud.dashBarTopOffset}px)`;
-    this.dashBarContainer.style.left = 'var(--vol-space-md)';
-    this.dashBarContainer.style.width = `${uiConfig.hud.barWidth}px`;
+    this.dashBarContainer.className = 'vol-hud__slot vol-hud__slot--dash';
 
     this.dashBar = new Bar({
       variant: 'stamina',
@@ -175,11 +193,11 @@ export class GameScene extends Phaser.Scene {
     this.pauseScreen = new PauseScreen(this.ui.element, audioSettings, {
       onResume: () => this.resumeGame(),
       onRestart: () => {
-        void gameAudio.playSfx('restart', { volume: 0.5 });
+        void gameAudio.playSfx('restart', { volume: sfxVolumes.restart });
         this.scene.restart();
       },
       onMainMenu: () => {
-        void gameAudio.playSfx('back', { volume: 0.5 });
+        void gameAudio.playSfx('back', { volume: sfxVolumes.back });
         this.scene.start('MainMenu');
       },
     });
@@ -187,17 +205,21 @@ export class GameScene extends Phaser.Scene {
     // Ölüm ekranı — UIRoot içine mount et, böylece box-sizing ve temel UI stilleri uygulanır
     this.deathScreen = new DeathScreen(this.ui.element, {
       onRestart: () => {
-        void gameAudio.playSfx('restart', { volume: 0.5 });
+        void gameAudio.playSfx('restart', { volume: sfxVolumes.restart });
         this.scene.restart();
       },
       onMainMenu: () => {
-        void gameAudio.playSfx('back', { volume: 0.5 });
+        void gameAudio.playSfx('back', { volume: sfxVolumes.back });
         this.scene.start('MainMenu');
       },
     });
 
     // ESC tuşu ile pause
-    this.escKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+    const keyboard = this.input.keyboard;
+    if (!keyboard) {
+      throw new Error('[GameScene] Keyboard plugin etkin değil; ESC ile duraklatma kurulamıyor');
+    }
+    this.escKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
     this.escKey.on('down', () => this.togglePause());
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
@@ -217,12 +239,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
-    this.diagnostics?.beginFrame();
-
     if (this.isPaused) {
-      this.diagnostics?.endFrame();
+      // beginFrame() ilk isi counts.clear() — duraklamada cagirmak overlay'deki
+      // tum sayaclari (dusman, mermi, partikul) tam da incelenmek istenen anda siler.
       return;
     }
+
+    this.diagnostics?.beginFrame();
 
     const dt = Math.min(delta, gameConfig.maxDeltaMs);
     this.elapsedTimeMs += dt;
@@ -232,14 +255,18 @@ export class GameScene extends Phaser.Scene {
     this.diagnostics?.setInput(this.inputManager.getDebugSnapshot());
     this.diagnostics?.endStage('input');
 
+    // Input state frame basina BIR kez okunur. Iki ayri getState() cagrisi hem
+    // gereksiz Vector2 uretiyor hem de iki farkli anlik goruntu yaratiyordu.
+    const inputState = this.inputManager.getState(this.player.getPosition());
+
     this.diagnostics?.startStage('player');
-    this.updatePlayer(dt);
+    this.updatePlayer(dt, inputState);
     this.diagnostics?.endStage('player');
 
     const playerPos = this.player.getPosition();
 
     this.diagnostics?.startStage('fire');
-    this.fire(playerPos);
+    this.fire(playerPos, inputState);
     this.diagnostics?.endStage('fire');
 
     this.diagnostics?.startStage('entities');
@@ -266,14 +293,12 @@ export class GameScene extends Phaser.Scene {
     this.diagnostics?.setCount('particles', this.particlePool.getActiveCount());
     this.diagnostics?.setCount('gridCells', this.spatialGrid.getCellCount());
 
-    this.updateAmbientState(delta);
+    this.updateAmbientState(dt);
 
     this.diagnostics?.endFrame();
   }
 
-  private updatePlayer(delta: number): void {
-    const playerPos = this.player.getPosition();
-    const state = this.inputManager.getState(playerPos);
+  private updatePlayer(delta: number, state: InputState): void {
     this.moveDirBuf.set(state.move.x, state.move.y);
     this.aimDirBuf.set(state.aim.x, state.aim.y);
 
@@ -281,18 +306,17 @@ export class GameScene extends Phaser.Scene {
     this.player.setMoveDirection(this.moveDirBuf);
 
     if (state.dash && this.player.tryDash(this.aimDirBuf)) {
-      void gameAudio.playSfx('dash', { volume: 0.65 });
+      void gameAudio.playSfx('dash', { volume: sfxVolumes.dash });
     }
 
     // Player update — dash dahil tüm hareket bu frame'de uygulanır
     this.player.update(delta);
   }
 
-  private fire(playerPos: Vector2): void {
-    const state = this.inputManager.getState(playerPos);
+  private fire(playerPos: Vector2, state: InputState): void {
     if (state.fire && this.aimDirBuf.length() > 0) {
       if (this.bulletManager.tryFire(playerPos, this.aimDirBuf)) {
-        void gameAudio.playSfx('fire', { volume: 0.45 });
+        void gameAudio.playSfx('fire', { volume: sfxVolumes.fire });
       }
     }
   }
@@ -332,13 +356,26 @@ export class GameScene extends Phaser.Scene {
     this.hudStats.setTime(this.elapsedTimeMs);
   }
 
-  private resetRun(): void {
+  /**
+   * Sahne örneği restart'ta yeniden kullanıldığı için alan başlatıcılarına
+   * güvenilemez. create() başında çağrılır; HUD'a dokunmaz (henüz kurulmamış olabilir).
+   */
+  private resetSceneState(): void {
+    this.isPaused = false;
     this.isDeathInProgress = false;
+    this.isAmbientLoaded = false;
     this.ambientState = 'calm';
     this.ambientStateTimer = 0;
+    this.lastEnemyKillShake = 0;
+    this.lastPlayerDamageShake = 0;
     this.score = 0;
     this.kills = 0;
     this.elapsedTimeMs = 0;
+  }
+
+  /** Koşu sayaçlarını sıfırlar ve HUD'a yansıtır. */
+  private resetRun(): void {
+    this.resetSceneState();
     this.hudStats?.setScore(0);
     this.hudStats?.setKills(0);
     this.hudStats?.setTime(0);
@@ -348,7 +385,8 @@ export class GameScene extends Phaser.Scene {
     if (this.isPaused || this.isDeathInProgress || !this.isAmbientLoaded) return;
 
     const enemyCount = this.enemyManager.getEnemies().length;
-    const desired: 'calm' | 'tense' = enemyCount >= 8 ? 'tense' : 'calm';
+    const desired: 'calm' | 'tense' =
+      enemyCount >= musicConfig.ambient.tenseEnemyThreshold ? 'tense' : 'calm';
 
     if (desired === this.ambientState) {
       this.ambientStateTimer = 0;
@@ -356,14 +394,19 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.ambientStateTimer += delta;
-    // Tense → calm: 5s bekleme (temkinli). Calm → tense: 1s (hızlı).
-    const thresholdMs = desired === 'calm' ? 5000 : 1000;
+    // Tehlikeye hızlı, sakinliğe temkinli geçiş — eşikler config'te.
+    const thresholdMs =
+      desired === 'calm' ? musicConfig.ambient.calmHoldMs : musicConfig.ambient.tenseHoldMs;
     if (this.ambientStateTimer < thresholdMs) return;
 
     this.ambientStateTimer = 0;
     this.ambientState = desired;
-    const trackId = desired === 'tense' ? 'iron-tide' : 'void-whisper';
-    void gameAudio.playAmbient(trackId, { crossfade: true, fadeIn: 2 });
+    const trackId =
+      desired === 'tense' ? musicConfig.ambient.tenseTrackId : musicConfig.ambient.calmTrackId;
+    void gameAudio.playAmbient(trackId, {
+      crossfade: true,
+      fadeIn: musicConfig.ambient.fadeInSec,
+    });
   }
 
   private onEnemyKilled(scoreValue: number): void {
@@ -431,11 +474,14 @@ export class GameScene extends Phaser.Scene {
       this.isPaused = true;
       this.input.activePointer.reset();
       this.scene.pause();
-      gameAudio.stopAmbient(1);
+      gameAudio.stopAmbient(musicConfig.ambient.deathStopFadeSec);
       const deathKey = deathTrackKeys[Math.floor(Math.random() * deathTrackKeys.length)];
       const deathTrack = musicTracks[deathKey];
-      void gameAudio.playMusic(deathTrack.id, { fadeIn: 1 });
-      void gameAudio.playSfx('death', { volume: 0.9, stopEvents: ['hurt', 'fire'] });
+      void gameAudio.playMusic(deathTrack.id, { fadeIn: musicConfig.death.fadeInSec });
+      void gameAudio.playSfx('death', {
+        volume: sfxVolumes.death,
+        stopEvents: ['hurt', 'fire'],
+      });
 
       const result = await this.submitRunSafely();
       this.deathScreen?.show({
@@ -468,7 +514,7 @@ export class GameScene extends Phaser.Scene {
     // Phaser activePointer'ı temizle — buton tıklaması son frame'de ateş tetiklemesin
     this.input.activePointer.reset();
     this.scene.pause();
-    void gameAudio.playSfx('pause', { volume: 0.5 });
+    void gameAudio.playSfx('pause', { volume: sfxVolumes.pause });
     this.pauseScreen?.show();
   }
 
@@ -479,7 +525,7 @@ export class GameScene extends Phaser.Scene {
     this.isPaused = false;
     this.diagnostics?.markResume();
     this.scene.resume();
-    void gameAudio.playSfx('resume', { volume: 0.5 });
+    void gameAudio.playSfx('resume', { volume: sfxVolumes.resume });
     this.pauseScreen?.hide();
   }
 

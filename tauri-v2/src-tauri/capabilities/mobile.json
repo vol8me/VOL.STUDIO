@@ -5,9 +5,6 @@
   "permissions": [
     "core:default",
     "core:window:allow-close",
-    "dialog:allow-open",
-    "dialog:allow-save",
-    "dialog:allow-message",
     "log:default",
     "store:default",
     "sql:default"

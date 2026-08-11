@@ -19,6 +19,20 @@ export function getPanGains(pan: number): [number, number] {
   return [left, right];
 }
 
+/** Bir geri beslemeli hattın -60 dB'ye düşmesi için gereken süre (saniye). */
+export function feedbackTailSeconds(delaySeconds: number, feedback: number): number {
+  const fb = Math.abs(feedback);
+  if (!(delaySeconds > 0)) return 0;
+  if (fb <= 0) return delaySeconds;
+  if (fb >= 1) return delaySeconds * 100; // pratik üst sınır — sonsuz kuyruk
+  return (delaySeconds * Math.log(0.001)) / Math.log(fb);
+}
+
+/** DelayParams'tan kuyruk süresini kestirir. */
+export function estimateDelayTail(params: DelayParams): number {
+  return feedbackTailSeconds(Math.max(0.001, params.time), params.feedback ?? 0.3);
+}
+
 // -----------------------------------------------------------------------------
 // Delay
 // -----------------------------------------------------------------------------
@@ -66,10 +80,8 @@ export class Chorus {
   private readonly depthSamples: number;
   private readonly rate: number;
   private readonly mix: number;
-  private readonly sampleRate: number;
 
   constructor(params: ChorusParams, sampleRate: number) {
-    this.sampleRate = sampleRate;
     const baseMs = 15;
     const depthMs = Math.max(0, params.depth ?? 2);
     this.baseSamples = Math.floor(sampleRate * (baseMs / 1000));
@@ -118,10 +130,8 @@ export class Flanger {
   private readonly rate: number;
   private readonly feedback: number;
   private readonly mix: number;
-  private readonly sampleRate: number;
 
   constructor(params: FlangerParams, sampleRate: number) {
-    this.sampleRate = sampleRate;
     const baseMs = Math.max(0.1, params.time ?? 1);
     const depthMs = Math.max(0, params.depth ?? 0.5);
     this.baseSamples = sampleRate * (baseMs / 1000);
@@ -198,11 +208,14 @@ export class Phaser {
   private readonly wave: 'sine' | 'triangle';
   private readonly feedback: number;
   private readonly mix: number;
+  private readonly stageSpread: number[];
   private lastOutput = 0;
 
   constructor(params: PhaserParams, sampleRate: number) {
     const stages = Math.max(1, Math.floor(params.stages ?? 4));
     this.filters = Array.from({ length: stages }, () => new FirstOrderAllpass(sampleRate));
+    // Kademe başına yarım oktav yayılım (2^0, 2^0.5, 2^1, ...).
+    this.stageSpread = Array.from({ length: stages }, (_, i) => Math.pow(2, i * 0.5));
     this.minFreq = Math.max(20, params.minFreq ?? 300);
     this.maxFreq = Math.max(this.minFreq + 10, Math.min(sampleRate * 0.49, params.maxFreq ?? 3000));
     this.rate = params.rate ?? 0.5;
@@ -224,9 +237,12 @@ export class Phaser {
     const freq = this.minFreq + (this.maxFreq - this.minFreq) * (0.5 + 0.5 * lfoValue);
 
     let sample = input + this.feedback * this.lastOutput;
-    for (const filter of this.filters) {
-      filter.setFreq(freq);
-      sample = filter.process(sample);
+    // Kademeler logaritmik olarak kaydırılır. Hepsine aynı frekansı vermek
+    // tek boyutlu, zayıf bir çentik deseni üretiyordu; gerçek phaser'lar
+    // kademeleri yayar.
+    for (let i = 0; i < this.filters.length; i++) {
+      this.filters[i].setFreq(freq * this.stageSpread[i]);
+      sample = this.filters[i].process(sample);
     }
 
     this.lastOutput = input * (1 - this.mix) + sample * this.mix;
@@ -359,32 +375,68 @@ export class Reverb {
   private readonly left: ReverbCore;
   private readonly right: ReverbCore;
   private readonly amount: number;
-  private readonly sampleRate: number;
 
   // L ve R için farklı comb süreleri — stereo genişlik
   private static readonly COMB_TIMES_L = [1557, 1617, 1491, 1422, 1277, 1356, 1188, 1116] as const;
   private static readonly COMB_TIMES_R = [1601, 1665, 1537, 1463, 1313, 1393, 1223, 1151] as const;
   private static readonly ALLPASS_TIMES = [225, 556, 441, 341] as const;
 
+  /** Bu reverb'ün comb gecikmelerine uygulanan oda ölçeği. */
+  private readonly roomScale: number;
+  private readonly feedback: number;
+
   constructor(params: ReverbParams, sampleRate: number) {
-    this.sampleRate = sampleRate;
     this.amount = Math.max(0, Math.min(1, params.amount ?? 0.3));
 
     const roomSize = Math.max(0, Math.min(1, params.roomSize ?? 0.5));
-    const decay = params.decay ?? 0.5 + roomSize * 0.5;
+    const decay = Math.max(0, Math.min(1, params.decay ?? 0.5 + roomSize * 0.5));
     const damp = Math.max(0, Math.min(1, params.damp ?? 0.5));
-    const feedback = Math.min(0.82, decay * 0.55 + 0.15);
     const preDelay = Math.max(0, params.preDelay ?? 0);
 
-    this.left = new ReverbCore(Reverb.COMB_TIMES_L, Reverb.ALLPASS_TIMES, sampleRate, feedback, damp, preDelay);
-    this.right = new ReverbCore(Reverb.COMB_TIMES_R, Reverb.ALLPASS_TIMES, sampleRate, feedback, damp, preDelay);
+    // roomSize artık comb gecikmelerini ölçekliyor (fiziksel oda boyutu).
+    // Önceden yalnızca `decay`'in varsayılanını üretiyordu: `decay` açıkça
+    // verildiğinde tamamen ölü bir parametreydi.
+    this.roomScale = 0.6 + roomSize * 0.8;
+    this.feedback = Math.min(0.82, decay * 0.55 + 0.15);
+
+    const scaleTimes = (times: readonly number[]): number[] => times.map((t) => t * this.roomScale);
+
+    this.left = new ReverbCore(
+      scaleTimes(Reverb.COMB_TIMES_L),
+      Reverb.ALLPASS_TIMES,
+      sampleRate,
+      this.feedback,
+      damp,
+      preDelay,
+    );
+    this.right = new ReverbCore(
+      scaleTimes(Reverb.COMB_TIMES_R),
+      Reverb.ALLPASS_TIMES,
+      sampleRate,
+      this.feedback,
+      damp,
+      preDelay,
+    );
+
+    // Kuyruk süresi: comb gecikmesinin -60 dB'ye düşmesi için gereken süre.
+    const avgCombSamples =
+      (Reverb.COMB_TIMES_L.reduce((a, b) => a + b, 0) / Reverb.COMB_TIMES_L.length) *
+      this.roomScale;
+    const combSeconds = avgCombSamples / 44100;
+    this.tailSeconds =
+      this.feedback > 0 && this.feedback < 1
+        ? (combSeconds * Math.log(0.001)) / Math.log(this.feedback)
+        : combSeconds;
   }
+
+  /** Reverb kuyruğunun -60 dB'ye düşme süresi (saniye). */
+  readonly tailSeconds: number;
 
   /** Mono işlem — geriye dönük uyum. L+R ortalaması. */
   process(input: number): number {
     const l = this.left.process(input);
     const r = this.right.process(input);
-    return input * (1 - this.amount) + ((l + r) * 0.5) * this.amount;
+    return input * (1 - this.amount) + (l + r) * 0.5 * this.amount;
   }
 
   /** Stereo işlem — L ve R bağımsız reverb kuyrukları. */
@@ -406,6 +458,19 @@ export class Reverb {
 // -----------------------------------------------------------------------------
 // Distortion
 // -----------------------------------------------------------------------------
+
+/**
+ * Sinyali [-1, 1] aralığına KATLAYARAK sığdırır (periyot 4 üçgen dalga eşlemesi).
+ *
+ * Önceki uygulama yalnızca BİR kez katlıyordu: `driven = 5` için çıktı `-3`
+ * oluyordu — aralık dışı bir değer, sonrasındaki normalize adımıyla birleşince
+ * tüm sesi aşağı bastırıyordu. Gerçek foldback, sinyal aralığa girene kadar
+ * katlamayı sürdürür; kapalı form bunu tek işlemde yapar.
+ */
+function foldback(x: number): number {
+  const period = (((x - 1) % 4) + 4) % 4;
+  return Math.abs(period - 2) - 1;
+}
 
 export class Distortion {
   private readonly amount: number;
@@ -429,17 +494,9 @@ export class Distortion {
       case 'hard':
         shaped = Math.max(-1, Math.min(1, driven));
         break;
-      case 'foldback': {
-        const threshold = 1;
-        if (driven > threshold) {
-          shaped = threshold - (driven - threshold);
-        } else if (driven < -threshold) {
-          shaped = -threshold - (driven + threshold);
-        } else {
-          shaped = driven;
-        }
+      case 'foldback':
+        shaped = foldback(driven);
         break;
-      }
     }
 
     return input * (1 - this.mix) + shaped * this.mix;
@@ -462,12 +519,19 @@ export class StereoWidener {
     this.width = Math.max(0, Math.min(2, w));
   }
 
-  /** [left, right] çiftini alır, genişletilmiş çift döner. */
+  /**
+   * [left, right] çiftini alır, genişletilmiş çift döner.
+   *
+   * Standart M/S genişlik kontrolü: mid korunur, side `width` ile ölçeklenir.
+   * width 0 → mono, 1 → değişiklik yok, 2 → iki kat geniş.
+   *
+   * Önceki formül mid'i de ölçekliyordu (`2·(1 - width/2)`): width=0'da mono
+   * kaynağı +6 dB yükseltiyor, width=2'de mono kaynağı tamamen susturuyordu.
+   * Yalnızca width=1 doğruydu.
+   */
   process(left: number, right: number): [number, number] {
     const mid = 0.5 * (left + right);
-    const side = 0.5 * (left - right);
-    const midAmp = 2 * (1 - this.width * 0.5);
-    const sideAmp = 2 * (this.width * 0.5);
-    return [mid * midAmp + side * sideAmp, mid * midAmp - side * sideAmp];
+    const side = 0.5 * (left - right) * this.width;
+    return [mid + side, mid - side];
   }
 }

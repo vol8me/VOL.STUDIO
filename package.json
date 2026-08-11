@@ -19,9 +19,11 @@
     "lint:css": "stylelint \"core/src/ui/**/*.css\" \"games/*/src/**/*.css\"",
     "format": "prettier --write \"**/*.{ts,css,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,css,json,md}\"",
-    "gen:theme": "node core/scripts/gen-theme.mjs"
+    "gen:theme": "node core/scripts/gen-theme.mjs",
+    "test:coverage": "pnpm -r --if-present test:coverage"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "3.0.5",
     "eslint": "9.0.0",
     "eslint-config-prettier": "10.0.0",
     "jiti": "^2.7.0",

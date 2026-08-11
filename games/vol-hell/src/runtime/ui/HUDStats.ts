@@ -20,25 +20,14 @@ export class HUDStats {
 
   constructor(parent: HTMLElement) {
     this.container = document.createElement('div');
-    this.container.style.cssText = `
-      position: absolute;
-      top: var(--vol-space-md);
-      right: var(--vol-space-md);
-      text-align: right;
-      display: flex;
-      flex-direction: column;
-      gap: var(--vol-space-xs);
-      pointer-events: none;
-      z-index: 50;
-    `;
+    this.container.className = 'vol-hud-stats';
 
     this.scoreLabel = new Text(this.formatScore(), { variant: 'body', tag: 'p' });
     this.killsLabel = new Text(this.formatKills(), { variant: 'body', tag: 'p' });
     this.timeLabel = new Text(this.formatTime(), { variant: 'body', tag: 'p' });
 
     for (const el of [this.scoreLabel, this.killsLabel, this.timeLabel]) {
-      el.element.style.margin = '0';
-      el.element.style.textAlign = 'right';
+      el.element.classList.add('vol-hud-stats__line');
       this.container.appendChild(el.element);
     }
 

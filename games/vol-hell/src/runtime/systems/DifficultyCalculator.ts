@@ -15,11 +15,6 @@ export interface DifficultyState {
   readonly scoreMultiplier: number;
 }
 
-/** Zaman çarpanını hiçbir zaman bu alt sınırın altına düşürmeme. */
-const MIN_SPAWN_MULTIPLIER = 0.15;
-/** Spawn aralığı için mutlak alt sınır (ms). */
-const MIN_SPAWN_INTERVAL_MS = 200;
-
 /**
  * Geçen süreye göre zorluğu hesaplar.
  * İlk `rampMinutes` dakikada büyüme yarı hızda; sonrasında tam hızda devam eder.
@@ -29,7 +24,7 @@ export function getDifficultyState(elapsedMs: number): DifficultyState {
   const ramped = Math.min(minutes, difficultyConfig.rampMinutes);
   const beyondRamp = Math.max(0, minutes - difficultyConfig.rampMinutes);
 
-  const rampedFactor = ramped * 0.5;
+  const rampedFactor = ramped * difficultyConfig.rampSlowdownFactor;
 
   const healthMultiplier =
     1 +
@@ -42,7 +37,7 @@ export function getDifficultyState(elapsedMs: number): DifficultyState {
     beyondRamp * difficultyConfig.speedGrowthPerMinute;
 
   const spawnMultiplier = Math.max(
-    MIN_SPAWN_MULTIPLIER,
+    difficultyConfig.minSpawnMultiplier,
     1 -
       (rampedFactor * difficultyConfig.spawnRateGrowthPerMinute +
         beyondRamp * difficultyConfig.spawnRateGrowthPerMinute),
@@ -59,8 +54,13 @@ export function getDifficultyState(elapsedMs: number): DifficultyState {
   return {
     enemyHealth: enemyConfig.health * healthMultiplier,
     enemySpeed: enemyConfig.speed * speedMultiplier,
-    spawnIntervalMs: Math.max(MIN_SPAWN_INTERVAL_MS, enemyConfig.spawnIntervalMs * spawnMultiplier),
-    maxEnemies: enemyConfig.maxCount + extraEnemies,
-    scoreMultiplier,
+    spawnIntervalMs: Math.max(
+      difficultyConfig.minSpawnIntervalMs,
+      enemyConfig.spawnIntervalMs * spawnMultiplier,
+    ),
+    // Tavan sart: extraEnemies dakikada +4 buyuyor ve spawn araligi 200 ms'de
+    // tabanlandigi icin uzun kosularda dusman sayisi sinirsiz artardi.
+    maxEnemies: Math.min(difficultyConfig.maxEnemiesCap, enemyConfig.maxCount + extraEnemies),
+    scoreMultiplier: Math.min(difficultyConfig.maxScoreMultiplier, scoreMultiplier),
   };
 }

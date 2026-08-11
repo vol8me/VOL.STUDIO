@@ -27,6 +27,8 @@ export class PinchZoomController {
   private readonly onTransformChangeHandler?: (zoom: number, panX: number, panY: number) => void;
   private readonly activePointers = new Map<number, ActivePointer>();
   private readonly cleanups: (() => void)[] = [];
+  /** Animasyon class'ini kaldiran bekleyen zamanlayici; destroy() iptal eder. */
+  private animationTimer: number | null = null;
   private zoom: number;
   private panX = 0;
   private panY = 0;
@@ -63,10 +65,11 @@ export class PinchZoomController {
     if (animate) this.canvas.classList.add('vol-pinch-zoom__canvas--animated');
     this.applyTransform();
     if (animate) {
-      window.setTimeout(
-        () => this.canvas.classList.remove('vol-pinch-zoom__canvas--animated'),
-        UI_TIMING.ZOOM_TRANSITION,
-      );
+      if (this.animationTimer !== null) window.clearTimeout(this.animationTimer);
+      this.animationTimer = window.setTimeout(() => {
+        this.animationTimer = null;
+        this.canvas.classList.remove('vol-pinch-zoom__canvas--animated');
+      }, UI_TIMING.ZOOM_TRANSITION);
     }
   }
 
@@ -80,6 +83,10 @@ export class PinchZoomController {
   }
 
   destroy(): void {
+    if (this.animationTimer !== null) {
+      window.clearTimeout(this.animationTimer);
+      this.animationTimer = null;
+    }
     for (const cleanup of this.cleanups) cleanup();
     this.element.remove();
   }

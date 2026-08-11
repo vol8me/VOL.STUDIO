@@ -31,7 +31,6 @@ export * as InputUtils from './input/InputUtils';
 export { PCController } from './input/PCController';
 export { TouchController } from './input/TouchController';
 
-export { AudioManager } from './systems/AudioManager';
 export * as Synth from './audio/synth';
 export * as Music from './audio/music';
 export { MusicEngine } from './audio/music/engine';

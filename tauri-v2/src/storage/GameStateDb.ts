@@ -1,6 +1,9 @@
 import Database from '@tauri-apps/plugin-sql';
 import { GameStateDbError } from './GameStateDbError';
 
+/** Mevcut sema surumu. Migration eklendiginde artirilir. */
+const CURRENT_SCHEMA_VERSION = 1;
+
 export interface GameStateDbOptions {
   /** SQLite dosya adi. Varsayilan 'game-state.db'. */
   path?: string;
@@ -21,6 +24,13 @@ export class GameStateDb {
   private db: Database | null = null;
   private readonly path: string;
   private initialized = false;
+  /**
+   * Devam eden init'in promise'i. Her public metot basinda `await this.init()`
+   * cagrildigi icin escanlilik istisna degil normal durum; bu olmadan
+   * `Promise.all([saveGame(a), saveGame(b)])` veritabanini iki kez yukler ve
+   * migrate()'i iki kez calistirirdi.
+   */
+  private initPromise: Promise<void> | null = null;
 
   constructor(options: GameStateDbOptions = {}) {
     this.path = options.path ?? 'game-state.db';
@@ -29,13 +39,29 @@ export class GameStateDb {
   /** Veritabanini yukler, tablolari ve schema version'u olusturur. Idempotent. */
   async init(): Promise<void> {
     if (this.initialized) return;
+    if (this.initPromise) return this.initPromise;
 
+    // Basarisizlikta initPromise temizlenir; sonraki cagri yeniden denesin.
+    this.initPromise = this.runInit().finally(() => {
+      this.initPromise = null;
+    });
+
+    return this.initPromise;
+  }
+
+  private async runInit(): Promise<void> {
     try {
       this.db = await Database.load(`sqlite:${this.path}`);
 
+      // `id` PK + CHECK(id = 1): tabloda YALNIZCA tek satir olabilir.
+      // Onceki sema `version`'i PK yapiyordu; ileride VALUES (2) eklenince
+      // versiyon 1 ile cakismayacagi icin tabloda iki satir birden olusur,
+      // `SELECT ... LIMIT 1` de ORDER BY'siz oldugu icin hangi satirin gelecegi
+      // belirsiz kalirdi.
       await this.db.execute(`
         CREATE TABLE IF NOT EXISTS schema_version (
-          version INTEGER PRIMARY KEY
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          version INTEGER NOT NULL
         )
       `);
 
@@ -59,17 +85,25 @@ export class GameStateDb {
 
   private async migrate(): Promise<void> {
     const result = await this.db!.select<{ version: number }[]>(
-      'SELECT version FROM schema_version LIMIT 1',
+      'SELECT version FROM schema_version WHERE id = 1',
     );
     const currentVersion = result[0]?.version ?? 0;
 
-    if (currentVersion === 0) {
-      await this.db!.execute('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [1]);
-    }
+    if (currentVersion >= CURRENT_SCHEMA_VERSION) return;
 
     // Gelecek migration'lar buraya eklenir:
-    // case 1: /* v1→v2 kolon ekleme/veri dönüşümü */ break;
-    // await this.db!.execute('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [2]);
+    // if (currentVersion < 2) { await this.db!.execute('ALTER TABLE saves ADD COLUMN ...'); }
+
+    await this.setSchemaVersion(CURRENT_SCHEMA_VERSION);
+  }
+
+  /** Sema versiyonunu yazar. `id = 1` sabit oldugu icin her zaman tek satir kalir. */
+  private async setSchemaVersion(version: number): Promise<void> {
+    await this.db!.execute(
+      'INSERT INTO schema_version (id, version) VALUES (1, ?) ' +
+        'ON CONFLICT(id) DO UPDATE SET version = excluded.version',
+      [version],
+    );
   }
 
   /** Veritabani baglantisini kapatir. init() sonrasi tekrar acilabilir. */
@@ -84,6 +118,7 @@ export class GameStateDb {
     } finally {
       this.db = null;
       this.initialized = false;
+      this.initPromise = null;
     }
   }
 

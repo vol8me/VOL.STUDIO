@@ -19,7 +19,6 @@ export class SidechainDucker {
   readonly gain: GainNode;
   private activeUntil = 0;
   private currentTarget = 1;
-  private releaseTimer?: number;
 
   constructor(
     private readonly context: AudioContext,
@@ -30,44 +29,44 @@ export class SidechainDucker {
     this.gain.connect(destination);
   }
 
-  /** Duck profilini uygula. */
+  /**
+   * Duck profilini uygular. Hem duck hem release AudioContext zaman cizelgesine
+   * zamanlanir — onceki tasarim release'i `setTimeout` ile tetikliyordu ve iki
+   * ayri saat kullanmak sekme arka plana alindiginda kirilyordu: setTimeout
+   * throttle edilir, ustelik GameAudio context'i suspend ettigi icin
+   * `currentTime` tamamen durur. Sonuc: sekmeye donuldugunde muzik kisik kalirdi.
+   */
   duck(profile: DuckingProfile): void {
     const now = this.context.currentTime;
     this.currentTarget = Math.min(this.currentTarget, profile.target);
 
     const attackTimeConst = Math.max(0.001, profile.attack / 3);
+    this.gain.gain.cancelScheduledValues(now);
     this.gain.gain.setTargetAtTime(this.currentTarget, now, attackTimeConst);
 
-    const end = now + profile.attack + profile.hold + profile.release;
+    const releaseStart = now + profile.attack + profile.hold;
+    const end = releaseStart + profile.release;
+
     if (end > this.activeUntil) {
       this.activeUntil = end;
-      clearTimeout(this.releaseTimer);
-      // Attack + hold bittikten sonra release'e geç.
-      this.releaseTimer = window.setTimeout(
-        () => this.release(profile.release),
-        Math.max(0, (profile.attack + profile.hold) * 1000),
-      );
+      this.currentTarget = 1;
+      // Release de audio saatinde: sekme arka plandayken context durursa
+      // ducking de donar ve geri donuldugunde kaldigi yerden dogru cozulur.
+      this.gain.gain.setTargetAtTime(1, releaseStart, Math.max(0.001, profile.release / 3));
     }
   }
 
   /** Anında sustain seviyesine geri dön (örn. sahne değişiminde). */
   reset(fadeTime = 0.05): void {
-    clearTimeout(this.releaseTimer);
     this.activeUntil = 0;
     this.currentTarget = 1;
     const now = this.context.currentTime;
+    this.gain.gain.cancelScheduledValues(now);
     this.gain.gain.setTargetAtTime(1, now, Math.max(0.001, fadeTime / 3));
   }
 
-  private release(release: number): void {
-    const now = this.context.currentTime;
-    this.currentTarget = 1;
-    this.activeUntil = 0;
-    this.gain.gain.setTargetAtTime(1, now, Math.max(0.001, release / 3));
-  }
-
   dispose(): void {
-    clearTimeout(this.releaseTimer);
+    this.reset(0);
     this.gain.disconnect();
   }
 }

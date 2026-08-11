@@ -45,8 +45,18 @@ export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
   const wavSampleRate = dataView.getUint32(fmtOffset + 4, true);
   const bitsPerSample = dataView.getUint16(fmtOffset + 14, true);
 
-  if (format !== 1) {
-    throw new Error('Sadece PCM WAV desteklenir');
+  // 1 = PCM tamsayı, 3 = IEEE float. WAVE_FORMAT_EXTENSIBLE (0xFFFE) için
+  // gerçek format fmt chunk'ının uzantı kısmındaki GUID'in ilk 2 baytındadır.
+  let effectiveFormat = format;
+  if (format === 0xfffe) {
+    effectiveFormat = dataView.getUint16(fmtOffset + 24, true);
+  }
+
+  if (effectiveFormat !== 1 && effectiveFormat !== 3) {
+    throw new Error(`Desteklenmeyen WAV formatı: ${effectiveFormat} (PCM veya float bekleniyor)`);
+  }
+  if (effectiveFormat === 3 && bitsPerSample !== 32 && bitsPerSample !== 64) {
+    throw new Error(`Float WAV yalnızca 32/64-bit destekler (verilen: ${bitsPerSample})`);
   }
 
   const sampleCount = Math.floor(dataSize / (numChannels * (bitsPerSample / 8)));
@@ -56,10 +66,31 @@ export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
   for (let i = 0; i < sampleCount; i++) {
     let sum = 0;
     for (let ch = 0; ch < numChannels; ch++) {
-      if (bitsPerSample === 16) {
+      if (effectiveFormat === 3) {
+        if (bitsPerSample === 32) {
+          sum += dataView.getFloat32(readIndex, true);
+          readIndex += 4;
+        } else {
+          sum += dataView.getFloat64(readIndex, true);
+          readIndex += 8;
+        }
+      } else if (bitsPerSample === 16) {
         sum += dataView.getInt16(readIndex, true) / 32768;
         readIndex += 2;
+      } else if (bitsPerSample === 24) {
+        // 24-bit little-endian işaretli: üç baytı birleştirip işaret genişlet.
+        const b0 = bytes[readIndex];
+        const b1 = bytes[readIndex + 1];
+        const b2 = bytes[readIndex + 2];
+        const raw = (b2 << 16) | (b1 << 8) | b0;
+        const signed = raw & 0x800000 ? raw - 0x1000000 : raw;
+        sum += signed / 8388608;
+        readIndex += 3;
+      } else if (bitsPerSample === 32) {
+        sum += dataView.getInt32(readIndex, true) / 2147483648;
+        readIndex += 4;
       } else if (bitsPerSample === 8) {
+        // 8-bit WAV işaretsizdir (0-255, orta nokta 128).
         sum += (bytes[readIndex] - 128) / 128;
         readIndex += 1;
       } else {
@@ -72,20 +103,40 @@ export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
   return { samples, sampleRate: wavSampleRate };
 }
 
-/** Hızlı doğrusal enterpolasyon ile örnekleri yeniden örnekler. */
+/**
+ * Doğrusal enterpolasyonla yeniden örnekler.
+ *
+ * `factor > 1` (aşağı örnekleme) durumunda önce bir alçak geçiren uygulanır:
+ * ön filtreleme olmadan yeni Nyquist'in üstündeki içerik katlanır (aliasing).
+ * Filtre basit bir kayan ortalama — biquad kadar keskin değil ama hiç
+ * filtrelememekten çok daha iyi ve tek geçişte çalışır.
+ */
 export function resampleLinear(samples: Float32Array, factor: number): Float32Array {
   if (factor <= 0 || samples.length === 0) return new Float32Array(0);
   if (factor === 1) return samples.slice();
 
-  const outLength = Math.max(1, Math.ceil(samples.length / factor));
+  let source = samples;
+  if (factor > 1) {
+    const window = Math.max(2, Math.round(factor));
+    const smoothed = new Float32Array(samples.length);
+    let running = 0;
+    for (let i = 0; i < samples.length; i++) {
+      running += samples[i];
+      if (i >= window) running -= samples[i - window];
+      smoothed[i] = running / Math.min(i + 1, window);
+    }
+    source = smoothed;
+  }
+
+  const outLength = Math.max(1, Math.ceil(source.length / factor));
   const out = new Float32Array(outLength);
 
   for (let i = 0; i < outLength; i++) {
     const pos = i * factor;
     const i0 = Math.floor(pos);
-    const i1 = Math.min(i0 + 1, samples.length - 1);
+    const i1 = Math.min(i0 + 1, source.length - 1);
     const frac = pos - i0;
-    out[i] = samples[i0] * (1 - frac) + samples[i1] * frac;
+    out[i] = source[i0] * (1 - frac) + source[i1] * frac;
   }
 
   return out;

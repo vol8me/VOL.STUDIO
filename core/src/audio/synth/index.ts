@@ -8,10 +8,17 @@
 
 export type * from './types';
 
-export { getWaveSample, getWaveSampleWithPhase } from './waveforms';
+export { getWaveSampleConstantFreq, getWaveSampleWithPhase } from './waveforms';
 export { WhiteNoise, PinkNoise, BrownNoise, createNoiseSource } from './noise';
 export { Envelope, applyCurve } from './envelope';
-export { LowpassFilter, HighpassFilter, BiquadFilter, Cascade4Filter, createFilter, getCutoffAtTime } from './filter';
+export {
+  LowpassFilter,
+  HighpassFilter,
+  BiquadFilter,
+  Cascade4Filter,
+  createFilter,
+  getCutoffAtTime,
+} from './filter';
 export {
   Chorus,
   DelayLine,

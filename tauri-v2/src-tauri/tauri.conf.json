@@ -1,5 +1,5 @@
 {
-  "productName": "VOL.STUDIO Game",
+  "productName": "VOL.HELL",
   "version": "0.1.0",
   "identifier": "com.volstudio.game",
   "build": {
@@ -12,7 +12,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "VOL.STUDIO Game",
+        "title": "VOL.HELL",
         "width": 1280,
         "height": 720,
         "resizable": true,
@@ -29,7 +29,10 @@
         "connect-src": "'self' ipc: http://ipc.localhost",
         "media-src": "'self'",
         "object-src": "'none'",
-        "frame-src": "'none'"
+        "frame-src": "'none'",
+        "base-uri": "'self'",
+        "form-action": "'none'",
+        "frame-ancestors": "'none'"
       },
       "assetProtocol": {
         "enable": true,

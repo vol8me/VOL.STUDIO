@@ -16,6 +16,28 @@ const DEFAULTS: GameStatsData = {
   totalKills: 0,
 };
 
+/** Sonlu ve negatif olmayan bir sayıysa kendisi, değilse yedek. */
+function safeCount(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+
+/**
+ * Depodan gelen veriye asla güvenilmez: elle düzenlenmiş, eski formatta veya
+ * kısmi bir kayıt alanları `undefined` bırakır ve `totalKills += kills` NaN
+ * üretir — bu NaN sonra kalıcı olarak diske yazılır.
+ */
+function sanitize(stored: unknown): GameStatsData {
+  if (typeof stored !== 'object' || stored === null) return { ...DEFAULTS };
+
+  const raw = stored as Partial<Record<keyof GameStatsData, unknown>>;
+  return {
+    bestScore: safeCount(raw.bestScore, DEFAULTS.bestScore),
+    bestTimeMs: safeCount(raw.bestTimeMs, DEFAULTS.bestTimeMs),
+    bestKills: safeCount(raw.bestKills, DEFAULTS.bestKills),
+    totalKills: safeCount(raw.totalKills, DEFAULTS.totalKills),
+  };
+}
+
 export interface RunResult extends GameStatsData {
   /** Bu koşu yeni bir skor rekoru mu? */
   readonly isNewBestScore: boolean;
@@ -35,7 +57,7 @@ export class GameStats {
   constructor(private readonly saveManager: SaveManager) {}
 
   async load(): Promise<void> {
-    this.data = { ...(await this.saveManager.load(STORAGE_KEY, DEFAULTS)) };
+    this.data = sanitize(await this.saveManager.load<unknown>(STORAGE_KEY, DEFAULTS));
   }
 
   getBestScore(): number {

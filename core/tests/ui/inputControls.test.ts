@@ -33,12 +33,27 @@ describe('Input kontrolleri - setValue onChange tetikler', () => {
     stepper.destroy();
   });
 
-  it('Slider.setValue onChange handlerını çağırır ve değeri sınırlandırır', () => {
+  it('Slider.setValue değeri sınırlandırır ve onChange TETİKLEMEZ', () => {
     const onChange = vi.fn();
     const slider = new Slider({ onChange, min: 0, max: 100, value: 50 });
+
     slider.setValue(150);
-    expect(onChange).toHaveBeenCalledWith(100);
+
     expect(slider.getValue()).toBe(100);
+    // Programatik atama sessizdir: onChange -> state -> setValue -> onChange
+    // geri besleme döngüsünü baştan imkansız kılar.
+    expect(onChange).not.toHaveBeenCalled();
+    slider.destroy();
+  });
+
+  it('Slider.setValueAndNotify hem değeri ayarlar hem onChange tetikler', () => {
+    const onChange = vi.fn();
+    const slider = new Slider({ onChange, min: 0, max: 100, value: 50 });
+
+    slider.setValueAndNotify(150);
+
+    expect(slider.getValue()).toBe(100);
+    expect(onChange).toHaveBeenCalledWith(100);
     slider.destroy();
   });
 

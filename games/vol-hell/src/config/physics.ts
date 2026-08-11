@@ -1,7 +1,5 @@
 /** Fizik/hareket parametreleri. Top-down bullet-hell — yerçekimi yok, custom hareket ve çarpışma. */
 export const physicsConfig = {
-  /** Yerçekimi (piksel/saniye²). Top-down olduğu için sıfır. */
-  gravity: { x: 0, y: 0 },
   /** Spatial grid hücre boyutu çarpanı: cellSize = max(enemyRadius, bulletRadius) * multiplier. */
   spatialGridCellMultiplier: 4,
   /** Player-enemy overlap çözümü parametreleri. */

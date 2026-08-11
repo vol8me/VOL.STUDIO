@@ -1,7 +1,6 @@
 import type {
   ActiveStem,
   CrossfadeOptions,
-  MusicContext,
   MusicEngineOptions,
   MusicState,
   MusicTrack,
@@ -53,7 +52,7 @@ export class MusicEngine {
     }
 
     this.mixer = new MusicMixer(this.context, { compressor: options.compressor });
-    this.mixer.output.connect(this.context.destination);
+    this.mixer.output.connect(options.destination ?? this.context.destination);
     this.loader = new StemLoader(this.context);
     this.lookahead = Math.max(0.01, options.lookaheadSeconds ?? 0.1);
     this.masterVolume = Math.max(0, Math.min(1, options.masterVolume ?? 1));
@@ -82,7 +81,14 @@ export class MusicEngine {
 
   /** Belirtilen track'i çalmaya başlar. */
   async play(trackId: string, options: PlayOptions = {}): Promise<void> {
-    if (this.isPlaying && this.currentTrackId === trackId) return;
+    // Aynı parça zaten çalıyorsa yeniden başlatılmaz — ama verilen state
+    // UYGULANIR. Önceki hali sessizce geri dönüyordu:
+    // `play('combat', { state: { intensity: 1 } })` hiçbir şey yapmıyordu ve
+    // çağıranın `setState()` kullanması gerektiği hiçbir yerde yazmıyordu.
+    if (this.isPlaying && this.currentTrackId === trackId) {
+      if (options.state) this.setState(options.state);
+      return;
+    }
 
     const track = this.tracks.get(trackId);
     if (!track) throw new Error(`Track bulunamadı: ${trackId}`);
@@ -157,7 +163,11 @@ export class MusicEngine {
       const targetBar = Math.floor(currentBar) + bars;
       transitionTime = this.scheduler.getTimeAtBar(targetBar, this.trackStartTime);
     } else {
-      transitionTime = now + duration;
+      // Bar hizalamasi istenmediyse gecis HEMEN baslar. Onceki tasarim
+      // `now + duration` kullaniyordu: hem eski stem'in fade'i hem yeni track
+      // o ana zamanlandigi icin gecisten once `duration` kadar hicbir sey
+      // olmuyordu (fadeIn:2 -> 2 sn olu bekleme, sonra 2 sn crossfade).
+      transitionTime = now;
     }
 
     // Eski stem'leri transition sonunda durdur; gain güncellemelerinden muaf tut.
@@ -251,6 +261,11 @@ export class MusicEngine {
     }
     this.mixer.clear();
     this.mixer.output.disconnect();
+
+    // Decode edilmiş AudioBuffer'lar parça başına megabaytlar tutabiliyor;
+    // dispose sonrası bunları elde tutmanın anlamı yok.
+    this.buffers.clear();
+    this.tracks.clear();
   }
 
   private startStem(stem: Stem, buffer: AudioBuffer, when: number): void {
@@ -262,11 +277,17 @@ export class MusicEngine {
     source.buffer = buffer;
     source.loop = stem.loop !== false;
 
+    // loopStart de kelepçelenir: loopStart >= loopEnd olduğunda Web Audio
+    // spesifikasyonu loop'u sessizce tüm buffer'a düşürür.
+    const loopEnd =
+      this.currentTrack?.loopEnd !== undefined
+        ? Math.min(this.currentTrack.loopEnd, buffer.duration)
+        : buffer.duration;
     if (this.currentTrack?.loopStart !== undefined) {
-      source.loopStart = this.currentTrack.loopStart;
+      source.loopStart = Math.max(0, Math.min(this.currentTrack.loopStart, loopEnd - 1e-3));
     }
     if (this.currentTrack?.loopEnd !== undefined) {
-      source.loopEnd = Math.min(this.currentTrack.loopEnd, buffer.duration);
+      source.loopEnd = loopEnd;
     }
 
     source.connect(gain);
@@ -291,11 +312,10 @@ export class MusicEngine {
     if (!this.scheduler) return;
 
     const now = when ?? this.context.currentTime;
-    const ctx = this.scheduler.getContext(now, this.trackStartTime);
 
     for (const active of this.activeStems.values()) {
       if (active.fadingOut) continue;
-      const targetGain = resolveStemGain(active.stem, this.state, ctx);
+      const targetGain = resolveStemGain(active.stem, this.state);
       this.mixer.setChannelGain(active.channelId, targetGain, fadeTime, now);
     }
   }

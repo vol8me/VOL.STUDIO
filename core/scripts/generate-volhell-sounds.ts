@@ -87,7 +87,13 @@ function layer(
 // Triangle fakir harmonikleri var — sadece sub ve yumuşak üst için.
 
 /** Sub bass katmanı — sine, tok body. Gain düşük — mid/high baskın olmasın. */
-function sub(freq: number, duration: number, gain = 0.3, slide = 0, offset = 0): { params: SynthParams; offset: number } {
+function sub(
+  freq: number,
+  duration: number,
+  gain = 0.3,
+  slide = 0,
+  offset = 0,
+): { params: SynthParams; offset: number } {
   return {
     offset,
     params: {
@@ -97,14 +103,29 @@ function sub(freq: number, duration: number, gain = 0.3, slide = 0, offset = 0):
       slide,
       gain,
       duration,
-      envelope: { attack: 0.003, hold: 0.015, decay: Math.min(0.1, duration * 0.4), sustain: 0, release: Math.min(0.08, duration * 0.3), sustainLevel: 0.35, curve: 'exponential' },
+      envelope: {
+        attack: 0.003,
+        hold: 0.015,
+        decay: Math.min(0.1, duration * 0.4),
+        sustain: 0,
+        release: Math.min(0.08, duration * 0.3),
+        sustainLevel: 0.35,
+        curve: 'exponential',
+      },
       lowpass: { cutoff: 400, poles: 1, type: 'lowpass' },
     },
   };
 }
 
 /** Mid karakter katmanı — sawtooth + lowpass, zengin harmonik. Gain yüksek — karakter burada. */
-function mid(freq: number, duration: number, gain = 0.5, slide = 0, cutoff = 2200, offset = 0): { params: SynthParams; offset: number } {
+function mid(
+  freq: number,
+  duration: number,
+  gain = 0.5,
+  slide = 0,
+  cutoff = 2200,
+  offset = 0,
+): { params: SynthParams; offset: number } {
   return {
     offset,
     params: {
@@ -114,7 +135,15 @@ function mid(freq: number, duration: number, gain = 0.5, slide = 0, cutoff = 220
       slide,
       gain,
       duration,
-      envelope: { attack: 0.002, hold: 0.01, decay: Math.min(0.08, duration * 0.35), sustain: 0, release: Math.min(0.06, duration * 0.25), sustainLevel: 0.3, curve: 'exponential' },
+      envelope: {
+        attack: 0.002,
+        hold: 0.01,
+        decay: Math.min(0.08, duration * 0.35),
+        sustain: 0,
+        release: Math.min(0.06, duration * 0.25),
+        sustainLevel: 0.3,
+        curve: 'exponential',
+      },
       lowpass: { cutoff, resonance: 1.5, poles: 2, type: 'lowpass' },
       highpass: { cutoff: 200, poles: 1, type: 'highpass' },
     },
@@ -122,7 +151,13 @@ function mid(freq: number, duration: number, gain = 0.5, slide = 0, cutoff = 220
 }
 
 /** High detay katmanı — metalik tını, bant sınırlı. Gain yüksek — metalik karakter için. */
-function high(freq: number, duration: number, gain = 0.26, slide = 0, offset = 0): { params: SynthParams; offset: number } {
+function high(
+  freq: number,
+  duration: number,
+  gain = 0.26,
+  slide = 0,
+  offset = 0,
+): { params: SynthParams; offset: number } {
   return {
     offset,
     params: {
@@ -132,7 +167,15 @@ function high(freq: number, duration: number, gain = 0.26, slide = 0, offset = 0
       slide,
       gain,
       duration,
-      envelope: { attack: 0.001, hold: 0.005, decay: Math.min(0.05, duration * 0.3), sustain: 0, release: Math.min(0.03, duration * 0.2), sustainLevel: 0.15, curve: 'exponential' },
+      envelope: {
+        attack: 0.001,
+        hold: 0.005,
+        decay: Math.min(0.05, duration * 0.3),
+        sustain: 0,
+        release: Math.min(0.03, duration * 0.2),
+        sustainLevel: 0.15,
+        curve: 'exponential',
+      },
       lowpass: { cutoff: 5000, resonance: 2, poles: 2, type: 'lowpass' },
       highpass: { cutoff: 1800, poles: 1, type: 'highpass' },
     },
@@ -140,7 +183,11 @@ function high(freq: number, duration: number, gain = 0.26, slide = 0, offset = 0
 }
 
 /** Kısa transient — darbe karakteri için. */
-function transient(duration = 0.025, gain = 0.18, offset = 0): { params: SynthParams; offset: number } {
+function transient(
+  duration = 0.025,
+  gain = 0.18,
+  offset = 0,
+): { params: SynthParams; offset: number } {
   return {
     offset,
     params: {
@@ -148,7 +195,15 @@ function transient(duration = 0.025, gain = 0.18, offset = 0): { params: SynthPa
       wave: 'noise',
       gain,
       duration,
-      envelope: { attack: 0.0005, hold: 0.002, decay: Math.min(0.015, duration * 0.6), sustain: 0, release: 0.005, sustainLevel: 0.1, curve: 'exponential' },
+      envelope: {
+        attack: 0.0005,
+        hold: 0.002,
+        decay: Math.min(0.015, duration * 0.6),
+        sustain: 0,
+        release: 0.005,
+        sustainLevel: 0.1,
+        curve: 'exponential',
+      },
       lowpass: { cutoff: 3000, resonance: 0.5, poles: 2, type: 'lowpass' },
       highpass: { cutoff: 600, poles: 1, type: 'highpass' },
     },
@@ -156,7 +211,12 @@ function transient(duration = 0.025, gain = 0.18, offset = 0): { params: SynthPa
 }
 
 /** Reverb tail — yumuşak kapanış. */
-function tail(freq: number, duration: number, gain = 0.14, offset = 0): { params: SynthParams; offset: number } {
+function tail(
+  freq: number,
+  duration: number,
+  gain = 0.14,
+  offset = 0,
+): { params: SynthParams; offset: number } {
   return {
     offset,
     params: {
@@ -165,7 +225,15 @@ function tail(freq: number, duration: number, gain = 0.14, offset = 0): { params
       frequency: freq,
       gain,
       duration,
-      envelope: { attack: 0.015, hold: 0, decay: Math.min(0.18, duration * 0.6), sustain: 0, release: Math.min(0.12, duration * 0.4), sustainLevel: 0.1, curve: 'cosine' },
+      envelope: {
+        attack: 0.015,
+        hold: 0,
+        decay: Math.min(0.18, duration * 0.6),
+        sustain: 0,
+        release: Math.min(0.12, duration * 0.4),
+        sustainLevel: 0.1,
+        curve: 'cosine',
+      },
       reverb: { amount: 0.5, decay: 0.4, roomSize: 0.5, damp: 0.65 },
     },
   };
@@ -190,9 +258,9 @@ const specs: SoundSpec[] = [
     type: 'render',
     render: () =>
       layer(0.08, [
-        mid(293.66, 0.06, 0.4, 0, 1600),       // D4 — mid karakter
-        sub(146.83, 0.06, 0.28),                // D3 — tok body
-        high(587.33, 0.04, 0.1),                // D5 — metalik detay
+        mid(293.66, 0.06, 0.4, 0, 1600), // D4 — mid karakter
+        sub(146.83, 0.06, 0.28), // D3 — tok body
+        high(587.33, 0.04, 0.1), // D5 — metalik detay
       ]),
   },
   {
@@ -201,26 +269,9 @@ const specs: SoundSpec[] = [
     type: 'render',
     render: () =>
       layer(0.08, [
-        mid(329.63, 0.06, 0.4, 0, 1800),       // E4 — mid karakter
-        sub(164.81, 0.06, 0.28),                // E3 — tok body
-        high(659.26, 0.04, 0.1),                // E5 — metalik detay
-      ]),
-  },
-  {
-    name: 'confirm-0',
-    category: 'ui',
-    type: 'render',
-    render: () =>
-      layer(0.3, [
-        // Aşama 1: Kısa tık
-        mid(220.0, 0.05, 0.35, 0, 1600),
-        high(440.0, 0.035, 0.1),
-        // Aşama 2: Tok mekanik kapanış — D3
-        { ...mid(146.83, 0.18, 0.45, 0, 1200), offset: 0.05 },
-        { ...sub(73.42, 0.15, 0.3), offset: 0.05 },
-        { ...high(293.66, 0.08, 0.1), offset: 0.05 },
-        // Reverb tail
-        { ...tail(146.83, 0.22, 0.13), offset: 0.05 },
+        mid(329.63, 0.06, 0.4, 0, 1800), // E4 — mid karakter
+        sub(164.81, 0.06, 0.28), // E3 — tok body
+        high(659.26, 0.04, 0.1), // E5 — metalik detay
       ]),
   },
   {
@@ -264,14 +315,30 @@ const specs: SoundSpec[] = [
             slide: 146.83, // → D4
             gain: 0.4,
             duration: 0.16,
-            envelope: { attack: 0.005, hold: 0.02, decay: 0.1, sustain: 0, release: 0.05, sustainLevel: 0.35, curve: 'exponential' },
+            envelope: {
+              attack: 0.005,
+              hold: 0.02,
+              decay: 0.1,
+              sustain: 0,
+              release: 0.05,
+              sustainLevel: 0.35,
+              curve: 'exponential',
+            },
             lowpass: {
               cutoff: 800,
               resonance: 2,
               poles: 2,
               type: 'lowpass',
               slide: 1200,
-              envelope: { attack: 0.005, hold: 0, decay: 0.1, sustain: 0, release: 0.05, sustainLevel: 0.2, curve: 'exponential' },
+              envelope: {
+                attack: 0.005,
+                hold: 0,
+                decay: 0.1,
+                sustain: 0,
+                release: 0.05,
+                sustainLevel: 0.2,
+                curve: 'exponential',
+              },
               envAmount: 0.7,
             },
             highpass: { cutoff: 150, poles: 1, type: 'highpass' },
@@ -321,22 +388,38 @@ const specs: SoundSpec[] = [
             slide: -110.0, // → A2
             gain: 0.42,
             duration: 0.1,
-            envelope: { attack: 0.001, hold: 0.008, decay: 0.05, sustain: 0, release: 0.04, sustainLevel: 0.25, curve: 'exponential' },
+            envelope: {
+              attack: 0.001,
+              hold: 0.008,
+              decay: 0.05,
+              sustain: 0,
+              release: 0.04,
+              sustainLevel: 0.25,
+              curve: 'exponential',
+            },
             lowpass: {
               cutoff: 2200,
               resonance: 2,
               poles: 2,
               type: 'lowpass',
               slide: -1600,
-              envelope: { attack: 0.001, hold: 0, decay: 0.06, sustain: 0, release: 0.035, sustainLevel: 0.1, curve: 'exponential' },
+              envelope: {
+                attack: 0.001,
+                hold: 0,
+                decay: 0.06,
+                sustain: 0,
+                release: 0.035,
+                sustainLevel: 0.1,
+                curve: 'exponential',
+              },
               envAmount: 0.7,
             },
             highpass: { cutoff: 180, poles: 1, type: 'highpass' },
           },
         },
-        sub(110.0, 0.09, 0.3),                   // A2 — tok body
-        high(880.0, 0.04, 0.1, -440.0),          // A5 → A4 — metalik detay
-        transient(0.022, 0.15),                   // Kısa mekanizma click
+        sub(110.0, 0.09, 0.3), // A2 — tok body
+        high(880.0, 0.04, 0.1, -440.0), // A5 → A4 — metalik detay
+        transient(0.022, 0.15), // Kısa mekanizma click
       ]),
   },
   {
@@ -354,21 +437,37 @@ const specs: SoundSpec[] = [
             slide: -123.47, // → B2
             gain: 0.4,
             duration: 0.095,
-            envelope: { attack: 0.001, hold: 0.008, decay: 0.048, sustain: 0, release: 0.035, sustainLevel: 0.25, curve: 'exponential' },
+            envelope: {
+              attack: 0.001,
+              hold: 0.008,
+              decay: 0.048,
+              sustain: 0,
+              release: 0.035,
+              sustainLevel: 0.25,
+              curve: 'exponential',
+            },
             lowpass: {
               cutoff: 2100,
               resonance: 2,
               poles: 2,
               type: 'lowpass',
               slide: -1500,
-              envelope: { attack: 0.001, hold: 0, decay: 0.055, sustain: 0, release: 0.03, sustainLevel: 0.1, curve: 'exponential' },
+              envelope: {
+                attack: 0.001,
+                hold: 0,
+                decay: 0.055,
+                sustain: 0,
+                release: 0.03,
+                sustainLevel: 0.1,
+                curve: 'exponential',
+              },
               envAmount: 0.7,
             },
             highpass: { cutoff: 180, poles: 1, type: 'highpass' },
           },
         },
-        sub(123.47, 0.085, 0.3),                 // B2 — tok body
-        high(987.77, 0.035, 0.1, -493.88),       // B5 → B4 — metalik detay
+        sub(123.47, 0.085, 0.3), // B2 — tok body
+        high(987.77, 0.035, 0.1, -493.88), // B5 → B4 — metalik detay
         transient(0.02, 0.14),
       ]),
   },
@@ -387,21 +486,37 @@ const specs: SoundSpec[] = [
             slide: -130.81, // → C3
             gain: 0.38,
             duration: 0.085,
-            envelope: { attack: 0.001, hold: 0.008, decay: 0.045, sustain: 0, release: 0.03, sustainLevel: 0.25, curve: 'exponential' },
+            envelope: {
+              attack: 0.001,
+              hold: 0.008,
+              decay: 0.045,
+              sustain: 0,
+              release: 0.03,
+              sustainLevel: 0.25,
+              curve: 'exponential',
+            },
             lowpass: {
               cutoff: 2000,
               resonance: 2,
               poles: 2,
               type: 'lowpass',
               slide: -1400,
-              envelope: { attack: 0.001, hold: 0, decay: 0.05, sustain: 0, release: 0.025, sustainLevel: 0.1, curve: 'exponential' },
+              envelope: {
+                attack: 0.001,
+                hold: 0,
+                decay: 0.05,
+                sustain: 0,
+                release: 0.025,
+                sustainLevel: 0.1,
+                curve: 'exponential',
+              },
               envAmount: 0.7,
             },
             highpass: { cutoff: 180, poles: 1, type: 'highpass' },
           },
         },
-        sub(130.81, 0.075, 0.3),                 // C3 — tok body
-        high(1046.5, 0.032, 0.1, -523.25),       // C6 → C5 — metalik detay
+        sub(130.81, 0.075, 0.3), // C3 — tok body
+        high(1046.5, 0.032, 0.1, -523.25), // C6 → C5 — metalik detay
         transient(0.018, 0.13),
       ]),
   },
@@ -423,14 +538,30 @@ const specs: SoundSpec[] = [
             slide: 73.42, // → D3
             gain: 0.42,
             duration: 0.4,
-            envelope: { attack: 0.005, hold: 0.08, decay: 0.18, sustain: 0.06, release: 0.14, sustainLevel: 0.4, curve: 'cosine' },
+            envelope: {
+              attack: 0.005,
+              hold: 0.08,
+              decay: 0.18,
+              sustain: 0.06,
+              release: 0.14,
+              sustainLevel: 0.4,
+              curve: 'cosine',
+            },
             lowpass: {
               cutoff: 600,
               resonance: 2,
               poles: 2,
               type: 'lowpass',
               slide: 1400,
-              envelope: { attack: 0.005, hold: 0, decay: 0.22, sustain: 0, release: 0.12, sustainLevel: 0.2, curve: 'exponential' },
+              envelope: {
+                attack: 0.005,
+                hold: 0,
+                decay: 0.22,
+                sustain: 0,
+                release: 0.12,
+                sustainLevel: 0.2,
+                curve: 'exponential',
+              },
               envAmount: 0.8,
             },
             highpass: { cutoff: 80, poles: 1, type: 'highpass' },
@@ -460,21 +591,37 @@ const specs: SoundSpec[] = [
             slide: -73.42, // → D2
             gain: 0.45,
             duration: 0.25,
-            envelope: { attack: 0.003, hold: 0.02, decay: 0.13, sustain: 0, release: 0.1, sustainLevel: 0.35, curve: 'exponential' },
+            envelope: {
+              attack: 0.003,
+              hold: 0.02,
+              decay: 0.13,
+              sustain: 0,
+              release: 0.1,
+              sustainLevel: 0.35,
+              curve: 'exponential',
+            },
             lowpass: {
               cutoff: 1600,
               resonance: 2,
               poles: 2,
               type: 'lowpass',
               slide: -1100,
-              envelope: { attack: 0.003, hold: 0, decay: 0.15, sustain: 0, release: 0.08, sustainLevel: 0.1, curve: 'exponential' },
+              envelope: {
+                attack: 0.003,
+                hold: 0,
+                decay: 0.15,
+                sustain: 0,
+                release: 0.08,
+                sustainLevel: 0.1,
+                curve: 'exponential',
+              },
               envAmount: 0.6,
             },
             highpass: { cutoff: 100, poles: 1, type: 'highpass' },
           },
         },
-        sub(73.42, 0.22, 0.32),                   // D2 — tok body
-        high(587.33, 0.08, 0.1, -293.66),         // D5 → D4 — metalik çatlama
+        sub(73.42, 0.22, 0.32), // D2 — tok body
+        high(587.33, 0.08, 0.1, -293.66), // D5 → D4 — metalik çatlama
         tail(73.42, 0.3, 0.15),
       ]),
   },
@@ -494,21 +641,37 @@ const specs: SoundSpec[] = [
             slide: -55.0, // → A1
             gain: 0.43,
             duration: 0.22,
-            envelope: { attack: 0.003, hold: 0.02, decay: 0.12, sustain: 0, release: 0.09, sustainLevel: 0.35, curve: 'exponential' },
+            envelope: {
+              attack: 0.003,
+              hold: 0.02,
+              decay: 0.12,
+              sustain: 0,
+              release: 0.09,
+              sustainLevel: 0.35,
+              curve: 'exponential',
+            },
             lowpass: {
               cutoff: 1400,
               resonance: 2,
               poles: 2,
               type: 'lowpass',
               slide: -900,
-              envelope: { attack: 0.003, hold: 0, decay: 0.13, sustain: 0, release: 0.07, sustainLevel: 0.1, curve: 'exponential' },
+              envelope: {
+                attack: 0.003,
+                hold: 0,
+                decay: 0.13,
+                sustain: 0,
+                release: 0.07,
+                sustainLevel: 0.1,
+                curve: 'exponential',
+              },
               envAmount: 0.6,
             },
             highpass: { cutoff: 80, poles: 1, type: 'highpass' },
           },
         },
-        sub(55.0, 0.2, 0.32),                     // A1 — tok body
-        high(440.0, 0.07, 0.1, -220.0),           // A4 → A3 — metalik çatlama
+        sub(55.0, 0.2, 0.32), // A1 — tok body
+        high(440.0, 0.07, 0.1, -220.0), // A4 → A3 — metalik çatlama
         tail(55.0, 0.27, 0.14),
       ]),
   },
@@ -528,14 +691,30 @@ const specs: SoundSpec[] = [
             slide: -110.0, // → A1
             gain: 0.38,
             duration: 2.0,
-            envelope: { attack: 0.08, hold: 0.25, decay: 0.9, sustain: 0.12, release: 1.0, sustainLevel: 0.35, curve: 'cosine' },
+            envelope: {
+              attack: 0.08,
+              hold: 0.25,
+              decay: 0.9,
+              sustain: 0.12,
+              release: 1.0,
+              sustainLevel: 0.35,
+              curve: 'cosine',
+            },
             lowpass: {
               cutoff: 1000,
               resonance: 1.5,
               poles: 2,
               type: 'lowpass',
               slide: -700,
-              envelope: { attack: 0.08, hold: 0, decay: 1.1, sustain: 0, release: 0.8, sustainLevel: 0.1, curve: 'exponential' },
+              envelope: {
+                attack: 0.08,
+                hold: 0,
+                decay: 1.1,
+                sustain: 0,
+                release: 0.8,
+                sustainLevel: 0.1,
+                curve: 'exponential',
+              },
               envAmount: 0.7,
             },
             highpass: { cutoff: 60, poles: 1, type: 'highpass' },
@@ -557,7 +736,15 @@ const specs: SoundSpec[] = [
             frequency: 110.0,
             gain: 0.16,
             duration: 0.35,
-            envelope: { attack: 0.005, hold: 0.02, decay: 0.18, sustain: 0, release: 0.15, sustainLevel: 0.12, curve: 'exponential' },
+            envelope: {
+              attack: 0.005,
+              hold: 0.02,
+              decay: 0.18,
+              sustain: 0,
+              release: 0.15,
+              sustainLevel: 0.12,
+              curve: 'exponential',
+            },
             lowpass: { cutoff: 1500, resonance: 0.5, poles: 2, type: 'lowpass' },
             highpass: { cutoff: 100, poles: 1, type: 'highpass' },
             reverb: { amount: 0.3, decay: 1.2, roomSize: 0.65, damp: 0.55 },
@@ -575,10 +762,10 @@ const specs: SoundSpec[] = [
     render: () =>
       layer(0.12, [
         // Metalik çarpışma — sawtooth, lowpass
-        mid(220.0, 0.08, 0.4, 0, 2200),          // A3 — mid karakter
-        sub(110.0, 0.08, 0.3),                    // A2 — tok body
-        high(880.0, 0.04, 0.12),                  // A5 — metalik ping
-        transient(0.02, 0.15),                    // darbe transient
+        mid(220.0, 0.08, 0.4, 0, 2200), // A3 — mid karakter
+        sub(110.0, 0.08, 0.3), // A2 — tok body
+        high(880.0, 0.04, 0.12), // A5 — metalik ping
+        transient(0.02, 0.15), // darbe transient
       ]),
   },
   {
@@ -587,9 +774,9 @@ const specs: SoundSpec[] = [
     type: 'render',
     render: () =>
       layer(0.11, [
-        mid(233.08, 0.075, 0.38, 0, 2300),       // Bb3 — mid karakter
-        sub(116.54, 0.075, 0.3),                  // Bb2 — tok body
-        high(932.33, 0.035, 0.11),                // Bb5 — metalik ping
+        mid(233.08, 0.075, 0.38, 0, 2300), // Bb3 — mid karakter
+        sub(116.54, 0.075, 0.3), // Bb2 — tok body
+        high(932.33, 0.035, 0.11), // Bb5 — metalik ping
         transient(0.018, 0.14),
       ]),
   },
@@ -609,14 +796,30 @@ const specs: SoundSpec[] = [
             slide: -110.0, // → A2
             gain: 0.38,
             duration: 0.75,
-            envelope: { attack: 0.008, hold: 0.04, decay: 0.35, sustain: 0.1, release: 0.4, sustainLevel: 0.3, curve: 'exponential' },
+            envelope: {
+              attack: 0.008,
+              hold: 0.04,
+              decay: 0.35,
+              sustain: 0.1,
+              release: 0.4,
+              sustainLevel: 0.3,
+              curve: 'exponential',
+            },
             lowpass: {
               cutoff: 1800,
               resonance: 2,
               poles: 2,
               type: 'lowpass',
               slide: -1300,
-              envelope: { attack: 0.008, hold: 0, decay: 0.45, sustain: 0, release: 0.3, sustainLevel: 0.1, curve: 'exponential' },
+              envelope: {
+                attack: 0.008,
+                hold: 0,
+                decay: 0.45,
+                sustain: 0,
+                release: 0.3,
+                sustainLevel: 0.1,
+                curve: 'exponential',
+              },
               envAmount: 0.7,
             },
             highpass: { cutoff: 100, poles: 1, type: 'highpass' },
@@ -638,7 +841,15 @@ const specs: SoundSpec[] = [
             frequency: 220.0,
             gain: 0.14,
             duration: 0.18,
-            envelope: { attack: 0.005, hold: 0.015, decay: 0.1, sustain: 0, release: 0.07, sustainLevel: 0.12, curve: 'exponential' },
+            envelope: {
+              attack: 0.005,
+              hold: 0.015,
+              decay: 0.1,
+              sustain: 0,
+              release: 0.07,
+              sustainLevel: 0.12,
+              curve: 'exponential',
+            },
             lowpass: { cutoff: 1800, resonance: 0.5, poles: 2, type: 'lowpass' },
             highpass: { cutoff: 150, poles: 1, type: 'highpass' },
           },
@@ -661,14 +872,30 @@ const specs: SoundSpec[] = [
             slide: -87.31, // → F2
             gain: 0.36,
             duration: 0.7,
-            envelope: { attack: 0.008, hold: 0.04, decay: 0.32, sustain: 0.1, release: 0.35, sustainLevel: 0.3, curve: 'exponential' },
+            envelope: {
+              attack: 0.008,
+              hold: 0.04,
+              decay: 0.32,
+              sustain: 0.1,
+              release: 0.35,
+              sustainLevel: 0.3,
+              curve: 'exponential',
+            },
             lowpass: {
               cutoff: 1600,
               resonance: 2,
               poles: 2,
               type: 'lowpass',
               slide: -1100,
-              envelope: { attack: 0.008, hold: 0, decay: 0.4, sustain: 0, release: 0.25, sustainLevel: 0.1, curve: 'exponential' },
+              envelope: {
+                attack: 0.008,
+                hold: 0,
+                decay: 0.4,
+                sustain: 0,
+                release: 0.25,
+                sustainLevel: 0.1,
+                curve: 'exponential',
+              },
               envAmount: 0.7,
             },
             highpass: { cutoff: 90, poles: 1, type: 'highpass' },
@@ -690,7 +917,15 @@ const specs: SoundSpec[] = [
             frequency: 174.61,
             gain: 0.13,
             duration: 0.15,
-            envelope: { attack: 0.005, hold: 0.012, decay: 0.08, sustain: 0, release: 0.06, sustainLevel: 0.12, curve: 'exponential' },
+            envelope: {
+              attack: 0.005,
+              hold: 0.012,
+              decay: 0.08,
+              sustain: 0,
+              release: 0.06,
+              sustainLevel: 0.12,
+              curve: 'exponential',
+            },
             lowpass: { cutoff: 1600, resonance: 0.5, poles: 2, type: 'lowpass' },
             highpass: { cutoff: 130, poles: 1, type: 'highpass' },
           },
@@ -713,13 +948,21 @@ const specs: SoundSpec[] = [
             slide: 110.0, // → A4
             gain: 0.4,
             duration: 0.12,
-            envelope: { attack: 0.002, hold: 0.008, decay: 0.06, sustain: 0, release: 0.05, sustainLevel: 0.25, curve: 'exponential' },
+            envelope: {
+              attack: 0.002,
+              hold: 0.008,
+              decay: 0.06,
+              sustain: 0,
+              release: 0.05,
+              sustainLevel: 0.25,
+              curve: 'exponential',
+            },
             lowpass: { cutoff: 2600, resonance: 2, poles: 2, type: 'lowpass' },
             highpass: { cutoff: 350, poles: 1, type: 'highpass' },
           },
         },
-        sub(110.0, 0.1, 0.3, 55.0),               // A2 → A3 — tok body
-        high(880.0, 0.07, 0.13, 440.0),           // A5 → A6 — metalik ping
+        sub(110.0, 0.1, 0.3, 55.0), // A2 → A3 — tok body
+        high(880.0, 0.07, 0.13, 440.0), // A5 → A6 — metalik ping
         { ...tail(220.0, 0.18, 0.13), offset: 0.02 },
       ]),
   },

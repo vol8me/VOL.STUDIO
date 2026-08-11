@@ -67,18 +67,28 @@ export class SquareJoystick {
     this.boundPointerMove = (event) => this.onPointerMove(event);
     this.boundPointerUp = (event) => this.onPointerUp(event);
 
+    // Global dinleyiciler yalnizca surukleme suresince bagli tutulur. Constructor'da
+    // baglamak, hic dokunulmayan bir joystick icin bile sayfadaki her pointermove'u
+    // handler'a sokardi (bkz. RadialMenu/Kanban ayni deseni kullanir).
     this.base.addEventListener('pointerdown', this.boundPointerDown);
+  }
+
+  destroy(): void {
+    this.base.removeEventListener('pointerdown', this.boundPointerDown);
+    this.detachDragListeners();
+    this.element.remove();
+  }
+
+  private attachDragListeners(): void {
     window.addEventListener('pointermove', this.boundPointerMove);
     window.addEventListener('pointerup', this.boundPointerUp);
     window.addEventListener('pointercancel', this.boundPointerUp);
   }
 
-  destroy(): void {
-    this.base.removeEventListener('pointerdown', this.boundPointerDown);
+  private detachDragListeners(): void {
     window.removeEventListener('pointermove', this.boundPointerMove);
     window.removeEventListener('pointerup', this.boundPointerUp);
     window.removeEventListener('pointercancel', this.boundPointerUp);
-    this.element.remove();
   }
 
   private onPointerDown(event: PointerEvent): void {
@@ -86,6 +96,7 @@ export class SquareJoystick {
       return;
     }
     this.activePointerId = event.pointerId;
+    this.attachDragListeners();
     const rect = this.base.getBoundingClientRect();
     this.originX = rect.left + rect.width / 2;
     this.originY = rect.top + rect.height / 2;
@@ -105,6 +116,7 @@ export class SquareJoystick {
       return;
     }
     this.activePointerId = null;
+    this.detachDragListeners();
     this.base.classList.remove('vol-square-joystick__base--active');
     this.thumb.style.transform = 'translate(-50%, -50%)';
     this.onReleaseHandler?.();

@@ -1,5 +1,10 @@
 import type { Enemy } from '@/runtime/entity/Enemy';
 
+/** Negatif hucre indekslerini pozitife tasiyan offset. */
+const CELL_OFFSET = 1_000_000;
+/** Anahtar adimi — offset'in iki kati olmali ki cy terimi cx hanesine tasmasin. */
+const CELL_STRIDE = CELL_OFFSET * 2;
+
 /**
  * Hücre bazlı spatial partitioning — çarpışma kontrolünü O(N·M)'den O(N·k)'ya düşürür.
  * Her frame'de clear + rebuild, sonra komşu hücreleri sorgula.
@@ -14,10 +19,17 @@ export class SpatialGrid {
     this.cellSize = cellSize;
   }
 
-  /** Numeric key — string allocation yok. cx/cy negatif olabilir, offset gerekir.
-   * Base 1_000_000 yeterince büyük; oyun alanı sınırlı olduğu için çakışma yok. */
+  /**
+   * Numeric key — string allocation yok. cx/cy negatif olabildigi icin offset
+   * eklenir; carpan offset'in IKI KATI olmak zorunda.
+   *
+   * Onceki hali `(cx + OFFSET) * OFFSET + (cy + OFFSET)` idi: cy >= 0 iken
+   * ikinci terim OFFSET'i asip cx hanesine tasiyordu, yani
+   * `key(cx, cy) === key(cx + 1, cy - OFFSET)`. Oyun alani sinirli oldugu icin
+   * pratikte ulasilmazdi ama formul yanlisti.
+   */
   private key(cx: number, cy: number): number {
-    return (cx + 1_000_000) * 1_000_000 + (cy + 1_000_000);
+    return (cx + CELL_OFFSET) * CELL_STRIDE + (cy + CELL_OFFSET);
   }
 
   /** Hücre dizilerini yeniden tahsis etmeden temizler; sonraki insertAll eski dizileri kullanır. */

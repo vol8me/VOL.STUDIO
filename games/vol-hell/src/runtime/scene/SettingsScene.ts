@@ -10,7 +10,14 @@ import {
   i18n,
   i18next,
 } from '@volstudio/core';
-import { audioSettings, gameAudio } from '@/app/bootstrap';
+import { audioSettings, gameAudio } from '@/app/services';
+import { sfxVolumes } from '@/config';
+
+/** Dil kodu -> kullaniciya gosterilen ad. Bilinmeyen kod buyuk harfe duser. */
+const LOCALE_LABELS: Record<string, string> = {
+  tr: 'Türkçe',
+  en: 'English',
+};
 
 export class SettingsScene extends Phaser.Scene {
   private ui!: UIRoot;
@@ -23,6 +30,7 @@ export class SettingsScene extends Phaser.Scene {
   private masterSlider!: Slider;
   private sfxSlider!: Slider;
   private musicSlider!: Slider;
+  private ambientSlider!: Slider;
   private shakeCheckbox!: Checkbox;
   private shakeSlider!: Slider;
   private muteCheckbox!: Checkbox;
@@ -45,17 +53,19 @@ export class SettingsScene extends Phaser.Scene {
 
     this.backButton = new Button(i18next.t('volhell:settings.back'), {
       onClick: () => {
-        void gameAudio.playSfx('back', { volume: 0.5 });
+        void gameAudio.playSfx('back', { volume: sfxVolumes.back });
         this.scene.start('MainMenu');
       },
     });
 
     const currentLocale = i18n.getLocale();
+    // Secenekler i18n'in kayitli dillerinden turetilir; hardcode liste ucuncu
+    // bir dil eklendiginde Select'i bos degere dusururdu.
     this.languageSelect = new Select({
-      options: [
-        { value: 'tr', label: 'Türkçe' },
-        { value: 'en', label: 'English' },
-      ],
+      options: i18n.getLocales().map((locale) => ({
+        value: locale,
+        label: LOCALE_LABELS[locale] ?? locale.toUpperCase(),
+      })),
       value: currentLocale,
       onChange: (value) => {
         void this.changeLanguage(value);
@@ -74,7 +84,7 @@ export class SettingsScene extends Phaser.Scene {
       label: i18next.t('volhell:settings.master'),
       onChange: (value) => {
         void audioSettings.setMasterVolume(value);
-        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+        void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
       },
     });
 
@@ -86,7 +96,7 @@ export class SettingsScene extends Phaser.Scene {
       label: i18next.t('volhell:settings.sfx'),
       onChange: (value) => {
         void audioSettings.setSfxVolume(value);
-        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+        void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
       },
     });
 
@@ -98,7 +108,7 @@ export class SettingsScene extends Phaser.Scene {
       label: i18next.t('volhell:settings.music'),
       onChange: (value) => {
         void audioSettings.setMusicVolume(value);
-        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+        void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
       },
     });
 
@@ -107,7 +117,7 @@ export class SettingsScene extends Phaser.Scene {
       label: i18next.t('volhell:settings.shake'),
       onChange: (checked) => {
         void audioSettings.setScreenShakeEnabled(checked);
-        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+        void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
       },
     });
 
@@ -119,7 +129,19 @@ export class SettingsScene extends Phaser.Scene {
       label: i18next.t('volhell:settings.shakeIntensity'),
       onChange: (value) => {
         void audioSettings.setScreenShakeIntensity(value);
-        void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+        void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
+      },
+    });
+
+    this.ambientSlider = new Slider({
+      min: 0,
+      max: 1,
+      step: 0.05,
+      value: audioSettings.getAmbientVolume(),
+      label: i18next.t('volhell:settings.ambient'),
+      onChange: (value) => {
+        void audioSettings.setAmbientVolume(value);
+        void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
       },
     });
 
@@ -129,7 +151,7 @@ export class SettingsScene extends Phaser.Scene {
       onChange: (checked) => {
         void audioSettings.setMuted(checked);
         if (!checked) {
-          void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+          void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
         }
       },
     });
@@ -142,6 +164,7 @@ export class SettingsScene extends Phaser.Scene {
       .add(this.masterSlider)
       .add(this.sfxSlider)
       .add(this.musicSlider)
+      .add(this.ambientSlider)
       .add(this.shakeCheckbox)
       .add(this.shakeSlider)
       .add(this.muteCheckbox)
@@ -163,6 +186,7 @@ export class SettingsScene extends Phaser.Scene {
     this.masterSlider.setLabel(i18next.t('volhell:settings.master'));
     this.sfxSlider.setLabel(i18next.t('volhell:settings.sfx'));
     this.musicSlider.setLabel(i18next.t('volhell:settings.music'));
+    this.ambientSlider.setLabel(i18next.t('volhell:settings.ambient'));
     this.shakeCheckbox.setLabel(i18next.t('volhell:settings.shake'));
     this.shakeSlider.setLabel(i18next.t('volhell:settings.shakeIntensity'));
     this.muteCheckbox.setLabel(i18next.t('volhell:settings.mute'));
@@ -183,6 +207,7 @@ export class SettingsScene extends Phaser.Scene {
     this.masterSlider.destroy();
     this.sfxSlider.destroy();
     this.musicSlider.destroy();
+    this.ambientSlider.destroy();
     this.shakeCheckbox.destroy();
     this.shakeSlider.destroy();
     this.muteCheckbox.destroy();

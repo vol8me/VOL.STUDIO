@@ -123,11 +123,23 @@ export class Slider {
     return Number(this.input.value);
   }
 
+  /**
+   * Degeri programatik olarak ayarlar. `onChange` TETIKLENMEZ — kullanici
+   * etkilesimi ile kod kaynakli degisikligi ayirmak, `onChange -> state ->
+   * setValue -> onChange` geri besleme dongusunu bastan imkansiz kilar.
+   * Bildirim gerekiyorsa `setValueAndNotify()` kullan.
+   */
   setValue(value: number): void {
     const clamped = this.clamp(value);
     this.input.value = String(clamped);
-    this.render(clamped);
-    this.onChangeHandler?.(clamped);
+    // Native input step'e yuvarlayabilir; gorunen deger her zaman gercek degerdir.
+    this.render(this.getValue());
+  }
+
+  /** Degeri ayarlar ve `onChange`'i tetikler — kullanici etkilesimini taklit eder. */
+  setValueAndNotify(value: number): void {
+    this.setValue(value);
+    this.onChangeHandler?.(this.getValue());
   }
 
   setDisabled(disabled: boolean): void {

@@ -31,7 +31,8 @@
     "shake": "Screen Shake",
     "shakeIntensity": "Shake Intensity",
     "mute": "Mute",
-    "back": "BACK"
+    "back": "BACK",
+    "ambient": "Ambience"
   },
   "pause": {
     "title": "PAUSED",
