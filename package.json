@@ -21,6 +21,7 @@
     "format:check": "prettier --check \"**/*.{ts,css,json,md}\"",
     "gen:theme": "node core/scripts/gen-theme.mjs",
     "convert:ios": "tsx core/scripts/convert-audio.ts games/vol-hell/public/assets/audio",
+    "audio:qa": "tsx core/scripts/audio-qa.ts games/vol-hell/audio-src",
     "test:coverage": "pnpm -r --if-present test:coverage"
   },
   "devDependencies": {

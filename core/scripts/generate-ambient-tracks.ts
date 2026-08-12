@@ -1,35 +1,56 @@
 /**
- * Vol-Hell ambiyans track'leri — 3 sade track.
+ * Oyun içi ambiyans + ölüm parçaları — Mindustry karakteri.
  *
- * Mevcut ambiyans çok gürültülü — oyun seslerini batırıyor.
- * Yeni yaklaşım: sade, atmosferik, oyun seslerine yer açan.
+ * Üç parça: `void-whisper` (düşman az), `iron-tide` (düşman çok),
+ * `last-ember` (ölüm ekranı).
  *
- * 1. Calm (düşman az/yok) — drone + pad + çok hafif pluck arpej
- * 2. Tense (düşman çok) — karanlık drone + pluck riff + hafif perküsyon
- * 3. Death (ölüm) — inen piyano, dramatik
+ * ## Spektral tasarım kararı
  *
- * Tonalite: D minor — combat track ile uyumlu.
+ * Ambiyans parçaları SFX'lerin ALTINDA çalar. SFX enerjisi ağırlıklı olarak
+ * 200-3000 Hz bandında. Bu yüzden ambiyansta orta bant kasıtlı olarak
+ * boşaltıldı: gövde alt bantta (<150 Hz), doku üst bantta (>5 kHz) taşınıyor.
+ * Böylece müzik mekân hissi verirken ateş/hasar/vuruş seslerini maskelemiyor.
+ * Menü temalarında böyle bir kısıt yok — orada SFX yalnızca UI blip'i.
  *
- * Kullanım: tsx scripts/generate-ambient-tracks.ts <src-dir> <public-dir>
+ * ## Crossfade uyumu
+ *
+ * `void-whisper` ve `iron-tide` oyun içinde düşman sayısına göre birbirine
+ * crossfade ediliyor (bkz. `games/vol-hell/src/config/music.ts`). İkisi de
+ * AYNI tempo ve AYNI uzunlukta üretilir; farklı tempoda olsalar geçiş
+ * ritmik olarak çakışırdı.
  */
 
 import { existsSync, mkdirSync } from 'node:fs';
-import { resolve, join } from 'node:path';
-import { synth } from '../src/audio/synth/engine';
-import { pluck } from '../src/audio/synth/physical';
-import { writeWav, writeOgg } from '../src/audio/synth/writer';
+import { join, resolve } from 'node:path';
 import type { SynthesisResult } from '../src/audio/synth/types';
 import {
-  SAMPLE_RATE,
-  FIFTH,
-  MINOR_3,
+  createMix,
+  createBeatClock,
+  addVoice,
+  applyEdgeGuard,
+  fadeRange,
+  masterChain,
+  chordFreqs,
+  chordAtBeat,
+  transpose,
   type ChordDef,
-  emptyBuffer,
-  toStereo,
-  addToStereo,
-  createBeatUtils,
-  masterMix,
-} from './music-utils';
+} from './audio-mix';
+import {
+  reactorHum,
+  subThrob,
+  atmosphereBed,
+  coldPad,
+  airDraft,
+  deepImpact,
+  metalClank,
+  machineTick,
+  pressureHiss,
+  conveyorRattle,
+  signalTone,
+  glassPing,
+  filteredPulse,
+} from './industrial-voices';
+import { writeWav, writeOgg } from '../src/audio/synth/writer';
 
 // --- CLI ---
 
@@ -41,401 +62,257 @@ if (!srcDirArg || !publicDirArg) {
 }
 const srcDir = resolve(srcDirArg);
 const publicDir = resolve(publicDirArg);
-if (!existsSync(srcDir)) mkdirSync(srcDir, { recursive: true });
-if (!existsSync(publicDir)) mkdirSync(publicDir, { recursive: true });
 
-// --- Sabitler ---
+// --- Ortak zaman ---
+// void-whisper ve iron-tide crossfade ile geçtiği için tempo/uzunluk aynı.
 
-const BPM = 72;
-const BEAT = 60 / BPM;
-const TAIL = 5;
-const LOOP_BEATS = 64;
-const LOOP_DURATION = LOOP_BEATS * BEAT;
-const FILE_DURATION = LOOP_DURATION + TAIL;
+const AMBIENT_BPM = 68;
+const AMBIENT_BEATS = 64;
+const ambientClock = createBeatClock(AMBIENT_BPM);
+const AMBIENT_DURATION = AMBIENT_BEATS * ambientClock.beatDuration;
 
-const { beatToSample, applyFades } = createBeatUtils(BEAT);
-
-// --- D minor paleti ---
+// --- Perde paleti (D kökü — menü temalarından bağımsız, oyun içi kimlik) ---
 
 const D1 = 36.71;
 const D2 = 73.42;
 const A2 = 110.0;
 const D3 = 146.83;
 const F3 = 174.61;
-const G3 = 196.0;
 const A3 = 220.0;
-const Bb3 = 233.08;
-const C4 = 261.63;
-const D4 = 293.66;
-const E4 = 329.63;
-const F4 = 349.23;
-const G4 = 392.0;
-const A4 = 440.0;
-const Bb4 = 466.16;
-const C5 = 523.25;
-const D5 = 587.33;
+const G2 = 98.0;
+const C3 = 130.81;
 
-// --- Akor ilerlemesi: Dm - Bb - F - C (i - VI - III - VII)
-//     4 akor × 8 beat = 32 beat, 2 tekrar = 64 beat
+/**
+ * void-whisper — düşman az/yok. Boşluk ve tekinsiz sakinlik.
+ *
+ * Neredeyse hiç olay yok: iki uzun akor, gürültü zemini, çok seyrek vurgu.
+ * Oyuncunun dikkatini çekmemesi gerekiyor — fark edilirse başarısız.
+ */
+function renderVoidWhisper(): SynthesisResult {
+  const clock = ambientClock;
+  const mix = createMix(AMBIENT_DURATION);
 
-const CHORDS: ChordDef[] = [
-  { root: D4, type: 'minor' }, // Dm
-  { root: Bb3, type: 'major' }, // Bb
-  { root: F3, type: 'major' }, // F
-  { root: C4, type: 'major' }, // C
-];
-
-// --- Enstrümanlar ---
-
-/** Çok derin sub-bass drone — neredeyse hissedilir, duyulmaz.
- *  Oyun seslerine hiç karışmaz. Atmosferik zemin.
- *  LFO yok — sabit, yorucu olmayan, kulak yormaz. */
-function deepDrone(freq: number, duration: number, gain = 0.18): SynthesisResult {
-  return synth(duration, {
-    sampleRate: SAMPLE_RATE,
-    wave: 'sine',
-    frequency: freq,
-    detune: 2,
-    envelope: {
-      attack: 4,
-      hold: 0,
-      decay: 0,
-      sustain: Math.max(0, duration - 8),
-      release: 4,
-      sustainLevel: 0.9,
-      curve: 'cosine',
-    },
-    lowpass: { cutoff: 150, resonance: 0, poles: 1, type: 'lowpass' },
-    gain,
-  });
-}
-
-/** Hafif pad — sawtooth, çok dar lowpass, az gain.
- *  Sadece harmonik zemin — melodi değil, ritim değil. */
-function ambientPad(freq: number, duration: number, gain = 0.08): SynthesisResult {
-  return synth(duration, {
-    sampleRate: SAMPLE_RATE,
-    wave: 'sawtooth',
-    frequency: freq,
-    detune: 8,
-    envelope: {
-      attack: 3,
-      hold: 0,
-      decay: 0,
-      sustain: duration - 6,
-      release: 3,
-      sustainLevel: 0.7,
-      curve: 'cosine',
-    },
-    lowpass: { cutoff: 400, resonance: 0, poles: 2, type: 'lowpass' },
-    chorus: { depth: 3, rate: 0.15, mix: 0.25 },
-    stereoWidth: { width: 0.8 },
-    reverb: { amount: 0.3, decay: 5, roomSize: 0.85, damp: 0.6 },
-    gain,
-  });
-}
-
-/** Physical pluck — kısa, sade, uzak.
- *  Calm'de çok uzun aralıklarla (her 8 beat'te bir nota).
- *  Tense'de daha sık ve karanlık. */
-function ambientPluck(freq: number, duration: number, velocity = 1): SynthesisResult {
-  return pluck({
-    frequency: freq,
-    duration,
-    sampleRate: SAMPLE_RATE,
-    decay: 0.992,
-    excitationMix: 0.4,
-    excitationHarmonics: 3,
-    stereoWidth: 0.3,
-    gain: 0.2 * velocity,
-    bodyResonance: freq * 2,
-    bodyAmount: 0.15,
-  });
-}
-
-/** Tense drone — daha karanlık, hafif dissonans.
- *  İki yakın frekanslı sine — beating efekti ile gerilim.
- *  LFO çok hafif — calm ile uyumlu, geçiş pürüzsüz. */
-function tenseDrone(freq: number, duration: number, gain = 0.2): SynthesisResult {
-  return synth(duration, {
-    sampleRate: SAMPLE_RATE,
-    wave: 'sine',
-    frequency: freq,
-    detune: 15, // beating için yeterli
-    envelope: {
-      attack: 3,
-      hold: 0,
-      decay: 0,
-      sustain: Math.max(0, duration - 7),
-      release: 4,
-      sustainLevel: 0.85,
-      curve: 'cosine',
-    },
-    lowpass: { cutoff: 300, resonance: 0, poles: 2, type: 'lowpass' },
-    lfos: [{ target: 'amplitude', rate: 0.08, depth: 0.08, wave: 'sine' }],
-    stereoWidth: { width: 0.6 },
-    reverb: { amount: 0.25, decay: 4, roomSize: 0.7, damp: 0.5 },
-    gain,
-  });
-}
-
-/** Tense pad — daha agresif, daha parlak.
- *  Calm pad'den farklı — cutoff daha yüksek, gain daha fazla. */
-function tensePad(freq: number, duration: number, gain = 0.12): SynthesisResult {
-  return synth(duration, {
-    sampleRate: SAMPLE_RATE,
-    wave: 'sawtooth',
-    frequency: freq,
-    detune: 12,
-    envelope: {
-      attack: 2,
-      hold: 0,
-      decay: 0,
-      sustain: duration - 5,
-      release: 3,
-      sustainLevel: 0.75,
-      curve: 'cosine',
-    },
-    lowpass: { cutoff: 600, resonance: 0, poles: 2, type: 'lowpass' },
-    lfos: [{ target: 'filter', rate: 0.1, depth: 100, wave: 'sine' }],
-    chorus: { depth: 4, rate: 0.2, mix: 0.3 },
-    stereoWidth: { width: 0.9 },
-    reverb: { amount: 0.3, decay: 4, roomSize: 0.8, damp: 0.45 },
-    gain,
-  });
-}
-
-/** Hafif perküsyon — tense'de sadece.
- *  Çok düşük gain, uzak hissi — kick her 4 beat, hiç snare yok. */
-function softKick(freq: number, duration: number): SynthesisResult {
-  return synth(duration, {
-    sampleRate: SAMPLE_RATE,
-    wave: 'sine',
-    frequency: freq,
-    slide: -freq * 0.6,
-    slideCurve: 'exponential',
-    envelope: {
-      attack: 0.005,
-      hold: 0.01,
-      decay: 0.25,
-      sustain: 0,
-      release: 0.05,
-      sustainLevel: 0,
-      curve: 'exponential',
-    },
-    lowpass: { cutoff: 400, resonance: 0, poles: 1, type: 'lowpass' },
-    reverb: { amount: 0.2, decay: 1, roomSize: 0.6, damp: 0.7 },
-    gain: 0.2,
-  });
-}
-
-/** Piyano notası — death track için.
- *  FM ile piyano benzeri timbre — sine taşıyıcı + sine modülatör.
- *  Yumuşak atak — FM index düşük, attack yavaş. Sert vuruş yok. */
-function pianoNote(freq: number, duration: number, velocity = 1): SynthesisResult {
-  return synth(duration + 0.5, {
-    sampleRate: SAMPLE_RATE,
-    wave: 'sine',
-    frequency: freq,
-    detune: 2,
-    fm: {
-      modulatorWave: 'sine',
-      ratio: 2,
-      index: 0.8 * velocity,
-      modulatorEnvelope: {
-        attack: 0.02,
-        hold: 0,
-        decay: 0.4,
-        sustain: 0,
-        release: 0.3,
-        sustainLevel: 0,
-        curve: 'exponential',
-      },
-    },
-    envelope: {
-      attack: 0.03,
-      hold: 0,
-      decay: 0.5,
-      sustain: 0.2,
-      release: 1.5,
-      sustainLevel: 0.15,
-      curve: 'exponential',
-    },
-    lowpass: { cutoff: 2500, resonance: 0, poles: 1, type: 'lowpass' },
-    stereoWidth: { width: 0.5 },
-    reverb: { amount: 0.35, decay: 4, roomSize: 0.85, damp: 0.4 },
-    gain: 0.4 * velocity,
-  });
-}
-
-// ============================================================
-// TRACK 1: CALM (düşman az/yok)
-// Sade — drone + pad + çok hafif pluck arpej
-// Oyun seslerini batırmayan, atmosferik
-// ============================================================
-
-function renderCalmAmbient(): SynthesisResult {
-  const left = emptyBuffer(FILE_DURATION);
-  const right = emptyBuffer(FILE_DURATION);
-
-  // Deep drone — D1, çok derin, neredeyse hissedilir
-  // Tense ile aynı base — geçiş uyumu için
-  addToStereo(left, right, deepDrone(D1, FILE_DURATION, 0.15), 0);
-
-  // Ambient pad — akor başına 8 beat, daha düşük gain (yorucu değil)
-  for (let repeat = 0; repeat < 2; repeat++) {
-    for (let i = 0; i < CHORDS.length; i++) {
-      const beat = repeat * 32 + i * 8;
-      const chord = CHORDS[i]!;
-      const root = chord.root / 2; // bir oktav aşağı — sıcak
-      const fifth = root * FIFTH;
-      const chordDur = 8 * BEAT + 2;
-      const offset = beatToSample(beat);
-
-      addToStereo(left, right, ambientPad(root, chordDur, 0.06), offset);
-      addToStereo(left, right, ambientPad(fifth, chordDur, 0.04), offset);
-    }
-  }
-
-  // Çok hafif pluck arpej — her 8 beat'te bir nota, uzak ve sade
-  // Sadece 2. tekrarda (beat 32+) — ilk 32 beat tamamen sade
-  // Tense ile aynı notalar başlar — geçiş doğal
-  const calmArp = [
-    { freq: D4, beat: 32 },
-    { freq: F4, beat: 40 },
-    { freq: A4, beat: 48 },
-    { freq: F4, beat: 56 },
+  const CHORDS: ChordDef[] = [
+    { root: D2, type: 'fifth' },
+    { root: G2, type: 'sus2' },
   ];
-  for (const note of calmArp) {
-    const offset = beatToSample(note.beat);
-    if (offset >= left.length) break;
-    addToStereo(left, right, ambientPluck(note.freq, BEAT * 3, 0.35), offset);
+  const CHORD_BEATS = 32;
+
+  // Alt bant gövde — SFX ile çakışmayan bölge.
+  addVoice(mix, subThrob(D1, AMBIENT_DURATION, 0.24, 0, 401), 0);
+  addVoice(mix, reactorHum(D2, AMBIENT_DURATION, 0.09, -0.3, 402), 0);
+
+  // Atmosfer: orta bant kısık, hava yüksek. `brightness` yüksek ama `level`
+  // düşük — doku var, kalabalık yok.
+  for (const voice of atmosphereBed(AMBIENT_DURATION, {
+    level: 0.7,
+    brightness: 1.6,
+    seedBase: 404,
+    spread: 0.5,
+  })) {
+    addVoice(mix, voice, 0);
+  }
+  addVoice(mix, airDraft(AMBIENT_DURATION, 0.09, 0.45, 410), 0);
+  addVoice(mix, airDraft(AMBIENT_DURATION, 0.07, -0.48, 411), 0);
+
+  // Pad: kısık ve geniş. Orta bandı doldurmaması için gain düşük.
+  for (let beat = 0; beat < AMBIENT_BEATS; beat += CHORD_BEATS) {
+    const chord = CHORDS[(beat / CHORD_BEATS) % CHORDS.length]!;
+    const padDuration = CHORD_BEATS * clock.beatDuration + 3.5;
+    const offset = clock.toSample(beat);
+    chordFreqs(chord).forEach((freq, i) => {
+      addVoice(
+        mix,
+        coldPad(freq, padDuration, i === 0 ? 0.075 : 0.05, i === 0 ? -0.3 : 0.38, 420 + beat + i),
+        offset,
+      );
+    });
   }
 
-  applyFades(left, right, 0, 8, 56, 64);
-  const [mL, mR] = masterMix(left, right);
-  return toStereo(mL, mR, FILE_DURATION);
+  // Çok seyrek olaylar: düzensiz aralıklarla iki ping, bir basınç.
+  addVoice(mix, glassPing(transpose(D3, 7), 0.07, 0.45, 430), clock.toSample(13));
+  addVoice(mix, glassPing(A3, 0.055, -0.42, 431), clock.toSample(43));
+  addVoice(mix, pressureHiss(0.07, -0.4, 432, 5200), clock.toSample(27));
+  addVoice(mix, deepImpact(D1 * 1.4, 0.16, 0, 433), clock.toSample(0));
+
+  applyEdgeGuard(mix, 16);
+  // En kısık parça: oyun sesleri her zaman üstte kalmalı.
+  return masterChain(mix, { targetRmsDb: -22, peakCeiling: 0.9, drive: 1.0 });
 }
 
-// ============================================================
-// TRACK 2: TENSE (düşman çok)
-// Karanlık drone + pluck riff + hafif perküsyon
-// Combat'tan farklı — ritmik değil, gerilimli
-// ============================================================
+/**
+ * iron-tide — düşman çok. Baskı ve tehdit.
+ *
+ * void-whisper'ın üzerine ritmik nabız, artan uğultu ve mekanik grid ekler.
+ * Combat müziği değil: hâlâ ambiyans, ama tedirgin ve ilerleyen.
+ * Orta bant kısıtı burada da geçerli — SFX yoğunluğu bu parçada en yüksek.
+ */
+function renderIronTide(): SynthesisResult {
+  const clock = ambientClock;
+  const mix = createMix(AMBIENT_DURATION);
 
-function renderTenseAmbient(): SynthesisResult {
-  const left = emptyBuffer(FILE_DURATION);
-  const right = emptyBuffer(FILE_DURATION);
-
-  // Base drone — calm ile aynı D1 deepDrone — geçiş pürüzsüz
-  addToStereo(left, right, deepDrone(D1, FILE_DURATION, 0.15), 0);
-  // Tense katman — A2 üstüne beating efekti ile gerilim
-  addToStereo(left, right, tenseDrone(A2, FILE_DURATION, 0.1), 0);
-
-  // Tense pad — akor başına 8 beat
-  for (let repeat = 0; repeat < 2; repeat++) {
-    for (let i = 0; i < CHORDS.length; i++) {
-      const beat = repeat * 32 + i * 8;
-      const chord = CHORDS[i]!;
-      const root = chord.root / 2;
-      const third = root * MINOR_3; // hep minor third — karanlık
-      const chordDur = 8 * BEAT + 2;
-      const offset = beatToSample(beat);
-
-      addToStereo(left, right, tensePad(root, chordDur, 0.09), offset);
-      addToStereo(left, right, tensePad(third, chordDur, 0.06), offset);
-    }
-  }
-
-  // Pluck riff — her 4 beat'te bir nota, karanlık arpej
-  // Calm ile aynı notalardan başlar — geçiş doğal
-  const tenseArp = [
-    // 1. tekrar (beat 0-32) — calm'in 2. yarısı ile aynı notalar
-    { freq: D4, beat: 0 },
-    { freq: F4, beat: 4 },
-    { freq: A4, beat: 8 },
-    { freq: F4, beat: 12 },
-    { freq: D4, beat: 16 },
-    { freq: F4, beat: 20 },
-    { freq: A4, beat: 24 },
-    { freq: F4, beat: 28 },
-    // 2. tekrar (beat 32-64) — daha hareketli
-    { freq: A4, beat: 32 },
-    { freq: D5, beat: 36 },
-    { freq: C5, beat: 40 },
-    { freq: A4, beat: 44 },
-    { freq: G4, beat: 48 },
-    { freq: F4, beat: 52 },
-    { freq: E4, beat: 56 },
-    { freq: D4, beat: 60 },
+  const CHORDS: ChordDef[] = [
+    { root: D2, type: 'minor' },
+    { root: C3, type: 'fifth' },
+    { root: D2, type: 'sus4' },
+    { root: A2, type: 'fifth' },
   ];
-  for (const note of tenseArp) {
-    const offset = beatToSample(note.beat);
-    if (offset >= left.length) break;
-    addToStereo(left, right, ambientPluck(note.freq, BEAT * 2.5, 0.6), offset);
+  const CHORD_BEATS = 16;
+
+  // Gövde: void-whisper'dan güçlü. Tehdit ağırlıkla anlatılır.
+  addVoice(mix, subThrob(D1, AMBIENT_DURATION, 0.3, 0, 501), 0);
+  addVoice(mix, reactorHum(D2, AMBIENT_DURATION, 0.16, -0.28, 502), 0);
+  addVoice(mix, reactorHum(A2, AMBIENT_DURATION, 0.09, 0.32, 503), 0);
+
+  for (const voice of atmosphereBed(AMBIENT_DURATION, {
+    level: 0.8,
+    brightness: 1.45,
+    seedBase: 504,
+    spread: 0.45,
+  })) {
+    addVoice(mix, voice, 0);
   }
 
-  // Hafif kick — her 4 beat, çok düşük gain
-  for (let b = 0; b < LOOP_BEATS; b += 4) {
-    const offset = beatToSample(b);
-    if (offset >= left.length) break;
-    addToStereo(left, right, softKick(45, BEAT), offset);
+  for (let beat = 0; beat < AMBIENT_BEATS; beat += CHORD_BEATS) {
+    const chord = chordAtBeat(CHORDS, beat, CHORD_BEATS);
+    const padDuration = CHORD_BEATS * clock.beatDuration + 2.5;
+    const offset = clock.toSample(beat);
+    chordFreqs(chord).forEach((freq, i) => {
+      addVoice(
+        mix,
+        coldPad(
+          freq,
+          padDuration,
+          i === 0 ? 0.085 : 0.055,
+          i === 0 ? 0 : i === 1 ? -0.4 : 0.4,
+          520 + beat + i,
+        ),
+        offset,
+      );
+    });
   }
 
-  applyFades(left, right, 0, 4, 58, 64);
-  const [mL, mR] = masterMix(left, right);
-  return toStereo(mL, mR, FILE_DURATION);
+  // Nabız: 4 beat'te bir yapısal darbe. Sabit ve kaçınılmaz.
+  for (let beat = 0; beat < AMBIENT_BEATS; beat += 4) {
+    const offset = clock.toSample(beat) + clock.humanize(beat, 1, 5);
+    addVoice(mix, deepImpact(D1 * 1.5, 0.26, 0, 530 + beat), offset);
+  }
+
+  // Mekanik grid: 2 beat'te bir tıkırtı. Orta-üst bantta, kısa — SFX'i
+  // maskelemeyecek kadar ince.
+  for (let beat = 1; beat < AMBIENT_BEATS; beat += 2) {
+    const offset = clock.toSample(beat) + clock.humanize(beat, 2, 9);
+    addVoice(mix, machineTick(1350, 0.06, beat % 4 === 1 ? -0.35 : 0.35, 540 + beat), offset);
+  }
+
+  // Konveyör dokusu: ikinci yarıda devreye girer, baskıyı artırır.
+  for (let beat = 32; beat < AMBIENT_BEATS; beat += 4) {
+    const offset = clock.toSample(beat + 2) + clock.humanize(beat, 3, 7);
+    addVoice(mix, conveyorRattle(340, 0.075, beat % 8 === 0 ? 0.4 : -0.4, 550 + beat), offset);
+  }
+
+  // Bas ostinato: akor köküne kilitli, ilerleme hissi.
+  for (let beat = 16; beat < AMBIENT_BEATS; beat += 8) {
+    const chord = chordAtBeat(CHORDS, beat, CHORD_BEATS);
+    const offset = clock.toSample(beat) + clock.humanize(beat, 4, 5);
+    addVoice(mix, filteredPulse(chord.root, clock.beatDuration * 2.2, 0.1, 0, 560 + beat), offset);
+  }
+
+  // Metal vurgu: 16 beat'te bir, uzak.
+  for (let beat = 14; beat < AMBIENT_BEATS; beat += 16) {
+    const offset = clock.toSample(beat) + clock.humanize(beat, 5, 6);
+    addVoice(mix, metalClank(F3, 0.12, beat % 32 === 14 ? -0.45 : 0.45, 570 + beat), offset);
+  }
+
+  applyEdgeGuard(mix, 16);
+  // void-whisper'dan 2 dB yüksek: geçiş duyulur olmalı ama SFX hâlâ üstte.
+  return masterChain(mix, { targetRmsDb: -20, peakCeiling: 0.9, drive: 1.12 });
 }
 
-// ============================================================
-// TRACK 3: DEATH (ölüm)
-// İnen piyano — D5 → A4 → F4 → D4 → A3 → D3
-// Sub-bass drone altta
-// ============================================================
+/**
+ * last-ember — ölüm ekranı. Sistemin kapanışı.
+ *
+ * Loop YAPMAZ (`config/music.ts`'te `loop: false`), bu yüzden sonda gerçek
+ * bir fade-out var: reaktör durur, ışıklar söner, yalnızca gürültü zemini
+ * kalır. İnen sinyal motifi kapanışı anlatır.
+ */
+function renderLastEmber(): SynthesisResult {
+  const BPM = 50;
+  const BEATS = 26;
+  const clock = createBeatClock(BPM);
+  const duration = BEATS * clock.beatDuration;
+  const mix = createMix(duration);
 
-function renderDeath(): SynthesisResult {
-  const slowBeat = BEAT * 2; // yavaş — her nota 2 beat
-  const loopBeats = 16;
-  const fileDuration = loopBeats * slowBeat + TAIL;
-  const left = emptyBuffer(fileDuration);
-  const right = emptyBuffer(fileDuration);
+  // Açılış darbesi: ölüm anının ağırlığı.
+  addVoice(mix, deepImpact(D1 * 1.3, 0.4, 0, 601), 0);
+  addVoice(mix, metalClank(D3, 0.22, 0.3, 602), clock.toSample(0.5));
 
-  // İnen piyano — D5 → A4 → F4 → D4 → A3 → D3
-  // D minor skala aşağı — dramatik çözülüm
-  const notes = [
-    { freq: D5, beat: 0, velocity: 0.9 },
-    { freq: A4, beat: 2, velocity: 0.8 },
-    { freq: F4, beat: 4, velocity: 0.75 },
-    { freq: D4, beat: 6, velocity: 0.7 },
-    { freq: A3, beat: 8, velocity: 0.65 },
-    { freq: D3, beat: 10, velocity: 0.6 },
-    { freq: A2, beat: 12, velocity: 0.5 },
-    { freq: D2, beat: 14, velocity: 0.4 },
+  // Zemin: başta güçlü, sonda sönecek.
+  addVoice(mix, subThrob(D1, duration, 0.26, 0, 603), 0);
+  addVoice(mix, reactorHum(D2, duration, 0.14, -0.3, 604), 0);
+
+  for (const voice of atmosphereBed(duration, {
+    level: 0.9,
+    brightness: 1.3,
+    seedBase: 605,
+    spread: 0.48,
+  })) {
+    addVoice(mix, voice, 0);
+  }
+  addVoice(mix, airDraft(duration, 0.1, 0.45, 610), 0);
+
+  // Tek akor, tüm parça: hareket yok, karar verilmiş.
+  const padDuration = duration + 2.0;
+  chordFreqs({ root: D2, type: 'minor' }).forEach((freq, i) => {
+    addVoice(
+      mix,
+      coldPad(
+        freq,
+        padDuration,
+        i === 0 ? 0.12 : 0.07,
+        i === 0 ? 0 : i === 1 ? -0.4 : 0.4,
+        620 + i,
+      ),
+      0,
+    );
+  });
+
+  // İnen sinyal motifi: kapanış. Her nota bir önceki kadar uzun ama daha kısık.
+  const DESCENT: { freq: number; beat: number; beats: number; gain: number }[] = [
+    { freq: A3, beat: 2, beats: 4, gain: 0.17 },
+    { freq: F3, beat: 7, beats: 4, gain: 0.14 },
+    { freq: D3, beat: 12, beats: 5, gain: 0.12 },
+    { freq: A2, beat: 18, beats: 6, gain: 0.1 },
   ];
-
-  for (const note of notes) {
-    const offset = Math.floor(note.beat * slowBeat * SAMPLE_RATE);
-    if (offset >= left.length) break;
-    addToStereo(left, right, pianoNote(note.freq, slowBeat * 2, note.velocity), offset);
+  for (const note of DESCENT) {
+    addVoice(
+      mix,
+      signalTone(
+        note.freq,
+        note.beats * clock.beatDuration,
+        note.gain,
+        note.beat % 4 === 2 ? -0.25 : 0.28,
+        630 + note.beat,
+      ),
+      clock.toSample(note.beat),
+    );
   }
 
-  // Sub-bass drone altta — D1, sürekli
-  addToStereo(left, right, deepDrone(D1, fileDuration, 0.15), 0);
+  // Son basınç boşalması: sistemin havasının kaçışı.
+  addVoice(mix, pressureHiss(0.16, 0, 640, 2400), clock.toSample(16));
 
-  // Hafif pad — D minor, sürekli
-  addToStereo(left, right, ambientPad(D2, fileDuration, 0.06), 0);
-  addToStereo(left, right, ambientPad(A2, fileDuration, 0.04), 0);
-
-  const [mL, mR] = masterMix(left, right);
-  return toStereo(mL, mR, fileDuration);
+  // Gerçek fade-out: loop olmadığı için sonda sessizliğe inmek doğru.
+  fadeRange(mix, clock, BEATS - 8, BEATS, 'out');
+  applyEdgeGuard(mix, 14);
+  return masterChain(mix, { targetRmsDb: -19, peakCeiling: 0.92, drive: 1.1 });
 }
 
-// --- Üret ---
+// --- Üretim ---
 
-const tracks = [
-  { name: 'void-whisper', render: renderCalmAmbient, dir: 'gameplay' },
-  { name: 'iron-tide', render: renderTenseAmbient, dir: 'gameplay' },
-  { name: 'last-ember', render: renderDeath, dir: 'death' },
+const tracks: { name: string; dir: string; render: () => SynthesisResult }[] = [
+  { name: 'void-whisper', dir: 'gameplay', render: renderVoidWhisper },
+  { name: 'iron-tide', dir: 'gameplay', render: renderIronTide },
+  { name: 'last-ember', dir: 'death', render: renderLastEmber },
 ];
 
 for (const track of tracks) {
@@ -447,7 +324,7 @@ for (const track of tracks) {
   const result = track.render();
   const wavPath = join(srcTrackDir, `${track.name}.wav`);
   const oggPath = join(publicTrackDir, `${track.name}.ogg`);
-  writeWav(wavPath, result);
+  writeWav(wavPath, result, 1.0);
   writeOgg(oggPath, result);
   console.log(
     `Generated: ${wavPath} + ${oggPath} (${result.duration.toFixed(2)}s, ${result.sampleRate}Hz)`,

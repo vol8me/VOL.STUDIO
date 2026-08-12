@@ -265,31 +265,59 @@ Track tanımları:
 games/vol-hell/src/config/music.ts
 ```
 
+Üretim altyapısı:
+
+```
+core/scripts/audio-mix.ts            — mix temeli: voice toplama, humanize, DC blocker, master
+core/scripts/industrial-voices.ts    — endüstriyel ses paleti (müzik + SFX ortak sözlüğü)
+core/scripts/audio-qa.ts             — üretilen asset'leri ölçer (click, clip, bant profili)
+```
+
 Üretim script'leri (track başına ayrı):
 
 ```
-core/scripts/generate-iron-vein.ts        — ana menü teması 1
-core/scripts/generate-black-tide.ts       — ana menü teması 2
-core/scripts/generate-crimson-horizon.ts  — ana menü teması 3
-core/scripts/generate-ambient-tracks.ts   — void-whisper + iron-tide (oyun içi ambiyans)
+core/scripts/generate-iron-vein.ts        — ana menü 1, karakter: ağırlık
+core/scripts/generate-black-tide.ts       — ana menü 2, karakter: hareket
+core/scripts/generate-crimson-horizon.ts  — ana menü 3, karakter: boşluk
+core/scripts/generate-ambient-tracks.ts   — void-whisper + iron-tide + last-ember
 ```
 
 Çalıştır:
 
 ```bash
 pnpm --filter @volstudio/vol-hell generate:music
+pnpm audio:qa   # üretilenleri ölç
 ```
+
+## Üretim kuralları
+
+Bu kurallar ölçümle konuldu; bozulduğunda sonuç duyulur şekilde kötüleşir.
+
+- **Voice'lar `normalize: false` ile üretilir.** `synth()` varsayılanı `true`'dur ve
+  her notayı tek tek 0.95 tepeye çeker; bu katmanlar arası doğal dinamiği yok eder.
+  Seviye dengesi `gain` ile kurulur, normalize yalnızca master zincirde bir kez
+  uygulanır (`masterChain` / `masterPeak`).
+- **Seviye hedefi RMS'tir, tepe değil.** Arka plan müziğinde algılanan yükseklik
+  ortalama seviyeyle belirlenir. Menü ~-17 dB, ambiyans -20/-22 dB.
+- **Ambiyans parçalarında orta bant boşaltılır.** Oyun içi SFX enerjisi 200-3000 Hz
+  bandında; ambiyans o bandı doldurursa ateş/hasar sesleri maskelenir.
+- **Üst üste binen perküsyon `humanize` ile ayrıştırılır.** Aynı örneğe düşen
+  transientlerin farkları toplanıp yapay sertlik üretiyordu.
+- **Loop'lanan parçada uzun fade YOK.** Yalnızca milisaniyelik `applyEdgeGuard`;
+  uzun fade her turda duyulur bir boşluk bırakır.
 
 ## Yeni Müzik Ekleme
 
 1. `core/scripts/` altına track için render script'i ekle (mevcut `generate-iron-vein.ts` gibi).
-2. `games/vol-hell/public/assets/audio/music/<kategori>/` altına WAV yaz.
-3. `games/vol-hell/src/config/music.ts`'te track ve stem tanımını güncelle.
-4. `games/vol-hell/package.json` `generate:music` script'ine üretim komutunu ekle.
-5. Sahne kodunda `loadMusic`/`playMusic` ile bağla.
-6. Doğrula:
+2. `games/vol-hell/src/config/music.ts`'te track/stem tanımını güncelle — `bpm` ve
+   `loopEnd` script'teki değerlerle BİREBİR eşleşmeli.
+3. `games/vol-hell/package.json` `generate:music` script'ine üretim komutunu ekle.
+4. Sahne kodunda `loadMusic`/`playMusic` ile bağla.
+5. Doğrula:
 
 ```bash
+pnpm --filter @volstudio/vol-hell generate:music
+pnpm audio:qa                 # click 0, clip 0 olmalı
 pnpm -r typecheck
 pnpm --filter @volstudio/vol-hell build
 pnpm test

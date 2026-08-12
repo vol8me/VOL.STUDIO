@@ -1,349 +1,182 @@
 /**
- * Ana menü müziği 2 — "Black Tide" v2
- * D minor, 90 BPM. Gizemli, melodik karanlık fantezi.
+ * Ana menü teması 2 — "Black Tide"
  *
- * Geliştirmeler:
- * - Loop uç noktaları Dm akorunda buluşur.
- * - Shimmer ve high air ile üst frekanslar açılır.
- * - Pluck telleri ve sinematik stringlerle karakter ayrılır.
+ * Karakter: **HAREKET.** Çalışan tesis / korozyon. Orta register hâkim,
+ * sürekli mekanik ritim var. Üç menü temasının en "meşgul" olanı.
+ *
+ * Kimlik ayrımı (Iron Vein ve Crimson Horizon ile karışmaması için):
+ * - Register: enerji orta bantta toplanır; sub kasıtlı olarak Iron Vein'in
+ *   belirgin altında — bu tema ağırlık değil hareket anlatır.
+ * - Ritim: konveyör takırtısı 2 beat'te bir, röle tıkırtısı her beat.
+ *   Sürekli ama monoton olmayan bir mekanik nabız.
+ * - Armoni: dört akor, 16 beat'te bir değişir. Süspansiyon ağırlıklı —
+ *   çözülmeyen, huzursuz bir renk.
+ * - Palet: conveyorRattle + pressureHiss + cableTension + filteredPulse.
+ *   Ağır yapısal darbe (deepImpact) yalnızca akor başlarında.
+ *
+ * Loop: 64 beat @ 74 BPM.
  */
 
-import type { SynthesisResult } from '../src/audio/synth/types';
 import {
-  SAMPLE_RATE,
-  MINOR_3,
-  MAJOR_3,
-  FIFTH,
-  emptyBuffer,
-  toStereo,
-  addToStereo,
+  createMix,
+  createBeatClock,
+  addVoice,
+  applyEdgeGuard,
+  masterChain,
+  chordFreqs,
   chordAtBeat,
-  createBeatUtils,
-  masterMix,
   parseWavOggArgs,
-  writeMenuTrack,
+  writeTrack,
   type ChordDef,
-} from './music-utils';
+} from './audio-mix';
 import {
-  deepSubBass,
-  darkDrone,
-  warmPad,
-  shimmerAir,
-  highShimmer,
-  bassPulse2,
-  pluckString,
-  bellLead,
-  cinematicStrings2,
-  cinematicKick,
-  darkSnare2,
-  openHiHat,
-} from './menu-music-instruments';
-
-// --- CLI ---
+  reactorHum,
+  subThrob,
+  atmosphereBed,
+  coldPad,
+  deepImpact,
+  metalClank,
+  machineTick,
+  pressureHiss,
+  conveyorRattle,
+  cableTension,
+  filteredPulse,
+} from './industrial-voices';
 
 const { wavPath, oggPath } = parseWavOggArgs('generate-black-tide.ts');
 
-// --- Sabitler ---
+// --- Zaman ---
 
-const BPM = 90;
-const BEAT = 60 / BPM;
-const LOOP_BEATS = 96;
-const FILE_DURATION = LOOP_BEATS * BEAT;
+const BPM = 74;
+const LOOP_BEATS = 64;
+const clock = createBeatClock(BPM);
+const DURATION = LOOP_BEATS * clock.beatDuration;
 
-const { beatToSample, applyFades } = createBeatUtils(BEAT);
+// --- Perde paleti (A kökü, süspansiyon ağırlıklı) ---
 
-// --- D minor paleti ---
-
-const D2 = 73.42;
+const A1 = 55.0;
 const A2 = 110.0;
-const Bb2 = 116.54;
 const C3 = 130.81;
 const D3 = 146.83;
 const E3 = 164.81;
-const F3 = 174.61;
 const G3 = 196.0;
 const A3 = 220.0;
-const Bb3 = 233.08;
-const C4 = 261.63;
-const D4 = 293.66;
-const E4 = 329.63;
-const F4 = 349.23;
-const G4 = 392.0;
-const A4 = 440.0;
+const F2 = 87.31;
+const C2 = 65.41;
+const G2 = 98.0;
 
-// --- Akor ilerlemesi: Dm Am Bb F C Gm A Dm
-//     16 beat | 16 beat | 16 beat | 16 beat | 8 beat | 8 beat | 8 beat | 8 beat
-
+/** Dört akor, 16 beat'te bir — Iron Vein'in iki akorlu durgunluğunun tersi. */
 const CHORDS: ChordDef[] = [
-  { root: D3, type: 'minor' },
-  { root: A2, type: 'minor' },
-  { root: Bb2, type: 'major' },
-  { root: F3, type: 'major' },
-  { root: C3, type: 'major' },
-  { root: G3, type: 'minor' },
-  { root: A2, type: 'major' },
-  { root: D3, type: 'minor' },
+  { root: A2, type: 'sus2' },
+  { root: F2, type: 'fifth' },
+  { root: C2, type: 'sus4' },
+  { root: G2, type: 'fifth' },
 ];
+const CHORD_BEATS = 16;
 
-const CHORD_BEATS = [16, 16, 16, 16, 8, 8, 8, 8];
-function chordAtIndex(i: number) {
-  return CHORDS[i]!;
-}
-function startBeatOf(i: number) {
-  let s = 0;
-  for (let j = 0; j < i; j++) s += CHORD_BEATS[j]!;
-  return s;
-}
-function chordAtBeatCustom(beat: number) {
-  let s = 0;
-  for (let i = 0; i < CHORDS.length; i++) {
-    s += CHORD_BEATS[i]!;
-    if (beat < s) return CHORDS[i]!;
-  }
-  return CHORDS[0]!;
+const mix = createMix(DURATION);
+
+// --- Katman 1: sub yatak ---
+// Iron Vein'den belirgin düşük: bu tema ağırlıkla değil hareketle anlatıyor.
+addVoice(mix, subThrob(A1, DURATION, 0.13, 0, 201), 0);
+
+// --- Katman 2: reaktör uğultusu ---
+addVoice(mix, reactorHum(A2, DURATION, 0.12, -0.3, 202), 0);
+
+// --- Katman 3: atmosfer yatağı ---
+// Iron Vein'den parlak: orta-üst bant hareketi taşıyor.
+for (const voice of atmosphereBed(DURATION, { level: 0.95, brightness: 1.2, seedBase: 204 })) {
+  addVoice(mix, voice, 0);
 }
 
-// --- Lead melodi (beat 32-80) ---
+// --- Katman 4: soğuk pad (akor dokusu, 16 beat'te bir) ---
+for (let beat = 0; beat < LOOP_BEATS; beat += CHORD_BEATS) {
+  const chord = chordAtBeat(CHORDS, beat, CHORD_BEATS);
+  const tones = chordFreqs(chord);
+  const padDuration = CHORD_BEATS * clock.beatDuration + 2.2;
+  const offset = clock.toSample(beat);
 
-const LEAD_MELODY = [
-  // Bb (32-48)
-  { freq: Bb3, beats: 4, velocity: 0.9, pan: 0.15 },
-  { freq: D4, beats: 3, velocity: 0.8, pan: -0.15 },
-  { freq: F4, beats: 3, velocity: 0.85, pan: 0.1 },
-  { freq: D4, beats: 4, velocity: 0.75, pan: -0.1 },
-  // F (48-64)
-  { freq: A3, beats: 4, velocity: 0.9, pan: 0.2 },
-  { freq: C4, beats: 3, velocity: 0.8, pan: -0.2 },
-  { freq: F4, beats: 3, velocity: 0.85, pan: 0.15 },
-  { freq: C4, beats: 4, velocity: 0.75, pan: -0.15 },
-  // C (64-72)
-  { freq: G3, beats: 3, velocity: 0.85, pan: 0.1 },
-  { freq: E4, beats: 2, velocity: 0.8, pan: -0.1 },
-  { freq: C4, beats: 3, velocity: 0.75, pan: 0.0 },
-  // Gm (72-80)
-  { freq: Bb3, beats: 3, velocity: 0.85, pan: 0.15 },
-  { freq: D4, beats: 2, velocity: 0.8, pan: -0.1 },
-  { freq: G3, beats: 3, velocity: 0.75, pan: 0.0 },
-];
-
-// --- Track render'ları ---
-
-function chordNotes(chord: ChordDef, octave = 1) {
-  const root = chord.root * octave;
-  const third = root * (chord.type === 'minor' ? MINOR_3 : MAJOR_3);
-  const fifth = root * FIFTH;
-  return { root, third, fifth };
+  tones.forEach((freq, i) => {
+    // Süspansiyon sesi (ikinci ton) kenara atılır: merkezde kalırsa akor
+    // fazla "tonal" duyuluyor, kenarda huzursuzluk hissi korunuyor.
+    const pan = i === 0 ? -0.1 : i === 1 ? 0.45 : -0.4;
+    const gain = i === 0 ? 0.13 : 0.085;
+    addVoice(mix, coldPad(freq, padDuration, gain, pan, 210 + beat + i), offset);
+  });
 }
 
-function renderDroneTrack(duration: number): SynthesisResult {
-  const left = emptyBuffer(duration);
-  const right = emptyBuffer(duration);
-
-  // D2 sabit sub foundation
-  addToStereo(left, right, deepSubBass(D2, duration, 0.22, 0), 0);
-  addToStereo(left, right, darkDrone(D2, duration, 0.08, 0), 0);
-
-  for (let i = 0; i < CHORDS.length; i++) {
-    const chord = chordAtIndex(i);
-    const beat = startBeatOf(i);
-    const dur = CHORD_BEATS[i]! * BEAT + 0.8;
-    const bassFreq = chord.root / 2;
-    addToStereo(
-      left,
-      right,
-      deepSubBass(bassFreq, dur, 0.14, Math.sin(i * 0.5) * 0.25),
-      beatToSample(beat),
-    );
-  }
-
-  applyFades(left, right, 0, 4, 92, 96);
-  return toStereo(left, right, duration);
+// --- Katman 5: konveyör ritmi (2 beat'te bir, tüm parça) ---
+// Bu temanın imzası. Sürekli çalışan bir bant; frekans hafifçe değişerek
+// monotonluğu kırıyor.
+for (let beat = 0; beat < LOOP_BEATS; beat += 2) {
+  const offset = clock.toSample(beat) + clock.humanize(beat, 1, 7);
+  const freq = beat % 8 === 0 ? 300 : beat % 8 === 4 ? 360 : 330;
+  const pan = (beat / 2) % 2 === 0 ? -0.35 : 0.35;
+  addVoice(mix, conveyorRattle(freq, 0.14, pan, 220 + beat), offset);
 }
 
-function renderPadTrack(duration: number): SynthesisResult {
-  const left = emptyBuffer(duration);
-  const right = emptyBuffer(duration);
-
-  for (let i = 0; i < CHORDS.length; i++) {
-    const chord = chordAtIndex(i);
-    const beat = startBeatOf(i);
-    const dur = CHORD_BEATS[i]! * BEAT + 1.2;
-    const { root, third, fifth } = chordNotes(chord);
-    const offset = beatToSample(beat);
-
-    addToStereo(left, right, warmPad(root, dur, 0.16, Math.sin(i * 0.4) * 0.3), offset);
-    addToStereo(left, right, warmPad(third, dur, 0.11, Math.cos(i * 0.4) * 0.3), offset);
-    addToStereo(left, right, warmPad(fifth, dur, 0.09, -Math.sin(i * 0.4) * 0.3), offset);
-
-    addToStereo(left, right, shimmerAir(root * 4, dur, 0.18, -0.4), offset);
-    addToStereo(left, right, shimmerAir(fifth * 4, dur, 0.12, 0.4), offset);
-    addToStereo(left, right, highShimmer(root * 8, dur, 0.05, 0.45), offset);
-  }
-
-  applyFades(left, right, 0, 4, 92, 96);
-  return toStereo(left, right, duration);
+// --- Katman 6: röle tıkırtısı (her beat, beat 8'den sonra) ---
+// Konveyörün arasını dolduran ince grid. Vurgu her 4. beat'te güçlenir.
+for (let beat = 8; beat < LOOP_BEATS; beat++) {
+  const offset = clock.toSample(beat) + clock.humanize(beat, 2, 9);
+  const accent = beat % 4 === 0;
+  addVoice(
+    mix,
+    machineTick(
+      accent ? 1500 : 1150,
+      accent ? 0.13 : 0.075,
+      beat % 2 === 0 ? -0.28 : 0.3,
+      230 + beat,
+    ),
+    offset,
+  );
 }
 
-function renderBassTrack(duration: number): SynthesisResult {
-  const left = emptyBuffer(duration);
-  const right = emptyBuffer(duration);
-
-  for (let i = 0; i < CHORDS.length; i++) {
-    const chord = chordAtIndex(i);
-    const beat = startBeatOf(i);
-    const len = CHORD_BEATS[i]!;
-    const pulseSpacing = 2;
-    for (let b = 0; b < len; b += pulseSpacing) {
-      const offset = beatToSample(beat + b);
-      const freq = chord.root / 2;
-      const pan = b % 4 === 0 ? -0.1 : 0.1;
-      addToStereo(left, right, bassPulse2(freq, BEAT * 1.3, 0.22, pan), offset);
-    }
-  }
-
-  applyFades(left, right, 8, 10, 86, 90);
-  return toStereo(left, right, duration);
+// --- Katman 7: yapısal darbe (akor başlarında) ---
+// Seyrek ve yalnızca akor değişiminde: ritmi taşımıyor, yapıyı işaretliyor.
+for (let beat = 0; beat < LOOP_BEATS; beat += CHORD_BEATS) {
+  const offset = clock.toSample(beat) + clock.humanize(beat, 3, 4);
+  addVoice(mix, deepImpact(A1 * 1.5, 0.3, 0, 240 + beat), offset);
 }
 
-function renderPercussionTrack(duration: number): SynthesisResult {
-  const left = emptyBuffer(duration);
-  const right = emptyBuffer(duration);
-
-  for (let b = 16; b < LOOP_BEATS; b++) {
-    const offset = beatToSample(b);
-    if (offset >= left.length) break;
-
-    if (b % 2 === 0) {
-      addToStereo(
-        left,
-        right,
-        cinematicKick(50, BEAT * 0.9, 0.32, 0.05 * (b % 4 === 0 ? -1 : 1)),
-        offset,
-      );
-    }
-    if (b % 4 === 2) {
-      addToStereo(left, right, darkSnare2(BEAT * 0.45, 0.18, 0.1), offset);
-    }
-
-    addToStereo(left, right, openHiHat(BEAT * 0.25, 0.12, 0.25), offset);
-    const halfOffset = beatToSample(b + 0.5);
-    if (halfOffset < left.length) {
-      addToStereo(left, right, openHiHat(BEAT * 0.2, 0.08, -0.25), halfOffset);
-    }
-  }
-
-  applyFades(left, right, 16, 18, 86, 90);
-  return toStereo(left, right, duration);
+// --- Katman 8: basınç boşalması (8 beat'te bir, ofsetli) ---
+// Ritmik gride nefes katar. Konveyörle aynı ana düşmemesi için 3 beat kaydı.
+for (let beat = 11; beat < LOOP_BEATS; beat += 8) {
+  const offset = clock.toSample(beat) + clock.humanize(beat, 4, 8);
+  addVoice(mix, pressureHiss(0.17, beat % 16 === 3 ? 0.45 : -0.45, 250 + beat, 2800), offset);
 }
 
-function buildArpPattern(chord: ChordDef) {
-  const root = chord.root * 2;
-  const third = root * (chord.type === 'minor' ? MINOR_3 : MAJOR_3);
-  const fifth = root * FIFTH;
-  const octave = root * 2;
-  return [
-    { freq: root, velocity: 1.0 },
-    { freq: fifth, velocity: 0.7 },
-    { freq: third, velocity: 0.6 },
-    { freq: octave, velocity: 0.85 },
-    { freq: fifth, velocity: 0.65 },
-    { freq: third, velocity: 0.55 },
-    { freq: root, velocity: 0.9 },
-    { freq: fifth, velocity: 0.6 },
-  ];
+// --- Katman 9: mekanik bas ostinato (beat 16-56) ---
+// Akor köküne kilitli, 8'lik nabız. Parçanın "yürüyen" hissini bu kurar.
+for (let beat = 16; beat < 56; beat += 1) {
+  if (beat % 2 === 1) continue; // yalnızca çift beat'ler — çok kalabalık olmasın
+  const chord = chordAtBeat(CHORDS, beat, CHORD_BEATS);
+  const offset = clock.toSample(beat) + clock.humanize(beat, 5, 5);
+  addVoice(mix, filteredPulse(chord.root, clock.beatDuration * 1.3, 0.16, 0, 260 + beat), offset);
 }
 
-function renderArpTrack(duration: number): SynthesisResult {
-  const left = emptyBuffer(duration);
-  const right = emptyBuffer(duration);
-
-  // Arp chords: Am(16-32) Bb(32-48) F(48-64) C(64-72) Gm(72-80)
-  const arpIndices = [1, 2, 3, 4, 5];
-  let beatCounter = 16;
-  for (const i of arpIndices) {
-    const chord = chordAtIndex(i);
-    const pattern = buildArpPattern(chord);
-    const len = i === 4 || i === 5 ? 8 : 16; // last two chords 8 beats
-    const reps = len / 4;
-    for (let r = 0; r < reps; r++) {
-      for (let j = 0; j < pattern.length; j++) {
-        const note = pattern[j]!;
-        const offset = beatToSample(beatCounter);
-        if (offset >= left.length) break;
-        const noteDur = Math.min(0.5 * BEAT + 0.35, duration - beatCounter * BEAT);
-        const pan = Math.sin(j * 0.6) * 0.35;
-        addToStereo(left, right, pluckString(note.freq, noteDur, note.velocity, pan), offset);
-        beatCounter += 0.5;
-      }
-    }
-  }
-
-  applyFades(left, right, 16, 18, 78, 82);
-  return toStereo(left, right, duration);
+// --- Katman 10: gerilmiş kablo motifi (beat 24'ten sonra) ---
+// Melodi değil, tekrarlayan kısa figür — Mindustry'de motif hipnotiktir.
+const CABLE_FIGURE = [A3, E3, G3, D3, C3, E3];
+for (let i = 0; i < CABLE_FIGURE.length; i++) {
+  const beat = 24 + i * 5;
+  if (beat >= LOOP_BEATS) break;
+  const offset = clock.toSample(beat) + clock.humanize(beat, 6, 6);
+  addVoice(
+    mix,
+    cableTension(CABLE_FIGURE[i]!, clock.beatDuration * 3, 0.85, i % 2 === 0 ? -0.32 : 0.34),
+    offset,
+  );
 }
 
-function renderLeadTrack(duration: number): SynthesisResult {
-  const left = emptyBuffer(duration);
-  const right = emptyBuffer(duration);
-
-  let beatCounter = 32;
-  for (const note of LEAD_MELODY) {
-    const offset = beatToSample(beatCounter);
-    if (offset >= left.length) break;
-    const noteDur = note.beats * BEAT;
-    addToStereo(
-      left,
-      right,
-      bellLead(note.freq, noteDur, note.velocity ?? 1, note.pan ?? 0),
-      offset,
-    );
-    beatCounter += note.beats;
-  }
-
-  applyFades(left, right, 32, 34, 78, 82);
-  return toStereo(left, right, duration);
+// --- Katman 11: metal vurgu (32 beat'te bir) ---
+for (let beat = 30; beat < LOOP_BEATS; beat += 32) {
+  const offset = clock.toSample(beat) + clock.humanize(beat, 7, 6);
+  addVoice(mix, metalClank(A3 * 1.5, 0.26, 0.4, 270 + beat), offset);
 }
 
-function renderStringsTrack(duration: number): SynthesisResult {
-  const left = emptyBuffer(duration);
-  const right = emptyBuffer(duration);
+// --- Master ---
+applyEdgeGuard(mix, 14);
+const result = masterChain(mix, { targetRmsDb: -17, peakCeiling: 0.92, drive: 1.2 });
 
-  for (let i = 0; i < CHORDS.length; i++) {
-    const chord = chordAtIndex(i);
-    const beat = startBeatOf(i);
-    const dur = CHORD_BEATS[i]! * BEAT + 1.0;
-    const { root, third, fifth } = chordNotes(chord);
-    const offset = beatToSample(beat);
-
-    addToStereo(left, right, cinematicStrings2(root, dur, 0.16, Math.sin(i * 0.3) * 0.4), offset);
-    addToStereo(left, right, cinematicStrings2(third, dur, 0.12, -Math.sin(i * 0.3) * 0.4), offset);
-    addToStereo(left, right, cinematicStrings2(fifth, dur, 0.1, Math.cos(i * 0.3) * 0.35), offset);
-  }
-
-  applyFades(left, right, 0, 6, 90, 96);
-  return toStereo(left, right, duration);
-}
-
-// --- Ana render ---
-
-function renderBlackTide(): SynthesisResult {
-  const left = emptyBuffer(FILE_DURATION);
-  const right = emptyBuffer(FILE_DURATION);
-
-  addToStereo(left, right, renderDroneTrack(FILE_DURATION), 0);
-  addToStereo(left, right, renderPadTrack(FILE_DURATION), 0);
-  addToStereo(left, right, renderStringsTrack(FILE_DURATION), 0);
-  addToStereo(left, right, renderBassTrack(FILE_DURATION), 0);
-  addToStereo(left, right, renderPercussionTrack(FILE_DURATION), 0);
-  addToStereo(left, right, renderArpTrack(FILE_DURATION), 0);
-  addToStereo(left, right, renderLeadTrack(FILE_DURATION), 0);
-
-  const [mL, mR] = masterMix(left, right);
-  const fadeBeats = 0.02 / BEAT;
-  applyFades(mL, mR, 0, fadeBeats, LOOP_BEATS - fadeBeats, LOOP_BEATS);
-
-  return toStereo(mL, mR, FILE_DURATION);
-}
-
-const result = renderBlackTide();
-writeMenuTrack(wavPath, oggPath, result);
+writeTrack(wavPath, oggPath, result);

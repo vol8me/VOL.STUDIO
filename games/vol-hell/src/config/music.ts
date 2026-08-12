@@ -1,21 +1,32 @@
 import type { MusicTrack } from '@volstudio/core/audio/music';
 
 const musicBasePath = 'assets/audio/music';
-const BPM = 72;
-const BEAT = 60 / BPM;
-const TAIL = 5;
 
-// Iron Vein — ana menü teması 1: C minor, 85 BPM, 64 beat loop
-const MENU_BPM = 85;
+// Bu değerler üretim script'leriyle (core/scripts/generate-*.ts) BİREBİR
+// eşleşmek zorunda: `loopEnd` dosyanın gerçek uzunluğunu aşarsa Web Audio
+// loop'u sessizce tüm buffer'a düşürür, kısa kalırsa parça erken başa sarar.
+
+// Iron Vein — ana menü 1: D kökü, 62 BPM, 64 beat. Karakter: ağırlık.
+const MENU_BPM = 62;
 const MENU_BEAT = 60 / MENU_BPM;
 
-// Black Tide — ana menü teması 2: D minor, 90 BPM, 96 beat loop
-const MENU2_BPM = 90;
+// Black Tide — ana menü 2: A kökü, 74 BPM, 64 beat. Karakter: hareket.
+const MENU2_BPM = 74;
 const MENU2_BEAT = 60 / MENU2_BPM;
 
-// Crimson Horizon — ana menü teması 3: A minor, 85 BPM, 64 beat loop
-const MENU3_BPM = 85;
+// Crimson Horizon — ana menü 3: E kökü, 52 BPM, 48 beat. Karakter: boşluk.
+const MENU3_BPM = 52;
 const MENU3_BEAT = 60 / MENU3_BPM;
+
+// Ambiyans: void-whisper ve iron-tide crossfade ile geçtiği için AYNI tempo
+// ve AYNI uzunlukta üretilir. Farklı tempoda olsalar geçiş ritmik çakışırdı.
+const AMBIENT_BPM = 68;
+const AMBIENT_BEAT = 60 / AMBIENT_BPM;
+const AMBIENT_BEATS = 64;
+
+// Last Ember — ölüm ekranı: 50 BPM, 26 beat. Loop yok, sonda fade-out var.
+const DEATH_BPM = 50;
+const DEATH_BEAT = 60 / DEATH_BPM;
 
 export const musicTrackIds = [
   'main-menu',
@@ -36,7 +47,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     id: 'main-menu',
     bpm: MENU_BPM,
     loopStart: 0,
-    loopEnd: 64 * MENU_BEAT, // ~45.2s — Iron Vein
+    loopEnd: 64 * MENU_BEAT, // ~61.9s — Iron Vein
     stems: [
       {
         id: 'iron-vein',
@@ -51,7 +62,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     id: 'main-menu-2',
     bpm: MENU2_BPM,
     loopStart: 0,
-    loopEnd: 96 * MENU2_BEAT, // ~64s — Black Tide
+    loopEnd: 64 * MENU2_BEAT, // ~51.9s — Black Tide
     stems: [
       {
         id: 'black-tide',
@@ -66,7 +77,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     id: 'main-menu-3',
     bpm: MENU3_BPM,
     loopStart: 0,
-    loopEnd: 64 * MENU3_BEAT, // ~45.2s — Crimson Horizon
+    loopEnd: 48 * MENU3_BEAT, // ~55.4s — Crimson Horizon
     stems: [
       {
         id: 'crimson-horizon',
@@ -79,9 +90,9 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
 
   'void-whisper': {
     id: 'void-whisper',
-    bpm: BPM,
+    bpm: AMBIENT_BPM,
     loopStart: 0,
-    loopEnd: 64 * BEAT + TAIL, // ~58s — düşman az/yok
+    loopEnd: AMBIENT_BEATS * AMBIENT_BEAT, // ~56.5s — düşman az/yok
     stems: [
       {
         id: 'void-whisper',
@@ -94,9 +105,9 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
 
   'iron-tide': {
     id: 'iron-tide',
-    bpm: BPM,
+    bpm: AMBIENT_BPM,
     loopStart: 0,
-    loopEnd: 64 * BEAT + TAIL, // ~58s — düşman çok
+    loopEnd: AMBIENT_BEATS * AMBIENT_BEAT, // ~56.5s — düşman çok
     stems: [
       {
         id: 'iron-tide',
@@ -109,9 +120,9 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
 
   'last-ember': {
     id: 'last-ember',
-    bpm: BPM,
+    bpm: DEATH_BPM,
     loopStart: 0,
-    loopEnd: 32 * BEAT + TAIL, // ~32s — inen piyano
+    loopEnd: 26 * DEATH_BEAT, // ~31.2s — inen sinyal motifi
     stems: [
       {
         id: 'last-ember',

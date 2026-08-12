@@ -253,18 +253,30 @@ Presets.findPresets({ category: 'combat', tags: ['weapon'] });
 Presets.getPreset('laser', 880, 0.15);
 ```
 
-## Yeni Ses Ekleme
+## VOL.HELL SFX'leri
 
-1. `core/scripts/generate-volhell-sounds.ts`'e ekle:
+VOL.HELL'in sesleri bu dosyadaki genel preset kütüphanesini DEĞİL,
+`core/scripts/industrial-voices.ts` paletini kullanır — müzikle aynı sözlük.
+Gerekçe: SFX çıplak `sawtooth`/`triangle` + kısa ADSR ile üretildiğinde klasik
+konsol (chiptune) karakteri veriyor ve additive/FM ile üretilen müzikle
+tutarsız bir kimlik oluşturuyordu. Aynı FM/bandpass/gürültü yaklaşımı iki
+tarafta da kullanılınca ateş sesi ile ambiyans aynı dünyaya ait duyuluyor.
+
+### Yeni Ses Ekleme
+
+1. `core/scripts/generate-volhell-sounds.ts`'teki `specs` dizisine ekle:
 
 ```typescript
 {
-  path: 'combat/my-sound.wav',
-  params: {
-    ...Presets.hit(600, 0.12),
-    wave: 'triangle',
-    slide: -200,
-    distortion: { amount: 0.3, type: 'soft' },
+  name: 'my-sound-0',
+  category: 'combat',
+  peak: 0.55,          // olay önemine göre seviye hiyerarşisi
+  drive: 1.12,
+  render: () => {
+    const mix = shot(0.35);
+    addVoice(mix, metalClank(A3, 0.45, 0, 1301), 0);
+    addVoice(mix, deepImpact(A2 * 0.8, 0.2, 0, 1302), at(0.002));
+    return mix;
   },
 }
 ```
@@ -275,10 +287,18 @@ Presets.getPreset('laser', 880, 0.15);
 5. Doğrula:
 
 ```bash
+pnpm audio:qa                 # click 0, clip 0 olmalı
 pnpm -r typecheck
 pnpm --filter @volstudio/<game> build
 pnpm --filter @volstudio/<game> test
 ```
+
+### Seviye kuralı
+
+Sesler aynı tepeye normalize EDİLMEZ. Her katman `normalize: false` ile üretilir,
+normalize son mix'te bir kez uygulanır (`masterPeak`). Tepe hedefi olay önemine
+göre verilir: UI tıkı ~0.45-0.62, ateş ~0.6, hasar ~0.78, ölüm ~0.86. Hepsini
+eşitlemek oyunun dinamik hiyerarşisini `sfxVolumes` tablosuna yüklüyordu.
 
 ## Kategori Yapısı
 
