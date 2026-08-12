@@ -25,7 +25,7 @@ import {
   applyEdgeGuard,
   masterChain,
   chordFreqs,
-  parseWavOggArgs,
+  parseOggArg,
   writeTrack,
   transpose,
   type ChordDef,
@@ -42,7 +42,7 @@ import {
   pressureHiss,
 } from './industrial-voices';
 
-const { wavPath, oggPath } = parseWavOggArgs('generate-crimson-horizon.ts');
+const oggPath = parseOggArg('generate-crimson-horizon.ts');
 
 // --- Zaman ---
 
@@ -154,4 +154,4 @@ addVoice(mix, pressureHiss(0.12, 0.4, 370, 4200), clock.toSample(35));
 applyEdgeGuard(mix, 16);
 const result = masterChain(mix, { targetRmsDb: -18, peakCeiling: 0.92, drive: 1.05 });
 
-writeTrack(wavPath, oggPath, result);
+writeTrack(oggPath, result);

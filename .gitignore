@@ -25,6 +25,12 @@ build/
 target/
 *.tsbuildinfo
 
+# Uretilen ses asset'leri — repoda tutulmaz.
+# Kaynak `core/scripts/generate-*.ts`; uretim deterministik oldugu icin ciktiyi
+# saklamak gereksiz ve her yeniden uretimde git gecmisine yeni blob ekliyordu.
+# `predev`/`prebuild` eksikse otomatik uretir (core/scripts/ensure-audio.mjs).
+games/*/public/assets/audio/
+
 # Test coverage raporlari
 coverage/
 .nyc_output/

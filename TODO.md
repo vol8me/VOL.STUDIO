@@ -243,3 +243,38 @@ V8 heap/JIT belirleyiciliği oluşturdu (motif değerleri aynı olmasına rağme
 son `dither` yuvarlama noktasında farklı bitler çıktı). `generateMotif()`
 primitifi `generate-composition-demo.ts`'de gösterildi ve tekrarlanabilirliği
 doğrulandı.
+
+---
+
+## Ses asset pipeline'ı — tek format, repoda tutulmuyor (2026-08-13)
+
+**Sorun:** Aynı ses üç formatta (wav+ogg+mp3) repoda duruyordu. Git'te 72 ses
+dosyası / 66 MB, geçmişte 238 MB blob, `.git` 221 MB. MP3'ler hiç kullanılmayan
+bir iOS hedefi için üretilmişti (`src-tauri/gen/` boş).
+
+**Karar:** Ses dosyaları repoda tutulmaz. Üretim deterministik olduğu için asıl
+kaynak `core/scripts/generate-*.ts`'tir; çıktıyı da saklamak aynı içeriği iki
+kez tutmaktır.
+
+```
+core/scripts/generate-*.ts          KAYNAK (git'te)
+games/*/public/assets/audio/**.ogg  ÜRETİLEN (gitignore)
+games/*/dist/                       BUILD (gitignore)
+```
+
+**Yapılanlar:**
+
+- Üretim yalnızca OGG verir; `writeWav` çağrıları script'lerden kaldırıldı.
+  CLI'lar tek argümana indi (`<out.ogg>` / `<out-dir>`).
+- `games/vol-hell/audio-src/` (24 WAV, 55 MB) silindi.
+- `public/**/*.mp3` (24 dosya) silindi. MP3 **altyapısı duruyor**: iOS hedefi
+  geldiğinde `pnpm convert:ios` OGG'den üretir, `StemLoader` fallback'i yerinde.
+- `.gitignore`: `games/*/public/assets/audio/` — git'te 0 ses dosyası kaldı.
+- `core/scripts/ensure-audio.mjs` + `predev`/`prebuild`: taze klonda ses yoksa
+  bir kez üretir, varsa 0.7 s'de hiçbir şey yapmadan döner (idempotent).
+- `generate:audio` toplu komut eklendi.
+- `audio-qa.ts` artık shipped OGG'yi FFmpeg ile decode edip ölçüyor — encode
+  sonrası artefaktlar da kapsama girdi.
+
+**Doğrulama:** Ses klasörü silinip `ensure:audio` ile sıfırdan üretildi (24 OGG),
+ikinci çağrı no-op. `pnpm audio:qa`: 0 click, 0 clip.

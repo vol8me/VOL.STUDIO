@@ -25,7 +25,7 @@ import {
   masterChain,
   chordFreqs,
   chordAtBeat,
-  parseWavOggArgs,
+  parseOggArg,
   writeTrack,
   type ChordDef,
 } from './audio-mix';
@@ -43,7 +43,7 @@ import {
   filteredPulse,
 } from './industrial-voices';
 
-const { wavPath, oggPath } = parseWavOggArgs('generate-black-tide.ts');
+const oggPath = parseOggArg('generate-black-tide.ts');
 
 // --- Zaman ---
 
@@ -185,4 +185,4 @@ for (let beat = 30; beat < LOOP_BEATS; beat += 32) {
 applyEdgeGuard(mix, 14);
 const result = masterChain(mix, { targetRmsDb: -17, peakCeiling: 0.92, drive: 1.2 });
 
-writeTrack(wavPath, oggPath, result);
+writeTrack(oggPath, result);

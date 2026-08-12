@@ -50,18 +50,16 @@ import {
   glassPing,
   filteredPulse,
 } from './industrial-voices';
-import { writeWav, writeOgg } from '../src/audio/synth/writer';
+import { writeOgg } from '../src/audio/synth/writer';
 
 // --- CLI ---
 
-const srcDirArg = process.argv[2];
-const publicDirArg = process.argv[3];
-if (!srcDirArg || !publicDirArg) {
-  console.error('Kullanim: tsx scripts/generate-ambient-tracks.ts <src-dir> <public-dir>');
+const outDirArg = process.argv[2];
+if (!outDirArg) {
+  console.error('Kullanim: tsx scripts/generate-ambient-tracks.ts <out-dir>');
   process.exit(1);
 }
-const srcDir = resolve(srcDirArg);
-const publicDir = resolve(publicDirArg);
+const outDir = resolve(outDirArg);
 
 // --- Ortak zaman ---
 // void-whisper ve iron-tide crossfade ile geçtiği için tempo/uzunluk aynı.
@@ -316,17 +314,11 @@ const tracks: { name: string; dir: string; render: () => SynthesisResult }[] = [
 ];
 
 for (const track of tracks) {
-  const srcTrackDir = join(srcDir, track.dir);
-  const publicTrackDir = join(publicDir, track.dir);
-  if (!existsSync(srcTrackDir)) mkdirSync(srcTrackDir, { recursive: true });
-  if (!existsSync(publicTrackDir)) mkdirSync(publicTrackDir, { recursive: true });
+  const trackDir = join(outDir, track.dir);
+  if (!existsSync(trackDir)) mkdirSync(trackDir, { recursive: true });
 
   const result = track.render();
-  const wavPath = join(srcTrackDir, `${track.name}.wav`);
-  const oggPath = join(publicTrackDir, `${track.name}.ogg`);
-  writeWav(wavPath, result, 1.0);
+  const oggPath = join(trackDir, `${track.name}.ogg`);
   writeOgg(oggPath, result);
-  console.log(
-    `Generated: ${wavPath} + ${oggPath} (${result.duration.toFixed(2)}s, ${result.sampleRate}Hz)`,
-  );
+  console.log(`Generated: ${oggPath} (${result.duration.toFixed(2)}s, ${result.sampleRate}Hz)`);
 }

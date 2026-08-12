@@ -12,8 +12,10 @@
  * Kullanım: tsx core/scripts/audio-qa.ts <dizin>
  */
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { ensureFfmpeg } from '../src/audio/synth/writer';
 
 /** Tek örnek içinde bu farkı aşan atlama duyulur sertlik sayılır. */
 const CLICK_DELTA_THRESHOLD = 0.35;
@@ -23,36 +25,43 @@ interface Decoded {
   sampleRate: number;
 }
 
-function decodeWav(path: string): Decoded {
-  const buf = readFileSync(path);
-  if (buf.toString('ascii', 0, 4) !== 'RIFF' || buf.toString('ascii', 8, 12) !== 'WAVE') {
-    throw new Error(`Geçersiz WAV: ${path}`);
-  }
-  const numChannels = buf.readUInt16LE(22);
-  const sampleRate = buf.readUInt32LE(24);
-  const bitsPerSample = buf.readUInt16LE(34);
-  if (bitsPerSample !== 16) throw new Error(`Yalnızca 16-bit destekli: ${path}`);
+/**
+ * OGG'yi FFmpeg ile ham float PCM'e çözer.
+ *
+ * Ölçüm shipped formatın kendisi üzerinde yapılır: Vorbis kayıplı bir codec,
+ * dolayısıyla kaynak mix'te olmayan artefaktlar (kırpma, transient bozulması)
+ * encode sırasında oluşabilir. Encode ÖNCESİNİ ölçmek bunları kaçırırdı.
+ */
+function decodeOgg(path: string): Decoded {
+  const probe = spawnSync(
+    'ffprobe',
+    [
+      '-v',
+      'error',
+      '-show_entries',
+      'stream=sample_rate,channels',
+      '-of',
+      'default=noprint_wrappers=1:nokey=1',
+      path,
+    ],
+    { encoding: 'utf8' },
+  );
+  if (probe.status !== 0) throw new Error(`ffprobe okuyamadi: ${path}`);
+  const [sampleRateRaw, channelsRaw] = probe.stdout.trim().split(/\s+/);
+  const sampleRate = Number(sampleRateRaw);
+  const numChannels = Number(channelsRaw);
 
-  let offset = 12;
-  let dataOffset = -1;
-  let dataSize = 0;
-  while (offset < buf.length - 8) {
-    const id = buf.toString('ascii', offset, offset + 4);
-    const size = buf.readUInt32LE(offset + 4);
-    if (id === 'data') {
-      dataOffset = offset + 8;
-      dataSize = Math.min(size, buf.length - dataOffset);
-      break;
-    }
-    offset += 8 + size + (size % 2);
-  }
-  if (dataOffset === -1) throw new Error(`data chunk yok: ${path}`);
+  const res = spawnSync('ffmpeg', ['-v', 'error', '-i', path, '-f', 'f32le', '-'], {
+    maxBuffer: 1024 * 1024 * 512,
+  });
+  if (res.status !== 0) throw new Error(`ffmpeg decode hatasi: ${path}`);
 
-  const frameCount = Math.floor(dataSize / 2 / numChannels);
+  const raw = res.stdout;
+  const frameCount = Math.floor(raw.length / 4 / numChannels);
   const channels = Array.from({ length: numChannels }, () => new Float32Array(frameCount));
   for (let i = 0; i < frameCount; i++) {
     for (let ch = 0; ch < numChannels; ch++) {
-      channels[ch]![i] = buf.readInt16LE(dataOffset + (i * numChannels + ch) * 2) / 32768;
+      channels[ch]![i] = raw.readFloatLE((i * numChannels + ch) * 4);
     }
   }
   return { channels, sampleRate };
@@ -150,7 +159,7 @@ function bandProfile(samples: Float32Array, sampleRate: number): number[] {
 }
 
 function analyze(path: string, label: string): void {
-  const { channels, sampleRate } = decodeWav(path);
+  const { channels, sampleRate } = decodeOgg(path);
   const left = channels[0]!;
   const right = channels[1] ?? left;
   const n = left.length;
@@ -210,12 +219,12 @@ function analyze(path: string, label: string): void {
   );
 }
 
-function collectWavs(dir: string): string[] {
+function collectOggs(dir: string): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...collectWavs(full));
-    else if (entry.isFile() && entry.name.endsWith('.wav')) out.push(full);
+    if (entry.isDirectory()) out.push(...collectOggs(full));
+    else if (entry.isFile() && entry.name.endsWith('.ogg')) out.push(full);
   }
   return out.sort();
 }
@@ -231,9 +240,11 @@ if (!statSync(root, { throwIfNoEntry: false })?.isDirectory()) {
   process.exit(1);
 }
 
-const files = collectWavs(root);
+ensureFfmpeg();
+
+const files = collectOggs(root);
 if (files.length === 0) {
-  console.log(`${root} altında .wav yok.`);
+  console.log(`${root} altında .ogg yok. Önce: pnpm --filter @volstudio/vol-hell generate:audio`);
   process.exit(0);
 }
 
@@ -243,7 +254,7 @@ console.log(
 let totalClicks = 0;
 let totalClip = 0;
 for (const file of files) {
-  const { channels } = decodeWav(file);
+  const { channels } = decodeOgg(file);
   const l = channels[0]!;
   for (let i = 1; i < l.length; i++) {
     if (Math.abs(l[i]! - l[i - 1]!) > CLICK_DELTA_THRESHOLD) totalClicks++;

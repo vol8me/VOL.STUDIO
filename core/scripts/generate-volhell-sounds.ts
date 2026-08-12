@@ -24,12 +24,12 @@
  * normalize yalnızca son mix'te bir kez uygulanır — katmanlar arası doğal
  * dinamik korunur.
  *
- * Kullanim: tsx scripts/generate-volhell-sounds.ts <src-dir> <public-dir> [filter]
+ * Kullanim: tsx scripts/generate-volhell-sounds.ts <out-dir> [filter]
  */
 
 import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { writeWav, writeOgg } from '../src/audio/synth/writer';
+import { writeOgg } from '../src/audio/synth/writer';
 import {
   createMix,
   addVoice,
@@ -55,36 +55,34 @@ import {
 
 // --- CLI ---
 
-const srcDirArg = process.argv[2];
-const publicDirArg = process.argv[3];
-const filterArg = process.argv[4];
+const outDirArg = process.argv[2];
+const filterArg = process.argv[3];
 
-if (!srcDirArg || !publicDirArg) {
-  console.error('Kullanim: tsx scripts/generate-volhell-sounds.ts <src-dir> <public-dir> [filter]');
-  console.error('  src-dir: WAV source-of-truth, örn. ../games/vol-hell/audio-src/sfx');
-  console.error('  public-dir: shipped OGG, örn. ../games/vol-hell/public/assets/audio/sfx');
+if (!outDirArg) {
+  console.error('Kullanim: tsx scripts/generate-volhell-sounds.ts <out-dir> [filter]');
+  console.error('  out-dir: OGG çıktı kökü, örn. ../games/vol-hell/public/assets/audio/sfx');
   console.error('  filter: kategori (ui|player|combat) veya isim oneki (fire, enemy-hit, ...)');
   process.exit(1);
 }
 
-const srcDir = resolve(srcDirArg);
-const publicDir = resolve(publicDirArg);
+const outDir = resolve(outDirArg);
 
 function ensureDir(dir: string): void {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 }
 
 /**
- * Var olan dizinde verilen uzantılara sahip dosyaları siler (bir seviye alt
- * klasörler dahil). Filtreli çalıştırmada dokunmaz.
+ * Çıktı dizinindeki eski ses dosyalarını siler (bir seviye alt klasör dahil).
+ * Filtreli çalıştırmada dokunmaz — o durumda yalnızca eşleşen sesler üretilir.
  *
- * `publicDir` için hem `.ogg` hem `.mp3` verilir: `.mp3` `convert:ios` ile
- * ayrı üretiliyor ve bir ses yeniden adlandırılırsa/silinirse eski `.mp3`
- * hiçbir script tarafından temizlenmiyordu.
+ * `.mp3` de temizlenir: iOS için `convert:ios` ile ayrı üretiliyor ve bir ses
+ * yeniden adlandırılırsa/silinirse eski `.mp3` başka hiçbir script tarafından
+ * temizlenmiyor, yetim dosya olarak kalıyordu.
  */
-function pruneExtensions(dir: string, exts: string[]): void {
+function pruneAudio(dir: string): void {
   if (!existsSync(dir) || filterArg) return;
-  const matches = (name: string): boolean => exts.some((ext) => name.endsWith(ext));
+  const matches = (name: string): boolean =>
+    ['.ogg', '.mp3', '.wav'].some((ext) => name.endsWith(ext));
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.isFile() && matches(entry.name)) {
       rmSync(join(dir, entry.name));
@@ -96,10 +94,8 @@ function pruneExtensions(dir: string, exts: string[]): void {
   }
 }
 
-ensureDir(srcDir);
-ensureDir(publicDir);
-pruneExtensions(srcDir, ['.wav']);
-pruneExtensions(publicDir, ['.ogg', '.mp3']);
+ensureDir(outDir);
+pruneAudio(outDir);
 
 // --- Perde paleti ---
 // Müzikle aynı D-kökü ailesinden: SFX ve müzik çakışmıyor, akraba duyuluyor.
@@ -444,25 +440,18 @@ for (const spec of specs) {
     if (!nameMatch && !categoryMatch) continue;
   }
 
-  const srcCategoryDir = join(srcDir, spec.category);
-  const publicCategoryDir = join(publicDir, spec.category);
-  ensureDir(srcCategoryDir);
-  ensureDir(publicCategoryDir);
+  const categoryDir = join(outDir, spec.category);
+  ensureDir(categoryDir);
 
   const mix = spec.render();
   const result = masterPeak(mix, spec.peak, spec.drive ?? 1);
 
-  const wavPath = join(srcCategoryDir, `${spec.name}.wav`);
-  const oggPath = join(publicCategoryDir, `${spec.name}.ogg`);
-  writeWav(wavPath, result);
-  writeOgg(oggPath, result);
+  writeOgg(join(categoryDir, `${spec.name}.ogg`), result);
   console.log(
     `Generated: ${spec.category}/${spec.name} (${result.duration.toFixed(2)}s, tepe ${spec.peak})`,
   );
 }
 
 console.log(
-  filter
-    ? `\nFiltreli SFX (${filter}) yazıldı: ${srcDir} + ${publicDir}`
-    : `\nTüm SFX yazıldı: ${srcDir} + ${publicDir}`,
+  filter ? `\nFiltreli SFX (${filter}) yazıldı: ${outDir}` : `\nTüm SFX yazıldı: ${outDir}`,
 );

@@ -5,7 +5,7 @@
 SFX motorundan (`@volstudio/core/audio/synth`) ayrıdır; müzik uzun loop'lar ve
 çok kanallı stem mix'i için optimize edilmiştir.
 
-> **Runtime'da sentez YAPILMAZ.** Motor yalnızca önceden üretilmiş WAV/OGG/MP3
+> **Runtime'da sentez YAPILMAZ.** Motor yalnızca önceden üretilmiş OGG (iOS'ta MP3)
 > stem'leri çalar. Müzik ve SFX dosyaları build-time script'lerle (`core/scripts/generate-*.ts`)
 > üretilir. Bu bilinçli bir karardır: runtime sentez CPU maliyeti ve mobilde
 > öngörülemeyen zamanlama getirir.
@@ -18,7 +18,7 @@ core/src/audio/music/
   engine.ts            — MusicEngine: yükleme, çalma, durdurma, crossfade
   mixer.ts             — MusicMixer: her stem için ayrı GainNode + master kompresör
   scheduler.ts         — MusicScheduler: BPM/ölçü bazlı zaman/bar/beat dönüşümleri
-  loader.ts            — StemLoader: WAV/OGG/MP3 stem'leri yükle ve decode et; OGG için MP3 fallback
+  loader.ts            — StemLoader: stem yükle ve decode et; OGG başarısızsa MP3 fallback
   gain-resolver.ts     — state'e göre stem gain'ini çözer
   instrument.ts        — build-time SFX script'leri için enstrüman preset'leri
   index.ts             — public API
@@ -103,17 +103,17 @@ Bir müzik parçası. `id`, `bpm`, `stems` ve opsiyonel `timeSignature` (`[4, 4]
 
 Track'in bir katmanı. Birden fazla stem aynı anda çalarak harmoni/richness oluşturur.
 
-| Alan      | Açıklama                                         |
-| --------- | ------------------------------------------------ |
-| `id`      | Benzersiz stem kimliği                           |
-| `src`     | WAV/OGG/MP3 dosya yolu; OGG tercih, MP3 fallback |
-| `buffer`  | Önceden yüklenmiş `AudioBuffer`                  |
-| `gain`    | Temel gain (0-1)                                 |
-| `loop`    | Loop çalışıp çalmayacağı                         |
-| `pan`     | Stereo pan (-1 sol, 1 sağ)                       |
-| `gainMap` | State'e göre adaptif gain haritası               |
-| `gainFn`  | `(state, context) => number` adaptif fonksiyon   |
-| `stinger` | One-shot çal ve bitince dur                      |
+| Alan      | Açıklama                                       |
+| --------- | ---------------------------------------------- |
+| `id`      | Benzersiz stem kimliği                         |
+| `src`     | OGG dosya yolu; iOS'ta MP3 fallback denenir    |
+| `buffer`  | Önceden yüklenmiş `AudioBuffer`                |
+| `gain`    | Temel gain (0-1)                               |
+| `loop`    | Loop çalışıp çalmayacağı                       |
+| `pan`     | Stereo pan (-1 sol, 1 sağ)                     |
+| `gainMap` | State'e göre adaptif gain haritası             |
+| `gainFn`  | `(state, context) => number` adaptif fonksiyon |
+| `stinger` | One-shot çal ve bitince dur                    |
 
 ### MusicState
 
@@ -218,24 +218,40 @@ await music.crossfadeTo('combat', 2, {
 
 ## Ses üretimi (build-time)
 
-Motor runtime'da sentez YAPMAZ; yalnızca hazır WAV/OGG/MP3 çalar. Müzik dosyaları
-`core/scripts/` altındaki track başına script'lerle üretilir (source-of-truth WAV,
-ship edilen OGG + MP3 fallback).
+Motor runtime'da sentez YAPMAZ; yalnızca hazır dosya çalar.
+
+### Asset akışı — tek format, tek kopya
+
+```
+core/scripts/generate-*.ts          KAYNAK (git'te)
+        ↓ pnpm generate:audio
+games/*/public/assets/audio/**.ogg  ÜRETİLEN (gitignore)
+        ↓ vite build
+games/*/dist/assets/audio/**.ogg    BUILD (gitignore)
+```
+
+**Ses dosyaları repoda tutulmaz.** Üretim deterministik olduğu için asıl kaynak
+script'lerin kendisidir; çıktıyı da saklamak aynı içeriği iki kez tutmak olurdu
+ve her yeniden üretim git geçmişine yeni blob ekliyordu. Taze klonda
+`predev`/`prebuild` eksik sesi bir kez otomatik üretir
+(`core/scripts/ensure-audio.mjs`); var olanı yeniden üretmez.
+
+Yalnızca **OGG** üretilir. iOS'a çıkılacağı zaman `pnpm convert:ios` OGG'den
+MP3 türetir (WKWebView Ogg Vorbis decode etmez) ve `StemLoader` `.ogg`
+başarısız olursa `.mp3`'e düşer. iOS hedefi yokken MP3 üretilmez.
 
 > **Uyarı — müzik için öneri:** `synth` motoru SFX, UI blip ve kısa drone için
 > designed. Çoksesli müzik, armoni ve uzun melodi üretmeye çalışmak aynı sonik
 > hissiyat ve sınırlı tımbr çıkarır. Müzik parçaları için DAW veya hazır royalty-free
-> stem'leri WAV/OGG olarak export edip bu motorla çalmak daha sağlıklıdır.
+> stem'leri OGG olarak export edip bu motorla çalmak daha sağlıklıdır.
 > Prosedürel müzik denemeleri yalnızca kısa jingle / drone düzeyinde tutarlıdır.
 
 ```bash
-pnpm --filter @volstudio/vol-hell generate:music   # tüm müzik WAV'ları
-pnpm --filter @volstudio/vol-hell generate:sounds  # tüm SFX WAV'ları
+pnpm --filter @volstudio/vol-hell generate:audio   # SFX + müzik (hepsi)
+pnpm --filter @volstudio/vol-hell generate:music   # yalnız müzik
+pnpm --filter @volstudio/vol-hell generate:sounds  # yalnız SFX
+pnpm audio:qa                                      # üretileni ölç
 ```
-
-Script'ler `@volstudio/core/audio/synth` motorunu kullanır (bkz. `sound-synth.md`).
-Üretim **deterministiktir**: aynı parametreler her zaman birebir aynı dosyayı
-verir, dolayısıyla üretilen asset'ler diff'lenebilir.
 
 > Daha önce bu doküman `ProceduralStemGenerator`, `procedural-presets.ts`,
 > `playStinger()`, `setTension()` ve `setBossPhase()` belgeliyordu. Bunların

@@ -22,7 +22,7 @@ import {
   applyEdgeGuard,
   masterChain,
   chordFreqs,
-  parseWavOggArgs,
+  parseOggArg,
   writeTrack,
   type ChordDef,
 } from './audio-mix';
@@ -40,7 +40,7 @@ import {
   filteredPulse,
 } from './industrial-voices';
 
-const { wavPath, oggPath } = parseWavOggArgs('generate-iron-vein.ts');
+const oggPath = parseOggArg('generate-iron-vein.ts');
 
 // --- Zaman ---
 
@@ -211,4 +211,4 @@ for (const note of MOTIF) {
 applyEdgeGuard(mix, 14);
 const result = masterChain(mix, { targetRmsDb: -17, peakCeiling: 0.92, drive: 1.15 });
 
-writeTrack(wavPath, oggPath, result);
+writeTrack(oggPath, result);

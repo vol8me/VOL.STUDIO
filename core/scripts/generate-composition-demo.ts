@@ -14,7 +14,7 @@ import {
   applyEdgeGuard,
   masterChain,
   chordFreqs,
-  parseWavOggArgs,
+  parseOggArg,
   writeTrack,
   type ChordDef,
 } from './audio-mix';
@@ -30,7 +30,7 @@ import {
   crystalBell,
 } from '../src/audio/synth/presets/instruments';
 
-const { wavPath, oggPath } = parseWavOggArgs('generate-composition-demo.ts');
+const oggPath = parseOggArg('generate-composition-demo.ts');
 
 const BPM = 88;
 const LOOP_BEATS = 48;
@@ -188,4 +188,4 @@ for (let beat = 40; beat < LOOP_BEATS; beat += 4) {
 applyEdgeGuard(mix, 12);
 const result = masterChain(mix, { targetRmsDb: -16, peakCeiling: 0.95, drive: 1.05 });
 
-writeTrack(wavPath, oggPath, result);
+writeTrack(oggPath, result);

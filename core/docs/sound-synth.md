@@ -1,13 +1,14 @@
 # Sound Synth Motoru
 
-`@volstudio/core/audio/synth` prosedürel ses sentezi üretir. Oyunlar build zamanında WAV çıktı alır; dış ses kütüphanesi veya DAW gerektirmez. Motor saf matematikle yazılmıştır; hem Node hem tarayıcıda çalışır. `writeWav` Node-only'dır.
+`@volstudio/core/audio/synth` prosedürel ses sentezi üretir. Oyunlar build zamanında OGG çıktı alır; dış ses kütüphanesi veya DAW gerektirmez. Motor saf matematikle yazılmıştır; hem Node hem tarayıcıda çalışır. `writeWav`/`writeOgg` Node-only'dır ve `writeOgg` FFmpeg ister.
 
 ## Determinizm ve seviye kontrolü
 
 - **Üretim tekrarlanabilirdir.** Gürültü kaynakları `Math.random()` değil,
   seed'lenebilir bir PRNG kullanır. Aynı parametreler + aynı `seed` her zaman
   birebir aynı örnekleri verir; `seed` verilmezse sabit bir varsayılan kullanılır.
-  Üretilen WAV'lar diff'lenebilir.
+  Aynı script her zaman aynı sesi verir; bu yüzden üretilen dosyalar repoda
+  tutulmaz (asset akışı için bkz. `music-engine.md`).
 - **`normalize` opsiyoneldir** (varsayılan `true`). `true` iken sonuç tepe
   değerine göre 0.95'e ölçeklenir. Bir mix içinde birden çok ses üretiliyorsa
   (`compose()` gibi) her birini ayrı ayrı normalize etmek aralarındaki dinamik
@@ -33,7 +34,7 @@ core/src/audio/synth/
   physical.ts   — fiziksel model (pluck / string)
   random.ts     — seed'li PRNG
   presets/      — kategorili hazır ses tarifleri
-  writer.ts     — mono/stereo WAV yazıcı
+  writer.ts     — WAV + OGG yazıcı (OGG için FFmpeg)
   index.ts      — public API
 ```
 
@@ -51,17 +52,17 @@ Pipeline:
 
 ```typescript
 import { Presets, synth } from '@volstudio/core/audio/synth';
-import { writeWav } from '@volstudio/core/audio/synth/writer';
+import { writeOgg } from '@volstudio/core/audio/synth/writer';
 
 const result = Presets.laser(880, 0.15);
 const sound = synth(result.duration, result);
-writeWav('public/assets/audio/sfx/combat/laser.wav', sound);
+writeOgg('public/assets/audio/sfx/combat/laser.ogg', sound);
 ```
 
 ### 2. Paket scripti
 
 ```json
-"generate:sounds": "tsx ../../core/scripts/generate-volhell-sounds.ts public/assets/audio/sfx"
+"generate:audio": "pnpm run generate:sounds && pnpm run generate:music"
 ```
 
 ### 3. Çalıştırma
@@ -195,7 +196,7 @@ sustainLevel: 0.7
 import { compose, Presets } from '@volstudio/core/audio/synth';
 
 const result = compose(Presets.arpeggioUp(440), Presets.blip(440, 0.1));
-writeWav('public/assets/audio/sfx/level-up.wav', result);
+writeOgg('public/assets/audio/sfx/level-up.ogg', result);
 ```
 
 ```typescript

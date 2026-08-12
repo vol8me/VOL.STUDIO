@@ -24,7 +24,7 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import type { SynthesisResult } from '../src/audio/synth/types';
-import { writeWav, writeOgg } from '../src/audio/synth/writer';
+import { writeOgg } from '../src/audio/synth/writer';
 
 export const SAMPLE_RATE = 44100;
 
@@ -365,25 +365,28 @@ export function chordAtBeat(chords: ChordDef[], beat: number, chordBeats: number
 // --- CLI ---
 
 /** `<out.wav> <out.ogg>` argümanlarını okur, doğrular, klasörlerini oluşturur. */
-export function parseWavOggArgs(scriptName: string): { wavPath: string; oggPath: string } {
-  const wavArg = process.argv[2];
-  const oggArg = process.argv[3];
-  if (!wavArg || !oggArg) {
-    console.error(`Kullanim: tsx scripts/${scriptName} <out.wav> <out.ogg>`);
+export function parseOggArg(scriptName: string): string {
+  const oggArg = process.argv[2];
+  if (!oggArg) {
+    console.error(`Kullanim: tsx scripts/${scriptName} <out.ogg>`);
     process.exit(1);
   }
-  const wavPath = resolve(wavArg);
   const oggPath = resolve(oggArg);
-  if (!existsSync(dirname(wavPath))) mkdirSync(dirname(wavPath), { recursive: true });
   if (!existsSync(dirname(oggPath))) mkdirSync(dirname(oggPath), { recursive: true });
-  return { wavPath, oggPath };
+  return oggPath;
 }
 
-/** WAV (source-of-truth) + OGG (shipped) çiftini yazar ve sonucu loglar. */
-export function writeTrack(wavPath: string, oggPath: string, result: SynthesisResult): void {
-  writeWav(wavPath, result, 1.0);
+/**
+ * Parçayı OGG olarak yazar ve sonucu loglar.
+ *
+ * Tek format bilinçli bir karardır. Önceden WAV (kayıpsız kaynak) + OGG
+ * (shipped) çifti üretiliyordu; WAV'lar repoda 54 MB yer kaplıyor ve her
+ * yeniden üretimde git geçmişine yeni blob ekliyordu. Üretim deterministik
+ * olduğu için asıl kaynak WAV değil bu script'lerin kendisidir — aynı koddan
+ * her zaman aynı ses çıkar, dolayısıyla kayıpsız kopyayı saklamanın karşılığı
+ * yok. iOS gerektiğinde `convert-audio.ts` OGG'den MP3 üretir.
+ */
+export function writeTrack(oggPath: string, result: SynthesisResult): void {
   writeOgg(oggPath, result);
-  console.log(
-    `Generated: ${wavPath} + ${oggPath} (${result.duration.toFixed(2)}s, ${result.sampleRate}Hz)`,
-  );
+  console.log(`Generated: ${oggPath} (${result.duration.toFixed(2)}s, ${result.sampleRate}Hz)`);
 }
