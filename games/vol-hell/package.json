@@ -13,10 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "generate:audio": "pnpm run generate:sounds && pnpm run generate:music",
-    "ensure:audio": "node ../../core/scripts/ensure-audio.mjs public/assets/audio",
-    "predev": "pnpm run ensure:audio",
-    "prebuild": "pnpm run ensure:audio"
+    "generate:audio": "pnpm run generate:sounds && pnpm run generate:music"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

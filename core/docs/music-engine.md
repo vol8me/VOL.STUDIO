@@ -223,18 +223,22 @@ Motor runtime'da sentez YAPMAZ; yalnızca hazır dosya çalar.
 ### Asset akışı — tek format, tek kopya
 
 ```
-core/scripts/generate-*.ts          KAYNAK (git'te)
-        ↓ pnpm generate:audio
-games/*/public/assets/audio/**.ogg  ÜRETİLEN (gitignore)
+core/scripts/generate-*.ts          ÜRETİM SCRIPT'İ (git'te)
+        ↓ pnpm generate:audio        (yalnızca ses değişince elle çalıştırılır)
+games/*/public/assets/audio/**.ogg  OYUN ASSET'İ (git'te)
         ↓ vite build
-games/*/dist/assets/audio/**.ogg    BUILD (gitignore)
+games/*/dist/assets/audio/**.ogg    BUILD ÇIKTISI (gitignore)
 ```
 
-**Ses dosyaları repoda tutulmaz.** Üretim deterministik olduğu için asıl kaynak
-script'lerin kendisidir; çıktıyı da saklamak aynı içeriği iki kez tutmak olurdu
-ve her yeniden üretim git geçmişine yeni blob ekliyordu. Taze klonda
-`predev`/`prebuild` eksik sesi bir kez otomatik üretir
-(`core/scripts/ensure-audio.mjs`); var olanı yeniden üretmez.
+**OGG dosyaları repoda tutulur.** Oyun asset'idir — tıpkı font ve texture gibi.
+Klonlayan biri `pnpm install && pnpm dev` ile oyunu sesli çalıştırabilmeli;
+asset'i gitignore'lamak oyunu çalıştırmak için FFmpeg kurulumunu ve dakikalarca
+üretim beklemeyi zorunlu kılardı.
+
+Üretim script'leri yalnızca ses tasarımı değişince çalıştırılır; çıktı commit
+edilir. Repoda tutulmayan tek şey ara formatlardır: kayıpsız WAV kopyası
+saklanmaz (üretim deterministik, gerekirse script'ten yeniden alınır) ve MP3
+yalnızca iOS build'i alınacağı zaman türetilir.
 
 Yalnızca **OGG** üretilir. iOS'a çıkılacağı zaman `pnpm convert:ios` OGG'den
 MP3 türetir (WKWebView Ogg Vorbis decode etmez) ve `StemLoader` `.ogg`

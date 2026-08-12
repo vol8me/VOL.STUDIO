@@ -246,20 +246,21 @@ doğrulandı.
 
 ---
 
-## Ses asset pipeline'ı — tek format, repoda tutulmuyor (2026-08-13)
+## Ses asset pipeline'ı — tek format (2026-08-13)
 
 **Sorun:** Aynı ses üç formatta (wav+ogg+mp3) repoda duruyordu. Git'te 72 ses
-dosyası / 66 MB, geçmişte 238 MB blob, `.git` 221 MB. MP3'ler hiç kullanılmayan
-bir iOS hedefi için üretilmişti (`src-tauri/gen/` boş).
+dosyası / 66 MB. MP3'ler hiç kullanılmayan bir iOS hedefi için üretilmişti
+(`src-tauri/gen/` boş).
 
-**Karar:** Ses dosyaları repoda tutulmaz. Üretim deterministik olduğu için asıl
-kaynak `core/scripts/generate-*.ts`'tir; çıktıyı da saklamak aynı içeriği iki
-kez tutmaktır.
+**Karar:** Tek format — OGG. Oyun asset'i olduğu için repoda TUTULUR (font ve
+texture gibi). Klonlayan `pnpm install && pnpm dev` ile sesli oynayabilmeli.
+Repoda tutulmayan tek şey ara formatlardır: kayıpsız WAV kopyası (üretim
+deterministik, gerekirse script'ten alınır) ve MP3 (yalnızca iOS build'inde).
 
 ```
-core/scripts/generate-*.ts          KAYNAK (git'te)
-games/*/public/assets/audio/**.ogg  ÜRETİLEN (gitignore)
-games/*/dist/                       BUILD (gitignore)
+core/scripts/generate-*.ts          ÜRETİM SCRIPT'İ (git'te)
+games/*/public/assets/audio/**.ogg  OYUN ASSET'İ (git'te)
+games/*/dist/                       BUILD ÇIKTISI (gitignore)
 ```
 
 **Yapılanlar:**
@@ -269,12 +270,15 @@ games/*/dist/                       BUILD (gitignore)
 - `games/vol-hell/audio-src/` (24 WAV, 55 MB) silindi.
 - `public/**/*.mp3` (24 dosya) silindi. MP3 **altyapısı duruyor**: iOS hedefi
   geldiğinde `pnpm convert:ios` OGG'den üretir, `StemLoader` fallback'i yerinde.
-- `.gitignore`: `games/*/public/assets/audio/` — git'te 0 ses dosyası kaldı.
-- `core/scripts/ensure-audio.mjs` + `predev`/`prebuild`: taze klonda ses yoksa
-  bir kez üretir, varsa 0.7 s'de hiçbir şey yapmadan döner (idempotent).
 - `generate:audio` toplu komut eklendi.
 - `audio-qa.ts` artık shipped OGG'yi FFmpeg ile decode edip ölçüyor — encode
   sonrası artefaktlar da kapsama girdi.
 
-**Doğrulama:** Ses klasörü silinip `ensure:audio` ile sıfırdan üretildi (24 OGG),
-ikinci çağrı no-op. `pnpm audio:qa`: 0 click, 0 clip.
+**Doğrulama:** `pnpm audio:qa`: 0 click, 0 clip. Build çıktısında 24 ogg,
+0 wav, 0 mp3.
+
+**Düzeltilen hata:** İlk uygulamada OGG'ler de gitignore'lanmış, klon sonrası
+otomatik üretim için `ensure-audio.mjs` + `predev`/`prebuild` hook'u
+eklenmişti. Yanlış karardı: oyun asset'ini repodan çıkarmak, oyunu çalıştırmak
+için FFmpeg kurulumunu ve dakikalarca üretim beklemeyi zorunlu kılıyordu.
+Geri alındı, hook silindi.
