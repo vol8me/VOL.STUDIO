@@ -40,7 +40,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     stems: [
       {
         id: 'iron-vein',
-        src: `${musicBasePath}/main-menu/iron-vein.wav`,
+        src: `${musicBasePath}/main-menu/iron-vein.ogg`,
         gain: 0.8,
         loop: true,
       },
@@ -55,7 +55,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     stems: [
       {
         id: 'black-tide',
-        src: `${musicBasePath}/main-menu/black-tide.wav`,
+        src: `${musicBasePath}/main-menu/black-tide.ogg`,
         gain: 0.8,
         loop: true,
       },
@@ -70,7 +70,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     stems: [
       {
         id: 'crimson-horizon',
-        src: `${musicBasePath}/main-menu/crimson-horizon.wav`,
+        src: `${musicBasePath}/main-menu/crimson-horizon.ogg`,
         gain: 0.8,
         loop: true,
       },
@@ -85,7 +85,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     stems: [
       {
         id: 'void-whisper',
-        src: `${musicBasePath}/gameplay/void-whisper.wav`,
+        src: `${musicBasePath}/gameplay/void-whisper.ogg`,
         gain: 0.7,
         loop: true,
       },
@@ -100,7 +100,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     stems: [
       {
         id: 'iron-tide',
-        src: `${musicBasePath}/gameplay/iron-tide.wav`,
+        src: `${musicBasePath}/gameplay/iron-tide.ogg`,
         gain: 0.7,
         loop: true,
       },
@@ -115,7 +115,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     stems: [
       {
         id: 'last-ember',
-        src: `${musicBasePath}/death/last-ember.wav`,
+        src: `${musicBasePath}/death/last-ember.ogg`,
         gain: 0.75,
         loop: false,
       },

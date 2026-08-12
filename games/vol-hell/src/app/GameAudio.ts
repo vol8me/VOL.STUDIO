@@ -2,7 +2,7 @@ import { MusicEngine, SidechainDucker } from '@volstudio/core';
 import type { AudioSettings, AudioSettingsData } from '@/app/AudioSettings';
 import { soundAssets, soundKeys, type SoundEvent } from '@/config/sounds';
 import { sfxDucking } from '@/config/audio';
-import type { MusicTrack, MusicState } from '@volstudio/core/audio/music';
+import { StemLoader, type MusicTrack, type MusicState } from '@volstudio/core/audio/music';
 
 /** SFX ses olayı başına ses sınırı. */
 interface SfxVoiceLimit {
@@ -18,6 +18,7 @@ interface SfxVoiceLimit {
  */
 class SfxBank {
   private readonly context: AudioContext;
+  private readonly loader: StemLoader;
   private readonly buffers = new Map<string, AudioBuffer[]>();
   /**
    * Devam eden yuklemeler. Cache yalnizca fetch+decode bittikten SONRA
@@ -44,6 +45,7 @@ class SfxBank {
 
   constructor(context: AudioContext, destination: AudioNode) {
     this.context = context;
+    this.loader = new StemLoader(context);
     this.busGain = context.createGain();
     this.busGain.connect(destination);
   }
@@ -74,22 +76,13 @@ class SfxBank {
 
   private async loadIntoCache(event: SoundEvent, key: string): Promise<void> {
     const paths = soundAssets[event];
-    const tasks = paths.map(async (path) => {
-      const response = await fetch(path);
-      if (!response.ok) throw new Error(`SFX yüklenemedi: ${path} (${response.status})`);
-      const contentType = response.headers.get('content-type');
-      if (contentType && !contentType.includes('audio') && !contentType.includes('octet-stream')) {
-        throw new Error(`SFX geçersiz içerik: ${path} (${contentType})`);
-      }
-      const arrayBuffer = await response.arrayBuffer();
-      try {
-        return await this.context.decodeAudioData(arrayBuffer);
-      } catch (err) {
-        throw new Error(
-          `SFX decode hatası: ${path} — ${err instanceof Error ? err.message : String(err)}`,
-        );
-      }
-    });
+    // `StemLoader.loadFromUrl` fetch + content-type kontrolü + decode + .ogg
+    // başarısız olursa .mp3 fallback'i tek yerden sağlar (music/loader.ts).
+    // Önceden burada ayrı, daha kısıtlı bir content-type kontrolü vardı ve
+    // fallback hiç yoktu — SFX'ler .ogg'ye taşınınca iOS WKWebView'da (Ogg
+    // Vorbis decode etmiyor) tüm SFX sessizce çalışmaz olurdu, müzik ise
+    // StemLoader kullandığı için çalışmaya devam ederdi.
+    const tasks = paths.map((path) => this.loader.loadFromUrl(path));
 
     // allSettled: bir dosya eksik/bozuksa diğerleri yine de yüklenir.
     // Promise.all kullansaydık tek 404 tüm SFX'i bozardı.

@@ -2,36 +2,58 @@ import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { synth, normalize } from '../src/audio/synth/engine';
-import { writeWav } from '../src/audio/synth/writer';
+import { writeWav, writeOgg } from '../src/audio/synth/writer';
 import type { SynthParams, SynthesisResult } from '../src/audio/synth/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const outDirArg = process.argv[2];
-const filterArg = process.argv[3];
+const srcDirArg = process.argv[2];
+const publicDirArg = process.argv[3];
+const filterArg = process.argv[4];
 
-if (!outDirArg) {
-  console.error('Kullanim: tsx scripts/generate-volhell-sounds.ts <out-dir> [filter]');
-  console.error('  out-dir: örn. ../games/vol-hell/public/assets/audio/sfx');
+if (!srcDirArg || !publicDirArg) {
+  console.error('Kullanim: tsx scripts/generate-volhell-sounds.ts <src-dir> <public-dir> [filter]');
+  console.error('  src-dir: WAV source-of-truth, örn. ../games/vol-hell/audio-src/sfx');
+  console.error('  public-dir: shipped OGG, örn. ../games/vol-hell/public/assets/audio/sfx');
   console.error('  filter: kategori (ui|player|combat) veya isim oneki (fire, enemy-hit, ...)');
   process.exit(1);
 }
 
-const outDir = resolve(outDirArg);
+const srcDir = resolve(srcDirArg);
+const publicDir = resolve(publicDirArg);
 
-if (!existsSync(outDir)) {
-  mkdirSync(outDir, { recursive: true });
-} else if (!filterArg) {
-  for (const entry of readdirSync(outDir, { withFileTypes: true })) {
-    if (entry.isFile() && entry.name.endsWith('.wav')) {
-      rmSync(join(outDir, entry.name));
+function ensureDir(dir: string): void {
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+}
+
+/**
+ * Var olan dizinde verilen uzantılara sahip dosyaları siler (bir seviye alt
+ * klasörler dahil). Filtreli (kategori/isim) çalıştırmada dokunmaz — o zaman
+ * yalnızca eşleşen spec'ler üretilir, tam temizlik yapılmaz.
+ *
+ * `publicDir` için hem `.ogg` hem `.mp3` verilir: `.mp3` `convert:ios` ile ayrı
+ * üretiliyor ve bir spec yeniden adlandırılır/silinirse eski `.mp3` hiçbir
+ * script tarafından temizlenmiyordu — public'te sonsuza dek kalan, hiçbir
+ * `.ogg`'e karşılık gelmeyen yetim dosya olarak duruyordu.
+ */
+function pruneExtensions(dir: string, exts: string[]): void {
+  if (!existsSync(dir) || filterArg) return;
+  const matches = (name: string): boolean => exts.some((ext) => name.endsWith(ext));
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isFile() && matches(entry.name)) {
+      rmSync(join(dir, entry.name));
     } else if (entry.isDirectory()) {
-      for (const file of readdirSync(join(outDir, entry.name))) {
-        if (file.endsWith('.wav')) rmSync(join(outDir, entry.name, file));
+      for (const file of readdirSync(join(dir, entry.name))) {
+        if (matches(file)) rmSync(join(dir, entry.name, file));
       }
     }
   }
 }
+
+ensureDir(srcDir);
+ensureDir(publicDir);
+pruneExtensions(srcDir, ['.wav']);
+pruneExtensions(publicDir, ['.ogg', '.mp3']);
 
 const SAMPLE_RATE = 32000;
 
@@ -979,8 +1001,10 @@ for (const spec of specs) {
     if (!nameMatch && !categoryMatch) continue;
   }
 
-  const categoryDir = join(outDir, spec.category);
-  if (!existsSync(categoryDir)) mkdirSync(categoryDir, { recursive: true });
+  const srcCategoryDir = join(srcDir, spec.category);
+  const publicCategoryDir = join(publicDir, spec.category);
+  if (!existsSync(srcCategoryDir)) mkdirSync(srcCategoryDir, { recursive: true });
+  if (!existsSync(publicCategoryDir)) mkdirSync(publicCategoryDir, { recursive: true });
 
   let result: SynthesisResult;
   if (spec.type === 'render') {
@@ -1002,13 +1026,19 @@ for (const spec of specs) {
     };
   }
 
-  const outPath = join(categoryDir, `${spec.name}.wav`);
-  writeWav(outPath, result);
-  console.log(`Generated: ${outPath} (${result.duration.toFixed(2)}s, ${result.sampleRate}Hz)`);
+  const srcPath = join(srcCategoryDir, `${spec.name}.wav`);
+  const publicPath = join(publicCategoryDir, `${spec.name}.ogg`);
+  writeWav(srcPath, result);
+  writeOgg(publicPath, result);
+  console.log(
+    `Generated: ${srcPath} + ${publicPath} (${result.duration.toFixed(2)}s, ${
+      result.sampleRate
+    }Hz)`,
+  );
 }
 
 if (filter) {
-  console.log(`\nFiltered SFX (${filter}) written to ${outDir}`);
+  console.log(`\nFiltered SFX (${filter}) written to ${srcDir} + ${publicDir}`);
 } else {
-  console.log(`\nAll SFX written to ${outDir}`);
+  console.log(`\nAll SFX written to ${srcDir} + ${publicDir}`);
 }

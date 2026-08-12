@@ -10,14 +10,14 @@
  *
  * Tonalite: D minor — combat track ile uyumlu.
  *
- * Kullanım: tsx scripts/generate-ambient-tracks.ts <out-dir>
+ * Kullanım: tsx scripts/generate-ambient-tracks.ts <src-dir> <public-dir>
  */
 
 import { existsSync, mkdirSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { synth } from '../src/audio/synth/engine';
 import { pluck } from '../src/audio/synth/physical';
-import { writeWav } from '../src/audio/synth/writer';
+import { writeWav, writeOgg } from '../src/audio/synth/writer';
 import type { SynthesisResult } from '../src/audio/synth/types';
 import {
   SAMPLE_RATE,
@@ -33,13 +33,16 @@ import {
 
 // --- CLI ---
 
-const outDirArg = process.argv[2];
-if (!outDirArg) {
-  console.error('Kullanim: tsx scripts/generate-ambient-tracks.ts <out-dir>');
+const srcDirArg = process.argv[2];
+const publicDirArg = process.argv[3];
+if (!srcDirArg || !publicDirArg) {
+  console.error('Kullanim: tsx scripts/generate-ambient-tracks.ts <src-dir> <public-dir>');
   process.exit(1);
 }
-const outDir = resolve(outDirArg);
-if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
+const srcDir = resolve(srcDirArg);
+const publicDir = resolve(publicDirArg);
+if (!existsSync(srcDir)) mkdirSync(srcDir, { recursive: true });
+if (!existsSync(publicDir)) mkdirSync(publicDir, { recursive: true });
 
 // --- Sabitler ---
 
@@ -436,10 +439,17 @@ const tracks = [
 ];
 
 for (const track of tracks) {
-  const trackDir = join(outDir, track.dir);
-  if (!existsSync(trackDir)) mkdirSync(trackDir, { recursive: true });
+  const srcTrackDir = join(srcDir, track.dir);
+  const publicTrackDir = join(publicDir, track.dir);
+  if (!existsSync(srcTrackDir)) mkdirSync(srcTrackDir, { recursive: true });
+  if (!existsSync(publicTrackDir)) mkdirSync(publicTrackDir, { recursive: true });
+
   const result = track.render();
-  const outPath = join(trackDir, `${track.name}.wav`);
-  writeWav(outPath, result);
-  console.log(`Generated: ${outPath} (${result.duration.toFixed(2)}s, ${result.sampleRate}Hz)`);
+  const wavPath = join(srcTrackDir, `${track.name}.wav`);
+  const oggPath = join(publicTrackDir, `${track.name}.ogg`);
+  writeWav(wavPath, result);
+  writeOgg(oggPath, result);
+  console.log(
+    `Generated: ${wavPath} + ${oggPath} (${result.duration.toFixed(2)}s, ${result.sampleRate}Hz)`,
+  );
 }

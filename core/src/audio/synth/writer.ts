@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { execSync, spawnSync } from 'node:child_process';
 import type { SynthesisResult } from './types';
 import { createRandom } from './random';
 
@@ -66,4 +67,158 @@ export function writeWav(filePath: string, result: SynthesisResult, targetGain =
 
   mkdirSync(dirname(filePath), { recursive: true });
   writeFileSync(filePath, buffer);
+}
+
+export interface OggOptions {
+  /** Vorbis kalite seviyesi (0-10). Varsayılan 4 (~128kbps). */
+  quality?: number;
+  /** Final gain (0-1). Varsayılan 1 — headroom kararı normalize adımında kalır. */
+  targetGain?: number;
+}
+
+/** `ensureFfmpeg()` sonucu process başına bir kez saklanır — bkz. aşağıdaki not. */
+let ffmpegAvailable: boolean | undefined;
+
+/**
+ * FFmpeg yoksa `writeOgg` çağrılmadan önce net bir hata fırlatır.
+ * `writeWav` bu kontrolden etkilenmez — FFmpeg'e ihtiyaç duymaz.
+ *
+ * Sonuç process başına memoize edilir: FFmpeg'in varlığı process ömrü
+ * boyunca değişmez, ama `generate-*.ts` script'leri onlarca ses/müzik
+ * parçası için döngüde `writeOgg` çağırıyor — memoize olmadan her çağrı
+ * ayrı bir senkron subprocess spawn ediyordu.
+ *
+ * `convert-audio.ts` da aynı fonksiyonu kullanır (bkz. export) — iki ayrı
+ * kopya birbirinden bağımsız güncellenip kod tabanı içinde uyuşmaz duruma
+ * gelmesin diye tek kaynak burada tutulur.
+ */
+export function ensureFfmpeg(): void {
+  if (ffmpegAvailable) return;
+  try {
+    execSync('ffmpeg -version', { stdio: 'ignore' });
+    ffmpegAvailable = true;
+  } catch {
+    // ffmpegAvailable bilinçli olarak false'a ayarlanmaz: bu dal her
+    // çağrıda yeniden denenir (yalnızca başarı memoize edilir), böylece
+    // FFmpeg sonradan kurulursa aynı process içinde bir sonraki çağrı onu
+    // görür.
+    throw new Error(
+      'FFmpeg bulunamadı. OGG encode için gerekli.\n' +
+        'Kurulum:\n' +
+        '  Windows: winget install ffmpeg\n' +
+        '  macOS: brew install ffmpeg\n' +
+        '  Linux: sudo apt install ffmpeg',
+    );
+  }
+}
+
+/**
+ * Yalnızca testler için: `ensureFfmpeg()` memoization'ını sıfırlar.
+ * Modül düzeyindeki `ffmpegAvailable` bir kez `true` olduktan sonra process
+ * ömrü boyunca kalır — "FFmpeg bulunamadı" senaryosunu doğrulayan bir test,
+ * aynı dosyada ondan önce başarılı bir `ensureFfmpeg()` çağrısı çalışmışsa
+ * (ör. test sırası değişirse) sessizce yanlış geçer. Bu fonksiyon testi test
+ * sırasından bağımsız hale getirir.
+ */
+export function resetFfmpegCache(): void {
+  ffmpegAvailable = undefined;
+}
+
+/**
+ * SynthesisResult içeriğini interleaved 32-bit float PCM'e çevirir.
+ * `writeWav`'ın aksine 16-bit'e kuantize etmez — dither gerekmez, Vorbis
+ * encoder tam çözünürlüklü girdiyi kendi iç temsiline çevirir.
+ */
+function toInterleavedPcm(result: SynthesisResult, targetGain: number): Buffer {
+  const { channels } = result;
+  const numChannels = channels.length;
+  const sampleCount = channels[0]?.length ?? 0;
+  const buffer = Buffer.alloc(sampleCount * numChannels * 4);
+
+  for (let i = 0; i < sampleCount; i++) {
+    for (let ch = 0; ch < numChannels; ch++) {
+      const raw = channels[ch]?.[i] ?? 0;
+      const clamped = Math.max(-1, Math.min(1, raw * targetGain));
+      buffer.writeFloatLE(clamped, (i * numChannels + ch) * 4);
+    }
+  }
+
+  return buffer;
+}
+
+/**
+ * SynthesisResult içeriğini FFmpeg üzerinden OGG Vorbis'e encode eder.
+ * Ara WAV dosyası oluşmaz — PCM doğrudan FFmpeg stdin'ine pipe'lanır.
+ *
+ * Determinizm notu: `writeWav` seed'li PRNG'yle byte-identical çıktı garanti
+ * eder; `writeOgg` bunu garanti ETMEZ. libvorbis encode'u FFmpeg/libvorbis
+ * sürümüne bağlıdır — farklı geliştirici makinelerinde veya zamanla güncellenen
+ * FFmpeg farklı OGG byte'ları üretebilir. WAV, source-of-truth ve diff'lenebilir
+ * asset olarak kalmalı; OGG'nin bit-eşitliği beklenmemeli.
+ */
+export function writeOgg(filePath: string, result: SynthesisResult, opts: OggOptions = {}): void {
+  ensureFfmpeg();
+
+  const { quality = 4, targetGain = 1 } = opts;
+  const { sampleRate, channels } = result;
+  const numChannels = channels.length;
+  const pcm = toInterleavedPcm(result, targetGain);
+
+  mkdirSync(dirname(filePath), { recursive: true });
+
+  const args = [
+    '-f',
+    'f32le',
+    '-ar',
+    String(sampleRate),
+    '-ac',
+    String(numChannels),
+    '-i',
+    'pipe:0',
+    '-c:a',
+    'libvorbis',
+    '-q:a',
+    String(quality),
+    '-y',
+    filePath,
+  ];
+
+  // shell: false (varsayılan) + array argümanlar: filePath boşluk/özel karakter
+  // içerse bile shell quoting riski olmadan geçer. Bilinçli tercih: shell: true
+  // .cmd/.bat shim'li FFmpeg kurulumlarını PATHEXT ile çözerdi ama shell
+  // quoting/injection riskini geri getirirdi — ensureFfmpeg() zaten geçtiyse
+  // bu satırın ENOENT vermesi son derece nadir (yalnızca shim tabanlı
+  // kurulumlarda; winget/resmi build'ler gerçek .exe verir).
+  const res = spawnSync('ffmpeg', args, { input: pcm });
+
+  if (res.error) {
+    const hint =
+      (res.error as NodeJS.ErrnoException).code === 'ENOENT'
+        ? ' FFmpeg .cmd/.bat shim üzerinden kuruluysa (bazı paket yöneticileri) bu satır onu bulamayabilir; execSync PATH çözümü farklıdır.'
+        : '';
+    throw new Error(`FFmpeg çalıştırılamadı (${filePath}): ${res.error.message}.${hint}`);
+  }
+  if (res.status !== 0) {
+    throw new Error(`FFmpeg encode başarısız (${filePath}): ${res.stderr?.toString() ?? ''}`);
+  }
+}
+
+export type AudioFormat = 'wav' | 'ogg';
+
+/**
+ * `writeWav` / `writeOgg` için format seçen ince sarmalayıcı.
+ * `opts.quality` yalnızca `format: 'ogg'` iken anlamlıdır — WAV sıkıştırılmamış
+ * PCM olduğu için kalite ayarı yok; `format: 'wav'` iken sessizce yok sayılır.
+ */
+export function writeAudio(
+  filePath: string,
+  result: SynthesisResult,
+  format: AudioFormat,
+  opts?: OggOptions,
+): void {
+  if (format === 'wav') {
+    writeWav(filePath, result, opts?.targetGain);
+  } else {
+    writeOgg(filePath, result, opts);
+  }
 }

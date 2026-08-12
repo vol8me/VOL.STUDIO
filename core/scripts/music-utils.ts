@@ -1,9 +1,12 @@
 /**
  * Müzik üretim script'leri için ortak altyapı.
- * Stereo buffer yönetimi, cosine fade, master mix, akor yardımcıları.
+ * Stereo buffer yönetimi, cosine fade, master mix, akor yardımcıları, CLI.
  */
 
+import { existsSync, mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import type { SynthesisResult } from '../src/audio/synth/types';
+import { writeWav, writeOgg } from '../src/audio/synth/writer';
 
 export const SAMPLE_RATE = 44100;
 
@@ -107,6 +110,35 @@ export function createBeatUtils(beatDuration: number) {
   };
 
   return { beatToSample, applyFades };
+}
+
+// --- CLI ---
+// Tek-track menü müziği script'leri (generate-iron-vein/black-tide/
+// crimson-horizon) aynı `<out.wav> <out.ogg>` argüman/klasör/yazım bloğunu
+// tekrarlıyordu — tek kaynağa taşındı.
+
+/** `<out.wav> <out.ogg>` argümanlarını okur, doğrular, klasörlerini oluşturur. */
+export function parseWavOggArgs(scriptName: string): { wavPath: string; oggPath: string } {
+  const wavArg = process.argv[2];
+  const oggArg = process.argv[3];
+  if (!wavArg || !oggArg) {
+    console.error(`Kullanim: tsx scripts/${scriptName} <out.wav> <out.ogg>`);
+    process.exit(1);
+  }
+  const wavPath = resolve(wavArg);
+  const oggPath = resolve(oggArg);
+  if (!existsSync(dirname(wavPath))) mkdirSync(dirname(wavPath), { recursive: true });
+  if (!existsSync(dirname(oggPath))) mkdirSync(dirname(oggPath), { recursive: true });
+  return { wavPath, oggPath };
+}
+
+/** WAV (source-of-truth) + OGG (shipped) çiftini yazar ve sonucu loglar. */
+export function writeMenuTrack(wavPath: string, oggPath: string, result: SynthesisResult): void {
+  writeWav(wavPath, result, 1.0);
+  writeOgg(oggPath, result);
+  console.log(
+    `Generated: ${wavPath} + ${oggPath} (${result.duration.toFixed(2)}s, ${result.sampleRate}Hz)`,
+  );
 }
 
 // --- Master mix ---

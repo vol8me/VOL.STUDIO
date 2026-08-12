@@ -9,9 +9,6 @@
  * - LFO, pan ve filter envelope ile hareket.
  */
 
-import { existsSync, mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { writeWav } from '../src/audio/synth/writer';
 import type { SynthesisResult } from '../src/audio/synth/types';
 import {
   SAMPLE_RATE,
@@ -24,6 +21,8 @@ import {
   chordAtBeat,
   createBeatUtils,
   masterMix,
+  parseWavOggArgs,
+  writeMenuTrack,
   type ChordDef,
 } from './music-utils';
 import {
@@ -44,14 +43,7 @@ import {
 
 // --- CLI ---
 
-const outDirArg = process.argv[2];
-if (!outDirArg) {
-  console.error('Kullanim: tsx scripts/generate-crimson-horizon.ts <out.wav>');
-  process.exit(1);
-}
-const outPath = resolve(outDirArg);
-const outDir = dirname(outPath);
-if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
+const { wavPath, oggPath } = parseWavOggArgs('generate-crimson-horizon.ts');
 
 // --- Sabitler ---
 
@@ -371,5 +363,4 @@ function renderCrimsonHorizon(): SynthesisResult {
 }
 
 const result = renderCrimsonHorizon();
-writeWav(outPath, result, 1.0);
-console.log(`Generated: ${outPath} (${result.duration.toFixed(2)}s, ${result.sampleRate}Hz)`);
+writeMenuTrack(wavPath, oggPath, result);
