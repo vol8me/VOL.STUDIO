@@ -1,8 +1,7 @@
-# Agent kuralları — yalnızca yerel/dahili kullanım, GitHub'a gönderilmez
-CLAUDE.md
-.claude/
+# Local-only files
 AGENTS.md
 **/AGENTS.md
+.claude/
 
 # Secrets / credentials — asla commit edilmez
 .env

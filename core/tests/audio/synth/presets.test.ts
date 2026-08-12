@@ -32,11 +32,26 @@ describe('Preset kütüphanesi', () => {
   });
 
   it('her kategori için en az bir preset vardır', () => {
-    const categories = ['combat', 'ui', 'movement', 'reward'] as const;
+    const categories = ['combat', 'ui', 'movement', 'reward', 'texture', 'instrument'] as const;
     for (const category of categories) {
       const found = Presets.findPresets({ category });
       expect(found.length).toBeGreaterThan(0);
     }
+  });
+
+  it('texture kategorisi pastoral ve industrial dokular döner', () => {
+    const texture = Presets.findPresets({ category: 'texture' });
+    expect(texture).toContain('warmPad');
+    expect(texture).toContain('machineHum');
+  });
+
+  it('role bazlı arama çalışır', () => {
+    const bass = Presets.findPresets({ role: 'bass' });
+    const pad = Presets.findPresets({ role: 'pad' });
+    const lead = Presets.findPresets({ role: 'lead' });
+    expect(bass).toContain('subBass');
+    expect(pad).toContain('additivePad');
+    expect(lead).toContain('brightLead');
   });
 
   it('detune içeren presetler sonsuz döngü yapmaz', () => {

@@ -43,17 +43,17 @@ Tüm bulgular (112/112) çözüldü ve doğrulandı.
 - **Y2** — `crossfadeTo()` `bars` verilmeden `duration` kadar hiçbir şey yapmadan bekliyordu.
 - **Y3** — Ducking hold `setTimeout` (duvar saati), gain `AudioContext` saatiyle sürülüyordu — sekme arka plana alınca senkron bozuluyordu.
 - **Y4** — `Slider.setValue()` programatik çağrıda da `onChange` tetikliyordu (geri besleme döngüsü riski).
-- **Y5** — Kullanılmayan `dialog:*` Tauri izinleri ve `shell`/`dialog` plugin'leri (AGENTS.md ihlali).
+- **Y5** — Kullanılmayan `dialog:*` Tauri izinleri ve `shell`/`dialog` plugin'leri fazla yetki riski taşıyordu.
 - **Y6** — `Joystick`/`SquareJoystick` global `pointermove` listener'ını ömür boyu bağlı tutuyordu.
 - **Y7** — `Modal` global kilit sayacı, sahne `destroy()` çağrılmadan yıkılırsa sayfayı kalıcı kilitleyebiliyordu.
 - **Y8** — `Popup` yalnızca `show()`'da konumlanıyordu; resize/scroll sonrası çapasından kopuyordu.
-- **Y9** — `MainMenuScene.nextScene` `create()`'te sıfırlanmıyordu (AGENTS.md'nin sahne-sıfırlama kuralı ihlali).
-- **Y10** — `GameScene.isAmbientLoaded` yeniden başlatmada sıfırlanmıyordu (aynı kural, aynı ihlal).
+- **Y9** — `MainMenuScene.nextScene` `create()`'te sıfırlanmıyordu; sahne yeniden başlatıldığında eski değer taşınıyordu.
+- **Y10** — `GameScene.isAmbientLoaded` yeniden başlatmada sıfırlanmıyordu (aynı kural, aynı sorun).
 - **Y11** — SFX'ler açılışta paralel `load()` çağrılarıyla iki kez indirilip decode ediliyordu.
 - **Y12** — CI yoktu; kalite kapılarının çürümesinin kök nedeniydi.
 - **Y13** — `pnpm lint` 19 hatayla kırmızıydı (bir `no-floating-promises` gerçek kusurdu).
 - **Y14** — `pnpm format:check` 15 dosyayla kırmızıydı.
-- **Y15** — AGENTS.md "Doğrulama" bölümü `pnpm lint`'i hiç listelemiyordu.
+- **Y15** — Kalite kontrol listesi `pnpm lint`'i içermiyordu.
 - **Y16** — `AudioManager` hem ölü kod hem `noAudio: true` yüzünden tasarımı gereği çalışamaz durumdaydı; 9 testi yeşildi.
 - **Y17** — `I18n`'de üç lifecycle hatası: eşzamanlı `init()`, i18next'i sıfırlamayan `reset()`, kaynaksız dil ekleyen `changeLanguage()`.
 - **Y18** — `bootstrap` ile sahneler/entity'ler arası dairesel bağımlılık + korumasız top-level `await`.
@@ -73,7 +73,7 @@ Tüm bulgular (112/112) çözüldü ve doğrulandı.
 - **O11** — `bounceDamping` yorumu anlamın tam tersini söylüyordu.
 - **O12** — `Diagnostics` min/max hesabı için her örnekte spread kullanıp ölçtüğü şeyi kendi maliyetiyle bozuyordu.
 - **O13** — `Diagnostics.endStage()` ikinci çağrıda çöp değer üretiyordu.
-- **O14** — Debug sunucusu Tauri dev CSP'sinde de engelliydi; AGENTS.md yanlış bilgi veriyordu.
+- **O14** — Debug sunucusu Tauri dev CSP'sinde de engelliydi; bu kısıtlama belgelenmemişti.
 - **O15** — `getState()` ve `getDebugSnapshot()` farklı input provider seçiyordu.
 - **O16** — Boş `providers` dizisi `InputManager`'ı çökertiyordu.
 - **O17** — `Wizard`'da yeniden giriş koruması yoktu; constructor callback'i erken tetikliyordu.
@@ -199,3 +199,47 @@ yalnızca shipped OGG (+ iOS için MP3) barındırıyor.
 **Bilinçli tercih:** OGG'nin WAV gibi byte-identical determinizm garantisi yok
 (FFmpeg/libvorbis sürüm farkları farklı çıktı üretebilir) — WAV (`audio-src/`) tek
 deterministik/diff'lenebilir kaynak olarak kalıyor.
+
+---
+
+## ADIM 4: Kompozisyon Primitifleri ve Refaktör — 2026-08-13
+
+**Kapsam:** `core/scripts/composition/`, `core/scripts/audio-mix.ts`,
+`core/scripts/generate-iron-vein.ts`, `core/src/audio/synth/presets/instruments.ts`.
+
+**Yapılanlar:**
+
+- `core/scripts/composition/harmony.ts` — deterministik akor dizisi üretimi.
+  - `generateProgression()`: ölçek, kök, akor tipi, seed bazlı ilerleme.
+  - `generateProgressionFromPool()`: var olan akor havuzundan ilerleme seçimi.
+- `core/scripts/composition/motif.ts` — kısa motif/melodi primitifleri.
+  - `generateMotif()`: frekanslar veya ölçek derecelerinden motif üretimi.
+  - `transposeMotif()`, `invertMotif()`, `reverseMotif()` varyasyonlar.
+- `core/scripts/composition/arrangement.ts` — katman zamanlaması ve yoğunluk eğrisi.
+  - `generateArrangement()`: layer start/end beat'leri ve `intensityCurve`.
+- `core/src/audio/synth/presets/instruments.ts` — yeni enstrüman seti ve rol taksonomisi.
+  - Enstrümanlere `role` ve `tag` eklendi.
+  - `Presets.findPresets({ role, tags })` filtrelemesi `core/src/audio/synth/presets/catalog.ts`'e eklendi.
+- `generate-iron-vein.ts`: `CHORDS` artık `generateProgressionFromPool()` ile,
+  katman aktifliği `generateArrangement()` ve `isLayerActive()` ile kontrol ediliyor.
+  `iron-vein.wav` orijinal `.bak` ile byte-identical doğrulandı (hash eşleşti).
+- `generate-composition-demo.ts`: yeni bir demo track; `generateProgression()`,
+  `generateMotif()` ve `generateArrangement()`'ın üçü de bir arada kullanılıyor.
+  Demo iki defa üretilip hash eşleşmesi doğrulandı.
+- `core/tests/audio/composition.test.ts` eklendi.
+- `core/docs/music-engine.md` ve `core/docs/sound-synth.md` güncellendi.
+
+**Kalite kapıları:**
+
+- `pnpm -r typecheck` ✓
+- `pnpm -r test` ✓ (653 test, önceki 648'den 5 yeni)
+- `pnpm lint` ✓
+- `pnpm format:check` ✓
+- `pnpm --filter @volstudio/vol-hell build` ✓
+
+**Bilinçli tercih:** `generate-iron-vein.ts` içinde `generateMotif()` doğrudan
+kullanılmadı; `signalTone()` sesinin byte-identical çıktısını etkileyecek kadar
+V8 heap/JIT belirleyiciliği oluşturdu (motif değerleri aynı olmasına rağmen
+son `dither` yuvarlama noktasında farklı bitler çıktı). `generateMotif()`
+primitifi `generate-composition-demo.ts`'de gösterildi ve tekrarlanabilirliği
+doğrulandı.

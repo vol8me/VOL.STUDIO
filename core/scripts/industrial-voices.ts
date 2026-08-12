@@ -429,11 +429,13 @@ export function cableTension(
   duration: number,
   velocity = 1,
   pan = 0,
+  seed = 42,
 ): SynthesisResult {
   return pluck({
     frequency: freq,
     duration,
     sampleRate: SAMPLE_RATE,
+    seed,
     // Yüksek sönüm: tel hızlı ölür, "çınlayan" akustik kuyruk bırakmaz.
     decay: 0.982,
     excitationMix: 0.5,

@@ -1,7 +1,18 @@
 import type { SynthParams } from '../types';
 
 /** Preset kategorileri. */
-export type PresetCategory = 'combat' | 'ui' | 'movement' | 'reward';
+export type PresetCategory = 'combat' | 'ui' | 'movement' | 'reward' | 'texture' | 'instrument';
+
+/** Enstrüman / sesin orkestral rolü. */
+export type InstrumentRole =
+  | 'bass'
+  | 'pad'
+  | 'lead'
+  | 'pluck'
+  | 'keys'
+  | 'bell'
+  | 'texture'
+  | 'percussion';
 
 /** Preset'in estetik/genre etiketi. */
 export type PresetGenre = 'retro' | 'sci-fi' | 'fantasy' | 'realistic';
@@ -10,6 +21,8 @@ export type PresetGenre = 'retro' | 'sci-fi' | 'fantasy' | 'realistic';
 export interface PresetMetadata {
   /** Hangi kategoriye ait. */
   category: PresetCategory;
+  /** Orkestral rol — agent'in doğru enstrümanı seçmesi için. */
+  role?: InstrumentRole;
   /** Estetik/genre. */
   genre?: PresetGenre;
   /** Kısa açıklama. */

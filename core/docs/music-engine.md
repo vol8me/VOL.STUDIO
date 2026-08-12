@@ -5,8 +5,8 @@
 SFX motorundan (`@volstudio/core/audio/synth`) ayrıdır; müzik uzun loop'lar ve
 çok kanallı stem mix'i için optimize edilmiştir.
 
-> **Runtime'da sentez YAPILMAZ.** Motor yalnızca önceden üretilmiş WAV stem'leri
-> çalar. Müzik ve SFX dosyaları build-time script'lerle (`core/scripts/generate-*.ts`)
+> **Runtime'da sentez YAPILMAZ.** Motor yalnızca önceden üretilmiş WAV/OGG/MP3
+> stem'leri çalar. Müzik ve SFX dosyaları build-time script'lerle (`core/scripts/generate-*.ts`)
 > üretilir. Bu bilinçli bir karardır: runtime sentez CPU maliyeti ve mobilde
 > öngörülemeyen zamanlama getirir.
 
@@ -18,7 +18,7 @@ core/src/audio/music/
   engine.ts            — MusicEngine: yükleme, çalma, durdurma, crossfade
   mixer.ts             — MusicMixer: her stem için ayrı GainNode + master kompresör
   scheduler.ts         — MusicScheduler: BPM/ölçü bazlı zaman/bar/beat dönüşümleri
-  loader.ts            — StemLoader: URL'den WAV yükler, decode eder
+  loader.ts            — StemLoader: WAV/OGG/MP3 stem'leri yükle ve decode et; OGG için MP3 fallback
   gain-resolver.ts     — state'e göre stem gain'ini çözer
   instrument.ts        — build-time SFX script'leri için enstrüman preset'leri
   index.ts             — public API
@@ -68,7 +68,7 @@ const mainMenu: MusicTrack = {
   stems: [
     {
       id: 'theme',
-      src: 'assets/audio/music/main-menu/main-menu-theme.wav',
+      src: 'assets/audio/music/main-menu/main-menu-theme.ogg',
       gain: 0.75,
       loop: true,
     },
@@ -103,17 +103,17 @@ Bir müzik parçası. `id`, `bpm`, `stems` ve opsiyonel `timeSignature` (`[4, 4]
 
 Track'in bir katmanı. Birden fazla stem aynı anda çalarak harmoni/richness oluşturur.
 
-| Alan      | Açıklama                                       |
-| --------- | ---------------------------------------------- |
-| `id`      | Benzersiz stem kimliği                         |
-| `src`     | WAV dosyası yolu                               |
-| `buffer`  | Önceden yüklenmiş `AudioBuffer`                |
-| `gain`    | Temel gain (0-1)                               |
-| `loop`    | Loop çalışıp çalmayacağı                       |
-| `pan`     | Stereo pan (-1 sol, 1 sağ)                     |
-| `gainMap` | State'e göre adaptif gain haritası             |
-| `gainFn`  | `(state, context) => number` adaptif fonksiyon |
-| `stinger` | One-shot çal ve bitince dur                    |
+| Alan      | Açıklama                                         |
+| --------- | ------------------------------------------------ |
+| `id`      | Benzersiz stem kimliği                           |
+| `src`     | WAV/OGG/MP3 dosya yolu; OGG tercih, MP3 fallback |
+| `buffer`  | Önceden yüklenmiş `AudioBuffer`                  |
+| `gain`    | Temel gain (0-1)                                 |
+| `loop`    | Loop çalışıp çalmayacağı                         |
+| `pan`     | Stereo pan (-1 sol, 1 sağ)                       |
+| `gainMap` | State'e göre adaptif gain haritası               |
+| `gainFn`  | `(state, context) => number` adaptif fonksiyon   |
+| `stinger` | One-shot çal ve bitince dur                      |
 
 ### MusicState
 
@@ -191,22 +191,19 @@ gainFn: (state, ctx) => {
 
 ## MusicEngine API
 
-| Metot                                       | Açıklama                             |
-| ------------------------------------------- | ------------------------------------ |
-| `loadTrack(track)`                          | Track buffer'larını önceden yükler   |
-| `play(trackId, options?)`                   | Track çalmaya başlar                 |
-| `stop(options?)`                            | Çalmayı fade out ile durdurur        |
-| `crossfadeTo(trackId, duration?, options?)` | Diğer track'e geçer (bkz. aşağıda)   |
-| `setState(state, fadeTime?)`                | State günceller                      |
-| `setIntensity(value, fadeTime?)`            | Yoğunluk (0-1) ayarlar               |
-| `setMasterVolume(value, fadeTime?)`         | Master seviye ayarlar                |
-| `mute(muted, fadeTime?)`                    | Susturur / ayarlanan seviyeye açar   |
-| `getCurrentState()`                         | Track id, state ve çalma durumu      |
-| `dispose()`                                 | Kaynakları ve buffer cache'i bırakır |
-| `setLocation(location, fadeTime?)`          | Lokasyon/state ayarlar               |
-| `setMasterVolume(value, fadeTime?)`         | Master ses seviyesi                  |
-| `mute(muted, fadeTime?)`                    | Motoru susturur/açar                 |
-| `dispose()`                                 | Tüm kaynakları temizler              |
+| Metot                                       | Açıklama                                 |
+| ------------------------------------------- | ---------------------------------------- |
+| `loadTrack(track)`                          | Track buffer'larını önceden yükler       |
+| `play(trackId, options?)`                   | Track çalmaya başlar                     |
+| `stop(options?)`                            | Çalmayı fade out ile durdurur            |
+| `crossfadeTo(trackId, duration?, options?)` | Diğer track'e geçer (bkz. aşağıda)       |
+| `setState(state, fadeTime?)`                | State günceller                          |
+| `setIntensity(value, fadeTime?)`            | Yoğunluk (0-1) ayarlar                   |
+| `setMasterVolume(value, fadeTime?)`         | Master seviye ayarlar                    |
+| `setLocation(location, fadeTime?)`          | Lokasyon/state ayarlar                   |
+| `mute(muted, fadeTime?)`                    | Susturur / ayarlanan seviyeye açar       |
+| `getCurrentState()`                         | Track id, state ve çalma durumu          |
+| `dispose()`                                 | Tüm kaynakları ve buffer cache'i bırakır |
 
 ## Çapraz Geçiş (Crossfade)
 
@@ -221,8 +218,15 @@ await music.crossfadeTo('combat', 2, {
 
 ## Ses üretimi (build-time)
 
-Motor runtime'da sentez YAPMAZ; yalnızca hazır WAV çalar. Müzik dosyaları
-`core/scripts/` altındaki track başına script'lerle üretilir:
+Motor runtime'da sentez YAPMAZ; yalnızca hazır WAV/OGG/MP3 çalar. Müzik dosyaları
+`core/scripts/` altındaki track başına script'lerle üretilir (source-of-truth WAV,
+ship edilen OGG + MP3 fallback).
+
+> **Uyarı — müzik için öneri:** `synth` motoru SFX, UI blip ve kısa drone için
+> designed. Çoksesli müzik, armoni ve uzun melodi üretmeye çalışmak aynı sonik
+> hissiyat ve sınırlı tımbr çıkarır. Müzik parçaları için DAW veya hazır royalty-free
+> stem'leri WAV/OGG olarak export edip bu motorla çalmak daha sağlıklıdır.
+> Prosedürel müzik denemeleri yalnızca kısa jingle / drone düzeyinde tutarlıdır.
 
 ```bash
 pnpm --filter @volstudio/vol-hell generate:music   # tüm müzik WAV'ları
@@ -346,10 +350,12 @@ const nextBarTime = scheduler.getNextBarTime(ctx.currentTime, trackStartTime);
 
 Yetersiz kalır:
 
-- MIDI zamanlama / ritmik grid
+- Real-time MIDI zamanlama / ritmik grid
 - Real-time ritim / beatmatching
-- Sample tabanlı orchestrasyon
-- VST/DAW entegrasyonu
+- DAW/VST entegrasyonu ve canlı orkestrasyon
+
+Sample tabanlı stem çalma desteklenir, ancak adaptif gain dışında real-time
+arrange/anlaşma yoktur.
 
 ## Doğrulama
 

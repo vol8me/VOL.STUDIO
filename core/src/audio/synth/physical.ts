@@ -11,6 +11,7 @@
  * Node.js ve tarayıcıda çalışır — saf matematik, bağımlılık yok.
  */
 
+import { createRandom, DEFAULT_SEED } from './random';
 import type { SynthesisResult } from './types';
 
 export interface PluckParams {
@@ -35,6 +36,8 @@ export interface PluckParams {
   bodyResonance?: number;
   /** Body resonance şiddeti (0-1). Varsayılan 0.3. */
   bodyAmount?: number;
+  /** Deterministik gürültü için seed. Varsayılan sabit seed. */
+  seed?: number;
 }
 
 /** Fractional delay line — linear interpolasyon ile.
@@ -91,10 +94,15 @@ class OnePoleLowpass {
 
 /** Excitation — noise + harmonik karışımı.
  *  Saf noise klasik KS'tir; harmonik eklemek daha zengin atak verir. */
-function generateExcitation(length: number, harmonics: number, mix: number): Float32Array {
+function generateExcitation(
+  length: number,
+  harmonics: number,
+  mix: number,
+  random = createRandom(DEFAULT_SEED),
+): Float32Array {
   const buffer = new Float32Array(length);
   for (let i = 0; i < length; i++) {
-    const noise = Math.random() * 2 - 1;
+    const noise = random.bipolar();
     // Harmonik excitation — sawtooth benzeri, kısa burst
     const phase = i / length;
     let harmonic = 0;
@@ -128,6 +136,8 @@ export function pluck(params: PluckParams): SynthesisResult {
   const gain = params.gain ?? 0.5;
   const bodyResonance = params.bodyResonance ?? 0;
   const bodyAmount = params.bodyAmount ?? 0.3;
+  const seed = params.seed ?? DEFAULT_SEED;
+  const random = createRandom(seed);
 
   // Delay line uzunluğu — frekansa göre
   const delaySamples = sampleRate / freq;
@@ -138,7 +148,7 @@ export function pluck(params: PluckParams): SynthesisResult {
 
   // Excitation buffer — delay line uzunluğu kadar
   const exciteLength = Math.ceil(delaySamples);
-  const excitation = generateExcitation(exciteLength, excitationHarmonics, excitationMix);
+  const excitation = generateExcitation(exciteLength, excitationHarmonics, excitationMix, random);
 
   // İki delay line (stereo)
   const dlLeft = new FractionalDelayLine(delayLeft);

@@ -26,10 +26,12 @@ core/src/audio/synth/
   noise.ts      — white / pink / brown gürültü
   envelope.ts   — ADSR zarf
   filter.ts     — değişken lowpass / highpass
-  effects.ts    — reverb, delay, flanger, phaser, chorus, distortion, stereo, bitcrush
+  effects.ts    — reverb, delay, flanger, phaser, chorus, distortion, stereo width
   engine.ts     — synthesize(), compose(), applyGlobalEffects()
   sequencer.ts  — arp / sequence / BPM
   sample.ts     — WAV decode, resample, loop, trim
+  physical.ts   — fiziksel model (pluck / string)
+  random.ts     — seed'li PRNG
   presets/      — kategorili hazır ses tarifleri
   writer.ts     — mono/stereo WAV yazıcı
   index.ts      — public API
@@ -37,11 +39,11 @@ core/src/audio/synth/
 
 Pipeline:
 
-1. Osilatör / gürültü sesi üretir.
-2. Zarf ve filtre şekillendirir.
-3. Distortion / bitcrush uygulanır.
-4. Master efektler sırayla işlenir: `delay` → `flanger` → `phaser` → `chorus` → `reverb`.
-5. Normalize ve pan / stereo width ile çıkış hazırlanır.
+1. Osilatör / gürültü / sample / harmonik serisi sesi üretir.
+2. Zarf, filtre, vibrato, tremolo ve LFO'lar şekillendirir.
+3. `distortion` per-voice uygulanır.
+4. Master efektler sırayla işlenir: `delay` → `flanger` → `phaser` → `chorus` → `pan` → `reverb` → `stereoWidth`.
+5. Normalize ile çıkış hazırlanır.
 
 ## Hızlı Başlangıç
 
@@ -87,11 +89,12 @@ this.audio.play(soundKeys.fire, { volume: 0.3 });
 | `detune`                       | `number`                          | İkinci osilatör detune (cent)                                               |
 | `pitchJump`                    | `{ amount, time, duration }`      | Ani frekans zıplaması                                                       |
 | `pulseWidth`                   | `number`                          | `pulse` duty cycle (0-1)                                                    |
+| `harmonics`                    | `HarmonicParams[]`                | Additive synthesis — sine osilatör listesi                                  |
 | `fm`                           | `FmParams`                        | 2-operator phase modulation                                                 |
 | `envelope`                     | `EnvelopeParams`                  | attack, hold, decay, sustain, release, sustainLevel, curve                  |
 | `lowpass`                      | `FilterParams`                    | `{ cutoff, slide }` — yüksekleri kes                                        |
 | `highpass`                     | `FilterParams`                    | `{ cutoff, slide }` — düşükleri kes                                         |
-| `bitcrush`                     | `BitcrushParams`                  | `{ bits, sampleRateFactor }` lo-fi efekti                                   |
+| `lfos`                         | `LfoParams[]`                     | pitch / filter / amplitude modülasyonu                                      |
 | `vibratoDepth` / `vibratoRate` | `number`                          | Frekans modülasyon derinliği / hızı (Hz)                                    |
 | `tremoloDepth` / `tremoloRate` | `number`                          | Genlik modülasyon derinliği / hızı                                          |
 | `reverb`                       | `ReverbParams`                    | `{ amount, decay, roomSize, damp, preDelay }`                               |
@@ -488,7 +491,7 @@ Kısa seslerde attack ve release'te `cosine` eğrisi, başlangıç ve bitişteki
 
 İyi sonuç verir: retro/synth SFX, UI blip, vuruş, zıplama, laser, dash, whoosh, kısa patlama ve hasar.
 
-Yetersiz kalır: gerçekçi foley, insan sesi, uzun ambient, müzik, armoni, Hollywood patlaması. Bu durumlara sample tabanlı veya hybrid yaklaşım gerekir.
+Yetersiz kalır: gerçekçi foley, insan sesi, uzun ambient, **müzik, armoni ve uzun melodi**. Hollywood patlaması. Bunun nedeni sınırlı osilatör paleti, matematiksel dalgalardan gelen "plastik" timbre ve paylaşılan master zinciri: bu motorla çoksesli müzik üretmeye çalışmak farklı parametrelerle aynı sonik hissiyat verir. Bu durumlarda WAV/OGG sample tabanlı veya hybrid yaklaşım gerekir; müzik için DAW'da üretilmiş stem'leri `music-engine` ile çalmak daha sağlıklıdır.
 
 ## Doğrulama
 

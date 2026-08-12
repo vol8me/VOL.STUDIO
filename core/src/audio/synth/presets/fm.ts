@@ -19,7 +19,7 @@ export function bell(frequency = 440, duration = 0.6): SynthParams {
   };
 }
 
-/** FM elektrik piyano / rhodes tarzı. */
+/** FM elektrik piyano / rhodes tarzı — yumuşatılmış modülasyon. */
 export function electricPiano(frequency = 440, duration = 0.5): SynthParams {
   return {
     wave: 'sine',
@@ -27,27 +27,29 @@ export function electricPiano(frequency = 440, duration = 0.5): SynthParams {
     envelope: {
       attack: 0.005,
       hold: 0,
-      decay: 0.15,
-      sustain: 0.2,
-      release: 0.4,
-      sustainLevel: 0.6,
+      decay: 0.18,
+      sustain: 0.15,
+      release: 0.45,
+      sustainLevel: 0.55,
     },
     fm: {
       modulatorWave: 'sine',
       ratio: 2,
-      index: 1.5,
+      index: 0.9,
+      feedback: 0.05,
       modulatorEnvelope: {
-        attack: 0.005,
+        attack: 0.002,
         hold: 0,
-        decay: 0.1,
+        decay: 0.12,
         sustain: 0.1,
-        release: 0.3,
+        release: 0.25,
         sustainLevel: 0.4,
       },
     },
-    lowpass: { cutoff: 3000, slide: -500 },
+    lowpass: { cutoff: 2800, resonance: 0.05, poles: 2, type: 'lowpass', slide: -500 },
+    chorus: { depth: 1.2, rate: 0.06, mix: 0.2 },
     duration,
-    gain: 0.6,
+    gain: 0.55,
   };
 }
 

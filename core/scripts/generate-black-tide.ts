@@ -164,7 +164,13 @@ for (let i = 0; i < CABLE_FIGURE.length; i++) {
   const offset = clock.toSample(beat) + clock.humanize(beat, 6, 6);
   addVoice(
     mix,
-    cableTension(CABLE_FIGURE[i]!, clock.beatDuration * 3, 0.85, i % 2 === 0 ? -0.32 : 0.34),
+    cableTension(
+      CABLE_FIGURE[i]!,
+      clock.beatDuration * 3,
+      0.85,
+      i % 2 === 0 ? -0.32 : 0.34,
+      500 + i,
+    ),
     offset,
   );
 }

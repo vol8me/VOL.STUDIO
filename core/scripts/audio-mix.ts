@@ -7,8 +7,8 @@
  *    `normalize: true` ile çağırıyordu; bu her notayı/pad'i/drone'u tek tek
  *    0.95 tepeye çekip katmanlar arası doğal dinamiği yok ediyordu. Mix dengesi
  *    tamamen `gain` sabitlerine kalıyor, sesin kendi karakteri kayboluyordu.
- *    Bu dosyadaki `addVoice` normalize'ı ÇAĞIRANIN sorumluluğunda bırakır ve
- *    `industrial-voices.ts` her voice'ta `normalize: false` geçer.
+ *    Bu dosyadaki `addVoice` normalize'ı ÇAĞIRANIN sorumluluğunda bırakır; ses
+ *    paletleri voice başına `normalize: false` geçmelidir.
  *
  * 2. **Üst üste binen transientler sample-exact hizalanmaz.** Ölçümle görüldü:
  *    tek tek hiçbir enstrüman click üretmiyordu (en yüksek fark 0.247) ama
@@ -312,18 +312,22 @@ export function transpose(freq: number, semitones: number): number {
   return freq * Math.pow(SEMITONE, semitones);
 }
 
-/**
- * Endüstriyel müzik için akor tipleri.
- *
- * Majör/minör üçlü yerine ağırlıklı olarak boş beşli (power) ve süspansiyon
- * kullanılır: Mindustry karakteri "kararsız, mekanik, duygusal olarak nötr"
- * — üçlü sesi fazla romantik/tonal bir renk katıyor.
- */
-export type IndustrialChord = 'fifth' | 'minor' | 'sus2' | 'sus4' | 'octave';
+/** Müzik üretimi için nötr akor tipleri. */
+export type ChordType =
+  | 'fifth'
+  | 'minor'
+  | 'major'
+  | 'sus2'
+  | 'sus4'
+  | 'octave'
+  | 'minor7'
+  | 'major7'
+  | 'dom7'
+  | 'add9';
 
 export interface ChordDef {
   root: number;
-  type: IndustrialChord;
+  type: ChordType;
 }
 
 /** Akorun frekanslarını döndürür (kök dahil). */
@@ -334,12 +338,22 @@ export function chordFreqs(chord: ChordDef): number[] {
       return [root, transpose(root, 7)];
     case 'minor':
       return [root, transpose(root, 3), transpose(root, 7)];
+    case 'major':
+      return [root, transpose(root, 4), transpose(root, 7)];
     case 'sus2':
       return [root, transpose(root, 2), transpose(root, 7)];
     case 'sus4':
       return [root, transpose(root, 5), transpose(root, 7)];
     case 'octave':
       return [root, root * 2];
+    case 'minor7':
+      return [root, transpose(root, 3), transpose(root, 7), transpose(root, 10)];
+    case 'major7':
+      return [root, transpose(root, 4), transpose(root, 7), transpose(root, 11)];
+    case 'dom7':
+      return [root, transpose(root, 4), transpose(root, 7), transpose(root, 10)];
+    case 'add9':
+      return [root, transpose(root, 4), transpose(root, 7), transpose(root, 14)];
   }
 }
 
