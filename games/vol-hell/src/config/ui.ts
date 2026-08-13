@@ -8,6 +8,8 @@ export const uiConfig = {
     barWidth: 200,
     /** Dash barının can barının altındaki dikey kayması (piksel). */
     dashBarTopOffset: 36,
+    /** Spark (deneyim) barının can barının altındaki dikey kayması (piksel). */
+    sparkBarTopOffset: 72,
     /** Dash bar animasyonu; 0 = anında güncelle (her frame rAF zinciri yaratmamak için). */
     dashBar: {
       /** 0 = animasyon yok. */

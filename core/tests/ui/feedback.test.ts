@@ -130,6 +130,18 @@ describe('Bar', () => {
     custom.destroy();
   });
 
+  it('lowThreshold null verilince uyarı durumu hiç oluşmaz — dolan barlar için', () => {
+    const bar = new Bar({ max: 100, value: 0, lowThreshold: null, animateMs: 0 });
+    expect(bar.element.classList.contains('vol-bar--low')).toBe(false);
+
+    bar.setValue(1);
+    expect(bar.element.classList.contains('vol-bar--low')).toBe(false);
+
+    bar.setValue(100);
+    expect(bar.element.classList.contains('vol-bar--low')).toBe(false);
+    bar.destroy();
+  });
+
   it('animasyon tamamlandığında fill genişliği hedefe ulaşır', () => {
     const bar = new Bar({ max: 100, value: 0, animateMs: 50 });
     const fill = bar.element.querySelector('.vol-bar__fill') as HTMLDivElement;

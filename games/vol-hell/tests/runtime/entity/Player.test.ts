@@ -49,15 +49,17 @@ vi.mock('phaser', async () => {
 import { Player } from '@/runtime/entity/Player';
 import { playerConfig } from '@/config/player';
 import { Vector2 } from '@volstudio/core';
-import type { ParticlePool } from '@/runtime/systems/ParticlePool';
+import type { EffectManager } from '@/runtime/systems/EffectManager';
 
 interface FakeArc {
   x: number;
   y: number;
+  depth: number;
   scene: FakeScene;
   setStrokeStyle: () => FakeArc;
   setFillStyle: () => FakeArc;
   setVisible: () => FakeArc;
+  setDepth: (d: number) => FakeArc;
   destroy: () => void;
 }
 
@@ -105,47 +107,20 @@ function makeBorder(): FakeBorder {
   };
 }
 
-/** ParticlePool mock'u — acquire/release sadece stub döner. */
-function makeParticlePool(): ParticlePool {
-  const fakeArc = {
-    x: 0,
-    y: 0,
-    setPosition() {
-      return this;
-    },
-    setRadius() {
-      return this;
-    },
-    setFillStyle() {
-      return this;
-    },
-    setAlpha() {
-      return this;
-    },
-    setScale() {
-      return this;
-    },
-    setStrokeStyle() {
-      return this;
-    },
-    setVisible() {
-      return this;
-    },
-    setActive() {
-      return this;
-    },
-    destroy() {},
-  };
+/** EffectManager mock'u — efekt çağrılarını kaydeder, Phaser'a dokunmaz. */
+function makeEffects(): EffectManager & { calls: string[] } {
+  const calls: string[] = [];
   return {
-    acquire: () => fakeArc,
-    release: () => {},
+    calls,
+    play: (id: string) => calls.push(id),
+    getActiveParticleCount: () => 0,
     destroy: () => {},
-  } as unknown as ParticlePool;
+  } as unknown as EffectManager & { calls: string[] };
 }
 
 describe('Player', () => {
   let scene: FakeScene;
-  let particles: ParticlePool;
+  let effects: EffectManager;
 
   beforeEach(() => {
     const sceneRef: {
@@ -159,10 +134,15 @@ describe('Player', () => {
       const arc: FakeArc = {
         x,
         y,
+        depth: 0,
         scene: sceneRef as unknown as FakeScene,
         setStrokeStyle: () => arc,
         setFillStyle: () => arc,
         setVisible: () => arc,
+        setDepth: (d: number) => {
+          arc.depth = d;
+          return arc;
+        },
         destroy: () => {},
       };
       return arc;
@@ -174,7 +154,7 @@ describe('Player', () => {
       scale: { width: 800, height: 600 },
       events: { once: vi.fn() },
     } as unknown as FakeScene;
-    particles = makeParticlePool();
+    effects = makeEffects();
   });
 
   afterEach(() => {
@@ -182,7 +162,7 @@ describe('Player', () => {
   });
 
   function makePlayer(x: number, y: number): Player {
-    return new Player(scene as unknown as never, x, y, particles);
+    return new Player(scene as unknown as never, x, y, effects);
   }
 
   it('constructor — ekran ortasında başlar, max can ile', () => {

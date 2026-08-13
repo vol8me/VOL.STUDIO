@@ -1,13 +1,20 @@
 import { enemyConfig } from '@/config/enemy';
 import { difficultyConfig } from '@/config/difficulty';
 
-/** Oyunun anlık zorluk durumu. */
+/**
+ * Oyunun anlık zorluk durumu.
+ *
+ * Düşman stat'ları burada MUTLAK değer olarak hesaplanmaz; yalnızca çarpan
+ * üretilir ve bu çarpanlar düşmanın `StatBlock`'una modifier olarak girer.
+ * İki paralel ölçekleme sistemi (config → EnemyStats ve DifficultyCalculator
+ * → EnemyStats) yerine tek zincir: arketip taban stat'ı → modifier → sonuç.
+ */
 export interface DifficultyState {
-  /** Güncel düşman sağlığı (scale uygulanmış). */
-  readonly enemyHealth: number;
-  /** Güncel düşman hızı (scale uygulanmış). */
-  readonly enemySpeed: number;
-  /** Güncel spawn aralığı (ms). */
+  /** Düşman canı çarpanı — StatBlock'a `multiply` modifier olarak girer. */
+  readonly healthMultiplier: number;
+  /** Düşman hızı çarpanı — StatBlock'a `multiply` modifier olarak girer. */
+  readonly speedMultiplier: number;
+  /** Güncel spawn aralığı (ms) — entity stat'ı değil, spawn temposu. */
   readonly spawnIntervalMs: number;
   /** Güncel maksimum düşman sayısı. */
   readonly maxEnemies: number;
@@ -52,8 +59,8 @@ export function getDifficultyState(elapsedMs: number): DifficultyState {
     1 + (rampedFactor + beyondRamp) * difficultyConfig.scoreMultiplierPerMinute;
 
   return {
-    enemyHealth: enemyConfig.health * healthMultiplier,
-    enemySpeed: enemyConfig.speed * speedMultiplier,
+    healthMultiplier,
+    speedMultiplier,
     spawnIntervalMs: Math.max(
       difficultyConfig.minSpawnIntervalMs,
       enemyConfig.spawnIntervalMs * spawnMultiplier,

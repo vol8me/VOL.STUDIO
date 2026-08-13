@@ -10,8 +10,13 @@ export interface BarOptions {
   variant?: BarVariant;
   max: number;
   value?: number;
-  /** value/max oranı bu eşiğin altına düşünce 'low' class'ı eklenir (örn. kritik can uyarısı). */
-  lowThreshold?: number;
+  /**
+   * value/max oranı bu eşiğin altına düşünce 'low' class'ı eklenir (örn. kritik
+   * can uyarısı). `null` verilirse uyarı durumu tamamen kapanır: TÜKENEN bir
+   * kaynakta (can, mana, dash) düşük değer uyarıdır, ama DOLAN bir barda
+   * (deneyim) boşluk normaldir — kırmızı orada yanlış algı yaratır.
+   */
+  lowThreshold?: number | null;
   /** Değer değişimini akıcı gösterme süresi. 0 = anında. */
   animateMs?: number;
   /**
@@ -33,7 +38,7 @@ export class Bar {
   private readonly variant: BarVariant;
   private max: number;
   private value: number;
-  private readonly lowThreshold: number;
+  private readonly lowThreshold: number | null;
   private readonly animateMs: number;
   private label?: BarLabel;
   private cancelAnimation?: () => void;
@@ -155,7 +160,10 @@ export class Bar {
   private renderFill(value: number): void {
     const ratio = this.max > 0 ? value / this.max : 0;
     this.fillElement.style.width = `${Math.max(0, Math.min(1, ratio)) * 100}%`;
-    this.element.classList.toggle('vol-bar--low', ratio <= this.lowThreshold);
+    this.element.classList.toggle(
+      'vol-bar--low',
+      this.lowThreshold !== null && ratio <= this.lowThreshold,
+    );
 
     if (this.labelElement && typeof this.label === 'function') {
       this.labelElement.textContent = this.label(Math.round(value), this.max);

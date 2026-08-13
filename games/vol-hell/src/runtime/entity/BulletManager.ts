@@ -1,14 +1,17 @@
 import type Phaser from 'phaser';
-import type { Vector2 } from '@volstudio/core';
+import type { StatBlock, Vector2 } from '@volstudio/core';
 import { Diagnostics } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
 import { Bullet } from './Bullet';
 import type { Border } from './Border';
-import type { ParticlePool } from '@/runtime/systems/ParticlePool';
+import type { EffectManager } from '@/runtime/systems/EffectManager';
 
 /**
  * Mermi yöneticisi — ateş cooldown, mermi yaşam döngüsü, trail partikül ve çarpışma.
- * Tek tek ateş: fireCooldownMs içinde bir kez ateş edilir.
+ * Tek tek ateş: `fireRate` stat'ı kadar bekleyip bir kez ateş eder.
+ *
+ * Hasar ve ateş temposu oyuncunun `StatBlock`'undan okunur; config değerleri
+ * yalnızca taban olarak kullanılır (bkz. Player).
  */
 export class BulletManager {
   private readonly bullets: Bullet[] = [];
@@ -16,16 +19,30 @@ export class BulletManager {
 
   constructor(
     private readonly scene: Phaser.Scene,
-    private readonly particles: ParticlePool,
+    private readonly effects: EffectManager,
+    private readonly stats: StatBlock,
   ) {}
 
   /** Ateş etmeye çalışır — cooldown aktifse reddedir. */
   tryFire(origin: Vector2, direction: Vector2): boolean {
     if (this.fireCooldown > 0) return false;
 
-    const bullet = new Bullet(this.scene, origin.x, origin.y, direction, this.particles);
+    const bullet = new Bullet(
+      this.scene,
+      origin.x,
+      origin.y,
+      direction,
+      this.effects,
+      // Negatif hasar mermiyi iyileştiriciye çevirirdi.
+      Math.max(0, this.stats.getValue('damage')),
+    );
     this.bullets.push(bullet);
-    this.fireCooldown = bulletConfig.fireCooldownMs;
+    // fireRate = atışlar arası bekleme (ms); alt sınır olmadan modifier'lar
+    // ateşi frame başına bir mermiye kadar hızlandırabilirdi.
+    this.fireCooldown = Math.max(bulletConfig.minFireCooldownMs, this.stats.getValue('fireRate'));
+
+    const angleDeg = Math.atan2(direction.y, direction.x) * (180 / Math.PI);
+    this.effects.play('bulletFire', origin.x, origin.y, angleDeg);
 
     Diagnostics.getInstance()?.recordEvent('bulletFire', {
       x: origin.x,

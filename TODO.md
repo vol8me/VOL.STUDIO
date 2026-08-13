@@ -334,3 +334,348 @@ promise hata kalıpları.
 | `pnpm --filter @volstudio/vol-hell build` | geçti | 0 font uyarısı  |
 | `pnpm --filter @volstudio/vol-ui build`   | geçti | 0 font uyarısı  |
 | `cargo check/fmt/clippy`                  | geçti |                 |
+
+---
+
+## AŞAMA 1/3 — Temel Altyapı (taktiksel arena-survival dönüşümü) — 2026-08-13
+
+Üç aşamalı jenre dönüşümünün ilk parçası: Aşama 2 (ability + kart sistemi) ve
+Aşama 3 (elite/boss + cila) bu altyapının üstüne oturacak. Bu aşamada YENİ
+OYNANIŞ İÇERİĞİ eklenmedi; kule, zincir yıldırım, kart seçimi, elite ve boss
+YOK — yalnızca onları taşıyacak zemin kuruldu.
+
+### A — İki bilinen hata
+
+- **A1** `core/tests/setup.ts` — `document.fonts` stub'ı KOŞULSUZ hale getirildi
+  (`Object.defineProperty`). Yeni jsdom sürümleri native `document.fonts`
+  sağlıyor ama `ready` promise'i hiç resolve olmuyordu; koşullu stub devreye
+  girmediği için `createVolGame` her testte 5 sn (`TECH.FONT_READY_FALLBACK`)
+  bekleyip vitest timeout'una çarpıyor, yarım kalan promise zinciri sonraki
+  teste sızıyordu. `tests/game.test.ts` 5/5, üç ardışık koşuda stabil.
+- **A2** `core/scripts/composition/harmony.ts` — `generateProgressionFromPool`
+  ardışık tekrar koruması, havuz İNDEKSİNİ frekansla (`result[i-1].root`)
+  kıyaslıyordu; koruma fiilen hiç çalışmıyordu. Ayrı bir `previousIndex` ile
+  düzeltildi, tek elemanlı havuz için guard eklendi. `composition.test.ts`'e
+  yüksek `tonicWeight` regresyon testi eklendi. `generate-iron-vein.ts`
+  çıktısı ETKİLENMİYOR (indeksler zaten farklıydı, doğrulandı).
+
+### B — Stat/modifier sistemi (Player + Enemy ortak)
+
+- `core/src/stats/StatBlock.ts` — dört stat (`damage`, `speed`, `health`,
+  `fireRate`), `add`/`multiply` modifier, kalıcı/koşullu (`condition`) ayrımı,
+  dinamik değer (`() => number`) desteği. Hesap sırası:
+  `(taban + Σ add) × Π multiply`. `@volstudio/core`'dan export edilir.
+- `Player` düz config okumayı bıraktı; stat bloğu kurup hız/can/hasar/ateş
+  temposunu oradan okuyor. `BulletManager` mermi hasarını ve cooldown'u
+  oyuncunun stat bloğundan alıyor.
+- `Enemy`'deki eski `EnemyStats` arayüzü KALDIRILDI, yerini `StatBlock` aldı.
+  `DifficultyCalculator` artık mutlak değer değil ÇARPAN üretiyor; çarpanlar
+  `createEnemyStats()` içinde spawn anında `multiply` modifier olarak stat
+  bloğuna giriyor. Üç paralel sistem (config → EnemyStats → Difficulty) tek
+  zincire indi.
+- Regresyon testi (`tests/runtime/entity/enemyStatsRegression.test.ts`) eski
+  formülün birebir kopyasını 8 farklı `elapsedMs` değerinde yeni zincirle
+  karşılaştırıyor — can ve hız birebir aynı.
+
+### C — Düşman kataloğu (data-driven, elite/boss hariç)
+
+- `src/config/enemies/` — ses preset kataloğuyla aynı desen: `types.ts` +
+  `catalog/{base,rusher,swarmer}.ts` + `catalog/index.ts` (`ENEMY_CATALOG`,
+  `findEnemies`, `getEnemyDefinition`, `pickEnemyDefinition`,
+  `getMaxEnemyRadius`).
+- Üç arketip: `grunt` (base, bugünkü düşman), `lancer` (rusher),
+  `brooder` (swarmer) + `swarmling` (brooder'ın minion'u, dalga havuzunda yok).
+- Davranışlar `src/runtime/entity/behaviors/` altında BAĞIMSIZ fonksiyonlar:
+  `applySeekBehavior`, `applyStandoffBehavior`, `applyRusherBehavior`,
+  `applySwarmerBehavior`. `Enemy` sınıfına gömülü değiller; kendi durum
+  nesneleriyle çalışırlar, böylece Aşama 3'te Elite ikisini de kompoze
+  edebilecek.
+- `EnemyManager` katalogdan dalga-kapılı ağırlıklı seçim yapıyor, swarmer'ın
+  doğurma isteklerini karşılıyor; spawn rastgeleliği artık seed'li PRNG.
+
+### D — Görsel katman (Phaser-native)
+
+- Elle yazılmış `ParticlePool` (Arc + tween zinciri) SİLİNDİ. Yerine
+  `EffectManager` geldi: Phaser'ın kendi `ParticleEmitter`'ını kullanır,
+  havuzlamayı motora bırakır.
+- `src/config/effects.ts` — hangi olayın hangi partikül/renk/süre/sarsıntı
+  kombinasyonuna karşılık geldiği tek merkezde. Mevcut olaylara bağlandı:
+  ateş, mermi izi, sekme, düşman vuruşu/ölümü, rusher atılımı, oyuncu dash'i,
+  oyuncu hasarı, Flux toplama.
+- Kamera sarsıntısı da efekt tanımının parçası (efekt başına cooldown +
+  ayarlardan gelen şiddet ölçeği). `gameConfig.shake` kaldırıldı,
+  `GameScene`'deki iki ayrı sarsıntı bloğu tek katmana indi.
+- Partikül dokusu bir kez üretilir (`Graphics.generateTexture`), renk emitter
+  `tint`'i ile verilir.
+
+### E — Ekonomi iskeleti ve koşu yapısı
+
+- `RunEconomy` — Flux (kalıcı) ve Spark (koşu içi) sayaçları, Spark seviye
+  eşikleri (`onLevelUp` olayı; kart ekranı Aşama 2'de bağlanacak).
+- **Flux gerçekten yere düşer**: `FluxPickup` + `FluxPickupManager` —
+  saçılma, mıknatıs çekimi, temasla toplama, süre dolumu + yanıp sönme.
+  **Spark pickup değildir**; düşman ölünce doğrudan sayaca eklenir.
+- `WaveManager` — 20 dalga × 40 sn. Olaylar: `onWaveStart`, `onWaveEnd`
+  (dükkan tetikleyicisi), `onEliteWave` (dalga 10), `onBossWave` (dalga 20),
+  `onRunComplete`. Hepsi şu an Diagnostics'e olay yazıyor; UI Aşama 2/3'te.
+- Zorluk eğrisi 800 sn'lik koşuya göre yeniden ayarlandı: hız büyümesi
+  %15/dk → %7/dk, can %18/dk → %14/dk. Eski oranlarla koşu sonunda düşman
+  hızı 265 px/sn oluyordu (oyuncu 220) — kaçış imkânsızdı. Yeni tavan ~173
+  px/sn. Testle kilitlendi.
+
+### Yapılan varsayımlar
+
+- **`fireRate` = cooldown (ms), düşük değer hızlı saldırı.** Dört stat adı
+  sabit olduğu için ters yönlü bir stat kaçınılmazdı; JSDoc'ta ve testte
+  açıkça belgelendi. "Ateş hızı +%25" veren bir kart `multiply 0.8` verir.
+- **Düşman `damage`/`fireRate`** temas hasarı ve temas hasarı bekleme süresi
+  olarak yorumlandı; böylece dört stat düşmanlar için de anlamlı.
+- **Dash hızı, hız stat'ının tabana oranıyla ölçeklenir** — "hız +%20" kartı
+  dash'i de aynı oranda hızlandırır. Modifier yokken davranış değişmez.
+- **Zorluk çarpanları spawn anında sabitlenir** (fonksiyon değil sabit değer):
+  bir düşman doğduğu andaki zorlukla yaşar, zamanla kendiliğinden güçlenmez.
+  Eski davranış buydu.
+- **Maks. can, mermi hasarının katına yuvarlanır** (`quantizeEnemyHealth`);
+  eski koddaki kural korundu, ek olarak "en az bir vuruşluk can" guard'ı
+  eklendi (eski kodda 12.5 canın altı 0'a yuvarlanabiliyordu).
+- **`displayName` teşhis/log amaçlıdır**, oyuncuya gösterilmez — bu yüzden
+  i18n anahtarı açılmadı. Düşman adları UI'da görünürse (Aşama 3) i18n'e taşınır.
+- **Koşu seed'i** `Date.now()` ile üretilir ve Diagnostics'e yazılır; her koşu
+  farklı, ama seed verilirse birebir tekrarlanabilir. `Math.random()` kullanan
+  yeni kod yok.
+- **Flux/Spark için HUD elemanı eklenmedi** — sayaçlar Diagnostics'e yazılıyor.
+  HUD/dükkan gösterimi Aşama 2'nin kart/dükkan UI'ıyla birlikte gelecek.
+- **Flux toplama sesi yok** — mevcut SFX kataloğunda uygun bir olay yok, yeni
+  ses asset'i üretmek bu aşamanın kapsamı dışında.
+- **`separationRadius` → `separationGap`**: ayrılma mesafesi artık
+  `r1 + r2 + gap`. Sabit 30 px, katalogdaki farklı boyutlu düşmanlarda iri
+  olanları iç içe geçiriyordu. İki temel düşman için sonuç aynı (14+14+2 = 30).
+- **Can barı ölçüsü yarıçaptan türetilir** (`healthBarWidthRatio`,
+  `healthBarGap`); temel düşman için eski değerlerle birebir aynı (28 px / 22 px).
+- **`CollisionResolver.onPlayerDamaged` kaldırıldı** — sarsıntı efekt katmanına
+  taşınınca callback'in tüketicisi kalmadı; boş gövdeli bir kanca bırakmak
+  yerine silindi (gerektiğinde üç satırla geri gelir).
+- **`vol-ui` showcase'ine dokunulmadı**: bu aşamanın görsel katmanı tamamen
+  Phaser canvas tarafında kaldı, `core/src/ui` altında yeni DOM component
+  doğmadı. Aşama 2'nin kart UI'ı için kritik olacak.
+
+### Aşama 2 bu altyapıyı nasıl kullanacak
+
+- **Kartlar** `player.getStats().addModifier({...})` çağırır; kalıcı kartlar
+  `condition` vermez, takas kartları `condition: () => durum` verir.
+  `removeModifier(kartId)` tek çağrıda kartın tüm stat etkilerini geri alır.
+- **Level-up ekranı** `RunEconomy` `onLevelUp` olayına bağlanır;
+  **dükkan ekranı** `WaveManager` `onWaveEnd` olayına, bakiye
+  `economy.getFlux()` / `economy.spendFlux()` ile.
+- **Yeni efektler** `effectsConfig`'e bir satır eklenip
+  `effects.play('id', x, y)` ile tetiklenir — motor tarafında değişiklik gerekmez.
+- **Aşama 3'te Elite**, `applyRusherBehavior` + `applySwarmerBehavior`
+  fonksiyonlarını kendi durum nesneleriyle üst üste çağırarak kompoze eder;
+  `WaveManager.onEliteWave` / `onBossWave` tetikleyicileri hazır.
+- **HUD**: `player.getMaxHealth()` artık modifier'lara duyarlı; can barının
+  `max` değeri sahne kurulumunda bir kez okunuyor. Maks. canı değiştiren bir
+  kart eklendiğinde bar `max`'ı da güncellenmeli.
+
+### Kalite kapıları
+
+| Kapı                                      | Durum | Not                                                      |
+| ----------------------------------------- | ----- | -------------------------------------------------------- |
+| `pnpm -r typecheck`                       | geçti | 4 paket                                                  |
+| `pnpm -r test`                            | geçti | 917 test (core 675, vol-hell 212, tauri-v2 25, vol-ui 5) |
+| `pnpm lint`                               | geçti | 0 hata, 0 uyarı                                          |
+| `pnpm format:check`                       | geçti |                                                          |
+| `pnpm lint:css`                           | geçti |                                                          |
+| `pnpm --filter @volstudio/vol-hell build` | geçti |                                                          |
+
+**Doğrulanmayan:** tarayıcıda görsel/oynanış kontrolü yapılmadı (ortamda
+tarayıcı otomasyonu yok; Phaser HEADLESS jsdom'da boot etmiyor — bu yüzden
+`core/tests/game.test.ts` zaten `Phaser.Game`'i mock'luyor). Efekt katmanının
+Phaser API kullanımı Phaser'ın kendi tip tanımlarıyla derleme zamanında
+doğrulandı; partikül/dalga akışının GÖRSEL kontrolü `pnpm dev` ile
+yapılmalıdır.
+
+---
+
+## Aşama 1 devamı — katmanlama, Flux düşüşü ve ekonomi HUD'u — 2026-08-13
+
+Oyun içi ilk görsel geri bildirim turu. Kullanıcı gözlemleri: Flux parçaları
+düşmanların üstünde çiziliyordu, düşme animasyonu yoktu, Spark'ın hiçbir
+göstergesi yoktu.
+
+### Render katmanları (kök sorun)
+
+`src/config/layers.ts` — `RENDER_DEPTH` tek kaynak. Önceden HİÇBİR entity'de
+`setDepth` yoktu; Phaser yaratılma sırasına göre çiziyordu, yani sonradan doğan
+her düşman oyuncunun ve yerdeki Flux'un üstüne biniyor, sıralama koşudan koşuya
+değişiyordu.
+
+```
+border -100 < groundEffect -60 < fluxPickup -50 < enemy 0
+       < enemyHealthBar 5 < player 10 < bullet 20 < impactEffect 30
+```
+
+- `Border`, `Enemy`, `EnemyHealthBar`, `Player`, `Bullet`, `FluxPickup` artık
+  katmanını açıkça veriyor; `effectsConfig`'teki eski `-1/1/2` değerleri de bu
+  ölçeğe taşındı (iki ayrı derinlik ölçeği kalmadı).
+- Yan fayda: oyuncu artık düşman kalabalığının altında kaybolmuyor, düşman can
+  barları başka bir düşmanın gövdesi altında kalmıyor.
+- `tests/config/renderDepth.test.ts` sıralama İLİŞKİLERİNİ kilitliyor.
+
+### Flux düşme animasyonu
+
+- Parça ölüm noktasında doğar, `easeOutCubic` ile saçılma noktasına giderken
+  bir yay çizer, fırlama anındaki büyüme (`popScale`) inişte sönümlenir.
+- İniş bitene kadar **toplanmaz ve mıknatıs çalışmaz** — "birden altında
+  belirme" hissi kalktı.
+- İniş sonrası hafif süzülme (bob): `economyConfig.flux.bob.enabled` ile
+  kapatılabilir. Mıknatıs parçayı taşıdıkça salınım merkezi güncelleniyor,
+  oyuncu menzilden çıkınca parça eski yerine ışınlanmıyor.
+- Tween yerine `update()` içinde elle yürütülüyor: delta tabanlı, deterministik
+  ve mevcut sahte sahne testleriyle doğrulanabilir.
+
+### Flux ömrü kaldırıldı
+
+Parçaların 12 sn ömrü ve son 3 sn'de yanıp sönmesi **silindi**; Flux toplanana
+kadar yerde durur. Bunun yerine sahne tavanı (`maxActive`) dolduğunda yeni
+düşen miktar en eski parçanın üzerine eklenir — sahne şişmez, hiçbir Flux
+kaybolmaz.
+
+### Ekonomi HUD'u
+
+- **Spark = deneyim**: sol sütunda can ve dash barlarının altında `XPBar`
+  (`vol-hud__slot--spark`). Bar `RunEconomy`'nin GÖRÜNTÜSÜDÜR; seviye defterini
+  ekonomi tutar. Bunun için core'a `XPBar.setState(level, xp)` eklendi
+  (`addXP()` kendi defterini tutuyor, iki sayaç kaçınılmaz olarak kayardı).
+  Seviye atlayınca XPBar'ın hazır `--level-up` vurgusu oynuyor.
+- **Flux = para birimi**: sağ üst blokta `ResourceCounter` (kristal ikonu +
+  sayı), toplandıkça `pulse` vurgusu.
+- `RunEconomy.getSparkInLevel()` / `getLevelSpan(level)` eklendi.
+- i18n: `hud.spark`, `hud.flux`, `hud.level` (tr + en).
+- `src/runtime/ui/icons.ts` — HUD ikonları `currentColor` ile çizilir, renk
+  CSS'ten gelir (tema token'ı dışına çıkan sabit renk yok).
+- Yeni component YAZILMADI; `XPBar`, `ResourceCounter` ve `Counter` zaten
+  `core/src/ui` içinde ve vol-ui showcase'inin HUD sekmesinde — README tablosu
+  değişmedi.
+
+### Ödül dengesi (kullanıcı kararı)
+
+| Düşman             | Flux | Spark |
+| ------------------ | ---- | ----- |
+| grunt              | 1    | 3     |
+| lancer             | 1    | 4     |
+| brooder            | 2    | 6     |
+| swarmling (minion) | 0    | 1     |
+
+Spark seviye eşikleri değişmedi: 12 → 28 → 50 → 80 → 119 (kümülatif).
+
+### Bilinçli tercihler
+
+- Ölüm başına "+3 Spark" floating text'i EKLENMEDİ: kalabalık dövüşte ekranı
+  doldururdu. Geri bildirim barın dolması ve seviye vurgusu.
+- Flux sayısı dilden bağımsız (yalnız ikon + rakam); çeviri yalnızca ekran
+  okuyucu etiketinde.
+- Bar dolumu animasyonlu olduğu için testler anlık değeri `aria-valuenow`
+  üzerinden doğruluyor; metin animasyonla akıyor.
+
+### Kalite kapıları
+
+| Kapı                                      | Durum | Not                                                      |
+| ----------------------------------------- | ----- | -------------------------------------------------------- |
+| `pnpm -r typecheck`                       | geçti | 4 paket                                                  |
+| `pnpm -r test`                            | geçti | 944 test (core 679, vol-hell 235, tauri-v2 25, vol-ui 5) |
+| `pnpm lint`                               | geçti | 0 hata, 0 uyarı                                          |
+| `pnpm format:check`                       | geçti |                                                          |
+| `pnpm lint:css`                           | geçti |                                                          |
+| `pnpm --filter @volstudio/vol-hell build` | geçti |                                                          |
+
+**Doğrulanmayan:** görsel kontrol hâlâ tarayıcıda yapılmalı (`pnpm dev`) —
+ortamda tarayıcı otomasyonu yok.
+
+---
+
+## Aşama 1 kapanış — hata avı ve sağlamlaştırma — 2026-08-13
+
+Çalışma ağacının tamamı gözden geçirildi; bulunanlar:
+
+### Düzeltilen hatalar
+
+- **CSS token hatası:** Flux satırı `var(--vol-ui-accent)` kullanıyordu — böyle
+  bir token YOK (`--vol-ui-accent-solid/-hover/-pressed/-subtle/-border` var).
+  Renk sessizce uygulanmıyordu. `--vol-ui-text`'e çevrildi; bu aynı zamanda
+  `Counter` pulse animasyonunun bitiş rengi, yani vurgu bitince renk zıplamıyor.
+- **Kesirli Flux:** `FluxPickupManager.drop()` miktarı parçalara bölerken
+  tamsayı varsayıyordu; ileride bir çarpan kartı kesirli miktar üretirse
+  toplam bozulurdu. Girişte `Math.floor` ile tamsayıya iniliyor.
+
+### Sağlamlaştırma (Aşama 2 kartlarına karşı)
+
+Kartlar stat'ları serbestçe değiştirecek; uç değerlerin oyunu saçma bir duruma
+sokamayacağı `tests/runtime/entity/statHardening.test.ts` ile kilitlendi:
+
+- `bulletConfig.minFireCooldownMs` (40 ms) eklendi — ateş hızını artıran bir
+  modifier cooldown'u sıfıra indirse bile mermi üretimi FPS'e bağlanmaz.
+- Negatif `damage` artık iyileştirmiyor: mermi hasarı ve düşman temas hasarı
+  sıfıra kelepçeleniyor.
+- Negatif `speed` oyuncuyu/düşmanı ters yöne sürüklemiyor.
+- `quantizeEnemyHealth` zaten en az bir vuruşluk can garantiliyordu; test edildi.
+
+### Ölü kod temizliği
+
+- `bulletConfig.trailSpread`, `playerConfig.dashGhostStrokeWidth`,
+  `dashGhostStrokeAlphaFactor` — partikül geçişinden sonra hiçbir yerde
+  okunmuyordu, silindi.
+- `RunEconomy.getLevelProgress()` ve `getNextThreshold()` —
+  `getSparkInLevel()` + `getLevelSpan()` ile aynı bilgiyi iki kez hesaplıyordu
+  (kayma riski), silindi.
+- `RunEconomy.onFluxChanged` callback'i — HUD zaten her frame sayacı okuyor,
+  ikinci bir sinyal yolu gereksizdi.
+- `FluxPickup.isActive/hasLanded/amount` getter'ları — dışarıdan çağıran yok.
+
+### Yeni entegrasyon testi
+
+`tests/runtime/runSimulation.test.ts` — sahte sahnede tam koşu simülasyonu
+(dalga + spawn + ölüm + Flux düşüşü/toplama + seviye atlama). Doğruladıkları:
+sayıların sınır içinde kalması, konumların sonlu ve saha içinde kalması, 20
+dalganın olaylarını doğru sırada üretmesi, aynı seed'in aynı koşuyu vermesi.
+
+### Doğrulandı, sorun çıkmadı
+
+- Ölüm anında `enemy.x/y` okunması: Phaser `destroy()` yalnızca
+  `active/scene/parentContainer` alanlarını temizliyor, koordinatlar duruyor.
+- Sahne yeniden başlatmada yeni alanların hepsi (`effects`, `economy`,
+  `waveManager`, `fluxPickups`, `sparkBar`, `runRandom`) `create()` içinde
+  yeniden kuruluyor; `SHUTDOWN`'da temizleniyor.
+- `UIRoot.mount()` sadece `appendChild`; SparkBar'ın doğrudan append etmesi
+  aynı davranış.
+- Yeni kodda `Math.random()` yok; kalan kullanımlar oynanış dışı (menü müziği
+  seçimi, SFX varyantı, yükleme animasyonu).
+
+### Bilinen borç (Aşama 2'ye taşınıyor)
+
+- `GameScene.ts` 636 satır. Çarpışma zaten `CollisionResolver`'a ayrılmıştı ama
+  sahne koşu yaşam döngüsü + ses + HUD + duraklama/ölüm akışını birlikte
+  taşıyor. Aşama 2'de dükkan/kart ekranları eklenmeden ÖNCE bölünmeli
+  (öneri: koşu yaşam döngüsü ve ses yönetimi ayrı birer sınıfa).
+- Can barının `max` değeri sahne kurulumunda bir kez okunuyor; maks. canı
+  değiştiren bir kart geldiğinde barın `max`'ı da güncellenmeli.
+
+### Kalite kapıları
+
+| Kapı                                      | Durum | Not                                                      |
+| ----------------------------------------- | ----- | -------------------------------------------------------- |
+| `pnpm -r typecheck`                       | geçti | 4 paket                                                  |
+| `pnpm -r test`                            | geçti | 954 test (core 679, vol-hell 245, tauri-v2 25, vol-ui 5) |
+| `pnpm lint`                               | geçti | 0 hata, 0 uyarı                                          |
+| `pnpm format:check`                       | geçti |                                                          |
+| `pnpm lint:css`                           | geçti |                                                          |
+| `pnpm --filter @volstudio/vol-hell build` | geçti |                                                          |
+| `pnpm --filter @volstudio/vol-ui build`   | geçti |                                                          |
+
+### XPBar uyarı durumu (kullanıcı geri bildirimi)
+
+`Bar`'ın "düşük değer = kırmızı" uyarısı TÜM barlara uygulanıyordu; XP barı
+seviye başında boş olduğu için kritik/kırmızı görünüyor ve yanlış algı
+yaratıyordu. `BarOptions.lowThreshold` artık `number | null`: `null` verilince
+uyarı durumu hiç oluşmaz. `XPBar` bunu kullanıyor — dolan bir bar tek renk.
+
+Can, mana ve dash barları değişmedi: orada düşük değer gerçekten uyarıdır.

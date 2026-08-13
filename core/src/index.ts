@@ -1,6 +1,11 @@
 export { Vector2 } from './math/Vector2';
 export { toStepVelocity } from './math/physics';
 
+// Deterministik PRNG. Ses sentezinde doğdu ama motor geneli bir yardımcıdır;
+// oyun tarafı da (spawn, davranış) aynı uygulamayı kullanır — ikinci bir PRNG
+// yazmak determinizmi iki ayrı yerde doğrulanması gereken bir soruna çevirir.
+export { createRandom, seedFromString, DEFAULT_SEED, type Random } from './audio/synth/random';
+
 export {
   INPUT,
   UI_DEPTH,
@@ -13,6 +18,16 @@ export {
   PINCH_ZOOM,
   TECH,
 } from './constants';
+
+export {
+  StatBlock,
+  STAT_KEYS,
+  type StatKey,
+  type StatModifier,
+  type StatModifierType,
+  type StatModifierValue,
+  type StatBaseValues,
+} from './stats/StatBlock';
 
 export type { BaseEntity } from './entities/BaseEntity';
 export { BaseSprite } from './entities/BaseSprite';

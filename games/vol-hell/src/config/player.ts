@@ -20,12 +20,8 @@ export const playerConfig = {
   dashGhostLifespanMs: 350,
   /** Dash ghost başlangıç alpha (0-1). */
   dashGhostAlpha: 0.4,
-  /** Dash ghost stroke alpha çarpanı (0-1). */
-  dashGhostStrokeAlphaFactor: 0.5,
   /** Dash ghost son scale değeri. */
   dashGhostScaleEnd: 0.5,
-  /** Dash ghost çizgi kalınlığı (piksel). */
-  dashGhostStrokeWidth: 2,
   /** Normal durumda oyuncu rengi (0xRRGGBB). */
   color: 0x4488ff,
   /** Dash sırasında oyuncu rengi (0xRRGGBB). */

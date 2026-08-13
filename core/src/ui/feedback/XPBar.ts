@@ -43,6 +43,9 @@ export class XPBar {
       max: xpForLevel(level),
       value: xp,
       animateMs,
+      // XP dolan bir değerdir: seviye başında bar boş olur. Tükenen kaynaklara
+      // ait "düşük = kritik" kırmızısı burada yanlış algı yaratırdı; bar tek renk.
+      lowThreshold: null,
       label: label ?? ((v, m) => `Lv.${this.level} — ${v} / ${m}`),
     });
     this.bar.element.classList.add('vol-xp-bar');
@@ -71,6 +74,27 @@ export class XPBar {
       this.onLevelUpHandler?.(this.level);
     } else {
       this.bar.setValue(this.xp);
+    }
+  }
+
+  /**
+   * Barı dışarıdaki bir kaynağın (oyun durumu) seviyesine ve XP'sine eşitler.
+   *
+   * `addXP()` barı KENDİ defteriyle sürer; seviye mantığı oyun tarafında zaten
+   * varsa iki ayrı sayaç tutmak kaçınılmaz olarak birbirinden kayar. Bu metotla
+   * bar saf bir görüntü olur. Seviye arttıysa level-up vurgusu oynar; olayın
+   * sahibi dışarısı olduğu için `onLevelUp` YENİDEN tetiklenmez.
+   */
+  setState(level: number, xp: number): void {
+    const leveledUp = level > this.level;
+    this.level = level;
+    this.xp = Math.max(0, xp);
+
+    this.bar.setMax(this.xpForLevel(level));
+    this.bar.setValue(this.xp);
+
+    if (leveledUp) {
+      this.triggerLevelUpEffect();
     }
   }
 

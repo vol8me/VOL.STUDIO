@@ -34,6 +34,28 @@ describe('Kompozisyon primitifleri', () => {
     expect(pool.map((c) => c.root)).toContain(chords[0].root);
   });
 
+  it('generateProgressionFromPool yüksek tonik ağırlığında bile aynı akoru üst üste koymaz', () => {
+    const pool = [
+      { root: 110, type: 'fifth' as const },
+      { root: 146.83, type: 'fifth' as const },
+      { root: 174.61, type: 'fifth' as const },
+    ];
+    // tonicWeight = 1 → her adım tonike gitmek ister; koruma çalışmazsa
+    // ilerleme tek akorun tekrarına dönerdi.
+    const chords = generateProgressionFromPool(pool, 16, 0, 1, 11);
+    expect(chords.length).toBe(16);
+    for (let i = 1; i < chords.length; i++) {
+      expect(chords[i]).not.toBe(chords[i - 1]);
+    }
+  });
+
+  it('generateProgressionFromPool tek elemanlı havuzda da çalışır', () => {
+    const pool = [{ root: 110, type: 'fifth' as const }];
+    const chords = generateProgressionFromPool(pool, 4, 0, 1, 5);
+    expect(chords.length).toBe(4);
+    expect(chords.every((c) => c.root === 110)).toBe(true);
+  });
+
   it('generateMotif explicit frekanslarla çalışır', () => {
     const motif = generateMotif({
       frequencies: [220, 261.63, 329.63],

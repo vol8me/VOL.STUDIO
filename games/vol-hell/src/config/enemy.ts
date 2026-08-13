@@ -16,18 +16,22 @@ export const enemyConfig = {
   spawnIntervalMs: 1400,
   /** Maksimum eşzamanlı düşman sayısı. */
   maxCount: 24,
-  /** Düşmanlar arası minimum mesafe (piksel) — overlap engeli. */
-  separationRadius: 30,
+  /**
+   * İki düşmanın arasında istenen boşluk (piksel). Ayrılma mesafesi
+   * `r1 + r2 + separationGap` olarak hesaplanır: katalogdaki her tür farklı
+   * boyutta olduğu için sabit bir mesafe iri düşmanları iç içe geçirirdi.
+   */
+  separationGap: 2,
   /** Düşman ayrılma gücü (0-1, yüksek = daha güçlü itme). */
   separationForce: 0.5,
-  /** Düşman can barı genişliği (piksel). */
-  healthBarWidth: 28,
+  /** Can barı genişliği = düşman yarıçapı x bu oran — iri düşman, iri bar. */
+  healthBarWidthRatio: 2,
   /** Can barı dolu kısmının minimum genişliği (piksel) — sıfıra inip kaybolmasın. */
   healthBarMinWidth: 2,
   /** Düşman can barı yüksekliği (piksel). */
   healthBarHeight: 4,
-  /** Düşman can barı offset (piksel, düşman merkezinden yukarı). */
-  healthBarOffset: 22,
+  /** Can barının düşman kenarıyla arasındaki boşluk (piksel). */
+  healthBarGap: 8,
   /** Düşman ölüm partikül sayısı. */
   deathParticleCount: 12,
   /** Düşman ölüm partikül yayılma hızı (piksel/saniye). */

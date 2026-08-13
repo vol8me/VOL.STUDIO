@@ -12,10 +12,9 @@ import { Player } from '@/runtime/entity/Player';
 import { Border } from '@/runtime/entity/Border';
 import { EnemyManager } from '@/runtime/entity/EnemyManager';
 import { BulletManager } from '@/runtime/entity/BulletManager';
+import type { Enemy } from '@/runtime/entity/Enemy';
 
-import { playerConfig } from '@/config/player';
 import { bulletConfig } from '@/config/bullet';
-import { enemyConfig } from '@/config/enemy';
 import { uiConfig } from '@/config/ui';
 import { gameConfig } from '@/config/game';
 import { physicsConfig } from '@/config/physics';
@@ -23,13 +22,18 @@ import { ambientTrackKeys, deathTrackKeys, musicConfig, musicTracks, sfxVolumes 
 import { gameAudio, audioSettings, gameStats } from '@/app/services';
 import type { RunResult } from '@/app/GameStats';
 import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
-import { ParticlePool } from '@/runtime/systems/ParticlePool';
+import { EffectManager } from '@/runtime/systems/EffectManager';
 import { CollisionResolver } from '@/runtime/systems/CollisionResolver';
 import { getDifficultyState } from '@/runtime/systems/DifficultyCalculator';
-import { Diagnostics } from '@volstudio/core';
+import { RunEconomy } from '@/runtime/systems/RunEconomy';
+import { WaveManager } from '@/runtime/systems/WaveManager';
+import { FluxPickupManager } from '@/runtime/entity/FluxPickupManager';
+import { getMaxEnemyRadius } from '@/config/enemies/catalog';
+import { createRandom, Diagnostics, type Random } from '@volstudio/core';
 import { PauseScreen } from './PauseScreen';
 import { DeathScreen } from './DeathScreen';
 import { HUDStats } from '@/runtime/ui/HUDStats';
+import { SparkBar } from '@/runtime/ui/SparkBar';
 
 /**
  * Ana oyun sahnesi — bullet-hell iskeleti.
@@ -46,20 +50,26 @@ export class GameScene extends BaseScene {
   private healthBarContainer!: HTMLElement;
   private dashBarContainer!: HTMLElement;
   private loadingScreen: LoadingScreen | null = null;
+  // Hücre boyutu katalogdaki EN BÜYÜK düşmana göre: küçük hücrede iri düşman
+  // komşu taramasından kaçabilir.
   private spatialGrid: SpatialGrid = new SpatialGrid(
-    Math.max(enemyConfig.radius, bulletConfig.radius) * physicsConfig.spatialGridCellMultiplier,
+    Math.max(getMaxEnemyRadius(), bulletConfig.radius) * physicsConfig.spatialGridCellMultiplier,
   );
-  private particlePool!: ParticlePool;
+  private effects!: EffectManager;
+  private economy!: RunEconomy;
+  private waveManager!: WaveManager;
+  private fluxPickups!: FluxPickupManager;
+  private runRandom!: Random;
+  private runSeed = 0;
   private prevHealth = 0;
   private prevDashCharge = 1;
   private diagnostics?: Diagnostics;
   private hudStats!: HUDStats;
+  private sparkBar!: SparkBar;
   private score = 0;
   private kills = 0;
   private elapsedTimeMs = 0;
   private isDeathInProgress = false;
-  private lastEnemyKillShake = 0;
-  private lastPlayerDamageShake = 0;
   // Reusable buffer'lar — her frame yeni obje yaratmaz
   private readonly moveDirBuf: Vector2 = Vector2.zero();
   private readonly aimDirBuf: Vector2 = Vector2.zero();
@@ -79,6 +89,7 @@ export class GameScene extends BaseScene {
   protected override onLanguageChanged(): void {
     this.healthBar.setLabel(i18next.t('volhell:hud.health'));
     this.dashBar.setLabel(i18next.t('volhell:hud.dash'));
+    this.sparkBar.refreshLabel();
   }
 
   protected createScene(data?: unknown): void {
@@ -115,15 +126,24 @@ export class GameScene extends BaseScene {
     // Border — kameradan küçük alan
     this.border = new Border(this);
 
-    // Partikül havuzu — GameObject yaratmak yerine reuse eder
-    this.particlePool = new ParticlePool(this, gameConfig.particlePoolSize);
+    // Koşu PRNG'si — spawn ve davranışlardaki tüm rastgelelik buradan gelir.
+    // Seed kaydedilir: bir koşu aynı seed ile birebir tekrar oynatılabilir.
+    this.runSeed = Date.now() & 0x7fffffff;
+    this.runRandom = createRandom(this.runSeed);
+    Diagnostics.getInstance()?.recordEvent('runSeed', { seed: this.runSeed });
+
+    // Efekt katmanı — partikül/sarsıntı tek merkezden tetiklenir
+    this.effects = new EffectManager(this, {
+      getShakeScale: () =>
+        audioSettings.isScreenShakeEnabled() ? audioSettings.getScreenShakeIntensity() : null,
+    });
 
     // Oyuncu — border merkezinde başlar
     this.player = new Player(
       this,
       this.border.bounds.centerX,
       this.border.bounds.centerY,
-      this.particlePool,
+      this.effects,
     );
     this.player.setBorder(this.border);
 
@@ -131,8 +151,26 @@ export class GameScene extends BaseScene {
     this.inputManager = new InputManager(this);
 
     // Mermi ve düşman yöneticileri
-    this.bulletManager = new BulletManager(this, this.particlePool);
-    this.enemyManager = new EnemyManager(this, this.particlePool);
+    this.bulletManager = new BulletManager(this, this.effects, this.player.getStats());
+    this.enemyManager = new EnemyManager(this, this.effects, this.runRandom);
+
+    // Ekonomi — Spark anında sayaca, Flux yere pickup olarak düşer
+    this.economy = new RunEconomy({
+      onLevelUp: (level) => this.onSparkLevelUp(level),
+    });
+    this.fluxPickups = new FluxPickupManager(this, this.border, this.effects, this.runRandom, {
+      onCollected: (amount) => this.economy.addFlux(amount),
+    });
+
+    // Dalga yapısı — 20 dalga x 40 sn
+    this.waveManager = new WaveManager({
+      onWaveStart: (wave) => this.onWaveStart(wave),
+      onWaveEnd: (wave) => this.onWaveEnd(wave),
+      onEliteWave: (wave) => this.onEliteWave(wave),
+      onBossWave: (wave) => this.onBossWave(wave),
+      onRunComplete: () => this.onRunComplete(),
+    });
+    this.waveManager.start();
 
     this.collisionResolver = new CollisionResolver(
       this.player,
@@ -140,10 +178,7 @@ export class GameScene extends BaseScene {
       this.enemyManager,
       this.spatialGrid,
       this.border,
-      {
-        onEnemyKilled: (value) => this.onEnemyKilled(value),
-        onPlayerDamaged: () => this.onPlayerDamaged(),
-      },
+      { onEnemyKilled: (enemy) => this.onEnemyKilled(enemy) },
     );
 
     // HUD olculeri config'te tek kaynak; CSS bunlari custom property olarak okur.
@@ -152,21 +187,26 @@ export class GameScene extends BaseScene {
       '--vol-hud-dash-offset',
       `${uiConfig.hud.dashBarTopOffset}px`,
     );
+    this.ui.element.style.setProperty(
+      '--vol-hud-spark-offset',
+      `${uiConfig.hud.sparkBarTopOffset}px`,
+    );
 
     // Can barı
     this.healthBarContainer = document.createElement('div');
     this.healthBarContainer.className = 'vol-hud__slot vol-hud__slot--health';
 
+    const maxHealth = this.player.getMaxHealth();
     this.healthBar = new Bar({
       variant: 'health',
-      max: playerConfig.maxHealth,
-      value: playerConfig.maxHealth,
+      max: maxHealth,
+      value: maxHealth,
       lowThreshold: uiConfig.lowHealthThreshold,
       label: i18next.t('volhell:hud.health'),
     });
     this.healthBarContainer.appendChild(this.healthBar.element);
     this.ui.mount(this.healthBarContainer);
-    this.prevHealth = playerConfig.maxHealth;
+    this.prevHealth = maxHealth;
 
     // Dash barı
     this.dashBarContainer = document.createElement('div');
@@ -185,6 +225,8 @@ export class GameScene extends BaseScene {
 
     // Skor / öldürme / süre HUD'u
     this.hudStats = new HUDStats(this.ui.element);
+    // Spark barı can/dash barlarının altındaki üçüncü yuva
+    this.sparkBar = new SparkBar(this.ui.element, this.economy);
     this.resetRun();
 
     // Pause ekranı — UIRoot içine mount et, böylece box-sizing ve temel UI stilleri uygulanır
@@ -284,8 +326,17 @@ export class GameScene extends BaseScene {
     this.diagnostics?.setCount('elapsedSeconds', Math.floor(this.elapsedTimeMs / 1000));
     this.diagnostics?.setCount('bullets', this.bulletManager.getBullets().length);
     this.diagnostics?.setCount('enemies', this.enemyManager.getEnemies().length);
-    this.diagnostics?.setCount('particles', this.particlePool.getActiveCount());
+    this.diagnostics?.setCount('particles', this.effects.getActiveParticleCount());
     this.diagnostics?.setCount('gridCells', this.spatialGrid.getCellCount());
+    this.diagnostics?.setCount('wave', this.waveManager.getCurrentWave());
+    this.diagnostics?.setCount(
+      'waveRemainingSeconds',
+      Math.ceil(this.waveManager.getRemainingMs() / 1000),
+    );
+    this.diagnostics?.setCount('flux', this.economy.getFlux());
+    this.diagnostics?.setCount('fluxPickups', this.fluxPickups.getActiveCount());
+    this.diagnostics?.setCount('spark', this.economy.getSpark());
+    this.diagnostics?.setCount('sparkLevel', this.economy.getLevel());
 
     this.updateAmbientState(dt);
 
@@ -318,6 +369,9 @@ export class GameScene extends BaseScene {
   private updateEntities(delta: number, playerPos: Vector2, time: number): void {
     const difficulty = getDifficultyState(this.elapsedTimeMs);
 
+    // Dalga sayacı — spawn havuzunu ve dükkan/elite/boss olaylarını sürer
+    this.waveManager.update(delta);
+
     // Spatial grid'i bu frame için yeniden kur — enemy update'inden ÖNCE
     this.spatialGrid.clear();
     this.spatialGrid.insertAll(this.enemyManager.getEnemies());
@@ -325,6 +379,7 @@ export class GameScene extends BaseScene {
     // Mermi ve düşman güncelle — güncel pozisyon ve grid ile
     this.bulletManager.update(delta, this.border);
     this.enemyManager.update(delta, playerPos, this.border, time, this.spatialGrid, difficulty);
+    this.fluxPickups.update(delta, playerPos);
 
     // Grid'i enemy hareketinden sonra yeniden kur — çarpışma kontrolü güncel pozisyon kullanır
     this.spatialGrid.clear();
@@ -348,6 +403,8 @@ export class GameScene extends BaseScene {
     this.hudStats.setScore(this.score);
     this.hudStats.setKills(this.kills);
     this.hudStats.setTime(this.elapsedTimeMs);
+    this.hudStats.setFlux(this.economy.getFlux());
+    this.sparkBar.refresh();
   }
 
   /**
@@ -360,8 +417,6 @@ export class GameScene extends BaseScene {
     this.isAmbientLoaded = false;
     this.ambientState = 'calm';
     this.ambientStateTimer = 0;
-    this.lastEnemyKillShake = 0;
-    this.lastPlayerDamageShake = 0;
     this.score = 0;
     this.kills = 0;
     this.elapsedTimeMs = 0;
@@ -373,6 +428,7 @@ export class GameScene extends BaseScene {
     this.hudStats?.setScore(0);
     this.hudStats?.setKills(0);
     this.hudStats?.setTime(0);
+    this.hudStats?.setFlux(0);
   }
 
   private updateAmbientState(delta: number): void {
@@ -403,37 +459,50 @@ export class GameScene extends BaseScene {
     });
   }
 
-  private onEnemyKilled(scoreValue: number): void {
+  /**
+   * Düşman ölümü — skor, Spark (anında sayaca) ve Flux (yere pickup).
+   * Sarsıntı ve partikül `EffectManager` tarafından ölüm efektiyle birlikte
+   * tetiklenir; burada ayrıca kamera sarsma yapılmaz.
+   */
+  private onEnemyKilled(enemy: Enemy): void {
     this.kills += 1;
-    this.score += Math.round(scoreValue);
+    this.score += Math.round(enemy.scoreValue);
 
-    if (!audioSettings.isScreenShakeEnabled()) return;
-
-    const now = this.time.now;
-    const cooldown = gameConfig.shake.enemyDeath.cooldownMs;
-    if (now - this.lastEnemyKillShake >= cooldown) {
-      this.lastEnemyKillShake = now;
-      const intensityScale = audioSettings.getScreenShakeIntensity();
-      this.cameras.main.shake(
-        gameConfig.shake.enemyDeath.durationMs,
-        gameConfig.shake.enemyDeath.intensity * intensityScale,
-      );
-    }
+    this.economy.addSpark(enemy.sparkReward);
+    this.fluxPickups.drop(enemy.x, enemy.y, enemy.fluxReward);
   }
 
-  private onPlayerDamaged(): void {
-    if (!audioSettings.isScreenShakeEnabled()) return;
+  private onWaveStart(wave: number): void {
+    this.enemyManager.setWave(wave);
+    Diagnostics.getInstance()?.recordEvent('waveStart', { wave });
+  }
 
-    const now = this.time.now;
-    const cooldown = gameConfig.shake.playerDamage.cooldownMs;
-    if (now - this.lastPlayerDamageShake >= cooldown) {
-      this.lastPlayerDamageShake = now;
-      const intensityScale = audioSettings.getScreenShakeIntensity();
-      this.cameras.main.shake(
-        gameConfig.shake.playerDamage.durationMs,
-        gameConfig.shake.playerDamage.intensity * intensityScale,
-      );
-    }
+  /** Dalga bitişi — Aşama 2'de dükkan ekranı bu olaya bağlanacak. */
+  private onWaveEnd(wave: number): void {
+    Diagnostics.getInstance()?.recordEvent('shopOpen', { wave, flux: this.economy.getFlux() });
+  }
+
+  /** Elite dalgası — Elite düşman implementasyonu Aşama 3'te gelecek. */
+  private onEliteWave(wave: number): void {
+    Diagnostics.getInstance()?.recordEvent('eliteWave', { wave });
+  }
+
+  /** Boss dalgası — Boss implementasyonu Aşama 3'te gelecek. */
+  private onBossWave(wave: number): void {
+    Diagnostics.getInstance()?.recordEvent('bossWave', { wave });
+  }
+
+  /** Koşunun tüm dalgaları tamamlandı — zafer akışı Aşama 3'te gelecek. */
+  private onRunComplete(): void {
+    Diagnostics.getInstance()?.recordEvent('runComplete', {
+      score: this.score,
+      flux: this.economy.getFlux(),
+    });
+  }
+
+  /** Spark eşiği aşıldı — Aşama 2'de kart seçim ekranı bu olaya bağlanacak. */
+  private onSparkLevelUp(level: number): void {
+    Diagnostics.getInstance()?.recordEvent('sparkLevelUp', { level });
   }
 
   private checkDeath(): void {
@@ -544,8 +613,11 @@ export class GameScene extends BaseScene {
       this.pauseScreen.destroy();
       this.pauseScreen = null;
     }
-    if (this.particlePool) {
-      this.particlePool.destroy();
+    if (this.effects) {
+      this.effects.destroy();
+    }
+    if (this.fluxPickups) {
+      this.fluxPickups.destroy();
     }
     this.inputManager.destroy();
     this.border.destroy();
@@ -554,6 +626,7 @@ export class GameScene extends BaseScene {
     this.healthBarContainer.remove();
     this.dashBarContainer.remove();
     this.hudStats.destroy();
+    this.sparkBar.destroy();
     this.diagnostics = undefined;
     if (this.loadingScreen) {
       this.loadingScreen.destroy();

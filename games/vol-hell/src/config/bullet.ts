@@ -15,8 +15,12 @@ export const bulletConfig = {
   bounceDamping: 0.8,
   /** Ateşler arası bekleme süresi (ms) — tek tek ateş. */
   fireCooldownMs: 180,
-  /** Mermi partikül trail yayılma açısı (radyan). */
-  trailSpread: 0.3,
+  /**
+   * Ateş bekleme süresinin mutlak alt sınırı (ms). Ateş hızını artıran
+   * modifier'lar (Aşama 2 kartları) cooldown'u sıfıra indirirse mermi her
+   * frame'de doğar; üretim hızı FPS'e bağlanır ve sahne mermiyle dolar.
+   */
+  minFireCooldownMs: 40,
   /** Mermi partikül trail hızı (piksel/saniye). */
   trailSpeed: 40,
   /** Mermi partikül trail ömrü (ms). */

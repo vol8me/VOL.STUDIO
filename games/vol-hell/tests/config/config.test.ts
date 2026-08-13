@@ -8,6 +8,7 @@ import { enemyConfig } from '@/config/enemy';
 import { difficultyConfig } from '@/config/difficulty';
 import { bulletConfig } from '@/config/bullet';
 import { soundAssets } from '@/config/sounds';
+import { getMaxEnemyRadius } from '@/config/enemies/catalog';
 import { getDifficultyState } from '@/runtime/systems/DifficultyCalculator';
 
 /**
@@ -41,8 +42,17 @@ describe('config ilişkileri — oyun dengesi', () => {
     expect(enemyConfig.health % bulletConfig.damage).toBe(0);
   });
 
-  it('separation yarıçapı düşman çapından büyük — ayrılma etkili', () => {
-    expect(enemyConfig.separationRadius).toBeGreaterThan(enemyConfig.radius * 2);
+  it('separation boşluğu pozitif — düşmanlar teğet geçmek yerine aralık bırakır', () => {
+    expect(enemyConfig.separationGap).toBeGreaterThan(0);
+  });
+
+  it('spatial grid hücresi en büyük düşmanın ayrılma mesafesini kapsar', () => {
+    // Ayrılma yalnızca komşu hücrelere bakar; hücre küçük kalırsa iri
+    // düşmanlar birbirini görmeden iç içe geçer.
+    const maxRadius = getMaxEnemyRadius();
+    const cellSize =
+      Math.max(maxRadius, bulletConfig.radius) * physicsConfig.spatialGridCellMultiplier;
+    expect(cellSize).toBeGreaterThanOrEqual(maxRadius * 2 + enemyConfig.separationGap);
   });
 
   it('spawn mesafesi temas mesafesinden çok uzak — anında hasar olmaz', () => {
@@ -115,8 +125,8 @@ describe('zorluk eğrisi sınırları', () => {
   it('zorluk zamanla monoton artar', () => {
     const early = getDifficultyState(0);
     const late = getDifficultyState(5 * 60 * 1000);
-    expect(late.enemyHealth).toBeGreaterThan(early.enemyHealth);
-    expect(late.enemySpeed).toBeGreaterThan(early.enemySpeed);
+    expect(late.healthMultiplier).toBeGreaterThan(early.healthMultiplier);
+    expect(late.speedMultiplier).toBeGreaterThan(early.speedMultiplier);
     expect(late.spawnIntervalMs).toBeLessThan(early.spawnIntervalMs);
   });
 });

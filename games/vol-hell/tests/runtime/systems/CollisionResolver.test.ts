@@ -4,6 +4,7 @@ import { bulletConfig } from '@/config/bullet';
 import { CollisionResolver } from '@/runtime/systems/CollisionResolver';
 import type { Border } from '@/runtime/entity/Border';
 import type { Player } from '@/runtime/entity/Player';
+import type { Enemy } from '@/runtime/entity/Enemy';
 import type { BulletManager } from '@/runtime/entity/BulletManager';
 import type { EnemyManager } from '@/runtime/entity/EnemyManager';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
@@ -89,8 +90,7 @@ function makeResolver(opts: {
   bullets?: FakeBullet[];
   enemies?: FakeEnemy[];
   nearby?: FakeEnemy[];
-  onEnemyKilled?: (score: number) => void;
-  onPlayerDamaged?: () => void;
+  onEnemyKilled?: (enemy: Enemy) => void;
 }): {
   resolver: CollisionResolver;
   player: FakePlayer;
@@ -134,10 +134,7 @@ function makeResolver(opts: {
     enemyManager as unknown as EnemyManager,
     spatialGrid as unknown as SpatialGrid,
     border,
-    {
-      onEnemyKilled: opts.onEnemyKilled,
-      onPlayerDamaged: opts.onPlayerDamaged,
-    },
+    { onEnemyKilled: opts.onEnemyKilled },
   );
 
   return {
@@ -173,7 +170,8 @@ describe('CollisionResolver', () => {
     expect(enemy.takeDamage).toHaveBeenCalledWith(bullet.damage);
     expect(removeBulletSpy).toHaveBeenCalledWith(bullet);
     expect(bullet.isAlive).toBe(false);
-    expect(onEnemyKilled).toHaveBeenCalledWith(enemy.scoreValue);
+    // Ölüm anında düşman NESNESİ iletilir: skor, Spark ve Flux aynı çağrıdan okunur.
+    expect(onEnemyKilled).toHaveBeenCalledWith(enemy);
   });
 
   it('aynı karede ikinci mermi ölü düşmana çarpmaz ve kaldırılmaz', () => {
@@ -236,18 +234,15 @@ describe('CollisionResolver', () => {
   it('temas hasarı cooldown’a uygun şekilde uygulanır', () => {
     const enemy = makeEnemy(0, 0);
     const player = makePlayer(0, 0);
-    const onPlayerDamaged = vi.fn();
 
     const { resolver } = makeResolver({
       player,
       enemies: [enemy],
       nearby: [enemy],
-      onPlayerDamaged,
     });
 
     resolver.resolve(0);
     expect(player.takeDamage).toHaveBeenCalledWith(10);
-    expect(onPlayerDamaged).toHaveBeenCalled();
 
     vi.clearAllMocks();
     resolver.resolve(100);

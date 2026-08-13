@@ -1,10 +1,11 @@
 import type Phaser from 'phaser';
 import { Vector2, Diagnostics } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
+import { RENDER_DEPTH } from '@/config/layers';
 import { sfxVolumes } from '@/config/audio';
 import { gameAudio } from '@/app/services';
 import type { Border } from './Border';
-import type { ParticlePool } from '@/runtime/systems/ParticlePool';
+import type { EffectManager } from '@/runtime/systems/EffectManager';
 
 /**
  * Mermi — oyuncunun fare yönüne doğru ateşlediği projectile.
@@ -23,7 +24,9 @@ export class Bullet {
     x: number,
     y: number,
     direction: Vector2,
-    private readonly particles: ParticlePool,
+    private readonly effects: EffectManager,
+    /** Ateşlendiği andaki hasar — oyuncunun stat bloğundan gelir. */
+    private readonly damageValue: number = bulletConfig.damage,
   ) {
     this.arc = scene.add.circle(
       x,
@@ -37,6 +40,7 @@ export class Bullet {
       bulletConfig.strokeColor,
       bulletConfig.strokeAlpha,
     );
+    this.arc.setDepth(RENDER_DEPTH.bullet);
 
     this.velocity.copyFrom(direction).normalizeInPlace().scaleInPlace(bulletConfig.speed);
   }
@@ -54,7 +58,7 @@ export class Bullet {
   }
 
   get damage(): number {
-    return bulletConfig.damage;
+    return this.damageValue;
   }
 
   update(delta: number, border: Border): void {
@@ -79,28 +83,11 @@ export class Bullet {
     }
   }
 
-  /** Hareket sırasında arkada küçük partikül bırakır — mermi yönünün tersine yayılır. */
+  /** Hareket sırasında arkada iz bırakır — mermi yönünün tersine yayılır. */
   private spawnTrailParticle(): void {
-    const angle = Math.atan2(this.velocity.y, this.velocity.x) + Math.PI;
-    const spread = (Math.random() - 0.5) * bulletConfig.trailSpread;
-    const dir = angle + spread;
-    const speed = bulletConfig.trailSpeed;
-    const px = this.particles.acquire(
-      this.arc.x,
-      this.arc.y,
-      bulletConfig.trailParticleSize,
-      bulletConfig.color,
-      bulletConfig.trailAlpha,
-    );
-    this.scene.tweens.add({
-      targets: px,
-      x: this.arc.x + Math.cos(dir) * speed * (bulletConfig.trailLifespanMs / 1000),
-      y: this.arc.y + Math.sin(dir) * speed * (bulletConfig.trailLifespanMs / 1000),
-      alpha: 0,
-      scale: 0,
-      duration: bulletConfig.trailLifespanMs,
-      onComplete: () => this.particles.release(px),
-    });
+    // Phaser açıları derece cinsinden bekler; iz mermi yönünün tersine gider.
+    const angleDeg = Math.atan2(-this.velocity.y, -this.velocity.x) * (180 / Math.PI);
+    this.effects.play('bulletTrail', this.arc.x, this.arc.y, angleDeg);
   }
 
   /** Border duvarından sekme — hız vektörünü yansıt. */
@@ -145,30 +132,9 @@ export class Bullet {
     }
   }
 
-  /** Sekme anında küçük partikül patlaması. */
+  /** Sekme anında küçük kıvılcım patlaması. */
   private spawnBounceParticles(): void {
-    const colors = bulletConfig.bounceColors;
-    for (let i = 0; i < bulletConfig.bounceParticleCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed =
-        bulletConfig.bounceParticleSpeedMin +
-        Math.random() * (bulletConfig.bounceParticleSpeedMax - bulletConfig.bounceParticleSpeedMin);
-      const px = this.particles.acquire(
-        this.arc.x,
-        this.arc.y,
-        bulletConfig.bounceParticleSize,
-        colors[i % colors.length],
-        bulletConfig.bounceParticleAlpha,
-      );
-      this.scene.tweens.add({
-        targets: px,
-        x: this.arc.x + Math.cos(angle) * speed,
-        y: this.arc.y + Math.sin(angle) * speed,
-        alpha: 0,
-        duration: bulletConfig.bounceParticleLifespanMs,
-        onComplete: () => this.particles.release(px),
-      });
-    }
+    this.effects.play('bulletBounce', this.arc.x, this.arc.y);
   }
 
   destroy(): void {

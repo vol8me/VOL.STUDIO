@@ -1,8 +1,9 @@
-import { Text, i18next } from '@volstudio/core';
+import { ResourceCounter, Text, i18next } from '@volstudio/core';
 import { formatTimeMs } from '@/utils/time';
+import { ICON_FLUX, svgIcon } from './icons';
 
 /**
- * Oyun içi skor, öldürme sayısı ve süre gösterimi.
+ * Oyun içi skor, öldürme sayısı, süre ve Flux gösterimi.
  * Sağ üst köşede sabit durur; dil değişiminde etiketler güncellenir.
  * Değer veya format değişmedikçe DOM manipülasyonu yapmaz.
  */
@@ -11,9 +12,12 @@ export class HUDStats {
   private readonly scoreLabel: Text;
   private readonly killsLabel: Text;
   private readonly timeLabel: Text;
+  private readonly fluxCounter: ResourceCounter;
+  private readonly fluxLine: HTMLDivElement;
   private score = 0;
   private kills = 0;
   private timeMs = 0;
+  private flux = 0;
   private lastScore = '';
   private lastKills = '';
   private lastTime = '';
@@ -30,6 +34,17 @@ export class HUDStats {
       el.element.classList.add('vol-hud-stats__line');
       this.container.appendChild(el.element);
     }
+
+    // Flux para birimi: ikon + sayı. Toplandıkça `pulse` ile vurgulanır.
+    this.fluxCounter = new ResourceCounter({
+      icon: svgIcon(ICON_FLUX),
+      label: i18next.t('volhell:hud.flux'),
+      value: 0,
+    });
+    this.fluxLine = document.createElement('div');
+    this.fluxLine.className = 'vol-hud-stats__line vol-hud-stats__line--flux';
+    this.fluxLine.appendChild(this.fluxCounter.element);
+    this.container.appendChild(this.fluxLine);
 
     parent.appendChild(this.container);
 
@@ -52,6 +67,14 @@ export class HUDStats {
     if (formatted === this.lastKills) return;
     this.lastKills = formatted;
     this.killsLabel.setContent(formatted);
+  }
+
+  /** Flux sayacını günceller; artışta vurgu (pulse) oynar. */
+  setFlux(value: number): void {
+    if (value === this.flux) return;
+    const increased = value > this.flux;
+    this.flux = value;
+    this.fluxCounter.setValue(value, { pulse: increased });
   }
 
   setTime(valueMs: number): void {
@@ -82,6 +105,8 @@ export class HUDStats {
     this.scoreLabel.setContent(this.lastScore);
     this.killsLabel.setContent(this.lastKills);
     this.timeLabel.setContent(this.lastTime);
+    // Flux sayısı dilden bağımsız; yalnızca ekran okuyucu etiketi çevrilir.
+    this.fluxCounter.element.setAttribute('aria-label', i18next.t('volhell:hud.flux'));
   };
 
   destroy(): void {
@@ -89,6 +114,8 @@ export class HUDStats {
     this.scoreLabel.destroy();
     this.killsLabel.destroy();
     this.timeLabel.destroy();
+    this.fluxCounter.destroy();
+    this.fluxLine.remove();
     this.container.remove();
   }
 }

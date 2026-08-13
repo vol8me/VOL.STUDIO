@@ -5,16 +5,19 @@ import { sfxVolumes } from '@/config/audio';
 import { gameAudio } from '@/app/services';
 import type { Player } from '@/runtime/entity/Player';
 import type { Bullet } from '@/runtime/entity/Bullet';
+import type { Enemy } from '@/runtime/entity/Enemy';
 import type { EnemyManager } from '@/runtime/entity/EnemyManager';
 import type { BulletManager } from '@/runtime/entity/BulletManager';
 import type { SpatialGrid } from './SpatialGrid';
 import type { Border } from '@/runtime/entity/Border';
 
 export interface CollisionResolverCallbacks {
-  /** Düşman öldüğünde — skor ve öldürme sayısı için. */
-  onEnemyKilled?: (scoreValue: number) => void;
-  /** Oyuncu hasar aldığında — ekran sarsıntısı için. */
-  onPlayerDamaged?: () => void;
+  /**
+   * Düşman öldüğünde — skor, öldürme sayısı ve ekonomi (Spark/Flux) için.
+   * Ölüm ANINDA çağrılır; düşman nesnesi bu çağrıdan sonra listeden düşer,
+   * bu yüzden referansı saklamayın, ihtiyacınız olan değerleri hemen okuyun.
+   */
+  onEnemyKilled?: (enemy: Enemy) => void;
 }
 
 /**
@@ -64,7 +67,7 @@ export class CollisionResolver {
               volume: sfxVolumes.enemyDeath,
               stopEvents: ['enemyHit'],
             });
-            this.callbacks.onEnemyKilled?.(enemy.scoreValue);
+            this.callbacks.onEnemyKilled?.(enemy);
           } else {
             void gameAudio.playSfx('enemyHit', { volume: sfxVolumes.enemyHit });
           }
@@ -89,11 +92,10 @@ export class CollisionResolver {
       const dist = Math.hypot(enemy.x - playerPos.x, enemy.y - playerPos.y);
       if (dist < enemy.radius + playerConfig.hitboxRadius) {
         const damage = enemy.tryContactDamage(time);
-        if (damage > 0) {
-          if (this.player.takeDamage(damage)) {
-            void gameAudio.playSfx('hurt', { volume: sfxVolumes.hurt });
-            this.callbacks.onPlayerDamaged?.();
-          }
+        // Hasar görselleri (partikül + sarsıntı) Player.takeDamage içinden
+        // efekt katmanına gider; burada yalnızca ses kalır.
+        if (damage > 0 && this.player.takeDamage(damage)) {
+          void gameAudio.playSfx('hurt', { volume: sfxVolumes.hurt });
         }
       }
     }

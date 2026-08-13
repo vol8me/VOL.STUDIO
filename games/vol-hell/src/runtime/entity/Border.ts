@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { borderConfig, type BorderBounds } from '@/config/border';
+import { RENDER_DEPTH } from '@/config/layers';
 
 /**
  * Saha sınırı — kameradan küçük bir dikdörtgen.
@@ -17,6 +18,7 @@ export class Border {
     this.bounds = this.computeBounds(width, height);
 
     this.graphics = scene.add.graphics();
+    this.graphics.setDepth(RENDER_DEPTH.border);
     this.draw();
 
     scene.scale.on(Phaser.Scale.Events.RESIZE, this.onResize, this);

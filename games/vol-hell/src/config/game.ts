@@ -8,13 +8,6 @@ export const gameConfig = {
   },
   /** Bir frame'in hesaplayacağı maksimum delta; 30 FPS eşdeğeri. */
   maxDeltaMs: 1000 / 30,
-  /** Ekran sarsıntısı parametreleri (ms, şiddet 0-1). */
-  shake: {
-    enemyDeath: { durationMs: 60, intensity: 0.006, cooldownMs: 180 },
-    playerDamage: { durationMs: 100, intensity: 0.009, cooldownMs: 400 },
-  },
-  /** Partikül havuzu başlangıç kapasitesi — enemy ölüm, bullet trail/bounce için. */
-  particlePoolSize: 256,
 } as const;
 
 export type GameConfig = typeof gameConfig;

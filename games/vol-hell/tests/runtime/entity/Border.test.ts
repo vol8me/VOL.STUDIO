@@ -18,6 +18,9 @@ vi.mock('phaser', async () => {
     strokeRect() {
       return this;
     }
+    setDepth() {
+      return this;
+    }
     destroy() {}
   }
 
@@ -86,9 +89,11 @@ function makeScene(): FakeScene {
     add: {
       graphics: vi.fn(() => ({
         scene: null as unknown,
+        depth: 0,
         clear: vi.fn(),
         lineStyle: vi.fn(),
         strokeRect: vi.fn(),
+        setDepth: vi.fn(),
         destroy: vi.fn(),
       })),
     },

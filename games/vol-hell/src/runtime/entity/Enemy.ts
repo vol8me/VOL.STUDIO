@@ -1,58 +1,103 @@
 import type Phaser from 'phaser';
-import { Vector2, Diagnostics } from '@volstudio/core';
+import { Vector2, Diagnostics, type Random, type StatBlock } from '@volstudio/core';
 import { enemyConfig } from '@/config/enemy';
 import { playerConfig } from '@/config/player';
+import { RENDER_DEPTH } from '@/config/layers';
+import type { EnemyDefinition } from '@/config/enemies/types';
 import type { Border } from './Border';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
-import type { ParticlePool } from '@/runtime/systems/ParticlePool';
+import type { EffectManager } from '@/runtime/systems/EffectManager';
 import { EnemyHealthBar } from './EnemyHealthBar';
+import { quantizeEnemyHealth } from './enemyStats';
+import {
+  applyRusherBehavior,
+  applySeekBehavior,
+  applySwarmerBehavior,
+  createMinionSpawnRequest,
+  createRusherState,
+  createSwarmerState,
+  type BehaviorContext,
+  type MinionSpawnRequest,
+  type MutableBehaviorContext,
+  type RusherState,
+  type SwarmerState,
+  type VelocityOutput,
+} from './behaviors';
 
-/** Bir düşmanın anlık istatistikleri — zorlukla ölçeklenebilir. */
-export interface EnemyStats {
-  maxHealth: number;
-  speed: number;
+/** Bir düşmanı doğururken verilen bağlam. */
+export interface EnemyOptions {
+  /** Katalog tanımı — arketip, görünüm ve davranış parametreleri. */
+  definition: EnemyDefinition;
+  /** Taban stat'lar + zorluk modifier'ları (bkz. `createEnemyStats`). */
+  stats: StatBlock;
+  /** Zorluk çarpanı uygulanmış skor değeri. */
   scoreValue: number;
 }
 
 /**
- * Düşman — oyuncuya doğru hareket eder, temasla hasar verir.
+ * Düşman — katalog tanımına göre davranır, temasla hasar verir.
  * Diğer düşmanlarla overlap etmez (separation). Can barı üzerindedir.
+ *
+ * Stat'lar `StatBlock` üzerinden okunur; arketipe özel hareket mantığı
+ * `behaviors/` altındaki bağımsız fonksiyonlardadır (Aşama 3'te Elite bunları
+ * kompoze edecek).
  */
 export class Enemy {
   readonly arc: Phaser.GameObjects.Arc;
+  readonly definition: EnemyDefinition;
+  private readonly stats: StatBlock;
   private readonly healthBar: EnemyHealthBar;
+  private readonly maxHealth: number;
+  private readonly score: number;
   private health: number;
   private alive = true;
-  private lastContactDamage = 0;
+  private lastContactDamage = -Infinity;
   private readonly velocity: Vector2 = Vector2.zero();
-  private readonly stats: EnemyStats;
-  // Reusable buffer'lar — her frame yeni Vector2 yaratmaz
-  private readonly toPlayerBuf: Vector2 = Vector2.zero();
+  // Reusable buffer'lar — her frame yeni obje yaratmaz
   private readonly separationBuf: Vector2 = Vector2.zero();
+  private readonly behaviorVelocity: VelocityOutput = { x: 0, y: 0 };
+  /** İlk update'te kurulur, sonra alanları yerinde güncellenir. */
+  private behaviorContext: MutableBehaviorContext | null = null;
+  // Arketipe özel davranış durumları — yalnızca ilgili arketipte kurulur.
+  private readonly rusherState: RusherState | null;
+  private readonly swarmerState: SwarmerState | null;
+  private readonly spawnRequest: MinionSpawnRequest | null;
+  /** Bu düşmanın doğurduğu ve hâlâ yaşayan minion'lar. */
+  private readonly minions: Enemy[] = [];
 
   constructor(
-    private readonly scene: Phaser.Scene,
+    scene: Phaser.Scene,
     x: number,
     y: number,
-    private readonly particles: ParticlePool,
-    stats?: Partial<EnemyStats>,
+    private readonly effects: EffectManager,
+    options: EnemyOptions,
   ) {
-    this.stats = {
-      maxHealth: stats?.maxHealth ?? enemyConfig.health,
-      speed: stats?.speed ?? enemyConfig.speed,
-      scoreValue: stats?.scoreValue ?? enemyConfig.scoreValue,
-    };
+    this.definition = options.definition;
+    this.stats = options.stats;
+    this.score = options.scoreValue;
 
-    this.arc = scene.add.circle(x, y, enemyConfig.radius, enemyConfig.color, enemyConfig.fillAlpha);
+    this.maxHealth = quantizeEnemyHealth(this.stats.getValue('health'));
+    this.health = this.maxHealth;
+
+    this.arc = scene.add.circle(
+      x,
+      y,
+      this.definition.radius,
+      this.definition.color,
+      enemyConfig.fillAlpha,
+    );
     this.arc.setStrokeStyle(
       enemyConfig.strokeWidth,
-      enemyConfig.strokeColor,
+      this.definition.strokeColor,
       enemyConfig.strokeAlpha,
     );
+    this.arc.setDepth(RENDER_DEPTH.enemy);
 
-    this.health = this.stats.maxHealth;
+    this.rusherState = this.definition.archetype === 'rusher' ? createRusherState() : null;
+    this.swarmerState = this.definition.archetype === 'swarmer' ? createSwarmerState() : null;
+    this.spawnRequest = this.swarmerState ? createMinionSpawnRequest() : null;
 
-    this.healthBar = new EnemyHealthBar(scene, x, y);
+    this.healthBar = new EnemyHealthBar(scene, x, y, this.definition.radius);
     this.updateHealthBar();
   }
 
@@ -69,14 +114,34 @@ export class Enemy {
   }
 
   get radius(): number {
-    return enemyConfig.radius;
+    return this.definition.radius;
   }
 
   get scoreValue(): number {
-    return this.stats.scoreValue;
+    return this.score;
   }
 
-  /** Düşmana hasar verir. Ölürsa true döner. */
+  /** Öldürülünce doğrudan sayaca eklenen Spark. */
+  get sparkReward(): number {
+    return this.definition.sparkReward;
+  }
+
+  /** Öldürülünce yere düşen Flux miktarı (0 = düşmez). */
+  get fluxReward(): number {
+    return this.definition.fluxReward;
+  }
+
+  /** Düşmanın stat bloğu — dışarıdan modifier eklemek için (Aşama 2/3). */
+  getStats(): StatBlock {
+    return this.stats;
+  }
+
+  /** Doğurulan minion'u sahiplenir; kapasite kontrolü buradan beslenir. */
+  registerMinion(minion: Enemy): void {
+    this.minions.push(minion);
+  }
+
+  /** Düşmana hasar verir. Ölürse true döner. */
   takeDamage(amount: number): boolean {
     if (!this.alive) return false;
     this.health = Math.max(0, this.health - amount);
@@ -93,72 +158,147 @@ export class Enemy {
       this.kill();
       return true;
     }
+
+    this.effects.play('enemyHit', this.arc.x, this.arc.y);
     return false;
   }
 
   /** Oyuncuya temas hasarı verir — cooldown aktifse reddedir. */
   tryContactDamage(time: number): number {
-    if (time - this.lastContactDamage < enemyConfig.contactDamageCooldownMs) return 0;
+    // fireRate = saldırılar arası bekleme (ms).
+    if (time - this.lastContactDamage < this.stats.getValue('fireRate')) return 0;
     this.lastContactDamage = time;
-    return enemyConfig.contactDamage;
+    // Negatif hasar oyuncuyu iyileştirirdi; modifier ne verirse versin taban sıfır.
+    return Math.max(0, this.stats.getValue('damage'));
   }
 
   /**
-   * Düşmanı günceller — oyuncuya doğru hareket + border clamp + separation.
-   * Oyuncuya temas mesafesine gelince durur (içine girmez).
+   * Düşmanı günceller — arketip davranışı + separation + border clamp.
    * Separation için spatial grid kullanır — O(N²) yerine O(N·k).
+   *
+   * @returns Bu frame'de minion doğurulacaksa istek nesnesi, yoksa null.
+   * Dönen nesne yeniden kullanılır; hemen tüket, saklama.
    */
-  update(delta: number, playerPos: Vector2, border: Border, grid: SpatialGrid): void {
-    if (!this.alive) return;
+  update(
+    delta: number,
+    playerPos: Vector2,
+    border: Border,
+    grid: SpatialGrid,
+    random: Random,
+  ): MinionSpawnRequest | null {
+    if (!this.alive) return null;
 
     const dt = delta / 1000;
+    // Bağlam nesnesi düşman başına bir kez kurulur, her frame yerinde güncellenir.
+    const context: MutableBehaviorContext = (this.behaviorContext ??= {
+      x: this.arc.x,
+      y: this.arc.y,
+      targetX: playerPos.x,
+      targetY: playerPos.y,
+      deltaMs: delta,
+      speed: 0,
+      random,
+    });
+    context.x = this.arc.x;
+    context.y = this.arc.y;
+    context.targetX = playerPos.x;
+    context.targetY = playerPos.y;
+    context.deltaMs = delta;
+    context.speed = Math.max(0, this.stats.getValue('speed'));
+    context.random = random;
 
-    // Oyuncuya doğru hareket — temas mesafesinde dur
-    this.toPlayerBuf.set(playerPos.x - this.arc.x, playerPos.y - this.arc.y);
-    const dist = this.toPlayerBuf.length();
-    const contactDist = enemyConfig.radius + playerConfig.hitboxRadius;
+    const spawnRequest = this.runBehavior(context);
+    this.velocity.set(this.behaviorVelocity.x, this.behaviorVelocity.y);
 
-    if (dist > contactDist) {
-      this.toPlayerBuf.normalizeInPlace();
-      this.velocity.set(
-        this.toPlayerBuf.x * this.stats.speed,
-        this.toPlayerBuf.y * this.stats.speed,
+    this.applySeparation(grid);
+
+    this.arc.x += (this.velocity.x + this.separationBuf.x) * dt;
+    this.arc.y += (this.velocity.y + this.separationBuf.y) * dt;
+
+    // Border clamp — obje yaratmaz
+    this.arc.x = border.clampX(this.arc.x, this.definition.radius);
+    this.arc.y = border.clampY(this.arc.y, this.definition.radius);
+
+    this.healthBar.follow(this.arc.x, this.arc.y);
+
+    return spawnRequest;
+  }
+
+  /** Arketipe göre davranışı çalıştırır ve `behaviorVelocity`'yi doldurur. */
+  private runBehavior(context: BehaviorContext): MinionSpawnRequest | null {
+    const contactDistance = this.definition.radius + playerConfig.hitboxRadius;
+
+    if (this.rusherState && this.definition.rusher) {
+      applyRusherBehavior(
+        this.rusherState,
+        context,
+        this.definition.rusher,
+        contactDistance,
+        this.behaviorVelocity,
       );
-    } else {
-      // Temas mesafesinde — hareketi durdur
-      this.velocity.reset();
+      if (this.rusherState.dashStarted) {
+        const angleDeg =
+          Math.atan2(-this.rusherState.dashDirY, -this.rusherState.dashDirX) * (180 / Math.PI);
+        this.effects.play('enemyDash', this.arc.x, this.arc.y, angleDeg);
+      }
+      return null;
     }
 
-    // Separation — spatial grid ile sadece yakındaki düşmanları kontrol et
+    if (this.swarmerState && this.definition.swarmer && this.spawnRequest) {
+      this.pruneMinions();
+      this.swarmerState.aliveMinions = this.minions.length;
+      return applySwarmerBehavior(
+        this.swarmerState,
+        context,
+        this.definition.swarmer,
+        this.behaviorVelocity,
+        this.spawnRequest,
+      );
+    }
+
+    applySeekBehavior(context, contactDistance, this.behaviorVelocity);
+    return null;
+  }
+
+  /** Yakındaki düşmanlardan uzaklaşma kuvveti — üst üste binmeyi engeller. */
+  private applySeparation(grid: SpatialGrid): void {
     this.separationBuf.reset();
+    // Ölçek olarak arketipin TABAN hızı kullanılır: zorlukla büyüyen hız
+    // separation'ı da büyütseydi geç oyunda düşmanlar birbirini fırlatırdı.
+    const separationScale = this.definition.baseStats.speed;
+
     const nearby = grid.queryNearby(this.arc.x, this.arc.y);
     for (const other of nearby) {
       if (other === this || !other.alive) continue;
       const dx = this.arc.x - other.x;
       const dy = this.arc.y - other.y;
       const d = Math.hypot(dx, dy);
-      if (d > 0 && d < enemyConfig.separationRadius) {
-        const force = (1 - d / enemyConfig.separationRadius) * enemyConfig.separationForce;
-        this.separationBuf.x += (dx / d) * force * enemyConfig.speed;
-        this.separationBuf.y += (dy / d) * force * enemyConfig.speed;
+      const minDistance =
+        this.definition.radius + other.definition.radius + enemyConfig.separationGap;
+      if (d > 0 && d < minDistance) {
+        const force = (1 - d / minDistance) * enemyConfig.separationForce;
+        this.separationBuf.x += (dx / d) * force * separationScale;
+        this.separationBuf.y += (dy / d) * force * separationScale;
       }
     }
+  }
 
-    this.arc.x += (this.velocity.x + this.separationBuf.x) * dt;
-    this.arc.y += (this.velocity.y + this.separationBuf.y) * dt;
-
-    // Border clamp — obje yaratmaz
-    this.arc.x = border.clampX(this.arc.x, enemyConfig.radius);
-    this.arc.y = border.clampY(this.arc.y, enemyConfig.radius);
-
-    this.healthBar.follow(this.arc.x, this.arc.y);
+  /** Ölmüş minion referanslarını listeden düşürür. */
+  private pruneMinions(): void {
+    for (let i = this.minions.length - 1; i >= 0; i--) {
+      if (this.minions[i].alive) continue;
+      const last = this.minions.pop();
+      if (last && i < this.minions.length) {
+        this.minions[i] = last;
+      }
+    }
   }
 
   private updateHealthBar(): void {
-    this.healthBar.setRatio(this.health / this.stats.maxHealth, this.alive, this.arc.x);
+    this.healthBar.setRatio(this.health / this.maxHealth, this.alive, this.arc.x);
   }
 
-  /** Düşmanı öldürür — partikül patlaması + yok etme. */
+  /** Düşmanı öldürür — ölüm efekti + yok etme. */
   private kill(): void {
     if (!this.alive) return;
     this.alive = false;
@@ -166,34 +306,12 @@ export class Enemy {
     Diagnostics.getInstance()?.recordEvent('enemyDeath', {
       x: this.arc.x,
       y: this.arc.y,
+      id: this.definition.id,
     });
 
-    this.spawnDeathParticles();
+    this.effects.play('enemyDeath', this.arc.x, this.arc.y);
     this.arc.destroy();
     this.healthBar.destroy();
-  }
-
-  private spawnDeathParticles(): void {
-    for (let i = 0; i < enemyConfig.deathParticleCount; i++) {
-      const angle = (i / enemyConfig.deathParticleCount) * Math.PI * 2;
-      const speed = enemyConfig.deathParticleSpeed;
-      const px = this.particles.acquire(
-        this.arc.x,
-        this.arc.y,
-        enemyConfig.deathParticleSize,
-        enemyConfig.deathParticleColor,
-        enemyConfig.deathParticleAlpha,
-      );
-      this.scene.tweens.add({
-        targets: px,
-        x: this.arc.x + Math.cos(angle) * speed * (enemyConfig.deathParticleLifespanMs / 1000),
-        y: this.arc.y + Math.sin(angle) * speed * (enemyConfig.deathParticleLifespanMs / 1000),
-        alpha: 0,
-        scale: 0,
-        duration: enemyConfig.deathParticleLifespanMs,
-        onComplete: () => this.particles.release(px),
-      });
-    }
   }
 
   /** Düşmana dışarıdan itme uygular (overlap çözümü için). Border'a clamp eder. */
@@ -201,14 +319,15 @@ export class Enemy {
     this.arc.x += pushX;
     this.arc.y += pushY;
 
-    this.arc.x = border.clampX(this.arc.x, enemyConfig.radius);
-    this.arc.y = border.clampY(this.arc.y, enemyConfig.radius);
+    this.arc.x = border.clampX(this.arc.x, this.definition.radius);
+    this.arc.y = border.clampY(this.arc.y, this.definition.radius);
   }
 
   /** Düşmanı yok eder — sadece alive ise. kill() zaten destroy yapar. */
   destroy(): void {
     if (!this.alive) return;
     this.alive = false;
+    this.minions.length = 0;
     this.arc.destroy();
     this.healthBar.destroy();
   }

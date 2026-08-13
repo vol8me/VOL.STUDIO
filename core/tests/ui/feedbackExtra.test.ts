@@ -270,4 +270,54 @@ describe('XPBar', () => {
     xpBar.destroy();
     expect(clearSpy).toHaveBeenCalled();
   });
+
+  it('boş XP barı kritik/kırmızı duruma düşmez — dolan bir değerdir', () => {
+    const xpBar = track(new XPBar({ level: 1, xp: 0, xpForLevel, animateMs: 0 }));
+    expect(xpBar.element.classList.contains('vol-bar--low')).toBe(false);
+
+    xpBar.addXP(1);
+    expect(xpBar.element.classList.contains('vol-bar--low')).toBe(false);
+
+    // Seviye atlayınca bar yeniden boşalır; yine kırmızıya dönmemeli.
+    xpBar.addXP(200);
+    expect(xpBar.element.classList.contains('vol-bar--low')).toBe(false);
+  });
+
+  it('setState barı dışarıdaki duruma eşitler', () => {
+    const xpBar = track(new XPBar({ level: 1, xp: 0, xpForLevel, animateMs: 0 }));
+
+    xpBar.setState(3, 42);
+
+    expect(xpBar.getLevel()).toBe(3);
+    expect(xpBar.getXP()).toBe(42);
+  });
+
+  it('setState seviye artışında vurgu oynatır ama onLevelUp tetiklemez', () => {
+    vi.useFakeTimers();
+    const onLevelUp = vi.fn();
+    const xpBar = track(new XPBar({ level: 1, xp: 0, xpForLevel, onLevelUp, animateMs: 0 }));
+
+    xpBar.setState(2, 10);
+
+    expect(xpBar.element.classList.contains('vol-xp-bar--level-up')).toBe(true);
+    // Seviye olayının sahibi dışarısı; bar ikinci kez haber vermez.
+    expect(onLevelUp).not.toHaveBeenCalled();
+  });
+
+  it('setState aynı seviyede vurgu oynatmaz', () => {
+    const xpBar = track(new XPBar({ level: 2, xp: 10, xpForLevel, animateMs: 0 }));
+
+    xpBar.setState(2, 60);
+
+    expect(xpBar.element.classList.contains('vol-xp-bar--level-up')).toBe(false);
+    expect(xpBar.getXP()).toBe(60);
+  });
+
+  it('setState negatif XP’yi sıfıra kelepçeler', () => {
+    const xpBar = track(new XPBar({ level: 1, xp: 50, xpForLevel, animateMs: 0 }));
+
+    xpBar.setState(1, -20);
+
+    expect(xpBar.getXP()).toBe(0);
+  });
 });

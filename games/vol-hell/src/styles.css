@@ -77,6 +77,10 @@
   top: calc(var(--vol-space-md) + var(--vol-hud-dash-offset));
 }
 
+.vol-hud__slot--spark {
+  top: calc(var(--vol-space-md) + var(--vol-hud-spark-offset));
+}
+
 .vol-hud-stats {
   position: absolute;
   top: var(--vol-space-md);
@@ -92,6 +96,19 @@
 .vol-hud-stats__line {
   margin: 0;
   text-align: right;
+}
+
+/*
+ * Flux satırı: ikon + sayı yan yana, diğer satırlarla aynı sağ hizada.
+ * Renk, Counter'ın pulse animasyonunun BİTİŞ rengiyle aynı olmalı
+ * (--vol-ui-text); farklı olsaydı vurgu bittiğinde renk zıplardı.
+ */
+.vol-hud-stats__line--flux {
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--vol-space-xs);
+  display: flex;
+  color: var(--vol-ui-text);
 }
 
 .vol-fatal-error {

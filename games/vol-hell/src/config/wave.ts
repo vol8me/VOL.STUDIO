@@ -1,0 +1,20 @@
+/**
+ * Koşu (run) yapısı — dalga sayısı, dalga süresi ve özel dalga işaretleri.
+ * Bir koşu `totalWaves * waveDurationMs` kadar sürer; zorluk eğrisi
+ * (`difficultyConfig`) bu toplam süreye göre ayarlanmıştır.
+ */
+export const waveConfig = {
+  /** Bir koşudaki toplam dalga sayısı. */
+  totalWaves: 20,
+  /** Her dalganın süresi (ms). */
+  waveDurationMs: 40_000,
+  /** Elite düşmanın çağrıldığı dalga (uygulaması Aşama 3). */
+  eliteWave: 10,
+  /** Boss'un çağrıldığı dalga (uygulaması Aşama 3). */
+  bossWave: 20,
+} as const;
+
+/** Bir koşunun toplam süresi (ms) — 20 x 40 sn = 800 sn. */
+export const WAVE_RUN_DURATION_MS = waveConfig.totalWaves * waveConfig.waveDurationMs;
+
+export type WaveConfig = typeof waveConfig;

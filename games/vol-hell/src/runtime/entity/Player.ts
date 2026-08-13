@@ -1,13 +1,19 @@
 import type Phaser from 'phaser';
-import { PlayerController, Vector2, Diagnostics } from '@volstudio/core';
+import { PlayerController, StatBlock, Vector2, Diagnostics } from '@volstudio/core';
 import { playerConfig } from '@/config/player';
+import { bulletConfig } from '@/config/bullet';
+import { RENDER_DEPTH } from '@/config/layers';
 import type { Border } from './Border';
-import type { ParticlePool } from '@/runtime/systems/ParticlePool';
+import type { EffectManager } from '@/runtime/systems/EffectManager';
 
 /**
  * Oyuncu entity'si. PlayerController composition ile sprite'ı tutar.
  * Placeholder görsel: Phaser.GameObjects.Arc (texture gerekmez).
  * Arc, Shape üzerinden Transform implement eder — cast gerekmez.
+ *
+ * Stat'lar `StatBlock` üzerinden okunur (düşmanlarla ortak motor); config
+ * değerleri yalnızca TABAN'dır. Kart/buff sistemleri (Aşama 2) config'e
+ * dokunmadan modifier ekleyerek etki eder.
  *
  * Dash sistemi:
  * - Space tuşu ile tetiklenir.
@@ -17,6 +23,7 @@ import type { ParticlePool } from '@/runtime/systems/ParticlePool';
  */
 export class Player extends PlayerController {
   private readonly arc: Phaser.GameObjects.Arc;
+  private readonly stats: StatBlock;
   private health: number;
   private moveDirection = Vector2.zero();
 
@@ -35,15 +42,45 @@ export class Player extends PlayerController {
   private currentBorder: Border | null = null;
   // Reusable buffer — getPosition() her çağrıda yeni Vector2 yaratmaz
   private readonly positionBuf: Vector2 = Vector2.zero();
-  private readonly particles: ParticlePool;
+  private readonly effects: EffectManager;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, particles: ParticlePool) {
+  constructor(scene: Phaser.Scene, x: number, y: number, effects: EffectManager) {
     const arc = scene.add.circle(x, y, playerConfig.hitboxRadius, playerConfig.color, 1);
     arc.setStrokeStyle(2, playerConfig.dashColor, 0.8);
+    // Oyuncu kalabalıkta düşman gövdelerinin altında kaybolmamalı.
+    arc.setDepth(RENDER_DEPTH.player);
     super('player', arc);
     this.arc = arc;
-    this.health = playerConfig.maxHealth;
-    this.particles = particles;
+    // fireRate = atışlar arası bekleme (ms); düşük değer hızlı ateş demektir.
+    this.stats = new StatBlock({
+      damage: bulletConfig.damage,
+      speed: playerConfig.moveSpeed,
+      health: playerConfig.maxHealth,
+      fireRate: bulletConfig.fireCooldownMs,
+    });
+    this.health = this.stats.getValue('health');
+    this.effects = effects;
+  }
+
+  /**
+   * Oyuncunun stat bloğu — mermi hasarı/ateş hızı için BulletManager,
+   * kart efektleri için (Aşama 2) dışarıdan modifier eklenerek kullanılır.
+   */
+  getStats(): StatBlock {
+    return this.stats;
+  }
+
+  /** Modifier'lar uygulanmış maksimum can. */
+  getMaxHealth(): number {
+    return this.stats.getValue('health');
+  }
+
+  /**
+   * Dash hızı. Taban dash hızı, hız stat'ının tabana oranıyla ölçeklenir;
+   * böylece "hız +%20" veren bir kart dash'i de aynı oranda hızlandırır.
+   */
+  private getDashSpeed(): number {
+    return playerConfig.dashSpeed * (this.stats.getValue('speed') / playerConfig.moveSpeed);
   }
 
   /** InputManager'dan gelen hareket yönü — update()'ten önce çağrılmalı. Dash sırasında reddedilir. */
@@ -108,8 +145,8 @@ export class Player extends PlayerController {
       }
     }
 
-    // Hareket
-    const speed = isDashing ? playerConfig.dashSpeed : playerConfig.moveSpeed;
+    // Hareket — negatif hız modifier'ı oyuncuyu ters yöne sürüklerdi.
+    const speed = Math.max(0, isDashing ? this.getDashSpeed() : this.stats.getValue('speed'));
     this.move(this.moveDirection, speed, delta);
 
     // Border clamp
@@ -171,6 +208,7 @@ export class Player extends PlayerController {
     this.health = Math.max(0, this.health - amount);
     this.hitFlashTimer = playerConfig.hitFlashDurationMs;
     this.arc.setFillStyle(playerConfig.hitColor, playerConfig.fillAlpha);
+    this.effects.play('playerHit', this.arc.x, this.arc.y);
 
     Diagnostics.getInstance()?.recordEvent('playerDamaged', {
       x: this.arc.x,
@@ -187,7 +225,10 @@ export class Player extends PlayerController {
   }
 
   getHealthRatio(): number {
-    return this.health / playerConfig.maxHealth;
+    const max = this.getMaxHealth();
+    if (max <= 0) return 0;
+    // Maks. can sonradan düşerse (takas kartı) oran 1'i aşmamalı.
+    return Math.min(1, this.health / max);
   }
 
   isAlive(): boolean {
@@ -224,29 +265,9 @@ export class Player extends PlayerController {
     }
   }
 
-  /** Dash ghost — yarı saydam kopya bırakır ve fade-out yapar. */
+  /** Dash izi — konumda sönümlenen bir hayalet bırakır. */
   private spawnGhost(): void {
-    const scene = this.arc.scene;
-    const ghost = this.particles.acquire(
-      this.arc.x,
-      this.arc.y,
-      playerConfig.hitboxRadius,
-      playerConfig.dashColor,
-      playerConfig.dashGhostAlpha,
-    );
-    ghost.setStrokeStyle(
-      playerConfig.dashGhostStrokeWidth,
-      playerConfig.ghostStrokeColor,
-      playerConfig.dashGhostAlpha * playerConfig.dashGhostStrokeAlphaFactor,
-    );
-
-    scene.tweens.add({
-      targets: ghost,
-      alpha: 0,
-      scale: playerConfig.dashGhostScaleEnd,
-      duration: playerConfig.dashGhostLifespanMs,
-      onComplete: () => this.particles.release(ghost),
-    });
+    this.effects.play('playerDash', this.arc.x, this.arc.y);
   }
 
   destroy(): void {

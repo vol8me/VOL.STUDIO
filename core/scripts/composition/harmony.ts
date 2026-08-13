@@ -104,7 +104,10 @@ export function generateProgression(options: ProgressionOptions): ChordDef[] {
   return result;
 }
 
-/** Verilen akor havuzundan tonik ağırlıklı ilerleme üretir. */
+/**
+ * Verilen akor havuzundan tonik ağırlıklı ilerleme üretir.
+ * Ardışık aynı akor tekrarlanmaz (havuzda birden fazla seçenek varsa).
+ */
 export function generateProgressionFromPool(
   chordPool: ChordDef[],
   length: number,
@@ -114,13 +117,19 @@ export function generateProgressionFromPool(
 ): ChordDef[] {
   const random = createRandom(seed);
   const result: ChordDef[] = [];
+  // Önceki seçimin HAVUZ İNDEKSİ tutulur. Karşılaştırma önceki akorun `root`
+  // frekansıyla yapılıyordu; indeks (0,1,2…) ile frekans (Hz) hiçbir zaman
+  // anlamlı biçimde eşleşmediği için tekrar koruması fiilen çalışmıyor,
+  // yüksek tonicWeight'te aynı akor onlarca kez üst üste geliyordu.
+  let previousIndex = -1;
   for (let i = 0; i < length; i++) {
     let index =
       random.next() < tonicWeight ? tonicIndex : Math.floor(random.next() * chordPool.length);
-    if (i > 0 && index === result[i - 1]!.root) {
+    if (i > 0 && index === previousIndex && chordPool.length > 1) {
       index = (index + 1 + Math.floor(random.next() * (chordPool.length - 1))) % chordPool.length;
     }
     result.push(chordPool[index]!);
+    previousIndex = index;
   }
   return result;
 }

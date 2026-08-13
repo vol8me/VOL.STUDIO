@@ -17,7 +17,10 @@
     "score": "Skor",
     "kills": "Öldürme",
     "time": "Süre",
-    "best": "Rekor"
+    "best": "Rekor",
+    "spark": "Spark",
+    "flux": "Flux",
+    "level": "Sv.{{level}}"
   },
   "settings": {
     "title": "AYARLAR",
