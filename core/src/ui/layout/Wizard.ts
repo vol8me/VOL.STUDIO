@@ -184,6 +184,10 @@ export class Wizard {
       }
 
       this.goToStep(this.currentIndex + 1);
+    } catch (error) {
+      // validate/onFinish/goToStep hata fırlatırsa ilerleme kilitlenmesin;
+      // unhandled rejection yerine loglanır.
+      console.error('[Wizard] Sonraki adıma geçiş başarısız:', error);
     } finally {
       this.advancing = false;
       this.nextButton.disabled = false;

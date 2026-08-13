@@ -2,12 +2,12 @@ import Phaser from 'phaser';
 import {
   Bar,
   InputManager,
-  UIRoot,
   Vector2,
   i18next,
   type InputState,
   type LoadingScreen,
 } from '@volstudio/core';
+import { BaseScene } from './BaseScene';
 import { Player } from '@/runtime/entity/Player';
 import { Border } from '@/runtime/entity/Border';
 import { EnemyManager } from '@/runtime/entity/EnemyManager';
@@ -35,10 +35,9 @@ import { HUDStats } from '@/runtime/ui/HUDStats';
  * Ana oyun sahnesi — bullet-hell iskeleti.
  * Player + InputManager + Border + BulletManager + EnemyManager + HUD içerir.
  */
-export class GameScene extends Phaser.Scene {
+export class GameScene extends BaseScene {
   private player!: Player;
   private inputManager!: InputManager;
-  private ui!: UIRoot;
   private border!: Border;
   private bulletManager!: BulletManager;
   private enemyManager!: EnemyManager;
@@ -72,21 +71,23 @@ export class GameScene extends Phaser.Scene {
   private ambientState: 'calm' | 'tense' = 'calm';
   private ambientStateTimer = 0;
   private isAmbientLoaded = false;
-  private readonly onLanguageChanged = (): void => {
-    this.healthBar.setLabel(i18next.t('volhell:hud.health'));
-    this.dashBar.setLabel(i18next.t('volhell:hud.dash'));
-  };
 
   constructor() {
     super({ key: 'Game' });
   }
 
-  create(data: { loadingScreen?: LoadingScreen } = {}): void {
+  protected override onLanguageChanged(): void {
+    this.healthBar.setLabel(i18next.t('volhell:hud.health'));
+    this.dashBar.setLabel(i18next.t('volhell:hud.dash'));
+  }
+
+  protected createScene(data?: unknown): void {
     // Phaser sahne örneğini yeniden kullanır; alan başlatıcıları restart'ta
     // ÇALIŞMAZ. Sıfırlanması gereken her alan tek bir yerde toplanır ki
     // yeni alan eklendiğinde unutulmasın.
     this.resetSceneState();
-    this.loadingScreen = data.loadingScreen ?? null;
+    const { loadingScreen } = (data ?? {}) as { loadingScreen?: LoadingScreen };
+    this.loadingScreen = loadingScreen ?? null;
 
     // Müzik ve ambiyans track'lerini önceden yükler.
     for (const key of deathTrackKeys) {
@@ -145,9 +146,6 @@ export class GameScene extends Phaser.Scene {
       },
     );
 
-    // HUD — UIRoot canvas ile aynı konteyner'e monte edilir
-    const container = this.game.canvas.parentElement ?? document.body;
-    this.ui = new UIRoot(container);
     // HUD olculeri config'te tek kaynak; CSS bunlari custom property olarak okur.
     this.ui.element.style.setProperty('--vol-hud-bar-width', `${uiConfig.hud.barWidth}px`);
     this.ui.element.style.setProperty(
@@ -221,10 +219,6 @@ export class GameScene extends Phaser.Scene {
     }
     this.escKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
     this.escKey.on('down', () => this.togglePause());
-
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
-
-    i18next.on('languageChanged', this.onLanguageChanged);
 
     // Yükleme tamamlandı — %100 yapıp gizle
     if (this.loadingScreen) {
@@ -493,6 +487,11 @@ export class GameScene extends Phaser.Scene {
         bestTimeMs: result.bestTimeMs,
         totalKills: result.totalKills,
       });
+    } catch (error) {
+      // Beklenmedik bir hata (depolama/çeviri/DOM) ölüm ekranını bozarsa
+      // oyun donmaz; ana menüye yönlendirilir ve hata loglanır.
+      console.error('[GameScene] Ölüm işlemi başarısız:', error);
+      this.scene.start('MainMenu');
     } finally {
       this.isDeathInProgress = false;
     }
@@ -529,14 +528,14 @@ export class GameScene extends Phaser.Scene {
     this.pauseScreen?.hide();
   }
 
-  private onShutdown(): void {
+  protected override onSceneShutdown(): void {
     // Phaser GameObject'leri (player, bulletManager, enemyManager, border)
     // DisplayList.shutdown() tarafından zaten yok edilir — tekrar destroy etmeye gerek yok.
     // Burada sadece Phaser'ın temizlemediği kaynaklar temizlenir:
     // input listener'lar, DOM elementleri, i18n listener'ları ve timer'lar.
+    gameAudio.stopAllSfx();
     gameAudio.stopMusic(1);
     gameAudio.stopAmbient(1);
-    i18next.off('languageChanged', this.onLanguageChanged);
     if (this.deathScreen) {
       this.deathScreen.destroy();
       this.deathScreen = null;
@@ -555,7 +554,6 @@ export class GameScene extends Phaser.Scene {
     this.healthBarContainer.remove();
     this.dashBarContainer.remove();
     this.hudStats.destroy();
-    this.ui.destroy();
     this.diagnostics = undefined;
     if (this.loadingScreen) {
       this.loadingScreen.destroy();

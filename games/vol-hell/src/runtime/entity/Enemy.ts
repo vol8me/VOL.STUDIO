@@ -5,6 +5,7 @@ import { playerConfig } from '@/config/player';
 import type { Border } from './Border';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import type { ParticlePool } from '@/runtime/systems/ParticlePool';
+import { EnemyHealthBar } from './EnemyHealthBar';
 
 /** Bir düşmanın anlık istatistikleri — zorlukla ölçeklenebilir. */
 export interface EnemyStats {
@@ -19,8 +20,7 @@ export interface EnemyStats {
  */
 export class Enemy {
   readonly arc: Phaser.GameObjects.Arc;
-  private readonly healthBarBg: Phaser.GameObjects.Rectangle;
-  private readonly healthBarFill: Phaser.GameObjects.Rectangle;
+  private readonly healthBar: EnemyHealthBar;
   private health: number;
   private alive = true;
   private lastContactDamage = 0;
@@ -52,25 +52,7 @@ export class Enemy {
 
     this.health = this.stats.maxHealth;
 
-    const barY = y - enemyConfig.healthBarOffset;
-    this.healthBarBg = scene.add.rectangle(
-      x,
-      barY,
-      enemyConfig.healthBarWidth,
-      enemyConfig.healthBarHeight,
-      enemyConfig.healthBarBgColor,
-      enemyConfig.healthBarBgAlpha,
-    );
-    this.healthBarFill = scene.add.rectangle(
-      x,
-      barY,
-      enemyConfig.healthBarWidth,
-      enemyConfig.healthBarHeight,
-      enemyConfig.healthBarFillColor,
-      enemyConfig.healthBarFillAlpha,
-    );
-    // Sol kenara sabitlenir ki genislik azalinca bar soldan buyuyup sagdan kisalsin.
-    this.healthBarFill.setOrigin(0, 0.5);
+    this.healthBar = new EnemyHealthBar(scene, x, y);
     this.updateHealthBar();
   }
 
@@ -169,28 +151,11 @@ export class Enemy {
     this.arc.x = border.clampX(this.arc.x, enemyConfig.radius);
     this.arc.y = border.clampY(this.arc.y, enemyConfig.radius);
 
-    // Can barını pozisyona güncelle — ikisi de düşman merkezine sabitlenir
-    this.healthBarBg.x = this.arc.x;
-    this.healthBarBg.y = this.arc.y - enemyConfig.healthBarOffset;
-    this.healthBarFill.x = this.arc.x - enemyConfig.healthBarWidth / 2;
-    this.healthBarFill.y = this.arc.y - enemyConfig.healthBarOffset;
+    this.healthBar.follow(this.arc.x, this.arc.y);
   }
 
   private updateHealthBar(): void {
-    const ratio = this.health / this.stats.maxHealth;
-    const visible = this.alive;
-    this.healthBarBg.setVisible(visible);
-    this.healthBarFill.setVisible(visible && ratio > 0);
-
-    // setSize() kullanilir: `.width`'e dogrudan atamak geom'u ve displayOrigin'i
-    // guncellemez, yalnizca WebGL renderer'in src.width okumasi sayesinde
-    // tesadufen calisirdi. Origin sola sabitlenmis oldugu icin bar soldan
-    // sabit kalip sagdan kisalir — klasik can bari davranisi.
-    this.healthBarFill.setSize(
-      Math.max(enemyConfig.healthBarMinWidth, enemyConfig.healthBarWidth * ratio),
-      enemyConfig.healthBarHeight,
-    );
-    this.healthBarFill.x = this.arc.x - enemyConfig.healthBarWidth / 2;
+    this.healthBar.setRatio(this.health / this.stats.maxHealth, this.alive, this.arc.x);
   }
 
   /** Düşmanı öldürür — partikül patlaması + yok etme. */
@@ -205,8 +170,7 @@ export class Enemy {
 
     this.spawnDeathParticles();
     this.arc.destroy();
-    this.healthBarBg.destroy();
-    this.healthBarFill.destroy();
+    this.healthBar.destroy();
   }
 
   private spawnDeathParticles(): void {
@@ -246,7 +210,6 @@ export class Enemy {
     if (!this.alive) return;
     this.alive = false;
     this.arc.destroy();
-    this.healthBarBg.destroy();
-    this.healthBarFill.destroy();
+    this.healthBar.destroy();
   }
 }

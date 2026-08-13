@@ -1,7 +1,7 @@
-import Phaser from 'phaser';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isTauri } from '@tauri-apps/api/core';
-import { Button, Panel, Text, UIRoot, i18next } from '@volstudio/core';
+import { Button, Panel, Text, i18next } from '@volstudio/core';
+import { BaseScene } from './BaseScene';
 import { LoadingTransition } from './LoadingTransition';
 import { gameAudio } from '@/app/services';
 import { musicConfig, musicTracks, menuTrackKeys, sfxVolumes } from '@/config';
@@ -13,40 +13,36 @@ function isMenuTrack(trackId: string | undefined): boolean {
   return trackId !== undefined && (menuTrackKeys as readonly string[]).includes(trackId);
 }
 
-export class MainMenuScene extends Phaser.Scene {
-  private ui!: UIRoot;
+export class MainMenuScene extends BaseScene {
   private panel!: Panel;
   private startButton!: Button;
   private exitButton!: Button;
   private settingsButton!: Button;
-  private showRafId: number | null = null;
   private loadingTransition: LoadingTransition | null = null;
   private nextScene: string | null = null;
   private titleText!: Text;
   private subtitleText!: Text;
   private bestScoreText!: Text;
   private bestTimeText!: Text;
-  private readonly onLanguageChanged = (): void => {
+
+  constructor() {
+    super({ key: 'MainMenu' });
+  }
+
+  protected override onLanguageChanged(): void {
     this.titleText.setContent(i18next.t('volhell:menu.title'));
     this.subtitleText.setContent(i18next.t('volhell:menu.subtitle'));
     this.startButton.setLabel(i18next.t('volhell:menu.start'));
     this.settingsButton.setLabel(i18next.t('volhell:menu.settings'));
     this.exitButton.setLabel(i18next.t('volhell:menu.exit'));
     this.updateBestStats();
-  };
-
-  constructor() {
-    super({ key: 'MainMenu' });
   }
 
-  create(): void {
+  protected createScene(): void {
     // Phaser sahne ornegini yeniden kullanir; alan baslaticisi restart'ta
     // calismaz. Sifirlanmazsa Ayarlar'dan donunce deger 'Settings' olarak asili
     // kalir ve onShutdown muzigi yanlislikla durdurmaz.
     this.nextScene = null;
-
-    const container = this.game.canvas.parentElement ?? document.body;
-    this.ui = new UIRoot(container);
 
     // Ana menüden ayrılıp geri dönüldüğünde müzik başa sarmasın;
     // eğer zaten bir ana menü teması çalıyorsa onu sürdür.
@@ -103,14 +99,7 @@ export class MainMenuScene extends Phaser.Scene {
 
     this.ui.mount(this.panel.element);
 
-    this.showRafId = requestAnimationFrame(() => {
-      this.showRafId = null;
-      this.panel.show();
-    });
-
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
-
-    i18next.on('languageChanged', this.onLanguageChanged);
+    this.showOnNextFrame(() => this.panel.show());
   }
 
   private updateBestStats(): void {
@@ -148,15 +137,12 @@ export class MainMenuScene extends Phaser.Scene {
     console.warn('[MainMenuScene] window.close() tarayıcıda çalışmaz; bu sekmeyi elle kapatın.');
   }
 
-  private onShutdown(): void {
-    i18next.off('languageChanged', this.onLanguageChanged);
+  protected override onSceneShutdown(): void {
     // Ayarlara geçerken müzik devam etsin; oyuna geçişte zaten transition'da durdurulur.
+    // SFX'ler kısa olmakla birlikte sahneler arasında taşmaması için durdur.
+    gameAudio.stopAllSfx();
     if (this.nextScene !== 'Settings') {
       gameAudio.stopMusic(musicConfig.menu.stopFadeSec);
-    }
-    if (this.showRafId !== null) {
-      cancelAnimationFrame(this.showRafId);
-      this.showRafId = null;
     }
     if (this.loadingTransition) {
       this.loadingTransition.destroy();
@@ -166,6 +152,5 @@ export class MainMenuScene extends Phaser.Scene {
     this.exitButton.destroy();
     this.settingsButton.destroy();
     this.panel.destroy();
-    this.ui.destroy();
   }
 }

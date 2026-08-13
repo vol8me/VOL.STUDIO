@@ -469,4 +469,24 @@ describe('LoadingScreen — video autoplay', () => {
       expect(bg?.classList.contains('vol-loading__background--css')).toBe(true);
     });
   });
+
+  it('video play() senkron hata fırlatırsa CSS fallback uygulanır', () => {
+    const playSpy = vi.fn().mockImplementation(() => {
+      throw new Error('NotAllowedError');
+    });
+    const originalCreate = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+      const el = originalCreate(tagName);
+      if (tagName.toLowerCase() === 'video') {
+        (el as HTMLVideoElement).play = playSpy;
+      }
+      return el;
+    });
+
+    const loading = createLoading({ background: { type: 'video', src: 'test.mp4' } });
+    const bg = loading.element.querySelector('.vol-loading__background');
+    expect(bg?.classList.contains('vol-loading__background--video')).toBe(false);
+    expect(bg?.classList.contains('vol-loading__background--css')).toBe(true);
+    expect(loading.element.querySelector('video')).toBeNull();
+  });
 });

@@ -379,19 +379,25 @@ export class LoadingScreen {
       video.loop = true;
       video.playsInline = true;
       video.autoplay = true;
-      video.onerror = () => {
+
+      const applyVideoFallback = (): void => {
         this.backgroundEl.classList.remove('vol-loading__background--video');
         this.backgroundEl.classList.add('vol-loading__background--css');
         video.remove();
       };
+
+      video.onerror = applyVideoFallback;
       this.backgroundEl.appendChild(video);
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          this.backgroundEl.classList.remove('vol-loading__background--video');
-          this.backgroundEl.classList.add('vol-loading__background--css');
-          video.remove();
-        });
+
+      try {
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(applyVideoFallback);
+        }
+      } catch {
+        // Bazı tarayıcılar/cihazlar `play()`'i senkron hata fırlatarak reddeder;
+        // bu durumda da statik CSS arkaplanına düş.
+        applyVideoFallback();
       }
       return;
     }

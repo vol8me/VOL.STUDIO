@@ -96,14 +96,18 @@ export class Button {
       return;
     }
 
-    const result = this.onClickHandler();
-    if (result instanceof Promise) {
-      this.setLoading(true);
-      try {
+    this.setLoading(true);
+    try {
+      const result = this.onClickHandler();
+      if (result instanceof Promise) {
         await result;
-      } finally {
-        this.setLoading(false);
       }
+    } catch (error) {
+      // onClick handler senkron veya asenkron hata fırlatırsa loading kalksın;
+      // unhandled rejection yerine loglanır.
+      console.error('[Button] onClick handler hatası:', error);
+    } finally {
+      this.setLoading(false);
     }
   }
 

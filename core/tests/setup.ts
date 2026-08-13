@@ -148,3 +148,10 @@ for (const ctor of [HTMLElement, Element]) {
     proto.hasPointerCapture = vi.fn(() => false);
   }
 }
+
+// jsdom `HTMLMediaElement.prototype.play`'i implemente etmez ve reddedilen
+// promise ile sanal console'a gürültü basar. LoadingScreen video arkaplan
+// testlerinde bu gürültüyü önlemek için no-op mock.
+if (typeof HTMLMediaElement !== 'undefined') {
+  HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
+}

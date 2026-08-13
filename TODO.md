@@ -10,7 +10,7 @@ Tüm bulgular (112/112) çözüldü ve doğrulandı.
 | Kapı                     | Durum | Not                                                      |
 | ------------------------ | ----- | -------------------------------------------------------- |
 | `pnpm -r typecheck`      | ✓     | 4 paket                                                  |
-| `pnpm -r test`           | ✓     | 779 test (core 643, vol-hell 106, tauri-v2 25, vol-ui 5) |
+| `pnpm -r test`           | ✓     | 793 test (core 654, vol-hell 109, tauri-v2 25, vol-ui 5) |
 | `pnpm lint`              | ✓     | 0 hata, 0 uyarı                                          |
 | `pnpm format:check`      | ✓     |                                                          |
 | `pnpm lint:css`          | ✓     |                                                          |
@@ -282,3 +282,55 @@ otomatik üretim için `ensure-audio.mjs` + `predev`/`prebuild` hook'u
 eklenmişti. Yanlış karardı: oyun asset'ini repodan çıkarmak, oyunu çalıştırmak
 için FFmpeg kurulumunu ve dakikalarca üretim beklemeyi zorunlu kılıyordu.
 Geri alındı, hook silindi.
+
+---
+
+## Son kontrol — UI/Audio runtime hataları
+
+Kapsam: Vite build font uyarıları, `GameScene.onPlayerDeath` hata yutma,
+`LoadingScreen` video play senkron hata, SFX temizliği ve benzer UI/Audio
+promise hata kalıpları.
+
+### Yapılanlar
+
+- `games/vol-hell/index.html`, `games/vol-ui/index.html` — ölü `@font-face`
+  tanımları kaldırıldı; build font URL uyarısı geçti.
+- `core/src/ui/overlays/LoadingScreen.ts` — `video.play()` senkron
+  `NotAllowedError` yakalanıp CSS fallback uygulanıyor.
+- `core/tests/setup.ts` — jsdom `HTMLMediaElement.prototype.play` no-op mock
+  eklendi; test gürültüsü kesildi.
+- `core/tests/ui/loadingScreen.test.ts` — senkron play hatası için test eklendi.
+- `games/vol-hell/src/runtime/scene/GameScene.ts` — `onPlayerDeath`
+  `try/catch/finally` ile güvenli kapanış; hata durumunda `MainMenu`'ye yönlendirme.
+- `games/vol-hell/src/app/SfxBank.ts` — `stopAll()` eklendi; `release()` aktif
+  sesleri durduruyor.
+- `games/vol-hell/src/app/GameAudio.ts` — `stopAllSfx()` eklendi;
+  `AudioContext.resume()`/`suspend()` reddedilen promise'ları yakalıyor.
+- `games/vol-hell/src/runtime/scene/{Game,MainMenu,Settings}Scene.ts` —
+  shutdown'ta `stopAllSfx()` çağrılıyor.
+- `games/vol-hell/tests/app/SfxBank.test.ts`, `tests/mocks/audio.ts` —
+  `SfxBank` davranış testleri eklendi.
+- `core/src/ui/primitives/Button.ts` — `onClick` hataları yutuluyor, loading
+  durumu takılı kalmıyor.
+- `core/src/ui/layout/Wizard.ts` — `handleNext` hata durumunda ilerleme
+  kilitlenmiyor.
+- `core/src/ui/controls/PullToRefresh.ts` — `onRefresh` reddederse gösterge
+  `refreshing` fazında kalmıyor.
+
+### Bilinçli tercih
+
+- iOS/WKWebView MP3 fallback otomatik üretilmiyor (`convert:ios` manuel);
+  kullanıcı şu an iOS hedeflemiyor.
+
+### Kalite kapıları
+
+| Kapı                                      | Durum | Not             |
+| ----------------------------------------- | ----- | --------------- |
+| `pnpm -r typecheck`                       | geçti | 4 paket         |
+| `pnpm test`                               | geçti | 793 test        |
+| `pnpm lint`                               | geçti | 0 hata, 0 uyarı |
+| `pnpm format:check`                       | geçti |                 |
+| `pnpm lint:css`                           | geçti |                 |
+| `pnpm --filter @volstudio/vol-hell build` | geçti | 0 font uyarısı  |
+| `pnpm --filter @volstudio/vol-ui build`   | geçti | 0 font uyarısı  |
+| `cargo check/fmt/clippy`                  | geçti |                 |

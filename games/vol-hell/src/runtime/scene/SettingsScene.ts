@@ -1,15 +1,5 @@
-import Phaser from 'phaser';
-import {
-  Button,
-  Checkbox,
-  Panel,
-  Select,
-  Slider,
-  Text,
-  UIRoot,
-  i18n,
-  i18next,
-} from '@volstudio/core';
+import { Button, Checkbox, Panel, Select, Slider, Text, i18n, i18next } from '@volstudio/core';
+import { BaseScene } from './BaseScene';
 import { audioSettings, gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config';
 
@@ -19,8 +9,7 @@ const LOCALE_LABELS: Record<string, string> = {
   en: 'English',
 };
 
-export class SettingsScene extends Phaser.Scene {
-  private ui!: UIRoot;
+export class SettingsScene extends BaseScene {
   private panel!: Panel;
   private backButton!: Button;
   private languageSelect!: Select;
@@ -34,23 +23,20 @@ export class SettingsScene extends Phaser.Scene {
   private shakeCheckbox!: Checkbox;
   private shakeSlider!: Slider;
   private muteCheckbox!: Checkbox;
-  private showRafId: number | null = null;
-  private readonly onLanguageChanged = (): void => {
-    this.titleText.setContent(i18next.t('volhell:settings.title'));
-    this.languageText.setContent(i18next.t('volhell:settings.language'));
-    this.soundText.setContent(i18next.t('volhell:settings.sound'));
-    this.backButton.setLabel(i18next.t('volhell:settings.back'));
-    this.updateSliderLabels();
-  };
 
   constructor() {
     super({ key: 'Settings' });
   }
 
-  create(): void {
-    const container = this.game.canvas.parentElement ?? document.body;
-    this.ui = new UIRoot(container);
+  protected override onLanguageChanged(): void {
+    this.titleText.setContent(i18next.t('volhell:settings.title'));
+    this.languageText.setContent(i18next.t('volhell:settings.language'));
+    this.soundText.setContent(i18next.t('volhell:settings.sound'));
+    this.backButton.setLabel(i18next.t('volhell:settings.back'));
+    this.updateSliderLabels();
+  }
 
+  protected createScene(): void {
     this.backButton = new Button(i18next.t('volhell:settings.back'), {
       onClick: () => {
         void gameAudio.playSfx('back', { volume: sfxVolumes.back });
@@ -172,14 +158,7 @@ export class SettingsScene extends Phaser.Scene {
 
     this.ui.mount(this.panel.element);
 
-    this.showRafId = requestAnimationFrame(() => {
-      this.showRafId = null;
-      this.panel.show();
-    });
-
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
-
-    i18next.on('languageChanged', this.onLanguageChanged);
+    this.showOnNextFrame(() => this.panel.show());
   }
 
   private updateSliderLabels(): void {
@@ -196,12 +175,9 @@ export class SettingsScene extends Phaser.Scene {
     await i18n.changeLanguage(locale);
   }
 
-  private onShutdown(): void {
-    i18next.off('languageChanged', this.onLanguageChanged);
-    if (this.showRafId !== null) {
-      cancelAnimationFrame(this.showRafId);
-      this.showRafId = null;
-    }
+  protected override onSceneShutdown(): void {
+    // Ayarlar menüsünden ayrılırken çalan kısa SFX'ler diğer sahneye taşınmasın.
+    gameAudio.stopAllSfx();
     this.backButton.destroy();
     this.languageSelect.destroy();
     this.masterSlider.destroy();
@@ -212,6 +188,5 @@ export class SettingsScene extends Phaser.Scene {
     this.shakeSlider.destroy();
     this.muteCheckbox.destroy();
     this.panel.destroy();
-    this.ui.destroy();
   }
 }

@@ -72,8 +72,15 @@ export class PullToRefresh {
   async refresh(): Promise<void> {
     this.setPhase('refreshing');
     this.setPullDistance(this.threshold);
-    await this.onRefreshHandler();
-    this.reset();
+    try {
+      await this.onRefreshHandler();
+    } catch (error) {
+      // Yenileme handler'ı reddederse gösterge idle'a dönsün;
+      // unhandled rejection yerine loglanır.
+      console.error('[PullToRefresh] Yenileme başarısız:', error);
+    } finally {
+      this.reset();
+    }
   }
 
   destroy(): void {
@@ -134,8 +141,13 @@ export class PullToRefresh {
   private async commitRefresh(): Promise<void> {
     this.setPhase('refreshing');
     this.setPullDistance(this.threshold);
-    await this.onRefreshHandler();
-    this.reset();
+    try {
+      await this.onRefreshHandler();
+    } catch (error) {
+      console.error('[PullToRefresh] Yenileme başarısız:', error);
+    } finally {
+      this.reset();
+    }
   }
 
   private reset(): void {
