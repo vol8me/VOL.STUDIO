@@ -110,6 +110,32 @@ describe('WaveManager', () => {
     expect(events.onWaveEnd).toHaveBeenCalledTimes(waveConfig.totalWaves);
   });
 
+  it('uzun frame maksimum adım sınırını aşarsa sonsuz döngüye girmez', () => {
+    const originalTotal = waveConfig.totalWaves;
+    const originalDuration = waveConfig.waveDurationMs;
+    (waveConfig as { totalWaves: number; waveDurationMs: number }).totalWaves = 100;
+    (waveConfig as { totalWaves: number; waveDurationMs: number }).waveDurationMs = 10;
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { manager, events } = makeManager();
+    manager.start();
+
+    try {
+      // 100 adım gerektiren bir delta; sınır 50'de kırılıp kalan sonraki frame'e bırakılır.
+      manager.update(1000);
+
+      expect(events.onWaveStart).toHaveBeenCalledTimes(51); // 1..51
+      expect(events.onWaveEnd).toHaveBeenCalledTimes(50);
+      expect(manager.getCurrentWave()).toBe(51);
+      expect(warnSpy).toHaveBeenCalled();
+    } finally {
+      (waveConfig as { totalWaves: number; waveDurationMs: number }).totalWaves = originalTotal;
+      (waveConfig as { totalWaves: number; waveDurationMs: number }).waveDurationMs =
+        originalDuration;
+      warnSpy.mockRestore();
+    }
+  });
+
   it('koşu bittikten sonra update hiçbir olay üretmez', () => {
     const { manager, events } = makeManager();
     manager.start();

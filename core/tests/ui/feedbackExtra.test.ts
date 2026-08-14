@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createRandom } from '../../src/audio/synth/random';
 import { FloatingTextManager } from '../../src/ui/feedback/FloatingText';
 import { ResourceBar } from '../../src/ui/feedback/ResourceBar';
 import { ResourceCounter } from '../../src/ui/feedback/ResourceCounter';
@@ -58,6 +59,25 @@ describe('FloatingTextManager', () => {
     const _manager = track(new FloatingTextManager(parent, { anchor: 'absolute' }));
     const container = parent.querySelector('.vol-floating-text-container')!;
     expect(container.classList.contains('vol-floating-text-container--absolute')).toBe(true);
+  });
+
+  it('opsiyonel random ile jitter deterministik hale gelir', () => {
+    const parent = document.createElement('div');
+    const random = createRandom(123);
+    const manager = track(new FloatingTextManager(parent, { random }));
+
+    manager.spawn(100, 100, 'X', { jitter: 20 });
+    const first = parent.querySelector<HTMLDivElement>('.vol-floating-text')!.style.left;
+
+    // Aynı seed aynı ofseti üretir.
+    random.bipolar(); // FloatingText spawn'da bir değer tüketmişti; aynı sırayla tekrarlayalım.
+    const secondRandom = createRandom(123);
+    const parent2 = document.createElement('div');
+    const manager2 = track(new FloatingTextManager(parent2, { random: secondRandom }));
+    manager2.spawn(100, 100, 'X', { jitter: 20 });
+    const second = parent2.querySelector<HTMLDivElement>('.vol-floating-text')!.style.left;
+
+    expect(first).toBe(second);
   });
 
   it("destroy bekleyen tüm zamanlayıcıları temizler ve container'ı kaldırır", () => {

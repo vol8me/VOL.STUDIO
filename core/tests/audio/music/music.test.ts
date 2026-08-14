@@ -196,6 +196,31 @@ describe('MusicEngine', () => {
     await engine.play('loop-test');
     expect(engine.getCurrentState().trackId).toBe('loop-test');
   });
+
+  it('NaN/negatif/Infinity loopStart ve loopEnd güvenli aralığa çekilir', async () => {
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    const buffer = makeBuffer(fakeContext, 2);
+
+    await engine.loadTrack({
+      id: 'loop-edge',
+      bpm: 120,
+      loopStart: NaN,
+      loopEnd: -5,
+      stems: [{ id: 'pad', buffer: buffer as unknown as AudioBuffer, gain: 1 }],
+    });
+
+    await engine.play('loop-edge');
+    const activeStems = (
+      engine as unknown as {
+        activeStems: Map<string, { source: { loopStart: number; loopEnd: number } }>;
+      }
+    ).activeStems;
+    const stem = activeStems.values().next().value;
+    expect(stem.source.loopStart).toBeGreaterThanOrEqual(0);
+    expect(stem.source.loopEnd).toBeGreaterThan(0);
+    expect(stem.source.loopEnd).toBeLessThanOrEqual(buffer.duration);
+    expect(stem.source.loopStart).toBeLessThan(stem.source.loopEnd);
+  });
 });
 
 describe('MusicScheduler', () => {

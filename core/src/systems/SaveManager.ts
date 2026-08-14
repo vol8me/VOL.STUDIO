@@ -22,13 +22,28 @@ export class SaveManager {
   }
 }
 
+/** Depolama katmanında oluşan hataları ayırt etmek için. */
+export class StorageError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message);
+    this.name = 'StorageError';
+    this.cause = options?.cause;
+  }
+}
+
 export class LocalStorageAdapter implements IStorageAdapter {
   get<T>(key: string): Promise<T | undefined> {
     const raw = localStorage.getItem(key);
     if (raw === null) return Promise.resolve(undefined);
     try {
       return Promise.resolve(JSON.parse(raw) as T);
-    } catch {
+    } catch (error) {
+      // Bozuk kaydı sessizce kaybetmemek için logla; çağıran `SaveManager.load`
+      // sayesinde varsayılan değere dönecek.
+      console.warn(
+        `[LocalStorageAdapter] '${key}' için bozuk kayıt okundu; varsayılan değere dönülüyor.`,
+        error,
+      );
       return Promise.resolve(undefined);
     }
   }
@@ -39,8 +54,9 @@ export class LocalStorageAdapter implements IStorageAdapter {
       return Promise.resolve();
     } catch (error) {
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        console.warn(`[LocalStorageAdapter] Depolama kotası doldu: ${key}`);
-        return Promise.resolve();
+        return Promise.reject(
+          new StorageError(`Depolama kotası doldu; '${key}' kaydedilemedi.`, { cause: error }),
+        );
       }
       return Promise.reject(error instanceof Error ? error : new Error(String(error)));
     }

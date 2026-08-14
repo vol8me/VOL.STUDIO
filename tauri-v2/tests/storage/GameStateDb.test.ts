@@ -168,9 +168,16 @@ describe('GameStateDb', () => {
 
   it('clear tum kayitlari siler', async () => {
     const db = new GameStateDb();
-    await db.clear();
+    await db.clear({ confirm: true });
 
     expect(mockExecute).toHaveBeenCalledWith('DELETE FROM saves');
+  });
+
+  it('clear onaysız çağrılırsa GameStateDbError fırlatır', async () => {
+    const db = new GameStateDb();
+
+    await expect(db.clear()).rejects.toBeInstanceOf(GameStateDbError);
+    await expect(db.clear()).rejects.toThrow(/confirm/);
   });
 
   it('custom path ile calisir', async () => {

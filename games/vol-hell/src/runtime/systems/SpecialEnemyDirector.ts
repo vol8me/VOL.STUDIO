@@ -158,6 +158,7 @@ export class SpecialEnemyDirector {
       if (this.elite.isAlive) {
         this.elite.update(deltaMs, playerPos, this.deps.border, grid);
       } else {
+        this.elite.destroy();
         this.elite = null;
         this.reportBlockerDefeated();
       }
@@ -177,6 +178,7 @@ export class SpecialEnemyDirector {
   }
 
   destroy(): void {
+    this.elite?.destroy();
     this.boss?.destroy();
     this.elite = null;
     this.boss = null;

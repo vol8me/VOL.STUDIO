@@ -49,6 +49,8 @@ export function isBlockerWave(wave: number): boolean {
  * Bu sınıf UI bilmez: yalnızca doğru anda olay tetikler.
  */
 export class WaveManager {
+  /** Tek frame'de atılabilecek maksimum dalga adımı — config/uzun frame hatası koruması. */
+  private static readonly MAX_STEPS_PER_FRAME = 50;
   private wave = 0;
   private elapsedInWaveMs = 0;
   private complete = false;
@@ -125,7 +127,8 @@ export class WaveManager {
     this.elapsedInWaveMs += deltaMs;
     // Bir frame birden fazla dalgayı geçebilecek kadar uzun olabilir
     // (sekme arka planda kaldıysa); while ile hepsi işlenir.
-    while (!this.complete && !this.blockedAtTimeUp) {
+    let steps = 0;
+    while (!this.complete && !this.blockedAtTimeUp && steps < WaveManager.MAX_STEPS_PER_FRAME) {
       if (this.elapsedInWaveMs < waveConfig.waveDurationMs) break;
 
       if (this.shouldWaitForBlocker()) {
@@ -137,6 +140,20 @@ export class WaveManager {
 
       this.elapsedInWaveMs -= waveConfig.waveDurationMs;
       this.finishWave();
+      steps++;
+    }
+
+    // Uzun frame veya yanlış dalga süresi: sonsuz döngüye girmemek için
+    // kalan zamanı güncel dalga süresine modüler indir ve ertesi frame devam et.
+    if (steps >= WaveManager.MAX_STEPS_PER_FRAME && !this.complete && !this.blockedAtTimeUp) {
+      if (waveConfig.waveDurationMs > 0) {
+        this.elapsedInWaveMs %= waveConfig.waveDurationMs;
+      } else {
+        this.elapsedInWaveMs = 0;
+      }
+      console.warn(
+        "[WaveManager] Uzun frame/config hatası: tek frame'de maksimum dalga adımı aşıldı.",
+      );
     }
   }
 

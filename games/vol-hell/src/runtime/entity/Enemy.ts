@@ -332,7 +332,7 @@ export class Enemy {
       const d = Math.hypot(dx, dy);
       const minDistance =
         this.definition.radius + other.definition.radius + enemyConfig.separationGap;
-      if (d > 0 && d < minDistance) {
+      if (Number.isFinite(d) && d > 0 && d < minDistance) {
         const force = (1 - d / minDistance) * enemyConfig.separationForce;
         this.separationBuf.x += (dx / d) * force * separationScale;
         this.separationBuf.y += (dy / d) * force * separationScale;

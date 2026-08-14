@@ -28,9 +28,9 @@ function makeScene() {
 }
 
 describe('TelegraphManager', () => {
-  it('play uyarı çizer ve süre dolunca resolve olur', async () => {
+  it('play uyarı çizer ve süre dolunca complete=true ile çözülür', async () => {
     const manager = new TelegraphManager(makeScene());
-    const promise = manager.play({
+    const handle = manager.play({
       durationMs: 500,
       shape: 'circle' as TelegraphShape,
       x: 100,
@@ -43,13 +43,13 @@ describe('TelegraphManager', () => {
     manager.update(400);
     manager.update(200);
 
-    await expect(promise).resolves.toBeUndefined();
+    await expect(handle.promise).resolves.toEqual({ completed: true });
     expect(manager.getActiveCount()).toBe(0);
   });
 
   it('süre dolmadan resolve olmaz', async () => {
     const manager = new TelegraphManager(makeScene());
-    const promise = manager.play({
+    const handle = manager.play({
       durationMs: 300,
       shape: 'circle' as TelegraphShape,
       x: 0,
@@ -60,16 +60,16 @@ describe('TelegraphManager', () => {
     manager.update(299);
 
     let resolved = false;
-    promise.then(() => (resolved = true));
+    handle.promise.then(() => (resolved = true));
     await Promise.resolve();
 
     expect(resolved).toBe(false);
     expect(manager.getActiveCount()).toBe(1);
   });
 
-  it('cancelAll bekleyen telegraphları siler ve resolve etmez', async () => {
+  it('cancelAll bekleyen telegraphları siler ve complete=false ile çözer', async () => {
     const manager = new TelegraphManager(makeScene());
-    const promise = manager.play({
+    const handle = manager.play({
       durationMs: 300,
       shape: 'circle' as TelegraphShape,
       x: 0,
@@ -80,11 +80,35 @@ describe('TelegraphManager', () => {
     manager.cancelAll();
     manager.update(500);
 
-    let resolved = false;
-    promise.then(() => (resolved = true));
-    await Promise.resolve();
+    await expect(handle.promise).resolves.toEqual({ completed: false });
+    expect(manager.getActiveCount()).toBe(0);
+  });
 
-    expect(resolved).toBe(false);
+  it('handle.cancel() tek bir telegraphı complete=false ile çözer', async () => {
+    const manager = new TelegraphManager(makeScene());
+    const a = manager.play({
+      durationMs: 500,
+      shape: 'circle' as TelegraphShape,
+      x: 0,
+      y: 0,
+      radius: 10,
+    });
+    const b = manager.play({
+      durationMs: 500,
+      shape: 'circle' as TelegraphShape,
+      x: 100,
+      y: 100,
+      radius: 20,
+    });
+
+    a.cancel();
+
+    await expect(a.promise).resolves.toEqual({ completed: false });
+    expect(manager.getActiveCount()).toBe(1);
+
+    manager.update(500);
+
+    await expect(b.promise).resolves.toEqual({ completed: true });
     expect(manager.getActiveCount()).toBe(0);
   });
 
@@ -108,17 +132,17 @@ describe('TelegraphManager', () => {
     expect(manager.getActiveCount()).toBe(2);
 
     manager.update(200);
-    await expect(a).resolves.toBeUndefined();
+    await expect(a.promise).resolves.toEqual({ completed: true });
     expect(manager.getActiveCount()).toBe(1);
 
     manager.update(200);
-    await expect(b).resolves.toBeUndefined();
+    await expect(b.promise).resolves.toEqual({ completed: true });
     expect(manager.getActiveCount()).toBe(0);
   });
 
-  it('destroy cancelAll ile aynı temizliği yapar', () => {
+  it('destroy cancelAll ile aynı temizliği yapar', async () => {
     const manager = new TelegraphManager(makeScene());
-    manager.play({
+    const handle = manager.play({
       durationMs: 300,
       shape: 'circle' as TelegraphShape,
       x: 0,
@@ -128,6 +152,7 @@ describe('TelegraphManager', () => {
 
     manager.destroy();
 
+    await expect(handle.promise).resolves.toEqual({ completed: false });
     expect(manager.getActiveCount()).toBe(0);
   });
 });

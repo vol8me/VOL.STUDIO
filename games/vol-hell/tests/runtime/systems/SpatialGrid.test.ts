@@ -140,4 +140,19 @@ describe('SpatialGrid', () => {
     expect(nearby).toHaveLength(1);
     expect(nearby[0].x).toBe(-100);
   });
+
+  it('iç içe queryNearby çağrıları aynı sonuç tamponunu ezmez', () => {
+    const grid = new SpatialGrid(56);
+    grid.insert(makeEnemy(100, 100));
+    grid.insert(makeEnemy(500, 500));
+
+    const first = grid.queryNearby(105, 105);
+    // İkinci sorgu ilk sonuç tamponunu overwrite etmemeli.
+    const second = grid.queryNearby(505, 505);
+
+    expect(first).toHaveLength(1);
+    expect(first[0].x).toBe(100);
+    expect(second).toHaveLength(1);
+    expect(second[0].x).toBe(500);
+  });
 });

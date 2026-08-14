@@ -64,6 +64,9 @@ export class CardTile {
   private readonly onAction?: (id: string) => void;
   private readonly onSecondaryAction?: (id: string) => void;
   private readonly cardId: string;
+  private readonly boundDragStart: (event: DragEvent) => void;
+  private readonly boundDragEnd: () => void;
+  private isDragListenerAttached = false;
 
   constructor(options: CardTileOptions) {
     const { data, disabled = false, onAction, className, compact = false } = options;
@@ -148,6 +151,16 @@ export class CardTile {
 
     this.element.appendChild(footer);
 
+    this.boundDragStart = (event: DragEvent) => {
+      event.dataTransfer?.setData(CARD_DRAG_MIME, options.dragData ?? '');
+      // Bazı tarayıcılar yalnızca `text/plain` taşır; ikisini de yaz.
+      event.dataTransfer?.setData('text/plain', options.dragData ?? '');
+      this.element.classList.add('vol-card--dragging');
+    };
+    this.boundDragEnd = () => {
+      this.element.classList.remove('vol-card--dragging');
+    };
+
     if (options.dragData !== undefined) {
       this.makeDraggable(options.dragData);
     }
@@ -167,21 +180,20 @@ export class CardTile {
   destroy(): void {
     this.actionButton?.removeEventListener('click', this.handleAction);
     this.secondaryButton?.removeEventListener('click', this.handleSecondaryAction);
+    if (this.isDragListenerAttached) {
+      this.element.removeEventListener('dragstart', this.boundDragStart);
+      this.element.removeEventListener('dragend', this.boundDragEnd);
+      this.isDragListenerAttached = false;
+    }
     this.element.remove();
   }
 
-  private makeDraggable(dragData: string): void {
+  private makeDraggable(_dragData: string): void {
     this.element.draggable = true;
     this.element.classList.add('vol-card--draggable');
-    this.element.addEventListener('dragstart', (event) => {
-      event.dataTransfer?.setData(CARD_DRAG_MIME, dragData);
-      // Bazı tarayıcılar yalnızca `text/plain` taşır; ikisini de yaz.
-      event.dataTransfer?.setData('text/plain', dragData);
-      this.element.classList.add('vol-card--dragging');
-    });
-    this.element.addEventListener('dragend', () => {
-      this.element.classList.remove('vol-card--dragging');
-    });
+    this.element.addEventListener('dragstart', this.boundDragStart);
+    this.element.addEventListener('dragend', this.boundDragEnd);
+    this.isDragListenerAttached = true;
   }
 
   private readonly handleAction = (): void => {

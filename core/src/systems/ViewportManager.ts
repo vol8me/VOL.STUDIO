@@ -50,12 +50,12 @@ export class ViewportManager {
 
     if (this.config.strategy === 'resize') {
       const dpr = this.resolveDpr();
-      const width = this.config.width ?? window.innerWidth;
-      const height = this.config.height ?? window.innerHeight;
+      const width = Math.max(1, this.config.width ?? window.innerWidth);
+      const height = Math.max(1, this.config.height ?? window.innerHeight);
       return {
         parent,
-        width: width * dpr,
-        height: height * dpr,
+        width: Math.max(1, width * dpr),
+        height: Math.max(1, height * dpr),
         backgroundColor: this.config.backgroundColor,
         zoom: 1 / dpr,
         scale: {
@@ -87,8 +87,19 @@ export class ViewportManager {
 
   /** getConfig() ve attachResize() aynı DPR'yi görmeli — `zoom` bu değere göre hesaplanır. */
   private resolveDpr(): number {
-    const rawDpr = window.devicePixelRatio || TECH.DPR_FALLBACK;
-    return this.config.maxDpr ? Math.min(rawDpr, this.config.maxDpr) : rawDpr;
+    const rawDpr =
+      typeof window !== 'undefined' &&
+      Number.isFinite(window.devicePixelRatio) &&
+      window.devicePixelRatio > 0
+        ? window.devicePixelRatio
+        : TECH.DPR_FALLBACK;
+
+    const configuredMaxDpr = this.config.maxDpr;
+    const maxDpr =
+      configuredMaxDpr !== undefined && Number.isFinite(configuredMaxDpr) && configuredMaxDpr > 0
+        ? configuredMaxDpr
+        : undefined;
+    return maxDpr ? Math.min(rawDpr, maxDpr) : rawDpr;
   }
 
   /**
@@ -102,8 +113,8 @@ export class ViewportManager {
   attachResize(game: Phaser.Game): () => void {
     const handler = (): void => {
       const dpr = this.resolveDpr();
-      const width = window.innerWidth * dpr;
-      const height = window.innerHeight * dpr;
+      const width = Math.max(1, window.innerWidth * dpr);
+      const height = Math.max(1, window.innerHeight * dpr);
 
       game.scale.resize(width, height);
 

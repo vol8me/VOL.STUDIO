@@ -13,7 +13,13 @@ const CELL_STRIDE = CELL_OFFSET * 2;
 export class SpatialGrid {
   private cellSize: number;
   private cells: Map<number, Enemy[]> = new Map();
-  private readonly resultBuffer: Enemy[] = [];
+  /**
+   * Reusable sonuç tamponları — iç içe `queryNearby` çağrılarında birbirinin
+   * üzerine yazmaz. 4'lik halka oyun mantığında görülebilecek maksimum iç
+   * içe çağrıyı karşılar; aşılırsa en eski tampon geri döndürülür.
+   */
+  private readonly resultBuffers: Enemy[][] = [[], [], [], []];
+  private resultIndex = 0;
 
   constructor(cellSize: number) {
     this.cellSize = cellSize;
@@ -77,24 +83,26 @@ export class SpatialGrid {
 
   /**
    * Verilen pozisyona yakın düşmanları döndürür — kendi hücresi + 8 komşu hücre.
-   * Ölü düşmanlar filtrelenir. Dönen array reusable'dır — başka queryNearby
-   * çağrısında üzerine yazılır. Sonuçu hemen tüket, saklama.
+   * Ölü düşmanlar filtrelenir. Dönen array reusable'dır; halka tampon sayesinde
+   * sınırlı iç içe çağrılarda birbirinin üzerine yazılmaz.
    */
   queryNearby(x: number, y: number): Enemy[] {
     const cx = Math.floor(x / this.cellSize);
     const cy = Math.floor(y / this.cellSize);
-    this.resultBuffer.length = 0;
+    const result = this.resultBuffers[this.resultIndex];
+    this.resultIndex = (this.resultIndex + 1) % this.resultBuffers.length;
+    result.length = 0;
 
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
         const cell = this.cells.get(this.key(cx + dx, cy + dy));
         if (!cell) continue;
         for (const enemy of cell) {
-          if (enemy.isAlive) this.resultBuffer.push(enemy);
+          if (enemy.isAlive) result.push(enemy);
         }
       }
     }
 
-    return this.resultBuffer;
+    return result;
   }
 }

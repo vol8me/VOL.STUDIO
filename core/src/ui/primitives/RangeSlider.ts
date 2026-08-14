@@ -61,6 +61,8 @@ export class RangeSlider {
   private boundPointerMove: (event: PointerEvent) => void;
   private boundPointerUp: (event: PointerEvent) => void;
   private boundHandleKeydown: (handle: 'min' | 'max') => (event: KeyboardEvent) => void;
+  private boundMinHandleKeydown: (event: KeyboardEvent) => void;
+  private boundMaxHandleKeydown: (event: KeyboardEvent) => void;
 
   constructor(options: RangeSliderOptions = {}) {
     const {
@@ -185,8 +187,10 @@ export class RangeSlider {
       const next = Number.isFinite(delta) ? current + delta : delta > 0 ? this.max : this.min;
       this.commit(handle, next);
     };
-    this.minHandle.addEventListener('keydown', this.boundHandleKeydown('min'));
-    this.maxHandle.addEventListener('keydown', this.boundHandleKeydown('max'));
+    this.boundMinHandleKeydown = this.boundHandleKeydown('min');
+    this.boundMaxHandleKeydown = this.boundHandleKeydown('max');
+    this.minHandle.addEventListener('keydown', this.boundMinHandleKeydown);
+    this.maxHandle.addEventListener('keydown', this.boundMaxHandleKeydown);
 
     this.render();
   }
@@ -220,6 +224,8 @@ export class RangeSlider {
     this.track.removeEventListener('pointermove', this.boundPointerMove);
     this.track.removeEventListener('pointerup', this.boundPointerUp);
     this.track.removeEventListener('pointercancel', this.boundPointerUp);
+    this.minHandle.removeEventListener('keydown', this.boundMinHandleKeydown);
+    this.maxHandle.removeEventListener('keydown', this.boundMaxHandleKeydown);
     this.element.remove();
   }
 

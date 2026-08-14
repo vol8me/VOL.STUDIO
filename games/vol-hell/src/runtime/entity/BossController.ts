@@ -11,7 +11,7 @@ import {
 } from './behaviors';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
-import type { TelegraphManager } from '@/runtime/systems/TelegraphManager';
+import type { TelegraphHandle, TelegraphManager } from '@/runtime/systems/TelegraphManager';
 
 /** Boss'un saldırı paternleri — sırayla döner. */
 export type BossAttack = 'slam' | 'volley' | 'summon';
@@ -58,6 +58,7 @@ export class BossController {
   private enraged = false;
   private readonly velocity: VelocityOutput = { x: 0, y: 0 };
   private context: MutableBehaviorContext | null = null;
+  private readonly activeTelegraphs: TelegraphHandle[] = [];
   private readonly spawnRequest: MinionSpawnRequest = {
     minionId: '',
     count: 0,
@@ -113,6 +114,10 @@ export class BossController {
   /** Boss öldü/sahne kapandı — bekleyen saldırılar uygulanmasın. */
   destroy(): void {
     this.state = 'idle';
+    for (const handle of this.activeTelegraphs) {
+      handle.cancel();
+    }
+    this.activeTelegraphs.length = 0;
   }
 
   private getAttackIntervalMs(): number {
@@ -149,20 +154,24 @@ export class BossController {
 
   private async runAttack(attack: BossAttack): Promise<void> {
     this.state = 'attacking';
-    switch (attack) {
-      case 'slam':
-        await this.runSlam();
-        break;
-      case 'volley':
-        await this.runVolley();
-        break;
-      case 'summon':
-        await this.runSummon();
-        break;
-    }
-    // Saldırı sırasında boss ölmüş olabilir; ölüyse durumu değiştirme.
-    if (this.enemy.isAlive) {
-      this.state = 'idle';
+    try {
+      switch (attack) {
+        case 'slam':
+          await this.runSlam();
+          break;
+        case 'volley':
+          await this.runVolley();
+          break;
+        case 'summon':
+          await this.runSummon();
+          break;
+      }
+    } finally {
+      // Saldırı sırasında boss ölmüş veya telegraph iptal edilmiş olabilir;
+      // yaşarsa durumu saldırıya hazır hale getir.
+      if (this.enemy.isAlive) {
+        this.state = 'idle';
+      }
     }
   }
 
@@ -171,7 +180,7 @@ export class BossController {
     const x = this.enemy.x;
     const y = this.enemy.y;
 
-    await this.deps.telegraphs.play({
+    const handle = this.playTelegraph({
       durationMs: bossConfig.slam.telegraphMs,
       shape: 'circle',
       x,
@@ -179,7 +188,8 @@ export class BossController {
       radius: bossConfig.slam.radius,
       color: this.definition.color,
     });
-    if (!this.enemy.isAlive) return;
+    const result = await handle.promise;
+    if (!result.completed || !this.enemy.isAlive) return;
 
     this.deps.effects.play('bossSlam', x, y);
     // Hasar UYARI KONUMUNA göre çözülür (bossun güncel konumuna değil):
@@ -203,21 +213,27 @@ export class BossController {
       angles.push(baseAngle + (i - (laneCount - 1) / 2) * laneSpreadRad);
     }
 
-    await Promise.all(
-      angles.map((angle) =>
-        this.deps.telegraphs.play({
-          durationMs: bossConfig.volley.telegraphMs,
-          shape: 'line',
-          x,
-          y,
-          angle,
-          radius: laneLengthPx,
-          width: laneWidthPx,
-          color: this.definition.color,
-        }),
-      ),
+    const handles = angles.map((angle) =>
+      this.playTelegraph({
+        durationMs: bossConfig.volley.telegraphMs,
+        shape: 'line',
+        x,
+        y,
+        angle,
+        radius: laneLengthPx,
+        width: laneWidthPx,
+        color: this.definition.color,
+      }),
     );
-    if (!this.enemy.isAlive) return;
+
+    let results: { completed: boolean }[] = [];
+    try {
+      results = await Promise.all(handles.map((h) => h.promise));
+    } finally {
+      for (const h of handles) this.removeTelegraph(h);
+    }
+
+    if (results.some((r) => !r.completed) || !this.enemy.isAlive) return;
 
     const target = this.deps.getPlayerPosition();
     for (const angle of angles) {
@@ -237,7 +253,7 @@ export class BossController {
     const baseAngle = Math.atan2(player.y - y, player.x - x);
     const { count, spreadRad, radiusPx, minionId } = bossConfig.summon;
 
-    await this.deps.telegraphs.play({
+    const handle = this.playTelegraph({
       durationMs: bossConfig.summon.telegraphMs,
       shape: 'cone',
       x,
@@ -247,7 +263,8 @@ export class BossController {
       spread: spreadRad,
       color: this.definition.color,
     });
-    if (!this.enemy.isAlive) return;
+    const result = await handle.promise;
+    if (!result.completed || !this.enemy.isAlive) return;
 
     this.spawnRequest.minionId = minionId;
     this.spawnRequest.count = count;
@@ -262,6 +279,24 @@ export class BossController {
 
     this.deps.effects.play('bossSummon', x, y);
     this.deps.spawnMinions(this.enemy, this.spawnRequest);
+  }
+
+  /**
+   * Telegraph başlatır ve takip listesine ekler.
+   * `destroy()` çağrıldığında tüm bekleyen telegraph'lar iptal edilebilsin.
+   */
+  private playTelegraph(options: Parameters<TelegraphManager['play']>[0]): TelegraphHandle {
+    const handle = this.deps.telegraphs.play(options);
+    this.activeTelegraphs.push(handle);
+    // Promise çözüldükten sonra listeyi temizle — `destroy()` artık bu
+    // telegraph'ı iptal etmeye çalışmasın.
+    void handle.promise.finally(() => this.removeTelegraph(handle));
+    return handle;
+  }
+
+  private removeTelegraph(handle: TelegraphHandle): void {
+    const i = this.activeTelegraphs.indexOf(handle);
+    if (i >= 0) this.activeTelegraphs.splice(i, 1);
   }
 
   private syncContext(deltaMs: number, playerPos: Vector2): MutableBehaviorContext {

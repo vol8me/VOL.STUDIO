@@ -87,4 +87,31 @@ describe('ViewportManager — DPR kelepçesi', () => {
     window.dispatchEvent(new Event('resize'));
     expect(recorded.width).toBe(0);
   });
+
+  it('negatif veya NaN maxDpr yok sayılır; ham DPR kullanılır', () => {
+    setEnvironment(2, 800, 600);
+
+    expect(new ViewportManager({ strategy: 'resize', maxDpr: -1 }).getConfig().zoom).toBe(1 / 2);
+    expect(new ViewportManager({ strategy: 'resize', maxDpr: NaN }).getConfig().zoom).toBe(1 / 2);
+    expect(new ViewportManager({ strategy: 'resize', maxDpr: 0 }).getConfig().zoom).toBe(1 / 2);
+  });
+
+  it('devicePixelRatio NaN/Infinity/negatif ise fallback DPR kullanılır', () => {
+    setEnvironment(NaN, 800, 600);
+    expect(new ViewportManager({ strategy: 'resize' }).getConfig().zoom).toBe(1);
+
+    setEnvironment(Infinity, 800, 600);
+    expect(new ViewportManager({ strategy: 'resize' }).getConfig().zoom).toBe(1);
+
+    setEnvironment(-2, 800, 600);
+    expect(new ViewportManager({ strategy: 'resize' }).getConfig().zoom).toBe(1);
+  });
+
+  it('resize modunda genişlik/yükseklik en az 1 olur', () => {
+    setEnvironment(1, 0, 0);
+
+    const config = new ViewportManager({ strategy: 'resize' }).getConfig();
+    expect(config.width).toBeGreaterThanOrEqual(1);
+    expect(config.height).toBeGreaterThanOrEqual(1);
+  });
 });

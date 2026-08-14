@@ -1,4 +1,5 @@
 import { UI_TIMING } from '../../constants';
+import type { Random } from '../../audio/synth/random';
 
 export type FloatingTextVariant = 'default' | 'damage' | 'heal' | 'critical';
 
@@ -15,6 +16,8 @@ export interface FloatingTextOptions {
 export interface FloatingTextManagerOptions {
   /** 'fixed' (varsayılan): viewport'a göre konumlanır. 'absolute': verilen `parent`'a göre (parent'ın position:relative/absolute olması gerekir). */
   anchor?: 'fixed' | 'absolute';
+  /** Belirtilirse jitter için deterministik PRNG kullanılır; yoksa `Math.random()`. */
+  random?: Random;
 }
 
 interface ActiveText {
@@ -27,9 +30,11 @@ interface ActiveText {
 export class FloatingTextManager {
   private readonly container: HTMLDivElement;
   private readonly active: ActiveText[] = [];
+  private readonly random?: Random;
 
   constructor(parent: HTMLElement, options: FloatingTextManagerOptions = {}) {
-    const { anchor = 'fixed' } = options;
+    const { anchor = 'fixed', random } = options;
+    this.random = random;
     this.container = document.createElement('div');
     this.container.className = `vol-floating-text-container vol-floating-text-container--${anchor}`;
     parent.appendChild(this.container);
@@ -38,7 +43,8 @@ export class FloatingTextManager {
   spawn(x: number, y: number, text: string, options: FloatingTextOptions = {}): void {
     const { variant = 'default', durationMs = 900, riseDistance = 40 } = options;
     const jitter = options.jitter ?? (variant === 'critical' ? 0 : 18);
-    const offsetX = jitter > 0 ? (Math.random() * 2 - 1) * jitter : 0;
+    const randomUnit = this.random ? this.random.bipolar() : Math.random() * 2 - 1;
+    const offsetX = jitter > 0 ? randomUnit * jitter : 0;
 
     const el = document.createElement('div');
     el.className = `vol-floating-text vol-floating-text--${variant}`;

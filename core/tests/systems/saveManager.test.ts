@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { LocalStorageAdapter, SaveManager } from '../../src/systems/SaveManager';
+import { LocalStorageAdapter, SaveManager, StorageError } from '../../src/systems/SaveManager';
 
 describe('LocalStorageAdapter', () => {
   beforeEach(() => {
@@ -7,19 +7,15 @@ describe('LocalStorageAdapter', () => {
     vi.restoreAllMocks();
   });
 
-  it('QuotaExceededError yakalanır ve çökmeden işlem tamamlanır', async () => {
+  it('QuotaExceededError StorageError olarak fırlatılır', async () => {
     const adapter = new LocalStorageAdapter();
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       const error = new DOMException('Quota exceeded', 'QuotaExceededError');
       throw error;
     });
 
-    await expect(adapter.set('kayit', { x: 1 })).resolves.toBeUndefined();
-    expect(warnSpy).toHaveBeenCalled();
-
-    warnSpy.mockRestore();
+    await expect(adapter.set('kayit', { x: 1 })).rejects.toBeInstanceOf(StorageError);
   });
 
   it('depoda null varsa varsayılan değere düşer', async () => {
@@ -30,9 +26,12 @@ describe('LocalStorageAdapter', () => {
   });
 
   it('depoda geçersiz JSON varsa varsayılan değere düşer', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     localStorage.setItem('kayit', 'not-json');
     const manager = new SaveManager(new LocalStorageAdapter());
     const result = await manager.load('kayit', { x: 42 });
     expect(result).toEqual({ x: 42 });
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 });

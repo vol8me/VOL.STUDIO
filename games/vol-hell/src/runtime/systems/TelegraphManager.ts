@@ -29,59 +29,88 @@ export interface TelegraphOptions {
   color?: number;
 }
 
+/** Uyarı tamamlandı mı, iptal mi edildi? */
+export interface TelegraphResult {
+  completed: boolean;
+}
+
+/** `play()` çağrısından dönen, telegraph'ı bekleyen/iptal eden tutacak. */
+export interface TelegraphHandle {
+  /** Uyarı sonucu. Süre dolarsa `{ completed: true }`, iptal edilirse `{ completed: false }`. */
+  readonly promise: Promise<TelegraphResult>;
+  /** Uyarıyı hemen iptal eder. */
+  cancel(): void;
+}
+
 /** Sahnede yaşayan tek bir telegraph. */
 interface ActiveTelegraph {
+  id: number;
   graphics: Phaser.GameObjects.Graphics;
   options: TelegraphOptions;
   elapsedMs: number;
-  /** Uyarı süresi dolduğunda çağrılır — saldırıyı çağıran kod uygular. */
-  resolve: () => void;
-  /** İptal edildiyse `resolve` çağrılmaz. */
+  /** Uyarı tamamlandığında veya iptal edildiğinde çağrılır. */
+  resolve: (result: TelegraphResult) => void;
+  /** İptal edildiyse `resolve` içinde `completed: false` gönderilir. */
   cancelled: boolean;
 }
 
 /**
  * Ortak telegraph katmanı — Elite ve Boss'un TÜM saldırıları buradan geçer.
  *
- * `play()` bir Promise döner ve uyarı süresi dolduğunda resolve olur; çağıran
- * kod saldırıyı o noktada uygular. Böylece "uyarı çiz → bekle → vur" akışı her
- * saldırıda yeniden yazılmaz, ve uyarı süresi ile hasar anı ASLA birbirinden
- * kaymaz.
+ * `play()` bir `TelegraphHandle` döner. Uyarı süresi dolduğunda
+ * `handle.promise` `{ completed: true }` ile çözülür; çağıran kod saldırıyı o
+ * noktada uygular. Böylece "uyarı çiz → bekle → vur" akışı her saldırıda
+ * yeniden yazılmaz ve uyarı süresi ile hasar anı ASLA birbirinden kaymaz.
  *
  * Zamanlama sahne delta'sıyla yürür (`setTimeout`/`scene.time` DEĞİL): oyun
  * duraklatıldığında telegraph da donar, yoksa kart ekranı açıkken geçen süre
  * oyuncuyu görmediği bir saldırıyla karşılardı.
  *
  * Aynı anda birden fazla telegraph yaşayabilir — Elite dash uyarısı verirken
- * Boss ayrı bir alan işaretleyebilir.
+ * Boss ayrı bir alan işaretleyebilir. Tek tek veya toplu `cancel()` ile
+ * bekleyen telegraph'lar güvenli şekilde sonlandırılabilir; promise
+ * `{ completed: false }` ile çözülür, böylece çağıran "iptal edildi" durumunu
+ * ayırt edebilir.
  */
 export class TelegraphManager {
   private readonly active: ActiveTelegraph[] = [];
+  private nextId = 1;
 
   constructor(private readonly scene: Phaser.Scene) {}
 
   /**
-   * Bir uyarı alanı çizer ve süresi dolunca resolve olur.
+   * Bir uyarı alanı çizer ve süresi dolunca çözülen bir promise döner.
    *
-   * Promise YALNIZCA uyarı normal şekilde tamamlanırsa resolve olur; sahne
-   * kapanır ya da `cancelAll()` çağrılırsa hiç resolve OLMAZ (reject de etmez).
-   * Bu bilinçli: sahne yıkılırken bekleyen saldırıların uygulanması istenmez.
+   * Promise, uyarı normal şekilde tamamlanırsa `{ completed: true }`,
+   * `cancel()` / `cancelAll()` / `destroy()` ile iptal edilirse
+   * `{ completed: false }` olarak çözülür.
    */
-  play(options: TelegraphOptions): Promise<void> {
+  play(options: TelegraphOptions): TelegraphHandle {
     const graphics = this.scene.add.graphics();
     graphics.setDepth(RENDER_DEPTH.abilityGround);
 
-    return new Promise<void>((resolve) => {
-      const telegraph: ActiveTelegraph = {
-        graphics,
-        options,
-        elapsedMs: 0,
-        resolve,
-        cancelled: false,
-      };
-      this.draw(telegraph);
-      this.active.push(telegraph);
+    const id = this.nextId++;
+    let resolve: (result: TelegraphResult) => void;
+    const promise = new Promise<TelegraphResult>((res) => {
+      resolve = res;
     });
+
+    const telegraph: ActiveTelegraph = {
+      id,
+      graphics,
+      options,
+      elapsedMs: 0,
+      resolve: resolve!,
+      cancelled: false,
+    };
+
+    this.draw(telegraph);
+    this.active.push(telegraph);
+
+    return {
+      promise,
+      cancel: () => this.cancelById(id),
+    };
   }
 
   /** Yaşayan telegraph sayısı — test ve diagnostic için. */
@@ -106,22 +135,36 @@ export class TelegraphManager {
       if (last && i < this.active.length) {
         this.active[i] = last;
       }
-      if (!telegraph.cancelled) {
-        telegraph.resolve();
-      }
+      telegraph.resolve({ completed: true });
     }
   }
 
   /**
-   * Bekleyen tüm uyarıları siler — saldırıları UYGULAMADAN.
+   * Tek bir uyarıyı iptal eder — saldırıyı UYGULAMAZ.
+   */
+  private cancelById(id: number): void {
+    const i = this.active.findIndex((t) => t.id === id);
+    if (i < 0) return;
+
+    const telegraph = this.active[i];
+    telegraph.cancelled = true;
+    telegraph.graphics.destroy();
+
+    const last = this.active.pop();
+    if (last && i < this.active.length) {
+      this.active[i] = last;
+    }
+    telegraph.resolve({ completed: false });
+  }
+
+  /**
+   * Bekleyen tüm uyarıları iptal eder — saldırıları UYGULAMAZ.
    * Dalga temizliğinde ve sahne kapanışında çağrılır.
    */
   cancelAll(): void {
-    for (const telegraph of this.active) {
-      telegraph.cancelled = true;
-      telegraph.graphics.destroy();
+    while (this.active.length > 0) {
+      this.cancelById(this.active[0].id);
     }
-    this.active.length = 0;
   }
 
   destroy(): void {

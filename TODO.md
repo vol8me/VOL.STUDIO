@@ -1033,3 +1033,84 @@ kartlar bile FPS'e bağlı mermi seli üretemiyor.
 3. Öfke fazında tempo artışı hissediliyor mu.
 4. Engel öldükten sonra dalga geçişi ve dükkan açılışı.
 5. Ölüm/zafer ekranında istatistiklerin doğru görünmesi.
+
+---
+
+## Aşama 3 sonrası — repo çapında defansif bug avı
+
+2026-08-15. Kodda değişiklik yapılmadan yalnızca tarama ve raporlama.
+
+### Yöntem
+
+- 4 paralel subagent (core math/systems, game runtime, UI/input, audio/storage/config).
+- Statik desen taraması: `setTimeout`/`setInterval`/`requestAnimationFrame`, `addEventListener`/`removeEventListener`, `Math.random()`, `as unknown as`, `!` non-null assertion, `NaN`/Infinity, `void` ile bırakılan promise'ler.
+- Manuel doğrulama ve çakışan/yanlış pozitif filtreleme.
+
+### Kalite kapıları (değişiklik yok)
+
+| Kapı                | Durum | Not                                     |
+| ------------------- | ----- | --------------------------------------- |
+| `pnpm -r typecheck` | geçti | 4 paket                                 |
+| `pnpm -r test`      | geçti | 1100 test (core 708, vol-hell 362, ...) |
+| `pnpm lint`         | geçti | 0 hata, 0 uyarı                         |
+| `pnpm format:check` | geçti |                                         |
+
+### Onaylanmış/gerçek bulgular (düzeltilmesi bekleniyor)
+
+| #   | Şiddet | Alan           | Dosya                                                                                           | Kısa açıklama                                                                                                                                |
+| --- | ------ | -------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Kritik | core/stats     | `core/src/stats/StatBlock.ts`                                                                   | Koşul closure'ı başka `StatBlock.getValue()` çağırırsa sonsuz özyineleme potansiyeli.                                                        |
+| 2   | Kritik | game/telegraph | `games/vol-hell/src/runtime/systems/TelegraphManager.ts` + `BossController.ts`                  | `cancelAll()` pending promise'leri çözmüyor; boss saldırısı asılı kalabiliyor ve sahnede ölü boss'un telegraph'ı çizilmeye devam edebiliyor. |
+| 3   | Yüksek | game/run       | `games/vol-hell/src/runtime/scene/GameScene.ts`                                                 | `finishRun()` ateş ve unut (`void`) çağrılıyor; guard'lar var ama `async` akış izleme zayıf.                                                 |
+| 4   | Yüksek | UI/DOM         | `core/src/ui/cards/CardTile.ts`, `core/src/ui/primitives/RangeSlider.ts`                        | `dragstart`/`dragend` ve `keydown` listener'ları `destroy()`'da kaldırılmıyor.                                                               |
+| 5   | Yüksek | storage        | `core/src/systems/SaveManager.ts`, `tauri-v2/src/storage/GameStateDb.ts`                        | `JSON.parse` hatası ve `QuotaExceededError` sessizce geçiliyor; `GameStateDb.clear()` onaysız silme.                                         |
+| 6   | Yüksek | core/math      | `core/src/math/Vector2.ts`, `core/src/math/physics.ts`, `core/src/systems/ViewportManager.ts`   | `NaN`/`Infinity` ve negatif/yanlış argümanlar sessizce sıfırlanabiliyor.                                                                     |
+| 7   | Orta   | game/wave      | `games/vol-hell/src/runtime/systems/WaveManager.ts`                                             | `while` döngüsünde maksimum adım sınırı yok (uzun frame/config hatası riski).                                                                |
+| 8   | Orta   | game/entity    | `games/vol-hell/src/runtime/entity/Enemy.ts`, `games/vol-hell/src/runtime/entity/FluxPickup.ts` | Çok küçük mesafelerde `dx/d`, `dy/d` ve magnet kuvveti kararsızlaşabilir.                                                                    |
+| 9   | Orta   | game/spatial   | `games/vol-hell/src/runtime/systems/SpatialGrid.ts`                                             | `queryNearby()` reusable buffer; iç içe çağrı riski.                                                                                         |
+| 10  | Orta   | core/audio     | `core/src/audio/music/engine.ts`                                                                | `loopEnd` `buffer.duration`dan büyükse sessizce kısılıyor.                                                                                   |
+| 11  | Düşük  | core/UI        | `core/src/ui/feedback/FloatingText.ts`                                                          | `Math.random()` jitter için kullanıyor; deterministik alternatif eklenebilir.                                                                |
+
+### Yanlış pozitif / tasarım kararı / zaten korunuyor
+
+- Constructor içi `i18next.t()` çağrıları (mevcut boot order'da güvenli; modül-seviyesi değil).
+- `GameAudio` dispose: singleton olarak kullanılıyor, `dispose()` mevcut ama sahne başına çağrılmıyor.
+- `GameScene` `stopAllSfx`: `GameAudioDirector.stopAll()` zaten `onSceneShutdown()`'da çağrılıyor.
+- `AbilityRuntime.replaceTurret()` çift `destroy()`: `destroyWithEffect()` + `destroy()` güvenli (`teardown()` `alive` guard'lı).
+- `SfxBank` / `MainMenuScene` / `LoadingTransition` `Math.random()` kullanımları oynanış dışı (SFX varyantı, menü müziği, loading animasyonu).
+- `CARD_CATALOG` price sistemi tek kaynak (`CARD_PRICES`); çift sistem yok.
+
+### Sonraki adım
+
+Kritik/yüksek bulgular için onay alındıktan sonra tek tek düzeltilecek; her düzeltme önce testle kırılıp sonra yeşillenecek.
+
+---
+
+## 2026-08-15 — Kritik/yüksek/orta/düşük bulgular düzeltildi
+
+Tüm bulgular defansif hale getirildi, her biri için regresyon testi eklendi.
+
+| #   | Durum   | Açıklama                                                                                                                                                                                       |
+| --- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | çözüldü | `StatBlock.getValue()` çağrı yığını ile döngüsel koşul özyinelemesini kırıyor.                                                                                                                 |
+| 2   | çözüldü | `TelegraphManager.play()` artık `TelegraphHandle` + `promise` dönüyor; `cancelAll()` promise'leri çözüyor. Boss/Elite `destroy()` bekleyen telegraph'ları iptal ediyor.                        |
+| 3   | çözüldü | `GameScene.finishRun()` sahne aktiflik kontrolü, guard ve `try/finally` ile sağlamlaştırıldı; `onPlayerDeath`/`onRunComplete` senkron wrapper oldu.                                            |
+| 4   | çözüldü | `CardTile` ve `RangeSlider` `destroy()`'da tüm listener'ları kaldırıyor.                                                                                                                       |
+| 5   | çözüldü | `LocalStorageAdapter` bozuk JSON'i logluyor; `QuotaExceededError` artık `StorageError` fırlatıyor. `GameStateDb.clear({ confirm: true })` zorunlu hale geldi.                                  |
+| 6   | çözüldü | `Vector2.normalize()` NaN/Infinity'de (0,0) dönüyor. `toStepVelocity()` geçersiz/negatif deltaMs'de 0 dönüyor. `ViewportManager.resolveDpr()` pozitif-sonlu DPR ve maxDpr kelepçesi uyguluyor. |
+| 7   | çözüldü | `WaveManager.update()` maksimum dalga adımı sınırı ve modüler geri sarma ile sonsuz döngüden korunuyor.                                                                                        |
+| 8   | çözüldü | `Enemy.applySeparation()` ve `FluxPickup.applyMagnet()` NaN/Infinity mesafe ve adım değerlerine karşı korumalı.                                                                                |
+| 9   | çözüldü | `SpatialGrid.queryNearby()` halka tampon (4'lü) ile iç içe çağrılarda sonuç ezilmiyor.                                                                                                         |
+| 10  | çözüldü | `MusicEngine.startStem()` `loopStart`/`loopEnd` sonsuz, negatif veya `loopStart >= loopEnd` durumlarına karşı pozitif-sonlu aralığa çekiliyor.                                                 |
+| 11  | çözüldü | `FloatingTextManager` opsiyonel deterministik `Random` desteğiyle jitter üretebiliyor.                                                                                                         |
+
+### Kalite kapıları (değişiklik sonrası)
+
+| Kapı                | Durum | Not                                             |
+| ------------------- | ----- | ----------------------------------------------- |
+| `pnpm -r typecheck` | geçti | 4 paket                                         |
+| `pnpm -r test`      | geçti | 1114 test (core 723, vol-hell 365, tauri-v2 26) |
+| `pnpm lint`         | geçti | 0 hata, 0 uyarı                                 |
+| `pnpm format:check` | geçti |                                                 |
+| `pnpm lint:css`     | geçti |                                                 |
+| `pnpm build:game`   | geçti | `games/vol-hell` prod build                     |

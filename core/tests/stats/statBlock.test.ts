@@ -178,4 +178,40 @@ describe('StatBlock', () => {
     stats.addModifier({ id: 'a', stat: 'damage', type: 'add', value: 2 });
     expect(stats.snapshot()).toEqual({ damage: 12, speed: 100, health: 50, fireRate: 200 });
   });
+
+  it('condition icerisinde aynı stat icin getValue cagrısı sonsuz döngü yapmaz', () => {
+    const stats = new StatBlock(makeBase());
+    stats.addModifier({
+      id: 'ozyineleme',
+      stat: 'damage',
+      type: 'add',
+      value: 5,
+      condition: () => stats.getValue('damage') > 0,
+    });
+
+    // Döngüsel çağrı taban değer döndürdüğü için condition true kalır; taban 10 > 0.
+    expect(stats.getValue('damage')).toBe(15);
+  });
+
+  it('condition farklı statlardan döngü oluştursa sonsuz döngü yapmaz', () => {
+    const stats = new StatBlock(makeBase());
+    stats.addModifier({
+      id: 'döngü-a',
+      stat: 'damage',
+      type: 'add',
+      value: 5,
+      condition: () => stats.getValue('speed') > 0,
+    });
+    stats.addModifier({
+      id: 'döngü-b',
+      stat: 'speed',
+      type: 'add',
+      value: 0,
+      condition: () => stats.getValue('damage') > 0,
+    });
+
+    // damage -> speed -> damage çevriminde speed hesaplanırken damage taban alınır.
+    expect(stats.getValue('speed')).toBe(100);
+    expect(stats.getValue('damage')).toBe(15);
+  });
 });

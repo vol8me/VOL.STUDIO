@@ -12,5 +12,10 @@ export function toStepVelocity(
   pixelsPerSecond: number,
   deltaMs: number = TECH.MS_PER_SECOND / 60,
 ): number {
-  return pixelsPerSecond * (deltaMs / TECH.MS_PER_SECOND);
+  // Geçersiz veya negatif adım süresi fiziksel anlam taşımaz; sıfırla.
+  // Sonsuz/NaN hız da aynı şekilde yutulur, yoksa Matter.js'a taşar.
+  if (!Number.isFinite(pixelsPerSecond) || !Number.isFinite(deltaMs) || deltaMs < 0) {
+    return 0;
+  }
+  return pixelsPerSecond * (Math.max(0, deltaMs) / TECH.MS_PER_SECOND);
 }

@@ -211,8 +211,16 @@ export class GameStateDb {
     }
   }
 
-  /** Tüm kayitlari siler. Dikkatli kullan. */
-  async clear(): Promise<void> {
+  /**
+   * Tüm kayitlari siler. Bu islem geri alınamaz; yanlışlıkla çağrılmaması
+   * için `{ confirm: true }` zorunludur.
+   */
+  async clear(options?: { confirm?: boolean }): Promise<void> {
+    if (options?.confirm !== true) {
+      throw new GameStateDbError(
+        'Tüm kayitlari silmek için `clear({ confirm: true })` çağrılmalı.',
+      );
+    }
     await this.init();
     try {
       await this.db!.execute('DELETE FROM saves');

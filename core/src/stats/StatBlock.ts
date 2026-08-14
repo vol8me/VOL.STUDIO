@@ -21,6 +21,14 @@ export type StatKey = 'damage' | 'speed' | 'health' | 'fireRate';
 /** Tüm stat anahtarları — iterasyon ve doğrulama için. */
 export const STAT_KEYS: readonly StatKey[] = ['damage', 'speed', 'health', 'fireRate'];
 
+/** Özyinelemeli getValue çağrısını tespit etmek için çağrı yığını. */
+interface ComputationFrame {
+  block: StatBlock;
+  stat: StatKey;
+}
+
+const computationStack: ComputationFrame[] = [];
+
 /** Modifier uygulama biçimi. */
 export type StatModifierType = 'add' | 'multiply';
 
@@ -125,22 +133,35 @@ export class StatBlock {
 
   /** Taban değer + o an aktif olan tüm modifier'lar uygulanmış sonuç. */
   getValue(stat: StatKey): number {
-    let additive = 0;
-    let multiplier = 1;
+    // Koşul closure'ları başka stat'lara getValue() çağrısı yaparsa ve bir
+    // döngü oluşursa sonsuz özyinelemeyi kırmak için taban değer döner.
+    const existing = computationStack.find((frame) => frame.block === this && frame.stat === stat);
+    if (existing) return this.base[stat];
 
-    for (const modifier of this.modifiers) {
-      if (modifier.stat !== stat) continue;
-      if (modifier.condition && !modifier.condition()) continue;
+    computationStack.push({ block: this, stat });
+    try {
+      let additive = 0;
+      let multiplier = 1;
 
-      const value = typeof modifier.value === 'function' ? modifier.value() : modifier.value;
-      if (modifier.type === 'add') {
-        additive += value;
-      } else {
-        multiplier *= value;
+      for (const modifier of this.modifiers) {
+        if (modifier.stat !== stat) continue;
+        if (modifier.condition && !modifier.condition()) continue;
+
+        const value = typeof modifier.value === 'function' ? modifier.value() : modifier.value;
+        if (modifier.type === 'add') {
+          additive += value;
+        } else {
+          multiplier *= value;
+        }
+      }
+
+      return (this.base[stat] + additive) * multiplier;
+    } finally {
+      const top = computationStack.pop();
+      if (top?.block !== this || top?.stat !== stat) {
+        throw new Error('StatBlock: computationStack dengesi bozuldu');
       }
     }
-
-    return (this.base[stat] + additive) * multiplier;
   }
 
   /** Dört stat'ın anlık sonuç değerleri — HUD/diagnostic için. */

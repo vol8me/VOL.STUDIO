@@ -277,16 +277,20 @@ export class MusicEngine {
     source.buffer = buffer;
     source.loop = stem.loop !== false;
 
-    // loopStart de kelepçelenir: loopStart >= loopEnd olduğunda Web Audio
-    // spesifikasyonu loop'u sessizce tüm buffer'a düşürür.
+    // loopStart/loopEnd sonsuz veya negatifse Web Audio sessizce tüm buffer'a
+    // düşürür; burada pozitif-sonlu aralığa çekilerek belirtilen loop korunur.
+    const configuredEnd = this.currentTrack?.loopEnd;
     const loopEnd =
-      this.currentTrack?.loopEnd !== undefined
-        ? Math.min(this.currentTrack.loopEnd, buffer.duration)
+      configuredEnd !== undefined && Number.isFinite(configuredEnd) && configuredEnd > 0
+        ? Math.min(configuredEnd, buffer.duration)
         : buffer.duration;
+
     if (this.currentTrack?.loopStart !== undefined) {
-      source.loopStart = Math.max(0, Math.min(this.currentTrack.loopStart, loopEnd - 1e-3));
+      const configuredStart = this.currentTrack.loopStart;
+      const start = Number.isFinite(configuredStart) ? configuredStart : 0;
+      source.loopStart = Math.max(0, Math.min(start, loopEnd - 1e-3));
     }
-    if (this.currentTrack?.loopEnd !== undefined) {
+    if (configuredEnd !== undefined && Number.isFinite(configuredEnd)) {
       source.loopEnd = loopEnd;
     }
 

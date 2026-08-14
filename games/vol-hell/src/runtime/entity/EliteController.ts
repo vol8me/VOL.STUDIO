@@ -5,7 +5,7 @@ import type { Enemy } from './Enemy';
 import type { Border } from './Border';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
-import type { TelegraphManager } from '@/runtime/systems/TelegraphManager';
+import type { TelegraphHandle, TelegraphManager } from '@/runtime/systems/TelegraphManager';
 import {
   applyRusherBehavior,
   applySeekBehavior,
@@ -51,6 +51,8 @@ export class EliteController {
   private spawnTelegraphActive = false;
   /** Atılım telegraf'ı bu faz için bir kez açılır. */
   private dashTelegraphShown = false;
+  private dashTelegraph: TelegraphHandle | null = null;
+  private spawnTelegraph: TelegraphHandle | null = null;
 
   constructor(
     private readonly enemy: Enemy,
@@ -82,6 +84,18 @@ export class EliteController {
     this.enemy.moveBy(this.velocity.x, this.velocity.y, deltaMs, border, grid);
   }
 
+  /**
+   * Elite öldü/sahne kapandı — bekleyen telegraph'lar ve doğurma işlemleri
+   * durdurulsun.
+   */
+  destroy(): void {
+    this.dashTelegraph?.cancel();
+    this.dashTelegraph = null;
+    this.spawnTelegraph?.cancel();
+    this.spawnTelegraph = null;
+    this.dashTelegraphShown = false;
+  }
+
   /** Rusher davranışı — hareketi bu belirler, atılım telegraph'lıdır. */
   private updateDash(context: MutableBehaviorContext): void {
     const rusher = this.definition.rusher;
@@ -100,7 +114,7 @@ export class EliteController {
       const angle = Math.atan2(context.targetY - context.y, context.targetX - context.x);
       // Telegraph yalnızca GÖSTERGEDİR; hasarı atılımın kendisi (temas) verir,
       // bu yüzden resolve edildiğinde yapılacak bir iş yok.
-      void this.deps.telegraphs.play({
+      this.dashTelegraph = this.deps.telegraphs.play({
         durationMs: rusher.windupMs,
         shape: 'line',
         x: this.enemy.x,
@@ -113,6 +127,8 @@ export class EliteController {
     }
 
     if (phaseBefore === 'dash' && this.rusherState.phase !== 'dash') {
+      this.dashTelegraph?.cancel();
+      this.dashTelegraph = null;
       this.dashTelegraphShown = false;
     }
     if (this.rusherState.dashStarted) {
@@ -156,20 +172,24 @@ export class EliteController {
       angles: [...request.angles],
     };
 
-    void this.deps.telegraphs
-      .play({
-        durationMs: eliteConfig.spawnTelegraphMs,
-        shape: 'circle',
-        x,
-        y,
-        radius: pending.radius + eliteConfig.spawnTelegraphPaddingPx,
-        color: this.definition.color,
-      })
-      .then(() => {
+    this.spawnTelegraph = this.deps.telegraphs.play({
+      durationMs: eliteConfig.spawnTelegraphMs,
+      shape: 'circle',
+      x,
+      y,
+      radius: pending.radius + eliteConfig.spawnTelegraphPaddingPx,
+      color: this.definition.color,
+    });
+
+    void this.spawnTelegraph.promise
+      .then((result) => {
         this.spawnTelegraphActive = false;
-        // Uyarı sırasında elite ölmüş olabilir — sürü mezardan çıkmasın.
-        if (!this.enemy.isAlive) return;
+        // Uyarı sırasında elite ölmüş veya iptal edilmişse sürü mezardan çıkmasın.
+        if (!result.completed || !this.enemy.isAlive) return;
         this.deps.spawnMinions(this.enemy, pending);
+      })
+      .finally(() => {
+        this.spawnTelegraph = null;
       });
   }
 

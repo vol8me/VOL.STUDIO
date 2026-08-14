@@ -538,16 +538,16 @@ export class GameScene extends BaseScene {
     }
   }
 
-  private async onPlayerDeath(): Promise<void> {
-    await this.finishRun('defeat');
+  private onPlayerDeath(): void {
+    void this.finishRun('defeat');
   }
 
   /**
    * Boss devrildi, 20 dalga tamamlandı — koşu ZAFERLE bitti.
    * Aynı özet ekranı zafer kılığında açılır (B3).
    */
-  private async onRunComplete(): Promise<void> {
-    await this.finishRun('victory');
+  private onRunComplete(): void {
+    void this.finishRun('victory');
   }
 
   /**
@@ -561,39 +561,55 @@ export class GameScene extends BaseScene {
     // aynı frame'de tetiklenirse (boss'un son vuruşu oyuncuyu öldürürse)
     // yalnızca ilki geçer.
     if (this.isDeathInProgress || this.isRunFinished || this.deathScreen?.isVisible()) return;
+    // Sahne zaten kapanmış veya başka bir sahneye geçilmişse hiçbir şey yapma;
+    // `await submitRunSafely()` sırasında restart/MainMenu geçişi gerçekleşebilir.
+    if (!this.isSceneActive()) return;
     this.isDeathInProgress = true;
     this.isRunFinished = true;
 
     try {
-      this.isPaused = true;
-      this.input.activePointer.reset();
-      this.scene.pause();
+      if (this.isSceneActive()) {
+        this.isPaused = true;
+        this.input.activePointer.reset();
+        this.scene.pause();
+      }
       if (outcome === 'defeat') {
         this.audio.playDeath();
       }
 
       const result = await this.submitRunSafely();
-      this.deathScreen?.show({
-        outcome,
-        score: this.score,
-        bestScore: result.bestScore,
-        kills: this.kills,
-        bestKills: result.bestKills,
-        timeMs: this.elapsedTimeMs,
-        bestTimeMs: result.bestTimeMs,
-        totalKills: result.totalKills,
-        wave: this.run.getCurrentWave(),
-        flux: this.run.economy.getFlux(),
-        level: this.run.economy.getLevel(),
-      });
+      if (this.isSceneActive()) {
+        this.deathScreen?.show({
+          outcome,
+          score: this.score,
+          bestScore: result.bestScore,
+          kills: this.kills,
+          bestKills: result.bestKills,
+          timeMs: this.elapsedTimeMs,
+          bestTimeMs: result.bestTimeMs,
+          totalKills: result.totalKills,
+          wave: this.run.getCurrentWave(),
+          flux: this.run.economy.getFlux(),
+          level: this.run.economy.getLevel(),
+        });
+      }
     } catch (error) {
       // Beklenmedik bir hata (depolama/çeviri/DOM) özet ekranını bozarsa
       // oyun donmaz; ana menüye yönlendirilir ve hata loglanır.
       console.error('[GameScene] Koşu sonu işlemi başarısız:', error);
-      this.scene.start('MainMenu');
+      if (this.isSceneActive()) {
+        this.scene.start('MainMenu');
+      }
     } finally {
       this.isDeathInProgress = false;
     }
+  }
+
+  private isSceneActive(): boolean {
+    if (!this.scene) return false;
+    const key = this.scene.key;
+    if (!key) return false;
+    return this.scene.isActive(key);
   }
 
   /**

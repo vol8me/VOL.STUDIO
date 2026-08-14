@@ -135,9 +135,13 @@ export class FluxPickup {
     const dx = playerX - this.arc.x;
     const dy = playerY - this.arc.y;
     const distance = Math.hypot(dx, dy);
-    if (distance === 0 || distance > magnetRadius) return false;
+    // distance NaN veya Infinity olduğunda `> magnetRadius` karşılaştırması
+    // `false` döner ve ilerlenir — konum bozulmadan geri dön.
+    if (!Number.isFinite(distance) || distance === 0 || distance > magnetRadius) return false;
 
     const step = (magnetSpeed * deltaMs) / 1000;
+    if (!Number.isFinite(step)) return false;
+
     // Adım mesafeyi aşarsa oyuncunun üstüne otur; sekme/titreme olmasın.
     const travel = Math.min(step, distance);
     this.arc.x += (dx / distance) * travel;
