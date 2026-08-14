@@ -4,15 +4,19 @@ import { waveConfig } from '@/config/wave';
 
 type WaveListener = (wave: number) => void;
 
-function makeManager() {
+function makeManager(overrides: { isBlockerAlive?: () => boolean } = {}) {
   const events = {
     onWaveStart: vi.fn<WaveListener>(),
     onWaveEnd: vi.fn<WaveListener>(),
+    onWaveClear: vi.fn<WaveListener>(),
     onEliteWave: vi.fn<WaveListener>(),
     onBossWave: vi.fn<WaveListener>(),
     onRunComplete: vi.fn<() => void>(),
   };
-  return { manager: new WaveManager(events), events };
+  return {
+    manager: new WaveManager({ ...events, ...overrides }),
+    events,
+  };
 }
 
 /** Dalgaları frame frame ilerletir — gerçek oyun döngüsüne yakın. */
@@ -149,5 +153,102 @@ describe('WaveManager', () => {
     manager.start();
     expect(() => manager.update(waveConfig.waveDurationMs * 2)).not.toThrow();
     expect(manager.getCurrentWave()).toBe(3);
+  });
+
+  it('normal dalga bitince onWaveClear sahneyi temizler', () => {
+    const { manager, events } = makeManager();
+    manager.start();
+    advanceWaves(manager, 1);
+
+    expect(events.onWaveClear).toHaveBeenCalledWith(1);
+    expect(events.onWaveEnd).toHaveBeenCalledWith(1);
+  });
+
+  it('elite dalgasında süre dolsa bile engel hayattaysa dalga bitmez', () => {
+    const isBlockerAlive = vi.fn(() => true);
+    const { manager, events } = makeManager({ isBlockerAlive });
+    manager.start();
+
+    advanceWaves(manager, waveConfig.eliteWave - 1);
+    events.onWaveEnd.mockClear();
+    events.onWaveClear.mockClear();
+
+    manager.update(waveConfig.waveDurationMs);
+
+    expect(isBlockerAlive).toHaveBeenCalled();
+    expect(manager.getCurrentWave()).toBe(waveConfig.eliteWave);
+    expect(manager.isAwaitingBlocker()).toBe(true);
+    expect(manager.getRemainingMs()).toBe(0);
+    expect(events.onWaveEnd).not.toHaveBeenCalled();
+    expect(events.onWaveClear).not.toHaveBeenCalled();
+  });
+
+  it('elite ölünce dalga o an biter ve sonraki dalga başlar', () => {
+    const isBlockerAlive = vi.fn(() => true);
+    const { manager, events } = makeManager({ isBlockerAlive });
+    manager.start();
+
+    advanceWaves(manager, waveConfig.eliteWave - 1);
+    manager.update(waveConfig.waveDurationMs);
+    events.onWaveEnd.mockClear();
+    events.onWaveStart.mockClear();
+    events.onWaveClear.mockClear();
+
+    isBlockerAlive.mockReturnValue(false);
+    manager.notifyBlockerDefeated();
+
+    expect(events.onWaveEnd).toHaveBeenCalledWith(waveConfig.eliteWave);
+    expect(events.onWaveClear).not.toHaveBeenCalled();
+    expect(events.onWaveStart).toHaveBeenCalledWith(waveConfig.eliteWave + 1);
+    expect(manager.getCurrentWave()).toBe(waveConfig.eliteWave + 1);
+    expect(manager.isAwaitingBlocker()).toBe(false);
+  });
+
+  it('elite erken öldürülse de dalga o an biter', () => {
+    const isBlockerAlive = vi.fn(() => true);
+    const { manager, events } = makeManager({ isBlockerAlive });
+    manager.start();
+
+    advanceWaves(manager, waveConfig.eliteWave - 1);
+    manager.update(waveConfig.waveDurationMs / 2);
+
+    expect(manager.getCurrentWave()).toBe(waveConfig.eliteWave);
+    expect(manager.isAwaitingBlocker()).toBe(false);
+
+    isBlockerAlive.mockReturnValue(false);
+    manager.notifyBlockerDefeated();
+
+    expect(events.onWaveEnd).toHaveBeenCalledWith(waveConfig.eliteWave);
+    expect(events.onWaveStart).toHaveBeenCalledWith(waveConfig.eliteWave + 1);
+  });
+
+  it('boss ölünce koşu tamamlanır', () => {
+    const isBlockerAlive = vi.fn(() => true);
+    const { manager, events } = makeManager({ isBlockerAlive });
+    manager.start();
+
+    // 1-9 normal dalgalarda engel yok.
+    advanceWaves(manager, waveConfig.eliteWave - 1);
+    // Dalga 10'da elite belirir; onu öldürüp ilerle.
+    manager.update(waveConfig.waveDurationMs);
+    manager.notifyBlockerDefeated();
+
+    // 11-19 normal dalgalar.
+    advanceWaves(manager, waveConfig.bossWave - waveConfig.eliteWave - 1);
+    events.onWaveEnd.mockClear();
+    events.onWaveClear.mockClear();
+
+    // Dalga 20'de boss belirir; süre dolsun ve öldür.
+    manager.update(waveConfig.waveDurationMs);
+    expect(manager.getCurrentWave()).toBe(waveConfig.bossWave);
+    expect(manager.isAwaitingBlocker()).toBe(true);
+
+    isBlockerAlive.mockReturnValue(false);
+    manager.notifyBlockerDefeated();
+
+    expect(events.onWaveEnd).toHaveBeenLastCalledWith(waveConfig.bossWave);
+    expect(events.onRunComplete).toHaveBeenCalled();
+    expect(events.onWaveClear).not.toHaveBeenCalled();
+    expect(manager.isRunComplete()).toBe(true);
   });
 });

@@ -18,6 +18,51 @@
   display: none;
 }
 
+/*
+ * Panelin açılış geçişi — level-up ve dükkan ekranları belirirken.
+ * Oyun bu sırada duraklatıldığı için animasyon oynanışı geciktirmez;
+ * amaç, panelin ekrana "çarpması" yerine yerine oturması.
+ */
+@keyframes vol-card-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.vol-card-picker:not([hidden]) {
+  animation: vol-card-picker-in var(--vol-transition-medium) ease-out both;
+}
+
+/* Kartlar sırayla belirir: gözün soldan sağa okuması için küçük gecikmeler. */
+@keyframes vol-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*
+ * Hareket duyarlılığı olan kullanıcılar için tüm giriş animasyonları kapanır.
+ * Panel yine görünür olur, yalnızca hareket etmez.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .vol-card-picker:not([hidden]),
+  .vol-card-picker:not([hidden]) .vol-card {
+    animation: none;
+  }
+}
+
 .vol-card-picker__header {
   flex-direction: column;
   gap: var(--vol-space-xs);
@@ -63,8 +108,36 @@
   gap: var(--vol-space-sm);
   min-height: 150px;
   padding: var(--vol-space-md);
-  transition: background var(--vol-transition-fast);
+
+  /* Nadirlik farkı kenarlık renginde taşınır; geçişi de o renge uygula ki
+     kart üzerine gelindiğinde renk zıplamak yerine yumuşasın. */
+  transition:
+    background var(--vol-transition-fast),
+    border-color var(--vol-transition-fast),
+    transform var(--vol-transition-fast);
   display: flex;
+}
+
+/*
+ * Panel açılırken kartlar sırayla belirir. Gecikme kart SAYISINA değil
+ * sırasına bağlı: üç kartlık level-up ile iki kartlık dükkan aynı ritmi
+ * paylaşır.
+ */
+.vol-card-picker:not([hidden]) .vol-card {
+  animation: vol-card-in var(--vol-transition-medium) ease-out both;
+}
+
+.vol-card:not(.vol-card--disabled):hover {
+  background: var(--vol-ui-surface-2);
+  transform: translateY(-2px);
+}
+
+.vol-card-picker:not([hidden]) .vol-card:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.vol-card-picker:not([hidden]) .vol-card:nth-child(3) {
+  animation-delay: 120ms;
 }
 
 .vol-card--disabled {

@@ -1,8 +1,7 @@
 import type Phaser from 'phaser';
-import type { Random } from '@volstudio/core';
+import type { Random, StatBlock } from '@volstudio/core';
 import { Diagnostics, Vector2 } from '@volstudio/core';
 import { enemyConfig } from '@/config/enemy';
-import { difficultyConfig } from '@/config/difficulty';
 import { getEnemyDefinition, pickEnemyDefinition } from '@/config/enemies/catalog';
 import type { EnemyDefinition } from '@/config/enemies/types';
 import type { Border } from './Border';
@@ -26,10 +25,23 @@ export interface EnemyUpdateContext {
  * hangi türün doğacağını dalga numarası ve katalog ağırlıkları belirler.
  * Swarmer'ların minion doğurma istekleri de burada karşılanır.
  */
+export interface EnemyManagerCallbacks {
+  /**
+   * Bir düşman ÖLDÜĞÜNDE — hasarın kaynağı ne olursa olsun.
+   * Mermi, kule, zincir ve ateş alanı ölümleri buradan geçer.
+   */
+  onEnemyDeath?: (enemy: Enemy) => void;
+}
+
 export class EnemyManager {
   private readonly enemies: Enemy[] = [];
   private spawnTimer = 0;
   private currentWave = 1;
+  /**
+   * Hareketi DIŞARIDAN sürülen düşmanlar (Elite/Boss). Normal davranış
+   * döngüsünden muaf tutulur; çarpışma ve temizlik için listede kalır.
+   */
+  private readonly externallyDriven = new Set<Enemy>();
   /** Reusable buffer — hedef seçimi her frame yeni Vector2 yaratmaz. */
   private readonly targetBuf: Vector2 = Vector2.zero();
 
@@ -37,6 +49,7 @@ export class EnemyManager {
     private readonly scene: Phaser.Scene,
     private readonly effects: EffectManager,
     private readonly random: Random,
+    private readonly callbacks: EnemyManagerCallbacks = {},
   ) {}
 
   /** Aktif dalga — spawn havuzunu belirler. */
@@ -69,13 +82,19 @@ export class EnemyManager {
 
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
-      const target = this.pickTarget(enemy, playerPos, context.turret ?? null);
-      const spawnRequest = enemy.update(delta, target, border, grid, this.random);
-      if (spawnRequest) {
-        this.spawnMinions(enemy, spawnRequest, difficulty);
+
+      // Elite/Boss'un hareketini kendi kontrolcüsü sürer; burada yalnızca
+      // listede tutulur (çarpışma, temizlik, spatial grid).
+      if (!this.externallyDriven.has(enemy)) {
+        const target = this.pickTarget(enemy, playerPos, context.turret ?? null);
+        const spawnRequest = enemy.update(delta, target, border, grid, this.random);
+        if (spawnRequest) {
+          this.spawnMinions(enemy, spawnRequest, difficulty);
+        }
       }
 
       if (!enemy.isAlive) {
+        this.externallyDriven.delete(enemy);
         // Swap-and-pop: O(1) kaldırma, kaydırma yok
         const last = this.enemies.pop();
         if (last && i < this.enemies.length) {
@@ -83,6 +102,59 @@ export class EnemyManager {
         }
       }
     }
+  }
+
+  /**
+   * Özel bir düşman (Elite/Boss) doğurur ve hareketini DIŞARIYA bırakır.
+   *
+   * Normal spawn havuzuna girmez; `WaveManager` özel dalga kancasından
+   * çağrılır. Dönen `Enemy` bir kontrolcüye (EliteController/BossController)
+   * verilir.
+   *
+   * @param stats Verilirse taban stat'ların YERİNE kullanılır — boss'un
+   * oyuncuya oranlı stat'ları böyle enjekte edilir.
+   */
+  spawnSpecial(
+    definition: EnemyDefinition,
+    x: number,
+    y: number,
+    difficulty: DifficultyState,
+    stats?: StatBlock,
+  ): Enemy {
+    const enemy = this.createEnemy(definition, x, y, difficulty, stats);
+    this.externallyDriven.add(enemy);
+    return enemy;
+  }
+
+  /** Bir doğurma isteğini karşılar — Elite/Boss kontrolcüleri için genel kapı. */
+  spawnMinionsFor(parent: Enemy, request: MinionSpawnRequest, difficulty: DifficultyState): void {
+    this.spawnMinions(parent, request, difficulty);
+  }
+
+  /**
+   * Dalga geçişinde sahnedeki düşmanları temizler (B1b).
+   *
+   * Bu bir öldürme DEĞİLDİR: ödül vermez, `onEnemyDeath` çağrılmaz, oyuncu
+   * ceza almaz. Dışarıdan sürülen düşmanlar (Elite/Boss) korunur — onların
+   * yaşadığı dalgada zaten temizlik yapılmaz, ama çağrı yanlışlıkla gelirse
+   * zorunlu engel silinmemeli.
+   *
+   * @returns Temizlenen düşman sayısı.
+   */
+  clearRegularEnemies(): number {
+    let cleared = 0;
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const enemy = this.enemies[i];
+      if (this.externallyDriven.has(enemy)) continue;
+
+      enemy.clearWithEffect();
+      cleared++;
+      const last = this.enemies.pop();
+      if (last && i < this.enemies.length) {
+        this.enemies[i] = last;
+      }
+    }
+    return cleared;
   }
 
   /**
@@ -133,9 +205,9 @@ export class EnemyManager {
     const definition = getEnemyDefinition(request.minionId);
 
     for (const angle of request.angles) {
-      // Minion'lar dalga spawn limitine değil, mutlak performans tavanına tabidir:
-      // yoksa sürü limiti doldurup normal spawn'ı tamamen kilitleyebilirdi.
-      if (this.enemies.length >= difficultyConfig.maxEnemiesCap) return;
+      // Sürü, normal spawn ile aynı dalga limitini paylaşır: aksi halde
+      // minion'lar tavanı doldurup normal spawn'ı tamamen kilitleyebilirdi.
+      if (this.enemies.length >= difficulty.maxEnemies) return;
 
       const x = parent.x + Math.cos(angle) * request.radius;
       const y = parent.y + Math.sin(angle) * request.radius;
@@ -149,11 +221,14 @@ export class EnemyManager {
     x: number,
     y: number,
     difficulty: DifficultyState,
+    stats?: StatBlock,
   ): Enemy {
     const enemy = new Enemy(this.scene, x, y, this.effects, {
       definition,
-      stats: createEnemyStats(definition, difficulty),
+      stats: stats ?? createEnemyStats(definition, difficulty),
       scoreValue: definition.scoreValue * difficulty.scoreMultiplier,
+      // Ödül ölümün KENDİSİNE bağlı: kule/zincir/ateş ölümleri de sayılır.
+      onDeath: (killed) => this.callbacks.onEnemyDeath?.(killed),
     });
     this.enemies.push(enemy);
 
@@ -188,5 +263,6 @@ export class EnemyManager {
       enemy.destroy();
     }
     this.enemies.length = 0;
+    this.externallyDriven.clear();
   }
 }

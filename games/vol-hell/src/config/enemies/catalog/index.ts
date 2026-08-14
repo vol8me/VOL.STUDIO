@@ -3,6 +3,7 @@ import type { EnemyDefinition, FindEnemiesQuery } from '../types';
 import { BASE_ENEMIES } from './base';
 import { RUSHER_ENEMIES } from './rusher';
 import { SWARMER_ENEMIES } from './swarmer';
+import { SPECIAL_ENEMIES } from './special';
 
 /**
  * Tüm düşman tanımlarının keşfedilebilir kataloğu.
@@ -14,7 +15,14 @@ export const ENEMY_CATALOG: Record<string, EnemyDefinition> = {
   ...BASE_ENEMIES,
   ...RUSHER_ENEMIES,
   ...SWARMER_ENEMIES,
+  ...SPECIAL_ENEMIES,
 };
+
+/** Elite dalgasında çağrılan düşmanın katalog kimliği. */
+export const ELITE_ENEMY_ID = 'warden';
+
+/** Boss dalgasında çağrılan düşmanın katalog kimliği. */
+export const BOSS_ENEMY_ID = 'sovereign';
 
 /** Katalogda tanımlı düşman kimlikleri. */
 export type EnemyId = keyof typeof ENEMY_CATALOG;

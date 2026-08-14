@@ -5,7 +5,6 @@ import { sfxVolumes } from '@/config/audio';
 import { gameAudio } from '@/app/services';
 import type { Player } from '@/runtime/entity/Player';
 import type { Bullet } from '@/runtime/entity/Bullet';
-import type { Enemy } from '@/runtime/entity/Enemy';
 import type { EnemyManager } from '@/runtime/entity/EnemyManager';
 import type { Turret } from '@/runtime/entity/Turret';
 import type { BulletManager } from '@/runtime/entity/BulletManager';
@@ -13,12 +12,6 @@ import type { SpatialGrid } from './SpatialGrid';
 import type { Border } from '@/runtime/entity/Border';
 
 export interface CollisionResolverCallbacks {
-  /**
-   * Düşman öldüğünde — skor, öldürme sayısı ve ekonomi (Spark/Flux) için.
-   * Ölüm ANINDA çağrılır; düşman nesnesi bu çağrıdan sonra listeden düşer,
-   * bu yüzden referansı saklamayın, ihtiyacınız olan değerleri hemen okuyun.
-   */
-  onEnemyKilled?: (enemy: Enemy) => void;
   /** Sahnedeki kule — düşmanlar temasla yıpratır. Yoksa null döner. */
   getTurret?: () => Turret | null;
 }
@@ -90,11 +83,12 @@ export class CollisionResolver {
 
           if (killed) {
             // Killing blow — hit tail'ini kes, sadece death çalsın.
+            // Skor/Spark/Flux burada DEĞİL, `Enemy.onDeath` üzerinden verilir:
+            // kule/zincir/ateş ölümleri de aynı ödülü almalı.
             void gameAudio.playSfx('enemyDeath', {
               volume: sfxVolumes.enemyDeath,
               stopEvents: ['enemyHit'],
             });
-            this.callbacks.onEnemyKilled?.(enemy);
           } else {
             void gameAudio.playSfx('enemyHit', { volume: sfxVolumes.enemyHit });
           }

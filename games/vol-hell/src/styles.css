@@ -57,6 +57,37 @@
 }
 
 /*
+ * Koşu özeti — yenilgi ve ZAFER aynı ekranın iki kılığı.
+ * Zaferde vurgu rengi değişir; düzen aynı kalır ki oyuncu aradığı sayıyı
+ * aynı yerde bulsun.
+ */
+.vol-death-overlay--victory .death-panel {
+  border-color: var(--vol-ui-success-border);
+}
+
+.vol-run-summary__subtitle {
+  color: var(--vol-ui-text-muted);
+  text-align: center;
+  margin: 0;
+}
+
+.vol-death-overlay--victory .vol-run-summary__subtitle {
+  color: var(--vol-ui-success-solid);
+}
+
+.death-stats {
+  flex-direction: column;
+  gap: var(--vol-space-xs);
+  margin: var(--vol-space-sm) 0;
+  display: flex;
+}
+
+.vol-run-summary__stat {
+  text-align: center;
+  margin: 0;
+}
+
+/*
  * HUD ve açılış hatası katmanları. Önceden bu stiller TS içinde
  * `element.style.cssText` ile yazılıyordu; bu hem tasarım sistemini (BEM +
  * theme.css token'ları) baypas ediyor hem de Tauri CSP'sinde
@@ -109,6 +140,55 @@
   gap: var(--vol-space-xs);
   display: flex;
   color: var(--vol-ui-text);
+}
+
+/*
+ * Dalga göstergesi — üstte ortada duran sayaç ve geçiş duyurusu.
+ * Duyurunun SÜRESİ JS'te tutulur (oyun duraklayınca donmalı); CSS yalnızca
+ * beliriş/kayboluş geçişini yapar.
+ */
+.vol-wave {
+  position: absolute;
+  top: var(--vol-space-md);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--vol-space-xs);
+  display: flex;
+  pointer-events: none;
+  font-family: var(--vol-font-family);
+}
+
+.vol-wave__counter {
+  letter-spacing: 0.12em;
+  color: var(--vol-ui-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Engel bekleniyor: sayaç yerine hedef uyarısı, dikkat çeken renkte. */
+.vol-wave__counter--blocked {
+  color: var(--vol-ui-danger-solid);
+}
+
+.vol-wave__announcement {
+  letter-spacing: 0.18em;
+  color: var(--vol-ui-text);
+  text-shadow: 0 0 12px var(--vol-ui-scrim);
+  font-size: 30px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity var(--vol-transition-medium) ease,
+    transform var(--vol-transition-medium) ease;
+}
+
+.vol-wave__announcement--visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Ability slotları — sol alt köşede Q ve E göstergeleri. */

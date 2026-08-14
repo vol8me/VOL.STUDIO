@@ -108,6 +108,22 @@ export class BulletManager {
     }
   }
 
+  /**
+   * Sahnedeki tüm mermileri siler — dalga geçişi temizliği (B1b).
+   * Ateş cooldown'u da sıfırlanır: yeni dalga temiz bir tempo ile başlar.
+   *
+   * @returns Silinen mermi sayısı.
+   */
+  clearAll(): number {
+    const count = this.bullets.length;
+    for (const bullet of this.bullets) {
+      bullet.destroy();
+    }
+    this.bullets.length = 0;
+    this.fireCooldown = 0;
+    return count;
+  }
+
   destroy(): void {
     for (const bullet of this.bullets) {
       bullet.destroy();

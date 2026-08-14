@@ -33,7 +33,14 @@ export type EffectId =
   | 'fireZoneTick'
   | 'fireZoneBurn'
   | 'multiShotCast'
-  | 'cardPicked';
+  | 'cardPicked'
+  | 'waveClear'
+  | 'eliteSpawn'
+  | 'bossSpawn'
+  | 'bossSlam'
+  | 'bossSummon'
+  | 'bossVolley'
+  | 'bossDefeat';
 
 /** Bir efektin partikül patlaması parametreleri. */
 export interface ParticleBurstSpec {
@@ -365,6 +372,109 @@ export const effectsConfig: Record<EffectId, EffectDefinition> = {
       depth: RENDER_DEPTH.impactEffect,
       additive: true,
     },
+  },
+
+  // --- Dalga ve özel düşman efektleri --------------------------------------
+
+  /**
+   * Dalga sonu temizliği — ölüm DEĞİL, buharlaşma.
+   * Ölüm efektinden bilinçli olarak farklı: soğuk renk, dışa değil içe
+   * sönen küçük bir parlama. Oyuncu "öldürdüm" sanmasın.
+   */
+  waveClear: {
+    particles: {
+      count: 7,
+      speed: { min: 10, max: 45 },
+      lifespan: { min: 200, max: 380 },
+      scale: { start: 0.34, end: 0 },
+      alpha: { start: 0.7, end: 0 },
+      tint: [0x88ccff, 0xffffff],
+      depth: RENDER_DEPTH.impactEffect,
+      additive: true,
+    },
+  },
+
+  eliteSpawn: {
+    particles: {
+      count: 28,
+      speed: { min: 90, max: 300 },
+      lifespan: { min: 320, max: 700 },
+      scale: { start: 0.7, end: 0 },
+      alpha: { start: 1, end: 0 },
+      tint: [0xcc3366, 0xff88bb, 0xffffff],
+      depth: RENDER_DEPTH.impactEffect,
+      additive: true,
+    },
+    shake: { durationMs: 240, intensity: 0.012, cooldownMs: 1000 },
+  },
+
+  bossSpawn: {
+    particles: {
+      count: 40,
+      speed: { min: 120, max: 380 },
+      lifespan: { min: 420, max: 900 },
+      scale: { start: 0.9, end: 0 },
+      alpha: { start: 1, end: 0 },
+      tint: [0x7733cc, 0xcc99ff, 0xffffff],
+      depth: RENDER_DEPTH.impactEffect,
+      additive: true,
+    },
+    shake: { durationMs: 380, intensity: 0.018, cooldownMs: 1000 },
+  },
+
+  bossSlam: {
+    particles: {
+      count: 24,
+      speed: { min: 140, max: 420 },
+      lifespan: { min: 260, max: 520 },
+      scale: { start: 0.66, end: 0 },
+      alpha: { start: 1, end: 0 },
+      tint: [0xcc99ff, 0xffffff],
+      depth: RENDER_DEPTH.impactEffect,
+      additive: true,
+    },
+    shake: { durationMs: 160, intensity: 0.014, cooldownMs: 300 },
+  },
+
+  bossSummon: {
+    particles: {
+      count: 16,
+      speed: { min: 60, max: 180 },
+      lifespan: { min: 220, max: 460 },
+      scale: { start: 0.5, end: 0 },
+      alpha: { start: 0.9, end: 0 },
+      tint: [0x9955dd, 0xcc99ff],
+      depth: RENDER_DEPTH.groundEffect,
+      additive: true,
+    },
+  },
+
+  bossVolley: {
+    particles: {
+      count: 8,
+      speed: { min: 80, max: 200 },
+      lifespan: { min: 140, max: 280 },
+      scale: { start: 0.36, end: 0 },
+      alpha: { start: 0.95, end: 0 },
+      tint: [0x9955dd, 0xffffff],
+      angleSpread: 24,
+      depth: RENDER_DEPTH.abilityVisual,
+      additive: true,
+    },
+  },
+
+  bossDefeat: {
+    particles: {
+      count: 56,
+      speed: { min: 120, max: 460 },
+      lifespan: { min: 500, max: 1100 },
+      scale: { start: 1, end: 0 },
+      alpha: { start: 1, end: 0 },
+      tint: [0x7733cc, 0xcc99ff, 0xffffff, 0xffdd66],
+      depth: RENDER_DEPTH.impactEffect,
+      additive: true,
+    },
+    shake: { durationMs: 460, intensity: 0.02, cooldownMs: 1000 },
   },
 };
 

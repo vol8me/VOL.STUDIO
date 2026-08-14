@@ -21,7 +21,10 @@
     "spark": "Spark",
     "flux": "Flux",
     "level": "Sv.{{level}}",
-    "pendingCards": "{{count}} kart bekliyor"
+    "pendingCards": "{{count}} kart bekliyor",
+    "waveCounter": "DALGA {{wave}} — {{seconds}} sn",
+    "waveAnnounce": "DALGA {{wave}}",
+    "waveBlocked": "HEDEFİ YEN — %{{percent}}"
   },
   "settings": {
     "title": "AYARLAR",
@@ -56,7 +59,13 @@
     "bestKills": "En Yüksek Öldürme",
     "time": "Süre",
     "bestTime": "En Uzun Süre",
-    "totalKills": "Toplam Öldürme"
+    "totalKills": "Toplam Öldürme",
+    "victoryTitle": "KAZANDIN",
+    "victorySubtitle": "Sovereign devrildi. Arena senin.",
+    "defeatSubtitle": "Koşu burada bitti.",
+    "wave": "Ulaşılan Dalga",
+    "level": "Seviye",
+    "flux": "Toplanan Flux"
   },
   "cards": {
     "cardTurret": {
@@ -220,5 +229,9 @@
     "clearSlot": "Slotu boşalt",
     "equipped": "TAKILI",
     "equip": "TAK"
+  },
+  "enemy": {
+    "warden": "Warden",
+    "sovereign": "Sovereign"
   }
 }

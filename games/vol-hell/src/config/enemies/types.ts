@@ -2,11 +2,14 @@ import type { StatBaseValues } from '@volstudio/core';
 
 /**
  * Düşman arketipi — davranış ailesini belirler.
- * Elite ve boss Aşama 3'te eklenecek; elite bu arketiplerin davranışlarını
- * kompoze edeceği için davranış mantığı arketipe değil, ayrı ve yeniden
- * çağrılabilir fonksiyonlara bağlıdır (bkz. `runtime/entity/behaviors/`).
+ *
+ * `elite` ve `boss` doğrudan spawn havuzuna girmez (`spawnWeight: 0`);
+ * `WaveManager` onları özel dalgalarda çağırır. Elite, rusher ve swarmer
+ * davranışlarını KOMPOZE eder — bu yüzden davranış mantığı arketipe değil,
+ * ayrı ve yeniden çağrılabilir fonksiyonlara bağlıdır
+ * (bkz. `runtime/entity/behaviors/`).
  */
-export type EnemyArchetype = 'base' | 'rusher' | 'swarmer';
+export type EnemyArchetype = 'base' | 'rusher' | 'swarmer' | 'elite' | 'boss';
 
 /** Rusher davranış parametreleri — bir çizgi üzerinde hesaplı atılım. */
 export interface RusherParams {

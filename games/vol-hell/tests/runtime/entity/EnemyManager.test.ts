@@ -208,4 +208,70 @@ describe('EnemyManager', () => {
     manager.destroy();
     expect(manager.getEnemies()).toHaveLength(0);
   });
+
+  it('ölen düşman için onEnemyDeath callback çağrılır', () => {
+    const onEnemyDeath = vi.fn();
+    const { scene } = makeScene();
+    const local = new EnemyManager(scene as never, makeEffects(), createRandom(11), {
+      onEnemyDeath,
+    });
+    local.setWave(1);
+    local.update(difficulty.spawnIntervalMs, playerPos, border, 0, grid, difficulty);
+    const enemy = local.getEnemies()[0];
+    enemy.takeDamage(9999);
+
+    expect(onEnemyDeath).toHaveBeenCalledWith(enemy);
+  });
+
+  it('spawnSpecial dışarıdan sürülen düşman doğurur; update hareket ettirmez', () => {
+    const { scene } = makeScene();
+    const local = new EnemyManager(scene as never, makeEffects(), createRandom(11));
+    const elite = local.spawnSpecial(ENEMY_CATALOG.warden, 400, 100, difficulty);
+
+    expect(local.getEnemies()).toContain(elite);
+
+    const beforeX = elite.x;
+    const beforeY = elite.y;
+    local.update(1000, playerPos, border, 0, grid, difficulty);
+
+    expect(elite.x).toBe(beforeX);
+    expect(elite.y).toBe(beforeY);
+  });
+
+  it('clearRegularEnemies normal düşmanları temizler, Elite/Boss korur', () => {
+    const { scene } = makeScene();
+    const local = new EnemyManager(scene as never, makeEffects(), createRandom(11));
+    local.setWave(1);
+    local.update(difficulty.spawnIntervalMs, playerPos, border, 0, grid, difficulty);
+    const grunt = local.getEnemies()[0];
+    const elite = local.spawnSpecial(ENEMY_CATALOG.warden, 400, 100, difficulty);
+
+    const cleared = local.clearRegularEnemies();
+
+    expect(cleared).toBe(1);
+    expect(local.getEnemies()).toContain(elite);
+    expect(local.getEnemies()).not.toContain(grunt);
+    expect(grunt.isAlive).toBe(false);
+    expect(elite.isAlive).toBe(true);
+  });
+
+  it('spawnMinionsFor zorluk limitine saygı gösterir', () => {
+    const { scene } = makeScene();
+    const local = new EnemyManager(scene as never, makeEffects(), createRandom(11));
+    local.setWave(20);
+    const brooder = local.spawnSpecial(ENEMY_CATALOG.brooder, 400, 100, difficulty);
+
+    local.spawnMinionsFor(
+      brooder,
+      {
+        minionId: 'swarmling',
+        count: 100,
+        angles: Array.from({ length: 100 }, (_, i) => (i * Math.PI) / 50),
+        radius: 20,
+      },
+      difficulty,
+    );
+
+    expect(local.getEnemies().length).toBeLessThanOrEqual(difficulty.maxEnemies);
+  });
 });

@@ -17,6 +17,12 @@ export const uiConfig = {
       /** Bu eşikten az değişirse bar güncellenmez. */
       updateThreshold: 0.005,
     },
+    /**
+     * Yeni dalga duyurusunun ekranda kalma süresi (ms).
+     * Sayaç JS tarafında yürür (CSS animasyonu değil): oyun duraklayınca
+     * duyuru da donmalı.
+     */
+    waveAnnounceMs: 1600,
   },
   /** Loading ekranı geçiş parametreleri. */
   loading: {

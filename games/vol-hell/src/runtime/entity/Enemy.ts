@@ -32,6 +32,15 @@ export interface EnemyOptions {
   stats: StatBlock;
   /** Zorluk çarpanı uygulanmış skor değeri. */
   scoreValue: number;
+  /**
+   * Düşman ÖLDÜĞÜNDE — hasarın KAYNAĞI ne olursa olsun çağrılır.
+   *
+   * Skor/Spark/Flux eskiden yalnızca `CollisionResolver`'daki mermi vuruşuna
+   * bağlıydı; kuleyle, zincirle ya da ateş alanıyla öldürülen düşman hiçbir
+   * ödül vermiyordu. Ödül artık ölümün kendisine bağlı.
+   * `destroy()` ile sahneden kaldırma (dalga temizliği) bunu TETİKLEMEZ.
+   */
+  onDeath?: (enemy: Enemy) => void;
 }
 
 /**
@@ -64,6 +73,7 @@ export class Enemy {
   private readonly spawnRequest: MinionSpawnRequest | null;
   /** Bu düşmanın doğurduğu ve hâlâ yaşayan minion'lar. */
   private readonly minions: Enemy[] = [];
+  private readonly onDeath?: (enemy: Enemy) => void;
 
   constructor(
     scene: Phaser.Scene,
@@ -75,6 +85,7 @@ export class Enemy {
     this.definition = options.definition;
     this.stats = options.stats;
     this.score = options.scoreValue;
+    this.onDeath = options.onDeath;
 
     this.maxHealth = quantizeEnemyHealth(this.stats.getValue('health'));
     this.health = this.maxHealth;
@@ -136,9 +147,55 @@ export class Enemy {
     return this.stats;
   }
 
+  /** Kalan can oranı (0-1) — Boss faz geçişi bunu okur. */
+  getHealthRatio(): number {
+    return this.maxHealth > 0 ? this.health / this.maxHealth : 0;
+  }
+
+  /**
+   * Temas hasarı değeri — COOLDOWN'A BAKMAZ.
+   * Boss saldırıları kendi zamanlamasını taşıdığı için temas cooldown'unu
+   * kullanmaz; hasar miktarını buradan okur.
+   */
+  getContactDamage(): number {
+    return Math.max(0, this.stats.getValue('damage'));
+  }
+
   /** Doğurulan minion'u sahiplenir; kapasite kontrolü buradan beslenir. */
   registerMinion(minion: Enemy): void {
     this.minions.push(minion);
+  }
+
+  /** Hayatta olan minion sayısı — dış kontrolcüler (Elite) kapasiteyi buradan okur. */
+  getAliveMinionCount(): number {
+    this.pruneMinions();
+    return this.minions.length;
+  }
+
+  /**
+   * Hareketi DIŞARIDAN sürer — Elite/Boss kontrolcüleri için.
+   *
+   * `update()` ile aynı son adımları uygular (separation + border clamp + can
+   * barı takibi) ama davranış seçimini atlar: hızı çağıran belirler. Böylece
+   * özel düşmanlar kendi yapay zekâlarını taşırken çarpışma/sınır mantığını
+   * kopyalamak zorunda kalmaz.
+   *
+   * @param vx Hız (piksel/saniye).
+   * @param vy Hız (piksel/saniye).
+   */
+  moveBy(vx: number, vy: number, deltaMs: number, border: Border, grid: SpatialGrid): void {
+    if (!this.alive) return;
+
+    const dt = deltaMs / 1000;
+    this.applySeparation(grid);
+
+    this.arc.x += (vx + this.separationBuf.x) * dt;
+    this.arc.y += (vy + this.separationBuf.y) * dt;
+
+    this.arc.x = border.clampX(this.arc.x, this.definition.radius);
+    this.arc.y = border.clampY(this.arc.y, this.definition.radius);
+
+    this.healthBar.follow(this.arc.x, this.arc.y);
   }
 
   /** Düşmana hasar verir. Ölürse true döner. */
@@ -298,7 +355,7 @@ export class Enemy {
     this.healthBar.setRatio(this.health / this.maxHealth, this.alive, this.arc.x);
   }
 
-  /** Düşmanı öldürür — ölüm efekti + yok etme. */
+  /** Düşmanı öldürür — ölüm efekti + ödül kancası + yok etme. */
   private kill(): void {
     if (!this.alive) return;
     this.alive = false;
@@ -310,6 +367,25 @@ export class Enemy {
     });
 
     this.effects.play('enemyDeath', this.arc.x, this.arc.y);
+    // Kanca, görseller oynatıldıktan SONRA ama nesne yok edilmeden ÖNCE:
+    // dinleyici hâlâ konumu okuyabilir (Flux ölüm noktasına düşer).
+    this.onDeath?.(this);
+    this.arc.destroy();
+    this.healthBar.destroy();
+  }
+
+  /**
+   * Dalga geçişinde sahneden kaldırır — ödül YOK, ölüm sayılmaz.
+   *
+   * Normal dalga bitince kalan düşmanlar temizlenir (B1b). Bu bir öldürme
+   * değildir: skor/Spark/Flux vermez, `onDeath` çağrılmaz. Oyuncu ceza da
+   * almaz, ödül de almaz — dalga geçişinin nötr bir parçasıdır.
+   */
+  clearWithEffect(): void {
+    if (!this.alive) return;
+    this.alive = false;
+    this.minions.length = 0;
+    this.effects.play('waveClear', this.arc.x, this.arc.y);
     this.arc.destroy();
     this.healthBar.destroy();
   }

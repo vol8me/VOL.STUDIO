@@ -6,6 +6,7 @@ import type { RunEconomy } from '@/runtime/systems/RunEconomy';
 import { AbilityHud } from './AbilityHud';
 import { HUDStats } from './HUDStats';
 import { SparkBar } from './SparkBar';
+import { WaveBanner } from './WaveBanner';
 
 /**
  * Oyun içi HUD'un tamamı — can/dash/Spark barları, skor bloğu ve ability
@@ -23,6 +24,7 @@ export class GameHud {
   private readonly stats: HUDStats;
   private readonly sparkBar: SparkBar;
   private readonly abilityHud: AbilityHud;
+  private readonly waveBanner: WaveBanner;
   private prevHealth: number;
   private prevMaxHealth: number;
   private prevDashCharge = 1;
@@ -68,6 +70,12 @@ export class GameHud {
     this.stats = new HUDStats(parent);
     this.sparkBar = new SparkBar(parent, economy);
     this.abilityHud = new AbilityHud(parent);
+    this.waveBanner = new WaveBanner(parent);
+  }
+
+  /** Yeni dalga başladı — ortada duyuru belirir. */
+  announceWave(wave: number): void {
+    this.waveBanner.announce(wave);
   }
 
   /** Koşu sayaçlarını başa alır (sahne yeniden başlatıldığında). */
@@ -88,6 +96,14 @@ export class GameHud {
     elapsedTimeMs: number;
     /** Dalga sonunda seçilmeyi bekleyen kart hakkı sayısı. */
     pendingLevelUps: number;
+    /** Bu frame'in süresi (ms) — dalga duyurusunun sayacı için. */
+    deltaMs: number;
+    wave: number;
+    waveRemainingMs: number;
+    /** Süre doldu ama Elite/Boss hâlâ ayakta. */
+    awaitingBlocker: boolean;
+    /** Zorunlu engelin kalan can oranı (0-1); engel yoksa null. */
+    blockerHealthRatio: number | null;
   }): void {
     // Maks. can kartlarla değişebilir; bar bunu yansıtmazsa dolum oranı yalan söyler.
     const maxHealth = state.player.getMaxHealth();
@@ -114,6 +130,13 @@ export class GameHud {
     this.stats.setFlux(state.economy.getFlux());
     this.sparkBar.refresh(state.pendingLevelUps);
     this.abilityHud.refresh(state.abilities);
+    this.waveBanner.refresh(
+      state.deltaMs,
+      state.wave,
+      state.waveRemainingMs,
+      state.awaitingBlocker,
+      state.blockerHealthRatio,
+    );
   }
 
   /** Dil değişiminde etiketleri yeniden yazdırır. */
@@ -122,6 +145,7 @@ export class GameHud {
     this.dashBar.setLabel(i18next.t('volhell:hud.dash'));
     this.sparkBar.refreshLabel();
     this.abilityHud.refreshLabels();
+    this.waveBanner.refreshLabels();
   }
 
   destroy(): void {
@@ -132,6 +156,7 @@ export class GameHud {
     this.stats.destroy();
     this.sparkBar.destroy();
     this.abilityHud.destroy();
+    this.waveBanner.destroy();
     this.parent.style.removeProperty('--vol-hud-spark-offset');
   }
 }

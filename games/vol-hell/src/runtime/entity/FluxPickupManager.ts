@@ -93,6 +93,22 @@ export class FluxPickupManager {
     return this.pickups.length;
   }
 
+  /**
+   * Toplanmamış tüm Flux'u siler — dalga geçişi temizliği (B1b).
+   * Miktar sayaca EKLENMEZ: dalga bitmeden toplanmayan Flux kaybolur.
+   * Oyuncuyu dalga içinde toplamaya iten şey budur.
+   *
+   * @returns Silinen parça sayısı.
+   */
+  clearAll(): number {
+    const count = this.pickups.length;
+    for (const pickup of this.pickups) {
+      pickup.destroy();
+    }
+    this.pickups.length = 0;
+    return count;
+  }
+
   destroy(): void {
     for (const pickup of this.pickups) {
       pickup.destroy();

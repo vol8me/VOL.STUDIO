@@ -4,7 +4,6 @@ import { bulletConfig } from '@/config/bullet';
 import { CollisionResolver } from '@/runtime/systems/CollisionResolver';
 import type { Border } from '@/runtime/entity/Border';
 import type { Player } from '@/runtime/entity/Player';
-import type { Enemy } from '@/runtime/entity/Enemy';
 import type { BulletManager } from '@/runtime/entity/BulletManager';
 import type { EnemyManager } from '@/runtime/entity/EnemyManager';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
@@ -63,7 +62,7 @@ function makeBullet(x: number, y: number, damage = bulletConfig.damage): FakeBul
   };
 }
 
-function makeEnemy(x: number, y: number, radius = 10): FakeEnemy {
+function makeEnemy(x: number, y: number, radius = 10, onDeath?: () => void): FakeEnemy {
   const enemy: FakeEnemy = {
     isAlive: true,
     x,
@@ -71,8 +70,12 @@ function makeEnemy(x: number, y: number, radius = 10): FakeEnemy {
     radius,
     scoreValue: 100,
     lastContactDamage: -Infinity,
+    // Gerçek `Enemy.takeDamage` ölümde `onDeath` kancasını çağırır; ödül yolu
+    // artık ÇARPIŞMADA değil ÖLÜMDE. Sahte düşman de aynısını yapar.
     takeDamage: vi.fn((_amount: number) => {
+      if (!enemy.isAlive) return false;
       enemy.isAlive = false;
+      onDeath?.();
       return true;
     }),
     tryContactDamage: vi.fn((time: number) => {
@@ -90,7 +93,6 @@ function makeResolver(opts: {
   bullets?: FakeBullet[];
   enemies?: FakeEnemy[];
   nearby?: FakeEnemy[];
-  onEnemyKilled?: (enemy: Enemy) => void;
 }): {
   resolver: CollisionResolver;
   player: FakePlayer;
@@ -134,7 +136,6 @@ function makeResolver(opts: {
     enemyManager as unknown as EnemyManager,
     spatialGrid as unknown as SpatialGrid,
     border,
-    { onEnemyKilled: opts.onEnemyKilled },
   );
 
   return {
@@ -155,14 +156,13 @@ describe('CollisionResolver', () => {
   });
 
   it('mermi düşmanı vurunca takeDamage çağrılır ve mermi kaldırılır', () => {
-    const enemy = makeEnemy(0, 0);
+    const onDeath = vi.fn();
+    const enemy = makeEnemy(0, 0, 10, onDeath);
     const bullet = makeBullet(0, 0);
-    const onEnemyKilled = vi.fn();
 
     const { resolver, removeBulletSpy } = makeResolver({
       bullets: [bullet],
       enemies: [enemy],
-      onEnemyKilled,
     });
 
     resolver.resolve(0);
@@ -170,26 +170,26 @@ describe('CollisionResolver', () => {
     expect(enemy.takeDamage).toHaveBeenCalledWith(bullet.damage);
     expect(removeBulletSpy).toHaveBeenCalledWith(bullet);
     expect(bullet.isAlive).toBe(false);
-    // Ölüm anında düşman NESNESİ iletilir: skor, Spark ve Flux aynı çağrıdan okunur.
-    expect(onEnemyKilled).toHaveBeenCalledWith(enemy);
+    // Ödül yolu çarpışmada DEĞİL ölümde: `Enemy.onDeath` bir kez tetiklenir.
+    // Böylece kule/zincir/ateş ölümleri de aynı ödülü alır.
+    expect(onDeath).toHaveBeenCalledTimes(1);
   });
 
   it('aynı karede ikinci mermi ölü düşmana çarpmaz ve kaldırılmaz', () => {
-    const enemy = makeEnemy(0, 0);
+    const onDeath = vi.fn();
+    const enemy = makeEnemy(0, 0, 10, onDeath);
     const bullet1 = makeBullet(0, 0);
     const bullet2 = makeBullet(0, 0);
-    const onEnemyKilled = vi.fn();
 
     const { resolver, removeBulletSpy } = makeResolver({
       bullets: [bullet1, bullet2],
       enemies: [enemy],
-      onEnemyKilled,
     });
 
     resolver.resolve(0);
 
     expect(enemy.takeDamage).toHaveBeenCalledTimes(1);
-    expect(onEnemyKilled).toHaveBeenCalledTimes(1);
+    expect(onDeath).toHaveBeenCalledTimes(1);
     expect(removeBulletSpy).toHaveBeenCalledTimes(1);
     expect(removeBulletSpy).toHaveBeenCalledWith(bullet1);
     expect(bullet2.isAlive).toBe(true);

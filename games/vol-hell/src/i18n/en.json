@@ -21,7 +21,10 @@
     "spark": "Spark",
     "flux": "Flux",
     "level": "Lv.{{level}}",
-    "pendingCards": "{{count}} card(s) waiting"
+    "pendingCards": "{{count}} card(s) waiting",
+    "waveCounter": "WAVE {{wave}} — {{seconds}}s",
+    "waveAnnounce": "WAVE {{wave}}",
+    "waveBlocked": "DEFEAT THE TARGET — {{percent}}%"
   },
   "settings": {
     "title": "SETTINGS",
@@ -56,7 +59,13 @@
     "bestKills": "Most Kills",
     "time": "Time",
     "bestTime": "Best Time",
-    "totalKills": "Total Kills"
+    "totalKills": "Total Kills",
+    "victoryTitle": "VICTORY",
+    "victorySubtitle": "The Sovereign has fallen. The arena is yours.",
+    "defeatSubtitle": "The run ends here.",
+    "wave": "Wave Reached",
+    "level": "Level",
+    "flux": "Flux Collected"
   },
   "cards": {
     "cardTurret": {
@@ -220,5 +229,9 @@
     "clearSlot": "Clear slot",
     "equipped": "EQUIPPED",
     "equip": "EQUIP"
+  },
+  "enemy": {
+    "warden": "Warden",
+    "sovereign": "Sovereign"
   }
 }

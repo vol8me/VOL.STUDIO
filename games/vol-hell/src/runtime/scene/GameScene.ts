@@ -25,15 +25,16 @@ import { gameAudio, audioSettings, gameStats } from '@/app/services';
 import type { RunResult } from '@/app/GameStats';
 import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import { EffectManager } from '@/runtime/systems/EffectManager';
+import { TelegraphManager } from '@/runtime/systems/TelegraphManager';
 import { CollisionResolver } from '@/runtime/systems/CollisionResolver';
-import { getDifficultyState } from '@/runtime/systems/DifficultyCalculator';
+import { getDifficultyState, type DifficultyState } from '@/runtime/systems/DifficultyCalculator';
 import { RunDirector } from '@/runtime/systems/RunDirector';
 import { GameAudioDirector } from '@/runtime/systems/GameAudioDirector';
 import { CardInventoryManager } from '@/runtime/systems/CardInventoryManager';
 import { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import { ABILITY_SLOTS, type AbilitySlot } from '@/runtime/ability/types';
 import { PauseScreen } from './PauseScreen';
-import { DeathScreen } from './DeathScreen';
+import { DeathScreen, type RunOutcome } from './DeathScreen';
 import { GameHud } from '@/runtime/ui/GameHud';
 import { CardScreens } from '@/runtime/ui/CardScreens';
 
@@ -58,6 +59,7 @@ export class GameScene extends BaseScene {
   private enemyManager!: EnemyManager;
   private collisionResolver!: CollisionResolver;
   private effects!: EffectManager;
+  private telegraphs!: TelegraphManager;
   private run!: RunDirector;
   private audio!: GameAudioDirector;
   private abilities!: AbilityRuntime;
@@ -84,6 +86,13 @@ export class GameScene extends BaseScene {
   private elapsedTimeMs = 0;
   private isPaused = false;
   private isDeathInProgress = false;
+  private isRunFinished = false;
+  /**
+   * Bu frame'in zorluk durumu. Koşu yöneticisi (boss ölçeklemesi, minion
+   * doğurma) bunu frame içinde birden çok kez okur; her okumada yeniden
+   * hesaplamak yerine frame başında bir kez üretilir.
+   */
+  private difficulty: DifficultyState = getDifficultyState(0);
   // Reusable buffer'lar — her frame yeni obje yaratmaz
   private readonly moveDirBuf: Vector2 = Vector2.zero();
   private readonly aimDirBuf: Vector2 = Vector2.zero();
@@ -119,6 +128,7 @@ export class GameScene extends BaseScene {
       getShakeScale: () =>
         audioSettings.isScreenShakeEnabled() ? audioSettings.getScreenShakeIntensity() : null,
     });
+    this.telegraphs = new TelegraphManager(this);
 
     this.player = new Player(
       this,
@@ -130,7 +140,11 @@ export class GameScene extends BaseScene {
 
     this.inputManager = new InputManager(this);
     this.bulletManager = new BulletManager(this, this.effects, this.player.getStats());
-    this.enemyManager = new EnemyManager(this, this.effects, this.runRandom);
+    this.enemyManager = new EnemyManager(this, this.effects, this.runRandom, {
+      // Ödül ölümün kendisine bağlı: mermi, kule, zincir ve ateş alanı
+      // ölümleri aynı kapıdan geçer.
+      onEnemyDeath: (enemy) => this.onEnemyKilled(enemy),
+    });
 
     this.abilities = new AbilityRuntime({
       scene: this,
@@ -146,14 +160,22 @@ export class GameScene extends BaseScene {
         scene: this,
         border: this.border,
         effects: this.effects,
+        telegraphs: this.telegraphs,
         random: this.runRandom,
         enemyManager: this.enemyManager,
+        bulletManager: this.bulletManager,
+        playerStats: this.player.getStats(),
+        damagePlayer: (amount) => this.applyBossDamage(amount),
+        getPlayerPosition: () => this.player.getPosition(),
+        getDifficulty: () => this.difficulty,
       },
       {
         // Seviye atlaması dövüşü kesmez: hak biriktirilir, dalga sonunda
         // sırayla sunulur (Brotato akışı).
         onLevelUp: (level) => this.cardScreens.queueLevelUp(level),
         onShopOpen: (wave) => this.cardScreens.openIntermission(wave),
+        onWaveStart: (wave) => this.hud.announceWave(wave),
+        onRunComplete: () => void this.onRunComplete(),
       },
     );
 
@@ -177,7 +199,8 @@ export class GameScene extends BaseScene {
       this.spatialGrid,
       this.border,
       {
-        onEnemyKilled: (enemy) => this.onEnemyKilled(enemy),
+        // Ödül `Enemy.onDeath` üzerinden gelir (kaynak fark etmez); burada
+        // yalnızca mermi vuruşuna özgü SES kalır.
         getTurret: () => this.abilities.getTurret(),
       },
     );
@@ -243,7 +266,7 @@ export class GameScene extends BaseScene {
     this.diagnostics?.endStage('collision');
 
     this.diagnostics?.startStage('hud');
-    this.updateHUD();
+    this.updateHUD(dt);
     this.diagnostics?.endStage('hud');
 
     this.diagnostics?.startStage('death');
@@ -347,13 +370,18 @@ export class GameScene extends BaseScene {
   }
 
   private updateEntities(delta: number, playerPos: Vector2, time: number): void {
-    const difficulty = getDifficultyState(this.elapsedTimeMs);
-
-    this.run.update(delta, playerPos);
+    // Frame başına bir kez: koşu yöneticisi (boss ölçeklemesi, minion doğurma)
+    // bunu geri çağrılar üzerinden okur.
+    this.difficulty = getDifficultyState(this.elapsedTimeMs);
+    const difficulty = this.difficulty;
 
     // Spatial grid'i bu frame için yeniden kur — enemy update'inden ÖNCE
     this.spatialGrid.clear();
     this.spatialGrid.insertAll(this.enemyManager.getEnemies());
+
+    // Koşu yöneticisi Elite/Boss'u sürdüğü için grid HAZIR olmalı: özel
+    // düşmanlar da separation hesabı yapar.
+    this.run.update(delta, playerPos, this.spatialGrid);
 
     this.bulletManager.update(delta, this.border);
     this.enemyManager.update(delta, playerPos, this.border, time, this.spatialGrid, difficulty, {
@@ -367,7 +395,8 @@ export class GameScene extends BaseScene {
     this.spatialGrid.trim();
   }
 
-  private updateHUD(): void {
+  private updateHUD(deltaMs: number): void {
+    const blocker = this.run.getBlocker();
     this.hud.refresh({
       player: this.player,
       economy: this.run.economy,
@@ -376,6 +405,11 @@ export class GameScene extends BaseScene {
       kills: this.kills,
       elapsedTimeMs: this.elapsedTimeMs,
       pendingLevelUps: this.cardScreens.getPendingLevelUpCount(),
+      deltaMs,
+      wave: this.run.getCurrentWave(),
+      waveRemainingMs: this.run.getWaveRemainingMs(),
+      awaitingBlocker: this.run.isAwaitingBlocker(),
+      blockerHealthRatio: blocker?.getHealthRatio() ?? null,
     });
   }
 
@@ -409,9 +443,11 @@ export class GameScene extends BaseScene {
   private resetSceneState(): void {
     this.isPaused = false;
     this.isDeathInProgress = false;
+    this.isRunFinished = false;
     this.score = 0;
     this.kills = 0;
     this.elapsedTimeMs = 0;
+    this.difficulty = getDifficultyState(0);
   }
 
   /** Koşu sayaçlarını sıfırlar ve HUD'a yansıtır. */
@@ -503,18 +539,42 @@ export class GameScene extends BaseScene {
   }
 
   private async onPlayerDeath(): Promise<void> {
-    // submitRun tamamlanana kadar tekrar çağrılmasın
-    if (this.isDeathInProgress || this.deathScreen?.isVisible()) return;
+    await this.finishRun('defeat');
+  }
+
+  /**
+   * Boss devrildi, 20 dalga tamamlandı — koşu ZAFERLE bitti.
+   * Aynı özet ekranı zafer kılığında açılır (B3).
+   */
+  private async onRunComplete(): Promise<void> {
+    await this.finishRun('victory');
+  }
+
+  /**
+   * Koşuyu bitirir ve özet ekranını açar — zafer ve yenilgi için ORTAK yol.
+   *
+   * İki çıkış da aynı işi yapıyordu (duraklat, skoru gönder, özet göster);
+   * ayrı iki kopya tutmak ikisinin zamanla ayrışmasını davet ederdi.
+   */
+  private async finishRun(outcome: RunOutcome): Promise<void> {
+    // submitRun tamamlanana kadar tekrar çağrılmasın; zafer ve yenilgi
+    // aynı frame'de tetiklenirse (boss'un son vuruşu oyuncuyu öldürürse)
+    // yalnızca ilki geçer.
+    if (this.isDeathInProgress || this.isRunFinished || this.deathScreen?.isVisible()) return;
     this.isDeathInProgress = true;
+    this.isRunFinished = true;
 
     try {
       this.isPaused = true;
       this.input.activePointer.reset();
       this.scene.pause();
-      this.audio.playDeath();
+      if (outcome === 'defeat') {
+        this.audio.playDeath();
+      }
 
       const result = await this.submitRunSafely();
       this.deathScreen?.show({
+        outcome,
         score: this.score,
         bestScore: result.bestScore,
         kills: this.kills,
@@ -522,14 +582,28 @@ export class GameScene extends BaseScene {
         timeMs: this.elapsedTimeMs,
         bestTimeMs: result.bestTimeMs,
         totalKills: result.totalKills,
+        wave: this.run.getCurrentWave(),
+        flux: this.run.economy.getFlux(),
+        level: this.run.economy.getLevel(),
       });
     } catch (error) {
-      // Beklenmedik bir hata (depolama/çeviri/DOM) ölüm ekranını bozarsa
+      // Beklenmedik bir hata (depolama/çeviri/DOM) özet ekranını bozarsa
       // oyun donmaz; ana menüye yönlendirilir ve hata loglanır.
-      console.error('[GameScene] Ölüm işlemi başarısız:', error);
+      console.error('[GameScene] Koşu sonu işlemi başarısız:', error);
       this.scene.start('MainMenu');
     } finally {
       this.isDeathInProgress = false;
+    }
+  }
+
+  /**
+   * Boss saldırısının oyuncuya verdiği hasar.
+   * Temas hasarından ayrı bir kapı: boss saldırıları kendi zamanlamasını
+   * taşır, oyuncunun i-frame'lerine (dash) yine de tabidir.
+   */
+  private applyBossDamage(amount: number): void {
+    if (this.player.takeDamage(amount)) {
+      void gameAudio.playSfx('hurt', { volume: sfxVolumes.hurt });
     }
   }
 
@@ -550,6 +624,7 @@ export class GameScene extends BaseScene {
     this.cardScreens?.destroy();
     this.abilities?.destroy();
     this.effects?.destroy();
+    this.telegraphs?.destroy();
     this.run?.destroy();
     this.inputManager.destroy();
     this.border.destroy();

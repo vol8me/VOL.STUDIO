@@ -947,3 +947,89 @@ kartlar bile FPS'e bağlı mermi seli üretemiyor.
 3. Zincirin zikzak kalınlığı ve parıltısı.
 4. Dükkanda sürükle-bırak hissi (TAK butonu yedek yol olarak var).
 5. Yeni ateş temposunun oyun hissi: taban artık belirgin şekilde yavaş.
+
+---
+
+## AŞAMA 3/3 — Elite/Boss, telegraph, görsel cila ve bitiş ekranı
+
+### B1 — Zorunlu engel dalgaları
+
+- `WaveManager` artık dalga 10 (Elite) ve 20 (Boss) için saf zamanla
+  ilerlemiyor. Süre dolduğunda engel hâlâ hayattaysa dalga `isAwaitingBlocker`
+  durumunda bekler; engel öldüğünde `notifyBlockerDefeated()` ile o an biter.
+- Engel dalgalarında `onWaveClear` çağrılmaz; normal dalgalarda `clearArena`
+  (`RunDirector`) kalan düşmanlar, mermiler, yerdeki Flux ve bekleyen
+  telegraph'ları temizler.
+- `EnemyManager.clearRegularEnemies()` dışarıdan sürülen Elite/Boss'u
+  korur; yalnızca normal düşmanları `waveClear` efektiyle kaldırır.
+- `WaveManager.test.ts` ve `RunDirector.test.ts` ile engel mantığı
+  kilitlendi: erken öldürme ve süre dolduktan sonra öldürme senaryoları.
+
+### B1b — Arena temizliği
+
+- `RunDirector.clearArena()` `WaveManager.onWaveClear` üzerinden çağrılır.
+- `BulletManager.clearAll()`, `FluxPickupManager.clearAll()`,
+  `TelegraphManager.cancelAll()` sırayla çalışır; normal dalga geçişi
+  temiz bir sahne ile başlar.
+- `tests/runtime/systems/RunDirector.test.ts` normal dalga sonunda mermi
+  ve telegraph temizliğini doğrular.
+
+### B2 — Elite/Boss AI
+
+- `SpecialEnemyDirector` Elite ve Boss'un yaşam döngüsünü tek elden yönetir;
+  `WaveManager.onEliteWave` / `onBossWave` ile doğurur, ölüm sinyalini
+  `onBlockerDefeated` ile verir.
+- `EliteController` (`warden`): rusher + swarmer kompozisyonu; atılım
+  öncesi çizgi telegraph, periyodik minion doğurma telegraph'lı.
+- `BossController` (`sovereign`): üç telegraph'lı saldırı paterni
+  (slam/volley/summon); döngüsel sıra, öfke fazında daha sık saldırı.
+- `bossScaling.ts` Boss'un stat'larını spawn anında oyuncu gücüne göre
+  ölçekler ve sabit bir `StatBlock` üretir; sonradan alınan kartlar boss'u
+  güçlendirmez.
+- `bossScaling.test.ts` ölçekleme ilişkilerini ve dondurulmuş stat
+  davranışını kilitler.
+
+### Telegraph sistemi
+
+- `TelegraphManager` Elite/Boss saldırıları ve Elite minion doğurma için
+  ortak telegraph katmanı; süre dolunca Promise resolve olur, saldırı o an
+  uygulanır.
+- Sahne durakladığında telegraph da donar (delta tabanlı güncelleme).
+- `TelegraphManager.test.ts` resolve, iptal, çoklu eşzamanlı telegraph ve
+  `destroy` davranışlarını doğrular.
+
+### B3 — Ölüm/zafer ekranı
+
+- `DeathScreen` tek ekranda hem yenilgi hem zafer gösterir; `runStats`
+  (süre, dalga, öldürülen, toplanan Flux/Spark, neden) ile doldurulur.
+- `GameScene.finishRun()` koşu sonu akışını tek yerden yönetir.
+
+### Görsel/HUD katmanı
+
+- `GameHud` ve `WaveBanner` Elite/Boss dalgalarında "Warden'i yen" /
+  "Sovereign'i yen" göstergeleri sunar.
+- `effects.ts` Elite/Boss efektleri (`eliteSpawn`, `bossSpawn`, `bossSlam`,
+  `bossSummon`, `bossVolley`, `bossDefeat`) eklendi.
+- i18n: `tr.json` ve `en.json` engel adları, "wave blocked", ölüm/zafer
+  ekranı metinleriyle güncellendi.
+
+### Kalite kapıları
+
+| Kapı                                      | Durum | Not                                                       |
+| ----------------------------------------- | ----- | --------------------------------------------------------- |
+| `pnpm -r typecheck`                       | geçti | 4 paket                                                   |
+| `pnpm test`                               | geçti | 1100 test (core 708, vol-hell 362, tauri-v2 25, vol-ui 5) |
+| `pnpm lint`                               | geçti | 0 hata, 0 uyarı                                           |
+| `pnpm format:check`                       | geçti |                                                           |
+| `pnpm lint:css`                           | geçti |                                                           |
+| `pnpm --filter @volstudio/vol-hell build` | geçti |                                                           |
+| `pnpm --filter @volstudio/vol-ui build`   | geçti |                                                           |
+| `cargo check/fmt/clippy`                  | geçti |                                                           |
+
+### Hâlâ elle doğrulanması gerekenler (`pnpm dev`)
+
+1. Elite atılım telegraph'ının okunabilirliği ve kaçış penceresi.
+2. Boss üç paterni (slam çemberi, volley koridorları, summon konisi).
+3. Öfke fazında tempo artışı hissediliyor mu.
+4. Engel öldükten sonra dalga geçişi ve dükkan açılışı.
+5. Ölüm/zafer ekranında istatistiklerin doğru görünmesi.
