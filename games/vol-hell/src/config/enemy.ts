@@ -1,7 +1,7 @@
 /** Düşman parametreleri. Hızlar piksel/saniye cinsinden. */
 export const enemyConfig = {
-  /** Düşman canı. */
-  health: 50,
+  /** Düşman canı — mermi hasarının tam katı, iki vuruşluk (bkz. bulletConfig). */
+  health: 44,
   /** Düşman hareket hızı (piksel/saniye). Oyuncudan yavaş. */
   speed: 90,
   /** Düşman öldürülünce verilen temel skor. */

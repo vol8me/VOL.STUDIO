@@ -9,7 +9,8 @@
     "advanced": "ADVANCED",
     "scroll": "SCROLL",
     "touch": "TOUCH",
-    "loading": "LOADING"
+    "loading": "LOADING",
+    "cards": "CARDS"
   },
   "buttons": {
     "variant": "Variant",
@@ -633,5 +634,54 @@
     "fast": "Fast (100ms)",
     "defaultSpeed": "Default (300ms)",
     "slow": "Slow (800ms)"
+  },
+  "cards": {
+    "rarityTitle": "CardTile — rarity tiers",
+    "levelUpCardTitle": "LevelUpPicker — free pick",
+    "shopCardTitle": "ShopPicker — priced cards, buy/sell",
+    "rarity": {
+      "rare": "RARE",
+      "epic": "EPIC",
+      "legendary": "LEGENDARY"
+    },
+    "turret": {
+      "title": "Turret",
+      "desc": "Deploys a turret that fires on its own."
+    },
+    "chain": {
+      "title": "Chain Lightning",
+      "desc": "Lightning that jumps between enemies."
+    },
+    "inferno": {
+      "title": "Inferno",
+      "desc": "A huge, high damage fire zone."
+    },
+    "selected": "Selected: {{id}}",
+    "noSelection": "Nothing selected yet",
+    "openLevelUp": "OPEN LEVEL-UP",
+    "openShop": "OPEN SHOP",
+    "levelUpTitle": "LEVEL 4",
+    "levelUpHint": "Choose one card",
+    "shopTitle": "SHOP — WAVE 3",
+    "shopHint": "Spend Flux on cards, then continue",
+    "owned": "OWNED",
+    "tooExpensive": "NOT ENOUGH FLUX",
+    "inventoryEmpty": "No cards yet",
+    "close": "CONTINUE",
+    "price": "{{price}} Flux",
+    "balance": "Flux: {{amount}}",
+    "select": "PICK",
+    "buy": "BUY",
+    "sell": "SELL +{{value}}",
+    "abilitiesTitle": "Your abilities (drag to a slot)",
+    "passivesTitle": "Your passives",
+    "type": {
+      "ability": "ABILITY",
+      "passive": "PASSIVE"
+    },
+    "sharpEdge": {
+      "title": "Sharp Edge",
+      "desc": "Damage increased by 15%."
+    }
   }
 }

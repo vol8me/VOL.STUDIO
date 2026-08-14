@@ -20,7 +20,8 @@
     "best": "Rekor",
     "spark": "Spark",
     "flux": "Flux",
-    "level": "Sv.{{level}}"
+    "level": "Sv.{{level}}",
+    "pendingCards": "{{count}} kart bekliyor"
   },
   "settings": {
     "title": "AYARLAR",
@@ -56,5 +57,168 @@
     "time": "Süre",
     "bestTime": "En Uzun Süre",
     "totalKills": "Toplam Öldürme"
+  },
+  "cards": {
+    "cardTurret": {
+      "title": "Kule",
+      "desc": "Bulunduğun yere ateş eden bir kule diker. Aynı anda tek kule durabilir."
+    },
+    "cardChainLightning": {
+      "title": "Zincir Yıldırım",
+      "desc": "Yakındaki düşmana çarpar, oradan bir düşmana daha sıçrar. Hasar sıçradıkça azalmaz."
+    },
+    "cardFireZone": {
+      "title": "Ateş Çemberi",
+      "desc": "Nişan yönüne kor alanı serer; içinde kalan düşmanlar sürekli yanar."
+    },
+    "cardMultiShot": {
+      "title": "Üçlü Atış",
+      "desc": "Tek seferde yelpaze şeklinde üç mermi fırlatır."
+    },
+    "cardTurretRapid": {
+      "title": "Seri Kule",
+      "desc": "Daha sık ama daha hafif vuran bir kule diker."
+    },
+    "cardChainSurge": {
+      "title": "Çifte Zincir",
+      "desc": "Daha güçlü yıldırım; dört kez sıçrar."
+    },
+    "cardEmberField": {
+      "title": "Kor Tarlası",
+      "desc": "Daha geniş ve daha uzun süren ateş alanı."
+    },
+    "cardScatterShot": {
+      "title": "Saçma Atış",
+      "desc": "Geniş yelpazede beş mermi fırlatır."
+    },
+    "cardTurretSiege": {
+      "title": "Kuşatma Kulesi",
+      "desc": "Ağır vuran, uzun menzilli kule. Yavaş ateş eder."
+    },
+    "cardChainStorm": {
+      "title": "Yıldırım Fırtınası",
+      "desc": "Yedi sıçramalık yıldırım; kalabalığı baştan sona tarar."
+    },
+    "cardInferno": {
+      "title": "Cehennem",
+      "desc": "Devasa ve yüksek hasarlı ateş alanı."
+    },
+    "cardBulletStorm": {
+      "title": "Mermi Fırtınası",
+      "desc": "Çevrene tam daire dokuz mermi savurur."
+    },
+    "keskinUc": {
+      "title": "Keskin Uç",
+      "desc": "Hasar %15 artar."
+    },
+    "hafifBotlar": {
+      "title": "Hafif Botlar",
+      "desc": "Hareket hızı %12 artar."
+    },
+    "takviyeliGovde": {
+      "title": "Takviyeli Gövde",
+      "desc": "Maksimum can +25."
+    },
+    "yagliTetik": {
+      "title": "Yağlı Tetik",
+      "desc": "Ateş temposu %10 hızlanır."
+    },
+    "catalDil": {
+      "title": "Çatal Dil",
+      "desc": "Zincir yıldırım bir kez daha sıçrar."
+    },
+    "agirNamlu": {
+      "title": "Ağır Namlu",
+      "desc": "Hasar %30 artar."
+    },
+    "tepkiKontrol": {
+      "title": "Tepki Kontrolü",
+      "desc": "Ateş temposu %22 hızlanır."
+    },
+    "zirhKaplama": {
+      "title": "Zırh Kaplama",
+      "desc": "Maksimum can +60."
+    },
+    "bakirNamlu": {
+      "title": "Bakır Namlu",
+      "desc": "Kulelerin atış hasarı +8."
+    },
+    "yikimProtokolu": {
+      "title": "Yıkım Protokolü",
+      "desc": "Hasar %60 artar."
+    },
+    "sonsuzTetik": {
+      "title": "Sonsuz Tetik",
+      "desc": "Ateş temposu %40 hızlanır."
+    },
+    "ekNamlu": {
+      "title": "Ek Namlu",
+      "desc": "Çoklu atış iki mermi daha fırlatır."
+    },
+    "korYakit": {
+      "title": "Kor Yakıt",
+      "desc": "Ateş alanları 2,5 saniye daha uzun yanar."
+    },
+    "camKanat": {
+      "title": "Cam Kanat",
+      "desc": "Hasar %35 artar, maksimum can %25 azalır."
+    },
+    "agirZirh": {
+      "title": "Ağır Zırh",
+      "desc": "Maksimum can +70, hareket hızı %15 azalır."
+    },
+    "riskliTeknik": {
+      "title": "Riskli Teknik",
+      "desc": "Hasar %50 artar, ateş temposu %20 yavaşlar."
+    },
+    "kuleBagi": {
+      "title": "Kule Bağı",
+      "desc": "Kulen ayaktayken hasar %35 artar, hız %10 azalır."
+    },
+    "olumeYakin": {
+      "title": "Ölüme Yakın",
+      "desc": "Maksimum can %15 azalır. Canın dörtte birin altındayken hasar iki katına çıkar, hız %25 artar."
+    },
+    "sonSilah": {
+      "title": "Son Silah",
+      "desc": "Hasar %80 artar, maksimum can %40 azalır."
+    },
+    "ui": {
+      "levelUpTitle": "SEVİYE {{level}}",
+      "levelUpHint": "Bir kart seç",
+      "shopTitle": "DÜKKAN — DALGA {{wave}}",
+      "shopHint": "Flux'unla kart al; hazır olduğunda devam et",
+      "buy": "SATIN AL",
+      "owned": "ALINDI",
+      "tooExpensive": "YETERSİZ FLUX",
+      "continue": "DEVAM ET",
+      "inventoryEmpty": "Henüz kartın yok",
+      "sell": "SAT +{{value}}",
+      "price": "{{price}} Flux",
+      "balance": "Flux: {{amount}}",
+      "select": "SEÇ",
+      "abilitiesTitle": "Yeteneklerin (slota sürükle)",
+      "passivesTitle": "Pasiflerin"
+    },
+    "rarity": {
+      "rare": "NADİR",
+      "epic": "DESTANSI",
+      "legendary": "EFSANEVİ"
+    },
+    "type": {
+      "ability": "YETENEK",
+      "buff": "PASİF",
+      "tradeoff": "TAKAS"
+    }
+  },
+  "ability": {
+    "empty": "Boş",
+    "slotHint": "{{key}} — {{name}}",
+    "loadoutTitle": "Yetenek Slotları",
+    "noCards": "Yetenek kartın yok",
+    "loadoutHint": "Kartı slota sürükle ya da kartı seçip slota tıkla",
+    "clearSlot": "Slotu boşalt",
+    "equipped": "TAKILI",
+    "equip": "TAK"
   }
 }

@@ -22,7 +22,18 @@ export type EffectId =
   | 'enemyDash'
   | 'playerDash'
   | 'playerHit'
-  | 'fluxPickup';
+  | 'fluxPickup'
+  | 'turretPlace'
+  | 'turretShot'
+  | 'turretImpact'
+  | 'turretHit'
+  | 'turretDestroy'
+  | 'chainHop'
+  | 'fireZoneSpawn'
+  | 'fireZoneTick'
+  | 'fireZoneBurn'
+  | 'multiShotCast'
+  | 'cardPicked';
 
 /** Bir efektin partikül patlaması parametreleri. */
 export interface ParticleBurstSpec {
@@ -197,6 +208,160 @@ export const effectsConfig: Record<EffectId, EffectDefinition> = {
       scale: { start: 0.3, end: 0 },
       alpha: { start: 0.9, end: 0 },
       tint: [0x66ffcc, 0x33ddaa],
+      depth: RENDER_DEPTH.impactEffect,
+      additive: true,
+    },
+  },
+
+  // --- Ability efektleri ---------------------------------------------------
+
+  turretPlace: {
+    particles: {
+      count: 14,
+      speed: { min: 60, max: 160 },
+      lifespan: { min: 220, max: 420 },
+      scale: { start: 0.45, end: 0 },
+      alpha: { start: 0.9, end: 0 },
+      tint: [0x44ddaa, 0x88ffdd],
+      depth: RENDER_DEPTH.impactEffect,
+      additive: true,
+    },
+    shake: { durationMs: 70, intensity: 0.004, cooldownMs: 200 },
+  },
+
+  turretShot: {
+    particles: {
+      count: 3,
+      speed: { min: 40, max: 120 },
+      lifespan: { min: 90, max: 170 },
+      scale: { start: 0.26, end: 0 },
+      alpha: { start: 0.85, end: 0 },
+      tint: [0x88ffdd, 0xffffff],
+      angleSpread: 20,
+      depth: RENDER_DEPTH.abilityVisual,
+      additive: true,
+    },
+  },
+
+  turretImpact: {
+    particles: {
+      count: 5,
+      speed: { min: 50, max: 150 },
+      lifespan: { min: 100, max: 200 },
+      scale: { start: 0.3, end: 0 },
+      alpha: { start: 0.95, end: 0 },
+      tint: [0xbbffee, 0xffffff],
+      depth: RENDER_DEPTH.abilityVisual,
+      additive: true,
+    },
+  },
+
+  turretHit: {
+    particles: {
+      count: 4,
+      speed: { min: 40, max: 120 },
+      lifespan: { min: 120, max: 240 },
+      scale: { start: 0.3, end: 0 },
+      alpha: { start: 0.8, end: 0 },
+      tint: [0x44ddaa, 0xff7744],
+      depth: RENDER_DEPTH.impactEffect,
+    },
+  },
+
+  turretDestroy: {
+    particles: {
+      count: 16,
+      speed: { min: 80, max: 220 },
+      lifespan: { min: 240, max: 460 },
+      scale: { start: 0.5, end: 0 },
+      alpha: { start: 0.95, end: 0 },
+      tint: [0x44ddaa, 0x336655],
+      depth: RENDER_DEPTH.impactEffect,
+    },
+    shake: { durationMs: 90, intensity: 0.006, cooldownMs: 250 },
+  },
+
+  chainHop: {
+    particles: {
+      count: 9,
+      speed: { min: 70, max: 210 },
+      lifespan: { min: 130, max: 260 },
+      scale: { start: 0.4, end: 0 },
+      alpha: { start: 1, end: 0 },
+      tint: [0x88ccff, 0xffffff, 0x4477ff],
+      depth: RENDER_DEPTH.abilityVisual,
+      additive: true,
+    },
+  },
+
+  fireZoneSpawn: {
+    particles: {
+      count: 18,
+      speed: { min: 50, max: 190 },
+      lifespan: { min: 260, max: 520 },
+      scale: { start: 0.55, end: 0 },
+      alpha: { start: 0.9, end: 0 },
+      tint: [0xff7722, 0xffcc33, 0xff3311],
+      depth: RENDER_DEPTH.abilityGround,
+      additive: true,
+    },
+    shake: { durationMs: 80, intensity: 0.005, cooldownMs: 300 },
+  },
+
+  fireZoneTick: {
+    particles: {
+      count: 2,
+      speed: { min: 10, max: 60 },
+      lifespan: { min: 220, max: 420 },
+      scale: { start: 0.3, end: 0 },
+      alpha: { start: 0.7, end: 0 },
+      tint: [0xff9933, 0xffcc55],
+      // Yukarı doğru yükselen kıvılcım — alev hissi.
+      angle: { min: 250, max: 290 },
+      depth: RENDER_DEPTH.abilityGround,
+      additive: true,
+    },
+  },
+
+  fireZoneBurn: {
+    particles: {
+      count: 2,
+      speed: { min: 20, max: 70 },
+      lifespan: { min: 180, max: 320 },
+      scale: { start: 0.26, end: 0 },
+      alpha: { start: 0.85, end: 0 },
+      tint: [0xff5522, 0xffaa44],
+      // Yanan düşmanın üstünden yükselir.
+      angle: { min: 250, max: 290 },
+      depth: RENDER_DEPTH.impactEffect,
+      additive: true,
+    },
+  },
+
+  multiShotCast: {
+    particles: {
+      count: 10,
+      speed: { min: 90, max: 240 },
+      lifespan: { min: 110, max: 220 },
+      scale: { start: 0.34, end: 0 },
+      alpha: { start: 0.9, end: 0 },
+      tint: [0xffee66, 0xffffff],
+      // Nişan yönüne yayılan namlu parlaması.
+      angleSpread: 30,
+      depth: RENDER_DEPTH.abilityVisual,
+      additive: true,
+    },
+    shake: { durationMs: 50, intensity: 0.004, cooldownMs: 200 },
+  },
+
+  cardPicked: {
+    particles: {
+      count: 20,
+      speed: { min: 60, max: 220 },
+      lifespan: { min: 300, max: 620 },
+      scale: { start: 0.5, end: 0 },
+      alpha: { start: 1, end: 0 },
+      tint: [0xffffff, 0xffdd66, 0x88ccff],
       depth: RENDER_DEPTH.impactEffect,
       additive: true,
     },

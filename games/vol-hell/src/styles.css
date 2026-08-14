@@ -111,6 +111,164 @@
   color: var(--vol-ui-text);
 }
 
+/* Ability slotları — sol alt köşede Q ve E göstergeleri. */
+.vol-ability-hud {
+  gap: var(--vol-space-sm);
+  display: flex;
+  position: absolute;
+  bottom: var(--vol-space-md);
+  left: var(--vol-space-md);
+}
+
+.vol-ability-slot {
+  background: var(--vol-ui-overlay-panel);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  flex-direction: column;
+  gap: 2px;
+  min-width: 104px;
+  padding: var(--vol-space-xs) var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-ability-slot--empty {
+  opacity: 0.55;
+}
+
+.vol-ability-slot--ready {
+  border-color: var(--vol-ui-support-border);
+}
+
+.vol-ability-slot__key {
+  letter-spacing: 0.1em;
+  color: var(--vol-ui-text-muted);
+  font-family: var(--vol-font-family);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.vol-ability-slot__name {
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: 12px;
+}
+
+.vol-ability-slot__gauge {
+  background: var(--vol-ui-surface-1);
+  border-radius: var(--vol-radius-sm);
+  height: 3px;
+  overflow: hidden;
+}
+
+.vol-ability-slot__fill {
+  background: var(--vol-ui-support-solid);
+  width: 0%;
+  height: 100%;
+  transition: width var(--vol-transition-fast);
+}
+
+.vol-ability-slot--ready .vol-ability-slot__fill {
+  background: var(--vol-ui-success-solid);
+}
+
+/* Kart ekranları katmanı — level-up ve dükkan panelleri ortalanır. */
+.vol-card-layer {
+  pointer-events: auto;
+  background: var(--vol-ui-scrim);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--vol-space-md);
+  display: flex;
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+}
+
+.vol-card-layer[hidden] {
+  display: none;
+}
+
+/* Yetenek slotları — dükkan panelinin içinde, kartlar buraya sürüklenir. */
+.vol-loadout {
+  flex-direction: column;
+  gap: var(--vol-space-xs);
+  width: 100%;
+  display: flex;
+}
+
+.vol-loadout__title {
+  letter-spacing: 0.06em;
+  color: var(--vol-ui-text-secondary);
+  font-family: var(--vol-font-family);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vol-loadout__hint {
+  color: var(--vol-ui-text-muted);
+  font-family: var(--vol-font-family-body);
+  font-size: 11px;
+}
+
+.vol-loadout__slots {
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-loadout__slot {
+  cursor: pointer;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-1);
+  border: 1px dashed var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-sm);
+  flex: 1;
+  padding: var(--vol-space-sm);
+  font-family: var(--vol-font-family);
+  font-size: 13px;
+  display: flex;
+}
+
+.vol-loadout__slot-name {
+  flex: 1;
+}
+
+.vol-loadout__slot-clear {
+  cursor: pointer;
+  color: var(--vol-ui-text-muted);
+  background: none;
+  border: none;
+  padding: 0 var(--vol-space-xs);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.vol-loadout__slot-clear:hover {
+  color: var(--vol-ui-danger-solid);
+}
+
+.vol-loadout__slot--filled {
+  border-style: solid;
+  border-color: var(--vol-ui-support-border);
+}
+
+/* Kart seçiliyken slotlar hedef olduklarını belli eder. */
+.vol-loadout__slot--target {
+  border-color: var(--vol-ui-focus-ring);
+}
+
+.vol-loadout__slot--hover {
+  background: var(--vol-ui-selected-fill);
+}
+
+.vol-loadout__slot:focus-visible,
+.vol-loadout__slot-clear:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
 .vol-fatal-error {
   position: fixed;
   inset: 0;

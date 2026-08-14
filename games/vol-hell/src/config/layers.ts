@@ -14,14 +14,20 @@ export const RENDER_DEPTH = {
   groundEffect: -60,
   /** Yerdeki Flux parçaları — düşmanlar üzerinden geçer. */
   fluxPickup: -50,
+  /** Ateş alanı gibi zemine serilen ability etkileri. */
+  abilityGround: -40,
   /** Düşman gövdeleri. */
   enemy: 0,
+  /** Kule gibi yerleştirilen yapılar — düşmanların üstünde, oyuncunun altında. */
+  structure: 8,
   /** Düşman can barları — başka bir düşmanın gövdesi altında kalmasın. */
   enemyHealthBar: 5,
   /** Oyuncu — kalabalıkta asla kaybolmaz. */
   player: 10,
   /** Mermiler. */
   bullet: 20,
+  /** Zincir yıldırım gibi anlık ability görselleri — mermilerin üstünde okunur. */
+  abilityVisual: 25,
   /** Vuruş/ölüm/toplama efektleri — en üstte okunur. */
   impactEffect: 30,
 } as const;

@@ -20,7 +20,8 @@
     "best": "Best",
     "spark": "Spark",
     "flux": "Flux",
-    "level": "Lv.{{level}}"
+    "level": "Lv.{{level}}",
+    "pendingCards": "{{count}} card(s) waiting"
   },
   "settings": {
     "title": "SETTINGS",
@@ -56,5 +57,168 @@
     "time": "Time",
     "bestTime": "Best Time",
     "totalKills": "Total Kills"
+  },
+  "cards": {
+    "cardTurret": {
+      "title": "Turret",
+      "desc": "Deploys a turret at your position that fires on its own. Only one turret at a time."
+    },
+    "cardChainLightning": {
+      "title": "Chain Lightning",
+      "desc": "Strikes a nearby enemy, then jumps to another. Damage never falls off."
+    },
+    "cardFireZone": {
+      "title": "Fire Ring",
+      "desc": "Lays a burning zone in your aim direction; enemies inside keep taking damage."
+    },
+    "cardMultiShot": {
+      "title": "Triple Shot",
+      "desc": "Fires three bullets in a fan with a single shot."
+    },
+    "cardTurretRapid": {
+      "title": "Rapid Turret",
+      "desc": "Deploys a turret that fires far more often for less damage."
+    },
+    "cardChainSurge": {
+      "title": "Twin Chain",
+      "desc": "Stronger lightning; jumps four times."
+    },
+    "cardEmberField": {
+      "title": "Ember Field",
+      "desc": "A wider fire zone that burns for longer."
+    },
+    "cardScatterShot": {
+      "title": "Scatter Shot",
+      "desc": "Fires five bullets across a wide fan."
+    },
+    "cardTurretSiege": {
+      "title": "Siege Turret",
+      "desc": "Long range turret that hits hard but fires slowly."
+    },
+    "cardChainStorm": {
+      "title": "Lightning Storm",
+      "desc": "Lightning with seven jumps; sweeps through a crowd."
+    },
+    "cardInferno": {
+      "title": "Inferno",
+      "desc": "A huge, high damage fire zone."
+    },
+    "cardBulletStorm": {
+      "title": "Bullet Storm",
+      "desc": "Hurls nine bullets in a full circle around you."
+    },
+    "keskinUc": {
+      "title": "Sharp Edge",
+      "desc": "Damage increased by 15%."
+    },
+    "hafifBotlar": {
+      "title": "Light Boots",
+      "desc": "Movement speed increased by 12%."
+    },
+    "takviyeliGovde": {
+      "title": "Reinforced Frame",
+      "desc": "Maximum health +25."
+    },
+    "yagliTetik": {
+      "title": "Oiled Trigger",
+      "desc": "Fire rate 10% faster."
+    },
+    "catalDil": {
+      "title": "Forked Tongue",
+      "desc": "Chain lightning jumps one more time."
+    },
+    "agirNamlu": {
+      "title": "Heavy Barrel",
+      "desc": "Damage increased by 30%."
+    },
+    "tepkiKontrol": {
+      "title": "Recoil Control",
+      "desc": "Fire rate 22% faster."
+    },
+    "zirhKaplama": {
+      "title": "Armor Plating",
+      "desc": "Maximum health +60."
+    },
+    "bakirNamlu": {
+      "title": "Copper Barrel",
+      "desc": "Turret shots deal +8 damage."
+    },
+    "yikimProtokolu": {
+      "title": "Demolition Protocol",
+      "desc": "Damage increased by 60%."
+    },
+    "sonsuzTetik": {
+      "title": "Endless Trigger",
+      "desc": "Fire rate 40% faster."
+    },
+    "ekNamlu": {
+      "title": "Extra Barrel",
+      "desc": "Multi-shot fires two more bullets."
+    },
+    "korYakit": {
+      "title": "Ember Fuel",
+      "desc": "Fire zones burn 2.5 seconds longer."
+    },
+    "camKanat": {
+      "title": "Glass Wing",
+      "desc": "Damage +35%, maximum health -25%."
+    },
+    "agirZirh": {
+      "title": "Heavy Armor",
+      "desc": "Maximum health +70, movement speed -15%."
+    },
+    "riskliTeknik": {
+      "title": "Risky Technique",
+      "desc": "Damage +50%, fire rate 20% slower."
+    },
+    "kuleBagi": {
+      "title": "Turret Bond",
+      "desc": "While your turret stands: damage +35%, speed -10%."
+    },
+    "olumeYakin": {
+      "title": "Near Death",
+      "desc": "Maximum health -15%. While below a quarter health: damage doubled, speed +25%."
+    },
+    "sonSilah": {
+      "title": "Last Weapon",
+      "desc": "Damage +80%, maximum health -40%."
+    },
+    "ui": {
+      "levelUpTitle": "LEVEL {{level}}",
+      "levelUpHint": "Choose one card",
+      "shopTitle": "SHOP — WAVE {{wave}}",
+      "shopHint": "Spend Flux on cards, then continue",
+      "buy": "BUY",
+      "owned": "OWNED",
+      "tooExpensive": "NOT ENOUGH FLUX",
+      "continue": "CONTINUE",
+      "inventoryEmpty": "No cards yet",
+      "sell": "SELL +{{value}}",
+      "price": "{{price}} Flux",
+      "balance": "Flux: {{amount}}",
+      "select": "PICK",
+      "abilitiesTitle": "Your abilities (drag to a slot)",
+      "passivesTitle": "Your passives"
+    },
+    "rarity": {
+      "rare": "RARE",
+      "epic": "EPIC",
+      "legendary": "LEGENDARY"
+    },
+    "type": {
+      "ability": "ABILITY",
+      "buff": "PASSIVE",
+      "tradeoff": "TRADEOFF"
+    }
+  },
+  "ability": {
+    "empty": "Empty",
+    "slotHint": "{{key}} — {{name}}",
+    "loadoutTitle": "Ability Slots",
+    "noCards": "No ability cards",
+    "loadoutHint": "Drag a card onto a slot, or select it and click a slot",
+    "clearSlot": "Clear slot",
+    "equipped": "EQUIPPED",
+    "equip": "EQUIP"
   }
 }

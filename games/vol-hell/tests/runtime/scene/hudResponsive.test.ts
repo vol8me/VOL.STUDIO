@@ -14,6 +14,10 @@ const sceneContent = readFileSync(scenePath, 'utf-8');
 const hudStatsPath = resolve(import.meta.dirname, '../../../src/runtime/ui/HUDStats.ts');
 const hudStatsContent = readFileSync(hudStatsPath, 'utf-8');
 
+// HUD kurulumu sahneden `GameHud`'a taşındı; ölçü custom property'lerini artık o yazıyor.
+const gameHudPath = resolve(import.meta.dirname, '../../../src/runtime/ui/GameHud.ts');
+const gameHudContent = readFileSync(gameHudPath, 'utf-8');
+
 describe('HUD responsive — --vol-space-md', () => {
   it('theme.css --vol-space-md değişkeni tanımlı', () => {
     expect(themeContent).toContain('--vol-space-md:');
@@ -45,15 +49,18 @@ describe('HUD responsive — --vol-space-md', () => {
   it('HUD stilleri TS içinde satır içi yazılmaz — tasarım sistemi baypas edilmez', () => {
     // O21: style.cssText ve sabit piksel top/left atamaları CSS'e taşındı.
     expect(hudStatsContent).not.toContain('style.cssText');
+    expect(gameHudContent).not.toContain('style.cssText');
     expect(sceneContent).not.toContain('style.position');
     expect(sceneContent).not.toContain('style.top');
     expect(sceneContent).not.toContain('style.left');
   });
 
   it('HUD ölçüleri config üzerinden CSS custom property olarak verilir', () => {
-    expect(sceneContent).toContain('--vol-hud-bar-width');
-    expect(sceneContent).toContain('--vol-hud-dash-offset');
+    expect(gameHudContent).toContain('--vol-hud-bar-width');
+    expect(gameHudContent).toContain('--vol-hud-dash-offset');
+    expect(gameHudContent).toContain('--vol-hud-spark-offset');
     expect(stylesContent).toContain('var(--vol-hud-bar-width)');
     expect(stylesContent).toContain('var(--vol-hud-dash-offset)');
+    expect(stylesContent).toContain('var(--vol-hud-spark-offset)');
   });
 });

@@ -53,10 +53,18 @@ export const economyConfig = {
     },
   },
   spark: {
-    /** İlk seviye atlaması için gereken Spark. */
-    baseThreshold: 12,
+    /**
+     * İlk seviye atlaması için gereken Spark.
+     *
+     * Ölçek bir dalgadan toplanan Spark'a göre kurulur: 40 saniyelik ilk
+     * dalgada ~25 grunt (3 Spark) ≈ 75 Spark toplanır. 30 + 38 = 68 eşiğiyle
+     * ilk dalga İKİ seviye verir; sonraki dalgalar aynı öldürme sayısıyla
+     * giderek daha az seviye verir, ileride bir dalga hiç seviye atlatmadan
+     * bitebilir.
+     */
+    baseThreshold: 30,
     /** Her seviyede eşiğin büyüme çarpanı. */
-    thresholdGrowth: 1.35,
+    thresholdGrowth: 1.28,
   },
 } as const;
 

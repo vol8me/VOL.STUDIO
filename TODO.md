@@ -679,3 +679,271 @@ yaratıyordu. `BarOptions.lowThreshold` artık `number | null`: `null` verilince
 uyarı durumu hiç oluşmaz. `XPBar` bunu kullanıyor — dolan bir bar tek renk.
 
 Can, mana ve dash barları değişmedi: orada düşük değer gerçekten uyarıdır.
+
+---
+
+## AŞAMA 2/3 — Ability sistemi, kart sistemi, level-up/dükkan UI — 2026-08-14
+
+Aşama 1'in altyapısı üzerine oynanış içeriği: dört ability mekaniği, 31 kartlık
+havuz, level-up ve dükkan akışları, kart UI component'leri.
+
+### Ön işler (Bölüm A/B/C/D'den önce)
+
+- **`GameScene.ts` bölündü.** 636 satırdı; koşu yaşam döngüsü `RunDirector`'a,
+  ses yönetimi `GameAudioDirector`'a, HUD kurulumu/tazelemesi `GameHud`'a
+  taşındı. Aşama 2'nin tüm eklemelerinden SONRA sahne **559 satır** — yani
+  büyümek yerine küçüldü.
+- **Can barı artık reaktif.** `Player.syncMaxHealth()` maks. can değişimini her
+  frame yakalıyor: artışta kazanılan can hemen veriliyor (yoksa "+60 can" kartı
+  o an hiçbir şey yapmazdı), azalışta mevcut can tavana kelepçeleniyor. HUD
+  tarafında `Bar.setMax()` değişimi izliyor.
+- **`core/tests/game.test.ts` 5/5 yeşil.** Kalan sorun font değil, `vi.mock`
+  içindeki `vi.importActual('phaser')` yüzünden gerçek Phaser modülünün
+  transform maliyetiydi; dosya bazında `testTimeout` 20 sn'ye çıkarıldı
+  (mock'u daraltmak Game.ts'in dokunduğu `Phaser.Game`/`Core.Events`/`Scale`
+  yüzeyini elle taklit etmeyi gerektirirdi — testi gerçeğe uzaklaştırırdı).
+  `--no-file-parallelism` dahil üç koşuda doğrulandı.
+
+### Bölüm A — Kart veri modeli
+
+- `src/config/cards/` — tip başına ayrı dosya + `CARD_CATALOG` + `findCards` +
+  `drawCards` (ses preset kataloğuyla aynı desen).
+- **31 kart**: 12 ability, 13 buff, 6 takas. Nadirlik dağılımı 11/10/10.
+- Rarity kartın kendi tasarımına GÖMÜLÜ; RNG yalnızca hangi kartın çekileceğini
+  belirler (`DEFAULT_RARITY_WEIGHTS`: rare 62 / epic 28 / legendary 10).
+- Fiyatlar Flux ölçeğiyle hizalı: rare 10, epic 18, legendary 32. Geri satışta
+  fiyatın %50'si iade edilir (`getCardSellValue`).
+- **Koşullar veri olarak taşınır.** Katalogda closure yok; `conditionId`
+  (`turretActive` / `lowHealth` / `bothSlotsFilled`) kart uygulanırken
+  `CardInventoryManager`'daki predicate tablosundan çözülür.
+
+### Bölüm B — Ability sistemi
+
+- 2 slot (Q/E). Boş slotta tuş sessizce hiçbir şey yapmaz.
+- Ortak taban `Ability` (cooldown muhasebesi + aktivasyon sözleşmesi); her
+  mekanik KENDİ dosyasında: `TurretAbility`, `ChainLightningAbility`,
+  `FireZoneAbility`, `MultiShotAbility`.
+- Ürettikleri varlıklar ayrı entity'ler: `Turret`, `FireZone`,
+  `ChainLightningStrike`. Ability sınıfları sahneyi tanımaz; her şeyi
+  `AbilityWorld` üzerinden `AbilityRuntime`'a verir — "aynı anda tek kule"
+  gibi ability'ler ARASI kurallar bu yüzden tek yerde durur.
+- **Kule**: hitscan ateş, canı var, düşmanlar hedefler ve temasla yıkar
+  (`EnemyManager` kuleye daha yakın düşmanları ona yönlendirir,
+  `CollisionResolver` temas hasarını uygular).
+- **Zincir yıldırım**: zamanlı sıçrama (`hopIntervalMs`), hasar sıçradıkça
+  AZALMAZ, sıçrama sayısı karta bağlı olarak artar.
+- **Ateş alanı**: nişan yönüne serilir, tick başına hasar, sönerek kaybolur.
+- **Çoklu mermi**: silah cooldown'unu atlayarak yelpaze mermi doğurur
+  (`BulletManager.spawnBullet`); mermi başına hasar `damageScale` ile düşer.
+- Ability cooldown'ları oyuncunun `fireRate` stat'ının tabana ORANIYLA
+  ölçeklenir; `MIN_ABILITY_COOLDOWN_MS` (250 ms) alt sınırı var.
+- **Ability'e özel parametreler** (`AbilityUpgrades`): sıçrama sayısı, kule
+  hasarı, alan süresi, mermi sayısı. Dört temel stat'a zorlanmadı; koşu
+  seviyesinde tutuluyor ki ability henüz alınmamışken de kart satın alınabilsin.
+- 12 ability tanımı = 4 mekanik × 3 kademe (`ABILITY_CATALOG`).
+
+### Bölüm C — Level-up ve dükkan mantığı
+
+- `CardInventoryManager` — UI'DAN TAMAMEN BAĞIMSIZ: teklif çekme, edinme,
+  satın alma, satma, slot atama ve kart etkilerini uygulama/geri alma.
+- Aynı kartın ikinci kopyası ÜST ÜSTE BİNER: modifier kimliği alım başına
+  benzersizdir (`keskinUc#2`), satışta yalnızca o kopya geri alınır.
+- Sahip olunan ability kartı tekrar teklif edilmez; buff/takas tekrar çıkabilir.
+- Level-up: 2 kart, ücretsiz, biri seçilir. Dükkan: 2 kart fiyatlı, 0/1/2
+  alınabilir, envanterden kart satılabilir, panel elle kapatılır.
+- Yeni alınan ability boş slot varsa OTOMATİK yerleşir; iki slot da doluysa
+  envanterde bekler ve dükkandaki loadout panelinden atanır.
+
+### Bölüm D — Kart UI component'leri
+
+- `core/src/ui/cards/`: `CardTile` (ortak taban), `CardPicker` (soyut panel),
+  `LevelUpPicker`, `ShopPicker` + `cards.css`.
+- **Modal'a bağlı DEĞİL**: kendi panelini çizer; karartma isteyen çağıran onu
+  kendi katmanına yerleştirir (oyun tarafında `vol-card-layer`).
+- Kartlar metin-only; nadirlik farkı yalnızca renk/kenarlık/arka planla verilir.
+- Kartın TAMAMI tek bir `<button>` — tıklama alanı belirsiz kalmaz, klavye ve
+  ekran okuyucu doğal çalışır.
+- Oyun tarafı: `CardScreens` (orkestrasyon + i18n çözümü), `AbilityLoadout`
+  (sürükle-bırak + tıklama ile slot atama), `AbilityHud` (Q/E göstergesi).
+- **vol-ui showcase**: yeni `KARTLAR` sekmesi — üç nadirlik yan yana, canlı
+  LevelUpPicker ve gerçekten alım/satım yapılabilen ShopPicker demosu.
+  README tablosu güncellendi.
+
+### Yapılan varsayımlar
+
+- **Kart metinleri i18n anahtarı olarak saklanır** (`titleKey`/`descriptionKey`);
+  katalog çeviri taşımaz, `toCardTileData()` çözer. 31 kart × 2 metin, tr+en.
+- **Ability kartı oranı %39** (12/31). Prompt "kabaca yarısı" diyordu; 4 mekanik
+  × 3 kademe doğal bir sınır, buff/takas havuzunu daraltmak yerine bu oranda
+  bırakıldı.
+- **Kule hitscan vurur** (mermi değil). Mermili kule `BulletManager`'a düşman
+  mermisi kavramı eklemeyi gerektirirdi; bu Aşama 3'ün Boss işine daha yakın.
+- **`olumeYakin` kartına kalıcı bir bedel eklendi** (maks. can −%15). Test
+  "takas kartı hem kazanç hem kayıp taşır" kuralını yakaladı: kart yalnızca
+  koşullu kazanç veriyordu, yani takas değil saf buff'tı.
+- **Sürükle-bırak yanına tıklama yolu kondu**: HTML5 drag dokunmatikte ve
+  klavyede çalışmaz; kart seç → slota tıkla aynı sonucu verir.
+- **Kart ekranları oyunu duraklatır** (`scene.pause()`), duraklatma MENÜSÜNÜ
+  açmadan. ESC kart ekranı açıkken devre dışıdır.
+- **Dükkan 20. dalgadan sonra da açılabilir** — `WaveManager` son dalganın
+  bitiminde `onWaveEnd` yayar; ekran normal çalışır, zafer akışı Aşama 3'e ait.
+
+### Aşama 3 için bırakılanlar
+
+- `WaveManager.onEliteWave` (dalga 10) ve `onBossWave` (dalga 20) hâlâ yalnızca
+  Diagnostics'e yazıyor — Elite/Boss implementasyonu Aşama 3.
+- Koşu bitişi (`onRunComplete`) zafer ekranı yok.
+- Dokunmatik cihazlarda ability tetikleme yok (Q/E yalnızca klavye);
+  `TouchController`'a iki ability butonu eklenmeli.
+
+### Kullanıcının `pnpm dev` ile ELLE test etmesi gerekenler
+
+Bu ortamda tarayıcı yok; aşağıdakiler testlerle değil ancak gözle doğrulanır:
+
+1. **Katmanlama** (`RENDER_DEPTH`): kule düşmanların üstünde/oyuncunun altında,
+   ateş alanı zeminde, yıldırım kolları mermilerin üstünde okunuyor mu.
+2. **Kart ekranları**: level-up ve dükkan panelleri ortalanıyor mu, kart metni
+   taşıyor mu, dükkanda envanter listesi kaydırılabiliyor mu.
+3. **Sürükle-bırak**: ability kartını Q/E kutusuna sürükleme hissi; tıklama
+   yolunun da çalıştığı.
+4. **Bar güncellemeleri**: maks. can artıran kart alındığında can barının
+   tavanının ve dolumunun birlikte büyümesi.
+5. **Ability efektleri**: kule kurulumu/yıkımı, zincir sıçraması, ateş alanı
+   tick'leri ve çoklu atış yelpazesi yeterince belirgin mi.
+6. **Cooldown göstergesi**: sol alttaki Q/E kutularının dolum çizgisi.
+
+### Kalite kapıları
+
+| Kapı                                      | Durum | Not                                                       |
+| ----------------------------------------- | ----- | --------------------------------------------------------- |
+| `pnpm -r typecheck`                       | geçti | 4 paket                                                   |
+| `pnpm -r test`                            | geçti | 1045 test (core 702, vol-hell 313, tauri-v2 25, vol-ui 5) |
+| `pnpm lint`                               | geçti | 0 hata, 0 uyarı                                           |
+| `pnpm format:check`                       | geçti |                                                           |
+| `pnpm lint:css`                           | geçti |                                                           |
+| `pnpm --filter @volstudio/vol-hell build` | geçti |                                                           |
+| `pnpm --filter @volstudio/vol-ui build`   | geçti |                                                           |
+
+### Kural: yeni UI component'i → showcase'e de eklenmeli
+
+`core/src/ui` altına eklenen HER yeni component `games/vol-ui` showcase'inde
+canlı bir demoyla gösterilmeli ve `games/vol-ui/README.md` tablosuna
+işlenmelidir. Aşama 2'de `cards/` klasörü ve `KARTLAR` sekmesi bu kuralla
+eklendi; sonraki aşamalar da aynı şekilde ilerlemeli.
+
+---
+
+## Aşama 2 revizyonu — denge, akış, dükkan UI ve ability görselleri — 2026-08-14
+
+Kullanıcının oyun içi ekran görüntüsü ve geri bildirimi üzerine yapılan tur.
+
+### Seviye/dalga dengesi (Brotato ritmi)
+
+Sorun: 2. dalgada oyuncu 6. seviyedeydi; eşik (12, ×1.35) bir dalgada 4-5 kart
+veriyordu. Eşik ölçeği bir dalgada toplanan Spark'a göre yeniden kuruldu:
+`baseThreshold` 12 → **30**, `thresholdGrowth` 1.35 → **1.28**.
+
+- İlk dalga (~25 grunt = 75 Spark) tam **iki** seviye verir.
+- Aynı öldürme sayısıyla ilerleyen dalgalar giderek daha az verir; bir noktada
+  seviyesiz dalga gelir.
+- `progressionBalance.test.ts` bunu SABİT SAYIYLA değil İLİŞKİYLE kilitler:
+  eşikler yeniden ayarlansa da eğrinin şekli korunur.
+
+### Level-up akışı dalga sonuna taşındı
+
+Seviye atlaması artık dövüşün ortasında ekran açmıyor. `RunEconomy.onLevelUp`
+→ `CardScreens.queueLevelUp()` ile **kuyruğa** alınıyor; dalga bitince
+`openIntermission()` bekleyen hakları **sırayla** sunuyor, sonuncusundan sonra
+dükkan geliyor. İki seviye atlanan bir dalgada oyuncu iki kart seçiyor.
+
+HUD: Spark barının etiketinde "N kart bekliyor" görünür — oyuncu dalga sonunda
+kendisini ne beklediğini bilir.
+
+### Dükkan UI yeniden tasarlandı
+
+Ekran görüntüsündeki sorunların hepsi karşılandı:
+
+- **Kaza tıklaması kalktı.** Kart gövdesine tıklamak artık hiçbir şey yapmıyor;
+  her eylem açık bir butonda: `SEÇ`, `SATIN AL`, `SAT +N`, `TAK`.
+- **"Pasif ne bilmiyoruz" giderildi.** Envanter iki bölüme ayrıldı —
+  **Yeteneklerin** (slota takılır) ve **Pasiflerin** — ve envanter kartlarında
+  açıklama artık gizlenmiyor. Kartlarda ayrıca tip rozeti var (YETENEK/PASİF/TAKAS).
+- **Slot atama çalışıyor.** Yetenek slotları dükkan panelinin İÇİNE alındı;
+  kart slota sürüklenebiliyor, sürüklemeyi kullanamayan için kartın kendi
+  **TAK** butonu aynı işi yapıyor. Slotu boşaltmak ayrı bir "×" butonunda —
+  slota değerek yetenek sökülemiyor.
+- Takılı yetenekte "TAKILI" rozeti; dükkan teklifi ekran AÇILIRKEN çekiliyor
+  (seviye ekranında alınan yetenek vitrinde tekrar çıkmıyor).
+
+### Ability'ler tek tek elden geçirildi
+
+**Kule** — en zayıf haldeydi (tek daire, hitscan):
+
+- Hedefe **dönen namlu**, atışta **geri tepme** (5 px, 110 ms'de sönümlenir).
+- **Gerçek mermi** (`TurretShot`): hedefi takip eder, çarpınca hasar verir,
+  hedefini kaybederse ömrü dolunca söner. Hitscan hasarı görünmüyordu.
+- **Menzil halkası**: normalde soluk (%12), kurulum anında belirgin (%55).
+- **Kurulum animasyonu**: gövde 1.6x'ten oturur, namlu açılır.
+- Hasar alma (`turretHit`) ve yıkım (`turretDestroy`) efektleri.
+
+**Zincir yıldırım** — düz ince çizgi ekranda kayboluyordu:
+
+- Kol artık **zikzak** (5 segment, uçlara doğru sönen sapma) ve **iki katman**
+  çiziliyor: kalın parıltı + ince çekirdek.
+- Zikzak, gameplay PRNG'sini kaydırmamak için AYRI bir görsel PRNG'den besleniyor.
+
+**Ateş alanı** — "çok basit ucuz bir şey"di:
+
+- **Nabız** (dolgu saydamlığı + halka ölçeği), sürekli yükselen **kıvılcımlar**
+  (hasar tick'inden bağımsız, 140 ms'de bir), yanan düşmanın üstünde ayrı
+  `fireZoneBurn` efekti, ömrün sonunda sönümlenme.
+
+**Çoklu atış**: salvo tek patlama gibi okunsun diye namlu parlaması
+(`multiShotCast`) + hafif sarsıntı eklendi.
+
+### Temel saldırı dengesi
+
+Taban tempo kartların katkısını yutuyordu: `fireCooldownMs` 180 → **260**,
+`damage` 25 → **22**, `minFireCooldownMs` 40 → **90**. Düşman canı hasarın tam
+katı kalsın diye `enemyConfig.health` 50 → **44** (yine iki vuruş). Böylece
+%40'lık legendary ateş hızı kartı gerçekten hissediliyor, üst üste binen
+kartlar bile FPS'e bağlı mermi seli üretemiyor.
+
+### Bug avı — bulunan ve düzeltilenler
+
+- **Sızıntı (gerçek):** Kule yıkıldığında `AbilityRuntime` yalnızca referansı
+  düşürüyordu; kulenin havadaki mermileri sahnede DONMUŞ Arc olarak kalıyordu.
+  Hem yıkımda hem "yeni kule eskisini kaldırır" yolunda `destroy()` çağrılıyor.
+  `abilityLifecycle.test.ts` sahnedeki şekilleri sayarak bunu kilitliyor.
+- **Determinizm kayması:** Yıldırımın zikzak sapması koşu PRNG'sinden çekiliyor,
+  yani bir GÖRSEL detay spawn/kart sırasını kaydırıyordu. Ability katmanı artık
+  ayrı bir görsel PRNG kullanıyor (koşu PRNG'sinden bir kez tohumlanır).
+- **Dükkan tekrarı:** Dükkan teklifi dalga sonunda, level-up seçimlerinden ÖNCE
+  çekiliyordu; seviye ekranında alınan yetenek kartı vitrinde tekrar
+  görünebiliyordu. Teklif artık dükkan açılırken çekiliyor.
+- **Ölü kod:** `AbilityRuntime.isEquipped`, `ChainLightningStrike.hitCount`,
+  `GameScene.abilityKeys` (yalnızca yazılıyordu), `AbilityLoadout`'un tıklama-seçim
+  yolu (TAK butonu gelince gereksizleşti) — hepsi silindi.
+- **Savunmacı guard:** Q/E tuşları duraklamada ve kart ekranı açıkken sessiz
+  kalıyor (Phaser sahne duraklayınca input'u zaten kapatıyor; bağ açık dursun).
+
+### Kalite kapıları
+
+| Kapı                                      | Durum | Not                                                       |
+| ----------------------------------------- | ----- | --------------------------------------------------------- |
+| `pnpm -r typecheck`                       | geçti | 4 paket                                                   |
+| `pnpm -r test`                            | geçti | 1076 test (core 708, vol-hell 338, tauri-v2 25, vol-ui 5) |
+| `pnpm lint`                               | geçti | 0 hata, 0 uyarı                                           |
+| `pnpm format:check`                       | geçti |                                                           |
+| `pnpm lint:css`                           | geçti |                                                           |
+| `pnpm --filter @volstudio/vol-hell build` | geçti |                                                           |
+| `pnpm --filter @volstudio/vol-ui build`   | geçti |                                                           |
+
+### Hâlâ elle doğrulanması gerekenler (`pnpm dev`)
+
+1. Kule: namlunun düşmana dönüşü, geri tepme hissi, menzil halkasının
+   rahatsız etmeden okunması, mermilerin görünürlüğü.
+2. Ateş alanının nabzı ve kıvılcım yoğunluğu — fazla mı, az mı?
+3. Zincirin zikzak kalınlığı ve parıltısı.
+4. Dükkanda sürükle-bırak hissi (TAK butonu yedek yol olarak var).
+5. Yeni ateş temposunun oyun hissi: taban artık belirgin şekilde yavaş.

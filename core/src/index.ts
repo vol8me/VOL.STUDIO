@@ -79,6 +79,7 @@ export * from './ui/data';
 export * from './ui/feedback';
 export * from './ui/controls';
 export * from './ui/hud';
+export * from './ui/cards';
 export { VOL_COLORS, type VolColorToken } from './ui/colors';
 export { Easing, animateValue, type AnimateValueOptions } from './ui/animation';
 export * from './debug';

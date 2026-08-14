@@ -7,6 +7,7 @@ import type { Player } from '@/runtime/entity/Player';
 import type { Bullet } from '@/runtime/entity/Bullet';
 import type { Enemy } from '@/runtime/entity/Enemy';
 import type { EnemyManager } from '@/runtime/entity/EnemyManager';
+import type { Turret } from '@/runtime/entity/Turret';
 import type { BulletManager } from '@/runtime/entity/BulletManager';
 import type { SpatialGrid } from './SpatialGrid';
 import type { Border } from '@/runtime/entity/Border';
@@ -18,6 +19,8 @@ export interface CollisionResolverCallbacks {
    * bu yüzden referansı saklamayın, ihtiyacınız olan değerleri hemen okuyun.
    */
   onEnemyKilled?: (enemy: Enemy) => void;
+  /** Sahnedeki kule — düşmanlar temasla yıpratır. Yoksa null döner. */
+  getTurret?: () => Turret | null;
 }
 
 /**
@@ -41,7 +44,31 @@ export class CollisionResolver {
   resolve(time: number): void {
     this.checkBulletEnemyCollisions();
     this.checkEnemyPlayerCollisions(time);
+    this.checkEnemyTurretCollisions(time);
     this.resolvePlayerEnemyOverlap();
+  }
+
+  /**
+   * Düşman-kule teması — kuleye değen düşman onu yıpratır.
+   * Aynı temas cooldown'unu kullanır: kuleye saldırmak oyuncuya saldırmakla
+   * aynı tempoda olur, düşman iki hedefe aynı anda vurmuş sayılmaz.
+   */
+  private checkEnemyTurretCollisions(time: number): void {
+    const turret = this.callbacks.getTurret?.();
+    if (!turret) return;
+
+    const nearbyEnemies = this.spatialGrid.queryNearby(turret.x, turret.y);
+    for (const enemy of nearbyEnemies) {
+      if (!enemy.isAlive) continue;
+
+      const dist = Math.hypot(enemy.x - turret.x, enemy.y - turret.y);
+      if (dist >= enemy.radius + turret.radius) continue;
+
+      const damage = enemy.tryContactDamage(time);
+      if (damage > 0) {
+        turret.takeDamage(damage);
+      }
+    }
   }
 
   /** Mermi-düşman çarpışma kontrolü — spatial grid ile sadece komşu hücreleri kontrol eder. */

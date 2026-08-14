@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
-import type { StatBlock, Vector2 } from '@volstudio/core';
-import { Diagnostics } from '@volstudio/core';
+import type { StatBlock } from '@volstudio/core';
+import { Diagnostics, Vector2 } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
 import { Bullet } from './Bullet';
 import type { Border } from './Border';
@@ -16,6 +16,8 @@ import type { EffectManager } from '@/runtime/systems/EffectManager';
 export class BulletManager {
   private readonly bullets: Bullet[] = [];
   private fireCooldown = 0;
+  /** Reusable buffer — mermi başına yeni Vector2 yaratmaz. */
+  private readonly directionBuf: Vector2 = new Vector2();
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -27,30 +29,46 @@ export class BulletManager {
   tryFire(origin: Vector2, direction: Vector2): boolean {
     if (this.fireCooldown > 0) return false;
 
-    const bullet = new Bullet(
-      this.scene,
+    // Negatif hasar mermiyi iyileştiriciye çevirirdi.
+    this.spawnBullet(
       origin.x,
       origin.y,
-      direction,
-      this.effects,
-      // Negatif hasar mermiyi iyileştiriciye çevirirdi.
+      direction.x,
+      direction.y,
       Math.max(0, this.stats.getValue('damage')),
     );
-    this.bullets.push(bullet);
     // fireRate = atışlar arası bekleme (ms); alt sınır olmadan modifier'lar
     // ateşi frame başına bir mermiye kadar hızlandırabilirdi.
     this.fireCooldown = Math.max(bulletConfig.minFireCooldownMs, this.stats.getValue('fireRate'));
 
-    const angleDeg = Math.atan2(direction.y, direction.x) * (180 / Math.PI);
-    this.effects.play('bulletFire', origin.x, origin.y, angleDeg);
+    return true;
+  }
+
+  /**
+   * Mermiyi doğrudan doğurur — ateş cooldown'unu OKUMAZ ve BAŞLATMAZ.
+   * Ability'ler (çoklu atış) bunu kullanır: kendi cooldown'ları zaten
+   * sınırlayıcıdır, silahın temposuna ikinci kez tabi olmamalıdırlar.
+   */
+  spawnBullet(x: number, y: number, dirX: number, dirY: number, damage: number): void {
+    this.directionBuf.set(dirX, dirY);
+    const bullet = new Bullet(
+      this.scene,
+      x,
+      y,
+      this.directionBuf,
+      this.effects,
+      Math.max(0, damage),
+    );
+    this.bullets.push(bullet);
+
+    const angleDeg = Math.atan2(dirY, dirX) * (180 / Math.PI);
+    this.effects.play('bulletFire', x, y, angleDeg);
 
     Diagnostics.getInstance()?.recordEvent('bulletFire', {
-      x: origin.x,
-      y: origin.y,
-      direction: { x: direction.x, y: direction.y },
+      x,
+      y,
+      direction: { x: dirX, y: dirY },
     });
-
-    return true;
   }
 
   update(delta: number, border: Border): void {

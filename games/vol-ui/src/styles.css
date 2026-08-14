@@ -239,6 +239,13 @@
   gap: var(--vol-space-sm);
 }
 
+/* Kart demoları — nadirlik kademeleri yan yana karşılaştırılabilsin. */
+.vol-showcase-card-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--vol-space-sm);
+}
+
 .vol-showcase-panel-demo__controls .vol-button {
   flex: 1;
   width: auto;

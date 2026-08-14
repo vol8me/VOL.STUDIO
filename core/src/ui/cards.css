@@ -1,0 +1,280 @@
+/* Kart seçim panelleri — level-up ve dükkan. Metin-only kartlar; nadirlik
+   farkı yalnızca renk/kenarlıkla verilir, ikon veya görsel varlık yoktur. */
+
+.vol-card-picker {
+  pointer-events: auto;
+  background: var(--vol-ui-overlay-panel);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  flex-direction: column;
+  gap: var(--vol-space-md);
+  width: min(720px, 92vw);
+  padding: var(--vol-space-lg);
+  display: flex;
+  position: relative;
+}
+
+.vol-card-picker[hidden] {
+  display: none;
+}
+
+.vol-card-picker__header {
+  flex-direction: column;
+  gap: var(--vol-space-xs);
+  display: flex;
+}
+
+.vol-card-picker__title {
+  letter-spacing: 0.08em;
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.vol-card-picker__hint {
+  color: var(--vol-ui-text-muted);
+  font-family: var(--vol-font-family-body);
+  font-size: 13px;
+}
+
+.vol-card-picker__grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--vol-space-md);
+  display: grid;
+}
+
+.vol-card-picker__footer {
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--vol-space-md);
+  display: flex;
+}
+
+/* --- Kart ---------------------------------------------------------------- */
+
+.vol-card {
+  text-align: left;
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-left: 3px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+  min-height: 150px;
+  padding: var(--vol-space-md);
+  transition: background var(--vol-transition-fast);
+  display: flex;
+}
+
+.vol-card--disabled {
+  color: var(--vol-ui-disabled-text);
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+}
+
+.vol-card--draggable {
+  cursor: grab;
+}
+
+.vol-card--dragging {
+  opacity: 0.5;
+}
+
+.vol-card__badges {
+  align-items: center;
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-card__rarity,
+.vol-card__type {
+  letter-spacing: 0.14em;
+  font-family: var(--vol-font-family);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.vol-card__type {
+  color: var(--vol-ui-text-muted);
+}
+
+.vol-card__action {
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-3);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-sm);
+  margin-left: auto;
+  padding: var(--vol-space-xs) var(--vol-space-md);
+  font-family: var(--vol-font-family);
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    background var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+}
+
+.vol-card__action:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-card__action:disabled {
+  cursor: default;
+  color: var(--vol-ui-disabled-text);
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+}
+
+.vol-card__action:hover:not(:disabled) {
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-card__title {
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.vol-card__description {
+  color: var(--vol-ui-text-secondary);
+  flex: 1;
+  font-family: var(--vol-font-family-body);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.vol-card__footer {
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-card__price {
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.vol-card__status {
+  letter-spacing: 0.08em;
+  color: var(--vol-ui-text-muted);
+  font-family: var(--vol-font-family);
+  font-size: 11px;
+}
+
+/* Nadirlik — yalnızca renk farkı; kademe yukarı çıktıkça vurgu artar. */
+
+.vol-card--rare {
+  border-left-color: var(--vol-ui-info-solid);
+}
+
+.vol-card--rare .vol-card__rarity {
+  color: var(--vol-ui-info-solid);
+}
+
+.vol-card--epic {
+  border-left-color: var(--vol-ui-accent-solid);
+}
+
+.vol-card--epic .vol-card__rarity {
+  color: var(--vol-ui-accent-border);
+}
+
+.vol-card--legendary {
+  background: linear-gradient(180deg, var(--vol-ui-warning-subtle) 0%, var(--vol-ui-surface-1) 60%);
+  border-left-color: var(--vol-ui-warning-solid);
+}
+
+.vol-card--legendary .vol-card__rarity,
+.vol-card--legendary .vol-card__title {
+  color: var(--vol-ui-warning-solid);
+}
+
+/* Envanterde kullanılan alçak kart — ne yaptığı görünür kalır, satır kısadır. */
+.vol-card--compact {
+  gap: var(--vol-space-xs);
+  min-height: 0;
+  padding: var(--vol-space-sm);
+}
+
+.vol-card--compact .vol-card__title {
+  font-size: 14px;
+}
+
+.vol-card--compact .vol-card__description {
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+/* --- Dükkan ------------------------------------------------------------- */
+
+.vol-card-shop__slots:empty {
+  display: none;
+}
+
+.vol-card-shop__section {
+  border-top: 1px solid var(--vol-ui-border-soft);
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+  padding-top: var(--vol-space-md);
+  display: flex;
+}
+
+.vol-card-shop__section-title {
+  letter-spacing: 0.06em;
+  color: var(--vol-ui-text-secondary);
+  font-family: var(--vol-font-family);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vol-card-shop__list {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--vol-space-sm);
+  max-height: 150px;
+  display: grid;
+  overflow-y: auto;
+}
+
+.vol-card-shop__empty {
+  color: var(--vol-ui-text-muted);
+  font-family: var(--vol-font-family-body);
+  font-size: 12px;
+}
+
+.vol-card-shop__balance {
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.vol-card-shop__close {
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  color: var(--vol-ui-on-brand);
+  background: var(--vol-ui-brand-solid);
+  border: 1px solid var(--vol-ui-brand-border);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-sm) var(--vol-space-lg);
+  font-family: var(--vol-font-family);
+  font-size: 13px;
+  font-weight: 700;
+  transition: background var(--vol-transition-fast);
+}
+
+.vol-card-shop__close:hover {
+  background: var(--vol-ui-brand-hover);
+}
+
+.vol-card-shop__close:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}

@@ -2,28 +2,41 @@ import type Phaser from 'phaser';
 import { enemyConfig } from '@/config/enemy';
 import { RENDER_DEPTH } from '@/config/layers';
 
+export interface EntityHealthBarOptions {
+  /** Dolu kısmın rengi (0xRRGGBB). Verilmezse düşman barı rengi. */
+  fillColor?: number;
+  /** Render katmanı. Verilmezse düşman can barı katmanı. */
+  depth?: number;
+}
+
 /**
- * Düşmanın başının üzerinde duran can barı — arka plan + dolum dikdörtgeni.
+ * Bir varlığın başının üzerinde duran can barı — arka plan + dolum dikdörtgeni.
  *
- * `Enemy`'den ayrı tutulur: düşmanın kendi sorumluluğu hareket, hasar ve ölüm;
- * barın konumlanma/geometri detayı ona ait değil. Bar dünya koordinatlarında
- * çizilir (kamera ile birlikte hareket eder), bu yüzden her frame düşmanın
- * pozisyonuyla `follow()` çağrılması gerekir.
+ * Sahibinden ayrı tutulur: düşmanın/kulenin kendi sorumluluğu hareket, hasar ve
+ * ölüm; barın konumlanma/geometri detayı ona ait değil. Bar dünya
+ * koordinatlarında çizilir, bu yüzden her frame `follow()` çağrılmalıdır.
  *
- * Genişlik ve yükseklik düşmanın yarıçapından türetilir: katalogdaki her
- * arketip farklı boyutta olduğu için sabit bir bar, küçük minion'ların
- * üzerinde devasa görünürdü.
+ * Genişlik ve yükseklik sahibin yarıçapından türetilir: katalogdaki her arketip
+ * farklı boyutta olduğu için sabit bir bar, küçük minion'ların üzerinde devasa
+ * görünürdü.
  */
-export class EnemyHealthBar {
+export class EntityHealthBar {
   private readonly bg: Phaser.GameObjects.Rectangle;
   private readonly fill: Phaser.GameObjects.Rectangle;
   private readonly width: number;
   private readonly offset: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, radius: number) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    radius: number,
+    options: EntityHealthBarOptions = {},
+  ) {
     this.width = radius * enemyConfig.healthBarWidthRatio;
     this.offset = radius + enemyConfig.healthBarGap;
     const barY = y - this.offset;
+    const depth = options.depth ?? RENDER_DEPTH.enemyHealthBar;
 
     this.bg = scene.add.rectangle(
       x,
@@ -38,19 +51,19 @@ export class EnemyHealthBar {
       barY,
       this.width,
       enemyConfig.healthBarHeight,
-      enemyConfig.healthBarFillColor,
+      options.fillColor ?? enemyConfig.healthBarFillColor,
       enemyConfig.healthBarFillAlpha,
     );
     // Sol kenara sabitlenir ki genislik azalinca bar soldan buyuyup sagdan kisalsin.
     this.fill.setOrigin(0, 0.5);
 
-    // Barlar düşman gövdelerinin üstünde: kalabalıkta başka bir düşmanın
-    // altında kalıp okunamaz hale gelmemeli.
-    this.bg.setDepth(RENDER_DEPTH.enemyHealthBar);
-    this.fill.setDepth(RENDER_DEPTH.enemyHealthBar);
+    // Barlar gövdelerin üstünde: kalabalıkta başka bir gövdenin altında kalıp
+    // okunamaz hale gelmemeli.
+    this.bg.setDepth(depth);
+    this.fill.setDepth(depth);
   }
 
-  /** Barı düşmanın güncel konumuna taşır. */
+  /** Barı sahibinin güncel konumuna taşır. */
   follow(x: number, y: number): void {
     const barY = y - this.offset;
     this.bg.x = x;
@@ -61,7 +74,7 @@ export class EnemyHealthBar {
 
   /**
    * Dolum oranını uygular. `alive` false ise bar tamamen gizlenir — ölmüş
-   * düşmanın barı ekranda kalmamalı.
+   * varlığın barı ekranda kalmamalı.
    */
   setRatio(ratio: number, alive: boolean, x: number): void {
     this.bg.setVisible(alive);

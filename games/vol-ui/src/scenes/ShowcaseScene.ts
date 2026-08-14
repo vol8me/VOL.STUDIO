@@ -10,6 +10,7 @@ import { buildAdvancedTab } from '../sections/advancedTab';
 import { buildScrollTab } from '../sections/scrollTab';
 import { buildTouchTab } from '../sections/touchTab';
 import { buildLoadingTab } from '../sections/loadingTab';
+import { buildCardsTab } from '../sections/cardsTab';
 
 export class ShowcaseScene extends Phaser.Scene {
   private ui!: UIRoot;
@@ -67,6 +68,7 @@ export class ShowcaseScene extends Phaser.Scene {
         builder: () => buildPanelsTab(this.ui.element),
       },
       { id: 'hud', label: i18next.t('volui:tabs.hud'), builder: () => buildHudTab() },
+      { id: 'cards', label: i18next.t('volui:tabs.cards'), builder: () => buildCardsTab() },
       {
         id: 'forms',
         label: i18next.t('volui:tabs.forms'),

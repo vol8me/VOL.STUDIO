@@ -7,7 +7,7 @@ import type { EnemyDefinition } from '@/config/enemies/types';
 import type { Border } from './Border';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
-import { EnemyHealthBar } from './EnemyHealthBar';
+import { EntityHealthBar } from './EntityHealthBar';
 import { quantizeEnemyHealth } from './enemyStats';
 import {
   applyRusherBehavior,
@@ -46,7 +46,7 @@ export class Enemy {
   readonly arc: Phaser.GameObjects.Arc;
   readonly definition: EnemyDefinition;
   private readonly stats: StatBlock;
-  private readonly healthBar: EnemyHealthBar;
+  private readonly healthBar: EntityHealthBar;
   private readonly maxHealth: number;
   private readonly score: number;
   private health: number;
@@ -97,7 +97,7 @@ export class Enemy {
     this.swarmerState = this.definition.archetype === 'swarmer' ? createSwarmerState() : null;
     this.spawnRequest = this.swarmerState ? createMinionSpawnRequest() : null;
 
-    this.healthBar = new EnemyHealthBar(scene, x, y, this.definition.radius);
+    this.healthBar = new EntityHealthBar(scene, x, y, this.definition.radius);
     this.updateHealthBar();
   }
 

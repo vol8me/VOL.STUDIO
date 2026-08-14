@@ -9,7 +9,8 @@
     "advanced": "GELİŞMİŞ",
     "scroll": "KAYDIRMA",
     "touch": "DOKUNMATİK",
-    "loading": "YÜKLEME"
+    "loading": "YÜKLEME",
+    "cards": "KARTLAR"
   },
   "buttons": {
     "variant": "Varyant",
@@ -633,5 +634,54 @@
     "fast": "Hızlı (100ms)",
     "defaultSpeed": "Varsayılan (300ms)",
     "slow": "Yavaş (800ms)"
+  },
+  "cards": {
+    "rarityTitle": "CardTile — nadirlik kademeleri",
+    "levelUpCardTitle": "LevelUpPicker — ücretsiz seçim",
+    "shopCardTitle": "ShopPicker — fiyatlı kartlar, alım/satım",
+    "rarity": {
+      "rare": "NADİR",
+      "epic": "DESTANSI",
+      "legendary": "EFSANEVİ"
+    },
+    "turret": {
+      "title": "Kule",
+      "desc": "Bulunduğun yere ateş eden bir kule diker."
+    },
+    "chain": {
+      "title": "Zincir Yıldırım",
+      "desc": "Düşmandan düşmana sıçrayan yıldırım."
+    },
+    "inferno": {
+      "title": "Cehennem",
+      "desc": "Devasa ve yüksek hasarlı ateş alanı."
+    },
+    "selected": "Seçilen: {{id}}",
+    "noSelection": "Henüz seçim yok",
+    "openLevelUp": "SEVİYE EKRANINI AÇ",
+    "openShop": "DÜKKANI AÇ",
+    "levelUpTitle": "SEVİYE 4",
+    "levelUpHint": "Bir kart seç",
+    "shopTitle": "DÜKKAN — DALGA 3",
+    "shopHint": "Flux'unla kart al; hazır olduğunda devam et",
+    "owned": "ALINDI",
+    "tooExpensive": "YETERSİZ FLUX",
+    "inventoryEmpty": "Henüz kartın yok",
+    "close": "DEVAM ET",
+    "price": "{{price}} Flux",
+    "balance": "Flux: {{amount}}",
+    "select": "SEÇ",
+    "buy": "SATIN AL",
+    "sell": "SAT +{{value}}",
+    "abilitiesTitle": "Yeteneklerin (slota sürükle)",
+    "passivesTitle": "Pasiflerin",
+    "type": {
+      "ability": "YETENEK",
+      "passive": "PASİF"
+    },
+    "sharpEdge": {
+      "title": "Keskin Uç",
+      "desc": "Hasar %15 artar."
+    }
   }
 }

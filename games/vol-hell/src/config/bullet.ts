@@ -5,7 +5,7 @@ export const bulletConfig = {
   /** Mermi yarıçapı (piksel). */
   radius: 4,
   /** Mermi hasarı. */
-  damage: 25,
+  damage: 22,
   /** Mermi ömrü (ms) — süre dolunca yok edilir. */
   lifetimeMs: 2000,
   /**
@@ -13,14 +13,21 @@ export const bulletConfig = {
    * 1 = kayip yok, 0 = tam dur. 0.8 -> her sekmede %20 hiz kaybi.
    */
   bounceDamping: 0.8,
-  /** Ateşler arası bekleme süresi (ms) — tek tek ateş. */
-  fireCooldownMs: 180,
   /**
-   * Ateş bekleme süresinin mutlak alt sınırı (ms). Ateş hızını artıran
-   * modifier'lar (Aşama 2 kartları) cooldown'u sıfıra indirirse mermi her
-   * frame'de doğar; üretim hızı FPS'e bağlanır ve sahne mermiyle dolar.
+   * Ateşler arası bekleme süresi (ms) — tek tek ateş.
+   *
+   * TABAN tempo bilerek ölçülüdür: kartlar ateş hızını %40'a varan oranda
+   * artırabiliyor, taban zaten hızlı olsaydı kartların katkısı hissedilmez,
+   * geç oyunda da mermi seli oluşurdu. Taban DPS'i düşük tutup artışı karta
+   * bırakmak, ilerleme hissini kartlarda toplar.
    */
-  minFireCooldownMs: 40,
+  fireCooldownMs: 260,
+  /**
+   * Ateş bekleme süresinin mutlak alt sınırı (ms). Üst üste binen ateş hızı
+   * kartları cooldown'u sıfıra yaklaştırırsa mermi üretimi FPS'e bağlanır ve
+   * sahne mermiyle dolar.
+   */
+  minFireCooldownMs: 90,
   /** Mermi partikül trail hızı (piksel/saniye). */
   trailSpeed: 40,
   /** Mermi partikül trail ömrü (ms). */

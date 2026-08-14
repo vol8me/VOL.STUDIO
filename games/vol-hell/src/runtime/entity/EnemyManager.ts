@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
-import type { Random, Vector2 } from '@volstudio/core';
-import { Diagnostics } from '@volstudio/core';
+import type { Random } from '@volstudio/core';
+import { Diagnostics, Vector2 } from '@volstudio/core';
 import { enemyConfig } from '@/config/enemy';
 import { difficultyConfig } from '@/config/difficulty';
 import { getEnemyDefinition, pickEnemyDefinition } from '@/config/enemies/catalog';
@@ -13,6 +13,12 @@ import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { DifficultyState } from '@/runtime/systems/DifficultyCalculator';
 
+/** Düşman güncellemesine dışarıdan verilen sahne durumu. */
+export interface EnemyUpdateContext {
+  /** Sahnedeki kule — yakınındaki düşmanlar oyuncu yerine onu hedefler. */
+  turret?: { x: number; y: number; isAlive: boolean } | null;
+}
+
 /**
  * Düşman yöneticisi — katalogdan arketip seçip spawn eder, günceller, temizler.
  *
@@ -24,6 +30,8 @@ export class EnemyManager {
   private readonly enemies: Enemy[] = [];
   private spawnTimer = 0;
   private currentWave = 1;
+  /** Reusable buffer — hedef seçimi her frame yeni Vector2 yaratmaz. */
+  private readonly targetBuf: Vector2 = Vector2.zero();
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -43,6 +51,7 @@ export class EnemyManager {
     _time: number,
     grid: SpatialGrid,
     difficulty: DifficultyState,
+    context: EnemyUpdateContext = {},
   ): void {
     this.spawnTimer += delta;
     if (
@@ -60,7 +69,8 @@ export class EnemyManager {
 
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
-      const spawnRequest = enemy.update(delta, playerPos, border, grid, this.random);
+      const target = this.pickTarget(enemy, playerPos, context.turret ?? null);
+      const spawnRequest = enemy.update(delta, target, border, grid, this.random);
       if (spawnRequest) {
         this.spawnMinions(enemy, spawnRequest, difficulty);
       }
@@ -73,6 +83,26 @@ export class EnemyManager {
         }
       }
     }
+  }
+
+  /**
+   * Bir düşmanın bu frame'deki hedefi: kule sahadaysa ve düşmana oyuncudan
+   * DAHA YAKINSA kule, aksi halde oyuncu. Kule böylece gerçek bir çekim
+   * merkezi olur; uzaktaki düşmanlar oyuncuyu kovalamayı sürdürür.
+   */
+  private pickTarget(
+    enemy: Enemy,
+    playerPos: Vector2,
+    turret: { x: number; y: number; isAlive: boolean } | null,
+  ): Vector2 {
+    if (!turret || !turret.isAlive) return playerPos;
+
+    const toTurret = Math.hypot(turret.x - enemy.x, turret.y - enemy.y);
+    const toPlayer = Math.hypot(playerPos.x - enemy.x, playerPos.y - enemy.y);
+    if (toTurret >= toPlayer) return playerPos;
+
+    this.targetBuf.set(turret.x, turret.y);
+    return this.targetBuf;
   }
 
   /** Border kenarından, dalga havuzundan seçilen bir düşman doğurur. */

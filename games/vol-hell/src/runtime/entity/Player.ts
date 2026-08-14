@@ -25,6 +25,8 @@ export class Player extends PlayerController {
   private readonly arc: Phaser.GameObjects.Arc;
   private readonly stats: StatBlock;
   private health: number;
+  /** Son görülen maksimum can — kart maks. canı değiştirdiğinde farkı yakalar. */
+  private lastMaxHealth: number;
   private moveDirection = Vector2.zero();
 
   // Dash şarjı (0-1, cooldown tabanlı — dash dışında her zaman dolar)
@@ -59,6 +61,7 @@ export class Player extends PlayerController {
       fireRate: bulletConfig.fireCooldownMs,
     });
     this.health = this.stats.getValue('health');
+    this.lastMaxHealth = this.health;
     this.effects = effects;
   }
 
@@ -73,6 +76,22 @@ export class Player extends PlayerController {
   /** Modifier'lar uygulanmış maksimum can. */
   getMaxHealth(): number {
     return this.stats.getValue('health');
+  }
+
+  /**
+   * Maksimum can kartlarla değişebilir; mevcut canı buna göre ayarlar.
+   *
+   * Artışta kazanılan kadar can HEMEN verilir (yoksa "+60 can" kartı o an
+   * hiçbir şey yapmaz, yalnızca barın tavanını yükseltir); azalışta mevcut can
+   * yeni tavana kelepçelenir.
+   */
+  private syncMaxHealth(): void {
+    const max = this.getMaxHealth();
+    if (max === this.lastMaxHealth) return;
+
+    const delta = max - this.lastMaxHealth;
+    this.lastMaxHealth = max;
+    this.health = Math.max(0, Math.min(max, this.health + Math.max(0, delta)));
   }
 
   /**
@@ -95,6 +114,7 @@ export class Player extends PlayerController {
   }
 
   update(delta: number): void {
+    this.syncMaxHealth();
     const isDashing = this.dashTimer > 0;
 
     // Dash şarjı — dash dışında her zaman dolar (cooldown tabanlı)
