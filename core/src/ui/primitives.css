@@ -52,6 +52,26 @@
   font-size: 18px;
   font-weight: 600;
   display: inline-flex;
+
+  /*
+   * `--vol-hit-target-min` yalnızca `pointer: coarse` altında bir değer taşır
+   * (bkz. theme.css); mouse/varsayılanda özellik tanımsız kalır ve `auto`ya
+   * düşer — masaüstü görünümü HİÇ etkilenmez. Dokunmatikte gerçek kutu
+   * büyür (görünmez bir overlay değil), bu yüzden flex/gap içindeki komşu
+   * butonlar otomatik olarak aralanır — hiçbir sızıntı/örtüşme riski taşımaz.
+   */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+/*
+ * `display: inline-flex` yukarıda tanımlı bir AUTHOR stili olduğu için
+ * tarayıcının native `[hidden] { display: none }` UA stilini ezer — `hidden`
+ * attribute'u tek başına bu component'i görsel olarak GİZLEMEZ. Aynı sorun
+ * `.vol-card-picker[hidden]`'da da vardı (bkz. cards.css), aynı çözüm.
+ */
+.vol-button[hidden] {
+  display: none;
 }
 
 .vol-button--auto-width {
@@ -491,6 +511,10 @@
   gap: var(--vol-space-sm);
   cursor: pointer;
   display: inline-flex;
+
+  /* bkz. .vol-button — aynı gerekçe: yalnızca pointer:coarse'da devreye girer. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-checkbox__input {

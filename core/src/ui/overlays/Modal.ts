@@ -1,3 +1,5 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+
 export interface ModalOptions {
   /** Scrim'e (arka plan karartması) tıklayınca kapat. Varsayılan true. */
   closeOnScrimClick?: boolean;
@@ -41,6 +43,8 @@ export class Modal {
   private readonly onClose?: () => void;
   private previouslyFocused: (HTMLOrSVGElement & Element) | null = null;
   private boundKeydown: (event: KeyboardEvent) => void;
+  /** Yalnızca modal açıkken yaşar: yığın üyeliği + `document` keydown dinleyicisi. */
+  private sessionScope: DisposableScope | null = null;
 
   constructor(options: ModalOptions = {}) {
     const { closeOnScrimClick = true, onClose } = options;
@@ -88,8 +92,11 @@ export class Modal {
     this.previouslyFocused = document.activeElement as (HTMLOrSVGElement & Element) | null;
     this.element.classList.add('vol-modal--visible');
     this.element.inert = false;
+
+    this.sessionScope = new DisposableScope();
     openModals.push(this);
-    document.addEventListener('keydown', this.boundKeydown);
+    this.sessionScope.add({ dispose: () => this.removeFromStack() });
+    this.sessionScope.addListener(document, 'keydown', this.boundKeydown as EventListener);
     syncBodyLock();
 
     const firstFocusable = this.content.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
@@ -104,8 +111,8 @@ export class Modal {
     }
     this.element.classList.remove('vol-modal--visible');
     this.element.inert = true;
-    this.removeFromStack();
-    document.removeEventListener('keydown', this.boundKeydown);
+    this.sessionScope?.dispose();
+    this.sessionScope = null;
     syncBodyLock();
     this.previouslyFocused?.focus();
     this.onClose?.();

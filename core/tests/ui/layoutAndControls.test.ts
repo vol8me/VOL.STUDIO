@@ -235,9 +235,24 @@ describe('Joystick', () => {
     expect(onMove).toHaveBeenCalled();
   });
 
-  it('destroy tüm pointer listenerlarını temizler', () => {
+  it('destroy sürükleme ortasında çağrılırsa tüm pointer listenerlarını temizler', () => {
     const joystick = track(new Joystick());
     const base = joystick.element.querySelector<HTMLDivElement>('.vol-joystick__base')!;
+
+    // Global (window) listener'lar yalnızca aktif bir sürükleme sırasında
+    // bağlıdır (bkz. "Y6" testleri yukarıda) — destroy()'un onları gerçekten
+    // kaldırdığını görmek için önce bir sürükleme başlatılmalı; aksi halde
+    // hiç bağlanmamış bir listener'ın "kaldırıldığını" doğrulamak anlamsız.
+    base.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        pointerId: 1,
+        clientX: 0,
+        clientY: 0,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
     const removeBase = vi.spyOn(base, 'removeEventListener');
     const removeWindow = vi.spyOn(window, 'removeEventListener');
 

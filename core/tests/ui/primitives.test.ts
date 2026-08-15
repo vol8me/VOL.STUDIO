@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Button } from '../../src/ui/primitives/Button';
 import { IconButton } from '../../src/ui/primitives/IconButton';
 import { Select, type SelectOption } from '../../src/ui/primitives/Select';
@@ -32,6 +34,15 @@ describe('Button', () => {
     document.body.appendChild(button.element);
     button.destroy();
     expect(button.element.isConnected).toBe(false);
+  });
+
+  it('.vol-button[hidden] görünmez — jsdom cascade hesaplamadığı için yapısal doğrulama', () => {
+    // `.vol-button`'un kendi `display: inline-flex`'i (author stili) native
+    // `[hidden] { display: none }` UA stilini ezer; `hidden = true` tek
+    // başına GÖRSEL olarak gizlemez — bu override'ın primitives.css'te
+    // gerçekten var olduğunu doğrular (bkz. .vol-card-picker[hidden] emsali).
+    const css = readFileSync(resolve(import.meta.dirname, '../../src/ui/primitives.css'), 'utf-8');
+    expect(css).toMatch(/\.vol-button\[hidden\]\s*\{\s*display:\s*none;?\s*\}/);
   });
 
   it('tıklama onClick handlerını çağırır', () => {

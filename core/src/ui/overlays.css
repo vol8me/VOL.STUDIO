@@ -3,7 +3,7 @@
   bottom: var(--vol-space-xl);
   align-items: center;
   gap: var(--vol-space-sm);
-  z-index: 20;
+  z-index: var(--vol-z-toast);
   flex-direction: column;
   display: flex;
   position: fixed;
@@ -51,7 +51,7 @@
 }
 
 .vol-modal {
-  z-index: 30;
+  z-index: var(--vol-z-dialog);
   pointer-events: none;
   opacity: 0;
   transition: opacity var(--vol-transition-medium);
@@ -100,7 +100,7 @@
 
 .vol-tooltip {
   pointer-events: none;
-  z-index: 40;
+  z-index: var(--vol-z-dialog-content);
   background: var(--vol-ui-inverse-surface);
   max-width: 240px;
   color: var(--vol-ui-inverse-text);
@@ -319,7 +319,7 @@
 }
 
 .vol-command-palette {
-  z-index: 40;
+  z-index: var(--vol-z-dialog);
   pointer-events: none;
   opacity: 0;
   transition: opacity var(--vol-transition-fast);
@@ -480,7 +480,7 @@
 }
 
 .vol-popup {
-  z-index: 40;
+  z-index: var(--vol-z-dialog-content);
   pointer-events: none;
   visibility: hidden;
   opacity: 0;
@@ -690,7 +690,7 @@
 
 .vol-rich-tooltip {
   font-family: var(--vol-font-family);
-  z-index: 60;
+  z-index: var(--vol-z-dialog-content);
   background: var(--vol-ui-overlay-panel);
   border: 1px solid var(--vol-ui-border-strong);
   border-radius: var(--vol-radius-md);
@@ -767,7 +767,7 @@
 .vol-loading {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: var(--vol-z-loading);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -542,7 +542,7 @@
 }
 
 .vol-radial-menu {
-  z-index: 50;
+  z-index: var(--vol-z-float);
   pointer-events: none;
   opacity: 0;
   width: 0;

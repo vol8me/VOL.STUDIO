@@ -81,4 +81,57 @@
   --vol-radius-md: 4px;
   --vol-transition-fast: 0.12s ease;
   --vol-transition-medium: 0.24s ease;
+
+  /*
+   * Katman (z-index) ölçeği — TEK doğruluk kaynağı. Önceden her floating/overlay
+   * component kendi sabit sayısını seçiyordu (Modal:30, Tooltip/CommandPalette/
+   * Popup üçü de 40'ta çakışıyordu, RadialMenu:50 — bir Modal'dan bile YÜKSEK).
+   * Sonuç: diyaloglar bazı öğelerin altında bazılarının üstünde kalıyordu,
+   * sıralama tamamen tesadüfiydi. Yeni bir floating component eklerken BURADAN
+   * bir katman seç; yeni bir sabit sayı UYDURMA.
+   *
+   * Sıralama (düşükten yükseğe), NEDEN'iyle:
+   *  root     — DOM UI'ın taban katmanı, diğer her şey bunun üstünde birikir.
+   *  float    — geçici, bağlamsal oyun kontrolleri (RadialMenu). Bir dialog
+   *             açıksa altında kalmalı, üstüne binmemeli.
+   *  toast    — bildirimler; sayfa içeriğinin üstünde ama bloklayıcı değil.
+   *  dialog   — etkileşimi BLOKLAYAN yüzeyler: Modal, CommandPalette, kart
+   *             seçim ekranları (level-up/dükkan). Aynı tier'da olmaları
+   *             kasıtlı — ikisi aynı anda açık olmamalı, ama açık olsalar
+   *             bile biri diğerini rastgele ezmemeli.
+   *  dialog-content — bir dialog'un İÇİNDEKİ öğelere iğnelenenler: Tooltip,
+   *             Popup/ContextMenu, RichTooltip. `dialog`'dan yüksek olması
+   *             ZORUNLU — aksi halde bir Modal içindeki butonun tooltip'i
+   *             modalın arkasında kalırdı.
+   *  loading  — tam ekran yükleme/sahne geçişi; açık bir dialog'un bile
+   *             üstünü kapatmalı (sahne değişirken her şey gizlenir).
+   *  debug    — Diagnostics paneli. HER ZAMAN kesin en üstte; geliştirici
+   *             bir fatal error ekranında bile paneli görebilmeli.
+   */
+  --vol-z-root: 10;
+  --vol-z-float: 15;
+  --vol-z-toast: 20;
+  --vol-z-dialog: 30;
+  --vol-z-dialog-content: 40;
+  --vol-z-loading: 50;
+  --vol-z-debug: 999999;
+
+  /* --vol-hit-target-min BURADA BİLİNÇLİ OLARAK TANIMLANMAZ: varsayılanda
+     (mouse) tanımsız kalıp min-height/min-width'te `auto`ya düşer, yani
+     masaüstü görünümü sıfır etkilenir. Değeri yalnızca aşağıdaki
+     `pointer: coarse` bloğunda gelir. */
+}
+
+/*
+ * pointer: coarse — dokunmatik ekran, kalem gibi kaba işaretçi cihazlar.
+ * `--vol-hit-target-min` küçük interaktif kontrollerin (ör. `.vol-button--sm`,
+ * `.vol-checkbox`) min-height/min-width'ine bağlanır (bkz. primitives.css,
+ * layout.css). GERÇEK kutu büyür — görünmez bir overlay değil — bu yüzden
+ * flex/grid `gap` içindeki komşular otomatik aralanır, örtüşme riski yok.
+ */
+@media (pointer: coarse) {
+  :root {
+    /* WCAG 2.5.5 AAA / Apple HIG / Material dokunma hedefi önerisi. */
+    --vol-hit-target-min: 44px;
+  }
 }

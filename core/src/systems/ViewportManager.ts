@@ -109,6 +109,14 @@ export class ViewportManager {
    * Örnek metodudur (statik değil): `maxDpr` kelepçesi getConfig()'in kurduğu
    * `zoom` ile aynı olmak zorunda. Ham devicePixelRatio kullanılırsa canvas'ın
    * CSS boyutu `rawDpr / maxDpr` oranında pencereyi taşar.
+   *
+   * `setZoom()` `resize()`'dan ÖNCE çağrılmalı — Phaser `resize(w, h)` canvas'ın
+   * CSS boyutunu `w × zoom` olarak hesaplar, o anki `zoom` değerini kullanarak.
+   * Bu çağrı olmadan `zoom` Game kurulduğu andaki DPR'de SONSUZA DEK sabit
+   * kalıyordu: tarayıcı yakınlaştırması `devicePixelRatio`'yu değiştirir (pencere
+   * `resize` event'i de tetikler) ama `zoom` güncellenmediği için canvas'ın CSS
+   * boyutu artık pencereyle uyuşmuyordu — ekranda büyüyüp küçülen, pencereyi
+   * takip etmeyen bir kutu olarak görünüyordu.
    */
   attachResize(game: Phaser.Game): () => void {
     const handler = (): void => {
@@ -116,6 +124,7 @@ export class ViewportManager {
       const width = Math.max(1, window.innerWidth * dpr);
       const height = Math.max(1, window.innerHeight * dpr);
 
+      game.scale.setZoom(1 / dpr);
       game.scale.resize(width, height);
 
       for (const scene of game.scene.getScenes(true)) {

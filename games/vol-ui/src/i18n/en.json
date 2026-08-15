@@ -682,6 +682,51 @@
     "sharpEdge": {
       "title": "Sharp Edge",
       "desc": "Damage increased by 15%."
-    }
+    },
+    "multiShot": {
+      "title": "Multi Shot",
+      "desc": "Weapon fires extra bullets in a fan pattern."
+    },
+    "swiftBoots": {
+      "title": "Swift Boots",
+      "desc": "Movement speed increased by 10%."
+    },
+    "ironWill": {
+      "title": "Iron Will",
+      "desc": "Maximum health increased by 20%."
+    },
+    "frostNova": {
+      "title": "Frost Nova",
+      "desc": "Creates a blast that freezes nearby enemies."
+    },
+    "vampiricRounds": {
+      "title": "Vampiric Rounds",
+      "desc": "5% of damage dealt is returned as health."
+    },
+    "berserkerRage": {
+      "title": "Berserker Rage",
+      "desc": "Damage dealt increases as health drops."
+    },
+    "shieldWall": {
+      "title": "Shield Wall",
+      "desc": "Raises a temporary damage-absorbing shield."
+    },
+    "criticalFocus": {
+      "title": "Critical Focus",
+      "desc": "Critical hit chance increased by 10%."
+    },
+    "phoenixFeather": {
+      "title": "Phoenix Feather",
+      "desc": "Blocks one fatal blow."
+    },
+    "nimbleReflexes": {
+      "title": "Nimble Reflexes",
+      "desc": "Increased chance to evade melee attacks."
+    },
+    "reroll": "REROLL",
+    "lock": "LOCK",
+    "unlock": "UNLOCK",
+    "slotsTitle": "Ability slots (Q/E)",
+    "slotEmpty": "Empty"
   }
 }

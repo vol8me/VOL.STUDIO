@@ -1,6 +1,7 @@
 import {
   Button,
   CardTile,
+  HIDE_ANIMATION_MS,
   LevelUpPicker,
   ShopPicker,
   Text,
@@ -10,21 +11,50 @@ import {
   type ShopInventoryEntry,
   type ShopPickerState,
 } from '@volstudio/core';
-import { card, cardGrid } from './shared';
+import { card } from './shared';
 
 interface Destroyable {
   destroy(): void;
 }
 
-/** Showcase kartları — gerçek oyun kataloğundan bağımsız, örnek içerik. */
+/** Bir kapatma fonksiyonunu ortak listeye kaydeder (bkz. `buildCardsTab`). */
+type RegisterCloser = (close: () => void) => void;
+/** Verilen kapatıcı DIŞINDAKİ tüm kayıtlı overlay'leri kapatır. */
+type CloseAllExcept = (except: () => void) => void;
+
+/**
+ * Showcase kartları — gerçek oyun kataloğundan bağımsız, örnek içerik.
+ * Dükkan demosunun "geniş market" hissi için 14'e çıkarıldı: havuz
+ * `SHOP_SIZE`'ın (4) çok üzerinde olmalı, aksi halde birkaç satın alma +
+ * kilitleme sonrası reroll'da havuz tükenip 4'ten AZ teklif gösterilir
+ * (gerçek bir bulguydu — bkz. `refreshOffers`).
+ */
 const DEMO_CARDS = {
   turret: { rarity: 'rare' as CardRarity, price: 10, type: 'ability' },
   chain: { rarity: 'epic' as CardRarity, price: 18, type: 'ability' },
   inferno: { rarity: 'legendary' as CardRarity, price: 32, type: 'ability' },
   sharpEdge: { rarity: 'rare' as CardRarity, price: 10, type: 'passive' },
+  multiShot: { rarity: 'epic' as CardRarity, price: 20, type: 'ability' },
+  swiftBoots: { rarity: 'rare' as CardRarity, price: 8, type: 'passive' },
+  ironWill: { rarity: 'legendary' as CardRarity, price: 28, type: 'passive' },
+  frostNova: { rarity: 'epic' as CardRarity, price: 22, type: 'ability' },
+  vampiricRounds: { rarity: 'rare' as CardRarity, price: 12, type: 'passive' },
+  berserkerRage: { rarity: 'legendary' as CardRarity, price: 30, type: 'passive' },
+  shieldWall: { rarity: 'rare' as CardRarity, price: 14, type: 'ability' },
+  criticalFocus: { rarity: 'epic' as CardRarity, price: 18, type: 'passive' },
+  phoenixFeather: { rarity: 'legendary' as CardRarity, price: 26, type: 'ability' },
+  nimbleReflexes: { rarity: 'rare' as CardRarity, price: 9, type: 'passive' },
 };
 
 type DemoCardId = keyof typeof DEMO_CARDS;
+
+const SHOP_POOL = Object.keys(DEMO_CARDS) as DemoCardId[];
+/** Dükkanda AYNI ANDA görünen teklif sayısı — havuzun tamamı değil, bir kesiti. */
+const SHOP_SIZE = 4;
+const REROLL_BASE_COST = 5;
+const REROLL_COST_STEP = 3;
+/** Q/E yetenek slotu sayısı — gerçek oyundaki `AbilityLoadout` ile aynı (bkz. TODO.md). */
+const ABILITY_SLOT_COUNT = 2;
 
 function demoCard(id: DemoCardId, options: { withPrice?: boolean } = {}): CardTileData {
   const demo = DEMO_CARDS[id];
@@ -41,7 +71,18 @@ function demoCard(id: DemoCardId, options: { withPrice?: boolean } = {}): CardTi
   };
 }
 
-/** CardTile: üç nadirlik kademesinin görsel farkı yan yana. */
+/** Havuzdan rastgele `n` benzersiz eleman seçer (Fisher-Yates parçalı). */
+function pickRandom(pool: readonly DemoCardId[], n: number): DemoCardId[] {
+  const copy = [...pool];
+  const picked: DemoCardId[] = [];
+  while (picked.length < n && copy.length > 0) {
+    const index = Math.floor(Math.random() * copy.length);
+    picked.push(copy.splice(index, 1)[0]);
+  }
+  return picked;
+}
+
+/** CardTile: örnek kartların nadirlik/tip görsel farkı yan yana. */
 function buildRarityCard(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
@@ -52,7 +93,10 @@ function buildRarityCard(disposables: Destroyable[]): HTMLElement {
   const status = new Text(i18next.t('volui:cards.noSelection'), { variant: 'muted' });
   disposables.push(status);
 
-  for (const id of Object.keys(DEMO_CARDS) as DemoCardId[]) {
+  // Tüm havuzu değil, ilk yedisini göster — bu kart yalnızca nadirlik/tip
+  // görsel farkını tanıtır, dükkan demosuyla aynı geniş havuzu tekrar
+  // sergilemenin bir değeri yok.
+  for (const id of SHOP_POOL.slice(0, 7)) {
     const tile = new CardTile({
       data: demoCard(id),
       actionLabel: i18next.t('volui:cards.select'),
@@ -68,8 +112,75 @@ function buildRarityCard(disposables: Destroyable[]): HTMLElement {
   return card(i18next.t('volui:cards.rarityTitle'), wrap);
 }
 
-/** LevelUpPicker: iki kart, fiyat yok, seçince kapanır. */
-function buildLevelUpCard(disposables: Destroyable[]): HTMLElement {
+/**
+ * Ortak overlay katmanı — `CardPicker` bilinçli olarak Modal'a bağlı değildir
+ * (konumlandırma çağıranın sorumluluğu); burada `games/vol-hell`'in
+ * `vol-card-layer`'ıyla AYNI mekanizma kurulur: ortalanmış, kararmış,
+ * `uiRootElement`'e mount edilmiş bir katman. Panel artık kartın kendi
+ * akışında değil bu katmanda yaşadığı için açılışı kartın boyutunu ETKİLEMEZ.
+ *
+ * `hide`/`show` çağıranın (`open`/`close` fonksiyonları) sorumluluğunda —
+ * bu fonksiyon yalnızca DOM iskeletini kurar.
+ */
+function buildCardLayer(uiRootElement: HTMLElement, pickerElement: HTMLElement): HTMLDivElement {
+  const layer = document.createElement('div');
+  layer.className = 'vol-showcase-card-layer';
+  layer.hidden = true;
+  layer.appendChild(pickerElement);
+  uiRootElement.appendChild(layer);
+  return layer;
+}
+
+/**
+ * Katmanı (scrim + panel) açar/kapar. Kapanış `HIDE_ANIMATION_MS` (CORE'un
+ * `CardPicker.hide()` ile AYNI süre) kadar ertelenir — aksi halde panel
+ * yumuşakça solarken arkasındaki scrim aniden kesilip uyumsuz görünürdü.
+ */
+function createLayerController(
+  layer: HTMLDivElement,
+  picker: { show(): void; hide(): void },
+  openButton: Button,
+): { open: () => void; close: () => void } {
+  let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  const open = (): void => {
+    if (hideTimeout !== null) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+    layer.classList.remove('vol-showcase-card-layer--leaving');
+    layer.hidden = false;
+    openButton.element.hidden = true;
+  };
+
+  const close = (): void => {
+    if (layer.hidden || hideTimeout !== null) return;
+    picker.hide();
+    layer.classList.add('vol-showcase-card-layer--leaving');
+    hideTimeout = setTimeout(() => {
+      hideTimeout = null;
+      layer.hidden = true;
+      layer.classList.remove('vol-showcase-card-layer--leaving');
+      openButton.element.hidden = false;
+    }, HIDE_ANIMATION_MS);
+  };
+
+  return { open, close };
+}
+
+/**
+ * LevelUpPicker: iki kart, fiyat yok, seçince kapanır.
+ *
+ * Tetikleyici buton overlay açıkken GİZLENİR. Aynı anda yalnızca TEK bir
+ * kart ekranı açık olabilir — `closeAllExcept` diğer overlay'i (dükkan)
+ * kapatır, `registerCloser` bu overlayin kendisini o listeye ekler.
+ */
+function buildLevelUpCard(
+  uiRootElement: HTMLElement,
+  disposables: Destroyable[],
+  registerCloser: RegisterCloser,
+  closeAllExcept: CloseAllExcept,
+): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -80,34 +191,78 @@ function buildLevelUpCard(disposables: Destroyable[]): HTMLElement {
     title: i18next.t('volui:cards.levelUpTitle'),
     hint: i18next.t('volui:cards.levelUpHint'),
     selectLabel: i18next.t('volui:cards.select'),
-    onSelect: (id) => result.setContent(i18next.t('volui:cards.selected', { id })),
+    onSelect: (id) => {
+      result.setContent(i18next.t('volui:cards.selected', { id }));
+      controller.close();
+    },
   });
   disposables.push(picker);
 
+  const layer = buildCardLayer(uiRootElement, picker.element);
+  disposables.push({ destroy: () => layer.remove() });
+
   const open = new Button(i18next.t('volui:cards.openLevelUp'), {
     variant: 'primary',
-    onClick: () =>
+    onClick: () => {
+      closeAllExcept(controller.close);
       picker.present([demoCard('turret'), demoCard('inferno')], {
         title: i18next.t('volui:cards.levelUpTitle'),
         hint: i18next.t('volui:cards.levelUpHint'),
-      }),
+      });
+      controller.open();
+    },
   });
   disposables.push(open);
 
-  wrap.appendChild(picker.element);
+  const controller = createLayerController(layer, picker, open);
+  registerCloser(controller.close);
+
   wrap.appendChild(open.element);
   wrap.appendChild(result.element);
   return card(i18next.t('volui:cards.levelUpCardTitle'), wrap);
 }
 
-/** ShopPicker: fiyatlı kartlar, alım/satım, iki bölümlü envanter — canlı demo. */
-function buildShopCard(disposables: Destroyable[]): HTMLElement {
+/**
+ * ShopPicker: "geniş market" demosu — 14 kartlık havuzdan 4'ü teklif edilir,
+ * reroll (ücretli, artan maliyetli) unlocked teklifleri yeniler, lock belirli
+ * bir teklifi reroll'dan korur. Bu iki özelliğin GERÇEK mantığı (RNG, maliyet
+ * eğrisi, hangi kartların korunacağı) burada yaşar — `ShopPicker`'ın kendisi
+ * yalnızca butonları çizer ve niyeti `onReroll`/`onToggle` ile bildirir.
+ *
+ * `slotArea` (gerçek oyunda Q/E yetenek slotları) burada da doldurulur —
+ * `ShopPicker`'ın "çağıranın kendi içeriğini koyabileceği alan" sözleşmesinin
+ * boş kalmaması için; alınan bir yetenek kartı otomatik ilk boş slota gider.
+ *
+ * Bakiye bilinçli olarak yüksek (500) — çoklu satın alma senaryolarını
+ * (art arda alım, envanter satışı, reroll'la aynı anda) engelsiz test etmek
+ * için.
+ */
+function buildShopCard(
+  uiRootElement: HTMLElement,
+  disposables: Destroyable[],
+  registerCloser: RegisterCloser,
+  closeAllExcept: CloseAllExcept,
+): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
-  let balance = 24;
+  let balance = 500;
+  let rerollCost = REROLL_BASE_COST;
   const purchased = new Set<DemoCardId>();
+  const locked = new Set<DemoCardId>();
   const owned: { entry: ShopInventoryEntry; id: DemoCardId }[] = [];
+  const slots: (DemoCardId | null)[] = new Array<DemoCardId | null>(ABILITY_SLOT_COUNT).fill(null);
+  let currentOfferIds: DemoCardId[] = [];
+
+  /** Kilitli VE satılmamış teklifler korunur; boşalan slotlar havuzdan tazelenir. */
+  function refreshOffers(): void {
+    const keep = currentOfferIds.filter((id) => locked.has(id) && !purchased.has(id));
+    const pool = SHOP_POOL.filter((id) => !purchased.has(id) && !keep.includes(id));
+    const fresh = pickRandom(pool, Math.max(0, SHOP_SIZE - keep.length));
+    currentOfferIds = [...keep, ...fresh];
+  }
+
+  refreshOffers();
 
   const shop = new ShopPicker({
     labels: {
@@ -119,6 +274,30 @@ function buildShopCard(disposables: Destroyable[]): HTMLElement {
       empty: i18next.t('volui:cards.inventoryEmpty'),
       close: i18next.t('volui:cards.close'),
     },
+    reroll: {
+      label: i18next.t('volui:cards.reroll'),
+      onReroll: () => {
+        if (balance < rerollCost) return;
+        balance -= rerollCost;
+        refreshOffers();
+        rerollCost += REROLL_COST_STEP;
+        render();
+        flashGridOnReroll();
+      },
+    },
+    lock: {
+      lockLabel: i18next.t('volui:cards.lock'),
+      unlockLabel: i18next.t('volui:cards.unlock'),
+      onToggle: (id) => {
+        const cardId = id as DemoCardId;
+        if (locked.has(cardId)) {
+          locked.delete(cardId);
+        } else {
+          locked.add(cardId);
+        }
+        render();
+      },
+    },
     onBuy: (id) => {
       const cardId = id as DemoCardId;
       const demo = DEMO_CARDS[cardId];
@@ -126,6 +305,8 @@ function buildShopCard(disposables: Destroyable[]): HTMLElement {
 
       balance -= demo.price;
       purchased.add(cardId);
+      // Satın alınan kart artık teklif değil — kilit anlamsız kalır.
+      locked.delete(cardId);
       owned.push({
         id: cardId,
         entry: {
@@ -135,7 +316,17 @@ function buildShopCard(disposables: Destroyable[]): HTMLElement {
           dragData: demo.type === 'ability' ? `${cardId}#${owned.length + 1}` : undefined,
         },
       });
+
+      // Gerçek oyundaki gibi: yeni alınan bir yetenek, boş slot varsa
+      // otomatik yerleşir (bkz. TODO.md — "yeni alınan ability boş slot
+      // varsa OTOMATİK yerleşir").
+      if (demo.type === 'ability') {
+        const emptyIndex = slots.indexOf(null);
+        if (emptyIndex !== -1) slots[emptyIndex] = cardId;
+      }
+
       render();
+      renderSlots();
     },
     onSell: (instanceId) => {
       const index = owned.findIndex((item) => item.entry.instanceId === instanceId);
@@ -143,18 +334,24 @@ function buildShopCard(disposables: Destroyable[]): HTMLElement {
       const [sold] = owned.splice(index, 1);
       balance += Math.floor(DEMO_CARDS[sold.id].price / 2);
       purchased.delete(sold.id);
+
+      const slotIndex = slots.indexOf(sold.id);
+      if (slotIndex !== -1) slots[slotIndex] = null;
+
       render();
+      renderSlots();
     },
-    onClose: () => shop.hide(),
+    onClose: () => controller.close(),
   });
   disposables.push(shop);
 
   function buildState(): ShopPickerState {
     return {
-      offers: (Object.keys(DEMO_CARDS) as DemoCardId[]).map((id) => ({
+      offers: currentOfferIds.map((id) => ({
         card: demoCard(id, { withPrice: true }),
         purchased: purchased.has(id),
         affordable: balance >= DEMO_CARDS[id].price,
+        locked: locked.has(id),
       })),
       abilities: owned
         .filter((item) => DEMO_CARDS[item.id].type === 'ability')
@@ -165,6 +362,10 @@ function buildShopCard(disposables: Destroyable[]): HTMLElement {
       balanceLabel: i18next.t('volui:cards.balance', { amount: balance }),
       title: i18next.t('volui:cards.shopTitle'),
       hint: i18next.t('volui:cards.shopHint'),
+      reroll: {
+        costLabel: i18next.t('volui:cards.price', { price: rerollCost }),
+        affordable: balance >= rerollCost,
+      },
     };
   }
 
@@ -172,31 +373,98 @@ function buildShopCard(disposables: Destroyable[]): HTMLElement {
     shop.render(buildState());
   }
 
+  // `shop.slotArea` — "çağıranın kendi içeriğini koyabileceği alan" (bkz.
+  // ShopPicker dokümantasyonu). Gerçek oyunda burası AbilityLoadout'un
+  // (Q/E slotları) yaşadığı yer; showcase'de aynı sözleşmeyi göstermek için
+  // basit, sürüklemesiz bir slot listesi kuruyoruz.
+  const slotsTitle = new Text(i18next.t('volui:cards.slotsTitle'), { variant: 'muted' });
+  shop.slotArea.appendChild(slotsTitle.element);
+  const slotRow = document.createElement('div');
+  slotRow.className = 'vol-showcase-ability-slots';
+  shop.slotArea.appendChild(slotRow);
+  disposables.push(slotsTitle);
+
+  function renderSlots(): void {
+    slotRow.replaceChildren();
+    for (const cardId of slots) {
+      const slot = document.createElement('div');
+      slot.className = 'vol-showcase-ability-slots__slot';
+      slot.textContent = cardId
+        ? i18next.t(`volui:cards.${cardId}.title` as 'volui:cards.turret.title')
+        : i18next.t('volui:cards.slotEmpty');
+      slot.classList.toggle('vol-showcase-ability-slots__slot--filled', cardId !== null);
+      slotRow.appendChild(slot);
+    }
+  }
+
+  /** Reroll'da tüm ızgaraya kısa bir vurgu — "teklif yenilendi" hissi. */
+  function flashGridOnReroll(): void {
+    const grid = shop.element.querySelector('.vol-card-picker__grid');
+    if (!grid) return;
+    grid.classList.remove('vol-showcase-shop-grid--rerolled');
+    // Aynı class'ı arka arkaya eklemek animasyonu yeniden TETİKLEMEZ —
+    // reflow zorlanmadan bir sonraki frame'e ertelemek gerekiyor.
+    requestAnimationFrame(() => grid.classList.add('vol-showcase-shop-grid--rerolled'));
+  }
+
   render();
+  renderSlots();
+
+  const layer = buildCardLayer(uiRootElement, shop.element);
+  disposables.push({ destroy: () => layer.remove() });
 
   const open = new Button(i18next.t('volui:cards.openShop'), {
     variant: 'primary',
     onClick: () => {
+      closeAllExcept(controller.close);
       render();
       shop.show();
+      controller.open();
     },
   });
   disposables.push(open);
 
-  wrap.appendChild(shop.element);
+  const controller = createLayerController(layer, shop, open);
+  registerCloser(controller.close);
+
   wrap.appendChild(open.element);
   return card(i18next.t('volui:cards.shopCardTitle'), wrap);
 }
 
-/** Kart component'leri sekmesi — CardTile, LevelUpPicker, ShopPicker. */
-export function buildCardsTab(): { element: HTMLElement; destroy: () => void } {
+/**
+ * Kart component'leri sekmesi — CardTile, LevelUpPicker, ShopPicker.
+ *
+ * CardTile kartı ÜSTTE tam genişlikte durur: örnek kartlar
+ * (`.vol-showcase-card-row`, auto-fit grid) ancak geniş bir konteynerde yan
+ * yana sığar. LevelUpPicker/ShopPicker ALTTA, yüzde-elli bölünmüş ayrı bir
+ * satırda yan yana durur; ikisinin panelleri artık kendi kartlarının İÇİNDE
+ * değil, `uiRootElement`'e mount edilmiş ortak bir overlay katmanında açılır
+ * (bkz. `buildCardLayer`) — `games/vol-hell`'deki gerçek kullanım deseniyle
+ * aynı (ortalanmış, kararmış, tam ekran, yumuşak geçişli).
+ */
+export function buildCardsTab(uiRootElement: HTMLElement): {
+  element: HTMLElement;
+  destroy: () => void;
+} {
   const disposables: Destroyable[] = [];
+  const closeHandlers: Array<() => void> = [];
+  const registerCloser: RegisterCloser = (close) => closeHandlers.push(close);
+  const closeAllExcept: CloseAllExcept = (except) => {
+    for (const close of closeHandlers) {
+      if (close !== except) close();
+    }
+  };
 
-  const element = cardGrid([
-    buildRarityCard(disposables),
-    buildLevelUpCard(disposables),
-    buildShopCard(disposables),
-  ]);
+  const bottomRow = document.createElement('div');
+  bottomRow.className = 'vol-showcase-cards-bottom-row';
+  bottomRow.append(
+    buildLevelUpCard(uiRootElement, disposables, registerCloser, closeAllExcept),
+    buildShopCard(uiRootElement, disposables, registerCloser, closeAllExcept),
+  );
+
+  const element = document.createElement('div');
+  element.className = 'vol-showcase-section';
+  element.append(buildRarityCard(disposables), bottomRow);
 
   return {
     element,

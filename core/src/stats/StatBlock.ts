@@ -21,10 +21,17 @@ export type StatKey = 'damage' | 'speed' | 'health' | 'fireRate';
 /** Tüm stat anahtarları — iterasyon ve doğrulama için. */
 export const STAT_KEYS: readonly StatKey[] = ['damage', 'speed', 'health', 'fireRate'];
 
-/** Özyinelemeli getValue çağrısını tespit etmek için çağrı yığını. */
+/**
+ * Özyinelemeli getValue çağrısını tespit etmek için çağrı yığını.
+ *
+ * Modül-seviyesinde TEK yığın — farklı `TStat` ile parametrelenmiş
+ * `StatBlock` örnekleri de aynı yığını paylaşır (yalnızca referans/kimlik
+ * karşılaştırması yapılır, `stat` alanı hangi somut union'dan geldiğine
+ * bakılmaksızın string olarak tutulur).
+ */
 interface ComputationFrame {
-  block: StatBlock;
-  stat: StatKey;
+  block: unknown;
+  stat: string;
 }
 
 const computationStack: ComputationFrame[] = [];
@@ -39,10 +46,10 @@ export type StatModifierType = 'add' | 'multiply';
  */
 export type StatModifierValue = number | (() => number);
 
-export interface StatModifier {
+export interface StatModifier<TStat extends string = StatKey> {
   /** Kaynağı izlemek için kimlik (kart id'si, 'difficulty', 'archetype' vb.). */
   id: string;
-  stat: StatKey;
+  stat: TStat;
   type: StatModifierType;
   value: StatModifierValue;
   /**
@@ -76,27 +83,33 @@ export type StatBaseValues = Record<StatKey, number>;
  *
  * **Kelepçeleme yoktur:** yeterince güçlü negatif modifier sonucu sıfırın
  * altına indirebilir. Anlamlı alt sınır entity'nin sorumluluğundadır.
+ *
+ * **Jenerik stat kümesi:** mekanizma stat adlarından bağımsızdır — `TStat`
+ * verilmezse VOL.HELL'in dört stat'ı (`StatKey`) varsayılan olarak kullanılır,
+ * bu yüzden mevcut `new StatBlock(baseStats)` çağrıları değişmeden çalışır.
+ * Başka bir oyun/tüketici kendi stat kümesini
+ * `new StatBlock<'armor' | 'range'>({ armor: 5, range: 120 })` şeklinde verebilir.
  */
-export class StatBlock {
-  private readonly base: StatBaseValues;
-  private readonly modifiers: StatModifier[] = [];
+export class StatBlock<TStat extends string = StatKey> {
+  private readonly base: Record<TStat, number>;
+  private readonly modifiers: StatModifier<TStat>[] = [];
 
-  constructor(baseStats: StatBaseValues) {
+  constructor(baseStats: Record<TStat, number>) {
     this.base = { ...baseStats };
   }
 
   /** Modifier uygulanmamış taban değer. */
-  getBase(stat: StatKey): number {
+  getBase(stat: TStat): number {
     return this.base[stat];
   }
 
   /** Taban değeri değiştirir — modifier'lar korunur. */
-  setBase(stat: StatKey, value: number): void {
+  setBase(stat: TStat, value: number): void {
     this.base[stat] = value;
   }
 
   /** Modifier ekler; aynı `id` + `stat` ikilisi varsa üzerine yazar. */
-  addModifier(modifier: StatModifier): void {
+  addModifier(modifier: StatModifier<TStat>): void {
     const index = this.modifiers.findIndex((m) => m.id === modifier.id && m.stat === modifier.stat);
     if (index >= 0) {
       this.modifiers[index] = modifier;
@@ -127,12 +140,12 @@ export class StatBlock {
   }
 
   /** Kayıtlı modifier'lar (koşulu şu an false olanlar dahil). */
-  getModifiers(): readonly StatModifier[] {
+  getModifiers(): readonly StatModifier<TStat>[] {
     return this.modifiers;
   }
 
   /** Taban değer + o an aktif olan tüm modifier'lar uygulanmış sonuç. */
-  getValue(stat: StatKey): number {
+  getValue(stat: TStat): number {
     // Koşul closure'ları başka stat'lara getValue() çağrısı yaparsa ve bir
     // döngü oluşursa sonsuz özyinelemeyi kırmak için taban değer döner.
     const existing = computationStack.find((frame) => frame.block === this && frame.stat === stat);
@@ -164,13 +177,12 @@ export class StatBlock {
     }
   }
 
-  /** Dört stat'ın anlık sonuç değerleri — HUD/diagnostic için. */
-  snapshot(): StatBaseValues {
-    return {
-      damage: this.getValue('damage'),
-      speed: this.getValue('speed'),
-      health: this.getValue('health'),
-      fireRate: this.getValue('fireRate'),
-    };
+  /** Tüm stat'ların anlık sonuç değerleri — HUD/diagnostic için. */
+  snapshot(): Record<TStat, number> {
+    const result = {} as Record<TStat, number>;
+    for (const stat of Object.keys(this.base) as TStat[]) {
+      result[stat] = this.getValue(stat);
+    }
+    return result;
   }
 }

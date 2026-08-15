@@ -16,7 +16,7 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  z-index: 9999;
+  z-index: var(--vol-z-debug);
   padding: 8px;
   border-radius: 4px;
   background: #000000bf;

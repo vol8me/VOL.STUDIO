@@ -682,6 +682,51 @@
     "sharpEdge": {
       "title": "Keskin Uç",
       "desc": "Hasar %15 artar."
-    }
+    },
+    "multiShot": {
+      "title": "Çoklu Atış",
+      "desc": "Silah yelpaze şeklinde ek mermi fırlatır."
+    },
+    "swiftBoots": {
+      "title": "Çevik Çizmeler",
+      "desc": "Hareket hızı %10 artar."
+    },
+    "ironWill": {
+      "title": "Demir İrade",
+      "desc": "Maksimum can %20 artar."
+    },
+    "frostNova": {
+      "title": "Buz Novası",
+      "desc": "Çevredeki düşmanları donduran bir patlama yaratır."
+    },
+    "vampiricRounds": {
+      "title": "Vampirik Mermiler",
+      "desc": "Verilen hasarın %5'i can olarak geri döner."
+    },
+    "berserkerRage": {
+      "title": "Berserker Öfkesi",
+      "desc": "Can azaldıkça verilen hasar artar."
+    },
+    "shieldWall": {
+      "title": "Kalkan Duvarı",
+      "desc": "Geçici olarak hasar emen bir kalkan kurar."
+    },
+    "criticalFocus": {
+      "title": "Kritik Odak",
+      "desc": "Kritik vuruş şansı %10 artar."
+    },
+    "phoenixFeather": {
+      "title": "Anka Tüyü",
+      "desc": "Ölümcül bir darbeyi bir kez engeller."
+    },
+    "nimbleReflexes": {
+      "title": "Çevik Refleksler",
+      "desc": "Yakın saldırılardan kaçınma şansı artar."
+    },
+    "reroll": "YENİDEN ÇEVİR",
+    "lock": "KİLİTLE",
+    "unlock": "KİLİDİ AÇ",
+    "slotsTitle": "Yetenek slotları (Q/E)",
+    "slotEmpty": "Boş"
   }
 }

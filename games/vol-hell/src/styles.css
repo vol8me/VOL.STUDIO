@@ -251,7 +251,11 @@
   background: var(--vol-ui-success-solid);
 }
 
-/* Kart ekranları katmanı — level-up ve dükkan panelleri ortalanır. */
+/*
+ * Kart ekranları katmanı — level-up ve dükkan panelleri ortalanır.
+ * `--vol-z-dialog` (Modal/CommandPalette ile aynı tier) — bloklayan bir
+ * yüzey, core/src/ui/theme.css'teki paylaşılan z-index ölçeğine bağlı.
+ */
 .vol-card-layer {
   pointer-events: auto;
   background: var(--vol-ui-scrim);
@@ -262,7 +266,7 @@
   display: flex;
   position: absolute;
   inset: 0;
-  z-index: 100;
+  z-index: var(--vol-z-dialog);
 }
 
 .vol-card-layer[hidden] {

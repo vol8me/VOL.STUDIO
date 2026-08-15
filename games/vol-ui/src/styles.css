@@ -543,3 +543,126 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* KARTLAR sekmesi — LevelUpPicker/ShopPicker kartları CardTile'ın altında
+   yüzde-elli bölünmüş tek bir satırda durur (bkz. cardsTab.ts). */
+
+/*
+ * align-items: flex-start (stretch DEĞİL) — ShopPicker açıldığında
+ * LevelUpPicker'dan çok daha uzun içerik taşıyor (4 kart + envanter
+ * bölümleri + bakiye + iki buton). stretch olsaydı kısa kart uzun olana
+ * eşitlenip ortasında büyük bir boş alan bırakırdı; her kart kendi
+ * içeriğine göre boy alır.
+ */
+.vol-showcase-cards-bottom-row {
+  display: flex;
+  gap: var(--vol-space-lg);
+  align-items: flex-start;
+}
+
+.vol-showcase-cards-bottom-row > .vol-showcase-card {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (width <= 700px) {
+  .vol-showcase-cards-bottom-row {
+    flex-direction: column;
+  }
+}
+
+/*
+ * `CardPicker` bilinçli olarak Modal'a bağlı değildir (bkz. core/src/ui/cards/CardPicker.ts)
+ * — konumlandırma çağıranın sorumluluğu. `games/vol-hell` bunu `.vol-card-layer`
+ * (ortalanmış, kararmış, `position: absolute; inset: 0`) içine yerleştiriyor;
+ * burada aynı mekanizmanın vol-ui eşdeğeri — `position: fixed` kullanılır çünkü
+ * showcase'in vol-hell'deki gibi tam-ekran tek bir oyun konteyneri yok, sayfa
+ * kaydırılabilir; `fixed` viewport'u kaydırmadan bağımsız ortalar.
+ */
+.vol-showcase-card-layer {
+  pointer-events: auto;
+  background: var(--vol-ui-scrim);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--vol-space-md);
+  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: var(--vol-z-dialog);
+  opacity: 1;
+  transition: opacity var(--vol-transition-medium) ease-in;
+}
+
+.vol-showcase-card-layer[hidden] {
+  display: none;
+}
+
+/*
+ * Kapanış geçişi — cardsTab.ts'teki createLayerController `hidden`'ı hemen
+ * DEĞİL, bu geçiş bitene kadar (`HIDE_ANIMATION_MS`, CORE'un
+ * `CardPicker.hide()` ile AYNI süre) erteliyor. Aksi halde panel kendi
+ * içinde yumuşakça solurken (bkz. cards.css `vol-card-picker-out`) arkasındaki
+ * scrim aniden kesilip iki geçiş uyumsuz görünürdü.
+ */
+.vol-showcase-card-layer--leaving {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-showcase-card-layer {
+    transition: none;
+  }
+}
+
+/* KARTLAR sekmesi — ShopPicker.slotArea demosu: Q/E yetenek slotları. */
+.vol-showcase-ability-slots {
+  display: flex;
+  gap: var(--vol-space-sm);
+}
+
+.vol-showcase-ability-slots__slot {
+  min-width: 96px;
+  padding: var(--vol-space-xs) var(--vol-space-sm);
+  background: var(--vol-ui-surface-2);
+  border: 1px dashed var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  color: var(--vol-ui-text-muted);
+  font-family: var(--vol-font-family);
+  font-size: 12px;
+  text-align: center;
+}
+
+.vol-showcase-ability-slots__slot--filled {
+  background: var(--vol-ui-brand-subtle);
+  border: 1px solid var(--vol-ui-brand-border);
+  color: var(--vol-ui-text);
+  font-weight: 700;
+}
+
+/*
+ * Reroll'da tüm teklif ızgarasına kısa bir vurgu — "teklif yenilendi" hissi.
+ * cardsTab.ts requestAnimationFrame ile ekleyip bir sonraki reroll'da
+ * kaldırıp yeniden ekliyor (aksi halde aynı class arka arkaya eklenirse
+ * animasyon yeniden tetiklenmez).
+ */
+@keyframes vol-showcase-shop-grid-flash {
+  0% {
+    box-shadow: 0 0 0 2px var(--vol-ui-accent-solid);
+  }
+
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+  }
+}
+
+.vol-showcase-shop-grid--rerolled {
+  animation: vol-showcase-shop-grid-flash var(--vol-transition-medium) ease-out;
+  border-radius: var(--vol-radius-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-showcase-shop-grid--rerolled {
+    animation: none;
+  }
+}

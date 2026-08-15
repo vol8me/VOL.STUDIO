@@ -1,4 +1,5 @@
 import { INPUT, UI_SIZE } from '../../constants';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export interface SquareJoystickVector {
   x: number;
@@ -38,6 +39,10 @@ export class SquareJoystick {
   private readonly boundPointerDown: (event: PointerEvent) => void;
   private readonly boundPointerMove: (event: PointerEvent) => void;
   private readonly boundPointerUp: (event: PointerEvent) => void;
+  /** Bileşen ömrü boyunca yaşayan tek kaynak: `base`'e bağlı `pointerdown`. */
+  private readonly scope = new DisposableScope();
+  /** Yalnızca bir sürükleme oturumu boyunca yaşar — bkz. `attachDragListeners`. */
+  private dragScope: DisposableScope | null = null;
 
   constructor(options: SquareJoystickOptions = {}) {
     const {
@@ -70,25 +75,25 @@ export class SquareJoystick {
     // Global dinleyiciler yalnizca surukleme suresince bagli tutulur. Constructor'da
     // baglamak, hic dokunulmayan bir joystick icin bile sayfadaki her pointermove'u
     // handler'a sokardi (bkz. RadialMenu/Kanban ayni deseni kullanir).
-    this.base.addEventListener('pointerdown', this.boundPointerDown);
+    this.scope.addListener(this.base, 'pointerdown', this.boundPointerDown as EventListener);
   }
 
   destroy(): void {
-    this.base.removeEventListener('pointerdown', this.boundPointerDown);
-    this.detachDragListeners();
+    this.dragScope?.dispose();
+    this.scope.dispose();
     this.element.remove();
   }
 
   private attachDragListeners(): void {
-    window.addEventListener('pointermove', this.boundPointerMove);
-    window.addEventListener('pointerup', this.boundPointerUp);
-    window.addEventListener('pointercancel', this.boundPointerUp);
+    this.dragScope = new DisposableScope();
+    this.dragScope.addListener(window, 'pointermove', this.boundPointerMove as EventListener);
+    this.dragScope.addListener(window, 'pointerup', this.boundPointerUp as EventListener);
+    this.dragScope.addListener(window, 'pointercancel', this.boundPointerUp as EventListener);
   }
 
   private detachDragListeners(): void {
-    window.removeEventListener('pointermove', this.boundPointerMove);
-    window.removeEventListener('pointerup', this.boundPointerUp);
-    window.removeEventListener('pointercancel', this.boundPointerUp);
+    this.dragScope?.dispose();
+    this.dragScope = null;
   }
 
   private onPointerDown(event: PointerEvent): void {

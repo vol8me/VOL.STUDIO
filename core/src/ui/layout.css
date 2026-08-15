@@ -57,6 +57,16 @@
   border-bottom: 2px solid transparent;
   font-size: 15px;
   font-weight: 600;
+
+  /*
+   * bkz. .vol-button (primitives.css) — aynı gerekçe: yalnızca pointer:coarse'da
+   * devreye girer, GERÇEK kutu büyür. `.vol-tabs__list`'in `gap`i (var(--vol-space-xs))
+   * dar olduğu için görünmez bir overlay tekniği (::before) burada komşu tab'lara
+   * taşardı — bu yüzden bilinçli olarak min-height/min-width kullanıldı: flex
+   * container büyüyen kutuya göre kardeşleri otomatik aralar, örtüşme oluşmaz.
+   */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-tabs__tab:hover {

@@ -4,7 +4,11 @@ export { toStepVelocity } from './math/physics';
 // Deterministik PRNG. Ses sentezinde doğdu ama motor geneli bir yardımcıdır;
 // oyun tarafı da (spawn, davranış) aynı uygulamayı kullanır — ikinci bir PRNG
 // yazmak determinizmi iki ayrı yerde doğrulanması gereken bir soruna çevirir.
-export { createRandom, seedFromString, DEFAULT_SEED, type Random } from './audio/synth/random';
+// Kendi namespace'inde yaşar (`core/src/random/`); `audio/synth/random.ts`
+// yalnızca sentez modülü içi importlar için bırakılan bir re-export shim'idir.
+export { createRandom, seedFromString, DEFAULT_SEED, type Random } from './random/random';
+
+export { DisposableScope, type Disposable } from './lifecycle/DisposableScope';
 
 export {
   INPUT,

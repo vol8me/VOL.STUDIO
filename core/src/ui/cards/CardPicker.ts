@@ -10,6 +10,14 @@ export interface CardPickerOptions {
 }
 
 /**
+ * `.vol-card-picker--leaving` CSS süresiyle (`--vol-transition-medium`,
+ * 240ms) eşleşir. `hide()` `element.hidden = true`'yu bu kadar ERTELER —
+ * aksi halde `display: none` anında uygulanır ve panel "birden kapanıyor"
+ * gibi görünürdü (opacity/transform geçişine hiç zaman kalmazdı).
+ */
+export const HIDE_ANIMATION_MS = 240;
+
+/**
  * Kart seçim panellerinin ortak tabanı — başlık, ipucu ve kart ızgarası.
  *
  * Kasıtlı olarak `Modal`'a BAĞLI DEĞİLDİR: yalnızca kendi panelini çizer.
@@ -24,6 +32,7 @@ export abstract class CardPicker {
   private readonly hintElement: HTMLDivElement;
   private readonly tiles: CardTile[] = [];
   private visible = false;
+  private hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(options: CardPickerOptions = {}) {
     this.element = document.createElement('div');
@@ -55,11 +64,19 @@ export abstract class CardPicker {
     this.element.appendChild(this.footer);
   }
 
+  /**
+   * Mantıksal görünürlük — `hide()` çağrıldığı ANDA `false` olur (çıkış
+   * animasyonunun bitmesini BEKLEMEZ). Çağıranların "şu an açık mı" sorusu
+   * her zaman senkron ve öngörülebilir kalsın diye — yalnızca DOM'un
+   * `hidden` niteliği (görsel geçiş için) gecikmeli uygulanır.
+   */
   isVisible(): boolean {
     return this.visible;
   }
 
   show(): void {
+    this.cancelPendingHide();
+    this.element.classList.remove('vol-card-picker--leaving');
     this.visible = true;
     this.element.hidden = false;
     // İlk kartın aksiyon butonu odaklanır: seçim klavyeyle de yapılabilsin.
@@ -67,13 +84,42 @@ export abstract class CardPicker {
   }
 
   hide(): void {
+    if (!this.visible) return;
+    this.visible = false;
+    this.element.classList.add('vol-card-picker--leaving');
+    this.hideTimeout = setTimeout(() => {
+      this.hideTimeout = null;
+      this.element.hidden = true;
+      this.element.classList.remove('vol-card-picker--leaving');
+    }, HIDE_ANIMATION_MS);
+  }
+
+  /**
+   * `hide()`'ın ANİMASYONSUZ hali — `hidden` hemen uygulanır. Aynı paylaşılan
+   * katmanda (ör. `games/vol-hell`'in tek `.vol-card-layer`'ı) BAŞKA bir
+   * CardPicker hemen `show()` edilecekse bunu kullan: gecikmeli `hide()`
+   * iki panelin flex konteynerde bir an üst üste binmesine/kaymasına yol
+   * açar — katman zaten açık kalıyorsa (yalnızca İÇERİĞİ değişiyorsa) ayrı
+   * bir çıkış animasyonuna gerek yoktur, yeni panelin giriş animasyonu
+   * (`vol-card-picker-in`) geçişi zaten taşır.
+   */
+  hideImmediately(): void {
+    this.cancelPendingHide();
     this.visible = false;
     this.element.hidden = true;
+    this.element.classList.remove('vol-card-picker--leaving');
   }
 
   destroy(): void {
+    this.cancelPendingHide();
     this.clearTiles();
     this.element.remove();
+  }
+
+  private cancelPendingHide(): void {
+    if (this.hideTimeout === null) return;
+    clearTimeout(this.hideTimeout);
+    this.hideTimeout = null;
   }
 
   protected setTitle(title: string): void {

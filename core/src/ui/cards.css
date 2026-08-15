@@ -22,6 +22,11 @@
  * Panelin açılış geçişi — level-up ve dükkan ekranları belirirken.
  * Oyun bu sırada duraklatıldığı için animasyon oynanışı geciktirmez;
  * amaç, panelin ekrana "çarpması" yerine yerine oturması.
+ *
+ * `:not(.vol-card-picker--leaving)` BİLEREK eklendi: `hide()` artık
+ * `hidden`'ı hemen değil `HIDE_ANIMATION_MS` sonra uyguluyor (bkz.
+ * CardPicker.ts) — o ara pencerede eleman hâlâ `:not([hidden])`, bu satır
+ * olmasaydı giriş ve çıkış animasyonu AYNI ANDA uygulanıp çakışırdı.
  */
 @keyframes vol-card-picker-in {
   from {
@@ -35,8 +40,26 @@
   }
 }
 
-.vol-card-picker:not([hidden]) {
+.vol-card-picker:not([hidden], .vol-card-picker--leaving) {
   animation: vol-card-picker-in var(--vol-transition-medium) ease-out both;
+}
+
+/* Panelin kapanış geçişi — `CardPicker.hide()` bu class'ı ekleyip süre
+   sonunda `hidden`'ı uygular (bkz. CardPicker.ts, HIDE_ANIMATION_MS). */
+@keyframes vol-card-picker-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+
+.vol-card-picker--leaving {
+  animation: vol-card-picker-out var(--vol-transition-medium) ease-in both;
 }
 
 /* Kartlar sırayla belirir: gözün soldan sağa okuması için küçük gecikmeler. */
@@ -53,12 +76,53 @@
 }
 
 /*
- * Hareket duyarlılığı olan kullanıcılar için tüm giriş animasyonları kapanır.
- * Panel yine görünür olur, yalnızca hareket etmez.
+ * Kart listeden çıkarken (satıldığında, ya da reroll'da tekliften düşünce) —
+ * ShopPicker.ts bu class'ı ekleyip `LEAVE_ANIMATION_MS` (=240ms, bu animasyonun
+ * süresiyle eşleşir) sonra DOM'dan gerçekten kaldırıyor.
+ */
+@keyframes vol-card-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+}
+
+.vol-card--leaving {
+  animation: vol-card-out var(--vol-transition-medium) ease-in both;
+  pointer-events: none;
+}
+
+/*
+ * Bir teklif İLK KEZ satın alındığında kısa bir "başarı" vurgusu —
+ * ShopPicker.ts yalnızca purchased:false → true geçişinde ekler, ikinci bir
+ * render'da (ör. ilgisiz bir kilitleme) tekrar tetiklenmez.
+ */
+@keyframes vol-card-purchase-flash {
+  0% {
+    background: var(--vol-ui-success-subtle);
+    border-color: var(--vol-ui-success-border);
+  }
+
+  100% {
+    background: var(--vol-ui-disabled-fill);
+    border-color: var(--vol-ui-disabled-border);
+  }
+}
+
+.vol-card--just-purchased {
+  animation: vol-card-purchase-flash var(--vol-transition-medium) ease-out both;
+}
+
+/*
+ * Hareket duyarlılığı olan kullanıcılar için tüm giriş/çıkış/vurgu
+ * animasyonları kapanır. Kartlar yine görünür/kaybolur, yalnızca hareket etmez.
  */
 @media (prefers-reduced-motion: reduce) {
   .vol-card-picker:not([hidden]),
-  .vol-card-picker:not([hidden]) .vol-card {
+  .vol-card-picker:not([hidden]) .vol-card,
+  .vol-card-picker--leaving,
+  .vol-card--leaving,
+  .vol-card--just-purchased {
     animation: none;
   }
 }
@@ -152,6 +216,16 @@
 
 .vol-card--dragging {
   opacity: 0.5;
+}
+
+/*
+ * `outline` kullanılır (border DEĞİL) — `.vol-card`'ın kendi `border` VE
+ * `border-left` (nadirlik rengi) özellikleriyle çakışmaması için. `outline`
+ * layout'a katılmaz, mevcut kenarlıkların üstüne biner.
+ */
+.vol-card--locked {
+  outline: 2px solid var(--vol-ui-accent-solid);
+  outline-offset: -2px;
 }
 
 .vol-card__badges {
@@ -287,6 +361,44 @@
 }
 
 /* --- Dükkan ------------------------------------------------------------- */
+
+.vol-card-shop__reroll-row {
+  justify-content: flex-end;
+  display: flex;
+}
+
+.vol-card-shop__reroll {
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-xs) var(--vol-space-md);
+  font-family: var(--vol-font-family);
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    background var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+}
+
+.vol-card-shop__reroll:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-card-shop__reroll:disabled {
+  cursor: default;
+  color: var(--vol-ui-disabled-text);
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+}
+
+.vol-card-shop__reroll:hover:not(:disabled) {
+  background: var(--vol-ui-hover-fill);
+  border-color: var(--vol-ui-accent-solid);
+}
 
 .vol-card-shop__slots:empty {
   display: none;

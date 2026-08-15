@@ -68,7 +68,11 @@ export class ShowcaseScene extends Phaser.Scene {
         builder: () => buildPanelsTab(this.ui.element),
       },
       { id: 'hud', label: i18next.t('volui:tabs.hud'), builder: () => buildHudTab() },
-      { id: 'cards', label: i18next.t('volui:tabs.cards'), builder: () => buildCardsTab() },
+      {
+        id: 'cards',
+        label: i18next.t('volui:tabs.cards'),
+        builder: () => buildCardsTab(this.ui.element),
+      },
       {
         id: 'forms',
         label: i18next.t('volui:tabs.forms'),

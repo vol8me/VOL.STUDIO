@@ -1114,3 +1114,265 @@ Tüm bulgular defansif hale getirildi, her biri için regresyon testi eklendi.
 | `pnpm format:check` | geçti |                                                 |
 | `pnpm lint:css`     | geçti |                                                 |
 | `pnpm build:game`   | geçti | `games/vol-hell` prod build                     |
+
+---
+
+## CORE capability yol haritası — taslak doğrulama ve Faz 0 — 2026-08-15
+
+`core/docs/targed-core.txt` (düşük maliyetli bir modelin ürettiği, koda hiç
+bakmadan yazılmış bir CORE-mimarisi taslağı) doğrulandı: her iddia gerçek
+koda karşı kontrol edildi, yanlış/aşırı genellenmiş kısımlar (madde 33'ün
+saf substring tabanlı governance kuralı `waveforms.ts` gibi meşru DSP
+dosyalarını kırardı; `Diagnostics`/`vol-ui` gibi zaten var olan altyapı
+sıfırdan öneriliyordu; taslağın kendi "en az iki tüketici" kuralı kendi
+önerilerine uygulanmamıştı) düzeltildi. Taslak silindi (git'te hiç takip
+edilmiyordu), yerine iki doğrulanmış/önceliklendirilmiş belge yazıldı:
+`core/docs/core-capability-roadmap.md` ve `core/docs/adaptive-ui-components.md`.
+
+Ardından roadmap'in "Faz 0 — düşük risk, hemen yapılabilir" bölümü uygulandı.
+
+### Yapılanlar
+
+- **`StatBlock<TStat extends string = StatKey>` jenerikleştirildi**
+  (`core/src/stats/StatBlock.ts`). Mekanizma zaten domain-nötrdü; sızıntı
+  yalnızca `StatKey` literal union'ındaydı. Varsayılan type parametresi
+  sayesinde mevcut `new StatBlock(baseStats)` çağrıları (VOL.HELL'de 10+
+  dosya) HİÇ değişmeden derlenmeye devam ediyor — additive bir değişiklik,
+  breaking refactor değil. `computationStack` artık `unknown`/`string` ile
+  tipli (birden fazla `TStat` örneğini aynı özyineleme-koruma yığınında
+  güvenle karşılaştırabilmek için); `snapshot()` artık dört stat'ı elle
+  saymak yerine `Object.keys(base)` ile jenerik iterasyon yapıyor.
+- **`createRandom` `core/src/random/random.ts`'e taşındı.** `audio/synth/random.ts`
+  artık yalnızca ses motoru içi göreli importları (`./random`) kırmamak için
+  bırakılan bir re-export shim'i. `core/src/index.ts` yeni konumdan import
+  ediyor.
+- **Governance testi eklendi** (`core/tests/governance/publicApi.test.ts`):
+  (1) `core/src/index.ts`'in export ettiği İSİMLERİN (dosya içerikleri değil)
+  VOL.HELL terminolojisi (`enemy`/`boss`/`flux`/`spark`/`volhell`) taşımadığını
+  doğruluyor — `wave`/`card` bilinçli olarak dışarıda çünkü `WaveCounter`/
+  `CardTile` gibi meşru, domain-nötr export'larla çakışıyorlar; (2) `core/src`
+  ağacının hiçbir dosyasının `games/*` veya `@volstudio/vol-*` import
+  etmediğini statik olarak tarıyor.
+
+### Ertelenenler (roadmap'te bilinçli olarak, madde 37 kuralına göre)
+
+`Disposable`/`Scope`, `Scheduler`, `StateMachine`, geometry/collision
+primitifleri, `ObjectPool<T>` — hiçbiri bu turda yapılmadı; hepsi ya ikinci
+bir somut kullanım bekliyor ya da mevcut lifecycle bulgularından (Y6/Y7/O1)
+geriye türetilecek ayrı bir faz.
+
+### Kalite kapıları
+
+| Kapı                | Durum | Not                                                       |
+| ------------------- | ----- | --------------------------------------------------------- |
+| `pnpm -r typecheck` | geçti | 4 paket                                                   |
+| `pnpm -r test`      | geçti | 1121 test (core 725, vol-hell 365, tauri-v2 26, vol-ui 5) |
+| `pnpm lint`         | geçti | 0 hata, 0 uyarı                                           |
+| `pnpm format:check` | geçti |                                                           |
+| `pnpm lint:css`     | geçti |                                                           |
+| `pnpm build:game`   | geçti | `games/vol-hell` prod build                               |
+| `cargo check`       | geçti | Rust'a dokunulmadı, yine de doğrulandı                    |
+
+---
+
+## CORE capability yol haritası — Faz 1 (DisposableScope) ve adaptive UI hit-target — 2026-08-15
+
+Roadmap'in Faz 1'i uygulandı: `core/src/lifecycle/DisposableScope.ts` —
+`Disposable` arayüzü + `add()`/`addListener()`/ters-sırada-ve-hataya-dayanıklı
+`dispose()`. İlk gerçek tüketiciler: `Joystick`, `SquareJoystick` (sürükleme
+oturumu başına yeni `dragScope`, `destroy()`'da tek çağrı) ve `Modal`
+(açık-oturum scope'u — yığın üyeliği + `document` keydown dinleyicisi tek
+`dispose()` ile kapanıyor). Bu sırada iki mevcut testin ("hiç sürüklenmemiş
+joystick'in destroy()'u yine de 3 kez removeEventListener çağırır") eskiden
+geçerli ama anlamsız bir implementasyon detayını kilitlediği görüldü —
+"sürükleme ortasında destroy()" senaryosuna düzeltildi. `addListener`'ın
+`options` verilmediğinde add/removeEventListener'ı üç değil iki argümanla
+çağırması gerektiği ayrıca bir spy testinde ortaya çıktı, düzeltildi.
+
+Ardından `adaptive-ui-components.md`'nin Button hit-area kısmı uygulandı:
+`--vol-hit-target-min` token'ı (yalnızca `@media (pointer: coarse)` içinde
+44px — `--vol-ui-` prefiksi YASAK, o yalnızca `colors.ts` üretimi renkler
+için, `colorSync.test.ts` zorluyor). İlk tasarım (`::before` overlay +
+`max(100%, token)`) terk edildi: matematiksel hatası vardı (CSS `inset`'te
+`%` kendi kutusuna değil containing block'a göre çözülür) VE sıkı gruplu
+component'lerde (button-group 16px gap, tab-list 4px gap) görünmez overlay
+komşularla çakışabilirdi. Yerine `min-height`/`min-width: var(--vol-hit-target-min, auto)`
+kondu — gerçek kutu büyür, flex/gap içindeki komşular otomatik aralanır.
+Uygulandığı yerler: `Button`, `Checkbox`, `Tabs`. Bilinçli atlanan:
+`RangeSlider` (iki handle birbirine yaklaştırılabiliyor, büyütme dokunmatikte
+ayırt etmeyi zorlaştırabilir), `CardTile` (zaten `min-height:150px`).
+
+vol-ui'ye denendi/geri alındı: roadmap'in Faz 3'ü ("validation ortamının
+genişletilmesi") gereği StatBlock/createRandom/DisposableScope'u gösteren bir
+"CORE" sekmesi eklendi, sonra kullanıcıyla birlikte KALDIRILDI — vol-ui'nin
+kendi kimliği "DOM UI kütüphanesinin showcase'i", bu üç capability zaten
+unit testlerle ve gerçek tüketicilerle (StatBlock→vol-hell,
+DisposableScope→Modal/Joystick) kanıtlanmış, bir demo sekmesi ölçülebilir bir
+doğrulama katmanı eklemiyordu. Tamamen temizlendi.
+
+### Ertelenenler (bilinçli, madde 37 kuralına göre)
+
+Faz 2 (Scheduler/StateMachine), geometry/collision, `ObjectPool<T>`,
+resource lifecycle — ikinci somut tüketici çıkmadan yapılmayacak.
+
+### Kalite kapıları
+
+| Kapı                | Durum | Not                                                       |
+| ------------------- | ----- | --------------------------------------------------------- |
+| `pnpm -r typecheck` | geçti | 4 paket                                                   |
+| `pnpm -r test`      | geçti | 1141 test (core 741, vol-hell 365, tauri-v2 26, vol-ui 5) |
+| `pnpm lint`         | geçti | 0 hata, 0 uyarı                                           |
+| `pnpm format:check` | geçti |                                                           |
+| `pnpm lint:css`     | geçti |                                                           |
+| `pnpm build:game`   | geçti |                                                           |
+| `cargo check`       | geçti |                                                           |
+
+---
+
+## vol-ui KARTLAR sekmesi düzeni ve ShopPicker reroll/kilit — 2026-08-15
+
+Kullanıcının `pnpm dev` ile canlı testinden gelen geri bildirim üzerine.
+
+### Düzen
+
+CardTile demo kartı tam genişliğe çıkarıldı (içindeki örnek kartlar artık
+yan yana sığıyor, dikey istiflenmiyor); LevelUpPicker/ShopPicker altta
+yüzde-elli bölünmüş ayrı bir satırda yan yana durur
+(`vol-showcase-cards-bottom-row`, `align-items: flex-start` — ShopPicker
+LevelUpPicker'dan çok daha uzun içerik taşıdığı için `stretch` olsaydı kısa
+kart ortasında büyük boşluk bırakırdı).
+
+### CORE: `ShopPicker`'a reroll + kilit (opsiyonel, geriye uyumlu)
+
+`ShopPickerOptions.reroll?: { label, onReroll }` ve
+`ShopPickerOptions.lock?: { lockLabel, unlockLabel, onToggle }` eklendi —
+ikisi de verilmezse hiçbir yeni buton render edilmez, mevcut tüketiciler
+(vol-hell) değişiklik yapmadan çalışmaya devam eder. Mimari ilke korundu:
+`ShopPicker` bir kart havuzu/RNG bilmez — hangi kartların reroll'da
+korunacağı tamamen çağıranın sorumluluğu (`onBuy`/`onSell` ile aynı desen).
+`games/vol-hell`'in kendi `CardInventoryManager`'ı bu özelliği henüz
+kullanmıyor; vol-ui'nin showcase demosunda gerçek mantıkla (7→14 kartlık
+havuz, artan maliyetli reroll, kilitliler korunur) sergileniyor.
+
+### Kalite kapıları
+
+| Kapı                | Durum | Not                                                       |
+| ------------------- | ----- | --------------------------------------------------------- |
+| `pnpm -r typecheck` | geçti | 4 paket                                                   |
+| `pnpm -r test`      | geçti | 1157 test (core 749, vol-hell 365, tauri-v2 26, vol-ui 5) |
+| `pnpm lint`         | geçti | 0 hata, 0 uyarı                                           |
+| `pnpm format:check` | geçti |                                                           |
+| `pnpm lint:css`     | geçti |                                                           |
+
+---
+
+## Repo çapında bug avı — zoom/z-index/kart animasyonları — 2026-08-15
+
+Kullanıcının "bug avına çık" talimatıyla, canlı testte gözlemlenen üç ayrı
+bulgu derinlemesine araştırılıp kök nedenlerinden düzeltildi.
+
+### K1 — Tarayıcı yakınlaştırmasında büyüyüp küçülen gri kutu
+
+**Kök neden:** `ViewportManager.attachResize()`'ın resize handler'ı
+`game.scale.resize(w, h)` çağırıyordu ama `game.scale.zoom`'u HİÇ
+güncellemiyordu. Phaser'ın `resize()`'ı canvas'ın CSS boyutunu
+`bufferSize × zoom` olarak hesaplıyor; `zoom` Game kurulduğu andaki DPR'de
+sonsuza dek sabit kalıyordu. Tarayıcı yakınlaştırması `devicePixelRatio`'yu
+değiştirir (ve `resize` event'i tetikler) — `zoom` güncellenmediği için
+canvas'ın CSS boyutu pencereyle uyuşmaz hale geliyor, ekranda pencereyi takip
+etmeyen, yakınlaştırma oranıyla büyüyüp küçülen bir kutu olarak görünüyordu.
+**Düzeltme:** `game.scale.setZoom(1 / dpr)` artık `resize()`'dan önce, TAZE
+dpr ile çağrılıyor. Mevcut K2 regresyon testi (`config.zoom` ile inşa-anı
+zoom'unu kullanıyordu) düzeltildi + yeni bir "tarayıcı yakınlaştırması" testi
+eklendi (DPR değişimi sonrası `setZoom`'un taze değerle çağrıldığını
+kilitliyor).
+
+### K2 — Dialog'lar tutarsız katmanlanıyor
+
+**Kök neden:** Hiçbir koordineli z-index ölçeği yoktu — her floating/overlay
+component kendi sabit sayısını seçmişti: `Modal:30` ama `RadialMenu:50` (bir
+Modal'dan bile YÜKSEK), `Tooltip`/`CommandPalette`/`Popup` üçü de `40`'ta
+çakışıyordu, kendi eklediğim `.vol-showcase-card-layer` ise `100` (neredeyse
+her şeyin üstünde) idi. **Düzeltme:** `theme.css`'e tek doğruluk kaynağı bir
+ölçek eklendi (`--vol-z-root/float/toast/dialog/dialog-content/loading/debug`,
+gerekçesi dosya içi yorumda) ve tüm sayfa-seviyesi component'ler (`Modal`,
+`CommandPalette`, `Tooltip`, `Popup`, `RichTooltip`, `RadialMenu`,
+`LoadingScreen`, `Diagnostics`, vol-hell'in `.vol-card-layer`'ı, vol-ui'nin
+`.vol-showcase-card-layer`'ı) buna bağlandı. 11 yeni regresyon testi
+(`core/tests/ui/zIndexScale.test.ts`) hem ölçeğin artan sırada olduğunu hem
+her component'in hardcoded sayı yerine token kullandığını kilitliyor.
+
+### K3 — ShopPicker: reroll'da 3 kart gelme, envanter büyüdükçe "görüntü bozulması", zayıf satın alma hissi
+
+**Kök neden (çoklu):**
+
+1. Demo kart havuzu (7) `SHOP_SIZE`'a (4) göre çok küçüktü — birkaç satın
+   alma + kilitleme sonrası reroll'un çekebileceği havuz 4'ün altına
+   düşüyordu, ekranda 4 yerine 3 (veya daha az) teklif görünüyordu.
+2. `ShopPicker.render()` HER çağrıda (satın alma, satış, kilit değişimi,
+   reroll — hangisi olursa olsun) TÜM teklif ve envanter kartlarını
+   `destroy()` edip yeniden kuruyordu. CSS giriş animasyonu yeni DOM
+   düğümünde tetiklenir — ilgisiz bir kilitleme tıklaması bile tüm envanteri
+   yeniden animasyonla titretiyordu, envanter büyüdükçe daha görünür/rahatsız
+   edici hale geliyordu. Aynı zamanda satın alma "birden oluyor" hissi
+   veriyordu çünkü hiçbir geçiş/vurgu yoktu.
+
+**Düzeltme:**
+
+- Demo havuzu 14 karta çıkarıldı (`games/vol-ui/src/sections/cardsTab.ts`).
+- `ShopPicker.render()` DIFF tabanlı hale getirildi: yalnızca gerçekten YENİ
+  kartlar oluşturuluyor, yalnızca listede artık OLMAYAN kartlar (çıkış
+  animasyonuyla, `LEAVE_ANIMATION_MS=240ms`) kaldırılıyor, VAR OLAN kartlar
+  `CardTile.setDisabled()` ile YERİNDE güncelleniyor (yapısal değişiklik —
+  kilit durumu — hâlâ yeniden kurulmayı gerektiriyor, `CardTile` var olan bir
+  butonu sonradan ekleyip çıkaramadığı için).
+- Bir teklif İLK KEZ satın alındığında kısa bir "başarı" vurgusu
+  (`vol-card--just-purchased`, `prefers-reduced-motion`'da devre dışı,
+  `animationend` VE zamanlayıcı ile temizleniyor — reduced-motion'da
+  `animationend` hiç ateşlenmeyeceği için).
+- `CardPicker.hide()` artık `HIDE_ANIMATION_MS` (240ms) kadar erteleyip
+  `--leaving` class'ıyla yumuşak çıkış yapıyor (`isVisible()` senkron kalır,
+  yalnızca DOM `hidden` niteliği gecikmeli); `show()` bekleyen bir hide'ı
+  iptal ediyor. `hideImmediately()` eklendi — `games/vol-hell`'in
+  `CardScreens.ts`'i AYNI paylaşılan `.vol-card-layer` içinde level-up↔dükkan
+  arası anlık takas yaptığı üç yerde (`advanceIntermission`, `openShop`,
+  `closeIntermission`) bunu kullanıyor: animasyonlu `hide()` orada iki panelin
+  flex konteynerde bir an üst üste binmesine yol açıyordu (gerçek bir
+  regresyon — `cardScreens.test.ts` bunu yakaladı, düzeltildi).
+- `ShopPicker.slotArea` (çağıranın kendi içeriğini koyabileceği, önceden hiç
+  kullanılmayan alan) artık vol-ui demosunda da dolduruluyor — 2 yetenek
+  slotu, gerçek oyundaki gibi yeni alınan yetenek otomatik boş slota yerleşir.
+- Reroll'da tüm ızgaraya kısa bir vurgu (`vol-showcase-shop-grid--rerolled`,
+  yalnızca vol-ui'de) — "teklif yenilendi" hissi.
+
+### Diğer
+
+- Phaser `node_modules` kontrolü: pnpm'in content-addressable yapısı gereği
+  `.pnpm/phaser@4.2.1/` altında saklanıp her pakete symlink'leniyor — kök
+  `node_modules/`de doğrudan görünmemesi normal, bug değil.
+- Git sağlığı doğrulandı: `git fsck --full` temiz, remote/branch tracking
+  doğru, gizli bilgi sızıntısı yok.
+
+### Kalite kapıları
+
+| Kapı                                      | Durum | Not                                                       |
+| ----------------------------------------- | ----- | --------------------------------------------------------- |
+| `pnpm -r typecheck`                       | geçti | 4 paket                                                   |
+| `pnpm -r test`                            | geçti | 1171 test (core 775, vol-hell 365, tauri-v2 26, vol-ui 5) |
+| `pnpm lint`                               | geçti | 0 hata, 0 uyarı                                           |
+| `pnpm format:check`                       | geçti |                                                           |
+| `pnpm lint:css`                           | geçti |                                                           |
+| `pnpm --filter @volstudio/vol-hell build` | geçti |                                                           |
+| `pnpm --filter @volstudio/vol-ui build`   | geçti |                                                           |
+| `cargo check/fmt/clippy`                  | geçti |                                                           |
+
+### Hâlâ elle doğrulanması gerekenler (`pnpm dev`)
+
+1. Tarayıcı yakınlaştırması (Ctrl+scroll) sonrası canvas'ın pencereyle
+   eşleştiği — otomasyonda gerçek `Phaser.Game`/tarayıcı DPR'si yok, düzeltme
+   yalnızca birim testle (sahte Game + sahte DPR) doğrulandı.
+2. Modal/Tooltip/CommandPalette/RadialMenu aynı anda tetiklendiğinde yeni
+   katmanlamanın görsel olarak beklenen sırada olduğu.
+3. Dükkanda reroll/kilit/çoklu satın alma akışının hissi — animasyonların
+   göze rahatsız gelip gelmediği, `prefers-reduced-motion` açıkken hiçbir
+   şeyin takılı kalmadığı.

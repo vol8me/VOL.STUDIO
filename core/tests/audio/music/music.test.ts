@@ -215,7 +215,7 @@ describe('MusicEngine', () => {
         activeStems: Map<string, { source: { loopStart: number; loopEnd: number } }>;
       }
     ).activeStems;
-    const stem = activeStems.values().next().value;
+    const stem = activeStems.values().next().value!;
     expect(stem.source.loopStart).toBeGreaterThanOrEqual(0);
     expect(stem.source.loopEnd).toBeGreaterThan(0);
     expect(stem.source.loopEnd).toBeLessThanOrEqual(buffer.duration);

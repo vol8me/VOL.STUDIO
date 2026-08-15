@@ -146,7 +146,13 @@ export class CardScreens {
       return;
     }
 
-    this.shop.hide();
+    // hideImmediately() (animasyonsuz) BİLEREK kullanılır: level-up ve dükkan
+    // AYNI paylaşılan `.vol-card-layer` içinde yaşıyor (bkz. constructor).
+    // Animasyonlu hide() `hidden`'ı erteler (bkz. CardPicker.ts); bu iki panel
+    // aynı flex konteynerde bir an üst üste biner/kayardı. Katman zaten açık
+    // kalıyor, yalnızca İÇERİK değişiyor — levelUp'ın kendi giriş animasyonu
+    // (`vol-card-picker-in`) geçişi zaten taşıyor.
+    this.shop.hideImmediately();
     this.levelUp.present(
       this.levelUpOffer.map((card) => toCardTileData(card, { showType: true })),
       {
@@ -160,14 +166,20 @@ export class CardScreens {
     // Teklif dükkan AÇILIRKEN çekilir: seviye ekranında alınan yetenek
     // kartının aynısı vitrinde tekrar görünmesin.
     this.shopOffer = this.cards.drawOffer(2);
-    this.levelUp.hide();
+    // hideImmediately() — bkz. advanceIntermission()'daki gerekçe, aynı katman içi takas.
+    this.levelUp.hideImmediately();
     this.shop.present(this.buildShopState());
     this.refreshLoadout();
   }
 
   private closeIntermission(): void {
-    this.levelUp.hide();
-    this.shop.hide();
+    // hideImmediately() BİLEREK: `this.container.hidden = true` hemen
+    // ardından geliyor ve `.vol-card-layer` kendi geçişi olmadığı için
+    // animasyonlu hide() burada zaten görünmez kalırdı (panel süresi dolmadan
+    // TÜM katman `display: none` olurdu) — hideImmediately() bunu açıkça
+    // belgeliyor, "yarım kalmış" bir animasyon başlatmıyor.
+    this.levelUp.hideImmediately();
+    this.shop.hideImmediately();
     this.container.hidden = true;
     this.intermissionActive = false;
     this.callbacks.onClose();

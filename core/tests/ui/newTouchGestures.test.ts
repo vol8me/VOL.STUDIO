@@ -473,9 +473,24 @@ describe('SquareJoystick', () => {
     expect(onMove).not.toHaveBeenCalled();
   });
 
-  it('destroy pointer listenerlarını temizler', () => {
+  it('destroy sürükleme ortasında çağrılırsa tüm pointer listenerlarını temizler', () => {
     const joystick = new SquareJoystick();
     const base = joystick.element.querySelector<HTMLDivElement>('.vol-square-joystick__base')!;
+
+    // Global (window) listener'lar yalnızca aktif bir sürükleme sırasında
+    // bağlıdır; destroy()'un onları gerçekten kaldırdığını görmek için önce
+    // bir sürükleme başlatılmalı — aksi halde hiç bağlanmamış bir listener'ın
+    // "kaldırıldığını" doğrulamak anlamsız.
+    base.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        pointerId: 1,
+        clientX: 0,
+        clientY: 0,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
     const removeBaseListener = vi.spyOn(base, 'removeEventListener');
     const removeWindowListener = vi.spyOn(window, 'removeEventListener');
 
