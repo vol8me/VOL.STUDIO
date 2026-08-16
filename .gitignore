@@ -43,6 +43,7 @@ coverage/
 .DS_Store
 Thumbs.db
 desktop.ini
+.directory
 
 # Logs
 *.log

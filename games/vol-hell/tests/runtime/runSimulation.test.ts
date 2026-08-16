@@ -210,6 +210,11 @@ describe('koşu simülasyonu — entegrasyon sağlamlığı', () => {
     expect(result.maxPickups).toBeLessThanOrEqual(economyConfig.flux.maxActive);
   });
 
+  // Tek parça hâlinde kalmalı: biriken durumuyla kesintisiz bir koşuyu
+  // doğruluyor, dalgalara bölünürse test ettiği şey kalmaz. Coverage
+  // enstrümantasyonu altında varsayılan 5 sn'yi aştığı için süre açıkça
+  // yükseltilir — global testTimeout artırmak diğer testlerdeki gerçek
+  // takılmaları gizlerdi.
   it('tam koşu (20 dalga) doğru olayları doğru sırayla üretir', () => {
     // 20 dalga x 40 sn = 800 sn; 100 ms adımla hızlıca örtülür.
     const frames = Math.ceil((waveConfig.totalWaves * waveConfig.waveDurationMs) / 100) + 10;
@@ -222,7 +227,7 @@ describe('koşu simülasyonu — entegrasyon sağlamlığı', () => {
     expect(result.eliteWaves).toEqual([waveConfig.eliteWave]);
     expect(result.bossWaves).toEqual([waveConfig.bossWave]);
     expect(result.runCompleted).toBe(true);
-  });
+  }, 20_000);
 
   it('aynı seed aynı koşuyu üretir — determinizm bozulmadı', () => {
     const a = simulate(1200);

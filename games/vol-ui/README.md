@@ -23,6 +23,7 @@ Vite dev server tarayıcıda açılır; Tauri veya Phaser oyun döngüsü gerekm
 | PALETTE  | `--vol-ui-*` renk token'ları, tipografi, spacing referansı                                                                                                                                                                                     | `theme.css`                             |
 | ADVANCED | Tree, Accordion, DataTable, Wizard, CommandPalette, SkillTree, EventLog, Kanban, DialogueBox                                                                                                                                                   | `layout/`, `data/`, `hud/`, `overlays/` |
 | SCROLL   | ScrollView, VirtualList, Carousel                                                                                                                                                                                                              | `layout/`                               |
+| YÜKLEME  | LoadingScreen — gösterge tipleri, geçiş tipleri, içerik konumları                                                                                                                                                                              | `overlays/`                             |
 | TOUCH    | Joystick, TouchButton, DPad, DirectionButton, ActionBar, ChargeButton, PauseResumeButton, LongPressButton, RadialMenu, PinchZoomController, PullToRefresh, SwipeableCardStack, SwipeGestureZone, MultiTouchZone, DualAxisScrollPanel, SlotGrid | `controls/`, `hud/`                     |
 
 ## Lisans

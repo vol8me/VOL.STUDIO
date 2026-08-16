@@ -68,7 +68,7 @@ const mainMenu: MusicTrack = {
   stems: [
     {
       id: 'theme',
-      src: 'assets/audio/music/main-menu/main-menu-theme.ogg',
+      src: 'assets/audio/music/main-menu/iron-vein.ogg',
       gain: 0.75,
       loop: true,
     },

@@ -1,6 +1,6 @@
 <img src="./.github/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
 
-Cross-platform game monorepo built with Tauri v2 + Phaser 4. Produces Windows (MSI/NSIS) and Android (APK) builds from a single codebase.
+Cross-platform game monorepo built with Tauri v2 + Phaser 4.
 
 [Türkçe](README.md)
 
@@ -14,14 +14,17 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 core/            # @volstudio/core — shared systems + DOM-based UI library
 games/vol-hell/  # @volstudio/vol-hell — the game (Vite root)
 games/vol-ui/    # @volstudio/vol-ui — live showcase of the core UI components
+games/design/    # @volstudio/design — Pencil design source, export pipeline and rig assembly
 tauri-v2/        # @volstudio/tauri-v2 — native wrapper and Rust backend
 ```
+
+Documentation surface: [core/docs](core/docs) (i18n, audio/music engines) and [games/docs](games/docs) (game i18n).
 
 ## Requirements
 
 - Node.js `^20.19.0` or `>=22.12.0`, pnpm >= 11.18
 - Rust + Cargo, Visual Studio C++ Build Tools (Windows)
-- Android Studio + SDK + NDK and Windows Developer Mode (for Android)
+- Android Studio + SDK + NDK
 
 ## Commands
 
@@ -36,16 +39,26 @@ pnpm build:tauri                           # Build PC installers
 
 ### Verification
 
-CI (`.github/workflows/ci.yml`) runs these six gates on every push and pull request:
+CI (`.github/workflows/ci.yml`) runs two jobs on every push and pull request. Web gates:
 
 ```bash
 pnpm -r typecheck                          # Typecheck all packages
-pnpm -r test                               # Test all packages
+pnpm -r --if-present test:coverage         # Tests + coverage thresholds
 pnpm lint                                  # ESLint
 pnpm format:check                          # Prettier (fix with: pnpm format)
 pnpm lint:css                              # Stylelint
 pnpm build:game                            # Build the game
 ```
+
+Rust gates (inside `tauri-v2/src-tauri`):
+
+```bash
+cargo check --locked
+cargo fmt --check
+cargo clippy --locked -- -D warnings
+```
+
+CI runs tests through `test:coverage`; `pnpm -r test` does not enforce coverage thresholds, so run the command above before pushing.
 
 ## License
 

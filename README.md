@@ -1,6 +1,6 @@
 <img src="./.github/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
 
-Tauri v2 + Phaser 4 ile geliştirilen çapraz platform oyun monoreposu. Tek kod tabanından Windows (MSI/NSIS) ve Android (APK) çıktısı üretir.
+Tauri v2 + Phaser 4 ile geliştirilen çapraz platform oyun monoreposu.
 
 [English](README.en.md)
 
@@ -14,14 +14,17 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 core/            # @volstudio/core — paylaşılan sistemler + DOM tabanlı UI kütüphanesi
 games/vol-hell/  # @volstudio/vol-hell — oyun (Vite kökü)
 games/vol-ui/    # @volstudio/vol-ui — core UI component'lerinin canlı showcase'i
+games/design/    # @volstudio/design — Pencil tasarım kaynağı, export pipeline'ı ve rig montajı
 tauri-v2/        # @volstudio/tauri-v2 — native wrapper ve Rust backend
 ```
+
+Doküman yüzeyi: [core/docs](core/docs) (i18n, ses/müzik motorları) ve [games/docs](games/docs) (oyun i18n'i).
 
 ## Gereksinimler
 
 - Node.js `^20.19.0` veya `>=22.12.0`, pnpm >= 11.18
 - Rust + Cargo, Visual Studio C++ Build Tools (Windows)
-- Android Studio + SDK + NDK ve Windows Geliştirici Modu (Android için)
+- Android Studio + SDK + NDK
 
 ## Komutlar
 
@@ -36,16 +39,26 @@ pnpm build:tauri                           # PC installer build
 
 ### Doğrulama
 
-CI (`.github/workflows/ci.yml`) her push ve PR'da bu altı kapıyı koşar:
+CI (`.github/workflows/ci.yml`) her push ve PR'da iki iş koşar. Web kapıları:
 
 ```bash
 pnpm -r typecheck                          # Tüm paketlerde TS doğrulama
-pnpm -r test                               # Tüm paketlerde test
+pnpm -r --if-present test:coverage         # Test + kapsam eşikleri
 pnpm lint                                  # ESLint
 pnpm format:check                          # Prettier (düzeltmek için: pnpm format)
 pnpm lint:css                              # Stylelint
 pnpm build:game                            # Oyun build
 ```
+
+Rust kapıları (`tauri-v2/src-tauri` içinde):
+
+```bash
+cargo check --locked
+cargo fmt --check
+cargo clippy --locked -- -D warnings
+```
+
+CI testi `test:coverage` ile koşar; `pnpm -r test` kapsam eşiklerini uygulamaz, bu yüzden push öncesi yukarıdaki komutun kendisi çalıştırılmalıdır.
 
 ## Lisans
 

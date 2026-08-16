@@ -27,8 +27,8 @@ core/src/audio/synth/
   noise.ts      — white / pink / brown gürültü
   envelope.ts   — ADSR zarf
   filter.ts     — değişken lowpass / highpass
-  effects.ts    — reverb, delay, flanger, phaser, chorus, distortion, stereo width
-  engine.ts     — synthesize(), compose(), applyGlobalEffects()
+  effects/      — reverb, delay, modulation, distortion, pan, stereo width
+  engine/       — synthesize(), compose(), applyGlobalEffects(), voice/render
   sequencer.ts  — arp / sequence / BPM
   sample.ts     — WAV decode, resample, loop, trim
   physical.ts   — fiziksel model (pluck / string)

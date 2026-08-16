@@ -1,17 +1,21 @@
 import { describe, it, expect } from 'vitest';
 import { Presets, synth } from '@volstudio/core/audio/synth';
 
-describe('Preset kütüphanesi', () => {
-  it('tüm catalog presetleri geçerli SynthParams döner ve sentezlenebilir', () => {
-    const names = Presets.findPresets();
-    expect(names.length).toBeGreaterThan(0);
+const presetNames = Presets.findPresets();
 
-    for (const name of names) {
-      const params = Presets.getPreset(name);
-      expect(params.duration).toBeGreaterThan(0);
-      const result = synth(params.duration, params);
-      expect(result.channels[0]?.length).toBeGreaterThan(0);
-    }
+describe('Preset kütüphanesi', () => {
+  it('catalog boş değil', () => {
+    expect(presetNames.length).toBeGreaterThan(0);
+  });
+
+  // Preset başına ayrı test: tüm catalog'u tek testte sentezlemek coverage
+  // enstrümantasyonu altında varsayılan 5 sn zaman aşımını aşıyordu. Ayrıca
+  // bölünmüş hâlde düşen preset'in adı doğrudan raporda görünür.
+  it.each(presetNames)('%s preseti geçerli SynthParams döner ve sentezlenebilir', (name) => {
+    const params = Presets.getPreset(name);
+    expect(params.duration).toBeGreaterThan(0);
+    const result = synth(params.duration, params);
+    expect(result.channels[0]?.length).toBeGreaterThan(0);
   });
 
   it('kategori bazlı arama çalışır', () => {

@@ -1,22 +1,22 @@
 # VOL.STUDIO — Denetim Kaydı
 
-`dev` dalı. Kapsam: ~43.000 satır TypeScript (core + games + tauri-v2) ve ayrıca
-ses/müzik motoru (`core/src/audio/**`, ~8.000 satır) için ayrı bir tam denetim.
+`dev` dalı. Bu dosya bir görev listesi değil, **tarih sıralı denetim/çalışma
+kaydıdır**: her bölüm tamamlanmış bir turu ve o turun kalite kapısı sonucunu
+belgeler. En güncel durum en alttaki bölümdedir; aşağıdaki tablo yalnızca
+son turun özetidir.
 
-## Durum
+## Son durum (2026-08-17)
 
-Tüm bulgular (112/112) çözüldü ve doğrulandı.
-
-| Kapı                     | Durum | Not                                                      |
-| ------------------------ | ----- | -------------------------------------------------------- |
-| `pnpm -r typecheck`      | ✓     | 4 paket                                                  |
-| `pnpm -r test`           | ✓     | 793 test (core 654, vol-hell 109, tauri-v2 25, vol-ui 5) |
-| `pnpm lint`              | ✓     | 0 hata, 0 uyarı                                          |
-| `pnpm format:check`      | ✓     |                                                          |
-| `pnpm lint:css`          | ✓     |                                                          |
-| `pnpm build:game`        | ✓     | `dist/`'te 0 `.wav` sızıntısı                            |
-| `cargo check/fmt/clippy` | ✓     |                                                          |
-| CI                       | ✓     | `.github/workflows/ci.yml`                               |
+| Kapı                                 | Durum | Not                                                                  |
+| ------------------------------------ | ----- | -------------------------------------------------------------------- |
+| `pnpm -r typecheck`                  | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                   |
+| `pnpm -r --if-present test:coverage` | ✓     | 1234 test (core 814, vol-hell 365, tauri-v2 26, design 24, vol-ui 5) |
+| `pnpm lint`                          | ✓     | 0 hata, 0 uyarı                                                      |
+| `pnpm format:check`                  | ✓     |                                                                      |
+| `pnpm lint:css`                      | ✓     |                                                                      |
+| `pnpm build:game`                    | ✓     | `dist/`'te 0 `.wav` sızıntısı                                        |
+| `cargo check/fmt/clippy`             | ✓     |                                                                      |
+| CI                                   | ✓     | `.github/workflows/ci.yml` — web + rust işleri                       |
 
 ---
 
