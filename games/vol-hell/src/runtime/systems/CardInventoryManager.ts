@@ -1,6 +1,7 @@
 import type { Random, StatBlock } from '@volstudio/core';
 import { Diagnostics } from '@volstudio/core';
 import { drawCards, getCardSellValue } from '@/config/cards';
+import type { DrawCardsOptions } from '@/config/cards';
 import type { CardConditionId, CardDefinition } from '@/config/cards/types';
 import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import { createAbility } from '@/runtime/ability/AbilityRuntime';
@@ -53,9 +54,13 @@ export class CardInventoryManager {
    * Level-up teklifi — ücretsiz seçim için kart çeker.
    * Sahip olunan ABILITY kartları tekrar çıkmaz (aynı yeteneğin ikinci kopyası
    * işe yaramaz); buff/takas kartları tekrar çıkabilir ve üst üste biner.
+   *
+   * Ek `exclude` verilirse bu kimlikler de havuz dışında bırakılır
+   * (örn. dükkan reroll'da kilitli/purchased teklifler).
    */
-  drawOffer(count = 2): CardDefinition[] {
-    return drawCards(this.deps.random, count, { exclude: this.getOwnedAbilityIds() });
+  drawOffer(count = 2, options: DrawCardsOptions = {}): CardDefinition[] {
+    const exclude = new Set([...this.getOwnedAbilityIds(), ...(options.exclude ?? [])]);
+    return drawCards(this.deps.random, count, { ...options, exclude });
   }
 
   /** Ücretsiz edinme (level-up seçimi) — kart hemen uygulanır. */

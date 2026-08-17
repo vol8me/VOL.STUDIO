@@ -5,18 +5,19 @@ kaydıdır**: her bölüm tamamlanmış bir turu ve o turun kalite kapısı sonu
 belgeler. En güncel durum en alttaki bölümdedir; aşağıdaki tablo yalnızca
 son turun özetidir.
 
-## Son durum (2026-08-17)
+## Son durum (2026-08-18)
 
-| Kapı                                 | Durum | Not                                                                  |
-| ------------------------------------ | ----- | -------------------------------------------------------------------- |
-| `pnpm -r typecheck`                  | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                   |
-| `pnpm -r --if-present test:coverage` | ✓     | 1234 test (core 814, vol-hell 365, tauri-v2 26, design 24, vol-ui 5) |
-| `pnpm lint`                          | ✓     | 0 hata, 0 uyarı                                                      |
-| `pnpm format:check`                  | ✓     |                                                                      |
-| `pnpm lint:css`                      | ✓     |                                                                      |
-| `pnpm build:game`                    | ✓     | `dist/`'te 0 `.wav` sızıntısı                                        |
-| `cargo check/fmt/clippy`             | ✓     |                                                                      |
-| CI                                   | ✓     | `.github/workflows/ci.yml` — web + rust işleri                       |
+| Kapı                                    | Durum | Not                                                                  |
+| --------------------------------------- | ----- | -------------------------------------------------------------------- |
+| `pnpm -r typecheck`                     | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                   |
+| `pnpm -r --if-present test:coverage`    | ✓     | 1234 test (core 829, vol-hell 374, tauri-v2 26, design 24, vol-ui 5) |
+| `pnpm lint`                             | ✓     | 0 hata, 0 uyarı                                                      |
+| `pnpm format:check`                     | ✓     |                                                                      |
+| `pnpm lint:css`                         | ✓     |                                                                      |
+| `pnpm build:game`                       | ✓     | `vol-hell` prod build                                                |
+| `pnpm --filter @volstudio/vol-ui build` | ✓     | showcase prod build                                                  |
+| `cargo check/fmt/clippy`                | ✓     |                                                                      |
+| CI                                      | ✓     | `.github/workflows/ci.yml` — web + rust işleri                       |
 
 ---
 
@@ -1376,3 +1377,106 @@ her component'in hardcoded sayı yerine token kullandığını kilitliyor.
 3. Dükkanda reroll/kilit/çoklu satın alma akışının hissi — animasyonların
    göze rahatsız gelip gelmediği, `prefers-reduced-motion` açıkken hiçbir
    şeyin takılı kalmadığı.
+
+---
+
+## Kart animasyon sağlamlaştırma — 2026-08-18
+
+Devam eden oturumda "reroll'da animasyon yok / kartlar sert değişiyor" ve
+"envanterde kart yığılması" geri bildirimleri kök nedenlerine inilerek
+cözüldü; tüm kalite kapıları yeniden koşuldu.
+
+### Yapılanlar
+
+- **Envanter yığılması giderildi.** `.vol-card-shop__list`'e
+  `align-content: start` ve `grid-auto-rows: min-content` eklendi. Kart sayısı
+  arttıkça satırlar boşluğa yayılıyor, eğer pencere sınırlı ise en dış panel
+  (`vol-card-picker`) kendi `overflow-y: auto`'sıyla kaydırıyor — kartlar
+  birbirinin üstüne binmiyor.
+- **Reroll giriş animasyonu profesyonelleştirildi.**
+  - Eski `vol-card-in` yalnızca `translateY(8px)` ve opaklık 0 → 1'di; yeni
+    girişte kart aşağıdan `translateY(16px)` + `scale(0.78)` + `opacity: 0`
+    halden beliriyor, 360 ms'de büyüyüp yerine oturuyor.
+  - **Dükkan reroll'larında stagger kaldırıldı.** Açık kartlar artık aynı
+    anda belirir; böylece kartlar birbirinden bağımsız "pat pat" patlamak
+    yerine tek bir deste hareketi gibi davranır.
+  - **Level-up'ta stagger korundu.** `.vol-card-picker:not(.vol-card-picker--shop)`
+    altında 2./3./4. kart gecikmeleri (60/120/180 ms) sürer.
+  - `CardTile.CARD_ENTER_ANIMATION_MS` en uzun stagger'ı da kapsayacak şekilde
+    540 ms yapıldı; `cssConstantSync.test.ts` CSS'deki gerçek `animation`
+    süresini okuyup JS sabitiyle karşılaştırıyor.
+  - `prefers-reduced-motion` medya sorgusu shop / level-up ayrımına göre
+    güncellendi.
+- **Reroll'da ızgara vurgusu eklendi.** Açık panelde teklif seti değişirse
+  `vol-card-picker--rerolling` class'ı 240 ms'lik bir 'kapanıp açılma'
+  animasyonu tetikliyor. Böylece tek kart girişi gözden kaçsa bile reroll
+  hissiyatı kaçınılmaz oluyor.
+- **Reroll'da kilitli olmayan kartlar her zaman yeni düğüm olarak kuruluyor.**
+  `ShopPicker` artık aynı id'nin tekrar gelmesi durumunda bile kilitli
+  olmayan teklifleri yeniden oluşturup `vol-card--entering` atıyor; kilitli
+  kartlar yerinde kalıyor.
+- **LevelUp/Shop panel açılış ve kapanış animasyonları yumuşatıldı.**
+  - `vol-card-picker-in/out` `translateY(24px) scale(0.92)`'den
+    `translateY(12px) scale(0.97)` / `translateY(-8px) scale(0.98)`'e
+    çekildi; aşırı büyüme ve parlama hissi azaltıldı, daha profesyonel
+    bir "fade + settle" karakteri kazandı.
+  - Reroll ızgara vurgusu (`vol-card-grid-reroll`) opaklık oynamasından
+    arındırıldı; yalnızca hafif `translateY(2px) scale(0.985)` ile
+    "yere oturma" hissi veriyor.
+  - Kart giriş (`vol-card-in`) ve çıkış (`vol-card-out`) animasyonları
+    `scale(0.78)`/`scale(0.97)` gibi keskin değerlerden
+    `scale(0.96)`/`scale(0.98)`'e indirildi; parlak patlama etkisi
+    kalktı.
+  - `vol-ui` showcase'inde panel `show()` / `present()` çağrıları katman
+    görünür olduktan sonra yapılıyor; aksi halde animasyon gizli ağaçta
+    koşup bitiyordu.
+  - `vol-hell` `CardScreens.closeIntermission()` artık `hideImmediately()`
+    değil `hide()` + `HIDE_ANIMATION_MS` kadar bekleyip katmanı gizliyor;
+    kapanış efekti görülebiliyor. Zamanlayıcı `destroy()`'da temizleniyor.
+  - `cardScreens.test.ts` kapanışın async olmasına göre güncellendi.
+- **Teklif ızgarası kart yükseklikleri eşitlendi.**
+  `.vol-card-picker__grid > .vol-card { height: 100%; }` ile aynı satırdaki
+  kartlar eşit yükseklikte duruyor; `box-sizing: border-box` sayesinde
+  padding sınırları içinde kalıyor.
+- **Animasyon mekanizması testlere kilitlendi.**
+  - `CardTile.startEnterAnimation()` için regresyon testi eklendi.
+  - `LevelUpPicker.present()` sonrası kartlara `vol-card--entering` atandığı
+    test edildi.
+  - `ShopPicker` açılış ve reroll'da yeni tekliflere `vol-card--entering`
+    atandığı ve süre sonunda kalktığı test edildi.
+  - Reroll sonrası panelin `vol-card-picker--rerolling` aldığı ve süre sonunda
+    kalktığı test edildi.
+- **Kod ağacı temizlendi.** `testcss.mjs` artık yok; `prettier-ignore` ile
+  `prefers-reduced-motion` bloğu düzgün biçimlendi; `format:check` ve
+  `lint:css` geçti.
+
+### Kalite kapıları
+
+| Kapı                                    | Durum | Not                                   |
+| --------------------------------------- | ----- | ------------------------------------- |
+| `pnpm -r typecheck`                     | geçti | 5 paket                               |
+| `pnpm -r --if-present test:coverage`    | geçti | 1234 test (core 829, vol-hell 374, …) |
+| `pnpm lint`                             | geçti | 0 hata, 0 uyarı                       |
+| `pnpm format:check`                     | geçti |                                       |
+| `pnpm lint:css`                         | geçti |                                       |
+| `pnpm build:game`                       | geçti | `vol-hell` prod build                 |
+| `pnpm --filter @volstudio/vol-ui build` | geçti | showcase prod build                   |
+| `cargo check --locked`                  | geçti |                                       |
+| `cargo fmt --check`                     | geçti |                                       |
+| `cargo clippy --locked -- -D warnings`  | geçti |                                       |
+
+### Bilinçli tercih / kalan risk
+
+- **"Sert değişim" hissi:** Eski kartlar çıkış animasyonu olmadan anında
+  yok ediliyor (yeni kartların aynı hücreye girmesini engellememek için).
+  Yeni kartlar aynı anda, aynı gecikmeyle beliriyor; ızgara flash'i ile
+  birlikte bu kaçınılmaz bir reroll hissi yaratıyor.
+- **Panel açılış/kapanış animasyonları:** `vol-card-picker-in/out`
+  keyframe'leri güçlendirildi; `vol-ui`'de panel `show()`'u katman
+  görünür olduktan SONRA çağrılıyor; `vol-hell`'de kapanış
+  `closeIntermission` animasyonu bitirdikten sonra katmanı gizliyor.
+- **Havuz daralınca yetersiz teklif:** `vol-ui` demosunda havuz 14 karttan
+  4'ü teklif eder. Çok satın alma sonrası havuz daralırsa `pickRandom` 4
+  farklı kart bulamayabilir; bu durumda az sayıda teklif gösterilir.
+  `vol-hell`'de `drawShopOffers` satın alınanları hariç tutar, aynı risk
+  daha geç yaşanır.

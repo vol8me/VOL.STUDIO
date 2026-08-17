@@ -9,9 +9,11 @@
   flex-direction: column;
   gap: var(--vol-space-md);
   width: min(720px, 92vw);
+  max-height: 88vh;
   padding: var(--vol-space-lg);
   display: flex;
   position: relative;
+  overflow-y: auto;
 }
 
 .vol-card-picker[hidden] {
@@ -31,7 +33,7 @@
 @keyframes vol-card-picker-in {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.985);
+    transform: translateY(12px) scale(0.97);
   }
 
   to {
@@ -54,7 +56,7 @@
 
   to {
     opacity: 0;
-    transform: translateY(10px) scale(0.985);
+    transform: translateY(-8px) scale(0.98);
   }
 }
 
@@ -62,16 +64,42 @@
   animation: vol-card-picker-out var(--vol-transition-medium) ease-in both;
 }
 
-/* Kartlar sırayla belirir: gözün soldan sağa okuması için küçük gecikmeler. */
+/* Reroll'da teklif ızgarasına yalnızca hafif bir "yere oturma" hareketi verilir.
+ * Parlaklık/opaklık oynaması yapılmaz; kartların kendi giriş animasyonu zaten
+ * "deste yenilendi" hissi yaratır. */
+@keyframes vol-card-grid-reroll {
+  from {
+    transform: translateY(2px) scale(0.985);
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.vol-card-picker__grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--vol-space-md);
+  display: grid;
+  align-items: stretch;
+}
+
+.vol-card-picker--rerolling .vol-card-picker__grid {
+  animation: vol-card-grid-reroll 0.24s ease-in-out both;
+  pointer-events: none;
+}
+
+/* Kartlar yumuşakça belirir: aşırı büyüme/parlama olmadan opaklık + hafif
+ * ölçek + kayma. */
 @keyframes vol-card-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(8px) scale(0.96);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -83,7 +111,7 @@
 @keyframes vol-card-out {
   to {
     opacity: 0;
-    transform: translateY(-6px) scale(0.97);
+    transform: translateY(-4px) scale(0.98);
   }
 }
 
@@ -113,20 +141,6 @@
   animation: vol-card-purchase-flash var(--vol-transition-medium) ease-out both;
 }
 
-/*
- * Hareket duyarlılığı olan kullanıcılar için tüm giriş/çıkış/vurgu
- * animasyonları kapanır. Kartlar yine görünür/kaybolur, yalnızca hareket etmez.
- */
-@media (prefers-reduced-motion: reduce) {
-  .vol-card-picker:not([hidden]),
-  .vol-card-picker:not([hidden]) .vol-card,
-  .vol-card-picker--leaving,
-  .vol-card--leaving,
-  .vol-card--just-purchased {
-    animation: none;
-  }
-}
-
 .vol-card-picker__header {
   flex-direction: column;
   gap: var(--vol-space-xs);
@@ -145,12 +159,6 @@
   color: var(--vol-ui-text-muted);
   font-family: var(--vol-font-family-body);
   font-size: 13px;
-}
-
-.vol-card-picker__grid {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--vol-space-md);
-  display: grid;
 }
 
 .vol-card-picker__footer {
@@ -182,13 +190,25 @@
   display: flex;
 }
 
+/* Teklif ızgarasındaki kartlar aynı satırda eşit yükseklikte dursun;
+   `.vol-ui-root * { box-sizing: border-box }` ile `height: 100%` padding'i
+   de kapsar. */
+.vol-card-picker__grid > .vol-card {
+  height: 100%;
+}
+
 /*
- * Panel açılırken kartlar sırayla belirir. Gecikme kart SAYISINA değil
- * sırasına bağlı: üç kartlık level-up ile iki kartlık dükkan aynı ritmi
- * paylaşır.
+ * Panel açılırken teklif ızgarasındaki YENİ kartlar sırayla belirir. Dükkan
+ * (`.vol-card-picker--shop`) reroll'unda tüm açık kartlar aynı anda
+ * animasyon alır; level-up'ta 2. ve 3. kart gecikmeli belirir. Envanter
+ * listelerine uygulanmaz (C5). Yalnızca `.vol-card--entering` alan kartlar
+ * animasyon alır; mevcut kartlar yerinde güncellenir, çıkış/flash
+ * durumlarındaki kartlar da giriş animasyonuyla çakışmaz.
  */
-.vol-card-picker:not([hidden]) .vol-card {
-  animation: vol-card-in var(--vol-transition-medium) ease-out both;
+
+/* prettier-ignore */
+.vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased) {
+  animation: vol-card-in 0.36s ease-out both;
 }
 
 .vol-card:not(.vol-card--disabled):hover {
@@ -196,12 +216,19 @@
   transform: translateY(-2px);
 }
 
-.vol-card-picker:not([hidden]) .vol-card:nth-child(2) {
+/* prettier-ignore */
+.vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(2) {
   animation-delay: 60ms;
 }
 
-.vol-card-picker:not([hidden]) .vol-card:nth-child(3) {
+/* prettier-ignore */
+.vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(3) {
   animation-delay: 120ms;
+}
+
+/* prettier-ignore */
+.vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(4) {
+  animation-delay: 180ms;
 }
 
 .vol-card--disabled {
@@ -422,6 +449,8 @@
 
 .vol-card-shop__list {
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-auto-rows: min-content;
+  align-content: start;
   gap: var(--vol-space-sm);
   max-height: 150px;
   display: grid;
@@ -462,4 +491,25 @@
 .vol-card-shop__close:focus-visible {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
+}
+
+/*
+ * Hareket duyarlılığı olan kullanıcılar için tüm giriş/çıkış/vurgu
+ * animasyonları kapanır. Kartlar yine görünür/kaybolur, yalnızca hareket etmez.
+ */
+
+/* prettier-ignore */
+@media (prefers-reduced-motion: reduce) {
+  .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased),
+  .vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(2),
+  .vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(3),
+  .vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(4),
+  .vol-card-picker:not([hidden]),
+  .vol-card-picker:not([hidden]) .vol-card,
+  .vol-card-picker--leaving,
+  .vol-card-picker--rerolling .vol-card-picker__grid,
+  .vol-card--leaving,
+  .vol-card--just-purchased {
+    animation: none;
+  }
 }

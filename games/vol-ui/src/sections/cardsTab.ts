@@ -205,11 +205,13 @@ function buildLevelUpCard(
     variant: 'primary',
     onClick: () => {
       closeAllExcept(controller.close);
+      // Katman önce görünür hale gelir; panel açılış animasyonu
+      // görünür ağaçta çalışır, gizli katmanda sıfırlandan başlamaz.
+      controller.open();
       picker.present([demoCard('turret'), demoCard('inferno')], {
         title: i18next.t('volui:cards.levelUpTitle'),
         hint: i18next.t('volui:cards.levelUpHint'),
       });
-      controller.open();
     },
   });
   disposables.push(open);
@@ -254,12 +256,24 @@ function buildShopCard(
   const slots: (DemoCardId | null)[] = new Array<DemoCardId | null>(ABILITY_SLOT_COUNT).fill(null);
   let currentOfferIds: DemoCardId[] = [];
 
-  /** Kilitli VE satılmamış teklifler korunur; boşalan slotlar havuzdan tazelenir. */
+  /**
+   * Kilitli teklifler aynı slotta kalır; yalnızca kilitli olmayan slotlar
+   * yeniden çekilir. Böylece 3. kart kilitlendiyse reroll sonrası 3. sırada
+   * durmaya devam eder, 1. sıraya atlamaz.
+   */
   function refreshOffers(): void {
     const keep = currentOfferIds.filter((id) => locked.has(id) && !purchased.has(id));
-    const pool = SHOP_POOL.filter((id) => !purchased.has(id) && !keep.includes(id));
-    const fresh = pickRandom(pool, Math.max(0, SHOP_SIZE - keep.length));
-    currentOfferIds = [...keep, ...fresh];
+    const keepSet = new Set(keep);
+    const pool = SHOP_POOL.filter((id) => !purchased.has(id) && !keepSet.has(id));
+    const needed = Math.max(0, SHOP_SIZE - keep.length);
+    const fresh = pickRandom(pool, needed);
+    const freshQueue = [...fresh];
+
+    currentOfferIds = Array.from({ length: SHOP_SIZE }, (_, i) => {
+      const current = currentOfferIds[i];
+      if (current && locked.has(current) && !purchased.has(current)) return current;
+      return freshQueue.shift() ?? current ?? fresh[0] ?? 'cardTurret';
+    });
   }
 
   refreshOffers();
@@ -282,7 +296,9 @@ function buildShopCard(
         refreshOffers();
         rerollCost += REROLL_COST_STEP;
         render();
-        flashGridOnReroll();
+        // Yeni gelen teklifler ShopPicker'ın diff render'ı ile kendi
+        // vol-card-in animasyonlarını alır; ızgaraya ayrı bir flash
+        // animasyonu eklemek çift vurgu yaratır.
       },
     },
     lock: {
@@ -397,16 +413,6 @@ function buildShopCard(
     }
   }
 
-  /** Reroll'da tüm ızgaraya kısa bir vurgu — "teklif yenilendi" hissi. */
-  function flashGridOnReroll(): void {
-    const grid = shop.element.querySelector('.vol-card-picker__grid');
-    if (!grid) return;
-    grid.classList.remove('vol-showcase-shop-grid--rerolled');
-    // Aynı class'ı arka arkaya eklemek animasyonu yeniden TETİKLEMEZ —
-    // reflow zorlanmadan bir sonraki frame'e ertelemek gerekiyor.
-    requestAnimationFrame(() => grid.classList.add('vol-showcase-shop-grid--rerolled'));
-  }
-
   render();
   renderSlots();
 
@@ -418,8 +424,10 @@ function buildShopCard(
     onClick: () => {
       closeAllExcept(controller.close);
       render();
-      shop.show();
+      // Katman önce görünür hale gelir; `shop.show()` panel açılış
+      // animasyonunu görünür ağaçta başlatır.
       controller.open();
+      shop.show();
     },
   });
   disposables.push(open);

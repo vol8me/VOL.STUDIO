@@ -6,6 +6,8 @@ import { TOAST_FADE_OUT_MS } from '../../src/ui/overlays/Toast';
 import { MIN_NODE_WIDTH, NODE_LABEL_FONT } from '../../src/ui/hud/SkillTree';
 import { HANDLE_WIDTH_PX } from '../../src/ui/primitives/RangeSlider';
 import { EVENT_LOG_LEAVE_DURATION_MS } from '../../src/ui/data/EventLog';
+import { LEAVE_ANIMATION_MS } from '../../src/ui/cards/ShopPicker';
+import { CARD_ENTER_ANIMATION_MS } from '../../src/ui/cards/CardTile';
 
 /**
  * JS tarafındaki bazı sabitler CSS değerlerini elle tekrarlıyor. Bunlar iki ayrı
@@ -25,6 +27,7 @@ const overlays = readCss('overlays.css');
 const hud = readCss('hud.css');
 const primitives = readCss('primitives.css');
 const data = readCss('data.css');
+const cards = readCss('cards.css');
 
 /** `--vol-transition-medium: 0.24s ease` → 240 */
 function cssVarDurationMs(css: string, varName: string): number {
@@ -68,6 +71,23 @@ describe('CSS sabit senkronu — teardown zamanlayıcıları', () => {
     const cssMs = match![2] === 'ms' ? Number(match![1]) : Number(match![1]) * 1000;
     expect(EVENT_LOG_LEAVE_DURATION_MS).toBeGreaterThanOrEqual(cssMs);
   });
+
+  it('LEAVE_ANIMATION_MS, .vol-card--leaving animasyonundan kısa değil', () => {
+    // `animation` shorthand'te süre `var(--vol-transition-medium)` olarak
+    // geçiyor; gerçek değeri theme.css'den çöz.
+    const cssMs = cssVarDurationMs(theme, '--vol-transition-medium');
+    expect(LEAVE_ANIMATION_MS).toBeGreaterThanOrEqual(cssMs);
+  });
+
+  it('CARD_ENTER_ANIMATION_MS, .vol-card--entering animasyonundan kısa değil', () => {
+    const gridBase =
+      '.vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased)';
+    const animation = cssDeclaration(cards, gridBase, 'animation');
+    const match = /([0-9.]+)(m?s)/.exec(animation);
+    expect(match, 'entering animasyon süresi okunamadı').not.toBeNull();
+    const cssMs = match![2] === 'ms' ? Number(match![1]) : Number(match![1]) * 1000;
+    expect(CARD_ENTER_ANIMATION_MS).toBeGreaterThanOrEqual(cssMs);
+  });
 });
 
 describe('CSS sabit senkronu — geometri birebir eşleşmeli', () => {
@@ -94,5 +114,33 @@ describe('CSS sabit senkronu — geometri birebir eşleşmeli', () => {
     expect(cssDeclaration(hud, '.vol-skill-tree__node', 'font-family')).toBe(
       'var(--vol-font-family)',
     );
+  });
+
+  it('vol-card-picker paneli yükseklik sınırı ve kaydırmaya sahip', () => {
+    const maxHeight = cssDeclaration(cards, '.vol-card-picker', 'max-height');
+    const overflowY = cssDeclaration(cards, '.vol-card-picker', 'overflow-y');
+    expect(maxHeight).toBe('88vh');
+    expect(overflowY).toBe('auto');
+  });
+
+  it('stagger gecikmesi yalnızca teklif ızgarasındaki YENİ kartlara uygulanır', () => {
+    const gridBase =
+      '.vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased)';
+    const gridSecond = cssDeclaration(cards, `${gridBase}:nth-child(2)`, 'animation-delay');
+    expect(gridSecond).toBe('60ms');
+
+    const gridThird = cssDeclaration(cards, `${gridBase}:nth-child(3)`, 'animation-delay');
+    expect(gridThird).toBe('120ms');
+
+    const gridFourth = cssDeclaration(cards, `${gridBase}:nth-child(4)`, 'animation-delay');
+    expect(gridFourth).toBe('180ms');
+
+    // Yalnızca `.vol-card--entering` alan kartlar animasyon kazanır; envanter
+    // veya satın alınmış kartlar stagere yakalanmaz.
+    const rawGrid = cssDeclaration(cards, gridBase, 'animation');
+    expect(rawGrid).toContain('vol-card-in');
+
+    const inventoryStagger = /\.vol-card-shop__list > \.vol-card:nth-child\(2\)/;
+    expect(cards).not.toMatch(inventoryStagger);
   });
 });

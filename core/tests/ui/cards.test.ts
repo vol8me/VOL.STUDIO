@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { CardTile, CARD_DRAG_MIME, type CardTileData } from '../../src/ui/cards/CardTile';
+import {
+  CardTile,
+  CARD_DRAG_MIME,
+  CARD_ENTER_ANIMATION_MS,
+  type CardTileData,
+} from '../../src/ui/cards/CardTile';
 import { LevelUpPicker } from '../../src/ui/cards/LevelUpPicker';
 import { HIDE_ANIMATION_MS } from '../../src/ui/cards/CardPicker';
 import {
@@ -140,6 +145,40 @@ describe('CardTile', () => {
     tile.destroy();
     expect(root.querySelector('.vol-card')).toBeNull();
   });
+
+  it('startEnterAnimation vol-card--entering ekler ve süre sonunda kaldırır', () => {
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame'],
+    });
+    const tile = new CardTile({ data: makeCard('a') });
+    root.appendChild(tile.element);
+
+    tile.startEnterAnimation();
+    expect(tile.element.classList.contains('vol-card--entering')).toBe(true);
+
+    vi.advanceTimersByTime(CARD_ENTER_ANIMATION_MS);
+    expect(tile.element.classList.contains('vol-card--entering')).toBe(false);
+
+    tile.destroy();
+    vi.useRealTimers();
+  });
+
+  it('update status metnini boş stringle siler, undefined verilmezse dokunmaz', () => {
+    const tile = new CardTile({ data: { ...makeCard('a'), statusLabel: 'TAKILI' } });
+    root.appendChild(tile.element);
+
+    const status = tile.element.querySelector('.vol-card__status')!;
+    expect(status.textContent).toBe('TAKILI');
+
+    tile.update({ statusLabel: '' });
+    expect(status.textContent).toBe('');
+
+    // Yalnızca başlık güncellenir; eski durum metni yanlışlıkla silinmez.
+    tile.update({ title: 'yeni başlık' });
+    expect(status.textContent).toBe('');
+
+    tile.destroy();
+  });
 });
 
 describe('LevelUpPicker', () => {
@@ -194,6 +233,24 @@ describe('LevelUpPicker', () => {
     expect(picker.element.querySelectorAll('.vol-card')).toHaveLength(1);
     expect(picker.element.textContent).toContain('c başlık');
     picker.destroy();
+  });
+
+  it('present sonrası kartlar vol-card--entering alır', () => {
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame'],
+    });
+    const { picker } = makePicker();
+    picker.present([makeCard('a'), makeCard('b')]);
+
+    vi.advanceTimersToNextFrame();
+    vi.advanceTimersToNextFrame();
+    expect(picker.element.querySelectorAll('.vol-card--entering')).toHaveLength(2);
+
+    vi.advanceTimersByTime(CARD_ENTER_ANIMATION_MS);
+    expect(picker.element.querySelectorAll('.vol-card--entering')).toHaveLength(0);
+
+    picker.destroy();
+    vi.useRealTimers();
   });
 
   it('fiyat göstermez', () => {
@@ -315,6 +372,7 @@ describe('ShopPicker', () => {
       onClose: () => void;
       onReroll: () => void;
       onToggleLock: (id: string) => void;
+      onEquip: (instanceId: string) => void;
     }> = {},
   ) {
     const shop = new ShopPicker({
@@ -322,6 +380,7 @@ describe('ShopPicker', () => {
       onBuy: handlers.onBuy ?? vi.fn(),
       onSell: handlers.onSell ?? vi.fn(),
       onClose: handlers.onClose ?? vi.fn(),
+      onEquip: handlers.onEquip,
       reroll: handlers.onReroll
         ? { label: 'YENİDEN ÇEVİR', onReroll: handlers.onReroll }
         : undefined,
@@ -356,6 +415,99 @@ describe('ShopPicker', () => {
     expect(shop.element.querySelectorAll('.vol-card__price')).toHaveLength(2);
     expect(shop.element.textContent).toContain('Flux: 12');
     shop.destroy();
+  });
+
+  it('açılışta yeni teklifler vol-card--entering alır ve süre sonunda kalkar', () => {
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame'],
+    });
+    const shop = makeShop();
+    shop.present(makeState());
+
+    vi.advanceTimersToNextFrame();
+    vi.advanceTimersToNextFrame();
+    expect(
+      shop.element.querySelectorAll('.vol-card-picker__grid .vol-card--entering'),
+    ).toHaveLength(2);
+
+    vi.advanceTimersByTime(CARD_ENTER_ANIMATION_MS);
+    expect(shop.element.querySelectorAll('.vol-card--entering')).toHaveLength(0);
+
+    shop.destroy();
+    vi.useRealTimers();
+  });
+
+  it('reroll sonrası yeni teklifler vol-card--entering alır', () => {
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame'],
+    });
+    const shop = makeShop();
+    shop.present(makeState());
+    vi.advanceTimersToNextFrame();
+    vi.advanceTimersToNextFrame();
+    vi.advanceTimersByTime(CARD_ENTER_ANIMATION_MS);
+
+    shop.render(
+      makeState({
+        offers: [
+          {
+            card: { ...makeCard('c'), priceLabel: '5 Flux' },
+            purchased: false,
+            affordable: true,
+          },
+          {
+            card: { ...makeCard('d'), priceLabel: '7 Flux' },
+            purchased: false,
+            affordable: true,
+          },
+        ],
+      }),
+    );
+
+    vi.advanceTimersToNextFrame();
+    vi.advanceTimersToNextFrame();
+    expect(
+      shop.element.querySelectorAll('.vol-card-picker__grid .vol-card--entering'),
+    ).toHaveLength(2);
+
+    shop.destroy();
+    vi.useRealTimers();
+  });
+
+  it('reroll sonrası panel vol-card-picker--rerolling alır ve süre sonunda kalkar', () => {
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame'],
+    });
+    const shop = makeShop();
+    shop.present(makeState());
+    vi.advanceTimersToNextFrame();
+    vi.advanceTimersToNextFrame();
+    vi.advanceTimersByTime(CARD_ENTER_ANIMATION_MS);
+
+    shop.render(
+      makeState({
+        offers: [
+          {
+            card: { ...makeCard('c'), priceLabel: '5 Flux' },
+            purchased: false,
+            affordable: true,
+          },
+          {
+            card: { ...makeCard('d'), priceLabel: '7 Flux' },
+            purchased: false,
+            affordable: true,
+          },
+        ],
+      }),
+    );
+
+    expect(shop.element.classList.contains('vol-card-picker--rerolling')).toBe(true);
+
+    vi.advanceTimersByTime(240);
+    expect(shop.element.classList.contains('vol-card-picker--rerolling')).toBe(false);
+
+    shop.destroy();
+    vi.useRealTimers();
   });
 
   it('bakiye yetmeyen kartın butonu kilitli ve uyarı metinli', () => {
@@ -693,7 +845,7 @@ describe('ShopPicker', () => {
       shop.destroy();
     });
 
-    it('kilit durumu değişince tile YENİDEN kurulur (etiket ve locked classı güncellenir)', () => {
+    it('kilit durumu değişince tile YERİNDE güncellenir (etiket ve locked classı değişir)', () => {
       const shop = makeShop({ onToggleLock: vi.fn() });
       shop.present(
         makeState({
@@ -726,10 +878,10 @@ describe('ShopPicker', () => {
         }),
       );
 
-      // Yapısal imza değişti (locked) — CardTile mevcut butonun etiketini
-      // sonradan değiştiremiyor, bu yüzden tile BİLEREK yeniden kuruldu.
+      // Yapısal imza değişti (locked) — CardTile artık ikincil butonu
+      // yerinde ekleyip kaldırabildiği için tile YENİDEN kurulmuyor.
       const after = shop.element.querySelector('.vol-card')!;
-      expect(after).not.toBe(before);
+      expect(after).toBe(before);
       expect(after.classList.contains('vol-card--locked')).toBe(true);
       expect(
         after.querySelector<HTMLButtonElement>('.vol-card__action--secondary')?.textContent,
@@ -804,8 +956,7 @@ describe('ShopPicker', () => {
       shop.destroy();
     });
 
-    it('listeden düşen teklif HEMEN silinmez — leaving class alır, süre sonunda kaldırılır', () => {
-      vi.useFakeTimers();
+    it('listeden düşen teklif anında silinir ve yeni teklifler aynı hücreye girer', () => {
       const shop = makeShop({ onReroll: vi.fn() });
       shop.present(
         makeState({
@@ -821,11 +972,9 @@ describe('ShopPicker', () => {
 
       shop.render(makeState({ offers: [] }));
 
-      const leaving = shop.element.querySelector('.vol-card--leaving');
-      expect(leaving).not.toBeNull();
-      expect(shop.element.querySelectorAll('.vol-card')).toHaveLength(1);
-
-      vi.advanceTimersByTime(LEAVE_ANIMATION_MS);
+      // Teklif ızgarasında eski kartlar hemen kaldırılır; çıkış
+      // animasyonu envanter gibi ardışık listelerde kullanılır.
+      expect(shop.element.querySelectorAll('.vol-card--leaving')).toHaveLength(0);
       expect(shop.element.querySelectorAll('.vol-card')).toHaveLength(0);
       shop.destroy();
     });
@@ -853,6 +1002,58 @@ describe('ShopPicker', () => {
 
     it('destroy bekleyen çıkış/vurgu zamanlayıcılarını iptal eder — zamanlayıcı ateşlenince hata fırlatmaz', () => {
       vi.useFakeTimers();
+      const shop = makeShop();
+      shop.present(
+        makeState({
+          abilities: [{ instanceId: 'a#1', card: makeCard('a'), sellLabel: 'SAT +5' }],
+        }),
+      );
+      shop.render(makeState({ abilities: [] })); // envanterdeki 'a#1' leaving durumunda
+
+      shop.destroy();
+      expect(() => vi.advanceTimersByTime(LEAVE_ANIMATION_MS * 2)).not.toThrow();
+    });
+
+    it('envanterdeki kart satış etiketi ve TAK butonu yerinde güncellenir', () => {
+      const onEquip = vi.fn();
+      const shop = makeShop({ onEquip });
+      shop.present(
+        makeState({
+          abilities: [{ instanceId: 'a#1', card: makeCard('a'), sellLabel: 'SAT +5' }],
+        }),
+      );
+
+      const tile = shop.element.querySelector('.vol-card-shop__abilities .vol-card')!;
+      const action = tile.querySelector<HTMLButtonElement>('.vol-card__action')!;
+      expect(action.textContent).toBe('SAT +5');
+      expect(tile.querySelector('.vol-card__action--secondary')).toBeNull();
+
+      shop.render(
+        makeState({
+          abilities: [
+            {
+              instanceId: 'a#1',
+              card: { ...makeCard('a'), statusLabel: 'TAKILI' },
+              sellLabel: 'SAT +8',
+              equipLabel: 'TAK',
+            },
+          ],
+        }),
+      );
+
+      expect(shop.element.querySelector('.vol-card-shop__abilities .vol-card')).toBe(tile);
+      expect(action.textContent).toBe('SAT +8');
+      const secondary = tile.querySelector<HTMLButtonElement>('.vol-card__action--secondary');
+      expect(secondary).not.toBeNull();
+      expect(secondary!.textContent).toBe('TAK');
+
+      secondary!.click();
+      expect(onEquip).toHaveBeenCalledWith('a#1');
+
+      shop.destroy();
+    });
+
+    it('reroll sonrası aynı kart tekrar gelirse hayalet düğüm oluşmaz', () => {
       const shop = makeShop({ onReroll: vi.fn() });
       shop.present(
         makeState({
@@ -865,10 +1066,157 @@ describe('ShopPicker', () => {
           ],
         }),
       );
-      shop.render(makeState({ offers: [] })); // 'a' artık leaving durumunda, zamanlayıcı bekliyor
+
+      shop.render(makeState({ offers: [] }));
+      expect(shop.element.querySelectorAll('.vol-card--leaving')).toHaveLength(0);
+
+      // Aynı kart geri geldiğinde eski düğüm kalmamış olmalı; yeni
+      // düğüm tek kart olarak ızgarada yerini alır.
+      shop.render(
+        makeState({
+          offers: [
+            {
+              card: { ...makeCard('a'), priceLabel: '10 Flux' },
+              purchased: false,
+              affordable: true,
+            },
+          ],
+        }),
+      );
+
+      expect(shop.element.querySelectorAll('.vol-card-picker__grid .vol-card')).toHaveLength(1);
+      expect(shop.element.querySelector('.vol-card--leaving')).toBeNull();
 
       shop.destroy();
-      expect(() => vi.advanceTimersByTime(LEAVE_ANIMATION_MS * 2)).not.toThrow();
+    });
+
+    it('teklifler render sonrası diziliş sırasını korur', () => {
+      const shop = makeShop();
+      shop.present(
+        makeState({
+          offers: [
+            {
+              card: { ...makeCard('a'), priceLabel: '10 Flux' },
+              purchased: false,
+              affordable: true,
+            },
+            {
+              card: { ...makeCard('b'), priceLabel: '20 Flux' },
+              purchased: false,
+              affordable: true,
+            },
+            {
+              card: { ...makeCard('c'), priceLabel: '30 Flux' },
+              purchased: false,
+              affordable: true,
+            },
+          ],
+        }),
+      );
+
+      const [a, b, c] = shop.element.querySelectorAll('.vol-card-picker__grid .vol-card');
+
+      shop.render(
+        makeState({
+          offers: [
+            {
+              card: { ...makeCard('b'), priceLabel: '20 Flux' },
+              purchased: false,
+              affordable: true,
+            },
+            {
+              card: { ...makeCard('a'), priceLabel: '10 Flux' },
+              purchased: false,
+              affordable: true,
+            },
+            {
+              card: { ...makeCard('c'), priceLabel: '30 Flux' },
+              purchased: false,
+              affordable: true,
+            },
+          ],
+        }),
+      );
+
+      const [first, second, third] = shop.element.querySelectorAll(
+        '.vol-card-picker__grid .vol-card',
+      );
+      expect(first).toBe(b);
+      expect(second).toBe(a);
+      expect(third).toBe(c);
+
+      shop.destroy();
+    });
+
+    it('reroll sonrası aynı teklif tekrar gelirse güncel veri ve durumla döner', () => {
+      const shop = makeShop();
+      shop.present(
+        makeState({
+          offers: [
+            {
+              card: { ...makeCard('a'), priceLabel: '10 Flux' },
+              purchased: false,
+              affordable: true,
+            },
+          ],
+        }),
+      );
+
+      // Kart ızgaradan anında çıkarılır.
+      shop.render(makeState({ offers: [] }));
+      expect(shop.element.querySelector('.vol-card--leaving')).toBeNull();
+
+      // Aynı kart geri geliyor; fiyat ve durum değişmiş.
+      shop.render(
+        makeState({
+          offers: [
+            {
+              card: { ...makeCard('a'), priceLabel: '99 Flux' },
+              purchased: true,
+              affordable: true,
+            },
+          ],
+        }),
+      );
+
+      const tile = shop.element.querySelector('.vol-card-picker__grid .vol-card')!;
+      expect(tile.querySelector('.vol-card__price')?.textContent).toBe('99 Flux');
+      expect(tile.querySelector<HTMLButtonElement>('.vol-card__action')?.disabled).toBe(true);
+
+      shop.destroy();
+    });
+
+    it('envanterdeki kart sırası değiştiğinde DOM konumları güncellenir', () => {
+      const shop = makeShop();
+      shop.present(
+        makeState({
+          abilities: [
+            { instanceId: 'a#1', card: makeCard('a'), sellLabel: 'SAT A' },
+            { instanceId: 'b#1', card: makeCard('b'), sellLabel: 'SAT B' },
+          ],
+        }),
+      );
+
+      const [first, second] = shop.element.querySelectorAll('.vol-card-shop__abilities .vol-card');
+      expect(first.textContent).toContain('a başlık');
+      expect(second.textContent).toContain('b başlık');
+
+      shop.render(
+        makeState({
+          abilities: [
+            { instanceId: 'b#1', card: makeCard('b'), sellLabel: 'SAT B' },
+            { instanceId: 'a#1', card: makeCard('a'), sellLabel: 'SAT A' },
+          ],
+        }),
+      );
+
+      const [afterFirst, afterSecond] = shop.element.querySelectorAll(
+        '.vol-card-shop__abilities .vol-card',
+      );
+      expect(afterFirst).toBe(second);
+      expect(afterSecond).toBe(first);
+
+      shop.destroy();
     });
   });
 });

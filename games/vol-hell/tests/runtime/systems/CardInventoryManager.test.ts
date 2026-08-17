@@ -148,6 +148,23 @@ describe('CardInventoryManager', () => {
     });
   });
 
+  describe('teklif çekimi', () => {
+    it('drawOffer ek exclude ile belirli kartları havuz dışında bırakır', () => {
+      const result = cards.drawOffer(2, { exclude: new Set(['cardTurret']) });
+      for (const card of result) {
+        expect(card.id).not.toBe('cardTurret');
+      }
+    });
+
+    it('drawOffer varsayılan olarak sahip olunan ability kartlarını çıkarmaya devam eder', () => {
+      cards.acquire(CARD_CATALOG.cardTurret);
+      const result = cards.drawOffer(2);
+      for (const card of result) {
+        expect(card.id).not.toBe('cardTurret');
+      }
+    });
+  });
+
   describe('dükkan alım/satım', () => {
     it('yetersiz Flux ile satın alma reddedilir ve hiçbir şey değişmez', () => {
       const card = CARD_CATALOG.yikimProtokolu;

@@ -114,6 +114,7 @@ describe('CardScreens — dalga arası akış', () => {
   afterEach(() => {
     screens.destroy();
     root.remove();
+    vi.restoreAllMocks();
   });
 
   it('seviye atlaması dalga ortasında ekran AÇMAZ — kuyruğa alınır', () => {
@@ -162,11 +163,14 @@ describe('CardScreens — dalga arası akış', () => {
   });
 
   it('DEVAM ET akışı bitirir ve oyunu sürdürür', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
     screens.openIntermission(2);
     root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!.click();
 
+    vi.advanceTimersByTime(240);
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(screens.isOpen()).toBe(false);
+    vi.useRealTimers();
   });
 
   it('dükkanda satın alma Flux düşürür ve envanteri günceller', () => {
@@ -243,5 +247,115 @@ describe('CardScreens — dalga arası akış', () => {
 
     expect(root.querySelectorAll('.vol-card-shop__abilities .vol-card')).toHaveLength(1);
     expect(root.querySelectorAll('.vol-card-shop__passives .vol-card')).toHaveLength(1);
+  });
+
+  it('dükkanda reroll butonu maliyetle gösterilir', () => {
+    economy.addFlux(100);
+    screens.openIntermission(9);
+
+    const reroll = root.querySelector<HTMLButtonElement>('.vol-card-shop__reroll')!;
+    expect(reroll).not.toBeNull();
+    expect(reroll.textContent).toMatch(/Flux/);
+  });
+
+  it('bakiye yetersizse reroll butonu kilitlidir', () => {
+    screens.openIntermission(10);
+
+    const reroll = root.querySelector<HTMLButtonElement>('.vol-card-shop__reroll')!;
+    expect(reroll.disabled).toBe(true);
+  });
+
+  it('kilitleme teklifte KİLİDİ AÇ etiketine döner', () => {
+    economy.addFlux(100);
+    screens.openIntermission(11);
+
+    const lockButton = root.querySelector<HTMLButtonElement>('.vol-card__action--secondary')!;
+    expect(lockButton.textContent).toBe(i18next.t('volhell:cards.ui.lock'));
+
+    lockButton.click();
+
+    const after = root.querySelector<HTMLButtonElement>('.vol-card__action--secondary')!;
+    expect(after.textContent).toBe(i18next.t('volhell:cards.ui.unlock'));
+    expect(after.closest('.vol-card')?.classList.contains('vol-card--locked')).toBe(true);
+  });
+
+  it('satın alınan teklifte kilit butonu kalkar', () => {
+    economy.addFlux(100);
+    screens.openIntermission(12);
+
+    const buyButton = root.querySelector<HTMLButtonElement>(
+      '.vol-card-picker--shop .vol-card-picker__grid .vol-card__action',
+    )!;
+    buyButton.click();
+
+    const tile = root.querySelector('.vol-card-picker--shop .vol-card-picker__grid .vol-card')!;
+    expect(tile.querySelector('.vol-card__action--secondary')).toBeNull();
+  });
+
+  it('tüm slotlar doluyken TAK butonu toast bildirimi gösterir', async () => {
+    cards.acquire(CARD_CATALOG.cardTurret);
+    cards.acquire(CARD_CATALOG.cardFireZone);
+    cards.acquire(CARD_CATALOG.cardChainLightning);
+    screens.openIntermission(13);
+
+    // Üç yetenek envanterde; TAK'lenen ilk iki slota yerleşir, üçüncü toast verir.
+    const equipButtons = root.querySelectorAll<HTMLButtonElement>(
+      '.vol-card-shop__abilities .vol-card__action--secondary',
+    );
+    equipButtons[0].click();
+    equipButtons[1].click();
+    equipButtons[2].click();
+
+    await vi.waitFor(() => expect(document.body.querySelector('.vol-toast')).not.toBeNull());
+  });
+
+  it('yeni alınan yetenek otomatik slota takılır', () => {
+    economy.addFlux(100);
+
+    // Dükkan teklifini deterministik hale getir: bir yetenek ve bir pasif.
+    vi.spyOn(cards, 'drawOffer').mockReturnValue([
+      CARD_CATALOG.cardFireZone,
+      CARD_CATALOG.keskinUc,
+    ]);
+
+    screens.openIntermission(14);
+
+    const buyButton = root.querySelector<HTMLButtonElement>(
+      '.vol-card-picker--shop .vol-card-picker__grid .vol-card__action',
+    )!;
+    buyButton.click();
+
+    const equipped = cards.getEquipped('primary');
+    expect(equipped).not.toBeNull();
+    expect(equipped?.definition.id).toBe('cardFireZone');
+  });
+
+  it('dükkan kartı satıldıktan sonra aynı teklif tekrar satın alınabilir', () => {
+    economy.addFlux(100);
+    vi.spyOn(cards, 'drawOffer').mockReturnValue([
+      CARD_CATALOG.cardFireZone,
+      CARD_CATALOG.keskinUc,
+    ]);
+
+    screens.openIntermission(15);
+
+    // İlk yetenek kartını al.
+    const buyButton = root.querySelector<HTMLButtonElement>(
+      '.vol-card-picker--shop .vol-card-picker__grid .vol-card__action',
+    )!;
+    buyButton.click();
+
+    // Sat.
+    const sellButton = root.querySelector<HTMLButtonElement>(
+      '.vol-card-shop__abilities .vol-card__action',
+    )!;
+    sellButton.click();
+
+    // Aynı teklif artık ALINDI değil; yeniden satın alınabilir.
+    const afterBuy = root.querySelector<HTMLButtonElement>(
+      '.vol-card-picker--shop .vol-card-picker__grid .vol-card__action',
+    )!;
+    expect(afterBuy.textContent).toBe(i18next.t('volhell:cards.ui.buy'));
+    expect(afterBuy.disabled).toBe(false);
   });
 });

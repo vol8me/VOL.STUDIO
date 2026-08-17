@@ -25,6 +25,8 @@ export function toCardTileData(
     priceLabel: options.showPrice
       ? i18next.t('volhell:cards.ui.price', { price: card.price })
       : undefined,
-    statusLabel: options.statusLabel,
+    // statusLabel yalnızca açıkça verilirse ekle; aksi halde `update()`
+    // eski durum metnini yanlışlıkla silmez.
+    ...(options.statusLabel !== undefined ? { statusLabel: options.statusLabel } : {}),
   };
 }

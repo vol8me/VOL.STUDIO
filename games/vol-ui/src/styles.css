@@ -639,30 +639,3 @@
   color: var(--vol-ui-text);
   font-weight: 700;
 }
-
-/*
- * Reroll'da tüm teklif ızgarasına kısa bir vurgu — "teklif yenilendi" hissi.
- * cardsTab.ts requestAnimationFrame ile ekleyip bir sonraki reroll'da
- * kaldırıp yeniden ekliyor (aksi halde aynı class arka arkaya eklenirse
- * animasyon yeniden tetiklenmez).
- */
-@keyframes vol-showcase-shop-grid-flash {
-  0% {
-    box-shadow: 0 0 0 2px var(--vol-ui-accent-solid);
-  }
-
-  100% {
-    box-shadow: 0 0 0 2px transparent;
-  }
-}
-
-.vol-showcase-shop-grid--rerolled {
-  animation: vol-showcase-shop-grid-flash var(--vol-transition-medium) ease-out;
-  border-radius: var(--vol-radius-md);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .vol-showcase-shop-grid--rerolled {
-    animation: none;
-  }
-}

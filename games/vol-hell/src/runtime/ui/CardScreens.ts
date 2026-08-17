@@ -1,11 +1,14 @@
 import {
+  HIDE_ANIMATION_MS,
   LevelUpPicker,
   ShopPicker,
+  ToastManager,
   i18next,
   type ShopInventoryEntry,
   type ShopPickerState,
 } from '@volstudio/core';
 import type { CardDefinition } from '@/config/cards/types';
+import { economyConfig } from '@/config/economy';
 import { getCardSellValue } from '@/config/cards';
 import type { AbilitySlot } from '@/runtime/ability/types';
 import type { CardInventoryManager, OwnedCard } from '@/runtime/systems/CardInventoryManager';
@@ -22,6 +25,10 @@ export interface CardScreensCallbacks {
   onCardTaken?: (card: CardDefinition) => void;
 }
 
+/** Dükkan teklif sayısı. */
+const SHOP_SIZE = 2;
+const ABILITY_SLOTS: AbilitySlot[] = ['primary', 'secondary'];
+
 /**
  * Dalga arası akışın oyun tarafı orkestrasyonu.
  *
@@ -34,14 +41,22 @@ export class CardScreens {
   private readonly levelUp: LevelUpPicker;
   private readonly shop: ShopPicker;
   private readonly loadout: AbilityLoadout;
+  private readonly toasts: ToastManager;
 
   /** Bekleyen seviye atlamaları — dalga sonunda sırayla sunulur. */
   private readonly pendingLevels: number[] = [];
   private levelUpOffer: CardDefinition[] = [];
   private shopOffer: CardDefinition[] = [];
+  /** Bu dükkan ziyaretinde satın alınan kart kimlikleri (UI'da ALINDI). */
   private purchased = new Set<string>();
+  /** Aynı kartın farklı örneklerini ayırt etmek için satın alınan instance'lar. */
+  private purchasedInstanceIds = new Set<string>();
+  /** Reroll'da korunacak teklifler. */
+  private lockedOfferIds = new Set<string>();
+  private rerollCost = economyConfig.reroll.baseCost;
   private shopWave = 0;
   private intermissionActive = false;
+  private closeTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     parent: HTMLElement,
@@ -52,6 +67,8 @@ export class CardScreens {
     this.container = document.createElement('div');
     this.container.className = 'vol-card-layer';
     this.container.hidden = true;
+
+    this.toasts = new ToastManager(parent.ownerDocument?.body ?? parent);
 
     this.levelUp = new LevelUpPicker({
       selectLabel: i18next.t('volhell:cards.ui.select'),
@@ -68,6 +85,15 @@ export class CardScreens {
         passivesTitle: i18next.t('volhell:cards.ui.passivesTitle'),
         empty: i18next.t('volhell:cards.ui.inventoryEmpty'),
         close: i18next.t('volhell:cards.ui.continue'),
+      },
+      reroll: {
+        label: i18next.t('volhell:cards.ui.reroll'),
+        onReroll: () => this.handleReroll(),
+      },
+      lock: {
+        lockLabel: i18next.t('volhell:cards.ui.lock'),
+        unlockLabel: i18next.t('volhell:cards.ui.unlock'),
+        onToggle: (cardId) => this.handleToggleLock(cardId),
       },
       onBuy: (cardId) => this.handleBuy(cardId),
       onSell: (instanceId) => this.handleSell(instanceId),
@@ -108,6 +134,9 @@ export class CardScreens {
   openIntermission(wave: number): void {
     this.shopWave = wave;
     this.purchased = new Set();
+    this.purchasedInstanceIds = new Set();
+    this.lockedOfferIds = new Set();
+    this.rerollCost = economyConfig.reroll.baseCost;
     this.intermissionActive = true;
     this.container.hidden = false;
     this.callbacks.onOpen();
@@ -123,9 +152,14 @@ export class CardScreens {
   }
 
   destroy(): void {
+    if (this.closeTimeout !== null) {
+      clearTimeout(this.closeTimeout);
+      this.closeTimeout = null;
+    }
     this.levelUp.destroy();
     this.shop.destroy();
     this.loadout.destroy();
+    this.toasts.destroy();
     this.container.remove();
     this.pendingLevels.length = 0;
     this.intermissionActive = false;
@@ -165,7 +199,7 @@ export class CardScreens {
   private openShop(): void {
     // Teklif dükkan AÇILIRKEN çekilir: seviye ekranında alınan yetenek
     // kartının aynısı vitrinde tekrar görünmesin.
-    this.shopOffer = this.cards.drawOffer(2);
+    this.shopOffer = this.drawShopOffers(SHOP_SIZE);
     // hideImmediately() — bkz. advanceIntermission()'daki gerekçe, aynı katman içi takas.
     this.levelUp.hideImmediately();
     this.shop.present(this.buildShopState());
@@ -173,16 +207,19 @@ export class CardScreens {
   }
 
   private closeIntermission(): void {
-    // hideImmediately() BİLEREK: `this.container.hidden = true` hemen
-    // ardından geliyor ve `.vol-card-layer` kendi geçişi olmadığı için
-    // animasyonlu hide() burada zaten görünmez kalırdı (panel süresi dolmadan
-    // TÜM katman `display: none` olurdu) — hideImmediately() bunu açıkça
-    // belgeliyor, "yarım kalmış" bir animasyon başlatmıyor.
-    this.levelUp.hideImmediately();
-    this.shop.hideImmediately();
-    this.container.hidden = true;
-    this.intermissionActive = false;
-    this.callbacks.onClose();
+    // Panel kapanış animasyonu tamamlansın, ardından katman yok olsun.
+    if (this.closeTimeout !== null) {
+      clearTimeout(this.closeTimeout);
+      this.closeTimeout = null;
+    }
+    this.levelUp.hide();
+    this.shop.hide();
+    this.closeTimeout = setTimeout(() => {
+      this.closeTimeout = null;
+      this.container.hidden = true;
+      this.intermissionActive = false;
+      this.callbacks.onClose();
+    }, HIDE_ANIMATION_MS);
   }
 
   private handleLevelUpSelect(cardId: string): void {
@@ -204,6 +241,9 @@ export class CardScreens {
     if (!owned) return;
 
     this.purchased.add(cardId);
+    this.purchasedInstanceIds.add(owned.instanceId);
+    // Satın alınan kart artık reroll'da korunacak bir şey değil.
+    this.lockedOfferIds.delete(cardId);
     this.autoEquip(owned.instanceId, card);
     this.callbacks.onCardTaken?.(card);
     this.shop.render(this.buildShopState());
@@ -211,9 +251,38 @@ export class CardScreens {
   }
 
   private handleSell(instanceId: string): void {
+    const owned = this.cards.getOwned().find((card) => card.instanceId === instanceId);
+    if (!owned) return;
+
     if (this.cards.sell(instanceId) <= 0) return;
+    // Bu dükkan ziyaretinde satın alınıp aynı turda satılırsa teklif yeniden
+    // seçilebilir olsun; aksi halde ALINDI ibaresi yanıltıcı kalır.
+    if (this.purchasedInstanceIds.delete(instanceId)) {
+      this.purchased.delete(owned.definition.id);
+    }
+
     this.shop.render(this.buildShopState());
     this.refreshLoadout();
+  }
+
+  private handleReroll(): void {
+    if (!this.economy.spendFlux(this.rerollCost)) {
+      this.toasts.show(i18next.t('volhell:cards.ui.rerollTooExpensive'), { variant: 'warning' });
+      return;
+    }
+
+    this.rerollCost += economyConfig.reroll.costStep;
+    this.refreshShopOffers();
+    this.shop.render(this.buildShopState());
+  }
+
+  private handleToggleLock(cardId: string): void {
+    if (this.lockedOfferIds.has(cardId)) {
+      this.lockedOfferIds.delete(cardId);
+    } else {
+      this.lockedOfferIds.add(cardId);
+    }
+    this.shop.render(this.buildShopState());
   }
 
   private handleAssign(instanceId: string, slot: AbilitySlot): void {
@@ -222,11 +291,15 @@ export class CardScreens {
     this.shop.render(this.buildShopState());
   }
 
-  /** "TAK" butonu — boş slot varsa oraya, yoksa ilk slota yerleştirir. */
+  /** "TAK" butonu — boş slot varsa oraya, yoksa uyarı verir. */
   private handleEquipToFreeSlot(instanceId: string): void {
-    const slots: AbilitySlot[] = ['primary', 'secondary'];
-    const free = slots.find((slot) => this.cards.getEquipped(slot) === null);
-    this.handleAssign(instanceId, free ?? 'primary');
+    const free = ABILITY_SLOTS.find((slot) => this.cards.getEquipped(slot) === null);
+    if (!free) {
+      this.toasts.show(i18next.t('volhell:cards.ui.noEmptySlot'), { variant: 'warning' });
+      return;
+    }
+
+    this.handleAssign(instanceId, free);
   }
 
   private handleClear(slot: AbilitySlot): void {
@@ -239,11 +312,49 @@ export class CardScreens {
   private autoEquip(instanceId: string, card: CardDefinition): void {
     if (card.type !== 'ability') return;
 
-    for (const slot of ['primary', 'secondary'] as AbilitySlot[]) {
+    for (const slot of ABILITY_SLOTS) {
       if (this.cards.getEquipped(slot)) continue;
       this.cards.equip(instanceId, slot);
+      this.toasts.show(
+        i18next.t('volhell:cards.ui.abilityAutoEquipped', {
+          name: i18next.t(`volhell:${card.titleKey}` as 'volhell:cards.cardTurret.title'),
+        }),
+        { variant: 'success' },
+      );
       return;
     }
+
+    this.toasts.show(i18next.t('volhell:cards.ui.noEmptySlot'), { variant: 'warning' });
+  }
+
+  private refreshShopOffers(): void {
+    const keep = this.shopOffer.filter(
+      (card) => this.lockedOfferIds.has(card.id) && !this.purchased.has(card.id),
+    );
+    const needed = Math.max(0, SHOP_SIZE - keep.length);
+    const fresh = this.drawShopOffers(needed, new Set(keep.map((card) => card.id)));
+    const freshQueue = [...fresh];
+
+    // Kilitli teklifler aynı slotta kalmalı; yalnızca açık slotlara yeni
+    // kart çekilir. Böylece ikinci slot kilitliyken birinci slot değişmez.
+    this.shopOffer = Array.from({ length: SHOP_SIZE }, (_, i) => {
+      const current = this.shopOffer[i];
+      if (current && this.lockedOfferIds.has(current.id) && !this.purchased.has(current.id)) {
+        return current;
+      }
+      return freshQueue.shift()!;
+    });
+  }
+
+  private drawShopOffers(count: number, extraExclude?: ReadonlySet<string>): CardDefinition[] {
+    if (count <= 0) return [];
+
+    // Dükkan havuzu: sadece satın alınmış ve kilitli/korunacak teklifler
+    // dışarıda bırakılır. Sahip olunan ability'ler zaten CardInventoryManager
+    // drawOffer içinde; sahip olunan buff/takas kartları tekrar çıkabilir
+    // (üst üste biner).
+    const exclude = new Set<string>([...this.purchased, ...(extraExclude ?? [])]);
+    return this.cards.drawOffer(count, { exclude });
   }
 
   private refreshLoadout(): void {
@@ -264,6 +375,7 @@ export class CardScreens {
         card: toCardTileData(card, { showPrice: true, showType: true }),
         purchased: this.purchased.has(card.id),
         affordable: flux >= card.price,
+        locked: this.lockedOfferIds.has(card.id),
       })),
       abilities: owned
         .filter((entry) => entry.definition.type === 'ability')
@@ -274,11 +386,15 @@ export class CardScreens {
       balanceLabel: i18next.t('volhell:cards.ui.balance', { amount: flux }),
       title: i18next.t('volhell:cards.ui.shopTitle', { wave: this.shopWave }),
       hint: i18next.t('volhell:cards.ui.shopHint'),
+      reroll: {
+        costLabel: i18next.t('volhell:cards.ui.price', { price: this.rerollCost }),
+        affordable: flux >= this.rerollCost,
+      },
     };
   }
 
   private toInventoryEntry(owned: OwnedCard, draggable: boolean): ShopInventoryEntry {
-    const equippedSlot = (['primary', 'secondary'] as AbilitySlot[]).find(
+    const equippedSlot = ABILITY_SLOTS.find(
       (slot) => this.cards.getEquipped(slot)?.instanceId === owned.instanceId,
     );
 
@@ -286,7 +402,7 @@ export class CardScreens {
       instanceId: owned.instanceId,
       card: toCardTileData(owned.definition, {
         showType: true,
-        statusLabel: equippedSlot ? i18next.t('volhell:ability.equipped') : undefined,
+        statusLabel: equippedSlot ? i18next.t('volhell:ability.equipped') : '',
       }),
       sellLabel: i18next.t('volhell:cards.ui.sell', {
         value: getCardSellValue(owned.definition.price),

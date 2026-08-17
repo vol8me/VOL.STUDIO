@@ -79,8 +79,20 @@ export abstract class CardPicker {
     this.element.classList.remove('vol-card-picker--leaving');
     this.visible = true;
     this.element.hidden = false;
+    this.startTileEnterAnimations();
     // İlk kartın aksiyon butonu odaklanır: seçim klavyeyle de yapılabilsin.
     this.element.querySelector<HTMLButtonElement>('.vol-card__action')?.focus();
+  }
+
+  protected startTileEnterAnimations(): void {
+    if (this.tiles.length === 0) return;
+    // Bir sonraki karede layout gerçekleştikten sonra class ekle ki
+    // `hidden` katmandan yeni açılan panellerde animasyon 0. kareden başlasın.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        for (const tile of this.tiles) tile.startEnterAnimation();
+      });
+    });
   }
 
   hide(): void {

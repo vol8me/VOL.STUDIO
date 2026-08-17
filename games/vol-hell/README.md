@@ -19,13 +19,13 @@ pnpm --filter @volstudio/vol-hell dev
 
 ## Sistemler
 
-| Alan       | İçerik                                                                             |
-| ---------- | ---------------------------------------------------------------------------------- |
-| Koşu akışı | 20 dalga × 40 sn, dalga sonu dükkân, elit (10) ve boss (20) dalgaları              |
-| Savaş      | Düşman kataloğu (rusher / swarmer / special), telegraph, elit ve boss davranışları |
-| İlerleme   | Spark/Flux ekonomisi, seviye atlama, kart kataloğu (ability / buff / takas)        |
-| Ability    | Zincir şimşek, ateş alanı, çoklu atış, kule — Q/E slotlarına takılır               |
-| Ses        | `@volstudio/core` müzik motoru üzerinden adaptif müzik + SFX yönetimi              |
+| Alan       | İçerik                                                                                               |
+| ---------- | ---------------------------------------------------------------------------------------------------- |
+| Koşu akışı | 20 dalga × 40 sn, dalga sonu dükkân, elit (10) ve boss (20) dalgaları                                |
+| Savaş      | Düşman kataloğu (rusher / swarmer / special), telegraph, elit ve boss davranışları                   |
+| İlerleme   | Spark/Flux ekonomisi, seviye atlama, kart kataloğu (ability / buff / takas), dükkan reroll/kilitleme |
+| Ability    | Zincir şimşek, ateş alanı, çoklu atış, kule — Q/E slotlarına takılır                                 |
+| Ses        | `@volstudio/core` müzik motoru üzerinden adaptif müzik + SFX yönetimi                                |
 
 Oynanış sayıları `src/config/` altında veri olarak durur; denge değişikliği kod değil config işidir.
 

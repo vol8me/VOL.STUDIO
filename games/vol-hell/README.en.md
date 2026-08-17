@@ -19,13 +19,13 @@ pnpm --filter @volstudio/vol-hell dev
 
 ## Systems
 
-| Area        | Contents                                                                          |
-| ----------- | --------------------------------------------------------------------------------- |
-| Run flow    | 20 waves × 40 s, shop after each wave, elite (10) and boss (20) waves             |
-| Combat      | Enemy catalog (rusher / swarmer / special), telegraphs, elite and boss behaviours |
-| Progression | Spark/Flux economy, level-ups, card catalog (ability / buff / trade-off)          |
-| Abilities   | Chain lightning, fire zone, multi-shot, turret — bound to the Q/E slots           |
-| Audio       | Adaptive music + SFX driven through the `@volstudio/core` music engine            |
+| Area        | Contents                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------ |
+| Run flow    | 20 waves × 40 s, shop after each wave, elite (10) and boss (20) waves                      |
+| Combat      | Enemy catalog (rusher / swarmer / special), telegraphs, elite and boss behaviours          |
+| Progression | Spark/Flux economy, level-ups, card catalog (ability / buff / trade-off), shop reroll/lock |
+| Abilities   | Chain lightning, fire zone, multi-shot, turret — bound to the Q/E slots                    |
+| Audio       | Adaptive music + SFX driven through the `@volstudio/core` music engine                     |
 
 Gameplay numbers live as data under `src/config/`; balancing is a config change, not a code change.
 

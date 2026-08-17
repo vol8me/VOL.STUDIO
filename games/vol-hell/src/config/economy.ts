@@ -52,6 +52,12 @@ export const economyConfig = {
       periodMs: 1600,
     },
   },
+  /** Dükkan reroll maliyeti. Her reroll maliyet artar; yanlış teklifi
+   * kilitlemek reroll kullanımını ödüllendirir. */
+  reroll: {
+    baseCost: 5,
+    costStep: 3,
+  },
   spark: {
     /**
      * İlk seviye atlaması için gereken Spark.
