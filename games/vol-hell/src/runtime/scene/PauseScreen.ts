@@ -1,6 +1,7 @@
 import { Button, Checkbox, Panel, Slider, Text, i18next } from '@volstudio/core';
 import type { AudioSettings } from '@/app/AudioSettings';
 import { gameAudio } from '@/app/services';
+import { sfxVolumes } from '@/config/audio';
 
 /**
  * Oyun içi duraklatma ekranı — DOM tabanlı overlay.
@@ -95,7 +96,7 @@ export class PauseScreen {
         label,
         onChange: (value) => {
           void set(value).then(() => {
-            void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+            void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
           });
         },
       });
@@ -121,7 +122,7 @@ export class PauseScreen {
       label: i18next.t('volhell:settings.shake'),
       onChange: (checked) => {
         void audioSettings.setScreenShakeEnabled(checked).then(() => {
-          void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+          void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
         });
       },
     });
@@ -132,7 +133,7 @@ export class PauseScreen {
       onChange: (checked) => {
         void audioSettings.setMuted(checked).then(() => {
           if (!checked) {
-            void gameAudio.playSfx('menuBlip', { volume: 0.4 });
+            void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
           }
         });
       },
@@ -175,13 +176,13 @@ export class PauseScreen {
   }
 
   private showSettings(): void {
-    void gameAudio.playSfx('menuBlip', { volume: 0.5 });
+    void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
     this.panel.hide();
     this.settingsPanel.show();
   }
 
   private hideSettings(): void {
-    void gameAudio.playSfx('back', { volume: 0.5 });
+    void gameAudio.playSfx('back', { volume: sfxVolumes.back });
     this.settingsPanel.hide();
     this.panel.show();
   }

@@ -20,8 +20,22 @@ core/src/audio/music/
   scheduler.ts         — MusicScheduler: BPM/ölçü bazlı zaman/bar/beat dönüşümleri
   loader.ts            — StemLoader: stem yükle ve decode et; OGG başarısızsa MP3 fallback
   gain-resolver.ts     — state'e göre stem gain'ini çözer
-  instrument.ts        — build-time SFX script'leri için enstrüman preset'leri
   index.ts             — public API
+```
+
+Track'ler ve SFX'ler artık oyun paketi içinden üretilir:
+
+```
+games/vol-hell/scripts/audio/
+  lib/mix.ts           — master zincir: voice toplama, normalize, DC blocker
+  lib/theory.ts        — müzik teorisi yardımcıları
+  palette/*.ts         — "Dark Synthetic / Void" ses paleti
+  music/*.ts           — track başına render script'leri
+  ambience/*.ts        — gameplay ambiyans render'ları
+  sfx/specs.ts         — SFX tanım tablosu
+  generate-music.ts    — tüm müzik ve ambiyansı export eder
+  generate-ambience.ts — ambiyans render giriş noktası
+  generate-sfx.ts      — SFX render giriş noktası
 ```
 
 Pipeline:
@@ -63,12 +77,12 @@ Bu maddeler kolayca yanlış varsayılan, ölçülerek doğrulanmış davranış
 import type { MusicTrack } from '@volstudio/core/audio/music';
 
 const mainMenu: MusicTrack = {
-  id: 'main-menu',
+  id: 'hollow-signal',
   bpm: 60,
   stems: [
     {
       id: 'theme',
-      src: 'assets/audio/music/main-menu/iron-vein.ogg',
+      src: 'assets/audio/music/main-menu/hollow-signal.ogg',
       gain: 0.75,
       loop: true,
     },
@@ -223,26 +237,24 @@ Motor runtime'da sentez YAPMAZ; yalnızca hazır dosya çalar.
 ### Asset akışı — tek format, tek kopya
 
 ```
-core/scripts/generate-*.ts          ÜRETİM SCRIPT'İ (git'te)
-        ↓ pnpm generate:audio        (yalnızca ses değişince elle çalıştırılır)
-games/*/public/assets/audio/**.ogg  OYUN ASSET'İ (git'te)
+games/vol-hell/scripts/audio/*.ts   ÜRETİM SCRIPT'LERİ (git'te)
+        ↓ pnpm --filter @volstudio/vol-hell generate:audio
+        ↓ (yalnızca ses tasarımı değişince elle çalıştırılır)
+games/vol-hell/public/assets/audio/**.ogg  OYUN ASSET'İ (git'te)
         ↓ vite build
-games/*/dist/assets/audio/**.ogg    BUILD ÇIKTISI (gitignore)
+games/vol-hell/dist/assets/audio/**.ogg    BUILD ÇIKTISI (gitignore)
 ```
 
-**OGG dosyaları repoda tutulur.** Oyun asset'idir — tıpkı font ve texture gibi.
-Klonlayan biri `pnpm install && pnpm dev` ile oyunu sesli çalıştırabilmeli;
-asset'i gitignore'lamak oyunu çalıştırmak için FFmpeg kurulumunu ve dakikalarca
-üretim beklemeyi zorunlu kılardı.
+**Shipped OGG dosyaları repoda tutulur; üreten script'ler de git'te durur.**
+Oyun kodları bu dosyaları `public/assets/audio/` altında bekler. Ses tasarımı
+değiştiğinde `pnpm --filter @volstudio/vol-hell generate:audio` çalıştırılarak
+OGG'ler yenilenir. Ara formatlar (WAV, MP3) repoda tutulmaz; iOS hedefi için
+`pnpm convert:ios` ile üretilen MP3'ler build çıktısına (`dist`) gider.
 
-Üretim script'leri yalnızca ses tasarımı değişince çalıştırılır; çıktı commit
-edilir. Repoda tutulmayan tek şey ara formatlardır: kayıpsız WAV kopyası
-saklanmaz (üretim deterministik, gerekirse script'ten yeniden alınır) ve MP3
-yalnızca iOS build'i alınacağı zaman türetilir.
-
-Yalnızca **OGG** üretilir. iOS'a çıkılacağı zaman `pnpm convert:ios` OGG'den
-MP3 türetir (WKWebView Ogg Vorbis decode etmez) ve `StemLoader` `.ogg`
-başarısız olursa `.mp3`'e düşer. iOS hedefi yokken MP3 üretilmez.
+Üretim deterministiktir: aynı seed + aynı script aynı OGG'yi verir.
+Kayıpsız WAV kopyası saklanmaz, gerektiğinde yeniden üretilir. iOS hedefi
+için `StemLoader` `.ogg` başarısız olursa `.mp3` fallback dener; proje
+build'inde `convert:ios` yokken yalnızca OGG üretilir.
 
 > **Uyarı — müzik için öneri:** `synth` motoru SFX, UI blip ve kısa drone için
 > designed. Çoksesli müzik, armoni ve uzun melodi üretmeye çalışmak aynı sonik
@@ -254,7 +266,7 @@ başarısız olursa `.mp3`'e düşer. iOS hedefi yokken MP3 üretilmez.
 pnpm --filter @volstudio/vol-hell generate:audio   # SFX + müzik (hepsi)
 pnpm --filter @volstudio/vol-hell generate:music   # yalnız müzik
 pnpm --filter @volstudio/vol-hell generate:sounds  # yalnız SFX
-pnpm audio:qa                                      # üretileni ölç
+pnpm --filter @volstudio/vol-hell audio:qa         # üretileni ölç
 ```
 
 > Daha önce bu doküman `ProceduralStemGenerator`, `procedural-presets.ts`,
@@ -266,21 +278,24 @@ pnpm audio:qa                                      # üretileni ölç
 
 ```
 games/vol-hell/src/app/GameAudio.ts
+games/vol-hell/src/runtime/systems/GameAudioDirector.ts
 ```
 
 `GameAudio` tek bir `AudioContext` yönetir ve içinde iki `MusicEngine` barındırır:
 
-- `music` — ana temalar (main menu, death screen)
+- `music` — ana temalar (main menu, death screen, victory)
 - `ambient` — gameplay ambiyans
 
-Böylece müzik ve ambiyans birbirinden bağımsızdır; ana menüden oyuna geçerken müzik dururken ambiyans başlar.
+`GameAudioDirector` sahne durumuna göre müzik ve ambiyans arası geçişi
+yönetir: menüden oyuna, oyundan savaşa, savaştan boss'a, ölüm ve zafer
+anlarına kararlı geçişler kurar.
 
 ```typescript
-gameAudio.loadMusic(musicTracks.mainMenu);
-gameAudio.playMusic(musicTracks.mainMenu.id, { fadeIn: 2 });
+gameAudio.loadMusic(musicTracks['hollow-signal']);
+gameAudio.playMusic('hollow-signal', { fadeIn: 2 });
 
-gameAudio.loadAmbient(musicTracks.gameplayAmbient);
-gameAudio.playAmbient(musicTracks.gameplayAmbient.id, { fadeIn: 2 });
+gameAudio.loadAmbient(musicTracks['null-drift']);
+gameAudio.playAmbient('null-drift', { fadeIn: 2 });
 ```
 
 Track tanımları:
@@ -289,28 +304,36 @@ Track tanımları:
 games/vol-hell/src/config/music.ts
 ```
 
-Üretim altyapısı:
+Üretim altyapısı (`Dark Synthetic / Void` teması):
 
 ```
-core/scripts/audio-mix.ts            — mix temeli: voice toplama, humanize, DC blocker, master
-core/scripts/industrial-voices.ts    — endüstriyel ses paleti (müzik + SFX ortak sözlüğü)
-core/scripts/audio-qa.ts             — üretilen asset'leri ölçer (click, clip, bant profili)
+games/vol-hell/scripts/audio/
+  lib/mix.ts          — master zincir: normalize, DC blocker, peak limitleme
+  lib/theory.ts       — armoni, ölçek ve ritim yardımcıları
+  lib/track.ts        — track render pipeline'ı
+  palette/*.ts        — synth ses paleti (bass, pads, keys, percussion, fx, ambience)
+  music/*.ts          — her track için ayrı render script'i
+  ambience/*.ts       — gameplay ambiyans render'ları
+  generate-music.ts   — müzik + ambiyans üretim giriş noktası
+  generate-ambience.ts — ambiyans giriş noktası
+  audio-qa.ts         — üretilen asset'leri ölçer (click, clip, bant profili)
 ```
 
-Üretim script'leri (track başına ayrı):
+Mevcut müzik track'leri:
 
-```
-core/scripts/generate-iron-vein.ts        — ana menü 1, karakter: ağırlık
-core/scripts/generate-black-tide.ts       — ana menü 2, karakter: hareket
-core/scripts/generate-crimson-horizon.ts  — ana menü 3, karakter: boşluk
-core/scripts/generate-ambient-tracks.ts   — void-whisper + iron-tide + last-ember
-```
+- `hollow-signal` — ana menü, yavaş, boşluk hissiyatı
+- `event-horizon` — ana menü alternatifi, hareketli
+- `surge-protocol` — savaş müziği
+- `sovereign` — boss müziği
+- `terminal-echo` — ölüm ekranı
+- `first-light` — zafer ekranı
+- `null-drift` / `deep-current` — gameplay ambiyansı
 
 Çalıştır:
 
 ```bash
 pnpm --filter @volstudio/vol-hell generate:music
-pnpm audio:qa   # üretilenleri ölç
+pnpm --filter @volstudio/vol-hell audio:qa
 ```
 
 ## Üretim kuralları
@@ -332,16 +355,19 @@ Bu kurallar ölçümle konuldu; bozulduğunda sonuç duyulur şekilde kötüleş
 
 ## Yeni Müzik Ekleme
 
-1. `core/scripts/` altına track için render script'i ekle (mevcut `generate-iron-vein.ts` gibi).
+1. `games/vol-hell/scripts/audio/music/` altına track için render script'i ekle
+   (mevcut `menu-hollow-signal.ts` gibi).
 2. `games/vol-hell/src/config/music.ts`'te track/stem tanımını güncelle — `bpm` ve
    `loopEnd` script'teki değerlerle BİREBİR eşleşmeli.
-3. `games/vol-hell/package.json` `generate:music` script'ine üretim komutunu ekle.
-4. Sahne kodunda `loadMusic`/`playMusic` ile bağla.
-5. Doğrula:
+3. `games/vol-hell/scripts/audio/generate-music.ts` içinde yeni track'i export et.
+4. `games/vol-hell/src/config/music.ts`'te gerekirse state mantığını (ör. menu,
+   combat, boss) güncelle.
+5. `GameAudioDirector` veya sahne kodunda `loadMusic`/`playMusic` ile çalma anını bağla.
+6. Doğrula:
 
 ```bash
 pnpm --filter @volstudio/vol-hell generate:music
-pnpm audio:qa                 # click 0, clip 0 olmalı
+pnpm --filter @volstudio/vol-hell audio:qa  # click 0, clip 0 olmalı
 pnpm -r typecheck
 pnpm --filter @volstudio/vol-hell build
 pnpm test

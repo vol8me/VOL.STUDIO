@@ -6,6 +6,8 @@ import type { Border } from './Border';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { TelegraphHandle, TelegraphManager } from '@/runtime/systems/TelegraphManager';
+import { gameAudio } from '@/app/services';
+import { sfxVolumes } from '@/config/audio';
 import {
   applyRusherBehavior,
   applySeekBehavior,
@@ -111,6 +113,9 @@ export class EliteController {
     // süresi windup süresiyle aynıdır: uyarı sönerken atılım başlar.
     if (this.rusherState.phase === 'windup' && !this.dashTelegraphShown) {
       this.dashTelegraphShown = true;
+      if (gameAudio) {
+        void gameAudio.playSfx('telegraph', { volume: sfxVolumes.telegraph });
+      }
       const angle = Math.atan2(context.targetY - context.y, context.targetX - context.x);
       // Telegraph yalnızca GÖSTERGEDİR; hasarı atılımın kendisi (temas) verir,
       // bu yüzden resolve edildiğinde yapılacak bir iş yok.

@@ -358,4 +358,70 @@ describe('CardScreens — dalga arası akış', () => {
     expect(afterBuy.textContent).toBe(i18next.t('volhell:cards.ui.buy'));
     expect(afterBuy.disabled).toBe(false);
   });
+
+  it('kilitli teklif sonraki wave’de aynı slotta korunur ve boş slot yenilenir', () => {
+    economy.addFlux(100);
+    vi.spyOn(cards, 'drawOffer')
+      .mockReturnValueOnce([CARD_CATALOG.keskinUc, CARD_CATALOG.hafifBotlar])
+      .mockReturnValueOnce([CARD_CATALOG.takviyeliGovde]);
+
+    // Birinci dalga — ilk kartı kilitle.
+    screens.openIntermission(16);
+
+    const firstTile = root.querySelector(
+      '.vol-card-picker--shop .vol-card-picker__grid .vol-card',
+    )!;
+    const lockButton = firstTile.querySelector<HTMLButtonElement>('.vol-card__action--secondary')!;
+    lockButton.click();
+
+    expect(firstTile.classList.contains('vol-card--locked')).toBe(true);
+    expect(
+      firstTile.querySelector<HTMLButtonElement>('.vol-card__action--secondary')?.textContent,
+    ).toBe(i18next.t('volhell:cards.ui.unlock'));
+
+    // Dükkanı kapat.
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!.click();
+    vi.advanceTimersByTime(240);
+    expect(screens.isOpen()).toBe(false);
+    vi.useRealTimers();
+
+    // İkinci dalga — kilitli kart aynı slotta, diğer slot yeni kartla doldu.
+    screens.openIntermission(17);
+
+    const tiles = root.querySelectorAll('.vol-card-picker--shop .vol-card-picker__grid .vol-card');
+    expect(tiles.length).toBe(2);
+
+    const persisted = tiles[0];
+    expect(persisted.classList.contains('vol-card--locked')).toBe(true);
+    expect(persisted.querySelector('.vol-card__title')?.textContent).toBe(
+      i18next.t('volhell:cards.keskinUc.title'),
+    );
+
+    const refreshed = tiles[1];
+    expect(refreshed.classList.contains('vol-card--locked')).toBe(false);
+    expect(refreshed.querySelector('.vol-card__title')?.textContent).toBe(
+      i18next.t('volhell:cards.takviyeliGovde.title'),
+    );
+  });
+
+  it('havuz tükendiğinde dükkan çökmez ve mevcut teklifler görüntülenir', () => {
+    economy.addFlux(100);
+    vi.spyOn(cards, 'drawOffer').mockReturnValue([CARD_CATALOG.keskinUc]);
+
+    screens.openIntermission(18);
+
+    const tiles = root.querySelectorAll('.vol-card-picker--shop .vol-card-picker__grid .vol-card');
+    expect(tiles.length).toBeGreaterThanOrEqual(1);
+
+    for (const tile of Array.from(tiles)) {
+      const title = tile.querySelector('.vol-card__title');
+      expect(title?.textContent).toBeTruthy();
+    }
+
+    const button = root.querySelector<HTMLButtonElement>(
+      '.vol-card-picker--shop .vol-card-picker__grid .vol-card__action',
+    );
+    expect(button).not.toBeNull();
+  });
 });

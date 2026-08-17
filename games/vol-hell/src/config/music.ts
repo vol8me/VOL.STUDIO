@@ -1,141 +1,187 @@
 import type { MusicTrack } from '@volstudio/core/audio/music';
 
 const musicBasePath = 'assets/audio/music';
+const ambienceBasePath = 'assets/audio/ambience';
 
-// Bu değerler üretim script'leriyle (core/scripts/generate-*.ts) BİREBİR
-// eşleşmek zorunda: `loopEnd` dosyanın gerçek uzunluğunu aşarsa Web Audio
-// loop'u sessizce tüm buffer'a düşürür, kısa kalırsa parça erken başa sarar.
+// Bu değerler üretim script'leriyle (scripts/audio/music/*.ts,
+// scripts/audio/ambience/*.ts) BİREBİR eşleşmek zorunda: `loopEnd`
+// dosyanın gerçek uzunluğunu aşarsa Web Audio loop'u sessizce tüm buffer'a
+// düşürür, kısa kalırsa parça erken başa sarar.
 
-// Iron Vein — ana menü 1: D kökü, 62 BPM, 64 beat. Karakter: ağırlık.
-const MENU_BPM = 62;
-const MENU_BEAT = 60 / MENU_BPM;
+// HOLLOW SIGNAL — ana menü 1: Dm, 84 BPM, 128 vuruş (~91.43 s).
+const HOLLOW_BPM = 84;
+const HOLLOW_BEAT = 60 / HOLLOW_BPM; // ~0.714 s
+const HOLLOW_BEATS = 128;
 
-// Black Tide — ana menü 2: A kökü, 74 BPM, 64 beat. Karakter: hareket.
-const MENU2_BPM = 74;
-const MENU2_BEAT = 60 / MENU2_BPM;
+// EVENT HORIZON — ana menü 2: Am, 100 BPM, 128 vuruş (~76.80 s).
+const EVENT_BPM = 100;
+const EVENT_BEAT = 60 / EVENT_BPM; // 0.60 s
+const EVENT_BEATS = 128;
 
-// Crimson Horizon — ana menü 3: E kökü, 52 BPM, 48 beat. Karakter: boşluk.
-const MENU3_BPM = 52;
-const MENU3_BEAT = 60 / MENU3_BPM;
+// SURGE PROTOCOL — savaş müziği: Em, 132 BPM, 128 vuruş (~58.18 s).
+const SURGE_BPM = 132;
+const SURGE_BEAT = 60 / SURGE_BPM; // ~0.4545 s
+const SURGE_BEATS = 128;
 
-// Ambiyans: void-whisper ve iron-tide crossfade ile geçtiği için AYNI tempo
-// ve AYNI uzunlukta üretilir. Farklı tempoda olsalar geçiş ritmik çakışırdı.
-const AMBIENT_BPM = 68;
-const AMBIENT_BEAT = 60 / AMBIENT_BPM;
-const AMBIENT_BEATS = 64;
+// SOVEREIGN — boss müziği: Cm, 140 BPM, 128 vuruş (~54.86 s).
+const SOVEREIGN_BPM = 140;
+const SOVEREIGN_BEAT = 60 / SOVEREIGN_BPM; // ~0.4286 s
+const SOVEREIGN_BEATS = 128;
 
-// Last Ember — ölüm ekranı: 50 BPM, 26 beat. Loop yok, sonda fade-out var.
-const DEATH_BPM = 50;
-const DEATH_BEAT = 60 / DEATH_BPM;
+// TERMINAL ECHO — ölüm ekranı: Dm, 56 BPM, 24 vuruş (~25.71 s). Loop yok.
+const DEATH_BPM = 56;
+const DEATH_BEAT = 60 / DEATH_BPM; // ~1.071 s
+const DEATH_BEATS = 24;
+
+// FIRST LIGHT — zafer ekranı: D, 92 BPM, 32 vuruş (~20.87 s). Loop yok.
+const VICTORY_BPM = 92;
+const VICTORY_BEAT = 60 / VICTORY_BPM; // ~0.652 s
+const VICTORY_BEATS = 32;
+
+// Ambiyans: 64.0 s, BPM tanımlı değil (ritimsiz, TextSound'u yok).
+// MusicEngine crossfade için bir tempo verilir; loop başı/sonu kesin.
+const AMBIENCE_BPM = 60;
+const AMBIENCE_BEAT = 1; // 1 sn / beat
+const AMBIENCE_BEATS = 64;
 
 export const musicTrackIds = [
-  'main-menu',
-  'main-menu-2',
-  'main-menu-3',
-  'void-whisper',
-  'iron-tide',
-  'last-ember',
+  'hollow-signal',
+  'event-horizon',
+  'surge-protocol',
+  'sovereign',
+  'terminal-echo',
+  'first-light',
+  'null-drift',
+  'deep-current',
 ] as const;
 export type MusicTrackId = (typeof musicTrackIds)[number];
 
-/** Vol-Hell müzik track'leri.
- *  3 ana menü, 2 oyun içi ambiyans (Void Whisper / Iron Tide), 1 ölüm (Last Ember).
- *  Düşman 0-7 → Void Whisper, 8+ → Iron Tide. Iron Tide, combat'ın yerini tutar —
- *  ritmik değil ama gerilimli, düşman yoğunluğunu yansıtır. */
+/** Vol-Hell müzik ve ambiyans track'leri.
+ *  2 ana menü, 1 savaş, 1 boss, 1 ölüm, 1 zafer, 2 ambiyans. */
 export const musicTracks: Record<MusicTrackId, MusicTrack> = {
-  'main-menu': {
-    id: 'main-menu',
-    bpm: MENU_BPM,
+  'hollow-signal': {
+    id: 'hollow-signal',
+    bpm: HOLLOW_BPM,
     loopStart: 0,
-    loopEnd: 64 * MENU_BEAT, // ~61.9s — Iron Vein
+    loopEnd: HOLLOW_BEATS * HOLLOW_BEAT, // ~91.43 s
     stems: [
       {
-        id: 'iron-vein',
-        src: `${musicBasePath}/main-menu/iron-vein.ogg`,
+        id: 'hollow-signal',
+        src: `${musicBasePath}/main-menu/hollow-signal.ogg`,
         gain: 0.8,
         loop: true,
       },
     ],
   },
 
-  'main-menu-2': {
-    id: 'main-menu-2',
-    bpm: MENU2_BPM,
+  'event-horizon': {
+    id: 'event-horizon',
+    bpm: EVENT_BPM,
     loopStart: 0,
-    loopEnd: 64 * MENU2_BEAT, // ~51.9s — Black Tide
+    loopEnd: EVENT_BEATS * EVENT_BEAT, // ~76.80 s
     stems: [
       {
-        id: 'black-tide',
-        src: `${musicBasePath}/main-menu/black-tide.ogg`,
+        id: 'event-horizon',
+        src: `${musicBasePath}/main-menu/event-horizon.ogg`,
         gain: 0.8,
         loop: true,
       },
     ],
   },
 
-  'main-menu-3': {
-    id: 'main-menu-3',
-    bpm: MENU3_BPM,
+  'surge-protocol': {
+    id: 'surge-protocol',
+    bpm: SURGE_BPM,
     loopStart: 0,
-    loopEnd: 48 * MENU3_BEAT, // ~55.4s — Crimson Horizon
+    loopEnd: SURGE_BEATS * SURGE_BEAT, // ~58.18 s
     stems: [
       {
-        id: 'crimson-horizon',
-        src: `${musicBasePath}/main-menu/crimson-horizon.ogg`,
-        gain: 0.8,
+        id: 'surge-protocol',
+        src: `${musicBasePath}/combat/surge-protocol.ogg`,
+        gain: 0.85,
         loop: true,
       },
     ],
   },
 
-  'void-whisper': {
-    id: 'void-whisper',
-    bpm: AMBIENT_BPM,
+  sovereign: {
+    id: 'sovereign',
+    bpm: SOVEREIGN_BPM,
     loopStart: 0,
-    loopEnd: AMBIENT_BEATS * AMBIENT_BEAT, // ~56.5s — düşman az/yok
+    loopEnd: SOVEREIGN_BEATS * SOVEREIGN_BEAT, // ~54.86 s
     stems: [
       {
-        id: 'void-whisper',
-        src: `${musicBasePath}/gameplay/void-whisper.ogg`,
-        gain: 0.7,
+        id: 'sovereign',
+        src: `${musicBasePath}/boss/sovereign.ogg`,
+        gain: 0.85,
         loop: true,
       },
     ],
   },
 
-  'iron-tide': {
-    id: 'iron-tide',
-    bpm: AMBIENT_BPM,
-    loopStart: 0,
-    loopEnd: AMBIENT_BEATS * AMBIENT_BEAT, // ~56.5s — düşman çok
-    stems: [
-      {
-        id: 'iron-tide',
-        src: `${musicBasePath}/gameplay/iron-tide.ogg`,
-        gain: 0.7,
-        loop: true,
-      },
-    ],
-  },
-
-  'last-ember': {
-    id: 'last-ember',
+  'terminal-echo': {
+    id: 'terminal-echo',
     bpm: DEATH_BPM,
     loopStart: 0,
-    loopEnd: 26 * DEATH_BEAT, // ~31.2s — inen sinyal motifi
+    loopEnd: DEATH_BEATS * DEATH_BEAT, // ~25.71 s
     stems: [
       {
-        id: 'last-ember',
-        src: `${musicBasePath}/death/last-ember.ogg`,
+        id: 'terminal-echo',
+        src: `${musicBasePath}/end/terminal-echo.ogg`,
         gain: 0.75,
         loop: false,
       },
     ],
   },
+
+  'first-light': {
+    id: 'first-light',
+    bpm: VICTORY_BPM,
+    loopStart: 0,
+    loopEnd: VICTORY_BEATS * VICTORY_BEAT, // ~20.87 s
+    stems: [
+      {
+        id: 'first-light',
+        src: `${musicBasePath}/end/first-light.ogg`,
+        gain: 0.75,
+        loop: false,
+      },
+    ],
+  },
+
+  'null-drift': {
+    id: 'null-drift',
+    bpm: AMBIENCE_BPM,
+    loopStart: 0,
+    loopEnd: AMBIENCE_BEATS * AMBIENCE_BEAT, // 64.0 s
+    stems: [
+      {
+        id: 'null-drift',
+        src: `${ambienceBasePath}/null-drift.ogg`,
+        gain: 0.7,
+        loop: true,
+      },
+    ],
+  },
+
+  'deep-current': {
+    id: 'deep-current',
+    bpm: AMBIENCE_BPM,
+    loopStart: 0,
+    loopEnd: AMBIENCE_BEATS * AMBIENCE_BEAT, // 64.0 s
+    stems: [
+      {
+        id: 'deep-current',
+        src: `${ambienceBasePath}/deep-current.ogg`,
+        gain: 0.7,
+        loop: true,
+      },
+    ],
+  },
 };
 
-/** Oyun içi ambiyans track'leri — Void Whisper ve Iron Tide, ambient engine'de crossfade ile geçer. */
-export const ambientTrackKeys = ['void-whisper', 'iron-tide'] as const;
+/** Oyun içi ambiyans track'leri. Null Drift (düşman az), Deep Current (yoğun). */
+export const ambientTrackKeys = ['null-drift', 'deep-current'] as const;
 export type AmbientTrackKey = (typeof ambientTrackKeys)[number];
 
 /**
@@ -151,18 +197,39 @@ export const musicConfig = {
     /** Tense -> calm için gereken kararlılık süresi (ms). Temkinli, sık geçiş yapmaz. */
     calmHoldMs: 5000,
     /** Düşman az/yok iken çalan ambiyans. */
-    calmTrackId: 'void-whisper' satisfies AmbientTrackKey,
+    calmTrackId: 'null-drift' satisfies AmbientTrackKey,
     /** Düşman yoğunken çalan ambiyans. */
-    tenseTrackId: 'iron-tide' satisfies AmbientTrackKey,
+    tenseTrackId: 'deep-current' satisfies AmbientTrackKey,
     /** Ambiyans giriş fade süresi (saniye). */
     fadeInSec: 2,
     /** Oyuna girerken menü müziğinin kapanma süresi (saniye). */
     menuStopFadeSec: 2,
-    /** Ölüm anında ambiyansın kapanma süresi (saniye). */
-    deathStopFadeSec: 1,
+    /** Ölüm veya zafer gibi terminal ekranlarda ambiyans/müziğin kapanma süresi (saniye). */
+    terminalStopFadeSec: 1,
+  },
+  /** Savaş müziği — `surge-protocol` ambiyansın üstüne girer. */
+  combat: {
+    /** Savaş müziği eşiği: düşman yoğunluğu bu seviyeyi geçince `surge-protocol` başlar. */
+    enemyThreshold: 12,
+    /** Savaş müziği giriş/kapanış fade süresi (saniye). */
+    fadeInSec: 3,
+    fadeOutSec: 4,
+    /** Savaş müziğine geçiş için kararlılık süresi (ms). */
+    holdMs: 2500,
+    /** Savaştan ambiyansa geçiş için kararlılık süresi (ms). */
+    releaseHoldMs: 4000,
+  },
+  /** Boss müziği. */
+  boss: {
+    fadeInSec: 1.5,
+    fadeOutSec: 2,
   },
   /** Ölüm ekranı müziği. */
   death: {
+    fadeInSec: 1,
+  },
+  /** Zafer ekranı müziği. */
+  victory: {
     fadeInSec: 1,
   },
   /** Ana menü müziği. */
@@ -176,7 +243,16 @@ export const musicConfig = {
 export type MusicConfig = typeof musicConfig;
 
 /** Death ekranı rastgele seçenekleri — tek track. */
-export const deathTrackKeys: readonly MusicTrackId[] = ['last-ember'];
+export const deathTrackKeys: readonly MusicTrackId[] = ['terminal-echo'];
 
-/** Ana menü rastgele seçenekleri — Iron Vein, Black Tide, Crimson Horizon. */
-export const menuTrackKeys: readonly MusicTrackId[] = ['main-menu', 'main-menu-2', 'main-menu-3'];
+/** Ana menü rastgele seçenekleri — Hollow Signal, Event Horizon. */
+export const menuTrackKeys: readonly MusicTrackId[] = ['hollow-signal', 'event-horizon'];
+
+/** Savaş müziği track id'si. */
+export const combatTrackId: MusicTrackId = 'surge-protocol';
+
+/** Boss müziği track id'si. */
+export const bossTrackId: MusicTrackId = 'sovereign';
+
+/** Zafer müziği track id'si. */
+export const victoryTrackId: MusicTrackId = 'first-light';

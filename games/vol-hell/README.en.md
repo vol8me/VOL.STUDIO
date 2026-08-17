@@ -40,8 +40,9 @@ Gameplay numbers live as data under `src/config/`; balancing is a config change,
 | `pnpm --filter @volstudio/vol-hell test`           | Tests                           |
 | `pnpm --filter @volstudio/vol-hell test:coverage`  | Tests + coverage (CI runs this) |
 | `pnpm --filter @volstudio/vol-hell generate:audio` | Generate audio and music assets |
+| `pnpm --filter @volstudio/vol-hell audio:qa`       | Measure generated audio assets  |
 
-Audio assets are not kept in the repo; generate them with `generate:audio` (see [sound-synth](../../core/docs/sound-synth.md), [music-engine](../../core/docs/music-engine.md)).
+Shipped audio assets (`public/assets/audio/**/*.ogg`) are kept in the repo; regenerate them with `pnpm --filter @volstudio/vol-hell generate:audio` when the sound design changes. Intermediate formats (WAV, MP3) are not kept in the repo (see [sound-synth](../../core/docs/sound-synth.md), [music-engine](../../core/docs/music-engine.md)).
 
 ## UI
 

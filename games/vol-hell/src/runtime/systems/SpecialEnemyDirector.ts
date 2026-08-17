@@ -12,6 +12,8 @@ import type { SpatialGrid } from './SpatialGrid';
 import type { EffectManager } from './EffectManager';
 import type { TelegraphManager } from './TelegraphManager';
 import type { DifficultyState } from './DifficultyCalculator';
+import { gameAudio } from '@/app/services';
+import { sfxVolumes } from '@/config/audio';
 
 export interface SpecialEnemyDirectorDeps {
   enemyManager: EnemyManager;
@@ -89,6 +91,9 @@ export class SpecialEnemyDirector {
     );
 
     this.deps.effects.play('eliteSpawn', position.x, position.y);
+    if (gameAudio) {
+      void gameAudio.playSfx('eliteSpawn', { volume: sfxVolumes.eliteSpawn });
+    }
     Diagnostics.getInstance()?.recordEvent('eliteSpawn', { x: position.x, y: position.y });
 
     this.elite = new EliteController(enemy, definition, {
@@ -136,6 +141,9 @@ export class SpecialEnemyDirector {
     );
 
     this.deps.effects.play('bossSpawn', enemy.x, enemy.y);
+    if (gameAudio) {
+      void gameAudio.playSfx('bossSpawn', { volume: sfxVolumes.bossSpawn });
+    }
     Diagnostics.getInstance()?.recordEvent('bossSpawn', {
       powerRatio: scaling.playerPowerRatio,
       health: stats.getValue('health'),
@@ -170,6 +178,9 @@ export class SpecialEnemyDirector {
       } else {
         const position = this.boss.getEnemy();
         this.deps.effects.play('bossDefeat', position.x, position.y);
+        if (gameAudio) {
+          void gameAudio.playSfx('bossDown', { volume: sfxVolumes.bossDown });
+        }
         this.boss.destroy();
         this.boss = null;
         this.reportBlockerDefeated();

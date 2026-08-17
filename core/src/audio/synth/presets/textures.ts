@@ -3,9 +3,8 @@ import type { SynthParams } from '../types';
 /**
  * Genel amaçlı ses dokusu / atmosfer presetleri.
  *
- * Bu dosya stilden bağımsız zemin ve pad karakterleri sağlar.
- * `industrial-voices.ts` (endüstriyel) ve `pastoral-voices.ts` (doğal/sıcak)
- * bu tariflerin üzerine gain/pan/seed ile karıştırma yapar.
+ * Bu dosya stilden bağımsız zemin ve pad karakterleri sağlar; oyun tarafındaki
+ * ses paletleri bu tariflerin üzerine gain/pan/seed ile karıştırma yapabilir.
  */
 
 /** Yumuşak, sine-tabanlı orta-yüksek doku — rüzgâr / nefes. */
@@ -19,7 +18,7 @@ export function softWind(frequency = 400, duration = 3): SynthParams {
       attack: 1.2,
       hold: 0,
       decay: 0,
-      sustain: duration - 2.4,
+      sustain: Math.max(0, duration - 2.4),
       release: 1.2,
       sustainLevel: 1,
       curve: 'cosine',
@@ -49,7 +48,7 @@ export function warmPad(frequency = 220, duration = 2.5): SynthParams {
       attack: 0.6,
       hold: 0,
       decay: 0.3,
-      sustain: duration - 1.8,
+      sustain: Math.max(0, duration - 1.8),
       release: 1.0,
       sustainLevel: 0.95,
       curve: 'cosine',
@@ -76,7 +75,7 @@ export function machineHum(frequency = 110, duration = 2.5): SynthParams {
       attack: 0.8,
       hold: 0,
       decay: 0.2,
-      sustain: duration - 1.8,
+      sustain: Math.max(0, duration - 1.8),
       release: 1.0,
       sustainLevel: 0.95,
       curve: 'cosine',
@@ -101,7 +100,7 @@ export function staticField(frequency = 2200, duration = 3): SynthParams {
       attack: 1.5,
       hold: 0,
       decay: 0,
-      sustain: duration - 3.0,
+      sustain: Math.max(0, duration - 3.0),
       release: 1.5,
       sustainLevel: 1,
       curve: 'cosine',

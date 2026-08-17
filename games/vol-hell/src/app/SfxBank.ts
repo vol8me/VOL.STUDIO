@@ -38,6 +38,16 @@ export class SfxBank {
     enemyHit: { maxVoices: 4, minInterval: 0.04 },
     enemyDeath: { maxVoices: 3, minInterval: 0.05 },
     bulletBounce: { maxVoices: 3, minInterval: 0.05 },
+    fluxPickup: { maxVoices: 3, minInterval: 0.04 },
+    turretFire: { maxVoices: 4, minInterval: 0.08 },
+    telegraph: { maxVoices: 4, minInterval: 0.03 },
+    eliteSpawn: { maxVoices: 1, minInterval: 0.2 },
+    bossSpawn: { maxVoices: 1, minInterval: 0.2 },
+    bossEnrage: { maxVoices: 1, minInterval: 0.2 },
+    bossDown: { maxVoices: 1, minInterval: 0.2 },
+    waveStart: { maxVoices: 1, minInterval: 0.2 },
+    waveClear: { maxVoices: 1, minInterval: 0.2 },
+    levelUp: { maxVoices: 1, minInterval: 0.2 },
   };
 
   constructor(context: AudioContext, destination: AudioNode) {

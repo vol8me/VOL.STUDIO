@@ -74,7 +74,7 @@ pnpm --filter @volstudio/vol-hell generate:sounds
 ### 4. Oyun içinde çalma
 
 ```typescript
-this.audio.play(soundKeys.fire, { volume: 0.3 });
+gameAudio.playSfx('fire', { volume: 0.3 });
 ```
 
 ## Parametre Referansı
@@ -260,7 +260,8 @@ Presets.getPreset('laser', 880, 0.15);
 ## VOL.HELL SFX'leri
 
 VOL.HELL'in sesleri bu dosyadaki genel preset kütüphanesini DEĞİL,
-`core/scripts/industrial-voices.ts` paletini kullanır — müzikle aynı sözlük.
+`games/vol-hell/scripts/audio/palette/*.ts` altındaki "Dark Synthetic / Void"
+paletini kullanır — müzikle aynı sözlük.
 Gerekçe: SFX çıplak `sawtooth`/`triangle` + kısa ADSR ile üretildiğinde klasik
 konsol (chiptune) karakteri veriyor ve additive/FM ile üretilen müzikle
 tutarsız bir kimlik oluşturuyordu. Aynı FM/bandpass/gürültü yaklaşımı iki
@@ -268,7 +269,7 @@ tarafta da kullanılınca ateş sesi ile ambiyans aynı dünyaya ait duyuluyor.
 
 ### Yeni Ses Ekleme
 
-1. `core/scripts/generate-volhell-sounds.ts`'teki `specs` dizisine ekle:
+1. `games/vol-hell/scripts/audio/sfx/specs.ts`'teki `specs` dizisine ekle:
 
 ```typescript
 {
@@ -285,13 +286,13 @@ tarafta da kullanılınca ateş sesi ile ambiyans aynı dünyaya ait duyuluyor.
 }
 ```
 
-2. `src/config/sounds.ts`'te `soundAssets` ve `soundKeys` güncelle.
-3. `pnpm --filter @volstudio/<game> generate:sounds` çalıştır.
-4. Oyun kodunda `soundKeys.mySound` ile çal.
+2. `games/vol-hell/src/config/sounds.ts`'te `soundAssets` güncelle.
+3. `pnpm --filter @volstudio/vol-hell generate:sounds` çalıştır.
+4. Oyun kodunda `gameAudio.playSfx('mySound', { volume: 0.3 })` ile çal.
 5. Doğrula:
 
 ```bash
-pnpm audio:qa                 # click 0, clip 0 olmalı
+pnpm --filter @volstudio/vol-hell audio:qa  # click 0, clip 0 olmalı
 pnpm -r typecheck
 pnpm --filter @volstudio/<game> build
 pnpm --filter @volstudio/<game> test
@@ -500,8 +501,8 @@ Her ses değişikliği sonrası:
 
 ```bash
 pnpm -r typecheck
-pnpm --filter @volstudio/core test
 pnpm --filter @volstudio/vol-hell generate:sounds
+pnpm --filter @volstudio/vol-hell audio:qa
 pnpm --filter @volstudio/vol-hell build
 pnpm --filter @volstudio/vol-hell test
 ```

@@ -12,6 +12,8 @@ import {
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { TelegraphHandle, TelegraphManager } from '@/runtime/systems/TelegraphManager';
+import { gameAudio } from '@/app/services';
+import { sfxVolumes } from '@/config/audio';
 
 /** Boss'un saldırı paternleri — sırayla döner. */
 export type BossAttack = 'slam' | 'volley' | 'summon';
@@ -130,6 +132,9 @@ export class BossController {
     if (this.enemy.getHealthRatio() > bossConfig.enrageHealthRatio) return;
     this.enraged = true;
     this.deps.effects.play('bossSpawn', this.enemy.x, this.enemy.y);
+    if (gameAudio) {
+      void gameAudio.playSfx('bossEnrage', { volume: sfxVolumes.bossEnrage });
+    }
   }
 
   /**
@@ -180,6 +185,10 @@ export class BossController {
     const x = this.enemy.x;
     const y = this.enemy.y;
 
+    if (gameAudio) {
+      void gameAudio.playSfx('telegraph', { volume: sfxVolumes.telegraph });
+    }
+
     const handle = this.playTelegraph({
       durationMs: bossConfig.slam.telegraphMs,
       shape: 'circle',
@@ -206,6 +215,10 @@ export class BossController {
     const y = this.enemy.y;
     const player = this.deps.getPlayerPosition();
     const baseAngle = Math.atan2(player.y - y, player.x - x);
+
+    if (gameAudio) {
+      void gameAudio.playSfx('telegraph', { volume: sfxVolumes.telegraph });
+    }
 
     const { laneCount, laneSpreadRad, laneLengthPx, laneWidthPx } = bossConfig.volley;
     const angles: number[] = [];
@@ -252,6 +265,10 @@ export class BossController {
     const player = this.deps.getPlayerPosition();
     const baseAngle = Math.atan2(player.y - y, player.x - x);
     const { count, spreadRad, radiusPx, minionId } = bossConfig.summon;
+
+    if (gameAudio) {
+      void gameAudio.playSfx('telegraph', { volume: sfxVolumes.telegraph });
+    }
 
     const handle = this.playTelegraph({
       durationMs: bossConfig.summon.telegraphMs,

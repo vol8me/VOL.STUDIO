@@ -1,4 +1,5 @@
 import { Ability, type AbilityContext } from './types';
+import { sfxVolumes } from '@/config/audio';
 
 /** Nişan yönü yoksa sağa doğru ateşlenir. */
 const DEFAULT_AIM_X = 1;
@@ -31,6 +32,7 @@ export class MultiShotAbility extends Ability {
       length > 0 ? Math.atan2(context.aimY, context.aimX) : Math.atan2(0, DEFAULT_AIM_X);
 
     // Salvo tek bir "patlama" gibi okunsun: mermilerden önce namlu parlaması.
+    context.world.playSfx('multiShot', sfxVolumes.multiShot);
     context.effects.play(
       'multiShotCast',
       context.playerX,

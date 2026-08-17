@@ -9,6 +9,9 @@ import { ChainLightningStrike } from '@/runtime/entity/ChainLightningStrike';
 import { FireZone } from '@/runtime/entity/FireZone';
 import { Turret } from '@/runtime/entity/Turret';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
+import { gameAudio } from '@/app/services';
+import { sfxVolumes } from '@/config/audio';
+import type { SoundEvent } from '@/config/sounds';
 import { AbilityUpgrades } from './AbilityUpgrades';
 import { ChainLightningAbility } from './ChainLightningAbility';
 import { FireZoneAbility } from './FireZoneAbility';
@@ -160,6 +163,7 @@ export class AbilityRuntime implements AbilityWorld {
       ...params,
       damage: Math.max(0, params.damage + this.upgrades.get('turretDamage')),
     });
+    this.playSfx('turretDeploy', sfxVolumes.turretDeploy);
   }
 
   spawnFireZone(x: number, y: number, definition: AbilityDefinition): void {
@@ -175,6 +179,7 @@ export class AbilityRuntime implements AbilityWorld {
         ),
       }),
     );
+    this.playSfx('fireZone', sfxVolumes.fireZone);
   }
 
   spawnChainLightning(originX: number, originY: number, definition: AbilityDefinition): void {
@@ -192,10 +197,17 @@ export class AbilityRuntime implements AbilityWorld {
         this.upgrades.get('chainBounces'),
       ),
     );
+    this.playSfx('chainLightning', sfxVolumes.chainLightning);
   }
 
   fireBullet(x: number, y: number, dirX: number, dirY: number, damage: number): void {
     this.deps.bullets.spawnBullet(x, y, dirX, dirY, damage);
+  }
+
+  playSfx(event: SoundEvent, volume: number): void {
+    if (gameAudio) {
+      void gameAudio.playSfx(event, { volume });
+    }
   }
 
   destroy(): void {

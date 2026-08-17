@@ -14,7 +14,7 @@ import { StemLoader } from './loader';
 import { resolveStemGain } from './gain-resolver';
 
 /** Web Audio API tabanlı müzik motoru.
- *  Önceden üretilmiş WAV stem'leri senkron çalar, adaptive gain ve crossfade destekler. */
+ *  Önceden üretilmiş OGG/MP3 stem'leri senkron çalar, adaptive gain ve crossfade destekler. */
 export class MusicEngine {
   readonly context: AudioContext;
   readonly mixer: MusicMixer;

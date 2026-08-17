@@ -25,22 +25,50 @@ export type AudioConfig = typeof audioConfig;
  * Olay başına SFX kazancı (0-1). Sahne kodunda `playSfx(..., { volume: 0.45 })`
  * gibi literal yazılmaz — mix dengesi tek yerden ayarlanabilmeli.
  * Bu değerler `sfxVolume` slider'ıyla ayrıca ölçeklenir.
+ *
+ * Hiyerarşi: UI ~0.4-0.5, ateş ~0.55, hasar ~0.75, ölüm/boss ~0.85-0.9.
  */
 export const sfxVolumes: Record<SoundEvent, number> = {
-  menuBlip: 0.4,
-  back: 0.5,
+  // UI
+  menuBlip: 0.48,
+  back: 0.46,
   pause: 0.5,
   resume: 0.5,
-  restart: 0.5,
+  restart: 0.52,
+  deny: 0.45,
+  cardPick: 0.5,
+  cardBuy: 0.54,
+  reroll: 0.5,
+  lock: 0.52,
 
-  fire: 0.45,
-  dash: 0.65,
-  hurt: 0.85,
-  death: 0.9,
+  // Player
+  fire: 0.55,
+  dash: 0.6,
+  hurt: 0.75,
+  death: 0.88,
+  fluxPickup: 0.42,
 
+  // Combat
   enemyHit: 0.6,
-  enemyDeath: 0.7,
+  enemyDeath: 0.68,
   bulletBounce: 0.45,
+  eliteSpawn: 0.72,
+  bossSpawn: 0.85,
+  bossEnrage: 0.8,
+  bossDown: 0.88,
+  telegraph: 0.4,
+
+  // Ability
+  chainLightning: 0.66,
+  fireZone: 0.62,
+  multiShot: 0.6,
+  turretDeploy: 0.58,
+  turretFire: 0.42,
+
+  // Progress
+  waveStart: 0.55,
+  waveClear: 0.55,
+  levelUp: 0.6,
 };
 
 /** SFX çaldığında müzik ve/veya ambiyansı geçici kısan sidechain ducking profilleri.
@@ -61,6 +89,22 @@ export const sfxDucking: Partial<
   enemyDeath: {
     music: { target: 0.8, attack: 0.01, hold: 0.08, release: 0.2 },
     ambient: { target: 0.7, attack: 0.01, hold: 0.12, release: 0.25 },
+  },
+  bossSpawn: {
+    music: { target: 0.5, attack: 0.05, hold: 1.2, release: 0.8 },
+    ambient: { target: 0.35, attack: 0.05, hold: 1.5, release: 0.8 },
+  },
+  bossDown: {
+    music: { target: 0.35, attack: 0.05, hold: 1.5, release: 1.0 },
+    ambient: { target: 0.2, attack: 0.05, hold: 1.8, release: 1.0 },
+  },
+  chainLightning: {
+    music: { target: 0.75, attack: 0.01, hold: 0.15, release: 0.25 },
+    ambient: { target: 0.6, attack: 0.01, hold: 0.2, release: 0.3 },
+  },
+  fireZone: {
+    music: { target: 0.8, attack: 0.02, hold: 0.3, release: 0.35 },
+    ambient: { target: 0.65, attack: 0.02, hold: 0.4, release: 0.35 },
   },
   restart: {
     music: { target: 0.75, attack: 0.02, hold: 0.15, release: 0.3 },

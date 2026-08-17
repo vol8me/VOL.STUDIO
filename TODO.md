@@ -5,12 +5,12 @@ kaydıdır**: her bölüm tamamlanmış bir turu ve o turun kalite kapısı sonu
 belgeler. En güncel durum en alttaki bölümdedir; aşağıdaki tablo yalnızca
 son turun özetidir.
 
-## Son durum (2026-08-18)
+## Son durum (2026-08-17)
 
 | Kapı                                    | Durum | Not                                                                  |
 | --------------------------------------- | ----- | -------------------------------------------------------------------- |
 | `pnpm -r typecheck`                     | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                   |
-| `pnpm -r --if-present test:coverage`    | ✓     | 1234 test (core 829, vol-hell 374, tauri-v2 26, design 24, vol-ui 5) |
+| `pnpm -r --if-present test:coverage`    | ✓     | 1252 test (core 822, vol-hell 375, tauri-v2 26, design 24, vol-ui 5) |
 | `pnpm lint`                             | ✓     | 0 hata, 0 uyarı                                                      |
 | `pnpm format:check`                     | ✓     |                                                                      |
 | `pnpm lint:css`                         | ✓     |                                                                      |
@@ -18,6 +18,21 @@ son turun özetidir.
 | `pnpm --filter @volstudio/vol-ui build` | ✓     | showcase prod build                                                  |
 | `cargo check/fmt/clippy`                | ✓     |                                                                      |
 | CI                                      | ✓     | `.github/workflows/ci.yml` — web + rust işleri                       |
+
+### Dükkan kilit persistence hatası
+
+- `CardScreens.openIntermission()` artık `lockedOfferIds`'i wave geçişinde sıfırlamıyor; kilitli teklif sonraki wave'ye taşınıyor.
+- `openShop()` baştan teklif çekmek yerine `refreshShopOffers()` ile kilitli kartları koruyarak açılıyor.
+- `refreshShopOffers()` wave/level-up sonrası sahip olunan yetenek kartlarının kilitli olarak kalmasını engelliyor.
+- `tests/runtime/ui/cardScreens.test.ts`'e "kilitli teklif sonraki wave'de korunur" regresyon testi eklendi.
+
+### Audio sistemi yenilemesi
+
+- Eski müzik ve SFX asset'leri kaldırıldı; "Dark Synthetic / Void" temalı yeni üretim altyapısı ve asset'leri eklendi.
+- Yeni track'ler: `hollow-signal`, `event-horizon`, `surge-protocol`, `sovereign`, `terminal-echo`, `first-light`, `null-drift`, `deep-current`.
+- Yeni SFX olayları `sounds.ts`/`audio.ts`'te tanımlandı; `GameAudioDirector`, `SfxBank`, `GameScene` ve ilgili entity/manager'larla bağlandı.
+- `core/docs/music-engine.md`, `core/docs/sound-synth.md` ve `games/vol-hell/README.md` yeni mimariye göre güncellendi.
+- Kalite kapıları ve `audio:qa` ölçümü 0 click, 0 clip ile tamamlandı.
 
 ---
 

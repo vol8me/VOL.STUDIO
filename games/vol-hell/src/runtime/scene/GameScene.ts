@@ -20,7 +20,7 @@ import { uiConfig } from '@/config/ui';
 import { gameConfig } from '@/config/game';
 import { physicsConfig } from '@/config/physics';
 import { sfxVolumes } from '@/config';
-import { getMaxEnemyRadius } from '@/config/enemies/catalog';
+import { BOSS_ENEMY_ID, getMaxEnemyRadius } from '@/config/enemies/catalog';
 import { gameAudio, audioSettings, gameStats } from '@/app/services';
 import type { RunResult } from '@/app/GameStats';
 import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
@@ -168,13 +168,25 @@ export class GameScene extends BaseScene {
         damagePlayer: (amount) => this.applyBossDamage(amount),
         getPlayerPosition: () => this.player.getPosition(),
         getDifficulty: () => this.difficulty,
+        onFluxCollected: () => {
+          void gameAudio.playSfx('fluxPickup', { volume: sfxVolumes.fluxPickup });
+        },
       },
       {
         // Seviye atlaması dövüşü kesmez: hak biriktirilir, dalga sonunda
         // sırayla sunulur (Brotato akışı).
-        onLevelUp: (level) => this.cardScreens.queueLevelUp(level),
-        onShopOpen: (wave) => this.cardScreens.openIntermission(wave),
-        onWaveStart: (wave) => this.hud.announceWave(wave),
+        onLevelUp: (level) => {
+          void gameAudio.playSfx('levelUp', { volume: sfxVolumes.levelUp });
+          this.cardScreens.queueLevelUp(level);
+        },
+        onShopOpen: (wave) => {
+          void gameAudio.playSfx('waveClear', { volume: sfxVolumes.waveClear });
+          this.cardScreens.openIntermission(wave);
+        },
+        onWaveStart: (wave) => {
+          void gameAudio.playSfx('waveStart', { volume: sfxVolumes.waveStart });
+          this.hud.announceWave(wave);
+        },
         onRunComplete: () => void this.onRunComplete(),
       },
     );
@@ -274,6 +286,8 @@ export class GameScene extends BaseScene {
     this.diagnostics?.endStage('death');
 
     this.reportDiagnostics();
+    const blocker = this.run.getBlocker();
+    this.audio.setBossActive(blocker?.definition.id === BOSS_ENEMY_ID);
     this.audio.update(dt, this.enemyManager.getEnemies().length, !this.isDeathInProgress);
 
     this.diagnostics?.endFrame();
@@ -290,8 +304,14 @@ export class GameScene extends BaseScene {
     this.cardScreens = new CardScreens(this.ui.element, this.cards, this.run.economy, {
       onOpen: () => this.pauseForScreen(),
       onClose: () => this.resumeAfterScreen(),
-      onCardTaken: () =>
-        this.effects.play('cardPicked', this.player.getX(), this.player.getPosition().y),
+      onCardTaken: (source) => {
+        this.effects.play('cardPicked', this.player.getX(), this.player.getPosition().y);
+        const sound = source === 'shop' ? 'cardBuy' : 'cardPick';
+        void gameAudio.playSfx(sound, { volume: sfxVolumes[sound] });
+      },
+      onReroll: () => void gameAudio.playSfx('reroll', { volume: sfxVolumes.reroll }),
+      onLockToggle: () => void gameAudio.playSfx('lock', { volume: sfxVolumes.lock }),
+      onDeny: () => void gameAudio.playSfx('deny', { volume: sfxVolumes.deny }),
     });
 
     // Pause ekranı — UIRoot içine mount et, böylece box-sizing ve temel UI stilleri uygulanır
@@ -464,6 +484,10 @@ export class GameScene extends BaseScene {
     this.kills += 1;
     this.score += Math.round(enemy.scoreValue);
     this.run.onEnemyKilled(enemy);
+    void gameAudio.playSfx('enemyDeath', {
+      volume: sfxVolumes.enemyDeath,
+      stopEvents: ['enemyHit'],
+    });
   }
 
   // --- Duraklatma / ekranlar ------------------------------------------------
@@ -575,6 +599,8 @@ export class GameScene extends BaseScene {
       }
       if (outcome === 'defeat') {
         this.audio.playDeath();
+      } else if (outcome === 'victory') {
+        this.audio.playVictory();
       }
 
       const result = await this.submitRunSafely();

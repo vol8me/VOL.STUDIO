@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import type { Random, StatBlock } from '@volstudio/core';
 import type { AbilityDefinition } from '@/config/abilities';
+import type { SoundEvent } from '@/config/sounds';
 import { MIN_ABILITY_COOLDOWN_MS } from '@/config/abilities';
 import type { Border } from '@/runtime/entity/Border';
 import type { Enemy } from '@/runtime/entity/Enemy';
@@ -30,6 +31,12 @@ export interface AbilityWorld {
   spawnChainLightning(originX: number, originY: number, definition: AbilityDefinition): void;
   /** Silahın ateş cooldown'unu atlayarak mermi doğurur (çoklu mermi). */
   fireBullet(x: number, y: number, dirX: number, dirY: number, damage: number): void;
+  /**
+   * Ability aktivasyonuna ses efekti ekler. Servis henüz kurulmamışsa sessizce
+   * geçer; bu sayede unit test'ler gameAudio mock'una ihtiyaç duymadan
+   * ability'leri doğurabilir.
+   */
+  playSfx(event: SoundEvent, volume: number): void;
 }
 
 /** Ability'nin aktivasyon/güncelleme anında gördüğü dünya durumu. */

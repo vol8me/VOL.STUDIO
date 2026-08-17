@@ -3,6 +3,8 @@ import { Diagnostics } from '@volstudio/core';
 import type { TurretParams } from '@/config/abilities';
 import { turretVisualConfig } from '@/config/abilities';
 import { RENDER_DEPTH } from '@/config/layers';
+import { sfxVolumes } from '@/config/audio';
+import { gameAudio } from '@/app/services';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import { EntityHealthBar } from './EntityHealthBar';
 import type { Enemy } from './Enemy';
@@ -172,6 +174,9 @@ export class Turret {
       new TurretShot(this.scene, muzzleX, muzzleY, target, this.params.damage, this.effects),
     );
     this.effects.play('turretShot', muzzleX, muzzleY, (this.aimAngle * 180) / Math.PI);
+    if (gameAudio) {
+      void gameAudio.playSfx('turretFire', { volume: sfxVolumes.turretFire });
+    }
   }
 
   private updateShots(deltaMs: number, enemies: readonly Enemy[]): void {

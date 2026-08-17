@@ -26,6 +26,8 @@ export interface RunDirectorDeps {
   damagePlayer: (amount: number) => void;
   getPlayerPosition: () => Vector2;
   getDifficulty: () => DifficultyState;
+  /** Flux parçası toplandığında — ses vb. geri bildirim. */
+  onFluxCollected?: () => void;
 }
 
 export interface RunDirectorCallbacks {
@@ -68,7 +70,10 @@ export class RunDirector {
     });
 
     this.pickups = new FluxPickupManager(deps.scene, deps.border, deps.effects, deps.random, {
-      onCollected: (amount) => this.economy.addFlux(amount),
+      onCollected: (amount) => {
+        this.economy.addFlux(amount);
+        deps.onFluxCollected?.();
+      },
     });
 
     this.specials = new SpecialEnemyDirector(

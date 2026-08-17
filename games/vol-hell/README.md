@@ -40,8 +40,9 @@ Oynanış sayıları `src/config/` altında veri olarak durur; denge değişikli
 | `pnpm --filter @volstudio/vol-hell test`           | Test                           |
 | `pnpm --filter @volstudio/vol-hell test:coverage`  | Test + kapsam (CI bunu koşar)  |
 | `pnpm --filter @volstudio/vol-hell generate:audio` | Ses ve müzik asset'lerini üret |
+| `pnpm --filter @volstudio/vol-hell audio:qa`       | Üretilen ses asset'lerini ölç  |
 
-Ses asset'leri repoda tutulmaz; `generate:audio` ile üretilir (bkz. [sound-synth](../../core/docs/sound-synth.md), [music-engine](../../core/docs/music-engine.md)).
+Shipped ses asset'leri (`public/assets/audio/**/*.ogg`) repoda tutulur; ses tasarımı değiştiğinde `pnpm --filter @volstudio/vol-hell generate:audio` ile yenilenir. Ara formatlar (WAV, MP3) repoda tutulmaz (bkz. [sound-synth](../../core/docs/sound-synth.md), [music-engine](../../core/docs/music-engine.md)).
 
 ## UI
 

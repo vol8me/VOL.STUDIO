@@ -21,8 +21,14 @@ export interface CardScreensCallbacks {
   onOpen: () => void;
   /** Tüm ekranlar kapandı — sahne devam eder. */
   onClose: () => void;
-  /** Kart edinildi — efekt/ses için. */
-  onCardTaken?: (card: CardDefinition) => void;
+  /** Kart edinildi — efekt/ses için. `source` level-up mu dükkandan mı alındığını belirtir. */
+  onCardTaken?: (source: 'levelUp' | 'shop') => void;
+  /** Dükkanda teklifleri yenileme — ses için. */
+  onReroll?: () => void;
+  /** Dükkanda bir teklifi kilitleme/kilidini açma — ses için. */
+  onLockToggle?: () => void;
+  /** Satın alma / ekipman takma reddedildiğinde — ses için. */
+  onDeny?: () => void;
 }
 
 /** Dükkan teklif sayısı. */
@@ -135,7 +141,7 @@ export class CardScreens {
     this.shopWave = wave;
     this.purchased = new Set();
     this.purchasedInstanceIds = new Set();
-    this.lockedOfferIds = new Set();
+    // Kilitli teklifler wave'ler arasında korunur; burada SIFIRLANMAZ.
     this.rerollCost = economyConfig.reroll.baseCost;
     this.intermissionActive = true;
     this.container.hidden = false;
@@ -197,9 +203,9 @@ export class CardScreens {
   }
 
   private openShop(): void {
-    // Teklif dükkan AÇILIRKEN çekilir: seviye ekranında alınan yetenek
-    // kartının aynısı vitrinde tekrar görünmesin.
-    this.shopOffer = this.drawShopOffers(SHOP_SIZE);
+    // Teklifler wave'ler arasında kilitli kartları koruyarak tazelenir.
+    // İlk açılışta shopOffer boş olduğu için SHOP_SIZE kadar yeni kart çekilir.
+    this.refreshShopOffers();
     // hideImmediately() — bkz. advanceIntermission()'daki gerekçe, aynı katman içi takas.
     this.levelUp.hideImmediately();
     this.shop.present(this.buildShopState());
@@ -228,7 +234,7 @@ export class CardScreens {
 
     const owned = this.cards.acquire(card);
     this.autoEquip(owned.instanceId, card);
-    this.callbacks.onCardTaken?.(card);
+    this.callbacks.onCardTaken?.('levelUp');
     // Sıradaki seviye ya da dükkan — ekran kapanmaz, akış devam eder.
     this.advanceIntermission();
   }
@@ -238,14 +244,17 @@ export class CardScreens {
     if (!card || this.purchased.has(cardId)) return;
 
     const owned = this.cards.purchase(card);
-    if (!owned) return;
+    if (!owned) {
+      this.callbacks.onDeny?.();
+      return;
+    }
 
     this.purchased.add(cardId);
     this.purchasedInstanceIds.add(owned.instanceId);
     // Satın alınan kart artık reroll'da korunacak bir şey değil.
     this.lockedOfferIds.delete(cardId);
     this.autoEquip(owned.instanceId, card);
-    this.callbacks.onCardTaken?.(card);
+    this.callbacks.onCardTaken?.('shop');
     this.shop.render(this.buildShopState());
     this.refreshLoadout();
   }
@@ -268,11 +277,13 @@ export class CardScreens {
   private handleReroll(): void {
     if (!this.economy.spendFlux(this.rerollCost)) {
       this.toasts.show(i18next.t('volhell:cards.ui.rerollTooExpensive'), { variant: 'warning' });
+      this.callbacks.onDeny?.();
       return;
     }
 
     this.rerollCost += economyConfig.reroll.costStep;
     this.refreshShopOffers();
+    this.callbacks.onReroll?.();
     this.shop.render(this.buildShopState());
   }
 
@@ -282,6 +293,7 @@ export class CardScreens {
     } else {
       this.lockedOfferIds.add(cardId);
     }
+    this.callbacks.onLockToggle?.();
     this.shop.render(this.buildShopState());
   }
 
@@ -296,6 +308,7 @@ export class CardScreens {
     const free = ABILITY_SLOTS.find((slot) => this.cards.getEquipped(slot) === null);
     if (!free) {
       this.toasts.show(i18next.t('volhell:cards.ui.noEmptySlot'), { variant: 'warning' });
+      this.callbacks.onDeny?.();
       return;
     }
 
@@ -325,25 +338,65 @@ export class CardScreens {
     }
 
     this.toasts.show(i18next.t('volhell:cards.ui.noEmptySlot'), { variant: 'warning' });
+    this.callbacks.onDeny?.();
   }
 
   private refreshShopOffers(): void {
+    // Kilitli tekliflerin hâlâ geçerli olup olmadığını kontrol et: aradan
+    // geçen wave/level-up sonrası sahip olunan yetenek tekrar vitrinde
+    // kalmamalı (drawOffer zaten ability çiftlemesini engeller).
+    const ownedAbilityIds = this.getOwnedAbilityIds();
     const keep = this.shopOffer.filter(
-      (card) => this.lockedOfferIds.has(card.id) && !this.purchased.has(card.id),
+      (card) =>
+        this.lockedOfferIds.has(card.id) &&
+        !this.purchased.has(card.id) &&
+        !ownedAbilityIds.has(card.id),
     );
+
+    // Artık geçersiz kilitleri temizle (sonraki render'da yanlış görünmesin).
+    for (const card of this.shopOffer) {
+      if (this.lockedOfferIds.has(card.id) && !keep.includes(card)) {
+        this.lockedOfferIds.delete(card.id);
+      }
+    }
+
     const needed = Math.max(0, SHOP_SIZE - keep.length);
     const fresh = this.drawShopOffers(needed, new Set(keep.map((card) => card.id)));
     const freshQueue = [...fresh];
 
     // Kilitli teklifler aynı slotta kalmalı; yalnızca açık slotlara yeni
     // kart çekilir. Böylece ikinci slot kilitliyken birinci slot değişmez.
+    // Havuz tükenirse `undefined` girmemek için mevcut teklif veya null
+    // dönülür, sonradan filtrelenir.
     this.shopOffer = Array.from({ length: SHOP_SIZE }, (_, i) => {
       const current = this.shopOffer[i];
-      if (current && this.lockedOfferIds.has(current.id) && !this.purchased.has(current.id)) {
+      if (
+        current &&
+        this.lockedOfferIds.has(current.id) &&
+        !this.purchased.has(current.id) &&
+        !ownedAbilityIds.has(current.id)
+      ) {
         return current;
       }
-      return freshQueue.shift()!;
-    });
+
+      const next = freshQueue.shift();
+      if (next) return next;
+
+      if (current && !this.purchased.has(current.id) && !ownedAbilityIds.has(current.id)) {
+        return current;
+      }
+      return null;
+    }).filter((card): card is CardDefinition => card !== null);
+  }
+
+  /** Sahip olunan yetenek kartlarının id'leri — drawOffer ile aynı kuralla. */
+  private getOwnedAbilityIds(): Set<string> {
+    return new Set(
+      this.cards
+        .getOwned()
+        .filter((entry) => entry.definition.type === 'ability')
+        .map((entry) => entry.definition.id),
+    );
   }
 
   private drawShopOffers(count: number, extraExclude?: ReadonlySet<string>): CardDefinition[] {

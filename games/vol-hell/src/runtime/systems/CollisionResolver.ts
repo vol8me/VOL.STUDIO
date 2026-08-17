@@ -81,15 +81,9 @@ export class CollisionResolver {
           const killed = enemy.takeDamage(bullet.damage);
           this.bulletsToRemoveBuf.push(bullet);
 
-          if (killed) {
-            // Killing blow — hit tail'ini kes, sadece death çalsın.
-            // Skor/Spark/Flux burada DEĞİL, `Enemy.onDeath` üzerinden verilir:
-            // kule/zincir/ateş ölümleri de aynı ödülü almalı.
-            void gameAudio.playSfx('enemyDeath', {
-              volume: sfxVolumes.enemyDeath,
-              stopEvents: ['enemyHit'],
-            });
-          } else {
+          // Ölüm anında hit çalmaz; death sesi GameScene.onEnemyKilled'da
+          // tüm kaynaklar için (mermi/kule/zincir/ateş) tek yerden verilir.
+          if (!killed) {
             void gameAudio.playSfx('enemyHit', { volume: sfxVolumes.enemyHit });
           }
           break;

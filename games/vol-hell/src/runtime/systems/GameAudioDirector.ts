@@ -1,20 +1,37 @@
 import type Phaser from 'phaser';
 import type { Random } from '@volstudio/core';
-import { ambientTrackKeys, deathTrackKeys, musicConfig, musicTracks, sfxVolumes } from '@/config';
+import {
+  ambientTrackKeys,
+  bossTrackId,
+  combatTrackId,
+  deathTrackKeys,
+  musicConfig,
+  musicTracks,
+  sfxVolumes,
+  victoryTrackId,
+} from '@/config';
 import { gameAudio } from '@/app/services';
 
 /**
  * Oyun sahnesinin ses yönetimi — ambiyans yükleme, sakin/gergin geçişi,
- * ölüm müziği ve sahne kapanışında susturma.
+ * savaş/boss müziği, ölüm ve zafer müziği, sahne kapanışında susturma.
  *
  * Sahne dosyasından ayrıldı: müzik durum makinesi oynanışla ilgisiz ama
  * `GameScene.update()` içinde yer kaplıyor ve her yeni oynanış sistemi
  * eklendiğinde sahneyi daha da okunaksız yapıyordu.
  */
 export class GameAudioDirector {
-  private state: 'calm' | 'tense' = 'calm';
-  private stateTimerMs = 0;
+  /** Ambiyans durumu. */
+  private ambientState: 'calm' | 'tense' = 'calm';
+  /** Müzik durumu. */
+  private musicState: 'ambient' | 'combat' | 'boss' | 'death' | 'victory' = 'ambient';
+  private ambientTimerMs = 0;
+  private combatTimerMs = 0;
   private ambientLoaded = false;
+  private musicLoaded = false;
+  private bossActive = false;
+  /** Ölüm/zafer terminal müziği çaldıktan sonra update'i dondur. */
+  private terminal = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -22,70 +39,67 @@ export class GameAudioDirector {
   ) {}
 
   /**
-   * Ölüm/ambiyans parçalarını arka planda yükler ve hazır olunca sakin
-   * ambiyansı başlatır. Sahne bu arada kapanırsa ses başlatılmaz.
+   * Oyun içi parçaları arka planda yükler ve sakin ambiyansı başlatır.
+   * Sahne bu arada kapanırsa ses başlatılmaz.
    */
   start(): void {
-    this.state = 'calm';
-    this.stateTimerMs = 0;
+    this.ambientState = 'calm';
+    this.musicState = 'ambient';
+    this.ambientTimerMs = 0;
+    this.combatTimerMs = 0;
     this.ambientLoaded = false;
+    this.musicLoaded = false;
+    this.bossActive = false;
+    this.terminal = false;
 
-    for (const key of deathTrackKeys) {
-      void gameAudio.loadMusic(musicTracks[key]);
-    }
-
-    void Promise.all(ambientTrackKeys.map((key) => gameAudio.loadAmbient(musicTracks[key])))
+    void Promise.all([
+      ...deathTrackKeys.map((key) => gameAudio.loadMusic(musicTracks[key])),
+      ...ambientTrackKeys.map((key) => gameAudio.loadAmbient(musicTracks[key])),
+      gameAudio.loadMusic(musicTracks[combatTrackId]),
+      gameAudio.loadMusic(musicTracks[bossTrackId]),
+      gameAudio.loadMusic(musicTracks[victoryTrackId]),
+    ])
       .then(() => {
         // Oyuna hızlıca restart/MainMenu dönüşünde arka plan sesi çalmaya başlamasın.
         if (!this.scene.scene.isActive(this.scene.scene.key)) return;
         this.ambientLoaded = true;
+        this.musicLoaded = true;
         gameAudio.stopMusic(musicConfig.ambient.menuStopFadeSec);
         void gameAudio.playAmbient(musicConfig.ambient.calmTrackId, {
           fadeIn: musicConfig.ambient.fadeInSec,
         });
       })
       .catch((error: unknown) => {
-        // Ambiyans yüklenemezse oyun sessiz devam eder; sahne durmaz.
-        console.warn('[GameAudioDirector] Ambiyans yüklenemedi:', error);
+        console.warn('[GameAudioDirector] Ambiyans/müzik yüklenemedi:', error);
       });
 
     void gameAudio.loadAllSfx();
   }
 
+  /** Boss oyunda mı? `true` girildiğinde boss müziğine geçilir. */
+  setBossActive(active: boolean): void {
+    this.bossActive = active;
+  }
+
   /**
-   * Sahadaki düşman sayısına göre ambiyansı sakin/gergin arasında geçirir.
+   * Sahadaki düşman sayısına göre ambiyansı sakin/gergin arasında geçirir
+   * ve yoğunluğa göre savaş müziğini devreye sokar/çeker.
    * Tehlikeye hızlı, sakinliğe temkinli geçilir — eşikler config'te.
    */
   update(deltaMs: number, enemyCount: number, isPlaying: boolean): void {
-    if (!isPlaying || !this.ambientLoaded) return;
+    if (!isPlaying || this.terminal) return;
+    if (!this.ambientLoaded) return;
 
-    const desired: 'calm' | 'tense' =
-      enemyCount >= musicConfig.ambient.tenseEnemyThreshold ? 'tense' : 'calm';
-
-    if (desired === this.state) {
-      this.stateTimerMs = 0;
-      return;
-    }
-
-    this.stateTimerMs += deltaMs;
-    const thresholdMs =
-      desired === 'calm' ? musicConfig.ambient.calmHoldMs : musicConfig.ambient.tenseHoldMs;
-    if (this.stateTimerMs < thresholdMs) return;
-
-    this.stateTimerMs = 0;
-    this.state = desired;
-    const trackId =
-      desired === 'tense' ? musicConfig.ambient.tenseTrackId : musicConfig.ambient.calmTrackId;
-    void gameAudio.playAmbient(trackId, {
-      crossfade: true,
-      fadeIn: musicConfig.ambient.fadeInSec,
-    });
+    this.updateAmbient(deltaMs, enemyCount);
+    this.updateMusic(deltaMs, enemyCount);
   }
 
-  /** Ölüm anı — ambiyans susar, ölüm parçası ve ölüm sesi çalar. */
+  /** Ölüm anı — ambiyans ve müzik susar, ölüm parçası ve ölüm sesi çalar. */
   playDeath(): void {
-    gameAudio.stopAmbient(musicConfig.ambient.deathStopFadeSec);
-    // Parça seçimi koşu PRNG'siyle: aynı seed aynı ölüm müziğini verir.
+    this.terminal = true;
+    gameAudio.stopAmbient(musicConfig.ambient.terminalStopFadeSec);
+    gameAudio.stopMusic(musicConfig.ambient.terminalStopFadeSec);
+
     const deathKey = deathTrackKeys[Math.floor(this.random.next() * deathTrackKeys.length)];
     void gameAudio.playMusic(musicTracks[deathKey].id, { fadeIn: musicConfig.death.fadeInSec });
     void gameAudio.playSfx('death', {
@@ -94,10 +108,91 @@ export class GameAudioDirector {
     });
   }
 
+  /** Koşu zaferi — ambiyans ve müzik susar, zafer parçası çalar. */
+  playVictory(): void {
+    this.terminal = true;
+    gameAudio.stopAmbient(musicConfig.ambient.terminalStopFadeSec);
+    gameAudio.stopMusic(musicConfig.ambient.terminalStopFadeSec);
+    void gameAudio.playMusic(victoryTrackId, { fadeIn: musicConfig.victory.fadeInSec });
+  }
+
   /** Sahne kapanışı — tüm ses kanallarını susturur. */
   stopAll(): void {
     gameAudio.stopAllSfx();
     gameAudio.stopMusic(1);
     gameAudio.stopAmbient(1);
+  }
+
+  private updateAmbient(deltaMs: number, enemyCount: number): void {
+    const desired: 'calm' | 'tense' =
+      enemyCount >= musicConfig.ambient.tenseEnemyThreshold ? 'tense' : 'calm';
+
+    if (desired === this.ambientState) {
+      this.ambientTimerMs = 0;
+    } else {
+      this.ambientTimerMs += deltaMs;
+      const thresholdMs =
+        desired === 'calm' ? musicConfig.ambient.calmHoldMs : musicConfig.ambient.tenseHoldMs;
+      if (this.ambientTimerMs >= thresholdMs) {
+        this.ambientTimerMs = 0;
+        this.ambientState = desired;
+        const trackId =
+          desired === 'tense' ? musicConfig.ambient.tenseTrackId : musicConfig.ambient.calmTrackId;
+        void gameAudio.playAmbient(trackId, {
+          crossfade: true,
+          fadeIn: musicConfig.ambient.fadeInSec,
+        });
+      }
+    }
+  }
+
+  private updateMusic(deltaMs: number, enemyCount: number): void {
+    if (this.bossActive) {
+      if (this.musicState !== 'boss') {
+        this.musicState = 'boss';
+        this.combatTimerMs = 0;
+        void gameAudio.playMusic(bossTrackId, {
+          crossfade: true,
+          fadeIn: musicConfig.boss.fadeInSec,
+        });
+      }
+      return;
+    }
+
+    // Boss bittiğinde savaş/ambiyansa geri dön.
+    if (this.musicState === 'boss') {
+      this.musicState = 'ambient';
+      this.combatTimerMs = 0;
+      gameAudio.stopMusic(musicConfig.boss.fadeOutSec);
+    }
+
+    const desiredCombat = enemyCount >= musicConfig.combat.enemyThreshold;
+
+    if (desiredCombat) {
+      if (this.musicState === 'combat') {
+        this.combatTimerMs = 0;
+      } else {
+        this.combatTimerMs += deltaMs;
+        if (this.combatTimerMs >= musicConfig.combat.holdMs) {
+          this.musicState = 'combat';
+          this.combatTimerMs = 0;
+          void gameAudio.playMusic(combatTrackId, {
+            crossfade: true,
+            fadeIn: musicConfig.combat.fadeInSec,
+          });
+        }
+      }
+    } else {
+      if (this.musicState !== 'combat') {
+        this.combatTimerMs = 0;
+      } else {
+        this.combatTimerMs += deltaMs;
+        if (this.combatTimerMs >= musicConfig.combat.releaseHoldMs) {
+          this.musicState = 'ambient';
+          this.combatTimerMs = 0;
+          gameAudio.stopMusic(musicConfig.combat.fadeOutSec);
+        }
+      }
+    }
   }
 }
