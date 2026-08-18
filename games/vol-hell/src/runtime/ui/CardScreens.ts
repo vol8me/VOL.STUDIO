@@ -284,7 +284,8 @@ export class CardScreens {
     this.rerollCost += economyConfig.reroll.costStep;
     this.refreshShopOffers();
     this.callbacks.onReroll?.();
-    this.shop.render(this.buildShopState());
+    // Panel reroll'u tahmin etmez; niyet açıkça bildirilir.
+    this.shop.render(this.buildShopState('reroll'));
   }
 
   private handleToggleLock(cardId: string): void {
@@ -364,29 +365,41 @@ export class CardScreens {
     const fresh = this.drawShopOffers(needed, new Set(keep.map((card) => card.id)));
     const freshQueue = [...fresh];
 
-    // Kilitli teklifler aynı slotta kalmalı; yalnızca açık slotlara yeni
-    // kart çekilir. Böylece ikinci slot kilitliyken birinci slot değişmez.
-    // Havuz tükenirse `undefined` girmemek için mevcut teklif veya null
-    // dönülür, sonradan filtrelenir.
-    this.shopOffer = Array.from({ length: SHOP_SIZE }, (_, i) => {
+    // Kilitli teklifler aynı slotta kalmalı; yalnızca açık slotlara yeni kart
+    // çekilir. Böylece ikinci slot kilitliyken birinci slot değişmez.
+    //
+    // Havuz istenen sayıyı karşılayamazsa slot BOŞ bırakılır. Önceki hâl o
+    // durumda "o slottaki eski kartı" geri koyuyordu; eski kart aynı turda
+    // başka bir slota çekilmişse teklif listesinde AYNI kart iki kez yer
+    // alıyordu (ör. havuz 3 kart verebilirken 4 istenince `B, C, D, D`).
+    // `ShopPicker` teklifleri id'ye göre Map'te tuttuğu için iki slot tek
+    // karta çöküyor, kart sayısı sessizce azalıyordu. Az sayıda teklif
+    // göstermek, aynı kartı iki kez göstermekten doğrudur.
+    const used = new Set<string>();
+    const nextOffers: CardDefinition[] = [];
+
+    for (let i = 0; i < SHOP_SIZE; i++) {
       const current = this.shopOffer[i];
-      if (
-        current &&
-        this.lockedOfferIds.has(current.id) &&
+      const currentUsable =
+        current !== undefined &&
         !this.purchased.has(current.id) &&
-        !ownedAbilityIds.has(current.id)
-      ) {
-        return current;
+        !ownedAbilityIds.has(current.id) &&
+        !used.has(current.id);
+
+      if (currentUsable && this.lockedOfferIds.has(current.id)) {
+        used.add(current.id);
+        nextOffers.push(current);
+        continue;
       }
 
-      const next = freshQueue.shift();
-      if (next) return next;
-
-      if (current && !this.purchased.has(current.id) && !ownedAbilityIds.has(current.id)) {
-        return current;
+      const drawn = freshQueue.shift();
+      if (drawn !== undefined && !used.has(drawn.id)) {
+        used.add(drawn.id);
+        nextOffers.push(drawn);
       }
-      return null;
-    }).filter((card): card is CardDefinition => card !== null);
+    }
+
+    this.shopOffer = nextOffers;
   }
 
   /** Sahip olunan yetenek kartlarının id'leri — drawOffer ile aynı kuralla. */
@@ -419,11 +432,12 @@ export class CardScreens {
     });
   }
 
-  private buildShopState(): ShopPickerState {
+  private buildShopState(transition?: ShopPickerState['transition']): ShopPickerState {
     const flux = this.economy.getFlux();
     const owned = this.cards.getOwned();
 
     return {
+      transition,
       offers: this.shopOffer.map((card) => ({
         card: toCardTileData(card, { showPrice: true, showType: true }),
         purchased: this.purchased.has(card.id),

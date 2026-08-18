@@ -269,11 +269,30 @@ function buildShopCard(
     const fresh = pickRandom(pool, needed);
     const freshQueue = [...fresh];
 
-    currentOfferIds = Array.from({ length: SHOP_SIZE }, (_, i) => {
+    // Havuz istenen sayıyı karşılayamazsa slot BOŞ bırakılır. Önceki fallback
+    // zinciri (`?? current ?? fresh[0] ?? 'cardTurret'`) aynı kartı birden
+    // fazla slota koyabiliyordu; `ShopPicker` teklifleri id'ye göre Map'te
+    // tuttuğu için iki slot tek karta çöküyor ve teklif sayısı sessizce
+    // azalıyordu. Ayrıca son çare `'cardTurret'` satın alınmış olsa bile
+    // vitrine girebiliyordu.
+    const used = new Set<DemoCardId>();
+    const next: DemoCardId[] = [];
+
+    for (let i = 0; i < SHOP_SIZE; i++) {
       const current = currentOfferIds[i];
-      if (current && locked.has(current) && !purchased.has(current)) return current;
-      return freshQueue.shift() ?? current ?? fresh[0] ?? 'cardTurret';
-    });
+      if (current && locked.has(current) && !purchased.has(current) && !used.has(current)) {
+        used.add(current);
+        next.push(current);
+        continue;
+      }
+      const drawn = freshQueue.shift();
+      if (drawn !== undefined && !used.has(drawn)) {
+        used.add(drawn);
+        next.push(drawn);
+      }
+    }
+
+    currentOfferIds = next;
   }
 
   refreshOffers();
@@ -295,10 +314,9 @@ function buildShopCard(
         balance -= rerollCost;
         refreshOffers();
         rerollCost += REROLL_COST_STEP;
-        render();
-        // Yeni gelen teklifler ShopPicker'ın diff render'ı ile kendi
-        // vol-card-in animasyonlarını alır; ızgaraya ayrı bir flash
-        // animasyonu eklemek çift vurgu yaratır.
+        // Panel reroll'u tahmin etmez; niyeti çağıran bildirir. Kilitli
+        // teklifler yerinde kalır, kilitsizler giriş animasyonuyla yenilenir.
+        render('reroll');
       },
     },
     lock: {
@@ -385,8 +403,8 @@ function buildShopCard(
     };
   }
 
-  function render(): void {
-    shop.render(buildState());
+  function render(transition?: ShopPickerState['transition']): void {
+    shop.render({ ...buildState(), transition });
   }
 
   // `shop.slotArea` — "çağıranın kendi içeriğini koyabileceği alan" (bkz.

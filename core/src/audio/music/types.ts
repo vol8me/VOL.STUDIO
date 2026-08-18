@@ -122,4 +122,12 @@ export interface ActiveStem {
   startTime: number;
   /** `crossfadeTo`/`stop` gibi geçişlerde bu stem gain değişikliklerinden muaf tutulur. */
   fadingOut?: boolean;
+  /**
+   * Motor bu stem'i bilerek durdurdu (stop/crossfade). Doğal bitişten ayırt
+   * edilmesi şart: `onended` her iki durumda da ateşlenir, ama "parça bitti"
+   * bildirimi yalnızca doğal bitişte verilmelidir.
+   */
+  stoppedByEngine?: boolean;
+  /** Bu stem'in ait olduğu track — doğal bitiş bildirimi doğru parçaya yazılsın diye. */
+  trackId?: string;
 }

@@ -301,3 +301,83 @@ describe('resolveStemGain', () => {
     expect(gain).toBeCloseTo(0.7, 5);
   });
 });
+
+/**
+ * Doğal bitiş bildirimi — `MusicPlaylist` ilerlemesi buna dayanır.
+ * Motorun kendi durdurduğu stem "parça bitti" saymamalı, yoksa liste
+ * her `stop()` çağrısında yanlışlıkla ilerler.
+ */
+describe('MusicEngine — onTrackEnd', () => {
+  let ctx: FakeAudioContext;
+
+  beforeEach(() => {
+    ctx = new FakeAudioContext();
+  });
+
+  function makeEngineWithTrack(loop: boolean) {
+    const engine = new MusicEngine({ audioContext: ctx as unknown as AudioContext });
+    const buffer = makeBuffer(ctx, 2);
+    const track = {
+      id: 'menu',
+      bpm: 100,
+      stems: [{ id: 'menu-stem', buffer, loop }],
+    };
+    return { engine, track };
+  }
+
+  it('parça kendiliğinden bitince dinleyiciyi çağırır', async () => {
+    const { engine, track } = makeEngineWithTrack(false);
+    const ended: string[] = [];
+    engine.onTrackEnd((id) => ended.push(id));
+
+    await engine.loadTrack(track);
+    await engine.play('menu');
+
+    ctx.createdSources.at(-1)?.simulateEnded();
+    expect(ended).toEqual(['menu']);
+  });
+
+  it('stop() ile durdurulan parça bitiş saymaz', async () => {
+    const { engine, track } = makeEngineWithTrack(false);
+    const ended: string[] = [];
+    engine.onTrackEnd((id) => ended.push(id));
+
+    await engine.loadTrack(track);
+    await engine.play('menu');
+    engine.stop({ fadeOut: 0 });
+
+    ctx.createdSources.at(-1)?.simulateEnded();
+    expect(ended).toEqual([]);
+  });
+
+  it('abonelik kaldırılınca artık bildirilmez', async () => {
+    const { engine, track } = makeEngineWithTrack(false);
+    const ended: string[] = [];
+    const off = engine.onTrackEnd((id) => ended.push(id));
+
+    await engine.loadTrack(track);
+    await engine.play('menu');
+    off();
+
+    ctx.createdSources.at(-1)?.simulateEnded();
+    expect(ended).toEqual([]);
+  });
+
+  it('bir dinleyici patlarsa diğerleri yine çağrılır', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { engine, track } = makeEngineWithTrack(false);
+    const ended: string[] = [];
+    engine.onTrackEnd(() => {
+      throw new Error('dinleyici patladı');
+    });
+    engine.onTrackEnd((id) => ended.push(id));
+
+    await engine.loadTrack(track);
+    await engine.play('menu');
+    ctx.createdSources.at(-1)?.simulateEnded();
+
+    expect(ended).toEqual(['menu']);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});

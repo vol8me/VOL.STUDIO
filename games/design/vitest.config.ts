@@ -13,10 +13,10 @@ export default defineConfig({
       // edilirse kapsam oranını yapay olarak seyreltirler.
       exclude: ['src/**/index.ts', 'src/**/*.d.ts'],
       thresholds: {
-        lines: 0,
-        functions: 0,
-        branches: 0,
-        statements: 0,
+        lines: 96,
+        functions: 100,
+        branches: 92,
+        statements: 96,
       },
     },
     environment: 'jsdom',

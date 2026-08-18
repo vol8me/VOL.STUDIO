@@ -11,10 +11,10 @@ export default defineConfig({
       // edilirse kapsam oranını yapay olarak seyreltirler.
       exclude: ['src/**/index.ts', 'src/**/*.d.ts', 'src/@types/**', 'src/vite-env.d.ts'],
       thresholds: {
-        lines: 25,
-        functions: 73,
-        branches: 77,
-        statements: 25,
+        lines: 68,
+        functions: 85,
+        branches: 79,
+        statements: 68,
       },
     },
     environment: 'jsdom',

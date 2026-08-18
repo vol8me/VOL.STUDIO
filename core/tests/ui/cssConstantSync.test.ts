@@ -6,7 +6,11 @@ import { TOAST_FADE_OUT_MS } from '../../src/ui/overlays/Toast';
 import { MIN_NODE_WIDTH, NODE_LABEL_FONT } from '../../src/ui/hud/SkillTree';
 import { HANDLE_WIDTH_PX } from '../../src/ui/primitives/RangeSlider';
 import { EVENT_LOG_LEAVE_DURATION_MS } from '../../src/ui/data/EventLog';
-import { LEAVE_ANIMATION_MS } from '../../src/ui/cards/ShopPicker';
+import {
+  LEAVE_ANIMATION_MS,
+  REROLL_FLASH_MS,
+  PURCHASE_FLASH_MS,
+} from '../../src/ui/cards/ShopPicker';
 import { CARD_ENTER_ANIMATION_MS } from '../../src/ui/cards/CardTile';
 
 /**
@@ -77,6 +81,26 @@ describe('CSS sabit senkronu — teardown zamanlayıcıları', () => {
     // geçiyor; gerçek değeri theme.css'den çöz.
     const cssMs = cssVarDurationMs(theme, '--vol-transition-medium');
     expect(LEAVE_ANIMATION_MS).toBeGreaterThanOrEqual(cssMs);
+  });
+
+  it('REROLL_FLASH_MS, ızgara reroll animasyonundan kısa değil', () => {
+    // Önceden bu süre `render()` içinde çıplak `240` idi; adı olmadığı için
+    // bu senkron testinin kapsamı dışındaydı ve CSS değişince sessizce ayrışırdı.
+    const animation = cssDeclaration(
+      cards,
+      '.vol-card-picker--rerolling .vol-card-picker__grid',
+      'animation',
+    );
+    const match = /([0-9.]+)(m?s)/.exec(animation);
+    expect(match, 'reroll ızgara animasyon süresi bulunamadı').not.toBeNull();
+    const cssMs = match![2] === 'ms' ? Number(match![1]) : Number(match![1]) * 1000;
+    expect(REROLL_FLASH_MS).toBeGreaterThanOrEqual(cssMs);
+  });
+
+  it('PURCHASE_FLASH_MS, .vol-card--just-purchased animasyonundan kısa değil', () => {
+    // Önceden çıkış animasyonu sabiti (LEAVE_ANIMATION_MS) ödünç alınıyordu.
+    const cssMs = cssVarDurationMs(theme, '--vol-transition-medium');
+    expect(PURCHASE_FLASH_MS).toBeGreaterThanOrEqual(cssMs);
   });
 
   it('CARD_ENTER_ANIMATION_MS, .vol-card--entering animasyonundan kısa değil', () => {

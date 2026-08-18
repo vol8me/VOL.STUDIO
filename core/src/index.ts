@@ -53,6 +53,8 @@ export { TouchController } from './input/TouchController';
 export * as Synth from './audio/synth';
 export * as Music from './audio/music';
 export { MusicEngine } from './audio/music/engine';
+export { MusicPlaylist } from './audio/music/playlist';
+export type { MusicPlaylistOptions } from './audio/music/playlist';
 export { SidechainDucker } from './audio/sidechain';
 export type { DuckingProfile } from './audio/sidechain';
 export { SaveManager, LocalStorageAdapter } from './systems/SaveManager';

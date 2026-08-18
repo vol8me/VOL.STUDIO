@@ -69,7 +69,9 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
         id: 'hollow-signal',
         src: `${musicBasePath}/main-menu/hollow-signal.ogg`,
         gain: 0.8,
-        loop: true,
+        // Menü parçaları DÖNMEZ: bitince playlist sıradakine geçsin diye.
+        // `loop: true` iken ikinci parçaya hiç sıra gelmiyordu.
+        loop: false,
       },
     ],
   },
@@ -84,7 +86,9 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
         id: 'event-horizon',
         src: `${musicBasePath}/main-menu/event-horizon.ogg`,
         gain: 0.8,
-        loop: true,
+        // Menü parçaları DÖNMEZ: bitince playlist sıradakine geçsin diye.
+        // `loop: true` iken ikinci parçaya hiç sıra gelmiyordu.
+        loop: false,
       },
     ],
   },
@@ -232,11 +236,13 @@ export const musicConfig = {
   victory: {
     fadeInSec: 1,
   },
-  /** Ana menü müziği. */
+  /** Ana menü müziği — parça listesi hâlinde çalar. */
   menu: {
     fadeInSec: 2,
     /** Menüden çıkarken müziğin kapanma süresi (saniye). */
     stopFadeSec: 1,
+    /** Bir parça bitip sıradakine geçmeden önceki sessizlik (ms). */
+    gapMs: 3000,
   },
 } as const;
 

@@ -424,4 +424,56 @@ describe('CardScreens — dalga arası akış', () => {
     );
     expect(button).not.toBeNull();
   });
+  /**
+   * Havuz daralınca teklif listesi AYNI kartı iki slota koyuyordu.
+   *
+   * `refreshShopOffers` boş kalan bir slotu "o slottaki eski kartla"
+   * dolduruyordu. O kart aynı turda başka bir slota da çekilmişse teklif
+   * listesinde iki kez yer alıyordu. `ShopPicker` teklifleri id'ye göre Map'te
+   * tuttuğu için iki slot tek karta çöküyor ve vitrindeki kart sayısı sessizce
+   * azalıyordu.
+   *
+   * Tetiklemek için önce vitrin DOLU olmalı (2 kart), sonra havuz istenen
+   * sayıyı karşılayamamalı (1 kart) — o zaman ikinci slot birinciyi tekrarlar.
+   */
+  describe('dükkan teklifleri — havuz daralması', () => {
+    it('havuz az kart verince eski teklif vitrinde ASILI KALMAZ', () => {
+      economy.addFlux(500);
+
+      const draw = vi.spyOn(cards, 'drawOffer');
+      // 1. ziyaret: vitrin dolu — keskinUc + cardFireZone.
+      draw.mockReturnValueOnce([CARD_CATALOG.keskinUc, CARD_CATALOG.cardFireZone]);
+      screens.openIntermission(20);
+      root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!.click();
+
+      // 2. ziyaret: havuz yalnızca TEK yeni kart verebiliyor.
+      draw.mockReturnValue([CARD_CATALOG.keskinUc]);
+      screens.openIntermission(21);
+
+      const titles = [
+        ...root.querySelectorAll('.vol-card-picker--shop .vol-card-picker__grid .vol-card'),
+      ].map((el) => el.querySelector('.vol-card__title')?.textContent ?? '');
+
+      // Eski hâl boş slotu "o slottaki eski kartla" dolduruyordu; oyuncu reroll
+      // için ödeme yaptığı hâlde önceki teklif vitrinde kalıyordu.
+      expect(titles).toHaveLength(1);
+      expect(new Set(titles).size).toBe(titles.length);
+    });
+
+    it('havuz hiç kart veremezse vitrin boş kalır, hayalet kart olmaz', () => {
+      economy.addFlux(500);
+      const draw = vi.spyOn(cards, 'drawOffer');
+      draw.mockReturnValueOnce([CARD_CATALOG.keskinUc, CARD_CATALOG.cardFireZone]);
+      screens.openIntermission(22);
+      root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!.click();
+
+      draw.mockReturnValue([]);
+      screens.openIntermission(23);
+
+      const shown = root.querySelectorAll(
+        '.vol-card-picker--shop .vol-card-picker__grid .vol-card',
+      );
+      expect(shown.length).toBe(0);
+    });
+  });
 });

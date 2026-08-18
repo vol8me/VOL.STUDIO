@@ -34,6 +34,8 @@ export class MusicEngine {
   private state: MusicState = {};
   private lookahead: number;
   private stemCounter = 0;
+  /** Doğal bitiş dinleyicileri — playlist ilerlemesi buna bağlanır. */
+  private readonly trackEndHandlers = new Set<(trackId: string) => void>();
 
   constructor(options: MusicEngineOptions = {}) {
     if (options.audioContext) {
@@ -129,6 +131,7 @@ export class MusicEngine {
     const stopTime = now + fadeOut;
 
     for (const active of this.activeStems.values()) {
+      active.stoppedByEngine = true;
       this.mixer.setChannelGain(active.channelId, 0, fadeOut, now);
       if (active.source) {
         try {
@@ -172,6 +175,7 @@ export class MusicEngine {
     // Eski stem'leri transition sonunda durdur; gain güncellemelerinden muaf tut.
     for (const active of this.activeStems.values()) {
       active.fadingOut = true;
+      active.stoppedByEngine = true;
       this.mixer.setChannelGain(active.channelId, 0, duration, transitionTime);
       if (active.source) {
         try {
@@ -296,7 +300,10 @@ export class MusicEngine {
     source.connect(gain);
     source.start(when, 0);
 
+    const ownerTrackId = this.currentTrackId;
+
     source.onended = () => {
+      const active = this.activeStems.get(channelId);
       try {
         source.disconnect();
         gain.disconnect();
@@ -306,9 +313,49 @@ export class MusicEngine {
         this.activeStems.delete(channelId);
         this.mixer.removeChannel(channelId);
       }
+      // Motorun kendi durdurduğu stem "parça bitti" saymaz; yalnızca sonuna
+      // kadar çalıp kendiliğinden biten loop'suz stem sayar.
+      if (active?.stoppedByEngine) return;
+      if (ownerTrackId === undefined || ownerTrackId !== this.currentTrackId) return;
+      this.notifyTrackEndIfDone(ownerTrackId);
     };
 
-    this.activeStems.set(channelId, { stem, channelId, source, gain, buffer, startTime: when });
+    this.activeStems.set(channelId, {
+      stem,
+      channelId,
+      source,
+      gain,
+      buffer,
+      startTime: when,
+      trackId: ownerTrackId,
+    });
+  }
+
+  /**
+   * Çalan parça KENDİLİĞİNDEN bittiğinde çağrılır (stop/crossfade değil).
+   * Playlist ilerlemesi buna bağlanır. Aboneliği kaldıran fonksiyon döner.
+   */
+  onTrackEnd(handler: (trackId: string) => void): () => void {
+    this.trackEndHandlers.add(handler);
+    return () => this.trackEndHandlers.delete(handler);
+  }
+
+  /** Parçanın tüm stem'leri bittiyse bitişi duyurur. */
+  private notifyTrackEndIfDone(trackId: string): void {
+    for (const active of this.activeStems.values()) {
+      if (active.trackId === trackId && !active.stoppedByEngine) return;
+    }
+    this.isPlaying = false;
+    this.currentTrackId = undefined;
+    this.currentTrack = undefined;
+    this.scheduler = undefined;
+    for (const handler of [...this.trackEndHandlers]) {
+      try {
+        handler(trackId);
+      } catch (error) {
+        console.warn('[MusicEngine] onTrackEnd dinleyicisi hata verdi:', error);
+      }
+    }
   }
 
   private updateGains(fadeTime = 0.1, when?: number): void {

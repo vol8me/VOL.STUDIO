@@ -8,6 +8,8 @@
 export type * from './types';
 
 export { MusicEngine } from './engine';
+export { MusicPlaylist } from './playlist';
+export type { MusicPlaylistOptions } from './playlist';
 export { MusicMixer } from './mixer';
 export { MusicScheduler } from './scheduler';
 export { StemLoader } from './loader';

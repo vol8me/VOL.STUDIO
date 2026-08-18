@@ -165,8 +165,13 @@ export class FakeAudioContext {
     return node as unknown as GainNode;
   }
 
+  /** Üretilen kaynaklar — testler doğal bitişi taklit edebilsin diye tutulur. */
+  readonly createdSources: FakeAudioBufferSourceNode[] = [];
+
   createBufferSource(): AudioBufferSourceNode {
-    return new FakeAudioBufferSourceNode() as unknown as AudioBufferSourceNode;
+    const node = new FakeAudioBufferSourceNode();
+    this.createdSources.push(node);
+    return node as unknown as AudioBufferSourceNode;
   }
 
   createDynamicsCompressor(): DynamicsCompressorNode {

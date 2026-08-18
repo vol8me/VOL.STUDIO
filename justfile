@@ -43,6 +43,16 @@ test-pkg pkg:
 coverage:
     pnpm -r --if-present test:coverage
 
+# Workspace sözleşmesi: her paketin kapılara dahil olduğunu doğrular.
+# `pnpm -r --if-present` script'i olmayan paketi sessizce atladığı için,
+# test/eşik yazılmamış yeni bir paket bu bekçi olmadan kapılardan görünmez geçer.
+contract:
+    pnpm run contract
+
+# build script'i olan HER paketi build eder — yeni paket elle eklenmeyi beklemez.
+build:
+    pnpm build:all
+
 build-game:
     pnpm build:game
 
@@ -58,13 +68,19 @@ rust:
 
 # === BİRLEŞİK KAPILAR ===
 
-# Pre-commit kapısı: format + tip + lint + test
-fast: format-check typecheck lint test
+# Test koşmaz: pre-commit'in her commit'te ~1.5 dk beklemesi kabul edilmedi,
+# test yükü `pre-push` → `high`'a bırakıldı. `contract` en başta koşar ki
+# kapsam ihlali 45 sn beklemeden anında düşsün.
+# Pre-commit kapısı: sözleşme + format + tip + lint (~45 sn)
+quick: contract format-check typecheck lint
+
+# Tam hızlı kapı: quick + test
+fast: quick test
 
 # `coverage` aynı testleri eşikleriyle koştuğu için düz `test` burada bilerek
 # tekrarlanmaz; `high` yine de `fast`'in her kapısını kapsar.
-# Push öncesi kapısı: fast + css lint + kapsam eşikleri + oyun build
-high: format-check typecheck lint lint-css coverage build-game
+# Push öncesi kapısı: quick + css lint + kapsam eşikleri + tüm build'ler
+high: quick lint-css coverage build
 
 # Release/milestone kapısı: high + Rust
 signoff: high rust

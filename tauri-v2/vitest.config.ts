@@ -14,10 +14,10 @@ export default defineConfig({
       // edilirse kapsam oranını yapay olarak seyreltirler.
       exclude: ['src/**/index.ts', 'src/**/*.d.ts', 'src/@types/**', 'src/vite-env.d.ts'],
       thresholds: {
-        lines: 86,
+        lines: 88,
         functions: 100,
-        branches: 74,
-        statements: 86,
+        branches: 77,
+        statements: 88,
       },
     },
     environment: 'node',

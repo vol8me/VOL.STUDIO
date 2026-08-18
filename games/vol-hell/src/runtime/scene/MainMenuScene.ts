@@ -4,14 +4,10 @@ import { Button, Panel, Text, i18next } from '@volstudio/core';
 import { BaseScene } from './BaseScene';
 import { LoadingTransition } from './LoadingTransition';
 import { gameAudio } from '@/app/services';
-import { musicConfig, musicTracks, menuTrackKeys, sfxVolumes } from '@/config';
+import { sfxVolumes } from '@/config';
+import { startMenuMusic, stopMenuMusic } from '@/app/menuMusic';
 import { gameStats } from '@/app/services';
 import { formatTimeMs } from '@/utils/time';
-
-/** trackId'nin bir ana menu parcasi olup olmadigini dogrular (cast yerine). */
-function isMenuTrack(trackId: string | undefined): boolean {
-  return trackId !== undefined && (menuTrackKeys as readonly string[]).includes(trackId);
-}
 
 export class MainMenuScene extends BaseScene {
   private panel!: Panel;
@@ -44,22 +40,9 @@ export class MainMenuScene extends BaseScene {
     // kalir ve onShutdown muzigi yanlislikla durdurmaz.
     this.nextScene = null;
 
-    // Ana menüden ayrılıp geri dönüldüğünde müzik başa sarmasın;
-    // eğer zaten bir ana menü teması çalıyorsa onu sürdür.
-    const currentMusic = gameAudio.music.getCurrentState();
-    // Cast yerine type guard: trackId duz bir string, literal union'a dogrulama
-    // olmadan cast etmek `any` kadar guvensizdir.
-    const isMenuMusicPlaying = currentMusic.playing && isMenuTrack(currentMusic.trackId);
-
-    if (!isMenuMusicPlaying) {
-      const trackKey = menuTrackKeys[Math.floor(Math.random() * menuTrackKeys.length)];
-      const track = musicTracks[trackKey];
-      void gameAudio.loadMusic(track).then(() => {
-        // Kullanıcı sahne kapanmadan önce başka bir ekrana geçtiyse müzik çalmaya devam etmesin.
-        if (!this.scene.isActive(this.scene.key)) return;
-        void gameAudio.playMusic(track.id, { fadeIn: musicConfig.menu.fadeInSec });
-      });
-    }
+    // Menü müziği bir parça listesidir ve sahnenin dışında yaşar: Ayarlar'a
+    // gidip dönünce baştan sarmaz, bir parça bitince sıradakine geçer.
+    startMenuMusic(() => this.scene.isActive(this.scene.key));
 
     this.startButton = new Button(i18next.t('volhell:menu.start'), {
       variant: 'primary',
@@ -120,7 +103,7 @@ export class MainMenuScene extends BaseScene {
       this.loadingTransition = null;
       this.startButton.setLoading(false);
       this.nextScene = 'Game';
-      gameAudio.stopMusic(musicConfig.menu.stopFadeSec);
+      stopMenuMusic();
       this.scene.start('Game', { loadingScreen });
     });
   }
@@ -142,7 +125,7 @@ export class MainMenuScene extends BaseScene {
     // SFX'ler kısa olmakla birlikte sahneler arasında taşmaması için durdur.
     gameAudio.stopAllSfx();
     if (this.nextScene !== 'Settings') {
-      gameAudio.stopMusic(musicConfig.menu.stopFadeSec);
+      stopMenuMusic();
     }
     if (this.loadingTransition) {
       this.loadingTransition.destroy();

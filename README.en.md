@@ -41,15 +41,20 @@ pnpm build:tauri                           # Build PC installers
 
 Quality gates run locally via `just`. There is no CI runner; GitHub is used only for source control, pull requests and releases.
 
-| Level           | Command                      | What it runs                                  |
-| --------------- | ---------------------------- | --------------------------------------------- |
-| Pre-commit      | `pnpm fast`                  | format, typecheck, lint, test                 |
-| Pre-push        | `pnpm high`                  | fast + CSS lint + coverage thresholds + build |
-| Release/signoff | `pnpm signoff`               | high + cargo check/fmt/clippy                 |
-| Long build      | `pnpm exec just tauri-build` | game build + Tauri prod build (manual)        |
-| Environment     | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri deps    |
+| Level           | Command                      | What it runs                                        |
+| --------------- | ---------------------------- | --------------------------------------------------- |
+| Pre-commit      | `pnpm quick`                 | contract, format, typecheck, lint (~45 s)           |
+| Pre-push        | `pnpm high`                  | quick + CSS lint + coverage thresholds + all builds |
+| Release/signoff | `pnpm signoff`               | high + cargo check/fmt/clippy                       |
+| Long build      | `pnpm exec just tauri-build` | game build + Tauri prod build (manual)              |
+| Environment     | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri deps          |
 
-The `pre-commit` → `pnpm fast` and `pre-push` → `pnpm high` hooks are installed during `pnpm install`; set `SKIP_SIMPLE_GIT_HOOKS=1` to bypass them.
+The `pre-commit` → `pnpm quick` and `pre-push` → `pnpm high` hooks are installed during `pnpm install`; set `SKIP_SIMPLE_GIT_HOOKS=1` to bypass them. Tests are deliberately deferred to push — use `pnpm fast` for the quick gate including tests.
+
+Gates derive from the workspace: a new package is never wired into a gate by
+hand — `pnpm -r` and repo-wide globs pick it up automatically.
+`scripts/workspace-contract.mjs` enforces this on every commit: a package cannot
+enter the repo without `test`/`test:coverage` scripts and coverage thresholds.
 
 The `just` binary lands in `node_modules/.bin` and is not on the global `PATH` — use `pnpm fast` or `pnpm exec just fast`, not a bare `just fast`. For single gates (`typecheck`, `lint`, `coverage`, `rust`, `test-pkg <package>` …): `pnpm exec just --list`.
 

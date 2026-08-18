@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "postinstall": "node -e \"try{require('child_process').execSync('simple-git-hooks',{stdio:'inherit'})}catch(e){console.warn('[postinstall] git hook kurulumu atlandi (git deposu degil veya git yok) - kalite kapilari elle calistirilmali')}\"",
+    "quick": "just quick",
     "fast": "just fast",
     "high": "just high",
     "signoff": "just signoff",
@@ -22,13 +23,15 @@
     "test": "pnpm -r --if-present test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "lint:css": "stylelint \"core/src/ui/**/*.css\" \"games/*/src/**/*.css\"",
+    "lint:css": "stylelint \"**/*.css\"",
     "format": "prettier --write \"**/*.{ts,css,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,css,json,md}\"",
     "gen:theme": "node core/scripts/gen-theme.mjs",
     "convert:ios": "tsx core/scripts/convert-audio.ts games/vol-hell/public/assets/audio",
     "audio:qa": "tsx core/scripts/audio-qa.ts games/vol-hell/public/assets/audio",
-    "test:coverage": "pnpm -r --if-present test:coverage"
+    "test:coverage": "pnpm -r --if-present test:coverage",
+    "build:all": "pnpm -r --if-present build",
+    "contract": "node scripts/workspace-contract.mjs"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "3.0.5",
@@ -50,7 +53,7 @@
     "pnpm": ">=11.18.0"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm fast",
+    "pre-commit": "pnpm quick",
     "pre-push": "pnpm high"
   }
 }
