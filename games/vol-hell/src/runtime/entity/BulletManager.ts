@@ -1,10 +1,11 @@
 import type Phaser from 'phaser';
-import type { StatBlock } from '@volstudio/core';
-import { Diagnostics, Vector2 } from '@volstudio/core';
+import type { HellStatBlock } from '@/config/stats';
+import { Vector2 } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
 import { Bullet } from './Bullet';
 import type { Border } from './Border';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
+import { diagnostics } from '@/app/services';
 
 /**
  * Mermi yöneticisi — ateş cooldown, mermi yaşam döngüsü, trail partikül ve çarpışma.
@@ -22,7 +23,7 @@ export class BulletManager {
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly effects: EffectManager,
-    private readonly stats: StatBlock,
+    private readonly stats: HellStatBlock,
   ) {}
 
   /** Ateş etmeye çalışır — cooldown aktifse reddedir. */
@@ -64,7 +65,7 @@ export class BulletManager {
     const angleDeg = Math.atan2(dirY, dirX) * (180 / Math.PI);
     this.effects.play('bulletFire', x, y, angleDeg);
 
-    Diagnostics.getInstance()?.recordEvent('bulletFire', {
+    diagnostics?.recordEvent('bulletFire', {
       x,
       y,
       direction: { x: dirX, y: dirY },

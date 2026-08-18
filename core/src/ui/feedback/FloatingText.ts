@@ -1,7 +1,19 @@
 import { UI_TIMING } from '../../constants';
 import type { Random } from '../../audio/synth/random';
 
-export type FloatingTextVariant = 'default' | 'damage' | 'heal' | 'critical';
+/**
+ * Varyant, metnin GÖRSEL tonunu seçer — oyun anlamını değil.
+ *
+ * Adlar bilinçli olarak dövüş terimleri (hasar/iyileşme/kritik vuruş) DEĞİL:
+ * bunlar tek bir türün kelimeleridir ve CORE'u o türe bağlar (bir üretim
+ * oyununda "iyileşme" yoktur). Eşleme çağıranın işidir.
+ *
+ * - `default` — nötr metin rengi.
+ * - `negative` — tehlike rengi (kayıp, hasar, ceza).
+ * - `positive` — başarı rengi (kazanç, iyileşme, ödül).
+ * - `emphasis` — uyarı rengi + büyük punto + yaylanan giriş; nadir/önemli olay.
+ */
+export type FloatingTextVariant = 'default' | 'negative' | 'positive' | 'emphasis';
 
 export interface FloatingTextOptions {
   variant?: FloatingTextVariant;
@@ -9,7 +21,7 @@ export interface FloatingTextOptions {
   durationMs?: number;
   /** Yukarı kayma mesafesi (px). */
   riseDistance?: number;
-  /** Üst üste binmeyi önlemek için rastgele yatay ofset (px, ±). Varsayılan 18; `critical` varsayılan olarak jitter almaz. */
+  /** Üst üste binmeyi önlemek için rastgele yatay ofset (px, ±). Varsayılan 18; `emphasis` varsayılan olarak jitter almaz. */
   jitter?: number;
 }
 
@@ -26,7 +38,7 @@ interface ActiveText {
   rafId: number;
 }
 
-/** Verilen x/y konumunda beliren, yukarı kayarak solan geçici metin (hasar/heal/kritik vuruş). Toast'tan farkı sabit köşede değil, verilen noktada belirmesi. */
+/** Verilen x/y konumunda beliren, yukarı kayarak solan geçici metin (kayıp/kazanç/vurgu sayıları). Toast'tan farkı sabit köşede değil, verilen noktada belirmesi. */
 export class FloatingTextManager {
   private readonly container: HTMLDivElement;
   private readonly active: ActiveText[] = [];
@@ -42,7 +54,7 @@ export class FloatingTextManager {
 
   spawn(x: number, y: number, text: string, options: FloatingTextOptions = {}): void {
     const { variant = 'default', durationMs = 900, riseDistance = 40 } = options;
-    const jitter = options.jitter ?? (variant === 'critical' ? 0 : 18);
+    const jitter = options.jitter ?? (variant === 'emphasis' ? 0 : 18);
     const randomUnit = this.random ? this.random.bipolar() : Math.random() * 2 - 1;
     const offsetX = jitter > 0 ? randomUnit * jitter : 0;
 

@@ -1,4 +1,5 @@
 import { StatBlock } from '@volstudio/core';
+import type { HellStat, HellStatBlock } from '@/config/stats';
 import { bulletConfig } from '@/config/bullet';
 import type { EnemyDefinition } from '@/config/enemies/types';
 import type { DifficultyState } from '@/runtime/systems/DifficultyCalculator';
@@ -19,8 +20,8 @@ export const DIFFICULTY_MODIFIER_ID = 'difficulty';
 export function createEnemyStats(
   definition: EnemyDefinition,
   difficulty?: DifficultyState,
-): StatBlock {
-  const stats = new StatBlock(definition.baseStats);
+): HellStatBlock {
+  const stats = new StatBlock<HellStat>(definition.baseStats);
   if (!difficulty) return stats;
 
   stats.addModifier({

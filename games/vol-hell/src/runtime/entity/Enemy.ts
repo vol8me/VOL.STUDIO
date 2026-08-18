@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
-import { Vector2, Diagnostics, type Random, type StatBlock } from '@volstudio/core';
+import { Vector2, type Random } from '@volstudio/core';
+import type { HellStatBlock } from '@/config/stats';
 import { enemyConfig } from '@/config/enemy';
 import { playerConfig } from '@/config/player';
 import { RENDER_DEPTH } from '@/config/layers';
@@ -23,13 +24,14 @@ import {
   type SwarmerState,
   type VelocityOutput,
 } from './behaviors';
+import { diagnostics } from '@/app/services';
 
 /** Bir düşmanı doğururken verilen bağlam. */
 export interface EnemyOptions {
   /** Katalog tanımı — arketip, görünüm ve davranış parametreleri. */
   definition: EnemyDefinition;
   /** Taban stat'lar + zorluk modifier'ları (bkz. `createEnemyStats`). */
-  stats: StatBlock;
+  stats: HellStatBlock;
   /** Zorluk çarpanı uygulanmış skor değeri. */
   scoreValue: number;
   /**
@@ -54,7 +56,7 @@ export interface EnemyOptions {
 export class Enemy {
   readonly arc: Phaser.GameObjects.Arc;
   readonly definition: EnemyDefinition;
-  private readonly stats: StatBlock;
+  private readonly stats: HellStatBlock;
   private readonly healthBar: EntityHealthBar;
   private readonly maxHealth: number;
   private readonly score: number;
@@ -143,7 +145,7 @@ export class Enemy {
   }
 
   /** Düşmanın stat bloğu — dışarıdan modifier eklemek için. */
-  getStats(): StatBlock {
+  getStats(): HellStatBlock {
     return this.stats;
   }
 
@@ -204,7 +206,7 @@ export class Enemy {
     this.health = Math.max(0, this.health - amount);
     this.updateHealthBar();
 
-    Diagnostics.getInstance()?.recordEvent('enemyHit', {
+    diagnostics?.recordEvent('enemyHit', {
       x: this.arc.x,
       y: this.arc.y,
       amount,
@@ -360,7 +362,7 @@ export class Enemy {
     if (!this.alive) return;
     this.alive = false;
 
-    Diagnostics.getInstance()?.recordEvent('enemyDeath', {
+    diagnostics?.recordEvent('enemyDeath', {
       x: this.arc.x,
       y: this.arc.y,
       id: this.definition.id,

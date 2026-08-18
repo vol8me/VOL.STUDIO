@@ -1,9 +1,9 @@
 import type Phaser from 'phaser';
-import { Vector2, Diagnostics } from '@volstudio/core';
+import { Vector2 } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
 import { RENDER_DEPTH } from '@/config/layers';
 import { sfxVolumes } from '@/config/audio';
-import { gameAudio } from '@/app/services';
+import { diagnostics, gameAudio } from '@/app/services';
 import type { Border } from './Border';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 
@@ -117,7 +117,7 @@ export class Bullet {
     }
 
     if (bounced) {
-      Diagnostics.getInstance()?.recordEvent('bulletBounce', {
+      diagnostics?.recordEvent('bulletBounce', {
         x: this.arc.x,
         y: this.arc.y,
       });

@@ -1,4 +1,4 @@
-import { CARD_DRAG_MIME, i18next } from '@volstudio/core';
+import { DisposableScope, CARD_DRAG_MIME, i18next } from '@volstudio/core';
 import { getAbilityDefinition } from '@/config/abilities';
 import type { OwnedCard } from '@/runtime/systems/CardInventoryManager';
 import { ABILITY_SLOTS, type AbilitySlot } from '@/runtime/ability/types';
@@ -32,7 +32,8 @@ interface SlotView {
 export class AbilityLoadout {
   readonly element: HTMLDivElement;
   private readonly slots = new Map<AbilitySlot, SlotView>();
-  private readonly cleanups: (() => void)[] = [];
+  /** Slot listener'ları — bkz. DisposableScope (hata izolasyonu + ters sıra). */
+  private readonly scope = new DisposableScope();
 
   constructor(
     parent: HTMLElement,
@@ -80,8 +81,7 @@ export class AbilityLoadout {
   }
 
   destroy(): void {
-    for (const cleanup of this.cleanups) cleanup();
-    this.cleanups.length = 0;
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -123,11 +123,13 @@ export class AbilityLoadout {
     root.addEventListener('dragleave', onDragLeave);
     root.addEventListener('drop', onDrop);
     clear.addEventListener('click', onClear);
-    this.cleanups.push(() => {
-      root.removeEventListener('dragover', onDragOver);
-      root.removeEventListener('dragleave', onDragLeave);
-      root.removeEventListener('drop', onDrop);
-      clear.removeEventListener('click', onClear);
+    this.scope.add({
+      dispose: () => {
+        root.removeEventListener('dragover', onDragOver);
+        root.removeEventListener('dragleave', onDragLeave);
+        root.removeEventListener('drop', onDrop);
+        clear.removeEventListener('click', onClear);
+      },
     });
 
     this.slots.set(slot, { root, name, clear });

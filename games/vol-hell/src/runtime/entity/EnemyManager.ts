@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
-import type { Random, StatBlock } from '@volstudio/core';
-import { Diagnostics, Vector2 } from '@volstudio/core';
+import type { Random } from '@volstudio/core';
+import type { HellStatBlock } from '@/config/stats';
+import { Vector2 } from '@volstudio/core';
 import { enemyConfig } from '@/config/enemy';
 import { getEnemyDefinition, pickEnemyDefinition } from '@/config/enemies/catalog';
 import type { EnemyDefinition } from '@/config/enemies/types';
@@ -11,6 +12,7 @@ import type { MinionSpawnRequest } from './behaviors';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { DifficultyState } from '@/runtime/systems/DifficultyCalculator';
+import { diagnostics } from '@/app/services';
 
 /** Düşman güncellemesine dışarıdan verilen sahne durumu. */
 export interface EnemyUpdateContext {
@@ -119,7 +121,7 @@ export class EnemyManager {
     x: number,
     y: number,
     difficulty: DifficultyState,
-    stats?: StatBlock,
+    stats?: HellStatBlock,
   ): Enemy {
     const enemy = this.createEnemy(definition, x, y, difficulty, stats);
     this.externallyDriven.add(enemy);
@@ -221,7 +223,7 @@ export class EnemyManager {
     x: number,
     y: number,
     difficulty: DifficultyState,
-    stats?: StatBlock,
+    stats?: HellStatBlock,
   ): Enemy {
     const enemy = new Enemy(this.scene, x, y, this.effects, {
       definition,
@@ -232,7 +234,7 @@ export class EnemyManager {
     });
     this.enemies.push(enemy);
 
-    Diagnostics.getInstance()?.recordEvent('enemySpawn', { x, y, id: definition.id });
+    diagnostics?.recordEvent('enemySpawn', { x, y, id: definition.id });
 
     return enemy;
   }

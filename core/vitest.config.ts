@@ -1,4 +1,16 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vitest/config';
+
+/**
+ * Kapsam eşikleri kök `quality.json`dan okunur — kapı sözleşmesinin tek
+ * doğruluk kaynağı (bkz. scripts/workspace-contract.mjs).
+ *
+ * `import ... with { type: 'json' }` KULLANILMIYOR: Prettier 3.0 import
+ * attribute sözdizimini parse edemiyor ve `format-check` kapısı düşüyor.
+ */
+const quality = JSON.parse(readFileSync(new URL('../quality.json', import.meta.url), 'utf-8')) as {
+  packages: Record<string, Record<string, number>>;
+};
 
 export default defineConfig({
   test: {
@@ -9,12 +21,9 @@ export default defineConfig({
       // Tip-only ve barrel dosyalarında çalıştırılabilir satır yok; dahil
       // edilirse kapsam oranını yapay olarak seyreltirler.
       exclude: ['src/**/index.ts', 'src/**/*.d.ts', 'src/@types/**', 'src/vite-env.d.ts'],
-      thresholds: {
-        lines: 85,
-        functions: 86,
-        branches: 79,
-        statements: 85,
-      },
+      // Eşikler kök `quality.json`dan gelir — tek doğruluk kaynağı.
+      // Burada sayı yazmak, bekçinin okuduğu değerle ayrışmaya davetiyedir.
+      thresholds: quality.packages['@volstudio/core'],
     },
     environment: 'jsdom',
     globals: true,

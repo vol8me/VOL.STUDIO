@@ -246,6 +246,10 @@
   justify-content: center;
   align-items: center;
   display: inline-flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-dialogue__control-icon {
@@ -301,6 +305,11 @@
     background-color var(--vol-transition-fast),
     border-color var(--vol-transition-fast);
   font-size: 15px;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-dialogue__choice::before {
@@ -414,6 +423,11 @@
   border-radius: var(--vol-radius-sm);
   transition: background-color var(--vol-transition-fast);
   display: flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-command-palette__item[aria-selected='true'] {
@@ -528,6 +542,11 @@
     box-shadow var(--vol-transition-fast);
   font-size: 16px;
   display: flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-select:hover {
@@ -578,6 +597,11 @@
   background: 0 0;
   border: none;
   font-size: 15px;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-select__option:hover {
@@ -643,6 +667,11 @@
   border: none;
   font-size: 15px;
   display: flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-context-menu__item:hover {

@@ -1,11 +1,12 @@
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 import { Vector2 } from '../math/Vector2';
 import {
   computePCInputState,
   isPCInputActive,
+  resolvePCActions,
+  type PCActionBinding,
   type PointerLikeState,
   type WasdDownState,
-  type ExtraKeysState,
 } from './PCInputState';
 import type { InputProvider } from './InputProvider';
 import type { InputState } from './InputState';
@@ -18,24 +19,83 @@ interface WasdKeys {
   right: Phaser.Input.Keyboard.Key;
 }
 
-export class PCController implements InputProvider {
+/** Hareket tuşları — dört yön için tarayıcı keyCode'ları. */
+export interface MoveKeyBindings {
+  up: number;
+  down: number;
+  left: number;
+  right: number;
+}
+
+/**
+ * WASD varsayılanı.
+ *
+ * Bu bir oyun sözlüğü DEĞİL, klavye yakınsaması: WASD'nin "hareket" demesi
+ * eylem adlarının aksine türden bağımsızdır (aynı sebeple sol fare düğmesi
+ * "birincil" demektir). Yine de `moveKeys` ile ezilebilir — yeniden atama
+ * yapan bir tüketici varsayılanı kullanmak zorunda değil.
+ *
+ * **Değerler ham `KeyboardEvent.keyCode` sayılarıdır, `Phaser.Input.Keyboard.KeyCodes`
+ * DEĞİL.** İki gerekçe:
+ * 1. `KeyCodes`'u modül seviyesinde okumak, Phaser'ı mock'layan bir tüketicide
+ *    (ör. vol-ui showcase testleri) import anında `Cannot read properties of
+ *    undefined` ile patlar — i18next'in modül seviyesinde çağrılmaması ile
+ *    aynı sınıf hata.
+ * 2. Eşleme SAF VERİ olmalı: bir tuş atama ekranı/kayıt dosyası da aynı
+ *    sayıları taşıyacak, enum referansı taşıyamaz.
+ *
+ * Sayılar `KeyCodes.W/S/A/D` ile birebir aynıdır (standart keyCode değerleri).
+ */
+export const DEFAULT_MOVE_KEYS: MoveKeyBindings = {
+  up: 87, // W
+  down: 83, // S
+  left: 65, // A
+  right: 68, // D
+};
+
+export interface PCControllerOptions<TAction extends string> {
+  /**
+   * Eylem → tuş/düğme eşlemesi. Eylem kümesini TÜKETİCİ tanımlar; CORE
+   * hangi eylemlerin var olduğunu bilmez.
+   */
+  actionBindings: Readonly<Record<TAction, PCActionBinding>>;
+  /** Hareket tuşları. Verilmezse `DEFAULT_MOVE_KEYS` (WASD). */
+  moveKeys?: MoveKeyBindings;
+}
+
+export class PCController<TAction extends string> implements InputProvider<TAction> {
   private readonly keys: WasdKeys;
-  private readonly dashKey: Phaser.Input.Keyboard.Key;
+  /** Eylem tuşları — yalnızca `source: 'key'` bağlantıları için kurulur. */
+  private readonly actionKeys = new Map<number, Phaser.Input.Keyboard.Key>();
+  private readonly actionBindings: Readonly<Record<TAction, PCActionBinding>>;
   private readonly boundBlur: () => void;
 
-  constructor(private readonly scene: Phaser.Scene) {
+  constructor(
+    private readonly scene: Phaser.Scene,
+    options: PCControllerOptions<TAction>,
+  ) {
     const keyboard = scene.input.keyboard;
     if (!keyboard) {
       throw new Error('Keyboard plugin etkin değil');
     }
 
+    const moveKeys = options.moveKeys ?? DEFAULT_MOVE_KEYS;
     this.keys = {
-      up: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-      down: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-      left: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-      right: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+      up: keyboard.addKey(moveKeys.up),
+      down: keyboard.addKey(moveKeys.down),
+      left: keyboard.addKey(moveKeys.left),
+      right: keyboard.addKey(moveKeys.right),
     };
-    this.dashKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+    this.actionBindings = options.actionBindings;
+    for (const action of Object.keys(this.actionBindings) as TAction[]) {
+      const binding = this.actionBindings[action];
+      // Aynı keyCode'a bağlı iki eylem tek bir Key nesnesini paylaşır;
+      // addKey'i iki kez çağırmak Phaser'da aynı tuşu iki kez kaydeder.
+      if (binding.source === 'key' && !this.actionKeys.has(binding.keyCode)) {
+        this.actionKeys.set(binding.keyCode, keyboard.addKey(binding.keyCode));
+      }
+    }
 
     this.boundBlur = () => this.resetKeys();
     window.addEventListener('blur', this.boundBlur);
@@ -46,7 +106,9 @@ export class PCController implements InputProvider {
     this.keys.down.reset();
     this.keys.left.reset();
     this.keys.right.reset();
-    this.dashKey.reset();
+    for (const key of this.actionKeys.values()) {
+      key.reset();
+    }
   }
 
   /** activePointer çalışma anında değişebilir; referans saklanmaz. */
@@ -74,12 +136,16 @@ export class PCController implements InputProvider {
     };
   }
 
-  private get extraKeysState(): ExtraKeysState {
-    return { dash: this.dashKey.isDown };
+  private get actionState(): Record<TAction, boolean> {
+    return resolvePCActions(
+      this.actionBindings,
+      (keyCode) => this.actionKeys.get(keyCode)?.isDown ?? false,
+      this.pointerState,
+    );
   }
 
   get isActive(): boolean {
-    return isPCInputActive(this.wasdState, this.pointerState, this.extraKeysState);
+    return isPCInputActive(this.wasdState, this.pointerState, this.actionState);
   }
 
   getDebugSnapshot(): InputSnapshot {
@@ -89,12 +155,12 @@ export class PCController implements InputProvider {
       pc: {
         wasd: { ...this.wasdState },
         pointer: { ...pointer },
-        dash: this.extraKeysState.dash,
+        actions: this.actionState,
       },
     };
   }
 
-  getState(playerPosition: Vector2): InputState {
+  getState(playerPosition: Vector2): InputState<TAction> {
     const camera = this.scene.cameras.main;
     const target = camera.getWorldPoint(this.pointer.x, this.pointer.y);
 
@@ -103,7 +169,7 @@ export class PCController implements InputProvider {
       this.pointerState,
       new Vector2(target.x, target.y),
       playerPosition,
-      this.extraKeysState,
+      this.actionState,
     );
   }
 

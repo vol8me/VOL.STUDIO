@@ -26,6 +26,19 @@ Vite dev server tarayıcıda açılır; Tauri veya Phaser oyun döngüsü gerekm
 | YÜKLEME  | LoadingScreen — gösterge tipleri, geçiş tipleri, içerik konumları                                                                                                                                                                              | `overlays/`                             |
 | TOUCH    | Joystick, TouchButton, DPad, DirectionButton, ActionBar, ChargeButton, PauseResumeButton, LongPressButton, RadialMenu, PinchZoomController, PullToRefresh, SwipeableCardStack, SwipeGestureZone, MultiTouchZone, DualAxisScrollPanel, SlotGrid | `controls/`, `hud/`                     |
 
+## Dokunmatik hedef politikası
+
+Showcase, dokunmatik hedef boyutunu doğrulamanın yeridir. `--vol-hit-target-min`
+token'ı yalnızca `pointer: coarse` altında bir değer taşır (bkz.
+`core/src/ui/theme.css`), yani masaüstünde hiçbir bileşenin görünümü
+değişmez; dokunmatik cihazda ya da tarayıcının cihaz emülasyonunda kutular
+gerçekten 44px'e büyür.
+
+Politika `core/tests/ui/hitTargetSync.test.ts` tarafından zorlanır: `cursor:
+pointer` taşıyan her CSS kuralı ya token'ı tüketmek ya da gerekçesi yazılı bir
+muafiyet taşımak zorundadır. Yeni bir interaktif bileşen eklendiğinde kapı,
+biri karar verene kadar kırılır.
+
 ## Lisans
 
 [Apache License 2.0](../../LICENSE)

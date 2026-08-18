@@ -25,7 +25,7 @@ describe('Bellek sızıntısı regresyonları', () => {
     expect(instances.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('TouchButton pointer capture serbest bırakılır ve listenerlar temizlenir', () => {
+  it('TouchButton pointer capture serbest bırakılır ve listenerlar SİMETRİK temizlenir', () => {
     const onPress = vi.fn();
     const onRelease = vi.fn();
     const button = new TouchButton({ label: 'Ateş', onPress, onRelease });
@@ -47,7 +47,27 @@ describe('Bellek sızıntısı regresyonları', () => {
     expect(releaseSpy).toHaveBeenCalledWith(pointerId);
 
     button.destroy();
-    expect(removeListenerSpy).toHaveBeenCalledTimes(4);
+
+    /*
+     * Sabit bir sayı (`toHaveBeenCalledTimes(4)`) yerine KÜME karşılaştırması.
+     *
+     * Sabit sayı, bileşene meşru bir listener eklendiğinde — klavye desteği
+     * tam olarak bunu yaptı — hiçbir sızıntı olmadığı hâlde kırılıyordu ve
+     * "sayıyı güncelle" refleksiyle geçilmeye açıktı. Asıl sözleşme
+     * "bağlanan HER tür kaldırılır"; beklenen küme burada açıkça yazılıdır,
+     * yani yeni bir listener eklenip kaldırılmazsa test yine kırılır.
+     */
+    const boundTypes = [
+      'pointerdown',
+      'pointerup',
+      'pointercancel',
+      'pointerleave',
+      'keydown',
+      'keyup',
+      'click',
+    ];
+    const removedTypes = removeListenerSpy.mock.calls.map((call) => call[0]);
+    expect([...new Set(removedTypes)].sort()).toEqual([...boundTypes].sort());
     expect(button.element.isConnected).toBe(false);
   });
 

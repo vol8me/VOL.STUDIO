@@ -1,4 +1,4 @@
-import type { StatKey } from '@volstudio/core';
+import type { HellStat } from '@/config/stats';
 import type { AbilityUpgradeKey } from '@/runtime/ability/AbilityUpgrades';
 
 /**
@@ -35,7 +35,7 @@ export type CardConditionId =
 
 /** Karttan gelen stat modifier'ı — `StatBlock` modifier'ının veri hali. */
 export interface CardStatModifier {
-  stat: StatKey;
+  stat: HellStat;
   type: 'add' | 'multiply';
   value: number;
   /** Verilirse modifier yalnızca bu koşul doğruyken uygulanır. */

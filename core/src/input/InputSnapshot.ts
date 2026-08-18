@@ -29,8 +29,13 @@ export interface PcInputSnapshot {
     isDown: boolean;
     leftButtonDown: boolean;
   };
-  /** Dash tuşu (Space) basılı mı? */
-  dash: boolean;
+  /**
+   * Eylemlerin o karedeki durumu (eylem adı → basılı mı).
+   *
+   * Anahtar kümesi tüketicinin eylem sözlüğünden gelir; CORE burada somut bir
+   * eylem adı bilmez — bu yüzden tip `Record<string, boolean>`.
+   */
+  actions: Readonly<Record<string, boolean>>;
 }
 
 export interface TouchInputSnapshot {

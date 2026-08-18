@@ -1,4 +1,5 @@
-import { StatBlock, type StatBaseValues } from '@volstudio/core';
+import { StatBlock } from '@volstudio/core';
+import type { HellBaseStats, HellStat, HellStatBlock } from '@/config/stats';
 import { bossConfig } from '@/config/boss';
 
 /** Boss'un spawn anında dondurulan güç profili — test ve HUD bunu okur. */
@@ -33,7 +34,7 @@ export interface BossScaling {
  * Sonuç spawn anında BİR KEZ hesaplanır ve dondurulur; boss dövüşünün
  * ortasında alınan bir kart boss'u güçlendirmez.
  */
-export function computeBossScaling(playerStats: StatBlock): BossScaling {
+export function computeBossScaling(playerStats: HellStatBlock): BossScaling {
   const damageRatio = safeRatio(playerStats.getValue('damage'), playerStats.getBase('damage'));
   // fireRate ters: küçük değer hızlı demek, bu yüzden taban/güncel.
   const fireRateRatio = safeRatio(
@@ -73,8 +74,8 @@ export function computeBossScaling(playerStats: StatBlock): BossScaling {
  * stat'ları spawn anında donmalı, oyuncunun sonraki kartları onu
  * güçlendirmemeli.
  */
-export function scaleBossStats(baseStats: StatBaseValues, scaling: BossScaling): StatBlock {
-  return new StatBlock({
+export function scaleBossStats(baseStats: HellBaseStats, scaling: BossScaling): HellStatBlock {
+  return new StatBlock<HellStat>({
     damage: baseStats.damage * scaling.damageMultiplier,
     speed: baseStats.speed,
     health: baseStats.health * scaling.healthMultiplier,

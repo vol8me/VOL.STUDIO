@@ -1,3 +1,4 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_RATIO } from '../../constants';
 import { i18next } from '../../systems/I18n';
 
@@ -34,7 +35,16 @@ export class Carousel {
   private dragDeltaX = 0;
   private isDragging = false;
   private activePointerId: number | null = null;
-  private cleanups: (() => void)[] = [];
+  /**
+   * Bu bileşenin ömrüne bağlı kaynaklar.
+   *
+   * Elle yönetilen bir `(() => void)[]` dizisiydi. `DisposableScope`in üç
+   * farkı var ve üçü de davranışsal: kapatma TERS sırada yapılır (kaynaklar
+   * arası bağımlılık genelde bu yönde kurulur), ikinci `dispose()` no-op'tur
+   * ve bir kaynağın kapatılması FIRLATIRSA geri kalanlar yine kapatılır —
+   * düz `for` döngüsü ilk hatada duruyor ve kalan her şeyi sızdırıyordu.
+   */
+  private readonly scope = new DisposableScope();
   private readonly onLanguageChanged = (): void => {
     const arrows = this.element.querySelectorAll<HTMLButtonElement>('.vol-carousel__arrow');
     arrows.forEach((btn) => {
@@ -114,7 +124,7 @@ export class Carousel {
   destroy(): void {
     i18next.off('languageChanged', this.onLanguageChanged);
     this.stopAutoPlay();
-    for (const cleanup of this.cleanups) cleanup();
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -195,11 +205,13 @@ export class Carousel {
     viewport.addEventListener('pointermove', onPointerMove);
     viewport.addEventListener('pointerup', onPointerUp);
     viewport.addEventListener('pointercancel', onPointerUp);
-    this.cleanups.push(() => {
-      viewport.removeEventListener('pointerdown', onPointerDown);
-      viewport.removeEventListener('pointermove', onPointerMove);
-      viewport.removeEventListener('pointerup', onPointerUp);
-      viewport.removeEventListener('pointercancel', onPointerUp);
+    this.scope.add({
+      dispose: () => {
+        viewport.removeEventListener('pointerdown', onPointerDown);
+        viewport.removeEventListener('pointermove', onPointerMove);
+        viewport.removeEventListener('pointerup', onPointerUp);
+        viewport.removeEventListener('pointercancel', onPointerUp);
+      },
     });
   }
 

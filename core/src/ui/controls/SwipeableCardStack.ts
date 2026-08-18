@@ -1,3 +1,4 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_RATIO, UI_THRESHOLD, UI_TIMING, UI_CAPACITY } from '../../constants';
 import { i18next } from '../../systems/I18n';
 
@@ -34,7 +35,16 @@ export class SwipeableCardStack {
   private readonly swipeThreshold: number;
   private cards: SwipeableCardDefinition[];
   private cardElements: HTMLDivElement[] = [];
-  private cleanups: (() => void)[] = [];
+  /**
+   * Bu bileşenin ömrüne bağlı kaynaklar.
+   *
+   * Elle yönetilen bir `(() => void)[]` dizisiydi. `DisposableScope`in üç
+   * farkı var ve üçü de davranışsal: kapatma TERS sırada yapılır (kaynaklar
+   * arası bağımlılık genelde bu yönde kurulur), ikinci `dispose()` no-op'tur
+   * ve bir kaynağın kapatılması FIRLATIRSA geri kalanlar yine kapatılır —
+   * düz `for` döngüsü ilk hatada duruyor ve kalan her şeyi sızdırıyordu.
+   */
+  private readonly scope = new DisposableScope();
   private dragStartX = 0;
   private dragOffsetX = 0;
   private isDragging = false;
@@ -93,7 +103,7 @@ export class SwipeableCardStack {
       window.clearTimeout(this.renderTimeoutId);
       this.renderTimeoutId = null;
     }
-    for (const cleanup of this.cleanups) cleanup();
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -224,11 +234,13 @@ export class SwipeableCardStack {
     topCardEl.addEventListener('pointermove', onPointerMove);
     topCardEl.addEventListener('pointerup', onPointerUp);
     topCardEl.addEventListener('pointercancel', onPointerUp);
-    this.cleanups.push(() => {
-      topCardEl.removeEventListener('pointerdown', onPointerDown);
-      topCardEl.removeEventListener('pointermove', onPointerMove);
-      topCardEl.removeEventListener('pointerup', onPointerUp);
-      topCardEl.removeEventListener('pointercancel', onPointerUp);
+    this.scope.add({
+      dispose: () => {
+        topCardEl.removeEventListener('pointerdown', onPointerDown);
+        topCardEl.removeEventListener('pointermove', onPointerMove);
+        topCardEl.removeEventListener('pointerup', onPointerUp);
+        topCardEl.removeEventListener('pointercancel', onPointerUp);
+      },
     });
     void cardId;
   }

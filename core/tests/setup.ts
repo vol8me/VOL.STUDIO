@@ -132,6 +132,14 @@ beforeAll(async () => {
   await i18next.changeLanguage('tr');
 });
 
+// jsdom Pointer Capture API'sini implemente etmez. Stub'lar bir dönem
+// birbirinden habersizdi: `hasPointerCapture` KOŞULSUZ `false` dönüyordu, yani
+// `if (el.hasPointerCapture(id)) el.releasePointerCapture(id)` yazan üretim
+// kodu testte hiçbir zaman release etmiyordu — gerçek tarayıcıda çalışan bir
+// akış testte sessizce ölü kalıyordu. Stub'lar artık ortak bir küme üzerinden
+// tutarlı davranır.
+const capturedPointers = new WeakMap<Element, Set<number>>();
+
 for (const ctor of [HTMLElement, Element]) {
   const proto = ctor.prototype as unknown as {
     setPointerCapture?: (pointerId: number) => void;
@@ -139,13 +147,24 @@ for (const ctor of [HTMLElement, Element]) {
     hasPointerCapture?: (pointerId: number) => boolean;
   };
   if (typeof proto.setPointerCapture !== 'function') {
-    proto.setPointerCapture = vi.fn();
+    proto.setPointerCapture = vi.fn(function (this: Element, pointerId: number) {
+      let set = capturedPointers.get(this);
+      if (!set) {
+        set = new Set<number>();
+        capturedPointers.set(this, set);
+      }
+      set.add(pointerId);
+    });
   }
   if (typeof proto.releasePointerCapture !== 'function') {
-    proto.releasePointerCapture = vi.fn();
+    proto.releasePointerCapture = vi.fn(function (this: Element, pointerId: number) {
+      capturedPointers.get(this)?.delete(pointerId);
+    });
   }
   if (typeof proto.hasPointerCapture !== 'function') {
-    proto.hasPointerCapture = vi.fn(() => false);
+    proto.hasPointerCapture = vi.fn(function (this: Element, pointerId: number) {
+      return capturedPointers.get(this)?.has(pointerId) ?? false;
+    });
   }
 }
 

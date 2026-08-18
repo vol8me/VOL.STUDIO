@@ -24,6 +24,11 @@
   gap: 4px;
   display: flex;
   position: relative;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-build-menu__item:hover {

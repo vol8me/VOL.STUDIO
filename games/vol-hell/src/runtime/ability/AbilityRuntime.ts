@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
-import type { Random, StatBlock, Vector2 } from '@volstudio/core';
-import { Diagnostics, createRandom } from '@volstudio/core';
+import type { Random, Vector2 } from '@volstudio/core';
+import type { HellStatBlock } from '@/config/stats';
+import { createRandom } from '@volstudio/core';
 import { getAbilityDefinition, type AbilityDefinition } from '@/config/abilities';
 import type { Border } from '@/runtime/entity/Border';
 import type { Enemy } from '@/runtime/entity/Enemy';
@@ -9,7 +10,7 @@ import { ChainLightningStrike } from '@/runtime/entity/ChainLightningStrike';
 import { FireZone } from '@/runtime/entity/FireZone';
 import { Turret } from '@/runtime/entity/Turret';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
-import { gameAudio } from '@/app/services';
+import { diagnostics, gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
 import type { SoundEvent } from '@/config/sounds';
 import { AbilityUpgrades } from './AbilityUpgrades';
@@ -31,7 +32,7 @@ export interface AbilityRuntimeDeps {
   border: Border;
   random: Random;
   bullets: BulletManager;
-  playerStats: StatBlock;
+  playerStats: HellStatBlock;
 }
 
 /** Tanımdan doğru ability sınıfını üretir — yeni mekanik eklenince tek yer değişir. */
@@ -82,7 +83,7 @@ export class AbilityRuntime implements AbilityWorld {
   assign(slot: AbilitySlot, ability: Ability | null): void {
     this.slots.get(slot)?.destroy();
     this.slots.set(slot, ability);
-    Diagnostics.getInstance()?.recordEvent('abilityAssigned', { slot, id: ability?.id ?? null });
+    diagnostics?.recordEvent('abilityAssigned', { slot, id: ability?.id ?? null });
   }
 
   getAbility(slot: AbilitySlot): Ability | null {
@@ -96,7 +97,7 @@ export class AbilityRuntime implements AbilityWorld {
 
     const activated = ability.tryActivate(this.context);
     if (activated) {
-      Diagnostics.getInstance()?.recordEvent('abilityUsed', { slot, id: ability.id });
+      diagnostics?.recordEvent('abilityUsed', { slot, id: ability.id });
     }
     return activated;
   }

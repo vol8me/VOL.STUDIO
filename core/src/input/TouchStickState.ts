@@ -1,6 +1,6 @@
 import { Vector2 } from '../math/Vector2';
 import { normalizeAnalog, normalizeDirection } from './InputUtils';
-import type { InputState } from './InputState';
+import { createIdleActions, type InputState } from './InputState';
 import { INPUT } from '../constants';
 
 export interface Stick {
@@ -11,18 +11,46 @@ export interface Stick {
   isRight: boolean;
 }
 
+/** Sağ stick'in "itildi" durumunu hangi eyleme bağlayacağını belirten ayarlar. */
+export interface TouchStickOptions<TAction extends string> {
+  /**
+   * Tanınan tüm eylemler — üretilen `actions` kaydı bu kümenin tamamını
+   * doldurur (basılı olmayanlar `false`).
+   */
+  actions: readonly TAction[];
+  /**
+   * Sağ stick deadzone'u aştığında basılı sayılacak eylem.
+   *
+   * Verilmezse sağ stick YALNIZCA nişan üretir, hiçbir eylemi tetiklemez —
+   * "nişan al + otomatik ateş" deseni her oyunun tercihi değildir.
+   */
+  aimStickAction?: TAction;
+  deadZone?: number;
+  maxRadius?: number;
+}
+
 /**
- * Çift joystick (sol hareket, sağ nişan/ateş) durum makinesi, Phaser'dan
- * tamamen bağımsız — Phaser.Scene kurmadan test edilebilir (bkz. TouchController.ts).
+ * Çift joystick (sol hareket, sağ nişan) durum makinesi, Phaser'dan tamamen
+ * bağımsız — Phaser.Scene kurmadan test edilebilir (bkz. TouchController.ts).
+ *
+ * Sağ stick'in bir EYLEME dönüşüp dönüşmeyeceği `aimStickAction` ile
+ * dışarıdan verilir; bu sınıf "ateş" diye bir şey bilmez.
  */
-export class TouchStickState {
+export class TouchStickState<TAction extends string> {
   private leftStick?: Stick;
   private rightStick?: Stick;
 
-  constructor(
-    private readonly deadZone = INPUT.DEAD_ZONE_RATIO,
-    public readonly maxRadius = INPUT.STICK_MAX_RADIUS,
-  ) {}
+  private readonly actions: readonly TAction[];
+  private readonly aimStickAction?: TAction;
+  private readonly deadZone: number;
+  public readonly maxRadius: number;
+
+  constructor(options: TouchStickOptions<TAction>) {
+    this.actions = options.actions;
+    this.aimStickAction = options.aimStickAction;
+    this.deadZone = options.deadZone ?? INPUT.DEAD_ZONE_RATIO;
+    this.maxRadius = options.maxRadius ?? INPUT.STICK_MAX_RADIUS;
+  }
 
   get isActive(): boolean {
     return this.leftStick !== undefined || this.rightStick !== undefined;
@@ -71,15 +99,20 @@ export class TouchStickState {
     }
   }
 
-  getState(): InputState {
+  getState(): InputState<TAction> {
     const leftRaw = this.getRaw(this.leftStick);
     const rightRaw = this.getRaw(this.rightStick);
+
+    const actions = createIdleActions(this.actions);
+    if (this.aimStickAction !== undefined) {
+      actions[this.aimStickAction] =
+        this.rightStick !== undefined && rightRaw.length() / this.maxRadius > this.deadZone;
+    }
 
     return {
       move: normalizeAnalog(leftRaw, this.deadZone, this.maxRadius),
       aim: normalizeDirection(rightRaw, this.deadZone, this.maxRadius),
-      fire: this.rightStick !== undefined && rightRaw.length() / this.maxRadius > this.deadZone,
-      dash: false,
+      actions,
     };
   }
 

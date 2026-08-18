@@ -58,7 +58,9 @@
     "largeLg": "Büyük (lg)",
     "tooltipSmall": "Kompakt HUD köşeleri için",
     "tooltipMedium": "Varsayılan boyut",
-    "tooltipLarge": "Ana aksiyon/dokunmatik hedefler için"
+    "tooltipLarge": "Ana aksiyon/dokunmatik hedefler için",
+    "asyncIconButton": "Asenkron ikon buton",
+    "asyncIconSave": "Kaydet (asenkron)"
   },
   "text": {
     "title": "Title",
@@ -600,7 +602,8 @@
     "quest3Title": "Tüccara Eşlik Et",
     "quest3Desc": "Ödül: 50 Altın",
     "quest4Title": "Ejderha İzini Takip Et",
-    "quest4Desc": "Ödül: 300 Altın (Riskli)"
+    "quest4Desc": "Ödül: 300 Altın (Riskli)",
+    "touchButtonKeyboardHint": "Tab ile odaklan, Space/Enter ile basılı tut — aynı press/release olayları klavyeden de gelir."
   },
   "loading": {
     "indicatorTypes": "Gösterge Tipleri",

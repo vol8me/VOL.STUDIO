@@ -1,3 +1,4 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { i18next } from '../../systems/I18n';
 
 export interface DataTableColumn<T> {
@@ -68,13 +69,18 @@ export class DataTable<T extends object> {
   private selectedKey: string | null = null;
   private readonly selectedKeys = new Set<string>();
   /** Satır (tbody) listener temizlikleri — her renderRows() çağrısında sıfırlanır. */
-  private readonly rowCleanups: (() => void)[] = [];
   /**
-   * Header sort-button listener'ları, ayrı ve kalıcı listede tutulur — rowCleanups
+   * Satır listener'ları. Satırlar her render'da yeniden kurulduğu için scope
+   * `dispose()` edilip YENİDEN oluşturulur — `dispose()` sonrası bir scope'a
+   * eklenen kaynak anında kapatılacağından aynı örnek tekrar kullanılamaz.
+   */
+  private rowScope = new DisposableScope();
+  /**
+   * Header sort-button listener'ları, ayrı ve kalıcı scope'ta tutulur — satır scope'u
    * içinde tutulsaydı her sıralama tıklaması header'ın kendi click listener'ını
    * silip yeniden eklemezdi (ikinci tıklama, ör. asc→desc, hiçbir şey yapmazdı).
    */
-  private readonly headerCleanups: (() => void)[] = [];
+  private readonly headerScope = new DisposableScope();
   private readonly virtualize: DataTableVirtualizeOptions | null;
   /** Sıralanmış satır önbelleği — pencereleme açıkken her kaydırma karesi renderRows()'u tetikler; önbellek olmadan büyük veri setleri her karede yeniden sıralanırdı. */
   private sortedCache: T[] | null = null;
@@ -159,8 +165,8 @@ export class DataTable<T extends object> {
     i18next.off('languageChanged', this.onLanguageChanged);
     if (this.scrollRafId !== null) cancelAnimationFrame(this.scrollRafId);
     if (this.boundScroll) this.element.removeEventListener('scroll', this.boundScroll);
-    for (const cleanup of this.rowCleanups) cleanup();
-    for (const cleanup of this.headerCleanups) cleanup();
+    this.rowScope.dispose();
+    this.headerScope.dispose();
     this.element.remove();
   }
 
@@ -198,7 +204,7 @@ export class DataTable<T extends object> {
 
         const onClick = (): void => this.toggleSort(column.key);
         button.addEventListener('click', onClick);
-        this.headerCleanups.push(() => button.removeEventListener('click', onClick));
+        this.headerScope.add({ dispose: () => button.removeEventListener('click', onClick) });
 
         th.appendChild(button);
       } else {
@@ -264,8 +270,9 @@ export class DataTable<T extends object> {
   }
 
   private renderRows(): void {
-    // Yalnızca satır listener'ları temizlenir — headerCleanups burada dokunulmaz.
-    for (const cleanup of this.rowCleanups.splice(0)) cleanup();
+    // Yalnızca satır listener'ları temizlenir — başlık scope'una dokunulmaz.
+    this.rowScope.dispose();
+    this.rowScope = new DisposableScope();
     this.tbody.replaceChildren();
 
     for (const [key, th] of this.headerCells) {
@@ -404,7 +411,7 @@ export class DataTable<T extends object> {
     if (this.selectable) {
       const onClick = (): void => this.selectRow(key);
       tr.addEventListener('click', onClick);
-      this.rowCleanups.push(() => tr.removeEventListener('click', onClick));
+      this.rowScope.add({ dispose: () => tr.removeEventListener('click', onClick) });
     }
 
     return tr;

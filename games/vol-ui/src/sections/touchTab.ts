@@ -109,6 +109,15 @@ function buildTouchButtonDemo(disposables: Destroyable[]): HTMLElement {
   wrap.appendChild(dashButton.element);
   wrap.appendChild(status.element);
 
+  // TouchButton dokunmatiğe ÖZEL değildir: taşıdığı şey press/hold semantiği.
+  // Klavye de aynı olayları üretir; showcase bunu görünür kılmalı, aksi hâlde
+  // yetenek yalnızca testte var olur.
+  const keyboardHint = new Text(i18next.t('volui:touch.touchButtonKeyboardHint'), {
+    variant: 'muted',
+  });
+  disposables.push(keyboardHint);
+  wrap.appendChild(keyboardHint.element);
+
   return wrap;
 }
 

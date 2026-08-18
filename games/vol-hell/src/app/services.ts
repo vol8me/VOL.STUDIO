@@ -1,4 +1,10 @@
-import type { SaveManager } from '@volstudio/core';
+import {
+  LocalServerTransport,
+  createDiagnostics,
+  isDiagnosticsEnabled,
+  type Diagnostics,
+  type SaveManager,
+} from '@volstudio/core';
 import { createSaveManager } from '@/app/storage';
 import { AudioSettings } from '@/app/AudioSettings';
 import { GameAudio } from '@/app/GameAudio';
@@ -25,6 +31,19 @@ export let audioSettings: AudioSettings;
 export let gameStats: GameStats;
 export let gameAudio: GameAudio;
 
+/**
+ * Ölçüm örneği — `?debug`/`?perf` yoksa `null`.
+ *
+ * CORE'da global bir `Diagnostics.getInstance()` VARDI ve kaldırıldı: bir
+ * framework'ün tüketicisine tek bir örnek dayatması, aynı process'te ikinci
+ * bir çalışma zamanını imkânsız kılar. Tek örnek tercihi artık OYUNUN kararı
+ * ve bu modülde, diğer uygulama servislerinin yanında duruyor.
+ *
+ * Yerel hata ayıklama sunucusunun adresi de burada: CORE artık "sunucu
+ * nerede?" sorusunu sormaz.
+ */
+export let diagnostics: Diagnostics | null = null;
+
 let initialized = false;
 
 /**
@@ -38,6 +57,12 @@ export function initServices(): void {
   audioSettings = new AudioSettings(saveManager);
   gameStats = new GameStats(saveManager);
   gameAudio = new GameAudio(audioSettings);
+  diagnostics = isDiagnosticsEnabled()
+    ? createDiagnostics({
+        gameId: 'vol-hell',
+        transport: new LocalServerTransport({ url: 'http://127.0.0.1:9876/debug' }),
+      })
+    : null;
 
   initialized = true;
 }

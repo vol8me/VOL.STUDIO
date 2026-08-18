@@ -43,6 +43,13 @@ const { container, parts } = assembleRig(this, rig);
 `buildRigDefinition` düz bir `Record<string, string>` aldığı için paket
 Vite'a bağlı değildir; glob'u tüketen oyun yapar.
 
+İlk iş metadata'yı çalışma zamanında doğrulamaktır (`validateRigMetadata`,
+ayrıca dışa açıktır): `schemaVersion`, zorunlu alanlar ve parça tipleri
+kontrol edilir, sorunlar tek mesajda toplanır. TypeScript arayüzü dosyadan
+okunan JSON hakkında hiçbir garanti vermez — bir agent ya da dış araç bozuk
+metadata ürettiğinde hata, anlaşılmaz bir `TypeError` yerine nerede olduğunu
+söyleyen bir mesaj olur.
+
 ## Export
 
 Pencil'den PNG çıkarma iki adımlıdır: Pencil MCP `execute` ile native

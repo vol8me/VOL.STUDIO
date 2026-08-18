@@ -1,3 +1,4 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { PINCH_ZOOM, UI_TIMING } from '../../constants';
 
 export interface PinchZoomControllerOptions {
@@ -26,7 +27,16 @@ export class PinchZoomController {
   private readonly maxZoom: number;
   private readonly onTransformChangeHandler?: (zoom: number, panX: number, panY: number) => void;
   private readonly activePointers = new Map<number, ActivePointer>();
-  private readonly cleanups: (() => void)[] = [];
+  /**
+   * Bu bileşenin ömrüne bağlı kaynaklar.
+   *
+   * Elle yönetilen bir `(() => void)[]` dizisiydi. `DisposableScope`in üç
+   * farkı var ve üçü de davranışsal: kapatma TERS sırada yapılır (kaynaklar
+   * arası bağımlılık genelde bu yönde kurulur), ikinci `dispose()` no-op'tur
+   * ve bir kaynağın kapatılması FIRLATIRSA geri kalanlar yine kapatılır —
+   * düz `for` döngüsü ilk hatada duruyor ve kalan her şeyi sızdırıyordu.
+   */
+  private readonly scope = new DisposableScope();
   /** Animasyon class'ini kaldiran bekleyen zamanlayici; destroy() iptal eder. */
   private animationTimer: number | null = null;
   private zoom: number;
@@ -87,7 +97,7 @@ export class PinchZoomController {
       window.clearTimeout(this.animationTimer);
       this.animationTimer = null;
     }
-    for (const cleanup of this.cleanups) cleanup();
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -99,7 +109,7 @@ export class PinchZoomController {
       this.applyTransform();
     };
     this.viewport.addEventListener('wheel', onWheel, { passive: false });
-    this.cleanups.push(() => this.viewport.removeEventListener('wheel', onWheel));
+    this.scope.add({ dispose: () => this.viewport.removeEventListener('wheel', onWheel) });
 
     const onPointerDown = (event: PointerEvent): void => {
       this.viewport.setPointerCapture(event.pointerId);
@@ -156,11 +166,13 @@ export class PinchZoomController {
     this.viewport.addEventListener('pointermove', onPointerMove);
     this.viewport.addEventListener('pointerup', onPointerUp);
     this.viewport.addEventListener('pointercancel', onPointerUp);
-    this.cleanups.push(() => {
-      this.viewport.removeEventListener('pointerdown', onPointerDown);
-      this.viewport.removeEventListener('pointermove', onPointerMove);
-      this.viewport.removeEventListener('pointerup', onPointerUp);
-      this.viewport.removeEventListener('pointercancel', onPointerUp);
+    this.scope.add({
+      dispose: () => {
+        this.viewport.removeEventListener('pointerdown', onPointerDown);
+        this.viewport.removeEventListener('pointermove', onPointerMove);
+        this.viewport.removeEventListener('pointerup', onPointerUp);
+        this.viewport.removeEventListener('pointercancel', onPointerUp);
+      },
     });
   }
 

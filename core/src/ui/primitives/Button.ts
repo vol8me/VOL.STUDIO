@@ -1,6 +1,8 @@
+import { runButtonClick, type ButtonClickHandler } from './buttonBehavior';
+
 export type ButtonVariant = 'default' | 'primary' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
-export type ButtonClickHandler = () => void | Promise<void>;
+export type { ButtonClickHandler };
 
 export interface ButtonOptions {
   variant?: ButtonVariant;
@@ -80,6 +82,9 @@ export class Button {
     this.loading = loading;
     this.element.classList.toggle('vol-button--loading', loading);
     this.element.disabled = loading;
+    // `disabled` görsel/etkileşim durumunu anlatır ama "meşgul"ü anlatmaz:
+    // ekran okuyucu, işlemin sürdüğünü yalnızca aria-busy ile bildirir.
+    this.element.setAttribute('aria-busy', String(loading));
     this.spinnerElement.hidden = !loading;
     if (loading && !this.spinnerElement.isConnected) {
       this.element.appendChild(this.spinnerElement);
@@ -91,24 +96,15 @@ export class Button {
     this.element.remove();
   }
 
-  private async handleClick(): Promise<void> {
-    if (!this.onClickHandler || this.loading) {
-      return;
-    }
-
-    this.setLoading(true);
-    try {
-      const result = this.onClickHandler();
-      if (result instanceof Promise) {
-        await result;
-      }
-    } catch (error) {
-      // onClick handler senkron veya asenkron hata fırlatırsa loading kalksın;
-      // unhandled rejection yerine loglanır.
-      console.error('[Button] onClick handler hatası:', error);
-    } finally {
-      this.setLoading(false);
-    }
+  private handleClick(): Promise<void> {
+    return runButtonClick(
+      {
+        setLoading: (loading) => this.setLoading(loading),
+        isLoading: () => this.loading,
+        logLabel: 'Button',
+      },
+      this.onClickHandler,
+    );
   }
 
   private buildIcon(icon: string | Node): HTMLSpanElement {

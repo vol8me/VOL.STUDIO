@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createRandom, STAT_KEYS } from '@volstudio/core';
+import { createRandom } from '@volstudio/core';
+import { HELL_STAT_KEYS } from '@/config/stats';
 import {
   ENEMY_CATALOG,
   findEnemies,
@@ -18,7 +19,7 @@ describe('ENEMY_CATALOG bütünlüğü', () => {
 
   it('her tanım dört temel stat’ı da taşır ve değerler pozitif', () => {
     for (const [key, definition] of Object.entries(ENEMY_CATALOG)) {
-      for (const stat of STAT_KEYS) {
+      for (const stat of HELL_STAT_KEYS) {
         expect(definition.baseStats[stat], `${key}.${stat}`).toBeGreaterThan(0);
       }
     }

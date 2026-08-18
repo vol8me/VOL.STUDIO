@@ -48,7 +48,6 @@
   pointer-events: auto;
   align-items: center;
   gap: var(--vol-space-sm);
-  min-height: 36px;
   padding: var(--vol-space-sm);
   border-radius: var(--vol-radius-sm);
   cursor: pointer;
@@ -57,6 +56,12 @@
     background-color var(--vol-transition-fast),
     color var(--vol-transition-fast);
   display: flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Fallback burada `auto` DEĞİL
+     36px: satırın masaüstünde zaten bir taban yüksekliği vardı ve token'a
+     geçerken kaybedilmemeli. Dokunmatikte token 44px'e yükseltir. */
+  min-height: var(--vol-hit-target-min, 36px);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-tree__row:hover {
@@ -180,6 +185,11 @@
   font-weight: 600;
   display: flex;
   position: relative;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-accordion__header[aria-expanded='true'] {
@@ -310,6 +320,11 @@
   font-size: 12px;
   font-weight: 700;
   display: flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-datatable__sort-button:hover {
@@ -514,6 +529,11 @@
     border-color var(--vol-transition-fast);
   font-size: 15px;
   font-weight: 600;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-wizard__nav-button:hover {
@@ -574,6 +594,11 @@
   padding: 3px 10px;
   font-size: 11px;
   font-weight: 600;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-event-log__filter:hover {
@@ -728,6 +753,11 @@
   justify-content: center;
   align-items: center;
   display: inline-flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-event-log__pin:hover {

@@ -14,7 +14,7 @@ tarihte çalışma ağacında bizzat koşuldu.
 | `pnpm signoff`           | ✓     | high + cargo check/fmt/clippy — zincirin tamamı, exit 0               |
 | `pnpm high`              | ✓     | quick + lint:css + coverage + tüm build'ler                           |
 | `pnpm -r typecheck`      | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                    |
-| `pnpm -r test:coverage`  | ✓     | 1334 test (core 829, vol-hell 428, vol-ui 27, tauri-v2 26, design 24) |
+| `pnpm -r test:coverage`  | ✓     | 1428 test (core 891, vol-hell 446, vol-ui 27, design 38, tauri-v2 26) |
 | `pnpm run contract`      | ✓     | 5 paket, kapı kapsamı tam                                             |
 | `pnpm lint`              | ✓     | 0 hata, 0 uyarı                                                       |
 | `pnpm format:check`      | ✓     |                                                                       |
@@ -23,9 +23,11 @@ tarihte çalışma ağacında bizzat koşuldu.
 | `cargo check/fmt/clippy` | ✓     | `tauri-v2/src-tauri`                                                  |
 | `pnpm run doctor:env`    | ✓     | Node 22.23.1, pnpm 11.18.0, rustc 1.97.1, just 1.58.0, FFmpeg 8.1.2   |
 
-Kapsam: core %86, vol-ui %84 (function %54), vol-hell %70, tauri-v2 %89,
-design %98. Eşikler ölçülen kapsamın ~2 puan altına kilitli (ratchet), yani
-bu oranlar artık taban — düşerlerse kapı kırılır.
+Kapsam: core %86.36, vol-ui %83.57 (function %53.65), vol-hell %70.17,
+tauri-v2 %89.07, design %98.62. Eşikler ölçülen kapsamın ~2 puan altına kilitli
+(ratchet), yani bu oranlar artık taban — düşerlerse kapı kırılır. Eşiklerin
+tamamı kök `quality.json`da; `vitest.config.ts` dosyaları ve
+`workspace-contract.mjs` aynı dosyayı okur.
 
 ## Açık borç ve riskler
 
@@ -34,14 +36,24 @@ silinir; kronolojiye not düşülmez.
 
 **Yapı**
 
-- `GameScene.ts` **608 satır** — dört sorumluluk çıkarıldıktan sonra sınırın
-  (~600) hâlâ 8 satır üstünde. Kalanı sahnenin kendi işi: sistem kurulumu
-  (~130 satır) ve frame döngüsü. Daha fazla bölmek satırı taşır ama test
-  edilebilirlik kazandırmaz; bu yüzden burada durduruldu. `core` tarafında
-  `Kanban.ts` (812) ve `SlotGrid.ts` (675) hâlâ sınır üstünde ve bölünmedi.
+- `GameScene.ts` **618 satır** — dört sorumluluk çıkarıldıktan sonra sınırın
+  (~600) hâlâ üstünde. Kalanı sahnenin kendi işi: sistem kurulumu ve frame
+  döngüsü. Daha fazla bölmek satırı taşır ama test edilebilirlik kazandırmaz;
+  bu yüzden burada durduruldu. `core` tarafında `Kanban.ts` (831) ve
+  `SlotGrid.ts` (687) hâlâ sınır üstünde ve bölünmedi — ikisi de bu turda
+  DisposableScope'a geçerken okundu, bölme ayrı bir tur.
 - CORE capability yol haritasında ertelenenler: `Scheduler`, `StateMachine`,
   geometry/collision primitifleri, `ObjectPool<T>`, resource lifecycle. İkinci
   somut tüketici çıkmadan yazılmayacak.
+- `SpatialGrid` hâlâ `vol-hell`de. Artımlı API (`insert`/`remove`/`update`) ve
+  `rebuild()` ayrımı yapıldı ve eşdeğerlikleri test edildi, yani CORE'a taşımaya
+  hazır; taşıma yine ikinci somut tüketiciye bağlı.
+- Tuşlar artık yeniden atanabilir (`PCActionBinding` veri hâlinde) ama bunu
+  oyuncuya açan bir ayar ekranı YOK. Altyapı hazır, UI bilinçli olarak
+  yapılmadı — ayrı bir tur.
+- `TouchButton` adı taşıdığı semantiği (press/hold, girdi cihazından bağımsız)
+  yanlış tanımlıyor. Yeniden adlandırılmadı: public API + showcase + README +
+  i18n anahtarları ada bağlı, kazanç estetik. Gerekçe sınıf dokümanında.
 
 **Kalite kapıları**
 
@@ -60,7 +72,7 @@ silinir; kronolojiye not düşülmez.
 - `vol-ui` function coverage **%54** — interaktif callback'ler (buton, form,
   scroll, touch, loading) test edilmeden %80'e çıkmaz.
 - `vol-hell` statements **%70**. Geriye kalan en büyük test dışı yüzeyler:
-  `GameScene` (608 satır, %0 — Phaser sahnesi, mock'suz sürülemiyor),
+  `GameScene` (618 satır, %0 — Phaser sahnesi, mock'suz sürülemiyor),
   `MainMenuScene`/`SettingsScene`, `GameHud`/`WaveBanner`, `app/music.ts` ve
   `app/GameAudio.ts`. Overlay ekranları artık test ediliyor; sahneler için
   `vol-ui`'deki Phaser mock deseni uygulanabilir.
@@ -107,6 +119,11 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-18 | `just` geçişinin denetimi ve sertleştirilmesi               | aşağıya bak                |
 | 2026-08-18 | Kapıların ölçeklenebilirliği                                | sözleşme bekçisi + ratchet |
 | 2026-08-18 | `GameScene` bölünmesi ve vol-hell kapsamı                   | 680→608, %66→%70           |
+| 2026-08-18 | CORE domain saflığı — stat + eylem sözlükleri               | sözlük oyuna taşındı       |
+| 2026-08-18 | Evrensel etkileşim sözleşmesi                               | hedef politikası + klavye  |
+| 2026-08-18 | Diagnostics — transport + singleton kaldırma                | CORE global dayatmıyor     |
+| 2026-08-18 | Kart işlem sınırı, metadata şeması, quality.json            | tek kalite kaynağı         |
+| 2026-08-18 | Lifecycle idiomu, artımlı spatial indeks, kapı raporu       | framework tutarlılığı      |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 
@@ -184,7 +201,9 @@ yapmazsa işleyiş güvende mi? Ölçüldü, üç delik çıktı, üçü de kapa
 - `scripts/workspace-contract.mjs` bekçisi `quick` içinde (pre-commit, ~2 sn):
   her paketin `typecheck`/`test`/`test:coverage` script'i ve tabanın üstünde
   coverage eşiği olmasını zorunlu kılar. Muafiyet `THRESHOLD_EXEMPT`'e
-  gerekçesiyle yazılır; sessiz muafiyet yok.
+  gerekçesiyle yazılır; sessiz muafiyet yok. (Eşikler ve muafiyet daha sonra
+  kök `quality.json`a taşındı — bkz. "Kart işlem sınırı, metadata doğrulama,
+  tek kalite kaynağı" turu.)
 - Eşikler ölçülen gerçek kapsamın ~2 puan altına ratchet'lendi:
   core 85/79/86, vol-hell 64/78/84, vol-ui 82/85/52, design 96/92/100,
   tauri-v2 88/77/100. Artık kapsam düşüşü kapıyı kırar.
@@ -248,6 +267,348 @@ burada durduruldu. Kapsam artışı da mütevazı (+4 puan): asıl ağırlık h�
 | `pnpm signoff` | ✓     | exit 0                                                        |
 | test           | ✓     | 1334 test (vol-hell 380 → 428)                                |
 | `pnpm lint`    | ✓     | ilk denemede 5 `no-unsafe-return` hatası yakaladı, düzeltildi |
+
+## 2026-08-18 — Yaşam döngüsü idiomu, artımlı spatial indeks, kapı raporu
+
+### DisposableScope norm hâline geldi
+
+Primitif yazılmış ve testlenmişti ama benimsenmemişti: 3 dosya kullanıyor,
+11 dosya kendi `(() => void)[]` dizisini elle yönetiyordu. Bu yalnızca stil
+sorunu değildi — düz `for (const cleanup of this.cleanups) cleanup();` BİR
+cleanup fırlatınca duruyor ve kalan her şeyi sızdırıyordu.
+
+Dönüştürülenler: `PinchZoomController`, `Carousel`, `SwipeableCardStack`,
+`SlotGrid`, `SkillTree`, `ActionBar`, `Kanban`, `DataTable`, `Tree`,
+`ContextMenu` (core) ve `AbilityLoadout` (vol-hell).
+
+İki tanesi düz dönüşümden fazlasıydı:
+
+- `Kanban` sütun başına dizi tutuyordu → sütun başına `DisposableScope`.
+  Yeniden çizimde scope kapatılıp yenisi açılır (dispose edilmiş bir scope
+  yeniden kullanılamaz — geç eklenen kaynak anında kapatılır).
+- `ContextMenu` handler referanslarını `boundClicks`/`boundKeydowns` PARALEL
+  dizilerinde tutup `itemButtons` ile aynı İNDEKSTE eşleştiriyordu. Üç dizinin
+  sırası ayrışırsa yanlış listener kaldırılır ve hata görünmez olurdu.
+
+**Bekçi:** `lifecycleIdiom.test.ts` — elle yönetilen temizlik dizisi kalıbı
+bulunursa kapı kırılır. Kapsam CORE ile sınırlı değil: `DisposableScope` public
+API'de ve oyunlar da onu tüketiyor, kural yalnızca CORE'da uygulansaydı aynı
+sızıntı oyun tarafında serbest kalırdı. Bekçi ilk taramada üç dosya
+(`DataTable`, `Tree`, `ContextMenu`), kapsam genişletilince bir dosya daha
+(`AbilityLoadout`) buldu — elle sayarken hepsi atlanmıştı.
+
+### SpatialGrid: rebuild ile artımlı ayrımı
+
+`insert`/`remove`/`update`/`has` eklendi; `rebuild()` bir KOLAYLIK metodu
+olarak tanımlandı (`clear`+`insertAll`+`trim` üçlüsünü toplar — çağıranın
+`trim`i unutmasına açıktı). Entity→hücre haritası (`cellOf`) yalnızca artımlı
+yol için tutulur.
+
+VOL.HELL bilinçli olarak `rebuild()` kullanmaya DEVAM ediyor: birkaç yüz
+düşmanda maliyeti ölçülemez ve kod basit kalır. Artımlı yol, sınıf CORE'a
+taşınırsa jenerik API'nin merkezinde durması gerektiği için yazıldı ve test
+edildi — "her frame her şeyi yeniden indeksle" varsayımını framework'e gömmek
+binlerce entity taşıyan ikinci bir tüketiciyi baştan cezalandırır. Sınıf hâlâ
+CORE'da DEĞİL; taşıma kararı ikinci somut tüketiciye bağlı.
+
+**Eşdeğerlik testi** turun asıl sözleşmesi: deterministik rastgele bir hareket
+dizisi üzerinde iki grid 30 kare boyunca yan yana sürülür ve her sorgunun
+KİMLİK KÜMESİ karşılaştırılır (sıra sözleşmenin parçası değil). `update`ten
+eski hücreden çıkarma adımı silinerek testin klasik "iz bırakma" hatasını
+yakaladığı doğrulandı.
+
+### Makine-okunur kapı raporu
+
+`scripts/quality/report.mjs` + `just report <kapı> [--json]`. Kapıları YENİDEN
+TANIMLAMAZ, `just <aşama>` çağırır; düşen aşamayı `{gate, status, stage, kind,
+package, reason}` olarak raporlar ve ham çıktıyı da basar (rapor bir özettir,
+teşhisin yerine geçmez).
+
+Aşama haritasının `justfile` ile ayrışmasını da doğrular: `high`ten `build`
+çıkarılarak denendi, betik kapıyı koşmadan exit 2 ile durdu.
+
+### Kalite kapıları
+
+| Kapı           | Durum | Not                                                      |
+| -------------- | ----- | -------------------------------------------------------- |
+| `pnpm signoff` | ✓     | 8 aşama, exit 0 (~99 sn)                                 |
+| test           | ✓     | tüm paketler yeşil (nihai toplam için bkz. Son durum)    |
+| Regresyon      | ✓     | spatial eşdeğerlik + lifecycle bekçisi enjeksiyonla test |
+
+## 2026-08-18 — Kart işlem sınırı, metadata doğrulama, tek kalite kaynağı
+
+### `purchase()` artık yarım commit bırakmıyor
+
+Akış `spendFlux → owned.push → applyCard` idi: uygulama ortasında bir hata
+olursa kart envanterde GÖRÜNÜYOR, etkileri yarım kalıyor ve satın almada Flux
+da gitmiş oluyordu. "Planla → commit et" ayrımına geçildi: etkiler önce
+hesaplanır (`planCardEffect`, hiçbir durumu değiştirmez), sonra tek noktada
+uygulanır; kart ve `instanceCounter` ancak commit başarılıysa ilerler.
+`purchase()` hata hâlinde Flux'u geri verir.
+
+Bugünkü kartlarda fırlatma yolu yok; üç regresyon testi o yolu YAPAY olarak
+açıyor (stat motoru fırlatacak şekilde sabote ediliyor). Üçü de eski
+sıralamada düştü.
+
+### Design metadata: çalışma zamanı şeması
+
+`RigMetadata` yalnızca bir TypeScript arayüzüydü; dosyadan okunan JSON hakkında
+hiçbir garanti vermiyordu. `parts` eksikse `.map` çağrısı "Cannot read
+properties of undefined" ile düşüyor, sorunun nerede olduğunu söylemiyordu.
+`schemaVersion: 1` tipte vardı ama çalışma zamanında hiç kontrol edilmiyordu.
+
+`validateRigMetadata()` eklendi (`buildRigDefinition` çağırıyor). `zod`
+EKLENMEDİ: tek tüketici için yeni bir çalışma zamanı bağımlılığı taşımaya
+değmiyor. Hatalar toplanır — bozuk bir dosyada eksiklerin tamamı bir kerede
+görülür, tek tek düzeltip yeniden koşmak gerekmez. `positionPx`/`rootSizePx`
+null olabilirliği (izole parça export'u) bilinçli olarak korunuyor.
+
+### Kapsam eşikleri tek dosyada
+
+`workspace-contract.mjs` eşikleri `vitest.config.ts`ten REGEX ile okuyordu:
+`/thresholds\s*:\s*\{([\s\S]*?)\}/` ilk `}`de kestiği için bloğa iç içe bir
+nesne eklemek bekçiyi sessizce yanlış bloğu okumaya iterdi.
+
+Kök `quality.json` eklendi (`floor`, `exempt`, `packages`). Beş `vitest.config.ts`
+onu okur, bekçi de aynı dosyayı okur — ayrışamazlar. Regex silindi. Bekçi
+ayrıca config'in eşiği SATIR İÇİ yazmadığını da doğrular; enjekte edilen
+satır içi eşikle kırıldığı test edildi.
+
+`import ... with { type: 'json' }` kullanılmadı: Prettier 3.0 import attribute
+sözdizimini parse edemiyor ve `format-check` kapısı düşüyor. `readFileSync` +
+`JSON.parse` tercih edildi.
+
+### Kalite kapıları
+
+| Kapı        | Durum | Not                                                       |
+| ----------- | ----- | --------------------------------------------------------- |
+| `pnpm high` | ✓     | exit 0                                                    |
+| test        | ✓     | tüm paketler yeşil                                        |
+| Kapsam      | ✓     | design %98.62 (yeni doğrulayıcı için 4 test daha yazıldı) |
+| Regresyon   | ✓     | kart işlem sınırı 3 test, eski sıralamada düştü           |
+| Bekçi       | ✓     | satır içi eşik enjekte edilince kırıldı                   |
+
+## 2026-08-18 — Diagnostics: taşıma ayrımı, uçuş koruması, singleton kaldırma
+
+### Taşıma (transport) yakalamadan ayrıldı
+
+`Diagnostics` hem ölçüm topluyor hem `http://127.0.0.1:9876/debug` adresine
+`fetch` atıyordu: CORE'un normal çalışma zamanı, geliştiricinin makinesindeki
+bir sunucunun adresini biliyordu. `DiagnosticsTransport` arayüzü eklendi;
+`NoopTransport` (varsayılan), `ConsoleTransport`, `LocalServerTransport`.
+Adres artık `vol-hell/app/services.ts`'te. **CORE'un varsayılanı hiçbir ağ
+isteği açmamak** — testle kilitlendi.
+
+### Uçuşta istek koruması
+
+Endpoint yavaşlarsa her `sampleEvery` frame'de yeni bir `fetch` açılıyor ve
+uzun oturumlarda bekleyen istekler birikiyordu. `LocalServerTransport` bir
+istek uçuştayken gelen snapshot'ı atlar (`skipWhileInFlight`, kapatılabilir).
+
+### Singleton tamamen kaldırıldı
+
+`static instance` / `getInstance()` / `reset()` **silindi**. Gerekçe teorik
+değil: tek process'te ikinci bir çalışma zamanı (core doğrulaması + oyun +
+showcase) imkânsızdı ve ölçüm bağımlılığı imzalarda görünmüyordu.
+
+- `createDiagnostics()` fabrikası eklendi.
+- `createVolGame` artık Diagnostics OLUŞTURMAZ; `diagnostics` alır ve yalnızca
+  ömrüne bağlar. `gameId`/`debug` alanları kaldırıldı (ölü config bırakılmadı).
+- 24 çağrı noktası, 13 dosyada döndü: `Diagnostics.getInstance()?.x` →
+  `diagnostics?.x`.
+- Tek örnek tercihi artık OYUNUN kararı ve `vol-hell/app/services.ts`'te,
+  diğer uygulama servislerinin yanında. Bu global'i taşımak değil: CORE artık
+  dayatmıyor, tüketici seçiyor.
+
+Yeni test: iki Diagnostics örneği yan yana yaşar ve birbirinin olaylarını
+görmez — eski kodda ikinci `new` fırlatıyordu.
+
+### Sözlük temizliği
+
+`debug/types.ts` JSDoc'undaki `'dash'`, `'enemyHit'`, `input/player/fire/
+collision`, `bullets/enemies/particles` örnekleri kaldırıldı; tipler zaten
+`string` idi, yanlış olan CORE'un zihinsel modelini tek bir oyuna bağlamasıydı.
+
+### Bekçi
+
+`publicApi.test.ts`'e ikinci bir bekçi: `core/src` içinde
+`static getInstance`/`static instance` bulunursa kapı kırılır. İki bekçinin
+ortak "yorum satırlarını atla" mantığı tek yardımcıya toplandı — ilk hâlinde
+`Diagnostics`in "singleton DEĞİLDİR" diyen JSDoc'u kendi kuralını ihlal etmiş
+sayılıyordu. Enjekte edilen sızıntıyla kırıldığı doğrulandı.
+
+### Kalite kapıları
+
+| Kapı        | Durum | Not                                         |
+| ----------- | ----- | ------------------------------------------- |
+| `pnpm high` | ✓     | exit 0                                      |
+| test        | ✓     | tüm paketler yeşil                          |
+| Kapsam      | ✓     | core %86.35, vol-hell %69.91, vol-ui %83.57 |
+| Regresyon   | ✓     | uçuş koruması kaldırılınca test düştü       |
+
+## 2026-08-18 — Evrensel etkileşim sözleşmesi
+
+Denetim raporunun ikinci kırmızı maddesi: bileşenler aynı adaptive interaction
+politikasını paylaşmıyordu. Beş eksende kapatıldı.
+
+### Dokunmatik hedef: durum kilidi yerine POLİTİKA
+
+`--vol-hit-target-min` token'ını yalnızca ÜÇ seçici tüketiyordu
+(`.vol-button`, `.vol-checkbox`, `.vol-tabs__tab`) ve test tam olarak o üçünü
+doğruluyordu — yani politikayı değil o günkü durumu kilitliyordu. Sonuç:
+`.vol-icon-button` 40px, `.vol-stepper__button` 40px, `.vol-dialogue__control`
+34px, `.vol-carousel__dot` **8px** ile politikanın dışında kalmıştı.
+
+`hitTargetSync.test.ts` tersine çevrildi: CSS taranır, `cursor: pointer` taşıyan
+HER kural ya token tüketir ya da GEREKÇESİ YAZILI bir muafiyet taşır. 41
+interaktif seçicinin tamamı tek tek değerlendirildi; 22'si politikaya alındı,
+16'sı gerekçeli muaf (joystick/touch-button gibi zaten 52–72px olanlar, hedefi
+başka kutuda olanlar, tablo satırı). Muafiyetin ölü kalmasını da test engelliyor:
+seçici CSS'ten silinirse muafiyet de silinmek zorunda.
+
+`.vol-carousel__dot` özel çözüldü: görsel nokta `::before`e taşındı, buton
+kutusu dokunmatikte gerçekten 44px oluyor. Bu, `.vol-button`da reddedilen
+"görünmez overlay" tekniğinin tersi — sözde-eleman İÇERİDE kalıyor, komşularla
+örtüşme riski yok.
+
+### TouchButton: klavye ve mandallı durum
+
+`<button>` ve `aria-label` vardı ama olaylar yalnızca pointer'dan geliyordu:
+Space/Enter hiçbir şey yapmıyordu. keydown/keyup eklendi (auto-repeat filtreli,
+native click bastırılmış, basım kaynağı izleniyor ki klavyeyle basılıyken gelen
+`pointerleave` basımı iptal etmesin).
+
+Ayrıca **basılıyken `destroy()` `onRelease` çağırmıyordu**: oyuncu ateş tuşunu
+tutarken sahne kapanınca çağıranın "basılı" durumu mandallı kalıyordu.
+
+Bileşenin adı korundu — press/hold semantiği dokunmatiğe özel değil ama
+yeniden adlandırmanın bedeli public API + showcase + README + i18n; gerekçe
+sınıf dokümanına yazıldı.
+
+### Pointer capture lifecycle
+
+`MultiTouchZone.destroy()` aktif parmakları bırakmıyor ve `onTouchEnd`
+üretmiyordu — çağıranın parmak-başına durumu asılı kalıyordu.
+`SwipeGestureZone.destroy()` sürükleme ortasında aynı hatayı taşıyordu.
+
+### Flick hızı: ortalama değil BIRAKMA anı
+
+`SwipeGestureEvent.velocity` "bırakma anındaki hız" diyordu ama
+`toplam mesafe / toplam süre` hesaplıyordu. Gerekli veri (`lastX/lastTime`)
+zaten toplanıyordu, sadece kullanılmıyordu. Son iki örneğe geçildi; iki yönlü
+regresyon testi yazıldı (yavaş sürükle + savur = flick; hızlı başla + dur =
+flick değil). Eski formülde ikisi de düşüyor.
+
+### Button / IconButton: tek sözleşme
+
+İkisi aynı adı taşıyıp farklı garanti veriyordu. Ortak `runButtonClick`
+çıkarıldı; IconButton asenkron handler, yeniden giriş engeli ve hata yakalama
+kazandı, ikisi de `aria-busy` yazıyor.
+
+`Button` thenable'ı kaçırıyordu (`result instanceof Promise` yalnızca native
+söz tanır). Düzeltmenin İLK hâli `await Promise.resolve(...)` idi ve mevcut bir
+test bunu yakaladı: senkron handler bile bir microtask gecikiyordu, art arda
+iki tıklamada ikincisi "loading" sanılıp düşüyordu. `isThenable` kontrolüne
+geçildi — senkron handler senkron kalır.
+
+### Test altyapısında bulunan sessiz körlük
+
+`tests/setup.ts`'te `hasPointerCapture` KOŞULSUZ `false` dönüyordu. Yani
+`if (el.hasPointerCapture(id)) el.releasePointerCapture(id)` yazan üretim kodu
+testte hiçbir zaman release etmiyordu — gerçek tarayıcıda çalışan bir akış
+testte sessizce ölüydü. Üç stub artık ortak bir küme üzerinden tutarlı.
+
+`memory.test.ts` `removeEventListener` çağrısını SAYIYORDU (`4 kez`); klavye
+listener'ları eklenince sızıntı olmadığı hâlde kırıldı. Sayı yerine KÜME
+karşılaştırmasına geçildi — bağlanan her tür kaldırılmak zorunda.
+
+### Doğrulama
+
+Beş regresyon testinin tamamı, eski davranış geri konarak koşuldu ve düştükleri
+tek tek görüldü (flick × 2, thenable, TouchButton destroy, MultiTouchZone
+destroy).
+
+### Kalite kapıları
+
+| Kapı        | Durum | Not                                                   |
+| ----------- | ----- | ----------------------------------------------------- |
+| `pnpm high` | ✓     | exit 0                                                |
+| test        | ✓     | tüm paketler yeşil                                    |
+| Kapsam      | ✓     | core %86.34, vol-ui %83.57, vol-hell %69.94           |
+| Regresyon   | ✓     | 5 test eski kodda düştü, doğrulandı                   |
+| Showcase    | ✓     | TouchButton klavye ipucu + asenkron IconButton demosu |
+
+## 2026-08-18 — CORE domain saflığı: stat ve eylem sözlükleri oyuna taşındı
+
+Dış denetim raporunun en ağır bulgusu doğrulandı: mekanizma CORE'daydı ama
+SÖZLÜK de CORE'daydı ve VOL.HELL onu oradan tüketiyordu — Bozulamaz Kural #3'ün
+kanıtlı ihlali. İki eksende kapatıldı.
+
+### Stat sözlüğü
+
+`StatBlock<TStat>` jeneriği zaten vardı; sorun varsayılanıydı. `StatKey`,
+`STAT_KEYS`, `StatBaseValues` CORE'dan **silindi**, `StatBlock`/`StatModifier`
+varsayılansız hâle geldi. Sözlük `games/vol-hell/src/config/stats.ts`'e taşındı
+(`HellStat`, `HELL_STAT_KEYS`, `HellBaseStats`, `HellStatBlock`); `fireRate`in
+ters-cooldown semantiği de oraya gitti. 13 runtime + 4 test dosyası döndü.
+
+### Eylem sözlüğü (raporun kaçırdığı, daha ağır ihlal)
+
+`InputState.fire`/`dash` alanları CORE'un tipindeydi ve StatBlock'un aksine
+hiçbir kaçış yolu yoktu; üstelik `PCController` WASD ve SPACE'i sabit kodluyordu.
+`InputState<TAction>` + `actions: Record<TAction, boolean>` modeline geçildi;
+eylem→tuş eşlemesi `PCActionBinding` olarak VERİ hâline geldi
+(`games/vol-hell/src/config/input.ts`). Yan kazanç: tuşlar artık yeniden
+atanabilir — kullanıcıya açan UI bilinçli olarak yapılmadı, altyapı hazır.
+
+`TouchStickState` de "sağ stick ateş eder" varsayımından kurtuldu:
+`aimStickAction` verilmezse stick yalnızca nişan üretir.
+
+### Bekçi
+
+Export ADI taraması bu sınıf hatayı yakalayamaz (`StatKey` adında yasaklı terim
+yok). `publicApi.test.ts`'e değer seviyesinde bir tarama eklendi: `core/src`
+içinde `'damage'`/`'fireRate'`/`'dash'` string literali bulunursa kapı kırılır.
+Yorum satırları atlanır; ses preset kütüphanesi (`audio/synth/presets/`)
+gerekçesi yazılı bir muafiyet taşır — oradaki adlar oyun fiili değil akustik
+arketiptir. Bekçinin gerçekten kırıldığı, kasıtlı bir sızıntı enjekte edilip
+doğrulandı.
+
+### Bekçinin bulduğu üçüncü sızıntı
+
+`FloatingTextVariant = 'default' | 'damage' | 'heal' | 'critical'` — bir dövüş
+oyununun sözlüğü CORE UI'ında. Görsel tona çevrildi:
+`'default' | 'negative' | 'positive' | 'emphasis'`. CSS sınıfları, core testi ve
+`vol-ui` showcase'i birlikte güncellendi. VOL.HELL bu bileşeni kullanmıyordu.
+
+### Yolda çıkan iki gizli kusur
+
+- `InputUtils.normalizeDirection/normalizeAnalog`'un `deadZone` parametresi
+  `INPUT.DEAD_ZONE_RATIO` (`as const`) varsayılanından `0.15` LİTERAL tipini
+  miras alıyordu: "ayarlanabilir" deadzone 0.15 dışında hiçbir değeri kabul
+  etmiyordu. Açık `: number` anotasyonuyla kapatıldı.
+- `DEFAULT_MOVE_KEYS` modül seviyesinde `Phaser.Input.Keyboard.KeyCodes`
+  okuyordu; Phaser'ı mock'layan `vol-ui` showcase testi import anında çöktü
+  (module-level `i18next.t()` yasağıyla aynı sınıf hata). Ham `keyCode`
+  sayılarına geçildi — eşleme zaten saf veri olmalı. Sessiz sapmaya karşı
+  sayıların Phaser tablosuyla aynı olduğunu doğrulayan test eklendi.
+
+### Testler kendi sözlüklerini kullanıyor
+
+`statBlock.test.ts`, `touchStickState.test.ts`, `pcInputState.test.ts` ve
+`inputManager.test.ts` artık VOL.HELL'in değil kendi kümelerini kullanıyor
+(`attack/agility/vitality/recovery`, `engage/boost`). Motoru oyunun sözlüğüyle
+test etmek bağımsızlığı kanıtlamaz, gizli bir kuplajı gizleyebilir.
+`wasTouch` regresyonu (`resolvePCActions`) korundu, kaybolmadı.
+
+### Kalite kapıları
+
+| Kapı        | Durum | Not                                                     |
+| ----------- | ----- | ------------------------------------------------------- |
+| `pnpm high` | ✓     | exit 0                                                  |
+| test        | ✓     | 1375 test (turun sonunda ölçüldü; öncesi 1334)          |
+| Kapsam      | ✓     | core %86.18, vol-hell %69.94, vol-ui %83.52, design %98 |
+| Bekçi       | ✓     | enjekte edilen sızıntıda kırıldığı doğrulandı           |
 
 ## 2026-08-18 — Menü müzik listesi, dükkân sözleşmesi ve teklif hatası
 

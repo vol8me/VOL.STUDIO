@@ -1,12 +1,14 @@
-import type { Random, StatBlock } from '@volstudio/core';
-import { Diagnostics } from '@volstudio/core';
+import type { Random, StatModifier } from '@volstudio/core';
+import type { HellStat, HellStatBlock } from '@/config/stats';
 import { drawCards, getCardSellValue } from '@/config/cards';
 import type { DrawCardsOptions } from '@/config/cards';
 import type { CardConditionId, CardDefinition } from '@/config/cards/types';
 import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import { createAbility } from '@/runtime/ability/AbilityRuntime';
+import type { AbilityUpgradeKey } from '@/runtime/ability/AbilityUpgrades';
 import type { AbilitySlot } from '@/runtime/ability/types';
 import type { RunEconomy } from './RunEconomy';
+import { diagnostics } from '@/app/services';
 
 /** Sahip olunan bir kart örneği — aynı kart birden fazla kez alınabilir. */
 export interface OwnedCard {
@@ -17,6 +19,17 @@ export interface OwnedCard {
    */
   instanceId: string;
   definition: CardDefinition;
+}
+
+/**
+ * Bir kartın uygulanmaya HAZIR etkisi — henüz uygulanmamış hâli.
+ *
+ * "Doğrula → kur → uygula" ayrımının orta adımı: hesaplama sırasında bir hata
+ * çıkarsa hiçbir durum değişmemiş olur.
+ */
+interface PlannedCardEffect {
+  modifiers: StatModifier<HellStat>[];
+  upgrades: { key: AbilityUpgradeKey; amount: number }[];
 }
 
 /** Koşullu takas kartlarının okuduğu canlı oyun durumu. */
@@ -31,7 +44,7 @@ export interface CardConditionSources {
 
 export interface CardInventoryDeps {
   random: Random;
-  playerStats: StatBlock;
+  playerStats: HellStatBlock;
   abilities: AbilityRuntime;
   economy: RunEconomy;
   conditions: CardConditionSources;
@@ -63,24 +76,54 @@ export class CardInventoryManager {
     return drawCards(this.deps.random, count, { ...options, exclude });
   }
 
-  /** Ücretsiz edinme (level-up seçimi) — kart hemen uygulanır. */
+  /**
+   * Ücretsiz edinme (level-up seçimi) — kart hemen uygulanır.
+   *
+   * **İşlem sınırı:** etkiler önce PLANLANIR, sonra tek noktada uygulanır ve
+   * kart ancak uygulama başarılıysa envantere girer. Önceki sıralama
+   * (`owned.push` → `applyCard`) yarım commit'e açıktı: `applyCard` fırlatırsa
+   * kart envanterde GÖRÜNÜYOR ama etkileri yarım uygulanmış oluyordu. Bugünkü
+   * kartlarda fırlatma yolu yok; kart sistemi büyüdükçe (kaynak harca → stat
+   * değiştir → ability yükselt → kuşan zinciri) bu sıralama kritikleşir.
+   */
   acquire(card: CardDefinition): OwnedCard {
-    const instanceId = `${card.id}#${++this.instanceCounter}`;
+    const instanceId = `${card.id}#${this.instanceCounter + 1}`;
     const owned: OwnedCard = { instanceId, definition: card };
-    this.owned.push(owned);
-    this.applyCard(owned);
 
-    Diagnostics.getInstance()?.recordEvent('cardAcquired', { id: card.id, instanceId });
+    // Plan aşaması: hiçbir durum değişmez, yalnızca ne yapılacağı hesaplanır.
+    const effect = this.planCardEffect(owned);
+
+    // Commit aşaması: buradan sonrası tümü-ya-hiç.
+    this.commitCardEffect(effect);
+    this.owned.push(owned);
+    this.instanceCounter++;
+
+    diagnostics?.recordEvent('cardAcquired', { id: card.id, instanceId });
     return owned;
   }
 
   /**
    * Dükkandan satın alma — Flux yetmezse hiçbir şey değişmez.
+   *
+   * Harcama ile uygulama arasında bir hata olursa Flux GERİ VERİLİR: oyuncunun
+   * parası gidip kartı gelmeme durumu, bir hata mesajından çok daha kötü bir
+   * kayıptır.
+   *
    * @returns Alınan kart örneği, yetersiz bakiyede null.
    */
   purchase(card: CardDefinition): OwnedCard | null {
     if (!this.deps.economy.spendFlux(card.price)) return null;
-    return this.acquire(card);
+
+    try {
+      return this.acquire(card);
+    } catch (error) {
+      this.deps.economy.addFlux(card.price);
+      diagnostics?.recordEvent('cardPurchaseRolledBack', {
+        id: card.id,
+        price: card.price,
+      });
+      throw error;
+    }
   }
 
   /**
@@ -98,7 +141,7 @@ export class CardInventoryManager {
     const refund = getCardSellValue(owned.definition.price);
     this.deps.economy.addFlux(refund);
 
-    Diagnostics.getInstance()?.recordEvent('cardSold', { id: owned.definition.id, refund });
+    diagnostics?.recordEvent('cardSold', { id: owned.definition.id, refund });
     return refund;
   }
 
@@ -153,21 +196,38 @@ export class CardInventoryManager {
     );
   }
 
-  /** Kartın stat ve ability etkilerini devreye alır. */
-  private applyCard(owned: OwnedCard): void {
+  /**
+   * Kartın etkisini HESAPLAR — hiçbir şeyi değiştirmez.
+   *
+   * Koşul closure'ları burada doğar; katalog saf veri olduğu için
+   * `resolveCondition` bilinmeyen bir kimlikte fırlatırsa hata henüz hiçbir
+   * durum değişmeden yakalanır.
+   */
+  private planCardEffect(owned: OwnedCard): PlannedCardEffect {
     const { definition, instanceId } = owned;
 
-    for (const modifier of definition.modifiers ?? []) {
-      this.deps.playerStats.addModifier({
-        id: instanceId,
-        stat: modifier.stat,
-        type: modifier.type,
-        value: modifier.value,
-        condition: modifier.conditionId ? this.resolveCondition(modifier.conditionId) : undefined,
-      });
-    }
+    const modifiers = (definition.modifiers ?? []).map((modifier) => ({
+      id: instanceId,
+      stat: modifier.stat,
+      type: modifier.type,
+      value: modifier.value,
+      condition: modifier.conditionId ? this.resolveCondition(modifier.conditionId) : undefined,
+    }));
 
-    for (const upgrade of definition.abilityUpgrades ?? []) {
+    const upgrades = (definition.abilityUpgrades ?? []).map((upgrade) => ({
+      key: upgrade.key,
+      amount: upgrade.amount,
+    }));
+
+    return { modifiers, upgrades };
+  }
+
+  /** Planlanmış etkiyi uygular. Bu noktadan sonra doğrulama yapılmaz. */
+  private commitCardEffect(effect: PlannedCardEffect): void {
+    for (const modifier of effect.modifiers) {
+      this.deps.playerStats.addModifier(modifier);
+    }
+    for (const upgrade of effect.upgrades) {
       this.deps.abilities.upgrades.add(upgrade.key, upgrade.amount);
     }
   }

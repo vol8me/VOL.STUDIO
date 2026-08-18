@@ -41,13 +41,14 @@ pnpm build:tauri                           # PC installer build
 
 Kalite kapıları `just` ile localde çalıştırılır. GitHub yalnızca source control, PR ve release için kullanılır; CI runner yoktur.
 
-| Seviye          | Komut                        | Ne yapar                                             |
-| --------------- | ---------------------------- | ---------------------------------------------------- |
-| Pre-commit      | `pnpm quick`                 | sözleşme, format, typecheck, lint (~45 sn)           |
-| Push öncesi     | `pnpm high`                  | quick + css lint + coverage eşikleri + tüm build'ler |
-| Release/signoff | `pnpm signoff`               | high + cargo check/fmt/clippy                        |
-| Uzun build      | `pnpm exec just tauri-build` | game build + Tauri prod build (manuel)               |
-| Ortam           | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri deps kontrolü  |
+| Seviye          | Komut                        | Ne yapar                                                 |
+| --------------- | ---------------------------- | -------------------------------------------------------- |
+| Pre-commit      | `pnpm quick`                 | sözleşme, format, typecheck, lint (~45 sn)               |
+| Push öncesi     | `pnpm high`                  | quick + css lint + coverage eşikleri + tüm build'ler     |
+| Release/signoff | `pnpm signoff`               | high + cargo check/fmt/clippy                            |
+| Uzun build      | `pnpm exec just tauri-build` | game build + Tauri prod build (manuel)                   |
+| Ortam           | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri deps kontrolü      |
+| Rapor           | `pnpm exec just report high` | Kapıyı koşar, sonucu yapılandırılmış raporlar (`--json`) |
 
 `pre-commit` → `pnpm quick` ve `pre-push` → `pnpm high` hook'ları `pnpm install`
 sırasında kurulur; atlamak için `SKIP_SIMPLE_GIT_HOOKS=1`. Test yükü bilerek
@@ -57,6 +58,10 @@ Kapılar workspace'ten türer: yeni bir paket hiçbir kapıya elle eklenmez,
 `pnpm -r` ve repo geneli glob'lar sayesinde kendiliğinden kapsanır.
 `scripts/workspace-contract.mjs` bekçisi her commit'te bunu doğrular — bir paket
 `test`/`test:coverage` script'i ya da coverage eşiği olmadan repoya giremez.
+
+Kapsam eşikleri kök `quality.json`da yaşar; beş `vitest.config.ts` onu okur ve
+bekçi de aynı dosyayı okur, yani ayrışamazlar. Bir config'e eşiği satır içi
+yazmak kapıyı kırar.
 
 `just` ikilisi `node_modules/.bin` altına kurulur, global `PATH`'e girmez —
 çıplak `just fast` değil `pnpm fast` ya da `pnpm exec just fast` kullanılır.

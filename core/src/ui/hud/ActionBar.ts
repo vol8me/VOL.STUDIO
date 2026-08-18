@@ -1,3 +1,4 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { i18next } from '../../systems/I18n';
 
 export interface ActionBarSlot {
@@ -32,7 +33,16 @@ export class ActionBar {
   private readonly shortcuts = new Map<string, string>();
   private readonly onActivateHandler: (id: string) => void;
   private readonly showLabels: boolean;
-  private readonly cleanups: (() => void)[] = [];
+  /**
+   * Bu bileşenin ömrüne bağlı kaynaklar.
+   *
+   * Elle yönetilen bir `(() => void)[]` dizisiydi. `DisposableScope`in üç
+   * farkı var ve üçü de davranışsal: kapatma TERS sırada yapılır (kaynaklar
+   * arası bağımlılık genelde bu yönde kurulur), ikinci `dispose()` no-op'tur
+   * ve bir kaynağın kapatılması FIRLATIRSA geri kalanlar yine kapatılır —
+   * düz `for` döngüsü ilk hatada duruyor ve kalan her şeyi sızdırıyordu.
+   */
+  private readonly scope = new DisposableScope();
   private boundKeyDown: ((event: KeyboardEvent) => void) | null = null;
 
   constructor(options: ActionBarOptions) {
@@ -83,7 +93,7 @@ export class ActionBar {
   }
 
   destroy(): void {
-    for (const cleanup of this.cleanups) cleanup();
+    this.scope.dispose();
     if (this.boundKeyDown) window.removeEventListener('keydown', this.boundKeyDown);
     this.element.remove();
   }
@@ -157,7 +167,7 @@ export class ActionBar {
       this.onActivateHandler(slot.id);
     };
     button.addEventListener('click', onClick);
-    this.cleanups.push(() => button.removeEventListener('click', onClick));
+    this.scope.add({ dispose: () => button.removeEventListener('click', onClick) });
 
     this.slotElements.set(slot.id, button);
     return button;

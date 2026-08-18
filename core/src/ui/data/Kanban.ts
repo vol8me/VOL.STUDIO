@@ -1,3 +1,4 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_THRESHOLD } from '../../constants';
 import { i18next } from '../../systems/I18n';
 
@@ -90,9 +91,26 @@ export class Kanban {
   ) => void;
   private readonly onWipLimitExceededHandler?: (columnId: string, cardId: string) => void;
   private readonly onCardClickHandler?: (card: KanbanCard, columnId: string) => void;
-  private readonly cleanups: (() => void)[] = [];
-  /** Kart listener temizlikleri, sütun bazında — tek düz listede biriktirilirse eskiler hiç kaldırılmaz ve bellek sınırsız büyür. */
-  private readonly cardCleanups = new Map<string, (() => void)[]>();
+  /**
+   * Bu bileşenin ömrüne bağlı kaynaklar.
+   *
+   * Elle yönetilen bir `(() => void)[]` dizisiydi. `DisposableScope`in üç
+   * farkı var ve üçü de davranışsal: kapatma TERS sırada yapılır (kaynaklar
+   * arası bağımlılık genelde bu yönde kurulur), ikinci `dispose()` no-op'tur
+   * ve bir kaynağın kapatılması FIRLATIRSA geri kalanlar yine kapatılır —
+   * düz `for` döngüsü ilk hatada duruyor ve kalan her şeyi sızdırıyordu.
+   */
+  private readonly scope = new DisposableScope();
+  /**
+   * Kart listener temizlikleri, sütun bazında — tek düz listede biriktirilirse
+   * eskiler hiç kaldırılmaz ve bellek sınırsız büyür.
+   *
+   * Her sütun KENDİ `DisposableScope`una sahip: sütun yeniden çizildiğinde o
+   * scope kapatılıp yenisi açılır. Ana `scope` bileşenin tamamının ömrünü,
+   * bunlar sütunun çizim ömrünü temsil eder — iç içe scope, ana scope'a düz
+   * bir dizi asmaktan daha doğru bir ömür modeli.
+   */
+  private readonly cardScopes = new Map<string, DisposableScope>();
   /** Sürükleme sırasında hedef sütunda kartın tam olarak nereye bırakılacağını gösteren ince çizgi. */
   private readonly dropIndicator: HTMLDivElement;
   /** flashCard() için işgal edilen timeout. */
@@ -159,25 +177,26 @@ export class Kanban {
     for (const rafId of this.columnScrollRaf.values()) cancelAnimationFrame(rafId);
     this.columnScrollRaf.clear();
     if (this.highlightTimeout !== null) window.clearTimeout(this.highlightTimeout);
-    for (const cleanup of this.cleanups) cleanup();
-    for (const columnId of [...this.cardCleanups.keys()]) this.clearCardCleanups(columnId);
+    this.scope.dispose();
+    for (const columnId of [...this.cardScopes.keys()]) this.clearCardCleanups(columnId);
     this.element.remove();
   }
 
   private trackCardCleanup(columnId: string, cleanup: () => void): void {
-    const existing = this.cardCleanups.get(columnId);
-    if (existing) {
-      existing.push(cleanup);
-      return;
+    let scope = this.cardScopes.get(columnId);
+    if (!scope) {
+      scope = new DisposableScope();
+      this.cardScopes.set(columnId, scope);
     }
-    this.cardCleanups.set(columnId, [cleanup]);
+    scope.add({ dispose: cleanup });
   }
 
   private clearCardCleanups(columnId: string): void {
-    const cleanups = this.cardCleanups.get(columnId);
-    if (!cleanups) return;
-    for (const cleanup of cleanups) cleanup();
-    cleanups.length = 0;
+    // Scope `dispose()` sonrası yeniden kullanılamaz (ikinci dispose no-op'tur
+    // ve geç eklenen kaynak anında kapatılır), bu yüzden kaydı silinir: bir
+    // sonraki `trackCardCleanup` taze bir scope açar.
+    this.cardScopes.get(columnId)?.dispose();
+    this.cardScopes.delete(columnId);
   }
 
   private isColumnFull(column: KanbanColumn): boolean {
@@ -207,7 +226,7 @@ export class Kanban {
       }
     };
     input.addEventListener('input', onInput);
-    this.cleanups.push(() => input.removeEventListener('input', onInput));
+    this.scope.add({ dispose: () => input.removeEventListener('input', onInput) });
     bar.appendChild(input);
 
     return bar;
@@ -255,7 +274,7 @@ export class Kanban {
 
       const onScroll = (): void => this.scheduleColumnWindowRender(column.id);
       body.addEventListener('scroll', onScroll);
-      this.cleanups.push(() => body.removeEventListener('scroll', onScroll));
+      this.scope.add({ dispose: () => body.removeEventListener('scroll', onScroll) });
     } else {
       this.columnViewports.set(column.id, body);
     }

@@ -1,4 +1,4 @@
-import type { StatBaseValues } from '@volstudio/core';
+import type { HellBaseStats } from '@/config/stats';
 
 /**
  * Düşman arketipi — davranış ailesini belirler.
@@ -64,7 +64,7 @@ export interface EnemyDefinition {
    * `damage` = temas hasarı, `speed` = hareket hızı (piksel/sn),
    * `health` = maksimum can, `fireRate` = temas hasarı bekleme süresi (ms).
    */
-  baseStats: StatBaseValues;
+  baseStats: HellBaseStats;
   /** Çarpışma/çizim yarıçapı (piksel). */
   radius: number;
   /** Gövde rengi (0xRRGGBB). */

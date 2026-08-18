@@ -1,11 +1,11 @@
 import type Phaser from 'phaser';
 import type { Random, Vector2 } from '@volstudio/core';
-import { Diagnostics } from '@volstudio/core';
 import { economyConfig } from '@/config/economy';
 import { playerConfig } from '@/config/player';
 import type { Border } from './Border';
 import { FluxPickup } from './FluxPickup';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
+import { diagnostics } from '@/app/services';
 
 export interface FluxPickupCallbacks {
   /** Bir parça toplandığında — sayaca eklemek için. */
@@ -83,7 +83,7 @@ export class FluxPickupManager {
       const amount = pickup.collect();
       this.effects.play('fluxPickup', pickup.x, pickup.y);
       this.callbacks.onCollected?.(amount);
-      Diagnostics.getInstance()?.recordEvent('fluxCollected', { amount });
+      diagnostics?.recordEvent('fluxCollected', { amount });
       this.remove(i);
     }
   }

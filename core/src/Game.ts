@@ -3,7 +3,7 @@ import { FontManager, type FontFaceSpec } from './systems/FontManager';
 import { ViewportManager, type ScaleStrategy } from './systems/ViewportManager';
 import { VOL_FONTS, type VolFontFamily } from './systems/DefaultFonts';
 import { TECH } from './constants';
-import { Diagnostics } from './debug/Diagnostics';
+import type { Diagnostics } from './debug/Diagnostics';
 
 export interface VolGameConfig {
   /** Yalnızca strategy: 'resize' iken opsiyoneldir — bkz. ViewportConfig.width. */
@@ -19,10 +19,17 @@ export interface VolGameConfig {
   input?: Phaser.Types.Core.InputConfig;
   /** Yüklenecek font alt seti. Belirtilmezse tüm VOL fontları yüklenir. */
   fonts?: VolFontFamily[];
-  /** Oyun kimliği; debug/diagnostics log'ları için kullanılır. */
-  gameId?: string;
-  /** Diagnostics modülünü aktif et. Genellikle `isDiagnosticsEnabled()` ile verilir. */
-  debug?: boolean;
+  /**
+   * Ölçüm örneği. `createVolGame` bunu OLUŞTURMAZ, yalnızca oyunun ömrüne
+   * bağlar (oyun destroy olunca `destroy()` çağırır).
+   *
+   * Önceden burada `debug`/`gameId` alanları vardı ve CORE global bir
+   * singleton kuruyordu; ölçüm bağımlılığı görünmez oluyor ve tek process'te
+   * ikinci bir çalışma zamanı imkânsızlaşıyordu. Artık tüketici
+   * `isDiagnosticsEnabled()` ile karar verip `createDiagnostics(...)` ile
+   * kendi örneğini üretir ve buraya geçirir.
+   */
+  diagnostics?: Diagnostics;
   /**
    * Sahneler init edilmeden (Phaser.Game oluşturulmadan) ÖNCE çalışır; native
    * state/save load için kullanılır (bkz. GDD 17.3). Hook reddedilirse oyun başlatılmaz.
@@ -85,15 +92,12 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     audio: { noAudio: true },
   };
 
-  if (config.debug && config.gameId && !Diagnostics.getInstance()) {
-    new Diagnostics({ gameId: config.gameId });
-  }
-
   const game = new Phaser.Game(gameConfig);
 
-  game.events.once(Phaser.Core.Events.DESTROY, () => {
-    Diagnostics.getInstance()?.destroy();
-  });
+  const { diagnostics } = config;
+  if (diagnostics) {
+    game.events.once(Phaser.Core.Events.DESTROY, () => diagnostics.destroy());
+  }
 
   if (config.strategy === 'resize') {
     const detachResize = viewportManager.attachResize(game);

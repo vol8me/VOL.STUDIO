@@ -213,6 +213,11 @@
   align-items: center;
   font-size: 18px;
   display: inline-flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-icon-button__icon {
@@ -422,6 +427,11 @@
   background: var(--vol-ui-surface-2);
   border: 1px solid var(--vol-ui-border-soft);
   position: relative;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-slider--horizontal .vol-slider__track {
@@ -594,6 +604,11 @@
   gap: var(--vol-space-sm);
   cursor: pointer;
   display: inline-flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-radio__input {
@@ -694,6 +709,11 @@
   font-size: 14px;
   font-weight: 600;
   position: relative;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-segmented__item:hover {
@@ -755,6 +775,11 @@
   font-size: 20px;
   font-weight: 700;
   line-height: 1;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-stepper__button:hover {
@@ -845,6 +870,11 @@
   height: 16px;
   margin: 5px 0;
   position: relative;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-range-slider__track::before {

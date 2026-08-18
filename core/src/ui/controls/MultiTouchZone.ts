@@ -69,6 +69,18 @@ export class MultiTouchZone {
   }
 
   destroy(): void {
+    // Aktif parmaklar varken yok edilirse çağıranın parmak-başına durumu
+    // (seçim, çizim, tuş) ASILI KALIRDI: `onTouchEnd` hiç gelmiyordu. DOM
+    // kaldırıldığında tarayıcı capture'ı kendi bırakır ama bu örtük davranışa
+    // yaslanmak, tüketiciye bildirim borcunu ödemez.
+    for (const pointerId of [...this.activePointers]) {
+      if (this.element.hasPointerCapture(pointerId)) {
+        this.element.releasePointerCapture(pointerId);
+      }
+      this.activePointers.delete(pointerId);
+      this.onTouchEndHandler?.(pointerId);
+    }
+
     this.element.removeEventListener('pointerdown', this.boundPointerDown);
     this.element.removeEventListener('pointermove', this.boundPointerMove);
     this.element.removeEventListener('pointerup', this.boundPointerUp);
@@ -100,7 +112,9 @@ export class MultiTouchZone {
 
   private handlePointerUp(event: PointerEvent): void {
     if (!this.activePointers.has(event.pointerId)) return;
-    this.element.releasePointerCapture(event.pointerId);
+    if (this.element.hasPointerCapture(event.pointerId)) {
+      this.element.releasePointerCapture(event.pointerId);
+    }
     this.activePointers.delete(event.pointerId);
     this.onTouchEndHandler?.(event.pointerId);
   }

@@ -1,4 +1,5 @@
 import type { InputSnapshot } from '../input/InputSnapshot';
+import type { DiagnosticsTransport } from './transport';
 
 /**
  * Diagnostics modülü için ortak tipler — frame metrikleri, input snapshot'ları
@@ -16,7 +17,7 @@ export interface StatsSummary {
 
 /** Bir oyun içi olayı. */
 export interface DiagnosticsEvent {
-  /** Olay tipi: 'dash', 'enemyHit', 'enemySpawn', vb. */
+  /** Olay tipi — tüketicinin belirlediği serbest bir kimlik. */
   type: string;
   /** Olay zaman damgası (performance.now() ms). */
   t: number;
@@ -40,9 +41,9 @@ export interface DiagnosticsSnapshot {
   render: StatsSummary;
   /** Game update süresi. */
   update: StatsSummary;
-  /** Aşama süreleri: input, player, fire, entities, collision, vb. */
+  /** Aşama süreleri; aşama adları tüketiciden gelir (CORE bir aşama listesi tanımlamaz). */
   stages: Record<string, number>;
-  /** Sayısal metrikler: bullets, enemies, particles, vb. */
+  /** Sayısal metrikler; metrik adları tüketiciden gelir. */
   counts: Record<string, number>;
   /** Input snapshot. */
   input: InputSnapshot;
@@ -62,10 +63,13 @@ export interface ScreenInfo {
 export interface DiagnosticsOptions {
   /** Oyun kimliği; log satırlarında gösterilir. */
   gameId: string;
-  /** Kaç karede bir sunucuya snapshot gönderilsin? Varsayılan 60. */
+  /** Kaç karede bir snapshot gönderilsin? Varsayılan 60. */
   sampleEvery?: number;
-  /** Sunucu adresi. Varsayılan http://127.0.0.1:9876/debug. */
-  serverUrl?: string;
+  /**
+   * Snapshot'ı nereye göndereceği. Verilmezse hiçbir yere gönderilmez
+   * (`NoopTransport`) — CORE'un varsayılanı bir ağ isteği açmak değildir.
+   */
+  transport?: DiagnosticsTransport;
   /** Ekranda overlay gösterilsin mi? Varsayılan true. */
   overlay?: boolean;
 }

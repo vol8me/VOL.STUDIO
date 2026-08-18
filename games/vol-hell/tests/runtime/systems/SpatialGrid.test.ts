@@ -156,3 +156,155 @@ describe('SpatialGrid', () => {
     expect(second[0].x).toBe(500);
   });
 });
+
+describe('SpatialGrid artımlı güncelleme', () => {
+  type TestEnemy = Parameters<SpatialGrid['insert']>[0] & { x: number; y: number; id: number };
+
+  let nextId = 0;
+
+  function movable(x: number, y: number): TestEnemy {
+    const enemy = makeEnemy(x, y) as TestEnemy;
+    enemy.id = ++nextId;
+    return enemy;
+  }
+
+  /**
+   * Sorgu sonucunu KİMLİK KÜMESİNE indirger.
+   *
+   * `queryNearby`nin dönüş SIRASI sözleşmenin parçası değildir: hücre içindeki
+   * sıra ekleme sırasına bağlıdır ve artımlı yolda hareket eden entity dizinin
+   * sonuna geçer. Karşılaştırılması gereken şey "hangi entity'ler yakın",
+   * "hangi sırayla" değil.
+   */
+  function idsOf(enemies: readonly unknown[]): number[] {
+    return enemies.map((enemy) => (enemy as TestEnemy).id).sort((a, b) => a - b);
+  }
+
+  it('remove entity’yi sorgudan çıkarır', () => {
+    const grid = new SpatialGrid(56);
+    const enemy = movable(100, 100);
+    grid.insert(enemy);
+    expect(grid.queryNearby(100, 100)).toHaveLength(1);
+
+    expect(grid.remove(enemy)).toBe(true);
+    expect(grid.queryNearby(100, 100)).toHaveLength(0);
+    expect(grid.has(enemy)).toBe(false);
+  });
+
+  it('bilinmeyen entity’nin remove’u no-op (çağıran ayrı kayıt tutmaz)', () => {
+    const grid = new SpatialGrid(56);
+    expect(grid.remove(movable(10, 10))).toBe(false);
+  });
+
+  it('update aynı hücre içinde hareket ederse ERKEN ÇIKAR', () => {
+    // Artımlı modelin asıl kazancı bu: hareketin çoğu hücre değiştirmez.
+    const grid = new SpatialGrid(56);
+    const enemy = movable(10, 10);
+    grid.insert(enemy);
+
+    enemy.x = 20;
+    enemy.y = 20;
+    expect(grid.update(enemy)).toBe(false);
+    expect(grid.queryNearby(20, 20)).toHaveLength(1);
+  });
+
+  it('update hücre değiştiren entity’yi taşır — eski hücrede iz bırakmaz', () => {
+    const grid = new SpatialGrid(56);
+    const enemy = movable(10, 10);
+    grid.insert(enemy);
+
+    enemy.x = 1000;
+    enemy.y = 1000;
+    expect(grid.update(enemy)).toBe(true);
+
+    expect(grid.queryNearby(10, 10)).toHaveLength(0);
+    expect(grid.queryNearby(1000, 1000)).toHaveLength(1);
+    expect(grid.getIndexedCount()).toBe(1);
+  });
+
+  it('indekste olmayan entity için update ekleme yapar (upsert)', () => {
+    const grid = new SpatialGrid(56);
+    const enemy = movable(10, 10);
+
+    expect(grid.update(enemy)).toBe(true);
+    expect(grid.queryNearby(10, 10)).toHaveLength(1);
+  });
+
+  it('clear artımlı takip kaydını da temizler', () => {
+    const grid = new SpatialGrid(56);
+    const enemy = movable(10, 10);
+    grid.insert(enemy);
+
+    grid.clear();
+    expect(grid.getIndexedCount()).toBe(0);
+    expect(grid.has(enemy)).toBe(false);
+  });
+
+  it('rebuild clear+insertAll+trim üçlüsüyle AYNI sonucu verir', () => {
+    const enemies = [movable(10, 10), movable(500, 500), movable(1200, 40)];
+
+    const manual = new SpatialGrid(56);
+    manual.clear();
+    manual.insertAll(enemies);
+    manual.trim();
+
+    const viaRebuild = new SpatialGrid(56);
+    viaRebuild.rebuild(enemies);
+
+    expect(viaRebuild.getCellCount()).toBe(manual.getCellCount());
+    for (const enemy of enemies) {
+      expect(viaRebuild.queryNearby(enemy.x, enemy.y).length).toBe(
+        manual.queryNearby(enemy.x, enemy.y).length,
+      );
+    }
+  });
+
+  /**
+   * EŞDEĞERLİK testi — bu turun asıl sözleşmesi.
+   *
+   * İki güncelleme modeli aynı dünyayı aynı biçimde indekslemeli. Aksi halde
+   * artımlı yol sessizce yanlış sonuç verir ve hata ancak çarpışmalar
+   * "bazen çalışmıyor" diye fark edilir. Rastgele ama DETERMİNİSTİK bir
+   * hareket dizisi üzerinde iki grid yan yana sürülür.
+   */
+  it('artımlı güncelleme ile tam rebuild AYNI sorgu sonuçlarını verir', () => {
+    let seed = 12345;
+    const nextRandom = (): number => {
+      // xorshift — deterministik, testler arası bağımsız.
+      seed ^= seed << 13;
+      seed ^= seed >>> 17;
+      seed ^= seed << 5;
+      return Math.abs(seed) / 2 ** 31;
+    };
+
+    const cellSize = 56;
+    const enemies = Array.from({ length: 40 }, () =>
+      movable(nextRandom() * 800, nextRandom() * 800),
+    );
+
+    const incremental = new SpatialGrid(cellSize);
+    const rebuilt = new SpatialGrid(cellSize);
+    for (const enemy of enemies) incremental.insert(enemy);
+
+    for (let frame = 0; frame < 30; frame++) {
+      for (const enemy of enemies) {
+        enemy.x += (nextRandom() - 0.5) * 120;
+        enemy.y += (nextRandom() - 0.5) * 120;
+        incremental.update(enemy);
+      }
+      incremental.trim();
+      rebuilt.rebuild(enemies);
+
+      expect(incremental.getIndexedCount(), `frame ${frame}`).toBe(enemies.length);
+
+      for (const enemy of enemies) {
+        const fromIncremental = idsOf(incremental.queryNearby(enemy.x, enemy.y));
+        const fromRebuild = idsOf(rebuilt.queryNearby(enemy.x, enemy.y));
+        expect(fromIncremental, `frame ${frame}, entity ${enemy.id}`).toEqual(fromRebuild);
+        // Sorgu boş çıkarsa test hiçbir şey doğrulamaz: entity en azından
+        // KENDİNİ görmeli.
+        expect(fromIncremental, `frame ${frame}`).toContain(enemy.id);
+      }
+    }
+  });
+});

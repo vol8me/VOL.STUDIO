@@ -7,6 +7,8 @@ export * from './elite';
 export * from './game';
 export * from './physics';
 export * from './player';
+export * from './stats';
+export * from './input';
 export * from './bullet';
 export * from './enemy';
 export * from './enemies';

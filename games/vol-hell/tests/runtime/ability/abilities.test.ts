@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { StatBlock, Vector2, createRandom } from '@volstudio/core';
+import type { HellStat, HellStatBlock } from '@/config/stats';
 import { ABILITY_CATALOG, MIN_ABILITY_COOLDOWN_MS, getAbilityDefinition } from '@/config/abilities';
 import { AbilityRuntime, createAbility } from '@/runtime/ability/AbilityRuntime';
 import type { ChainLightningAbility } from '@/runtime/ability/ChainLightningAbility';
@@ -79,8 +80,8 @@ function makeBullets(spawned: SpawnedBullet[]): BulletManager {
   } as unknown as BulletManager;
 }
 
-function makePlayerStats(): StatBlock {
-  return new StatBlock({
+function makePlayerStats(): HellStatBlock {
+  return new StatBlock<HellStat>({
     damage: bulletConfig.damage,
     speed: 220,
     health: 100,
@@ -91,7 +92,7 @@ function makePlayerStats(): StatBlock {
 describe('Ability sistemi', () => {
   let effects: EffectManager & { calls: string[] };
   let spawned: SpawnedBullet[];
-  let stats: StatBlock;
+  let stats: HellStatBlock;
   let runtime: AbilityRuntime;
   const playerPos = new Vector2(400, 300);
   const aim = new Vector2(1, 0);

@@ -492,6 +492,11 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-carousel__arrow svg {
@@ -518,25 +523,49 @@
   display: flex;
 }
 
+/*
+ * Sayfa noktası. Sistemdeki EN KÜÇÜK dokunma hedefiydi (8×8 px).
+ *
+ * Görsel nokta `::before`e taşındı; buton kutusu dokunmatikte gerçekten
+ * 44px'e büyür. Bu, `.vol-button`da reddedilen "görünmez ::before overlay"
+ * tekniğinin TERSİ: orada sözde-eleman elemanın DIŞINA taşıp komşularla
+ * örtüşüyordu; burada gerçek kutu büyüyor, sözde-eleman İÇERİDE kalıyor —
+ * `.vol-carousel__dots`un flex `gap`i kardeşleri otomatik aralar.
+ */
 .vol-carousel__dot {
   pointer-events: auto;
   cursor: pointer;
+  justify-content: center;
+  align-items: center;
+  background: 0 0;
+  width: 8px;
+  height: 8px;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-carousel__dot::before {
+  content: '';
   background: var(--vol-ui-border-strong);
+  border-radius: 50%;
   width: 8px;
   height: 8px;
   transition:
     background-color var(--vol-transition-fast),
     transform var(--vol-transition-fast);
-  border: none;
-  border-radius: 50%;
-  padding: 0;
+  display: block;
 }
 
-.vol-carousel__dot:hover {
+.vol-carousel__dot:hover::before {
   background: var(--vol-ui-text-muted);
 }
 
-.vol-carousel__dot--active {
+.vol-carousel__dot--active::before {
   background: var(--vol-ui-brand-solid);
   transform: scale(1.3);
 }

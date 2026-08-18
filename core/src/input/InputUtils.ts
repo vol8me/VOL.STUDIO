@@ -6,8 +6,12 @@ import { INPUT } from '../constants';
  */
 export function normalizeDirection(
   v: Vector2,
-  deadZone = INPUT.DEAD_ZONE_RATIO,
-  maxRadius = 1.0,
+  // Tipler AÇIKÇA yazılır: `INPUT` bir `as const` nesnesi olduğu için
+  // `INPUT.DEAD_ZONE_RATIO`nun tipi `number` değil `0.15` literalidir.
+  // Anotasyon olmadan parametre o literale daralır ve "ayarlanabilir"
+  // deadzone 0.15 dışında hiçbir değeri kabul etmez.
+  deadZone: number = INPUT.DEAD_ZONE_RATIO,
+  maxRadius: number = 1.0,
 ): Vector2 {
   const len = v.length();
   if (len <= 0 || len / maxRadius < deadZone) {
@@ -23,8 +27,9 @@ export function normalizeDirection(
  */
 export function normalizeAnalog(
   v: Vector2,
-  deadZone = INPUT.DEAD_ZONE_RATIO,
-  maxRadius = 1.0,
+  // bkz. normalizeDirection — literal daralmasını önleyen açık anotasyon.
+  deadZone: number = INPUT.DEAD_ZONE_RATIO,
+  maxRadius: number = 1.0,
 ): Vector2 {
   const len = v.length();
   if (len <= 0) {

@@ -1,3 +1,4 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { Popup, type PopupPlacement } from './Popup';
 
 export interface ContextMenuItem {
@@ -35,8 +36,13 @@ function isSeparator(entry: ContextMenuEntry): entry is ContextMenuSeparator {
 export class ContextMenu {
   readonly popup: Popup;
   private readonly itemButtons: HTMLButtonElement[] = [];
-  private readonly boundClicks: (() => void)[] = [];
-  private readonly boundKeydowns: ((event: KeyboardEvent) => void)[] = [];
+  /**
+   * Tüm listener'lar burada. Önceden handler referansları `boundClicks` /
+   * `boundKeydowns` PARALEL dizilerinde tutuluyor ve `destroy()` onları
+   * `itemButtons` ile aynı İNDEKSTE eşleştiriyordu — üç dizinin sırası
+   * sessizce ayrışırsa yanlış listener kaldırılır ve hata görünmez olur.
+   */
+  private readonly scope = new DisposableScope();
   private boundToggle: () => void;
   private readonly target: HTMLElement;
 
@@ -96,12 +102,10 @@ export class ContextMenu {
         this.popup.close();
         entry.onSelect();
       };
-      itemButton.addEventListener('click', onClick);
-      this.boundClicks.push(onClick);
+      this.scope.addListener(itemButton, 'click', onClick);
 
       const onKeydown = (event: KeyboardEvent): void => this.handleItemKeydown(event, index);
-      itemButton.addEventListener('keydown', onKeydown);
-      this.boundKeydowns.push(onKeydown);
+      this.scope.addListener(itemButton, 'keydown', onKeydown as EventListener);
 
       this.itemButtons.push(itemButton);
       this.popup.element.appendChild(itemButton);
@@ -114,15 +118,11 @@ export class ContextMenu {
         this.focusItem(this.firstEnabledIndex());
       }
     };
-    this.target.addEventListener('click', this.boundToggle);
+    this.scope.addListener(this.target, 'click', this.boundToggle);
   }
 
   destroy(): void {
-    this.target.removeEventListener('click', this.boundToggle);
-    for (let i = 0; i < this.itemButtons.length; i++) {
-      this.itemButtons[i].removeEventListener('click', this.boundClicks[i]);
-      this.itemButtons[i].removeEventListener('keydown', this.boundKeydowns[i]);
-    }
+    this.scope.dispose();
     this.popup.destroy();
   }
 

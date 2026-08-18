@@ -13,7 +13,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** Her paketin sahip olması gereken script'ler ve hangi kapının kullandığı. */
@@ -23,18 +23,23 @@ const REQUIRED_SCRIPTS = {
   'test:coverage': 'just coverage',
 };
 
-/**
- * Kapsam eşiği tabanı. Bir paket bunun altına eşik yazamaz; yazarsa kapsam
- * gerilemesi sessizce geçer. `design` paketi bir dönem 0/0/0/0 ile durdu ve
- * gerçek kapsamı %98 olmasına rağmen sıfıra düşse kapı yeşil kalırdı.
- */
-const THRESHOLD_FLOOR = { lines: 50, statements: 50, branches: 50, functions: 40 };
-
-/** Kapsam eşiği aranmayan paketler — gerekçesi burada yazılı olmalı. */
-const THRESHOLD_EXEMPT = new Map();
-
 const root = process.cwd();
 const problems = [];
+
+/**
+ * Kalite sözleşmesi TEK dosyadan okunur (`quality.json`).
+ *
+ * Eşikler bir dönem her paketin `vitest.config.ts` dosyasındaydı ve buradan
+ * REGEX ile okunuyordu: `/thresholds\s*:\s*\{([\s\S]*?)\}/` ilk `}`
+ * karakterinde kestiği için `thresholds` bloğuna iç içe bir nesne eklemek
+ * bekçiyi sessizce yanlış bloğu okumaya iterdi — üstelik dosyadaki İLK
+ * `thresholds` eşleşmesi neredeyse doğru olurdu. Bekçi ile config artık aynı
+ * dosyayı tüketiyor, ayrışamazlar.
+ */
+const quality = JSON.parse(readFileSync(join(root, 'quality.json'), 'utf8'));
+const THRESHOLD_FLOOR = quality.floor;
+/** Kapsam eşiği aranmayan paketler — gerekçesi `quality.json`da yazılı olmalı. */
+const THRESHOLD_EXEMPT = new Map(Object.entries(quality.exempt ?? {}));
 
 function listWorkspacePackages() {
   const raw = execFileSync('pnpm', ['list', '-r', '--depth', '-1', '--json'], {
@@ -51,22 +56,9 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
-/** vitest config'inden `thresholds` bloğunu okur (config'i çalıştırmadan). */
-function readThresholds(dir) {
-  const candidates = ['vitest.config.ts', 'vitest.config.mts', 'vitest.config.js'];
-  const file = candidates.map((c) => join(dir, c)).find((p) => existsSync(p));
-  if (!file) return null;
-
-  const src = readFileSync(file, 'utf8');
-  const block = src.match(/thresholds\s*:\s*\{([\s\S]*?)\}/);
-  if (!block) return null;
-
-  const found = {};
-  for (const key of Object.keys(THRESHOLD_FLOOR)) {
-    const hit = block[1].match(new RegExp(`${key}\\s*:\\s*(\\d+(?:\\.\\d+)?)`));
-    if (hit) found[key] = Number(hit[1]);
-  }
-  return Object.keys(found).length > 0 ? found : null;
+/** Paketin eşiklerini tek kaynaktan okur. */
+function readThresholds(name) {
+  return quality.packages?.[name] ?? null;
 }
 
 const packages = listWorkspacePackages();
@@ -91,13 +83,24 @@ for (const pkg of packages) {
   if (!scripts['test:coverage']) continue;
   if (THRESHOLD_EXEMPT.has(pkg.name)) continue;
 
-  const thresholds = readThresholds(join(root, pkg.dir));
+  const thresholds = readThresholds(pkg.name);
   if (!thresholds) {
     problems.push(
-      `${pkg.name} (${pkg.dir}): vitest coverage "thresholds" bloğu yok. ` +
+      `${pkg.name} (${pkg.dir}): quality.json içinde kapsam eşiği yok. ` +
         `Eşiksiz paket kapsam gerilemesini yakalamaz.`,
     );
     continue;
+  }
+
+  // Config'in eşiği ELLE yazmadığını da doğrula: `quality.json`u atlayıp
+  // vitest.config.ts'e sayı yazmak, bekçi yeşilken kapsamın düşmesine yol açar.
+  const configPath = join(root, pkg.dir, 'vitest.config.ts');
+  const configSource = readFileSync(configPath, 'utf8');
+  if (/thresholds:\s*\{/.test(configSource)) {
+    problems.push(
+      `${pkg.name}: vitest.config.ts eşikleri satır içi yazıyor. ` +
+        `Eşikler quality.json'dan gelmeli (thresholds: quality.packages[...]).`,
+    );
   }
 
   for (const [key, floor] of Object.entries(THRESHOLD_FLOOR)) {
@@ -107,7 +110,7 @@ for (const pkg of packages) {
     } else if (value < floor) {
       problems.push(
         `${pkg.name}: coverage eşiği ${key}=${value}, taban ${floor}'ın altında. ` +
-          `Eşiği yükselt ya da gerekçesini THRESHOLD_EXEMPT'e yaz.`,
+          `Eşiği yükselt ya da gerekçesini quality.json'un "exempt" alanına yaz.`,
       );
     }
   }

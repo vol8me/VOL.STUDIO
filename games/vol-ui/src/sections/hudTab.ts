@@ -239,7 +239,12 @@ function buildResourceCounterCard(disposables: Destroyable[]): HTMLElement {
   return card(i18next.t('volui:hud.resourceCounter'), wrap);
 }
 
-/** FloatingTextManager: hasar/iyileşme/kritik sayıları belirli x/y'de belirir, yukarı süzülür ve kaybolur. */
+/**
+ * FloatingTextManager: kayıp/kazanç/vurgu sayıları belirli x/y'de belirir, yukarı süzülür ve kaybolur.
+ *
+ * Varyant adları GÖRSELDİR (negative/positive/emphasis); oyun anlamını çağıran
+ * eşler — bu demoda hasar/iyileşme/kritik vuruş olarak gösteriliyor.
+ */
 function buildFloatingTextCard(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
@@ -263,21 +268,21 @@ function buildFloatingTextCard(disposables: Destroyable[]): HTMLElement {
     variant: 'danger',
     onClick: () => {
       const { x, y } = spawnAt();
-      manager.spawn(x, y, `-${Math.ceil(Math.random() * 30) + 5}`, { variant: 'damage' });
+      manager.spawn(x, y, `-${Math.ceil(Math.random() * 30) + 5}`, { variant: 'negative' });
     },
   });
   const healButton = new Button(i18next.t('volui:hud.heal'), {
     variant: 'primary',
     onClick: () => {
       const { x, y } = spawnAt();
-      manager.spawn(x, y, `+${Math.ceil(Math.random() * 20) + 5}`, { variant: 'heal' });
+      manager.spawn(x, y, `+${Math.ceil(Math.random() * 20) + 5}`, { variant: 'positive' });
     },
   });
   const criticalButton = new Button(i18next.t('volui:hud.critical'), {
     onClick: () => {
       const { x, y } = spawnAt();
       manager.spawn(x, y, `-${Math.ceil(Math.random() * 50) + 40} KRİTİK!`, {
-        variant: 'critical',
+        variant: 'emphasis',
       });
     },
   });

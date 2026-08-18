@@ -1,3 +1,4 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { RichTooltip } from '../overlays/RichTooltip';
 
 export interface SkillNodeCost {
@@ -148,7 +149,16 @@ export class SkillTree {
   private readonly nodeElements = new Map<string, HTMLButtonElement>();
   private readonly tooltips = new Map<string, RichTooltip>();
   private readonly onUnlockHandler?: (id: string) => boolean | void;
-  private readonly cleanups: (() => void)[] = [];
+  /**
+   * Bu bileşenin ömrüne bağlı kaynaklar.
+   *
+   * Elle yönetilen bir `(() => void)[]` dizisiydi. `DisposableScope`in üç
+   * farkı var ve üçü de davranışsal: kapatma TERS sırada yapılır (kaynaklar
+   * arası bağımlılık genelde bu yönde kurulur), ikinci `dispose()` no-op'tur
+   * ve bir kaynağın kapatılması FIRLATIRSA geri kalanlar yine kapatılır —
+   * düz `for` döngüsü ilk hatada duruyor ve kalan her şeyi sızdırıyordu.
+   */
+  private readonly scope = new DisposableScope();
   /** Bekleyen zamanlayici/rAF handle'lari — destroy() hepsini iptal eder. */
   private readonly pendingTimers = new Set<number>();
   private readonly pendingFrames = new Set<number>();
@@ -266,7 +276,7 @@ export class SkillTree {
     this.pendingTimers.clear();
     for (const id of this.pendingFrames) cancelAnimationFrame(id);
     this.pendingFrames.clear();
-    for (const cleanup of this.cleanups) cleanup();
+    this.scope.dispose();
     for (const tooltip of this.tooltips.values()) tooltip.destroy();
     this.element.remove();
   }
@@ -321,11 +331,11 @@ export class SkillTree {
       }
     };
     button.addEventListener('animationend', onAnimationEnd);
-    this.cleanups.push(() => button.removeEventListener('animationend', onAnimationEnd));
+    this.scope.add({ dispose: () => button.removeEventListener('animationend', onAnimationEnd) });
 
     const onClick = (): void => this.tryUnlock(node);
     button.addEventListener('click', onClick);
-    this.cleanups.push(() => button.removeEventListener('click', onClick));
+    this.scope.add({ dispose: () => button.removeEventListener('click', onClick) });
 
     if (this.showTooltips && (node.description || node.cost?.length)) {
       const tooltip = new RichTooltip(button, {
@@ -544,7 +554,7 @@ export class SkillTree {
       this.applyTransform();
     };
     this.viewport.addEventListener('wheel', onWheel, { passive: false });
-    this.cleanups.push(() => this.viewport.removeEventListener('wheel', onWheel));
+    this.scope.add({ dispose: () => this.viewport.removeEventListener('wheel', onWheel) });
 
     const onPointerDown = (event: PointerEvent): void => {
       // Düğüm butonlarının tıklamasıyla çakışmasın diye yalnızca boş
@@ -572,11 +582,13 @@ export class SkillTree {
     this.viewport.addEventListener('pointermove', onPointerMove);
     this.viewport.addEventListener('pointerup', onPointerUp);
     this.viewport.addEventListener('pointercancel', onPointerUp);
-    this.cleanups.push(() => {
-      this.viewport.removeEventListener('pointerdown', onPointerDown);
-      this.viewport.removeEventListener('pointermove', onPointerMove);
-      this.viewport.removeEventListener('pointerup', onPointerUp);
-      this.viewport.removeEventListener('pointercancel', onPointerUp);
+    this.scope.add({
+      dispose: () => {
+        this.viewport.removeEventListener('pointerdown', onPointerDown);
+        this.viewport.removeEventListener('pointermove', onPointerMove);
+        this.viewport.removeEventListener('pointerup', onPointerUp);
+        this.viewport.removeEventListener('pointercancel', onPointerUp);
+      },
     });
   }
 

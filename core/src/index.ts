@@ -23,22 +23,41 @@ export {
   TECH,
 } from './constants';
 
+// Stat SÖZLÜĞÜ bilinçli olarak burada yok: `StatKey`/`STAT_KEYS`/`StatBaseValues`
+// CORE'dan kaldırıldı, çünkü 'damage'/'fireRate' bir oyunun kelimesidir. Motor
+// jeneriktir (`StatBlock<TStat>`); kümeyi tüketici tanımlar
+// (bkz. games/vol-hell/src/config/stats.ts).
 export {
   StatBlock,
-  STAT_KEYS,
-  type StatKey,
   type StatModifier,
   type StatModifierType,
   type StatModifierValue,
-  type StatBaseValues,
 } from './stats/StatBlock';
 
 export type { BaseEntity } from './entities/BaseEntity';
 export { BaseSprite } from './entities/BaseSprite';
 export { PlayerController, type MovableGameObject } from './entities/PlayerController';
 
-export type { InputState } from './input/InputState';
+// Eylem SÖZLÜĞÜ bilinçli olarak burada yok: `InputState.fire`/`dash` alanları
+// kaldırıldı, yerine `actions: Record<TAction, boolean>` geldi. Hangi eylemlerin
+// var olduğunu ve hangi tuşa bağlandığını tüketici tanımlar
+// (bkz. games/vol-hell/src/config/input.ts).
+export { createIdleActions, type InputState } from './input/InputState';
 export type { InputProvider } from './input/InputProvider';
+export type {
+  PCActionBinding,
+  PointerButton,
+  WasdDownState,
+  PointerLikeState,
+} from './input/PCInputState';
+export { resolvePCActions, computePCInputState, isPCInputActive } from './input/PCInputState';
+export type { TouchStickOptions } from './input/TouchStickState';
+export type { InputManagerOptions } from './input/InputManager';
+export {
+  DEFAULT_MOVE_KEYS,
+  type MoveKeyBindings,
+  type PCControllerOptions,
+} from './input/PCController';
 export type {
   InputSnapshot,
   PcInputSnapshot,

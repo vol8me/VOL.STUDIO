@@ -1,10 +1,9 @@
 import type Phaser from 'phaser';
-import { Diagnostics } from '@volstudio/core';
 import type { TurretParams } from '@/config/abilities';
 import { turretVisualConfig } from '@/config/abilities';
 import { RENDER_DEPTH } from '@/config/layers';
 import { sfxVolumes } from '@/config/audio';
-import { gameAudio } from '@/app/services';
+import { diagnostics, gameAudio } from '@/app/services';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import { EntityHealthBar } from './EntityHealthBar';
 import type { Enemy } from './Enemy';
@@ -75,7 +74,7 @@ export class Turret {
     this.healthBar.setRatio(1, true, x);
 
     this.effects.play('turretPlace', x, y);
-    Diagnostics.getInstance()?.recordEvent('turretPlaced', { x, y });
+    diagnostics?.recordEvent('turretPlaced', { x, y });
   }
 
   get x(): number {
@@ -142,7 +141,7 @@ export class Turret {
   destroyWithEffect(): void {
     if (!this.alive) return;
     this.effects.play('turretDestroy', this.body.x, this.body.y);
-    Diagnostics.getInstance()?.recordEvent('turretDestroyed', { x: this.body.x, y: this.body.y });
+    diagnostics?.recordEvent('turretDestroyed', { x: this.body.x, y: this.body.y });
     this.teardown();
   }
 

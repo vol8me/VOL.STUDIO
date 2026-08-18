@@ -1,3 +1,4 @@
+export { runButtonClick, type ButtonBehaviorHost } from './buttonBehavior';
 export {
   Button,
   type ButtonVariant,

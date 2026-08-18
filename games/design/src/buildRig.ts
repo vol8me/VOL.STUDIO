@@ -1,3 +1,4 @@
+import { validateRigMetadata } from './validateMetadata';
 import type { RigDefinition, RigMetadata, RigPartAsset } from './types';
 
 /**
@@ -15,6 +16,11 @@ export function buildRigDefinition(
   metadata: RigMetadata,
   partUrls: Record<string, string>,
 ): RigDefinition {
+  // Metadata dosyadan/dış araçtan gelir; TypeScript arayüzü çalışma zamanında
+  // hiçbir şey garanti etmez. Şekil önce doğrulanır ki eksik bir alan
+  // anlaşılmaz bir `TypeError` yerine nerede olduğunu söyleyen bir mesaj versin.
+  validateRigMetadata(metadata, metadata?.entityId ?? 'metadata');
+
   const { entityId } = metadata;
   const { rootSizePx, exportScale } = metadata.source;
 

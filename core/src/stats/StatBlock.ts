@@ -1,25 +1,19 @@
 /**
- * Stat/modifier motoru — oyuncu ve düşmanların ORTAK istatistik katmanı.
+ * Stat/modifier motoru — bir oyunun tüm varlıkları (oyuncu, düşman, yapı)
+ * için ORTAK istatistik katmanı.
  *
  * Taban değerlerin üzerine kaynak (kart, zorluk eğrisi, arketip) bazlı
  * modifier'lar binerek sonuç değeri verir. Her entity tipi için ayrı bir
  * ölçekleme mantığı yazmak yerine tek motor kullanılır.
- */
-
-/**
- * Modifier'ların etkileyebildiği dört temel stat.
  *
- * - `damage` — vuruş başına hasar.
- * - `speed` — hareket hızı (piksel/saniye).
- * - `health` — maksimum can.
- * - `fireRate` — saldırılar arası bekleme (COOLDOWN, ms). **Düşük değer =
- *   hızlı saldırı.** "Ateş hızı %25 artsın" isteyen bir kaynak
- *   `{ type: 'multiply', value: 0.8 }` verir; `1.25` vermek ateşi yavaşlatır.
+ * **Stat kümesi bu modülde TANIMLI DEĞİLDİR.** `TStat` zorunlu bir tip
+ * parametresidir; hangi stat'ların var olduğu tüketicinin kararıdır
+ * (`new StatBlock<'armor' | 'range'>({ armor: 5, range: 120 })`). Motorun
+ * `'damage'`/`'health'` gibi bir kelime bilmesi, CORE'u tek bir oyunun
+ * sözlüğüne bağlar — bu yüzden varsayılan bir stat kümesi BİLİNÇLİ OLARAK
+ * sunulmaz. VOL.HELL'in kendi kümesi için bkz.
+ * `games/vol-hell/src/config/stats.ts`.
  */
-export type StatKey = 'damage' | 'speed' | 'health' | 'fireRate';
-
-/** Tüm stat anahtarları — iterasyon ve doğrulama için. */
-export const STAT_KEYS: readonly StatKey[] = ['damage', 'speed', 'health', 'fireRate'];
 
 /**
  * Özyinelemeli getValue çağrısını tespit etmek için çağrı yığını.
@@ -46,7 +40,7 @@ export type StatModifierType = 'add' | 'multiply';
  */
 export type StatModifierValue = number | (() => number);
 
-export interface StatModifier<TStat extends string = StatKey> {
+export interface StatModifier<TStat extends string> {
   /** Kaynağı izlemek için kimlik (kart id'si, 'difficulty', 'archetype' vb.). */
   id: string;
   stat: TStat;
@@ -58,9 +52,6 @@ export interface StatModifier<TStat extends string = StatKey> {
    */
   condition?: () => boolean;
 }
-
-/** Taban stat değerleri — dört stat da zorunludur. */
-export type StatBaseValues = Record<StatKey, number>;
 
 /**
  * Taban değer + modifier listesinden sonuç stat üreten blok.
@@ -84,13 +75,14 @@ export type StatBaseValues = Record<StatKey, number>;
  * **Kelepçeleme yoktur:** yeterince güçlü negatif modifier sonucu sıfırın
  * altına indirebilir. Anlamlı alt sınır entity'nin sorumluluğundadır.
  *
- * **Jenerik stat kümesi:** mekanizma stat adlarından bağımsızdır — `TStat`
- * verilmezse VOL.HELL'in dört stat'ı (`StatKey`) varsayılan olarak kullanılır,
- * bu yüzden mevcut `new StatBlock(baseStats)` çağrıları değişmeden çalışır.
- * Başka bir oyun/tüketici kendi stat kümesini
- * `new StatBlock<'armor' | 'range'>({ armor: 5, range: 120 })` şeklinde verebilir.
+ * **Jenerik stat kümesi:** mekanizma stat adlarından tamamen bağımsızdır ve
+ * `TStat` ZORUNLUDUR — varsayılan bir küme yoktur. Bir tüketici kendi
+ * sözlüğünü verir (`new StatBlock<'armor' | 'range'>({ armor: 5, range: 120 })`);
+ * çoğu durumda tip parametresi taban obje literalinden çıkarsanır, ama
+ * paylaşılan bir union kullanılıyorsa açıkça yazmak (`StatBlock<HellStat>`)
+ * yanlış bir stat adının derleme zamanında yakalanmasını garanti eder.
  */
-export class StatBlock<TStat extends string = StatKey> {
+export class StatBlock<TStat extends string> {
   private readonly base: Record<TStat, number>;
   private readonly modifiers: StatModifier<TStat>[] = [];
 

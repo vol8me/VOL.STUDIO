@@ -6,7 +6,16 @@ export interface SwipeGestureEvent {
   direction: SwipeZoneDirection;
   /** Sürükleme mesafesi (piksel, yalnızca baskın eksende — ör. 'left' için |dx|). */
   distance: number;
-  /** Bırakma anındaki hız (piksel/ms, yalnızca baskın eksende). Hızlı bir "flick" ile yavaş bir sürüklemeyi ayırt etmek için. */
+  /**
+   * BIRAKMA ANINDAKİ hız (piksel/ms, yalnızca baskın eksende) — jestin
+   * ortalama hızı DEĞİL.
+   *
+   * Ayrım gerçek: yavaşça sürükleyip son anda hızlı savuran bir jestin
+   * ortalaması düşüktür ama kullanıcının niyeti bir "flick"tir; tersine hızlı
+   * başlayıp parmağı durdurarak biten bir jestin ortalaması yüksektir ama
+   * bırakma anında hareket yoktur. Ortalama kullanmak ikisini de yanlış
+   * sınıflandırır.
+   */
   velocity: number;
 }
 
@@ -31,6 +40,14 @@ interface DragState {
   lastX: number;
   lastY: number;
   lastTime: number;
+  /**
+   * Bir ÖNCEKİ pointermove örneği. Bırakma anındaki hız bu örnek ile son
+   * örnek arasındaki farktan hesaplanır; `start`'tan ölçmek ortalama hız
+   * verir (bkz. `SwipeGestureEvent.velocity`).
+   */
+  prevX: number;
+  prevY: number;
+  prevTime: number;
 }
 
 /**
@@ -83,6 +100,13 @@ export class SwipeGestureZone {
   }
 
   destroy(): void {
+    // Sürükleme ortasında yok edilirse capture asılı kalır ve `drag` state'i
+    // sızar; bkz. MultiTouchZone.destroy — aynı sınıf hata.
+    if (this.drag && this.element.hasPointerCapture(this.drag.pointerId)) {
+      this.element.releasePointerCapture(this.drag.pointerId);
+    }
+    this.drag = null;
+
     this.element.removeEventListener('pointerdown', this.boundPointerDown);
     this.element.removeEventListener('pointermove', this.boundPointerMove);
     this.element.removeEventListener('pointerup', this.boundPointerUp);
@@ -94,14 +118,18 @@ export class SwipeGestureZone {
     // Aynı anda yalnızca tek bir jest takip edilir — ikinci bir parmak zone'un pointer capture'ını çalmamalı.
     if (this.drag) return;
     this.element.setPointerCapture(event.pointerId);
+    const now = performance.now();
     this.drag = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
-      startTime: performance.now(),
+      startTime: now,
       lastX: event.clientX,
       lastY: event.clientY,
-      lastTime: performance.now(),
+      lastTime: now,
+      prevX: event.clientX,
+      prevY: event.clientY,
+      prevTime: now,
     };
   }
 
@@ -109,6 +137,9 @@ export class SwipeGestureZone {
     const drag = this.drag;
     if (!drag || event.pointerId !== drag.pointerId) return;
 
+    drag.prevX = drag.lastX;
+    drag.prevY = drag.lastY;
+    drag.prevTime = drag.lastTime;
     drag.lastX = event.clientX;
     drag.lastY = event.clientY;
     drag.lastTime = performance.now();
@@ -123,17 +154,25 @@ export class SwipeGestureZone {
   private handlePointerUp(event: PointerEvent): void {
     const drag = this.drag;
     if (!drag || event.pointerId !== drag.pointerId) return;
-    this.element.releasePointerCapture(event.pointerId);
+    if (this.element.hasPointerCapture(event.pointerId)) {
+      this.element.releasePointerCapture(event.pointerId);
+    }
     this.drag = null;
 
     const dx = drag.lastX - drag.startX;
     const dy = drag.lastY - drag.startY;
-    const elapsedMs = Math.max(1, drag.lastTime - drag.startTime);
 
     // Baskın eksen (yatay/dikey) jesti belirler — çapraz sürükleme her zaman tek bir yöne yorumlanır.
     const isHorizontal = Math.abs(dx) >= Math.abs(dy);
     const distance = isHorizontal ? Math.abs(dx) : Math.abs(dy);
-    const velocity = distance / elapsedMs;
+
+    // Hız SON iki örnekten hesaplanır (ortalamadan değil). Tek bir pointermove
+    // bile gelmediyse prev === start olur ve hız doğal olarak 0 çıkar.
+    const releaseDx = drag.lastX - drag.prevX;
+    const releaseDy = drag.lastY - drag.prevY;
+    const releaseMs = Math.max(1, drag.lastTime - drag.prevTime);
+    const releaseDistance = isHorizontal ? Math.abs(releaseDx) : Math.abs(releaseDy);
+    const velocity = releaseDistance / releaseMs;
 
     if (distance < this.thresholdPx && velocity < this.velocityThresholdPxMs) return;
 

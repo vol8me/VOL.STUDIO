@@ -49,7 +49,7 @@ describe('FloatingTextManager', () => {
     const parent = document.createElement('div');
     const manager = track(new FloatingTextManager(parent));
 
-    manager.spawn(100, 100, 'KRİTİK', { variant: 'critical' });
+    manager.spawn(100, 100, 'KRİTİK', { variant: 'emphasis' });
     const el = parent.querySelector<HTMLDivElement>('.vol-floating-text')!;
     expect(el.style.left).toBe('100px'); // jitter olmadan tam x konumu
   });

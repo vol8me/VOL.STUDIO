@@ -141,6 +141,18 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
     label: i18next.t('volui:buttons.reject'),
   });
 
+  /*
+   * Asenkron sözleşme: IconButton artık `Button` ile AYNI garantileri verir —
+   * söz beklenirken buton `aria-busy` + `disabled` olur ve tekrar tetiklenemez.
+   * Önceden IconButton handler'ı doğrudan listener'dı: asenkron yoktu, hata
+   * yakalanmıyordu. Showcase'de görünmezse yetenek yalnızca testte var olur.
+   */
+  const asyncSave = new IconButton(svgIcon(ICON_CHECK), {
+    label: i18next.t('volui:buttons.asyncIconSave'),
+    variant: 'primary',
+    onClick: () => new Promise<void>((resolve) => setTimeout(resolve, 1200)),
+  });
+
   // Boyut + tooltip: 3 boyut, her biri tooltip'li.
   const small = new IconButton(svgIcon(ICON_GEAR), {
     label: i18next.t('volui:buttons.smallSm'),
@@ -175,6 +187,7 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
     buy,
     confirm,
     reject,
+    asyncSave,
     small,
     gear,
     large,
@@ -194,6 +207,7 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
     iconButtonGroup(i18next.t('volui:buttons.inventoryEconomy'), [lock, buy, confirm, reject]),
   );
   wrap.appendChild(iconButtonGroup(i18next.t('volui:buttons.sizeTooltip'), [small, gear, large]));
+  wrap.appendChild(iconButtonGroup(i18next.t('volui:buttons.asyncIconButton'), [asyncSave]));
 
   return wrap;
 }

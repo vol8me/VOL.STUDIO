@@ -1,4 +1,5 @@
 import '../ui/debug.css';
+import { NoopTransport, type DiagnosticsTransport } from './transport';
 import type {
   DiagnosticsSnapshot,
   DiagnosticsOptions,
@@ -21,14 +22,20 @@ interface RollingStats {
 /**
  * Oyun performans ve input metriklerini toplayan geliştirme aracı.
  * URL'de `?debug` veya `?perf` varsa `createVolGame` tarafından oluşturulur.
- * Sahneler `getInstance()` üzerinden anlık metrik/event gönderebilir.
+ *
+ * **Global singleton DEĞİLDİR.** Bir dönem `static getInstance()` ile her
+ * yerden erişiliyordu; bu, tek bir process'te birden fazla çalışma zamanının
+ * (core doğrulaması + oyun + showcase) yan yana yaşamasını imkânsız kılıyor ve
+ * ölçüm bağımlılığını gizli bir global'e çeviriyordu. Örnek artık açıkça
+ * oluşturulur (`createDiagnostics`) ve bağımlılık olarak GEÇİRİLİR.
+ *
+ * Snapshot'ı nereye göndereceğini bilmez; bunu `transport` belirler
+ * (bkz. `DiagnosticsTransport`).
  */
 export class Diagnostics {
-  private static instance: Diagnostics | null = null;
-
   private readonly gameId: string;
   private readonly sampleEvery: number;
-  private readonly serverUrl: string;
+  private readonly transport: DiagnosticsTransport;
   private readonly overlay: boolean;
   /** Aktif asamalarin baslangic damgalari — sureden AYRI tutulur (bkz. endStage). */
   private readonly stageStarts = new Map<string, number>();
@@ -48,14 +55,12 @@ export class Diagnostics {
   private readonly onVisibilityChange: () => void;
 
   constructor(options: DiagnosticsOptions) {
-    if (Diagnostics.instance) {
-      throw new Error(
-        'Diagnostics zaten oluşturulmuş; tekrar new ile yaratmak yerine getInstance() kullan.',
-      );
-    }
     this.gameId = options.gameId;
     this.sampleEvery = Math.max(1, options.sampleEvery ?? 60);
-    this.serverUrl = options.serverUrl ?? 'http://127.0.0.1:9876/debug';
+    // Varsayılan HİÇBİR YERE göndermemek: CORE'un varsayılan davranışı bir
+    // ağ isteği açmak olmamalı. Yerel sunucuya göndermek isteyen tüketici
+    // `LocalServerTransport`i açıkça verir.
+    this.transport = options.transport ?? new NoopTransport();
     this.overlay = options.overlay ?? true;
 
     if (this.overlay && typeof document !== 'undefined') {
@@ -74,19 +79,6 @@ export class Diagnostics {
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', this.onVisibilityChange);
     }
-
-    Diagnostics.instance = this;
-  }
-
-  /** Global erişim noktası; sahne ve entity'ler buradan çağırır. */
-  static getInstance(): Diagnostics | null {
-    return Diagnostics.instance;
-  }
-
-  /** Bellekteki instance'ı sıfırlar; genellikle testler için. */
-  static reset(): void {
-    Diagnostics.instance?.destroy();
-    Diagnostics.instance = null;
   }
 
   setScene(scene: string): void {
@@ -177,9 +169,6 @@ export class Diagnostics {
     this.panel = undefined;
     if (typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.onVisibilityChange);
-    }
-    if (Diagnostics.instance === this) {
-      Diagnostics.instance = null;
     }
   }
 
@@ -291,14 +280,24 @@ export class Diagnostics {
 
   private sendSnapshot(): void {
     const snapshot = this.buildSnapshot();
+    // Buffer snapshot ALINDIKTAN sonra temizlenir: taşıma katmanı isteği
+    // atlasa (uçuşta başka istek varsa) bile olaylar snapshot'a girmiş olur,
+    // yani `send` bir daha çağrılmasa da veri kaybı buradan doğmaz.
     this.pendingEvents.length = 0;
 
-    void fetch(this.serverUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(snapshot),
-    }).catch(() => {});
+    void this.transport.send(snapshot);
   }
+}
+
+/**
+ * Diagnostics örneği üretir.
+ *
+ * `new Diagnostics(...)` ile aynı işi yapar; ayrı bir fabrika, çağrı yerlerinin
+ * "global bir örnek al" yerine "bir örnek oluştur ve geçir" okumasını sağlamak
+ * için var.
+ */
+export function createDiagnostics(options: DiagnosticsOptions): Diagnostics {
+  return new Diagnostics(options);
 }
 
 /** Diagnostics'ın URL'de ?debug veya ?perf varsa aktif olması gerekip geremediğini döner. */

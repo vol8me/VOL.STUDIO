@@ -1,5 +1,5 @@
-import { createVolGame, VOL_COLORS, i18n, isDiagnosticsEnabled } from '@volstudio/core';
-import { initServices, loadPersistedState, saveManager } from '@/app/services';
+import { createVolGame, VOL_COLORS, i18n } from '@volstudio/core';
+import { diagnostics, initServices, loadPersistedState, saveManager } from '@/app/services';
 import { MainMenuScene } from '@/runtime/scene/MainMenuScene';
 import { GameScene } from '@/runtime/scene/GameScene';
 import { SettingsScene } from '@/runtime/scene/SettingsScene';
@@ -46,8 +46,7 @@ try {
     strategy: gameConfig.viewport.strategy,
     maxDpr: gameConfig.viewport.maxDpr,
     scenes: [MainMenuScene, GameScene, SettingsScene],
-    gameId: 'vol-hell',
-    debug: isDiagnosticsEnabled(),
+    diagnostics: diagnostics ?? undefined,
   });
 } catch (error: unknown) {
   showFatalError(error);

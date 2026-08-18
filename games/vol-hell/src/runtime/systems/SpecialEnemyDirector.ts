@@ -1,5 +1,5 @@
-import type { Random, StatBlock, Vector2 } from '@volstudio/core';
-import { Diagnostics } from '@volstudio/core';
+import type { Random, Vector2 } from '@volstudio/core';
+import type { HellStatBlock } from '@/config/stats';
 import { BOSS_ENEMY_ID, ELITE_ENEMY_ID, getEnemyDefinition } from '@/config/enemies/catalog';
 import type { Border } from '@/runtime/entity/Border';
 import type { Enemy } from '@/runtime/entity/Enemy';
@@ -12,7 +12,7 @@ import type { SpatialGrid } from './SpatialGrid';
 import type { EffectManager } from './EffectManager';
 import type { TelegraphManager } from './TelegraphManager';
 import type { DifficultyState } from './DifficultyCalculator';
-import { gameAudio } from '@/app/services';
+import { diagnostics, gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
 
 export interface SpecialEnemyDirectorDeps {
@@ -21,7 +21,7 @@ export interface SpecialEnemyDirectorDeps {
   telegraphs: TelegraphManager;
   border: Border;
   random: Random;
-  playerStats: StatBlock;
+  playerStats: HellStatBlock;
   damagePlayer: (amount: number) => void;
   getPlayerPosition: () => Vector2;
   getDifficulty: () => DifficultyState;
@@ -94,7 +94,7 @@ export class SpecialEnemyDirector {
     if (gameAudio) {
       void gameAudio.playSfx('eliteSpawn', { volume: sfxVolumes.eliteSpawn });
     }
-    Diagnostics.getInstance()?.recordEvent('eliteSpawn', { x: position.x, y: position.y });
+    diagnostics?.recordEvent('eliteSpawn', { x: position.x, y: position.y });
 
     this.elite = new EliteController(enemy, definition, {
       effects: this.deps.effects,
@@ -144,7 +144,7 @@ export class SpecialEnemyDirector {
     if (gameAudio) {
       void gameAudio.playSfx('bossSpawn', { volume: sfxVolumes.bossSpawn });
     }
-    Diagnostics.getInstance()?.recordEvent('bossSpawn', {
+    diagnostics?.recordEvent('bossSpawn', {
       powerRatio: scaling.playerPowerRatio,
       health: stats.getValue('health'),
       damage: stats.getValue('damage'),

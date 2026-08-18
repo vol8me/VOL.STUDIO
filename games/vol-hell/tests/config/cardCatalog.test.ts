@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createRandom, STAT_KEYS } from '@volstudio/core';
+import { createRandom } from '@volstudio/core';
+import { HELL_STAT_KEYS } from '@/config/stats';
 import {
   CARD_CATALOG,
   CARD_PRICES,
@@ -57,7 +58,7 @@ describe('CARD_CATALOG bütünlüğü', () => {
   it('modifier’lar geçerli stat ve çarpan taşır', () => {
     for (const card of Object.values(CARD_CATALOG)) {
       for (const modifier of card.modifiers ?? []) {
-        expect(STAT_KEYS, card.id).toContain(modifier.stat);
+        expect(HELL_STAT_KEYS, card.id).toContain(modifier.stat);
         expect(Number.isFinite(modifier.value), card.id).toBe(true);
         if (modifier.type === 'multiply') {
           // Sıfır/negatif çarpan stat'ı anlamsız hale getirir.

@@ -44,6 +44,13 @@ const { container, parts } = assembleRig(this, rig);
 `buildRigDefinition` takes a plain `Record<string, string>`, so the package
 itself does not depend on Vite; the consuming game performs the glob.
 
+Its first step is to validate the metadata at runtime (`validateRigMetadata`,
+also exported): `schemaVersion`, required fields and part types are checked,
+and all problems are collected into a single message. The TypeScript interface
+guarantees nothing about JSON read from disk — when an agent or an external
+tool emits broken metadata, the failure is a message that says where the
+problem is, not an opaque `TypeError`.
+
 ## Export
 
 Getting PNGs out of Pencil is a two-step flow: the native `Export()` is

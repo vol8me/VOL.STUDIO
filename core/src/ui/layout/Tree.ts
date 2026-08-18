@@ -1,3 +1,5 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+
 export interface TreeNodeDefinition {
   id: string;
   label: string;
@@ -43,7 +45,8 @@ export class Tree {
   private readonly selectedIds = new Set<string>();
   private readonly itemElements = new Map<string, HTMLLIElement>();
   private readonly flatOrder: FlatNode[] = [];
-  private readonly rowCleanups: (() => void)[] = [];
+  /** Satır listener'ları — bkz. DisposableScope (hata izolasyonu + ters sıra). */
+  private readonly rowScope = new DisposableScope();
 
   constructor(nodes: TreeNodeDefinition[], options: TreeOptions = {}) {
     this.onSelectHandler = options.onSelect;
@@ -89,9 +92,7 @@ export class Tree {
   }
 
   destroy(): void {
-    for (const cleanup of this.rowCleanups) {
-      cleanup();
-    }
+    this.rowScope.dispose();
     this.element.remove();
   }
 
@@ -226,10 +227,12 @@ export class Tree {
 
     row.addEventListener('click', onClick);
     row.addEventListener('keydown', onKeydown);
-    this.rowCleanups.push(() => {
-      row.removeEventListener('click', onClick);
-      row.removeEventListener('keydown', onKeydown);
-      if (hasChildren) caret.removeEventListener('click', onCaretClick);
+    this.rowScope.add({
+      dispose: () => {
+        row.removeEventListener('click', onClick);
+        row.removeEventListener('keydown', onKeydown);
+        if (hasChildren) caret.removeEventListener('click', onCaretClick);
+      },
     });
 
     if (node.expanded) {

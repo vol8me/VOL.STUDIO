@@ -39,7 +39,8 @@ test:
 test-pkg pkg:
     pnpm --filter @volstudio/{{ pkg }} test
 
-# Test + kapsam eşikleri. Eşikler paketlerin vitest.config.ts dosyalarında.
+# Test + kapsam eşikleri. Eşikler kök `quality.json`da (tek kaynak); paketlerin
+# vitest.config.ts dosyaları onu okur, `contract` ikisinin ayrışmadığını doğrular.
 coverage:
     pnpm -r --if-present test:coverage
 
@@ -84,6 +85,13 @@ high: quick lint-css coverage build
 
 # Release/milestone kapısı: high + Rust
 signoff: high rust
+
+# Kapıyı koşar ve sonucu MAKİNE-OKUNUR raporlar (agent döngüleri için).
+# Kapıları yeniden tanımlamaz, yukarıdaki tarifleri çağırır; aşama haritasının
+# bu dosyayla ayrışmadığını da doğrular.
+# Örn: just report high | just report quick --json
+report gate='high' *flags:
+    node scripts/quality/report.mjs {{ gate }} {{ flags }}
 
 # === TAURİ ===
 

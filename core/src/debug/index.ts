@@ -1,4 +1,11 @@
-export { Diagnostics, isDiagnosticsEnabled } from './Diagnostics';
+export { Diagnostics, createDiagnostics, isDiagnosticsEnabled } from './Diagnostics';
+export {
+  NoopTransport,
+  ConsoleTransport,
+  LocalServerTransport,
+  type DiagnosticsTransport,
+  type LocalServerTransportOptions,
+} from './transport';
 export type {
   StatsSummary,
   DiagnosticsEvent,

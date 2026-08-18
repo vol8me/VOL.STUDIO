@@ -1,3 +1,4 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_THRESHOLD } from '../../constants';
 import { i18next } from '../../systems/I18n';
 
@@ -241,7 +242,16 @@ export class SlotGrid {
   private readonly dragContainer: HTMLElement;
 
   private drag: DragState | null = null;
-  private cleanups: (() => void)[] = [];
+  /**
+   * Bu bileşenin ömrüne bağlı kaynaklar.
+   *
+   * Elle yönetilen bir `(() => void)[]` dizisiydi. `DisposableScope`in üç
+   * farkı var ve üçü de davranışsal: kapatma TERS sırada yapılır (kaynaklar
+   * arası bağımlılık genelde bu yönde kurulur), ikinci `dispose()` no-op'tur
+   * ve bir kaynağın kapatılması FIRLATIRSA geri kalanlar yine kapatılır —
+   * düz `for` döngüsü ilk hatada duruyor ve kalan her şeyi sızdırıyordu.
+   */
+  private readonly scope = new DisposableScope();
 
   constructor(options: SlotGridOptions) {
     this.slotCount = options.slotCount;
@@ -281,12 +291,12 @@ export class SlotGrid {
 
     const pointerDown = (event: PointerEvent) => this.onPointerDown(event);
     this.itemsEl.addEventListener('pointerdown', pointerDown);
-    this.cleanups.push(() => this.itemsEl.removeEventListener('pointerdown', pointerDown));
+    this.scope.add({ dispose: () => this.itemsEl.removeEventListener('pointerdown', pointerDown) });
   }
 
   destroy(): void {
     this.endDrag();
-    for (const cleanup of this.cleanups) cleanup();
+    this.scope.dispose();
     for (const view of this.itemViews.values()) this.itemsEl.removeChild(view.element);
     this.itemViews.clear();
     this.element.remove();
@@ -481,10 +491,12 @@ export class SlotGrid {
     itemEl.addEventListener('pointerup', this.onPointerUp);
     itemEl.addEventListener('pointercancel', this.onPointerUp);
 
-    this.cleanups.push(() => {
-      itemEl.removeEventListener('pointermove', this.onPointerMove);
-      itemEl.removeEventListener('pointerup', this.onPointerUp);
-      itemEl.removeEventListener('pointercancel', this.onPointerUp);
+    this.scope.add({
+      dispose: () => {
+        itemEl.removeEventListener('pointermove', this.onPointerMove);
+        itemEl.removeEventListener('pointerup', this.onPointerUp);
+        itemEl.removeEventListener('pointercancel', this.onPointerUp);
+      },
     });
   }
 

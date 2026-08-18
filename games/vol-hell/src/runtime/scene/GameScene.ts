@@ -3,7 +3,6 @@ import {
   InputManager,
   Vector2,
   createRandom,
-  Diagnostics,
   type InputState,
   type LoadingScreen,
   type Random,
@@ -16,12 +15,19 @@ import { BulletManager } from '@/runtime/entity/BulletManager';
 import type { Enemy } from '@/runtime/entity/Enemy';
 
 import { bulletConfig } from '@/config/bullet';
+import {
+  HELL_ACTIONS,
+  HELL_AIM_STICK_ACTION,
+  HELL_MOVE_KEYS,
+  HELL_PC_BINDINGS,
+  type HellAction,
+} from '@/config/input';
 import { uiConfig } from '@/config/ui';
 import { gameConfig } from '@/config/game';
 import { physicsConfig } from '@/config/physics';
 import { sfxVolumes } from '@/config';
 import { BOSS_ENEMY_ID, getMaxEnemyRadius } from '@/config/enemies/catalog';
-import { gameAudio, audioSettings } from '@/app/services';
+import { diagnostics, gameAudio, audioSettings } from '@/app/services';
 import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import { EffectManager } from '@/runtime/systems/EffectManager';
 import { TelegraphManager } from '@/runtime/systems/TelegraphManager';
@@ -56,7 +62,7 @@ const SLOT_KEYS: Record<AbilitySlot, number> = {
  */
 export class GameScene extends BaseScene {
   private player!: Player;
-  private inputManager!: InputManager;
+  private inputManager!: InputManager<HellAction>;
   private border!: Border;
   private bulletManager!: BulletManager;
   private enemyManager!: EnemyManager;
@@ -80,7 +86,6 @@ export class GameScene extends BaseScene {
   private spatialGrid: SpatialGrid = new SpatialGrid(
     Math.max(getMaxEnemyRadius(), bulletConfig.radius) * physicsConfig.spatialGridCellMultiplier,
   );
-  private diagnostics?: Diagnostics;
   private escKey!: Phaser.Input.Keyboard.Key;
 
   private runSeed = 0;
@@ -114,7 +119,7 @@ export class GameScene extends BaseScene {
       void gameAudio.playSfx('resume', { volume: sfxVolumes.resume });
       this.pauseScreen?.hide();
     },
-    onResume: () => this.diagnostics?.markResume(),
+    onResume: () => diagnostics?.markResume(),
   });
 
   private readonly scoreboard = new RunScoreboard();
@@ -167,7 +172,7 @@ export class GameScene extends BaseScene {
     // buradan gelir. Seed kaydedilir: bir koşu aynı seed ile tekrar oynatılabilir.
     this.runSeed = Date.now() & 0x7fffffff;
     this.runRandom = createRandom(this.runSeed);
-    Diagnostics.getInstance()?.recordEvent('runSeed', { seed: this.runSeed });
+    diagnostics?.recordEvent('runSeed', { seed: this.runSeed });
 
     this.audio = new GameAudioDirector(this, this.runRandom);
     this.audio.start();
@@ -187,7 +192,12 @@ export class GameScene extends BaseScene {
     );
     this.player.setBorder(this.border);
 
-    this.inputManager = new InputManager(this);
+    this.inputManager = new InputManager<HellAction>(this, {
+      actions: HELL_ACTIONS,
+      pcActionBindings: HELL_PC_BINDINGS,
+      moveKeys: HELL_MOVE_KEYS,
+      aimStickAction: HELL_AIM_STICK_ACTION,
+    });
     this.bulletManager = new BulletManager(this, this.effects, this.player.getStats());
     this.enemyManager = new EnemyManager(this, this.effects, this.runRandom, {
       // Ödül ölümün kendisine bağlı: mermi, kule, zincir ve ateş alanı
@@ -277,10 +287,10 @@ export class GameScene extends BaseScene {
       this.loadingScreen.hide();
     }
 
-    // Geliştirme/diagnostic overlay — createVolGame'de ?debug/?perf varsa oluşur
-    this.diagnostics = Diagnostics.getInstance() ?? undefined;
-    this.diagnostics?.setScene(this.scene.key);
-    this.diagnostics?.markResume();
+    // Geliştirme/diagnostic overlay — `?debug`/`?perf` varsa initServices()
+    // tarafından oluşturulur, yoksa null'dur (bkz. app/services.ts).
+    diagnostics?.setScene(this.scene.key);
+    diagnostics?.markResume();
   }
 
   update(_time: number, delta: number): void {
@@ -290,56 +300,56 @@ export class GameScene extends BaseScene {
       return;
     }
 
-    this.diagnostics?.beginFrame();
+    diagnostics?.beginFrame();
 
     const dt = Math.min(delta, gameConfig.maxDeltaMs);
     this.scoreboard.advance(dt);
 
-    this.diagnostics?.startStage('input');
+    diagnostics?.startStage('input');
     this.inputManager.update(dt);
-    this.diagnostics?.setInput(this.inputManager.getDebugSnapshot());
-    this.diagnostics?.endStage('input');
+    diagnostics?.setInput(this.inputManager.getDebugSnapshot());
+    diagnostics?.endStage('input');
 
     // Input state frame basina BIR kez okunur. Iki ayri getState() cagrisi hem
     // gereksiz Vector2 uretiyor hem de iki farkli anlik goruntu yaratiyordu.
     const inputState = this.inputManager.getState(this.player.getPosition());
 
-    this.diagnostics?.startStage('player');
+    diagnostics?.startStage('player');
     this.updatePlayer(dt, inputState);
-    this.diagnostics?.endStage('player');
+    diagnostics?.endStage('player');
 
     const playerPos = this.player.getPosition();
 
-    this.diagnostics?.startStage('fire');
+    diagnostics?.startStage('fire');
     this.fire(playerPos, inputState);
-    this.diagnostics?.endStage('fire');
+    diagnostics?.endStage('fire');
 
-    this.diagnostics?.startStage('abilities');
+    diagnostics?.startStage('abilities');
     this.updateAbilities(dt, playerPos);
-    this.diagnostics?.endStage('abilities');
+    diagnostics?.endStage('abilities');
 
-    this.diagnostics?.startStage('entities');
+    diagnostics?.startStage('entities');
     this.updateEntities(dt, playerPos, _time);
-    this.diagnostics?.endStage('entities');
+    diagnostics?.endStage('entities');
 
-    this.diagnostics?.startStage('collision');
+    diagnostics?.startStage('collision');
     this.collisionResolver.resolve(_time);
-    this.diagnostics?.endStage('collision');
+    diagnostics?.endStage('collision');
 
-    this.diagnostics?.startStage('hud');
+    diagnostics?.startStage('hud');
     this.updateHUD(dt);
-    this.diagnostics?.endStage('hud');
+    diagnostics?.endStage('hud');
 
-    this.diagnostics?.startStage('death');
+    diagnostics?.startStage('death');
     this.checkDeath();
-    this.diagnostics?.endStage('death');
+    diagnostics?.endStage('death');
 
     this.reportDiagnostics();
     const blocker = this.run.getBlocker();
     this.audio.setBossActive(blocker?.definition.id === BOSS_ENEMY_ID);
     this.audio.update(dt, this.enemyManager.getEnemies().length, !this.finisher.isFinishing);
 
-    this.diagnostics?.endFrame();
+    diagnostics?.endFrame();
   }
 
   // --- Kurulum --------------------------------------------------------------
@@ -411,14 +421,14 @@ export class GameScene extends BaseScene {
 
   // --- Döngü ---------------------------------------------------------------
 
-  private updatePlayer(delta: number, state: InputState): void {
+  private updatePlayer(delta: number, state: InputState<HellAction>): void {
     this.moveDirBuf.set(state.move.x, state.move.y);
     this.aimDirBuf.set(state.aim.x, state.aim.y);
 
     // Önce input uygula — dash update'ten önce tetiklenmeli (BUG-3 fix)
     this.player.setMoveDirection(this.moveDirBuf);
 
-    if (state.dash && this.player.tryDash(this.aimDirBuf)) {
+    if (state.actions.dash && this.player.tryDash(this.aimDirBuf)) {
       void gameAudio.playSfx('dash', { volume: sfxVolumes.dash });
     }
 
@@ -426,8 +436,8 @@ export class GameScene extends BaseScene {
     this.player.update(delta);
   }
 
-  private fire(playerPos: Vector2, state: InputState): void {
-    if (state.fire && this.aimDirBuf.length() > 0) {
+  private fire(playerPos: Vector2, state: InputState<HellAction>): void {
+    if (state.actions.fire && this.aimDirBuf.length() > 0) {
       if (this.bulletManager.tryFire(playerPos, this.aimDirBuf)) {
         void gameAudio.playSfx('fire', { volume: sfxVolumes.fire });
       }
@@ -444,9 +454,12 @@ export class GameScene extends BaseScene {
     this.difficulty = getDifficultyState(this.scoreboard.getElapsedMs());
     const difficulty = this.difficulty;
 
-    // Spatial grid'i bu frame için yeniden kur — enemy update'inden ÖNCE
-    this.spatialGrid.clear();
-    this.spatialGrid.insertAll(this.enemyManager.getEnemies());
+    // Spatial grid'i bu frame için yeniden kur — enemy update'inden ÖNCE.
+    // Tam rebuild bilinçli: VOL.HELL ölçeğinde (birkaç yüz düşman) maliyeti
+    // ölçülemez ve hangi entity'nin nerede hareket ettiğini takip etmeyi
+    // gerektirmez. Artımlı yol (insert/remove/update) sınıfta hazır ve test
+    // edilmiş durumda; binlerce entity taşıyan bir tüketici onu kullanır.
+    this.spatialGrid.rebuild(this.enemyManager.getEnemies());
 
     // Koşu yöneticisi Elite/Boss'u sürdüğü için grid HAZIR olmalı: özel
     // düşmanlar da separation hesabı yapar.
@@ -459,9 +472,7 @@ export class GameScene extends BaseScene {
     });
 
     // Grid'i enemy hareketinden sonra yeniden kur — çarpışma kontrolü güncel pozisyon kullanır
-    this.spatialGrid.clear();
-    this.spatialGrid.insertAll(this.enemyManager.getEnemies());
-    this.spatialGrid.trim();
+    this.spatialGrid.rebuild(this.enemyManager.getEnemies());
   }
 
   private updateHUD(deltaMs: number): void {
@@ -483,8 +494,8 @@ export class GameScene extends BaseScene {
   }
 
   private reportDiagnostics(): void {
-    if (!this.diagnostics) return;
-    reportSceneTelemetry(this.diagnostics, {
+    if (!diagnostics) return;
+    reportSceneTelemetry(diagnostics, {
       score: this.scoreboard.getScore(),
       kills: this.scoreboard.getKills(),
       elapsedMs: this.scoreboard.getElapsedMs(),
@@ -599,7 +610,6 @@ export class GameScene extends BaseScene {
     this.inputManager.destroy();
     this.border.destroy();
     this.hud.destroy();
-    this.diagnostics = undefined;
     if (this.loadingScreen) {
       this.loadingScreen.destroy();
       this.loadingScreen = null;

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { Vector2 } from '../math/Vector2';
 import { VOL_COLORS } from '../ui/colors';
-import { TouchStickState } from './TouchStickState';
+import { TouchStickState, type TouchStickOptions } from './TouchStickState';
 import type { InputProvider } from './InputProvider';
 import type { InputState } from './InputState';
 import type { InputSnapshot, TouchStickSnapshot } from './InputSnapshot';
@@ -19,14 +19,18 @@ const STICK_THUMB_COLOR = hexColorToNumber(VOL_COLORS.supportSolid);
  * İnce Phaser sarmalayıcısı: pointer olaylarını dinler, görseli çizer.
  * Stick atama/clamp/deadzone mantığı TouchStickState'te yaşar (bkz. TouchStickState.ts).
  */
-export class TouchController extends Phaser.GameObjects.Container implements InputProvider {
+export class TouchController<TAction extends string>
+  extends Phaser.GameObjects.Container
+  implements InputProvider<TAction>
+{
   private readonly graphics: Phaser.GameObjects.Graphics;
-  private readonly sticks = new TouchStickState();
+  private readonly sticks: TouchStickState<TAction>;
   /** Ekranda çizili stick var mı — parmak kalkınca tek bir clear() için. */
   private hasDrawnSticks = false;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, stickOptions: TouchStickOptions<TAction>) {
     super(scene);
+    this.sticks = new TouchStickState(stickOptions);
     scene.add.existing(this);
     this.setScrollFactor(0);
     this.setDepth(UI_DEPTH.OVERLAY);
@@ -63,7 +67,7 @@ export class TouchController extends Phaser.GameObjects.Container implements Inp
     };
   }
 
-  getState(_playerPosition: Vector2): InputState {
+  getState(_playerPosition: Vector2): InputState<TAction> {
     return this.sticks.getState();
   }
 

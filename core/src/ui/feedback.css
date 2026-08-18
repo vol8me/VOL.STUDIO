@@ -144,15 +144,15 @@
   opacity: 0;
 }
 
-.vol-floating-text--damage {
+.vol-floating-text--negative {
   color: var(--vol-ui-danger-border);
 }
 
-.vol-floating-text--heal {
+.vol-floating-text--positive {
   color: var(--vol-ui-success-solid);
 }
 
-.vol-floating-text--critical {
+.vol-floating-text--emphasis {
   color: var(--vol-ui-warning-solid);
   transition:
     opacity var(--vol-transition-fast),

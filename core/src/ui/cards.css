@@ -288,6 +288,11 @@
   transition:
     background var(--vol-transition-fast),
     border-color var(--vol-transition-fast);
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-card__action:focus-visible {
@@ -408,6 +413,11 @@
   transition:
     background var(--vol-transition-fast),
     border-color var(--vol-transition-fast);
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-card-shop__reroll:focus-visible {
@@ -482,6 +492,11 @@
   font-size: 13px;
   font-weight: 700;
   transition: background var(--vol-transition-fast);
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-card-shop__close:hover {

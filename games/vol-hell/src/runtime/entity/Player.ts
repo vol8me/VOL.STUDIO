@@ -1,10 +1,12 @@
 import type Phaser from 'phaser';
-import { PlayerController, StatBlock, Vector2, Diagnostics } from '@volstudio/core';
+import { PlayerController, StatBlock, Vector2 } from '@volstudio/core';
+import type { HellStat, HellStatBlock } from '@/config/stats';
 import { playerConfig } from '@/config/player';
 import { bulletConfig } from '@/config/bullet';
 import { RENDER_DEPTH } from '@/config/layers';
 import type { Border } from './Border';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
+import { diagnostics } from '@/app/services';
 
 /**
  * Oyuncu entity'si. PlayerController composition ile sprite'ı tutar.
@@ -23,7 +25,7 @@ import type { EffectManager } from '@/runtime/systems/EffectManager';
  */
 export class Player extends PlayerController {
   private readonly arc: Phaser.GameObjects.Arc;
-  private readonly stats: StatBlock;
+  private readonly stats: HellStatBlock;
   private health: number;
   /** Son görülen maksimum can — kart maks. canı değiştirdiğinde farkı yakalar. */
   private lastMaxHealth: number;
@@ -54,7 +56,7 @@ export class Player extends PlayerController {
     super('player', arc);
     this.arc = arc;
     // fireRate = atışlar arası bekleme (ms); düşük değer hızlı ateş demektir.
-    this.stats = new StatBlock({
+    this.stats = new StatBlock<HellStat>({
       damage: bulletConfig.damage,
       speed: playerConfig.moveSpeed,
       health: playerConfig.maxHealth,
@@ -69,7 +71,7 @@ export class Player extends PlayerController {
    * Oyuncunun stat bloğu — mermi hasarı/ateş hızı için BulletManager,
    * kart efektleri için dışarıdan modifier eklenerek kullanılır.
    */
-  getStats(): StatBlock {
+  getStats(): HellStatBlock {
     return this.stats;
   }
 
@@ -203,7 +205,7 @@ export class Player extends PlayerController {
     this.moveDirection.normalizeInPlace();
     this.ghostTimer = 0;
 
-    Diagnostics.getInstance()?.recordEvent('dash', {
+    diagnostics?.recordEvent('dash', {
       x: this.arc.x,
       y: this.arc.y,
       direction: { x: this.moveDirection.x, y: this.moveDirection.y },
@@ -230,7 +232,7 @@ export class Player extends PlayerController {
     this.arc.setFillStyle(playerConfig.hitColor, playerConfig.fillAlpha);
     this.effects.play('playerHit', this.arc.x, this.arc.y);
 
-    Diagnostics.getInstance()?.recordEvent('playerDamaged', {
+    diagnostics?.recordEvent('playerDamaged', {
       x: this.arc.x,
       y: this.arc.y,
       amount,

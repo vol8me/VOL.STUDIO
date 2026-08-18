@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { StatBlock, Vector2, createRandom } from '@volstudio/core';
+import type { HellStat, HellStatBlock } from '@/config/stats';
 import { CARD_CATALOG, getCardSellValue } from '@/config/cards';
 import { bulletConfig } from '@/config/bullet';
 import { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
@@ -50,7 +51,7 @@ function makeEffects(): EffectManager {
 }
 
 describe('CardInventoryManager', () => {
-  let stats: StatBlock;
+  let stats: HellStatBlock;
   let economy: RunEconomy;
   let abilities: AbilityRuntime;
   let cards: CardInventoryManager;
@@ -60,7 +61,7 @@ describe('CardInventoryManager', () => {
   beforeEach(() => {
     turretActive = false;
     lowHealth = false;
-    stats = new StatBlock({
+    stats = new StatBlock<HellStat>({
       damage: bulletConfig.damage,
       speed: 220,
       health: 100,
@@ -289,5 +290,125 @@ describe('CardInventoryManager', () => {
     abilities.update(16, new Vector2(100, 100), new Vector2(1, 0), []);
     expect(abilities.tryActivate('primary')).toBe(true);
     expect(abilities.getTurret()).not.toBeNull();
+  });
+});
+
+describe('CardInventoryManager işlem sınırı', () => {
+  /**
+   * Yarım commit regresyonu.
+   *
+   * Eski sıralama `owned.push()` → `applyCard()` idi: uygulama fırlatırsa kart
+   * envanterde görünüyor, etkileri yarım kalıyor, satın almada Flux da gitmiş
+   * oluyordu. Bugünkü kartlarda fırlatma yolu yok — bu test o yolu YAPAY olarak
+   * açar (stat motoru fırlatacak şekilde sabote edilir) ve sözleşmeyi kilitler.
+   */
+  function makeFailingSetup(): {
+    cards: CardInventoryManager;
+    economy: RunEconomy;
+    failingCard: (typeof CARD_CATALOG)[keyof typeof CARD_CATALOG];
+  } {
+    const stats = new StatBlock<HellStat>({
+      damage: bulletConfig.damage,
+      speed: 220,
+      health: 100,
+      fireRate: bulletConfig.fireCooldownMs,
+    });
+    // Modifier eklemeyi fırlatacak hâle getir: "uygulama ortasında hata".
+    vi.spyOn(stats, 'addModifier').mockImplementation(() => {
+      throw new Error('stat motoru patladı');
+    });
+
+    const economy = new RunEconomy();
+    const abilities = new AbilityRuntime({
+      scene: makeScene(),
+      effects: makeEffects(),
+      border: { clampX: (x: number) => x, clampY: (y: number) => y } as unknown as Border,
+      random: createRandom(1),
+      bullets: { spawnBullet: vi.fn() } as unknown as BulletManager,
+      playerStats: stats,
+    });
+
+    const cards = new CardInventoryManager({
+      random: createRandom(1),
+      playerStats: stats,
+      abilities,
+      economy,
+      conditions: {
+        hasActiveTurret: () => false,
+        isLowHealth: () => false,
+        areBothSlotsFilled: () => false,
+      },
+    });
+
+    // Modifier taşıyan herhangi bir kart (buff/tradeoff).
+    const failingCard = Object.values(CARD_CATALOG).find(
+      (card) => (card.modifiers?.length ?? 0) > 0,
+    )!;
+
+    return { cards, economy, failingCard };
+  }
+
+  it('uygulama ortasında hata olursa kart envantere GİRMEZ', () => {
+    const { cards, failingCard } = makeFailingSetup();
+
+    expect(() => cards.acquire(failingCard)).toThrow('stat motoru patladı');
+    expect(cards.getOwned()).toHaveLength(0);
+  });
+
+  it('satın alma başarısız olursa harcanan Flux GERİ VERİLİR', () => {
+    const { cards, economy, failingCard } = makeFailingSetup();
+    economy.addFlux(500);
+    const before = economy.getFlux();
+
+    expect(() => cards.purchase(failingCard)).toThrow('stat motoru patladı');
+
+    expect(economy.getFlux()).toBe(before);
+    expect(cards.getOwned()).toHaveLength(0);
+  });
+
+  it('başarısız edinme instanceId sayacını TÜKETMEZ', () => {
+    // Sayaç commit'ten SONRA artar. Aksi halde başarısız denemeler kimlik
+    // dizisinde boşluk bırakır (`kart#1` hiç var olmadan `kart#2` doğar) ve
+    // kayıt/kaydetme okumaları yanıltıcı hâle gelir.
+    const stats = new StatBlock<HellStat>({
+      damage: bulletConfig.damage,
+      speed: 220,
+      health: 100,
+      fireRate: bulletConfig.fireCooldownMs,
+    });
+    const addModifier = vi.spyOn(stats, 'addModifier').mockImplementation(() => {
+      throw new Error('stat motoru patladı');
+    });
+
+    const abilities = new AbilityRuntime({
+      scene: makeScene(),
+      effects: makeEffects(),
+      border: { clampX: (x: number) => x, clampY: (y: number) => y } as unknown as Border,
+      random: createRandom(1),
+      bullets: { spawnBullet: vi.fn() } as unknown as BulletManager,
+      playerStats: stats,
+    });
+    const cards = new CardInventoryManager({
+      random: createRandom(1),
+      playerStats: stats,
+      abilities,
+      economy: new RunEconomy(),
+      conditions: {
+        hasActiveTurret: () => false,
+        isLowHealth: () => false,
+        areBothSlotsFilled: () => false,
+      },
+    });
+
+    const buffCard = Object.values(CARD_CATALOG).find((card) => (card.modifiers?.length ?? 0) > 0)!;
+
+    expect(() => cards.acquire(buffCard)).toThrow('stat motoru patladı');
+
+    // Aynı kart artık başarıyla alınabilir olmalı ve kimliği #1 olmalı.
+    addModifier.mockRestore();
+    const owned = cards.acquire(buffCard);
+
+    expect(owned.instanceId).toBe(`${buffCard.id}#1`);
+    expect(cards.getOwned()).toHaveLength(1);
   });
 });

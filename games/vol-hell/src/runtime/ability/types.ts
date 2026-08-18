@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
-import type { Random, StatBlock } from '@volstudio/core';
+import type { Random } from '@volstudio/core';
+import type { HellStatBlock } from '@/config/stats';
 import type { AbilityDefinition } from '@/config/abilities';
 import type { SoundEvent } from '@/config/sounds';
 import { MIN_ABILITY_COOLDOWN_MS } from '@/config/abilities';
@@ -46,7 +47,7 @@ export interface AbilityContext {
   readonly border: Border;
   readonly random: Random;
   /** Oyuncunun stat bloğu — cooldown ölçeklemesi ve hasar için. */
-  readonly playerStats: StatBlock;
+  readonly playerStats: HellStatBlock;
   readonly playerX: number;
   readonly playerY: number;
   /** Nişan yönü (birim vektör bileşenleri). */

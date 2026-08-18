@@ -58,7 +58,9 @@
     "largeLg": "Large (lg)",
     "tooltipSmall": "For compact HUD corners",
     "tooltipMedium": "Default size",
-    "tooltipLarge": "For main actions / touch targets"
+    "tooltipLarge": "For main actions / touch targets",
+    "asyncIconButton": "Async icon button",
+    "asyncIconSave": "Save (async)"
   },
   "text": {
     "title": "Title",
@@ -600,7 +602,8 @@
     "quest3Title": "Escort the Merchant",
     "quest3Desc": "Reward: 50 Gold",
     "quest4Title": "Follow the Dragon Trail",
-    "quest4Desc": "Reward: 300 Gold (Risky)"
+    "quest4Desc": "Reward: 300 Gold (Risky)",
+    "touchButtonKeyboardHint": "Focus with Tab, hold Space/Enter — the same press/release events arrive from the keyboard."
   },
   "loading": {
     "indicatorTypes": "Indicator Types",

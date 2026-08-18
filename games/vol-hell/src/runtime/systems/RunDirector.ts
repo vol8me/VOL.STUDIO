@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
-import type { Random, StatBlock, Vector2 } from '@volstudio/core';
-import { Diagnostics } from '@volstudio/core';
+import type { Random, Vector2 } from '@volstudio/core';
+import type { HellStatBlock } from '@/config/stats';
 import type { Border } from '@/runtime/entity/Border';
 import type { Enemy } from '@/runtime/entity/Enemy';
 import type { EnemyManager } from '@/runtime/entity/EnemyManager';
@@ -13,6 +13,7 @@ import type { DifficultyState } from './DifficultyCalculator';
 import { RunEconomy } from './RunEconomy';
 import { WaveManager } from './WaveManager';
 import { SpecialEnemyDirector } from './SpecialEnemyDirector';
+import { diagnostics } from '@/app/services';
 
 export interface RunDirectorDeps {
   scene: Phaser.Scene;
@@ -22,7 +23,7 @@ export interface RunDirectorDeps {
   random: Random;
   enemyManager: EnemyManager;
   bulletManager: BulletManager;
-  playerStats: StatBlock;
+  playerStats: HellStatBlock;
   damagePlayer: (amount: number) => void;
   getPlayerPosition: () => Vector2;
   getDifficulty: () => DifficultyState;
@@ -64,7 +65,7 @@ export class RunDirector {
 
     this.economy = new RunEconomy({
       onLevelUp: (level) => {
-        Diagnostics.getInstance()?.recordEvent('sparkLevelUp', { level });
+        diagnostics?.recordEvent('sparkLevelUp', { level });
         callbacks.onLevelUp?.(level);
       },
     });
@@ -98,18 +99,18 @@ export class RunDirector {
       isBlockerAlive: () => this.specials.isBlockerAlive(),
       onWaveStart: (wave) => {
         this.enemyManager.setWave(wave);
-        Diagnostics.getInstance()?.recordEvent('waveStart', { wave });
+        diagnostics?.recordEvent('waveStart', { wave });
         callbacks.onWaveStart?.(wave);
       },
       onWaveClear: (wave) => this.clearArena(wave),
       onWaveEnd: (wave) => {
-        Diagnostics.getInstance()?.recordEvent('shopOpen', { wave, flux: this.economy.getFlux() });
+        diagnostics?.recordEvent('shopOpen', { wave, flux: this.economy.getFlux() });
         callbacks.onShopOpen?.(wave);
       },
       onEliteWave: () => this.specials.spawnElite(),
       onBossWave: () => this.specials.spawnBoss(),
       onRunComplete: () => {
-        Diagnostics.getInstance()?.recordEvent('runComplete', { flux: this.economy.getFlux() });
+        diagnostics?.recordEvent('runComplete', { flux: this.economy.getFlux() });
         callbacks.onRunComplete?.();
       },
     });
@@ -185,6 +186,6 @@ export class RunDirector {
     // bir kaynaktan hasar gelmesin.
     this.telegraphs.cancelAll();
 
-    Diagnostics.getInstance()?.recordEvent('waveClear', { wave, enemies, bullets, pickups });
+    diagnostics?.recordEvent('waveClear', { wave, enemies, bullets, pickups });
   }
 }
