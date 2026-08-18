@@ -40,15 +40,14 @@ export class MusicEngine {
       this.context = options.audioContext;
     } else if (typeof globalThis.AudioContext !== 'undefined') {
       this.context = new globalThis.AudioContext();
-    } else if (
-      typeof (globalThis as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext !==
-      'undefined'
-    ) {
-      this.context = new (
-        globalThis as { webkitAudioContext?: typeof AudioContext }
-      ).webkitAudioContext!();
     } else {
-      throw new Error('AudioContext desteklenmiyor. Browser veya fake context gerekli.');
+      const webkitCtor = (globalThis as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+      if (typeof webkitCtor === 'function') {
+        this.context = new webkitCtor();
+      } else {
+        throw new Error('AudioContext desteklenmiyor. Browser veya fake context gerekli.');
+      }
     }
 
     this.mixer = new MusicMixer(this.context, { compressor: options.compressor });

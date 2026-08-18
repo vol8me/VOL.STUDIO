@@ -35,7 +35,7 @@ export interface SpecialEnemyDirectorCallbacks {
 /**
  * Elite ve Boss'un yaşam döngüsü — spawn, güncelleme, ölüm sinyali.
  *
- * Bu iki düşman "zorunlu engel"dir (B1): yaşadıkları dalga, süre dolsa bile
+ * Bu iki düşman "zorunlu engel"dir: yaşadıkları dalga, süre dolsa bile
  * onlar ölene kadar bitmez. Engel sinyalini tek elden buradan vermek, sinyalin
  * `EnemyManager`, `WaveManager` ve iki ayrı kontrolcü arasında dağılmasını
  * önler.
@@ -107,7 +107,7 @@ export class SpecialEnemyDirector {
 
   /**
    * Boss dalgası başladı — Sovereign, oyuncunun O ANKİ gücüne oranlı
-   * stat'larla doğar (B2). Ölçekleme burada BİR KEZ hesaplanır ve sabit
+   * stat'larla doğar. Ölçekleme burada BİR KEZ hesaplanır ve sabit
    * sayılara dönüştürülür; sonraki kartlar boss'u güçlendirmez.
    */
   spawnBoss(): void {

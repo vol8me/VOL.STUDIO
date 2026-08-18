@@ -10,7 +10,7 @@ export const DIFFICULTY_MODIFIER_ID = 'difficulty';
  * Bir düşmanın stat bloğunu kurar: arketip taban değerleri + zorluk çarpanları.
  *
  * Zorluk ölçeklemesi ayrı bir "hesaplanmış stat" nesnesi üretmez; doğrudan
- * `StatBlock`'a `multiply` modifier olarak girer. Böylece Aşama 2'nin kartları
+ * `StatBlock`'a `multiply` modifier olarak girer. Böylece kart modifier'ları
  * ile zorluk eğrisi tek bir zincirde toplanır, iki paralel ölçekleme olmaz.
  *
  * Çarpanlar spawn ANINDA sabitlenir (fonksiyon değil sabit değer): bir düşman

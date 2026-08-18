@@ -1,0 +1,150 @@
+# VOL.STUDIO — Local-first kalite kapıları
+# Fedora / pnpm / Tauri v2
+# Kullanım: just fast | just high | just signoff | just --list
+#
+# `just` ikilisi `just-install` devDependency'siyle `node_modules/.bin` altına
+# kurulur. Global PATH'te `just` yoksa kapılar `pnpm fast` / `pnpm high` /
+# `pnpm signoff` ya da `pnpm exec just <tarif>` ile çağrılır.
+
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+cargo_dir := "tauri-v2/src-tauri"
+
+# Varsayılan: tarif listesi
+default:
+    @just --list
+
+# === TEKİL KAPILAR ===
+# Birleşik kapılar bunlardan kurulur. Bir kapı düştüğünde agent ya da
+# geliştirici tüm zinciri değil yalnızca düşen kapıyı tekrar koşabilsin diye
+# ayrı tarifler hâlinde durur.
+
+typecheck:
+    pnpm -r typecheck
+
+lint:
+    pnpm lint
+
+lint-css:
+    pnpm lint:css
+
+format-check:
+    pnpm format:check
+
+# Tüm paketlerde test (kapsam eşiği UYGULANMAZ).
+test:
+    pnpm -r --if-present test
+
+# Tek paket testi. Örn: just test-pkg core | just test-pkg vol-ui
+test-pkg pkg:
+    pnpm --filter @volstudio/{{ pkg }} test
+
+# Test + kapsam eşikleri. Eşikler paketlerin vitest.config.ts dosyalarında.
+coverage:
+    pnpm -r --if-present test:coverage
+
+build-game:
+    pnpm build:game
+
+build-ui:
+    pnpm --filter @volstudio/vol-ui build
+
+# Her satır kendi kabuğunda koştuğu için `cd` her satırda tekrarlanır.
+# Rust kapıları: cargo check + fmt + clippy
+rust:
+    cd {{ cargo_dir }} && cargo check --locked
+    cd {{ cargo_dir }} && cargo fmt --check
+    cd {{ cargo_dir }} && cargo clippy --locked -- -D warnings
+
+# === BİRLEŞİK KAPILAR ===
+
+# Pre-commit kapısı: format + tip + lint + test
+fast: format-check typecheck lint test
+
+# `coverage` aynı testleri eşikleriyle koştuğu için düz `test` burada bilerek
+# tekrarlanmaz; `high` yine de `fast`'in her kapısını kapsar.
+# Push öncesi kapısı: fast + css lint + kapsam eşikleri + oyun build
+high: format-check typecheck lint lint-css coverage build-game
+
+# Release/milestone kapısı: high + Rust
+signoff: high rust
+
+# === TAURİ ===
+
+# Tauri prod build: uzun, ağır, manuel.
+tauri-build:
+    pnpm build:game
+    pnpm --filter @volstudio/tauri-v2 tauri build
+
+tauri-dev:
+    pnpm tauri:dev
+
+tauri-android:
+    pnpm tauri:android:dev
+
+tauri-ios:
+    pnpm tauri:ios:dev
+
+# === GELİŞTİRME ===
+
+dev:
+    pnpm dev
+
+dev-ui:
+    pnpm --filter @volstudio/vol-ui dev
+
+fix:
+    pnpm format
+    pnpm lint:fix
+
+gen-theme:
+    pnpm gen:theme
+
+# Artefaktlar paket köklerinde yaşar, repo kökünde değil; kök seviyesinde
+# silmek hiçbir şeye dokunmaz.
+# JS/TS çıktılarını siler: dist, coverage, *.tsbuildinfo
+clean:
+    rm -rf core/dist games/*/dist tauri-v2/dist
+    rm -rf core/coverage games/*/coverage tauri-v2/coverage
+    find . -name '*.tsbuildinfo' -not -path './node_modules/*' -delete
+
+# Rust target'ı da siler. Sonraki `cargo check` sıfırdan derler; ayrı tutuldu.
+clean-all: clean
+    rm -rf {{ cargo_dir }}/target
+
+# === SES / ASSET HATTI ===
+
+download-fonts:
+    pnpm --filter @volstudio/core download-fonts
+
+generate-audio:
+    pnpm --filter @volstudio/vol-hell generate:audio
+
+audio-qa:
+    pnpm audio:qa
+
+convert-ios:
+    pnpm convert:ios
+
+# === ORTAM KONTROLÜ ===
+
+doctor:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Node:   $(node -v)"
+    echo "pnpm:   $(pnpm -v)"
+    echo "Rust:   $(rustc --version 2>/dev/null || echo 'rustc yok')"
+    echo "Cargo:  $(cargo -V 2>/dev/null || echo 'cargo yok')"
+    echo "just:   $(just --version 2>/dev/null || echo 'PATH içinde yok')"
+    echo "FFmpeg: $(ffmpeg -version 2>/dev/null | head -n1 || echo 'FFmpeg yok — ses hattı çalışmaz')"
+    if command -v just >/dev/null 2>&1; then
+      echo "just PATH: global ($(command -v just))"
+    else
+      echo "just PATH: global değil — kapıları 'pnpm fast/high/signoff' ile çağır."
+    fi
+    # Fedora paket adları; Debian/Ubuntu'da libgtk-3-dev / libwebkit2gtk-4.1-dev.
+    if pkg-config --exists gtk+-3.0 webkit2gtk-4.1; then
+      echo "Tauri sistem deps: OK"
+    else
+      echo "UYARI: gtk3-devel / webkit2gtk4.1-devel eksik olabilir (Fedora)."
+    fi

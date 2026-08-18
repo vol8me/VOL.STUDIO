@@ -7,7 +7,7 @@ import { enemyConfig } from '@/config/enemy';
 /**
  * Seviye eğrisinin HİSSİYATINI kilitler: ilk dalga iki kart verir, sonraki
  * dalgalar aynı öldürme sayısıyla giderek daha az verir ve geç oyunda bir
- * dalga hiç seviye atlatmadan bitebilir (Brotato ritmi).
+ * dalga hiç seviye atlatmadan bitebilir.
  *
  * Sabit sayı değil, İLİŞKİ test edilir: eşikler ayarlanırsa bu testler
  * eğrinin şeklini korumaya devam eder.

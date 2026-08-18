@@ -169,7 +169,7 @@ export class RunDirector {
   }
 
   /**
-   * Normal dalga sonu temizliği (B1b) — Brotato tarzı temiz geçiş.
+   * Normal dalga sonu temizliği — sonraki dalga temiz sahnede başlar.
    *
    * Kalan düşmanlar, uçan mermiler, bekleyen telegraph'lar ve YERDE KALAN
    * Flux silinir. Bu bir ceza değil: oyuncu can/skor kaybetmez, düşmanlar

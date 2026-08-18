@@ -6,3 +6,5 @@ publicHoistPattern:
   - '@tauri-apps/*'
 allowBuilds:
   esbuild: true
+  just-install: true
+  simple-git-hooks: true

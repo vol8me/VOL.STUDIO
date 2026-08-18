@@ -48,8 +48,8 @@ export interface EnemyOptions {
  * Diğer düşmanlarla overlap etmez (separation). Can barı üzerindedir.
  *
  * Stat'lar `StatBlock` üzerinden okunur; arketipe özel hareket mantığı
- * `behaviors/` altındaki bağımsız fonksiyonlardadır (Aşama 3'te Elite bunları
- * kompoze edecek).
+ * `behaviors/` altındaki bağımsız fonksiyonlardadır; Elite bunları kompoze
+ * ederek kullanır.
  */
 export class Enemy {
   readonly arc: Phaser.GameObjects.Arc;
@@ -142,7 +142,7 @@ export class Enemy {
     return this.definition.fluxReward;
   }
 
-  /** Düşmanın stat bloğu — dışarıdan modifier eklemek için (Aşama 2/3). */
+  /** Düşmanın stat bloğu — dışarıdan modifier eklemek için. */
   getStats(): StatBlock {
     return this.stats;
   }
@@ -377,7 +377,7 @@ export class Enemy {
   /**
    * Dalga geçişinde sahneden kaldırır — ödül YOK, ölüm sayılmaz.
    *
-   * Normal dalga bitince kalan düşmanlar temizlenir (B1b). Bu bir öldürme
+   * Normal dalga bitince kalan düşmanlar temizlenir. Bu bir öldürme
    * değildir: skor/Spark/Flux vermez, `onDeath` çağrılmaz. Oyuncu ceza da
    * almaz, ödül de almaz — dalga geçişinin nötr bir parçasıdır.
    */

@@ -74,8 +74,9 @@ export class GameAudio {
   private setupResume(): () => void {
     const resume = (): void => {
       if (this.context.state === 'suspended') {
-        this.context.resume().catch(() => {
-          // Context kapatılmış veya başka bir sebeple resume edilememişse görmezden gel.
+        this.context.resume().catch((err: unknown) => {
+          // Context kapatılmış veya başka bir sebeple resume edilememişse logla ve devam et.
+          console.warn('[GameAudio] AudioContext resume başarısız:', err);
         });
       }
     };
@@ -90,13 +91,13 @@ export class GameAudio {
     const handleVisibility = (): void => {
       if (document.hidden) {
         if (this.context.state === 'running') {
-          this.context.suspend().catch(() => {
-            // Context kapatılmışsa görmezden gel.
+          this.context.suspend().catch((err: unknown) => {
+            console.warn('[GameAudio] AudioContext suspend başarısız:', err);
           });
         }
       } else if (this.context.state === 'suspended') {
-        this.context.resume().catch(() => {
-          // Context kapatılmışsa görmezden gel.
+        this.context.resume().catch((err: unknown) => {
+          console.warn('[GameAudio] AudioContext resume başarısız:', err);
         });
       }
     };

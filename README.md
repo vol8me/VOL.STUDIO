@@ -39,26 +39,23 @@ pnpm build:tauri                           # PC installer build
 
 ### Doğrulama
 
-CI (`.github/workflows/ci.yml`) her push ve PR'da iki iş koşar. Web kapıları:
+Kalite kapıları `just` ile localde çalıştırılır. GitHub yalnızca source control, PR ve release için kullanılır; CI runner yoktur.
 
-```bash
-pnpm -r typecheck                          # Tüm paketlerde TS doğrulama
-pnpm -r --if-present test:coverage         # Test + kapsam eşikleri
-pnpm lint                                  # ESLint
-pnpm format:check                          # Prettier (düzeltmek için: pnpm format)
-pnpm lint:css                              # Stylelint
-pnpm build:game                            # Oyun build
-```
+| Seviye          | Komut                        | Ne yapar                                            |
+| --------------- | ---------------------------- | --------------------------------------------------- |
+| Pre-commit      | `pnpm fast`                  | format, typecheck, lint, test                       |
+| Push öncesi     | `pnpm high`                  | fast + css lint + coverage eşikleri + oyun build    |
+| Release/signoff | `pnpm signoff`               | high + cargo check/fmt/clippy                       |
+| Uzun build      | `pnpm exec just tauri-build` | game build + Tauri prod build (manuel)              |
+| Ortam           | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri deps kontrolü |
 
-Rust kapıları (`tauri-v2/src-tauri` içinde):
+`pre-commit` → `pnpm fast` ve `pre-push` → `pnpm high` hook'ları `pnpm install`
+sırasında kurulur; atlamak için `SKIP_SIMPLE_GIT_HOOKS=1`.
 
-```bash
-cargo check --locked
-cargo fmt --check
-cargo clippy --locked -- -D warnings
-```
-
-CI testi `test:coverage` ile koşar; `pnpm -r test` kapsam eşiklerini uygulamaz, bu yüzden push öncesi yukarıdaki komutun kendisi çalıştırılmalıdır.
+`just` ikilisi `node_modules/.bin` altına kurulur, global `PATH`'e girmez —
+çıplak `just fast` değil `pnpm fast` ya da `pnpm exec just fast` kullanılır.
+Tekil kapılar (`typecheck`, `lint`, `coverage`, `rust`, `test-pkg <paket>` …)
+için: `pnpm exec just --list`.
 
 ## Lisans
 

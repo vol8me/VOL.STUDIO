@@ -38,7 +38,7 @@ Gameplay numbers live as data under `src/config/`; balancing is a config change,
 | `pnpm --filter @volstudio/vol-hell preview`        | Serve the production build      |
 | `pnpm --filter @volstudio/vol-hell typecheck`      | TypeScript check                |
 | `pnpm --filter @volstudio/vol-hell test`           | Tests                           |
-| `pnpm --filter @volstudio/vol-hell test:coverage`  | Tests + coverage (CI runs this) |
+| `pnpm --filter @volstudio/vol-hell test:coverage`  | Tests + coverage thresholds     |
 | `pnpm --filter @volstudio/vol-hell generate:audio` | Generate audio and music assets |
 | `pnpm --filter @volstudio/vol-hell audio:qa`       | Measure generated audio assets  |
 

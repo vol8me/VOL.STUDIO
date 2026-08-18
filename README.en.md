@@ -39,26 +39,19 @@ pnpm build:tauri                           # Build PC installers
 
 ### Verification
 
-CI (`.github/workflows/ci.yml`) runs two jobs on every push and pull request. Web gates:
+Quality gates run locally via `just`. There is no CI runner; GitHub is used only for source control, pull requests and releases.
 
-```bash
-pnpm -r typecheck                          # Typecheck all packages
-pnpm -r --if-present test:coverage         # Tests + coverage thresholds
-pnpm lint                                  # ESLint
-pnpm format:check                          # Prettier (fix with: pnpm format)
-pnpm lint:css                              # Stylelint
-pnpm build:game                            # Build the game
-```
+| Level           | Command                      | What it runs                                  |
+| --------------- | ---------------------------- | --------------------------------------------- |
+| Pre-commit      | `pnpm fast`                  | format, typecheck, lint, test                 |
+| Pre-push        | `pnpm high`                  | fast + CSS lint + coverage thresholds + build |
+| Release/signoff | `pnpm signoff`               | high + cargo check/fmt/clippy                 |
+| Long build      | `pnpm exec just tauri-build` | game build + Tauri prod build (manual)        |
+| Environment     | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri deps    |
 
-Rust gates (inside `tauri-v2/src-tauri`):
+The `pre-commit` → `pnpm fast` and `pre-push` → `pnpm high` hooks are installed during `pnpm install`; set `SKIP_SIMPLE_GIT_HOOKS=1` to bypass them.
 
-```bash
-cargo check --locked
-cargo fmt --check
-cargo clippy --locked -- -D warnings
-```
-
-CI runs tests through `test:coverage`; `pnpm -r test` does not enforce coverage thresholds, so run the command above before pushing.
+The `just` binary lands in `node_modules/.bin` and is not on the global `PATH` — use `pnpm fast` or `pnpm exec just fast`, not a bare `just fast`. For single gates (`typecheck`, `lint`, `coverage`, `rust`, `test-pkg <package>` …): `pnpm exec just --list`.
 
 ## License
 

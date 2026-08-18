@@ -5,6 +5,12 @@
   "packageManager": "pnpm@11.18.0",
   "type": "module",
   "scripts": {
+    "postinstall": "node -e \"try{require('child_process').execSync('simple-git-hooks',{stdio:'inherit'})}catch(e){console.warn('[postinstall] git hook kurulumu atlandi (git deposu degil veya git yok) - kalite kapilari elle calistirilmali')}\"",
+    "fast": "just fast",
+    "high": "just high",
+    "signoff": "just signoff",
+    "doctor": "just doctor",
+    "doctor:env": "just doctor",
     "dev": "pnpm --parallel -r --filter @volstudio/vol-hell --filter @volstudio/vol-ui run dev",
     "build:game": "pnpm --filter @volstudio/vol-hell build",
     "build:tauri": "pnpm run build:game && pnpm --filter @volstudio/tauri-v2 tauri build",
@@ -29,7 +35,9 @@
     "eslint": "9.0.0",
     "eslint-config-prettier": "10.0.0",
     "jiti": "^2.7.0",
+    "just-install": "^2.0.2",
     "prettier": "3.0.0",
+    "simple-git-hooks": "^2.13.1",
     "stylelint": "^16.20.0",
     "stylelint-config-standard": "^38.0.0",
     "tsx": "^4.23.11",
@@ -40,5 +48,9 @@
   "engines": {
     "node": "^20.19.0 || >=22.12.0",
     "pnpm": ">=11.18.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm fast",
+    "pre-push": "pnpm high"
   }
 }

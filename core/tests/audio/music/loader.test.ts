@@ -52,6 +52,20 @@ describe('StemLoader — .ogg -> .mp3 fallback', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it('signal zaten abort edilmişse fetch hiç denenmez', async () => {
+    const fetchMock = vi.fn(() => Promise.reject(new Error('should not reach')));
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const controller = new AbortController();
+    controller.abort();
+    const loader = new StemLoader(fakeContext());
+
+    await expect(loader.loadFromUrl('track.ogg', { signal: controller.signal })).rejects.toThrow(
+      /iptal/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('.ogg olmayan kaynaklarda (.wav) fallback denenmez, orijinal hata fırlatılır', async () => {
     const fetchMock = vi.fn(() => Promise.resolve(fakeResponse(false, 404, null)));
     globalThis.fetch = fetchMock as unknown as typeof fetch;

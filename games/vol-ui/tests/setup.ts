@@ -1,15 +1,33 @@
-import { vi } from 'vitest';
+import { vi, beforeAll } from 'vitest';
+import { i18n, i18next } from '../../../core/src/systems/I18n';
+import trResources from '../src/i18n/tr.json';
+import enResources from '../src/i18n/en.json';
+
+i18n.addResources('tr', 'volui', trResources);
+i18n.addResources('en', 'volui', enResources);
 
 // jsdom, HTMLCanvasElement.getContext'i implemente etmez ('canvas' npm
-// paketi kurulu değilse). Phaser modülü import edilir edilmez module-level
-// init sırasında bir prob canvas oluşturup 2D context üzerinde okuma/yazma
-// yapar — bu mock olmadan `import Phaser from 'phaser'` içeren HERHANGİ bir
-// test dosyası import aşamasında çöker.
+// paketi kurulu değilse). Phaser modülü import edilir edilmez (sınıf
+// tanımlarından bağımsız, module-level init sırasında) bir prob canvas
+// oluşturup 2D context üzerinde fillStyle/fillRect gibi özellikler
+// okur/yazar — bu mock olmadan `import Phaser from 'phaser'` içeren
+// HERHANGİ bir test dosyası import aşamasında çöker.
 const noopCtx2d = {
   fillStyle: '',
   strokeStyle: '',
   fillRect: vi.fn(),
+  strokeRect: vi.fn(),
   clearRect: vi.fn(),
+  beginPath: vi.fn(),
+  moveTo: vi.fn(),
+  lineTo: vi.fn(),
+  closePath: vi.fn(),
+  arc: vi.fn(),
+  ellipse: vi.fn(),
+  rect: vi.fn(),
+  clip: vi.fn(),
+  stroke: vi.fn(),
+  fill: vi.fn(),
   getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4) })),
   putImageData: vi.fn(),
   createImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4) })),
@@ -47,6 +65,17 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
   };
 }
 
+if (typeof globalThis.IntersectionObserver === 'undefined') {
+  globalThis.IntersectionObserver = class IntersectionObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  } as unknown as typeof IntersectionObserver;
+}
+
 if (typeof globalThis.matchMedia === 'undefined') {
   globalThis.matchMedia = vi.fn((query: string) => ({
     matches: false,
@@ -59,6 +88,54 @@ if (typeof globalThis.matchMedia === 'undefined') {
     dispatchEvent: vi.fn(),
   })) as unknown as typeof matchMedia;
 }
+
+// jsdom, CSS Font Loading API'sini (FontFace, document.fonts) implemente
+// etmez. FontManager `new FontFace(...)` ve `document.fonts.add/delete`
+// kullanır — bu stub olmadan FontManager'a dokunan HERHANGİ bir test
+// import/çalışma aşamasında çöker.
+if (typeof globalThis.FontFace === 'undefined') {
+  globalThis.FontFace = class FontFace {
+    family: string;
+    weight: string;
+    style: string;
+    status: 'unloaded' | 'loading' | 'loaded' | 'error' = 'unloaded';
+
+    constructor(
+      family: string,
+      _source: string,
+      descriptors: { weight?: string; style?: string } = {},
+    ) {
+      this.family = family;
+      this.weight = descriptors.weight ?? 'normal';
+      this.style = descriptors.style ?? 'normal';
+    }
+
+    load(): Promise<FontFace> {
+      this.status = 'loaded';
+      return Promise.resolve(this as unknown as FontFace);
+    }
+  } as unknown as typeof FontFace;
+}
+
+if (typeof document !== 'undefined') {
+  const fontSet = new Set<FontFace>();
+  Object.defineProperty(document, 'fonts', {
+    configurable: true,
+    writable: true,
+    value: {
+      ready: Promise.resolve(undefined as unknown as FontFaceSet),
+      check: () => true,
+      add: (f: FontFace) => fontSet.add(f),
+      delete: (f: FontFace) => fontSet.delete(f),
+      [Symbol.iterator]: () => fontSet[Symbol.iterator](),
+    },
+  });
+}
+
+beforeAll(async () => {
+  await i18n.init();
+  await i18next.changeLanguage('tr');
+});
 
 for (const ctor of [HTMLElement, Element]) {
   const proto = ctor.prototype as unknown as {
@@ -75,4 +152,8 @@ for (const ctor of [HTMLElement, Element]) {
   if (typeof proto.hasPointerCapture !== 'function') {
     proto.hasPointerCapture = vi.fn(() => false);
   }
+}
+
+if (typeof HTMLMediaElement !== 'undefined') {
+  HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
 }

@@ -149,9 +149,11 @@ for (const ctor of [HTMLElement, Element]) {
   }
 }
 
-// jsdom `HTMLMediaElement.prototype.play`'i implemente etmez ve reddedilen
-// promise ile sanal console'a gürültü basar. LoadingScreen video arkaplan
-// testlerinde bu gürültüyü önlemek için no-op mock.
+// jsdom `HTMLMediaElement.prototype.play`/`pause`/`load`'u implemente etmez
+// ve reddedilen promise / console gürültüsü basar. LoadingScreen video
+// arkaplan testlerinde bu gürültüyü önlemek için no-op mock.
 if (typeof HTMLMediaElement !== 'undefined') {
   HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
+  HTMLMediaElement.prototype.pause = vi.fn();
+  HTMLMediaElement.prototype.load = vi.fn();
 }

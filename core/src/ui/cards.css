@@ -201,7 +201,7 @@
  * Panel açılırken teklif ızgarasındaki YENİ kartlar sırayla belirir. Dükkan
  * (`.vol-card-picker--shop`) reroll'unda tüm açık kartlar aynı anda
  * animasyon alır; level-up'ta 2. ve 3. kart gecikmeli belirir. Envanter
- * listelerine uygulanmaz (C5). Yalnızca `.vol-card--entering` alan kartlar
+ * listelerine uygulanmaz. Yalnızca `.vol-card--entering` alan kartlar
  * animasyon alır; mevcut kartlar yerinde güncellenir, çıkış/flash
  * durumlarındaki kartlar da giriş animasyonuyla çakışmaz.
  */

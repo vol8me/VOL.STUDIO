@@ -183,6 +183,21 @@ describe('I18n — addResources (namespace)', () => {
     await i18n.init();
     expect((i18next.t as (key: string) => string)('volhell:menu.start')).toBe('BAŞLA');
   });
+
+  it('boş kaynak eklenmez ve locale listesine dahil olmaz', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await i18n.init();
+    i18n.addResources('de', 'core', {});
+    expect(i18next.t('core:carousel.prev', { lng: 'de' })).not.toBe('Zurück');
+    expect(i18n.getLocales()).not.toContain('de');
+    warnSpy.mockRestore();
+  });
+
+  it('core kaynağı olmayan dile geçiş reddedilir', async () => {
+    await i18n.init();
+    i18n.addResources('fr', 'volhell', { menu: { start: 'DÉMARRER' } });
+    await expect(i18n.changeLanguage('fr')).rejects.toThrow(/core.*kaynağı/);
+  });
 });
 
 describe('I18n — exists', () => {

@@ -12,7 +12,7 @@ import type { EffectManager } from '@/runtime/systems/EffectManager';
  * Arc, Shape üzerinden Transform implement eder — cast gerekmez.
  *
  * Stat'lar `StatBlock` üzerinden okunur (düşmanlarla ortak motor); config
- * değerleri yalnızca TABAN'dır. Kart/buff sistemleri (Aşama 2) config'e
+ * değerleri yalnızca TABAN'dır. Kart/buff sistemleri config'e
  * dokunmadan modifier ekleyerek etki eder.
  *
  * Dash sistemi:
@@ -67,7 +67,7 @@ export class Player extends PlayerController {
 
   /**
    * Oyuncunun stat bloğu — mermi hasarı/ateş hızı için BulletManager,
-   * kart efektleri için (Aşama 2) dışarıdan modifier eklenerek kullanılır.
+   * kart efektleri için dışarıdan modifier eklenerek kullanılır.
    */
   getStats(): StatBlock {
     return this.stats;

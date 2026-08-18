@@ -181,7 +181,7 @@ export class ShopPicker extends CardPicker {
 
   /** Teklif kartları — kart ID'sine göre. */
   private readonly offerTiles = new Map<string, CardTile>();
-  /** Çıkış animasyonu bekleyen teklifler — geri gelirse geri alınır (C3). */
+  /** Çıkış animasyonu bekleyen teklifler — geri gelirse geri alınır. */
   private readonly leavingOffers = new Map<string, LeavingTile>();
   private readonly offerPurchased = new Map<string, boolean>();
   /** Envanter kartları — instanceId'ye göre (iki liste ayrı Map'te). */
@@ -421,7 +421,7 @@ export class ShopPicker extends CardPicker {
       }
 
       // Reroll'da aynı kart tekrar gelirse yeni düğüm oluşturma — çıkış
-      // animasyonu bekleyen tile'ı geri al (C3).
+      // animasyonu bekleyen tile'ı geri al.
       const returning = this.cancelLeaving(id, this.leavingOffers);
       if (returning) {
         // Geri gelen tile eski metin/rozetlerle dönebilir; güncelle.

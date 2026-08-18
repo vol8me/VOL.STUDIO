@@ -33,7 +33,7 @@ export interface EliteControllerDeps {
 /**
  * Elite (Warden) yapay zekâsı — rusher ve swarmer davranışlarının KOMPOZİSYONU.
  *
- * Yeni bir davranış icat etmez: Aşama 1'de yazılan `applyRusherBehavior` ve
+ * Yeni bir davranış icat etmez: mevcut `applyRusherBehavior` ve
  * `applySwarmerBehavior` fonksiyonlarını AYNI ANDA çalıştırır. Rusher hareketi
  * verir (yaklaş → telegraf → atıl → toparlan), swarmer ise yalnızca doğurma
  * saatini işletir — konumlanmasını değil. İkisi tek gövdede birleşince

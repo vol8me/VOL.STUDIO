@@ -420,6 +420,29 @@ describe('LoadingScreen — destroy', () => {
     loading.destroy();
     expect(cancelAnimationFrame).toHaveBeenCalled();
   });
+
+  it('destroy image arkaplanını temizler', () => {
+    const loading = createLoading({ background: { type: 'image', src: 'test.jpg' } });
+    const media = (loading as unknown as { backgroundMedia?: HTMLImageElement }).backgroundMedia;
+    expect(media).toBeInstanceOf(HTMLImageElement);
+    loading.destroy();
+    expect(media?.src).toBe('');
+    expect(media?.onload).toBeNull();
+    expect(media?.onerror).toBeNull();
+  });
+
+  it('destroy video arkaplanını durdurur ve kaldırır', () => {
+    const playSpy = vi.spyOn(HTMLVideoElement.prototype, 'play').mockResolvedValue(undefined);
+    const loading = createLoading({ background: { type: 'video', src: 'test.mp4' } });
+    const media = (loading as unknown as { backgroundMedia?: HTMLVideoElement }).backgroundMedia;
+    expect(media).toBeInstanceOf(HTMLVideoElement);
+    const pauseSpy = vi.spyOn(media!, 'pause');
+    loading.destroy();
+    expect(pauseSpy).toHaveBeenCalled();
+    expect(media?.src).toBe('');
+    expect(media?.parentElement).toBeNull();
+    playSpy.mockRestore();
+  });
 });
 
 describe('LoadingScreen — prefers-reduced-motion', () => {

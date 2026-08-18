@@ -40,7 +40,7 @@ export function isBlockerWave(wave: number): boolean {
  *
  * - **Normal dalga (1-9, 11-19):** süre dolunca biter. Sahnede kalan her şey
  *   `onWaveClear` ile temizlenir — oyuncu ceza almaz, sonraki dalga temiz
- *   başlar (Brotato geçişi).
+ *   başlar.
  * - **Zorunlu-engel dalgası (10 = Elite, 20 = Boss):** süre dolsa bile engel
  *   hayattaysa dalga BİTMEZ. Sayaç sıfırda durur, dalga uzar; engel öldüğü
  *   anda `notifyBlockerDefeated()` ile dalga o an biter. Bu dalgalarda hiçbir

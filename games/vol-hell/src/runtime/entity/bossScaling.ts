@@ -12,7 +12,7 @@ export interface BossScaling {
 }
 
 /**
- * Oyuncunun o anki gücünü boss'un stat'larına oranlar (B2).
+ * Oyuncunun o anki gücünü boss'un stat'larına oranlar.
  *
  * Neden: sabit bir boss, güçlü bir build karşısında saniyeler içinde eriyor;
  * zayıf bir build karşısındaysa aşılmaz oluyor. Boss'un zorluğu koşunun

@@ -4,8 +4,8 @@ import type { Random } from '@volstudio/core';
  * Davranış fonksiyonlarına verilen anlık dünya durumu.
  *
  * Davranışlar `Enemy` sınıfına gömülü değildir: yalnızca bu bağlamı ve kendi
- * durum nesnelerini bilirler. Aşama 3'teki Elite, rusher + swarmer
- * davranışlarını aynı bağlamla üst üste çağırarak kompoze edecek.
+ * durum nesnelerini bilirler. Elite, rusher + swarmer davranışlarını aynı
+ * bağlamla üst üste çağırarak kompoze eder.
  */
 export interface BehaviorContext {
   /** Davranışı çalıştıran düşmanın konumu. */

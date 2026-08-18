@@ -43,6 +43,7 @@ export class Modal {
   private readonly onClose?: () => void;
   private previouslyFocused: (HTMLOrSVGElement & Element) | null = null;
   private boundKeydown: (event: KeyboardEvent) => void;
+  private onScrimClick?: () => void;
   /** Yalnızca modal açıkken yaşar: yığın üyeliği + `document` keydown dinleyicisi. */
   private sessionScope: DisposableScope | null = null;
 
@@ -57,7 +58,8 @@ export class Modal {
     this.scrim = document.createElement('div');
     this.scrim.className = 'vol-modal__scrim';
     if (closeOnScrimClick) {
-      this.scrim.addEventListener('click', () => this.close());
+      this.onScrimClick = () => this.close();
+      this.scrim.addEventListener('click', this.onScrimClick);
     }
 
     this.content = document.createElement('div');
@@ -124,6 +126,9 @@ export class Modal {
 
   destroy(): void {
     this.close();
+    if (this.onScrimClick) {
+      this.scrim.removeEventListener('click', this.onScrimClick);
+    }
     this.element.remove();
   }
 

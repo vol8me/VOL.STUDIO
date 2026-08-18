@@ -144,12 +144,14 @@ export class I18n {
     if (!this.initialized) {
       throw new Error('[I18n] changeLanguage çağrıldı ama init() henüz yapılmadı');
     }
-    await i18next.changeLanguage(locale);
-    // Yalnizca gercekten kaynagi olan diller kayitli sayilir. Kosulsuz eklemek
-    // detectLocale()'in cevirisi olmayan bir dili secmesine yol acardi.
-    if (i18next.hasResourceBundle(locale, 'core')) {
-      this.locales.add(locale);
+    if (!locale) {
+      throw new Error('[I18n] changeLanguage için geçersiz dil kodu');
     }
+    if (!i18next.hasResourceBundle(locale, 'core')) {
+      throw new Error(`[I18n] '${locale}' dili için 'core' kaynağı bulunamadı`);
+    }
+    await i18next.changeLanguage(locale);
+    this.locales.add(locale);
     if (this.saveManager) {
       await this.saveManager.save(this.saveKey, locale);
     }
@@ -157,6 +159,12 @@ export class I18n {
 
   /** Bir dile yeni bir namespace + çeviri sözlüğü ekler. Oyunlar kendi çevirilerini yüklemek için kullanır. init() öncesi çağrılırsa init sonrası uygulanır. */
   addResources<T extends Record<string, unknown>>(locale: string, ns: string, resources: T): void {
+    if (!locale || !ns) return;
+    if (!resources || typeof resources !== 'object' || Object.keys(resources).length === 0) {
+      console.warn(`[I18n] Boş kaynak eklendi: ${locale}:${ns}`);
+      return;
+    }
+
     if (!this.initialized) {
       this.pendingResources.push({ locale, ns, resources });
       this.locales.add(locale);

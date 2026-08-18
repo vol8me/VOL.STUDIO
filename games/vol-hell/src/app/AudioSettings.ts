@@ -167,6 +167,20 @@ export class AudioSettings {
     return () => this.listeners.delete(listener);
   }
 
+  /**
+   * Bekleyen debounce timer'ını iptal eder ve dinleyicileri temizler.
+   * Bileşen yok edilirken çağrılmalı; devam eden persist promise'ine sahip
+   * çıkmaz — çağıran istersen önce `flush()` çağırır.
+   */
+  dispose(): void {
+    if (this.persistTimer) {
+      clearTimeout(this.persistTimer);
+      this.persistTimer = null;
+    }
+    this.pendingPersist = null;
+    this.listeners.clear();
+  }
+
   private async persistAndNotify(): Promise<void> {
     this.notify();
     try {

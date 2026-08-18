@@ -110,6 +110,7 @@ export class LoadingScreen {
   private readonly indicatorEl: HTMLDivElement;
   private readonly percentEl: HTMLDivElement | null = null;
   private readonly backgroundEl: HTMLDivElement;
+  private backgroundMedia?: HTMLImageElement | HTMLVideoElement;
 
   private readonly minDisplayMs: number;
   private readonly transitionMs: number;
@@ -352,6 +353,10 @@ export class LoadingScreen {
 
   /** Arkaplan uygular. */
   private applyBackground(background: LoadingScreenOptions['background']): void {
+    this.cleanupBackgroundMedia();
+    this.backgroundEl.className = 'vol-loading__background';
+    this.backgroundEl.style.backgroundImage = '';
+
     if (!background || background.type === 'css') {
       this.backgroundEl.classList.add('vol-loading__background--css');
       return;
@@ -360,6 +365,7 @@ export class LoadingScreen {
     if (background.type === 'image') {
       this.backgroundEl.classList.add('vol-loading__background--image');
       const img = new Image();
+      this.backgroundMedia = img;
       img.onload = () => {
         this.backgroundEl.style.backgroundImage = `url(${background.src})`;
       };
@@ -374,6 +380,7 @@ export class LoadingScreen {
     if (background.type === 'video') {
       this.backgroundEl.classList.add('vol-loading__background--video');
       const video = document.createElement('video');
+      this.backgroundMedia = video;
       video.src = background.src;
       video.muted = true;
       video.loop = true;
@@ -401,6 +408,33 @@ export class LoadingScreen {
       }
       return;
     }
+  }
+
+  /** Arkaplan medya elementini durdurur ve referansı serbest bırakır. */
+  private cleanupBackgroundMedia(): void {
+    if (!this.backgroundMedia) return;
+
+    if (this.backgroundMedia instanceof HTMLVideoElement) {
+      try {
+        this.backgroundMedia.pause();
+      } catch {
+        // ignore
+      }
+      this.backgroundMedia.removeAttribute('src');
+      try {
+        this.backgroundMedia.load();
+      } catch {
+        // JSDOM/HTMLMediaElement.load() desteklenmez; ignore
+      }
+      this.backgroundMedia.remove();
+    } else if (this.backgroundMedia instanceof HTMLImageElement) {
+      this.backgroundMedia.onload = null;
+      this.backgroundMedia.onerror = null;
+      this.backgroundMedia.removeAttribute('src');
+      this.backgroundMedia.removeAttribute('srcset');
+    }
+
+    this.backgroundMedia = undefined;
   }
 
   /** Gösterge uygular. */
@@ -533,6 +567,7 @@ export class LoadingScreen {
     }
     cancelAnimationFrame(this.progressRafId);
     cancelAnimationFrame(this.showRafId);
+    this.cleanupBackgroundMedia();
     this.element.remove();
   }
 }

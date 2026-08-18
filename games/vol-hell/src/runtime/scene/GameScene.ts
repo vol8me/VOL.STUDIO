@@ -174,7 +174,7 @@ export class GameScene extends BaseScene {
       },
       {
         // Seviye atlaması dövüşü kesmez: hak biriktirilir, dalga sonunda
-        // sırayla sunulur (Brotato akışı).
+        // sırayla sunulur.
         onLevelUp: (level) => {
           void gameAudio.playSfx('levelUp', { volume: sfxVolumes.levelUp });
           this.cardScreens.queueLevelUp(level);
@@ -568,7 +568,7 @@ export class GameScene extends BaseScene {
 
   /**
    * Boss devrildi, 20 dalga tamamlandı — koşu ZAFERLE bitti.
-   * Aynı özet ekranı zafer kılığında açılır (B3).
+   * Aynı özet ekranı zafer kılığında açılır.
    */
   private onRunComplete(): void {
     void this.finishRun('victory');

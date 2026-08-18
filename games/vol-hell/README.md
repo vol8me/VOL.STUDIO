@@ -38,7 +38,7 @@ Oynanış sayıları `src/config/` altında veri olarak durur; denge değişikli
 | `pnpm --filter @volstudio/vol-hell preview`        | Prod build'i yerelde sun       |
 | `pnpm --filter @volstudio/vol-hell typecheck`      | TypeScript doğrulama           |
 | `pnpm --filter @volstudio/vol-hell test`           | Test                           |
-| `pnpm --filter @volstudio/vol-hell test:coverage`  | Test + kapsam (CI bunu koşar)  |
+| `pnpm --filter @volstudio/vol-hell test:coverage`  | Test + kapsam eşikleri         |
 | `pnpm --filter @volstudio/vol-hell generate:audio` | Ses ve müzik asset'lerini üret |
 | `pnpm --filter @volstudio/vol-hell audio:qa`       | Üretilen ses asset'lerini ölç  |
 

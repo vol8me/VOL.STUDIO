@@ -68,8 +68,13 @@ export class StemLoader {
     const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const controller = new AbortController();
 
-    const abortFromCaller = (): void => controller.abort();
-    options.signal?.addEventListener('abort', abortFromCaller);
+    const abortFromCaller = (): void => controller.abort(new Error(`Stem iptal edildi: ${src}`));
+
+    if (options.signal?.aborted) {
+      controller.abort(new Error(`Stem iptal edildi: ${src}`));
+    } else if (options.signal) {
+      options.signal.addEventListener('abort', abortFromCaller);
+    }
 
     const timer =
       timeoutMs > 0
@@ -77,6 +82,9 @@ export class StemLoader {
         : undefined;
 
     try {
+      if (controller.signal.aborted) {
+        throw new Error(`Stem iptal edildi: ${src}`);
+      }
       const response = await fetch(src, { signal: controller.signal });
       if (!response.ok) {
         throw new Error(`Stem yüklenemedi: ${src} (${response.status})`);
@@ -89,7 +97,9 @@ export class StemLoader {
       return await this.decode(arrayBuffer, src);
     } finally {
       if (timer !== undefined) clearTimeout(timer);
-      options.signal?.removeEventListener('abort', abortFromCaller);
+      if (options.signal && !options.signal.aborted) {
+        options.signal.removeEventListener('abort', abortFromCaller);
+      }
     }
   }
 

@@ -109,7 +109,7 @@ export class BulletManager {
   }
 
   /**
-   * Sahnedeki tüm mermileri siler — dalga geçişi temizliği (B1b).
+   * Sahnedeki tüm mermileri siler — dalga geçişi temizliği.
    * Ateş cooldown'u da sıfırlanır: yeni dalga temiz bir tempo ile başlar.
    *
    * @returns Silinen mermi sayısı.

@@ -30,8 +30,8 @@ export function createSwarmerState(): SwarmerState {
  * Swarmer davranışı — mesafesini korur ve dolu değilse minion doğurur.
  *
  * Doğurmayı kendisi YAPMAZ; bir istek döner. Böylece davranış saf kalır,
- * test edilebilir olur ve Aşama 3'te Elite aynı fonksiyonu kendi doğurma
- * mantığına bağlayabilir.
+ * test edilebilir olur ve Elite aynı fonksiyonu kendi doğurma mantığına
+ * bağlayabilir.
  *
  * @param request Yeniden kullanılan istek nesnesi — her frame yeni obje yaratmaz.
  * @returns Doğurma yapılacaksa `request`, yoksa null.

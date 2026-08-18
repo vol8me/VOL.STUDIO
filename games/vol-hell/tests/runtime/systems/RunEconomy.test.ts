@@ -138,4 +138,37 @@ describe('RunEconomy — Spark ve seviye', () => {
     expect(economy.getLevelSpan()).toBe(economyConfig.spark.baseThreshold);
     expect(economy.getSparkInLevel()).toBe(0);
   });
+
+  it('NaN ve Infinity Flux değerleri sayaca yansımaz', () => {
+    const economy = new RunEconomy();
+    economy.addFlux(NaN);
+    economy.addFlux(Infinity);
+    economy.addFlux(-Infinity);
+    expect(economy.getFlux()).toBe(0);
+  });
+
+  it('NaN ve Infinity Spark değerleri sayacı bozmaz ve sonsuz döngü yapmaz', () => {
+    const economy = new RunEconomy();
+    economy.addSpark(NaN);
+    economy.addSpark(Infinity);
+    economy.addSpark(-Infinity);
+    expect(economy.getSpark()).toBe(0);
+    expect(economy.getLevel()).toBe(1);
+  });
+
+  it('tek seferde aşırı büyük Spark sınırlandırılır', () => {
+    const onLevelUp = vi.fn();
+    const economy = new RunEconomy({ onLevelUp });
+    economy.addSpark(Number.MAX_SAFE_INTEGER);
+    expect(economy.getLevel()).toBeGreaterThan(1);
+    expect(onLevelUp).toHaveBeenCalledTimes(100);
+  });
+
+  it('harcama uç değerlerle reddedilir', () => {
+    const economy = new RunEconomy();
+    economy.addFlux(10);
+    expect(economy.spendFlux(NaN)).toBe(false);
+    expect(economy.spendFlux(Infinity)).toBe(false);
+    expect(economy.getFlux()).toBe(10);
+  });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MusicEngine, MusicScheduler, resolveStemGain } from '../../../src/audio/music';
 import { synth } from '../../../src/audio/synth';
 import { FakeAudioContext, createFakeAudioBufferFromResult } from './mock-audio';
@@ -220,6 +220,40 @@ describe('MusicEngine', () => {
     expect(stem.source.loopEnd).toBeGreaterThan(0);
     expect(stem.source.loopEnd).toBeLessThanOrEqual(buffer.duration);
     expect(stem.source.loopStart).toBeLessThan(stem.source.loopEnd);
+  });
+
+  it('AudioContext yoksa webkitAudioContext ile oluşur', () => {
+    const originalAudioContext = (globalThis as { AudioContext?: typeof AudioContext })
+      .AudioContext;
+    const originalWebkit = (globalThis as { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
+
+    vi.stubGlobal('AudioContext', undefined);
+
+    const FakeWebkitAudioContext = vi.fn(() => fakeContext) as unknown as typeof AudioContext;
+    vi.stubGlobal('webkitAudioContext', FakeWebkitAudioContext);
+
+    const engine = new MusicEngine();
+    expect(engine).toBeDefined();
+    expect(FakeWebkitAudioContext).toHaveBeenCalled();
+
+    vi.stubGlobal('AudioContext', originalAudioContext);
+    vi.stubGlobal('webkitAudioContext', originalWebkit);
+  });
+
+  it('AudioContext ve webkitAudioContext yoksa hata fırlatır', () => {
+    const originalAudioContext = (globalThis as { AudioContext?: typeof AudioContext })
+      .AudioContext;
+    const originalWebkit = (globalThis as { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
+
+    vi.stubGlobal('AudioContext', undefined);
+    vi.stubGlobal('webkitAudioContext', undefined);
+
+    expect(() => new MusicEngine()).toThrow('AudioContext desteklenmiyor');
+
+    vi.stubGlobal('AudioContext', originalAudioContext);
+    vi.stubGlobal('webkitAudioContext', originalWebkit);
   });
 });
 

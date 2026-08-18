@@ -132,7 +132,7 @@ export class EnemyManager {
   }
 
   /**
-   * Dalga geçişinde sahnedeki düşmanları temizler (B1b).
+   * Dalga geçişinde sahnedeki düşmanları temizler.
    *
    * Bu bir öldürme DEĞİLDİR: ödül vermez, `onEnemyDeath` çağrılmaz, oyuncu
    * ceza almaz. Dışarıdan sürülen düşmanlar (Elite/Boss) korunur — onların

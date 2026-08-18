@@ -8,9 +8,9 @@ export const waveConfig = {
   totalWaves: 20,
   /** Her dalganın süresi (ms). */
   waveDurationMs: 40_000,
-  /** Elite düşmanın çağrıldığı dalga (uygulaması Aşama 3). */
+  /** Elite düşmanın çağrıldığı dalga — spawn'ı `SpecialEnemyDirector` yönetir. */
   eliteWave: 10,
-  /** Boss'un çağrıldığı dalga (uygulaması Aşama 3). */
+  /** Boss'un çağrıldığı dalga — spawn'ı `SpecialEnemyDirector` yönetir. */
   bossWave: 20,
 } as const;
 

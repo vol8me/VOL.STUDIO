@@ -9,7 +9,7 @@ import type { Border } from '@/runtime/entity/Border';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 
 /**
- * Aşama 2'nin kartları stat'ları serbestçe değiştirecek. Bu testler,
+ * Kartlar stat'ları serbestçe değiştirebilir. Bu testler,
  * uç modifier değerlerinin oyunu saçma bir duruma sokamayacağını kilitler:
  * negatif hasar iyileştirmemeli, sıfır cooldown mermi seline dönüşmemeli.
  */

@@ -94,7 +94,7 @@ export class FluxPickupManager {
   }
 
   /**
-   * Toplanmamış tüm Flux'u siler — dalga geçişi temizliği (B1b).
+   * Toplanmamış tüm Flux'u siler — dalga geçişi temizliği.
    * Miktar sayaca EKLENMEZ: dalga bitmeden toplanmayan Flux kaybolur.
    * Oyuncuyu dalga içinde toplamaya iten şey budur.
    *
