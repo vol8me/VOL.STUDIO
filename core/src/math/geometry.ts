@@ -81,14 +81,14 @@ export interface RayHit<T> {
 }
 
 /**
- * Işının çarptığı EN YAKIN daireyi bulur — hitscan silah, görüş hattı,
- * lazer kule.
+ * Işının çarptığı EN YAKIN daireyi bulur — nişan alma, görüş hattı, imleç
+ * altındaki nesneyi seçme.
  *
  * `direction` normalize edilmemişse burada normalize edilir; sıfır uzunlukta
  * bir yön `null` döndürür (yönsüz ışın hiçbir şeye çarpamaz).
  *
  * `maxDistance` verilmezse ışın sonsuzdur. Işının ARKASINDAKİ hedefler
- * elenir: negatif izdüşüm, "arkamdaki düşmanı vurdum" hatasının kaynağıdır.
+ * elenir: negatif izdüşüm, "arkamdaki hedefi vurdum" hatasının kaynağıdır.
  */
 export function raycastCircles<T extends Circle>(
   origin: Vector2,

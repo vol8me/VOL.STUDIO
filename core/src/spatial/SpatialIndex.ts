@@ -11,7 +11,7 @@ const CELL_STRIDE = CELL_OFFSET * 2;
 
 /**
  * Hücre bazlı uzamsal indeks — "yakınımda ne var?" sorusunu O(N)'den O(k)'ya
- * düşürür. Çarpışma, hedefleme, sürü ayrımı, kule menzili.
+ * düşürür: çarpışma, en yakın komşu, etki alanı, ayrım kuvveti.
  *
  * **İki güncelleme modeli vardır ve ayrım bilinçlidir:**
  *
@@ -19,9 +19,8 @@ const CELL_STRIDE = CELL_OFFSET * 2;
  *    varlıkla maliyeti ölçülemez ve kodu basit tutar: hangi varlığın kimin
  *    elinde hareket ettiğini takip etmek gerekmez.
  * 2. `insert`/`remove`/`update` — yalnızca DEĞİŞEN varlığa dokunur. Hareket
- *    eden varlık sayısı toplamın küçük bir kısmıysa (binlerce duran kule, az
- *    sayıda hareketli düşman — yani tam olarak bir tower defense) bu model
- *    O(hareket eden)'e düşer.
+ *    eden varlık sayısı toplamın küçük bir kısmıysa (binlerce sabit nesne,
+ *    az sayıda hareketli birim) bu model O(hareket eden)'e düşer.
  *
  * `rebuild()` bir KOLAYLIK metodudur, ana model değil. "Her frame her şeyi
  * yeniden indeksle" varsayımını API'ye gömmek, binlerce varlık taşıyan bir

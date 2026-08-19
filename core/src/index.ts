@@ -17,8 +17,28 @@ export { DisposableScope, type Disposable } from './lifecycle/DisposableScope';
  * Yeni bir oyun bunları doğrudan alır; vol-hell'in sıfırdan yazmak zorunda
  * kaldığı zamanlama/durum/havuz/uzamsal indeks işleri buradan gelir.
  */
-export { Scheduler, Cooldown, RoundLoop } from './time';
+export { Scheduler, Cooldown, RoundLoop, Clock } from './time';
 export type { CancelScheduled, RoundLoopOptions } from './time';
+export { EventBus, type Unsubscribe } from './events/EventBus';
+export {
+  Grid,
+  findPath,
+  ORTHOGONAL_NEIGHBOURS,
+  DIAGONAL_NEIGHBOURS,
+  type GridPoint,
+  type FindPathOptions,
+} from './grid';
+export { WeightedPicker, type WeightedEntry } from './random/WeightedPicker';
+export {
+  clamp,
+  clamp01,
+  lerp,
+  inverseLerp,
+  remap,
+  approach,
+  damp,
+  wrap,
+} from './math/interpolation';
 export { StateMachine } from './state/StateMachine';
 export type { StateDefinition, StateMachineOptions } from './state/StateMachine';
 export { ResourcePool, type ResourceCost } from './economy/ResourcePool';

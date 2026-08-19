@@ -18,7 +18,7 @@ games/design/    # @volstudio/design — Pencil tasarım kaynağı, export pipel
 tauri-v2/        # @volstudio/tauri-v2 — native wrapper ve Rust backend
 ```
 
-Doküman yüzeyi: [core/docs](core/docs) (i18n, ses/müzik motorları) ve [games/docs](games/docs) (oyun i18n'i).
+Doküman yüzeyi: [core/docs](core/docs) (i18n, ses/müzik motorları, CORE primitifleri) ve [games/docs](games/docs) (oyun i18n'i).
 
 ## Gereksinimler
 
@@ -73,18 +73,6 @@ tek bir hata mesajı verir.
 çıplak `just fast` değil `pnpm fast` ya da `pnpm exec just fast` kullanılır.
 Tekil kapılar (`typecheck`, `lint`, `coverage`, `rust`, `test-pkg <paket>` …)
 için: `pnpm exec just --list`.
-
-## CORE ile yeni oyun
-
-CORE üç katmandır: **mekanizma** (oyun bilmeyen primitifler), **sunum**
-(durumu çizen, kural taşımayan bileşenler) ve **tarif** (yaygın kuralı hazır
-veren opt-in fonksiyonlar). Yeni bir oyuna başlarken zamanlama, faz yönetimi,
-kaynak cüzdanı, nesne havuzu ve uzamsal sorgu sıfırdan yazılmaz.
-
-`Scheduler` · `Cooldown` · `RoundLoop` · `StateMachine` · `ResourcePool` ·
-`ObjectPool` · `SpatialIndex` · geometri
-
-Kullanım ve tam bir tower-defense iskeleti: [`core/docs/primitives.md`](core/docs/primitives.md)
 
 ## Lisans
 

@@ -55,9 +55,9 @@ export class ResourcePool<TResource extends string> {
    * Maliyeti düşer. **Ya hepsi ya hiçbiri:** tek bir kaynak yetmiyorsa
    * HİÇBİRİ düşülmez ve `false` döner.
    *
-   * Kısmi harcama, "altını gitti ama enerjisi yetmediği için kule kurulamadı"
-   * gibi geri alınamaz bir duruma yol açardı; kontrol ve düşme tek çağrıda
-   * atomik olarak yapılır.
+   * Kısmi harcama, "altını gitti ama enerjisi yetmediği için satın alma
+   * tamamlanmadı" gibi geri alınamaz bir duruma yol açardı; kontrol ve düşme
+   * tek çağrıda atomik olarak yapılır.
    */
   spend(cost: ResourceCost<TResource>): boolean {
     if (!this.canAfford(cost)) return false;

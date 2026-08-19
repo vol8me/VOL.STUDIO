@@ -1,6 +1,6 @@
 /**
- * Tipli sonlu durum makinesi — oyun fazları (hazırlık/dalga/ara/bitiş),
- * entity davranışı (devriye/kovala/kaç), UI akışı.
+ * Tipli sonlu durum makinesi — oyun fazları (dağıtım/bahis/gösterim,
+ * hazırlık/çatışma/ödül, keşif/inşa), entity davranışı, UI akışı.
  *
  * vol-hell'de faz yönetimi boolean bayrakların (`isPaused`, `isFinishing`,
  * `awaitingBlocker`) birleşimiyle yapılıyordu ve geçersiz kombinasyonlar

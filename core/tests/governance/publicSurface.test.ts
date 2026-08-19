@@ -21,7 +21,7 @@ import * as Core from '../../src/index';
  * geçici bir tip) `export`u kaldır. İkisi de meşru; sessizce olmaması
  * yeterli.
  */
-const EXPECTED_EXPORT_COUNT = 144;
+const EXPECTED_EXPORT_COUNT = 159;
 
 describe('CORE public API yüzeyi', () => {
   it('export sayısı bilinçli bir kararla değişir', () => {

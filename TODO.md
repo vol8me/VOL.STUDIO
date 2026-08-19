@@ -14,7 +14,7 @@ tarihte çalışma ağacında bizzat koşuldu.
 | `pnpm signoff`           | ✓     | high + cargo check/fmt/clippy — zincirin tamamı, exit 0                |
 | `pnpm high`              | ✓     | quick + lint:css + coverage + tüm build'ler                            |
 | `pnpm -r typecheck`      | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                     |
-| `pnpm -r test:coverage`  | ✓     | 1563 test (core 1009, vol-hell 447, vol-ui 27, design 54, tauri-v2 26) |
+| `pnpm -r test:coverage`  | ✓     | 1637 test (core 1083, vol-hell 447, vol-ui 27, design 54, tauri-v2 26) |
 | `pnpm run contract`      | ✓     | 5 paket, kapı kapsamı tam                                              |
 | `pnpm lint`              | ✓     | 0 hata, 0 uyarı                                                        |
 | `pnpm format:check`      | ✓     |                                                                        |
@@ -23,7 +23,7 @@ tarihte çalışma ağacında bizzat koşuldu.
 | `cargo check/fmt/clippy` | ✓     | `tauri-v2/src-tauri`                                                   |
 | `pnpm run doctor:env`    | ✓     | Node 22.23.1, pnpm 11.18.0, rustc 1.97.1, just 1.58.0, FFmpeg 8.1.2    |
 
-Kapsam: core %86.68, vol-ui %83.57 (function %53.65), vol-hell %70.17,
+Kapsam: core %86.97, vol-ui %83.57 (function %53.65), vol-hell %70.17,
 tauri-v2 %89.07, design %98.86. Eşikler ölçülen kapsamın ~2 puan altına kilitli
 (ratchet), yani bu oranlar artık taban — düşerlerse kapı kırılır. Eşiklerin
 tamamı kök `quality.json`da; `vitest.config.ts` dosyaları ve
@@ -141,6 +141,7 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-18 | Lifecycle idiomu, artımlı spatial indeks, kapı raporu       | framework tutarlılığı      |
 | 2026-08-19 | Dış denetimin kalan 8 bulgusu                               | 3'ü denetimde değişti      |
 | 2026-08-19 | CORE katmanlaması + 8 headless primitif                     | yeni oyun zemini           |
+| 2026-08-19 | Tür sızıntısı temizliği (doküman)                           | kod nötrdü, repo değildi   |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 
@@ -354,6 +355,84 @@ Aşama haritasının `justfile` ile ayrışmasını da doğrular: `high`ten `bui
 | test           | ✓     | tüm paketler yeşil (nihai toplam için bkz. Son durum)    |
 | Regresyon      | ✓     | spatial eşdeğerlik + lifecycle bekçisi enjeksiyonla test |
 
+## 2026-08-19 — Katman 1 genişletmesi
+
+Altı primitif daha; amaç CORE'u şişirmek değil, her oyunun yeniden yazmak
+zorunda kaldığı mekanizmaları hazır bulundurmak.
+
+- **`EventBus<TEvents>`** — tipli yayın/abone. Yayın sırasında yapılan
+  abonelik değişiklikleri yayını bozmaz (kopya üzerinde yürünür); bir
+  dinleyicinin hatası kalanları durdurmaz. Kısıt `Record<string, unknown>`
+  değil `object`: TS'te `interface` örtük indeks imzası taşımaz ve tüketicinin
+  doğal yazımını reddeden bir kısıt tip güvenliği kazandırmadan kullanımı
+  zorlaştırırdı (bunu `tsc` yakaladı, vitest esbuild kullandığı için görmedi).
+- **`Grid<T>`** — ayrık 2B ızgara. `SpatialIndex`ten farkı ölçek değil model:
+  biri sürekli uzayda "yakınımda ne var", diğeri ayrık hücrede "burada ne var".
+  Sınır dışı okuma `undefined` döner (kenar taraması çok yaygın), sınır dışı
+  YAZMA `false` döner — sessiz taşma en sinsi hata biçimi.
+- **`findPath` (A\*)** — ikili yığınla. Sezgisel komşuluğa göre seçilir
+  (Manhattan / Chebyshev); admissible olmayan sezgisel en kısa yol garantisini
+  bozar. Çapraz adım √2 sayılır, yoksa yol çaprazlara çarpılır.
+- **`WeightedPicker<T>`** — kümülatif ağırlık + ikili arama, O(log n).
+  Deterministik `Random` ile çalışır. Sıfır/negatif ağırlık havuza girmez.
+- **`Clock`** — duraklatılabilir, ölçeklenebilir geçen-zaman. Negatif ölçek
+  0'a kelepçelenir: geriye akan zaman süreye dayanan her hesabı tanımsız yapar.
+- **İnterpolasyon** — `clamp`/`lerp`/`inverseLerp`/`remap`/`approach`/`damp`/
+  `wrap`. `damp` kare hızından BAĞIMSIZDIR; naif `lerp(cur, target, 0.1)` her
+  karede aynı oranı uyguladığı için 30 ve 144 FPS'te farklı yumuşatır ve his
+  donanıma göre değişir. `approach` hedefe gerçekten ULAŞIR, `lerp` varmaz.
+
+Katman 1 artık 14 parça. Bir A\* testinde beklentiyi yanlış yazdım (9 hücre
+dedim, doğrusu 7); algoritma haklıydı, test düzeltildi.
+
+| Kapı      | Durum | Not                    |
+| --------- | ----- | ---------------------- |
+| `signoff` | ✓     | 8 aşama, exit 0        |
+| test      | ✓     | 1563 → 1637 test (+74) |
+| coverage  | ✓     | core %86.68 → %86.97   |
+| yüzey     | ✓     | 144 → 159 export       |
+
+## 2026-08-19 — Tür sızıntısı: kod nötrdü, repo değildi
+
+Primitifler koddan oyun kelimelerinden arındırıldı ama JSDoc'lara,
+`core/docs/primitives.md`'ye ve README'lere **tower defense** çivilenmişti:
+"tam bir tower-defense iskeleti", "Tower defense'te dalga molası", "yani tam
+olarak bir tower defense". Bir kart, otomasyon ya da blok inşa oyunu yazacak
+kişi repoyu açtığında CORE'u bir TD framework'ü sanacaktı.
+
+Hata örneğin FRAMING'e dönüşmesiydi: bir tür örnek olarak verilmişti, ben onu
+belgenin omurgası yaptım.
+
+**İlk düzeltme yanlıştı.** Tek türü dört türle değiştirdim (kart, otomasyon,
+blok inşa, araç) — aynı hatanın daha genişi. Tür SEÇMEK de editoryal bir
+karardır ve CORE onu vermez. Doğrusu **hiç tür örneği vermemek**: bir primitif
+yaptığı işle anlatılır, nerede kullanılacağı tüketicinin kararıdır. Altı
+primitif dosyasının JSDoc'u, `primitives.md` ve `StateMachine` testi bu ilkeye
+göre yeniden yazıldı.
+
+**README'den çıkarıldı.** Root README'ye bir "CORE ile yeni oyun" bölümü
+eklemiştim; README'nin işi repoyu tanıtmaktır, CORE dersi vermek değil. Bölüm
+silindi, mevcut doküman yüzeyi satırına `core/docs` işareti eklendi.
+
+`StateMachine` testi bilinçli olarak OYUN DIŞI bir sözlüğe geçti (belge iş
+akışı: draft/review/published/archived) — `StatBlock` testinin kendi yabancı
+stat sözlüğüyle aynı gerekçe.
+
+**Bekçi.** `primitiveNeutrality.test.ts`: katman 1 kaynaklarını ve
+`primitives.md`'yi tür adları için tarar, ayrıca belgede en az üç farklı tür
+örneği bulunmasını zorunlu kılar. `publicApi.test.ts` export ADLARINI tarıyordu;
+bu bekçi PROSA'yı tarar — iki farklı sızıntı biçimi.
+
+Bekçi yazılırken kendi yanlış pozitifini üretti: `dalgayla` (sinüs dalgası)
+`dalga` ile eşleşti. Kelime sınırına çevrildi — bir bekçinin yanlış pozitifi,
+koruduğu şeyden daha hızlı devre dışı bırakılır. Aynı hatayı `publicSurface`
+bekçisinde de yapmıştım (`S-wip-eableCardStack`).
+
+| Kapı      | Durum | Not             |
+| --------- | ----- | --------------- |
+| `signoff` | ✓     | 8 aşama, exit 0 |
+| test      | ✓     | 1566 test       |
+
 ## 2026-08-19 — CORE katmanlaması ve yeni oyun zemini
 
 Yön değişti: CORE'u yalnızca saflaştırmak değil, **yeni bir oyuna hızlı
@@ -420,7 +499,7 @@ karşılığı bu oldu.
 ### Belge
 
 `core/docs/primitives.md` yazıldı: üç katmanın sözleşmesi, her primitifin
-kullanımı ve tamamı CORE'dan kurulan bir tower-defense iskeleti. `AGENTS.md`e
+kullanımı ve aynı parçaların dört farklı türde kurulumu. `AGENTS.md`e
 katman kuralı, README'lere giriş bölümü eklendi.
 
 ### Kalite kapıları

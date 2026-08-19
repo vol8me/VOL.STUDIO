@@ -18,7 +18,7 @@ games/design/    # @volstudio/design — Pencil design source, export pipeline a
 tauri-v2/        # @volstudio/tauri-v2 — native wrapper and Rust backend
 ```
 
-Documentation surface: [core/docs](core/docs) (i18n, audio/music engines) and [games/docs](games/docs) (game i18n).
+Documentation surface: [core/docs](core/docs) (i18n, audio/music engines, CORE primitives) and [games/docs](games/docs) (game i18n).
 
 ## Requirements
 
@@ -68,19 +68,6 @@ validated on every read (`scripts/quality/config.mjs`), so a typo yields a
 single message that says where to look.
 
 The `just` binary lands in `node_modules/.bin` and is not on the global `PATH` — use `pnpm fast` or `pnpm exec just fast`, not a bare `just fast`. For single gates (`typecheck`, `lint`, `coverage`, `rust`, `test-pkg <package>` …): `pnpm exec just --list`.
-
-## Starting a new game on CORE
-
-CORE has three layers: **mechanism** (game-agnostic primitives), **presentation**
-(components that render state and carry no rules) and **recipes** (opt-in
-functions providing the common rule). Starting a new game does not mean
-rewriting scheduling, phase management, resource wallets, object pooling or
-spatial queries.
-
-`Scheduler` · `Cooldown` · `RoundLoop` · `StateMachine` · `ResourcePool` ·
-`ObjectPool` · `SpatialIndex` · geometry
-
-Usage and a full tower-defense skeleton: [`core/docs/primitives.md`](core/docs/primitives.md)
 
 ## License
 

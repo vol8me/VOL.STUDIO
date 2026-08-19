@@ -1,5 +1,5 @@
 /**
- * Stat/modifier motoru — bir oyunun tüm varlıkları (oyuncu, düşman, yapı)
+ * Stat/modifier motoru — bir oyunun tüm varlıkları (karakter, birim, yapı)
  * için ORTAK istatistik katmanı.
  *
  * Taban değerlerin üzerine kaynak (kart, zorluk eğrisi, arketip) bazlı
@@ -35,7 +35,7 @@ export type StatModifierType = 'add' | 'multiply';
 
 /**
  * Modifier değeri. Sabit bir sayı olabilir ya da her okumada yeniden
- * hesaplanan bir getter — zamanla/dalgayla değişen ölçeklemeler için
+ * hesaplanan bir getter — zamanla ya da salınımla değişen ölçeklemeler için
  * modifier'ı her frame kaldırıp yeniden eklemeye gerek kalmaz.
  */
 export type StatModifierValue = number | (() => number);

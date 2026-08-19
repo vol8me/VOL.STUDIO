@@ -1,227 +1,294 @@
-# CORE primitifleri — yeni bir oyuna başlarken
+# CORE primitifleri
 
-Bu belge CORE'un **katman 1**'ini anlatır: oyun bilmeyen, sunumdan bağımsız,
-doğrudan alınıp kullanılan parçalar. Amaç, yeni bir oyuna başlarken zamanlama,
-faz yönetimi, kaynak cüzdanı, havuz ve uzamsal sorgu gibi işlerin sıfırdan
-yazılmaması.
+CORE'un **katman 1**'i: sunumdan bağımsız, doğrudan alınıp kullanılan parçalar.
+
+Her primitif yaptığı işle tanımlanır — nerede kullanılacağıyla değil. Hangi
+oyunun neye ihtiyacı olduğu CORE'un kararı değildir.
 
 ## CORE'un üç katmanı
 
 | Katman        | Ne yapar                                     | Örnek                                       |
 | ------------- | -------------------------------------------- | ------------------------------------------- |
-| **Mekanizma** | Oyun kelimesi bilmez, sunumdan bağımsız      | `Scheduler`, `StateMachine`, `SpatialIndex` |
+| **Mekanizma** | Sunumdan bağımsız, oyun kelimesi bilmez      | `Scheduler`, `StateMachine`, `SpatialIndex` |
 | **Sunum**     | Durumu çizer, niyet bildirir — kural taşımaz | `Bar`, `SkillTree`, `ShopPicker`            |
 | **Tarif**     | Yaygın kuralı hazır verir — ama **opt-in**   | `resolveSkillStates()`, `applyXpGain()`     |
 
 Ayrımın sebebi somuttur: bir kural sunum bileşeninin içinde yaşarsa bileşen
-kendi defterini tutar ve oyunun kendi sistemiyle **kayar**. `XPBar` bir dönem
-seviye hesabını kendi yapıyordu; VOL.HELL onu kullanmayı reddetti ve yalnızca
-`setState()` çağırdı — kural CORE'da dururken tek çalıştıranı showcase demosu
-kaldı.
+kendi defterini tutar ve tüketicinin kendi sistemiyle **kayar**. `XPBar` bir
+dönem seviye hesabını kendi yapıyordu; onu tüketen oyun kullanmayı reddedip
+yalnızca `setState()` çağırdı — kural CORE'da dururken tek çalıştıranı showcase
+demosu kaldı.
 
 Tarif katmanı bu yüzden **silinmiş bir kural değil, taşınmış bir kuraldır**:
-en yaygın davranış hazır durur, tek satırda çağrılır, ama hiçbir bileşen onu
+yaygın davranış hazır durur, tek satırda çağrılır, ama hiçbir bileşen onu
 arkanda varsaymaz.
 
 ## Zamanlama
 
+Üçü de delta-time ile sürülür: `update()` çağrılmadıkça zaman akmaz. Tarayıcı
+zamanlayıcılarından farkı budur — duraklatılmış bir çalıştırmada hiçbiri
+ilerlemez.
+
 ### `Scheduler`
 
-Gecikmeli ve tekrarlı işler. `setTimeout` YERİNE oyun döngüsüne bağlıdır:
-`update()` çağrılmadıkça zaman akmaz, yani duraklatılmış oyunda cooldown
-ilerlemez. Deterministiktir — aynı delta dizisi aynı sırayı üretir.
+Gecikmeli ve tekrarlı işler. Deterministiktir: aynı delta dizisi aynı
+tetiklenme sırasını üretir.
 
 ```ts
 const scheduler = new Scheduler();
-const cancel = scheduler.every(2000, spawnEnemy);
-scheduler.after(500, () => showHint());
+const cancel = scheduler.every(2000, tick);
+scheduler.after(500, once);
 
-// oyun döngüsünde
 scheduler.update(deltaMs);
 ```
 
 Uzun bir karede birikmiş tetiklenmeler **atlanmaz**; aksi halde kare
-düşmelerinde oyun mantığı gerçek zamandan geri kalır.
+düşmelerinde mantık gerçek zamandan geri kalır.
 
 ### `Cooldown`
 
-Ateş temposu, yetenek bekleme, yeniden doğma gecikmesi.
+Bir işlemin yeniden yapılabilir olmasına kalan süre.
 
 ```ts
-const shot = new Cooldown(250);
-if (shot.tryTrigger()) fire(); // kontrol + tetikleme tek çağrıda
-bar.setValue(shot.getProgress()); // HUD [0,1]
-shot.setDuration(180); // devam eden bekleme KISALIR
+const cd = new Cooldown(250);
+if (cd.tryTrigger()) act(); // kontrol + tetikleme tek çağrıda
+bar.setValue(cd.getProgress()); // [0,1]
+cd.setDuration(180); // devam eden bekleme KISALIR
+cd.update(deltaMs);
 ```
+
+`tryTrigger` tek çağrıdır: kontrol ve tetikleme ayrı adımlar olsaydı araya
+giren bir çağrı ikisinin arasında beklemeyi tüketebilirdi.
 
 ### `RoundLoop`
 
-Tur/dalga döngüsü — mola, otomatik ilerletme, toplam tur sınırı. Tower
-defense'te dalga arası, roguelite'ta oda arası, yarışta tur sayacı aynı parça.
+Ardışık turlar ve aralarındaki mola. Toplam tur sınırı opsiyoneldir; verilmezse
+sonsuz sürer.
 
 ```ts
 const loop = new RoundLoop({
   breakMs: 5000,
   totalRounds: 20,
-  onRoundStart: (round) => spawnWave(round),
-  onComplete: () => finishRun(),
+  onRoundStart: (round) => begin(round),
+  onComplete: () => finish(),
 });
 loop.start(); // İLK tur hemen başlar, mola aralarda
 
-// oyun döngüsünde
 loop.update(deltaMs);
-counter.setWave(loop.getRound());
-counter.setRemainingSeconds(loop.getRemainingMs() / 1000);
+loop.getRound();
+loop.getRemainingMs();
+loop.skipBreak(); // molayı atla
 ```
 
-`skipBreak()` "hazırım" butonu için molayı atlar.
+### `Clock`
+
+Duraklatılabilir, ölçeklenebilir geçen-zaman sayacı. "İçeride geçen zaman"ı
+okuyan her yer gerçek zamanı değil bunu okumalıdır.
+
+```ts
+const clock = new Clock();
+clock.setScale(0.5); // yavaş çekim; 0 = dondur
+clock.update(deltaMs);
+clock.getElapsedSeconds();
+```
 
 ## Durum
 
 ### `StateMachine`
 
-Oyun fazları, entity davranışı, UI akışı. Boolean bayrak birleşimlerinin
+Tipli sonlu durum makinesi. Boolean bayrak birleşimlerinin
 (`isPaused && isFinishing`) aksine geçersiz durumu **temsil edilemez** kılar.
 
 ```ts
-type Phase = 'build' | 'wave' | 'reward' | 'over';
-
-const phases = new StateMachine<Phase>({
-  initial: 'build',
+const machine = new StateMachine<'draft' | 'review' | 'done'>({
+  initial: 'draft',
   states: {
-    build: { transitions: ['wave'], onEnter: () => showBuildUI() },
-    wave: { transitions: ['reward', 'over'], onUpdate: (dt) => runWave(dt) },
-    reward: { transitions: ['build'] },
-    over: { transitions: [] }, // terminal
+    draft: { transitions: ['review'], onEnter: () => prepare() },
+    review: { transitions: ['done'], onUpdate: (dt) => tick(dt) },
+    done: { transitions: [] }, // terminal
   },
   onRejected: (from, to) => console.warn(`geçersiz geçiş: ${from} → ${to}`),
 });
 ```
 
 `transitions` verilmezse her geçiş serbesttir; boş dizi durumu terminal yapar.
+Kanca sırası `onExit` → durum değişimi → `onEnter`; `onEnter` içinde
+`getState()` YENİ durumu görür.
 
 ### `ResourcePool`
 
-Tipli kaynak cüzdanı. Kaynak kümesini **tüketici** tanımlar — `StatBlock<TStat>`
-ile aynı sözleşme.
+Tipli sayaç cüzdanı. Kaynak kümesini **tüketici** tanımlar —
+`StatBlock<TStat>` ile aynı sözleşme.
 
 ```ts
-type Resource = 'gold' | 'energy';
+const wallet = new ResourcePool<'a' | 'b'>({ a: 100, b: 5 }, { b: 10 });
 
-const wallet = new ResourcePool<Resource>({ gold: 100, energy: 5 }, { energy: 10 });
-
-if (wallet.spend({ gold: 50, energy: 2 })) buildTower();
+if (wallet.spend({ a: 50, b: 2 })) commit();
 ```
 
-`spend` **ya hepsi ya hiçbiri**: bir kaynak yetmezse hiçbiri düşmez. Kısmi
-harcama "altını gitti ama enerjisi yetmediği için kule kurulamadı" gibi geri
-alınamaz bir duruma yol açardı.
+`spend` **ya hepsi ya hiçbiri**: bir kalem yetmezse hiçbiri düşmez. Kısmi
+harcama geri alınamaz bir ara duruma yol açardı.
+
+### `EventBus`
+
+Tipli yayın/abone. Olay kümesini tüketici tanımlar.
+
+```ts
+interface Events {
+  changed: { total: number };
+  ended: void;
+}
+
+const bus = new EventBus<Events>();
+const off = bus.on('changed', ({ total }) => hud.set(total));
+bus.emit('changed', { total: 120 });
+```
+
+Yayıncının dinleyicileri tanımaması, bir çıktıya yeni tüketici eklemeyi
+yayıncıya dokunmadan mümkün kılar. Bir dinleyicinin hatası kalanları durdurmaz;
+yayın sırasında yapılan abonelik değişiklikleri o yayını bozmaz.
+
+## Uzam
+
+### `Grid`
+
+Sabit boyutlu, ayrık 2B ızgara. `SpatialIndex`ten farkı ölçek değil MODEL:
+`SpatialIndex` sürekli uzayda "yakınımda ne var", `Grid` ayrık hücrelerde "şu
+hücrede ne var" sorusunu yanıtlar.
+
+```ts
+const grid = new Grid<T>(cols, rows);
+grid.set(col, row, value); // sınır dışı → false, sessiz taşma yok
+grid.get(col, row); // sınır dışı → undefined
+grid.neighbours(col, row, DIAGONAL_NEIGHBOURS);
+grid.toCell(x, y, cellSize);
+grid.toWorld(col, row, cellSize); // hücre MERKEZİ
+```
+
+### `findPath` (A\*)
+
+Izgara üzerinde en kısa yol. Izgaranın içeriğini bilmez: geçilebilirlik ve
+maliyet çağırandan gelen fonksiyonlardır.
+
+```ts
+const path = findPath({ cols, rows }, start, goal, {
+  isWalkable: (p) => !blocked.has(key(p)),
+  cost: (p) => terrainCost(p),
+  neighbours: DIAGONAL_NEIGHBOURS,
+});
+```
+
+Sezgisel komşuluğa göre seçilir (dört yönde Manhattan, çaprazda Chebyshev);
+sezgiselin gerçek maliyeti aşmaması A\*'ın en kısa yol garantisinin koşuludur.
+Çapraz adım maliyeti √2 sayılır, yoksa yol çaprazlara çarpılırdı.
 
 ## Performans
 
 ### `ObjectPool`
 
-Mermi, düşman, partikül gibi sık doğup ölen varlıklar. Amaç allocation'ı değil
-**çöp toplamayı** azaltmak.
+Sık doğup ölen kısa ömürlü nesneler. Amaç allocation'ı değil **çöp toplamayı**
+azaltmak: kare başına yüzlerce nesne, GC'yi görünür takılmalar üretecek
+sıklıkta tetikler.
 
 ```ts
-const bullets = new ObjectPool<Bullet>({
-  create: () => new Bullet(),
-  reset: (b) => {
-    b.target = null;
+const pool = new ObjectPool<T>({
+  create: () => new T(),
+  reset: (item) => {
+    item.ref = null;
   }, // referansları BIRAK
   prewarm: 64,
   maxIdle: 256, // tepe anındaki şişme kalıcı olmasın
 });
 
-const b = bullets.acquire();
-bullets.release(b); // aynı örneği iki kez iade → hata
+const item = pool.acquire();
+pool.release(item); // aynı örneği iki kez iade → hata
 ```
 
 `reset` içinde referans bırakmak çağıranın sorumluluğudur: boşta duran bir
-mermi hâlâ düşmana referans tutuyorsa o düşman da serbest kalmaz.
+nesne başkasına referans tutuyorsa o da serbest kalmaz.
 
 ### `SpatialIndex`
 
-"Yakınımda ne var?" sorusunu O(N)'den O(k)'ya düşürür — çarpışma, hedefleme,
-kule menzili, sürü ayrımı.
+"Şu noktanın yakınında ne var?" sorusunu O(N)'den O(k)'ya düşürür.
 
 ```ts
-const index = new SpatialIndex<Enemy>(64, (e) => e.isAlive);
+const index = new SpatialIndex<T>(64, (t) => t.isActive);
 
-// Basit model: her kare tüm dünyayı yeniden indeksle
-index.rebuild(enemies);
-
-// Artımlı model: yalnızca hareket edeni bildir
-index.update(enemy); // hücre değişmediyse false, iş yok
+index.rebuild(items); // tüm dünyayı yeniden indeksle, O(N)
+index.update(item); // yalnızca değişeni bildir; hücre aynıysa false, iş yok
 
 for (const near of index.query(x, y)) {
   /* … */
 }
 ```
 
-İki model **aynı sonucu** verir (testle kilitli). Binlerce duran yapı ve az
-sayıda hareketli birim varsa — yani tipik bir tower defense — artımlı model
-O(hareket eden)'e düşer.
+İki model **aynı sonucu** verir (testle kilitli). Nesnelerin çoğu sabitse ve az
+sayıda öğe hareket ediyorsa artımlı model O(hareket eden)'e düşer; hepsi her
+kare hareket ediyorsa `rebuild` daha basittir.
+
+## Rastgelelik
+
+### `WeightedPicker`
+
+Ağırlıklı seçim; deterministik `Random` ile çalışır, yani aynı tohum aynı
+diziyi üretir.
+
+```ts
+const picker = new WeightedPicker([
+  { value: a, weight: 9 },
+  { value: b, weight: 1 },
+]);
+
+picker.pick(random);
+picker.pickUnique(random, 3); // tekrarsız
+```
+
+Sıfır/negatif ağırlık havuza girmez — "bu seçenek şu an kapalı" demenin doğal
+yolu ağırlığı sıfırlamaktır.
 
 ## Geometri
 
-Saf sayılarla çalışır, hiçbir oyun nesnesi tanımaz.
+Saf sayılarla çalışır, hiçbir nesne tipi tanımaz.
 
 ```ts
-if (circlesOverlap(bullet, enemy)) applyDamage();
-if (circleRectOverlap(unit, buildZone)) highlight(); // KÖŞE temasını yakalar
-
-const hit = raycastCircles(origin, aimDir, enemies, 800);
-if (hit) damage(hit.target, hit.distance); // en YAKIN hedef
+circlesOverlap(a, b);
+circleRectOverlap(circle, rect); // KÖŞE temasını yakalar
+pointInRect(x, y, rect);
+raycastCircles(origin, direction, targets, maxDistance); // en YAKIN isabet
 ```
 
 Karşılaştırmalarda `distanceSquared` kullanılır: kare kök, sonucu bir eşikle
 karşılaştırırken bilgi eklemez ama kare başına binlerce çağrıda maliyet üretir.
 
-## Yeni bir oyunun ilk adımı
+`raycastCircles` ışının arkasındaki hedefleri eler — negatif izdüşüm,
+"arkamdaki hedefi vurdum" hatasının kaynağıdır.
 
-Tipik bir tower defense iskeleti, tamamı CORE'dan:
+### İnterpolasyon
 
 ```ts
-type Phase = 'build' | 'wave';
-type Resource = 'gold' | 'lives';
-
-const wallet = new ResourcePool<Resource>({ gold: 200, lives: 20 });
-const enemies = new SpatialIndex<Enemy>(64, (e) => e.isAlive);
-const bullets = new ObjectPool<Bullet>({ create: () => new Bullet(), prewarm: 128 });
-const scheduler = new Scheduler();
-
-const waves = new RoundLoop({
-  breakMs: 8000,
-  totalRounds: 30,
-  onRoundStart: (round) => scheduler.every(600, () => spawn(round)),
-  onComplete: () => phases.transition('over' as Phase),
-});
-
-const phases = new StateMachine<Phase>({
-  initial: 'build',
-  states: {
-    build: { transitions: ['wave'], onEnter: () => waves.start() },
-    wave: {
-      transitions: ['build'],
-      onUpdate: (dt) => {
-        waves.update(dt);
-        scheduler.update(dt);
-      },
-    },
-  },
-});
+clamp(v, min, max);
+lerp(a, b, t); // t kelepçelenmez (ekstrapolasyon bilinçli)
+inverseLerp(a, b, v);
+remap(v, fromMin, fromMax, toMin, toMax);
+approach(current, target, maxDelta); // hedefi AŞMAZ, ona ULAŞIR
+damp(current, target, smoothing, deltaMs); // kare hızından BAĞIMSIZ
+wrap(v, min, max); // üst sınır dışlayıcı
 ```
 
-Geriye kalan oyunun kendi işidir: kule tanımları, düşman davranışı, harita.
-Zemin CORE'dan gelir.
+`damp` ile naif `lerp` arasındaki fark önemlidir: `lerp(cur, target, 0.1)` her
+KAREDE aynı oranı uygular, yani 30 FPS ile 144 FPS'te farklı hızda yumuşatır ve
+his donanıma göre değişir. `damp` oranı delta ile üstel hesaplar.
+
+`approach` ise sabit hızla yaklaşır ve hedefe gerçekten ULAŞIR; `lerp` her
+karede kalan mesafenin bir kısmını kapattığı için teorik olarak hiç varmaz ve
+bir eşitlik kontrolü asla tutmaz.
 
 ## Ayrımı bozmamak
 
-- Bir bileşene kural eklemek istediğinde önce sor: **başka bir oyun bu kuralı
+- Bir bileşene kural eklemek istediğinde önce sor: **başka bir tüketici bunu
   farklı isteyebilir mi?** Cevap evetse kural tarif katmanına ait.
-- Bir primitif oyun kelimesi (`enemy`, `tower`, `wave`) taşımamalı.
-  `core/tests/governance/publicApi.test.ts` bunu kapıda doğrular.
+- Bir primitif ne kodunda ne dokümanında bir türe (genre) bağlanmaz; örnek
+  vermek gerekiyorsa mekanizmanın kendi terimleriyle verilir.
+  `core/tests/governance/primitiveNeutrality.test.ts` bunu kapıda doğrular.
 - Public API yüzeyi sayılıdır (`publicSurface.test.ts`); yeni export bilinçli
   bir karardır, kapı kırılınca sayı güncellenir.

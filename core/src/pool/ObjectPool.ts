@@ -14,15 +14,15 @@ export interface ObjectPoolOptions<T> {
 }
 
 /**
- * Nesne havuzu — mermi, düşman, partikül, hasar yazısı gibi sık doğup ölen
- * varlıklar için.
+ * Nesne havuzu — sık doğup ölen kısa ömürlü nesneler için. Nesnenin ne olduğu
+ * havuzu ilgilendirmez; üretimi ve sıfırlamayı çağıran verir.
  *
  * Amaç allocation'ı değil ÇÖP TOPLAMAYI azaltmaktır: kare başına yüzlerce
  * kısa ömürlü nesne, GC'yi görünür takılmalar üretecek sıklıkta tetikler.
  *
  * Havuz nesnenin ne olduğunu bilmez; üretimi ve sıfırlamayı çağıran verir.
  * `reset` içinde referansları bırakmak ÇAĞIRANIN sorumluluğudur: boşta duran
- * bir mermi hâlâ bir düşmana referans tutuyorsa o düşman da serbest kalmaz.
+ * bir nesne hâlâ bir başkasına referans tutuyorsa o da serbest kalmaz.
  */
 export class ObjectPool<T> {
   private readonly idle: T[] = [];

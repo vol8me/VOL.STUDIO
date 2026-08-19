@@ -56,8 +56,8 @@ export class Cooldown {
   }
 
   /**
-   * Süreyi değiştirir. Devam eden bekleme KELEPÇELENİR: ateş hızı artıran bir
-   * kart alındığında oyuncu, eski uzun beklemeyi sonuna kadar çekmez.
+   * Süreyi değiştirir. Devam eden bekleme KELEPÇELENİR: süre kısaldığında
+   * çağıran, eski uzun beklemeyi sonuna kadar çekmez.
    */
   setDuration(durationMs: number): void {
     this.durationMs = Math.max(0, durationMs);

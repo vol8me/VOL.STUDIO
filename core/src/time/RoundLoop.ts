@@ -17,7 +17,9 @@ export interface RoundLoopOptions {
 }
 
 /**
- * Tur/dalga döngüsü — headless.
+ * Tur döngüsü — headless.
+ * Ardışık turlar ve aralarındaki mola. Döngü turun İÇERİĞİNİ bilmez;
+ * yalnızca "tur ilerledi" ve "mola bitti" der.
  *
  * Bir dönem `WaveCounter.startAutoLoop()` içinde, yani bir HUD bileşeninin
  * içinde yaşıyordu: bileşen turu kendi ilerletiyor, kendi defterini tutuyor ve
@@ -25,19 +27,18 @@ export interface RoundLoopOptions {
  * katmanında durmasının sebebi yoktu ve oyunun kendi tur yöneticisiyle iki
  * defter kaçınılmaz olarak kayıyordu.
  *
- * Artık gösterimden bağımsız: `RoundLoop` turu yürütür, `WaveCounter` (ya da
- * herhangi bir görsel) yalnızca çıktısını çizer. Tower defense'te dalga
- * molası, roguelite'ta oda arası, bir yarışta tur sayacı aynı parçadır.
+ * Artık gösterimden bağımsız: `RoundLoop` turu yürütür, bir sayaç/HUD (ya da
+ * hiçbir görsel) yalnızca çıktısını çizer.
  *
  * `Scheduler` gibi delta-time ile sürülür: duraklatılan oyunda mola akmaz.
  *
  * ```ts
- * const loop = new RoundLoop({ breakMs: 5000, totalRounds: 10, onRoundStart: spawnWave });
+ * const loop = new RoundLoop({ breakMs: 5000, totalRounds: 10, onRoundStart: begin });
  * loop.start();
  * // her karede:
  * loop.update(dt);
- * counter.setWave(loop.getRound());
- * counter.setRemainingSeconds(loop.getRemainingMs() / 1000);
+ * hud.setRound(loop.getRound());
+ * hud.setRemainingSeconds(loop.getRemainingMs() / 1000);
  * ```
  */
 export class RoundLoop {
