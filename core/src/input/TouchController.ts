@@ -7,6 +7,7 @@ import type { InputState } from './InputState';
 import {
   singleProviderSnapshot,
   type InputSnapshot,
+  type TouchInputSnapshot,
   type TouchStickSnapshot,
 } from './InputSnapshot';
 import { UI_DEPTH, UI_RATIO, UI_ALPHA, UI_SIZE } from '../constants';
@@ -57,10 +58,12 @@ export class TouchController<TAction extends string>
   getDebugSnapshot(): InputSnapshot {
     const left = this.sticks.getLeftStick();
     const right = this.sticks.getRightStick();
-    return singleProviderSnapshot(this.id, {
+    // bkz. PCController.getDebugSnapshot — şekil açıkça tiplenir.
+    const snapshot: TouchInputSnapshot = {
       left: left ? this.toStickSnapshot(left) : undefined,
       right: right ? this.toStickSnapshot(right) : undefined,
-    });
+    };
+    return singleProviderSnapshot(this.id, snapshot);
   }
 
   private toStickSnapshot(stick: { base: Vector2; current: Vector2 }): TouchStickSnapshot {

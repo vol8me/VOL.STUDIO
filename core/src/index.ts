@@ -53,7 +53,7 @@ export type { InputProvider } from './input/InputProvider';
 export type {
   PCActionBinding,
   PointerButton,
-  WasdDownState,
+  MoveDownState,
   PointerLikeState,
 } from './input/PCInputState';
 export { resolvePCActions, computePCInputState, isPCInputActive } from './input/PCInputState';
@@ -64,11 +64,19 @@ export {
   type MoveKeyBindings,
   type PCControllerOptions,
 } from './input/PCController';
-export type {
-  InputSnapshot,
-  PcInputSnapshot,
-  TouchInputSnapshot,
-  TouchStickSnapshot,
+// Sağlayıcı kümesi AÇIK olduğu için tüketici kendi modality'sini yazabilmeli:
+// `singleProviderSnapshot`/`idleSnapshot` olmadan `activeProvider` ile
+// `providers` anahtarını elle senkron tutmak gerekir ve ayrışırlarsa overlay
+// sessizce boş görünür.
+export {
+  NO_ACTIVE_PROVIDER,
+  singleProviderSnapshot,
+  idleSnapshot,
+  type ProviderSnapshot,
+  type InputSnapshot,
+  type PcInputSnapshot,
+  type TouchInputSnapshot,
+  type TouchStickSnapshot,
 } from './input/InputSnapshot';
 export { InputManager } from './input/InputManager';
 export * as InputUtils from './input/InputUtils';

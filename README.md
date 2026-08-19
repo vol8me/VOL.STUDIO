@@ -59,6 +59,10 @@ Kapılar workspace'ten türer: yeni bir paket hiçbir kapıya elle eklenmez,
 `scripts/workspace-contract.mjs` bekçisi her commit'te bunu doğrular — bir paket
 `test`/`test:coverage` script'i ya da coverage eşiği olmadan repoya giremez.
 
+`doctor:env` adındaki ek tesadüfi değil: `pnpm doctor` pnpm'in KENDİ tanılama
+komutudur ve aynı adlı bir script'i sessizce gölgeler — script hiç çalışmaz.
+Yerleşik bir komutla çakışan script adları bir kapı testiyle engellenir.
+
 Kapsam eşikleri kök `quality.json`da yaşar; beş `vitest.config.ts` onu okur ve
 bekçi de aynı dosyayı okur, yani ayrışamazlar. Bir config'e eşiği satır içi
 yazmak kapıyı kırar. Dosya her okunuşta şema doğrulamasından geçer

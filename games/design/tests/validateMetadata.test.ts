@@ -75,14 +75,12 @@ describe('validateRigMetadata', () => {
   });
 
   it('parça alanlarının tipleri doğrulanır', () => {
-    expect(
-      () =>
-        validateRigMetadata(
-          corrupt((d) => {
-            (d.parts as Record<string, unknown>[])[0].partId = 42;
-          }),
-        ),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    expect(() =>
+      validateRigMetadata(
+        corrupt((d) => {
+          (d.parts as Record<string, unknown>[])[0].partId = 42;
+        }),
+      ),
     ).toThrow(/parts\[0\]\.partId/);
 
     expect(() =>

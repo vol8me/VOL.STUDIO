@@ -6,13 +6,13 @@ import {
   resolvePCActions,
   type PCActionBinding,
   type PointerLikeState,
-  type WasdDownState,
+  type MoveDownState,
 } from './PCInputState';
 import type { InputProvider } from './InputProvider';
 import type { InputState } from './InputState';
-import { singleProviderSnapshot, type InputSnapshot } from './InputSnapshot';
+import { singleProviderSnapshot, type InputSnapshot, type PcInputSnapshot } from './InputSnapshot';
 
-interface WasdKeys {
+interface MoveKeys {
   up: Phaser.Input.Keyboard.Key;
   down: Phaser.Input.Keyboard.Key;
   left: Phaser.Input.Keyboard.Key;
@@ -70,7 +70,7 @@ export interface PCControllerOptions<TAction extends string> {
 }
 
 export class PCController<TAction extends string> implements InputProvider<TAction> {
-  private readonly keys: WasdKeys;
+  private readonly keys: MoveKeys;
   /** Eylem tuşları — yalnızca `source: 'key'` bağlantıları için kurulur. */
   private readonly actionKeys = new Map<number, Phaser.Input.Keyboard.Key>();
   private readonly actionBindings: Readonly<Record<TAction, PCActionBinding>>;
@@ -124,7 +124,7 @@ export class PCController<TAction extends string> implements InputProvider<TActi
     return this.scene.input.activePointer;
   }
 
-  private get wasdState(): WasdDownState {
+  private get moveState(): MoveDownState {
     return {
       up: this.keys.up.isDown,
       down: this.keys.down.isDown,
@@ -153,15 +153,20 @@ export class PCController<TAction extends string> implements InputProvider<TActi
   }
 
   get isActive(): boolean {
-    return isPCInputActive(this.wasdState, this.pointerState, this.actionState);
+    return isPCInputActive(this.moveState, this.pointerState, this.actionState);
   }
 
   getDebugSnapshot(): InputSnapshot {
-    return singleProviderSnapshot(this.id, {
-      move: { ...this.wasdState },
+    // Şekil AÇIKÇA tiplenir: `singleProviderSnapshot` gövdeyi `ProviderSnapshot`
+    // (yani `Record<string, unknown>`) olarak kabul ettiği için satır içi bir
+    // nesne hiçbir kontrolden geçmezdi ve `PcInputSnapshot` sessizce
+    // gerçeklikten kopardı.
+    const snapshot: PcInputSnapshot = {
+      move: { ...this.moveState },
       pointer: { ...this.pointerState },
       actions: this.actionState,
-    });
+    };
+    return singleProviderSnapshot(this.id, snapshot);
   }
 
   getState(playerPosition: Vector2): InputState<TAction> {
@@ -169,7 +174,7 @@ export class PCController<TAction extends string> implements InputProvider<TActi
     const target = camera.getWorldPoint(this.pointer.x, this.pointer.y);
 
     return computePCInputState(
-      this.wasdState,
+      this.moveState,
       this.pointerState,
       new Vector2(target.x, target.y),
       playerPosition,

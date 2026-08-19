@@ -46,11 +46,17 @@ silinir; kronolojiye not düşülmez.
   çağıranı yok; yalnızca testler koşuyor. Bilinçli (bkz. 2026-08-19 turu) ve
   bir bekçiyle işaretli, ama gerçek oynanışta hiç yürümeyen kod olduğu
   unutulmamalı.
-- CORE public API yüzeyi 124 export ve dokuz `export *` barrel'ıyla büyüyor.
+- CORE public API yüzeyi 127 export ve dokuz `export *` barrel'ıyla büyüyor.
   Yüzey sayısı kilitli (kapı kırılır) ama barrel'lar hâlâ otomatik; daraltma
   ayrı bir tur.
 - `PlayerController` takma adı `@deprecated` olarak duruyor; kaldırma bir
   sonraki büyük sürümde.
+- **`AGENTS.md` ve `games/design/AGENTS.md` gitignore'da** (`.gitignore:2-3`) ve
+  hiç commit edilmemiş. Bilinçli bir tercih (agent talimatları yerelde kalıyor)
+  ama sonucu şu: bu dosyalara yapılan güncellemeler HİÇBİR commit'e girmez ve
+  yeni bir klonda yoktur. Bir kural `AGENTS.md`ye yazıldığında repoda kalıcı
+  olduğu VARSAYILMAMALI; kalıcı olması gerekiyorsa `README.md` ya da bu dosyaya
+  da işlenmeli.
 - CORE capability yol haritasında ertelenenler: `Scheduler`, `StateMachine`,
   geometry/collision primitifleri, `ObjectPool<T>`, resource lifecycle. İkinci
   somut tüketici çıkmadan yazılmayacak.
@@ -399,7 +405,7 @@ toplu olarak raporlanıyor. `games/design` metadata doğrulayıcısıyla aynı d
 
 **Public API yüzeyi sayıldı.** Dokuz `export *` barrel'ı yüzeyi KARAR NOKTASI
 OLMADAN büyütüyordu. Barrel'ları elle listeye çevirmek 120+ satır kalıcı bakım
-demekti; onun yerine yüzey kilitlendi (124 export). Değiştiğinde kapı kırılır ve
+demekti; onun yerine yüzey kilitlendi (127 export). Değiştiğinde kapı kırılır ve
 biri kararı bilinçle verir. Ek olarak `_`/`internal`/`wip` gibi segment taşıyan
 sızıntı isimleri taranıyor — bu tarama ilk hâlinde `SwipeableCardStack`'i
 yakalıyordu ("S-**wip**-eable"); camelCase segmentine çevrildi.

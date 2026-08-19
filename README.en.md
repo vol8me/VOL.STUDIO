@@ -57,6 +57,10 @@ hand — `pnpm -r` and repo-wide globs pick it up automatically.
 `scripts/workspace-contract.mjs` enforces this on every commit: a package cannot
 enter the repo without `test`/`test:coverage` scripts and coverage thresholds.
 
+The `:env` suffix is not incidental: `pnpm doctor` is pnpm's OWN diagnostic
+command and silently shadows a script of the same name — the script never runs.
+A gate test rejects script names that collide with pnpm builtins.
+
 Coverage thresholds live in the root `quality.json`; all five `vitest.config.ts`
 files read it and the guard reads the same file, so the two cannot drift.
 Writing a threshold inline in a config breaks the gate. The file is schema

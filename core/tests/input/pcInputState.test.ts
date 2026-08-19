@@ -6,7 +6,7 @@ import {
   resolvePCActions,
   type PCActionBinding,
   type PointerLikeState,
-  type WasdDownState,
+  type MoveDownState,
 } from '../../src/input/PCInputState';
 
 /**
@@ -23,7 +23,7 @@ const bindings: Readonly<Record<TestAction, PCActionBinding>> = {
   boost: { source: 'key', keyCode: BOOST_KEY },
 };
 
-const noKeys: WasdDownState = { up: false, down: false, left: false, right: false };
+const noKeys: MoveDownState = { up: false, down: false, left: false, right: false };
 const noActions: Readonly<Record<TestAction, boolean>> = { engage: false, boost: false };
 const idlePointer: PointerLikeState = {
   x: 0,

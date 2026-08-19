@@ -2,7 +2,15 @@ import { Vector2 } from '../math/Vector2';
 import { normalizeAnalog, normalizeDirection } from './InputUtils';
 import type { InputState } from './InputState';
 
-export interface WasdDownState {
+/**
+ * Hareket eksenlerinin o karedeki basılı durumu.
+ *
+ * Adı bir dönem `WasdDownState`'ti ve YANILTICIYDI: tuş eşlemesi artık
+ * yapılandırılabilir (`MoveKeyBindings`, varsayılanı WASD ama ok tuşları da
+ * verilebilir). Tip adının tek bir klavye düzenini çivilemesi, mekanizmanın
+ * düzenden bağımsız olduğu gerçeğini gizliyordu.
+ */
+export interface MoveDownState {
   up: boolean;
   down: boolean;
   left: boolean;
@@ -65,7 +73,7 @@ export function resolvePCActions<TAction extends string>(
  * (PCController tipleri çevirip burayı çağırır) — Phaser.Scene kurmadan test edilebilir.
  */
 export function computePCInputState<TAction extends string>(
-  keys: WasdDownState,
+  keys: MoveDownState,
   pointer: PointerLikeState,
   worldTarget: Vector2,
   playerPosition: Vector2,
@@ -94,7 +102,7 @@ export function computePCInputState<TAction extends string>(
  * olduğu CORE'un bilgisi değil, "herhangi biri basılı mı" sorusu yeterli.
  */
 export function isPCInputActive(
-  keys: WasdDownState,
+  keys: MoveDownState,
   pointer: PointerLikeState,
   actions: Readonly<Record<string, boolean>>,
 ): boolean {
