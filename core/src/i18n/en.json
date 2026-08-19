@@ -50,7 +50,7 @@
     "label": "Resources"
   },
   "bar": {
-    "ariaLabel": "{{variant}} bar"
+    "ariaLabel": "progress bar"
   },
   "datatable": {
     "empty": "No records"

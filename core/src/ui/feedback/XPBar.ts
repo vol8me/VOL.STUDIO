@@ -11,17 +11,29 @@ export interface XPBarOptions {
   /** Bar üzerindeki metin; varsayılan "xp / xpForLevel". */
   label?: BarLabel;
   animateMs?: number;
-  onLevelUp?: (newLevel: number) => void;
 }
 
-/** Bar üzerine kurulu XP/seviye göstergesi. `addXP()` eşiği aşan XP'yi otomatik sonraki seviyeye taşır (zincirleme atlama olabilir), her geçişte `onLevelUp` tetiklenir. */
+/**
+ * Bar üzerine kurulu seviye/ilerleme göstergesi. **Saf görüntüdür:** durumu
+ * `setState()` ile dışarıdan alır, kendi defterini TUTMAZ.
+ *
+ * Önceden bir `addXP(amount)` metodu vardı ve eşiği aşan miktarı sonraki
+ * seviyeye taşıyordu (`while (kalan >= eşik) { kalan -= eşik; seviye++ }`).
+ * Bu bir GÖRÜNÜM değil, bir OYUN KURALIDIR: başka bir oyun "seviye atlayınca
+ * artan XP yanar" ya da "taşma kelepçelenir" der. Dahası bileşen kendi
+ * `level`/`xp` defterini tutuyordu ve oyunun kendi ilerleme sistemi zaten
+ * varsa iki sayaç kaçınılmaz olarak birbirinden kayıyordu.
+ *
+ * Kanıt teorik değildi: VOL.HELL'in `SparkBar`'ı `addXP()`'yi hiç kullanmadı,
+ * yalnızca `setState()` çağırdı — kural CORE'da dururken tek çalıştıranı
+ * showcase demosuydu. Kural artık çağıranda (bkz. vol-ui HUD sekmesi).
+ */
 export class XPBar {
   readonly element: HTMLDivElement;
   private readonly bar: Bar;
   private level: number;
   private xp: number;
   private readonly xpForLevel: (level: number) => number;
-  private readonly onLevelUpHandler?: (newLevel: number) => void;
   private levelUpTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(options: XPBarOptions) {
@@ -31,12 +43,10 @@ export class XPBar {
       xpForLevel,
       label,
       animateMs = UI_TIMING.BAR_DEFAULT_ANIMATE,
-      onLevelUp,
     } = options;
     this.level = level;
     this.xp = xp;
     this.xpForLevel = xpForLevel;
-    this.onLevelUpHandler = onLevelUp;
 
     this.bar = new Bar({
       variant: 'cooldown',
@@ -52,38 +62,10 @@ export class XPBar {
     this.element = this.bar.element;
   }
 
-  /** Verilen miktarda XP ekler; eşiği aşarsa otomatik seviye atlar (zincirleme olabilir). */
-  addXP(amount: number): void {
-    let remaining = this.xp + amount;
-    let leveledUp = false;
-
-    let threshold = this.xpForLevel(this.level);
-    while (remaining >= threshold && threshold > 0) {
-      remaining -= threshold;
-      this.level += 1;
-      leveledUp = true;
-      threshold = this.xpForLevel(this.level);
-    }
-
-    this.xp = Math.max(0, remaining);
-
-    if (leveledUp) {
-      this.bar.setMax(threshold);
-      this.bar.setValue(this.xp);
-      this.triggerLevelUpEffect();
-      this.onLevelUpHandler?.(this.level);
-    } else {
-      this.bar.setValue(this.xp);
-    }
-  }
-
   /**
-   * Barı dışarıdaki bir kaynağın (oyun durumu) seviyesine ve XP'sine eşitler.
-   *
-   * `addXP()` barı KENDİ defteriyle sürer; seviye mantığı oyun tarafında zaten
-   * varsa iki ayrı sayaç tutmak kaçınılmaz olarak birbirinden kayar. Bu metotla
-   * bar saf bir görüntü olur. Seviye arttıysa level-up vurgusu oynar; olayın
-   * sahibi dışarısı olduğu için `onLevelUp` YENİDEN tetiklenmez.
+   * Barı dışarıdaki kaynağın (oyun durumu) seviyesine ve ilerlemesine eşitler.
+   * Seviye arttıysa level-up vurgusu oynar — bu tamamen görsel bir tepkidir,
+   * bileşen hiçbir şeye karar vermez.
    */
   setState(level: number, xp: number): void {
     const leveledUp = level > this.level;
@@ -122,4 +104,53 @@ export class XPBar {
       this.element.classList.remove('vol-xp-bar--level-up');
     }, UI_TIMING.XP_LEVEL_UP_EFFECT);
   }
+}
+
+/** `applyXpGain` sonucu. */
+export interface XpGainResult {
+  level: number;
+  /** Yeni seviyenin İÇİNDEKİ ilerleme. */
+  xp: number;
+  /** Bu çağrıda kaç seviye atlandı (0 = atlanmadı). */
+  levelsGained: number;
+}
+
+/**
+ * Klasik "taşan XP sonraki seviyeye devreder" ilerleme kuralı — OPSİYONEL tarif.
+ *
+ * Bu kural bir dönem `XPBar.addXP()` içinde gömülüydü; bileşen kendi defterini
+ * tutuyor ve oyunun ilerleme sistemiyle kayıyordu. Kural silinmedi, DIŞARI
+ * ALINDI: en yaygın davranış hazır durur ve tek satırda kullanılır, ama
+ * `XPBar` onu arkanda varsaymaz.
+ *
+ * "Taşan XP yanar" ya da "seviye başına sabit eşik" isteyen bir oyun bu
+ * fonksiyonu çağırmaz, kendi hesabını yapıp `bar.setState()` der.
+ *
+ * ```ts
+ * const next = applyXpGain(level, xp, kazanılan, xpForLevel);
+ * bar.setState(next.level, next.xp);
+ * ```
+ *
+ * `xpForLevel` sıfır ya da negatif dönerse döngü DURUR: aksi halde sonsuz
+ * seviye atlama olurdu (eşiksiz seviye her zaman aşılmış sayılır).
+ */
+export function applyXpGain(
+  level: number,
+  xp: number,
+  amount: number,
+  xpForLevel: (level: number) => number,
+): XpGainResult {
+  let currentLevel = level;
+  let remaining = xp + amount;
+  let levelsGained = 0;
+
+  let threshold = xpForLevel(currentLevel);
+  while (threshold > 0 && remaining >= threshold) {
+    remaining -= threshold;
+    currentLevel += 1;
+    levelsGained += 1;
+    threshold = xpForLevel(currentLevel);
+  }
+
+  return { level: currentLevel, xp: Math.max(0, remaining), levelsGained };
 }

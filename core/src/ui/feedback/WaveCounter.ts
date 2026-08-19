@@ -8,16 +8,20 @@ export interface WaveCounterOptions {
   className?: string;
 }
 
-export interface AutoLoopOptions {
-  /** Dalgalar arası mola süresi (saniye). */
-  countdownSeconds: number;
-  /** Her yeni dalga başladığında (mola bitip dalga numarası artınca) tetiklenir. */
-  onWaveStart: (wave: number) => void;
-}
-
 /**
- * Dalga/round göstergesi + sonraki dalgaya kalan süre geri sayımı. `startCountdown()` tek seferlik geri sayım başlatır.
- * `startAutoLoop()` mola bitiminde dalgayı otomatik artırıp yeni molayı başlatır (totalWaves'e ulaşılınca durur). İkisi aynı anda aktif olamaz.
+ * Round/tur göstergesi + kalan süre geri sayımı. **Saf görüntüdür:** turu
+ * kendisi ilerletmez, ne zaman biteceğine karar vermez.
+ *
+ * Önceden bir `startAutoLoop({ countdownSeconds, onWaveStart })` metodu vardı:
+ * mola bitince tur numarasını KENDİSİ artırıyor, `totalWaves`e ulaşınca
+ * KENDİSİ duruyordu. Bu bir tur orkestrasyonudur — tam olarak `GameScene`den
+ * `RunDirector`a taşıdığımız cinsten bir kural — ve bir HUD bileşeninde
+ * durmasının nedeni yoktu. Bileşen kendi tur defterini tutuyordu; oyunun
+ * kendi tur yöneticisi zaten varsa iki sayaç birbirinden kayardı.
+ *
+ * VOL.HELL bu bileşeni hiç kullanmadı (turları `RunDirector` yönetiyor); tek
+ * çalıştıranı showcase demosuydu. `startCountdown()` kalır: bir süreyi geri
+ * saymak mekanizmadır, o sürenin sonunda NE OLACAĞI çağıranın kararıdır.
  */
 export class WaveCounter {
   readonly element: HTMLDivElement;
@@ -28,7 +32,6 @@ export class WaveCounter {
   private intervalId?: ReturnType<typeof setInterval>;
   private remainingSeconds = 0;
   private wave = 1;
-  private autoLoop: AutoLoopOptions | null = null;
   private readonly onLanguageChanged = (): void => {
     this.setWave(this.wave);
     if (!this.countdownElement.hidden) this.renderCountdown();
@@ -69,21 +72,36 @@ export class WaveCounter {
     return this.wave;
   }
 
-  /** Saniye bazlı geri sayım başlatır; süre dolunca onCountdownEnd tetiklenir. Yeni çağrı öncekini iptal eder. */
+  /**
+   * Saniye bazlı geri sayım başlatır; süre dolunca `onCountdownEnd` tetiklenir.
+   * Yeni çağrı öncekini iptal eder.
+   *
+   * Süre bittiğinde NE OLACAĞINA bileşen karar vermez: turu ilerletmek,
+   * durdurmak ya da yeni bir geri sayım açmak çağıranın işidir.
+   */
   startCountdown(seconds: number): void {
-    this.autoLoop = null;
     this.runCountdown(seconds, () => this.onCountdownEndHandler?.());
   }
 
-  /** Dalgalar arası otomatik döngüyü başlatır. totalWaves verilmediyse döngü hiç durmaz — durdurmak için stopCountdown() çağrılmalı. */
-  startAutoLoop(options: AutoLoopOptions): void {
-    this.autoLoop = options;
-    this.runCountdown(options.countdownSeconds, () => this.advanceLoop());
+  /**
+   * Kalan süreyi DIŞARIDAN alıp gösterir — kendi zamanlayıcısını kurmaz.
+   *
+   * Süreyi zaten yöneten bir sistem (ör. `RoundLoop`) varken bileşenin ikinci
+   * bir `setInterval` kurması iki sayacın kayması demektir. Negatif değer 0
+   * sayılır; `null` verilirse geri sayım metni gizlenir.
+   */
+  setRemainingSeconds(seconds: number | null): void {
+    if (seconds === null) {
+      this.countdownElement.hidden = true;
+      return;
+    }
+    this.remainingSeconds = Math.max(0, Math.ceil(seconds));
+    this.countdownElement.hidden = false;
+    this.renderCountdown();
   }
 
   /** Geri sayımı durdurur ve countdown metnini gizler. */
   stopCountdown(): void {
-    this.autoLoop = null;
     clearInterval(this.intervalId);
     this.intervalId = undefined;
     this.countdownElement.hidden = true;
@@ -93,21 +111,6 @@ export class WaveCounter {
     i18next.off('languageChanged', this.onLanguageChanged);
     this.stopCountdown();
     this.element.remove();
-  }
-
-  private advanceLoop(): void {
-    const loop = this.autoLoop;
-    if (!loop) return;
-
-    const nextWave = this.wave + 1;
-    if (this.totalWaves !== undefined && nextWave > this.totalWaves) {
-      this.autoLoop = null;
-      return;
-    }
-
-    this.setWave(nextWave);
-    loop.onWaveStart(nextWave);
-    this.runCountdown(loop.countdownSeconds, () => this.advanceLoop());
   }
 
   private runCountdown(seconds: number, onEnd: () => void): void {

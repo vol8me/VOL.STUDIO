@@ -1,0 +1,75 @@
+/**
+ * Delta-time ile sürülen bekleme süresi — ateş temposu, yetenek cooldown'ı,
+ * yeniden doğma gecikmesi.
+ *
+ * vol-hell'de bu desen (`lastUse`, `elapsed`, `if (now - last < cd) return`)
+ * en az altı sınıfta elle tekrarlanıyordu ve her biri duraklamayı biraz farklı
+ * ele alıyordu. `Scheduler` gibi oyun döngüsüne bağlıdır: `update()`
+ * çağrılmadıkça süre akmaz, yani duraklatılmış bir oyunda cooldown ilerlemez.
+ */
+export class Cooldown {
+  private remainingMs = 0;
+  private durationMs: number;
+
+  /** `durationMs` negatifse 0'a kelepçelenir (her zaman hazır). */
+  constructor(durationMs: number) {
+    this.durationMs = Math.max(0, durationMs);
+  }
+
+  /** Bekleme bitti mi? */
+  isReady(): boolean {
+    return this.remainingMs <= 0;
+  }
+
+  /** Kalan süre (ms); hazırsa 0. */
+  getRemaining(): number {
+    return Math.max(0, this.remainingMs);
+  }
+
+  /** Tamamlanma oranı [0, 1] — HUD göstergeleri için. Süre 0 ise her zaman 1. */
+  getProgress(): number {
+    if (this.durationMs <= 0) return 1;
+    return 1 - Math.max(0, this.remainingMs) / this.durationMs;
+  }
+
+  /**
+   * Hazırsa beklemeyi başlatır ve `true` döner; hazır değilse hiçbir şey
+   * yapmadan `false` döner.
+   *
+   * "Kontrol et, sonra tetikle" iki ayrı adım olsaydı araya giren bir çağrı
+   * ikisinin arasında beklemeyi tüketebilirdi; tek çağrı bunu imkânsız kılar.
+   */
+  tryTrigger(): boolean {
+    if (!this.isReady()) return false;
+    this.remainingMs = this.durationMs;
+    return true;
+  }
+
+  /** Hazır olup olmadığına BAKMADAN beklemeyi başlatır. */
+  trigger(): void {
+    this.remainingMs = this.durationMs;
+  }
+
+  /** Beklemeyi anında bitirir. */
+  reset(): void {
+    this.remainingMs = 0;
+  }
+
+  /**
+   * Süreyi değiştirir. Devam eden bekleme KELEPÇELENİR: ateş hızı artıran bir
+   * kart alındığında oyuncu, eski uzun beklemeyi sonuna kadar çekmez.
+   */
+  setDuration(durationMs: number): void {
+    this.durationMs = Math.max(0, durationMs);
+    this.remainingMs = Math.min(this.remainingMs, this.durationMs);
+  }
+
+  getDuration(): number {
+    return this.durationMs;
+  }
+
+  update(deltaMs: number): void {
+    if (deltaMs <= 0 || this.remainingMs <= 0) return;
+    this.remainingMs -= deltaMs;
+  }
+}

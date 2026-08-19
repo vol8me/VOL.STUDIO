@@ -9,21 +9,21 @@ commit diff'inde ve git geçmişindedir; burada tekrarlanmaz.
 Bulut CI yoktur; kapılar `justfile` ile localde koşar. Aşağıdaki sonuçlar bu
 tarihte çalışma ağacında bizzat koşuldu.
 
-| Kapı                     | Durum | Not                                                                   |
-| ------------------------ | ----- | --------------------------------------------------------------------- |
-| `pnpm signoff`           | ✓     | high + cargo check/fmt/clippy — zincirin tamamı, exit 0               |
-| `pnpm high`              | ✓     | quick + lint:css + coverage + tüm build'ler                           |
-| `pnpm -r typecheck`      | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                    |
-| `pnpm -r test:coverage`  | ✓     | 1471 test (core 917, vol-hell 447, vol-ui 27, design 54, tauri-v2 26) |
-| `pnpm run contract`      | ✓     | 5 paket, kapı kapsamı tam                                             |
-| `pnpm lint`              | ✓     | 0 hata, 0 uyarı                                                       |
-| `pnpm format:check`      | ✓     |                                                                       |
-| `pnpm lint:css`          | ✓     |                                                                       |
-| `pnpm build:all`         | ✓     | build script'i olan her paket (`vol-hell`, `vol-ui`)                  |
-| `cargo check/fmt/clippy` | ✓     | `tauri-v2/src-tauri`                                                  |
-| `pnpm run doctor:env`    | ✓     | Node 22.23.1, pnpm 11.18.0, rustc 1.97.1, just 1.58.0, FFmpeg 8.1.2   |
+| Kapı                     | Durum | Not                                                                    |
+| ------------------------ | ----- | ---------------------------------------------------------------------- |
+| `pnpm signoff`           | ✓     | high + cargo check/fmt/clippy — zincirin tamamı, exit 0                |
+| `pnpm high`              | ✓     | quick + lint:css + coverage + tüm build'ler                            |
+| `pnpm -r typecheck`      | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                     |
+| `pnpm -r test:coverage`  | ✓     | 1563 test (core 1009, vol-hell 447, vol-ui 27, design 54, tauri-v2 26) |
+| `pnpm run contract`      | ✓     | 5 paket, kapı kapsamı tam                                              |
+| `pnpm lint`              | ✓     | 0 hata, 0 uyarı                                                        |
+| `pnpm format:check`      | ✓     |                                                                        |
+| `pnpm lint:css`          | ✓     |                                                                        |
+| `pnpm build:all`         | ✓     | build script'i olan her paket (`vol-hell`, `vol-ui`)                   |
+| `cargo check/fmt/clippy` | ✓     | `tauri-v2/src-tauri`                                                   |
+| `pnpm run doctor:env`    | ✓     | Node 22.23.1, pnpm 11.18.0, rustc 1.97.1, just 1.58.0, FFmpeg 8.1.2    |
 
-Kapsam: core %86.42, vol-ui %83.57 (function %53.65), vol-hell %70.17,
+Kapsam: core %86.68, vol-ui %83.57 (function %53.65), vol-hell %70.17,
 tauri-v2 %89.07, design %98.86. Eşikler ölçülen kapsamın ~2 puan altına kilitli
 (ratchet), yani bu oranlar artık taban — düşerlerse kapı kırılır. Eşiklerin
 tamamı kök `quality.json`da; `vitest.config.ts` dosyaları ve
@@ -140,6 +140,7 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-18 | Kart işlem sınırı, metadata şeması, quality.json            | tek kalite kaynağı         |
 | 2026-08-18 | Lifecycle idiomu, artımlı spatial indeks, kapı raporu       | framework tutarlılığı      |
 | 2026-08-19 | Dış denetimin kalan 8 bulgusu                               | 3'ü denetimde değişti      |
+| 2026-08-19 | CORE katmanlaması + 8 headless primitif                     | yeni oyun zemini           |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 
@@ -352,6 +353,89 @@ Aşama haritasının `justfile` ile ayrışmasını da doğrular: `high`ten `bui
 | `pnpm signoff` | ✓     | 8 aşama, exit 0 (~99 sn)                                 |
 | test           | ✓     | tüm paketler yeşil (nihai toplam için bkz. Son durum)    |
 | Regresyon      | ✓     | spatial eşdeğerlik + lifecycle bekçisi enjeksiyonla test |
+
+## 2026-08-19 — CORE katmanlaması ve yeni oyun zemini
+
+Yön değişti: CORE'u yalnızca saflaştırmak değil, **yeni bir oyuna hızlı
+başlamayı** sağlamak. İkisi çelişmiyor; sorun kodun saflığı değil katmanın
+yanlış olmasıydı.
+
+### Teşhis
+
+vol-hell yapılırken CORE'da bulunamayıp sıfırdan yazılanlar: `SpatialGrid`,
+`EffectManager`, `CollisionResolver`, `DifficultyCalculator`, `WaveManager`,
+`RunEconomy`, `TelegraphManager`, `RunDirector`. Hiçbiri "cehennem temalı
+arena" değil — hepsi jenerik. Yani zorluğun kaynağı bileşen eksikliği DEĞİLDİ
+(CORE'da 60+ UI bileşeni var); katman 1 (headless primitif) ve katman 3
+(tarif) zayıf, katman 2 (sunum) şişmandı.
+
+### Üç katmanlı sözleşme
+
+1. **Mekanizma** — oyun kelimesi bilmez, sunumdan bağımsız.
+2. **Sunum** — durumu çizer, niyet bildirir; kural taşımaz.
+3. **Tarif** — yaygın kuralı hazır verir ama OPT-IN'dir.
+
+Kural silinmedi, TAŞINDI: en yaygın davranış hazır durur ve tek satırda
+çağrılır, ama hiçbir bileşen onu arkanda varsaymaz.
+
+### Sunum katmanından çıkarılan kurallar
+
+| Neydi                                             | Nereye gitti                    | Kanıt                                                       |
+| ------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- |
+| `XPBar.addXP()` zincirleme seviye + kendi defteri | `applyXpGain()` tarifi          | `SparkBar` bunu hiç kullanmadı, tek çalıştıranı showcase'ti |
+| `WaveCounter.startAutoLoop()` tur orkestrasyonu   | `RoundLoop` primitifi           | vol-hell bileşeni hiç kullanmadı                            |
+| `SkillTree.unlock()` + `unlockedIds` defteri      | `resolveSkillStates()` tarifi   | bileşen kendi kilit defterini tutuyordu                     |
+| `Bar` kapalı `'health'\|'stamina'\|'cooldown'`    | `variant: string` + `fillColor` | "kalkan"/"ısı" barı ifade EDİLEMİYORDU                      |
+
+`ShopPicker` dokunulmadı — zaten doğru modeldi (`costLabel`/`canAfford`
+dışarıdan gelir, `onReroll` niyet bildirir) ve diğerleri ona benzetildi.
+
+Ek olarak `Bar`ın `aria-label`ı `t('core:bar.ariaLabel', { variant })` ile ham
+varyantı enterpole ediyordu; Türkçe arayüzde "health bar" okunuyordu. Varyant
+oyunun kelimesi, çevirisi de oyunun sorumluluğu: `ariaLabel` seçeneği eklendi.
+
+### Katman 1 — sekiz primitif
+
+`Scheduler` (delta-time, deterministik, kare düşmesinde tetiklenme yemez) ·
+`Cooldown` (tryTrigger tek çağrıda, süre değişince devam eden bekleme kısalır) ·
+`RoundLoop` (tur/dalga, ilk tur hemen başlar, skipBreak) · `StateMachine`
+(geçersiz durum temsil edilemez, terminal durum, yeniden giriş koruması) ·
+`ResourcePool<TResource>` (ya hepsi ya hiçbiri harcama, üst sınır) ·
+`ObjectPool` (çift iade hatası, maxIdle) · `SpatialIndex<T>` (rebuild +
+artımlı, iki model eşdeğerliği testli) · geometri (daire/dikdörtgen/ışın,
+köşe teması, arkadaki hedef elenir).
+
+`TODO.md`'de "ikinci somut tüketici çıkmadan yazılmayacak" diye ertelenen
+maddelerdi; tetikleyici karşılandı.
+
+### Dogfooding
+
+vol-hell'in `SpatialGrid`i CORE'un `SpatialIndex<Enemy>`i üzerine ince bir
+adaptöre indi. Göç sırasında `update()`in dönüş anlamını sessizce
+değiştirmiştim (eski: "indeks değişti mi", yeni: "kayıtlı mı"); vol-hell
+testleri yakaladı ve ESKİ sözleşme geri alındı — daha tutarlıydı, üyelik
+sorgusu için zaten `has()` var. Primitifi gerçek tüketiciyle doğrulamanın
+karşılığı bu oldu.
+
+### Belge
+
+`core/docs/primitives.md` yazıldı: üç katmanın sözleşmesi, her primitifin
+kullanımı ve tamamı CORE'dan kurulan bir tower-defense iskeleti. `AGENTS.md`e
+katman kuralı, README'lere giriş bölümü eklendi.
+
+### Kalite kapıları
+
+| Kapı      | Durum | Not                                               |
+| --------- | ----- | ------------------------------------------------- |
+| `signoff` | ✓     | 8 aşama, exit 0                                   |
+| test      | ✓     | 1471 → 1563 test (+92)                            |
+| coverage  | ✓     | core %86.42 → %86.68                              |
+| yüzey     | ✓     | 127 → 144 export, bilinçli karar (bekçi yakaladı) |
+
+**Kalan risk:** `vol-ui` function coverage hâlâ %53.65 ve yeni primitiflerin
+showcase karşılığı yok (headless oldukları için showcase kuralı kapsamıyor).
+Bir sonraki oyunun bunları gerçekten kullanması, API'nin doğruluğunun asıl
+sınavı olacak.
 
 ## 2026-08-19 — Dış denetimin kalan bulguları
 

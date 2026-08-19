@@ -69,6 +69,19 @@ single message that says where to look.
 
 The `just` binary lands in `node_modules/.bin` and is not on the global `PATH` — use `pnpm fast` or `pnpm exec just fast`, not a bare `just fast`. For single gates (`typecheck`, `lint`, `coverage`, `rust`, `test-pkg <package>` …): `pnpm exec just --list`.
 
+## Starting a new game on CORE
+
+CORE has three layers: **mechanism** (game-agnostic primitives), **presentation**
+(components that render state and carry no rules) and **recipes** (opt-in
+functions providing the common rule). Starting a new game does not mean
+rewriting scheduling, phase management, resource wallets, object pooling or
+spatial queries.
+
+`Scheduler` · `Cooldown` · `RoundLoop` · `StateMachine` · `ResourcePool` ·
+`ObjectPool` · `SpatialIndex` · geometry
+
+Usage and a full tower-defense skeleton: [`core/docs/primitives.md`](core/docs/primitives.md)
+
 ## License
 
 [Apache License 2.0](LICENSE)

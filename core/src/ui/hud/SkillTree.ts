@@ -12,10 +12,14 @@ export interface SkillNodeDefinition {
   /** Grid koordinatı (satır/sütun birimi, piksel değil) — layout bunlara göre konumlanır. */
   x: number;
   y: number;
-  /** Bu düğümün açılabilmesi için önce açılmış olması gereken düğüm id'leri. Birden fazla verilirse HEPSİ gerekir (AND). */
+  /**
+   * Bu düğüme bağlanan üst düğüm id'leri — ÇİZİLECEK KENARLARI tanımlar.
+   *
+   * Bileşen bunu yalnızca grafiği çizmek için okur; açılabilirliğe KARAR
+   * VERMEZ (bkz. `resolveSkillStates`). Bir oyun "herhangi biri yeterli"
+   * derse kenarlar aynı kalır, yalnızca durum hesabı değişir.
+   */
   requires?: string[];
-  /** Başlangıçta açık mı (önkoşulu olmasa bile). Varsayılan false. */
-  unlocked?: boolean;
   /**
    * Kategori/dal etiketi — aynı branch değerine sahip düğümler ve onları
    * birbirine bağlayan çizgiler aynı vurgu rengini paylaşır (ör. "saldırı"
@@ -28,14 +32,50 @@ export interface SkillNodeDefinition {
   description?: string;
 }
 
+/** Bir düğümün o anki durumu. Çağıran hesaplar, bileşen yalnızca çizer. */
+export type SkillNodeState = 'unlocked' | 'available' | 'locked';
+
+/**
+ * Klasik "TÜM önkoşullar açık olmalı" (AND) kuralını uygulayan saf fonksiyon.
+ *
+ * Bu kural bir dönem `SkillTree`in İÇİNDE gömülüydü ve bileşen kendi
+ * `unlockedIds` defterini tutuyordu — yani CORE, bir oyunun beceri ağacının
+ * nasıl açıldığına karar veriyordu ve oyunun kendi ilerleme sistemiyle iki
+ * ayrı defter kaçınılmaz olarak kayıyordu.
+ *
+ * Kural silinmedi, DIŞARI ALINDI: en yaygın davranış hazır durur ve tek
+ * satırda kullanılır, ama bileşen onu arkanda varsaymaz. "Önkoşullardan
+ * HERHANGİ biri yeterli" (OR) ya da "dalda N puan harcanmış olmalı" gibi bir
+ * kural isteyen oyun kendi eşlemesini yazar ve `setStates()`e verir.
+ *
+ * ```ts
+ * tree.setStates(resolveSkillStates(nodes, unlockedIds));
+ * ```
+ */
+export function resolveSkillStates(
+  nodes: readonly SkillNodeDefinition[],
+  unlockedIds: ReadonlySet<string>,
+): Record<string, SkillNodeState> {
+  const states: Record<string, SkillNodeState> = {};
+  for (const node of nodes) {
+    if (unlockedIds.has(node.id)) {
+      states[node.id] = 'unlocked';
+      continue;
+    }
+    const requires = node.requires ?? [];
+    states[node.id] = requires.every((id) => unlockedIds.has(id)) ? 'available' : 'locked';
+  }
+  return states;
+}
+
 export interface SkillTreeOptions {
   nodes: SkillNodeDefinition[];
   /**
-   * Bir düğüme tıklanıp o an açılabilir durumdaysa çağrılır; true dönerse
-   * düğüm açılır. false/void dönerse (senkron) açılmaz — dışarıdan
-   * onay/maliyet kontrolü için (ör. "yeterli beceri puanı yok" reddi).
+   * Bir düğüme tıklandığında NİYETİ bildirir; düğümün o anki durumu da
+   * verilir. Bileşen hiçbir şey açmaz — açma kararı (maliyet, puan, onay)
+   * tamamen çağıranındır. Karar sonrası `setStates()` çağrılır.
    */
-  onUnlock?: (id: string) => boolean | void;
+  onNodeClick?: (id: string, state: SkillNodeState) => void;
   /** Grid biriminin piksel karşılığı (satır yüksekliği ve minimum sütun genişliği). Varsayılan 120. */
   cellSize?: number;
   /**
@@ -54,8 +94,6 @@ export interface SkillTreeOptions {
    */
   zoomable?: boolean;
 }
-
-type NodeState = 'unlocked' | 'available' | 'locked';
 
 /** .vol-skill-tree__canvas--resetting gecisi (hud.css: transform 0.4s) + kare payi. */
 const RESET_VIEW_TRANSITION_MS = 420;
@@ -145,10 +183,11 @@ export class SkillTree {
   private readonly cellSize: number;
   private readonly showTooltips: boolean;
   private readonly zoomable: boolean;
-  private readonly unlockedIds = new Set<string>();
+  /** Dışarıdan verilen durum haritası — bileşenin KENDİ defteri yoktur. */
+  private states: Readonly<Record<string, SkillNodeState>> = {};
   private readonly nodeElements = new Map<string, HTMLButtonElement>();
   private readonly tooltips = new Map<string, RichTooltip>();
-  private readonly onUnlockHandler?: (id: string) => boolean | void;
+  private readonly onNodeClickHandler?: (id: string, state: SkillNodeState) => void;
   /**
    * Bu bileşenin ömrüne bağlı kaynaklar.
    *
@@ -174,13 +213,9 @@ export class SkillTree {
   constructor(options: SkillTreeOptions) {
     this.nodes = options.nodes;
     this.cellSize = options.cellSize ?? 120;
-    this.onUnlockHandler = options.onUnlock;
+    this.onNodeClickHandler = options.onNodeClick;
     this.showTooltips = options.showTooltips ?? false;
     this.zoomable = options.zoomable ?? false;
-
-    for (const node of this.nodes) {
-      if (node.unlocked) this.unlockedIds.add(node.id);
-    }
 
     this.element = document.createElement('div');
     this.element.className = 'vol-skill-tree';
@@ -244,14 +279,36 @@ export class SkillTree {
     });
   }
 
-  /** Bir düğümü programatik olarak açar (onUnlock onayı olmadan) — ör. görev ödülü, hile menüsü. */
-  unlock(id: string): void {
-    this.unlockedIds.add(id);
-    this.renderStates(true, id);
+  /**
+   * Düğüm durumlarını dışarıdan alır ve çizer. Haritada olmayan düğüm
+   * `'locked'` sayılır.
+   *
+   * Yeni açılan düğüm önceki haritayla KARŞILAŞTIRILARAK bulunur ve vurgu
+   * animasyonu oynatılır — "hangi düğüm az önce açıldı" bilgisi çağırandan
+   * ayrıca istenmez, ama kararın sahibi yine çağırandır.
+   */
+  setStates(states: Readonly<Record<string, SkillNodeState>>): void {
+    const previous = this.states;
+    this.states = states;
+
+    const newlyUnlocked = this.nodes.find(
+      (node) => states[node.id] === 'unlocked' && previous[node.id] !== 'unlocked',
+    );
+    this.renderStates(newlyUnlocked !== undefined, newlyUnlocked?.id);
   }
 
-  isUnlocked(id: string): boolean {
-    return this.unlockedIds.has(id);
+  /** Bir düğümün o an çizilen durumu. */
+  getNodeState(id: string): SkillNodeState {
+    return this.states[id] ?? 'locked';
+  }
+
+  /**
+   * Düğüm tanımları — çağıranın durum hesabı yapabilmesi için
+   * (`resolveSkillStates(tree.getNodes(), unlockedIds)`). Böylece tanım
+   * listesini ayrıca elde tutmak gerekmez.
+   */
+  getNodes(): readonly SkillNodeDefinition[] {
+    return this.nodes;
   }
 
   /**
@@ -299,11 +356,8 @@ export class SkillTree {
     this.pendingFrames.add(id);
   }
 
-  private getState(node: SkillNodeDefinition): NodeState {
-    if (this.unlockedIds.has(node.id)) return 'unlocked';
-    const requires = node.requires ?? [];
-    const available = requires.every((reqId) => this.unlockedIds.has(reqId));
-    return available ? 'available' : 'locked';
+  private getState(node: SkillNodeDefinition): SkillNodeState {
+    return this.states[node.id] ?? 'locked';
   }
 
   private buildNode(node: SkillNodeDefinition): HTMLButtonElement {
@@ -333,7 +387,7 @@ export class SkillTree {
     button.addEventListener('animationend', onAnimationEnd);
     this.scope.add({ dispose: () => button.removeEventListener('animationend', onAnimationEnd) });
 
-    const onClick = (): void => this.tryUnlock(node);
+    const onClick = (): void => this.handleNodeClick(node);
     button.addEventListener('click', onClick);
     this.scope.add({ dispose: () => button.removeEventListener('click', onClick) });
 
@@ -431,15 +485,12 @@ export class SkillTree {
     }
   }
 
-  private tryUnlock(node: SkillNodeDefinition): void {
-    const state = this.getState(node);
-    if (state !== 'available') return;
-
-    const result = this.onUnlockHandler?.(node.id);
-    if (result === false) return;
-
-    this.unlockedIds.add(node.id);
-    this.renderStates(true, node.id);
+  /**
+   * Tıklamayı NİYET olarak bildirir. Kilitli düğüm zaten `disabled` olduğu için
+   * buraya ulaşmaz; kararı çağıran verir ve sonucu `setStates()` ile geri yazar.
+   */
+  private handleNodeClick(node: SkillNodeDefinition): void {
+    this.onNodeClickHandler?.(node.id, this.getState(node));
   }
 
   private renderConnections(): void {
@@ -508,8 +559,8 @@ export class SkillTree {
 
     const lines = this.svg.querySelectorAll<SVGLineElement>('.vol-skill-tree__connection');
     lines.forEach((line) => {
-      const fromUnlocked = this.unlockedIds.has(line.dataset.from ?? '');
-      const toUnlocked = this.unlockedIds.has(line.dataset.to ?? '');
+      const fromUnlocked = this.states[line.dataset.from ?? ''] === 'unlocked';
+      const toUnlocked = this.states[line.dataset.to ?? ''] === 'unlocked';
       const nowActive = fromUnlocked && toUnlocked;
       const wasActive = line.classList.contains('vol-skill-tree__connection--active');
 

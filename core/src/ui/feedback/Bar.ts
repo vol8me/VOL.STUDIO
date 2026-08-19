@@ -2,12 +2,27 @@ import { animateValue } from '../animation';
 import { UI_RATIO, UI_TIMING } from '../../constants';
 import { i18next } from '../../systems/I18n';
 
-export type BarVariant = 'health' | 'stamina' | 'cooldown';
+/**
+ * Görsel varyant — `vol-bar--<variant>` CSS sınıfına çevrilir.
+ *
+ * Küme AÇIKTIR (`string`). Bir dönem `'health' | 'stamina' | 'cooldown'`
+ * kapalı union'ıydı ve "kalkan", "ısı", "yakıt" gibi bir barı ifade etmek
+ * İMKÂNSIZDI — CORE, tüketicinin hangi kaynaklara sahip olabileceğine karar
+ * veriyordu. Üç ad CSS'te hazır önayar olarak durmayı sürdürür; başka bir
+ * varyant için ya kendi CSS'ini yaz ya da `fillColor` ver.
+ */
+export type BarVariant = string;
 
 export type BarLabel = string | ((value: number, max: number) => string);
 
 export interface BarOptions {
   variant?: BarVariant;
+  /**
+   * Dolgu rengi (CSS renk değeri). CORE'un CSS'ine dokunmadan özel bir
+   * varyant kurmak için: `{ variant: 'shield', fillColor: 'var(--kalkan)' }`.
+   * Verilmezse renk `vol-bar--<variant>` sınıfından gelir.
+   */
+  fillColor?: string;
   max: number;
   value?: number;
   /**
@@ -27,6 +42,15 @@ export interface BarOptions {
   label?: BarLabel;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
+  /**
+   * Etiketsiz barlarda erişilebilirlik adı — ÇEVRİLMİŞ metin beklenir.
+   *
+   * Önceden CORE `t('core:bar.ariaLabel', { variant })` ile varyant adını
+   * enterpole ediyordu; sonuç Türkçe arayüzde "health bar" gibi yarı çevrilmiş
+   * bir etiketti. Varyant adı oyunun kelimesi, çevirisi de oyunun sorumluluğu.
+   * Verilmezse jenerik bir yedek kullanılır.
+   */
+  ariaLabel?: string;
 }
 
 let barInstanceCounter = 0;
@@ -36,6 +60,7 @@ export class Bar {
   private readonly fillElement: HTMLDivElement;
   private labelElement: HTMLSpanElement | null;
   private readonly variant: BarVariant;
+  private readonly ariaLabel?: string;
   private max: number;
   private value: number;
   private readonly lowThreshold: number | null;
@@ -46,10 +71,7 @@ export class Bar {
     if (this.labelElement) {
       this.renderFill(this.value);
     } else {
-      this.element.setAttribute(
-        'aria-label',
-        i18next.t('core:bar.ariaLabel', { variant: this.variant }),
-      );
+      this.element.setAttribute('aria-label', this.resolveAriaLabel());
     }
   };
 
@@ -64,6 +86,7 @@ export class Bar {
     } = options;
 
     this.variant = variant;
+    this.ariaLabel = options.ariaLabel;
     this.max = max;
     // Değer burada da kelepçelenmeli, aksi halde `new Bar({ max: 100, value: 150 })` gibi
     // durumlarda getValue()/aria-valuenow max'ı aşan geçersiz bir değer döndürürdü.
@@ -92,7 +115,11 @@ export class Bar {
       this.element.setAttribute('aria-labelledby', labelId);
     } else {
       this.labelElement = null;
-      this.element.setAttribute('aria-label', i18next.t('core:bar.ariaLabel', { variant }));
+      this.element.setAttribute('aria-label', this.resolveAriaLabel());
+    }
+
+    if (options.fillColor) {
+      this.fillElement.style.background = options.fillColor;
     }
 
     this.renderFill(this.value);
@@ -155,6 +182,14 @@ export class Bar {
     i18next.off('languageChanged', this.onLanguageChanged);
     this.cancelAnimation?.();
     this.element.remove();
+  }
+
+  /**
+   * Erişilebilirlik adı: çağıranın verdiği çevrilmiş metin, yoksa jenerik
+   * yedek. CORE varyant adını çevirmeye ÇALIŞMAZ — o oyunun kelimesidir.
+   */
+  private resolveAriaLabel(): string {
+    return this.ariaLabel ?? i18next.t('core:bar.ariaLabel');
   }
 
   private renderFill(value: number): void {

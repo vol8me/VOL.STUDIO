@@ -50,7 +50,7 @@
     "label": "Kaynaklar"
   },
   "bar": {
-    "ariaLabel": "{{variant}} bar"
+    "ariaLabel": "ilerleme çubuğu"
   },
   "datatable": {
     "empty": "Kayıt yok"

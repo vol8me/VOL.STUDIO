@@ -11,7 +11,9 @@ import {
   Text,
   VOL_COLORS,
   WaveCounter,
+  RoundLoop,
   XPBar,
+  applyXpGain,
   i18n,
   i18next,
 } from '@volstudio/core';
@@ -155,16 +157,25 @@ function buildFormattedCounterCard(disposables: Destroyable[]): HTMLElement {
   return card(i18next.t('volui:hud.counterFormatted'), wrap);
 }
 
-/** XPBar: eşiği aşan XP sonraki seviyeye taşınır, level-up vurgusu oynar. */
+/**
+ * XPBar: saf görüntü. İlerleme KURALI (taşan XP sonraki seviyeye devreder)
+ * bileşende değil, CORE'un opsiyonel `applyXpGain` tarifindedir — bar yalnızca
+ * `setState()` ile eşitlenir. Farklı bir kural isteyen oyun tarifi çağırmaz.
+ */
 function buildXPBarCard(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
-  const xpBar = new XPBar({
-    level: 1,
-    xp: 0,
-    xpForLevel: (level) => 50 + level * 25,
-  });
+  const xpForLevel = (level: number): number => 50 + level * 25;
+  let progress = { level: 1, xp: 0 };
+
+  const xpBar = new XPBar({ level: progress.level, xp: progress.xp, xpForLevel });
+
+  const gainXp = (amount: number): void => {
+    const next = applyXpGain(progress.level, progress.xp, amount, xpForLevel);
+    progress = { level: next.level, xp: next.xp };
+    xpBar.setState(progress.level, progress.xp);
+  };
   disposables.push(xpBar);
   wrap.appendChild(xpBar.element);
 
@@ -178,11 +189,11 @@ function buildXPBarCard(disposables: Destroyable[]): HTMLElement {
   controls.className = 'vol-showcase-panel-demo__controls';
 
   const addSmallButton = new Button(i18next.t('volui:hud.add20XP'), {
-    onClick: () => xpBar.addXP(20),
+    onClick: () => gainXp(20),
   });
   const addBigButton = new Button(i18next.t('volui:hud.add150XP'), {
     variant: 'primary',
-    onClick: () => xpBar.addXP(150),
+    onClick: () => gainXp(150),
   });
   disposables.push(addSmallButton, addBigButton);
 
@@ -333,7 +344,11 @@ function buildResourceBarCard(disposables: Destroyable[]): HTMLElement {
   return card(i18next.t('volui:hud.resourceBar'), wrap);
 }
 
-/** WaveCounter: dalga numarası + geri sayım. startAutoLoop() otomatik ilerletir, totalWaves'te durur. */
+/**
+ * WaveCounter: saf görüntü. Tur ilerletme KURALI bileşende değil, CORE'un
+ * headless `RoundLoop` primitifindedir — bir tower defense'te dalga molası,
+ * roguelite'ta oda arası aynı parçadır. Sayaç yalnızca çıktısını çizer.
+ */
 function buildWaveCounterCard(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
@@ -349,26 +364,55 @@ function buildWaveCounterCard(disposables: Destroyable[]): HTMLElement {
   const controls = document.createElement('div');
   controls.className = 'vol-showcase-panel-demo__controls';
 
+  let loop: RoundLoop | null = null;
+  let rafId = 0;
+  let lastFrame = 0;
+
+  // `RoundLoop` delta-time ile sürülür (duraklatılan oyunda mola akmaz), bu
+  // yüzden showcase'te bir rAF döngüsüne bağlanır. Gerçek oyunda bu, sahnenin
+  // update() metodudur.
+  const tick = (now: number): void => {
+    const delta = lastFrame === 0 ? 0 : now - lastFrame;
+    lastFrame = now;
+    loop?.update(delta);
+    if (loop) {
+      waveCounter.setRemainingSeconds(loop.getRemainingMs() / 1000);
+      rafId = requestAnimationFrame(tick);
+    }
+  };
+
+  const stopLoop = (): void => {
+    loop = null;
+    lastFrame = 0;
+    cancelAnimationFrame(rafId);
+  };
+
   const startLoopButton = new Button(i18next.t('volui:hud.startAutoLoop'), {
     variant: 'primary',
     onClick: () => {
-      waveCounter.startAutoLoop({
-        countdownSeconds: 3,
-        onWaveStart: () => {
-          // Gerçek oyunda düşman üretimi burada tetiklenir.
-        },
+      stopLoop();
+      loop = new RoundLoop({
+        breakMs: 3000,
+        totalRounds: 10,
+        onRoundStart: (round) => waveCounter.setWave(round),
+        onComplete: stopLoop,
       });
+      loop.start();
+      lastFrame = 0;
+      rafId = requestAnimationFrame(tick);
     },
   });
   disposables.push(startLoopButton);
 
   const resetButton = new Button(i18next.t('volui:hud.reset'), {
     onClick: () => {
+      stopLoop();
       waveCounter.stopCountdown();
       waveCounter.setWave(1);
     },
   });
   disposables.push(resetButton);
+  disposables.push({ destroy: stopLoop });
 
   controls.appendChild(startLoopButton.element);
   controls.appendChild(resetButton.element);

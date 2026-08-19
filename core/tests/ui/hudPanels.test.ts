@@ -2,7 +2,11 @@ import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest';
 import { BuildMenu, type BuildMenuItem } from '../../src/ui/hud/BuildMenu';
 import { MinimapPanel } from '../../src/ui/hud/MinimapPanel';
 import { SelectionInfoPanel } from '../../src/ui/hud/SelectionInfoPanel';
-import { SkillTree, type SkillNodeDefinition } from '../../src/ui/hud/SkillTree';
+import {
+  SkillTree,
+  resolveSkillStates,
+  type SkillNodeDefinition,
+} from '../../src/ui/hud/SkillTree';
 
 const tracked: Array<{ destroy(): void }> = [];
 function track<T extends { destroy(): void }>(instance: T): T {
@@ -269,14 +273,22 @@ describe('SelectionInfoPanel', () => {
 describe('SkillTree', () => {
   function makeNodes(): SkillNodeDefinition[] {
     return [
-      { id: 'root', label: 'Kök Yetenek', x: 0, y: 0, unlocked: true },
+      { id: 'root', label: 'Kök Yetenek', x: 0, y: 0 },
       { id: 'child', label: 'Çocuk Yetenek', x: 0, y: 1, requires: ['root'] },
       { id: 'locked', label: 'Kilitli', x: 1, y: 1, requires: ['nonexistent'] },
     ];
   }
 
-  it('unlocked düğüm --unlocked, önkoşulu tamam olan --available, eksik olan --locked class alır', () => {
-    const tree = track(new SkillTree({ nodes: makeNodes() }));
+  /** Durumlar artık ÇAĞIRANIN sorumluluğu; opsiyonel tarif kuralı uygulanır. */
+  function treeWith(unlocked: string[], onNodeClick?: (id: string) => void) {
+    const nodes = makeNodes();
+    const tree = track(new SkillTree({ nodes, onNodeClick: onNodeClick as never }));
+    tree.setStates(resolveSkillStates(nodes, new Set(unlocked)));
+    return tree;
+  }
+
+  it('durum haritasına göre --unlocked / --available / --locked class alır', () => {
+    const tree = treeWith(['root']);
     const buttons = tree.element.querySelectorAll<HTMLButtonElement>('.vol-skill-tree__node');
 
     expect(buttons[0].classList.contains('vol-skill-tree__node--unlocked')).toBe(true);
@@ -285,51 +297,53 @@ describe('SkillTree', () => {
     expect(buttons[2].disabled).toBe(true);
   });
 
-  it('available bir düğüme tıklamak onUnlock çağırır, true dönerse açılır', () => {
-    const onUnlock = vi.fn().mockReturnValue(true);
-    const tree = track(new SkillTree({ nodes: makeNodes(), onUnlock }));
-    const childButton =
-      tree.element.querySelectorAll<HTMLButtonElement>('.vol-skill-tree__node')[1];
+  it('durum verilmezse tüm düğümler kilitli sayılır', () => {
+    const tree = track(new SkillTree({ nodes: makeNodes() }));
+    const buttons = tree.element.querySelectorAll<HTMLButtonElement>('.vol-skill-tree__node');
 
-    childButton.click();
-    expect(onUnlock).toHaveBeenCalledWith('child');
-    expect(tree.isUnlocked('child')).toBe(true);
-    expect(childButton.classList.contains('vol-skill-tree__node--unlocked')).toBe(true);
+    expect(buttons[0].classList.contains('vol-skill-tree__node--locked')).toBe(true);
   });
 
-  it('onUnlock false dönerse düğüm açılmaz', () => {
-    const onUnlock = vi.fn().mockReturnValue(false);
-    const tree = track(new SkillTree({ nodes: makeNodes(), onUnlock }));
+  it('tıklama yalnızca NİYET bildirir — bileşen hiçbir şey açmaz', () => {
+    // Regresyon: bileşen bir dönem kendi `unlockedIds` defterini tutup düğümü
+    // KENDİ açıyordu; oyunun ilerleme sistemiyle iki defter kaçınılmaz olarak
+    // kayıyordu. Artık açma kararı tamamen çağıranın.
+    const onNodeClick = vi.fn();
+    const tree = treeWith(['root'], onNodeClick);
     const childButton =
       tree.element.querySelectorAll<HTMLButtonElement>('.vol-skill-tree__node')[1];
 
     childButton.click();
-    expect(tree.isUnlocked('child')).toBe(false);
+
+    expect(onNodeClick).toHaveBeenCalledWith('child', 'available');
+    expect(tree.getNodeState('child')).toBe('available');
+    expect(childButton.classList.contains('vol-skill-tree__node--unlocked')).toBe(false);
+  });
+
+  it('çağıran setStates ile kararını geri yazınca düğüm açılır', () => {
+    const nodes = makeNodes();
+    const tree = track(new SkillTree({ nodes }));
+    tree.setStates(resolveSkillStates(nodes, new Set(['root'])));
+
+    tree.setStates(resolveSkillStates(nodes, new Set(['root', 'child'])));
+
+    expect(tree.getNodeState('child')).toBe('unlocked');
   });
 
   it('locked (disabled) bir düğüme tıklamak hiçbir şey yapmaz', () => {
-    const onUnlock = vi.fn();
-    const tree = track(new SkillTree({ nodes: makeNodes(), onUnlock }));
+    const onNodeClick = vi.fn();
+    const tree = treeWith(['root'], onNodeClick);
     const lockedButton =
       tree.element.querySelectorAll<HTMLButtonElement>('.vol-skill-tree__node')[2];
 
     lockedButton.click();
-    expect(onUnlock).not.toHaveBeenCalled();
-  });
-
-  it('unlock() programatik olarak onUnlock çağırmadan doğrudan açar', () => {
-    const onUnlock = vi.fn();
-    const tree = track(new SkillTree({ nodes: makeNodes(), onUnlock }));
-
-    tree.unlock('child');
-    expect(onUnlock).not.toHaveBeenCalled();
-    expect(tree.isUnlocked('child')).toBe(true);
+    expect(onNodeClick).not.toHaveBeenCalled();
   });
 
   it('showTooltips:true iken cost/description olan düğümlere RichTooltip bağlanır', () => {
     vi.useFakeTimers();
     const nodes: SkillNodeDefinition[] = [
-      { id: 'a', label: 'A', x: 0, y: 0, unlocked: true, description: 'Açıklama' },
+      { id: 'a', label: 'A', x: 0, y: 0, description: 'Açıklama' },
     ];
     const tree = track(new SkillTree({ nodes, showTooltips: true }));
     // RichTooltip constructor'ı hemen bubble oluşturur ama DOM'a eklemez;
@@ -357,9 +371,7 @@ describe('SkillTree', () => {
   });
 
   it("destroy tüm cleanup ve tooltip'leri temizler", () => {
-    const nodes: SkillNodeDefinition[] = [
-      { id: 'a', label: 'A', x: 0, y: 0, unlocked: true, description: 'X' },
-    ];
+    const nodes: SkillNodeDefinition[] = [{ id: 'a', label: 'A', x: 0, y: 0, description: 'X' }];
     const tree = new SkillTree({ nodes, showTooltips: true });
     expect(() => tree.destroy()).not.toThrow();
     expect(tree.element.isConnected).toBe(false);

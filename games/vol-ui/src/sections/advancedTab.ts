@@ -10,6 +10,7 @@ import {
   RadioGroup,
   RichTooltip,
   SkillTree,
+  resolveSkillStates,
   Text,
   Tree,
   Wizard,
@@ -649,7 +650,14 @@ function buildCommandPaletteDemo(
   return wrap;
 }
 
-/** SkillTree demosu: üç dallı beceri ağacı, tooltip'li, zoom/pan destekli. onUnlock yetersiz puanla false dönebilir. */
+/**
+ * SkillTree demosu: üç dallı beceri ağacı, tooltip'li, zoom/pan destekli.
+ *
+ * Kilit açma KURALI burada, bileşende değil: `onNodeClick` yalnızca niyeti
+ * bildirir, puan kontrolü ve durum güncellemesi çağıranın işidir. Klasik
+ * "tüm önkoşullar açık olmalı" kuralı için CORE'un opsiyonel
+ * `resolveSkillStates` tarifi kullanılır.
+ */
 function buildSkillTreeDemo(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
@@ -669,11 +677,13 @@ function buildSkillTreeDemo(disposables: Destroyable[]): HTMLElement {
     sup2: 3,
   };
 
+  const unlockedIds = new Set<string>(['root']);
+
   const skillTree = new SkillTree({
     showTooltips: true,
     zoomable: true,
     nodes: [
-      { id: 'root', label: i18next.t('volui:advanced.basicTraining'), x: 2, y: 0, unlocked: true },
+      { id: 'root', label: i18next.t('volui:advanced.basicTraining'), x: 2, y: 0 },
       {
         id: 'atk1',
         label: i18next.t('volui:advanced.swordMastery'),
@@ -735,15 +745,25 @@ function buildSkillTreeDemo(disposables: Destroyable[]): HTMLElement {
         cost: [{ label: i18next.t('volui:advanced.skillPointCost'), amount: costs.sup2 }],
       },
     ],
-    onUnlock: (id) => {
+    // Bileşen hiçbir şey açmaz, yalnızca NİYET bildirir. Maliyet kontrolü,
+    // puan düşme ve durum güncellemesi tamamen burada — CORE bir oyunun
+    // beceri ağacının nasıl açıldığına karar vermez.
+    onNodeClick: (id, state) => {
+      if (state !== 'available') return;
       const cost = costs[id] ?? 1;
-      if (skillPoints < cost) return false;
+      if (skillPoints < cost) return;
+
       skillPoints -= cost;
+      unlockedIds.add(id);
       pointsText.setContent(i18next.t('volui:advanced.skillPoints', { n: skillPoints }));
-      return true;
+      skillTree.setStates(resolveSkillStates(skillTree.getNodes(), unlockedIds));
     },
   });
   disposables.push(skillTree);
+
+  // `resolveSkillStates` CORE'un OPSİYONEL tarifi: klasik "tüm önkoşullar
+  // açık olmalı" kuralı. Farklı bir kural isteyen oyun kendi eşlemesini yazar.
+  skillTree.setStates(resolveSkillStates(skillTree.getNodes(), unlockedIds));
   skillTree.element.style.height = '360px';
 
   const resetButton = new Button(i18next.t('volui:advanced.resetView'), {

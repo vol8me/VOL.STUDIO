@@ -156,12 +156,11 @@ function simulate(frames: number, stepMs = 16): SimulationResult {
     waveManager.update(stepMs);
 
     grid.clear();
-    grid.insertAll(enemies.getEnemies());
+    grid.rebuild(enemies.getEnemies());
     enemies.update(stepMs, player, border, elapsedMs, grid, difficulty);
     pickups.update(stepMs, player);
     grid.clear();
-    grid.insertAll(enemies.getEnemies());
-    grid.trim();
+    grid.rebuild(enemies.getEnemies());
 
     // Oyuncuya yaklaşan düşmanları öldür — ölüm/ödül yolunu sür.
     for (const enemy of enemies.getEnemies()) {
@@ -252,7 +251,7 @@ describe('koşu simülasyonu — entegrasyon sağlamlığı', () => {
     const difficulty = getDifficultyState(600_000);
     for (let frame = 0; frame < 2000; frame++) {
       grid.clear();
-      grid.insertAll(enemies.getEnemies());
+      grid.rebuild(enemies.getEnemies());
       enemies.update(16, player, border, frame * 16, grid, difficulty);
     }
 

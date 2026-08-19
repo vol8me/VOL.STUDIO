@@ -4,7 +4,8 @@ import { FloatingTextManager } from '../../src/ui/feedback/FloatingText';
 import { ResourceBar } from '../../src/ui/feedback/ResourceBar';
 import { ResourceCounter } from '../../src/ui/feedback/ResourceCounter';
 import { WaveCounter } from '../../src/ui/feedback/WaveCounter';
-import { XPBar } from '../../src/ui/feedback/XPBar';
+import { RoundLoop } from '../../src/time/RoundLoop';
+import { XPBar, applyXpGain } from '../../src/ui/feedback/XPBar';
 
 // Projedeki diğer feedback testleriyle (bkz. feedback.test.ts) aynı desen:
 // her testte fake timers açık başlar — Counter/XPBar'ın global clearTimeout
@@ -180,34 +181,33 @@ describe('WaveCounter', () => {
     expect(countdownEl.hidden).toBe(true);
   });
 
-  it("startAutoLoop her mola bitiminde dalgayı otomatik artırır, totalWaves'e ulaşınca durur", () => {
-    vi.useFakeTimers();
-    const onWaveStart = vi.fn();
+  it('tur ilerletme artık RoundLoop ile yapılır — sayaç yalnızca çizer', () => {
+    // Regresyon: `startAutoLoop()` bir dönem BU BİLEŞENİN İÇİNDEYDİ. Tur
+    // orkestrasyonu bir HUD bileşeninin işi değil; oyunun kendi tur yöneticisi
+    // varsa iki defter kaçınılmaz olarak kayardı. Bu test ayrımın uçtan uca
+    // çalıştığını gösterir: kural RoundLoop'ta, gösterim WaveCounter'da.
+    const onRoundStart = vi.fn();
     const counter = track(new WaveCounter({ totalWaves: 2 }));
+    const loop = new RoundLoop({
+      breakMs: 1000,
+      totalRounds: 2,
+      onRoundStart: (round) => {
+        onRoundStart(round);
+        counter.setWave(round);
+      },
+    });
 
-    counter.startAutoLoop({ countdownSeconds: 1, onWaveStart });
-    vi.advanceTimersByTime(1000); // dalga 2 başlar
+    loop.start();
+    expect(counter.getWave()).toBe(1);
+
+    loop.update(1000);
     expect(counter.getWave()).toBe(2);
-    expect(onWaveStart).toHaveBeenCalledWith(2);
+    expect(onRoundStart).toHaveBeenLastCalledWith(2);
 
-    onWaveStart.mockClear();
-    vi.advanceTimersByTime(1000); // totalWaves=2'ye ulaşıldı, döngü durmalı
-    expect(onWaveStart).not.toHaveBeenCalled();
+    onRoundStart.mockClear();
+    loop.update(1000);
+    expect(onRoundStart).not.toHaveBeenCalled();
     expect(counter.getWave()).toBe(2);
-  });
-
-  it('startCountdown ile startAutoLoop birbirini iptal eder (aynı anda yalnızca biri aktif)', () => {
-    vi.useFakeTimers();
-    const onCountdownEnd = vi.fn();
-    const onWaveStart = vi.fn();
-    const counter = track(new WaveCounter({ onCountdownEnd }));
-
-    counter.startAutoLoop({ countdownSeconds: 5, onWaveStart });
-    counter.startCountdown(2); // otomatik döngüyü iptal etmeli
-
-    vi.advanceTimersByTime(2000);
-    expect(onCountdownEnd).toHaveBeenCalledTimes(1);
-    expect(onWaveStart).not.toHaveBeenCalled();
   });
 
   it('stopCountdown geri sayımı durdurur ve metni gizler', () => {
@@ -238,43 +238,35 @@ describe('WaveCounter', () => {
 describe('XPBar', () => {
   const xpForLevel = (level: number) => level * 100;
 
-  it('addXP eşiği aşmadığı sürece yalnızca bar değerini günceller', () => {
-    const onLevelUp = vi.fn();
-    const xpBar = track(new XPBar({ level: 1, xp: 0, xpForLevel, onLevelUp, animateMs: 0 }));
+  it('setState barı dışarıdaki duruma eşitler', () => {
+    const xpBar = track(new XPBar({ level: 1, xp: 0, xpForLevel, animateMs: 0 }));
 
-    xpBar.addXP(50);
-    expect(xpBar.getXP()).toBe(50);
+    xpBar.setState(1, 50);
     expect(xpBar.getLevel()).toBe(1);
-    expect(onLevelUp).not.toHaveBeenCalled();
+    expect(xpBar.getXP()).toBe(50);
   });
 
-  it('addXP eşiği aşarsa seviye atlar, kalan XP bir sonraki seviyeye taşınır', () => {
-    const onLevelUp = vi.fn();
-    const xpBar = track(new XPBar({ level: 1, xp: 90, xpForLevel, onLevelUp, animateMs: 0 }));
+  it('ilerleme kuralı artık applyXpGain tarifinde — bar yalnızca çizer', () => {
+    // Regresyon: `addXP()` bir dönem BU BİLEŞENİN İÇİNDEYDİ ve kendi
+    // level/xp defterini tutuyordu. Bu bir görünüm değil OYUN KURALIDIR
+    // (taşan XP devreder mi, yanar mı?) ve VOL.HELL zaten kullanmayı
+    // reddediyordu. Kural dışarı alındı; bu test ayrımın uçtan uca
+    // çalıştığını gösterir.
+    const xpBar = track(new XPBar({ level: 1, xp: 90, xpForLevel, animateMs: 0 }));
 
-    xpBar.addXP(30); // 90+30=120, eşik(1)=100 -> seviye 2'ye geç, kalan 20
+    const next = applyXpGain(1, 90, 30, xpForLevel); // eşik(1)=100 -> lv2, kalan 20
+    xpBar.setState(next.level, next.xp);
+
+    expect(next.levelsGained).toBe(1);
     expect(xpBar.getLevel()).toBe(2);
     expect(xpBar.getXP()).toBe(20);
-    expect(onLevelUp).toHaveBeenCalledWith(2);
-  });
-
-  it('büyük bir XP kazanımı ZİNCİRLEME olarak birden fazla seviye atlatabilir', () => {
-    const onLevelUp = vi.fn();
-    // level 1 eşiği 100, level 2 eşiği 200 — 350 XP hem 1->2 hem 2->3 atlatmalı.
-    const xpBar = track(new XPBar({ level: 1, xp: 0, xpForLevel, onLevelUp, animateMs: 0 }));
-
-    xpBar.addXP(350); // 100(lv1) + 200(lv2) = 300 tüketilir, kalan 50, seviye 3
-    expect(xpBar.getLevel()).toBe(3);
-    expect(xpBar.getXP()).toBe(50);
-    expect(onLevelUp).toHaveBeenCalledTimes(1);
-    expect(onLevelUp).toHaveBeenCalledWith(3);
   });
 
   it("seviye atlayınca --level-up class'ı kısa süreliğine eklenir", () => {
     vi.useFakeTimers();
     const xpBar = track(new XPBar({ level: 1, xp: 90, xpForLevel, animateMs: 0 }));
 
-    xpBar.addXP(20);
+    xpBar.setState(2, 10);
     expect(xpBar.element.classList.contains('vol-xp-bar--level-up')).toBe(true);
 
     vi.advanceTimersByTime(600);
@@ -284,7 +276,7 @@ describe('XPBar', () => {
   it('destroy bekleyen level-up zamanlayıcısını temizler', () => {
     vi.useFakeTimers();
     const xpBar = new XPBar({ level: 1, xp: 90, xpForLevel, animateMs: 0 });
-    xpBar.addXP(20);
+    xpBar.setState(2, 10);
 
     const clearSpy = vi.spyOn(window, 'clearTimeout');
     xpBar.destroy();
@@ -295,11 +287,11 @@ describe('XPBar', () => {
     const xpBar = track(new XPBar({ level: 1, xp: 0, xpForLevel, animateMs: 0 }));
     expect(xpBar.element.classList.contains('vol-bar--low')).toBe(false);
 
-    xpBar.addXP(1);
+    xpBar.setState(1, 1);
     expect(xpBar.element.classList.contains('vol-bar--low')).toBe(false);
 
     // Seviye atlayınca bar yeniden boşalır; yine kırmızıya dönmemeli.
-    xpBar.addXP(200);
+    xpBar.setState(2, 0);
     expect(xpBar.element.classList.contains('vol-bar--low')).toBe(false);
   });
 
@@ -312,16 +304,16 @@ describe('XPBar', () => {
     expect(xpBar.getXP()).toBe(42);
   });
 
-  it('setState seviye artışında vurgu oynatır ama onLevelUp tetiklemez', () => {
+  it('setState seviye artışında yalnızca GÖRSEL vurgu oynatır', () => {
     vi.useFakeTimers();
-    const onLevelUp = vi.fn();
-    const xpBar = track(new XPBar({ level: 1, xp: 0, xpForLevel, onLevelUp, animateMs: 0 }));
+    const xpBar = track(new XPBar({ level: 1, xp: 0, xpForLevel, animateMs: 0 }));
 
     xpBar.setState(2, 10);
 
+    // Seviye olayının sahibi dışarısı: bar bir `onLevelUp` geri çağrısı
+    // TAŞIMAZ, çünkü olayı zaten çağıran üretti ve ikinci kez haber vermek
+    // aynı olayın iki kaynaktan akmasına yol açardı.
     expect(xpBar.element.classList.contains('vol-xp-bar--level-up')).toBe(true);
-    // Seviye olayının sahibi dışarısı; bar ikinci kez haber vermez.
-    expect(onLevelUp).not.toHaveBeenCalled();
   });
 
   it('setState aynı seviyede vurgu oynatmaz', () => {

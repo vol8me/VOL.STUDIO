@@ -12,5 +12,12 @@ export {
   type SelectionInfoAction,
   type SelectionInfoData,
 } from './SelectionInfoPanel';
-export { SkillTree, type SkillNodeDefinition, type SkillTreeOptions } from './SkillTree';
+export {
+  SkillTree,
+  // Opsiyonel KURAL tarifi — bileşen onu varsaymaz, çağıran seçer.
+  resolveSkillStates,
+  type SkillNodeDefinition,
+  type SkillNodeState,
+  type SkillTreeOptions,
+} from './SkillTree';
 export { SlotGrid, type SlotItem, type SlotGridOptions } from './SlotGrid';

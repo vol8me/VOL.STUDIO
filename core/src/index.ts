@@ -10,6 +10,34 @@ export { createRandom, seedFromString, DEFAULT_SEED, type Random } from './rando
 
 export { DisposableScope, type Disposable } from './lifecycle/DisposableScope';
 
+/*
+ * KATMAN 1 — headless primitifler.
+ *
+ * Hiçbiri oyun kelimesi bilmez ve hiçbiri sunum katmanına bağlı değildir.
+ * Yeni bir oyun bunları doğrudan alır; vol-hell'in sıfırdan yazmak zorunda
+ * kaldığı zamanlama/durum/havuz/uzamsal indeks işleri buradan gelir.
+ */
+export { Scheduler, Cooldown, RoundLoop } from './time';
+export type { CancelScheduled, RoundLoopOptions } from './time';
+export { StateMachine } from './state/StateMachine';
+export type { StateDefinition, StateMachineOptions } from './state/StateMachine';
+export { ResourcePool, type ResourceCost } from './economy/ResourcePool';
+export { ObjectPool, type ObjectPoolOptions } from './pool/ObjectPool';
+export { SpatialIndex, type SpatialEntity } from './spatial/SpatialIndex';
+export {
+  distance,
+  distanceSquared,
+  circlesOverlap,
+  pointInCircle,
+  pointInRect,
+  rectsOverlap,
+  circleRectOverlap,
+  raycastCircles,
+  type Circle,
+  type Rect,
+  type RayHit,
+} from './math/geometry';
+
 export {
   INPUT,
   UI_DEPTH,

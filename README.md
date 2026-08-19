@@ -74,6 +74,18 @@ tek bir hata mesajı verir.
 Tekil kapılar (`typecheck`, `lint`, `coverage`, `rust`, `test-pkg <paket>` …)
 için: `pnpm exec just --list`.
 
+## CORE ile yeni oyun
+
+CORE üç katmandır: **mekanizma** (oyun bilmeyen primitifler), **sunum**
+(durumu çizen, kural taşımayan bileşenler) ve **tarif** (yaygın kuralı hazır
+veren opt-in fonksiyonlar). Yeni bir oyuna başlarken zamanlama, faz yönetimi,
+kaynak cüzdanı, nesne havuzu ve uzamsal sorgu sıfırdan yazılmaz.
+
+`Scheduler` · `Cooldown` · `RoundLoop` · `StateMachine` · `ResourcePool` ·
+`ObjectPool` · `SpatialIndex` · geometri
+
+Kullanım ve tam bir tower-defense iskeleti: [`core/docs/primitives.md`](core/docs/primitives.md)
+
 ## Lisans
 
 [Apache License 2.0](LICENSE)

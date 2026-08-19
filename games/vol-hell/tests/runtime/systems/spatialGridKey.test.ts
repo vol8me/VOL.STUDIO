@@ -23,7 +23,7 @@ describe('SpatialGrid anahtar çakışması', () => {
     const a = makeEnemy(0, 0);
     const b = makeEnemy(CELL, -1_000_000 * CELL);
 
-    grid.insertAll([a, b] as unknown as EnemyLike[]);
+    grid.rebuild([a, b] as unknown as EnemyLike[]);
 
     // İki farklı hücre olmalı; tek kovaya düşerlerse çakışma var demektir.
     expect(grid.getCellCount()).toBe(2);
@@ -32,7 +32,7 @@ describe('SpatialGrid anahtar çakışması', () => {
   it('negatif koordinatlar pozitiflerle çakışmaz', () => {
     const grid = new SpatialGrid(CELL);
 
-    grid.insertAll([
+    grid.rebuild([
       makeEnemy(-CELL, -CELL),
       makeEnemy(CELL, CELL),
       makeEnemy(-CELL, CELL),
@@ -45,7 +45,7 @@ describe('SpatialGrid anahtar çakışması', () => {
   it('aynı hücredeki düşmanlar tek kovada toplanır', () => {
     const grid = new SpatialGrid(CELL);
 
-    grid.insertAll([makeEnemy(1, 1), makeEnemy(2, 2), makeEnemy(3, 3)] as unknown as EnemyLike[]);
+    grid.rebuild([makeEnemy(1, 1), makeEnemy(2, 2), makeEnemy(3, 3)] as unknown as EnemyLike[]);
 
     expect(grid.getCellCount()).toBe(1);
     expect(grid.queryNearby(1, 1)).toHaveLength(3);
@@ -54,7 +54,7 @@ describe('SpatialGrid anahtar çakışması', () => {
   it('komşu hücre sorgusu 3x3 alanı kapsar', () => {
     const grid = new SpatialGrid(CELL);
 
-    grid.insertAll([
+    grid.rebuild([
       makeEnemy(0, 0), // merkez
       makeEnemy(CELL, 0), // komşu
       makeEnemy(CELL * 3, 0), // uzak — kapsam dışı

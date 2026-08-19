@@ -54,7 +54,7 @@ describe('SpatialGrid', () => {
   it('insertAll ölü düşmanları atlar', () => {
     const grid = new SpatialGrid(56);
     const enemies = [makeEnemy(100, 100, true), makeEnemy(110, 110, false)];
-    grid.insertAll(enemies);
+    grid.rebuild(enemies);
 
     const nearby = grid.queryNearby(105, 105);
     expect(nearby).toHaveLength(1);
@@ -81,7 +81,7 @@ describe('SpatialGrid', () => {
       const y = (i * 97) % 2000;
       enemies.push(makeEnemy(x, y));
     }
-    grid.insertAll(enemies);
+    grid.rebuild(enemies);
 
     // (100, 100) civarında sorgula — en fazla 9 hücredekiler döner
     const nearby = grid.queryNearby(100, 100);
@@ -106,7 +106,6 @@ describe('SpatialGrid', () => {
 
     grid.clear();
     grid.insert(makeEnemy(100, 100));
-    grid.trim();
 
     expect(grid.getCellCount()).toBe(1);
     const nearby = grid.queryNearby(105, 105);
@@ -122,11 +121,11 @@ describe('SpatialGrid', () => {
     }
 
     const gridLarge = new SpatialGrid(112);
-    gridLarge.insertAll(enemies);
+    gridLarge.rebuild(enemies);
     const resultLarge = gridLarge.queryNearby(500, 500);
 
     const gridSmall = new SpatialGrid(28);
-    gridSmall.insertAll(enemies);
+    gridSmall.rebuild(enemies);
     const resultSmall = gridSmall.queryNearby(500, 500);
 
     // Daha küçük hücre = daha dar sorgu = daha az sonuç
@@ -246,9 +245,7 @@ describe('SpatialGrid artımlı güncelleme', () => {
     const enemies = [movable(10, 10), movable(500, 500), movable(1200, 40)];
 
     const manual = new SpatialGrid(56);
-    manual.clear();
-    manual.insertAll(enemies);
-    manual.trim();
+    manual.rebuild(enemies);
 
     const viaRebuild = new SpatialGrid(56);
     viaRebuild.rebuild(enemies);
@@ -294,7 +291,6 @@ describe('SpatialGrid artımlı güncelleme', () => {
         enemy.y += (nextRandom() - 0.5) * 120;
         incremental.update(enemy);
       }
-      incremental.trim();
       rebuilt.rebuild(enemies);
 
       expect(incremental.getIndexedCount(), `frame ${frame}`).toBe(enemies.length);
