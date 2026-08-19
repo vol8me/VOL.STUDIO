@@ -128,6 +128,6 @@ export const TECH = {
   FONT_READY_FALLBACK: 5000,
   /** ViewportManager DPR fallback değeri. */
   DPR_FALLBACK: 1,
-  /** Delta-time ms → saniye çevrimi (PlayerController). */
+  /** Delta-time ms → saniye çevrimi (MovableController). */
   MS_PER_SECOND: 1000,
 } as const;

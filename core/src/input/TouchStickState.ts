@@ -13,6 +13,8 @@ export interface Stick {
 
 /** Sağ stick'in "itildi" durumunu hangi eyleme bağlayacağını belirten ayarlar. */
 export interface TouchStickOptions<TAction extends string> {
+  /** Diagnostics'te görünecek sağlayıcı kimliği. Varsayılan `'touch'`. */
+  id?: string;
   /**
    * Tanınan tüm eylemler — üretilen `actions` kaydı bu kümenin tamamını
    * doldurur (basılı olmayanlar `false`).

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { loadQualityConfig } from '../../scripts/quality/config.mjs';
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
 
@@ -9,9 +9,9 @@ import { resolve } from 'node:path';
  * `import ... with { type: 'json' }` KULLANILMIYOR: Prettier 3.0 import
  * attribute sözdizimini parse edemiyor ve `format-check` kapısı düşüyor.
  */
-const quality = JSON.parse(
-  readFileSync(new URL('../../quality.json', import.meta.url), 'utf-8'),
-) as { packages: Record<string, Record<string, number>> };
+const quality = loadQualityConfig(new URL('../../quality.json', import.meta.url)) as {
+  packages: Record<string, Record<string, number>>;
+};
 
 export default defineConfig({
   test: {

@@ -10,7 +10,7 @@ import {
 } from './PCInputState';
 import type { InputProvider } from './InputProvider';
 import type { InputState } from './InputState';
-import type { InputSnapshot } from './InputSnapshot';
+import { singleProviderSnapshot, type InputSnapshot } from './InputSnapshot';
 
 interface WasdKeys {
   up: Phaser.Input.Keyboard.Key;
@@ -61,6 +61,12 @@ export interface PCControllerOptions<TAction extends string> {
   actionBindings: Readonly<Record<TAction, PCActionBinding>>;
   /** Hareket tuşları. Verilmezse `DEFAULT_MOVE_KEYS` (WASD). */
   moveKeys?: MoveKeyBindings;
+  /**
+   * Diagnostics'te görünecek sağlayıcı kimliği. Varsayılan `'pc'`; aynı
+   * oyunda ikinci bir klavye sağlayıcısı (ör. bölünmüş ekran) kurulacaksa
+   * ayırt etmek için değiştirilir.
+   */
+  id?: string;
 }
 
 export class PCController<TAction extends string> implements InputProvider<TAction> {
@@ -68,6 +74,7 @@ export class PCController<TAction extends string> implements InputProvider<TActi
   /** Eylem tuşları — yalnızca `source: 'key'` bağlantıları için kurulur. */
   private readonly actionKeys = new Map<number, Phaser.Input.Keyboard.Key>();
   private readonly actionBindings: Readonly<Record<TAction, PCActionBinding>>;
+  readonly id: string;
   private readonly boundBlur: () => void;
 
   constructor(
@@ -79,6 +86,7 @@ export class PCController<TAction extends string> implements InputProvider<TActi
       throw new Error('Keyboard plugin etkin değil');
     }
 
+    this.id = options.id ?? 'pc';
     const moveKeys = options.moveKeys ?? DEFAULT_MOVE_KEYS;
     this.keys = {
       up: keyboard.addKey(moveKeys.up),
@@ -149,15 +157,11 @@ export class PCController<TAction extends string> implements InputProvider<TActi
   }
 
   getDebugSnapshot(): InputSnapshot {
-    const pointer = this.pointerState;
-    return {
-      activeProvider: 'pc',
-      pc: {
-        wasd: { ...this.wasdState },
-        pointer: { ...pointer },
-        actions: this.actionState,
-      },
-    };
+    return singleProviderSnapshot(this.id, {
+      move: { ...this.wasdState },
+      pointer: { ...this.pointerState },
+      actions: this.actionState,
+    });
   }
 
   getState(playerPosition: Vector2): InputState<TAction> {

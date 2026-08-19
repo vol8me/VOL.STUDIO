@@ -197,3 +197,33 @@ describe('buildRigDefinition doğrulamayı çağırır', () => {
     expect(() => buildRigDefinition(broken, {})).toThrow(/parts bir dizi olmalı/);
   });
 });
+
+describe('eklem (parentPartId) doğrulaması', () => {
+  it('parentPartId verilmemişse geçerlidir (eklem opsiyoneldir)', () => {
+    const metadata = metadataFixture();
+    delete (metadata.parts[0] as unknown as Record<string, unknown>).parentPartId;
+
+    expect(() => validateRigMetadata(metadata)).not.toThrow();
+  });
+
+  it('parentPartId null olabilir', () => {
+    const metadata = metadataFixture();
+    (metadata.parts[0] as unknown as Record<string, unknown>).parentPartId = null;
+
+    expect(() => validateRigMetadata(metadata)).not.toThrow();
+  });
+
+  it('BOŞ metin reddedilir — sessizce "ebeveyni yok" gibi davranırdı', () => {
+    const metadata = metadataFixture();
+    (metadata.parts[0] as unknown as Record<string, unknown>).parentPartId = '';
+
+    expect(() => validateRigMetadata(metadata)).toThrow(/parentPartId/);
+  });
+
+  it('metin olmayan parentPartId reddedilir', () => {
+    const metadata = metadataFixture();
+    (metadata.parts[0] as unknown as Record<string, unknown>).parentPartId = 7;
+
+    expect(() => validateRigMetadata(metadata)).toThrow(/parentPartId/);
+  });
+});

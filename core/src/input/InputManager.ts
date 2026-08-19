@@ -4,7 +4,7 @@ import { PCController, type MoveKeyBindings } from './PCController';
 import type { PCActionBinding } from './PCInputState';
 import type { InputProvider } from './InputProvider';
 import { createIdleActions, type InputState } from './InputState';
-import type { InputSnapshot } from './InputSnapshot';
+import { idleSnapshot, type InputSnapshot } from './InputSnapshot';
 import { TouchController } from './TouchController';
 
 export interface InputManagerOptions<TAction extends string> {
@@ -95,7 +95,7 @@ export class InputManager<TAction extends string> {
     if (active?.getDebugSnapshot) {
       return active.getDebugSnapshot();
     }
-    return { activeProvider: 'none' };
+    return idleSnapshot();
   }
 
   destroy(): void {

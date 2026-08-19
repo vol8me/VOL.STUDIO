@@ -27,6 +27,15 @@ export interface RigPartMetadata {
   positionPx: Point | null;
   /** Parçanın kendi sol-üst köşesi etrafında, derece cinsinden CCW. */
   rotationDeg: number;
+  /**
+   * Bu parçanın bağlı olduğu ÜST parçanın `partId`si — eklemlenme (articulation).
+   * `null`/verilmemiş ise parça doğrudan rig köküne bağlanır.
+   *
+   * Render için tek başına yeterlidir: üst parça döndüğünde alt parça da döner
+   * (kol → önkol → el). Bir FİZİK rig'i DEĞİLDİR — eklem limiti, kütle, kısıt
+   * taşımaz; onlar ayrı bir aşamanın işidir.
+   */
+  parentPartId?: string | null;
   file: string;
 }
 
@@ -48,6 +57,8 @@ export interface RigMetadata {
 /** Metadata'sı çözümlenmiş texture URL'siyle eşleştirilmiş, yüklenmeye hazır parça. */
 export interface RigPartAsset {
   partId: string;
+  /** Üst parçanın `partId`si; kök seviyesindeki parçalarda `null`. */
+  parentPartId: string | null;
   textureKey: string;
   textureUrl: string;
   logicalSizePx: Size;
@@ -64,6 +75,13 @@ export interface RigDefinition {
    * boyutu `logicalSizePx * exportScale`'den büyüktür.
    */
   exportScale: number;
-  /** Alttan üste çizim sırası - kaynak dokümanın child sırasıyla aynı. */
+  /**
+   * Alttan üste çizim sırası - kaynak dokümanın child sırasıyla aynı.
+   *
+   * Sıra AYNI ZAMANDA topolojik olarak geçerlidir: bir parçanın `parentPartId`si
+   * listede ondan ÖNCE gelir (`buildRigDefinition` bunu doğrular). Böylece
+   * `assembleRig` tek geçişte ağacı kurabilir, ikinci bir sıralama adımı
+   * gerekmez.
+   */
   parts: RigPartAsset[];
 }

@@ -50,8 +50,25 @@ export function buildRigDefinition(
       );
     }
 
+    const parentPartId = part.parentPartId ?? null;
+    if (parentPartId !== null) {
+      if (parentPartId === part.partId) {
+        throw new Error(`${entityId}: "${part.partId}" parçası kendi ebeveyni olamaz`);
+      }
+      // Çizim sırası aynı zamanda ağacın kuruluş sırası: ebeveyn ÖNCE gelmeli.
+      // Gelmezse `assembleRig` henüz var olmayan bir container'a bağlanmaya
+      // çalışır — döngüsel bir referans da bu kontrole takılır.
+      if (!seen.has(parentPartId)) {
+        throw new Error(
+          `${entityId}: "${part.partId}" parçasının ebeveyni "${parentPartId}" ` +
+            `listede ondan SONRA geliyor ya da hiç yok. Ebeveyn önce gelmelidir.`,
+        );
+      }
+    }
+
     return {
       partId: part.partId,
+      parentPartId,
       textureKey: `${entityId}__${part.partId}`,
       textureUrl,
       logicalSizePx: part.logicalSizePx,

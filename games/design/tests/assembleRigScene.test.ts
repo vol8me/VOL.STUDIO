@@ -71,6 +71,7 @@ function rigFixture(): RigDefinition {
     parts: [
       {
         partId: 'top_cap',
+        parentPartId: null,
         textureKey: 'test_unit__top_cap',
         textureUrl: '/assets/top_cap.png',
         logicalSizePx: { width: 16, height: 6.4 },
@@ -79,6 +80,7 @@ function rigFixture(): RigDefinition {
       },
       {
         partId: 'leg_l',
+        parentPartId: null,
         textureKey: 'test_unit__leg_l',
         textureUrl: '/assets/leg_l.png',
         logicalSizePx: { width: 10, height: 20 },
@@ -170,5 +172,74 @@ describe('assembleRig', () => {
     assembleRig(harness.scene as never, rigFixture());
 
     expect(harness.images.map((img) => img.key)).toEqual(ALL_KEYS);
+  });
+});
+
+describe('eklemli rig montajı', () => {
+  function part(over: { partId: string; parentPartId?: string | null; x?: number; y?: number }) {
+    return {
+      partId: over.partId,
+      parentPartId: over.parentPartId ?? null,
+      textureKey: `robot__${over.partId}`,
+      textureUrl: `/assets/${over.partId}.png`,
+      logicalSizePx: { width: 10, height: 10 },
+      positionPx: { x: over.x ?? 100, y: over.y ?? 100 },
+      rotationDeg: 0,
+    };
+  }
+
+  function rigOf(parts: ReturnType<typeof part>[]): RigDefinition {
+    return {
+      entityId: 'robot',
+      rootSizePx: { width: 200, height: 200 },
+      exportScale: 1,
+      parts,
+    };
+  }
+
+  /** Sahte container'ın çocuk dizisi `children` adını taşır (Phaser'da `list`). */
+  const childrenOf = (c: unknown) => (c as { children: unknown[] }).children;
+
+  const keysOf = (parts: ReturnType<typeof part>[]) => parts.map((p) => p.textureKey);
+
+  it("alt parça KÖKE değil ÜST PARÇANIN container'ına eklenir", () => {
+    const parts = [
+      part({ partId: 'kol', x: 100, y: 100 }),
+      part({ partId: 'onkol', parentPartId: 'kol', x: 140, y: 100 }),
+    ];
+    const { scene } = fakeScene(keysOf(parts));
+
+    const { container, parts: built } = assembleRig(scene as never, rigOf(parts));
+
+    // Kök yalnızca ÜST parçayı taşır; alt parça onun içindedir.
+    expect((container as unknown as { children: unknown[] }).children).toHaveLength(1);
+    expect((container as unknown as { children: unknown[] }).children[0]).toBe(built.get('kol'));
+    expect(childrenOf(built.get('kol'))).toContain(built.get('onkol'));
+  });
+
+  it('üç seviyeli zincir sırayla kurulur (kol → önkol → el)', () => {
+    const parts = [
+      part({ partId: 'kol' }),
+      part({ partId: 'onkol', parentPartId: 'kol' }),
+      part({ partId: 'el', parentPartId: 'onkol' }),
+    ];
+    const { scene } = fakeScene(keysOf(parts));
+
+    const { parts: built } = assembleRig(scene as never, rigOf(parts));
+
+    expect(childrenOf(built.get('kol'))).toContain(built.get('onkol'));
+    expect(childrenOf(built.get('onkol'))).toContain(built.get('el'));
+  });
+
+  it('ebeveyn kurulmamışsa açık hata verir (savunma dalı)', () => {
+    // `buildRigDefinition` bunu zaten engelliyor; ama `assembleRig` elle
+    // kurulmuş bir RigDefinition da alabilir ve o durumda parça sessizce
+    // düşerdi.
+    const parts = [part({ partId: 'onkol', parentPartId: 'olmayan' })];
+    const { scene } = fakeScene(keysOf(parts));
+
+    expect(() => assembleRig(scene as never, rigOf(parts))).toThrow(
+      /ebeveyni "olmayan" kurulmamış/,
+    );
   });
 });

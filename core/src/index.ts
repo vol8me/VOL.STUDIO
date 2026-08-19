@@ -36,7 +36,13 @@ export {
 
 export type { BaseEntity } from './entities/BaseEntity';
 export { BaseSprite } from './entities/BaseSprite';
-export { PlayerController, type MovableGameObject } from './entities/PlayerController';
+export { MovableController, type MovableGameObject } from './entities/MovableController';
+/**
+ * @deprecated `MovableController` kullan. Sınıf hiçbir zaman oyuncuya özel
+ * bir davranış taşımadı; eski ad CORE'da olmayan bir rol ima ediyordu.
+ * Bu takma ad bir sonraki büyük sürümde kaldırılacak.
+ */
+export { MovableController as PlayerController } from './entities/MovableController';
 
 // Eylem SÖZLÜĞÜ bilinçli olarak burada yok: `InputState.fire`/`dash` alanları
 // kaldırıldı, yerine `actions: Record<TAction, boolean>` geldi. Hangi eylemlerin

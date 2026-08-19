@@ -5,6 +5,8 @@ import { InputManager } from '../../src/input/InputManager';
 import type { InputProvider } from '../../src/input/InputProvider';
 import type { InputState } from '../../src/input/InputState';
 import type { PCActionBinding } from '../../src/input/PCInputState';
+import { NO_ACTIVE_PROVIDER, singleProviderSnapshot } from '../../src/input/InputSnapshot';
+import { createIdleActions } from '../../src/input/InputState';
 
 /**
  * Testin KENDİ eylem sözlüğü — VOL.HELL'in kümesinden bilinçli olarak farklı.
@@ -19,8 +21,22 @@ const PC_BINDINGS: Readonly<Record<TestAction, PCActionBinding>> = {
   boost: { source: 'key', keyCode: 32 },
 };
 
-function makeProvider(isActive: boolean, state: InputState<TestAction>): InputProvider<TestAction> {
+/** Girdisiz bir InputState — sağlayıcı sahteleri için. */
+function idleState(): InputState<TestAction> {
   return {
+    move: Vector2.zero(),
+    aim: Vector2.zero(),
+    actions: createIdleActions(TEST_ACTIONS),
+  };
+}
+
+function makeProvider(
+  isActive: boolean,
+  state: InputState<TestAction>,
+  id = 'test',
+): InputProvider<TestAction> {
+  return {
+    id,
     get isActive() {
       return isActive;
     },
@@ -141,5 +157,56 @@ describe('InputManager provider seçim önceliği', () => {
     manager.destroy();
     expect(touch.destroy).toHaveBeenCalledTimes(1);
     expect(pc.destroy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Diagnostics snapshot sağlayıcı kümesi AÇIK', () => {
+  it("CORE'un tanımadığı bir modality (gamepad) raporlanabilir", () => {
+    // Regresyon: `activeProvider` bir dönem `'pc' | 'touch' | 'none'` kapalı
+    // union'ıydı ve ham durum `pc`/`touch` ADLI ALANLARDA taşınıyordu. Yani
+    // `InputProvider` açık bir arayüz olmasına rağmen — gamepad sağlayıcısı
+    // YAZILABİLİYOR ama diagnostics'e GİREMİYORDU. Bu test o asimetrinin
+    // döndüğünü yakalar: aşağıdaki sağlayıcı CORE'da hiçbir yerde geçmeyen
+    // bir kimlik kullanıyor ve derlenmek zorunda.
+    const gamepad: InputProvider<TestAction> = {
+      id: 'gamepad',
+      get isActive() {
+        return true;
+      },
+      getState: vi.fn(() => idleState()),
+      getDebugSnapshot: () =>
+        singleProviderSnapshot('gamepad', {
+          leftStick: { x: 0.5, y: -0.25 },
+          buttons: { engage: true, boost: false },
+        }),
+      update: vi.fn(),
+      destroy: vi.fn(),
+    };
+
+    const manager = new InputManager(fakeScene, {
+      actions: TEST_ACTIONS,
+      pcActionBindings: PC_BINDINGS,
+      providers: [gamepad],
+    });
+
+    const snapshot = manager.getDebugSnapshot();
+    expect(snapshot.activeProvider).toBe('gamepad');
+    expect(snapshot.providers?.gamepad).toEqual({
+      leftStick: { x: 0.5, y: -0.25 },
+      buttons: { engage: true, boost: false },
+    });
+  });
+
+  it('hiçbir sağlayıcı aktif değilken kimlik NO_ACTIVE_PROVIDER olur', () => {
+    const idle = makeProvider(false, idleState());
+    const manager = new InputManager(fakeScene, {
+      actions: TEST_ACTIONS,
+      pcActionBindings: PC_BINDINGS,
+      providers: [idle],
+    });
+
+    const snapshot = manager.getDebugSnapshot();
+    expect(snapshot.activeProvider).toBe(NO_ACTIVE_PROVIDER);
+    expect(snapshot.providers).toBeUndefined();
   });
 });

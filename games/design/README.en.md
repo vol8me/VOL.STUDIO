@@ -44,6 +44,13 @@ const { container, parts } = assembleRig(this, rig);
 `buildRigDefinition` takes a plain `Record<string, string>`, so the package
 itself does not depend on Vite; the consuming game performs the glob.
 
+A part carrying `parentPartId` is attached to its PARENT's container rather
+than the root: rotating the parent rotates the whole chain (arm → forearm →
+hand). Position and rotation in metadata are always authored in rig-root space;
+assembly converts them into local space, compensating for the parent's
+rotation. A rig without joints produces byte-identical output to before joint
+support existed. This is a RENDER joint; it carries no physics constraints.
+
 Its first step is to validate the metadata at runtime (`validateRigMetadata`,
 also exported): `schemaVersion`, required fields and part types are checked,
 and all problems are collected into a single message. The TypeScript interface

@@ -14,7 +14,7 @@ tarihte çalışma ağacında bizzat koşuldu.
 | `pnpm signoff`           | ✓     | high + cargo check/fmt/clippy — zincirin tamamı, exit 0               |
 | `pnpm high`              | ✓     | quick + lint:css + coverage + tüm build'ler                           |
 | `pnpm -r typecheck`      | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                    |
-| `pnpm -r test:coverage`  | ✓     | 1428 test (core 891, vol-hell 446, vol-ui 27, design 38, tauri-v2 26) |
+| `pnpm -r test:coverage`  | ✓     | 1471 test (core 917, vol-hell 447, vol-ui 27, design 54, tauri-v2 26) |
 | `pnpm run contract`      | ✓     | 5 paket, kapı kapsamı tam                                             |
 | `pnpm lint`              | ✓     | 0 hata, 0 uyarı                                                       |
 | `pnpm format:check`      | ✓     |                                                                       |
@@ -23,8 +23,8 @@ tarihte çalışma ağacında bizzat koşuldu.
 | `cargo check/fmt/clippy` | ✓     | `tauri-v2/src-tauri`                                                  |
 | `pnpm run doctor:env`    | ✓     | Node 22.23.1, pnpm 11.18.0, rustc 1.97.1, just 1.58.0, FFmpeg 8.1.2   |
 
-Kapsam: core %86.36, vol-ui %83.57 (function %53.65), vol-hell %70.17,
-tauri-v2 %89.07, design %98.62. Eşikler ölçülen kapsamın ~2 puan altına kilitli
+Kapsam: core %86.42, vol-ui %83.57 (function %53.65), vol-hell %70.17,
+tauri-v2 %89.07, design %98.86. Eşikler ölçülen kapsamın ~2 puan altına kilitli
 (ratchet), yani bu oranlar artık taban — düşerlerse kapı kırılır. Eşiklerin
 tamamı kök `quality.json`da; `vitest.config.ts` dosyaları ve
 `workspace-contract.mjs` aynı dosyayı okur.
@@ -42,6 +42,15 @@ silinir; kronolojiye not düşülmez.
   bu yüzden burada durduruldu. `core` tarafında `Kanban.ts` (831) ve
   `SlotGrid.ts` (687) hâlâ sınır üstünde ve bölünmedi — ikisi de bu turda
   DisposableScope'a geçerken okundu, bölme ayrı bir tur.
+- `SpatialGrid`in artımlı yolunun (`insert`/`remove`/`update`) ÜRETİMDE
+  çağıranı yok; yalnızca testler koşuyor. Bilinçli (bkz. 2026-08-19 turu) ve
+  bir bekçiyle işaretli, ama gerçek oynanışta hiç yürümeyen kod olduğu
+  unutulmamalı.
+- CORE public API yüzeyi 124 export ve dokuz `export *` barrel'ıyla büyüyor.
+  Yüzey sayısı kilitli (kapı kırılır) ama barrel'lar hâlâ otomatik; daraltma
+  ayrı bir tur.
+- `PlayerController` takma adı `@deprecated` olarak duruyor; kaldırma bir
+  sonraki büyük sürümde.
 - CORE capability yol haritasında ertelenenler: `Scheduler`, `StateMachine`,
   geometry/collision primitifleri, `ObjectPool<T>`, resource lifecycle. İkinci
   somut tüketici çıkmadan yazılmayacak.
@@ -124,6 +133,7 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-18 | Diagnostics — transport + singleton kaldırma                | CORE global dayatmıyor     |
 | 2026-08-18 | Kart işlem sınırı, metadata şeması, quality.json            | tek kalite kaynağı         |
 | 2026-08-18 | Lifecycle idiomu, artımlı spatial indeks, kapı raporu       | framework tutarlılığı      |
+| 2026-08-19 | Dış denetimin kalan 8 bulgusu                               | 3'ü denetimde değişti      |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 
@@ -142,6 +152,8 @@ yanlıştı. Hepsi gerçeğe göre düzeltildi.
 **Çalışmayan komutlar.** `pnpm doctor` pnpm'in built-in komutu olduğu için
 `"doctor": "just doctor"` script'ini gölgeliyordu — "`just doctor` ✓" raporu
 aslında başka bir komutun çıktısıydı; gölgelenmeyen `doctor:env` eklendi.
+Gölgelenen `"doctor"` script'i sonradan tamamen silindi: ikisi aynı
+tarifi çağırıyor görünse de `pnpm doctor` ona HİÇ ulaşmıyordu.
 `just` global PATH'te olmadığı hâlde README birincil komut olarak çıplak
 `just fast` gösteriyordu. `just clean` no-op'tu (kök seviyesinde artefakt yok);
 şimdi 7 dizini de siliyor, pahalı Rust `target` ayrı `clean-all`'a alındı.
@@ -334,6 +346,92 @@ Aşama haritasının `justfile` ile ayrışmasını da doğrular: `high`ten `bui
 | `pnpm signoff` | ✓     | 8 aşama, exit 0 (~99 sn)                                 |
 | test           | ✓     | tüm paketler yeşil (nihai toplam için bkz. Son durum)    |
 | Regresyon      | ✓     | spatial eşdeğerlik + lifecycle bekçisi enjeksiyonla test |
+
+## 2026-08-19 — Dış denetimin kalan bulguları
+
+Düşük yetenekli bir agent'ın çıkardığı sekiz maddelik liste kod üzerinden
+denetlendi ve tamamı kapatıldı. Denetimin kendisi listeyi değiştirdi: bir madde
+YANLIŞtı, ikisinin önceliği hatalıydı, biri de düzeltilmeye kalkılınca ters
+çıktı.
+
+### Denetim sonuçları
+
+- **"SpatialGrid artımlı destek yok" YANLIŞ.** Bir önceki turda eklenmişti
+  (`insert`/`remove`/`update`/`has`/`rebuild`). Agent eskimiş bir durum okumuş.
+  Ama yerine GERÇEK bir bulgu çıktı: artımlı yolun **üretimde çağıranı yok**,
+  yalnızca testler çağırıyor. Bu bilinçli (oyun döngüsüne bağlamak bugünkü
+  ölçekte kanıtsız karmaşıklık olurdu) ama saklanmamalı: sınıf dokümanına açık
+  uyarı yazıldı ve iddia bir bekçiye bağlandı — biri artımlı API'yi üretimde
+  kullanmaya başlarsa test düşer ve dokümanı güncellemeye zorlar.
+- **"`PlayerController` domain adı" doğru ama P1 değil.** Sınıfta tek satır
+  oyuncu semantiği yok; yalnızca `velocity` + kelepçeli `move()`. Kuplaj değil,
+  yanlış ad. `MovableController` oldu, eski ad `@deprecated` takma ad olarak
+  duruyor.
+- **"`doctor`/`doctor:env` duplikasyonu" — düzeltmesi ters çıktı.** `doctor:env`
+  silinip tek isme inildi, sonra `pnpm doctor` koşulduğunda çıktının pnpm'in
+  KENDİ tanılama komutundan geldiği görüldü: `"doctor"` script'i baştan beri
+  gölgeleniyordu ve `doctor:env` tam olarak bunun çözümüydü. Duplikasyon
+  sanılan şey bir çözümdü. Karar tersine çevrildi: gölgelenen `"doctor"` silindi,
+  çalışan `doctor:env` kaldı, `AGENTS.md`'ye adlandırma kuralı ve bir bekçi eklendi.
+- **"StatBlock O(M)" ölçüldü.** 40 modifier × 124.7 ns/okuma → VOL.HELL'de frame
+  bütçesinin **%0.0022**'si; spekülatif VOLDUSTRY ölçeğinde (2000 entity × 2
+  okuma × 10 modifier) **0.25 ms/frame = %1.5**. Gerçek ama düşük. Profil
+  olmadan cache/bucket eklemek kanıtsız karmaşıklık olurdu — YAPILMADI.
+
+### Kapatılanlar
+
+**Diagnostics sağlayıcı kümesi açıldı.** `activeProvider` `'pc' | 'touch' |
+'none'` kapalı union'ıydı ve ham durum `pc`/`touch` ADLI ALANLARDA taşınıyordu.
+`InputProvider` ise açık bir arayüz: gamepad sağlayıcısı yazılabiliyor ama
+raporlanamıyordu. Bu, bir önceki turda temizlenen `fire`/`dash` sızıntısıyla
+aynı sınıftı — yarım kalmış bir uygulama. Artık sağlayıcı kendi kimliğini
+taşıyor (`InputProvider.id`) ve snapshot `providers: Record<string, …>`. Bekçi:
+CORE'da hiç geçmeyen bir `'gamepad'` kimliğiyle kurulan sahte sağlayıcının
+raporlanabildiğini doğrulayan test.
+
+**`quality.json` şema doğrulaması.** Tek doğruluk kaynağı doğrulanmıyordu:
+`floor` → `flor` yazım hatası `TypeError: Cannot convert undefined or null to
+object` veriyordu. Kapı kırılıyordu (sessiz geçiş yok) ama nereye bakılacağı
+belli değildi. `scripts/quality/config.mjs` tek okuyucu oldu; eksik/yanlış
+tipte/tanınmayan metrik, gerekçesiz muafiyet ve "hem muaf hem eşikli" çelişkisi
+toplu olarak raporlanıyor. `games/design` metadata doğrulayıcısıyla aynı desen
+— kendi kuralımı bir yerde uygulayıp diğerinde uygulamamışım.
+
+**Public API yüzeyi sayıldı.** Dokuz `export *` barrel'ı yüzeyi KARAR NOKTASI
+OLMADAN büyütüyordu. Barrel'ları elle listeye çevirmek 120+ satır kalıcı bakım
+demekti; onun yerine yüzey kilitlendi (124 export). Değiştiğinde kapı kırılır ve
+biri kararı bilinçle verir. Ek olarak `_`/`internal`/`wip` gibi segment taşıyan
+sızıntı isimleri taranıyor — bu tarama ilk hâlinde `SwipeableCardStack`'i
+yakalıyordu ("S-**wip**-eable"); camelCase segmentine çevrildi.
+
+**Rig eklemlenmesi (articulation).** `parentPartId` metadata'ya, export
+script'ine, doğrulayıcıya ve montaja eklendi. Metadata'daki konum/dönüş rig
+KÖKÜ uzayında kalır (mevcut dosyaların anlamı değişmez); montaj ebeveynin
+dönüşünü telafi ederek yerel uzaya çevirir — telafi olmadan dönük bir ebeveynin
+altındaki parça yazarın çizdiği yerden kayardı. Ebeveyn listede parçadan ÖNCE
+gelmek zorunda: sıra aynı zamanda ağacın kuruluş sırası, ileri referans ve
+döngü aynı kontrole takılır. Eklem taşımayan rig eskisiyle birebir aynı çıktıyı
+verir. RENDER eklemi; fizik kısıtı taşımaz.
+
+**Rapor sınıflandırması sağlamlaştırıldı.** Kendi betiklerimiz artık
+`##quality:{…}` yapılandırılmış işareti basıyor (kendi çıktımızı serbest
+metinden okumak ev yapımı bir kırılganlıktı). Üçüncü parti kalıpları gerçek
+araç çıktılarıyla test edildi; `stylelint` ile `eslint` aynı `✖ N problems`
+biçimini kullandığı için aşama adıyla ayrıldı — ayrılmasa CSS hatası `lint`
+diye raporlanırdı. Sınıflandırma tutmazsa artık `unknown` deyip susmuyor,
+çıktının son satırlarını rapora koyuyor.
+
+### Kalite kapıları
+
+| Kapı      | Durum | Not                                             |
+| --------- | ----- | ----------------------------------------------- |
+| `signoff` | ✓     | 8 aşama, exit 0                                 |
+| test      | ✓     | 1471 test                                       |
+| coverage  | ✓     | design %98.62 → %98.86 (eklem dalları kapsandı) |
+
+**Dürüst not:** `design` kapsamı eklem kodu eklenince eşiğin altına düştü ve
+kapı kırıldı. Eşik düşürülmedi; `buildRig`in dört hata dalı ve `assembleRig`in
+ağaç kurulumu için test yazıldı.
 
 ## 2026-08-18 — Kart işlem sınırı, metadata doğrulama, tek kalite kaynağı
 

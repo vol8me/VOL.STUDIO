@@ -3,6 +3,12 @@ import type { InputState } from './InputState';
 import type { InputSnapshot } from './InputSnapshot';
 
 export interface InputProvider<TAction extends string> {
+  /**
+   * Sağlayıcı kimliği (`'pc'`, `'touch'`, `'gamepad'`…). Diagnostics
+   * snapshot'ında modality'yi bu ad tanımlar; CORE kapalı bir liste tutmaz.
+   */
+  readonly id: string;
+
   /** Bu provider şu an aktif girdi üretiyor mu? */
   get isActive(): boolean;
 

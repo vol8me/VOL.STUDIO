@@ -4,7 +4,11 @@ import { VOL_COLORS } from '../ui/colors';
 import { TouchStickState, type TouchStickOptions } from './TouchStickState';
 import type { InputProvider } from './InputProvider';
 import type { InputState } from './InputState';
-import type { InputSnapshot, TouchStickSnapshot } from './InputSnapshot';
+import {
+  singleProviderSnapshot,
+  type InputSnapshot,
+  type TouchStickSnapshot,
+} from './InputSnapshot';
 import { UI_DEPTH, UI_RATIO, UI_ALPHA, UI_SIZE } from '../constants';
 
 // Graphics.fillStyle sayısal 0xRRGGBB bekler, VOL_COLORS '#rrggbb' string'leri taşır.
@@ -23,6 +27,7 @@ export class TouchController<TAction extends string>
   extends Phaser.GameObjects.Container
   implements InputProvider<TAction>
 {
+  readonly id: string;
   private readonly graphics: Phaser.GameObjects.Graphics;
   private readonly sticks: TouchStickState<TAction>;
   /** Ekranda çizili stick var mı — parmak kalkınca tek bir clear() için. */
@@ -30,6 +35,7 @@ export class TouchController<TAction extends string>
 
   constructor(scene: Phaser.Scene, stickOptions: TouchStickOptions<TAction>) {
     super(scene);
+    this.id = stickOptions.id ?? 'touch';
     this.sticks = new TouchStickState(stickOptions);
     scene.add.existing(this);
     this.setScrollFactor(0);
@@ -51,13 +57,10 @@ export class TouchController<TAction extends string>
   getDebugSnapshot(): InputSnapshot {
     const left = this.sticks.getLeftStick();
     const right = this.sticks.getRightStick();
-    return {
-      activeProvider: 'touch',
-      touch: {
-        left: left ? this.toStickSnapshot(left) : undefined,
-        right: right ? this.toStickSnapshot(right) : undefined,
-      },
-    };
+    return singleProviderSnapshot(this.id, {
+      left: left ? this.toStickSnapshot(left) : undefined,
+      right: right ? this.toStickSnapshot(right) : undefined,
+    });
   }
 
   private toStickSnapshot(stick: { base: Vector2; current: Vector2 }): TouchStickSnapshot {

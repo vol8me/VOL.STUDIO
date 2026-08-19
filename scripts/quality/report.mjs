@@ -22,6 +22,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 /**
  * Birleşik kapıların hangi tekil aşamalardan oluştuğu.
@@ -37,10 +38,54 @@ const GATES = {
   signoff: ['high', 'rust'],
 };
 
-/** Aşama çıktısından paket adını ve sebebi çıkarmayı dener. */
-function classify(stage, output) {
+/**
+ * Çıktının SON anlamlı satırları — sınıflandırma başarısız olduğunda raporun
+ * yine de eyleme geçirilebilir bir şey taşıması için.
+ *
+ * Sınıflandırılamayan bir hatada `reason: 'sınıflandırılamayan hata'` demek,
+ * okuyucuyu tamamen kör bırakırdı; araçlar biçim değiştirdiğinde olan tam
+ * olarak budur.
+ */
+function tailLines(output, limit = 5) {
+  return output
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .slice(-limit);
+}
+
+/**
+ * Aşama çıktısından paket adını ve sebebi çıkarır.
+ *
+ * **Ayrıştırma sırası bilinçlidir:** önce KENDİ ürettiğimiz yapılandırılmış
+ * işaretlere bakılır, sonra üçüncü parti araçların insan çıktısına. Kendi
+ * betiklerimizin biçimini kontrol ediyoruz; onları serbest metinden okumak
+ * gereksiz bir kırılganlık olurdu.
+ *
+ * Üçüncü parti kalıpları araç biçimine bağlıdır ve bir sürüm yükseltmesinde
+ * eşleşmeyi bırakabilir. Bu KAPIYI bozmaz — geçer/kalır kararı çıkış
+ * kodundan gelir, buradan değil; yalnızca teşhis `unknown`a düşer ve
+ * `tail` alanı devreye girer. Kalıplar `report.test.mjs` içinde gerçek
+ * çıktı örnekleriyle kilitlidir.
+ */
+export function classify(stage, output) {
   const packageMatch = output.match(/(@volstudio\/[\w-]+)/);
   const pkg = packageMatch ? packageMatch[1] : null;
+
+  // Kendi betiklerimizin yapılandırılmış işareti — biçimi biz belirliyoruz.
+  const marker = output.match(/##quality:(\{.*?\})/);
+  if (marker) {
+    try {
+      const parsed = JSON.parse(marker[1]);
+      return {
+        package: pkg,
+        reason: `${parsed.kind}: ${parsed.count} ihlal`,
+        kind: parsed.kind,
+      };
+    } catch {
+      // Bozuk işaret, sınıflandırmayı engellemez; aşağıdaki kalıplara düşer.
+    }
+  }
 
   const coverage = output.match(/Coverage for (\w+) \(([\d.]+)%\) does not meet.*?\(([\d.]+)%\)/);
   if (coverage) {
@@ -51,8 +96,23 @@ function classify(stage, output) {
     };
   }
 
-  if (/\[workspace-contract\] Kapı kapsamı ihlali/.test(output)) {
-    return { package: pkg, reason: 'workspace sözleşmesi ihlali', kind: 'contract' };
+  // stylelint: `✖ N problems` eslint'inkiyle aynı simgeyi kullandığı için
+  // aşama adıyla ayrılır — aksi halde CSS hatası 'lint' diye raporlanırdı.
+  if (stage === 'lint-css' && /✖|problems?/.test(output)) {
+    const cssCount = output.match(/(\d+) problems?/);
+    return {
+      package: null,
+      reason: cssCount ? `${cssCount[1]} CSS lint hatası` : 'CSS lint hatası',
+      kind: 'lint-css',
+    };
+  }
+  if (/error(\[E\d+\])?:/.test(output) && stage === 'rust') {
+    const cargo = output.match(/^error(?:\[(E\d+)\])?: (.+)$/m);
+    return {
+      package: null,
+      reason: cargo ? `cargo ${cargo[1] ?? ''} ${cargo[2]}`.trim() : 'cargo hatası',
+      kind: 'rust',
+    };
   }
   if (/Code style issues found/.test(output)) {
     return { package: null, reason: 'biçim (prettier) uyumsuz', kind: 'format' };
@@ -74,7 +134,12 @@ function classify(stage, output) {
     return { package: null, reason: `${lintCount[1]} lint hatası`, kind: 'lint' };
   }
 
-  return { package: pkg, reason: 'sınıflandırılamayan hata', kind: 'unknown' };
+  return {
+    package: pkg,
+    reason: 'sınıflandırılamayan hata',
+    kind: 'unknown',
+    tail: tailLines(output),
+  };
 }
 
 /** `justfile` ile `GATES` haritasının ayrışmadığını doğrular. */
@@ -97,6 +162,20 @@ function verifyGateGraph(root) {
   return problems;
 }
 
+/*
+ * Buradan aşağısı yalnızca betik DOĞRUDAN çalıştırıldığında koşar.
+ *
+ * `classify` dışa açık: kalıplarının gerçek araç çıktılarıyla test edilmesi
+ * gerekiyor (`report.test.mjs`). Koruma olmadan testin import'u tüm kalite
+ * kapısını başlatırdı.
+ */
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isMain) {
+  runCli();
+}
+
+function runCli() {
 const [, , gateArg = 'high', ...flags] = process.argv;
 const asJson = flags.includes('--json');
 const root = process.cwd();
@@ -158,6 +237,7 @@ const report = {
       package: failure.package,
       reason: failure.reason,
       exitCode: failure.exitCode,
+      ...(failure.tail && { tail: failure.tail }),
     },
   }),
 };
@@ -173,10 +253,16 @@ if (asJson) {
     console.log(`\n  aşama : ${failure.stage}`);
     console.log(`  tür   : ${failure.kind}`);
     console.log(`  paket : ${failure.package ?? '-'}`);
-    console.log(`  sebep : ${failure.reason}\n`);
+    console.log(`  sebep : ${failure.reason}`);
+    if (failure.tail) {
+      // Sınıflandırma tutmadı; en azından son satırlar görünsün.
+      for (const line of failure.tail) console.log(`  son   : ${line}`);
+    }
+    console.log('');
     // Ham çıktı bastırılmaz: rapor bir ÖZETtir, teşhisin yerine geçmez.
     console.log(failure.output);
   }
 }
 
 process.exit(failure ? failure.exitCode : 0);
+}

@@ -15,6 +15,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { loadQualityConfig } from './quality/config.mjs';
 
 /** Her paketin sahip olması gereken script'ler ve hangi kapının kullandığı. */
 const REQUIRED_SCRIPTS = {
@@ -36,7 +37,7 @@ const problems = [];
  * `thresholds` eşleşmesi neredeyse doğru olurdu. Bekçi ile config artık aynı
  * dosyayı tüketiyor, ayrışamazlar.
  */
-const quality = JSON.parse(readFileSync(join(root, 'quality.json'), 'utf8'));
+const quality = loadQualityConfig(join(root, 'quality.json'));
 const THRESHOLD_FLOOR = quality.floor;
 /** Kapsam eşiği aranmayan paketler — gerekçesi `quality.json`da yazılı olmalı. */
 const THRESHOLD_EXEMPT = new Map(Object.entries(quality.exempt ?? {}));
@@ -117,6 +118,10 @@ for (const pkg of packages) {
 }
 
 if (problems.length > 0) {
+  // Makine-okunur işaret: `scripts/quality/report.mjs` bunu ayrıştırır. Kendi
+  // ürettiğimiz çıktıyı serbest metinden okumak, üçüncü parti araçları
+  // ayrıştırmakla aynı kırılganlığı ev yapımı bir soruna çevirirdi.
+  console.error(`##quality:{"kind":"contract","count":${problems.length}}`);
   console.error('\n[workspace-contract] Kapı kapsamı ihlali:\n');
   for (const p of problems) console.error(`  ✗ ${p}`);
   console.error(

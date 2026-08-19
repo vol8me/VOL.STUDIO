@@ -42,6 +42,9 @@ describe('buildRigDefinition', () => {
     expect(rig.parts).toEqual([
       {
         partId: 'top_cap',
+        // Eklem taşımayan parça köke bağlanır — eklem desteği eklenmeden
+        // önceki davranışın birebir aynısı.
+        parentPartId: null,
         textureKey: 'test_unit__top_cap',
         textureUrl: '/assets/top_cap-abc.png',
         logicalSizePx: { width: 16, height: 6.4 },
@@ -114,5 +117,46 @@ describe('buildRigDefinition', () => {
     });
 
     expect(rig.parts).toHaveLength(1);
+  });
+});
+
+describe('eklem (parentPartId) doğrulaması', () => {
+  it('ebeveyn listede ÖNCE geliyorsa çözümlenir', () => {
+    const metadata = metadataFixture();
+    metadata.parts.push({
+      ...metadata.parts[0],
+      partId: 'barrel',
+      sourceNodeId: 'n2',
+      parentPartId: 'top_cap',
+    });
+
+    const rig = buildRigDefinition(metadata, {
+      ...TOP_CAP_URL,
+      'pen_export/players/test_unit/parts/barrel.png': '/assets/barrel-def.png',
+    });
+
+    expect(rig.parts[1].parentPartId).toBe('top_cap');
+  });
+
+  it('parça kendi ebeveyni olamaz', () => {
+    const metadata = metadataFixture();
+    metadata.parts[0].parentPartId = 'top_cap';
+
+    expect(() => buildRigDefinition(metadata, TOP_CAP_URL)).toThrow(/kendi ebeveyni olamaz/);
+  });
+
+  it('ebeveyn listede SONRA geliyorsa reddedilir (ağaç tek geçişte kurulamaz)', () => {
+    const metadata = metadataFixture();
+    metadata.parts[0].parentPartId = 'barrel';
+    metadata.parts.push({ ...metadata.parts[0], partId: 'barrel', sourceNodeId: 'n2' });
+
+    expect(() => buildRigDefinition(metadata, TOP_CAP_URL)).toThrow(/ondan SONRA geliyor/);
+  });
+
+  it('var olmayan ebeveyn reddedilir', () => {
+    const metadata = metadataFixture();
+    metadata.parts[0].parentPartId = 'olmayan_parca';
+
+    expect(() => buildRigDefinition(metadata, TOP_CAP_URL)).toThrow(/hiç yok/);
   });
 });

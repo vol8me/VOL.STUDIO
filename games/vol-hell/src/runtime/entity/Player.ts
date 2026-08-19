@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import { PlayerController, StatBlock, Vector2 } from '@volstudio/core';
+import { MovableController, StatBlock, Vector2 } from '@volstudio/core';
 import type { HellStat, HellStatBlock } from '@/config/stats';
 import { playerConfig } from '@/config/player';
 import { bulletConfig } from '@/config/bullet';
@@ -9,7 +9,7 @@ import type { EffectManager } from '@/runtime/systems/EffectManager';
 import { diagnostics } from '@/app/services';
 
 /**
- * Oyuncu entity'si. PlayerController composition ile sprite'ı tutar.
+ * Oyuncu entity'si. MovableController composition ile sprite'ı tutar.
  * Placeholder görsel: Phaser.GameObjects.Arc (texture gerekmez).
  * Arc, Shape üzerinden Transform implement eder — cast gerekmez.
  *
@@ -23,7 +23,7 @@ import { diagnostics } from '@/app/services';
  * - Dash süresince i-frame aktif — hasar alınmaz.
  * - Dash ghost: yarı saydam kopyalar bırakılır.
  */
-export class Player extends PlayerController {
+export class Player extends MovableController {
   private readonly arc: Phaser.GameObjects.Arc;
   private readonly stats: HellStatBlock;
   private health: number;

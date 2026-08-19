@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
 import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 
 /** Düşman yerine geçen basit test mock'u */
@@ -306,5 +308,47 @@ describe('SpatialGrid artımlı güncelleme', () => {
         expect(fromIncremental, `frame ${frame}`).toContain(enemy.id);
       }
     }
+  });
+});
+
+describe('artımlı API sözleşmesi', () => {
+  /**
+   * `SpatialGrid`in sınıf dokümanı "artımlı yolun üretimde çağıranı yoktur"
+   * DİYOR. Bir doküman iddiası, onu doğrulayan bir şey olmadan çürür: biri
+   * `grid.update(...)` çağrısını oyun döngüsüne eklerse doküman sessizce
+   * yanlışa döner ve sonraki okuyucuyu yanıltır.
+   *
+   * Bu test iddiayı bekçiye bağlar. AMACI artımlı yolu YASAKLAMAK DEĞİL —
+   * düştüğünde doğru tepki, çağrıyı geri almak değil, sınıf dokümanını
+   * gerçeğe uydurmaktır.
+   */
+  it('üretim kaynağı yalnızca rebuild kullanır (doküman iddiasıyla senkron)', () => {
+    const srcRoot = resolve(import.meta.dirname, '../../../src');
+    const incremental =
+      /\b(?:grid|spatialGrid|this\.spatialGrid)\.(insert|remove|update|has|getIndexedCount)\s*\(/;
+
+    const offenders: string[] = [];
+    const walk = (dir: string): void => {
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry);
+        if (statSync(full).isDirectory()) {
+          walk(full);
+          continue;
+        }
+        if (!entry.endsWith('.ts')) continue;
+        // Sınıfın kendisi doğal olarak kendi metotlarını çağırır.
+        if (full.endsWith('SpatialGrid.ts')) continue;
+        if (incremental.test(readFileSync(full, 'utf-8'))) {
+          offenders.push(relative(srcRoot, full));
+        }
+      }
+    };
+    walk(srcRoot);
+
+    expect(
+      offenders,
+      'Artımlı API üretimde kullanılmaya başlandı. SpatialGrid sınıf dokümanındaki ' +
+        '"üretimde çağıranı yoktur" uyarısını GÜNCELLE, sonra bu testi kaldır.',
+    ).toEqual([]);
   });
 });

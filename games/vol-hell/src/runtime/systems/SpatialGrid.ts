@@ -25,6 +25,24 @@ const CELL_STRIDE = CELL_OFFSET * 2;
  *
  * Şu an CORE'da DEĞİLDİR ve ikinci somut tüketici çıkmadan taşınmayacaktır
  * (bkz. TODO.md — CORE capability yol haritası ertelemeleri).
+ *
+ * ---
+ *
+ * **DİKKAT — artımlı yolun ÜRETİMDE ÇAĞIRANI YOKTUR.** `insert`, `remove`,
+ * `update`, `has` ve `getIndexedCount` yalnızca testlerden çağrılır; oyun
+ * döngüsü (`GameScene.updateEntities`) iki kez `rebuild()` der. Yani bu yol
+ * gerçek oynanışta hiç yürümez ve yalnızca `SpatialGrid.test.ts`'teki
+ * eşdeğerlik testiyle korunur.
+ *
+ * Bu bilinçli bir durum, unutulmuş bir iş değil: artımlı modeli oyun döngüsüne
+ * bağlamak `EnemyManager`'ın her hareket eden düşmanı bildirmesini gerektirir
+ * ve bugünkü ölçekte ölçülebilir bir kazanç vermez — kanıtsız karmaşıklık
+ * olurdu. API, tasarım kararını KAYIT ALTINA ALMAK ve ikinci tüketici geldiğinde
+ * hazır olmak için yazıldı.
+ *
+ * Buraya dokunacak olan için sonuç şu: artımlı yolu bozan bir değişiklik
+ * OYUNU BOZMAZ, yalnızca testi düşürür. Testi "alakasız" diye zayıflatma —
+ * bu yolun tek koruması odur.
  */
 export class SpatialGrid {
   private cellSize: number;

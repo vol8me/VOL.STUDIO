@@ -43,6 +43,13 @@ const { container, parts } = assembleRig(this, rig);
 `buildRigDefinition` düz bir `Record<string, string>` aldığı için paket
 Vite'a bağlı değildir; glob'u tüketen oyun yapar.
 
+Bir parça `parentPartId` taşıyorsa kökün değil ÜST PARÇANIN container'ına
+girer: üst parçayı döndürmek alt zinciri de döndürür (kol → önkol → el).
+Metadata'daki konum ve dönüş her zaman rig kökü uzayında yazılır; montaj
+bunları ebeveynin dönüşünü telafi ederek yerel uzaya çevirir. Eklem taşımayan
+bir rig, eklem desteği eklenmeden önceki çıktının birebir aynısını verir.
+Bu bir RENDER eklemidir; fizik/eklem kısıtı taşımaz.
+
 İlk iş metadata'yı çalışma zamanında doğrulamaktır (`validateRigMetadata`,
 ayrıca dışa açıktır): `schemaVersion`, zorunlu alanlar ve parça tipleri
 kontrol edilir, sorunlar tek mesajda toplanır. TypeScript arayüzü dosyadan

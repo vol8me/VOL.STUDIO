@@ -142,6 +142,19 @@ function validateParts(value: unknown, problems: string[]): void {
       );
     }
 
+    // Eklem (articulation): opsiyoneldir; verilirse boş olmayan bir metin ya
+    // da null olmalı. Boş metin sessizce "ebeveyni yok" gibi davranırdı.
+    if (
+      part.parentPartId !== undefined &&
+      part.parentPartId !== null &&
+      (typeof part.parentPartId !== 'string' || part.parentPartId.length === 0)
+    ) {
+      problems.push(
+        `${label}.parentPartId boş olmayan bir metin ya da null olmalı ` +
+          `(gelen: ${describe(part.parentPartId)})`,
+      );
+    }
+
     validateSize(part.logicalSizePx, `${label}.logicalSizePx`, problems);
 
     // positionPx null olabilir (hücre düzeninden izole edilmiş parça).

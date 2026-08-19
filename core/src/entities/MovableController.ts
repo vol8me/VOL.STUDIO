@@ -11,11 +11,18 @@ export type MovableGameObject = Phaser.GameObjects.GameObject &
   Phaser.GameObjects.Components.Transform;
 
 /**
+ * Hız tabanlı hareket eden bir varlığın taban sınıfı.
+ *
+ * Adı bir dönem `PlayerController`'dı ve YANILTICIYDI: sınıfta tek satır
+ * oyuncu semantiği yok — yalnızca `velocity`, kelepçeli `move()` ve
+ * `destroy()` var. Bir düşmana, bir araca ya da bir konveyör taşıyıcısına
+ * aynen hizmet eder; "Player" adı CORE'da olmayan bir rolü ima ediyordu.
+ *
  * `sprite` composition ile tutulur (extend edilmez), bu yüzden Phaser'in
  * destroy() zinciri otomatik gelmez. Alt sınıflar destroy() override ederse
  * `super.destroy()` çağırmalıdır.
  */
-export abstract class PlayerController implements BaseEntity {
+export abstract class MovableController implements BaseEntity {
   protected velocity = Vector2.zero();
   /** move() çağıranın vektörünü bozmasın diye kullanılan yerel tampon. */
   private readonly moveDirBuf = Vector2.zero();
@@ -32,7 +39,7 @@ export abstract class PlayerController implements BaseEntity {
   }
 
   /**
-   * `direction` ASLA yerinde değiştirilmez — çağıranlar (bkz. Player.moveDirection)
+   * `direction` ASLA yerinde değiştirilmez — çağıranlar (bkz. vol-hell Player.moveDirection)
    * burayı kalıcı bir alanla besliyor, normalize etmek o alanı kalıcı olarak birim
    * uzunluğa çevirir ve analog girdiyi yok ederdi.
    *

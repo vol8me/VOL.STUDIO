@@ -59,7 +59,9 @@ enter the repo without `test`/`test:coverage` scripts and coverage thresholds.
 
 Coverage thresholds live in the root `quality.json`; all five `vitest.config.ts`
 files read it and the guard reads the same file, so the two cannot drift.
-Writing a threshold inline in a config breaks the gate.
+Writing a threshold inline in a config breaks the gate. The file is schema
+validated on every read (`scripts/quality/config.mjs`), so a typo yields a
+single message that says where to look.
 
 The `just` binary lands in `node_modules/.bin` and is not on the global `PATH` — use `pnpm fast` or `pnpm exec just fast`, not a bare `just fast`. For single gates (`typecheck`, `lint`, `coverage`, `rust`, `test-pkg <package>` …): `pnpm exec just --list`.
 

@@ -61,7 +61,9 @@ Kapılar workspace'ten türer: yeni bir paket hiçbir kapıya elle eklenmez,
 
 Kapsam eşikleri kök `quality.json`da yaşar; beş `vitest.config.ts` onu okur ve
 bekçi de aynı dosyayı okur, yani ayrışamazlar. Bir config'e eşiği satır içi
-yazmak kapıyı kırar.
+yazmak kapıyı kırar. Dosya her okunuşta şema doğrulamasından geçer
+(`scripts/quality/config.mjs`) — bir yazım hatası, nereye bakılacağını söyleyen
+tek bir hata mesajı verir.
 
 `just` ikilisi `node_modules/.bin` altına kurulur, global `PATH`'e girmez —
 çıplak `just fast` değil `pnpm fast` ya da `pnpm exec just fast` kullanılır.

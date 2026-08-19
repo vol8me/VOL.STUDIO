@@ -29,14 +29,45 @@ export interface PartLayout {
 export function computePartLayout(
   part: RigPartAsset,
   rig: { exportScale: number; rootSizePx: Size },
+  parent?: RigPartAsset,
 ): PartLayout {
-  return {
-    pivotX: part.positionPx.x - rig.rootSizePx.width / 2,
-    pivotY: part.positionPx.y - rig.rootSizePx.height / 2,
-    rotationRad: Phaser.Math.DegToRad(part.rotationDeg),
+  const sprite = {
     spriteOffsetX: part.logicalSizePx.width / 2,
     spriteOffsetY: part.logicalSizePx.height / 2,
     spriteScale: 1 / rig.exportScale,
+  };
+
+  if (!parent) {
+    return {
+      pivotX: part.positionPx.x - rig.rootSizePx.width / 2,
+      pivotY: part.positionPx.y - rig.rootSizePx.height / 2,
+      rotationRad: Phaser.Math.DegToRad(part.rotationDeg),
+      ...sprite,
+    };
+  }
+
+  /*
+   * Eklemli parça: metadata'daki `positionPx`/`rotationDeg` HER ZAMAN rig kökü
+   * uzayındadır (eklem eklemek mevcut metadata'nın anlamını değiştirmez). Parça
+   * ebeveynin container'ına girdiği için değerler YEREL uzaya çevrilmelidir.
+   *
+   * Ebeveyn container'ı `parent.rotationDeg` kadar dönüktür ve çocuklarını da
+   * döndürür; bu yüzden rig uzayındaki fark vektörü TERS açıyla döndürülerek
+   * telafi edilir. Aksi halde dönük bir ebeveynin altındaki parça, yazarın
+   * çizdiği yerden kayarak otururdu.
+   */
+  const dx = part.positionPx.x - parent.positionPx.x;
+  const dy = part.positionPx.y - parent.positionPx.y;
+  const inverse = Phaser.Math.DegToRad(-parent.rotationDeg);
+  const cos = Math.cos(inverse);
+  const sin = Math.sin(inverse);
+
+  return {
+    pivotX: dx * cos - dy * sin,
+    pivotY: dx * sin + dy * cos,
+    // Ebeveynin dönüşü zaten miras alınıyor; yerel dönüş yalnızca FARK kadardır.
+    rotationRad: Phaser.Math.DegToRad(part.rotationDeg - parent.rotationDeg),
+    ...sprite,
   };
 }
 
@@ -64,6 +95,11 @@ export interface AssembledRig {
  * Rig'i bir `Phaser.Container` ağacı olarak kurar. Texture'lar önceden
  * yüklenmiş olmalıdır (bkz. `preloadRigTextures`). Çizim sırası
  * `rig.parts` sırasını izler.
+ *
+ * `parentPartId` taşıyan parçalar kökün değil ÜST PARÇANIN container'ına
+ * girer: üst parçayı döndürmek alt zinciri de döndürür (kol → önkol → el).
+ * Eklem taşımayan bir rig, eklem desteği eklenmeden önceki davranışın
+ * birebir aynısını üretir.
  */
 export function assembleRig(scene: Phaser.Scene, rig: RigDefinition): AssembledRig {
   // Phaser bilinmeyen bir texture key'inde sessizce `__MISSING` dokusunu
@@ -80,9 +116,11 @@ export function assembleRig(scene: Phaser.Scene, rig: RigDefinition): AssembledR
 
   const container = scene.add.container(0, 0);
   const parts = new Map<string, Phaser.GameObjects.Container>();
+  const assetById = new Map(rig.parts.map((part) => [part.partId, part]));
 
   for (const part of rig.parts) {
-    const layout = computePartLayout(part, rig);
+    const parentAsset = part.parentPartId ? assetById.get(part.parentPartId) : undefined;
+    const layout = computePartLayout(part, rig, parentAsset);
 
     const pivot = scene.add.container(layout.pivotX, layout.pivotY);
     pivot.rotation = layout.rotationRad;
@@ -91,7 +129,16 @@ export function assembleRig(scene: Phaser.Scene, rig: RigDefinition): AssembledR
     sprite.setScale(layout.spriteScale);
 
     pivot.add(sprite);
-    container.add(pivot);
+
+    // `buildRigDefinition` ebeveynin listede ÖNCE geldiğini doğruladığı için
+    // hedef container bu noktada kesinlikle kurulmuştur.
+    const target = part.parentPartId ? parts.get(part.parentPartId) : container;
+    if (!target) {
+      throw new Error(
+        `${rig.entityId}: "${part.partId}" parçasının ebeveyni "${part.parentPartId}" kurulmamış`,
+      );
+    }
+    target.add(pivot);
     parts.set(part.partId, pivot);
   }
 

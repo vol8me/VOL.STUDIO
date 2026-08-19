@@ -1,22 +1,46 @@
 /**
  * Geliştirme/diagnostics için input sağlayıcılarının ham durum snapshot'ları.
- * Bu tipler sadece `?debug`/`?perf` modunda kullanılır; normal oyun mantığına dahil değildir.
+ * Bu tipler sadece `?debug`/`?perf` modunda kullanılır; normal oyun mantığına
+ * dahil değildir.
+ *
+ * **Sağlayıcı kümesi AÇIKTIR.** Önceden `activeProvider: 'pc' | 'touch' | 'none'`
+ * kapalı bir union'dı ve `pc`/`touch` ayrı alanlardı; oysa `InputProvider` açık
+ * bir arayüz. Yani bir gamepad sağlayıcısı YAZILABİLİYOR ama RAPORLANAMIYORDU —
+ * CORE'un tanımadığı bir modality diagnostics'e giremiyordu. Bu, eylem
+ * sözlüğünün (`fire`/`dash`) CORE'da durmasıyla aynı sınıf sızıntıydı.
  */
 
+/**
+ * Bir sağlayıcının ham durumu. Şekli sağlayıcının kendisi belirler; CORE
+ * içeriği yorumlamaz, yalnızca taşır ve overlay'de gösterir.
+ */
+export type ProviderSnapshot = Readonly<Record<string, unknown>>;
+
+/** Hiçbir sağlayıcı aktif değilken kullanılan kimlik. */
+export const NO_ACTIVE_PROVIDER = 'none';
+
 export interface InputSnapshot {
-  /** Hangi sağlayıcı aktif girdi üretiyor. */
-  activeProvider: 'pc' | 'touch' | 'none';
+  /**
+   * Aktif sağlayıcının kimliği; sağlayıcı kendi adını verir
+   * (`'pc'`, `'touch'`, `'gamepad'`…). Hiçbiri aktif değilse
+   * `NO_ACTIVE_PROVIDER`.
+   */
+  activeProvider: string;
 
-  /** PC (WASD + fare) durumu; sadece aktif sağlayıcı 'pc' ise dolu. */
-  pc?: PcInputSnapshot;
-
-  /** Touch (çift joystick) durumu; sadece aktif sağlayıcı 'touch' ise dolu. */
-  touch?: TouchInputSnapshot;
+  /**
+   * Sağlayıcı kimliği → o sağlayıcının ham durumu.
+   *
+   * Genellikle yalnızca aktif sağlayıcının girdisi bulunur, ama sözleşme bunu
+   * ZORUNLU KILMAZ: aynı anda birden fazla sağlayıcıyı raporlamak (ör. hangi
+   * modality'nin neden kazandığını incelemek) serbesttir.
+   */
+  providers?: Readonly<Record<string, ProviderSnapshot>>;
 }
 
-export interface PcInputSnapshot {
-  /** WASD tuş durumları. */
-  wasd: {
+/** PC sağlayıcısının kendi snapshot şekli — CORE bunu yorumlamaz. */
+export interface PcInputSnapshot extends ProviderSnapshot {
+  /** Hareket tuşlarının durumu. */
+  move: {
     up: boolean;
     down: boolean;
     left: boolean;
@@ -38,10 +62,11 @@ export interface PcInputSnapshot {
   actions: Readonly<Record<string, boolean>>;
 }
 
-export interface TouchInputSnapshot {
+/** Dokunmatik sağlayıcısının kendi snapshot şekli. */
+export interface TouchInputSnapshot extends ProviderSnapshot {
   /** Sol hareket stick'i. */
   left?: TouchStickSnapshot;
-  /** Sağ nişan/ateş stick'i. */
+  /** Sağ nişan/aksiyon stick'i. */
   right?: TouchStickSnapshot;
 }
 
@@ -50,4 +75,18 @@ export interface TouchStickSnapshot {
   base: { x: number; y: number };
   /** Şu anki parmak pozisyonu. */
   current: { x: number; y: number };
+}
+
+/**
+ * Tek sağlayıcılı snapshot kurmak için yardımcı — çağıranın hem `activeProvider`
+ * hem `providers` anahtarını elle senkron tutmasını engeller (ayrışırlarsa
+ * overlay aktif sağlayıcının verisini bulamaz ve sessizce boş görünür).
+ */
+export function singleProviderSnapshot(id: string, snapshot: ProviderSnapshot): InputSnapshot {
+  return { activeProvider: id, providers: { [id]: snapshot } };
+}
+
+/** Hiçbir sağlayıcının aktif olmadığı snapshot. */
+export function idleSnapshot(): InputSnapshot {
+  return { activeProvider: NO_ACTIVE_PROVIDER };
 }

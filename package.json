@@ -10,7 +10,6 @@
     "fast": "just fast",
     "high": "just high",
     "signoff": "just signoff",
-    "doctor": "just doctor",
     "doctor:env": "just doctor",
     "dev": "pnpm --parallel -r --filter @volstudio/vol-hell --filter @volstudio/vol-ui run dev",
     "build:game": "pnpm --filter @volstudio/vol-hell build",
