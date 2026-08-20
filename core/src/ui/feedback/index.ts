@@ -10,7 +10,7 @@ export { Counter, type CounterOptions } from './Counter';
 export { ResourceCounter, type ResourceCounterOptions } from './ResourceCounter';
 export { ResourceBar, type ResourceBarEntry, type ResourceBarOptions } from './ResourceBar';
 export { TimerBar, type TimerBarOptions } from './TimerBar';
-export { WaveCounter, type WaveCounterOptions } from './WaveCounter';
+export { RoundCounter, type RoundCounterOptions } from './RoundCounter';
 export {
   FloatingTextManager,
   type FloatingTextVariant,

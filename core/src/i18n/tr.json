@@ -77,16 +77,16 @@
     "next": "İleri",
     "finish": "Bitir"
   },
-  "wavecounter": {
-    "wave": "Dalga {{wave}}",
-    "waveTotal": "Dalga {{wave}} / {{total}}",
-    "next": "Sonraki dalga: {{seconds}}s"
-  },
   "minimap": {
     "label": "Harita",
     "interactive": "{{label}}, etkileşimli — Enter ile merkeze zıpla"
   },
   "selectionInfo": {
     "emptyState": "Seçili öğe yok"
+  },
+  "roundcounter": {
+    "round": "Tur {{round}}",
+    "roundTotal": "Tur {{round}} / {{total}}",
+    "next": "Sonraki: {{seconds}}s"
   }
 }

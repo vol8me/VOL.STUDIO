@@ -149,15 +149,19 @@ export class SpatialIndex<T extends SpatialEntity> {
   /**
    * Verilen noktanın hücresi + 8 komşu hücredeki varlıklar.
    *
-   * Dönen dizi YENİDEN KULLANILIR: bir sonraki `query` çağrısına kadar
-   * geçerlidir, saklanacaksa kopyalanmalıdır.
+   * **SÖZLEŞME:** yalnızca arama yarıçapı `cellSize`'ı AŞMADIĞINDA eksiksizdir.
+   * 3×3 hücrelik pencere `cellSize` kadar uzağı garanti eder; daha uzaktaki
+   * bir varlık pencerenin dışında kalır ve SESSİZCE bulunamaz. Daha geniş bir
+   * arama için `queryRadius`/`queryBounds` kullanılmalıdır — onlar gereken
+   * kadar hücre tarar.
+   *
+   * Dönen dizi YENİDEN KULLANILIR: bir sonraki sorguya kadar geçerlidir,
+   * saklanacaksa kopyalanmalıdır.
    */
   query(x: number, y: number): readonly T[] {
     const cx = Math.floor(x / this.cellSize);
     const cy = Math.floor(y / this.cellSize);
-    const result = this.resultBuffers[this.resultIndex];
-    this.resultIndex = (this.resultIndex + 1) % this.resultBuffers.length;
-    result.length = 0;
+    const result = this.nextBuffer();
 
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
@@ -170,6 +174,108 @@ export class SpatialIndex<T extends SpatialEntity> {
       }
     }
 
+    return result;
+  }
+
+  /**
+   * Verilen yarıçap içindeki varlıklar — yarıçap `cellSize`'dan büyük olsa da
+   * DOĞRU sonuç verir.
+   *
+   * `query()` sabit 3×3 pencere tarar ve `cellSize`'ı aşan bir aramada
+   * uzaktaki varlıkları sessizce kaçırır; bu, ölçü değiştiğinde (menzil artıran
+   * bir etki, farklı bir birim tipi) ortaya çıkan ve fark edilmesi çok zor bir
+   * hata biçimidir. Burada taranacak hücre sayısı yarıçaptan HESAPLANIR.
+   *
+   * Sonuç yarıçapa göre de FİLTRELENİR: hücre penceresi kare, arama alanı
+   * dairedir; filtrelemeden köşelerdeki varlıklar da dönerdi.
+   */
+  queryRadius(x: number, y: number, radius: number): readonly T[] {
+    const result = this.nextBuffer();
+    if (!(radius > 0) || !Number.isFinite(radius)) return result;
+
+    const span = Math.ceil(radius / this.cellSize);
+    const cx = Math.floor(x / this.cellSize);
+    const cy = Math.floor(y / this.cellSize);
+    const radiusSq = radius * radius;
+
+    for (let dx = -span; dx <= span; dx++) {
+      for (let dy = -span; dy <= span; dy++) {
+        const cell = this.cells.get(this.key(cx + dx, cy + dy));
+        if (!cell) continue;
+        for (const entity of cell) {
+          if (this.isActive && !this.isActive(entity)) continue;
+          const ex = entity.x - x;
+          const ey = entity.y - y;
+          if (ex * ex + ey * ey <= radiusSq) result.push(entity);
+        }
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Eksen hizalı bir dikdörtgen içindeki varlıklar — seçim kutusu, görünür
+   * alan kırpma, bölge etkisi.
+   *
+   * Dikdörtgen sol-üst köşe + boyut ile verilir; negatif genişlik/yükseklik
+   * normalize edilir (sürükleyerek çizilen seçim kutusu her yöne açılabilir).
+   */
+  queryBounds(x: number, y: number, width: number, height: number): readonly T[] {
+    const result = this.nextBuffer();
+    if (!Number.isFinite(width) || !Number.isFinite(height)) return result;
+
+    const minX = Math.min(x, x + width);
+    const maxX = Math.max(x, x + width);
+    const minY = Math.min(y, y + height);
+    const maxY = Math.max(y, y + height);
+
+    const minCol = Math.floor(minX / this.cellSize);
+    const maxCol = Math.floor(maxX / this.cellSize);
+    const minRow = Math.floor(minY / this.cellSize);
+    const maxRow = Math.floor(maxY / this.cellSize);
+
+    for (let col = minCol; col <= maxCol; col++) {
+      for (let row = minRow; row <= maxRow; row++) {
+        const cell = this.cells.get(this.key(col, row));
+        if (!cell) continue;
+        for (const entity of cell) {
+          if (this.isActive && !this.isActive(entity)) continue;
+          if (entity.x < minX || entity.x > maxX || entity.y < minY || entity.y > maxY) continue;
+          result.push(entity);
+        }
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Verilen noktaya EN YAKIN varlık — yarıçap içinde arar.
+   *
+   * `queryRadius` sonucunu tarayarak bulur; ayrı bir tarama yapmaz, böylece
+   * çağıranın "en yakını" bulmak için sonucu tekrar gezmesi gerekmez.
+   */
+  findNearest(x: number, y: number, radius: number, exclude?: T): T | null {
+    let best: T | null = null;
+    let bestSq = Infinity;
+
+    for (const entity of this.queryRadius(x, y, radius)) {
+      if (entity === exclude) continue;
+      const ex = entity.x - x;
+      const ey = entity.y - y;
+      const distSq = ex * ex + ey * ey;
+      if (distSq < bestSq) {
+        bestSq = distSq;
+        best = entity;
+      }
+    }
+    return best;
+  }
+
+  /** Sıradaki yeniden kullanılabilir tampon — iç içe sorgular çakışmasın diye. */
+  private nextBuffer(): T[] {
+    const result = this.resultBuffers[this.resultIndex];
+    this.resultIndex = (this.resultIndex + 1) % this.resultBuffers.length;
+    result.length = 0;
     return result;
   }
 

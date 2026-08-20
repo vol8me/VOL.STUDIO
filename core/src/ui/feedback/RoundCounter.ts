@@ -1,19 +1,33 @@
 import { i18next } from '../../systems/I18n';
 
-export interface WaveCounterOptions {
+export interface RoundCounterOptions {
   /** Toplam dalga sayısı biliniyorsa (örn. "3 / 10"); bilinmiyorsa (sonsuz mod) undefined bırakılır. */
-  totalWaves?: number;
+  totalRounds?: number;
   onCountdownEnd?: () => void;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
+  /**
+   * Tur etiketini biçimlendirir — ÇEVRİLMİŞ metin beklenir.
+   *
+   * Varsayılan CORE'un nötr metnidir ("Tur 3"). Oyunun kendi kelimesi varsa
+   * ("Dalga 3", "El 3", "Vardiya 3") onu CORE'un sözlüğüne eklemek yerine
+   * buradan verir: hangi turun ne dendiği oyunun kararıdır.
+   */
+  formatRound?: (round: number, total?: number) => string;
+  /** Geri sayım metnini biçimlendirir — ÇEVRİLMİŞ metin beklenir. */
+  formatCountdown?: (seconds: number) => string;
 }
 
 /**
- * Round/tur göstergesi + kalan süre geri sayımı. **Saf görüntüdür:** turu
- * kendisi ilerletmez, ne zaman biteceğine karar vermez.
+ * Tur göstergesi + kalan süre geri sayımı. **Saf görüntüdür:** turu kendisi
+ * ilerletmez, ne zaman biteceğine karar vermez.
+ *
+ * Adı bir dönem `WaveCounter`'dı; "dalga" bir türün kelimesidir ve bileşen
+ * yalnızca bir sayı ile bir geri sayım çizer. `RoundLoop` ile aynı sözlüğü
+ * paylaşması, hangi parçanın hangisini beslediğini de okunur kılar.
  *
  * Önceden bir `startAutoLoop({ countdownSeconds, onWaveStart })` metodu vardı:
- * mola bitince tur numarasını KENDİSİ artırıyor, `totalWaves`e ulaşınca
+ * mola bitince tur numarasını KENDİSİ artırıyor, `totalRounds`e ulaşınca
  * KENDİSİ duruyordu. Bu bir tur orkestrasyonudur — tam olarak `GameScene`den
  * `RunDirector`a taşıdığımız cinsten bir kural — ve bir HUD bileşeninde
  * durmasının nedeni yoktu. Bileşen kendi tur defterini tutuyordu; oyunun
@@ -23,53 +37,58 @@ export interface WaveCounterOptions {
  * çalıştıranı showcase demosuydu. `startCountdown()` kalır: bir süreyi geri
  * saymak mekanizmadır, o sürenin sonunda NE OLACAĞI çağıranın kararıdır.
  */
-export class WaveCounter {
+export class RoundCounter {
   readonly element: HTMLDivElement;
-  private readonly waveLabelElement: HTMLSpanElement;
+  private readonly roundLabelElement: HTMLSpanElement;
   private readonly countdownElement: HTMLSpanElement;
-  private readonly totalWaves?: number;
+  private readonly totalRounds?: number;
   private readonly onCountdownEndHandler?: () => void;
+  private readonly formatRound?: (round: number, total?: number) => string;
+  private readonly formatCountdown?: (seconds: number) => string;
   private intervalId?: ReturnType<typeof setInterval>;
   private remainingSeconds = 0;
-  private wave = 1;
+  private round = 1;
   private readonly onLanguageChanged = (): void => {
-    this.setWave(this.wave);
+    this.setRound(this.round);
     if (!this.countdownElement.hidden) this.renderCountdown();
   };
 
-  constructor(options: WaveCounterOptions = {}) {
-    this.totalWaves = options.totalWaves;
+  constructor(options: RoundCounterOptions = {}) {
+    this.totalRounds = options.totalRounds;
     this.onCountdownEndHandler = options.onCountdownEnd;
+    this.formatRound = options.formatRound;
+    this.formatCountdown = options.formatCountdown;
 
     this.element = document.createElement('div');
-    this.element.className = ['vol-wave-counter', options.className].filter(Boolean).join(' ');
+    this.element.className = ['vol-round-counter', options.className].filter(Boolean).join(' ');
     this.element.setAttribute('role', 'status');
     this.element.setAttribute('aria-live', 'polite');
 
-    this.waveLabelElement = document.createElement('span');
-    this.waveLabelElement.className = 'vol-wave-counter__wave';
-    this.element.appendChild(this.waveLabelElement);
+    this.roundLabelElement = document.createElement('span');
+    this.roundLabelElement.className = 'vol-round-counter__round';
+    this.element.appendChild(this.roundLabelElement);
 
     this.countdownElement = document.createElement('span');
-    this.countdownElement.className = 'vol-wave-counter__countdown';
+    this.countdownElement.className = 'vol-round-counter__countdown';
     this.countdownElement.hidden = true;
     this.element.appendChild(this.countdownElement);
 
-    this.setWave(1);
+    this.setRound(1);
 
     i18next.on('languageChanged', this.onLanguageChanged);
   }
 
-  setWave(wave: number): void {
-    this.wave = wave;
-    this.waveLabelElement.textContent =
-      this.totalWaves !== undefined
-        ? i18next.t('core:wavecounter.waveTotal', { wave, total: this.totalWaves })
-        : i18next.t('core:wavecounter.wave', { wave });
+  setRound(round: number): void {
+    this.round = round;
+    this.roundLabelElement.textContent = this.formatRound
+      ? this.formatRound(round, this.totalRounds)
+      : this.totalRounds !== undefined
+      ? i18next.t('core:roundcounter.roundTotal', { round, total: this.totalRounds })
+      : i18next.t('core:roundcounter.round', { round });
   }
 
-  getWave(): number {
-    return this.wave;
+  getRound(): number {
+    return this.round;
   }
 
   /**
@@ -133,8 +152,8 @@ export class WaveCounter {
   }
 
   private renderCountdown(): void {
-    this.countdownElement.textContent = i18next.t('core:wavecounter.next', {
-      seconds: this.remainingSeconds,
-    });
+    this.countdownElement.textContent = this.formatCountdown
+      ? this.formatCountdown(this.remainingSeconds)
+      : i18next.t('core:roundcounter.next', { seconds: this.remainingSeconds });
   }
 }

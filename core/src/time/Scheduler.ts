@@ -11,6 +11,17 @@
  * kayıtlı bir koşu tekrar oynatılabilir.
  */
 
+/**
+ * Tek bir `update()` içinde bir işin çalışabileceği azami tekrar sayısı.
+ *
+ * Birikmiş tetiklenmeleri işlemek bilinçlidir (kare düşmesinde iş yenmemeli)
+ * ama SINIRSIZ olamaz: sekme dakikalarca donduktan sonra dönen tek bir dev
+ * delta, 1ms periyotlu bir işi yüz binlerce kez çağırır ve kareyi kilitler.
+ * Sınır aşılınca kalan borç DÜŞÜLÜR — mantık gerçek zamandan geri kalır ama
+ * uygulama yanıt vermeye devam eder.
+ */
+const DEFAULT_MAX_CATCH_UP = 32;
+
 /** Kaydedilmiş işi iptal eder. İkinci çağrı no-op'tur. */
 export type CancelScheduled = () => void;
 
@@ -24,12 +35,33 @@ interface Task {
   cancelled: boolean;
 }
 
+export interface SchedulerOptions {
+  /**
+   * Tek `update()` içinde bir işin azami tekrar sayısı. Varsayılan 32.
+   * `Infinity` verilebilir ama donmuş sekme dönüşünde kareyi kilitler.
+   */
+  maxCatchUp?: number;
+  /**
+   * Sınıra takılıp atlanan tetiklenmeler bildirilir — sessizce kaybolmaları,
+   * "neden bu iş bir süre çalışmadı?" sorusunu ayıklanamaz kılardı.
+   */
+  onCatchUpLimit?: (skipped: number) => void;
+}
+
 export class Scheduler {
   private readonly tasks: Task[] = [];
   private nextId = 1;
+  private readonly maxCatchUp: number;
+  private readonly onCatchUpLimit?: (skipped: number) => void;
   /** update() içindeyken eklenen işler bu turda İŞLENMEZ (bkz. update). */
   private draining = false;
   private readonly pending: Task[] = [];
+
+  constructor(options: SchedulerOptions = {}) {
+    const limit = options.maxCatchUp ?? DEFAULT_MAX_CATCH_UP;
+    this.maxCatchUp = limit > 0 ? limit : DEFAULT_MAX_CATCH_UP;
+    this.onCatchUpLimit = options.onCatchUpLimit;
+  }
 
   /** Verilen süre sonra BİR KEZ çalışır. */
   after(delayMs: number, callback: () => void): CancelScheduled {
@@ -53,6 +85,10 @@ export class Scheduler {
    * Tek bir `update()` içinde bir tekrarlı iş birden fazla kez tetiklenebilir
    * (uzun bir kare, kısa bir periyot). Bu bilinçlidir: aksi halde kare
    * düşmelerinde iş sessizce YİYİLİR ve mantık gerçek zamandan geri kalır.
+   *
+   * Ama `maxCatchUp` ile SINIRLIDIR (bkz. `DEFAULT_MAX_CATCH_UP`): sınırsız
+   * telafi, donmuş bir sekmeden dönüşte tek karede yüz binlerce çağrı demektir.
+   * Sınıra takılan iş kalan borcunu düşer ve `onCatchUpLimit` ile bildirir.
    */
   update(deltaMs: number): void {
     if (deltaMs <= 0) return;
@@ -62,8 +98,22 @@ export class Scheduler {
       if (task.cancelled) continue;
 
       task.remainingMs -= deltaMs;
-      // `while`: uzun bir karede birikmiş tetiklenmeler atlanmaz.
+
+      // `while`: uzun bir karede birikmiş tetiklenmeler atlanmaz — ama
+      // sınırsız değil (bkz. DEFAULT_MAX_CATCH_UP).
+      let runs = 0;
       while (!task.cancelled && task.remainingMs <= 0) {
+        if (runs >= this.maxCatchUp) {
+          const skipped =
+            task.intervalMs !== null ? Math.ceil(-task.remainingMs / task.intervalMs) : 0;
+          // Borcu düş: telafi edilemeyen tetiklenmeler geride bırakılır,
+          // aksi halde her karede aynı sınıra takılıp asla kapanmaz.
+          task.remainingMs = task.intervalMs ?? 0;
+          this.onCatchUpLimit?.(skipped);
+          break;
+        }
+        runs++;
+
         task.callback();
         if (task.intervalMs === null) {
           task.cancelled = true;

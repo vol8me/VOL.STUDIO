@@ -77,16 +77,16 @@
     "next": "Next",
     "finish": "Finish"
   },
-  "wavecounter": {
-    "wave": "Wave {{wave}}",
-    "waveTotal": "Wave {{wave}} / {{total}}",
-    "next": "Next wave: {{seconds}}s"
-  },
   "minimap": {
     "label": "Map",
     "interactive": "{{label}}, interactive — press Enter to jump to center"
   },
   "selectionInfo": {
     "emptyState": "No selection"
+  },
+  "roundcounter": {
+    "round": "Round {{round}}",
+    "roundTotal": "Round {{round}} / {{total}}",
+    "next": "Next: {{seconds}}s"
   }
 }

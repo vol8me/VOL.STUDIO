@@ -4,7 +4,7 @@ import { NumberStepper } from '../../src/ui/primitives/NumberStepper';
 import { Select } from '../../src/ui/primitives/Select';
 import { Bar } from '../../src/ui/feedback/Bar';
 import { ResourceBar } from '../../src/ui/feedback/ResourceBar';
-import { WaveCounter } from '../../src/ui/feedback/WaveCounter';
+import { RoundCounter } from '../../src/ui/feedback/RoundCounter';
 import { PauseResumeButton } from '../../src/ui/controls/PauseResumeButton';
 import { Carousel } from '../../src/ui/controls/Carousel';
 import { DPad } from '../../src/ui/controls/DPad';
@@ -102,17 +102,17 @@ describe('languageChanged — canli dil degisimi', () => {
     await changeLanguage('tr');
   });
 
-  it('WaveCounter dalga metni dil degisiminde guncellenir', async () => {
-    const wc = track(new WaveCounter({ totalWaves: 10 }));
-    wc.setWave(3);
-    const waveEl = wc.element.querySelector<HTMLSpanElement>('.vol-wave-counter__wave');
-    expect(waveEl?.textContent).toBe(
-      i18next.t('core:wavecounter.waveTotal', { wave: 3, total: 10 }),
+  it('RoundCounter tur metni dil degisiminde guncellenir', async () => {
+    const wc = track(new RoundCounter({ totalRounds: 10 }));
+    wc.setRound(3);
+    const roundEl = wc.element.querySelector<HTMLSpanElement>('.vol-round-counter__round');
+    expect(roundEl?.textContent).toBe(
+      i18next.t('core:roundcounter.roundTotal', { round: 3, total: 10 }),
     );
 
     await changeLanguage('en');
-    expect(waveEl?.textContent).toBe(
-      i18next.t('core:wavecounter.waveTotal', { wave: 3, total: 10 }),
+    expect(roundEl?.textContent).toBe(
+      i18next.t('core:roundcounter.roundTotal', { round: 3, total: 10 }),
     );
 
     await changeLanguage('tr');

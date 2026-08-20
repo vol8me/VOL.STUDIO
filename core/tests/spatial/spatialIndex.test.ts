@@ -190,4 +190,110 @@ describe('SpatialIndex', () => {
     expect(index.size).toBe(0);
     expect(index.getCellCount()).toBe(0);
   });
+
+  describe('geniş yarıçap sözleşmesi', () => {
+    it('query() cellSize ötesindeki varlığı KAÇIRIR — sözleşmesi budur', () => {
+      // Bu kasıtlı bir sınırdır ve belgelenmiştir; testin amacı sınırın
+      // farkında olunduğunu kilitlemek, aksi halde queryRadius'un neden var
+      // olduğu bir sonraki okuyucuya kaybolur.
+      const index = new SpatialIndex<Unit>(50);
+      const far = unit(200, 0);
+      index.insert(far);
+
+      expect(index.query(0, 0)).not.toContain(far);
+    });
+
+    it('queryRadius cellSize ötesini DOĞRU bulur', () => {
+      const index = new SpatialIndex<Unit>(50);
+      const far = unit(200, 0);
+      index.insert(far);
+
+      expect(index.queryRadius(0, 0, 250)).toContain(far);
+    });
+
+    it('queryRadius sonucu daireye göre filtreler (köşe sızıntısı yok)', () => {
+      // Taranan hücre penceresi KARE, arama alanı DAİREdir; filtrelemeden
+      // köşedeki varlıklar da dönerdi.
+      const index = new SpatialIndex<Unit>(10);
+      const corner = unit(90, 90); // merkeze uzaklık ~127
+      index.insert(corner);
+
+      expect(index.queryRadius(0, 0, 100)).not.toContain(corner);
+      expect(index.queryRadius(0, 0, 130)).toContain(corner);
+    });
+
+    it('queryRadius geçersiz yarıçapta boş döner', () => {
+      const index = new SpatialIndex<Unit>(50);
+      index.insert(unit(10, 10));
+
+      expect(index.queryRadius(0, 0, 0)).toEqual([]);
+      expect(index.queryRadius(0, 0, -5)).toEqual([]);
+      expect(index.queryRadius(0, 0, NaN)).toEqual([]);
+    });
+
+    it('queryRadius pasif varlıkları eler', () => {
+      const index = new SpatialIndex<Unit>(50, (u) => u.alive);
+      index.insert(unit(10, 10, false));
+      expect(index.queryRadius(0, 0, 100)).toEqual([]);
+    });
+
+    it('queryBounds dikdörtgen içindekileri döner', () => {
+      const index = new SpatialIndex<Unit>(20);
+      const inside = unit(50, 50);
+      const outside = unit(500, 500);
+      index.insert(inside);
+      index.insert(outside);
+
+      const result = index.queryBounds(0, 0, 100, 100);
+      expect(result).toContain(inside);
+      expect(result).not.toContain(outside);
+    });
+
+    it('queryBounds negatif genişlik/yükseklik normalize eder', () => {
+      // Sürükleyerek çizilen seçim kutusu her yöne açılabilir.
+      const index = new SpatialIndex<Unit>(20);
+      const target = unit(50, 50);
+      index.insert(target);
+
+      expect(index.queryBounds(100, 100, -100, -100)).toContain(target);
+    });
+
+    it('queryBounds hücre sınırına yakın varlıkları kesin olarak filtreler', () => {
+      const index = new SpatialIndex<Unit>(20);
+      const justOutside = unit(101, 50);
+      index.insert(justOutside);
+
+      expect(index.queryBounds(0, 0, 100, 100)).not.toContain(justOutside);
+    });
+
+    it('findNearest en yakını verir ve kendini hariç tutabilir', () => {
+      const index = new SpatialIndex<Unit>(50);
+      const self = unit(0, 0);
+      const near = unit(30, 0);
+      const far = unit(120, 0);
+      index.rebuild([self, near, far]);
+
+      expect(index.findNearest(0, 0, 200)).toBe(self);
+      expect(index.findNearest(0, 0, 200, self)).toBe(near);
+    });
+
+    it('findNearest yarıçap içinde hiçbir şey yoksa null döner', () => {
+      const index = new SpatialIndex<Unit>(50);
+      index.insert(unit(500, 500));
+      expect(index.findNearest(0, 0, 100)).toBeNull();
+    });
+
+    it('geniş sorgular da yeniden kullanılan tamponu paylaşır ama çakışmaz', () => {
+      const index = new SpatialIndex<Unit>(20);
+      const a = unit(10, 10);
+      const b = unit(500, 500);
+      index.rebuild([a, b]);
+
+      const first = index.queryRadius(10, 10, 30);
+      const second = index.queryBounds(480, 480, 40, 40);
+
+      expect(first).toEqual([a]);
+      expect(second).toEqual([b]);
+    });
+  });
 });

@@ -26,6 +26,11 @@ class MinHeap {
     return this.values.length;
   }
 
+  clear(): void {
+    this.values.length = 0;
+    this.keys.length = 0;
+  }
+
   push(value: number, key: number): void {
     this.values.push(value);
     this.keys.push(key);
@@ -69,6 +74,65 @@ class MinHeap {
 }
 
 /**
+ * A* çalışma alanı — tampon sahibi.
+ *
+ * `findPath` her çağrıda üç typed array tahsis eder (`cols * rows` boyutunda);
+ * tek seferlik aramada bu görünmez, ama çok sayıda birim her kare yol
+ * arattığında kare başına megabaytlarca çöp üretir ve GC takılmaları başlar.
+ *
+ * `PathFinder` tamponları BİR KEZ ayırır ve her aramada damga (generation)
+ * tekniğiyle "temizler": diziyi sıfırlamak yerine her aramaya artan bir damga
+ * verilir ve eski damgalı hücreler ziyaret edilmemiş sayılır. Böylece temizlik
+ * de O(1) olur.
+ *
+ * Aynı ızgara boyutuyla tekrar tekrar arama yapılacaksa bu sınıf kullanılır;
+ * tek seferlik aramalarda `findPath` yeterlidir.
+ */
+export class PathFinder {
+  private readonly gScore: Float64Array;
+  private readonly cameFrom: Int32Array;
+  private readonly stamp: Int32Array;
+  private readonly open: MinHeap;
+  private generation = 0;
+
+  constructor(
+    readonly cols: number,
+    readonly rows: number,
+  ) {
+    if (!Number.isInteger(cols) || !Number.isInteger(rows) || cols <= 0 || rows <= 0) {
+      throw new Error(`PathFinder: cols/rows pozitif tam sayı olmalı (gelen: ${cols}x${rows})`);
+    }
+    const size = cols * rows;
+    this.gScore = new Float64Array(size);
+    this.cameFrom = new Int32Array(size);
+    // 0 damgası "hiç ziyaret edilmedi" anlamına gelir; ilk arama 1'den başlar.
+    this.stamp = new Int32Array(size);
+    this.open = new MinHeap();
+  }
+
+  /** Bkz. `findPath` — aynı sözleşme, tamponlar yeniden kullanılır. */
+  find(start: GridPoint, goal: GridPoint, options: FindPathOptions = {}): GridPoint[] | null {
+    this.generation++;
+    this.open.clear();
+    return search({ cols: this.cols, rows: this.rows }, start, goal, options, {
+      gScore: this.gScore,
+      cameFrom: this.cameFrom,
+      stamp: this.stamp,
+      generation: this.generation,
+      open: this.open,
+    });
+  }
+}
+
+interface Workspace {
+  gScore: Float64Array;
+  cameFrom: Int32Array;
+  stamp: Int32Array;
+  generation: number;
+  open: MinHeap;
+}
+
+/**
  * Izgara üzerinde A* ile en kısa yol.
  *
  * Izgaranın İÇERİĞİNİ bilmez: geçilebilirlik ve maliyet çağırandan gelen
@@ -79,6 +143,9 @@ class MinHeap {
  * (admissible olması) A*'ın en kısa yolu bulma garantisinin koşuludur; çapraz
  * harekette Manhattan kullanmak bu garantiyi bozar ve daha uzun yollar üretir.
  *
+ * Tekrar tekrar arama yapılacaksa `PathFinder` kullanılmalıdır: bu fonksiyon
+ * her çağrıda tamponlarını yeniden ayırır.
+ *
  * @returns Başlangıçtan hedefe hücre dizisi (ikisi de dahil); yol yoksa `null`.
  *   Başlangıç hedefe eşitse tek elemanlı dizi.
  */
@@ -87,6 +154,25 @@ export function findPath(
   start: GridPoint,
   goal: GridPoint,
   options: FindPathOptions = {},
+): GridPoint[] | null {
+  const size = gridSize.cols * gridSize.rows;
+  if (size <= 0) return null;
+
+  return search(gridSize, start, goal, options, {
+    gScore: new Float64Array(size),
+    cameFrom: new Int32Array(size),
+    stamp: new Int32Array(size),
+    generation: 1,
+    open: new MinHeap(),
+  });
+}
+
+function search(
+  gridSize: { cols: number; rows: number },
+  start: GridPoint,
+  goal: GridPoint,
+  options: FindPathOptions,
+  workspace: Workspace,
 ): GridPoint[] | null {
   const { cols, rows } = gridSize;
   const neighbours = options.neighbours ?? ORTHOGONAL_NEIGHBOURS;
@@ -113,20 +199,25 @@ export function findPath(
     return hasDiagonal ? Math.max(dx, dy) : dx + dy;
   };
 
-  const gScore = new Float64Array(cols * rows).fill(Infinity);
-  const cameFrom = new Int32Array(cols * rows).fill(-1);
-  const closed = new Uint8Array(cols * rows);
+  const { gScore, cameFrom, stamp, generation, open } = workspace;
+
+  // Damga tekniği: diziyi sıfırlamak yerine bu aramanın damgasını taşımayan
+  // hücreler "ziyaret edilmemiş" sayılır. Böylece hazırlık O(1) olur.
+  // Kapalı (closed) durumu damganın NEGATİFİYLE işaretlenir.
+  const isSeen = (i: number): boolean => Math.abs(stamp[i]) === generation;
+  const isClosed = (i: number): boolean => stamp[i] === -generation;
 
   gScore[startIndex] = 0;
-  const open = new MinHeap();
+  cameFrom[startIndex] = -1;
+  stamp[startIndex] = generation;
   open.push(startIndex, heuristic(start.col, start.row));
 
   let expanded = 0;
 
   while (open.size > 0) {
     const currentIndex = open.pop()!;
-    if (closed[currentIndex]) continue;
-    closed[currentIndex] = 1;
+    if (isClosed(currentIndex)) continue;
+    stamp[currentIndex] = -generation;
 
     if (currentIndex === goalIndex) {
       const path: GridPoint[] = [];
@@ -146,7 +237,7 @@ export function findPath(
       if (!inBounds(next)) continue;
 
       const nextIndex = index(next);
-      if (closed[nextIndex] || !isWalkable(next)) continue;
+      if (isClosed(nextIndex) || !isWalkable(next)) continue;
 
       const step = costOf(next);
       if (!(step > 0) || !Number.isFinite(step)) continue;
@@ -155,9 +246,10 @@ export function findPath(
       const diagonal = offset.col !== 0 && offset.row !== 0;
       const tentative = gScore[currentIndex] + step * (diagonal ? Math.SQRT2 : 1);
 
-      if (tentative < gScore[nextIndex]) {
+      if (!isSeen(nextIndex) || tentative < gScore[nextIndex]) {
         gScore[nextIndex] = tentative;
         cameFrom[nextIndex] = currentIndex;
+        stamp[nextIndex] = generation;
         open.push(nextIndex, tentative + heuristic(next.col, next.row));
       }
     }

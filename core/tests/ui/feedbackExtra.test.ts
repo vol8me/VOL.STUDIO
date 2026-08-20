@@ -3,7 +3,7 @@ import { createRandom } from '../../src/audio/synth/random';
 import { FloatingTextManager } from '../../src/ui/feedback/FloatingText';
 import { ResourceBar } from '../../src/ui/feedback/ResourceBar';
 import { ResourceCounter } from '../../src/ui/feedback/ResourceCounter';
-import { WaveCounter } from '../../src/ui/feedback/WaveCounter';
+import { RoundCounter } from '../../src/ui/feedback/RoundCounter';
 import { RoundLoop } from '../../src/time/RoundLoop';
 import { XPBar, applyXpGain } from '../../src/ui/feedback/XPBar';
 
@@ -152,29 +152,29 @@ describe('ResourceBar', () => {
   });
 });
 
-describe('WaveCounter', () => {
-  it('setWave/getWave totalWaves ile birlikte doğru metni üretir', () => {
-    const counter = track(new WaveCounter({ totalWaves: 10 }));
-    counter.setWave(3);
-    expect(counter.getWave()).toBe(3);
-    expect(counter.element.querySelector('.vol-wave-counter__wave')?.textContent).toBe(
-      'Dalga 3 / 10',
+describe('RoundCounter', () => {
+  it('setRound/getRound totalRounds ile birlikte doğru metni üretir', () => {
+    const counter = track(new RoundCounter({ totalRounds: 10 }));
+    counter.setRound(3);
+    expect(counter.getRound()).toBe(3);
+    expect(counter.element.querySelector('.vol-round-counter__round')?.textContent).toBe(
+      'Tur 3 / 10',
     );
   });
 
   it('startCountdown her saniye azalır, süre dolunca onCountdownEnd çağrılır', () => {
     vi.useFakeTimers();
     const onCountdownEnd = vi.fn();
-    const counter = track(new WaveCounter({ onCountdownEnd }));
+    const counter = track(new RoundCounter({ onCountdownEnd }));
 
     counter.startCountdown(3);
     const countdownEl = counter.element.querySelector<HTMLSpanElement>(
-      '.vol-wave-counter__countdown',
+      '.vol-round-counter__countdown',
     )!;
-    expect(countdownEl.textContent).toBe('Sonraki dalga: 3s');
+    expect(countdownEl.textContent).toBe('Sonraki: 3s');
 
     vi.advanceTimersByTime(1000);
-    expect(countdownEl.textContent).toBe('Sonraki dalga: 2s');
+    expect(countdownEl.textContent).toBe('Sonraki: 2s');
 
     vi.advanceTimersByTime(2000);
     expect(onCountdownEnd).toHaveBeenCalledTimes(1);
@@ -185,39 +185,39 @@ describe('WaveCounter', () => {
     // Regresyon: `startAutoLoop()` bir dönem BU BİLEŞENİN İÇİNDEYDİ. Tur
     // orkestrasyonu bir HUD bileşeninin işi değil; oyunun kendi tur yöneticisi
     // varsa iki defter kaçınılmaz olarak kayardı. Bu test ayrımın uçtan uca
-    // çalıştığını gösterir: kural RoundLoop'ta, gösterim WaveCounter'da.
+    // çalıştığını gösterir: kural RoundLoop'ta, gösterim RoundCounter'da.
     const onRoundStart = vi.fn();
-    const counter = track(new WaveCounter({ totalWaves: 2 }));
+    const counter = track(new RoundCounter({ totalRounds: 2 }));
     const loop = new RoundLoop({
       breakMs: 1000,
       totalRounds: 2,
       onRoundStart: (round) => {
         onRoundStart(round);
-        counter.setWave(round);
+        counter.setRound(round);
       },
     });
 
     loop.start();
-    expect(counter.getWave()).toBe(1);
+    expect(counter.getRound()).toBe(1);
 
     loop.update(1000);
-    expect(counter.getWave()).toBe(2);
+    expect(counter.getRound()).toBe(2);
     expect(onRoundStart).toHaveBeenLastCalledWith(2);
 
     onRoundStart.mockClear();
     loop.update(1000);
     expect(onRoundStart).not.toHaveBeenCalled();
-    expect(counter.getWave()).toBe(2);
+    expect(counter.getRound()).toBe(2);
   });
 
   it('stopCountdown geri sayımı durdurur ve metni gizler', () => {
     vi.useFakeTimers();
-    const counter = track(new WaveCounter());
+    const counter = track(new RoundCounter());
     counter.startCountdown(10);
     counter.stopCountdown();
 
     const countdownEl = counter.element.querySelector<HTMLSpanElement>(
-      '.vol-wave-counter__countdown',
+      '.vol-round-counter__countdown',
     )!;
     expect(countdownEl.hidden).toBe(true);
 
@@ -227,7 +227,7 @@ describe('WaveCounter', () => {
 
   it("destroy bekleyen interval'i temizler", () => {
     vi.useFakeTimers();
-    const counter = new WaveCounter();
+    const counter = new RoundCounter();
     counter.startCountdown(10);
     const clearSpy = vi.spyOn(window, 'clearInterval');
     counter.destroy();

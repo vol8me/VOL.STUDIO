@@ -10,7 +10,7 @@ import {
   SelectionInfoPanel,
   Text,
   VOL_COLORS,
-  WaveCounter,
+  RoundCounter,
   RoundLoop,
   XPBar,
   applyXpGain,
@@ -345,17 +345,17 @@ function buildResourceBarCard(disposables: Destroyable[]): HTMLElement {
 }
 
 /**
- * WaveCounter: saf görüntü. Tur ilerletme KURALI bileşende değil, CORE'un
+ * RoundCounter: saf görüntü. Tur ilerletme KURALI bileşende değil, CORE'un
  * headless `RoundLoop` primitifindedir — bir tower defense'te dalga molası,
  * roguelite'ta oda arası aynı parçadır. Sayaç yalnızca çıktısını çizer.
  */
-function buildWaveCounterCard(disposables: Destroyable[]): HTMLElement {
+function buildRoundCounterCard(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
-  const waveCounter = new WaveCounter({ totalWaves: 10 });
-  disposables.push(waveCounter);
-  wrap.appendChild(waveCounter.element);
+  const roundCounter = new RoundCounter({ totalRounds: 10 });
+  disposables.push(roundCounter);
+  wrap.appendChild(roundCounter.element);
 
   const hint = new Text(i18next.t('volui:hud.waveCounterHint'), { variant: 'muted' });
   disposables.push(hint);
@@ -376,7 +376,7 @@ function buildWaveCounterCard(disposables: Destroyable[]): HTMLElement {
     lastFrame = now;
     loop?.update(delta);
     if (loop) {
-      waveCounter.setRemainingSeconds(loop.getRemainingMs() / 1000);
+      roundCounter.setRemainingSeconds(loop.getRemainingMs() / 1000);
       rafId = requestAnimationFrame(tick);
     }
   };
@@ -394,7 +394,7 @@ function buildWaveCounterCard(disposables: Destroyable[]): HTMLElement {
       loop = new RoundLoop({
         breakMs: 3000,
         totalRounds: 10,
-        onRoundStart: (round) => waveCounter.setWave(round),
+        onRoundStart: (round) => roundCounter.setRound(round),
         onComplete: stopLoop,
       });
       loop.start();
@@ -407,8 +407,8 @@ function buildWaveCounterCard(disposables: Destroyable[]): HTMLElement {
   const resetButton = new Button(i18next.t('volui:hud.reset'), {
     onClick: () => {
       stopLoop();
-      waveCounter.stopCountdown();
-      waveCounter.setWave(1);
+      roundCounter.stopCountdown();
+      roundCounter.setRound(1);
     },
   });
   disposables.push(resetButton);
@@ -661,7 +661,7 @@ export function buildHudTab(): { element: HTMLElement; destroy: () => void } {
     buildResourceCounterCard(disposables),
     buildFloatingTextCard(disposables),
     buildResourceBarCard(disposables),
-    buildWaveCounterCard(disposables),
+    buildRoundCounterCard(disposables),
     buildSelectionInfoPanelCard(disposables),
     buildBuildMenuCard(disposables),
     buildMinimapCard(disposables),

@@ -214,7 +214,7 @@
   display: flex;
 }
 
-.vol-wave-counter {
+.vol-round-counter {
   pointer-events: auto;
   padding: var(--vol-space-sm) var(--vol-space-lg);
   background: var(--vol-ui-overlay-panel);
@@ -226,14 +226,14 @@
   display: flex;
 }
 
-.vol-wave-counter__wave {
+.vol-round-counter__round {
   font-family: var(--vol-font-family);
   color: var(--vol-ui-text);
   font-size: 16px;
   font-weight: 700;
 }
 
-.vol-wave-counter__countdown {
+.vol-round-counter__countdown {
   font-family: var(--vol-font-family);
   color: var(--vol-ui-text-muted);
   font-size: 12px;

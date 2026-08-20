@@ -135,4 +135,70 @@ describe('Scheduler', () => {
 
     expect(run()).toEqual(run());
   });
+
+  describe('runaway telafi koruması', () => {
+    it('tek update içindeki tekrar sayısı SINIRLIDIR', () => {
+      // Donmuş bir sekmeden dönüşte tek dev delta, kısa periyotlu bir işi
+      // yüz binlerce kez çağırıp kareyi kilitlerdi.
+      const scheduler = new Scheduler({ maxCatchUp: 5 });
+      const fn = vi.fn();
+      scheduler.every(1, fn);
+
+      scheduler.update(600_000); // 10 dakikalık donma
+      expect(fn).toHaveBeenCalledTimes(5);
+    });
+
+    it('sınıra takılan iş borcunu DÜŞER — sonraki karede tekrar takılmaz', () => {
+      // Borç düşülmezse her karede aynı sınıra çarpar ve iş asla normale dönmez.
+      const scheduler = new Scheduler({ maxCatchUp: 3 });
+      const fn = vi.fn();
+      scheduler.every(10, fn);
+
+      scheduler.update(100_000);
+      fn.mockClear();
+
+      scheduler.update(10);
+      expect(fn).toHaveBeenCalledTimes(1);
+    });
+
+    it('atlanan tetiklenme sayısı bildirilir (sessizce kaybolmaz)', () => {
+      const onCatchUpLimit = vi.fn();
+      const scheduler = new Scheduler({ maxCatchUp: 2, onCatchUpLimit });
+      scheduler.every(10, vi.fn());
+
+      scheduler.update(1000);
+      expect(onCatchUpLimit).toHaveBeenCalledTimes(1);
+      expect(onCatchUpLimit.mock.calls[0][0]).toBeGreaterThan(0);
+    });
+
+    it('normal karede sınır devreye girmez', () => {
+      const onCatchUpLimit = vi.fn();
+      const scheduler = new Scheduler({ maxCatchUp: 32, onCatchUpLimit });
+      const fn = vi.fn();
+      scheduler.every(16, fn);
+
+      scheduler.update(16);
+      scheduler.update(16);
+      expect(fn).toHaveBeenCalledTimes(2);
+      expect(onCatchUpLimit).not.toHaveBeenCalled();
+    });
+
+    it('geçersiz maxCatchUp varsayılana düşer', () => {
+      const scheduler = new Scheduler({ maxCatchUp: 0 });
+      const fn = vi.fn();
+      scheduler.every(1, fn);
+
+      scheduler.update(10_000);
+      expect(fn).toHaveBeenCalledTimes(32);
+    });
+
+    it('tek seferlik iş sınırdan etkilenmez', () => {
+      const scheduler = new Scheduler({ maxCatchUp: 1 });
+      const fn = vi.fn();
+      scheduler.after(10, fn);
+
+      scheduler.update(10_000);
+      expect(fn).toHaveBeenCalledTimes(1);
+    });
+  });
 });

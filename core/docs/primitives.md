@@ -35,15 +35,18 @@ Gecikmeli ve tekrarlı işler. Deterministiktir: aynı delta dizisi aynı
 tetiklenme sırasını üretir.
 
 ```ts
-const scheduler = new Scheduler();
+const scheduler = new Scheduler({ maxCatchUp: 32 });
 const cancel = scheduler.every(2000, tick);
 scheduler.after(500, once);
 
 scheduler.update(deltaMs);
 ```
 
-Uzun bir karede birikmiş tetiklenmeler **atlanmaz**; aksi halde kare
-düşmelerinde mantık gerçek zamandan geri kalır.
+Uzun bir karede birikmiş tetiklenmeler **atlanmaz** (aksi halde kare
+düşmelerinde mantık gerçek zamandan geri kalır) ama **sınırsız da değildir**:
+donmuş bir sekmeden dönen tek dev delta, 1ms periyotlu bir işi yüz binlerce kez
+çağırıp kareyi kilitlerdi. `maxCatchUp` aşılınca kalan borç düşülür ve
+`onCatchUpLimit` ile bildirilir.
 
 ### `Cooldown`
 
@@ -170,7 +173,17 @@ grid.toWorld(col, row, cellSize); // hücre MERKEZİ
 Izgara üzerinde en kısa yol. Izgaranın içeriğini bilmez: geçilebilirlik ve
 maliyet çağırandan gelen fonksiyonlardır.
 
+Aynı ızgarada tekrar tekrar arama yapılacaksa `PathFinder` kullanılır:
+tamponları bir kez ayırır ve her aramada damga (generation) tekniğiyle
+"temizler", yani hazırlık O(1) olur. `findPath` her çağrıda üç typed array
+tahsis eder — tek seferlik aramada görünmez, çok sayıda birim her kare yol
+arattığında GC takılmaları başlar.
+
 ```ts
+const finder = new PathFinder(cols, rows);
+finder.find(start, goal, options);
+
+// tek seferlik:
 const path = findPath({ cols, rows }, start, goal, {
   isWalkable: (p) => !blocked.has(key(p)),
   cost: (p) => terrainCost(p),
@@ -181,6 +194,86 @@ const path = findPath({ cols, rows }, start, goal, {
 Sezgisel komşuluğa göre seçilir (dört yönde Manhattan, çaprazda Chebyshev);
 sezgiselin gerçek maliyeti aşmaması A\*'ın en kısa yol garantisinin koşuludur.
 Çapraz adım maliyeti √2 sayılır, yoksa yol çaprazlara çarpılırdı.
+
+### `FlowField`
+
+TEK hedefe giden ÇOK birim için. `findPath` bir başlangıçtan bir hedefe arar
+(N birim = N arama); `FlowField` hedeften geriye tek bir Dijkstra taraması
+yapar ve her hücre için "buradan hangi komşuya" bilgisini üretir. 10 birim de
+5000 birim de aynı alanı okur.
+
+```ts
+const field = new FlowField(cols, rows);
+field.compute([goal], { isWalkable, cost });
+
+field.getNext(col, row); // hedefe doğru komşu; ulaşılamıyorsa null
+field.getCost(col, row); // toplam maliyet; ulaşılamıyorsa Infinity
+field.traceFrom(col, row); // tam yol (alan hazır olduğu için ucuz)
+```
+
+Bedeli: tüm ızgara taranır ve hedef değişince yeniden hesaplanır. Az birim ya
+da sık değişen hedefte A\* daha ucuzdur — ikisi rakip değil, farklı sorulara
+verilen cevaplardır.
+
+### Doğru ve görüş
+
+```ts
+bresenhamLine(from, to); // uçlar dahil, bitişik hücreler
+hasLineOfSight(from, to, { blocks }); // uç hücreler varsayılan olarak sayılmaz
+```
+
+Yalnızca tam sayı aritmetiği kullanır: kayan noktalı adımlarda uzun
+mesafelerde birikimli yuvarlama hatası doğruyu kaydırır ve iki uçtan çizilen
+aynı doğru farklı hücrelerden geçer.
+
+## Koleksiyonlar
+
+### `RingBuffer`
+
+Sabit kapasiteli kayan pencere. Dizi + `shift()` yerine: `shift()` kalan tüm
+elemanları kaydırır (O(n)), halka tamponda ekleme/düşürme O(1).
+
+```ts
+const history = new RingBuffer<number>(60);
+const evicted = history.push(value); // dolduysa düşen öğeyi DÖNDÜRÜR
+```
+
+Düşeni döndürmesi, kayan bir toplam/ortalama tutan çağıran için gereklidir.
+
+### `Deck`
+
+Karılmış çekme yığını, iskarta ve yeniden karma ile. `WeightedPicker`den farkı:
+o her seferinde bağımsız bir zar atar, `Deck` sonlu bir yığından TEKRARSIZ
+çeker. "N çekişte her öğe en az bir kez" garantisini yalnızca ikincisi verir.
+
+```ts
+const deck = new Deck(items, random);
+deck.draw();
+deck.discard(item); // tükenince karılıp geri döner
+deck.putOnTop(item);
+```
+
+Fisher-Yates ile karar. `sort(() => rnd - 0.5)` yaygın ama yanlıştır:
+karşılaştırma tutarsız olduğu için sonuç sıralama algoritmasına bağlıdır ve
+dağılım düzgün değildir.
+
+### `SlotContainer`
+
+Sabit sayıda slot, isteğe bağlı yığınlama, taşıma ve takas.
+
+```ts
+const bag = new SlotContainer<Item>({
+  size: 24,
+  isSameItem: (a, b) => a.id === b.id,
+  maxStack: (item) => item.stackSize,
+});
+
+const leftover = bag.add(item, 25); // KISMİ ekler, sığmayanı döner
+bag.swap(from, to); // aynı yığınlanabilir öğede TAKAS değil BİRLEŞTİRME
+```
+
+Yığınlama varsayılan olarak KAPALIDIR (`maxStack` 1): yığınlanamayan bir öğeyi
+yanlışlıkla bindirmek sessizce kopya üretirdi.
 
 ## Performans
 
@@ -217,10 +310,17 @@ const index = new SpatialIndex<T>(64, (t) => t.isActive);
 index.rebuild(items); // tüm dünyayı yeniden indeksle, O(N)
 index.update(item); // yalnızca değişeni bildir; hücre aynıysa false, iş yok
 
-for (const near of index.query(x, y)) {
-  /* … */
-}
+index.query(x, y); // 3×3 hücre — YALNIZCA yarıçap ≤ cellSize iken doğru
+index.queryRadius(x, y, r); // her yarıçapta doğru, daireye göre filtreli
+index.queryBounds(x, y, w, h); // dikdörtgen bölge (negatif boyut normalize)
+index.findNearest(x, y, r, self); // en yakın, kendini hariç tutabilir
 ```
+
+**Sözleşme farkı önemlidir:** `query()` sabit 3×3 pencere tarar; arama yarıçapı
+`cellSize`'ı aşarsa uzaktaki varlığı **sessizce** kaçırır. Bu, ölçü
+değiştiğinde (menzil artıran bir etki, farklı birim tipi) ortaya çıkan ve fark
+edilmesi zor bir hatadır. Geniş arama için `queryRadius` kullanılır — taranacak
+hücre sayısını yarıçaptan hesaplar.
 
 İki model **aynı sonucu** verir (testle kilitli). Nesnelerin çoğu sabitse ve az
 sayıda öğe hareket ediyorsa artımlı model O(hareket eden)'e düşer; hepsi her

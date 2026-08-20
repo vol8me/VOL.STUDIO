@@ -19,15 +19,30 @@ export { DisposableScope, type Disposable } from './lifecycle/DisposableScope';
  */
 export { Scheduler, Cooldown, RoundLoop, Clock } from './time';
 export type { CancelScheduled, RoundLoopOptions } from './time';
+export type { SchedulerOptions } from './time/Scheduler';
 export { EventBus, type Unsubscribe } from './events/EventBus';
 export {
   Grid,
   findPath,
+  PathFinder,
+  FlowField,
+  bresenhamLine,
+  hasLineOfSight,
   ORTHOGONAL_NEIGHBOURS,
   DIAGONAL_NEIGHBOURS,
   type GridPoint,
   type FindPathOptions,
+  type FlowFieldOptions,
+  type LineOfSightOptions,
 } from './grid';
+export {
+  RingBuffer,
+  Deck,
+  SlotContainer,
+  type DeckOptions,
+  type Slot,
+  type SlotContainerOptions,
+} from './collections';
 export { WeightedPicker, type WeightedEntry } from './random/WeightedPicker';
 export {
   clamp,

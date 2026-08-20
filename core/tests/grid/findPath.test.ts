@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findPath } from '../../src/grid/findPath';
+import { findPath, PathFinder } from '../../src/grid/findPath';
 import { DIAGONAL_NEIGHBOURS, type GridPoint } from '../../src/grid/Grid';
 
 /** `#` geçilemez, `.` geçilebilir. Satırlar yukarıdan aşağıya. */
@@ -148,5 +148,74 @@ describe('findPath (A*)', () => {
     const a = findPath(size, { col: 0, row: 0 }, { col: 4, row: 2 }, { isWalkable });
     const b = findPath(size, { col: 0, row: 0 }, { col: 4, row: 2 }, { isWalkable });
     expect(a).toEqual(b);
+  });
+
+  describe('PathFinder (yeniden kullanılan tamponlar)', () => {
+    it('findPath ile AYNI sonucu verir', () => {
+      const { size, isWalkable } = parse(['.....', '.###.', '.....', '.#...', '.....']);
+      const start = { col: 0, row: 0 };
+      const goal = { col: 4, row: 4 };
+
+      const oneShot = findPath(size, start, goal, { isWalkable });
+      const finder = new PathFinder(size.cols, size.rows);
+
+      expect(finder.find(start, goal, { isWalkable })).toEqual(oneShot);
+    });
+
+    it('ARDIŞIK aramalar birbirini kirletmez (damga sıfırlaması)', () => {
+      // Tamponlar sıfırlanmak yerine damgalanıyor; damga mantığı bozuksa
+      // ikinci arama birinci aramanın gScore/cameFrom verisini görür ve
+      // yanlış ya da imkânsız bir yol üretir.
+      const { size, isWalkable } = parse(['.....', '.###.', '.....']);
+      const finder = new PathFinder(size.cols, size.rows);
+
+      const first = finder.find({ col: 0, row: 0 }, { col: 4, row: 0 }, { isWalkable });
+      const second = finder.find({ col: 0, row: 2 }, { col: 4, row: 2 }, { isWalkable });
+      const firstAgain = finder.find({ col: 0, row: 0 }, { col: 4, row: 0 }, { isWalkable });
+
+      expect(first).toEqual(firstAgain);
+      expect(second?.[0]).toEqual({ col: 0, row: 2 });
+      expect(second?.at(-1)).toEqual({ col: 4, row: 2 });
+    });
+
+    it('BAŞARISIZ aramadan sonra sonraki arama doğru çalışır', () => {
+      // Yol bulunamayan bir arama tamponu yarım bırakır; damga bunu
+      // görünmez kılmalı.
+      const { size, isWalkable } = parse(['..#..', '..#..', '..#..']);
+      const finder = new PathFinder(size.cols, size.rows);
+
+      expect(finder.find({ col: 0, row: 0 }, { col: 4, row: 0 }, { isWalkable })).toBeNull();
+      const ok = finder.find({ col: 0, row: 0 }, { col: 1, row: 2 }, { isWalkable });
+      expect(ok).not.toBeNull();
+      expect(ok?.at(-1)).toEqual({ col: 1, row: 2 });
+    });
+
+    it('yüz arama üst üste tutarlı kalır', () => {
+      const finder = new PathFinder(20, 20);
+      const expected = finder.find({ col: 0, row: 0 }, { col: 19, row: 19 });
+
+      for (let i = 0; i < 100; i++) {
+        expect(finder.find({ col: 0, row: 0 }, { col: 19, row: 19 })).toEqual(expected);
+      }
+    });
+
+    it('geçersiz boyut reddedilir', () => {
+      expect(() => new PathFinder(0, 5)).toThrow(/pozitif tam sayı/);
+      expect(() => new PathFinder(5, -1)).toThrow(/pozitif tam sayı/);
+    });
+
+    it('engel değişince yeni yolu bulur (durum taşımaz)', () => {
+      const blocked = new Set<string>();
+      const finder = new PathFinder(5, 3);
+      const isWalkable = (p: GridPoint) => !blocked.has(`${p.col},${p.row}`);
+
+      const open = finder.find({ col: 0, row: 1 }, { col: 4, row: 1 }, { isWalkable });
+      expect(open).toHaveLength(5);
+
+      blocked.add('2,1');
+      const around = finder.find({ col: 0, row: 1 }, { col: 4, row: 1 }, { isWalkable });
+      expect(around!.length).toBeGreaterThan(5);
+      for (const step of around!) expect(isWalkable(step)).toBe(true);
+    });
   });
 });
