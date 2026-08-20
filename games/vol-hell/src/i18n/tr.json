@@ -239,5 +239,9 @@
   "enemy": {
     "warden": "Warden",
     "sovereign": "Sovereign"
+  },
+  "fatal": {
+    "title": "Oyun başlatılamadı",
+    "description": "{{message}}"
   }
 }

@@ -66,14 +66,20 @@ export class EventBus<TEvents extends object> {
    * `onHandlerError`a bildirilir (verilmezse sessizce yutulmaz, konsola
    * yazılır).
    */
-  emit<K extends keyof TEvents>(event: K, payload: TEvents[K]): void {
+  /**
+   * Olayı yayınlar. Hata fırlatan dinleyici sayısını döner (0 = tümü sağlıklı);
+   * çağıran, sessiz failure yerine yayının kısmen başarısız olduğunu öğrenebilir.
+   */
+  emit<K extends keyof TEvents>(event: K, payload: TEvents[K]): number {
     const set = this.handlers.get(event);
-    if (!set || set.size === 0) return;
+    if (!set || set.size === 0) return 0;
 
+    let errors = 0;
     for (const handler of [...set]) {
       try {
         (handler as (p: TEvents[K]) => void)(payload);
       } catch (error) {
+        errors++;
         if (this.onHandlerError) {
           this.onHandlerError(error, String(event));
         } else {
@@ -81,6 +87,7 @@ export class EventBus<TEvents extends object> {
         }
       }
     }
+    return errors;
   }
 
   /** Handler hatalarını karşılamak için opsiyonel kanca. */

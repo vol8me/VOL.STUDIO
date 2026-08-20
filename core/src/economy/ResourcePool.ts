@@ -62,7 +62,8 @@ export class ResourcePool<TResource extends string> {
   spend(cost: ResourceCost<TResource>): boolean {
     if (!this.canAfford(cost)) return false;
     for (const [resource, amount] of Object.entries(cost) as [TResource, number][]) {
-      if (amount > 0) this.amounts[resource] = this.get(resource) - amount;
+      // canAfford zaten kontrol etti; get() içindeki clamping gereksiz.
+      if (amount > 0) this.amounts[resource] = this.amounts[resource] - amount;
     }
     return true;
   }

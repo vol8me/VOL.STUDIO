@@ -100,6 +100,10 @@ export class RoundCounter {
       this.countdownElement.hidden = true;
       return;
     }
+    // Çalışan bir `runCountdown` interval'i varsa durdur — iki kaynak aynı
+    // metni güncellerse sayma kayar.
+    clearInterval(this.intervalId);
+    this.intervalId = undefined;
     this.remainingSeconds = Math.max(0, Math.ceil(seconds));
     this.countdownElement.hidden = false;
     this.renderCountdown();

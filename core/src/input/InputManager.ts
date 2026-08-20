@@ -60,6 +60,10 @@ export class InputManager<TAction extends string> {
    * Aktif saglayiciyi secer. getState() ve getDebugSnapshot() AYNI secimi
    * kullanmali — aksi halde debug overlay 'pc' gosterirken oyun touch state'i
    * kullanir ve hata ayiklama araci yaniltir.
+   *
+   * Öncelik: touch her zaman PC'den öncelikli (hibrit cihazlarda dokunmatik
+   * aktifken fare/klavye ikincil). PC provider'lar arasında `find()` ilk
+   * aktif olanı döner; sıra `providers` dizisindeki tanım sırasına bağlıdır.
    */
   private resolveActiveProvider(): InputProvider<TAction> | undefined {
     if (this.touch.isActive) return this.touch;

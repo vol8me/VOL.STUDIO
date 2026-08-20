@@ -59,6 +59,8 @@ export const economyConfig = {
     costStep: 3,
   },
   spark: {
+    /** Koşu başlangıcındaki seviye. */
+    startLevel: 1,
     /**
      * İlk seviye atlaması için gereken Spark.
      *

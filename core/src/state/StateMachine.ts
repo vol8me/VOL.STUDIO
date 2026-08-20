@@ -85,6 +85,12 @@ export class StateMachine<TState extends string> {
       this.states[from]?.onExit?.(to);
       this.current = to;
       this.states[to]?.onEnter?.(from);
+    } catch (error) {
+      // onEnter hata fırlatırsa durum yarıda kalmasın: `current` hedefe
+      // atanmıştı ama giriş kancası tamamlanmadı. Kaynağa geri dön ki
+      // sonraki çağrılar yanlış durumdan devam etmesin.
+      this.current = from;
+      throw error;
     } finally {
       this.transitioning = false;
     }

@@ -15,7 +15,7 @@ export interface RunEconomyCallbacks {
 export class RunEconomy {
   private flux = 0;
   private spark = 0;
-  private level = 1;
+  private level = economyConfig.spark.startLevel;
   /** Bir sonraki seviye için gereken toplam Spark. */
   private nextThreshold: number = economyConfig.spark.baseThreshold;
 
@@ -90,7 +90,7 @@ export class RunEconomy {
   reset(): void {
     this.flux = 0;
     this.spark = 0;
-    this.level = 1;
+    this.level = economyConfig.spark.startLevel;
     this.nextThreshold = economyConfig.spark.baseThreshold;
   }
 

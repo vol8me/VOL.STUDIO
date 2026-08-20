@@ -38,6 +38,13 @@ interface Destroyable {
   destroy(): void;
 }
 
+/** Showcase demo zamanlama sabitleri (ms). */
+const DEMO_TIMEOUTS = {
+  rankingShuffle: 900,
+  chargeDuration: 1100,
+  resetDelay: 1500,
+} as const;
+
 /** Joystick demosu. Durum satırı joystick'in ALTINDA — yanına koyunca metin genişliği joystick'i kaydırıyordu. */
 function buildJoystickDemo(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
@@ -146,18 +153,7 @@ function buildPullToRefreshDemo(disposables: Destroyable[]): HTMLElement {
   const list = document.createElement('div');
   list.className = 'vol-showcase-leaderboard';
 
-  let names = [
-    'Kaan',
-    'Elif',
-    'Aldric',
-    'Meriel',
-    'Toren',
-    'Draven',
-    'Sena',
-    'Baran',
-    'Nil',
-    'Emir',
-  ];
+  let names: string[] = i18next.t('volui:touch.leaderboardNames', { returnObjects: true });
 
   const renderList = (): void => {
     list.replaceChildren();
@@ -178,7 +174,7 @@ function buildPullToRefreshDemo(disposables: Destroyable[]): HTMLElement {
     label: i18next.t('volui:touch.refreshing'),
     onRefresh: async () => {
       status.setContent(i18next.t('volui:touch.updatingRanking'));
-      await new Promise((resolve) => window.setTimeout(resolve, 900));
+      await new Promise((resolve) => window.setTimeout(resolve, DEMO_TIMEOUTS.rankingShuffle));
       names = [...names].sort(() => Math.random() - 0.5);
       renderList();
       status.setContent(i18next.t('volui:touch.rankingUpdated'));
@@ -327,7 +323,7 @@ function buildChargeButtonDemo(disposables: Destroyable[]): HTMLElement {
 
   const chargeButton = new ChargeButton({
     label: i18next.t('volui:touch.hit'),
-    chargeDurationMs: 1100,
+    chargeDurationMs: DEMO_TIMEOUTS.chargeDuration,
     onChargeProgress: (progress) => {
       result.setContent(i18next.t('volui:touch.charging', { n: Math.round(progress * 100) }));
     },
@@ -489,8 +485,15 @@ function buildDPadDemo(disposables: Destroyable[]): HTMLElement {
   return wrap;
 }
 
-/** DirectionButton demosu ("Zıpla"): DPad ile sınıf paylaşsa da bağımsız aksiyon butonu. */
-function buildJumpButtonDemo(disposables: Destroyable[]): HTMLElement {
+/** DirectionButton demosu — zıpla/eğil gibi bağımsız aksiyon butonları. */
+function buildDirectionActionButtonDemo(
+  disposables: Destroyable[],
+  opts: {
+    label: string;
+    icon: Node;
+    activeText: string;
+  },
+): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
   wrap.style.alignItems = 'center';
@@ -498,40 +501,16 @@ function buildJumpButtonDemo(disposables: Destroyable[]): HTMLElement {
   const { element: statusRow, text: status } = buildStatusRow(i18next.t('volui:touch.holdHint'));
   disposables.push(status);
 
-  const jumpButton = new DirectionButton({
-    label: i18next.t('volui:touch.jump'),
-    icon: svgIcon(ICON_JUMP),
+  const button = new DirectionButton({
+    label: opts.label,
+    icon: opts.icon,
     size: 68,
-    onPress: () => status.setContent(i18next.t('volui:touch.jumping')),
+    onPress: () => status.setContent(opts.activeText),
     onRelease: () => status.setContent(i18next.t('volui:touch.holdHint')),
   });
-  disposables.push(jumpButton);
+  disposables.push(button);
 
-  wrap.appendChild(jumpButton.element);
-  wrap.appendChild(statusRow);
-
-  return wrap;
-}
-
-/** DirectionButton demosu ("Eğil") — buildJumpButtonDemo ile aynı desen, ayrı kart. */
-function buildCrouchButtonDemo(disposables: Destroyable[]): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'vol-showcase-panel-demo';
-  wrap.style.alignItems = 'center';
-
-  const { element: statusRow, text: status } = buildStatusRow(i18next.t('volui:touch.holdHint'));
-  disposables.push(status);
-
-  const crouchButton = new DirectionButton({
-    label: i18next.t('volui:touch.crouch'),
-    icon: svgIcon(ICON_CROUCH),
-    size: 68,
-    onPress: () => status.setContent(i18next.t('volui:touch.crouching')),
-    onRelease: () => status.setContent(i18next.t('volui:touch.holdHint')),
-  });
-  disposables.push(crouchButton);
-
-  wrap.appendChild(crouchButton.element);
+  wrap.appendChild(button.element);
   wrap.appendChild(statusRow);
 
   return wrap;
@@ -672,7 +651,7 @@ function buildLongPressButtonDemo(disposables: Destroyable[]): HTMLElement {
       resetTimeoutId = window.setTimeout(() => {
         resetTimeoutId = null;
         status.setContent(i18next.t('volui:touch.longPressHint'));
-      }, 1500);
+      }, DEMO_TIMEOUTS.resetDelay);
     },
   });
   disposables.push(longPressButton);
@@ -801,12 +780,24 @@ export function buildTouchTab(): { element: HTMLElement; destroy: () => void } {
     }),
     card(i18next.t('volui:touch.radialMenu'), buildRadialMenuDemo(disposables), { center: true }),
     card(i18next.t('volui:touch.dpad'), buildDPadDemo(disposables)),
-    card(i18next.t('volui:touch.directionJump'), buildJumpButtonDemo(disposables), {
-      center: true,
-    }),
-    card(i18next.t('volui:touch.directionCrouch'), buildCrouchButtonDemo(disposables), {
-      center: true,
-    }),
+    card(
+      i18next.t('volui:touch.directionJump'),
+      buildDirectionActionButtonDemo(disposables, {
+        label: i18next.t('volui:touch.jump'),
+        icon: svgIcon(ICON_JUMP),
+        activeText: i18next.t('volui:touch.jumping'),
+      }),
+      { center: true },
+    ),
+    card(
+      i18next.t('volui:touch.directionCrouch'),
+      buildDirectionActionButtonDemo(disposables, {
+        label: i18next.t('volui:touch.crouch'),
+        icon: svgIcon(ICON_CROUCH),
+        activeText: i18next.t('volui:touch.crouching'),
+      }),
+      { center: true },
+    ),
     card(i18next.t('volui:touch.pauseResume'), buildPauseResumeDemo(disposables), { center: true }),
     card(i18next.t('volui:touch.longPressButton'), buildLongPressButtonDemo(disposables), {
       center: true,

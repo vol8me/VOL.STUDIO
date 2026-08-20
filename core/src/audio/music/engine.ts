@@ -156,6 +156,9 @@ export class MusicEngine {
     let transitionTime: number;
 
     if (options.bars && this.scheduler) {
+      // Bar hizalı geçiş: `earliest` anındaki kesirli bar numarasını al,
+      // tam bar sınırına floor'la ve `bars` kadar ileri taşı. Kesirli kısım
+      // atılır — geçiş her zaman tam bar başında başlar, yarım bar beklenmez.
       const bars = Math.max(1, options.bars);
       const earliest = now + duration;
       const currentBar = this.scheduler.getBarAtTime(earliest, this.trackStartTime);
@@ -311,7 +314,13 @@ export class MusicEngine {
       // kadar çalıp kendiliğinden biten loop'suz stem sayar.
       if (active?.stoppedByEngine) return;
       if (ownerTrackId === undefined || ownerTrackId !== this.currentTrackId) return;
-      this.notifyTrackEndIfDone(ownerTrackId);
+      try {
+        this.notifyTrackEndIfDone(ownerTrackId);
+      } catch (error) {
+        // notifyTrackEndIfDone handler'ları çağırır; handler hatası
+        // onended'yi patlatmamalı (Web Audio senkron çağırır, unhandled olur).
+        console.error('[MusicEngine] trackEnd bildirimi sırasında hata:', error);
+      }
     };
 
     this.activeStems.set(channelId, {

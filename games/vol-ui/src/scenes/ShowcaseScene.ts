@@ -18,6 +18,10 @@ export class ShowcaseScene extends Phaser.Scene {
   private tabs!: Tabs;
   private langButton!: HTMLButtonElement;
   private activeTabId = 'buttons';
+  private readonly onLangButtonClick = (): void => {
+    const next = i18next.language === 'tr' ? 'en' : 'tr';
+    void i18next.changeLanguage(next);
+  };
 
   constructor() {
     super({ key: 'Showcase' });
@@ -49,10 +53,7 @@ export class ShowcaseScene extends Phaser.Scene {
     this.langButton.type = 'button';
     this.langButton.className = 'vol-showcase-lang-button';
     this.langButton.textContent = i18next.language?.toUpperCase() ?? 'TR';
-    this.langButton.addEventListener('click', () => {
-      const next = i18next.language === 'tr' ? 'en' : 'tr';
-      void i18next.changeLanguage(next);
-    });
+    this.langButton.addEventListener('click', this.onLangButtonClick);
     header.appendChild(this.langButton);
 
     const tabDefs = [
@@ -120,6 +121,7 @@ export class ShowcaseScene extends Phaser.Scene {
 
   private onShutdown(): void {
     i18next.off('languageChanged', this.onLanguageChanged);
+    this.langButton.removeEventListener('click', this.onLangButtonClick);
     this.tabs.destroy();
     this.root.remove();
     this.ui.destroy();

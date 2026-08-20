@@ -77,33 +77,36 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
   const pausePlay = new IconButton(svgIcon(ICON_PAUSE), {
     label: i18next.t('volui:buttons.pause'),
   });
-  pausePlay.element.addEventListener('click', () => {
+  const onPausePlayClick = (): void => {
     paused = !paused;
     pausePlay.setIcon(svgIcon(paused ? ICON_PLAY : ICON_PAUSE));
     pausePlay.setLabel(
       paused ? i18next.t('volui:buttons.resume') : i18next.t('volui:buttons.pause'),
     );
-  });
+  };
+  pausePlay.element.addEventListener('click', onPausePlayClick);
 
   const speeds = [1, 2, 3];
   let speedIndex = 0;
   const fastForward = new IconButton(svgIcon(ICON_FAST_FORWARD), {
     label: i18next.t('volui:buttons.fastForward', { n: 1 }),
   });
-  fastForward.element.addEventListener('click', () => {
+  const onFastForwardClick = (): void => {
     speedIndex = (speedIndex + 1) % speeds.length;
     fastForward.setLabel(i18next.t('volui:buttons.fastForward', { n: speeds[speedIndex] }));
-  });
+  };
+  fastForward.element.addEventListener('click', onFastForwardClick);
 
   let muted = false;
   const volume = new IconButton(svgIcon(ICON_VOLUME_ON), {
     label: i18next.t('volui:buttons.mute'),
   });
-  volume.element.addEventListener('click', () => {
+  const onVolumeClick = (): void => {
     muted = !muted;
     volume.setIcon(svgIcon(muted ? ICON_VOLUME_OFF : ICON_VOLUME_ON));
     volume.setLabel(muted ? i18next.t('volui:buttons.unmute') : i18next.t('volui:buttons.mute'));
-  });
+  };
+  volume.element.addEventListener('click', onVolumeClick);
 
   // Kamera/harita: zoom + merkezle.
   const zoomIn = new IconButton(svgIcon(ICON_ZOOM_IN), {
@@ -193,6 +196,13 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
     smallTooltip,
     gearTooltip,
     largeTooltip,
+    {
+      destroy: () => {
+        pausePlay.element.removeEventListener('click', onPausePlayClick);
+        fastForward.element.removeEventListener('click', onFastForwardClick);
+        volume.element.removeEventListener('click', onVolumeClick);
+      },
+    },
   );
 
   wrap.appendChild(

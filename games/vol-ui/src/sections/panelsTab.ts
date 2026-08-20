@@ -108,7 +108,7 @@ function buildStaticMenuDemo(disposables: Destroyable[]): HTMLElement {
   stage.className = 'vol-showcase-panel-stage';
 
   const menuPanel = new Panel({ className: 'vol-showcase-demo-panel' })
-    .add(new Text('VOL.HELL', { variant: 'heading', tag: 'h2' }))
+    .add(new Text(i18next.t('volui:panels.brandTitle'), { variant: 'heading', tag: 'h2' }))
     .add(new Text(i18next.t('volui:text.sampleBody'), { variant: 'muted' }));
   disposables.push(menuPanel);
 
@@ -413,12 +413,13 @@ function buildPopupDemo(disposables: Destroyable[], uiRootElement: HTMLElement):
     fullWidth: false,
   });
   disposables.push(closeBtn);
-  closeBtn.element.addEventListener('click', () => popup.close());
+  const onCloseBtnClick = (): void => popup.close();
+  closeBtn.element.addEventListener('click', onCloseBtnClick);
   popupContent.appendChild(closeBtn.element);
 
   popup.element.appendChild(popupContent);
 
-  trigger.element.addEventListener('click', () => {
+  const onTriggerClick = (): void => {
     if (popup.isOpen()) {
       popup.close();
     } else {
@@ -426,6 +427,13 @@ function buildPopupDemo(disposables: Destroyable[], uiRootElement: HTMLElement):
       result.setContent(i18next.t('volui:panels.popupOpen'));
       trigger.element.textContent = i18next.t('volui:panels.closePopup');
     }
+  };
+  trigger.element.addEventListener('click', onTriggerClick);
+  disposables.push({
+    destroy: () => {
+      closeBtn.element.removeEventListener('click', onCloseBtnClick);
+      trigger.element.removeEventListener('click', onTriggerClick);
+    },
   });
 
   wrap.appendChild(trigger.element);

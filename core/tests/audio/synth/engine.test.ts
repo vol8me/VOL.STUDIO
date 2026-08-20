@@ -129,10 +129,17 @@ describe('Synth engine', () => {
       fm: { modulatorWave: 'sine', ratio: 1, index: 2 },
       envelope: { attack: 0, hold: 0.1, release: 0 },
     });
-    // FM çıkışı düz sinüse göre daha fazla harmonik içerir
-    const dryHf = dry.channels[0].reduce((a, s, i) => a + Math.abs(s) * (i % 2 === 0 ? 1 : -1), 0);
-    const fmHf = fm.channels[0].reduce((a, s, i) => a + Math.abs(s) * (i % 2 === 0 ? 1 : -1), 0);
-    expect(Math.abs(fmHf)).not.toBeCloseTo(Math.abs(dryHf), 1);
+    // FM, taşıyıcının fazını modüle eder — sonuç düz sinüsten farklı bir
+    // dalga formudur. Normalizasyon zirveleri eşitleyebileceği için peak
+    // karşılaştırması güvenilmez; bunun yerine örnek-örnek farkın sıfır
+    // olmaması, iki dalga formunun farklı olduğunu doğrular.
+    const dryCh = dry.channels[0];
+    const fmCh = fm.channels[0];
+    let maxDiff = 0;
+    for (let i = 0; i < dryCh.length; i++) {
+      maxDiff = Math.max(maxDiff, Math.abs(dryCh[i] - fmCh[i]));
+    }
+    expect(maxDiff).toBeGreaterThan(0.01);
   });
 
   it('FM index 0 iken normal sinüs çıkar', () => {

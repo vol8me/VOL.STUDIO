@@ -48,7 +48,13 @@ export class Deck<T> {
   draw(): T | undefined {
     if (this.drawPile.length === 0) {
       if (!this.reshuffle || this.discardPile.length === 0) return undefined;
-      this.drawPile = this.discardPile.splice(0, this.discardPile.length);
+      // discardPile readonly; referans takası yerine elemanları taşıp temizle.
+      // splice(0, n) her elemanı kaydırırdı; push + length=0 O(n) ama kaydırma yok.
+      for (let i = 0; i < this.discardPile.length; i++) {
+        this.drawPile[i] = this.discardPile[i];
+      }
+      this.drawPile.length = this.discardPile.length;
+      this.discardPile.length = 0;
       this.shuffleDrawPile();
     }
     return this.drawPile.pop();

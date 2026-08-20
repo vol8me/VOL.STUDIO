@@ -14,14 +14,33 @@ import '@/styles.css';
  * oradan import eder, bu modülden değil. Böylece bootstrap ile sahneler
  * arasında dairesel bağımlılık oluşmaz.
  */
+/**
+ * Fatal hata ekranı — i18n init başarısız olabileceği için i18n'ye BAĞLI DEĞİL.
+ * Dil tercihini `i18n` hazır değilse `navigator.language`'ten düşürür;
+ * key çevirileri bu modülün own sözlüğünde durur (tr.json/en.json ile ayrışabilir
+ * — bu ekran i18n'den önce gösterilir).
+ */
+const FATAL_STRINGS = {
+  tr: { title: 'Oyun başlatılamadı' },
+  en: { title: 'Failed to start game' },
+} as const;
+
+function detectLocale(): 'tr' | 'en' {
+  // i18n hazır olabilir (init sonrası hata); değilse tarayıcı diline düş.
+  const lang = (i18n.getLocale?.() ?? navigator.language ?? 'tr').toLowerCase();
+  return lang.startsWith('en') ? 'en' : 'tr';
+}
+
 function showFatalError(error: unknown): void {
   console.error('[bootstrap] Oyun başlatılamadı:', error);
   const message = error instanceof Error ? error.message : String(error);
+  const locale = detectLocale();
+  const title = FATAL_STRINGS[locale].title;
 
   const overlay = document.createElement('div');
   overlay.className = 'vol-fatal-error';
   overlay.setAttribute('role', 'alert');
-  overlay.textContent = `Oyun başlatılamadı: ${message}`;
+  overlay.textContent = `${title}: ${message}`;
   document.body.appendChild(overlay);
 }
 

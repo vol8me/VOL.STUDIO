@@ -96,6 +96,7 @@
   },
   "panels": {
     "fade": "Fade",
+    "brandTitle": "VOL.HELL",
     "dynamicContent": "Dynamic Content",
     "staticMenu": "Static Menu",
     "contextMenu": "Context Menu",
@@ -513,6 +514,18 @@
   "touch": {
     "joystick": "Joystick",
     "squareJoystick": "Square Joystick",
+    "leaderboardNames": [
+      "Kaan",
+      "Elif",
+      "Aldric",
+      "Meriel",
+      "Toren",
+      "Draven",
+      "Sena",
+      "Baran",
+      "Nil",
+      "Emir"
+    ],
     "touchButton": "Touch Button",
     "chargeButton": "Charge Button",
     "radialMenu": "Radial Menu",

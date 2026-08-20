@@ -51,7 +51,7 @@ const SHOP_POOL = Object.keys(DEMO_CARDS) as DemoCardId[];
 const SHOP_SIZE = 4;
 const REROLL_BASE_COST = 5;
 const REROLL_COST_STEP = 3;
-/** Q/E yetenek slotu sayısı — gerçek oyundaki `AbilityLoadout` ile aynı (bkz. TODO.md). */
+/** Q/E yetenek slotu sayısı — gerçek oyundaki `AbilityLoadout` ile aynı. */
 const ABILITY_SLOT_COUNT = 2;
 
 function demoCard(id: DemoCardId, options: { withPrice?: boolean } = {}): CardTileData {

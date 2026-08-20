@@ -12,6 +12,12 @@ export const waveConfig = {
   eliteWave: 10,
   /** Boss'un çağrıldığı dalga — spawn'ı `SpecialEnemyDirector` yönetir. */
   bossWave: 20,
+  /**
+   * Tek frame'de atılabilecek maksimum dalga adımı. Uzun frame'de (sekme
+   * arka plan, GC duraklaması) dalga zamanlayıcısının birden çok dalgayı
+   * atlayarak koşuyu aniden bitirmesini önler.
+   */
+  maxStepsPerFrame: 50,
 } as const;
 
 /** Bir koşunun toplam süresi (ms) — 20 x 40 sn = 800 sn. */

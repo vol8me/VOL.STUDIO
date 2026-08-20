@@ -49,13 +49,22 @@ export class Envelope {
 
     const total = attack + hold + decay + sustain + release;
     if (total > duration && total > 0) {
-      // Süre aşımı varsa aşama sürelerini orantılı kısalt
-      const scale = duration / total;
-      attack *= scale;
-      hold *= scale;
-      decay *= scale;
-      sustain *= scale;
-      release *= scale;
+      // Süre aşımı varsa önce sustain'i kısalt — zarfın şeklini (attack/decay/release
+      // eğrisi) korur. Sustain zaten sabit seviyede tutulduğu için süresi esnektir.
+      // Sustain yetmezse kalan aşamaları orantılı kısalt; bu son çare olarak
+      // zarf şeklini bozar ama toplam süreyi duration'a indirir.
+      const nonSustain = attack + hold + decay + release;
+      if (sustain > total - duration) {
+        sustain = Math.max(0, duration - nonSustain);
+      } else {
+        const overflow = total - duration;
+        const scale = (total - overflow) / total;
+        attack *= scale;
+        hold *= scale;
+        decay *= scale;
+        sustain *= scale;
+        release *= scale;
+      }
     }
 
     this.attack = attack;

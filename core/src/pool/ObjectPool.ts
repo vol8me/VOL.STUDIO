@@ -30,6 +30,8 @@ export class ObjectPool<T> {
   private readonly resetFn?: (item: T) => void;
   private readonly maxIdle: number;
   private activeCount = 0;
+  /** Boştaki örneklerin O(1) iade kontrolü için kümesi. */
+  private readonly idleSet: Set<T> = new Set();
 
   constructor(options: ObjectPoolOptions<T>) {
     this.createFn = options.create;
@@ -38,7 +40,9 @@ export class ObjectPool<T> {
 
     const prewarm = Math.max(0, options.prewarm ?? 0);
     for (let i = 0; i < prewarm; i++) {
-      this.idle.push(this.createFn());
+      const item = this.createFn();
+      this.idle.push(item);
+      this.idleSet.add(item);
     }
   }
 
@@ -46,7 +50,11 @@ export class ObjectPool<T> {
   acquire(): T {
     this.activeCount++;
     const reused = this.idle.pop();
-    return reused ?? this.createFn();
+    if (reused !== undefined) {
+      this.idleSet.delete(reused);
+      return reused;
+    }
+    return this.createFn();
   }
 
   /**
@@ -54,9 +62,10 @@ export class ObjectPool<T> {
    *
    * Aynı örneği İKİ KEZ iade etmek sessiz ve ayıklanması çok zor bir hataya
    * yol açar (aynı nesne iki farklı sahibe dağıtılır), bu yüzden yakalanır.
+   * Kontrol O(1) — `idleSet.has` eskiden `idle.includes` (O(n)) idi.
    */
   release(item: T): void {
-    if (this.idle.includes(item)) {
+    if (this.idleSet.has(item)) {
       throw new Error('ObjectPool: aynı örnek iki kez iade edildi');
     }
 
@@ -65,6 +74,7 @@ export class ObjectPool<T> {
 
     if (this.idle.length < this.maxIdle) {
       this.idle.push(item);
+      this.idleSet.add(item);
     }
   }
 
@@ -84,5 +94,6 @@ export class ObjectPool<T> {
    */
   clear(): void {
     this.idle.length = 0;
+    this.idleSet.clear();
   }
 }

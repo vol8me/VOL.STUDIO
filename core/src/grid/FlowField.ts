@@ -1,5 +1,59 @@
 import { ORTHOGONAL_NEIGHBOURS, type GridPoint } from './Grid';
 
+/** Sabit kapasiteli ikili yığın — Dijkstra açık listesi için. */
+class MinHeap {
+  private readonly values: number[] = [];
+  private readonly keys: number[] = [];
+
+  get size(): number {
+    return this.values.length;
+  }
+
+  push(value: number, key: number): void {
+    this.values.push(value);
+    this.keys.push(key);
+    let i = this.values.length - 1;
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      if (this.keys[parent] <= this.keys[i]) break;
+      this.swap(parent, i);
+      i = parent;
+    }
+  }
+
+  pop(): number | undefined {
+    if (this.values.length === 0) return undefined;
+    const top = this.values[0];
+    const lastValue = this.values.pop()!;
+    const lastKey = this.keys.pop()!;
+    if (this.values.length > 0) {
+      this.values[0] = lastValue;
+      this.keys[0] = lastKey;
+      let i = 0;
+      for (;;) {
+        const left = i * 2 + 1;
+        const right = left + 1;
+        let smallest = i;
+        if (left < this.keys.length && this.keys[left] < this.keys[smallest]) smallest = left;
+        if (right < this.keys.length && this.keys[right] < this.keys[smallest]) smallest = right;
+        if (smallest === i) break;
+        this.swap(smallest, i);
+        i = smallest;
+      }
+    }
+    return top;
+  }
+
+  private swap(a: number, b: number): void {
+    const v = this.values[a];
+    this.values[a] = this.values[b];
+    this.values[b] = v;
+    const k = this.keys[a];
+    this.keys[a] = this.keys[b];
+    this.keys[b] = k;
+  }
+}
+
 export interface FlowFieldOptions {
   /** Hücre geçilebilir mi? Verilmezse hepsi geçilebilir. */
   isWalkable?: (point: GridPoint) => boolean;
@@ -62,24 +116,18 @@ export class FlowField {
     // Dijkstra dalgası: maliyete göre sıralı işlenir. Tüm kenar maliyetleri
     // eşitse bu bir BFS'e indirgenir; farklıysa sıralama şart, aksi halde
     // pahalı bir kenardan erken ulaşılan hücre yanlış maliyetle kilitlenir.
-    const queue: number[] = [];
+    // MinHeap O(n log n); önceki lineer min-search O(n²) idi ve büyük
+    // ızgaralarda (binlerce hücre) darboğaz oluşturuyordu.
+    const queue = new MinHeap();
     for (const goal of goals) {
       if (!inBounds(goal.col, goal.row) || !isWalkable(goal)) continue;
       const index = goal.row * cols + goal.col;
       this.costs[index] = 0;
-      queue.push(index);
+      queue.push(index, 0);
     }
 
-    let head = 0;
-    while (head < queue.length) {
-      // Kalan kuyruktaki en ucuz hücreyi seç (küçük alanlarda yığından ucuz).
-      let bestAt = head;
-      for (let i = head + 1; i < queue.length; i++) {
-        if (this.costs[queue[i]] < this.costs[queue[bestAt]]) bestAt = i;
-      }
-      [queue[head], queue[bestAt]] = [queue[bestAt], queue[head]];
-
-      const current = queue[head++];
+    while (queue.size > 0) {
+      const current = queue.pop()!;
       const col = current % cols;
       const row = Math.floor(current / cols);
 
@@ -102,7 +150,7 @@ export class FlowField {
           this.costs[nextIndex] = candidate;
           // Alan hedeften geriye kuruluyor: komşunun "sonrakisi" biziz.
           this.next[nextIndex] = current;
-          queue.push(nextIndex);
+          queue.push(nextIndex, candidate);
         }
       }
     }

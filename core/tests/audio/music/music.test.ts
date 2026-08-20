@@ -16,7 +16,10 @@ describe('MusicEngine', () => {
   });
 
   afterEach(() => {
-    fakeContext = new FakeAudioContext();
+    // Önceki context'in referansını bırak — yeni context oluşturmak eski
+    // context'i dispose etmez; FakeAudioContext state'i testler arası sızıntı yapar.
+    fakeContext = undefined as unknown as FakeAudioContext;
+    vi.restoreAllMocks();
   });
 
   it('track yükler ve çalar', async () => {

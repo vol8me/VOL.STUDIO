@@ -103,8 +103,16 @@ export class Carousel {
 
     if (this.autoPlayIntervalMs) {
       this.startAutoPlay();
-      this.element.addEventListener('pointerenter', () => this.stopAutoPlay());
-      this.element.addEventListener('pointerleave', () => this.startAutoPlay());
+      const onEnter = (): void => this.stopAutoPlay();
+      const onLeave = (): void => this.startAutoPlay();
+      this.element.addEventListener('pointerenter', onEnter);
+      this.element.addEventListener('pointerleave', onLeave);
+      this.scope.add({
+        dispose: () => {
+          this.element.removeEventListener('pointerenter', onEnter);
+          this.element.removeEventListener('pointerleave', onLeave);
+        },
+      });
     }
 
     i18next.on('languageChanged', this.onLanguageChanged);

@@ -48,7 +48,7 @@ importers:
   core:
     dependencies:
       i18next:
-        specifier: ^26.3.6
+        specifier: 26.3.6
         version: 26.3.6(typescript@6.0.3)
     devDependencies:
       '@types/node':

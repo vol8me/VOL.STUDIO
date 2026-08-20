@@ -36,7 +36,9 @@ export class SpatialIndex<T extends SpatialEntity> {
   /**
    * Yeniden kullanılan sonuç tamponları — iç içe `query` çağrılarında
    * birbirinin üzerine yazmaz. 4'lük halka, oyun mantığında görülebilecek
-   * azami iç içe çağrıyı karşılar.
+   * azami iç içe çağrıyı karşılar. 5 ve üzeri iç içe sorguda en eski tampon
+   * overwrite edilir; çağıran tamponu kullanım süresi boyunca tutuyorsa
+   * sonuç bozulur.
    */
   private readonly resultBuffers: T[][] = [[], [], [], []];
   private resultIndex = 0;

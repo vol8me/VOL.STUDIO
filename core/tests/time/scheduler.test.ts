@@ -96,6 +96,16 @@ describe('Scheduler', () => {
     expect(scheduler.size).toBe(0);
   });
 
+  it('negatif periyot da reddedilir', () => {
+    const scheduler = new Scheduler();
+    const fn = vi.fn();
+    scheduler.every(-5, fn);
+    scheduler.update(100);
+
+    expect(fn).not.toHaveBeenCalled();
+    expect(scheduler.size).toBe(0);
+  });
+
   it('sıfır/negatif delta zamanı ilerletmez', () => {
     const scheduler = new Scheduler();
     const fn = vi.fn();

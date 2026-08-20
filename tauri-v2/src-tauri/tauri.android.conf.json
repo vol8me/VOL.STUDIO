@@ -1,4 +1,8 @@
 {
+  "bundle": {
+    "active": true,
+    "targets": ["apk"]
+  },
   "app": {
     "security": {
       "assetProtocol": {

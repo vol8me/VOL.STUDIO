@@ -49,8 +49,8 @@ export function isBlockerWave(wave: number): boolean {
  * Bu sınıf UI bilmez: yalnızca doğru anda olay tetikler.
  */
 export class WaveManager {
-  /** Tek frame'de atılabilecek maksimum dalga adımı — config/uzun frame hatası koruması. */
-  private static readonly MAX_STEPS_PER_FRAME = 50;
+  /** Tek frame'de atılabilecek maksimum dalga adımı — `waveConfig.maxStepsPerFrame`. */
+  private static readonly MAX_STEPS_PER_FRAME = waveConfig.maxStepsPerFrame;
   private wave = 0;
   private elapsedInWaveMs = 0;
   private complete = false;

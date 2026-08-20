@@ -64,6 +64,16 @@ export function getFmSample(
   return out;
 }
 
+/**
+ * Üstel interpolasyon — `start * (end/start)^t`. Ses frekans kaymaları için
+ * doğal algı üsteldir; linear kayma perde değişimi olarak değil hacim değişimi
+ * olarak duyulur.
+ *
+ * Üstel slide yalnızca PÖZİTİF uçlarda tanımlıdır: 0'dan pozitife üstel geçiş
+ * matematiksel olarak `log(0) = -∞` içerir. Bu yüzden start/end ≤ 0 iken
+ * linear lerp'ye düşülür. Çağıran üstel davranış bekliyorsa 0 geçişinden
+ * kaçınmalı; bu fallback sessiz sürprizi önlemek için linear tutulur.
+ */
 function expLerp(start: number, end: number, t: number): number {
   if (start <= 0) return lerp(start, end, t);
   if (end <= 0) return lerp(start, end, t);

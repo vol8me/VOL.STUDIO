@@ -345,8 +345,12 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
     nameInput.className = 'vol-input';
     nameInput.placeholder = i18next.t('volui:advanced.charNamePlaceholder');
     nameInput.value = characterName;
-    nameInput.addEventListener('input', () => {
+    const onNameInput = (): void => {
       characterName = nameInput.value;
+    };
+    nameInput.addEventListener('input', onNameInput);
+    disposables.push({
+      destroy: () => nameInput.removeEventListener('input', onNameInput),
     });
     nameStep.appendChild(nameLabel.element);
     nameStep.appendChild(nameInput);

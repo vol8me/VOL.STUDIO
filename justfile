@@ -153,22 +153,12 @@ convert-ios:
 # === ORTAM KONTROLÜ ===
 
 doctor:
-    #!/usr/bin/env bash
-    set -euo pipefail
     echo "Node:   $(node -v)"
     echo "pnpm:   $(pnpm -v)"
     echo "Rust:   $(rustc --version 2>/dev/null || echo 'rustc yok')"
     echo "Cargo:  $(cargo -V 2>/dev/null || echo 'cargo yok')"
     echo "just:   $(just --version 2>/dev/null || echo 'PATH içinde yok')"
     echo "FFmpeg: $(ffmpeg -version 2>/dev/null | head -n1 || echo 'FFmpeg yok — ses hattı çalışmaz')"
-    if command -v just >/dev/null 2>&1; then
-      echo "just PATH: global ($(command -v just))"
-    else
-      echo "just PATH: global değil — kapıları 'pnpm fast/high/signoff' ile çağır."
-    fi
+    if command -v just >/dev/null 2>&1; then echo "just PATH: global ($(command -v just))"; else echo "just PATH: global değil — kapıları 'pnpm fast/high/signoff' ile çağır."; fi
     # Fedora paket adları; Debian/Ubuntu'da libgtk-3-dev / libwebkit2gtk-4.1-dev.
-    if pkg-config --exists gtk+-3.0 webkit2gtk-4.1; then
-      echo "Tauri sistem deps: OK"
-    else
-      echo "UYARI: gtk3-devel / webkit2gtk4.1-devel eksik olabilir (Fedora)."
-    fi
+    if pkg-config --exists gtk+-3.0 webkit2gtk-4.1; then echo "Tauri sistem deps: OK"; else echo "UYARI: gtk3-devel / webkit2gtk4.1-devel eksik olabilir (Fedora)."; fi

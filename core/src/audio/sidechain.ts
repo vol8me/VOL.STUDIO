@@ -18,6 +18,7 @@ export interface DuckingProfile {
 export class SidechainDucker {
   readonly gain: GainNode;
   private activeUntil = 0;
+  private releaseStartAt = 0;
   private currentTarget = 1;
 
   constructor(
@@ -38,7 +39,15 @@ export class SidechainDucker {
    */
   duck(profile: DuckingProfile): void {
     const now = this.context.currentTime;
-    this.currentTarget = Math.min(this.currentTarget, profile.target);
+    // Release aşamasında yeni duck gelirse gain zaten 1'e gidiyordur; yeni
+    // target'a çek. Hold/attack aşamasındaysa en güçlü (en düşük) duck uygulanır.
+    // Önceki tasarım release planlandığı an `currentTarget = 1` yapıyordu — bu,
+    // hold devam ederken gelen ikinci duck'ın min(1, target) = target ile
+    // önceki duck'ı zayıflatmasına yol açıyordu.
+    const inReleasePhase = this.activeUntil > 0 && now >= this.releaseStartAt;
+    this.currentTarget = inReleasePhase
+      ? profile.target
+      : Math.min(this.currentTarget, profile.target);
 
     const attackTimeConst = Math.max(0.001, profile.attack / 3);
     this.gain.gain.cancelScheduledValues(now);
@@ -49,9 +58,12 @@ export class SidechainDucker {
 
     if (end > this.activeUntil) {
       this.activeUntil = end;
-      this.currentTarget = 1;
-      // Release de audio saatinde: sekme arka plandayken context durursa
+      this.releaseStartAt = releaseStart;
+      // Release de audio saatinde: sekma arka plandayken context durursa
       // ducking de donar ve geri donuldugunde kaldigi yerden dogru cozulur.
+      // `currentTarget` burada 1'e set EDILMEZ — release başladığında gain
+      // timeline tarafından 1'e çekilir; JS state olan currentTarget, hold
+      // aşamasında gelen yeni duck'lar için etkin hedefi korumalıdır.
       this.gain.gain.setTargetAtTime(1, releaseStart, Math.max(0.001, profile.release / 3));
     }
   }
@@ -59,6 +71,7 @@ export class SidechainDucker {
   /** Anında sustain seviyesine geri dön (örn. sahne değişiminde). */
   reset(fadeTime = 0.05): void {
     this.activeUntil = 0;
+    this.releaseStartAt = 0;
     this.currentTarget = 1;
     const now = this.context.currentTime;
     this.gain.gain.cancelScheduledValues(now);

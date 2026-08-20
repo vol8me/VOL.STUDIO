@@ -239,5 +239,9 @@
   "enemy": {
     "warden": "Warden",
     "sovereign": "Sovereign"
+  },
+  "fatal": {
+    "title": "Failed to start game",
+    "description": "{{message}}"
   }
 }

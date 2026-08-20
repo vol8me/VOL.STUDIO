@@ -17,6 +17,8 @@ export function synthesize(params: SynthParams): SynthesisResult {
   const internalRate = sampleRate * OVERSAMPLE_FACTOR;
   const duration = Math.max(0.001, params.duration);
   const repeat = Math.max(1, Math.floor(params.repeat ?? 1));
+  // `repeatTime` tekrarlar ARASINDAKİ süredir. 0 → tekrarlar üst üste biner
+  // (overlap); sesler her tekrar için yeniden kurulduğu için faz farklıdır.
   const repeatTime = Math.max(0, params.repeatTime ?? 0);
   const totalDuration = duration + (repeat - 1) * repeatTime;
   const internalSampleCount = Math.floor(internalRate * totalDuration);

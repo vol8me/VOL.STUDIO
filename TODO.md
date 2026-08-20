@@ -4,6 +4,48 @@
 kaydıdır**: ne yapıldı, hangi kapı koşuldu, geriye ne kaldı. Turun ayrıntısı
 commit diff'inde ve git geçmişindedir; burada tekrarlanmaz.
 
+## 2026-08-20 — Profesyonel kod avı bulgularının çözümü
+
+Derin bir av raporu (6 paralel subagent + doğrulama) ~63 bulgu çıkardı.
+Bulguların ~47'sine çözüm getirildi; god object'ler ve AGENTS.md ile ilgili
+bulgular kullanıcı talimatıyla hariç tutuldu; 3 şüpheli bulgu yanlış pozitif
+doğrulanıp atlandı (findPath heuristic admissible, SaveManager `??` doğru,
+design'da @types yok).
+
+**Kritik (5):**
+
+- K-02/K-03: Tauri bundle `targets` tanımlandı — Windows `["nsis","msi"]`,
+  Android `["apk"]` (AGENTS.md hedefi).
+- K-04: Carousel pointerenter/pointerleave listener leak — DisposableScope'a
+  bağlandı.
+- K-05: Reverb `tailSeconds` 44100 hard-coded → `sampleRate` kullanıldı.
+- K-06: StateMachine transition hatada `current` geri alınıyor.
+
+**Yüksek (10):**
+
+- Y-08: bootstrap fatal error i18n + tarayıcı dili düşüşü.
+- Y-09: RunEconomy `startLevel` ve WaveManager `maxStepsPerFrame` config'e.
+- Y-10: vol-ui showcase inline arrow listener'lar named + disposables'a.
+- Y-11: Cargo.toml bağımlılıklar `major.minor` pin'lendi.
+- Y-12: i18next versioning tutarsızlığı giderildi (core `^` → tam).
+- Y-16/Y-17/Y-18: sidechain assertion eklendi, FM test düzeltildi,
+  music.test afterEach context temizliyor.
+
+**Orta (15) + Düşük (8):** FlowField MinHeap, ObjectPool Set, EventBus emit
+hata sayacı döner, Deck.draw referans takası, Carousel/RoundCounter listener,
+expLerp/Sidechain/envelope/filter düzeltmeleri, magic numbers const, hard-coded
+metin i18n, design previews tipi, .nvmrc, tsconfig lib senkron, vs.
+
+**Atlanan (kasıtlı):** D-02/D-03 (LoadingScreen kısa ömürlü, % evrensel),
+O-20 (design path injection testi script refactor gerektirir), D-14 (Prettier
+printWidth stil tercihi, tüm dosyaları reformat eder).
+
+| Kapı                    | Durum | Not                                    |
+| ----------------------- | ----- | -------------------------------------- |
+| `pnpm high`             | ✓     | quick + css + coverage + build, exit 0 |
+| `pnpm -r test:coverage` | ✓     | 1165+447+27+54+26 test geçti           |
+| `pnpm run contract`     | ✓     | 5 paket                                |
+
 ## Son durum (2026-08-18)
 
 Bulut CI yoktur; kapılar `justfile` ile localde koşar. Aşağıdaki sonuçlar bu

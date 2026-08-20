@@ -103,7 +103,7 @@ export class BiquadFilter implements Filter {
     // korunurken katsayıyı her örnek oynatmak yüksek Q'da zipper gürültüsü
     // üretiyordu.
     if (
-      this.lastCutoff < 0 ||
+      this.lastCutoff <= 0 ||
       Math.abs(cutoff - this.lastCutoff) > this.lastCutoff * COEFF_UPDATE_EPSILON
     ) {
       this.computeCoeffs(cutoff);

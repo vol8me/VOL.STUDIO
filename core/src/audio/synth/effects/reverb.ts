@@ -165,7 +165,7 @@ export class Reverb {
     const avgCombSamples =
       (Reverb.COMB_TIMES_L.reduce((a, b) => a + b, 0) / Reverb.COMB_TIMES_L.length) *
       this.roomScale;
-    const combSeconds = avgCombSamples / 44100;
+    const combSeconds = avgCombSamples / sampleRate;
     this.tailSeconds =
       this.feedback > 0 && this.feedback < 1
         ? (combSeconds * Math.log(0.001)) / Math.log(this.feedback)

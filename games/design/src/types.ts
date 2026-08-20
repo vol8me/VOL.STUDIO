@@ -39,6 +39,15 @@ export interface RigPartMetadata {
   file: string;
 }
 
+/** Rig'in bir önizleme görseli — assemble edilmiş kartın tamamını gösterir. */
+export interface RigPreviewMetadata {
+  id: string;
+  partId: string;
+  width: number;
+  height: number;
+  file: string;
+}
+
 export interface RigMetadata {
   schemaVersion: 1;
   entityId: string;
@@ -51,7 +60,7 @@ export interface RigMetadata {
     rootSizePx: Size | null;
   };
   parts: RigPartMetadata[];
-  previews: unknown[];
+  previews: RigPreviewMetadata[];
 }
 
 /** Metadata'sı çözümlenmiş texture URL'siyle eşleştirilmiş, yüklenmeye hazır parça. */
