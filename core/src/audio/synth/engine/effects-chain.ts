@@ -8,9 +8,7 @@ import { NORMALIZE_TARGET_PEAK } from './constants';
  * stereo width → normalize. Pan reverb öncesi — her kanal kendi reverb
  * kuyruğuna girer, geniş imaj.
  *
- * `dryBuffer` DEĞİŞTİRİLMEZ: fonksiyon kendi kopyasında çalışır. Önceki hali
- * girdiyi yerinde eziyordu ve `export` edildiği için çağıranın verisini sessizce
- * yok ediyordu.
+ * `dryBuffer` değiştirilmez; fonksiyon kendi kopyasında çalışır.
  */
 export function applyGlobalEffects(
   dryBuffer: Float32Array,
@@ -147,12 +145,8 @@ export function normalize(buffer: Float32Array, target = 0.95): Float32Array {
 /**
  * Soft-knee brick-wall limiter. Tavan `threshold`, geçiş `knee` genişliğinde.
  *
- * Transfer eğrisi MONOTON ve C1-sürekli: knee bölgesinde
- * `y = x - (x - T + W/2)² / (2W)`, üstünde `y = T`. Önceki uygulama
- * `over·(1 - over/knee)` kullanıyordu — bu bir paraboldü ve `over = knee/2`'de
- * tepe yapıp geri iniyordu: 0.90 → 0.875 iken 0.94 → 0.859 çıkıyordu. Yani
- * yüksek girdi daha sessiz çıktı veriyordu (fold-back distortion). Ayrıca
- * tavan `threshold` değil `threshold - knee`'de kalıyordu.
+ * Transfer eğrisi monoton ve C1-sürekli: knee bölgesinde
+ * `y = x - (x - T + W/2)² / (2W)`, üstünde `y = T`.
  */
 export function limitBuffer(buffer: Float32Array, threshold = 0.95, knee = 0.1): Float32Array {
   const out = new Float32Array(buffer.length);

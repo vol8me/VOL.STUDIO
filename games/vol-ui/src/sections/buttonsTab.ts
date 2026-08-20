@@ -142,10 +142,9 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
   });
 
   /*
-   * Asenkron sözleşme: IconButton artık `Button` ile AYNI garantileri verir —
+   * Asenkron sözleşme: IconButton, `Button` ile aynı garantileri verir —
    * söz beklenirken buton `aria-busy` + `disabled` olur ve tekrar tetiklenemez.
-   * Önceden IconButton handler'ı doğrudan listener'dı: asenkron yoktu, hata
-   * yakalanmıyordu. Showcase'de görünmezse yetenek yalnızca testte var olur.
+   * Showcase'de görünmezse yetenek yalnızca testte var olur.
    */
   const asyncSave = new IconButton(svgIcon(ICON_CHECK), {
     label: i18next.t('volui:buttons.asyncIconSave'),

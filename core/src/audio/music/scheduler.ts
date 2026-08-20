@@ -25,9 +25,7 @@ export class MusicScheduler {
       throw new Error(`MusicScheduler: geçersiz ölçü (${beatsPerBar}/${beatUnit})`);
     }
 
-    // Payda ARTIK hesaba katılıyor: bpm dörtlük nota cinsinden verilir, vuruş
-    // birimi paydadan gelir. 6/8'de vuruş sekizliktir — önceki kod paydayı hiç
-    // okumadığı için bar süresini iki katı hesaplıyordu.
+    // BPM dörtlük nota cinsindendir; vuruş birimi paydadan gelir (örn. 6/8'de sekizlik).
     this.beatDuration = (60 / bpm) * (4 / beatUnit);
     this.barDuration = this.beatDuration * beatsPerBar;
   }
@@ -54,11 +52,8 @@ export class MusicScheduler {
   }
 
   /**
-   * Verilen andan SONRAKİ ilk bar başlangıç zamanını döner.
-   *
-   * Tam bir bar sınırındayken bir SONRAKİ barı döndürür. Önceki hali
-   * `Math.ceil` ile aynı barı döndürüyordu, yani `currentTime`'ın kendisini —
-   * bar sınırında crossfade planlarken sıfır gecikmeli geçişe yol açıyordu.
+   * Verilen andan sonraki ilk bar başlangıç zamanını döner.
+   * Tam bir bar sınırındayken bir sonraki barı döndürür.
    */
   getNextBarTime(currentTime: number, startTime: number): number {
     const currentBar = this.getBarAtTime(currentTime, startTime);

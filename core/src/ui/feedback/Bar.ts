@@ -5,11 +5,9 @@ import { i18next } from '../../systems/I18n';
 /**
  * Görsel varyant — `vol-bar--<variant>` CSS sınıfına çevrilir.
  *
- * Küme AÇIKTIR (`string`). Bir dönem `'health' | 'stamina' | 'cooldown'`
- * kapalı union'ıydı ve "kalkan", "ısı", "yakıt" gibi bir barı ifade etmek
- * İMKÂNSIZDI — CORE, tüketicinin hangi kaynaklara sahip olabileceğine karar
- * veriyordu. Üç ad CSS'te hazır önayar olarak durmayı sürdürür; başka bir
- * varyant için ya kendi CSS'ini yaz ya da `fillColor` ver.
+ * Küme AÇIKTIR (`string`). Üç hazır varyant (`health`, `stamina`, `cooldown`)
+ * CSS'te önayar olarak durur; başka bir varyant için kendi CSS'ini yaz ya da
+ * `fillColor` ver.
  */
 export type BarVariant = string;
 
@@ -45,9 +43,7 @@ export interface BarOptions {
   /**
    * Etiketsiz barlarda erişilebilirlik adı — ÇEVRİLMİŞ metin beklenir.
    *
-   * Önceden CORE `t('core:bar.ariaLabel', { variant })` ile varyant adını
-   * enterpole ediyordu; sonuç Türkçe arayüzde "health bar" gibi yarı çevrilmiş
-   * bir etiketti. Varyant adı oyunun kelimesi, çevirisi de oyunun sorumluluğu.
+   * Varyant adı oyunun kelimesi, çevirisi de oyunun sorumluluğu.
    * Verilmezse jenerik bir yedek kullanılır.
    */
   ariaLabel?: string;

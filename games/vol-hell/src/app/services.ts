@@ -13,18 +13,11 @@ import { GameStats } from '@/app/GameStats';
 /**
  * Uygulama genelindeki tekil servisler.
  *
- * Bu modül sahne veya entity import ETMEZ — dairesel bağımlılığı kıran nokta
- * burası. Önceden servisler `bootstrap.ts` içinde yaşıyordu; bootstrap sahneleri
- * import ederken sahneler ve entity'ler de bootstrap'tan `gameAudio` çekiyordu.
- * Bu döngü top-level `await` ile birleşince kırılgan bir yükleme sırası
- * yaratıyordu ve `Bullet` gibi küçük bir sınıfı izole test etmek tüm açılış
- * zincirini (i18n, storage, Web Audio) ayağa kaldırmayı gerektiriyordu.
- *
- * Bağlamalar `let` çünkü kurulum `initServices()` içinde yapılır: `GameAudio`
- * ctor'u Web Audio desteklenmiyorsa fırlatır ve bunun bootstrap'ın hata
- * ekranıyla yakalanabilmesi gerekir. ESM canlı bağlaması sayesinde geç atama
- * tüm tüketicilerde görünür; sahne metotları modül değerlendirmesinden sonra
- * çalıştığı için güvenlidir.
+ * Bu modül sahne veya entity import ETMEZ — dairesel bağımlılığı kıran nokta.
+ * Bağlamalar `let` ile tanımlanır ve `initServices()` içinde kurulur: `GameAudio`
+ * ctor'u Web Audio desteklenmiyorsa fırlatır; geç atama ESM canlı bağlaması
+ * sayesinde tüm tüketicilerde görünür. Sahne metotları modül değerlendirmesinden
+ * sonra çalıştığı için güvenlidir.
  */
 export let saveManager: SaveManager;
 export let audioSettings: AudioSettings;
@@ -34,13 +27,9 @@ export let gameAudio: GameAudio;
 /**
  * Ölçüm örneği — `?debug`/`?perf` yoksa `null`.
  *
- * CORE'da global bir `Diagnostics.getInstance()` VARDI ve kaldırıldı: bir
- * framework'ün tüketicisine tek bir örnek dayatması, aynı process'te ikinci
- * bir çalışma zamanını imkânsız kılar. Tek örnek tercihi artık OYUNUN kararı
- * ve bu modülde, diğer uygulama servislerinin yanında duruyor.
- *
- * Yerel hata ayıklama sunucusunun adresi de burada: CORE artık "sunucu
- * nerede?" sorusunu sormaz.
+ * Tek örnek tercihi oyunun kararıdır ve bu modülde, diğer uygulama
+ * servislerinin yanında durur. Yerel hata ayıklama sunucusunun adresi de
+ * burada: CORE "sunucu nerede?" sormaz.
  */
 export let diagnostics: Diagnostics | null = null;
 
@@ -69,7 +58,7 @@ export function initServices(): void {
 
 /** Kayıtlı ayar ve istatistikleri depodan yükler. */
 export async function loadPersistedState(): Promise<void> {
-  // İkisi birbirinden bağımsız; Tauri store'da her okuma bir IPC turu olduğu
-  // için seri beklemek gereksiz gecikme yaratıyordu.
+  // İkisi bağımsız; Tauri store'da her okuma bir IPC turu olduğu için
+  // paralel yüklemek gecikmeyi azaltır.
   await Promise.all([audioSettings.load(), gameStats.load()]);
 }

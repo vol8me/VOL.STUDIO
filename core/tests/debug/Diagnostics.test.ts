@@ -21,9 +21,8 @@ function recordingTransport(): DiagnosticsTransport & { sent: DiagnosticsSnapsho
 }
 
 describe('Diagnostics', () => {
-  it('artık singleton DEĞİL: iki örnek yan yana yaşayabilir', () => {
-    // Regresyon: `static instance` varken ikinci `new` fırlatıyordu ve tek
-    // process'te ikinci bir çalışma zamanı (core doğrulaması + oyun) imkânsızdı.
+  it('iki örnek yan yana yaşayabilir', () => {
+    // Aynı process'te birden fazla Diagnostics örneği çalışabilmeli.
     const first = createDiagnostics({ gameId: 'a', overlay: false });
     const second = createDiagnostics({ gameId: 'b', overlay: false });
 
@@ -161,8 +160,7 @@ describe('DiagnosticsTransport', () => {
   });
 
   it('bir istek UÇUŞTAYKEN gelen snapshot atlanır (istekler birikmez)', async () => {
-    // Regresyon: endpoint yavaşlarsa her sampleEvery frame'de yeni bir fetch
-    // açılıyor ve uzun oturumlarda onlarca bekleyen istek birikiyordu.
+    // Uçuşta iken yeni istek açılmamalı; snapshot atlanır.
     let release: () => void = () => {};
     const pending = new Promise<Response>((resolve) => {
       release = () => resolve({ ok: true } as unknown as Response);

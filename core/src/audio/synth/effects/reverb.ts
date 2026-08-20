@@ -138,9 +138,7 @@ export class Reverb {
     const damp = Math.max(0, Math.min(1, params.damp ?? 0.5));
     const preDelay = Math.max(0, params.preDelay ?? 0);
 
-    // roomSize artık comb gecikmelerini ölçekliyor (fiziksel oda boyutu).
-    // Önceden yalnızca `decay`'in varsayılanını üretiyordu: `decay` açıkça
-    // verildiğinde tamamen ölü bir parametreydi.
+    // roomSize comb gecikmelerini ölçekler (fiziksel oda boyutu).
     this.roomScale = 0.6 + roomSize * 0.8;
     this.feedback = Math.min(0.82, decay * 0.55 + 0.15);
 

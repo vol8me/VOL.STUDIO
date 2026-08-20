@@ -7,8 +7,7 @@ import { createRandom } from '../../../src/audio/synth/random';
 import { writeWav } from '../../../src/audio/synth/writer';
 
 /**
- * DSP doğruluk testleri. Her biri denetimde ÖLÇÜLEREK tespit edilmiş bir hatayı
- * kilitler; hepsi düzeltmeden önce başarısız oluyordu.
+ * DSP doğruluk testleri.
  */
 
 const SR = 44100;
@@ -51,7 +50,7 @@ describe('S1 — osilatör fazı frekansın integrali', () => {
     const ch = r.channels[0];
     const measured = estimateFreq(ch, Math.floor(ch.length * 0.9), Math.floor(ch.length * 0.99));
 
-    // `phase = f(t)·t` kullanılıyorken burada ~580 Hz ölçülüyordu (2·f₁ - f₀).
+    // Lineer slide sonunda hedef frekans civarında ölçülmeli.
     expect(measured).toBeGreaterThan(360);
     expect(measured).toBeLessThan(430);
   });
@@ -78,7 +77,7 @@ describe('S1 — osilatör fazı frekansın integrali', () => {
     const early = spread(0);
     const late = spread(ch.length - 9 * win);
 
-    // Önceden baştaki sapma 280 Hz, sondaki 820 Hz'di — 3 kat büyüyordu.
+    // Vibrato sapması zamanla 1.5 katın üzerine çıkmamalı.
     expect(late).toBeLessThan(early * 1.5 + 5);
   });
 });
@@ -97,7 +96,7 @@ describe('S3 — dikdörtgen dalga PolyBLEP', () => {
     for (const wave of ['square', 'pulse', 'sawtooth', 'sine', 'triangle'] as const) {
       for (let i = 0; i < 1000; i++) {
         const value = getWaveSampleWithPhase(wave, i / 1000, 0.3, 0.02);
-        // Önceden square(0.5) = -2.0 dönüyordu.
+        // Dalga çıktısı [-1, 1] aralığında kalmalı.
         expect(Math.abs(value), `${wave} @ ${i / 1000}`).toBeLessThanOrEqual(1.0001);
       }
     }
@@ -121,7 +120,6 @@ describe('S5 — StereoWidener kazanç korunumu', () => {
     for (const width of [0, 0.5, 1, 1.5, 2]) {
       const [l, r] = new StereoWidener(width).process(0.5, 0.5);
       // Mono kaynakta side sinyali yok; genişlik seviyeyi DEĞİŞTİRMEMELİ.
-      // Önceden width=0 → 1.0 (+6 dB), width=2 → 0.0 (tamamen sessiz) oluyordu.
       expect(l, `width=${width}`).toBeCloseTo(0.5, 6);
       expect(r, `width=${width}`).toBeCloseTo(0.5, 6);
     }
@@ -141,7 +139,7 @@ describe('S6 — limiter transfer eğrisi', () => {
     const outputs = limitBuffer(new Float32Array(inputs));
 
     for (let i = 1; i < outputs.length; i++) {
-      // Önceden 0.90 → 0.875 iken 0.94 → 0.859 çıkıyordu (fold-back).
+      // Çıkış girdisiyle monoton artmalı.
       expect(outputs[i], `girdi ${inputs[i].toFixed(2)}`).toBeGreaterThanOrEqual(
         outputs[i - 1] - 1e-9,
       );
@@ -165,7 +163,7 @@ describe('S7 — foldback distortion aralığı', () => {
   it('çıktı [-1, 1] içinde kalır', () => {
     const dist = new Distortion({ amount: 1, type: 'foldback', mix: 1 });
     for (let i = -500; i <= 500; i++) {
-      // Önceden max |çıktı| = 3.0 idi.
+      // Çıktı [-1, 1] aralığında kalmalı.
       expect(Math.abs(dist.process(i / 100))).toBeLessThanOrEqual(1.0001);
     }
   });
@@ -234,7 +232,7 @@ describe('S30 — zarf uç noktalara tam varır', () => {
       1,
     );
 
-    // Önceden 0.998993 / 0.001007 dönüyordu.
+    // Uç değerler tam olarak 1.0 ve 0.0 olmalı.
     expect(env.value(0.0999)).toBeGreaterThan(0.9999);
     expect(env.value(0.2999)).toBeLessThan(0.0001);
     expect(env.value(0)).toBe(0);
@@ -259,9 +257,7 @@ describe('S13 — WAV yazımı çift gain uygulamaz', () => {
       const bytes = readFileSync(file);
       const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
-      // 0.95 → ~31128. Önceki varsayılan (targetGain 0.95) bunu ~29572'ye
-      // düşürüyordu: applyGlobalEffects zaten 0.95'e normalize etmişken
-      // writeWav bir 0.95 daha uyguluyordu.
+      // 0.95 → ~31128; normalize edilmiş tepe dosyada korunur.
       const first = view.getInt16(44, true);
       expect(first).toBeGreaterThan(31000);
       expect(first).toBeLessThanOrEqual(32767);

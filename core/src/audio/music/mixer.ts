@@ -3,14 +3,14 @@
  *  aynı stem id'li farklı track'ler çakışmaz.
  */
 /**
- * Bir AudioParam'ı hedefe RAMPA ile götürür.
+ * Bir AudioParam'ı hedefe lineer rampa ile götürür.
  *
- * `setTargetAtTime` üsteldir ve hedefe asla varmaz: `fadeTime` sonunda hedefin
- * yalnızca %95'ine gelinir. Fade-out'ta bu, kaynağın hâlâ −26 dB seviyedeyken
- * `stop()` ile kesilmesi (duyulur tık) demekti. Lineer rampa hedefe TAM varır.
+ * `setTargetAtTime` üstel olduğundan hedefe asla varmaz: `fadeTime` sonunda
+ * hedefin yalnızca %95'ine gelinir; fade-out'ta kaynak −26 dB'deyken kesilirse
+ * duyulur tık oluşur. Lineer rampa hedefe tam varır.
  *
- * `cancelAndHoldAtTime` varsa kullanılır: gelecekteki bir ana zamanlanan
- * geçişte (crossfade) o andaki değeri sabitleyip oradan rampalamak gerekir.
+ * `cancelAndHoldAtTime` varsa kullanılır; gelecekteki bir ana zamanlanan
+ * geçişte o andaki değeri sabitleyip oradan rampalamak gerekir.
  */
 function rampParam(param: AudioParam, value: number, when: number, fadeTime: number): void {
   if (fadeTime <= 0.001) {
@@ -130,8 +130,7 @@ export class MusicMixer {
   /**
    * Tüm çıkışı kapatır / açar.
    *
-   * Açarken AYARLANAN seviyeye dönülür. Önceki hali sabit `1` yazıyordu: müziği
-   * %30'a çekip sustur/aç yapan kullanıcı sesi %100'de buluyordu.
+   * Açarken ayarlanan seviyeye (`unmutedGain`) döner; son master gain değeri korunur.
    */
   mute(muted: boolean, fadeTime = 0.05): void {
     this.muted = muted;

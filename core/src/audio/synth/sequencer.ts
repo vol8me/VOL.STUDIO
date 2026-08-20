@@ -53,13 +53,7 @@ export function compose(
   const loop = Math.max(1, Math.floor(sequence.loop ?? 1));
   const loopDelay = resolveTime(sequence.loopDelay ?? 0, bpm);
   const musicDuration = sequenceDuration * loop + (loop - 1) * loopDelay;
-  // Kuyruk süreleri GERÇEK sönüm süresinden hesaplanır.
-  //
-  // Önceki hesap iki ayrı birim hatası taşıyordu:
-  //  - `reverb.decay` 0-1 normalize bir değerdir (feedback'e haritalanır),
-  //    saniye değil — doğrudan kuyruk süresi sayılıyordu.
-  //  - `delay.time` (saniye) ile `delay.feedback` (oran) TOPLANIYORDU;
-  //    boyutsal olarak anlamsız bir sayı üretiyordu.
+  // Kuyruk süreleri gerçek sönüm süresinden hesaplanır.
   const reverbTail = baseParams.reverb ? new Reverb(baseParams.reverb, sampleRate).tailSeconds : 0;
   const delayTail = baseParams.delay ? estimateDelayTail(baseParams.delay) : 0;
   const tail = Math.max(reverbTail, delayTail);
@@ -86,9 +80,8 @@ export function compose(
         frequency: noteFreq,
         duration: noteDuration,
         sampleRate,
-        // Nota BAZINDA normalize edilmez: her notayı ayrı ayrı 0.95'e çekmek
-        // aralarındaki dinamik farkı yok ediyordu — crescendo, vurgulu nota veya
-        // sönümlenen kuyruk imkânsızdı. Normalize yalnızca final mix'e uygulanır.
+        // Normalize yalnızca final mix'e uygulanır; nota bazında yapılırsa
+        // notalar arası dinamik fark kaybolur.
         normalize: false,
         // Her nota farklı bir seed alır; aynı gürültü dizisi tekrarlanıp
         // yapay bir "aynılık" oluşturmasın. Dizi yine deterministiktir.

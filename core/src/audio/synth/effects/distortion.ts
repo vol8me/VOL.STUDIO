@@ -5,12 +5,10 @@ import type { DistortionParams } from '../types';
 // -----------------------------------------------------------------------------
 
 /**
- * Sinyali [-1, 1] aralığına KATLAYARAK sığdırır (periyot 4 üçgen dalga eşlemesi).
+ * Sinyali [-1, 1] aralığına katlayarak sığdırır (periyot 4 üçgen dalga eşlemesi).
  *
- * Önceki uygulama yalnızca BİR kez katlıyordu: `driven = 5` için çıktı `-3`
- * oluyordu — aralık dışı bir değer, sonrasındaki normalize adımıyla birleşince
- * tüm sesi aşağı bastırıyordu. Gerçek foldback, sinyal aralığa girene kadar
- * katlamayı sürdürür; kapalı form bunu tek işlemde yapar.
+ * Gerçek foldback sinyal aralığa girene kadar katlamayı sürdürür;
+ * kapalı form bunu tek işlemde yapar.
  */
 function foldback(x: number): number {
   const period = (((x - 1) % 4) + 4) % 4;

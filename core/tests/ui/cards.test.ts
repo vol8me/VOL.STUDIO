@@ -488,7 +488,7 @@ describe('ShopPicker', () => {
 
     shop.render(
       makeState({
-        // Vurgu artık tahmin edilmiyor; çağıran niyetini bildiriyor.
+        // 'reroll' geçişi açıkça belirtilir.
         transition: 'reroll',
         offers: [
           {
@@ -882,8 +882,8 @@ describe('ShopPicker', () => {
         }),
       );
 
-      // Yapısal imza değişti (locked) — CardTile artık ikincil butonu
-      // yerinde ekleyip kaldırabildiği için tile YENİDEN kurulmuyor.
+      // Kilit durumu değişince ikincil buton yerinde güncellenir;
+      // tile yeniden kurulmaz.
       const after = shop.element.querySelector('.vol-card')!;
       expect(after).toBe(before);
       expect(after.classList.contains('vol-card--locked')).toBe(true);
@@ -1226,12 +1226,10 @@ describe('ShopPicker', () => {
 });
 
 /**
- * Dükkanın render niyeti artık TAHMİN EDİLMİYOR, çağıran bildiriyor.
+ * ShopPicker — açık geçiş niyeti.
  *
- * Önceki hâl "bazı teklifler gitti VE bazıları geldi" sezgisine bakıyordu.
- * Bu sezgi satın alma sonrası teklif listesi değiştiğinde de doğru çıkıyor,
- * reroll olmadığı hâlde kilitsiz tüm kartları yıkıp yeniden kuruyor ve
- * ızgarayı titretiyordu.
+ * Render sırasında `transition` çağıran tarafından belirtilir;
+ * 'reroll' dışı güncellemeler mevcut teklif düğümlerini korur.
  */
 describe('ShopPicker — açık geçiş niyeti', () => {
   let root: HTMLDivElement;

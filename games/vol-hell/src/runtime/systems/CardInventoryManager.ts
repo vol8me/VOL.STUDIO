@@ -14,8 +14,8 @@ import { diagnostics } from '@/app/services';
 export interface OwnedCard {
   /**
    * Bu ALIMA özel kimlik (`camKanat#3`). Stat modifier'ları bu kimlikle
-   * eklenir: aynı kartın ikinci kopyası öncekinin üstüne yazmak yerine
-   * gerçekten üst üste biner, satışta da yalnızca o kopya geri alınır.
+   * eklenir; aynı kartın kopyaları bağımsız yığılır ve satışta yalnızca
+   * ilgili kopya geri alınır.
    */
   instanceId: string;
   definition: CardDefinition;
@@ -79,12 +79,8 @@ export class CardInventoryManager {
   /**
    * Ücretsiz edinme (level-up seçimi) — kart hemen uygulanır.
    *
-   * **İşlem sınırı:** etkiler önce PLANLANIR, sonra tek noktada uygulanır ve
-   * kart ancak uygulama başarılıysa envantere girer. Önceki sıralama
-   * (`owned.push` → `applyCard`) yarım commit'e açıktı: `applyCard` fırlatırsa
-   * kart envanterde GÖRÜNÜYOR ama etkileri yarım uygulanmış oluyordu. Bugünkü
-   * kartlarda fırlatma yolu yok; kart sistemi büyüdükçe (kaynak harca → stat
-   * değiştir → ability yükselt → kuşan zinciri) bu sıralama kritikleşir.
+   * **İşlem sınırı:** etkiler önce planlanır, sonra tek noktada uygulanır ve
+   * kart ancak uygulama başarılıysa envantere girer.
    */
   acquire(card: CardDefinition): OwnedCard {
     const instanceId = `${card.id}#${this.instanceCounter + 1}`;

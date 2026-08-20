@@ -10,10 +10,7 @@ for (let i = 0; i < TABLE_SIZE; i++) {
 
 /**
  * Bandlimited triangle tablosu — 200 tek harmonik (1/n² amplitüd).
- *
- * Tembel üretilir: 4096 × 100 = 819.200 `Math.sin()` çağrısı, modül import
- * edilir edilmez çalışıyordu ve triangle hiç kullanılmasa bile tarayıcı
- * açılışına gecikme ekliyordu. İlk triangle isteğinde bir kez üretilir.
+ * İlk triangle isteğinde bir kez üretilir (tembel başlatma).
  *
  * NOT: "aliasing yok" değil, "naive triangle'a göre çok daha az aliasing".
  * Sabit harmonik sayılı bir tablo yalnızca tabloya göre bant sınırlıdır;
@@ -68,10 +65,7 @@ function polyblep(phase: number, inc: number): number {
 /**
  * Genişliği ayarlanabilir dikdörtgen dalga, PolyBLEP ile bant sınırlı.
  *
- * `square` bunun `pulseWidth = 0.5` özel hali — ayrı bir uygulaması YOK.
- * Önceki ayrı `square` dalı iki hata taşıyordu: düşen kenarda BLEP'i çıkarmak
- * yerine ekliyordu (çıktı ±2'ye taşıyordu) ve `phase > 1 - inc` bölgesini
- * hiç düzeltmiyordu.
+ * `square` bunun `pulseWidth = 0.5` özel hali — ayrı bir uygulaması yok.
  */
 function rectangleSample(phase: number, pulseWidth: number, phaseInc: number): number {
   let sample = phase < pulseWidth ? 1 : -1;

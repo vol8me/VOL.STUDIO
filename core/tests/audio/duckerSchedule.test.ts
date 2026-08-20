@@ -3,11 +3,7 @@ import { SidechainDucker } from '../../src/audio/sidechain';
 import { FakeAudioContext } from './music/mock-audio';
 
 /**
- * Y3 regresyonu: ducking'in hem inişi hem çıkışı AudioContext zaman
- * çizelgesine zamanlanmalı. Önceki tasarım release'i `setTimeout` ile
- * tetikliyordu; sekme arka plana alınınca setTimeout throttle edilir ve
- * GameAudio context'i suspend ettiği için `currentTime` tamamen durur — iki
- * saat ayrışınca müzik kısık takılı kalıyordu.
+ * Duck/release, AudioContext saatine (currentTime) göre zamanlanır.
  */
 describe('SidechainDucker — zamanlama tek saatte', () => {
   let context: FakeAudioContext;

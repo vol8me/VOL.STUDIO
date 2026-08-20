@@ -23,9 +23,7 @@ describe('Bar', () => {
     expect(bar.element.getAttribute('aria-valuemin')).toBe('0');
     expect(bar.element.getAttribute('aria-valuemax')).toBe('100');
     expect(bar.element.getAttribute('aria-valuenow')).toBe('100');
-    // CORE varyant adını ÇEVİRMEZ: eskiden `t('core:bar.ariaLabel', { variant })`
-    // ham varyantı enterpole ediyordu ve Türkçe arayüzde "health bar" çıkıyordu.
-    // Varyant oyunun kelimesi; çevirisi de oyunun sorumluluğu (bkz. ariaLabel).
+    // Varyant adı çevrilmez; bar'ın varsayılan aria-label'i 'ilerleme çubuğu'dur.
     expect(bar.element.getAttribute('aria-label')).toBe('ilerleme çubuğu');
 
     const fill = bar.element.querySelector('.vol-bar__fill') as HTMLDivElement;

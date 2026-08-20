@@ -23,11 +23,8 @@ interface RollingStats {
  * Oyun performans ve input metriklerini toplayan geliştirme aracı.
  * URL'de `?debug` veya `?perf` varsa `createVolGame` tarafından oluşturulur.
  *
- * **Global singleton DEĞİLDİR.** Bir dönem `static getInstance()` ile her
- * yerden erişiliyordu; bu, tek bir process'te birden fazla çalışma zamanının
- * (core doğrulaması + oyun + showcase) yan yana yaşamasını imkânsız kılıyor ve
- * ölçüm bağımlılığını gizli bir global'e çeviriyordu. Örnek artık açıkça
- * oluşturulur (`createDiagnostics`) ve bağımlılık olarak GEÇİRİLİR.
+ * **Global singleton DEĞİLDİR.** Örnek açıkça oluşturulur (`createDiagnostics`)
+ * ve bağımlılık olarak geçirilir.
  *
  * Snapshot'ı nereye göndereceğini bilmez; bunu `transport` belirler
  * (bkz. `DiagnosticsTransport`).
@@ -65,8 +62,8 @@ export class Diagnostics {
 
     if (this.overlay && typeof document !== 'undefined') {
       this.panel = document.createElement('div');
-      // Stil CSS'te (debug.css): satir ici cssText hem tasarim sistemini baypas
-      // ediyor hem Tauri CSP'sinde style-src 'unsafe-inline' tutmayi zorunlu kiliyordu.
+      // Stil CSS'ten gelir; satir ici cssText tasarim sistemini baypas eder
+      // ve Tauri CSP'sinde style-src 'unsafe-inline' ister.
       this.panel.className = 'vol-diagnostics-panel';
       document.body.appendChild(this.panel);
     }
@@ -173,10 +170,9 @@ export class Diagnostics {
   }
 
   /**
-   * Ornek ekler. min/max her cagrida `Math.min(...values)` ile hesaplanmiyordu
-   * artik: 60 elemanlik spread x 3 istatistik x her kare, olcum aracinin kendi
-   * maliyetini olctugu metrigin mertebesine cikariyordu. Yalnizca pencereden
-   * eleman dustugunde tam tarama yapilir.
+   * Ornek ekler. min/max yalnizca pencereden eleman dustugunde tam tarama
+   * yapilarak guncellenir; her cagrida `Math.min(...values)` hesaplamak olcum
+   * aracinin kendi maliyetini artirir.
    */
   private pushSample(stats: RollingStats, value: number): void {
     stats.values.push(value);

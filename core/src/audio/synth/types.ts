@@ -42,7 +42,7 @@ export interface FilterParams {
   /** Süre boyunca kesim frekansında ne kadar değişim olacağı (Hz). Varsayılan 0. */
   slide?: number;
   /** Rezonans (0-1 NORMALİZE, Q değeri değil). 0 → Q 0.707 (Butterworth),
-   *  1 → Q 20. Eski 1-kutuplu filtrelerde yok sayılır.
+   *  1 → Q 20. 1-kutuplu filtrelerde yok sayılır.
    *  Ham Q gerekiyorsa `BiquadFilter` doğrudan kullanılmalıdır. */
   resonance?: number;
   /** Filtre tipi. Varsayılan 'lowpass'. Biquad kullanımı için.

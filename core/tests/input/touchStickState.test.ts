@@ -44,8 +44,7 @@ describe('TouchStickState', () => {
     });
 
     it("sol stick doluyken sol yarıya ikinci dokunuş yok sayılır (sağ stick'i çalmaz)", () => {
-      // Regresyon: önceki hatalı mantık, sol stick doluyken sol yarıya
-      // gelen ikinci parmağı yanlışlıkla SAĞ stick'e atıyordu.
+      // Sol yarıda sol stick dolu iken ikinci parmak sağ stick'e atanmamalı.
       const sticks = makeSticks();
       sticks.onPointerDown(1, 100, 100, false);
       sticks.onPointerDown(2, 150, 150, false);
@@ -151,8 +150,8 @@ describe('TouchStickState', () => {
     });
 
     it('aimStickAction verilmezse sağ stick HİÇBİR eylemi tetiklemez, yalnızca aim üretir', () => {
-      // Yeni davranış: "nişan al + otomatik ateş" her oyunun tercihi değildir.
-      // Eylem bağlanmadığında stick nişan vermeye devam eder ama kayıt boş kalır.
+      // "Nişan al + otomatik ateş" her oyunun tercihi değil;
+      // eylem bağlanmadığında stick nişan verir, kayıt boş kalır.
       const sticks = makeAimOnlySticks();
       sticks.onPointerDown(1, 900, 100, true);
       sticks.onPointerMove(1, 900 + 40, 100);

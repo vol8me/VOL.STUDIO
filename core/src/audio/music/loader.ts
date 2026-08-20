@@ -9,12 +9,10 @@ export interface StemLoadOptions {
 }
 
 /**
- * `Content-Type` bir SES dosyasını dışlıyor mu?
+ * `Content-Type` açıkça ses olmayan bir tip mi?
  *
- * Yalnızca AÇIKÇA ses olmayan tipler reddedilir (`text/html` gibi — genellikle
- * bir 404 sayfası). Önceki kontrol `includes('audio') || includes('octet-stream')`
- * idi ve `application/x-wav` gibi geçerli tipleri reddediyordu; sunucu
- * yapılandırmasına aşırı bağımlıydı.
+ * `text/html`, JSON veya XML gibi tipler reddedilir; genellikle
+ * bir 404 sayfası yerine düşmüş ses dosyasıdır.
  */
 function isDefinitelyNotAudio(contentType: string): boolean {
   const type = contentType.toLowerCase();

@@ -24,10 +24,8 @@ type CloseAllExcept = (except: () => void) => void;
 
 /**
  * Showcase kartları — gerçek oyun kataloğundan bağımsız, örnek içerik.
- * Dükkan demosunun "geniş market" hissi için 14'e çıkarıldı: havuz
- * `SHOP_SIZE`'ın (4) çok üzerinde olmalı, aksi halde birkaç satın alma +
- * kilitleme sonrası reroll'da havuz tükenip 4'ten AZ teklif gösterilir
- * (gerçek bir bulguydu — bkz. `refreshOffers`).
+ * Havuz `SHOP_SIZE`'dan büyük tutulur; aksi halde satın alma + kilitleme
+ * sonrası teklif sayısı azalabilir.
  */
 const DEMO_CARDS = {
   turret: { rarity: 'rare' as CardRarity, price: 10, type: 'ability' },
@@ -115,9 +113,9 @@ function buildRarityCard(disposables: Destroyable[]): HTMLElement {
 /**
  * Ortak overlay katmanı — `CardPicker` bilinçli olarak Modal'a bağlı değildir
  * (konumlandırma çağıranın sorumluluğu); burada `games/vol-hell`'in
- * `vol-card-layer`'ıyla AYNI mekanizma kurulur: ortalanmış, kararmış,
- * `uiRootElement`'e mount edilmiş bir katman. Panel artık kartın kendi
- * akışında değil bu katmanda yaşadığı için açılışı kartın boyutunu ETKİLEMEZ.
+ * `vol-card-layer`'ıyla aynı mekanizma kurulur: ortalanmış, kararmış,
+ * `uiRootElement`'e mount edilmiş bir katman. Panel bu katmanda yaşar,
+ * kartın kendi akışında değil; açılış kart boyutunu etkilemez.
  *
  * `hide`/`show` çağıranın (`open`/`close` fonksiyonları) sorumluluğunda —
  * bu fonksiyon yalnızca DOM iskeletini kurar.
@@ -269,12 +267,8 @@ function buildShopCard(
     const fresh = pickRandom(pool, needed);
     const freshQueue = [...fresh];
 
-    // Havuz istenen sayıyı karşılayamazsa slot BOŞ bırakılır. Önceki fallback
-    // zinciri (`?? current ?? fresh[0] ?? 'cardTurret'`) aynı kartı birden
-    // fazla slota koyabiliyordu; `ShopPicker` teklifleri id'ye göre Map'te
-    // tuttuğu için iki slot tek karta çöküyor ve teklif sayısı sessizce
-    // azalıyordu. Ayrıca son çare `'cardTurret'` satın alınmış olsa bile
-    // vitrine girebiliyordu.
+    // Havuz istenen sayıyı karşılayamazsa slot boş bırakılır. Aynı kart
+    // iki kez gösterilmez; satın alınmış kart vitrine giremez.
     const used = new Set<DemoCardId>();
     const next: DemoCardId[] = [];
 
@@ -339,7 +333,7 @@ function buildShopCard(
 
       balance -= demo.price;
       purchased.add(cardId);
-      // Satın alınan kart artık teklif değil — kilit anlamsız kalır.
+      // Satın alınan kart teklif değil — kilit anlamsız kalır.
       locked.delete(cardId);
       owned.push({
         id: cardId,
@@ -352,8 +346,7 @@ function buildShopCard(
       });
 
       // Gerçek oyundaki gibi: yeni alınan bir yetenek, boş slot varsa
-      // otomatik yerleşir (bkz. TODO.md — "yeni alınan ability boş slot
-      // varsa OTOMATİK yerleşir").
+      // otomatik yerleşir.
       if (demo.type === 'ability') {
         const emptyIndex = slots.indexOf(null);
         if (emptyIndex !== -1) slots[emptyIndex] = cardId;
@@ -460,13 +453,13 @@ function buildShopCard(
 /**
  * Kart component'leri sekmesi — CardTile, LevelUpPicker, ShopPicker.
  *
- * CardTile kartı ÜSTTE tam genişlikte durur: örnek kartlar
+ * CardTile kartı üstte tam genişlikte durur: örnek kartlar
  * (`.vol-showcase-card-row`, auto-fit grid) ancak geniş bir konteynerde yan
- * yana sığar. LevelUpPicker/ShopPicker ALTTA, yüzde-elli bölünmüş ayrı bir
- * satırda yan yana durur; ikisinin panelleri artık kendi kartlarının İÇİNDE
- * değil, `uiRootElement`'e mount edilmiş ortak bir overlay katmanında açılır
- * (bkz. `buildCardLayer`) — `games/vol-hell`'deki gerçek kullanım deseniyle
- * aynı (ortalanmış, kararmış, tam ekran, yumuşak geçişli).
+ * yana sığar. LevelUpPicker/ShopPicker altta, yüzde-elli bölünmüş ayrı bir
+ * satırda yan yana durur; panelleri `uiRootElement`'e mount edilmiş ortak
+ * bir overlay katmanında açılır (bkz. `buildCardLayer`) — `games/vol-hell`'deki
+ * gerçek kullanım deseniyle aynı (ortalanmış, kararmış, tam ekran,
+ * yumuşak geçişli).
  */
 export function buildCardsTab(uiRootElement: HTMLElement): {
   element: HTMLElement;

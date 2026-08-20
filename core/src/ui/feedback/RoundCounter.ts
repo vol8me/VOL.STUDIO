@@ -20,22 +20,8 @@ export interface RoundCounterOptions {
 
 /**
  * Tur göstergesi + kalan süre geri sayımı. **Saf görüntüdür:** turu kendisi
- * ilerletmez, ne zaman biteceğine karar vermez.
- *
- * Adı bir dönem `WaveCounter`'dı; "dalga" bir türün kelimesidir ve bileşen
- * yalnızca bir sayı ile bir geri sayım çizer. `RoundLoop` ile aynı sözlüğü
- * paylaşması, hangi parçanın hangisini beslediğini de okunur kılar.
- *
- * Önceden bir `startAutoLoop({ countdownSeconds, onWaveStart })` metodu vardı:
- * mola bitince tur numarasını KENDİSİ artırıyor, `totalRounds`e ulaşınca
- * KENDİSİ duruyordu. Bu bir tur orkestrasyonudur — tam olarak `GameScene`den
- * `RunDirector`a taşıdığımız cinsten bir kural — ve bir HUD bileşeninde
- * durmasının nedeni yoktu. Bileşen kendi tur defterini tutuyordu; oyunun
- * kendi tur yöneticisi zaten varsa iki sayaç birbirinden kayardı.
- *
- * VOL.HELL bu bileşeni hiç kullanmadı (turları `RunDirector` yönetiyor); tek
- * çalıştıranı showcase demosuydu. `startCountdown()` kalır: bir süreyi geri
- * saymak mekanizmadır, o sürenin sonunda NE OLACAĞI çağıranın kararıdır.
+ * ilerletmez, ne zaman biteceğine karar vermez; sadece dışarıdan verilen tur
+ * numarasını ve kalan süreyi çizer.
  */
 export class RoundCounter {
   readonly element: HTMLDivElement;
@@ -93,7 +79,7 @@ export class RoundCounter {
 
   /**
    * Saniye bazlı geri sayım başlatır; süre dolunca `onCountdownEnd` tetiklenir.
-   * Yeni çağrı öncekini iptal eder.
+   * Yeni çağrı mevcut geri sayımı iptal eder.
    *
    * Süre bittiğinde NE OLACAĞINA bileşen karar vermez: turu ilerletmek,
    * durdurmak ya da yeni bir geri sayım açmak çağıranın işidir.

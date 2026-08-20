@@ -162,12 +162,7 @@ describe('InputManager provider seçim önceliği', () => {
 
 describe('Diagnostics snapshot sağlayıcı kümesi AÇIK', () => {
   it("CORE'un tanımadığı bir modality (gamepad) raporlanabilir", () => {
-    // Regresyon: `activeProvider` bir dönem `'pc' | 'touch' | 'none'` kapalı
-    // union'ıydı ve ham durum `pc`/`touch` ADLI ALANLARDA taşınıyordu. Yani
-    // `InputProvider` açık bir arayüz olmasına rağmen — gamepad sağlayıcısı
-    // YAZILABİLİYOR ama diagnostics'e GİREMİYORDU. Bu test o asimetrinin
-    // döndüğünü yakalar: aşağıdaki sağlayıcı CORE'da hiçbir yerde geçmeyen
-    // bir kimlik kullanıyor ve derlenmek zorunda.
+    // Tanıdık olmayan provider id'si de diagnostics snapshot'ına yazılır.
     const gamepad: InputProvider<TestAction> = {
       id: 'gamepad',
       get isActive() {

@@ -58,11 +58,6 @@ export interface ShopPickerState {
   /**
    * Bu render'ın NİYETİ. Panel bunu tahmin ETMEZ, çağıran söyler.
    *
-   * Önceki hâl "bazı teklifler gitti VE bazıları geldi" sezgisine bakıyordu;
-   * bu sezgi satın alma sonrası teklif listesi değiştiğinde de doğru çıkıyor
-   * ve reroll olmadığı hâlde tüm kartları yıkıp yeniden kurarak ızgarayı
-   * titretiyordu. Niyet açıkça verilince yanlış pozitif kalmaz.
-   *
    * - `'reroll'`: teklifler yeniden çekildi; kilitli olmayanlar yenilenir.
    * - `'refresh'` (varsayılan): bakiye/satın alma durumu değişti, kartlar yerinde güncellenir.
    */
@@ -159,17 +154,14 @@ export const LEAVE_ANIMATION_MS = 240;
 
 /**
  * `.vol-card-picker--rerolling .vol-card-picker__grid` animasyon süresiyle
- * (`vol-card-grid-reroll`, 0.24s) eşleşir. Daha önce `render()` içinde çıplak
- * `240` olarak yazılıydı; adı olmadığı için CSS senkron testinin kapsamı
- * dışında kalıyordu.
+ * (`vol-card-grid-reroll`, 0.24s) eşleşir.
  */
 export const REROLL_FLASH_MS = 240;
 
 /**
  * `.vol-card--just-purchased` (`vol-card-purchase-flash`,
- * `--vol-transition-medium`) süresiyle eşleşir. Önceden çıkış animasyonu
- * sabiti (`LEAVE_ANIMATION_MS`) ödünç alınıyordu — iki animasyonun süresi
- * ayrışırsa vurgu erken silinirdi.
+ * `--vol-transition-medium`) süresiyle eşleşir. `LEAVE_ANIMATION_MS`'den
+ * ayrı tutulur; iki animasyonun süresi ayrışırsa vurgu erken silinebilir.
  */
 export const PURCHASE_FLASH_MS = 240;
 
@@ -183,18 +175,9 @@ export const PURCHASE_FLASH_MS = 240;
  * (slota sürüklenebilirler); "elimde ne var, ne işe yarıyor" sorusu panelden
  * çıkmadan yanıtlanır.
  *
- * **Render stratejisi bilinçli olarak DIFF'lidir, "hepsini yık yeniden kur"
- * DEĞİLDİR.** İlk tasarım her `render()` çağrısında (satın alma, satış, kilit
- * değişimi, reroll — HANGİSİ olursa olsun) tüm teklif ve envanter kartlarını
- * `destroy()` edip yeniden `CardTile` olarak kuruyordu. Bunun iki gerçek
- * sonucu vardı: (1) CSS giriş animasyonu (`vol-card-in`) YENİ eklenen bir DOM
- * düğümünde tetiklenir — ilgisiz bir kilitleme tıklaması bile TÜM envanteri
- * yeniden animasyonla titretiyordu, envanter büyüdükçe bu daha görünür/rahatsız
- * edici hale geliyordu; (2) tek bir kartın satın alınması diğer tekliflerin de
- * DOM'unu (ve olay dinleyicilerini) gereksiz yere yeniden kuruyordu. Şimda:
- * yalnızca gerçekten YENİ olan kartlar oluşturuluyor, yalnızca artık listede
- * OLMAYAN kartlar (çıkış animasyonuyla) kaldırılıyor, VAR OLAN kartlar
- * `CardTile.update()` ile YERİNDE güncelleniyor ve KONUMU KORUNUYOR.
+ * **Render stratejisi DIFF'lidir:** yalnızca yeni kartlar oluşturulur,
+ * listeden çıkanlar çıkış animasyonuyla kaldırılır, var olanlar yerinde
+ * güncellenir ve konumları korunur.
  */
 export class ShopPicker extends CardPicker {
   /** Çağıranın kendi içeriğini koyabileceği alan (ör. yetenek slotları). */
@@ -215,10 +198,10 @@ export class ShopPicker extends CardPicker {
   private readonly closeButton: HTMLButtonElement;
 
   /**
-   * Teklif kartları — kart ID'sine göre TEK kayıt. Önceden kart düğümü ve
-   * "satın alındı mı" bilgisi iki ayrı Map'te tutuluyordu ve elle senkron
-   * kalmaları gerekiyordu; biri silinip diğeri unutulduğunda vurgu mantığı
-   * sessizce yanlış çalışıyordu.
+   * Teklif kartları — kart ID'sine göre TEK kayıt.
+   *
+   * Tek kayıtta hem düğüm hem satın alma durumu tutulur; ayrı senkronizasyon
+   * hatası riski olmaz.
    */
   private readonly offers = new Map<string, OfferEntry>();
   /** Çıkış animasyonu bekleyen teklifler — geri gelirse geri alınır. */
@@ -483,9 +466,9 @@ export class ShopPicker extends CardPicker {
 
   /**
    * Bir teklif kartının tüm görsel durumunu TEK yerden uygular.
-   * Önceden aynı üç çağrı (`update`/`setDisabled`/`setSecondaryAction`) hem
-   * "var olan" hem "yeni" dalında ayrı ayrı yazılıydı ve ikisi zamanla
-   * ayrışabiliyordu.
+   *
+   * Yeni ve var olan kartlar aynı yolla güncellenir; farklı kollar arasında
+   * davranış ayrışması riski oluşmaz.
    */
   private applyOfferState(
     tile: CardTile,

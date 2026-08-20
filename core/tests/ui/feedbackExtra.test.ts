@@ -7,11 +7,8 @@ import { RoundCounter } from '../../src/ui/feedback/RoundCounter';
 import { RoundLoop } from '../../src/time/RoundLoop';
 import { XPBar, applyXpGain } from '../../src/ui/feedback/XPBar';
 
-// Projedeki diğer feedback testleriyle (bkz. feedback.test.ts) aynı desen:
-// her testte fake timers açık başlar — Counter/XPBar'ın global clearTimeout
-// çağrıları, bu dosyanın kendi test sırasına göre useFakeTimers hiç
-// çağrılmadan çalıştığında (bazı ortam/sıralama koşullarında) tanımsız
-// kalabiliyordu; beforeEach ile baştan fake timer kurulumu bunu ortadan kaldırır.
+// Her testte fake timer'lar açık başlar; Counter ve XPBar'ın clearTimeout
+// çağrıları bu ortamda tanımlı olur.
 beforeEach(() => {
   vi.useFakeTimers();
 });
@@ -181,11 +178,8 @@ describe('RoundCounter', () => {
     expect(countdownEl.hidden).toBe(true);
   });
 
-  it('tur ilerletme artık RoundLoop ile yapılır — sayaç yalnızca çizer', () => {
-    // Regresyon: `startAutoLoop()` bir dönem BU BİLEŞENİN İÇİNDEYDİ. Tur
-    // orkestrasyonu bir HUD bileşeninin işi değil; oyunun kendi tur yöneticisi
-    // varsa iki defter kaçınılmaz olarak kayardı. Bu test ayrımın uçtan uca
-    // çalıştığını gösterir: kural RoundLoop'ta, gösterim RoundCounter'da.
+  it('tur ilerletme RoundLoop sorumluluğunda, sayaç yalnızca çizer', () => {
+    // Sayaç tur değerini gösterir; ilerletmeyi RoundLoop yapar.
     const onRoundStart = vi.fn();
     const counter = track(new RoundCounter({ totalRounds: 2 }));
     const loop = new RoundLoop({
@@ -246,12 +240,8 @@ describe('XPBar', () => {
     expect(xpBar.getXP()).toBe(50);
   });
 
-  it('ilerleme kuralı artık applyXpGain tarifinde — bar yalnızca çizer', () => {
-    // Regresyon: `addXP()` bir dönem BU BİLEŞENİN İÇİNDEYDİ ve kendi
-    // level/xp defterini tutuyordu. Bu bir görünüm değil OYUN KURALIDIR
-    // (taşan XP devreder mi, yanar mı?) ve VOL.HELL zaten kullanmayı
-    // reddediyordu. Kural dışarı alındı; bu test ayrımın uçtan uca
-    // çalıştığını gösterir.
+  it('ilerleme kuralı applyXpGain tarifinde, bar yalnızca çizer', () => {
+    // XPBar durumu çizer; kural applyXpGain'de kalır.
     const xpBar = track(new XPBar({ level: 1, xp: 90, xpForLevel, animateMs: 0 }));
 
     const next = applyXpGain(1, 90, 30, xpForLevel); // eşik(1)=100 -> lv2, kalan 20

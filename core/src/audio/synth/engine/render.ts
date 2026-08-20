@@ -127,11 +127,7 @@ export function renderDrySample(
  * 2x oversampling ile anti-aliasing lowpass + decimation.
  *
  * Filtre 4. derece Butterworth: iki biquad kaskadı, Q değerleri 0.5412 ve
- * 1.3066 (Butterworth kutup açılarından). Önceki kod `createFilter`'a
- * `resonance: 0.707` geçiyordu — `resonance` 0-1 normalize bir değer olarak
- * yorumlanıp Q = 0.707 + 0.707·19.293 ≈ 14.35'e haritalanıyordu ve cutoff'ta
- * +23 dB'lik bir rezonans tepesi yaratıyordu. Aliasing temizlemesi gereken
- * filtre, spektrumun tepesine devasa bir tepe ekliyordu.
+ * 1.3066 (Butterworth kutup açılarından).
  */
 export function downsample2x(
   buffer: Float32Array,

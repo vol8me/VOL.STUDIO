@@ -21,14 +21,7 @@ export interface RoundLoopOptions {
  * Ardışık turlar ve aralarındaki mola. Döngü turun İÇERİĞİNİ bilmez;
  * yalnızca "tur ilerledi" ve "mola bitti" der.
  *
- * Bir dönem `WaveCounter.startAutoLoop()` içinde, yani bir HUD bileşeninin
- * içinde yaşıyordu: bileşen turu kendi ilerletiyor, kendi defterini tutuyor ve
- * `totalWaves`e ulaşınca kendi duruyordu. Bir tur orkestrasyonunun sunum
- * katmanında durmasının sebebi yoktu ve oyunun kendi tur yöneticisiyle iki
- * defter kaçınılmaz olarak kayıyordu.
- *
- * Artık gösterimden bağımsız: `RoundLoop` turu yürütür, bir sayaç/HUD (ya da
- * hiçbir görsel) yalnızca çıktısını çizer.
+ * Gösterimden bağımsız: `RoundLoop` turu yürütür; sayaç/HUD yalnızca çıktısını çizer.
  *
  * `Scheduler` gibi delta-time ile sürülür: duraklatılan oyunda mola akmaz.
  *
@@ -60,9 +53,7 @@ export class RoundLoop {
 
   /**
    * Döngüyü başlatır ve İLK turu HEMEN bildirir (mola beklemeden).
-   *
-   * Molanın önce gelmesi, oyuncuyu daha ilk saniyede boş bir ekranla
-   * karşılardı; ilk tur anında başlar, mola turlar ARASINDA olur.
+   * İlk tur anında başlar; mola turlar ARASINDA olur.
    */
   start(): void {
     if (this.running || this.completed) return;

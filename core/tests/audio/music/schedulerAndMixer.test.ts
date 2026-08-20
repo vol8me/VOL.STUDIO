@@ -3,7 +3,7 @@ import { MusicScheduler } from '../../../src/audio/music/scheduler';
 import { MusicMixer } from '../../../src/audio/music/mixer';
 import { FakeAudioContext } from './mock-audio';
 
-/** Denetimde tespit edilen scheduler/mixer hatalarını kilitler. */
+/** MusicScheduler ve MusicMixer davranışını doğrular. */
 
 describe('S15 — ölçü paydası hesaba katılır', () => {
   it('6/8 barı 4/4 barından farklı', () => {
@@ -15,7 +15,6 @@ describe('S15 — ölçü paydası hesaba katılır', () => {
     expect(common.barDuration).toBeCloseTo(2, 6);
 
     // 6/8'de vuruş SEKİZLİK → 0.25 sn, bar = 6 × 0.25 = 1.5 sn.
-    // Payda yok sayılırken bar 3 sn hesaplanıyordu — iki katı.
     expect(compound.beatDuration).toBeCloseTo(0.25, 6);
     expect(compound.barDuration).toBeCloseTo(1.5, 6);
   });
@@ -85,7 +84,7 @@ describe('S9/S10 — mixer sustur/aç ve rampalar', () => {
 
     mixer.mute(false);
     settle();
-    // Önceden sabit 1 yazılıyordu: %30'a ayarlanmış ses %100'e fırlıyordu.
+    // Sessizlik kapatıldığında kazanç ayarlanan seviyeye dönmeli.
     expect(gain.value).toBeCloseTo(0.3, 6);
   });
 
@@ -116,8 +115,7 @@ describe('S9/S10 — mixer sustur/aç ve rampalar', () => {
     context.currentTime += 0.5;
     gain.advanceTo(context.currentTime);
 
-    // setTargetAtTime üsteldi ve hedefe asla varmıyordu: fade sonunda gain
-    // %5'te kalıyor, kaynak o seviyede kesilince tık duyuluyordu.
+    // Fade-out sonunda hedef gain 0'a tam olarak ulaşmalı.
     expect(gain.value).toBe(0);
   });
 

@@ -82,10 +82,7 @@ export class MusicEngine {
 
   /** Belirtilen track'i çalmaya başlar. */
   async play(trackId: string, options: PlayOptions = {}): Promise<void> {
-    // Aynı parça zaten çalıyorsa yeniden başlatılmaz — ama verilen state
-    // UYGULANIR. Önceki hali sessizce geri dönüyordu:
-    // `play('combat', { state: { intensity: 1 } })` hiçbir şey yapmıyordu ve
-    // çağıranın `setState()` kullanması gerektiği hiçbir yerde yazmıyordu.
+    // Aynı parça zaten çalıyorsa yeniden başlatılmaz; verilen state uygulanır.
     if (this.isPlaying && this.currentTrackId === trackId) {
       if (options.state) this.setState(options.state);
       return;
@@ -165,10 +162,7 @@ export class MusicEngine {
       const targetBar = Math.floor(currentBar) + bars;
       transitionTime = this.scheduler.getTimeAtBar(targetBar, this.trackStartTime);
     } else {
-      // Bar hizalamasi istenmediyse gecis HEMEN baslar. Onceki tasarim
-      // `now + duration` kullaniyordu: hem eski stem'in fade'i hem yeni track
-      // o ana zamanlandigi icin gecisten once `duration` kadar hicbir sey
-      // olmuyordu (fadeIn:2 -> 2 sn olu bekleme, sonra 2 sn crossfade).
+      // Bar hizalaması istenmediyse geçiş hemen başlar.
       transitionTime = now;
     }
 

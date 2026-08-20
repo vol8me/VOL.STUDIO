@@ -23,10 +23,7 @@ export interface VolGameConfig {
    * Ölçüm örneği. `createVolGame` bunu OLUŞTURMAZ, yalnızca oyunun ömrüne
    * bağlar (oyun destroy olunca `destroy()` çağırır).
    *
-   * Önceden burada `debug`/`gameId` alanları vardı ve CORE global bir
-   * singleton kuruyordu; ölçüm bağımlılığı görünmez oluyor ve tek process'te
-   * ikinci bir çalışma zamanı imkânsızlaşıyordu. Artık tüketici
-   * `isDiagnosticsEnabled()` ile karar verip `createDiagnostics(...)` ile
+   * Tüketici `isDiagnosticsEnabled()` ile karar verip `createDiagnostics(...)` ile
    * kendi örneğini üretir ve buraya geçirir.
    */
   diagnostics?: Diagnostics;

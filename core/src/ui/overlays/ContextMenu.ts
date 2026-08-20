@@ -37,10 +37,8 @@ export class ContextMenu {
   readonly popup: Popup;
   private readonly itemButtons: HTMLButtonElement[] = [];
   /**
-   * Tüm listener'lar burada. Önceden handler referansları `boundClicks` /
-   * `boundKeydowns` PARALEL dizilerinde tutuluyor ve `destroy()` onları
-   * `itemButtons` ile aynı İNDEKSTE eşleştiriyordu — üç dizinin sırası
-   * sessizce ayrışırsa yanlış listener kaldırılır ve hata görünmez olur.
+   * Tüm dinleyiciler tek bir kapsamda (`DisposableScope`) tutulur;
+   * `destroy()` ile topluca ve güvenli kaldırılır.
    */
   private readonly scope = new DisposableScope();
   private boundToggle: () => void;

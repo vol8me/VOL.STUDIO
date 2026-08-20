@@ -35,12 +35,10 @@ export interface EnemyOptions {
   /** Zorluk çarpanı uygulanmış skor değeri. */
   scoreValue: number;
   /**
-   * Düşman ÖLDÜĞÜNDE — hasarın KAYNAĞI ne olursa olsun çağrılır.
+   * Düşman öldüğünde — hasarın kaynağı ne olursa olsun çağrılır.
    *
-   * Skor/Spark/Flux eskiden yalnızca `CollisionResolver`'daki mermi vuruşuna
-   * bağlıydı; kuleyle, zincirle ya da ateş alanıyla öldürülen düşman hiçbir
-   * ödül vermiyordu. Ödül artık ölümün kendisine bağlı.
-   * `destroy()` ile sahneden kaldırma (dalga temizliği) bunu TETİKLEMEZ.
+   * Ödül ölümün kendisine bağlıdır.
+   * `destroy()` ile sahneden kaldırma (dalga temizliği) bunu tetiklemez.
    */
   onDeath?: (enemy: Enemy) => void;
 }

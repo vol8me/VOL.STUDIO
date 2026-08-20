@@ -87,12 +87,7 @@
   margin: 0;
 }
 
-/*
- * HUD ve açılış hatası katmanları. Önceden bu stiller TS içinde
- * `element.style.cssText` ile yazılıyordu; bu hem tasarım sistemini (BEM +
- * theme.css token'ları) baypas ediyor hem de Tauri CSP'sinde
- * `style-src: 'unsafe-inline'` tutmayı zorunlu kılıyordu.
- */
+/* HUD ve açılış hatası katmanları */
 
 .vol-hud__slot {
   position: absolute;

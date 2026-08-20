@@ -16,17 +16,6 @@ export interface XPBarOptions {
 /**
  * Bar üzerine kurulu seviye/ilerleme göstergesi. **Saf görüntüdür:** durumu
  * `setState()` ile dışarıdan alır, kendi defterini TUTMAZ.
- *
- * Önceden bir `addXP(amount)` metodu vardı ve eşiği aşan miktarı sonraki
- * seviyeye taşıyordu (`while (kalan >= eşik) { kalan -= eşik; seviye++ }`).
- * Bu bir GÖRÜNÜM değil, bir OYUN KURALIDIR: başka bir oyun "seviye atlayınca
- * artan XP yanar" ya da "taşma kelepçelenir" der. Dahası bileşen kendi
- * `level`/`xp` defterini tutuyordu ve oyunun kendi ilerleme sistemi zaten
- * varsa iki sayaç kaçınılmaz olarak birbirinden kayıyordu.
- *
- * Kanıt teorik değildi: VOL.HELL'in `SparkBar`'ı `addXP()`'yi hiç kullanmadı,
- * yalnızca `setState()` çağırdı — kural CORE'da dururken tek çalıştıranı
- * showcase demosuydu. Kural artık çağıranda (bkz. vol-ui HUD sekmesi).
  */
 export class XPBar {
   readonly element: HTMLDivElement;
@@ -117,11 +106,6 @@ export interface XpGainResult {
 
 /**
  * Klasik "taşan XP sonraki seviyeye devreder" ilerleme kuralı — OPSİYONEL tarif.
- *
- * Bu kural bir dönem `XPBar.addXP()` içinde gömülüydü; bileşen kendi defterini
- * tutuyor ve oyunun ilerleme sistemiyle kayıyordu. Kural silinmedi, DIŞARI
- * ALINDI: en yaygın davranış hazır durur ve tek satırda kullanılır, ama
- * `XPBar` onu arkanda varsaymaz.
  *
  * "Taşan XP yanar" ya da "seviye başına sabit eşik" isteyen bir oyun bu
  * fonksiyonu çağırmaz, kendi hesabını yapıp `bar.setState()` der.

@@ -62,18 +62,15 @@ describe('isPCInputActive', () => {
     ).toBe(true);
   });
 
-  it('touch kaynaklı pointer basılıyken true DÖNMEZ (regresyon: eski hata her zaman true dönüyordu)', () => {
-    // Eski hata: `!pointer.wasTouch` tek başına kontrol edildiği için,
-    // dokunulmamış hiçbir tuş/pointer olmasa bile wasTouch=false olduğu
-    // sürece isActive her zaman true dönüyordu (hiçbir girdi yokken bile).
+  it('touch kaynaklı pointer basılıyken true dönmez', () => {
+    // wasTouch=true ise basılı olsa bile aktif sayılmaz.
     expect(
       isPCInputActive(noKeys, { ...idlePointer, isDown: true, wasTouch: true }, noActions),
     ).toBe(false);
   });
 
-  it('hiçbir girdi yokken ve pointer hiç dokunulmamışsa (wasTouch=false, isDown=false) false döner', () => {
-    // Bu, eski `!pointer.wasTouch || ...` mantığının anlamsızlığını
-    // doğrudan test eder: yalnızca "dokunulmamış" olmak aktiflik değildir.
+  it('hiçbir girdi yokken false döner', () => {
+    // wasTouch=false ve isDown=false tek başına aktiflik değildir.
     expect(
       isPCInputActive(noKeys, { ...idlePointer, isDown: false, wasTouch: false }, noActions),
     ).toBe(false);
@@ -164,9 +161,8 @@ describe('resolvePCActions', () => {
     expect(actions.engage).toBe(true);
   });
 
-  it('touch kaynaklı "sol tık" pointer eylemini TETİKLEMEZ', () => {
-    // Regresyon: bu koruma olmadan tek bir dokunuş hem joystick'i hem PC
-    // eylemini tetikler ve oyun çift girdi alır.
+  it('touch kaynaklı "sol tık" eylemi tetiklemez', () => {
+    // Dokunmatik kaynaklı pointer PC eylemini çalıştırmamalı; çift girdi engellenir.
     const actions = resolvePCActions(bindings, noKeyDown, {
       ...idlePointer,
       leftButtonDown: true,

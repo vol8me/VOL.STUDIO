@@ -83,12 +83,9 @@
   --vol-transition-medium: 0.24s ease;
 
   /*
-   * Katman (z-index) ölçeği — TEK doğruluk kaynağı. Önceden her floating/overlay
-   * component kendi sabit sayısını seçiyordu (Modal:30, Tooltip/CommandPalette/
-   * Popup üçü de 40'ta çakışıyordu, RadialMenu:50 — bir Modal'dan bile YÜKSEK).
-   * Sonuç: diyaloglar bazı öğelerin altında bazılarının üstünde kalıyordu,
-   * sıralama tamamen tesadüfiydi. Yeni bir floating component eklerken BURADAN
-   * bir katman seç; yeni bir sabit sayı UYDURMA.
+   * Katman (z-index) ölçeği — TEK doğruluk kaynağı.
+   * Yeni bir floating component eklerken BURADAN bir katman seç;
+   * yeni bir sabit sayı UYDURMA.
    *
    * Sıralama (düşükten yükseğe), NEDEN'iyle:
    *  root     — DOM UI'ın taban katmanı, diğer her şey bunun üstünde birikir.

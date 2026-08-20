@@ -13,10 +13,7 @@ const BYTES_PER_SAMPLE = BITS_PER_SAMPLE / 8;
 /**
  * SynthesisResult içeriğini 16-bit PCM WAV dosyasına yazar. Mono veya stereo.
  *
- * `targetGain` varsayılanı 1.0'dır. Önceden 0.95 idi ve `applyGlobalEffects`
- * ZATEN 0.95'e normalize ettiği için dosyaya yazılan tepe 0.95 × 0.95 = 0.9025
- * oluyordu — aynı sabit iki farklı anlamda iki yerde duruyor ve ~0.9 dB
- * istenmeyen kayıp veriyordu. Headroom kararı tek yerde (normalize) kalır.
+ * `targetGain` varsayılanı 1.0'dır; headroom kararı tek yerde (normalize) kalır.
  */
 export function writeWav(filePath: string, result: SynthesisResult, targetGain = 1): void {
   const { channels, sampleRate } = result;
@@ -57,8 +54,7 @@ export function writeWav(filePath: string, result: SynthesisResult, targetGain =
       const raw = result.channels[ch]?.[i] ?? 0;
       const noise = (dither.next() - dither.next()) * LSB;
       const clamped = Math.max(-1, Math.min(1, raw * targetGain + noise));
-      // Math.round: Math.floor pozitif değerleri sistematik olarak aşağı
-      // yuvarlayıp yarım LSB'lik bir sapma bırakıyordu.
+      // Math.round, pozitif değerlerdeki sistematik aşağı yuvarlama sapmasını önler.
       const intVal = Math.max(-32768, Math.min(32767, Math.round(clamped * 32767)));
       const offset = 44 + (i * numChannels + ch) * BYTES_PER_SAMPLE;
       buffer.writeInt16LE(intVal, offset);
@@ -81,16 +77,9 @@ let ffmpegAvailable: boolean | undefined;
 
 /**
  * FFmpeg yoksa `writeOgg` çağrılmadan önce net bir hata fırlatır.
- * `writeWav` bu kontrolden etkilenmez — FFmpeg'e ihtiyaç duymaz.
+ * `writeWav` bu kontrolden etkilenmez.
  *
- * Sonuç process başına memoize edilir: FFmpeg'in varlığı process ömrü
- * boyunca değişmez, ama `generate-*.ts` script'leri onlarca ses/müzik
- * parçası için döngüde `writeOgg` çağırıyor — memoize olmadan her çağrı
- * ayrı bir senkron subprocess spawn ediyordu.
- *
- * `convert-audio.ts` da aynı fonksiyonu kullanır (bkz. export) — iki ayrı
- * kopya birbirinden bağımsız güncellenip kod tabanı içinde uyuşmaz duruma
- * gelmesin diye tek kaynak burada tutulur.
+ * Sonuç process başına memoize edilir.
  */
 export function ensureFfmpeg(): void {
   if (ffmpegAvailable) return;

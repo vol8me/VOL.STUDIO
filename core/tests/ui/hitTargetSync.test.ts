@@ -3,21 +3,13 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /**
- * Dokunmatik hedef POLİTİKASI.
+ * Dokunmatik hedef politikası.
  *
- * Bu test bir dönem yalnızca üç seçiciyi (`.vol-button`, `.vol-checkbox`,
- * `.vol-tabs__tab`) doğruluyordu — yani politikayı değil, o günkü DURUMU
- * kilitliyordu: sisteme eklenen her yeni interaktif bileşen politikanın
- * dışında kalıyor ve kimse fark etmiyordu (`.vol-icon-button` 40px,
- * `.vol-carousel__dot` 8px ile aylarca öyle durdu).
+ * `cursor: pointer` taşıyan her kural ya `--vol-hit-target-min` tüketir
+ * ya da gerekçeli muafiyet taşır. Yeni bileşen eklenince kapı,
+ * karar verilene kadar kırılır.
  *
- * Artık tersi yapılıyor: CSS taranır, `cursor: pointer` taşıyan HER kural
- * aday kabul edilir ve iki şıktan birini karşılamak zorundadır —
- * ya `--vol-hit-target-min` tüketir, ya da gerekçesi yazılı bir muafiyet
- * taşır. Yeni bir bileşen eklendiğinde kapı, biri karar verene kadar kırılır.
- *
- * jsdom layout/paint hesaplamadığı için doğrulama zorunlu olarak yapısal
- * (metin tabanlı); bir davranış testiyle yakalanamaz.
+ * jsdom layout/paint hesaplamadığı için doğrulama yapısal (metin tabanlı) yapılır.
  */
 const CSS_DIR = resolve(import.meta.dirname, '../../src/ui');
 
@@ -211,10 +203,9 @@ describe('Dokunmatik hedef politikası', () => {
     }
   });
 
-  it('.vol-button ve .vol-checkbox görünmez ::before overlay KULLANMIYOR', () => {
-    // Önceki tasarım (::before + max(100%, token)) sıkı gruplu component'lerde
-    // (ör. button-group gap, tab list gap) komşularla örtüşebiliyordu — gerçek
-    // kutu boyutuna (min-height/min-width) geçildi.
+  it('.vol-button ve .vol-checkbox görünmez ::before overlay kullanmaz', () => {
+    // Görünmez overlay yerine gerçek kutu boyutu (min-height/min-width) kullanılır;
+    // komşu öğelerle örtüşme riski azalır.
     const primitives = files.get('primitives.css')!;
     expect(primitives).not.toMatch(/\.vol-button::before/);
     expect(primitives).not.toMatch(/\.vol-checkbox::before/);

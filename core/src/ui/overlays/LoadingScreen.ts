@@ -237,7 +237,7 @@ export class LoadingScreen {
 
   /** Yükleme ekranını görünür yapar. */
   show(): void {
-    // Önceki hide timer/temizlik
+    // Varsa kalan hide timer ve geçiş zamanlayıcısını temizle
     if (this.hideTimer) {
       clearTimeout(this.hideTimer);
       this.hideTimer = null;
@@ -252,7 +252,7 @@ export class LoadingScreen {
     this.hideCompleted = false;
     this.element.setAttribute('aria-busy', 'true');
 
-    // Exit class'ları temizle (önceki hide'tan kalmış olabilir)
+    // Kalan exit class'larını temizle
     this.element.classList.remove(
       'vol-loading--enter',
       'vol-loading--exit',
@@ -260,7 +260,7 @@ export class LoadingScreen {
       'vol-loading--hidden',
     );
 
-    // Önceki show rAF'ı iptal et
+    // Varsa show rAF'ı iptal et
     cancelAnimationFrame(this.showRafId);
 
     // Önce DOM'a ekle, sonra bir frame bekle ki transition çalışsın

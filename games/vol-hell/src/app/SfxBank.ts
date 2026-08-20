@@ -17,11 +17,7 @@ export class SfxBank {
   private readonly context: AudioContext;
   private readonly loader: StemLoader;
   private readonly buffers = new Map<string, AudioBuffer[]>();
-  /**
-   * Devam eden yuklemeler. Cache yalnizca fetch+decode bittikten SONRA
-   * doluyordu; loadAllSfx() ile ilk play() ayni anda cagrilinca ikisi de bos
-   * cache gorup ayni dosyalari paralel indiriyordu.
-   */
+  /** Devam eden yüklemeler — aynı ses için tekrar fetch'i önler. */
   private readonly pendingLoads = new Map<string, Promise<void>>();
   private readonly busGain: GainNode;
   private readonly voiceStates = new Map<
@@ -29,8 +25,8 @@ export class SfxBank {
     { active: Set<AudioBufferSourceNode>; lastStart: number }
   >();
   private readonly voiceLimits: Partial<Record<SoundEvent, SfxVoiceLimit>> = {
-    // Slider `input` olayında tetiklendiği için tek bir sürükleme onlarca blip
-    // üretir; limit olmadan hepsi üst üste binip makineli tüfek sesi veriyordu.
+    // Slider `input` olayında tek bir sürükleme onlarca blip üretir;
+    // limit olmadan hepsi üst üste binip makineli tüfek sesi verir.
     menuBlip: { maxVoices: 2, minInterval: 0.06 },
     fire: { maxVoices: 3, minInterval: 0.05 },
     dash: { maxVoices: 2, minInterval: 0.1 },
@@ -83,12 +79,8 @@ export class SfxBank {
 
   private async loadIntoCache(event: SoundEvent, key: string): Promise<void> {
     const paths = soundAssets[event];
-    // `StemLoader.loadFromUrl` fetch + content-type kontrolü + decode + .ogg
-    // başarısız olursa .mp3 fallback'i tek yerden sağlar (music/loader.ts).
-    // Önceden burada ayrı, daha kısıtlı bir content-type kontrolü vardı ve
-    // fallback hiç yoktu — SFX'ler .ogg'ye taşınınca iOS WKWebView'da (Ogg
-    // Vorbis decode etmiyor) tüm SFX sessizce çalışmaz olurdu, müzik ise
-    // StemLoader kullandığı için çalışmaya devam ederdi.
+    // `StemLoader.loadFromUrl` fetch + content-type kontrolü + decode yapar;
+    // .ogg başarısız olursa .mp3 fallback'i tek yerden sağlar (music/loader.ts).
     const tasks = paths.map((path) => this.loader.loadFromUrl(path));
 
     // allSettled: bir dosya eksik/bozuksa diğerleri yine de yüklenir.

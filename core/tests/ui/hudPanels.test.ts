@@ -279,7 +279,7 @@ describe('SkillTree', () => {
     ];
   }
 
-  /** Durumlar artık ÇAĞIRANIN sorumluluğu; opsiyonel tarif kuralı uygulanır. */
+  /** Durumlar ÇAĞIRANIN sorumluluğu; opsiyonel tarif kuralı uygulanır. */
   function treeWith(unlocked: string[], onNodeClick?: (id: string) => void) {
     const nodes = makeNodes();
     const tree = track(new SkillTree({ nodes, onNodeClick: onNodeClick as never }));
@@ -304,10 +304,8 @@ describe('SkillTree', () => {
     expect(buttons[0].classList.contains('vol-skill-tree__node--locked')).toBe(true);
   });
 
-  it('tıklama yalnızca NİYET bildirir — bileşen hiçbir şey açmaz', () => {
-    // Regresyon: bileşen bir dönem kendi `unlockedIds` defterini tutup düğümü
-    // KENDİ açıyordu; oyunun ilerleme sistemiyle iki defter kaçınılmaz olarak
-    // kayıyordu. Artık açma kararı tamamen çağıranın.
+  it('tıklama niyet bildirir, açma kararı çağırandadır', () => {
+    // Bileşen tıklamayı dışarıya bildirir; durum güncellemesi çağıran yapar.
     const onNodeClick = vi.fn();
     const tree = treeWith(['root'], onNodeClick);
     const childButton =

@@ -3,26 +3,16 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 /**
- * Katman 1 primitifleri hiçbir TÜRE (genre) bağlanmamalı — ne kodunda ne de
- * DOKÜMANINDA.
+ * Katman 1 primitifleri hiçbir türe (genre) bağlanmamalı — ne kodunda ne de
+ * dokümanında.
  *
- * Doğru davranış "birden fazla tür örneği vermek" DEĞİL, **hiç tür örneği
- * vermemektir.** Bir primitif yaptığı işle anlatılır; nerede kullanılacağı
- * tüketicinin kararıdır. Bir dönem belge tek bir türe (tower defense)
- * bağlanmıştı; düzeltirken dört türe bağlandı — aynı hatanın daha genişi,
- * çünkü tür seçmek de bir editoryal karardır ve CORE onu vermez.
+ * Doğru davranış 'birden fazla tür örneği vermek' değil, hiç tür örneği
+ * vermemektir. Bir primitif yaptığı işle anlatılır; nerede kullanılacağı
+ * tüketicinin kararıdır.
  *
- * Bu bekçi gerçek bir hatadan doğdu: primitifler koddan oyun kelimelerinden
- * arındırıldı, ama JSDoc'lara ve `core/docs/primitives.md`'ye "tower defense"
- * çivilendi. Kod nötrdü, REPO değildi — bir kart ya da otomasyon oyunu yazacak
- * kişi CORE'u bir TD framework'ü sanacaktı.
- *
- * `publicApi.test.ts` export ADLARINI tarar; bu bekçi PROSA'yı tarar. İkisi
- * farklı sızıntı biçimleri.
- *
- * Kapsam bilinçli olarak DAR: yalnızca katman 1 modülleri. `core/src/ui/`
- * altındaki bileşenlerin (`WaveCounter`, `CardTile`) tür çağrıştıran adları
- * meşrudur — onlar bir katalog kalemi, altyapı değil.
+ * publicApi.test.ts export adlarını tarar; bu bekçi prosa'yı tarar.
+ * Kapsam bilinçli olarak dar: yalnızca katman 1 modülleri; ui bileşenlerinin
+ * tür çağrıştıran adları meşrudur — onlar bir katalog kalemi, altyapı değil.
  */
 const PRIMITIVE_ROOTS = [
   'time',
@@ -56,11 +46,9 @@ const GENRE_TERMS = [
 ];
 
 /**
- * Terimi KELİME olarak arar, ham substring olarak değil.
- *
- * Düz `includes` bekçinin kendi yanlış pozitifini üretiyordu: `dalgayla`
- * (sinüs dalgası) `dalga` ile eşleşiyordu. Bir bekçinin yanlış pozitifi,
- * koruduğu şeyden daha hızlı devre dışı bırakılır.
+ * Terimi kelime sınırında arar; düz `includes` yanlış pozitif üretir
+ * (örn. `dalgayla`–`dalga`). Bir bekçinin yanlış pozitifi, koruduğu şeyden
+ * hızlı devre dışı bırakılır.
  */
 function containsTerm(source: string, term: string): boolean {
   const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

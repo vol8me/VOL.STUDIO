@@ -2,9 +2,9 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { ViewportManager } from '../../src/systems/ViewportManager';
 
 /**
- * K2 regresyonu: getConfig() ve attachResize() aynı DPR'yi görmek zorunda.
+ * getConfig() ve attachResize() aynı DPR'yi görmek zorunda.
  * Ham devicePixelRatio kullanılırsa canvas'ın CSS boyutu (genişlik * zoom)
- * pencereyi `rawDpr / maxDpr` oranında taşar.
+ * pencereyi taşar.
  */
 function setEnvironment(dpr: number, innerWidth: number, innerHeight: number): void {
   Object.defineProperty(window, 'devicePixelRatio', { value: dpr, configurable: true });
@@ -101,12 +101,7 @@ describe('ViewportManager — DPR kelepçesi', () => {
   });
 
   it('tarayıcı yakınlaştırması (DPR değişimi) sonrası canvas CSS boyutu YİNE pencereyle eşleşir', () => {
-    // Kök neden regresyonu: attachResize() eskiden yalnızca resize(w,h)
-    // çağırıp zoom'u HİÇ güncellemiyordu. Game kurulduğu andaki DPR'de
-    // sonsuza dek sabit kalan zoom, tarayıcı yakınlaştırması pencere
-    // `resize` event'i tetikleyip DPR'yi değiştirdiğinde canvas'ın CSS
-    // boyutunu pencereden koparıyordu — ekranda büyüyüp küçülen, pencereyi
-    // takip etmeyen bir kutu olarak görünüyordu.
+    // DPR değiştiğinde zoom tazelenmeli; aksi halde canvas pencereyle uyuşmaz.
     setEnvironment(1, 1000, 800);
     const manager = new ViewportManager({ strategy: 'resize' });
     manager.getConfig(); // ilk açılış — zoom = 1/1 = 1

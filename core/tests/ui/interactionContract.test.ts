@@ -96,9 +96,8 @@ describe('TouchButton — press/hold semantiği girdi cihazından bağımsız', 
     button.destroy();
   });
 
-  it('BASILIYKEN destroy edilirse onRelease gelir (mandallı durum bırakmaz)', () => {
-    // Regresyon: oyuncu ateş tuşunu basılı tutarken sahne kapanınca çağıranın
-    // "basılı" durumu asılı kalıyordu — ateş hiç durmuyordu.
+  it('basılıyken destroy edilirse onRelease gelir (mandallı durum bırakmaz)', () => {
+    // Basılı durumda destroy çağrılırsa çağıran temiz kapanmalı.
     const onRelease = vi.fn();
     const button = new TouchButton({ label: 'Ateş', onRelease });
 
@@ -195,9 +194,8 @@ describe('SwipeGestureZone — hız BIRAKMA anından ölçülür', () => {
 });
 
 describe('Button / IconButton — aynı tıklama sözleşmesi', () => {
-  it('Button thenable (native olmayan söz) döndüren handler’ı BEKLER', async () => {
-    // Regresyon: `result instanceof Promise` kontrolü thenable’ı kaçırıyordu;
-    // loading anında kalkıyor ve çağıran işin bittiğini sanıyordu.
+  it('Button thenable döndüren handler’ı bekler', async () => {
+    // `instanceof Promise` yerine thenable kontrolü; Promise-benzeri nesneleri bekle.
     let resolveThenable: () => void = () => {};
     const thenable = {
       then(onFulfilled: () => void) {

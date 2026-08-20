@@ -251,7 +251,7 @@ export class CardScreens {
 
     this.purchased.add(cardId);
     this.purchasedInstanceIds.add(owned.instanceId);
-    // Satın alınan kart artık reroll'da korunacak bir şey değil.
+    // Satın alınan kart reroll'da korunmaz.
     this.lockedOfferIds.delete(cardId);
     this.autoEquip(owned.instanceId, card);
     this.callbacks.onCardTaken?.('shop');
@@ -354,7 +354,7 @@ export class CardScreens {
         !ownedAbilityIds.has(card.id),
     );
 
-    // Artık geçersiz kilitleri temizle (sonraki render'da yanlış görünmesin).
+    // Geçersiz kilitleri temizle (sonraki render'da yanlış görünmesin).
     for (const card of this.shopOffer) {
       if (this.lockedOfferIds.has(card.id) && !keep.includes(card)) {
         this.lockedOfferIds.delete(card.id);
@@ -367,14 +367,8 @@ export class CardScreens {
 
     // Kilitli teklifler aynı slotta kalmalı; yalnızca açık slotlara yeni kart
     // çekilir. Böylece ikinci slot kilitliyken birinci slot değişmez.
-    //
-    // Havuz istenen sayıyı karşılayamazsa slot BOŞ bırakılır. Önceki hâl o
-    // durumda "o slottaki eski kartı" geri koyuyordu; eski kart aynı turda
-    // başka bir slota çekilmişse teklif listesinde AYNI kart iki kez yer
-    // alıyordu (ör. havuz 3 kart verebilirken 4 istenince `B, C, D, D`).
-    // `ShopPicker` teklifleri id'ye göre Map'te tuttuğu için iki slot tek
-    // karta çöküyor, kart sayısı sessizce azalıyordu. Az sayıda teklif
-    // göstermek, aynı kartı iki kez göstermekten doğrudur.
+    // Havuz istenen sayıyı karşılayamazsa slot boş bırakılır; aynı kart iki
+    // kez gösterilmez.
     const used = new Set<string>();
     const nextOffers: CardDefinition[] = [];
 

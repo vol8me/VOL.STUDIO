@@ -14,13 +14,9 @@ import {
 import { CARD_ENTER_ANIMATION_MS } from '../../src/ui/cards/CardTile';
 
 /**
- * JS tarafındaki bazı sabitler CSS değerlerini elle tekrarlıyor. Bunlar iki ayrı
- * yerde yaşadığı için sessizce ayrışabilirler — nitekim EventLog sabiti (220 ms)
- * ile CSS animasyonu (200 ms) arasında zaten fark vardı.
- *
- * İki farklı sözleşme doğrulanır:
- * - Teardown zamanlayıcıları CSS süresinden KISA olamaz (erken silme animasyonu keser).
- * - Geometrik değerler (genişlik, font) BİREBİR eşit olmalı.
+ * CSS sabit senkronu:
+ * - Teardown zamanlayıcıları CSS süresinden kısa olamaz.
+ * - Geometrik değerler (genişlik, font) birebir eşit olmalı.
  */
 function readCss(name: string): string {
   return readFileSync(resolve(import.meta.dirname, '../../src/ui', name), 'utf-8');
@@ -84,8 +80,7 @@ describe('CSS sabit senkronu — teardown zamanlayıcıları', () => {
   });
 
   it('REROLL_FLASH_MS, ızgara reroll animasyonundan kısa değil', () => {
-    // Önceden bu süre `render()` içinde çıplak `240` idi; adı olmadığı için
-    // bu senkron testinin kapsamı dışındaydı ve CSS değişince sessizce ayrışırdı.
+    // Sabit, CSS animasyon süresinden kısa olmamalı.
     const animation = cssDeclaration(
       cards,
       '.vol-card-picker--rerolling .vol-card-picker__grid',
@@ -98,7 +93,7 @@ describe('CSS sabit senkronu — teardown zamanlayıcıları', () => {
   });
 
   it('PURCHASE_FLASH_MS, .vol-card--just-purchased animasyonundan kısa değil', () => {
-    // Önceden çıkış animasyonu sabiti (LEAVE_ANIMATION_MS) ödünç alınıyordu.
+    // Satın alma vurgusu için ayrı süre kullanılır.
     const cssMs = cssVarDurationMs(theme, '--vol-transition-medium');
     expect(PURCHASE_FLASH_MS).toBeGreaterThanOrEqual(cssMs);
   });

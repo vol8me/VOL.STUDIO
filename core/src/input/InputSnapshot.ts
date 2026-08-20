@@ -3,11 +3,9 @@
  * Bu tipler sadece `?debug`/`?perf` modunda kullanılır; normal oyun mantığına
  * dahil değildir.
  *
- * **Sağlayıcı kümesi AÇIKTIR.** Önceden `activeProvider: 'pc' | 'touch' | 'none'`
- * kapalı bir union'dı ve `pc`/`touch` ayrı alanlardı; oysa `InputProvider` açık
- * bir arayüz. Yani bir gamepad sağlayıcısı YAZILABİLİYOR ama RAPORLANAMIYORDU —
- * CORE'un tanımadığı bir modality diagnostics'e giremiyordu. Bu, eylem
- * sözlüğünün (`fire`/`dash`) CORE'da durmasıyla aynı sınıf sızıntıydı.
+ * **Sağlayıcı kümesi AÇIKTIR.** `InputProvider` açık bir arayüz; tüketici kendi
+ * sağlayıcısını yazabilir. Snapshot'lar bu kimlikleri ve ham durumları taşır,
+ * içeriği yorumlamaz.
  */
 
 /**

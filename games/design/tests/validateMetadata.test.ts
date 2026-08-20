@@ -50,16 +50,13 @@ describe('validateRigMetadata', () => {
     expect(() => validateRigMetadata([])).toThrow(/bir nesne olmalı/);
   });
 
-  it('schemaVersion kontrol edilir — tipte vardı ama çalışma zamanında hiç bakılmıyordu', () => {
+  it('schemaVersion çalışma zamanında da doğrulanır', () => {
     expect(() => validateRigMetadata(corrupt((d) => (d.schemaVersion = 2)))).toThrow(
       /schemaVersion 1 olmalı/,
     );
   });
 
   it('parts eksikse anlaşılır bir mesaj verir (ham TypeError değil)', () => {
-    // Regresyon: doğrulama yokken `metadata.parts.map` çağrısı
-    // "Cannot read properties of undefined" ile düşüyor, sorunun NEREDE
-    // olduğunu söylemiyordu.
     let message = '';
     try {
       validateRigMetadata(corrupt((d) => delete d.parts));
@@ -211,7 +208,7 @@ describe('eklem (parentPartId) doğrulaması', () => {
     expect(() => validateRigMetadata(metadata)).not.toThrow();
   });
 
-  it('BOŞ metin reddedilir — sessizce "ebeveyni yok" gibi davranırdı', () => {
+  it('BOŞ metin reddedilir', () => {
     const metadata = metadataFixture();
     (metadata.parts[0] as unknown as Record<string, unknown>).parentPartId = '';
 
