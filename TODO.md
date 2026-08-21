@@ -84,11 +84,12 @@ silinir; kronolojiye not düşülmez.
   bu yüzden burada durduruldu. `core` tarafında `Kanban.ts` (831) ve
   `SlotGrid.ts` (687) hâlâ sınır üstünde ve bölünmedi — ikisi de bu turda
   DisposableScope'a geçerken okundu, bölme ayrı bir tur.
-- `SpatialGrid`in artımlı yolunun (`insert`/`remove`/`update`) ÜRETİMDE
-  çağıranı yok; yalnızca testler koşuyor. Bilinçli (bkz. 2026-08-19 turu) ve
-  bir bekçiyle işaretli, ama gerçek oynanışta hiç yürümeyen kod olduğu
-  unutulmamalı.
-- CORE public API yüzeyi 127 export ve dokuz `export *` barrel'ıyla büyüyor.
+- `SpatialIndex`in artımlı yolunun (`insert`/`remove`/`update`) ÜRETİMDE
+  çağıranı yok; `vol-hell` iki kez `rebuild()` diyor, artımlı yolu yalnızca
+  testler koşuyor. Bilinçli ve bir bekçiyle işaretli, ama gerçek oynanışta hiç
+  yürümeyen kod olduğu unutulmamalı. (Mekanizma CORE'a taşındı;
+  `vol-hell/SpatialGrid` artık ince bir adaptör.)
+- CORE public API yüzeyi 171 export ve dokuz `export *` barrel'ıyla büyüyor.
   Yüzey sayısı kilitli (kapı kırılır) ama barrel'lar hâlâ otomatik; daraltma
   ayrı bir tur.
 - `PlayerController` takma adı `@deprecated` olarak duruyor; kaldırma bir
@@ -99,12 +100,12 @@ silinir; kronolojiye not düşülmez.
   yeni bir klonda yoktur. Bir kural `AGENTS.md`ye yazıldığında repoda kalıcı
   olduğu VARSAYILMAMALI; kalıcı olması gerekiyorsa `README.md` ya da bu dosyaya
   da işlenmeli.
-- CORE capability yol haritasında ertelenenler: `Scheduler`, `StateMachine`,
-  geometry/collision primitifleri, `ObjectPool<T>`, resource lifecycle. İkinci
-  somut tüketici çıkmadan yazılmayacak.
-- `SpatialGrid` hâlâ `vol-hell`de. Artımlı API (`insert`/`remove`/`update`) ve
-  `rebuild()` ayrımı yapıldı ve eşdeğerlikleri test edildi, yani CORE'a taşımaya
-  hazır; taşıma yine ikinci somut tüketiciye bağlı.
+- CORE capability yol haritasının ertelenen maddeleri 2026-08-19'da YAZILDI
+  (`Scheduler`, `StateMachine`, `ObjectPool`, `ResourcePool`, `SpatialIndex`,
+  geometri) — tetikleyici "ikinci somut tüketici" kuralıydı ve karşılandı.
+  Kalan risk: bu 14 primitifin API'si henüz tek gerçek tüketiciyle
+  (`vol-hell`, o da yalnızca `SpatialIndex`) sınandı. `Grid`, `findPath`,
+  `FlowField`, `EventBus`, `Deck`, `SlotContainer` üretimde hiç yürümedi.
 - Tuşlar artık yeniden atanabilir (`PCActionBinding` veri hâlinde) ama bunu
   oyuncuya açan bir ayar ekranı YOK. Altyapı hazır, UI bilinçli olarak
   yapılmadı — ayrı bir tur.
@@ -184,6 +185,8 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-19 | Dış denetimin kalan 8 bulgusu                               | 3'ü denetimde değişti      |
 | 2026-08-19 | CORE katmanlaması + 8 headless primitif                     | yeni oyun zemini           |
 | 2026-08-19 | Tür sızıntısı temizliği (doküman)                           | kod nötrdü, repo değildi   |
+| 2026-08-19 | Katman 1 genişletmesi (+6 primitif)                         | 14 parça                   |
+| 2026-08-20 | Primitif sertleştirme (denetim + 7 madde)                   | sessiz bozulma → hata      |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 
