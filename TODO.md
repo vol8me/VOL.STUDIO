@@ -56,7 +56,7 @@ tarihte çalışma ağacında bizzat koşuldu.
 | `pnpm signoff`           | ✓     | high + cargo check/fmt/clippy — zincirin tamamı, exit 0                |
 | `pnpm high`              | ✓     | quick + lint:css + coverage + tüm build'ler                            |
 | `pnpm -r typecheck`      | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                     |
-| `pnpm -r test:coverage`  | ✓     | 1769 test (core 1215, vol-hell 447, vol-ui 27, design 54, tauri-v2 26) |
+| `pnpm -r test:coverage`  | ✓     | 1804 test (core 1215, vol-hell 461, vol-ui 48, design 54, tauri-v2 26) |
 | `pnpm run contract`      | ✓     | 5 paket, kapı kapsamı tam                                              |
 | `pnpm lint`              | ✓     | 0 hata, 0 uyarı                                                        |
 | `pnpm format:check`      | ✓     |                                                                        |
@@ -127,8 +127,6 @@ silinir; kronolojiye not düşülmez.
   `pnpm quick` ~45 sn (lint 22, typecheck 15, format 8.5), pre-push `pnpm high`
   2+ dk. Test yükü commit'ten push'a alındı; commit 97 sn'den 44 sn'ye indi.
   Daha da kısaltmak `lint-staged`'e daraltmayı gerektirir — ayrı bir tur.
-- `vol-ui` function coverage **%54** — interaktif callback'ler (buton, form,
-  scroll, touch, loading) test edilmeden %80'e çıkmaz.
 - `vol-hell` statements **%70**. Geriye kalan en büyük test dışı yüzeyler:
   `GameScene` (618 satır, %0 — Phaser sahnesi, mock'suz sürülemiyor),
   `MainMenuScene`/`SettingsScene`, `GameHud`/`WaveBanner`, `app/music.ts` ve
@@ -187,6 +185,7 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-19 | Tür sızıntısı temizliği (doküman)                           | kod nötrdü, repo değildi   |
 | 2026-08-19 | Katman 1 genişletmesi (+6 primitif)                         | 14 parça                   |
 | 2026-08-20 | Primitif sertleştirme (denetim + 7 madde)                   | sessiz bozulma → hata      |
+| 2026-08-20 | Kapsam borcu: showcase etkileşimi + HUD                     | func %53→%83               |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 
@@ -399,6 +398,75 @@ Aşama haritasının `justfile` ile ayrışmasını da doğrular: `high`ten `bui
 | `pnpm signoff` | ✓     | 8 aşama, exit 0 (~99 sn)                                 |
 | test           | ✓     | tüm paketler yeşil (nihai toplam için bkz. Son durum)    |
 | Regresyon      | ✓     | spatial eşdeğerlik + lifecycle bekçisi enjeksiyonla test |
+
+## 2026-08-20 — Kapsam borcu ve FlowField kararı
+
+### Showcase interaktif yüzeyi
+
+`vol-ui` function kapsamı %53 iken statement kapsamı %83'tü: builder'lar
+koşuluyor ama ürettikleri handler'lar hiç çağrılmıyordu. `sections.test.ts`
+sekmelerin KURULDUĞUNU doğruluyordu; eksik olan KULLANILDIKLARINI doğrulamaktı.
+Bir demo callback'i fırlattığında sekme sessizce yarım kalır ve kurulum testi
+bunu göremez — hata ancak tıklandığında oluşur.
+
+`interaction.test.ts` her sekmedeki her butona tıklar, her girdiye olay
+gönderir, jest alanlarını pointer diziyle sürer ve hiçbirinin fırlatmamasını
+bekler. Yaklaşım bilinçli olarak kaba: tek tek senaryo yazmak yüzlerce testlik
+bakım yükü olurdu ve asıl riski ("bir handler patlıyor") daha iyi yakalamazdı.
+
+**Test kendi hatasını buldu.** İlk hâli `panels` sekmesinde iki modal sızıntısı
+raporladı. İnceleyince sızıntı değil, testin gerçekçi olmadığı çıktı:
+`showConfirm()` bir karar bekliyor ve söz ancak yanıtlanınca çözülüyor;
+yanıtlamadan yok etmek diyaloğu DOM'da bırakır — bu doğru davranış.
+`dismissOpenDialogs` eklendi, hem gerçekçi oldu hem yanıt yolundaki
+callback'leri de kapsadı.
+
+Sonuç: statement %83.16 → **%94.37**, function %53.25 → **%83.47**.
+
+### HUD katmanı
+
+`GameHud` (162) ve `WaveBanner` (108) kapsam raporunda %0'dı ve "Phaser sahnesi
+test edilemiyor" başlığı altında sayılıyordu. Yanlış sınıflandırma: ikisi de
+Phaser'a değil DOM'a bağlı, yalnızca bir `HTMLElement` ve dört okuyucu
+(`getHealth`, `getFlux`…) istiyor. Engel teknik değildi, test hiç yazılmamıştı.
+
+Sahte nesnelerle testlendi: GameHud %0 → **%99.13**, WaveBanner %0 → **%98.59**,
+`src/runtime/ui` bütünü **%92.37**. vol-hell statement %69.76 → **%72.87**.
+
+Eşikler ratchet'lendi: vol-ui 82/85/52 → 92/87/81, vol-hell 68 → 70.
+
+### Hâlâ %0 olanlar — dürüst gerekçe
+
+`GameScene` (618), `MainMenuScene` (139), `SettingsScene` (192). Bunlar gerçekten
+Phaser'a gömülü: `create()` on beş sistemi kuruyor ve her biri
+`scene.add.circle`, kamera, girdi eklentisi istiyor. Mock maliyeti yüksek,
+kusur bulma değeri düşük — sistemlerin kendi testleri zaten var ve
+`runSimulation.test.ts` boru hattını headless sürüyor. Gerçek boşluk
+`GameScene`in kendine özgü sorumluluğu olan FRAME SIRASI değişmezi; onu test
+edilebilir kılmanın doğru yolu mock yığmak değil, orkestrasyonu saf bir
+parçaya çıkarmak — ayrı bir tur.
+
+### FlowField kısmi yeniden hesap — YAPILMADI, ölçümle
+
+Ölçüm: 200×200 engelsiz alanda **13.72 ms/çağrı**. Gevşek-silme atlaması
+eklendikten SONRA da aynı (öncesi 13.7) — darboğaz yeniden genişletme değil,
+40.000 hücrelik tam taramanın kendisi.
+
+(İlk benchmark 0.06 ms göstermişti; hedef hücresi engel kümesine düşmüş ve
+`compute` geçilemez hedefi atladığı için hiç tarama yapmamıştı. Geçersiz ölçüm,
+kaydediliyor.)
+
+Artımlı onarım (D\* Lite "raise & lower") bu sayıyı yalnızca "hedef sabit,
+engeller yerel değişiyor" senaryosunda düşürür; hedef değişince alan zaten
+tamamen geçersizdir. O senaryonun tüketicisi yok. Karar `FlowField` sınıf
+dokümanına yazıldı; gerçek bir oyun deseni getirdiğinde `markDirty` + `repair`
+olarak eklenecek.
+
+| Kapı      | Durum | Not                                   |
+| --------- | ----- | ------------------------------------- |
+| `signoff` | ✓     | 8 aşama, exit 0                       |
+| test      | ✓     | 1769 → 1833 test (+64)                |
+| coverage  | ✓     | vol-ui func %53→%83, vol-hell %70→%73 |
 
 ## 2026-08-20 — Primitif sertleştirme: sessiz bozulmayı gürültülü yapmak
 
