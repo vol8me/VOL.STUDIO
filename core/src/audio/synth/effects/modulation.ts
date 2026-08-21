@@ -131,7 +131,15 @@ class FirstOrderAllpass {
   }
 }
 
-export class Phaser {
+/**
+ * Faz kaydırmalı modülasyon efekti (phaser).
+ *
+ * Adı `Phaser` DEĞİL `PhaserEffect`: bu monorepo'nun oyun motoru da Phaser ve
+ * `import { Phaser } from '@volstudio/core/audio/synth'` ile
+ * `import Phaser from 'phaser'` aynı dosyada yan yana geldiğinde biri
+ * diğerini gölgeler. Tip hatası vermez, çalışma zamanında patlar.
+ */
+export class PhaserEffect {
   private readonly filters: FirstOrderAllpass[];
   private readonly minFreq: number;
   private readonly maxFreq: number;

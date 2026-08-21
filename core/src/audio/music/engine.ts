@@ -1,5 +1,6 @@
 import type {
   ActiveStem,
+  LoopTimingMismatch,
   CrossfadeOptions,
   MusicEngineOptions,
   MusicState,
@@ -12,6 +13,15 @@ import { MusicMixer } from './mixer';
 import { MusicScheduler } from './scheduler';
 import { StemLoader } from './loader';
 import { resolveStemGain } from './gain-resolver';
+
+/**
+ * `loopEnd` ile dosya süresi arasında kabul edilen fark (saniye).
+ *
+ * Kodlayıcılar (OGG/MP3) blok hizalaması yüzünden birkaç milisaniyelik fark
+ * bırakabilir; eşik bunun altındaki gürültüyü susturur ama gerçek bir
+ * ayrışmayı (bölüm eksik, parça erken sarıyor) geçirmez.
+ */
+const LOOP_DURATION_TOLERANCE = 0.05;
 
 /** Web Audio API tabanlı müzik motoru.
  *  Önceden üretilmiş OGG/MP3 stem'leri senkron çalar, adaptive gain ve crossfade destekler. */
@@ -36,6 +46,10 @@ export class MusicEngine {
   private stemCounter = 0;
   /** Doğal bitiş dinleyicileri — playlist ilerlemesi buna bağlanır. */
   private readonly trackEndHandlers = new Set<(trackId: string) => void>();
+  /** Zamanlama ayrışması bildirimi; verilmezse konsola yazılır. */
+  private readonly onTimingMismatch?: (info: LoopTimingMismatch) => void;
+  /** Aynı stem için tekrar tekrar uyarmamak adına bildirilenler. */
+  private readonly reportedMismatches = new Set<string>();
 
   constructor(options: MusicEngineOptions = {}) {
     if (options.audioContext) {
@@ -56,8 +70,30 @@ export class MusicEngine {
     this.mixer.output.connect(options.destination ?? this.context.destination);
     this.loader = new StemLoader(this.context);
     this.lookahead = Math.max(0.01, options.lookaheadSeconds ?? 0.1);
+    this.onTimingMismatch = options.onTimingMismatch;
     this.masterVolume = Math.max(0, Math.min(1, options.masterVolume ?? 1));
     this.mixer.setMasterGain(this.masterVolume, 0);
+  }
+
+  /**
+   * Zamanlama ayrışmasını BİR KEZ bildirir (stem başına).
+   *
+   * Her loop turunda tekrarlamak konsolu doldurup asıl bilgiyi gömerdi.
+   */
+  private reportTimingMismatch(info: LoopTimingMismatch): void {
+    const key = `${info.trackId}:${info.stemId}`;
+    if (this.reportedMismatches.has(key)) return;
+    this.reportedMismatches.add(key);
+
+    if (this.onTimingMismatch) {
+      this.onTimingMismatch(info);
+      return;
+    }
+    console.warn(
+      `[MusicEngine] "${info.trackId}" / "${info.stemId}": loopEnd ` +
+        `${info.configuredEnd.toFixed(3)} s ama dosya ${info.actualDuration.toFixed(3)} s. ` +
+        'Config ile üretim ayrışmış; parça erken sarar ya da bir bölüm hiç duyulmaz.',
+    );
   }
 
   /** Track'i buffer'ları ile önceden yükler.
@@ -284,6 +320,24 @@ export class MusicEngine {
       configuredEnd !== undefined && Number.isFinite(configuredEnd) && configuredEnd > 0
         ? Math.min(configuredEnd, buffer.duration)
         : buffer.duration;
+
+    // Yapılandırılan uzunluk ile DOSYANIN gerçek uzunluğu ayrışırsa bildir.
+    //
+    // Kelepçeleme tek başına yetmez çünkü SESSİZDİR: config 91 s derken dosya
+    // 60 s ise parça sessizce erken sarar, tersi durumda bestenin bir bölümü
+    // hiç duyulmaz. İki sayı ayrı yerlerde üretildiği için (config vs. üretim
+    // script'i) bu ayrışma gerçek bir olasılıktır ve duyulmadan fark edilmez.
+    if (configuredEnd !== undefined && Number.isFinite(configuredEnd) && configuredEnd > 0) {
+      const drift = Math.abs(configuredEnd - buffer.duration);
+      if (drift > LOOP_DURATION_TOLERANCE) {
+        this.reportTimingMismatch({
+          trackId: this.currentTrackId ?? '(bilinmiyor)',
+          stemId: stem.id,
+          configuredEnd,
+          actualDuration: buffer.duration,
+        });
+      }
+    }
 
     if (this.currentTrack?.loopStart !== undefined) {
       const configuredStart = this.currentTrack.loopStart;

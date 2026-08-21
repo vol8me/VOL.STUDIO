@@ -16,6 +16,7 @@
  * Armoni (1 bar / akor, 4 barlık döngü): Am — Bb — Am — G.
  */
 
+import { MUSIC_TIMING } from '@/config/musicTiming';
 import { createMix, addVoice, masterize, edgeGuard } from '../lib/mix';
 import type { StereoMix } from '../lib/mix';
 import { beatSec, hz } from '../lib/theory';
@@ -28,8 +29,13 @@ import { tensionPad } from '../palette/pads';
 import { voidPluck, nightLead } from '../palette/keys';
 import { tonalRiser, subDrop, deepImpact } from '../palette/fx';
 
-const BPM = 100;
-const BEATS = 128;
+/**
+ * Tempo ve uzunluk `src/config/musicTiming.ts`ten gelir — çalma
+ * config'iyle aynı kaynak. Buraya sayı yazmak, `loopEnd` ile bestenin
+ * sessizce ayrışmasına yol açardı (bkz. o dosyanın başındaki not).
+ */
+const { bpm: BPM, beats: BEATS } = MUSIC_TIMING['event-horizon'];
+
 const WRAP = true;
 
 /** 1 bar / akor, 4 barlık döngü. */

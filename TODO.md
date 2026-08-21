@@ -56,7 +56,7 @@ tarihte çalışma ağacında bizzat koşuldu.
 | `pnpm signoff`           | ✓     | high + cargo check/fmt/clippy — zincirin tamamı, exit 0                |
 | `pnpm high`              | ✓     | quick + lint:css + coverage + tüm build'ler                            |
 | `pnpm -r typecheck`      | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                     |
-| `pnpm -r test:coverage`  | ✓     | 1804 test (core 1215, vol-hell 461, vol-ui 48, design 54, tauri-v2 26) |
+| `pnpm -r test:coverage`  | ✓     | 1817 test (core 1220, vol-hell 469, vol-ui 48, design 54, tauri-v2 26) |
 | `pnpm run contract`      | ✓     | 5 paket, kapı kapsamı tam                                              |
 | `pnpm lint`              | ✓     | 0 hata, 0 uyarı                                                        |
 | `pnpm format:check`      | ✓     |                                                                        |
@@ -186,6 +186,7 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-19 | Katman 1 genişletmesi (+6 primitif)                         | 14 parça                   |
 | 2026-08-20 | Primitif sertleştirme (denetim + 7 madde)                   | sessiz bozulma → hata      |
 | 2026-08-20 | Kapsam borcu: showcase etkileşimi + HUD                     | func %53→%83               |
+| 2026-08-20 | Ses/müzik motoru denetimi (Z1-Z4)                           | tek kaynak + görünür hata  |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 
@@ -398,6 +399,61 @@ Aşama haritasının `justfile` ile ayrışmasını da doğrular: `high`ten `bui
 | `pnpm signoff` | ✓     | 8 aşama, exit 0 (~99 sn)                                 |
 | test           | ✓     | tüm paketler yeşil (nihai toplam için bkz. Son durum)    |
 | Regresyon      | ✓     | spatial eşdeğerlik + lifecycle bekçisi enjeksiyonla test |
+
+## 2026-08-20 — Ses/müzik motoru denetimi ve dört düzeltme
+
+Motor derinlemesine okundu (sentez ~4400 satır, çalma ~1000). Mimarinin
+çekirdeği: **üretim offline, çalma runtime.** `synthesize()` saf matematik,
+Node'da koşar, tohumlanmış ve deterministik; sonuç `.ogg` olarak repoya girer.
+Runtime hiç sentez yapmaz, yalnızca stem çalar. Kazancı, kaliteyle kare
+bütçesi arasındaki takasın tamamen kalkması.
+
+Beste CORE'da DEĞİL: `core/audio/synth` enstrüman verir, `games/vol-hell/
+scripts/audio/` besteler (palette + track dosyaları, akor dizisi yorumda).
+Bu, mekanizma/politika ayrımının ses tarafındaki karşılığı.
+
+Denetimden çıkan dört zayıflık kapatıldı:
+
+**Z1 — BPM/BEATS iki kaynaktaydı, bekçisizdi.** `config/music.ts` ve
+`scripts/audio/music/*.ts` aynı sayıları taşıyor, yalnızca bir yorumla
+("BİREBİR eşleşmek zorunda") korunuyordu. Altısı da tutuyordu ama ayrışma
+SESSİZ olurdu: `loopEnd` dosyadan uzunsa Web Audio loop aralığını yok sayar,
+kısaysa besteden bir bölüm hiç duyulmaz. `config/musicTiming.ts` tek kaynak
+oldu; `loopEnd` artık türetiliyor, üretim script'leri de oradan okuyor.
+Bekçi `musicTiming.test.ts`: script'lerde `const BPM = <sayı>` kalırsa kapı
+kırılır. `tsx`in alias'ı çalışma zamanında çözdüğü ayrıca doğrulandı.
+
+**Z2 — `Phaser` adı çakışıyordu.** `core/audio/synth` bir `Phaser` efekti
+ihraç ediyordu; monorepo'nun oyun motoru da Phaser. Aynı dosyada yan yana
+gelince biri diğerini gölgeler, tip hatası vermez, çalışma zamanında patlar.
+`PhaserEffect` oldu — takma ad bırakılmadı, çünkü çakışmanın kendisi tehlike.
+
+**Z3 — Runtime kompozisyon yok.** Bir eksiklik değil, mimari sınır; ama
+yazılı değildi. `music/types.ts`e kaydedildi: uyarlanabilirlik yalnızca dikey
+katmanlamayla (stem gain haritaları) sağlanır. "Oyuncunun hamlesine göre
+armoni" gerekirse bu motor genişletilerek değil, yanına ayrı bir çalma-zamanı
+sentez yolu konarak çözülmeli.
+
+**Z4 — `loopEnd` dosya süresiyle doğrulanmıyordu.** Motor zaten
+`buffer.duration`a kelepçeliyordu — ama SESSİZCE, ki asıl sorun buydu. Artık
+tolerans (50 ms, kodlayıcı blok hizalaması payı) aşılırsa `onTimingMismatch`
+ile bildiriliyor, kanca yoksa konsola yazılıyor. Stem başına bir kez.
+
+**Güçlü yan olarak kaydedilmeli:** `src/audio` kapsamı %97.72 ile reponun en
+iyi test edilmiş bölgesi. `core/scripts/audio-qa.ts` "kulağa kötü geliyor"u
+sayıya çeviriyor (tepe/RMS, dinamik aralık, DC kayması, transient sertliği,
+spektral bant dağılımı) ve iki gerçek soruyu cevaplıyor: parçalar birbirinden
+ayrışıyor mu, ambiyans SFX'e yer bırakıyor mu.
+
+**En sert ders (`sidechain.ts`):** seste yalnızca ses saati kullanılır.
+Release bir dönem `setTimeout` ile tetikleniyordu; sekme arka plana alınınca
+setTimeout throttle ediliyor, üstelik context suspend olduğu için
+`currentTime` duruyordu — dönüşte müzik kısık kalıyordu.
+
+| Kapı      | Durum | Not                    |
+| --------- | ----- | ---------------------- |
+| `signoff` | ✓     | 8 aşama, exit 0        |
+| test      | ✓     | 1804 → 1817 test (+13) |
 
 ## 2026-08-20 — Kapsam borcu ve FlowField kararı
 

@@ -10,7 +10,7 @@
  */
 export { getPanGains } from './pan';
 export { DelayLine, feedbackTailSeconds, estimateDelayTail } from './delay';
-export { Chorus, Flanger, Phaser } from './modulation';
+export { Chorus, Flanger, PhaserEffect } from './modulation';
 export { Reverb } from './reverb';
 export { Distortion } from './distortion';
 export { StereoWidener } from './stereo';

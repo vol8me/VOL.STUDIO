@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MusicEngine, MusicScheduler, resolveStemGain } from '../../../src/audio/music';
+import type { LoopTimingMismatch } from '../../../src/audio/music';
 import { synth } from '../../../src/audio/synth';
 import { FakeAudioContext, createFakeAudioBufferFromResult } from './mock-audio';
 
@@ -382,5 +383,107 @@ describe('MusicEngine — onTrackEnd', () => {
     expect(ended).toEqual(['menu']);
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
+  });
+
+  describe('MusicEngine — loop zamanlaması ayrışması', () => {
+    let fakeContext: FakeAudioContext;
+
+    beforeEach(() => {
+      fakeContext = new FakeAudioContext();
+    });
+
+    afterEach(() => {
+      fakeContext = undefined as unknown as FakeAudioContext;
+      vi.restoreAllMocks();
+    });
+
+    /** 2 saniyelik buffer taşıyan tek stem'li track. */
+    async function loadTrackWith(engine: MusicEngine, loopEnd?: number): Promise<string> {
+      const buffer = makeBuffer(fakeContext, 2);
+      await engine.loadTrack({
+        id: 'drift-test',
+        bpm: 120,
+        loopEnd,
+        stems: [{ id: 'stem-a', buffer, loop: true }],
+      });
+      return 'drift-test';
+    }
+
+    it('loopEnd dosya süresiyle ayrışırsa BİLDİRİLİR', async () => {
+      // Kelepçeleme tek başına yetmez çünkü sessizdir: config 30 s derken
+      // dosya 2 s ise parça sessizce erken sarar ve bu ancak kulakla fark
+      // edilir. İki sayı ayrı yerlerde üretildiği için gerçek bir olasılık.
+      const onTimingMismatch = vi.fn<(info: LoopTimingMismatch) => void>();
+      const engine = new MusicEngine({
+        audioContext: fakeContext as unknown as AudioContext,
+        onTimingMismatch,
+      });
+
+      const id = await loadTrackWith(engine, 30);
+      await engine.play(id);
+
+      expect(onTimingMismatch).toHaveBeenCalledTimes(1);
+      const info = onTimingMismatch.mock.calls[0][0];
+      expect(info.trackId).toBe(id);
+      expect(info.stemId).toBe('stem-a');
+      expect(info.configuredEnd).toBe(30);
+      expect(info.actualDuration).toBeCloseTo(2, 1);
+    });
+
+    it('süreler uyuşuyorsa bildirim YAPILMAZ', async () => {
+      const onTimingMismatch = vi.fn();
+      const engine = new MusicEngine({
+        audioContext: fakeContext as unknown as AudioContext,
+        onTimingMismatch,
+      });
+
+      const id = await loadTrackWith(engine, 2);
+      await engine.play(id);
+
+      expect(onTimingMismatch).not.toHaveBeenCalled();
+    });
+
+    it('loopEnd verilmezse bildirim yapılmaz', async () => {
+      const onTimingMismatch = vi.fn();
+      const engine = new MusicEngine({
+        audioContext: fakeContext as unknown as AudioContext,
+        onTimingMismatch,
+      });
+
+      const id = await loadTrackWith(engine);
+      await engine.play(id);
+
+      expect(onTimingMismatch).not.toHaveBeenCalled();
+    });
+
+    it('aynı stem için uyarı BİR KEZ verilir', async () => {
+      // Her çalışta tekrarlamak konsolu doldurup asıl bilgiyi gömerdi.
+      const onTimingMismatch = vi.fn();
+      const engine = new MusicEngine({
+        audioContext: fakeContext as unknown as AudioContext,
+        onTimingMismatch,
+      });
+
+      const id = await loadTrackWith(engine, 30);
+      await engine.play(id);
+      engine.stop();
+      await engine.play(id);
+
+      expect(onTimingMismatch).toHaveBeenCalledTimes(1);
+    });
+
+    it('kanca verilmezse konsola yazılır — sessiz kalmaz', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const engine = new MusicEngine({
+        audioContext: fakeContext as unknown as AudioContext,
+      });
+
+      const id = await loadTrackWith(engine, 30);
+      await engine.play(id);
+
+      expect(warn).toHaveBeenCalled();
+      expect(String(warn.mock.calls[0][0])).toContain('loopEnd');
+      warn.mockRestore();
+    });
   });
 });

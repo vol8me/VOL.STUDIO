@@ -1,6 +1,22 @@
-/** Müzik motoru tipleri.
- *  Runtime'da sadece önceden üretilmiş WAV'lar çalınır —
- *  melodi/procedural üretim yok. */
+/**
+ * Müzik motoru tipleri.
+ *
+ * **Mimari karar: çalma zamanında beste YOKTUR.** Runtime yalnızca önceden
+ * üretilmiş stem'leri (OGG/MP3) çalar; nota/melodi üretimi build-time'da
+ * `audio/synth` ile yapılır ve sonuç repoya asset olarak girer.
+ *
+ * Kazancı: bir parçayı render etmek saniyeler sürebilir, kimse fark etmez —
+ * kalite ile kare bütçesi arasındaki takas tamamen kalkar. `synthesize()`
+ * senkron ve offline'dır; bir karede çağrılamaz.
+ *
+ * Bedeli ve SINIRI: uyarlanabilirlik yalnızca DİKEY KATMANLAMA ile sağlanır.
+ * `Stem.gainMap` sayesinde "yoğunluk artınca davul katmanı girer" ifade
+ * edilebilir; "oyuncunun hamlesine göre armoni değişsin" ya da "melodi
+ * gerçek zamanda üretilsin" EDİLEMEZ. Böyle bir ihtiyaç doğarsa bu motor
+ * genişletilerek değil, yanına ayrı bir çalma-zamanı sentez yolu (Web Audio
+ * düğüm grafiği ya da AudioWorklet) konarak çözülmelidir — `synthesize()`in
+ * offline tasarımı oraya taşınmaz.
+ */
 
 /** Müzik state'indeki bir değer (sayısal veya sembolik). */
 export type MusicStateValue = number | string;
@@ -70,8 +86,24 @@ export interface MusicTrack {
   defaultState?: MusicState;
 }
 
+/** `loopEnd` ile dosyanın gerçek süresi ayrıştığında bildirilen bilgi. */
+export interface LoopTimingMismatch {
+  trackId: string;
+  stemId: string;
+  /** Config'te yazan loop sonu (saniye). */
+  configuredEnd: number;
+  /** Decode edilmiş buffer'ın gerçek süresi (saniye). */
+  actualDuration: number;
+}
+
 /** Müzik motoru yapılandırması. */
 export interface MusicEngineOptions {
+  /**
+   * `loopEnd` dosyanın gerçek uzunluğuyla ayrıştığında çağrılır. Verilmezse
+   * konsola uyarı yazılır — sessiz kalmaz, çünkü bu ayrışma duyulmadan fark
+   * edilmez.
+   */
+  onTimingMismatch?: (info: LoopTimingMismatch) => void;
   /** Dışarıdan sağlanan AudioContext. */
   audioContext?: AudioContext;
   /** Master ses seviyesi (0-1). */

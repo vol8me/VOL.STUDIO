@@ -1,5 +1,13 @@
 import type { SynthesisResult, SynthParams } from '../types';
-import { Chorus, DelayLine, Flanger, getPanGains, Phaser, Reverb, StereoWidener } from '../effects';
+import {
+  Chorus,
+  DelayLine,
+  Flanger,
+  getPanGains,
+  PhaserEffect,
+  Reverb,
+  StereoWidener,
+} from '../effects';
 import { NORMALIZE_TARGET_PEAK } from './constants';
 
 /**
@@ -34,7 +42,7 @@ export function applyGlobalEffects(
   }
 
   if (params.phaser) {
-    const phaser = new Phaser(params.phaser, sampleRate);
+    const phaser = new PhaserEffect(params.phaser, sampleRate);
     for (let i = 0; i < effected.length; i++) {
       effected[i] = phaser.process(effected[i], i / sampleRate);
     }

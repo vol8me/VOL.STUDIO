@@ -7,6 +7,7 @@
  * ilk kez nefes alır.
  */
 
+import { MUSIC_TIMING } from '@/config/musicTiming';
 import { createMix, addVoice, masterize } from '../lib/mix';
 import type { StereoMix } from '../lib/mix';
 import { beatSec, hz } from '../lib/theory';
@@ -18,8 +19,12 @@ import { warmPad } from '../palette/pads';
 import { glassKey, nightLead } from '../palette/keys';
 import { deepImpact } from '../palette/fx';
 
-const BPM = 92;
-const BEATS = 32;
+/**
+ * Tempo ve uzunluk `src/config/musicTiming.ts`ten gelir — çalma
+ * config'iyle aynı kaynak. Buraya sayı yazmak, `loopEnd` ile bestenin
+ * sessizce ayrışmasına yol açardı (bkz. o dosyanın başındaki not).
+ */
+const { bpm: BPM, beats: BEATS } = MUSIC_TIMING['first-light'];
 
 /** Yükselen zafer motifi — D eksenli, son adımda majör 3'lüye (F#) varır. */
 const ASCENT: NoteEvent[] = [

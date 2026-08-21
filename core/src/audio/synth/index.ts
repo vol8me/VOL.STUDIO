@@ -24,7 +24,7 @@ export {
   DelayLine,
   Distortion,
   Flanger,
-  Phaser,
+  PhaserEffect,
   Reverb,
   StereoWidener,
   getPanGains,

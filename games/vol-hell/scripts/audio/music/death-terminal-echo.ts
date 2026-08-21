@@ -6,6 +6,7 @@
  * ve zeminden çekilen sub. Son çan yankısı sessizliğe bırakılır.
  */
 
+import { MUSIC_TIMING } from '@/config/musicTiming';
 import { createMix, addVoice, masterize } from '../lib/mix';
 import type { StereoMix } from '../lib/mix';
 import { beatSec, hz } from '../lib/theory';
@@ -17,8 +18,12 @@ import { voidPad } from '../palette/pads';
 import { glassKey } from '../palette/keys';
 import { subDrop } from '../palette/fx';
 
-const BPM = 56;
-const BEATS = 24;
+/**
+ * Tempo ve uzunluk `src/config/musicTiming.ts`ten gelir — çalma
+ * config'iyle aynı kaynak. Buraya sayı yazmak, `loopEnd` ile bestenin
+ * sessizce ayrışmasına yol açardı (bkz. o dosyanın başındaki not).
+ */
+const { bpm: BPM, beats: BEATS } = MUSIC_TIMING['terminal-echo'];
 
 /** İnen veda motifi — her nota bir öncekinden aşağıda, aralıklar açılır. */
 const DESCENT: NoteEvent[] = [
