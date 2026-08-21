@@ -173,4 +173,72 @@ describe('StateMachine', () => {
     expect(m.canTransition('review')).toBe(true);
     expect(m.canTransition('published')).toBe(false);
   });
+
+  describe('kanca hatası sözleşmesi', () => {
+    it('onEnter fırlatırsa makine KAYNAĞA döner ve hata yeniden fırlar', () => {
+      const m = new StateMachine<Phase>({
+        initial: 'draft',
+        states: {
+          draft: { transitions: ['review'] },
+          review: {
+            onEnter: () => {
+              throw new Error('giris hatasi');
+            },
+          },
+          published: {},
+          archived: {},
+        },
+      });
+
+      expect(() => m.transition('review')).toThrow('giris hatasi');
+      expect(m.getState()).toBe('draft');
+    });
+
+    it('hata onTransitionError ile bildirilir (yırtık durum görünür olur)', () => {
+      // Geri alma TAM DEĞİLDİR: onExit(from) zaten çalışmıştır. Kanca,
+      // tüketicinin bilinçli kurtarma yapabilmesi için var.
+      const onTransitionError = vi.fn();
+      const exits: string[] = [];
+      const m = new StateMachine<Phase>({
+        initial: 'draft',
+        states: {
+          draft: { transitions: ['review'], onExit: (to) => exits.push(to) },
+          review: {
+            onEnter: () => {
+              throw new Error('bozuk');
+            },
+          },
+          published: {},
+          archived: {},
+        },
+        onTransitionError,
+      });
+
+      expect(() => m.transition('review')).toThrow();
+      expect(exits).toEqual(['review']); // çıkış ZATEN çalıştı
+      expect(onTransitionError).toHaveBeenCalledTimes(1);
+      expect(onTransitionError.mock.calls[0][1]).toBe('draft');
+      expect(onTransitionError.mock.calls[0][2]).toBe('review');
+    });
+
+    it('hata sonrası makine yeni geçişleri kabul etmeye devam eder', () => {
+      // `transitioning` bayrağı finally ile düşmezse makine kilitlenirdi.
+      const m = new StateMachine<Phase>({
+        initial: 'draft',
+        states: {
+          draft: { transitions: ['review', 'published'] },
+          review: {
+            onEnter: () => {
+              throw new Error('bozuk');
+            },
+          },
+          published: {},
+          archived: {},
+        },
+      });
+
+      expect(() => m.transition('review')).toThrow();
+      expect(m.transition('published')).toBe(true);
+    });
+  });
 });

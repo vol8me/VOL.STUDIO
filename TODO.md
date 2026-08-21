@@ -56,7 +56,7 @@ tarihte çalışma ağacında bizzat koşuldu.
 | `pnpm signoff`           | ✓     | high + cargo check/fmt/clippy — zincirin tamamı, exit 0                |
 | `pnpm high`              | ✓     | quick + lint:css + coverage + tüm build'ler                            |
 | `pnpm -r typecheck`      | ✓     | 5 paket (core, vol-hell, vol-ui, design, tauri-v2)                     |
-| `pnpm -r test:coverage`  | ✓     | 1637 test (core 1083, vol-hell 447, vol-ui 27, design 54, tauri-v2 26) |
+| `pnpm -r test:coverage`  | ✓     | 1769 test (core 1215, vol-hell 447, vol-ui 27, design 54, tauri-v2 26) |
 | `pnpm run contract`      | ✓     | 5 paket, kapı kapsamı tam                                              |
 | `pnpm lint`              | ✓     | 0 hata, 0 uyarı                                                        |
 | `pnpm format:check`      | ✓     |                                                                        |
@@ -65,7 +65,7 @@ tarihte çalışma ağacında bizzat koşuldu.
 | `cargo check/fmt/clippy` | ✓     | `tauri-v2/src-tauri`                                                   |
 | `pnpm run doctor:env`    | ✓     | Node 22.23.1, pnpm 11.18.0, rustc 1.97.1, just 1.58.0, FFmpeg 8.1.2    |
 
-Kapsam: core %86.97, vol-ui %83.57 (function %53.65), vol-hell %70.17,
+Kapsam: core %87.34, vol-ui %83.57 (function %53.65), vol-hell %70.17,
 tauri-v2 %89.07, design %98.86. Eşikler ölçülen kapsamın ~2 puan altına kilitli
 (ratchet), yani bu oranlar artık taban — düşerlerse kapı kırılır. Eşiklerin
 tamamı kök `quality.json`da; `vitest.config.ts` dosyaları ve
@@ -396,6 +396,81 @@ Aşama haritasının `justfile` ile ayrışmasını da doğrular: `high`ten `bui
 | `pnpm signoff` | ✓     | 8 aşama, exit 0 (~99 sn)                                 |
 | test           | ✓     | tüm paketler yeşil (nihai toplam için bkz. Son durum)    |
 | Regresyon      | ✓     | spatial eşdeğerlik + lifecycle bekçisi enjeksiyonla test |
+
+## 2026-08-20 — Primitif sertleştirme: sessiz bozulmayı gürültülü yapmak
+
+Dış denetimin yedi maddesi doğrulandı; biri yanlış çıktı, ikisinin şiddeti
+yükseldi. Denetim **okuyarak değil çalıştırarak** yapıldı — her iddia bir probe
+testiyle ölçüldü.
+
+### Denetim sonuçları
+
+- **"`SlotContainer.get()` out-of-range → undefined" YANLIŞ.** `get(99)`,
+  `get(-1)`, `get(1.5)` üçü de `null` döndürüyor; üçlü operatör `undefined`'ı
+  zaten çeviriyor. Ama komşusunda gerçek bug vardı (aşağıda).
+- **"`SpatialIndex` scratch buffer" P2 değil P0.** Ölçüldü: 5 sonuç
+  saklandığında birinci sonuç beşincinin verisine dönüşüyor ve hiçbir hata
+  çıkmıyor.
+- **"`ObjectPool` ownership" belirtilenden ağır.** Yabancı nesne havuza
+  giriyor, `activeCount`ı sahibi olmadığı hâlde düşürüyor ve bir sonraki
+  `acquire()` ile başka bir çağırana dağıtılıyordu.
+- **"`Scheduler` reentrancy" ölçüldü:** tek `update(10)` callback'i ÜÇ kez
+  çalıştırıyordu.
+- **"`FlowField` recompute" ölçüldü:** 200×200 alanda recompute başına
+  ~13.7 ms — tek yeniden hesap bir karenin tamamını yiyor.
+
+### Bulunan ek sorunlar
+
+- **NaN sızıntısı sistemik.** Yalnızca `ResourcePool` değil:
+  `Cooldown.update(NaN)` beklemeyi kalıcı `NaN` yapıp sonsuza dek bitmemesine
+  yol açıyor, `Clock`/`RoundLoop` aynı sınıf. `spend({x: NaN})` `true` dönüp
+  hiçbir şey düşmüyordu — sessiz bedava alışveriş.
+- **`Grid` kesirli indeks görünmez veri yazıyor.** `set(1.5, 1, 'x')` → `true`,
+  `get(1.5,1)` → `'x'`, ama `filledCount` 0. Değer dizide `"1.5"` adlı normal
+  bir özellik olarak yaşıyor; `forEach`/`clear` hiç görmüyor.
+- **`Deck.reset()` büyük destede `RangeError` + VERİ KAYBI.** 200k kartta
+  `push(...spread)` limiti aşıyor; `splice` önce çalıştığı için iskarta
+  boşalmış oluyor ve tüm deste kayboluyordu.
+- **`MinHeap` iki kopya** (`findPath` + `FlowField`).
+- **`FlowField` eskimiş yığın girişlerini atlamıyordu** — sonuç doğru ama
+  düğümler tekrar tekrar genişletiliyordu.
+
+### Yapılanlar
+
+**Sonlu sayı sözleşmesi** (`math/numeric.ts`): yapılandırma değeri REDDEDİLİR,
+akış değeri (`deltaMs`) YOKSAYILIR. Altı primitife uygulandı, governance
+testiyle kapıya bağlandı.
+
+**Sonuç tamponu sözleşmesi:** `queryInto`/`queryRadiusInto` çağıranın dizisine
+yazar; `queryStamp()` + `assertQueryValid()` halka devrini gürültülü yapar.
+Mevcut `query()` imzası korundu, hiçbir çağrı yeri kırılmadı.
+
+**Tam sayı sözleşmesi:** `Grid.inBounds` ve `SlotContainer.inRange` artık
+`Number.isInteger` kontrol ediyor.
+
+**Sahiplik:** `ObjectPool` `activeSet` tutuyor; alınmamış nesnenin iadesi hata.
+
+**Yeniden giriş:** `Scheduler.update()` artık `boolean` dönüyor; iç çağrı
+reddedilip `onReentrantUpdate` ile bildiriliyor.
+
+**Tahsis:** `Grid.forEach`/`forEachNeighbour` koordinatı NESNE değil SAYI
+veriyor. İlk denemede yeniden kullanılan tek nesneyi geçirdim — bu yeni bir
+sessiz aliasing yaratıyordu ve testler yakaladı; sayılar ikilemi tamamen
+ortadan kaldırıyor.
+
+**`MinHeap` tekilleştirildi** (`collections/MinHeap.ts`), `FlowField` eskimiş
+girişleri atlıyor.
+
+**`StateMachine` hata sözleşmesi belgelendi:** geri alma TAM DEĞİL ve olamaz —
+`onEnter` fırlarsa `onExit(from)` zaten çalışmıştır. Yırtık durum kaçınılmaz;
+`onTransitionError` kancası tüketiciye bilinçli kurtarma imkânı veriyor.
+
+| Kapı      | Durum | Not                     |
+| --------- | ----- | ----------------------- |
+| `signoff` | ✓     | 8 aşama, exit 0         |
+| test      | ✓     | 1637 → 1769 test (+132) |
+| coverage  | ✓     | core %86.97 → %87.34    |
+| yüzey     | ✓     | 166 → 171 export        |
 
 ## 2026-08-19 — Katman 1 genişletmesi
 

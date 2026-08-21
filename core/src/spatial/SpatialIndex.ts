@@ -1,3 +1,5 @@
+import { isFiniteNumber, requireFinite } from '../math/numeric';
+
 /** Uzamsal indekse girebilecek en az koşul: bir konum. */
 export interface SpatialEntity {
   x: number;
@@ -41,7 +43,20 @@ export class SpatialIndex<T extends SpatialEntity> {
    * sonuç bozulur.
    */
   private readonly resultBuffers: T[][] = [[], [], [], []];
+  /**
+   * Her tamponun hangi sorguya ait olduğunu tutan devir damgası.
+   *
+   * Halkanın sessiz tehlikesi ölçüldü: 5 sonuç aynı anda saklandığında
+   * birinci sonuç beşincinin verisine dönüşüyor ve HİÇBİR hata çıkmıyordu.
+   * Damga, `assertQueryValid` ile bu bozulmayı gürültülü hâle getirir;
+   * sonucu saklaması gereken çağıran ise `queryInto()` ile kendi dizisini
+   * verir ve halkaya hiç girmez.
+   */
+  private readonly bufferStamps: number[] = [0, 0, 0, 0];
   private resultIndex = 0;
+  private queryCounter = 0;
+  /** Son sorgunun damgası — `queryStamp()` bunu döner. */
+  private lastStamp = 0;
 
   /**
    * @param cellSize Hücre kenarı. Sorgu yarıçapına yakın seçilmelidir: çok
@@ -53,7 +68,8 @@ export class SpatialIndex<T extends SpatialEntity> {
     private readonly cellSize: number,
     private readonly isActive?: (entity: T) => boolean,
   ) {
-    if (!Number.isFinite(cellSize) || cellSize <= 0) {
+    requireFinite(cellSize, 'SpatialIndex cellSize');
+    if (cellSize <= 0) {
       throw new Error(`SpatialIndex: cellSize pozitif olmalı (gelen: ${cellSize})`);
     }
   }
@@ -71,8 +87,20 @@ export class SpatialIndex<T extends SpatialEntity> {
     return this.key(Math.floor(entity.x / this.cellSize), Math.floor(entity.y / this.cellSize));
   }
 
-  /** Varlığı mevcut konumuna göre ekler. Zaten varsa konumu tazelenir. */
+  /**
+   * Varlığı mevcut konumuna göre ekler. Zaten varsa konumu tazelenir.
+   *
+   * Sonlu olmayan konum REDDEDİLİR: eskiden böyle bir varlık indekse GİRİYOR
+   * (`size` artıyor) ama hiçbir sorgu onu bulamıyordu — indekste görünen ama
+   * erişilemeyen bir kara delik.
+   */
   insert(entity: T): void {
+    if (!isFiniteNumber(entity.x) || !isFiniteNumber(entity.y)) {
+      throw new TypeError(
+        `SpatialIndex: varlık konumu sonlu olmalı (x=${String(entity.x)}, y=${String(entity.y)})`,
+      );
+    }
+
     const existing = this.cellOf.get(entity);
     const target = this.cellKeyFor(entity);
     if (existing === target) return;
@@ -273,12 +301,90 @@ export class SpatialIndex<T extends SpatialEntity> {
     return best;
   }
 
-  /** Sıradaki yeniden kullanılabilir tampon — iç içe sorgular çakışmasın diye. */
+  /** Sıradaki yeniden kullanılabilir tampon — ardışık sorgular çakışmasın diye. */
   private nextBuffer(): T[] {
-    const result = this.resultBuffers[this.resultIndex];
+    const slot = this.resultIndex;
+    const result = this.resultBuffers[slot];
     this.resultIndex = (this.resultIndex + 1) % this.resultBuffers.length;
+    this.lastStamp = ++this.queryCounter;
+    this.bufferStamps[slot] = this.lastStamp;
     result.length = 0;
     return result;
+  }
+
+  /**
+   * Bir sorgu sonucunun HÂLÂ GEÇERLİ olduğunu doğrular.
+   *
+   * Halka tampon 4 sorguda bir başa döner; arada saklanan bir sonuç sessizce
+   * başka bir sorgunun verisine dönüşür. Uzun ömürlü bir sonuç tutan kod,
+   * kullanmadan önce bunu çağırarak bozulmayı GÜRÜLTÜLÜ hâle getirebilir.
+   *
+   * Sonucu gerçekten saklamak gerekiyorsa doğru çözüm `queryInto()` ya da
+   * `[...result]` kopyasıdır; bu metot bir teşhis aracıdır, çözüm değil.
+   *
+   * @param stamp `queryStamp()` ile alınan damga.
+   */
+  assertQueryValid(stamp: number): void {
+    if (!this.bufferStamps.includes(stamp)) {
+      throw new Error(
+        'SpatialIndex: sorgu sonucu geçersiz — halka tampon devretti. ' +
+          'Sonucu saklamak için queryInto() kullan ya da kopyala.',
+      );
+    }
+  }
+
+  /** Son sorgunun damgası; `assertQueryValid` ile birlikte kullanılır. */
+  queryStamp(): number {
+    return this.lastStamp;
+  }
+
+  /**
+   * `query` ile aynı, ama sonucu ÇAĞIRANIN dizisine yazar — halka tampona
+   * hiç dokunmaz, dolayısıyla süresiz saklanabilir.
+   *
+   * Dizi önce temizlenir ve geri döndürülür (zincirleme kullanım için).
+   */
+  queryInto(out: T[], x: number, y: number): T[] {
+    out.length = 0;
+    this.collectCells(out, x, y, 1);
+    return out;
+  }
+
+  /** `queryRadius` ile aynı, sonucu çağıranın dizisine yazar. */
+  queryRadiusInto(out: T[], x: number, y: number, radius: number): T[] {
+    out.length = 0;
+    if (!isFiniteNumber(radius) || radius <= 0) return out;
+
+    const span = Math.ceil(radius / this.cellSize);
+    this.collectCells(out, x, y, span, radius * radius);
+    return out;
+  }
+
+  /**
+   * Hücre penceresini tarayıp `out`a toplar.
+   *
+   * `radiusSq` verilirse sonuç daireye göre de filtrelenir: taranan pencere
+   * KARE, arama alanı DAİREdir.
+   */
+  private collectCells(out: T[], x: number, y: number, span: number, radiusSq?: number): void {
+    const cx = Math.floor(x / this.cellSize);
+    const cy = Math.floor(y / this.cellSize);
+
+    for (let dx = -span; dx <= span; dx++) {
+      for (let dy = -span; dy <= span; dy++) {
+        const cell = this.cells.get(this.key(cx + dx, cy + dy));
+        if (!cell) continue;
+        for (const entity of cell) {
+          if (this.isActive && !this.isActive(entity)) continue;
+          if (radiusSq !== undefined) {
+            const ex = entity.x - x;
+            const ey = entity.y - y;
+            if (ex * ex + ey * ey > radiusSq) continue;
+          }
+          out.push(entity);
+        }
+      }
+    }
   }
 
   private removeFromCell(entity: T, cellKey: number): void {

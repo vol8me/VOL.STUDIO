@@ -296,4 +296,80 @@ describe('SpatialIndex', () => {
       expect(second).toEqual([b]);
     });
   });
+
+  describe('sonuç tamponu sözleşmesi', () => {
+    function seeded(): SpatialIndex<Unit> {
+      const index = new SpatialIndex<Unit>(20);
+      for (let i = 0; i < 5; i++) index.insert(unit(i * 200, 0));
+      return index;
+    }
+
+    it('halka tampon 4 sorgudan sonra devreder (belgelenmiş sınır)', () => {
+      // Ölçülen davranış: 5 sonuç saklandığında birinci sonuç beşincinin
+      // verisine dönüşüyor ve HİÇBİR hata çıkmıyordu. Test bu sınırın
+      // farkında olunduğunu kilitler.
+      const index = seeded();
+      const held = [0, 1, 2, 3, 4].map((i) => index.query(i * 200, 0));
+
+      expect(held[0]).toBe(held[4]);
+    });
+
+    it('queryStamp + assertQueryValid bozulmayı GÜRÜLTÜLÜ yapar', () => {
+      const index = seeded();
+      index.query(0, 0);
+      const stamp = index.queryStamp();
+
+      expect(() => index.assertQueryValid(stamp)).not.toThrow();
+
+      for (let i = 1; i <= 4; i++) index.query(i * 200, 0);
+      expect(() => index.assertQueryValid(stamp)).toThrow(/devretti/);
+    });
+
+    it('queryInto ÇAĞIRANIN dizisine yazar — halka tampona hiç girmez', () => {
+      const index = seeded();
+      const mine: Unit[] = [];
+      index.queryInto(mine, 0, 0);
+      const snapshot = [...mine];
+
+      // Halkayı tamamen devret; saklanan sonuç etkilenmemeli.
+      for (let i = 0; i < 10; i++) index.query(i * 200, 0);
+
+      expect(mine).toEqual(snapshot);
+      expect(mine).toHaveLength(1);
+    });
+
+    it('queryInto verilen diziyi önce temizler ve geri döner', () => {
+      const index = seeded();
+      const mine: Unit[] = [unit(-1, -1)];
+
+      expect(index.queryInto(mine, 0, 0)).toBe(mine);
+      expect(mine).toHaveLength(1);
+      expect(mine[0].x).toBe(0);
+    });
+
+    it('queryRadiusInto geniş yarıçapta da çağıranın dizisine yazar', () => {
+      const index = seeded();
+      const mine: Unit[] = [];
+      index.queryRadiusInto(mine, 0, 0, 450);
+
+      expect(mine.length).toBeGreaterThan(1);
+      for (let i = 0; i < 10; i++) index.query(i * 200, 0);
+      expect(mine.length).toBeGreaterThan(1);
+    });
+
+    it('queryRadiusInto geçersiz yarıçapta boş dizi döner', () => {
+      const index = seeded();
+      const mine: Unit[] = [unit(9, 9)];
+
+      expect(index.queryRadiusInto(mine, 0, 0, -1)).toEqual([]);
+      expect(index.queryRadiusInto(mine, 0, 0, NaN)).toEqual([]);
+    });
+
+    it('queryInto ile query AYNI sonucu verir', () => {
+      const index = seeded();
+      const mine: Unit[] = [];
+
+      expect(index.queryInto(mine, 200, 0)).toEqual([...index.query(200, 0)]);
+    });
+  });
 });

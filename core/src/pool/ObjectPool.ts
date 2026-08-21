@@ -29,9 +29,17 @@ export class ObjectPool<T> {
   private readonly createFn: () => T;
   private readonly resetFn?: (item: T) => void;
   private readonly maxIdle: number;
-  private activeCount = 0;
   /** Boştaki örneklerin O(1) iade kontrolü için kümesi. */
   private readonly idleSet: Set<T> = new Set();
+  /**
+   * DIŞARIDA kullanımdaki örnekler.
+   *
+   * Yalnızca sayaç tutmak yetmiyordu: havuzdan HİÇ alınmamış yabancı bir
+   * nesne `release` edilebiliyor, havuza giriyor, `activeCount`ı sahibi
+   * olmadığı hâlde düşürüyor ve bir sonraki `acquire()` ile başka bir
+   * çağırana dağıtılıyordu.
+   */
+  private readonly activeSet: Set<T> = new Set();
 
   constructor(options: ObjectPoolOptions<T>) {
     this.createFn = options.create;
@@ -48,13 +56,11 @@ export class ObjectPool<T> {
 
   /** Boştaki bir örneği verir; yoksa yenisini üretir. */
   acquire(): T {
-    this.activeCount++;
     const reused = this.idle.pop();
-    if (reused !== undefined) {
-      this.idleSet.delete(reused);
-      return reused;
-    }
-    return this.createFn();
+    const item = reused ?? this.createFn();
+    if (reused !== undefined) this.idleSet.delete(reused);
+    this.activeSet.add(item);
+    return item;
   }
 
   /**
@@ -68,8 +74,14 @@ export class ObjectPool<T> {
     if (this.idleSet.has(item)) {
       throw new Error('ObjectPool: aynı örnek iki kez iade edildi');
     }
+    // Sahiplik kontrolü: havuzdan alınmamış bir nesne havuza giremez.
+    // Aksi halde havuz, ömrünü yönetmediği bir nesneyi başka bir çağırana
+    // dağıtır ve iki sahip aynı örneği paylaşır.
+    if (!this.activeSet.has(item)) {
+      throw new Error('ObjectPool: bu havuzdan alınmamış bir örnek iade edilemez');
+    }
 
-    this.activeCount = Math.max(0, this.activeCount - 1);
+    this.activeSet.delete(item);
     this.resetFn?.(item);
 
     if (this.idle.length < this.maxIdle) {
@@ -80,7 +92,7 @@ export class ObjectPool<T> {
 
   /** Dışarıda kullanımda olan örnek sayısı. */
   getActiveCount(): number {
-    return this.activeCount;
+    return this.activeSet.size;
   }
 
   /** Havuzda bekleyen örnek sayısı. */
@@ -91,6 +103,10 @@ export class ObjectPool<T> {
   /**
    * Boştaki örnekleri bırakır. Aktif örnekler ETKİLENMEZ — havuz onların
    * sahibi değildir, yalnızca iade edilenleri saklar.
+   */
+  /**
+   * Boştaki örnekleri bırakır. Aktif örnekler ETKİLENMEZ ve sahiplikleri
+   * korunur — havuz onların sahibi değildir, iade edilebilmeleri gerekir.
    */
   clear(): void {
     this.idle.length = 0;

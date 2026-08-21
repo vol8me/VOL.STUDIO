@@ -1,3 +1,5 @@
+import { finiteOr } from '../math/numeric';
+
 /**
  * Duraklatılabilir, ölçeklenebilir geçen-zaman sayacı.
  *
@@ -54,8 +56,10 @@ export class Clock {
     return this.scale;
   }
 
+  /** Sonlu olmayan `deltaMs` yoksayılır — bkz. `Cooldown.update`. */
   update(deltaMs: number): void {
-    if (!this.running || deltaMs <= 0) return;
-    this.elapsedMs += deltaMs * this.scale;
+    const delta = finiteOr(deltaMs, 0);
+    if (!this.running || delta <= 0) return;
+    this.elapsedMs += delta * this.scale;
   }
 }

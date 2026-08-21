@@ -35,11 +35,13 @@ export {
   RingBuffer,
   Deck,
   SlotContainer,
+  MinHeap,
   type DeckOptions,
   type Slot,
   type SlotContainerOptions,
 } from './collections';
 export { WeightedPicker, type WeightedEntry } from './random/WeightedPicker';
+export { isFiniteNumber, requireFinite, finiteOr, finitePositiveOr } from './math/numeric';
 export {
   clamp,
   clamp01,

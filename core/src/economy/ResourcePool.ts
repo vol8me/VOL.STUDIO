@@ -1,3 +1,5 @@
+import { isFiniteNumber, requireFinite } from '../math/numeric';
+
 /**
  * Tipli kaynak cüzdanı — altın, enerji, mana, araştırma puanı, bilet.
  *
@@ -23,7 +25,15 @@ export class ResourcePool<TResource extends string> {
   constructor(initial: Record<TResource, number>, caps: Partial<Record<TResource, number>> = {}) {
     this.amounts = { ...initial };
     this.caps = { ...caps };
+
+    // Sonlu olmayan bir başlangıç değeri ya da sınır, ilk `add`den itibaren
+    // tüm bakiyeyi NaN'e çevirir ve kaynağı görünmez olur.
+    for (const key of Object.keys(this.caps) as TResource[]) {
+      const cap = this.caps[key];
+      if (cap !== undefined) requireFinite(cap, `ResourcePool cap "${String(key)}"`);
+    }
     for (const key of Object.keys(this.amounts) as TResource[]) {
+      requireFinite(this.amounts[key], `ResourcePool "${String(key)}"`);
       this.amounts[key] = this.clamp(key, this.amounts[key]);
     }
   }
@@ -37,8 +47,13 @@ export class ResourcePool<TResource extends string> {
     return { ...this.amounts };
   }
 
-  /** Miktar ekler (negatif verilmez; düşürmek için `spend`). Sınır varsa kelepçelenir. */
+  /**
+   * Miktar ekler (negatif verilmez; düşürmek için `spend`). Sınır varsa
+   * kelepçelenir. Sonlu olmayan miktar REDDEDİLİR — `NaN <= 0` yanlış
+   * olduğu için eski kod onu geçiriyor ve bakiyeyi kalıcı NaN yapıyordu.
+   */
   add(resource: TResource, amount: number): void {
+    requireFinite(amount, 'ResourcePool add amount');
     if (amount <= 0) return;
     this.amounts[resource] = this.clamp(resource, this.get(resource) + amount);
   }
@@ -46,6 +61,10 @@ export class ResourcePool<TResource extends string> {
   /** Maliyetin TAMAMI karşılanabiliyor mu? */
   canAfford(cost: ResourceCost<TResource>): boolean {
     for (const [resource, amount] of Object.entries(cost) as [TResource, number][]) {
+      // Sonlu olmayan kalem karşılanamaz sayılır: eskiden `NaN > 0` yanlış
+      // olduğu için kalem atlanıyor, `spend` `true` dönüyor ve HİÇBİR ŞEY
+      // düşülmüyordu — sessiz bir bedava alışveriş.
+      if (!isFiniteNumber(amount)) return false;
       if (amount > 0 && this.get(resource) < amount) return false;
     }
     return true;
@@ -70,6 +89,7 @@ export class ResourcePool<TResource extends string> {
 
   /** Miktarı doğrudan belirler (kayıt yükleme). Sınır varsa kelepçelenir. */
   set(resource: TResource, amount: number): void {
+    requireFinite(amount, 'ResourcePool set amount');
     this.amounts[resource] = this.clamp(resource, amount);
   }
 
@@ -79,6 +99,7 @@ export class ResourcePool<TResource extends string> {
       delete this.caps[resource];
       return;
     }
+    requireFinite(cap, 'ResourcePool cap');
     this.caps[resource] = cap;
     this.amounts[resource] = this.clamp(resource, this.get(resource));
   }

@@ -1,3 +1,5 @@
+import { finiteOr, requireFinite } from '../math/numeric';
+
 /**
  * Delta-time ile sürülen bekleme süresi — ateş temposu, yetenek cooldown'ı,
  * yeniden doğma gecikmesi.
@@ -11,9 +13,14 @@ export class Cooldown {
   private remainingMs = 0;
   private durationMs: number;
 
-  /** `durationMs` negatifse 0'a kelepçelenir (her zaman hazır). */
+  /**
+   * `durationMs` negatifse 0'a kelepçelenir (her zaman hazır); sonlu değilse
+   * REDDEDİLİR — `new Cooldown(NaN)` sessizce kabul edilirse `trigger()`
+   * sonrası bekleme sonsuza dek bitmez ve neden bitmediği hiçbir yerde
+   * görünmez.
+   */
   constructor(durationMs: number) {
-    this.durationMs = Math.max(0, durationMs);
+    this.durationMs = Math.max(0, requireFinite(durationMs, 'Cooldown durationMs'));
   }
 
   /** Bekleme bitti mi? */
@@ -60,7 +67,7 @@ export class Cooldown {
    * çağıran, eski uzun beklemeyi sonuna kadar çekmez.
    */
   setDuration(durationMs: number): void {
-    this.durationMs = Math.max(0, durationMs);
+    this.durationMs = Math.max(0, requireFinite(durationMs, 'Cooldown durationMs'));
     this.remainingMs = Math.min(this.remainingMs, this.durationMs);
   }
 
@@ -68,8 +75,14 @@ export class Cooldown {
     return this.durationMs;
   }
 
+  /**
+   * Zamanı ilerletir. Sonlu olmayan `deltaMs` YOKSAYILIR: tek bozuk bir kare
+   * yüzünden beklemenin kalıcı olarak `NaN`e düşmesi, hatayı kaynağından çok
+   * uzakta görünür kılardı.
+   */
   update(deltaMs: number): void {
-    if (deltaMs <= 0 || this.remainingMs <= 0) return;
-    this.remainingMs -= deltaMs;
+    const delta = finiteOr(deltaMs, 0);
+    if (delta <= 0 || this.remainingMs <= 0) return;
+    this.remainingMs -= delta;
   }
 }

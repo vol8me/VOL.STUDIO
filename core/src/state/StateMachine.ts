@@ -33,18 +33,29 @@ export interface StateMachineOptions<TState extends string> {
    * geliştirmede bağlanması önerilir.
    */
   onRejected?: (from: TState, to: TState) => void;
+  /**
+   * Bir yaşam döngüsü kancası hata fırlattığında çağrılır; ardından hata
+   * yeniden fırlatılır.
+   *
+   * Makine kaynağa geri döndürülmüş olur ama `onExit(from)` zaten çalıştığı
+   * için durum YIRTIKTIR (bkz. `transition`). Bu kanca, tüketicinin bilinçli
+   * bir kurtarma yapabilmesi içindir — sessiz bir yarı-geçiş bırakmak yerine.
+   */
+  onTransitionError?: (error: unknown, from: TState, to: TState) => void;
 }
 
 export class StateMachine<TState extends string> {
   private current: TState;
   private readonly states: Readonly<Record<TState, StateDefinition<TState>>>;
   private readonly onRejected?: (from: TState, to: TState) => void;
+  private readonly onTransitionError?: (error: unknown, from: TState, to: TState) => void;
   /** onEnter/onExit içinden gelen yeniden giriş, sırayı bozmasın diye. */
   private transitioning = false;
 
   constructor(options: StateMachineOptions<TState>) {
     this.states = options.states;
     this.onRejected = options.onRejected;
+    this.onTransitionError = options.onTransitionError;
     this.current = options.initial;
     this.states[this.current]?.onEnter?.(null);
   }
@@ -86,10 +97,20 @@ export class StateMachine<TState extends string> {
       this.current = to;
       this.states[to]?.onEnter?.(from);
     } catch (error) {
-      // onEnter hata fırlatırsa durum yarıda kalmasın: `current` hedefe
-      // atanmıştı ama giriş kancası tamamlanmadı. Kaynağa geri dön ki
-      // sonraki çağrılar yanlış durumdan devam etmesin.
+      // Kaynağa geri dönülür ki sonraki çağrılar yarım kalmış bir hedeften
+      // devam etmesin.
+      //
+      // **Bu geri alma TAM DEĞİLDİR ve olamaz.** `onEnter` fırlatmışsa
+      // `onExit(from)` ZATEN çalışmıştır: makine `from`'da görünür ama
+      // `from`'un çıkış temizliği yapılmıştır. Yırtık durum kaçınılmazdır;
+      // seçenek yalnızca hangi yarısında durulacağıdır ve kaynağa dönmek
+      // "bilinen bir duruma dön" olduğu için tercih edildi.
+      //
+      // Doğru çözüm çağırandadır: `onEnter` istisna-güvenli yazılmalı, ya da
+      // `onTransitionError` ile makine bilinçli bir kurtarma durumuna
+      // taşınmalıdır.
       this.current = from;
+      this.onTransitionError?.(error, from, to);
       throw error;
     } finally {
       this.transitioning = false;

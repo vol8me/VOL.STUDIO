@@ -96,8 +96,19 @@ export class Deck<T> {
   }
 
   /** İskartayı çekme yığınına katıp yeniden karar. */
+  /**
+   * İskartayı çekme yığınına katıp yeniden karar.
+   *
+   * `push(...spread)` KULLANILMAZ: argüman sayısı motor limitini aşınca
+   * `RangeError` fırlar. Üstelik `splice` önce çalıştığı için iskarta
+   * boşalmış oluyor ve hata anında TÜM DESTE kayboluyordu. Döngüyle taşımak
+   * hem limitsiz hem de ara durum bırakmıyor.
+   */
   reset(): void {
-    this.drawPile.push(...this.discardPile.splice(0, this.discardPile.length));
+    for (let i = 0; i < this.discardPile.length; i++) {
+      this.drawPile.push(this.discardPile[i]);
+    }
+    this.discardPile.length = 0;
     this.shuffleDrawPile();
   }
 

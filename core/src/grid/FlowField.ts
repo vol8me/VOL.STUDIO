@@ -1,58 +1,5 @@
+import { MinHeap } from '../collections/MinHeap';
 import { ORTHOGONAL_NEIGHBOURS, type GridPoint } from './Grid';
-
-/** Sabit kapasiteli ikili yığın — Dijkstra açık listesi için. */
-class MinHeap {
-  private readonly values: number[] = [];
-  private readonly keys: number[] = [];
-
-  get size(): number {
-    return this.values.length;
-  }
-
-  push(value: number, key: number): void {
-    this.values.push(value);
-    this.keys.push(key);
-    let i = this.values.length - 1;
-    while (i > 0) {
-      const parent = (i - 1) >> 1;
-      if (this.keys[parent] <= this.keys[i]) break;
-      this.swap(parent, i);
-      i = parent;
-    }
-  }
-
-  pop(): number | undefined {
-    if (this.values.length === 0) return undefined;
-    const top = this.values[0];
-    const lastValue = this.values.pop()!;
-    const lastKey = this.keys.pop()!;
-    if (this.values.length > 0) {
-      this.values[0] = lastValue;
-      this.keys[0] = lastKey;
-      let i = 0;
-      for (;;) {
-        const left = i * 2 + 1;
-        const right = left + 1;
-        let smallest = i;
-        if (left < this.keys.length && this.keys[left] < this.keys[smallest]) smallest = left;
-        if (right < this.keys.length && this.keys[right] < this.keys[smallest]) smallest = right;
-        if (smallest === i) break;
-        this.swap(smallest, i);
-        i = smallest;
-      }
-    }
-    return top;
-  }
-
-  private swap(a: number, b: number): void {
-    const v = this.values[a];
-    this.values[a] = this.values[b];
-    this.values[b] = v;
-    const k = this.keys[a];
-    this.keys[a] = this.keys[b];
-    this.keys[b] = k;
-  }
-}
 
 export interface FlowFieldOptions {
   /** Hücre geçilebilir mi? Verilmezse hepsi geçilebilir. */
@@ -127,7 +74,13 @@ export class FlowField {
     }
 
     while (queue.size > 0) {
+      // Gevşek silme (lazy deletion): maliyeti iyileşen düğüm yığına TEKRAR
+      // eklenir, eskisi içeride kalır. Anahtarı güncel maliyetten büyük olan
+      // giriş eskimiştir; atlanmazsa aynı düğüm defalarca genişletilir.
+      // Sonuç yine doğrudur (gevşetme canlı `costs` okur) ama iş boşa gider.
+      const staleKey = queue.peekKey()!;
       const current = queue.pop()!;
+      if (staleKey > this.costs[current]) continue;
       const col = current % cols;
       const row = Math.floor(current / cols);
 

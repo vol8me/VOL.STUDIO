@@ -1,3 +1,5 @@
+import { finiteOr, requireFinite } from '../math/numeric';
+
 /**
  * Delta-time ile sürülen zamanlayıcı — gecikmeli ve tekrarlı işler.
  *
@@ -46,6 +48,11 @@ export interface SchedulerOptions {
    * "neden bu iş bir süre çalışmadı?" sorusunu ayıklanamaz kılardı.
    */
   onCatchUpLimit?: (skipped: number) => void;
+  /**
+   * Bir callback içinden `update()` çağrıldığında bildirilir. Sessiz
+   * reddetme, "neden bu kare işlenmedi?" sorusunu ayıklanamaz kılardı.
+   */
+  onReentrantUpdate?: () => void;
 }
 
 export class Scheduler {
@@ -53,6 +60,7 @@ export class Scheduler {
   private nextId = 1;
   private readonly maxCatchUp: number;
   private readonly onCatchUpLimit?: (skipped: number) => void;
+  private readonly onReentrantUpdate?: () => void;
   /** update() içindeyken eklenen işler bu turda İŞLENMEZ (bkz. update). */
   private draining = false;
   private readonly pending: Task[] = [];
@@ -61,11 +69,12 @@ export class Scheduler {
     const limit = options.maxCatchUp ?? DEFAULT_MAX_CATCH_UP;
     this.maxCatchUp = limit > 0 ? limit : DEFAULT_MAX_CATCH_UP;
     this.onCatchUpLimit = options.onCatchUpLimit;
+    this.onReentrantUpdate = options.onReentrantUpdate;
   }
 
   /** Verilen süre sonra BİR KEZ çalışır. */
   after(delayMs: number, callback: () => void): CancelScheduled {
-    return this.add(delayMs, null, callback);
+    return this.add(requireFinite(delayMs, 'Scheduler delayMs'), null, callback);
   }
 
   /**
@@ -75,6 +84,7 @@ export class Scheduler {
    * içinde sonsuz döngü demektir.
    */
   every(intervalMs: number, callback: () => void): CancelScheduled {
+    requireFinite(intervalMs, 'Scheduler intervalMs');
     if (intervalMs <= 0) return () => {};
     return this.add(intervalMs, intervalMs, callback);
   }
@@ -86,18 +96,32 @@ export class Scheduler {
    * (uzun bir kare, kısa bir periyot). Bu bilinçlidir: aksi halde kare
    * düşmelerinde iş sessizce YİYİLİR ve mantık gerçek zamandan geri kalır.
    *
+   * **Yeniden giriş REDDEDİLİR.** Bir callback içinden `update()` çağrılırsa
+   * çağrı sessizce yok sayılır ve `false` döner. Aksi halde iç çağrı zamanı
+   * bir kez daha ilerletir (tek 10ms'lik kare içinde aynı iş üç kez çalışır),
+   * üstelik `draining` bayrağını erken düşürerek "yayın sırasında eklenen iş
+   * bu turda çalışmaz" garantisini de kırar.
+   *
+   * @returns Kare işlendiyse `true`; yeniden giriş yüzünden atlandıysa `false`.
+   *
    * Ama `maxCatchUp` ile SINIRLIDIR (bkz. `DEFAULT_MAX_CATCH_UP`): sınırsız
    * telafi, donmuş bir sekmeden dönüşte tek karede yüz binlerce çağrı demektir.
    * Sınıra takılan iş kalan borcunu düşer ve `onCatchUpLimit` ile bildirir.
    */
-  update(deltaMs: number): void {
-    if (deltaMs <= 0) return;
+  update(deltaMs: number): boolean {
+    if (this.draining) {
+      this.onReentrantUpdate?.();
+      return false;
+    }
+
+    const delta = finiteOr(deltaMs, 0);
+    if (delta <= 0) return true;
 
     this.draining = true;
     for (const task of this.tasks) {
       if (task.cancelled) continue;
 
-      task.remainingMs -= deltaMs;
+      task.remainingMs -= delta;
 
       // `while`: uzun bir karede birikmiş tetiklenmeler atlanmaz — ama
       // sınırsız değil (bkz. DEFAULT_MAX_CATCH_UP).
@@ -129,6 +153,7 @@ export class Scheduler {
       this.pending.length = 0;
     }
     this.purge();
+    return true;
   }
 
   /** Kayıtlı (iptal edilmemiş) iş sayısı — teşhis ve test için. */

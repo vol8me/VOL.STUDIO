@@ -1,3 +1,4 @@
+import { requireFinite } from '../math/numeric';
 import { Cooldown } from './Cooldown';
 
 export interface RoundLoopOptions {
@@ -44,8 +45,10 @@ export class RoundLoop {
   private completed = false;
 
   constructor(options: RoundLoopOptions) {
-    this.round = options.startRound ?? 1;
-    this.breakTimer = new Cooldown(Math.max(0, options.breakMs));
+    this.round = requireFinite(options.startRound ?? 1, 'RoundLoop startRound');
+    this.breakTimer = new Cooldown(
+      Math.max(0, requireFinite(options.breakMs, 'RoundLoop breakMs')),
+    );
     this.totalRounds = options.totalRounds;
     this.onRoundStart = options.onRoundStart;
     this.onComplete = options.onComplete;

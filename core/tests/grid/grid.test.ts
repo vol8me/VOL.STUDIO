@@ -58,7 +58,7 @@ describe('Grid', () => {
   it('forEach tüm hücreleri satır satır gezer', () => {
     const grid = new Grid<number>(2, 2);
     const visited: string[] = [];
-    grid.forEach((_, { col, row }) => visited.push(`${col},${row}`));
+    grid.forEach((_, col, row) => visited.push(`${col},${row}`));
 
     expect(visited).toEqual(['0,0', '1,0', '0,1', '1,1']);
   });
@@ -70,7 +70,7 @@ describe('Grid', () => {
     grid.forEachFilled(visit);
 
     expect(visit).toHaveBeenCalledTimes(1);
-    expect(visit).toHaveBeenCalledWith(7, { col: 1, row: 0 });
+    expect(visit).toHaveBeenCalledWith(7, 1, 0);
   });
 
   it('neighbours sınır dışını ELER', () => {
@@ -112,5 +112,81 @@ describe('Grid', () => {
   it('negatif dünya koordinatı negatif hücreye düşer (sessizce 0a kırpılmaz)', () => {
     const grid = new Grid<number>(4, 4);
     expect(grid.toCell(-5, -5, 10)).toEqual({ col: -1, row: -1 });
+  });
+
+  describe('tam sayı sözleşmesi', () => {
+    it('KESİRLİ indekse yazmak REDDEDİLİR', () => {
+      // Ölçülen eski davranış: set(1.5, 1, 'x') true dönüyor, get(1.5, 1)
+      // değeri geri veriyor, ama filledCount 0 kalıyordu — değer dizide
+      // "1.5" adlı normal bir ÖZELLİK olarak yaşıyor, forEach/clear onu hiç
+      // görmüyordu. Görünmez, temizlenmeyen veri.
+      const grid = new Grid<string>(3, 3);
+
+      expect(grid.set(1.5, 1, 'x')).toBe(false);
+      expect(grid.get(1.5, 1)).toBeUndefined();
+      expect(grid.filledCount).toBe(0);
+    });
+
+    it('NaN/Infinity indeks reddedilir', () => {
+      const grid = new Grid<string>(3, 3);
+      expect(grid.set(NaN, 1, 'x')).toBe(false);
+      expect(grid.set(1, Infinity, 'x')).toBe(false);
+      expect(grid.filledCount).toBe(0);
+    });
+
+    it('inBounds kesirli koordinata false der', () => {
+      const grid = new Grid<string>(3, 3);
+      expect(grid.inBounds(1, 1)).toBe(true);
+      expect(grid.inBounds(1.5, 1)).toBe(false);
+    });
+
+    it('kesirli indekste yazılan veri clear ile temizlenebilir kalır', () => {
+      const grid = new Grid<string>(2, 2, () => 'dolu');
+      grid.set(0.5, 0, 'sizinti');
+      grid.clear();
+
+      expect(grid.filledCount).toBe(0);
+    });
+  });
+
+  describe('tahsis-sız gezinme', () => {
+    it('forEachNeighbour sınır dışını eler', () => {
+      const grid = new Grid<number>(3, 3);
+      const seen: string[] = [];
+      grid.forEachNeighbour(0, 0, (col, row) => seen.push(`${col},${row}`));
+
+      expect(seen.sort()).toEqual(['0,1', '1,0']);
+    });
+
+    it('forEachNeighbour ve neighbours AYNI kümeyi verir', () => {
+      const grid = new Grid<number>(4, 4);
+      const viaCallback: string[] = [];
+      grid.forEachNeighbour(
+        1,
+        1,
+        (col, row) => viaCallback.push(`${col},${row}`),
+        DIAGONAL_NEIGHBOURS,
+      );
+
+      const viaArray = grid.neighbours(1, 1, DIAGONAL_NEIGHBOURS).map((p) => `${p.col},${p.row}`);
+
+      expect(viaCallback.sort()).toEqual(viaArray.sort());
+    });
+
+    it('koordinat SAYI olarak verilir — aliasing imkânsız', () => {
+      // Yeniden kullanılan tek bir {col,row} nesnesi tahsisi önlerdi ama
+      // çağıran koordinatı saklarsa hepsi aynı nesneye bakardı; sayılar bu
+      // ikilemi tamamen ortadan kaldırır.
+      const grid = new Grid<number>(2, 2);
+      const captured: Array<[number, number]> = [];
+      grid.forEach((_, col, row) => captured.push([col, row]));
+
+      expect(captured).toEqual([
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ]);
+    });
   });
 });

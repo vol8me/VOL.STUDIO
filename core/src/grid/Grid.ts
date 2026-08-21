@@ -54,9 +54,24 @@ export class Grid<T> {
     }
   }
 
-  /** Koordinat ızgaranın içinde mi? */
+  /**
+   * Koordinat ızgaranın içinde mi?
+   *
+   * TAM SAYI olması da şarttır. Eskiden yalnızca sınır kontrol ediliyordu ve
+   * `set(1.5, 1, x)` `true` dönüyordu: değer dizide `"1.5"` adlı normal bir
+   * ÖZELLİK olarak yazılıyor, `get(1.5, 1)` onu geri veriyor, ama
+   * `forEach`/`filledCount`/`clear` hiç görmüyordu — görünmez, temizlenmeyen
+   * veri.
+   */
   inBounds(col: number, row: number): boolean {
-    return col >= 0 && row >= 0 && col < this.cols && row < this.rows;
+    return (
+      Number.isInteger(col) &&
+      Number.isInteger(row) &&
+      col >= 0 &&
+      row >= 0 &&
+      col < this.cols &&
+      row < this.rows
+    );
   }
 
   /** Hücre değeri; sınır dışında ya da boşsa `undefined`. */
@@ -87,26 +102,56 @@ export class Grid<T> {
     return count;
   }
 
-  /** Her hücre için sırayla (satır satır) çağırır. */
-  forEach(visit: (value: T | undefined, point: GridPoint) => void): void {
+  /**
+   * Her hücre için sırayla (satır satır) çağırır.
+   *
+   * Koordinat, nesne yerine AYRI SAYILAR olarak verilir. Hücre başına
+   * `{col,row}` üretmek 100×100'lük bir ızgarada tek gezinmede 10.000 tahsis
+   * demektir; tek bir nesneyi yeniden kullanmak ise sessiz aliasing yaratır
+   * (çağıran koordinatı saklarsa hepsi aynı nesneye bakar). Sayılar bu
+   * ikilemin ikisini de ortadan kaldırır.
+   */
+  forEach(visit: (value: T | undefined, col: number, row: number) => void): void {
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
-        visit(this.cells[row * this.cols + col], { col, row });
+        visit(this.cells[row * this.cols + col], col, row);
       }
     }
   }
 
   /** Yalnızca DOLU hücreleri gezer. */
-  forEachFilled(visit: (value: T, point: GridPoint) => void): void {
-    this.forEach((value, point) => {
-      if (value !== undefined) visit(value, point);
+  forEachFilled(visit: (value: T, col: number, row: number) => void): void {
+    this.forEach((value, col, row) => {
+      if (value !== undefined) visit(value, col, row);
     });
   }
 
   /**
-   * Komşu hücrelerin koordinatları — sınır dışındakiler ELENİR.
+   * Komşuları TAHSİS ETMEDEN gezer — sıcak döngüler için.
    *
-   * @param offsets Komşuluk tanımı; varsayılan dört yön.
+   * `neighbours()` her çağrıda bir dizi ve komşu başına bir nesne üretir;
+   * kare başına binlerce kez çağrılan bir hesapta bu ölçülebilir çöp demektir.
+   * Koordinat burada da nesne değil ayrı sayılardır — aliasing riski yok.
+   */
+  forEachNeighbour(
+    col: number,
+    row: number,
+    visit: (col: number, row: number) => void,
+    offsets: readonly GridPoint[] = ORTHOGONAL_NEIGHBOURS,
+  ): void {
+    for (const offset of offsets) {
+      const nc = col + offset.col;
+      const nr = row + offset.row;
+      if (!this.inBounds(nc, nr)) continue;
+      visit(nc, nr);
+    }
+  }
+
+  /**
+   * Komşu hücrelerin koordinatları — sınır dışındakiler elenir.
+   *
+   * Her çağrıda yeni dizi ve nesne üretir; sıcak döngülerde
+   * `forEachNeighbour` tercih edilmelidir.
    */
   neighbours(
     col: number,

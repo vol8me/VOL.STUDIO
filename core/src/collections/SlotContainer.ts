@@ -59,8 +59,14 @@ export class SlotContainer<TItem> {
     return this.usedSlots === this.slots.length;
   }
 
-  /** Slot içeriği (kopya); boşsa `null`. */
+  /**
+   * Slot içeriği (kopya); boş ya da geçersiz indekste `null`.
+   *
+   * Aralık dışı ve kesirli indeks de `null` döner — dizi erişimi `undefined`
+   * verse bile sözleşme `null`dur.
+   */
   get(index: number): Slot<TItem> | null {
+    if (!this.inRange(index)) return null;
     const slot = this.slots[index];
     return slot ? { ...slot } : null;
   }
@@ -132,10 +138,18 @@ export class SlotContainer<TItem> {
     return removed;
   }
 
-  /** Slotu boşaltır ve içeriğini döner. */
+  /**
+   * Slotu boşaltır ve içeriğini döner. Geçersiz indekste `null` döner ve
+   * HİÇBİR ŞEY yazmaz.
+   *
+   * Eskiden sınır kontrolü `inRange` yerine elle yapılıyor ve tam sayılığı
+   * atlıyordu: `clearSlot(1.5)` diziye `"1.5"` adlı bir özellik ekliyor,
+   * `fill()` onu temizleyemiyordu.
+   */
   clearSlot(index: number): Slot<TItem> | null {
+    if (!this.inRange(index)) return null;
     const slot = this.slots[index] ?? null;
-    if (index >= 0 && index < this.slots.length) this.slots[index] = null;
+    this.slots[index] = null;
     return slot;
   }
 

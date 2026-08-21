@@ -108,4 +108,67 @@ describe('ObjectPool', () => {
     p.acquire();
     expect(create).toHaveBeenCalledTimes(1);
   });
+
+  describe('sahiplik', () => {
+    it('havuzdan ALINMAMIŞ nesnenin iadesi REDDEDİLİR', () => {
+      // Eskiden yabancı nesne havuza giriyor, activeCount'ı sahibi olmadığı
+      // hâlde düşürüyor ve bir sonraki acquire() ile başka bir çağırana
+      // dağıtılıyordu — iki sahip aynı örneği paylaşıyordu.
+      const p = pool();
+      p.acquire();
+      const foreign = { id: 999, owner: null };
+
+      expect(() => p.release(foreign)).toThrow(/alınmamış/);
+      expect(p.getIdleCount()).toBe(0);
+      expect(p.getActiveCount()).toBe(1);
+    });
+
+    it('reddedilen iade havuzun içeriğini kirletmez', () => {
+      const p = pool();
+      const owned = p.acquire();
+      const foreign = { id: 999, owner: null };
+
+      try {
+        p.release(foreign);
+      } catch {
+        /* beklenen */
+      }
+
+      p.release(owned);
+      expect(p.acquire()).toBe(owned);
+    });
+
+    it('aktif sayaç gerçek sahiplikten türer', () => {
+      const p = pool();
+      const a = p.acquire();
+      const b = p.acquire();
+      expect(p.getActiveCount()).toBe(2);
+
+      p.release(a);
+      expect(p.getActiveCount()).toBe(1);
+
+      p.release(b);
+      expect(p.getActiveCount()).toBe(0);
+    });
+
+    it('maxIdle yüzünden tutulmayan örnek yine de sahiplikten düşer', () => {
+      const p = pool({ maxIdle: 0 });
+      const item = p.acquire();
+      p.release(item);
+
+      expect(p.getActiveCount()).toBe(0);
+      expect(p.getIdleCount()).toBe(0);
+      // Havuz onu saklamadı; tekrar iade edilemez.
+      expect(() => p.release(item)).toThrow(/alınmamış/);
+    });
+
+    it('clear sonrası aktif örnek HÂLÂ iade edilebilir', () => {
+      // Havuz aktif örneklerin sahibi değildir; clear onları düşürmemeli.
+      const p = pool({ prewarm: 2 });
+      const active = p.acquire();
+      p.clear();
+
+      expect(() => p.release(active)).not.toThrow();
+    });
+  });
 });

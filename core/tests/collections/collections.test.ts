@@ -3,6 +3,7 @@ import { RingBuffer } from '../../src/collections/RingBuffer';
 import { Deck } from '../../src/collections/Deck';
 import { SlotContainer } from '../../src/collections/SlotContainer';
 import { createRandom } from '../../src/random/random';
+import { MinHeap } from '../../src/collections/MinHeap';
 
 describe('RingBuffer', () => {
   it('kapasite pozitif tam sayı olmalı', () => {
@@ -314,5 +315,107 @@ describe('SlotContainer', () => {
 
     bag.clear();
     expect(bag.usedSlots).toBe(0);
+  });
+});
+
+describe('koleksiyon sınır sözleşmeleri', () => {
+  it('SlotContainer.get aralık dışında NULL döner (undefined değil)', () => {
+    const bag = new SlotContainer<string>({ size: 2 });
+    bag.add('a');
+
+    expect(bag.get(99)).toBeNull();
+    expect(bag.get(-1)).toBeNull();
+    expect(bag.get(1.5)).toBeNull();
+  });
+
+  it('SlotContainer.clearSlot kesirli indekste diziyi KİRLETMEZ', () => {
+    // Ölçülen eski davranış: slots anahtarları ["0","1","1.5"] oluyordu ve
+    // fill() o özelliği temizleyemiyordu.
+    const bag = new SlotContainer<string>({ size: 2 });
+    bag.add('a');
+
+    expect(bag.clearSlot(1.5)).toBeNull();
+    const raw = (bag as unknown as { slots: unknown[] }).slots;
+    expect(Object.keys(raw)).toEqual(['0', '1']);
+  });
+
+  it('SlotContainer.clearSlot geçerli indekste çalışmaya devam eder', () => {
+    const bag = new SlotContainer<string>({ size: 2 });
+    bag.add('a');
+
+    expect(bag.clearSlot(0)).toEqual({ item: 'a', count: 1 });
+    expect(bag.usedSlots).toBe(0);
+  });
+
+  it('Deck.reset BÜYÜK destede patlamaz ve kart kaybetmez', () => {
+    // Ölçülen eski davranış: push(...spread) 200k kartta RangeError
+    // fırlatıyor, splice zaten çalıştığı için TÜM DESTE kayboluyordu.
+    const size = 200_000;
+    const cards = Array.from({ length: size }, (_, i) => i);
+    const deck = new Deck(cards, createRandom(1));
+
+    deck.drawMany(size).forEach((c) => deck.discard(c));
+    expect(deck.discarded).toBe(size);
+
+    expect(() => deck.reset()).not.toThrow();
+    expect(deck.remaining).toBe(size);
+    expect(deck.discarded).toBe(0);
+  });
+});
+
+describe('MinHeap', () => {
+  it('en küçük anahtarlı değeri sırayla verir', () => {
+    const heap = new MinHeap();
+    [5, 1, 4, 2, 3].forEach((n) => heap.push(n * 10, n));
+
+    const order: number[] = [];
+    while (heap.size > 0) order.push(heap.pop()!);
+    expect(order).toEqual([10, 20, 30, 40, 50]);
+  });
+
+  it('boş yığın undefined döner', () => {
+    const heap = new MinHeap();
+    expect(heap.pop()).toBeUndefined();
+    expect(heap.peekKey()).toBeUndefined();
+  });
+
+  it('peekKey en küçük anahtarı çekmeden verir', () => {
+    const heap = new MinHeap();
+    heap.push(100, 7);
+    heap.push(200, 3);
+
+    expect(heap.peekKey()).toBe(3);
+    expect(heap.size).toBe(2);
+  });
+
+  it('eşit anahtarlarla çökmez', () => {
+    const heap = new MinHeap();
+    for (let i = 0; i < 10; i++) heap.push(i, 1);
+    expect(heap.size).toBe(10);
+
+    const drained: number[] = [];
+    while (heap.size > 0) drained.push(heap.pop()!);
+    expect(drained.sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  });
+
+  it('clear yığını boşaltır', () => {
+    const heap = new MinHeap();
+    heap.push(1, 1);
+    heap.clear();
+    expect(heap.size).toBe(0);
+  });
+
+  it('rastgele girdide sıralı boşalır (yığın değişmezi)', () => {
+    const heap = new MinHeap();
+    const keys = Array.from({ length: 200 }, (_, i) => (i * 37) % 200);
+    keys.forEach((k, i) => heap.push(i, k));
+
+    let previous = -Infinity;
+    while (heap.size > 0) {
+      const key = heap.peekKey()!;
+      heap.pop();
+      expect(key).toBeGreaterThanOrEqual(previous);
+      previous = key;
+    }
   });
 });

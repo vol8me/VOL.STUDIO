@@ -1,3 +1,4 @@
+import { MinHeap } from '../collections/MinHeap';
 import { ORTHOGONAL_NEIGHBOURS, type GridPoint } from './Grid';
 
 export interface FindPathOptions {
@@ -15,62 +16,6 @@ export interface FindPathOptions {
    * haritayı taramasını sınırlar. Varsayılan `cols * rows`.
    */
   maxNodes?: number;
-}
-
-/** Sabit kapasiteli ikili yığın (min-heap) — A*'ın açık listesi. */
-class MinHeap {
-  private readonly keys: number[] = [];
-  private readonly values: number[] = [];
-
-  get size(): number {
-    return this.values.length;
-  }
-
-  clear(): void {
-    this.values.length = 0;
-    this.keys.length = 0;
-  }
-
-  push(value: number, key: number): void {
-    this.values.push(value);
-    this.keys.push(key);
-    let i = this.values.length - 1;
-    while (i > 0) {
-      const parent = (i - 1) >> 1;
-      if (this.keys[parent] <= this.keys[i]) break;
-      this.swap(parent, i);
-      i = parent;
-    }
-  }
-
-  pop(): number | undefined {
-    if (this.values.length === 0) return undefined;
-    const top = this.values[0];
-    const lastValue = this.values.pop()!;
-    const lastKey = this.keys.pop()!;
-
-    if (this.values.length > 0) {
-      this.values[0] = lastValue;
-      this.keys[0] = lastKey;
-      let i = 0;
-      for (;;) {
-        const left = i * 2 + 1;
-        const right = left + 1;
-        let smallest = i;
-        if (left < this.keys.length && this.keys[left] < this.keys[smallest]) smallest = left;
-        if (right < this.keys.length && this.keys[right] < this.keys[smallest]) smallest = right;
-        if (smallest === i) break;
-        this.swap(i, smallest);
-        i = smallest;
-      }
-    }
-    return top;
-  }
-
-  private swap(a: number, b: number): void {
-    [this.values[a], this.values[b]] = [this.values[b], this.values[a]];
-    [this.keys[a], this.keys[b]] = [this.keys[b], this.keys[a]];
-  }
 }
 
 /**

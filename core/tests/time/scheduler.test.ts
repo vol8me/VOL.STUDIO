@@ -211,4 +211,60 @@ describe('Scheduler', () => {
       expect(fn).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('yeniden giriş (reentrancy)', () => {
+    it('callback içinden update() REDDEDİLİR', () => {
+      // Ölçülen eski davranış: tek update(10) çağrısı callback'i ÜÇ kez
+      // çalıştırıyordu, çünkü iç çağrı zamanı yeniden ilerletiyordu.
+      const scheduler = new Scheduler();
+      let calls = 0;
+      let innerResult: boolean | null = null;
+
+      scheduler.every(10, () => {
+        calls++;
+        if (calls === 1) innerResult = scheduler.update(10);
+      });
+
+      expect(scheduler.update(10)).toBe(true);
+      expect(calls).toBe(1);
+      expect(innerResult).toBe(false);
+    });
+
+    it('reddedilen yeniden giriş bildirilir', () => {
+      const onReentrantUpdate = vi.fn();
+      const scheduler = new Scheduler({ onReentrantUpdate });
+      scheduler.every(10, () => scheduler.update(10));
+
+      scheduler.update(10);
+      expect(onReentrantUpdate).toHaveBeenCalledTimes(1);
+    });
+
+    it('yeniden giriş sonrası scheduler normal çalışmaya devam eder', () => {
+      const scheduler = new Scheduler();
+      let calls = 0;
+      scheduler.every(10, () => {
+        calls++;
+        scheduler.update(10);
+      });
+
+      scheduler.update(10);
+      scheduler.update(10);
+      expect(calls).toBe(2);
+    });
+
+    it('yeniden giriş "sonraki turda çalış" garantisini korur', () => {
+      const scheduler = new Scheduler();
+      const late = vi.fn();
+      scheduler.every(10, () => {
+        scheduler.update(10); // reddedilir
+        scheduler.after(0, late);
+      });
+
+      scheduler.update(10);
+      expect(late).not.toHaveBeenCalled();
+
+      scheduler.update(1);
+      expect(late).toHaveBeenCalledTimes(1);
+    });
+  });
 });

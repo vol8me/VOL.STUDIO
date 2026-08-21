@@ -5,6 +5,21 @@ CORE'un **katman 1**'i: sunumdan bağımsız, doğrudan alınıp kullanılan par
 Her primitif yaptığı işle tanımlanır — nerede kullanılacağıyla değil. Hangi
 oyunun neye ihtiyacı olduğu CORE'un kararı değildir.
 
+## Sonlu sayı sözleşmesi
+
+Her primitif dış dünyadan gelen sayıyı **sınırda** doğrular. `NaN`/`Infinity`
+bir kez duruma girdiğinde her aritmetiği kirletir ve kaynağı çok sonra,
+tamamen ilgisiz bir yerde fark edilir.
+
+İki politika vardır ve seçim bilinçlidir:
+
+| Politika                     | Nerede                                                                  | Neden                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **Reddet** (`requireFinite`) | Yapılandırma: `new Cooldown(ms)`, `breakMs`, `cellSize`, kaynak miktarı | Bozuk değer çağıranın hatasıdır; sessizce düzeltmek onu kullanıma kadar erteler |
+| **Yoksay** (`finiteOr`)      | Akış: `update(deltaMs)`                                                 | Tek bozuk kare yüzünden oyunu durdurmak orantısız olurdu                        |
+
+`core/tests/governance/numericContract.test.ts` bunu kapıda doğrular.
+
 ## CORE'un üç katmanı
 
 | Katman        | Ne yapar                                     | Örnek                                       |
@@ -33,6 +48,11 @@ ilerlemez.
 
 Gecikmeli ve tekrarlı işler. Deterministiktir: aynı delta dizisi aynı
 tetiklenme sırasını üretir.
+
+**Yeniden giriş reddedilir:** bir callback içinden `update()` çağrılırsa çağrı
+yok sayılır ve `false` döner. Aksi halde iç çağrı zamanı bir kez daha ilerletir
+(ölçüldü: tek 10ms'lik kare içinde aynı iş üç kez çalışıyordu) ve "yayın
+sırasında eklenen iş bu turda çalışmaz" garantisini kırar.
 
 ```ts
 const scheduler = new Scheduler({ maxCatchUp: 32 });
@@ -118,6 +138,13 @@ const machine = new StateMachine<'draft' | 'review' | 'done'>({
 Kanca sırası `onExit` → durum değişimi → `onEnter`; `onEnter` içinde
 `getState()` YENİ durumu görür.
 
+**Kanca hatası:** bir kanca fırlatırsa makine kaynağa döner ve hata yeniden
+fırlar. Bu geri alma **tam değildir ve olamaz** — `onEnter` fırlamışsa
+`onExit(from)` zaten çalışmıştır, yani makine `from`'da görünürken `from`'un
+çıkış temizliği yapılmıştır. Yırtık durum kaçınılmaz; seçenek yalnızca hangi
+yarısında durulacağı. Doğru çözüm çağırandadır: `onEnter` istisna-güvenli
+yazılmalı ya da `onTransitionError` ile bilinçli bir kurtarma yapılmalıdır.
+
 ### `ResourcePool`
 
 Tipli sayaç cüzdanı. Kaynak kümesini **tüketici** tanımlar —
@@ -163,7 +190,9 @@ hücrede ne var" sorusunu yanıtlar.
 const grid = new Grid<T>(cols, rows);
 grid.set(col, row, value); // sınır dışı → false, sessiz taşma yok
 grid.get(col, row); // sınır dışı → undefined
-grid.neighbours(col, row, DIAGONAL_NEIGHBOURS);
+grid.neighbours(col, row, DIAGONAL_NEIGHBOURS); // dizi + nesne tahsis eder
+grid.forEachNeighbour(col, row, (c, r) => {}); // tahsis-sız, sıcak döngüler için
+grid.forEach((value, col, row) => {}); // koordinat SAYI — aliasing imkânsız
 grid.toCell(x, y, cellSize);
 grid.toWorld(col, row, cellSize); // hücre MERKEZİ
 ```
@@ -283,6 +312,10 @@ Sık doğup ölen kısa ömürlü nesneler. Amaç allocation'ı değil **çöp t
 azaltmak: kare başına yüzlerce nesne, GC'yi görünür takılmalar üretecek
 sıklıkta tetikler.
 
+Havuz **sahiplik** takip eder: `acquire` edilmemiş bir nesnenin iadesi hata
+fırlatır. Aksi halde yabancı nesne havuza girer ve bir sonraki `acquire()` ile
+başka bir çağırana dağıtılırdı — iki sahip aynı örneği paylaşır.
+
 ```ts
 const pool = new ObjectPool<T>({
   create: () => new T(),
@@ -314,7 +347,17 @@ index.query(x, y); // 3×3 hücre — YALNIZCA yarıçap ≤ cellSize iken doğr
 index.queryRadius(x, y, r); // her yarıçapta doğru, daireye göre filtreli
 index.queryBounds(x, y, w, h); // dikdörtgen bölge (negatif boyut normalize)
 index.findNearest(x, y, r, self); // en yakın, kendini hariç tutabilir
+
+index.queryInto(mine, x, y); // ÇAĞIRANIN dizisine yazar — süresiz saklanabilir
+index.queryRadiusInto(mine, x, y, r);
 ```
+
+**Sonuç tamponu:** `query*` metodları 4'lük bir halkadan yeniden kullanılan dizi
+döner. Dördüncü sorgudan sonra halka devreder ve saklanan eski bir sonuç
+**uyarısız** başka bir sorgunun verisine dönüşür (ölçüldü: 5 sonuç tutulduğunda
+birincisi beşincinin verisi oluyordu). Sonucu saklaman gerekiyorsa `queryInto`
+kullan; teşhis için `queryStamp()` + `assertQueryValid(stamp)` bozulmayı
+gürültülü hâle getirir.
 
 **Sözleşme farkı önemlidir:** `query()` sabit 3×3 pencere tarar; arama yarıçapı
 `cellSize`'ı aşarsa uzaktaki varlığı **sessizce** kaçırır. Bu, ölçü
