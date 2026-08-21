@@ -94,6 +94,12 @@ silinir; kronolojiye not düşülmez.
   ayrı bir tur.
 - `PlayerController` takma adı `@deprecated` olarak duruyor; kaldırma bir
   sonraki büyük sürümde.
+- **Görsel sentez (`core/visual/` + `games/vol-forge`) tasarlandı ama
+  YAZILMADI.** Doktrin, veri modeli, primitif envanteri, algoritma notları ve
+  beş turluk uygulama sırası `core/docs/visual-synthesis.md`de. Kod yok;
+  belgedeki §13 açık kalanları karar bekliyor. Ses motorunun aynı editör
+  kabuğuna taşınması D11'de dikiş olarak işaretli ama görsel kanıtlanmadan
+  başlanmayacak.
 - **`AGENTS.md` ve `games/design/AGENTS.md` gitignore'da** (`.gitignore:2-3`) ve
   hiç commit edilmemiş. Bilinçli bir tercih (agent talimatları yerelde kalıyor)
   ama sonucu şu: bu dosyalara yapılan güncellemeler HİÇBİR commit'e girmez ve
