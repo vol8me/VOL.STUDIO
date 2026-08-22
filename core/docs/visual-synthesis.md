@@ -941,49 +941,341 @@ Nicemleme sonrası çıktıda palet dışı piksel **kalmaz**. `visual-qa` bunu
 
 ## 8. Editör (`games/vol-forge`)
 
-Kullanıcı içindir; agent CLI'dan sürer (§10). Bileşenler `core/src/ui`'den
-gelir — ImGui benzeri bir bağımlılık **eklenmez** (repo zaten kendi
-immediate-benzeri kontrol setine sahip).
+**Kullanıcı içindir; agent CLI'dan sürer (§10).** İkisi aynı çekirdeği çağırır,
+dolayısıyla ikisi de aynı çıktıyı üretir — editör bir önizleme oyuncağı değil,
+belgenin ikinci bir giriş yoludur.
 
-### 8.1 Düzen
+Dört karar bu bölümün tamamını belirliyor:
+
+1. **Hem sıfırdan kurma hem ayar çekme** eşit ağırlıkta. Editör ne salt bir
+   ayar masası ne salt bir yapım tezgahı; ikisi de birinci sınıf.
+2. **Tam ağaç düzenleme.** Şeklin iç içe yapısı editörden değiştirilebilir
+   (bkz. §8.5), yalnızca sayıları oynatmakla sınırlı değil.
+3. **Canlı önizleme**, kaydırıcı çekilirken. Bunun bedeli çözünürlük
+   yönetimidir (bkz. §8.8).
+4. **Çıktılar repoya düşer**, kategori klasörlerine (bkz. §8.11).
+
+Bileşenler `core/src/ui`'den gelir — ImGui benzeri bir bağımlılık **eklenmez**
+(repo zaten kendi kontrol setine sahip).
+
+### 8.1 Paket biçimi — Phaser YOK
+
+`vol-ui` Phaser içinde yaşar çünkü bir OYUN vitrinidir. Editör oyun değildir ve
+`core/src/ui` Phaser'a hiç bağlı değildir: `UIRoot` kendi belgesinde "canvas/oyun
+döngüsünden bağımsız tam ekran DOM UI katmanı" diye tanımlı ve `core/src/ui`
+altında tek bir Phaser importu yok. Kontroller `HTMLDivElement` ve
+`<input type="range">` üzerine kurulu.
+
+Dolayısıyla `vol-forge` **Vite + DOM**tur; `createVolGame` çağırmaz. Üç gerekçe:
+
+- Sırf DOM bir arayüz için ~1 MB Phaser paketlemek karşılıksız bir bedeldir.
+- `createVolGame`'in görüntü alanı ölçeklemesi OYUN içindir; editör normal
+  tarayıcı yerleşimi, kaydırma ve pencere yeniden boyutlandırma ister.
+- Önizleme doğrudan bir `<canvas>`a `putImageData` ile yazılır; Phaser dokusu
+  aradan çıkınca yükleme adımı da çıkar.
+
+Bu, "vol-ui kardeşi" tarifinden bilinçli bir sapmadır: kardeşlik BİLEŞEN
+setinde ve depo kurallarındadır, barındırma kabuğunda değil.
+
+`workspace-contract` gereği paket `typecheck`, `test`, `test:coverage`
+script'leriyle ve kök `quality.json`da bir eşik girdisiyle gelir; taban
+50/50/50/40 (§11.3).
+
+### 8.2 Düzen
 
 ```
-┌───────────────┬──────────────────────────┬──────────────┐
-│ KATMAN LİSTESİ│        ÖNİZLEME          │  PARAMETRE   │
-│ (sürükle-sırala│  1:1 · yakınlaştırma     │  (şemadan    │
-│  göz/kilit)   │  3×3 döşeme              │   üretilir)  │
-│               │  kanal görüntüleyici     │              │
-├───────────────┴──────────────────────────┴──────────────┤
-│ PALET ŞERİDİ  (rampa düzenleme · kilit göstergesi)      │
-└──────────────────────────────────────────────────────────┘
+┌──────────────────┬──────────────────────────┬─────────────────────┐
+│ BELGE            │        ÖNİZLEME          │ PARAMETRE           │
+│                  │                          │  (seçili düğüm)     │
+│ ▸ katman listesi │  1:1 · tamsayı zoom      │                     │
+│   sürükle-sırala │  3×3 döşeme              │ ─────────────────── │
+│   göz · kilit    │  kanal görüntüleyici     │ BELGE AYARLARI      │
+│                  │                          │  size · seed ·      │
+│ ─────────────────│  [rozet: palet · dikiş]  │  tileable ·         │
+│ ▸ ŞEKİL AĞACI    │  [önizleme 128² /        │  antialias ·        │
+│   seçili katmanın│   çıktı 512²]            │  shade · post       │
+│   source/mask/   │                          │                     │
+│   height/matMask │                          │                     │
+├──────────────────┴──────────────────────────┴─────────────────────┤
+│ PALET ŞERİDİ            │ SORUNLAR (canlı) │ kategori ▾ [Kaydet]  │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
-### 8.2 Önizleme modları — hangileri ve NEDEN
+Sol sütun `ScrollView` içinde iki `Accordion` bölümü, sağ sütun `Tabs`.
+Ağaç `core/src/ui/layout/Tree.ts` ile çizilir.
 
-| Mod                             | Neden gerekli                                                                                                                                                      |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **1:1 + tamsayı yakınlaştırma** | Piksel sanatı 1:1 değerlendirilir; kesirli ölçek yanıltır. Yakınlaştırma **nearest** olmalı.                                                                       |
-| **3×3 döşeme**                  | Dikişsizliği gözle doğrulamanın tek yolu. `tileable: true` iken varsayılan.                                                                                        |
-| **Kanal görüntüleyici**         | `coverage` · `height` · `material` · `normal` · `shade` · final. **Hata ayıklamanın belkemiği**: "gölge neden yanlış?" sorusu ancak `height` görülünce cevaplanır. |
-| **Nicemleme öncesi/sonrası**    | Paletin ne kadarını kaybettiğini gösterir; dither ayarı buna bakılarak yapılır.                                                                                    |
-| **Palet uyum rozeti**           | Palet dışı piksel sayısı canlı. Sıfır değilse kırmızı.                                                                                                             |
+### 8.3 Belge durumu ve geri alma
+
+**Editörün tek doğruluk kaynağı TEK bir `SpriteDoc` nesnesidir.** Seçim,
+yakınlaştırma, açık akordeon gibi her şey ondan ayrı tutulur ve belgeye
+yazılmaz. Her düzenleme YENİ bir belge üretir (yerinde değiştirme yok); bu,
+geri almayı anlık görüntü yığınına indirger.
+
+Belgeler birkaç kilobayttır, dolayısıyla **tam anlık görüntü** alınır; fark
+tabanlı bir geçmiş burada kazanç değil karmaşıklık olurdu. Yığın 50 adımla
+sınırlıdır.
+
+**Kaydırıcı sürüklemesi TEK bir adıma indirilir.** Aksi hâlde tek bir sürükleme
+yüzlerce geri alma girdisi üretir ve geri alma kullanılamaz hâle gelir: aynı
+(düğüm yolu, parametre) çiftine 400 ms içinde gelen ardışık değişiklikler tek
+girdide birleştirilir.
+
+### 8.4 Katman listesi — göz ve kilit BELGEYE yazılmaz
+
+Sürükle-sırala belgeyi DEĞİŞTİRİR: katman sırası bileşim sırasıdır (D10).
+
+Göz (görünürlük) ve kilit ise **yalnızca editör durumudur**. Gerekçe Tur 4'ün
+kendi kanıtıdır: _editörde kurulan belge CLI'dan birebir aynı PNG'yi verir._
+Gizlenen bir katman render'ı etkileseydi editördeki görüntü ile CLI çıktısı
+ayrışırdı ve kanıt çökerdi. Kapatma niyeti zaten belgede ifade edilebiliyor:
+`opacity: 0`.
+
+Bir katman gizliyken önizlemenin üstünde kalıcı bir rozet durur ("2 katman
+gizli") — gizlediğini unutup çıktıyı yanlış değerlendirmek mümkün olmasın.
+
+### 8.5 Şekil ağacı — üç işlem yeter
+
+Şemadaki her `field` parametresi ZORUNLUdur; boş yuva diye bir şey yoktur.
+Bunun sonucu şu: yapısal düzenleme "çocuk ekle" değil, tam olarak üç işlemdir.
+
+| İşlem        | Ne yapar                                      | Örnek                     |
+| ------------ | --------------------------------------------- | ------------------------- |
+| **Değiştir** | Düğümün türünü değiştirir, alt ağacı korur    | `sdf.circle` → `sdf.star` |
+| **Sar**      | Düğümü YENİ bir düğümün içine koyar           | `min(…)` → `blur(min(…))` |
+| **Çıkar**    | Düğümü siler; çocuklarından BİRİ yerine geçer | `blur(min(…))` → `min(…)` |
+
+Üçü birlikte her ağacı her ağaca dönüştürebilir; dördüncü bir işlem gerekmez.
+
+**Değiştir — parametre eşlemesi.** Aynı adı taşıyan parametreler değerlerini
+KORUR (`center`, `r`, `freq`), kalanlar şemadaki varsayılanı alır. Şemadaki
+`default` alanının asıl tüketicisi budur.
+
+**Sar — boş kalan yuvalar.** `min` gibi iki alanlı bir düğümle sarıldığında
+ikinci yuva doldurulmalıdır. Editör oraya, sarılan düğümle **AYNI etki
+alanında** bir varsayılan koyar: `signed` ise bir `sdf.circle`, `unit` ise bir
+`const`. Böylece ağaç inşa gereği geçerli kalır ve kullanıcı hemen bir
+doğrulama hatasıyla karşılaşmaz.
+
+**Çıkar — hangi çocuk?** Tek girdili düğümlerde soru yok. `min`/`max`/`mix`
+gibi iki girdili düğümlerde editör hangisinin yerine geçeceğini sorar.
+
+**Etki alanı rozeti.** Her düğüm satırı çözümlenmiş etki alanını gösterir
+(`unit` / `signed`). Bir düğümü değiştirmek katmanın kapsamaya çevrilme
+biçimini değiştirebilir (§5.8); rozet bunu sürpriz olmaktan çıkarır. Bilgi
+zaten şemada var, ayrıca hesaplanmaz.
+
+**Sürükle DEĞİL, kes/yapıştır.** Ağaç içinde sürükleme belirsizdir: bırakılan
+yer çocuk mu, kardeş mi, hangi yuva? Kes/yapıştır hedefi açıkça seçtirir ve
+hem uygulaması hem kullanımı daha basittir. Sürükleme yalnızca DÜZ listelerde
+kullanılır: katmanlar ve `domain` zinciri.
+
+**Katman başına dört ağaç.** `source` · `mask` · `height` · `materialMask`.
+Üçü opsiyonel olduğu için katman panelinde sekme olarak durur; boş olanın
+sekmesinde "ekle" düğmesi vardır ve şemadan varsayılan bir düğüm kurar.
+
+**Alt-yığın maskeler.** `mask` bir alt-yığına çevrilebilir; ağaç o noktada iç
+içe bir katman listesi gösterir. Derinlik 4'te (D10) "sar" ve "alt-yığına
+çevir" eylemleri kapanır — hata mesajı yerine kapalı düğme, çünkü sınır
+kullanıcının yapabileceği bir şeyin sınırı, düzeltebileceği bir hata değil.
+
+### 8.6 Parametre paneli (D11)
+
+Kontroller şemadan üretilir; kırk küsur primitifin parametrelerini elle
+bağlamak sürdürülemez.
+
+| Şema tipi | Kontrol                                         |
+| --------- | ----------------------------------------------- |
+| `number`  | `Slider` (min/max/step şemadan)                 |
+| `int`     | `NumberStepper`                                 |
+| `bool`    | `Checkbox`                                      |
+| `enum`    | ≤4 seçenek `SegmentedControl`, fazlası `Select` |
+| `vec2`    | iki `Slider`                                    |
+| `points`  | **`CurveEditor` (YENİ, bkz. §8.12)**            |
+| `field`   | düzenlenmez — ağacın işi (aşağıya bak)          |
+
+**`field` parametreleri panelde DÜZENLENMEZ.** Panelde bir satır olarak
+görünür ve tıklandığında o çocuk düğümü seçer. Aksi hâlde aynı işi yapmanın
+iki yolu olurdu: ağaçta ve panelde. Ağaç yapıyı, panel sayıları yönetir.
+
+**Opsiyonel parametreler bir anahtarla açılır.** Anahtar kapalıyken alan
+belgeden TAMAMEN çıkarılır; varsayılan değeriyle yazılmaz. Her varsayılanı
+açıkça yazan bir belge diff'te okunmaz hâle gelir ve neyin bilinçli
+ayarlandığı kaybolur.
+
+Panel ayrıca düğümün şemadaki `description` metnini ve çözümlenmiş etki
+alanını gösterir.
+
+### 8.7 Palet şeridi
+
+Veri modeliyle aynı iki kip (§7.1):
+
+- **Veri kipi** (`colors` + `ramps`): renk kutucukları `ColorPicker` ile
+  düzenlenir; rampalar satır satır durur ve indeksleri sürükleyerek sıralanır.
+- **Sentez kipi** (`generate`): her istek için taban rengi `ColorPicker`,
+  `steps`/`hueShift`/`satCurve`/`lightRange` kontrolleri ve canlı güncellenen
+  kutucuklar.
+
+**"Sentezi veriye çevir" düğmesi** sentez sonucunu `colors` + `ramps` olarak
+yazar; tek renge elle dokunmak istediğinde çıkış kapın budur. Tek yönlüdür ve
+açıkça sorulur — geri dönüş elle yapılan her ayarı silerdi.
+
+Şeridin sağında **palet kilidi rozeti** durur: palet dışı piksel sayısı canlı,
+sıfır değilse kırmızı (D6).
+
+### 8.8 Canlı önizleme — bütçesiyle kendini ayarlayan çözünürlük
+
+Önizleme `renderSprite(doc, { size: önizlemeBoyu })` çağrısıdır — **aynı giriş
+noktası**, D2'nin `--size` ezmesiyle. İkinci bir çizim yolu yoktur, dolayısıyla
+editör ile CLI'ın ayrışma ihtimali de yoktur.
+
+Sorun şu: 64² birkaç milisaniye, 1024² filtrelerle bir saniyeye yakın sürer.
+Kaydırıcı çekilirken ikincisi kabul edilemez. Çözüm **ölçüm**:
+
+- Her render süresi ölçülür. Bütçe (24 ms) aşılırsa önizleme çözünürlüğü
+  yarıya iner; bütçenin belirgin altında kalırsa çıktı boyuna doğru geri
+  tırmanır. Belgenin ağırlığına göre kendini ayarlar, elle ayar istemez.
+- **Kuyruk YOK.** Bir render sürerken gelen değişiklikler birikmez; sürekli
+  en yeni belge kazanır, aradaki durumlar düşürülür. Aksi hâlde sürükleme
+  bittikten sonra saniyelerce geriden gelen kareler izlenirdi.
+- **Boşta tam çözünürlük.** ~300 ms değişiklik olmayınca önizleme bir kez
+  ÇIKTI boyunda render edilir. Çekerken hızlı, bıraktığında birebir.
+- Geçerli önizleme çözünürlüğü her zaman yazılıdır ("önizleme 128² / çıktı
+  512²") — kaba bir önizlemeyi gerçek çıktı sanmak mümkün olmasın.
+
+**Web Worker bilinçli olarak ERTELENDİ.** `core/visual` headless olduğu için
+(D8) render'ı bir worker'a taşımak yerinden oynatma işidir, yeniden yazma
+değil; ama tampon aktarımı ve mesajlaşma gerçek bir karmaşıklıktır ve ölçülen
+bütçe hiç gerektirmeyebilir. **Tetik:** tipik bir belgede bütçe 96²'de bile
+tutturulamıyorsa worker'a taşınır.
+
+### 8.9 Önizleme modları — hangileri ve NEDEN
+
+| Mod                             | Neden gerekli                                                                                                                                                           |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1:1 + tamsayı yakınlaştırma** | Piksel sanatı 1:1 değerlendirilir; kesirli ölçek yanıltır. Yakınlaştırma **nearest** olmalı.                                                                            |
+| **3×3 döşeme**                  | Dikişsizliği gözle doğrulamanın tek yolu. `tileable: true` iken varsayılan.                                                                                             |
+| **Kanal görüntüleyici**         | `coverage` · `height` · `material` · `shade` · `normal` · `outline` · final. **Hata ayıklamanın belkemiği**: "gölge neden yanlış?" ancak `height` görülünce cevaplanır. |
+| **Nicemleme öncesi/sonrası**    | Paletin ne kadarını kaybettiğini gösterir; dither ayarı buna bakılarak yapılır.                                                                                         |
+| **Ölçüm rozetleri**             | Palet uyumu, dikiş farkı, kontrast — `measureSprite` zaten hesaplıyor, gösterilmemesi için sebep yok.                                                                   |
+
+Yedi kanalın hepsi `RenderResult` içinde zaten var; görüntüleyici veri
+üretmez, olanı gösterir.
 
 Şeffaflık dama deseniyle gösterilir; düz renk zeminde alfa hatası görünmez.
 
-### 8.3 Kontroller şemadan üretilir (D11)
+### 8.10 Canlı doğrulama
 
-`number` → `Slider` (min/max/step şemadan) · `int` → `NumberStepper` ·
-`bool` → `Checkbox` · `enum` → `SegmentedControl` ya da `Select` ·
-`vec2` → iki `Slider` · `color` → **ColorPicker (YENİ, bkz. §11)** ·
-`field` → alt-düzenleyici (özyineleme, azami derinlik 4).
+`collectSpriteDocIssues` her belge değişiminde koşar — mikrosaniyeler sürer,
+tutmak için sebep yok. Sonuçlar alt şeritteki **SORUNLAR** panelinde durur ve
+bir soruna tıklamak ilgili düğümü seçer.
 
-### 8.4 Zorunlu repo kuralları
+Doğrulayıcının her sorunu YOL ile döndürmesinin (`layers[0].source.freq`)
+asıl tüketicisi burasıdır: yol, seçime çevrilir.
+
+**Sorun varken kaydetme kapalıdır.** Çıktı klasörü hiçbir zaman geçersiz bir
+belge almaz; ajan o klasörden okuduğunda kırık bir dosyayla karşılaşmaz.
+
+### 8.11 Çıktı — repoya yazma
+
+```
+games/vol-forge/output/
+  material/   brushed-metal.png   brushed-metal.json
+  organic/    bark-a.png          bark-a.json
+  terrain/    …
+```
+
+PNG ve onu üreten belge **yan yana** durur. Böylece klasör hem sonucu hem
+tarifi taşır: sen editörde kurarsın, ajan aynı dosyayı okuyup üstünde çalışır,
+kimse dosya taşımaz.
+
+**Kategoriler sabit listedir:** `material` · `terrain` · `organic` · `liquid` ·
+`mineral` · `structure` · `effect`. §10.2'deki preset kataloğuyla AYNI sözlük;
+iki yerde ayrı ayrı büyüyen iki taksonomi kaçınılmaz olarak ayrışırdı.
+
+**Mekanizma: Vite geliştirme sunucusu ara katmanı.** Editör PNG ve JSON'u bir
+uca gönderir, sunucu diske yazar. Yalnızca `pnpm dev` altında çalışır,
+üretilen pakete GİRMEZ.
+
+- `POST /api/forge/save` — `{ category, name, doc, png }`
+- `GET  /api/forge/list` — mevcut çıktılar (klasörü gezmek için)
+- `GET  /api/forge/load` — bir belgeyi geri açmak için
+
+Yol güvenliği pazarlık konusu değil: `category` sabit listede olmalı, `name`
+`[a-z0-9-]{1,64}` kalıbına uymalı, çözülen mutlak yol `output/` altında
+kalmalı. Üçünden biri tutmazsa uç reddeder.
+
+**Git politikası: hepsi commit edilir.** Sonucu dürüstçe yazalım — PNG ikili
+bir dosyadır, `git diff` içeriğini göstermez ve klasör zamanla büyür. Bunu
+kabul edilebilir kılan iki şey var: çıktılar indeksli PNG olduğu için küçüktür
+(64² bir sprite ~400 bayt, 512² ~3 KB) ve yanlarındaki JSON her PNG'yi yeniden
+üretilebilir kılar. **Tetik:** klasör ~50 MB'ı geçerse politika yeniden
+değerlendirilir.
+
+`AGENTS.md`in "üreten ara formatlar repoda tutulmaz" kuralıyla çelişmez: o
+kural kayıpsız ARA formatlar içindir (WAV). Buradaki PNG shipped biçimin
+kendisi, JSON ise kaynağıdır; ikisi de kalır.
+
+### 8.12 Yeni CORE bileşenleri
+
+| Bileşen       | Neden gerekli                                               |
+| ------------- | ----------------------------------------------------------- |
+| `ColorPicker` | UI setinde renk kontrolü yok; palet şeridi onsuz kurulamaz. |
+| `CurveEditor` | `curve` düğümünün `points` parametresi için.                |
+
+**`CurveEditor` §13'ün üçüncü açık maddesini KAPATIR.** Karar: yazılır. Bir
+aktarım eğrisini sayı tablosu olarak düzenlemek kullanılamaz — eğrinin bütün
+anlamı BİÇİMİdir. Küçük bir tuval, sürüklenebilir noktalar, çift tıkla ekle,
+sağ tıkla sil. Bu, D11 ile çelişmez: şema _neyi_ söyler (`type: 'points'`),
+editör *nasıl*ı seçer.
+
+İkisi de CORE'a girdiği an [AGENTS.md](../../AGENTS.md) UI kuralı devreye
+girer: `games/vol-ui` showcase'ine eklenir, README sekme tablosu güncellenir,
+i18n key paritesi sağlanır.
+
+### 8.13 i18n — şema açıklamaları kullanıcıya görünür
+
+Burada gerçek bir çatışma var ve önden çözülmesi gerekiyor. `NODE_SCHEMAS`
+içindeki `description` alanları koda gömülü TÜRKÇE metinlerdir ve editörde
+kullanıcıya gösterilecektir — `AGENTS.md` Bozulamaz Kural 1 bunu yasaklar.
+
+**Karar:** şema `description`ı kodda kalır (parametrenin yanında durduğu için
+geliştirici belgesi olarak da işlevlidir) ve `tr.json`un KAYNAĞI olur. Küçük
+bir üretim script'i şemadan `volforge:param.<kind>.<name>` anahtarlarını
+çıkarır; `en.json` elle doldurulur ve parite testi eksik İngilizceyi yakalar.
+
+Aynı metni iki yerde elle taşımak yerine tek kaynaktan türetmek, deponun
+`gen-theme.mjs` ile zaten kurduğu desendir.
+
+Editörün kendi metinleri (düğmeler, başlıklar, hata cümleleri) doğrudan
+`volforge:` namespace'inde yazılır. Module-level `i18next.t()` yasaktır
+(Kural 2): import anında `init()` bitmemiştir ve boş string döner.
+
+### 8.14 Zorunlu repo kuralları
 
 - Metinler i18n'den (`volforge:` namespace), tr/en key paritesi zorunlu.
-- Yeni bir CORE bileşeni eklenirse `games/vol-ui` showcase'ine de eklenir ve
-  README sekme tablosu güncellenir ([AGENTS.md](../../AGENTS.md) UI Kuralları).
-- Listeler kimliğe göre diff'lenir; her güncellemede DOM yıkılmaz.
-- Her listener'ın `destroy()` karşılığı olur — `DisposableScope` kullanılır.
+- Yeni bir CORE bileşeni eklendiğinde `games/vol-ui` showcase'ine de eklenir
+  ve README sekme tablosu güncellenir.
+- Listeler kimliğe göre diff'lenir; her güncellemede DOM yıkılmaz — aksi
+  hâlde sürükleme sırasında odak düşer ve animasyon yanlış tetiklenir.
+- Her listener'ın `destroy()` karşılığı olur; `DisposableScope` kullanılır
+  (`lifecycleIdiom` bekçisi `games/*/src` altını da tarıyor).
+- `visualHeadless` bekçisi `core/visual`ı korur: editör çekirdeğe DOM
+  sızdıramaz, ilişki tek yönlüdür.
+
+### 8.15 Tur 4'ün kanıtı
+
+_Editörde kurulan belge CLI'dan birebir aynı PNG'yi verir._
+
+Bu, iki tarafın da `renderSprite` çağırması sayesinde **inşa gereği** doğrudur.
+Gerçek risk başka yerde: editörün belgede OLMAYAN bir durumu render'a
+karıştırması. Göz simgesi, kilit, önizleme çözünürlüğü — üçü de tam olarak bu
+tuzağın adayı.
+
+Bu yüzden kanıt testi şunu yapar: editör eylemleriyle bir belge kurar (katman
+ekle, düğüm sar, kaydırıcı çek, bir katmanı gizle), belgeyi kaydeder, kaydedilen
+JSON'u CLI yolundan render eder ve editörün TAM ÇÖZÜNÜRLÜKLÜ önizlemesiyle bayt
+bayt karşılaştırır. Gizli katman testi özellikle vardır: görünürlük render'ı
+etkilerse test düşer.
 
 ---
 
@@ -1114,9 +1406,10 @@ kapılardan doğar; sürpriz olmasınlar diye önden yazıldı.
 | ------------------------ | ---------------------------------------- | --------------------------------------------------------------------------- |
 | **OKLab dönüşümü**       | Depoda renk uzayı matematiği **hiç yok** | `visual/color/oklab.ts`                                                     |
 | **ColorPicker bileşeni** | UI setinde renk kontrolü yok             | `core/src/ui/primitives/ColorPicker.ts` + **vol-ui showcase FORMS sekmesi** |
+| **CurveEditor bileşeni** | `curve` düğümü için (§8.12)              | `core/src/ui/primitives/CurveEditor.ts` + **vol-ui showcase FORMS sekmesi** |
 | **PNG kodlayıcı**        | Raster yazma yok                         | `visual/encode/png.ts` (alt-yol)                                            |
 
-`ColorPicker` CORE'a girdiği an [AGENTS.md](../../AGENTS.md) UI kuralı devreye
+Bu ikisi CORE'a girdiği an [AGENTS.md](../../AGENTS.md) UI kuralı devreye
 girer: showcase'e eklenir, README sekme tablosu güncellenir, i18n key paritesi
 sağlanır.
 
@@ -1245,14 +1538,59 @@ olmaması (§4.5). Ayrıca §4.6'da aynı paragraf iki kez yazılmıştı; temiz
 
 ### Tur 4 — Editör
 
-- `games/vol-forge` iskeleti (vol-ui deseni)
-- `ColorPicker` → CORE + showcase + README
-- Şemadan kontrol üretimi (D11)
-- Katman listesi (sürükle-sırala, göz/kilit)
-- Önizleme modları (§8.2) — **kanal görüntüleyici dahil**
-- JSON içe/dışa aktarma
+Ayrıntılı sözleşme §8'dedir; buradaki liste onun iş dökümüdür. Tur TEK PARÇA
+uygulanır — bölünmüş bir editör, yarısı çalışan bir editördür.
 
-_Kanıt:_ editörde kurulan belge CLI'dan **birebir aynı** PNG'yi verir.
+**Paket ve iskelet**
+
+- `games/vol-forge`: Vite + DOM, **Phaser yok** (§8.1). `package.json`
+  (`typecheck`/`test`/`test:coverage`), `vite.config.ts`, `vitest.config.ts`,
+  `index.html`, `tsconfig.json`.
+- Kök `quality.json`a eşik girdisi (taban 50/50/50/40) — yoksa
+  `workspace-contract` kapısı düşer.
+- `volforge:` i18n namespace, `tr.json` + `en.json`.
+
+**Durum ve düzenleme**
+
+- Tek `SpriteDoc` durumu + değişmez güncelleme (§8.3).
+- Geri al/yinele: 50 adımlık anlık görüntü yığını, kaydırıcı sürüklemesi
+  400 ms içinde tek adıma birleşir.
+- Katman listesi: sürükle-sırala (belgeyi değiştirir), göz/kilit (belgeyi
+  DEĞİŞTİRMEZ — §8.4).
+- Şekil ağacı: **değiştir / sar / çıkar** (§8.5), etki alanı rozeti,
+  kes-yapıştır, katman başına dört ağaç sekmesi, alt-yığın maskeler.
+- `domain` zinciri: sürükle-sırala düz liste.
+
+**Kontroller ve palet**
+
+- Şemadan kontrol üretimi (D11, §8.6); opsiyonel parametre anahtarı belgeden
+  alanı çıkarır.
+- `ColorPicker` → CORE + showcase + README.
+- `CurveEditor` → CORE + showcase + README (§13 madde 3'ü kapatır).
+- Palet şeridi: veri/sentez kipleri, "sentezi veriye çevir", kilit rozeti.
+
+**Önizleme ve ölçüm**
+
+- Canlı önizleme: bütçeyle kendini ayarlayan çözünürlük, kuyruksuz, boşta tam
+  çözünürlük (§8.8).
+- Önizleme modları (§8.9): 1:1 + tamsayı zoom, 3×3 döşeme, yedi kanallı
+  görüntüleyici, nicemleme öncesi/sonrası, ölçüm rozetleri.
+- Canlı doğrulama paneli; sorun varken kaydetme kapalı (§8.10).
+
+**Çıktı**
+
+- Vite geliştirme sunucusu ara katmanı: `save` / `list` / `load` (§8.11).
+- `games/vol-forge/output/<kategori>/` — sabit yedi kategori, PNG + JSON yan
+  yana, hepsi commit edilir.
+
+**Şema i18n'i**
+
+- Şemadan `tr.json` üreten script; `en.json` elle, parite testiyle korunur
+  (§8.13).
+
+_Kanıt:_ editör eylemleriyle kurulan belge kaydedilir, CLI yolundan render
+edilir ve editörün tam çözünürlüklü önizlemesiyle **bayt bayt** karşılaştırılır.
+Gizli katman testi ayrıca vardır: görünürlük render'ı etkilerse test düşer.
 
 ### Tur 5 — Katalog ve olgunlaşma
 
@@ -1269,16 +1607,17 @@ _Kanıt:_ agent yalnızca kataloğu okuyarak makul bir başlangıç belgesi üre
 Bunlar **bilinçli olarak** kararlaştırılmadı; ilk gerçek kullanım karar
 verecek. Karar verilmeden kod yazılmaz.
 
+Kapanan madde — **`curve` düzenleyici**: Tur 4'te yazılmasına karar verildi
+(§8.12). Bir aktarım eğrisini sayı tablosu olarak düzenlemek kullanılamaz;
+eğrinin bütün anlamı biçimidir. D11 ile çelişmez — şema _neyi_ söyler, editör
+*nasıl*ı seçer.
+
 1. **Çoklu çıktı.** Bir belgeden atlas/varyant seti üretmek (`--variants 8`)
    doğal bir istek ama `seed` ezmesiyle zaten yapılabiliyor; ayrı bir kavram
    gerekip gerekmediği belirsiz.
 2. **Normal/height haritası dışa aktarımı.** Motor zaten üretiyor; PNG olarak
    yazmak ucuz. Tüketicisi çıkınca eklenir.
-3. **`curve` düzenleyici.** Şema `type: 'curve'` diyebilir ama editörün onu
-   nasıl çizeceği özel bir bileşen ister. Bu D11 ile **çelişmez**: şema _neyi_
-   söyler, editör *nasıl*ı seçer — özel bileşen şemanın yetersizliği değil,
-   kaçış kapısıdır. Bileşenin yazılıp yazılmayacağı Tur 4'te kararlaşır.
-4. **Ses motorunun editöre taşınması.** D11'deki şema deseni bunun dikişidir.
+3. **Ses motorunun editöre taşınması.** D11'deki şema deseni bunun dikişidir.
    **Görsel kanıtlanmadan başlanmaz** — ikinci tüketici gelmeden ortak kabuk
    soyutlaması yapılmaz.
 

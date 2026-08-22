@@ -316,7 +316,11 @@ silinir; kronolojiye not düşülmez.
   yüzeyi (52) ayrıca kilitli — alt sistemler kök sayının gölgesinde büyümesin.
 - `PlayerController` takma adı `@deprecated` olarak duruyor; kaldırma bir
   sonraki büyük sürümde.
-- **Görsel sentez: Tur 1–3 bitti, Tur 4–5 açık.** `core/visual/` motorun
+- **Görsel sentez: Tur 1–3 bitti, Tur 4 ayrıntılı yazıldı, Tur 5 açık.**
+  Tur 4'ün sözleşmesi 2026-08-22'de soyutluktan çıkarıldı (§8, on beş alt
+  bölüm): editör Phaser'sız DOM paketi, tam ağaç düzenleme (değiştir/sar/
+  çıkar), bütçeyle kendini ayarlayan canlı önizleme, `output/<kategori>/`
+  altına repoya yazma ve şemadan üretilen i18n. Kod YAZILMADI. `core/visual/` motorun
   tamamı: cebir, döşeme, gölgeleme, dış çizgi, dither, iki nicemleme kipi,
   palet sentezi, alt-yığın maskeler ve yedi ölçüm metriği. Yazılmayanlar
   yalnızca **editör** (`games/vol-forge`, Tur 4) ve **preset kataloğu**
@@ -420,6 +424,7 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-22 | Görsel sentez Tur 1 — çekirdek iskelet                      | 139 test, kapılar yeşil    |
 | 2026-08-22 | Görsel sentez Tur 2 — cebiri tamamla                        | +115 test, döşeme kanıtlı  |
 | 2026-08-22 | Görsel sentez Tur 3 — biçim ve stil                         | +75 test, iki stil kanıtlı |
+| 2026-08-22 | Tur 4 sözleşmesi (§8) ayrıntılandırıldı                     | belge; kod yok             |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 
