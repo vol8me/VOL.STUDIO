@@ -1142,6 +1142,11 @@ Kaydırıcı çekilirken ikincisi kabul edilemez. Çözüm **ölçüm**:
 - Geçerli önizleme çözünürlüğü her zaman yazılıdır ("önizleme 128² / çıktı
   512²") — kaba bir önizlemeyi gerçek çıktı sanmak mümkün olmasın.
 
+**Çıktı boyu `RenderResult.doc`tan OKUNMAZ.** O alan ezmeler uygulandıktan
+SONRAKİ belgedir, yani önizleme boyunu taşır; ondan okumak göstergeyi
+"önizleme 128² / çıktı 128²" hâline getirir ve göstergenin tüm amacı kaybolur.
+Kare, belgenin gerçek çıktı boyunu ayrıca taşır.
+
 **Web Worker bilinçli olarak ERTELENDİ.** `core/visual` headless olduğu için
 (D8) render'ı bir worker'a taşımak yerinden oynatma işidir, yeniden yazma
 değil; ama tampon aktarımı ve mesajlaşma gerçek bir karmaşıklıktır ve ölçülen
@@ -1203,6 +1208,13 @@ uca gönderir, sunucu diske yazar. Yalnızca `pnpm dev` altında çalışır,
 Yol güvenliği pazarlık konusu değil: `category` sabit listede olmalı, `name`
 `[a-z0-9-]{1,64}` kalıbına uymalı, çözülen mutlak yol `output/` altında
 kalmalı. Üçünden biri tutmazsa uç reddeder.
+
+**Çekirdek eklentiye `ssrLoadModule` ile girer, doğrudan import EDİLMEZ.**
+Eklenti dosyası Vite YAPILANDIRMASINDAN çağrılır ve yapılandırma düz Node ESM
+ile yüklenir; orada `core/visual`in dizin barrel'ları çözülmez
+(`ERR_UNSUPPORTED_DIR_IMPORT`). Aynı sebeple yol modülü de çekirdeğe bağlı
+değildir: kategori listesini PARAMETRE olarak alır. Tek doğruluk kaynağı yine
+`PRESET_CATEGORIES`tir, yalnızca oraya dışarıdan verilir.
 
 **Git politikası: hepsi commit edilir.** Sonucu dürüstçe yazalım — PNG ikili
 bir dosyadır, `git diff` içeriğini göstermez ve klasör zamanla büyür. Bunu
@@ -1536,7 +1548,7 @@ değil "kenarda kırpılma" olduğu (§9), kontrastın mutlak değil oran olmas�
 türevinin birim uzayda alınması (§4.5) ve kenar ışığı üssünün parametre
 olmaması (§4.5). Ayrıca §4.6'da aynı paragraf iki kez yazılmıştı; temizlendi.
 
-### Tur 4 — Editör
+### Tur 4 — Editör — **TAMAMLANDI**
 
 Ayrıntılı sözleşme §8'dedir; buradaki liste onun iş dökümüdür. Tur TEK PARÇA
 uygulanır — bölünmüş bir editör, yarısı çalışan bir editördür.
@@ -1591,6 +1603,17 @@ uygulanır — bölünmüş bir editör, yarısı çalışan bir editördür.
 _Kanıt:_ editör eylemleriyle kurulan belge kaydedilir, CLI yolundan render
 edilir ve editörün tam çözünürlüklü önizlemesiyle **bayt bayt** karşılaştırılır.
 Gizli katman testi ayrıca vardır: görünürlük render'ı etkilerse test düşer.
+Uçtan uca da doğrulandı: geliştirme sunucusundan kaydedilen
+`output/material/brushed-metal.png`, aynı belgeden CLI'ın ürettiği baytların
+birebir aynısı.
+
+Turda ortaya çıkan ve bu belgeye işlenen düzeltmeler: çıktı boyunun
+`RenderResult.doc`tan okunamayacağı (§8.8 — o alan ezilmiş belgedir), eklentinin
+çekirdeği `ssrLoadModule` ile yüklemesi ve yol modülünün kategori listesini
+parametre olarak alması gerektiği (§8.11 — Vite yapılandırması düz Node ESM ile
+yüklenir). Ayrıca `core/visual/encode` alt-yoluna bir barrel eklendi ve
+`ColorPicker`ın hazır renk kısayolları dokunmatik hedef politikasına gerekçeli
+muafiyetle girdi.
 
 ### Tur 5 — Katalog ve olgunlaşma
 

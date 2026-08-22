@@ -14,8 +14,19 @@ import { i18n, i18next } from '../src/systems/I18n';
 const noopCtx2d = {
   fillStyle: '',
   strokeStyle: '',
+  lineWidth: 1,
   fillRect: vi.fn(),
   clearRect: vi.fn(),
+  // Yol çizimi `CurveEditor` için gerekli: bileşen bağlamsız ortamda çizimi
+  // atlar ama bağlam VARSA onu gerçekten kullanır, dolayısıyla stub'ın
+  // kullanılan yüzeyi karşılaması gerekir.
+  beginPath: vi.fn(),
+  closePath: vi.fn(),
+  moveTo: vi.fn(),
+  lineTo: vi.fn(),
+  arc: vi.fn(),
+  stroke: vi.fn(),
+  fill: vi.fn(),
   getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4) })),
   putImageData: vi.fn(),
   createImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4) })),

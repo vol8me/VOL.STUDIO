@@ -1,0 +1,399 @@
+{
+  "const": {
+    "description": "Constant field; the basis for masks and blending.",
+    "params": {
+      "value": "The value returned at every point."
+    }
+  },
+  "gradient_linear": {
+    "description": "A 0→1 ramp along one axis.",
+    "params": {
+      "angle": "Direction of the ramp, DEGREES.",
+      "from": "Unit-space position where the ramp is 0.",
+      "to": "Unit-space position where the ramp is 1."
+    }
+  },
+  "gradient_radial": {
+    "description": "Radial ramp, 1 at the centre and 0 at the radius; the basis for volume.",
+    "params": {
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "radius": "Distance at which the ramp reaches zero."
+    }
+  },
+  "gradient_angular": {
+    "description": "0→1 over one full turn around the centre; for gears and pie slices.",
+    "params": {
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "offset": "Start angle, DEGREES."
+    }
+  },
+  "gradient_diamond": {
+    "description": "Manhattan distance: 1 at the centre, 0 at `size`.",
+    "params": {
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "size": "Manhattan distance at which the ramp reaches zero."
+    }
+  },
+  "noise_value": {
+    "description": "Lattice value noise; the cheapest noise, blocky in character.",
+    "params": {
+      "freq": "Cell count across the short edge.",
+      "seed": "Derived from the node path when omitted (D5)."
+    }
+  },
+  "noise_simplex": {
+    "description": "Skewed-lattice noise; low axis artifacts. Cannot be used in a tileable document.",
+    "params": {
+      "freq": "Cell count across the short edge.",
+      "seed": "Derived from the node path when omitted (D5)."
+    }
+  },
+  "noise_worley": {
+    "description": "Cellular noise; `F2-F1` gives cell edges.",
+    "params": {
+      "freq": "Cell count across the short edge.",
+      "mode": "Which feature distance is read.",
+      "seed": "Derived from the node path when omitted (D5)."
+    }
+  },
+  "noise_fbm": {
+    "description": "Octave-summing wrapper; rotates between octaves (§5.1).",
+    "params": {
+      "base": "The UNIT field to be summed; usually a noise.",
+      "octaves": "How many scales are summed.",
+      "lacunarity": "Frequency multiplier per octave. Must be an INTEGER in a tileable document.",
+      "gain": "Amplitude multiplier per octave."
+    }
+  },
+  "sdf_circle": {
+    "description": "Circle signed distance; negative is inside.",
+    "params": {
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "r": "Radius."
+    }
+  },
+  "sdf_box": {
+    "description": "Box signed distance; negative is inside.",
+    "params": {
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "half": "Half edge lengths."
+    }
+  },
+  "sdf_roundBox": {
+    "description": "Rounded box; cannot be derived from `sdf.box`, it is a separate formula.",
+    "params": {
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "half": "Half edge lengths.",
+      "r": "Corner rounding radius."
+    }
+  },
+  "sdf_polygon": {
+    "description": "Regular n-gon; `r` is the circumradius.",
+    "params": {
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "n": "Number of sides.",
+      "r": "Circumradius.",
+      "rotation": "Rotation angle, DEGREES."
+    }
+  },
+  "sdf_star": {
+    "description": "n-pointed star.",
+    "params": {
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "n": "Number of points.",
+      "rOuter": "Outer radius.",
+      "rInner": "Inner radius.",
+      "rotation": "Rotation angle, DEGREES."
+    }
+  },
+  "sdf_line": {
+    "description": "Thick line segment; ends are FLAT.",
+    "params": {
+      "a": "Start point.",
+      "b": "End point.",
+      "thickness": "Total thickness."
+    }
+  },
+  "sdf_capsule": {
+    "description": "Capsule with ROUND ends; the basis for bodies and branches.",
+    "params": {
+      "a": "Start point.",
+      "b": "End point.",
+      "r": "Radius."
+    }
+  },
+  "sdf_arc": {
+    "description": "Annulus sector.",
+    "params": {
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "r": "Ring radius.",
+      "thickness": "Ring thickness.",
+      "from": "Start angle, DEGREES.",
+      "to": "End angle, DEGREES."
+    }
+  },
+  "pattern_checker": {
+    "description": "Checker pattern.",
+    "params": {
+      "size": "Edge length of one square in unit space."
+    }
+  },
+  "pattern_stripes": {
+    "description": "Stripes.",
+    "params": {
+      "freq": "Cell count across the short edge.",
+      "angle": "Stripe direction, DEGREES.",
+      "duty": "Ratio of the filled part to the period."
+    }
+  },
+  "pattern_dots": {
+    "description": "Dots.",
+    "params": {
+      "freq": "Cell count across the short edge.",
+      "r": "Dot radius as a ratio of the half cell width."
+    }
+  },
+  "pattern_grid": {
+    "description": "Grid lines.",
+    "params": {
+      "freq": "Cell count across the short edge.",
+      "thickness": "Line thickness as a ratio of the cell width."
+    }
+  },
+  "pattern_hex": {
+    "description": "Hexagonal tiling; 1 at the cell centre, 0 at the edge.",
+    "params": {
+      "freq": "Cell count across the short edge."
+    }
+  },
+  "translate": {
+    "description": "Translates the field.",
+    "params": {
+      "x": "Horizontal translation.",
+      "y": "Vertical translation.",
+      "input": "Field to transform."
+    }
+  },
+  "rotate": {
+    "description": "Rotates the field; +y is down, so a positive angle turns clockwise.",
+    "params": {
+      "angle": "Rotation angle, DEGREES.",
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "input": "Field to transform."
+    }
+  },
+  "scale": {
+    "description": "Scales the field; components are separate, so it is anisotropic.",
+    "params": {
+      "x": "Horizontal scale.",
+      "y": "Vertical scale.",
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "input": "Field to transform."
+    }
+  },
+  "skew": {
+    "description": "Shear; for slanted bodies and a sense of perspective.",
+    "params": {
+      "x": "Horizontal shift driven by y.",
+      "y": "Vertical shift driven by x.",
+      "input": "Field to transform."
+    }
+  },
+  "mirror": {
+    "description": "Symmetry fold; works about the origin.",
+    "params": {
+      "axis": "Which axis is folded; `radial` gives n-fold symmetry.",
+      "count": "For `radial` only: number of arms.",
+      "input": "Field to transform."
+    }
+  },
+  "repeat": {
+    "description": "Tiling; `mirror` mode reflects neighbouring cells and hides the seam.",
+    "params": {
+      "count": "Cell count across the short edge.",
+      "mode": "Plain tiling or mirrored tiling.",
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "input": "Field to transform."
+    }
+  },
+  "polar": {
+    "description": "Polar transform: horizontal lines become rings, vertical lines become rays.",
+    "params": {
+      "center": "Fixed point of the operation; the unit-space origin when omitted.",
+      "inverse": "Reverse direction: unrolls a ring into a strip.",
+      "input": "Field to transform."
+    }
+  },
+  "warp": {
+    "description": "Warp: marble, smoke, veins, flow. Displacement comes from another field.",
+    "params": {
+      "by": "Field that drives the displacement.",
+      "amount": "Maximum displacement, in UNIT space.",
+      "sample": "Sampling mode of the displacement field; `nearest` for pixel art.",
+      "input": "Field to transform."
+    }
+  },
+  "scatter": {
+    "description": "Replicates the source onto a jittered grid; combined with `max`.",
+    "params": {
+      "source": "Field to replicate; must be centred at the origin.",
+      "count": "Instance count.",
+      "seed": "Derived from the node path when omitted (D5).",
+      "jitter": "Deviation from the grid; 0 is an exact grid, 1 is nearly random.",
+      "rotJitter": "Maximum rotation jitter, DEGREES.",
+      "scaleJitter": "Maximum scale jitter ratio."
+    }
+  },
+  "blur": {
+    "description": "Blur; separable + running sum, O(1) per pixel.",
+    "params": {
+      "radius": "Blur radius, in UNIT space.",
+      "mode": "`gauss` is approximated with three box passes.",
+      "input": "Field to transform."
+    }
+  },
+  "sharpen": {
+    "description": "Sharpen: original + (original − blurred) × amount.",
+    "params": {
+      "amount": "Emphasis amount.",
+      "radius": "Which detail scale is emphasised, in UNIT space.",
+      "input": "Field to transform."
+    }
+  },
+  "dilate": {
+    "description": "Morphological dilation; separable maximum.",
+    "params": {
+      "radius": "Dilation radius, in UNIT space.",
+      "input": "Field to transform."
+    }
+  },
+  "erode": {
+    "description": "Morphological erosion; separable minimum.",
+    "params": {
+      "radius": "Erosion radius, in UNIT space.",
+      "input": "Field to transform."
+    }
+  },
+  "edge": {
+    "description": "Sobel gradient magnitude.",
+    "params": {
+      "input": "Field to transform."
+    }
+  },
+  "distance": {
+    "description": "Exact Euclidean distance transform; turns a raster into a SIGNED distance field.",
+    "params": {
+      "threshold": "Values above this count as \"inside\".",
+      "input": "Field to transform."
+    }
+  },
+  "add": {
+    "description": "Addition. On an SDF it grows or shrinks the shape.",
+    "params": {
+      "a": "First field.",
+      "b": "Second field."
+    }
+  },
+  "sub": {
+    "description": "Subtraction. The way to build a contour band on an SDF.",
+    "params": {
+      "a": "First field.",
+      "b": "Second field."
+    }
+  },
+  "mul": {
+    "description": "Multiplication. Masking and distance scaling.",
+    "params": {
+      "a": "First field.",
+      "b": "Second field."
+    }
+  },
+  "min": {
+    "description": "The smaller one. On an SDF this means UNION.",
+    "params": {
+      "a": "First field.",
+      "b": "Second field."
+    }
+  },
+  "max": {
+    "description": "The larger one. On an SDF this means INTERSECTION.",
+    "params": {
+      "a": "First field.",
+      "b": "Second field."
+    }
+  },
+  "screen": {
+    "description": "Lightens: 1 − (1−a)(1−b). For unit fields.",
+    "params": {
+      "a": "First field.",
+      "b": "Second field."
+    }
+  },
+  "overlay": {
+    "description": "Raises contrast: multiply in shadows, screen in highlights.",
+    "params": {
+      "a": "First field.",
+      "b": "Second field."
+    }
+  },
+  "mix": {
+    "description": "Linear blend between two fields.",
+    "params": {
+      "a": "First field.",
+      "b": "Second field.",
+      "t": "Blend ratio; 0 = a, 1 = b."
+    }
+  },
+  "step": {
+    "description": "Hard threshold: 1 when the input is at or above the edge.",
+    "params": {
+      "edge": "Threshold value.",
+      "input": "Field to transform."
+    }
+  },
+  "smoothstep": {
+    "description": "Soft threshold; passing e0 > e1 yields a descending ramp.",
+    "params": {
+      "e0": "Input value at which the result is 0.",
+      "e1": "Input value at which the result is 1.",
+      "input": "Field to transform."
+    }
+  },
+  "remap": {
+    "description": "Maps one range onto another; does not clamp.",
+    "params": {
+      "inMin": "Input lower bound.",
+      "inMax": "Input upper bound.",
+      "outMin": "Output lower bound.",
+      "outMax": "Output upper bound.",
+      "input": "Field to transform."
+    }
+  },
+  "curve": {
+    "description": "Piecewise linear transfer curve; input outside the range clamps to the end value.",
+    "params": {
+      "points": "At least two `[input, output]` points. Defaults to the identity curve.",
+      "input": "Field to transform."
+    }
+  },
+  "clamp": {
+    "description": "Clamps the value to a range.",
+    "params": {
+      "min": "Lower bound.",
+      "max": "Upper bound.",
+      "input": "Field to transform."
+    }
+  },
+  "abs": {
+    "description": "Absolute value; the way to build a contour from an SDF.",
+    "params": {
+      "input": "Field to transform."
+    }
+  },
+  "invert": {
+    "description": "1 − x; inverts coverage fields.",
+    "params": {
+      "input": "Field to transform."
+    }
+  }
+}

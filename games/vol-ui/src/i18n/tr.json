@@ -268,7 +268,11 @@
     "medium": "Orta",
     "high": "Yüksek",
     "productionQuantity": "Üretim Adedi",
-    "serverModPlaceholder": "Sunucu/mod açıklaması girin…"
+    "serverModPlaceholder": "Sunucu/mod açıklaması girin…",
+    "colorPicker": "Renk Seçici",
+    "colorPickerLabel": "Rampa tabanı",
+    "curveEditor": "Eğri Düzenleyici",
+    "curveEditorLabel": "Aktarım eğrisi"
   },
   "palette": {
     "surface": "Surface",

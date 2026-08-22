@@ -1,5 +1,6 @@
 /**
  * Parametre şeması — D11.
+
  *
  * Şema dört kategoriye bölünmüştür (üreteç, alan-uzayı, tamponlu,
  * birleştirici) ve burada tek bir kayıtta toplanır. Bölünme keyfi değil:

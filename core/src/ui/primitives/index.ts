@@ -25,6 +25,8 @@ export { NumberStepper, type NumberStepperOptions } from './NumberStepper';
 export { Slider, type SliderOptions } from './Slider';
 export { RangeSlider, type RangeSliderValue, type RangeSliderOptions } from './RangeSlider';
 export { Checkbox, type CheckboxOptions } from './Checkbox';
+export { ColorPicker, type ColorPickerOptions } from './ColorPicker';
+export { CurveEditor, type CurveEditorOptions, type CurvePoint } from './CurveEditor';
 export { RadioGroup, type RadioOption, type RadioGroupOptions } from './RadioGroup';
 export {
   SegmentedControl,

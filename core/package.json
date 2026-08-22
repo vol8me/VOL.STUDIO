@@ -35,8 +35,8 @@
       "types": "./src/visual/index.ts"
     },
     "./visual/encode": {
-      "import": "./src/visual/encode/png.ts",
-      "types": "./src/visual/encode/png.ts"
+      "import": "./src/visual/encode/index.ts",
+      "types": "./src/visual/encode/index.ts"
     }
   },
   "scripts": {

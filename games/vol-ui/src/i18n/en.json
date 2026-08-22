@@ -268,7 +268,11 @@
     "medium": "Medium",
     "high": "High",
     "productionQuantity": "Production Quantity",
-    "serverModPlaceholder": "Enter server/mod description…"
+    "serverModPlaceholder": "Enter server/mod description…",
+    "colorPicker": "Color Picker",
+    "colorPickerLabel": "Ramp base",
+    "curveEditor": "Curve Editor",
+    "curveEditorLabel": "Transfer curve"
   },
   "palette": {
     "surface": "Surface",

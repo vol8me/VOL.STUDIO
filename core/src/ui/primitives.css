@@ -1200,3 +1200,98 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* ── ColorPicker ─────────────────────────────────────────────────────────
+ * Kutucuk yerli `<input type="color">`tır; tarayıcılar ona kendi iç
+ * dolgusunu verir. `padding: 0` + `::-webkit-color-swatch` sıfırlaması
+ * olmadan kutucuk kendi kenarlığının içinde küçülür ve rengi yanlış okunur.
+ */
+.vol-color-picker {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--vol-space-xs);
+  pointer-events: auto;
+}
+
+.vol-color-picker__label {
+  color: var(--vol-ui-text-secondary);
+  font-size: 12px;
+}
+
+.vol-color-picker__row {
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-sm);
+}
+
+.vol-color-picker__swatch {
+  width: 34px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-sm);
+  background: none;
+  cursor: pointer;
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-color-picker__swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.vol-color-picker__swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--vol-radius-sm) - 1px);
+}
+
+.vol-color-picker__hex {
+  width: 84px;
+  padding: 4px var(--vol-space-sm);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-surface-1);
+  color: var(--vol-ui-text);
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.vol-color-picker__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.vol-color-picker__preset {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.vol-color-picker__preset:hover {
+  border-color: var(--vol-ui-border-strong);
+}
+
+/* ── CurveEditor ─────────────────────────────────────────────────────── */
+.vol-curve-editor {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--vol-space-xs);
+  pointer-events: auto;
+}
+
+.vol-curve-editor__label {
+  color: var(--vol-ui-text-secondary);
+  font-size: 12px;
+}
+
+.vol-curve-editor__canvas {
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-bg-subtle);
+  cursor: crosshair;
+  touch-action: none;
+}

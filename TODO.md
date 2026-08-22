@@ -4,6 +4,76 @@
 kaydıdır**: ne yapıldı, hangi kapı koşuldu, geriye ne kaldı. Turun ayrıntısı
 commit diff'inde ve git geçmişindedir; burada tekrarlanmaz.
 
+## 2026-08-22 — Görsel sentez Tur 4: editör (`games/vol-forge`)
+
+§8'in tamamı uygulandı: altıncı paket, tam ağaç düzenleme, canlı önizleme,
+şemadan üretilen kontroller, palet şeridi, canlı doğrulama ve repoya yazma.
+
+**Editör Phaser'sız**
+
+`core/src/ui` tamamen DOM: `UIRoot` kendi belgesinde "canvas/oyun döngüsünden
+bağımsız" diyor ve `ui/` altında tek bir Phaser importu yok. vol-ui Phaser
+içinde yaşıyor çünkü oyun vitrini; editör oyun değil. Kardeşlik bileşen
+setinde ve depo kurallarında, barındırma kabuğunda değil.
+
+**Ağaç düzenleme üç işlemden ibaret**
+
+Şemadaki her `field` parametresi zorunlu olduğu için "boş yuva" yok;
+"çocuk ekle" işlemi tanımsız. **Değiştir · sar · çıkar** birlikte her ağacı her
+ağaca dönüştürüyor ve test bunu sar→çıkar kimliğiyle sabitliyor. Sarma
+sırasında boş kalan yuva, sarılan düğümle aynı etki alanında bir dolguyla
+doldurulur; aksi hâlde kullanıcı her sarmadan sonra bir doğrulama hatasıyla
+karşılaşırdı.
+
+**Göz simgesi belgeye yazılmıyor**
+
+Turun kanıtı bunu gerektiriyor: gizlenen bir katman render'ı etkileseydi
+editör ile CLI ayrışırdı. Test özellikle gizli katman senaryosunu içeriyor.
+
+**Uçtan uca kanıtlandı**
+
+Geliştirme sunucusundan kaydedilen `output/material/brushed-metal.png`, aynı
+belgeden CLI'ın ürettiği baytların birebir aynısı. Yol güvenliği de canlı
+denendi: `../../gizli` reddedildi, bilinmeyen kategori reddedildi, geçersiz
+belge dört sorunuyla birlikte reddedildi.
+
+**Uygulama sırasında bulunanlar**
+
+- `RenderResult.doc` EZİLMİŞ belgedir; önizleme göstergesi çıktı boyunu ondan
+  okuyunca "önizleme 128² / çıktı 128²" yazıyordu ve göstergenin tüm amacı
+  kayboluyordu. Kare artık gerçek çıktı boyunu ayrıca taşıyor.
+- Vite yapılandırması düz Node ESM ile yükleniyor ve `core/visual`in dizin
+  barrel'larını çözemiyor. Eklenti çekirdeği `ssrLoadModule` ile alıyor, yol
+  modülü de kategori listesini parametre olarak istiyor. Tek kaynak yine
+  `PRESET_CATEGORIES`.
+- Altıncı paket, `pnpm -r` kapsam koşusunu ağırlaştırıp vol-ui'nin `main`
+  testini 5 sn'de düşürdü. Genel `testTimeout` ARTIRILMADI (AGENTS.md); süre
+  yalnızca bölünemeyen o iki bütünsel teste gerekçesiyle verildi.
+- `ColorPicker`ın hazır renk kısayolları dokunmatik hedef politikasına takıldı;
+  birincil kontrol zaten tam boy olduğu için gerekçeli muafiyet yazıldı.
+
+**Şema açıklamaları i18n'e taşındı**
+
+`NODE_SCHEMAS` içindeki Türkçe açıklamalar editörde kullanıcıya görünüyor ve
+Bozulamaz Kural 1'i çiğniyordu. Üreteç (`gen-param-i18n.ts`) şemadan 52
+düğümün 126 ayrık metnini çıkarıyor; `tr` türetiliyor, `en` elle dolduruldu ve
+parite testi hem eksik anahtarı hem BOŞ metni yakalıyor.
+
+**Yeni CORE bileşenleri**
+
+`ColorPicker` ve `CurveEditor` — ikisi de showcase'e, README sekme tablosuna ve
+i18n paritesine bağlandı. `CurveEditor` §13'ün üçüncü maddesini kapattı.
+
+**Kapılar**
+
+| Kapı                | Durum | Not                                           |
+| ------------------- | ----- | --------------------------------------------- |
+| `pnpm high`         | ✓     | quick + lint:css + coverage + build           |
+| `pnpm run contract` | ✓     | 6 paket, kapı kapsamı tam                     |
+| vol-forge kapsam    | ✓     | 78.63/78.63/79.51/78.78 — eşikler 76/76/77/76 |
+| core test           | ✓     | +24 test (ColorPicker, CurveEditor)           |
+| vol-forge test      | ✓     | 93 test                                       |
+
 ## 2026-08-22 — Görsel sentez Tur 3: biçim ve stil
 
 `visual-synthesis.md` §12'nin üçüncü turu. Gölgeleme (normal/lambert/rim/ao),
@@ -316,11 +386,10 @@ silinir; kronolojiye not düşülmez.
   yüzeyi (52) ayrıca kilitli — alt sistemler kök sayının gölgesinde büyümesin.
 - `PlayerController` takma adı `@deprecated` olarak duruyor; kaldırma bir
   sonraki büyük sürümde.
-- **Görsel sentez: Tur 1–3 bitti, Tur 4 ayrıntılı yazıldı, Tur 5 açık.**
-  Tur 4'ün sözleşmesi 2026-08-22'de soyutluktan çıkarıldı (§8, on beş alt
-  bölüm): editör Phaser'sız DOM paketi, tam ağaç düzenleme (değiştir/sar/
-  çıkar), bütçeyle kendini ayarlayan canlı önizleme, `output/<kategori>/`
-  altına repoya yazma ve şemadan üretilen i18n. Kod YAZILMADI. `core/visual/` motorun
+- **Görsel sentez: Tur 1–4 bitti, yalnızca Tur 5 açık.** Motor, CLI, ölçüm ve
+  editör çalışıyor. Kalan: preset kataloğu (§10.2), `forge qa --json` alt
+  komutu ve olgunlaşma. §13'te üç açık kalan var (çoklu çıktı, normal/height
+  dışa aktarımı, ses motorunun editöre taşınması). `core/visual/` motorun
   tamamı: cebir, döşeme, gölgeleme, dış çizgi, dither, iki nicemleme kipi,
   palet sentezi, alt-yığın maskeler ve yedi ölçüm metriği. Yazılmayanlar
   yalnızca **editör** (`games/vol-forge`, Tur 4) ve **preset kataloğu**
@@ -425,6 +494,7 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-22 | Görsel sentez Tur 2 — cebiri tamamla                        | +115 test, döşeme kanıtlı  |
 | 2026-08-22 | Görsel sentez Tur 3 — biçim ve stil                         | +75 test, iki stil kanıtlı |
 | 2026-08-22 | Tur 4 sözleşmesi (§8) ayrıntılandırıldı                     | belge; kod yok             |
+| 2026-08-22 | Görsel sentez Tur 4 — editör (`games/vol-forge`)            | 6. paket, 93 test          |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 

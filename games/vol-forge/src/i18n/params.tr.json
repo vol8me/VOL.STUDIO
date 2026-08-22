@@ -1,0 +1,399 @@
+{
+  "const": {
+    "description": "Sabit alan; maske ve karışım için taban.",
+    "params": {
+      "value": "Her noktada dönen değer."
+    }
+  },
+  "gradient_linear": {
+    "description": "Bir eksen boyunca 0→1 rampası.",
+    "params": {
+      "angle": "Rampanın yönü, DERECE.",
+      "from": "Rampanın 0 olduğu birim-uzay konumu.",
+      "to": "Rampanın 1 olduğu birim-uzay konumu."
+    }
+  },
+  "gradient_radial": {
+    "description": "Merkezde 1, yarıçapta 0 olan dairesel rampa; hacim tabanı.",
+    "params": {
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "radius": "Rampanın sıfıra indiği uzaklık."
+    }
+  },
+  "gradient_angular": {
+    "description": "Merkez etrafında bir tam turda 0→1; dişli ve pasta dilimi için.",
+    "params": {
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "offset": "Başlangıç açısı, DERECE."
+    }
+  },
+  "gradient_diamond": {
+    "description": "Manhattan uzaklığı: merkezde 1, `size` uzaklığında 0.",
+    "params": {
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "size": "Rampanın sıfıra indiği Manhattan uzaklığı."
+    }
+  },
+  "noise_value": {
+    "description": "Kafes tabanlı değer gürültüsü; en ucuz gürültü, blok karakterli.",
+    "params": {
+      "freq": "Kısa kenar boyunca hücre sayısı.",
+      "seed": "Verilmezse düğüm yolundan türetilir (D5)."
+    }
+  },
+  "noise_simplex": {
+    "description": "Eğik kafes gürültüsü; eksen yapaylığı düşük. Döşenebilir belgede kullanılamaz.",
+    "params": {
+      "freq": "Kısa kenar boyunca hücre sayısı.",
+      "seed": "Verilmezse düğüm yolundan türetilir (D5)."
+    }
+  },
+  "noise_worley": {
+    "description": "Hücresel gürültü; `F2-F1` hücre kenarlarını verir.",
+    "params": {
+      "freq": "Kısa kenar boyunca hücre sayısı.",
+      "mode": "Hangi öznitelik uzaklığı okunur.",
+      "seed": "Verilmezse düğüm yolundan türetilir (D5)."
+    }
+  },
+  "noise_fbm": {
+    "description": "Oktav toplayıcı sarmalayıcı; oktavlar arasında döndürme uygular (§5.1).",
+    "params": {
+      "base": "Toplanacak BİRİM alan; genellikle bir gürültü.",
+      "octaves": "Kaç ölçekte toplanacağı.",
+      "lacunarity": "Oktav başına frekans çarpanı. Döşenebilir belgede TAM SAYI olmalı.",
+      "gain": "Oktav başına genlik çarpanı."
+    }
+  },
+  "sdf_circle": {
+    "description": "Daire işaretli mesafesi; negatif içeridedir.",
+    "params": {
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "r": "Yarıçap."
+    }
+  },
+  "sdf_box": {
+    "description": "Kutu işaretli mesafesi; negatif içeridedir.",
+    "params": {
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "half": "Yarım kenar uzunlukları."
+    }
+  },
+  "sdf_roundBox": {
+    "description": "Köşesi yuvarlatılmış kutu; `sdf.box`tan türetilemez, ayrı formül.",
+    "params": {
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "half": "Yarım kenar uzunlukları.",
+      "r": "Köşe yuvarlama yarıçapı."
+    }
+  },
+  "sdf_polygon": {
+    "description": "Düzgün n-gen; `r` çevrel yarıçaptır.",
+    "params": {
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "n": "Kenar sayısı.",
+      "r": "Çevrel yarıçap.",
+      "rotation": "Dönme açısı, DERECE."
+    }
+  },
+  "sdf_star": {
+    "description": "n uçlu yıldız.",
+    "params": {
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "n": "Uç sayısı.",
+      "rOuter": "Dış yarıçap.",
+      "rInner": "İç yarıçap.",
+      "rotation": "Dönme açısı, DERECE."
+    }
+  },
+  "sdf_line": {
+    "description": "Kalın doğru parçası; uçları DÜZ.",
+    "params": {
+      "a": "Başlangıç noktası.",
+      "b": "Bitiş noktası.",
+      "thickness": "Toplam kalınlık."
+    }
+  },
+  "sdf_capsule": {
+    "description": "Uçları YUVARLAK kapsül; gövde ve dal için temel.",
+    "params": {
+      "a": "Başlangıç noktası.",
+      "b": "Bitiş noktası.",
+      "r": "Yarıçap."
+    }
+  },
+  "sdf_arc": {
+    "description": "Halka dilimi.",
+    "params": {
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "r": "Halka yarıçapı.",
+      "thickness": "Halka kalınlığı.",
+      "from": "Başlangıç açısı, DERECE.",
+      "to": "Bitiş açısı, DERECE."
+    }
+  },
+  "pattern_checker": {
+    "description": "Dama deseni.",
+    "params": {
+      "size": "Bir karenin birim uzaydaki kenarı."
+    }
+  },
+  "pattern_stripes": {
+    "description": "Çizgiler.",
+    "params": {
+      "freq": "Kısa kenar boyunca hücre sayısı.",
+      "angle": "Çizgi yönü, DERECE.",
+      "duty": "Dolu kısmın periyoda oranı."
+    }
+  },
+  "pattern_dots": {
+    "description": "Noktalar.",
+    "params": {
+      "freq": "Kısa kenar boyunca hücre sayısı.",
+      "r": "Nokta yarıçapının hücre yarı genişliğine oranı."
+    }
+  },
+  "pattern_grid": {
+    "description": "Izgara çizgileri.",
+    "params": {
+      "freq": "Kısa kenar boyunca hücre sayısı.",
+      "thickness": "Çizgi kalınlığının hücre genişliğine oranı."
+    }
+  },
+  "pattern_hex": {
+    "description": "Altıgen döşeme; hücre merkezinde 1, kenarında 0.",
+    "params": {
+      "freq": "Kısa kenar boyunca hücre sayısı."
+    }
+  },
+  "translate": {
+    "description": "Alanı öteler.",
+    "params": {
+      "x": "Yatay öteleme.",
+      "y": "Dikey öteleme.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "rotate": {
+    "description": "Alanı döndürür; +y aşağı olduğu için pozitif açı saat yönündedir.",
+    "params": {
+      "angle": "Dönme açısı, DERECE.",
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "scale": {
+    "description": "Alanı ölçekler; bileşenler ayrı olduğu için anizotropiktir.",
+    "params": {
+      "x": "Yatay ölçek.",
+      "y": "Dikey ölçek.",
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "skew": {
+    "description": "Kesme (shear); eğik gövde ve perspektif hissi için.",
+    "params": {
+      "x": "y'ye bağlı yatay kayma.",
+      "y": "x'e bağlı dikey kayma.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "mirror": {
+    "description": "Simetri katlaması; kökene göre çalışır.",
+    "params": {
+      "axis": "Hangi eksende katlanacağı; `radial` n kollu simetri verir.",
+      "count": "Yalnızca `radial` için: kol sayısı.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "repeat": {
+    "description": "Döşeme; `mirror` modu komşu hücreleri yansıtarak dikişi gizler.",
+    "params": {
+      "count": "Kısa kenar boyunca hücre sayısı.",
+      "mode": "Düz döşeme ya da yansıtmalı döşeme.",
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "polar": {
+    "description": "Kutupsal dönüşüm: yatay çizgiler halkaya, dikey çizgiler ışınlara döner.",
+    "params": {
+      "center": "İşlemin sabit noktası; verilmezse birim uzayın kökeni.",
+      "inverse": "Ters yön: halkayı şeride açar.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "warp": {
+    "description": "Bozma: mermer, duman, damar, akıntı. Kayma başka bir alandan gelir.",
+    "params": {
+      "by": "Kaymayı belirleyen alan.",
+      "amount": "Azami kayma, BİRİM uzayda.",
+      "sample": "Kayma alanının örnekleme kipi; piksel sanatında `nearest`.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "scatter": {
+    "description": "Kaynağı sapmalı bir ızgaraya çoğaltır; birleştirme `max`.",
+    "params": {
+      "source": "Çoğaltılacak alan; kökende ortalanmış olmalı.",
+      "count": "Örnek sayısı.",
+      "seed": "Verilmezse düğüm yolundan türetilir (D5).",
+      "jitter": "Izgaradan sapma oranı; 0 tam ızgara, 1 neredeyse rastgele.",
+      "rotJitter": "Azami dönme sapması, DERECE.",
+      "scaleJitter": "Azami ölçek sapması oranı."
+    }
+  },
+  "blur": {
+    "description": "Bulanıklaştırma; ayrılabilir + koşan toplam, piksel başına O(1).",
+    "params": {
+      "radius": "Bulanıklık yarıçapı, BİRİM uzayda.",
+      "mode": "`gauss` üç kutu geçişiyle yaklaşıklanır.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "sharpen": {
+    "description": "Keskinleştirme: orijinal + (orijinal − bulanık) × amount.",
+    "params": {
+      "amount": "Vurgu miktarı.",
+      "radius": "Hangi ölçekteki detayın vurgulanacağı, BİRİM uzayda.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "dilate": {
+    "description": "Morfolojik genişletme; ayrılabilir maksimum.",
+    "params": {
+      "radius": "Genişletme yarıçapı, BİRİM uzayda.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "erode": {
+    "description": "Morfolojik aşındırma; ayrılabilir minimum.",
+    "params": {
+      "radius": "Aşındırma yarıçapı, BİRİM uzayda.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "edge": {
+    "description": "Sobel gradyan büyüklüğü.",
+    "params": {
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "distance": {
+    "description": "Tam Öklid mesafe dönüşümü; rasterı İŞARETLİ mesafe alanına çevirir.",
+    "params": {
+      "threshold": "Bu değerin üstü \"içeri\" sayılır.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "add": {
+    "description": "Toplama. SDF üzerinde şekli büyütmek/küçültmek için kullanılır.",
+    "params": {
+      "a": "Birinci alan.",
+      "b": "İkinci alan."
+    }
+  },
+  "sub": {
+    "description": "Çıkarma. SDF üzerinde kontur bandı kurmanın yolu.",
+    "params": {
+      "a": "Birinci alan.",
+      "b": "İkinci alan."
+    }
+  },
+  "mul": {
+    "description": "Çarpma. Maskeleme ve mesafe ölçekleme.",
+    "params": {
+      "a": "Birinci alan.",
+      "b": "İkinci alan."
+    }
+  },
+  "min": {
+    "description": "Küçük olan. SDF üzerinde BİRLEŞİM demektir.",
+    "params": {
+      "a": "Birinci alan.",
+      "b": "İkinci alan."
+    }
+  },
+  "max": {
+    "description": "Büyük olan. SDF üzerinde KESİŞİM demektir.",
+    "params": {
+      "a": "Birinci alan.",
+      "b": "İkinci alan."
+    }
+  },
+  "screen": {
+    "description": "Aydınlatır: 1 − (1−a)(1−b). Birim alanlar içindir.",
+    "params": {
+      "a": "Birinci alan.",
+      "b": "İkinci alan."
+    }
+  },
+  "overlay": {
+    "description": "Kontrastı artırır: koyuda çarpma, açıkta screen.",
+    "params": {
+      "a": "Birinci alan.",
+      "b": "İkinci alan."
+    }
+  },
+  "mix": {
+    "description": "İki alan arasında doğrusal karışım.",
+    "params": {
+      "a": "Birinci alan.",
+      "b": "İkinci alan.",
+      "t": "Karışım oranı; 0 = a, 1 = b."
+    }
+  },
+  "step": {
+    "description": "Sert eşik: girdi eşiğe eşit ya da büyükse 1.",
+    "params": {
+      "edge": "Eşik değeri.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "smoothstep": {
+    "description": "Yumuşak eşik; e0 > e1 verilerek azalan rampa elde edilir.",
+    "params": {
+      "e0": "Sonucun 0 olduğu girdi değeri.",
+      "e1": "Sonucun 1 olduğu girdi değeri.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "remap": {
+    "description": "Bir aralığı başka bir aralığa taşır; kelepçelemez.",
+    "params": {
+      "inMin": "Girdi alt sınırı.",
+      "inMax": "Girdi üst sınırı.",
+      "outMin": "Çıktı alt sınırı.",
+      "outMax": "Çıktı üst sınırı.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "curve": {
+    "description": "Parçalı doğrusal aktarım eğrisi; aralık dışı girdi uç değerde kelepçelenir.",
+    "params": {
+      "points": "En az iki `[girdi, çıktı]` noktası. Varsayılan kimlik eğrisidir.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "clamp": {
+    "description": "Değeri bir aralığa kelepçeler.",
+    "params": {
+      "min": "Alt sınır.",
+      "max": "Üst sınır.",
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "abs": {
+    "description": "Mutlak değer; bir SDF ile birlikte kontur kurmanın yolu.",
+    "params": {
+      "input": "Dönüştürülecek alan."
+    }
+  },
+  "invert": {
+    "description": "1 − x; kapsama alanlarını tersine çevirir.",
+    "params": {
+      "input": "Dönüştürülecek alan."
+    }
+  }
+}

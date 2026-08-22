@@ -1,6 +1,8 @@
 import {
   Button,
   Checkbox,
+  ColorPicker,
+  CurveEditor,
   Input,
   NumberStepper,
   RadioGroup,
@@ -181,6 +183,48 @@ function buildTimerBarDemo(disposables: Destroyable[]): HTMLElement {
   return wrap;
 }
 
+/** Palet düzenlemenin iki ucu: kutucuk + hex + hazır renkler. */
+function buildColorPickerDemo(disposables: Destroyable[]): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-checkbox-group';
+
+  const readout = new Text('#b85518', { variant: 'muted' });
+  const picker = new ColorPicker({
+    label: i18next.t('volui:forms.colorPickerLabel'),
+    value: '#b85518',
+    swatches: ['#b85518', '#246a79', '#565dbe', '#307a57', '#d2a03c', '#b94a4a'],
+    onChange: (value) => readout.setContent(value),
+  });
+  disposables.push(picker, readout);
+
+  wrap.appendChild(picker.element);
+  wrap.appendChild(readout.element);
+  return wrap;
+}
+
+/** Aktarım eğrisi: noktaları sürükle, çift tıkla ekle, Alt+tık ile sil. */
+function buildCurveEditorDemo(disposables: Destroyable[]): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-checkbox-group';
+
+  const readout = new Text('f(0.5) = 0.50', { variant: 'muted' });
+  const curve = new CurveEditor({
+    label: i18next.t('volui:forms.curveEditorLabel'),
+    points: [
+      [0, 0],
+      [0.5, 0.85],
+      [1, 1],
+    ],
+    onChange: () => readout.setContent(`f(0.5) = ${curve.sample(0.5).toFixed(2)}`),
+  });
+  disposables.push(curve, readout);
+  readout.setContent(`f(0.5) = ${curve.sample(0.5).toFixed(2)}`);
+
+  wrap.appendChild(curve.element);
+  wrap.appendChild(readout.element);
+  return wrap;
+}
+
 export function buildFormsTab(uiRootElement: HTMLElement): {
   element: HTMLElement;
   destroy: () => void;
@@ -262,6 +306,8 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:forms.timerBarVariations'), buildTimerBarVariationsDemo(disposables)),
     card(i18next.t('volui:forms.timerBar'), buildTimerBarDemo(disposables), { span: 2 }),
     card(i18next.t('volui:forms.rangeSlider'), buildRangeSliderDemo(disposables), { span: 4 }),
+    card(i18next.t('volui:forms.colorPicker'), buildColorPickerDemo(disposables)),
+    card(i18next.t('volui:forms.curveEditor'), buildCurveEditorDemo(disposables), { span: 2 }),
   ];
 
   container.appendChild(cardGrid(cards));

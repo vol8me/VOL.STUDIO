@@ -26,6 +26,14 @@ const ALSO_REQUIRED = [
  * politikayı sessizce delmenin kolay yolu olur.
  */
 const EXEMPT: ReadonlyArray<{ selector: string; reason: string }> = [
+  // --- Birincil kontrolün yanındaki KISAYOLLAR ---
+  {
+    selector: '.vol-color-picker__preset',
+    reason:
+      'Hazır renk kısayolu; aynı seçimi birincil kontrol (tam boy kutucuk + hex alanı) ' +
+      'zaten karşılıyor. Altı kutucuklu bir şeridi dokunmatik hedefe büyütmek paleti okunmaz yapardı.',
+  },
+
   // --- Zaten hedefin üstünde: dokunmatik-öncelikli kontroller ---
   {
     selector: '.vol-joystick__base',

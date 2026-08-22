@@ -1,0 +1,115 @@
+{
+  "app": {
+    "title": "VOL.FORGE",
+    "undo": "Undo",
+    "redo": "Redo"
+  },
+  "section": {
+    "layers": "LAYERS",
+    "tree": "SHAPE TREE",
+    "params": "PARAMETERS",
+    "document": "DOCUMENT",
+    "palette": "PALETTE",
+    "issues": "ISSUES",
+    "save": "SAVE"
+  },
+  "channel": {
+    "final": "Final",
+    "coverage": "Coverage",
+    "height": "Height",
+    "material": "Material",
+    "shade": "Shade",
+    "normal": "Normal",
+    "outline": "Outline"
+  },
+  "preview": {
+    "single": "Single",
+    "tile": "3×3",
+    "zoom": "Zoom",
+    "preQuantize": "Pre-quantize",
+    "error": "Document could not be rendered",
+    "status": "preview {{previewW}}×{{previewH}} / output {{outputW}}×{{outputH}} · {{ms}} ms · {{exact}}",
+    "exact": "exact",
+    "approx": "approximate",
+    "hiddenLayers": "{{count}} layer(s) hidden"
+  },
+  "layer": {
+    "add": "Add layer",
+    "remove": "Delete",
+    "moveUp": "Up",
+    "moveDown": "Down",
+    "hide": "Hide",
+    "show": "Show",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "locked": "Locked layers cannot be edited",
+    "material": "Ramp"
+  },
+  "tree": {
+    "source": "Source",
+    "mask": "Mask",
+    "height": "Height",
+    "materialMask": "Material mask",
+    "addField": "Add",
+    "removeField": "Remove",
+    "replace": "Replace",
+    "wrap": "Wrap",
+    "extract": "Extract",
+    "extractWhich": "Which child stays?",
+    "depthLimit": "Sub-stack depth limit reached",
+    "empty": "This field is not defined"
+  },
+  "param": {
+    "useDefault": "default",
+    "domain": "Domain",
+    "childLink": "→ go to node"
+  },
+  "document": {
+    "width": "Width",
+    "height": "Height",
+    "seed": "Seed",
+    "tileable": "Tileable",
+    "antialias": "Antialias",
+    "shadeEnabled": "Shading",
+    "light": "Light",
+    "strength": "Strength",
+    "ambient": "Ambient",
+    "rim": "Rim",
+    "relief": "Relief",
+    "aoRadius": "AO radius",
+    "aoStrength": "AO strength",
+    "outlinePx": "Outline (px)",
+    "outlineMode": "Outline mode",
+    "outlineColor": "Outline color",
+    "ditherKind": "Dither",
+    "ditherAmount": "Dither amount",
+    "quantize": "Quantize"
+  },
+  "palette": {
+    "modeData": "Data",
+    "modeGenerate": "Synthesis",
+    "bake": "Bake synthesis to data",
+    "bakeConfirm": "Synthesis will be baked to data; this cannot be undone. Continue?",
+    "addRamp": "Add ramp",
+    "removeRamp": "Remove ramp",
+    "base": "Base",
+    "steps": "Steps",
+    "hueShift": "Hue shift",
+    "satCurve": "Saturation",
+    "lockOk": "Palette lock: clean",
+    "lockFail": "Off-palette: {{count}}"
+  },
+  "issues": {
+    "none": "No issues",
+    "count": "{{count}} issue(s)",
+    "blocked": "Cannot save while issues remain"
+  },
+  "save": {
+    "category": "Category",
+    "name": "Name",
+    "button": "Save",
+    "ok": "Saved: {{path}}",
+    "fail": "Save failed: {{error}}",
+    "namePattern": "Name may contain only a-z, 0-9 and hyphen"
+  }
+}

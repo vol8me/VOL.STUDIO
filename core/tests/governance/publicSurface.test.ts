@@ -22,14 +22,14 @@ import * as Visual from '../../src/visual/index';
  * geçici bir tip) `export`u kaldır. İkisi de meşru; sessizce olmaması
  * yeterli.
  */
-const EXPECTED_EXPORT_COUNT = 172;
+const EXPECTED_EXPORT_COUNT = 174;
 
 /**
  * `visual/` kök barrel'a TEK bir isimle (`Visual`) girer, tıpkı `Synth` gibi.
  * Bu, alt sistemin kendi yüzeyini kök sayısının gölgesinde büyütmesi demek
  * olurdu; bu yüzden ayrıca ve kendi başına sayılır.
  */
-const EXPECTED_VISUAL_EXPORT_COUNT = 52;
+const EXPECTED_VISUAL_EXPORT_COUNT = 54;
 
 describe('CORE public API yüzeyi', () => {
   it('export sayısı bilinçli bir kararla değişir', () => {
