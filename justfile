@@ -117,6 +117,9 @@ dev:
 dev-ui:
     pnpm --filter @volstudio/vol-ui dev
 
+dev-forge:
+    pnpm --filter @volstudio/vol-forge dev
+
 fix:
     pnpm format
     pnpm lint:fix

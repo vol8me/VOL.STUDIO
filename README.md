@@ -31,9 +31,10 @@ Doküman yüzeyi: [core/docs](core/docs) (i18n, ses/müzik motorları, CORE prim
 
 ```bash
 pnpm install
-pnpm dev                                   # Vite dev server (yalnızca tarayıcı)
-pnpm --filter @volstudio/vol-ui dev        # UI component showcase'i
-pnpm --filter @volstudio/vol-forge dev     # görsel sentez editörü
+pnpm dev                                   # üç dev sunucusu birden (5173/5174/5175)
+pnpm --filter @volstudio/vol-hell dev      # yalnızca oyun            :5173
+pnpm --filter @volstudio/vol-ui dev        # yalnızca UI showcase'i   :5174
+pnpm --filter @volstudio/vol-forge dev     # yalnızca görsel editör   :5175
 pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # Oyun build
 pnpm build:tauri                           # PC installer build

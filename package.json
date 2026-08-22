@@ -11,7 +11,7 @@
     "high": "just high",
     "signoff": "just signoff",
     "doctor:env": "just doctor",
-    "dev": "pnpm --parallel -r --filter @volstudio/vol-hell --filter @volstudio/vol-ui run dev",
+    "dev": "pnpm --parallel -r --filter @volstudio/vol-hell --filter @volstudio/vol-ui --filter @volstudio/vol-forge run dev",
     "build:game": "pnpm --filter @volstudio/vol-hell build",
     "build:tauri": "pnpm run build:game && pnpm --filter @volstudio/tauri-v2 tauri build",
     "tauri:dev": "pnpm --filter @volstudio/tauri-v2 tauri dev --config tauri.dev.conf.json",

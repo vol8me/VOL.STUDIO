@@ -14,6 +14,7 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 core/            # @volstudio/core — shared systems + DOM-based UI library
 games/vol-hell/  # @volstudio/vol-hell — the game (Vite root)
 games/vol-ui/    # @volstudio/vol-ui — live showcase of the core UI components
+games/vol-forge/ # @volstudio/vol-forge — parameter editor for core/visual
 games/design/    # @volstudio/design — Pencil design source, export pipeline and rig assembly
 tauri-v2/        # @volstudio/tauri-v2 — native wrapper and Rust backend
 ```
@@ -30,8 +31,10 @@ Documentation surface: [core/docs](core/docs) (i18n, audio/music engines, CORE p
 
 ```bash
 pnpm install
-pnpm dev                                   # Vite dev server (browser only)
-pnpm --filter @volstudio/vol-ui dev        # UI component showcase
+pnpm dev                                   # all three dev servers (5173/5174/5175)
+pnpm --filter @volstudio/vol-hell dev      # game only               :5173
+pnpm --filter @volstudio/vol-ui dev        # UI showcase only        :5174
+pnpm --filter @volstudio/vol-forge dev     # visual editor only      :5175
 pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # Build the game
 pnpm build:tauri                           # Build PC installers
