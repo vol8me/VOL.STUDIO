@@ -27,9 +27,21 @@ export {
 
 export { createUnitSpace, type UnitSpace } from './field/space';
 export { FieldBufferPool, type FieldBuffer } from './field/buffer';
-export { compileField, applyDomainChain, deriveNodeSeed } from './field/evaluate';
+export { createLattice, type Lattice } from './field/lattice';
+export {
+  compileField,
+  applyDomainChain,
+  createCompileContext,
+  releaseCompiled,
+  evaluateInto,
+  deriveNodeSeed,
+  type CompileContext,
+} from './field/evaluate';
 export type { FieldFn } from './field/fn';
+export { toCoverageFn } from './field/coverage';
 export { blendCoverage, blendHeight } from './field/blend';
+export { createBufferSampler, type SampleMode, type EdgeMode } from './field/sample';
+export { signedDistanceField } from './field/distance';
 
 export {
   rgbToOklab,

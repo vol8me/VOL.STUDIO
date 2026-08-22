@@ -8,15 +8,21 @@
  * kod o sırayı birebir izler.
  */
 
-import { clamp01 } from '../math/interpolation';
 import { resolvePalette, type ResolvedPalette } from './color/palette';
 import { quantizeToRgba } from './color/quantize';
 import { blendCoverage, blendHeight } from './field/blend';
 import { FieldBufferPool, type FieldBuffer } from './field/buffer';
-import { applyDomainChain, compileField } from './field/evaluate';
+import { toCoverageFn } from './field/coverage';
+import {
+  applyDomainChain,
+  compileField,
+  createCompileContext,
+  evaluateInto,
+  releaseCompiled,
+  type CompileContext,
+} from './field/evaluate';
 import type { FieldFn } from './field/fn';
 import { createUnitSpace, type UnitSpace } from './field/space';
-import { resolveFieldDomain } from './schema';
 import type { FieldNode, LayerSpec, SpriteDoc } from './types';
 import { validateSpriteDoc } from './validate';
 
@@ -60,63 +66,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-/**
- * Bir alanı KAPSAMAYA çevirir — §5.8'in tek uygulandığı yer.
- *
- * `unit` alan zaten kapsamadır, kelepçelenir. `signed` alan işaretli
- * mesafedir ve eşikten geçer:
- *
- * - `antialias: false` → `d <= 0 ? 1 : 0`. Keskin piksel; düşük çözünürlükte
- *   istenen budur.
- * - `antialias: true`  → yarım piksel genişliğinde yumuşak geçiş. Genişlik
- *   BİRİM UZAYDA SABİT OLAMAZ: 1024²'de yumuşak olan bir genişlik 32²'de
- *   şeklin tamamını yutar. Bu yüzden piksel boyutundan türetilir.
- *
- * `antialias`ın tüm varlık sebebi çözünürlüğe bağlı kenar davranışıdır;
- * piksel biriminin buraya sızması D2'ye aykırı değil, D2'nin kendisidir.
- */
-function toCoverageFn(
-  field: FieldFn,
-  node: FieldNode,
-  space: UnitSpace,
-  antialias: boolean,
-): FieldFn {
-  if (resolveFieldDomain(node) === 'unit') {
-    return (x, y) => clamp01(field(x, y));
-  }
-  if (!antialias) {
-    return (x, y) => (field(x, y) <= 0 ? 1 : 0);
-  }
-  const half = space.pixelUnit / 2;
-  const span = 1 / (2 * half);
-  return (x, y) => {
-    const t = clamp01((field(x, y) + half) * span);
-    // Azalan yumuşatma: mesafe −half iken 1 (tam içeride), +half iken 0.
-    return 1 - t * t * (3 - 2 * t);
-  };
-}
-
 /** Bir katman alanını derleyip kapsamaya çeviren yardımcı. */
 function compileCoverage(
   node: FieldNode,
   path: string,
-  seed: number,
+  context: CompileContext,
   space: UnitSpace,
-  antialias: boolean,
 ): FieldFn {
-  return toCoverageFn(compileField(node, path, seed), node, space, antialias);
-}
-
-/** Aşama 1: derlenmiş alanı hedef çözünürlükte tampona yazar (yeniden örnekleme YOK). */
-function evaluateInto(buffer: FieldBuffer, field: FieldFn, space: UnitSpace): void {
-  const { width, height, data } = buffer;
-  for (let py = 0; py < height; py++) {
-    const y = space.unitY(py);
-    const row = py * width;
-    for (let px = 0; px < width; px++) {
-      data[row + px] = field(space.unitX(px), y);
-    }
-  }
+  return toCoverageFn(compileField(node, path, context), node, space, context.antialias);
 }
 
 function renderLayer(
@@ -126,9 +83,19 @@ function renderLayer(
   pool: FieldBufferPool,
   accumulator: RenderChannels,
 ): void {
-  const antialias = doc.antialias ?? false;
   const { width, height } = space;
   const pixelCount = width * height;
+
+  // Derleme bağlamı KATMAN BAŞINA kurulur ve katman bitince tamponlarını
+  // iade eder: tamponlu düğümlerin (filtre, warp, scatter) tuttuğu bellek
+  // belgenin tamamı boyunca değil, yalnızca kendi katmanı boyunca yaşar (D7).
+  const context = createCompileContext(
+    space,
+    pool,
+    doc.seed,
+    doc.tileable ?? false,
+    doc.antialias ?? false,
+  );
 
   const layerCoverage = pool.acquire(width, height);
   const layerHeight = pool.acquire(width, height);
@@ -136,7 +103,7 @@ function renderLayer(
   try {
     // (a) üreteç ∘ domain zinciri — fonksiyonel, ara raster yok.
     const sourceFn = applyDomainChain(
-      compileCoverage(layer.source, `${layer.id}/source`, doc.seed, space, antialias),
+      compileCoverage(layer.source, `${layer.id}/source`, context, space),
       layer.domain,
     );
     evaluateInto(layerCoverage, sourceFn, space);
@@ -144,29 +111,26 @@ function renderLayer(
     // (b) maske. Maske ŞEKİLDİR, opaklık değil: bu yüzden kapsamayı çarpar
     //     ve malzeme eşiği maskelenmiş kapsamayı sınar. Aksi halde maskeyle
     //     gizlenen bölge altındaki katmanın rengini bu katmanın rampasıyla
-    //     ezerdi — görünmeyen bir katmanın görünür bir yan etkisi.
+    //     ezerdi — görünmeyen bir katmanın görünür yan etkisi.
     if (layer.mask) {
       const mask = pool.acquire(width, height);
       try {
-        evaluateInto(
-          mask,
-          compileCoverage(layer.mask, `${layer.id}/mask`, doc.seed, space, antialias),
-          space,
-        );
+        evaluateInto(mask, compileCoverage(layer.mask, `${layer.id}/mask`, context, space), space);
         for (let i = 0; i < pixelCount; i++) layerCoverage.data[i] *= mask.data[i];
       } finally {
         pool.release(mask);
       }
     }
 
-    // (c) komşuluk filtreleri — Tur 2.
+    // (c) komşuluk filtreleri ağacın DÜĞÜMÜDÜR (bkz. `field/evaluate.ts`),
+    //     ayrı bir katman adımı değil; burada yapılacak iş kalmaz.
 
     // (e) ayrı yükseklik alanı; yoksa kapsama kullanılır. Ayrı olabilmesi
     //     gerekir, yoksa "düz siluet, dokulu yüzey" ifade edilemez.
     if (layer.height) {
       evaluateInto(
         layerHeight,
-        compileCoverage(layer.height, `${layer.id}/height`, doc.seed, space, antialias),
+        compileCoverage(layer.height, `${layer.id}/height`, context, space),
         space,
       );
     } else {
@@ -194,6 +158,7 @@ function renderLayer(
       if (coverage > threshold) accumulator.material[i] = material;
     }
   } finally {
+    releaseCompiled(context);
     pool.release(layerHeight);
     pool.release(layerCoverage);
   }
@@ -231,7 +196,7 @@ export function renderSprite(input: unknown, options: RenderOptions = {}): Rende
 
   for (const layer of doc.layers) renderLayer(layer, doc, space, pool, channels);
 
-  // Tur 1'de gölge YÜKSEKLİĞİN KENDİSİDİR. Tur 3 buraya Lambert + ambient +
+  // Tur 1–2'de gölge YÜKSEKLİĞİN KENDİSİDİR. Tur 3 buraya Lambert + ambient +
   // rim + AO koyacak; nicemleyicinin sözleşmesi değişmez, `shade`in kaynağı
   // değişir. Aradaki özdeşlik, yükseklik kanalını bugünden ölçülebilir yapar.
   const shade = channels.height;
@@ -241,3 +206,5 @@ export function renderSprite(input: unknown, options: RenderOptions = {}): Rende
 
   return { width, height, rgba, channels, palette, doc };
 }
+
+export type { FieldBuffer };

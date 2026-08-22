@@ -5,7 +5,7 @@
  * primitifi gerekmez (D9).
  */
 
-import { clamp01, lerp } from '../../math/interpolation';
+import { clamp, clamp01, lerp, remap } from '../../math/interpolation';
 import type { FieldFn } from './fn';
 
 export function addFields(a: FieldFn, b: FieldFn): FieldFn {
@@ -51,4 +51,78 @@ export function smoothstepField(e0: number, e1: number, input: FieldFn): FieldFn
     const t = clamp01((input(x, y) - e0) * span);
     return t * t * (3 - 2 * t);
   };
+}
+
+export function subFields(a: FieldFn, b: FieldFn): FieldFn {
+  return (x, y) => a(x, y) - b(x, y);
+}
+
+/** `1 − (1−a)(1−b)` — aydınlatır, 1'i aşmaz. */
+export function screenFields(a: FieldFn, b: FieldFn): FieldFn {
+  return (x, y) => 1 - (1 - a(x, y)) * (1 - b(x, y));
+}
+
+/** Koyu bölgede çarpma, açık bölgede screen: kontrastı artırır. */
+export function overlayFields(a: FieldFn, b: FieldFn): FieldFn {
+  return (x, y) => {
+    const base = a(x, y);
+    const blend = b(x, y);
+    return base < 0.5 ? 2 * base * blend : 1 - 2 * (1 - base) * (1 - blend);
+  };
+}
+
+/** Bir aralığı başka bir aralığa taşır; kelepçelemez (bilinçli ekstrapolasyon). */
+export function remapField(
+  inMin: number,
+  inMax: number,
+  outMin: number,
+  outMax: number,
+  input: FieldFn,
+): FieldFn {
+  return (x, y) => remap(input(x, y), inMin, inMax, outMin, outMax);
+}
+
+/**
+ * Parçalı doğrusal aktarım eğrisi.
+ *
+ * Noktalar derleme anında x'e göre sıralanır ve ayrı dizilere açılır: piksel
+ * başına nesne alanına erişmek, milyonlarca çağrıda ölçülebilir bir fark
+ * yaratır. Aralık dışı girdi uç değerlerde KELEPÇELENİR — eğrinin dışına
+ * ekstrapolasyon yapmak, kullanıcının çizmediği bir davranışı uydurmaktır.
+ */
+export function curveField(
+  points: readonly (readonly [number, number])[],
+  input: FieldFn,
+): FieldFn {
+  const sorted = [...points].sort((first, second) => first[0] - second[0]);
+  const xs = Float64Array.from(sorted, (point) => point[0]);
+  const ys = Float64Array.from(sorted, (point) => point[1]);
+  const last = xs.length - 1;
+
+  return (x, y) => {
+    const value = input(x, y);
+    if (value <= xs[0]) return ys[0];
+    if (value >= xs[last]) return ys[last];
+
+    // Aralık sayısı küçük olduğu için doğrusal tarama ikili aramadan hızlıdır.
+    let i = 0;
+    while (i < last && xs[i + 1] < value) i++;
+    const span = xs[i + 1] - xs[i];
+    if (span <= 0) return ys[i + 1];
+    return lerp(ys[i], ys[i + 1], (value - xs[i]) / span);
+  };
+}
+
+export function clampField(min: number, max: number, input: FieldFn): FieldFn {
+  return (x, y) => clamp(input(x, y), min, max);
+}
+
+/** Mutlak değer — bir SDF'yi KONTURA çevirmenin yolu (§4.1). */
+export function absField(input: FieldFn): FieldFn {
+  return (x, y) => Math.abs(input(x, y));
+}
+
+/** `1 − x`; kapsama alanlarını tersine çevirir. */
+export function invertField(input: FieldFn): FieldFn {
+  return (x, y) => 1 - input(x, y);
 }

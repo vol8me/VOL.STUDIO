@@ -5,23 +5,18 @@
  *
  * 1. **Tüm sorunlar tek seferde bildirilir.** İlk hatada durmak, agent'ı
  *    "düzelt–çalıştır–düzelt" döngüsüne sokar. `scripts/quality/config.mjs`
- *    aynı kararı ses/kapı tarafında verdi.
- * 2. **Henüz uygulanmamış bir alan SESSİZCE YOKSAYILMAZ.** Yoksayılırsa
- *    belge tip denetiminden geçer, render olur ve istenenden başka bir şey
- *    çizer. Bunun yerine hangi turda geleceği söylenerek reddedilir.
+ *    aynı kararı kapı tarafında verdi.
+ * 2. **Henüz uygulanmamış ya da o bağlamda çalışmayacak bir alan SESSİZCE
+ *    YOKSAYILMAZ.** Yoksayılırsa belge doğrulamadan geçer, render olur ve
+ *    istenenden başka bir şey çizer.
  *
  * Sonlu sayı sözleşmesi (`core/docs/primitives.md`): `size`, `seed`, `freq`
  * gibi YAPILANDIRMA değerleri REDDEDİLİR — sessizce düzeltmek hatayı
  * kullanıma kadar erteler.
  */
 
-import {
-  NODE_SCHEMAS,
-  FIELD_KINDS,
-  type NodeSchema,
-  type ParamConstraint,
-  type ParamSchema,
-} from './schema';
+import { FIELD_KINDS, NODE_SCHEMAS } from './schema';
+import type { NodeSchema, ParamConstraint, ParamSchema } from './schema';
 import type { CoverageBlend, FieldKind, FieldNode, HeightBlend, SpriteDoc } from './types';
 
 /** En küçük ve en büyük çıktı kenarı (§2). */
@@ -44,48 +39,20 @@ const COVERAGE_BLENDS: readonly CoverageBlend[] = [
 const HEIGHT_BLENDS: readonly HeightBlend[] = ['max', 'min', 'add', 'mul', 'replace'];
 
 /**
- * Envanterde (§4) tanımlı ama henüz uygulanmamış düğümler ve geldikleri tur.
+ * Belgede görülebilecek ama alan düğümü OLMAYAN adlar ve geldikleri tur.
  *
- * "Bilinmeyen tür" demek yerine yol haritasını söylemek, belgeyi yazan
- * agent'ın bir sonraki hamlesini belirler.
+ * Gölgeleme ve son işlem `shade`/`post` yapılandırmasıdır, `source` içine
+ * yazılmaz; agent bunları düğüm sanıp denediğinde "bilinmeyen tür" yerine
+ * nereye ait olduklarını öğrenir.
  */
 const FUTURE_KINDS: Readonly<Record<string, string>> = {
-  'noise.simplex': 'Tur 2',
-  'noise.worley': 'Tur 2',
-  'noise.fbm': 'Tur 2',
-  'gradient.angular': 'Tur 2',
-  'gradient.diamond': 'Tur 2',
-  'sdf.roundBox': 'Tur 2',
-  'sdf.polygon': 'Tur 2',
-  'sdf.star': 'Tur 2',
-  'sdf.line': 'Tur 2',
-  'sdf.capsule': 'Tur 2',
-  'sdf.arc': 'Tur 2',
-  'pattern.checker': 'Tur 2',
-  'pattern.stripes': 'Tur 2',
-  'pattern.dots': 'Tur 2',
-  'pattern.grid': 'Tur 2',
-  'pattern.hex': 'Tur 2',
-  skew: 'Tur 2',
-  mirror: 'Tur 2',
-  repeat: 'Tur 2',
-  polar: 'Tur 2',
-  warp: 'Tur 2',
-  scatter: 'Tur 2',
-  sub: 'Tur 2',
-  screen: 'Tur 2',
-  overlay: 'Tur 2',
-  remap: 'Tur 2',
-  curve: 'Tur 2',
-  clamp: 'Tur 2',
-  abs: 'Tur 2',
-  invert: 'Tur 2',
-  blur: 'Tur 2',
-  sharpen: 'Tur 2',
-  dilate: 'Tur 2',
-  erode: 'Tur 2',
-  edge: 'Tur 2',
-  distance: 'Tur 2',
+  normal: 'Tur 3 — `shade` yapılandırması, alan düğümü değil',
+  lambert: 'Tur 3 — `shade` yapılandırması, alan düğümü değil',
+  rim: 'Tur 3 — `shade` yapılandırması, alan düğümü değil',
+  ao: 'Tur 3 — `shade` yapılandırması, alan düğümü değil',
+  outline: 'Tur 3 — `post` yapılandırması, alan düğümü değil',
+  dither: 'Tur 3 — `post` yapılandırması, alan düğümü değil',
+  quantize: 'Tur 3 — `post` yapılandırması, alan düğümü değil',
 };
 
 /** Belgede görülebilecek, henüz uygulanmamış ALANLAR ve geldikleri tur. */
@@ -103,6 +70,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 class IssueList {
   readonly items: string[] = [];
+
+  /** Döşenebilir belgede bazı düğümler geçersizdir (§5.2). */
+  constructor(readonly tileable: boolean) {}
 
   add(path: string, message: string): void {
     this.items.push(`${path}: ${message}`);
@@ -146,6 +116,9 @@ function checkConstraint(
     case 'unit':
       if (value < 0 || value > 1) issues.add(path, `0..1 aralığında olmalı (gelen: ${value})`);
       break;
+    case 'atLeastThree':
+      if (value < 3) issues.add(path, `en az 3 olmalı (gelen: ${value})`);
+      break;
     default:
       break;
   }
@@ -176,6 +149,11 @@ function checkParam(
     case 'bool':
       if (typeof value !== 'boolean') issues.add(at, 'true ya da false olmalı');
       break;
+    case 'enum':
+      if (typeof value !== 'string' || !(param.options ?? []).includes(value)) {
+        issues.add(at, `şunlardan biri olmalı: ${(param.options ?? []).join(', ')}`);
+      }
+      break;
     case 'vec2':
       if (!Array.isArray(value) || value.length !== 2) {
         issues.add(at, 'iki elemanlı bir dizi olmalı');
@@ -188,6 +166,20 @@ function checkParam(
         }
       }
       break;
+    case 'points':
+      if (!Array.isArray(value) || value.length < 2) {
+        issues.add(at, 'en az iki nokta içeren bir dizi olmalı');
+        break;
+      }
+      value.forEach((point, i) => {
+        if (!Array.isArray(point) || point.length !== 2) {
+          issues.add(`${at}[${i}]`, '`[girdi, çıktı]` biçiminde olmalı');
+          return;
+        }
+        issues.finite(`${at}[${i}][0]`, point[0]);
+        issues.finite(`${at}[${i}][1]`, point[1]);
+      });
+      break;
     case 'field':
       checkField(issues, at, value, depth + 1);
       break;
@@ -197,10 +189,63 @@ function checkParam(
 }
 
 /**
+ * Türe özel anlamsal kurallar — şemanın tek tek parametrelerden göremediği
+ * ilişkiler ve döşeme kısıtları.
+ *
+ * Şemaya sıkıştırılmadılar çünkü şema PARAMETRE bildirir; buradakiler
+ * parametreler ARASI ya da belge bağlamına bağlı kurallardır.
+ */
+function checkSemantics(
+  issues: IssueList,
+  path: string,
+  kind: FieldKind,
+  raw: Record<string, unknown>,
+): void {
+  if (kind === 'skew') {
+    const x = raw.x;
+    const y = raw.y;
+    if (typeof x === 'number' && typeof y === 'number' && 1 - x * y === 0) {
+      issues.add(path, 'x·y = 1 kesmesi tekildir: düzlemin tamamı bir doğruya çöker');
+    }
+  }
+
+  if (kind === 'mirror' && raw.axis === 'radial' && raw.count === undefined) {
+    issues.add(`${path}.count`, '`radial` aynalama kol sayısı ister');
+  }
+
+  if (!issues.tileable) return;
+
+  // §5.2 — döşenebilirlik ızgara sarmasına dayanır ve bazı düğümler buna
+  // uymaz. Sessizce yanlış üretmek yerine sınırda reddedilirler.
+  if (kind === 'noise.simplex') {
+    issues.add(
+      path,
+      'simplex kafesi EĞİKtir, ızgara sarma uygulanamaz (§5.2); ' +
+        'döşenebilir belgede `noise.value` ya da `noise.worley` kullanın',
+    );
+  }
+
+  if ((kind === 'noise.value' || kind === 'noise.worley') && !Number.isInteger(raw.freq)) {
+    issues.add(`${path}.freq`, 'döşenebilir belgede tam sayı olmalı (§5.2)');
+  }
+
+  if (kind === 'noise.fbm' && raw.lacunarity !== undefined && !Number.isInteger(raw.lacunarity)) {
+    issues.add(
+      `${path}.lacunarity`,
+      'döşenebilir belgede tam sayı olmalı; kesirli çarpan periyodu bozar',
+    );
+  }
+
+  if (kind === 'repeat' && !Number.isInteger(raw.count)) {
+    issues.add(`${path}.count`, 'döşenebilir belgede tam sayı olmalı');
+  }
+}
+
+/**
  * Düğüm türünü şemaya çözer.
  *
  * `checkField` ve `domain` dizisi AYNI çözümleyiciyi kullanır; ayrı yazılmış
- * iki kopya, "bu tür Tur 2'de gelir" gibi mesajların birinde güncellenip
+ * iki kopya, "bu tür Tur 3'te gelir" gibi mesajların birinde güncellenip
  * diğerinde eskimesi demekti.
  */
 function resolveNodeSchema(issues: IssueList, path: string, kind: unknown): NodeSchema | null {
@@ -210,7 +255,7 @@ function resolveNodeSchema(issues: IssueList, path: string, kind: unknown): Node
   }
   const future = FUTURE_KINDS[kind];
   if (future !== undefined) {
-    issues.add(path, `"${kind}" envanterde var ama henüz uygulanmadı (${future})`);
+    issues.add(path, `"${kind}": ${future}`);
     return null;
   }
   if (!Object.prototype.hasOwnProperty.call(NODE_SCHEMAS, kind)) {
@@ -268,6 +313,7 @@ function checkField(issues: IssueList, path: string, value: unknown, depth = 0):
 
   for (const param of schema.params) checkParam(issues, path, param, value, depth);
   checkUnknownKeys(issues, path, value, schema);
+  checkSemantics(issues, path, schema.kind, value);
 }
 
 function checkPalette(issues: IssueList, raw: unknown): Set<number> {
@@ -277,7 +323,7 @@ function checkPalette(issues: IssueList, raw: unknown): Set<number> {
     return rampIds;
   }
 
-  if (isRecord(raw) && raw.generate !== undefined) {
+  if (raw.generate !== undefined) {
     issues.add(
       'palette.generate',
       "palet sentezi Tur 3'te gelir; şimdilik `colors` + `ramps` verilir",
@@ -344,6 +390,33 @@ function checkPalette(issues: IssueList, raw: unknown): Set<number> {
   return rampIds;
 }
 
+function checkDomainChain(issues: IssueList, at: string, raw: unknown): void {
+  if (!Array.isArray(raw)) {
+    issues.add(`${at}.domain`, 'alan-uzayı işlemlerinden oluşan bir dizi olmalı');
+    return;
+  }
+  raw.forEach((op, i) => {
+    const opAt = `${at}.domain[${i}]`;
+    if (!isRecord(op)) {
+      issues.add(opAt, 'nesne olmalı');
+      return;
+    }
+    const schema = resolveNodeSchema(issues, opAt, op.kind);
+    if (!schema) return;
+    if (schema.category !== 'domain') {
+      issues.add(opAt, `"${schema.kind}" bir alan-uzayı işlemi değil`);
+      return;
+    }
+    // `input` burada YOKTUR: dizi `source`a uygulanır, sırayı zincir verir.
+    for (const param of schema.params) {
+      if (param.name === 'input') continue;
+      checkParam(issues, opAt, param, op);
+    }
+    checkUnknownKeys(issues, opAt, op, schema, ['input']);
+    checkSemantics(issues, opAt, schema.kind, op);
+  });
+}
+
 function checkLayer(issues: IssueList, index: number, raw: unknown, rampIds: Set<number>): string {
   const at = `layers[${index}]`;
   if (!isRecord(raw)) {
@@ -362,31 +435,7 @@ function checkLayer(issues: IssueList, index: number, raw: unknown, rampIds: Set
 
   checkField(issues, `${at}.source`, raw.source);
 
-  if (raw.domain !== undefined && raw.domain !== null) {
-    if (!Array.isArray(raw.domain)) {
-      issues.add(`${at}.domain`, 'alan-uzayı işlemlerinden oluşan bir dizi olmalı');
-    } else {
-      raw.domain.forEach((op, i) => {
-        const opAt = `${at}.domain[${i}]`;
-        if (!isRecord(op)) {
-          issues.add(opAt, 'nesne olmalı');
-          return;
-        }
-        const schema = resolveNodeSchema(issues, opAt, op.kind);
-        if (!schema) return;
-        if (schema.category !== 'domain') {
-          issues.add(opAt, `"${schema.kind}" bir alan-uzayı işlemi değil`);
-          return;
-        }
-        // `input` burada YOKTUR: dizi `source`a uygulanır, sırayı zincir verir.
-        for (const param of schema.params) {
-          if (param.name === 'input') continue;
-          checkParam(issues, opAt, param, op);
-        }
-        checkUnknownKeys(issues, opAt, op, schema, ['input']);
-      });
-    }
-  }
+  if (raw.domain !== undefined && raw.domain !== null) checkDomainChain(issues, at, raw.domain);
 
   if (raw.mask !== undefined && raw.mask !== null) {
     if (isRecord(raw.mask) && Array.isArray(raw.mask.layers)) {
@@ -432,11 +481,10 @@ function checkLayer(issues: IssueList, index: number, raw: unknown, rampIds: Set
 
 /** Belgedeki TÜM sorunları toplar. Boş dizi = belge geçerli. */
 export function collectSpriteDocIssues(input: unknown): string[] {
-  const issues = new IssueList();
+  if (!isRecord(input)) return ['belge: bir JSON nesnesi olmalı'];
 
-  if (!isRecord(input)) {
-    return ['belge: bir JSON nesnesi olmalı'];
-  }
+  const tileable = input.tileable === true;
+  const issues = new IssueList(tileable);
 
   if (input.schemaVersion !== 1) {
     issues.add('schemaVersion', `1 olmalı (gelen: ${String(input.schemaVersion)})`);
@@ -458,9 +506,7 @@ export function collectSpriteDocIssues(input: unknown): string[] {
 
   issues.integer('seed', input.seed);
 
-  if (input.tileable === true) {
-    issues.add('tileable', "döşenebilir üretim Tur 2'de gelir; şimdilik false olmalı");
-  } else if (input.tileable !== undefined && typeof input.tileable !== 'boolean') {
+  if (input.tileable !== undefined && typeof input.tileable !== 'boolean') {
     issues.add('tileable', 'true ya da false olmalı');
   }
 
@@ -523,19 +569,25 @@ export function validateSpriteDoc(input: unknown): SpriteDoc {
   return input as SpriteDoc;
 }
 
-/** Bir alan ağacını tek başına doğrular — maske/yükseklik parçaları için. */
-export function collectFieldIssues(node: unknown, path = 'field'): string[] {
-  const issues = new IssueList();
+/**
+ * Bir alan ağacını tek başına doğrular — maske/yükseklik parçaları için.
+ *
+ * `tileable` verilmezse döşeme kuralları uygulanmaz; tek başına bir alan
+ * hangi belgede kullanılacağını bilmez.
+ */
+export function collectFieldIssues(node: unknown, path = 'field', tileable = false): string[] {
+  const issues = new IssueList(tileable);
   checkField(issues, path, node);
   return issues.items;
 }
 
 /** Dışarıdan gelen `FieldNode`u doğrular ve tipler. */
-export function validateField(node: unknown, path = 'field'): FieldNode {
-  const issues = collectFieldIssues(node, path);
+export function validateField(node: unknown, path = 'field', tileable = false): FieldNode {
+  const issues = collectFieldIssues(node, path, tileable);
   if (issues.length > 0) {
     throw new Error(
-      `Alan geçersiz (${issues.length} sorun):\n` + issues.map((i) => `  - ${i}`).join('\n'),
+      `Alan geçersiz (${issues.length} sorun):\n` +
+        issues.map((issue) => `  - ${issue}`).join('\n'),
     );
   }
   return node as FieldNode;

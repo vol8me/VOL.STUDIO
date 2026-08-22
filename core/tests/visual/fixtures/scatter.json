@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "size": [96, 96],
+  "seed": 31,
+  "antialias": false,
+  "palette": {
+    "colors": ["#12101a", "#2a2540", "#4b4270", "#7a6ea8", "#b0a6d6"],
+    "ramps": [
+      { "id": 0, "name": "taban", "indices": [0, 1] },
+      { "id": 1, "name": "parca", "indices": [2, 3, 4] }
+    ]
+  },
+  "layers": [
+    {
+      "id": "zemin",
+      "source": { "kind": "sdf.roundBox", "center": [0, 0], "half": [0.9, 0.9], "r": 0.15 },
+      "height": { "kind": "const", "value": 0.2 },
+      "material": 0
+    },
+    {
+      "id": "serpme",
+      "source": {
+        "kind": "scatter",
+        "source": { "kind": "sdf.star", "center": [0, 0], "n": 5, "rOuter": 0.09, "rInner": 0.04 },
+        "count": 12,
+        "jitter": 0.7,
+        "rotJitter": 180,
+        "scaleJitter": 0.35
+      },
+      "height": { "kind": "gradient.radial", "center": [0, 0], "radius": 1.4 },
+      "blend": "over",
+      "material": 1
+    }
+  ]
+}

@@ -93,8 +93,8 @@ describe('sonlu sayı sözleşmesi — yapılandırma REDDEDİLİR', () => {
 });
 
 describe('henüz uygulanmamış alanlar sessizce YOKSAYILMAZ', () => {
-  it('tileable Tur 2 diyerek reddedilir', () => {
-    expect(issuesFor({ ...baseDoc(), tileable: true }, 'tileable')[0]).toMatch(/Tur 2/);
+  it('tileable artık kabul edilir, tipi denetlenir', () => {
+    expect(collectSpriteDocIssues({ ...baseDoc(), tileable: true })).toEqual([]);
     expect(collectSpriteDocIssues({ ...baseDoc(), tileable: false })).toEqual([]);
     expect(issuesFor({ ...baseDoc(), tileable: 'evet' }, 'tileable')).toHaveLength(1);
   });
@@ -119,10 +119,12 @@ describe('henüz uygulanmamış alanlar sessizce YOKSAYILMAZ', () => {
     );
   });
 
-  it('envanterde olan ama uygulanmayan düğüm turunu söyler', () => {
+  it('alan düğümü OLMAYAN adlar nereye ait olduklarını söyler', () => {
+    // Gölgeleme ve son işlem `shade`/`post` yapılandırmasıdır; `source`
+    // içine yazıldığında "bilinmeyen tür" demek yol göstermez.
     const doc = baseDoc();
-    (doc.layers as Array<Record<string, unknown>>)[0].source = { kind: 'sdf.capsule' };
-    expect(issuesFor(doc, 'layers[0].source')[0]).toMatch(/Tur 2/);
+    (doc.layers as Array<Record<string, unknown>>)[0].source = { kind: 'lambert' };
+    expect(issuesFor(doc, 'layers[0].source')[0]).toMatch(/Tur 3.*alan düğümü değil/);
   });
 
   it('bilinmeyen düğüm uygulanabilir türleri listeler', () => {
@@ -376,5 +378,94 @@ describe('parametre şeması doğrulaması', () => {
   it('validateField geçerli ağacı döndürür, geçersizde fırlatır', () => {
     expect(validateField({ kind: 'const', value: 0.5 })).toEqual({ kind: 'const', value: 0.5 });
     expect(() => validateField({ kind: 'const' })).toThrow(/Alan geçersiz/);
+  });
+});
+
+describe('Tur 2 parametre tipleri', () => {
+  it('enum yalnızca listedeki değeri kabul eder', () => {
+    expect(collectFieldIssues({ kind: 'noise.worley', freq: 4, mode: 'F3' })[0]).toMatch(
+      /F1, F2, F2-F1/,
+    );
+    expect(collectFieldIssues({ kind: 'noise.worley', freq: 4, mode: 'F2' })).toEqual([]);
+    expect(collectFieldIssues({ kind: 'noise.worley', freq: 4 })).toEqual([]);
+  });
+
+  it('points en az iki geçerli çift ister', () => {
+    const withPoints = (points: unknown): unknown => ({
+      kind: 'curve',
+      points,
+      input: { kind: 'const', value: 0.5 },
+    });
+
+    expect(collectFieldIssues(withPoints([[0, 0]]))[0]).toMatch(/en az iki nokta/);
+    expect(collectFieldIssues(withPoints('eğri'))[0]).toMatch(/en az iki nokta/);
+    expect(collectFieldIssues(withPoints([[0, 0], [1]]))[0]).toMatch(/girdi, çıktı/);
+    expect(
+      collectFieldIssues(
+        withPoints([
+          [0, 0],
+          [1, NaN],
+        ]),
+      )[0],
+    ).toMatch(/sonlu/);
+    expect(
+      collectFieldIssues(
+        withPoints([
+          [0, 0],
+          [1, 1],
+        ]),
+      ),
+    ).toEqual([]);
+  });
+
+  it('atLeastThree kısıtı düşük kenar sayısını reddeder', () => {
+    expect(collectFieldIssues({ kind: 'sdf.polygon', n: 2, r: 0.5 })[0]).toMatch(/en az 3/);
+    expect(collectFieldIssues({ kind: 'sdf.star', n: 2, rOuter: 0.5, rInner: 0.2 })[0]).toMatch(
+      /en az 3/,
+    );
+  });
+});
+
+describe('türe özel anlamsal kurallar', () => {
+  it('tekil kesme reddedilir — düzlem bir doğruya çöker', () => {
+    const singular = { kind: 'skew', x: 2, y: 0.5, input: { kind: 'const', value: 1 } };
+    expect(collectFieldIssues(singular)[0]).toMatch(/tekildir/);
+
+    const fine = { kind: 'skew', x: 0.5, y: 0.5, input: { kind: 'const', value: 1 } };
+    expect(collectFieldIssues(fine)).toEqual([]);
+  });
+
+  it('radial aynalama kol sayısı ister', () => {
+    const missing = { kind: 'mirror', axis: 'radial', input: { kind: 'const', value: 1 } };
+    expect(collectFieldIssues(missing)[0]).toMatch(/kol sayısı/);
+
+    const given = { ...missing, count: 5 };
+    expect(collectFieldIssues(given)).toEqual([]);
+    // Diğer eksenler sayı istemez.
+    expect(collectFieldIssues({ ...missing, axis: 'quad' })).toEqual([]);
+  });
+
+  it('tamponlu düğümler de şemadan doğrulanır', () => {
+    expect(
+      collectFieldIssues({ kind: 'blur', radius: -1, input: { kind: 'const', value: 1 } })[0],
+    ).toMatch(/negatif olamaz/);
+    expect(
+      collectFieldIssues({ kind: 'scatter', source: { kind: 'const', value: 1 }, count: 0 })[0],
+    ).toMatch(/sıfırdan büyük/);
+    expect(
+      collectFieldIssues({
+        kind: 'warp',
+        by: { kind: 'const', value: 1 },
+        amount: 0.1,
+        sample: 'kübik',
+        input: { kind: 'const', value: 1 },
+      })[0],
+    ).toMatch(/nearest, bilinear/);
+  });
+
+  it('döşeme kuralları tek başına doğrulanan alanda da uygulanabilir', () => {
+    const simplex = { kind: 'noise.simplex', freq: 4 };
+    expect(collectFieldIssues(simplex, 'field', true)[0]).toMatch(/EĞİK/);
+    expect(collectFieldIssues(simplex, 'field', false)).toEqual([]);
   });
 });

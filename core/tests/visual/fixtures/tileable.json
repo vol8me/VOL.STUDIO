@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "size": [64, 64],
+  "seed": 909,
+  "tileable": true,
+  "antialias": false,
+  "palette": {
+    "colors": ["#161a12", "#2c3524", "#48573a", "#6b8055", "#93ab74"],
+    "ramps": [{ "id": 0, "name": "yuzey", "indices": [0, 1, 2, 3, 4] }]
+  },
+  "layers": [
+    {
+      "id": "zemin",
+      "source": { "kind": "const", "value": 1 },
+      "height": {
+        "kind": "noise.fbm",
+        "base": { "kind": "noise.value", "freq": 4 },
+        "octaves": 3,
+        "lacunarity": 2,
+        "gain": 0.5
+      },
+      "blend": "over",
+      "material": 0
+    },
+    {
+      "id": "hucre",
+      "source": { "kind": "const", "value": 1 },
+      "height": { "kind": "noise.worley", "freq": 5, "mode": "F2-F1" },
+      "blend": "over",
+      "heightBlend": "mul",
+      "material": 0
+    }
+  ]
+}

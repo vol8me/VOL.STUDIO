@@ -7,10 +7,10 @@
  * geçirilebilmesi buna bağlıdır.
  *
  * **Bu dosya YALNIZCA uygulanmış olanı bildirir.** Envanterin tamamını
- * (§4) baştan tipe yazmak, tip denetiminden geçen ama hiçbir şey çizmeyen
+ * baştan tipe yazmak, tip denetiminden geçen ama hiçbir şey çizmeyen
  * belgeler üretirdi — palet kilidinin reddettiği "sessiz yalan"ın (D6) tip
- * sistemindeki karşılığı. Sonraki turlar tipi büyütür; doğrulayıcı o ana
- * kadar hangi turda geleceğini söyleyerek reddeder (bkz. `schema.ts`).
+ * sistemindeki karşılığı. Doğrulayıcı henüz gelmemiş olanı, hangi turda
+ * geleceğini söyleyerek reddeder (bkz. `validate.ts`).
  */
 
 /** Birim uzayda bir nokta ya da bir çift ölçü. */
@@ -23,13 +23,13 @@ export type Vec2 = readonly [number, number];
  * - `signed` — işaretli mesafe; **negatif içeridedir** (§4.1).
  *
  * Ayrım gereklidir çünkü katman kaynağı kapsamaya çevrilirken ikisi farklı
- * davranır: `unit` kelepçelenir, `signed` §5.8'in eşik dönüşümünden geçer.
- * Etki alanı düğüm türünden STATİK olarak türetilir; çalışma anında
- * değer "mesafeye benziyor mu" diye yoklanmaz.
+ * davranır: `unit` kelepçelenir, `signed` §5.8'in eşiğinden geçer. Etki alanı
+ * düğüm türünden STATİK olarak türetilir; çalışma anında değer "mesafeye
+ * benziyor mu" diye yoklanmaz.
  */
 export type FieldDomain = 'unit' | 'signed';
 
-/* ── §4.1 Üreteçler (birim uzay → skaler) ─────────────────────────────── */
+/* ── §4.1 Üreteçler: sabit ve gradyanlar ──────────────────────────────── */
 
 /** Sabit alan; maske ve karışım için taban. */
 export interface ConstNode {
@@ -38,21 +38,9 @@ export interface ConstNode {
 }
 
 /**
- * Değer gürültüsü. `freq` = KISA KENAR boyunca hücre sayısı (§5.2 döşeme
- * kuralı bu tanıma dayanır: `tileable` iken hücre indeksleri `mod freq`).
- *
- * `seed` verilmezse düğüm yolundan türetilir (D5).
- */
-export interface ValueNoiseNode {
-  kind: 'noise.value';
-  freq: number;
-  seed?: number;
-}
-
-/**
  * Doğrusal gradyan. `angle` derece (D2); `from`/`to` o eksen üzerindeki
  * BİRİM UZAY KONUMLARIdır — değer değil. Değer aralığını değiştirmek
- * `remap`in işidir (§4.3), gradyanın değil.
+ * `remap`in işidir, gradyanın değil.
  */
 export interface LinearGradientNode {
   kind: 'gradient.linear';
@@ -64,31 +52,205 @@ export interface LinearGradientNode {
 /** Dairesel gradyan: merkezde 1, `radius`ta 0. Kubbe/hacim için taban. */
 export interface RadialGradientNode {
   kind: 'gradient.radial';
-  center: Vec2;
+  center?: Vec2;
   radius: number;
 }
 
-/** Daire işaretli mesafesi. */
+/**
+ * Kutupsal açı gradyanı: merkez etrafında bir tam turda 0→1.
+ * `offset` başlangıç açısını derece cinsinden kaydırır.
+ */
+export interface AngularGradientNode {
+  kind: 'gradient.angular';
+  center?: Vec2;
+  offset?: number;
+}
+
+/** Manhattan (eşkenar dörtgen) gradyanı: merkezde 1, `size`ta 0. */
+export interface DiamondGradientNode {
+  kind: 'gradient.diamond';
+  center?: Vec2;
+  size: number;
+}
+
+/* ── §4.1 Üreteçler: gürültü ──────────────────────────────────────────── */
+
+/**
+ * Değer gürültüsü. `freq` = KISA KENAR boyunca hücre sayısı; §5.2'nin döşeme
+ * kuralı bu tanıma dayanır (hücre indeksleri periyoda göre sarılır).
+ *
+ * `seed` verilmezse düğüm yolundan türetilir (D5).
+ */
+export interface ValueNoiseNode {
+  kind: 'noise.value';
+  freq: number;
+  seed?: number;
+}
+
+/**
+ * Simplex gürültü — eğik kafes sayesinde eksen yapaylığı düşüktür.
+ *
+ * **Döşenebilir belgede kullanılamaz:** kafesi eğik olduğu için ızgara sarma
+ * uygulanamaz (§5.2). Doğrulayıcı `tileable: true` iken reddeder.
+ */
+export interface SimplexNoiseNode {
+  kind: 'noise.simplex';
+  freq: number;
+  seed?: number;
+}
+
+/** Hücresel (Worley) gürültü. `F2-F1` hücre kenarlarını verir. */
+export interface WorleyNoiseNode {
+  kind: 'noise.worley';
+  freq: number;
+  mode?: 'F1' | 'F2' | 'F2-F1';
+  seed?: number;
+}
+
+/**
+ * Kesirli Brown hareketi — oktav toplayıcı SARMALAYICI.
+ *
+ * `base` herhangi bir BİRİM alandır; oktavlar `lacunarity` ile ölçeklenir,
+ * `gain` ile zayıflar ve aralarında sabit bir açıyla DÖNDÜRÜLÜR (§5.1).
+ * Döndürme olmazsa oktavlar üst üste binip eksen hizalı yapaylık üretir.
+ *
+ * Oktav parametresi taban gürültülerde YOKTUR: iki ayrı yol açmamak için
+ * toplama yalnızca burada yapılır (D9).
+ */
+export interface FbmNode {
+  kind: 'noise.fbm';
+  base: FieldNode;
+  octaves: number;
+  lacunarity?: number;
+  gain?: number;
+}
+
+/* ── §4.1 Üreteçler: işaretli mesafe alanları ─────────────────────────── */
+
 export interface CircleSdfNode {
   kind: 'sdf.circle';
-  center: Vec2;
+  center?: Vec2;
   r: number;
 }
 
-/** Kutu işaretli mesafesi. `half` yarım kenar uzunluklarıdır. */
+/** `half` yarım kenar uzunluklarıdır. */
 export interface BoxSdfNode {
   kind: 'sdf.box';
-  center: Vec2;
+  center?: Vec2;
   half: Vec2;
+}
+
+/** Köşesi yuvarlatılmış kutu — `sdf.box`tan türetilemez, ayrı formül (D9). */
+export interface RoundBoxSdfNode {
+  kind: 'sdf.roundBox';
+  center?: Vec2;
+  half: Vec2;
+  r: number;
+}
+
+/** Düzgün n-gen; `rotation` derece. */
+export interface PolygonSdfNode {
+  kind: 'sdf.polygon';
+  center?: Vec2;
+  n: number;
+  r: number;
+  rotation?: number;
+}
+
+export interface StarSdfNode {
+  kind: 'sdf.star';
+  center?: Vec2;
+  n: number;
+  rOuter: number;
+  rInner: number;
+  rotation?: number;
+}
+
+/** Kalınlığı olan doğru parçası; uçları düz. */
+export interface LineSdfNode {
+  kind: 'sdf.line';
+  a: Vec2;
+  b: Vec2;
+  thickness: number;
+}
+
+/** Uçları yuvarlak kapsül — gövde ve dal için temel. */
+export interface CapsuleSdfNode {
+  kind: 'sdf.capsule';
+  a: Vec2;
+  b: Vec2;
+  r: number;
+}
+
+/** Halka dilimi; `from`/`to` derece. */
+export interface ArcSdfNode {
+  kind: 'sdf.arc';
+  center?: Vec2;
+  r: number;
+  thickness: number;
+  from: number;
+  to: number;
+}
+
+/* ── §4.1 Üreteçler: desenler ─────────────────────────────────────────── */
+
+/** `size` bir karenin birim uzaydaki kenar uzunluğudur. */
+export interface CheckerPatternNode {
+  kind: 'pattern.checker';
+  size: number;
+}
+
+/** `duty` çizgi genişliğinin periyoda oranı; `angle` derece. */
+export interface StripesPatternNode {
+  kind: 'pattern.stripes';
+  freq: number;
+  angle?: number;
+  duty?: number;
+}
+
+/** `r` nokta yarıçapının hücre yarı genişliğine oranı (0..1). */
+export interface DotsPatternNode {
+  kind: 'pattern.dots';
+  freq: number;
+  r: number;
+}
+
+/** `thickness` çizgi kalınlığının hücre genişliğine oranı (0..1). */
+export interface GridPatternNode {
+  kind: 'pattern.grid';
+  freq: number;
+  thickness: number;
+}
+
+/** Altıgen döşeme; hücre merkezine yakınlık verir. */
+export interface HexPatternNode {
+  kind: 'pattern.hex';
+  freq: number;
 }
 
 export type GeneratorNode =
   | ConstNode
-  | ValueNoiseNode
   | LinearGradientNode
   | RadialGradientNode
+  | AngularGradientNode
+  | DiamondGradientNode
+  | ValueNoiseNode
+  | SimplexNoiseNode
+  | WorleyNoiseNode
+  | FbmNode
   | CircleSdfNode
-  | BoxSdfNode;
+  | BoxSdfNode
+  | RoundBoxSdfNode
+  | PolygonSdfNode
+  | StarSdfNode
+  | LineSdfNode
+  | CapsuleSdfNode
+  | ArcSdfNode
+  | CheckerPatternNode
+  | StripesPatternNode
+  | DotsPatternNode
+  | GridPatternNode
+  | HexPatternNode;
 
 /* ── §4.2 Alan-uzayı işlemleri ────────────────────────────────────────── */
 
@@ -121,13 +283,171 @@ export interface ScaleOp {
   center?: Vec2;
 }
 
-export type DomainOp = TranslateOp | RotateOp | ScaleOp;
+/** Kesme (shear); `x` y'ye bağlı yatay kayma, `y` x'e bağlı dikey kayma. */
+export interface SkewOp {
+  kind: 'skew';
+  x: number;
+  y: number;
+}
+
+/**
+ * Simetri katlaması — bu sistemin genelliğinin ana kaynaklarından biri.
+ *
+ * `radial-n` yazımı yerine `axis: 'radial'` + `count` kullanılır: D11
+ * parametrelerin TİPLİ bildirilmesini ister ve içine sayı gömülmüş bir dizgi
+ * ne doğrulanabilir ne de editörde kontrol üretebilir.
+ */
+export interface MirrorOp {
+  kind: 'mirror';
+  axis: 'x' | 'y' | 'quad' | 'radial';
+  /** Yalnızca `radial` için: kaç kollu simetri. */
+  count?: number;
+}
+
+/** Döşeme; `mirror` modu komşu hücreleri yansıtarak dikişi gizler. */
+export interface RepeatOp {
+  kind: 'repeat';
+  count: number;
+  mode?: 'tile' | 'mirror';
+  center?: Vec2;
+}
+
+/**
+ * Kutupsal dönüşüm — halka, spiral, dişli, girişim deseni.
+ *
+ * İleri yönde çıktı noktasının açısı x'e, yarıçapı y'ye eşlenir; `inverse`
+ * bunun tersidir ve ikisi birbirini götürür.
+ */
+export interface PolarOp {
+  kind: 'polar';
+  center?: Vec2;
+  inverse?: boolean;
+}
+
+export type DomainOp = TranslateOp | RotateOp | ScaleOp | SkewOp | MirrorOp | RepeatOp | PolarOp;
 
 export type TranslateNode = TranslateOp & { input: FieldNode };
 export type RotateNode = RotateOp & { input: FieldNode };
 export type ScaleNode = ScaleOp & { input: FieldNode };
+export type SkewNode = SkewOp & { input: FieldNode };
+export type MirrorNode = MirrorOp & { input: FieldNode };
+export type RepeatNode = RepeatOp & { input: FieldNode };
+export type PolarNode = PolarOp & { input: FieldNode };
 
-export type DomainNode = TranslateNode | RotateNode | ScaleNode;
+export type DomainNode =
+  | TranslateNode
+  | RotateNode
+  | ScaleNode
+  | SkewNode
+  | MirrorNode
+  | RepeatNode
+  | PolarNode;
+
+/* ── Tamponlu düğümler: warp, scatter, komşuluk filtreleri ────────────── */
+
+/**
+ * Bozma — organik doku (mermer, duman, damar, akıntı) için.
+ *
+ * `by` alanı önce TAMPONA yazılır (D4, Aşama 2), sonra ondan örneklenir;
+ * saf fonksiyon olarak yazılamamasının sebebi budur. Tek skaler alandan iki
+ * eksenlik kayma türetmek için tampon iki farklı noktadan okunur
+ * (bkz. `warp.ts`).
+ */
+export interface WarpNode {
+  kind: 'warp';
+  by: FieldNode;
+  input: FieldNode;
+  /** Azami kayma, BİRİM uzayda. */
+  amount: number;
+  sample?: 'nearest' | 'bilinear';
+}
+
+/**
+ * Serpme — alan-uzayı işlemi DEĞİL, örnekleme işlemi (§4.2b).
+ *
+ * Bir alan-uzayı işlemi tek bir çıktı noktasını tek bir girdi noktasına
+ * götürür ve tersi vardır; `scatter` bir çıktı noktasına N aday demektir.
+ * Yanlış kategoride durması, ters dönüşümü varmış gibi uygulanmasına yol
+ * açardı.
+ */
+export interface ScatterNode {
+  kind: 'scatter';
+  source: FieldNode;
+  count: number;
+  seed?: number;
+  /** Düzenli ızgaradan sapma oranı (0 = tam ızgara, 1 = hücre boyu kadar). */
+  jitter?: number;
+  /** Azami dönme sapması, DERECE. */
+  rotJitter?: number;
+  /** Azami ölçek sapması oranı (0.2 → 0.8x–1.2x). */
+  scaleJitter?: number;
+}
+
+/**
+ * Komşuluk filtreleri — Aşama 2 (§4.4).
+ *
+ * Komşu piksel okurlar, dolayısıyla `(x,y)`nin saf fonksiyonu olarak
+ * yazılamazlar. Girdileri hedef çözünürlükte bir tampona yazılır ve sonuç o
+ * tampon üzerinde hesaplanır.
+ *
+ * **Yarıçaplar BİRİM uzaydadır**, piksel değil: §3'e göre bu adım parametre
+ * sınırının birim tarafındadır. Piksel yarıçapı aynı belgeyi 64² ve 512²'de
+ * bambaşka gösterirdi.
+ */
+export interface BlurNode {
+  kind: 'blur';
+  input: FieldNode;
+  radius: number;
+  mode?: 'box' | 'gauss';
+}
+
+export interface SharpenNode {
+  kind: 'sharpen';
+  input: FieldNode;
+  amount: number;
+  radius?: number;
+}
+
+export interface DilateNode {
+  kind: 'dilate';
+  input: FieldNode;
+  radius: number;
+}
+
+export interface ErodeNode {
+  kind: 'erode';
+  input: FieldNode;
+  radius: number;
+}
+
+/** Sobel gradyan büyüklüğü. */
+export interface EdgeNode {
+  kind: 'edge';
+  input: FieldNode;
+}
+
+/**
+ * Mesafe dönüşümü — `threshold` üstü "içeri" sayılır.
+ *
+ * Çıktı İŞARETLİDİR ve birim uzaydadır: içeride negatif, dışarıda pozitif.
+ * İşaretsiz bırakmak alanı `min`/`max` ile birleştirilemez yapardı; işaretli
+ * olması onu bir SDF üreticisi hâline getirir ve mevcut cebre bağlar (D9).
+ */
+export interface DistanceNode {
+  kind: 'distance';
+  input: FieldNode;
+  threshold?: number;
+}
+
+export type BufferedNode =
+  | WarpNode
+  | ScatterNode
+  | BlurNode
+  | SharpenNode
+  | DilateNode
+  | ErodeNode
+  | EdgeNode
+  | DistanceNode;
 
 /* ── §4.3 Birleştiriciler ─────────────────────────────────────────────── */
 
@@ -136,7 +456,7 @@ export type DomainNode = TranslateNode | RotateNode | ScaleNode;
  * ayrı bir boolean primitifi gerekmez (D9).
  */
 export interface BinaryNode {
-  kind: 'add' | 'mul' | 'min' | 'max';
+  kind: 'add' | 'sub' | 'mul' | 'min' | 'max' | 'screen' | 'overlay';
   a: FieldNode;
   b: FieldNode;
 }
@@ -164,9 +484,53 @@ export interface SmoothstepNode {
   input: FieldNode;
 }
 
-export type CombineNode = BinaryNode | MixNode | StepNode | SmoothstepNode;
+export interface RemapNode {
+  kind: 'remap';
+  input: FieldNode;
+  inMin: number;
+  inMax: number;
+  outMin: number;
+  outMax: number;
+}
 
-export type FieldNode = GeneratorNode | DomainNode | CombineNode;
+/** Parçalı doğrusal aktarım eğrisi; noktalar x'e göre artan sırada. */
+export interface CurveNode {
+  kind: 'curve';
+  input: FieldNode;
+  points: readonly Vec2[];
+}
+
+export interface ClampNode {
+  kind: 'clamp';
+  input: FieldNode;
+  min: number;
+  max: number;
+}
+
+/** Mutlak değer — bir SDF'yi konture çevirmenin yolu (§4.1). */
+export interface AbsNode {
+  kind: 'abs';
+  input: FieldNode;
+}
+
+/** `1 − x`; kapsama alanlarını tersine çevirir. */
+export interface InvertNode {
+  kind: 'invert';
+  input: FieldNode;
+}
+
+export type CombineNode =
+  | BinaryNode
+  | MixNode
+  | StepNode
+  | SmoothstepNode
+  | RemapNode
+  | CurveNode
+  | ClampNode
+  | AbsNode
+  | InvertNode;
+
+export type FieldNode = GeneratorNode | DomainNode | BufferedNode | CombineNode;
 
 /** `FieldNode` birleşiminde geçen tüm `kind` değerleri. */
 export type FieldKind = FieldNode['kind'];
@@ -178,8 +542,8 @@ export type CoverageBlend = 'over' | 'max' | 'min' | 'add' | 'sub' | 'mul' | 'sc
 
 /**
  * Yükseklik harmanlama modları. Kapsamadan AYRI olması gerekir: iki katman
- * `max` ile birleşirken kapsama birleşmeli ama yükseklik toplanmalı olabilir
- * (üst üste binen kabartma). Tek mod ikisini de doğru yapamaz (§3).
+ * `max` ile birleşirken kapsama birleşmelidir ama yükseklik toplanmalı
+ * olabilir (üst üste binen kabartma). Tek mod ikisini de doğru yapamaz (§3).
  */
 export type HeightBlend = 'max' | 'min' | 'add' | 'mul' | 'replace';
 
@@ -217,7 +581,7 @@ export interface PaletteSpec {
 }
 
 export interface QuantizeSpec {
-  /** Tur 1'de yalnızca `ramp`; `nearest` Tur 3'te gelir. */
+  /** Tur 1–2'de yalnızca `ramp`; `nearest` Tur 3'te gelir. */
   mode: 'ramp';
 }
 
@@ -230,7 +594,7 @@ export interface SpriteDoc {
   /** `[genişlik, yükseklik]` piksel. Kare olmak zorunda değildir. */
   size: readonly [number, number];
   seed: number;
-  /** Tur 2'de uygulanacak; şimdilik yalnızca `false` kabul edilir. */
+  /** Periyodik gürültü + sarmalı filtre + sarmalı serpme (§5.2). */
   tileable?: boolean;
   /** Birim uzayda kenar yumuşatma (§5.8). */
   antialias?: boolean;

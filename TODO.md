@@ -4,6 +4,79 @@
 kaydıdır**: ne yapıldı, hangi kapı koşuldu, geriye ne kaldı. Turun ayrıntısı
 commit diff'inde ve git geçmişindedir; burada tekrarlanmaz.
 
+## 2026-08-22 — Görsel sentez Tur 2: cebiri tamamla
+
+`visual-synthesis.md` §12'nin ikinci turu. Envanterin tamamı uygulandı:
+kalan on altı üreteç, dört alan-uzayı işlemi, `scatter`, sekiz birleştirici,
+altı komşuluk filtresi, `tileable` uçtan uca ve dikiş metriği.
+
+**Mimari kararlar**
+
+- **Filtreler ağacın DÜĞÜMÜ oldu**, ayrı bir katman adımı değil. §3'ün ilk
+  yazımı onları yalnızca `layerCoverage`a uyguluyordu; düğüm olmaları
+  `source`, `mask`, `height` ve `warp.by` içinde de kullanılabilmelerini
+  sağlıyor. Aynı şeyi söylemenin ikinci bir yolu da açılmıyor.
+- **Derleyici iki aşamalı oldu.** Tamponlu düğümler girdilerini hedef
+  çözünürlükte bir tampona yazıp örnekleyici döndürüyor. Tamponlar katman
+  başına kurulan bağlamda tutuluyor ve katman bitince iade ediliyor (D7);
+  test bunu doğruluyor.
+- **`scatter`da kova yok, damgalama var.** Kova indeksi "bu pikseli hangi
+  örnekler kapsıyor?" sorusunu cevaplar; örnekler üzerinde dönüp her birini
+  kendi kutusuna damgalamak aynı soruyu inşa gereği cevaplar. Aynı maliyet
+  sınıfı, bir veri yapısı eksiğiyle.
+- **`mirror` `radial-n` yerine `axis` + `count`.** D11 tipli parametre
+  istiyor; içine sayı gömülmüş bir dizgi ne doğrulanabilir ne de editörde
+  kontrol üretebilir.
+
+**Bulunan ve düzeltilen hatalar**
+
+- `sdf.polygon` katlaması dilimi KÖŞEYE ortalıyordu; kenar ortasına
+  ortalanmalı. Altıgenin köşesi 0.134 birim dışarıda görünüyordu — testle
+  yakalandı, formül düzeltildi.
+- `filter.ts` içinde `window` adlı yerel değişken DOM global'ini
+  gölgeliyordu; `visualHeadless` bekçisi yakaladı, `windowSize` oldu.
+- Filtre yarıçapları önce piksel cinsindendi; §3'e göre birim uzayda olmalı,
+  yoksa aynı belge 64² ve 512²'de bambaşka görünür.
+- `distance` işaretsiz bırakılsa `min`/`max` ile birleştirilemezdi; iki
+  geçişle işaretli hâle getirildi ve birim uzaya çevrildi.
+- `sharpen` belgede yalnızca `amount` taşıyordu; bulanıklık olmadan işlem
+  tanımsız, yarıçap eklendi.
+
+**Döşeme (§5.2) ve sınırları**
+
+Izgara sarma seçildi. `noise.simplex` döşenebilir belgede REDDEDİLİYOR —
+kafesi eğik, sarma uygulanamaz. `fbm` o kipte oktavlar arası döndürmeyi
+kapatıyor (döndürme periyodikliği bozar) ve `lacunarity` tam sayı olmak
+zorunda. Dikdörtgen çıktıda periyot eksen başına yuvarlanıyor; sapma yarım
+hücreyi geçmiyor.
+
+**Dikiş metriği ORAN, ham fark değil**
+
+Dikişsiz bir dokuda karşı kenarlar EŞİT değildir — döşenmiş düzlemde bir
+piksel komşudurlar. Ölçüm, sarma sınırındaki farkı sıradan komşu farkına
+bölüyor. Ölçülen: döşenebilir gürültü 0.00, worley kenarları 1.56, sarmalı
+bulanıklık 0.10; döşenmeyen yatay gradyan **63.0** ile düşüyor. Metrik DEĞER
+sürekliliğini ölçer, türev sürekliliğini değil — yansımalı döşeme meşru bir
+teknik olduğu için bu bilinçli.
+
+**Dış denetim bulguları**
+
+Kullanıcı Tur 1'i başka bir ajana analiz ettirdi. Altı maddeden biri gerçek
+çıktı: §4.1, §4.2 ve §4.4 tabloları kaçırılmamış `|` yüzünden bozuktu ve
+`mirror` satırının açıklaması hayalet sütuna kaçmıştı — `·` ayracına geçildi.
+"`size` örnek belgede tek sayı" iddiası yanlıştı (belgede tek yer var ve çift
+yazılı; `--size 256` CLI kısayoluyla karıştırılmış). Kalanlar ya benim kendi
+notumdu ya da planın kendisiydi.
+
+**Kapılar**
+
+| Kapı                    | Durum | Not                                           |
+| ----------------------- | ----- | --------------------------------------------- |
+| `pnpm high`             | ✓     | quick + lint:css + coverage + build           |
+| `pnpm -r test:coverage` | ✓     | core 1481 test (+115)                         |
+| core kapsam             | ✓     | 89.24/89.24/84.38/90.77 — eşikler 87/87/82/88 |
+| `visual/` kapsamı       | ✓     | dosya grubu bazında %92–99 statement          |
+
 ## 2026-08-22 — Görsel sentez Tur 1: çekirdek iskelet
 
 `core/docs/visual-synthesis.md` §12'nin ilk turu uygulandı. Hedef belgede
@@ -167,17 +240,18 @@ silinir; kronolojiye not düşülmez.
 - CORE public API yüzeyi 172 export ve dokuz `export *` barrel'ıyla büyüyor.
   Yüzey sayısı kilitli (kapı kırılır) ama barrel'lar hâlâ otomatik; daraltma
   ayrı bir tur. `visual` alt sistemi kök barrel'a tek isimle giriyor ve kendi
-  yüzeyi (30) ayrıca kilitli — alt sistemler kök sayının gölgesinde büyümesin.
+  yüzeyi (37) ayrıca kilitli — alt sistemler kök sayının gölgesinde büyümesin.
 - `PlayerController` takma adı `@deprecated` olarak duruyor; kaldırma bir
   sonraki büyük sürümde.
-- **Görsel sentez: Tur 1 bitti, Tur 2–5 açık.** `core/visual/` çekirdeği ve
-  `forge` CLI'ı çalışıyor; envanterin geri kalanı (§4'ün ~35 primitifinden
-  16'sı uygulandı), döşenebilirlik, komşuluk filtreleri, gölgeleme, dither,
-  `nearest` nicemleme, palet sentezi, alt-yığın maskeler ve editör
-  (`games/vol-forge`) yazılmadı. Doğrulayıcı uygulanmamış her alanı hangi
-  turda geleceğini söyleyerek reddeder, yani yarım uygulama sessiz kalmaz.
-  §13'te üç açık kalan var. Ses motorunun aynı editör kabuğuna taşınması
-  D11'de dikiş olarak işaretli ama editör yazılmadan başlanmayacak.
+- **Görsel sentez: Tur 1–2 bitti, Tur 3–5 açık.** `core/visual/` cebri
+  tamamlandı: §4'ün envanteri (üreteçler, alan-uzayı, `scatter`,
+  birleştiriciler, komşuluk filtreleri) ve `tileable` uçtan uca çalışıyor.
+  Yazılmayanlar: gölgeleme (normal/lambert/rim/ao), dış çizgi, dither,
+  `nearest` nicemleme, palet sentezi, alt-yığın maskeler, `materialAlt` ve
+  editör (`games/vol-forge`). Doğrulayıcı uygulanmamış her alanı hangi turda
+  geleceğini söyleyerek reddeder, yani yarım uygulama sessiz kalmaz. §13'te
+  üç açık kalan var. Ses motorunun aynı editör kabuğuna taşınması D11'de
+  dikiş olarak işaretli ama editör yazılmadan başlanmayacak.
 - **`AGENTS.md` ve `games/design/AGENTS.md` gitignore'da** (`.gitignore:2-3`) ve
   hiç commit edilmemiş. Bilinçli bir tercih (agent talimatları yerelde kalıyor)
   ama sonucu şu: bu dosyalara yapılan güncellemeler HİÇBİR commit'e girmez ve
@@ -274,6 +348,7 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-21 | Görsel sentez doktrini (§0–§14)                             | belge; kod yok             |
 | 2026-08-22 | Doktrin denetimi + dikdörtgen çıktı kararı                  | 4 bulgunun 2'si geçerli    |
 | 2026-08-22 | Görsel sentez Tur 1 — çekirdek iskelet                      | 139 test, kapılar yeşil    |
+| 2026-08-22 | Görsel sentez Tur 2 — cebiri tamamla                        | +115 test, döşeme kanıtlı  |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 

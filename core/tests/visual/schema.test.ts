@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { FIELD_KINDS, NODE_SCHEMAS } from '../../src/visual/schema';
 import { collectFieldIssues } from '../../src/visual/validate';
-import { compileField } from '../../src/visual/field/evaluate';
+import { compileTest } from './support';
 import type { FieldNode } from '../../src/visual/types';
 
 /**
@@ -59,7 +59,7 @@ describe('şema bütünlüğü (D11)', () => {
       }
       const fallback = param.default;
       if (fallback !== undefined) {
-        node[param.name] = Array.isArray(fallback) ? [fallback[0], fallback[1]] : fallback;
+        node[param.name] = Array.isArray(fallback) ? (fallback as unknown[]).slice() : fallback;
       } else if (!param.optional) {
         throw new Error(`${kind}.${param.name}: zorunlu parametrenin varsayılanı yok`);
       }
@@ -75,7 +75,7 @@ describe('şema bütünlüğü (D11)', () => {
 
   it('şemadaki her düğüm DERLENİR ve sonlu bir değer üretir', () => {
     for (const kind of FIELD_KINDS) {
-      const field = compileField(buildDefault(kind) as unknown as FieldNode, kind, 11);
+      const field = compileTest(buildDefault(kind) as unknown as FieldNode, kind);
       for (const [x, y] of [
         [0, 0],
         [0.7, -0.3],
@@ -87,8 +87,6 @@ describe('şema bütünlüğü (D11)', () => {
   });
 
   it('derleyici şemada olmayan bir türü sessizce geçmez', () => {
-    expect(() => compileField({ kind: 'yok' } as unknown as FieldNode, 'x', 1)).toThrow(
-      /Derlenemeyen/,
-    );
+    expect(() => compileTest({ kind: 'yok' } as unknown as FieldNode, 'x')).toThrow(/Derlenemeyen/);
   });
 });

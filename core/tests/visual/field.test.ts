@@ -1,15 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { createUnitSpace } from '../../src/visual/field/space';
 import { FieldBufferPool } from '../../src/visual/field/buffer';
-import { applyDomainChain, compileField, deriveNodeSeed } from '../../src/visual/field/evaluate';
+import { applyDomainChain, deriveNodeSeed } from '../../src/visual/field/evaluate';
+import { compileTest } from './support';
 import { blendCoverage, blendHeight } from '../../src/visual/field/blend';
 import { quintic } from '../../src/visual/field/fn';
 import { resolveFieldDomain } from '../../src/visual/schema';
 import type { DomainOp, FieldNode } from '../../src/visual/types';
 
-const SEED = 4242;
-const evaluate = (node: FieldNode, x: number, y: number): number =>
-  compileField(node, 'test', SEED)(x, y);
+const evaluate = (node: FieldNode, x: number, y: number): number => compileTest(node, 'test')(x, y);
 
 describe('birim uzay sözleşmesi (D2)', () => {
   it('kökeni merkezde, birimi kısa kenarın yarısıdır', () => {
@@ -37,7 +36,7 @@ describe('birim uzay sözleşmesi (D2)', () => {
     // Esnetilmiş bir eşleme (birim kareyi dikdörtgene germek) burada
     // yatay/dikey yarıçapları ayrıştırırdı; kısa kenar normalizasyonu korur.
     const space = createUnitSpace(48, 32);
-    const circle = compileField({ kind: 'sdf.circle', center: [0, 0], r: 0.5 }, 'c', SEED);
+    const circle = compileTest({ kind: 'sdf.circle', center: [0, 0], r: 0.5 }, 'c');
 
     let width = 0;
     let height = 0;
@@ -97,7 +96,7 @@ describe('üreteçler (§4.1)', () => {
 
   it('noise.value 0..1 arasında kalır ve KONUMUN fonksiyonudur', () => {
     const node: FieldNode = { kind: 'noise.value', freq: 8, seed: 99 };
-    const fn = compileField(node, 'n', SEED);
+    const fn = compileTest(node, 'n');
 
     for (let i = 0; i < 200; i++) {
       const value = fn((i % 20) / 10 - 1, Math.floor(i / 20) / 10 - 1);
@@ -110,8 +109,8 @@ describe('üreteçler (§4.1)', () => {
   });
 
   it('noise.value farklı tohumda farklı alan üretir', () => {
-    const a = compileField({ kind: 'noise.value', freq: 6, seed: 1 }, 'n', SEED);
-    const b = compileField({ kind: 'noise.value', freq: 6, seed: 2 }, 'n', SEED);
+    const a = compileTest({ kind: 'noise.value', freq: 6, seed: 1 }, 'n');
+    const b = compileTest({ kind: 'noise.value', freq: 6, seed: 2 }, 'n');
     const differing = [0.1, 0.3, -0.4, 0.7, -0.8].filter((x) => a(x, 0) !== b(x, 0));
     expect(differing.length).toBeGreaterThan(0);
   });
@@ -141,8 +140,8 @@ describe('alan-uzayı işlemleri — ters eşleme (D4, §5.7)', () => {
     // İleri eşleme (girdiden çıktıya) burada delikli bir kare üretirdi.
     const space = createUnitSpace(64, 64);
     const box: FieldNode = { kind: 'sdf.box', center: [0, 0], half: [0.5, 0.5] };
-    const straight = compileField(box, 'a', SEED);
-    const rotated = compileField({ kind: 'rotate', angle: 37, input: box }, 'b', SEED);
+    const straight = compileTest(box, 'a');
+    const rotated = compileTest({ kind: 'rotate', angle: 37, input: box }, 'b');
 
     let straightArea = 0;
     let rotatedArea = 0;
@@ -203,15 +202,14 @@ describe('alan-uzayı işlemleri — ters eşleme (D4, §5.7)', () => {
       { kind: 'rotate', angle: 90 },
     ];
 
-    const viaChain = applyDomainChain(compileField(source, 's', SEED), chain);
-    const viaNesting = compileField(
+    const viaChain = applyDomainChain(compileTest(source, 's'), chain);
+    const viaNesting = compileTest(
       {
         kind: 'rotate',
         angle: 90,
         input: { kind: 'translate', x: 0.2, y: 0, input: source },
       },
       's',
-      SEED,
     );
 
     for (const [x, y] of [
@@ -224,7 +222,7 @@ describe('alan-uzayı işlemleri — ters eşleme (D4, §5.7)', () => {
   });
 
   it('boş domain zinciri kaynağı değiştirmez', () => {
-    const source = compileField({ kind: 'const', value: 0.5 }, 's', SEED);
+    const source = compileTest({ kind: 'const', value: 0.5 }, 's');
     expect(applyDomainChain(source, undefined)(0, 0)).toBe(0.5);
     expect(applyDomainChain(source, [])(0, 0)).toBe(0.5);
   });
@@ -380,5 +378,149 @@ describe('tampon havuzu (D7)', () => {
     pool.clear();
 
     expect(pool.acquire(4, 4)).not.toBe(buffer);
+  });
+});
+
+describe('Tur 2 birleştiricileri', () => {
+  const A: FieldNode = { kind: 'const', value: 0.8 };
+  const B: FieldNode = { kind: 'const', value: 0.25 };
+
+  it('sub, screen ve overlay tanımlandığı gibi çalışır', () => {
+    expect(evaluate({ kind: 'sub', a: A, b: B }, 0, 0)).toBeCloseTo(0.55, 10);
+    expect(evaluate({ kind: 'screen', a: A, b: B }, 0, 0)).toBeCloseTo(0.85, 10);
+    // overlay: taban 0.8 > 0.5 olduğu için screen dalı.
+    expect(evaluate({ kind: 'overlay', a: A, b: B }, 0, 0)).toBeCloseTo(0.7, 10);
+    // taban 0.25 < 0.5 olduğu için çarpma dalı.
+    expect(evaluate({ kind: 'overlay', a: B, b: A }, 0, 0)).toBeCloseTo(0.4, 10);
+  });
+
+  it('remap aralığı taşır ve KELEPÇELEMEZ', () => {
+    const node: FieldNode = {
+      kind: 'remap',
+      inMin: 0,
+      inMax: 1,
+      outMin: -1,
+      outMax: 1,
+      input: { kind: 'const', value: 0.25 },
+    };
+    expect(evaluate(node, 0, 0)).toBeCloseTo(-0.5, 10);
+
+    const beyond: FieldNode = { ...node, input: { kind: 'const', value: 2 } };
+    expect(evaluate(beyond, 0, 0)).toBeCloseTo(3, 10);
+  });
+
+  it('clamp değeri aralığa çeker', () => {
+    const node = (value: number): FieldNode => ({
+      kind: 'clamp',
+      min: 0.2,
+      max: 0.6,
+      input: { kind: 'const', value },
+    });
+    expect(evaluate(node(0), 0, 0)).toBeCloseTo(0.2, 10);
+    expect(evaluate(node(0.4), 0, 0)).toBeCloseTo(0.4, 10);
+    expect(evaluate(node(1), 0, 0)).toBeCloseTo(0.6, 10);
+  });
+
+  it('abs + sub bir SDF üzerinde KONTUR üretir — ayrı primitif gerekmez (D9)', () => {
+    const ring: FieldNode = {
+      kind: 'sub',
+      a: { kind: 'abs', input: { kind: 'sdf.circle', center: [0, 0], r: 0.5 } },
+      b: { kind: 'const', value: 0.05 },
+    };
+    // Halka üzerinde içeride, merkezde ve dışarıda dışarıda.
+    expect(evaluate(ring, 0.5, 0)).toBeLessThan(0);
+    expect(evaluate(ring, 0, 0)).toBeGreaterThan(0);
+    expect(evaluate(ring, 1, 0)).toBeGreaterThan(0);
+  });
+
+  it('invert kapsamayı ters çevirir', () => {
+    expect(evaluate({ kind: 'invert', input: A }, 0, 0)).toBeCloseTo(0.2, 10);
+  });
+
+  it('curve parçalı doğrusal eşleme yapar ve uçlarda KELEPÇELER', () => {
+    const curve = (value: number): FieldNode => ({
+      kind: 'curve',
+      points: [
+        [0, 0],
+        [0.5, 0.9],
+        [1, 1],
+      ],
+      input: { kind: 'const', value },
+    });
+    expect(evaluate(curve(0), 0, 0)).toBeCloseTo(0, 10);
+    expect(evaluate(curve(0.25), 0, 0)).toBeCloseTo(0.45, 10);
+    expect(evaluate(curve(0.5), 0, 0)).toBeCloseTo(0.9, 10);
+    expect(evaluate(curve(0.75), 0, 0)).toBeCloseTo(0.95, 10);
+    // Eğrinin dışına EKSTRAPOLASYON yapılmaz: kullanıcının çizmediği davranış
+    // uydurulmaz.
+    expect(evaluate(curve(-1), 0, 0)).toBeCloseTo(0, 10);
+    expect(evaluate(curve(3), 0, 0)).toBeCloseTo(1, 10);
+  });
+
+  it('curve noktaları SIRASIZ verilebilir', () => {
+    const node: FieldNode = {
+      kind: 'curve',
+      points: [
+        [1, 1],
+        [0, 0],
+        [0.5, 0.9],
+      ],
+      input: { kind: 'const', value: 0.25 },
+    };
+    expect(evaluate(node, 0, 0)).toBeCloseTo(0.45, 10);
+  });
+
+  it('curve eşit x taşıyan noktalarda sıfıra bölmez', () => {
+    const node: FieldNode = {
+      kind: 'curve',
+      points: [
+        [0.5, 0.2],
+        [0.5, 0.8],
+      ],
+      input: { kind: 'const', value: 0.5 },
+    };
+    expect(Number.isFinite(evaluate(node, 0, 0))).toBe(true);
+  });
+});
+
+describe('Tur 2 etki alanı kuralları', () => {
+  const sdf: FieldNode = { kind: 'sdf.circle', center: [0, 0], r: 0.5 };
+  const unit: FieldNode = { kind: 'const', value: 1 };
+
+  it('filtreler etki alanını girdiden DEVRALIR', () => {
+    expect(resolveFieldDomain({ kind: 'blur', radius: 0.05, input: sdf })).toBe('signed');
+    expect(resolveFieldDomain({ kind: 'dilate', radius: 0.05, input: unit })).toBe('unit');
+  });
+
+  it('distance her zaman İŞARETLİ, scatter ve edge her zaman kapsama üretir', () => {
+    expect(resolveFieldDomain({ kind: 'distance', input: unit })).toBe('signed');
+    expect(resolveFieldDomain({ kind: 'scatter', source: sdf, count: 4 })).toBe('unit');
+    expect(resolveFieldDomain({ kind: 'edge', input: sdf })).toBe('unit');
+  });
+
+  it('warp girdisinden devralır, `by` alanı etkilemez', () => {
+    expect(resolveFieldDomain({ kind: 'warp', by: unit, amount: 0.1, input: sdf })).toBe('signed');
+    expect(resolveFieldDomain({ kind: 'warp', by: sdf, amount: 0.1, input: unit })).toBe('unit');
+  });
+
+  it('abs ve clamp devralır, invert ve curve kapsama üretir', () => {
+    expect(resolveFieldDomain({ kind: 'abs', input: sdf })).toBe('signed');
+    expect(resolveFieldDomain({ kind: 'clamp', min: 0, max: 1, input: sdf })).toBe('signed');
+    expect(resolveFieldDomain({ kind: 'invert', input: sdf })).toBe('unit');
+    expect(
+      resolveFieldDomain({
+        kind: 'curve',
+        points: [
+          [0, 0],
+          [1, 1],
+        ],
+        input: sdf,
+      }),
+    ).toBe('unit');
+  });
+
+  it('screen ve overlay kapsama üretir — birim alanlar içindir', () => {
+    expect(resolveFieldDomain({ kind: 'screen', a: sdf, b: unit })).toBe('unit');
+    expect(resolveFieldDomain({ kind: 'overlay', a: sdf, b: unit })).toBe('unit');
   });
 });

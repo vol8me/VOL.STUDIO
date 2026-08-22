@@ -14,6 +14,21 @@
 import { packRgb } from './color/palette';
 import type { RenderResult } from './render';
 
+/**
+ * Dikiş farkının iç komşuluk farkına oranı bu değeri aşarsa dikiş GÖRÜNÜR
+ * sayılır.
+ *
+ * Ham fark eşiği yanlış olurdu: dikişsiz bir dokuda karşı kenarlar EŞİT
+ * değildir, döşenmiş düzlemde bir piksel komşudurlar. Doğru soru "kenar farkı
+ * sıfır mı" değil, "kenar farkı sıradan bir komşu farkı gibi mi". Üç kat
+ * pay yerel dalgalanmaya yer bırakır, gerçek bir dikişi (tipik olarak on
+ * kat ve üstü) yakalamaya fazlasıyla yeter.
+ */
+const SEAM_RATIO_LIMIT = 3;
+
+/** 0..255 ölçeğinde bu farkın altı "fark yok" sayılır. */
+const SEAM_EPSILON = 1;
+
 export interface QaMetric {
   id: string;
   /** Metriğin ne söylediği — rapor satırında görünür. */
@@ -21,6 +36,83 @@ export interface QaMetric {
   value: number;
   pass: boolean;
   detail: string;
+}
+
+interface SeamMeasurement {
+  /** Sarma sınırındaki ortalama piksel farkı, 0..255. */
+  readonly seam: number;
+  /** Sıradan komşu piksellerin ortalama farkı, 0..255. */
+  readonly interior: number;
+}
+
+/** İki piksel sütunu/satırı arasındaki ortalama mutlak RGBA farkı. */
+function meanDelta(
+  rgba: Uint8ClampedArray,
+  count: number,
+  indexA: (i: number) => number,
+  indexB: (i: number) => number,
+): number {
+  let total = 0;
+  for (let i = 0; i < count; i++) {
+    const a = indexA(i) * 4;
+    const b = indexB(i) * 4;
+    total +=
+      Math.abs(rgba[a] - rgba[b]) +
+      Math.abs(rgba[a + 1] - rgba[b + 1]) +
+      Math.abs(rgba[a + 2] - rgba[b + 2]) +
+      Math.abs(rgba[a + 3] - rgba[b + 3]);
+  }
+  return total / (count * 4);
+}
+
+/**
+ * Sarma sınırındaki farkı, sıradan komşuluk farkıyla birlikte ölçer.
+ *
+ * İç referans TÜM komşu sütun/satır çiftleri üzerinden alınır; örnekleme
+ * burada da sahte tasarruf olurdu (§9).
+ */
+function measureSeams(result: RenderResult): SeamMeasurement {
+  const { rgba, width, height } = result;
+
+  const columnSeam = meanDelta(
+    rgba,
+    height,
+    (y) => y * width + (width - 1),
+    (y) => y * width,
+  );
+  const rowSeam = meanDelta(
+    rgba,
+    width,
+    (x) => (height - 1) * width + x,
+    (x) => x,
+  );
+
+  let columnInterior = 0;
+  for (let x = 0; x < width - 1; x++) {
+    columnInterior += meanDelta(
+      rgba,
+      height,
+      (y) => y * width + x,
+      (y) => y * width + x + 1,
+    );
+  }
+  let rowInterior = 0;
+  for (let y = 0; y < height - 1; y++) {
+    rowInterior += meanDelta(
+      rgba,
+      width,
+      (x) => y * width + x,
+      (x) => (y + 1) * width + x,
+    );
+  }
+
+  return {
+    seam: Math.max(columnSeam, rowSeam),
+    interior: Math.max(
+      width > 1 ? columnInterior / (width - 1) : 0,
+      height > 1 ? rowInterior / (height - 1) : 0,
+    ),
+  };
 }
 
 export interface QaReport {
@@ -37,10 +129,13 @@ export interface QaReport {
 /**
  * Sprite'ı ölçer.
  *
- * Tur 1 üç metrik taşır: palet uyumu, alfa saflığı, kullanılan renk sayısı.
- * Kalan metrikler (dikiş farkı, dış çizgi sürekliliği, kontrast, bantlaşma)
- * ölçtükleri özellikler uygulandığında eklenir — ölçülecek şey yokken
- * ölçüm yazmak sıfır bilgi taşıyan yeşil bir satır üretir.
+ * Palet uyumu, alfa saflığı ve renk sayısı her belgede ölçülür; dikiş farkı
+ * yalnızca `tileable: true` iken eklenir çünkü döşenmeyen bir çıktıda
+ * kenarların birbirini tutması için hiçbir sebep yoktur.
+ *
+ * Kalan metrikler (dış çizgi sürekliliği, kontrast, bantlaşma) ölçtükleri
+ * özellikler uygulandığında eklenir — ölçülecek şey yokken ölçüm yazmak
+ * sıfır bilgi taşıyan yeşil bir satır üretir.
  */
 export function measureSprite(result: RenderResult): QaReport {
   const { rgba, palette, doc } = result;
@@ -98,6 +193,22 @@ export function measureSprite(result: RenderResult): QaReport {
       detail: `${distinct.size} / ${palette.colorCount} palet rengi kullanıldı`,
     },
   ];
+
+  if (doc.tileable === true) {
+    const seams = measureSeams(result);
+    const ratio = seams.interior > SEAM_EPSILON ? seams.seam / seams.interior : seams.seam;
+    const pass =
+      seams.interior > SEAM_EPSILON ? ratio <= SEAM_RATIO_LIMIT : seams.seam <= SEAM_EPSILON;
+    metrics.push({
+      id: 'seamDelta',
+      label: 'Dikiş farkı',
+      value: Number(ratio.toFixed(2)),
+      pass,
+      detail: `sarma sınırı ${seams.seam.toFixed(2)}, iç komşuluk ${seams.interior.toFixed(
+        2,
+      )} (oran ${ratio.toFixed(2)}, sınır ${SEAM_RATIO_LIMIT})`,
+    });
+  }
 
   return {
     width: result.width,

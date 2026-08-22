@@ -375,7 +375,7 @@ mümkün.
      a. layerCoverage ← Aşama 1: üreteç ∘ domain zinciri  (fonksiyonel, D4)
      b. maske varsa   ← üreteç ya da alt-yığın (özyineleme, azami derinlik 4)
                         layerCoverage *= maske   (MASKE ŞEKİLDİR — aşağıdaki not)
-     c. komşuluk filtreleri (varsa) layerCoverage üzerinde
+     c. komşuluk filtreleri AĞAÇTA yaşar (a ve b'nin içinde); ayrı adım yok
      d. layerAlpha ← layerCoverage * opacity
                      (KAPSAMA AYRI KALIR — bkz. aşağıdaki not)
      e. layerHeight ← katmanın `height` alanı varsa Aşama 1 ile ayrıca
@@ -462,34 +462,39 @@ Toplam ~35. Her biri D9'a (ortogonallik) uyar. `kind` alanı JSON'daki kimliktir
 
 ### 4.1 Üreteçler (birim uzay → skaler)
 
-| `kind`             | Parametreler                      | Not                                                         |
-| ------------------ | --------------------------------- | ----------------------------------------------------------- | -------------- | ------------------------------------- |
-| `const`            | `value`                           | Sabit alan; maske/karışım için taban.                       |
-| `noise.value`      | `freq, seed?`                     | En ucuz gürültü, blok karakterli.                           |
-| `noise.simplex`    | `freq, seed?`                     | Yön yapaylığı (axis artifact) düşük.                        |
-| `noise.worley`     | `freq, mode(F1                    | F2                                                          | F2-F1), seed?` | Hücresel; `F2-F1` hücre kenarı verir. |
-| `noise.fbm`        | `base, octaves, lacunarity, gain` | Sarmalayıcı; oktavlar arası **döndürme** uygular (bkz. §5). |
-| `gradient.linear`  | `angle, from, to`                 |                                                             |
-| `gradient.radial`  | `center, radius`                  |                                                             |
-| `gradient.angular` | `center, offset`                  | Kutupsal açı; dişli/pasta için.                             |
-| `gradient.diamond` | `center, size`                    | Manhattan mesafesi.                                         |
-| `sdf.circle`       | `center, r`                       |                                                             |
-| `sdf.box`          | `center, half`                    |                                                             |
-| `sdf.roundBox`     | `center, half, r`                 | `box`tan türetilemez, ayrı formül.                          |
-| `sdf.polygon`      | `center, n, r, rotation`          | Düzgün n-gen.                                               |
-| `sdf.star`         | `center, n, rOuter, rInner`       |                                                             |
-| `sdf.line`         | `a, b, thickness`                 |                                                             |
-| `sdf.capsule`      | `a, b, r`                         | Uçları yuvarlak; gövde/dal için temel.                      |
-| `sdf.arc`          | `center, r, thickness, from, to`  |                                                             |
-| `pattern.checker`  | `size`                            |                                                             |
-| `pattern.stripes`  | `freq, angle, duty`               |                                                             |
-| `pattern.dots`     | `freq, r`                         |                                                             |
-| `pattern.grid`     | `freq, thickness`                 |                                                             |
-| `pattern.hex`      | `freq`                            |                                                             |
+| `kind`             | Parametreler                            | Not                                            |
+| ------------------ | --------------------------------------- | ---------------------------------------------- |
+| `const`            | `value`                                 | Sabit alan; maske/karışım için taban.          |
+| `noise.value`      | `freq, seed?`                           | En ucuz gürültü, blok karakterli.              |
+| `noise.simplex`    | `freq, seed?`                           | Eksen yapaylığı düşük; **döşenemez** (§5.2).   |
+| `noise.worley`     | `freq, mode(F1 · F2 · F2-F1), seed?`    | Hücresel; `F2-F1` hücre kenarı verir.          |
+| `noise.fbm`        | `base, octaves, lacunarity?, gain?`     | Oktav sarmalayıcı; aralarında döndürür (§5.1). |
+| `gradient.linear`  | `angle, from, to`                       | `from`/`to` KONUMdur, değer değil.             |
+| `gradient.radial`  | `center?, radius`                       | Merkezde 1, yarıçapta 0.                       |
+| `gradient.angular` | `center?, offset?`                      | Kutupsal açı; dişli/pasta için.                |
+| `gradient.diamond` | `center?, size`                         | Manhattan mesafesi.                            |
+| `sdf.circle`       | `center?, r`                            |                                                |
+| `sdf.box`          | `center?, half`                         |                                                |
+| `sdf.roundBox`     | `center?, half, r`                      | `box`tan türetilemez, ayrı formül.             |
+| `sdf.polygon`      | `center?, n, r, rotation?`              | Düzgün n-gen; `r` çevrel yarıçap.              |
+| `sdf.star`         | `center?, n, rOuter, rInner, rotation?` |                                                |
+| `sdf.line`         | `a, b, thickness`                       | Uçları DÜZ.                                    |
+| `sdf.capsule`      | `a, b, r`                               | Uçları YUVARLAK; gövde/dal için temel.         |
+| `sdf.arc`          | `center?, r, thickness, from, to`       |                                                |
+| `pattern.checker`  | `size`                                  |                                                |
+| `pattern.stripes`  | `freq, angle?, duty?`                   |                                                |
+| `pattern.dots`     | `freq, r`                               |                                                |
+| `pattern.grid`     | `freq, thickness`                       |                                                |
+| `pattern.hex`      | `freq`                                  | Dikdörtgen olmayan kafes.                      |
+
+**Tablolarda `|` yerine `·` kullanılır.** Kaçırılmamış bir boru işareti hücreyi
+böler ve satır hayalet sütunlara dağılır; bu belgede bir kez oldu ve
+`mirror` satırının açıklaması görünmez hâle geldi.
 
 SDF'ler **işaretli mesafe** döndürür; katman sınırında kapsamaya çevrilir
-(§3) ve `abs` ile konture dönüştürülebilir. Bu, bir SDF'den hem dolu şekil
-hem çerçeve elde edilebilmesini sağlar — ayrı primitif gerekmez (D9).
+(§3). Çerçeve için ayrı primitif gerekmez: `sub(abs(d), w)` kalınlığı `w`
+olan bir kontur bandı verir ve sonucu yine işaretli bir alandır, yani
+`min`/`max` ile birleştirilebilir (D9).
 
 **Tek tek gürültülerde `octaves` YOKTUR** ve bu bir düzeltmedir: `noise.fbm`
 zaten oktav sarmalayıcısıdır ve oktavlar arası döndürmeyi (§5.1) o uygular.
@@ -497,21 +502,47 @@ Aynı parametreyi taban gürültülere de koymak, `fbm(base=value, octaves=3)`
 ile `value(octaves=3)` arasında iki farklı ve sessizce ayrışan yol açardı —
 D9'un yasakladığı türetilebilir primitifin parametre düzeyindeki hâli.
 
+`noise.fbm`in `base`i herhangi bir BİRİM alandır, yalnızca gürültü değil:
+sarmalayıcı olması, `fbm(worley)` ya da `fbm(pattern.hex)` gibi bileşimleri
+bedavaya açar.
+
+**Desenler D9'un BİLİNÇLİ ve SINIRLI bir istisnasıdır.** `stripes`, `dots` ve
+`grid` `repeat` + bir SDF + eşik bileşimiyle ifade edilebilir; doktrine göre
+primitif sayılmazlar. Yine de tutuluyorlar çünkü çok sık gereken bir şeyi
+dört düğümlük bir bileşime çevirmek belgeyi okunmaz yapar. İstisna
+DESENLERLE sınırlı ve burada yazılı; kural gevşetilmiş değil, bir kez ve
+gerekçesiyle delinmiştir. `checker` (katlamadan elde edilemeyen bir parite)
+ve `hex` (dikdörtgen olmayan kafes) gerçekten türetilemez.
+
 ### 4.2 Alan-uzayı işlemleri — GENELLİĞİN KAYNAĞI
 
 Bunlar **girdi koordinatını** dönüştürür (D4, ters eşleme). On üreteçle
 sınırlı kalmanın önündeki tek engel budur.
 
-| `kind`      | Parametreler                | Neyi açar                                 |
-| ----------- | --------------------------- | ----------------------------------------- | ------------------------------------------ | ---------- | ----------------------------------------- |
-| `translate` | `x, y`                      |                                           |
-| `rotate`    | `angle, center?`            |                                           |
-| `scale`     | `x, y, center?`             | Bileşenler ayrı → anizotropik esnetme.    |
-| `skew`      | `x, y`                      |                                           |
-| `mirror`    | `axis(x                     | y                                         | quad                                       | radial-n)` | **Simetri**: makine parçası, yaprak, yüz. |
-| `repeat`    | `count, mode(tile           | mirror)`                                  | Döşeme; `mirror` dikiş gizler.             |
-| `polar`     | `center, inverse?`          | **Halka, spiral, dişli, girişim deseni.** |
-| `warp`      | `by, amount, sample(nearest | bilinear)`                                | **Organik**: mermer, duman, damar, akıntı. |
+| `kind`      | Parametreler                             | Neyi açar                                      |
+| ----------- | ---------------------------------------- | ---------------------------------------------- |
+| `translate` | `x, y`                                   |                                                |
+| `rotate`    | `angle, center?`                         | +y aşağı olduğu için pozitif açı saat yönünde. |
+| `scale`     | `x, y, center?`                          | Bileşenler ayrı → anizotropik esnetme.         |
+| `skew`      | `x, y`                                   | `x·y = 1` tekildir ve reddedilir.              |
+| `mirror`    | `axis(x · y · quad · radial), count?`    | **Simetri**: makine parçası, yaprak, yüz.      |
+| `repeat`    | `count, mode(tile · mirror), center?`    | Döşeme; `mirror` dikişi gizler.                |
+| `polar`     | `center?, inverse?`                      | **Halka, spiral, dişli, girişim deseni.**      |
+| `warp`      | `by, amount, sample(nearest · bilinear)` | **Organik**: mermer, duman, damar.             |
+
+`mirror`ın `radial-n` yazımı yerine **`axis: 'radial'` + `count`** kullanılır:
+D11 parametrelerin TİPLİ bildirilmesini ister ve içine sayı gömülmüş bir dizgi
+ne doğrulanabilir ne de editörde kontrol üretebilir.
+
+`polar` ileri yönde çıktının x'ini AÇIYA, y'sini YARIÇAPA eşler — yatay
+çizgiler halkaya, dikey çizgiler ışınlara döner. `inverse` bunun tersidir ve
+ikisi arka arkaya uygulanınca kimlik verir.
+
+`warp` bu tablodaki TEK tamponlu işlemdir: kayma miktarı başka bir alandan
+gelir, o alan önce tampona yazılır ve oradan örneklenir (D4). Tek skaler
+alandan iki eksenlik kayma için tampon, 90° DÖNDÜRÜLMÜŞ konumdan ikinci kez
+okunur — aynı örneği iki eksende kullanmak kaymayı her yerde 45° yapardı,
+ikinci bir tampon ise bellek bütçesini katmanın kendisi kadar büyütürdü.
 
 ### 4.2b `scatter` — alan-uzayı işlemi DEĞİL, örnekleme işlemidir
 
@@ -528,10 +559,23 @@ scatter: { count, seed, jitter, rotJitter, scaleJitter, source }
 Her örnek kendi dönüşümünü tohumdan türetir (D5); çıktı `max` ile birleşir.
 
 **Maliyet uyarısı — naif uygulama kabul edilemez.** Piksel başına N örnek
-denemek 1024²'de N=200 ile 200 milyon değerlendirme demektir. Zorunlu
-optimizasyon: her örneğin **sınırlayıcı kutusu** önceden hesaplanır ve örnekler
-uzamsal kovalara yerleştirilir; bir piksel yalnızca kendisini kapsayan örnekleri
-sınar. Tipik dağılımda piksel başına 1–3 örnek kalır.
+denemek 1024²'de N=200 ile 200 milyon değerlendirme demektir.
+
+Bu belge önce "sınırlayıcı kutu + uzamsal kova" öngörüyordu. Uygulamada
+kutu kaldı, **kova kalktı** ve gerekçesi şudur: kova indeksi "bu pikseli
+hangi örnekler kapsıyor?" sorusunu cevaplamak içindir; örnekler üzerinde
+dönüp HER BİRİNİ KENDİ KUTUSUNA damgalamak aynı soruyu inşa gereği cevaplar.
+Maliyet damgalanan toplam alan kadardır — kovalı çözümle aynı sınıf, bir veri
+yapısı eksiğiyle. Kutu zorunluluğu aynen durur.
+
+Örnekler **düzenli ızgaraya** yerleştirilip `jitter` kadar sapar. Tamamen
+rastgele konum kümelenme ve boşluk üretir; ızgara + sapma hem düzgün dağılım
+hem doğal görünüm verir ve `jitter: 1` neredeyse rastgeleye eşittir.
+
+**Kaynak tampona yazılırken KIRPILIR.** `tileable` sarması ÖRNEĞİN çıktı
+konumuna uygulanır, kaynağın kendi çizimine değil; tuvalin dışına ötelenmiş
+bir kaynak hiç üretilmez. Bu yüzden kaynak KÖKENDE ORTALANMIŞ olmalıdır —
+konumlandırma serpmenin işidir, kaynağın değil.
 
 ### 4.3 Birleştiriciler (alan × alan → alan)
 
@@ -541,20 +585,50 @@ sınar. Tipik dağılımda piksel başına 1–3 örnek kalır.
 
 `min`/`max` SDF'de kesişim/birleşim demektir — ayrı boolean primitifi gerekmez.
 
+Üç davranış açıkça yazılıdır çünkü sezgi ikiye ayrılıyor:
+
+- `remap` **kelepçelemez**; aralık dışına çıkmak bilinçli bir ekstrapolasyon
+  olabilir. Kelepçe isteyen `clamp` ile sarar.
+- `curve` **kelepçeler**; eğrinin dışına ekstrapolasyon yapmak, kullanıcının
+  ÇİZMEDİĞİ bir davranışı uydurmaktır.
+- `screen` ve `overlay` birim alanlar içindir ve çıktıları her zaman kapsama
+  sayılır; geri kalan ikili işlemler etki alanını girdilerinden devralır.
+
 ### 4.4 Komşuluk filtreleri (tampon → tampon)
 
-| `kind`     | Parametreler      | Algoritma notu                               |
-| ---------- | ----------------- | -------------------------------------------- | ---------------------------------------------------------------------- |
-| `blur`     | `radius, kind(box | gauss)`                                      | Ayrılabilir + koşan toplam, piksel başına O(1). Gauss ≈ 3 kutu geçişi. |
-| `sharpen`  | `amount`          | Orijinal + (orijinal − bulanık) × amount.    |
-| `dilate`   | `radius`          | Morfolojik genişletme; ayrılabilir maks.     |
-| `erode`    | `radius`          |                                              |
-| `edge`     | `—`               | Sobel gradyan büyüklüğü.                     |
-| `distance` | `threshold`       | Felzenszwalb & Huttenlocher, O(n) tam Öklid. |
+| `kind`     | Parametreler                | Algoritma notu                                  |
+| ---------- | --------------------------- | ----------------------------------------------- |
+| `blur`     | `radius, mode(box · gauss)` | Ayrılabilir + koşan toplam, piksel başına O(1). |
+| `sharpen`  | `amount, radius?`           | Orijinal + (orijinal − bulanık) × amount.       |
+| `dilate`   | `radius`                    | Morfolojik genişletme; ayrılabilir maks.        |
+| `erode`    | `radius`                    | Ayrılabilir min; ikisi de monoton kuyruk.       |
+| `edge`     | `—`                         | Sobel gradyan büyüklüğü.                        |
+| `distance` | `threshold?`                | Felzenszwalb & Huttenlocher, O(n) tam Öklid.    |
+
+**Yarıçaplar BİRİM uzaydadır, piksel değil.** §3'e göre bu adım parametre
+sınırının birim tarafındadır; piksel yarıçapı aynı belgeyi 64² ve 512²'de
+bambaşka gösterirdi. Dönüşüm derleme anında yapılır ve bir pikselin altına
+düşen yarıçap işlemi no-op'a çevirir.
+
+**`sharpen` bir yarıçap taşır** — belgede önce yalnızca `amount` yazılıydı ama
+bulanıklık olmadan bu işlem tanımsızdır: hangi ÖLÇEKTEKİ detayın
+vurgulanacağını yarıçap belirler.
+
+**`distance` İŞARETLİ ve BİRİM uzayda çıktı verir**: içeride negatif, dışarıda
+pozitif. İşaretsiz bırakmak alanı `min`/`max` ile birleştirilemez yapardı;
+işaretli olması onu bir SDF üreticisi hâline getirir ve mevcut cebre bağlar
+(D9). Girdisi önce kapsamaya çevrilir — bir SDF'nin ham mesafesinde 0.5
+eşiği anlamsız olurdu.
 
 **Kenar davranışı `tileable`a bağlıdır:** `false` → kenar değeri kelepçelenir,
 `true` → **sarmalanır**. Sarmalanmazsa döşeme dikişinde bulanıklık kırılır ve
-5×5 önizlemede görülür.
+3×3 önizlemede görülür.
+
+**Filtreler ağacın DÜĞÜMÜDÜR, ayrı bir katman adımı değil.** §3'ün ilk
+yazımında (c) adımı filtreleri yalnızca `layerCoverage` üzerine uyguluyordu;
+düğüm olmaları `source`, `mask`, `height` ve hatta `warp`ın kendi `by` alanı
+içinde de kullanılabilmelerini sağlar. Ayrı bir katman dizisi hem daha dar
+olurdu hem de aynı şeyi söylemenin ikinci bir yolunu açardı.
 
 ### 4.5 Biçimlendirme (height → gölge)
 
@@ -686,18 +760,31 @@ yok, karar açıkça piksel tarafındadır.
 ```
 core/src/visual/
   types.ts            SpriteDoc, Layer, FieldNode, Palette
-  schema.ts           parametre şeması + çıktı etki alanı (D11)
+  schema/             parametre şeması + çıktı etki alanı (D11)
+    types.ts          ParamSchema, NodeSchema, OutputRule
+    generators.ts  domain.ts  buffered.ts  combine.ts
+    index.ts          birleştirilmiş kayıt + resolveFieldDomain
   validate.ts         belge doğrulaması — şemayı TÜKETİR
   field/
     space.ts          piksel ↔ birim uzay (D2 koordinat sözleşmesi)
     fn.ts             FieldFn (derlenmiş biçim) + ortak eğri
     buffer.ts         FieldBuffer ayırma/havuzlama
-    generators.ts     §4.1
+    hash.ts           konumsal karma (gürültü ve serpme kaynağı)
+    lattice.ts        gürültü kafesi + döşeme periyodu (§5.2)
+    generators.ts     §4.1 — sabit ve gradyanlar
+    noise.ts          §4.1 — value / simplex / worley / fbm
+    sdf.ts            §4.1 — işaretli mesafe alanları
+    patterns.ts       §4.1 — desenler
     domain.ts         §4.2  (ters eşleme burada)
     combine.ts        §4.3
     blend.ts          kapsama/yükseklik harmanlama modları
-    evaluate.ts       Aşama 1 derleyicisi + tohum türetimi (D4, D5)
-    filter.ts         §4.4  (koşan toplam, Felzenszwalb)      ← Tur 2
+    coverage.ts       alan → kapsama çevrimi (§5.8'in tek yeri)
+    sample.ts         tampon örnekleme (nearest/bilinear, clamp/wrap)
+    filter.ts         §4.4  (koşan toplam, monoton kuyruk)
+    distance.ts       §5.4  (Felzenszwalb, işaretli)
+    warp.ts           §4.2  tamponlu bozma
+    scatter.ts        §4.2b damgalama
+    evaluate.ts       iki aşamalı derleyici + tohum türetimi (D4, D5)
   shade/                                                       ← Tur 3
     normal.ts  lambert.ts  ao.ts  outline.ts
   color/
@@ -724,10 +811,11 @@ games/vol-forge/                   editör (vol-ui kardeşi)     ← Tur 4
 
 İki ayrım kasıtlı:
 
-- **`schema.ts` / `validate.ts` ayrı.** Şema veridir ve editör de (Tur 4) onu
+- **`schema/` ve `validate.ts` ayrı.** Şema veridir ve editör de (Tur 4) onu
   okuyacak; doğrulama o verinin bir tüketicisidir. Tek dosyada tutmak,
   arayüz üretimi için şemayı import eden kodun doğrulayıcıyı da sürüklemesi
-  demekti.
+  demekti. Şemanın kendisi kategoriye bölünmüştür: editör kontrolleri
+  kategoriye göre gruplayacak ve tek dosya 1200 satırı geçerdi.
 - **Ölçüm `visual/qa.ts` içinde, script'te değil.** Script bir sarmalayıcıdır;
   metrikler çekirdekte olduğu için hem test edilir hem de editör (Tur 4) aynı
   sayıları gösterebilir. D8 ve D12 birlikte bunu gerektirir.
@@ -838,15 +926,27 @@ Metrikler çekirdektedir (headless, D8); script yalnızca dosya okur ve
 biçimlendirir. Böylece aynı sayılar hem CLI'da hem editörde (Tur 4) görünür
 ve metriklerin kendisi test edilebilir.
 
-| Metrik                     | Ne söyler                               | Eşik                        |
-| -------------------------- | --------------------------------------- | --------------------------- |
-| **Palet uyumu**            | Palet dışı piksel sayısı                | **0 olmalı** (alfa 0 hariç) |
-| **Dikiş farkı**            | Sol↔sağ ve üst↔alt kenar piksel farkı | `tileable` iken ~0          |
-| **Dış çizgi sürekliliği**  | Silüetin kopuk parça sayısı             | 1 (tek bileşen)             |
-| **Kontrast oranı**         | En koyu/en açık algısal fark (OKLab L)  | tür bazlı taban             |
-| **Bantlaşma**              | Rampa adımlarının histogram düzgünlüğü  | uç birikme yok              |
-| **Kullanılan renk sayısı** | Palet gereğinden büyük mü               | rapor                       |
-| **Alfa saflığı**           | Kısmi alfa piksel sayısı                | `antialias:false` iken 0    |
+| Metrik                     | Ne söyler                                | Eşik                        |
+| -------------------------- | ---------------------------------------- | --------------------------- |
+| **Palet uyumu**            | Palet dışı piksel sayısı                 | **0 olmalı** (alfa 0 hariç) |
+| **Dikiş farkı**            | Sarma sınırı farkının iç komşuluğa oranı | `tileable` iken ≤ 3         |
+| **Dış çizgi sürekliliği**  | Silüetin kopuk parça sayısı              | 1 (tek bileşen)             |
+| **Kontrast oranı**         | En koyu/en açık algısal fark (OKLab L)   | tür bazlı taban             |
+| **Bantlaşma**              | Rampa adımlarının histogram düzgünlüğü   | uç birikme yok              |
+| **Kullanılan renk sayısı** | Palet gereğinden büyük mü                | rapor                       |
+| **Alfa saflığı**           | Kısmi alfa piksel sayısı                 | `antialias:false` iken 0    |
+
+**Dikiş farkı neden ORAN?** Ham fark eşiği yanlış olurdu: dikişsiz bir dokuda
+karşı kenarlar EŞİT değildir, döşenmiş düzlemde bir piksel komşudurlar. Doğru
+soru "kenar farkı sıfır mı" değil, "kenar farkı sıradan bir komşu farkı gibi
+mi". Ölçüm, sarma sınırındaki ortalama farkı tüm komşu sütun/satır çiftlerinin
+ortalamasına böler; ölçülen değerler dikişsiz bir dokuda 1'in altında,
+döşenmeyen bir gradyanda 60'ın üstünde çıkar.
+
+Metriğin sınırı: DEĞER sürekliliğini ölçer, TÜREV sürekliliğini değil. Merkeze
+göre simetrik bir alan (ör. ortalanmış dairesel gradyan) sıfır fark verir ama
+döşendiğinde bir kırık gösterir. Bu bilinçlidir — yansımalı döşeme (`repeat`
+`mirror` modu) meşru bir tekniktir ve tam olarak böyle davranır.
 
 **Tarama yöntemi: TAM tarama, örnekleme değil.** Tek bir palet dışı piksel tam
 olarak örneklemenin kaçıracağı şeydir; 4M pikselin taranması ~50 ms sürer ve
@@ -1007,7 +1107,7 @@ düzeyinde olduğu (D5). Ayrıca `scale` uygulanmış bir SDF'nin artık gerçek
 mesafe alanı olmadığı kaydedildi — Tur 2–3'te dış çizgi ve mesafe dönüşümü
 bunu hesaba katmalı.
 
-### Tur 2 — Cebiri tamamla
+### Tur 2 — Cebiri tamamla — **TAMAMLANDI**
 
 - Kalan üreteçler (worley, simplex, fbm, tüm SDF'ler, desenler)
 - Kalan alan-uzayı: `mirror`, `repeat`, `polar`, `warp`, `skew`
@@ -1017,7 +1117,21 @@ bunu hesaba katmalı.
 - `tileable` uçtan uca (periyodik gürültü + sarmalı filtre + sarmalı scatter)
 - Dikiş farkı metriği
 
-_Kanıt:_ döşenebilir bir doku 3×3'te dikişsiz; dikiş farkı ~0.
+_Kanıt:_ `core/tests/visual/fixtures/tileable.json` 3×3'te dikişsiz; dikiş
+farkı oranı 0.91 (sınır 3) ve aynı ölçüm döşenmeyen bir gradyanı 63.0 ile
+reddediyor. `scatter.json` sapmalı ızgarayı, dönmeyi ve ölçek sapmasını
+gösteriyor.
+
+Turda ortaya çıkan ve bu belgeye işlenen düzeltmeler: `sdf.polygon`
+katlamasının kenar ortasına ortalanması gerektiği (§4.1), filtrelerin ağaç
+düğümü olduğu (§4.4, §3), filtre yarıçaplarının birim uzayda durduğu (§4.4),
+`distance`ın işaretli olması gerektiği (§4.4), `scatter`da kova yerine
+damgalama (§4.2b), `mirror`ın `radial-n` yazımının şemaya sığmadığı (§4.2),
+`sharpen`ın bir yarıçap taşıması gerektiği (§4.4), döşemenin simplex'i
+dışladığı ve fbm döndürmesini kapattığı (§5.1, §5.2), dikdörtgen çıktıda
+periyodun eksen başına hesaplandığı (§5.2) ve dikiş metriğinin ham fark değil
+ORAN olması gerektiği (§9). Ayrıca §4.1, §4.2 ve §4.4 tabloları kaçırılmamış
+`|` yüzünden bozuktu; `·` ayracına geçildi.
 
 ### Tur 3 — Biçim ve stil
 
