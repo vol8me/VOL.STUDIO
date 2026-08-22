@@ -27,10 +27,13 @@ describe('çıktı istemcisi (§8.11)', () => {
       pngPath: 'material/a.png',
       width: 64,
       height: 64,
+      qaPass: true,
+      qaMetrics: [],
     });
 
     const result = await saveOutput('material', 'a', DOC);
     expect(result.pngPath).toBe('material/a.png');
+    expect(result.qaPass).toBe(true);
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('/api/forge/save');

@@ -10,8 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "gen:params": "tsx ../../core/scripts/gen-param-i18n.ts"
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@volstudio/core": "workspace:*"
@@ -20,7 +19,6 @@
     "@types/node": "^26.1.2",
     "i18next": "26.3.6",
     "jsdom": "25.0.1",
-    "tsx": "^4.23.11",
     "typescript": "^6.0.3",
     "vite": "^8.2.0",
     "vitest": "3.0.5"

@@ -83,7 +83,18 @@ export { computeShade, type LightingOptions } from './shade/lighting';
 export { computeAo } from './shade/ao';
 export { computeOutline, type OutlineMode } from './shade/outline';
 
-export { PRESET_CATEGORIES, isPresetCategory, type PresetCategory } from './catalog';
+export {
+  PRESET_CATEGORIES,
+  VISUAL_PRESET_CATALOG,
+  isPresetCategory,
+  findVisualPresets,
+  createVisualPreset,
+  type PresetCategory,
+  type VisualPresetId,
+  type VisualPresetMetadata,
+  type FindVisualPresetsQuery,
+  type CreateVisualPresetOptions,
+} from './catalog';
 
 export { renderSprite, resolvePaletteSpec } from './render';
 export type { RenderOptions, RenderResult, RenderChannels } from './render';

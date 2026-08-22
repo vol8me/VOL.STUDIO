@@ -291,6 +291,37 @@ describe('PinchZoomController', () => {
     expect(controller.getZoom()).toBe(1);
   });
 
+  it('tekerlek zoomunda imlecin altındaki içerik noktası kaçmaz', () => {
+    const controller = track(new PinchZoomController({ content: document.createElement('div') }));
+    const viewport = controller.element.querySelector<HTMLDivElement>('.vol-pinch-zoom__viewport')!;
+    const canvas = controller.element.querySelector<HTMLDivElement>('.vol-pinch-zoom__canvas')!;
+    canvas.style.transformOrigin = '0px 0px';
+    vi.spyOn(viewport, 'getBoundingClientRect').mockReturnValue({
+      left: 10,
+      top: 20,
+      width: 200,
+      height: 100,
+      right: 210,
+      bottom: 120,
+      x: 10,
+      y: 20,
+      toJSON: () => ({}),
+    });
+
+    viewport.dispatchEvent(
+      new WheelEvent('wheel', {
+        deltaY: -100,
+        clientX: 60,
+        clientY: 45,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(controller.getZoom()).toBe(1.1);
+    expect(controller.getPan()[0]).toBeCloseTo(-5);
+    expect(controller.getPan()[1]).toBeCloseTo(-2.5);
+  });
+
   it('tek pointer ile pan hareketi durumu değiştirir', () => {
     const onTransform = vi.fn();
     const controller = track(
@@ -322,6 +353,8 @@ describe('PinchZoomController', () => {
     );
     expect(controller.getZoom()).toBe(1);
     expect(onTransform).toHaveBeenLastCalledWith(1, 7, 3);
+    expect(controller.getPan()).toEqual([7, 3]);
+    expect(controller.element.classList.contains('vol-pinch-zoom--dragging')).toBe(true);
 
     viewport.dispatchEvent(
       new PointerEvent('pointerup', {
@@ -331,6 +364,7 @@ describe('PinchZoomController', () => {
       }),
     );
     expect(controller.getZoom()).toBe(1);
+    expect(controller.element.classList.contains('vol-pinch-zoom--dragging')).toBe(false);
   });
 
   it('iki parmak ile pinch zoom yapar', () => {

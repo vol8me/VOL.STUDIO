@@ -1,5 +1,5 @@
 import type { PresetCategory } from '@volstudio/core/visual';
-import type { SpriteDoc } from '@volstudio/core/visual';
+import type { QaMetric, SpriteDoc } from '@volstudio/core/visual';
 
 /**
  * Çıktı ucunun istemcisi — §8.11.
@@ -14,6 +14,8 @@ export interface SaveResult {
   pngPath: string;
   width: number;
   height: number;
+  qaPass: boolean;
+  qaMetrics: readonly QaMetric[];
 }
 
 export interface OutputListing {

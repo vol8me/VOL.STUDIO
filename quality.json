@@ -37,10 +37,10 @@
       "functions": 81
     },
     "@volstudio/vol-forge": {
-      "lines": 76,
-      "statements": 76,
-      "branches": 77,
-      "functions": 76
+      "lines": 86,
+      "statements": 86,
+      "branches": 83,
+      "functions": 92
     },
     "@volstudio/design": {
       "lines": 96,

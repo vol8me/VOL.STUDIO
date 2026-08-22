@@ -1,10 +1,6 @@
 import { i18next } from '@volstudio/core';
 
-/**
- * i18next'in anahtarları LİTERAL tiplidir; editörün anahtarlarının bir kısmı
- * ise şemadan türer (`param.<kind>.<name>`) ve derleme anında bilinemez. Tek
- * bir sınır dönüşümü, çağrı yerlerine yayılmış onlarca dönüşümden iyidir.
- */
+/** Dinamik katalog anahtarlarını tek i18n sınırında güvenli biçimde çevirir. */
 const translate = i18next.t as unknown as (
   key: string,
   options?: Record<string, unknown>,
@@ -13,21 +9,6 @@ const translate = i18next.t as unknown as (
 /** i18n metni — çağrı her zaman fonksiyon İÇİNDE (Bozulamaz Kural 2). */
 export function t(key: string, options?: Record<string, unknown>): string {
   return translate(`volforge:${key}`, options ?? {});
-}
-
-/**
- * Şema metinlerinin i18n anahtarı.
- *
- * i18next `.` karakterini iç içe geçme ayracı olarak kullandığı için tür adı
- * (`sdf.circle`) doğrudan anahtar olamaz; üreteç de aynı dönüşümü uygular
- * (`core/scripts/gen-param-i18n.ts`).
- */
-export function nodeDescription(kind: string): string {
-  return t(`node.${kind.replace(/\./g, '_')}.description`);
-}
-
-export function paramLabel(kind: string, param: string): string {
-  return t(`node.${kind.replace(/\./g, '_')}.params.${param}`);
 }
 
 export function el<K extends keyof HTMLElementTagNameMap>(
@@ -39,21 +20,6 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
-}
-
-/** Başlıklı bölüm — sol ve sağ sütunun ortak kabuğu. */
-export function section(titleText: string): { element: HTMLDivElement; body: HTMLDivElement } {
-  const element = el('div', 'vf-section');
-  element.appendChild(el('div', 'vf-section__title', titleText));
-  const body = el('div', 'vf-section__body');
-  element.appendChild(body);
-  return { element, body };
-}
-
-export function row(...children: (HTMLElement | null)[]): HTMLDivElement {
-  const element = el('div', 'vf-row');
-  for (const child of children) if (child) element.appendChild(child);
-  return element;
 }
 
 export interface Disposable {

@@ -26,7 +26,7 @@ describe('belge deposu', () => {
     const listener = vi.fn();
     store.subscribe(listener);
     store.set(withSeed(2));
-    expect(listener).toHaveBeenCalledWith(store.get());
+    expect(listener).toHaveBeenCalledWith(store.get(), {});
   });
 
   it('abonelik bırakılabilir', () => {

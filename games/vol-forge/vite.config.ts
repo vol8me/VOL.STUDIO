@@ -11,6 +11,10 @@ import { forgeOutputPlugin } from './server/forgePlugin.ts';
 export default defineConfig({
   base: './',
   clearScreen: false,
+  // Forge Phaser kabuğunu kullanmadığı için `createVolGame` fontları onun
+  // adına taşımaz. Aynı CORE font klasörünü doğrudan public yüzey yaparak
+  // geliştirme sunucusu ve üretim paketi aynı `/assets/fonts` yollarını taşır.
+  publicDir: resolve(import.meta.dirname, '../../core/public'),
   plugins: [forgeOutputPlugin()],
   server: {
     port: 5175,

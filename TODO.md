@@ -4,6 +4,131 @@
 kaydıdır**: ne yapıldı, hangi kapı koşuldu, geriye ne kaldı. Turun ayrıntısı
 commit diff'inde ve git geçmişindedir; burada tekrarlanmaz.
 
+## 2026-08-23 — Görsel motor Tur 5: tek ekran ürün, Tur 1–5 ve Tur 4 kalıntı denetimi
+
+Kullanıcı denetimi Tur 5'in önceki “basit kip + ileri kip” çözümünü reddetti:
+ikinci kip ürünün amacını açıklamıyor, yüzeyi şişiriyor ve Tur 4'teki pasif/
+yarım kontrolleri koruyordu. Güncel karar **tek ekran canlı üretim**dir.
+Gelişmiş düzenleme, “Üretim” sekmesi, `Tabs`, teknik kanal ve bütün
+katman/ağaç/parametre/palet panel kodları üründen fiziksel olarak silindi.
+
+**Tur 1–5 denetim özeti**
+
+| Tur         | Sağlam kalan temel                                                  | Bulunan zayıflık / işlem                                                                                                          |
+| ----------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 1 — iskelet | Headless alan tamponları, doğrulama, deterministik render ve ilk QA | CLI'da belgelenen `qa`/`palette` yüzeyi eksikti; PNG decode + komutlar tamamlandı                                                 |
+| 2 — cebir   | Üreteç/birleştirici/domain/filtre ayrımı ve bellek havuzu           | Ürün bu gücü kullanıcıya ham düğüm ağacı olarak yüklüyordu; CORE'da kaldı, Forge'dan çıkarıldı                                    |
+| 3 — stil    | Height/normal/ışık/AO/outline/dither/palet kilidi                   | Yedi presetin dördü tohumu RGBA'da kullanmıyordu; hepsi tohum-duyarlı yapıldı ve piksel testi eklendi                             |
+| 4 — editör  | `SpriteDoc` geçmişi, adaptif preview ve güvenli çıktı yolu fikri    | Gerçek tarayıcıda olay engeli, pasif kontroller, eksik font/kaydırma ve fazla teknik yüzey; editör kipi ve kalıntıları kaldırıldı |
+| 5 — ürün    | Katalog, yerel niyet, kaydetme/geri açma ve CLI QA                  | Bilinmeyen prompt sahte tarife düşüyor, 128 sınırı ve obje-pan hissi sürüyordu; tek ekran sözleşmesiyle düzeltildi                |
+
+**Somut bug avı ve kapanışları**
+
+- `UIRoot` kökündeki `pointer-events:none`, Forge tarafından geri alınmadığı
+  için native textarea/kart/Select gerçek tarayıcıda tıklanmıyordu. `.vf-app`
+  olay yüzeyi açıldı ve CSS entegrasyon testi bırakıldı.
+- Boyut kontrolü motorun 2048 sınırına rağmen yalnız 32/64/128 sunuyordu.
+  Hazır 64..2048 seçimleri ve bağımsız 8..2048 Stepper'lar eklendi.
+- “Solucan” eşleşmiyor; eşleşmeyen her metin seçili tarife düşüp anlaşılmış
+  gibi raporlanıyordu. Bilinmeyen belgeyi artık değiştirmiyor. Solucan/worm/
+  kurtçuk/larva, kapsül gövde + baş + göz kuran gerçek nesne tarifidir.
+- Dama zemini kamera dışında kaldığı için yalnız sprite sürükleniyor hissi
+  veriyordu. Dama artboard ile PNG aynı kamera içeriğine taşındı; sabit dünya
+  ızgarası, imleç-merkezli wheel zoom, iki parmak merkezi ve gerçek Sığdır
+  eklendi.
+- Jura/Exo 2 dosyaları Forge Vite yüzeyinde yayınlanmıyor ve yüklenmiyordu.
+  CORE public fontları build'e kopyalanıyor; `FontManager` iki aileyi yükler;
+  Forge CSS'inde `monospace` kaçağı kalmadı.
+- F11 hiçbir davranışa bağlı değildi. Görünür CORE `IconButton` ve F11 aynı
+  Fullscreen API kontrolüne bağlandı; tüm listener'lar `destroy()`da bırakılır.
+- Forge sunucusu ve CLI aynı alt fonksiyonları ayrı ayrı sıralıyordu. Node-only
+  `createForgeArtifact` doğrulama → render → QA → PNG zincirinin tek girişi
+  oldu; sunucu, `render` ve `qa` bunu kullanıyor.
+- 2048² belgeyi her 300 ms boşlukta ana iş parçacığında tam render etme donma
+  riskiydi. 512 üstünde adaptif preview korunuyor; kaydetme gerçek boyutta.
+- Tur 4'ün `DocumentPanel`, `LayerPanel`, `TreePanel`, `ParamPanel`,
+  `PalettePanel`, `IssuePanel`, `EditorState`, doc yol/varsayılan yardımcıları,
+  iki parametre i18n dosyası ve i18n üreticisi silindi; ölü `tsx` paket
+  bağımlılığı kaldırıldı.
+
+**Bu turda ölçülen kapılar**
+
+| Kapı/ölçüm                   | Sonuç                                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------- |
+| CORE + Forge typecheck       | ✓                                                                                      |
+| Forge test                   | ✓ — 16 dosya, 79 test                                                                  |
+| Forge kapsam                 | ✓ — satır/ifade %88.66, dal %85.01, fonksiyon %94.11                                   |
+| Forge build                  | ✓ — fontlar build'de; 1.56 MB ham ana chunk uyarısı açık risk                          |
+| Firefox 1600×900 ve 1365×768 | ✓ — font HTTP 200, tek ekran, yan sütun scroll ve artboard yerleşimi görsel denetlendi |
+| CLI render + qa JSON         | ✓ — `pixelMismatch: 0`, bütün QA metrikleri geçti                                      |
+
+**Açık ve saklanmayan sınırlar:** tarayıcı F11 tuşunu sayfaya hiç iletmezse
+görünür tam ekran düğmesi kullanılır; nesne sözlüğü bugün yalnız solucan
+ailesini gerçek tarif olarak kapsar; 500 kB build uyarısı işlevsel hata değil
+ama sonraki performans turunda ölçülmelidir. Genel amaçlı teknik editör Forge'a
+geri eklenmeyecek; gerekirse ayrı ürün kapsamıdır.
+
+> Aşağıdaki 2026-08-22 Tur 5 kaydı, “İleri düzenleme korunur” kararını anlatan
+> tarihsel kayıttır ve güncel ürün sözleşmesi değildir; bu bölüm tarafından
+> geçersiz kılınmıştır.
+
+## 2026-08-22 — Görsel sentez Tur 5: üretim akışı ve Tur 4 tam denetimi
+
+Tur 4 teknik olarak yeşildi fakat ürün olarak editör-first kurulmuştu: VOL
+Forge'un ne yaptığı açıklanmıyor, kullanıcı doğrudan düğüm/kanal/parametre
+yüzeyine bırakılıyor ve serbest bir başlangıç niyeti veremiyordu. Tur 5
+varsayılan yüzeyi **niyet → katalog tarifi → canlı sonuç → dört hızlı karar →
+kaydetme** akışına çevirdi. Eski yüzey aynı `SpriteDoc` üstünde İleri düzenleme
+olarak korundu; ikinci bir motor ya da belge biçimi açılmadı.
+
+**Tur 4 etkileşim denetimi**
+
+| Sözleşme/etkileşim          | Denetim sonucu                                                     | Tur 5 işlemi                      |
+| --------------------------- | ------------------------------------------------------------------ | --------------------------------- |
+| Slider/eğri/renk sürükleme  | İlk `input` panel DOM'unu yıkıyor, etkin sürükleme kesiliyordu     | Kaynak panel yerinde tutuldu      |
+| 50 adımlık geri al/yinele   | Depo vardı, arayüze hiç bağlanmamıştı                              | Üst çubuğa bağlandı               |
+| Katman gözü                 | Yalnızca satırı soluklaştırıyor, önizlemeyi etkilemiyordu          | Geçici önizleme izdüşümü eklendi  |
+| Katman kilidi               | Simge değişiyor, düzenleme devam ediyordu                          | Ağaç/parametre/sıra/silme kapandı |
+| Kanal görüntüleyici         | Seçili kanal görünmüyor, ayrıca DOM'a takılmayan ölü kontrol vardı | Tek görünür/aktif kontrol kaldı   |
+| Sınır ve kaydetme düğmeleri | Neden pasif oldukları görünmüyordu                                 | Gerçek `disabled` + açıklama      |
+| Sentezi veriye çevir        | Sözleşme onay istiyor, kod doğrudan uyguluyordu                    | Onay ve regresyon testi eklendi   |
+| İlk kullanım                | Amaç, yönlendirme ve prompt yoktu                                  | Üretim kipi + dürüst yerel eşleme |
+
+Denetim ayrıca Tur 4 kaydındaki üç geniş iddianın kodda karşılığı olmadığını
+doğruladı: `domain` zinciri görsel düzenleyicisi, veri paleti rampa indeks
+düzenleyicisi ve kayıtlı çıktıları listeden geri yükleme yüzeyi. Çekirdek ve
+sunucu ara katmanı bunları destekliyor; eksik olan ileri arayüzdür. Tamamlanmış
+gibi raporlanmıyor ve basit kipi yeniden şişirmeden ayrı ileri-yüzey işi olarak
+kalıyor.
+
+**Katalog ve araç yüzeyi**
+
+- Yedi sabit kategorinin her birine çalışan bir başlangıç belgesi eklendi.
+  Katalog girdilerinin tamamı doğrulanıyor, render ediliyor ve QA metriklerini
+  geçiyor; Türkçe/İngilizce etiket araması niyet alanı ile agent tarafından
+  aynı API üzerinden kullanılıyor. Boyut, ana renk ve keskin/pürüzsüz bitiriş
+  serbest metinden ayrıca uygulanıyor.
+- `forge.ts qa <png> --doc <json> [--json]` PNG'yi geri çözüyor, belgeyle
+  piksel özdeşliğini ve kalite metriklerini birlikte raporluyor.
+- `forge.ts palette <istek.json>` dokümanda yazılı olup eksik kalan palet CLI
+  yolunu tamamladı.
+- 128² + `nearest` varsayılanı ve gerçek `image-rendering:auto`, ilk açılışı
+  zorunlu piksel-art görünümünden çıkardı; keskin piksel bitişi hâlâ tek
+  seçimle kullanılabilir.
+
+**Kapılar**
+
+| Kapı/ölçüm                           | Durum | Not                                                     |
+| ------------------------------------ | ----- | ------------------------------------------------------- |
+| `pnpm --filter @volstudio/core test` | ✓     | 94 dosya, 1593 test                                     |
+| vol-forge test                       | ✓     | 105 test; Tur 4 başlangıcı 93                           |
+| vol-forge kapsam                     | ✓     | 82.17/82.17/82.17/79.83; eşikler 80/80/80/78'e yükseldi |
+| `forge.ts qa ... --json`             | ✓     | `pixelMismatch: 0`, bütün metrikler yeşil               |
+| `pnpm high`                          | ✓     | contract + format + type + lint + CSS + kapsam + build  |
+
+Kalan ileri-yüzey boşlukları `core/docs/visual-synthesis.md` §13'te açıkça
+listelendi.
+
 ## 2026-08-22 — Görsel sentez Tur 4: editör (`games/vol-forge`)
 
 §8'in tamamı uygulandı: altıncı paket, tam ağaç düzenleme, canlı önizleme,
@@ -282,7 +407,8 @@ dönüşümü (Tur 2–3) bunu hesaba katmalı.
 
 - `justfile` tarifi ve kök `pnpm` script'i eklenmedi. Ses tarafında `audio:qa`
   var çünkü ölçülecek shipped asset var; görselde henüz yok. Kapı, işaret
-  edeceği bir şey olmadan açılmaz — Tur 5'in işi.
+  edeceği bir şey olmadan açılmaz — bu Tur 1 kaydında Tur 5'e bırakılmıştı;
+  dosya-bazlı `forge qa` Tur 5'te eklendi (güncel kayıt en üstte).
 - `README` dosyalarına dokunulmadı; görsel hattın kullanıcıya dönük bir komutu
   henüz yok.
 
@@ -386,14 +512,16 @@ silinir; kronolojiye not düşülmez.
   yüzeyi (52) ayrıca kilitli — alt sistemler kök sayının gölgesinde büyümesin.
 - `PlayerController` takma adı `@deprecated` olarak duruyor; kaldırma bir
   sonraki büyük sürümde.
-- **Görsel sentez: Tur 1–4 bitti, yalnızca Tur 5 açık.** Motor, CLI, ölçüm ve
+- **Görsel sentez (bu denetim anındaki durum): Tur 1–4 bitmiş, yalnızca Tur 5
+  açıktı.** Motor, CLI, ölçüm ve
   editör çalışıyor. Kalan: preset kataloğu (§10.2), `forge qa --json` alt
   komutu ve olgunlaşma. §13'te üç açık kalan var (çoklu çıktı, normal/height
   dışa aktarımı, ses motorunun editöre taşınması). `core/visual/` motorun
   tamamı: cebir, döşeme, gölgeleme, dış çizgi, dither, iki nicemleme kipi,
   palet sentezi, alt-yığın maskeler ve yedi ölçüm metriği. Yazılmayanlar
   yalnızca **editör** (`games/vol-forge`, Tur 4) ve **preset kataloğu**
-  (Tur 5). §13'te üç açık kalan var. Ses motorunun aynı editör kabuğuna
+  (Tur 5) olarak kaydedilmişti. Tur 5 artık tamamlandı; güncel denetim ve kalan
+  ileri-yüzey boşlukları dosyanın en üstündeki 2026-08-22 kaydında. Ses motorunun aynı editör kabuğuna
   taşınması D11'de dikiş olarak işaretli ama editör yazılmadan başlanmayacak.
 - **`AGENTS.md` ve `games/design/AGENTS.md` gitignore'da** (`.gitignore:2-3`) ve
   hiç commit edilmemiş. Bilinçli bir tercih (agent talimatları yerelde kalıyor)

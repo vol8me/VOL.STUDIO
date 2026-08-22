@@ -4,4 +4,5 @@
  * Node-only alt-yol (D8): PNG kodlama ve dosya yazma. Tarayıcı paketine
  * `node:zlib`/`node:fs` sızmasın diye `visual` barrel'ından AYRIdır.
  */
-export { encodePng, writePng } from './png';
+export { decodePng, encodePng, writePng, type DecodedPng } from './png';
+export { createForgeArtifact, type ForgeArtifact, type ForgeArtifactOptions } from './artifact';

@@ -17,7 +17,7 @@ import { isInsideOutput, resolveTarget } from './paths.ts';
  * taşıma (HTTP) işi yapılır.
  *
  * **PNG'yi SUNUCU üretir, tarayıcı değil.** İstemci yalnızca belgeyi gönderir;
- * sunucu `renderSprite` + `encodePng` ile yazar. Tarayıcıda `canvas.toBlob`
+ * sunucu ortak `createForgeArtifact` hattıyla yazar. Tarayıcıda `canvas.toBlob`
  * kullanmak başka bir kodlayıcı demek olurdu ve editörden kaydedilen dosya
  * CLI'ın yazdığıyla bayt bayt aynı olmazdı — Tur 4'ün kanıtı tam olarak bunu
  * istiyor (§8.15). Yan kazanç: gövde küçülür, tarayıcıya PNG kodlayıcı
@@ -35,11 +35,14 @@ const MAX_BODY_BYTES = 32 * 1024 * 1024;
 
 interface VisualModule {
   PRESET_CATEGORIES: readonly string[];
-  renderSprite: (doc: unknown) => { width: number; height: number; rgba: Uint8ClampedArray };
 }
 
 interface EncodeModule {
-  encodePng: (width: number, height: number, rgba: Uint8ClampedArray) => Buffer;
+  createForgeArtifact: (doc: unknown) => {
+    result: { width: number; height: number };
+    png: Buffer;
+    report: { pass: boolean; metrics: readonly unknown[] };
+  };
 }
 
 type ForgeModules = VisualModule & EncodeModule;
@@ -142,7 +145,7 @@ export function forgeOutputPlugin(): Plugin {
           return;
         }
         void Promise.all([readBody(request), visual()])
-          .then(([raw, { PRESET_CATEGORIES, renderSprite, encodePng }]) => {
+          .then(([raw, { PRESET_CATEGORIES, createForgeArtifact }]) => {
             const payload = JSON.parse(raw) as SaveRequest;
             const resolved = resolveTarget(payload.category, payload.name, PRESET_CATEGORIES);
             if (!resolved.ok) {
@@ -155,22 +158,23 @@ export function forgeOutputPlugin(): Plugin {
               return;
             }
 
-            // Belge burada RENDER edilir: geçersiz bir belge diske hiç
-            // ulaşmaz ve yazılan PNG, CLI'ın yazacağıyla aynı koddan çıkar.
-            const rendered = renderSprite(payload.doc);
-            const png = encodePng(rendered.width, rendered.height, rendered.rgba);
+            // CLI'ın `render` ve `qa` komutlarıyla AYNI atomik hat: belge
+            // doğrulanır, render edilir, ölçülür ve PNG'ye kodlanır.
+            const artifact = createForgeArtifact(payload.doc);
 
             const docAbsolute = join(OUTPUT_ROOT, target.docPath);
             const pngAbsolute = join(OUTPUT_ROOT, target.pngPath);
             mkdirSync(dirname(docAbsolute), { recursive: true });
             writeFileSync(docAbsolute, `${JSON.stringify(payload.doc, null, 2)}\n`);
-            writeFileSync(pngAbsolute, png);
+            writeFileSync(pngAbsolute, artifact.png);
 
             send(response, 200, {
               docPath: target.docPath,
               pngPath: target.pngPath,
-              width: rendered.width,
-              height: rendered.height,
+              width: artifact.result.width,
+              height: artifact.result.height,
+              qaPass: artifact.report.pass,
+              qaMetrics: artifact.report.metrics,
             });
           })
           .catch((error: unknown) => {

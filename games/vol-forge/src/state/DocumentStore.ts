@@ -1,6 +1,7 @@
 import type { SpriteDoc } from '@volstudio/core/visual';
 
-export type DocumentListener = (doc: SpriteDoc) => void;
+export type DocumentChangeSource = 'intent' | 'quick' | 'output';
+export type DocumentListener = (doc: SpriteDoc, options: ChangeOptions) => void;
 export type Unsubscribe = () => void;
 
 export interface DocumentStoreOptions {
@@ -18,13 +19,22 @@ export interface ChangeOptions {
    * "yol + parametre". Verilmezse her değişiklik ayrı bir geri alma adımıdır.
    */
   coalesceKey?: string;
+  /**
+   * Sürekli etkileşimi üreten ürün kontrolü.
+   *
+   * Renk girdisi ilk `input` olayında kendi DOM'unu yeniden kurarsa
+   * tarayıcı etkin sürüklemeyi kaybeder. Editör bu kaynağı bir tur atlar;
+   * kontrol kendi değerini zaten çizmiştir. Başka panelden ve geçmişten
+   * gelen değişikliklerde bütün yüzey yine eşitlenir.
+   */
+  source?: DocumentChangeSource;
 }
 
 const DEFAULT_LIMIT = 50;
 const DEFAULT_COALESCE_MS = 400;
 
 /**
- * Editörün TEK doğruluk kaynağı — §8.3.
+ * Forge üretim belgesinin TEK doğruluk kaynağı.
  *
  * Belge değişmezdir: her düzenleme yeni bir kök üretir, dolayısıyla geri alma
  * tam anlık görüntü yığınına indirgenir. Belgeler birkaç kilobayt olduğu ve
@@ -91,7 +101,7 @@ export class DocumentStore {
     this.lastKey = key;
     this.lastTime = time;
     this.doc = next;
-    this.emit();
+    this.emit(options);
   }
 
   update(mutate: (doc: SpriteDoc) => SpriteDoc, options: ChangeOptions = {}): void {
@@ -106,7 +116,7 @@ export class DocumentStore {
     // Geri alma birleştirme zincirini KIRAR: geri alıp aynı kaydırıcıya
     // dokunmak yeni bir adım açmalı, eskisini yeniden yazmamalı.
     this.lastKey = null;
-    this.emit();
+    this.emit({});
     return true;
   }
 
@@ -116,7 +126,7 @@ export class DocumentStore {
     this.past.push(this.doc);
     this.doc = next;
     this.lastKey = null;
-    this.emit();
+    this.emit({});
     return true;
   }
 
@@ -125,7 +135,7 @@ export class DocumentStore {
     return () => this.listeners.delete(listener);
   }
 
-  private emit(): void {
-    for (const listener of this.listeners) listener(this.doc);
+  private emit(options: ChangeOptions): void {
+    for (const listener of this.listeners) listener(this.doc, options);
   }
 }

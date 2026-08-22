@@ -1,115 +1,115 @@
 {
   "app": {
     "title": "VOL.FORGE",
+    "pipeline": "Shared CORE / CLI output pipeline",
     "undo": "Undo",
     "redo": "Redo"
   },
-  "section": {
-    "layers": "LAYERS",
-    "tree": "SHAPE TREE",
-    "params": "PARAMETERS",
-    "document": "DOCUMENT",
-    "palette": "PALETTE",
-    "issues": "ISSUES",
-    "save": "SAVE"
+  "intent": {
+    "title": "What do you want to create?",
+    "lead": "Write a brief; the result updates live when you pause.",
+    "promptLabel": "Visual brief",
+    "promptPlaceholder": "For example: pink worm, 256×128, crisp pixel…",
+    "catalogTitle": "Starter recipes",
+    "reading": "Resolving brief…",
+    "matched": "Applied the {{name}} recipe.",
+    "modifiersApplied": "Applied size, color, or finish to the current visual.",
+    "unknown": "That object is not in the recipe dictionary yet; the visual was not changed."
   },
-  "channel": {
-    "final": "Final",
-    "coverage": "Coverage",
-    "height": "Height",
-    "material": "Material",
-    "shade": "Shade",
-    "normal": "Normal",
-    "outline": "Outline"
+  "object": {
+    "worm": {
+      "applied": "Applied the worm object recipe."
+    }
   },
-  "preview": {
-    "single": "Single",
-    "tile": "3×3",
-    "zoom": "Zoom",
-    "preQuantize": "Pre-quantize",
-    "error": "Document could not be rendered",
-    "status": "preview {{previewW}}×{{previewH}} / output {{outputW}}×{{outputH}} · {{ms}} ms · {{exact}}",
-    "exact": "exact",
-    "approx": "approximate",
-    "hiddenLayers": "{{count}} layer(s) hidden"
-  },
-  "layer": {
-    "add": "Add layer",
-    "remove": "Delete",
-    "moveUp": "Up",
-    "moveDown": "Down",
-    "hide": "Hide",
-    "show": "Show",
-    "lock": "Lock",
-    "unlock": "Unlock",
-    "locked": "Locked layers cannot be edited",
-    "material": "Ramp"
-  },
-  "tree": {
-    "source": "Source",
-    "mask": "Mask",
-    "height": "Height",
-    "materialMask": "Material mask",
-    "addField": "Add",
-    "removeField": "Remove",
-    "replace": "Replace",
-    "wrap": "Wrap",
-    "extract": "Extract",
-    "extractWhich": "Which child stays?",
-    "depthLimit": "Sub-stack depth limit reached",
-    "empty": "This field is not defined"
-  },
-  "param": {
-    "useDefault": "default",
-    "domain": "Domain",
-    "childLink": "→ go to node"
-  },
-  "document": {
+  "quick": {
+    "title": "Output",
+    "size": "Size",
+    "customSize": "Custom size",
     "width": "Width",
     "height": "Height",
-    "seed": "Seed",
-    "tileable": "Tileable",
-    "antialias": "Antialias",
-    "shadeEnabled": "Shading",
-    "light": "Light",
-    "strength": "Strength",
-    "ambient": "Ambient",
-    "rim": "Rim",
-    "relief": "Relief",
-    "aoRadius": "AO radius",
-    "aoStrength": "AO strength",
-    "outlinePx": "Outline (px)",
-    "outlineMode": "Outline mode",
-    "outlineColor": "Outline color",
-    "ditherKind": "Dither",
-    "ditherAmount": "Dither amount",
-    "quantize": "Quantize"
+    "finish": "Finish",
+    "pixel": "Crisp pixel",
+    "smooth": "Smooth",
+    "color": "Primary color",
+    "seed": "Variation seed",
+    "variation": "New variation"
   },
-  "palette": {
-    "modeData": "Data",
-    "modeGenerate": "Synthesis",
-    "bake": "Bake synthesis to data",
-    "bakeConfirm": "Synthesis will be baked to data; this cannot be undone. Continue?",
-    "addRamp": "Add ramp",
-    "removeRamp": "Remove ramp",
-    "base": "Base",
-    "steps": "Steps",
-    "hueShift": "Hue shift",
-    "satCurve": "Saturation",
-    "lockOk": "Palette lock: clean",
-    "lockFail": "Off-palette: {{count}}"
+  "category": {
+    "material": "Material",
+    "terrain": "Terrain",
+    "organic": "Organic",
+    "liquid": "Liquid",
+    "mineral": "Mineral",
+    "structure": "Structure",
+    "effect": "Effect"
+  },
+  "preset": {
+    "brushedSurface": {
+      "name": "Brushed surface",
+      "description": "Directional marks and light relief"
+    },
+    "terrainCells": {
+      "name": "Natural ground",
+      "description": "Tileable cells and noise"
+    },
+    "organicCluster": {
+      "name": "Organic cluster",
+      "description": "Soft natural main silhouette"
+    },
+    "liquidRipples": {
+      "name": "Liquid ripples",
+      "description": "Repeating glossy surface"
+    },
+    "cutMineral": {
+      "name": "Cut mineral",
+      "description": "Sharp polygon and directional volume"
+    },
+    "structureGrid": {
+      "name": "Structure grid",
+      "description": "Tileable panel relief"
+    },
+    "softGlow": {
+      "name": "Soft glow",
+      "description": "Bright-centered star-like effect"
+    }
+  },
+  "preview": {
+    "title": "Live result",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "fit": "Fit",
+    "cameraLabel": "Pannable and zoomable live preview",
+    "error": "The recipe could not be rendered.",
+    "status": "Preview {{previewW}}×{{previewH}} · Output {{outputW}}×{{outputH}} · {{exact}}",
+    "exact": "exact",
+    "adaptive": "fast preview"
+  },
+  "fullscreen": {
+    "enter": "Enter fullscreen (F11)",
+    "exit": "Exit fullscreen (F11)"
   },
   "issues": {
-    "none": "No issues",
-    "count": "{{count}} issue(s)",
-    "blocked": "Cannot save while issues remain"
+    "count": "Recipe validation failed with {{count}} issue(s).",
+    "blocked": "The recipe must be valid before saving."
+  },
+  "outputs": {
+    "title": "Saved outputs",
+    "refresh": "Fetch outputs",
+    "loading": "Reading outputs…",
+    "empty": "There are no saved recipes.",
+    "loaded": "Loaded {{name}}.",
+    "invalid": "Recipe was not loaded: {{count}} validation issue(s).",
+    "fail": "Outputs could not be read: {{error}}"
   },
   "save": {
+    "title": "Save",
     "category": "Category",
-    "name": "Name",
-    "button": "Save",
-    "ok": "Saved: {{path}}",
+    "name": "Asset name",
+    "button": "Save PNG + recipe",
+    "nameRequired": "Enter a short asset name to save.",
+    "ok": "Saved: {{path}} · CORE/CLI quality checks passed.",
+    "qaWarning": "Saved: {{path}} · some quality metrics reported a warning.",
     "fail": "Save failed: {{error}}",
-    "namePattern": "Name may contain only a-z, 0-9 and hyphen"
+    "namePattern": "Name may contain only a-z, 0-9 and hyphen."
   }
 }

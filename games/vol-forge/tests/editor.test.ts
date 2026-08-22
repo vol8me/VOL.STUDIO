@@ -1,170 +1,113 @@
-import { describe, it, expect } from 'vitest';
-import { collectSpriteDocIssues, renderSprite, type SpriteDoc } from '@volstudio/core/visual';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createVisualPreset, renderSprite, type SpriteDoc } from '@volstudio/core/visual';
 import { Editor } from '../src/Editor';
-import { DocumentStore } from '../src/state/DocumentStore';
-import { EditorState } from '../src/state/editorState';
-import { LayerPanel } from '../src/ui/LayerPanel';
-import { TreePanel } from '../src/ui/TreePanel';
-import { ParamPanel } from '../src/ui/ParamPanel';
-import { DocumentPanel } from '../src/ui/DocumentPanel';
-import { PalettePanel } from '../src/ui/PalettePanel';
-import { IssuePanel } from '../src/ui/IssuePanel';
-import { wrapNode } from '../src/doc/defaults';
-import { getAt, setAt } from '../src/doc/path';
 
-const DOC: SpriteDoc = {
-  schemaVersion: 1,
-  size: [32, 32],
-  seed: 7,
-  palette: {
-    colors: ['#101010', '#606060', '#b0b0b0', '#f0f0f0'],
-    ramps: [{ id: 0, indices: [0, 1, 2, 3] }],
-  },
-  layers: [
-    {
-      id: 'govde',
-      source: { kind: 'sdf.circle', center: [0, 0], r: 0.6 },
-      height: { kind: 'gradient.radial', center: [0, 0], radius: 0.9 },
-      material: 0,
-    },
-  ],
-} as SpriteDoc;
-
+const DOC = createVisualPreset('softGlow', { size: 32, seed: 1337 });
 const bytes = (doc: SpriteDoc): number[] => Array.from(renderSprite(doc).rgba);
 
-describe('Tur 4 kanıtı — editör belgesi CLI ile aynı PNG"yi verir (§8.15)', () => {
-  it('editör eylemleriyle kurulan belge geçerli kalır ve aynı çıktıyı verir', () => {
-    const store = new DocumentStore(DOC);
-    const state = new EditorState();
-
-    // 1) Katman ekle.
-    const layers = new LayerPanel(store, state);
-    layers.render();
-    const addButton = layers.element.querySelector('button.vol-button');
-    (addButton as HTMLButtonElement).click();
-    expect(store.get().layers).toHaveLength(2);
-
-    // 2) İlk katmanın kaynağını SAR.
-    const sourcePath = ['layers', 0, 'source'] as const;
-    const source = getAt(store.get(), sourcePath) as never;
-    store.update((doc) => setAt(doc, sourcePath, wrapNode(source, 'blur')));
-
-    // 3) Bir parametreyi değiştir.
-    store.update((doc) => setAt(doc, [...sourcePath, 'radius'], 0.05), {
-      coalesceKey: 'radius',
-    });
-
-    // 4) Bir katmanı GİZLE — belgeyi etkilememeli.
-    const before = bytes(store.get());
-    state.toggleHidden('govde');
-    const after = bytes(store.get());
-
-    expect(collectSpriteDocIssues(store.get())).toEqual([]);
-    expect(after).toEqual(before);
-
-    // Kaydedilecek belge = render edilen belge. Sunucu da aynı `renderSprite`
-    // çağrısını yapar, dolayısıyla dosya bu piksellerin aynısını taşır.
-    const result = renderSprite(store.get());
-    expect(result.width).toBe(32);
-    expect(Array.from(result.rgba)).toEqual(after);
-
-    layers.destroy();
-  });
-
-  it('GİZLİ katman belgede iz bırakmaz', () => {
-    const store = new DocumentStore(DOC);
-    const state = new EditorState();
-    state.toggleHidden('govde');
-
-    expect(state.isHidden('govde')).toBe(true);
-    expect(state.hiddenCount).toBe(1);
-    // Belgede görünürlük alanı YOKtur; olsaydı CLI ile editör ayrışırdı.
-    expect(JSON.stringify(store.get())).not.toContain('hidden');
-    expect(JSON.stringify(store.get())).not.toContain('visible');
-  });
-
-  it('kilit de belgeye yazılmaz', () => {
-    const store = new DocumentStore(DOC);
-    const state = new EditorState();
-    state.toggleLocked('govde');
-    expect(state.isLocked('govde')).toBe(true);
-    expect(JSON.stringify(store.get())).not.toContain('locked');
-  });
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
-describe('paneller kurulur, çizer ve temizlenir', () => {
-  it('Editor kabuğu tüm panelleri kurar', () => {
-    const editor = new Editor(DOC);
+describe('VOL Forge tek ekran ürün sözleşmesi', () => {
+  it('tek üretim çalışma alanı kurar; kip, Tabs ve gelişmiş editör kalıntısı taşımaz', () => {
+    const editor = new Editor(DOC, 'effect');
     editor.start();
 
-    expect(editor.element.querySelector('.vf-main')).not.toBeNull();
-    expect(editor.element.querySelector('.vf-layers')).not.toBeNull();
-    expect(editor.element.querySelector('.vf-tree')).not.toBeNull();
-    expect(editor.element.querySelector('.vf-palette')).not.toBeNull();
-    expect(editor.element.querySelector('.vf-issues')).not.toBeNull();
-
+    expect(editor.element.querySelector('.vf-workspace')).not.toBeNull();
+    expect(editor.element.querySelector('.vf-intent')).not.toBeNull();
+    expect(editor.element.querySelector('.vf-preview')).not.toBeNull();
+    expect(editor.element.querySelector('.vf-quick')).not.toBeNull();
+    expect(editor.element.querySelector('.vf-save')).not.toBeNull();
+    expect(editor.element.querySelector('.vol-tabs')).toBeNull();
+    expect(editor.element.querySelector('[data-mode]')).toBeNull();
+    expect(editor.element.querySelector('.vf-layers')).toBeNull();
+    expect(editor.element.textContent).not.toContain('İleri düzenleme');
     editor.destroy();
-    expect(editor.element.isConnected).toBe(false);
   });
 
-  it('ağaç paneli katmanın alanlarını sekmeler', () => {
-    const store = new DocumentStore(DOC);
-    const state = new EditorState();
-    const tree = new TreePanel(store, state);
-    tree.render();
+  it('“solucan” yazıldığında ayrı nesne tarifini canlı üretir', () => {
+    vi.useFakeTimers();
+    const editor = new Editor(DOC, 'effect');
+    editor.start();
+    const before = bytes(editor.getDocument());
+    const prompt = editor.element.querySelector<HTMLTextAreaElement>('textarea')!;
+    prompt.value = 'mor solucan';
+    prompt.dispatchEvent(new Event('input', { bubbles: true }));
+    vi.advanceTimersByTime(320);
 
-    const tabs = tree.element.querySelectorAll('.vf-tree__tab');
-    expect(tabs).toHaveLength(4);
-    // `mask` ve `materialMask` tanımsız → boş işareti.
-    expect(tree.element.querySelectorAll('.vf-tree__tab--empty')).toHaveLength(2);
-    tree.destroy();
+    expect(editor.getDocument().layers.map((layer) => layer.id)).toEqual(['body', 'eye']);
+    expect(editor.getDocument().palette.generate?.[0]?.base).toBe('#8b67c6');
+    expect(bytes(editor.getDocument())).not.toEqual(before);
+    editor.destroy();
   });
 
-  it('parametre paneli seçili düğümün şemasını gösterir', () => {
-    const store = new DocumentStore(DOC);
-    const state = new EditorState();
-    state.selectNode(['layers', 0, 'source']);
+  it('bilinmeyen prompt görüntüyü değiştirmez ve dürüst uyarı verir', () => {
+    vi.useFakeTimers();
+    const editor = new Editor(DOC);
+    editor.start();
+    const before = JSON.stringify(editor.getDocument());
+    const prompt = editor.element.querySelector<HTMLTextAreaElement>('textarea')!;
+    prompt.value = 'xyzzy';
+    prompt.dispatchEvent(new Event('input', { bubbles: true }));
+    vi.advanceTimersByTime(320);
 
-    const params = new ParamPanel(store, state);
-    params.render();
-    expect(params.element.textContent).toContain('sdf.circle');
-    // Etki alanı rozeti şemadan gelir (§8.5).
-    expect(params.element.textContent).toContain('signed');
-    params.destroy();
+    expect(JSON.stringify(editor.getDocument())).toBe(before);
+    expect(editor.element.querySelector('.vf-intent__status')?.textContent).toContain(
+      'değiştirilmedi',
+    );
+    editor.destroy();
   });
 
-  it('belge paneli boyut ve tohum kontrollerini kurar', () => {
-    const store = new DocumentStore(DOC);
-    const panel = new DocumentPanel(store);
-    panel.render();
-    expect(panel.element.querySelectorAll('.vf-field').length).toBeGreaterThan(5);
-    panel.destroy();
+  it('başlangıç kartı ikinci onay beklemeden tarifi uygular', () => {
+    const editor = new Editor(DOC);
+    editor.start();
+    editor.element.querySelector<HTMLButtonElement>('[data-preset="cutMineral"]')!.click();
+    expect(editor.getDocument().layers[0]?.id).toBe('facet');
+    editor.destroy();
   });
 
-  it('palet paneli veri kipinde renk kutucukları gösterir', () => {
-    const store = new DocumentStore(DOC);
-    const panel = new PalettePanel(store);
-    panel.render();
-    expect(panel.element.querySelectorAll('.vol-color-picker')).toHaveLength(4);
-    panel.destroy();
+  it('genişlik ve yükseklik 128 kilidi olmadan 2048 sınırına kadar girilebilir', () => {
+    const editor = new Editor(DOC);
+    editor.start();
+    const dimensions = editor.element.querySelectorAll<HTMLInputElement>(
+      '.vf-quick__dimensions input[type="number"]',
+    );
+    expect(dimensions).toHaveLength(2);
+    expect(dimensions[0].max).toBe('2048');
+    dimensions[0].value = '1536';
+    dimensions[0].dispatchEvent(new Event('change', { bubbles: true }));
+    dimensions[1].value = '768';
+    dimensions[1].dispatchEvent(new Event('change', { bubbles: true }));
+    expect(editor.getDocument().size).toEqual([1536, 768]);
+    editor.destroy();
   });
 
-  it('sorun paneli geçerli belgede temiz, bozukta yol gösterir', () => {
-    const store = new DocumentStore(DOC);
-    const state = new EditorState();
-    const panel = new IssuePanel(store, state);
+  it('yeni varyasyon hem tohumu hem gerçek pikselleri değiştirir', () => {
+    const editor = new Editor(DOC, 'effect');
+    editor.start();
+    const beforeSeed = editor.getDocument().seed;
+    const before = bytes(editor.getDocument());
+    editor.element.querySelector<HTMLButtonElement>('.vf-quick__variation')!.click();
+    expect(editor.getDocument().seed).not.toBe(beforeSeed);
+    expect(bytes(editor.getDocument())).not.toEqual(before);
+    editor.destroy();
+  });
 
-    panel.render();
-    expect(panel.hasIssues).toBe(false);
-
-    store.update((doc) => setAt(doc, ['layers', 0, 'source', 'r'], -1));
-    panel.render();
-    expect(panel.hasIssues).toBe(true);
-
-    // Soruna tıklamak ilgili düğümü SEÇER (§8.10).
-    const row = panel.element.querySelector('.vf-issues__row') as HTMLButtonElement;
-    row.click();
-    expect(state.selectedNode).toEqual(['layers', 0, 'source', 'r']);
-    panel.destroy();
+  it('geri al ve yinele gerçek belge geçmişine bağlıdır', () => {
+    const editor = new Editor(DOC);
+    editor.start();
+    const undo = editor.element.querySelector<HTMLButtonElement>('[aria-label="Geri al"]')!;
+    const redo = editor.element.querySelector<HTMLButtonElement>('[aria-label="Yinele"]')!;
+    expect(undo.disabled).toBe(true);
+    editor.element.querySelector<HTMLButtonElement>('[data-preset="organicCluster"]')!.click();
+    expect(undo.disabled).toBe(false);
+    undo.click();
+    expect(editor.getDocument().layers[0]?.id).toBe('halo');
+    expect(redo.disabled).toBe(false);
+    redo.click();
+    expect(editor.getDocument().layers[0]?.id).toBe('stem');
+    editor.destroy();
   });
 });

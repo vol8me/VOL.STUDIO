@@ -1,7 +1,7 @@
 # Görsel sentez — doktrin ve sözleşme
 
 Bu belge `core/visual/` (prosedürel raster sentezi) ve `games/vol-forge`
-(parametre editörü) için **bağlayıcı** tasarım kararlarını taşır. Uygulayan
+(tek ekran tarif üreticisi) için **bağlayıcı** tasarım kararlarını taşır. Uygulayan
 kişi ya da agent önce bunu okur; buradaki kararlar gerekçeleriyle birlikte
 yazılıdır ve gerekçe çürütülmeden değiştirilmez.
 
@@ -14,7 +14,7 @@ offline üretim, tohumlanmış determinizm, ölçülebilir kalite.
 ## 0. Amaç ve anti-hedefler
 
 **Amaç:** parametrelerle tanımlanan, deterministik, tek bir PNG sprite üreten
-genel amaçlı bir raster sentez sistemi; ve onu canlı düzenleyen bir editör.
+genel amaçlı raster sentez sistemi ve onu niyetten canlı kuran üretim yüzeyi.
 
 Sistem **hiçbir nesne türüne göre tasarlanmaz.** Ağaç, matkap, cevher, sıvı,
 kristal — hepsi aynı cebirin farklı bileşimleridir. Bir örneğe demirlemek
@@ -22,14 +22,14 @@ sistemi o örnek kadar dar yapar.
 
 **Anti-hedefler** (bunlar bilinçli olarak YAPILMAZ):
 
-| Yapılmayacak                     | Neden                                                                                           |
-| -------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Animasyon / kare dizisi          | Çıktı tek PNG. Zaman parametresi eklemek her düğümü ve editörü etkiler; gerekirse ayrı bir tur. |
-| Düğüm grafiği (DAG) editörü      | Kompozisyon modeli katman yığını (bkz. D10). DAG'a geçiş yolu açık ama bugün yapılmaz.          |
-| Genel amaçlı görüntü düzenleyici | Fırça, seçim, katman efekti yok. Bu bir _üretici_, bir _editör_ değil.                          |
-| Üretken YZ / difüzyon            | Çıktı tamamen algoritmiktir.                                                                    |
-| Vektör çıktı (SVG)               | Hedef raster; SDF'ler vektör değil, alan olarak kullanılır.                                     |
-| 3B                               | Yükseklik alanı 2.5B gölgeleme içindir, geometri değil.                                         |
+| Yapılmayacak                     | Neden                                                                                         |
+| -------------------------------- | --------------------------------------------------------------------------------------------- |
+| Animasyon / kare dizisi          | Çıktı tek PNG. Zaman parametresi her düğümü ve çıktı hattını etkiler; gerekirse ayrı bir tur. |
+| Düğüm grafiği (DAG) editörü      | Kompozisyon modeli katman yığını (bkz. D10). DAG'a geçiş yolu açık ama bugün yapılmaz.        |
+| Genel amaçlı görüntü düzenleyici | Fırça, seçim, katman efekti yok. Bu bir _üretici_, bir _editör_ değil.                        |
+| Üretken YZ / difüzyon            | Çıktı tamamen algoritmiktir.                                                                  |
+| Vektör çıktı (SVG)               | Hedef raster; SDF'ler vektör değil, alan olarak kullanılır.                                   |
+| 3B                               | Yükseklik alanı 2.5B gölgeleme içindir, geometri değil.                                       |
 
 ---
 
@@ -230,12 +230,12 @@ Yani havuzlama isteğe bağlı bir iyileştirme değil, bütçenin parçasıdır
 Tamponlar `ObjectPool` (bkz. [`primitives.md`](./primitives.md)) ile devredilir;
 boyut başına bir havuz tutulur.
 
-### D8 — Çekirdek headless, editör tüketici
+### D8 — Çekirdek headless, üretim yüzeyi tüketici
 
 `core/visual/` **DOM tanımaz**. `Canvas`, `ImageData`, `window` geçmez.
 Node'da ve tarayıcıda aynı çalışır.
 
-Editör bir _tüketicidir_: çekirdeği çağırır, sonucu gösterir. Editörsüz
+Forge bir _tüketicidir_: çekirdeği çağırır, sonucu gösterir. Forge olmadan
 çekirdek tam işlevlidir — `synthesize()`in `vol-ui` olmadan çalıştığı gibi.
 
 Node-only kod (PNG yazma, dosya sistemi) **barrel'a girmez**, ayrı alt-yolda
@@ -261,33 +261,33 @@ Neden DAG değil:
 
 1. **JSON düz dizi** — agent'ın yazması ve düzenlemesi kolay; DAG'da düğüm
    kimliği/bağlantı hatası çok daha olası.
-2. **Editör liste** — mevcut `Tabs`/`Accordion`/`Slider` bileşenleri doğrudan
-   karşılar; grafik editörü ayrı bir projedir.
+2. **Agent tarafından okunabilirlik** — düz JSON dizi yazılır ve diff'lenir;
+   grafik bağlantı kimlikleri gerekmez.
 3. **Bellek doğrusal** (D7).
 4. **DAG'ı engellemez** — primitifler aynı kalır, ilerde yalnızca kompozisyon
    katmanı değişir.
 
 Maske **alt-yığın** olabilir (özyinelemeli). Azami derinlik **4**; aşılırsa
-hata fırlatılır. Gerekçe: bellek sınırı (D7) ve editörde gezilebilirlik.
+hata fırlatılır. Gerekçe: bellek sınırı (D7) ve belge okunabilirliği.
 Sonsuz derinlik pratikte gerekmedi, sınırsız bırakmak hem belleği hem arayüzü
 öngörülemez yapar.
 
-### D11 — Parametre şeması hem doğrular hem arayüz üretir
+### D11 — Parametre şeması doğrular ve araçlara veri sağlar
 
 Her primitifin parametreleri **veriyle bildirilir**: ad, tip, aralık, adım,
 varsayılan, açıklama.
 
-Bu şema iki yerde kullanılır:
+Bu şema iki amaç taşır:
 
 - **Doğrulama** — agent'ın yazdığı JSON sınırda kontrol edilir (ses tarafındaki
   `validateQualityConfig`/`validateRigMetadata` deseni).
-- **Arayüz üretimi** — editör kontrolleri şemadan türetir; 35 primitifin
-  parametrelerini elle bağlamak sürdürülemez.
+- **Araç introspeksiyonu** — CLI/agent hangi alanın türünü, aralığını ve
+  varsayılanını tek kaynaktan okuyabilir.
 
-_İleriye dönük dikiş:_ ses motorunun editöre taşınması düşünülüyor. O geldiğinde
-`SynthParams` de bir şema kazanırsa aynı editör kabuğu iki motoru da sürebilir.
-**Bugün ses için hiçbir şey inşa edilmez** — şema görsel için tek başına
-gerekçelidir; ses geldiğinde soyutlama yapılır, öncesinde değil.
+Tur 4'te şema doğrudan parametre editörü üretmek için kullanıldı; Tur 5 ürün
+denetiminde bu yüzey kaldırıldı. Şemanın doğrulama ve agent sözleşmesi değeri
+bundan bağımsızdır. Gelecekte yeni bir tüketici çıkmadan ortak editör kabuğu
+soyutlanmaz.
 
 ### D12 — Ölçüm zorunludur
 
@@ -849,26 +849,25 @@ core/src/visual/
 
 core/src/visual/encode/            ← ayrı ALT-YOL, barrel'da değil (D8)
   png.ts              node:zlib ile PNG kodlayıcı + writePng
+  artifact.ts         render + QA + PNG için CLI/sunucu ortak girişi
 
-core/scripts/forge.ts              §10.1 CLI (render / validate)
+core/scripts/forge.ts              §10.1 CLI (render / validate / qa / palette)
 core/scripts/visual-qa.ts          §9 ölçüm aracının İNCE sarmalayıcısı
 
 core/tests/visual/fixtures/*.json  elle yazılmış kanıt belgeleri
 
-games/vol-forge/                   editör (vol-ui kardeşi)     ← Tur 4
-  src/main.ts  scenes/  sections/  i18n/{tr,en}.json
+games/vol-forge/                   tek ekran üretici (vol-ui kardeşi)
+  src/main.ts  intent/  preview/  ui/  i18n/{tr,en}.json
 ```
 
 İki ayrım kasıtlı:
 
-- **`schema/` ve `validate.ts` ayrı.** Şema veridir ve editör de (Tur 4) onu
-  okuyacak; doğrulama o verinin bir tüketicisidir. Tek dosyada tutmak,
-  arayüz üretimi için şemayı import eden kodun doğrulayıcıyı da sürüklemesi
-  demekti. Şemanın kendisi kategoriye bölünmüştür: editör kontrolleri
-  kategoriye göre gruplayacak ve tek dosya 1200 satırı geçerdi.
+- **`schema/` ve `validate.ts` ayrı.** Şema veridir; doğrulama onun bir
+  tüketicisidir. Agent/CLI introspeksiyonu şemayı doğrulama yürütmeden
+  okuyabilir ve tek dosya 1200 satırı aşmaz.
 - **Ölçüm `visual/qa.ts` içinde, script'te değil.** Script bir sarmalayıcıdır;
-  metrikler çekirdekte olduğu için hem test edilir hem de editör (Tur 4) aynı
-  sayıları gösterebilir. D8 ve D12 birlikte bunu gerektirir.
+  metrikler çekirdekte olduğu için hem test edilir hem CLI hem Forge kayıt
+  yanıtı aynı sayıları taşır. D8 ve D12 birlikte bunu gerektirir.
 
 `core/package.json` `exports` alanına iki giriş eklenir:
 `"./visual"` ve `"./visual/encode"`.
@@ -939,355 +938,248 @@ Nicemleme sonrası çıktıda palet dışı piksel **kalmaz**. `visual-qa` bunu
 
 ---
 
-## 8. Editör (`games/vol-forge`)
+## 8. Üretim yüzeyi (`games/vol-forge`)
 
-**Kullanıcı içindir; agent CLI'dan sürer (§10).** İkisi aynı çekirdeği çağırır,
-dolayısıyla ikisi de aynı çıktıyı üretir — editör bir önizleme oyuncağı değil,
-belgenin ikinci bir giriş yoludur.
+**Kullanıcı içindir; agent aynı hattı CLI üzerinden sürer (§10).** Forge bir
+katman ağacı editörü, elle piksel çizme uygulaması ya da üretken YZ servisi
+değildir. CORE görsel sentez tariflerini anlaşılır bir niyet ve birkaç kalıcı
+çıktı kararıyla üretir; sonuç PNG ve onu yeniden üreten JSON belgesidir.
 
-Dört karar bu bölümün tamamını belirliyor:
+Tur 5 ürün denetimi, Tur 4'te kurulan teknik editörün bu amaca hizmet
+etmediğini gösterdi. Katman/ağaç/parametre/palet/teknik kanal yüzeyleri
+**üründen tamamen kaldırıldı**; CSS ile saklanan ikinci bir kip ya da `Tabs`
+kalıntısı yoktur. Sık kullanılan birkaç kontrolü “Üretim” adlı başka bir
+sekmeye taşımak da aynı kip karmaşasını koruyacaktı. Forge artık yalnızca tek
+ekrandır:
 
-1. **Hem sıfırdan kurma hem ayar çekme** eşit ağırlıkta. Editör ne salt bir
-   ayar masası ne salt bir yapım tezgahı; ikisi de birinci sınıf.
-2. **Tam ağaç düzenleme.** Şeklin iç içe yapısı editörden değiştirilebilir
-   (bkz. §8.5), yalnızca sayıları oynatmakla sınırlı değil.
-3. **Canlı önizleme**, kaydırıcı çekilirken. Bunun bedeli çözünürlük
-   yönetimidir (bkz. §8.8).
-4. **Çıktılar repoya düşer**, kategori klasörlerine (bkz. §8.11).
+1. niyet yaz veya katalog tarifine tıkla,
+2. CORE sonucu canlı önizle,
+3. boyut, bitiş, ana renk ve tohumu belirle,
+4. PNG + JSON tarifini ortak CLI hattıyla kaydet ya da eski bir çıktıyı aç.
 
-Bileşenler `core/src/ui`'den gelir — ImGui benzeri bir bağımlılık **eklenmez**
-(repo zaten kendi kontrol setine sahip).
+Bileşenler `core/src/ui`den gelir. Forge yalnızca ürün yerleşimi ve
+`SpriteDoc`a yapılan kararları taşır; kendi Button/Select/Stepper/Zoom
+bileşenlerini icat etmez.
 
 ### 8.1 Paket biçimi — Phaser YOK
 
-`vol-ui` Phaser içinde yaşar çünkü bir OYUN vitrinidir. Editör oyun değildir ve
-`core/src/ui` Phaser'a hiç bağlı değildir: `UIRoot` kendi belgesinde "canvas/oyun
-döngüsünden bağımsız tam ekran DOM UI katmanı" diye tanımlı ve `core/src/ui`
-altında tek bir Phaser importu yok. Kontroller `HTMLDivElement` ve
-`<input type="range">` üzerine kurulu.
+`vol-ui` Phaser içinde yaşar çünkü bir oyun vitrinidir. Forge oyun değildir
+ve `core/src/ui` Phaser'a bağlı değildir. Bu nedenle paket **Vite + DOM**dur;
+`createVolGame` çağırmaz.
 
-Dolayısıyla `vol-forge` **Vite + DOM**tur; `createVolGame` çağırmaz. Üç gerekçe:
+- Normal tarayıcı yerleşimi, sütun kaydırması ve pencere yeniden boyutlandırma
+  doğrudan DOM ile yürür.
+- Önizleme bir `<canvas>`a `putImageData` ile yazılır.
+- Forge, `UIRoot`un uygulama dışı olayları geçiren
+  `pointer-events: none` sözleşmesini kendi `.vf-app` kökünde açıkça
+  `pointer-events: auto` ile geri alır. Bu ezme yokken bütün yerli
+  textarea/kart/Select kontrolleri gerçek tarayıcıda pasifti; jsdom bunu
+  yakalayamıyordu.
+- `core/public/assets/fonts` Vite `publicDir` yüzeyidir. Jura ve Exo 2,
+  uygulama kurulmadan önce `FontManager` ile yüklenir; sistem fontuna sessiz
+  düşülmez.
 
-- Sırf DOM bir arayüz için ~1 MB Phaser paketlemek karşılıksız bir bedeldir.
-- `createVolGame`'in görüntü alanı ölçeklemesi OYUN içindir; editör normal
-  tarayıcı yerleşimi, kaydırma ve pencere yeniden boyutlandırma ister.
-- Önizleme doğrudan bir `<canvas>`a `putImageData` ile yazılır; Phaser dokusu
-  aradan çıkınca yükleme adımı da çıkar.
+Paket `typecheck`, `test`, `test:coverage` ve `build` kapılarına
+workspace üzerinden kendiliğinden katılır.
 
-Bu, "vol-ui kardeşi" tarifinden bilinçli bir sapmadır: kardeşlik BİLEŞEN
-setinde ve depo kurallarındadır, barındırma kabuğunda değil.
-
-`workspace-contract` gereği paket `typecheck`, `test`, `test:coverage`
-script'leriyle ve kök `quality.json`da bir eşik girdisiyle gelir; taban
-50/50/50/40 (§11.3).
-
-### 8.2 Düzen
+### 8.2 Tek ekran düzeni
 
 ```
-┌──────────────────┬──────────────────────────┬─────────────────────┐
-│ BELGE            │        ÖNİZLEME          │ PARAMETRE           │
-│                  │                          │  (seçili düğüm)     │
-│ ▸ katman listesi │  1:1 · tamsayı zoom      │                     │
-│   sürükle-sırala │  3×3 döşeme              │ ─────────────────── │
-│   göz · kilit    │  kanal görüntüleyici     │ BELGE AYARLARI      │
-│                  │                          │  size · seed ·      │
-│ ─────────────────│  [rozet: palet · dikiş]  │  tileable ·         │
-│ ▸ ŞEKİL AĞACI    │  [önizleme 128² /        │  antialias ·        │
-│   seçili katmanın│   çıktı 512²]            │  shade · post       │
-│   source/mask/   │                          │                     │
-│   height/matMask │                          │                     │
-├──────────────────┴──────────────────────────┴─────────────────────┤
-│ PALET ŞERİDİ            │ SORUNLAR (canlı) │ kategori ▾ [Kaydet]  │
-└───────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ VOL.FORGE · CORE/CLI ortak hat      geri al · yinele · tam ekran    │
+├──────────────────┬───────────────────────────┬───────────────────────┤
+│ NİYET            │ CANLI SONUÇ               │ ÇIKTI                 │
+│                  │                           │                       │
+│ görsel tarifi    │ sabit dünya ızgarası      │ 8..2048 genişlik      │
+│ canlı durum      │ hareketli artboard+PNG    │ 8..2048 yükseklik     │
+│                  │ tekerlek/pinch zoom       │ piksel/pürüzsüz       │
+│ 7 katalog kartı  │ tutup sürükleyerek pan    │ ana renk · tohum      │
+│                  │ Sığdır                    │ yeni varyasyon         │
+│                  │                           │                       │
+│                  │                           │ KAYDET · KAYITLAR      │
+└──────────────────┴───────────────────────────┴───────────────────────┘
 ```
 
-Sol sütun `ScrollView` içinde iki `Accordion` bölümü, sağ sütun `Tabs`.
-Ağaç `core/src/ui/layout/Tree.ts` ile çizilir.
+Sol ve sağ sütun içerikleri büyüdüğünde sütunun **en dış kabı** kayar; içteki
+listeyi sınırlayıp paneli taşırma hatası yapılmaz. Dar görünümde hiçbir panel
+kaybolmaz: önizleme üste, niyet ve çıktı altına akar.
 
-### 8.3 Belge durumu ve geri alma
+Başlıkta kip seçici yoktur. Geri al/yinele aynı `DocumentStore` geçmişine,
+tam ekran düğmesi ise F11 ile aynı Fullscreen API akışına bağlıdır. Tarayıcı
+F11 olayını işletim sistemi düzeyinde ayırırsa görünür düğme her zaman
+yedektir.
 
-**Editörün tek doğruluk kaynağı TEK bir `SpriteDoc` nesnesidir.** Seçim,
-yakınlaştırma, açık akordeon gibi her şey ondan ayrı tutulur ve belgeye
-yazılmaz. Her düzenleme YENİ bir belge üretir (yerinde değiştirme yok); bu,
-geri almayı anlık görüntü yığınına indirger.
+### 8.3 Niyet çözümleme — bildiğini ve bilmediğini ayır
 
-Belgeler birkaç kilobayttır, dolayısıyla **tam anlık görüntü** alınır; fark
-tabanlı bir geçmiş burada kazanç değil karmaşıklık olurdu. Yığın 50 adımla
-sınırlıdır.
+Niyet çözümleme sırası sabittir:
 
-**Kaydırıcı sürüklemesi TEK bir adıma indirilir.** Aksi hâlde tek bir sürükleme
-yüzlerce geri alma girdisi üretir ve geri alma kullanılamaz hâle gelir: aynı
-(düğüm yolu, parametre) çiftine 400 ms içinde gelen ardışık değişiklikler tek
-girdide birleştirilir.
+1. kullanıcı doğrudan bir katalog kartına tıkladıysa o açık karar,
+2. genişletilebilir nesne sözlüğü,
+3. `findVisualPresets` katalog araması,
+4. her belgede aynı anlama gelen boyut/renk/bitiş değiştiricileri,
+5. hiçbiri yoksa **bilinmeyen**.
 
-### 8.4 Katman listesi — göz ve kilit BELGEYE yazılmaz
+Bilinmeyen metin seçili tarife sessizce düşmez. Arayüz “sözlükte yok; görsel
+değiştirilmedi” der ve açık belgeyi korur. Bu ayrım, eşleşmemiş bir promptu
+başarı gibi gösteren Tur 5 öncesi davranışı kapatır.
 
-Sürükle-sırala belgeyi DEĞİŞTİRİR: katman sırası bileşim sırasıdır (D10).
+Metin yazılırken her tuşta pahalı render başlatılmaz; 320 ms duraklamadan
+sonra canlı uygulanır. `Ctrl/Cmd+Enter` beklemeyi atlar. Katalog kartları
+ikinci bir “oluştur” onayı beklemeden çalışır.
 
-Göz (görünürlük) ve kilit ise **yalnızca editör durumudur**. Gerekçe Tur 4'ün
-kendi kanıtıdır: _editörde kurulan belge CLI'dan birebir aynı PNG'yi verir._
-Gizlenen bir katman render'ı etkileseydi editördeki görüntü ile CLI çıktısı
-ayrışırdı ve kanıt çökerdi. Kapatma niyeti zaten belgede ifade edilebiliyor:
-`opacity: 0`.
+Nesne sözlüğündeki bir girdi yalnızca katalog etiketi değildir. Örneğin
+`solucan | worm | kurtçuk | larva`, dört kapsül + baş + göz + tohumdan
+etkilenen yükseklik alanı kuran ayrı bir tariftir. Böylece “organik küme”
+seçili diye ilgisiz bir bitki silüetine düşmez. Sözlüğe yeni bir nesne
+eklemek, terimleri ve gerçek `SpriteDoc` kurucusunu aynı kayıtta eklemeyi
+gerektirir.
 
-Bir katman gizliyken önizlemenin üstünde kalıcı bir rozet durur ("2 katman
-gizli") — gizlediğini unutup çıktıyı yanlış değerlendirmek mümkün olmasın.
+Evrensel değiştiriciler:
 
-### 8.5 Şekil ağacı — üç işlem yeter
+- `WxH` ya da kare sayı: iki kenarda da 8..2048,
+- Türkçe/İngilizce temel renk adları,
+- keskin piksel veya pürüzsüz bitiş.
 
-Şemadaki her `field` parametresi ZORUNLUdur; boş yuva diye bir şey yoktur.
-Bunun sonucu şu: yapısal düzenleme "çocuk ekle" değil, tam olarak üç işlemdir.
+Bunların dışındaki sıfatlar uygulanmış gibi raporlanmaz.
 
-| İşlem        | Ne yapar                                      | Örnek                     |
-| ------------ | --------------------------------------------- | ------------------------- |
-| **Değiştir** | Düğümün türünü değiştirir, alt ağacı korur    | `sdf.circle` → `sdf.star` |
-| **Sar**      | Düğümü YENİ bir düğümün içine koyar           | `min(…)` → `blur(min(…))` |
-| **Çıkar**    | Düğümü siler; çocuklarından BİRİ yerine geçer | `blur(min(…))` → `min(…)` |
+### 8.4 Belge durumu ve geçmiş
 
-Üçü birlikte her ağacı her ağaca dönüştürebilir; dördüncü bir işlem gerekmez.
+Tek doğruluk kaynağı bir `SpriteDoc`tur. Her karar yeni bir kök üretir;
+yerinde değişiklik yapılmaz. Tam anlık görüntü geçmişi 50 adımla sınırlıdır.
+Renk seçicinin ardışık girdileri 400 ms pencerede tek geri alma adımına
+birleşir; katalog, nesne, boyut, bitiş, tohum ve yüklenen kayıt normal birer
+adımdır.
 
-**Değiştir — parametre eşlemesi.** Aynı adı taşıyan parametreler değerlerini
-KORUR (`center`, `r`, `freq`), kalanlar şemadaki varsayılanı alır. Şemadaki
-`default` alanının asıl tüketicisi budur.
+Geçersiz belge canlı render'a veya kayda gönderilmez.
+`collectSpriteDocIssues` sonucu boş değilse kaydetme gerçek `disabled`
+durumuna geçer ve nedenini gösterir. Kayıtlı JSON da açılmadan önce aynı
+doğrulayıcıdan geçer.
 
-**Sar — boş kalan yuvalar.** `min` gibi iki alanlı bir düğümle sarıldığında
-ikinci yuva doldurulmalıdır. Editör oraya, sarılan düğümle **AYNI etki
-alanında** bir varsayılan koyar: `signed` ise bir `sdf.circle`, `unit` ise bir
-`const`. Böylece ağaç inşa gereği geçerli kalır ve kullanıcı hemen bir
-doğrulama hatasıyla karşılaşmaz.
+### 8.5 Canlı önizleme ve kamera
 
-**Çıkar — hangi çocuk?** Tek girdili düğümlerde soru yok. `min`/`max`/`mix`
-gibi iki girdili düğümlerde editör hangisinin yerine geçeceğini sorar.
+Önizleme ikinci bir çizim motoru değildir:
+`renderSprite(doc, { size: previewSize })` çağrısıdır. Üç davranış birlikte
+canlı kalmasını sağlar:
 
-**Etki alanı rozeti.** Her düğüm satırı çözümlenmiş etki alanını gösterir
-(`unit` / `signed`). Bir düğümü değiştirmek katmanın kapsamaya çevrilme
-biçimini değiştirebilir (§5.8); rozet bunu sürpriz olmaktan çıkarır. Bilgi
-zaten şemada var, ayrıca hesaplanmaz.
+- Her hızlı karenin süresi ölçülür. 24 ms bütçe aşılırsa önizleme kenar sınırı
+  yarıya iner; belirgin biçimde altındaysa tekrar yükselir.
+- Kuyruk yoktur; yeni belge gelince aradaki bekleyen durumlar düşer.
+- 512 ve altındaki çıktılar yaklaşık 300 ms boşlukta birebir çizilir. Daha
+  büyük çıktılar ana iş parçacığını 2048² render ile dondurmaz; ekranda adaptif
+  önizleme kalır, kaydetme ortak çıktı hattında gerçek boyutu üretir.
 
-**Sürükle DEĞİL, kes/yapıştır.** Ağaç içinde sürükleme belirsizdir: bırakılan
-yer çocuk mu, kardeş mi, hangi yuva? Kes/yapıştır hedefi açıkça seçtirir ve
-hem uygulaması hem kullanımı daha basittir. Sürükleme yalnızca DÜZ listelerde
-kullanılır: katmanlar ve `domain` zinciri.
+Durum satırı **önizleme boyu** ile **çıktı boyunu** ayrı taşır.
+`RenderResult.doc` ezilmiş önizleme belgesi olduğu için çıktı boyu oradan
+okunmaz.
 
-**Katman başına dört ağaç.** `source` · `mask` · `height` · `materialMask`.
-Üçü opsiyonel olduğu için katman panelinde sekme olarak durur; boş olanın
-sekmesinde "ekle" düğmesi vardır ve şemadan varsayılan bir düğüm kurar.
+Kamera `PinchZoomController` kullanır:
 
-**Alt-yığın maskeler.** `mask` bir alt-yığına çevrilebilir; ağaç o noktada iç
-içe bir katman listesi gösterir. Derinlik 4'te (D10) "sar" ve "alt-yığına
-çevir" eylemleri kapanır — hata mesajı yerine kapalı düğme, çünkü sınır
-kullanıcının yapabileceği bir şeyin sınırı, düzeltebileceği bir hata değil.
+- yalnızca sol fare düğmesi pan başlatır,
+- tekerlek zoomu imlecin altındaki dünya noktasını sabit tutar,
+- iki parmak hem merkez hareketini hem mesafe değişimini uygular,
+- işaretçi yakalama güvenli bırakılır ve `destroy()` bütün pointer/timer
+  durumunu temizler,
+- sabit dünya ızgarası sahnede kalır; dama artboard ile PNG kameranın
+  **içinde** birlikte hareket eder. Bu görsel ayrım, “objeyi sürüklüyorum”
+  hissini kamera panına çevirir,
+- Sığdır, sahne ve artboard ölçüsünden gerçek zoom hesaplar; varyasyon aynı
+  boyuttaysa kullanıcının pan/zoomunu sıfırlamaz.
 
-### 8.6 Parametre paneli (D11)
+Teknik coverage/height/material/normal kanal sekmeleri son kullanıcı üretim
+akışından çıkarılmıştır. Bu kanallar `RenderResult`ta ve CLI/test yüzeyinde
+durur; Forge'u bir motor hata ayıklayıcısına çevirmeleri gerekmez.
 
-Kontroller şemadan üretilir; kırk küsur primitifin parametrelerini elle
-bağlamak sürdürülemez.
+### 8.6 Temel çıktı kararları
 
-| Şema tipi | Kontrol                                         |
-| --------- | ----------------------------------------------- |
-| `number`  | `Slider` (min/max/step şemadan)                 |
-| `int`     | `NumberStepper`                                 |
-| `bool`    | `Checkbox`                                      |
-| `enum`    | ≤4 seçenek `SegmentedControl`, fazlası `Select` |
-| `vec2`    | iki `Slider`                                    |
-| `points`  | **`CurveEditor` (YENİ, bkz. §8.12)**            |
-| `field`   | düzenlenmez — ağacın işi (aşağıya bak)          |
+| Karar          | Sözleşme                                                                           |
+| -------------- | ---------------------------------------------------------------------------------- |
+| Boyut          | Hazır 64..2048 kareler veya bağımsız 8..2048 genişlik/yükseklik                    |
+| Bitiş          | Antialias + dither + quantize birlikte değiştirilir                                |
+| Ana renk       | Sentez paletinin ilk rampası; sabit veri paletinde sahte/pasif kontrol gösterilmez |
+| Tohum          | Tam 32-bit işaretli değer, kayda yazılır                                           |
+| Yeni varyasyon | LCG ile yeni tohum; her katalog tarifi ve nesne tarifinde gerçek RGBA değişir      |
 
-**`field` parametreleri panelde DÜZENLENMEZ.** Panelde bir satır olarak
-görünür ve tıklandığında o çocuk düğümü seçer. Aksi hâlde aynı işi yapmanın
-iki yolu olurdu: ağaçta ve panelde. Ağaç yapıyı, panel sayıları yönetir.
+128 bir motor sınırı değildir; yalnızca eski arayüzün sabit seçenek
+listesiydi. Çekirdek sınırı `MAX_SIZE = 2048`dir ve Forge aynı sınırı hem
+serbest promptta hem Stepper kontrollerinde kullanır.
 
-**Opsiyonel parametreler bir anahtarla açılır.** Anahtar kapalıyken alan
-belgeden TAMAMEN çıkarılır; varsayılan değeriyle yazılmaz. Her varsayılanı
-açıkça yazan bir belge diff'te okunmaz hâle gelir ve neyin bilinçli
-ayarlandığı kaybolur.
+### 8.7 Çıktı, kayıtlar ve gerçek CLI bağı
 
-Panel ayrıca düğümün şemadaki `description` metnini ve çözümlenmiş etki
-alanını gösterir.
-
-### 8.7 Palet şeridi
-
-Veri modeliyle aynı iki kip (§7.1):
-
-- **Veri kipi** (`colors` + `ramps`): renk kutucukları `ColorPicker` ile
-  düzenlenir; rampalar satır satır durur ve indeksleri sürükleyerek sıralanır.
-- **Sentez kipi** (`generate`): her istek için taban rengi `ColorPicker`,
-  `steps`/`hueShift`/`satCurve`/`lightRange` kontrolleri ve canlı güncellenen
-  kutucuklar.
-
-**"Sentezi veriye çevir" düğmesi** sentez sonucunu `colors` + `ramps` olarak
-yazar; tek renge elle dokunmak istediğinde çıkış kapın budur. Tek yönlüdür ve
-açıkça sorulur — geri dönüş elle yapılan her ayarı silerdi.
-
-Şeridin sağında **palet kilidi rozeti** durur: palet dışı piksel sayısı canlı,
-sıfır değilse kırmızı (D6).
-
-### 8.8 Canlı önizleme — bütçesiyle kendini ayarlayan çözünürlük
-
-Önizleme `renderSprite(doc, { size: önizlemeBoyu })` çağrısıdır — **aynı giriş
-noktası**, D2'nin `--size` ezmesiyle. İkinci bir çizim yolu yoktur, dolayısıyla
-editör ile CLI'ın ayrışma ihtimali de yoktur.
-
-Sorun şu: 64² birkaç milisaniye, 1024² filtrelerle bir saniyeye yakın sürer.
-Kaydırıcı çekilirken ikincisi kabul edilemez. Çözüm **ölçüm**:
-
-- Her render süresi ölçülür. Bütçe (24 ms) aşılırsa önizleme çözünürlüğü
-  yarıya iner; bütçenin belirgin altında kalırsa çıktı boyuna doğru geri
-  tırmanır. Belgenin ağırlığına göre kendini ayarlar, elle ayar istemez.
-- **Kuyruk YOK.** Bir render sürerken gelen değişiklikler birikmez; sürekli
-  en yeni belge kazanır, aradaki durumlar düşürülür. Aksi hâlde sürükleme
-  bittikten sonra saniyelerce geriden gelen kareler izlenirdi.
-- **Boşta tam çözünürlük.** ~300 ms değişiklik olmayınca önizleme bir kez
-  ÇIKTI boyunda render edilir. Çekerken hızlı, bıraktığında birebir.
-- Geçerli önizleme çözünürlüğü her zaman yazılıdır ("önizleme 128² / çıktı
-  512²") — kaba bir önizlemeyi gerçek çıktı sanmak mümkün olmasın.
-
-**Çıktı boyu `RenderResult.doc`tan OKUNMAZ.** O alan ezmeler uygulandıktan
-SONRAKİ belgedir, yani önizleme boyunu taşır; ondan okumak göstergeyi
-"önizleme 128² / çıktı 128²" hâline getirir ve göstergenin tüm amacı kaybolur.
-Kare, belgenin gerçek çıktı boyunu ayrıca taşır.
-
-**Web Worker bilinçli olarak ERTELENDİ.** `core/visual` headless olduğu için
-(D8) render'ı bir worker'a taşımak yerinden oynatma işidir, yeniden yazma
-değil; ama tampon aktarımı ve mesajlaşma gerçek bir karmaşıklıktır ve ölçülen
-bütçe hiç gerektirmeyebilir. **Tetik:** tipik bir belgede bütçe 96²'de bile
-tutturulamıyorsa worker'a taşınır.
-
-### 8.9 Önizleme modları — hangileri ve NEDEN
-
-| Mod                             | Neden gerekli                                                                                                                                                           |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1:1 + tamsayı yakınlaştırma** | Piksel sanatı 1:1 değerlendirilir; kesirli ölçek yanıltır. Yakınlaştırma **nearest** olmalı.                                                                            |
-| **3×3 döşeme**                  | Dikişsizliği gözle doğrulamanın tek yolu. `tileable: true` iken varsayılan.                                                                                             |
-| **Kanal görüntüleyici**         | `coverage` · `height` · `material` · `shade` · `normal` · `outline` · final. **Hata ayıklamanın belkemiği**: "gölge neden yanlış?" ancak `height` görülünce cevaplanır. |
-| **Nicemleme öncesi/sonrası**    | Paletin ne kadarını kaybettiğini gösterir; dither ayarı buna bakılarak yapılır.                                                                                         |
-| **Ölçüm rozetleri**             | Palet uyumu, dikiş farkı, kontrast — `measureSprite` zaten hesaplıyor, gösterilmemesi için sebep yok.                                                                   |
-
-Yedi kanalın hepsi `RenderResult` içinde zaten var; görüntüleyici veri
-üretmez, olanı gösterir.
-
-Şeffaflık dama deseniyle gösterilir; düz renk zeminde alfa hatası görünmez.
-
-### 8.10 Canlı doğrulama
-
-`collectSpriteDocIssues` her belge değişiminde koşar — mikrosaniyeler sürer,
-tutmak için sebep yok. Sonuçlar alt şeritteki **SORUNLAR** panelinde durur ve
-bir soruna tıklamak ilgili düğümü seçer.
-
-Doğrulayıcının her sorunu YOL ile döndürmesinin (`layers[0].source.freq`)
-asıl tüketicisi burasıdır: yol, seçime çevrilir.
-
-**Sorun varken kaydetme kapalıdır.** Çıktı klasörü hiçbir zaman geçersiz bir
-belge almaz; ajan o klasörden okuduğunda kırık bir dosyayla karşılaşmaz.
-
-### 8.11 Çıktı — repoya yazma
+Tarayıcı PNG kodlamaz ve doğrudan dosya sistemine yazmaz. İstemci yalnızca
+kategori, güvenli varlık adı ve `SpriteDoc` gönderir. Geliştirme sunucusu
+çıktıyı şu biçimde yazar:
 
 ```
-games/vol-forge/output/
-  material/   brushed-metal.png   brushed-metal.json
-  organic/    bark-a.png          bark-a.json
-  terrain/    …
+games/vol-forge/output/<kategori>/<ad>.json
+games/vol-forge/output/<kategori>/<ad>.png
 ```
 
-PNG ve onu üreten belge **yan yana** durur. Böylece klasör hem sonucu hem
-tarifi taşır: sen editörde kurarsın, ajan aynı dosyayı okuyup üstünde çalışır,
-kimse dosya taşımaz.
+Kategori `PRESET_CATEGORIES` listesinden gelir; ad
+`[a-z0-9-]{1,64}` kalıbındadır ve çözülmüş yol ayrıca `output/` sınırında
+kontrol edilir. JSON tarifleri kapalı “Kayıtlı çıktılar” akordeonundan
+listelenip aynı tek ekrana geri açılabilir.
 
-**Kategoriler sabit listedir:** `material` · `terrain` · `organic` · `liquid` ·
-`mineral` · `structure` · `effect`. §10.2'deki preset kataloğuyla AYNI sözlük;
-iki yerde ayrı ayrı büyüyen iki taksonomi kaçınılmaz olarak ayrışırdı.
+Forge–CLI bağı bir açıklama etiketi değildir. Node-only
+`createForgeArtifact(doc, options)` şu zincirin tek girişidir:
 
-**Mekanizma: Vite geliştirme sunucusu ara katmanı.** Editör PNG ve JSON'u bir
-uca gönderir, sunucu diske yazar. Yalnızca `pnpm dev` altında çalışır,
-üretilen pakete GİRMEZ.
+```
+doğrulama → renderSprite → measureSprite → encodePng
+```
 
-- `POST /api/forge/save` — `{ category, name, doc, png }`
-- `GET  /api/forge/list` — mevcut çıktılar (klasörü gezmek için)
-- `GET  /api/forge/load` — bir belgeyi geri açmak için
+Hem Vite kaydetme sunucusu hem `forge.ts render` hem de `forge.ts qa` bu
+fonksiyonu çağırır. Sunucu ikinci bir `renderSprite + encodePng` yolu
+taşımaz. Kaydetme yanıtı gerçek QA sonucunu döndürür; arayüz başarısız bir
+metriği “geçti” diye yazmaz.
 
-Yol güvenliği pazarlık konusu değil: `category` sabit listede olmalı, `name`
-`[a-z0-9-]{1,64}` kalıbına uymalı, çözülen mutlak yol `output/` altında
-kalmalı. Üçünden biri tutmazsa uç reddeder.
+`qa`, PNG'yi geri çözüp aynı belgenin yeniden ürettiği RGBA ile tam tarama
+karşılaştırması yapar:
 
-**Çekirdek eklentiye `ssrLoadModule` ile girer, doğrudan import EDİLMEZ.**
-Eklenti dosyası Vite YAPILANDIRMASINDAN çağrılır ve yapılandırma düz Node ESM
-ile yüklenir; orada `core/visual`in dizin barrel'ları çözülmez
-(`ERR_UNSUPPORTED_DIR_IMPORT`). Aynı sebeple yol modülü de çekirdeğe bağlı
-değildir: kategori listesini PARAMETRE olarak alır. Tek doğruluk kaynağı yine
-`PRESET_CATEGORIES`tir, yalnızca oraya dışarıdan verilir.
+```bash
+pnpm exec tsx core/scripts/forge.ts render belge.json çıktı.png
+pnpm exec tsx core/scripts/forge.ts qa çıktı.png --doc belge.json
+pnpm exec tsx core/scripts/forge.ts qa çıktı.png --doc belge.json --json
+```
 
-**Git politikası: hepsi commit edilir.** Sonucu dürüstçe yazalım — PNG ikili
-bir dosyadır, `git diff` içeriğini göstermez ve klasör zamanla büyür. Bunu
-kabul edilebilir kılan iki şey var: çıktılar indeksli PNG olduğu için küçüktür
-(64² bir sprite ~400 bayt, 512² ~3 KB) ve yanlarındaki JSON her PNG'yi yeniden
-üretilebilir kılar. **Tetik:** klasör ~50 MB'ı geçerse politika yeniden
-değerlendirilir.
+Garanti, aynı Node sürümündeki dosya baytından önce **piksel özdeşliğidir**;
+PNG sıkıştırma baytları Node/zlib sürümleri arasında değişebilir (§6).
 
-`AGENTS.md`in "üreten ara formatlar repoda tutulmaz" kuralıyla çelişmez: o
-kural kayıpsız ARA formatlar içindir (WAV). Buradaki PNG shipped biçimin
-kendisi, JSON ise kaynağıdır; ikisi de kalır.
+### 8.8 Yaşam döngüsü, i18n ve erişilebilirlik
 
-### 8.12 Yeni CORE bileşenleri
+- Bütün metinler `tr.json` ve `en.json` üzerinden gelir; anahtar paritesi
+  ve boş çeviri testi vardır.
+- Jura başlıklarda, Exo 2 gövde metninde kullanılır; Forge CSS'inde
+  `monospace` ya da sistem fontuna özel kaçak yoktur.
+- Button, IconButton, TextArea, Select, NumberStepper, SegmentedControl,
+  ColorPicker, Accordion ve PinchZoomController CORE bileşenleridir.
+- Görünür etiketler ve ikon-only düğmeler erişilebilir ad taşır.
+- Debounce, adaptif preview, animation frame, ResizeObserver, fullscreen ve
+  pointer listener'larının tamamı `destroy()`da bırakılır.
+- Forge kökü metin alanlarında seçime izin verir; uygulamanın geri kalanında
+  yanlışlıkla metin seçerek pan hissini bozmaz.
 
-| Bileşen       | Neden gerekli                                               |
-| ------------- | ----------------------------------------------------------- |
-| `ColorPicker` | UI setinde renk kontrolü yok; palet şeridi onsuz kurulamaz. |
-| `CurveEditor` | `curve` düğümünün `points` parametresi için.                |
+### 8.9 Tur 4/5 tam denetim sonucu
 
-**`CurveEditor` §13'ün üçüncü açık maddesini KAPATIR.** Karar: yazılır. Bir
-aktarım eğrisini sayı tablosu olarak düzenlemek kullanılamaz — eğrinin bütün
-anlamı BİÇİMİdir. Küçük bir tuval, sürüklenebilir noktalar, çift tıkla ekle,
-sağ tıkla sil. Bu, D11 ile çelişmez: şema _neyi_ söyler (`type: 'points'`),
-editör *nasıl*ı seçer.
+Tur 4'ün “tam editör” kaydı, yeşil testlerin gerçek tarayıcı ve ürün
+sözleşmesini kanıtlamadığını gösterdi. Somut bulgular:
 
-İkisi de CORE'a girdiği an [AGENTS.md](../../AGENTS.md) UI kuralı devreye
-girer: `games/vol-ui` showcase'ine eklenir, README sekme tablosu güncellenir,
-i18n key paritesi sağlanır.
+| Bulgu                                                                         | Son karar                                                        |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `UIRoot pointer-events:none` yüzünden yerli kontroller tıklanmıyordu          | Forge kökünde olaylar açıldı; gerçek CSS regresyon testi eklendi |
+| Sol panelin dış kabında kaydırma yoktu                                        | İki yan sütun dıştan kaydırılır                                  |
+| 32/64/128 sabit listesi motor sınırı sanılıyordu                              | 8..2048 Stepper + hazır boyutlar                                 |
+| Bilinmeyen prompt seçili tarife düşüp anlaşılmış gibi görünüyordu             | Bilinmeyen belgeyi değiştirmez; nesne sözlüğü gerçek tarif ister |
+| Dört katalog tarifi tohumu kullanmadığı için varyasyon aynı RGBA'yı veriyordu | Yedi tarifin tamamında tohum-duyarlı alan + piksel testi         |
+| Dama kamera dışında kaldığı için yalnız obje sürükleniyor hissi vardı         | Artboard ve PNG kamera içindeki tek içerik                       |
+| Font dosyaları Vite çıktısında yoktu                                          | CORE public fontları kopyalanır ve yüklenir                      |
+| F11 hiçbir koda bağlı değildi                                                 | F11 + görünür Fullscreen API kontrolü                            |
+| Tarayıcı kaydı ile CLI yalnızca aynı alt fonksiyonları tesadüfen çağırıyordu  | Ortak atomik `createForgeArtifact`                               |
+| Gelişmiş editörün çoğu pasif, yüzeysel veya yarımdı                           | Kip, Tabs ve on bir panel/durum/i18n kalıntısı tamamen silindi   |
 
-### 8.13 i18n — şema açıklamaları kullanıcıya görünür
-
-Burada gerçek bir çatışma var ve önden çözülmesi gerekiyor. `NODE_SCHEMAS`
-içindeki `description` alanları koda gömülü TÜRKÇE metinlerdir ve editörde
-kullanıcıya gösterilecektir — `AGENTS.md` Bozulamaz Kural 1 bunu yasaklar.
-
-**Karar:** şema `description`ı kodda kalır (parametrenin yanında durduğu için
-geliştirici belgesi olarak da işlevlidir) ve `tr.json`un KAYNAĞI olur. Küçük
-bir üretim script'i şemadan `volforge:param.<kind>.<name>` anahtarlarını
-çıkarır; `en.json` elle doldurulur ve parite testi eksik İngilizceyi yakalar.
-
-Aynı metni iki yerde elle taşımak yerine tek kaynaktan türetmek, deponun
-`gen-theme.mjs` ile zaten kurduğu desendir.
-
-Editörün kendi metinleri (düğmeler, başlıklar, hata cümleleri) doğrudan
-`volforge:` namespace'inde yazılır. Module-level `i18next.t()` yasaktır
-(Kural 2): import anında `init()` bitmemiştir ve boş string döner.
-
-### 8.14 Zorunlu repo kuralları
-
-- Metinler i18n'den (`volforge:` namespace), tr/en key paritesi zorunlu.
-- Yeni bir CORE bileşeni eklendiğinde `games/vol-ui` showcase'ine de eklenir
-  ve README sekme tablosu güncellenir.
-- Listeler kimliğe göre diff'lenir; her güncellemede DOM yıkılmaz — aksi
-  hâlde sürükleme sırasında odak düşer ve animasyon yanlış tetiklenir.
-- Her listener'ın `destroy()` karşılığı olur; `DisposableScope` kullanılır
-  (`lifecycleIdiom` bekçisi `games/*/src` altını da tarıyor).
-- `visualHeadless` bekçisi `core/visual`ı korur: editör çekirdeğe DOM
-  sızdıramaz, ilişki tek yönlüdür.
-
-### 8.15 Tur 4'ün kanıtı
-
-_Editörde kurulan belge CLI'dan birebir aynı PNG'yi verir._
-
-Bu, iki tarafın da `renderSprite` çağırması sayesinde **inşa gereği** doğrudur.
-Gerçek risk başka yerde: editörün belgede OLMAYAN bir durumu render'a
-karıştırması. Göz simgesi, kilit, önizleme çözünürlüğü — üçü de tam olarak bu
-tuzağın adayı.
-
-Bu yüzden kanıt testi şunu yapar: editör eylemleriyle bir belge kurar (katman
-ekle, düğüm sar, kaydırıcı çek, bir katmanı gizle), belgeyi kaydeder, kaydedilen
-JSON'u CLI yolundan render eder ve editörün TAM ÇÖZÜNÜRLÜKLÜ önizlemesiyle bayt
-bayt karşılaştırır. Gizli katman testi özellikle vardır: görünürlük render'ı
-etkilerse test düşer.
+Regresyon kanıtı yalnız DOM varlığı değildir: testler “solucan”ın farklı RGBA
+ürettiğini, yedi katalog varyasyonunun tohumla piksel değiştirdiğini, 2048
+boyut girişini, bilinmeyen promptta belgenin aynı kaldığını, pan dönüşümünü,
+F11 çağrısını, font dosyasının HTTP erişimini, CLI PNG piksel özdeşliğini ve
+ortak sunucu/CLI girişini ölçer.
 
 ---
 
@@ -1295,7 +1187,7 @@ etkilerse test düşer.
 
 Ses tarafındaki `audio-qa.ts`'in karşılığı. **İlk turdan itibaren** vardır.
 Metrikler çekirdektedir (headless, D8); script yalnızca dosya okur ve
-biçimlendirir. Böylece aynı sayılar hem CLI'da hem editörde (Tur 4) görünür
+biçimlendirir. Böylece aynı sayılar hem CLI'da hem Forge kayıt hattında görünür
 ve metriklerin kendisi test edilebilir.
 
 | Metrik                     | Ne söyler                                | Eşik                        |
@@ -1363,27 +1255,31 @@ en-boy oranı değişse de şekiller bozulmaz.
 
 ### 10.2 Katalog — agent'ın "ne yazacağını" bilmesi
 
-Parametre şeması **yetmez**; agent neyi arayacağını bilmeli. Ses tarafındaki
-`presets/catalog/` deseninin aynısı:
+Parametre şeması **yetmez**; agent neyi arayacağını bilmeli. Uygulanan katalog
+metadata ile geçerli başlangıç belgesini aynı kimlikte buluşturur:
 
 ```ts
-export const MATERIAL_CATALOG: Record<string, PresetMetadata> = {
-  brushedMetal: {
+export const VISUAL_PRESET_CATALOG = {
+  brushedSurface: {
     category: 'material',
-    description: 'Yönlü çizikli metal yüzey; anizotropik gürültü + hafif AO.',
-    useCase: 'Machine housing, panel, plate',
-    tags: ['metal', 'industrial', 'anisotropic'],
-    related: ['rustedMetal', 'polishedMetal'],
+    description: 'Yönlü çizgiler ve düşük kabartmayla işlenmiş yüzey başlangıcı.',
+    useCase: 'Directional hard-surface texture, panel or plate base',
+    tags: ['metal', 'steel', 'çelik', 'surface', 'yüzey', 'brushed', 'fırçalı'],
+    related: ['structureGrid', 'cutMineral'],
   },
 };
+
+findVisualPresets({ text: 'mor kristal kaya parçası' }); // ['cutMineral']
+createVisualPreset('cutMineral', { size: 128, seed: 42 }); // geçerli SpriteDoc
 ```
 
 Kategoriler: `material` · `terrain` · `organic` · `liquid` · `mineral` ·
 `structure` · `effect`.
 
-**Bu katalog olmadan agent boş bir parametre setine bakar.** Katalog, "piksel
-ağacı çiz" isteğinin başlangıç noktasıdır: agent `organic` + `tags:['plant']`
-arar, en yakın preseti alır, parametreleri türetir.
+**Bu katalog olmadan agent boş bir parametre setine bakar.** Katalog yedi
+kategorinin her birinde en az bir başlangıç taşır. Her giriş doğrulanır,
+render edilir ve QA kapısını geçer; yani arama sonucu yalnızca açıklama değil
+çalışan belgedir. Forge'un yerel niyet eşlemesi de aynı aramayı tüketir.
 
 > Katalog girdileri **TÜR (genre) değil malzeme/biçim** tanımlar. Bir oyun
 > türünü ya da belirli bir oyunu adlandıran terimler kataloğa girmez; yasaklı
@@ -1406,20 +1302,21 @@ kapılardan doğar; sürpriz olmasınlar diye önden yazıldı.
 | `lerp`/`clamp`/`smoothstep`/`remap` | ✅         | `core/src/math/interpolation.ts`                                                                               |
 | Sonlu sayı bariyeri                 | ✅         | `requireFinite`, `finiteOr` — **D5 için zorunlu**                                                              |
 | Tampon havuzu                       | ✅         | `ObjectPool` — D7                                                                                              |
-| Yaşam döngüsü                       | ✅         | `DisposableScope` — editörde zorunlu                                                                           |
+| Yaşam döngüsü                       | ✅         | `DisposableScope` — Forge listener/timer'larında zorunlu                                                       |
 | UI kontrolleri                      | ✅         | `Slider`, `NumberStepper`, `Select`, `SegmentedControl`, `Checkbox`, `Tabs`, `Accordion`, `Tree`, `ScrollView` |
 | Node-only izolasyon deseni          | ✅         | `audio/synth/writer` alt-yolu                                                                                  |
 | Katalog deseni                      | ✅         | `audio/synth/presets/catalog/`                                                                                 |
 | CLI deseni                          | ✅         | `tsx core/scripts/*.ts`                                                                                        |
 
-### 11.2 Yazılacak yeni CORE parçaları
+### 11.2 Turlarda eklenen CORE parçaları
 
-| Parça                    | Neden yok                                | Nereye                                                                      |
-| ------------------------ | ---------------------------------------- | --------------------------------------------------------------------------- |
-| **OKLab dönüşümü**       | Depoda renk uzayı matematiği **hiç yok** | `visual/color/oklab.ts`                                                     |
-| **ColorPicker bileşeni** | UI setinde renk kontrolü yok             | `core/src/ui/primitives/ColorPicker.ts` + **vol-ui showcase FORMS sekmesi** |
-| **CurveEditor bileşeni** | `curve` düğümü için (§8.12)              | `core/src/ui/primitives/CurveEditor.ts` + **vol-ui showcase FORMS sekmesi** |
-| **PNG kodlayıcı**        | Raster yazma yok                         | `visual/encode/png.ts` (alt-yol)                                            |
+| Parça                    | Neden yok                                 | Nereye                                                                      |
+| ------------------------ | ----------------------------------------- | --------------------------------------------------------------------------- |
+| **OKLab dönüşümü**       | Depoda renk uzayı matematiği **hiç yok**  | `visual/color/oklab.ts`                                                     |
+| **ColorPicker bileşeni** | UI setinde renk kontrolü yok              | `core/src/ui/primitives/ColorPicker.ts` + **vol-ui showcase FORMS sekmesi** |
+| **CurveEditor bileşeni** | Eğri verisini görsel düzenlemek için      | `core/src/ui/primitives/CurveEditor.ts` + **vol-ui showcase FORMS sekmesi** |
+| **Forge artifact hattı** | CLI ve sunucu ayrışmasını engellemek için | `visual/encode/artifact.ts`                                                 |
+| **PNG kodlayıcı**        | Raster yazma yok                          | `visual/encode/png.ts` (alt-yol)                                            |
 
 Bu ikisi CORE'a girdiği an [AGENTS.md](../../AGENTS.md) UI kuralı devreye
 girer: showcase'e eklenir, README sekme tablosu güncellenir, i18n key paritesi
@@ -1548,101 +1445,81 @@ değil "kenarda kırpılma" olduğu (§9), kontrastın mutlak değil oran olmas�
 türevinin birim uzayda alınması (§4.5) ve kenar ışığı üssünün parametre
 olmaması (§4.5). Ayrıca §4.6'da aynı paragraf iki kez yazılmıştı; temizlendi.
 
-### Tur 4 — Editör — **TAMAMLANDI**
+### Tur 4 — Teknik editör deneyi — **TARİHSEL; ÜRÜNDEN KALDIRILDI**
 
-Ayrıntılı sözleşme §8'dedir; buradaki liste onun iş dökümüdür. Tur TEK PARÇA
-uygulanır — bölünmüş bir editör, yarısı çalışan bir editördür.
+Tur 4, `SpriteDoc`un DOM üzerinden düzenlenebildiğini ve geliştirme
+sunucusunun PNG + JSON yazabildiğini kanıtladı. Bu teknik kanıt değerlidir:
+değişmez belge geçmişi, şema doğrulaması, adaptif önizleme, güvenli çıktı
+yolları ve CORE UI bileşenleri bu turda sınandı.
 
-**Paket ve iskelet**
+Ürün denetimi ise teslim kaydının gerçeği aştığını gösterdi:
 
-- `games/vol-forge`: Vite + DOM, **Phaser yok** (§8.1). `package.json`
-  (`typecheck`/`test`/`test:coverage`), `vite.config.ts`, `vitest.config.ts`,
-  `index.html`, `tsconfig.json`.
-- Kök `quality.json`a eşik girdisi (taban 50/50/50/40) — yoksa
-  `workspace-contract` kapısı düşer.
-- `volforge:` i18n namespace, `tr.json` + `en.json`.
+- `UIRoot` olay engeli gerçek tarayıcıda kontrolleri pasif bırakıyordu,
+- slider DOM'u sürükleme sırasında yeniden kuruluyordu,
+- göz/kilit/kanal gibi birçok eylem görünür fakat etkisizdi,
+- `domain`, veri rampası ve kayıt geri yükleme iddiaları eksikti,
+- katman/ağaç/parametre/palet yüzeyi Forge'u anlaşılır üreticiden çok yarım
+  bir motor editörüne çeviriyordu,
+- jsdom testleri CSS hit-testing, font dosyası ve gerçek kaydırma kusurlarını
+  yakalamıyordu.
 
-**Durum ve düzenleme**
+Tur 5 yön kararı bu eksikleri yeni panellerle büyütmek değil, ürün amacına
+uymayan yüzeyi sökmektir. Tur 4 kodu bugün çalıştırılan ikinci bir kip değildir;
+tarihsel karar ve bulguları bu bölümde tutulur.
 
-- Tek `SpriteDoc` durumu + değişmez güncelleme (§8.3).
-- Geri al/yinele: 50 adımlık anlık görüntü yığını, kaydırıcı sürüklemesi
-  400 ms içinde tek adıma birleşir.
-- Katman listesi: sürükle-sırala (belgeyi değiştirir), göz/kilit (belgeyi
-  DEĞİŞTİRMEZ — §8.4).
-- Şekil ağacı: **değiştir / sar / çıkar** (§8.5), etki alanı rozeti,
-  kes-yapıştır, katman başına dört ağaç sekmesi, alt-yığın maskeler.
-- `domain` zinciri: sürükle-sırala düz liste.
+### Tur 5 — Tek ekran ürün ve tam kalıntı denetimi — **TAMAMLANDI**
 
-**Kontroller ve palet**
+- Yedi kategoride doğrulanan, render edilen ve tohum değişince gerçek RGBA'sı
+  değişen katalog tarifleri.
+- Tek ekran: canlı niyet, katalog kartları, kamera, 8..2048 boyut,
+  piksel/pürüzsüz bitiş, ana renk, tohum, varyasyon, kaydetme ve kayıt açma.
+- “Solucan” için eş anlamlılarıyla gerçek prosedürel nesne tarifi; bilinmeyen
+  metinde belgeyi değiştirmeyen dürüst sonuç.
+- Gelişmiş kip, `Tabs`, katman/ağaç/parametre/palet/kanal panelleri,
+  `EditorState`, yol/varsayılan editör yardımcıları, parametre i18n dosyaları
+  ve üreticisi tamamen silindi.
+- CORE `PinchZoomController`: sol tuş bariyeri, güvenli pointer capture,
+  imleç-merkezli wheel zoom, iki parmak merkez hareketi ve tam yaşam döngüsü.
+- Artboard + görüntünün birlikte panı, gerçek Sığdır, 2048 çıktıda donmayı
+  önleyen adaptif preview sınırı.
+- CORE fontlarının Vite çıktısına kopyalanması ve `FontManager` ile Jura /
+  Exo 2 yüklenmesi.
+- Görünür tam ekran düğmesi + F11; tarayıcı F11'i ayırırsa düğme yedek.
+- Node-only `createForgeArtifact`: CLI render/qa ile Forge sunucusunun ortak
+  doğrulama → render → QA → PNG yolu.
+- PNG decode + belgeyle tam piksel karşılaştırmalı `qa [--json]` ve palet
+  CLI komutu.
+- Davranış, piksel, CSS entegrasyonu, font sunumu, kamera, F11, boyut,
+  yaşam döngüsü ve i18n regresyon testleri.
 
-- Şemadan kontrol üretimi (D11, §8.6); opsiyonel parametre anahtarı belgeden
-  alanı çıkarır.
-- `ColorPicker` → CORE + showcase + README.
-- `CurveEditor` → CORE + showcase + README (§13 madde 3'ü kapatır).
-- Palet şeridi: veri/sentez kipleri, "sentezi veriye çevir", kilit rozeti.
-
-**Önizleme ve ölçüm**
-
-- Canlı önizleme: bütçeyle kendini ayarlayan çözünürlük, kuyruksuz, boşta tam
-  çözünürlük (§8.8).
-- Önizleme modları (§8.9): 1:1 + tamsayı zoom, 3×3 döşeme, yedi kanallı
-  görüntüleyici, nicemleme öncesi/sonrası, ölçüm rozetleri.
-- Canlı doğrulama paneli; sorun varken kaydetme kapalı (§8.10).
-
-**Çıktı**
-
-- Vite geliştirme sunucusu ara katmanı: `save` / `list` / `load` (§8.11).
-- `games/vol-forge/output/<kategori>/` — sabit yedi kategori, PNG + JSON yan
-  yana, hepsi commit edilir.
-
-**Şema i18n'i**
-
-- Şemadan `tr.json` üreten script; `en.json` elle, parite testiyle korunur
-  (§8.13).
-
-_Kanıt:_ editör eylemleriyle kurulan belge kaydedilir, CLI yolundan render
-edilir ve editörün tam çözünürlüklü önizlemesiyle **bayt bayt** karşılaştırılır.
-Gizli katman testi ayrıca vardır: görünürlük render'ı etkilerse test düşer.
-Uçtan uca da doğrulandı: geliştirme sunucusundan kaydedilen
-`output/material/brushed-metal.png`, aynı belgeden CLI'ın ürettiği baytların
-birebir aynısı.
-
-Turda ortaya çıkan ve bu belgeye işlenen düzeltmeler: çıktı boyunun
-`RenderResult.doc`tan okunamayacağı (§8.8 — o alan ezilmiş belgedir), eklentinin
-çekirdeği `ssrLoadModule` ile yüklemesi ve yol modülünün kategori listesini
-parametre olarak alması gerektiği (§8.11 — Vite yapılandırması düz Node ESM ile
-yüklenir). Ayrıca `core/visual/encode` alt-yoluna bir barrel eklendi ve
-`ColorPicker`ın hazır renk kısayolları dokunmatik hedef politikasına gerekçeli
-muafiyetle girdi.
-
-### Tur 5 — Katalog ve olgunlaşma
-
-- Preset kataloğu (§10.2), kategoriler ve etiketler
-- CLI `qa` alt komutu + `--json`
-- Kapsam ratchet'i, doküman güncellemesi
-
-_Kanıt:_ agent yalnızca kataloğu okuyarak makul bir başlangıç belgesi üretir.
+_Kanıt:_ Forge testleri yalnız elemanın DOM'da bulunmasını değil; prompt
+sonrası belge/piksel farkını, bilinmeyen promptta değişmezliği, kamera
+transformunu, 2048 sınırını ve Fullscreen API çağrısını ölçer. CORE katalog
+testi yedi tarifin her tohumda değiştiğini doğrular. CLI uçtan uca denetimi
+kaydedilen PNG'de `pixelMismatch: 0` ve bütün QA metriklerinde geçiş verir.
 
 ---
 
 ## 13. Açık kalanlar
 
-Bunlar **bilinçli olarak** kararlaştırılmadı; ilk gerçek kullanım karar
-verecek. Karar verilmeden kod yazılmaz.
+Bunlar tamamlanmış gibi sunulmaz; gerçek tüketici veya ölçüm tetiklemeden kod
+yazılmaz.
 
-Kapanan madde — **`curve` düzenleyici**: Tur 4'te yazılmasına karar verildi
-(§8.12). Bir aktarım eğrisini sayı tablosu olarak düzenlemek kullanılamaz;
-eğrinin bütün anlamı biçimidir. D11 ile çelişmez — şema _neyi_ söyler, editör
-*nasıl*ı seçer.
-
-1. **Çoklu çıktı.** Bir belgeden atlas/varyant seti üretmek (`--variants 8`)
-   doğal bir istek ama `seed` ezmesiyle zaten yapılabiliyor; ayrı bir kavram
-   gerekip gerekmediği belirsiz.
-2. **Normal/height haritası dışa aktarımı.** Motor zaten üretiyor; PNG olarak
-   yazmak ucuz. Tüketicisi çıkınca eklenir.
-3. **Ses motorunun editöre taşınması.** D11'deki şema deseni bunun dikişidir.
-   **Görsel kanıtlanmadan başlanmaz** — ikinci tüketici gelmeden ortak kabuk
-   soyutlaması yapılmaz.
+1. **Çoklu çıktı.** Bir belgeden atlas/varyant seti üretmek
+   (`--variants 8`) doğal bir istek, fakat `seed` ezmesiyle bugün
+   betiklenebilir. Ayrı veri modeli gerçek kullanım çıkınca değerlendirilir.
+2. **Normal/height haritası dışa aktarımı.** Motor kanalları zaten üretir;
+   dosya sözleşmesi ve tüketicisi çıkınca Node-only artifact hattına eklenir.
+3. **Nesne sözlüğünün genişliği.** “Solucan” sözlük mimarisini ve gerçek tarif
+   zorunluluğunu kanıtlar. Yeni nesneler yalnız terim ekleyerek katalog
+   presetine düşürülmez; her biri piksel testi olan gerçek bir `SpriteDoc`
+   tarifi ister.
+4. **Web Worker.** Büyük çıktı ana iş parçacığında adaptif önizlemeyle
+   sınırlandı. Tipik bir belge 96² hızlı önizlemede bile 24 ms bütçeyi
+   tutturamazsa `core/visual` render'ı worker'a taşınır.
+5. **Genel amaçlı teknik editör.** Forge'un hedefi değildir. İleride gerçekten
+   gerekirse ayrı ürün, kullanıcı araştırması ve ayrı kapsam ister; kaldırılan
+   Tur 4 panelleri sessizce geri eklenmez.
 
 ---
 

@@ -1,115 +1,115 @@
 {
   "app": {
     "title": "VOL.FORGE",
+    "pipeline": "CORE / CLI ortak çıktı hattı",
     "undo": "Geri al",
     "redo": "Yinele"
   },
-  "section": {
-    "layers": "KATMANLAR",
-    "tree": "ŞEKİL AĞACI",
-    "params": "PARAMETRE",
-    "document": "BELGE",
-    "palette": "PALET",
-    "issues": "SORUNLAR",
-    "save": "KAYDET"
+  "intent": {
+    "title": "Ne üretmek istiyorsun?",
+    "lead": "Tarifi yaz; sonuç sen durduğunda canlı güncellenir.",
+    "promptLabel": "Görsel tarifi",
+    "promptPlaceholder": "Örn. pembe solucan, 256×128, keskin piksel…",
+    "catalogTitle": "Başlangıç tarifleri",
+    "reading": "Tarif çözümleniyor…",
+    "matched": "{{name}} tarifi uygulandı.",
+    "modifiersApplied": "Boyut, renk veya bitiş açık görsele uygulandı.",
+    "unknown": "Bu nesne henüz tarif sözlüğünde yok; görsel değiştirilmedi."
   },
-  "channel": {
-    "final": "Final",
-    "coverage": "Kapsama",
-    "height": "Yükseklik",
-    "material": "Malzeme",
-    "shade": "Gölge",
-    "normal": "Normal",
-    "outline": "Dış çizgi"
+  "object": {
+    "worm": {
+      "applied": "Solucan nesne tarifi uygulandı."
+    }
   },
-  "preview": {
-    "single": "Tek",
-    "tile": "3×3",
-    "zoom": "Yakınlaştırma",
-    "preQuantize": "Nicemleme öncesi",
-    "error": "Belge render edilemedi",
-    "status": "önizleme {{previewW}}×{{previewH}} / çıktı {{outputW}}×{{outputH}} · {{ms}} ms · {{exact}}",
-    "exact": "birebir",
-    "approx": "yaklaşık",
-    "hiddenLayers": "{{count}} katman gizli"
-  },
-  "layer": {
-    "add": "Katman ekle",
-    "remove": "Sil",
-    "moveUp": "Yukarı",
-    "moveDown": "Aşağı",
-    "hide": "Gizle",
-    "show": "Göster",
-    "lock": "Kilitle",
-    "unlock": "Kilidi aç",
-    "locked": "Kilitli katman düzenlenemez",
-    "material": "Rampa"
-  },
-  "tree": {
-    "source": "Kaynak",
-    "mask": "Maske",
-    "height": "Yükseklik",
-    "materialMask": "Malzeme maskesi",
-    "addField": "Ekle",
-    "removeField": "Kaldır",
-    "replace": "Değiştir",
-    "wrap": "Sar",
-    "extract": "Çıkar",
-    "extractWhich": "Hangi çocuk kalsın?",
-    "depthLimit": "Alt-yığın derinlik sınırına ulaşıldı",
-    "empty": "Bu alan tanımlı değil"
-  },
-  "param": {
-    "useDefault": "varsayılan",
-    "domain": "Etki alanı",
-    "childLink": "→ düğüme git"
-  },
-  "document": {
+  "quick": {
+    "title": "Çıktı",
+    "size": "Boyut",
+    "customSize": "Özel boyut",
     "width": "Genişlik",
     "height": "Yükseklik",
-    "seed": "Tohum",
-    "tileable": "Döşenebilir",
-    "antialias": "Kenar yumuşatma",
-    "shadeEnabled": "Gölgeleme",
-    "light": "Işık",
-    "strength": "Şiddet",
-    "ambient": "Taban",
-    "rim": "Kenar ışığı",
-    "relief": "Kabartma",
-    "aoRadius": "AO yarıçapı",
-    "aoStrength": "AO şiddeti",
-    "outlinePx": "Dış çizgi (px)",
-    "outlineMode": "Dış çizgi kipi",
-    "outlineColor": "Dış çizgi rengi",
-    "ditherKind": "Dither",
-    "ditherAmount": "Dither miktarı",
-    "quantize": "Nicemleme"
+    "finish": "Bitiş",
+    "pixel": "Keskin piksel",
+    "smooth": "Pürüzsüz",
+    "color": "Ana renk",
+    "seed": "Varyasyon tohumu",
+    "variation": "Yeni varyasyon"
   },
-  "palette": {
-    "modeData": "Veri",
-    "modeGenerate": "Sentez",
-    "bake": "Sentezi veriye çevir",
-    "bakeConfirm": "Sentez verilere çevrilecek; geri dönüşü yok. Devam?",
-    "addRamp": "Rampa ekle",
-    "removeRamp": "Rampayı sil",
-    "base": "Taban",
-    "steps": "Adım",
-    "hueShift": "Ton kayması",
-    "satCurve": "Doygunluk",
-    "lockOk": "Palet kilidi: temiz",
-    "lockFail": "Palet dışı: {{count}}"
+  "category": {
+    "material": "Malzeme",
+    "terrain": "Zemin",
+    "organic": "Organik",
+    "liquid": "Sıvı",
+    "mineral": "Mineral",
+    "structure": "Yapı",
+    "effect": "Efekt"
+  },
+  "preset": {
+    "brushedSurface": {
+      "name": "Fırçalı yüzey",
+      "description": "Yönlü çizik ve hafif kabartma"
+    },
+    "terrainCells": {
+      "name": "Doğal zemin",
+      "description": "Döşenebilir hücre ve gürültü"
+    },
+    "organicCluster": {
+      "name": "Organik küme",
+      "description": "Yumuşak, doğal ana silüet"
+    },
+    "liquidRipples": {
+      "name": "Sıvı dalgaları",
+      "description": "Tekrarlanan parlak yüzey"
+    },
+    "cutMineral": {
+      "name": "Kesik mineral",
+      "description": "Keskin çokgen ve yönlü hacim"
+    },
+    "structureGrid": {
+      "name": "Yapı ızgarası",
+      "description": "Döşenebilir panel kabartması"
+    },
+    "softGlow": {
+      "name": "Yumuşak parıltı",
+      "description": "Parlak merkezli yıldızsı etki"
+    }
+  },
+  "preview": {
+    "title": "Canlı sonuç",
+    "zoomOut": "Uzaklaştır",
+    "zoomIn": "Yakınlaştır",
+    "fit": "Sığdır",
+    "cameraLabel": "Kaydırılabilir ve yakınlaştırılabilir canlı önizleme",
+    "error": "Tarif çizilemedi.",
+    "status": "Önizleme {{previewW}}×{{previewH}} · Çıktı {{outputW}}×{{outputH}} · {{exact}}",
+    "exact": "birebir",
+    "adaptive": "hızlı önizleme"
+  },
+  "fullscreen": {
+    "enter": "Tam ekrana geç (F11)",
+    "exit": "Tam ekrandan çık (F11)"
   },
   "issues": {
-    "none": "Sorun yok",
-    "count": "{{count}} sorun",
-    "blocked": "Sorun varken kaydedilemez"
+    "count": "Tarif doğrulanamadı: {{count}} sorun.",
+    "blocked": "Tarif geçerli olmadan kaydedilemez."
+  },
+  "outputs": {
+    "title": "Kayıtlı çıktılar",
+    "refresh": "Kayıtları getir",
+    "loading": "Kayıtlar okunuyor…",
+    "empty": "Kayıtlı tarif yok.",
+    "loaded": "{{name}} açıldı.",
+    "invalid": "Tarif açılmadı: {{count}} doğrulama sorunu var.",
+    "fail": "Kayıtlar okunamadı: {{error}}"
   },
   "save": {
+    "title": "Kaydet",
     "category": "Kategori",
-    "name": "Ad",
-    "button": "Kaydet",
-    "ok": "Kaydedildi: {{path}}",
+    "name": "Varlık adı",
+    "button": "PNG + tarif kaydet",
+    "nameRequired": "Kaydetmek için kısa bir varlık adı yaz.",
+    "ok": "Kaydedildi: {{path}} · CORE/CLI kalite denetimi geçti.",
+    "qaWarning": "Kaydedildi: {{path}} · kalite ölçümlerinden bazıları uyarı verdi.",
     "fail": "Kaydedilemedi: {{error}}",
-    "namePattern": "Ad yalnızca a-z, 0-9 ve tire içerebilir"
+    "namePattern": "Ad yalnızca a-z, 0-9 ve tire içerebilir."
   }
 }

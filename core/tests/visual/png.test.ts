@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { inflateSync } from 'node:zlib';
-import { encodePng } from '../../src/visual/encode/png';
+import { decodePng, encodePng } from '../../src/visual/encode/png';
 
 const SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
@@ -136,6 +136,27 @@ describe('PNG kodlayıcı', () => {
   it('aynı girdi aynı baytları verir', () => {
     const rgba = solid(8, 8, [1, 2, 3, 255]);
     expect(encodePng(8, 8, rgba).equals(encodePng(8, 8, rgba))).toBe(true);
+  });
+
+  it('indexed ve truecolor Forge PNG dosyalarını piksele geri çözer', () => {
+    const indexed = new Uint8ClampedArray([
+      0, 0, 0, 0, 20, 40, 60, 255, 80, 100, 120, 180, 20, 40, 60, 255,
+    ]);
+    const many = new Uint8ClampedArray(300 * 4);
+    for (let i = 0; i < 300; i++) {
+      many.set([i & 0xff, (i >> 4) & 0xff, (i * 7) & 0xff, 255], i * 4);
+    }
+
+    expect(Array.from(decodePng(encodePng(2, 2, indexed)).rgba)).toEqual(Array.from(indexed));
+    expect(Array.from(decodePng(encodePng(300, 1, many)).rgba)).toEqual(Array.from(many));
+  });
+
+  it('bozuk imza ve CRC sessizce kabul edilmez', () => {
+    expect(() => decodePng(Buffer.from('png değil'))).toThrow(/imzası/);
+
+    const png = encodePng(2, 2, solid(2, 2, [10, 20, 30, 255]));
+    png[20] ^= 0xff;
+    expect(() => decodePng(png)).toThrow(/CRC/);
   });
 
   it('bozuk boyut ve uyumsuz tampon reddedilir', () => {

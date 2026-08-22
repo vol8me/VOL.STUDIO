@@ -31,6 +31,8 @@ export interface PreviewRendererOptions {
   idleMs?: number;
   /** Önizlemenin başlangıç kenar sınırı. */
   initialCap?: number;
+  /** Tarayıcıda boşta birebir çizilebilecek azami kenar. */
+  exactMaxEdge?: number;
   now?: () => number;
   schedule?: (callback: () => void, delayMs: number) => number;
   cancel?: (handle: number) => void;
@@ -41,6 +43,7 @@ const MIN_EDGE = 8;
 const DEFAULT_BUDGET_MS = 24;
 const DEFAULT_IDLE_MS = 300;
 const DEFAULT_CAP = 256;
+const DEFAULT_EXACT_MAX_EDGE = 512;
 
 /**
  * Canlı önizleme — §8.8.
@@ -66,6 +69,7 @@ export class PreviewRenderer {
   private readonly pool = new FieldBufferPool();
   private readonly budgetMs: number;
   private readonly idleMs: number;
+  private readonly exactMaxEdge: number;
   private readonly now: () => number;
   private readonly schedule: (callback: () => void, delayMs: number) => number;
   private readonly cancel: (handle: number) => void;
@@ -79,6 +83,7 @@ export class PreviewRenderer {
   constructor(options: PreviewRendererOptions = {}) {
     this.budgetMs = options.budgetMs ?? DEFAULT_BUDGET_MS;
     this.idleMs = options.idleMs ?? DEFAULT_IDLE_MS;
+    this.exactMaxEdge = options.exactMaxEdge ?? DEFAULT_EXACT_MAX_EDGE;
     this.cap = options.initialCap ?? DEFAULT_CAP;
     this.now = options.now ?? (() => performance.now());
     this.schedule =
@@ -144,6 +149,10 @@ export class PreviewRenderer {
     if (this.idleHandle !== null) this.cancel(this.idleHandle);
     this.idleHandle = this.schedule(() => {
       this.idleHandle = null;
+      // 2048² gibi bir çıktıyı her kısa duraklamada tarayıcı ana iş
+      // parçacığında üretmek canlı akışı saniyelerce dondurur. Büyük çıktı
+      // kaydederken ortak CORE/CLI hattında yine gerçek boyutunda üretilir.
+      if (Math.max(doc.size[0], doc.size[1]) > this.exactMaxEdge) return;
       const size: [number, number] = [doc.size[0], doc.size[1]];
       // Boştaki kare bütçeyi AYARLAMAZ: tam çözünürlük zaten yavaş olabilir
       // ve onu ölçüye katmak sınırı gereksiz yere dibe çekerdi.

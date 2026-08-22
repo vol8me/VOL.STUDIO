@@ -134,6 +134,16 @@ describe('canlı önizleme (§8.8)', () => {
     expect(last.result?.width).toBe(512);
   });
 
+  it('2048 gibi büyük çıktıyı boşta ana iş parçacığında zorla render etmez', () => {
+    const { renderer, frames, flush } = harness();
+    renderer.request({ ...DOC, size: [2048, 1024] } as SpriteDoc);
+    flush(); // hızlı kare
+    flush(); // boşta görevi tam kareyi bilinçli olarak atlar
+    expect(frames).toHaveLength(1);
+    expect(frames[0].result?.width).toBeLessThanOrEqual(256);
+    expect(frames[0].outputSize).toEqual([2048, 1024]);
+  });
+
   it('geçersiz belge kare yerine HATA verir, patlamaz', () => {
     const { renderer, frames, flush } = harness();
     renderer.request({ ...DOC, layers: [] } as unknown as SpriteDoc);

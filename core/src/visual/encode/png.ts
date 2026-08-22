@@ -17,7 +17,7 @@
  * sözleşme piksel özdeşliğidir, dosya boyutu değil.
  */
 
-import { deflateSync } from 'node:zlib';
+import { deflateSync, inflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
@@ -28,6 +28,12 @@ const MAX_INDEXED_ENTRIES = 256;
 
 const COLOR_TYPE_INDEXED = 3;
 const COLOR_TYPE_RGBA = 6;
+
+export interface DecodedPng {
+  readonly width: number;
+  readonly height: number;
+  readonly rgba: Uint8ClampedArray;
+}
 
 const CRC_TABLE = (() => {
   const table = new Int32Array(256);
@@ -177,6 +183,101 @@ export function encodePng(width: number, height: number, rgba: Uint8ClampedArray
 
   parts.push(chunk('IEND', Buffer.alloc(0)));
   return Buffer.concat(parts);
+}
+
+/**
+ * Forge çıktısını yeniden denetlemek için 8-bit indexed/RGBA PNG çözer.
+ *
+ * Genel amaçlı bir PNG kitaplığı değildir: yalnızca bu modülün yazdığı
+ * interlace'siz ve filtre 0 kullanan iki biçimi kabul eder. Sınırı açıkça
+ * reddetmek, desteklenmeyen bir dosyayı yanlış piksellere çözmekten iyidir.
+ */
+export function decodePng(input: Uint8Array): DecodedPng {
+  const png = Buffer.from(input);
+  if (png.length < PNG_SIGNATURE.length || !png.subarray(0, 8).equals(PNG_SIGNATURE)) {
+    throw new Error('PNG: geçersiz dosya imzası');
+  }
+
+  let width = 0;
+  let height = 0;
+  let colorType = -1;
+  let palette = Buffer.alloc(0);
+  let transparency = Buffer.alloc(0);
+  const imageParts: Buffer[] = [];
+  let offset = PNG_SIGNATURE.length;
+  let ended = false;
+
+  while (offset < png.length) {
+    if (offset + 12 > png.length) throw new Error('PNG: eksik parça başlığı');
+    const length = png.readUInt32BE(offset);
+    const end = offset + 12 + length;
+    if (end > png.length) throw new Error('PNG: parça dosya sınırını aşıyor');
+    const type = png.toString('ascii', offset + 4, offset + 8);
+    const data = png.subarray(offset + 8, offset + 8 + length);
+    const expectedCrc = png.readUInt32BE(offset + 8 + length);
+    const actualCrc = crc32(png.subarray(offset + 4, offset + 8 + length));
+    if (actualCrc !== expectedCrc) throw new Error(`PNG: ${type} CRC doğrulaması başarısız`);
+
+    if (type === 'IHDR') {
+      if (length !== 13) throw new Error('PNG: IHDR uzunluğu 13 olmalı');
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      colorType = data[9];
+      if (data[8] !== 8 || data[10] !== 0 || data[11] !== 0 || data[12] !== 0) {
+        throw new Error('PNG: yalnızca 8-bit, interlace olmayan Forge çıktısı desteklenir');
+      }
+    } else if (type === 'PLTE') {
+      palette = Buffer.from(data);
+    } else if (type === 'tRNS') {
+      transparency = Buffer.from(data);
+    } else if (type === 'IDAT') {
+      imageParts.push(Buffer.from(data));
+    } else if (type === 'IEND') {
+      ended = true;
+      break;
+    }
+    offset = end;
+  }
+
+  if (!ended || width <= 0 || height <= 0 || imageParts.length === 0) {
+    throw new Error('PNG: IHDR, IDAT veya IEND eksik');
+  }
+  if (colorType !== COLOR_TYPE_INDEXED && colorType !== COLOR_TYPE_RGBA) {
+    throw new Error(`PNG: desteklenmeyen renk türü ${colorType}`);
+  }
+  if (colorType === COLOR_TYPE_INDEXED && (palette.length === 0 || palette.length % 3 !== 0)) {
+    throw new Error('PNG: indexed görüntüde geçerli PLTE bulunamadı');
+  }
+
+  const stride = colorType === COLOR_TYPE_INDEXED ? 1 : 4;
+  const raw = inflateSync(Buffer.concat(imageParts));
+  const rowLength = 1 + width * stride;
+  if (raw.length !== rowLength * height) {
+    throw new Error(`PNG: açılan veri ${rowLength * height} bayt olmalı (gelen: ${raw.length})`);
+  }
+
+  const rgba = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    const row = y * rowLength;
+    if (raw[row] !== 0) throw new Error(`PNG: desteklenmeyen satır filtresi ${raw[row]}`);
+    for (let x = 0; x < width; x++) {
+      const target = (y * width + x) * 4;
+      const source = row + 1 + x * stride;
+      if (colorType === COLOR_TYPE_RGBA) {
+        rgba.set(raw.subarray(source, source + 4), target);
+        continue;
+      }
+      const index = raw[source];
+      const paletteOffset = index * 3;
+      if (paletteOffset + 2 >= palette.length)
+        throw new Error('PNG: palet indeksi PLTE sınırını aşıyor');
+      rgba[target] = palette[paletteOffset];
+      rgba[target + 1] = palette[paletteOffset + 1];
+      rgba[target + 2] = palette[paletteOffset + 2];
+      rgba[target + 3] = index < transparency.length ? transparency[index] : 255;
+    }
+  }
+  return { width, height, rgba };
 }
 
 /** PNG'yi diske yazar; ara klasörler oluşturulur. */
