@@ -23,6 +23,7 @@ const PRIMITIVE_ROOTS = [
   'lifecycle',
   'random',
   'stats',
+  'visual',
 ];
 
 /**
@@ -94,18 +95,28 @@ describe('Katman 1 primitifleri türden bağımsız kalmalı', () => {
     ).toEqual([]);
   });
 
-  it('primitives.md tek bir türü örnek olarak dayatmaz', () => {
-    // Belge bir tür seçerse okuyucu CORE'u o türün framework'ü sanır.
-    const doc = readFileSync(join(import.meta.dirname, '../../docs/primitives.md'), 'utf-8');
+  /**
+   * Bir primitif kökünün DOKÜMANI da taranır.
+   *
+   * Kodu nötr olup dokümanı bir türe demirleyen bir modülde kod nötr sayılsa
+   * da repo değildir: okuyucu belgeyi okur, kaynağı değil. Bu hata bir kez
+   * yapıldı (bkz. TODO.md "Tür sızıntısı" turu) ve bekçi o yüzden dokümanı
+   * da kapsar.
+   */
+  it.each(['primitives.md', 'visual-synthesis.md'])(
+    '%s tek bir türü örnek olarak dayatmaz',
+    (name) => {
+      const doc = readFileSync(join(import.meta.dirname, '../../docs', name), 'utf-8');
 
-    // Kural cümlesinin kendisi yasaklı terimleri SAYAR; onu hariç tut.
-    const prose = doc
-      .split('\n')
-      .filter((line) => !line.includes('taşımamalı'))
-      .join('\n')
-      .toLowerCase();
+      // Kural cümlesinin kendisi yasaklı terimleri SAYAR; onu hariç tut.
+      const prose = doc
+        .split('\n')
+        .filter((line) => !line.includes('taşımamalı'))
+        .join('\n')
+        .toLowerCase();
 
-    const violations = GENRE_TERMS.filter((term) => containsTerm(prose, term));
-    expect(violations).toEqual([]);
-  });
+      const violations = GENRE_TERMS.filter((term) => containsTerm(prose, term));
+      expect(violations).toEqual([]);
+    },
+  );
 });

@@ -140,6 +140,10 @@ export * as InputUtils from './input/InputUtils';
 export { PCController } from './input/PCController';
 export { TouchController } from './input/TouchController';
 
+// Prosedürel raster sentezi. PNG yazma ve dosya sistemi BARREL'A GİRMEZ;
+// `@volstudio/core/visual/encode` alt-yolunda yaşar (visual-synthesis.md D8).
+export * as Visual from './visual';
+
 export * as Synth from './audio/synth';
 export * as Music from './audio/music';
 export { MusicEngine } from './audio/music/engine';

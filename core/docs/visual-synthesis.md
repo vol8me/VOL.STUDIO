@@ -81,10 +81,15 @@ eksen `[-a, a]` (`a = uzun / kısa`).
    kaynağıdır (§4.2). `x = 0` etrafında aynalamak doğaldır; `x = 0.5`
    etrafında aynalamak her çağrıda merkez parametresi taşımak demektir.
 
+**Eksen yönü: +y AŞAĞIDIR.** Çıktı bir görüntüdür ve tampon indeksi doğrudan
+satıra eşlenir; ayrıca `"light": [-0.55, -0.7, …]` bu eksende sol-üst demektir
+ki piksel sanatının alışılmış anahtar ışığı odur. Yan sonucu: **pozitif açı
+görsel olarak saat yönünde döner.**
+
 **Açı birimi:** JSON'da **derece**, motor içinde **radyan**. Dönüşüm sınırda
-(şema doğrulaması sırasında) bir kez yapılır. Gerekçe: `"angle": 45` bir
-insanın ve agent'ın yazacağı biçimdir; `0.7853981634` değil. Kod içinde radyan
-kalır çünkü `Math.*` öyle çalışır.
+(derleme sırasında) bir kez yapılır. Gerekçe: `"angle": 45` bir insanın ve
+agent'ın yazacağı biçimdir; `0.7853981634` değil. Kod içinde radyan kalır
+çünkü `Math.*` öyle çalışır.
 
 Yan sonuç: **stil, grafiğin değil ÇIKTININ özelliğidir.** Aynı belge 64² + 8
 renk + Bayer ile piksel sanatı, 1024² + 64 renk + dithersiz ile pürüzsüz doku
@@ -150,13 +155,30 @@ tercih edilebilir.
 
 ### D5 — Determinizm mutlaktır
 
-Aynı belge + aynı tohum = **bit düzeyinde aynı PNG**, her platformda.
+Aynı belge + aynı tohum = **bit düzeyinde aynı PİKSELLER**, her platformda.
 
 - Her rastgele kullanan düğüm tohumunu `kökTohum ⊕ hash(düğümYolu)` ile alır.
   Düğüm sırası değişince komşu düğümlerin çıktısı değişMEMELİdir.
-- `Math.random()` **yasaktır**. `createRandom()` kullanılır.
+- `Math.random()` **yasaktır**. Sıralı rastgelelik gereken yerde
+  `createRandom()` kullanılır.
+- **Kafes gürültüsü sıralı PRNG değil KONUMSAL KARMA kullanır.** Gürültünün
+  değeri konumun fonksiyonu olmalıdır, çağrı sırasının değil: sıralı bir
+  üreteç aynı noktayı iki kez okurken farklı değer verir ve `warp` gibi
+  yeniden örnekleyen işlemler bozulur. Tohum yine yukarıdaki kuralla
+  türetilir; değişen yalnızca tohumun nasıl tüketildiğidir.
 - Kayan nokta işlem sırası sabit tutulur; paralel/atlamalı toplama yapılmaz.
 - Test: aynı belge iki kez render edilir, tamponlar birebir karşılaştırılır.
+
+**Tohum yolu katman KİMLİĞİYLE başlar, indeksiyle değil.** İndeks kullanılsa
+listenin başına bir katman eklemek altındaki her katmanın gürültüsünü
+değiştirir; "şu parçayı biraz değiştir" isteği ilgisiz katmanları da
+yeniden üretir ve fark gözden geçirilemez olur — D5'in yasakladığı tam olarak
+budur.
+
+**Garantinin sınırı dürüstçe:** garanti edilen PİKSEL özdeşliğidir. PNG'nin
+bayt düzeyinde aynı olması zlib sıkıştırma çıktısının aynı kalmasına bağlıdır;
+bu aynı Node sürümünde geçerlidir, sürümler arası garanti edilemez. Testler
+bu yüzden RGBA tamponunu karşılaştırır, dosya özetini değil.
 
 Gerekçe: asset üretimi tekrarlanabilir olmazsa "şu parçayı biraz değiştir"
 istenmeyen değişiklikler getirir ve fark gözden geçirilemez.
@@ -168,6 +190,11 @@ kendi paletini verebilir ya da sentezletebilir; ikisi de aynı veriye indirgenir
 
 Motor asla renk sabiti taşımaz. `VOL_COLORS` bu sisteme girmez — o, arayüzün
 paletidir, üretilen asset'in değil.
+
+**Kimliği 0 olan rampa zorunludur.** Malzeme biriktiricisi 0 ile başlar (§3);
+kapsaması sıfırdan büyük ama malzeme eşiğinin altında kalan bir piksel oraya
+düşer. Rampa 0'ı zorunlu kılmak, o pikselin çalışma anında patlaması yerine
+belgenin sınırda reddedilmesi demektir.
 
 **Palet kilidi:** nicemleme sonrası çıktıda palet dışı piksel KALMAZ. Bu
 ölçülür (bkz. §9) ve ihlal kapıyı kırar.
@@ -347,8 +374,9 @@ mümkün.
 3. HER KATMAN için (sırayla):
      a. layerCoverage ← Aşama 1: üreteç ∘ domain zinciri  (fonksiyonel, D4)
      b. maske varsa   ← üreteç ya da alt-yığın (özyineleme, azami derinlik 4)
+                        layerCoverage *= maske   (MASKE ŞEKİLDİR — aşağıdaki not)
      c. komşuluk filtreleri (varsa) layerCoverage üzerinde
-     d. layerAlpha ← layerCoverage * maske * opacity
+     d. layerAlpha ← layerCoverage * opacity
                      (KAPSAMA AYRI KALIR — bkz. aşağıdaki not)
      e. layerHeight ← katmanın `height` alanı varsa Aşama 1 ile ayrıca
                       değerlendirilir; YOKSA layerCoverage kullanılır
@@ -397,6 +425,35 @@ her yerde 0.3 olur, eşiğin altına düşer ve HİÇBİR YERE malzeme yazmaz �
 paneli renksiz çıkar. Bu yüzden `layerCoverage` ile `layerAlpha` ayrı tutulur:
 harmanlama alfayı, malzeme eşiği kapsamayı kullanır.
 
+**Maske opaklığın değil ŞEKLİN tarafındadır.** Bu ayrım Tur 1'de uygulama
+sırasında netleşti: maske `layerAlpha`ya bırakılırsa, maskeyle gizlenen bölge
+`layerCoverage` üzerinden hâlâ eşiği geçer ve ALTINDAKİ katmanın rengini bu
+katmanın rampasıyla ezer. Görünmeyen bir katmanın görünür yan etkisi olur.
+Maskenin anlamı "bu parça burada YOK"tur; opaklığınki "bu parça burada ama
+saydam". İlki kapsamayı çarpar, ikincisi çarpmaz.
+
+Bu, kapsama/alfa ayrımının gerekçesini çürütmez, tamamlar: ayrım OPAKLIK için
+kondu; maskenin aynı çarpanda durması o kararın yan ürünüydü.
+
+**Katman kaynağı kapsamaya nasıl çevrilir.** `source`, `mask` ve `height`
+alanlarının hepsi 0..1 kapsama üretmelidir, ama SDF'ler işaretli mesafe
+döndürür (§4.1). Dönüşüm tek yerde ve düğüm türünden STATİK olarak türetilen
+bir bilgiyle yapılır — her düğüm şemada çıktı etki alanını bildirir:
+
+| Etki alanı | Kim üretir                      | Kapsamaya çevrimi |
+| ---------- | ------------------------------- | ----------------- |
+| `unit`     | `const`, gürültü, gradyan, eşik | `clamp01(v)`      |
+| `signed`   | `sdf.*`                         | §5.8'in eşiği     |
+
+Alan-uzayı işlemleri etki alanını girdilerinden DEVRALIR (koordinatı
+değiştirirler, değerin anlamını değil). Birleştiricilerde girdilerden
+herhangi biri `signed` ise sonuç `signed`'dır: `min`/`max` iki SDF'nin
+birleşimi/kesişimi, `add` bir SDF'yi ötelemek (şekli büyütmek), `mul`
+mesafeyi ölçeklemektir. `step`/`smoothstep` her zaman `unit` üretir.
+
+Bu sayede §2'deki gibi çıplak bir SDF doğrudan `source` olarak yazılabilir;
+elle eşik sarmak gerekmez.
+
 ---
 
 ## 4. Primitif envanteri
@@ -408,8 +465,8 @@ Toplam ~35. Her biri D9'a (ortogonallik) uyar. `kind` alanı JSON'daki kimliktir
 | `kind`             | Parametreler                      | Not                                                         |
 | ------------------ | --------------------------------- | ----------------------------------------------------------- | -------------- | ------------------------------------- |
 | `const`            | `value`                           | Sabit alan; maske/karışım için taban.                       |
-| `noise.value`      | `freq, octaves?, seed?`           | En ucuz gürültü, blok karakterli.                           |
-| `noise.simplex`    | `freq, octaves?, seed?`           | Yön yapaylığı (axis artifact) düşük.                        |
+| `noise.value`      | `freq, seed?`                     | En ucuz gürültü, blok karakterli.                           |
+| `noise.simplex`    | `freq, seed?`                     | Yön yapaylığı (axis artifact) düşük.                        |
 | `noise.worley`     | `freq, mode(F1                    | F2                                                          | F2-F1), seed?` | Hücresel; `F2-F1` hücre kenarı verir. |
 | `noise.fbm`        | `base, octaves, lacunarity, gain` | Sarmalayıcı; oktavlar arası **döndürme** uygular (bkz. §5). |
 | `gradient.linear`  | `angle, from, to`                 |                                                             |
@@ -430,9 +487,15 @@ Toplam ~35. Her biri D9'a (ortogonallik) uyar. `kind` alanı JSON'daki kimliktir
 | `pattern.grid`     | `freq, thickness`                 |                                                             |
 | `pattern.hex`      | `freq`                            |                                                             |
 
-SDF'ler **işaretli mesafe** döndürür; `step`/`smoothstep` ile maskeye,
-`abs` ile konture çevrilir. Bu, bir SDF'den hem dolu şekil hem çerçeve
-elde edilebilmesini sağlar — ayrı primitif gerekmez (D9).
+SDF'ler **işaretli mesafe** döndürür; katman sınırında kapsamaya çevrilir
+(§3) ve `abs` ile konture dönüştürülebilir. Bu, bir SDF'den hem dolu şekil
+hem çerçeve elde edilebilmesini sağlar — ayrı primitif gerekmez (D9).
+
+**Tek tek gürültülerde `octaves` YOKTUR** ve bu bir düzeltmedir: `noise.fbm`
+zaten oktav sarmalayıcısıdır ve oktavlar arası döndürmeyi (§5.1) o uygular.
+Aynı parametreyi taban gürültülere de koymak, `fbm(base=value, octaves=3)`
+ile `value(octaves=3)` arasında iki farklı ve sessizce ayrışan yol açardı —
+D9'un yasakladığı türetilebilir primitifin parametre düzeyindeki hâli.
 
 ### 4.2 Alan-uzayı işlemleri — GENELLİĞİN KAYNAĞI
 
@@ -597,12 +660,24 @@ uygularken çıktı koordinatı **−30°** döndürülür. İleri eşleme (gird
 çıktıya) çıktıda boşluk (hole) bırakır. Zincir birden fazlaysa **ters sırada**
 uygulanır.
 
-### 5.8 SDF `smoothstep` genişliği çözünürlüğe bağlıdır
+### 5.8 SDF eşiğinin genişliği çözünürlüğe bağlıdır
 
-Bir SDF'yi maskeye çevirirken `smoothstep(-w, +w, d)` kullanılır. `w` birim
-uzayda sabitse 1024²'de yumuşak, 32²'de tüm şekli yutar. `w` **piksel
-cinsinden** verilip birim uzaya çevrilmelidir: `w = pixelWidth / size`.
-`antialias: false` iken `step(0, d)` kullanılır, `w` hiç devreye girmez.
+Bir SDF'yi maskeye çevirirken `smoothstep(+w, −w, d)` kullanılır (mesafe
+negatifken içeridedir, yani rampa AZALIR). `w` birim uzayda sabitse 1024²'de
+yumuşak, 32²'de tüm şekli yutar; bu yüzden **piksel cinsinden** verilip birim
+uzaya çevrilir: `w` yarım pikseldir, yani `1 / min(genişlik, yükseklik)`.
+`antialias: false` iken `d <= 0 ? 1 : 0` kullanılır ve `w` hiç devreye girmez.
+
+**Bu dönüşüm boru hattında TEK bir yerde yaşar:** katmanın `source`/`mask`/
+`height` alanları kapsamaya çevrilirken (§3). `step` ve `smoothstep`
+düğümleri ayrıca vardır ama onlar YAZARIN denetimindedir ve birim uzayda
+çalışır; `antialias` onları etkilemez. İkisini karıştırmamak gerekir: biri
+sistemin kenar politikası, diğeri belgede yazılan bir ifade.
+
+Piksel biriminin burada birim-uzay adımına sızması D2'ye aykırı değildir:
+`antialias`ın tüm varlık sebebi çözünürlüğe bağlı kenar davranışıdır ve D2
+"parametrenin hangi tarafta olduğu belirsiz olmasın" der — burada belirsizlik
+yok, karar açıkça piksel tarafındadır.
 
 ---
 
@@ -610,33 +685,52 @@ cinsinden** verilip birim uzaya çevrilmelidir: `w = pixelWidth / size`.
 
 ```
 core/src/visual/
-  types.ts            SpriteDoc, Layer, Palette, ParamSchema…
-  schema.ts           parametre şeması + doğrulama (D11)
+  types.ts            SpriteDoc, Layer, FieldNode, Palette
+  schema.ts           parametre şeması + çıktı etki alanı (D11)
+  validate.ts         belge doğrulaması — şemayı TÜKETİR
   field/
+    space.ts          piksel ↔ birim uzay (D2 koordinat sözleşmesi)
+    fn.ts             FieldFn (derlenmiş biçim) + ortak eğri
     buffer.ts         FieldBuffer ayırma/havuzlama
     generators.ts     §4.1
     domain.ts         §4.2  (ters eşleme burada)
     combine.ts        §4.3
-    filter.ts         §4.4  (koşan toplam, Felzenszwalb)
-  shade/
+    blend.ts          kapsama/yükseklik harmanlama modları
+    evaluate.ts       Aşama 1 derleyicisi + tohum türetimi (D4, D5)
+    filter.ts         §4.4  (koşan toplam, Felzenszwalb)      ← Tur 2
+  shade/                                                       ← Tur 3
     normal.ts  lambert.ts  ao.ts  outline.ts
   color/
     oklab.ts          §5.6
-    palette.ts        Palette tipi, kilit doğrulaması
-    generate.ts       §7 palet sentezi
-    dither.ts         §5.5
+    palette.ts        Palette tipi, kilit kümesi
+    generate.ts       §7 palet sentezi                         ← Tur 3
+    dither.ts         §5.5                                     ← Tur 3
     quantize.ts
+  qa.ts               §9 metrikleri — HEADLESS, dolayısıyla test edilebilir
   render.ts           §3 boru hattı — TEK giriş noktası
   index.ts            barrel (Node-only HİÇBİR ŞEY yok — D8)
 
 core/src/visual/encode/            ← ayrı ALT-YOL, barrel'da değil (D8)
-  png.ts              node:zlib ile PNG kodlayıcı
+  png.ts              node:zlib ile PNG kodlayıcı + writePng
 
-core/scripts/visual-qa.ts          §9 ölçüm aracı
+core/scripts/forge.ts              §10.1 CLI (render / validate)
+core/scripts/visual-qa.ts          §9 ölçüm aracının İNCE sarmalayıcısı
 
-games/vol-forge/                   editör (vol-ui kardeşi)
+core/tests/visual/fixtures/*.json  elle yazılmış kanıt belgeleri
+
+games/vol-forge/                   editör (vol-ui kardeşi)     ← Tur 4
   src/main.ts  scenes/  sections/  i18n/{tr,en}.json
 ```
+
+İki ayrım kasıtlı:
+
+- **`schema.ts` / `validate.ts` ayrı.** Şema veridir ve editör de (Tur 4) onu
+  okuyacak; doğrulama o verinin bir tüketicisidir. Tek dosyada tutmak,
+  arayüz üretimi için şemayı import eden kodun doğrulayıcıyı da sürüklemesi
+  demekti.
+- **Ölçüm `visual/qa.ts` içinde, script'te değil.** Script bir sarmalayıcıdır;
+  metrikler çekirdekte olduğu için hem test edilir hem de editör (Tur 4) aynı
+  sayıları gösterebilir. D8 ve D12 birlikte bunu gerektirir.
 
 `core/package.json` `exports` alanına iki giriş eklenir:
 `"./visual"` ve `"./visual/encode"`.
@@ -737,9 +831,12 @@ immediate-benzeri kontrol setine sahip).
 
 ---
 
-## 9. Ölçüm — `core/scripts/visual-qa.ts`
+## 9. Ölçüm — `core/src/visual/qa.ts` + `core/scripts/visual-qa.ts`
 
 Ses tarafındaki `audio-qa.ts`'in karşılığı. **İlk turdan itibaren** vardır.
+Metrikler çekirdektedir (headless, D8); script yalnızca dosya okur ve
+biçimlendirir. Böylece aynı sayılar hem CLI'da hem editörde (Tur 4) görünür
+ve metriklerin kendisi test edilebilir.
 
 | Metrik                     | Ne söyler                               | Eşik                        |
 | -------------------------- | --------------------------------------- | --------------------------- |
@@ -843,8 +940,11 @@ sağlanır.
 - **`workspace-contract`**: `games/vol-forge` `typecheck`, `test`,
   `test:coverage` script'leri ve `quality.json`da eşik **olmadan** repoya
   giremez. Taban: 50/50/50/40.
-- **`publicSurface`**: her yeni CORE export'u yüzey sayısını değiştirir; kapı
-  kırılır ve sayı **bilinçli** güncellenir. `visual/` ~40 export getirecek.
+- **`publicSurface`**: `visual/` kök barrel'a `Synth` gibi TEK bir isimle
+  (`export * as Visual`) girer, yani kök sayısını yalnızca 1 artırır. Alt
+  sistemin kendi yüzeyi kök sayının gölgesinde büyümesin diye AYRICA ve kendi
+  başına kilitlenir (`EXPECTED_VISUAL_EXPORT_COUNT`). İki sayı da bilinçli
+  olarak güncellenir.
 - **`publicApi`**: export adları `enemy`/`boss`/`flux`/`spark`/`volhell`
   içeremez.
 - **`primitiveNeutrality`**: `PRIMITIVE_ROOTS` dizisine `'visual'` **eklenir**;
@@ -861,6 +961,11 @@ sağlanır.
 - **`numericContract`**: sonlu olmayan girdi ya reddedilir (yapılandırma) ya
   yoksayılır (akış). `size`, `seed`, `freq` **reddedilir**.
 - **`lifecycleIdiom`**: elle `(() => void)[]` temizlik dizisi yasak.
+- **`visualHeadless`** (Tur 1'de eklendi): `visual/` altındaki hiçbir dosya
+  DOM global'ine dokunamaz ve `node:` importu yalnızca `encode/` altında
+  bulunabilir; barrel `encode/`i yeniden dışa açamaz. İki sızıntı da sessizdir
+  — DOM sızıntısı testlerde (jsdom) görünmez ve yalnızca `tsx` ile asset
+  üretilirken patlar; `node:` sızıntısı tarayıcı build'ini kırar.
 - **Kapsam**: yeni paket ölçülür; eşikler ölçülen değerin ~2 puan altına
   ratchet'lenir.
 
@@ -876,7 +981,7 @@ paritesi zorunlu**. Module-level `i18next.t()` **yasak** (import anında
 
 Her tur kendi başına yeşil kapıyla kapanır; yarım tur bırakılmaz.
 
-### Tur 1 — Çekirdek iskelet (editörsüz, ölçülebilir)
+### Tur 1 — Çekirdek iskelet (editörsüz, ölçülebilir) — **TAMAMLANDI**
 
 Hedef: `tsx forge.ts render doc.json out.png` çalışsın.
 
@@ -891,7 +996,16 @@ Hedef: `tsx forge.ts render doc.json out.png` çalışsın.
 - **Determinizm testi** (D5): iki render bit düzeyinde aynı
 - **`visual-qa` ilk üç metrik**: palet uyumu, alfa saflığı, renk sayısı
 
-_Kanıt:_ elle yazılmış bir `doc.json` beklenen PNG'yi üretir; palet uyumu 0 ihlal.
+_Kanıt:_ `core/tests/visual/fixtures/` altındaki üç elle yazılmış belge
+beklenen PNG'yi üretir; üçünde de palet uyumu 0 ihlal.
+
+Turda ortaya çıkan ve bu belgeye işlenen düzeltmeler: maskenin şekil tarafında
+olduğu (§3), katman kaynağının kapsamaya çevrilmesinin etki alanına dayandığı
+(§3, §5.8), taban gürültülerde `octaves` bulunmaması gerektiği (§4.1), tohum
+yolunun katman kimliğinden türediği (D5) ve determinizm garantisinin piksel
+düzeyinde olduğu (D5). Ayrıca `scale` uygulanmış bir SDF'nin artık gerçek
+mesafe alanı olmadığı kaydedildi — Tur 2–3'te dış çizgi ve mesafe dönüşümü
+bunu hesaba katmalı.
 
 ### Tur 2 — Cebiri tamamla
 

@@ -19,10 +19,10 @@
   "exempt": {},
   "packages": {
     "@volstudio/core": {
-      "lines": 85,
-      "statements": 85,
-      "branches": 79,
-      "functions": 86
+      "lines": 86,
+      "statements": 86,
+      "branches": 81,
+      "functions": 88
     },
     "@volstudio/vol-hell": {
       "lines": 70,

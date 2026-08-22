@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "size": [48, 32],
+  "seed": 7,
+  "antialias": false,
+  "palette": {
+    "colors": ["#101418", "#243040", "#3f5468", "#6d8ba3", "#a8c2d4"],
+    "ramps": [{ "id": 0, "name": "govde", "indices": [0, 1, 2, 3, 4] }]
+  },
+  "layers": [
+    {
+      "id": "birlesim",
+      "source": {
+        "kind": "min",
+        "a": { "kind": "sdf.circle", "center": [-0.55, 0], "r": 0.5 },
+        "b": { "kind": "sdf.circle", "center": [0.55, 0], "r": 0.5 }
+      },
+      "height": {
+        "kind": "smoothstep",
+        "e0": 0,
+        "e1": -0.45,
+        "input": {
+          "kind": "min",
+          "a": { "kind": "sdf.circle", "center": [-0.55, 0], "r": 0.5 },
+          "b": { "kind": "sdf.circle", "center": [0.55, 0], "r": 0.5 }
+        }
+      },
+      "blend": "over",
+      "material": 0
+    }
+  ]
+}

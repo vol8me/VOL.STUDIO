@@ -4,6 +4,81 @@
 kaydıdır**: ne yapıldı, hangi kapı koşuldu, geriye ne kaldı. Turun ayrıntısı
 commit diff'inde ve git geçmişindedir; burada tekrarlanmaz.
 
+## 2026-08-22 — Görsel sentez Tur 1: çekirdek iskelet
+
+`core/docs/visual-synthesis.md` §12'nin ilk turu uygulandı. Hedef belgede
+yazılıydı: `tsx core/scripts/forge.ts render doc.json out.png` çalışsın,
+ölçülebilir olsun, editörsüz tam işlevli kalsın.
+
+**Ne yazıldı**
+
+- `core/src/visual/` — 15 dosya. Veri modeli, parametre şeması (D11), belge
+  doğrulaması, birim uzay (D2), tampon havuzu (D7), Aşama 1 derleyicisi (D4),
+  altı üreteç, üç alan-uzayı işlemi, yedi birleştirici, üç kanallı bileşim
+  (D3), OKLab, palet, `ramp` nicemleme, §9 metrikleri.
+- `core/src/visual/encode/png.ts` — Node-only alt-yol (D8). İndeksli PNG
+  varsayılan; ayrık (renk, alfa) çifti 256'yı aşarsa truecolor'a düşer.
+  Dış ikili gerekmez, `node:zlib` yeterli.
+- `core/scripts/forge.ts` (§10.1 `render`/`validate`) ve
+  `core/scripts/visual-qa.ts` (§9 sarmalayıcısı).
+- `core/tests/visual/` — 139 test, üç elle yazılmış kanıt belgesi.
+
+**Uygulama sırasında bulunan ve belgeye işlenen beş düzeltme**
+
+- **Maske opaklığın değil ŞEKLİN tarafında.** §3 maskeyi `layerAlpha`
+  çarpanına koyuyordu; o hâlde maskeyle gizlenen bölge `layerCoverage`
+  üzerinden malzeme eşiğini geçiyor ve ALTINDAKİ katmanın rengini bu katmanın
+  rampasıyla eziyordu — görünmeyen bir katmanın görünür yan etkisi. Maske artık
+  kapsamayı çarpar; opaklık çarpmaz. Kapsama/alfa ayrımının gerekçesi
+  (cam paneli) çürütülmedi, tamamlandı.
+- **Katman kaynağının kapsamaya çevrimi etki alanına dayanır.** §2 çıplak bir
+  SDF'yi `source` olarak gösteriyor, §4.1 ise dönüşümü `step`/`smoothstep`e
+  havale ediyordu; ikisi ancak dönüşüm SİSTEMDE olursa tutarlıdır. Her düğüm
+  şemada `unit`/`signed` bildirir, dönüşüm tek yerde yapılır (§3, §5.8).
+- **Taban gürültülerde `octaves` yok.** `noise.fbm` zaten oktav
+  sarmalayıcısı; aynı parametreyi `noise.value`/`simplex`/`worley`e de koymak
+  iki ayrışan yol açardı (D9).
+- **Tohum yolu katman KİMLİĞİNDEN türer**, indeksinden değil. İndeks olsaydı
+  listeye katman eklemek altındaki her katmanı yeniden üretir ve fark gözden
+  geçirilemez olurdu (D5). Testle sabitlendi.
+- **Determinizm garantisi piksel düzeyinde.** PNG'nin bayt düzeyinde aynı
+  olması zlib sürümüne bağlıdır; testler RGBA tamponunu karşılaştırır.
+
+Ayrıca kaydedildi (henüz tüketicisi yok): `scale` uygulanmış bir SDF gerçek
+mesafe alanı değildir — işaret doğru, uzunluk değil. Dış çizgi ve mesafe
+dönüşümü (Tur 2–3) bunu hesaba katmalı.
+
+**Bekçiler**
+
+- `primitiveNeutrality` artık `visual/` kaynaklarını VE
+  `core/docs/visual-synthesis.md`i tarıyor.
+- `publicSurface` 171 → 172 (kök barrel'a tek isim: `Visual`), ayrıca
+  `visual` yüzeyi kendi başına 30'da kilitli.
+- `numericContract`e görsel belge girdisi eklendi (`size`/`seed`/`freq`
+  reddedilir).
+- **Yeni:** `visualHeadless` — `visual/` altında DOM global'i yasak, `node:`
+  importu yalnızca `encode/` altında, barrel `encode/`i yeniden dışa açamaz.
+  İlk yazımında kendi yanlış pozitifini verdi (D8'in kendi cümlesi kaynak
+  dosyanın yorumunda geçiyor); yorumları düşürüp koda bakacak şekilde
+  düzeltildi.
+
+**Bilinçli olarak YAPILMAYANLAR**
+
+- `justfile` tarifi ve kök `pnpm` script'i eklenmedi. Ses tarafında `audio:qa`
+  var çünkü ölçülecek shipped asset var; görselde henüz yok. Kapı, işaret
+  edeceği bir şey olmadan açılmaz — Tur 5'in işi.
+- `README` dosyalarına dokunulmadı; görsel hattın kullanıcıya dönük bir komutu
+  henüz yok.
+
+**Kapılar**
+
+| Kapı                    | Durum | Not                                           |
+| ----------------------- | ----- | --------------------------------------------- |
+| `pnpm high`             | ✓     | quick + lint:css + coverage + build           |
+| `pnpm -r test:coverage` | ✓     | core 1366 test (+139)                         |
+| core kapsam             | ✓     | 88.22/88.22/83.47/90.29 — eşikler 86/86/81/88 |
+| `visual/` kapsamı       | ✓     | dosya grubu bazında %92–99 statement          |
+
 ## 2026-08-20 — Profesyonel kod avı bulgularının çözümü
 
 Derin bir av raporu (6 paralel subagent + doğrulama) ~63 bulgu çıkardı.
@@ -89,18 +164,20 @@ silinir; kronolojiye not düşülmez.
   testler koşuyor. Bilinçli ve bir bekçiyle işaretli, ama gerçek oynanışta hiç
   yürümeyen kod olduğu unutulmamalı. (Mekanizma CORE'a taşındı;
   `vol-hell/SpatialGrid` artık ince bir adaptör.)
-- CORE public API yüzeyi 171 export ve dokuz `export *` barrel'ıyla büyüyor.
+- CORE public API yüzeyi 172 export ve dokuz `export *` barrel'ıyla büyüyor.
   Yüzey sayısı kilitli (kapı kırılır) ama barrel'lar hâlâ otomatik; daraltma
-  ayrı bir tur.
+  ayrı bir tur. `visual` alt sistemi kök barrel'a tek isimle giriyor ve kendi
+  yüzeyi (30) ayrıca kilitli — alt sistemler kök sayının gölgesinde büyümesin.
 - `PlayerController` takma adı `@deprecated` olarak duruyor; kaldırma bir
   sonraki büyük sürümde.
-- **Görsel sentez (`core/visual/` + `games/vol-forge`) tasarlandı ama
-  YAZILMADI.** Doktrin, veri modeli, primitif envanteri, algoritma notları ve
-  beş turluk uygulama sırası `core/docs/visual-synthesis.md`de. Kod yok;
-  belgedeki §13'te dört açık kalan var (dikdörtgen çıktı kararı verildi ve
-  listeden çıktı). Ses motorunun aynı editör
-  kabuğuna taşınması D11'de dikiş olarak işaretli ama görsel kanıtlanmadan
-  başlanmayacak.
+- **Görsel sentez: Tur 1 bitti, Tur 2–5 açık.** `core/visual/` çekirdeği ve
+  `forge` CLI'ı çalışıyor; envanterin geri kalanı (§4'ün ~35 primitifinden
+  16'sı uygulandı), döşenebilirlik, komşuluk filtreleri, gölgeleme, dither,
+  `nearest` nicemleme, palet sentezi, alt-yığın maskeler ve editör
+  (`games/vol-forge`) yazılmadı. Doğrulayıcı uygulanmamış her alanı hangi
+  turda geleceğini söyleyerek reddeder, yani yarım uygulama sessiz kalmaz.
+  §13'te üç açık kalan var. Ses motorunun aynı editör kabuğuna taşınması
+  D11'de dikiş olarak işaretli ama editör yazılmadan başlanmayacak.
 - **`AGENTS.md` ve `games/design/AGENTS.md` gitignore'da** (`.gitignore:2-3`) ve
   hiç commit edilmemiş. Bilinçli bir tercih (agent talimatları yerelde kalıyor)
   ama sonucu şu: bu dosyalara yapılan güncellemeler HİÇBİR commit'e girmez ve
@@ -194,6 +271,9 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-20 | Primitif sertleştirme (denetim + 7 madde)                   | sessiz bozulma → hata      |
 | 2026-08-20 | Kapsam borcu: showcase etkileşimi + HUD                     | func %53→%83               |
 | 2026-08-20 | Ses/müzik motoru denetimi (Z1-Z4)                           | tek kaynak + görünür hata  |
+| 2026-08-21 | Görsel sentez doktrini (§0–§14)                             | belge; kod yok             |
+| 2026-08-22 | Doktrin denetimi + dikdörtgen çıktı kararı                  | 4 bulgunun 2'si geçerli    |
+| 2026-08-22 | Görsel sentez Tur 1 — çekirdek iskelet                      | 139 test, kapılar yeşil    |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 

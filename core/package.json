@@ -29,6 +29,14 @@
     "./audio/music": {
       "import": "./src/audio/music/index.ts",
       "types": "./src/audio/music/index.ts"
+    },
+    "./visual": {
+      "import": "./src/visual/index.ts",
+      "types": "./src/visual/index.ts"
+    },
+    "./visual/encode": {
+      "import": "./src/visual/encode/png.ts",
+      "types": "./src/visual/encode/png.ts"
     }
   },
   "scripts": {

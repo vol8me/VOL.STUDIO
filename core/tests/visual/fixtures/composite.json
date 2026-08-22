@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "size": [64, 64],
+  "seed": 1337,
+  "antialias": false,
+  "palette": {
+    "colors": [
+      "#1a1420",
+      "#3a2b3f",
+      "#6b5570",
+      "#a58aa8",
+      "#20301c",
+      "#3d5433",
+      "#5f7d4c",
+      "#8fae6d"
+    ],
+    "ramps": [
+      { "id": 0, "name": "taban", "indices": [0, 1, 2, 3] },
+      { "id": 1, "name": "kusak", "indices": [4, 5, 6, 7] }
+    ]
+  },
+  "layers": [
+    {
+      "id": "taban",
+      "source": { "kind": "sdf.circle", "center": [0, 0], "r": 0.7 },
+      "height": { "kind": "gradient.radial", "center": [-0.25, -0.25], "radius": 1.25 },
+      "blend": "over",
+      "heightBlend": "max",
+      "material": 0
+    },
+    {
+      "id": "kusak",
+      "source": { "kind": "sdf.box", "center": [0, 0], "half": [0.85, 0.14] },
+      "domain": [{ "kind": "rotate", "angle": 25 }],
+      "mask": { "kind": "sdf.circle", "center": [0, 0], "r": 0.7 },
+      "height": { "kind": "gradient.linear", "angle": 115, "from": -0.3, "to": 0.3 },
+      "blend": "over",
+      "heightBlend": "max",
+      "material": 1
+    }
+  ],
+  "post": { "quantize": { "mode": "ramp" } }
+}
