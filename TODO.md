@@ -97,7 +97,8 @@ silinir; kronolojiye not düşülmez.
 - **Görsel sentez (`core/visual/` + `games/vol-forge`) tasarlandı ama
   YAZILMADI.** Doktrin, veri modeli, primitif envanteri, algoritma notları ve
   beş turluk uygulama sırası `core/docs/visual-synthesis.md`de. Kod yok;
-  belgedeki §13 açık kalanları karar bekliyor. Ses motorunun aynı editör
+  belgedeki §13'te dört açık kalan var (dikdörtgen çıktı kararı verildi ve
+  listeden çıktı). Ses motorunun aynı editör
   kabuğuna taşınması D11'de dikiş olarak işaretli ama görsel kanıtlanmadan
   başlanmayacak.
 - **`AGENTS.md` ve `games/design/AGENTS.md` gitignore'da** (`.gitignore:2-3`) ve

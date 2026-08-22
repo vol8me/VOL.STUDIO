@@ -68,6 +68,19 @@ PİKSEL ÖLÇÜLER — parametreler piksel sayısı, çözünürlüğe BAĞLI
 Sınır **nicemlemedir**. Sınırın hangi tarafında olduğu belirsiz bir parametre
 yazılmaz; belirsizse tasarım yanlıştır.
 
+**Koordinat sözleşmesi:** `size` bir `[w, h]` çiftidir. Birim uzayın **kökeni
+MERKEZDEDİR** ve birim **kısa kenarın yarısıdır**: kısa eksen `[-1, 1]`, uzun
+eksen `[-a, a]` (`a = uzun / kısa`).
+
+İki gerekçe:
+
+1. **Bozulma yok.** `[0,1]²`yi dikdörtgene esnetmek daireyi elipse çevirir ve
+   her SDF'yi en-boy oranına bağımlı kılar. Kısa kenar normalizasyonu şekli
+   korur; uzun eksen yalnızca daha fazla alan gösterir.
+2. **Simetri doğal olur.** `mirror` ve `polar` bu sistemin genelliğinin
+   kaynağıdır (§4.2). `x = 0` etrafında aynalamak doğaldır; `x = 0.5`
+   etrafında aynalamak her çağrıda merkez parametresi taşımak demektir.
+
 **Açı birimi:** JSON'da **derece**, motor içinde **radyan**. Dönüşüm sınırda
 (şema doğrulaması sırasında) bir kez yapılır. Gerekçe: `"angle": 45` bir
 insanın ve agent'ın yazacağı biçimdir; `0.7853981634` değil. Kod içinde radyan
@@ -157,7 +170,12 @@ Motor asla renk sabiti taşımaz. `VOL_COLORS` bu sisteme girmez — o, arayüz�
 paletidir, üretilen asset'in değil.
 
 **Palet kilidi:** nicemleme sonrası çıktıda palet dışı piksel KALMAZ. Bu
-ölçülür (bkz. §9) ve ihlal kapıyı kırar. Sebep: piksel sanatı iddiası taşıyan
+ölçülür (bkz. §9) ve ihlal kapıyı kırar.
+
+Kilit **uygulanabilirdir çünkü nicemleme boru hattının SON renk işlemidir**
+(§3, adım 7). Kenar yumuşatma açıkken karışan ara renkler bile nicemlemeden
+geçer ve palete oturur. İhlal ancak nicemlemeden sonra renk üreten bir adım
+eklenirse doğar — böyle bir adım eklenmez. Sebep: piksel sanatı iddiası taşıyan
 bir çıktının 4 renk yerine 4.000 renk içermesi sessiz bir yalandır.
 
 ### D7 — Bellek doğrusaldır, çünkü kompozisyon doğrusaldır
@@ -262,7 +280,7 @@ aynısı.)
 ```jsonc
 {
   "schemaVersion": 1,
-  "size": 64, // çıktı kenarı (piksel). 8..2048, ikinin katı olmak ZORUNDA DEĞİL.
+  "size": [64, 64], // [genişlik, yükseklik] piksel; 8..2048. Kare olmak zorunda değil.
   "seed": 1337,
   "tileable": false, // true ise gürültü periyodik, filtreler sarmalı (bkz. §5)
   "antialias": false, // birim uzayda süperörnekleme; düşük çözünürlükte kapalı tutulur
@@ -278,7 +296,7 @@ aynısı.)
   "layers": [
     {
       "id": "govde",
-      "source": { "kind": "sdf.capsule", "a": [0.5, 0.92], "b": [0.5, 0.42], "r": 0.055 },
+      "source": { "kind": "sdf.capsule", "a": [0, -0.84], "b": [0, 0.16], "r": 0.11 },
       "domain": [
         { "kind": "warp", "by": { "kind": "noise.fbm", "freq": 5, "octaves": 3 }, "amount": 0.02 }
       ],
@@ -330,12 +348,14 @@ mümkün.
      a. layerCoverage ← Aşama 1: üreteç ∘ domain zinciri  (fonksiyonel, D4)
      b. maske varsa   ← üreteç ya da alt-yığın (özyineleme, azami derinlik 4)
      c. komşuluk filtreleri (varsa) layerCoverage üzerinde
-     d. layerCoverage *= maske * opacity
-     f. layerHeight ← katmanın `height` alanı varsa Aşama 1 ile ayrıca
+     d. layerAlpha ← layerCoverage * maske * opacity
+                     (KAPSAMA AYRI KALIR — bkz. aşağıdaki not)
+     e. layerHeight ← katmanın `height` alanı varsa Aşama 1 ile ayrıca
                       değerlendirilir; YOKSA layerCoverage kullanılır
-     g. coverage ← blend(coverage, layerCoverage)
-        height   ← heightBlend(height, layerHeight * layerCoverage)
+     f. coverage ← blend(coverage, layerAlpha)
+        height   ← heightBlend(height, layerHeight * layerAlpha)
         material ← layerCoverage > materialThresholdCoverage olan yerde
+                   (opaklık DEĞİL kapsama sınanır)
                    katmanın malzemesi (materialMask > threshold ise materialAlt)
 4. BİÇİMLENDİR              normal ← height; shade ← Lambert + ambient + rim
                             ao     ← height'tan; shade *= (1 - ao)
@@ -367,9 +387,15 @@ kapsama dışında yükseklik anlamsızdır.
 birleşmelidir ama yükseklik toplanmalı olabilir (üst üste binen kabartma).
 Tek mod ikisini de doğru yapamaz.
 
-**Malzeme yazımı eşikli:** `materialThresholdCoverage` (varsayılan 0.5)
-altındaki kısmi kapsama malzeme YAZMAZ. Ham `> 0` koşulu, kenar yumuşatma
-açıkken saçaklarda yanlış rampa bırakırdı.
+**Malzeme yazımı eşikli, ama KAPSAMAYI sınar — opaklığı değil.** Ham `> 0`
+koşulu, kenar yumuşatma açıkken saçaklarda yanlış rampa bırakırdı; bu yüzden
+`materialThresholdCoverage` (varsayılan 0.5, katman düzeyinde) vardır.
+
+Kritik ayrım: **kapsama "şekil burada mı", opaklık "ne kadar saydam"dır.**
+İkisi tek değere karıştırılırsa `opacity: 0.3` veren bir katmanın kapsaması
+her yerde 0.3 olur, eşiğin altına düşer ve HİÇBİR YERE malzeme yazmaz — cam
+paneli renksiz çıkar. Bu yüzden `layerCoverage` ile `layerAlpha` ayrı tutulur:
+harmanlama alfayı, malzeme eşiği kapsamayı kullanır.
 
 ---
 
@@ -413,20 +439,36 @@ elde edilebilmesini sağlar — ayrı primitif gerekmez (D9).
 Bunlar **girdi koordinatını** dönüştürür (D4, ters eşleme). On üreteçle
 sınırlı kalmanın önündeki tek engel budur.
 
-| `kind`      | Parametreler                                  | Neyi açar                                 |
-| ----------- | --------------------------------------------- | ----------------------------------------- | ------------------------------------------ | ---------- | ----------------------------------------- |
-| `translate` | `x, y`                                        |                                           |
-| `rotate`    | `angle, center?`                              |                                           |
-| `scale`     | `x, y, center?`                               | Bileşenler ayrı → anizotropik esnetme.    |
-| `skew`      | `x, y`                                        |                                           |
-| `mirror`    | `axis(x                                       | y                                         | quad                                       | radial-n)` | **Simetri**: makine parçası, yaprak, yüz. |
-| `repeat`    | `count, mode(tile                             | mirror)`                                  | Döşeme; `mirror` dikiş gizler.             |
-| `polar`     | `center, inverse?`                            | **Halka, spiral, dişli, girişim deseni.** |
-| `warp`      | `by, amount, sample(nearest                   | bilinear)`                                | **Organik**: mermer, duman, damar, akıntı. |
-| `scatter`   | `count, seed, jitter, rotJitter, scaleJitter` | **Tekrar**: dal, yaprak, cıvata, çakıl.   |
+| `kind`      | Parametreler                | Neyi açar                                 |
+| ----------- | --------------------------- | ----------------------------------------- | ------------------------------------------ | ---------- | ----------------------------------------- |
+| `translate` | `x, y`                      |                                           |
+| `rotate`    | `angle, center?`            |                                           |
+| `scale`     | `x, y, center?`             | Bileşenler ayrı → anizotropik esnetme.    |
+| `skew`      | `x, y`                      |                                           |
+| `mirror`    | `axis(x                     | y                                         | quad                                       | radial-n)` | **Simetri**: makine parçası, yaprak, yüz. |
+| `repeat`    | `count, mode(tile           | mirror)`                                  | Döşeme; `mirror` dikiş gizler.             |
+| `polar`     | `center, inverse?`          | **Halka, spiral, dişli, girişim deseni.** |
+| `warp`      | `by, amount, sample(nearest | bilinear)`                                | **Organik**: mermer, duman, damar, akıntı. |
 
-`scatter` özel: alt-alanı N kez, tohumlanmış rastgele dönüşümlerle yerleştirir
-ve `max` ile birleştirir. Determinizm D5'e tabidir.
+### 4.2b `scatter` — alan-uzayı işlemi DEĞİL, örnekleme işlemidir
+
+`scatter` yukarıdaki tabloda **yer almaz** ve bu bilinçlidir. Bir alan-uzayı
+işlemi koordinat üzerinde bir eşlemedir: bir çıktı noktası ↔ bir girdi noktası,
+ters çevrilebilir (D4). `scatter` ise bir çıktı noktası ← **N aday** demektir;
+tersi yoktur, üzerinden birleştirme yapılır. Yanlış kategoride durması, ters
+dönüşümü varmış gibi uygulanmasına yol açardı.
+
+```
+scatter: { count, seed, jitter, rotJitter, scaleJitter, source }
+```
+
+Her örnek kendi dönüşümünü tohumdan türetir (D5); çıktı `max` ile birleşir.
+
+**Maliyet uyarısı — naif uygulama kabul edilemez.** Piksel başına N örnek
+denemek 1024²'de N=200 ile 200 milyon değerlendirme demektir. Zorunlu
+optimizasyon: her örneğin **sınırlayıcı kutusu** önceden hesaplanır ve örnekler
+uzamsal kovalara yerleştirilir; bir piksel yalnızca kendisini kapsayan örnekleri
+sınar. Tipik dağılımda piksel başına 1–3 örnek kalır.
 
 ### 4.3 Birleştiriciler (alan × alan → alan)
 
@@ -467,6 +509,16 @@ ve `max` ile birleştirir. Determinizm D5'e tabidir.
 | `outline`  | `dilate(coverage, px) − coverage`. Modlar: `outside`, `inside`, `centered`.           |
 | `dither`   | `none` · `bayer2/4/8` · `blueNoise`.                                                  |
 | `quantize` | `ramp` (material+shade → rampa indeksi) veya `nearest` (RGB → **OKLab'da** en yakın). |
+
+**`nearest` maliyeti ve zorunlu çözümü:** piksel başına palet taraması 2048² ×
+32 renk = 134M mesafe hesabı demektir. RGB üzerinde **3B arama tablosu** (32³
+girdi, bir kez hesaplanır) piksel başına tek okumaya indirir. `ramp` modda
+arama zaten yoktur — doğrudan indeks.
+
+**`nearest` maliyeti ve çözümü:** piksel başına palet taraması 2048² × 32 renk
+= 134M mesafe hesabı demektir. Zorunlu optimizasyon: RGB üzerinde **3B arama
+tablosu** (32³ girdi) bir kez hesaplanır, piksel başına tek okumaya iner.
+`ramp` modda arama zaten yoktur — doğrudan indeks.
 
 **`nearest` neden OKLab'da:** RGB Öklid mesafesi algısal değildir; koyu
 mavilerde ve doygun kırmızılarda gözle alakasız eşleşmeler üretir.
@@ -699,6 +751,10 @@ Ses tarafındaki `audio-qa.ts`'in karşılığı. **İlk turdan itibaren** vard�
 | **Kullanılan renk sayısı** | Palet gereğinden büyük mü               | rapor                       |
 | **Alfa saflığı**           | Kısmi alfa piksel sayısı                | `antialias:false` iken 0    |
 
+**Tarama yöntemi: TAM tarama, örnekleme değil.** Tek bir palet dışı piksel tam
+olarak örneklemenin kaçıracağı şeydir; 4M pikselin taranması ~50 ms sürer ve
+örnekleme burada sahte tasarruf olur. Metrikler tek geçişte birlikte toplanır.
+
 Rapor makine-okunur (`--json`), tıpkı `scripts/quality/report.mjs` gibi.
 
 ---
@@ -708,14 +764,16 @@ Rapor makine-okunur (`--json`), tıpkı `scripts/quality/report.mjs` gibi.
 ### 10.1 CLI
 
 ```bash
-tsx core/scripts/forge.ts render <doc.json> <out.png> [--size 256] [--seed 42]
+tsx core/scripts/forge.ts render <doc.json> <out.png> [--size 256x384] [--seed 42]
 tsx core/scripts/forge.ts validate <doc.json>
 tsx core/scripts/forge.ts qa <out.png> --doc <doc.json> [--json]
 tsx core/scripts/forge.ts palette <istek.json>      # palet sentezi
 ```
 
 `--size` ve `--seed` belgeyi **ezmek** içindir: aynı belgeden farklı boyut/
-varyant üretmenin yolu budur (D2).
+varyant üretmenin yolu budur (D2). `--size` `WxH` ya da tek sayı (kare) kabul
+eder; koordinat sözleşmesi merkez-köken + kısa kenar normalizasyonu olduğu için
+en-boy oranı değişse de şekiller bozulmaz.
 
 ### 10.2 Katalog — agent'ın "ne yazacağını" bilmesi
 
@@ -838,7 +896,8 @@ _Kanıt:_ elle yazılmış bir `doc.json` beklenen PNG'yi üretir; palet uyumu 0
 ### Tur 2 — Cebiri tamamla
 
 - Kalan üreteçler (worley, simplex, fbm, tüm SDF'ler, desenler)
-- Kalan alan-uzayı: `mirror`, `repeat`, `polar`, `warp`, `scatter`, `skew`
+- Kalan alan-uzayı: `mirror`, `repeat`, `polar`, `warp`, `skew`
+- `scatter` (§4.2b) — sınırlayıcı kutu + uzamsal kova optimizasyonuyla
 - Kalan birleştiriciler
 - Komşuluk filtreleri (koşan toplam bulanıklık, Felzenszwalb DT, morfoloji, edge)
 - `tileable` uçtan uca (periyodik gürültü + sarmalı filtre + sarmalı scatter)
@@ -884,17 +943,16 @@ _Kanıt:_ agent yalnızca kataloğu okuyarak makul bir başlangıç belgesi üre
 Bunlar **bilinçli olarak** kararlaştırılmadı; ilk gerçek kullanım karar
 verecek. Karar verilmeden kod yazılmaz.
 
-1. **Dikdörtgen çıktı.** Bugün `size` tek sayı (kare). Kare olmayan sprite
-   gerekirse birim uzayın en-boy oranı da tanımlanmalı — `[0,1]²` mi kalır,
-   yoksa uzun kenar mı 1 olur? İkisi farklı sonuç verir.
-2. **Çoklu çıktı.** Bir belgeden atlas/varyant seti üretmek (`--variants 8`)
+1. **Çoklu çıktı.** Bir belgeden atlas/varyant seti üretmek (`--variants 8`)
    doğal bir istek ama `seed` ezmesiyle zaten yapılabiliyor; ayrı bir kavram
    gerekip gerekmediği belirsiz.
-3. **Normal/height haritası dışa aktarımı.** Motor zaten üretiyor; PNG olarak
+2. **Normal/height haritası dışa aktarımı.** Motor zaten üretiyor; PNG olarak
    yazmak ucuz. Tüketicisi çıkınca eklenir.
-4. **`curve` düzenleyici.** Şemadan üretilen kontroller eğri için yetersiz;
-   özel bir bileşen gerekir. Tur 4'te değerlendirilir.
-5. **Ses motorunun editöre taşınması.** D11'deki şema deseni bunun dikişidir.
+3. **`curve` düzenleyici.** Şema `type: 'curve'` diyebilir ama editörün onu
+   nasıl çizeceği özel bir bileşen ister. Bu D11 ile **çelişmez**: şema _neyi_
+   söyler, editör *nasıl*ı seçer — özel bileşen şemanın yetersizliği değil,
+   kaçış kapısıdır. Bileşenin yazılıp yazılmayacağı Tur 4'te kararlaşır.
+4. **Ses motorunun editöre taşınması.** D11'deki şema deseni bunun dikişidir.
    **Görsel kanıtlanmadan başlanmaz** — ikinci tüketici gelmeden ortak kabuk
    soyutlaması yapılmaz.
 
