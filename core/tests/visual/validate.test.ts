@@ -92,31 +92,176 @@ describe('sonlu sayı sözleşmesi — yapılandırma REDDEDİLİR', () => {
   });
 });
 
-describe('henüz uygulanmamış alanlar sessizce YOKSAYILMAZ', () => {
-  it('tileable artık kabul edilir, tipi denetlenir', () => {
+describe('yapılandırma alanları uygulanmıştır ve DOĞRULANIR', () => {
+  it('tileable kabul edilir, tipi denetlenir', () => {
     expect(collectSpriteDocIssues({ ...baseDoc(), tileable: true })).toEqual([]);
     expect(collectSpriteDocIssues({ ...baseDoc(), tileable: false })).toEqual([]);
     expect(issuesFor({ ...baseDoc(), tileable: 'evet' }, 'tileable')).toHaveLength(1);
   });
 
-  it('shade ve post alanları geldikleri turu söyler', () => {
-    expect(issuesFor({ ...baseDoc(), shade: {} }, 'shade')[0]).toMatch(/Tur 3/);
-    expect(issuesFor({ ...baseDoc(), post: { outline: {} } }, 'post.outline')[0]).toMatch(/Tur 3/);
-    expect(issuesFor({ ...baseDoc(), post: { dither: {} } }, 'post.dither')[0]).toMatch(/Tur 3/);
+  it('shade alanları tek tek denetlenir', () => {
+    expect(collectSpriteDocIssues({ ...baseDoc(), shade: {} })).toEqual([]);
     expect(
-      issuesFor({ ...baseDoc(), post: { quantize: { mode: 'nearest' } } }, 'post.quantize.mode')[0],
-    ).toMatch(/Tur 3/);
+      collectSpriteDocIssues({
+        ...baseDoc(),
+        shade: { light: [-0.5, -0.7, 0.5], strength: 0.6, ambient: 0.3, rim: 0.1, relief: 1.2 },
+      }),
+    ).toEqual([]);
+
+    expect(issuesFor({ ...baseDoc(), shade: 5 }, 'shade')).toHaveLength(1);
+    expect(issuesFor({ ...baseDoc(), shade: { light: [0, 0] } }, 'shade.light')).toHaveLength(1);
+    expect(issuesFor({ ...baseDoc(), shade: { ambient: -1 } }, 'shade.ambient')[0]).toMatch(
+      /negatif olamaz/,
+    );
+    expect(issuesFor({ ...baseDoc(), shade: { parlaklik: 1 } }, 'shade.parlaklik')).toHaveLength(1);
   });
 
-  it('post biçimi denetlenir', () => {
-    expect(issuesFor({ ...baseDoc(), post: 5 }, 'post')).toHaveLength(1);
-    expect(issuesFor({ ...baseDoc(), post: { quantize: 5 } }, 'post.quantize')).toHaveLength(1);
-    expect(
-      issuesFor({ ...baseDoc(), post: { quantize: { mode: 'x' } } }, 'post.quantize.mode'),
-    ).toHaveLength(1);
-    expect(collectSpriteDocIssues({ ...baseDoc(), post: { quantize: { mode: 'ramp' } } })).toEqual(
-      [],
+  it('sıfır ışık vektörü reddedilir — yön taşımalı', () => {
+    expect(issuesFor({ ...baseDoc(), shade: { light: [0, 0, 0] } }, 'shade.light')[0]).toMatch(
+      /sıfır vektör/,
     );
+  });
+
+  it('shade.ao yarıçap ve şiddet ister', () => {
+    expect(
+      collectSpriteDocIssues({ ...baseDoc(), shade: { ao: { radius: 0.04, strength: 0.4 } } }),
+    ).toEqual([]);
+    expect(
+      issuesFor({ ...baseDoc(), shade: { ao: { radius: -1, strength: 0.4 } } }, 'shade.ao.radius'),
+    ).toHaveLength(1);
+    expect(
+      issuesFor(
+        { ...baseDoc(), shade: { ao: { radius: 0.04, strength: 0.4, x: 1 } } },
+        'shade.ao.x',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('post.outline denetlenir ve palet sınırına bakar', () => {
+    expect(
+      collectSpriteDocIssues({
+        ...baseDoc(),
+        post: { outline: { px: 1, mode: 'inside', colorIndex: 1 } },
+      }),
+    ).toEqual([]);
+    expect(
+      issuesFor({ ...baseDoc(), post: { outline: { px: 1.5 } } }, 'post.outline.px')[0],
+    ).toMatch(/tam sayı/);
+    expect(
+      issuesFor(
+        { ...baseDoc(), post: { outline: { px: 1, mode: 'yok' } } },
+        'post.outline.mode',
+      )[0],
+    ).toMatch(/outside, inside, centered/);
+    expect(
+      issuesFor(
+        { ...baseDoc(), post: { outline: { px: 1, colorIndex: 9 } } },
+        'post.outline.colorIndex',
+      )[0],
+    ).toMatch(/palet sınırları/);
+  });
+
+  it('post.dither türü ve miktarı denetlenir', () => {
+    expect(
+      collectSpriteDocIssues({ ...baseDoc(), post: { dither: { kind: 'bayer4', amount: 0.2 } } }),
+    ).toEqual([]);
+    expect(
+      issuesFor({ ...baseDoc(), post: { dither: { kind: 'yok' } } }, 'post.dither.kind')[0],
+    ).toMatch(/bayer2, bayer4, bayer8, blueNoise/);
+    expect(
+      issuesFor(
+        { ...baseDoc(), post: { dither: { kind: 'none', amount: 2 } } },
+        'post.dither.amount',
+      )[0],
+    ).toMatch(/0\.\.1/);
+  });
+
+  it('post.quantize iki kipi de kabul eder', () => {
+    for (const mode of ['ramp', 'nearest']) {
+      expect(collectSpriteDocIssues({ ...baseDoc(), post: { quantize: { mode } } })).toEqual([]);
+    }
+    expect(
+      issuesFor({ ...baseDoc(), post: { quantize: { mode: 'x' } } }, 'post.quantize.mode')[0],
+    ).toMatch(/ramp, nearest/);
+  });
+
+  it('post tanınmayan alanı yutmaz', () => {
+    expect(issuesFor({ ...baseDoc(), post: { keskinlik: 1 } }, 'post.keskinlik')).toHaveLength(1);
+  });
+
+  it('alt-yığın maske kabul edilir ve İÇİ de doğrulanır', () => {
+    const doc = baseDoc();
+    (doc.layers as Array<Record<string, unknown>>)[0].mask = {
+      layers: [{ id: 'ic', source: { kind: 'sdf.circle', r: 0.3 }, material: 0 }],
+    };
+    expect(collectSpriteDocIssues(doc)).toEqual([]);
+
+    const broken = baseDoc();
+    (broken.layers as Array<Record<string, unknown>>)[0].mask = {
+      layers: [{ id: 'ic', source: { kind: 'sdf.circle' }, material: 0 }],
+    };
+    expect(issuesFor(broken, 'layers[0].mask[0].source.r')).toHaveLength(1);
+  });
+
+  it('alt-yığın derinliği SINIRLIdır (D10)', () => {
+    const nest = (depth: number): Record<string, unknown> => {
+      let mask: unknown = null;
+      for (let i = depth; i > 0; i--) {
+        mask = {
+          layers: [{ id: `n${i}`, source: { kind: 'const', value: 1 }, material: 0, mask }],
+        };
+      }
+      const doc = baseDoc();
+      (doc.layers as Array<Record<string, unknown>>)[0].mask = mask;
+      return doc;
+    };
+
+    expect(collectSpriteDocIssues(nest(3))).toEqual([]);
+    expect(collectSpriteDocIssues(nest(6)).some((issue) => issue.includes('seviyeden derin'))).toBe(
+      true,
+    );
+  });
+
+  it('katman kimlikleri BELGE GENELİNDE benzersizdir', () => {
+    const doc = baseDoc();
+    (doc.layers as Array<Record<string, unknown>>)[0].mask = {
+      layers: [{ id: 'a', source: { kind: 'const', value: 1 }, material: 0 }],
+    };
+    expect(collectSpriteDocIssues(doc).some((issue) => issue.includes('tekrarlanıyor'))).toBe(true);
+  });
+
+  it('alt-yığın yalnızca layers taşır', () => {
+    const doc = baseDoc();
+    (doc.layers as Array<Record<string, unknown>>)[0].mask = {
+      layers: [{ id: 'ic', source: { kind: 'const', value: 1 }, material: 0 }],
+      opacity: 0.5,
+    };
+    expect(issuesFor(doc, 'layers[0].mask.opacity')).toHaveLength(1);
+  });
+
+  it('materialAlt ve materialMask BİRLİKTE verilir', () => {
+    const withBoth = baseDoc();
+    const layer = (withBoth.layers as Array<Record<string, unknown>>)[0];
+    (withBoth.palette as Record<string, unknown>).ramps = [
+      { id: 0, indices: [0, 1] },
+      { id: 1, indices: [1] },
+    ];
+    layer.materialAlt = 1;
+    layer.materialMask = { kind: 'noise.value', freq: 8 };
+    layer.materialThreshold = 0.6;
+    expect(collectSpriteDocIssues(withBoth)).toEqual([]);
+
+    const onlyAlt = baseDoc();
+    (onlyAlt.layers as Array<Record<string, unknown>>)[0].materialAlt = 0;
+    expect(issuesFor(onlyAlt, 'layers[0].materialAlt')[0]).toMatch(/birlikte verilir/);
+  });
+
+  it('materialAlt tanımlı bir rampaya işaret etmeli', () => {
+    const doc = baseDoc();
+    const layer = (doc.layers as Array<Record<string, unknown>>)[0];
+    layer.materialAlt = 7;
+    layer.materialMask = { kind: 'const', value: 1 };
+    expect(issuesFor(doc, 'layers[0].materialAlt')[0]).toMatch(/böyle bir rampa yok/);
   });
 
   it('alan düğümü OLMAYAN adlar nereye ait olduklarını söyler', () => {
@@ -124,31 +269,61 @@ describe('henüz uygulanmamış alanlar sessizce YOKSAYILMAZ', () => {
     // içine yazıldığında "bilinmeyen tür" demek yol göstermez.
     const doc = baseDoc();
     (doc.layers as Array<Record<string, unknown>>)[0].source = { kind: 'lambert' };
-    expect(issuesFor(doc, 'layers[0].source')[0]).toMatch(/Tur 3.*alan düğümü değil/);
+    expect(issuesFor(doc, 'layers[0].source')[0]).toMatch(/alan düğümü değil/);
+  });
+});
+
+describe('palet sentezi (§7.1)', () => {
+  function generatedDoc(generate: unknown): unknown {
+    const doc = baseDoc();
+    doc.palette = { generate };
+    return doc;
+  }
+
+  it('sentez isteği kabul edilir ve rampa 0 kendiliğinden oluşur', () => {
+    expect(
+      collectSpriteDocIssues(generatedDoc([{ base: '#6b5570', steps: 4, hueShift: -18 }])),
+    ).toEqual([]);
   });
 
-  it('bilinmeyen düğüm uygulanabilir türleri listeler', () => {
+  it('sentez ile doğrudan veri BİRLİKTE verilemez', () => {
     const doc = baseDoc();
-    (doc.layers as Array<Record<string, unknown>>)[0].source = { kind: 'sdf.hicbirsey' };
-    expect(issuesFor(doc, 'layers[0].source')[0]).toMatch(/Uygulananlar:.*sdf\.circle/);
+    doc.palette = { colors: ['#000000'], generate: [{ base: '#6b5570', steps: 3 }] };
+    expect(issuesFor(doc, 'palette')[0]).toMatch(/birlikte verilemez/);
   });
 
-  it('alt-yığın maske ve ikinci malzeme alanları turlarını söyler', () => {
-    const doc = baseDoc();
-    const layer = (doc.layers as Array<Record<string, unknown>>)[0];
-    layer.mask = { layers: [] };
-    layer.materialAlt = 1;
-    layer.materialMask = { kind: 'const', value: 1 };
-    layer.materialThreshold = 0.5;
-
-    const issues = collectSpriteDocIssues(doc);
-    expect(issues.filter((i) => i.includes('Tur 3')).length).toBe(4);
+  it('istek alanları denetlenir', () => {
+    expect(issuesFor(generatedDoc([]), 'palette.generate')).toHaveLength(1);
+    expect(
+      issuesFor(generatedDoc([{ base: 'kirmizi', steps: 3 }]), 'palette.generate[0].base'),
+    ).toHaveLength(1);
+    expect(
+      issuesFor(generatedDoc([{ base: '#112233', steps: 0 }]), 'palette.generate[0].steps')[0],
+    ).toMatch(/1\.\.64/);
+    expect(
+      issuesFor(
+        generatedDoc([{ base: '#112233', steps: 3, satCurve: 'yok' }]),
+        'palette.generate[0].satCurve',
+      )[0],
+    ).toMatch(/flat, arch, rise/);
+    expect(
+      issuesFor(
+        generatedDoc([{ base: '#112233', steps: 3, lightRange: [0, 2] }]),
+        'palette.generate[0].lightRange[1]',
+      )[0],
+    ).toMatch(/0\.\.1/);
+    expect(
+      issuesFor(
+        generatedDoc([{ base: '#112233', steps: 3, tonKaymasi: 1 }]),
+        'palette.generate[0].tonKaymasi',
+      ),
+    ).toHaveLength(1);
   });
 
-  it('palette.generate turunu söyler', () => {
-    const doc = baseDoc();
-    (doc.palette as Record<string, unknown>).generate = { base: '#000000' };
-    expect(issuesFor(doc, 'palette.generate')[0]).toMatch(/Tur 3/);
+  it('sentezlenmiş palette dış çizgi indeksi renk sayısına göre denetlenir', () => {
+    const doc = generatedDoc([{ base: '#112233', steps: 3 }]) as Record<string, unknown>;
+    doc.post = { outline: { px: 1, colorIndex: 5 } };
+    expect(issuesFor(doc, 'post.outline.colorIndex')[0]).toMatch(/0\.\.2/);
   });
 });
 

@@ -26,6 +26,15 @@ export const MAX_SIZE = 2048;
 /** Bir alan ağacının azami iç içe geçme derinliği. */
 export const MAX_FIELD_DEPTH = 24;
 
+/**
+ * Alt-yığın maskelerin azami derinliği (D10).
+ *
+ * Sınır bellek bütçesinden (D7 — seviye başına kendi biriktiricisi) ve
+ * editörde gezilebilirlikten geliyor. Sonsuz derinlik pratikte gerekmedi;
+ * sınırsız bırakmak hem belleği hem arayüzü öngörülemez yapardı.
+ */
+export const MAX_STACK_DEPTH = 4;
+
 const COVERAGE_BLENDS: readonly CoverageBlend[] = [
   'over',
   'max',
@@ -45,22 +54,20 @@ const HEIGHT_BLENDS: readonly HeightBlend[] = ['max', 'min', 'add', 'mul', 'repl
  * yazılmaz; agent bunları düğüm sanıp denediğinde "bilinmeyen tür" yerine
  * nereye ait olduklarını öğrenir.
  */
-const FUTURE_KINDS: Readonly<Record<string, string>> = {
-  normal: 'Tur 3 — `shade` yapılandırması, alan düğümü değil',
-  lambert: 'Tur 3 — `shade` yapılandırması, alan düğümü değil',
-  rim: 'Tur 3 — `shade` yapılandırması, alan düğümü değil',
-  ao: 'Tur 3 — `shade` yapılandırması, alan düğümü değil',
-  outline: 'Tur 3 — `post` yapılandırması, alan düğümü değil',
-  dither: 'Tur 3 — `post` yapılandırması, alan düğümü değil',
-  quantize: 'Tur 3 — `post` yapılandırması, alan düğümü değil',
+const NOT_A_NODE: Readonly<Record<string, string>> = {
+  normal: '`shade` yapılandırmasının parçası, alan düğümü değil',
+  lambert: '`shade` yapılandırmasının parçası, alan düğümü değil',
+  rim: '`shade` yapılandırmasının parçası, alan düğümü değil',
+  ao: '`shade.ao` yapılandırması, alan düğümü değil',
+  outline: '`post.outline` yapılandırması, alan düğümü değil',
+  dither: '`post.dither` yapılandırması, alan düğümü değil',
+  quantize: '`post.quantize` yapılandırması, alan düğümü değil',
 };
 
-/** Belgede görülebilecek, henüz uygulanmamış ALANLAR ve geldikleri tur. */
-const DEFERRED_LAYER_FIELDS: Readonly<Record<string, string>> = {
-  materialAlt: 'Tur 3',
-  materialMask: 'Tur 3',
-  materialThreshold: 'Tur 3',
-};
+const OUTLINE_MODES = ['outside', 'inside', 'centered'];
+const DITHER_KINDS = ['none', 'bayer2', 'bayer4', 'bayer8', 'blueNoise'];
+const SAT_CURVES = ['flat', 'arch', 'rise'];
+const QUANTIZE_MODES = ['ramp', 'nearest'];
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
@@ -253,9 +260,9 @@ function resolveNodeSchema(issues: IssueList, path: string, kind: unknown): Node
     issues.add(path, '`kind` alanı zorunlu');
     return null;
   }
-  const future = FUTURE_KINDS[kind];
-  if (future !== undefined) {
-    issues.add(path, `"${kind}": ${future}`);
+  const misplaced = NOT_A_NODE[kind];
+  if (misplaced !== undefined) {
+    issues.add(path, `"${kind}": ${misplaced}`);
     return null;
   }
   if (!Object.prototype.hasOwnProperty.call(NODE_SCHEMAS, kind)) {
@@ -316,6 +323,63 @@ function checkField(issues: IssueList, path: string, value: unknown, depth = 0):
   checkSemantics(issues, path, schema.kind, value);
 }
 
+/**
+ * Sentez isteklerini doğrular ve üretilecek rampa kimliklerini döndürür.
+ *
+ * Kimlikler 0'dan başlayarak SIRAYLA verilir; `material: 0` varsayılanı bu
+ * sayede sentezlenmiş bir palette de her zaman geçerlidir.
+ */
+function checkGenerate(issues: IssueList, raw: unknown): Set<number> {
+  const rampIds = new Set<number>();
+  if (!Array.isArray(raw) || raw.length === 0) {
+    issues.add('palette.generate', 'en az bir rampa isteği içeren bir dizi olmalı');
+    return rampIds;
+  }
+
+  const KNOWN = ['base', 'steps', 'hueShift', 'satCurve', 'lightRange', 'name'];
+
+  raw.forEach((request, i) => {
+    const at = `palette.generate[${i}]`;
+    if (!isRecord(request)) {
+      issues.add(at, 'nesne olmalı');
+      return;
+    }
+    rampIds.add(i);
+
+    if (typeof request.base !== 'string' || !HEX_COLOR.test(request.base)) {
+      issues.add(`${at}.base`, `"#rrggbb" biçiminde olmalı (gelen: ${String(request.base)})`);
+    }
+    if (issues.integer(`${at}.steps`, request.steps) && (request.steps < 1 || request.steps > 64)) {
+      issues.add(`${at}.steps`, '1..64 aralığında olmalı');
+    }
+    if (request.hueShift !== undefined) issues.finite(`${at}.hueShift`, request.hueShift);
+    if (request.satCurve !== undefined && !SAT_CURVES.includes(request.satCurve as string)) {
+      issues.add(`${at}.satCurve`, `şunlardan biri olmalı: ${SAT_CURVES.join(', ')}`);
+    }
+    if (request.name !== undefined && typeof request.name !== 'string') {
+      issues.add(`${at}.name`, 'metin olmalı');
+    }
+    if (request.lightRange !== undefined) {
+      const range = request.lightRange;
+      if (!Array.isArray(range) || range.length !== 2) {
+        issues.add(`${at}.lightRange`, 'iki elemanlı bir dizi olmalı');
+      } else {
+        range.forEach((value, j) => {
+          const slot = `${at}.lightRange[${j}]`;
+          if (issues.finite(slot, value)) checkConstraint(issues, slot, value, 'unit');
+        });
+      }
+    }
+    for (const name of Object.keys(request)) {
+      if (!KNOWN.includes(name)) {
+        issues.add(`${at}.${name}`, 'rampa isteği böyle bir alan tanımıyor');
+      }
+    }
+  });
+
+  return rampIds;
+}
+
 function checkPalette(issues: IssueList, raw: unknown): Set<number> {
   const rampIds = new Set<number>();
   if (!isRecord(raw)) {
@@ -323,11 +387,13 @@ function checkPalette(issues: IssueList, raw: unknown): Set<number> {
     return rampIds;
   }
 
+  // Palet ya VERİ ya SENTEZdir. Karıştırmak renk indekslerinin kimin
+  // tarafından yönetildiğini belirsiz yapardı.
   if (raw.generate !== undefined) {
-    issues.add(
-      'palette.generate',
-      "palet sentezi Tur 3'te gelir; şimdilik `colors` + `ramps` verilir",
-    );
+    if (raw.colors !== undefined || raw.ramps !== undefined) {
+      issues.add('palette', '`generate` ile `colors`/`ramps` birlikte verilemez');
+    }
+    return checkGenerate(issues, raw.generate);
   }
 
   const colors = raw.colors;
@@ -417,20 +483,29 @@ function checkDomainChain(issues: IssueList, at: string, raw: unknown): void {
   });
 }
 
-function checkLayer(issues: IssueList, index: number, raw: unknown, rampIds: Set<number>): string {
-  const at = `layers[${index}]`;
+function checkLayer(
+  issues: IssueList,
+  at: string,
+  raw: unknown,
+  rampIds: Set<number>,
+  seen: Set<string>,
+  depth: number,
+): void {
   if (!isRecord(raw)) {
     issues.add(at, 'nesne olmalı');
-    return '';
+    return;
   }
 
   const id = raw.id;
   if (typeof id !== 'string' || id.length === 0) {
     issues.add(`${at}.id`, 'boş olmayan bir metin olmalı (tohum türetimi buna dayanır)');
-  }
-
-  for (const [field, round] of Object.entries(DEFERRED_LAYER_FIELDS)) {
-    if (raw[field] !== undefined) issues.add(`${at}.${field}`, `${round}'te gelir`);
+  } else if (seen.has(id)) {
+    // Kimlik tohum türetiminde kullanılır (D5); tekrarlanan kimlik iki katmanı
+    // aynı gürültüye bağlar. Kapsam BELGE GENELİdir: alt-yığındaki bir katman
+    // da üsttekiyle aynı kimliği taşıyamaz.
+    issues.add(`${at}.id`, `katman kimliği tekrarlanıyor: "${id}"`);
+  } else {
+    seen.add(id);
   }
 
   checkField(issues, `${at}.source`, raw.source);
@@ -438,8 +513,13 @@ function checkLayer(issues: IssueList, index: number, raw: unknown, rampIds: Set
   if (raw.domain !== undefined && raw.domain !== null) checkDomainChain(issues, at, raw.domain);
 
   if (raw.mask !== undefined && raw.mask !== null) {
-    if (isRecord(raw.mask) && Array.isArray(raw.mask.layers)) {
-      issues.add(`${at}.mask`, "alt-yığın maskeler Tur 3'te gelir; şimdilik üreteç verilir");
+    if (isRecord(raw.mask) && raw.mask.layers !== undefined) {
+      checkLayerStack(issues, `${at}.mask`, raw.mask.layers, rampIds, seen, depth + 1);
+      for (const name of Object.keys(raw.mask)) {
+        if (name !== 'layers') {
+          issues.add(`${at}.mask.${name}`, 'alt-yığın yalnızca `layers` taşır');
+        }
+      }
     } else {
       checkField(issues, `${at}.mask`, raw.mask);
     }
@@ -476,7 +556,184 @@ function checkLayer(issues: IssueList, index: number, raw: unknown, rampIds: Set
     }
   }
 
-  return typeof id === 'string' ? id : '';
+  // İkinci malzeme ve onu seçen maske birbirsiz anlamsızdır: `materialAlt`
+  // tek başına hiç tetiklenmez, `materialMask` tek başına hiçbir şey seçmez.
+  const hasAlt = raw.materialAlt !== undefined;
+  const hasSelector = raw.materialMask !== undefined && raw.materialMask !== null;
+  if (hasAlt !== hasSelector) {
+    issues.add(`${at}.materialAlt`, '`materialAlt` ve `materialMask` birlikte verilir');
+  }
+  if (hasAlt && issues.integer(`${at}.materialAlt`, raw.materialAlt)) {
+    if (rampIds.size > 0 && !rampIds.has(raw.materialAlt)) {
+      issues.add(`${at}.materialAlt`, `böyle bir rampa yok: ${raw.materialAlt}`);
+    }
+  }
+  if (hasSelector) checkField(issues, `${at}.materialMask`, raw.materialMask);
+  if (
+    raw.materialThreshold !== undefined &&
+    issues.finite(`${at}.materialThreshold`, raw.materialThreshold)
+  ) {
+    checkConstraint(issues, `${at}.materialThreshold`, raw.materialThreshold, 'unit');
+  }
+}
+
+/** Bir katman yığınını doğrular; alt-yığınlar için özyinelemelidir (D10). */
+function checkLayerStack(
+  issues: IssueList,
+  path: string,
+  raw: unknown,
+  rampIds: Set<number>,
+  seen: Set<string>,
+  depth: number,
+): void {
+  if (depth > MAX_STACK_DEPTH) {
+    issues.add(path, `alt-yığın ${MAX_STACK_DEPTH} seviyeden derin olamaz`);
+    return;
+  }
+  if (!Array.isArray(raw) || raw.length === 0) {
+    issues.add(path, 'en az bir katman içeren bir dizi olmalı');
+    return;
+  }
+  raw.forEach((layer, i) => {
+    checkLayer(issues, `${path}[${i}]`, layer, rampIds, seen, depth);
+  });
+}
+
+/** Gölgeleme yapılandırması — §4.5. */
+function checkShade(issues: IssueList, raw: unknown): void {
+  if (!isRecord(raw)) {
+    issues.add('shade', 'nesne olmalı');
+    return;
+  }
+
+  if (raw.light !== undefined) {
+    const light = raw.light;
+    if (!Array.isArray(light) || light.length !== 3) {
+      issues.add('shade.light', 'üç elemanlı bir dizi olmalı');
+    } else {
+      light.forEach((value, i) => issues.finite(`shade.light[${i}]`, value));
+      // Sıfır vektör normalize edilemez; yön bilgisi taşımayan bir ışık
+      // sessizce sabit bir gölgeye dönüşürdü.
+      if (light.every((value) => value === 0)) {
+        issues.add('shade.light', 'sıfır vektör olamaz — yön taşımalı');
+      }
+    }
+  }
+
+  for (const name of ['strength', 'ambient', 'rim', 'relief'] as const) {
+    const value = raw[name];
+    if (value === undefined) continue;
+    if (issues.finite(`shade.${name}`, value)) {
+      checkConstraint(issues, `shade.${name}`, value, 'nonNegative');
+    }
+  }
+
+  if (raw.ao !== undefined && raw.ao !== null) {
+    if (!isRecord(raw.ao)) {
+      issues.add('shade.ao', 'nesne olmalı');
+    } else {
+      if (issues.finite('shade.ao.radius', raw.ao.radius)) {
+        checkConstraint(issues, 'shade.ao.radius', raw.ao.radius, 'nonNegative');
+      }
+      if (issues.finite('shade.ao.strength', raw.ao.strength)) {
+        checkConstraint(issues, 'shade.ao.strength', raw.ao.strength, 'nonNegative');
+      }
+      for (const name of Object.keys(raw.ao)) {
+        if (name !== 'radius' && name !== 'strength') {
+          issues.add(`shade.ao.${name}`, '`ao` böyle bir alan tanımıyor');
+        }
+      }
+    }
+  }
+
+  for (const name of Object.keys(raw)) {
+    if (!['light', 'strength', 'ambient', 'rim', 'relief', 'ao'].includes(name)) {
+      issues.add(`shade.${name}`, '`shade` böyle bir alan tanımıyor');
+    }
+  }
+}
+
+/** Sentezlenmiş palette renk sayısı isteklerden türer. */
+function colorCountOf(palette: unknown): number {
+  if (!isRecord(palette)) return 0;
+  if (Array.isArray(palette.colors)) return palette.colors.length;
+  if (Array.isArray(palette.generate)) {
+    return palette.generate.reduce<number>(
+      (total, request) =>
+        total + (isRecord(request) && typeof request.steps === 'number' ? request.steps : 0),
+      0,
+    );
+  }
+  return 0;
+}
+
+/** Piksel-uzay son işlem — §4.6. */
+function checkPost(issues: IssueList, raw: unknown, colorCount: number): void {
+  if (!isRecord(raw)) {
+    issues.add('post', 'nesne olmalı');
+    return;
+  }
+
+  const outline = raw.outline;
+  if (outline !== undefined && outline !== null) {
+    if (!isRecord(outline)) {
+      issues.add('post.outline', 'nesne olmalı');
+    } else {
+      if (issues.integer('post.outline.px', outline.px)) {
+        checkConstraint(issues, 'post.outline.px', outline.px, 'nonNegative');
+      }
+      if (outline.mode !== undefined && !OUTLINE_MODES.includes(outline.mode as string)) {
+        issues.add('post.outline.mode', `şunlardan biri olmalı: ${OUTLINE_MODES.join(', ')}`);
+      }
+      if (
+        outline.colorIndex !== undefined &&
+        issues.integer('post.outline.colorIndex', outline.colorIndex) &&
+        colorCount > 0 &&
+        (outline.colorIndex < 0 || outline.colorIndex >= colorCount)
+      ) {
+        issues.add('post.outline.colorIndex', `palet sınırları dışında (0..${colorCount - 1})`);
+      }
+      for (const name of Object.keys(outline)) {
+        if (!['px', 'mode', 'colorIndex'].includes(name)) {
+          issues.add(`post.outline.${name}`, '`outline` böyle bir alan tanımıyor');
+        }
+      }
+    }
+  }
+
+  const dither = raw.dither;
+  if (dither !== undefined && dither !== null) {
+    if (!isRecord(dither)) {
+      issues.add('post.dither', 'nesne olmalı');
+    } else {
+      if (!DITHER_KINDS.includes(dither.kind as string)) {
+        issues.add('post.dither.kind', `şunlardan biri olmalı: ${DITHER_KINDS.join(', ')}`);
+      }
+      if (dither.amount !== undefined && issues.finite('post.dither.amount', dither.amount)) {
+        checkConstraint(issues, 'post.dither.amount', dither.amount, 'unit');
+      }
+      for (const name of Object.keys(dither)) {
+        if (name !== 'kind' && name !== 'amount') {
+          issues.add(`post.dither.${name}`, '`dither` böyle bir alan tanımıyor');
+        }
+      }
+    }
+  }
+
+  const quantize = raw.quantize;
+  if (quantize !== undefined) {
+    if (!isRecord(quantize)) {
+      issues.add('post.quantize', 'nesne olmalı');
+    } else if (!QUANTIZE_MODES.includes(quantize.mode as string)) {
+      issues.add('post.quantize.mode', `şunlardan biri olmalı: ${QUANTIZE_MODES.join(', ')}`);
+    }
+  }
+
+  for (const name of Object.keys(raw)) {
+    if (!['outline', 'dither', 'quantize'].includes(name)) {
+      issues.add(`post.${name}`, '`post` böyle bir alan tanımıyor');
+    }
+  }
 }
 
 /** Belgedeki TÜM sorunları toplar. Boş dizi = belge geçerli. */
@@ -514,45 +771,13 @@ export function collectSpriteDocIssues(input: unknown): string[] {
     issues.add('antialias', 'true ya da false olmalı');
   }
 
-  if (input.shade !== undefined) {
-    issues.add('shade', "gölgeleme (normal/lambert/rim/ao) Tur 3'te gelir");
-  }
-
-  if (input.post !== undefined) {
-    if (!isRecord(input.post)) {
-      issues.add('post', 'nesne olmalı');
-    } else {
-      if (input.post.outline !== undefined) issues.add('post.outline', "Tur 3'te gelir");
-      if (input.post.dither !== undefined) issues.add('post.dither', "Tur 3'te gelir");
-      const quantize = input.post.quantize;
-      if (quantize !== undefined) {
-        if (!isRecord(quantize)) {
-          issues.add('post.quantize', 'nesne olmalı');
-        } else if (quantize.mode === 'nearest') {
-          issues.add('post.quantize.mode', "OKLab en-yakın nicemleme Tur 3'te gelir");
-        } else if (quantize.mode !== undefined && quantize.mode !== 'ramp') {
-          issues.add('post.quantize.mode', '"ramp" olmalı');
-        }
-      }
-    }
-  }
+  if (input.shade !== undefined) checkShade(issues, input.shade);
 
   const rampIds = checkPalette(issues, input.palette);
 
-  const layers = input.layers;
-  if (!Array.isArray(layers) || layers.length === 0) {
-    issues.add('layers', 'en az bir katman içeren bir dizi olmalı');
-  } else {
-    const seen = new Set<string>();
-    layers.forEach((layer, i) => {
-      const id = checkLayer(issues, i, layer, rampIds);
-      if (id.length === 0) return;
-      // Kimlik tohum türetiminde kullanılır (D5); tekrarlanan kimlik iki
-      // katmanı aynı gürültüye bağlar ve fark gözden geçirilemez olur.
-      if (seen.has(id)) issues.add(`layers[${i}].id`, `katman kimliği tekrarlanıyor: "${id}"`);
-      seen.add(id);
-    });
-  }
+  if (input.post !== undefined) checkPost(issues, input.post, colorCountOf(input.palette));
+
+  checkLayerStack(issues, 'layers', input.layers, rampIds, new Set<string>(), 0);
 
   return issues.items;
 }

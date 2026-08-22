@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "size": [64, 64],
+  "seed": 4801,
+  "antialias": false,
+  "palette": {
+    "generate": [
+      { "base": "#6b5570", "steps": 5, "hueShift": -20, "satCurve": "arch", "name": "govde" },
+      { "base": "#7d8f4a", "steps": 4, "hueShift": -14, "satCurve": "arch", "name": "kabuk" }
+    ]
+  },
+  "layers": [
+    {
+      "id": "govde",
+      "source": {
+        "kind": "min",
+        "a": { "kind": "sdf.roundBox", "center": [0, 0.15], "half": [0.45, 0.5], "r": 0.18 },
+        "b": { "kind": "sdf.circle", "center": [0, -0.4], "r": 0.34 }
+      },
+      "height": {
+        "kind": "smoothstep",
+        "e0": 0.02,
+        "e1": -0.5,
+        "input": {
+          "kind": "min",
+          "a": { "kind": "sdf.roundBox", "center": [0, 0.15], "half": [0.45, 0.5], "r": 0.18 },
+          "b": { "kind": "sdf.circle", "center": [0, -0.4], "r": 0.34 }
+        }
+      },
+      "material": 0,
+      "materialAlt": 1,
+      "materialMask": {
+        "kind": "noise.fbm",
+        "base": { "kind": "noise.worley", "freq": 5, "mode": "F2-F1" },
+        "octaves": 2
+      },
+      "materialThreshold": 0.35
+    }
+  ],
+  "shade": {
+    "light": [-0.55, -0.7, 0.45],
+    "strength": 0.6,
+    "ambient": 0.35,
+    "rim": 0.18,
+    "relief": 0.35,
+    "ao": { "radius": 0.06, "strength": 0.5 }
+  },
+  "post": {
+    "outline": { "px": 1, "mode": "outside", "colorIndex": 0 },
+    "dither": { "kind": "bayer4", "amount": 0.12 },
+    "quantize": { "mode": "ramp" }
+  }
+}

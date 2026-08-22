@@ -312,12 +312,13 @@ aynısı.)
   "tileable": false, // true ise gürültü periyodik, filtreler sarmalı (bkz. §5)
   "antialias": false, // birim uzayda süperörnekleme; düşük çözünürlükte kapalı tutulur
 
+  // Palet ya DOĞRUDAN VERİ ya da SENTEZ İSTEĞİdir; ikisi bir arada olamaz.
+  // Karıştırmak renk indekslerini kimin yönettiğini belirsiz yapardı.
   "palette": {
-    // Ya doğrudan veri…
     "colors": ["#1a1420", "#3a2b3f", "#6b5570", "#a58aa8"],
     "ramps": [{ "id": 0, "name": "taş", "indices": [0, 1, 2, 3] }]
-    // …ya da sentez isteği (bkz. §7)
-    // "generate": { "base": "#6b5570", "steps": 4, "hueShift": -18, "satCurve": "arch" }
+    // …ya da (bkz. §7). DİZİdir: kimlikler 0'dan başlayarak sırayla verilir.
+    // "generate": [{ "base": "#6b5570", "steps": 4, "hueShift": -18, "satCurve": "arch" }]
   },
 
   "layers": [
@@ -340,17 +341,20 @@ aynısı.)
     }
   ],
 
+  // `shade` YOKSA gölge yüksekliğin kendisidir; bu bir yer tutucu değil,
+  // basit belgeleri basit tutan bilinçli bir varsayılan.
   "shade": {
-    "light": [-0.55, -0.7, 0.45], // normalize edilir
-    "strength": 0.6,
-    "ambient": 0.35,
-    "rim": 0.15,
-    "ao": { "radius": 0.04, "strength": 0.4 }
+    "light": [-0.55, -0.7, 0.45], // normalize edilir; +y aşağı, +z izleyiciye
+    "strength": 0.6, // yayınık ışığın katkısı
+    "ambient": 0.35, // taban aydınlık
+    "rim": 0.15, // kenar ışığı şiddeti (üssü sabittir, bkz. §4.5)
+    "relief": 1, // yükseklikten türetilen kabartmanın şiddeti
+    "ao": { "radius": 0.04, "strength": 0.4 } // radius BİRİM uzayda
   },
 
   "post": {
-    "outline": { "px": 1, "mode": "outside", "colorIndex": 0 },
-    "dither": { "kind": "bayer4", "amount": 0.15 },
+    "outline": { "px": 1, "mode": "outside", "colorIndex": 0 }, // px PİKSEL
+    "dither": { "kind": "bayer4", "amount": 0.15 }, // none|bayer2/4/8|blueNoise
     "quantize": { "mode": "ramp" } // "ramp" | "nearest"
   }
 }
@@ -632,30 +636,62 @@ olurdu hem de aynı şeyi söylemenin ikinci bir yolunu açardı.
 
 ### 4.5 Biçimlendirme (height → gölge)
 
-| `kind`    | Not                                                           |
-| --------- | ------------------------------------------------------------- |
-| `normal`  | Sobel türeviyle yükseklikten normal; `strength` ile z ölçeği. |
-| `lambert` | `max(0, N·L)`; `ambient` taban aydınlık.                      |
-| `rim`     | `1 − max(0, N·V)` üssü; silüeti ayırır.                       |
-| `ao`      | Yükseklik farkının yerel ortalaması; ucuz ve yeterli.         |
+| `kind`    | Parametreler               | Not                                        |
+| --------- | -------------------------- | ------------------------------------------ |
+| `normal`  | `relief`                   | Sobel türeviyle yükseklikten normal.       |
+| `lambert` | `light, strength, ambient` | `max(0, N·L)`; `ambient` taban aydınlık.   |
+| `rim`     | `rim`                      | `(1 − N.z)` üssü; silüeti zeminden ayırır. |
+| `ao`      | `ao.radius, ao.strength`   | Yükseklik farkının yerel ortalaması.       |
+
+Dördü ayrı düğüm değil, tek bir `shade` yapılandırmasının alanlarıdır: gölge
+TEK ışıktan gelir ve tüm malzemeler onu paylaşır. D3'ün "çok renkli obje, tek
+ve tutarlı ışık" iddiasının teknik karşılığı budur.
+
+**Türev BİRİM uzayda alınır.** Piksel farkı çözünürlükle küçülür; türev ondan
+alınsaydı aynı belge 512²'de 64²'ye göre sekiz kat yassı görünürdü. Bölen
+`8 · pixelUnit` olduğunda eğim çözünürlükten bağımsız kalır (D2). Test bunu
+ham piksel farkının dört kat değiştiğini ölçerek karşılaştırır.
+
+**Kenar ışığının ÜSSÜ parametre değildir.** `rim` zaten bir şiddet taşıyor;
+üssü de açmak, ikisi birlikte ayarlanmadıkça anlamsız sonuç veren iki
+kaydırıcı demekti. Sabit değer (3) silüeti ayıracak kadar dar bir bant verir.
+Ayrı bir kamera vektörü de yoktur — çıktı ortografiktir, bakış `(0, 0, 1)`.
+
+**AO ışın izlemez.** 2.5B bir yükseklik alanında yerel ortalama ile değerin
+farkı kadar bilgi taşımaz ve maliyeti kat kat yüksektir. Fark tipik olarak
+0.05–0.25 aralığında kaldığı için sabit bir kazançla ölçeklenir; `strength`
+böylece 0..1 aralığında anlamlı davranır.
 
 ### 4.6 Piksel-uzay son işlem
 
-| `kind`     | Not                                                                                   |
-| ---------- | ------------------------------------------------------------------------------------- |
-| `outline`  | `dilate(coverage, px) − coverage`. Modlar: `outside`, `inside`, `centered`.           |
-| `dither`   | `none` · `bayer2/4/8` · `blueNoise`.                                                  |
-| `quantize` | `ramp` (material+shade → rampa indeksi) veya `nearest` (RGB → **OKLab'da** en yakın). |
+| `kind`     | Parametreler           | Not                                  |
+| ---------- | ---------------------- | ------------------------------------ |
+| `outline`  | `px, mode, colorIndex` | `dilate(coverage, px) − coverage`.   |
+| `dither`   | `kind, amount`         | `none` · `bayer2/4/8` · `blueNoise`. |
+| `quantize` | `mode(ramp · nearest)` | Boru hattının SON renk işlemi.       |
 
-**`nearest` maliyeti ve zorunlu çözümü:** piksel başına palet taraması 2048² ×
-32 renk = 134M mesafe hesabı demektir. RGB üzerinde **3B arama tablosu** (32³
-girdi, bir kez hesaplanır) piksel başına tek okumaya indirir. `ramp` modda
-arama zaten yoktur — doğrudan indeks.
+**Dış çizgi.** Modlar `outside` (silüeti büyütür), `inside` (büyütmez) ve
+`centered` (tek sayıda kalınlıkta DIŞA fazladan piksel alır — silüetin görsel
+ağırlığını korumak, içeriden yemekten daha az bozucudur). Yapısal eleman
+KAREdir, yani köşeler 8-komşulukla dolar; piksel sanatının alışılmış dış
+çizgisi budur. Çizgi pikselleri rampayı ATLAR ve doğrudan `colorIndex`i alır:
+çizgi bir malzeme değil, silüetin kendisi hakkında bir ifadedir.
 
-**`nearest` maliyeti ve çözümü:** piksel başına palet taraması 2048² × 32 renk
-= 134M mesafe hesabı demektir. Zorunlu optimizasyon: RGB üzerinde **3B arama
-tablosu** (32³ girdi) bir kez hesaplanır, piksel başına tek okumaya iner.
-`ramp` modda arama zaten yoktur — doğrudan indeks.
+**Nicemleme iki kip, TEK sıcak döngü.** Her ikisi de malzeme başına 256
+girişlik bir GÖLGE TABLOSUNA indirgenir; piksel başına kalan iş bir dizi
+okumasıdır. Kipler yalnızca tablonun nasıl kurulduğunda ayrışır:
+
+- `ramp` — gölge doğrudan rampa adımına düşer. Bantlanma BİLİNÇLİdir.
+- `nearest` — gölge rampa renkleri ARASINDA OKLab'da ara değer alır, sonra
+  PALETİN TAMAMI içinde en yakın renge oturur. Bir malzeme, kendi rampasında
+  olmayan bir ara tonu komşu rampadan ödünç alabilir; yüksek çözünürlüklü
+  doku bu yüzden pürüzsüz çıkar.
+
+**3B arama tablosu GEREKMEDİ.** Belge 32³ girişlik bir LUT öngörüyordu ve
+gerekçesi piksel başına palet taramasının maliyetiydi (2048² × 32 renk =
+134M mesafe hesabı). Ama renk kaynağı keyfi bir RGB değil: malzeme başına
+TEK BOYUTLU bir eksen, yani gölge. Tek boyutlu tablo hem 4096 kat küçük hem
+daha hızlıdır ve aynı maliyeti sıfırlar.
 
 **`nearest` neden OKLab'da:** RGB Öklid mesafesi algısal değildir; koyu
 mavilerde ve doygun kırmızılarda gözle alakasız eşleşmeler üretir.
@@ -711,9 +747,20 @@ M(2n) = [[4·Mn + 0, 4·Mn + 2],
 
 Normalize: `M / (n²)`. 2→4→8 böyle türetilir; elle tablo yazılmaz.
 
-Mavi gürültü için **void-and-cluster** ile 64×64 bir karo başlangıçta üretilip
-saklanır. Hash tabanlı "rastgele" bir yaklaşım mavi gürültü DEĞİLDİR — spektrumu
-düz olur ve dither kumlu görünür.
+Mavi gürültü için **void-and-cluster** (Ulichney) ile 64×64 bir karo süreç
+başına bir kez üretilip saklanır. Hash tabanlı "rastgele" bir yaklaşım mavi
+gürültü DEĞİLDİR — spektrumu düz olur ve dither kumlu görünür.
+
+Algoritmanın çekirdeği: her adımda ya en SIKI KÜME dağıtılır ya da en BÜYÜK
+BOŞLUK doldurulur; ikinci yarıda roller değişip SIFIRLARIN kümesine bakılır.
+Tek enerji alanıyla devam etmek deseni ikinci yarıda beyaz gürültüye çevirirdi,
+bu yüzden birler ve sıfırlar için AYRI enerji alanı tutulur ve artımlı
+güncellenir — her adımda baştan hesaplamak karo başına milyarlarca işlem
+demekti.
+
+**İddia ölçülür.** Test, karonun yerel ortalama varyansını aynı boydaki beyaz
+gürültüyle karşılaştırır; mavi gürültüde düşük frekans enerjisi üçte birin
+altında kalır. Hash tabanlı bir dizi bu testi geçemez.
 
 ### 5.6 OKLab dönüşümü — sRGB transfer fonksiyonuyla
 
@@ -785,14 +832,17 @@ core/src/visual/
     warp.ts           §4.2  tamponlu bozma
     scatter.ts        §4.2b damgalama
     evaluate.ts       iki aşamalı derleyici + tohum türetimi (D4, D5)
-  shade/                                                       ← Tur 3
-    normal.ts  lambert.ts  ao.ts  outline.ts
+  shade/
+    normal.ts         yükseklikten normal (birim uzayda türev)
+    lighting.ts       lambert + ambient + rim
+    ao.ts             yerel ortalama farkı
+    outline.ts        dilate/erode tabanlı halka maskesi
   color/
     oklab.ts          §5.6
     palette.ts        Palette tipi, kilit kümesi
-    generate.ts       §7 palet sentezi                         ← Tur 3
-    dither.ts         §5.5                                     ← Tur 3
-    quantize.ts
+    generate.ts       §7 palet sentezi (OKLab + gamut kısma)
+    dither.ts         §5.5 Bayer + void-and-cluster
+    quantize.ts       gölge tabloları + `ramp`/`nearest`
   qa.ts               §9 metrikleri — HEADLESS, dolayısıyla test edilebilir
   render.ts           §3 boru hattı — TEK giriş noktası
   index.ts            barrel (Node-only HİÇBİR ŞEY yok — D8)
@@ -860,6 +910,24 @@ generateRamp({
   lightRange: [0.18, 0.88],
 }): string[]
 ```
+
+Ton kayması `1 − 2t` ile uygulanır: en koyu adım `+hueShift`, en açık adım
+`−hueShift` alır. OKLab ton açısında AZALAN yön soğuk yöndür (kırmızıdan
+maviye), dolayısıyla negatif kayma gölgeleri soğutur ve aydınlıkları ısıtır.
+
+**Doygunluk gamuta KISILIR, kelepçelenmez.** Gamut dışı iki farklı adım
+kelepçe sonrası aynı renge düşer ve rampada görünmez bir tekrar oluşur — beş
+adımlık bir rampa dört renk gibi davranır. İkili arama on iki adımda 8-bit
+çözünürlüğün altına iner ve her adımın ayrı bir renk kalmasını garanti eder.
+
+**`generate` bir DİZİdir.** Belgenin ilk yazımı tek bir nesne gösteriyordu;
+gerçek bir palet birden çok rampa ister. Rampalar renk dizisine sırayla
+eklenir ve kimlikleri 0'dan başlar, böylece `material: 0` varsayılanı
+sentezlenmiş bir palette de her zaman geçerli olur.
+
+**Palet ya VERİ ya SENTEZdir.** İkisi birlikte verilemez: karıştırmak renk
+indekslerini kimin yönettiğini belirsiz yapardı ve belgeyi okuyan da yazan da
+hangi indeksin nereye düştüğünü saymak zorunda kalırdı.
 
 ### 7.2 Palet kilidi
 
@@ -930,11 +998,28 @@ ve metriklerin kendisi test edilebilir.
 | -------------------------- | ---------------------------------------- | --------------------------- |
 | **Palet uyumu**            | Palet dışı piksel sayısı                 | **0 olmalı** (alfa 0 hariç) |
 | **Dikiş farkı**            | Sarma sınırı farkının iç komşuluğa oranı | `tileable` iken ≤ 3         |
-| **Dış çizgi sürekliliği**  | Silüetin kopuk parça sayısı              | 1 (tek bileşen)             |
-| **Kontrast oranı**         | En koyu/en açık algısal fark (OKLab L)   | tür bazlı taban             |
-| **Bantlaşma**              | Rampa adımlarının histogram düzgünlüğü   | uç birikme yok              |
+| **Dış çizgi sürekliliği**  | Kenara değip halkası kırpılan piksel     | dışa büyüyen kipte 0        |
+| **Kontrast oranı**         | Kullanılan / paletin sunduğu OKLab L     | ≥ 0.3                       |
+| **Bantlaşma**              | Gölgenin rampa UÇLARINDA birikme payı    | ≤ 0.9                       |
 | **Kullanılan renk sayısı** | Palet gereğinden büyük mü                | rapor                       |
 | **Alfa saflığı**           | Kısmi alfa piksel sayısı                 | `antialias:false` iken 0    |
+
+**Dış çizgi sürekliliği neden "tek bileşen" DEĞİL?** Belgenin ilk yazımı
+silüetin tek parça olmasını istiyordu. `scatter` bunu geçersiz kıldı: çok
+parçalı bir sprite tamamen meşrudur. Halkanın kendisi ise `dilate` gereği her
+zaman kapalıdır — tek gerçek kopma biçimi silüetin görüntü KENARINA değmesi
+ve halkanın orada çizilecek yer bulamamasıdır. Ölçülen budur; parça sayısı
+ayrıntı satırında bilgi olarak raporlanır.
+
+**Kontrast neden ORAN?** Mutlak bir eşik yanlış olurdu: paletin kendisi düz
+ise çıktının kontrastlı olması beklenemez. Soru "verilen aralığın ne kadarını
+kullandın" — beş adımlık bir rampanın ikisini kullanan bir sprite bu oranın
+altına düşer. Palet düzse (L aralığı < 0.05) metrik hiç eklenmez.
+
+**Bantlaşma neden UÇ payı?** "Bir renk çok yer kaplıyor mu" yanlış sorudur;
+geniş ve düz bir yüzey meşrudur. §9'un sorduğu, gölgenin rampanın uçlarında
+birikip ORTASINI boş bırakması. Yalnızca üç ve daha fazla adımlı rampalar
+sayılır; iki adımlı bir rampanın ortası yoktur.
 
 **Dikiş farkı neden ORAN?** Ham fark eşiği yanlış olurdu: dikişsiz bir dokuda
 karşı kenarlar EŞİT değildir, döşenmiş düzlemde bir piksel komşudurlar. Doğru
@@ -1133,7 +1218,7 @@ periyodun eksen başına hesaplandığı (§5.2) ve dikiş metriğinin ham fark 
 ORAN olması gerektiği (§9). Ayrıca §4.1, §4.2 ve §4.4 tabloları kaçırılmamış
 `|` yüzünden bozuktu; `·` ayracına geçildi.
 
-### Tur 3 — Biçim ve stil
+### Tur 3 — Biçim ve stil — **TAMAMLANDI**
 
 - `normal`, `lambert`, `rim`, `ao`
 - `outline` (üç mod), `dither` (Bayer + mavi gürültü)
@@ -1143,7 +1228,20 @@ ORAN olması gerektiği (§9). Ayrıca §4.1, §4.2 ve §4.4 tabloları kaçır�
 - `materialAlt` + `materialMask`
 - Kalan `visual-qa` metrikleri
 
-_Kanıt:_ tek belgeden hem 64² piksel sanatı hem 512² doku; ikisi de palet uyumlu.
+_Kanıt:_ `tests/visual/style.test.ts` aynı katman gövdesini ve paletini iki
+çıktı yapılandırmasıyla render ediyor — 64² + Bayer + `ramp` ile piksel sanatı,
+512² + `nearest` ile pürüzsüz doku — ve ikisi de palet uyumlu çıkıyor.
+`fixtures/shaded.json` tüm Tur 3 yığınını (sentezlenmiş palet, ışık, AO,
+ikinci malzeme, dış çizgi, dither) tek belgede gösteriyor.
+
+Turda ortaya çıkan ve bu belgeye işlenen düzeltmeler: 3B arama tablosunun
+gerekmediği (§4.6 — renk kaynağı tek boyutlu), `generate`in dizi olması
+gerektiği (§7.1), paletin veri XOR sentez olması (§7.1), doygunluğun
+kelepçelenmek yerine kısılması (§7.1), dış çizgi sürekliliğinin "tek bileşen"
+değil "kenarda kırpılma" olduğu (§9), kontrastın mutlak değil oran olması
+(§9), bantlaşmanın "baskın renk" değil "uç birikme" olması (§9), normal
+türevinin birim uzayda alınması (§4.5) ve kenar ışığı üssünün parametre
+olmaması (§4.5). Ayrıca §4.6'da aynı paragraf iki kez yazılmıştı; temizlendi.
 
 ### Tur 4 — Editör
 

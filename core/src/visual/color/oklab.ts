@@ -47,19 +47,36 @@ export function rgbToOklab(r: number, g: number, b: number): Oklab {
   };
 }
 
-/** OKLab'ı 0..255 sRGB üçlüsüne çevirir; gamut dışı sonuçlar kelepçelenir. */
-export function oklabToRgb(color: Oklab): [number, number, number] {
+/** OKLab'ı DOĞRUSAL sRGB'ye çevirir; kelepçelenmemiş, gamut dışı olabilir. */
+export function oklabToLinearRgb(color: Oklab): [number, number, number] {
   const l = (color.L + 0.3963377774 * color.a + 0.2158037573 * color.b) ** 3;
   const m = (color.L - 0.1055613458 * color.a - 0.0638541728 * color.b) ** 3;
   const s = (color.L - 0.0894841775 * color.a - 1.291485548 * color.b) ** 3;
 
-  const lr = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
-  const lg = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
-  const lb = -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+}
 
+/**
+ * Renk sRGB gamutunun içinde mi?
+ *
+ * Palet sentezi buna bakarak doygunluğu kısar (§7.1). Kelepçelemek yerine
+ * kısmak şart: kelepçelenen iki farklı adım aynı renge düşer ve rampada
+ * görünmez bir tekrar oluşur.
+ */
+export function isOklabInGamut(color: Oklab): boolean {
+  const epsilon = 1e-6;
+  return oklabToLinearRgb(color).every((value) => value >= -epsilon && value <= 1 + epsilon);
+}
+
+/** OKLab'ı 0..255 sRGB üçlüsüne çevirir; gamut dışı sonuçlar kelepçelenir. */
+export function oklabToRgb(color: Oklab): [number, number, number] {
   const encode = (value: number): number =>
     Math.max(0, Math.min(255, Math.round(linearToSrgb(value) * 255)));
-
+  const [lr, lg, lb] = oklabToLinearRgb(color);
   return [encode(lr), encode(lg), encode(lb)];
 }
 

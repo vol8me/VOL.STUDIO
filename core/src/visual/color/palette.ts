@@ -9,7 +9,18 @@
  * renklerin paketlenmiş kümesi (palet kilidi doğrulaması bunu okur).
  */
 
-import type { PaletteSpec } from '../types';
+import type { RampSpec } from '../types';
+
+/**
+ * Çözümlemeye HAZIR palet verisi.
+ *
+ * `PaletteSpec`ten ayrıdır çünkü belgedeki palet sentez isteği de olabilir;
+ * bu tip sentez çözüldükten SONRAKİ hâli tanımlar ve alanları zorunludur.
+ */
+export interface ResolvablePalette {
+  colors: readonly string[];
+  ramps: readonly RampSpec[];
+}
 
 export interface ResolvedPalette {
   /** `[r,g,b, r,g,b, …]` — uzunluk `colorCount * 3`. */
@@ -32,7 +43,7 @@ export function parseHexColor(hex: string): [number, number, number] {
   return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
 }
 
-export function resolvePalette(spec: PaletteSpec): ResolvedPalette {
+export function resolvePalette(spec: ResolvablePalette): ResolvedPalette {
   const colorCount = spec.colors.length;
   const rgb = new Uint8Array(colorCount * 3);
   const packed = new Set<number>();

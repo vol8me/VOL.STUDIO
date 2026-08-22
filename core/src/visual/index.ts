@@ -23,6 +23,7 @@ export {
   MIN_SIZE,
   MAX_SIZE,
   MAX_FIELD_DEPTH,
+  MAX_STACK_DEPTH,
 } from './validate';
 
 export { createUnitSpace, type UnitSpace } from './field/space';
@@ -56,11 +57,33 @@ export {
   parseHexColor,
   packRgb,
   isPaletteColor,
+  type ResolvablePalette,
   type ResolvedPalette,
 } from './color/palette';
-export { quantizeToRgba } from './color/quantize';
+export {
+  quantizeToRgba,
+  buildShadeTables,
+  nearestPaletteIndex,
+  type QuantizeMode,
+  type ShadeTables,
+} from './color/quantize';
+export { generateRamp, generatePalette, type RampRequest, type SatCurve } from './color/generate';
+export {
+  bayerMatrix,
+  blueNoiseTile,
+  resolveDitherMatrix,
+  applyDither,
+  BLUE_NOISE_SIZE,
+  type DitherKind,
+  type DitherMatrix,
+} from './color/dither';
 
-export { renderSprite } from './render';
+export { computeNormals, type NormalChannel } from './shade/normal';
+export { computeShade, type LightingOptions } from './shade/lighting';
+export { computeAo } from './shade/ao';
+export { computeOutline, type OutlineMode } from './shade/outline';
+
+export { renderSprite, resolvePaletteSpec } from './render';
 export type { RenderOptions, RenderResult, RenderChannels } from './render';
 
 export { measureSprite, formatQaReport, type QaMetric, type QaReport } from './qa';

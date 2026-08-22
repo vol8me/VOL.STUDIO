@@ -14,7 +14,7 @@
     {
       "id": "zemin",
       "source": { "kind": "sdf.roundBox", "center": [0, 0], "half": [0.9, 0.9], "r": 0.15 },
-      "height": { "kind": "const", "value": 0.2 },
+      "height": { "kind": "gradient.diamond", "center": [0, 0], "size": 1.6 },
       "material": 0
     },
     {

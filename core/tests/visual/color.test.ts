@@ -12,7 +12,7 @@ import {
   parseHexColor,
   resolvePalette,
 } from '../../src/visual/color/palette';
-import { quantizeToRgba } from '../../src/visual/color/quantize';
+import { buildShadeTables, quantizeToRgba } from '../../src/visual/color/quantize';
 
 describe('OKLab (§5.6)', () => {
   it('sRGB transfer fonksiyonu PARÇALIdır — gamma 2.2 üssü değil', () => {
@@ -112,6 +112,8 @@ describe('nicemleme — boru hattının SON renk işlemi', () => {
     ramps: [{ id: 0, indices: [0, 1, 2, 3] }],
   });
 
+  const tables = buildShadeTables(palette, 'ramp');
+
   function quantize(coverage: number[], shade: number[], material: number[]): Uint8ClampedArray {
     const out = new Uint8ClampedArray(coverage.length * 4);
     quantizeToRgba(
@@ -120,6 +122,7 @@ describe('nicemleme — boru hattının SON renk işlemi', () => {
       Uint8Array.from(material),
       palette,
       out,
+      { tables },
     );
     return out;
   }

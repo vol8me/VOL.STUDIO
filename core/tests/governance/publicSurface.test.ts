@@ -29,7 +29,7 @@ const EXPECTED_EXPORT_COUNT = 172;
  * Bu, alt sistemin kendi yüzeyini kök sayısının gölgesinde büyütmesi demek
  * olurdu; bu yüzden ayrıca ve kendi başına sayılır.
  */
-const EXPECTED_VISUAL_EXPORT_COUNT = 37;
+const EXPECTED_VISUAL_EXPORT_COUNT = 52;
 
 describe('CORE public API yüzeyi', () => {
   it('export sayısı bilinçli bir kararla değişir', () => {

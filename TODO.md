@@ -4,6 +4,79 @@
 kaydıdır**: ne yapıldı, hangi kapı koşuldu, geriye ne kaldı. Turun ayrıntısı
 commit diff'inde ve git geçmişindedir; burada tekrarlanmaz.
 
+## 2026-08-22 — Görsel sentez Tur 3: biçim ve stil
+
+`visual-synthesis.md` §12'nin üçüncü turu. Gölgeleme (normal/lambert/rim/ao),
+dış çizgi, dither (Bayer + mavi gürültü), `nearest` nicemleme, palet sentezi,
+alt-yığın maskeler, ikinci malzeme ve kalan üç ölçüm metriği.
+
+**Tur 3 kanıtı**
+
+Aynı katman gövdesi ve paleti iki çıktı yapılandırmasıyla render ediliyor:
+64² + Bayer + `ramp` piksel sanatı, 512² + `nearest` pürüzsüz doku. İkisi de
+palet uyumlu. D2'nin "stil grafiğin değil ÇIKTININ özelliğidir" iddiası artık
+ölçülen bir şey.
+
+**3B arama tablosu gerekmedi**
+
+Belge `nearest` için 32³ girişlik bir LUT'u zorunlu optimizasyon olarak
+yazıyordu; gerekçesi piksel başına palet taramasının maliyetiydi. Ama renk
+kaynağı keyfi bir RGB değil: malzeme başına TEK BOYUTLU bir eksen, yani gölge.
+Her iki nicemleme kipi de malzeme başına 256 girişlik bir tabloya indi —
+4096 kat küçük, aynı maliyeti sıfırlıyor ve iki kip tek sıcak döngüyü
+paylaşıyor.
+
+**Mavi gürültü gerçekten mavi**
+
+Void-and-cluster tam uygulandı: birler ve sıfırlar için ayrı, artımlı
+güncellenen enerji alanları; ikinci yarıda roller değişiyor. §5.5 "hash
+tabanlı bir dizi mavi gürültü değildir" diyor ve bu artık ölçülüyor — testin
+karşılaştırdığı şey yerel ortalama varyansı, mavi gürültüde beyaz gürültünün
+üçte birinin altında kalıyor.
+
+**Palet sentezinde doygunluk KISILIYOR, kelepçelenmiyor**
+
+Gamut dışı iki adım kelepçe sonrası aynı renge düşüyor ve beş adımlık bir
+rampa dört renk gibi davranıyordu. İkili arama on iki adımda doygunluğu
+gamuta sığdırıyor; testte doygun bir tabanla yedi adımın yedisi de ayrı renk
+kalıyor.
+
+**Üç metriğin tanımı DEĞİŞTİ — üçü de yanlış soruyordu**
+
+- _Dış çizgi sürekliliği_ "silüet tek parça mı" diyordu; `scatter` bunu
+  geçersiz kıldı, çok parçalı sprite meşru. Halka `dilate` gereği zaten
+  kapalı; tek gerçek kopma biçimi silüetin görüntü kenarına değip halkanın
+  çizilecek yer bulamaması. Ölçülen artık bu.
+- _Kontrast_ mutlak bir eşik istiyordu ("tür bazlı taban" — ki tür yok).
+  Palet düzse çıktının kontrastlı olması beklenemez; ölçü artık ORAN:
+  kullanılan / paletin sunduğu OKLab L aralığı.
+- _Bantlaşma_ önce "baskın renk payı" olarak yazıldı ve `scatter.json`u
+  düşürdü — ama geniş düz yüzey meşrudur. §9'un asıl sorduğu gölgenin rampa
+  UÇLARINDA birikip ortasını boş bırakması; ölçü ona çevrildi ve üç fixture
+  da geçti.
+
+**Diğer düzeltmeler**
+
+- Normal türevi birim uzayda alınıyor; piksel farkından alınsaydı aynı belge
+  512²'de sekiz kat yassı görünürdü. Test ham piksel farkının dört kat
+  değiştiğini, normalin değişmediğini ölçüyor.
+- Kenar ışığı üssü parametre DEĞİL: `rim` zaten şiddet taşıyor, ikisini
+  birden açmak birlikte ayarlanmadıkça anlamsız iki kaydırıcı demekti.
+- `palette.generate` dizi oldu; tek nesne gerçek bir paleti karşılamıyordu.
+  Palet ya veri ya sentez — ikisi birlikte verilemez.
+- Katman kimlikleri artık BELGE GENELİNDE benzersiz; alt-yığındaki bir katman
+  üsttekiyle aynı kimliği taşıyamaz, yoksa D5'in tohum yolu çakışırdı.
+- §4.6'da aynı paragraf iki kez yazılıydı; temizlendi.
+
+**Kapılar**
+
+| Kapı                    | Durum | Not                                           |
+| ----------------------- | ----- | --------------------------------------------- |
+| `pnpm high`             | ✓     | quick + lint:css + coverage + build           |
+| `pnpm -r test:coverage` | ✓     | core 1556 test (+75)                          |
+| core kapsam             | ✓     | 89.57/89.57/84.70/90.89 — eşikler 87/87/82/88 |
+| `visual/` kapsamı       | ✓     | dizin bazında %92–99 statement                |
+
 ## 2026-08-22 — Görsel sentez Tur 2: cebiri tamamla
 
 `visual-synthesis.md` §12'nin ikinci turu. Envanterin tamamı uygulandı:
@@ -240,18 +313,15 @@ silinir; kronolojiye not düşülmez.
 - CORE public API yüzeyi 172 export ve dokuz `export *` barrel'ıyla büyüyor.
   Yüzey sayısı kilitli (kapı kırılır) ama barrel'lar hâlâ otomatik; daraltma
   ayrı bir tur. `visual` alt sistemi kök barrel'a tek isimle giriyor ve kendi
-  yüzeyi (37) ayrıca kilitli — alt sistemler kök sayının gölgesinde büyümesin.
+  yüzeyi (52) ayrıca kilitli — alt sistemler kök sayının gölgesinde büyümesin.
 - `PlayerController` takma adı `@deprecated` olarak duruyor; kaldırma bir
   sonraki büyük sürümde.
-- **Görsel sentez: Tur 1–2 bitti, Tur 3–5 açık.** `core/visual/` cebri
-  tamamlandı: §4'ün envanteri (üreteçler, alan-uzayı, `scatter`,
-  birleştiriciler, komşuluk filtreleri) ve `tileable` uçtan uca çalışıyor.
-  Yazılmayanlar: gölgeleme (normal/lambert/rim/ao), dış çizgi, dither,
-  `nearest` nicemleme, palet sentezi, alt-yığın maskeler, `materialAlt` ve
-  editör (`games/vol-forge`). Doğrulayıcı uygulanmamış her alanı hangi turda
-  geleceğini söyleyerek reddeder, yani yarım uygulama sessiz kalmaz. §13'te
-  üç açık kalan var. Ses motorunun aynı editör kabuğuna taşınması D11'de
-  dikiş olarak işaretli ama editör yazılmadan başlanmayacak.
+- **Görsel sentez: Tur 1–3 bitti, Tur 4–5 açık.** `core/visual/` motorun
+  tamamı: cebir, döşeme, gölgeleme, dış çizgi, dither, iki nicemleme kipi,
+  palet sentezi, alt-yığın maskeler ve yedi ölçüm metriği. Yazılmayanlar
+  yalnızca **editör** (`games/vol-forge`, Tur 4) ve **preset kataloğu**
+  (Tur 5). §13'te üç açık kalan var. Ses motorunun aynı editör kabuğuna
+  taşınması D11'de dikiş olarak işaretli ama editör yazılmadan başlanmayacak.
 - **`AGENTS.md` ve `games/design/AGENTS.md` gitignore'da** (`.gitignore:2-3`) ve
   hiç commit edilmemiş. Bilinçli bir tercih (agent talimatları yerelde kalıyor)
   ama sonucu şu: bu dosyalara yapılan güncellemeler HİÇBİR commit'e girmez ve
@@ -349,6 +419,7 @@ silinir; kronolojiye not düşülmez.
 | 2026-08-22 | Doktrin denetimi + dikdörtgen çıktı kararı                  | 4 bulgunun 2'si geçerli    |
 | 2026-08-22 | Görsel sentez Tur 1 — çekirdek iskelet                      | 139 test, kapılar yeşil    |
 | 2026-08-22 | Görsel sentez Tur 2 — cebiri tamamla                        | +115 test, döşeme kanıtlı  |
+| 2026-08-22 | Görsel sentez Tur 3 — biçim ve stil                         | +75 test, iki stil kanıtlı |
 
 ## 2026-08-18 — `just` geçişinin denetimi
 

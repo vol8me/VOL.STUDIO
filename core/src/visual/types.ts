@@ -547,14 +547,25 @@ export type CoverageBlend = 'over' | 'max' | 'min' | 'add' | 'sub' | 'mul' | 'sc
  */
 export type HeightBlend = 'max' | 'min' | 'add' | 'mul' | 'replace';
 
+/**
+ * Maske olarak kullanılan ALT-YIĞIN (D10).
+ *
+ * Katmanların tam cebri maske içinde de kullanılabilsin diye özyinelemelidir;
+ * derinlik sınırlıdır (bkz. `MAX_STACK_DEPTH`) çünkü hem bellek bütçesi (D7)
+ * hem editörde gezilebilirlik sonsuz derinliği öngörülemez yapardı.
+ */
+export interface LayerStack {
+  layers: readonly LayerSpec[];
+}
+
 export interface LayerSpec {
   /** Tohum türetiminde kullanılır (D5) — bu yüzden belge içinde benzersizdir. */
   id: string;
   source: FieldNode;
   /** `source`a sırayla uygulanan alan-uzayı zinciri; `[A, B]` ≡ `B(A(source))`. */
   domain?: readonly DomainOp[];
-  /** Kapsamayı çarpan alan. Alt-yığın biçimi Tur 3'te gelir. */
-  mask?: FieldNode | null;
+  /** Kapsamayı çarpan alan ya da alt-yığın. */
+  mask?: FieldNode | LayerStack | null;
   /** AYRI yükseklik alanı; verilmezse `source` kullanılır (§3). */
   height?: FieldNode | null;
   blend?: CoverageBlend;
@@ -562,6 +573,12 @@ export interface LayerSpec {
   opacity?: number;
   /** Yazılacak rampa kimliği. */
   material?: number;
+  /** İkinci rampa; `materialMask` eşiği aşınca yazılır. */
+  materialAlt?: number;
+  /** Hangi malzemenin yazılacağını seçen alan (aşınma, pas, damar). */
+  materialMask?: FieldNode | null;
+  /** `materialMask` bu değeri aşınca `materialAlt` yazılır. */
+  materialThreshold?: number;
   /** Malzeme yazımı için KAPSAMA eşiği — opaklık değil (§3). */
   materialThresholdCoverage?: number;
 }
@@ -574,18 +591,83 @@ export interface RampSpec {
   indices: readonly number[];
 }
 
+/** Sentezlenecek bir rampanın isteği (§7.1). */
+export interface GenerateRampSpec {
+  /** `#rrggbb` — rampanın ton ve doygunluk kaynağı. */
+  base: string;
+  steps: number;
+  /** DERECE. Negatif = gölgeler soğur, aydınlıklar ısınır. */
+  hueShift?: number;
+  satCurve?: 'flat' | 'arch' | 'rise';
+  lightRange?: readonly [number, number];
+  name?: string;
+}
+
+/**
+ * Palet ya DOĞRUDAN VERİ ya da SENTEZ İSTEĞİdir — ikisi bir arada olamaz.
+ *
+ * Karıştırmak renk indekslerinin kimin tarafından yönetildiğini belirsiz
+ * yapardı; belgeyi okuyan da yazan da hangi indeksin nereye düştüğünü
+ * saymak zorunda kalırdı.
+ */
 export interface PaletteSpec {
   /** `#rrggbb` biçiminde renkler. */
-  colors: readonly string[];
-  ramps: readonly RampSpec[];
+  colors?: readonly string[];
+  ramps?: readonly RampSpec[];
+  generate?: readonly GenerateRampSpec[];
 }
 
 export interface QuantizeSpec {
-  /** Tur 1–2'de yalnızca `ramp`; `nearest` Tur 3'te gelir. */
-  mode: 'ramp';
+  /**
+   * - `ramp` — gölge doğrudan rampa adımına düşer; bantlanma bilinçlidir.
+   * - `nearest` — rampa içinde ara değer alınıp PALETİN TAMAMINDA en yakın
+   *   renge oturulur; yüksek çözünürlüklü doku için.
+   */
+  mode: 'ramp' | 'nearest';
+}
+
+export interface AoSpec {
+  /** BİRİM uzayda yarıçap. */
+  radius: number;
+  strength: number;
+}
+
+/**
+ * Gölgeleme yapılandırması — §4.5.
+ *
+ * Verilmezse gölge YÜKSEKLİĞİN KENDİSİdir; bu, yükseklik kanalını ışık
+ * modeli olmadan da görünür kılar ve basit belgeleri basit tutar.
+ */
+export interface ShadeSpec {
+  /** Işık yönü; normalize edilir. +y aşağı, +z izleyiciye doğru. */
+  light?: readonly [number, number, number];
+  /** Yayınık ışığın katkısı. */
+  strength?: number;
+  /** Taban aydınlık — gölgede kalan yüzeyin alt sınırı. */
+  ambient?: number;
+  /** Kenar ışığı şiddeti; silüeti zeminden ayırır. */
+  rim?: number;
+  /** Yüzey eğiminden türetilen kabartma şiddeti. */
+  relief?: number;
+  ao?: AoSpec | null;
+}
+
+export interface OutlineSpec {
+  /** PİKSEL cinsinden kalınlık (D2 — son işlem piksel uzayındadır). */
+  px: number;
+  mode?: 'outside' | 'inside' | 'centered';
+  /** Palet renk indeksi; çizgi bir malzeme değildir. */
+  colorIndex?: number;
+}
+
+export interface DitherSpec {
+  kind: 'none' | 'bayer2' | 'bayer4' | 'bayer8' | 'blueNoise';
+  amount?: number;
 }
 
 export interface PostSpec {
+  outline?: OutlineSpec | null;
+  dither?: DitherSpec | null;
   quantize?: QuantizeSpec;
 }
 
@@ -600,5 +682,6 @@ export interface SpriteDoc {
   antialias?: boolean;
   palette: PaletteSpec;
   layers: readonly LayerSpec[];
+  shade?: ShadeSpec;
   post?: PostSpec;
 }
