@@ -4,6 +4,18 @@
 kaydıdır**: ne yapıldı, hangi kapı koşuldu, geriye ne kaldı. Turun ayrıntısı
 commit diff'inde ve git geçmişindedir; burada tekrarlanmaz.
 
+## 2026-08-23 — Asset Studio Aşama 0: güvenli başlangıç
+
+Yeni repo-varlık çalışma ortamı `feature/asset-studio` dalında, güncel
+`origin/dev` (`31a875b`) tabanından başlatıldı. Eski Forge kaldırılmadan önce
+`games/vol-forge/output` yüzeyi envanterlendi: toplam **16 PNG/JSON dosyası**
+(2 takipli, 14 takipsiz), yaklaşık **396 KiB**. Sıralı SHA-256 manifestinin
+özeti `067d12a79e7aebb36f07ec7765746f8a81149da326c270458291dd3e71b9c994`.
+
+Bu aşamada çıktıların hiçbiri taşınmadı, silinmedi veya commit kapsamına
+alınmadı. Aşama 0–3 boyunca Forge çalışır kalacak; korumalı içe aktarım ve
+Forge emekliliği ayrı Aşama 4 işidir.
+
 ## 2026-08-23 — Görsel motor Tur 5: tek ekran ürün, Tur 1–5 ve Tur 4 kalıntı denetimi
 
 Kullanıcı denetimi Tur 5'in önceki “basit kip + ileri kip” çözümünü reddetti:
