@@ -134,7 +134,7 @@ describe('QuickLook', () => {
         name: 'click.ogg',
       }),
     );
-    quickLook.element.querySelector<HTMLButtonElement>('.quick-look__edit:not([hidden])')!.click();
+    quickLook.element.querySelector<HTMLButtonElement>('.quick-look__audio:not([hidden])')!.click();
     expect(onEditAudio).toHaveBeenCalledOnce();
 
     quickLook.setTranslator((key) => `tr:${key}`);

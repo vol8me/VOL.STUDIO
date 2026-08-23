@@ -85,7 +85,7 @@ export class QuickLook {
         if (this.asset) options.onEditAudio(this.asset);
       },
     });
-    this.audioButton.element.classList.add('quick-look__edit');
+    this.audioButton.element.classList.add('quick-look__audio');
     this.audioButton.element.prepend(new Icon({ name: 'audio' }).element);
     this.audioButton.element.hidden = true;
     this.editButton.element.hidden = true;

@@ -164,7 +164,7 @@ test('ses editörü dalga formu seçimini gerçek işlem zincirine alır', async
   await page.locator('[data-filter="audio"]').click();
   await page.locator('.asset-search__input').fill('lock-0.ogg');
   await page.locator('.asset-card').first().click();
-  await page.locator('.quick-look__edit:visible').click();
+  await page.locator('.quick-look__audio:visible').click();
   await expect(page.locator('.audio-editor')).toHaveClass(/audio-editor--open/);
   await expect(page.locator('.audio-editor__status')).toHaveText(/hazır|ready/i, {
     timeout: 30_000,

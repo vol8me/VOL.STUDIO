@@ -1313,7 +1313,8 @@ audio:focus-visible {
   cursor: copy;
 }
 
-.quick-look__edit {
+.quick-look__edit,
+.quick-look__audio {
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -1328,11 +1329,13 @@ audio:focus-visible {
   cursor: pointer;
 }
 
-.quick-look__edit:hover {
+.quick-look__edit:hover,
+.quick-look__audio:hover {
   background: var(--vol-ui-accent-hover);
 }
 
-.quick-look__edit[hidden] {
+.quick-look__edit[hidden],
+.quick-look__audio[hidden] {
   display: none;
 }
 
