@@ -332,7 +332,21 @@
     "colorPicker": "Renk Seçici",
     "colorPickerLabel": "Rampa tabanı",
     "curveEditor": "Eğri Düzenleyici",
-    "curveEditorLabel": "Aktarım eğrisi"
+    "curveEditorLabel": "Aktarım eğrisi",
+    "propertyField": "Özellik Alanı",
+    "playerName": "Oyuncu adı",
+    "playerNameValue": "Aldric",
+    "propertyFieldDescription": "Programatik değer sessizdir; kullanıcı commit'i ayrıca bildirilir.",
+    "propertyFieldNoCommit": "Henüz commit yok",
+    "propertyFieldCommit": "Son commit: {{value}}",
+    "toolbar": "Araç Çubuğu",
+    "pencil": "Kalem",
+    "eraser": "Silgi",
+    "eyedropper": "Damlalık",
+    "trash": "Sil",
+    "toolbarIdle": "Bir araç seç",
+    "toolbarSelected": "Seçili: {{value}}",
+    "toolbarAction": "Aksiyon: {{action}}"
   },
   "palette": {
     "surface": "Surface",

@@ -5,6 +5,7 @@ import {
   CurveEditor,
   Input,
   NumberStepper,
+  PropertyField,
   RadioGroup,
   RangeSlider,
   SegmentedControl,
@@ -13,6 +14,7 @@ import {
   Text,
   TextArea,
   TimerBar,
+  Toolbar,
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid } from './shared';
@@ -186,14 +188,14 @@ function buildTimerBarDemo(disposables: Destroyable[]): HTMLElement {
 /** Palet düzenlemenin iki ucu: kutucuk + hex + hazır renkler. */
 function buildColorPickerDemo(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
-  wrap.className = 'vol-showcase-checkbox-group';
+  wrap.className = 'vol-showcase-panel-demo vol-showcase-panel-demo--centered';
 
   const readout = new Text('#b85518', { variant: 'muted' });
   const picker = new ColorPicker({
     label: i18next.t('volui:forms.colorPickerLabel'),
     value: '#b85518',
     swatches: ['#b85518', '#246a79', '#565dbe', '#307a57', '#d2a03c', '#b94a4a'],
-    onChange: (value) => readout.setContent(value),
+    onInput: (value) => readout.setContent(value),
   });
   disposables.push(picker, readout);
 
@@ -205,7 +207,7 @@ function buildColorPickerDemo(disposables: Destroyable[]): HTMLElement {
 /** Aktarım eğrisi: noktaları sürükle, çift tıkla ekle, Alt+tık ile sil. */
 function buildCurveEditorDemo(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
-  wrap.className = 'vol-showcase-checkbox-group';
+  wrap.className = 'vol-showcase-panel-demo vol-showcase-panel-demo--centered';
 
   const readout = new Text('f(0.5) = 0.50', { variant: 'muted' });
   const curve = new CurveEditor({
@@ -222,6 +224,83 @@ function buildCurveEditorDemo(disposables: Destroyable[]): HTMLElement {
 
   wrap.appendChild(curve.element);
   wrap.appendChild(readout.element);
+  return wrap;
+}
+
+/** Inspector form örneği: etiket + input + açıklama + reset. */
+function buildPropertyFieldDemo(disposables: Destroyable[]): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const defaultValue = i18next.t('volui:forms.playerNameValue');
+  const state = new Text(i18next.t('volui:forms.propertyFieldNoCommit'), { variant: 'muted' });
+  const input = new Input({
+    value: defaultValue,
+    onCommit: (value) => state.setContent(i18next.t('volui:forms.propertyFieldCommit', { value })),
+  });
+  const field = new PropertyField({
+    label: i18next.t('volui:forms.playerName'),
+    control: input,
+    description: i18next.t('volui:forms.propertyFieldDescription'),
+    resetLabel: i18next.t('volui:forms.reset'),
+    onReset: () => {
+      input.setValue(defaultValue);
+      state.setContent(i18next.t('volui:forms.propertyFieldNoCommit'));
+    },
+  });
+  disposables.push(input, field, state);
+
+  wrap.appendChild(field.element);
+  wrap.appendChild(state.element);
+  return wrap;
+}
+
+/** Tek/çoklu seçim ve aksiyon düğmesi destekli araç çubuğu. */
+function buildToolbarDemo(disposables: Destroyable[]): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo vol-showcase-panel-demo--centered';
+
+  const toolLabels: Record<string, string> = {
+    pencil: i18next.t('volui:forms.pencil'),
+    eraser: i18next.t('volui:forms.eraser'),
+    eyedropper: i18next.t('volui:forms.eyedropper'),
+    trash: i18next.t('volui:forms.trash'),
+  };
+
+  const state = new Text(i18next.t('volui:forms.toolbarSelected', { value: toolLabels.pencil }), {
+    variant: 'muted',
+  });
+  const toolbar = new Toolbar({
+    ariaLabel: i18next.t('volui:forms.toolbar'),
+    selectionMode: 'single',
+    value: 'pencil',
+    items: [
+      { id: 'pencil', icon: 'pencil', label: toolLabels.pencil },
+      { id: 'eraser', icon: 'eraser', label: toolLabels.eraser },
+      { id: 'eyedropper', icon: 'eyedropper', label: toolLabels.eyedropper },
+      {
+        id: 'trash',
+        icon: 'trash',
+        label: toolLabels.trash,
+        toggle: false,
+        onPress: () =>
+          state.setContent(i18next.t('volui:forms.toolbarAction', { action: toolLabels.trash })),
+      },
+    ],
+    onChange: (value) => {
+      if (value === undefined || typeof value !== 'string') {
+        state.setContent(i18next.t('volui:forms.toolbarIdle'));
+      } else {
+        state.setContent(
+          i18next.t('volui:forms.toolbarSelected', { value: toolLabels[value] ?? value }),
+        );
+      }
+    },
+  });
+  disposables.push(toolbar, state);
+
+  wrap.appendChild(toolbar.element);
+  wrap.appendChild(state.element);
   return wrap;
 }
 
@@ -306,8 +385,10 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:forms.timerBarVariations'), buildTimerBarVariationsDemo(disposables)),
     card(i18next.t('volui:forms.timerBar'), buildTimerBarDemo(disposables), { span: 2 }),
     card(i18next.t('volui:forms.rangeSlider'), buildRangeSliderDemo(disposables), { span: 4 }),
-    card(i18next.t('volui:forms.colorPicker'), buildColorPickerDemo(disposables)),
-    card(i18next.t('volui:forms.curveEditor'), buildCurveEditorDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:forms.colorPicker'), buildColorPickerDemo(disposables), { center: true }),
+    card(i18next.t('volui:forms.curveEditor'), buildCurveEditorDemo(disposables), { center: true }),
+    card(i18next.t('volui:forms.propertyField'), buildPropertyFieldDemo(disposables)),
+    card(i18next.t('volui:forms.toolbar'), buildToolbarDemo(disposables)),
   ];
 
   container.appendChild(cardGrid(cards));

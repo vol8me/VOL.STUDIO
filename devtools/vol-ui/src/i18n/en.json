@@ -332,7 +332,21 @@
     "colorPicker": "Color Picker",
     "colorPickerLabel": "Ramp base",
     "curveEditor": "Curve Editor",
-    "curveEditorLabel": "Transfer curve"
+    "curveEditorLabel": "Transfer curve",
+    "propertyField": "Property Field",
+    "playerName": "Player name",
+    "playerNameValue": "Aldric",
+    "propertyFieldDescription": "Programmatic value is silent; user commit is reported separately.",
+    "propertyFieldNoCommit": "No commit yet",
+    "propertyFieldCommit": "Last commit: {{value}}",
+    "toolbar": "Toolbar",
+    "pencil": "Pen",
+    "eraser": "Eraser",
+    "eyedropper": "Eyedropper",
+    "trash": "Delete",
+    "toolbarIdle": "Select a tool",
+    "toolbarSelected": "Selected: {{value}}",
+    "toolbarAction": "Action: {{action}}"
   },
   "palette": {
     "surface": "Surface",

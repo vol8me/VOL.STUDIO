@@ -256,6 +256,10 @@ body {
   width: 100%;
 }
 
+.vol-showcase-panel-demo--centered {
+  align-items: center;
+}
+
 .vol-showcase-panel-demo__controls {
   display: flex;
   flex-wrap: wrap;
