@@ -22,6 +22,7 @@ export type IconName =
   | 'eraser'
   | 'eyedropper'
   | 'fill'
+  | 'fit'
   | 'pencil'
   | 'redo'
   | 'refresh'
@@ -93,9 +94,18 @@ export const VOL_ICONS: Readonly<Record<IconName, IconDefinition>> = {
     viewBox: '0 0 24 24',
     paths: ['M5 11 12 4l7 7-7 7Z', 'm5 11 7 7', 'M19 15c1.5 2 1.5 4 0 4s-1.5-2 0-4Z'],
   },
+  // Damlalık: pipet gövdesi + ampul. Kalemden AÇIKÇA ayrılmalı; ikisi de
+  // eğik bir çubuk çizerse kullanıcı araç çubuğunda hangisinin seçili
+  // olduğunu ikondan ayırt edemez.
   eyedropper: {
     viewBox: '0 0 24 24',
-    paths: ['m4 20 1-4 8-8 3 3-8 8Z', 'm14 5 5 5', 'm12 7 5 5'],
+    paths: ['m3 21 2-6 7-7 4 4-7 7Z', 'M13 5.5 18.5 11', 'M15.5 3a3.5 3.5 0 0 1 5 5l-2 2-5-5Z'],
+  },
+  // Sığdır: köşe köşebentleri. `expand` bir bölme ikonudur ve burada
+  // anlamsızdı.
+  fit: {
+    viewBox: '0 0 24 24',
+    paths: ['M4 9V4h5', 'M20 9V4h-5', 'M4 15v5h5', 'M20 15v5h-5'],
   },
   redo: { viewBox: '0 0 24 24', paths: ['m15 7 4 4-4 4', 'M19 11h-8a6 6 0 0 0-6 6'] },
   refresh: {

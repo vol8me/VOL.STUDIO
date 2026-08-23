@@ -9,6 +9,22 @@
   inset: 0;
 }
 
+/**
+ * `hidden` attribute'unu KORUR.
+ *
+ * Tarayıcının `[hidden] { display: none }` kuralı bir UA stilidir; yazar
+ * stillerindeki HERHANGİ bir `display` bildirimi onu ezer. `.x { display: flex }`
+ * yazan bir kural, `element.hidden = true` yapılan aynı elemanı görünür bırakır
+ * ve kimse fark etmez — bileşen "gizlendi" sanır, kullanıcı görmeye devam eder.
+ *
+ * Bu tuzak repoda bir dönem seçici seçici çözülüyordu (`.vol-button[hidden]`,
+ * `.vol-card-picker[hidden]`, `.studio-toast[hidden]`…); her yeni `display`
+ * kuralı onu geri getirebiliyordu. Tek merkezi kural sınıfı kapatır.
+ */
+[hidden] {
+  display: none !important;
+}
+
 .vol-sr-only {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;

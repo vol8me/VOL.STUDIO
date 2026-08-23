@@ -29,6 +29,7 @@ describe('QuickLook', () => {
       locale: () => 'tr',
       onClose: vi.fn(),
       onToast: vi.fn(),
+      onEdit: vi.fn(),
     });
     document.body.append(quickLook.element);
     quickLook.setAsset(asset());
@@ -49,6 +50,7 @@ describe('QuickLook', () => {
       locale: () => 'tr',
       onClose: vi.fn(),
       onToast: vi.fn(),
+      onEdit: vi.fn(),
     });
     document.body.append(quickLook.element);
     quickLook.setAsset(
@@ -82,6 +84,7 @@ describe('QuickLook', () => {
       locale: () => 'tr',
       onClose,
       onToast,
+      onEdit: vi.fn(),
     });
     document.body.append(quickLook.element);
     quickLook.setAsset(asset());

@@ -35,6 +35,54 @@ ve `git diff --check` temizdi. Aşamalar paralel aynı çalışma ağacında
 geliştirildiği için bu sınır commit'inde hook atlandı; tam `pnpm high` Aşama 3
 kapanışında temiz birleşik ağaç üzerinde zorunludur.
 
+## 2026-08-23 — Asset Studio Aşama 5 tamam: gerçek PNG aç/düzenle/kaydet
+
+Editör kabuğa bağlandı ve çıkış kriteri gerçek tarayıcıda doğrulandı: Chromium
+altında bir PNG açılıyor, kalemle çiziliyor, diske kaydediliyor ve dosyanın
+baytları gerçekten değişiyor. Sekiz E2E akışının tamamı yeşil.
+
+QuickLook artık yalnız YAZILABİLİR görsellerde "Piksel düzenle" sunuyor; salt
+okunur kökte düğmeyi göstermek sunucunun reddedeceği bir işi davet ederdi.
+
+**Üç hata avlandı.**
+
+1. Raster ucu revizyonu katalog önbelleğinden döndürüyordu, okuduğu baytlardan
+   değil. Önbellek bir an bayat kaldığında editör yanlış tabanla açılıyor,
+   ardından gelen watcher olayı sahte çakışma gösteriyor ve kayıt sebepsiz
+   `asset_conflict` veriyordu. Revizyon artık okunan tampondan türetiliyor.
+
+2. `hidden` attribute'u yazar stilleriyle eziliyordu. `.editor-panel__conflict`
+   kuralındaki `display: flex`, tarayıcının `[hidden] { display: none }` UA
+   kuralını geçersiz kılıyor ve gizlenmiş çakışma şeridi ekranda kalıyordu.
+   Repo bu tuzağı biliyordu ama seçici seçici çözüyordu (`.vol-button[hidden]`,
+   `.studio-toast[hidden]`…), bu yüzden her yeni `display` kuralı onu geri
+   getirebiliyordu. CORE artık tek merkezi `[hidden] { display: none !important }`
+   kuralı taşıyor ve bir governance testi onu koruyor.
+
+3. Merkezi kural, editör yerleşimindeki gizli kırılganlığı açığa çıkardı:
+   `grid-template-rows: auto auto 1fr` konuma bağlıydı; çakışma şeridi
+   gizlenince sahne ikinci `auto` track'ine kayıyor, yüksekliği sıfıra düşüyor,
+   tuval 1 piksel kalıyor ve tıklamalar araca hiç ulaşmıyordu. Belirti "kaydet
+   düğmesi pasif" gibi görünüp asıl nedeni gizliyordu. Yerleşim flex kolona
+   çevrildi ve E2E artık tuvalin gerçekten yer kapladığını doğruluyor.
+
+**Yeni bekçi:** tanımsız CSS custom property taraması. `var(--vol-color-accent)`
+gibi var olmayan bir token hata vermez, tarayıcı onu sessizce boş bırakır ve
+kural düşer; stylelint sözdizimi geçerli olduğu için yakalamaz. Bekçi repodaki
+her `--vol-*` / `--studio-*` kullanımının tanımlı olduğunu doğrular ve çalışma
+zamanında `setProperty` ile atananları da tanım sayar. Tarama devralınan dört
+gerçek hatayı buldu: LAN token alanı hiç stillenmiyordu.
+
+`save()` artık temiz belgeyi yazmıyor. Kaydetmek dosyayı yeniden kodlar;
+içerik aynı olsa bile baytlar değişebilir, mtime kayar ve `git status`
+sebepsiz kirlenirdi.
+
+CORE ikonları: damlalık kalemden ayırt edilebilir hale getirildi, "sığdır" için
+köşebent ikonu eklendi (önce bir bölme ikonu kullanılıyordu).
+
+174 test (asset-studio), 1661 test (core). Kapsam ratchet'i 85/85/76/89'a
+yükseltildi. `pnpm high` tam geçti.
+
 ## 2026-08-23 — Asset Studio Aşama 5 (kısmi): piksel çekirdeği ve kayıt hattı
 
 Piksel editörünün veri, araç ve kayıt katmanları kuruldu ve doğrulandı; kabuğa

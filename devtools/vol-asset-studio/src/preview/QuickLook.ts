@@ -11,6 +11,8 @@ export interface QuickLookOptions {
   locale: () => string;
   onClose: () => void;
   onToast: (message: string) => void;
+  /** Görsel varlığı piksel editöründe açar. */
+  onEdit: (asset: AssetSummary) => void;
 }
 
 /** Seçili varlığı türüne göre gösteren, düzenleme yapmayan hızlı önizleme çekmecesi. */
@@ -24,6 +26,7 @@ export class QuickLook {
   private readonly preview: HTMLDivElement;
   private readonly details: HTMLDivElement;
   private readonly copyButton: HTMLButtonElement;
+  private readonly editButton: HTMLButtonElement;
   private readonly notice: HTMLParagraphElement;
   private asset: AssetSummary | null = null;
   private t: Translate;
@@ -53,6 +56,14 @@ export class QuickLook {
       children: [icon('copy'), element('span')],
     });
     this.scope.addListener(this.copyButton, 'click', () => void this.copyPath());
+    this.editButton = element('button', {
+      className: 'quick-look__edit',
+      attrs: { type: 'button', hidden: 'hidden' },
+      children: [icon('pencil'), element('span')],
+    });
+    this.scope.addListener(this.editButton, 'click', () => {
+      if (this.asset) options.onEdit(this.asset);
+    });
     this.notice = element('p', { className: 'quick-look__notice' });
 
     this.element = element('aside', {
@@ -62,7 +73,7 @@ export class QuickLook {
         header,
         element('div', {
           className: 'quick-look__scroll',
-          children: [this.preview, this.details, this.copyButton, this.notice],
+          children: [this.preview, this.details, this.editButton, this.copyButton, this.notice],
         }),
       ],
     });
@@ -77,9 +88,13 @@ export class QuickLook {
     if (!asset) {
       replaceChildren(this.preview);
       replaceChildren(this.details);
+      this.editButton.hidden = true;
       return;
     }
 
+    // Düzenleme yalnız yazılabilir GÖRSEL için sunulur. Salt okunur bir kökte
+    // düğmeyi göstermek, sunucunun reddedeceği bir işi davet etmek olurdu.
+    this.editButton.hidden = !(asset.kind === 'image' && asset.role !== 'readonly');
     this.title.textContent = asset.name;
     this.subtitle.textContent = asset.path;
     this.renderPreview(asset);
@@ -104,6 +119,8 @@ export class QuickLook {
     this.element.setAttribute('aria-label', this.t('asset.details'));
     const label = this.copyButton.querySelector('span');
     if (label) label.textContent = this.t('asset.reveal');
+    const editLabel = this.editButton.querySelector('span');
+    if (editLabel) editLabel.textContent = this.t('editor.open');
     this.notice.textContent = this.t('asset.editingNotice');
   }
 

@@ -37,9 +37,9 @@
       "functions": 83
     },
     "@volstudio/vol-asset-studio": {
-      "lines": 83,
-      "statements": 83,
-      "branches": 74,
+      "lines": 85,
+      "statements": 85,
+      "branches": 76,
       "functions": 89
     },
     "@volstudio/design": {

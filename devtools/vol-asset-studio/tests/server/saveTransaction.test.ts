@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { LightMyRequestResponse } from 'fastify';
@@ -113,6 +114,22 @@ describe('raster ucu', () => {
     expect(response.rawPayload.length).toBe(2 * 2 * 4);
     // Fixture #ff5500ff dolu: unpremultiplied RGBA olarak birebir gelmeli.
     expect(Array.from(response.rawPayload.subarray(0, 4))).toEqual([255, 85, 0, 255]);
+  });
+
+  it('revizyonu katalog önbelleğinden değil okunan baytlardan türetir', async () => {
+    const { server, fixture, png } = await setup();
+    const onDisk = createHash('sha256')
+      .update(await readFile(fixture.pngPath))
+      .digest('hex');
+
+    const response = await server.app.inject({
+      method: 'GET',
+      url: `/api/v1/assets/${png.id}/raster`,
+    });
+
+    // Baştaki taban yanlışsa kayıt, hiçbir harici değişiklik olmadan
+    // `asset_conflict` verir ve kullanıcı sahte bir çakışma görür.
+    expect(response.headers['x-vol-asset-revision']).toBe(onDisk);
   });
 
   it('görsel olmayan varlığı reddeder', async () => {

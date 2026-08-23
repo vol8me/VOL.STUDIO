@@ -922,9 +922,9 @@ audio:focus-visible {
 }
 
 .studio-state__token {
-  color: var(--vol-ui-text-primary);
-  background: var(--vol-ui-surface-raised);
-  border: 1px solid var(--vol-ui-border-default);
+  color: var(--vol-ui-text);
+  background: var(--studio-input-bg);
+  border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-sm);
   width: 100%;
   min-height: 42px;
@@ -933,7 +933,7 @@ audio:focus-visible {
 }
 
 .studio-state__token:focus-visible {
-  border-color: var(--vol-ui-focus-border);
+  border-color: var(--vol-ui-focus-ring);
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 1px;
 }
@@ -1064,4 +1064,194 @@ audio:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ===== Piksel editörü =====
+   Kütüphanenin üzerine tam alan kaplayan odaklı düzenleme kipi. Kabuk
+   `studio-shell--editing` sınıfıyla bu kipe geçer. */
+.editor-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: none;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--studio-drawer-bg);
+}
+
+/* Flex kolon, KONUMA BAĞLI grid track'lerine yeğlenir: çakışma şeridi
+   gizlendiğinde grid'de sahne bir üst track'e kayıyor ve yüksekliği sıfıra
+   düşüyordu — tuval 1 piksel kalıyor, tıklamalar araca hiç ulaşmıyordu. */
+.editor-panel--open {
+  display: flex;
+}
+
+.editor-panel__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  background: var(--studio-topbar-glass);
+}
+
+.editor-panel__identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.editor-panel__title {
+  overflow: hidden;
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: 15px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.editor-panel__status {
+  color: var(--vol-ui-text-muted);
+  font-size: 12px;
+}
+
+.editor-panel__tools,
+.editor-panel__settings,
+.editor-panel__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.editor-panel__tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--vol-hit-target-min);
+  min-height: var(--vol-hit-target-min);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: transparent;
+  color: var(--vol-ui-text-muted);
+  cursor: pointer;
+  transition:
+    border-color var(--vol-transition-fast),
+    background var(--vol-transition-fast);
+}
+
+.editor-panel__tool:hover {
+  background: var(--vol-ui-hover-fill);
+}
+
+.editor-panel__tool[aria-pressed='true'] {
+  border-color: var(--vol-ui-accent-border);
+  background: var(--vol-ui-accent-subtle);
+  color: var(--vol-ui-text);
+}
+
+.editor-panel__color {
+  width: 40px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: transparent;
+  cursor: pointer;
+}
+
+.editor-panel__brush {
+  width: 110px;
+}
+
+.editor-panel__save {
+  padding: 8px 18px;
+  border: 1px solid var(--vol-ui-accent-border);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-accent-solid);
+  color: var(--vol-ui-on-accent);
+  font-family: var(--vol-font-family-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.editor-panel__save:disabled {
+  border-color: var(--vol-ui-disabled-border);
+  background: var(--vol-ui-disabled-fill);
+  color: var(--vol-ui-disabled-text);
+  cursor: not-allowed;
+}
+
+/* Çakışma şeridi: kirli belge asla sessizce ezilmez, karar kullanıcınındır. */
+.editor-panel__conflict {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--vol-ui-warning-border);
+  background: var(--vol-ui-warning-subtle);
+  color: var(--vol-ui-text);
+  font-size: 13px;
+}
+
+.editor-panel__conflict-action {
+  padding: 6px 12px;
+  border: 1px solid var(--vol-ui-warning-border);
+  border-radius: var(--vol-radius-sm);
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.editor-panel__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--studio-preview-bg);
+}
+
+.pixel-editor {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.pixel-editor__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* İmleç araca bağlıdır; kamera kipinin imlecini CORE yönetir. */
+.pixel-editor[data-tool='pencil'],
+.pixel-editor[data-tool='eraser'],
+.pixel-editor[data-tool='fill'] {
+  cursor: crosshair;
+}
+
+.pixel-editor[data-tool='eyedropper'] {
+  cursor: copy;
+}
+
+.quick-look__edit {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 1px solid var(--vol-ui-accent-border);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-accent-subtle);
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family-body);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.quick-look__edit:hover {
+  background: var(--vol-ui-accent-hover);
 }

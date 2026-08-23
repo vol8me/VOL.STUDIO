@@ -57,7 +57,7 @@
     "problemCount": "{{count}} sorun",
     "fontSample": "Aa",
     "fontPreview": "Hızlı kahverengi tilki tembel köpeğin üzerinden atlar.",
-    "editingNotice": "Düzenleme araçları sonraki aşamada eklenecek. Bu aşama repo varlıklarını güvenle keşfeder ve önizler.",
+    "editingNotice": "Sol tuş çizer, orta tuş veya Space + sürükleme kamerayı taşır, tekerlek yakınlaştırır.",
     "details": "Varlık ayrıntıları",
     "close": "Önizlemeyi kapat",
     "reveal": "Yolu kopyala",
@@ -80,6 +80,32 @@
     "relations": "Kaynak ilişkisi",
     "sourceRelation": "Kaynağa bağlı",
     "derivedCount": "{{count}} türetilmiş çıktı"
+  },
+  "editor": {
+    "open": "Piksel düzenle",
+    "loading": "Belge yükleniyor…",
+    "saving": "Kaydediliyor…",
+    "saved": "Varlık kaydedildi.",
+    "save": "Kaydet",
+    "undo": "Geri al",
+    "redo": "Yinele",
+    "close": "Editörü kapat",
+    "color": "Aktif renk",
+    "brush": "Fırça boyutu",
+    "fit": "Sığdır",
+    "actualSize": "Gerçek boyut",
+    "clean": "Kaydedilmiş",
+    "unsaved": "Kaydedilmemiş değişiklik",
+    "conflictClean": "Dosya diskte değişti. Güncel içeriği yükleyebilirsiniz.",
+    "conflictDirty": "Dosya diskte değişti. Yüklerseniz kaydedilmemiş çalışmanız gider.",
+    "reloadFromDisk": "Diskteki sürümü yükle",
+    "metadataStripped": "Kaydederken şu metadata düşecek: {{fields}}",
+    "tools": {
+      "pencil": "Kalem",
+      "eraser": "Silgi",
+      "fill": "Doldur",
+      "eyedropper": "Damlalık"
+    }
   },
   "errors": {
     "asset_not_found": "Varlık artık bulunmuyor.",

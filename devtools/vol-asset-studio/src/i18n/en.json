@@ -57,7 +57,7 @@
     "problemCount": "{{count}} problems",
     "fontSample": "Aa",
     "fontPreview": "The quick brown fox jumps over the lazy dog.",
-    "editingNotice": "Editing tools arrive in the next stage. This stage safely discovers and previews repository assets.",
+    "editingNotice": "Left button draws; middle button or Space + drag pans; the wheel zooms.",
     "details": "Asset details",
     "close": "Close preview",
     "reveal": "Copy path",
@@ -80,6 +80,32 @@
     "relations": "Source relation",
     "sourceRelation": "Linked to source",
     "derivedCount": "{{count}} derived outputs"
+  },
+  "editor": {
+    "open": "Edit pixels",
+    "loading": "Loading document…",
+    "saving": "Saving…",
+    "saved": "Asset saved.",
+    "save": "Save",
+    "undo": "Undo",
+    "redo": "Redo",
+    "close": "Close editor",
+    "color": "Active colour",
+    "brush": "Brush size",
+    "fit": "Fit",
+    "actualSize": "Actual size",
+    "clean": "Saved",
+    "unsaved": "Unsaved changes",
+    "conflictClean": "The file changed on disk. You can load the current content.",
+    "conflictDirty": "The file changed on disk. Loading it discards your unsaved work.",
+    "reloadFromDisk": "Load version from disk",
+    "metadataStripped": "Saving will drop this metadata: {{fields}}",
+    "tools": {
+      "pencil": "Pencil",
+      "eraser": "Eraser",
+      "fill": "Fill",
+      "eyedropper": "Eyedropper"
+    }
   },
   "errors": {
     "asset_not_found": "The asset no longer exists.",

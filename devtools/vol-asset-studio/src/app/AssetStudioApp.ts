@@ -7,6 +7,7 @@ import {
   type AssetStudioClient,
 } from '../api/AssetStudioClient';
 import { AssetLibrary, type Translate } from '../catalog/AssetLibrary';
+import { EditorPanel } from '../editor/EditorPanel';
 import { QuickLook } from '../preview/QuickLook';
 import { element, replaceChildren } from '../ui/dom';
 import { icon } from '../ui/icons';
@@ -50,6 +51,7 @@ export class AssetStudioApp {
   private readonly toast: HTMLDivElement;
   private readonly library: AssetLibrary;
   private readonly quickLook: QuickLook;
+  private readonly editor: EditorPanel;
   private t: Translate;
   private assets = new Map<string, AssetSummary>();
   private revision = 0;
@@ -107,11 +109,19 @@ export class AssetStudioApp {
       locale: options.locale,
       onClose: () => this.selectAsset(null),
       onToast: (message) => this.showToast(message),
+      onEdit: (asset) => void this.openEditor(asset),
+    });
+    this.editor = new EditorPanel({
+      client: options.client,
+      t: this.t,
+      onClose: () => this.closeEditor(),
+      onToast: (message) => this.showToast(message),
+      onSaved: (assetId, revision) => this.applySavedRevision(assetId, revision),
     });
 
     const workspace = element('main', {
       className: 'studio-workspace',
-      children: [this.library.element, this.quickLook.element],
+      children: [this.library.element, this.quickLook.element, this.editor.element],
     });
     const body = element('div', {
       className: 'studio-body',
@@ -223,6 +233,7 @@ export class AssetStudioApp {
     this.t = t;
     this.library.setTranslator(t);
     this.quickLook.setTranslator(t);
+    this.editor.setTranslator(t);
     this.renderLabels();
   }
 
@@ -233,6 +244,7 @@ export class AssetStudioApp {
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.library.destroy();
     this.quickLook.destroy();
+    this.editor.destroy();
     this.scope.dispose();
     this.shell.remove();
   }
@@ -256,6 +268,11 @@ export class AssetStudioApp {
       this.assets.set(event.asset.id, event.asset);
     }
     this.revision = event.revision;
+    // Açık belge diskte değiştiyse editör bunu bilmeli; kirli belge otomatik
+    // yüklenmez, kullanıcıya seçenek gösterilir.
+    if (event.type === 'changed') {
+      this.editor.noteExternalRevision(event.asset.id, event.asset.revision);
+    }
     this.library.setAssets([...this.assets.values()]);
     this.restoreSelection();
   }
@@ -265,6 +282,26 @@ export class AssetStudioApp {
     this.library.setSelected(this.selectedId);
     this.quickLook.setAsset(asset);
     this.shell.classList.toggle('studio-shell--inspecting', Boolean(asset));
+  }
+
+  /** Varlığı piksel editöründe açar ve kabuğu düzenleme kipine alır. */
+  private async openEditor(asset: AssetSummary): Promise<void> {
+    this.shell.classList.add('studio-shell--editing');
+    await this.editor.open(asset);
+  }
+
+  private closeEditor(): void {
+    this.editor.close();
+    this.shell.classList.remove('studio-shell--editing');
+  }
+
+  /** Kayıttan sonra katalog satırını yeni revizyonla tazeler. */
+  private applySavedRevision(assetId: string, revision: string): void {
+    const asset = this.assets.get(assetId);
+    if (asset === undefined) return;
+    this.assets.set(assetId, { ...asset, revision });
+    this.library.setAssets([...this.assets.values()]);
+    this.restoreSelection();
   }
 
   private restoreSelection(): void {

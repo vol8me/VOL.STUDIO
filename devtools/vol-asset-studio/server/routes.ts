@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { basename } from 'node:path';
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import sharp from 'sharp';
@@ -267,10 +268,15 @@ export function registerApiRoutes(app: FastifyInstance, options: ApiRouteOptions
       maxImagePixels: options.maxImagePixels,
       maxEdge: options.maxEdge,
     });
+    // Revizyon, KATALOG ÖNBELLEĞİNDEN değil OKUNAN BAYTLARDAN türetilir.
+    // Önbellek bir an bayat kaldığında (dosya taramadan hemen önce yazıldıysa)
+    // editör yanlış tabanla açılıyor, ardından gelen watcher olayı sahte bir
+    // çakışma gösteriyor ve kayıt sebepsiz `asset_conflict` veriyordu.
+    const revision = createHash('sha256').update(source).digest('hex');
     reply.header('content-type', 'application/octet-stream');
     reply.header('x-vol-raster-width', String(raster.width));
     reply.header('x-vol-raster-height', String(raster.height));
-    reply.header('x-vol-asset-revision', record.summary.revision);
+    reply.header('x-vol-asset-revision', revision);
     reply.header('x-vol-stripped-metadata', raster.strippedMetadata.join(','));
     reply.header('cache-control', 'no-store');
     return reply.send(raster.rgba);
