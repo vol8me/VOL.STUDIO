@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import studioTr from '../../src/i18n/tr.json';
 import studioEn from '../../src/i18n/en.json';
-import { API_ERROR_CODES } from '../../shared/contracts.js';
+import { API_ERROR_CODES, PROBLEM_CODES } from '../../shared/contracts.js';
 
 /** İç içe nesneden tüm leaf key'leri nokta notasyonunda çıkarır. */
 function extractKeys(obj: Record<string, unknown>, prefix = ''): string[] {
@@ -52,6 +52,14 @@ describe('Key parity — vol-asset-studio', () => {
       const errors = locale.errors as Record<string, unknown> | undefined;
       const missing = API_ERROR_CODES.filter((code) => typeof errors?.[code] !== 'string');
       expect(missing, `Çevirisi olmayan hata kodları: ${missing.join(', ')}`).toEqual([]);
+    }
+  });
+
+  it('her katalog sorun kodunun iki dilde de karşılığı var', () => {
+    for (const locale of [studioTr, studioEn] as Record<string, unknown>[]) {
+      const problems = locale.problems as Record<string, unknown> | undefined;
+      const missing = PROBLEM_CODES.filter((code) => typeof problems?.[code] !== 'string');
+      expect(missing, `Çevirisi olmayan sorun kodları: ${missing.join(', ')}`).toEqual([]);
     }
   });
 });

@@ -35,6 +35,7 @@ body,
 
 body {
   min-width: 360px;
+  font-size: 14px;
   background: radial-gradient(circle at 45% -30%, rgb(58 76 91 / 20%), transparent 44%),
     var(--studio-bg-deep);
 }
@@ -57,8 +58,8 @@ audio:focus-visible {
 }
 
 .studio-shell {
-  --studio-topbar: 56px;
-  --studio-rail: 86px;
+  --studio-topbar: 60px;
+  --studio-rail: 64px;
 
   background: var(--studio-shell-glass);
   isolation: isolate;
@@ -210,16 +211,17 @@ audio:focus-visible {
   min-height: 0;
   display: grid;
   grid-template-columns: var(--studio-rail) minmax(0, 1fr);
+  position: relative;
 }
 
 .asset-rail {
   background: var(--studio-rail-bg);
   border-right: 1px solid var(--vol-ui-border-soft);
   flex-direction: column;
-  align-items: stretch;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   min-height: 0;
-  padding: 14px 9px;
+  padding: 10px 8px;
   display: flex;
   overflow-y: auto;
 }
@@ -230,18 +232,18 @@ audio:focus-visible {
   border: 1px solid transparent;
   border-radius: var(--vol-radius-md);
   cursor: pointer;
-  flex: 0 0 auto;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 58px;
-  padding: 7px 4px;
+  flex: 0 0 46px;
+  position: relative;
+  width: 46px;
+  height: 46px;
+  padding: 0;
   transition:
     color var(--vol-transition-fast),
     background var(--vol-transition-fast),
-    border-color var(--vol-transition-fast);
-  display: flex;
+    border-color var(--vol-transition-fast),
+    box-shadow var(--vol-transition-fast);
+  display: grid;
+  place-items: center;
 }
 
 .asset-rail__button:hover {
@@ -251,18 +253,35 @@ audio:focus-visible {
 
 .asset-rail .asset-rail__button[aria-pressed='true'] {
   color: var(--vol-ui-on-brand);
-  background: linear-gradient(180deg, rgb(184 85 24 / 19%), rgb(184 85 24 / 10%));
+  background: linear-gradient(180deg, rgb(184 85 24 / 28%), rgb(184 85 24 / 14%));
   border-color: var(--vol-ui-brand-border);
+  box-shadow: inset 3px 0 0 var(--vol-ui-brand-solid);
+}
+
+.asset-rail__button .vol-icon {
+  width: 24px;
+  height: 24px;
 }
 
 .asset-rail__label {
-  max-width: 68px;
-  font-size: 11px;
-  line-height: 1.1;
+  display: none;
+}
+
+.asset-rail__badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border: 2px solid var(--studio-rail-bg);
+  border-radius: 9px;
+  background: var(--vol-ui-warning-solid);
+  color: var(--studio-bg-deep);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 13px;
   text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
 }
 
 .studio-workspace {
@@ -275,7 +294,7 @@ audio:focus-visible {
 }
 
 .studio-shell--inspecting .studio-workspace {
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 390px);
+  grid-template-columns: minmax(0, 1fr) 380px;
 }
 
 .asset-library {
@@ -420,9 +439,11 @@ audio:focus-visible {
 
 .asset-card--selected {
   border-color: var(--vol-ui-brand-solid);
+  background: color-mix(in srgb, var(--studio-card-bg) 84%, var(--vol-ui-brand-solid));
   box-shadow:
-    0 0 0 1px var(--vol-ui-brand-solid),
-    0 10px 28px rgb(0 0 0 / 25%);
+    0 0 0 2px var(--vol-ui-brand-solid),
+    0 0 0 5px rgb(184 85 24 / 12%),
+    0 12px 30px rgb(0 0 0 / 32%);
 }
 
 .asset-card__preview {
@@ -529,7 +550,7 @@ audio:focus-visible {
 .asset-card__path {
   color: var(--vol-ui-text-muted);
   margin-top: 5px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .asset-card__meta {
@@ -537,7 +558,7 @@ audio:focus-visible {
   align-items: center;
   gap: 7px;
   margin-top: 10px;
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   display: flex;
 }
@@ -642,6 +663,19 @@ audio:focus-visible {
   height: 34px;
 }
 
+.asset-library__empty-title {
+  color: var(--vol-ui-text-secondary);
+  font-size: 15px;
+}
+
+.asset-library__empty-hint {
+  max-width: 560px;
+  color: var(--vol-ui-text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: center;
+}
+
 .quick-look {
   background: var(--studio-drawer-bg);
   border-left: 1px solid var(--vol-ui-border-soft);
@@ -650,14 +684,17 @@ audio:focus-visible {
   visibility: hidden;
   opacity: 0;
   overflow: hidden;
+  transform: translateX(24px);
   transition:
-    opacity var(--vol-transition-fast),
-    visibility var(--vol-transition-fast);
+    opacity var(--vol-transition-medium),
+    visibility var(--vol-transition-medium),
+    transform var(--vol-transition-medium);
 }
 
 .quick-look--open {
   visibility: visible;
   opacity: 1;
+  transform: translateX(0);
 }
 
 .quick-look__header {
@@ -690,7 +727,7 @@ audio:focus-visible {
 .quick-look__subtitle {
   color: var(--vol-ui-text-muted);
   margin: 5px 0 0;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .quick-look__close {
@@ -784,17 +821,23 @@ audio:focus-visible {
 
 .quick-look__metadata dt {
   color: var(--vol-ui-text-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .quick-look__metadata dd {
   color: var(--vol-ui-text-secondary);
-  font-size: 13px;
+  font-size: 14px;
   text-align: right;
 }
 
 .quick-look__value--danger {
   color: var(--vol-ui-warning-solid) !important;
+}
+
+.quick-look__actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
 }
 
 /* Önceki ortak hover sözleşmesiyle aynı bileşenin bağlamsal yerleşimidir. */
@@ -807,7 +850,7 @@ audio:focus-visible {
   gap: 9px;
   width: 100%;
   min-height: 40px;
-  margin-top: 18px;
+  margin: 0;
   padding: 8px 14px;
   display: flex;
 }
@@ -1070,31 +1113,67 @@ audio:focus-visible {
    Kütüphanenin üzerine tam alan kaplayan odaklı düzenleme kipi. Kabuk
    `studio-shell--editing` sınıfıyla bu kipe geçer. */
 .editor-panel {
+  /* Gövde grid'inin HER İKİ sütununu da kapsar (ray + çalışma alanı).
+     Tek hücreye bırakıldığında panel QuickLook sütununun genişliğine
+     sıkışıyordu. */
+  grid-column: 1 / -1;
+  grid-row: 1;
   position: absolute;
   inset: 0;
   z-index: 3;
-  display: none;
+  display: flex;
   flex-direction: column;
   min-height: 0;
   background: var(--studio-drawer-bg);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.995);
+  transition:
+    opacity var(--vol-transition-medium),
+    visibility var(--vol-transition-medium),
+    transform var(--vol-transition-medium);
 }
 
 /* Flex kolon, KONUMA BAĞLI grid track'lerine yeğlenir: çakışma şeridi
    gizlendiğinde grid'de sahne bir üst track'e kayıyor ve yüksekliği sıfıra
    düşüyordu — tuval 1 piksel kalıyor, tıklamalar araca hiç ulaşmıyordu. */
 .editor-panel--open {
-  display: flex;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .editor-panel__bar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+  gap: 18px;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 18px;
+  min-height: 60px;
+  padding: 8px 16px;
   border-bottom: 1px solid var(--vol-ui-border-soft);
   background: var(--studio-topbar-glass);
+}
+
+/* Üst bar KOMPAKTTIR: bileşenlerin görünür etiket satırları burada taşıyor ve
+   bara sığmıyordu. Erişilebilir ad `aria-label` ile korunur. */
+.editor-panel__bar .vol-color-picker__label,
+.editor-panel__bar .vol-color-picker__hex,
+.editor-panel__bar .vol-slider__label {
+  display: none;
+}
+
+.editor-panel__bar .vol-color-picker__row {
+  gap: 0;
+}
+
+.editor-panel__bar .vol-slider {
+  width: 150px;
+}
+
+.editor-panel__bar .vol-slider__label-row {
+  justify-content: flex-end;
 }
 
 .editor-panel__identity {
@@ -1151,18 +1230,15 @@ audio:focus-visible {
   color: var(--vol-ui-text);
 }
 
-.editor-panel__color {
+.editor-panel__color .vol-color-picker__swatch {
   width: 40px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-sm);
-  background: transparent;
-  cursor: pointer;
+  height: 36px;
 }
 
-.editor-panel__brush {
-  width: 110px;
+.editor-panel__color .vol-color-picker__hex {
+  width: 92px;
+  min-height: 36px;
+  font-size: 13px;
 }
 
 .editor-panel__save {
@@ -1254,4 +1330,653 @@ audio:focus-visible {
 
 .quick-look__edit:hover {
   background: var(--vol-ui-accent-hover);
+}
+
+.quick-look__edit[hidden] {
+  display: none;
+}
+
+/* Editör gövdesi: sahne + sağ panel sütunu. */
+.editor-panel__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.editor-panel__tools {
+  flex: 0 0 56px;
+  align-self: stretch;
+  gap: 6px;
+  padding: 10px 8px;
+  border: 0;
+  border-right: 1px solid var(--vol-ui-border-soft);
+  background: var(--studio-rail-bg);
+}
+
+.editor-panel__tools .vol-tool-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--vol-radius-md);
+}
+
+.editor-panel__tools .vol-icon {
+  width: 21px;
+  height: 21px;
+}
+
+.editor-panel__split {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.editor-panel__split > .vol-split-pane__pane {
+  min-width: 0;
+  min-height: 0;
+}
+
+.editor-panel__split > .vol-split-pane__pane--secondary {
+  background: var(--studio-drawer-bg);
+}
+
+.editor-panel__workspace {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.editor-panel__settings {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  min-height: 58px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  background: var(--studio-topbar-glass);
+}
+
+.editor-panel__settings .vol-color-picker {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-panel__settings .vol-slider {
+  width: min(220px, 28vw);
+}
+
+.editor-panel__sidebar {
+  display: grid;
+  grid-template-rows: minmax(220px, 1fr) minmax(180px, auto);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--studio-drawer-bg);
+}
+
+.layer-panel,
+.frame-panel,
+.palette-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+}
+
+.layer-panel {
+  overflow: hidden;
+}
+
+.palette-panel {
+  overflow-y: auto;
+}
+
+.frame-panel {
+  max-height: 176px;
+  border-top: 1px solid var(--vol-ui-border-soft);
+  border-bottom: 0;
+  background: var(--studio-drawer-bg);
+}
+
+.layer-panel__header,
+.frame-panel__header,
+.palette-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.layer-panel__title,
+.frame-panel__title,
+.palette-panel__title {
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.palette-panel__count {
+  color: var(--vol-ui-text-muted);
+  font-size: 11px;
+}
+
+.layer-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.layer-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--studio-card-bg);
+  cursor: pointer;
+}
+
+.layer-row--active {
+  border-color: var(--vol-ui-accent-border);
+  background: var(--vol-ui-accent-subtle);
+}
+
+.layer-row__top {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.layer-row__name {
+  overflow: hidden;
+  color: var(--vol-ui-text);
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.layer-row__visible {
+  display: inline-flex;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  color: var(--vol-ui-text-muted);
+  cursor: pointer;
+}
+
+.layer-row__visible[aria-pressed='true'] {
+  color: var(--vol-ui-accent-solid);
+}
+
+.layer-row__controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.layer-row__opacity-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.layer-row__blend {
+  flex: 0 0 104px;
+  min-width: 104px;
+  min-height: 30px;
+  padding: 3px 5px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--studio-input-bg);
+  color: var(--vol-ui-text);
+  font-size: 12px;
+}
+
+.layer-row__actions {
+  display: flex;
+  gap: 4px;
+}
+
+.frame-panel__strip {
+  display: flex;
+  gap: 8px;
+  min-height: 50px;
+  overflow-x: auto;
+  padding: 2px 2px 6px;
+}
+
+.frame-panel__controls {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(180px, 1fr);
+  gap: 20px;
+  align-items: end;
+}
+
+.frame-cell {
+  position: relative;
+  display: flex;
+  padding: 2px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--studio-card-bg);
+  color: var(--vol-ui-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.frame-cell--active {
+  border-color: var(--vol-ui-accent-border);
+  background: var(--vol-ui-accent-subtle);
+  color: var(--vol-ui-text);
+}
+
+.frame-panel__settings,
+.palette-panel__actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.frame-panel__field,
+.palette-panel__field {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--vol-ui-text-muted);
+  font-size: 11px;
+}
+
+.frame-panel__duration {
+  width: 68px;
+  padding: 3px 5px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--studio-input-bg);
+  color: var(--vol-ui-text);
+  font-size: 11px;
+}
+
+.palette-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+  gap: 6px;
+}
+
+.palette-swatch {
+  aspect-ratio: 1;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: 3px;
+  background: var(--swatch-color, #000);
+  cursor: pointer;
+}
+
+.palette-swatch--selected {
+  outline: 2px solid var(--vol-ui-accent-solid);
+  outline-offset: 1px;
+}
+
+.palette-panel__quantize {
+  padding: 5px 10px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: transparent;
+  color: var(--vol-ui-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* Ses: dalga formu görünümü. */
+
+/* Editör kipinde kütüphane rayı GİZLENİR.
+   Ray filtreleri yalnız kütüphaneye aittir; editör açıkken tıklanamıyor ama
+   ekranın solunda ölü bir sütun olarak duruyordu. */
+.studio-shell--editing .asset-rail {
+  display: none;
+}
+
+/* Panel bölümleri: başlık sola dayalı, aksiyonlar sağda. */
+.panel-section__header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+}
+
+.panel-section__actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.panel-section__actions--spread {
+  justify-content: space-between;
+  width: 100%;
+}
+
+.panel-section__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.layer-row__thumb,
+.frame-cell__thumb {
+  display: block;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: 3px;
+  background: var(--studio-checker-bg);
+  image-rendering: pixelated;
+}
+
+.frame-cell__index {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  padding: 0 3px;
+  border-radius: 2px;
+  background: var(--studio-state-bg);
+  color: var(--vol-ui-text);
+  font-size: 10px;
+}
+
+/* ===== Ses editörü =====
+   Piksel yüzeyinden AYRI: sesin kavramları rasterla örtüşmez. */
+.audio-editor {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--studio-drawer-bg);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.995);
+  transition:
+    opacity var(--vol-transition-medium),
+    visibility var(--vol-transition-medium),
+    transform var(--vol-transition-medium);
+}
+
+.audio-editor--open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.audio-editor__bar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  background: var(--studio-topbar-glass);
+}
+
+.audio-editor__identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.audio-editor__identity h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.audio-editor__identity > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.audio-editor__status {
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.audio-editor__transport {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+
+.audio-editor__transport .vol-button {
+  width: auto;
+}
+
+.audio-editor__workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.audio-editor__main {
+  display: grid;
+  grid-template-rows: minmax(260px, 1fr) auto auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px;
+  background: var(--studio-preview-bg);
+}
+
+.waveform {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 2%);
+}
+
+.waveform__canvas,
+.waveform__overlay {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.waveform__overlay {
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.audio-editor__main .waveform {
+  height: 100%;
+  min-height: 260px;
+}
+
+.audio-editor__selection {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 2px 0;
+}
+
+.audio-editor__selection-text {
+  color: var(--vol-ui-text-secondary);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.audio-editor__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  align-items: end;
+  padding-top: 14px;
+  border-top: 1px solid var(--vol-ui-border-soft);
+}
+
+.audio-editor__gain,
+.audio-editor__processes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+}
+
+.audio-editor__gain .vol-slider {
+  width: min(280px, 32vw);
+}
+
+.audio-editor__controls .vol-button {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.audio-editor__inspector {
+  min-height: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--vol-ui-border-soft);
+  background: var(--studio-drawer-bg);
+}
+
+.audio-editor__stats {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 14px;
+  margin: 0;
+  padding: 14px 16px;
+  color: var(--vol-ui-text-muted);
+  font-size: 13px;
+}
+
+.audio-editor__stats dt,
+.audio-editor__stats dd {
+  min-width: 0;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--vol-ui-hairline-alpha);
+}
+
+.audio-editor__stats dt {
+  color: var(--vol-ui-text-secondary);
+}
+
+.audio-editor__stats dd {
+  margin: 0;
+  color: var(--vol-ui-text);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.audio-editor__operations {
+  padding: 14px 16px;
+}
+
+.audio-editor__operations-header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.audio-editor__operations-header h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.audio-editor__operations-header .vol-button {
+  width: auto;
+}
+
+.audio-editor__operations-empty {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.audio-editor__operations-list {
+  display: grid;
+  gap: 7px;
+}
+
+.audio-editor__operation {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 38px;
+  padding: 7px 9px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--studio-card-bg);
+}
+
+.audio-editor__operation-index {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--vol-ui-accent-subtle);
+  color: var(--vol-ui-on-brand);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.audio-editor__operation-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--vol-ui-text-secondary);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.audio-editor > audio {
+  display: none;
+}
+
+@media (width <= 1100px) {
+  .audio-editor__workspace {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+
+  .audio-editor__bar {
+    align-items: flex-start;
+  }
+
+  .audio-editor__transport {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .editor-panel__settings {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  .editor-panel__settings .vol-slider {
+    width: 150px;
+  }
+
+  .frame-panel {
+    max-height: 190px;
+  }
 }

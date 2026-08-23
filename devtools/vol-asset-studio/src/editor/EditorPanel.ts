@@ -1,14 +1,47 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
+import { ColorPicker, Slider, SplitPane, Toolbar } from '@volstudio/core/ui';
 import type { AssetSummary } from '../../shared/index';
 import { AssetStudioApiError, type AssetStudioClient } from '../api/AssetStudioClient';
 import { element, replaceChildren } from '../ui/dom';
 import { icon, type IconName } from '../ui/icons';
 import { DocumentSession, type DocumentSessionState } from './DocumentSession';
+import { fromHex as paletteFromHex, quantizeToPalette, replaceColor } from './Palette';
 import { PixelEditor } from './PixelEditor';
 import type { Rgba } from './RasterSurface';
+import type { RasterBuffer } from './transform';
+import { StrokeRecorder } from './StrokeRecorder';
+import { FramePanel } from './panels/FramePanel';
+import { LayerPanel } from './panels/LayerPanel';
+import { PalettePanel } from './panels/PalettePanel';
 import type { ToolId } from './tools';
 
 export type Translate = (key: string, options?: Record<string, unknown>) => string;
+
+/**
+ * Panel yenilemesi bu kadar sessizlikten sonra koşar.
+ *
+ * Fırça darbesi boyunca onlarca durum değişimi olur; her birinde katman ve
+ * kare önizlemesi üretmek darbeyi yüzlerce milisaniye yavaşlatıyordu.
+ */
+const PANEL_REFRESH_DELAY_MS = 180;
+const EDITOR_PRIMARY_SIZE_KEY = 'vol-asset-studio:editor-primary-size';
+
+function readEditorPrimarySize(): number | null {
+  try {
+    const value = Number(localStorage.getItem(EDITOR_PRIMARY_SIZE_KEY));
+    return Number.isFinite(value) && value >= 420 ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeEditorPrimarySize(size: number): void {
+  try {
+    localStorage.setItem(EDITOR_PRIMARY_SIZE_KEY, String(Math.round(size)));
+  } catch {
+    return;
+  }
+}
 
 export interface EditorPanelOptions {
   client: AssetStudioClient;
@@ -25,6 +58,12 @@ const TOOL_ICONS: Record<ToolId, IconName> = {
   eraser: 'eraser',
   fill: 'fill',
   eyedropper: 'eyedropper',
+};
+const TOOL_SHORTCUTS: Record<ToolId, string> = {
+  pencil: 'B',
+  eraser: 'E',
+  fill: 'G',
+  eyedropper: 'I',
 };
 
 function toHex(color: Rgba): string {
@@ -54,9 +93,9 @@ export class EditorPanel {
   readonly #title: HTMLSpanElement;
   readonly #status: HTMLSpanElement;
   readonly #stage: HTMLDivElement;
-  readonly #toolButtons = new Map<ToolId, HTMLButtonElement>();
-  readonly #colorInput: HTMLInputElement;
-  readonly #brushInput: HTMLInputElement;
+  readonly #colorPicker: ColorPicker;
+  readonly #brush: Slider;
+  readonly #toolbar: Toolbar;
   readonly #undoButton: HTMLButtonElement;
   readonly #redoButton: HTMLButtonElement;
   readonly #fitButton: HTMLButtonElement;
@@ -66,6 +105,14 @@ export class EditorPanel {
   readonly #conflictBar: HTMLDivElement;
   readonly #conflictText: HTMLSpanElement;
   readonly #reloadButton: HTMLButtonElement;
+  readonly #layerPanel: LayerPanel;
+  readonly #framePanel: FramePanel;
+  readonly #palettePanel: PalettePanel;
+  readonly #sidebar: HTMLElement;
+  readonly #splitPane: SplitPane;
+  #playbackTimer: ReturnType<typeof setTimeout> | null = null;
+  #panelTimer: ReturnType<typeof setTimeout> | null = null;
+  #lastState: DocumentSessionState | null = null;
   #t: Translate;
   #asset: AssetSummary | null = null;
   #session: DocumentSession | null = null;
@@ -81,35 +128,52 @@ export class EditorPanel {
     this.#status = element('span', { className: 'editor-panel__status' });
     this.#closeButton = this.#iconButton('close', 'close', () => options.onClose());
 
+    // Araç seçimi CORE `Toolbar`: roving tabindex, tek seçim ve ARIA onun
+    // sözleşmesinde. Elle `aria-pressed` yönetmek bu davranışı kaybettiriyordu.
+    this.#toolbar = new Toolbar({
+      ariaLabel: options.t('editor.toolsLabel'),
+      orientation: 'vertical',
+      selectionMode: 'single',
+      value: 'pencil',
+      items: TOOL_ORDER.map((id) => ({
+        id,
+        icon: TOOL_ICONS[id],
+        label: options.t(`editor.tools.${id}`),
+        shortcut: TOOL_SHORTCUTS[id],
+      })),
+      onChange: (value) => {
+        if (typeof value === 'string') this.#editor?.setActiveTool(value as ToolId);
+      },
+    });
+    this.#toolbar.element.classList.add('editor-panel__tools');
     for (const id of TOOL_ORDER) {
-      const button = element('button', {
-        className: 'editor-panel__tool',
-        attrs: { type: 'button', 'data-tool': id, 'aria-pressed': 'false' },
-        children: [icon(TOOL_ICONS[id])],
-      });
-      this.#scope.addListener(button, 'click', () => this.setTool(id));
-      this.#toolButtons.set(id, button);
+      const button = this.#toolbar.getButton(id)?.element;
+      if (button) {
+        button.classList.add('editor-panel__tool');
+        button.dataset.tool = id;
+      }
     }
 
-    this.#colorInput = element('input', {
-      className: 'editor-panel__color',
-      attrs: { type: 'color', value: '#ffffff' },
+    // Renk seçimi CORE `ColorPicker`: ham `<input type="color">` TARAYICININ
+    // kendi diyaloğunu açıyordu — VOL teması, fontları ve i18n'i olmayan,
+    // uygulamaya hiç benzemeyen bir pencere.
+    this.#colorPicker = new ColorPicker({
+      value: '#ffffff',
+      label: options.t('editor.color'),
+      onInput: (value) => this.#editor?.setPrimaryColor(fromHex(value)),
     });
-    this.#scope.addListener(
-      this.#colorInput,
-      'input',
-      () => this.#editor?.setPrimaryColor(fromHex(this.#colorInput.value)),
-    );
+    this.#colorPicker.element.classList.add('editor-panel__color');
 
-    this.#brushInput = element('input', {
-      className: 'editor-panel__brush',
-      attrs: { type: 'range', min: '1', max: '16', step: '1', value: '1' },
+    this.#brush = new Slider({
+      min: 1,
+      max: 16,
+      step: 1,
+      value: 1,
+      label: options.t('editor.brush'),
+      formatValue: (value) => `${Math.round(value)} px`,
+      onInput: (value) => this.#editor?.setBrushSize(value),
     });
-    this.#scope.addListener(
-      this.#brushInput,
-      'input',
-      () => this.#editor?.setBrushSize(Number(this.#brushInput.value)),
-    );
+    this.#brush.element.classList.add('editor-panel__brush');
 
     this.#undoButton = this.#iconButton('undo', 'undo', () => {
       this.#session?.undo();
@@ -145,6 +209,79 @@ export class EditorPanel {
 
     this.#stage = element('div', { className: 'editor-panel__stage' });
 
+    this.#layerPanel = new LayerPanel({
+      t: (key, opts) => this.#t(key, opts),
+      onSelect: (layerId) => this.#session?.setActiveLayer(layerId),
+      onToggleVisible: (layerId, visible) =>
+        this.#session?.updateLayer(layerId, { visible }, this.#t('editor.layerVisible')),
+      onOpacity: (layerId, opacity) =>
+        this.#session?.updateLayer(layerId, { opacity }, this.#t('editor.layerOpacity')),
+      onBlendMode: (layerId, blendMode) =>
+        this.#session?.updateLayer(layerId, { blendMode }, this.#t('editor.layerBlend')),
+      onAdd: () => this.#session?.addLayer(),
+      onRemove: (layerId) => this.#session?.removeLayer(layerId),
+      onMove: (layerId, direction) => this.#session?.moveLayer(layerId, direction),
+      onMergeDown: (layerId) => this.#session?.mergeLayerDown(layerId),
+    });
+
+    this.#framePanel = new FramePanel({
+      t: (key, opts) => this.#t(key, opts),
+      onSelect: (index) => this.#session?.setActiveFrame(index),
+      onAdd: (copyCurrent) => this.#session?.addFrame(copyCurrent),
+      onRemove: (index) => this.#session?.removeFrame(index),
+      onDuration: (index, durationMs) => this.#session?.setFrameDuration(index, durationMs),
+      onOnionSkin: (before, after) => this.#editor?.setOnionSkin(before, after),
+      onPlayToggle: (playing) => this.#setPlayback(playing),
+    });
+
+    this.#palettePanel = new PalettePanel({
+      t: (key, opts) => this.#t(key, opts),
+      onPick: (hex) => {
+        this.#colorPicker.setValue(hex);
+        this.#editor?.setPrimaryColor(paletteFromHex(hex));
+      },
+      onReplace: (from, to) =>
+        this.#applyBufferEdit(this.#t('editor.palette'), (buffer) =>
+          replaceColor(buffer, paletteFromHex(from), paletteFromHex(to)),
+        ),
+      onQuantize: (palette, dither) =>
+        this.#applyBufferEdit(this.#t('editor.quantize'), (buffer) =>
+          quantizeToPalette(buffer, {
+            palette,
+            ...(dither ? { dither: 'bayer4' as const, ditherAmount: 0.6 } : {}),
+          }),
+        ),
+    });
+
+    this.#sidebar = element('aside', {
+      className: 'editor-panel__sidebar',
+      children: [this.#layerPanel.element, this.#palettePanel.element],
+    });
+    const settings = element('div', {
+      className: 'editor-panel__settings',
+      children: [
+        this.#colorPicker.element,
+        this.#brush.element,
+        this.#fitButton,
+        this.#actualSizeButton,
+      ],
+    });
+    const workspace = element('div', {
+      className: 'editor-panel__workspace',
+      children: [settings, this.#stage, this.#framePanel.element],
+    });
+    this.#splitPane = new SplitPane({
+      primary: workspace,
+      secondary: this.#sidebar,
+      initialSize: Math.max(480, (typeof window === 'undefined' ? 1024 : window.innerWidth) - 320),
+      minPrimary: 420,
+      minSecondary: 272,
+      onCommit: (size) => storeEditorPrimarySize(size),
+      className: 'editor-panel__split',
+    });
+    const storedSize = readEditorPrimarySize();
+    if (storedSize !== null) this.#splitPane.setSize(storedSize);
+
     this.element = element('section', {
       className: 'editor-panel',
       attrs: { 'aria-hidden': 'true' },
@@ -157,29 +294,21 @@ export class EditorPanel {
               children: [this.#title, this.#status],
             }),
             element('div', {
-              className: 'editor-panel__tools',
-              attrs: { role: 'group' },
-              children: [...this.#toolButtons.values()],
-            }),
-            element('div', {
-              className: 'editor-panel__settings',
-              children: [
-                this.#colorInput,
-                this.#brushInput,
-                this.#fitButton,
-                this.#actualSizeButton,
-              ],
-            }),
-            element('div', {
               className: 'editor-panel__actions',
               children: [this.#undoButton, this.#redoButton, this.#saveButton, this.#closeButton],
             }),
           ],
         }),
         this.#conflictBar,
-        this.#stage,
+        element('div', {
+          className: 'editor-panel__body',
+          children: [this.#toolbar.element, this.#splitPane.element],
+        }),
       ],
     });
+    this.#scope.addListener(window, 'keydown', (event) =>
+      this.#handleKeydown(event as KeyboardEvent),
+    );
     this.renderLabels();
   }
 
@@ -198,6 +327,9 @@ export class EditorPanel {
   public setTranslator(t: Translate): void {
     this.#t = t;
     this.renderLabels();
+    this.#layerPanel.setTranslator(t);
+    this.#framePanel.setTranslator(t);
+    this.#palettePanel.setTranslator(t);
     this.#syncState();
   }
 
@@ -234,10 +366,10 @@ export class EditorPanel {
           eyedropper: this.#t('editor.tools.eyedropper'),
         },
         onColorChange: (color) => {
-          this.#colorInput.value = toHex(color);
+          this.#colorPicker.setValue(toHex(color));
         },
       });
-      this.#editor.setPrimaryColor(fromHex(this.#colorInput.value));
+      this.#editor.setPrimaryColor(fromHex(this.#colorPicker.getValue()));
       this.setTool('pencil');
       if (raster.strippedMetadata.length > 0) {
         this.#options.onToast(
@@ -255,9 +387,7 @@ export class EditorPanel {
 
   public setTool(id: ToolId): void {
     this.#editor?.setActiveTool(id);
-    for (const [toolId, button] of this.#toolButtons) {
-      button.setAttribute('aria-pressed', String(toolId === id));
-    }
+    this.#toolbar.setValue(id);
   }
 
   /** Diskteki güncel içeriği yeniden yükler; kirli çalışmayı ATAR. */
@@ -313,8 +443,119 @@ export class EditorPanel {
 
   public destroy(): void {
     this.close();
+    this.#toolbar.destroy();
+    this.#colorPicker.destroy();
+    this.#brush.destroy();
+    this.#layerPanel.destroy();
+    this.#framePanel.destroy();
+    this.#palettePanel.destroy();
+    this.#splitPane.destroy();
     this.#scope.dispose();
     this.element.remove();
+  }
+
+  #handleKeydown(event: KeyboardEvent): void {
+    if (!this.isOpen) return;
+    const target = event.target;
+    if (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      (target instanceof HTMLElement && target.isContentEditable)
+    ) {
+      return;
+    }
+    const key = event.key.toLocaleLowerCase();
+    const command = event.ctrlKey || event.metaKey;
+    if (command && key === 's') {
+      event.preventDefault();
+      void this.save();
+      return;
+    }
+    if (command && key === 'z') {
+      event.preventDefault();
+      if (event.shiftKey) this.#session?.redo();
+      else this.#session?.undo();
+      return;
+    }
+    const tool =
+      key === 'b'
+        ? 'pencil'
+        : key === 'e'
+        ? 'eraser'
+        : key === 'g'
+        ? 'fill'
+        : key === 'i'
+        ? 'eyedropper'
+        : null;
+    if (tool !== null) {
+      event.preventDefault();
+      this.setTool(tool);
+      return;
+    }
+    if (key === 'f') {
+      event.preventDefault();
+      this.#editor?.fit();
+    } else if (key === '1') {
+      event.preventDefault();
+      this.#editor?.actualSize();
+    } else if (key === '[' || key === ']') {
+      event.preventDefault();
+      const next = this.#brush.getValue() + (key === '[' ? -1 : 1);
+      this.#brush.setValue(next);
+      this.#editor?.setBrushSize(next);
+    } else if (key === 'escape') {
+      this.#editor?.cancelGesture();
+    }
+  }
+
+  /**
+   * Bütün bileşiği dönüştüren işlemleri tek undo adımına indirir.
+   *
+   * Palet indirgeme ve renk değiştirme AKTİF KATMANA uygulanır; bileşiğe
+   * yazmak alttaki katmanları düzleştirir ve kullanıcının katman ayrımını
+   * sessizce yok ederdi.
+   */
+  #applyBufferEdit(label: string, transform: (buffer: RasterBuffer) => RasterBuffer): void {
+    const session = this.#session;
+    if (session === null) return;
+    const surface = session.surface;
+    const before = { width: surface.width, height: surface.height, rgba: surface.toRgba() };
+    const after = transform(before);
+    const recorder = new StrokeRecorder(surface);
+    for (let y = 0; y < surface.height; y += 1) {
+      for (let x = 0; x < surface.width; x += 1) {
+        const index = (y * surface.width + x) * 4;
+        recorder.setPixel(x, y, {
+          r: after.rgba[index],
+          g: after.rgba[index + 1],
+          b: after.rgba[index + 2],
+          a: after.rgba[index + 3],
+        });
+      }
+    }
+    const command = recorder.toCommand({ label });
+    if (command !== null) session.record(command);
+    this.#editor?.requestRender();
+  }
+
+  /** Kare önizlemesi: her karenin kendi süresiyle ilerler. */
+  #setPlayback(playing: boolean): void {
+    if (this.#playbackTimer !== null) {
+      clearTimeout(this.#playbackTimer);
+      this.#playbackTimer = null;
+    }
+    if (!playing) return;
+    const step = (): void => {
+      const session = this.#session;
+      if (session === null || !this.#framePanel.isPlaying) return;
+      const next = (session.document.activeFrameIndex + 1) % session.document.frameCount;
+      session.setActiveFrame(next);
+      this.#editor?.requestRender();
+      const frame = session.document.frameAt(next);
+      this.#playbackTimer = setTimeout(step, frame?.durationMs ?? 100);
+    };
+    this.#playbackTimer = setTimeout(step, 100);
   }
 
   public renderLabels(): void {
@@ -324,15 +565,32 @@ export class EditorPanel {
     this.#labelButton(this.#fitButton, 'editor.fit');
     this.#labelButton(this.#actualSizeButton, 'editor.actualSize');
     this.#labelButton(this.#closeButton, 'editor.close');
-    this.#colorInput.setAttribute('aria-label', this.#t('editor.color'));
-    this.#brushInput.setAttribute('aria-label', this.#t('editor.brush'));
+    this.#toolbar.element.setAttribute('aria-label', this.#t('editor.toolsLabel'));
+    this.#colorPicker.setLabel(this.#t('editor.color'));
+    this.#colorPicker.element.setAttribute('aria-label', this.#t('editor.color'));
+    this.#brush.setLabel(this.#t('editor.brush'));
+    this.#brush.element.setAttribute('aria-label', this.#t('editor.brush'));
     this.#reloadButton.textContent = this.#t('editor.reloadFromDisk');
-    for (const [id, button] of this.#toolButtons) {
-      this.#labelButton(button, `editor.tools.${id}`);
+    for (const id of TOOL_ORDER) {
+      const button = this.#toolbar.getButton(id)?.element;
+      if (button === undefined) continue;
+      const label = this.#t(`editor.tools.${id}`);
+      button.setAttribute('aria-label', label);
+      button.title = `${label} (${TOOL_SHORTCUTS[id]})`;
     }
   }
 
   #teardownDocument(): void {
+    this.#framePanel.stopPlayback();
+    if (this.#panelTimer !== null) {
+      clearTimeout(this.#panelTimer);
+      this.#panelTimer = null;
+    }
+    this.#lastState = null;
+    if (this.#playbackTimer !== null) {
+      clearTimeout(this.#playbackTimer);
+      this.#playbackTimer = null;
+    }
     this.#request?.abort();
     this.#request = null;
     this.#editor?.destroy();
@@ -377,7 +635,17 @@ export class EditorPanel {
     button.title = label;
   }
 
+  /**
+   * Ucuz durum: her değişimde koşar.
+   *
+   * Pahalı panel yenilemesi (katman ve kare küçük önizlemeleri, palet taraması)
+   * BURADA YAPILMAZ. Bir dönem yapılıyordu ve tek fırça darbesi 1024² belgede
+   * 700 ms sürüyordu: darbe boyunca her hareket tam bileşik, her katman için
+   * tam tampon kopyası ve 1M piksellik palet taraması tetikliyordu. Pahalı iş
+   * artık gecikmeli ve yalnız gesture bittikten sonra koşar.
+   */
   #applyState(state: DocumentSessionState): void {
+    this.#lastState = state;
     this.#undoButton.disabled = !state.canUndo;
     this.#redoButton.disabled = !state.canRedo;
     this.#saveButton.disabled = this.#saving || !state.dirty;
@@ -391,6 +659,36 @@ export class EditorPanel {
         ? this.#t('editor.conflictDirty')
         : this.#t('editor.conflictClean');
     }
+    this.#editor?.requestRender();
+    this.#schedulePanelRefresh();
+  }
+
+  /** Pahalı panel yenilemesini geciktirir; hızlı ardışık değişimler tek sefere iner. */
+  #schedulePanelRefresh(): void {
+    if (this.#panelTimer !== null) clearTimeout(this.#panelTimer);
+    this.#panelTimer = setTimeout(() => {
+      this.#panelTimer = null;
+      this.#refreshPanels();
+    }, PANEL_REFRESH_DELAY_MS);
+  }
+
+  #refreshPanels(): void {
+    const session = this.#session;
+    const state = this.#lastState;
+    if (session === null || state === null) return;
+    this.#layerPanel.setLayers(state.layers, state.activeLayerId, (layerId) => ({
+      width: session.document.width,
+      height: session.document.height,
+      rgba: session.document.celSurface(session.document.activeFrameIndex, layerId).toRgba(),
+    }));
+    const frame = session.document.frameAt(state.activeFrameIndex);
+    this.#framePanel.setFrames(
+      state.frameCount,
+      state.activeFrameIndex,
+      frame?.durationMs ?? 100,
+      (index) => session.document.compositeFrame(index),
+    );
+    this.#palettePanel.update(session.composite());
   }
 
   #syncState(): void {

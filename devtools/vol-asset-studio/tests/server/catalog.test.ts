@@ -63,6 +63,25 @@ describe('AssetCatalog', () => {
     expect(changed?.asset.problemCodes).toEqual(['image_decode_failed']);
   });
 
+  it('ses imzası, metadata yapısı ve boş dosya sorunlarını kataloglar', async () => {
+    const fixture = await createFixtureProject();
+    fixtures.push(fixture);
+    await writeFile(fixture.wavPath, Buffer.from('not-wave'));
+    await writeFile(`${fixture.assetsRoot}/car.json`, '{');
+    await writeFile(`${fixture.assetsRoot}/empty.json`, '');
+
+    const snapshot = (await createCatalog(fixture)).snapshot();
+    expect(snapshot.assets.find((asset) => asset.name === 'tone.wav')?.problemCodes).toEqual([
+      'audio_header_invalid',
+    ]);
+    expect(snapshot.assets.find((asset) => asset.name === 'car.json')?.problemCodes).toEqual([
+      'metadata_parse_failed',
+    ]);
+    expect(snapshot.assets.find((asset) => asset.name === 'empty.json')?.problemCodes).toEqual([
+      'asset_empty',
+    ]);
+  });
+
   it('repo göreli Git durumunu clean, modified ve untracked olarak eşler', async () => {
     const fixture = await createFixtureProject();
     fixtures.push(fixture);

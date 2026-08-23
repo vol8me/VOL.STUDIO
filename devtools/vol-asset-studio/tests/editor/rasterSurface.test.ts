@@ -81,6 +81,18 @@ describe('RasterSurface — tembel tile deposu', () => {
     expect(surface.toRgba().every((byte) => byte === 0)).toBe(true);
   });
 
+  it('renderer için yalnız sürümden sonra değişen tileları verir', () => {
+    const surface = new RasterSurface(256, 256);
+    const baseline = surface.version;
+    surface.setPixel(130, 5, RED);
+    surface.setPixel(131, 5, BLUE);
+
+    const updates = surface.tileUpdatesSince(baseline);
+    expect(updates).toHaveLength(1);
+    expect(updates[0].rect).toEqual({ x: 128, y: 0, width: 64, height: 64 });
+    expect(surface.tileUpdatesSince(surface.version)).toEqual([]);
+  });
+
   it('compact saydamlaşmış tileları bellekten düşürür', () => {
     const surface = new RasterSurface(128, 128);
     surface.setPixel(10, 10, RED);

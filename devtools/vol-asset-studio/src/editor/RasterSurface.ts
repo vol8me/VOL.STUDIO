@@ -23,6 +23,12 @@ export interface TileSnapshot {
   after: Uint8ClampedArray | null;
 }
 
+export interface SurfaceTileUpdate {
+  index: number;
+  rect: SurfaceRect;
+  data: Uint8ClampedArray | null;
+}
+
 const TRANSPARENT: Readonly<Rgba> = Object.freeze({ r: 0, g: 0, b: 0, a: 0 });
 
 /**
@@ -39,6 +45,9 @@ export class RasterSurface {
   readonly tilesX: number;
   readonly tilesY: number;
   readonly #tiles = new Map<number, Uint8ClampedArray>();
+  readonly #tileVersions = new Map<number, number>();
+  /** Her yazımda artar; bileşik önbelleği bunu izleyerek geçersiz kılınır. */
+  #version = 0;
 
   public constructor(width: number, height: number) {
     if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1) {
@@ -59,13 +68,21 @@ export class RasterSurface {
     for (let ty = 0; ty < surface.tilesY; ty += 1) {
       for (let tx = 0; tx < surface.tilesX; tx += 1) {
         const tile = surface.#readTileFromRgba(rgba, tx, ty);
-        if (tile !== null) surface.#tiles.set(ty * surface.tilesX + tx, tile);
+        if (tile !== null) {
+          const index = ty * surface.tilesX + tx;
+          surface.#tiles.set(index, tile);
+          surface.#tileVersions.set(index, 0);
+        }
       }
     }
     return surface;
   }
 
   /** Bellekte tutulan (yani tümüyle saydam olmayan) tile sayısı. */
+  public get version(): number {
+    return this.#version;
+  }
+
   public get residentTileCount(): number {
     return this.#tiles.size;
   }
@@ -109,6 +126,8 @@ export class RasterSurface {
     tile[offset + 1] = color.g;
     tile[offset + 2] = color.b;
     tile[offset + 3] = color.a;
+    this.#version += 1;
+    this.#tileVersions.set(index, this.#version);
     return true;
   }
 
@@ -135,8 +154,19 @@ export class RasterSurface {
     return tile === undefined ? null : new Uint8ClampedArray(tile);
   }
 
+  public tileUpdatesSince(version: number): SurfaceTileUpdate[] {
+    const updates: SurfaceTileUpdate[] = [];
+    for (const [index, changedAt] of this.#tileVersions) {
+      if (changedAt <= version) continue;
+      updates.push({ index, rect: this.tileRect(index), data: this.copyTile(index) });
+    }
+    return updates;
+  }
+
   /** Tile'ı verilen içerikle değiştirir; `null` onu saydama döndürür. */
   public restoreTile(index: number, data: Uint8ClampedArray | null): void {
+    this.#version += 1;
+    this.#tileVersions.set(index, this.#version);
     if (data === null) {
       this.#tiles.delete(index);
       return;
@@ -158,6 +188,8 @@ export class RasterSurface {
       }
       if (!opaque) {
         this.#tiles.delete(index);
+        this.#version += 1;
+        this.#tileVersions.set(index, this.#version);
         removed += 1;
       }
     }
@@ -180,7 +212,10 @@ export class RasterSurface {
 
   public clone(): RasterSurface {
     const copy = new RasterSurface(this.width, this.height);
-    for (const [index, tile] of this.#tiles) copy.#tiles.set(index, new Uint8ClampedArray(tile));
+    for (const [index, tile] of this.#tiles) {
+      copy.#tiles.set(index, new Uint8ClampedArray(tile));
+      copy.#tileVersions.set(index, 0);
+    }
     return copy;
   }
 

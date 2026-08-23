@@ -228,6 +228,21 @@ describe('EditorPanel — araç ve yaşam döngüsü', () => {
     expect(pressed[0].getAttribute('data-tool')).toBe('fill');
   });
 
+  it('araç klavye kısayollarını form alanı dışında uygular', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(rasterResponse())),
+    );
+    const { panel } = mount();
+    await panel.open(IMAGE);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
+
+    expect(panel.element.querySelector('[data-tool="eraser"]')?.getAttribute('aria-pressed')).toBe(
+      'true',
+    );
+  });
+
   it('kapatma belgeyi bırakır ve tuvali söker', async () => {
     vi.stubGlobal(
       'fetch',
@@ -279,6 +294,20 @@ describe('EditorPanel — araç ve yaşam döngüsü', () => {
     panel.destroy();
 
     expect(element.isConnected).toBe(false);
+  });
+
+  it('reload açık varlığı yeniden indirir', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(rasterResponse())),
+    );
+    const { panel } = mount();
+    await panel.open(IMAGE);
+
+    await panel.reload();
+
+    expect(panel.isOpen).toBe(true);
+    expect(panel.openAssetId).toBe('asset-1');
   });
 
   it('hata kodu bilinmiyorsa genel mesaja düşer', async () => {

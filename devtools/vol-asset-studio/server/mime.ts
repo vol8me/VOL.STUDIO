@@ -1,6 +1,8 @@
 import { extname } from 'node:path';
 
 const MIME_BY_EXTENSION: Readonly<Record<string, string>> = {
+  '.avif': 'image/avif',
+  '.flac': 'audio/flac',
   '.gif': 'image/gif',
   '.jpeg': 'image/jpeg',
   '.jpg': 'image/jpeg',

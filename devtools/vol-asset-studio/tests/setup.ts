@@ -15,6 +15,9 @@ const noopContext2d = {
   fillStyle: '',
   strokeStyle: '',
   lineWidth: 1,
+  globalAlpha: 1,
+  globalCompositeOperation: 'source-over',
+  font: '',
   save: vi.fn(),
   restore: vi.fn(),
   scale: vi.fn(),
@@ -23,12 +26,14 @@ const noopContext2d = {
   fillRect: vi.fn(),
   strokeRect: vi.fn(),
   beginPath: vi.fn(),
+  closePath: vi.fn(),
   rect: vi.fn(),
   clip: vi.fn(),
   moveTo: vi.fn(),
   lineTo: vi.fn(),
   stroke: vi.fn(),
   fill: vi.fn(),
+  fillText: vi.fn(),
   drawImage: vi.fn(),
   putImageData: vi.fn(),
   createImageData: vi.fn(
@@ -55,6 +60,11 @@ if (typeof globalThis.PointerEvent === 'undefined') {
       this.pointerId = init.pointerId ?? 0;
     }
   } as unknown as typeof PointerEvent;
+}
+
+if (typeof HTMLMediaElement !== 'undefined') {
+  HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
+  HTMLMediaElement.prototype.pause = vi.fn();
 }
 
 if (typeof globalThis.ResizeObserver === 'undefined') {

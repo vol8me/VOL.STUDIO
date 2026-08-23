@@ -1,5 +1,5 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
-import { Toolbar, ToolButton } from '@volstudio/core/ui';
+import { Icon, Input, Text, Toolbar, ToolButton } from '@volstudio/core/ui';
 import type { AssetSummary } from '../../shared/index';
 import type { AssetStudioClient } from '../api/AssetStudioClient';
 import { element } from '../ui/dom';
@@ -39,9 +39,11 @@ export class AssetLibrary {
   readonly rail: HTMLElement;
 
   private readonly scope = new DisposableScope();
-  private readonly headerTitle: HTMLHeadingElement;
-  private readonly count: HTMLSpanElement;
-  private readonly searchInput: HTMLInputElement;
+  private readonly headerTitle: Text;
+  private readonly count: Text;
+  private readonly search: Input;
+  private readonly emptyText: Text;
+  private readonly emptyHint: Text;
   private readonly filterToolbar: Toolbar;
   private readonly viewToolbar: Toolbar;
   private readonly gridButton: ToolButton;
@@ -70,7 +72,6 @@ export class AssetLibrary {
         id: filter.id,
         icon: filter.icon,
         label: this.t(`library.${filter.id}`),
-        text: this.t(`library.${filter.id}`),
       })),
       onChange: (value) => {
         if (typeof value === 'string') this.setFilter(value as AssetFilter);
@@ -83,32 +84,30 @@ export class AssetLibrary {
       if (!button) continue;
       button.classList.add('asset-rail__button');
       button.dataset.filter = filter.id;
-      button.querySelector('.vol-tool-button__text')?.classList.add('asset-rail__label');
+      if (filter.id === 'problems' || filter.id === 'modified') {
+        button.append(element('span', { className: 'asset-rail__badge', attrs: { hidden: true } }));
+      }
     }
 
-    this.headerTitle = element('h1', {
-      className: 'asset-library__title',
-      children: [this.t('library.title')],
-    });
-    this.count = element('span', { className: 'asset-library__count' });
+    this.headerTitle = new Text(this.t('library.title'), { variant: 'title', tag: 'h1' });
+    this.headerTitle.element.classList.add('asset-library__title');
+    this.count = new Text('', { variant: 'muted' });
+    this.count.element.classList.add('asset-library__count');
 
-    this.searchInput = element('input', {
-      className: 'asset-search__input',
-      attrs: {
-        type: 'search',
-        placeholder: this.t('library.search'),
-        'aria-label': this.t('library.search'),
-        autocomplete: 'off',
-        spellcheck: 'false',
+    this.search = new Input({
+      type: 'search',
+      placeholder: this.t('library.search'),
+      onInput: (value) => {
+        this.query = normalize(value);
+        this.renderAssets();
       },
     });
-    this.scope.addListener(this.searchInput, 'input', () => {
-      this.query = normalize(this.searchInput.value);
-      this.renderAssets();
-    });
+    this.search.element.classList.add('asset-search__input');
+    this.search.element.setAttribute('aria-label', this.t('library.search'));
+    this.search.element.setAttribute('autocomplete', 'off');
     const search = element('label', {
       className: 'asset-search',
-      children: [icon('search'), this.searchInput],
+      children: [icon('search'), this.search.element],
     });
 
     this.viewToolbar = new Toolbar({
@@ -143,14 +142,33 @@ export class AssetLibrary {
     });
     const heading = element('div', {
       className: 'asset-library__heading',
-      children: [element('div', { children: [this.headerTitle, this.count] }), search, viewTools],
+      children: [
+        element('div', {
+          className: 'asset-library__identity',
+          children: [this.headerTitle.element, this.count.element],
+        }),
+        search,
+        viewTools,
+      ],
     });
 
-    this.content = element('div', { className: 'asset-grid', attrs: { role: 'list' } });
+    this.content = element('div', {
+      className: 'asset-grid',
+      attrs: { role: 'listbox', 'aria-label': this.t('library.title') },
+    });
     this.scope.addListener(this.content, 'click', (event) => this.handleCardClick(event));
+    this.emptyText = new Text(this.t('library.empty'), { variant: 'muted' });
+    this.emptyText.element.classList.add('asset-library__empty-title');
+    this.emptyHint = new Text(this.t('library.problemScope'), { variant: 'muted' });
+    this.emptyHint.element.classList.add('asset-library__empty-hint');
+    this.emptyHint.element.hidden = true;
     this.empty = element('div', {
       className: 'asset-library__empty',
-      children: [icon('file'), element('span', { children: [this.t('library.empty')] })],
+      children: [
+        new Icon({ name: 'file' }).element,
+        this.emptyText.element,
+        this.emptyHint.element,
+      ],
     });
 
     this.element = element('section', {
@@ -164,7 +182,7 @@ export class AssetLibrary {
         }),
       ],
     });
-    this.headerTitle.id = 'asset-library-title';
+    this.headerTitle.element.id = 'asset-library-title';
     this.renderState();
   }
 
@@ -176,26 +194,36 @@ export class AssetLibrary {
       this.selectedId = null;
       this.options.onSelect(null);
     }
+    this.updateFilterBadges();
     this.renderAssets();
   }
 
   setSelected(assetId: string | null): void {
     const previous = this.selectedId;
     this.selectedId = assetId;
-    if (previous) this.cards.get(previous)?.element.classList.remove('asset-card--selected');
-    if (assetId) this.cards.get(assetId)?.element.classList.add('asset-card--selected');
+    if (previous) {
+      const card = this.cards.get(previous)?.element;
+      card?.classList.remove('asset-card--selected');
+      card?.setAttribute('aria-selected', 'false');
+    }
+    if (assetId) {
+      const card = this.cards.get(assetId)?.element;
+      card?.classList.add('asset-card--selected');
+      card?.setAttribute('aria-selected', 'true');
+    }
   }
 
   setTranslator(t: Translate): void {
     this.t = t;
-    this.headerTitle.textContent = t('library.title');
-    this.searchInput.placeholder = t('library.search');
-    this.searchInput.setAttribute('aria-label', t('library.search'));
+    this.headerTitle.setContent(t('library.title'));
+    this.emptyText.setContent(t('library.empty'));
+    this.emptyHint.setContent(t('library.problemScope'));
+    this.search.element.placeholder = t('library.search');
+    this.search.element.setAttribute('aria-label', t('library.search'));
+    this.content.setAttribute('aria-label', t('library.title'));
     this.rail.setAttribute('aria-label', t('library.filters'));
     for (const { id } of FILTERS) {
       const button = this.filterToolbar.getButton(id)?.element;
-      const label = button?.querySelector<HTMLElement>('.asset-rail__label');
-      if (label) label.textContent = t(`library.${id}`);
       button?.setAttribute('aria-label', t(`library.${id}`));
       if (button) button.title = t(`library.${id}`);
     }
@@ -204,7 +232,7 @@ export class AssetLibrary {
   }
 
   focusSearch(): void {
-    this.searchInput.focus();
+    this.search.focus();
   }
 
   destroy(): void {
@@ -214,6 +242,11 @@ export class AssetLibrary {
     this.filterToolbar.destroy();
     this.viewToolbar.destroy();
     this.refreshButton.destroy();
+    this.headerTitle.destroy();
+    this.count.destroy();
+    this.emptyText.destroy();
+    this.emptyHint.destroy();
+    this.search.destroy();
     this.scope.dispose();
   }
 
@@ -244,6 +277,9 @@ export class AssetLibrary {
       button.classList.toggle('asset-rail__button--active', active);
       button.setAttribute('aria-current', active ? 'page' : 'false');
     }
+    this.headerTitle.setContent(
+      this.filter === 'all' ? this.t('library.title') : this.t(`library.${this.filter}`),
+    );
     this.content.dataset.view = this.view;
     this.viewToolbar.setValue(this.view);
     this.gridButton.element.classList.toggle('icon-action--active', this.view === 'grid');
@@ -259,6 +295,24 @@ export class AssetLibrary {
     ] as const) {
       button.title = this.t(key);
       button.setAttribute('aria-label', this.t(key));
+    }
+  }
+
+  private updateFilterBadges(): void {
+    const counts: Partial<Record<AssetFilter, number>> = {
+      problems: this.assets.filter((asset) => asset.problemCodes.length > 0).length,
+      modified: this.assets.filter(
+        (asset) => Boolean(asset.gitStatus) && asset.gitStatus !== 'clean',
+      ).length,
+    };
+    for (const id of ['problems', 'modified'] as const) {
+      const badge = this.filterToolbar
+        .getButton(id)
+        ?.element.querySelector<HTMLElement>('.asset-rail__badge');
+      if (!badge) continue;
+      const count = counts[id] ?? 0;
+      badge.textContent = count > 99 ? '99+' : String(count);
+      badge.hidden = count === 0;
     }
   }
 
@@ -291,11 +345,17 @@ export class AssetLibrary {
         card = replacement;
         this.cards.set(asset.id, card);
       }
-      card.element.classList.toggle('asset-card--selected', asset.id === this.selectedId);
+      const selected = asset.id === this.selectedId;
+      card.element.classList.toggle('asset-card--selected', selected);
+      card.element.setAttribute('aria-selected', String(selected));
       this.content.append(card.element);
     }
 
-    this.count.textContent = this.t('library.count', { count: visible.length });
+    this.count.setContent(this.t('library.count', { count: visible.length }));
+    this.emptyText.setContent(
+      this.t(this.filter === 'problems' ? 'library.noProblems' : 'library.empty'),
+    );
+    this.emptyHint.element.hidden = this.filter !== 'problems';
     this.empty.hidden = visible.length > 0;
     this.content.hidden = visible.length === 0;
   }
@@ -355,8 +415,9 @@ export class AssetLibrary {
       className: 'asset-card',
       attrs: {
         type: 'button',
-        role: 'listitem',
+        role: 'option',
         'data-asset-id': asset.id,
+        'aria-selected': String(asset.id === this.selectedId),
         'aria-label': `${asset.name}, ${this.t(`asset.${asset.kind}`)}`,
       },
       children: [preview, body, icon('chevron-right', 'asset-card__chevron')],

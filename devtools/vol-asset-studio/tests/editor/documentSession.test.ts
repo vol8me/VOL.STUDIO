@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocumentSession } from '../../src/editor/DocumentSession';
 import { StrokeRecorder } from '../../src/editor/StrokeRecorder';
 import type { Rgba } from '../../src/editor/RasterSurface';
@@ -143,5 +143,180 @@ describe('DocumentSession — bildirim', () => {
     paint(session, 3, 3, RED);
 
     expect(session.getState().historyBytes).toBeGreaterThan(0);
+  });
+});
+
+describe('DocumentSession — yapısal işlemler', () => {
+  beforeEach(() => {
+    vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('katman ekler, siler, geri alır ve yeniler', () => {
+    const session = makeSession();
+    const initialCount = session.document.layers.length;
+
+    session.addLayer('yeni');
+    expect(session.document.layers.length).toBe(initialCount + 1);
+    expect(session.activeLayerId).toBe(
+      session.document.layers[session.document.layers.length - 1].id,
+    );
+
+    const addedId = session.activeLayerId;
+    session.removeLayer(addedId);
+    expect(session.document.layers.length).toBe(initialCount);
+
+    session.undo();
+    expect(session.document.layers.length).toBe(initialCount + 1);
+
+    session.redo();
+    expect(session.document.layers.length).toBe(initialCount);
+  });
+
+  it('son katmanı silmeye çalışmaz', () => {
+    const session = makeSession();
+    const onlyId = session.document.layers[0].id;
+    session.removeLayer(onlyId);
+    expect(session.document.layers.length).toBe(1);
+  });
+
+  it('katman özelliğini değiştirir ve geri alır', () => {
+    const session = makeSession();
+    const layerId = session.document.layers[0].id;
+
+    session.updateLayer(layerId, { opacity: 0.5, name: 'gölge' }, 'özellik');
+    expect(session.document.layers[0].opacity).toBe(0.5);
+    expect(session.document.layers[0].name).toBe('gölge');
+
+    session.undo();
+    expect(session.document.layers[0].opacity).toBe(1);
+    expect(session.document.layers[0].name).toBe('Katman 1');
+  });
+
+  it('geçersiz katman kimliğiyle değişiklik yapmaz', () => {
+    const session = makeSession();
+    const before = session.getState();
+
+    session.setActiveLayer('yok');
+    session.updateLayer('yok', { opacity: 0.5 }, 'özellik');
+
+    expect(session.getState().activeLayerId).toBe(before.activeLayerId);
+  });
+
+  it('katman sırasını değiştirir ve geri alır', () => {
+    const session = makeSession();
+    session.addLayer('üst');
+    const [lower, upper] = session.document.layers.map((l) => l.id);
+
+    session.moveLayer(lower, 1);
+    expect(session.document.layers[0].id).toBe(upper);
+    expect(session.document.layers[1].id).toBe(lower);
+
+    session.undo();
+    expect(session.document.layers[0].id).toBe(lower);
+    expect(session.document.layers[1].id).toBe(upper);
+  });
+
+  it('sınır dışı katman hareketini reddeder', () => {
+    const session = makeSession();
+    const layerId = session.document.layers[0].id;
+
+    session.moveLayer(layerId, -1);
+    session.moveLayer(layerId, 1);
+
+    expect(session.document.layers.length).toBe(1);
+  });
+
+  it('iki katmanı aşağı birleştirir ve geri alır', () => {
+    const session = makeSession();
+    const lower = session.document.layers[0].id;
+    session.addLayer('üst');
+    const upper = session.document.layers[1].id;
+    paint(session, 1, 1, RED);
+    session.setActiveLayer(lower);
+    paint(session, 2, 2, BLUE);
+
+    session.mergeLayerDown(upper);
+    expect(session.document.layers.length).toBe(1);
+    expect(session.document.layers[0].id).toBe(lower);
+
+    session.undo();
+    expect(session.document.layers.length).toBe(2);
+    expect(session.document.layers.some((l) => l.id === upper)).toBe(true);
+  });
+
+  it('en alttaki katmanı birleştirmeye çalışmaz', () => {
+    const session = makeSession();
+    const lower = session.document.layers[0].id;
+    session.mergeLayerDown(lower);
+    expect(session.document.layers.length).toBe(1);
+  });
+
+  it('kare ekler, siler, geri alır ve yeniler', () => {
+    const session = makeSession();
+
+    session.addFrame(false);
+    expect(session.document.frameCount).toBe(2);
+    expect(session.document.activeFrameIndex).toBe(1);
+
+    session.removeFrame(1);
+    expect(session.document.frameCount).toBe(1);
+
+    session.undo();
+    expect(session.document.frameCount).toBe(2);
+
+    session.redo();
+    expect(session.document.frameCount).toBe(1);
+  });
+
+  it('son kareyi silmeye çalışmaz', () => {
+    const session = makeSession();
+    session.removeFrame(0);
+    expect(session.document.frameCount).toBe(1);
+  });
+
+  it('mevcut kareyi kopyalayarak kare ekler', () => {
+    const session = makeSession();
+    paint(session, 1, 1, RED);
+
+    session.addFrame(true);
+    expect(session.document.frameCount).toBe(2);
+
+    const state = session.getState();
+    expect(state.frameCount).toBe(2);
+  });
+
+  it('kare süresini değiştirir ve geri alır', () => {
+    const session = makeSession();
+
+    session.setFrameDuration(0, 250);
+    expect(session.document.frames[0].durationMs).toBe(250);
+
+    session.undo();
+    expect(session.document.frames[0].durationMs).toBe(100);
+  });
+
+  it('aktif kareyi değiştirir', () => {
+    const session = makeSession();
+    session.addFrame(false);
+
+    session.setActiveFrame(0);
+    expect(session.document.activeFrameIndex).toBe(0);
+
+    session.setActiveFrame(99);
+    expect(session.document.activeFrameIndex).toBe(session.document.frameCount - 1);
+  });
+
+  it('aktif katman yüzeyine yazar ve bileşiği döner', () => {
+    const session = makeSession();
+
+    paint(session, 5, 5, RED);
+
+    expect(session.getPixel(5, 5)).toEqual(RED);
+    expect(session.toRgba()).toBeInstanceOf(Uint8ClampedArray);
+    expect(session.composite().width).toBe(32);
   });
 });

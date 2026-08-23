@@ -23,6 +23,16 @@ export type IconName =
   | 'eyedropper'
   | 'fill'
   | 'fit'
+  | 'layer-add'
+  | 'layers'
+  | 'merge-down'
+  | 'move-down'
+  | 'move-up'
+  | 'pause'
+  | 'play'
+  | 'trash'
+  | 'visible'
+  | 'hidden'
   | 'pencil'
   | 'redo'
   | 'refresh'
@@ -30,7 +40,9 @@ export type IconName =
   | 'save'
   | 'search'
   | 'undo'
-  | 'warning';
+  | 'warning'
+  | 'zoom-in'
+  | 'zoom-out';
 
 export interface IconDefinition {
   /** SVG viewBox; bütün yerleşik ikonlarda 24×24 koordinat sistemi kullanılır. */
@@ -83,6 +95,41 @@ export const VOL_ICONS: Readonly<Record<IconName, IconDefinition>> = {
   modified: { viewBox: '0 0 24 24', paths: ['m4 16-1 5 5-1L19 9l-4-4Z', 'm13 7 4 4'] },
   more: { viewBox: '0 0 24 24', paths: ['M5 12h.01', 'M12 12h.01', 'M19 12h.01'] },
   copy: { viewBox: '0 0 24 24', paths: ['M8 8h12v12H8z', 'M16 8V4H4v12h4'] },
+  // Katman ve zaman çizelgesi ikonları. Yön ikonları (`collapse`/`expand`)
+  // bölme paneline aittir; katman sırası için kullanıldıklarında ekranda
+  // anlamsız birer çentik olarak okunuyordu.
+  layers: {
+    viewBox: '0 0 24 24',
+    paths: ['m12 3 9 5-9 5-9-5Z', 'm3 13 9 5 9-5', 'm3 17 9 5 9-5'],
+  },
+  'layer-add': {
+    viewBox: '0 0 24 24',
+    paths: ['m12 3 9 5-9 5-9-5Z', 'm3 13 9 5 9-5', 'M12 15v6', 'M9 18h6'],
+  },
+  'merge-down': {
+    viewBox: '0 0 24 24',
+    paths: ['M5 5h14v6H5z', 'M12 12v7', 'm8 15 4 4 4-4'],
+  },
+  'move-up': { viewBox: '0 0 24 24', paths: ['M12 20V5', 'm6 11 6-6 6 6'] },
+  'move-down': { viewBox: '0 0 24 24', paths: ['M12 4v15', 'm6 13 6 6 6-6'] },
+  play: { viewBox: '0 0 24 24', paths: ['M7 4v16l13-8Z'] },
+  pause: { viewBox: '0 0 24 24', paths: ['M8 4v16', 'M16 4v16'] },
+  trash: {
+    viewBox: '0 0 24 24',
+    paths: ['M4 7h16', 'M9 7V4h6v3', 'M6 7l1 14h10l1-14', 'M10 11v6', 'M14 11v6'],
+  },
+  visible: {
+    viewBox: '0 0 24 24',
+    paths: ['M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z', 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z'],
+  },
+  hidden: {
+    viewBox: '0 0 24 24',
+    paths: [
+      'M3 3l18 18',
+      'M10.6 6.2A9.7 9.7 0 0 1 12 6c6 0 10 6 10 6a17 17 0 0 1-3.2 3.7',
+      'M6.6 7.6A16.8 16.8 0 0 0 2 12s4 6 10 6a9.6 9.6 0 0 0 3.5-.65',
+    ],
+  },
   // Piksel editörü araç ikonları. Ürüne değil ROLE bağlıdır: kalem, silgi,
   // kova ve damlalık her raster editöründe aynı anlamı taşır.
   pencil: { viewBox: '0 0 24 24', paths: ['m4 20 1.5-4.5L16 5l3 3L8.5 18.5Z', 'm14 7 3 3'] },
@@ -117,6 +164,14 @@ export const VOL_ICONS: Readonly<Record<IconName, IconDefinition>> = {
   search: { viewBox: '0 0 24 24', paths: ['M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z', 'm16 16 4 4'] },
   undo: { viewBox: '0 0 24 24', paths: ['m9 7-4 4 4 4', 'M5 11h8a6 6 0 0 1 6 6'] },
   warning: { viewBox: '0 0 24 24', paths: ['M12 3 2 21h20Z', 'M12 9v5', 'M12 18h.01'] },
+  'zoom-in': {
+    viewBox: '0 0 24 24',
+    paths: ['M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z', 'm16 16 4 4', 'M8 11h6', 'M11 8v6'],
+  },
+  'zoom-out': {
+    viewBox: '0 0 24 24',
+    paths: ['M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z', 'm16 16 4 4', 'M8 11h6'],
+  },
 };
 
 export interface IconOptions {

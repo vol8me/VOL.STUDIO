@@ -15,6 +15,18 @@ export type BlendMode = 'normal' | 'multiply' | 'screen' | 'overlay' | 'add';
 
 export type GitStatus = 'clean' | 'modified' | 'untracked' | 'deleted' | 'ignored';
 
+export const PROBLEM_CODES = [
+  'asset_empty',
+  'asset_too_large',
+  'audio_header_invalid',
+  'font_header_invalid',
+  'image_decode_failed',
+  'image_dimensions_missing',
+  'metadata_parse_failed',
+] as const;
+
+export type ProblemCode = (typeof PROBLEM_CODES)[number];
+
 export interface AssetRelation {
   sourceId?: string;
   derivedIds?: string[];
@@ -44,7 +56,7 @@ export interface AssetSummary {
   gitStatus?: GitStatus;
   relation?: AssetRelation;
   image?: ImageMetadata;
-  problemCodes: string[];
+  problemCodes: ProblemCode[];
 }
 
 export interface AssetRootSummary {

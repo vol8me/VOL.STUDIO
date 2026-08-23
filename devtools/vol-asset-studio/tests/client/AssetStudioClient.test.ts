@@ -107,6 +107,63 @@ describe('AssetStudioClient', () => {
     });
   });
 
+  it('ses işlem zincirini JSON gövdesi ve revizyonla gönderir', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ assetId: 'audio-1', revision: 'b'.repeat(64), bytes: 128 }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await new AssetStudioClient().saveAudio('audio/1', 'a'.repeat(64), [
+      { kind: 'gain', decibels: -3 },
+    ]);
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/v1/assets/audio%2F1/audio/render');
+    expect(init.method).toBe('POST');
+    const bodyText = init.body as string;
+    expect(JSON.parse(bodyText)).toEqual({
+      expectedRevision: 'a'.repeat(64),
+      operations: [{ kind: 'gain', decibels: -3 }],
+    });
+  });
+
+  it('ses metadata ve dalga formu endpointlerini çağırır', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ codec: 'vorbis', durationSeconds: 1, sampleRate: 48000, channels: 2 }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            sampleRate: 48000,
+            channelCount: 2,
+            frameCount: 4800,
+            levels: [],
+            qa: { peakDbfs: -3, rmsDbfs: -12, clippedFrames: 0, pass: true },
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new AssetStudioClient();
+
+    const metadata = await client.getAudioMetadata('audio:click');
+    const waveform = await client.getWaveform('audio:click');
+
+    expect(metadata).toMatchObject({ codec: 'vorbis' });
+    expect(waveform).toMatchObject({ frameCount: 4800 });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const [waveUrl] = fetchMock.mock.calls[1] as [string, RequestInit];
+    expect(waveUrl).toBe('/api/v1/assets/audio%3Aclick/waveform');
+  });
+
   it('art arda kopmalarda tarayıcı denedikçe yeniden bağlanıyor der', () => {
     vi.stubGlobal('EventSource', FakeEventSource);
     const states: string[] = [];

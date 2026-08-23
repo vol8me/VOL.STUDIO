@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
-import { basename } from 'node:path';
+import { basename, extname } from 'node:path';
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import sharp from 'sharp';
+import type { AudioRenderRequest, AudioRenderResponse } from '../shared/audio.js';
 import type {
   AssetEvent,
   AssetSummary,
@@ -12,7 +13,7 @@ import type {
 } from '../shared/contracts.js';
 import type { ArtifactCache } from './artifactCache.js';
 import { openVerifiedAsset } from './assetFile.js';
-import { decodeAudioPcm, probeAudioHandle } from './audio.js';
+import { decodeAudioPcm, probeAudioHandle, renderAudioBuffer } from './audio.js';
 import type { AssetCatalog } from './catalog.js';
 import { AssetStudioError } from './errors.js';
 import type { EditorLeaseManager } from './lease.js';
@@ -138,6 +139,7 @@ function writeSse(reply: FastifyReply, event: AssetEvent): void {
 /** Bütün v1 endpointlerini aynı katalog ve hata sözleşmesine bağlar. */
 export function registerApiRoutes(app: FastifyInstance, options: ApiRouteOptions): void {
   const closeSseConnections = new Set<() => void>();
+  let audioRenderQueue: Promise<void> = Promise.resolve();
 
   app.addHook('preClose', (done) => {
     for (const close of [...closeSseConnections]) close();
@@ -333,6 +335,75 @@ export function registerApiRoutes(app: FastifyInstance, options: ApiRouteOptions
       })),
     };
   });
+
+  app.post<{ Params: AssetParams; Body: AudioRenderRequest }>(
+    '/api/v1/assets/:id/audio/render',
+    async (request): Promise<AudioRenderResponse> => {
+      const record = options.catalog.get(request.params.id);
+      const body = request.body;
+      if (record.summary.kind !== 'audio') {
+        throw new AssetStudioError('unsupported_format', 415, { kind: record.summary.kind });
+      }
+      if (record.summary.role === 'readonly') {
+        throw new AssetStudioError('asset_readonly', 403, { assetId: record.summary.id });
+      }
+      if (
+        body === null ||
+        typeof body !== 'object' ||
+        typeof body.expectedRevision !== 'string' ||
+        !REVISION_PATTERN.test(body.expectedRevision) ||
+        !Array.isArray(body.operations) ||
+        body.operations.length === 0 ||
+        body.operations.length > 64
+      ) {
+        throw new AssetStudioError('invalid_request', 400, { field: 'audioRender' });
+      }
+      const extension = extname(record.absolutePath).toLowerCase();
+      const format = extension === '.ogg' ? 'ogg' : extension === '.wav' ? 'wav' : null;
+      if (format === null) {
+        throw new AssetStudioError('unsupported_format', 415, { format: extension });
+      }
+      if (record.summary.problemCodes.includes('asset_too_large')) {
+        throw new AssetStudioError('asset_too_large', 413, { maximum: options.maxAssetBytes });
+      }
+      const verified = await openVerifiedAsset(record);
+      let source: Buffer;
+      try {
+        source = await verified.handle.readFile();
+      } finally {
+        await verified.handle.close();
+      }
+      const actualRevision = createHash('sha256').update(source).digest('hex');
+      if (actualRevision !== body.expectedRevision) {
+        throw new AssetStudioError('asset_conflict', 409, {
+          assetId: record.summary.id,
+          expectedRevision: body.expectedRevision,
+          actualRevision,
+        });
+      }
+      const render = audioRenderQueue.then(
+        () => renderAudioBuffer(source, body.operations, format),
+        () => renderAudioBuffer(source, body.operations, format),
+      );
+      audioRenderQueue = render.then(
+        () => undefined,
+        () => undefined,
+      );
+      const payload = await render;
+      const [result] = await runSaveTransaction(
+        options.catalog,
+        [
+          {
+            assetId: record.summary.id,
+            expectedRevision: body.expectedRevision,
+            payload,
+          },
+        ],
+        { maxAssetBytes: options.maxAssetBytes },
+      );
+      return result;
+    },
+  );
 
   /** Varlığa metinsel referans veren dosyalar; rename önizlemesinin temeli. */
   app.get<{ Params: AssetParams }>('/api/v1/references/:id', async (request) => {

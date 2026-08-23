@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PixelRenderer } from '../../src/editor/PixelRenderer';
-import { RasterSurface } from '../../src/editor/RasterSurface';
+import { SpriteDocument } from '../../src/editor/SpriteDocument';
+import type { RasterBuffer } from '../../src/editor/transform';
+
+/** Saydam test tamponu. */
+function buffer(width: number, height: number): RasterBuffer {
+  return { width, height, rgba: new Uint8ClampedArray(width * height * 4) };
+}
 
 /**
  * Renderer'ın ÖLÇÜLEBİLİR mantığı.
@@ -103,7 +109,7 @@ describe('PixelRenderer', () => {
     const { renderer, main } = makeRenderer();
     renderer.resize(200, 200, 1);
 
-    renderer.render(new RasterSurface(16, 16), { offsetX: 0, offsetY: 0, zoom: 4 });
+    renderer.render(buffer(16, 16), { offsetX: 0, offsetY: 0, zoom: 4 });
 
     expect(main.imageSmoothingEnabled).toBe(false);
     expect(main.calls.some((call) => call.method === 'drawImage')).toBe(true);
@@ -113,7 +119,7 @@ describe('PixelRenderer', () => {
     const { renderer, main } = makeRenderer();
     renderer.resize(200, 200, 1);
 
-    renderer.render(new RasterSurface(64, 64), { offsetX: 0, offsetY: 0, zoom: 2 });
+    renderer.render(buffer(64, 64), { offsetX: 0, offsetY: 0, zoom: 2 });
 
     // Izgara çizgileri görüntüyü tamamen kaplardı; eşik altında hiç çizilmez.
     expect(main.calls.some((call) => call.method === 'moveTo')).toBe(false);
@@ -123,7 +129,7 @@ describe('PixelRenderer', () => {
     const { renderer, main } = makeRenderer();
     renderer.resize(400, 400, 1);
 
-    renderer.render(new RasterSurface(16, 16), { offsetX: 0, offsetY: 0, zoom: 16 });
+    renderer.render(buffer(16, 16), { offsetX: 0, offsetY: 0, zoom: 16 });
 
     expect(main.calls.some((call) => call.method === 'moveTo')).toBe(true);
   });
@@ -133,7 +139,7 @@ describe('PixelRenderer', () => {
     const canvas = document.createElement('canvas');
     const renderer = new PixelRenderer({ canvas });
     renderer.resize(200, 200, 1);
-    const surface = new RasterSurface(32, 32);
+    const surface = buffer(32, 32);
 
     renderer.render(surface, { offsetX: 0, offsetY: 0, zoom: 1 });
     const afterFirst = contexts.length;
@@ -149,11 +155,35 @@ describe('PixelRenderer', () => {
     const renderer = new PixelRenderer({ canvas });
     renderer.resize(200, 200, 1);
 
-    renderer.render(new RasterSurface(32, 32), { offsetX: 0, offsetY: 0, zoom: 1 });
+    renderer.render(buffer(32, 32), { offsetX: 0, offsetY: 0, zoom: 1 });
     const afterFirst = contexts.length;
-    renderer.render(new RasterSurface(64, 64), { offsetX: 0, offsetY: 0, zoom: 1 });
+    renderer.render(buffer(64, 64), { offsetX: 0, offsetY: 0, zoom: 1 });
 
     expect(contexts.length).toBe(afterFirst + 1);
+  });
+
+  it('katman çiziminde yalnız değişen tile tamponunu günceller', () => {
+    const { contexts } = installRecordingContext();
+    const canvas = document.createElement('canvas');
+    const renderer = new PixelRenderer({ canvas });
+    renderer.resize(256, 256, 1);
+    const documentModel = SpriteDocument.fromFlat(
+      'sprite',
+      128,
+      128,
+      new Uint8ClampedArray(128 * 128 * 4),
+    );
+
+    renderer.renderDocument(documentModel, { offsetX: 0, offsetY: 0, zoom: 1 });
+    documentModel.celSurface(0, 'layer-1').setPixel(70, 70, { r: 255, g: 0, b: 0, a: 255 });
+    renderer.renderDocument(documentModel, { offsetX: 0, offsetY: 0, zoom: 1 });
+
+    const tileContext = contexts.find((context) =>
+      context.calls.some((call) => call.method === 'putImageData'),
+    );
+    const update = tileContext?.calls.find((call) => call.method === 'putImageData');
+    expect((update?.args[0] as ImageData).width).toBe(64);
+    expect(update?.args.slice(1)).toEqual([64, 64]);
   });
 
   it('context alınamazsa açıkça hata verir', () => {
@@ -169,7 +199,7 @@ describe('PixelRenderer', () => {
   it('destroy tampon referanslarını bırakır', () => {
     const { renderer } = makeRenderer();
     renderer.resize(100, 100, 1);
-    renderer.render(new RasterSurface(8, 8), { offsetX: 0, offsetY: 0, zoom: 1 });
+    renderer.render(buffer(8, 8), { offsetX: 0, offsetY: 0, zoom: 1 });
 
     expect(() => renderer.destroy()).not.toThrow();
   });

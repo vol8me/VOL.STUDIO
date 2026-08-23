@@ -107,6 +107,56 @@ describe('AssetStudioApp', () => {
     app.destroy();
   });
 
+  it('F11 tuşunu görünür tam ekran eylemiyle aynı davranışa bağlar', async () => {
+    const requestFullscreen = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(document.documentElement, 'requestFullscreen', {
+      configurable: true,
+      value: requestFullscreen,
+    });
+    const app = createApp(new FakeClient());
+    await app.start();
+
+    const event = new KeyboardEvent('keydown', { key: 'F11', cancelable: true });
+    window.dispatchEvent(event);
+    await Promise.resolve();
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(requestFullscreen).toHaveBeenCalledOnce();
+    app.destroy();
+  });
+
+  it('dil değişiminde uygulama etiketlerini günceller', async () => {
+    const client = new FakeClient();
+    const app = createApp(client);
+    await app.start();
+
+    app.setTranslator((key) => `tr:${key}`);
+
+    expect(document.querySelector('.asset-search__input')?.getAttribute('placeholder')).toBe(
+      'tr:library.search',
+    );
+    expect(document.title).toBe('tr:app.title');
+    app.destroy();
+  });
+
+  it('tam ekran reddedilirse toast ile bildirir', async () => {
+    const requestFullscreen = vi.fn().mockRejectedValue(new Error('User denied'));
+    Object.defineProperty(document.documentElement, 'requestFullscreen', {
+      configurable: true,
+      value: requestFullscreen,
+    });
+    const app = createApp(new FakeClient());
+    await app.start();
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F11' }));
+    await Promise.resolve();
+
+    expect(document.querySelector('.studio-toast')?.textContent).toBe(
+      'Tarayıcı tam ekran isteğini reddetti.',
+    );
+    app.destroy();
+  });
+
   it('yükleme hatasını çalışan retry eylemiyle gösterir', async () => {
     const client = new FakeClient();
     client.getCatalog.mockRejectedValueOnce(new Error('network'));

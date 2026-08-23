@@ -30,6 +30,7 @@ describe('QuickLook', () => {
       onClose: vi.fn(),
       onToast: vi.fn(),
       onEdit: vi.fn(),
+      onEditAudio: vi.fn(),
     });
     document.body.append(quickLook.element);
     quickLook.setAsset(asset());
@@ -51,6 +52,7 @@ describe('QuickLook', () => {
       onClose: vi.fn(),
       onToast: vi.fn(),
       onEdit: vi.fn(),
+      onEditAudio: vi.fn(),
     });
     document.body.append(quickLook.element);
     quickLook.setAsset(
@@ -71,6 +73,12 @@ describe('QuickLook', () => {
     expect(quickLook.element.querySelector('.quick-look__metadata')?.textContent).toContain(
       '48000 Hz',
     );
+    expect(quickLook.element.querySelector('.quick-look__notice')?.textContent).toBe(
+      translate('asset.audioNotice'),
+    );
+    expect(quickLook.element.querySelector('.quick-look__notice')?.textContent).not.toContain(
+      'Sol tuş çizer',
+    );
   });
 
   it('kapatma niyetini bildirir ve yolu kopyaladıktan sonra gerçek başarı mesajı verir', async () => {
@@ -85,6 +93,7 @@ describe('QuickLook', () => {
       onClose,
       onToast,
       onEdit: vi.fn(),
+      onEditAudio: vi.fn(),
     });
     document.body.append(quickLook.element);
     quickLook.setAsset(asset());
@@ -96,5 +105,57 @@ describe('QuickLook', () => {
     expect(onClose).toHaveBeenCalledOnce();
     expect(writeText).toHaveBeenCalledWith('assets/ship.png');
     expect(onToast).toHaveBeenCalledWith('Varlık yolu kopyalandı');
+  });
+
+  it('görsel için düzenleme niyetini ve ses için ses editörü niyetini iletir', () => {
+    const onEdit = vi.fn();
+    const onEditAudio = vi.fn();
+    const quickLook = new QuickLook({
+      client: createClient(),
+      t: translate,
+      locale: () => 'tr',
+      onClose: vi.fn(),
+      onToast: vi.fn(),
+      onEdit,
+      onEditAudio,
+    });
+    document.body.append(quickLook.element);
+
+    quickLook.setAsset(asset({ role: 'source' }));
+    quickLook.element.querySelector<HTMLButtonElement>('.quick-look__edit:not([hidden])')!.click();
+    expect(onEdit).toHaveBeenCalledOnce();
+
+    quickLook.setAsset(
+      asset({
+        id: 'audio:click',
+        kind: 'audio',
+        format: 'ogg',
+        image: undefined,
+        name: 'click.ogg',
+      }),
+    );
+    quickLook.element.querySelector<HTMLButtonElement>('.quick-look__edit:not([hidden])')!.click();
+    expect(onEditAudio).toHaveBeenCalledOnce();
+
+    quickLook.setTranslator((key) => `tr:${key}`);
+    expect(quickLook.element.querySelector('.quick-look__notice')?.textContent).toContain(
+      'tr:asset.audioNotice',
+    );
+  });
+
+  it('font önizlemesi açar', () => {
+    const quickLook = new QuickLook({
+      client: createClient(),
+      t: translate,
+      locale: () => 'tr',
+      onClose: vi.fn(),
+      onToast: vi.fn(),
+      onEdit: vi.fn(),
+      onEditAudio: vi.fn(),
+    });
+    document.body.append(quickLook.element);
+
+    quickLook.setAsset(asset({ kind: 'font', format: 'ttf', image: undefined }));
+    expect(quickLook.element.querySelector('.quick-look__preview--font')).not.toBeNull();
   });
 });

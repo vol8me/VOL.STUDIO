@@ -33,7 +33,7 @@ async function openFixtureInEditor(page: Page): Promise<void> {
   await page.locator('.asset-search__input').fill('__e2e-editor-fixture');
   const card = page.locator('.asset-card', { hasText: FIXTURE_NAME });
   await card.first().click();
-  await page.locator('.quick-look__edit').click();
+  await page.locator('.quick-look__edit:visible').click();
   await expect(page.locator('.editor-panel')).toHaveClass(/editor-panel--open/);
   await expect(page.locator('.pixel-editor__canvas')).toBeVisible();
 
@@ -128,4 +128,81 @@ test('harici değişiklik çakışma şeridini açar ve dosyayı ezmez', async (
       .digest('hex'),
   ).toBe(createHash('sha256').update(external).digest('hex'));
   expect(original.equals(external)).toBe(false);
+});
+
+test('katman, kare ve palet panelleri gerçekten çalışır', async ({ page }) => {
+  await openFixtureInEditor(page);
+
+  // Palet belgeden çıkarılır; tek renkli fixture en az bir swatch verir.
+  await expect(page.locator('.palette-swatch').first()).toBeVisible();
+
+  // Katman ekle → liste iki satır olur, yeni katman aktif.
+  await expect(page.locator('.layer-row')).toHaveCount(1);
+  await page.locator('.layer-panel__add').click();
+  await expect(page.locator('.layer-row')).toHaveCount(2);
+  await expect(page.locator('.layer-row--active')).toHaveCount(1);
+
+  // Görünürlük kapatılabilir.
+  const topVisible = page.locator('.layer-row').first().locator('.layer-row__visible');
+  await topVisible.click();
+  await expect(topVisible).toHaveAttribute('aria-pressed', 'false');
+
+  // Kare ekle → şerit iki hücre gösterir ve ikincisi aktif olur.
+  await expect(page.locator('.frame-cell')).toHaveCount(1);
+  await page.locator('.frame-panel__frameCopy').click();
+  await expect(page.locator('.frame-cell')).toHaveCount(2);
+  await expect(page.locator('.frame-cell--active')).toHaveText('2');
+
+  // Yapısal işlemler geçmişe girer: undo kareyi geri alır.
+  await page.locator('.editor-panel__undo').click();
+  await expect(page.locator('.frame-cell')).toHaveCount(1);
+});
+
+test('ses editörü dalga formu seçimini gerçek işlem zincirine alır', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.asset-card').first().waitFor({ timeout: 30_000 });
+  await page.locator('[data-filter="audio"]').click();
+  await page.locator('.asset-search__input').fill('lock-0.ogg');
+  await page.locator('.asset-card').first().click();
+  await page.locator('.quick-look__edit:visible').click();
+  await expect(page.locator('.audio-editor')).toHaveClass(/audio-editor--open/);
+  await expect(page.locator('.audio-editor__status')).toHaveText(/hazır|ready/i, {
+    timeout: 30_000,
+  });
+  const waveform = page.locator('.waveform__overlay');
+  await expect(waveform).toBeVisible();
+  const box = await waveform.boundingBox();
+  if (box === null) throw new Error('dalga formu ölçülemedi');
+
+  await page.mouse.move(box.x + box.width * 0.2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.7, box.y + box.height / 2, { steps: 5 });
+  await page.mouse.up();
+
+  const trim = page.locator('.audio-editor__processes .vol-button').first();
+  await expect(trim).toBeEnabled();
+  await trim.click();
+  await expect(page.locator('.audio-editor__operation')).toHaveCount(1);
+  await expect(page.locator('.audio-editor__transport .vol-button')).toBeEnabled();
+});
+
+test('katman opaklığı bileşiği değiştirir ve tek undo üretir', async ({ page }) => {
+  await openFixtureInEditor(page);
+  await page.locator('.layer-panel__add').click();
+
+  const canvas = page.locator('.pixel-editor__canvas');
+  const box = await canvas.boundingBox();
+  if (box === null) throw new Error('tuval ölçülemedi');
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 30, box.y + box.height / 2, { steps: 5 });
+  await page.mouse.up();
+
+  const opacity = page.locator('.layer-row').first().locator('.layer-row__opacity');
+  await opacity.fill('40');
+  await opacity.dispatchEvent('change');
+
+  // Opaklık değişimi ayrı bir undo adımıdır; darbeyi geri almamalı.
+  await page.locator('.editor-panel__undo').click();
+  await expect(opacity).toHaveValue('100');
 });

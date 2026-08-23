@@ -1,4 +1,5 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
+import { Button, Icon, IconButton, Text } from '@volstudio/core/ui';
 import type { AssetSummary, AudioMetadata } from '../../shared/index';
 import { AssetStudioApiError, type AssetStudioClient } from '../api/AssetStudioClient';
 import type { Translate } from '../catalog/AssetLibrary';
@@ -13,6 +14,8 @@ export interface QuickLookOptions {
   onToast: (message: string) => void;
   /** Görsel varlığı piksel editöründe açar. */
   onEdit: (asset: AssetSummary) => void;
+  /** Ses varlığını KENDİ editöründe açar; piksel yüzeyiyle açılmaz. */
+  onEditAudio: (asset: AssetSummary) => void;
 }
 
 /** Seçili varlığı türüne göre gösteren, düzenleme yapmayan hızlı önizleme çekmecesi. */
@@ -20,14 +23,15 @@ export class QuickLook {
   readonly element: HTMLElement;
 
   private readonly scope = new DisposableScope();
-  private readonly title: HTMLHeadingElement;
-  private readonly subtitle: HTMLParagraphElement;
-  private readonly closeButton: HTMLButtonElement;
+  private readonly title: Text;
+  private readonly subtitle: Text;
+  private readonly closeButton: IconButton;
   private readonly preview: HTMLDivElement;
   private readonly details: HTMLDivElement;
-  private readonly copyButton: HTMLButtonElement;
-  private readonly editButton: HTMLButtonElement;
-  private readonly notice: HTMLParagraphElement;
+  private readonly copyButton: Button;
+  private readonly editButton: Button;
+  private readonly audioButton: Button;
+  private readonly notice: Text;
   private asset: AssetSummary | null = null;
   private t: Translate;
   private request: AbortController | null = null;
@@ -35,36 +39,59 @@ export class QuickLook {
 
   constructor(private readonly options: QuickLookOptions) {
     this.t = options.t;
-    this.title = element('h2', { className: 'quick-look__title' });
-    this.subtitle = element('p', { className: 'quick-look__subtitle' });
-    this.closeButton = element('button', {
-      className: 'icon-action quick-look__close',
-      attrs: { type: 'button' },
-      children: [icon('close')],
+    this.title = new Text('', { variant: 'heading', tag: 'h2' });
+    this.title.element.classList.add('quick-look__title');
+    this.subtitle = new Text('', { variant: 'muted' });
+    this.subtitle.element.classList.add('quick-look__subtitle');
+    this.closeButton = new IconButton(new Icon({ name: 'close' }).element, {
+      label: options.t('asset.close'),
+      size: 'sm',
+      onClick: () => options.onClose(),
     });
-    this.scope.addListener(this.closeButton, 'click', options.onClose);
+    this.closeButton.element.classList.add('quick-look__close');
+
     const header = element('header', {
       className: 'quick-look__header',
-      children: [element('div', { children: [this.title, this.subtitle] }), this.closeButton],
+      children: [
+        element('div', {
+          className: 'quick-look__identity',
+          children: [this.title.element, this.subtitle.element],
+        }),
+        this.closeButton.element,
+      ],
     });
 
     this.preview = element('div', { className: 'quick-look__preview' });
     this.details = element('div', { className: 'quick-look__details' });
-    this.copyButton = element('button', {
-      className: 'quick-look__copy',
-      attrs: { type: 'button' },
-      children: [icon('copy'), element('span')],
+    this.copyButton = new Button(options.t('asset.reveal'), {
+      size: 'sm',
+      onClick: () => void this.copyPath(),
     });
-    this.scope.addListener(this.copyButton, 'click', () => void this.copyPath());
-    this.editButton = element('button', {
-      className: 'quick-look__edit',
-      attrs: { type: 'button', hidden: 'hidden' },
-      children: [icon('pencil'), element('span')],
+    this.copyButton.element.classList.add('quick-look__copy');
+    this.copyButton.element.prepend(new Icon({ name: 'copy' }).element);
+    this.editButton = new Button(options.t('editor.open'), {
+      size: 'sm',
+      variant: 'primary',
+      onClick: () => {
+        if (this.asset) options.onEdit(this.asset);
+      },
     });
-    this.scope.addListener(this.editButton, 'click', () => {
-      if (this.asset) options.onEdit(this.asset);
+    this.editButton.element.classList.add('quick-look__edit');
+    this.editButton.element.prepend(new Icon({ name: 'pencil' }).element);
+    this.audioButton = new Button(options.t('audio.open'), {
+      size: 'sm',
+      variant: 'primary',
+      onClick: () => {
+        if (this.asset) options.onEditAudio(this.asset);
+      },
     });
-    this.notice = element('p', { className: 'quick-look__notice' });
+    this.audioButton.element.classList.add('quick-look__edit');
+    this.audioButton.element.prepend(new Icon({ name: 'audio' }).element);
+    this.audioButton.element.hidden = true;
+    this.editButton.element.hidden = true;
+
+    this.notice = new Text('', { variant: 'muted' });
+    this.notice.element.classList.add('quick-look__notice');
 
     this.element = element('aside', {
       className: 'quick-look',
@@ -73,7 +100,19 @@ export class QuickLook {
         header,
         element('div', {
           className: 'quick-look__scroll',
-          children: [this.preview, this.details, this.editButton, this.copyButton, this.notice],
+          children: [
+            this.preview,
+            this.details,
+            element('div', {
+              className: 'quick-look__actions',
+              children: [
+                this.editButton.element,
+                this.audioButton.element,
+                this.copyButton.element,
+              ],
+            }),
+            this.notice.element,
+          ],
         }),
       ],
     });
@@ -88,15 +127,27 @@ export class QuickLook {
     if (!asset) {
       replaceChildren(this.preview);
       replaceChildren(this.details);
-      this.editButton.hidden = true;
+      this.editButton.element.hidden = true;
+      this.audioButton.element.hidden = true;
       return;
     }
 
     // Düzenleme yalnız yazılabilir GÖRSEL için sunulur. Salt okunur bir kökte
     // düğmeyi göstermek, sunucunun reddedeceği bir işi davet etmek olurdu.
-    this.editButton.hidden = !(asset.kind === 'image' && asset.role !== 'readonly');
-    this.title.textContent = asset.name;
-    this.subtitle.textContent = asset.path;
+    // Düzenleme yalnız YAZILABİLİR görsel için sunulur; sesin kendi editörü
+    // vardır ve piksel yüzeyiyle açılmaz.
+    this.editButton.element.hidden = !(asset.kind === 'image' && asset.role !== 'readonly');
+    this.audioButton.element.hidden = asset.kind !== 'audio';
+    this.title.setContent(asset.name);
+    this.subtitle.setContent(asset.path);
+    const noticeKey =
+      asset.kind === 'image'
+        ? 'asset.editingNotice'
+        : asset.kind === 'audio'
+        ? 'asset.audioNotice'
+        : null;
+    this.notice.element.hidden = noticeKey === null;
+    if (noticeKey !== null) this.notice.setContent(this.t(noticeKey));
     this.renderPreview(asset);
     this.renderDetails(asset);
   }
@@ -109,19 +160,28 @@ export class QuickLook {
 
   destroy(): void {
     this.cancelPending();
+    for (const component of [
+      this.title,
+      this.subtitle,
+      this.closeButton,
+      this.copyButton,
+      this.editButton,
+      this.audioButton,
+      this.notice,
+    ]) {
+      component.destroy();
+    }
     this.scope.dispose();
     this.element.remove();
   }
 
   private renderLabels(): void {
-    this.closeButton.title = this.t('asset.close');
-    this.closeButton.setAttribute('aria-label', this.t('asset.close'));
+    this.closeButton.setLabel(this.t('asset.close'));
     this.element.setAttribute('aria-label', this.t('asset.details'));
-    const label = this.copyButton.querySelector('span');
-    if (label) label.textContent = this.t('asset.reveal');
-    const editLabel = this.editButton.querySelector('span');
-    if (editLabel) editLabel.textContent = this.t('editor.open');
-    this.notice.textContent = this.t('asset.editingNotice');
+    this.copyButton.setLabel(this.t('asset.reveal'));
+    this.editButton.setLabel(this.t('editor.open'));
+    this.audioButton.setLabel(this.t('audio.open'));
+    this.notice.setContent(this.t('asset.editingNotice'));
   }
 
   private renderPreview(asset: AssetSummary): void {
@@ -203,7 +263,7 @@ export class QuickLook {
       this.addDetail(
         list,
         this.t('asset.problems'),
-        asset.problemCodes.join(', '),
+        asset.problemCodes.map((code) => this.t(`problems.${code}`)).join(', '),
         'quick-look__value--danger',
       );
     }

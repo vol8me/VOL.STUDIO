@@ -7,6 +7,7 @@ import {
   type AssetStudioClient,
 } from '../api/AssetStudioClient';
 import { AssetLibrary, type Translate } from '../catalog/AssetLibrary';
+import { AudioEditorPanel } from '../audio/AudioEditorPanel';
 import { EditorPanel } from '../editor/EditorPanel';
 import { QuickLook } from '../preview/QuickLook';
 import { element, replaceChildren } from '../ui/dom';
@@ -52,6 +53,7 @@ export class AssetStudioApp {
   private readonly library: AssetLibrary;
   private readonly quickLook: QuickLook;
   private readonly editor: EditorPanel;
+  private readonly audioEditor: AudioEditorPanel;
   private t: Translate;
   private assets = new Map<string, AssetSummary>();
   private revision = 0;
@@ -110,6 +112,7 @@ export class AssetStudioApp {
       onClose: () => this.selectAsset(null),
       onToast: (message) => this.showToast(message),
       onEdit: (asset) => void this.openEditor(asset),
+      onEditAudio: (asset) => void this.openAudioEditor(asset),
     });
     this.editor = new EditorPanel({
       client: options.client,
@@ -119,13 +122,24 @@ export class AssetStudioApp {
       onSaved: (assetId, revision) => this.applySavedRevision(assetId, revision),
     });
 
+    this.audioEditor = new AudioEditorPanel({
+      client: options.client,
+      t: this.t,
+      onClose: () => this.closeAudioEditor(),
+      onToast: (message) => this.showToast(message),
+      onSaved: (assetId, revision) => this.applySavedRevision(assetId, revision),
+    });
+
     const workspace = element('main', {
       className: 'studio-workspace',
-      children: [this.library.element, this.quickLook.element, this.editor.element],
+      children: [this.library.element, this.quickLook.element],
     });
+    // Editör yüzeyleri workspace GRID'İNİN İÇİNDE değil, gövdenin üstünde
+    // yaşar. Grid çocuğu olarak absolute konumlandıklarında hücre genişliğine
+    // sıkışıyor ve QuickLook sütununun 340 pikseline hapsoluyorlardı.
     const body = element('div', {
       className: 'studio-body',
-      children: [this.library.rail, workspace],
+      children: [this.library.rail, workspace, this.editor.element, this.audioEditor.element],
     });
 
     this.loadingText = element('p');
@@ -234,6 +248,7 @@ export class AssetStudioApp {
     this.library.setTranslator(t);
     this.quickLook.setTranslator(t);
     this.editor.setTranslator(t);
+    this.audioEditor.setTranslator(t);
     this.renderLabels();
   }
 
@@ -245,6 +260,7 @@ export class AssetStudioApp {
     this.library.destroy();
     this.quickLook.destroy();
     this.editor.destroy();
+    this.audioEditor.destroy();
     this.scope.dispose();
     this.shell.remove();
   }
@@ -288,6 +304,18 @@ export class AssetStudioApp {
   private async openEditor(asset: AssetSummary): Promise<void> {
     this.shell.classList.add('studio-shell--editing');
     await this.editor.open(asset);
+  }
+
+  /** Sesi kendi editöründe açar. */
+  private async openAudioEditor(asset: AssetSummary): Promise<void> {
+    this.shell.classList.add('studio-shell--editing');
+    await this.audioEditor.open(asset);
+    this.audioEditor.syncWaveformSize();
+  }
+
+  private closeAudioEditor(): void {
+    this.audioEditor.close();
+    this.shell.classList.remove('studio-shell--editing');
   }
 
   private closeEditor(): void {
@@ -405,17 +433,28 @@ export class AssetStudioApp {
       if (document.fullscreenElement) await document.exitFullscreen();
       else await document.documentElement.requestFullscreen();
     } catch {
-      // Tarayıcı/politika reddi durumunda mevcut görünüm korunur.
+      this.showToast(this.t('app.fullscreenFailed'));
     }
   }
 
   private handleKeydown(event: KeyboardEvent): void {
+    if (event.key === 'F11') {
+      event.preventDefault();
+      if (!event.repeat) void this.toggleFullscreen();
+      return;
+    }
     if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 'k') {
       event.preventDefault();
       this.library.focusSearch();
       return;
     }
-    if (event.key === 'Escape' && this.selectedId && !document.fullscreenElement) {
+    if (
+      event.key === 'Escape' &&
+      this.selectedId &&
+      !this.editor.isOpen &&
+      !this.audioEditor.isOpen &&
+      !document.fullscreenElement
+    ) {
       this.selectAsset(null);
     }
   }

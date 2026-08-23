@@ -1,3 +1,5 @@
+import type { AudioEditOperation, AudioRenderResponse } from '../../shared/audio';
+import type { WaveformData } from '../audio/WaveformView';
 import type {
   AssetEvent,
   AssetSummary,
@@ -98,6 +100,33 @@ export class AssetStudioClient {
       rgba: new Uint8ClampedArray(buffer),
       strippedMetadata: stripped === '' ? [] : stripped.split(','),
     };
+  }
+
+  /** Dalga formu peak piramidi ve QA raporu. */
+  getWaveform(assetId: string, signal?: AbortSignal): Promise<WaveformData> {
+    return this.request(`/api/v1/assets/${encodeURIComponent(assetId)}/waveform`, signal);
+  }
+
+  async saveAudio(
+    assetId: string,
+    expectedRevision: string,
+    operations: readonly AudioEditOperation[],
+    signal?: AbortSignal,
+  ): Promise<AudioRenderResponse> {
+    const response = await fetch(
+      this.url(`/api/v1/assets/${encodeURIComponent(assetId)}/audio/render`),
+      {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({ expectedRevision, operations }),
+        ...(signal === undefined ? {} : { signal }),
+      },
+    );
+    if (!response.ok) {
+      throw new AssetStudioApiError(await errorCodeOf(response), response.status);
+    }
+    return (await response.json()) as AudioRenderResponse;
   }
 
   /** Tek varlığı tek mantıksal transaction olarak kaydeder. */

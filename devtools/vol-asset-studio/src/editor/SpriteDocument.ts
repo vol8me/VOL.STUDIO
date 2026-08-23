@@ -50,6 +50,11 @@ export class SpriteDocument {
   #layerMeta: SpriteLayerMeta[];
   #frames: SpriteFrame[];
   #activeFrame = 0;
+  /** Kare indeksi → { imza, tampon }. İmza katman metadata'sı + yüzey
+   *  sürümlerinden türetilir; hiçbir şey değişmediyse bileşik yeniden
+   *  hesaplanmaz. Önbelleksiz her fırça darbesi bütün katmanları yeniden
+   *  karıştırıyordu ve 1024² belgede darbe 700 ms sürüyordu. */
+  readonly #compositeCache = new Map<number, { signature: string; buffer: RasterBuffer }>();
 
   public constructor(options: SpriteDocumentOptions) {
     if (options.layers.length === 0) throw new Error('Sprite belgesi en az bir katman ister');
@@ -136,6 +141,44 @@ export class SpriteDocument {
     this.#layerMeta.splice(index, 0, { ...meta });
   }
 
+  /**
+   * Katman metadata'sını kaldırır, cel verisine DOKUNMAZ.
+   *
+   * Sıralama değişimi için gerekli: `removeLayer` celleri de silseydi
+   * yeniden ekleme boş bir katman geri getirir ve kullanıcının işi kaybolurdu.
+   */
+  public removeLayerMetaOnly(layerId: string): boolean {
+    const index = this.#layerMeta.findIndex((layer) => layer.id === layerId);
+    if (index < 0) return false;
+    this.#layerMeta.splice(index, 1);
+    return true;
+  }
+
+  /** Kareyi verilen indekse geri koyar (undo yolu). */
+  public insertFrame(index: number, frame: SpriteFrame): void {
+    this.#frames.splice(Math.max(0, Math.min(this.#frames.length, index)), 0, frame);
+  }
+
+  /** Katmanı bir altındakiyle birleştirir; alttaki hedeftir. */
+  public mergeLayerDown(layerId: string): boolean {
+    const index = this.#layerMeta.findIndex((layer) => layer.id === layerId);
+    if (index <= 0) return false;
+    const upper = this.#layerMeta[index];
+    const lower = this.#layerMeta[index - 1];
+    for (const frame of this.#frames) {
+      const upperSurface = frame.cels.get(upper.id);
+      if (upperSurface === undefined) continue;
+      const merged = (
+        frame.cels.get(lower.id) ?? new RasterSurface(this.width, this.height)
+      ).toRgba();
+      blendBuffer(merged, upperSurface.toRgba(), upper.blendMode, upper.opacity);
+      frame.cels.set(lower.id, RasterSurface.fromRgba(this.width, this.height, merged));
+      frame.cels.delete(upper.id);
+    }
+    this.#layerMeta.splice(index, 1);
+    return true;
+  }
+
   public removeLayer(layerId: string): boolean {
     if (this.#layerMeta.length === 1) return false;
     const index = this.#layerMeta.findIndex((layer) => layer.id === layerId);
@@ -196,15 +239,41 @@ export class SpriteDocument {
   /** Kareyi katman sırasına ve blend kiplerine göre düzleştirir. */
   public compositeFrame(index: number): RasterBuffer {
     const frame = this.#frames[index];
+    if (frame === undefined) {
+      return {
+        width: this.width,
+        height: this.height,
+        rgba: new Uint8ClampedArray(this.width * this.height * 4),
+      };
+    }
+    const signature = this.#frameSignature(frame);
+    const cached = this.#compositeCache.get(index);
+    if (cached !== undefined && cached.signature === signature) return cached.buffer;
+
     const rgba = new Uint8ClampedArray(this.width * this.height * 4);
-    if (frame === undefined) return { width: this.width, height: this.height, rgba };
     for (const meta of this.#layerMeta) {
       if (!meta.visible || meta.opacity <= 0) continue;
       const surface = frame.cels.get(meta.id);
       if (surface === undefined) continue;
       blendBuffer(rgba, surface.toRgba(), meta.blendMode, meta.opacity);
     }
-    return { width: this.width, height: this.height, rgba };
+    const buffer = { width: this.width, height: this.height, rgba };
+    this.#compositeCache.set(index, { signature, buffer });
+    return buffer;
+  }
+
+  /** Karenin görsel durumunu tek dizede özetler. */
+  #frameSignature(frame: SpriteFrame): string {
+    const parts: string[] = [];
+    for (const meta of this.#layerMeta) {
+      const surface = frame.cels.get(meta.id);
+      parts.push(
+        `${meta.id}:${meta.visible ? 1 : 0}:${meta.opacity}:${meta.blendMode}:${
+          surface?.version ?? -1
+        }`,
+      );
+    }
+    return parts.join('|');
   }
 
   /** Katman yığınını AKTİF kare üzerinden kurar (araçlar bunu düzenler). */

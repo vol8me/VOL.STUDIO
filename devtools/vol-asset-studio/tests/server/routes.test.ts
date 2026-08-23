@@ -1,4 +1,4 @@
-import { copyFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
+import { copyFile, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { get as httpGet, type ClientRequest } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
@@ -118,6 +118,39 @@ describe('Asset Studio API', () => {
     });
     expect(metadata.statusCode).toBe(200);
     expect(metadata.json()).toMatchObject({ codec: 'pcm_s16le', sampleRate: 8000, channels: 1 });
+  });
+
+  it('ses işlem zincirini FFmpeg ile uygulayıp revizyon kontrollü kaydeder', async () => {
+    const { server, assets, fixture } = await setup();
+    const audio = assets.find((asset) => asset.name === 'tone.wav')!;
+    const before = await readFile(fixture.wavPath);
+    const response = await server.app.inject({
+      method: 'POST',
+      url: `/api/v1/assets/${audio.id}/audio/render`,
+      payload: {
+        expectedRevision: audio.revision,
+        operations: [{ kind: 'gain', decibels: -6 }],
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const result = response.json<{ assetId: string; bytes: number }>();
+    expect(result).toMatchObject({ assetId: audio.id });
+    expect(typeof result.bytes).toBe('number');
+    const after = await readFile(fixture.wavPath);
+    expect(after.subarray(0, 4).toString('ascii')).toBe('RIFF');
+    expect(after.equals(before)).toBe(false);
+
+    const stale = await server.app.inject({
+      method: 'POST',
+      url: `/api/v1/assets/${audio.id}/audio/render`,
+      payload: {
+        expectedRevision: audio.revision,
+        operations: [{ kind: 'reverse' }],
+      },
+    });
+    expect(stale.statusCode).toBe(409);
+    expect((await readFile(fixture.wavPath)).equals(after)).toBe(true);
   });
 
   it('boyut sınırını aşan medyayı stream eder fakat decode işlemine almaz', async () => {

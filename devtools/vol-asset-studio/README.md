@@ -9,19 +9,25 @@ değişiklikleri izler ve türüne uygun önizleme sunar.
 
 ## Geçerli kapsam
 
-Aşama 3 yüzeyi bilinçli olarak **salt okunurdur**:
-
 - repo köklerinden canlı katalog, arama, tür/sorun/Git durumu filtreleri;
+- dosya boyutu, medya imzası, JSON yapısı ve görsel çözümleme sorunları;
 - PNG/JPEG/WebP/GIF/AVIF önizlemeleri ve sunucu tarafı thumbnail;
 - OGG/MP3/WAV/FLAC oynatma ile FFmpeg/ffprobe metadata'sı;
 - WOFF/WOFF2/TTF/OTF font örneği;
 - kaynak, türetilmiş çıktı ve reçete ilişki metadata'sı;
 - SSE ile kimlik bazlı artımlı güncelleme ve sıra boşluğunda tam eşitleme;
-- Quick Look ayrıntıları ve repo göreli yol kopyalama.
+- Quick Look ayrıntıları ve repo göreli yol kopyalama;
+- tile tabanlı piksel yüzeyi, katman/kare/palet, onion skin, undo/redo ve
+  revizyon kontrollü atomik PNG kaydı;
+- peak piramitli ses dalga formu, seçim, yakınlaştırma, transport, gain, trim,
+  fade, peak normalize ve reverse zinciriyle atomik OGG/WAV kaydı;
+- salt okunur referans arama, rename önizleme ve kurtarılabilir çöp.
 
-Piksel/ses düzenleme, sürüm geçmişi ve güvenli yazma işlemleri bu aşamada
-varmış gibi gösterilmez. CORE'daki workbench bileşenleri sonraki aşamanın
-altyapısıdır; mevcut ekranın tüm görünen kontrolleri çalışır.
+Katman ve kareler mevcut doğrudan PNG kaydında bileşiğe düzleştirilir; native
+`.volsprite.json` kapanıp yeniden açma hattı henüz tamamlanmamıştır. Ses zinciri
+mevcut OGG/WAV dosyasına açık kaydet eylemiyle uygulanır; `.volaudio.json`
+reçetesine kalıcılaştırma henüz bağlı değildir. MP3/FLAC sesler incelenebilir,
+ancak kaydetmeden önce OGG/WAV dönüşüm hattı gerektirir.
 
 ## Çalıştırma
 
@@ -72,16 +78,22 @@ başlangıçta tek bir yapılandırma hatasıyla reddedilir.
 
 ## Repo host sözleşmesi
 
-| Uç nokta                                      | Sorumluluk                                  |
-| --------------------------------------------- | ------------------------------------------- |
-| `GET /api/v1/project`                         | Proje kökleri ve erişim biçimi              |
-| `GET /api/v1/catalog`                         | Sürümlü varlık özeti                        |
-| `GET /api/v1/assets/:id/content`              | Range ve ETag destekli gerçek dosya         |
-| `GET /api/v1/assets/:id/thumbnail?size=…`     | Sınırlandırılmış görsel önizlemesi          |
-| `GET /api/v1/assets/:id/audio`                | Ses codec/süre/kanal metadata'sı            |
-| `GET /api/v1/events`                          | Canlı katalog SSE akışı                     |
-| `POST/DELETE /api/v1/session/auth`            | LAN oturumu açma/kapatma                    |
-| `POST/DELETE /api/v1/session/lease[ /renew ]` | Gelecek yazma yüzeyi için tek editör kilidi |
+| Uç nokta                                      | Sorumluluk                                   |
+| --------------------------------------------- | -------------------------------------------- |
+| `GET /api/v1/project`                         | Proje kökleri ve erişim biçimi               |
+| `GET /api/v1/catalog`                         | Sürümlü varlık özeti                         |
+| `GET /api/v1/assets/:id/content`              | Range ve ETag destekli gerçek dosya          |
+| `GET /api/v1/assets/:id/thumbnail?size=…`     | Sınırlandırılmış görsel önizlemesi           |
+| `GET /api/v1/assets/:id/audio`                | Ses codec/süre/kanal metadata'sı             |
+| `GET /api/v1/assets/:id/raster`               | Düzenleme için sınırlı ham RGBA              |
+| `GET /api/v1/assets/:id/waveform`             | Peak piramidi ve yapılandırılmış ses QA      |
+| `POST /api/v1/assets/:id/audio/render`        | Ses zincirini doğrula, işle ve atomik kaydet |
+| `POST /api/v1/save-transactions`              | Revizyon kontrollü atomik varlık kaydı       |
+| `GET /api/v1/references/:id`                  | Salt okunur referans indeksi                 |
+| `POST /api/v1/file-operations/*`              | Rename önizleme ve kurtarılabilir çöp        |
+| `GET /api/v1/events`                          | Canlı katalog SSE akışı                      |
+| `POST/DELETE /api/v1/session/auth`            | LAN oturumu açma/kapatma                     |
+| `POST/DELETE /api/v1/session/lease[ /renew ]` | Tek editör kilidi                            |
 
 API hataları kullanıcı metni taşımaz; kararlı `error.code` değerleri istemci
 i18n katmanında Türkçe/İngilizce metne çevrilir.
@@ -95,8 +107,9 @@ i18n katmanında Türkçe/İngilizce metne çevrilir.
 - Thumbnail pikseli, varlık baytı ve istek gövdesi limitlidir.
 - Dosya yanıtları revision, `ETag`, koşullu istek ve tek aralıklı `Range`
   sözleşmesini uygular.
-- Aşama 3 istemcisi yazma uç noktası çağırmaz; Forge çıktıları `readonly`
-  eski kök olarak yalnız görüntülenir.
+- Yazma yalnız açık kaydet eyleminde, beklenen içerik revizyonu iki kez
+  doğrulandıktan sonra temp/yedek/rollback transaction'ıyla yapılır; `readonly`
+  kökler yazma uçlarında reddedilir.
 
 ## Doğrulama
 

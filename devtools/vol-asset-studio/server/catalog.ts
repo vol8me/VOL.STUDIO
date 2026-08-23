@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { lstat, opendir, stat } from 'node:fs/promises';
+import { lstat, open, opendir, readFile, stat } from 'node:fs/promises';
 import { basename, extname, relative, sep } from 'node:path';
 import sharp from 'sharp';
 import type {
@@ -10,6 +10,7 @@ import type {
   AssetStudioProjectConfig,
   AssetSummary,
   CatalogResponse,
+  ProblemCode,
 } from '../shared/index.js';
 import { AssetStudioError } from './errors.js';
 import { AssetEventJournal } from './events.js';
@@ -21,10 +22,21 @@ import {
   type ResolvedWorkspaceRoot,
 } from './pathSecurity.js';
 
-const IMAGE_EXTENSIONS = new Set(['.gif', '.jpeg', '.jpg', '.png', '.svg', '.webp']);
-const AUDIO_EXTENSIONS = new Set(['.mp3', '.ogg', '.wav']);
+const IMAGE_EXTENSIONS = new Set(['.avif', '.gif', '.jpeg', '.jpg', '.png', '.svg', '.webp']);
+const AUDIO_EXTENSIONS = new Set(['.flac', '.mp3', '.ogg', '.wav']);
 const FONT_EXTENSIONS = new Set(['.otf', '.ttf', '.woff', '.woff2']);
-const RELATED_MEDIA_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.svg', '.ogg', '.wav', '.mp3'];
+const RELATED_MEDIA_EXTENSIONS = [
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.webp',
+  '.avif',
+  '.svg',
+  '.ogg',
+  '.wav',
+  '.mp3',
+  '.flac',
+];
 
 export interface CatalogRoot extends ResolvedWorkspaceRoot {
   id: string;
@@ -122,7 +134,7 @@ function createAssetId(rootId: string, path: string): string {
 async function imageMetadata(
   path: string,
   maxImagePixels: number,
-): Promise<{ image?: AssetSummary['image']; problemCodes: string[] }> {
+): Promise<{ image?: AssetSummary['image']; problemCodes: ProblemCode[] }> {
   try {
     const metadata = await sharp(path, { limitInputPixels: maxImagePixels }).metadata();
     if (metadata.width === undefined || metadata.height === undefined) {
@@ -139,6 +151,59 @@ async function imageMetadata(
   } catch {
     return { problemCodes: ['image_decode_failed'] };
   }
+}
+
+async function readSignature(path: string, length = 12): Promise<Buffer> {
+  const handle = await open(path, 'r');
+  try {
+    const buffer = Buffer.alloc(length);
+    const { bytesRead } = await handle.read(buffer, 0, length, 0);
+    return buffer.subarray(0, bytesRead);
+  } finally {
+    await handle.close();
+  }
+}
+
+async function lightweightProblems(
+  path: string,
+  relativePath: string,
+  kind: AssetKind,
+): Promise<ProblemCode[]> {
+  if (kind === 'audio') {
+    const header = await readSignature(path);
+    const extension = extname(relativePath).toLowerCase();
+    const valid =
+      (extension === '.ogg' && header.subarray(0, 4).toString('ascii') === 'OggS') ||
+      (extension === '.flac' && header.subarray(0, 4).toString('ascii') === 'fLaC') ||
+      (extension === '.wav' &&
+        header.subarray(0, 4).toString('ascii') === 'RIFF' &&
+        header.subarray(8, 12).toString('ascii') === 'WAVE') ||
+      (extension === '.mp3' &&
+        (header.subarray(0, 3).toString('ascii') === 'ID3' ||
+          (header[0] === 0xff && (header[1] & 0xe0) === 0xe0)));
+    return valid ? [] : ['audio_header_invalid'];
+  }
+  if (kind === 'font') {
+    const signature = await readSignature(path, 4);
+    const ascii = signature.toString('ascii');
+    const valid =
+      signature.equals(Buffer.from([0, 1, 0, 0])) ||
+      ascii === 'OTTO' ||
+      ascii === 'true' ||
+      ascii === 'typ1' ||
+      ascii === 'wOFF' ||
+      ascii === 'wOF2';
+    return valid ? [] : ['font_header_invalid'];
+  }
+  if (kind === 'metadata') {
+    try {
+      JSON.parse(await readFile(path, 'utf8'));
+      return [];
+    } catch {
+      return ['metadata_parse_failed'];
+    }
+  }
+  return [];
 }
 
 async function scanRoot(
@@ -213,11 +278,16 @@ async function scanRoot(
             )
             .digest('hex')
         : await hashFile(canonicalFile);
-      const problemCodes = tooLarge ? ['asset_too_large'] : [];
+      const problemCodes: ProblemCode[] = [];
+      if (canonicalStat.size === 0) problemCodes.push('asset_empty');
+      if (tooLarge) problemCodes.push('asset_too_large');
+      if (!tooLarge && canonicalStat.size > 0) {
+        problemCodes.push(...(await lightweightProblems(canonicalFile, relativeToRoot, kind)));
+      }
       const visual =
-        kind === 'image' && !tooLarge
+        kind === 'image' && !tooLarge && canonicalStat.size > 0
           ? await imageMetadata(canonicalFile, maxImagePixels)
-          : { problemCodes: [] as string[] };
+          : { problemCodes: [] as ProblemCode[] };
       problemCodes.push(...visual.problemCodes);
 
       records.push({

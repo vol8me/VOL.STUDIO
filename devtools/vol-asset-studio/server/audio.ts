@@ -1,10 +1,12 @@
 import { execFile, spawn } from 'node:child_process';
 import { createWriteStream } from 'node:fs';
-import { mkdtemp, rm, type FileHandle } from 'node:fs/promises';
+import { mkdtemp, open, readFile, rm, writeFile, type FileHandle } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
+import type { AudioEditOperation } from '../shared/audio.js';
 import type { AudioMetadata } from '../shared/contracts.js';
+import { buildFfmpegArgs, compileAudioPlan } from './audioPlan.js';
 import { AssetStudioError } from './errors.js';
 
 interface FfprobeOutput {
@@ -263,4 +265,79 @@ export async function probeAudioHandle(
     if (error instanceof AssetStudioError) throw error;
     throw new AssetStudioError('decode_failed', 422, { kind: 'audio' }, { cause: error });
   }
+}
+
+export async function renderAudioBuffer(
+  source: Buffer,
+  operations: readonly AudioEditOperation[],
+  format: 'ogg' | 'wav',
+  timeoutMs = 120_000,
+): Promise<Buffer> {
+  const directory = await mkdtemp(join(tmpdir(), 'vol-asset-render-'));
+  const inputPath = join(directory, 'source.audio');
+  const outputPath = join(directory, `output.${format}`);
+  try {
+    await writeFile(inputPath, source, { flag: 'wx', mode: 0o600 });
+    const handle = await open(inputPath, 'r');
+    let pcm;
+    try {
+      pcm = await decodeAudioPcm(handle, Math.min(timeoutMs, 60_000));
+    } finally {
+      await handle.close();
+    }
+    const plan = compileAudioPlan(operations, {
+      sampleRate: pcm.sampleRate,
+      channelCount: pcm.channelCount,
+      frameCount: pcm.channels[0]?.length ?? 0,
+    });
+    await runFfmpeg(
+      buildFfmpegArgs(inputPath, outputPath, plan, {
+        format,
+        ...(format === 'ogg' ? { vorbisQuality: 6 } : {}),
+      }),
+      timeoutMs,
+    );
+    await probeAudio(outputPath, Math.min(timeoutMs, 15_000));
+    return await readFile(outputPath);
+  } catch (error) {
+    if (error instanceof AssetStudioError) throw error;
+    throw new AssetStudioError('decode_failed', 422, { kind: 'audio' }, { cause: error });
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
+function runFfmpeg(args: string[], timeoutMs: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn('ffmpeg', args, {
+      shell: false,
+      stdio: ['ignore', 'ignore', 'pipe'],
+      windowsHide: true,
+    });
+    let settled = false;
+    let errorBytes = 0;
+    const finish = (error?: Error): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (error === undefined) resolve();
+      else reject(error);
+    };
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      finish(new Error('ffmpeg_timeout'));
+    }, timeoutMs);
+    child.stderr?.on('data', (chunk: Buffer) => {
+      errorBytes += chunk.length;
+      if (errorBytes > 1024 * 1024) {
+        child.kill('SIGKILL');
+        finish(new Error('ffmpeg_error_output_limit'));
+      }
+    });
+    child.once('error', (error) => finish(error));
+    child.once('close', (code) => {
+      if (code === 0) finish();
+      else finish(new Error(`ffmpeg_exit_${String(code)}`));
+    });
+  });
 }

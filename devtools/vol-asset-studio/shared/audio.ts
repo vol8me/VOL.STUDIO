@@ -113,6 +113,17 @@ export interface VolAudioDocumentV1 {
 
 export const AUDIO_DOCUMENT_SUFFIX = '.volaudio.json';
 
+export interface AudioRenderRequest {
+  expectedRevision: string;
+  operations: AudioEditOperation[];
+}
+
+export interface AudioRenderResponse {
+  assetId: string;
+  revision: string;
+  bytes: number;
+}
+
 export interface AudioPeakLevel {
   /** Bu seviyede bir peak kaç frame'i temsil ediyor. */
   framesPerPeak: number;

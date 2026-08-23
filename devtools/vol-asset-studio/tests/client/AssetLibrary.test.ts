@@ -106,10 +106,14 @@ describe('AssetLibrary', () => {
     document.body.append(library.rail, library.element);
     library.setAssets([
       asset({ id: 'clean', gitStatus: 'clean' }),
-      asset({ id: 'problem', problemCodes: ['missing-recipe'] }),
+      asset({ id: 'problem', problemCodes: ['metadata_parse_failed'] }),
       asset({ id: 'new', gitStatus: 'untracked' }),
     ]);
 
+    expect(document.querySelector('[data-filter="problems"] .asset-rail__badge')?.textContent).toBe(
+      '1',
+    );
+    expect(document.querySelectorAll('.asset-rail__label')).toHaveLength(0);
     document.querySelector<HTMLButtonElement>('[data-filter="problems"]')!.click();
     expect(document.querySelectorAll('.asset-card')).toHaveLength(1);
     expect(document.querySelector('.asset-card')?.getAttribute('data-asset-id')).toBe('problem');

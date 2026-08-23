@@ -9,19 +9,25 @@ changes, and provides a preview appropriate for each asset kind.
 
 ## Current scope
 
-The Stage 3 surface is intentionally **read only**:
-
 - live catalog, search, and kind/problem/Git-status filters across repo roots;
+- file-size, media-signature, JSON-structure, and image-decoding diagnostics;
 - PNG/JPEG/WebP/GIF/AVIF previews with server-side thumbnails;
 - OGG/MP3/WAV/FLAC playback and FFmpeg/ffprobe metadata;
 - WOFF/WOFF2/TTF/OTF font samples;
 - source, derived-output, and recipe relationship metadata;
 - identity-based incremental SSE updates with full resync after a sequence gap;
-- Quick Look metadata and repository-relative path copying.
+- Quick Look metadata and repository-relative path copying;
+- tile-backed pixel surface, layers/frames/palette, onion skin, undo/redo, and
+  revision-checked atomic PNG saves;
+- peak-pyramid waveform, selection, zoom, transport, gain, trim, fades, peak
+  normalization, reverse, and atomic OGG/WAV saves;
+- read-only reference search, rename preview, and recoverable trash.
 
-Pixel/audio editing, version history, and safe writes are not presented as if
-they existed in this stage. The CORE workbench components are infrastructure
-for the next stage; every control visible on the current screen works.
+Layers and frames are currently flattened into the composite when a direct PNG
+is saved; reopening native `.volsprite.json` documents is not complete yet. An
+audio processing chain is applied to the current OGG/WAV only after an explicit
+save; persistence as a `.volaudio.json` recipe is not wired yet. MP3/FLAC files
+can be inspected but require the OGG/WAV conversion path before saving.
 
 ## Running
 
@@ -73,16 +79,22 @@ configuration error.
 
 ## Repository host contract
 
-| Endpoint                                      | Responsibility                       |
-| --------------------------------------------- | ------------------------------------ |
-| `GET /api/v1/project`                         | Project roots and access mode        |
-| `GET /api/v1/catalog`                         | Revisioned asset summary             |
-| `GET /api/v1/assets/:id/content`              | Real file with Range and ETag        |
-| `GET /api/v1/assets/:id/thumbnail?size=…`     | Bounded image preview                |
-| `GET /api/v1/assets/:id/audio`                | Audio codec/duration/channel data    |
-| `GET /api/v1/events`                          | Live catalog SSE stream              |
-| `POST/DELETE /api/v1/session/auth`            | Open/close a LAN session             |
-| `POST/DELETE /api/v1/session/lease[ /renew ]` | Single-editor lock for future writes |
+| Endpoint                                      | Responsibility                         |
+| --------------------------------------------- | -------------------------------------- |
+| `GET /api/v1/project`                         | Project roots and access mode          |
+| `GET /api/v1/catalog`                         | Revisioned asset summary               |
+| `GET /api/v1/assets/:id/content`              | Real file with Range and ETag          |
+| `GET /api/v1/assets/:id/thumbnail?size=…`     | Bounded image preview                  |
+| `GET /api/v1/assets/:id/audio`                | Audio codec/duration/channel data      |
+| `GET /api/v1/assets/:id/raster`               | Bounded raw RGBA for editing           |
+| `GET /api/v1/assets/:id/waveform`             | Peak pyramid and structured audio QA   |
+| `POST /api/v1/assets/:id/audio/render`        | Validate, process, and atomically save |
+| `POST /api/v1/save-transactions`              | Revision-checked atomic asset save     |
+| `GET /api/v1/references/:id`                  | Read-only reference index              |
+| `POST /api/v1/file-operations/*`              | Rename preview and recoverable trash   |
+| `GET /api/v1/events`                          | Live catalog SSE stream                |
+| `POST/DELETE /api/v1/session/auth`            | Open/close a LAN session               |
+| `POST/DELETE /api/v1/session/lease[ /renew ]` | Single-editor lock                     |
 
 API errors never carry display copy. Stable `error.code` values are translated
 to Turkish or English by the client i18n layer.
@@ -97,8 +109,9 @@ to Turkish or English by the client i18n layer.
 - Thumbnail pixels, asset bytes, and request bodies are bounded.
 - File responses implement revision, `ETag`, conditional requests, and a
   single-range `Range` contract.
-- The Stage 3 client calls no write endpoint; Forge outputs are visible only
-  as a `readonly` legacy root.
+- Writes happen only after an explicit save; the expected content revision is
+  checked twice and a temp/backup/rollback transaction protects the target.
+  Write routes reject `readonly` roots.
 
 ## Verification
 
