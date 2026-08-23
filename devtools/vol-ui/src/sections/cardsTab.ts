@@ -94,7 +94,7 @@ function buildRarityCard(disposables: Destroyable[]): HTMLElement {
   // Tüm havuzu değil, ilk yedisini göster — bu kart yalnızca nadirlik/tip
   // görsel farkını tanıtır, dükkan demosuyla aynı geniş havuzu tekrar
   // sergilemenin bir değeri yok.
-  for (const id of SHOP_POOL.slice(0, 7)) {
+  for (const id of SHOP_POOL.slice(0, 6)) {
     const tile = new CardTile({
       data: demoCard(id),
       actionLabel: i18next.t('volui:cards.select'),

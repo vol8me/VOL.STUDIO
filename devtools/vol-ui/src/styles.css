@@ -128,9 +128,13 @@ body {
 
 .vol-showcase-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--vol-space-lg);
   align-items: stretch;
+}
+
+.vol-showcase-card-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .vol-showcase-card {
@@ -261,7 +265,7 @@ body {
 /* Kart demoları — nadirlik kademeleri yan yana karşılaştırılabilsin. */
 .vol-showcase-card-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--vol-space-sm);
 }
 
@@ -574,19 +578,19 @@ body {
  * içeriğine göre boy alır.
  */
 .vol-showcase-cards-bottom-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--vol-space-lg);
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 .vol-showcase-cards-bottom-row > .vol-showcase-card {
-  flex: 1;
   min-width: 0;
 }
 
 @media (width <= 700px) {
   .vol-showcase-cards-bottom-row {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -788,7 +792,7 @@ body {
 /* CORE ikon kaydı vitrini: her ikon adıyla birlikte görünür. */
 .vol-showcase-workbench-icons {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--vol-space-md);
 }
 

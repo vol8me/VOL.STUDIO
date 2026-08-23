@@ -569,7 +569,7 @@
 
 .vol-checkbox__input:checked ~ .vol-checkbox__track .vol-checkbox__thumb {
   background: var(--vol-ui-brand-solid);
-  transform: translate(18px);
+  transform: translate(20px);
 }
 
 .vol-checkbox__input:focus-visible ~ .vol-checkbox__track {

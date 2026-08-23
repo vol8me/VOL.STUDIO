@@ -19,15 +19,19 @@ import { i18n, i18next } from '@volstudio/core/i18n';
 import { card, cardGrid, svgIcon } from './shared';
 import {
   ICON_AMMO,
+  ICON_COIN,
   ICON_FIRE,
   ICON_GOLD,
   ICON_GUARD,
   ICON_MANA,
+  ICON_SPEED,
   ICON_SWORD,
   ICON_TOWER,
   ICON_TURRET,
   ICON_WALL,
   ICON_WOOD,
+  ICON_ZOOM_IN,
+  ICON_ZOOM_OUT,
 } from './icons';
 
 interface Destroyable {
@@ -552,13 +556,177 @@ function buildBuildMenuCard(disposables: Destroyable[]): HTMLElement {
             i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.guardTower') }),
           ),
       },
+      {
+        id: 'healing-well',
+        icon: svgIcon(ICON_MANA),
+        label: i18next.t('volui:hud.healingWell'),
+        cost: i18next.t('volui:hud.cost60Gold'),
+        hotkey: 'U',
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.healingWell') }),
+          ),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'ballista',
+        icon: svgIcon(ICON_TURRET),
+        label: i18next.t('volui:hud.ballista'),
+        cost: i18next.t('volui:hud.cost100Gold'),
+        hotkey: 'I',
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.ballista') }),
+          ),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'cannon',
+        icon: svgIcon(ICON_FIRE),
+        label: i18next.t('volui:hud.cannon'),
+        cost: i18next.t('volui:hud.cost120Gold'),
+        hotkey: 'O',
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.cannon') }),
+          ),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'observatory',
+        icon: svgIcon(ICON_ZOOM_IN),
+        label: i18next.t('volui:hud.observatory'),
+        cost: i18next.t('volui:hud.cost80Gold'),
+        hotkey: 'P',
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.observatory') }),
+          ),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'gate',
+        icon: svgIcon(ICON_WALL),
+        label: i18next.t('volui:hud.gate'),
+        cost: i18next.t('volui:hud.cost50Wood'),
+        hotkey: 'A',
+        onSelect: () =>
+          result.setContent(i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.gate') })),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'farm',
+        icon: svgIcon(ICON_WOOD),
+        label: i18next.t('volui:hud.farm'),
+        cost: i18next.t('volui:hud.cost30Wood'),
+        hotkey: 'S',
+        onSelect: () =>
+          result.setContent(i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.farm') })),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'lumber-mill',
+        icon: svgIcon(ICON_WOOD),
+        label: i18next.t('volui:hud.lumberMill'),
+        cost: i18next.t('volui:hud.cost40Wood'),
+        hotkey: 'D',
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.lumberMill') }),
+          ),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'market',
+        icon: svgIcon(ICON_COIN),
+        label: i18next.t('volui:hud.market'),
+        cost: i18next.t('volui:hud.cost100Gold'),
+        hotkey: 'F',
+        disabled: true,
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.market') }),
+          ),
+      },
+      {
+        id: 'shrine',
+        icon: svgIcon(ICON_MANA),
+        label: i18next.t('volui:hud.shrine'),
+        cost: i18next.t('volui:hud.cost150Gold'),
+        hotkey: 'G',
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.shrine') }),
+          ),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'stable',
+        icon: svgIcon(ICON_SPEED),
+        label: i18next.t('volui:hud.stable'),
+        cost: i18next.t('volui:hud.cost80Gold'),
+        hotkey: 'H',
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.stable') }),
+          ),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'siege-workshop',
+        icon: svgIcon(ICON_SWORD),
+        label: i18next.t('volui:hud.siegeWorkshop'),
+        cost: i18next.t('volui:hud.cost120Gold'),
+        hotkey: 'J',
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.siegeWorkshop') }),
+          ),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'mage-tower',
+        icon: svgIcon(ICON_TOWER),
+        label: i18next.t('volui:hud.mageTower'),
+        cost: i18next.t('volui:hud.cost150Gold'),
+        hotkey: 'K',
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.mageTower') }),
+          ),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'bunker',
+        icon: svgIcon(ICON_GUARD),
+        label: i18next.t('volui:hud.bunker'),
+        cost: i18next.t('volui:hud.cost90Gold'),
+        hotkey: 'L',
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.bunker') }),
+          ),
+        onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
+      },
+      {
+        id: 'lighthouse',
+        icon: svgIcon(ICON_ZOOM_OUT),
+        label: i18next.t('volui:hud.lighthouse'),
+        cost: i18next.t('volui:hud.cost110Gold'),
+        hotkey: ';',
+        disabled: true,
+        onSelect: () =>
+          result.setContent(
+            i18next.t('volui:hud.selected', { name: i18next.t('volui:hud.lighthouse') }),
+          ),
+      },
     ],
   });
   disposables.push(buildMenu);
   wrap.appendChild(buildMenu.element);
   wrap.appendChild(result.element);
 
-  return card(i18next.t('volui:hud.buildMenu'), wrap, { span: 3 });
+  return card(i18next.t('volui:hud.buildMenu'), wrap, { spanAll: true });
 }
 
 /** MinimapPanel.backgroundImage için basit arazi dokusu üretir. */

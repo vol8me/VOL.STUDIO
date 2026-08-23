@@ -804,13 +804,13 @@
   opacity: 0;
 
   --vol-loading-color: var(--vol-ui-accent-solid);
-  --vol-loading-size: 120px;
+  --vol-loading-size: clamp(80px, 22vmin, 160px);
   --vol-loading-progress: 0%;
   --vol-loading-bg: var(--vol-ui-bg);
   --vol-loading-scrim: var(--vol-ui-scrim);
-  --vol-loading-title-size: 24px;
-  --vol-loading-subtitle-size: 14px;
-  --vol-loading-percent-size: 16px;
+  --vol-loading-title-size: clamp(18px, 5vmin, 32px);
+  --vol-loading-subtitle-size: clamp(12px, 2.5vmin, 18px);
+  --vol-loading-percent-size: clamp(14px, 3vmin, 22px);
 
   transition: opacity var(--vol-loading-transition, 400ms) ease;
 }
@@ -913,6 +913,9 @@
   flex-direction: column;
   align-items: center;
   gap: var(--vol-space-lg);
+  text-align: center;
+  max-width: min(640px, 90vw);
+  padding: var(--vol-space-md);
 }
 
 /* Gösterge konteyner */
@@ -1063,6 +1066,7 @@
   color: var(--vol-ui-text);
   letter-spacing: 0.05em;
   text-shadow: 0 0 8px var(--vol-loading-color);
+  text-align: center;
 }
 
 /* Başlık */
@@ -1073,6 +1077,8 @@
   color: var(--vol-ui-text);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  text-align: center;
+  word-break: break-word;
 }
 
 /* Alt başlık */
@@ -1081,6 +1087,8 @@
   font-size: var(--vol-loading-subtitle-size);
   color: var(--vol-ui-text-muted);
   letter-spacing: 0.03em;
+  text-align: center;
+  word-break: break-word;
 }
 
 /* === Particle Orbit === */

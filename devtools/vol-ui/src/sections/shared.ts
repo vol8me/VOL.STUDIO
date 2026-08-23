@@ -48,6 +48,16 @@ export function paletteGrid(cards: HTMLElement[]): HTMLElement {
   return grid;
 }
 
+/** 3 eşit sütunlu cardGrid — Workbench gibi az kartlı satırlar için. */
+export function cardGrid3(cards: HTMLElement[]): HTMLElement {
+  const grid = document.createElement('div');
+  grid.className = 'vol-showcase-card-grid vol-showcase-card-grid--3';
+  for (const c of cards) {
+    grid.appendChild(c);
+  }
+  return grid;
+}
+
 export function svgIcon(path: string): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', '0 0 24 24');

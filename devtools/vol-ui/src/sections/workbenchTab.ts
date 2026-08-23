@@ -16,7 +16,7 @@ import {
   type CommandHistorySnapshot,
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
-import { card, cardGrid } from './shared';
+import { card, cardGrid3 } from './shared';
 
 interface Destroyable {
   destroy(): void;
@@ -252,8 +252,8 @@ export function buildWorkbenchTab(root: HTMLElement): {
   const section = document.createElement('div');
   section.className = 'vol-showcase-section';
   section.append(
-    card(i18next.t('volui:workbench.toolbar'), buildToolbarDemo(root, disposables)),
-    cardGrid([
+    cardGrid3([
+      card(i18next.t('volui:workbench.toolbar'), buildToolbarDemo(root, disposables)),
       card(i18next.t('volui:workbench.propertyFields'), buildPropertyDemo(disposables)),
       card(i18next.t('volui:workbench.history'), buildHistoryDemo(disposables)),
     ]),
