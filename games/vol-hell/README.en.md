@@ -46,7 +46,7 @@ Shipped audio assets (`public/assets/audio/**/*.ogg`) are kept in the repo; rege
 
 ## UI
 
-vol-hell does not invent its own UI components; all interface components come from `@volstudio/core` (`core/src/ui/`). For live component examples, see [games/vol-ui](../vol-ui/README.md).
+vol-hell does not invent its own UI components; all interface components come from `@volstudio/core` (`core/src/ui/`). For live component examples, see [devtools/vol-ui](../../devtools/vol-ui/README.md).
 
 ## License
 

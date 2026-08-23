@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { validateQualityConfig, COVERAGE_KEYS } from '../../../scripts/quality/config.mjs';
+import {
+  validateQualityConfig,
+  validateQualityWorkspaceParity,
+  COVERAGE_KEYS,
+} from '../../../scripts/quality/config.mjs';
 
 /**
- * `quality.json` kalite kapılarının tek doğruluk kaynağı: beş `vitest.config.ts`
+ * `quality.json` kalite kapılarının tek doğruluk kaynağı: paket `vitest.config.ts`
  * ve `workspace-contract.mjs` onu okur. Şeması doğrulanmazsa bir yazım hatası
  * (`floor` → `flor`) bekçiyi `TypeError: Cannot convert undefined or null to
  * object` ile düşürüyordu — kapı kırılıyordu ama hatayı okuyan kişi
@@ -106,6 +110,20 @@ describe('quality.json şema doğrulaması', () => {
     for (const [name, block] of Object.entries(packages)) {
       expect(Object.keys(block).sort(), name).toEqual([...COVERAGE_KEYS].sort());
     }
+  });
+
+  it('workspace ile quality kayıtlarının iki yönlü paritesini korur', () => {
+    const config = validConfig();
+
+    expect(validateQualityWorkspaceParity(config, ['@volstudio/core'])).toEqual([]);
+
+    expect(validateQualityWorkspaceParity(config, ['@volstudio/core', '@volstudio/yeni'])).toEqual([
+      '@volstudio/yeni: workspace paketi quality.json içinde eşik veya gerekçeli muafiyet taşımıyor.',
+    ]);
+
+    expect(validateQualityWorkspaceParity(config, [])).toEqual([
+      '@volstudio/core: quality.json kaydı bayat; karşılık gelen bir workspace paketi bulunamadı.',
+    ]);
   });
 });
 

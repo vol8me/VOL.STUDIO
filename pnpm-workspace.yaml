@@ -1,5 +1,6 @@
 packages:
   - 'core'
+  - 'devtools/*'
   - 'games/*'
   - 'tauri-v2'
 publicHoistPattern:

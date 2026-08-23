@@ -46,7 +46,7 @@ Shipped ses asset'leri (`public/assets/audio/**/*.ogg`) repoda tutulur; ses tasa
 
 ## UI
 
-vol-hell kendi UI bileşenini icat etmez; tüm arayüz bileşenleri `@volstudio/core`'dan (`core/src/ui/`) gelir. Canlı örnekler için [games/vol-ui](../vol-ui/README.md)'ye bakın.
+vol-hell kendi UI bileşenini icat etmez; tüm arayüz bileşenleri `@volstudio/core`'dan (`core/src/ui/`) gelir. Canlı örnekler için [devtools/vol-ui](../../devtools/vol-ui/README.md)'ye bakın.
 
 ## Lisans
 

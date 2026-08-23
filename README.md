@@ -1,6 +1,7 @@
 <img src="./.github/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
 
-Tauri v2 + Phaser 4 ile geliştirilen çapraz platform oyun monoreposu.
+Tauri v2 + Phaser 4 oyun runtime'ı ile web tabanlı geliştirici araçlarını aynı
+çalışma alanında buluşturan çapraz platform monorepo.
 
 [English](README.en.md)
 
@@ -11,15 +12,18 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 ## Yapı
 
 ```
-core/            # @volstudio/core — paylaşılan sistemler + DOM tabanlı UI kütüphanesi
-games/vol-hell/  # @volstudio/vol-hell — oyun (Vite kökü)
-games/vol-ui/    # @volstudio/vol-ui — core UI component'lerinin canlı showcase'i
-games/vol-forge/ # @volstudio/vol-forge — tek ekran tarif/katalog tabanlı görsel üretici
-games/design/    # @volstudio/design — Pencil tasarım kaynağı, export pipeline'ı ve rig montajı
-tauri-v2/        # @volstudio/tauri-v2 — native wrapper ve Rust backend
+core/                       # @volstudio/core — paylaşılan sistemler + DOM UI kütüphanesi
+games/vol-hell/             # @volstudio/vol-hell — oyun (Vite kökü)
+games/vol-forge/            # @volstudio/vol-forge — geçici eski görsel üretim yüzeyi
+games/design/               # @volstudio/design — Pencil kaynağı, export hattı ve rig montajı
+devtools/vol-ui/            # @volstudio/vol-ui — CORE UI canlı bileşen kataloğu
+devtools/vol-asset-studio/  # @volstudio/vol-asset-studio — repo varlık çalışma ortamı
+tauri-v2/                   # @volstudio/tauri-v2 — native oyun kabuğu ve Rust backend
 ```
 
-Doküman yüzeyi: [core/docs](core/docs) (i18n, ses/müzik motorları, CORE primitifleri) ve [games/docs](games/docs) (oyun i18n'i).
+Doküman yüzeyi: [core/docs](core/docs) (i18n, ses/müzik motorları, CORE
+primitifleri), [games/docs](games/docs) (oyun i18n'i) ve ilgili
+`devtools/<paket>/README.md` dosyalarıdır.
 
 ## Gereksinimler
 
@@ -31,10 +35,11 @@ Doküman yüzeyi: [core/docs](core/docs) (i18n, ses/müzik motorları, CORE prim
 
 ```bash
 pnpm install
-pnpm dev                                   # üç dev sunucusu birden (5173/5174/5175)
+pnpm dev                                   # oyun + iki geliştirici aracı
 pnpm --filter @volstudio/vol-hell dev      # yalnızca oyun            :5173
 pnpm --filter @volstudio/vol-ui dev        # yalnızca UI showcase'i   :5174
-pnpm --filter @volstudio/vol-forge dev     # yalnızca görsel üretici :5175
+pnpm --filter @volstudio/vol-asset-studio dev # yalnızca Asset Studio :5175
+pnpm --filter @volstudio/vol-forge dev     # geçici eski Forge yüzeyi
 pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # Oyun build
 pnpm build:tauri                           # PC installer build
@@ -66,7 +71,7 @@ Kapılar workspace'ten türer: yeni bir paket hiçbir kapıya elle eklenmez,
 komutudur ve aynı adlı bir script'i sessizce gölgeler — script hiç çalışmaz.
 Yerleşik bir komutla çakışan script adları bir kapı testiyle engellenir.
 
-Kapsam eşikleri kök `quality.json`da yaşar; beş `vitest.config.ts` onu okur ve
+Kapsam eşikleri kök `quality.json`da yaşar; paket `vitest.config.ts` dosyaları onu okur ve
 bekçi de aynı dosyayı okur, yani ayrışamazlar. Bir config'e eşiği satır içi
 yazmak kapıyı kırar. Dosya her okunuşta şema doğrulamasından geçer
 (`scripts/quality/config.mjs`) — bir yazım hatası, nereye bakılacağını söyleyen

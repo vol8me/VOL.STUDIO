@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import coreTr from '../../src/i18n/tr.json';
 import coreEn from '../../src/i18n/en.json';
-import voluiTr from '../../../games/vol-ui/src/i18n/tr.json';
-import voluiEn from '../../../games/vol-ui/src/i18n/en.json';
+import voluiTr from '../../../devtools/vol-ui/src/i18n/tr.json';
+import voluiEn from '../../../devtools/vol-ui/src/i18n/en.json';
 
 /** İç içe nesneden tüm leaf key'leri nokta notasyonunda çıkarır. */
 function extractKeys(obj: Record<string, unknown>, prefix = ''): string[] {

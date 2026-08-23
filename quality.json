@@ -36,6 +36,12 @@
       "branches": 87,
       "functions": 81
     },
+    "@volstudio/vol-asset-studio": {
+      "lines": 50,
+      "statements": 50,
+      "branches": 50,
+      "functions": 40
+    },
     "@volstudio/vol-forge": {
       "lines": 86,
       "statements": 86,

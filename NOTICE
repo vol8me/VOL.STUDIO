@@ -11,4 +11,4 @@ works, in any medium.
 Third-party components retain their own licenses:
 
 - Fonts (Jura, Exo 2): SIL Open Font License 1.1.
-  See public/assets/fonts/OFL-*.txt (core, games/vol-hell, games/vol-ui) for the full text.
+  See public/assets/fonts/OFL-*.txt (core, games/vol-hell, devtools/vol-ui) for the full text.

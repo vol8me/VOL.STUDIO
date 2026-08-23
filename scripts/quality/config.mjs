@@ -1,7 +1,7 @@
 /**
  * `quality.json`un TEK okuyucusu ve doğrulayıcısı.
  *
- * Dosyayı hem `scripts/workspace-contract.mjs` hem beş `vitest.config.ts`
+ * Dosyayı hem `scripts/workspace-contract.mjs` hem paket `vitest.config.ts`
  * tüketiyor. Doğrulama olmadan bir yazım hatası (`floor` → `flor`) bekçiyi
  * teşhis edilemez bir çökmeye sürüklüyordu:
  *
@@ -89,7 +89,9 @@ export function validateQualityConfig(raw) {
     } else {
       for (const [name, reason] of Object.entries(raw.exempt)) {
         if (typeof reason !== 'string' || reason.trim() === '') {
-          problems.push(`exempt[${JSON.stringify(name)}]: gerekçe boş olamaz. Sessiz muafiyet yok.`);
+          problems.push(
+            `exempt[${JSON.stringify(name)}]: gerekçe boş olamaz. Sessiz muafiyet yok.`,
+          );
         }
       }
     }
@@ -103,6 +105,40 @@ export function validateQualityConfig(raw) {
           `${name}: hem "exempt" hem "packages" içinde. Muafiyet mi eşik mi geçerli, belirsiz.`,
         );
       }
+    }
+  }
+
+  return problems;
+}
+
+/**
+ * Workspace paketleri ile `quality.json` kayıtlarının iki yönlü paritesini
+ * doğrular. Yeni paketin eşiksiz kalması kadar, silinmiş/taşınmış bir paketin
+ * eski quality kaydının gerçeği maskelemesi de sözleşme ihlalidir.
+ *
+ * `validateQualityConfig()` önce çağrılmalıdır; bu yardımcı geçerli config
+ * biçimi üzerinde çalışır.
+ */
+export function validateQualityWorkspaceParity(raw, workspacePackageNames) {
+  const problems = [];
+  const workspace = new Set(workspacePackageNames);
+  const packages = new Set(Object.keys(raw.packages ?? {}));
+  const exempt = new Set(Object.keys(raw.exempt ?? {}));
+  const registered = new Set([...packages, ...exempt]);
+
+  for (const name of workspace) {
+    if (!registered.has(name)) {
+      problems.push(
+        `${name}: workspace paketi quality.json içinde eşik veya gerekçeli muafiyet taşımıyor.`,
+      );
+    }
+  }
+
+  for (const name of registered) {
+    if (!workspace.has(name)) {
+      problems.push(
+        `${name}: quality.json kaydı bayat; karşılık gelen bir workspace paketi bulunamadı.`,
+      );
     }
   }
 

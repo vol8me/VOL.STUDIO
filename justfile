@@ -117,6 +117,11 @@ dev:
 dev-ui:
     pnpm --filter @volstudio/vol-ui dev
 
+dev-asset-studio:
+    pnpm --filter @volstudio/vol-asset-studio dev
+
+# Aşama 4 migrasyonuna kadar eski çıktıları açabilmek için korunur; Asset
+# Studio ile aynı 5175 portunu kullandığından kök `dev` tarifine dahil değildir.
 dev-forge:
     pnpm --filter @volstudio/vol-forge dev
 
@@ -131,8 +136,8 @@ gen-theme:
 # silmek hiçbir şeye dokunmaz.
 # JS/TS çıktılarını siler: dist, coverage, *.tsbuildinfo
 clean:
-    rm -rf core/dist games/*/dist tauri-v2/dist
-    rm -rf core/coverage games/*/coverage tauri-v2/coverage
+    rm -rf core/dist devtools/*/dist games/*/dist tauri-v2/dist
+    rm -rf core/coverage devtools/*/coverage games/*/coverage tauri-v2/coverage
     find . -name '*.tsbuildinfo' -not -path './node_modules/*' -delete
 
 # Rust target'ı da siler. Sonraki `cargo check` sıfırdan derler; ayrı tutuldu.

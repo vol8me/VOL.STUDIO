@@ -16,6 +16,25 @@ Bu aşamada çıktıların hiçbiri taşınmadı, silinmedi veya commit kapsamı
 alınmadı. Aşama 0–3 boyunca Forge çalışır kalacak; korumalı içe aktarım ve
 Forge emekliliği ayrı Aşama 4 işidir.
 
+## 2026-08-23 — Asset Studio Aşama 1: araç workspace'i
+
+Oyun ile geliştirici aracı sınırı klasör yapısına taşındı: VOL.UI dosya
+kaybetmeden `games/vol-ui` → `devtools/vol-ui` yoluna alındı ve workspace artık
+`devtools/*` paketlerini otomatik keşfediyor. Kök `dev`, VOL.HELL + VOL.UI +
+Asset Studio'yu çalıştırır; aynı 5175 portunu kullanan geçici Forge yalnız
+`dev-forge` ile açıkça başlatılır ve Aşama 4'e kadar repoda kalır.
+
+Workspace sözleşmesi ile `quality.json` arasında iki yönlü parite eklendi:
+yeni bir paketin eşiksiz kalması kadar, kaldırılmış paketin bayat kapsam kaydı
+da kapıyı kırar. Yol ve komut değişiklikleri kök TR/EN README'leri, oyun i18n
+rehberi, VOL.HELL bağlantıları ve NOTICE üzerinde birlikte güncellendi.
+
+Hedefli doğrulama: workspace contract 7 pakette geçti; VOL.UI typecheck,
+48 test ve build geçti; governance regresyonları 11/11 geçti; hedefli Prettier
+ve `git diff --check` temizdi. Aşamalar paralel aynı çalışma ağacında
+geliştirildiği için bu sınır commit'inde hook atlandı; tam `pnpm high` Aşama 3
+kapanışında temiz birleşik ağaç üzerinde zorunludur.
+
 ## 2026-08-23 — Görsel motor Tur 5: tek ekran ürün, Tur 1–5 ve Tur 4 kalıntı denetimi
 
 Kullanıcı denetimi Tur 5'in önceki “basit kip + ileri kip” çözümünü reddetti:

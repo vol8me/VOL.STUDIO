@@ -13,9 +13,9 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadQualityConfig } from './quality/config.mjs';
+import { loadQualityConfig, validateQualityWorkspaceParity } from './quality/config.mjs';
 
 /** Her paketin sahip olması gereken script'ler ve hangi kapının kullandığı. */
 const REQUIRED_SCRIPTS = {
@@ -68,6 +68,13 @@ if (packages.length === 0) {
   problems.push('Hiç workspace paketi bulunamadı — pnpm-workspace.yaml bozuk olabilir.');
 }
 
+problems.push(
+  ...validateQualityWorkspaceParity(
+    quality,
+    packages.map((pkg) => pkg.name),
+  ),
+);
+
 for (const pkg of packages) {
   const manifest = readJson(join(root, pkg.dir, 'package.json'));
   const scripts = manifest.scripts ?? {};
@@ -86,16 +93,19 @@ for (const pkg of packages) {
 
   const thresholds = readThresholds(pkg.name);
   if (!thresholds) {
-    problems.push(
-      `${pkg.name} (${pkg.dir}): quality.json içinde kapsam eşiği yok. ` +
-        `Eşiksiz paket kapsam gerilemesini yakalamaz.`,
-    );
     continue;
   }
 
   // Config'in eşiği ELLE yazmadığını da doğrula: `quality.json`u atlayıp
   // vitest.config.ts'e sayı yazmak, bekçi yeşilken kapsamın düşmesine yol açar.
   const configPath = join(root, pkg.dir, 'vitest.config.ts');
+  if (!existsSync(configPath)) {
+    problems.push(
+      `${pkg.name} (${pkg.dir}): "test:coverage" script'i var ama vitest.config.ts yok. ` +
+        `Kapsam eşiği test çalıştırıcısına bağlanmamış.`,
+    );
+    continue;
+  }
   const configSource = readFileSync(configPath, 'utf8');
   if (/thresholds:\s*\{/.test(configSource)) {
     problems.push(

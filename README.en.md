@@ -1,6 +1,7 @@
 <img src="./.github/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
 
-Cross-platform game monorepo built with Tauri v2 + Phaser 4.
+Cross-platform monorepo combining a Tauri v2 + Phaser 4 game runtime with
+browser-based developer tools in one workspace.
 
 [Türkçe](README.md)
 
@@ -11,15 +12,18 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 ## Structure
 
 ```
-core/            # @volstudio/core — shared systems + DOM-based UI library
-games/vol-hell/  # @volstudio/vol-hell — the game (Vite root)
-games/vol-ui/    # @volstudio/vol-ui — live showcase of the core UI components
-games/vol-forge/ # @volstudio/vol-forge — single-screen recipe/catalog visual generator
-games/design/    # @volstudio/design — Pencil design source, export pipeline and rig assembly
-tauri-v2/        # @volstudio/tauri-v2 — native wrapper and Rust backend
+core/                       # @volstudio/core — shared systems + DOM UI library
+games/vol-hell/             # @volstudio/vol-hell — the game (Vite root)
+games/vol-forge/            # @volstudio/vol-forge — temporary legacy visual generator
+games/design/               # @volstudio/design — Pencil source, export pipeline and rig assembly
+devtools/vol-ui/            # @volstudio/vol-ui — live CORE UI component catalog
+devtools/vol-asset-studio/  # @volstudio/vol-asset-studio — repository asset workbench
+tauri-v2/                   # @volstudio/tauri-v2 — native game wrapper and Rust backend
 ```
 
-Documentation surface: [core/docs](core/docs) (i18n, audio/music engines, CORE primitives) and [games/docs](games/docs) (game i18n).
+Documentation lives in [core/docs](core/docs) (i18n, audio/music engines, CORE
+primitives), [games/docs](games/docs) (game i18n), and each relevant
+`devtools/<package>/README.md`.
 
 ## Requirements
 
@@ -31,10 +35,11 @@ Documentation surface: [core/docs](core/docs) (i18n, audio/music engines, CORE p
 
 ```bash
 pnpm install
-pnpm dev                                   # all three dev servers (5173/5174/5175)
+pnpm dev                                   # game + two developer tools
 pnpm --filter @volstudio/vol-hell dev      # game only               :5173
 pnpm --filter @volstudio/vol-ui dev        # UI showcase only        :5174
-pnpm --filter @volstudio/vol-forge dev     # visual generator only   :5175
+pnpm --filter @volstudio/vol-asset-studio dev # Asset Studio only    :5175
+pnpm --filter @volstudio/vol-forge dev     # temporary legacy Forge
 pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # Build the game
 pnpm build:tauri                           # Build PC installers
@@ -64,7 +69,7 @@ The `:env` suffix is not incidental: `pnpm doctor` is pnpm's OWN diagnostic
 command and silently shadows a script of the same name — the script never runs.
 A gate test rejects script names that collide with pnpm builtins.
 
-Coverage thresholds live in the root `quality.json`; all five `vitest.config.ts`
+Coverage thresholds live in the root `quality.json`; package `vitest.config.ts`
 files read it and the guard reads the same file, so the two cannot drift.
 Writing a threshold inline in a config breaks the gate. The file is schema
 validated on every read (`scripts/quality/config.mjs`), so a typo yields a

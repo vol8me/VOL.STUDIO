@@ -21,7 +21,7 @@ import { join, relative } from 'node:path';
 const SCANNED_ROOTS = [
   join(import.meta.dirname, '../../src'),
   join(import.meta.dirname, '../../../games/vol-hell/src'),
-  join(import.meta.dirname, '../../../games/vol-ui/src'),
+  join(import.meta.dirname, '../../../devtools/vol-ui/src'),
 ];
 
 /** Elle yönetilen temizlik dizisi kalıpları. */
