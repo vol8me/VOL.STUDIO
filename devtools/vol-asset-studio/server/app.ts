@@ -21,6 +21,9 @@ import { registerApiRoutes } from './routes.js';
 import { packageRootFromRuntime, resolveCacheRoot } from './runtimePaths.js';
 import { watchCatalog, type CatalogWatcher } from './watcher.js';
 
+/** Piksel editörünün açabileceği azami kenar; genel raster sınırı. */
+const MAX_RASTER_EDGE = 8192;
+
 export interface AssetStudioServerOptions {
   repoRoot: string;
   configPath?: string;
@@ -164,8 +167,20 @@ export async function createAssetStudioServer(
     maxImagePixels: loaded.limits.maxImagePixels,
   });
   const app = fastify({
+    // Varsayılan gövde sınırı KÜÇÜK tutulur: JSON uçları birkaç KiB'den
+    // fazlasını hiç görmemeli. Büyük ikili yükler yalnız multipart kayıt
+    // yolundan geçer ve kendi sınırını taşır.
     bodyLimit: 64 * 1024,
     logger: options.logger ?? false,
+  });
+  const { default: multipart } = await import('@fastify/multipart');
+  await app.register(multipart, {
+    limits: {
+      fileSize: loaded.limits.maxAssetBytes,
+      files: 64,
+      fields: 8,
+      fieldSize: 256 * 1024,
+    },
   });
   const leases = new EditorLeaseManager();
   const lanSessions = new LanSessionManager();
@@ -244,7 +259,6 @@ export async function createAssetStudioServer(
 
   registerApiRoutes(app, {
     catalog,
-    thumbnailCache,
     projectName: loaded.project.name ?? basename(loaded.repoRoot),
     repoRoot: loaded.repoRoot,
     network: loopback ? 'loopback' : 'lan',
@@ -252,7 +266,9 @@ export async function createAssetStudioServer(
     maxAssetBytes: loaded.limits.maxAssetBytes,
     maxImagePixels: loaded.limits.maxImagePixels,
     maxThumbnailSize: loaded.limits.maxThumbnailSize,
+    maxEdge: MAX_RASTER_EDGE,
     leases,
+    thumbnailCache,
   });
 
   let watcher: CatalogWatcher | undefined;

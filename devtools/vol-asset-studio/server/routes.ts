@@ -6,6 +6,8 @@ import type {
   AssetSummary,
   LeaseResponse,
   ProjectResponse,
+  SaveTransactionRequest,
+  SaveTransactionResponse,
 } from '../shared/contracts.js';
 import type { ArtifactCache } from './artifactCache.js';
 import { openVerifiedAsset } from './assetFile.js';
@@ -15,6 +17,8 @@ import { AssetStudioError } from './errors.js';
 import type { EditorLeaseManager } from './lease.js';
 import { contentTypeForPath } from './mime.js';
 import { parseByteRange } from './range.js';
+import { decodeRaster } from './raster.js';
+import { runSaveTransaction, type SaveTarget } from './saveTransaction.js';
 
 interface AssetParams {
   id: string;
@@ -40,6 +44,7 @@ export interface ApiRouteOptions {
   maxThumbnailSize: number;
   leases: EditorLeaseManager;
   thumbnailCache: ArtifactCache;
+  maxEdge: number;
 }
 
 function quotedEtag(revision: string): string {
@@ -57,6 +62,48 @@ function parseThumbnailSize(raw: string | undefined, maximum: number): number {
     throw new AssetStudioError('invalid_request', 400, { field: 'size' });
   }
   return size;
+}
+
+const ASSET_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+const PART_NAME_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
+const REVISION_PATTERN = /^[a-f0-9]{64}$/;
+
+/**
+ * Kayıt planını doğrular ve parçalarla eşleştirir.
+ *
+ * Doğrulama gövdeyi diske YAZMADAN ÖNCE biter: geçersiz bir plan yüzünden
+ * yarım yazılmış geçici dosya bırakmak, geri sarılacak bir durum üretirdi.
+ */
+function buildSaveTargets(
+  plan: SaveTransactionRequest | undefined,
+  payloads: ReadonlyMap<string, Buffer>,
+): SaveTarget[] {
+  if (plan === undefined || !Array.isArray(plan.targets) || plan.targets.length === 0) {
+    throw new AssetStudioError('invalid_request', 400, { field: 'transaction.targets' });
+  }
+  return plan.targets.map((target, index) => {
+    const field = `transaction.targets.${index}`;
+    if (typeof target.assetId !== 'string' || !ASSET_ID_PATTERN.test(target.assetId)) {
+      throw new AssetStudioError('invalid_request', 400, { field: `${field}.assetId` });
+    }
+    if (
+      typeof target.expectedRevision !== 'string' ||
+      !REVISION_PATTERN.test(target.expectedRevision)
+    ) {
+      throw new AssetStudioError('invalid_request', 400, { field: `${field}.expectedRevision` });
+    }
+    if (typeof target.payloadPart !== 'string' || !PART_NAME_PATTERN.test(target.payloadPart)) {
+      throw new AssetStudioError('invalid_request', 400, { field: `${field}.payloadPart` });
+    }
+    const payload = payloads.get(target.payloadPart);
+    if (payload === undefined) {
+      throw new AssetStudioError('invalid_request', 400, {
+        field: `${field}.payloadPart`,
+        reason: 'missing_part',
+      });
+    }
+    return { assetId: target.assetId, expectedRevision: target.expectedRevision, payload };
+  });
 }
 
 function clientIdFrom(body: LeaseBody): string {
@@ -197,6 +244,38 @@ export function registerApiRoutes(app: FastifyInstance, options: ApiRouteOptions
     },
   );
 
+  /**
+   * Düzenlenebilir piksel verisi: JSON değil ham RGBA döner.
+   *
+   * 2048² bir görüntü JSON'da ~50 MB metin olurdu; ikili gövde hem küçük hem
+   * istemcide kopyasız `Uint8ClampedArray`ye sarılabilir. Boyut ve revizyon
+   * gövdeye karışmasın diye başlıklarda taşınır.
+   */
+  app.get<{ Params: AssetParams }>('/api/v1/assets/:id/raster', async (request, reply) => {
+    const record = options.catalog.get(request.params.id);
+    if (record.summary.kind !== 'image') {
+      throw new AssetStudioError('unsupported_format', 415, { kind: record.summary.kind });
+    }
+    const verified = await openVerifiedAsset(record);
+    let source: Buffer;
+    try {
+      source = await verified.handle.readFile();
+    } finally {
+      await verified.handle.close();
+    }
+    const raster = await decodeRaster(source, {
+      maxImagePixels: options.maxImagePixels,
+      maxEdge: options.maxEdge,
+    });
+    reply.header('content-type', 'application/octet-stream');
+    reply.header('x-vol-raster-width', String(raster.width));
+    reply.header('x-vol-raster-height', String(raster.height));
+    reply.header('x-vol-asset-revision', record.summary.revision);
+    reply.header('x-vol-stripped-metadata', raster.strippedMetadata.join(','));
+    reply.header('cache-control', 'no-store');
+    return reply.send(raster.rgba);
+  });
+
   app.get<{ Params: AssetParams }>('/api/v1/assets/:id/audio', async (request) => {
     const record = options.catalog.get(request.params.id);
     if (record.summary.kind !== 'audio') {
@@ -243,6 +322,45 @@ export function registerApiRoutes(app: FastifyInstance, options: ApiRouteOptions
     };
     closeSseConnections.add(close);
     request.raw.once('close', cleanup);
+  });
+
+  /**
+   * Tek mantıksal kayıt işlemi.
+   *
+   * Multipart: `transaction` alanı JSON planı, kalan parçalar ham RGBA
+   * gövdeleridir. Plan ve veri ayrı taşınır çünkü ikili payload'ı JSON'a
+   * gömmek base64 ile %33 şişirir ve bellekte iki kopya yaratır.
+   */
+  app.post('/api/v1/save-transactions', async (request): Promise<SaveTransactionResponse> => {
+    if (!request.isMultipart()) {
+      throw new AssetStudioError('invalid_request', 400, { field: 'content-type' });
+    }
+    let plan: SaveTransactionRequest | undefined;
+    const payloads = new Map<string, Buffer>();
+    for await (const part of request.parts()) {
+      if (part.type === 'file') {
+        payloads.set(part.fieldname, await part.toBuffer());
+        continue;
+      }
+      if (part.fieldname !== 'transaction') continue;
+      try {
+        plan = JSON.parse(String(part.value)) as SaveTransactionRequest;
+      } catch (error) {
+        throw new AssetStudioError(
+          'invalid_request',
+          400,
+          { field: 'transaction' },
+          {
+            cause: error,
+          },
+        );
+      }
+    }
+    const targets = buildSaveTargets(plan, payloads);
+    const results = await runSaveTransaction(options.catalog, targets, {
+      maxAssetBytes: options.maxAssetBytes,
+    });
+    return { transactionId: plan?.transactionId ?? '', results };
   });
 
   app.post<{ Body: LeaseBody }>('/api/v1/session/lease', (request): LeaseResponse => {

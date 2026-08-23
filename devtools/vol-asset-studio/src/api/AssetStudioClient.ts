@@ -4,8 +4,17 @@ import type {
   AudioMetadata,
   CatalogResponse,
   ProjectResponse,
+  SaveTransactionResponse,
   SessionResponse,
 } from '../../shared/index';
+
+export interface RasterPayload {
+  width: number;
+  height: number;
+  revision: string;
+  rgba: Uint8ClampedArray;
+  strippedMetadata: string[];
+}
 
 type ConnectionState = 'live' | 'offline' | 'reconnecting';
 
@@ -30,6 +39,16 @@ export interface AssetEventSubscription {
   close(): void;
 }
 
+/** Hata gövdesinden sözleşmeli kodu çıkarır; okunamazsa güvenli yedeğe düşer. */
+async function errorCodeOf(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as ErrorPayload;
+    return body.error?.code ?? 'request_failed';
+  } catch {
+    return 'request_failed';
+  }
+}
+
 /** Repo hostunun sürümlü HTTP/SSE yüzeyini tek noktada toplar. */
 export class AssetStudioClient {
   constructor(private readonly baseUrl = '') {}
@@ -44,6 +63,72 @@ export class AssetStudioClient {
 
   getAudioMetadata(assetId: string, signal?: AbortSignal): Promise<AudioMetadata> {
     return this.request<AudioMetadata>(this.assetUrl(assetId, 'audio'), signal);
+  }
+
+  /**
+   * Düzenlenebilir piksel verisini indirir.
+   *
+   * `request()` JSON bekler; raster ikili olduğu için ayrı yol izler. Boyut ve
+   * revizyon başlıklardan okunur — gövde saf piksel kalmalı ki
+   * `Uint8ClampedArray`ye kopyasız sarılabilsin.
+   */
+  async getRaster(assetId: string, signal?: AbortSignal): Promise<RasterPayload> {
+    const response = await fetch(this.url(this.assetUrl(assetId, 'raster')), {
+      credentials: 'same-origin',
+      ...(signal === undefined ? {} : { signal }),
+    });
+    if (!response.ok) {
+      throw new AssetStudioApiError(await errorCodeOf(response), response.status);
+    }
+    const width = Number(response.headers.get('x-vol-raster-width'));
+    const height = Number(response.headers.get('x-vol-raster-height'));
+    const revision = response.headers.get('x-vol-asset-revision') ?? '';
+    const buffer = await response.arrayBuffer();
+    if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width < 1 || height < 1) {
+      throw new AssetStudioApiError('decode_failed', response.status);
+    }
+    if (buffer.byteLength !== width * height * 4) {
+      throw new AssetStudioApiError('decode_failed', response.status);
+    }
+    const stripped = response.headers.get('x-vol-stripped-metadata') ?? '';
+    return {
+      width,
+      height,
+      revision,
+      rgba: new Uint8ClampedArray(buffer),
+      strippedMetadata: stripped === '' ? [] : stripped.split(','),
+    };
+  }
+
+  /** Tek varlığı tek mantıksal transaction olarak kaydeder. */
+  async saveRaster(
+    asset: Pick<AssetSummary, 'id'>,
+    expectedRevision: string,
+    width: number,
+    height: number,
+    png: Blob,
+    signal?: AbortSignal,
+  ): Promise<SaveTransactionResponse> {
+    const transactionId = `tx-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    const body = new FormData();
+    body.set(
+      'transaction',
+      JSON.stringify({
+        transactionId,
+        targets: [{ assetId: asset.id, expectedRevision, width, height, payloadPart: 'payload0' }],
+      }),
+    );
+    body.set('payload0', png, 'payload0.png');
+    const response = await fetch(this.url('/api/v1/save-transactions'), {
+      method: 'POST',
+      credentials: 'same-origin',
+      body,
+      ...(signal === undefined ? {} : { signal }),
+    });
+    if (!response.ok) {
+      throw new AssetStudioApiError(await errorCodeOf(response), response.status);
+    }
+    return (await response.json()) as SaveTransactionResponse;
   }
 
   authenticate(token: string, signal?: AbortSignal): Promise<SessionResponse> {
@@ -132,7 +217,7 @@ export class AssetStudioClient {
     }
   }
 
-  private assetUrl(assetId: string, action: 'content' | 'thumbnail' | 'audio'): string {
+  private assetUrl(assetId: string, action: 'content' | 'thumbnail' | 'audio' | 'raster'): string {
     return `/api/v1/assets/${encodeURIComponent(assetId)}/${action}`;
   }
 

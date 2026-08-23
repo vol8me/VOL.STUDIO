@@ -47,7 +47,8 @@
     "viewportHint": "Cursor-centered wheel zoom; pan with middle mouse or Space + left drag.",
     "fit": "Fit",
     "actualSize": "100%",
-    "zoomState": "Zoom {{zoom}}%"
+    "zoomState": "Zoom {{zoom}}%",
+    "iconRegistry": "Icon registry"
   },
   "buttons": {
     "variant": "Variant",

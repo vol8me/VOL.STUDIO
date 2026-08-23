@@ -116,6 +116,41 @@ export interface ApiErrorResponse {
   };
 }
 
+/** `GET /assets/:id/raster` yanıt başlıklarının gövdesiz özeti. */
+export interface RasterInfo {
+  width: number;
+  height: number;
+  revision: string;
+  /** İlk normalize kaydında düşecek metadata alanları (icc, exif…). */
+  strippedMetadata: string[];
+}
+
+export interface SaveTargetRequest {
+  assetId: string;
+  /** İstemcinin düzenlemeye başladığı revizyon; disk bundan farklıysa kayıt düşer. */
+  expectedRevision: string;
+  width: number;
+  height: number;
+  /** Ham RGBA'nın multipart parça adı. */
+  payloadPart: string;
+}
+
+export interface SaveTransactionRequest {
+  transactionId: string;
+  targets: SaveTargetRequest[];
+}
+
+export interface SaveTargetResult {
+  assetId: string;
+  revision: string;
+  bytes: number;
+}
+
+export interface SaveTransactionResponse {
+  transactionId: string;
+  results: SaveTargetResult[];
+}
+
 export interface LeaseResponse {
   clientId: string;
   mode: 'editor' | 'readonly';

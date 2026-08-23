@@ -19,6 +19,10 @@ export type IconName =
   | 'modified'
   | 'more'
   | 'copy'
+  | 'eraser'
+  | 'eyedropper'
+  | 'fill'
+  | 'pencil'
   | 'redo'
   | 'refresh'
   | 'reset'
@@ -78,6 +82,21 @@ export const VOL_ICONS: Readonly<Record<IconName, IconDefinition>> = {
   modified: { viewBox: '0 0 24 24', paths: ['m4 16-1 5 5-1L19 9l-4-4Z', 'm13 7 4 4'] },
   more: { viewBox: '0 0 24 24', paths: ['M5 12h.01', 'M12 12h.01', 'M19 12h.01'] },
   copy: { viewBox: '0 0 24 24', paths: ['M8 8h12v12H8z', 'M16 8V4H4v12h4'] },
+  // Piksel editörü araç ikonları. Ürüne değil ROLE bağlıdır: kalem, silgi,
+  // kova ve damlalık her raster editöründe aynı anlamı taşır.
+  pencil: { viewBox: '0 0 24 24', paths: ['m4 20 1.5-4.5L16 5l3 3L8.5 18.5Z', 'm14 7 3 3'] },
+  eraser: {
+    viewBox: '0 0 24 24',
+    paths: ['M8 20 3 15l9-9 5 5-9 9Z', 'M8 20h11', 'm10 8 5 5'],
+  },
+  fill: {
+    viewBox: '0 0 24 24',
+    paths: ['M5 11 12 4l7 7-7 7Z', 'm5 11 7 7', 'M19 15c1.5 2 1.5 4 0 4s-1.5-2 0-4Z'],
+  },
+  eyedropper: {
+    viewBox: '0 0 24 24',
+    paths: ['m4 20 1-4 8-8 3 3-8 8Z', 'm14 5 5 5', 'm12 7 5 5'],
+  },
   redo: { viewBox: '0 0 24 24', paths: ['m15 7 4 4-4 4', 'M19 11h-8a6 6 0 0 0-6 6'] },
   refresh: {
     viewBox: '0 0 24 24',

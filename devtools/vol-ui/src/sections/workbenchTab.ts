@@ -1,11 +1,13 @@
 import {
   Button,
   CanvasViewportController,
+  VOL_ICONS,
   Checkbox,
   CommandHistory,
   Input,
   KeyedVirtualList,
   Popover,
+  Icon,
   PropertyField,
   Slider,
   SplitPane,
@@ -219,6 +221,29 @@ function buildSplitViewportDemo(disposables: Destroyable[]): HTMLElement {
   return split.element;
 }
 
+/**
+ * CORE ikon kaydının TAMAMI.
+ *
+ * Liste elle yazılmaz, `VOL_ICONS` üzerinde gezilir: kayda yeni bir ikon
+ * eklendiğinde showcase'e ayrıca eklenmesi gerekmez ve hiçbir ikon görsel
+ * denetimden kaçamaz.
+ */
+function buildIconRegistry(disposables: Destroyable[]): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-workbench-icons';
+  for (const name of Object.keys(VOL_ICONS) as (keyof typeof VOL_ICONS)[]) {
+    const cell = document.createElement('div');
+    cell.className = 'vol-showcase-workbench-icons__cell';
+    const instance = new Icon({ name, label: name });
+    disposables.push(instance);
+    const caption = document.createElement('span');
+    caption.textContent = name;
+    cell.append(instance.element, caption);
+    wrap.appendChild(cell);
+  }
+  return wrap;
+}
+
 export function buildWorkbenchTab(root: HTMLElement): {
   element: HTMLElement;
   destroy: () => void;
@@ -232,6 +257,9 @@ export function buildWorkbenchTab(root: HTMLElement): {
       card(i18next.t('volui:workbench.propertyFields'), buildPropertyDemo(disposables)),
       card(i18next.t('volui:workbench.history'), buildHistoryDemo(disposables)),
     ]),
+    card(i18next.t('volui:workbench.iconRegistry'), buildIconRegistry(disposables), {
+      spanAll: true,
+    }),
     card(i18next.t('volui:workbench.splitPane'), buildSplitViewportDemo(disposables), {
       spanAll: true,
     }),

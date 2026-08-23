@@ -47,7 +47,8 @@
     "viewportHint": "Wheel ile imleç merkezli zoom; orta tuş veya Space + sol sürükleme ile kamera pan.",
     "fit": "Sığdır",
     "actualSize": "%100",
-    "zoomState": "Zoom %{{zoom}}"
+    "zoomState": "Zoom %{{zoom}}",
+    "iconRegistry": "İkon kaydı"
   },
   "buttons": {
     "variant": "Varyant",

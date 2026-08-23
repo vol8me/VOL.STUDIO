@@ -35,6 +35,53 @@ ve `git diff --check` temizdi. Aşamalar paralel aynı çalışma ağacında
 geliştirildiği için bu sınır commit'inde hook atlandı; tam `pnpm high` Aşama 3
 kapanışında temiz birleşik ağaç üzerinde zorunludur.
 
+## 2026-08-23 — Asset Studio Aşama 5 (kısmi): piksel çekirdeği ve kayıt hattı
+
+Piksel editörünün veri, araç ve kayıt katmanları kuruldu ve doğrulandı; kabuğa
+bağlanan editör yüzeyi bir sonraki tura kaldı.
+
+`RasterSurface` 64×64 tembel tile deposudur: tümüyle saydam tile bellekte
+tutulmaz, 2048² boş belge sıfır bayt tutar. Aynı bölünme undo'nun da birimidir
+— `StrokeRecorder` yalnız dokunulan tile'ın önce/sonra görüntüsünü saklar, tek
+piksel değişimi 16 MiB'lık yüzeyi değil 16 KiB'lık tile'ı kopyalar. Önce
+görüntüsü tile'a İLK dokunulduğunda alınır; gesture ortasındaki ara durumlar
+undo hedefi olmaz.
+
+`DocumentSession` kirliliği adım sayarak değil DAMGAYLA ölçer. Her belge
+durumu tekil bir damga alır, kaydedilen damga saklanır; kullanıcı undo ile
+kaydedilmiş duruma dönerse belge yeniden temiz sayılır. Adım saymak burada
+yanılırdı: iki edit + iki undo, diskle birebir aynı içerikte "kaydedilmemiş
+değişiklik" uyarısı gösterirdi.
+
+Araçlar: kalem, silgi, bucket fill ve damlalık. Fill yığın tabanlıdır,
+özyineleme değil — 512² tek renkli belgede özyineleme çağrı yığınını taşırırdı.
+Kalem Bresenham ile ara örnekleme yapar ve `getCoalescedEvents()` kullanır.
+Damlalık belgeyi değiştirmediği için hiç undo komutu üretmez.
+
+Kamera–araç ayrımı testle sabitlendi: `Space` + sol sürükleme ve orta tuş
+kamerayı taşır ve HİÇ çizmez; normal sol sürükleme daima araca gider.
+`pointercancel` darbeyi geri sarar ve geçmişe yazmaz.
+
+Sunucu: `decodeRaster` her raster girdiyi 8-bit sRGB unpremultiplied RGBA'ya
+indirger ve EXIF yönelimini decode sırasında uygular (uygulanmasaydı kullanıcı
+düz gördüğü görüntüyü düzenler, kaydedince görüntü dönerdi); sınır kontrolü
+kullanıcının GÖRECEĞİ boyuta uygulanır. `GET /assets/:id/raster` JSON değil
+ikili döner. `POST /save-transactions` multipart alır ve revizyonu rename'den
+HEMEN ÖNCE tekrar doğrular: ilk kontrol ile rename arasında dosya harici bir
+araçla değişebilir. Geçici dosya hedefle aynı dizindedir (rename yalnız aynı
+dosya sisteminde atomiktir) ve rename'den önce fsync edilir. Hata halinde ters
+sırayla geri sarılır; başarısız kayıt geçici veya yedek dosya bırakmaz.
+
+CORE ikon kaydına kalem/silgi/kova/damlalık eklendi. Showcase artık listeyi
+elle tutmuyor, `VOL_ICONS` üzerinde geziyor — yeni ikon görsel denetimden
+kaçamaz.
+
+Yeni: 41 editör/sunucu testi (toplam 160). Kapsam ratchet'i korundu.
+`pnpm high` tam geçti.
+
+**Devam edecek:** editör panelinin kabuğa bağlanması, seçim modeli, recovery
+journal ve gerçek tarayıcıda aç/düzenle/kaydet doğrulaması.
+
 ## 2026-08-23 — Asset Studio Aşama 4: Forge emekliliği ve CLI sertleşmesi
 
 `games/vol-forge` repodan tümüyle kaldırıldı. Kullanıcı kararı: çıktılar
