@@ -54,6 +54,15 @@ contract:
 build:
     pnpm build:all
 
+# Gerçek tarayıcı kritik akışları (Chromium). jsdom testleri font yüklemesini,
+# gerçek yerleşimi ve bundle içeriğini göremez; bu kapı o boşluğu kapatır.
+e2e:
+    pnpm --filter @volstudio/vol-asset-studio test:e2e
+
+# Chromium + Firefox tam matris — yalnız signoff'ta koşar.
+e2e-full:
+    pnpm --filter @volstudio/vol-asset-studio test:e2e:full
+
 build-game:
     pnpm build:game
 
@@ -80,11 +89,11 @@ fast: quick test
 
 # `coverage` aynı testleri eşikleriyle koştuğu için düz `test` burada bilerek
 # tekrarlanmaz; `high` yine de `fast`'in her kapısını kapsar.
-# Push öncesi kapısı: quick + css lint + kapsam eşikleri + tüm build'ler
-high: quick lint-css coverage build
+# Push öncesi kapısı: quick + css lint + kapsam eşikleri + build + Chromium smoke
+high: quick lint-css coverage build e2e
 
-# Release/milestone kapısı: high + Rust
-signoff: high rust
+# Release/milestone kapısı: high + iki motorlu E2E + Rust
+signoff: high e2e-full rust
 
 # Kapıyı koşar ve sonucu MAKİNE-OKUNUR raporlar (agent döngüleri için).
 # Kapıları yeniden tanımlamaz, yukarıdaki tarifleri çağırır; aşama haritasının
@@ -136,8 +145,9 @@ gen-theme:
 # silmek hiçbir şeye dokunmaz.
 # JS/TS çıktılarını siler: dist, coverage, *.tsbuildinfo
 clean:
-    rm -rf core/dist devtools/*/dist games/*/dist tauri-v2/dist
+    rm -rf core/dist devtools/*/dist devtools/*/dist-server games/*/dist tauri-v2/dist
     rm -rf core/coverage devtools/*/coverage games/*/coverage tauri-v2/coverage
+    rm -rf devtools/*/test-results devtools/*/playwright-report
     find . -name '*.tsbuildinfo' -not -path './node_modules/*' -delete
 
 # Rust target'ı da siler. Sonraki `cargo check` sıfırdan derler; ayrı tutuldu.

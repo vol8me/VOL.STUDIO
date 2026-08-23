@@ -21,12 +21,19 @@ node_modules/
 
 # Build outputs
 dist/
+dist-server/
 build/
 target/
 *.tsbuildinfo
 
 # Test coverage raporlari
 coverage/
+
+# Playwright artefaktlari (trace, rapor, tarayici indirmeleri)
+test-results/
+playwright-report/
+blob-report/
+.playwright/
 .nyc_output/
 
 # Tauri mobile/desktop generated projects

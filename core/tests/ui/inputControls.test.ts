@@ -8,28 +8,28 @@ import { Checkbox } from '../../src/ui/primitives/Checkbox';
 import { RadioGroup } from '../../src/ui/primitives/RadioGroup';
 import { SegmentedControl } from '../../src/ui/primitives/SegmentedControl';
 
-describe('Input kontrolleri - setValue onChange tetikler', () => {
-  it('Input.setValue onInput handlerını çağırır', () => {
+describe('Input kontrolleri - programatik setter sözleşmesi', () => {
+  it('Input.setValue sessizdir', () => {
     const onInput = vi.fn();
     const input = new Input({ onInput });
     input.setValue('yeni değer');
-    expect(onInput).toHaveBeenCalledWith('yeni değer');
+    expect(onInput).not.toHaveBeenCalled();
     input.destroy();
   });
 
-  it('TextArea.setValue onInput handlerını çağırır', () => {
+  it('TextArea.setValue sessizdir', () => {
     const onInput = vi.fn();
     const area = new TextArea({ onInput, maxLength: 100 });
     area.setValue('yeni metin');
-    expect(onInput).toHaveBeenCalledWith('yeni metin');
+    expect(onInput).not.toHaveBeenCalled();
     area.destroy();
   });
 
-  it('NumberStepper.setValue onChange handlerını çağırır', () => {
+  it('NumberStepper.setValue sessizdir', () => {
     const onChange = vi.fn();
     const stepper = new NumberStepper({ onChange, value: 5 });
     stepper.setValue(12);
-    expect(onChange).toHaveBeenCalledWith(12);
+    expect(onChange).not.toHaveBeenCalled();
     stepper.destroy();
   });
 
@@ -57,7 +57,7 @@ describe('Input kontrolleri - setValue onChange tetikler', () => {
     slider.destroy();
   });
 
-  it('RangeSlider.setValue onChange handlerını çağırır ve step=0 çökmez', () => {
+  it('RangeSlider.setValue sessizdir ve step=0 çökmez', () => {
     const onChange = vi.fn();
     const slider = new RangeSlider({
       onChange,
@@ -67,7 +67,7 @@ describe('Input kontrolleri - setValue onChange tetikler', () => {
       value: { min: 10, max: 90 },
     });
     slider.setValue({ min: 20, max: 80 });
-    expect(onChange).toHaveBeenCalledWith({ min: 20, max: 80 });
+    expect(onChange).not.toHaveBeenCalled();
 
     // step=0 varsayılan 1'e çekilir, NaN/Infinity üretmemeli
     const value = slider.getValue();
@@ -76,15 +76,15 @@ describe('Input kontrolleri - setValue onChange tetikler', () => {
     slider.destroy();
   });
 
-  it('Checkbox.setChecked onChange handlerını çağırır', () => {
+  it('Checkbox.setChecked sessizdir', () => {
     const onChange = vi.fn();
     const checkbox = new Checkbox({ onChange, checked: false });
     checkbox.setChecked(true);
-    expect(onChange).toHaveBeenCalledWith(true);
+    expect(onChange).not.toHaveBeenCalled();
     checkbox.destroy();
   });
 
-  it('RadioGroup.setValue onChange handlerını çağırır', () => {
+  it('RadioGroup.setValue sessizdir', () => {
     const onChange = vi.fn();
     const group = new RadioGroup({
       options: [
@@ -95,11 +95,11 @@ describe('Input kontrolleri - setValue onChange tetikler', () => {
       onChange,
     });
     group.setValue('b');
-    expect(onChange).toHaveBeenCalledWith('b');
+    expect(onChange).not.toHaveBeenCalled();
     group.destroy();
   });
 
-  it('SegmentedControl.setValue onChange handlerını çağırır', () => {
+  it('SegmentedControl.setValue sessizdir', () => {
     const onChange = vi.fn();
     const control = new SegmentedControl({
       options: [
@@ -110,7 +110,7 @@ describe('Input kontrolleri - setValue onChange tetikler', () => {
       onChange,
     });
     control.setValue('hard');
-    expect(onChange).toHaveBeenCalledWith('hard');
+    expect(onChange).not.toHaveBeenCalled();
     control.destroy();
   });
 });

@@ -1,6 +1,7 @@
 import { defineConfig, normalizePath } from 'vite';
 import { resolve } from 'node:path';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { coreAliases } from '../../scripts/build/coreAliases.mjs';
 
 // Fontlar tek kaynaktan (core/public) çözümlenir — paketlere kopya yapılmaz.
 // normalizePath: Windows'ta \ yerine / gerekli (tinyglobby \ escape olarak yorumlar).
@@ -27,26 +28,11 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     assetsDir: 'assets',
-    chunkSizeWarningLimit: 1500,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules/phaser')) {
-            return 'phaser';
-          }
-          return undefined;
-        },
-      },
-    },
     assetsInlineLimit: 4096,
   },
+  // Alias listesi `vitest.config.ts` ile AYNI kaynaktan gelir; CORE'un
+  // `exports` haritasından türer (bkz. scripts/build/coreAliases.mjs).
   resolve: {
-    alias: {
-      '@volstudio/core': resolve(import.meta.dirname, '../../core/src'),
-      '@': resolve(import.meta.dirname, './src'),
-    },
-  },
-  optimizeDeps: {
-    include: ['phaser'],
+    alias: [...coreAliases(), { find: '@', replacement: resolve(import.meta.dirname, './src') }],
   },
 });

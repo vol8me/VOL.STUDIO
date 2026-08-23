@@ -6,8 +6,8 @@ import {
   type LoadingTransitionType,
   type LoadingContentPosition,
   Text,
-  i18next,
-} from '@volstudio/core';
+} from '@volstudio/core/ui';
+import { i18next } from '@volstudio/core/i18n';
 import { card, paletteGrid } from './shared';
 
 interface Destroyable {

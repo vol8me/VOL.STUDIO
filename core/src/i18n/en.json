@@ -72,6 +72,12 @@
     "decrement": "Decrease",
     "increment": "Increase"
   },
+  "splitPane": {
+    "resize": "Resize panels"
+  },
+  "propertyField": {
+    "reset": "Reset to default"
+  },
   "wizard": {
     "back": "Back",
     "next": "Next",

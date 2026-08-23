@@ -1,4 +1,4 @@
-import { Text } from '@volstudio/core';
+import { Text } from '@volstudio/core/ui';
 
 /** Grid için başlıklı demo kartı. İçerik .vol-showcase-card__body'e sarılır — flex çakışması olmaz. spanAll tam genişlik, span:2 iki sütun, span:3/4/6 yalnızca paletteGrid'de, center her iki eksende ortalar. */
 export function card(

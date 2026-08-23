@@ -1,8 +1,27 @@
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-bg);
+  font-family: var(--vol-font-family-body);
+}
+
 .vol-showcase-root {
   pointer-events: auto;
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+
+.vol-showcase-root > .vol-tabs {
+  height: 100%;
 }
 
 .vol-showcase-header {
@@ -638,4 +657,130 @@
   border: 1px solid var(--vol-ui-brand-border);
   color: var(--vol-ui-text);
   font-weight: 700;
+}
+
+/* Workbench sekmesi — oyun HUD'ından bağımsız araç bileşenleri. */
+.vol-showcase-workbench-fields,
+.vol-showcase-workbench-history {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--vol-space-md);
+  width: 100%;
+  display: flex;
+}
+
+.vol-showcase-workbench-split {
+  border: 1px solid var(--vol-ui-border-soft);
+  min-height: 420px;
+  height: 420px;
+}
+
+.vol-showcase-workbench-split .vol-keyed-virtual-list {
+  background: var(--vol-ui-bg-subtle);
+}
+
+.vol-showcase-workbench-asset {
+  color: var(--vol-ui-text-secondary);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--vol-ui-hairline-alpha);
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--vol-space-md);
+  font-family: var(--vol-font-family-body);
+}
+
+.vol-showcase-workbench-asset:hover,
+.vol-showcase-workbench-asset:focus-visible {
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-hover-fill);
+}
+
+.vol-showcase-workbench-viewport-wrap {
+  background: var(--vol-ui-bg);
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  display: grid;
+}
+
+.vol-showcase-workbench-viewport-bar {
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  align-items: center;
+  gap: var(--vol-space-sm);
+  min-height: 48px;
+  padding: var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-showcase-workbench-viewport-bar > :first-child {
+  flex: 1;
+}
+
+.vol-showcase-workbench-viewport {
+  background-color: var(--vol-ui-bg-subtle);
+  background-image: linear-gradient(45deg, var(--vol-ui-surface-1) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--vol-ui-surface-1) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--vol-ui-surface-1) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--vol-ui-surface-1) 75%);
+  background-position:
+    0 0,
+    0 10px,
+    10px -10px,
+    -10px 0;
+  background-size: 20px 20px;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.vol-showcase-workbench-artwork {
+  background: var(--vol-ui-surface-2);
+  border: 2px solid var(--vol-ui-border-strong);
+  width: 256px;
+  height: 256px;
+  transform-origin: 0 0;
+  position: absolute;
+  inset: 0 auto auto 0;
+  box-shadow: 0 16px 42px var(--vol-ui-scrim);
+}
+
+.vol-showcase-workbench-artwork__block {
+  width: 50%;
+  height: 50%;
+  position: absolute;
+}
+
+.vol-showcase-workbench-artwork__block--brand {
+  background: var(--vol-ui-brand-solid);
+  inset: 0 auto auto 0;
+}
+
+.vol-showcase-workbench-artwork__block--support {
+  background: var(--vol-ui-support-solid);
+  inset: 0 0 auto auto;
+}
+
+.vol-showcase-workbench-artwork__block--accent {
+  background: var(--vol-ui-accent-solid);
+  inset: auto auto 0 0;
+}
+
+.vol-showcase-workbench-artwork__block--warning {
+  background: var(--vol-ui-warning-solid);
+  inset: auto 0 0 auto;
+}
+
+@media (width <= 760px) {
+  .vol-showcase-workbench-viewport-bar > :first-child {
+    display: none;
+  }
+
+  .vol-showcase-workbench-split {
+    min-height: 360px;
+    height: 360px;
+  }
 }

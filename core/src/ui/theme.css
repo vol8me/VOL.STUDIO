@@ -7,6 +7,7 @@
 @import url('./hud.css');
 @import url('./data.css');
 @import url('./cards.css');
+@import url('./workbench.css');
 
 /* RENKLER — colors.ts'ten generate edilir (pnpm gen:theme). Manuel düzenleme yapma. */
 :root {

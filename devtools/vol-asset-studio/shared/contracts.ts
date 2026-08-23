@@ -1,0 +1,129 @@
+/** Asset Studio istemcisi ile repo hostu arasındaki sürümlü sözleşmeler. */
+
+export type AssetKind =
+  | 'image'
+  | 'audio'
+  | 'font'
+  | 'sprite-document'
+  | 'audio-recipe'
+  | 'metadata';
+
+export type AssetRole = 'source' | 'shipped' | 'derived' | 'readonly';
+
+export type GitStatus = 'clean' | 'modified' | 'untracked' | 'deleted' | 'ignored';
+
+export interface AssetRelation {
+  sourceId?: string;
+  derivedIds?: string[];
+  recipeId?: string;
+  relatedIds?: string[];
+}
+
+export interface ImageMetadata {
+  width: number;
+  height: number;
+  hasAlpha: boolean;
+}
+
+export interface AssetSummary {
+  /** Dosya yollarından türetilen fakat istemcinin anlam yüklememesi gereken kimlik. */
+  id: string;
+  /** Repo köküne göre POSIX biçimli yol. */
+  path: string;
+  rootId: string;
+  name: string;
+  kind: AssetKind;
+  format: string;
+  role: AssetRole;
+  bytes: number;
+  modifiedAt: string;
+  revision: string;
+  gitStatus?: GitStatus;
+  relation?: AssetRelation;
+  image?: ImageMetadata;
+  problemCodes: string[];
+}
+
+export interface AssetRootSummary {
+  id: string;
+  path: string;
+  role: AssetRole;
+  kinds: AssetKind[];
+  available: boolean;
+}
+
+export interface ProjectResponse {
+  schemaVersion: 1;
+  name: string;
+  roots: AssetRootSummary[];
+  access: {
+    network: 'loopback' | 'lan';
+    requiresToken: boolean;
+  };
+}
+
+export interface CatalogResponse {
+  revision: number;
+  assets: AssetSummary[];
+}
+
+export interface AudioMetadata {
+  codec: string;
+  durationSeconds: number;
+  sampleRate?: number;
+  channels?: number;
+  channelLayout?: string;
+  bitRate?: number;
+}
+
+export type AssetEvent =
+  | { type: 'created'; revision: number; asset: AssetSummary }
+  | { type: 'changed'; revision: number; asset: AssetSummary }
+  | { type: 'deleted'; revision: number; assetId: string }
+  | { type: 'resync'; revision: number };
+
+/**
+ * Sunucunun üretebileceği bütün hata kodları.
+ *
+ * Tip değil DİZİ: istemci hangi kodu çevirebildiğini kendi elle tuttuğu bir
+ * listeden okuyordu; sunucuya yeni kod eklendiğinde o liste sessizce geride
+ * kalıyor ve kullanıcı genel "istek başarısız" metnini görüyordu. Kapı artık
+ * bu tek listeyi hem istemciye hem i18n parite testine veriyor.
+ */
+export const API_ERROR_CODES = [
+  'asset_not_found',
+  'asset_conflict',
+  'asset_too_large',
+  'asset_readonly',
+  'path_outside_workspace',
+  'unsupported_format',
+  'decode_failed',
+  'invalid_request',
+  'range_not_satisfiable',
+  'configuration_invalid',
+  'authentication_required',
+  'editor_lease_required',
+  'editor_lease_conflict',
+  'internal_error',
+] as const;
+
+export type ApiErrorCode = (typeof API_ERROR_CODES)[number];
+
+export interface ApiErrorResponse {
+  error: {
+    code: ApiErrorCode;
+    details?: Record<string, unknown>;
+  };
+}
+
+export interface LeaseResponse {
+  clientId: string;
+  mode: 'editor' | 'readonly';
+  leaseId?: string;
+  expiresAt?: string;
+}
+
+export interface SessionResponse {
+  authenticated: true;
+  expiresAt: string;
+}

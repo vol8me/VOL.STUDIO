@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "name": "VOL.STUDIO",
+  "roots": [
+    {
+      "id": "core-fonts",
+      "path": "core/public/assets/fonts",
+      "role": "readonly",
+      "kinds": ["font"]
+    },
+    {
+      "id": "vol-hell-audio",
+      "path": "games/vol-hell/public/assets/audio",
+      "role": "derived",
+      "kinds": ["audio"]
+    },
+    {
+      "id": "design-source",
+      "path": "games/design/pen",
+      "role": "source",
+      "kinds": ["sprite-document"]
+    },
+    {
+      "id": "design-export",
+      "path": "games/design/pen_export",
+      "role": "derived",
+      "kinds": ["image", "metadata"]
+    },
+    {
+      "id": "forge-legacy",
+      "path": "games/vol-forge/output",
+      "role": "readonly",
+      "kinds": ["image", "metadata"]
+    }
+  ],
+  "ignore": ["**/.DS_Store", "**/Thumbs.db", "**/*.tmp", "**/*.part"],
+  "limits": {
+    "maxAssetBytes": 268435456,
+    "maxImagePixels": 33554432,
+    "maxThumbnailSize": 512
+  }
+}

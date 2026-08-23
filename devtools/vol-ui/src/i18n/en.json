@@ -1,4 +1,8 @@
 {
+  "app": {
+    "title": "VOL.UI",
+    "language": "Türkçe"
+  },
   "tabs": {
     "buttons": "BUTTONS",
     "text": "TEXT",
@@ -10,7 +14,40 @@
     "scroll": "SCROLL",
     "touch": "TOUCH",
     "loading": "LOADING",
-    "cards": "CARDS"
+    "cards": "CARDS",
+    "workbench": "WORKBENCH"
+  },
+  "workbench": {
+    "toolbar": "Toolbar",
+    "imageTool": "Image tool",
+    "audioTool": "Audio tool",
+    "fontTool": "Font tool",
+    "moreTool": "More tools",
+    "popoverTitle": "Contextual tool options",
+    "popoverBody": "The popover safely receives focus, closes outside, and restores focus to its tool.",
+    "close": "Close",
+    "propertyFields": "Property fields and value contract",
+    "name": "Asset name",
+    "nameValue": "ship.png",
+    "nameDescription": "Programmatic values are silent; user commits are reported separately.",
+    "opacity": "Opacity",
+    "visible": "Visible",
+    "reset": "Reset to default",
+    "commitState": "Last commit: {{value}}",
+    "noCommit": "No user commit yet",
+    "history": "Byte-budgeted command history",
+    "applyChange": "Apply change",
+    "undo": "Undo",
+    "redo": "Redo",
+    "historyState": "Value {{value}} · undo {{undo}} · redo {{redo}}",
+    "splitPane": "Resizable pane and virtual list",
+    "assetList": "Virtual asset list",
+    "assetRow": "Asset {{index}}",
+    "viewport": "Canvas camera controller",
+    "viewportHint": "Cursor-centered wheel zoom; pan with middle mouse or Space + left drag.",
+    "fit": "Fit",
+    "actualSize": "100%",
+    "zoomState": "Zoom {{zoom}}%"
   },
   "buttons": {
     "variant": "Variant",

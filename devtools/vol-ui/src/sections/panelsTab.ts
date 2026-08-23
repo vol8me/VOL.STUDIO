@@ -6,9 +6,9 @@ import {
   Popup,
   Text,
   ToastManager,
-  i18next,
   showConfirm,
-} from '@volstudio/core';
+} from '@volstudio/core/ui';
+import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid, svgIcon } from './shared';
 import { ICON_COPY, ICON_EDIT, ICON_SHARE, ICON_TRASH } from './icons';
 

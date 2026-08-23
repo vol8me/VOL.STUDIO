@@ -1,4 +1,8 @@
 {
+  "app": {
+    "title": "VOL.UI",
+    "language": "English"
+  },
   "tabs": {
     "buttons": "BUTONLAR",
     "text": "METİN",
@@ -10,7 +14,40 @@
     "scroll": "KAYDIRMA",
     "touch": "DOKUNMATİK",
     "loading": "YÜKLEME",
-    "cards": "KARTLAR"
+    "cards": "KARTLAR",
+    "workbench": "ÇALIŞMA ALANI"
+  },
+  "workbench": {
+    "toolbar": "Araç çubuğu",
+    "imageTool": "Görsel aracı",
+    "audioTool": "Ses aracı",
+    "fontTool": "Font aracı",
+    "moreTool": "Daha fazla araç",
+    "popoverTitle": "Bağlamsal araç seçenekleri",
+    "popoverBody": "Popover odağı güvenle alır, dışarı tıklayınca kapanır ve odağı araca geri verir.",
+    "close": "Kapat",
+    "propertyFields": "Özellik alanları ve değer sözleşmesi",
+    "name": "Varlık adı",
+    "nameValue": "ship.png",
+    "nameDescription": "Programatik değer sessizdir; kullanıcı commit'i ayrıca bildirilir.",
+    "opacity": "Opaklık",
+    "visible": "Görünür",
+    "reset": "Varsayılana dön",
+    "commitState": "Son commit: {{value}}",
+    "noCommit": "Henüz kullanıcı commit'i yok",
+    "history": "Byte bütçeli komut geçmişi",
+    "applyChange": "Değişiklik uygula",
+    "undo": "Geri al",
+    "redo": "Yinele",
+    "historyState": "Değer {{value}} · geri {{undo}} · ileri {{redo}}",
+    "splitPane": "Bölünebilir panel ve sanal liste",
+    "assetList": "Sanal varlık listesi",
+    "assetRow": "Varlık {{index}}",
+    "viewport": "Canvas kamera denetleyicisi",
+    "viewportHint": "Wheel ile imleç merkezli zoom; orta tuş veya Space + sol sürükleme ile kamera pan.",
+    "fit": "Sığdır",
+    "actualSize": "%100",
+    "zoomState": "Zoom %{{zoom}}"
   },
   "buttons": {
     "variant": "Varyant",

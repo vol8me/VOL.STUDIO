@@ -5,6 +5,9 @@ export interface ColorPickerOptions {
   disabled?: boolean;
   /** Hızlı seçim için gösterilecek hazır renkler. */
   swatches?: readonly string[];
+  onInput?: (value: string) => void;
+  onCommit?: (value: string) => void;
+  /** @deprecated Canlı kullanıcı değişimleri için korunur; yeni kodda `onInput` kullanın. */
   onChange?: (value: string) => void;
   className?: string;
 }
@@ -27,17 +30,26 @@ export class ColorPicker {
   readonly element: HTMLDivElement;
   private readonly swatchInput: HTMLInputElement;
   private readonly hexInput: HTMLInputElement;
-  private readonly swatchButtons: HTMLButtonElement[] = [];
+  private readonly swatchButtons: Array<{ button: HTMLButtonElement; handler: () => void }> = [];
   private readonly labelText: HTMLSpanElement | null;
+  private onInputHandler?: (value: string) => void;
+  private onCommitHandler?: (value: string) => void;
   private onChangeHandler?: (value: string) => void;
   private value: string;
+  private committedValue: string;
   private readonly boundSwatch: () => void;
+  private readonly boundSwatchCommit: () => void;
   private readonly boundHex: () => void;
+  private readonly boundHexChange: () => void;
+  private readonly boundHexKeydown: (event: KeyboardEvent) => void;
   private readonly boundHexBlur: () => void;
 
   constructor(options: ColorPickerOptions = {}) {
+    this.onInputHandler = options.onInput;
+    this.onCommitHandler = options.onCommit;
     this.onChangeHandler = options.onChange;
     this.value = normalize(options.value ?? '#000000');
+    this.committedValue = this.value;
 
     this.element = document.createElement('div');
     this.element.className = ['vol-color-picker', options.className].filter(Boolean).join(' ');
@@ -81,27 +93,44 @@ export class ColorPicker {
         button.className = 'vol-color-picker__preset';
         button.style.backgroundColor = preset;
         button.title = preset;
-        button.addEventListener('click', () => this.apply(preset));
+        const handler = (): void => {
+          this.applyInput(preset);
+          this.commitCurrent();
+        };
+        button.addEventListener('click', handler);
         presets.appendChild(button);
-        this.swatchButtons.push(button);
+        this.swatchButtons.push({ button, handler });
       }
       this.element.appendChild(presets);
     }
 
-    this.boundSwatch = () => this.apply(this.swatchInput.value);
+    this.boundSwatch = () => this.applyInput(this.swatchInput.value);
+    this.boundSwatchCommit = () => this.commitCurrent();
     // Hex alanı yazarken DEĞİL, geçerli bir değer oluşunca uygulanır: her tuş
     // vuruşunda geçersiz bir ara değer yaymak, dinleyicideki paleti kırardı.
     this.boundHex = () => {
-      if (HEX.test(this.hexInput.value)) this.apply(this.hexInput.value);
+      if (HEX.test(this.hexInput.value)) this.applyInput(this.hexInput.value);
+    };
+    this.boundHexChange = () => this.commitCurrent();
+    this.boundHexKeydown = (event) => {
+      if (event.key !== 'Escape' || this.value === this.committedValue) return;
+      event.preventDefault();
+      this.setVisualValue(this.committedValue);
+      this.onInputHandler?.(this.value);
+      this.onChangeHandler?.(this.value);
     };
     // Odak kaybında geçersiz metin son geçerli değere geri döner; kullanıcı
     // yarım yazdığı bir hex ile baş başa kalmaz.
     this.boundHexBlur = () => {
+      this.commitCurrent();
       this.hexInput.value = this.value;
     };
 
     this.swatchInput.addEventListener('input', this.boundSwatch);
+    this.swatchInput.addEventListener('change', this.boundSwatchCommit);
     this.hexInput.addEventListener('input', this.boundHex);
+    this.hexInput.addEventListener('change', this.boundHexChange);
+    this.hexInput.addEventListener('keydown', this.boundHexKeydown);
     this.hexInput.addEventListener('blur', this.boundHexBlur);
   }
 
@@ -111,7 +140,17 @@ export class ColorPicker {
 
   /** Değeri dışarıdan ayarlar; `onChange` TETİKLENMEZ (döngüyü kırar). */
   setValue(value: string): void {
-    this.value = normalize(value);
+    this.setVisualValue(normalize(value));
+    this.committedValue = this.value;
+  }
+
+  setValueAndNotify(value: string): void {
+    this.applyInput(value);
+    this.commitCurrent();
+  }
+
+  private setVisualValue(value: string): void {
+    this.value = value;
     this.swatchInput.value = this.value;
     this.hexInput.value = this.value;
   }
@@ -119,7 +158,7 @@ export class ColorPicker {
   setDisabled(disabled: boolean): void {
     this.swatchInput.disabled = disabled;
     this.hexInput.disabled = disabled;
-    for (const button of this.swatchButtons) button.disabled = disabled;
+    for (const { button } of this.swatchButtons) button.disabled = disabled;
   }
 
   setLabel(label: string): void {
@@ -128,16 +167,29 @@ export class ColorPicker {
 
   destroy(): void {
     this.swatchInput.removeEventListener('input', this.boundSwatch);
+    this.swatchInput.removeEventListener('change', this.boundSwatchCommit);
     this.hexInput.removeEventListener('input', this.boundHex);
+    this.hexInput.removeEventListener('change', this.boundHexChange);
+    this.hexInput.removeEventListener('keydown', this.boundHexKeydown);
     this.hexInput.removeEventListener('blur', this.boundHexBlur);
+    for (const { button, handler } of this.swatchButtons) {
+      button.removeEventListener('click', handler);
+    }
     this.element.remove();
   }
 
-  private apply(raw: string): void {
+  private applyInput(raw: string): void {
     const next = normalize(raw);
     if (next === this.value) return;
-    this.setValue(next);
+    this.setVisualValue(next);
+    this.onInputHandler?.(next);
     this.onChangeHandler?.(next);
+  }
+
+  private commitCurrent(): void {
+    if (this.value === this.committedValue) return;
+    this.committedValue = this.value;
+    this.onCommitHandler?.(this.value);
   }
 }
 

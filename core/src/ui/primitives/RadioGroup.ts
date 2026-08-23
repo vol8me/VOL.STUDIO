@@ -9,6 +9,9 @@ export interface RadioGroupOptions {
   value?: string;
   name?: string;
   disabled?: boolean;
+  onInput?: (value: string) => void;
+  onCommit?: (value: string) => void;
+  /** @deprecated Ayrık kullanıcı değişimlerinde korunur; yeni kodda `onCommit` kullanın. */
   onChange?: (value: string) => void;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
@@ -20,8 +23,11 @@ let radioGroupInstanceCounter = 0;
 export class RadioGroup {
   readonly element: HTMLDivElement;
   private readonly inputs = new Map<string, HTMLInputElement>();
+  private readonly itemDisabled = new Set<string>();
   private readonly boundChanges = new Map<string, () => void>();
   private value: string | undefined;
+  private onInputHandler?: (value: string) => void;
+  private onCommitHandler?: (value: string) => void;
   private onChangeHandler?: (value: string) => void;
 
   constructor(options: RadioGroupOptions) {
@@ -32,9 +38,13 @@ export class RadioGroup {
       value,
       name = `vol-radio-group-${++radioGroupInstanceCounter}`,
       disabled = false,
+      onInput,
+      onCommit,
       onChange,
     } = options;
     this.value = value;
+    this.onInputHandler = onInput;
+    this.onCommitHandler = onCommit;
     this.onChangeHandler = onChange;
 
     this.element = document.createElement('div');
@@ -52,6 +62,7 @@ export class RadioGroup {
       input.value = item.value;
       input.checked = item.value === value;
       input.disabled = disabled || Boolean(item.disabled);
+      if (item.disabled) this.itemDisabled.add(item.value);
       label.appendChild(input);
 
       const dot = document.createElement('span');
@@ -64,8 +75,7 @@ export class RadioGroup {
       label.appendChild(labelText);
 
       const onChangeBound = (): void => {
-        this.value = item.value;
-        this.onChangeHandler?.(item.value);
+        this.commitUser(item.value);
       };
       input.addEventListener('change', onChangeBound);
       this.boundChanges.set(item.value, onChangeBound);
@@ -85,12 +95,15 @@ export class RadioGroup {
     for (const [itemValue, input] of this.inputs) {
       input.checked = itemValue === value;
     }
-    this.onChangeHandler?.(value);
+  }
+
+  setValueAndNotify(value: string): void {
+    this.commitUser(value);
   }
 
   setDisabled(disabled: boolean): void {
-    for (const input of this.inputs.values()) {
-      input.disabled = disabled;
+    for (const [value, input] of this.inputs) {
+      input.disabled = disabled || this.itemDisabled.has(value);
     }
   }
 
@@ -100,5 +113,13 @@ export class RadioGroup {
       if (handler) input.removeEventListener('change', handler);
     }
     this.element.remove();
+  }
+
+  private commitUser(value: string): void {
+    if (this.value === value || this.itemDisabled.has(value)) return;
+    this.setValue(value);
+    this.onInputHandler?.(value);
+    this.onCommitHandler?.(value);
+    this.onChangeHandler?.(value);
   }
 }

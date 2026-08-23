@@ -19,9 +19,8 @@ import {
   SwipeGestureZone,
   Text,
   TouchButton,
-  i18n,
-  i18next,
-} from '@volstudio/core';
+} from '@volstudio/core/ui';
+import { i18n, i18next } from '@volstudio/core/i18n';
 import { card, cardGrid, svgIcon } from './shared';
 import {
   ICON_DASH,

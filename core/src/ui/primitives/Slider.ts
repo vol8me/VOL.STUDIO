@@ -13,6 +13,10 @@ export interface SliderOptions {
   length?: number;
   /** Değerin yanında gösterilecek metni biçimlendirir. Varsayılan: ham sayı. */
   formatValue?: (value: number) => string;
+  disabled?: boolean;
+  onInput?: (value: number) => void;
+  onCommit?: (value: number) => void;
+  /** @deprecated Canlı kullanıcı değişimleri için korunur; yeni kodda `onInput` kullanın. */
   onChange?: (value: number) => void;
 }
 
@@ -33,8 +37,15 @@ export class Slider {
   private readonly max: number;
   private readonly orientation: SliderOrientation;
   private readonly formatValue: (value: number) => string;
+  private onInputHandler?: (value: number) => void;
+  private onCommitHandler?: (value: number) => void;
   private onChangeHandler?: (value: number) => void;
+  private committedValue: number;
+  private gestureStartValue: number | null = null;
   private boundInput: () => void;
+  private boundChange: () => void;
+  private boundKeydown: (event: KeyboardEvent) => void;
+  private boundPointerCancel: () => void;
 
   constructor(options: SliderOptions = {}) {
     const {
@@ -46,6 +57,9 @@ export class Slider {
       orientation = 'horizontal',
       length = UI_SIZE.SLIDER_DEFAULT_LENGTH,
       formatValue = (v) => String(v),
+      disabled = false,
+      onInput,
+      onCommit,
       onChange,
     } = options;
 
@@ -53,7 +67,10 @@ export class Slider {
     this.max = max;
     this.orientation = orientation;
     this.formatValue = formatValue;
+    this.onInputHandler = onInput;
+    this.onCommitHandler = onCommit;
     this.onChangeHandler = onChange;
+    this.committedValue = value;
 
     this.element = document.createElement('div');
     this.element.className = `vol-slider vol-slider--${orientation}`;
@@ -111,12 +128,32 @@ export class Slider {
 
     this.boundInput = () => {
       const value = Number(this.input.value);
+      this.gestureStartValue ??= this.committedValue;
       this.render(value);
+      this.onInputHandler?.(value);
       this.onChangeHandler?.(value);
     };
+    this.boundChange = () => {
+      const value = this.getValue();
+      this.gestureStartValue = null;
+      if (value === this.committedValue) return;
+      this.committedValue = value;
+      this.onCommitHandler?.(value);
+    };
+    this.boundKeydown = (event) => {
+      if (event.key !== 'Escape' || this.gestureStartValue === null) return;
+      event.preventDefault();
+      this.cancelGesture();
+    };
+    this.boundPointerCancel = () => this.cancelGesture();
     this.input.addEventListener('input', this.boundInput);
+    this.input.addEventListener('change', this.boundChange);
+    this.input.addEventListener('keydown', this.boundKeydown);
+    this.input.addEventListener('pointercancel', this.boundPointerCancel);
 
     this.render(value);
+    this.committedValue = this.getValue();
+    this.setDisabled(disabled);
   }
 
   getValue(): number {
@@ -134,12 +171,17 @@ export class Slider {
     this.input.value = String(clamped);
     // Native input step'e yuvarlayabilir; gorunen deger her zaman gercek degerdir.
     this.render(this.getValue());
+    this.committedValue = this.getValue();
+    this.gestureStartValue = null;
   }
 
-  /** Degeri ayarlar ve `onChange`'i tetikler — kullanici etkilesimini taklit eder. */
+  /** Değeri ayarlar ve tam kullanıcı gesture'ını taklit eder. */
   setValueAndNotify(value: number): void {
     this.setValue(value);
-    this.onChangeHandler?.(this.getValue());
+    const current = this.getValue();
+    this.onInputHandler?.(current);
+    this.onChangeHandler?.(current);
+    this.onCommitHandler?.(current);
   }
 
   setDisabled(disabled: boolean): void {
@@ -153,11 +195,25 @@ export class Slider {
 
   destroy(): void {
     this.input.removeEventListener('input', this.boundInput);
+    this.input.removeEventListener('change', this.boundChange);
+    this.input.removeEventListener('keydown', this.boundKeydown);
+    this.input.removeEventListener('pointercancel', this.boundPointerCancel);
     this.element.remove();
   }
 
   private clamp(value: number): number {
+    if (!Number.isFinite(value)) return this.min;
     return Math.min(this.max, Math.max(this.min, value));
+  }
+
+  private cancelGesture(): void {
+    if (this.gestureStartValue === null) return;
+    const start = this.gestureStartValue;
+    this.gestureStartValue = null;
+    this.input.value = String(start);
+    this.render(this.getValue());
+    this.onInputHandler?.(this.getValue());
+    this.onChangeHandler?.(this.getValue());
   }
 
   private render(value: number): void {

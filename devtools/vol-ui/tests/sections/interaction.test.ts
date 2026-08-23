@@ -1,14 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { tabBuilders } from './tabBuilders';
 import { buildButtonsTab } from '../../src/sections/buttonsTab';
-import { buildTextTab } from '../../src/sections/textTab';
-import { buildPanelsTab } from '../../src/sections/panelsTab';
-import { buildHudTab } from '../../src/sections/hudTab';
-import { buildCardsTab } from '../../src/sections/cardsTab';
-import { buildFormsTab } from '../../src/sections/formsTab';
-import { buildAdvancedTab } from '../../src/sections/advancedTab';
-import { buildScrollTab } from '../../src/sections/scrollTab';
-import { buildTouchTab } from '../../src/sections/touchTab';
-import { buildLoadingTab } from '../../src/sections/loadingTab';
 
 /**
  * Showcase'in İNTERAKTİF yüzeyi.
@@ -150,18 +142,7 @@ describe('showcase interaktif yüzeyi', () => {
     document.body.replaceChildren();
   });
 
-  const builders = [
-    { name: 'buttons', build: () => buildButtonsTab(uiRoot) },
-    { name: 'text', build: () => buildTextTab() },
-    { name: 'panels', build: () => buildPanelsTab(uiRoot) },
-    { name: 'hud', build: () => buildHudTab() },
-    { name: 'cards', build: () => buildCardsTab(uiRoot) },
-    { name: 'forms', build: () => buildFormsTab(uiRoot) },
-    { name: 'advanced', build: () => buildAdvancedTab(uiRoot) },
-    { name: 'scroll', build: () => buildScrollTab() },
-    { name: 'touch', build: () => buildTouchTab() },
-    { name: 'loading', build: () => buildLoadingTab() },
-  ] as const;
+  const builders = tabBuilders(() => uiRoot);
 
   for (const { name, build } of builders) {
     it(`${name}: her interaktif eleman hatasız çalışır`, () => {

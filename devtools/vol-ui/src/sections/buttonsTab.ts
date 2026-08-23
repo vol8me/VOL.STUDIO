@@ -1,4 +1,5 @@
-import { Button, IconButton, Tooltip, i18next } from '@volstudio/core';
+import { Button, IconButton, Tooltip } from '@volstudio/core/ui';
+import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid, svgIcon } from './shared';
 import {
   ICON_CENTER,

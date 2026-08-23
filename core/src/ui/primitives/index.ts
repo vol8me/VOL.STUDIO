@@ -34,3 +34,13 @@ export {
   type SegmentedControlOptions,
 } from './SegmentedControl';
 export { Select, type SelectOption, type SelectOptionTone, type SelectOptions } from './Select';
+export { Icon, VOL_ICONS, type IconName, type IconDefinition, type IconOptions } from './Icon';
+export {
+  Toolbar,
+  ToolButton,
+  type ToolbarOrientation,
+  type ToolbarSelectionMode,
+  type ToolbarOptions,
+  type ToolButtonOptions,
+} from './Toolbar';
+export { PropertyField, type PropertyFieldOptions } from './PropertyField';

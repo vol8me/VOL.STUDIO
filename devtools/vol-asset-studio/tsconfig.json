@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@volstudio/core/ui": ["../../core/src/ui/index.ts"],
+      "@volstudio/core/i18n": ["../../core/src/i18n/index.ts"],
+      "@volstudio/core/fonts": ["../../core/src/fonts/index.ts"],
+      "@volstudio/core/lifecycle": ["../../core/src/lifecycle/index.ts"],
+      "@shared/*": ["./shared/*"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "server", "shared", "tests", "vite.config.ts"]
+}

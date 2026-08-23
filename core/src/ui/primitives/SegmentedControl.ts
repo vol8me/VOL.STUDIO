@@ -8,6 +8,9 @@ export interface SegmentedControlOptions {
   options: SegmentedControlOption[];
   value?: string;
   disabled?: boolean;
+  onInput?: (value: string) => void;
+  onCommit?: (value: string) => void;
+  /** @deprecated Ayrık kullanıcı değişimlerinde korunur; yeni kodda `onCommit` kullanın. */
   onChange?: (value: string) => void;
 }
 
@@ -21,8 +24,11 @@ export class SegmentedControl {
   readonly element: HTMLDivElement;
   private readonly thumb: HTMLDivElement;
   private readonly buttons = new Map<string, HTMLButtonElement>();
+  private readonly itemDisabled = new Set<string>();
   private readonly boundClicks = new Map<string, () => void>();
   private value: string | undefined;
+  private onInputHandler?: (value: string) => void;
+  private onCommitHandler?: (value: string) => void;
   private onChangeHandler?: (value: string) => void;
   private boundResize: () => void;
   private resizeObserver?: ResizeObserver;
@@ -30,8 +36,10 @@ export class SegmentedControl {
   private initialThumbFrame: number | null = null;
 
   constructor(options: SegmentedControlOptions) {
-    const { options: items, value, disabled = false, onChange } = options;
+    const { options: items, value, disabled = false, onInput, onCommit, onChange } = options;
     this.value = value;
+    this.onInputHandler = onInput;
+    this.onCommitHandler = onCommit;
     this.onChangeHandler = onChange;
 
     this.element = document.createElement('div');
@@ -53,11 +61,12 @@ export class SegmentedControl {
       button.setAttribute('role', 'radio');
       button.setAttribute('aria-checked', String(item.value === value));
       button.disabled = disabled || Boolean(item.disabled);
+      if (item.disabled) this.itemDisabled.add(item.value);
       if (item.value === value) {
         button.classList.add('vol-segmented__item--active');
       }
 
-      const onClick = (): void => this.select(item.value);
+      const onClick = (): void => this.commitUser(item.value);
       button.addEventListener('click', onClick);
       this.boundClicks.set(item.value, onClick);
 
@@ -88,9 +97,13 @@ export class SegmentedControl {
     this.select(value);
   }
 
+  setValueAndNotify(value: string): void {
+    this.commitUser(value);
+  }
+
   setDisabled(disabled: boolean): void {
-    for (const button of this.buttons.values()) {
-      button.disabled = disabled;
+    for (const [value, button] of this.buttons) {
+      button.disabled = disabled || this.itemDisabled.has(value);
     }
   }
 
@@ -109,7 +122,7 @@ export class SegmentedControl {
     this.element.remove();
   }
 
-  private select(value: string, opts: { silent?: boolean } = {}): void {
+  private select(value: string): void {
     const previous = this.value ? this.buttons.get(this.value) : undefined;
     previous?.classList.remove('vol-segmented__item--active');
     previous?.setAttribute('aria-checked', 'false');
@@ -119,10 +132,14 @@ export class SegmentedControl {
     next?.classList.add('vol-segmented__item--active');
     next?.setAttribute('aria-checked', 'true');
     this.moveThumb();
+  }
 
-    if (!opts.silent) {
-      this.onChangeHandler?.(value);
-    }
+  private commitUser(value: string): void {
+    if (this.value === value || this.buttons.get(value)?.disabled) return;
+    this.select(value);
+    this.onInputHandler?.(value);
+    this.onCommitHandler?.(value);
+    this.onChangeHandler?.(value);
   }
 
   private moveThumb(): void {

@@ -15,6 +15,9 @@ export interface SelectOptions {
   value?: string;
   placeholder?: string;
   disabled?: boolean;
+  onInput?: (value: string) => void;
+  onCommit?: (value: string) => void;
+  /** @deprecated Ayrık kullanıcı değişimlerinde korunur; yeni kodda `onCommit` kullanın. */
   onChange?: (value: string) => void;
   /** Popup'ın ekleneceği kapsayıcı. Varsayılan document.body. */
   container?: HTMLElement;
@@ -31,6 +34,8 @@ export class Select {
   private readonly options: SelectOption[];
   private placeholder: string;
   private readonly placeholderIsI18n: boolean;
+  private readonly onInputHandler?: (value: string) => void;
+  private readonly onCommitHandler?: (value: string) => void;
   private readonly onChangeHandler?: (value: string) => void;
   private readonly optionButtons = new Map<string, HTMLButtonElement>();
   private readonly boundOptionClicks = new Map<string, () => void>();
@@ -46,10 +51,21 @@ export class Select {
   };
 
   constructor(options: SelectOptions) {
-    const { options: items, value, placeholder, disabled = false, onChange, container } = options;
+    const {
+      options: items,
+      value,
+      placeholder,
+      disabled = false,
+      onInput,
+      onCommit,
+      onChange,
+      container,
+    } = options;
     this.options = items;
     this.placeholderIsI18n = placeholder === undefined;
     this.placeholder = placeholder ?? i18next.t('core:select.placeholder');
+    this.onInputHandler = onInput;
+    this.onCommitHandler = onCommit;
     this.onChangeHandler = onChange;
     this.value = value;
 
@@ -134,6 +150,10 @@ export class Select {
     this.selectValue(value, { silent: true });
   }
 
+  setValueAndNotify(value: string): void {
+    this.selectValue(value);
+  }
+
   setDisabled(disabled: boolean): void {
     this.element.disabled = disabled;
   }
@@ -163,6 +183,8 @@ export class Select {
     this.popup.close();
 
     if (!opts.silent) {
+      this.onInputHandler?.(value);
+      this.onCommitHandler?.(value);
       this.onChangeHandler?.(value);
     }
   }

@@ -33,3 +33,4 @@ export {
 export { CommandPalette, type CommandItem, type CommandPaletteOptions } from './CommandPalette';
 export { showConfirm, type ConfirmOptions } from './Confirm';
 export { ToastManager, type ToastVariant, type ToastOptions } from './Toast';
+export { Popover, type PopoverOptions } from './Popover';

@@ -3,7 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@volstudio/core": ["../../core/src"],
+      "@volstudio/core/ui": ["../../core/src/ui/index.ts"],
+      "@volstudio/core/i18n": ["../../core/src/i18n/index.ts"],
+      "@volstudio/core/fonts": ["../../core/src/fonts/index.ts"],
       "@/*": ["./src/*"]
     }
   },

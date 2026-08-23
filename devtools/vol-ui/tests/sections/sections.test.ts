@@ -1,15 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { buildButtonsTab } from '../../src/sections/buttonsTab';
-import { buildTextTab } from '../../src/sections/textTab';
-import { buildPanelsTab } from '../../src/sections/panelsTab';
-import { buildHudTab } from '../../src/sections/hudTab';
+import { missingTabModules, tabBuilders } from './tabBuilders';
 import { buildCardsTab } from '../../src/sections/cardsTab';
-import { buildFormsTab } from '../../src/sections/formsTab';
-import { buildPaletteTab } from '../../src/sections/paletteTab';
-import { buildAdvancedTab } from '../../src/sections/advancedTab';
-import { buildScrollTab } from '../../src/sections/scrollTab';
-import { buildTouchTab } from '../../src/sections/touchTab';
-import { buildLoadingTab } from '../../src/sections/loadingTab';
 import { card, cardGrid, svgIcon, paletteGrid } from '../../src/sections/shared';
 
 describe('vol-ui sekme builderları', () => {
@@ -27,19 +18,7 @@ describe('vol-ui sekme builderları', () => {
     document.body.replaceChildren();
   });
 
-  const builders = [
-    { name: 'buttons', build: () => buildButtonsTab(uiRoot) },
-    { name: 'text', build: () => buildTextTab() },
-    { name: 'panels', build: () => buildPanelsTab(uiRoot) },
-    { name: 'hud', build: () => buildHudTab() },
-    { name: 'cards', build: () => buildCardsTab(uiRoot) },
-    { name: 'forms', build: () => buildFormsTab(uiRoot) },
-    { name: 'palette', build: () => buildPaletteTab() },
-    { name: 'advanced', build: () => buildAdvancedTab(uiRoot) },
-    { name: 'scroll', build: () => buildScrollTab() },
-    { name: 'touch', build: () => buildTouchTab() },
-    { name: 'loading', build: () => buildLoadingTab() },
-  ] as const;
+  const builders = tabBuilders(() => uiRoot);
 
   for (const { name, build } of builders) {
     it(`${name} sekmesi element döndürür ve destroy overlay bırakmaz`, () => {
@@ -121,5 +100,13 @@ describe('vol-ui sekme builderları', () => {
       destroy();
       expect(document.querySelector('.vol-card-picker--shop')).toBeNull();
     });
+  });
+});
+
+describe('sekme kapsam bekçisi', () => {
+  it('src/sections altındaki her *Tab.ts test listesinde yer alır', () => {
+    // `workbench` sekmesi eklenirken iki test dosyasına da girmemişti ve
+    // aylarca hiç sürülmedi. Yeni bir sekme listeye alınmadan bu kapı geçmez.
+    expect(missingTabModules()).toEqual([]);
   });
 });

@@ -2,6 +2,9 @@ export interface CheckboxOptions {
   checked?: boolean;
   label?: string;
   disabled?: boolean;
+  onInput?: (checked: boolean) => void;
+  onCommit?: (checked: boolean) => void;
+  /** @deprecated Ayrık kullanıcı değişimlerinde korunur; yeni kodda `onCommit` kullanın. */
   onChange?: (checked: boolean) => void;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
@@ -11,11 +14,17 @@ export class Checkbox {
   readonly element: HTMLLabelElement;
   private readonly input: HTMLInputElement;
   private readonly labelText: HTMLSpanElement | null;
+  private checked: boolean;
+  private onInputHandler?: (checked: boolean) => void;
+  private onCommitHandler?: (checked: boolean) => void;
   private onChangeHandler?: (checked: boolean) => void;
   private boundChange: () => void;
 
   constructor(options: CheckboxOptions = {}) {
-    const { checked = false, label, disabled = false, onChange } = options;
+    const { checked = false, label, disabled = false, onInput, onCommit, onChange } = options;
+    this.checked = checked;
+    this.onInputHandler = onInput;
+    this.onCommitHandler = onCommit;
     this.onChangeHandler = onChange;
 
     this.element = document.createElement('label');
@@ -45,7 +54,7 @@ export class Checkbox {
       this.labelText = null;
     }
 
-    this.boundChange = () => this.onChangeHandler?.(this.input.checked);
+    this.boundChange = () => this.commitUser(this.input.checked);
     this.input.addEventListener('change', this.boundChange);
   }
 
@@ -54,8 +63,12 @@ export class Checkbox {
   }
 
   setChecked(checked: boolean): void {
+    this.checked = checked;
     this.input.checked = checked;
-    this.onChangeHandler?.(checked);
+  }
+
+  setCheckedAndNotify(checked: boolean): void {
+    this.commitUser(checked);
   }
 
   setDisabled(disabled: boolean): void {
@@ -70,5 +83,14 @@ export class Checkbox {
   destroy(): void {
     this.input.removeEventListener('change', this.boundChange);
     this.element.remove();
+  }
+
+  private commitUser(checked: boolean): void {
+    if (checked === this.checked) return;
+    this.checked = checked;
+    this.input.checked = checked;
+    this.onInputHandler?.(checked);
+    this.onCommitHandler?.(checked);
+    this.onChangeHandler?.(checked);
   }
 }

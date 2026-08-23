@@ -1,4 +1,5 @@
-import { Text, i18n } from '@volstudio/core';
+import { Text } from '@volstudio/core/ui';
+import { i18n } from '@volstudio/core/i18n';
 import { card, paletteGrid } from './shared';
 
 interface PaletteGroup {

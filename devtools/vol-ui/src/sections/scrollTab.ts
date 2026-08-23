@@ -1,4 +1,5 @@
-import { Carousel, ScrollView, Text, VirtualList, i18n, i18next } from '@volstudio/core';
+import { Carousel, ScrollView, Text, VirtualList } from '@volstudio/core/ui';
+import { i18n, i18next } from '@volstudio/core/i18n';
 import { card, cardGrid } from './shared';
 
 interface Destroyable {

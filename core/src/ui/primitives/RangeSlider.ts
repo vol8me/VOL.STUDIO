@@ -13,6 +13,10 @@ export interface RangeSliderOptions {
   value?: RangeSliderValue;
   label?: string;
   formatValue?: (value: number) => string;
+  disabled?: boolean;
+  onInput?: (value: RangeSliderValue) => void;
+  onCommit?: (value: RangeSliderValue) => void;
+  /** @deprecated Canlı kullanıcı değişimleri için korunur; yeni kodda `onInput` kullanın. */
   onChange?: (value: RangeSliderValue) => void;
 }
 
@@ -52,11 +56,15 @@ export class RangeSlider {
   private readonly max: number;
   private readonly step: number;
   private readonly formatValue: (value: number) => string;
+  private onInputHandler?: (value: RangeSliderValue) => void;
+  private onCommitHandler?: (value: RangeSliderValue) => void;
   private onChangeHandler?: (value: RangeSliderValue) => void;
   private minValue: number;
   private maxValue: number;
   private disabled: boolean;
   private activeHandle: 'min' | 'max' | null = null;
+  private activePointerId: number | null = null;
+  private gestureStart: RangeSliderValue | null = null;
   private boundPointerDown: (event: PointerEvent) => void;
   private boundPointerMove: (event: PointerEvent) => void;
   private boundPointerUp: (event: PointerEvent) => void;
@@ -72,6 +80,9 @@ export class RangeSlider {
       value = { min, max },
       label,
       formatValue = (v) => String(v),
+      disabled = false,
+      onInput,
+      onCommit,
       onChange,
     } = options;
 
@@ -85,8 +96,10 @@ export class RangeSlider {
     this.minValue = Math.min(clampedMin, clampedMax);
     this.maxValue = Math.max(clampedMin, clampedMax);
     this.formatValue = formatValue;
+    this.onInputHandler = onInput;
+    this.onCommitHandler = onCommit;
     this.onChangeHandler = onChange;
-    this.disabled = false;
+    this.disabled = disabled;
 
     this.element = document.createElement('div');
     this.element.className = 'vol-range-slider';
@@ -151,17 +164,18 @@ export class RangeSlider {
             ? 'min'
             : 'max';
       }
-      this.commit(this.activeHandle, this.valueFromClientX(event.clientX));
+      this.gestureStart = this.getValue();
+      this.activePointerId = event.pointerId;
+      this.commitUserInput(this.activeHandle, this.valueFromClientX(event.clientX));
       this.track.setPointerCapture(event.pointerId);
       event.preventDefault();
     };
     this.boundPointerMove = (event) => {
       if (!this.activeHandle) return;
-      this.commit(this.activeHandle, this.valueFromClientX(event.clientX));
+      this.commitUserInput(this.activeHandle, this.valueFromClientX(event.clientX));
     };
     this.boundPointerUp = (event) => {
-      this.track.releasePointerCapture(event.pointerId);
-      this.activeHandle = null;
+      this.finishGesture(event, event.type === 'pointercancel');
     };
     this.track.addEventListener('pointerdown', this.boundPointerDown);
     this.track.addEventListener('pointermove', this.boundPointerMove);
@@ -170,6 +184,11 @@ export class RangeSlider {
 
     this.boundHandleKeydown = (handle) => (event) => {
       if (this.disabled) return;
+      if (event.key === 'Escape' && this.gestureStart) {
+        event.preventDefault();
+        this.restoreGestureStart();
+        return;
+      }
       const delta =
         event.key === 'ArrowRight' || event.key === 'ArrowUp'
           ? this.step
@@ -185,7 +204,7 @@ export class RangeSlider {
       event.preventDefault();
       const current = handle === 'min' ? this.minValue : this.maxValue;
       const next = Number.isFinite(delta) ? current + delta : delta > 0 ? this.max : this.min;
-      this.commit(handle, next);
+      if (this.commitUserInput(handle, next)) this.onCommitHandler?.(this.getValue());
     };
     this.boundMinHandleKeydown = this.boundHandleKeydown('min');
     this.boundMaxHandleKeydown = this.boundHandleKeydown('max');
@@ -193,6 +212,7 @@ export class RangeSlider {
     this.maxHandle.addEventListener('keydown', this.boundMaxHandleKeydown);
 
     this.render();
+    this.setDisabled(disabled);
   }
 
   getValue(): RangeSliderValue {
@@ -200,19 +220,25 @@ export class RangeSlider {
   }
 
   setValue(value: RangeSliderValue): void {
-    const previous = this.getValue();
     const clampedMin = this.clamp(value.min);
     const clampedMax = this.clamp(value.max);
     this.minValue = Math.min(clampedMin, clampedMax);
     this.maxValue = Math.max(clampedMin, clampedMax);
     this.render();
+  }
+
+  setValueAndNotify(value: RangeSliderValue): void {
+    const previous = this.getValue();
+    this.setValue(value);
     const current = this.getValue();
-    if (current.min !== previous.min || current.max !== previous.max) {
-      this.onChangeHandler?.(current);
-    }
+    if (current.min === previous.min && current.max === previous.max) return;
+    this.onInputHandler?.(current);
+    this.onChangeHandler?.(current);
+    this.onCommitHandler?.(current);
   }
 
   setDisabled(disabled: boolean): void {
+    if (disabled) this.restoreGestureStart();
     this.disabled = disabled;
     this.element.classList.toggle('vol-range-slider--disabled', disabled);
     this.minHandle.tabIndex = disabled ? -1 : 0;
@@ -220,6 +246,7 @@ export class RangeSlider {
   }
 
   destroy(): void {
+    this.restoreGestureStart(false);
     this.track.removeEventListener('pointerdown', this.boundPointerDown);
     this.track.removeEventListener('pointermove', this.boundPointerMove);
     this.track.removeEventListener('pointerup', this.boundPointerUp);
@@ -236,7 +263,7 @@ export class RangeSlider {
     return this.min + ratio * (this.max - this.min);
   }
 
-  private commit(handle: 'min' | 'max', rawValue: number): void {
+  private commitUserInput(handle: 'min' | 'max', rawValue: number): boolean {
     // Adım hizalama this.min'e göredir, sıfıra değil — native <input type=range>'in
     // `min + n*step` kuralıyla uyumlu (bkz. Slider.ts); aksi halde ok-tuşu adımları
     // min step'in katı değilse beklenmedik yuvarlanırdı.
@@ -245,16 +272,58 @@ export class RangeSlider {
     );
 
     // ÇAKIŞMA: min max'ı aşamaz, max min'in altına düşemez — taşınan handle sınırında durur.
+    const previous = this.getValue();
     if (handle === 'min') {
       this.minValue = Math.min(stepped, this.maxValue);
     } else {
       this.maxValue = Math.max(stepped, this.minValue);
     }
     this.render();
-    this.onChangeHandler?.(this.getValue());
+    const current = this.getValue();
+    const changed = current.min !== previous.min || current.max !== previous.max;
+    if (changed) {
+      this.onInputHandler?.(current);
+      this.onChangeHandler?.(current);
+    }
+    return changed;
+  }
+
+  private finishGesture(event: PointerEvent, cancelled: boolean): void {
+    if (!this.activeHandle || this.activePointerId !== event.pointerId) return;
+    if (this.track.hasPointerCapture(event.pointerId))
+      this.track.releasePointerCapture(event.pointerId);
+    if (cancelled) {
+      this.restoreGestureStart();
+    } else if (this.gestureStart) {
+      const current = this.getValue();
+      if (current.min !== this.gestureStart.min || current.max !== this.gestureStart.max) {
+        this.onCommitHandler?.(current);
+      }
+    }
+    this.activeHandle = null;
+    this.activePointerId = null;
+    this.gestureStart = null;
+  }
+
+  private restoreGestureStart(notify = true): void {
+    if (!this.gestureStart) return;
+    if (this.activePointerId !== null && this.track.hasPointerCapture(this.activePointerId)) {
+      this.track.releasePointerCapture(this.activePointerId);
+    }
+    const previous = this.getValue();
+    const start = this.gestureStart;
+    this.setValue(start);
+    if (notify && (previous.min !== start.min || previous.max !== start.max)) {
+      this.onInputHandler?.(this.getValue());
+      this.onChangeHandler?.(this.getValue());
+    }
+    this.activeHandle = null;
+    this.activePointerId = null;
+    this.gestureStart = null;
   }
 
   private clamp(value: number): number {
+    if (!Number.isFinite(value)) return this.min;
     return Math.min(this.max, Math.max(this.min, value));
   }
 

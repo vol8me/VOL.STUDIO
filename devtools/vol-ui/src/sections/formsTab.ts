@@ -13,8 +13,8 @@ import {
   Text,
   TextArea,
   TimerBar,
-  i18next,
-} from '@volstudio/core';
+} from '@volstudio/core/ui';
+import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid } from './shared';
 
 interface Destroyable {

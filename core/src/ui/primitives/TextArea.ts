@@ -5,6 +5,7 @@ export interface TextAreaOptions {
   maxLength?: number;
   disabled?: boolean;
   onInput?: (value: string) => void;
+  onCommit?: (value: string) => void;
 }
 
 /**
@@ -19,13 +20,26 @@ export class TextArea {
   private readonly counterElement: HTMLSpanElement | null;
   private readonly maxLength?: number;
   private onInputHandler?: (value: string) => void;
+  private onCommitHandler?: (value: string) => void;
+  private committedValue: string;
   private boundInput: () => void;
+  private boundChange: () => void;
   private minHeightObserver: ResizeObserver | null = null;
 
   constructor(options: TextAreaOptions = {}) {
-    const { placeholder, value = '', rows = 4, maxLength, disabled = false, onInput } = options;
+    const {
+      placeholder,
+      value = '',
+      rows = 4,
+      maxLength,
+      disabled = false,
+      onInput,
+      onCommit,
+    } = options;
     this.maxLength = maxLength;
     this.onInputHandler = onInput;
+    this.onCommitHandler = onCommit;
+    this.committedValue = value;
 
     this.element = document.createElement('div');
     this.element.className = 'vol-textarea';
@@ -51,7 +65,14 @@ export class TextArea {
       this.renderCounter();
       this.onInputHandler?.(this.textarea.value);
     };
+    this.boundChange = () => {
+      const value = this.textarea.value;
+      if (value === this.committedValue) return;
+      this.committedValue = value;
+      this.onCommitHandler?.(value);
+    };
     this.textarea.addEventListener('input', this.boundInput);
+    this.textarea.addEventListener('change', this.boundChange);
 
     this.renderCounter();
 
@@ -77,8 +98,19 @@ export class TextArea {
 
   setValue(value: string): void {
     this.textarea.value = value;
+    this.committedValue = value;
     this.renderCounter();
-    this.onInputHandler?.(value);
+  }
+
+  setValueAndNotify(value: string): void {
+    const changed = value !== this.textarea.value;
+    this.textarea.value = value;
+    this.committedValue = value;
+    this.renderCounter();
+    if (changed) {
+      this.onInputHandler?.(value);
+      this.onCommitHandler?.(value);
+    }
   }
 
   setDisabled(disabled: boolean): void {
@@ -95,6 +127,7 @@ export class TextArea {
     // gözlemci bağlı kalır ve DOM'dan çıkan textarea'yı canlı tutar.
     this.disconnectMinHeightObserver();
     this.textarea.removeEventListener('input', this.boundInput);
+    this.textarea.removeEventListener('change', this.boundChange);
     this.element.remove();
   }
 

@@ -72,6 +72,12 @@
     "decrement": "Azalt",
     "increment": "Artır"
   },
+  "splitPane": {
+    "resize": "Panel boyutunu değiştir"
+  },
+  "propertyField": {
+    "reset": "Varsayılana döndür"
+  },
   "wizard": {
     "back": "Geri",
     "next": "İleri",

@@ -13,8 +13,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@volstudio/core": "workspace:*",
-    "phaser": "^4.2.1"
+    "@volstudio/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",

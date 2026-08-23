@@ -35,6 +35,64 @@ ve `git diff --check` temizdi. Aşamalar paralel aynı çalışma ağacında
 geliştirildiği için bu sınır commit'inde hook atlandı; tam `pnpm high` Aşama 3
 kapanışında temiz birleşik ağaç üzerinde zorunludur.
 
+## 2026-08-23 — Asset Studio Aşama 2–3: Phaser'sız workbench, repo hostu, hata avı
+
+VOL.UI Phaser'dan tümüyle koptu ve Asset Studio repo hostu ayağa kalktı: 66
+varlıklı gerçek katalog, thumbnail, ses probe, SSE watcher, LAN token ve edit
+lease çalışıyor. Aşama 0–3 tek commit'te kapanır.
+
+**Kapıları kıran devralınan durum.** Silinmiş `ShowcaseScene` için ölü test
+dosyası typecheck/test/lint kapılarını birden düşürüyordu; `main.test.ts` hâlâ
+Phaser dönemine ait `createVolGame` sözleşmesini test ediyordu. Daha önemlisi
+`vitest.config.ts` ile `vite.config.ts` alias listeleri ayrışmıştı: vitest
+tarafındaki tek prefix alias `@volstudio/core/ui/styles.css` yolunu var olmayan
+`core/src/ui/styles.css` dosyasına çeviriyordu. Test ile build farklı modül
+grafiği çözdüğü için ikisi birbirini doğrulayamıyordu. Liste artık CORE'un
+`exports` haritasından türeyen tek kaynaktan (`scripts/build/coreAliases.mjs`)
+geliyor.
+
+**Geliştirme modunda API tamamen ölüydü.** Vite ara katmanı middie üzerinden
+filtresiz bağlanmıştı; Fastify router'ından önce koşan SPA fallback dosya
+olmayan her GET'i `index.html`e çeviriyordu. `pnpm dev` ile açılan uygulama
+katalogu hiç yükleyemiyor, arayüz "Varlık kataloğu açılamadı" gösteriyordu.
+Bütün sunucu testleri `frontend: 'none'` ile koştuğu için hata testlerden
+görünmez geçmişti. API yolları artık Vite'a hiç verilmiyor; `tests/integration`
+altındaki yeni kapı iki frontend modunu da gerçek sunucuyla dener ve düzeltme
+geri alındığında düşer. Vite HMR de ayrı WebSocket portu yerine Fastify'ın
+sunucusuna bindirildi — iki örnek yan yana çalışabiliyor ve tek-origin kuralı
+korunuyor.
+
+**CORE workbench bileşenlerinde altı hata.** Seçimli `Toolbar`da her düğme
+toggle oluyordu: menü açan aksiyon düğmesine basmak aktif aracı düşürüp
+`onChange`'i yanlış kimlikle tetikliyordu. `CommandHistory` bütçeye sığmayan
+komutu uygulayıp kaydetmiyor, sonraki undo belgeyi hiç var olmamış bir duruma
+götürüyordu — mevcut test bu davranışı doğru sanıp sabitlemişti. `Popover`
+dışarı tıklamayla kapanırken odağı kullanıcının yeni tıkladığı alandan geri
+çalıyordu. `SplitPane` pencere daralınca kullanıcının seçtiği bölme ölçüsünü
+kalıcı olarak kaybediyordu. `KeyedVirtualList` görünürden çıkan satırları
+temizleme kancası sunmuyordu. `CanvasViewportController` border ve padding
+kutusunu karıştırıyordu. Altısı da düzeltildi ve 13 regresyon testiyle bağlandı.
+
+**Bekçiler.** `workbench` sekmesi iki test dosyasına da hiç eklenmemişti;
+sekme listesi tek kaynağa çekildi ve `src/sections` altındaki her `*Tab.ts`
+dosyasının test kapsamında olduğunu doğrulayan bekçi eklendi. Asset Studio i18n
+parite testi kazandı; `API_ERROR_CODES` runtime listesi eklendi ve on dört hata
+kodunun tamamı iki dilde karşılık aldı (yedisi eksikti, istemci elle tuttuğu
+listeyle sessizce genel metne düşüyordu).
+
+**Plan sapmaları kapatıldı.** LAN Host allowlist (joker bind'de makinenin dış
+adresleri + loopback), içerik-hash anahtarlı disk thumbnail cache'i (repo
+dışında, Aşama 5 raster ve Aşama 7 waveform aynı altyapıyı kullanacak),
+`GET /api/v1/assets/:id` ve `vol-hell-audio` rolünün `derived`e düzeltilmesi.
+
+**Gerçek tarayıcı kapısı.** Playwright kuruldu; Chromium `high` kapısına,
+Chromium + Firefox matrisi `signoff`a bağlandı. Beş kritik akış gerçek repo
+üzerinde koşuyor: katalog yüklenmesi, same-origin JSON, Jura/Exo 2'nin
+gerçekten yüklenmesi, bundle'da Phaser olmaması, Quick Look aç/kapa.
+
+Kapsam ratchet'leri gerçek ölçümle kondu: Asset Studio tabandan
+83/83/74/89'a, VOL.UI 94/94/89/83'e yükseldi.
+
 ## 2026-08-23 — Görsel motor Tur 5: tek ekran ürün, Tur 1–5 ve Tur 4 kalıntı denetimi
 
 Kullanıcı denetimi Tur 5'in önceki “basit kip + ileri kip” çözümünü reddetti:

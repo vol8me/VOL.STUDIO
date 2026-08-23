@@ -11,13 +11,11 @@ import {
   Text,
   VOL_COLORS,
   RoundCounter,
-  RoundLoop,
   XPBar,
   applyXpGain,
-  i18n,
-  i18next,
-} from '@volstudio/core';
-import type { BarVariant } from '@volstudio/core';
+} from '@volstudio/core/ui';
+import type { BarVariant } from '@volstudio/core/ui';
+import { i18n, i18next } from '@volstudio/core/i18n';
 import { card, cardGrid, svgIcon } from './shared';
 import {
   ICON_AMMO,
@@ -344,11 +342,7 @@ function buildResourceBarCard(disposables: Destroyable[]): HTMLElement {
   return card(i18next.t('volui:hud.resourceBar'), wrap);
 }
 
-/**
- * RoundCounter: saf görüntü. Tur ilerletme KURALI bileşende değil, CORE'un
- * headless `RoundLoop` primitifindedir — bir tower defense'te dalga molası,
- * roguelite'ta oda arası aynı parçadır. Sayaç yalnızca çıktısını çizer.
- */
+/** RoundCounter saf görüntüdür; demo akışı yalnız bu builder içinde tutulur. */
 function buildRoundCounterCard(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
@@ -364,25 +358,35 @@ function buildRoundCounterCard(disposables: Destroyable[]): HTMLElement {
   const controls = document.createElement('div');
   controls.className = 'vol-showcase-panel-demo__controls';
 
-  let loop: RoundLoop | null = null;
+  const breakMs = 3000;
+  const totalRounds = 10;
+  let running = false;
+  let round = 1;
+  let remainingMs = breakMs;
   let rafId = 0;
   let lastFrame = 0;
 
-  // `RoundLoop` delta-time ile sürülür (duraklatılan oyunda mola akmaz), bu
-  // yüzden showcase'te bir rAF döngüsüne bağlanır. Gerçek oyunda bu, sahnenin
-  // update() metodudur.
   const tick = (now: number): void => {
     const delta = lastFrame === 0 ? 0 : now - lastFrame;
     lastFrame = now;
-    loop?.update(delta);
-    if (loop) {
-      roundCounter.setRemainingSeconds(loop.getRemainingMs() / 1000);
+    remainingMs = Math.max(0, remainingMs - delta);
+    if (remainingMs === 0) {
+      round += 1;
+      if (round > totalRounds) {
+        stopLoop();
+        return;
+      }
+      remainingMs = breakMs;
+      roundCounter.setRound(round);
+    }
+    roundCounter.setRemainingSeconds(remainingMs / 1000);
+    if (running) {
       rafId = requestAnimationFrame(tick);
     }
   };
 
   const stopLoop = (): void => {
-    loop = null;
+    running = false;
     lastFrame = 0;
     cancelAnimationFrame(rafId);
   };
@@ -391,13 +395,11 @@ function buildRoundCounterCard(disposables: Destroyable[]): HTMLElement {
     variant: 'primary',
     onClick: () => {
       stopLoop();
-      loop = new RoundLoop({
-        breakMs: 3000,
-        totalRounds: 10,
-        onRoundStart: (round) => roundCounter.setRound(round),
-        onComplete: stopLoop,
-      });
-      loop.start();
+      running = true;
+      round = 1;
+      remainingMs = breakMs;
+      roundCounter.setRound(round);
+      roundCounter.setRemainingSeconds(remainingMs / 1000);
       lastFrame = 0;
       rafId = requestAnimationFrame(tick);
     },
@@ -408,7 +410,9 @@ function buildRoundCounterCard(disposables: Destroyable[]): HTMLElement {
     onClick: () => {
       stopLoop();
       roundCounter.stopCountdown();
-      roundCounter.setRound(1);
+      round = 1;
+      remainingMs = breakMs;
+      roundCounter.setRound(round);
     },
   });
   disposables.push(resetButton);

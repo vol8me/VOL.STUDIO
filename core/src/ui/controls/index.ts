@@ -13,6 +13,13 @@ export {
   type SquareJoystickOptions,
 } from './SquareJoystick';
 export { PinchZoomController, type PinchZoomControllerOptions } from './PinchZoomController';
+export {
+  CanvasViewportController,
+  type ViewportPoint,
+  type CanvasViewportTransform,
+  type CanvasViewportChangeReason,
+  type CanvasViewportControllerOptions,
+} from './CanvasViewportController';
 export { DualAxisScrollPanel, type DualAxisScrollPanelOptions } from './DualAxisScrollPanel';
 export {
   SwipeableCardStack,
@@ -32,3 +39,10 @@ export {
   type SwipeGestureZoneOptions,
 } from './SwipeGestureZone';
 export { MultiTouchZone, type MultiTouchPoint, type MultiTouchZoneOptions } from './MultiTouchZone';
+export {
+  CommandHistory,
+  CommandTransaction,
+  type HistoryCommand,
+  type CommandHistorySnapshot,
+  type CommandHistoryOptions,
+} from './CommandHistory';

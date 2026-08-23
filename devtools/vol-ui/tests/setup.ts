@@ -1,5 +1,5 @@
 import { vi, beforeAll } from 'vitest';
-import { i18n, i18next } from '../../../core/src/systems/I18n';
+import { i18n, i18next } from '@volstudio/core/i18n';
 import trResources from '../src/i18n/tr.json';
 import enResources from '../src/i18n/en.json';
 
@@ -7,11 +7,10 @@ i18n.addResources('tr', 'volui', trResources);
 i18n.addResources('en', 'volui', enResources);
 
 // jsdom, HTMLCanvasElement.getContext'i implemente etmez ('canvas' npm
-// paketi kurulu değilse). Phaser modülü import edilir edilmez (sınıf
-// tanımlarından bağımsız, module-level init sırasında) bir prob canvas
-// oluşturup 2D context üzerinde fillStyle/fillRect gibi özellikler
-// okur/yazar — bu mock olmadan `import Phaser from 'phaser'` içeren
-// HERHANGİ bir test dosyası import aşamasında çöker.
+// paketi kurulu değilse). Showcase artık Phaser taşımıyor; mock CORE'un
+// kendi canvas yüzeyleri için duruyor: CanvasViewportController ölçüm için
+// context ister, palet/HUD bölümleri 2D context üzerine çizer. Mock olmadan
+// bu bileşenlere dokunan HERHANGİ bir test kurulum aşamasında çöker.
 const noopCtx2d = {
   fillStyle: '',
   strokeStyle: '',

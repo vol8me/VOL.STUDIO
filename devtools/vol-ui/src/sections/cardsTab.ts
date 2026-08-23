@@ -5,12 +5,12 @@ import {
   LevelUpPicker,
   ShopPicker,
   Text,
-  i18next,
   type CardRarity,
   type CardTileData,
   type ShopInventoryEntry,
   type ShopPickerState,
-} from '@volstudio/core';
+} from '@volstudio/core/ui';
+import { i18next } from '@volstudio/core/i18n';
 import { card } from './shared';
 
 interface Destroyable {

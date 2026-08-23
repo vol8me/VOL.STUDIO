@@ -426,6 +426,65 @@ his donanıma göre değişir. `damp` oranı delta ile üstel hesaplar.
 karede kalan mesafenin bir kısmını kapattığı için teorik olarak hiç varmaz ve
 bir eşitlik kontrolü asla tutmaz.
 
+## Web araçları için UI yüzeyi
+
+Repo içindeki web araçları, Phaser bağımlılığını bundle'a taşımayan alt yolları
+kullanır:
+
+```ts
+import {
+  CanvasViewportController,
+  CommandHistory,
+  KeyedVirtualList,
+  SplitPane,
+  Toolbar,
+} from '@volstudio/core/ui';
+import { i18next } from '@volstudio/core/i18n';
+import '@volstudio/core/ui/styles.css';
+```
+
+`@volstudio/core/lifecycle` ve `@volstudio/core/fonts` da aynı nedenle ayrı
+giriş noktalarıdır. Web araçları kök `@volstudio/core` barrel'ını kullanmaz;
+bu barrel oyun runtime yüzeyini de taşır.
+
+Workbench bileşenleri oyun kuralı tutmaz:
+
+- `SplitPane`, yatay/dikey panel ölçüsünü pointer ve klavye ile değiştirir;
+  daraltma durumunu çağıran yönetir. Kullanıcının seçtiği ölçü ayrı tutulur:
+  pencere daralınca görünen ölçü kısılır, yeniden genişleyince tercih geri gelir.
+- `Toolbar` ve `ToolButton`, roving tabindex, ARIA ve tekli/çoklu seçim
+  davranışını sağlar. Seçimli bir toolbardaki **aksiyon** düğmeleri (menü açan,
+  komut çalıştıran) `toggle: false` almalıdır; aksi halde seçim kümesine girer
+  ve basıldıklarında aktif aracı düşürürler.
+- `PropertyField` etiket, açıklama, durum ve sıfırlama niyetini tek erişilebilir
+  alanda toplar; `Popover` açılma/kapanma ve odağı geri verme işini üstlenir.
+  Odak yalnız popover'ın içindeyken tetikleyiciye döner: dışarı tıklamayla
+  kapanışta kullanıcının odaklandığı alan korunur.
+- `KeyedVirtualList`, satır DOM'unu kimliğe göre korur; güncelleme sırasında
+  odağı ve esnek satır ölçülerini kaybetmez. Satırlarında bileşen kuran
+  tüketiciler `destroyItem` vermelidir — satır görünürden çıktığında ve liste
+  yıkıldığında çağrılır, verilmezse her kaydırma dinleyici sızdırır.
+- `CanvasViewportController`, normal sol sürüklemeyi çizim aracına bırakır.
+  Kamera yalnızca orta tuşla veya `Space` + sol tuşla kaydırılır; tekerlek
+  imlecin altındaki belge koordinatını sabit tutarak yakınlaştırır.
+- `CommandHistory`, komutları byte bütçesi içinde tutar; transaction, geri alma
+  ve yineleme mekanizması sunar. Komutların alan anlamı tüketicide kalır.
+  Bütçe aşıldığında en eski komutlar düşer; tek başına bütçeye sığmayan bir
+  komut uygulanır fakat saklanamaz ve o noktadan geriye hiçbir undo geçerli
+  olmadığı için yığın tümüyle bırakılır.
+
+### Değer ve olay sözleşmesi
+
+Form kontrollerinde `setValue()` / `setChecked()` programatik ve **sessizdir**.
+Kullanıcı etkileşiminde `onInput` canlı değeri, `onCommit` tamamlanan hareketi
+bildirir. Eski tüketicileri kırmamak için `onChange` kullanıcı değişiminde
+çalışmaya devam eder; özellikle bildirim gereken programatik geçişlerde
+`setValueAndNotify()` / `setCheckedAndNotify()` kullanılır.
+
+DOM olayı, dil aboneliği, observer veya pointer capture alan her workbench
+bileşeni `destroy()` ile bunları bırakır. Bu sözleşme, araç yüzeyi yeniden
+kurulduğunda çift listener ve eski DOM'a bildirim sızıntısını önler.
+
 ## Ayrımı bozmamak
 
 - Bir bileşene kural eklemek istediğinde önce sor: **başka bir tüketici bunu

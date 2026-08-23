@@ -22,6 +22,12 @@ export interface QualityConfig {
  */
 export declare function validateQualityConfig(raw: unknown): string[];
 
+/** Workspace paket adları ile eşik/muafiyet kayıtlarının iki yönlü paritesini doğrular. */
+export declare function validateQualityWorkspaceParity(
+  raw: unknown,
+  workspacePackageNames: readonly string[],
+): string[];
+
 /**
  * `quality.json`u okur, doğrular ve döner. Geçersizse TÜM sorunları listeleyen
  * tek bir hata fırlatır.

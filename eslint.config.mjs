@@ -16,9 +16,9 @@ export default tseslint.config(
     ],
   },
 
-  // TypeScript dosyaları — core, games, tauri-v2 src ve tests
+  // TypeScript dosyaları — uygulama kaynakları, repo-host sunucuları ve testler.
   {
-    files: ['**/src/**/*.ts', '**/tests/**/*.ts'],
+    files: ['**/src/**/*.ts', '**/server/**/*.ts', '**/shared/**/*.ts', '**/tests/**/*.ts'],
     extends: [...tseslint.configs.recommendedTypeChecked, prettierConfig],
     languageOptions: {
       parserOptions: {

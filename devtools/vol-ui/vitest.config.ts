@@ -1,3 +1,4 @@
+import { coreAliases } from '../../scripts/build/coreAliases.mjs';
 import { loadQualityConfig } from '../../scripts/quality/config.mjs';
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
@@ -32,10 +33,10 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
   },
+  // Alias listesi `vite.config.ts` ile AYNI kaynaktan gelir. Elle yazıldığı
+  // dönemde ikisi ayrışmış, testler build'in çözdüğü modül grafiğini
+  // çözemez olmuştu (bkz. scripts/build/coreAliases.mjs).
   resolve: {
-    alias: {
-      '@volstudio/core': resolve(import.meta.dirname, '../../core/src'),
-      '@': resolve(import.meta.dirname, './src'),
-    },
+    alias: [...coreAliases(), { find: '@', replacement: resolve(import.meta.dirname, './src') }],
   },
 });
