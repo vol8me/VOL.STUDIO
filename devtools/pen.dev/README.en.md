@@ -1,15 +1,15 @@
-# games/design
+# pen.dev
 
 VOL.STUDIO's shared design source and export pipeline: a Pencil canvas file
 (`pen/entities.pen`), the part/preview images exported from it
 (`pen_export/`), and a runtime layer that assembles them into a Phaser scene
-(`@volstudio/design`, `src/`).
+(`@volstudio/pen.dev`, `src/`).
 
 **Self-contained.** Neither `core/` nor any `games/<game>` package knows this
 folder exists; the dependency is one-directional — games consume
-`@volstudio/design`, never the other way around. It has its own
+`@volstudio/pen.dev`, never the other way around. It has its own
 `package.json`, its own `tsconfig.json`, its own tests — picked up
-automatically by the pnpm workspace's `games/*` glob, no manual registration
+automatically by the pnpm workspace's `devtools/*` glob, no manual registration
 anywhere else.
 
 **Ready to be detached.** This folder can be cut out as-is and moved
@@ -18,11 +18,11 @@ dependency is `phaser`, it imports no `@volstudio/*` package.
 
 ## Usage
 
-The consuming game defines the `@volstudio/design` alias in its own
+The consuming game defines the `@volstudio/pen.dev` alias in its own
 `vite.config.ts` and `tsconfig.json`, then:
 
 ```typescript
-import { buildRigDefinition, preloadRigTextures, assembleRig } from '@volstudio/design';
+import { buildRigDefinition, preloadRigTextures, assembleRig } from '@volstudio/pen.dev';
 import metadata from '.../metadata/<entity>.metadata.json';
 
 // Collect part PNGs with the bundler's glob (Vite example):
@@ -73,8 +73,8 @@ node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
 ## Testing
 
 ```bash
-pnpm --filter @volstudio/design typecheck
-pnpm --filter @volstudio/design test:coverage
+pnpm --filter @volstudio/pen.dev typecheck
+pnpm --filter @volstudio/pen.dev test:coverage
 ```
 
 [Türkçe](README.md)

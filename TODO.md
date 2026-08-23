@@ -812,7 +812,7 @@ silinir; kronolojiye not düşülmez.
   (Tur 5) olarak kaydedilmişti. Tur 5 artık tamamlandı; güncel denetim ve kalan
   ileri-yüzey boşlukları dosyanın en üstündeki 2026-08-22 kaydında. Ses motorunun aynı editör kabuğuna
   taşınması D11'de dikiş olarak işaretli ama editör yazılmadan başlanmayacak.
-- **`AGENTS.md` ve `games/design/AGENTS.md` gitignore'da** (`.gitignore:2-3`) ve
+- **`AGENTS.md` ve `devtools/pen.dev/AGENTS.md` gitignore'da** (`.gitignore:2-3`) ve
   hiç commit edilmemiş. Bilinçli bir tercih (agent talimatları yerelde kalıyor)
   ama sonucu şu: bu dosyalara yapılan güncellemeler HİÇBİR commit'e girmez ve
   yeni bir klonda yoktur. Bir kural `AGENTS.md`ye yazıldığında repoda kalıcı
@@ -1532,7 +1532,7 @@ raporlanabildiğini doğrulayan test.
 object` veriyordu. Kapı kırılıyordu (sessiz geçiş yok) ama nereye bakılacağı
 belli değildi. `scripts/quality/config.mjs` tek okuyucu oldu; eksik/yanlış
 tipte/tanınmayan metrik, gerekçesiz muafiyet ve "hem muaf hem eşikli" çelişkisi
-toplu olarak raporlanıyor. `games/design` metadata doğrulayıcısıyla aynı desen
+toplu olarak raporlanıyor. `devtools/pen.dev` metadata doğrulayıcısıyla aynı desen
 — kendi kuralımı bir yerde uygulayıp diğerinde uygulamamışım.
 
 **Public API yüzeyi sayıldı.** Dokuz `export *` barrel'ı yüzeyi KARAR NOKTASI

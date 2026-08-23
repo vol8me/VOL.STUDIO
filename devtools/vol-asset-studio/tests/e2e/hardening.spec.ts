@@ -3,14 +3,14 @@ import { join, resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Aşama 9 sertleştirme kapısı.
+ * E2E sertleştirme kapısı.
  *
  * jsdom testleri gerçek yerleşimi, klavye odak sırasını, azaltılmış hareket
  * tercihini ve bundle içeriğini göremez. Bu dosya ürünü kullanıcının gerçekten
  * karşılaştığı koşullarda sürer: dar ekran, yalnız klavye, hareket kapalı.
  */
 const REPO_ROOT = resolve(import.meta.dirname, '../../../..');
-const SANDBOX_DIR = join(REPO_ROOT, 'games/design/pen_export');
+const SANDBOX_DIR = join(REPO_ROOT, 'devtools/pen.dev/pen_export');
 const FIXTURE = join(SANDBOX_DIR, '__e2e-hardening.png');
 
 test.beforeAll(async () => {

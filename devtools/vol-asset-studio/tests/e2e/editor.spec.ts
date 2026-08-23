@@ -4,14 +4,14 @@ import { join, resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Aşama 5'in çıkış kriteri: GERÇEK bir PNG aç, düzenle, kaydet.
+ * E2E hedefi: GERÇEK bir PNG aç, düzenle, kaydet.
  *
  * jsdom testleri belge modelini ve girdi yönlendirmesini kanıtlar ama tuvalin
  * gerçekten çizdiğini, `toBlob`un PNG ürettiğini ve multipart kaydın diskteki
  * baytları değiştirdiğini gösteremez. Bu dosya o zinciri uçtan uca yürütür.
  */
 const REPO_ROOT = resolve(import.meta.dirname, '../../../..');
-const SANDBOX_DIR = join(REPO_ROOT, 'games/design/pen_export');
+const SANDBOX_DIR = join(REPO_ROOT, 'devtools/pen.dev/pen_export');
 const FIXTURE_NAME = '__e2e-editor-fixture.png';
 const FIXTURE_PATH = join(SANDBOX_DIR, FIXTURE_NAME);
 

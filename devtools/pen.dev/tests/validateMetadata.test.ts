@@ -9,7 +9,7 @@ function metadataFixture(): RigMetadata {
     entityId: 'test_unit',
     domain: 'players',
     source: {
-      penFile: 'games/design/pen/entities.pen',
+      penFile: 'devtools/pen.dev/pen/entities.pen',
       sheetNodeId: 'root1',
       sheetNodeName: 'test_unit_character',
       exportScale: 2,
@@ -24,7 +24,7 @@ function metadataFixture(): RigMetadata {
         logicalSizePx: { width: 16, height: 6.4 },
         positionPx: { x: 104, y: 32 },
         rotationDeg: 0,
-        file: 'games/design/pen_export/players/test_unit/parts/top_cap.png',
+        file: 'devtools/pen.dev/pen_export/players/test_unit/parts/top_cap.png',
       },
     ],
     previews: [],

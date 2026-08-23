@@ -15,14 +15,14 @@
       "kinds": ["audio"]
     },
     {
-      "id": "design-source",
-      "path": "games/design/pen",
+      "id": "pen-dev-source",
+      "path": "devtools/pen.dev/pen",
       "role": "source",
       "kinds": ["sprite-document"]
     },
     {
-      "id": "design-export",
-      "path": "games/design/pen_export",
+      "id": "pen-dev-export",
+      "path": "devtools/pen.dev/pen_export",
       "role": "derived",
       "kinds": ["image", "metadata"]
     }

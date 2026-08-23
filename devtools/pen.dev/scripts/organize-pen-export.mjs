@@ -15,7 +15,7 @@
 // {
 //   "entityId": "arachnid",
 //   "domain": "enemies",
-//   "sourcePenFile": "games/design/pen/entities.pen",
+//   "sourcePenFile": "devtools/pen.dev/pen/entities.pen",
 //   "sourceSheetNodeId": "bBlFU",
 //   "sourceSheetName": "Arachnid Parts Export Sheet",
 //   "exportScale": 2,

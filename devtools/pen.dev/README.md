@@ -1,14 +1,14 @@
-# games/design
+# pen.dev
 
 VOL.STUDIO'nun paylaşılan tasarım kaynağı ve export pipeline'ı: bir Pencil
 canvas dosyası (`pen/entities.pen`), ondan export edilen parça/önizleme
 görselleri (`pen_export/`) ve bunları bir Phaser sahnesinde birleştiren
-çalışma zamanı katmanı (`@volstudio/design`, `src/`).
+çalışma zamanı katmanı (`@volstudio/pen.dev`, `src/`).
 
 **Bağımsız.** `core/` ve hiçbir `games/<oyun>` paketi bu klasörün varlığını
-bilmez; bağımlılık tek yönlüdür, oyunlar `@volstudio/design`'ı tüketir, tersi
+bilmez; bağımlılık tek yönlüdür, oyunlar `@volstudio/pen.dev`'ı tüketir, tersi
 olmaz. Kendi `package.json`'ı, kendi `tsconfig.json`'ı, kendi testleri
-vardır — pnpm workspace'in `games/*` glob'u tarafından otomatik yakalanır,
+vardır — pnpm workspace'in `devtools/*` glob'u tarafından otomatik yakalanır,
 başka hiçbir dosyada elle kayıt gerekmez.
 
 **Sökülmeye hazır.** Bu klasör olduğu gibi kesilip başka bir yere (ayrı bir
@@ -17,11 +17,11 @@ repo, başka bir stüdyo projesi) taşınabilir: dışarıya tek bağımlılığ
 
 ## Kullanım
 
-Tüketen oyun `@volstudio/design` alias'ını kendi `vite.config.ts` ve
+Tüketen oyun `@volstudio/pen.dev` alias'ını kendi `vite.config.ts` ve
 `tsconfig.json`'ında tanımlar, ardından:
 
 ```typescript
-import { buildRigDefinition, preloadRigTextures, assembleRig } from '@volstudio/design';
+import { buildRigDefinition, preloadRigTextures, assembleRig } from '@volstudio/pen.dev';
 import metadata from '.../metadata/<entity>.metadata.json';
 
 // Parça PNG'lerini bundler'ın glob'u ile topla (Vite örneği):
@@ -71,8 +71,8 @@ node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
 ## Test
 
 ```bash
-pnpm --filter @volstudio/design typecheck
-pnpm --filter @volstudio/design test:coverage
+pnpm --filter @volstudio/pen.dev typecheck
+pnpm --filter @volstudio/pen.dev test:coverage
 ```
 
 [English](README.en.md)

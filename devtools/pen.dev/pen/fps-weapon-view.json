@@ -1,0 +1,1171 @@
+{
+  "schemaVersion": 1,
+  "size": [2048, 2048],
+  "seed": 20260823,
+  "antialias": false,
+  "palette": {
+    "generate": [
+      {
+        "base": "#7ea7d2",
+        "steps": 7,
+        "hueShift": -14,
+        "satCurve": "flat",
+        "name": "gokyuzu",
+        "lightRange": [0.58, 0.86]
+      },
+      {
+        "base": "#7d7f88",
+        "steps": 7,
+        "hueShift": -6,
+        "satCurve": "flat",
+        "name": "uzak",
+        "lightRange": [0.52, 0.74]
+      },
+      {
+        "base": "#a89272",
+        "steps": 7,
+        "hueShift": -14,
+        "satCurve": "arch",
+        "name": "zemin",
+        "lightRange": [0.48, 0.82]
+      },
+      {
+        "base": "#39414d",
+        "steps": 8,
+        "hueShift": -6,
+        "satCurve": "flat",
+        "name": "gunmetal",
+        "lightRange": [0.14, 0.44]
+      },
+      {
+        "base": "#191d23",
+        "steps": 6,
+        "hueShift": -4,
+        "satCurve": "flat",
+        "name": "koyu-metal",
+        "lightRange": [0.06, 0.26]
+      },
+      {
+        "base": "#6b5240",
+        "steps": 7,
+        "hueShift": 6,
+        "satCurve": "arch",
+        "name": "eldiven",
+        "lightRange": [0.2, 0.48]
+      },
+      {
+        "base": "#e8a83f",
+        "steps": 5,
+        "hueShift": 12,
+        "satCurve": "arch",
+        "name": "vurgu",
+        "lightRange": [0.45, 0.86]
+      }
+    ]
+  },
+  "layers": [
+    {
+      "id": "gokyuzu",
+      "material": 0,
+      "source": {
+        "kind": "const",
+        "value": 1
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -1.0,
+        "to": 0.45
+      }
+    },
+    {
+      "id": "bina-0",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [-1.2182, -0.0115],
+        "half": [0.0671, 0.1115]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-cam-0",
+      "material": 0,
+      "opacity": 0.22,
+      "source": {
+        "kind": "sdf.box",
+        "center": [-1.2182, -0.0115],
+        "half": [0.0503, 0.0837]
+      },
+      "mask": {
+        "kind": "pattern.grid",
+        "freq": 30,
+        "thickness": 0.55
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.75
+      }
+    },
+    {
+      "id": "bina-1",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [-0.9926, -0.0268],
+        "half": [0.0866, 0.1268]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-cam-1",
+      "material": 0,
+      "opacity": 0.22,
+      "source": {
+        "kind": "sdf.box",
+        "center": [-0.9926, -0.0268],
+        "half": [0.0649, 0.0951]
+      },
+      "mask": {
+        "kind": "pattern.grid",
+        "freq": 30,
+        "thickness": 0.55
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.75
+      }
+    },
+    {
+      "id": "bina-2",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [-0.8063, 0.0042],
+        "half": [0.0585, 0.0958]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-3",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [-0.6206, -0.0343],
+        "half": [0.06, 0.1343]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-cam-3",
+      "material": 0,
+      "opacity": 0.22,
+      "source": {
+        "kind": "sdf.box",
+        "center": [-0.6206, -0.0343],
+        "half": [0.045, 0.1007]
+      },
+      "mask": {
+        "kind": "pattern.grid",
+        "freq": 30,
+        "thickness": 0.55
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.75
+      }
+    },
+    {
+      "id": "bina-4",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [-0.4299, -0.0312],
+        "half": [0.0589, 0.1312]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-cam-4",
+      "material": 0,
+      "opacity": 0.22,
+      "source": {
+        "kind": "sdf.box",
+        "center": [-0.4299, -0.0312],
+        "half": [0.0441, 0.0984]
+      },
+      "mask": {
+        "kind": "pattern.grid",
+        "freq": 30,
+        "thickness": 0.55
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.75
+      }
+    },
+    {
+      "id": "bina-5",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [-0.2732, -0.0057],
+        "half": [0.0852, 0.1057]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-6",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [-0.0757, 0.0304],
+        "half": [0.073, 0.0696]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-7",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [0.1459, -0.0411],
+        "half": [0.0878, 0.1411]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-cam-7",
+      "material": 0,
+      "opacity": 0.22,
+      "source": {
+        "kind": "sdf.box",
+        "center": [0.1459, -0.0411],
+        "half": [0.0659, 0.1058]
+      },
+      "mask": {
+        "kind": "pattern.grid",
+        "freq": 30,
+        "thickness": 0.55
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.75
+      }
+    },
+    {
+      "id": "bina-8",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [0.3014, -0.0653],
+        "half": [0.0745, 0.1653]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-cam-8",
+      "material": 0,
+      "opacity": 0.22,
+      "source": {
+        "kind": "sdf.box",
+        "center": [0.3014, -0.0653],
+        "half": [0.0559, 0.124]
+      },
+      "mask": {
+        "kind": "pattern.grid",
+        "freq": 30,
+        "thickness": 0.55
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.75
+      }
+    },
+    {
+      "id": "bina-9",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [0.4972, 0.0443],
+        "half": [0.0519, 0.0557]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-10",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [0.7232, -0.0111],
+        "half": [0.0823, 0.1111]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-cam-10",
+      "material": 0,
+      "opacity": 0.22,
+      "source": {
+        "kind": "sdf.box",
+        "center": [0.7232, -0.0111],
+        "half": [0.0617, 0.0833]
+      },
+      "mask": {
+        "kind": "pattern.grid",
+        "freq": 30,
+        "thickness": 0.55
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.75
+      }
+    },
+    {
+      "id": "bina-11",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [0.913, 0.0292],
+        "half": [0.0505, 0.0708]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "bina-12",
+      "material": 1,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.box",
+        "center": [1.0913, 0.0187],
+        "half": [0.055, 0.0813]
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 90,
+        "from": -0.35,
+        "to": 0.35
+      }
+    },
+    {
+      "id": "ufuk-sis",
+      "material": 1,
+      "opacity": 0.3,
+      "source": {
+        "kind": "sdf.box",
+        "center": [0, 0.1],
+        "half": [1.6, 0.035]
+      },
+      "height": {
+        "kind": "noise.fbm",
+        "base": {
+          "kind": "noise.simplex",
+          "freq": 4.5
+        },
+        "octaves": 4
+      }
+    },
+    {
+      "id": "zemin",
+      "material": 2,
+      "source": {
+        "kind": "sdf.box",
+        "center": [0, 0.86],
+        "half": [1.6, 0.66]
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.linear",
+          "angle": 90,
+          "from": -0.05,
+          "to": 1.0
+        },
+        "b": {
+          "kind": "noise.worley",
+          "freq": 13
+        },
+        "t": 0.38
+      }
+    },
+    {
+      "id": "namlu-freni",
+      "material": 4,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [-0.5467, 0.0029],
+        "b": [-0.4399, 0.0713],
+        "r": 0.036
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 32.6,
+        "from": -0.4,
+        "to": 0.55
+      }
+    },
+    {
+      "id": "namlu",
+      "material": 4,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [-0.4577, 0.0599],
+        "b": [-0.0572, 0.3164],
+        "r": 0.024
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 122.6,
+        "from": -0.5,
+        "to": 0.5
+      }
+    },
+    {
+      "id": "gaz-blogu",
+      "material": 3,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [-0.0863, 0.2835],
+        "b": [0.0205, 0.3519],
+        "r": 0.052
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.linear",
+          "angle": 122.6,
+          "from": -0.55,
+          "to": 0.55
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 44
+        },
+        "t": 0.12
+      }
+    },
+    {
+      "id": "kundak",
+      "material": 3,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [-0.0216, 0.3392],
+        "b": [0.4056, 0.6128],
+        "r": 0.094
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.linear",
+          "angle": 122.6,
+          "from": -0.55,
+          "to": 0.55
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 44
+        },
+        "t": 0.12
+      }
+    },
+    {
+      "id": "kundak-yarik",
+      "material": 4,
+      "opacity": 0.95,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.0318, 0.3734],
+        "b": [0.37, 0.59],
+        "r": 0.08
+      },
+      "mask": {
+        "kind": "pattern.stripes",
+        "freq": 34,
+        "angle": 122.6,
+        "duty": 0.36
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.1
+      }
+    },
+    {
+      "id": "govde",
+      "material": 3,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.4056, 0.6128],
+        "b": [0.9396, 0.9548],
+        "r": 0.136
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.linear",
+          "angle": 122.6,
+          "from": -0.55,
+          "to": 0.55
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 44
+        },
+        "t": 0.12
+      }
+    },
+    {
+      "id": "ejektor",
+      "material": 4,
+      "opacity": 0.85,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.6149, 0.678],
+        "b": [0.7929, 0.792],
+        "r": 0.03
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.18
+      }
+    },
+    {
+      "id": "ray",
+      "material": 4,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.2805, 0.4163],
+        "b": [1.0744, 0.901],
+        "r": 0.024
+      },
+      "mask": {
+        "kind": "pattern.stripes",
+        "freq": 44,
+        "angle": 122.6,
+        "duty": 0.5
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.5
+      }
+    },
+    {
+      "id": "nisangah-govde",
+      "material": 4,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.6203, 0.5128],
+        "b": [0.9471, 0.7079],
+        "r": 0.086
+      },
+      "height": {
+        "kind": "gradient.radial",
+        "center": [0.7837, 0.6103],
+        "radius": 0.21
+      }
+    },
+    {
+      "id": "nisangah-tup",
+      "material": 3,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.6559, 0.5356],
+        "b": [0.9272, 0.6998],
+        "r": 0.068
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 122.6,
+        "from": -0.4,
+        "to": 0.4
+      }
+    },
+    {
+      "id": "lens-halka",
+      "material": 4,
+      "source": {
+        "kind": "sdf.circle",
+        "center": [0.9402, 0.707],
+        "r": 0.07
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.35
+      }
+    },
+    {
+      "id": "lens",
+      "material": 6,
+      "source": {
+        "kind": "sdf.circle",
+        "center": [0.9402, 0.707],
+        "r": 0.052
+      },
+      "height": {
+        "kind": "gradient.radial",
+        "center": [0.9089, 0.7048],
+        "radius": 0.1
+      }
+    },
+    {
+      "id": "sarjor",
+      "material": 3,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.585, 0.8227],
+        "b": [0.284, 1.0574],
+        "r": 0.082
+      },
+      "height": {
+        "kind": "gradient.linear",
+        "angle": 122.6,
+        "from": -0.45,
+        "to": 0.45
+      }
+    },
+    {
+      "id": "sarjor-kaburga",
+      "material": 4,
+      "opacity": 0.65,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.5626, 0.838],
+        "b": [0.3091, 1.0379],
+        "r": 0.068
+      },
+      "mask": {
+        "kind": "pattern.stripes",
+        "freq": 24,
+        "angle": 32.6,
+        "duty": 0.45
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.16
+      }
+    },
+    {
+      "id": "korkuluk",
+      "material": 3,
+      "source": {
+        "kind": "sdf.arc",
+        "center": [0.811, 0.9793],
+        "r": 0.094,
+        "thickness": 0.022,
+        "from": 190,
+        "to": 430
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.4
+      }
+    },
+    {
+      "id": "tetik",
+      "material": 4,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.8253, 0.9766],
+        "b": [0.8037, 1.0103],
+        "r": 0.015
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.5
+      }
+    },
+    {
+      "id": "kabza",
+      "material": 3,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.9757, 1.0551],
+        "b": [0.9777, 1.4245],
+        "r": 0.098
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.linear",
+          "angle": 32.6,
+          "from": -0.4,
+          "to": 0.45
+        },
+        "b": {
+          "kind": "pattern.dots",
+          "freq": 36,
+          "r": 0.34
+        },
+        "t": 0.24
+      }
+    },
+    {
+      "id": "dipcik-boyun",
+      "material": 3,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.9871, 0.9591],
+        "b": [1.1829, 1.0845],
+        "r": 0.062
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.linear",
+          "angle": 122.6,
+          "from": -0.55,
+          "to": 0.55
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 44
+        },
+        "t": 0.12
+      }
+    },
+    {
+      "id": "dipcik",
+      "material": 3,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [1.1451, 1.065],
+        "b": [1.3765, 1.2132],
+        "r": 0.118
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.linear",
+          "angle": 122.6,
+          "from": -0.55,
+          "to": 0.55
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 44
+        },
+        "t": 0.12
+      }
+    },
+    {
+      "id": "dipcik-pad",
+      "material": 4,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [1.3409, 1.1904],
+        "b": [1.4299, 1.2474],
+        "r": 0.12
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.22
+      }
+    },
+    {
+      "id": "on-bilek",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.0129, 0.5988],
+        "b": [-0.11710000000000001, 0.7988],
+        "r": 0.074
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [-0.0378, 0.7564],
+          "radius": 0.24
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "on-avuc",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [-0.0027, 0.5057],
+        "b": [0.2643, 0.6767],
+        "r": 0.086
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [0.1343, 0.6053],
+          "radius": 0.24
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "on-parmak-0",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [-0.0332, 0.5337],
+        "b": [0.0828, 0.3526],
+        "r": 0.029
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [0.0261, 0.441],
+          "radius": 0.12
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "on-parmak-1",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.0558, 0.5907],
+        "b": [0.1718, 0.4096],
+        "r": 0.029
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [0.1151, 0.498],
+          "radius": 0.12
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "on-parmak-2",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.1448, 0.6477],
+        "b": [0.2608, 0.4666],
+        "r": 0.029
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [0.2041, 0.555],
+          "radius": 0.12
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "on-parmak-3",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.2338, 0.7047],
+        "b": [0.3498, 0.5236],
+        "r": 0.029
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [0.2931, 0.612],
+          "radius": 0.12
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "on-basparmak",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [-0.0175, 0.4309],
+        "b": [0.2357, 0.4862],
+        "r": 0.031
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [0.1046, 0.4557],
+          "radius": 0.12
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "tetik-bilek",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [1.034, 1.3953],
+        "b": [1.1964, 1.808],
+        "r": 0.094
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [1.1063, 1.5959],
+          "radius": 0.3
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "tetik-avuc",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.9277, 1.2085],
+        "b": [1.0658, 1.4632],
+        "r": 0.104
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [0.9968, 1.3358],
+          "radius": 0.3
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "tetik-parmak-0",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.8218, 1.1584],
+        "b": [0.9188, 1.0068],
+        "r": 0.033
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [0.8703, 1.0826],
+          "radius": 0.12
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "tetik-parmak-1",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.893, 1.204],
+        "b": [0.99, 1.0524],
+        "r": 0.033
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [0.9415, 1.1282],
+          "radius": 0.12
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "tetik-parmak-2",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.9642, 1.2496],
+        "b": [1.0612, 1.098],
+        "r": 0.033
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [1.0127, 1.1738],
+          "radius": 0.12
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "tetik-parmagi",
+      "material": 5,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [0.8363, 1.0965],
+        "b": [0.8298, 1.0008],
+        "r": 0.027
+      },
+      "height": {
+        "kind": "mix",
+        "a": {
+          "kind": "gradient.radial",
+          "center": [0.8312, 1.0457],
+          "radius": 0.09
+        },
+        "b": {
+          "kind": "noise.value",
+          "freq": 50
+        },
+        "t": 0.1
+      }
+    },
+    {
+      "id": "namlu-parlama",
+      "material": 6,
+      "opacity": 0.7,
+      "source": {
+        "kind": "sdf.capsule",
+        "a": [-0.5111, 0.0257],
+        "b": [-0.463, 0.0565],
+        "r": 0.022
+      },
+      "height": {
+        "kind": "const",
+        "value": 0.95
+      }
+    }
+  ],
+  "shade": {
+    "light": [-0.48, -0.74, 0.47],
+    "strength": 0.62,
+    "ambient": 0.28,
+    "rim": 0.22,
+    "relief": 0.55,
+    "ao": {
+      "radius": 0.05,
+      "strength": 0.5
+    }
+  },
+  "post": {
+    "outline": {
+      "px": 2,
+      "mode": "outside",
+      "colorIndex": 0
+    },
+    "quantize": {
+      "mode": "nearest"
+    }
+  }
+}

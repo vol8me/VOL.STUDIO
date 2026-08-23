@@ -14,7 +14,7 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 ```
 core/                       # @volstudio/core — paylaşılan sistemler + DOM UI kütüphanesi
 games/vol-hell/             # @volstudio/vol-hell — oyun (Vite kökü)
-games/design/               # @volstudio/design — Pencil kaynağı, export hattı ve rig montajı
+devtools/pen.dev/          # @volstudio/pen.dev — Pencil kaynağı, export hattı ve rig montajı
 devtools/vol-ui/            # @volstudio/vol-ui — CORE UI canlı bileşen kataloğu
 devtools/vol-asset-studio/  # @volstudio/vol-asset-studio — repo varlık çalışma ortamı
 tauri-v2/                   # @volstudio/tauri-v2 — native oyun kabuğu ve Rust backend

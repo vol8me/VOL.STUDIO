@@ -9,7 +9,7 @@
  *         at workspace-contract.mjs:106
  *
  * Kapı kırıldığı için SESSİZ bir geçiş yoktu — ama hatayı okuyan kişi
- * `quality.json`a bakması gerektiğini anlayamıyordu. `games/design`
+ * `quality.json`a bakması gerektiğini anlayamıyordu. `devtools/pen.dev`
  * metadata'sı için yazılan doğrulayıcıyla aynı gerekçe ve aynı desen:
  * sorunlar TOPLANIR, ilk hatada durulmaz, mesaj nereye bakılacağını söyler.
  *
