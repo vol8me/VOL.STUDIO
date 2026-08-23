@@ -10,6 +10,9 @@ export type AssetKind =
 
 export type AssetRole = 'source' | 'shipped' | 'derived' | 'readonly';
 
+/** Katman karıştırma kipleri; CORE UI ve sprite belgesi aynı listeyi kullanır. */
+export type BlendMode = 'normal' | 'multiply' | 'screen' | 'overlay' | 'add';
+
 export type GitStatus = 'clean' | 'modified' | 'untracked' | 'deleted' | 'ignored';
 
 export interface AssetRelation {

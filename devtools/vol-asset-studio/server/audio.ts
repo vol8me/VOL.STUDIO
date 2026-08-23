@@ -142,6 +142,94 @@ function parseFfprobe(raw: string): AudioMetadata {
 }
 
 /** Shell açmadan, sınırlı çıktı ve süreyle temel ses bilgisini okur. */
+/**
+ * Sesi ham 16-bit PCM'e çözer.
+ *
+ * Çözme SUNUCUDA yapılır: tarayıcı codec desteği motora göre değişir ve
+ * OGG/MP3 kombinasyonlarında sessizce başarısız olur. Sunucu tarafı FFmpeg tek
+ * yetkili çözücüdür; Web Audio yalnız etkileşimli önizleme içindir.
+ */
+export async function decodeAudioPcm(
+  handle: FileHandle,
+  timeoutMs = 30_000,
+): Promise<{ sampleRate: number; channelCount: number; channels: Float32Array[] }> {
+  const metadata = await probeAudioHandle(handle, timeoutMs);
+  const sampleRate = metadata.sampleRate ?? 48_000;
+  const channelCount = Math.max(1, Math.min(2, metadata.channels ?? 1));
+  const raw = await runFfmpegPcm(handle, sampleRate, channelCount, timeoutMs);
+  const { deinterleaveInt16 } = await import('./audioPeaks.js');
+  return deinterleaveInt16(raw, channelCount, sampleRate);
+}
+
+/** FFmpeg'i descriptor üzerinden çalıştırıp ham PCM toplar. */
+function runFfmpegPcm(
+  handle: FileHandle,
+  sampleRate: number,
+  channelCount: number,
+  timeoutMs: number,
+): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      'ffmpeg',
+      [
+        '-hide_banner',
+        '-nostdin',
+        '-loglevel',
+        'error',
+        '-i',
+        'pipe:3',
+        '-f',
+        's16le',
+        '-acodec',
+        'pcm_s16le',
+        '-ar',
+        String(sampleRate),
+        '-ac',
+        String(channelCount),
+        'pipe:1',
+      ],
+      { shell: false, stdio: ['ignore', 'pipe', 'pipe', handle.fd], windowsHide: true },
+    );
+    const chunks: Buffer[] = [];
+    let bytes = 0;
+    let settled = false;
+    const finish = (error?: Error, output?: Buffer): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      child.removeAllListeners();
+      if (error) reject(error);
+      else resolve(output ?? Buffer.alloc(0));
+    };
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      finish(new Error('ffmpeg_timeout'));
+    }, timeoutMs);
+
+    // `stdio` yapılandırması pipe verdiği için akışlar dolu gelir; tip
+    // düzeyinde `null` olabilirler, çalışma zamanında değil.
+    child.stdout?.on('data', (chunk: Buffer) => {
+      bytes += chunk.length;
+      // Sınırsız birikim uzun seste belleği tüketir.
+      if (bytes > MAX_PCM_BYTES) {
+        child.kill('SIGKILL');
+        finish(new Error('pcm_too_large'));
+        return;
+      }
+      chunks.push(chunk);
+    });
+    child.stderr?.on('data', () => undefined);
+    child.on('error', (error) => finish(error));
+    child.on('close', (code) => {
+      if (code === 0) finish(undefined, Buffer.concat(chunks));
+      else finish(new Error(`ffmpeg_exit_${String(code)}`));
+    });
+  });
+}
+
+/** 10 dakikalık 48 kHz stereo yaklaşık bu kadar tutar. */
+const MAX_PCM_BYTES = 120 * 1024 * 1024;
+
 export async function probeAudio(path: string, timeoutMs = 15_000): Promise<AudioMetadata> {
   try {
     return parseFfprobe(await runFfprobe(path, timeoutMs));

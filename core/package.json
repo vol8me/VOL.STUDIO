@@ -51,6 +51,10 @@
       "import": "./src/visual/index.ts",
       "types": "./src/visual/index.ts"
     },
+    "./visual/color": {
+      "import": "./src/visual/color/index.ts",
+      "types": "./src/visual/color/index.ts"
+    },
     "./visual/encode": {
       "import": "./src/visual/encode/index.ts",
       "types": "./src/visual/encode/index.ts"

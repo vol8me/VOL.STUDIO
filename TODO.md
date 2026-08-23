@@ -35,6 +35,70 @@ ve `git diff --check` temizdi. Aşamalar paralel aynı çalışma ağacında
 geliştirildiği için bu sınır commit'inde hook atlandı; tam `pnpm high` Aşama 3
 kapanışında temiz birleşik ağaç üzerinde zorunludur.
 
+## 2026-08-23 — Asset Studio Aşama 6–9: tam çalışma ortamı, ses, repo zekâsı, sertleştirme
+
+**Aşama 6 — tam pixel ortamı.** Katman yığını alttan üste sıralıdır ve beş
+blend kipi (normal/multiply/screen/overlay/add) unpremultiplied RGBA üzerinde
+çalışır; premultiply edip geri çevirmek düşük alfada yuvarlama hatası biriktirip
+pixel-art'ta görünür kenar kirliliği yaratırdı. Boş zeminde blend fonksiyonu
+ATLANIR, yoksa `multiply` boş belgeye çizen kullanıcıya siyah katman gösterirdi.
+
+Seçim maskesi dikdörtgen değil bit alanıdır (lasso ve sihirli değnek keyfi biçim
+üretir); sınırlayıcı kutu ayrıca tutulur ki transform taramaları bütün belgeyi
+gezmesin. Ekle/çıkar/kesiştir birleşimleri, even-odd lasso taraması ve OKLab
+toleranslı sihirli değnek var. Transform tarafında aynalama, çeyrek dönüş,
+nearest-neighbor ölçekleme, crop, çapalı canvas resize ve maske dışı temizleme.
+
+Palet sistemi CORE'un renk matematiğini kullanır. Bunun için `visual` barrel'ının
+tamamını istemciye çekmek yerine dar bir `@volstudio/core/visual/color` alt yolu
+açıldı — barrel prosedürel sentez motorunu da taşıyor ve istemci paketine
+binlerce satır ölü kod sokardı. Quantize en yakın rengi OKLab'da arar; RGB Öklid
+mesafesi algısal değildir ve koyu mavilerde gözle alakasız eşleşme üretir. Dither
+sapması yalnız AÇIKLIK eksenine uygulanır, renk ekseninde gürültü paleti bozar.
+
+`.volsprite.json` yalnız metadata taşır; cel piksel verisi ayrı PNG'lerde yaşar.
+Kare süresi sıfıra inemez (sonsuz döngüde takılan oynatıcı), son katman ve son
+kare silinemez. Sprite sheet dizilimi ve kare dikdörtgenleri BİRLİKTE döner —
+sayfayı üretip koordinatları ayrı hesaplamak iki tarafın ayrışacağı bir yol açar.
+Runtime metadata hiçbir motor kavramına bağlanmaz, testte de doğrulanır.
+
+Türetilmiş varlık modeli planın en kritik sözleşmesini karşılar: `.volpost.json`
+tam görüntü değil PİKSEL DELTASI tutar, böylece generator yeniden ürettiğinde
+delta yeni tabana uygulanır ve kullanıcının işi kaybolmaz. Tam görüntü
+saklansaydı yeniden üretim hiç görünmez, varlık fiilen "manuel" olurdu. Tabanla
+aynılaşan düzenlemeler rebase'de temizlenir.
+
+**Aşama 7 — ses.** Tarif zamanları kayan noktalı saniye değil FRAME tutar;
+saniye, sample-rate değiştiğinde kayar ve trim sınırını bir örnek kaydırarak tık
+üretir. Plan derleyicisi saf bir fonksiyondur: aynı tarif her zaman aynı
+filtergraph'ı verir ve bu testle sabitlenir. Sayılar bilimsel gösterime
+kaçmaz — `1e-7` FFmpeg tarafından ayrıştırılamaz. Peak piramidi kanal başına
+min VE max tutar; yalnız mutlak değer dalga formunun asimetrisini ve DC kaymasını
+görünmez kılardı. 5 dakikalık 48 kHz stereo 28 milyon örnektir, tam PCM
+tarayıcıya gönderilmez.
+
+**Aşama 8 — repo zekâsı.** Silme dosyayı KALDIRMAZ, repo dışı çöp alanına taşır;
+`unlink` geri alınamaz ve takipsiz dosyada git de kurtaramaz. Geri yükleme hedef
+doluysa üzerine yazmaz. Referans taraması tam yolu ve dosya adını ayrı ayrı
+kovalar — kod çoğu zaman `assets/car.png` yerine yalnız `car.png` yazar. Rename
+yalnız ÖNİZLER; referansları da değiştirdiği için onaysız uygulanmaz.
+
+**Aşama 9 — sertleştirme.** 1365×768 ve 1600×900'de yatay taşma yok, yalnız
+klavyeyle gezinme, azaltılmış hareket, paralel katalog yükü altında monotonik
+revizyon, bundle'da Phaser ve Node-only alt yol yokluğu. Chromium + Firefox tam
+matris 32 test geçiyor.
+
+Bir hata avlandı: rename önizleme rotası `:id` parametresi olmadan kaydedilmişti
+ve `request.params.id` tanımsız geliyordu; kendi testimdeki çöp satırları
+temizlerken ortaya çıktı.
+
+315 test (asset-studio), kapsam ratchet'i 87/87/78/90'a yükseldi. `pnpm high`
+tam geçti.
+
+**Kalan:** ses ve repo zekâsı yüzeyleri API olarak tam, editör UI'ı Aşama 5'in
+piksel yüzeyiyle sınırlı — katman/kare/palet panelleri ve dalga formu görünümü
+sonraki turda bağlanacak.
+
 ## 2026-08-23 — Asset Studio Aşama 5 tamam: gerçek PNG aç/düzenle/kaydet
 
 Editör kabuğa bağlandı ve çıkış kriteri gerçek tarayıcıda doğrulandı: Chromium

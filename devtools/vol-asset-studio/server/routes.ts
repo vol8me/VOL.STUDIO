@@ -12,12 +12,15 @@ import type {
 } from '../shared/contracts.js';
 import type { ArtifactCache } from './artifactCache.js';
 import { openVerifiedAsset } from './assetFile.js';
-import { probeAudioHandle } from './audio.js';
+import { decodeAudioPcm, probeAudioHandle } from './audio.js';
 import type { AssetCatalog } from './catalog.js';
 import { AssetStudioError } from './errors.js';
 import type { EditorLeaseManager } from './lease.js';
 import { contentTypeForPath } from './mime.js';
 import { parseByteRange } from './range.js';
+import { buildPeakPyramid, measureAudio } from './audioPeaks.js';
+import { findReferences, previewRename } from './fileOperations.js';
+import type { TrashStore } from './fileOperations.js';
 import { decodeRaster } from './raster.js';
 import { runSaveTransaction, type SaveTarget } from './saveTransaction.js';
 
@@ -46,6 +49,7 @@ export interface ApiRouteOptions {
   leases: EditorLeaseManager;
   thumbnailCache: ArtifactCache;
   maxEdge: number;
+  trash: TrashStore;
 }
 
 function quotedEtag(revision: string): string {
@@ -296,6 +300,80 @@ export function registerApiRoutes(app: FastifyInstance, options: ApiRouteOptions
     } finally {
       await verified.handle.close();
     }
+  });
+
+  /**
+   * Dalga formu peak piramidi.
+   *
+   * Tam PCM gönderilmez: 5 dakikalık 48 kHz stereo ses 28 milyon örnektir.
+   * İstemci zoom seviyesine uygun seviyeyi seçer.
+   */
+  app.get<{ Params: AssetParams }>('/api/v1/assets/:id/waveform', async (request) => {
+    const record = options.catalog.get(request.params.id);
+    if (record.summary.kind !== 'audio') {
+      throw new AssetStudioError('unsupported_format', 415, { kind: record.summary.kind });
+    }
+    const verified = await openVerifiedAsset(record);
+    let pcm;
+    try {
+      pcm = await decodeAudioPcm(verified.handle);
+    } finally {
+      await verified.handle.close();
+    }
+    const pyramid = buildPeakPyramid(pcm);
+    return {
+      sampleRate: pyramid.sampleRate,
+      channelCount: pyramid.channelCount,
+      frameCount: pyramid.frameCount,
+      revision: record.summary.revision,
+      qa: measureAudio(pcm),
+      levels: pyramid.levels.map((level) => ({
+        framesPerPeak: level.framesPerPeak,
+        channels: level.channels.map((peaks) => Array.from(peaks)),
+      })),
+    };
+  });
+
+  /** Varlığa metinsel referans veren dosyalar; rename önizlemesinin temeli. */
+  app.get<{ Params: AssetParams }>('/api/v1/references/:id', async (request) => {
+    const record = options.catalog.get(request.params.id);
+    return {
+      assetId: record.summary.id,
+      hits: await findReferences(options.repoRoot, record.summary.path),
+    };
+  });
+
+  app.post<{ Params: AssetParams; Body: { targetName?: unknown } }>(
+    '/api/v1/file-operations/rename/preview/:id',
+    async (request) => {
+      const targetName = request.body?.targetName;
+      if (typeof targetName !== 'string') {
+        throw new AssetStudioError('invalid_request', 400, { field: 'targetName' });
+      }
+      return previewRename(options.catalog, request.params.id, targetName);
+    },
+  );
+
+  app.post<{ Params: AssetParams }>('/api/v1/file-operations/delete/:id', async (request) => {
+    const record = options.catalog.get(request.params.id);
+    if (record.summary.role === 'readonly') {
+      throw new AssetStudioError('asset_readonly', 403, { assetId: record.summary.id });
+    }
+    const entry = await options.trash.trash(record);
+    await options.catalog.refresh();
+    return entry;
+  });
+
+  app.get('/api/v1/file-operations/trash', () => options.trash.list());
+
+  app.post<{ Body: { trashId?: unknown } }>('/api/v1/file-operations/restore', async (request) => {
+    const trashId = request.body?.trashId;
+    if (typeof trashId !== 'string') {
+      throw new AssetStudioError('invalid_request', 400, { field: 'trashId' });
+    }
+    const entry = await options.trash.restore(trashId, options.repoRoot);
+    await options.catalog.refresh();
+    return entry;
   });
 
   app.get('/api/v1/events', (request, reply) => {

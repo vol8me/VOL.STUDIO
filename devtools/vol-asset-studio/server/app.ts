@@ -17,6 +17,7 @@ import {
   LanSessionManager,
   tokensEqual,
 } from './lease.js';
+import { TrashStore } from './fileOperations.js';
 import { registerApiRoutes } from './routes.js';
 import { packageRootFromRuntime, resolveCacheRoot } from './runtimePaths.js';
 import { watchCatalog, type CatalogWatcher } from './watcher.js';
@@ -251,8 +252,10 @@ export async function createAssetStudioServer(
     return reply.status(204).send();
   });
 
+  const cacheRoot = options.cacheRoot ?? resolveCacheRoot(loaded.repoRoot);
+  const trash = new TrashStore(resolve(cacheRoot, 'trash'));
   const thumbnailCache = new ArtifactCache({
-    directory: options.cacheRoot ?? resolveCacheRoot(loaded.repoRoot),
+    directory: cacheRoot,
     namespace: 'thumbnails',
     onError: (error) => app.log.error(error),
   });
@@ -267,6 +270,7 @@ export async function createAssetStudioServer(
     maxImagePixels: loaded.limits.maxImagePixels,
     maxThumbnailSize: loaded.limits.maxThumbnailSize,
     maxEdge: MAX_RASTER_EDGE,
+    trash,
     leases,
     thumbnailCache,
   });
