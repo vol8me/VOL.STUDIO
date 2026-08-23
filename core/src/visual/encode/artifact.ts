@@ -1,31 +1,31 @@
 /**
- * Forge'un tek çıktı hattı — Node-only.
+ * Görsel belgeden varlık üretmenin tek çıktı hattı — Node-only.
  *
- * CLI ve geliştirme sunucusu aynı belgeyi ayrı ayrı render/ölçüm/kodlama
- * adımlarıyla yürütürse zamanla ayrışır. Bu fonksiyon üç adımı atomik bir
- * ürün çıktısında birleştirir; tarayıcı istemcisi ise Node bağımlılıklarını
+ * Ayrı tüketiciler (CLI, sunucu) aynı belgeyi kendi render/ölçüm/kodlama
+ * adımlarıyla yürütürse zamanla ayrışırlar. Bu fonksiyon üç adımı atomik bir
+ * ürün çıktısında birleştirir; tarayıcı istemcileri ise Node bağımlılıklarını
  * paketine almamak için yalnızca sunucuya belge gönderir.
  */
 import { measureSprite, type QaReport } from '../qa';
 import { renderSprite, type RenderResult } from '../render';
 import { encodePng } from './png';
 
-export interface ForgeArtifactOptions {
+export interface VisualArtifactOptions {
   readonly size?: readonly [number, number];
   readonly seed?: number;
 }
 
-export interface ForgeArtifact {
+export interface VisualArtifact {
   readonly result: RenderResult;
   readonly png: Buffer;
   readonly report: QaReport;
 }
 
 /** Doğrulama → render → QA → PNG zincirini tek kez yürütür. */
-export function createForgeArtifact(
+export function createVisualArtifact(
   doc: unknown,
-  options: ForgeArtifactOptions = {},
-): ForgeArtifact {
+  options: VisualArtifactOptions = {},
+): VisualArtifact {
   const result = renderSprite(doc, options);
   return {
     result,

@@ -129,11 +129,6 @@ dev-ui:
 dev-asset-studio:
     pnpm --filter @volstudio/vol-asset-studio dev
 
-# Aşama 4 migrasyonuna kadar eski çıktıları açabilmek için korunur; Asset
-# Studio ile aynı 5175 portunu kullandığından kök `dev` tarifine dahil değildir.
-dev-forge:
-    pnpm --filter @volstudio/vol-forge dev
-
 fix:
     pnpm format
     pnpm lint:fix

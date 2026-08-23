@@ -14,7 +14,6 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 ```
 core/                       # @volstudio/core — paylaşılan sistemler + DOM UI kütüphanesi
 games/vol-hell/             # @volstudio/vol-hell — oyun (Vite kökü)
-games/vol-forge/            # @volstudio/vol-forge — geçici eski görsel üretim yüzeyi
 games/design/               # @volstudio/design — Pencil kaynağı, export hattı ve rig montajı
 devtools/vol-ui/            # @volstudio/vol-ui — CORE UI canlı bileşen kataloğu
 devtools/vol-asset-studio/  # @volstudio/vol-asset-studio — repo varlık çalışma ortamı
@@ -39,7 +38,6 @@ pnpm dev                                   # oyun + iki geliştirici aracı
 pnpm --filter @volstudio/vol-hell dev      # yalnızca oyun            :5173
 pnpm --filter @volstudio/vol-ui dev        # yalnızca UI showcase'i   :5174
 pnpm --filter @volstudio/vol-asset-studio dev # yalnızca Asset Studio :5175
-pnpm --filter @volstudio/vol-forge dev     # geçici eski Forge yüzeyi
 pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # Oyun build
 pnpm build:tauri                           # PC installer build

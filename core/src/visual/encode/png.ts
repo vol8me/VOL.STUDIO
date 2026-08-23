@@ -186,7 +186,7 @@ export function encodePng(width: number, height: number, rgba: Uint8ClampedArray
 }
 
 /**
- * Forge çıktısını yeniden denetlemek için 8-bit indexed/RGBA PNG çözer.
+ * Üretilen görsel varlığı yeniden denetlemek için 8-bit indexed/RGBA PNG çözer.
  *
  * Genel amaçlı bir PNG kitaplığı değildir: yalnızca bu modülün yazdığı
  * interlace'siz ve filtre 0 kullanan iki biçimi kabul eder. Sınırı açıkça
@@ -224,7 +224,7 @@ export function decodePng(input: Uint8Array): DecodedPng {
       height = data.readUInt32BE(4);
       colorType = data[9];
       if (data[8] !== 8 || data[10] !== 0 || data[11] !== 0 || data[12] !== 0) {
-        throw new Error('PNG: yalnızca 8-bit, interlace olmayan Forge çıktısı desteklenir');
+        throw new Error('PNG: yalnızca 8-bit, interlace olmayan görsel varlık çıktısı desteklenir');
       }
     } else if (type === 'PLTE') {
       palette = Buffer.from(data);

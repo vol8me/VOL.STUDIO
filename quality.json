@@ -42,12 +42,6 @@
       "branches": 74,
       "functions": 89
     },
-    "@volstudio/vol-forge": {
-      "lines": 86,
-      "statements": 86,
-      "branches": 83,
-      "functions": 92
-    },
     "@volstudio/design": {
       "lines": 96,
       "statements": 96,

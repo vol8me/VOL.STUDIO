@@ -35,6 +35,47 @@ ve `git diff --check` temizdi. Aşamalar paralel aynı çalışma ağacında
 geliştirildiği için bu sınır commit'inde hook atlandı; tam `pnpm high` Aşama 3
 kapanışında temiz birleşik ağaç üzerinde zorunludur.
 
+## 2026-08-23 — Asset Studio Aşama 4: Forge emekliliği ve CLI sertleşmesi
+
+`games/vol-forge` repodan tümüyle kaldırıldı. Kullanıcı kararı: çıktılar
+arşivlenmedi, hepsi test amaçlıydı ve silindi. Karar öncesi 16 dosya
+`assets/legacy-forge` altına byte-for-byte kopyalanıp `cmp` ile tek tek
+doğrulanmıştı (16/16, 371.967 bayt); kullanıcı onayıyla o kopya da silindi.
+
+Aşama 0 kaydındaki manifest özeti (`067d12a7…`) **yeniden üretilemedi**: o tur
+yalnız özeti yazmış, hangi algoritmayla hesaplandığını yazmamıştı. Beş makul
+kurulum denendi, hiçbiri tutmadı. Doğrulama bu yüzden opak özet karşılaştırması
+yerine dosya-başına `cmp` ile yapıldı. Ders: özet kaydeden tur, özetin
+üretim komutunu da kaydetmelidir.
+
+Neden kaldırıldı: Forge'un web prompt yüzeyi serbest metinden tarif çıkarmaya
+çalışıyordu ve kullanıcının yazdığı çoğu isteğe "eşleşme yok" veriyordu. Asıl
+çalışan yol prompt katmanı değil, agent'ın `SpriteDoc`u doğrudan yazıp CLI ile
+render/QA etmesiydi. Motor ve CLI bu yüzden korundu, yalnız arayüz sökülDÜ.
+
+Ürün bağımsızlaştırma: `createForgeArtifact` → `createVisualArtifact`,
+`ForgeArtifact` → `VisualArtifact`, `core/scripts/forge.ts` →
+`core/scripts/visual-asset.ts` (git mv ile geçmiş korunarak).
+`visual-synthesis.md` §8 "Üretim yüzeyi (games/vol-forge)" 242 satırdan tüketici
+tarafsız bir bölüme indirildi; kalıcı sözleşmeler (MAX_SIZE 2048, atomik
+artefakt zinciri) korundu, Tur 4/5 tarihsel kayıtlarına "paket sonradan
+kaldırıldı" notu düşüldü.
+
+CLI'ın hiç testi yoktu — en çok kullanılan yüzey denetimsizdi. `core/tests/scripts`
+altında gerçek süreç koşturan 7 uçtan uca test eklendi ve bir hata avlandı:
+`qa` komutu `render` ile aynı `--size`/`--seed` bayraklarını kabul etmiyordu.
+`render --size 128` ile üretilen PNG doğrulanamıyor, doğrulayıcı belgeyi doğal
+boyutunda render edip 16.384 pikselin tamamını uyumsuz sayıyordu — eksik bir
+bayrak bozuk belge gibi görünüyordu. Artık `qa` aynı ezmeleri alıyor ve boyut
+farkı ham piksel sayısı yerine açık `dimensionMismatch` alanıyla raporlanıyor.
+
+Temizlik: `quality.json` Forge kaydı, `asset-studio.json` `forge-legacy` kökü,
+`justfile` `dev-forge` tarifi, kök README'lerin Forge satırları ve lockfile.
+Planın istediği sekiz kalıntı deseninin tamamı temiz; kalan iki `vol-forge`
+eşleşmesi dokümandaki bilinçli "ne kaldırıldı, neden" kaydıdır.
+
+Workspace 7 paketten 6'ya indi. `pnpm high` tam geçti.
+
 ## 2026-08-23 — Asset Studio Aşama 2–3: Phaser'sız workbench, repo hostu, hata avı
 
 VOL.UI Phaser'dan tümüyle koptu ve Asset Studio repo hostu ayağa kalktı: 66

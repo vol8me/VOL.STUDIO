@@ -25,12 +25,6 @@
       "path": "games/design/pen_export",
       "role": "derived",
       "kinds": ["image", "metadata"]
-    },
-    {
-      "id": "forge-legacy",
-      "path": "games/vol-forge/output",
-      "role": "readonly",
-      "kinds": ["image", "metadata"]
     }
   ],
   "ignore": ["**/.DS_Store", "**/Thumbs.db", "**/*.tmp", "**/*.part"],

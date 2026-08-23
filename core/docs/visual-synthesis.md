@@ -1,7 +1,7 @@
 # Görsel sentez — doktrin ve sözleşme
 
-Bu belge `core/visual/` (prosedürel raster sentezi) ve `games/vol-forge`
-(tek ekran tarif üreticisi) için **bağlayıcı** tasarım kararlarını taşır. Uygulayan
+Bu belge `core/visual/` (prosedürel raster sentezi) ve onun tüketici
+yüzeyleri için **bağlayıcı** tasarım kararlarını taşır. Uygulayan
 kişi ya da agent önce bunu okur; buradaki kararlar gerekçeleriyle birlikte
 yazılıdır ve gerekçe çürütülmeden değiştirilmez.
 
@@ -235,8 +235,9 @@ boyut başına bir havuz tutulur.
 `core/visual/` **DOM tanımaz**. `Canvas`, `ImageData`, `window` geçmez.
 Node'da ve tarayıcıda aynı çalışır.
 
-Forge bir _tüketicidir_: çekirdeği çağırır, sonucu gösterir. Forge olmadan
-çekirdek tam işlevlidir — `synthesize()`in `vol-ui` olmadan çalıştığı gibi.
+Yüzeyler _tüketicidir_: çekirdeği çağırır, sonucu gösterir. Hiçbir yüzey
+olmadan çekirdek tam işlevlidir — `synthesize()`in `vol-ui` olmadan çalıştığı
+gibi. Bugünkü tüketici agent'ın CLI üzerinden sürdüğü hattır (§8, §10).
 
 Node-only kod (PNG yazma, dosya sistemi) **barrel'a girmez**, ayrı alt-yolda
 yayınlanır. Ses tarafındaki `@volstudio/core/audio/synth/writer` deseninin
@@ -851,13 +852,11 @@ core/src/visual/encode/            ← ayrı ALT-YOL, barrel'da değil (D8)
   png.ts              node:zlib ile PNG kodlayıcı + writePng
   artifact.ts         render + QA + PNG için CLI/sunucu ortak girişi
 
-core/scripts/forge.ts              §10.1 CLI (render / validate / qa / palette)
+core/scripts/visual-asset.ts       §10.1 CLI (render / validate / qa / palette)
 core/scripts/visual-qa.ts          §9 ölçüm aracının İNCE sarmalayıcısı
 
 core/tests/visual/fixtures/*.json  elle yazılmış kanıt belgeleri
-
-games/vol-forge/                   tek ekran üretici (vol-ui kardeşi)
-  src/main.ts  intent/  preview/  ui/  i18n/{tr,en}.json
+core/tests/scripts/                CLI uçtan uca sözleşme testleri
 ```
 
 İki ayrım kasıtlı:
@@ -866,8 +865,8 @@ games/vol-forge/                   tek ekran üretici (vol-ui kardeşi)
   tüketicisidir. Agent/CLI introspeksiyonu şemayı doğrulama yürütmeden
   okuyabilir ve tek dosya 1200 satırı aşmaz.
 - **Ölçüm `visual/qa.ts` içinde, script'te değil.** Script bir sarmalayıcıdır;
-  metrikler çekirdekte olduğu için hem test edilir hem CLI hem Forge kayıt
-  yanıtı aynı sayıları taşır. D8 ve D12 birlikte bunu gerektirir.
+  metrikler çekirdekte olduğu için hem testler hem CLI aynı sayıları taşır.
+  D8 ve D12 birlikte bunu gerektirir.
 
 `core/package.json` `exports` alanına iki giriş eklenir:
 `"./visual"` ve `"./visual/encode"`.
@@ -938,248 +937,69 @@ Nicemleme sonrası çıktıda palet dışı piksel **kalmaz**. `visual-qa` bunu
 
 ---
 
-## 8. Üretim yüzeyi (`games/vol-forge`)
+## 8. Tüketici yüzeyi
 
-**Kullanıcı içindir; agent aynı hattı CLI üzerinden sürer (§10).** Forge bir
-katman ağacı editörü, elle piksel çizme uygulaması ya da üretken YZ servisi
-değildir. CORE görsel sentez tariflerini anlaşılır bir niyet ve birkaç kalıcı
-çıktı kararıyla üretir; sonuç PNG ve onu yeniden üreten JSON belgesidir.
+**Çekirdek headless'tır (D8); yüzeyler onu çağırır, o hiçbir yüzeyi tanımaz.**
+Bir dönem `games/vol-forge` adında tek ekranlı bir üretim arayüzü vardı ve bu
+bölüm onu anlatıyordu. O yüzey üründen kaldırıldı: serbest metinden tarif
+çıkarmaya çalışan kelime eşlemesi, kullanıcının yazdığı çoğu isteğe "eşleşme
+yok" cevabı veriyordu — arada bir prompt katmanı tutmak, belgeyi doğrudan
+yazmaktan daha zayıf bir arayüzdü.
 
-Tur 5 ürün denetimi, Tur 4'te kurulan teknik editörün bu amaca hizmet
-etmediğini gösterdi. Katman/ağaç/parametre/palet/teknik kanal yüzeyleri
-**üründen tamamen kaldırıldı**; CSS ile saklanan ikinci bir kip ya da `Tabs`
-kalıntısı yoktur. Sık kullanılan birkaç kontrolü “Üretim” adlı başka bir
-sekmeye taşımak da aynı kip karmaşasını koruyacaktı. Forge artık yalnızca tek
-ekrandır:
+Bugünkü tüketiciler:
 
-1. niyet yaz veya katalog tarifine tıkla,
-2. CORE sonucu canlı önizle,
-3. boyut, bitiş, ana renk ve tohumu belirle,
-4. PNG + JSON tarifini ortak CLI hattıyla kaydet ya da eski bir çıktıyı aç.
+| Tüketici         | Ne yapar                                                 | Nasıl bağlanır          |
+| ---------------- | -------------------------------------------------------- | ----------------------- |
+| Agent            | `SpriteDoc` yazar, render ve QA eder — asıl üretim yolu  | CLI (§10.1)             |
+| Katalog          | Agent'ın "ne yazabileceğini" bildiği hazır tarifler      | `visual/catalog.ts`     |
+| VOL Asset Studio | Üretilen PNG'yi açar, inceler, piksel düzenler, kaydeder | Dosya sistemi — üretmez |
 
-Bileşenler `core/src/ui`den gelir. Forge yalnızca ürün yerleşimi ve
-`SpriteDoc`a yapılan kararları taşır; kendi Button/Select/Stepper/Zoom
-bileşenlerini icat etmez.
+Asset Studio bu hattın **üreticisi değil tüketicisidir**: çekirdeğe hiç
+bağlanmaz, yalnızca çıktısını bir varlık olarak görür. Üretilen varlık
+`derived` roldedir; kullanıcının üzerine yaptığı düzenleme post-process
+tarifine dönüşür ve belge yeniden üretildiğinde korunur.
 
-### 8.1 Paket biçimi — Phaser YOK
+### 8.1 Boyut ve çıktı kararları
 
-`vol-ui` Phaser içinde yaşar çünkü bir oyun vitrinidir. Forge oyun değildir
-ve `core/src/ui` Phaser'a bağlı değildir. Bu nedenle paket **Vite + DOM**dur;
-`createVolGame` çağırmaz.
+| Karar     | Sözleşme                                                      |
+| --------- | ------------------------------------------------------------- |
+| Boyut     | 8..2048 genişlik/yükseklik; çekirdek sınırı `MAX_SIZE = 2048` |
+| Bitiş     | Antialias + dither + quantize birlikte değiştirilir           |
+| Ana renk  | Sentez paletinin ilk rampası                                  |
+| Tohum     | Tam 32-bit işaretli değer, belgeye yazılır                    |
+| Varyasyon | Yeni tohum; her katalog tarifinde gerçek RGBA değişir         |
 
-- Normal tarayıcı yerleşimi, sütun kaydırması ve pencere yeniden boyutlandırma
-  doğrudan DOM ile yürür.
-- Önizleme bir `<canvas>`a `putImageData` ile yazılır.
-- Forge, `UIRoot`un uygulama dışı olayları geçiren
-  `pointer-events: none` sözleşmesini kendi `.vf-app` kökünde açıkça
-  `pointer-events: auto` ile geri alır. Bu ezme yokken bütün yerli
-  textarea/kart/Select kontrolleri gerçek tarayıcıda pasifti; jsdom bunu
-  yakalayamıyordu.
-- `core/public/assets/fonts` Vite `publicDir` yüzeyidir. Jura ve Exo 2,
-  uygulama kurulmadan önce `FontManager` ile yüklenir; sistem fontuna sessiz
-  düşülmez.
+128 bir motor sınırı değildir; kaldırılan arayüzün sabit seçenek listesiydi.
 
-Paket `typecheck`, `test`, `test:coverage` ve `build` kapılarına
-workspace üzerinden kendiliğinden katılır.
+### 8.2 Atomik artefakt zinciri
 
-### 8.2 Tek ekran düzeni
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│ VOL.FORGE · CORE/CLI ortak hat      geri al · yinele · tam ekran    │
-├──────────────────┬───────────────────────────┬───────────────────────┤
-│ NİYET            │ CANLI SONUÇ               │ ÇIKTI                 │
-│                  │                           │                       │
-│ görsel tarifi    │ sabit dünya ızgarası      │ 8..2048 genişlik      │
-│ canlı durum      │ hareketli artboard+PNG    │ 8..2048 yükseklik     │
-│                  │ tekerlek/pinch zoom       │ piksel/pürüzsüz       │
-│ 7 katalog kartı  │ tutup sürükleyerek pan    │ ana renk · tohum      │
-│                  │ Sığdır                    │ yeni varyasyon         │
-│                  │                           │                       │
-│                  │                           │ KAYDET · KAYITLAR      │
-└──────────────────┴───────────────────────────┴───────────────────────┘
-```
-
-Sol ve sağ sütun içerikleri büyüdüğünde sütunun **en dış kabı** kayar; içteki
-listeyi sınırlayıp paneli taşırma hatası yapılmaz. Dar görünümde hiçbir panel
-kaybolmaz: önizleme üste, niyet ve çıktı altına akar.
-
-Başlıkta kip seçici yoktur. Geri al/yinele aynı `DocumentStore` geçmişine,
-tam ekran düğmesi ise F11 ile aynı Fullscreen API akışına bağlıdır. Tarayıcı
-F11 olayını işletim sistemi düzeyinde ayırırsa görünür düğme her zaman
-yedektir.
-
-### 8.3 Niyet çözümleme — bildiğini ve bilmediğini ayır
-
-Niyet çözümleme sırası sabittir:
-
-1. kullanıcı doğrudan bir katalog kartına tıkladıysa o açık karar,
-2. genişletilebilir nesne sözlüğü,
-3. `findVisualPresets` katalog araması,
-4. her belgede aynı anlama gelen boyut/renk/bitiş değiştiricileri,
-5. hiçbiri yoksa **bilinmeyen**.
-
-Bilinmeyen metin seçili tarife sessizce düşmez. Arayüz “sözlükte yok; görsel
-değiştirilmedi” der ve açık belgeyi korur. Bu ayrım, eşleşmemiş bir promptu
-başarı gibi gösteren Tur 5 öncesi davranışı kapatır.
-
-Metin yazılırken her tuşta pahalı render başlatılmaz; 320 ms duraklamadan
-sonra canlı uygulanır. `Ctrl/Cmd+Enter` beklemeyi atlar. Katalog kartları
-ikinci bir “oluştur” onayı beklemeden çalışır.
-
-Nesne sözlüğündeki bir girdi yalnızca katalog etiketi değildir. Örneğin
-`solucan | worm | kurtçuk | larva`, dört kapsül + baş + göz + tohumdan
-etkilenen yükseklik alanı kuran ayrı bir tariftir. Böylece “organik küme”
-seçili diye ilgisiz bir bitki silüetine düşmez. Sözlüğe yeni bir nesne
-eklemek, terimleri ve gerçek `SpriteDoc` kurucusunu aynı kayıtta eklemeyi
-gerektirir.
-
-Evrensel değiştiriciler:
-
-- `WxH` ya da kare sayı: iki kenarda da 8..2048,
-- Türkçe/İngilizce temel renk adları,
-- keskin piksel veya pürüzsüz bitiş.
-
-Bunların dışındaki sıfatlar uygulanmış gibi raporlanmaz.
-
-### 8.4 Belge durumu ve geçmiş
-
-Tek doğruluk kaynağı bir `SpriteDoc`tur. Her karar yeni bir kök üretir;
-yerinde değişiklik yapılmaz. Tam anlık görüntü geçmişi 50 adımla sınırlıdır.
-Renk seçicinin ardışık girdileri 400 ms pencerede tek geri alma adımına
-birleşir; katalog, nesne, boyut, bitiş, tohum ve yüklenen kayıt normal birer
-adımdır.
-
-Geçersiz belge canlı render'a veya kayda gönderilmez.
-`collectSpriteDocIssues` sonucu boş değilse kaydetme gerçek `disabled`
-durumuna geçer ve nedenini gösterir. Kayıtlı JSON da açılmadan önce aynı
-doğrulayıcıdan geçer.
-
-### 8.5 Canlı önizleme ve kamera
-
-Önizleme ikinci bir çizim motoru değildir:
-`renderSprite(doc, { size: previewSize })` çağrısıdır. Üç davranış birlikte
-canlı kalmasını sağlar:
-
-- Her hızlı karenin süresi ölçülür. 24 ms bütçe aşılırsa önizleme kenar sınırı
-  yarıya iner; belirgin biçimde altındaysa tekrar yükselir.
-- Kuyruk yoktur; yeni belge gelince aradaki bekleyen durumlar düşer.
-- 512 ve altındaki çıktılar yaklaşık 300 ms boşlukta birebir çizilir. Daha
-  büyük çıktılar ana iş parçacığını 2048² render ile dondurmaz; ekranda adaptif
-  önizleme kalır, kaydetme ortak çıktı hattında gerçek boyutu üretir.
-
-Durum satırı **önizleme boyu** ile **çıktı boyunu** ayrı taşır.
-`RenderResult.doc` ezilmiş önizleme belgesi olduğu için çıktı boyu oradan
-okunmaz.
-
-Kamera `PinchZoomController` kullanır:
-
-- yalnızca sol fare düğmesi pan başlatır,
-- tekerlek zoomu imlecin altındaki dünya noktasını sabit tutar,
-- iki parmak hem merkez hareketini hem mesafe değişimini uygular,
-- işaretçi yakalama güvenli bırakılır ve `destroy()` bütün pointer/timer
-  durumunu temizler,
-- sabit dünya ızgarası sahnede kalır; dama artboard ile PNG kameranın
-  **içinde** birlikte hareket eder. Bu görsel ayrım, “objeyi sürüklüyorum”
-  hissini kamera panına çevirir,
-- Sığdır, sahne ve artboard ölçüsünden gerçek zoom hesaplar; varyasyon aynı
-  boyuttaysa kullanıcının pan/zoomunu sıfırlamaz.
-
-Teknik coverage/height/material/normal kanal sekmeleri son kullanıcı üretim
-akışından çıkarılmıştır. Bu kanallar `RenderResult`ta ve CLI/test yüzeyinde
-durur; Forge'u bir motor hata ayıklayıcısına çevirmeleri gerekmez.
-
-### 8.6 Temel çıktı kararları
-
-| Karar          | Sözleşme                                                                           |
-| -------------- | ---------------------------------------------------------------------------------- |
-| Boyut          | Hazır 64..2048 kareler veya bağımsız 8..2048 genişlik/yükseklik                    |
-| Bitiş          | Antialias + dither + quantize birlikte değiştirilir                                |
-| Ana renk       | Sentez paletinin ilk rampası; sabit veri paletinde sahte/pasif kontrol gösterilmez |
-| Tohum          | Tam 32-bit işaretli değer, kayda yazılır                                           |
-| Yeni varyasyon | LCG ile yeni tohum; her katalog tarifi ve nesne tarifinde gerçek RGBA değişir      |
-
-128 bir motor sınırı değildir; yalnızca eski arayüzün sabit seçenek
-listesiydi. Çekirdek sınırı `MAX_SIZE = 2048`dir ve Forge aynı sınırı hem
-serbest promptta hem Stepper kontrollerinde kullanır.
-
-### 8.7 Çıktı, kayıtlar ve gerçek CLI bağı
-
-Tarayıcı PNG kodlamaz ve doğrudan dosya sistemine yazmaz. İstemci yalnızca
-kategori, güvenli varlık adı ve `SpriteDoc` gönderir. Geliştirme sunucusu
-çıktıyı şu biçimde yazar:
-
-```
-games/vol-forge/output/<kategori>/<ad>.json
-games/vol-forge/output/<kategori>/<ad>.png
-```
-
-Kategori `PRESET_CATEGORIES` listesinden gelir; ad
-`[a-z0-9-]{1,64}` kalıbındadır ve çözülmüş yol ayrıca `output/` sınırında
-kontrol edilir. JSON tarifleri kapalı “Kayıtlı çıktılar” akordeonundan
-listelenip aynı tek ekrana geri açılabilir.
-
-Forge–CLI bağı bir açıklama etiketi değildir. Node-only
-`createForgeArtifact(doc, options)` şu zincirin tek girişidir:
+Tüketici–çekirdek bağı bir açıklama etiketi değildir. Node-only
+`createVisualArtifact(doc, options)` şu zincirin **tek** girişidir:
 
 ```
 doğrulama → renderSprite → measureSprite → encodePng
 ```
 
-Hem Vite kaydetme sunucusu hem `forge.ts render` hem de `forge.ts qa` bu
-fonksiyonu çağırır. Sunucu ikinci bir `renderSprite + encodePng` yolu
-taşımaz. Kaydetme yanıtı gerçek QA sonucunu döndürür; arayüz başarısız bir
-metriği “geçti” diye yazmaz.
+CLI'ın `render` ve `qa` komutlarının ikisi de bu fonksiyonu çağırır; ikinci
+bir `renderSprite + encodePng` yolu yoktur. Ayrı yollar zamanla ayrışır ve
+"kaydedilen görüntü ile doğrulanan görüntü aynı değil" sınıfını doğurur.
 
 `qa`, PNG'yi geri çözüp aynı belgenin yeniden ürettiği RGBA ile tam tarama
-karşılaştırması yapar:
+karşılaştırması yapar. `render` hangi ezmelerle çağrıldıysa `qa` da aynılarını
+kabul eder — biri `--size`/`--seed` alıp diğeri almazsa ölçeklenmiş çıktı hiç
+doğrulanamaz:
 
 ```bash
-pnpm exec tsx core/scripts/forge.ts render belge.json çıktı.png
-pnpm exec tsx core/scripts/forge.ts qa çıktı.png --doc belge.json
-pnpm exec tsx core/scripts/forge.ts qa çıktı.png --doc belge.json --json
+pnpm exec tsx core/scripts/visual-asset.ts render belge.json çıktı.png --size 256
+pnpm exec tsx core/scripts/visual-asset.ts qa çıktı.png --doc belge.json --size 256
+pnpm exec tsx core/scripts/visual-asset.ts qa çıktı.png --doc belge.json --json
 ```
+
+Boyutlar tutmadığında rapor ham piksel sayısı değil açık bir
+`dimensionMismatch` taşır; eksik bir bayrak, bozuk belge gibi görünmemelidir.
 
 Garanti, aynı Node sürümündeki dosya baytından önce **piksel özdeşliğidir**;
 PNG sıkıştırma baytları Node/zlib sürümleri arasında değişebilir (§6).
-
-### 8.8 Yaşam döngüsü, i18n ve erişilebilirlik
-
-- Bütün metinler `tr.json` ve `en.json` üzerinden gelir; anahtar paritesi
-  ve boş çeviri testi vardır.
-- Jura başlıklarda, Exo 2 gövde metninde kullanılır; Forge CSS'inde
-  `monospace` ya da sistem fontuna özel kaçak yoktur.
-- Button, IconButton, TextArea, Select, NumberStepper, SegmentedControl,
-  ColorPicker, Accordion ve PinchZoomController CORE bileşenleridir.
-- Görünür etiketler ve ikon-only düğmeler erişilebilir ad taşır.
-- Debounce, adaptif preview, animation frame, ResizeObserver, fullscreen ve
-  pointer listener'larının tamamı `destroy()`da bırakılır.
-- Forge kökü metin alanlarında seçime izin verir; uygulamanın geri kalanında
-  yanlışlıkla metin seçerek pan hissini bozmaz.
-
-### 8.9 Tur 4/5 tam denetim sonucu
-
-Tur 4'ün “tam editör” kaydı, yeşil testlerin gerçek tarayıcı ve ürün
-sözleşmesini kanıtlamadığını gösterdi. Somut bulgular:
-
-| Bulgu                                                                         | Son karar                                                        |
-| ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `UIRoot pointer-events:none` yüzünden yerli kontroller tıklanmıyordu          | Forge kökünde olaylar açıldı; gerçek CSS regresyon testi eklendi |
-| Sol panelin dış kabında kaydırma yoktu                                        | İki yan sütun dıştan kaydırılır                                  |
-| 32/64/128 sabit listesi motor sınırı sanılıyordu                              | 8..2048 Stepper + hazır boyutlar                                 |
-| Bilinmeyen prompt seçili tarife düşüp anlaşılmış gibi görünüyordu             | Bilinmeyen belgeyi değiştirmez; nesne sözlüğü gerçek tarif ister |
-| Dört katalog tarifi tohumu kullanmadığı için varyasyon aynı RGBA'yı veriyordu | Yedi tarifin tamamında tohum-duyarlı alan + piksel testi         |
-| Dama kamera dışında kaldığı için yalnız obje sürükleniyor hissi vardı         | Artboard ve PNG kamera içindeki tek içerik                       |
-| Font dosyaları Vite çıktısında yoktu                                          | CORE public fontları kopyalanır ve yüklenir                      |
-| F11 hiçbir koda bağlı değildi                                                 | F11 + görünür Fullscreen API kontrolü                            |
-| Tarayıcı kaydı ile CLI yalnızca aynı alt fonksiyonları tesadüfen çağırıyordu  | Ortak atomik `createForgeArtifact`                               |
-| Gelişmiş editörün çoğu pasif, yüzeysel veya yarımdı                           | Kip, Tabs ve on bir panel/durum/i18n kalıntısı tamamen silindi   |
-
-Regresyon kanıtı yalnız DOM varlığı değildir: testler “solucan”ın farklı RGBA
-ürettiğini, yedi katalog varyasyonunun tohumla piksel değiştirdiğini, 2048
-boyut girişini, bilinmeyen promptta belgenin aynı kaldığını, pan dönüşümünü,
-F11 çağrısını, font dosyasının HTTP erişimini, CLI PNG piksel özdeşliğini ve
-ortak sunucu/CLI girişini ölçer.
 
 ---
 
@@ -1187,7 +1007,7 @@ ortak sunucu/CLI girişini ölçer.
 
 Ses tarafındaki `audio-qa.ts`'in karşılığı. **İlk turdan itibaren** vardır.
 Metrikler çekirdektedir (headless, D8); script yalnızca dosya okur ve
-biçimlendirir. Böylece aynı sayılar hem CLI'da hem Forge kayıt hattında görünür
+biçimlendirir. Böylece aynı sayılar hem testlerde hem CLI'da görünür
 ve metriklerin kendisi test edilebilir.
 
 | Metrik                     | Ne söyler                                | Eşik                        |
@@ -1242,10 +1062,10 @@ Rapor makine-okunur (`--json`), tıpkı `scripts/quality/report.mjs` gibi.
 ### 10.1 CLI
 
 ```bash
-tsx core/scripts/forge.ts render <doc.json> <out.png> [--size 256x384] [--seed 42]
-tsx core/scripts/forge.ts validate <doc.json>
-tsx core/scripts/forge.ts qa <out.png> --doc <doc.json> [--json]
-tsx core/scripts/forge.ts palette <istek.json>      # palet sentezi
+tsx core/scripts/visual-asset.ts render <doc.json> <out.png> [--size 256x384] [--seed 42]
+tsx core/scripts/visual-asset.ts validate <doc.json>
+tsx core/scripts/visual-asset.ts qa <out.png> --doc <doc.json> [--json]
+tsx core/scripts/visual-asset.ts palette <istek.json>      # palet sentezi
 ```
 
 `--size` ve `--seed` belgeyi **ezmek** içindir: aynı belgeden farklı boyut/
@@ -1279,7 +1099,7 @@ Kategoriler: `material` · `terrain` · `organic` · `liquid` · `mineral` ·
 **Bu katalog olmadan agent boş bir parametre setine bakar.** Katalog yedi
 kategorinin her birinde en az bir başlangıç taşır. Her giriş doğrulanır,
 render edilir ve QA kapısını geçer; yani arama sonucu yalnızca açıklama değil
-çalışan belgedir. Forge'un yerel niyet eşlemesi de aynı aramayı tüketir.
+çalışan belgedir.
 
 > Katalog girdileri **TÜR (genre) değil malzeme/biçim** tanımlar. Bir oyun
 > türünü ya da belirli bir oyunu adlandıran terimler kataloğa girmez; yasaklı
@@ -1302,7 +1122,7 @@ kapılardan doğar; sürpriz olmasınlar diye önden yazıldı.
 | `lerp`/`clamp`/`smoothstep`/`remap` | ✅         | `core/src/math/interpolation.ts`                                                                               |
 | Sonlu sayı bariyeri                 | ✅         | `requireFinite`, `finiteOr` — **D5 için zorunlu**                                                              |
 | Tampon havuzu                       | ✅         | `ObjectPool` — D7                                                                                              |
-| Yaşam döngüsü                       | ✅         | `DisposableScope` — Forge listener/timer'larında zorunlu                                                       |
+| Yaşam döngüsü                       | ✅         | `DisposableScope` — yüzey listener/timer'larında zorunlu                                                       |
 | UI kontrolleri                      | ✅         | `Slider`, `NumberStepper`, `Select`, `SegmentedControl`, `Checkbox`, `Tabs`, `Accordion`, `Tree`, `ScrollView` |
 | Node-only izolasyon deseni          | ✅         | `audio/synth/writer` alt-yolu                                                                                  |
 | Katalog deseni                      | ✅         | `audio/synth/presets/catalog/`                                                                                 |
@@ -1315,7 +1135,7 @@ kapılardan doğar; sürpriz olmasınlar diye önden yazıldı.
 | **OKLab dönüşümü**       | Depoda renk uzayı matematiği **hiç yok**  | `visual/color/oklab.ts`                                                     |
 | **ColorPicker bileşeni** | UI setinde renk kontrolü yok              | `core/src/ui/primitives/ColorPicker.ts` + **vol-ui showcase FORMS sekmesi** |
 | **CurveEditor bileşeni** | Eğri verisini görsel düzenlemek için      | `core/src/ui/primitives/CurveEditor.ts` + **vol-ui showcase FORMS sekmesi** |
-| **Forge artifact hattı** | CLI ve sunucu ayrışmasını engellemek için | `visual/encode/artifact.ts`                                                 |
+| **Artefakt hattı**       | Tüketicilerin ayrışmasını engellemek için | `visual/encode/artifact.ts`                                                 |
 | **PNG kodlayıcı**        | Raster yazma yok                          | `visual/encode/png.ts` (alt-yol)                                            |
 
 Bu ikisi CORE'a girdiği an [AGENTS.md](../../AGENTS.md) UI kuralı devreye
@@ -1324,7 +1144,7 @@ sağlanır.
 
 ### 11.3 Kapılar ve bekçiler
 
-- **`workspace-contract`**: `games/vol-forge` `typecheck`, `test`,
+- **`workspace-contract`**: hiçbir paket `typecheck`, `test`,
   `test:coverage` script'leri ve `quality.json`da eşik **olmadan** repoya
   giremez. Taban: 50/50/50/40.
 - **`publicSurface`**: `visual/` kök barrel'a `Synth` gibi TEK bir isimle
@@ -1358,9 +1178,10 @@ sağlanır.
 
 ### 11.4 i18n
 
-Editör metinleri `volforge:` namespace'inde, `tr.json` + `en.json` **key
-paritesi zorunlu**. Module-level `i18next.t()` **yasak** (import anında
-`init()` bitmemiştir; boş string döner) — çağrı build fonksiyonunun İÇİNDE olur.
+Çekirdek metinsiz çalışır; yüzeylerin metinleri kendi namespace'lerinde,
+`tr.json` + `en.json` **key paritesi zorunlu**. Module-level `i18next.t()`
+**yasak** (import anında `init()` bitmemiştir; boş string döner) — çağrı build
+fonksiyonunun İÇİNDE olur.
 
 ---
 
@@ -1370,7 +1191,7 @@ Her tur kendi başına yeşil kapıyla kapanır; yarım tur bırakılmaz.
 
 ### Tur 1 — Çekirdek iskelet (editörsüz, ölçülebilir) — **TAMAMLANDI**
 
-Hedef: `tsx forge.ts render doc.json out.png` çalışsın.
+Hedef: `tsx visual-asset.ts render doc.json out.png` çalışsın.
 
 - `types.ts`, `schema.ts` + doğrulama
 - `FieldBuffer` + havuz
@@ -1485,7 +1306,7 @@ tarihsel karar ve bulguları bu bölümde tutulur.
 - CORE fontlarının Vite çıktısına kopyalanması ve `FontManager` ile Jura /
   Exo 2 yüklenmesi.
 - Görünür tam ekran düğmesi + F11; tarayıcı F11'i ayırırsa düğme yedek.
-- Node-only `createForgeArtifact`: CLI render/qa ile Forge sunucusunun ortak
+- Node-only `createVisualArtifact`: CLI render/qa'nın ortak
   doğrulama → render → QA → PNG yolu.
 - PNG decode + belgeyle tam piksel karşılaştırmalı `qa [--json]` ve palet
   CLI komutu.
@@ -1497,6 +1318,12 @@ sonrası belge/piksel farkını, bilinmeyen promptta değişmezliği, kamera
 transformunu, 2048 sınırını ve Fullscreen API çağrısını ölçer. CORE katalog
 testi yedi tarifin her tohumda değiştiğini doğrular. CLI uçtan uca denetimi
 kaydedilen PNG'de `pixelMismatch: 0` ve bütün QA metriklerinde geçiş verir.
+
+> **Sonraki durum:** `games/vol-forge` paketi Asset Studio migrasyonunda
+> tümüyle kaldırıldı; yukarıdaki Forge testleri paketle birlikte gitti. Kalan
+> kanıt yüzeyi CORE katalog/artefakt testleri ile `core/tests/scripts`
+> altındaki CLI uçtan uca denetimidir. Bu bölüm tarihsel karar kaydı olarak
+> durur, çalışan bir yüzeyi anlatmaz.
 
 ---
 
@@ -1517,9 +1344,10 @@ yazılmaz.
 4. **Web Worker.** Büyük çıktı ana iş parçacığında adaptif önizlemeyle
    sınırlandı. Tipik bir belge 96² hızlı önizlemede bile 24 ms bütçeyi
    tutturamazsa `core/visual` render'ı worker'a taşınır.
-5. **Genel amaçlı teknik editör.** Forge'un hedefi değildir. İleride gerçekten
-   gerekirse ayrı ürün, kullanıcı araştırması ve ayrı kapsam ister; kaldırılan
-   Tur 4 panelleri sessizce geri eklenmez.
+5. **Genel amaçlı teknik editör.** Bu çekirdeğin hedefi değildir; prosedürel
+   sentez tarifi üretir, elle çizim yüzeyi sunmaz. Piksel düzenleme ayrı bir
+   ürünün (VOL Asset Studio) işidir ve çekirdeğe bağlanmaz. Kaldırılan Tur 4
+   panelleri sessizce geri eklenmez.
 
 ---
 

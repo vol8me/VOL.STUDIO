@@ -5,4 +5,4 @@
  * `node:zlib`/`node:fs` sızmasın diye `visual` barrel'ından AYRIdır.
  */
 export { decodePng, encodePng, writePng, type DecodedPng } from './png';
-export { createForgeArtifact, type ForgeArtifact, type ForgeArtifactOptions } from './artifact';
+export { createVisualArtifact, type VisualArtifact, type VisualArtifactOptions } from './artifact';

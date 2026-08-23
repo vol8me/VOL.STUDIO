@@ -1,12 +1,12 @@
 /**
- * Görsel sentez CLI'ı — §10.1.
+ * Görsel varlık CLI'ı — §10.1.
  *
- * Agent'ın çekirdeği editörsüz sürdüğü arayüz. Editör (Tur 4) bir tüketici
- * olacak; çekirdek onsuz da tam işlevlidir (D8).
+ * Çekirdeği herhangi bir editör olmadan süren arayüz. Editörler bu hattın
+ * tüketicisidir; çekirdek onlarsız da tam işlevlidir (D8).
  *
- *   tsx core/scripts/forge.ts render <doc.json> <out.png> [--size 256x384] [--seed 42]
- *   tsx core/scripts/forge.ts validate <doc.json>
- *   tsx core/scripts/forge.ts qa <out.png> --doc <doc.json> [--json]
+ *   tsx core/scripts/visual-asset.ts render <doc.json> <out.png> [--size 256x384] [--seed 42]
+ *   tsx core/scripts/visual-asset.ts validate <doc.json>
+ *   tsx core/scripts/visual-asset.ts qa <out.png> --doc <doc.json> [--size 256x384] [--json]
  *
  * `--size` ve `--seed` belgeyi EZMEK içindir: aynı belgeden farklı boyut ve
  * varyant üretmenin yolu budur (D2). Koordinat sözleşmesi merkez-köken +
@@ -19,14 +19,14 @@ import { dirname, resolve } from 'node:path';
 import { collectSpriteDocIssues, generatePalette } from '../src/visual/index';
 import type { RampRequest } from '../src/visual/color/generate';
 import { formatQaReport } from '../src/visual/qa';
-import { createForgeArtifact, decodePng } from '../src/visual/encode/index';
+import { createVisualArtifact, decodePng } from '../src/visual/encode/index';
 
 const USAGE = [
   'Kullanım:',
-  '  tsx core/scripts/forge.ts render <doc.json> <out.png> [--size WxH] [--seed N]',
-  '  tsx core/scripts/forge.ts validate <doc.json>',
-  '  tsx core/scripts/forge.ts qa <out.png> --doc <doc.json> [--json]',
-  '  tsx core/scripts/forge.ts palette <istek.json>',
+  '  tsx core/scripts/visual-asset.ts render <doc.json> <out.png> [--size WxH] [--seed N]',
+  '  tsx core/scripts/visual-asset.ts validate <doc.json>',
+  '  tsx core/scripts/visual-asset.ts qa <out.png> --doc <doc.json> [--size WxH] [--seed N] [--json]',
+  '  tsx core/scripts/visual-asset.ts palette <istek.json>',
 ].join('\n');
 
 function fail(message: string): never {
@@ -77,7 +77,7 @@ function runRender(docPath: string, outPath: string, args: readonly string[]): v
   const flags = parseFlags(args);
   let artifact;
   try {
-    artifact = createForgeArtifact(readDoc(docPath), flags);
+    artifact = createVisualArtifact(readDoc(docPath), flags);
   } catch (error) {
     fail(error instanceof Error ? error.message : String(error));
   }
@@ -94,6 +94,7 @@ function runRender(docPath: string, outPath: string, args: readonly string[]): v
 function runQa(pngPath: string, args: readonly string[]): void {
   let docPath: string | undefined;
   let json = false;
+  const overrides: { size?: [number, number]; seed?: number } = {};
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--json') {
       json = true;
@@ -104,13 +105,29 @@ function runQa(pngPath: string, args: readonly string[]): void {
       if (!docPath) fail('--doc bir belge yolu bekliyor');
       continue;
     }
+    // `render` ile AYNI ezmeleri kabul eder. Bir dönem etmiyordu: `render
+    // --size 256` ile üretilen PNG belgeyle karşılaştırılamıyor, doğrulayıcı
+    // belgeyi kendi doğal boyutunda render edip bütün pikselleri uyumsuz
+    // sayıyordu. Üretimde kullanılan bayraklar doğrulamada da geçerli olmalı.
+    if (args[i] === '--size') {
+      const value = args[++i];
+      if (value === undefined) fail('--size bir değer bekliyor');
+      overrides.size = parseSize(value);
+      continue;
+    }
+    if (args[i] === '--seed') {
+      const value = args[++i];
+      if (value === undefined) fail('--seed bir değer bekliyor');
+      overrides.seed = Number(value);
+      continue;
+    }
     fail(`Bilinmeyen bayrak: ${args[i]}\n${USAGE}`);
   }
   if (!docPath) fail(`qa için --doc zorunlu\n${USAGE}`);
 
   let artifact;
   try {
-    artifact = createForgeArtifact(readDoc(docPath));
+    artifact = createVisualArtifact(readDoc(docPath), overrides);
   } catch (error) {
     fail(error instanceof Error ? error.message : String(error));
   }
@@ -122,8 +139,13 @@ function runQa(pngPath: string, args: readonly string[]): void {
     fail(`PNG okunamadı: ${pngPath}\n${error instanceof Error ? error.message : String(error)}`);
   }
 
+  // Boyut uyuşmazlığı "her piksel farklı" DEĞİLDİR; ayrı ve anlaşılır bir
+  // sonuçtur. Ham piksel sayısı raporlamak kullanıcıya belgenin bozulduğunu
+  // düşündürüyordu, oysa tek sorun eksik bir `--size` bayrağıydı.
+  const dimensionMismatch =
+    decoded.width !== artifact.result.width || decoded.height !== artifact.result.height;
   let pixelMismatch = 0;
-  if (decoded.width !== artifact.result.width || decoded.height !== artifact.result.height) {
+  if (dimensionMismatch) {
     pixelMismatch = Math.max(
       decoded.width * decoded.height,
       artifact.result.width * artifact.result.height,
@@ -149,6 +171,14 @@ function runQa(pngPath: string, args: readonly string[]): void {
           source: pngPath,
           document: docPath,
           pixelMismatch,
+          ...(dimensionMismatch
+            ? {
+                dimensionMismatch: {
+                  png: [decoded.width, decoded.height],
+                  document: [artifact.result.width, artifact.result.height],
+                },
+              }
+            : {}),
           ...artifact.report,
           pass,
         },
