@@ -105,40 +105,9 @@ export { MovableController as PlayerController } from './entities/MovableControl
 // Eylem SÖZLÜĞÜ bilinçli olarak burada yok. `InputState` jenerik
 // `actions: Record<TAction, boolean>` taşır; hangi eylemlerin var olduğunu ve
 // hangi tuşa bağlandığını tüketici tanımlar (bkz. games/vol-hell/src/config/input.ts).
-export { createIdleActions, type InputState } from './input/InputState';
-export type { InputProvider } from './input/InputProvider';
-export type {
-  PCActionBinding,
-  PointerButton,
-  MoveDownState,
-  PointerLikeState,
-} from './input/PCInputState';
-export { resolvePCActions, computePCInputState, isPCInputActive } from './input/PCInputState';
-export type { TouchStickOptions } from './input/TouchStickState';
-export type { InputManagerOptions } from './input/InputManager';
-export {
-  DEFAULT_MOVE_KEYS,
-  type MoveKeyBindings,
-  type PCControllerOptions,
-} from './input/PCController';
-// Sağlayıcı kümesi AÇIK olduğu için tüketici kendi modality'sini yazabilmeli:
-// `singleProviderSnapshot`/`idleSnapshot` olmadan `activeProvider` ile
-// `providers` anahtarını elle senkron tutmak gerekir ve ayrışırlarsa overlay
-// sessizce boş görünür.
-export {
-  NO_ACTIVE_PROVIDER,
-  singleProviderSnapshot,
-  idleSnapshot,
-  type ProviderSnapshot,
-  type InputSnapshot,
-  type PcInputSnapshot,
-  type TouchInputSnapshot,
-  type TouchStickSnapshot,
-} from './input/InputSnapshot';
-export { InputManager } from './input/InputManager';
-export * as InputUtils from './input/InputUtils';
-export { PCController } from './input/PCController';
-export { TouchController } from './input/TouchController';
+// Girdi barrel'ı ayrıca `Cursor` namespace'i taşır.
+export * from './input';
+export * from './input/cursor';
 
 // Prosedürel raster sentezi. PNG yazma ve dosya sistemi BARREL'A GİRMEZ;
 // `@volstudio/core/visual/encode` alt-yolunda yaşar (visual-synthesis.md D8).

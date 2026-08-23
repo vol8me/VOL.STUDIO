@@ -15,7 +15,8 @@
     "touch": "DOKUNMATİK",
     "loading": "YÜKLEME",
     "cards": "KARTLAR",
-    "workbench": "ÇALIŞMA ALANI"
+    "workbench": "ÇALIŞMA ALANI",
+    "input": "GİRDİ"
   },
   "workbench": {
     "toolbar": "Araç çubuğu",
@@ -822,5 +823,33 @@
     "unlock": "KİLİDİ AÇ",
     "slotsTitle": "Yetenek slotları (Q/E)",
     "slotEmpty": "Boş"
+  },
+  "input": {
+    "title": "VOL Cursor Ailesi",
+    "controls": "Boyut ve Tema",
+    "gallery": "Cursor Galerisi",
+    "size": "Boyut",
+    "accent": "Vurgu Rengi",
+    "liveHint": "Seçili cursor canlı olarak takip eder.",
+    "default": "Varsayılan",
+    "pointer": "İşaretçi",
+    "text": "Metin",
+    "crosshair": "Nişan",
+    "precision": "Hassas",
+    "grab": "Kavra",
+    "grabbing": "Kavrarken",
+    "pan": "Kaydır",
+    "move": "Taşı",
+    "resize-ew": "Yatay Boyutlandır",
+    "resize-ns": "Dikey Boyutlandır",
+    "resize-nesw": "NE-SW Boyutlandır",
+    "resize-nwse": "NW-SE Boyutlandır",
+    "resize-all": "Tüm Yönler",
+    "zoom-in": "Yakınlaştır",
+    "zoom-out": "Uzaklaştır",
+    "not-allowed": "Yasak",
+    "wait": "Bekle",
+    "help": "Yardım",
+    "target": "Hedef"
   }
 }
