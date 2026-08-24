@@ -73,7 +73,7 @@ export class PhaserCursorManager {
   set(id: CursorId): void {
     this.currentAsset = this.registry.resolve(id);
     this.draw();
-    this.setupTween(id);
+    this.setupTween();
   }
 
   get current(): CursorAsset | null {
@@ -106,7 +106,6 @@ export class PhaserCursorManager {
     for (const l of asset.layers) {
       const color = colorForRole(l.role, this.getColors());
       const width = l.strokeWidth * scale;
-      this.graphics.lineStyle(width, color, 1);
       this.graphics.beginPath();
 
       let commands = this.commandsCache.get(`${asset.id}:${l.d}`);
@@ -116,7 +115,15 @@ export class PhaserCursorManager {
       }
       drawCommands(this.graphics, commands, scale, offsetX, offsetY);
 
-      this.graphics.strokePath();
+      if (l.fill) {
+        this.graphics.fillStyle(color, 1);
+        this.graphics.fillPath();
+      }
+
+      if (l.stroke) {
+        this.graphics.lineStyle(width, color, 1);
+        this.graphics.strokePath();
+      }
     }
   }
 
@@ -130,25 +137,41 @@ export class PhaserCursorManager {
     return this.colorTokens;
   }
 
-  private setupTween(id: CursorId): void {
+  private setupTween(): void {
     this.tween?.stop();
     this.tween?.destroy();
     this.tween = null;
 
-    if (id === 'wait') {
+    const asset = this.currentAsset;
+    if (!asset?.animation) return;
+
+    const { type, duration } = asset.animation;
+
+    if (type === 'rotate') {
       this.tween = this.scene.tweens.add({
         targets: this.container,
         angle: 360,
-        duration: 1200,
+        duration,
         repeat: -1,
         ease: 'Linear',
       });
-    } else if (id === 'target') {
+    } else if (type === 'pulse') {
+      const scale = asset.animation.scale ?? { from: 1, to: 1.15 };
       this.tween = this.scene.tweens.add({
         targets: this.container,
-        scaleX: { from: 1, to: 1.15 },
-        scaleY: { from: 1, to: 1.15 },
-        duration: 700,
+        scaleX: { from: scale.from, to: scale.to },
+        scaleY: { from: scale.from, to: scale.to },
+        duration,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    } else if (type === 'shake') {
+      const amount = asset.animation.amount ?? 2;
+      this.tween = this.scene.tweens.add({
+        targets: this.container,
+        x: { from: -amount, to: amount },
+        duration: duration / 4,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut',

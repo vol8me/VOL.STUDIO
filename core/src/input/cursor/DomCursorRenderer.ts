@@ -24,7 +24,11 @@ export function buildSvgString(
           ? colors.danger
           : colors.disabled;
 
-      return `<path d="${l.d}" fill="none" stroke="${color}" stroke-width="${l.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      const fill = l.fill ? `fill="${color}"` : 'fill="none"';
+      const stroke = l.stroke
+        ? `stroke="${color}" stroke-width="${l.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"`
+        : '';
+      return `<path d="${l.d}" ${fill} ${stroke}/>`;
     })
     .join('');
 
@@ -137,12 +141,15 @@ export class DomCursorRenderer {
 
     for (const l of asset.layers) {
       const path = document.createElementNS(SVG_NAMESPACE, 'path');
+      const color = colorForRole(l.role, this.colors);
       path.setAttribute('d', l.d);
-      path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', colorForRole(l.role, this.colors));
-      path.setAttribute('stroke-width', String(l.strokeWidth));
-      path.setAttribute('stroke-linecap', 'round');
-      path.setAttribute('stroke-linejoin', 'round');
+      path.setAttribute('fill', l.fill ? color : 'none');
+      if (l.stroke) {
+        path.setAttribute('stroke', color);
+        path.setAttribute('stroke-width', String(l.strokeWidth));
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+      }
       this.overlay.appendChild(path);
     }
 

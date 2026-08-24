@@ -58,6 +58,14 @@
     "./visual/encode": {
       "import": "./src/visual/encode/index.ts",
       "types": "./src/visual/encode/index.ts"
+    },
+    "./input/cursor/dom": {
+      "import": "./src/input/cursor/dom.ts",
+      "types": "./src/input/cursor/dom.ts"
+    },
+    "./input/cursor/phaser": {
+      "import": "./src/input/cursor/phaser.ts",
+      "types": "./src/input/cursor/phaser.ts"
     }
   },
   "scripts": {

@@ -1,5 +1,6 @@
 import { Tabs } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
+import { DomCursorContext, VolCursorTheme } from '@volstudio/core/input/cursor/dom';
 import { buildAdvancedTab } from './sections/advancedTab';
 import { buildButtonsTab } from './sections/buttonsTab';
 import { buildCardsTab } from './sections/cardsTab';
@@ -43,6 +44,7 @@ export class ShowcaseApp {
   private langButton: HTMLButtonElement | null = null;
   private activeTabId: ShowcaseTabId = 'buttons';
   private destroyed = false;
+  private cursorContext: DomCursorContext | null = null;
   private readonly onLangButtonClick = (): void => {
     void i18next.changeLanguage(i18next.language === 'tr' ? 'en' : 'tr');
   };
@@ -55,6 +57,7 @@ export class ShowcaseApp {
     this.element.className = 'vol-showcase-root';
     this.mount.replaceChildren(this.element);
     this.rebuild();
+    this.cursorContext = new DomCursorContext(this.element, VolCursorTheme, { size: 24 });
     i18next.on('languageChanged', this.onLanguageChanged);
   }
 
@@ -66,6 +69,8 @@ export class ShowcaseApp {
     this.tabs?.destroy();
     this.tabs = null;
     this.langButton = null;
+    this.cursorContext?.destroy();
+    this.cursorContext = null;
     this.element.remove();
   }
 

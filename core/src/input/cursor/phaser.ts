@@ -12,6 +12,15 @@ export type {
 export { CursorRegistry } from './CursorRegistry';
 export { VolCursorTheme, VOL_CURSOR_COLORS, VOL_CURSOR_ASSETS } from './volTheme';
 
+export { PhaserCursorManager } from './PhaserCursorManager';
+
+export {
+  PhaserCursorContext,
+  defaultPhaserCursorResolver,
+  type PhaserCursorResolver,
+  type PhaserCursorContextOptions,
+} from './PhaserCursorContext';
+
 export {
   parseSvgPath,
   convertCommands,
@@ -19,23 +28,3 @@ export {
   type PathCommand,
   type DrawCommand,
 } from './svgToGraphics';
-
-export { PhaserCursorManager } from './PhaserCursorManager';
-export {
-  DomCursorRenderer,
-  applyCssCursor,
-  buildCursorDataUri,
-  buildSvgString,
-} from './DomCursorRenderer';
-export {
-  DomCursorContext,
-  defaultDomCursorResolver,
-  type DomCursorResolver,
-  type DomCursorContextOptions,
-} from './CursorContext';
-export {
-  PhaserCursorContext,
-  defaultPhaserCursorResolver,
-  type PhaserCursorResolver,
-  type PhaserCursorContextOptions,
-} from './PhaserCursorContext';

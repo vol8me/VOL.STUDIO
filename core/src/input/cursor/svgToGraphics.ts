@@ -297,9 +297,15 @@ export interface ArcSegment {
   cy: number;
   rx: number;
   ry: number;
+  /** Yayı x ekseninde döndüren açı (derece). */
+  rotation: number;
   startAngle: number;
   endAngle: number;
   anticlockwise: boolean;
+  /** Yayın bitiş noktası (orijinal SVG koordinatı). */
+  x: number;
+  /** Yayın bitiş noktası (orijinal SVG koordinatı). */
+  y: number;
 }
 
 export type DrawCommand =
@@ -383,9 +389,12 @@ function arcToCenter(
     cy: cyp,
     rx,
     ry,
+    rotation: phiDeg,
     startAngle,
     endAngle: startAngle + delta,
     anticlockwise,
+    x: x2,
+    y: y2,
   };
 }
 
@@ -495,17 +504,9 @@ export function drawCommands(
         currentY = cmd.y * scale + offsetY;
         break;
       case 'arc': {
-        const radius = ((cmd.rx + cmd.ry) / 2) * scale;
-        graphics.arc(
-          cmd.cx * scale + offsetX,
-          cmd.cy * scale + offsetY,
-          radius,
-          cmd.startAngle,
-          cmd.endAngle,
-          cmd.anticlockwise,
-        );
-        currentX = cmd.cx * scale + offsetX + radius * Math.cos(cmd.endAngle);
-        currentY = cmd.cy * scale + offsetY + radius * Math.sin(cmd.endAngle);
+        drawArc(graphics, cmd, scale, offsetX, offsetY);
+        currentX = cmd.x * scale + offsetX;
+        currentY = cmd.y * scale + offsetY;
         break;
       }
       case 'Z':
@@ -542,6 +543,43 @@ function drawCubicBezier(
     const ax = mt * mt * mt * x0 + 3 * mt * mt * t * x1 + 3 * mt * t * t * x2 + t * t * t * x3;
     const ay = mt * mt * mt * y0 + 3 * mt * mt * t * y1 + 3 * mt * t * t * y2 + t * t * t * y3;
     graphics.lineTo(ax, ay);
+  }
+}
+
+function drawArc(
+  graphics: Phaser.GameObjects.Graphics,
+  cmd: ArcSegment,
+  scale: number,
+  offsetX: number,
+  offsetY: number,
+): void {
+  const cx = cmd.cx * scale + offsetX;
+  const cy = cmd.cy * scale + offsetY;
+  const rx = cmd.rx * scale;
+  const ry = cmd.ry * scale;
+  const phi = toRadians(cmd.rotation);
+  const cosP = Math.cos(phi);
+  const sinP = Math.sin(phi);
+
+  const delta = cmd.endAngle - cmd.startAngle;
+  // Normalizasyon olmadan adım sayısını tutarlı hesaplamak için mutlak açı farkı.
+  const sweepAngle = Math.abs(delta);
+  const circumference = Math.PI * (rx + ry) * (sweepAngle / (2 * Math.PI));
+  // Piksel başına en az 4 örnek; küçük cursor'larda bile yuvarlak görünür.
+  const steps = Math.max(8, Math.ceil(circumference * 0.5));
+
+  for (let i = 1; i <= steps; i += 1) {
+    const t = i / steps;
+    const theta = cmd.startAngle + delta * t;
+    const u = Math.cos(theta);
+    const v = Math.sin(theta);
+    // Elips üzerindeki döndürülmemiş nokta.
+    const x1 = rx * u;
+    const y1 = ry * v;
+    // phi açısıyla döndür.
+    const x = cx + x1 * cosP - y1 * sinP;
+    const y = cy + x1 * sinP + y1 * cosP;
+    graphics.lineTo(x, y);
   }
 }
 

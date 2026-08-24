@@ -4,6 +4,33 @@
 kaydıdır**: ne yapıldı, hangi kapı koşuldu, geriye ne kaldı. Turun ayrıntısı
 commit diff'inde ve git geçmişindedir; burada tekrarlanmaz.
 
+## 2026-08-24 — Cursor P2 (#7–#9) ve uygulama entegrasyonu
+
+- SVG `svgToGraphics.ts` elips ve döndürülmüş yayları doğru çizer; artık
+  `rx ≠ ry` ve `x-axis-rotation` destekleniyor.
+- `CursorLayer` `fill`/`stroke` sözleşmesi uygulandı: `buildSvgString`,
+  `DomCursorRenderer` ve `PhaserCursorManager` katman bazında fill/stroke
+  kullanabiliyor.
+- Cursor animasyonları `CursorAsset.animation` ile genişletildi: `rotate`,
+  `pulse`, `shake`; `wait`, `target`, `help`, `not-allowed` için varsayılan
+  animasyonlar tanımlandı.
+- `DomCursorContext` eklendi: metin alanları `text`, buton/link `pointer`,
+  `disabled`/`data-cursor-danger` `not-allowed`; `data-cursor` ile geçersiz
+  kimlik uygulanabiliyor.
+- `PhaserCursorContext` eklendi: `gameobjectover`/`gameobjectout` ile
+  GameObject `cursor` datasına göre cursor değişimi.
+- `vol-ui`, `vol-asset-studio` ve `vol-hell` artık `DomCursorContext` /
+  `PhaserCursorContext` ile çalışıyor. `vol-hell` oyun sahnesinde varsayılan
+  cursor `crosshair`.
+- `core/package.json`'e DOM ve Phaser özel cursor subpath'leri eklendi
+  (`@volstudio/core/input/cursor/dom`, `@volstudio/core/input/cursor/phaser`);
+  bu sayede Asset Studio client paketine Phaser taşınmadı.
+- `.prettierignore` arka plan ajanlarının geçici root json/png çıktılarını
+  dışarıda bırakacak şekilde güncellendi.
+- Yeni testler: `CursorContext.test.ts`, `PhaserCursorContext.test.ts`,
+  `svgToGraphics` elips yayı. `publicSurface.test.ts` export sayısı 202'ye
+  güncellendi.
+
 ## 2026-08-24 — P0/P1 cursor ve Asset Studio düzeltmeleri
 
 - DOM cursor: `DomCursorRenderer` çift ofset kaldırıldı; overlay `left/top`

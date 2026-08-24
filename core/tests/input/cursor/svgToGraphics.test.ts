@@ -33,6 +33,20 @@ describe('svgToGraphics', () => {
     expect(draw.some((c) => c.type === 'arc')).toBe(true);
   });
 
+  it('elips ve döndürülmüş yay merkez parametrizasyonunu korur', () => {
+    const commands = parseSvgPath('M0 0 A8 4 45 0 1 10 10');
+    const draw = convertCommands(commands);
+    const arc = draw.find((c) => c.type === 'arc');
+    expect(arc).toBeDefined();
+    if (arc?.type === 'arc') {
+      expect(arc.rx).toBe(8);
+      expect(arc.ry).toBe(4);
+      expect(arc.rotation).toBe(45);
+      expect(arc.x).toBe(10);
+      expect(arc.y).toBe(10);
+    }
+  });
+
   it('desteklenmeyen komut hata verir', () => {
     expect(() => parseSvgPath('M0 0 X1 1')).toThrow();
   });

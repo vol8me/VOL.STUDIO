@@ -1,5 +1,5 @@
 import { i18next } from '@volstudio/core/i18n';
-import { VOL_COLORS } from '@volstudio/core';
+import { VOL_COLORS } from '@volstudio/core/ui/colors';
 import {
   DomCursorRenderer,
   VolCursorTheme,
@@ -9,7 +9,7 @@ import {
   type CursorAsset,
   type CursorColorTokens,
   type CursorId,
-} from '@volstudio/core';
+} from '@volstudio/core/input/cursor/dom';
 import { Text } from '@volstudio/core/ui';
 import { card, cardGrid } from './shared';
 

@@ -23,7 +23,11 @@ const OUTLINE_STROKE = 2.75;
 const ACCENT_STROKE = 1.5;
 
 /** Tek renk rolüne göre katman üretir. */
-function layer(d: string, role: 'outline' | 'body' | 'accent' | 'danger'): CursorLayer {
+function layer(
+  d: string,
+  role: 'outline' | 'body' | 'accent' | 'danger',
+  options: { fill?: boolean; stroke?: boolean } = {},
+): CursorLayer {
   const strokeWidth =
     role === 'outline'
       ? OUTLINE_STROKE
@@ -36,8 +40,8 @@ function layer(d: string, role: 'outline' | 'body' | 'accent' | 'danger'): Curso
   return {
     d,
     role,
-    fill: false,
-    stroke: true,
+    fill: options.fill ?? false,
+    stroke: options.stroke ?? true,
     strokeWidth,
   };
 }
@@ -223,6 +227,7 @@ const VOL_CURSOR_ASSETS: Record<CursorId, CursorAsset> = {
       layer('M12 4 A8 8 0 1 1 12 20 A8 8 0 1 1 12 4', 'body'),
       layer('M5 5 L19 19', 'danger'),
     ],
+    animation: { type: 'shake', duration: 400, amount: 1.5 },
   },
 
   wait: {
@@ -232,6 +237,7 @@ const VOL_CURSOR_ASSETS: Record<CursorId, CursorAsset> = {
     hotspotY: 12,
     fallback: 'wait',
     layers: strokePair('M5 4 L19 4 L12 12 L19 20 L5 20 L12 12 Z'),
+    animation: { type: 'rotate', duration: 1200 },
   },
 
   help: {
@@ -244,6 +250,7 @@ const VOL_CURSOR_ASSETS: Record<CursorId, CursorAsset> = {
       'M12 4 A8 8 0 1 1 12 20 A8 8 0 1 1 12 4 M12 16 L12 16.01 M10 9 C10 7 12 6 14 6 C16 6 17 7 17 9 C17 11 15 12 14 13 L14 15',
       'M12 17 A1 1 0 1 1 12 19 A1 1 0 1 1 12 17',
     ),
+    animation: { type: 'pulse', duration: 1000, scale: { from: 1, to: 1.08 } },
   },
 
   target: {
@@ -256,6 +263,7 @@ const VOL_CURSOR_ASSETS: Record<CursorId, CursorAsset> = {
       'M12 4 A8 8 0 1 1 12 20 A8 8 0 1 1 12 4 M12 7 A5 5 0 1 1 12 17 A5 5 0 1 1 12 7 M12 2 L12 22 M2 12 L22 12',
       'M12 5 A7 7 0 1 1 12 19 A7 7 0 1 1 12 5',
     ),
+    animation: { type: 'pulse', duration: 900, scale: { from: 1, to: 1.15 } },
   },
 };
 

@@ -22,7 +22,7 @@ import * as Visual from '../../src/visual/index';
  * geçici bir tip) `export`u kaldır. İkisi de meşru; sessizce olmaması
  * yeterli.
  */
-const EXPECTED_EXPORT_COUNT = 198;
+const EXPECTED_EXPORT_COUNT = 202;
 
 /**
  * `visual/` kök barrel'a TEK bir isimle (`Visual`) girer, tıpkı `Synth` gibi.

@@ -7,6 +7,7 @@ import {
   type LoadingScreen,
   type Random,
 } from '@volstudio/core';
+import type { CursorId } from '@volstudio/core/input/cursor/phaser';
 import { BaseScene } from './BaseScene';
 import { Player } from '@/runtime/entity/Player';
 import { Border } from '@/runtime/entity/Border';
@@ -158,6 +159,10 @@ export class GameScene extends BaseScene {
   protected override onLanguageChanged(): void {
     this.hud.refreshLabels();
     this.cardScreens.refreshLabels();
+  }
+
+  protected override getDefaultCursor(): CursorId {
+    return 'crosshair';
   }
 
   protected createScene(data?: unknown): void {

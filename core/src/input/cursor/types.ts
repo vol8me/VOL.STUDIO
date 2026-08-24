@@ -49,6 +49,18 @@ export interface CursorLayer {
   strokeWidth: number;
 }
 
+/** Bir cursor animasyonunun tarifi. */
+export interface CursorAnimation {
+  /** Animasyon türü. */
+  type: 'rotate' | 'pulse' | 'shake';
+  /** Döngü süresi (ms). */
+  duration: number;
+  /** `pulse` için başlangıç/bitiş ölçeği. */
+  scale?: { from: number; to: number };
+  /** `shake` için maksimum piksel sapma. */
+  amount?: number;
+}
+
 /** Tek cursor varlığı. */
 export interface CursorAsset {
   id: CursorId;
@@ -62,6 +74,8 @@ export interface CursorAsset {
   fallback: string;
   /** Alttan üste çizilecek katmanlar. */
   layers: CursorLayer[];
+  /** İsteğe bağlı Phaser tween animasyonu. */
+  animation?: CursorAnimation;
 }
 
 /** Cursor temasında kullanılan renk token'leri. */
