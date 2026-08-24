@@ -168,6 +168,8 @@
     "channels": "Kanal",
     "qa": "Kalite denetimi",
     "open": "Sesi düzenle",
+    "previewing": "Önizleme işleniyor…",
+    "previewReady": "Önizleme hazır",
     "operations": "İşlem zinciri",
     "operationsEmpty": "Henüz kalıcı işlem eklenmedi.",
     "selectionStart": "Seçimin başına git",

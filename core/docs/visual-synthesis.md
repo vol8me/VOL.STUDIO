@@ -940,11 +940,11 @@ Nicemleme sonrası çıktıda palet dışı piksel **kalmaz**. `visual-qa` bunu
 ## 8. Tüketici yüzeyi
 
 **Çekirdek headless'tır (D8); yüzeyler onu çağırır, o hiçbir yüzeyi tanımaz.**
-Bir dönem `games/vol-forge` adında tek ekranlı bir üretim arayüzü vardı ve bu
-bölüm onu anlatıyordu. O yüzey üründen kaldırıldı: serbest metinden tarif
-çıkarmaya çalışan kelime eşlemesi, kullanıcının yazdığı çoğu isteğe "eşleşme
-yok" cevabı veriyordu — arada bir prompt katmanı tutmak, belgeyi doğrudan
-yazmaktan daha zayıf bir arayüzdü.
+Bir dönem tek ekranlı bir üretim arayüzü vardı ve bu bölüm onu anlatıyordu.
+O yüzey üründen kaldırıldı: serbest metinden tarif çıkarmaya çalışan kelime
+eşlemesi, kullanıcının yazdığı çoğu isteğe "eşleşme yok" cevabı veriyordu —
+arada bir prompt katmanı tutmak, belgeyi doğrudan yazmaktan daha zayıf bir
+arayüzdü.
 
 Bugünkü tüketiciler:
 
@@ -1279,7 +1279,7 @@ yolları ve CORE UI bileşenleri bu turda sınandı.
 - slider DOM'u sürükleme sırasında yeniden kuruluyordu,
 - göz/kilit/kanal gibi birçok eylem görünür fakat etkisizdi,
 - `domain`, veri rampası ve kayıt geri yükleme iddiaları eksikti,
-- katman/ağaç/parametre/palet yüzeyi Forge'u anlaşılır üreticiden çok yarım
+- katman/ağaç/parametre/palet yüzeyi o arayüzü anlaşılır üreticiden çok yarım
   bir motor editörüne çeviriyordu,
 - jsdom testleri CSS hit-testing, font dosyası ve gerçek kaydırma kusurlarını
   yakalamıyordu.
@@ -1313,14 +1313,14 @@ tarihsel karar ve bulguları bu bölümde tutulur.
 - Davranış, piksel, CSS entegrasyonu, font sunumu, kamera, F11, boyut,
   yaşam döngüsü ve i18n regresyon testleri.
 
-_Kanıt:_ Forge testleri yalnız elemanın DOM'da bulunmasını değil; prompt
+_Kanıt:_ O dönem testleri yalnız elemanın DOM'da bulunmasını değil; prompt
 sonrası belge/piksel farkını, bilinmeyen promptta değişmezliği, kamera
 transformunu, 2048 sınırını ve Fullscreen API çağrısını ölçer. CORE katalog
 testi yedi tarifin her tohumda değiştiğini doğrular. CLI uçtan uca denetimi
 kaydedilen PNG'de `pixelMismatch: 0` ve bütün QA metriklerinde geçiş verir.
 
-> **Sonraki durum:** `games/vol-forge` paketi Asset Studio migrasyonunda
-> tümüyle kaldırıldı; yukarıdaki Forge testleri paketle birlikte gitti. Kalan
+> **Sonraki durum:** Eski tek ekranlı üretim arayüzü Asset Studio
+> migrasyonunda tümüyle kaldırıldı; o döneme ait testler de silindi. Kalan
 > kanıt yüzeyi CORE katalog/artefakt testleri ile `core/tests/scripts`
 > altındaki CLI uçtan uca denetimidir. Bu bölüm tarihsel karar kaydı olarak
 > durur, çalışan bir yüzeyi anlatmaz.

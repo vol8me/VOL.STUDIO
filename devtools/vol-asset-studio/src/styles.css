@@ -290,7 +290,6 @@ audio:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 0;
   position: relative;
-  transition: grid-template-columns var(--vol-transition-medium);
 }
 
 .studio-shell--inspecting .studio-workspace {
@@ -411,6 +410,15 @@ audio:focus-visible {
   gap: 14px;
   padding: 20px;
   display: grid;
+  transform-origin: center top;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.asset-grid--fading {
+  opacity: 0;
+  transform: scale(0.98);
 }
 
 .asset-card {
@@ -437,13 +445,18 @@ audio:focus-visible {
   box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
 }
 
-.asset-card--selected {
+.asset-card--selected,
+.asset-card--selected:hover {
   border-color: var(--vol-ui-brand-solid);
   background: color-mix(in srgb, var(--studio-card-bg) 84%, var(--vol-ui-brand-solid));
   box-shadow:
     0 0 0 2px var(--vol-ui-brand-solid),
     0 0 0 5px rgb(184 85 24 / 12%),
     0 12px 30px rgb(0 0 0 / 32%);
+}
+
+.asset-card--selected:hover {
+  transform: translateY(-1px);
 }
 
 .asset-card__preview {

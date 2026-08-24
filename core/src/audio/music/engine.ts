@@ -302,6 +302,8 @@ export class MusicEngine {
     // dispose sonrası bunları elde tutmanın anlamı yok.
     this.buffers.clear();
     this.tracks.clear();
+    this.reportedMismatches.clear();
+    this.stemCounter = 0;
   }
 
   private startStem(stem: Stem, buffer: AudioBuffer, when: number): void {

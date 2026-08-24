@@ -4,6 +4,62 @@
 kaydıdır**: ne yapıldı, hangi kapı koşuldu, geriye ne kaldı. Turun ayrıntısı
 commit diff'inde ve git geçmişindedir; burada tekrarlanmaz.
 
+## 2026-08-24 — VOL Cursor Ailesi ve vol-ui INPUT sekmesi
+
+`core/src/input/cursor/*` ile 20 vektörel cursor tanımlandı: `types.ts`,
+`volTheme.ts`, `CursorRegistry.ts`, SVG `d` → Phaser Graphics parser
+(`svgToGraphics.ts`), `PhaserCursorManager` ve DOM overlay/CSS renderer
+`DomCursorRenderer`. `PhaserCursorManager` sahne pointer'ını takip eder,
+`wait`/`target` cursor'ları için tween başlatır. `DomCursorRenderer` hem
+`cursor: url(...)` CSS'ini hem `<svg>` overlay'ini destekler. Vurgu rengi
+ve boyut canlı değiştirilebilir.
+
+`vol-ui`'ya `INPUT` sekmesi eklendi: cursor galeri, hotspot gösterimi,
+16/24/32 px boyut seçici, vurgu rengi seçici ve fareyi canlı takip eden
+seçili cursor overlay. `i18n` (tr/en) ve README güncellendi.
+
+`core/src/index.ts` girdi barrel'ını ve cursor export'larını içerecek
+şekilde yeniden düzenlendi; `publicSurface.test.ts` export sayacı 198'e
+çıkarıldı.
+
+Doğrulama: `pnpm high` ve `pnpm quick` (pre-commit) geçti. Cursor testleri
+`core/tests/input/cursor/` altında toplandı.
+
+## 2026-08-24 — Asset Studio UI/UX ve ses önizleme tamamlandı
+
+VOL.UI font yükleme sorunu çözüldü: `publicDir` `core/public` olarak ayarlandı,
+`vite-plugin-static-copy` kaldırıldı, `DefaultFonts` URL'leri mutlak `/assets/fonts/`
+ile sabitlendi.
+
+Asset Studio kart animasyonları ve tooltipler sağlamlaştırıldı: kart wobble
+(`transform: translateY(-1px)`), seçili kart hover durumu sabitlendi, liste/ızgara
+geçişi `asset-grid--fading` ile kısa fade animasyonuna bağlandı. Sol ray buton
+etiketleri (`aria-label`) korunarak `title` öznitelikleri kaldırıldı; tüm sol
+butonlar `core/ui` `Tooltip` ile sağlandı. Ses/müzik ikonları ayrıldı (`audio` ≠
+`music`).
+
+Ses editöründe 7 işlem (gain, trim, fade in/out, normalize, reverse, clear) için
+önizleme uç noktası (`POST /api/v1/assets/:id/audio/preview`) ve istemci
+`previewAudio()` eklendi. Önizleme işlem değişikliğinden 400 ms sonra sunucudan
+blob indirir, `URL.createObjectURL` ile `<audio>` kaynağına yükler; oynatma
+çizgisi trim/reverse için doğru yöne çevrilir. i18n'e `audio.previewing` ve
+`audio.previewReady` eklendi.
+
+Ses/müzik motoru sağlamlaştırması: `MusicEngine.dispose()` artık
+`reportedMismatches` ve `stemCounter` durumlarını sıfırlıyor. `AudioSettings`
+sayfa kapanmadan önce `beforeunload` ile `flush()` çağırıyor. `core/docs/music-engine.md`
+gerçek API'ye uygun şekilde temizlendi (`gainFn`, `setLocation`, `stinger`
+kaldırıldı).
+
+Doğrulama: `pnpm high` (contract, format, typecheck, lint, lint:css,
+`test:coverage`, `build:all`, asset-studio e2e) tam geçti. Son kapsam
+raporu: vol-asset-studio fonksiyon %90.11, vol-hell fonksiyon %87.46.
+
+**Kalan risk:** `AudioEditorPanel` önizleme testi sahte `URL` ve blob ile
+çalışıyor; gerçek tarayıcıda blob yükleme ve oynatma performansı ayrıca
+manipüle edilmeli. `vol-asset-studio` fonksiyon kapsamı yalnızca 0.11 puan
+üstünde; yeni önizleme iş akışları teste katılmalı.
+
 ## 2026-08-23 — Asset Studio Aşama 0: güvenli başlangıç
 
 Yeni repo-varlık çalışma ortamı `feature/asset-studio` dalında, güncel

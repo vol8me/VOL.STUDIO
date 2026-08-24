@@ -1,6 +1,6 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { Button, Icon, IconButton, Text } from '@volstudio/core/ui';
-import type { AssetSummary } from '../../shared/index';
+import type { AssetSummary, AudioEditOperation } from '../../shared/index';
 import { AssetStudioApiError, type AssetStudioClient } from '../api/AssetStudioClient';
 import { element } from '../ui/dom';
 import { AudioOperationsPanel } from './AudioOperationsPanel';
@@ -52,6 +52,14 @@ export class AudioEditorPanel {
   #data: WaveformData | null = null;
   #selection: WaveformSelection = { startFrame: 0, endFrame: 0 };
   #request: AbortController | null = null;
+  #previewRequest: AbortController | null = null;
+  #previewTimer: ReturnType<typeof setTimeout> | null = null;
+  #previewUrl: string | null = null;
+  #originalUrl: string | null = null;
+  #previewTrimStart = 0;
+  #previewTrimEnd = 0;
+  #previewReversed = false;
+  #previewing = false;
   #playing = false;
   #saving = false;
   #raf: number | null = null;
@@ -109,6 +117,7 @@ export class AudioEditorPanel {
         this.#audio.volume = Math.max(0, Math.min(1, 10 ** (value / 20)));
       },
       onChange: () => this.#updateControls(),
+      onPreview: () => this.#schedulePreview(),
     });
     this.#saveButton = new Button(options.t('audio.save'), {
       size: 'sm',
@@ -204,7 +213,8 @@ export class AudioEditorPanel {
     this.#title.setContent(asset.name);
     this.#subtitle.setContent(asset.path);
     this.#status.setContent(this.#t('editor.loading'));
-    this.#audio.src = this.#options.client.contentUrl(asset);
+    this.#originalUrl = this.#options.client.contentUrl(asset);
+    this.#setAudioSource(this.#originalUrl);
 
     const request = new AbortController();
     this.#request = request;
@@ -230,11 +240,13 @@ export class AudioEditorPanel {
     this.stopPlayback();
     this.#request?.abort();
     this.#request = null;
-    this.#audio.removeAttribute('src');
+    this.#cancelPreview();
+    this.#setAudioSource(null);
     this.#audio.currentTime = 0;
     this.#audio.volume = 1;
     this.#data = null;
     this.#asset = null;
+    this.#originalUrl = null;
     this.#selection = { startFrame: 0, endFrame: 0 };
     this.#operationsPanel.reset();
     this.#waveform.setData(null);
@@ -283,12 +295,19 @@ export class AudioEditorPanel {
   private async startPlayback(): Promise<void> {
     const data = this.#data;
     if (data === null) return;
-    const selectionEnd = this.#selection.endFrame / data.sampleRate;
-    if (
-      this.#audio.currentTime >= selectionEnd ||
-      this.#audio.currentTime < this.#selection.startFrame / data.sampleRate
-    ) {
-      this.seekToFrame(this.#selection.startFrame);
+    if (this.#previewUrl) {
+      const duration = this.#audio.duration || this.#previewDurationSeconds();
+      if (!Number.isFinite(duration) || this.#audio.ended || this.#audio.currentTime >= duration) {
+        this.#audio.currentTime = 0;
+      }
+    } else {
+      const selectionEnd = this.#selection.endFrame / data.sampleRate;
+      if (
+        this.#audio.currentTime >= selectionEnd ||
+        this.#audio.currentTime < this.#selection.startFrame / data.sampleRate
+      ) {
+        this.seekToFrame(this.#selection.startFrame);
+      }
     }
     try {
       await this.#audio.play();
@@ -314,11 +333,8 @@ export class AudioEditorPanel {
     const step = (): void => {
       const data = this.#data;
       if (data === null || !this.#playing) return;
-      const frame = Math.min(
-        data.frameCount,
-        Math.round(this.#audio.currentTime * data.sampleRate),
-      );
-      if (frame >= this.#selection.endFrame) {
+      const frame = this.#previewFrameOfCurrentTime();
+      if (!this.#previewUrl && frame >= this.#selection.endFrame) {
         this.#audio.currentTime = this.#selection.endFrame / data.sampleRate;
         this.#waveform.setPlayhead(this.#selection.endFrame);
         this.stopPlayback();
@@ -336,7 +352,7 @@ export class AudioEditorPanel {
     const data = this.#data;
     if (data === null || data.sampleRate === 0) return;
     const clamped = Math.max(0, Math.min(data.frameCount, Math.round(frame)));
-    this.#audio.currentTime = clamped / data.sampleRate;
+    this.#audio.currentTime = this.#previewTimeForFrame(clamped);
     this.#waveform.setPlayhead(clamped);
     this.#renderSelection(clamped);
   }
@@ -436,17 +452,17 @@ export class AudioEditorPanel {
   #syncPlayhead(): void {
     const data = this.#data;
     if (data === null) return;
-    const frame = Math.max(
-      0,
-      Math.min(data.frameCount, Math.round(this.#audio.currentTime * data.sampleRate)),
-    );
+    const frame = this.#previewFrameOfCurrentTime();
     this.#waveform.setPlayhead(frame);
     this.#renderSelection(frame);
   }
 
   #handleEnded(): void {
-    const data = this.#data;
-    const end = Math.min(data?.frameCount ?? 0, this.#selection.endFrame);
+    const end = this.#previewUrl
+      ? this.#previewReversed
+        ? this.#previewTrimStart
+        : this.#previewTrimEnd
+      : Math.min(this.#data?.frameCount ?? 0, this.#selection.endFrame);
     this.#waveform.setPlayhead(end);
     this.#renderSelection(end);
     this.#syncPlaybackState(false);
@@ -467,6 +483,132 @@ export class AudioEditorPanel {
     return Number.isFinite(value)
       ? this.#t('audio.dbfs', { value: value.toFixed(1) })
       : this.#t('audio.unknownTime');
+  }
+
+  #setAudioSource(url: string | null): void {
+    const previous = this.#audio.src;
+    if (url) {
+      this.#audio.src = url;
+      this.#audio.currentTime = 0;
+    } else {
+      this.#audio.removeAttribute('src');
+    }
+    if (previous && previous === this.#previewUrl && this.#previewUrl !== url) {
+      URL.revokeObjectURL(this.#previewUrl);
+      this.#previewUrl = null;
+    }
+  }
+
+  #cancelPreview(): void {
+    if (this.#previewTimer !== null) {
+      clearTimeout(this.#previewTimer);
+      this.#previewTimer = null;
+    }
+    this.#previewRequest?.abort();
+    this.#previewRequest = null;
+    this.#previewing = false;
+  }
+
+  #schedulePreview(): void {
+    if (this.#previewTimer !== null) clearTimeout(this.#previewTimer);
+    const asset = this.#asset;
+    const data = this.#data;
+    if (!asset || !data) return;
+    const operations = this.#operationsPanel.getOperations();
+    if (operations.length === 0) {
+      this.#cancelPreview();
+      if (this.#originalUrl) this.#setAudioSource(this.#originalUrl);
+      this.#status.setContent(this.#t('audio.ready'));
+      return;
+    }
+    this.#computePreviewContext(operations);
+    this.#previewTimer = setTimeout(() => {
+      this.#previewTimer = null;
+      void this.#renderPreview(operations);
+    }, 400);
+  }
+
+  async #renderPreview(operations: readonly AudioEditOperation[]): Promise<void> {
+    const asset = this.#asset;
+    if (!asset) return;
+    this.#cancelPreview();
+    const controller = new AbortController();
+    this.#previewRequest = controller;
+    this.#previewing = true;
+    this.#status.setContent(this.#t('audio.previewing'));
+    this.#updateControls();
+    try {
+      const blob = await this.#options.client.previewAudio(
+        asset.id,
+        asset.revision,
+        operations,
+        controller.signal,
+      );
+      if (controller.signal.aborted) return;
+      this.#previewUrl = URL.createObjectURL(blob);
+      this.#setAudioSource(this.#previewUrl);
+      this.#status.setContent(this.#t('audio.previewReady'));
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      this.#status.setContent(this.#errorText(error));
+      if (this.#originalUrl) this.#setAudioSource(this.#originalUrl);
+    } finally {
+      this.#previewing = false;
+      this.#updateControls();
+    }
+  }
+
+  #computePreviewContext(operations: readonly AudioEditOperation[]): void {
+    const data = this.#data;
+    if (!data) return;
+    let start = 0;
+    let end = data.frameCount;
+    let reversed = false;
+    for (const op of operations) {
+      if (op.kind === 'trim') {
+        start = Math.max(0, Math.min(data.frameCount, Math.round(op.startFrame)));
+        end = Math.max(0, Math.min(data.frameCount, Math.round(op.endFrame)));
+      } else if (op.kind === 'reverse') {
+        reversed = !reversed;
+      }
+    }
+    this.#previewTrimStart = start;
+    this.#previewTrimEnd = end;
+    this.#previewReversed = reversed;
+  }
+
+  #previewDurationSeconds(): number {
+    const data = this.#data;
+    if (!data) return 0;
+    return (this.#previewTrimEnd - this.#previewTrimStart) / data.sampleRate;
+  }
+
+  #previewFrameOfCurrentTime(): number {
+    const data = this.#data;
+    if (!data) return 0;
+    const t = this.#audio.currentTime * data.sampleRate;
+    if (this.#previewUrl) {
+      const previewLength = this.#previewTrimEnd - this.#previewTrimStart;
+      const clampedT = Math.max(0, Math.min(previewLength, t));
+      return this.#previewReversed
+        ? Math.max(0, Math.min(data.frameCount, this.#previewTrimEnd - clampedT))
+        : Math.max(0, Math.min(data.frameCount, this.#previewTrimStart + clampedT));
+    }
+    return Math.max(0, Math.min(data.frameCount, Math.round(t)));
+  }
+
+  #previewTimeForFrame(frame: number): number {
+    const data = this.#data;
+    if (!data) return 0;
+    if (this.#previewUrl) {
+      if (this.#previewReversed) {
+        const clamped = Math.max(this.#previewTrimStart, Math.min(this.#previewTrimEnd, frame));
+        return (this.#previewTrimEnd - clamped) / data.sampleRate;
+      }
+      const clamped = Math.max(this.#previewTrimStart, Math.min(this.#previewTrimEnd, frame));
+      return (clamped - this.#previewTrimStart) / data.sampleRate;
+    }
+    return Math.max(0, Math.min(data.frameCount, frame)) / data.sampleRate;
   }
 
   #formatTime(seconds: number): string {

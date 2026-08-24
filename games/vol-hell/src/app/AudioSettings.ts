@@ -58,8 +58,13 @@ export class AudioSettings {
   private readonly listeners = new Set<(data: AudioSettingsData) => void>();
   private persistTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingPersist: Promise<void> | null = null;
+  private readonly boundFlush = (): void => void this.flush();
 
-  constructor(private readonly saveManager: SaveManager) {}
+  constructor(private readonly saveManager: SaveManager) {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', this.boundFlush);
+    }
+  }
 
   async load(): Promise<void> {
     const stored = await this.saveManager.load<unknown>(STORAGE_KEY, {});
@@ -179,6 +184,9 @@ export class AudioSettings {
     }
     this.pendingPersist = null;
     this.listeners.clear();
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('beforeunload', this.boundFlush);
+    }
   }
 
   private async persistAndNotify(): Promise<void> {

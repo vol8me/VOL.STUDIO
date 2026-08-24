@@ -10,6 +10,7 @@ import { AssetLibrary, type Translate } from '../catalog/AssetLibrary';
 import { AudioEditorPanel } from '../audio/AudioEditorPanel';
 import { EditorPanel } from '../editor/EditorPanel';
 import { QuickLook } from '../preview/QuickLook';
+import { Tooltip } from '@volstudio/core/ui';
 import { element, replaceChildren } from '../ui/dom';
 import { icon } from '../ui/icons';
 
@@ -38,6 +39,7 @@ export class AssetStudioApp {
   private readonly connection: HTMLSpanElement;
   private readonly connectionLabel: HTMLSpanElement;
   private readonly fullscreenButton: HTMLButtonElement;
+  private readonly fullscreenTooltip: Tooltip;
   private readonly languageButton: HTMLButtonElement;
   private readonly loadingLayer: HTMLDivElement;
   private readonly loadingText: HTMLParagraphElement;
@@ -85,6 +87,10 @@ export class AssetStudioApp {
       className: 'icon-action',
       attrs: { type: 'button' },
       children: [icon('fullscreen')],
+    });
+    this.fullscreenButton.removeAttribute('title');
+    this.fullscreenTooltip = new Tooltip(this.fullscreenButton, this.t('app.fullscreen'), {
+      placement: 'bottom',
     });
     this.scope.addListener(this.fullscreenButton, 'click', () => void this.toggleFullscreen());
     this.languageButton = element('button', {
@@ -257,6 +263,7 @@ export class AssetStudioApp {
     this.subscription?.close();
     this.subscription = null;
     if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.fullscreenTooltip.destroy();
     this.library.destroy();
     this.quickLook.destroy();
     this.editor.destroy();
@@ -423,7 +430,7 @@ export class AssetStudioApp {
 
   private renderFullscreenLabel(): void {
     const key = document.fullscreenElement ? 'app.leaveFullscreen' : 'app.fullscreen';
-    this.fullscreenButton.title = this.t(key);
+    this.fullscreenTooltip.setText(this.t(key));
     this.fullscreenButton.setAttribute('aria-label', this.t(key));
     this.fullscreenButton.setAttribute('aria-pressed', String(Boolean(document.fullscreenElement)));
   }

@@ -117,17 +117,15 @@ Bir müzik parçası. `id`, `bpm`, `stems` ve opsiyonel `timeSignature` (`[4, 4]
 
 Track'in bir katmanı. Birden fazla stem aynı anda çalarak harmoni/richness oluşturur.
 
-| Alan      | Açıklama                                       |
-| --------- | ---------------------------------------------- |
-| `id`      | Benzersiz stem kimliği                         |
-| `src`     | OGG dosya yolu; iOS'ta MP3 fallback denenir    |
-| `buffer`  | Önceden yüklenmiş `AudioBuffer`                |
-| `gain`    | Temel gain (0-1)                               |
-| `loop`    | Loop çalışıp çalmayacağı                       |
-| `pan`     | Stereo pan (-1 sol, 1 sağ)                     |
-| `gainMap` | State'e göre adaptif gain haritası             |
-| `gainFn`  | `(state, context) => number` adaptif fonksiyon |
-| `stinger` | One-shot çal ve bitince dur                    |
+| Alan      | Açıklama                                    |
+| --------- | ------------------------------------------- |
+| `id`      | Benzersiz stem kimliği                      |
+| `src`     | OGG dosya yolu; iOS'ta MP3 fallback denenir |
+| `buffer`  | Önceden yüklenmiş `AudioBuffer`             |
+| `gain`    | Temel gain (0-1)                            |
+| `loop`    | Loop çalışıp çalmayacağı                    |
+| `pan`     | Stereo pan (-1 sol, 1 sağ)                  |
+| `gainMap` | State'e göre adaptif gain haritası          |
 
 ### MusicState
 
@@ -145,7 +143,7 @@ interface MusicState {
 
 ### MusicContext
 
-Motorun o anki çalma bağlamını verir; `gainFn` içinde kullanılabilir.
+Motorun o anki çalma bağlamını verir; `gainMap` çözümlemesinde ve dış dinleyicilerde kullanılabilir.
 
 ```typescript
 interface MusicContext {
@@ -192,17 +190,6 @@ gainMap: {
 }
 ```
 
-### gainFn
-
-Daha karmaşık mantık için fonksiyon:
-
-```typescript
-gainFn: (state, ctx) => {
-  if (state.location === 'boss' && ctx.bar > 4) return 1.0;
-  return 0.3;
-};
-```
-
 ## MusicEngine API
 
 | Metot                                       | Açıklama                                 |
@@ -214,7 +201,6 @@ gainFn: (state, ctx) => {
 | `setState(state, fadeTime?)`                | State günceller                          |
 | `setIntensity(value, fadeTime?)`            | Yoğunluk (0-1) ayarlar                   |
 | `setMasterVolume(value, fadeTime?)`         | Master seviye ayarlar                    |
-| `setLocation(location, fadeTime?)`          | Lokasyon/state ayarlar                   |
 | `mute(muted, fadeTime?)`                    | Susturur / ayarlanan seviyeye açar       |
 | `getCurrentState()`                         | Track id, state ve çalma durumu          |
 | `dispose()`                                 | Tüm kaynakları ve buffer cache'i bırakır |
@@ -239,7 +225,7 @@ Motor runtime'da sentez YAPMAZ; yalnızca hazır dosya çalar.
 ```
 games/vol-hell/scripts/audio/*.ts   ÜRETİM SCRIPT'LERİ (git'te)
         ↓ pnpm --filter @volstudio/vol-hell generate:audio
-        ↓ (yalnızca ses tasarımı değişince elle çalıştırılır)
+        ↓ (yalnız ses tasarımı değişince elle çalıştırılır)
 games/vol-hell/public/assets/audio/**.ogg  OYUN ASSET'İ (git'te)
         ↓ vite build
 games/vol-hell/dist/assets/audio/**.ogg    BUILD ÇIKTISI (gitignore)
@@ -375,7 +361,7 @@ pnpm test
 
 ## Scheduler
 
-`MusicScheduler` BPM ve ölçü üzerinden bar/beat hesaplar. `crossfadeTo` ve `gainFn` içinde kullanılır.
+`MusicScheduler` BPM ve ölçü üzerinden bar/beat hesaplar. `crossfadeTo` içinde kullanılır.
 
 ```typescript
 const scheduler = new MusicScheduler(110, [4, 4]);

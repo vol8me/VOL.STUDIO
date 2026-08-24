@@ -9,6 +9,8 @@ export interface AudioOperationsPanelOptions {
   formatTime: (seconds: number) => string;
   onPreviewGain: (decibels: number) => void;
   onChange: () => void;
+  /** İşlem listesi değiştikçe önizleme istenir; isteği boş listede iptal eden taraf. */
+  onPreview?: () => void;
 }
 
 export class AudioOperationsPanel {
@@ -169,6 +171,7 @@ export class AudioOperationsPanel {
     this.#operations = [];
     this.#gain.setValue(0);
     this.#options.onPreviewGain(0);
+    this.#options.onPreview?.();
     this.#render();
   }
 
@@ -197,6 +200,7 @@ export class AudioOperationsPanel {
       this.#gain.setValue(0);
       this.#options.onPreviewGain(0);
     }
+    this.#options.onPreview?.();
     this.#render();
   }
 

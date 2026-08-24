@@ -1,21 +1,16 @@
-import { defineConfig, normalizePath } from 'vite';
+import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { coreAliases } from '../../scripts/build/coreAliases.mjs';
 
 // Fontlar tek kaynaktan (core/public) çözümlenir — paketlere kopya yapılmaz.
-// normalizePath: Windows'ta \ yerine / gerekli (tinyglobby \ escape olarak yorumlar).
-// stripBase: true: dizin yapısını korumaz, sadece dosya adlarını hedefe koyar.
-const coreFontsDir = normalizePath(resolve(import.meta.dirname, '../../core/public/assets/fonts'));
+// publicDir hem dev'te hem build'de aynı yolu koruyarak FontManager'a sunar.
+const corePublicDir = resolve(import.meta.dirname, '../../core/public');
 
 export default defineConfig({
   base: './',
+  publicDir: corePublicDir,
   clearScreen: false,
-  plugins: [
-    viteStaticCopy({
-      targets: [{ src: `${coreFontsDir}/*`, dest: 'assets/fonts', rename: { stripBase: true } }],
-    }),
-  ],
+  plugins: [],
   server: {
     port: 5174,
     strictPort: true,

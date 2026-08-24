@@ -19,6 +19,8 @@ export type IconName =
   | 'modified'
   | 'more'
   | 'copy'
+  | 'music'
+  | 'volume'
   | 'eraser'
   | 'eyedropper'
   | 'fill'
@@ -94,6 +96,14 @@ export const VOL_ICONS: Readonly<Record<IconName, IconDefinition>> = {
   },
   modified: { viewBox: '0 0 24 24', paths: ['m4 16-1 5 5-1L19 9l-4-4Z', 'm13 7 4 4'] },
   more: { viewBox: '0 0 24 24', paths: ['M5 12h.01', 'M12 12h.01', 'M19 12h.01'] },
+  music: {
+    viewBox: '0 0 24 24',
+    paths: ['M10 18V5l7 1', 'M8 20a3 2 0 1 0 0-4 3 2 0 0 0 0 4Z'],
+  },
+  volume: {
+    viewBox: '0 0 24 24',
+    paths: ['M5 10v4h3l5 4V6l-5 4H5z', 'M16 10c2 2 2 4 0 6', 'M18 8c3 3 3 7 0 10'],
+  },
   copy: { viewBox: '0 0 24 24', paths: ['M8 8h12v12H8z', 'M16 8V4H4v12h4'] },
   // Katman ve zaman çizelgesi ikonları. Yön ikonları (`collapse`/`expand`)
   // bölme paneline aittir; katman sırası için kullanıldıklarında ekranda

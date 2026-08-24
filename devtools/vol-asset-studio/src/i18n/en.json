@@ -168,6 +168,8 @@
     "channels": "Channels",
     "qa": "Quality check",
     "open": "Edit audio",
+    "previewing": "Rendering preview…",
+    "previewReady": "Preview ready",
     "operations": "Processing chain",
     "operationsEmpty": "No persistent operations have been added yet.",
     "selectionStart": "Go to selection start",

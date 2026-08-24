@@ -405,6 +405,73 @@ export function registerApiRoutes(app: FastifyInstance, options: ApiRouteOptions
     },
   );
 
+  /**
+   * Ses işlemlerinin uygulanmış halini önizleme olarak döndürür.
+   *
+   * Bu uç nokta dosyaya KAYDETMEZ; yalnızca render edilmiş sesi blob olarak
+   * gönderir. İstemci oynatıcıya bu kaynağı yükleyerek işlemleri duyabilir.
+   */
+  app.post<{ Params: AssetParams; Body: AudioRenderRequest }>(
+    '/api/v1/assets/:id/audio/preview',
+    async (request, reply) => {
+      const record = options.catalog.get(request.params.id);
+      const body = request.body;
+      if (record.summary.kind !== 'audio') {
+        throw new AssetStudioError('unsupported_format', 415, { kind: record.summary.kind });
+      }
+      if (record.summary.role === 'readonly') {
+        throw new AssetStudioError('asset_readonly', 403, { assetId: record.summary.id });
+      }
+      if (
+        body === null ||
+        typeof body !== 'object' ||
+        typeof body.expectedRevision !== 'string' ||
+        !REVISION_PATTERN.test(body.expectedRevision) ||
+        !Array.isArray(body.operations) ||
+        body.operations.length > 64
+      ) {
+        throw new AssetStudioError('invalid_request', 400, { field: 'audioPreview' });
+      }
+      const extension = extname(record.absolutePath).toLowerCase();
+      const format = extension === '.ogg' ? 'ogg' : extension === '.wav' ? 'wav' : null;
+      if (format === null) {
+        throw new AssetStudioError('unsupported_format', 415, { format: extension });
+      }
+      if (record.summary.problemCodes.includes('asset_too_large')) {
+        throw new AssetStudioError('asset_too_large', 413, { maximum: options.maxAssetBytes });
+      }
+      const verified = await openVerifiedAsset(record);
+      let source: Buffer;
+      try {
+        source = await verified.handle.readFile();
+      } finally {
+        await verified.handle.close();
+      }
+      const actualRevision = createHash('sha256').update(source).digest('hex');
+      if (actualRevision !== body.expectedRevision) {
+        throw new AssetStudioError('asset_conflict', 409, {
+          assetId: record.summary.id,
+          expectedRevision: body.expectedRevision,
+          actualRevision,
+        });
+      }
+      const render = audioRenderQueue.then(
+        () => renderAudioBuffer(source, body.operations, format),
+        () => renderAudioBuffer(source, body.operations, format),
+      );
+      audioRenderQueue = render.then(
+        () => undefined,
+        () => undefined,
+      );
+      const payload = await render;
+      const mime = format === 'ogg' ? 'audio/ogg' : 'audio/wav';
+      reply.header('content-type', mime);
+      reply.header('x-vol-asset-revision', actualRevision);
+      reply.header('cache-control', 'no-store');
+      return reply.send(payload);
+    },
+  );
+
   /** Varlığa metinsel referans veren dosyalar; rename önizlemesinin temeli. */
   app.get<{ Params: AssetParams }>('/api/v1/references/:id', async (request) => {
     const record = options.catalog.get(request.params.id);

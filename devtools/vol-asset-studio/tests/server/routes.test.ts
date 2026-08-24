@@ -153,6 +153,31 @@ describe('Asset Studio API', () => {
     expect((await readFile(fixture.wavPath)).equals(after)).toBe(true);
   });
 
+  it('ses işlemlerinin önizlemesini blob olarak döner ve dosyayı kaydetmez', async () => {
+    const { server, assets, fixture } = await setup();
+    const audio = assets.find((asset) => asset.name === 'tone.wav')!;
+    const before = await readFile(fixture.wavPath);
+
+    const response = await server.app.inject({
+      method: 'POST',
+      url: `/api/v1/assets/${audio.id}/audio/preview`,
+      payload: {
+        expectedRevision: audio.revision,
+        operations: [{ kind: 'gain', decibels: -6 }],
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toBe('audio/wav');
+    expect(response.headers['x-vol-asset-revision']).toBe(audio.revision);
+    const preview = Buffer.from(response.payload, 'binary');
+    expect(preview.length).toBeGreaterThan(0);
+    expect(preview.subarray(0, 4).toString('ascii')).toBe('RIFF');
+
+    const after = await readFile(fixture.wavPath);
+    expect(after.equals(before)).toBe(true);
+  });
+
   it('boyut sınırını aşan medyayı stream eder fakat decode işlemine almaz', async () => {
     const fixture = await createFixtureProject();
     fixtures.push(fixture);

@@ -1,5 +1,5 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
-import { Icon, Input, Text, Toolbar, ToolButton } from '@volstudio/core/ui';
+import { Icon, Input, Text, Toolbar, ToolButton, Tooltip } from '@volstudio/core/ui';
 import type { AssetSummary } from '../../shared/index';
 import type { AssetStudioClient } from '../api/AssetStudioClient';
 import { element } from '../ui/dom';
@@ -12,7 +12,7 @@ export type Translate = (key: string, options?: Record<string, unknown>) => stri
 const FILTERS: ReadonlyArray<{ id: AssetFilter; icon: IconName }> = [
   { id: 'all', icon: 'apps' },
   { id: 'images', icon: 'image' },
-  { id: 'audio', icon: 'audio' },
+  { id: 'audio', icon: 'volume' },
   { id: 'fonts', icon: 'font' },
   { id: 'problems', icon: 'warning' },
   { id: 'modified', icon: 'modified' },
@@ -52,6 +52,8 @@ export class AssetLibrary {
   private readonly content: HTMLDivElement;
   private readonly empty: HTMLDivElement;
   private readonly cards = new Map<string, AssetCard>();
+  private readonly buttonTooltips = new Map<ToolButton, Tooltip>();
+  private viewSwitchTimer?: ReturnType<typeof setTimeout>;
   private assets: AssetSummary[] = [];
   private filter: AssetFilter = 'all';
   private view: AssetView;
@@ -184,6 +186,7 @@ export class AssetLibrary {
     });
     this.headerTitle.element.id = 'asset-library-title';
     this.renderState();
+    this.attachTooltips();
   }
 
   setAssets(assets: AssetSummary[]): void {
@@ -223,11 +226,13 @@ export class AssetLibrary {
     this.content.setAttribute('aria-label', t('library.title'));
     this.rail.setAttribute('aria-label', t('library.filters'));
     for (const { id } of FILTERS) {
-      const button = this.filterToolbar.getButton(id)?.element;
-      button?.setAttribute('aria-label', t(`library.${id}`));
-      if (button) button.title = t(`library.${id}`);
+      const button = this.filterToolbar.getButton(id);
+      if (!button) continue;
+      const label = t(`library.${id}`);
+      button.element.setAttribute('aria-label', label);
+      this.buttonTooltips.get(button)?.setText(label);
     }
-    this.updateActionLabels();
+    this.updateActionButtonTooltips();
     this.renderAssets(true);
   }
 
@@ -236,6 +241,9 @@ export class AssetLibrary {
   }
 
   destroy(): void {
+    clearTimeout(this.viewSwitchTimer);
+    for (const tooltip of this.buttonTooltips.values()) tooltip.destroy();
+    this.buttonTooltips.clear();
     for (const card of this.cards.values()) card.destroy();
     this.cards.clear();
     this.element.remove();
@@ -266,6 +274,12 @@ export class AssetLibrary {
       // Gizli mod veya kapalı storage görünümü etkilememeli.
     }
     this.renderState();
+    this.content.classList.add('asset-grid--fading');
+    if (this.viewSwitchTimer) clearTimeout(this.viewSwitchTimer);
+    this.viewSwitchTimer = setTimeout(() => {
+      this.content.classList.remove('asset-grid--fading');
+      this.viewSwitchTimer = undefined;
+    }, 180);
   }
 
   private renderState(): void {
@@ -284,17 +298,40 @@ export class AssetLibrary {
     this.viewToolbar.setValue(this.view);
     this.gridButton.element.classList.toggle('icon-action--active', this.view === 'grid');
     this.listButton.element.classList.toggle('icon-action--active', this.view === 'list');
-    this.updateActionLabels();
+    this.updateActionButtonTooltips();
   }
 
-  private updateActionLabels(): void {
+  private updateActionButtonTooltips(): void {
     for (const [button, key] of [
-      [this.gridButton.element, 'library.grid'],
-      [this.listButton.element, 'library.list'],
-      [this.refreshButton.element, 'library.refresh'],
+      [this.gridButton, 'library.grid'],
+      [this.listButton, 'library.list'],
+      [this.refreshButton, 'library.refresh'],
     ] as const) {
-      button.title = this.t(key);
-      button.setAttribute('aria-label', this.t(key));
+      const label = this.t(key);
+      button.element.setAttribute('aria-label', label);
+      this.buttonTooltips.get(button)?.setText(label);
+    }
+  }
+
+  private attachTooltips(): void {
+    for (const { id } of FILTERS) {
+      const button = this.filterToolbar.getButton(id);
+      if (!button || this.buttonTooltips.has(button)) continue;
+      const label = this.t(`library.${id}`);
+      button.element.removeAttribute('title');
+      this.buttonTooltips.set(button, new Tooltip(button.element, label, { placement: 'bottom' }));
+    }
+    for (const [button, key] of [
+      [this.gridButton, 'library.grid'],
+      [this.listButton, 'library.list'],
+      [this.refreshButton, 'library.refresh'],
+    ] as const) {
+      if (this.buttonTooltips.has(button)) continue;
+      button.element.removeAttribute('title');
+      this.buttonTooltips.set(
+        button,
+        new Tooltip(button.element, this.t(key), { placement: 'bottom' }),
+      );
     }
   }
 
@@ -379,7 +416,9 @@ export class AssetLibrary {
       destroyPreview = () => image.removeEventListener('error', handleError);
       preview.append(image, icon('image', 'asset-card__fallback'));
     } else if (asset.kind === 'audio') {
-      preview.append(icon('audio'), this.createWaveform());
+      preview.append(icon('volume'), this.createWaveform());
+    } else if (asset.kind === 'audio-recipe') {
+      preview.append(icon('music'));
     } else if (asset.kind === 'font') {
       preview.append(
         element('span', { className: 'asset-card__glyph', children: [this.t('asset.fontSample')] }),

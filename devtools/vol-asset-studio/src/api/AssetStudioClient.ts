@@ -129,6 +129,33 @@ export class AssetStudioClient {
     return (await response.json()) as AudioRenderResponse;
   }
 
+  /**
+   * Seçili ses işlemlerinin sunucuda uygulanmış halini blob olarak indirir.
+   *
+   * İstemci oynatıcıya bu URL'yi verir; dosya kaydedilmeden önce duyulabilir.
+   */
+  async previewAudio(
+    assetId: string,
+    expectedRevision: string,
+    operations: readonly AudioEditOperation[],
+    signal?: AbortSignal,
+  ): Promise<Blob> {
+    const response = await fetch(
+      this.url(`/api/v1/assets/${encodeURIComponent(assetId)}/audio/preview`),
+      {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ expectedRevision, operations }),
+        ...(signal === undefined ? {} : { signal }),
+      },
+    );
+    if (!response.ok) {
+      throw new AssetStudioApiError(await errorCodeOf(response), response.status);
+    }
+    return response.blob();
+  }
+
   /** Tek varlığı tek mantıksal transaction olarak kaydeder. */
   async saveRaster(
     asset: Pick<AssetSummary, 'id'>,

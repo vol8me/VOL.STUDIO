@@ -36,6 +36,7 @@ function mount() {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   document.body.replaceChildren();
 });
 
@@ -182,6 +183,64 @@ describe('AudioEditorPanel', () => {
     expect(panel.element.querySelectorAll('.audio-editor__operation')).toHaveLength(0);
 
     panel.destroy();
+  });
+
+  it('işlem eklendiğinde önizlemeyi zamanlar ve blob URL’ye yükler', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const createObjectURL = vi.fn().mockReturnValue('blob:preview');
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL,
+      revokeObjectURL,
+    });
+
+    const previewAudio = vi
+      .fn()
+      .mockResolvedValue(new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/ogg' }));
+    const client = {
+      getWaveform: vi.fn().mockResolvedValue(waveform),
+      contentUrl: vi.fn(() => '/audio.ogg'),
+      saveAudio: vi.fn(),
+      previewAudio,
+    } as unknown as AssetStudioClient;
+    const panel = new AudioEditorPanel({
+      client,
+      t: translate,
+      onClose: vi.fn(),
+      onToast: vi.fn(),
+      onSaved: vi.fn(),
+    });
+    document.body.append(panel.element);
+
+    await panel.open(
+      asset({
+        id: 'audio:click',
+        name: 'click.ogg',
+        kind: 'audio',
+        format: 'ogg',
+        image: undefined,
+      }),
+    );
+
+    const gainInput = panel.element.querySelector<HTMLInputElement>(
+      '.audio-editor__gain .vol-slider__input',
+    )!;
+    gainInput.value = '6';
+    gainInput.dispatchEvent(new Event('input', { bubbles: true }));
+    panel.element.querySelector<HTMLButtonElement>('.audio-editor__gain .vol-button')!.click();
+
+    expect(previewAudio).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(400);
+    expect(previewAudio).toHaveBeenCalledOnce();
+    expect(createObjectURL).toHaveBeenCalledOnce();
+    expect(panel.element.querySelector('audio')?.getAttribute('src')).toBe('blob:preview');
+    expect(panel.element.querySelector('.audio-editor__status')?.textContent).toBe(
+      translate('audio.previewReady'),
+    );
+
+    panel.destroy();
+    vi.useRealTimers();
   });
 
   it('yükleme hatasını açık metinle gösterir', async () => {

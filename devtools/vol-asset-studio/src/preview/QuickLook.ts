@@ -86,7 +86,7 @@ export class QuickLook {
       },
     });
     this.audioButton.element.classList.add('quick-look__audio');
-    this.audioButton.element.prepend(new Icon({ name: 'audio' }).element);
+    this.audioButton.element.prepend(new Icon({ name: 'volume' }).element);
     this.audioButton.element.hidden = true;
     this.editButton.element.hidden = true;
 
@@ -201,13 +201,22 @@ export class QuickLook {
       return;
     }
 
-    if (asset.kind === 'audio') {
-      const audio = element('audio', {
-        attrs: { controls: true, preload: 'metadata', src: this.options.client.contentUrl(asset) },
-      });
-      this.preview.append(icon('audio', 'quick-look__hero-icon'), audio);
-      this.request = new AbortController();
-      void this.loadAudioMetadata(asset, this.request.signal);
+    if (asset.kind === 'audio' || asset.kind === 'audio-recipe') {
+      const iconName = asset.kind === 'audio-recipe' ? 'music' : 'volume';
+      if (asset.kind === 'audio') {
+        const audio = element('audio', {
+          attrs: {
+            controls: true,
+            preload: 'metadata',
+            src: this.options.client.contentUrl(asset),
+          },
+        });
+        this.preview.append(icon(iconName, 'quick-look__hero-icon'), audio);
+        this.request = new AbortController();
+        void this.loadAudioMetadata(asset, this.request.signal);
+      } else {
+        this.preview.append(icon(iconName, 'quick-look__hero-icon'));
+      }
       return;
     }
 

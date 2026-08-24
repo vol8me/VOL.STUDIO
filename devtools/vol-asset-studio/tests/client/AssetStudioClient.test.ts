@@ -130,6 +130,30 @@ describe('AssetStudioClient', () => {
     });
   });
 
+  it('ses önizlemesini blob olarak indirir', async () => {
+    const payload = new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/ogg' });
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(payload, {
+        status: 200,
+        headers: { 'content-type': 'audio/ogg' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const blob = await new AssetStudioClient().previewAudio('audio/1', 'a'.repeat(64), [
+      { kind: 'gain', decibels: -3 },
+    ]);
+
+    expect(blob.type).toBe('audio/ogg');
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/v1/assets/audio%2F1/audio/preview');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual({
+      expectedRevision: 'a'.repeat(64),
+      operations: [{ kind: 'gain', decibels: -3 }],
+    });
+  });
+
   it('ses metadata ve dalga formu endpointlerini çağırır', async () => {
     const fetchMock = vi
       .fn()
