@@ -55,8 +55,10 @@ function createPanel(
   const onClose = overrides.onClose ?? vi.fn();
   const onToast = overrides.onToast ?? vi.fn();
   const onSaved = overrides.onSaved ?? vi.fn();
+  const client = new AssetStudioClient();
+  client.setLease('client-test', 'a'.repeat(32));
   const panel = new EditorPanel({
-    client: new AssetStudioClient(),
+    client,
     t: translate,
     onClose,
     onToast,

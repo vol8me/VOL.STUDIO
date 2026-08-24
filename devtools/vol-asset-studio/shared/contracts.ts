@@ -144,14 +144,12 @@ export interface SaveTargetRequest {
   assetId: string;
   /** İstemcinin düzenlemeye başladığı revizyon; disk bundan farklıysa kayıt düşer. */
   expectedRevision: string;
-  width: number;
-  height: number;
   /** Ham RGBA'nın multipart parça adı. */
   payloadPart: string;
 }
 
 export interface SaveTransactionRequest {
-  transactionId: string;
+  transactionId?: string;
   targets: SaveTargetRequest[];
 }
 

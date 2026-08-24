@@ -48,6 +48,8 @@ describe('DomCursorRenderer', () => {
     // Varsayılan cursor sıcak noktası (2,2) 24 px'de 2 px kaydırır.
     expect(overlay.style.left).toBe('48px');
     expect(overlay.style.top).toBe('58px');
+    // Çift ofset yok: SVG içeriği `left/top` ile konumlanır, ek transform yok.
+    expect(overlay.style.transform).toBeFalsy();
   });
 
   it('destroy overlay ve olay dinleyiciyi kaldırır', () => {

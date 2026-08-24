@@ -5,7 +5,7 @@ import type { LightMyRequestResponse } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
 import sharp from 'sharp';
 import { createAssetStudioServer, type AssetStudioServer } from '../../server/app.js';
-import type { AssetSummary, CatalogResponse } from '../../shared/contracts.js';
+import type { AssetSummary, CatalogResponse, LeaseResponse } from '../../shared/contracts.js';
 import { createFixtureProject, type FixtureProject } from './fixtures.js';
 
 const fixtures: FixtureProject[] = [];
@@ -36,6 +36,19 @@ async function setup(): Promise<{
   return { fixture, server, png };
 }
 
+async function acquireLease(
+  server: AssetStudioServer,
+): Promise<{ clientId: string; leaseId: string }> {
+  const response = await server.app.inject({
+    method: 'POST',
+    url: '/api/v1/session/lease',
+    payload: { clientId: 'test-client' },
+  });
+  const body = response.json<LeaseResponse>();
+  if (body.leaseId === undefined) throw new Error('lease unavailable');
+  return { clientId: body.clientId, leaseId: body.leaseId };
+}
+
 /** Multipart kayıt gövdesini elle kurar (undici FormData yerine deterministik). */
 function multipartBody(
   boundary: string,
@@ -63,25 +76,28 @@ function multipartBody(
   return Buffer.concat(chunks);
 }
 
-function save(
+async function save(
   server: AssetStudioServer,
   targets: { assetId: string; expectedRevision: string; payload: Buffer }[],
 ): Promise<LightMyRequestResponse> {
+  const { clientId, leaseId } = await acquireLease(server);
   const boundary = 'volboundary123';
   const plan = {
     transactionId: 'tx-1',
     targets: targets.map((target, index) => ({
       assetId: target.assetId,
       expectedRevision: target.expectedRevision,
-      width: 2,
-      height: 2,
       payloadPart: `p${index}`,
     })),
   };
   return server.app.inject({
     method: 'POST',
     url: '/api/v1/save-transactions',
-    headers: { 'content-type': `multipart/form-data; boundary=${boundary}` },
+    headers: {
+      'content-type': `multipart/form-data; boundary=${boundary}`,
+      'x-vol-client-id': clientId,
+      'x-vol-lease-id': leaseId,
+    },
     payload: multipartBody(
       boundary,
       plan,
@@ -237,12 +253,17 @@ describe('save-transaction', () => {
 
   it('geçersiz planı diske dokunmadan reddeder', async () => {
     const { server, fixture, png } = await setup();
+    const { clientId, leaseId } = await acquireLease(server);
     const before = await readFile(fixture.pngPath);
 
     const missingPart = await server.app.inject({
       method: 'POST',
       url: '/api/v1/save-transactions',
-      headers: { 'content-type': 'multipart/form-data; boundary=b1' },
+      headers: {
+        'content-type': 'multipart/form-data; boundary=b1',
+        'x-vol-client-id': clientId,
+        'x-vol-lease-id': leaseId,
+      },
       payload: multipartBody(
         'b1',
         {
@@ -251,8 +272,6 @@ describe('save-transaction', () => {
             {
               assetId: png.id,
               expectedRevision: png.revision,
-              width: 2,
-              height: 2,
               payloadPart: 'yok',
             },
           ],
@@ -267,13 +286,39 @@ describe('save-transaction', () => {
 
   it('multipart olmayan gövdeyi reddeder', async () => {
     const { server } = await setup();
+    const { clientId, leaseId } = await acquireLease(server);
 
     const response = await server.app.inject({
       method: 'POST',
       url: '/api/v1/save-transactions',
+      headers: {
+        'content-type': 'application/json',
+        'x-vol-client-id': clientId,
+        'x-vol-lease-id': leaseId,
+      },
       payload: { transactionId: 'x', targets: [] },
     });
 
     expect(response.statusCode).toBe(400);
+  });
+
+  it('lease başlığı olmadan kayıt reddeder', async () => {
+    const { server, png } = await setup();
+    const payload = await solidPng('#00ff00ff');
+    const boundary = 'volboundary123';
+    const plan = {
+      transactionId: 'tx-1',
+      targets: [{ assetId: png.id, expectedRevision: png.revision, payloadPart: 'p0' }],
+    };
+
+    const response = await server.app.inject({
+      method: 'POST',
+      url: '/api/v1/save-transactions',
+      headers: { 'content-type': `multipart/form-data; boundary=${boundary}` },
+      payload: multipartBody(boundary, plan, [{ name: 'p0', data: payload }]),
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toMatchObject({ error: { code: 'editor_lease_required' } });
   });
 });

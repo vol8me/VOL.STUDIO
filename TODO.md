@@ -4,6 +4,27 @@
 kaydıdır**: ne yapıldı, hangi kapı koşuldu, geriye ne kaldı. Turun ayrıntısı
 commit diff'inde ve git geçmişindedir; burada tekrarlanmaz.
 
+## 2026-08-24 — P0/P1 cursor ve Asset Studio düzeltmeleri
+
+- DOM cursor: `DomCursorRenderer` çift ofset kaldırıldı; overlay `left/top`
+  ile konumlanıyor, transform temizleniyor.
+- Phaser cursor: `PhaserCursorManager` sahne cursorunu `none` yapıp `destroy`
+  ile önceki değeri geri yüklüyor.
+- `CursorId` artık `KnownCursorId | (string & {})` şeklinde; özel cursor
+  genişlemeleri kaydedilebilir ve çözümlenebilir.
+- `vol-ui` INPUT sekmesi vurgu renkleri artık `VOL_COLORS` master paletinden
+  (`accentSolid`, `brandHover`, `successSolid`, `dangerSolid`); master
+  palet dışı mor kaldırıldı.
+- Asset Studio yazma lease'i: mutation uçları (`audio/render`,
+  `save-transactions`, `delete`, `restore`) `EditorLeaseManager.assertEditor`
+  ile `x-vol-client-id` / `x-vol-lease-id` başlıklarına göre denetleniyor.
+- `AssetStudioClient` `acquireLease` / `renewLease` / `ensureLease` ile
+  çalışıyor; `saveAudio` ve `saveRaster` lease başlıklarını gönderiyor.
+- `SaveTargetRequest` gereksiz `width` / `height` alanlarını kaybetti;
+  `transactionId` isteğe bağlı; boş payload ve `transactionId` türü doğrulanıyor.
+- Doğrulama: `pnpm high` geçti (contract, format, typecheck, lint, lint:css,
+  `test:coverage`, `build:all`, asset-studio e2e).
+
 ## 2026-08-24 — VOL Cursor Ailesi ve vol-ui INPUT sekmesi
 
 `core/src/input/cursor/*` ile 20 vektörel cursor tanımlandı: `types.ts`,

@@ -21,6 +21,7 @@ export class PhaserCursorManager {
   private commandsCache = new Map<string, DrawCommand[]>();
   private currentAsset: CursorAsset | null = null;
   private tween: Phaser.Tweens.Tween | null = null;
+  private previousCursor: string;
   private colorTokens: {
     outline: number;
     body: number;
@@ -41,6 +42,8 @@ export class PhaserCursorManager {
     this.scene = scene;
     this.registry = new CursorRegistry();
     this.colorTokens = toPhaserTokens(theme?.colors ?? defaultColors());
+    this.previousCursor = scene.input.manager.defaultCursor;
+    scene.input.setDefaultCursor('none');
     if (theme) {
       this.registry.registerTheme(theme);
     }
@@ -157,6 +160,7 @@ export class PhaserCursorManager {
     this.scene.events.off('update', this.onSceneUpdate);
     this.tween?.stop();
     this.tween?.destroy();
+    this.scene.input.setDefaultCursor(this.previousCursor);
     this.container.destroy();
   }
 }

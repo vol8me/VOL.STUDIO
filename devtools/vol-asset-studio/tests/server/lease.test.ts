@@ -36,6 +36,15 @@ describe('EditorLeaseManager', () => {
     const lease = new EditorLeaseManager();
     expect(() => lease.renew('client-a', 'not-the-lease')).toThrow(AssetStudioError);
   });
+
+  it('assertEditor yanlış veya süresi dolmuş lease reddeder', () => {
+    const lease = new EditorLeaseManager();
+    const first = lease.acquire('client-a');
+    expect(first.leaseId).toBeDefined();
+    lease.assertEditor('client-a', first.leaseId!);
+    expect(() => lease.assertEditor('client-b', first.leaseId!)).toThrow(AssetStudioError);
+    expect(() => lease.assertEditor('client-a', 'not-the-lease')).toThrow(AssetStudioError);
+  });
 });
 
 describe('ağ erişimi yardımcıları', () => {

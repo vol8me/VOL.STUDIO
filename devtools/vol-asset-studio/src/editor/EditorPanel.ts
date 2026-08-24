@@ -414,13 +414,7 @@ export class EditorPanel {
     this.#status.textContent = this.#t('editor.saving');
     try {
       const png = await this.#encodePng(session);
-      const response = await this.#options.client.saveRaster(
-        asset,
-        session.revision,
-        session.surface.width,
-        session.surface.height,
-        png,
-      );
+      const response = await this.#options.client.saveRaster(asset, session.revision, png);
       const result = response.results[0];
       session.markSaved(result.revision);
       this.#options.onSaved(asset.id, result.revision);

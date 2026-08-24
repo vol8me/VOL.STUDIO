@@ -35,7 +35,11 @@ interface FakeScene {
   };
   tweens: { add: MockFn<[], FakeTween> };
   events: { on: MockFn; off: MockFn };
-  input: { activePointer: { x: number; y: number } };
+  input: {
+    activePointer: { x: number; y: number };
+    setDefaultCursor: MockFn<[], void>;
+    manager: { defaultCursor: string };
+  };
 }
 
 function createFakeScene(): FakeScene {
@@ -66,7 +70,11 @@ function createFakeScene(): FakeScene {
 
   const pointer = { x: 100, y: 200 };
 
-  const input = { activePointer: pointer };
+  const input = {
+    activePointer: pointer,
+    setDefaultCursor: vi.fn(),
+    manager: { defaultCursor: 'default' },
+  };
 
   return {
     add: {
@@ -122,5 +130,12 @@ describe('PhaserCursorManager', () => {
     const manager = new PhaserCursorManager(fakeScene as unknown as Phaser.Scene, VolCursorTheme);
     manager.destroy();
     expect(fakeScene.events.off).toHaveBeenCalledWith('update', expect.any(Function));
+  });
+
+  it('sahne cursorunu gizler ve destroyda eski haline getirir', () => {
+    const manager = new PhaserCursorManager(fakeScene as unknown as Phaser.Scene, VolCursorTheme);
+    expect(fakeScene.input.setDefaultCursor).toHaveBeenCalledWith('none');
+    manager.destroy();
+    expect(fakeScene.input.setDefaultCursor).toHaveBeenCalledWith('default');
   });
 });

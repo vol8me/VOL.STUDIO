@@ -4,7 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createAssetStudioServer, type AssetStudioServer } from '../../server/app.js';
-import type { AssetSummary, CatalogResponse } from '../../shared/contracts.js';
+import type { AssetSummary, CatalogResponse, LeaseResponse } from '../../shared/contracts.js';
 import { createFixtureProject, type FixtureProject } from './fixtures.js';
 
 const fixtures: FixtureProject[] = [];
@@ -36,6 +36,19 @@ async function setup(
     server.accessToken === undefined ? {} : { 'x-vol-asset-token': server.accessToken };
   const catalog = await server.app.inject({ method: 'GET', url: '/api/v1/catalog', headers });
   return { fixture, server, assets: catalog.json<CatalogResponse>().assets };
+}
+
+async function acquireLease(
+  server: AssetStudioServer,
+): Promise<{ clientId: string; leaseId: string }> {
+  const response = await server.app.inject({
+    method: 'POST',
+    url: '/api/v1/session/lease',
+    payload: { clientId: 'route-test' },
+  });
+  const body = response.json<LeaseResponse>();
+  if (body.leaseId === undefined) throw new Error('lease unavailable');
+  return { clientId: body.clientId, leaseId: body.leaseId };
 }
 
 describe('Asset Studio API', () => {
@@ -123,10 +136,16 @@ describe('Asset Studio API', () => {
   it('ses işlem zincirini FFmpeg ile uygulayıp revizyon kontrollü kaydeder', async () => {
     const { server, assets, fixture } = await setup();
     const audio = assets.find((asset) => asset.name === 'tone.wav')!;
+    const { clientId, leaseId } = await acquireLease(server);
     const before = await readFile(fixture.wavPath);
     const response = await server.app.inject({
       method: 'POST',
       url: `/api/v1/assets/${audio.id}/audio/render`,
+      headers: {
+        'content-type': 'application/json',
+        'x-vol-client-id': clientId,
+        'x-vol-lease-id': leaseId,
+      },
       payload: {
         expectedRevision: audio.revision,
         operations: [{ kind: 'gain', decibels: -6 }],
@@ -144,6 +163,11 @@ describe('Asset Studio API', () => {
     const stale = await server.app.inject({
       method: 'POST',
       url: `/api/v1/assets/${audio.id}/audio/render`,
+      headers: {
+        'content-type': 'application/json',
+        'x-vol-client-id': clientId,
+        'x-vol-lease-id': leaseId,
+      },
       payload: {
         expectedRevision: audio.revision,
         operations: [{ kind: 'reverse' }],
@@ -424,6 +448,63 @@ describe('Asset Studio API', () => {
     });
     expect(rebound.statusCode).toBe(400);
     expect(crossOrigin.statusCode).toBe(403);
+  });
+
+  it('değişiklik uçlarında editör lease başlığı zorunludur', async () => {
+    const { server, assets } = await setup();
+    const audio = assets.find((asset) => asset.name === 'tone.wav')!;
+    const png = assets.find((asset) => asset.name === 'car.png')!;
+
+    const noLeaseRender = await server.app.inject({
+      method: 'POST',
+      url: `/api/v1/assets/${audio.id}/audio/render`,
+      headers: { 'content-type': 'application/json' },
+      payload: {
+        expectedRevision: audio.revision,
+        operations: [{ kind: 'gain', decibels: -6 }],
+      },
+    });
+    expect(noLeaseRender.statusCode).toBe(409);
+    expect(noLeaseRender.json()).toMatchObject({ error: { code: 'editor_lease_required' } });
+
+    const noLeaseDelete = await server.app.inject({
+      method: 'POST',
+      url: `/api/v1/file-operations/delete/${png.id}`,
+    });
+    expect(noLeaseDelete.statusCode).toBe(409);
+    expect(noLeaseDelete.json()).toMatchObject({ error: { code: 'editor_lease_required' } });
+
+    const noLeaseRestore = await server.app.inject({
+      method: 'POST',
+      url: '/api/v1/file-operations/restore',
+      payload: { trashId: 'x' },
+    });
+    expect(noLeaseRestore.statusCode).toBe(409);
+    expect(noLeaseRestore.json()).toMatchObject({ error: { code: 'editor_lease_required' } });
+  });
+
+  it('editör lease ile dosya siler ve geri yükler', async () => {
+    const { server, fixture, assets } = await setup();
+    const png = assets.find((asset) => asset.name === 'car.png')!;
+    const { clientId, leaseId } = await acquireLease(server);
+
+    const deleted = await server.app.inject({
+      method: 'POST',
+      url: `/api/v1/file-operations/delete/${png.id}`,
+      headers: { 'x-vol-client-id': clientId, 'x-vol-lease-id': leaseId },
+    });
+    expect(deleted.statusCode).toBe(200);
+    const { trashId } = deleted.json<{ trashId: string }>();
+    await expect(readFile(fixture.pngPath)).rejects.toThrow();
+
+    const restored = await server.app.inject({
+      method: 'POST',
+      url: '/api/v1/file-operations/restore',
+      headers: { 'x-vol-client-id': clientId, 'x-vol-lease-id': leaseId },
+      payload: { trashId },
+    });
+    expect(restored.statusCode).toBe(200);
+    await expect(readFile(fixture.pngPath)).resolves.toBeTruthy();
   });
 
   it('açık SSE bağlantısını kontrollü kapatıp sunucunun kapanmasını tamamlar', async () => {

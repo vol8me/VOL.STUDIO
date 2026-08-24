@@ -1,4 +1,5 @@
 import { i18next } from '@volstudio/core/i18n';
+import { VOL_COLORS } from '@volstudio/core';
 import {
   DomCursorRenderer,
   VolCursorTheme,
@@ -14,10 +15,10 @@ import { card, cardGrid } from './shared';
 
 const SIZES = [16, 24, 32] as const;
 const ACCENTS = [
-  { name: 'blue', value: '#565dbe' },
-  { name: 'orange', value: '#d67434' },
-  { name: 'green', value: '#307a57' },
-  { name: 'purple', value: '#8e44ad' },
+  { name: 'accent', value: VOL_COLORS.accentSolid },
+  { name: 'brand', value: VOL_COLORS.brandHover },
+  { name: 'success', value: VOL_COLORS.successSolid },
+  { name: 'danger', value: VOL_COLORS.dangerSolid },
 ];
 
 type Destroyable = { destroy(): void };

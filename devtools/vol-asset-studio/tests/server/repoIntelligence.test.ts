@@ -2,7 +2,7 @@ import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createAssetStudioServer, type AssetStudioServer } from '../../server/app.js';
-import type { CatalogResponse } from '../../shared/contracts.js';
+import type { CatalogResponse, LeaseResponse } from '../../shared/contracts.js';
 import { createFixtureProject, type FixtureProject } from './fixtures.js';
 
 const fixtures: FixtureProject[] = [];
@@ -34,6 +34,19 @@ async function setup(): Promise<{
   const wav = assets.find((asset) => asset.path.endsWith('tone.wav'));
   if (png === undefined || wav === undefined) throw new Error('fixture eksik');
   return { fixture, server, pngId: png.id, wavId: wav.id };
+}
+
+async function acquireLease(
+  server: AssetStudioServer,
+): Promise<{ clientId: string; leaseId: string }> {
+  const response = await server.app.inject({
+    method: 'POST',
+    url: '/api/v1/session/lease',
+    payload: { clientId: 'repo-test' },
+  });
+  const body = response.json<LeaseResponse>();
+  if (body.leaseId === undefined) throw new Error('lease unavailable');
+  return { clientId: body.clientId, leaseId: body.leaseId };
 }
 
 describe('waveform ucu', () => {
@@ -132,11 +145,13 @@ describe('rename önizleme ucu', () => {
 describe('kurtarılabilir silme uçları', () => {
   it('siler, listeler ve geri yükler', async () => {
     const { server, fixture, pngId } = await setup();
+    const { clientId, leaseId } = await acquireLease(server);
     const before = await readFile(fixture.pngPath);
 
     const deleted = await server.app.inject({
       method: 'POST',
       url: `/api/v1/file-operations/delete/${pngId}`,
+      headers: { 'x-vol-client-id': clientId, 'x-vol-lease-id': leaseId },
     });
     expect(deleted.statusCode).toBe(200);
     const entry = deleted.json<{ trashId: string; originalPath: string }>();
@@ -152,6 +167,7 @@ describe('kurtarılabilir silme uçları', () => {
     const restored = await server.app.inject({
       method: 'POST',
       url: '/api/v1/file-operations/restore',
+      headers: { 'x-vol-client-id': clientId, 'x-vol-lease-id': leaseId },
       payload: { trashId: entry.trashId },
     });
 
@@ -179,10 +195,12 @@ describe('kurtarılabilir silme uçları', () => {
     servers.push(server);
     const catalog = await server.app.inject({ method: 'GET', url: '/api/v1/catalog' });
     const png = catalog.json<CatalogResponse>().assets.find((a) => a.path.endsWith('car.png'));
+    const { clientId, leaseId } = await acquireLease(server);
 
     const response = await server.app.inject({
       method: 'POST',
       url: `/api/v1/file-operations/delete/${png?.id ?? 'x'}`,
+      headers: { 'x-vol-client-id': clientId, 'x-vol-lease-id': leaseId },
     });
 
     expect(response.statusCode).toBe(403);
@@ -191,10 +209,12 @@ describe('kurtarılabilir silme uçları', () => {
 
   it('geçersiz trashId reddedilir', async () => {
     const { server } = await setup();
+    const { clientId, leaseId } = await acquireLease(server);
 
     const response = await server.app.inject({
       method: 'POST',
       url: '/api/v1/file-operations/restore',
+      headers: { 'x-vol-client-id': clientId, 'x-vol-lease-id': leaseId },
       payload: { trashId: 42 },
     });
 

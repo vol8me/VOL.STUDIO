@@ -29,7 +29,18 @@ describe('CursorRegistry', () => {
   it('bilinmeyen id için default cursor döner', () => {
     const registry = new CursorRegistry();
     registry.registerTheme(VolCursorTheme);
-    const fallback = registry.resolve('unknown-cursor-id' as 'default');
+    const fallback = registry.resolve('unknown-cursor-id');
     expect(fallback.id).toBe('default');
+  });
+
+  it('özel id kaydı ve çözümlemesi', () => {
+    const registry = new CursorRegistry();
+    registry.registerTheme(VolCursorTheme);
+    const custom = {
+      ...VolCursorTheme.cursors.default,
+      id: 'my-cursor',
+    };
+    registry.register(custom);
+    expect(registry.resolve('my-cursor').id).toBe('my-cursor');
   });
 });

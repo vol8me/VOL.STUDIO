@@ -5,6 +5,7 @@ import type {
   AssetSummary,
   AudioMetadata,
   CatalogResponse,
+  LeaseResponse,
   ProjectResponse,
   SaveTransactionResponse,
   SessionResponse,
@@ -53,7 +54,13 @@ async function errorCodeOf(response: Response): Promise<string> {
 
 /** Repo hostunun sürümlü HTTP/SSE yüzeyini tek noktada toplar. */
 export class AssetStudioClient {
-  constructor(private readonly baseUrl = '') {}
+  private clientId: string;
+  private leaseId?: string;
+  private leaseExpiresAt?: number;
+
+  constructor(private readonly baseUrl = '') {
+    this.clientId = this.#makeClientId();
+  }
 
   getProject(signal?: AbortSignal): Promise<ProjectResponse> {
     return this.request<ProjectResponse>('/api/v1/project', signal);
@@ -113,20 +120,20 @@ export class AssetStudioClient {
     operations: readonly AudioEditOperation[],
     signal?: AbortSignal,
   ): Promise<AudioRenderResponse> {
-    const response = await fetch(
-      this.url(`/api/v1/assets/${encodeURIComponent(assetId)}/audio/render`),
+    await this.#ensureLease(signal);
+    return this.request<AudioRenderResponse>(
+      `/api/v1/assets/${encodeURIComponent(assetId)}/audio/render`,
+      signal,
       {
         method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          'x-vol-client-id': this.clientId,
+          'x-vol-lease-id': this.leaseId!,
+        },
         body: JSON.stringify({ expectedRevision, operations }),
-        ...(signal === undefined ? {} : { signal }),
       },
     );
-    if (!response.ok) {
-      throw new AssetStudioApiError(await errorCodeOf(response), response.status);
-    }
-    return (await response.json()) as AudioRenderResponse;
   }
 
   /**
@@ -160,31 +167,78 @@ export class AssetStudioClient {
   async saveRaster(
     asset: Pick<AssetSummary, 'id'>,
     expectedRevision: string,
-    width: number,
-    height: number,
     png: Blob,
     signal?: AbortSignal,
   ): Promise<SaveTransactionResponse> {
+    await this.#ensureLease(signal);
     const transactionId = `tx-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     const body = new FormData();
     body.set(
       'transaction',
       JSON.stringify({
         transactionId,
-        targets: [{ assetId: asset.id, expectedRevision, width, height, payloadPart: 'payload0' }],
+        targets: [{ assetId: asset.id, expectedRevision, payloadPart: 'payload0' }],
       }),
     );
     body.set('payload0', png, 'payload0.png');
-    const response = await fetch(this.url('/api/v1/save-transactions'), {
+    return this.request<SaveTransactionResponse>('/api/v1/save-transactions', signal, {
       method: 'POST',
-      credentials: 'same-origin',
+      headers: {
+        'x-vol-client-id': this.clientId,
+        'x-vol-lease-id': this.leaseId!,
+      },
       body,
-      ...(signal === undefined ? {} : { signal }),
     });
-    if (!response.ok) {
-      throw new AssetStudioApiError(await errorCodeOf(response), response.status);
+  }
+
+  /** Sunucudan bir editör lease'i alır. */
+  async acquireLease(signal?: AbortSignal): Promise<void> {
+    const response = await this.request<LeaseResponse>('/api/v1/session/lease', signal, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ clientId: this.clientId }),
+    });
+    if (
+      response.mode !== 'editor' ||
+      response.leaseId === undefined ||
+      response.expiresAt === undefined
+    ) {
+      throw new AssetStudioApiError('editor_lease_required', 409);
     }
-    return (await response.json()) as SaveTransactionResponse;
+    this.leaseId = response.leaseId;
+    this.leaseExpiresAt = new Date(response.expiresAt).getTime();
+  }
+
+  /** Mevcut lease'i yeniler; başarısızsa bir kez yeni lease almaya çalışır. */
+  async renewLease(signal?: AbortSignal): Promise<void> {
+    if (this.leaseId === undefined) {
+      await this.acquireLease(signal);
+      return;
+    }
+    try {
+      const response = await this.request<LeaseResponse>('/api/v1/session/lease/renew', signal, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ clientId: this.clientId, leaseId: this.leaseId }),
+      });
+      if (response.leaseId !== undefined && response.expiresAt !== undefined) {
+        this.leaseId = response.leaseId;
+        this.leaseExpiresAt = new Date(response.expiresAt).getTime();
+      }
+    } catch (error) {
+      if (error instanceof AssetStudioApiError && error.status === 409) {
+        await this.acquireLease(signal);
+        return;
+      }
+      throw error;
+    }
+  }
+
+  /** Test veya manuel senaryolar için client/lease kimliklerini sabitler. */
+  setLease(clientId: string, leaseId: string): void {
+    this.clientId = clientId;
+    this.leaseId = leaseId;
+    this.leaseExpiresAt = Date.now() + 86_400_000;
   }
 
   authenticate(token: string, signal?: AbortSignal): Promise<SessionResponse> {
@@ -244,7 +298,7 @@ export class AssetStudioClient {
   private async request<T>(
     path: string,
     signal?: AbortSignal,
-    init: Pick<RequestInit, 'method' | 'headers'> = {},
+    init: Pick<RequestInit, 'method' | 'headers' | 'body'> = {},
   ): Promise<T> {
     const headers = new Headers(init.headers);
     headers.set('Accept', 'application/json');
@@ -295,5 +349,23 @@ export class AssetStudioClient {
     return this.baseUrl
       ? `${this.baseUrl}${url.pathname}${url.search}`
       : `${url.pathname}${url.search}`;
+  }
+
+  #makeClientId(): string {
+    const globalCrypto = typeof globalThis !== 'undefined' ? globalThis.crypto : undefined;
+    if (globalCrypto && typeof globalCrypto.randomUUID === 'function') {
+      return globalCrypto.randomUUID();
+    }
+    return `client-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  }
+
+  async #ensureLease(signal?: AbortSignal): Promise<void> {
+    if (
+      this.leaseId === undefined ||
+      this.leaseExpiresAt === undefined ||
+      this.leaseExpiresAt - Date.now() < 5_000
+    ) {
+      await this.renewLease(signal);
+    }
   }
 }

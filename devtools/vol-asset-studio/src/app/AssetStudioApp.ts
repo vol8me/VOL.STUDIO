@@ -63,6 +63,7 @@ export class AssetStudioApp {
   private request: AbortController | null = null;
   private subscription: AssetEventSubscription | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private leaseInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(private readonly options: AssetStudioAppOptions) {
     this.t = options.t;
@@ -222,6 +223,9 @@ export class AssetStudioApp {
 
   async start(): Promise<void> {
     await this.load();
+    if (this.loadingLayer.dataset.state === undefined) {
+      await this.#startLease();
+    }
   }
 
   async load(): Promise<void> {
@@ -262,6 +266,10 @@ export class AssetStudioApp {
     this.request?.abort();
     this.subscription?.close();
     this.subscription = null;
+    if (this.leaseInterval) {
+      clearInterval(this.leaseInterval);
+      this.leaseInterval = null;
+    }
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.fullscreenTooltip.destroy();
     this.library.destroy();
@@ -393,6 +401,9 @@ export class AssetStudioApp {
       await this.options.client.authenticate(token);
       this.authenticationToken.value = '';
       await this.load();
+      if (this.loadingLayer.dataset.state === undefined) {
+        await this.#startLease();
+      }
     } catch (error) {
       if (error instanceof AssetStudioApiError && error.code === 'authentication_required') {
         this.showAuthentication('authentication.invalid');
@@ -410,6 +421,18 @@ export class AssetStudioApp {
       (event) => void this.handleAssetEvent(event),
       (state) => this.setConnection(state),
     );
+  }
+
+  async #startLease(): Promise<void> {
+    if (this.leaseInterval !== null) return;
+    try {
+      await this.options.client.acquireLease();
+      this.leaseInterval = setInterval(() => {
+        void this.options.client.renewLease();
+      }, 15_000);
+    } catch (error) {
+      this.showError(error);
+    }
   }
 
   private renderLabels(): void {

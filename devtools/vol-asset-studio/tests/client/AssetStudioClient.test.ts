@@ -107,7 +107,7 @@ describe('AssetStudioClient', () => {
     });
   });
 
-  it('ses işlem zincirini JSON gövdesi ve revizyonla gönderir', async () => {
+  it('ses işlem zincirini JSON gövdesi, revizyon ve lease başlıklarıyla gönderir', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ assetId: 'audio-1', revision: 'b'.repeat(64), bytes: 128 }), {
         status: 200,
@@ -116,13 +116,17 @@ describe('AssetStudioClient', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    await new AssetStudioClient().saveAudio('audio/1', 'a'.repeat(64), [
-      { kind: 'gain', decibels: -3 },
-    ]);
+    const client = new AssetStudioClient();
+    client.setLease('client-1', 'a'.repeat(32));
+    await client.saveAudio('audio/1', 'a'.repeat(64), [{ kind: 'gain', decibels: -3 }]);
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('/api/v1/assets/audio%2F1/audio/render');
     expect(init.method).toBe('POST');
+    const headers = new Headers(init.headers);
+    expect(headers.get('x-vol-client-id')).toBe('client-1');
+    expect(headers.get('x-vol-lease-id')).toBe('a'.repeat(32));
+    expect(headers.get('content-type')).toBe('application/json');
     const bodyText = init.body as string;
     expect(JSON.parse(bodyText)).toEqual({
       expectedRevision: 'a'.repeat(64),

@@ -23,6 +23,9 @@ class FakeClient {
   authenticate = vi.fn(() =>
     Promise.resolve({ authenticated: true as const, expiresAt: '2026-08-24T00:00:00Z' }),
   );
+  acquireLease = vi.fn().mockResolvedValue(undefined);
+  renewLease = vi.fn().mockResolvedValue(undefined);
+  setLease = vi.fn();
 
   subscribe(
     onEvent: (event: AssetEvent) => void,

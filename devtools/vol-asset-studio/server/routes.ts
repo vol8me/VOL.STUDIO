@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { basename, extname } from 'node:path';
-import type { FastifyInstance, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import sharp from 'sharp';
 import type { AudioRenderRequest, AudioRenderResponse } from '../shared/audio.js';
 import type {
@@ -87,6 +87,9 @@ function buildSaveTargets(
   if (plan === undefined || !Array.isArray(plan.targets) || plan.targets.length === 0) {
     throw new AssetStudioError('invalid_request', 400, { field: 'transaction.targets' });
   }
+  if (plan.transactionId !== undefined && typeof plan.transactionId !== 'string') {
+    throw new AssetStudioError('invalid_request', 400, { field: 'transaction.transactionId' });
+  }
   return plan.targets.map((target, index) => {
     const field = `transaction.targets.${index}`;
     if (typeof target.assetId !== 'string' || !ASSET_ID_PATTERN.test(target.assetId)) {
@@ -108,6 +111,12 @@ function buildSaveTargets(
         reason: 'missing_part',
       });
     }
+    if (payload.length === 0) {
+      throw new AssetStudioError('invalid_request', 400, {
+        field: `${field}.payload`,
+        reason: 'empty',
+      });
+    }
     return { assetId: target.assetId, expectedRevision: target.expectedRevision, payload };
   });
 }
@@ -124,6 +133,22 @@ function leaseIdFrom(body: LeaseBody): string {
     throw new AssetStudioError('invalid_request', 400, { field: 'leaseId' });
   }
   return body.leaseId;
+}
+
+/**
+ * İstek başlıklarından editör lease kimliklerini çıkarır.
+ *
+ * `clientIdFrom` / `leaseIdFrom` doğrulamasını yeniden kullanır; başlık
+ * eksik veya biçimsizse 400 yerine 409 `editor_lease_required` döner.
+ */
+function editorLeaseFrom(request: FastifyRequest): [string, string] {
+  const clientId = headerString(request.headers['x-vol-client-id']);
+  const leaseId = headerString(request.headers['x-vol-lease-id']);
+  try {
+    return [clientIdFrom({ clientId }), leaseIdFrom({ leaseId })];
+  } catch {
+    throw new AssetStudioError('editor_lease_required', 409);
+  }
 }
 
 export function formatSseEvent(event: AssetEvent): string {
@@ -339,6 +364,8 @@ export function registerApiRoutes(app: FastifyInstance, options: ApiRouteOptions
   app.post<{ Params: AssetParams; Body: AudioRenderRequest }>(
     '/api/v1/assets/:id/audio/render',
     async (request): Promise<AudioRenderResponse> => {
+      const [clientId, leaseId] = editorLeaseFrom(request);
+      options.leases.assertEditor(clientId, leaseId);
       const record = options.catalog.get(request.params.id);
       const body = request.body;
       if (record.summary.kind !== 'audio') {
@@ -493,6 +520,8 @@ export function registerApiRoutes(app: FastifyInstance, options: ApiRouteOptions
   );
 
   app.post<{ Params: AssetParams }>('/api/v1/file-operations/delete/:id', async (request) => {
+    const [clientId, leaseId] = editorLeaseFrom(request);
+    options.leases.assertEditor(clientId, leaseId);
     const record = options.catalog.get(request.params.id);
     if (record.summary.role === 'readonly') {
       throw new AssetStudioError('asset_readonly', 403, { assetId: record.summary.id });
@@ -505,6 +534,8 @@ export function registerApiRoutes(app: FastifyInstance, options: ApiRouteOptions
   app.get('/api/v1/file-operations/trash', () => options.trash.list());
 
   app.post<{ Body: { trashId?: unknown } }>('/api/v1/file-operations/restore', async (request) => {
+    const [clientId, leaseId] = editorLeaseFrom(request);
+    options.leases.assertEditor(clientId, leaseId);
     const trashId = request.body?.trashId;
     if (typeof trashId !== 'string') {
       throw new AssetStudioError('invalid_request', 400, { field: 'trashId' });
@@ -554,6 +585,8 @@ export function registerApiRoutes(app: FastifyInstance, options: ApiRouteOptions
    * gömmek base64 ile %33 şişirir ve bellekte iki kopya yaratır.
    */
   app.post('/api/v1/save-transactions', async (request): Promise<SaveTransactionResponse> => {
+    const [clientId, leaseId] = editorLeaseFrom(request);
+    options.leases.assertEditor(clientId, leaseId);
     if (!request.isMultipart()) {
       throw new AssetStudioError('invalid_request', 400, { field: 'content-type' });
     }

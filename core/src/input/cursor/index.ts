@@ -5,6 +5,7 @@ export type {
   CursorLayer,
   CursorLayerRole,
   CursorTheme,
+  KnownCursorId,
 } from './types';
 
 export { CursorRegistry } from './CursorRegistry';

@@ -77,6 +77,12 @@ export async function runSaveTransaction(
       });
     }
     seen.add(target.assetId);
+    if (target.payload.length === 0) {
+      throw new AssetStudioError('invalid_request', 400, {
+        field: 'targets.payload',
+        reason: 'empty',
+      });
+    }
     if (target.payload.length > options.maxAssetBytes) {
       throw new AssetStudioError('asset_too_large', 413, { maximum: options.maxAssetBytes });
     }

@@ -7,7 +7,7 @@
  */
 
 /** v1'de tanımlı cursor kimlikleri. */
-export type CursorId =
+export type KnownCursorId =
   | 'default'
   | 'pointer'
   | 'text'
@@ -28,6 +28,9 @@ export type CursorId =
   | 'wait'
   | 'help'
   | 'target';
+
+/** Tanımlı cursor kimlikleri veya özel genişletme. */
+export type CursorId = KnownCursorId | (string & {});
 
 /** Bir katmanın çizim rengi rolü. */
 export type CursorLayerRole = 'outline' | 'body' | 'accent' | 'danger' | 'disabled';

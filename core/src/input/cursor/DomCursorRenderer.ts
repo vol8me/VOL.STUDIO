@@ -82,8 +82,8 @@ export class DomCursorRenderer {
     this.overlay.setAttribute('class', 'vol-cursor-overlay');
     this.overlay.setAttribute('pointer-events', 'none');
     this.overlay.style.position = 'fixed';
-    this.overlay.style.left = '0px';
-    this.overlay.style.top = '0px';
+    this.overlay.style.left = '-9999px';
+    this.overlay.style.top = '-9999px';
     this.overlay.style.zIndex = '2147483647';
     this.overlay.setAttribute('fill', 'none');
 
@@ -128,7 +128,6 @@ export class DomCursorRenderer {
     if (!this.currentAsset) return;
 
     const asset = this.currentAsset;
-    const scale = this.size / asset.viewBox;
 
     this.overlay.setAttribute('viewBox', `0 0 ${asset.viewBox} ${asset.viewBox}`);
     this.overlay.setAttribute('width', String(this.size));
@@ -147,9 +146,7 @@ export class DomCursorRenderer {
       this.overlay.appendChild(path);
     }
 
-    const x = -asset.hotspotX * scale;
-    const y = -asset.hotspotY * scale;
-    this.overlay.style.transform = `translate(${x}px, ${y}px)`;
+    this.overlay.style.transform = '';
   }
 
   destroy(): void {
