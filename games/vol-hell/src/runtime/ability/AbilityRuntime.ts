@@ -13,6 +13,7 @@ import type { EffectManager } from '@/runtime/systems/EffectManager';
 import { diagnostics, gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
 import type { SoundEvent } from '@/config/sounds';
+import { clampFinite, finiteOr, nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 import { AbilityUpgrades } from './AbilityUpgrades';
 import { ChainLightningAbility } from './ChainLightningAbility';
 import { FireZoneAbility } from './FireZoneAbility';
@@ -107,13 +108,14 @@ export class AbilityRuntime implements AbilityWorld {
    * Bağlam nesnesi bir kez kurulup yerinde güncellenir — her frame yeni obje yok.
    */
   update(deltaMs: number, playerPos: Vector2, aim: Vector2, enemies: readonly Enemy[]): void {
+    const safeDelta = safeDeltaMs(deltaMs);
     const context = this.refreshContext(playerPos, aim, enemies);
 
     for (const slot of ABILITY_SLOTS) {
-      this.slots.get(slot)?.update(deltaMs, context);
+      this.slots.get(slot)?.update(safeDelta, context);
     }
 
-    this.turret?.update(deltaMs, enemies);
+    this.turret?.update(safeDelta, enemies);
     if (this.turret && !this.turret.isAlive) {
       // Kule yıkıldığında havadaki mermileri de kapat: referansı düşürmek
       // yetmez, o Arc'lar sahnede donmuş halde kalırdı.
@@ -123,13 +125,13 @@ export class AbilityRuntime implements AbilityWorld {
 
     for (let i = this.zones.length - 1; i >= 0; i--) {
       const zone = this.zones[i];
-      zone.update(deltaMs, enemies);
+      zone.update(safeDelta, enemies);
       if (!zone.isActive) this.zones.splice(i, 1);
     }
 
     for (let i = this.strikes.length - 1; i >= 0; i--) {
       const strike = this.strikes[i];
-      strike.update(deltaMs, enemies);
+      strike.update(safeDelta, enemies);
       if (!strike.isActive) this.strikes.splice(i, 1);
     }
   }
@@ -162,7 +164,7 @@ export class AbilityRuntime implements AbilityWorld {
     this.turret?.destroy();
     this.turret = new Turret(this.deps.scene, x, y, this.deps.effects, {
       ...params,
-      damage: Math.max(0, params.damage + this.upgrades.get('turretDamage')),
+      damage: nonNegativeFinite(params.damage + this.upgrades.get('turretDamage')),
     });
     this.playSfx('turretDeploy', sfxVolumes.turretDeploy);
   }
@@ -176,7 +178,7 @@ export class AbilityRuntime implements AbilityWorld {
         ...params,
         durationMs: Math.max(
           params.tickMs,
-          params.durationMs + this.upgrades.get('fireZoneDurationMs'),
+          nonNegativeFinite(params.durationMs + this.upgrades.get('fireZoneDurationMs')),
         ),
       }),
     );
@@ -195,7 +197,7 @@ export class AbilityRuntime implements AbilityWorld {
         this.deps.effects,
         params,
         this.visualRandom,
-        this.upgrades.get('chainBounces'),
+        Math.floor(clampFinite(this.upgrades.get('chainBounces'), 0, Number.MAX_SAFE_INTEGER, 0)),
       ),
     );
     this.playSfx('chainLightning', sfxVolumes.chainLightning);
@@ -235,10 +237,10 @@ export class AbilityRuntime implements AbilityWorld {
       border: this.deps.border,
       random: this.deps.random,
       playerStats: this.deps.playerStats,
-      playerX: playerPos.x,
-      playerY: playerPos.y,
-      aimX: aim.x,
-      aimY: aim.y,
+      playerX: finiteOr(playerPos.x, 0),
+      playerY: finiteOr(playerPos.y, 0),
+      aimX: finiteOr(aim.x, 0),
+      aimY: finiteOr(aim.y, 0),
       enemies,
       world: this,
       upgrades: this.upgrades,

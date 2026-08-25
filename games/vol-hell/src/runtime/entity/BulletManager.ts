@@ -6,6 +6,12 @@ import { Bullet } from './Bullet';
 import type { Border } from './Border';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import { diagnostics } from '@/app/services';
+import {
+  clampFinite,
+  hasFiniteDirection,
+  nonNegativeFinite,
+  safeDeltaMs,
+} from '@/runtime/utils/numeric';
 
 /**
  * Mermi yöneticisi — ateş cooldown, mermi yaşam döngüsü, trail partikül ve çarpışma.
@@ -17,6 +23,7 @@ import { diagnostics } from '@/app/services';
 export class BulletManager {
   private readonly bullets: Bullet[] = [];
   private fireCooldown = 0;
+  private destroyed = false;
   /** Reusable buffer — mermi başına yeni Vector2 yaratmaz. */
   private readonly directionBuf: Vector2 = new Vector2();
 
@@ -28,19 +35,27 @@ export class BulletManager {
 
   /** Ateş etmeye çalışır — cooldown aktifse reddedir. */
   tryFire(origin: Vector2, direction: Vector2): boolean {
-    if (this.fireCooldown > 0) return false;
+    if (this.destroyed || this.fireCooldown > 0) return false;
+    if (
+      !Number.isFinite(origin.x) ||
+      !Number.isFinite(origin.y) ||
+      !hasFiniteDirection(direction.x, direction.y)
+    ) {
+      return false;
+    }
 
     // Negatif hasar mermiyi iyileştiriciye çevirirdi.
-    this.spawnBullet(
-      origin.x,
-      origin.y,
-      direction.x,
-      direction.y,
-      Math.max(0, this.stats.getValue('damage')),
+    const damage = nonNegativeFinite(this.stats.getValue('damage'));
+    const fireRate = clampFinite(
+      this.stats.getValue('fireRate'),
+      bulletConfig.minFireCooldownMs,
+      Number.MAX_SAFE_INTEGER,
+      bulletConfig.minFireCooldownMs,
     );
+    this.spawnBullet(origin.x, origin.y, direction.x, direction.y, damage);
     // fireRate = atışlar arası bekleme (ms); alt sınır olmadan modifier'lar
     // ateşi frame başına bir mermiye kadar hızlandırabilirdi.
-    this.fireCooldown = Math.max(bulletConfig.minFireCooldownMs, this.stats.getValue('fireRate'));
+    this.fireCooldown = fireRate;
 
     return true;
   }
@@ -51,15 +66,18 @@ export class BulletManager {
    * sınırlayıcıdır, silahın temposuna ikinci kez tabi olmamalıdırlar.
    */
   spawnBullet(x: number, y: number, dirX: number, dirY: number, damage: number): void {
+    if (
+      this.destroyed ||
+      !Number.isFinite(x) ||
+      !Number.isFinite(y) ||
+      !hasFiniteDirection(dirX, dirY)
+    ) {
+      return;
+    }
+
+    const safeDamage = nonNegativeFinite(damage);
     this.directionBuf.set(dirX, dirY);
-    const bullet = new Bullet(
-      this.scene,
-      x,
-      y,
-      this.directionBuf,
-      this.effects,
-      Math.max(0, damage),
-    );
+    const bullet = new Bullet(this.scene, x, y, this.directionBuf, this.effects, safeDamage);
     this.bullets.push(bullet);
 
     const angleDeg = Math.atan2(dirY, dirX) * (180 / Math.PI);
@@ -73,13 +91,15 @@ export class BulletManager {
   }
 
   update(delta: number, border: Border): void {
+    if (this.destroyed) return;
+    const safeDelta = safeDeltaMs(delta);
     if (this.fireCooldown > 0) {
-      this.fireCooldown -= delta;
+      this.fireCooldown = Math.max(0, this.fireCooldown - safeDelta);
     }
 
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
-      bullet.update(delta, border);
+      bullet.update(safeDelta, border);
 
       if (!bullet.isAlive) {
         // Swap-and-pop: O(1) kaldırma, kaydırma yok
@@ -116,6 +136,7 @@ export class BulletManager {
    * @returns Silinen mermi sayısı.
    */
   clearAll(): number {
+    if (this.destroyed) return 0;
     const count = this.bullets.length;
     for (const bullet of this.bullets) {
       bullet.destroy();
@@ -126,9 +147,12 @@ export class BulletManager {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     for (const bullet of this.bullets) {
       bullet.destroy();
     }
     this.bullets.length = 0;
+    this.fireCooldown = 0;
   }
 }

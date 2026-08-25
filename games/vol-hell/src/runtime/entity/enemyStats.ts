@@ -3,6 +3,7 @@ import type { HellStat, HellStatBlock } from '@/config/stats';
 import { bulletConfig } from '@/config/bullet';
 import type { EnemyDefinition } from '@/config/enemies/types';
 import type { DifficultyState } from '@/runtime/systems/DifficultyCalculator';
+import { MAX_RUNTIME_VALUE, nonNegativeFinite } from '@/runtime/utils/numeric';
 
 /** Zorluk eğrisinin eklediği modifier'ların ortak kimliği. */
 export const DIFFICULTY_MODIFIER_ID = 'difficulty';
@@ -47,5 +48,6 @@ export function createEnemyStats(
  */
 export function quantizeEnemyHealth(health: number): number {
   const step = bulletConfig.damage;
-  return Math.max(step, Math.round(health / step) * step);
+  const safeHealth = nonNegativeFinite(health, step);
+  return Math.min(MAX_RUNTIME_VALUE, Math.max(step, Math.round(safeHealth / step) * step));
 }

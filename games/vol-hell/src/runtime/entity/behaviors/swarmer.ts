@@ -1,6 +1,7 @@
 import type { SwarmerParams } from '@/config/enemies/types';
 import { applyStandoffBehavior } from './seek';
 import type { BehaviorContext, VelocityOutput } from './types';
+import { nonNegativeFinite, safeDeltaMs, saturatingAdd } from '@/runtime/utils/numeric';
 
 /** Standoff bandının genişliği (mesafenin oranı) — yaklaş/kaç titremesini keser. */
 const STANDOFF_TOLERANCE_RATIO = 0.12;
@@ -45,17 +46,21 @@ export function applySwarmerBehavior(
 ): MinionSpawnRequest | null {
   applyStandoffBehavior(context, params.standoffDistance, STANDOFF_TOLERANCE_RATIO, out);
 
-  state.spawnTimerMs += context.deltaMs;
-  if (state.spawnTimerMs < params.spawnIntervalMs) return null;
+  state.spawnTimerMs = saturatingAdd(state.spawnTimerMs, safeDeltaMs(context.deltaMs));
+  const spawnIntervalMs = nonNegativeFinite(params.spawnIntervalMs, Number.MAX_SAFE_INTEGER);
+  if (state.spawnTimerMs < spawnIntervalMs) return null;
 
   // Sayaç, kapasite dolu olsa bile sıfırlanır: yoksa bir minion öldüğü anda
   // birikmiş sayaçla anında yeni sürü çıkar.
   state.spawnTimerMs = 0;
 
-  const free = params.maxMinions - state.aliveMinions;
+  const free =
+    Math.floor(nonNegativeFinite(params.maxMinions)) -
+    Math.floor(nonNegativeFinite(state.aliveMinions));
   if (free <= 0) return null;
 
-  const count = Math.min(params.spawnCount, free);
+  const count = Math.min(Math.floor(nonNegativeFinite(params.spawnCount)), free);
+  if (count <= 0) return null;
   request.minionId = params.minionId;
   request.count = count;
   request.radius = params.spawnRadius;

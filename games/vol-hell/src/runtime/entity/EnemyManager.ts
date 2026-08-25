@@ -13,6 +13,7 @@ import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { DifficultyState } from '@/runtime/systems/DifficultyCalculator';
 import { diagnostics } from '@/app/services';
+import { nonNegativeFinite, safeDeltaMs, saturatingAdd } from '@/runtime/utils/numeric';
 
 /** Düşman güncellemesine dışarıdan verilen sahne durumu. */
 export interface EnemyUpdateContext {
@@ -46,6 +47,7 @@ export class EnemyManager {
   private readonly externallyDriven = new Set<Enemy>();
   /** Reusable buffer — hedef seçimi her frame yeni Vector2 yaratmaz. */
   private readonly targetBuf: Vector2 = Vector2.zero();
+  private destroyed = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -56,7 +58,8 @@ export class EnemyManager {
 
   /** Aktif dalga — spawn havuzunu belirler. */
   setWave(wave: number): void {
-    this.currentWave = wave;
+    if (!Number.isFinite(wave)) return;
+    this.currentWave = Math.max(1, Math.floor(wave));
   }
 
   update(
@@ -68,17 +71,20 @@ export class EnemyManager {
     difficulty: DifficultyState,
     context: EnemyUpdateContext = {},
   ): void {
-    this.spawnTimer += delta;
-    if (
-      this.spawnTimer >= difficulty.spawnIntervalMs &&
-      this.enemies.length < difficulty.maxEnemies
-    ) {
+    if (this.destroyed) return;
+    const safeDelta = safeDeltaMs(delta);
+    this.spawnTimer = saturatingAdd(this.spawnTimer, safeDelta);
+    const spawnInterval = nonNegativeFinite(difficulty.spawnIntervalMs);
+    const maxEnemies = Number.isFinite(difficulty.maxEnemies)
+      ? Math.max(0, Math.floor(difficulty.maxEnemies))
+      : 0;
+    if (spawnInterval > 0 && this.spawnTimer >= spawnInterval && this.enemies.length < maxEnemies) {
       const spawned = this.spawnFromCatalog(border, playerPos, difficulty);
       if (spawned) {
         this.spawnTimer = 0;
       } else {
         // Spawn başarısız (oyuncuya çok yakın) — kısa bekleme sonra tekrar dene
-        this.spawnTimer = difficulty.spawnIntervalMs * enemyConfig.spawnRetryIntervalFactor;
+        this.spawnTimer = spawnInterval * enemyConfig.spawnRetryIntervalFactor;
       }
     }
 
@@ -89,7 +95,7 @@ export class EnemyManager {
       // listede tutulur (çarpışma, temizlik, spatial grid).
       if (!this.externallyDriven.has(enemy)) {
         const target = this.pickTarget(enemy, playerPos, context.turret ?? null);
-        const spawnRequest = enemy.update(delta, target, border, grid, this.random);
+        const spawnRequest = enemy.update(safeDelta, target, border, grid, this.random);
         if (spawnRequest) {
           this.spawnMinions(enemy, spawnRequest, difficulty);
         }
@@ -123,6 +129,9 @@ export class EnemyManager {
     difficulty: DifficultyState,
     stats?: HellStatBlock,
   ): Enemy {
+    if (this.destroyed) {
+      throw new Error('[EnemyManager] yok edilmiş yöneticide düşman doğurulamaz');
+    }
     const enemy = this.createEnemy(definition, x, y, difficulty, stats);
     this.externallyDriven.add(enemy);
     return enemy;
@@ -148,6 +157,12 @@ export class EnemyManager {
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
       if (this.externallyDriven.has(enemy)) continue;
+      if (!enemy.isAlive) {
+        this.externallyDriven.delete(enemy);
+        const dead = this.enemies.pop();
+        if (dead && i < this.enemies.length) this.enemies[i] = dead;
+        continue;
+      }
 
       enemy.clearWithEffect();
       cleared++;
@@ -169,7 +184,13 @@ export class EnemyManager {
     playerPos: Vector2,
     turret: { x: number; y: number; isAlive: boolean } | null,
   ): Vector2 {
-    if (!turret || !turret.isAlive) return playerPos;
+    if (!Number.isFinite(playerPos.x) || !Number.isFinite(playerPos.y)) {
+      this.targetBuf.set(enemy.x, enemy.y);
+      return this.targetBuf;
+    }
+    if (!turret || !turret.isAlive || !Number.isFinite(turret.x) || !Number.isFinite(turret.y)) {
+      return playerPos;
+    }
 
     const toTurret = Math.hypot(turret.x - enemy.x, turret.y - enemy.y);
     const toPlayer = Math.hypot(playerPos.x - enemy.x, playerPos.y - enemy.y);
@@ -185,6 +206,7 @@ export class EnemyManager {
     playerPos: Vector2,
     difficulty: DifficultyState,
   ): boolean {
+    if (!Number.isFinite(playerPos.x) || !Number.isFinite(playerPos.y)) return false;
     const definition = pickEnemyDefinition(this.random, this.currentWave);
     if (!definition) return false;
 
@@ -204,15 +226,29 @@ export class EnemyManager {
     request: MinionSpawnRequest,
     difficulty: DifficultyState,
   ): void {
-    const definition = getEnemyDefinition(request.minionId);
+    if (this.destroyed || !parent.isAlive || !request || !Array.isArray(request.angles)) return;
+    const radius = nonNegativeFinite(request.radius);
+    const count = Math.min(request.angles.length, Math.floor(nonNegativeFinite(request.count)));
+    const maxEnemies = Number.isFinite(difficulty.maxEnemies)
+      ? Math.max(0, Math.floor(difficulty.maxEnemies))
+      : 0;
+    let definition: EnemyDefinition;
+    try {
+      definition = getEnemyDefinition(request.minionId);
+    } catch (error) {
+      console.warn('[EnemyManager] Geçersiz minion tanımı yok sayıldı:', error);
+      return;
+    }
 
-    for (const angle of request.angles) {
+    for (let i = 0; i < count; i++) {
+      const angle = request.angles[i];
+      if (!Number.isFinite(angle)) continue;
       // Sürü, normal spawn ile aynı dalga limitini paylaşır: aksi halde
       // minion'lar tavanı doldurup normal spawn'ı tamamen kilitleyebilirdi.
-      if (this.enemies.length >= difficulty.maxEnemies) return;
+      if (this.enemies.length >= maxEnemies) return;
 
-      const x = parent.x + Math.cos(angle) * request.radius;
-      const y = parent.y + Math.sin(angle) * request.radius;
+      const x = parent.x + Math.cos(angle) * radius;
+      const y = parent.y + Math.sin(angle) * radius;
       const minion = this.createEnemy(definition, x, y, difficulty);
       parent.registerMinion(minion);
     }
@@ -261,6 +297,8 @@ export class EnemyManager {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     for (const enemy of this.enemies) {
       enemy.destroy();
     }

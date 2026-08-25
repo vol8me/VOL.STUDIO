@@ -58,6 +58,11 @@ export class AudioSettings {
   private readonly listeners = new Set<(data: AudioSettingsData) => void>();
   private persistTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingPersist: Promise<void> | null = null;
+  private pendingResolve: ((value: void | PromiseLike<void>) => void) | null = null;
+  /** Yazıları sıraya alır; flush sırasında iki ayar kaydı yarışmaz. */
+  private persistQueue: Promise<void> = Promise.resolve();
+  private disposed = false;
+  private loadGeneration = 0;
   private readonly boundFlush = (): void => void this.flush();
 
   constructor(private readonly saveManager: SaveManager) {
@@ -67,7 +72,9 @@ export class AudioSettings {
   }
 
   async load(): Promise<void> {
+    const generation = ++this.loadGeneration;
     const stored = await this.saveManager.load<unknown>(STORAGE_KEY, {});
+    if (this.disposed || generation !== this.loadGeneration) return;
     this.data = mergeWithDefaults(stored);
   }
 
@@ -80,11 +87,11 @@ export class AudioSettings {
    * sözleşmesi korunur.
    */
   private persist(): Promise<void> {
+    if (this.disposed) return Promise.resolve();
     this.pendingPersist ??= new Promise<void>((resolve) => {
+      this.pendingResolve = resolve;
       this.persistTimer = setTimeout(() => {
-        this.persistTimer = null;
-        this.pendingPersist = null;
-        resolve(this.saveManager.save(STORAGE_KEY, this.data));
+        this.commitPendingPersist();
       }, PERSIST_DEBOUNCE_MS);
     });
 
@@ -93,11 +100,15 @@ export class AudioSettings {
 
   /** Bekleyen yazmayı hemen diske indirir (kapanış, sahne geçişi). */
   async flush(): Promise<void> {
-    if (this.persistTimer === null) return;
-    clearTimeout(this.persistTimer);
-    this.persistTimer = null;
-    this.pendingPersist = null;
-    await this.saveManager.save(STORAGE_KEY, this.data);
+    if (this.persistTimer !== null) {
+      clearTimeout(this.persistTimer);
+      this.persistTimer = null;
+      this.commitPendingPersist();
+    }
+
+    // Timer daha önce çalıştıysa yazma hâlâ kuyrukta olabilir. Sadece timer'ı
+    // kontrol etmek, beforeunload/scene geçişinde son kaydı yarıda bırakırdı.
+    await this.persistQueue;
   }
 
   getMasterVolume(): number {
@@ -133,37 +144,37 @@ export class AudioSettings {
   }
 
   async setMasterVolume(volume: number): Promise<void> {
-    this.data.masterVolume = Math.max(0, Math.min(1, volume));
+    this.data.masterVolume = safeVolume(volume, this.data.masterVolume);
     await this.persistAndNotify();
   }
 
   async setSfxVolume(volume: number): Promise<void> {
-    this.data.sfxVolume = Math.max(0, Math.min(1, volume));
+    this.data.sfxVolume = safeVolume(volume, this.data.sfxVolume);
     await this.persistAndNotify();
   }
 
   async setMusicVolume(volume: number): Promise<void> {
-    this.data.musicVolume = Math.max(0, Math.min(1, volume));
+    this.data.musicVolume = safeVolume(volume, this.data.musicVolume);
     await this.persistAndNotify();
   }
 
   async setAmbientVolume(volume: number): Promise<void> {
-    this.data.ambientVolume = Math.max(0, Math.min(1, volume));
+    this.data.ambientVolume = safeVolume(volume, this.data.ambientVolume);
     await this.persistAndNotify();
   }
 
   async setMuted(muted: boolean): Promise<void> {
-    this.data.muted = muted;
+    this.data.muted = safeFlag(muted, this.data.muted);
     await this.persistAndNotify();
   }
 
   async setScreenShakeEnabled(enabled: boolean): Promise<void> {
-    this.data.screenShakeEnabled = enabled;
+    this.data.screenShakeEnabled = safeFlag(enabled, this.data.screenShakeEnabled);
     await this.persistAndNotify();
   }
 
   async setScreenShakeIntensity(intensity: number): Promise<void> {
-    this.data.screenShakeIntensity = Math.max(0, Math.min(1, intensity));
+    this.data.screenShakeIntensity = safeVolume(intensity, this.data.screenShakeIntensity);
     await this.persistAndNotify();
   }
 
@@ -174,15 +185,19 @@ export class AudioSettings {
 
   /**
    * Bekleyen debounce timer'ını iptal eder ve dinleyicileri temizler.
-   * Bileşen yok edilirken çağrılmalı; devam eden persist promise'ine sahip
-   * çıkmaz — çağıran istersen önce `flush()` çağırır.
+   * Bileşen yok edilirken çağrılmalı; bekleyen snapshot'ı da sıraya alır ve
+   * setter promise'lerini açıkta bırakmaz.
    */
   dispose(): void {
-    if (this.persistTimer) {
+    this.loadGeneration++;
+    if (this.persistTimer !== null) {
       clearTimeout(this.persistTimer);
       this.persistTimer = null;
+      // Bekleyen setter promise'leri asılı kalmasın; kapanışta son snapshot
+      // yine sıraya alınır. `dispose()` artık sessizce yazmayı düşürmez.
+      this.commitPendingPersist();
     }
-    this.pendingPersist = null;
+    this.disposed = true;
     this.listeners.clear();
     if (typeof window !== 'undefined') {
       window.removeEventListener('beforeunload', this.boundFlush);
@@ -190,6 +205,7 @@ export class AudioSettings {
   }
 
   private async persistAndNotify(): Promise<void> {
+    if (this.disposed) return;
     this.notify();
     try {
       await this.persist();
@@ -203,7 +219,30 @@ export class AudioSettings {
   private notify(): void {
     const snapshot = this.getData();
     for (const listener of this.listeners) {
-      listener(snapshot);
+      try {
+        listener(snapshot);
+      } catch (error) {
+        // Bir UI dinleyicisinin hatası diğer dinleyicileri ve persist'i
+        // engellememeli; ayar değişikliği yine de kalıcı olmalıdır.
+        console.warn('[AudioSettings] Ayar dinleyicisi hata verdi:', error);
+      }
     }
+  }
+
+  /** Debounce beklemesini bitirip güncel snapshot'ı yazma kuyruğuna alır. */
+  private commitPendingPersist(): void {
+    this.persistTimer = null;
+    if (this.pendingPersist === null) return;
+
+    const resolve = this.pendingResolve;
+    this.pendingResolve = null;
+    this.pendingPersist = null;
+
+    // Canlı `this.data` referansı yerine snapshot al: timer açıldıktan sonra
+    // gelen yeni bir ayar, önceki yazının içeriğini geriye dönük değiştirmesin.
+    const snapshot = { ...this.data };
+    const write = this.persistQueue.then(() => this.saveManager.save(STORAGE_KEY, snapshot));
+    this.persistQueue = write.catch(() => {});
+    resolve?.(write);
   }
 }

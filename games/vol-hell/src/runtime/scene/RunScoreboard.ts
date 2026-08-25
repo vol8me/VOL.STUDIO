@@ -1,5 +1,6 @@
 import { gameStats } from '@/app/services';
 import type { RunResult } from '@/app/GameStats';
+import { MAX_RUNTIME_VALUE, safeDeltaMs, saturatingAdd } from '@/runtime/utils/numeric';
 
 /**
  * Koşu sayaçları ve koşu sonu istatistik gönderimi — `GameScene`'den ayrıldı.
@@ -49,15 +50,14 @@ export class RunScoreboard {
    * sayaca yazılmaz — bozuk bir katalog değeri skoru NaN'a çevirmemeli.
    */
   addKill(scoreValue: number): void {
-    this.kills += 1;
+    this.kills = Math.min(MAX_RUNTIME_VALUE, this.kills + 1);
     if (!Number.isFinite(scoreValue) || scoreValue <= 0) return;
-    this.score += Math.round(scoreValue);
+    this.score = saturatingAdd(this.score, Math.round(scoreValue));
   }
 
   /** Frame süresi ekler. Sonlu olmayan ya da negatif delta yok sayılır. */
   advance(deltaMs: number): void {
-    if (!Number.isFinite(deltaMs) || deltaMs <= 0) return;
-    this.elapsedMs += deltaMs;
+    this.elapsedMs = saturatingAdd(this.elapsedMs, safeDeltaMs(deltaMs));
   }
 
   /**

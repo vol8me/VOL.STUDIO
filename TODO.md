@@ -5,6 +5,27 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-26 — VOL-HELL kapsamlı hardening turu
+
+- Runtime sayıları ortak sonlu/saturating yardımcılarla sınırlandı; oyuncu,
+  düşman, mermi, ability, telegraph, efekt, dalga ve ekonomi sınırlarında
+  `NaN`/`Infinity`/negatif delta artık durumu zehirleyemiyor.
+- Scene restart temizliği genişletildi: klavye key sahipliği, Phaser entity
+  yöneticileri, DOM kart ekranları, async telegraph'lar ve eski müzik yükleme
+  nesilleri kapatılıyor. `BaseScene` alt sınıf temizliği hata verse bile kendi
+  listener/rAF/UI kaynaklarını finally ile bırakıyor.
+- Ses ayarı yazmaları snapshot + sıralı kuyrukla persist ediliyor; `flush()`
+  gerçekten devam eden yazmayı bekliyor. SFX ilk çalma zamanı, geçersiz
+  AudioParam seçenekleri ve release sonrası geç cache yazımı için regresyonlar
+  eklendi.
+- Kart envanteri dış dizi mutasyonuna kapatıldı; ability upgrade'leri işaretli
+  doygunlukta çalışıyor ve kısmi commit geri alması önceki değerleri birebir
+  geri yüklüyor.
+- Geniş değişiklik yüzeyi `games/vol-hell` kodu/testleri ile bu kaydın ve paket
+  README'lerinin güncellenmesiyle sınırlıdır; bu turda commit/push bilinçli
+  olarak yapılmayacak. Kalan doğrulama resmi workspace kapıları ve gerçek
+  tarayıcı/cihaz smoke testidir.
+
 ## 2026-08-25 — VisualSynth P0/P1/P2 ve güvenli inceleme yüzeyi
 
 - `VISUAL_SYNTH_CAPABILITIES` manifesti şemadan türetiliyor; determinism,

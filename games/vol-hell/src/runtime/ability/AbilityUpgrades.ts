@@ -1,3 +1,5 @@
+import { saturatingAddSigned } from '@/runtime/utils/numeric';
+
 /**
  * Ability'lere özel, koşu boyunca birikeen yükseltmeler.
  *
@@ -24,8 +26,19 @@ export class AbilityUpgrades {
 
   /** Yükseltmeyi birikimli olarak ekler. Negatif değer de geçerlidir (takas kartları). */
   add(key: AbilityUpgradeKey, amount: number): void {
-    if (amount === 0) return;
-    this.values.set(key, (this.values.get(key) ?? 0) + amount);
+    if (!Number.isFinite(amount) || amount === 0) return;
+    const current = this.values.get(key) ?? 0;
+    this.values.set(key, saturatingAddSigned(current, amount));
+  }
+
+  /** İşlem geri alma sırasında önceki değeri doygunluk kaybı olmadan yükler. */
+  restore(key: AbilityUpgradeKey, value: number): void {
+    const safeValue = saturatingAddSigned(0, value);
+    if (safeValue === 0) {
+      this.values.delete(key);
+      return;
+    }
+    this.values.set(key, safeValue);
   }
 
   /** Birikmiş yükseltme miktarı (hiç eklenmediyse 0). */

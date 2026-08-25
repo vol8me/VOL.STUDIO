@@ -151,6 +151,19 @@ describe('WaveManager', () => {
     expect(manager.getProgress()).toBe(1);
   });
 
+  it('NaN, Infinity ve negatif frame dalgayı bozmaz', () => {
+    const { manager, events } = makeManager();
+    manager.start();
+
+    manager.update(Number.NaN);
+    manager.update(Infinity);
+    manager.update(-100);
+
+    expect(manager.getRemainingMs()).toBe(waveConfig.waveDurationMs);
+    expect(events.onWaveEnd).not.toHaveBeenCalled();
+    expect(manager.getCurrentWave()).toBe(1);
+  });
+
   it('tek bir uzun frame birden fazla dalgayı atlamaz — hepsi işlenir', () => {
     const { manager, events } = makeManager();
     manager.start();

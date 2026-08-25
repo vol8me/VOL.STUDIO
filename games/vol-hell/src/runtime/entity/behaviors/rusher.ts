@@ -1,6 +1,7 @@
 import type { RusherParams } from '@/config/enemies/types';
 import { applySeekBehavior } from './seek';
 import { distanceToTarget, type BehaviorContext, type VelocityOutput } from './types';
+import { nonNegativeFinite, safeDeltaMs, saturatingAdd } from '@/runtime/utils/numeric';
 
 /** Rusher atılım döngüsünün fazları. */
 export type RusherPhase = 'approach' | 'windup' | 'dash' | 'recover';
@@ -48,11 +49,9 @@ export function applyRusherBehavior(
   out: VelocityOutput,
 ): void {
   state.dashStarted = false;
-  state.phaseTimerMs += context.deltaMs;
-  state.cooldownTimerMs = Math.min(
-    Number.MAX_SAFE_INTEGER,
-    state.cooldownTimerMs + context.deltaMs,
-  );
+  const safeDelta = safeDeltaMs(context.deltaMs);
+  state.phaseTimerMs = saturatingAdd(state.phaseTimerMs, safeDelta);
+  state.cooldownTimerMs = saturatingAdd(state.cooldownTimerMs, safeDelta);
 
   // Önce faz geçişleri, SONRA hız: geçiş anında bir frame'lik boşluk kalmaz
   // (telegraf biten frame'de atılım hızı hemen uygulanır). Uzun bir frame
@@ -137,7 +136,7 @@ function applyPhaseVelocity(
   }
 
   if (state.phase === 'dash') {
-    const dashSpeed = context.speed * params.dashSpeedMultiplier;
+    const dashSpeed = nonNegativeFinite(context.speed * params.dashSpeedMultiplier);
     out.x = state.dashDirX * dashSpeed;
     out.y = state.dashDirY * dashSpeed;
     return;

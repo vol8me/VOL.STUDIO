@@ -25,6 +25,7 @@ import {
   type VelocityOutput,
 } from './behaviors';
 import { diagnostics } from '@/app/services';
+import { clampFinite, finiteOr, nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 /** Bir düşmanı doğururken verilen bağlam. */
 export interface EnemyOptions {
@@ -84,15 +85,17 @@ export class Enemy {
   ) {
     this.definition = options.definition;
     this.stats = options.stats;
-    this.score = options.scoreValue;
+    this.score = nonNegativeFinite(options.scoreValue);
     this.onDeath = options.onDeath;
 
     this.maxHealth = quantizeEnemyHealth(this.stats.getValue('health'));
     this.health = this.maxHealth;
 
+    const safeX = finiteOr(x, 0);
+    const safeY = finiteOr(y, 0);
     this.arc = scene.add.circle(
-      x,
-      y,
+      safeX,
+      safeY,
       this.definition.radius,
       this.definition.color,
       enemyConfig.fillAlpha,
@@ -108,7 +111,7 @@ export class Enemy {
     this.swarmerState = this.definition.archetype === 'swarmer' ? createSwarmerState() : null;
     this.spawnRequest = this.swarmerState ? createMinionSpawnRequest() : null;
 
-    this.healthBar = new EntityHealthBar(scene, x, y, this.definition.radius);
+    this.healthBar = new EntityHealthBar(scene, safeX, safeY, this.definition.radius);
     this.updateHealthBar();
   }
 
@@ -149,7 +152,7 @@ export class Enemy {
 
   /** Kalan can oranı (0-1) — Boss faz geçişi bunu okur. */
   getHealthRatio(): number {
-    return this.maxHealth > 0 ? this.health / this.maxHealth : 0;
+    return this.maxHealth > 0 ? clampFinite(this.health / this.maxHealth, 0, 1, 0) : 0;
   }
 
   /**
@@ -158,7 +161,7 @@ export class Enemy {
    * kullanmaz; hasar miktarını buradan okur.
    */
   getContactDamage(): number {
-    return Math.max(0, this.stats.getValue('damage'));
+    return nonNegativeFinite(this.stats.getValue('damage'));
   }
 
   /** Doğurulan minion'u sahiplenir; kapasite kontrolü buradan beslenir. */
@@ -186,11 +189,11 @@ export class Enemy {
   moveBy(vx: number, vy: number, deltaMs: number, border: Border, grid: SpatialGrid): void {
     if (!this.alive) return;
 
-    const dt = deltaMs / 1000;
+    const dt = safeDeltaMs(deltaMs) / 1000;
     this.applySeparation(grid);
 
-    this.arc.x += (vx + this.separationBuf.x) * dt;
-    this.arc.y += (vy + this.separationBuf.y) * dt;
+    this.arc.x += (finiteOr(vx, 0) + this.separationBuf.x) * dt;
+    this.arc.y += (finiteOr(vy, 0) + this.separationBuf.y) * dt;
 
     this.arc.x = border.clampX(this.arc.x, this.definition.radius);
     this.arc.y = border.clampY(this.arc.y, this.definition.radius);
@@ -200,7 +203,7 @@ export class Enemy {
 
   /** Düşmana hasar verir. Ölürse true döner. */
   takeDamage(amount: number): boolean {
-    if (!this.alive) return false;
+    if (!this.alive || !Number.isFinite(amount) || amount <= 0) return false;
     this.health = Math.max(0, this.health - amount);
     this.updateHealthBar();
 
@@ -222,11 +225,14 @@ export class Enemy {
 
   /** Oyuncuya temas hasarı verir — cooldown aktifse reddedir. */
   tryContactDamage(time: number): number {
+    if (!this.alive || !Number.isFinite(time)) return 0;
     // fireRate = saldırılar arası bekleme (ms).
-    if (time - this.lastContactDamage < this.stats.getValue('fireRate')) return 0;
+    const fireRate = this.stats.getValue('fireRate');
+    if (!Number.isFinite(fireRate)) return 0;
+    if (time - this.lastContactDamage < Math.max(0, fireRate)) return 0;
     this.lastContactDamage = time;
     // Negatif hasar oyuncuyu iyileştirirdi; modifier ne verirse versin taban sıfır.
-    return Math.max(0, this.stats.getValue('damage'));
+    return this.getContactDamage();
   }
 
   /**
@@ -245,27 +251,30 @@ export class Enemy {
   ): MinionSpawnRequest | null {
     if (!this.alive) return null;
 
-    const dt = delta / 1000;
+    const safeDelta = safeDeltaMs(delta);
+    const dt = safeDelta / 1000;
+    const targetX = finiteOr(playerPos.x, this.arc.x);
+    const targetY = finiteOr(playerPos.y, this.arc.y);
     // Bağlam nesnesi düşman başına bir kez kurulur, her frame yerinde güncellenir.
     const context: MutableBehaviorContext = (this.behaviorContext ??= {
       x: this.arc.x,
       y: this.arc.y,
-      targetX: playerPos.x,
-      targetY: playerPos.y,
-      deltaMs: delta,
+      targetX,
+      targetY,
+      deltaMs: safeDelta,
       speed: 0,
       random,
     });
     context.x = this.arc.x;
     context.y = this.arc.y;
-    context.targetX = playerPos.x;
-    context.targetY = playerPos.y;
-    context.deltaMs = delta;
-    context.speed = Math.max(0, this.stats.getValue('speed'));
+    context.targetX = targetX;
+    context.targetY = targetY;
+    context.deltaMs = safeDelta;
+    context.speed = nonNegativeFinite(this.stats.getValue('speed'));
     context.random = random;
 
     const spawnRequest = this.runBehavior(context);
-    this.velocity.set(this.behaviorVelocity.x, this.behaviorVelocity.y);
+    this.velocity.set(finiteOr(this.behaviorVelocity.x, 0), finiteOr(this.behaviorVelocity.y, 0));
 
     this.applySeparation(grid);
 
@@ -392,6 +401,7 @@ export class Enemy {
 
   /** Düşmana dışarıdan itme uygular (overlap çözümü için). Border'a clamp eder. */
   applyPush(pushX: number, pushY: number, border: Border): void {
+    if (!this.alive || !Number.isFinite(pushX) || !Number.isFinite(pushY)) return;
     this.arc.x += pushX;
     this.arc.y += pushY;
 

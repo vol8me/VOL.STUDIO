@@ -1,4 +1,5 @@
 import { waveConfig } from '@/config/wave';
+import { safeDeltaMs } from '@/runtime/utils/numeric';
 
 export interface WaveManagerCallbacks {
   /** Bir dalga başladığında (koşu başındaki 1. dalga dahil). */
@@ -120,11 +121,13 @@ export class WaveManager {
 
   update(deltaMs: number): void {
     if (this.complete || this.wave === 0) return;
+    const safeDelta = safeDeltaMs(deltaMs);
+    if (safeDelta <= 0) return;
 
     // Engel bekleniyor: sayaç ilerlemez, dalga yalnızca engel ölünce biter.
     if (this.blockedAtTimeUp) return;
 
-    this.elapsedInWaveMs += deltaMs;
+    this.elapsedInWaveMs += safeDelta;
     // Bir frame birden fazla dalgayı geçebilecek kadar uzun olabilir
     // (sekme arka planda kaldıysa); while ile hepsi işlenir.
     let steps = 0;

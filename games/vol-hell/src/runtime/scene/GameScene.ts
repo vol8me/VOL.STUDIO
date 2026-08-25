@@ -46,6 +46,8 @@ import { RunScoreboard } from '@/runtime/scene/RunScoreboard';
 import { RunFinisher } from '@/runtime/scene/RunFinisher';
 import { reportSceneTelemetry } from '@/runtime/scene/sceneTelemetry';
 import { CardScreens } from '@/runtime/ui/CardScreens';
+import { GameKeyboardBindings } from './GameKeyboardBindings';
+import { safeDeltaMs } from '@/runtime/utils/numeric';
 
 /** Q ve E — ability slotlarının klavye karşılığı. */
 const SLOT_KEYS: Record<AbilitySlot, number> = {
@@ -86,7 +88,7 @@ export class GameScene extends BaseScene {
   private spatialGrid: SpatialGrid = new SpatialGrid(
     Math.max(getMaxEnemyRadius(), bulletConfig.radius) * physicsConfig.spatialGridCellMultiplier,
   );
-  private escKey!: Phaser.Input.Keyboard.Key;
+  private keyboardBindings: GameKeyboardBindings | null = null;
 
   private runSeed = 0;
   /**
@@ -156,8 +158,8 @@ export class GameScene extends BaseScene {
   }
 
   protected override onLanguageChanged(): void {
-    this.hud.refreshLabels();
-    this.cardScreens.refreshLabels();
+    this.hud?.refreshLabels();
+    this.cardScreens?.refreshLabels();
   }
 
   protected createScene(data?: unknown): void {
@@ -302,7 +304,7 @@ export class GameScene extends BaseScene {
 
     diagnostics?.beginFrame();
 
-    const dt = Math.min(delta, gameConfig.maxDeltaMs);
+    const dt = safeDeltaMs(delta, gameConfig.maxDeltaMs);
     this.scoreboard.advance(dt);
 
     diagnostics?.startStage('input');
@@ -404,19 +406,14 @@ export class GameScene extends BaseScene {
       throw new Error('[GameScene] Keyboard plugin etkin değil; ESC ile duraklatma kurulamıyor');
     }
 
-    this.escKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-    this.escKey.on('down', () => this.pauseCtl.toggle());
-
-    for (const slot of ABILITY_SLOTS) {
-      const key = keyboard.addKey(SLOT_KEYS[slot]);
-      key.on('down', () => {
-        // Duraklamada ve kart ekranı açıkken yetenek tetiklenmez; Phaser
-        // sahne duraklayınca input'u zaten kapatır ama bu bağ açık dursun.
-        if (this.pauseCtl.isPaused || this.cardScreens.isOpen()) return;
-        // Boş slotta tuş sessizce hiçbir şey yapmaz — AbilityRuntime karar verir.
-        this.abilities.tryActivate(slot);
-      });
-    }
+    this.keyboardBindings?.destroy();
+    this.keyboardBindings = new GameKeyboardBindings(keyboard, {
+      pauseKeyCode: Phaser.Input.Keyboard.KeyCodes.ESC,
+      abilityKeys: SLOT_KEYS,
+      onPause: () => this.pauseCtl.toggle(),
+      isAbilityBlocked: () => this.pauseCtl.isPaused || this.cardScreens.isOpen(),
+      onAbility: (slot) => this.abilities.tryActivate(slot),
+    });
   }
 
   // --- Döngü ---------------------------------------------------------------
@@ -589,10 +586,12 @@ export class GameScene extends BaseScene {
   }
 
   protected override onSceneShutdown(): void {
-    // Phaser GameObject'leri (player, bulletManager, enemyManager, border)
-    // DisplayList.shutdown() tarafından zaten yok edilir — tekrar destroy etmeye gerek yok.
-    // Burada sadece Phaser'ın temizlemediği kaynaklar temizlenir:
-    // input listener'lar, DOM elementleri, i18n listener'ları ve timer'lar.
+    // Sahne restart'ta aynı örneği kullandığı için sahip olduğumuz bütün
+    // yöneticileri burada kapatıyoruz. DisplayList'in genel temizliği,
+    // yöneticilerin tuttuğu dizileri, async telegraph'ları ve key closure'larını
+    // garanti etmez.
+    this.keyboardBindings?.destroy();
+    this.keyboardBindings = null;
     this.audio?.stopAll();
     if (this.deathScreen) {
       this.deathScreen.destroy();
@@ -602,14 +601,17 @@ export class GameScene extends BaseScene {
       this.pauseScreen.destroy();
       this.pauseScreen = null;
     }
-    this.cardScreens?.destroy();
-    this.abilities?.destroy();
-    this.effects?.destroy();
-    this.telegraphs?.destroy();
     this.run?.destroy();
-    this.inputManager.destroy();
-    this.border.destroy();
-    this.hud.destroy();
+    this.telegraphs?.destroy();
+    this.abilities?.destroy();
+    this.bulletManager?.destroy();
+    this.enemyManager?.destroy();
+    this.player?.destroy();
+    this.effects?.destroy();
+    this.inputManager?.destroy();
+    this.border?.destroy();
+    this.hud?.destroy();
+    this.cardScreens?.destroy();
     if (this.loadingScreen) {
       this.loadingScreen.destroy();
       this.loadingScreen = null;

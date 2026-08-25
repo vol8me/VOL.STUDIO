@@ -99,6 +99,21 @@ describe('AudioSettings', () => {
     expect(settings.getScreenShakeIntensity()).toBe(1);
   });
 
+  it('setter — NaN ve Infinity ses zincirine sızmaz', async () => {
+    const settings = new AudioSettings(new SaveManager(makeAdapter()));
+    await settings.load();
+    const original = settings.getMasterVolume();
+
+    await settings.setMasterVolume(Number.NaN);
+    await settings.setSfxVolume(Infinity);
+    await settings.setScreenShakeIntensity(-Infinity);
+
+    expect(settings.getMasterVolume()).toBe(original);
+    expect(Number.isFinite(settings.getSfxVolume())).toBe(true);
+    expect(settings.getSfxVolume()).toBe(audioConfig.sfxVolume);
+    expect(settings.getScreenShakeIntensity()).toBe(audioConfig.screenShakeIntensity);
+  });
+
   it('persist hatası — bildirimi engellemez ve rejection fırlatmaz', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const settings = new AudioSettings(new SaveManager(makeFailingAdapter()));
@@ -155,5 +170,34 @@ describe('AudioSettings', () => {
 
     expect(setSpy).toHaveBeenCalledTimes(1);
     expect(settings.getMasterVolume()).toBe(0.4);
+  });
+
+  it('flush — timer çalışmış olsa bile devam eden yazmayı bekler', async () => {
+    let releaseWrite: (() => void) | undefined;
+    const adapter = makeAdapter();
+    vi.mocked(adapter.set).mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          releaseWrite = resolve;
+        }),
+    );
+    const settings = new AudioSettings(new SaveManager(adapter));
+    await settings.load();
+
+    const setter = settings.setMasterVolume(0.42);
+    const flush = settings.flush();
+    await Promise.resolve();
+    expect(adapter.set).toHaveBeenCalledTimes(1);
+
+    let flushed = false;
+    void flush.then(() => {
+      flushed = true;
+    });
+    await Promise.resolve();
+    expect(flushed).toBe(false);
+
+    releaseWrite?.();
+    await Promise.all([setter, flush]);
+    expect(flushed).toBe(true);
   });
 });

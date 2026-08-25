@@ -154,4 +154,16 @@ describe('GameStats', () => {
     expect(corrupt.getBestKills()).toBe(0);
     expect(corrupt.getTotalKills()).toBe(0);
   });
+
+  it('güvenli tamsayı sınırı taşmayı ve kesirli kill sayısını engeller', async () => {
+    await stats.load();
+
+    const result = await stats.submitRun(Number.MAX_VALUE, Number.MAX_VALUE, 2.8);
+
+    expect(result.bestScore).toBe(Number.MAX_SAFE_INTEGER);
+    expect(result.bestTimeMs).toBe(Number.MAX_SAFE_INTEGER);
+    expect(result.bestKills).toBe(2);
+    expect(result.totalKills).toBe(2);
+    expect(Number.isFinite(result.totalKills)).toBe(true);
+  });
 });

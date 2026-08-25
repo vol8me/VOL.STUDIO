@@ -2,6 +2,7 @@ import type Phaser from 'phaser';
 import { economyConfig } from '@/config/economy';
 import { RENDER_DEPTH } from '@/config/layers';
 import type { Border } from './Border';
+import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 /**
  * Yerde duran Flux parçası — koşunun para birimi.
@@ -39,7 +40,7 @@ export class FluxPickup {
     amount: number,
   ) {
     const { radius, color, strokeColor, strokeWidth } = economyConfig.flux;
-    this.amountValue = amount;
+    this.amountValue = Math.floor(nonNegativeFinite(amount));
 
     // Sahne dışına düşen parça toplanamaz; iniş noktası sınır içine çekilir.
     this.originX = border.clampX(originX, radius);
@@ -66,21 +67,22 @@ export class FluxPickup {
    * böylece sahne şişmeden hiçbir Flux kaybolmaz.
    */
   addAmount(extra: number): void {
-    if (extra <= 0) return;
-    this.amountValue += extra;
+    if (!Number.isFinite(extra) || extra <= 0) return;
+    this.amountValue = Math.min(Number.MAX_SAFE_INTEGER, this.amountValue + Math.floor(extra));
   }
 
   /** Parçayı günceller: düşme yayı, yerdeki süzülme ve mıknatıs çekimi. */
   update(deltaMs: number, playerX: number, playerY: number): void {
     if (this.collected) return;
+    const safeDelta = safeDeltaMs(deltaMs);
 
     if (!this.settled) {
-      this.updateDrop(deltaMs);
+      this.updateDrop(safeDelta);
       return;
     }
 
-    if (this.applyMagnet(deltaMs, playerX, playerY)) return;
-    this.updateBob(deltaMs);
+    if (this.applyMagnet(safeDelta, playerX, playerY)) return;
+    this.updateBob(safeDelta);
   }
 
   /** Oyuncu bu parçayı toplayacak kadar yakın mı? İniş bitmeden toplanmaz. */

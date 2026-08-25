@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import { enemyConfig } from '@/config/enemy';
 import { RENDER_DEPTH } from '@/config/layers';
+import { clampFinite } from '@/runtime/utils/numeric';
 
 export interface EntityHealthBarOptions {
   /** Dolu kısmın rengi (0xRRGGBB). Verilmezse düşman barı rengi. */
@@ -77,15 +78,16 @@ export class EntityHealthBar {
    * varlığın barı ekranda kalmamalı.
    */
   setRatio(ratio: number, alive: boolean, x: number): void {
+    const safeRatio = clampFinite(ratio, 0, 1, 0);
     this.bg.setVisible(alive);
-    this.fill.setVisible(alive && ratio > 0);
+    this.fill.setVisible(alive && safeRatio > 0);
 
     // setSize() kullanilir: `.width`'e dogrudan atamak geom'u ve displayOrigin'i
     // guncellemez, yalnizca WebGL renderer'in src.width okumasi sayesinde
     // tesadufen calisirdi. Origin sola sabitlenmis oldugu icin bar soldan
     // sabit kalip sagdan kisalir — klasik can bari davranisi.
     this.fill.setSize(
-      Math.max(enemyConfig.healthBarMinWidth, this.width * ratio),
+      Math.max(enemyConfig.healthBarMinWidth, this.width * safeRatio),
       enemyConfig.healthBarHeight,
     );
     this.fill.x = x - this.width / 2;

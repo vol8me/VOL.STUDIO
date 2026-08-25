@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { StatBlock, Vector2, createRandom } from '@volstudio/core';
 import type { HellStat, HellStatBlock } from '@/config/stats';
-import { CARD_CATALOG, getCardSellValue } from '@/config/cards';
+import { CARD_CATALOG, getCardSellValue, type CardDefinition } from '@/config/cards';
 import { bulletConfig } from '@/config/bullet';
 import { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import {
   CardInventoryManager,
   type CardConditionSources,
+  type OwnedCard,
 } from '@/runtime/systems/CardInventoryManager';
 import { RunEconomy } from '@/runtime/systems/RunEconomy';
 import type { BulletManager } from '@/runtime/entity/BulletManager';
@@ -270,6 +271,15 @@ describe('CardInventoryManager', () => {
       expect(cards.getOwnedAbilityCards()).toHaveLength(1);
       expect(cards.getOwned()).toHaveLength(2);
     });
+
+    it('getOwned dışarıdan dizi mutasyonuna izin vermez', () => {
+      cards.acquire(CARD_CATALOG.keskinUc);
+      const exposed = cards.getOwned() as OwnedCard[];
+
+      exposed.pop();
+
+      expect(cards.getOwned()).toHaveLength(1);
+    });
   });
 
   it('düşük can koşulu canlı okunur', () => {
@@ -363,6 +373,57 @@ describe('CardInventoryManager işlem sınırı', () => {
     expect(() => cards.purchase(failingCard)).toThrow('stat motoru patladı');
 
     expect(economy.getFlux()).toBe(before);
+    expect(cards.getOwned()).toHaveLength(0);
+  });
+
+  it('upgrade commiti patlarsa modifier ve önceki doygun değer geri yüklenir', () => {
+    const stats = new StatBlock<HellStat>({
+      damage: bulletConfig.damage,
+      speed: 220,
+      health: 100,
+      fireRate: bulletConfig.fireCooldownMs,
+    });
+    const abilities = new AbilityRuntime({
+      scene: makeScene(),
+      effects: makeEffects(),
+      border: { clampX: (x: number) => x, clampY: (y: number) => y } as unknown as Border,
+      random: createRandom(1),
+      bullets: { spawnBullet: vi.fn() } as unknown as BulletManager,
+      playerStats: stats,
+    });
+    const cards = new CardInventoryManager({
+      random: createRandom(1),
+      playerStats: stats,
+      abilities,
+      economy: new RunEconomy(),
+      conditions: {
+        hasActiveTurret: () => false,
+        isLowHealth: () => false,
+        areBothSlotsFilled: () => false,
+      },
+    });
+    const transactionalCard: CardDefinition = {
+      id: 'transactional-hardening-card',
+      type: 'buff',
+      rarity: 'rare',
+      titleKey: 'cards.keskinUc.title',
+      descriptionKey: 'cards.keskinUc.desc',
+      price: 1,
+      modifiers: [{ stat: 'damage', type: 'add', value: 5 }],
+      abilityUpgrades: [{ key: 'turretDamage', amount: 10 }],
+    };
+    abilities.upgrades.add('turretDamage', Number.MAX_SAFE_INTEGER - 1);
+    const previousDamage = stats.getValue('damage');
+    const previousUpgrade = abilities.upgrades.get('turretDamage');
+    const originalAdd = abilities.upgrades.add.bind(abilities.upgrades);
+    vi.spyOn(abilities.upgrades, 'add').mockImplementationOnce((key, amount) => {
+      originalAdd(key, amount);
+      throw new Error('upgrade motoru patladı');
+    });
+
+    expect(() => cards.acquire(transactionalCard)).toThrow('upgrade motoru patladı');
+    expect(stats.getValue('damage')).toBe(previousDamage);
+    expect(abilities.upgrades.get('turretDamage')).toBe(previousUpgrade);
     expect(cards.getOwned()).toHaveLength(0);
   });
 

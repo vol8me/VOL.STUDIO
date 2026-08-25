@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SfxBank } from '@/app/SfxBank';
 import { soundKeys, type SoundEvent } from '@/config/sounds';
 import { FakeAudioContext } from '../mocks/audio';
@@ -79,5 +79,51 @@ describe('SfxBank', () => {
     expect(activeSources('fire').length).toBe(0);
     expect((bank as unknown as { buffers: Map<string, unknown> }).buffers.size).toBe(0);
     expect((bank as unknown as { voiceStates: Map<string, unknown> }).voiceStates.size).toBe(0);
+  });
+
+  it('currentTime sıfırken ilk ses minInterval tarafından susturulmaz', async () => {
+    seedBuffer('menuBlip');
+    context.currentTime = 0;
+
+    await bank.play('menuBlip', {});
+
+    expect(activeSources('menuBlip')).toHaveLength(1);
+  });
+
+  it('geçersiz ses seçenekleri AudioParam içine NaN taşımaz', async () => {
+    seedBuffer('fire');
+    context.currentTime = 1;
+
+    expect(() => bank.setBusVolume(Number.NaN, Infinity)).not.toThrow();
+    bank.setBusVolume(0.25, 0.2);
+    await expect(
+      bank.play('fire', { volume: Number.NaN, pitchVar: Infinity }),
+    ).resolves.toBeUndefined();
+
+    const busGain = (bank as unknown as { busGain: GainNode }).busGain;
+    expect(Number.isFinite(busGain.gain.value)).toBe(true);
+  });
+
+  it('release sonrası ses parametresi güncellenmez', () => {
+    bank.release();
+
+    expect(() => bank.setBusVolume(0.5)).not.toThrow();
+  });
+
+  it('release sırasında tamamlanan yükleme cache’i yeniden canlandırmaz', async () => {
+    let resolveLoad: ((buffer: AudioBuffer) => void) | undefined;
+    const pendingBuffer = new Promise<AudioBuffer>((resolve) => {
+      resolveLoad = resolve;
+    });
+    const loader = (bank as unknown as { loader: { loadFromUrl: () => Promise<AudioBuffer> } })
+      .loader;
+    vi.spyOn(loader, 'loadFromUrl').mockReturnValue(pendingBuffer);
+
+    const load = bank.load('fire');
+    bank.release();
+    resolveLoad?.(context.createBuffer());
+    await load;
+
+    expect((bank as unknown as { buffers: Map<string, unknown> }).buffers.size).toBe(0);
   });
 });

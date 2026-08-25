@@ -1,5 +1,6 @@
 import { i18next } from '@volstudio/core';
 import { uiConfig } from '@/config/ui';
+import { clampFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 /**
  * Dalga göstergesi — sürekli duran bir satır + geçişlerde beliren bir duyuru.
@@ -65,15 +66,19 @@ export class WaveBanner {
     awaitingBlocker: boolean,
     blockerRatio: number | null,
   ): void {
+    const safeDelta = safeDeltaMs(deltaMs);
     if (this.announcementTimerMs > 0) {
-      this.announcementTimerMs -= deltaMs;
+      this.announcementTimerMs -= safeDelta;
       if (this.announcementTimerMs <= 0) {
         this.announcement.classList.remove('vol-wave__announcement--visible');
         this.announcement.hidden = true;
       }
     }
 
-    const seconds = Math.ceil(remainingMs / 1000);
+    const seconds = Math.max(
+      0,
+      Math.ceil(clampFinite(remainingMs, 0, Number.MAX_SAFE_INTEGER, 0) / 1000),
+    );
     if (
       wave === this.lastWave &&
       seconds === this.lastSeconds &&
@@ -92,7 +97,8 @@ export class WaveBanner {
     }
 
     // Engel bekleniyor: sayaç yerine hedef gösterilir, canı da yüzdeyle.
-    const percent = blockerRatio === null ? 100 : Math.max(0, Math.ceil(blockerRatio * 100));
+    const percent =
+      blockerRatio === null ? 100 : Math.ceil(clampFinite(blockerRatio, 0, 1, 0) * 100);
     this.counter.textContent = i18next.t('volhell:hud.waveBlocked', { percent });
   }
 

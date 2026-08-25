@@ -14,6 +14,7 @@ import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { TelegraphHandle, TelegraphManager } from '@/runtime/systems/TelegraphManager';
 import { gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
+import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 /** Boss'un saldırı paternleri — sırayla döner. */
 export type BossAttack = 'slam' | 'volley' | 'summon';
@@ -98,11 +99,12 @@ export class BossController {
 
   update(deltaMs: number, playerPos: Vector2, border: Border, grid: SpatialGrid): void {
     if (!this.enemy.isAlive) return;
+    const safeDelta = safeDeltaMs(deltaMs);
 
     this.updateEnrage();
-    this.updateMovement(deltaMs, playerPos, border, grid);
+    this.updateMovement(safeDelta, playerPos, border, grid);
 
-    this.timerMs += deltaMs;
+    this.timerMs += safeDelta;
     if (this.state === 'attacking') return;
 
     const wait = this.state === 'opening' ? bossConfig.openingDelayMs : this.getAttackIntervalMs();
@@ -331,7 +333,7 @@ export class BossController {
     context.targetX = playerPos.x;
     context.targetY = playerPos.y;
     context.deltaMs = deltaMs;
-    context.speed = Math.max(0, this.enemy.getStats().getValue('speed'));
+    context.speed = nonNegativeFinite(this.enemy.getStats().getValue('speed'));
     context.random = this.deps.random;
     return context;
   }

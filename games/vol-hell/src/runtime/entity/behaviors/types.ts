@@ -1,4 +1,5 @@
 import type { Random } from '@volstudio/core';
+import { finiteOr } from '@/runtime/utils/numeric';
 
 /**
  * Davranış fonksiyonlarına verilen anlık dünya durumu.
@@ -38,5 +39,9 @@ export interface VelocityOutput {
 
 /** Hedefe olan mesafe — davranışlar arasında tekrarlanan hesap. */
 export function distanceToTarget(context: BehaviorContext): number {
-  return Math.hypot(context.targetX - context.x, context.targetY - context.y);
+  const x = finiteOr(context.x, 0);
+  const y = finiteOr(context.y, 0);
+  const targetX = finiteOr(context.targetX, x);
+  const targetY = finiteOr(context.targetY, y);
+  return Math.hypot(targetX - x, targetY - y);
 }

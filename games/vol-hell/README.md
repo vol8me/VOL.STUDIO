@@ -29,6 +29,24 @@ pnpm --filter @volstudio/vol-hell dev
 
 Oynanış sayıları `src/config/` altında veri olarak durur; denge değişikliği kod değil config işidir.
 
+## Dayanıklılık sözleşmesi
+
+- Sahne yeniden başlatıldığında klavye tuşları, Phaser yöneticileri, DOM ekranları,
+  i18n dinleyicileri, rAF/timer'lar ve async telegraph'lar açıkta kalmaz; sahip
+  olan sistemlerin `destroy()`/`stopAll()` sınırı vardır.
+- Runtime girişlerinde `NaN`, `Infinity`, negatif delta, geçersiz yön ve bozuk
+  sayaç değerleri reddedilir veya güvenli sınıra doyurulur. Skor, ekonomi,
+  can, cooldown ve ses parametreleri sonlu kalır.
+- Ses ayarları debounce edilmiş yazmaları sıralı snapshot'larla persist eder;
+  `flush()` devam eden yazmayı bekler. SFX yüklemesi sahne kapanınca cache'i
+  yeniden canlandıramaz; oyun müziği de eski sahne yüklemesinden korunur.
+- Kart etkileri planla/commit/rollback sınırında uygulanır; dışarı verilen
+  envanter listesi iç diziyi mutasyona açmaz.
+
+Bu sözleşme ağ geçidi değildir: gerçek tarayıcı Web Audio davranışı, Phaser
+renderer/cihaz performansı ve uzun süreli gerçek oyun oturumu ayrıca manuel
+smoke test gerektirir.
+
 ## Komutlar
 
 | Komut                                              | Açıklama                       |

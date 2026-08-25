@@ -192,4 +192,20 @@ describe('RunDirector', () => {
     expect(callbacks.onShopOpen).toHaveBeenCalledWith(waveConfig.eliteWave);
     expect(callbacks.onWaveStart).toHaveBeenCalledWith(waveConfig.eliteWave + 1);
   });
+
+  it('destroy sonrası eski run update ve ödül callbacki yeniden çalışamaz', () => {
+    const { run, callbacks, playerPos, grid } = makeRunDirector();
+    run.start();
+    callbacks.onShopOpen.mockClear();
+
+    run.destroy();
+    run.destroy();
+    run.update(waveConfig.waveDurationMs, playerPos, grid);
+    run.onEnemyKilled({ sparkReward: 999, fluxReward: 999 } as never);
+
+    expect(callbacks.onShopOpen).not.toHaveBeenCalled();
+    expect(run.getCurrentWave()).toBe(1);
+    expect(run.economy.getSpark()).toBe(0);
+    expect(run.getPickupCount()).toBe(0);
+  });
 });

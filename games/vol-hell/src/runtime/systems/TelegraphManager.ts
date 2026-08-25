@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import { telegraphConfig } from '@/config/telegraph';
 import { RENDER_DEPTH } from '@/config/layers';
+import { finiteOr, nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 /** Telegraph'ın kapladığı alanın şekli. */
 export type TelegraphShape = 'circle' | 'line' | 'cone';
@@ -75,6 +76,7 @@ interface ActiveTelegraph {
 export class TelegraphManager {
   private readonly active: ActiveTelegraph[] = [];
   private nextId = 1;
+  private destroyed = false;
 
   constructor(private readonly scene: Phaser.Scene) {}
 
@@ -86,6 +88,18 @@ export class TelegraphManager {
    * `{ completed: false }` olarak çözülür.
    */
   play(options: TelegraphOptions): TelegraphHandle {
+    if (this.destroyed) return cancelledTelegraphHandle();
+
+    const safeOptions: TelegraphOptions = {
+      ...options,
+      durationMs: nonNegativeFinite(options.durationMs),
+      x: finiteOr(options.x, 0),
+      y: finiteOr(options.y, 0),
+      radius: nonNegativeFinite(options.radius),
+      angle: options.angle === undefined ? undefined : finiteOr(options.angle, 0),
+      width: options.width === undefined ? undefined : nonNegativeFinite(options.width),
+      spread: options.spread === undefined ? undefined : nonNegativeFinite(options.spread),
+    };
     const graphics = this.scene.add.graphics();
     graphics.setDepth(RENDER_DEPTH.abilityGround);
 
@@ -98,7 +112,7 @@ export class TelegraphManager {
     const telegraph: ActiveTelegraph = {
       id,
       graphics,
-      options,
+      options: safeOptions,
       elapsedMs: 0,
       resolve: resolve!,
       cancelled: false,
@@ -119,9 +133,11 @@ export class TelegraphManager {
   }
 
   update(deltaMs: number): void {
+    if (this.destroyed) return;
+    const safeDelta = safeDeltaMs(deltaMs);
     for (let i = this.active.length - 1; i >= 0; i--) {
       const telegraph = this.active[i];
-      telegraph.elapsedMs += deltaMs;
+      telegraph.elapsedMs += safeDelta;
 
       if (telegraph.elapsedMs < telegraph.options.durationMs) {
         this.draw(telegraph);
@@ -168,13 +184,16 @@ export class TelegraphManager {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     this.cancelAll();
   }
 
   /** Uyarıyı o anki ilerlemesine göre yeniden çizer. */
   private draw(telegraph: ActiveTelegraph): void {
     const { graphics, options } = telegraph;
-    const progress = Math.min(1, telegraph.elapsedMs / options.durationMs);
+    const progress =
+      options.durationMs > 0 ? Math.min(1, telegraph.elapsedMs / options.durationMs) : 1;
     const color = options.color ?? telegraphConfig.defaultColor;
 
     const intensity = this.getIntensity(telegraph, progress);
@@ -286,4 +305,12 @@ function drawPolygon(graphics: Phaser.GameObjects.Graphics, flat: readonly numbe
 
 function lerp(from: number, to: number, t: number): number {
   return from + (to - from) * Math.min(1, Math.max(0, t));
+}
+
+/** Yok edilmiş yöneticide açılan saldırı, oyuncuya sonradan hasar veremez. */
+function cancelledTelegraphHandle(): TelegraphHandle {
+  return {
+    promise: Promise.resolve({ completed: false }),
+    cancel: () => {},
+  };
 }

@@ -21,6 +21,7 @@ import {
   type SwarmerState,
   type VelocityOutput,
 } from './behaviors';
+import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 export interface EliteControllerDeps {
   effects: EffectManager;
@@ -77,13 +78,14 @@ export class EliteController {
    */
   update(deltaMs: number, playerPos: Vector2, border: Border, grid: SpatialGrid): void {
     if (!this.enemy.isAlive) return;
+    const safeDelta = safeDeltaMs(deltaMs);
 
-    const context = this.syncContext(deltaMs, playerPos);
+    const context = this.syncContext(safeDelta, playerPos);
 
     this.updateDash(context);
     this.updateSpawning(context);
 
-    this.enemy.moveBy(this.velocity.x, this.velocity.y, deltaMs, border, grid);
+    this.enemy.moveBy(this.velocity.x, this.velocity.y, safeDelta, border, grid);
   }
 
   /**
@@ -217,7 +219,7 @@ export class EliteController {
     context.targetX = playerPos.x;
     context.targetY = playerPos.y;
     context.deltaMs = deltaMs;
-    context.speed = Math.max(0, this.enemy.getStats().getValue('speed'));
+    context.speed = nonNegativeFinite(this.enemy.getStats().getValue('speed'));
     context.random = this.deps.random;
     return context;
   }

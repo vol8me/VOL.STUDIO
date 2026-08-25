@@ -1,4 +1,5 @@
 import { economyConfig } from '@/config/economy';
+import { clampFinite, saturatingAdd } from '@/runtime/utils/numeric';
 
 export interface RunEconomyCallbacks {
   /** Spark eşiği aşıldığında — `CardScreens` kart seçim ekranını buna bağlar. */
@@ -35,18 +36,18 @@ export class RunEconomy {
 
   /** Mevcut seviye içinde biriken Spark — XP barının dolum değeri. */
   getSparkInLevel(): number {
-    return this.spark - this.thresholdForLevel(this.level - 1);
+    return Math.max(0, this.spark - this.thresholdForLevel(this.level - 1));
   }
 
   /** Verilen seviyeyi tamamlamak için gereken Spark — XP barının max değeri. */
   getLevelSpan(level: number = this.level): number {
-    return this.thresholdForLevel(level) - this.thresholdForLevel(level - 1);
+    return Math.max(0, this.thresholdForLevel(level) - this.thresholdForLevel(level - 1));
   }
 
   /** Toplanan Flux'u sayaca ekler. Negatif, NaN veya Infinity değer yok sayılır. */
   addFlux(amount: number): void {
     if (!Number.isFinite(amount) || amount <= 0) return;
-    this.flux += amount;
+    this.flux = saturatingAdd(this.flux, amount);
   }
 
   /**
@@ -71,7 +72,7 @@ export class RunEconomy {
    */
   addSpark(amount: number): void {
     if (!Number.isFinite(amount) || amount <= 0) return;
-    this.spark += amount;
+    this.spark = saturatingAdd(this.spark, amount);
 
     let steps = 0;
     while (this.spark >= this.nextThreshold && steps < RunEconomy.MAX_LEVEL_UPS_PER_ADD) {
@@ -99,13 +100,19 @@ export class RunEconomy {
    * Eşik her seviyede geometrik büyür; toplam, geometrik serinin toplamıdır.
    */
   private thresholdForLevel(level: number): number {
-    if (level <= 0) return 0;
+    if (!Number.isFinite(level) || level <= 0) return 0;
+    level = Math.min(100_000, Math.floor(level));
     const { baseThreshold, thresholdGrowth } = economyConfig.spark;
     let total = 0;
-    let step = baseThreshold;
+    let step: number = baseThreshold;
     for (let i = 0; i < level; i++) {
-      total += step;
-      step *= thresholdGrowth;
+      total = clampFinite(total + step, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+      step = clampFinite(
+        step * thresholdGrowth,
+        0,
+        Number.MAX_SAFE_INTEGER,
+        Number.MAX_SAFE_INTEGER,
+      );
     }
     return Math.round(total);
   }

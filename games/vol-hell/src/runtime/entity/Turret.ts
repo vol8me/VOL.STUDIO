@@ -8,6 +8,7 @@ import type { EffectManager } from '@/runtime/systems/EffectManager';
 import { EntityHealthBar } from './EntityHealthBar';
 import type { Enemy } from './Enemy';
 import { TurretShot } from './TurretShot';
+import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 /**
  * Yerleştirilen savunma kulesi — menzilindeki en yakın düşmana namlusunu
@@ -100,12 +101,13 @@ export class Turret {
 
   /** Kuleyi sürer: kurulum animasyonu, hedefleme, atış ve mermiler. */
   update(deltaMs: number, enemies: readonly Enemy[]): void {
+    const safeDelta = safeDeltaMs(deltaMs);
     // Mermiler kule yıkılsa bile yolunu tamamlar; bu yüzden alive kontrolünden önce.
-    this.updateShots(deltaMs, enemies);
+    this.updateShots(safeDelta, enemies);
     if (!this.alive) return;
 
-    this.updateSpawnAnimation(deltaMs);
-    this.updateRecoil(deltaMs);
+    this.updateSpawnAnimation(safeDelta);
+    this.updateRecoil(safeDelta);
 
     const target = this.findTarget(enemies);
     if (target) {
@@ -114,7 +116,7 @@ export class Turret {
     this.barrel.setRotation(this.aimAngle);
     this.applyBarrelOffset();
 
-    this.fireTimerMs += deltaMs;
+    this.fireTimerMs += safeDelta;
     if (!target || this.fireTimerMs < this.params.fireIntervalMs) return;
 
     // Sayaç yalnızca ATIŞ yapıldığında sıfırlanır: hedefsiz beklerken dolu
@@ -125,9 +127,9 @@ export class Turret {
 
   /** Kuleye hasar verir. Yıkılırsa true döner. */
   takeDamage(amount: number): boolean {
-    if (!this.alive || amount <= 0) return false;
+    if (!this.alive || !Number.isFinite(amount) || amount <= 0) return false;
 
-    this.health = Math.max(0, this.health - amount);
+    this.health = Math.max(0, this.health - nonNegativeFinite(amount));
     this.healthBar.setRatio(this.health / this.maxHealth, true, this.body.x);
     this.effects.play('turretHit', this.body.x, this.body.y);
 

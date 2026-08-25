@@ -1,4 +1,5 @@
 import type { SaveManager } from '@volstudio/core';
+import { MAX_RUNTIME_VALUE, saturatingAdd } from '@/runtime/utils/numeric';
 
 export interface GameStatsData {
   bestScore: number;
@@ -16,9 +17,11 @@ const DEFAULTS: GameStatsData = {
   totalKills: 0,
 };
 
-/** Sonlu ve negatif olmayan bir sayıysa kendisi, değilse yedek. */
-function safeCount(value: unknown, fallback: number): number {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
+/** Sonlu, negatif olmayan ve güvenli tamsayıysa kendisi, değilse yedek. */
+function safeCount(value: unknown, fallback: number, integer = false): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return fallback;
+  const normalized = Math.min(MAX_RUNTIME_VALUE, value);
+  return integer ? Math.floor(normalized) : normalized;
 }
 
 /**
@@ -33,8 +36,8 @@ function sanitize(stored: unknown): GameStatsData {
   return {
     bestScore: safeCount(raw.bestScore, DEFAULTS.bestScore),
     bestTimeMs: safeCount(raw.bestTimeMs, DEFAULTS.bestTimeMs),
-    bestKills: safeCount(raw.bestKills, DEFAULTS.bestKills),
-    totalKills: safeCount(raw.totalKills, DEFAULTS.totalKills),
+    bestKills: safeCount(raw.bestKills, DEFAULTS.bestKills, true),
+    totalKills: safeCount(raw.totalKills, DEFAULTS.totalKills, true),
   };
 }
 
@@ -83,12 +86,14 @@ export class GameStats {
    * @returns Güncel rekorlar ve rekor kırılıp kırılmadığı bilgisi.
    */
   async submitRun(score: number, timeMs: number, kills: number): Promise<RunResult> {
-    const safeScore = Number.isFinite(score) && score > 0 ? score : 0;
-    const safeTimeMs = Number.isFinite(timeMs) && timeMs > 0 ? timeMs : 0;
-    const safeKills = Number.isFinite(kills) && kills > 0 ? kills : 0;
+    const safeScore = Number.isFinite(score) && score > 0 ? Math.min(MAX_RUNTIME_VALUE, score) : 0;
+    const safeTimeMs =
+      Number.isFinite(timeMs) && timeMs > 0 ? Math.min(MAX_RUNTIME_VALUE, timeMs) : 0;
+    const safeKills =
+      Number.isFinite(kills) && kills > 0 ? Math.min(MAX_RUNTIME_VALUE, Math.floor(kills)) : 0;
 
     const nextData: GameStatsData = { ...this.data };
-    nextData.totalKills += safeKills;
+    nextData.totalKills = saturatingAdd(nextData.totalKills, safeKills);
 
     const isNewBestScore = safeScore > nextData.bestScore;
     if (isNewBestScore) nextData.bestScore = safeScore;

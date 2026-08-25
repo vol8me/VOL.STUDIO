@@ -75,6 +75,17 @@ describe('applySeekBehavior', () => {
     expect(out.x).toBe(0);
     expect(out.y).toBe(0);
   });
+
+  it('geçersiz bağlam hareket vektörüne sızmaz', () => {
+    const out = makeOut();
+    applySeekBehavior(
+      makeContext({ x: Number.NaN, targetY: Infinity, speed: Number.NaN }),
+      Number.NaN,
+      out,
+    );
+
+    expect(out).toEqual({ x: 0, y: 0 });
+  });
 });
 
 describe('applyStandoffBehavior', () => {
@@ -357,5 +368,22 @@ describe('applySwarmerBehavior', () => {
       request,
     );
     expect(out.x).toBe(0);
+  });
+
+  it('geçersiz delta doğurma sayacını NaN yapmaz', () => {
+    const state = createSwarmerState();
+    const request = createMinionSpawnRequest();
+    const out = makeOut();
+
+    const result = applySwarmerBehavior(
+      state,
+      makeContext({ deltaMs: Number.NaN }),
+      SWARMER_PARAMS,
+      out,
+      request,
+    );
+
+    expect(result).toBeNull();
+    expect(Number.isFinite(state.spawnTimerMs)).toBe(true);
   });
 });

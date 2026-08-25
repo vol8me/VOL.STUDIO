@@ -8,6 +8,7 @@ import type { Border } from '@/runtime/entity/Border';
 import type { Enemy } from '@/runtime/entity/Enemy';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { AbilityUpgrades } from './AbilityUpgrades';
+import { clampFinite, nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 /** Q ve E — oyuncunun iki aktif ability slotu. */
 export type AbilitySlot = 'primary' | 'secondary';
@@ -96,10 +97,11 @@ export abstract class Ability {
   }
 
   update(deltaMs: number, context: AbilityContext): void {
+    const safeDelta = safeDeltaMs(deltaMs);
     if (this.cooldownRemainingMs > 0) {
-      this.cooldownRemainingMs = Math.max(0, this.cooldownRemainingMs - deltaMs);
+      this.cooldownRemainingMs = Math.max(0, this.cooldownRemainingMs - safeDelta);
     }
-    this.onUpdate(deltaMs, context);
+    this.onUpdate(safeDelta, context);
   }
 
   /**
@@ -109,8 +111,15 @@ export abstract class Ability {
    */
   protected getCooldownMs(context: AbilityContext): number {
     const base = context.playerStats.getBase('fireRate');
-    const ratio = base > 0 ? context.playerStats.getValue('fireRate') / base : 1;
-    return Math.max(MIN_ABILITY_COOLDOWN_MS, this.definition.cooldownMs * Math.max(0, ratio));
+    const value = context.playerStats.getValue('fireRate');
+    const ratio = base > 0 && Number.isFinite(value) ? value / base : 1;
+    return Math.max(
+      MIN_ABILITY_COOLDOWN_MS,
+      nonNegativeFinite(
+        this.definition.cooldownMs * clampFinite(ratio, 0, Number.MAX_SAFE_INTEGER, 1),
+        MIN_ABILITY_COOLDOWN_MS,
+      ),
+    );
   }
 
   /** Ability'nin kendi davranışı — her alt sınıf kendi dosyasında uygular. */
@@ -131,6 +140,14 @@ export function findNearestEnemy(
   maxDistance: number,
   exclude?: ReadonlySet<Enemy>,
 ): Enemy | null {
+  if (
+    !Number.isFinite(x) ||
+    !Number.isFinite(y) ||
+    !Number.isFinite(maxDistance) ||
+    maxDistance < 0
+  ) {
+    return null;
+  }
   let best: Enemy | null = null;
   let bestDistance = maxDistance;
 

@@ -155,4 +155,55 @@ describe('TelegraphManager', () => {
     await expect(handle.promise).resolves.toEqual({ completed: false });
     expect(manager.getActiveCount()).toBe(0);
   });
+
+  it('destroy sonrası geç gelen saldırı telegraph açamaz', async () => {
+    const manager = new TelegraphManager(makeScene());
+    manager.destroy();
+
+    const handle = manager.play({
+      durationMs: 300,
+      shape: 'circle' as TelegraphShape,
+      x: Number.NaN,
+      y: Infinity,
+      radius: Number.NaN,
+    });
+
+    manager.update(Infinity);
+    await expect(handle.promise).resolves.toEqual({ completed: false });
+    expect(manager.getActiveCount()).toBe(0);
+  });
+
+  it('geçersiz delta telegraph zamanını bozmaz', async () => {
+    const manager = new TelegraphManager(makeScene());
+    const handle = manager.play({
+      durationMs: 100,
+      shape: 'circle' as TelegraphShape,
+      x: 0,
+      y: 0,
+      radius: 10,
+    });
+
+    manager.update(Number.NaN);
+    manager.update(-10);
+    expect(manager.getActiveCount()).toBe(1);
+
+    manager.update(100);
+    await expect(handle.promise).resolves.toEqual({ completed: true });
+  });
+
+  it('sıfır süreli telegraph NaN alpha üretmeden tamamlanır', async () => {
+    const manager = new TelegraphManager(makeScene());
+    const handle = manager.play({
+      durationMs: 0,
+      shape: 'circle' as TelegraphShape,
+      x: 0,
+      y: 0,
+      radius: 10,
+    });
+
+    manager.update(0);
+
+    await expect(handle.promise).resolves.toEqual({ completed: true });
+    expect(manager.getActiveCount()).toBe(0);
+  });
 });

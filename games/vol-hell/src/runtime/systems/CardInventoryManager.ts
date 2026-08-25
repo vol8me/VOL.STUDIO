@@ -174,7 +174,7 @@ export class CardInventoryManager {
 
   /** Sahip olunan tüm kartlar. */
   getOwned(): readonly OwnedCard[] {
-    return this.owned;
+    return this.owned.slice();
   }
 
   /** Sahip olunan ability kartları — slot atama UI'ı bunları listeler. */
@@ -220,11 +220,33 @@ export class CardInventoryManager {
 
   /** Planlanmış etkiyi uygular. Bu noktadan sonra doğrulama yapılmaz. */
   private commitCardEffect(effect: PlannedCardEffect): void {
-    for (const modifier of effect.modifiers) {
-      this.deps.playerStats.addModifier(modifier);
-    }
+    const appliedModifiers: StatModifier<HellStat>[] = [];
+    const previousUpgrades = new Map<AbilityUpgradeKey, number>();
     for (const upgrade of effect.upgrades) {
-      this.deps.abilities.upgrades.add(upgrade.key, upgrade.amount);
+      if (!previousUpgrades.has(upgrade.key)) {
+        previousUpgrades.set(upgrade.key, this.deps.abilities.upgrades.get(upgrade.key));
+      }
+    }
+
+    try {
+      for (const modifier of effect.modifiers) {
+        this.deps.playerStats.addModifier(modifier);
+        appliedModifiers.push(modifier);
+      }
+      for (const upgrade of effect.upgrades) {
+        this.deps.abilities.upgrades.add(upgrade.key, upgrade.amount);
+      }
+    } catch (error) {
+      // Stat/ability katmanı kısmi uygulamadan sonra fırlatabilir. Kartın
+      // envantere girmemesi tek başına yetmez; daha önce uygulanan parçalar da
+      // geri alınmazsa görünmez bir buff kalır.
+      for (const modifier of appliedModifiers) {
+        this.deps.playerStats.removeModifier(modifier.id);
+      }
+      for (const [key, value] of previousUpgrades) {
+        this.deps.abilities.upgrades.restore(key, value);
+      }
+      throw error;
     }
   }
 

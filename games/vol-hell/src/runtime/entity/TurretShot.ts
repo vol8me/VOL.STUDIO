@@ -3,6 +3,7 @@ import { turretVisualConfig } from '@/config/abilities';
 import { RENDER_DEPTH } from '@/config/layers';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { Enemy } from './Enemy';
+import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 /**
  * Kulenin attığı mermi — hedefi TAKİP EDER ve çarpınca hasar verir.
@@ -19,6 +20,7 @@ export class TurretShot {
   private target: Enemy | null;
   private dirX: number;
   private dirY: number;
+  private readonly damage: number;
   private ageMs = 0;
   private active = true;
 
@@ -27,9 +29,10 @@ export class TurretShot {
     x: number,
     y: number,
     target: Enemy,
-    private readonly damage: number,
+    damage: number,
     private readonly effects: EffectManager,
   ) {
+    this.damage = nonNegativeFinite(damage);
     this.target = target;
 
     const dx = target.x - x;
@@ -55,8 +58,9 @@ export class TurretShot {
 
   update(deltaMs: number, enemies: readonly Enemy[]): void {
     if (!this.active) return;
+    const safeDelta = safeDeltaMs(deltaMs);
 
-    this.ageMs += deltaMs;
+    this.ageMs += safeDelta;
     if (this.ageMs >= turretVisualConfig.shotLifetimeMs) {
       this.destroy();
       return;
@@ -74,7 +78,7 @@ export class TurretShot {
       this.dirY = dy / distance;
     }
 
-    const step = (turretVisualConfig.shotSpeed * deltaMs) / 1000;
+    const step = (turretVisualConfig.shotSpeed * safeDelta) / 1000;
     this.dot.x += this.dirX * step;
     this.dot.y += this.dirY * step;
 

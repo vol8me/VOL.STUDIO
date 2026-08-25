@@ -6,6 +6,7 @@ import { RENDER_DEPTH } from '@/config/layers';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import { findNearestEnemy } from '@/runtime/ability/types';
 import type { Enemy } from './Enemy';
+import { safeDeltaMs } from '@/runtime/utils/numeric';
 
 /** Zikzak bir kolun kırılma noktaları — sabit dizi, her frame yeniden çizilir. */
 interface LightningArc {
@@ -58,9 +59,10 @@ export class ChainLightningStrike {
 
   update(deltaMs: number, enemies: readonly Enemy[]): void {
     if (!this.active) return;
+    const safeDelta = safeDeltaMs(deltaMs);
 
-    this.advanceChain(deltaMs, enemies);
-    this.renderArcs(deltaMs);
+    this.advanceChain(safeDelta, enemies);
+    this.renderArcs(safeDelta);
 
     // Zincir bittikten sonra kollar sönene kadar sahnede kalır.
     if (this.chainFinished && this.arcs.length === 0) {

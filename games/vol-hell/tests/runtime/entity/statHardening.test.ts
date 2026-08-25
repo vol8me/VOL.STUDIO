@@ -148,4 +148,34 @@ describe('uç stat değerlerine karşı sağlamlık', () => {
     expect(enemy.isAlive).toBe(true);
     expect(enemy.takeDamage(bulletConfig.damage)).toBe(true);
   });
+
+  it('NaN hasar ve zaman düşman canını/cooldownunu bozmaz', () => {
+    const { scene } = makeScene();
+    const definition = ENEMY_CATALOG.grunt;
+    const enemy = new Enemy(scene, 0, 0, makeEffects(), {
+      definition,
+      stats: createEnemyStats(definition),
+      scoreValue: definition.scoreValue,
+    });
+    const initialRatio = enemy.getHealthRatio();
+
+    expect(enemy.takeDamage(Number.NaN)).toBe(false);
+    expect(enemy.getHealthRatio()).toBe(initialRatio);
+    expect(enemy.tryContactDamage(Number.NaN)).toBe(0);
+    expect(Number.isFinite(enemy.getHealthRatio())).toBe(true);
+  });
+
+  it('geçersiz mermi yönü doğurulmaz ve cooldown sonsuza kaçmaz', () => {
+    const { scene } = makeScene();
+    const stats = new StatBlock({
+      damage: bulletConfig.damage,
+      speed: 200,
+      health: 100,
+      fireRate: Number.NaN,
+    });
+    const bullets = new BulletManager(scene, makeEffects(), stats);
+
+    expect(bullets.tryFire(new Vector2(0, 0), new Vector2(Number.NaN, 1))).toBe(false);
+    expect(bullets.getBullets()).toHaveLength(0);
+  });
 });

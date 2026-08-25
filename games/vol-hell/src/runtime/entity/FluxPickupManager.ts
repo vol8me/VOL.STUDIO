@@ -6,6 +6,7 @@ import type { Border } from './Border';
 import { FluxPickup } from './FluxPickup';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import { diagnostics } from '@/app/services';
+import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 export interface FluxPickupCallbacks {
   /** Bir parça toplandığında — sayaca eklemek için. */
@@ -32,9 +33,10 @@ export class FluxPickupManager {
 
   /** Ölüm noktasına Flux düşürür; miktarı parçalara böler. */
   drop(x: number, y: number, amount: number): void {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
     // Flux ayrık parçalara bölünür; kesirli miktar parça matematiğini bozardı
     // (ileride bir çarpan kartı gelirse burada tamsayıya inmiş olur).
-    const total = Math.floor(amount);
+    const total = Math.floor(nonNegativeFinite(amount));
     if (total <= 0) return;
 
     const { maxDropsPerDeath, scatterRadius, maxActive } = economyConfig.flux;
@@ -72,9 +74,11 @@ export class FluxPickupManager {
   }
 
   update(deltaMs: number, playerPos: Vector2): void {
+    const safeDelta = safeDeltaMs(deltaMs);
+    if (!Number.isFinite(playerPos.x) || !Number.isFinite(playerPos.y)) return;
     for (let i = this.pickups.length - 1; i >= 0; i--) {
       const pickup = this.pickups[i];
-      pickup.update(deltaMs, playerPos.x, playerPos.y);
+      pickup.update(safeDelta, playerPos.x, playerPos.y);
 
       if (!pickup.isWithinCollectRange(playerPos.x, playerPos.y, playerConfig.hitboxRadius)) {
         continue;

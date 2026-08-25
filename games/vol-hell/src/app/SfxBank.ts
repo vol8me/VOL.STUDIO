@@ -1,5 +1,6 @@
 import { soundAssets, soundKeys, type SoundEvent } from '@/config/sounds';
 import { StemLoader } from '@volstudio/core/audio/music';
+import { clampFinite, finiteOr, nonNegativeFinite } from '@/runtime/utils/numeric';
 
 /** SFX ses olayı başına ses sınırı. */
 export interface SfxVoiceLimit {
@@ -24,6 +25,7 @@ export class SfxBank {
     string,
     { active: Set<AudioBufferSourceNode>; lastStart: number }
   >();
+  private released = false;
   private readonly voiceLimits: Partial<Record<SoundEvent, SfxVoiceLimit>> = {
     // Slider `input` olayında tek bir sürükleme onlarca blip üretir;
     // limit olmadan hepsi üst üste binip makineli tüfek sesi verir.
@@ -54,17 +56,22 @@ export class SfxBank {
   }
 
   setBusVolume(value: number, fadeTime = 0.05): void {
-    const now = this.context.currentTime;
-    if (fadeTime <= 0.001) {
+    if (this.released) return;
+    const now = finiteOr(this.context.currentTime, 0);
+    const safeValue = clampFinite(value, 0, 1, 0);
+    const safeFadeTime = nonNegativeFinite(fadeTime, 0);
+    if (safeFadeTime <= 0.001) {
       this.busGain.gain.cancelScheduledValues(now);
-      this.busGain.gain.setValueAtTime(value, now);
+      this.busGain.gain.setValueAtTime(safeValue, now);
     } else {
-      this.busGain.gain.setTargetAtTime(value, now, fadeTime / 3);
+      this.busGain.gain.setTargetAtTime(safeValue, now, safeFadeTime / 3);
     }
   }
 
   async load(event: SoundEvent): Promise<void> {
+    if (this.released) return;
     const key = soundKeys[event];
+    if (!key) return;
     if (this.buffers.has(key)) return;
 
     const pending = this.pendingLoads.get(key);
@@ -90,6 +97,10 @@ export class SfxBank {
       .filter((r): r is PromiseFulfilledResult<AudioBuffer> => r.status === 'fulfilled')
       .map((r) => r.value);
 
+    // release() yüklemeyi iptal edemez; ancak geç tamamlanan bir fetch'in
+    // yıkılmış bankayı yeniden doldurmasına da izin verilmez.
+    if (this.released) return;
+
     // Boş olsa bile cache'le — her play çağrısında tekrar fetch denemesini önler.
     this.buffers.set(key, buffers);
 
@@ -104,17 +115,22 @@ export class SfxBank {
     event: SoundEvent,
     options: { volume?: number; pitchVar?: number; maxVoices?: number; minInterval?: number } = {},
   ): Promise<void> {
+    if (this.released) return;
+    if (this.context.state === 'closed') return;
     if (this.context.state === 'suspended') {
       await this.context.resume();
     }
+    if (this.released) return;
 
     const key = soundKeys[event];
+    if (!key) return;
     if (!this.buffers.has(key)) await this.load(event);
+    if (this.released) return;
 
     const variants = this.buffers.get(key);
     if (!variants || variants.length === 0) return;
 
-    const now = this.context.currentTime;
+    const now = finiteOr(this.context.currentTime, 0);
     const limit = this.resolveLimit(event, options);
     const state = this.getVoiceState(key);
 
@@ -144,10 +160,11 @@ export class SfxBank {
     source.buffer = buffer;
 
     const gain = this.context.createGain();
-    gain.gain.value = Math.max(0, options.volume ?? 1);
+    gain.gain.value = clampFinite(options.volume ?? 1, 0, 1, 1);
 
-    if (options.pitchVar && options.pitchVar !== 0) {
-      const cents = (Math.random() * 2 - 1) * options.pitchVar;
+    const pitchVar = nonNegativeFinite(options.pitchVar ?? 0, 0);
+    if (pitchVar > 0) {
+      const cents = (Math.random() * 2 - 1) * pitchVar;
       source.detune.value = cents;
     }
 
@@ -174,7 +191,7 @@ export class SfxBank {
     const key = soundKeys[event];
     const state = this.voiceStates.get(key);
     if (!state) return;
-    const now = this.context.currentTime;
+    const now = finiteOr(this.context.currentTime, 0);
     for (const source of state.active) {
       try {
         source.stop(now);
@@ -187,7 +204,7 @@ export class SfxBank {
 
   /** Tüm aktif SFX seslerini durdurur. Sahne geçişlerinde ses sızıntısını önler. */
   stopAll(): void {
-    const now = this.context.currentTime;
+    const now = finiteOr(this.context.currentTime, 0);
     for (const state of this.voiceStates.values()) {
       for (const source of state.active) {
         try {
@@ -205,22 +222,34 @@ export class SfxBank {
     options: { maxVoices?: number; minInterval?: number },
   ): SfxVoiceLimit {
     const defaults = this.voiceLimits[event];
+    const defaultMaxVoices = defaults?.maxVoices ?? 0;
+    const defaultMinInterval = defaults?.minInterval ?? 0;
     return {
-      maxVoices: options.maxVoices ?? defaults?.maxVoices ?? 0,
-      minInterval: options.minInterval ?? defaults?.minInterval ?? 0,
+      maxVoices: Math.floor(
+        clampFinite(
+          options.maxVoices ?? defaultMaxVoices,
+          0,
+          Number.MAX_SAFE_INTEGER,
+          defaultMaxVoices,
+        ),
+      ),
+      minInterval: nonNegativeFinite(options.minInterval ?? defaultMinInterval, defaultMinInterval),
     };
   }
 
   private getVoiceState(key: string): { active: Set<AudioBufferSourceNode>; lastStart: number } {
     let state = this.voiceStates.get(key);
     if (!state) {
-      state = { active: new Set(), lastStart: 0 };
+      // currentTime=0'da minInterval ilk sesi yanlışlıkla susturmamalı.
+      state = { active: new Set(), lastStart: -Infinity };
       this.voiceStates.set(key, state);
     }
     return state;
   }
 
   release(): void {
+    if (this.released) return;
+    this.released = true;
     this.stopAll();
     this.buffers.clear();
     this.voiceStates.clear();

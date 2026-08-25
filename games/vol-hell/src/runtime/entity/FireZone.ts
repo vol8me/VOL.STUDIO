@@ -4,6 +4,7 @@ import { fireZoneVisualConfig } from '@/config/abilities';
 import { RENDER_DEPTH } from '@/config/layers';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { Enemy } from './Enemy';
+import { safeDeltaMs } from '@/runtime/utils/numeric';
 
 /**
  * Zemine serilen ateş alanı — içinde kalan düşmanlara düzenli aralıklarla
@@ -45,15 +46,16 @@ export class FireZone {
   /** Alanı yürütür: nabız, kıvılcım, hasar tick'leri ve ömür sonunda sönme. */
   update(deltaMs: number, enemies: readonly Enemy[]): void {
     if (!this.active) return;
+    const safeDelta = safeDeltaMs(deltaMs);
 
-    this.elapsedMs += deltaMs;
+    this.elapsedMs += safeDelta;
     if (this.elapsedMs >= this.params.durationMs) {
       this.destroy();
       return;
     }
 
-    this.updateVisuals(deltaMs);
-    this.updateDamage(deltaMs, enemies);
+    this.updateVisuals(safeDelta);
+    this.updateDamage(safeDelta, enemies);
   }
 
   destroy(): void {

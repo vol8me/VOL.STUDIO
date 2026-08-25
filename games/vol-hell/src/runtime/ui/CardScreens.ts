@@ -63,6 +63,7 @@ export class CardScreens {
   private shopWave = 0;
   private intermissionActive = false;
   private closeTimeout: ReturnType<typeof setTimeout> | null = null;
+  private destroyed = false;
 
   constructor(
     parent: HTMLElement,
@@ -131,6 +132,7 @@ export class CardScreens {
    * Seviye atlandı — kart seçimi HEMEN açılmaz, dalga sonuna kuyruğa alınır.
    */
   queueLevelUp(level: number): void {
+    if (this.destroyed || !Number.isFinite(level)) return;
     this.pendingLevels.push(level);
   }
 
@@ -138,6 +140,7 @@ export class CardScreens {
    * Dalga bitti — önce bekleyen kart seçimleri sırayla, sonra dükkan.
    */
   openIntermission(wave: number): void {
+    if (this.destroyed) return;
     this.shopWave = wave;
     this.purchased = new Set();
     this.purchasedInstanceIds = new Set();
@@ -151,6 +154,7 @@ export class CardScreens {
 
   /** Dil değişiminde metinleri tazeler (ekran kapalıyken de güvenli). */
   refreshLabels(): void {
+    if (this.destroyed) return;
     if (this.shop.isVisible()) {
       this.shop.render(this.buildShopState());
       this.refreshLoadout();
@@ -158,6 +162,8 @@ export class CardScreens {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     if (this.closeTimeout !== null) {
       clearTimeout(this.closeTimeout);
       this.closeTimeout = null;
@@ -222,6 +228,7 @@ export class CardScreens {
     this.shop.hide();
     this.closeTimeout = setTimeout(() => {
       this.closeTimeout = null;
+      if (this.destroyed) return;
       this.container.hidden = true;
       this.intermissionActive = false;
       this.callbacks.onClose();

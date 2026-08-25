@@ -6,6 +6,7 @@ import { sfxVolumes } from '@/config/audio';
 import { diagnostics, gameAudio } from '@/app/services';
 import type { Border } from './Border';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
+import { finiteOr, nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 /**
  * Mermi — oyuncunun fare yönüne doğru ateşlediği projectile.
@@ -16,6 +17,7 @@ export class Bullet {
   private readonly velocity: Vector2 = Vector2.zero();
   private age = 0;
   private alive = true;
+  private readonly damageValue: number;
   private lastTrailTime = 0;
   private lastBounceSoundTime = -Infinity;
 
@@ -26,11 +28,14 @@ export class Bullet {
     direction: Vector2,
     private readonly effects: EffectManager,
     /** Ateşlendiği andaki hasar — oyuncunun stat bloğundan gelir. */
-    private readonly damageValue: number = bulletConfig.damage,
+    damageValue: number = bulletConfig.damage,
   ) {
+    this.damageValue = nonNegativeFinite(damageValue);
+    const directionX = finiteOr(direction.x, 0);
+    const directionY = finiteOr(direction.y, 0);
     this.arc = scene.add.circle(
-      x,
-      y,
+      finiteOr(x, 0),
+      finiteOr(y, 0),
       bulletConfig.radius,
       bulletConfig.color,
       bulletConfig.fillAlpha,
@@ -42,7 +47,10 @@ export class Bullet {
     );
     this.arc.setDepth(RENDER_DEPTH.bullet);
 
-    this.velocity.copyFrom(direction).normalizeInPlace().scaleInPlace(bulletConfig.speed);
+    this.velocity.set(directionX, directionY);
+    if (this.velocity.length() > 0) {
+      this.velocity.normalizeInPlace().scaleInPlace(bulletConfig.speed);
+    }
   }
 
   get isAlive(): boolean {
@@ -64,20 +72,21 @@ export class Bullet {
   update(delta: number, border: Border): void {
     if (!this.alive) return;
 
-    const dt = delta / 1000;
+    const safeDelta = safeDeltaMs(delta);
+    const dt = safeDelta / 1000;
     this.arc.x += this.velocity.x * dt;
     this.arc.y += this.velocity.y * dt;
 
     this.handleBounce(border);
 
     // Trail partikül
-    this.lastTrailTime += delta;
+    this.lastTrailTime += safeDelta;
     if (this.lastTrailTime >= bulletConfig.trailFrequencyMs) {
       this.lastTrailTime = 0;
       this.spawnTrailParticle();
     }
 
-    this.age += delta;
+    this.age += safeDelta;
     if (this.age >= bulletConfig.lifetimeMs) {
       this.destroy();
     }
@@ -122,7 +131,7 @@ export class Bullet {
         y: this.arc.y,
       });
 
-      const now = this.scene.time.now;
+      const now = finiteOr(this.scene.time.now, 0);
       if (now - this.lastBounceSoundTime >= bulletConfig.bounceSoundCooldownMs) {
         this.lastBounceSoundTime = now;
         void gameAudio.playSfx('bulletBounce', { volume: sfxVolumes.bulletBounce });

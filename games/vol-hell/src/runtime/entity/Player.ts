@@ -7,6 +7,13 @@ import { RENDER_DEPTH } from '@/config/layers';
 import type { Border } from './Border';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import { diagnostics } from '@/app/services';
+import {
+  clampFinite,
+  finiteOr,
+  hasFiniteDirection,
+  nonNegativeFinite,
+  safeDeltaMs,
+} from '@/runtime/utils/numeric';
 
 /**
  * Oyuncu entity'si. MovableController composition ile sprite'ı tutar.
@@ -49,7 +56,13 @@ export class Player extends MovableController {
   private readonly effects: EffectManager;
 
   constructor(scene: Phaser.Scene, x: number, y: number, effects: EffectManager) {
-    const arc = scene.add.circle(x, y, playerConfig.hitboxRadius, playerConfig.color, 1);
+    const arc = scene.add.circle(
+      finiteOr(x, 0),
+      finiteOr(y, 0),
+      playerConfig.hitboxRadius,
+      playerConfig.color,
+      1,
+    );
     arc.setStrokeStyle(2, playerConfig.dashColor, 0.8);
     // Oyuncu kalabalıkta düşman gövdelerinin altında kaybolmamalı.
     arc.setDepth(RENDER_DEPTH.player);
@@ -62,7 +75,7 @@ export class Player extends MovableController {
       health: playerConfig.maxHealth,
       fireRate: bulletConfig.fireCooldownMs,
     });
-    this.health = this.stats.getValue('health');
+    this.health = nonNegativeFinite(this.stats.getValue('health'), playerConfig.maxHealth);
     this.lastMaxHealth = this.health;
     this.effects = effects;
   }
@@ -77,7 +90,7 @@ export class Player extends MovableController {
 
   /** Modifier'lar uygulanmış maksimum can. */
   getMaxHealth(): number {
-    return this.stats.getValue('health');
+    return nonNegativeFinite(this.stats.getValue('health'), this.lastMaxHealth);
   }
 
   /**
@@ -101,12 +114,18 @@ export class Player extends MovableController {
    * böylece "hız +%20" veren bir kart dash'i de aynı oranda hızlandırır.
    */
   private getDashSpeed(): number {
-    return playerConfig.dashSpeed * (this.stats.getValue('speed') / playerConfig.moveSpeed);
+    const speed = nonNegativeFinite(this.stats.getValue('speed'));
+    const ratio = playerConfig.moveSpeed > 0 ? speed / playerConfig.moveSpeed : 0;
+    return nonNegativeFinite(playerConfig.dashSpeed * ratio);
   }
 
   /** InputManager'dan gelen hareket yönü — update()'ten önce çağrılmalı. Dash sırasında reddedilir. */
   setMoveDirection(direction: Vector2): void {
     if (this.dashing) return;
+    if (!Number.isFinite(direction.x) || !Number.isFinite(direction.y)) {
+      this.moveDirection.reset();
+      return;
+    }
     this.moveDirection.copyFrom(direction);
   }
 
@@ -116,17 +135,18 @@ export class Player extends MovableController {
   }
 
   update(delta: number): void {
+    const safeDelta = safeDeltaMs(delta);
     this.syncMaxHealth();
     const isDashing = this.dashTimer > 0;
 
     // Dash şarjı — dash dışında her zaman dolar (cooldown tabanlı)
     if (!isDashing) {
-      this.dashCharge = Math.min(1, this.dashCharge + delta / playerConfig.dashChargeMs);
+      this.dashCharge = Math.min(1, this.dashCharge + safeDelta / playerConfig.dashChargeMs);
     }
 
     // Dash timer decrement
     if (this.dashTimer > 0) {
-      this.dashTimer -= delta;
+      this.dashTimer -= safeDelta;
       if (this.dashTimer <= 0) {
         this.dashTimer = 0;
         this.dashing = false;
@@ -135,7 +155,7 @@ export class Player extends MovableController {
 
     // Invulnerability timer decrement (sadece dash i-frame)
     if (this.invulnerabilityTimer > 0) {
-      this.invulnerabilityTimer -= delta;
+      this.invulnerabilityTimer -= safeDelta;
       if (this.invulnerabilityTimer <= 0) {
         this.invulnerabilityTimer = 0;
         this.invulnerable = false;
@@ -151,7 +171,7 @@ export class Player extends MovableController {
 
     // Hasar flash efekti — hasarı engellemez, sadece görsel geri bildirim
     if (this.hitFlashTimer > 0) {
-      this.hitFlashTimer -= delta;
+      this.hitFlashTimer -= safeDelta;
       if (this.hitFlashTimer <= 0 && !this.dashing) {
         this.arc.setFillStyle(playerConfig.color, playerConfig.fillAlpha);
       }
@@ -159,7 +179,7 @@ export class Player extends MovableController {
 
     // Dash ghost bırakma
     if (this.dashing) {
-      this.ghostTimer += delta;
+      this.ghostTimer += safeDelta;
       const ghostInterval = playerConfig.dashDurationMs / playerConfig.dashGhostCount;
       if (this.ghostTimer >= ghostInterval) {
         this.ghostTimer = 0;
@@ -168,8 +188,8 @@ export class Player extends MovableController {
     }
 
     // Hareket — negatif hız modifier'ı oyuncuyu ters yöne sürüklerdi.
-    const speed = Math.max(0, isDashing ? this.getDashSpeed() : this.stats.getValue('speed'));
-    this.move(this.moveDirection, speed, delta);
+    const speed = isDashing ? this.getDashSpeed() : nonNegativeFinite(this.stats.getValue('speed'));
+    this.move(this.moveDirection, speed, safeDelta);
 
     // Border clamp
     if (this.currentBorder) {
@@ -192,17 +212,19 @@ export class Player extends MovableController {
   tryDash(aimDirection: Vector2): boolean {
     if (this.dashTimer > 0 || this.dashCharge < 1) return false;
 
+    if (this.moveDirection.length() <= playerConfig.moveDirectionThreshold) {
+      if (!hasFiniteDirection(aimDirection.x, aimDirection.y)) return false;
+      this.moveDirection.copyFrom(aimDirection);
+    }
+    if (!hasFiniteDirection(this.moveDirection.x, this.moveDirection.y)) return false;
+    this.moveDirection.normalizeInPlace();
+
     this.dashing = true;
     this.dashTimer = playerConfig.dashDurationMs;
     this.dashCharge = 0;
     this.invulnerable = true;
     this.invulnerabilityTimer = Math.max(playerConfig.dashIFrameMs, this.invulnerabilityTimer);
 
-    // Dash yönü — hareket yönü varsa onu kullan, yoksa aim
-    if (this.moveDirection.length() <= playerConfig.moveDirectionThreshold) {
-      this.moveDirection.copyFrom(aimDirection);
-    }
-    this.moveDirection.normalizeInPlace();
     this.ghostTimer = 0;
 
     diagnostics?.recordEvent('dash', {
@@ -216,7 +238,7 @@ export class Player extends MovableController {
 
   /** Dash şarj oranı (0-1) — UI bar için. */
   getDashChargeRatio(): number {
-    return this.dashCharge;
+    return clampFinite(this.dashCharge, 0, 1, 0);
   }
 
   /** Dash hazır mı? */
@@ -226,7 +248,9 @@ export class Player extends MovableController {
 
   /** Hasar alır — dash i-frame aktifse reddedilir. Contact damage i-frame vermez. */
   takeDamage(amount: number): boolean {
-    if (this.invulnerable) return false;
+    if (this.invulnerable || !this.isAlive() || !Number.isFinite(amount) || amount <= 0)
+      return false;
+    this.syncMaxHealth();
     this.health = Math.max(0, this.health - amount);
     this.hitFlashTimer = playerConfig.hitFlashDurationMs;
     this.arc.setFillStyle(playerConfig.hitColor, playerConfig.fillAlpha);
@@ -250,7 +274,7 @@ export class Player extends MovableController {
     const max = this.getMaxHealth();
     if (max <= 0) return 0;
     // Maks. can sonradan düşerse (takas kartı) oran 1'i aşmamalı.
-    return Math.min(1, this.health / max);
+    return clampFinite(this.health / max, 0, 1, 0);
   }
 
   isAlive(): boolean {
@@ -278,6 +302,7 @@ export class Player extends MovableController {
    * Pozisyonu günceller ve border'a clamp eder.
    */
   applyPush(pushX: number, pushY: number): void {
+    if (!Number.isFinite(pushX) || !Number.isFinite(pushY)) return;
     this.arc.x += pushX;
     this.arc.y += pushY;
 

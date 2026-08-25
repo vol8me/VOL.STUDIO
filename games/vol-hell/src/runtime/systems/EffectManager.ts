@@ -6,6 +6,7 @@ import {
   type EffectId,
   type ParticleBurstSpec,
 } from '@/config/effects';
+import { finiteOr, nonNegativeFinite } from '@/runtime/utils/numeric';
 
 /** Partikül dokusunun TextureManager anahtarı — sahneler arasında paylaşılır. */
 const PARTICLE_TEXTURE_KEY = 'vol-effect-particle';
@@ -35,6 +36,7 @@ export class EffectManager {
   private readonly emitters = new Map<EffectId, Phaser.GameObjects.Particles.ParticleEmitter>();
   /** Efekt başına son sarsıntı zamanı (ms) — sarsıntı spam'ini keser. */
   private readonly lastShakeAt = new Map<EffectId, number>();
+  private destroyed = false;
 
   constructor(scene: Phaser.Scene, options: EffectManagerOptions = {}) {
     this.scene = scene;
@@ -57,12 +59,14 @@ export class EffectManager {
    * `angleSpread` varsa partiküller bu açının etrafına saçılır.
    */
   play(id: EffectId, x: number, y: number, angleDeg?: number): void {
+    if (this.destroyed || !Number.isFinite(x) || !Number.isFinite(y)) return;
     const definition = effectsConfig[id];
+    if (!definition) return;
     const emitter = this.emitters.get(id);
 
     if (emitter && definition.particles) {
       const spread = definition.particles.angleSpread;
-      if (spread !== undefined && angleDeg !== undefined) {
+      if (spread !== undefined && angleDeg !== undefined && Number.isFinite(angleDeg)) {
         emitter.setEmitterAngle({ min: angleDeg - spread, max: angleDeg + spread });
       }
       emitter.emitParticleAt(x, y, definition.particles.count);
@@ -75,6 +79,7 @@ export class EffectManager {
 
   /** Yaşayan partikül sayısı — diagnostic sayacı için. */
   getActiveParticleCount(): number {
+    if (this.destroyed) return 0;
     let total = 0;
     for (const emitter of this.emitters.values()) {
       total += emitter.getAliveParticleCount();
@@ -83,6 +88,8 @@ export class EffectManager {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     for (const emitter of this.emitters.values()) {
       emitter.destroy();
     }
@@ -92,14 +99,14 @@ export class EffectManager {
 
   private applyShake(id: EffectId, shake: NonNullable<EffectDefinition['shake']>): void {
     const scale = this.options.getShakeScale?.();
-    if (scale === undefined || scale === null || scale <= 0) return;
+    if (scale === undefined || scale === null || !Number.isFinite(scale) || scale <= 0) return;
 
-    const now = this.scene.time.now;
+    const now = finiteOr(this.scene.time.now, 0);
     const last = this.lastShakeAt.get(id);
     if (last !== undefined && now - last < shake.cooldownMs) return;
 
     this.lastShakeAt.set(id, now);
-    this.scene.cameras.main.shake(shake.durationMs, shake.intensity * scale);
+    this.scene.cameras.main.shake(shake.durationMs, nonNegativeFinite(shake.intensity * scale));
   }
 
   private createEmitter(spec: ParticleBurstSpec): Phaser.GameObjects.Particles.ParticleEmitter {

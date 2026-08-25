@@ -11,6 +11,7 @@ import {
   victoryTrackId,
 } from '@/config';
 import { gameAudio } from '@/app/services';
+import { clampFinite, nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 
 /**
  * Oyun sahnesinin ses yönetimi — ambiyans yükleme, sakin/gergin geçişi,
@@ -32,6 +33,9 @@ export class GameAudioDirector {
   private bossActive = false;
   /** Ölüm/zafer terminal müziği çaldıktan sonra update'i dondur. */
   private terminal = false;
+  /** Eski sahne örneğinin geç tamamlanan yüklemesi yeni koşuna sızmasın. */
+  private lifecycleToken = 0;
+  private stopped = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -43,6 +47,8 @@ export class GameAudioDirector {
    * Sahne bu arada kapanırsa ses başlatılmaz.
    */
   start(): void {
+    const token = ++this.lifecycleToken;
+    this.stopped = false;
     this.ambientState = 'calm';
     this.musicState = 'ambient';
     this.ambientTimerMs = 0;
@@ -61,7 +67,13 @@ export class GameAudioDirector {
     ])
       .then(() => {
         // Oyuna hızlıca restart/MainMenu dönüşünde arka plan sesi çalmaya başlamasın.
-        if (!this.scene.scene.isActive(this.scene.scene.key)) return;
+        if (
+          this.stopped ||
+          token !== this.lifecycleToken ||
+          !this.scene.scene.isActive(this.scene.scene.key)
+        ) {
+          return;
+        }
         this.ambientLoaded = true;
         this.musicLoaded = true;
         gameAudio.stopMusic(musicConfig.ambient.menuStopFadeSec);
@@ -87,20 +99,24 @@ export class GameAudioDirector {
    * Tehlikeye hızlı, sakinliğe temkinli geçilir — eşikler config'te.
    */
   update(deltaMs: number, enemyCount: number, isPlaying: boolean): void {
-    if (!isPlaying || this.terminal) return;
+    if (!isPlaying || this.terminal || this.stopped) return;
     if (!this.ambientLoaded) return;
 
-    this.updateAmbient(deltaMs, enemyCount);
-    this.updateMusic(deltaMs, enemyCount);
+    const safeDelta = safeDeltaMs(deltaMs);
+    const safeEnemyCount = Math.max(0, Math.floor(nonNegativeFinite(enemyCount)));
+    this.updateAmbient(safeDelta, safeEnemyCount);
+    this.updateMusic(safeDelta, safeEnemyCount);
   }
 
   /** Ölüm anı — ambiyans ve müzik susar, ölüm parçası ve ölüm sesi çalar. */
   playDeath(): void {
+    if (this.stopped) return;
     this.terminal = true;
     gameAudio.stopAmbient(musicConfig.ambient.terminalStopFadeSec);
     gameAudio.stopMusic(musicConfig.ambient.terminalStopFadeSec);
 
-    const deathKey = deathTrackKeys[Math.floor(this.random.next() * deathTrackKeys.length)];
+    const index = Math.floor(clampFinite(this.random.next(), 0, deathTrackKeys.length - 1, 0));
+    const deathKey = deathTrackKeys[index] ?? deathTrackKeys[0];
     void gameAudio.playMusic(musicTracks[deathKey].id, { fadeIn: musicConfig.death.fadeInSec });
     void gameAudio.playSfx('death', {
       volume: sfxVolumes.death,
@@ -110,6 +126,7 @@ export class GameAudioDirector {
 
   /** Koşu zaferi — ambiyans ve müzik susar, zafer parçası çalar. */
   playVictory(): void {
+    if (this.stopped) return;
     this.terminal = true;
     gameAudio.stopAmbient(musicConfig.ambient.terminalStopFadeSec);
     gameAudio.stopMusic(musicConfig.ambient.terminalStopFadeSec);
@@ -118,6 +135,8 @@ export class GameAudioDirector {
 
   /** Sahne kapanışı — tüm ses kanallarını susturur. */
   stopAll(): void {
+    this.stopped = true;
+    this.lifecycleToken++;
     gameAudio.stopAllSfx();
     gameAudio.stopMusic(1);
     gameAudio.stopAmbient(1);

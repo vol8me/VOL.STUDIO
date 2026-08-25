@@ -352,4 +352,23 @@ describe('Player', () => {
 
     expect(player.getPosition().x).toBeCloseTo(100 + playerConfig.moveSpeed, 0);
   });
+
+  it('geçersiz delta ve hasar oyuncu durumunu bozmaz', () => {
+    const player = makePlayer(100, 100);
+    player.setMoveDirection(new Vector2(1, 0));
+    player.update(Number.NaN);
+    expect(Number.isFinite(player.getX())).toBe(true);
+
+    expect(player.takeDamage(Number.NaN)).toBe(false);
+    expect(player.takeDamage(Infinity)).toBe(false);
+    expect(player.getHealth()).toBe(playerConfig.maxHealth);
+  });
+
+  it('geçersiz dash nişanı dash başlatmaz', () => {
+    const player = makePlayer(100, 100);
+
+    expect(player.tryDash(new Vector2(Number.NaN, 0))).toBe(false);
+    expect(player.canDash()).toBe(true);
+    expect(player.getDashChargeRatio()).toBe(1);
+  });
 });

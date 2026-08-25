@@ -21,6 +21,7 @@ export abstract class BaseScene extends Phaser.Scene {
 
   /** Bekleyen `show()` rAF'i; shutdown'da iptal edilir. */
   private showRafId: number | null = null;
+  private shutdownHandled = false;
 
   private readonly onLanguageChangedBound = (): void => {
     this.onLanguageChanged();
@@ -31,6 +32,7 @@ export abstract class BaseScene extends Phaser.Scene {
    * ÇALIŞMAZ; bu yüzden durum sıfırlama `createScene()` içinde yapılır.
    */
   create(data?: unknown): void {
+    this.shutdownHandled = false;
     const container = this.game.canvas.parentElement ?? document.body;
     this.ui = new UIRoot(container);
 
@@ -67,13 +69,21 @@ export abstract class BaseScene extends Phaser.Scene {
   }
 
   private handleShutdown(): void {
-    this.onSceneShutdown();
+    if (this.shutdownHandled) return;
+    this.shutdownHandled = true;
 
-    i18next.off('languageChanged', this.onLanguageChangedBound);
-    if (this.showRafId !== null) {
-      cancelAnimationFrame(this.showRafId);
-      this.showRafId = null;
+    try {
+      this.onSceneShutdown();
+    } finally {
+      // Alt sınıf kısmi kurulumda hata verse bile taban listener/rAF/UI
+      // kaynakları açık kalmamalı; aksi hâlde sonraki scene restart'ı eski
+      // DOM ve i18n closure'larıyla birlikte çalışır.
+      i18next.off('languageChanged', this.onLanguageChangedBound);
+      if (this.showRafId !== null) {
+        cancelAnimationFrame(this.showRafId);
+        this.showRafId = null;
+      }
+      this.ui?.destroy();
     }
-    this.ui.destroy();
   }
 }

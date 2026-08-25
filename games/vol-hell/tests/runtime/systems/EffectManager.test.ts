@@ -215,4 +215,15 @@ describe('EffectManager', () => {
     expect(scene.emitters.every((e) => e.destroyed)).toBe(true);
     expect(effects.getActiveParticleCount()).toBe(0);
   });
+
+  it('geçersiz konum/açı ve shake ölçeği partikül zincirini bozmaz', () => {
+    const effects = new EffectManager(asPhaser, { getShakeScale: () => Number.NaN });
+
+    effects.play('enemyDeath', Number.NaN, 0, Infinity);
+    effects.play('enemyDeath', 0, 0, Infinity);
+
+    expect(scene.emitters.flatMap((e) => e.emitted)).toHaveLength(1);
+    expect(scene.emitters.flatMap((e) => e.angleSets)).toHaveLength(0);
+    expect(scene.shakes).toHaveLength(0);
+  });
 });

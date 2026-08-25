@@ -1,4 +1,5 @@
 import type { BehaviorContext, VelocityOutput } from './types';
+import { finiteOr, nonNegativeFinite } from '@/runtime/utils/numeric';
 
 /**
  * Temel takip: hedefe doğru tam hızda gider, `stopDistance` mesafesine
@@ -10,18 +11,24 @@ export function applySeekBehavior(
   stopDistance: number,
   out: VelocityOutput,
 ): void {
-  const dx = context.targetX - context.x;
-  const dy = context.targetY - context.y;
+  const x = finiteOr(context.x, 0);
+  const y = finiteOr(context.y, 0);
+  const targetX = finiteOr(context.targetX, x);
+  const targetY = finiteOr(context.targetY, y);
+  const speed = nonNegativeFinite(context.speed);
+  const safeStopDistance = nonNegativeFinite(stopDistance);
+  const dx = targetX - x;
+  const dy = targetY - y;
   const distance = Math.hypot(dx, dy);
 
-  if (distance <= stopDistance || distance === 0) {
+  if (distance <= safeStopDistance || distance === 0) {
     out.x = 0;
     out.y = 0;
     return;
   }
 
-  out.x = (dx / distance) * context.speed;
-  out.y = (dy / distance) * context.speed;
+  out.x = (dx / distance) * speed;
+  out.y = (dy / distance) * speed;
 }
 
 /**
@@ -37,8 +44,15 @@ export function applyStandoffBehavior(
   toleranceRatio: number,
   out: VelocityOutput,
 ): void {
-  const dx = context.targetX - context.x;
-  const dy = context.targetY - context.y;
+  const x = finiteOr(context.x, 0);
+  const y = finiteOr(context.y, 0);
+  const targetX = finiteOr(context.targetX, x);
+  const targetY = finiteOr(context.targetY, y);
+  const speed = nonNegativeFinite(context.speed);
+  const safeStandoff = nonNegativeFinite(standoffDistance);
+  const safeToleranceRatio = nonNegativeFinite(toleranceRatio);
+  const dx = targetX - x;
+  const dy = targetY - y;
   const distance = Math.hypot(dx, dy);
 
   if (distance === 0) {
@@ -47,16 +61,16 @@ export function applyStandoffBehavior(
     return;
   }
 
-  const tolerance = standoffDistance * toleranceRatio;
-  if (distance > standoffDistance + tolerance) {
-    out.x = (dx / distance) * context.speed;
-    out.y = (dy / distance) * context.speed;
+  const tolerance = safeStandoff * safeToleranceRatio;
+  if (distance > safeStandoff + tolerance) {
+    out.x = (dx / distance) * speed;
+    out.y = (dy / distance) * speed;
     return;
   }
 
-  if (distance < standoffDistance - tolerance) {
-    out.x = -(dx / distance) * context.speed;
-    out.y = -(dy / distance) * context.speed;
+  if (distance < safeStandoff - tolerance) {
+    out.x = -(dx / distance) * speed;
+    out.y = -(dy / distance) * speed;
     return;
   }
 

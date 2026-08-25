@@ -14,6 +14,7 @@ import { RunEconomy } from './RunEconomy';
 import { WaveManager } from './WaveManager';
 import { SpecialEnemyDirector } from './SpecialEnemyDirector';
 import { diagnostics } from '@/app/services';
+import { safeDeltaMs } from '@/runtime/utils/numeric';
 
 export interface RunDirectorDeps {
   scene: Phaser.Scene;
@@ -57,6 +58,7 @@ export class RunDirector {
   private readonly bulletManager: BulletManager;
   private readonly telegraphs: TelegraphManager;
   private readonly specials: SpecialEnemyDirector;
+  private destroyed = false;
 
   constructor(deps: RunDirectorDeps, callbacks: RunDirectorCallbacks = {}) {
     this.enemyManager = deps.enemyManager;
@@ -118,14 +120,17 @@ export class RunDirector {
 
   /** Koşuyu ilk dalgadan başlatır. */
   start(): void {
+    if (this.destroyed) return;
     this.waves.start();
   }
 
   update(deltaMs: number, playerPos: Vector2, grid: SpatialGrid): void {
-    this.waves.update(deltaMs);
-    this.pickups.update(deltaMs, playerPos);
-    this.telegraphs.update(deltaMs);
-    this.specials.update(deltaMs, playerPos, grid);
+    if (this.destroyed) return;
+    const safeDelta = safeDeltaMs(deltaMs);
+    this.waves.update(safeDelta);
+    this.pickups.update(safeDelta, playerPos);
+    this.telegraphs.update(safeDelta);
+    this.specials.update(safeDelta, playerPos, grid);
   }
 
   /**
@@ -133,6 +138,7 @@ export class RunDirector {
    * Skor sahnenin kendi sorumluluğu (koşu ekonomisine ait değil).
    */
   onEnemyKilled(enemy: Enemy): void {
+    if (this.destroyed) return;
     this.economy.addSpark(enemy.sparkReward);
     this.pickups.drop(enemy.x, enemy.y, enemy.fluxReward);
   }
@@ -165,6 +171,8 @@ export class RunDirector {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     this.pickups.destroy();
     this.specials.destroy();
   }

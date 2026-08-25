@@ -29,6 +29,24 @@ pnpm --filter @volstudio/vol-hell dev
 
 Gameplay numbers live as data under `src/config/`; balancing is a config change, not a code change.
 
+## Hardening contract
+
+- Scene restarts do not leave keyboard keys, Phaser managers, DOM screens, i18n
+  listeners, rAF/timers, or async telegraphs behind; owning systems expose an
+  explicit `destroy()`/`stopAll()` boundary.
+- Runtime inputs reject or safely saturate `NaN`, `Infinity`, negative deltas,
+  invalid directions, and corrupt counters. Score, economy, health, cooldown,
+  and audio parameters remain finite.
+- Audio settings persist debounced writes as ordered snapshots; `flush()` waits
+  for an in-flight write. SFX loading cannot repopulate a released cache, and
+  music loading from an old scene cannot leak into a new run.
+- Card effects use a plan/commit/rollback boundary; the exposed inventory list
+  cannot mutate the internal collection.
+
+This contract is not a browser gate: real Web Audio behaviour, Phaser
+renderer/device performance, and long-session gameplay still require manual
+smoke testing.
+
 ## Commands
 
 | Command                                            | Description                     |
