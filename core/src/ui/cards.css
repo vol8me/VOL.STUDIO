@@ -312,6 +312,24 @@
   border-color: var(--vol-ui-brand-border);
 }
 
+/*
+ * İkincil aksiyon (kilitle/tak/sat) birincil (satın al/seç) ile AYNI dolgulu
+ * stili paylaşıyordu — sınıf zaten `--secondary` olarak ayrılmıştı ama hiç
+ * kural yazılmamıştı, ikisi görsel olarak ayırt edilemiyordu. Ghost stil
+ * (saydam zemin, soluk kenarlık) birincili öne çıkarır.
+ */
+.vol-card__action--secondary {
+  color: var(--vol-ui-text-secondary);
+  background: transparent;
+  border-color: var(--vol-ui-border-soft);
+}
+
+.vol-card__action--secondary:hover:not(:disabled) {
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-hover-fill);
+  border-color: var(--vol-ui-border-strong);
+}
+
 .vol-card__title {
   color: var(--vol-ui-text);
   font-family: var(--vol-font-family);

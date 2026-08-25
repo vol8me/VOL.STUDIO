@@ -93,7 +93,7 @@ export class ShowcaseApp {
       { id: 'hud', labelKey: 'hud', builder: buildHudTab },
       { id: 'cards', labelKey: 'cards', builder: () => buildCardsTab(this.element) },
       { id: 'forms', labelKey: 'forms', builder: () => buildFormsTab(this.element) },
-      { id: 'workbench', labelKey: 'workbench', builder: () => buildWorkbenchTab(this.element) },
+      { id: 'workbench', labelKey: 'workbench', builder: buildWorkbenchTab },
       { id: 'palette', labelKey: 'palette', builder: buildPaletteTab },
       { id: 'advanced', labelKey: 'advanced', builder: () => buildAdvancedTab(this.element) },
       { id: 'scroll', labelKey: 'scroll', builder: buildScrollTab },

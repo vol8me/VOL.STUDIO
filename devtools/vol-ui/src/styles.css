@@ -1,3 +1,19 @@
+/*
+ * CORE'un primitif CSS'i `box-sizing: border-box` varsayar (bkz.
+ * `core/src/ui/base.css` — `.vol-ui-root *`), ama o kural yalnızca `UIRoot`
+ * (oyun tarafı) mount ettiği `.vol-ui-root` kapsamında çalışır. Showcase
+ * kendi kökünü (`.vol-showcase-root`) kullanır ve bu kurala hiç girmez —
+ * `devtools/vol-asset-studio` aynı sorunu kendi `* { box-sizing: border-box }`
+ * ile çözmüştü, vol-ui'de bu satır hiç yazılmamıştı. Sonuç: `width:100%` +
+ * `padding` taşıyan her primitif (TextArea, Input, PropertyField içindeki
+ * kontroller, Checkbox track'i) content-box'ta gerçek genişliğin üstüne
+ * padding/border EKLİYOR, konteyneri taşıp sağa kayıyor ya da (Checkbox'ta)
+ * transform mesafesi yanlış hesaplanıyordu.
+ */
+* {
+  box-sizing: border-box;
+}
+
 html,
 body,
 #app {
@@ -126,15 +142,25 @@ body {
   color: var(--vol-ui-text-muted);
 }
 
+/*
+ * `auto-fit` + `minmax(260px, 1fr)`: sütun sayısı pencere genişliğine göre
+ * doğal olarak azalır (4 → 3 → 2 → 1), kartlar her genişlikte en az 260px
+ * kalır. Bir dönem `repeat(4, minmax(0, 1fr))`e değiştirilmişti — sabit 4
+ * sütun pencere daralınca kartları okunmaz genişliğe kadar sıkıştırıyor,
+ * hiçbir zaman az sütuna düşmüyordu ("akıllı davranmıyor" bildirimi buradan
+ * geliyordu). `span-3`/`span-4` kartların @media 900px kuralı (aşağıda) bu
+ * temel davranışla çakışmaz; o kural yalnızca GENİŞ kartları dar ekranda
+ * tam satıra indirir.
+ */
 .vol-showcase-card-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--vol-space-lg);
   align-items: stretch;
 }
 
 .vol-showcase-card-grid--3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
 .vol-showcase-card {
@@ -166,6 +192,14 @@ body {
 @media (width <= 900px) {
   .vol-showcase-card--span-3,
   .vol-showcase-card--span-4 {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (width <= 600px) {
+  /* Genel grid tek sütuna düştüğünde span:2 aksi hâlde örtük ikinci sütun
+     oluşturup kartı yatay taşırır. */
+  .vol-showcase-card--span-2 {
     grid-column: 1 / -1;
   }
 }
@@ -286,6 +320,12 @@ body {
   border: 1px dashed var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-md);
   margin-bottom: var(--vol-space-md);
+}
+
+/* FloatingText tam satır kart aldığında (bkz. hudTab.ts) daha geniş bir
+   alanda birden çok noktaya doğuş göstermek için ekstra yükseklik kazanır. */
+.vol-showcase-panel-stage--wide {
+  height: 260px;
 }
 
 .vol-showcase-demo-panel {
@@ -585,7 +625,7 @@ body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--vol-space-lg);
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 .vol-showcase-cards-bottom-row > .vol-showcase-card {
@@ -725,6 +765,25 @@ body {
 
 .vol-showcase-workbench-viewport-bar > :first-child {
   flex: 1;
+
+  /* `min-width: 0` olmadan bir flex item'ın büzülme tabanı İÇERİĞİNİN
+     min-content genişliğidir — burada tek bir sözcük değil, uzun bir ipucu
+     cümlesi. `.vol-button`'ın taban `width: 100%`ü (bkz. primitives.css)
+     yan yana oturan Sığdır/%100 düğmelerinde `flex-basis: 100%`e dönüşüp bu
+     satırı köşeye sıkıştırıyordu (bkz. aşağıdaki düğme kuralı). */
+  min-width: 0;
+}
+
+/*
+ * `.vol-button`'ın taban `width: 100%`ü tek düğmelik dikey yerleşimler
+ * içindir (bkz. primitives.css). Burada Sığdır/%100 yan yana oturuyor;
+ * override olmadan HER İKİSİ "%100 genişlik" istiyor, flexbox ikisini de
+ * zorla büzüp komşu ipucu metnini (yukarıdaki `:first-child`) tek sözcüklük
+ * bir sütuna sıkıştırıyordu. Aynı düzeltme `panel-demo__controls`da zaten var.
+ */
+.vol-showcase-workbench-viewport-bar .vol-button {
+  flex: none;
+  width: auto;
 }
 
 .vol-showcase-workbench-viewport {
@@ -793,11 +852,20 @@ body {
   }
 }
 
-/* CORE ikon kaydı vitrini: her ikon adıyla birlikte görünür. */
+/*
+ * CORE ikon kaydı vitrini: her ikon adıyla birlikte görünür.
+ *
+ * `width: 100%` gerekli: `.vol-showcase-card__body` (bu grid'in ebeveyni)
+ * `display: flex` — flex ekseninde block çocuklar varsayılan olarak İÇERİĞE
+ * göre daralır, `1fr` sütunlu bir grid'in intrinsic genişliği de içeriğinin
+ * en geniş satırı kadardır. Bu satır olmadan kart genişliğinin bir kısmı
+ * kullanılmadan sağda boş kalıyordu.
+ */
 .vol-showcase-workbench-icons {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: var(--vol-space-md);
+  width: 100%;
 }
 
 .vol-showcase-workbench-icons__cell {

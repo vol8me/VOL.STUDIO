@@ -18,14 +18,6 @@
     "workbench": "ÇALIŞMA ALANI"
   },
   "workbench": {
-    "toolbar": "Araç çubuğu",
-    "imageTool": "Görsel aracı",
-    "audioTool": "Ses aracı",
-    "fontTool": "Font aracı",
-    "moreTool": "Daha fazla araç",
-    "popoverTitle": "Bağlamsal araç seçenekleri",
-    "popoverBody": "Popover odağı güvenle alır, dışarı tıklayınca kapanır ve odağı araca geri verir.",
-    "close": "Kapat",
     "propertyFields": "Özellik alanları ve değer sözleşmesi",
     "name": "Varlık adı",
     "nameValue": "ship.png",
@@ -225,6 +217,7 @@
     "damage": "Hasar",
     "heal": "İyileş",
     "critical": "Kritik",
+    "floatingCritical": "-{{value}} KRİTİK!",
     "resourceBar": "Resource Bar",
     "gold": "Altın",
     "wood": "Odun",
@@ -592,6 +585,7 @@
   "touch": {
     "joystick": "Joystick",
     "squareJoystick": "Square Joystick",
+    "axisReadout": "x: {{x}}  y: {{y}}",
     "leaderboardNames": [
       "Kaan",
       "Elif",

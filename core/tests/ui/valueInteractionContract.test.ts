@@ -222,7 +222,11 @@ describe('Değer kontrolleri — input/commit sözleşmesi', () => {
     });
     color.setValue('#123456');
     expect(colorInput).not.toHaveBeenCalled();
-    color.element.querySelector<HTMLButtonElement>('button')!.click();
+    // Kutucuk artık yerli <input type="color"> değil; hazır renkler
+    // Popover'da yaşar ve yalnızca kutucuğa tıklanınca DOM'a girer.
+    document.body.appendChild(color.element);
+    color.element.querySelector<HTMLButtonElement>('.vol-color-picker__swatch')!.click();
+    document.querySelector<HTMLButtonElement>('.vol-color-picker__preset')!.click();
     expect(colorInput).toHaveBeenCalledWith('#ffffff');
     expect(colorCommit).toHaveBeenCalledWith('#ffffff');
 

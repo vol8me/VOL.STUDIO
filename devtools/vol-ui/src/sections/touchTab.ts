@@ -44,18 +44,22 @@ const DEMO_TIMEOUTS = {
   resetDelay: 1500,
 } as const;
 
+function axisReadout(x: number, y: number): string {
+  return i18next.t('volui:touch.axisReadout', { x: x.toFixed(2), y: y.toFixed(2) });
+}
+
 /** Joystick demosu. Durum satırı joystick'in ALTINDA — yanına koyunca metin genişliği joystick'i kaydırıyordu. */
 function buildJoystickDemo(disposables: Destroyable[]): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
   wrap.style.alignItems = 'center';
 
-  const { element: statusRow, text: readout } = buildStatusRow('x: 0.00  y: 0.00');
+  const { element: statusRow, text: readout } = buildStatusRow(axisReadout(0, 0));
   disposables.push(readout);
 
   const joystick = new Joystick({
-    onMove: ({ x, y }) => readout.setContent(`x: ${x.toFixed(2)}  y: ${y.toFixed(2)}`),
-    onRelease: () => readout.setContent('x: 0.00  y: 0.00'),
+    onMove: ({ x, y }) => readout.setContent(axisReadout(x, y)),
+    onRelease: () => readout.setContent(axisReadout(0, 0)),
   });
   disposables.push(joystick);
 
@@ -71,12 +75,12 @@ function buildSquareJoystickDemo(disposables: Destroyable[]): HTMLElement {
   wrap.className = 'vol-showcase-panel-demo';
   wrap.style.alignItems = 'center';
 
-  const { element: statusRow, text: readout } = buildStatusRow('x: 0.00  y: 0.00');
+  const { element: statusRow, text: readout } = buildStatusRow(axisReadout(0, 0));
   disposables.push(readout);
 
   const squareJoystick = new SquareJoystick({
-    onMove: ({ x, y }) => readout.setContent(`x: ${x.toFixed(2)}  y: ${y.toFixed(2)}`),
-    onRelease: () => readout.setContent('x: 0.00  y: 0.00'),
+    onMove: ({ x, y }) => readout.setContent(axisReadout(x, y)),
+    onRelease: () => readout.setContent(axisReadout(0, 0)),
   });
   disposables.push(squareJoystick);
 

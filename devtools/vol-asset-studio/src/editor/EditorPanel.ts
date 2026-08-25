@@ -154,9 +154,10 @@ export class EditorPanel {
       }
     }
 
-    // Renk seçimi CORE `ColorPicker`: ham `<input type="color">` TARAYICININ
-    // kendi diyaloğunu açıyordu — VOL teması, fontları ve i18n'i olmayan,
-    // uygulamaya hiç benzemeyen bir pencere.
+    // Renk seçimi CORE `ColorPicker`: ham `<input type="color">` tarayıcının
+    // kendi diyaloğunu açardı — VOL teması, fontları ve i18n'i olmayan,
+    // uygulamaya hiç benzemeyen bir pencere. `ColorPicker` artık kendi
+    // içinde de yerli seçici KULLANMAZ (bkz. ColorPicker.ts sınıf dokümanı).
     this.#colorPicker = new ColorPicker({
       value: '#ffffff',
       label: options.t('editor.color'),

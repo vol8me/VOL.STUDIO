@@ -73,7 +73,7 @@ export class Popup {
   }
 
   show(): void {
-    if (this.open) return;
+    if (this.destroyed || this.open) return;
     this.open = true;
 
     if (!this.element.isConnected) {
@@ -99,7 +99,7 @@ export class Popup {
   }
 
   close(): void {
-    if (!this.open) return;
+    if (this.destroyed || !this.open) return;
     this.open = false;
 
     this.element.classList.remove('vol-popup--visible');
@@ -123,7 +123,10 @@ export class Popup {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
     this.destroyed = true;
+    this.open = false;
+    this.element.classList.remove('vol-popup--visible');
     document.removeEventListener('click', this.boundOutsideClick);
     document.removeEventListener('keydown', this.boundKeydown);
     window.removeEventListener('scroll', this.boundReposition, { capture: true });

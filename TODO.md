@@ -5,6 +5,55 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-25 — vol-ui ikinci denetim: yaşam döngüsü, erişilebilirlik ve dar ekran
+
+- `Popup.destroy()` açık durumu kapatmıyor ve yok edilmiş popup yeniden açılabiliyordu; yok etme artık idempotent, kapalı ve yeniden açılamaz. Regresyon testi eklendi.
+- `ColorPicker.setLabel()` görünür etiketi değiştirirken swatch/hex/popover erişilebilir adlarını eski bırakıyordu; tüm ilişkili yüzeyler birlikte güncelleniyor ve hazır renk düğmeleri ad taşıyor.
+- Showcase grid'inde dar ekranda `span:2` kartlar örtük sütunla taşabiliyor; tek sütun medya kuralı eklendi. Kart picker satırında kısa kartın uzun karta zorla gerilmesi kaldırıldı.
+- Joystick eksen okuması ve kritik floating text artık i18n kaynaklarından geliyor.
+
+## 2026-08-25 — vol-ui görsel hata avı: kök neden `box-sizing` eksikliği
+
+Ekran görüntüleriyle bildirilen sekiz ayrı belirti tek bir kök nedene indi:
+`devtools/vol-asset-studio` kendi `* { box-sizing: border-box }` sıfırlamasını
+taşıyordu, oyun `UIRoot`'un `.vol-ui-root *` kuralından aynı sıfırlamayı
+alıyordu — **vol-ui showcase hiçbirini almıyordu.** Sonuç: `width:100%` +
+padding taşıyan her primitif (TextArea, Input, Checkbox track'i) content-box'ta
+gerçek boyutun üstüne padding/border ekleyip taşıyordu.
+
+- `devtools/vol-ui/src/styles.css`'e evrensel `* { box-sizing: border-box }`
+  eklendi (Asset Studio'nun deseniyle aynı). Bu tek satır TextArea'nın sağa
+  taşmasını, PropertyField içindeki Input'un taşmasını ve Checkbox thumb'ının
+  track'in sağına tam yaslanmamasını (kalan `translate(20px)` → `18px`
+  düzeltmesiyle birlikte) çözdü.
+- `.vol-showcase-card-grid` sabit `repeat(4, minmax(0,1fr))`den
+  `repeat(auto-fit, minmax(260px,1fr))`e döndü — bir dönem responsive iken
+  sabit 4 sütuna değiştirilmiş, kod yorumunda eski davranış hâlâ yazılıydı.
+  Pencere daralınca artık sütun sayısı azalır (4→1), kart genişliği hiç
+  260px'in altına düşmez.
+- **Kritik:** `ColorPicker`'ın kutucuğu `<input type="color">` idi ve
+  tıklanınca TARAYICININ kendi diyaloğunu açıyordu (Firefox'ta ayrı bir "Bir
+  renk seçin" penceresi — VOL temasız, fontsuz, i18n'siz). Kutucuk artık sade
+  bir düğme: mevcut rengi gösterir, `swatches` verildiyse VOL'un kendi
+  `Popover`'ında hazır renk ızgarasını açar. Kesin/keyfi değer her zaman
+  hex alanından girilir. `.vol-card-shop__reroll-row` mekanizması dokunulmadı.
+- HUD sekmesinde Minimap ↔ FloatingText yer değiştirdi; FloatingText artık
+  BuildMenu'nün altında tam satır (`spanAll`).
+- Workbench sekmesinde: gereksiz Toolbar+Popover demo kartı (FORMLAR'daki ikon
+  buton galerisiyle örtüşüyordu) kaldırıldı; PropertyField kartı boşalan
+  satırı tam kaplıyor; İkon Kaydı `width:100%` eksikliğinden sağda boş kalan
+  alanı artık `auto-fill` ızgarasıyla dolduruyor; SplitPane'in görüntüleyici
+  çubuğunda `.vol-button`'ın taban `width:100%`ü Sığdır/%100 düğmelerini
+  `flex-basis`e çevirip ipucu metnini tek sözcüklük bir sütuna sıkıştırıyordu
+  (`panel-demo__controls`daki gibi `flex:none; width:auto` eklendi).
+- `ShopPicker`'ın `vol-card__action--secondary` sınıfı JS'te atanıyor ama hiç
+  CSS kuralı yoktu — kilit/sat/tak butonu satın al ile birebir aynı görünüyordu.
+  Ghost stil eklendi; birincil aksiyon artık görsel olarak öne çıkıyor.
+
+Doğrulama: `pnpm high`, core/vol-ui/vol-asset-studio/vol-hell testlerinin
+tamamı, dört paketin production build'i, her değişiklik canlı Playwright
+ekran görüntüsüyle doğrulandı.
+
 ## 2026-08-25 — `core/visual` → `core/visualSynth` yeniden adlandırıldı
 
 `core/visual` yalnızca prosedürel raster **sentez** motoruydu ama adı bunu

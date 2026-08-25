@@ -6,13 +6,11 @@ import {
   CommandHistory,
   Input,
   KeyedVirtualList,
-  Popover,
   Icon,
   PropertyField,
   Slider,
   SplitPane,
   Text,
-  Toolbar,
   type CommandHistorySnapshot,
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
@@ -20,46 +18,6 @@ import { card, cardGrid3 } from './shared';
 
 interface Destroyable {
   destroy(): void;
-}
-
-function buildToolbarDemo(root: HTMLElement, disposables: Destroyable[]): HTMLElement {
-  const toolbar = new Toolbar({
-    ariaLabel: i18next.t('volui:workbench.toolbar'),
-    selectionMode: 'single',
-    value: 'image',
-    items: [
-      { id: 'image', icon: 'image', label: i18next.t('volui:workbench.imageTool') },
-      { id: 'audio', icon: 'audio', label: i18next.t('volui:workbench.audioTool') },
-      { id: 'font', icon: 'font', label: i18next.t('volui:workbench.fontTool') },
-    ],
-  });
-  const more = toolbar.add({
-    id: 'more',
-    icon: 'more',
-    label: i18next.t('volui:workbench.moreTool'),
-    // Araç değil aksiyon: seçimli toolbarda `toggle: false` verilmezse bu
-    // düğmeye basmak aktif aracı düşürür (bkz. Toolbar.add).
-    toggle: false,
-    // `popover` aşağıda tanımlanır; bu geri çağrı ancak kullanıcı butona
-    // bastığında, yani kurulum bittikten sonra koşar.
-    onPress: () => popover.toggle(),
-  });
-
-  // `aria-expanded` tetikleyicide Popover tarafından yönetilir; burada elle
-  // sıfırlamaya gerek yok.
-  const popover = new Popover(more.element, {
-    container: root,
-    ariaLabel: i18next.t('volui:workbench.popoverTitle'),
-  });
-  const popoverText = new Text(i18next.t('volui:workbench.popoverBody'), { variant: 'body' });
-  const close = new Button(i18next.t('volui:workbench.close'), {
-    size: 'sm',
-    onClick: () => popover.close(),
-  });
-  popover.add(popoverText).add(close);
-
-  disposables.push(toolbar, popover, popoverText, close);
-  return toolbar.element;
 }
 
 function buildPropertyDemo(disposables: Destroyable[]): HTMLElement {
@@ -244,7 +202,7 @@ function buildIconRegistry(disposables: Destroyable[]): HTMLElement {
   return wrap;
 }
 
-export function buildWorkbenchTab(root: HTMLElement): {
+export function buildWorkbenchTab(): {
   element: HTMLElement;
   destroy: () => void;
 } {
@@ -253,8 +211,9 @@ export function buildWorkbenchTab(root: HTMLElement): {
   section.className = 'vol-showcase-section';
   section.append(
     cardGrid3([
-      card(i18next.t('volui:workbench.toolbar'), buildToolbarDemo(root, disposables)),
-      card(i18next.t('volui:workbench.propertyFields'), buildPropertyDemo(disposables)),
+      card(i18next.t('volui:workbench.propertyFields'), buildPropertyDemo(disposables), {
+        spanAll: true,
+      }),
       card(i18next.t('volui:workbench.history'), buildHistoryDemo(disposables)),
     ]),
     card(i18next.t('volui:workbench.iconRegistry'), buildIconRegistry(disposables), {

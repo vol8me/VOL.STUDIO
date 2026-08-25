@@ -313,6 +313,20 @@ describe('Popup', () => {
     expect(onClose).not.toHaveBeenCalled();
     expect(document.body.contains(popup.element)).toBe(false);
   });
+
+  it('destroy açık durumu kapatır ve popup yeniden açılamaz', async () => {
+    const target = makeTarget();
+    const popup = track(new Popup(target));
+    popup.show();
+    await Promise.resolve();
+
+    popup.destroy();
+    expect(popup.isOpen()).toBe(false);
+
+    popup.show();
+    expect(popup.isOpen()).toBe(false);
+    expect(document.body.contains(popup.element)).toBe(false);
+  });
 });
 
 describe('ContextMenu', () => {

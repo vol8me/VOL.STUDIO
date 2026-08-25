@@ -569,7 +569,11 @@
 
 .vol-checkbox__input:checked ~ .vol-checkbox__track .vol-checkbox__thumb {
   background: var(--vol-ui-brand-solid);
-  transform: translate(20px);
+
+  /* track content-box genişliği (40 - 2*1 border - 2*2 padding = 34) eksi
+     thumb genişliği (16) = 18. Farklı bir değer thumb'ı track'in sağ iç
+     kenarına tam yaslamaz. */
+  transform: translate(18px);
 }
 
 .vol-checkbox__input:focus-visible ~ .vol-checkbox__track {
@@ -1230,19 +1234,23 @@
   padding: 0;
   border: 1px solid var(--vol-ui-border-strong);
   border-radius: var(--vol-radius-sm);
-  background: none;
   cursor: pointer;
   min-height: var(--vol-hit-target-min, auto);
   min-width: var(--vol-hit-target-min, auto);
 }
 
-.vol-color-picker__swatch::-webkit-color-swatch-wrapper {
-  padding: 0;
+.vol-color-picker__swatch:hover {
+  border-color: var(--vol-ui-brand-border);
 }
 
-.vol-color-picker__swatch::-webkit-color-swatch {
-  border: none;
-  border-radius: calc(var(--vol-radius-sm) - 1px);
+.vol-color-picker__swatch:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-color-picker__swatch:disabled {
+  cursor: default;
+  opacity: 0.5;
 }
 
 .vol-color-picker__hex {

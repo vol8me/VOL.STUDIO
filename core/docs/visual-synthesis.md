@@ -1185,145 +1185,34 @@ fonksiyonunun İÇİNDE olur.
 
 ---
 
-## 12. Uygulama sırası
+## 12. Uygulama geçmişi
 
-Her tur kendi başına yeşil kapıyla kapanır; yarım tur bırakılmaz.
+Motor beş turda kuruldu; her tur kendi kapısıyla (`pnpm high`) kapandı. Turlar
+sırasında ortaya çıkan düzeltmeler kalıcı yerlerine (D4, D5, §3, §4, §5, §7.1,
+§9) zaten işlendi ve orada anlatılır — burada ikinci kez tekrarlanmaz. Turdan
+tura tam döküm için tek kaynak git geçmişi ve `TODO.md`dir.
 
-### Tur 1 — Çekirdek iskelet (editörsüz, ölçülebilir) — **TAMAMLANDI**
+### Tur 1–3 — çekirdek, cebir, biçim ve stil (TAMAMLANDI)
 
-Hedef: `tsx visual-synth-asset.ts render doc.json out.png` çalışsın.
+- **Tur 1:** veri modeli, `FieldBuffer` + havuz, temel üreteç/alan-uzayı/
+  birleştirici seti, üç kanallı bileşim, OKLab + `ramp` nicemleme, indeksli
+  PNG kodlayıcı, piksel-düzeyinde determinizm testi.
+- **Tur 2:** kalan üreteçler (worley/simplex/fbm/desenler), kalan alan-uzayı
+  işlemleri (`mirror`/`repeat`/`polar`/`warp`/`skew`), `scatter`, komşuluk
+  filtreleri, `tileable` uçtan uca ve dikiş farkı metriği.
+- **Tur 3:** gölgeleme (`normal`/`lambert`/`rim`/`ao`), `outline`, dither
+  (Bayer + mavi gürültü), `nearest` nicemleme, palet sentezi (ton kayması +
+  doygunluk kemeri), alt-yığın maskeler, kalan `visual-synth-qa` metrikleri.
 
-- `types.ts`, `schema.ts` + doğrulama
-- `FieldBuffer` + havuz
-- Üreteçler: `const`, `noise.value`, `gradient.linear/radial`, `sdf.circle/box`
-- Alan-uzayı: `translate`, `rotate`, `scale` (ters eşleme — D4)
-- Birleştirici: `add`, `mul`, `min`, `max`, `mix`, `step`, `smoothstep`
-- Üç kanallı bileşim (D3) + katman yığını (D10, alt-yığın **henüz yok**)
-- OKLab + palet veri + `ramp` nicemleme
-- PNG kodlayıcı (indexed)
-- **Determinizm testi** (D5): iki render bit düzeyinde aynı
-- **`visual-synth-qa` ilk üç metrik**: palet uyumu, alfa saflığı, renk sayısı
+### Tur 4 ve Tur 5 — kaldırılmış ürün yüzeyleri
 
-_Kanıt:_ `core/tests/visualSynth/fixtures/` altındaki üç elle yazılmış belge
-beklenen PNG'yi üretir; üçünde de palet uyumu 0 ihlal.
-
-Turda ortaya çıkan ve bu belgeye işlenen düzeltmeler: maskenin şekil tarafında
-olduğu (§3), katman kaynağının kapsamaya çevrilmesinin etki alanına dayandığı
-(§3, §5.8), taban gürültülerde `octaves` bulunmaması gerektiği (§4.1), tohum
-yolunun katman kimliğinden türediği (D5) ve determinizm garantisinin piksel
-düzeyinde olduğu (D5). Ayrıca `scale` uygulanmış bir SDF'nin artık gerçek
-mesafe alanı olmadığı kaydedildi — Tur 2–3'te dış çizgi ve mesafe dönüşümü
-bunu hesaba katmalı.
-
-### Tur 2 — Cebiri tamamla — **TAMAMLANDI**
-
-- Kalan üreteçler (worley, simplex, fbm, tüm SDF'ler, desenler)
-- Kalan alan-uzayı: `mirror`, `repeat`, `polar`, `warp`, `skew`
-- `scatter` (§4.2b) — sınırlayıcı kutu + uzamsal kova optimizasyonuyla
-- Kalan birleştiriciler
-- Komşuluk filtreleri (koşan toplam bulanıklık, Felzenszwalb DT, morfoloji, edge)
-- `tileable` uçtan uca (periyodik gürültü + sarmalı filtre + sarmalı scatter)
-- Dikiş farkı metriği
-
-_Kanıt:_ `core/tests/visualSynth/fixtures/tileable.json` 3×3'te dikişsiz; dikiş
-farkı oranı 0.91 (sınır 3) ve aynı ölçüm döşenmeyen bir gradyanı 63.0 ile
-reddediyor. `scatter.json` sapmalı ızgarayı, dönmeyi ve ölçek sapmasını
-gösteriyor.
-
-Turda ortaya çıkan ve bu belgeye işlenen düzeltmeler: `sdf.polygon`
-katlamasının kenar ortasına ortalanması gerektiği (§4.1), filtrelerin ağaç
-düğümü olduğu (§4.4, §3), filtre yarıçaplarının birim uzayda durduğu (§4.4),
-`distance`ın işaretli olması gerektiği (§4.4), `scatter`da kova yerine
-damgalama (§4.2b), `mirror`ın `radial-n` yazımının şemaya sığmadığı (§4.2),
-`sharpen`ın bir yarıçap taşıması gerektiği (§4.4), döşemenin simplex'i
-dışladığı ve fbm döndürmesini kapattığı (§5.1, §5.2), dikdörtgen çıktıda
-periyodun eksen başına hesaplandığı (§5.2) ve dikiş metriğinin ham fark değil
-ORAN olması gerektiği (§9). Ayrıca §4.1, §4.2 ve §4.4 tabloları kaçırılmamış
-`|` yüzünden bozuktu; `·` ayracına geçildi.
-
-### Tur 3 — Biçim ve stil — **TAMAMLANDI**
-
-- `normal`, `lambert`, `rim`, `ao`
-- `outline` (üç mod), `dither` (Bayer + mavi gürültü)
-- `nearest` nicemleme (OKLab mesafesi)
-- Palet sentezi (`generateRamp`, ton kayması + doygunluk kemeri)
-- Alt-yığın maskeler (özyineleme, derinlik sınırı 4)
-- `materialAlt` + `materialMask`
-- Kalan `visual-synth-qa` metrikleri
-
-_Kanıt:_ `tests/visualSynth/style.test.ts` aynı katman gövdesini ve paletini iki
-çıktı yapılandırmasıyla render ediyor — 64² + Bayer + `ramp` ile piksel sanatı,
-512² + `nearest` ile pürüzsüz doku — ve ikisi de palet uyumlu çıkıyor.
-`fixtures/shaded.json` tüm Tur 3 yığınını (sentezlenmiş palet, ışık, AO,
-ikinci malzeme, dış çizgi, dither) tek belgede gösteriyor.
-
-Turda ortaya çıkan ve bu belgeye işlenen düzeltmeler: 3B arama tablosunun
-gerekmediği (§4.6 — renk kaynağı tek boyutlu), `generate`in dizi olması
-gerektiği (§7.1), paletin veri XOR sentez olması (§7.1), doygunluğun
-kelepçelenmek yerine kısılması (§7.1), dış çizgi sürekliliğinin "tek bileşen"
-değil "kenarda kırpılma" olduğu (§9), kontrastın mutlak değil oran olması
-(§9), bantlaşmanın "baskın renk" değil "uç birikme" olması (§9), normal
-türevinin birim uzayda alınması (§4.5) ve kenar ışığı üssünün parametre
-olmaması (§4.5). Ayrıca §4.6'da aynı paragraf iki kez yazılmıştı; temizlendi.
-
-### Tur 4 — Teknik editör deneyi — **TARİHSEL; ÜRÜNDEN KALDIRILDI**
-
-Tur 4, `SpriteDoc`un DOM üzerinden düzenlenebildiğini ve geliştirme
-sunucusunun PNG + JSON yazabildiğini kanıtladı. Bu teknik kanıt değerlidir:
-değişmez belge geçmişi, şema doğrulaması, adaptif önizleme, güvenli çıktı
-yolları ve CORE UI bileşenleri bu turda sınandı.
-
-Ürün denetimi ise teslim kaydının gerçeği aştığını gösterdi:
-
-- `UIRoot` olay engeli gerçek tarayıcıda kontrolleri pasif bırakıyordu,
-- slider DOM'u sürükleme sırasında yeniden kuruluyordu,
-- göz/kilit/kanal gibi birçok eylem görünür fakat etkisizdi,
-- `domain`, veri rampası ve kayıt geri yükleme iddiaları eksikti,
-- katman/ağaç/parametre/palet yüzeyi o arayüzü anlaşılır üreticiden çok yarım
-  bir motor editörüne çeviriyordu,
-- jsdom testleri CSS hit-testing, font dosyası ve gerçek kaydırma kusurlarını
-  yakalamıyordu.
-
-Tur 5 yön kararı bu eksikleri yeni panellerle büyütmek değil, ürün amacına
-uymayan yüzeyi sökmektir. Tur 4 kodu bugün çalıştırılan ikinci bir kip değildir;
-tarihsel karar ve bulguları bu bölümde tutulur.
-
-### Tur 5 — Tek ekran ürün ve tam kalıntı denetimi — **TAMAMLANDI**
-
-- Yedi kategoride doğrulanan, render edilen ve tohum değişince gerçek RGBA'sı
-  değişen katalog tarifleri.
-- Tek ekran: canlı niyet, katalog kartları, kamera, 8..2048 boyut,
-  piksel/pürüzsüz bitiş, ana renk, tohum, varyasyon, kaydetme ve kayıt açma.
-- “Solucan” için eş anlamlılarıyla gerçek prosedürel nesne tarifi; bilinmeyen
-  metinde belgeyi değiştirmeyen dürüst sonuç.
-- Gelişmiş kip, `Tabs`, katman/ağaç/parametre/palet/kanal panelleri,
-  `EditorState`, yol/varsayılan editör yardımcıları, parametre i18n dosyaları
-  ve üreticisi tamamen silindi.
-- CORE `PinchZoomController`: sol tuş bariyeri, güvenli pointer capture,
-  imleç-merkezli wheel zoom, iki parmak merkez hareketi ve tam yaşam döngüsü.
-- Artboard + görüntünün birlikte panı, gerçek Sığdır, 2048 çıktıda donmayı
-  önleyen adaptif preview sınırı.
-- CORE fontlarının Vite çıktısına kopyalanması ve `FontManager` ile Jura /
-  Exo 2 yüklenmesi.
-- Görünür tam ekran düğmesi + F11; tarayıcı F11'i ayırırsa düğme yedek.
-- Node-only `createVisualArtifact`: CLI render/qa'nın ortak
-  doğrulama → render → QA → PNG yolu.
-- PNG decode + belgeyle tam piksel karşılaştırmalı `qa [--json]` ve palet
-  CLI komutu.
-- Davranış, piksel, CSS entegrasyonu, font sunumu, kamera, F11, boyut,
-  yaşam döngüsü ve i18n regresyon testleri.
-
-_Kanıt:_ O dönem testleri yalnız elemanın DOM'da bulunmasını değil; prompt
-sonrası belge/piksel farkını, bilinmeyen promptta değişmezliği, kamera
-transformunu, 2048 sınırını ve Fullscreen API çağrısını ölçer. CORE katalog
-testi yedi tarifin her tohumda değiştiğini doğrular. CLI uçtan uca denetimi
-kaydedilen PNG'de `pixelMismatch: 0` ve bütün QA metriklerinde geçiş verir.
-
-> **Sonraki durum:** Eski tek ekranlı üretim arayüzü Asset Studio
-> migrasyonunda tümüyle kaldırıldı; o döneme ait testler de silindi. Kalan
-> kanıt yüzeyi CORE katalog/artefakt testleri ile `core/tests/scripts`
-> altındaki CLI uçtan uca denetimidir. Bu bölüm tarihsel karar kaydı olarak
-> durur, çalışan bir yüzeyi anlatmaz.
+Tur 4 (`SpriteDoc`un DOM editörü) ve Tur 5 (tek ekranlı üretim arayüzü) ikisi
+de web UI'ıydı; ikisi de Asset Studio migrasyonunda TÜMÜYLE kaldırıldı ve
+bugün çalışan bir kip değildir. Kanıtladıkları teknik (değişmez belge
+geçmişi, şema doğrulaması, adaptif önizleme, katalog tarifleri, CORE
+`PinchZoomController`) çekirdeğe (§1–§11) ve CLI'a (§10) kalıcı olarak
+taşındı; arayüzün kendisi yoktur. Genel amaçlı bir editör bu çekirdeğin
+hedefi değildir (§13 madde 5) — kaldırılan paneller sessizce geri eklenmez.
 
 ---
 

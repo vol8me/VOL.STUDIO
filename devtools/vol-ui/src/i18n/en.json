@@ -18,14 +18,6 @@
     "workbench": "WORKBENCH"
   },
   "workbench": {
-    "toolbar": "Toolbar",
-    "imageTool": "Image tool",
-    "audioTool": "Audio tool",
-    "fontTool": "Font tool",
-    "moreTool": "More tools",
-    "popoverTitle": "Contextual tool options",
-    "popoverBody": "The popover safely receives focus, closes outside, and restores focus to its tool.",
-    "close": "Close",
     "propertyFields": "Property fields and value contract",
     "name": "Asset name",
     "nameValue": "ship.png",
@@ -225,6 +217,7 @@
     "damage": "Damage",
     "heal": "Heal",
     "critical": "Critical",
+    "floatingCritical": "-{{value}} CRITICAL!",
     "resourceBar": "Resource Bar",
     "gold": "Gold",
     "wood": "Wood",
@@ -592,6 +585,7 @@
   "touch": {
     "joystick": "Joystick",
     "squareJoystick": "Square Joystick",
+    "axisReadout": "x: {{x}}  y: {{y}}",
     "leaderboardNames": [
       "Kaan",
       "Elif",

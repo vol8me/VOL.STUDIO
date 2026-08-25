@@ -263,7 +263,7 @@ function buildFloatingTextCard(disposables: Destroyable[]): HTMLElement {
   wrap.className = 'vol-showcase-panel-demo';
 
   const stage = document.createElement('div');
-  stage.className = 'vol-showcase-panel-stage';
+  stage.className = 'vol-showcase-panel-stage vol-showcase-panel-stage--wide';
   wrap.appendChild(stage);
 
   const manager = new FloatingTextManager(stage, { anchor: 'absolute' });
@@ -294,9 +294,12 @@ function buildFloatingTextCard(disposables: Destroyable[]): HTMLElement {
   const criticalButton = new Button(i18next.t('volui:hud.critical'), {
     onClick: () => {
       const { x, y } = spawnAt();
-      manager.spawn(x, y, `-${Math.ceil(Math.random() * 50) + 40} KRİTİK!`, {
-        variant: 'emphasis',
-      });
+      manager.spawn(
+        x,
+        y,
+        i18next.t('volui:hud.floatingCritical', { value: Math.ceil(Math.random() * 50) + 40 }),
+        { variant: 'emphasis' },
+      );
     },
   });
   disposables.push(damageButton, healButton, criticalButton);
@@ -306,7 +309,7 @@ function buildFloatingTextCard(disposables: Destroyable[]): HTMLElement {
   controls.appendChild(criticalButton.element);
   wrap.appendChild(controls);
 
-  return card(i18next.t('volui:hud.floatingText'), wrap);
+  return card(i18next.t('volui:hud.floatingText'), wrap, { spanAll: true });
 }
 
 /** ResourceBar: RTS/otomasyon için sabit çoklu-kaynak şeridi. */
@@ -751,12 +754,14 @@ export function buildHudTab(): { element: HTMLElement; destroy: () => void } {
     buildCounterCard(disposables),
     buildFormattedCounterCard(disposables),
     buildResourceCounterCard(disposables),
-    buildFloatingTextCard(disposables),
+    // Minimap eskiden FloatingText'in yerinde (tekli sütun). FloatingText
+    // BuildMenu'nün hemen altına, tam satır olarak taşındı (bkz. aşağıda).
+    buildMinimapCard(disposables),
     buildResourceBarCard(disposables),
     buildRoundCounterCard(disposables),
     buildSelectionInfoPanelCard(disposables),
     buildBuildMenuCard(disposables),
-    buildMinimapCard(disposables),
+    buildFloatingTextCard(disposables),
   ];
 
   container.appendChild(cardGrid(cards));
