@@ -23,7 +23,7 @@ const PRIMITIVE_ROOTS = [
   'lifecycle',
   'random',
   'stats',
-  'visual',
+  'visualSynth',
 ];
 
 /**

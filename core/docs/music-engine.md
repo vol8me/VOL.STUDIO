@@ -302,8 +302,9 @@ games/vol-hell/scripts/audio/
   ambience/*.ts       — gameplay ambiyans render'ları
   generate-music.ts   — müzik + ambiyans üretim giriş noktası
   generate-ambience.ts — ambiyans giriş noktası
-  audio-qa.ts         — üretilen asset'leri ölçer (click, clip, bant profili)
 ```
+
+`core/scripts/audio-qa.ts` üretilen asset'leri ölçer (click, clip, bant profili) — paylaşılan CLI, `pnpm --filter @volstudio/vol-hell audio:qa` ile çağrılır.
 
 Mevcut müzik track'leri:
 

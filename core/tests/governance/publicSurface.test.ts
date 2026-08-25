@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as Core from '../../src/index';
-import * as Visual from '../../src/visual/index';
+import * as VisualSynth from '../../src/visualSynth/index';
 
 /**
  * CORE'un public API yüzeyinin BÜYÜKLÜĞÜNÜ kilitler.
@@ -22,14 +22,14 @@ import * as Visual from '../../src/visual/index';
  * geçici bir tip) `export`u kaldır. İkisi de meşru; sessizce olmaması
  * yeterli.
  */
-const EXPECTED_EXPORT_COUNT = 202;
+const EXPECTED_EXPORT_COUNT = 185;
 
 /**
- * `visual/` kök barrel'a TEK bir isimle (`Visual`) girer, tıpkı `Synth` gibi.
- * Bu, alt sistemin kendi yüzeyini kök sayısının gölgesinde büyütmesi demek
- * olurdu; bu yüzden ayrıca ve kendi başına sayılır.
+ * `visualSynth/` kök barrel'a TEK bir isimle (`VisualSynth`) girer, tıpkı
+ * `Synth` gibi. Bu, alt sistemin kendi yüzeyini kök sayısının gölgesinde
+ * büyütmesi demek olurdu; bu yüzden ayrıca ve kendi başına sayılır.
  */
-const EXPECTED_VISUAL_EXPORT_COUNT = 57;
+const EXPECTED_VISUAL_SYNTH_EXPORT_COUNT = 57;
 
 describe('CORE public API yüzeyi', () => {
   it('export sayısı bilinçli bir kararla değişir', () => {
@@ -61,8 +61,8 @@ describe('CORE public API yüzeyi', () => {
   });
 
   it('visual alt sistemi kok barrel icine TEK isimle girer', () => {
-    expect(Core.Visual).toBeDefined();
-    expect(Object.keys(Visual).length).toBe(EXPECTED_VISUAL_EXPORT_COUNT);
+    expect(Core.VisualSynth).toBeDefined();
+    expect(Object.keys(VisualSynth).length).toBe(EXPECTED_VISUAL_SYNTH_EXPORT_COUNT);
   });
 
   it('deprecated takma adlar yüzeyde ama sayıya dahil', () => {

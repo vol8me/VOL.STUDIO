@@ -47,25 +47,17 @@
       "import": "./src/audio/music/index.ts",
       "types": "./src/audio/music/index.ts"
     },
-    "./visual": {
-      "import": "./src/visual/index.ts",
-      "types": "./src/visual/index.ts"
+    "./visualSynth": {
+      "import": "./src/visualSynth/index.ts",
+      "types": "./src/visualSynth/index.ts"
     },
-    "./visual/color": {
-      "import": "./src/visual/color/index.ts",
-      "types": "./src/visual/color/index.ts"
+    "./visualSynth/color": {
+      "import": "./src/visualSynth/color/index.ts",
+      "types": "./src/visualSynth/color/index.ts"
     },
-    "./visual/encode": {
-      "import": "./src/visual/encode/index.ts",
-      "types": "./src/visual/encode/index.ts"
-    },
-    "./input/cursor/dom": {
-      "import": "./src/input/cursor/dom.ts",
-      "types": "./src/input/cursor/dom.ts"
-    },
-    "./input/cursor/phaser": {
-      "import": "./src/input/cursor/phaser.ts",
-      "types": "./src/input/cursor/phaser.ts"
+    "./visualSynth/encode": {
+      "import": "./src/visualSynth/encode/index.ts",
+      "types": "./src/visualSynth/encode/index.ts"
     }
   },
   "scripts": {

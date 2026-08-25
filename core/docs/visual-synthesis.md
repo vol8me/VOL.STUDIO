@@ -1,6 +1,6 @@
 # Görsel sentez — doktrin ve sözleşme
 
-Bu belge `core/visual/` (prosedürel raster sentezi) ve onun tüketici
+Bu belge `core/visualSynth/` (prosedürel raster sentezi) ve onun tüketici
 yüzeyleri için **bağlayıcı** tasarım kararlarını taşır. Uygulayan
 kişi ya da agent önce bunu okur; buradaki kararlar gerekçeleriyle birlikte
 yazılıdır ve gerekçe çürütülmeden değiştirilmez.
@@ -232,7 +232,7 @@ boyut başına bir havuz tutulur.
 
 ### D8 — Çekirdek headless, üretim yüzeyi tüketici
 
-`core/visual/` **DOM tanımaz**. `Canvas`, `ImageData`, `window` geçmez.
+`core/visualSynth/` **DOM tanımaz**. `Canvas`, `ImageData`, `window` geçmez.
 Node'da ve tarayıcıda aynı çalışır.
 
 Yüzeyler _tüketicidir_: çekirdeği çağırır, sonucu gösterir. Hiçbir yüzey
@@ -294,7 +294,7 @@ soyutlanmaz.
 
 "Kötü görünüyor" takip edilemez. Ses tarafında `audio-qa.ts` bunu sayıya
 çeviriyor ve o disiplin olmasa parçalar da kötü olurdu. Görselin karşılığı
-`visual-qa` (bkz. §9) ve **ilk turdan itibaren** vardır, sonradan eklenmez.
+`visual-synth-qa` (bkz. §9) ve **ilk turdan itibaren** vardır, sonradan eklenmez.
 
 ---
 
@@ -806,7 +806,7 @@ yok, karar açıkça piksel tarafındadır.
 ## 6. Modül yerleşimi
 
 ```
-core/src/visual/
+core/src/visualSynth/
   types.ts            SpriteDoc, Layer, FieldNode, Palette
   schema/             parametre şeması + çıktı etki alanı (D11)
     types.ts          ParamSchema, NodeSchema, OutputRule
@@ -848,14 +848,14 @@ core/src/visual/
   render.ts           §3 boru hattı — TEK giriş noktası
   index.ts            barrel (Node-only HİÇBİR ŞEY yok — D8)
 
-core/src/visual/encode/            ← ayrı ALT-YOL, barrel'da değil (D8)
+core/src/visualSynth/encode/            ← ayrı ALT-YOL, barrel'da değil (D8)
   png.ts              node:zlib ile PNG kodlayıcı + writePng
   artifact.ts         render + QA + PNG için CLI/sunucu ortak girişi
 
-core/scripts/visual-asset.ts       §10.1 CLI (render / validate / qa / palette)
-core/scripts/visual-qa.ts          §9 ölçüm aracının İNCE sarmalayıcısı
+core/scripts/visual-synth-asset.ts       §10.1 CLI (render / validate / qa / palette)
+core/scripts/visual-synth-qa.ts          §9 ölçüm aracının İNCE sarmalayıcısı
 
-core/tests/visual/fixtures/*.json  elle yazılmış kanıt belgeleri
+core/tests/visualSynth/fixtures/*.json  elle yazılmış kanıt belgeleri
 core/tests/scripts/                CLI uçtan uca sözleşme testleri
 ```
 
@@ -864,12 +864,12 @@ core/tests/scripts/                CLI uçtan uca sözleşme testleri
 - **`schema/` ve `validate.ts` ayrı.** Şema veridir; doğrulama onun bir
   tüketicisidir. Agent/CLI introspeksiyonu şemayı doğrulama yürütmeden
   okuyabilir ve tek dosya 1200 satırı aşmaz.
-- **Ölçüm `visual/qa.ts` içinde, script'te değil.** Script bir sarmalayıcıdır;
+- **Ölçüm `visualSynth/qa.ts` içinde, script'te değil.** Script bir sarmalayıcıdır;
   metrikler çekirdekte olduğu için hem testler hem CLI aynı sayıları taşır.
   D8 ve D12 birlikte bunu gerektirir.
 
 `core/package.json` `exports` alanına iki giriş eklenir:
-`"./visual"` ve `"./visual/encode"`.
+`"./visualSynth"` ve `"./visualSynth/encode"`.
 
 ### PNG kodlayıcı neden ffmpeg değil
 
@@ -929,7 +929,7 @@ hangi indeksin nereye düştüğünü saymak zorunda kalırdı.
 
 ### 7.2 Palet kilidi
 
-Nicemleme sonrası çıktıda palet dışı piksel **kalmaz**. `visual-qa` bunu
+Nicemleme sonrası çıktıda palet dışı piksel **kalmaz**. `visual-synth-qa` bunu
 ölçer; ihlal kapıyı kırar (D6). `nearest` modunda kilit doğal olarak sağlanır;
 `ramp` modunda rampa indeksi sınırları kelepçelenir.
 
@@ -948,11 +948,11 @@ arayüzdü.
 
 Bugünkü tüketiciler:
 
-| Tüketici         | Ne yapar                                                 | Nasıl bağlanır          |
-| ---------------- | -------------------------------------------------------- | ----------------------- |
-| Agent            | `SpriteDoc` yazar, render ve QA eder — asıl üretim yolu  | CLI (§10.1)             |
-| Katalog          | Agent'ın "ne yazabileceğini" bildiği hazır tarifler      | `visual/catalog.ts`     |
-| VOL Asset Studio | Üretilen PNG'yi açar, inceler, piksel düzenler, kaydeder | Dosya sistemi — üretmez |
+| Tüketici         | Ne yapar                                                 | Nasıl bağlanır           |
+| ---------------- | -------------------------------------------------------- | ------------------------ |
+| Agent            | `SpriteDoc` yazar, render ve QA eder — asıl üretim yolu  | CLI (§10.1)              |
+| Katalog          | Agent'ın "ne yazabileceğini" bildiği hazır tarifler      | `visualSynth/catalog.ts` |
+| VOL Asset Studio | Üretilen PNG'yi açar, inceler, piksel düzenler, kaydeder | Dosya sistemi — üretmez  |
 
 Asset Studio bu hattın **üreticisi değil tüketicisidir**: çekirdeğe hiç
 bağlanmaz, yalnızca çıktısını bir varlık olarak görür. Üretilen varlık
@@ -990,9 +990,9 @@ kabul eder — biri `--size`/`--seed` alıp diğeri almazsa ölçeklenmiş çık
 doğrulanamaz:
 
 ```bash
-pnpm exec tsx core/scripts/visual-asset.ts render belge.json çıktı.png --size 256
-pnpm exec tsx core/scripts/visual-asset.ts qa çıktı.png --doc belge.json --size 256
-pnpm exec tsx core/scripts/visual-asset.ts qa çıktı.png --doc belge.json --json
+pnpm exec tsx core/scripts/visual-synth-asset.ts render belge.json çıktı.png --size 256
+pnpm exec tsx core/scripts/visual-synth-asset.ts qa çıktı.png --doc belge.json --size 256
+pnpm exec tsx core/scripts/visual-synth-asset.ts qa çıktı.png --doc belge.json --json
 ```
 
 Boyutlar tutmadığında rapor ham piksel sayısı değil açık bir
@@ -1003,7 +1003,7 @@ PNG sıkıştırma baytları Node/zlib sürümleri arasında değişebilir (§6)
 
 ---
 
-## 9. Ölçüm — `core/src/visual/qa.ts` + `core/scripts/visual-qa.ts`
+## 9. Ölçüm — `core/src/visualSynth/qa.ts` + `core/scripts/visual-synth-qa.ts`
 
 Ses tarafındaki `audio-qa.ts`'in karşılığı. **İlk turdan itibaren** vardır.
 Metrikler çekirdektedir (headless, D8); script yalnızca dosya okur ve
@@ -1062,10 +1062,10 @@ Rapor makine-okunur (`--json`), tıpkı `scripts/quality/report.mjs` gibi.
 ### 10.1 CLI
 
 ```bash
-tsx core/scripts/visual-asset.ts render <doc.json> <out.png> [--size 256x384] [--seed 42]
-tsx core/scripts/visual-asset.ts validate <doc.json>
-tsx core/scripts/visual-asset.ts qa <out.png> --doc <doc.json> [--json]
-tsx core/scripts/visual-asset.ts palette <istek.json>      # palet sentezi
+tsx core/scripts/visual-synth-asset.ts render <doc.json> <out.png> [--size 256x384] [--seed 42]
+tsx core/scripts/visual-synth-asset.ts validate <doc.json>
+tsx core/scripts/visual-synth-asset.ts qa <out.png> --doc <doc.json> [--json]
+tsx core/scripts/visual-synth-asset.ts palette <istek.json>      # palet sentezi
 ```
 
 `--size` ve `--seed` belgeyi **ezmek** içindir: aynı belgeden farklı boyut/
@@ -1132,11 +1132,11 @@ kapılardan doğar; sürpriz olmasınlar diye önden yazıldı.
 
 | Parça                    | Neden yok                                 | Nereye                                                                      |
 | ------------------------ | ----------------------------------------- | --------------------------------------------------------------------------- |
-| **OKLab dönüşümü**       | Depoda renk uzayı matematiği **hiç yok**  | `visual/color/oklab.ts`                                                     |
+| **OKLab dönüşümü**       | Depoda renk uzayı matematiği **hiç yok**  | `visualSynth/color/oklab.ts`                                                |
 | **ColorPicker bileşeni** | UI setinde renk kontrolü yok              | `core/src/ui/primitives/ColorPicker.ts` + **vol-ui showcase FORMS sekmesi** |
 | **CurveEditor bileşeni** | Eğri verisini görsel düzenlemek için      | `core/src/ui/primitives/CurveEditor.ts` + **vol-ui showcase FORMS sekmesi** |
-| **Artefakt hattı**       | Tüketicilerin ayrışmasını engellemek için | `visual/encode/artifact.ts`                                                 |
-| **PNG kodlayıcı**        | Raster yazma yok                          | `visual/encode/png.ts` (alt-yol)                                            |
+| **Artefakt hattı**       | Tüketicilerin ayrışmasını engellemek için | `visualSynth/encode/artifact.ts`                                            |
+| **PNG kodlayıcı**        | Raster yazma yok                          | `visualSynth/encode/png.ts` (alt-yol)                                       |
 
 Bu ikisi CORE'a girdiği an [AGENTS.md](../../AGENTS.md) UI kuralı devreye
 girer: showcase'e eklenir, README sekme tablosu güncellenir, i18n key paritesi
@@ -1147,20 +1147,20 @@ sağlanır.
 - **`workspace-contract`**: hiçbir paket `typecheck`, `test`,
   `test:coverage` script'leri ve `quality.json`da eşik **olmadan** repoya
   giremez. Taban: 50/50/50/40.
-- **`publicSurface`**: `visual/` kök barrel'a `Synth` gibi TEK bir isimle
-  (`export * as Visual`) girer, yani kök sayısını yalnızca 1 artırır. Alt
+- **`publicSurface`**: `visualSynth/` kök barrel'a `Synth` gibi TEK bir isimle
+  (`export * as VisualSynth`) girer, yani kök sayısını yalnızca 1 artırır. Alt
   sistemin kendi yüzeyi kök sayının gölgesinde büyümesin diye AYRICA ve kendi
-  başına kilitlenir (`EXPECTED_VISUAL_EXPORT_COUNT`). İki sayı da bilinçli
+  başına kilitlenir (`EXPECTED_VISUAL_SYNTH_EXPORT_COUNT`). İki sayı da bilinçli
   olarak güncellenir.
 - **`publicApi`**: export adları `enemy`/`boss`/`flux`/`spark`/`volhell`
   içeremez.
-- **`primitiveNeutrality`**: `PRIMITIVE_ROOTS` dizisine `'visual'` **eklenir**;
-  o andan itibaren `visual/` altında bir oyun türünü adlandıran terim hem kodda
+- **`primitiveNeutrality`**: `PRIMITIVE_ROOTS` dizisine `'visualSynth'` **eklenir**;
+  o andan itibaren `visualSynth/` altında bir oyun türünü adlandıran terim hem kodda
   hem yorumda yasaktır. Yasaklı terimler bekçideki `GENRE_TERMS` dizisinde
   tutulur; bu belge onları tekrarlamaz.
 
   **Bu belge de taranmalıdır.** Bekçi bugün `core/docs/primitives.md`i tarıyor;
-  `visual/` bir primitif kökü olduğunda tarama listesine
+  `visualSynth/` bir primitif kökü olduğunda tarama listesine
   `core/docs/visual-synthesis.md` de eklenmelidir — bir modülün kodu nötr olup
   dokümanı bir türe demirlerse, kod nötr sayılsa da REPO değildir (bu hata bir
   kez yapıldı, bkz. `TODO.md` "Tür sızıntısı" turu).
@@ -1168,7 +1168,7 @@ sağlanır.
 - **`numericContract`**: sonlu olmayan girdi ya reddedilir (yapılandırma) ya
   yoksayılır (akış). `size`, `seed`, `freq` **reddedilir**.
 - **`lifecycleIdiom`**: elle `(() => void)[]` temizlik dizisi yasak.
-- **`visualHeadless`** (Tur 1'de eklendi): `visual/` altındaki hiçbir dosya
+- **`visualHeadless`** (Tur 1'de eklendi): `visualSynth/` altındaki hiçbir dosya
   DOM global'ine dokunamaz ve `node:` importu yalnızca `encode/` altında
   bulunabilir; barrel `encode/`i yeniden dışa açamaz. İki sızıntı da sessizdir
   — DOM sızıntısı testlerde (jsdom) görünmez ve yalnızca `tsx` ile asset
@@ -1191,7 +1191,7 @@ Her tur kendi başına yeşil kapıyla kapanır; yarım tur bırakılmaz.
 
 ### Tur 1 — Çekirdek iskelet (editörsüz, ölçülebilir) — **TAMAMLANDI**
 
-Hedef: `tsx visual-asset.ts render doc.json out.png` çalışsın.
+Hedef: `tsx visual-synth-asset.ts render doc.json out.png` çalışsın.
 
 - `types.ts`, `schema.ts` + doğrulama
 - `FieldBuffer` + havuz
@@ -1202,9 +1202,9 @@ Hedef: `tsx visual-asset.ts render doc.json out.png` çalışsın.
 - OKLab + palet veri + `ramp` nicemleme
 - PNG kodlayıcı (indexed)
 - **Determinizm testi** (D5): iki render bit düzeyinde aynı
-- **`visual-qa` ilk üç metrik**: palet uyumu, alfa saflığı, renk sayısı
+- **`visual-synth-qa` ilk üç metrik**: palet uyumu, alfa saflığı, renk sayısı
 
-_Kanıt:_ `core/tests/visual/fixtures/` altındaki üç elle yazılmış belge
+_Kanıt:_ `core/tests/visualSynth/fixtures/` altındaki üç elle yazılmış belge
 beklenen PNG'yi üretir; üçünde de palet uyumu 0 ihlal.
 
 Turda ortaya çıkan ve bu belgeye işlenen düzeltmeler: maskenin şekil tarafında
@@ -1225,7 +1225,7 @@ bunu hesaba katmalı.
 - `tileable` uçtan uca (periyodik gürültü + sarmalı filtre + sarmalı scatter)
 - Dikiş farkı metriği
 
-_Kanıt:_ `core/tests/visual/fixtures/tileable.json` 3×3'te dikişsiz; dikiş
+_Kanıt:_ `core/tests/visualSynth/fixtures/tileable.json` 3×3'te dikişsiz; dikiş
 farkı oranı 0.91 (sınır 3) ve aynı ölçüm döşenmeyen bir gradyanı 63.0 ile
 reddediyor. `scatter.json` sapmalı ızgarayı, dönmeyi ve ölçek sapmasını
 gösteriyor.
@@ -1249,9 +1249,9 @@ ORAN olması gerektiği (§9). Ayrıca §4.1, §4.2 ve §4.4 tabloları kaçır�
 - Palet sentezi (`generateRamp`, ton kayması + doygunluk kemeri)
 - Alt-yığın maskeler (özyineleme, derinlik sınırı 4)
 - `materialAlt` + `materialMask`
-- Kalan `visual-qa` metrikleri
+- Kalan `visual-synth-qa` metrikleri
 
-_Kanıt:_ `tests/visual/style.test.ts` aynı katman gövdesini ve paletini iki
+_Kanıt:_ `tests/visualSynth/style.test.ts` aynı katman gövdesini ve paletini iki
 çıktı yapılandırmasıyla render ediyor — 64² + Bayer + `ramp` ile piksel sanatı,
 512² + `nearest` ile pürüzsüz doku — ve ikisi de palet uyumlu çıkıyor.
 `fixtures/shaded.json` tüm Tur 3 yığınını (sentezlenmiş palet, ışık, AO,
@@ -1343,7 +1343,7 @@ yazılmaz.
    tarifi ister.
 4. **Web Worker.** Büyük çıktı ana iş parçacığında adaptif önizlemeyle
    sınırlandı. Tipik bir belge 96² hızlı önizlemede bile 24 ms bütçeyi
-   tutturamazsa `core/visual` render'ı worker'a taşınır.
+   tutturamazsa `core/visualSynth` render'ı worker'a taşınır.
 5. **Genel amaçlı teknik editör.** Bu çekirdeğin hedefi değildir; prosedürel
    sentez tarifi üretir, elle çizim yüzeyi sunmaz. Piksel düzenleme ayrı bir
    ürünün (VOL Asset Studio) işidir ve çekirdeğe bağlanmaz. Kaldırılan Tur 4

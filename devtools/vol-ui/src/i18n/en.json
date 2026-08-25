@@ -15,8 +15,7 @@
     "touch": "TOUCH",
     "loading": "LOADING",
     "cards": "CARDS",
-    "workbench": "WORKBENCH",
-    "input": "INPUT"
+    "workbench": "WORKBENCH"
   },
   "workbench": {
     "toolbar": "Toolbar",
@@ -823,33 +822,5 @@
     "unlock": "UNLOCK",
     "slotsTitle": "Ability slots (Q/E)",
     "slotEmpty": "Empty"
-  },
-  "input": {
-    "title": "VOL Cursor Family",
-    "controls": "Size and Theme",
-    "gallery": "Cursor Gallery",
-    "size": "Size",
-    "accent": "Accent Color",
-    "liveHint": "Selected cursor follows the pointer live.",
-    "default": "Default",
-    "pointer": "Pointer",
-    "text": "Text",
-    "crosshair": "Crosshair",
-    "precision": "Precision",
-    "grab": "Grab",
-    "grabbing": "Grabbing",
-    "pan": "Pan",
-    "move": "Move",
-    "resize-ew": "Resize EW",
-    "resize-ns": "Resize NS",
-    "resize-nesw": "Resize NE-SW",
-    "resize-nwse": "Resize NW-SE",
-    "resize-all": "Resize All",
-    "zoom-in": "Zoom In",
-    "zoom-out": "Zoom Out",
-    "not-allowed": "Not Allowed",
-    "wait": "Wait",
-    "help": "Help",
-    "target": "Target"
   }
 }

@@ -1,5 +1,4 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
-import { DomCursorContext, VolCursorTheme } from '@volstudio/core/input/cursor/dom';
 import { API_ERROR_CODES } from '../../shared/index';
 import type { AssetEvent, AssetSummary, ProjectResponse } from '../../shared/index';
 import {
@@ -65,7 +64,6 @@ export class AssetStudioApp {
   private subscription: AssetEventSubscription | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
   private leaseInterval: ReturnType<typeof setInterval> | null = null;
-  private cursorContext: DomCursorContext | null = null;
 
   constructor(private readonly options: AssetStudioAppOptions) {
     this.t = options.t;
@@ -214,7 +212,6 @@ export class AssetStudioApp {
       children: [topbar, body, this.loadingLayer, this.toast],
     });
     replaceChildren(options.root, this.shell);
-    this.cursorContext = new DomCursorContext(this.shell, VolCursorTheme, { size: 24 });
 
     this.scope.addListener(document, 'fullscreenchange', () => this.renderFullscreenLabel());
     this.scope.addListener(window, 'keydown', (event) =>
@@ -279,8 +276,6 @@ export class AssetStudioApp {
     this.quickLook.destroy();
     this.editor.destroy();
     this.audioEditor.destroy();
-    this.cursorContext?.destroy();
-    this.cursorContext = null;
     this.scope.dispose();
     this.shell.remove();
   }

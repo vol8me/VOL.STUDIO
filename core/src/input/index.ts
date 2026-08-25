@@ -1,5 +1,3 @@
-export * as Cursor from './cursor';
-
 export { createIdleActions, type InputState } from './InputState';
 export type { InputProvider } from './InputProvider';
 export type {

@@ -126,7 +126,7 @@ test('bundle Phaser ve Node yerleşiği taşımaz', async ({ page, baseURL }) =>
 
   expect(scripts.some((url) => /phaser/i.test(url))).toBe(false);
   // Node-only alt yol tarayıcıya sızmamalı.
-  expect(scripts.some((url) => /visual\/encode/i.test(url))).toBe(false);
+  expect(scripts.some((url) => /visualSynth\/encode/i.test(url))).toBe(false);
   void baseURL;
 });
 

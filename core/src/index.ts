@@ -105,13 +105,11 @@ export { MovableController as PlayerController } from './entities/MovableControl
 // Eylem SÖZLÜĞÜ bilinçli olarak burada yok. `InputState` jenerik
 // `actions: Record<TAction, boolean>` taşır; hangi eylemlerin var olduğunu ve
 // hangi tuşa bağlandığını tüketici tanımlar (bkz. games/vol-hell/src/config/input.ts).
-// Girdi barrel'ı ayrıca `Cursor` namespace'i taşır.
 export * from './input';
-export * from './input/cursor';
 
 // Prosedürel raster sentezi. PNG yazma ve dosya sistemi BARREL'A GİRMEZ;
-// `@volstudio/core/visual/encode` alt-yolunda yaşar (visual-synthesis.md D8).
-export * as Visual from './visual';
+// `@volstudio/core/visualSynth/encode` alt-yolunda yaşar (visual-synthesis.md D8).
+export * as VisualSynth from './visualSynth';
 
 export * as Synth from './audio/synth';
 export * as Music from './audio/music';

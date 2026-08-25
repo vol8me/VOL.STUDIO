@@ -6,7 +6,7 @@ import { Scheduler } from '../../src/time/Scheduler';
 import { ResourcePool } from '../../src/economy/ResourcePool';
 import { SpatialIndex } from '../../src/spatial/SpatialIndex';
 import { isFiniteNumber, requireFinite, finiteOr } from '../../src/math/numeric';
-import { collectSpriteDocIssues, validateSpriteDoc } from '../../src/visual/validate';
+import { collectSpriteDocIssues, validateSpriteDoc } from '../../src/visualSynth/validate';
 
 /**
  * Sonlu sayı sözleşmesi — primitiflerin ORTAK giriş bariyeri.

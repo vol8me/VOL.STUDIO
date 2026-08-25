@@ -4,7 +4,7 @@ import {
   rgbToOklab,
   type DitherKind,
   type Oklab,
-} from '@volstudio/core/visual/color';
+} from '@volstudio/core/visualSynth/color';
 import type { Rgba } from './RasterSurface';
 import type { RasterBuffer } from './transform';
 

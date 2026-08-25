@@ -1,7 +1,5 @@
 import Phaser from 'phaser';
 import { UIRoot, i18next } from '@volstudio/core';
-import { PhaserCursorContext, VolCursorTheme } from '@volstudio/core/input/cursor/phaser';
-import type { CursorId } from '@volstudio/core/input/cursor/phaser';
 
 /**
  * DOM tabanlı UI kullanan sahnelerin ortak iskeleti.
@@ -21,9 +19,6 @@ export abstract class BaseScene extends Phaser.Scene {
   /** DOM UI kökü. `createScene()` çağrıldığında hazırdır. */
   protected ui!: UIRoot;
 
-  /** Phaser cursor bağlamı. */
-  protected cursorContext: PhaserCursorContext | null = null;
-
   /** Bekleyen `show()` rAF'i; shutdown'da iptal edilir. */
   private showRafId: number | null = null;
 
@@ -39,11 +34,6 @@ export abstract class BaseScene extends Phaser.Scene {
     const container = this.game.canvas.parentElement ?? document.body;
     this.ui = new UIRoot(container);
 
-    this.cursorContext = new PhaserCursorContext(this, VolCursorTheme, {
-      size: 24,
-      defaultCursor: this.getDefaultCursor(),
-    });
-
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
     i18next.on('languageChanged', this.onLanguageChangedBound);
 
@@ -52,14 +42,6 @@ export abstract class BaseScene extends Phaser.Scene {
 
   /** Sahne kurulumunu alt sınıf burada yapar. `this.ui` hazırdır. */
   protected abstract createScene(data?: unknown): void;
-
-  /**
-   * Alt sınıf sahnenin varsayılan cursor kimliğini döner.
-   * Menü sahneleri `default`, oyun sahneleri genellikle `crosshair` ister.
-   */
-  protected getDefaultCursor(): CursorId {
-    return 'default';
-  }
 
   /**
    * Dil değiştiğinde metinleri tazeler. Metni olmayan sahneler override etmez.
@@ -92,8 +74,6 @@ export abstract class BaseScene extends Phaser.Scene {
       cancelAnimationFrame(this.showRafId);
       this.showRafId = null;
     }
-    this.cursorContext?.destroy();
-    this.cursorContext = null;
     this.ui.destroy();
   }
 }
