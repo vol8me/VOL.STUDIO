@@ -17,6 +17,9 @@ değişiklikleri izler ve türüne uygun önizleme sunar.
 - kaynak, türetilmiş çıktı ve reçete ilişki metadata'sı;
 - SSE ile kimlik bazlı artımlı güncelleme ve sıra boşluğunda tam eşitleme;
 - Quick Look ayrıntıları ve repo göreli yol kopyalama;
+- `.volsprite.json` belgeleri için salt-okunur VisualSynth inspector:
+  kaynak graph, kanal önizlemesi, QA, gerçek render profili, tampon maliyeti
+  ve region/halo kararı;
 - tile tabanlı piksel yüzeyi, katman/kare/palet, onion skin, undo/redo ve
   revizyon kontrollü atomik PNG kaydı;
 - peak piramitli ses dalga formu, seçim, yakınlaştırma, transport, gain, trim,
@@ -27,7 +30,10 @@ Katman ve kareler mevcut doğrudan PNG kaydında bileşiğe düzleştirilir; nat
 `.volsprite.json` kapanıp yeniden açma hattı henüz tamamlanmamıştır. Ses zinciri
 mevcut OGG/WAV dosyasına açık kaydet eylemiyle uygulanır; `.volaudio.json`
 reçetesine kalıcılaştırma henüz bağlı değildir. MP3/FLAC sesler incelenebilir,
-ancak kaydetmeden önce OGG/WAV dönüşüm hattı gerektirir.
+ancak kaydetmeden önce OGG/WAV dönüşüm hattı gerektirir. VisualSynth inspector
+JSON kaynağını tarayıcıda CORE ile salt-okunur render eder; piksel düzenlemez
+ve dosyaya yazmaz. Native `.volsprite.json` düzenleme/kaydetme hattı yine
+ayrı bir borçtur.
 
 ## Çalıştırma
 

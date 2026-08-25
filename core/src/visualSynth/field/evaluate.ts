@@ -86,6 +86,7 @@ import { createBufferSampler, type EdgeMode } from './sample';
 import type { FieldBuffer, FieldBufferPool } from './buffer';
 import type { UnitSpace } from './space';
 import type { FieldFn } from './fn';
+import type { MutableRenderDiagnostics } from '../diagnostics';
 
 const DEG_TO_RAD = Math.PI / 180;
 const ORIGIN: Vec2 = [0, 0];
@@ -96,6 +97,8 @@ export interface CompileContext {
   readonly pool: FieldBufferPool;
   readonly tileable: boolean;
   readonly antialias: boolean;
+  /** Render sonucunu değiştirmeyen, deterministik teşhis kaydı. */
+  readonly diagnostics?: MutableRenderDiagnostics;
   /** Tamponlu düğümlerin tuttuğu tamponlar; katman bitince iade edilir. */
   readonly acquired: FieldBuffer[];
 }
@@ -106,8 +109,9 @@ export function createCompileContext(
   rootSeed: number,
   tileable: boolean,
   antialias: boolean,
+  diagnostics?: MutableRenderDiagnostics,
 ): CompileContext {
-  return { space, pool, rootSeed, tileable, antialias, acquired: [] };
+  return { space, pool, rootSeed, tileable, antialias, diagnostics, acquired: [] };
 }
 
 /** Derleme sırasında tutulan tamponları TERS SIRADA iade eder. */
@@ -309,7 +313,7 @@ function compileNode(node: FieldNode, path: string, context: CompileContext): Fi
       );
       const target = context.pool.acquire(space.width, space.height);
       context.acquired.push(target);
-      renderScatter(source, target.data, space, {
+      const stats = renderScatter(source, target.data, space, {
         count: node.count,
         seed: node.seed ?? deriveNodeSeed(rootSeed, path),
         jitter: node.jitter ?? 0.5,
@@ -319,6 +323,7 @@ function compileNode(node: FieldNode, path: string, context: CompileContext): Fi
         minDistance: node.minDistance,
         tileable,
       });
+      context.diagnostics?.scatters.push({ path, ...stats });
       return createBufferSampler(target, space, 'nearest', edgeMode(context));
     }
     case 'blur': {

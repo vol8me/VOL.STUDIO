@@ -18,6 +18,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import {
   collectSpriteDocIssues,
+  analyzeSpriteDoc,
   generatePalette,
   getVisualSynthCapabilities,
   measureSprite,
@@ -34,6 +35,7 @@ const USAGE = [
   '  tsx core/scripts/visual-synth-asset.ts qa <out.png> --doc <doc.json> [--size WxH] [--seed N] [--json]',
   '  tsx core/scripts/visual-synth-asset.ts palette <istek.json>',
   '  tsx core/scripts/visual-synth-asset.ts capabilities [--json]',
+  '  tsx core/scripts/visual-synth-asset.ts inspect <doc.json> [--json]',
   '  tsx core/scripts/visual-synth-asset.ts benchmark <doc.json> [--sizes 32,64,128] [--iterations N] [--json]',
 ].join('\n');
 
@@ -252,7 +254,53 @@ function runCapabilities(args: readonly string[]): void {
     console.log(`  ${category}: ${kinds.join(', ')}`);
   }
   console.log(`Gölgeleme: ${capabilities.shading.join(', ')}`);
+  console.log(`Post: ${capabilities.post.join(', ')}`);
   console.log(`Desteklenmiyor: ${capabilities.unsupported.join(', ')}`);
+}
+
+function runInspect(docPath: string, args: readonly string[]): void {
+  if (args.some((arg) => arg !== '--json')) fail(`Bilinmeyen bayrak: ${args[0]}\n${USAGE}`);
+  let analysis;
+  try {
+    analysis = analyzeSpriteDoc(readDoc(docPath));
+  } catch (error) {
+    fail(error instanceof Error ? error.message : String(error));
+  }
+
+  if (args.includes('--json')) {
+    console.log(JSON.stringify({ document: docPath, ...analysis }, null, 2));
+    return;
+  }
+
+  console.log(`Inspect: ${docPath}`);
+  console.log(`  Boyut: ${analysis.width}x${analysis.height} (${analysis.pixelCount} piksel)`);
+  console.log(
+    `  Katman: ${analysis.layerCount}, alan düğümü: ${analysis.fieldNodeCount}, ` +
+      `tamponlu düğüm: ${analysis.bufferedNodeCount}`,
+  );
+  console.log(
+    `  Tampon: ${analysis.requiredFullResolutionBuffers} toplam, ` +
+      `katman tepe değeri ${analysis.maxLayerBufferCount}`,
+  );
+  console.log(
+    `  Scatter: ${analysis.scatterNodeCount} düğüm / ` +
+      `${analysis.requestedScatterCount} istenen örnek`,
+  );
+  console.log(
+    `  Yaklaşık tepe çalışma belleği: ` +
+      `${Math.ceil(analysis.estimatedPeakWorkingBytes / 1024 / 1024)} MiB`,
+  );
+  console.log(
+    `  Bölge kararı: ${analysis.regionSupport.mode}, ` +
+      `halo ${
+        analysis.regionSupport.haloPixels === null
+          ? 'belirsiz'
+          : `${analysis.regionSupport.haloPixels} px`
+      }`,
+  );
+  if (analysis.regionSupport.blockers.length > 0) {
+    console.log(`  Bölge engelleri: ${analysis.regionSupport.blockers.join(', ')}`);
+  }
 }
 
 interface BenchmarkFlags {
@@ -301,11 +349,26 @@ function runBenchmark(docPath: string, args: readonly string[]): void {
     renderSprite(doc, { size: [size, size] });
     let renderMs = 0;
     let qaMs = 0;
+    let paletteMs = 0;
+    let layersMs = 0;
+    let shadingMs = 0;
+    let outlineMs = 0;
+    let ditherMs = 0;
+    let glowMs = 0;
+    let quantizeMs = 0;
     const rssBeforeBytes = process.memoryUsage().rss;
     for (let iteration = 0; iteration < flags.iterations; iteration++) {
       const renderStart = performance.now();
-      const result = renderSprite(doc, { size: [size, size] });
+      const result = renderSprite(doc, { size: [size, size], profile: true });
       renderMs += performance.now() - renderStart;
+      if (!result.profile) fail('Render profili beklenmedik biçimde boş döndü');
+      paletteMs += result.profile.paletteMs;
+      layersMs += result.profile.layersMs;
+      shadingMs += result.profile.shadingMs;
+      outlineMs += result.profile.outlineMs;
+      ditherMs += result.profile.ditherMs;
+      glowMs += result.profile.glowMs;
+      quantizeMs += result.profile.quantizeMs;
 
       const qaStart = performance.now();
       measureSprite(result);
@@ -317,6 +380,15 @@ function runBenchmark(docPath: string, args: readonly string[]): void {
       iterations: flags.iterations,
       renderMs: renderMs / flags.iterations,
       qaMs: qaMs / flags.iterations,
+      stagesMs: {
+        palette: paletteMs / flags.iterations,
+        layers: layersMs / flags.iterations,
+        shading: shadingMs / flags.iterations,
+        outline: outlineMs / flags.iterations,
+        dither: ditherMs / flags.iterations,
+        glow: glowMs / flags.iterations,
+        quantize: quantizeMs / flags.iterations,
+      },
       rssBeforeBytes,
       rssAfterBytes: process.memoryUsage().rss,
     };
@@ -330,7 +402,8 @@ function runBenchmark(docPath: string, args: readonly string[]): void {
   for (const row of rows) {
     console.log(
       `  ${row.size[0]}² | render ${row.renderMs.toFixed(2)} ms | ` +
-        `QA ${row.qaMs.toFixed(2)} ms | RSS ${Math.round(row.rssAfterBytes / 1024 / 1024)} MB`,
+        `QA ${row.qaMs.toFixed(2)} ms | katman ${row.stagesMs.layers.toFixed(2)} ms | ` +
+        `RSS ${Math.round(row.rssAfterBytes / 1024 / 1024)} MB`,
     );
   }
 }
@@ -365,6 +438,12 @@ switch (command) {
   case 'capabilities':
     runCapabilities(rest);
     break;
+  case 'inspect': {
+    const [docPath, ...flags] = rest;
+    if (!docPath) fail(USAGE);
+    runInspect(docPath, flags);
+    break;
+  }
   case 'benchmark': {
     const [docPath, ...flags] = rest;
     if (!docPath) fail(USAGE);

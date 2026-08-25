@@ -32,7 +32,7 @@ export {
   MAX_STACK_DEPTH,
 } from './validate';
 
-export { createUnitSpace, type UnitSpace } from './field/space';
+export { createUnitRegionSpace, createUnitSpace, type UnitSpace } from './field/space';
 export { FieldBufferPool, type FieldBuffer } from './field/buffer';
 export { createLattice, type Lattice } from './field/lattice';
 export {
@@ -102,7 +102,38 @@ export {
   type CreateVisualPresetOptions,
 } from './catalog';
 
-export { renderSprite, resolvePaletteSpec } from './render';
-export type { RenderOptions, RenderResult, RenderChannels } from './render';
+export {
+  VISUAL_MATERIAL_RECIPES,
+  createVisualMaterialDocument,
+  createVisualMaterialLayer,
+  findVisualMaterials,
+  type CreateVisualMaterialOptions,
+  type FindVisualMaterialsQuery,
+  type VisualMaterialId,
+  type VisualMaterialMetadata,
+  type VisualMaterialRecipe,
+} from './materials';
+
+export { renderSprite, renderSpriteRegion, resolvePaletteSpec } from './render';
+export type {
+  RenderOptions,
+  RenderRegion,
+  RenderRegionOptions,
+  RenderResult,
+  RenderChannels,
+  RenderProfile,
+} from './render';
+
+export { RenderCache, createRenderCacheKey } from './cache';
+export type { RenderCacheOptions, RenderCacheStats } from './cache';
+
+export { analyzeSpriteDoc, type RegionRenderSupport, type VisualSpriteAnalysis } from './analysis';
+
+export {
+  createRenderDiagnostics,
+  type RenderDiagnostics,
+  type MutableRenderDiagnostics,
+  type ScatterDiagnostic,
+} from './diagnostics';
 
 export { measureSprite, formatQaReport, type QaMetric, type QaReport } from './qa';

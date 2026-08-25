@@ -24,6 +24,8 @@ export interface LightingOptions {
   readonly strength: number;
   readonly ambient: number;
   readonly rim: number;
+  /** Fiziksel olmayan, palet güvenli emissive katkı. */
+  readonly emission?: number;
 }
 
 /** Normal alanından gölge üretir; sonuç 0..1. */
@@ -45,7 +47,10 @@ export function computeShade(
     // ışığı yükselir. Ayrı bir kamera vektörü YOKTUR — çıktı ortografiktir.
     const facing = clamp01(1 - normals.z[i]);
     shade[i] = clamp01(
-      options.ambient + options.strength * diffuse + options.rim * Math.pow(facing, RIM_POWER),
+      options.ambient +
+        options.strength * diffuse +
+        options.rim * Math.pow(facing, RIM_POWER) +
+        (options.emission ?? 0),
     );
   }
   return shade;

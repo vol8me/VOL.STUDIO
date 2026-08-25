@@ -113,6 +113,9 @@ describe('yapılandırma alanları uygulanmıştır ve DOĞRULANIR', () => {
     expect(issuesFor({ ...baseDoc(), shade: { ambient: -1 } }, 'shade.ambient')[0]).toMatch(
       /negatif olamaz/,
     );
+    expect(issuesFor({ ...baseDoc(), shade: { emission: 1.1 } }, 'shade.emission')[0]).toMatch(
+      /0\.\.1/,
+    );
     expect(issuesFor({ ...baseDoc(), shade: { parlaklik: 1 } }, 'shade.parlaklik')).toHaveLength(1);
   });
 
@@ -174,6 +177,33 @@ describe('yapılandırma alanları uygulanmıştır ve DOĞRULANIR', () => {
         'post.dither.amount',
       )[0],
     ).toMatch(/0\.\.1/);
+  });
+
+  it('palette-safe glow post işlemi parametrelerini denetler', () => {
+    expect(
+      collectSpriteDocIssues({
+        ...baseDoc(),
+        post: { glow: { radius: 3, strength: 0.8, threshold: 0.4, colorIndex: 1 } },
+      }),
+    ).toEqual([]);
+    expect(
+      issuesFor(
+        { ...baseDoc(), post: { glow: { radius: 1.5, strength: 0.4 } } },
+        'post.glow.radius',
+      )[0],
+    ).toMatch(/tam sayı/);
+    expect(
+      issuesFor(
+        { ...baseDoc(), post: { glow: { radius: 1, strength: 2 } } },
+        'post.glow.strength',
+      )[0],
+    ).toMatch(/0\.\.1/);
+    expect(
+      issuesFor(
+        { ...baseDoc(), post: { glow: { radius: 1, strength: 0.4, colorIndex: 9 } } },
+        'post.glow.colorIndex',
+      )[0],
+    ).toMatch(/palet sınırları/);
   });
 
   it('post.quantize iki kipi de kabul eder', () => {

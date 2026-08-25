@@ -38,11 +38,11 @@ export function readPixel(buffer: FieldBuffer, px: number, py: number, edge: Edg
 
 /** Birim koordinatı piksel koordinatına çevirir — `UnitSpace.unitX`in tersi. */
 export function toPixelX(space: UnitSpace, x: number): number {
-  return (x * space.short + space.width - 1) / 2;
+  return (x * space.short + space.canvasWidth - 1) / 2 - space.offsetX;
 }
 
 export function toPixelY(space: UnitSpace, y: number): number {
-  return (y * space.short + space.height - 1) / 2;
+  return (y * space.short + space.canvasHeight - 1) / 2 - space.offsetY;
 }
 
 /** Tamponu birim uzayda okunabilir bir alana çevirir. */

@@ -74,6 +74,17 @@ export class AssetStudioClient {
     return this.request<AudioMetadata>(this.assetUrl(assetId, 'audio'), signal);
   }
 
+  /** Salt-okunur `.volsprite.json` içeriği; inspector render'ı tarayıcıda CORE'a bırakır. */
+  getJsonContent<T>(
+    asset: Pick<AssetSummary, 'id' | 'revision'>,
+    signal?: AbortSignal,
+  ): Promise<T> {
+    return this.request<T>(
+      this.withRevision(this.assetUrl(asset.id, 'content'), asset.revision),
+      signal,
+    );
+  }
+
   /**
    * Düzenlenebilir piksel verisini indirir.
    *

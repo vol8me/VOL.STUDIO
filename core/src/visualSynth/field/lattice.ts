@@ -47,8 +47,11 @@ export function createLattice(space: UnitSpace, freq: number, tileable: boolean)
     };
   }
 
-  const halfX = space.width / space.short;
-  const halfY = space.height / space.short;
+  // Bölge render'ında `space.width` yalnızca çıktı tamponudur. Döşeme
+  // periyodu tam belgeden türemeli; aksi halde her tile ayrı bir belge gibi
+  // normalize olur ve seam karşılaştırması anlamsızlaşır.
+  const halfX = space.canvasWidth / space.short;
+  const halfY = space.canvasHeight / space.short;
   const periodX = Math.max(1, Math.round(freq * halfX));
   const periodY = Math.max(1, Math.round(freq * halfY));
 

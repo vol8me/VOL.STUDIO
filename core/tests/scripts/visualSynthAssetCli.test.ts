@@ -196,6 +196,24 @@ describe('visual-synth-asset CLI', () => {
   );
 
   it(
+    'inspect render öncesi graph ve tampon maliyetini JSON olarak raporlar',
+    () => {
+      const result = runCli(['inspect', docPath, '--json']);
+      const analysis = JSON.parse(result.stdout) as {
+        fieldNodeCount: number;
+        estimatedPeakWorkingBytes: number;
+        bufferedByKind: Record<string, number>;
+      };
+
+      expect(result.status).toBe(0);
+      expect(analysis.fieldNodeCount).toBeGreaterThan(0);
+      expect(analysis.estimatedPeakWorkingBytes).toBeGreaterThan(0);
+      expect(analysis.bufferedByKind).toBeDefined();
+    },
+    CLI_TIMEOUT_MS,
+  );
+
+  it(
     'benchmark farklı çözünürlüklerde render ve QA sürelerini raporlar',
     () => {
       const result = runCli([

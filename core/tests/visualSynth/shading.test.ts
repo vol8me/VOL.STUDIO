@@ -137,6 +137,24 @@ describe('ışıklandırma (§4.5)', () => {
     });
     for (const value of shade) expect(value).toBeLessThanOrEqual(1);
   });
+
+  it('emission palet öncesi aydınlığı artırır ve 1de doyar', () => {
+    const base = computeShade(flatNormals, W * H, {
+      light: [0, 0, 1],
+      strength: 0,
+      ambient: 0.2,
+      rim: 0,
+    });
+    const lit = computeShade(flatNormals, W * H, {
+      light: [0, 0, 1],
+      strength: 0,
+      ambient: 0.2,
+      rim: 0,
+      emission: 0.5,
+    });
+    expect(base[CENTER]).toBeCloseTo(0.2, 6);
+    expect(lit[CENTER]).toBeCloseTo(0.7, 6);
+  });
 });
 
 describe('örtüşme gölgesi (§4.5)', () => {

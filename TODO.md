@@ -5,14 +5,20 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
-## 2026-08-25 — VisualSynth P0/P1 çekirdek güçlendirmesi
+## 2026-08-25 — VisualSynth P0/P1/P2 ve güvenli inceleme yüzeyi
 
 - `VISUAL_SYNTH_CAPABILITIES` manifesti şemadan türetiliyor; determinism,
   palette lock, headless sınırı ve bilinçli 2B/3B/AI kapsamı CLI üzerinden
   okunabiliyor (`capabilities --json`).
 - `benchmark` komutu ısınma sonrası render/QA sürelerini, piksel sayısını ve
-  süreç RSS değerlerini raporluyor; henüz makine bağımsız performans eşiği
-  uydurmuyor.
+  süreç RSS değerlerini ve render aşama sürelerini raporluyor; henüz makine
+  bağımsız performans eşiği uydurmuyor.
+- `inspect` komutu render etmeden alan düğümü, tampon ihtiyacı, scatter talebi
+  ve yaklaşık tepe çalışma belleğini raporluyor; cache/tile kararı artık
+  graph ölçümüne dayanabilir.
+- QA sonlu kanal değerlerini, anlamsal kanal aralıklarını ve scatter'ın kabul/
+  minimum mesafe tutarlılığını kapıdan geçiriyor; renderer opt-in aşama
+  profiliyle bu metriklerin maliyeti ayrıca görülebiliyor.
 - `sdf.path` sabit maliyetli capsule zinciri olarak eklendi; açık/kapalı path,
   endpoint ve birleşim regresyonları var.
 - `sdf.smoothUnion`, `sdf.smoothSub` ve `sdf.smoothIntersection` eklendi;
@@ -23,9 +29,26 @@ burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 - Capability, path, smooth SDF, Poisson ve benchmark için regresyon testleri
   eklendi.
 
-Kalan: benchmark tabanına göre cache/tile render kararı, ayrı inspector yüzeyi,
-malzeme tarifleri ve P2 ışık/post-process çalışması. 3B/PBR/AI core kapsamına
-alınmadı.
+- `inspect` graph ölçümü artık gerçek bir region/halo sözleşmesine bağlı:
+  komşuluk/tampon/ışık/post isteyen belgeler güvenli olmayan tile isteğini
+  reddeder; halo'suz belgeler global koordinatlarla doğrudan bölge render'ı
+  yapar ve tam kare crop'u ile bit düzeyinde eşleşir.
+- `RenderCache`, çağıranın verdiği byte ve giriş sayısı bütçeleriyle bounded
+  LRU olarak eklendi. Cache global değildir, profil ölçümünü atlamaz ve typed
+  array/graph mutasyonunu girdiye geri sızdırmaz.
+- Asset Studio Quick Look'a salt-okunur VisualSynth inspector eklendi:
+  kaynak graph, kanal önizlemesi, QA, gerçek render aşama profili, tampon
+  maliyeti ve region/halo engelleri görünür; JSON varlık yazılmaz.
+- `brushedMetal`, `warmWood`, `coarseStone`, `organicFlesh` ve
+  `emissiveGlow` şekilden bağımsız malzeme tarifleri ile doğrulanabilir test
+  kartları eklendi. P2 ışık diliminde emission ve palette-safe glow var;
+  glow'un kısmi alfası QA sözleşmesine açıkça dahil edildi.
+
+Kalan: sonlu halo hesabını buffered/normal/AO/post zincirlerine genişletmek;
+benchmark çıktısını tüketen Web Worker eşiğini gerçek hedef makinelerde
+ölçerek seçmek; atlas/variant, normal-map dışa aktarımı ve daha fazla malzeme
+tarifi için gerçek tüketici eklemek. 3B kamera, depth/shadow mapping,
+specular/Fresnel/IBL/PBR ve üretken AI core kapsamına alınmadı.
 
 ## 2026-08-25 — vol-ui ikinci denetim: yaşam döngüsü, erişilebilirlik ve dar ekran
 

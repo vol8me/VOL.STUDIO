@@ -9,11 +9,3 @@ core/public/assets/fonts/
 
 # Test coverage raporlari
 coverage/
-
-# Arka plan ajanlarının geçici çıktıları
-/*.json
-!/asset-studio.json
-!/package.json
-!/quality.json
-!/tsconfig.base.json
-/*.png

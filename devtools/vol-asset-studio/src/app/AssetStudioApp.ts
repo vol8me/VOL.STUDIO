@@ -10,6 +10,7 @@ import { AssetLibrary, type Translate } from '../catalog/AssetLibrary';
 import { AudioEditorPanel } from '../audio/AudioEditorPanel';
 import { EditorPanel } from '../editor/EditorPanel';
 import { QuickLook } from '../preview/QuickLook';
+import { VisualInspector } from '../preview/VisualInspector';
 import { Tooltip } from '@volstudio/core/ui';
 import { element, replaceChildren } from '../ui/dom';
 import { icon } from '../ui/icons';
@@ -56,6 +57,7 @@ export class AssetStudioApp {
   private readonly quickLook: QuickLook;
   private readonly editor: EditorPanel;
   private readonly audioEditor: AudioEditorPanel;
+  private readonly visualInspector: VisualInspector;
   private t: Translate;
   private assets = new Map<string, AssetSummary>();
   private revision = 0;
@@ -120,6 +122,7 @@ export class AssetStudioApp {
       onToast: (message) => this.showToast(message),
       onEdit: (asset) => void this.openEditor(asset),
       onEditAudio: (asset) => void this.openAudioEditor(asset),
+      onInspect: (asset) => void this.openVisualInspector(asset),
     });
     this.editor = new EditorPanel({
       client: options.client,
@@ -136,6 +139,11 @@ export class AssetStudioApp {
       onToast: (message) => this.showToast(message),
       onSaved: (assetId, revision) => this.applySavedRevision(assetId, revision),
     });
+    this.visualInspector = new VisualInspector({
+      client: options.client,
+      t: this.t,
+      onClose: () => this.closeVisualInspector(),
+    });
 
     const workspace = element('main', {
       className: 'studio-workspace',
@@ -146,7 +154,13 @@ export class AssetStudioApp {
     // sıkışıyor ve QuickLook sütununun 340 pikseline hapsoluyorlardı.
     const body = element('div', {
       className: 'studio-body',
-      children: [this.library.rail, workspace, this.editor.element, this.audioEditor.element],
+      children: [
+        this.library.rail,
+        workspace,
+        this.editor.element,
+        this.audioEditor.element,
+        this.visualInspector.element,
+      ],
     });
 
     this.loadingText = element('p');
@@ -259,6 +273,7 @@ export class AssetStudioApp {
     this.quickLook.setTranslator(t);
     this.editor.setTranslator(t);
     this.audioEditor.setTranslator(t);
+    this.visualInspector.setTranslator(t);
     this.renderLabels();
   }
 
@@ -276,6 +291,7 @@ export class AssetStudioApp {
     this.quickLook.destroy();
     this.editor.destroy();
     this.audioEditor.destroy();
+    this.visualInspector.destroy();
     this.scope.dispose();
     this.shell.remove();
   }
@@ -303,13 +319,18 @@ export class AssetStudioApp {
     // yüklenmez, kullanıcıya seçenek gösterilir.
     if (event.type === 'changed') {
       this.editor.noteExternalRevision(event.asset.id, event.asset.revision);
+      this.visualInspector.noteAssetChanged(event.asset);
     }
     this.library.setAssets([...this.assets.values()]);
     this.restoreSelection();
   }
 
   private selectAsset(asset: AssetSummary | null): void {
-    this.selectedId = asset?.id ?? null;
+    const nextId = asset?.id ?? null;
+    if (this.selectedId !== nextId && this.visualInspector.isOpen) {
+      this.closeVisualInspector();
+    }
+    this.selectedId = nextId;
     this.library.setSelected(this.selectedId);
     this.quickLook.setAsset(asset);
     this.shell.classList.toggle('studio-shell--inspecting', Boolean(asset));
@@ -326,6 +347,17 @@ export class AssetStudioApp {
     this.shell.classList.add('studio-shell--editing');
     await this.audioEditor.open(asset);
     this.audioEditor.syncWaveformSize();
+  }
+
+  /** VisualSynth graphını kullanıcıya gösterir; bu yüzey salt-okunurdur. */
+  private openVisualInspector(asset: AssetSummary): void {
+    this.shell.classList.add('studio-shell--visual-inspecting');
+    this.visualInspector.open(asset);
+  }
+
+  private closeVisualInspector(): void {
+    this.visualInspector.close();
+    this.shell.classList.remove('studio-shell--visual-inspecting');
   }
 
   private closeAudioEditor(): void {
@@ -481,11 +513,14 @@ export class AssetStudioApp {
     if (
       event.key === 'Escape' &&
       this.selectedId &&
+      !this.visualInspector.isOpen &&
       !this.editor.isOpen &&
       !this.audioEditor.isOpen &&
       !document.fullscreenElement
     ) {
       this.selectAsset(null);
+    } else if (event.key === 'Escape' && this.visualInspector.isOpen) {
+      this.closeVisualInspector();
     }
   }
 

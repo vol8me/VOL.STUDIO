@@ -193,6 +193,85 @@
     "dbfs": "{{value}} dBFS",
     "unknownTime": "—"
   },
+  "inspector": {
+    "title": "VisualSynth synthesis inspector",
+    "open": "Inspect synthesis",
+    "close": "Close inspector",
+    "render": "Render preview again",
+    "channel": "Channel",
+    "previewSize": "Preview edge",
+    "pixelSize": "{{value}} pixels",
+    "canvasUnavailable": "The preview surface is unavailable.",
+    "previewLabel": "{{view}} channel preview",
+    "unknown": "unknown",
+    "sections": {
+      "structure": "Graph and cost",
+      "qa": "QA gates",
+      "performance": "Render profile",
+      "capabilities": "Region and halo contract"
+    },
+    "views": {
+      "rgba": "RGBA",
+      "alpha": "Alpha",
+      "coverage": "Coverage",
+      "height": "Height",
+      "shade": "Shade",
+      "glow": "Glow"
+    },
+    "facts": {
+      "documentSize": "Document size",
+      "layers": "Layers",
+      "fieldNodes": "Field nodes",
+      "buffers": "Full-resolution buffers",
+      "memory": "Estimated working memory"
+    },
+    "fields": {
+      "source": "Source",
+      "height": "Height",
+      "mask": "Mask",
+      "materialMask": "Material mask"
+    },
+    "region": {
+      "region": "Region rendering is safe",
+      "fullFrame": "Full-frame rendering required",
+      "halo": "Required halo: {{pixels}} pixels",
+      "haloUnknown": "The halo bound is not safely calculated yet."
+    },
+    "blockers": {
+      "buffered": "Full-frame buffered node: {{kind}}",
+      "shade": "Normals/lighting read neighbours",
+      "post": "Full-frame post-process: {{kind}}"
+    },
+    "metrics": {
+      "finiteValues": "Finite channel values",
+      "channelBounds": "Channel bounds",
+      "paletteCompliance": "Palette compliance",
+      "alphaPurity": "Alpha purity",
+      "colorCount": "Used colour count",
+      "scatterHealth": "Scatter health",
+      "outlineContinuity": "Outline continuity",
+      "contrast": "Contrast",
+      "banding": "Banding",
+      "generic": "Metric"
+    },
+    "stages": {
+      "total": "Total",
+      "palette": "Palette",
+      "layers": "Layers",
+      "shading": "Shading",
+      "outline": "Outline",
+      "glow": "Glow",
+      "dither": "Dither",
+      "quantize": "Quantization"
+    },
+    "status": {
+      "idle": "Select a sprite document.",
+      "loading": "Reading source graph…",
+      "rendering": "Rendering preview…",
+      "ready": "Read-only inspection ready",
+      "error": "Inspector data could not be produced."
+    }
+  },
   "problems": {
     "asset_empty": "The file is empty.",
     "asset_too_large": "The file exceeds the configured size limit.",

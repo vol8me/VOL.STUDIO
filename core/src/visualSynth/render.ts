@@ -18,6 +18,7 @@ import { computeAo } from './shade/ao';
 import { computeOutline } from './shade/outline';
 import { blendCoverage, blendHeight } from './field/blend';
 import { FieldBufferPool, type FieldBuffer } from './field/buffer';
+import { gaussBlur } from './field/filter';
 import { toCoverageFn } from './field/coverage';
 import {
   applyDomainChain,
@@ -29,8 +30,15 @@ import {
 } from './field/evaluate';
 import type { FieldFn } from './field/fn';
 import type { EdgeMode } from './field/sample';
-import { createUnitSpace, type UnitSpace } from './field/space';
+import { createUnitRegionSpace, createUnitSpace, type UnitSpace } from './field/space';
+import {
+  createRenderDiagnostics,
+  type MutableRenderDiagnostics,
+  type RenderDiagnostics,
+} from './diagnostics';
 import type { FieldNode, LayerSpec, LayerStack, PaletteSpec, SpriteDoc } from './types';
+import { analyzeSpriteDoc } from './analysis';
+import { createRenderCacheKey, type RenderCache } from './cache';
 import { MAX_STACK_DEPTH, validateSpriteDoc } from './validate';
 
 /** Katman varsayılanları — §2'de opsiyonel olan her alanın karşılığı. */
@@ -46,9 +54,11 @@ const DEFAULT_LIGHT_STRENGTH = 0.6;
 const DEFAULT_AMBIENT = 0.35;
 const DEFAULT_RIM = 0.15;
 const DEFAULT_RELIEF = 1;
+const DEFAULT_EMISSION = 0;
 
 const DEFAULT_OUTLINE_MODE = 'outside';
 const DEFAULT_OUTLINE_COLOR = 0;
+const DEFAULT_GLOW_COLOR = 0;
 const DEFAULT_DITHER_AMOUNT = 0.15;
 
 export interface RenderOptions {
@@ -58,6 +68,41 @@ export interface RenderOptions {
   seed?: number;
   /** Tampon havuzu; verilmezse render'a özel bir havuz kullanılır (D7). */
   pool?: FieldBufferPool;
+  /** Aşamaları süreyle ölçer; piksel çıktısını ve determinizmi etkilemez. */
+  profile?: boolean;
+  /** Açıkça verilen bounded cache; profil açıkken kullanılmaz. */
+  cache?: RenderCache;
+}
+
+export interface RenderRegion {
+  /** Tamponun tam belge içindeki sol-üst x'i. */
+  readonly x: number;
+  /** Tamponun tam belge içindeki sol-üst y'si. */
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface RenderRegionOptions {
+  /** Aynı graph için deterministik varyant. */
+  readonly seed?: number;
+  readonly pool?: FieldBufferPool;
+  readonly profile?: boolean;
+  readonly cache?: RenderCache;
+}
+
+export interface RenderProfile {
+  readonly totalMs: number;
+  readonly paletteMs: number;
+  readonly layersMs: number;
+  readonly shadingMs: number;
+  readonly outlineMs: number;
+  readonly ditherMs: number;
+  readonly glowMs: number;
+  readonly quantizeMs: number;
+  readonly pixelCount: number;
+  /** Profil sonunda havuzda görülen boyut kovası sayısı. */
+  readonly bufferPoolSizeCount: number;
 }
 
 export interface RenderChannels {
@@ -81,9 +126,31 @@ export interface RenderResult {
   readonly normal: NormalChannel | null;
   /** Dış çizgi maskesi; `post.outline` yoksa null. */
   readonly outline: Uint8Array | null;
+  /** Palet rengine dönüştürülmeden önceki stilize halo; yoksa null. */
+  readonly glow: Float32Array | null;
   readonly palette: ResolvedPalette;
+  /** Scatter gibi tamponlu düğümlerin deterministik kabul istatistikleri. */
+  readonly diagnostics: RenderDiagnostics;
+  /** Yalnız `RenderOptions.profile: true` istendiğinde doludur. */
+  readonly profile: RenderProfile | null;
   /** Ezmeler uygulandıktan SONRAKİ belge — ölçüm bunu okur. */
   readonly doc: SpriteDoc;
+}
+
+function now(): number {
+  return typeof globalThis.performance?.now === 'function'
+    ? globalThis.performance.now()
+    : Date.now();
+}
+
+function mergedInput(input: unknown, options: { size?: readonly [number, number]; seed?: number }) {
+  return isRecord(input) && (options.size || options.seed !== undefined)
+    ? {
+        ...input,
+        ...(options.size ? { size: options.size } : {}),
+        ...(options.seed !== undefined ? { seed: options.seed } : {}),
+      }
+    : input;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -128,6 +195,7 @@ function renderLayer(
   pool: FieldBufferPool,
   accumulator: RenderChannels,
   depth: number,
+  diagnostics: MutableRenderDiagnostics,
 ): void {
   const { width, height } = space;
   const pixelCount = width * height;
@@ -141,6 +209,7 @@ function renderLayer(
     doc.seed,
     doc.tileable ?? false,
     doc.antialias ?? false,
+    diagnostics,
   );
 
   const layerCoverage = pool.acquire(width, height);
@@ -160,7 +229,7 @@ function renderLayer(
     //     ezerdi — görünmeyen bir katmanın görünür yan etkisi.
     if (layer.mask) {
       if (isLayerStack(layer.mask)) {
-        const nested = renderStack(layer.mask.layers, doc, space, pool, depth + 1);
+        const nested = renderStack(layer.mask.layers, doc, space, pool, depth + 1, diagnostics);
         for (let i = 0; i < pixelCount; i++) layerCoverage.data[i] *= nested.coverage[i];
       } else {
         const mask = pool.acquire(width, height);
@@ -255,12 +324,13 @@ function renderStack(
   space: UnitSpace,
   pool: FieldBufferPool,
   depth: number,
+  diagnostics: MutableRenderDiagnostics,
 ): RenderChannels {
   if (depth > MAX_STACK_DEPTH) {
     throw new Error(`Görsel: katman yığını ${MAX_STACK_DEPTH} seviyeden derin olamaz`);
   }
   const channels = createChannels(space.width * space.height);
-  for (const layer of layers) renderLayer(layer, doc, space, pool, channels, depth);
+  for (const layer of layers) renderLayer(layer, doc, space, pool, channels, depth, diagnostics);
   return channels;
 }
 
@@ -295,6 +365,7 @@ function computeShading(
     strength: spec.strength ?? DEFAULT_LIGHT_STRENGTH,
     ambient: spec.ambient ?? DEFAULT_AMBIENT,
     rim: spec.rim ?? DEFAULT_RIM,
+    emission: spec.emission ?? DEFAULT_EMISSION,
   });
 
   if (spec.ao) {
@@ -313,6 +384,26 @@ function computeShading(
   return { shade, normal };
 }
 
+function computeGlow(
+  coverage: Float32Array,
+  width: number,
+  height: number,
+  radius: number,
+  strength: number,
+  threshold: number,
+  edge: EdgeMode,
+): Float32Array | null {
+  if (radius < 1 || strength <= 0) return null;
+  const glow = new Float32Array(coverage.length);
+  const denominator = Math.max(1e-6, 1 - threshold);
+  for (let i = 0; i < coverage.length; i++) {
+    glow[i] = Math.max(0, Math.min(1, (coverage[i] - threshold) / denominator));
+  }
+  gaussBlur(glow, width, height, radius, edge);
+  for (let i = 0; i < glow.length; i++) glow[i] = Math.min(1, glow[i] * strength);
+  return glow;
+}
+
 /**
  * Belgeyi RGBA'ya çevirir.
  *
@@ -320,30 +411,43 @@ function computeShading(
  * atlaması mümkün olmamalı. Doğrulanmış belgeyi elinde tutan çağıran
  * `validateSpriteDoc` sonucunu geçirir; maliyet ihmal edilebilir.
  */
-export function renderSprite(input: unknown, options: RenderOptions = {}): RenderResult {
-  const merged =
-    isRecord(input) && (options.size || options.seed !== undefined)
-      ? {
-          ...input,
-          ...(options.size ? { size: options.size } : {}),
-          ...(options.seed !== undefined ? { seed: options.seed } : {}),
-        }
-      : input;
-
-  const doc = validateSpriteDoc(merged);
-  const [width, height] = doc.size;
-  const space = createUnitSpace(width, height);
+function renderValidatedDoc(
+  doc: SpriteDoc,
+  space: UnitSpace,
+  options: {
+    pool?: FieldBufferPool;
+    profile?: boolean;
+    cache?: RenderCache;
+    cacheKey?: string;
+  },
+): RenderResult {
+  const profileEnabled = options.profile === true;
+  if (!profileEnabled && options.cache && options.cacheKey) {
+    const cached = options.cache.get(options.cacheKey);
+    if (cached) return cached;
+  }
+  const totalStart = profileEnabled ? now() : 0;
+  const { width, height } = space;
+  const paletteStart = profileEnabled ? now() : 0;
   const palette = resolvePaletteSpec(doc.palette);
+  const paletteMs = profileEnabled ? now() - paletteStart : 0;
   const pool = options.pool ?? new FieldBufferPool();
   const edge: EdgeMode = doc.tileable ? 'wrap' : 'clamp';
   const pixelCount = width * height;
 
-  const channels = renderStack(doc.layers, doc, space, pool, 0);
+  const diagnostics = createRenderDiagnostics();
+  const layersStart = profileEnabled ? now() : 0;
+  const channels = renderStack(doc.layers, doc, space, pool, 0, diagnostics);
+  const layersMs = profileEnabled ? now() - layersStart : 0;
+
+  const shadingStart = profileEnabled ? now() : 0;
   const { shade, normal } = computeShading(doc, space, channels, edge);
+  const shadingMs = profileEnabled ? now() - shadingStart : 0;
 
   // (5) DIŞ ÇİZGİ — maske silüeti büyütebilir, bu yüzden kapsamaya da yazılır.
   let outline: Uint8Array | null = null;
   const outlineSpec = doc.post?.outline;
+  const outlineStart = profileEnabled ? now() : 0;
   if (outlineSpec && outlineSpec.px > 0) {
     outline = computeOutline(
       channels.coverage,
@@ -355,17 +459,38 @@ export function renderSprite(input: unknown, options: RenderOptions = {}): Rende
     );
     for (let i = 0; i < pixelCount; i++) if (outline[i] === 1) channels.coverage[i] = 1;
   }
+  const outlineMs = profileEnabled ? now() - outlineStart : 0;
+
+  // (5b) GLOW — kapsamadan türeyen ayrı bir palet rengi. Bu fiziksel bloom
+  // değildir; HDR/IBL üretmez. Palet kilidi nicemlemede son kez uygulanır.
+  const glowSpec = doc.post?.glow;
+  const glowStart = profileEnabled ? now() : 0;
+  const glow = glowSpec
+    ? computeGlow(
+        channels.coverage,
+        width,
+        height,
+        glowSpec.radius,
+        glowSpec.strength,
+        glowSpec.threshold ?? 0,
+        edge,
+      )
+    : null;
+  const glowMs = profileEnabled ? now() - glowStart : 0;
 
   // (6) DITHER — gölgeye piksel konumundan gelen küçük bir sapma ekler.
   const ditherSpec = doc.post?.dither;
+  const ditherStart = profileEnabled ? now() : 0;
   if (ditherSpec && ditherSpec.kind !== 'none') {
     const matrix = resolveDitherMatrix(ditherSpec.kind);
     if (matrix) {
       applyDither(shade, width, height, matrix, ditherSpec.amount ?? DEFAULT_DITHER_AMOUNT);
     }
   }
+  const ditherMs = profileEnabled ? now() - ditherStart : 0;
 
   // (7) NİCEMLE — boru hattının son renk işlemi (D6).
+  const quantizeStart = profileEnabled ? now() : 0;
   const tables: ShadeTables = buildShadeTables(palette, doc.post?.quantize?.mode ?? 'ramp');
   const rgba = new Uint8ClampedArray(pixelCount * 4);
   quantizeToRgba(channels.coverage, shade, channels.material, palette, rgba, {
@@ -373,9 +498,105 @@ export function renderSprite(input: unknown, options: RenderOptions = {}): Rende
     outline: outline
       ? { mask: outline, colorIndex: outlineSpec?.colorIndex ?? DEFAULT_OUTLINE_COLOR }
       : null,
+    glow: glow ? { mask: glow, colorIndex: glowSpec?.colorIndex ?? DEFAULT_GLOW_COLOR } : null,
   });
+  const quantizeMs = profileEnabled ? now() - quantizeStart : 0;
 
-  return { width, height, rgba, channels, shade, normal, outline, palette, doc };
+  const profile: RenderProfile | null = profileEnabled
+    ? {
+        totalMs: now() - totalStart,
+        paletteMs,
+        layersMs,
+        shadingMs,
+        outlineMs,
+        ditherMs,
+        glowMs,
+        quantizeMs,
+        pixelCount,
+        bufferPoolSizeCount: pool.sizeCount,
+      }
+    : null;
+
+  const result: RenderResult = {
+    width,
+    height,
+    rgba,
+    channels,
+    shade,
+    normal,
+    outline,
+    glow,
+    palette,
+    diagnostics,
+    profile,
+    doc,
+  };
+  if (!profileEnabled && options.cache && options.cacheKey) {
+    options.cache.set(options.cacheKey, result);
+  }
+  return result;
+}
+
+export function renderSprite(input: unknown, options: RenderOptions = {}): RenderResult {
+  const doc = validateSpriteDoc(mergedInput(input, options));
+  const [width, height] = doc.size;
+  return renderValidatedDoc(doc, createUnitSpace(width, height), {
+    ...options,
+    cacheKey: createRenderCacheKey(doc, width, height, doc.seed),
+  });
+}
+
+/**
+ * Güvenli bölge render'ı.
+ *
+ * Bu fonksiyon tam görüntüyü render edip kırpmaz. Sadece `analyzeSpriteDoc`
+ * tarafından `haloPixels: 0` sözleşmesi verilen belgede, tam belge koordinat
+ * sisteminde doğrudan örnekleme yapar. Komşuluk isteyen graph'lar açıkça
+ * reddedilir; halo hesabı geldiğinde bu kapı genişletilebilir.
+ */
+export function renderSpriteRegion(
+  input: unknown,
+  region: RenderRegion,
+  options: RenderRegionOptions = {},
+): RenderResult {
+  const doc = validateSpriteDoc(mergedInput(input, options));
+  const [canvasWidth, canvasHeight] = doc.size;
+  const values = [region.x, region.y, region.width, region.height];
+  if (values.some((value) => !Number.isInteger(value))) {
+    throw new Error('Görsel bölge geçersiz: x, y, width ve height tam sayı olmalı');
+  }
+  if (region.width < 1 || region.height < 1) {
+    throw new Error('Görsel bölge geçersiz: width ve height pozitif olmalı');
+  }
+  if (
+    region.x < 0 ||
+    region.y < 0 ||
+    region.x + region.width > canvasWidth ||
+    region.y + region.height > canvasHeight
+  ) {
+    throw new Error(
+      `Görsel bölge belge sınırlarını aşıyor: ${canvasWidth}x${canvasHeight} içinde olmalı`,
+    );
+  }
+
+  const support = analyzeSpriteDoc(doc).regionSupport;
+  if (support.mode !== 'region' || support.haloPixels !== 0) {
+    const blockers = support.blockers.length > 0 ? support.blockers.join(', ') : 'bilinmeyen halo';
+    throw new Error(`Görsel bölge güvenli değil; tam kare gerekir (${blockers})`);
+  }
+
+  const space = createUnitRegionSpace(
+    region.width,
+    region.height,
+    canvasWidth,
+    canvasHeight,
+    region.x,
+    region.y,
+  );
+  return renderValidatedDoc(doc, space, {
+    ...options,
+    cacheKey: createRenderCacheKey(doc, region.width, region.height, doc.seed, region),
+  });
 }
 
 export type { FieldBuffer, NormalChannel };

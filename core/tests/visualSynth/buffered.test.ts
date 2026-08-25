@@ -143,6 +143,33 @@ describe('scatter — serpme (§4.2b)', () => {
     expect(poisson(5).every((value) => Number.isFinite(value))).toBe(true);
   });
 
+  it('Poisson teşhisi istenen, kabul edilen ve minimum mesafeyi ayırır', () => {
+    const result = renderSprite(
+      doc({
+        kind: 'scatter',
+        source: SEED_SOURCE,
+        count: 12,
+        seed: 5,
+        distribution: 'poisson',
+        minDistance: 0.12,
+      }),
+    );
+    const [diagnostic] = result.diagnostics.scatters;
+
+    expect(diagnostic).toMatchObject({
+      path: 'a/source',
+      distribution: 'poisson',
+      requestedCount: 12,
+      sourceEmpty: false,
+    });
+    expect(diagnostic.acceptedCount).toBeGreaterThan(0);
+    expect(diagnostic.acceptedCount).toBeLessThanOrEqual(diagnostic.requestedCount);
+    expect(diagnostic.observedMinDistancePixels).toBeGreaterThanOrEqual(
+      diagnostic.minDistancePixels!,
+    );
+    expect(diagnostic.attempts).toBeGreaterThanOrEqual(diagnostic.acceptedCount);
+  });
+
   it('Poisson dağılımı döşenebilir belgede sonlu çıktı verir', () => {
     const result = renderSprite({
       ...doc({
@@ -165,6 +192,11 @@ describe('scatter — serpme (§4.2b)', () => {
       doc({ kind: 'scatter', source: { kind: 'const', value: 0 }, count: 8 }),
     );
     expect(Array.from(result.channels.coverage).every((value) => value === 0)).toBe(true);
+    expect(result.diagnostics.scatters[0]).toMatchObject({
+      sourceEmpty: true,
+      acceptedCount: 0,
+      attempts: 0,
+    });
   });
 
   it('döşenebilir belgede kenardan taşan örnek KARŞI kenardan girer', () => {

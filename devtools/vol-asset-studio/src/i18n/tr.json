@@ -193,6 +193,85 @@
     "dbfs": "{{value}} dBFS",
     "unknownTime": "—"
   },
+  "inspector": {
+    "title": "VisualSynth sentez denetimi",
+    "open": "Sentezi incele",
+    "close": "Inspector'ı kapat",
+    "render": "Önizlemeyi yeniden üret",
+    "channel": "Kanal",
+    "previewSize": "Önizleme kenarı",
+    "pixelSize": "{{value}} piksel",
+    "canvasUnavailable": "Önizleme yüzeyi kullanılamıyor.",
+    "previewLabel": "{{view}} kanalı önizlemesi",
+    "unknown": "bilinmiyor",
+    "sections": {
+      "structure": "Graph ve maliyet",
+      "qa": "QA kapıları",
+      "performance": "Render profili",
+      "capabilities": "Bölge ve halo sözleşmesi"
+    },
+    "views": {
+      "rgba": "RGBA",
+      "alpha": "Alfa",
+      "coverage": "Kapsama",
+      "height": "Yükseklik",
+      "shade": "Gölge",
+      "glow": "Glow"
+    },
+    "facts": {
+      "documentSize": "Belge boyutu",
+      "layers": "Katman",
+      "fieldNodes": "Alan düğümü",
+      "buffers": "Tam çözünürlük tamponu",
+      "memory": "Tahmini çalışma belleği"
+    },
+    "fields": {
+      "source": "Kaynak",
+      "height": "Yükseklik",
+      "mask": "Maske",
+      "materialMask": "Malzeme maskesi"
+    },
+    "region": {
+      "region": "Bölge renderı güvenli",
+      "fullFrame": "Tam kare renderı gerekli",
+      "halo": "Gerekli halo: {{pixels}} piksel",
+      "haloUnknown": "Halo sınırı henüz güvenli biçimde hesaplanmıyor."
+    },
+    "blockers": {
+      "buffered": "Tam kare isteyen tamponlu düğüm: {{kind}}",
+      "shade": "Normal/ışıklandırma komşuluk okuyor",
+      "post": "Tam kare isteyen son işlem: {{kind}}"
+    },
+    "metrics": {
+      "finiteValues": "Sonlu kanal değerleri",
+      "channelBounds": "Kanal aralıkları",
+      "paletteCompliance": "Palet uyumu",
+      "alphaPurity": "Alfa saflığı",
+      "colorCount": "Kullanılan renk sayısı",
+      "scatterHealth": "Scatter sağlığı",
+      "outlineContinuity": "Dış çizgi sürekliliği",
+      "contrast": "Kontrast",
+      "banding": "Bantlaşma",
+      "generic": "Metrik"
+    },
+    "stages": {
+      "total": "Toplam",
+      "palette": "Palet",
+      "layers": "Katmanlar",
+      "shading": "Gölgeleme",
+      "outline": "Outline",
+      "glow": "Glow",
+      "dither": "Dither",
+      "quantize": "Nicemleme"
+    },
+    "status": {
+      "idle": "Bir sprite belgesi seçin.",
+      "loading": "Kaynak graph okunuyor…",
+      "rendering": "Önizleme render ediliyor…",
+      "ready": "Salt-okunur inceleme hazır",
+      "error": "Inspector verisi oluşturulamadı."
+    }
+  },
   "problems": {
     "asset_empty": "Dosya boş.",
     "asset_too_large": "Dosya yapılandırılmış boyut sınırını aşıyor.",

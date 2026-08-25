@@ -350,12 +350,14 @@ aynısı.)
     "ambient": 0.35, // taban aydınlık
     "rim": 0.15, // kenar ışığı şiddeti (üssü sabittir, bkz. §4.5)
     "relief": 1, // yükseklikten türetilen kabartmanın şiddeti
+    "emission": 0.0, // palet öncesi stilize emissive katkı; fiziksel ışık değil
     "ao": { "radius": 0.04, "strength": 0.4 } // radius BİRİM uzayda
   },
 
   "post": {
     "outline": { "px": 1, "mode": "outside", "colorIndex": 0 }, // px PİKSEL
     "dither": { "kind": "bayer4", "amount": 0.15 }, // none|bayer2/4/8|blueNoise
+    "glow": { "radius": 3, "strength": 0.75, "colorIndex": 1 }, // palette-safe halo, px
     "quantize": { "mode": "ramp" } // "ramp" | "nearest"
   }
 }
@@ -390,13 +392,14 @@ mümkün.
         material ← layerCoverage > materialThresholdCoverage olan yerde
                    (opaklık DEĞİL kapsama sınanır)
                    katmanın malzemesi (materialMask > threshold ise materialAlt)
-4. BİÇİMLENDİR              normal ← height; shade ← Lambert + ambient + rim
+4. BİÇİMLENDİR              normal ← height; shade ← Lambert + ambient + rim + emission
                             ao     ← height'tan; shade *= (1 - ao)
 ── PARAMETRE UZAYI SINIRI ──  (ayrı bir işlem DEĞİL; bkz. aşağıdaki not)
 5. DIŞ ÇİZGİ                dilate(coverage, px) − coverage → outline maskesi
-6. DITHER                   shade += (matris(px,py) − 0.5) * amount
-7. NİCEMLE                  (material, shade) → palet indeksi → RGBA
-8. KODLA                    RGBA → PNG
+6. GLOW                     gauss(coverage, radius) → seçili palet rengi + alfa
+7. DITHER                   shade += (matris(px,py) − 0.5) * amount
+8. NİCEMLE                  (material, shade) → palet indeksi → RGBA
+9. KODLA                    RGBA → PNG
 ```
 
 **Sınır bir işlem değildir.** D4 gereği Aşama 1 zaten HER ÇIKTI PİKSELİ için
@@ -584,6 +587,12 @@ count” diye sunulmaz; önizleme/QA katmanı için raporlanacak bir sonuçtur.
 
 Poisson kipinde jitter kullanılmaz; konum sapması dağılımın kendisinden gelir.
 `rotJitter` ve `scaleJitter` iki kipte de tohumludur.
+
+Render sonucu `diagnostics.scatters[]` ile her serpmenin `requestedCount`,
+`acceptedCount`, aday denemesi ve gözlenen minimum merkez mesafesini taşır.
+Boş kaynakta sıfır kabul geçerli bir sonuçtur; dolu kaynakta hedef count'a
+sığmamak hata değildir ama sessizce tam count gibi sunulmaz. QA bu kaydı
+mesafe ihlali ve sayaç tutarsızlığı için kapıdan geçirir.
 
 **Kaynak tampona yazılırken KIRPILIR.** `tileable` sarması ÖRNEĞİN çıktı
 konumuna uygulanır, kaynağın kendi çizimine değil; tuvalin dışına ötelenmiş
@@ -1024,6 +1033,8 @@ ve metriklerin kendisi test edilebilir.
 
 | Metrik                     | Ne söyler                                | Eşik                        |
 | -------------------------- | ---------------------------------------- | --------------------------- |
+| **Sonlu kanal değerleri**  | NaN/Infinity sızıntısı                   | **0 olmalı**                |
+| **Kanal aralıkları**       | Kapsama/yükseklik/gölge/normal sınırı    | **0 kaçak olmalı**          |
 | **Palet uyumu**            | Palet dışı piksel sayısı                 | **0 olmalı** (alfa 0 hariç) |
 | **Dikiş farkı**            | Sarma sınırı farkının iç komşuluğa oranı | `tileable` iken ≤ 3         |
 | **Dış çizgi sürekliliği**  | Kenara değip halkası kırpılan piksel     | dışa büyüyen kipte 0        |
@@ -1031,6 +1042,7 @@ ve metriklerin kendisi test edilebilir.
 | **Bantlaşma**              | Gölgenin rampa UÇLARINDA birikme payı    | ≤ 0.9                       |
 | **Kullanılan renk sayısı** | Palet gereğinden büyük mü                | rapor                       |
 | **Alfa saflığı**           | Kısmi alfa piksel sayısı                 | `antialias:false` iken 0    |
+| **Scatter sağlığı**        | Kabul oranı ve Poisson merkez mesafesi   | sayaç/mesafe ihlali 0       |
 
 **Dış çizgi sürekliliği neden "tek bileşen" DEĞİL?** Belgenin ilk yazımı
 silüetin tek parça olmasını istiyordu. `scatter` bunu geçersiz kıldı: çok
@@ -1063,7 +1075,9 @@ döşendiğinde bir kırık gösterir. Bu bilinçlidir — yansımalı döşeme 
 
 **Tarama yöntemi: TAM tarama, örnekleme değil.** Tek bir palet dışı piksel tam
 olarak örneklemenin kaçıracağı şeydir; 4M pikselin taranması ~50 ms sürer ve
-örnekleme burada sahte tasarruf olur. Metrikler tek geçişte birlikte toplanır.
+örnekleme burada sahte tasarruf olur. RGBA, alan kanalları ve gölge tam tarama
+ile denetlenir; komşuluk/dikiş ve bileşen metrikleri kendi zorunlu geçişlerini
+yapar. Bu ayrım süre ölçümünde görünürdür.
 
 Rapor makine-okunur (`--json`), tıpkı `scripts/quality/report.mjs` gibi.
 
@@ -1079,6 +1093,7 @@ tsx core/scripts/visual-synth-asset.ts validate <doc.json>
 tsx core/scripts/visual-synth-asset.ts qa <out.png> --doc <doc.json> [--json]
 tsx core/scripts/visual-synth-asset.ts palette <istek.json>      # palet sentezi
 tsx core/scripts/visual-synth-asset.ts capabilities [--json]     # gerçek yetenek/sınır manifesti
+tsx core/scripts/visual-synth-asset.ts inspect <doc.json> [--json] # graph/tampon maliyeti
 tsx core/scripts/visual-synth-asset.ts benchmark <doc.json> [--sizes 32,64,128] [--iterations N] [--json]
 ```
 
@@ -1092,8 +1107,19 @@ okunur biçimde bildirir; ayrıca determinism, palette lock ve headless garantil
 ile 3B kamera, depth buffer, fiziksel PBR, diffusion ve genel editörün destek
 alanı dışında kaldığını açıkça söyler. `benchmark` tek bir “geçti/kaldı” eşiği
 uydurmaz; ısınma sonrası render süresi, QA süresi, piksel sayısı ve süreç RSS
-ölçümünü raporlar. Eşikler gerçek makine ve belge grafikleri görüldükten sonra
-ayrıca kararlaştırılır.
+ölçümünü raporlar; `stagesMs` içinde palet, katman, gölgeleme, outline, glow,
+dither ve nicemleme sürelerini ayırır. `inspect` ise render çalıştırmadan alan düğümü,
+tampon sayısı, scatter talebi ve yaklaşık tepe çalışma belleğini gösterir.
+`inspect` ayrıca `regionSupport` döndürür: halo gerektirmeyen graph
+`mode: "region", haloPixels: 0` alır; tamponlu düğüm, normal/AO ve komşuluk
+isteyen post zinciri `mode: "fullFrame"` olarak kalır.
+`renderSpriteRegion` tam görüntüyü kırpmaz; tam belgenin global koordinatlarında
+doğrudan örnekler ve bu sözleşme dışındaki belgeleri reddeder. `RenderCache`
+global değildir, çağıran tarafından verilen byte/girdi bütçeli LRU'dur; profil
+açıkken bypass edilir ve typed-array sonuçlarını kopyalayarak çağıran
+mutasyonunu cache'e sızdırmaz.
+Bu iki yüzey cache/tile kararını ölçülebilir kılar; tek bir makineye ait süre
+eşikleri uydurmaz.
 
 ### 10.2 Katalog — agent'ın "ne yazacağını" bilmesi
 
@@ -1128,6 +1154,17 @@ render edilir ve QA kapısını geçer; yani arama sonucu yalnızca açıklama d
 > terimlerin listesi `core/tests/governance/primitiveNeutrality.test.ts`
 > içindeki `GENRE_TERMS` dizisidir ve **burada tekrarlanmaz** — iki yerde
 > tutulan bir liste ayrışır.
+
+### Malzeme tarifleri
+
+`visualSynth/materials.ts` şekil seçmez; `source` alanına uygulanacak
+yeniden kullanılabilir bir `height`, palet, ikinci malzeme maskesi ve
+başlangıç ışıklandırması taşır. `brushedMetal`, `warmWood`, `coarseStone`,
+`organicFlesh` ve `emissiveGlow` tarifleri
+`createVisualMaterialLayer` ile herhangi bir SDF, path veya alan kaynağına
+uygulanabilir; `createVisualMaterialDocument` bunları doğrulanabilir bir test
+kartı olarak üretir. Tarifler PBR değildir ve nesne sözlüğünün yerini tutmaz;
+ama aynı yüzey tarifini her nesne için yeniden yazma borcunu azaltır.
 
 ---
 
@@ -1252,13 +1289,31 @@ yazılmaz.
    zorunluluğunu kanıtlar. Yeni nesneler yalnız terim ekleyerek katalog
    presetine düşürülmez; her biri piksel testi olan gerçek bir `SpriteDoc`
    tarifi ister.
-4. **Web Worker.** Büyük çıktı ana iş parçacığında adaptif önizlemeyle
-   sınırlandı. Tipik bir belge 96² hızlı önizlemede bile 24 ms bütçeyi
-   tutturamazsa `core/visualSynth` render'ı worker'a taşınır.
+4. **Web Worker.** Asset Studio inspector'ı kaynak graphı analiz eder, fakat
+   önizleme renderını en fazla 256² ile sınırlar; böylece bugün 2048² kaynak
+   belgenin tamamını ana iş parçacığında çizmez. `benchmark --json` aşama
+   sürelerini verir; gerçek hedef makinede seçilen önizleme bütçesi aşılırsa
+   aynı saf render hattı Worker'a taşınır. Evrensel donanım eşiği uydurulmaz.
 5. **Genel amaçlı teknik editör.** Bu çekirdeğin hedefi değildir; prosedürel
    sentez tarifi üretir, elle çizim yüzeyi sunmaz. Piksel düzenleme ayrı bir
    ürünün (VOL Asset Studio) işidir ve çekirdeğe bağlanmaz. Kaldırılan Tur 4
    panelleri sessizce geri eklenmez.
+6. **Halo kapsamının genişletilmesi.** Halo'suz graph'lar için gerçek bölge
+   render'ı ve bounded LRU cache tamamlandı. `blur`, `warp`, `distance`,
+   `scatter`, normal/AO, outline, dither ve glow bugün bilinçli olarak
+   `fullFrame` kalır; bunlar için düğüm zincirinden türetilen sonlu halo,
+   sarmalı sınır ve cache anahtarı doğrulaması gerekir. Bu iş yapılmadan
+   bölgeyi “destekleniyor” göstermek yasaktır.
+7. **Inspector'ın ilerletilmesi.** Asset Studio içinde salt-okunur kullanıcı
+   inspector'ı tamamlandı: kaynak graph, kanal önizlemesi, QA, profile ve
+   region/halo kararı görünür. Kaynak çözünürlüğü 2048² olsa da panelin
+   önizlemesi 256² ile sınırlıdır; gerçek hedefte bu bütçe aşılırsa Worker
+   aktarımı yapılacaktır. Bugünkü paneli sahte asenkron göstermek yerine
+   benchmark ile ölçülmüş bir aktarım kapısı beklenir.
+8. **Malzeme tariflerinin genişletilmesi.** İlk beş generic tarif ve test
+   kartları tamamlandı. Doku/normal/roughness haritası gibi PBR yüzeyleri ve
+   fiziksel ışık hâlâ bilinçli kapsam dışıdır; yeni tarif ancak tüketicisi ve
+   regresyon görseli olduğunda eklenir.
 
 ---
 

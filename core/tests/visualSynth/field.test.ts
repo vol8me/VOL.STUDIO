@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createUnitSpace } from '../../src/visualSynth/field/space';
+import { createUnitRegionSpace, createUnitSpace } from '../../src/visualSynth/field/space';
+import { createBufferSampler } from '../../src/visualSynth/field/sample';
 import { FieldBufferPool } from '../../src/visualSynth/field/buffer';
 import { applyDomainChain, deriveNodeSeed } from '../../src/visualSynth/field/evaluate';
 import { compileTest } from './support';
@@ -44,6 +45,19 @@ describe('birim uzay sözleşmesi (D2)', () => {
     for (let py = 0; py < 32; py++) if (circle(space.unitX(24), space.unitY(py)) <= 0) height++;
 
     expect(width).toBe(height);
+  });
+
+  it('bölge uzayı tampon örneklemesini tam belgenin koordinatına geri çevirir', () => {
+    const space = createUnitRegionSpace(4, 3, 12, 10, 5, 4);
+    const buffer = {
+      width: 4,
+      height: 3,
+      data: Float32Array.from([0, 1, 2, 3, 10, 11, 12, 13, 20, 21, 22, 23]),
+    };
+    const sample = createBufferSampler(buffer, space, 'nearest', 'clamp');
+
+    expect(sample(space.unitX(0), space.unitY(0))).toBe(0);
+    expect(sample(space.unitX(3), space.unitY(2))).toBe(23);
   });
 });
 

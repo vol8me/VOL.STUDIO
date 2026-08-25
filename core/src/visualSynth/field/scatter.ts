@@ -58,6 +58,22 @@ interface ScatterPoint {
   readonly scale: number;
 }
 
+export interface ScatterRenderStats {
+  readonly distribution: 'grid' | 'poisson';
+  readonly requestedCount: number;
+  readonly acceptedCount: number;
+  readonly sourceEmpty: boolean;
+  readonly minDistancePixels: number | null;
+  readonly observedMinDistancePixels: number | null;
+  readonly attempts: number;
+}
+
+interface GeneratedPoints {
+  readonly points: readonly ScatterPoint[];
+  readonly minDistancePixels: number | null;
+  readonly attempts: number;
+}
+
 /**
  * Kaynağın sıfırdan büyük piksellerinin merkeze göre azami uzaklığı.
  *
@@ -81,7 +97,7 @@ function measureSource(buffer: FieldBuffer, centerX: number, centerY: number): S
   return { radius, empty };
 }
 
-function gridPoints(space: UnitSpace, options: ScatterOptions): ScatterPoint[] {
+function gridPoints(space: UnitSpace, options: ScatterOptions): GeneratedPoints {
   const { width, height } = space;
   // Izgara en-boy oranını izler; aksi hâlde dar bir çıktıda örnekler
   // tek eksende sıkışır.
@@ -106,10 +122,10 @@ function gridPoints(space: UnitSpace, options: ScatterOptions): ScatterPoint[] {
     });
   }
 
-  return points;
+  return { points, minDistancePixels: null, attempts: options.count };
 }
 
-function poissonPoints(space: UnitSpace, options: ScatterOptions): ScatterPoint[] {
+function poissonPoints(space: UnitSpace, options: ScatterOptions): GeneratedPoints {
   const { width, height } = space;
   // Açık mesafe verilmezse hedef count ve tuval alanından dengeli bir
   // başlangıç üret. `undefined`ın tamamen rastgele dağılıma dönüşmesi,
@@ -129,7 +145,7 @@ function poissonPoints(space: UnitSpace, options: ScatterOptions): ScatterPoint[
         scale: 1 + (hash1(index * 4 + 3, options.seed) - 0.5) * 2 * options.scaleJitter,
       });
     }
-    return points;
+    return { points, minDistancePixels: 0, attempts: options.count };
   }
 
   // Hücre köşegeni minDistance'tan küçük tutulur; böylece kabul edilebilir
@@ -198,7 +214,31 @@ function poissonPoints(space: UnitSpace, options: ScatterOptions): ScatterPoint[
     else buckets.set(key, [index]);
   }
 
-  return points;
+  return { points, minDistancePixels: minDistance, attempts };
+}
+
+/** Kabul edilen merkezlerin gerçek minimum mesafesini hesaplar. */
+function measureMinimumDistance(
+  points: readonly ScatterPoint[],
+  width: number,
+  height: number,
+  tileable: boolean,
+): number | null {
+  if (points.length < 2) return null;
+
+  let minimumSquared = Infinity;
+  for (let a = 0; a < points.length - 1; a++) {
+    for (let b = a + 1; b < points.length; b++) {
+      let dx = Math.abs(points[a].x - points[b].x);
+      let dy = Math.abs(points[a].y - points[b].y);
+      if (tileable) {
+        dx = Math.min(dx, width - dx);
+        dy = Math.min(dy, height - dy);
+      }
+      minimumSquared = Math.min(minimumSquared, dx * dx + dy * dy);
+    }
+  }
+  return Math.sqrt(minimumSquared);
 }
 
 /**
@@ -211,23 +251,37 @@ export function renderScatter(
   target: Float32Array,
   space: UnitSpace,
   options: ScatterOptions,
-): void {
+): ScatterRenderStats {
   const centerX = toPixelX(space, 0);
   const centerY = toPixelY(space, 0);
   const extent = measureSource(source, centerX, centerY);
-  if (extent.empty) return;
+  const distribution = options.distribution ?? 'grid';
+  if (extent.empty) {
+    return {
+      distribution,
+      requestedCount: options.count,
+      acceptedCount: 0,
+      sourceEmpty: true,
+      minDistancePixels: null,
+      observedMinDistancePixels: null,
+      attempts: 0,
+    };
+  }
 
   const { width, height } = space;
   // Izgara en-boy oranını izler; aksi hâlde dar bir çıktıda örnekler
   // tek eksende sıkışır.
-  const points =
-    (options.distribution ?? 'grid') === 'poisson'
-      ? poissonPoints(space, options)
-      : gridPoints(space, options);
+  const generated =
+    distribution === 'poisson' ? poissonPoints(space, options) : gridPoints(space, options);
+  const points = generated.points;
+  const acceptedPoints: ScatterPoint[] = [];
+  let acceptedCount = 0;
 
   for (const point of points) {
     const { angle, scale } = point;
     if (!(scale > 0)) continue;
+    acceptedCount++;
+    acceptedPoints.push(point);
 
     const originX = point.x;
     const originY = point.y;
@@ -262,4 +316,17 @@ export function renderScatter(
       }
     }
   }
+
+  return {
+    distribution,
+    requestedCount: options.count,
+    acceptedCount,
+    sourceEmpty: false,
+    minDistancePixels: generated.minDistancePixels,
+    observedMinDistancePixels:
+      distribution === 'poisson'
+        ? measureMinimumDistance(acceptedPoints, width, height, options.tileable)
+        : null,
+    attempts: generated.attempts,
+  };
 }

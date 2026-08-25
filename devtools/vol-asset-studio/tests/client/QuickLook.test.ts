@@ -158,4 +158,33 @@ describe('QuickLook', () => {
     quickLook.setAsset(asset({ kind: 'font', format: 'ttf', image: undefined }));
     expect(quickLook.element.querySelector('.quick-look__preview--font')).not.toBeNull();
   });
+
+  it('sprite belgesinde ayrı inspector niyetini gösterir', () => {
+    const onInspect = vi.fn();
+    const quickLook = new QuickLook({
+      client: createClient(),
+      t: translate,
+      locale: () => 'tr',
+      onClose: vi.fn(),
+      onToast: vi.fn(),
+      onEdit: vi.fn(),
+      onEditAudio: vi.fn(),
+      onInspect,
+    });
+    document.body.append(quickLook.element);
+    const sprite = asset({
+      id: 'recipes:ship.volsprite.json',
+      kind: 'sprite-document',
+      format: 'volsprite.json',
+      image: undefined,
+    });
+    quickLook.setAsset(sprite);
+
+    const button = quickLook.element.querySelector<HTMLButtonElement>(
+      '.quick-look__inspect:not([hidden])',
+    );
+    expect(button).not.toBeNull();
+    button!.click();
+    expect(onInspect).toHaveBeenCalledWith(sprite);
+  });
 });

@@ -20,6 +20,13 @@ class FakeClient {
   thumbnailUrl = vi.fn(() => '/thumb.png');
   contentUrl = vi.fn(() => '/content');
   getAudioMetadata = vi.fn();
+  getJsonContent = vi.fn().mockResolvedValue({
+    schemaVersion: 1,
+    size: [16, 16],
+    seed: 1,
+    palette: { colors: ['#000000', '#ffffff'], ramps: [{ id: 0, indices: [0, 1] }] },
+    layers: [{ id: 'gövde', source: { kind: 'sdf.circle', r: 0.4 }, material: 0 }],
+  });
   authenticate = vi.fn(() =>
     Promise.resolve({ authenticated: true as const, expiresAt: '2026-08-24T00:00:00Z' }),
   );
@@ -107,6 +114,44 @@ describe('AssetStudioApp', () => {
 
     document.querySelector<HTMLButtonElement>('.studio-language')!.click();
     expect(onToggleLanguage).toHaveBeenCalledOnce();
+    app.destroy();
+  });
+
+  it('sprite Quick Look inspectorını açar, değişen kaynağı yeniler ve Escape ile kapatır', async () => {
+    const client = new FakeClient();
+    const sprite = asset({
+      id: 'recipes:ship.volsprite.json',
+      name: 'ship.volsprite.json',
+      path: 'recipes/ship.volsprite.json',
+      kind: 'sprite-document',
+      format: 'volsprite.json',
+      image: undefined,
+    });
+    client.catalog = { revision: 1, assets: [sprite] };
+    const app = createApp(client);
+    await app.start();
+
+    document.querySelector<HTMLButtonElement>('.asset-card')!.click();
+    document.querySelector<HTMLButtonElement>('.quick-look__inspect')!.click();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(document.querySelector('.visual-inspector--open')).not.toBeNull();
+
+    client.onEvent?.({ type: 'changed', revision: 2, asset: { ...sprite, revision: 'rev-2' } });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(client.getJsonContent).toHaveBeenCalledTimes(2);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(document.querySelector('.visual-inspector--open')).toBeNull();
+
+    document.querySelector<HTMLButtonElement>('.quick-look__inspect')!.click();
+    await Promise.resolve();
+    await Promise.resolve();
+    client.onEvent?.({ type: 'deleted', revision: 3, assetId: sprite.id });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(document.querySelector('.visual-inspector--open')).toBeNull();
     app.destroy();
   });
 

@@ -16,6 +16,8 @@ export interface QuickLookOptions {
   onEdit: (asset: AssetSummary) => void;
   /** Ses varlığını KENDİ editöründe açar; piksel yüzeyiyle açılmaz. */
   onEditAudio: (asset: AssetSummary) => void;
+  /** VisualSynth tarifini salt-okunur inspector yüzeyinde açar. */
+  onInspect?: (asset: AssetSummary) => void;
 }
 
 /** Seçili varlığı türüne göre gösteren, düzenleme yapmayan hızlı önizleme çekmecesi. */
@@ -31,6 +33,7 @@ export class QuickLook {
   private readonly copyButton: Button;
   private readonly editButton: Button;
   private readonly audioButton: Button;
+  private readonly inspectButton: Button;
   private readonly notice: Text;
   private asset: AssetSummary | null = null;
   private t: Translate;
@@ -89,6 +92,16 @@ export class QuickLook {
     this.audioButton.element.prepend(new Icon({ name: 'volume' }).element);
     this.audioButton.element.hidden = true;
     this.editButton.element.hidden = true;
+    this.inspectButton = new Button(options.t('inspector.open'), {
+      size: 'sm',
+      variant: 'primary',
+      onClick: () => {
+        if (this.asset) options.onInspect?.(this.asset);
+      },
+      iconLeft: icon('search'),
+    });
+    this.inspectButton.element.classList.add('quick-look__inspect');
+    this.inspectButton.element.hidden = true;
 
     this.notice = new Text('', { variant: 'muted' });
     this.notice.element.classList.add('quick-look__notice');
@@ -108,6 +121,7 @@ export class QuickLook {
               children: [
                 this.editButton.element,
                 this.audioButton.element,
+                this.inspectButton.element,
                 this.copyButton.element,
               ],
             }),
@@ -129,6 +143,7 @@ export class QuickLook {
       replaceChildren(this.details);
       this.editButton.element.hidden = true;
       this.audioButton.element.hidden = true;
+      this.inspectButton.element.hidden = true;
       return;
     }
 
@@ -138,6 +153,7 @@ export class QuickLook {
     // vardır ve piksel yüzeyiyle açılmaz.
     this.editButton.element.hidden = !(asset.kind === 'image' && asset.role !== 'readonly');
     this.audioButton.element.hidden = asset.kind !== 'audio';
+    this.inspectButton.element.hidden = asset.kind !== 'sprite-document';
     this.title.setContent(asset.name);
     this.subtitle.setContent(asset.path);
     const noticeKey =
@@ -167,6 +183,7 @@ export class QuickLook {
       this.copyButton,
       this.editButton,
       this.audioButton,
+      this.inspectButton,
       this.notice,
     ]) {
       component.destroy();
@@ -181,6 +198,7 @@ export class QuickLook {
     this.copyButton.setLabel(this.t('asset.reveal'));
     this.editButton.setLabel(this.t('editor.open'));
     this.audioButton.setLabel(this.t('audio.open'));
+    this.inspectButton.setLabel(this.t('inspector.open'));
     this.notice.setContent(this.t('asset.editingNotice'));
   }
 

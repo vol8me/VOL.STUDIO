@@ -25,6 +25,11 @@ export interface OutlineOverlay {
   readonly colorIndex: number;
 }
 
+export interface GlowOverlay {
+  readonly mask: Float32Array;
+  readonly colorIndex: number;
+}
+
 /** Malzeme kimliğinden 256 girişlik palet-indeksi tablosuna. */
 export type ShadeTables = ReadonlyMap<number, Uint8Array>;
 
@@ -110,6 +115,7 @@ export function buildShadeTables(palette: ResolvedPalette, mode: QuantizeMode): 
 export interface QuantizeOptions {
   readonly tables: ShadeTables;
   readonly outline?: OutlineOverlay | null;
+  readonly glow?: GlowOverlay | null;
 }
 
 /**
@@ -128,9 +134,12 @@ export function quantizeToRgba(
 ): void {
   const pixelCount = coverage.length;
   const outline = options.outline ?? null;
+  const glow = options.glow ?? null;
 
   for (let i = 0; i < pixelCount; i++) {
-    const alpha = Math.round(clamp01(coverage[i]) * 255);
+    const sourceCoverage = clamp01(coverage[i]);
+    const glowCoverage = glow ? clamp01(glow.mask[i]) : 0;
+    const alpha = Math.round(Math.max(sourceCoverage, glowCoverage) * 255);
     const offset = i * 4;
 
     if (alpha === 0) {
@@ -147,6 +156,8 @@ export function quantizeToRgba(
     let colorIndex: number;
     if (outline && outline.mask[i] === 1) {
       colorIndex = outline.colorIndex;
+    } else if (glow && glowCoverage > sourceCoverage) {
+      colorIndex = glow.colorIndex;
     } else {
       const table = options.tables.get(material[i]);
       if (!table) throw new Error(`Nicemleme: ${material[i]} kimlikli rampa palette yok`);

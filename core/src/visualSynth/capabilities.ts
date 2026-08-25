@@ -21,7 +21,8 @@ export interface VisualSynthCapabilities {
     readonly headless: true;
     readonly unitAndPixelSpaces: true;
   };
-  readonly shading: readonly ['ambient', 'lambert', 'rim', 'relief', 'ao'];
+  readonly shading: readonly ['ambient', 'lambert', 'rim', 'relief', 'ao', 'emission'];
+  readonly post: readonly ['outline', 'dither', 'quantize', 'glow'];
   readonly unsupported: readonly [
     'camera3d',
     'depthBuffer',
@@ -55,7 +56,8 @@ export const VISUAL_SYNTH_CAPABILITIES: VisualSynthCapabilities = {
     headless: true,
     unitAndPixelSpaces: true,
   },
-  shading: ['ambient', 'lambert', 'rim', 'relief', 'ao'],
+  shading: ['ambient', 'lambert', 'rim', 'relief', 'ao', 'emission'],
+  post: ['outline', 'dither', 'quantize', 'glow'],
   unsupported: [
     'camera3d',
     'depthBuffer',

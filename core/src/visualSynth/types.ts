@@ -681,6 +681,8 @@ export interface ShadeSpec {
   rim?: number;
   /** Yüzey eğiminden türetilen kabartma şiddeti. */
   relief?: number;
+  /** Palet içinde kalacak emissive aydınlık katkısı; fiziksel ışık değildir. */
+  emission?: number;
   ao?: AoSpec | null;
 }
 
@@ -697,9 +699,28 @@ export interface DitherSpec {
   amount?: number;
 }
 
+/**
+ * Palet kilidini koruyan stilize ışık halesi.
+ *
+ * Yalnızca kapsama alanının bulanık bir kopyasını nicemleme öncesi ayrı bir
+ * palet rengi olarak kullanır; fiziksel bloom, HDR ya da çevre yansıması
+ * iddiası taşımaz.
+ */
+export interface GlowSpec {
+  /** Piksel yarıçapı; post işlemlerinin bilinçli tek piksel uzay parametresi. */
+  radius: number;
+  /** Halo kapsamasını 0..1 aralığında ölçekler. */
+  strength: number;
+  /** Halo rengi; verilmezse paletin ilk rengi kullanılır. */
+  colorIndex?: number;
+  /** Kapsamanın bu eşiği üzerindeki kısmı ışık kaynağı sayılır. */
+  threshold?: number;
+}
+
 export interface PostSpec {
   outline?: OutlineSpec | null;
   dither?: DitherSpec | null;
+  glow?: GlowSpec | null;
   quantize?: QuantizeSpec;
 }
 

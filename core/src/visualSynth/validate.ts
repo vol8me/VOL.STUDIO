@@ -61,6 +61,7 @@ const NOT_A_NODE: Readonly<Record<string, string>> = {
   ao: '`shade.ao` yapılandırması, alan düğümü değil',
   outline: '`post.outline` yapılandırması, alan düğümü değil',
   dither: '`post.dither` yapılandırması, alan düğümü değil',
+  glow: '`post.glow` yapılandırması, alan düğümü değil',
   quantize: '`post.quantize` yapılandırması, alan düğümü değil',
 };
 
@@ -620,11 +621,11 @@ function checkShade(issues: IssueList, raw: unknown): void {
     }
   }
 
-  for (const name of ['strength', 'ambient', 'rim', 'relief'] as const) {
+  for (const name of ['strength', 'ambient', 'rim', 'relief', 'emission'] as const) {
     const value = raw[name];
     if (value === undefined) continue;
     if (issues.finite(`shade.${name}`, value)) {
-      checkConstraint(issues, `shade.${name}`, value, 'nonNegative');
+      checkConstraint(issues, `shade.${name}`, value, name === 'emission' ? 'unit' : 'nonNegative');
     }
   }
 
@@ -647,7 +648,7 @@ function checkShade(issues: IssueList, raw: unknown): void {
   }
 
   for (const name of Object.keys(raw)) {
-    if (!['light', 'strength', 'ambient', 'rim', 'relief', 'ao'].includes(name)) {
+    if (!['light', 'strength', 'ambient', 'rim', 'relief', 'emission', 'ao'].includes(name)) {
       issues.add(`shade.${name}`, '`shade` böyle bir alan tanımıyor');
     }
   }
@@ -720,6 +721,37 @@ function checkPost(issues: IssueList, raw: unknown, colorCount: number): void {
     }
   }
 
+  const glow = raw.glow;
+  if (glow !== undefined && glow !== null) {
+    if (!isRecord(glow)) {
+      issues.add('post.glow', 'nesne olmalı');
+    } else {
+      if (issues.integer('post.glow.radius', glow.radius)) {
+        checkConstraint(issues, 'post.glow.radius', glow.radius, 'nonNegative');
+        if (glow.radius > 64) issues.add('post.glow.radius', '0..64 piksel aralığında olmalı');
+      }
+      if (issues.finite('post.glow.strength', glow.strength)) {
+        checkConstraint(issues, 'post.glow.strength', glow.strength, 'unit');
+      }
+      if (glow.threshold !== undefined && issues.finite('post.glow.threshold', glow.threshold)) {
+        checkConstraint(issues, 'post.glow.threshold', glow.threshold, 'unit');
+      }
+      if (
+        glow.colorIndex !== undefined &&
+        issues.integer('post.glow.colorIndex', glow.colorIndex) &&
+        colorCount > 0 &&
+        (glow.colorIndex < 0 || glow.colorIndex >= colorCount)
+      ) {
+        issues.add('post.glow.colorIndex', `palet sınırları dışında (0..${colorCount - 1})`);
+      }
+      for (const name of Object.keys(glow)) {
+        if (!['radius', 'strength', 'threshold', 'colorIndex'].includes(name)) {
+          issues.add(`post.glow.${name}`, '`glow` böyle bir alan tanımıyor');
+        }
+      }
+    }
+  }
+
   const quantize = raw.quantize;
   if (quantize !== undefined) {
     if (!isRecord(quantize)) {
@@ -730,7 +762,7 @@ function checkPost(issues: IssueList, raw: unknown, colorCount: number): void {
   }
 
   for (const name of Object.keys(raw)) {
-    if (!['outline', 'dither', 'quantize'].includes(name)) {
+    if (!['outline', 'dither', 'glow', 'quantize'].includes(name)) {
       issues.add(`post.${name}`, '`post` böyle bir alan tanımıyor');
     }
   }

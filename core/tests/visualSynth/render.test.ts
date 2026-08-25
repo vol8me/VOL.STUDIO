@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { renderSprite } from '../../src/visualSynth/render';
+import { renderSprite, renderSpriteRegion } from '../../src/visualSynth/render';
+import { RenderCache } from '../../src/visualSynth/cache';
 import { measureSprite } from '../../src/visualSynth/qa';
 import { FieldBufferPool } from '../../src/visualSynth/field/buffer';
 import type { LayerSpec, SpriteDoc } from '../../src/visualSynth/types';
@@ -77,6 +78,20 @@ describe('determinizm (D5)', () => {
     expect(Array.from(second.channels.material)).toEqual(Array.from(first.channels.material));
   });
 
+  it('profil opt-in aşama sürelerini verir ama piksel çıktısını değiştirmez', () => {
+    const source = loadFixture('composite');
+    const plain = renderSprite(source);
+    const profiled = renderSprite(source, { profile: true });
+
+    expect(profiled.profile).not.toBeNull();
+    expect(profiled.profile!.pixelCount).toBe(profiled.width * profiled.height);
+    for (const value of Object.values(profiled.profile!)) {
+      expect(typeof value === 'number' ? Number.isFinite(value) : true).toBe(true);
+    }
+    expect(Array.from(profiled.rgba)).toEqual(Array.from(plain.rgba));
+    expect(renderSprite(source).profile).toBeNull();
+  });
+
   it('tohum ezmesi çıktıyı değiştirir', () => {
     const source = loadFixture('noise');
     const a = renderSprite(source);
@@ -112,6 +127,148 @@ describe('determinizm (D5)', () => {
         expect(shifted.channels.height[index]).toBe(alone.channels.height[index]);
       }
     }
+  });
+});
+
+describe('gerçek bölge render sözleşmesi', () => {
+  function expectCrop(
+    full: ReturnType<typeof renderSprite>,
+    region: ReturnType<typeof renderSpriteRegion>,
+    x: number,
+    y: number,
+  ): void {
+    for (let row = 0; row < region.height; row++) {
+      for (let column = 0; column < region.width; column++) {
+        const source = (y + row) * full.width + x + column;
+        const target = row * region.width + column;
+        expect(region.rgba.slice(target * 4, target * 4 + 4)).toEqual(
+          full.rgba.slice(source * 4, source * 4 + 4),
+        );
+        expect(region.channels.coverage[target]).toBe(full.channels.coverage[source]);
+        expect(region.channels.height[target]).toBe(full.channels.height[source]);
+        expect(region.channels.material[target]).toBe(full.channels.material[source]);
+      }
+    }
+  }
+
+  it('halo gerektirmeyen graphı global koordinatlarla tam crop ile bit düzeyinde eşler', () => {
+    const source = doc(
+      [
+        {
+          id: 'zemin',
+          source: { kind: 'sdf.circle', center: [-0.18, 0.12], r: 0.62 },
+          height: { kind: 'noise.value', freq: 7 },
+          material: 0,
+        },
+      ],
+      { size: [48, 32], tileable: true },
+    );
+    const full = renderSprite(source);
+    const region = renderSpriteRegion(source, { x: 11, y: 7, width: 19, height: 13 });
+
+    expectCrop(full, region, 11, 7);
+    expect(region.profile).toBeNull();
+  });
+
+  it('komşuluk isteyen graphları tahminî halo ile çalıştırmaz', () => {
+    const buffered = doc([
+      {
+        id: 'bulanık',
+        source: { kind: 'blur', radius: 0.04, input: { kind: 'sdf.circle', r: 0.4 } },
+        material: 0,
+      },
+    ]);
+
+    expect(() => renderSpriteRegion(buffered, { x: 0, y: 0, width: 8, height: 8 })).toThrow(
+      /buffered:blur/,
+    );
+    expect(() =>
+      renderSpriteRegion(
+        doc([{ id: 'ışık', source: { kind: 'const', value: 1 } }], { shade: {} }),
+        {
+          x: 0,
+          y: 0,
+          width: 8,
+          height: 8,
+        },
+      ),
+    ).toThrow(/shade/);
+  });
+
+  it('bölge belge sınırını aşınca reddeder', () => {
+    const source = doc([{ id: 'a', source: { kind: 'const', value: 1 }, material: 0 }]);
+    expect(() => renderSpriteRegion(source, { x: 28, y: 0, width: 8, height: 8 })).toThrow(
+      /sınırlarını aşıyor/,
+    );
+  });
+});
+
+describe('bounded render cache', () => {
+  it('hit sonucunu çağıran mutasyonundan izole eder', () => {
+    const source = doc([{ id: 'a', source: { kind: 'sdf.circle', r: 0.55 }, material: 0 }]);
+    const cache = new RenderCache({ maxEntries: 2, maxBytes: 1_000_000 });
+
+    const first = renderSprite(source, { cache });
+    const expected = Array.from(first.rgba);
+    first.rgba[0] = first.rgba[0] === 0 ? 255 : 0;
+    first.channels.coverage[0] = 0.123;
+
+    const second = renderSprite(source, { cache });
+    expect(Array.from(second.rgba)).toEqual(expected);
+    expect(second.channels.coverage[0]).not.toBe(0.123);
+    expect(cache.stats).toMatchObject({ hits: 1, misses: 1, entries: 1, evictions: 0 });
+  });
+
+  it('profil açıkken cache kullanmaz ve gerçek süreyi ölçer', () => {
+    const source = doc([{ id: 'a', source: { kind: 'sdf.circle', r: 0.55 }, material: 0 }]);
+    const cache = new RenderCache({ maxBytes: 1_000_000 });
+    const profiled = renderSprite(source, { cache, profile: true });
+
+    expect(profiled.profile).not.toBeNull();
+    expect(cache.stats).toMatchObject({ hits: 0, misses: 0, entries: 0 });
+  });
+
+  it('giriş ve byte bütçesi dolunca en eski sonucu atar', () => {
+    const cache = new RenderCache({ maxEntries: 1, maxBytes: 1_000_000 });
+    const first = doc([{ id: 'a', source: { kind: 'sdf.circle', r: 0.35 }, material: 0 }]);
+    const second = doc([{ id: 'b', source: { kind: 'sdf.circle', r: 0.65 }, material: 0 }]);
+
+    renderSprite(first, { cache });
+    renderSprite(second, { cache });
+    expect(cache.stats.entries).toBe(1);
+    expect(cache.stats.evictions).toBe(1);
+    renderSprite(first, { cache });
+    expect(cache.stats.misses).toBe(3);
+  });
+});
+
+describe('palette-safe P2 glow', () => {
+  it('halo rengini paletten seçer, alfa ve kanal sınırlarını korur', () => {
+    const source = doc([{ id: 'ışık', source: { kind: 'sdf.circle', r: 0.32 }, material: 0 }], {
+      post: { glow: { radius: 3, strength: 0.8, colorIndex: 4 } },
+    });
+    const result = renderSprite(source, { profile: true });
+    const report = measureSprite(result);
+
+    expect(result.glow).not.toBeNull();
+    expect(result.profile?.glowMs).toBeGreaterThanOrEqual(0);
+    expect(
+      Array.from(result.rgba).some(
+        (_, index) => index % 4 === 3 && result.rgba[index] > 0 && result.rgba[index] < 255,
+      ),
+    ).toBe(true);
+    expect(report.metrics.find((metric) => metric.id === 'finiteValues')?.pass).toBe(true);
+    expect(report.metrics.find((metric) => metric.id === 'channelBounds')?.pass).toBe(true);
+    expect(report.metrics.find((metric) => metric.id === 'paletteCompliance')?.value).toBe(0);
+  });
+
+  it('glow da halo isteyen diğer post işlemleri gibi bölge renderını kilitler', () => {
+    const source = doc([{ id: 'ışık', source: { kind: 'sdf.circle', r: 0.32 }, material: 0 }], {
+      post: { glow: { radius: 2, strength: 0.5 } },
+    });
+    expect(() => renderSpriteRegion(source, { x: 0, y: 0, width: 8, height: 8 })).toThrow(
+      /post:glow/,
+    );
   });
 });
 

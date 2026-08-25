@@ -17,6 +17,9 @@ changes, and provides a preview appropriate for each asset kind.
 - source, derived-output, and recipe relationship metadata;
 - identity-based incremental SSE updates with full resync after a sequence gap;
 - Quick Look metadata and repository-relative path copying;
+- read-only VisualSynth inspector for `.volsprite.json` documents, showing the
+  source graph, channel preview, QA, real render profile, buffer cost, and
+  region/halo decision;
 - tile-backed pixel surface, layers/frames/palette, onion skin, undo/redo, and
   revision-checked atomic PNG saves;
 - peak-pyramid waveform, selection, zoom, transport, gain, trim, fades, peak
@@ -27,7 +30,10 @@ Layers and frames are currently flattened into the composite when a direct PNG
 is saved; reopening native `.volsprite.json` documents is not complete yet. An
 audio processing chain is applied to the current OGG/WAV only after an explicit
 save; persistence as a `.volaudio.json` recipe is not wired yet. MP3/FLAC files
-can be inspected but require the OGG/WAV conversion path before saving.
+can be inspected but require the OGG/WAV conversion path before saving. The
+VisualSynth inspector renders the JSON source read-only in the browser through
+CORE; it does not edit pixels or write files. Native `.volsprite.json` editing
+and saving remains a separate debt.
 
 ## Running
 

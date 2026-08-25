@@ -19,6 +19,8 @@ describe('ölçüm (§9, D12)', () => {
     expect(report.pass).toBe(true);
     // Her belgede ölçülenler; koşullu metrikler (dikiş, dış çizgi) yok.
     expect(report.metrics.map((entry) => entry.id)).toEqual([
+      'finiteValues',
+      'channelBounds',
       'paletteCompliance',
       'alphaPurity',
       'colorCount',
@@ -108,6 +110,26 @@ describe('ölçüm (§9, D12)', () => {
     result.rgba[2] = 3;
     result.rgba[3] = 255;
     expect(formatQaReport(measureSprite(result))).toMatch(/✗ Palet uyumu/);
+  });
+
+  it('sonlu olmayan kanal değerini ayrı QA kapısı olarak yakalar', () => {
+    const result = renderSprite(loadFixture('composite'));
+    result.channels.height[0] = Number.NaN;
+
+    const entry = metric(result, 'finiteValues');
+    expect(entry.value).toBe(1);
+    expect(entry.pass).toBe(false);
+    expect(entry.detail).toMatch(/sonlu değil/);
+  });
+
+  it('kanalın anlamsal aralık dışına çıkmasını yakalar', () => {
+    const result = renderSprite(loadFixture('composite'));
+    result.channels.coverage[0] = 2;
+
+    const entry = metric(result, 'channelBounds');
+    expect(entry.value).toBe(1);
+    expect(entry.pass).toBe(false);
+    expect(entry.detail).toMatch(/aralığın dışında/);
   });
 });
 
@@ -242,5 +264,33 @@ describe('Tur 3 metrikleri', () => {
       ramps: [{ id: 0, indices: [0, 1] }],
     };
     expect(metricOf(doc({ palette: twoStep }), 'banding')).toBeUndefined();
+  });
+
+  it('Poisson scatter kabul oranı ve mesafe teşhisini QA raporuna taşır', () => {
+    const report = measureSprite(
+      renderSprite(
+        doc({
+          layers: [
+            {
+              id: 'serpme',
+              source: {
+                kind: 'scatter',
+                source: { kind: 'sdf.circle', r: 0.04 },
+                count: 10,
+                distribution: 'poisson',
+                minDistance: 0.12,
+                seed: 9,
+              },
+              material: 0,
+            },
+          ],
+        }),
+      ),
+    );
+
+    const entry = report.metrics.find((metric) => metric.id === 'scatterHealth')!;
+    expect(entry.pass).toBe(true);
+    expect(entry.value).toBeGreaterThan(0);
+    expect(entry.detail).toMatch(/minimum mesafe/);
   });
 });

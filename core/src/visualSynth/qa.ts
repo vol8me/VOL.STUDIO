@@ -6,9 +6,9 @@
  * biriken bir borcun üstünü örter.
  *
  * **Tarama yöntemi: TAM tarama, örnekleme değil.** Tek bir palet dışı
- * piksel, tam olarak örneklemenin kaçıracağı şeydir. Bütün metrikler tek
- * geçişte birlikte toplanır; 4 milyon pikselin taranması onlarca
- * milisaniyedir ve örnekleme burada sahte tasarruf olurdu.
+ * piksel, tam olarak örneklemenin kaçıracağı şeydir. RGBA ve kanal sağlık
+ * metrikleri tam taranır; komşuluk/bileşen ölçümleri de kendi zorunlu
+ * geçişlerini yapar. 4 milyon pikselde örnekleme sahte tasarruftur.
  */
 
 import { packRgb } from './color/palette';
@@ -221,6 +221,100 @@ interface BandingMeasurement {
   readonly atEdges: number;
 }
 
+interface ChannelHealth {
+  readonly nonFinite: number;
+  readonly outOfBounds: number;
+}
+
+/** Render kanallarında NaN/Infinity ve anlamsal aralık kaçaklarını tarar. */
+function measureChannelHealth(result: RenderResult): ChannelHealth {
+  let nonFinite = 0;
+  let outOfBounds = 0;
+  const inspected = new Set<Float32Array>();
+
+  const inspect = (values: Float32Array, min: number, max: number): void => {
+    if (inspected.has(values)) return;
+    inspected.add(values);
+    for (const value of values) {
+      if (!Number.isFinite(value)) {
+        nonFinite++;
+        continue;
+      }
+      if (value < min - 1e-5 || value > max + 1e-5) outOfBounds++;
+    }
+  };
+
+  inspect(result.channels.coverage, 0, 1);
+  inspect(result.channels.height, 0, 1);
+  inspect(result.shade, 0, 1);
+  if (result.normal) {
+    inspect(result.normal.x, -1, 1);
+    inspect(result.normal.y, -1, 1);
+    inspect(result.normal.z, -1, 1);
+  }
+  if (result.glow) inspect(result.glow, 0, 1);
+
+  return { nonFinite, outOfBounds };
+}
+
+interface ScatterHealth {
+  readonly ratio: number;
+  readonly invalid: number;
+  readonly spacingViolations: number;
+  readonly detail: string;
+}
+
+/** Scatter üretiminin yalnız hedefi değil, fiili kapasitesi ve mesafesi. */
+function measureScatterHealth(result: RenderResult): ScatterHealth {
+  const scatters = result.diagnostics.scatters;
+  if (scatters.length === 0) {
+    return { ratio: 1, invalid: 0, spacingViolations: 0, detail: '' };
+  }
+
+  let requested = 0;
+  let accepted = 0;
+  let invalid = 0;
+  let spacingViolations = 0;
+  const details: string[] = [];
+
+  for (const scatter of scatters) {
+    requested += scatter.requestedCount;
+    accepted += scatter.acceptedCount;
+    const countInvalid =
+      scatter.requestedCount < 1 ||
+      scatter.acceptedCount < 0 ||
+      scatter.acceptedCount > scatter.requestedCount ||
+      scatter.attempts < scatter.acceptedCount;
+    if (countInvalid) invalid++;
+
+    if (
+      scatter.distribution === 'poisson' &&
+      !scatter.sourceEmpty &&
+      scatter.minDistancePixels !== null &&
+      scatter.observedMinDistancePixels !== null &&
+      scatter.observedMinDistancePixels + 1e-4 < scatter.minDistancePixels
+    ) {
+      spacingViolations++;
+    }
+
+    const capacityNote = scatter.sourceEmpty
+      ? 'kaynak boş'
+      : `${scatter.acceptedCount}/${scatter.requestedCount} örnek kabul edildi`;
+    const spacingNote =
+      scatter.distribution === 'poisson' && scatter.observedMinDistancePixels !== null
+        ? `, minimum mesafe ${scatter.observedMinDistancePixels.toFixed(2)} px`
+        : '';
+    details.push(`${scatter.path}: ${capacityNote}${spacingNote}`);
+  }
+
+  return {
+    ratio: requested > 0 ? accepted / requested : 1,
+    invalid,
+    spacingViolations,
+    detail: details.join('; '),
+  };
+}
+
 /** Gölgenin rampa adımlarına dağılımını ölçer (§9 "uç birikme"). */
 function measureBanding(result: RenderResult): BandingMeasurement {
   const { rgba, shade, channels, palette } = result;
@@ -295,13 +389,37 @@ export function measureSprite(result: RenderResult): QaReport {
   const usedSpan = opaquePixels > 0 ? usedHigh - usedLow : 0;
   const paletteSpan = paletteLightnessSpan(result);
   const banding = measureBanding(result);
+  const channelHealth = measureChannelHealth(result);
+  const scatterHealth = measureScatterHealth(result);
 
   // Kısmi alfa, kenar yumuşatma açıkken ya da bir katman saydamken BEKLENİR;
   // ikisi de kapalıyken saçak demektir ve kapıyı kırmalıdır.
   const softnessRequested =
-    (doc.antialias ?? false) || doc.layers.some((layer) => (layer.opacity ?? 1) < 1);
+    (doc.antialias ?? false) ||
+    doc.layers.some((layer) => (layer.opacity ?? 1) < 1) ||
+    Boolean(doc.post?.glow && doc.post.glow.radius > 0 && doc.post.glow.strength > 0);
 
   const metrics: QaMetric[] = [
+    {
+      id: 'finiteValues',
+      label: 'Sonlu kanal değerleri',
+      value: channelHealth.nonFinite,
+      pass: channelHealth.nonFinite === 0,
+      detail:
+        channelHealth.nonFinite === 0
+          ? 'NaN ya da Infinity yok'
+          : `${channelHealth.nonFinite} kanal değeri sonlu değil`,
+    },
+    {
+      id: 'channelBounds',
+      label: 'Kanal aralıkları',
+      value: channelHealth.outOfBounds,
+      pass: channelHealth.outOfBounds === 0,
+      detail:
+        channelHealth.outOfBounds === 0
+          ? 'kapsama, yükseklik, gölge ve normal sınırları korunuyor'
+          : `${channelHealth.outOfBounds} kanal değeri tanımlı aralığın dışında`,
+    },
     {
       id: 'paletteCompliance',
       label: 'Palet uyumu',
@@ -318,7 +436,7 @@ export function measureSprite(result: RenderResult): QaReport {
       value: partialAlpha,
       pass: softnessRequested || partialAlpha === 0,
       detail: softnessRequested
-        ? `${partialAlpha} kısmi alfa piksel — kenar yumuşatma ya da saydam katman istendiği için beklenir`
+        ? `${partialAlpha} kısmi alfa piksel — kenar yumuşatma, saydam katman ya da glow istendiği için beklenir`
         : `${partialAlpha} kısmi alfa piksel — antialias kapalı ve her katman opak, saçak olmamalı`,
     },
     {
@@ -329,6 +447,20 @@ export function measureSprite(result: RenderResult): QaReport {
       detail: `${distinct.size} / ${palette.colorCount} palet rengi kullanıldı`,
     },
   ];
+
+  if (result.diagnostics.scatters.length > 0) {
+    metrics.push({
+      id: 'scatterHealth',
+      label: 'Scatter kapasitesi ve mesafesi',
+      value: Number(scatterHealth.ratio.toFixed(3)),
+      pass: scatterHealth.invalid === 0 && scatterHealth.spacingViolations === 0,
+      detail:
+        scatterHealth.invalid === 0 && scatterHealth.spacingViolations === 0
+          ? scatterHealth.detail
+          : `${scatterHealth.detail}; ${scatterHealth.invalid} sayaç, ` +
+            `${scatterHealth.spacingViolations} mesafe ihlali`,
+    });
+  }
 
   // Silüet bileşenleri — dış çizgi ölçümünün ayrıntısında raporlanır.
   const components = countComponents(result);
