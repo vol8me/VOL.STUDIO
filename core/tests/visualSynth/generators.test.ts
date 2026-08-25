@@ -205,6 +205,39 @@ describe('işaretli mesafe alanları', () => {
     expect(at(node, 0, 0.2)).toBeGreaterThan(0);
   });
 
+  it('sdf.path ardışık noktaları yuvarlak capsule ile bağlar', () => {
+    const node: FieldNode = {
+      kind: 'sdf.path',
+      points: [
+        [-0.5, 0],
+        [0, 0.35],
+        [0.5, 0],
+      ],
+      r: 0.1,
+    };
+
+    expect(at(node, 0, 0.35)).toBeCloseTo(-0.1, 10);
+    expect(at(node, 0, 0.52)).toBeGreaterThan(0);
+    // İlk segment ile ikinci segmentin birleşiminde boşluk bırakmaz.
+    expect(at(node, -0.02, 0.33)).toBeLessThan(0);
+  });
+
+  it('sdf.path closed son noktayı ilk noktaya bağlar', () => {
+    const open: FieldNode = {
+      kind: 'sdf.path',
+      points: [
+        [-0.4, -0.4],
+        [0.4, -0.4],
+        [0.4, 0.4],
+      ],
+      r: 0.05,
+    };
+    const closed: FieldNode = { ...open, closed: true };
+
+    expect(at(open, 0, 0)).toBeGreaterThan(0);
+    expect(at(closed, 0, 0)).toBeCloseTo(-0.05, 10);
+  });
+
   it('dejenere doğru/kapsül NaN üretmez', () => {
     const line: FieldNode = { kind: 'sdf.line', a: [0, 0], b: [0, 0], thickness: 0.2 };
     const capsule: FieldNode = { kind: 'sdf.capsule', a: [0, 0], b: [0, 0], r: 0.2 };

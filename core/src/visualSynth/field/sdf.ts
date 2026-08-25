@@ -221,3 +221,29 @@ export function arcSdfField(
     return Math.min(toStart, toEnd) - halfThickness;
   };
 }
+
+/**
+ * Kalın yol — ardışık capsule segmentlerinin birleşimi.
+ *
+ * Capsule birleşimi `min` ile kurulur; bu açık yol için doğru stroku ve
+ * yuvarlak uçları verir. `closed` son noktayı ilk noktaya bağlar. Nokta
+ * sayısı derleme anında sabit olduğundan piksel başına yalnızca segment
+ * mesafeleri hesaplanır; Bézier yakın-nokta çözümü gibi iteratif bir arama
+ * yoktur.
+ */
+export function pathSdfField(
+  points: readonly (readonly [number, number])[],
+  r: number,
+  closed: boolean,
+): FieldFn {
+  const segments = points.slice(0, closed ? points.length : points.length - 1).map((point, i) => {
+    const next = points[(i + 1) % points.length];
+    return capsuleSdfField(point[0], point[1], next[0], next[1], r);
+  });
+
+  return (x, y) => {
+    let distance = Infinity;
+    for (const segment of segments) distance = Math.min(distance, segment(x, y));
+    return distance;
+  };
+}

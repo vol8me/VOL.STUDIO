@@ -5,6 +5,28 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-25 — VisualSynth P0/P1 çekirdek güçlendirmesi
+
+- `VISUAL_SYNTH_CAPABILITIES` manifesti şemadan türetiliyor; determinism,
+  palette lock, headless sınırı ve bilinçli 2B/3B/AI kapsamı CLI üzerinden
+  okunabiliyor (`capabilities --json`).
+- `benchmark` komutu ısınma sonrası render/QA sürelerini, piksel sayısını ve
+  süreç RSS değerlerini raporluyor; henüz makine bağımsız performans eşiği
+  uydurmuyor.
+- `sdf.path` sabit maliyetli capsule zinciri olarak eklendi; açık/kapalı path,
+  endpoint ve birleşim regresyonları var.
+- `sdf.smoothUnion`, `sdf.smoothSub` ve `sdf.smoothIntersection` eklendi;
+  `k=0` sert boolean davranışına iner.
+- `scatter` varsayılan grid davranışını koruyor; opt-in deterministik Poisson
+  dağılımı `distribution` ve `minDistance` ile geliyor. Tileable kenar mesafesi
+  uzamsal kovada denetleniyor.
+- Capability, path, smooth SDF, Poisson ve benchmark için regresyon testleri
+  eklendi.
+
+Kalan: benchmark tabanına göre cache/tile render kararı, ayrı inspector yüzeyi,
+malzeme tarifleri ve P2 ışık/post-process çalışması. 3B/PBR/AI core kapsamına
+alınmadı.
+
 ## 2026-08-25 — vol-ui ikinci denetim: yaşam döngüsü, erişilebilirlik ve dar ekran
 
 - `Popup.destroy()` açık durumu kapatmıyor ve yok edilmiş popup yeniden açılabiliyordu; yok etme artık idempotent, kapalı ve yeniden açılamaz. Regresyon testi eklendi.

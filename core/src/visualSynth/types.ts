@@ -192,6 +192,21 @@ export interface ArcSdfNode {
   to: number;
 }
 
+/**
+ * Capsule segmentlerinden oluşan açık/kapalı yol.
+ *
+ * Bu ilk path primitive'i dolu eğri değil, kalın bir strok üretir. Böylece
+ * kablo, sap, damar ve dal gibi organik/curvy biçimler sabit maliyetli ve
+ * kararlı bir signed-distance alanıyla ifade edilir. Dolu spline yüzeyi
+ * ayrı bir geometri sözleşmesidir; burada sessizce taklit edilmez.
+ */
+export interface PathSdfNode {
+  kind: 'sdf.path';
+  points: readonly Vec2[];
+  r: number;
+  closed?: boolean;
+}
+
 /* ── §4.1 Üreteçler: desenler ─────────────────────────────────────────── */
 
 /** `size` bir karenin birim uzaydaki kenar uzunluğudur. */
@@ -246,6 +261,7 @@ export type GeneratorNode =
   | LineSdfNode
   | CapsuleSdfNode
   | ArcSdfNode
+  | PathSdfNode
   | CheckerPatternNode
   | StripesPatternNode
   | DotsPatternNode
@@ -381,6 +397,10 @@ export interface ScatterNode {
   rotJitter?: number;
   /** Azami ölçek sapması oranı (0.2 → 0.8x–1.2x). */
   scaleJitter?: number;
+  /** Örnek konumlandırma; eski belgelerde varsayılan `grid`dir. */
+  distribution?: 'grid' | 'poisson';
+  /** Poisson dağılımında minimum merkez uzaklığı, BİRİM uzayda. */
+  minDistance?: number;
 }
 
 /**
@@ -461,6 +481,17 @@ export interface BinaryNode {
   b: FieldNode;
 }
 
+/**
+ * Signed-distance alanları için yumuşak boolean işlemleri.
+ * `k` geçiş yarıçapıdır; sıfırda mevcut sert boolean davranışına iner.
+ */
+export interface SmoothSdfNode {
+  kind: 'sdf.smoothUnion' | 'sdf.smoothSub' | 'sdf.smoothIntersection';
+  a: FieldNode;
+  b: FieldNode;
+  k: number;
+}
+
 /** Doğrusal karışım; `t` sabittir (§4.3 `mix(t)`). */
 export interface MixNode {
   kind: 'mix';
@@ -521,6 +552,7 @@ export interface InvertNode {
 
 export type CombineNode =
   | BinaryNode
+  | SmoothSdfNode
   | MixNode
   | StepNode
   | SmoothstepNode

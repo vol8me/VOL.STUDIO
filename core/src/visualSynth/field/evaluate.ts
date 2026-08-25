@@ -35,6 +35,7 @@ import {
   capsuleSdfField,
   circleSdfField,
   lineSdfField,
+  pathSdfField,
   polygonSdfField,
   roundBoxSdfField,
   starSdfField,
@@ -68,6 +69,9 @@ import {
   overlayFields,
   remapField,
   screenFields,
+  smoothIntersectionFields,
+  smoothSubFields,
+  smoothUnionFields,
   smoothstepField,
   stepField,
   subFields,
@@ -247,6 +251,8 @@ function compileNode(node: FieldNode, path: string, context: CompileContext): Fi
         node.to * DEG_TO_RAD,
       );
     }
+    case 'sdf.path':
+      return pathSdfField(node.points, node.r, node.closed ?? false);
 
     /* ── üreteçler: desenler ─────────────────────────────────────────── */
     case 'pattern.checker':
@@ -309,6 +315,8 @@ function compileNode(node: FieldNode, path: string, context: CompileContext): Fi
         jitter: node.jitter ?? 0.5,
         rotJitter: (node.rotJitter ?? 0) * DEG_TO_RAD,
         scaleJitter: node.scaleJitter ?? 0,
+        distribution: node.distribution ?? 'grid',
+        minDistance: node.minDistance,
         tileable,
       });
       return createBufferSampler(target, space, 'nearest', edgeMode(context));
@@ -410,6 +418,12 @@ function compileNode(node: FieldNode, path: string, context: CompileContext): Fi
           return overlayFields(a, b);
       }
     }
+    case 'sdf.smoothUnion':
+      return smoothUnionFields(child('a', node.a), child('b', node.b), node.k);
+    case 'sdf.smoothSub':
+      return smoothSubFields(child('a', node.a), child('b', node.b), node.k);
+    case 'sdf.smoothIntersection':
+      return smoothIntersectionFields(child('a', node.a), child('b', node.b), node.k);
     case 'mix':
       return mixFields(child('a', node.a), child('b', node.b), node.t);
     case 'step':

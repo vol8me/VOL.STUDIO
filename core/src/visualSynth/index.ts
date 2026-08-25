@@ -14,6 +14,12 @@ export type * from './types';
 
 export { NODE_SCHEMAS, FIELD_KINDS, resolveFieldDomain } from './schema';
 export type { NodeSchema, ParamSchema, ParamType, ParamConstraint, OutputRule } from './schema';
+export {
+  VISUAL_SYNTH_CAPABILITIES,
+  getVisualSynthCapabilities,
+  type VisualSynthCapabilities,
+  type VisualSynthCategory,
+} from './capabilities';
 
 export {
   validateSpriteDoc,

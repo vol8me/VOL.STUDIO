@@ -16,7 +16,13 @@
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { collectSpriteDocIssues, generatePalette } from '../src/visualSynth/index';
+import {
+  collectSpriteDocIssues,
+  generatePalette,
+  getVisualSynthCapabilities,
+  measureSprite,
+  renderSprite,
+} from '../src/visualSynth/index';
 import type { RampRequest } from '../src/visualSynth/color/generate';
 import { formatQaReport } from '../src/visualSynth/qa';
 import { createVisualArtifact, decodePng } from '../src/visualSynth/encode/index';
@@ -27,6 +33,8 @@ const USAGE = [
   '  tsx core/scripts/visual-synth-asset.ts validate <doc.json>',
   '  tsx core/scripts/visual-synth-asset.ts qa <out.png> --doc <doc.json> [--size WxH] [--seed N] [--json]',
   '  tsx core/scripts/visual-synth-asset.ts palette <istek.json>',
+  '  tsx core/scripts/visual-synth-asset.ts capabilities [--json]',
+  '  tsx core/scripts/visual-synth-asset.ts benchmark <doc.json> [--sizes 32,64,128] [--iterations N] [--json]',
 ].join('\n');
 
 function fail(message: string): never {
@@ -231,6 +239,102 @@ function runPalette(requestPath: string): void {
   }
 }
 
+function runCapabilities(args: readonly string[]): void {
+  if (args.some((arg) => arg !== '--json')) fail(`Bilinmeyen bayrak: ${args[0]}\n${USAGE}`);
+  const capabilities = getVisualSynthCapabilities();
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(capabilities, null, 2));
+    return;
+  }
+  console.log(`VisualSynth schema ${capabilities.schemaVersion}`);
+  console.log(`Alan düğümü: ${capabilities.fieldKinds.length}`);
+  for (const [category, kinds] of Object.entries(capabilities.kindsByCategory)) {
+    console.log(`  ${category}: ${kinds.join(', ')}`);
+  }
+  console.log(`Gölgeleme: ${capabilities.shading.join(', ')}`);
+  console.log(`Desteklenmiyor: ${capabilities.unsupported.join(', ')}`);
+}
+
+interface BenchmarkFlags {
+  readonly sizes: readonly number[];
+  readonly iterations: number;
+  readonly json: boolean;
+}
+
+function parseBenchmarkFlags(args: readonly string[]): BenchmarkFlags {
+  const sizes: number[] = [];
+  let iterations = 1;
+  let json = false;
+  for (let i = 0; i < args.length; i++) {
+    const flag = args[i];
+    if (flag === '--json') {
+      json = true;
+      continue;
+    }
+    const value = args[++i];
+    if (value === undefined) fail(`${flag} bir değer bekliyor`);
+    if (flag === '--sizes') {
+      for (const raw of value.split(',')) {
+        const size = Number(raw);
+        if (!Number.isInteger(size) || size < 8 || size > 2048) {
+          fail(`--sizes 8..2048 aralığında tam sayılar bekler (gelen: ${raw})`);
+        }
+        sizes.push(size);
+      }
+    } else if (flag === '--iterations') {
+      iterations = Number(value);
+      if (!Number.isInteger(iterations) || iterations < 1 || iterations > 20) {
+        fail('--iterations 1..20 aralığında tam sayı olmalı');
+      }
+    } else {
+      fail(`Bilinmeyen bayrak: ${flag}\n${USAGE}`);
+    }
+  }
+  return { sizes: sizes.length > 0 ? [...new Set(sizes)] : [32, 64, 128, 256], iterations, json };
+}
+
+function runBenchmark(docPath: string, args: readonly string[]): void {
+  const flags = parseBenchmarkFlags(args);
+  const doc = readDoc(docPath);
+  const rows = flags.sizes.map((size) => {
+    // JIT ve ilk palette çözümleme maliyetini ölçümden ayırmak için tek ısınma.
+    renderSprite(doc, { size: [size, size] });
+    let renderMs = 0;
+    let qaMs = 0;
+    const rssBeforeBytes = process.memoryUsage().rss;
+    for (let iteration = 0; iteration < flags.iterations; iteration++) {
+      const renderStart = performance.now();
+      const result = renderSprite(doc, { size: [size, size] });
+      renderMs += performance.now() - renderStart;
+
+      const qaStart = performance.now();
+      measureSprite(result);
+      qaMs += performance.now() - qaStart;
+    }
+    return {
+      size: [size, size],
+      pixels: size * size,
+      iterations: flags.iterations,
+      renderMs: renderMs / flags.iterations,
+      qaMs: qaMs / flags.iterations,
+      rssBeforeBytes,
+      rssAfterBytes: process.memoryUsage().rss,
+    };
+  });
+
+  if (flags.json) {
+    console.log(JSON.stringify({ document: docPath, rows }, null, 2));
+    return;
+  }
+  console.log(`Benchmark: ${docPath}`);
+  for (const row of rows) {
+    console.log(
+      `  ${row.size[0]}² | render ${row.renderMs.toFixed(2)} ms | ` +
+        `QA ${row.qaMs.toFixed(2)} ms | RSS ${Math.round(row.rssAfterBytes / 1024 / 1024)} MB`,
+    );
+  }
+}
+
 const [command, ...rest] = process.argv.slice(2);
 
 switch (command) {
@@ -256,6 +360,15 @@ switch (command) {
     const [requestPath] = rest;
     if (!requestPath) fail(USAGE);
     runPalette(requestPath);
+    break;
+  }
+  case 'capabilities':
+    runCapabilities(rest);
+    break;
+  case 'benchmark': {
+    const [docPath, ...flags] = rest;
+    if (!docPath) fail(USAGE);
+    runBenchmark(docPath, flags);
     break;
   }
   default:

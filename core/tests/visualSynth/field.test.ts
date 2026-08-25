@@ -251,6 +251,38 @@ describe('birleştiriciler (§4.3)', () => {
     expect(evaluate({ kind: 'max', a: left, b: right }, 0, 0)).toBeLessThan(0);
   });
 
+  it('smooth SDF booleanları k=0 iken sert operatöre iner', () => {
+    const left: FieldNode = { kind: 'sdf.circle', center: [-0.3, 0], r: 0.4 };
+    const right: FieldNode = { kind: 'sdf.circle', center: [0.3, 0], r: 0.4 };
+
+    for (const [x, y] of [
+      [-0.7, 0],
+      [-0.1, 0.2],
+      [0.4, 0],
+    ] as const) {
+      expect(evaluate({ kind: 'sdf.smoothUnion', a: left, b: right, k: 0 }, x, y)).toBeCloseTo(
+        evaluate({ kind: 'min', a: left, b: right }, x, y),
+        10,
+      );
+      expect(
+        evaluate({ kind: 'sdf.smoothIntersection', a: left, b: right, k: 0 }, x, y),
+      ).toBeCloseTo(evaluate({ kind: 'max', a: left, b: right }, x, y), 10);
+    }
+  });
+
+  it('smooth union organik geçişte köprü kurar', () => {
+    const left: FieldNode = { kind: 'sdf.circle', center: [-0.35, 0], r: 0.25 };
+    const right: FieldNode = { kind: 'sdf.circle', center: [0.35, 0], r: 0.25 };
+    const hard: FieldNode = { kind: 'min', a: left, b: right };
+    const smooth: FieldNode = { kind: 'sdf.smoothUnion', a: left, b: right, k: 0.3 };
+
+    expect(evaluate(hard, 0, 0)).toBeGreaterThan(0);
+    expect(evaluate(smooth, 0, 0)).toBeLessThan(evaluate(hard, 0, 0));
+    expect(
+      Number.isFinite(evaluate({ kind: 'sdf.smoothSub', a: left, b: right, k: 0.2 }, 0, 0)),
+    ).toBe(true);
+  });
+
   it('step sert eşik uygular', () => {
     const input: FieldNode = { kind: 'gradient.linear', angle: 0, from: -1, to: 1 };
     expect(evaluate({ kind: 'step', edge: 0.5, input }, -0.5, 0)).toBe(0);

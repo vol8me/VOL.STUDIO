@@ -463,7 +463,7 @@ elle eşik sarmak gerekmez.
 
 ## 4. Primitif envanteri
 
-Toplam ~35. Her biri D9'a (ortogonallik) uyar. `kind` alanı JSON'daki kimliktir.
+Toplam 40 küsur. Her biri D9'a (ortogonallik) uyar. `kind` alanı JSON'daki kimliktir.
 
 ### 4.1 Üreteçler (birim uzay → skaler)
 
@@ -486,6 +486,7 @@ Toplam ~35. Her biri D9'a (ortogonallik) uyar. `kind` alanı JSON'daki kimliktir
 | `sdf.line`         | `a, b, thickness`                       | Uçları DÜZ.                                    |
 | `sdf.capsule`      | `a, b, r`                               | Uçları YUVARLAK; gövde/dal için temel.         |
 | `sdf.arc`          | `center?, r, thickness, from, to`       |                                                |
+| `sdf.path`         | `points[], r, closed?`                  | Capsule zinciri; kablo, sap, damar ve dal.     |
 | `pattern.checker`  | `size`                                  |                                                |
 | `pattern.stripes`  | `freq, angle?, duty?`                   |                                                |
 | `pattern.dots`     | `freq, r`                               |                                                |
@@ -558,7 +559,7 @@ tersi yoktur, üzerinden birleştirme yapılır. Yanlış kategoride durması, t
 dönüşümü varmış gibi uygulanmasına yol açardı.
 
 ```
-scatter: { count, seed, jitter, rotJitter, scaleJitter, source }
+scatter: { count, seed, distribution, minDistance, jitter, rotJitter, scaleJitter, source }
 ```
 
 Her örnek kendi dönüşümünü tohumdan türetir (D5); çıktı `max` ile birleşir.
@@ -573,9 +574,16 @@ dönüp HER BİRİNİ KENDİ KUTUSUNA damgalamak aynı soruyu inşa gereği ceva
 Maliyet damgalanan toplam alan kadardır — kovalı çözümle aynı sınıf, bir veri
 yapısı eksiğiyle. Kutu zorunluluğu aynen durur.
 
-Örnekler **düzenli ızgaraya** yerleştirilip `jitter` kadar sapar. Tamamen
-rastgele konum kümelenme ve boşluk üretir; ızgara + sapma hem düzgün dağılım
-hem doğal görünüm verir ve `jitter: 1` neredeyse rastgeleye eşittir.
+Eski belgelerde varsayılan dağılım **düzenli ızgaraya** yerleştirilip `jitter`
+kadar sapmadır. Bu davranış geriye dönük korunur. `distribution: 'poisson'`
+seçildiğinde adaylar tohumdan üretilir, uzamsal kovada komşuları denetlenir ve
+`minDistance` ile birbirine fazla yaklaşanlar reddedilir. Minimum uzaklık
+birim uzaydadır; kabul edilen nokta sayısı, fiziksel olarak sığmayan yüksek bir
+mesafe istendiğinde hedef `count`tan düşük kalabilir. Bu durum sessizce “tam
+count” diye sunulmaz; önizleme/QA katmanı için raporlanacak bir sonuçtur.
+
+Poisson kipinde jitter kullanılmaz; konum sapması dağılımın kendisinden gelir.
+`rotJitter` ve `scaleJitter` iki kipte de tohumludur.
 
 **Kaynak tampona yazılırken KIRPILIR.** `tileable` sarması ÖRNEĞİN çıktı
 konumuna uygulanır, kaynağın kendi çizimine değil; tuvalin dışına ötelenmiş
@@ -584,11 +592,15 @@ konumlandırma serpmenin işidir, kaynağın değil.
 
 ### 4.3 Birleştiriciler (alan × alan → alan)
 
-`add` · `sub` · `mul` · `min` · `max` · `mix(t)` · `screen` · `overlay`
+`add` · `sub` · `mul` · `min` · `max` · `sdf.smoothUnion(k)` ·
+`sdf.smoothSub(k)` · `sdf.smoothIntersection(k)` · `mix(t)` · `screen` · `overlay`
 `step(edge)` · `smoothstep(e0,e1)` · `remap(inMin,inMax,outMin,outMax)`
 `curve(points[])` · `clamp` · `abs` · `invert`
 
 `min`/`max` SDF'de kesişim/birleşim demektir — ayrı boolean primitifi gerekmez.
+`sdf.smooth*` aynı boolean işlemlerinin polinomik geçişli biçimleridir; `k = 0`
+sert `min`/`max` davranışına iner. Bu düğümler signed-distance girdileri için
+tasarlanmıştır; `k` büyüdükçe iki biçim arasındaki köprü genişler.
 
 Üç davranış açıkça yazılıdır çünkü sezgi ikiye ayrılıyor:
 
@@ -1066,12 +1078,22 @@ tsx core/scripts/visual-synth-asset.ts render <doc.json> <out.png> [--size 256x3
 tsx core/scripts/visual-synth-asset.ts validate <doc.json>
 tsx core/scripts/visual-synth-asset.ts qa <out.png> --doc <doc.json> [--json]
 tsx core/scripts/visual-synth-asset.ts palette <istek.json>      # palet sentezi
+tsx core/scripts/visual-synth-asset.ts capabilities [--json]     # gerçek yetenek/sınır manifesti
+tsx core/scripts/visual-synth-asset.ts benchmark <doc.json> [--sizes 32,64,128] [--iterations N] [--json]
 ```
 
 `--size` ve `--seed` belgeyi **ezmek** içindir: aynı belgeden farklı boyut/
 varyant üretmenin yolu budur (D2). `--size` `WxH` ya da tek sayı (kare) kabul
 eder; koordinat sözleşmesi merkez-köken + kısa kenar normalizasyonu olduğu için
 en-boy oranı değişse de şekiller bozulmaz.
+
+`capabilities`, şema ve derleyicinin aynı düğüm kümesini kullandığını makine
+okunur biçimde bildirir; ayrıca determinism, palette lock ve headless garantileri
+ile 3B kamera, depth buffer, fiziksel PBR, diffusion ve genel editörün destek
+alanı dışında kaldığını açıkça söyler. `benchmark` tek bir “geçti/kaldı” eşiği
+uydurmaz; ısınma sonrası render süresi, QA süresi, piksel sayısı ve süreç RSS
+ölçümünü raporlar. Eşikler gerçek makine ve belge grafikleri görüldükten sonra
+ayrıca kararlaştırılır.
 
 ### 10.2 Katalog — agent'ın "ne yazacağını" bilmesi
 

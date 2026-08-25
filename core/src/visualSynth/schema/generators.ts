@@ -439,6 +439,42 @@ export const GENERATOR_SCHEMAS: readonly NodeSchema[] = [
     ],
   },
   {
+    kind: 'sdf.path',
+    category: 'generator',
+    output: SIGNED,
+    description: 'Capsule segmentlerinden oluşan kalın yol; kablo, sap, damar ve dal için.',
+    params: [
+      {
+        name: 'points',
+        type: 'points',
+        range: [-2, 2],
+        step: 0.01,
+        default: [
+          [-0.5, 0],
+          [0, 0.35],
+          [0.5, 0],
+        ],
+        description: 'En az iki `[x, y]` yol noktası; ardışık noktalar capsule ile bağlanır.',
+      },
+      {
+        name: 'r',
+        type: 'number',
+        range: [0.005, 1],
+        step: 0.005,
+        default: 0.08,
+        constraint: 'positive',
+        description: 'Yol kalınlığının yarıçapı.',
+      },
+      {
+        name: 'closed',
+        type: 'bool',
+        default: false,
+        optional: true,
+        description: 'Doğruysa son noktayı ilk noktaya bağlar.',
+      },
+    ],
+  },
+  {
     kind: 'pattern.checker',
     category: 'generator',
     output: UNIT,

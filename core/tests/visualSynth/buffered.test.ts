@@ -119,6 +119,47 @@ describe('scatter — serpme (§4.2b)', () => {
     expect(render(5)).not.toEqual(render(6));
   });
 
+  it('Poisson dağılımı deterministik kalır ve ızgaradan ayrışır', () => {
+    const poisson = (seed: number): number[] =>
+      Array.from(
+        renderSprite(
+          doc({
+            kind: 'scatter',
+            source: SEED_SOURCE,
+            count: 12,
+            seed,
+            distribution: 'poisson',
+            minDistance: 0.12,
+          }),
+        ).channels.coverage,
+      );
+    const grid = renderSprite(
+      doc({ kind: 'scatter', source: SEED_SOURCE, count: 12, seed: 5, distribution: 'grid' }),
+    ).channels.coverage;
+
+    expect(poisson(5)).toEqual(poisson(5));
+    expect(poisson(5)).not.toEqual(poisson(6));
+    expect(poisson(5)).not.toEqual(Array.from(grid));
+    expect(poisson(5).every((value) => Number.isFinite(value))).toBe(true);
+  });
+
+  it('Poisson dağılımı döşenebilir belgede sonlu çıktı verir', () => {
+    const result = renderSprite({
+      ...doc({
+        kind: 'scatter',
+        source: SEED_SOURCE,
+        count: 18,
+        distribution: 'poisson',
+        minDistance: 0.08,
+        seed: 19,
+      }),
+      tileable: true,
+    });
+    expect(Array.from(result.channels.coverage).every((value) => Number.isFinite(value))).toBe(
+      true,
+    );
+  });
+
   it('boş kaynak hiçbir şey damgalamaz', () => {
     const result = renderSprite(
       doc({ kind: 'scatter', source: { kind: 'const', value: 0 }, count: 8 }),

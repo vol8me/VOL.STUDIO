@@ -26,6 +26,41 @@ export function maxFields(a: FieldFn, b: FieldFn): FieldFn {
   return (x, y) => Math.max(a(x, y), b(x, y));
 }
 
+/**
+ * Polinomik yumuşak minimum. `k <= 0` sert minimuma iner; bu sınır, eski
+ * boolean davranışını yeni belgelerde de açıkça korur.
+ */
+export function smoothMinFields(a: FieldFn, b: FieldFn, k: number): FieldFn {
+  if (!(k > 0)) return minFields(a, b);
+  return (x, y) => {
+    const av = a(x, y);
+    const bv = b(x, y);
+    const h = clamp01(0.5 + (0.5 * (bv - av)) / k);
+    return (1 - h) * bv + h * av - k * h * (1 - h);
+  };
+}
+
+/** Signed-distance yumuşak birleşimi. */
+export function smoothUnionFields(a: FieldFn, b: FieldFn, k: number): FieldFn {
+  return smoothMinFields(a, b, k);
+}
+
+/** Signed-distance yumuşak kesişimi: −smoothMin(−a, −b). */
+export function smoothIntersectionFields(a: FieldFn, b: FieldFn, k: number): FieldFn {
+  const result = smoothMinFields(
+    (x, y) => -a(x, y),
+    (x, y) => -b(x, y),
+    k,
+  );
+  return (x, y) => -result(x, y);
+}
+
+/** Signed-distance yumuşak çıkarımı: a ∩ ¬b. */
+export function smoothSubFields(a: FieldFn, b: FieldFn, k: number): FieldFn {
+  const result = smoothMinFields((x, y) => -a(x, y), b, k);
+  return (x, y) => -result(x, y);
+}
+
 export function mixFields(a: FieldFn, b: FieldFn, t: number): FieldFn {
   return (x, y) => lerp(a(x, y), b(x, y), t);
 }

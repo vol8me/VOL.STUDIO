@@ -46,7 +46,8 @@ export const BUFFERED_SCHEMAS: readonly NodeSchema[] = [
     kind: 'scatter',
     category: 'buffered',
     output: UNIT,
-    description: 'Kaynağı sapmalı bir ızgaraya çoğaltır; birleştirme `max`.',
+    description:
+      'Kaynağı deterministik ızgara ya da Poisson dağılımıyla çoğaltır; birleştirme `max`.',
     params: [
       {
         name: 'source',
@@ -92,6 +93,24 @@ export const BUFFERED_SCHEMAS: readonly NodeSchema[] = [
         optional: true,
         constraint: 'unit',
         description: 'Azami ölçek sapması oranı.',
+      },
+      {
+        name: 'distribution',
+        type: 'enum',
+        options: ['grid', 'poisson'],
+        default: 'grid',
+        optional: true,
+        description: 'Konum dağılımı; eski belgelerde varsayılan `grid`dir.',
+      },
+      {
+        name: 'minDistance',
+        type: 'number',
+        range: [0, 1],
+        step: 0.005,
+        default: 0.08,
+        optional: true,
+        constraint: 'nonNegative',
+        description: 'Poisson merkezleri arasındaki asgari uzaklık, BİRİM uzayda.',
       },
     ],
   },

@@ -177,4 +177,46 @@ describe('visual-synth-asset CLI', () => {
     },
     CLI_TIMEOUT_MS,
   );
+
+  it(
+    'capabilities motorun gerçek sınırlarını JSON olarak bildirir',
+    () => {
+      const result = runCli(['capabilities', '--json']);
+      const capabilities = JSON.parse(result.stdout) as {
+        fieldKinds: string[];
+        unsupported: string[];
+      };
+
+      expect(result.status).toBe(0);
+      expect(capabilities.fieldKinds).toContain('sdf.smoothUnion');
+      expect(capabilities.fieldKinds).toContain('sdf.path');
+      expect(capabilities.unsupported).toContain('camera3d');
+    },
+    CLI_TIMEOUT_MS,
+  );
+
+  it(
+    'benchmark farklı çözünürlüklerde render ve QA sürelerini raporlar',
+    () => {
+      const result = runCli([
+        'benchmark',
+        docPath,
+        '--sizes',
+        '16,24',
+        '--iterations',
+        '1',
+        '--json',
+      ]);
+      const report = JSON.parse(result.stdout) as {
+        rows: { size: number[]; renderMs: number; qaMs: number; pixels: number }[];
+      };
+
+      expect(result.status).toBe(0);
+      expect(report.rows).toHaveLength(2);
+      expect(report.rows[0].size).toEqual([16, 16]);
+      expect(report.rows.every((row) => row.renderMs >= 0 && row.qaMs >= 0)).toBe(true);
+      expect(report.rows[1].pixels).toBe(24 * 24);
+    },
+    CLI_TIMEOUT_MS,
+  );
 });

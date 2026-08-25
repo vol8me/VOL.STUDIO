@@ -29,7 +29,7 @@ const EXPECTED_EXPORT_COUNT = 185;
  * `Synth` gibi. Bu, alt sistemin kendi yüzeyini kök sayısının gölgesinde
  * büyütmesi demek olurdu; bu yüzden ayrıca ve kendi başına sayılır.
  */
-const EXPECTED_VISUAL_SYNTH_EXPORT_COUNT = 57;
+const EXPECTED_VISUAL_SYNTH_EXPORT_COUNT = 59;
 
 describe('CORE public API yüzeyi', () => {
   it('export sayısı bilinçli bir kararla değişir', () => {
