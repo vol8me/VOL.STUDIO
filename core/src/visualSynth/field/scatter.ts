@@ -72,6 +72,7 @@ interface GeneratedPoints {
   readonly points: readonly ScatterPoint[];
   readonly minDistancePixels: number | null;
   readonly attempts: number;
+  readonly observedMinDistancePixels: number | null;
 }
 
 /**
@@ -122,7 +123,12 @@ function gridPoints(space: UnitSpace, options: ScatterOptions): GeneratedPoints 
     });
   }
 
-  return { points, minDistancePixels: null, attempts: options.count };
+  return {
+    points,
+    minDistancePixels: null,
+    attempts: options.count,
+    observedMinDistancePixels: null,
+  };
 }
 
 function poissonPoints(space: UnitSpace, options: ScatterOptions): GeneratedPoints {
@@ -145,7 +151,15 @@ function poissonPoints(space: UnitSpace, options: ScatterOptions): GeneratedPoin
         scale: 1 + (hash1(index * 4 + 3, options.seed) - 0.5) * 2 * options.scaleJitter,
       });
     }
-    return { points, minDistancePixels: 0, attempts: options.count };
+    // minDistance: 0 hiçbir aralık garantisi istemediği için gözlenen
+    // minimum mesafeyi ölçmek anlamsız; O(N²) bir tarama gerektirir ve
+    // hiçbir kısıt ihlalini raporlamaz. `null` bunu açıkça işaretler.
+    return {
+      points,
+      minDistancePixels: 0,
+      attempts: options.count,
+      observedMinDistancePixels: null,
+    };
   }
 
   // Hücre köşegeni minDistance'tan küçük tutulur; böylece kabul edilebilir
@@ -173,9 +187,15 @@ function poissonPoints(space: UnitSpace, options: ScatterOptions): GeneratedPoin
     return dx * dx + dy * dy;
   };
 
-  const isFarEnough = (candidate: ScatterPoint): boolean => {
+  // 5×5 komşuluktaki en yakın kabul edilmiş noktaya olan kare mesafeyi verir
+  // (yoksa Infinity). Aynı tarama hem kabul/red kararı hem de gerçek gözlenen
+  // minimum mesafe için kullanılır — ayrı bir O(N²) ölçüm geçişine gerek
+  // kalmaz, çünkü her yeni nokta zaten kendi komşularına karşı bir kez
+  // taranıyor ve bu, o çiftin mesafesini de verir.
+  const nearestAcceptedDistanceSquared = (candidate: ScatterPoint): number => {
     const [column, row] = bucketOf(candidate.x, candidate.y);
     const checked = new Set<number>();
+    let nearest = Infinity;
     for (let oy = -2; oy <= 2; oy++) {
       for (let ox = -2; ox <= 2; ox++) {
         const neighbourX = options.tileable ? wrapIndex(column + ox, columns) : column + ox;
@@ -186,18 +206,19 @@ function poissonPoints(space: UnitSpace, options: ScatterOptions): GeneratedPoin
         if (checked.has(key)) continue;
         checked.add(key);
         for (const index of buckets.get(key) ?? []) {
-          if (distanceSquared(points[index], candidate.x, candidate.y) < minDistance * minDistance)
-            return false;
+          const d = distanceSquared(points[index], candidate.x, candidate.y);
+          if (d < nearest) nearest = d;
         }
       }
     }
-    return true;
+    return nearest;
   };
 
   // Sabit aday bütçesi sonucu seed'e bağlı ama çağrı sırasından bağımsız
   // kılar. Yüksek minimum mesafe istenirse hedef count'a ulaşılamayabilir;
   // bu durum daha sonra QA/preview katmanında görünür olmalıdır.
   const attempts = Math.max(64, options.count * 64);
+  let observedMinDistanceSquared = Infinity;
   for (let attempt = 0; attempt < attempts && points.length < options.count; attempt++) {
     const candidate: ScatterPoint = {
       x: hash1(attempt * 4 + 0, options.seed) * width,
@@ -205,7 +226,9 @@ function poissonPoints(space: UnitSpace, options: ScatterOptions): GeneratedPoin
       angle: (hash1(attempt * 4 + 2, options.seed) - 0.5) * 2 * options.rotJitter,
       scale: 1 + (hash1(attempt * 4 + 3, options.seed) - 0.5) * 2 * options.scaleJitter,
     };
-    if (!isFarEnough(candidate)) continue;
+    const nearest = nearestAcceptedDistanceSquared(candidate);
+    if (nearest < minDistance * minDistance) continue;
+    if (nearest < observedMinDistanceSquared) observedMinDistanceSquared = nearest;
     const index = points.push(candidate) - 1;
     const [column, row] = bucketOf(candidate.x, candidate.y);
     const key = bucketKey(column, row);
@@ -214,31 +237,15 @@ function poissonPoints(space: UnitSpace, options: ScatterOptions): GeneratedPoin
     else buckets.set(key, [index]);
   }
 
-  return { points, minDistancePixels: minDistance, attempts };
-}
-
-/** Kabul edilen merkezlerin gerçek minimum mesafesini hesaplar. */
-function measureMinimumDistance(
-  points: readonly ScatterPoint[],
-  width: number,
-  height: number,
-  tileable: boolean,
-): number | null {
-  if (points.length < 2) return null;
-
-  let minimumSquared = Infinity;
-  for (let a = 0; a < points.length - 1; a++) {
-    for (let b = a + 1; b < points.length; b++) {
-      let dx = Math.abs(points[a].x - points[b].x);
-      let dy = Math.abs(points[a].y - points[b].y);
-      if (tileable) {
-        dx = Math.min(dx, width - dx);
-        dy = Math.min(dy, height - dy);
-      }
-      minimumSquared = Math.min(minimumSquared, dx * dx + dy * dy);
-    }
-  }
-  return Math.sqrt(minimumSquared);
+  return {
+    points,
+    minDistancePixels: minDistance,
+    attempts,
+    observedMinDistancePixels:
+      points.length >= 2 && Number.isFinite(observedMinDistanceSquared)
+        ? Math.sqrt(observedMinDistanceSquared)
+        : null,
+  };
 }
 
 /**
@@ -274,14 +281,12 @@ export function renderScatter(
   const generated =
     distribution === 'poisson' ? poissonPoints(space, options) : gridPoints(space, options);
   const points = generated.points;
-  const acceptedPoints: ScatterPoint[] = [];
   let acceptedCount = 0;
 
   for (const point of points) {
     const { angle, scale } = point;
     if (!(scale > 0)) continue;
     acceptedCount++;
-    acceptedPoints.push(point);
 
     const originX = point.x;
     const originY = point.y;
@@ -323,10 +328,7 @@ export function renderScatter(
     acceptedCount,
     sourceEmpty: false,
     minDistancePixels: generated.minDistancePixels,
-    observedMinDistancePixels:
-      distribution === 'poisson'
-        ? measureMinimumDistance(acceptedPoints, width, height, options.tileable)
-        : null,
+    observedMinDistancePixels: generated.observedMinDistancePixels,
     attempts: generated.attempts,
   };
 }

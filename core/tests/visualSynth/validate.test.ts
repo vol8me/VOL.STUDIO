@@ -5,6 +5,7 @@ import {
   validateField,
   validateSpriteDoc,
   MAX_FIELD_DEPTH,
+  MAX_POINTS,
 } from '../../src/visualSynth/validate';
 
 /** Geçerli bir taban belge; her test yalnızca ilgilendiği alanı bozar. */
@@ -140,6 +141,20 @@ describe('yapılandırma alanları uygulanmıştır ve DOĞRULANIR', () => {
     ).toHaveLength(1);
   });
 
+  it('shade.ao.radius sınırsız bırakılmaz — boxBlur tampon ayırmayı çökertir', () => {
+    // radiusPx = ao.radius * space.short / 2; tavan olmadan `radius: 1e9`
+    // boxBlur'un ayırdığı geçici diziyi pratikte sonsuz büyütür.
+    expect(
+      issuesFor(
+        { ...baseDoc(), shade: { ao: { radius: 1e9, strength: 0.4 } } },
+        'shade.ao.radius',
+      )[0],
+    ).toMatch(/aşamaz/);
+    expect(
+      collectSpriteDocIssues({ ...baseDoc(), shade: { ao: { radius: 4, strength: 0.4 } } }),
+    ).toEqual([]);
+  });
+
   it('post.outline denetlenir ve palet sınırına bakar', () => {
     expect(
       collectSpriteDocIssues({
@@ -162,6 +177,16 @@ describe('yapılandırma alanları uygulanmıştır ve DOĞRULANIR', () => {
         'post.outline.colorIndex',
       )[0],
     ).toMatch(/palet sınırları/);
+  });
+
+  it('post.outline.px sınırsız bırakılmaz — dilate/erode tampon ayırmayı çökertir', () => {
+    // dilate/erode PİKSEL yarıçapı doğrudan geçici dizinin uzunluğuna eklenir
+    // (`span + 2 × px`); glow.radius zaten aynı sınıf riske karşı 64'te
+    // sınırlı, outline.px de aynı tavanı almalı.
+    expect(
+      issuesFor({ ...baseDoc(), post: { outline: { px: 1e9 } } }, 'post.outline.px')[0],
+    ).toMatch(/aşamaz/);
+    expect(collectSpriteDocIssues({ ...baseDoc(), post: { outline: { px: 64 } } })).toEqual([]);
   });
 
   it('post.dither türü ve miktarı denetlenir', () => {
@@ -628,6 +653,74 @@ describe('Tur 2 parametre tipleri', () => {
     expect(collectFieldIssues({ kind: 'sdf.star', n: 2, rOuter: 0.5, rInner: 0.2 })[0]).toMatch(
       /en az 3/,
     );
+  });
+
+  it('points dizisi MAX_POINTS sınırından uzun olamaz — piksel başına doğrusal tarama var', () => {
+    const tooLong = Array.from({ length: MAX_POINTS + 1 }, (_, i) => [i, i] as [number, number]);
+    const node = {
+      kind: 'curve',
+      points: tooLong,
+      input: { kind: 'const', value: 0.5 },
+    };
+    expect(collectFieldIssues(node)[0]).toMatch(new RegExp(`en fazla ${MAX_POINTS} nokta`));
+
+    const atLimit = Array.from({ length: MAX_POINTS }, (_, i) => [i, i] as [number, number]);
+    expect(
+      collectFieldIssues({ kind: 'curve', points: atLimit, input: { kind: 'const', value: 0.5 } }),
+    ).toEqual([]);
+  });
+
+  it('unitRadiusParam tabanlı düğümler (blur/sharpen/dilate/erode) hardMax değerini aşamaz', () => {
+    // boxBlur/gaussBlur geçici diziyi `span + 2 × piksel yarıçapı` uzunluğunda
+    // ayırır; tavan olmadan `radius: 1e9` bunu çökertir.
+    for (const kind of ['blur', 'dilate', 'erode'] as const) {
+      expect(
+        collectFieldIssues({ kind, radius: 1e9, input: { kind: 'const', value: 1 } })[0],
+      ).toMatch(/aşamaz/);
+    }
+    expect(
+      collectFieldIssues({
+        kind: 'sharpen',
+        amount: 1,
+        radius: 1e9,
+        input: { kind: 'const', value: 1 },
+      })[0],
+    ).toMatch(/aşamaz/);
+    expect(
+      collectFieldIssues({ kind: 'blur', radius: 0.3, input: { kind: 'const', value: 1 } }),
+    ).toEqual([]);
+  });
+
+  it('noise.fbm octaves hardMax değerini aşamaz — her oktav piksel başına ek örnekleme', () => {
+    const node = {
+      kind: 'noise.fbm',
+      base: { kind: 'noise.value', freq: 4 },
+      octaves: 1e6,
+    };
+    expect(collectFieldIssues(node)[0]).toMatch(/aşamaz/);
+    expect(
+      collectFieldIssues({
+        kind: 'noise.fbm',
+        base: { kind: 'noise.value', freq: 4 },
+        octaves: 8,
+      }),
+    ).toEqual([]);
+  });
+
+  it('scatter count hardMax değerini aşamaz — her örnek kendi damga döngüsünü çalıştırır', () => {
+    const node = {
+      kind: 'scatter',
+      source: { kind: 'sdf.circle', center: [0, 0], r: 0.1 },
+      count: 1e6,
+    };
+    expect(collectFieldIssues(node).some((issue) => issue.match(/count.*aşamaz/))).toBe(true);
+    expect(
+      collectFieldIssues({
+        kind: 'scatter',
+        source: { kind: 'sdf.circle', center: [0, 0], r: 0.1 },
+        count: 512,
+      }),
+    ).toEqual([]);
   });
 });
 

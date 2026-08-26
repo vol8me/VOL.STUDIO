@@ -29,6 +29,15 @@ export interface ParamSchema {
   type: ParamType;
   /** Editör kaydırıcısının sınırları — doğrulama kuralı DEĞİL. */
   range?: readonly [number, number];
+  /**
+   * Doğrulayıcının uyguladığı gerçek tavan — `range`in aksine bir öneri
+   * değil. Piksel başına döngü sayısını (oktav, serpme sayısı, yol noktası)
+   * ya da bir tampon ayırma boyutunu (yarıçap) doğrudan belirleyen
+   * parametreler için var: sınırsız bırakılırsa agent'ın yazdığı tek bir
+   * belge render sürecini saatlerce kilitleyebilir ya da tampon ayırmayı
+   * çökertebilir. Sanatsal `range`den bilinçli olarak daha cömerttir.
+   */
+  hardMax?: number;
   step?: number;
   default?:
     | number
@@ -106,11 +115,20 @@ export const SEED_PARAM: ParamSchema = {
 };
 
 /** Filtre yarıçapı — BİRİM uzayda, piksel değil (§3 parametre sınırı). */
+/**
+ * Ayrılabilir tampon filtrelerinin (blur/sharpen/dilate/erode) hepsinde bu
+ * yarıçap doğrudan geçici tamponun uzunluğuna eklenir (`span + 2 × piksel
+ * yarıçapı`). `range` yalnızca 0..0.5 öneriyor ama doğrulamıyor; `hardMax`
+ * olmadan `radius: 1e9` gibi bir değer tampon ayırmayı çökertir.
+ */
+export const MAX_UNIT_RADIUS = 4;
+
 export function unitRadiusParam(defaultValue: number, description: string): ParamSchema {
   return {
     name: 'radius',
     type: 'number',
     range: [0, 0.5],
+    hardMax: MAX_UNIT_RADIUS,
     step: 0.005,
     default: defaultValue,
     constraint: 'nonNegative',

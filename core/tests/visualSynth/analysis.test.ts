@@ -110,4 +110,47 @@ describe('render öncesi yapısal analiz', () => {
 
     expect(styled.estimatedPeakWorkingBytes).toBeGreaterThan(plain.estimatedPeakWorkingBytes);
   });
+
+  it('iç içe tamponlu maskenin bellek tahmini derinlikle ölçeklenir', () => {
+    // renderLayer bir üst katmanın layerCoverage/layerHeight ve alan
+    // tamponlarını serbest bırakmadan alt maske yığınının render'ını
+    // rekürsif çağırır (render.ts); bu yüzden yalnız `channelBytes` değil
+    // `layerBytes` da stack derinliğiyle çarpılmalı, yoksa tahmin iç içe
+    // tamponlu maskelerde gerçek tepe belleğin altında kalır.
+    const bufferedLayer = (id: string): SpriteDoc['layers'][number] => ({
+      id,
+      source: { kind: 'blur', radius: 0.02, input: { kind: 'const', value: 1 } },
+    });
+    const shallow = analyzeSpriteDoc({
+      schemaVersion: 1,
+      size: [16, 16],
+      seed: 1,
+      palette: PALETTE,
+      layers: [bufferedLayer('üst')],
+    } as SpriteDoc);
+    const deep = analyzeSpriteDoc({
+      schemaVersion: 1,
+      size: [16, 16],
+      seed: 1,
+      palette: PALETTE,
+      layers: [
+        {
+          ...bufferedLayer('üst'),
+          mask: {
+            layers: [{ ...bufferedLayer('maske1'), mask: { layers: [bufferedLayer('maske2')] } }],
+          },
+        },
+      ],
+    } as SpriteDoc);
+
+    expect(deep.maxStackDepth).toBe(2);
+    expect(deep.maxLayerBufferCount).toBe(shallow.maxLayerBufferCount);
+    // Yalnız `channelBytes` derinlikle ölçeklenip `layerBytes` sabit kalsaydı
+    // (düzeltmeden önceki davranış) tahmin bu değerde kalırdı; düzeltmeden
+    // sonra `layerBytes` da derinlikle çarpıldığı için bunu AŞMALI.
+    const ifOnlyChannelBytesScaled =
+      deep.pixelCount * (9 * (deep.maxStackDepth + 1) + (8 + deep.maxLayerBufferCount * 4) + 4);
+    expect(deep.estimatedPeakWorkingBytes).toBeGreaterThan(ifOnlyChannelBytesScaled);
+    expect(deep.estimatedPeakWorkingBytes).toBeGreaterThan(shallow.estimatedPeakWorkingBytes);
+  });
 });

@@ -58,6 +58,10 @@ export const BUFFERED_SCHEMAS: readonly NodeSchema[] = [
         name: 'count',
         type: 'int',
         range: [1, 512],
+        // Her örnek kendi damga döngüsünü çalıştırır (bkz. field/scatter.ts);
+        // sınırsız count hem ızgara/Poisson üretimini hem damgalamayı O(N)
+        // katlar. Sanatsal `range` 512'de kalsa da tavan çok daha cömert.
+        hardMax: 4096,
         step: 1,
         default: 24,
         constraint: 'positive',

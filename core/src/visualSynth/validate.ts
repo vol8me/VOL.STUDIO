@@ -35,6 +35,21 @@ export const MAX_FIELD_DEPTH = 24;
  */
 export const MAX_STACK_DEPTH = 4;
 
+/**
+ * `points` tipli parametrelerin (sdf.path, curve) azami eleman sayısı.
+ *
+ * İkisi de piksel başına noktalar üzerinde DOĞRUSAL tarama yapar (bkz.
+ * field/sdf.ts pathSdfField, field/combine.ts curveField); nokta sayısının
+ * şemada bir `range` karşılığı yok, dolayısıyla tek koruma bu sabit.
+ */
+export const MAX_POINTS = 64;
+
+/** `shade.ao.radius` BİRİM uzayda; tavan olmadan boxBlur tampon ayırmayı çökertir. */
+const MAX_AO_RADIUS = 4;
+
+/** `post.outline.px` PİKSEL uzayda; `post.glow.radius`la aynı güvenlik tavanı. */
+const MAX_OUTLINE_PX = 64;
+
 const COVERAGE_BLENDS: readonly CoverageBlend[] = [
   'over',
   'max',
@@ -132,6 +147,18 @@ function checkConstraint(
   }
 }
 
+/** `range`den ayrı, gerçekten uygulanan tavan (bkz. ParamSchema.hardMax). */
+function checkHardMax(
+  issues: IssueList,
+  path: string,
+  value: number,
+  hardMax: number | undefined,
+): void {
+  if (hardMax !== undefined && value > hardMax) {
+    issues.add(path, `${hardMax} değerini aşamaz (gelen: ${value})`);
+  }
+}
+
 function checkParam(
   issues: IssueList,
   path: string,
@@ -149,10 +176,16 @@ function checkParam(
 
   switch (param.type) {
     case 'number':
-      if (issues.finite(at, value)) checkConstraint(issues, at, value, param.constraint);
+      if (issues.finite(at, value)) {
+        checkConstraint(issues, at, value, param.constraint);
+        checkHardMax(issues, at, value, param.hardMax);
+      }
       break;
     case 'int':
-      if (issues.integer(at, value)) checkConstraint(issues, at, value, param.constraint);
+      if (issues.integer(at, value)) {
+        checkConstraint(issues, at, value, param.constraint);
+        checkHardMax(issues, at, value, param.hardMax);
+      }
       break;
     case 'bool':
       if (typeof value !== 'boolean') issues.add(at, 'true ya da false olmalı');
@@ -177,6 +210,10 @@ function checkParam(
     case 'points':
       if (!Array.isArray(value) || value.length < 2) {
         issues.add(at, 'en az iki nokta içeren bir dizi olmalı');
+        break;
+      }
+      if (value.length > MAX_POINTS) {
+        issues.add(at, `en fazla ${MAX_POINTS} nokta içerebilir (gelen: ${value.length})`);
         break;
       }
       value.forEach((point, i) => {
@@ -635,6 +672,7 @@ function checkShade(issues: IssueList, raw: unknown): void {
     } else {
       if (issues.finite('shade.ao.radius', raw.ao.radius)) {
         checkConstraint(issues, 'shade.ao.radius', raw.ao.radius, 'nonNegative');
+        checkHardMax(issues, 'shade.ao.radius', raw.ao.radius, MAX_AO_RADIUS);
       }
       if (issues.finite('shade.ao.strength', raw.ao.strength)) {
         checkConstraint(issues, 'shade.ao.strength', raw.ao.strength, 'nonNegative');
@@ -682,6 +720,7 @@ function checkPost(issues: IssueList, raw: unknown, colorCount: number): void {
     } else {
       if (issues.integer('post.outline.px', outline.px)) {
         checkConstraint(issues, 'post.outline.px', outline.px, 'nonNegative');
+        checkHardMax(issues, 'post.outline.px', outline.px, MAX_OUTLINE_PX);
       }
       if (outline.mode !== undefined && !OUTLINE_MODES.includes(outline.mode as string)) {
         issues.add('post.outline.mode', `şunlardan biri olmalı: ${OUTLINE_MODES.join(', ')}`);

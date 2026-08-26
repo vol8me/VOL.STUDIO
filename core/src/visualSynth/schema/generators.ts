@@ -158,6 +158,10 @@ export const GENERATOR_SCHEMAS: readonly NodeSchema[] = [
         name: 'octaves',
         type: 'int',
         range: [1, 8],
+        // Her oktav piksel başına ek bir gürültü örneklemesi demektir;
+        // sınırsız bırakılırsa render süresi lineer değil pratikte sonsuza
+        // gider. Sanatsal `range` 8'de kalsa da tavan çok daha cömert.
+        hardMax: 64,
         step: 1,
         default: 4,
         constraint: 'positive',

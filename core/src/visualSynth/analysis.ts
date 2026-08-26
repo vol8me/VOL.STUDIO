@@ -183,13 +183,20 @@ export function analyzeSpriteDoc(input: unknown): VisualSpriteAnalysis {
   const [width, height] = doc.size;
   const pixelCount = width * height;
   // 9 B/piksel biriktirici + 8 B/piksel aktif katman + alan tamponları.
-  // İç içe maske yığınlarının kendi biriktiricileri ayrıca stack depth ile
-  // çarpılır. Çıktı ve post/ışık kanalları da hesaba katılır; bu nedenle
-  // inspector'daki rakam yalnız graph maliyetini değil, render sonucunun
-  // yaşayacağı temel tamponları da görünür kılar. Bu bir üstten tahmindir,
-  // kesin RSS iddiası değildir.
-  const channelBytes = 9 * Math.max(1, analysis.maxStackDepth + 1);
-  const layerBytes = 8 + analysis.maxLayerBufferCount * 4;
+  // İç içe bir maske yığını `renderStack` içinde REKÜRSİF çağrılır (bkz.
+  // render.ts renderLayer): üst katman kendi `layerCoverage`/`layerHeight`
+  // ve alan tamponlarını serbest bırakmadan alt yığının render'ı biter,
+  // yani her stack derinliği kendi biriktiricisini VE kendi katman
+  // tamponlarını eş zamanlı canlı tutar — ikisi de derinlikle çarpılmalı.
+  // `maxLayerBufferCount` belgedeki EN YOĞUN tek katmanın rakamıdır; onu her
+  // derinlik seviyesinde tekrarlamak üstten bir tahmindir ama derinliği hiç
+  // saymamaktan daha güvenlidir. Çıktı ve post/ışık kanalları da hesaba
+  // katılır; bu nedenle inspector'daki rakam yalnız graph maliyetini değil,
+  // render sonucunun yaşayacağı temel tamponları da görünür kılar. Bu bir
+  // üstten tahmindir, kesin RSS iddiası değildir.
+  const stackMultiplier = Math.max(1, analysis.maxStackDepth + 1);
+  const channelBytes = 9 * stackMultiplier;
+  const layerBytes = (8 + analysis.maxLayerBufferCount * 4) * stackMultiplier;
   const outputBytes = 4; // RGBA
   const shadingBytes = doc.shade === undefined ? 0 : 16 + (doc.shade.ao === undefined ? 0 : 8);
   const outlineBytes = doc.post?.outline && doc.post.outline.px > 0 ? 1 : 0;
