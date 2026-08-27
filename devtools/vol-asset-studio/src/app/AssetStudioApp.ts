@@ -281,6 +281,7 @@ export class AssetStudioApp {
     this.request?.abort();
     this.subscription?.close();
     this.subscription = null;
+    this.options.client.releaseLease();
     if (this.leaseInterval) {
       clearInterval(this.leaseInterval);
       this.leaseInterval = null;

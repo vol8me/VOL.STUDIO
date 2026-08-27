@@ -19,6 +19,7 @@ import { ChainLightningAbility } from './ChainLightningAbility';
 import { FireZoneAbility } from './FireZoneAbility';
 import { MultiShotAbility } from './MultiShotAbility';
 import { TurretAbility } from './TurretAbility';
+import { scaleAbilityDamage, scaleTurretFireInterval, scaleTurretHealth } from './abilityScaling';
 import {
   ABILITY_SLOTS,
   type Ability,
@@ -164,7 +165,12 @@ export class AbilityRuntime implements AbilityWorld {
     this.turret?.destroy();
     this.turret = new Turret(this.deps.scene, x, y, this.deps.effects, {
       ...params,
-      damage: nonNegativeFinite(params.damage + this.upgrades.get('turretDamage')),
+      damage: scaleAbilityDamage(
+        params.damage + this.upgrades.get('turretDamage'),
+        this.deps.playerStats,
+      ),
+      health: scaleTurretHealth(params.health, this.deps.playerStats),
+      fireIntervalMs: scaleTurretFireInterval(params.fireIntervalMs, this.deps.playerStats),
     });
     this.playSfx('turretDeploy', sfxVolumes.turretDeploy);
   }
@@ -176,6 +182,7 @@ export class AbilityRuntime implements AbilityWorld {
     this.zones.push(
       new FireZone(this.deps.scene, x, y, this.deps.effects, {
         ...params,
+        damagePerTick: scaleAbilityDamage(params.damagePerTick, this.deps.playerStats),
         durationMs: Math.max(
           params.tickMs,
           nonNegativeFinite(params.durationMs + this.upgrades.get('fireZoneDurationMs')),
@@ -195,7 +202,10 @@ export class AbilityRuntime implements AbilityWorld {
         originX,
         originY,
         this.deps.effects,
-        params,
+        {
+          ...params,
+          damage: scaleAbilityDamage(params.damage, this.deps.playerStats),
+        },
         this.visualRandom,
         Math.floor(clampFinite(this.upgrades.get('chainBounces'), 0, Number.MAX_SAFE_INTEGER, 0)),
       ),

@@ -5,7 +5,12 @@ export { toStepVelocity } from './math/physics';
 // (`core/src/random/`); `audio/synth/random.ts` sentez modülü içi re-export içindir.
 export { createRandom, seedFromString, DEFAULT_SEED, type Random } from './random/random';
 
-export { DisposableScope, type Disposable } from './lifecycle/DisposableScope';
+export {
+  DisposableScope,
+  type CancellableDisposable,
+  type Destroyable,
+  type Disposable,
+} from './lifecycle/DisposableScope';
 
 /*
  * KATMAN 1 — headless primitifler.

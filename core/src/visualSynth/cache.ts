@@ -26,6 +26,10 @@ export interface RenderCacheStats {
   readonly bytes: number;
   readonly maxBytes: number;
   readonly maxEntries: number;
+  /** Cache sahipliği ile çağıran sahipliği arasında kopyalanan mantıksal byte. */
+  readonly copyBytes: number;
+  /** `set` ve başarılı `get` kopyalarının toplamı. */
+  readonly copyOperations: number;
 }
 
 interface CacheEntry {
@@ -54,7 +58,8 @@ function clonePalette(palette: ResolvedPalette): ResolvedPalette {
   };
 }
 
-function cloneResult(result: RenderResult): RenderResult {
+function cloneResult(result: RenderResult, onCopy?: (bytes: number) => void): RenderResult {
+  onCopy?.(estimateRenderResultBytes(result));
   return {
     width: result.width,
     height: result.height,
@@ -77,7 +82,8 @@ function cloneResult(result: RenderResult): RenderResult {
   };
 }
 
-function estimateBytes(result: RenderResult): number {
+/** Typed array + serileştirilebilir metadata için mantıksal cache boyutu. */
+export function estimateRenderResultBytes(result: RenderResult): number {
   let bytes = result.rgba.byteLength;
   bytes += result.channels.coverage.byteLength;
   bytes += result.channels.height.byteLength;
@@ -106,6 +112,8 @@ export class RenderCache {
   #hits = 0;
   #misses = 0;
   #evictions = 0;
+  #copyBytes = 0;
+  #copyOperations = 0;
 
   constructor(options: RenderCacheOptions = {}) {
     this.#maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
@@ -128,12 +136,18 @@ export class RenderCache {
     // Map insertion sırası LRU sırasıdır.
     this.#entries.delete(key);
     this.#entries.set(key, entry);
-    return cloneResult(entry.result);
+    return cloneResult(entry.result, (bytes) => {
+      this.#copyBytes += bytes;
+      this.#copyOperations++;
+    });
   }
 
   set(key: string, result: RenderResult): void {
-    const snapshot = cloneResult(result);
-    const bytes = estimateBytes(snapshot);
+    const snapshot = cloneResult(result, (copiedBytes) => {
+      this.#copyBytes += copiedBytes;
+      this.#copyOperations++;
+    });
+    const bytes = estimateRenderResultBytes(snapshot);
     if (bytes > this.#maxBytes) return;
 
     const old = this.#entries.get(key);
@@ -168,6 +182,8 @@ export class RenderCache {
       bytes: this.#bytes,
       maxBytes: this.#maxBytes,
       maxEntries: this.#maxEntries,
+      copyBytes: this.#copyBytes,
+      copyOperations: this.#copyOperations,
     };
   }
 }

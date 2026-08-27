@@ -364,13 +364,13 @@ describe('Select', () => {
     expect(select.getValue()).toBeUndefined();
   });
 
-  it('setValue onChange çağırmaz, etiket ve aria-selected günceller', async () => {
-    const onChange = vi.fn();
-    const select = new Select({ options: sampleOptions, onChange });
+  it('setValue callback çağırmaz, etiket ve aria-selected günceller', async () => {
+    const onInput = vi.fn();
+    const select = new Select({ options: sampleOptions, onInput });
     instances.push(select);
 
     select.setValue('c');
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onInput).not.toHaveBeenCalled();
     expect(select.getValue()).toBe('c');
     expect(select.element.querySelector<HTMLSpanElement>('.vol-select__label')?.textContent).toBe(
       'C',
@@ -391,9 +391,9 @@ describe('Select', () => {
     expect(optionButtons[0].getAttribute('aria-selected')).toBe('false');
   });
 
-  it('seçenek tıklaması onChange çağırır, değeri ve etiketi günceller', async () => {
-    const onChange = vi.fn();
-    const select = new Select({ options: sampleOptions, onChange });
+  it('seçenek tıklaması input callback çağırır, değeri ve etiketi günceller', async () => {
+    const onInput = vi.fn();
+    const select = new Select({ options: sampleOptions, onInput });
     instances.push(select);
     document.body.appendChild(select.element);
 
@@ -407,8 +407,8 @@ describe('Select', () => {
       new PointerEvent('click', { bubbles: true, cancelable: true, pointerId: 1 }),
     );
 
-    expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange).toHaveBeenCalledWith('b');
+    expect(onInput).toHaveBeenCalledTimes(1);
+    expect(onInput).toHaveBeenCalledWith('b');
     expect(select.getValue()).toBe('b');
     expect(select.element.querySelector<HTMLSpanElement>('.vol-select__label')?.textContent).toBe(
       'B',

@@ -1,4 +1,5 @@
 import { runButtonClick, type ButtonClickHandler } from './buttonBehavior';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export type IconButtonVariant = 'default' | 'primary' | 'success' | 'danger';
 export type IconButtonSize = 'sm' | 'md' | 'lg';
@@ -27,6 +28,7 @@ export class IconButton {
   private readonly iconWrapper: HTMLSpanElement;
   private onClickHandler?: ButtonClickHandler;
   private readonly boundHandleClick: () => void;
+  private readonly scope = new DisposableScope();
   private loading = false;
 
   constructor(icon: string | Node, options: IconButtonOptions) {
@@ -51,7 +53,7 @@ export class IconButton {
     this.boundHandleClick = () => {
       void this.handleClick();
     };
-    this.element.addEventListener('click', this.boundHandleClick);
+    this.scope.addListener(this.element, 'click', this.boundHandleClick);
 
     if (onClick) {
       this.onClick(onClick);
@@ -102,7 +104,7 @@ export class IconButton {
   }
 
   destroy(): void {
-    this.element.removeEventListener('click', this.boundHandleClick);
+    this.scope.dispose();
     this.element.remove();
   }
 

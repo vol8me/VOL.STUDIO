@@ -32,6 +32,7 @@ class FakeClient {
   );
   acquireLease = vi.fn().mockResolvedValue(undefined);
   renewLease = vi.fn().mockResolvedValue(undefined);
+  releaseLease = vi.fn();
   setLease = vi.fn();
 
   subscribe(
@@ -66,6 +67,7 @@ describe('AssetStudioApp', () => {
     expect(document.querySelector('.quick-look__title')?.textContent).toBe('ship.png');
     app.destroy();
     expect(client.close).toHaveBeenCalledOnce();
+    expect(client.releaseLease).toHaveBeenCalledOnce();
   });
 
   it('SSE değişikliklerini artımlı uygular ve sıra boşluğunda tam katalog yeniler', async () => {

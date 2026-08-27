@@ -1,3 +1,5 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+
 export interface InputOptions {
   placeholder?: string;
   value?: string;
@@ -16,9 +18,7 @@ export class Input {
   private onCommitHandler?: (value: string) => void;
   private onEnterHandler?: (value: string) => void;
   private committedValue: string;
-  private boundInput: () => void;
-  private boundChange: () => void;
-  private boundKeydown: (event: KeyboardEvent) => void;
+  private readonly scope = new DisposableScope();
 
   constructor(options: InputOptions = {}) {
     const {
@@ -41,18 +41,18 @@ export class Input {
       this.element.placeholder = placeholder;
     }
 
-    this.boundInput = () => this.onInputHandler?.(this.element.value);
-    this.boundChange = () => this.commitUserValue();
-    this.boundKeydown = (event) => {
+    const boundInput = (): void => this.onInputHandler?.(this.element.value);
+    const boundChange = (): void => this.commitUserValue();
+    const boundKeydown = (event: KeyboardEvent): void => {
       if (event.key === 'Enter') {
         this.onEnterHandler?.(this.element.value);
         this.commitUserValue();
       }
     };
 
-    this.element.addEventListener('input', this.boundInput);
-    this.element.addEventListener('change', this.boundChange);
-    this.element.addEventListener('keydown', this.boundKeydown);
+    this.scope.addListener(this.element, 'input', boundInput);
+    this.scope.addListener(this.element, 'change', boundChange);
+    this.scope.addListener(this.element, 'keydown', boundKeydown as EventListener);
 
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
@@ -86,9 +86,7 @@ export class Input {
   }
 
   destroy(): void {
-    this.element.removeEventListener('input', this.boundInput);
-    this.element.removeEventListener('change', this.boundChange);
-    this.element.removeEventListener('keydown', this.boundKeydown);
+    this.scope.dispose();
     this.element.remove();
   }
 

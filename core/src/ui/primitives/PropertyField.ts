@@ -1,4 +1,5 @@
 import { i18next } from '../../systems/I18n';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { Icon } from './Icon';
 
 let propertyFieldId = 0;
@@ -22,7 +23,7 @@ export class PropertyField {
   private readonly statusElement: HTMLDivElement;
   private readonly resetButton: HTMLButtonElement | null;
   private readonly resetLabelIsI18n: boolean;
-  private readonly boundReset: (() => void) | null;
+  private readonly scope = new DisposableScope();
   private readonly onLanguageChanged: () => void;
 
   constructor(options: PropertyFieldOptions) {
@@ -49,12 +50,10 @@ export class PropertyField {
         'aria-label',
         options.resetLabel ?? i18next.t('core:propertyField.reset'),
       );
-      this.boundReset = () => options.onReset?.();
-      this.resetButton.addEventListener('click', this.boundReset);
+      this.scope.addListener(this.resetButton, 'click', () => options.onReset?.());
       header.appendChild(this.resetButton);
     } else {
       this.resetButton = null;
-      this.boundReset = null;
     }
     this.element.appendChild(header);
 
@@ -89,6 +88,7 @@ export class PropertyField {
       }
     };
     i18next.on('languageChanged', this.onLanguageChanged);
+    this.scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
   }
 
   setLabel(label: string): void {
@@ -107,10 +107,7 @@ export class PropertyField {
   }
 
   destroy(): void {
-    i18next.off('languageChanged', this.onLanguageChanged);
-    if (this.resetButton && this.boundReset) {
-      this.resetButton.removeEventListener('click', this.boundReset);
-    }
+    this.scope.dispose();
     this.element.remove();
   }
 

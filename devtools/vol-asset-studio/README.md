@@ -103,6 +103,8 @@ başlangıçta tek bir yapılandırma hatasıyla reddedilir.
 
 API hataları kullanıcı metni taşımaz; kararlı `error.code` değerleri istemci
 i18n katmanında Türkçe/İngilizce metne çevrilir.
+Sayfa kapanırken istemci editör lease'ini `keepalive` isteğiyle bırakır; ağ
+kapanışında sunucunun kısa TTL'i güvenli geri dönüş olarak kalır.
 
 ## Güvenlik sınırı
 

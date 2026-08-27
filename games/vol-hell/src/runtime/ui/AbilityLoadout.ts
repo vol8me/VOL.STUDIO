@@ -119,18 +119,10 @@ export class AbilityLoadout {
       this.callbacks.onClear(slot);
     };
 
-    root.addEventListener('dragover', onDragOver);
-    root.addEventListener('dragleave', onDragLeave);
-    root.addEventListener('drop', onDrop);
-    clear.addEventListener('click', onClear);
-    this.scope.add({
-      dispose: () => {
-        root.removeEventListener('dragover', onDragOver);
-        root.removeEventListener('dragleave', onDragLeave);
-        root.removeEventListener('drop', onDrop);
-        clear.removeEventListener('click', onClear);
-      },
-    });
+    this.scope.addListener(root, 'dragover', onDragOver);
+    this.scope.addListener(root, 'dragleave', onDragLeave);
+    this.scope.addListener(root, 'drop', onDrop);
+    this.scope.addListener(clear, 'click', onClear);
 
     this.slots.set(slot, { root, name, clear });
     return root;

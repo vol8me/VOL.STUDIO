@@ -120,4 +120,70 @@ describe('DisposableScope', () => {
     expect(disposeC).toHaveBeenCalledTimes(1);
     expect(disposeA).toHaveBeenCalledTimes(1);
   });
+
+  it('addSubscription aboneliği scope kapanırken kaldırır ve tek kez çağırır', () => {
+    const scope = new DisposableScope();
+    const unsubscribe = vi.fn();
+
+    scope.addSubscription(unsubscribe);
+    scope.dispose();
+    scope.dispose();
+
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('addDestroyable bileşeni ters sırayla kapatır', () => {
+    const scope = new DisposableScope();
+    const destroy = vi.fn();
+    const component = { destroy };
+
+    expect(scope.addDestroyable(component)).toBe(component);
+    scope.dispose();
+
+    expect(destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it('addDestroyables bileşenleri ekleniş sırasının tersinde kapatır', () => {
+    const scope = new DisposableScope();
+    const order: string[] = [];
+    scope.addDestroyables({ destroy: () => order.push('a') }, { destroy: () => order.push('b') });
+
+    scope.dispose();
+
+    expect(order).toEqual(['b', 'a']);
+  });
+
+  it('timeout çalışınca kendini scope kaydından çıkarır ve cancel tekrar çalışmaz', () => {
+    vi.useFakeTimers();
+    try {
+      const scope = new DisposableScope();
+      const callback = vi.fn();
+      const timer = scope.addTimeout(callback, 20);
+
+      vi.advanceTimersByTime(20);
+      timer.cancel();
+      scope.dispose();
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('interval scope kapanınca durur', () => {
+    vi.useFakeTimers();
+    try {
+      const scope = new DisposableScope();
+      const callback = vi.fn();
+      scope.addInterval(callback, 10);
+
+      vi.advanceTimersByTime(25);
+      expect(callback).toHaveBeenCalledTimes(2);
+      scope.dispose();
+      vi.advanceTimersByTime(30);
+      expect(callback).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

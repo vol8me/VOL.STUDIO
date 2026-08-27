@@ -27,6 +27,7 @@ import {
 import type { RampRequest } from '../src/visualSynth/color/generate';
 import { formatQaReport } from '../src/visualSynth/qa';
 import { createVisualArtifact, decodePng } from '../src/visualSynth/encode/index';
+import { createRenderCacheKey, RenderCache } from '../src/visualSynth/cache';
 
 const USAGE = [
   'Kullanım:',
@@ -356,6 +357,11 @@ function runBenchmark(docPath: string, args: readonly string[]): void {
     let ditherMs = 0;
     let glowMs = 0;
     let quantizeMs = 0;
+    let cacheSetMs = 0;
+    let cacheHitMs = 0;
+    let estimatedPeakWorkingBytes = 0;
+    let memoryEstimate: ReturnType<typeof analyzeSpriteDoc>['memoryEstimate'] | null = null;
+    const cache = new RenderCache({ maxBytes: 512 * 1024 * 1024, maxEntries: 1 });
     const rssBeforeBytes = process.memoryUsage().rss;
     for (let iteration = 0; iteration < flags.iterations; iteration++) {
       const renderStart = performance.now();
@@ -369,11 +375,29 @@ function runBenchmark(docPath: string, args: readonly string[]): void {
       ditherMs += result.profile.ditherMs;
       glowMs += result.profile.glowMs;
       quantizeMs += result.profile.quantizeMs;
+      const analysis = analyzeSpriteDoc(result.doc);
+      estimatedPeakWorkingBytes = analysis.estimatedPeakWorkingBytes;
+      memoryEstimate = analysis.memoryEstimate;
 
       const qaStart = performance.now();
       measureSprite(result);
       qaMs += performance.now() - qaStart;
+
+      const cacheKey = createRenderCacheKey(
+        result.doc,
+        result.width,
+        result.height,
+        result.doc.seed,
+      );
+      const cacheSetStart = performance.now();
+      cache.set(cacheKey, result);
+      cacheSetMs += performance.now() - cacheSetStart;
+      const cacheHitStart = performance.now();
+      const cached = cache.get(cacheKey);
+      cacheHitMs += performance.now() - cacheHitStart;
+      if (!cached) fail('Cache hit benchmark sonucu beklenmedik biçimde boş döndü');
     }
+    const cacheStats = cache.stats;
     return {
       size: [size, size],
       pixels: size * size,
@@ -389,6 +413,15 @@ function runBenchmark(docPath: string, args: readonly string[]): void {
         glow: glowMs / flags.iterations,
         quantize: quantizeMs / flags.iterations,
       },
+      estimatedPeakWorkingBytes,
+      memoryEstimate,
+      cache: {
+        setMs: cacheSetMs / flags.iterations,
+        hitMs: cacheHitMs / flags.iterations,
+        storedBytes: cacheStats.bytes,
+        copyBytes: cacheStats.copyBytes,
+        copyOperations: cacheStats.copyOperations,
+      },
       rssBeforeBytes,
       rssAfterBytes: process.memoryUsage().rss,
     };
@@ -403,6 +436,8 @@ function runBenchmark(docPath: string, args: readonly string[]): void {
     console.log(
       `  ${row.size[0]}² | render ${row.renderMs.toFixed(2)} ms | ` +
         `QA ${row.qaMs.toFixed(2)} ms | katman ${row.stagesMs.layers.toFixed(2)} ms | ` +
+        `cache set/get ${row.cache.setMs.toFixed(2)}/${row.cache.hitMs.toFixed(2)} ms | ` +
+        `tahmin ${Math.ceil(row.estimatedPeakWorkingBytes / 1024 / 1024)} MiB | ` +
         `RSS ${Math.round(row.rssAfterBytes / 1024 / 1024)} MB`,
     );
   }

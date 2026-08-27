@@ -45,6 +45,12 @@ describe('render öncesi yapısal analiz', () => {
       blockers: ['buffered:blur', 'buffered:scatter'],
     });
     expect(analysis.estimatedPeakWorkingBytes).toBeGreaterThan(0);
+    expect(analysis.memoryEstimate.confidence).toBe('conservative');
+    expect(analysis.memoryEstimate.transientScratchBytes).toBeGreaterThan(0);
+    expect(analysis.memoryEstimate.safetyMarginBytes).toBeGreaterThan(0);
+    expect(analysis.memoryEstimate.estimatedPeakWorkingBytes).toBe(
+      analysis.estimatedPeakWorkingBytes,
+    );
   });
 
   it('iç içe maske yığınını katman ve stack derinliğine katar', () => {
@@ -109,6 +115,9 @@ describe('render öncesi yapısal analiz', () => {
     });
 
     expect(styled.estimatedPeakWorkingBytes).toBeGreaterThan(plain.estimatedPeakWorkingBytes);
+    expect(styled.memoryEstimate.transientScratchBytes).toBeGreaterThan(
+      plain.memoryEstimate.transientScratchBytes,
+    );
   });
 
   it('iç içe tamponlu maskenin bellek tahmini derinlikle ölçeklenir', () => {

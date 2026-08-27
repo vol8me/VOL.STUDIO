@@ -1,3 +1,4 @@
+import { DisposableScope, type CancellableDisposable } from '@volstudio/core/lifecycle';
 import {
   Button,
   CardTile,
@@ -12,10 +13,6 @@ import {
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { card } from './shared';
-
-interface Destroyable {
-  destroy(): void;
-}
 
 /** Bir kapatma fonksiyonunu ortak listeye kaydeder (bkz. `buildCardsTab`). */
 type RegisterCloser = (close: () => void) => void;
@@ -81,7 +78,7 @@ function pickRandom(pool: readonly DemoCardId[], n: number): DemoCardId[] {
 }
 
 /** CardTile: örnek kartların nadirlik/tip görsel farkı yan yana. */
-function buildRarityCard(disposables: Destroyable[]): HTMLElement {
+function buildRarityCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -89,7 +86,7 @@ function buildRarityCard(disposables: Destroyable[]): HTMLElement {
   row.className = 'vol-showcase-card-row';
 
   const status = new Text(i18next.t('volui:cards.noSelection'), { variant: 'muted' });
-  disposables.push(status);
+  disposables.addDestroyables(status);
 
   // Tüm havuzu değil, ilk yedisini göster — bu kart yalnızca nadirlik/tip
   // görsel farkını tanıtır, dükkan demosuyla aynı geniş havuzu tekrar
@@ -101,7 +98,7 @@ function buildRarityCard(disposables: Destroyable[]): HTMLElement {
       onAction: (selected) =>
         status.setContent(i18next.t('volui:cards.selected', { id: selected })),
     });
-    disposables.push(tile);
+    disposables.addDestroyables(tile);
     row.appendChild(tile.element);
   }
 
@@ -135,17 +132,16 @@ function buildCardLayer(uiRootElement: HTMLElement, pickerElement: HTMLElement):
  * yumuşakça solarken arkasındaki scrim aniden kesilip uyumsuz görünürdü.
  */
 function createLayerController(
+  disposables: DisposableScope,
   layer: HTMLDivElement,
   picker: { show(): void; hide(): void },
   openButton: Button,
 ): { open: () => void; close: () => void } {
-  let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+  let hideTimeout: CancellableDisposable | null = null;
 
   const open = (): void => {
-    if (hideTimeout !== null) {
-      clearTimeout(hideTimeout);
-      hideTimeout = null;
-    }
+    hideTimeout?.cancel();
+    hideTimeout = null;
     layer.classList.remove('vol-showcase-card-layer--leaving');
     layer.hidden = false;
     openButton.element.hidden = true;
@@ -155,7 +151,7 @@ function createLayerController(
     if (layer.hidden || hideTimeout !== null) return;
     picker.hide();
     layer.classList.add('vol-showcase-card-layer--leaving');
-    hideTimeout = setTimeout(() => {
+    hideTimeout = disposables.addTimeout(() => {
       hideTimeout = null;
       layer.hidden = true;
       layer.classList.remove('vol-showcase-card-layer--leaving');
@@ -175,7 +171,7 @@ function createLayerController(
  */
 function buildLevelUpCard(
   uiRootElement: HTMLElement,
-  disposables: Destroyable[],
+  disposables: DisposableScope,
   registerCloser: RegisterCloser,
   closeAllExcept: CloseAllExcept,
 ): HTMLElement {
@@ -183,7 +179,7 @@ function buildLevelUpCard(
   wrap.className = 'vol-showcase-panel-demo';
 
   const result = new Text(i18next.t('volui:cards.noSelection'), { variant: 'muted' });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const picker = new LevelUpPicker({
     title: i18next.t('volui:cards.levelUpTitle'),
@@ -194,10 +190,10 @@ function buildLevelUpCard(
       controller.close();
     },
   });
-  disposables.push(picker);
+  disposables.addDestroyables(picker);
 
   const layer = buildCardLayer(uiRootElement, picker.element);
-  disposables.push({ destroy: () => layer.remove() });
+  disposables.addDestroyables({ destroy: () => layer.remove() });
 
   const open = new Button(i18next.t('volui:cards.openLevelUp'), {
     variant: 'primary',
@@ -212,9 +208,9 @@ function buildLevelUpCard(
       });
     },
   });
-  disposables.push(open);
+  disposables.addDestroyables(open);
 
-  const controller = createLayerController(layer, picker, open);
+  const controller = createLayerController(disposables, layer, picker, open);
   registerCloser(controller.close);
 
   wrap.appendChild(open.element);
@@ -239,7 +235,7 @@ function buildLevelUpCard(
  */
 function buildShopCard(
   uiRootElement: HTMLElement,
-  disposables: Destroyable[],
+  disposables: DisposableScope,
   registerCloser: RegisterCloser,
   closeAllExcept: CloseAllExcept,
 ): HTMLElement {
@@ -370,7 +366,7 @@ function buildShopCard(
     },
     onClose: () => controller.close(),
   });
-  disposables.push(shop);
+  disposables.addDestroyables(shop);
 
   function buildState(): ShopPickerState {
     return {
@@ -409,7 +405,7 @@ function buildShopCard(
   const slotRow = document.createElement('div');
   slotRow.className = 'vol-showcase-ability-slots';
   shop.slotArea.appendChild(slotRow);
-  disposables.push(slotsTitle);
+  disposables.addDestroyables(slotsTitle);
 
   function renderSlots(): void {
     slotRow.replaceChildren();
@@ -428,7 +424,7 @@ function buildShopCard(
   renderSlots();
 
   const layer = buildCardLayer(uiRootElement, shop.element);
-  disposables.push({ destroy: () => layer.remove() });
+  disposables.addDestroyables({ destroy: () => layer.remove() });
 
   const open = new Button(i18next.t('volui:cards.openShop'), {
     variant: 'primary',
@@ -441,9 +437,9 @@ function buildShopCard(
       shop.show();
     },
   });
-  disposables.push(open);
+  disposables.addDestroyables(open);
 
-  const controller = createLayerController(layer, shop, open);
+  const controller = createLayerController(disposables, layer, shop, open);
   registerCloser(controller.close);
 
   wrap.appendChild(open.element);
@@ -465,7 +461,7 @@ export function buildCardsTab(uiRootElement: HTMLElement): {
   element: HTMLElement;
   destroy: () => void;
 } {
-  const disposables: Destroyable[] = [];
+  const disposables = new DisposableScope();
   const closeHandlers: Array<() => void> = [];
   const registerCloser: RegisterCloser = (close) => closeHandlers.push(close);
   const closeAllExcept: CloseAllExcept = (except) => {
@@ -487,8 +483,6 @@ export function buildCardsTab(uiRootElement: HTMLElement): {
 
   return {
     element,
-    destroy: () => {
-      for (const item of disposables) item.destroy();
-    },
+    destroy: () => disposables.dispose(),
   };
 }

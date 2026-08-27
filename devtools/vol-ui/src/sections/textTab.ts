@@ -1,3 +1,4 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { AnimatedLabel, Button, Text } from '@volstudio/core/ui';
 import type {
   AnimatedLabelContinuousEffect,
@@ -6,10 +7,6 @@ import type {
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid } from './shared';
-
-interface Destroyable {
-  destroy(): void;
-}
 
 /** Her Text varyantının theme.css'teki font ailesi (Text.ts ile eşleşmeli). */
 const VARIANT_FONTS: Record<TextVariant, string> = {
@@ -23,12 +20,12 @@ function sampleCard(
   title: string,
   variant: TextVariant,
   sample: string,
-  disposables: Destroyable[],
+  disposables: DisposableScope,
   options: { spanAll?: boolean } = {},
 ): HTMLElement {
   const sampleText = new Text(sample, { variant, tag: 'p' });
   sampleText.element.style.textAlign = 'left';
-  disposables.push(sampleText);
+  disposables.addDestroyables(sampleText);
 
   const body = document.createElement('div');
   body.appendChild(sampleText.element);
@@ -41,17 +38,17 @@ function triggeredEffectCard(
   title: string,
   effect: AnimatedLabelEffect,
   sample: string,
-  disposables: Destroyable[],
+  disposables: DisposableScope,
 ): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const label = new AnimatedLabel(sample, { effect, tag: 'span' });
   label.element.classList.add('vol-showcase-animated-label-sample');
-  disposables.push(label);
+  disposables.addDestroyables(label);
 
   const replayButton = new Button(i18next.t('volui:text.play'), { onClick: () => label.replay() });
-  disposables.push(replayButton);
+  disposables.addDestroyables(replayButton);
 
   wrap.appendChild(label.element);
   wrap.appendChild(replayButton.element);
@@ -64,7 +61,7 @@ function continuousEffectCard(
   title: string,
   effect: AnimatedLabelContinuousEffect,
   sample: string,
-  disposables: Destroyable[],
+  disposables: DisposableScope,
 ): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
@@ -72,10 +69,10 @@ function continuousEffectCard(
   const label = new AnimatedLabel(sample, { tag: 'span' });
   label.element.classList.add('vol-showcase-animated-label-sample');
   label.setContinuousEffect(effect);
-  disposables.push(label);
+  disposables.addDestroyables(label);
 
   const hint = new Text(i18next.t('volui:text.autoPlaying'), { variant: 'muted' });
-  disposables.push(hint);
+  disposables.addDestroyables(hint);
 
   wrap.appendChild(label.element);
   wrap.appendChild(hint.element);
@@ -86,7 +83,7 @@ function continuousEffectCard(
 export function buildTextTab(): { element: HTMLElement; destroy: () => void } {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
-  const disposables: Destroyable[] = [];
+  const disposables = new DisposableScope();
 
   const cards = [
     sampleCard(
@@ -174,6 +171,6 @@ export function buildTextTab(): { element: HTMLElement; destroy: () => void } {
 
   return {
     element: container,
-    destroy: () => disposables.forEach((d) => d.destroy()),
+    destroy: () => disposables.dispose(),
   };
 }

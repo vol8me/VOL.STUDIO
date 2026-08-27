@@ -1,4 +1,5 @@
 import { MusicEngine, SidechainDucker } from '@volstudio/core';
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import type { AudioSettings, AudioSettingsData } from '@/app/AudioSettings';
 import { soundAssets, type SoundEvent } from '@/config/sounds';
 import { sfxDucking } from '@/config/audio';
@@ -18,8 +19,8 @@ export class GameAudio {
   private readonly musicDucker: SidechainDucker;
   private readonly ambientDucker: SidechainDucker;
   private readonly settings: AudioSettings;
-  private readonly unsubscribe: () => void;
-  private readonly cleanupResume: () => void;
+  private readonly lifecycle = new DisposableScope();
+  private disposed = false;
 
   constructor(settings: AudioSettings) {
     this.settings = settings;
@@ -56,8 +57,8 @@ export class GameAudio {
     this.sfx = new SfxBank(this.context, this.masterGain);
 
     this.apply(settings.getData());
-    this.unsubscribe = settings.onChange((data) => this.apply(data));
-    this.cleanupResume = this.setupResume();
+    this.lifecycle.addSubscription(settings.onChange((data) => this.apply(data)));
+    this.setupResume();
   }
 
   private createMusicBus(initialVolume: number, destination: AudioNode): MusicEngine {
@@ -71,7 +72,7 @@ export class GameAudio {
     return engine;
   }
 
-  private setupResume(): () => void {
+  private setupResume(): void {
     const resume = (): void => {
       if (this.context.state === 'suspended') {
         this.context.resume().catch((err: unknown) => {
@@ -84,7 +85,7 @@ export class GameAudio {
     // İlk kullanıcı etkileşiminde context'i çalıştır; daha fazla olay dinleyerek mobil/safari uyumluluğu artır.
     const events = ['pointerdown', 'touchstart', 'keydown', 'click'] as const;
     for (const event of events) {
-      window.addEventListener(event, resume, { once: true });
+      this.lifecycle.addListener(window, event, resume, { once: true });
     }
 
     // Sekme arka planda sesi durdur, öne gelince devam et; pil/performans için.
@@ -101,14 +102,7 @@ export class GameAudio {
         });
       }
     };
-    document.addEventListener('visibilitychange', handleVisibility);
-
-    return () => {
-      for (const event of events) {
-        window.removeEventListener(event, resume);
-      }
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
+    this.lifecycle.addListener(document, 'visibilitychange', handleVisibility);
   }
 
   /** Tüm SFX'leri önceden yükler. Bir dosya bozuksa diğerlerini engellemez. */
@@ -235,8 +229,9 @@ export class GameAudio {
    * dongusu boyunca sizinti yaratir.
    */
   async dispose(): Promise<void> {
-    this.unsubscribe();
-    this.cleanupResume();
+    if (this.disposed) return;
+    this.disposed = true;
+    this.lifecycle.dispose();
     this.music.dispose();
     this.ambient.dispose();
     this.musicDucker.dispose();

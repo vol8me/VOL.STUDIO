@@ -71,14 +71,14 @@ describe('CurveEditor', () => {
   });
 
   it('çift tıkla nokta EKLENİR', () => {
-    const onChange = vi.fn();
-    const editor = new CurveEditor({ width: 100, height: 100, onChange });
+    const onInput = vi.fn();
+    const editor = new CurveEditor({ width: 100, height: 100, onInput });
     canvasOf(editor).dispatchEvent(
       new MouseEvent('dblclick', { clientX: 50, clientY: 50, bubbles: true }),
     );
 
     expect(editor.getPoints()).toHaveLength(3);
-    expect(onChange).toHaveBeenCalled();
+    expect(onInput).toHaveBeenCalled();
     editor.destroy();
   });
 
@@ -105,7 +105,7 @@ describe('CurveEditor', () => {
   });
 
   it('sürükleme noktayı taşır ve alan içinde KELEPÇELER', () => {
-    const onChange = vi.fn();
+    const onInput = vi.fn();
     const editor = new CurveEditor({
       width: 100,
       height: 100,
@@ -114,7 +114,7 @@ describe('CurveEditor', () => {
         [0.5, 0.5],
         [1, 1],
       ],
-      onChange,
+      onInput,
     });
     const canvas = canvasOf(editor);
 
@@ -128,7 +128,7 @@ describe('CurveEditor', () => {
     canvas.dispatchEvent(pointer('pointermove', 500, -500));
     expect(editor.getPoints()[2]).toEqual([1, 1]);
     canvas.dispatchEvent(pointer('pointerup', 500, -500));
-    expect(onChange).toHaveBeenCalled();
+    expect(onInput).toHaveBeenCalled();
     editor.destroy();
   });
 
@@ -159,47 +159,47 @@ describe('CurveEditor', () => {
   });
 
   it('boş alana tıklamak sürükleme BAŞLATMAZ', () => {
-    const onChange = vi.fn();
-    const editor = new CurveEditor({ width: 100, height: 100, onChange });
+    const onInput = vi.fn();
+    const editor = new CurveEditor({ width: 100, height: 100, onInput });
     const canvas = canvasOf(editor);
     canvas.dispatchEvent(pointer('pointerdown', 50, 10));
     canvas.dispatchEvent(pointer('pointermove', 60, 20));
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onInput).not.toHaveBeenCalled();
     editor.destroy();
   });
 
   it('devre dışıyken düzenlenemez', () => {
-    const onChange = vi.fn();
-    const editor = new CurveEditor({ width: 100, height: 100, disabled: true, onChange });
+    const onInput = vi.fn();
+    const editor = new CurveEditor({ width: 100, height: 100, disabled: true, onInput });
     const canvas = canvasOf(editor);
     canvas.dispatchEvent(new MouseEvent('dblclick', { clientX: 50, clientY: 50 }));
     canvas.dispatchEvent(pointer('pointerdown', 0, 100));
     expect(editor.getPoints()).toHaveLength(2);
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onInput).not.toHaveBeenCalled();
     editor.destroy();
   });
 
-  it('setPoints onChange TETİKLEMEZ', () => {
-    const onChange = vi.fn();
-    const editor = new CurveEditor({ onChange });
+  it('setPoints callback TETİKLEMEZ', () => {
+    const onInput = vi.fn();
+    const editor = new CurveEditor({ onInput });
     editor.setPoints([
       [0, 1],
       [1, 0],
     ]);
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onInput).not.toHaveBeenCalled();
     expect(editor.sample(0.5)).toBeCloseTo(0.5, 10);
     editor.destroy();
   });
 
   it('destroy dinleyicileri bırakır', () => {
-    const onChange = vi.fn();
-    const editor = new CurveEditor({ width: 100, height: 100, onChange });
+    const onInput = vi.fn();
+    const editor = new CurveEditor({ width: 100, height: 100, onInput });
     const canvas = canvasOf(editor);
     document.body.appendChild(editor.element);
     editor.destroy();
 
     canvas.dispatchEvent(new MouseEvent('dblclick', { clientX: 50, clientY: 50 }));
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onInput).not.toHaveBeenCalled();
     expect(editor.element.isConnected).toBe(false);
   });
 });

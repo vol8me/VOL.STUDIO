@@ -477,8 +477,10 @@ Workbench bileşenleri oyun kuralı tutmaz:
 
 Form kontrollerinde `setValue()` / `setChecked()` programatik ve **sessizdir**.
 Kullanıcı etkileşiminde `onInput` canlı değeri, `onCommit` tamamlanan hareketi
-bildirir. Eski tüketicileri kırmamak için `onChange` kullanıcı değişiminde
-çalışmaya devam eder; özellikle bildirim gereken programatik geçişlerde
+bildirir. Değer taşıyan primitiflerde `onChange` geçişi tamamlandı; yeni
+tüketiciler `onInput` / `onCommit` kullanmalıdır. `onChange` yalnızca Toolbar
+ve Tabs gibi değer değil seçim/aksiyon semantiği taşıyan bileşenlerde kalır.
+Özellikle bildirim gereken programatik geçişlerde
 `setValueAndNotify()` / `setCheckedAndNotify()` kullanılır.
 
 DOM olayı, dil aboneliği, observer veya pointer capture alan her workbench

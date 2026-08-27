@@ -1,3 +1,4 @@
+import { DisposableScope, type CancellableDisposable } from '@volstudio/core/lifecycle';
 import {
   Bar,
   BuildMenu,
@@ -34,22 +35,18 @@ import {
   ICON_ZOOM_OUT,
 } from './icons';
 
-interface Destroyable {
-  destroy(): void;
-}
-
 const VARIANT_KEYS: Record<BarVariant, string> = {
   health: 'volui:hud.health',
   stamina: 'volui:hud.stamina',
   cooldown: 'volui:hud.cooldown',
 };
 
-function buildBarVariantCard(variant: BarVariant, disposables: Destroyable[]): HTMLElement {
+function buildBarVariantCard(variant: BarVariant, disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const bar = new Bar({ variant, max: 100, value: 100, label: (v, m) => `${v} / ${m}` });
-  disposables.push(bar);
+  disposables.addDestroyables(bar);
   wrap.appendChild(bar.element);
 
   const controls = document.createElement('div');
@@ -68,7 +65,7 @@ function buildBarVariantCard(variant: BarVariant, disposables: Destroyable[]): H
       bar.setValue(next);
     },
   });
-  disposables.push(decButton, incButton);
+  disposables.addDestroyables(decButton, incButton);
 
   controls.appendChild(decButton.element);
   controls.appendChild(incButton.element);
@@ -78,7 +75,7 @@ function buildBarVariantCard(variant: BarVariant, disposables: Destroyable[]): H
 }
 
 /** lowThreshold altında kırmızıya döner. Varsayılan %25, burada %50. */
-function buildLowThresholdCard(disposables: Destroyable[]): HTMLElement {
+function buildLowThresholdCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -89,13 +86,13 @@ function buildLowThresholdCard(disposables: Destroyable[]): HTMLElement {
     lowThreshold: 0.5,
     label: (v, m) => `${v} / ${m}`,
   });
-  disposables.push(bar);
+  disposables.addDestroyables(bar);
   wrap.appendChild(bar.element);
 
   const hint = new Text(i18next.t('volui:hud.lowThresholdHint'), {
     variant: 'muted',
   });
-  disposables.push(hint);
+  disposables.addDestroyables(hint);
   wrap.appendChild(hint.element);
 
   const controls = document.createElement('div');
@@ -108,7 +105,7 @@ function buildLowThresholdCard(disposables: Destroyable[]): HTMLElement {
   const resetButton = new Button(i18next.t('volui:hud.reset'), {
     onClick: () => bar.setValue(100),
   });
-  disposables.push(decButton, resetButton);
+  disposables.addDestroyables(decButton, resetButton);
 
   controls.appendChild(decButton.element);
   controls.appendChild(resetButton.element);
@@ -117,27 +114,27 @@ function buildLowThresholdCard(disposables: Destroyable[]): HTMLElement {
   return card(i18next.t('volui:hud.criticalThreshold'), wrap);
 }
 
-function buildCounterCard(disposables: Destroyable[]): HTMLElement {
+function buildCounterCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const counter = new Counter({ value: 0 });
   counter.element.style.fontSize = '32px';
-  disposables.push(counter);
+  disposables.addDestroyables(counter);
   wrap.appendChild(counter.element);
 
   const button = new Button(i18next.t('volui:hud.addScore'), {
     variant: 'primary',
     onClick: () => counter.setValue(counter.getValue() + 10, { pulse: true }),
   });
-  disposables.push(button);
+  disposables.addDestroyables(button);
   wrap.appendChild(button.element);
 
   return card(i18next.t('volui:hud.counter'), wrap);
 }
 
 /** Özel format (binlik ayraç + para birimi) örneği. */
-function buildFormattedCounterCard(disposables: Destroyable[]): HTMLElement {
+function buildFormattedCounterCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -146,14 +143,14 @@ function buildFormattedCounterCard(disposables: Destroyable[]): HTMLElement {
     format: (v) => `${Math.round(v).toLocaleString('tr-TR')} ₺`,
   });
   counter.element.style.fontSize = '32px';
-  disposables.push(counter);
+  disposables.addDestroyables(counter);
   wrap.appendChild(counter.element);
 
   const button = new Button(i18next.t('volui:hud.addGold'), {
     variant: 'primary',
     onClick: () => counter.setValue(counter.getValue() + 500, { pulse: true }),
   });
-  disposables.push(button);
+  disposables.addDestroyables(button);
   wrap.appendChild(button.element);
 
   return card(i18next.t('volui:hud.counterFormatted'), wrap);
@@ -164,7 +161,7 @@ function buildFormattedCounterCard(disposables: Destroyable[]): HTMLElement {
  * bileşende değil, CORE'un opsiyonel `applyXpGain` tarifindedir — bar yalnızca
  * `setState()` ile eşitlenir. Farklı bir kural isteyen oyun tarifi çağırmaz.
  */
-function buildXPBarCard(disposables: Destroyable[]): HTMLElement {
+function buildXPBarCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -178,13 +175,13 @@ function buildXPBarCard(disposables: Destroyable[]): HTMLElement {
     progress = { level: next.level, xp: next.xp };
     xpBar.setState(progress.level, progress.xp);
   };
-  disposables.push(xpBar);
+  disposables.addDestroyables(xpBar);
   wrap.appendChild(xpBar.element);
 
   const hint = new Text(i18next.t('volui:hud.xpHint'), {
     variant: 'muted',
   });
-  disposables.push(hint);
+  disposables.addDestroyables(hint);
   wrap.appendChild(hint.element);
 
   const controls = document.createElement('div');
@@ -197,7 +194,7 @@ function buildXPBarCard(disposables: Destroyable[]): HTMLElement {
     variant: 'primary',
     onClick: () => gainXp(150),
   });
-  disposables.push(addSmallButton, addBigButton);
+  disposables.addDestroyables(addSmallButton, addBigButton);
 
   controls.appendChild(addSmallButton.element);
   controls.appendChild(addBigButton.element);
@@ -206,7 +203,7 @@ function buildXPBarCard(disposables: Destroyable[]): HTMLElement {
   return card(i18next.t('volui:hud.xpBar'), wrap);
 }
 
-function buildResourceCounterCard(disposables: Destroyable[]): HTMLElement {
+function buildResourceCounterCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -216,7 +213,7 @@ function buildResourceCounterCard(disposables: Destroyable[]): HTMLElement {
     value: 30,
   });
   ammo.element.style.fontSize = '24px';
-  disposables.push(ammo);
+  disposables.addDestroyables(ammo);
 
   const mana = new ResourceCounter({
     icon: svgIcon(ICON_MANA),
@@ -224,7 +221,7 @@ function buildResourceCounterCard(disposables: Destroyable[]): HTMLElement {
     value: 80,
   });
   mana.element.style.fontSize = '24px';
-  disposables.push(mana);
+  disposables.addDestroyables(mana);
 
   const row = document.createElement('div');
   row.className = 'vol-showcase-panel-demo__controls';
@@ -243,7 +240,7 @@ function buildResourceCounterCard(disposables: Destroyable[]): HTMLElement {
     variant: 'primary',
     onClick: () => mana.setValue(Math.max(0, mana.getValue() - 15), { pulse: true }),
   });
-  disposables.push(fireButton, spellButton);
+  disposables.addDestroyables(fireButton, spellButton);
 
   controls.appendChild(fireButton.element);
   controls.appendChild(spellButton.element);
@@ -258,7 +255,7 @@ function buildResourceCounterCard(disposables: Destroyable[]): HTMLElement {
  * Varyant adları GÖRSELDİR (negative/positive/emphasis); oyun anlamını çağıran
  * eşler — bu demoda hasar/iyileşme/kritik vuruş olarak gösteriliyor.
  */
-function buildFloatingTextCard(disposables: Destroyable[]): HTMLElement {
+function buildFloatingTextCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -267,7 +264,7 @@ function buildFloatingTextCard(disposables: Destroyable[]): HTMLElement {
   wrap.appendChild(stage);
 
   const manager = new FloatingTextManager(stage, { anchor: 'absolute' });
-  disposables.push({ destroy: () => manager.destroy() });
+  disposables.addDestroyables({ destroy: () => manager.destroy() });
 
   const spawnAt = (): { x: number; y: number } => {
     const rect = stage.getBoundingClientRect();
@@ -302,7 +299,7 @@ function buildFloatingTextCard(disposables: Destroyable[]): HTMLElement {
       );
     },
   });
-  disposables.push(damageButton, healButton, criticalButton);
+  disposables.addDestroyables(damageButton, healButton, criticalButton);
 
   controls.appendChild(damageButton.element);
   controls.appendChild(healButton.element);
@@ -313,7 +310,7 @@ function buildFloatingTextCard(disposables: Destroyable[]): HTMLElement {
 }
 
 /** ResourceBar: RTS/otomasyon için sabit çoklu-kaynak şeridi. */
-function buildResourceBarCard(disposables: Destroyable[]): HTMLElement {
+function buildResourceBarCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -323,7 +320,7 @@ function buildResourceBarCard(disposables: Destroyable[]): HTMLElement {
       { key: 'wood', icon: svgIcon(ICON_WOOD), label: i18next.t('volui:hud.wood'), value: 120 },
     ],
   });
-  disposables.push(resourceBar);
+  disposables.addDestroyables(resourceBar);
   wrap.appendChild(resourceBar.element);
 
   const controls = document.createElement('div');
@@ -340,7 +337,7 @@ function buildResourceBarCard(disposables: Destroyable[]): HTMLElement {
         pulse: true,
       }),
   });
-  disposables.push(gatherButton, spendButton);
+  disposables.addDestroyables(gatherButton, spendButton);
 
   controls.appendChild(gatherButton.element);
   controls.appendChild(spendButton.element);
@@ -350,16 +347,16 @@ function buildResourceBarCard(disposables: Destroyable[]): HTMLElement {
 }
 
 /** RoundCounter saf görüntüdür; demo akışı yalnız bu builder içinde tutulur. */
-function buildRoundCounterCard(disposables: Destroyable[]): HTMLElement {
+function buildRoundCounterCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const roundCounter = new RoundCounter({ totalRounds: 10 });
-  disposables.push(roundCounter);
+  disposables.addDestroyables(roundCounter);
   wrap.appendChild(roundCounter.element);
 
   const hint = new Text(i18next.t('volui:hud.waveCounterHint'), { variant: 'muted' });
-  disposables.push(hint);
+  disposables.addDestroyables(hint);
   wrap.appendChild(hint.element);
 
   const controls = document.createElement('div');
@@ -370,7 +367,7 @@ function buildRoundCounterCard(disposables: Destroyable[]): HTMLElement {
   let running = false;
   let round = 1;
   let remainingMs = breakMs;
-  let rafId = 0;
+  let roundFrame: CancellableDisposable | null = null;
   let lastFrame = 0;
 
   const tick = (now: number): void => {
@@ -388,14 +385,15 @@ function buildRoundCounterCard(disposables: Destroyable[]): HTMLElement {
     }
     roundCounter.setRemainingSeconds(remainingMs / 1000);
     if (running) {
-      rafId = requestAnimationFrame(tick);
+      roundFrame = disposables.addAnimationFrame(tick);
     }
   };
 
   const stopLoop = (): void => {
     running = false;
     lastFrame = 0;
-    cancelAnimationFrame(rafId);
+    roundFrame?.cancel();
+    roundFrame = null;
   };
 
   const startLoopButton = new Button(i18next.t('volui:hud.startAutoLoop'), {
@@ -408,10 +406,10 @@ function buildRoundCounterCard(disposables: Destroyable[]): HTMLElement {
       roundCounter.setRound(round);
       roundCounter.setRemainingSeconds(remainingMs / 1000);
       lastFrame = 0;
-      rafId = requestAnimationFrame(tick);
+      roundFrame = disposables.addAnimationFrame(tick);
     },
   });
-  disposables.push(startLoopButton);
+  disposables.addDestroyables(startLoopButton);
 
   const resetButton = new Button(i18next.t('volui:hud.reset'), {
     onClick: () => {
@@ -422,8 +420,7 @@ function buildRoundCounterCard(disposables: Destroyable[]): HTMLElement {
       roundCounter.setRound(round);
     },
   });
-  disposables.push(resetButton);
-  disposables.push({ destroy: stopLoop });
+  disposables.addDestroyables(resetButton);
 
   controls.appendChild(startLoopButton.element);
   controls.appendChild(resetButton.element);
@@ -433,12 +430,12 @@ function buildRoundCounterCard(disposables: Destroyable[]): HTMLElement {
 }
 
 /** SelectionInfoPanel: RTS birim/TD kule detay paneli. */
-function buildSelectionInfoPanelCard(disposables: Destroyable[]): HTMLElement {
+function buildSelectionInfoPanelCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const panel = new SelectionInfoPanel();
-  disposables.push(panel);
+  disposables.addDestroyables(panel);
   wrap.appendChild(panel.element);
 
   const controls = document.createElement('div');
@@ -470,7 +467,7 @@ function buildSelectionInfoPanelCard(disposables: Destroyable[]): HTMLElement {
   const clearButton = new Button(i18next.t('volui:hud.clearSelection'), {
     onClick: () => panel.clear(),
   });
-  disposables.push(selectButton, clearButton);
+  disposables.addDestroyables(selectButton, clearButton);
 
   controls.appendChild(selectButton.element);
   controls.appendChild(clearButton.element);
@@ -480,12 +477,12 @@ function buildSelectionInfoPanelCard(disposables: Destroyable[]): HTMLElement {
 }
 
 /** BuildMenu: RTS/TD inşa menüsü — ikon+ad+maliyet+kısayol grid'i. */
-function buildBuildMenuCard(disposables: Destroyable[]): HTMLElement {
+function buildBuildMenuCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const result = new Text(i18next.t('volui:hud.awaitingSelection'), { variant: 'muted' });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const buildMenuItems = [
     {
@@ -645,7 +642,7 @@ function buildBuildMenuCard(disposables: Destroyable[]): HTMLElement {
       onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
     })),
   });
-  disposables.push(buildMenu);
+  disposables.addDestroyables(buildMenu);
   wrap.appendChild(buildMenu.element);
   wrap.appendChild(result.element);
 
@@ -683,12 +680,12 @@ function buildMinimapBackgroundTexture(): HTMLCanvasElement {
 }
 
 /** MinimapPanel: dünya koordinatlarını piksele çevirir, işaretçi + viewport çizer. */
-function buildMinimapCard(disposables: Destroyable[]): HTMLElement {
+function buildMinimapCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const result = new Text(i18next.t('volui:hud.minimapHint'), { variant: 'muted' });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const minimap = new MinimapPanel({
     width: 200,
@@ -705,7 +702,7 @@ function buildMinimapCard(disposables: Destroyable[]): HTMLElement {
       );
     },
   });
-  disposables.push(minimap);
+  disposables.addDestroyables(minimap);
   minimap.element.style.alignSelf = 'center';
   minimap.setMarker('player', {
     worldX: 0,
@@ -731,7 +728,7 @@ function buildMinimapCard(disposables: Destroyable[]): HTMLElement {
       minimap.setZoom(nextZoom);
     },
   });
-  disposables.push(zoomButton);
+  disposables.addDestroyables(zoomButton);
   controls.appendChild(zoomButton.element);
   wrap.appendChild(controls);
 
@@ -743,7 +740,7 @@ function buildMinimapCard(disposables: Destroyable[]): HTMLElement {
 export function buildHudTab(): { element: HTMLElement; destroy: () => void } {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
-  const disposables: Destroyable[] = [];
+  const disposables = new DisposableScope();
 
   const cards = [
     buildBarVariantCard('health', disposables),
@@ -768,6 +765,6 @@ export function buildHudTab(): { element: HTMLElement; destroy: () => void } {
 
   return {
     element: container,
-    destroy: () => disposables.forEach((d) => d.destroy()),
+    destroy: () => disposables.dispose(),
   };
 }

@@ -160,6 +160,12 @@ generate-audio:
 audio-qa:
     pnpm audio:qa
 
+benchmark-core:
+    pnpm benchmark:core
+
+benchmark-vol-hell:
+    pnpm benchmark:vol-hell
+
 convert-ios:
     pnpm convert:ios
 

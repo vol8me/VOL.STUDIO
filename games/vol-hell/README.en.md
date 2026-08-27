@@ -19,15 +19,37 @@ pnpm --filter @volstudio/vol-hell dev
 
 ## Systems
 
-| Area        | Contents                                                                                   |
-| ----------- | ------------------------------------------------------------------------------------------ |
-| Run flow    | 20 waves × 40 s, shop after each wave, elite (10) and boss (20) waves                      |
-| Combat      | Enemy catalog (rusher / swarmer / special), telegraphs, elite and boss behaviours          |
-| Progression | Spark/Flux economy, level-ups, card catalog (ability / buff / trade-off), shop reroll/lock |
-| Abilities   | Chain lightning, fire zone, multi-shot, turret — bound to the Q/E slots                    |
-| Audio       | Adaptive music + SFX driven through the `@volstudio/core` music engine                     |
+| Area        | Contents                                                                                        |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| Run flow    | 20 waves × 40 s, shop after each wave, elite (10) and boss (20) waves                           |
+| Combat      | Enemy catalog (rusher / swarmer / special), telegraphs, elite and boss behaviours               |
+| Progression | Spark/Flux economy, level-ups, card catalog (ability / buff / trade-off), shop reroll/lock      |
+| Abilities   | Chain lightning, fire zone, multi-shot, turret — Q/E slots; scales with player damage/fire rate |
+| Audio       | Adaptive music + SFX driven through the `@volstudio/core` music engine                          |
 
 Gameplay numbers live as data under `src/config/`; balancing is a config change, not a code change.
+
+### Ability progression balance
+
+Abilities with fixed damage parameters follow the player's current `damage`
+stat, so chain lightning and fire zones do not fall behind the base weapon in
+the late game. Multi-shot already uses player damage per projectile. Turrets
+also have a maximum health derived from player maximum health and an internal
+fire interval that follows player `fireRate`; turret health cannot fall below
+its configured minimum ratio under health trade-offs. Ability activation
+cooldowns use the same `fireRate` rule. The shared scaling lives under
+`src/runtime/ability/`, its tuning is in `src/config/abilities.ts`, and its
+contract is covered by regression tests.
+
+### Simulation / render boundary
+
+`src/runtime/simulation/VolHellSimulation.ts` is a Phaser-free model of waves,
+enemies, economy and pickups. `VolHellSimulationDriver` advances it and gives
+the render port only copied, read-only snapshots; long-run tests and the
+benchmark use that surface without constructing a renderer. This boundary is
+not yet a replacement for the entire production Phaser path: interactive
+elite/boss controllers and the existing visual entity managers remain Phaser
+owned and still require device smoke testing.
 
 ## Hardening contract
 
@@ -49,16 +71,17 @@ smoke testing.
 
 ## Commands
 
-| Command                                            | Description                     |
-| -------------------------------------------------- | ------------------------------- |
-| `pnpm --filter @volstudio/vol-hell dev`            | Vite dev server                 |
-| `pnpm --filter @volstudio/vol-hell build`          | Production build                |
-| `pnpm --filter @volstudio/vol-hell preview`        | Serve the production build      |
-| `pnpm --filter @volstudio/vol-hell typecheck`      | TypeScript check                |
-| `pnpm --filter @volstudio/vol-hell test`           | Tests                           |
-| `pnpm --filter @volstudio/vol-hell test:coverage`  | Tests + coverage thresholds     |
-| `pnpm --filter @volstudio/vol-hell generate:audio` | Generate audio and music assets |
-| `pnpm --filter @volstudio/vol-hell audio:qa`       | Measure generated audio assets  |
+| Command                                                  | Description                     |
+| -------------------------------------------------------- | ------------------------------- |
+| `pnpm --filter @volstudio/vol-hell dev`                  | Vite dev server                 |
+| `pnpm --filter @volstudio/vol-hell build`                | Production build                |
+| `pnpm --filter @volstudio/vol-hell preview`              | Serve the production build      |
+| `pnpm --filter @volstudio/vol-hell typecheck`            | TypeScript check                |
+| `pnpm --filter @volstudio/vol-hell test`                 | Tests                           |
+| `pnpm --filter @volstudio/vol-hell test:coverage`        | Tests + coverage thresholds     |
+| `pnpm --filter @volstudio/vol-hell benchmark:simulation` | Headless simulation benchmark   |
+| `pnpm --filter @volstudio/vol-hell generate:audio`       | Generate audio and music assets |
+| `pnpm --filter @volstudio/vol-hell audio:qa`             | Measure generated audio assets  |
 
 Shipped audio assets (`public/assets/audio/**/*.ogg`) are kept in the repo; regenerate them with `pnpm --filter @volstudio/vol-hell generate:audio` when the sound design changes. Intermediate formats (WAV, MP3) are not kept in the repo (see [sound-synth](../../core/docs/sound-synth.md), [music-engine](../../core/docs/music-engine.md)).
 

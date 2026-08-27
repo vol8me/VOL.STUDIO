@@ -1,11 +1,11 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+
 export interface CheckboxOptions {
   checked?: boolean;
   label?: string;
   disabled?: boolean;
   onInput?: (checked: boolean) => void;
   onCommit?: (checked: boolean) => void;
-  /** @deprecated Ayrık kullanıcı değişimlerinde korunur; yeni kodda `onCommit` kullanın. */
-  onChange?: (checked: boolean) => void;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
 }
@@ -17,15 +17,13 @@ export class Checkbox {
   private checked: boolean;
   private onInputHandler?: (checked: boolean) => void;
   private onCommitHandler?: (checked: boolean) => void;
-  private onChangeHandler?: (checked: boolean) => void;
-  private boundChange: () => void;
+  private readonly scope = new DisposableScope();
 
   constructor(options: CheckboxOptions = {}) {
-    const { checked = false, label, disabled = false, onInput, onCommit, onChange } = options;
+    const { checked = false, label, disabled = false, onInput, onCommit } = options;
     this.checked = checked;
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
-    this.onChangeHandler = onChange;
 
     this.element = document.createElement('label');
     this.element.className = ['vol-checkbox', options.className].filter(Boolean).join(' ');
@@ -54,8 +52,7 @@ export class Checkbox {
       this.labelText = null;
     }
 
-    this.boundChange = () => this.commitUser(this.input.checked);
-    this.input.addEventListener('change', this.boundChange);
+    this.scope.addListener(this.input, 'change', () => this.commitUser(this.input.checked));
   }
 
   isChecked(): boolean {
@@ -81,7 +78,7 @@ export class Checkbox {
   }
 
   destroy(): void {
-    this.input.removeEventListener('change', this.boundChange);
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -91,6 +88,5 @@ export class Checkbox {
     this.input.checked = checked;
     this.onInputHandler?.(checked);
     this.onCommitHandler?.(checked);
-    this.onChangeHandler?.(checked);
   }
 }

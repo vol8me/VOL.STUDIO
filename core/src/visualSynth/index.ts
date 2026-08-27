@@ -124,10 +124,15 @@ export type {
   RenderProfile,
 } from './render';
 
-export { RenderCache, createRenderCacheKey } from './cache';
+export { RenderCache, createRenderCacheKey, estimateRenderResultBytes } from './cache';
 export type { RenderCacheOptions, RenderCacheStats } from './cache';
 
-export { analyzeSpriteDoc, type RegionRenderSupport, type VisualSpriteAnalysis } from './analysis';
+export {
+  analyzeSpriteDoc,
+  type RegionRenderSupport,
+  type VisualMemoryEstimate,
+  type VisualSpriteAnalysis,
+} from './analysis';
 
 export {
   createRenderDiagnostics,

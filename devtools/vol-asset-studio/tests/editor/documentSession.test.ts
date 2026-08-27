@@ -93,6 +93,62 @@ describe('DocumentSession — kirlilik sözleşmesi', () => {
     expect(session.redo()).toBe(false);
     expect(session.isDirty).toBe(false);
   });
+
+  it('history budget kırpılsa da undo belge damgasını yanlış duruma taşımaz', () => {
+    const session = new DocumentSession({
+      assetId: 'asset-1',
+      width: 2,
+      height: 2,
+      rgba: new Uint8ClampedArray(16),
+      revision: 'a'.repeat(64),
+      maxHistoryBytes: 1,
+    });
+    const state = { value: 0 };
+    const command = (next: number) => ({
+      label: `değer ${next}`,
+      byteCost: 1,
+      apply: () => {
+        state.value = next;
+      },
+      revert: () => {
+        state.value = next - 1;
+      },
+    });
+
+    session.execute(command(1));
+    session.markSaved('b'.repeat(64));
+    session.execute(command(2));
+    expect(session.undo()).toBe(true);
+    expect(state.value).toBe(1);
+    expect(session.isDirty).toBe(false);
+    expect(session.undo()).toBe(false);
+  });
+
+  it('bütçeye sığmayan komut yeni durumu damgalar fakat sahte undo bırakmaz', () => {
+    const session = new DocumentSession({
+      assetId: 'asset-1',
+      width: 2,
+      height: 2,
+      rgba: new Uint8ClampedArray(16),
+      revision: 'a'.repeat(64),
+      maxHistoryBytes: 1,
+    });
+    let value = 0;
+    session.execute({
+      label: 'büyük',
+      byteCost: 2,
+      apply: () => {
+        value = 1;
+      },
+      revert: () => {
+        value = 0;
+      },
+    });
+
+    expect(value).toBe(1);
+    expect(session.isDirty).toBe(true);
+    expect(session.undo()).toBe(false);
+  });
 });
 
 describe('DocumentSession — harici revizyon', () => {

@@ -5,6 +5,45 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-27 — P1/P2 borç kapatma ve VOL-HELL ability ilerleme denetimi
+
+- Yaşam döngüsü kaynakları için `DisposableScope` ortaklaştırıldı; CORE,
+  vol-ui ve VOL.HELL'in ilgili yüzeylerinde elle yönetilen cleanup dizileri
+  kaldırıldı. Scope; subscription, listener, timer/rAF ve `destroy()` sahibi
+  bileşenleri ters sırada, hata izolasyonuyla kapatıyor.
+- Değer taşıyan UI kontrollerinin `onInput`/`onCommit` geçişi tamamlandı;
+  `onChange` yalnızca seçim/aksiyon semantiği taşıyan bileşenlerde bırakıldı.
+  Showcase, oyun sahneleri ve test tüketicileri yeni sözleşmeye taşındı.
+- VOL.HELL için Phaser'sız `VolHellSimulation` + salt-okunur kopya snapshot ve
+  render driver sınırı kuruldu. Dalga/düşman/ekonomi/pickup uzun koşusu ve
+  render snapshot sahiplik testi bu yüzeyi kullanıyor; mevcut Phaser elite/boss
+  özel yolu bilinçli olarak sınırın dışında ve dokümante edildi.
+- Ability denetiminde sabit zincir şimşek/ateş alanı hasarlarının oyuncu
+  `damage` statından kopuk kaldığı, tek kulenin de oyuncu `health` ve iç atış
+  temposunu izlemediği ölçüldü. Tüm sabit hasar aileleri hasar oranını, kule
+  canı ve iç atış aralığı ilgili statları takip ediyor; kule canı ve atış
+  aralığı alt sınırlarla korunuyor. Çoklu atışın mevcut hasar sözleşmesi
+  korundu; kart varyantlarının sırası rastgele buff artışıyla değiştirilmedi.
+- CORE benchmark harness'i SpatialIndex rebuild/artımlı yol, PathFinder,
+  Scheduler ve ObjectPool workload'larıyla genişletildi; VOL.HELL simülasyon
+  adımı ile render snapshot kopyası için ayrı benchmark komutu eklendi.
+- Asset Studio `DocumentSession` kirliliği paralel stamp sayaçlarından
+  `CommandHistory` state token'ına taşındı; history budget eviction, undo/redo
+  ve oversized command regresyonları eklendi.
+- VisualSynth bellek tahmini bilinen tampon, geçici scratch, metadata ve %50
+  güvenlik payını ayrı raporlayan muhafazakâr modele taşındı. RenderCache
+  sahiplik kopyalarının byte/işlem telemetry'si benchmark çıktısına eklendi.
+
+Bu turda bilinçli olarak config taban değerleri körlemesine artırılmadı: sorun
+varyantların geç oyunda oyuncu build'inden kopmasıydı ve çözüm önce ortak stat
+ölçeklemesiyle güvenceye alındı. Son doğrulamada `pnpm quick`, `pnpm fast`,
+`pnpm high` ve `pnpm signoff` yeşil geçti; signoff içindeki Asset Studio tam
+matrisi Chromium ve Firefox'ta 38/38 test tamamladı. `pnpm run doctor:env`, CORE
+ve VOL.HELL benchmark komutları, `git diff --check` ve ilgili hedefli testler de
+başarılıdır. Playwright Chromium ikilisi bu makinenin yerel önbelleğine kuruldu;
+gerçek cihaz ve uzun süreli oynanış smoke testi otomatik kapı değildir ve kalan
+operasyonel risktir.
+
 ## 2026-08-26 — VOL-HELL kapsamlı hardening turu
 
 - Runtime sayıları ortak sonlu/saturating yardımcılarla sınırlandı; oyuncu,
@@ -275,9 +314,11 @@ silinir; kronolojiye not düşülmez.
   (831 satır, `core/src/ui/data/`) god-object sınırının (~600) üstünde. Kalan
   kod zaten sahnenin/bileşenin kendi sorumluluğu; daha fazla bölmek satırı
   taşır ama test edilebilirlik kazandırmaz — bilinçli olarak durduruldu.
-- `SpatialIndex`in artımlı yolunun (`insert`/`remove`/`update`) üretimde
-  çağıranı yok — `vol-hell` hâlâ `rebuild()` kullanıyor (birkaç yüz düşmanda
-  maliyeti ölçülemez). Artımlı yol yalnızca testlerle canlı tutuluyor.
+- `SpatialIndex`in artımlı yolu renderer-neutral `VolHellSimulation` içinde
+  üretim modelinin parçası; Phaser `GameScene` ise aynı frame snapshot'ını ve
+  separation sırasını korumak için hâlâ `rebuild()` kullanıyor. Phaser yolunu
+  artımlıya taşımak, iki hareket fazının davranış eşitliğini koruyan ayrı bir
+  entegrasyon ve cihaz benchmark'ı gerektiriyor.
 - CORE public API yüzeyi kilitli bir sayıyla büyüyor (güncel sayı
   `core/tests/governance/publicSurface.test.ts`te), 13 `export *`
   barrel'ıyla. Barrel'ları elle listeye çevirmek büyük bakım yükü getirir;
@@ -288,9 +329,10 @@ silinir; kronolojiye not düşülmez.
   tercih (agent talimatları yerelde kalır) ama bu dosyalara yapılan
   güncellemeler hiçbir commit'e girmez. Kalıcı olması gereken bir kural
   mutlaka `README.md`ye de işlenmeli.
-- 14 headless primitifin çoğu (`Grid`, `findPath`, `FlowField`, `EventBus`,
-  `Deck`, `SlotContainer`) üretimde henüz hiç yürümedi — yalnızca
-  `SpatialIndex` `vol-hell` tarafından tüketiliyor.
+- CORE headless primitiflerinin benchmark/workload tüketimi genişledi; ancak
+  `EventBus`, `Deck`, `SlotContainer`, `FlowField` ve benzeri bazı yüzeylerin
+  hâlâ ikinci gerçek ürün tüketicisi yok. Bu, mekanizma doğrulamasından ayrı
+  bir entegrasyon borcu olarak duruyor.
 - Tuşlar yeniden atanabilir durumda (`PCActionBinding` veri hâlinde) ama
   bunu oyuncuya açan bir ayar ekranı yok.
 - `TouchButton` adı taşıdığı semantiği (girdi cihazından bağımsız press/hold)
@@ -309,6 +351,11 @@ silinir; kronolojiye not düşülmez.
   devam ediyor — kabul edilen bir sınır (bkz. `quality.json` eşikleri).
 
 **Oynanış / UI**
+
+- Ability stat ölçeklemesi ve kule dayanıklılık/tempo bağı artık runtime ve
+  regresyon testleriyle korunuyor; hedefleme, alan kapsaması ve gerçek cihaz
+  FPS'i matematiksel benchmark'ta temsil edilmediği için 20 dalgalık manuel
+  oynanış smoke testi hâlâ gerekli.
 
 - `ShopPicker` reroll'unda eski kartlar çıkış animasyonu almadan yok
   ediliyor (yeni kartların aynı hücreye girişini engellememek için) —

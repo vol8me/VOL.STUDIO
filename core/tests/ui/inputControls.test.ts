@@ -26,48 +26,49 @@ describe('Input kontrolleri - programatik setter sözleşmesi', () => {
   });
 
   it('NumberStepper.setValue sessizdir', () => {
-    const onChange = vi.fn();
-    const stepper = new NumberStepper({ onChange, value: 5 });
+    const onCommit = vi.fn();
+    const stepper = new NumberStepper({ onCommit, value: 5 });
     stepper.setValue(12);
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onCommit).not.toHaveBeenCalled();
     stepper.destroy();
   });
 
-  it('Slider.setValue değeri sınırlandırır ve onChange TETİKLEMEZ', () => {
-    const onChange = vi.fn();
-    const slider = new Slider({ onChange, min: 0, max: 100, value: 50 });
+  it('Slider.setValue değeri sınırlandırır ve callback TETİKLEMEZ', () => {
+    const onCommit = vi.fn();
+    const slider = new Slider({ onCommit, min: 0, max: 100, value: 50 });
 
     slider.setValue(150);
 
     expect(slider.getValue()).toBe(100);
-    // Programatik atama sessizdir: onChange -> state -> setValue -> onChange
-    // geri besleme döngüsünü baştan imkansız kılar.
-    expect(onChange).not.toHaveBeenCalled();
+    // Programatik atama sessizdir; geri besleme döngüsünü baştan imkânsız kılar.
+    expect(onCommit).not.toHaveBeenCalled();
     slider.destroy();
   });
 
-  it('Slider.setValueAndNotify hem değeri ayarlar hem onChange tetikler', () => {
-    const onChange = vi.fn();
-    const slider = new Slider({ onChange, min: 0, max: 100, value: 50 });
+  it('Slider.setValueAndNotify hem değeri ayarlar hem input/commit tetikler', () => {
+    const onInput = vi.fn();
+    const onCommit = vi.fn();
+    const slider = new Slider({ onInput, onCommit, min: 0, max: 100, value: 50 });
 
     slider.setValueAndNotify(150);
 
     expect(slider.getValue()).toBe(100);
-    expect(onChange).toHaveBeenCalledWith(100);
+    expect(onInput).toHaveBeenCalledWith(100);
+    expect(onCommit).toHaveBeenCalledWith(100);
     slider.destroy();
   });
 
   it('RangeSlider.setValue sessizdir ve step=0 çökmez', () => {
-    const onChange = vi.fn();
+    const onCommit = vi.fn();
     const slider = new RangeSlider({
-      onChange,
+      onCommit,
       min: 0,
       max: 100,
       step: 0,
       value: { min: 10, max: 90 },
     });
     slider.setValue({ min: 20, max: 80 });
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onCommit).not.toHaveBeenCalled();
 
     // step=0 varsayılan 1'e çekilir, NaN/Infinity üretmemeli
     const value = slider.getValue();
@@ -77,40 +78,40 @@ describe('Input kontrolleri - programatik setter sözleşmesi', () => {
   });
 
   it('Checkbox.setChecked sessizdir', () => {
-    const onChange = vi.fn();
-    const checkbox = new Checkbox({ onChange, checked: false });
+    const onCommit = vi.fn();
+    const checkbox = new Checkbox({ onCommit, checked: false });
     checkbox.setChecked(true);
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onCommit).not.toHaveBeenCalled();
     checkbox.destroy();
   });
 
   it('RadioGroup.setValue sessizdir', () => {
-    const onChange = vi.fn();
+    const onCommit = vi.fn();
     const group = new RadioGroup({
       options: [
         { value: 'a', label: 'A' },
         { value: 'b', label: 'B' },
       ],
       value: 'a',
-      onChange,
+      onCommit,
     });
     group.setValue('b');
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onCommit).not.toHaveBeenCalled();
     group.destroy();
   });
 
   it('SegmentedControl.setValue sessizdir', () => {
-    const onChange = vi.fn();
+    const onCommit = vi.fn();
     const control = new SegmentedControl({
       options: [
         { value: 'easy', label: 'Kolay' },
         { value: 'hard', label: 'Zor' },
       ],
       value: 'easy',
-      onChange,
+      onCommit,
     });
     control.setValue('hard');
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onCommit).not.toHaveBeenCalled();
     control.destroy();
   });
 });
@@ -162,8 +163,8 @@ describe('RangeSlider - pointer sürükleme ve çarpışma', () => {
   }
 
   it('min tutamacı sürüklenince değer track genişliğine göre doğru hesaplanır', () => {
-    const onChange = vi.fn();
-    const slider = new RangeSlider({ min: 0, max: 100, value: { min: 0, max: 100 }, onChange });
+    const onInput = vi.fn();
+    const slider = new RangeSlider({ min: 0, max: 100, value: { min: 0, max: 100 }, onInput });
     const track = slider.element.querySelector<HTMLDivElement>('.vol-range-slider__track')!;
     const minHandle = slider.element.querySelector<HTMLDivElement>(
       '.vol-range-slider__handle--min',
@@ -179,8 +180,8 @@ describe('RangeSlider - pointer sürükleme ve çarpışma', () => {
   });
 
   it('min tutamacı max değerini GEÇEMEZ (itmez) — kendi sınırında durur', () => {
-    const onChange = vi.fn();
-    const slider = new RangeSlider({ min: 0, max: 100, value: { min: 0, max: 40 }, onChange });
+    const onInput = vi.fn();
+    const slider = new RangeSlider({ min: 0, max: 100, value: { min: 0, max: 40 }, onInput });
     const track = slider.element.querySelector<HTMLDivElement>('.vol-range-slider__track')!;
     const minHandle = slider.element.querySelector<HTMLDivElement>(
       '.vol-range-slider__handle--min',

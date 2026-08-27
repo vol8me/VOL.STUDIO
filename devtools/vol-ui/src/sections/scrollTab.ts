@@ -1,12 +1,9 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { Carousel, ScrollView, Text, VirtualList } from '@volstudio/core/ui';
 import { i18n, i18next } from '@volstudio/core/i18n';
 import { card, cardGrid } from './shared';
 
-interface Destroyable {
-  destroy(): void;
-}
-
-function buildVerticalTextDemo(disposables: Destroyable[]): HTMLElement {
+function buildVerticalTextDemo(disposables: DisposableScope): HTMLElement {
   const loreParagraphs = [
     i18next.t('volui:scroll.lore1'),
     i18next.t('volui:scroll.lore2'),
@@ -18,19 +15,19 @@ function buildVerticalTextDemo(disposables: Destroyable[]): HTMLElement {
   ];
 
   const scroll = new ScrollView({ direction: 'vertical', size: 220 });
-  disposables.push(scroll);
+  disposables.addDestroyables(scroll);
   for (const paragraph of loreParagraphs) {
     const text = new Text(paragraph, { variant: 'body' });
-    disposables.push(text);
+    disposables.addDestroyables(text);
     scroll.add(text);
   }
   return scroll.element;
 }
 
-function buildHorizontalCardsDemo(disposables: Destroyable[]): HTMLElement {
+function buildHorizontalCardsDemo(disposables: DisposableScope): HTMLElement {
   const scroll = new ScrollView({ direction: 'horizontal' });
   scroll.element.classList.add('vol-showcase-scroll-cards');
-  disposables.push(scroll);
+  disposables.addDestroyables(scroll);
 
   const cards = [
     i18next.t('volui:scroll.pistol'),
@@ -44,7 +41,7 @@ function buildHorizontalCardsDemo(disposables: Destroyable[]): HTMLElement {
     const el = document.createElement('div');
     el.className = 'vol-showcase-scroll-card';
     const text = new Text(card, { variant: 'body', tag: 'span' });
-    disposables.push(text);
+    disposables.addDestroyables(text);
     el.appendChild(text.element);
     scroll.add({ element: el });
   }
@@ -71,7 +68,7 @@ const RARITY_COLOR: Record<LootRow['rarity'], string> = {
 };
 
 /** VirtualList demosu: 5000 satır, DOM'da yalnızca ~12-15 görünür. */
-function buildVirtualListDemo(disposables: Destroyable[]): HTMLElement {
+function buildVirtualListDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -85,7 +82,7 @@ function buildVirtualListDemo(disposables: Destroyable[]): HTMLElement {
   const info = new Text(i18next.t('volui:scroll.virtualListInfo', { n: items.length }), {
     variant: 'muted',
   });
-  disposables.push(info);
+  disposables.addDestroyables(info);
 
   const list = new VirtualList<LootRow>({
     items,
@@ -109,7 +106,7 @@ function buildVirtualListDemo(disposables: Destroyable[]): HTMLElement {
       return row;
     },
   });
-  disposables.push(list);
+  disposables.addDestroyables(list);
 
   wrap.appendChild(info.element);
   wrap.appendChild(list.element);
@@ -118,7 +115,7 @@ function buildVirtualListDemo(disposables: Destroyable[]): HTMLElement {
 }
 
 /** Carousel demosu: 4 sayfalık karakter seçimi. autoPlayIntervalMs yok — beklenmedik geçişler rahatsız eder. */
-function buildCarouselDemo(disposables: Destroyable[]): HTMLElement {
+function buildCarouselDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -133,14 +130,14 @@ function buildCarouselDemo(disposables: Destroyable[]): HTMLElement {
     i18next.t('volui:scroll.selectedChar', { name: characters[0].name }),
     { variant: 'body' },
   );
-  disposables.push(resultText);
+  disposables.addDestroyables(resultText);
 
   const slides = characters.map((c) => {
     const slide = document.createElement('div');
     slide.className = 'vol-showcase-carousel-slide';
     const name = new Text(c.name, { variant: 'body' });
     const desc = new Text(c.desc, { variant: 'muted' });
-    disposables.push(name, desc);
+    disposables.addDestroyables(name, desc);
     slide.appendChild(name.element);
     slide.appendChild(desc.element);
     return { id: c.name, element: slide };
@@ -154,7 +151,7 @@ function buildCarouselDemo(disposables: Destroyable[]): HTMLElement {
       );
     },
   });
-  disposables.push(carousel);
+  disposables.addDestroyables(carousel);
 
   wrap.appendChild(carousel.element);
   wrap.appendChild(resultText.element);
@@ -165,7 +162,7 @@ function buildCarouselDemo(disposables: Destroyable[]): HTMLElement {
 export function buildScrollTab(): { element: HTMLElement; destroy: () => void } {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
-  const disposables: Destroyable[] = [];
+  const disposables = new DisposableScope();
 
   const cards = [
     // Carousel span:2 — dar kartta sıkışıp boşluk bırakmasın.
@@ -181,6 +178,6 @@ export function buildScrollTab(): { element: HTMLElement; destroy: () => void } 
 
   return {
     element: container,
-    destroy: () => disposables.forEach((d) => d.destroy()),
+    destroy: () => disposables.dispose(),
   };
 }

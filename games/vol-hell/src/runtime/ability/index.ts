@@ -12,3 +12,4 @@ export { TurretAbility } from './TurretAbility';
 export { ChainLightningAbility } from './ChainLightningAbility';
 export { FireZoneAbility } from './FireZoneAbility';
 export { MultiShotAbility } from './MultiShotAbility';
+export { scaleAbilityDamage, scaleTurretFireInterval, scaleTurretHealth } from './abilityScaling';

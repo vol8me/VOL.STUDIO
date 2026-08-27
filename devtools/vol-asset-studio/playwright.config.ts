@@ -2,6 +2,22 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = Number(process.env.VOL_ASSET_STUDIO_E2E_PORT ?? 5176);
 const BASE_URL = `http://127.0.0.1:${PORT}`;
+const FIREFOX_PORT = PORT + 1;
+const FIREFOX_BASE_URL = `http://127.0.0.1:${FIREFOX_PORT}`;
+const FULL_MATRIX = process.env.VOL_E2E_FULL === '1';
+
+function webServer(port: number, name: string) {
+  return {
+    command: `pnpm exec tsx server/cli.ts --port ${port}`,
+    url: `http://127.0.0.1:${port}/api/v1/health`,
+    name,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
+    // İstek logu E2E çıktısını boğuyordu; hatalar stderr'de görünmeye devam eder.
+    stdout: 'ignore' as const,
+    stderr: 'pipe' as const,
+  };
+}
 
 /**
  * Gerçek tarayıcı kapısı.
@@ -27,18 +43,18 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    ...(process.env.VOL_E2E_FULL === '1'
-      ? [{ name: 'firefox', use: { ...devices['Desktop Firefox'] } }]
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], baseURL: BASE_URL } },
+    ...(FULL_MATRIX
+      ? [{ name: 'firefox', use: { ...devices['Desktop Firefox'], baseURL: FIREFOX_BASE_URL } }]
       : []),
   ],
-  webServer: {
-    command: `pnpm exec tsx server/cli.ts --port ${PORT}`,
-    url: `${BASE_URL}/api/v1/health`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-    // İstek logu E2E çıktısını boğuyordu; hatalar stderr'de görünmeye devam eder.
-    stdout: 'ignore',
-    stderr: 'pipe',
-  },
+  // Tek editör lease'i iki tarayıcı projesinin durumunu birbirine taşımamalı.
+  // Tam matriste her proje kendi sunucu sürecine gider; tek Chromium smoke'u
+  // hızlı kalması için tek sunucu kullanmaya devam eder.
+  webServer: FULL_MATRIX
+    ? [
+        webServer(PORT, 'Chromium Asset Studio sunucusu'),
+        webServer(FIREFOX_PORT, 'Firefox Asset Studio sunucusu'),
+      ]
+    : webServer(PORT, 'Asset Studio sunucusu'),
 });

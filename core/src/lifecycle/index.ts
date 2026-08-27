@@ -1,1 +1,6 @@
-export { DisposableScope, type Disposable } from './DisposableScope';
+export {
+  DisposableScope,
+  type CancellableDisposable,
+  type Destroyable,
+  type Disposable,
+} from './DisposableScope';

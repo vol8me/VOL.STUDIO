@@ -53,29 +53,29 @@ describe('ColorPicker', () => {
   });
 
   it('hazır renk yokken kutucuğa tıklamak hiçbir popover açmaz', () => {
-    const onChange = vi.fn();
-    const picker = new ColorPicker({ value: '#000000', onChange });
+    const onInput = vi.fn();
+    const picker = new ColorPicker({ value: '#000000', onInput });
     document.body.appendChild(picker.element);
     swatch(picker).click();
     expect(document.querySelector('.vol-popover')).toBeNull();
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onInput).not.toHaveBeenCalled();
     picker.destroy();
   });
 
   it('hex alanı YALNIZCA geçerli değerde yayın yapar', () => {
     // Her tuş vuruşunda geçersiz bir ara değer yaymak dinleyicideki paleti
     // kırardı.
-    const onChange = vi.fn();
-    const picker = new ColorPicker({ value: '#000000', onChange });
+    const onInput = vi.fn();
+    const picker = new ColorPicker({ value: '#000000', onInput });
     const input = hexInput(picker);
 
     input.value = '#12';
     input.dispatchEvent(new Event('input'));
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onInput).not.toHaveBeenCalled();
 
     input.value = '#123456';
     input.dispatchEvent(new Event('input'));
-    expect(onChange).toHaveBeenCalledWith('#123456');
+    expect(onInput).toHaveBeenCalledWith('#123456');
     picker.destroy();
   });
 
@@ -88,20 +88,20 @@ describe('ColorPicker', () => {
     picker.destroy();
   });
 
-  it('setValue onChange TETİKLEMEZ — döngüyü kırar', () => {
-    const onChange = vi.fn();
-    const picker = new ColorPicker({ value: '#000000', onChange });
+  it('setValue callback TETİKLEMEZ — döngüyü kırar', () => {
+    const onInput = vi.fn();
+    const picker = new ColorPicker({ value: '#000000', onInput });
     picker.setValue('#ffffff');
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onInput).not.toHaveBeenCalled();
     expect(hexInput(picker).value).toBe('#ffffff');
     picker.destroy();
   });
 
   it('aynı değeri yeniden atamak yayın yapmaz', () => {
-    const onChange = vi.fn();
-    const picker = new ColorPicker({ value: '#123456', swatches: ['#123456'], onChange });
+    const onInput = vi.fn();
+    const picker = new ColorPicker({ value: '#123456', swatches: ['#123456'], onInput });
     openPresets(picker)[0].click();
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onInput).not.toHaveBeenCalled();
     picker.destroy();
   });
 
@@ -118,12 +118,12 @@ describe('ColorPicker', () => {
   });
 
   it('hazır renkler tıklanınca uygulanır ve popover kapanır', () => {
-    const onChange = vi.fn();
-    const picker = new ColorPicker({ swatches: ['#ff0000', '#00ff00'], onChange });
+    const onInput = vi.fn();
+    const picker = new ColorPicker({ swatches: ['#ff0000', '#00ff00'], onInput });
     const presets = openPresets(picker);
     expect(presets).toHaveLength(2);
     presets[1].click();
-    expect(onChange).toHaveBeenCalledWith('#00ff00');
+    expect(onInput).toHaveBeenCalledWith('#00ff00');
     // Kapalı Popup DOM'dan kaldırılmaz, yalnızca görünürlük class'ını kaybeder.
     expect(document.querySelector('.vol-popup--visible')).toBeNull();
     picker.destroy();
@@ -138,13 +138,13 @@ describe('ColorPicker', () => {
   });
 
   it('destroy dinleyicileri bırakır ve elementi kaldırır', () => {
-    const onChange = vi.fn();
-    const picker = new ColorPicker({ swatches: ['#111111'], onChange });
+    const onInput = vi.fn();
+    const picker = new ColorPicker({ swatches: ['#111111'], onInput });
     const preset = openPresets(picker)[0];
     picker.destroy();
 
     preset.click();
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onInput).not.toHaveBeenCalled();
     expect(picker.element.isConnected).toBe(false);
   });
 

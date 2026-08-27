@@ -1,3 +1,4 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import {
   Button,
   Checkbox,
@@ -19,19 +20,15 @@ import {
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid } from './shared';
 
-interface Destroyable {
-  destroy(): void;
-}
-
 /** Checkbox'ı ayar listesi içinde gösterir. */
-function buildCheckboxGroupDemo(disposables: Destroyable[]): HTMLElement {
+function buildCheckboxGroupDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-checkbox-group';
 
   const music = new Checkbox({ label: i18next.t('volui:forms.musicOn'), checked: true });
   const screenShake = new Checkbox({ label: i18next.t('volui:forms.screenShake'), checked: true });
   const autoAim = new Checkbox({ label: i18next.t('volui:forms.autoAim'), checked: false });
-  disposables.push(music, screenShake, autoAim);
+  disposables.addDestroyables(music, screenShake, autoAim);
 
   wrap.appendChild(music.element);
   wrap.appendChild(screenShake.element);
@@ -40,7 +37,7 @@ function buildCheckboxGroupDemo(disposables: Destroyable[]): HTMLElement {
   return wrap;
 }
 
-function buildVerticalSliderDemo(disposables: Destroyable[]): HTMLElement {
+function buildVerticalSliderDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-vertical-sliders';
 
@@ -65,7 +62,7 @@ function buildVerticalSliderDemo(disposables: Destroyable[]): HTMLElement {
 
     const label = new Text(channel, { variant: 'muted', tag: 'span' });
     column.appendChild(label.element);
-    disposables.push(slider, label);
+    disposables.addDestroyables(slider, label);
 
     wrap.appendChild(column);
   }
@@ -74,14 +71,14 @@ function buildVerticalSliderDemo(disposables: Destroyable[]): HTMLElement {
 }
 
 /** RangeSlider demosu: düşman seviye aralığı filtresi. */
-function buildRangeSliderDemo(disposables: Destroyable[]): HTMLElement {
+function buildRangeSliderDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const hint = new Text(i18next.t('volui:forms.enemyLevelHint'), {
     variant: 'muted',
   });
-  disposables.push(hint);
+  disposables.addDestroyables(hint);
 
   const range = new RangeSlider({
     label: i18next.t('volui:forms.enemyLevelRange'),
@@ -90,7 +87,7 @@ function buildRangeSliderDemo(disposables: Destroyable[]): HTMLElement {
     value: { min: 5, max: 30 },
     formatValue: (v) => `Lv.${v}`,
   });
-  disposables.push(range);
+  disposables.addDestroyables(range);
 
   wrap.appendChild(range.element);
   wrap.appendChild(hint.element);
@@ -99,7 +96,7 @@ function buildRangeSliderDemo(disposables: Destroyable[]): HTMLElement {
 }
 
 /** Otomatik (autoStart + loop) TimerBar varyasyonları: bekleme, buff, yükleme. */
-function buildTimerBarVariationsDemo(disposables: Destroyable[]): HTMLElement {
+function buildTimerBarVariationsDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-timer-variations';
 
@@ -110,7 +107,7 @@ function buildTimerBarVariationsDemo(disposables: Destroyable[]): HTMLElement {
     autoStart: true,
     loop: true,
   });
-  disposables.push(cooldown);
+  disposables.addDestroyables(cooldown);
 
   const buff = new TimerBar({
     durationSeconds: 6,
@@ -119,7 +116,7 @@ function buildTimerBarVariationsDemo(disposables: Destroyable[]): HTMLElement {
     autoStart: true,
     loop: true,
   });
-  disposables.push(buff);
+  disposables.addDestroyables(buff);
 
   const loading = new TimerBar({
     durationSeconds: 2.5,
@@ -127,7 +124,7 @@ function buildTimerBarVariationsDemo(disposables: Destroyable[]): HTMLElement {
     autoStart: true,
     loop: true,
   });
-  disposables.push(loading);
+  disposables.addDestroyables(loading);
   loading.element.classList.add('vol-timer-bar--thin');
 
   for (const [caption, timer] of [
@@ -139,7 +136,7 @@ function buildTimerBarVariationsDemo(disposables: Destroyable[]): HTMLElement {
     column.className = 'vol-showcase-timer-variations__column';
 
     const label = new Text(caption, { variant: 'muted', tag: 'span' });
-    disposables.push(label);
+    disposables.addDestroyables(label);
     column.appendChild(label.element);
     column.appendChild(timer.element);
     wrap.appendChild(column);
@@ -149,7 +146,7 @@ function buildTimerBarVariationsDemo(disposables: Destroyable[]): HTMLElement {
 }
 
 /** TimerBar: sıfırlanabilir dol/boşalt zamanlayıcı. */
-function buildTimerBarDemo(disposables: Destroyable[]): HTMLElement {
+function buildTimerBarDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -159,7 +156,7 @@ function buildTimerBarDemo(disposables: Destroyable[]): HTMLElement {
     label: (remaining) => i18next.t('volui:forms.abilityReady', { n: remaining }),
     loop: false,
   });
-  disposables.push(timer);
+  disposables.addDestroyables(timer);
   wrap.appendChild(timer.element);
 
   const controls = document.createElement('div');
@@ -175,7 +172,7 @@ function buildTimerBarDemo(disposables: Destroyable[]): HTMLElement {
   const resetButton = new Button(i18next.t('volui:forms.reset'), {
     onClick: () => timer.reset(),
   });
-  disposables.push(startButton, pauseButton, resetButton);
+  disposables.addDestroyables(startButton, pauseButton, resetButton);
 
   controls.appendChild(startButton.element);
   controls.appendChild(pauseButton.element);
@@ -186,7 +183,7 @@ function buildTimerBarDemo(disposables: Destroyable[]): HTMLElement {
 }
 
 /** Palet düzenlemenin iki ucu: kutucuk + hex + hazır renkler. */
-function buildColorPickerDemo(disposables: Destroyable[]): HTMLElement {
+function buildColorPickerDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo vol-showcase-panel-demo--centered';
 
@@ -197,7 +194,7 @@ function buildColorPickerDemo(disposables: Destroyable[]): HTMLElement {
     swatches: ['#b85518', '#246a79', '#565dbe', '#307a57', '#d2a03c', '#b94a4a'],
     onInput: (value) => readout.setContent(value),
   });
-  disposables.push(picker, readout);
+  disposables.addDestroyables(picker, readout);
 
   wrap.appendChild(picker.element);
   wrap.appendChild(readout.element);
@@ -205,7 +202,7 @@ function buildColorPickerDemo(disposables: Destroyable[]): HTMLElement {
 }
 
 /** Aktarım eğrisi: noktaları sürükle, çift tıkla ekle, Alt+tık ile sil. */
-function buildCurveEditorDemo(disposables: Destroyable[]): HTMLElement {
+function buildCurveEditorDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo vol-showcase-panel-demo--centered';
 
@@ -217,9 +214,9 @@ function buildCurveEditorDemo(disposables: Destroyable[]): HTMLElement {
       [0.5, 0.85],
       [1, 1],
     ],
-    onChange: () => readout.setContent(`f(0.5) = ${curve.sample(0.5).toFixed(2)}`),
+    onInput: () => readout.setContent(`f(0.5) = ${curve.sample(0.5).toFixed(2)}`),
   });
-  disposables.push(curve, readout);
+  disposables.addDestroyables(curve, readout);
   readout.setContent(`f(0.5) = ${curve.sample(0.5).toFixed(2)}`);
 
   wrap.appendChild(curve.element);
@@ -228,7 +225,7 @@ function buildCurveEditorDemo(disposables: Destroyable[]): HTMLElement {
 }
 
 /** Inspector form örneği: etiket + input + açıklama + reset. */
-function buildPropertyFieldDemo(disposables: Destroyable[]): HTMLElement {
+function buildPropertyFieldDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -248,7 +245,7 @@ function buildPropertyFieldDemo(disposables: Destroyable[]): HTMLElement {
       state.setContent(i18next.t('volui:forms.propertyFieldNoCommit'));
     },
   });
-  disposables.push(input, field, state);
+  disposables.addDestroyables(input, field, state);
 
   wrap.appendChild(field.element);
   wrap.appendChild(state.element);
@@ -256,7 +253,7 @@ function buildPropertyFieldDemo(disposables: Destroyable[]): HTMLElement {
 }
 
 /** Tek/çoklu seçim ve aksiyon düğmesi destekli araç çubuğu. */
-function buildToolbarDemo(disposables: Destroyable[]): HTMLElement {
+function buildToolbarDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo vol-showcase-panel-demo--centered';
 
@@ -297,7 +294,7 @@ function buildToolbarDemo(disposables: Destroyable[]): HTMLElement {
       }
     },
   });
-  disposables.push(toolbar, state);
+  disposables.addDestroyables(toolbar, state);
 
   wrap.appendChild(toolbar.element);
   wrap.appendChild(state.element);
@@ -310,10 +307,10 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
 } {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
-  const disposables: Destroyable[] = [];
+  const disposables = new DisposableScope();
 
   const nameInput = new Input({ placeholder: i18next.t('volui:forms.playerNamePlaceholder') });
-  disposables.push(nameInput);
+  disposables.addDestroyables(nameInput);
 
   const volumeSlider = new Slider({
     label: i18next.t('volui:forms.volumeLabel'),
@@ -322,7 +319,7 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     value: 70,
     formatValue: (v) => `${Math.round(v)}%`,
   });
-  disposables.push(volumeSlider);
+  disposables.addDestroyables(volumeSlider);
 
   const difficultySelect = new Select({
     options: [
@@ -335,7 +332,7 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     placeholder: i18next.t('volui:forms.difficultyPlaceholder'),
     container: uiRootElement,
   });
-  disposables.push(difficultySelect);
+  disposables.addDestroyables(difficultySelect);
 
   const gameModeRadio = new RadioGroup({
     options: [
@@ -345,7 +342,7 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     ],
     value: 'campaign',
   });
-  disposables.push(gameModeRadio);
+  disposables.addDestroyables(gameModeRadio);
 
   const qualitySegmented = new SegmentedControl({
     options: [
@@ -355,7 +352,7 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     ],
     value: 'medium',
   });
-  disposables.push(qualitySegmented);
+  disposables.addDestroyables(qualitySegmented);
 
   const unitStepper = new NumberStepper({
     label: i18next.t('volui:forms.productionQuantity'),
@@ -363,14 +360,14 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     max: 20,
     value: 5,
   });
-  disposables.push(unitStepper);
+  disposables.addDestroyables(unitStepper);
 
   const noteTextArea = new TextArea({
     placeholder: i18next.t('volui:forms.serverModPlaceholder'),
     rows: 4,
     maxLength: 200,
   });
-  disposables.push(noteTextArea);
+  disposables.addDestroyables(noteTextArea);
 
   const cards = [
     card(i18next.t('volui:forms.input'), nameInput.element),
@@ -395,6 +392,6 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
 
   return {
     element: container,
-    destroy: () => disposables.forEach((d) => d.destroy()),
+    destroy: () => disposables.dispose(),
   };
 }

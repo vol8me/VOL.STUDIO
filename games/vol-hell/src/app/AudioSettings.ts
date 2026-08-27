@@ -1,4 +1,5 @@
 import type { SaveManager } from '@volstudio/core';
+import { DisposableScope, type CancellableDisposable } from '@volstudio/core/lifecycle';
 import { audioConfig } from '@/config/audio';
 
 /** Persist edilen ses ayarları. */
@@ -56,7 +57,8 @@ function mergeWithDefaults(stored: unknown): AudioSettingsData {
 export class AudioSettings {
   private data: AudioSettingsData = mergeWithDefaults(undefined);
   private readonly listeners = new Set<(data: AudioSettingsData) => void>();
-  private persistTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly lifecycle = new DisposableScope();
+  private persistTimer: CancellableDisposable | null = null;
   private pendingPersist: Promise<void> | null = null;
   private pendingResolve: ((value: void | PromiseLike<void>) => void) | null = null;
   /** Yazıları sıraya alır; flush sırasında iki ayar kaydı yarışmaz. */
@@ -67,7 +69,7 @@ export class AudioSettings {
 
   constructor(private readonly saveManager: SaveManager) {
     if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', this.boundFlush);
+      this.lifecycle.addListener(window, 'beforeunload', this.boundFlush);
     }
   }
 
@@ -90,7 +92,8 @@ export class AudioSettings {
     if (this.disposed) return Promise.resolve();
     this.pendingPersist ??= new Promise<void>((resolve) => {
       this.pendingResolve = resolve;
-      this.persistTimer = setTimeout(() => {
+      this.persistTimer = this.lifecycle.addTimeout(() => {
+        this.persistTimer = null;
         this.commitPendingPersist();
       }, PERSIST_DEBOUNCE_MS);
     });
@@ -101,7 +104,7 @@ export class AudioSettings {
   /** Bekleyen yazmayı hemen diske indirir (kapanış, sahne geçişi). */
   async flush(): Promise<void> {
     if (this.persistTimer !== null) {
-      clearTimeout(this.persistTimer);
+      this.persistTimer.cancel();
       this.persistTimer = null;
       this.commitPendingPersist();
     }
@@ -191,7 +194,7 @@ export class AudioSettings {
   dispose(): void {
     this.loadGeneration++;
     if (this.persistTimer !== null) {
-      clearTimeout(this.persistTimer);
+      this.persistTimer.cancel();
       this.persistTimer = null;
       // Bekleyen setter promise'leri asılı kalmasın; kapanışta son snapshot
       // yine sıraya alınır. `dispose()` artık sessizce yazmayı düşürmez.
@@ -199,9 +202,7 @@ export class AudioSettings {
     }
     this.disposed = true;
     this.listeners.clear();
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('beforeunload', this.boundFlush);
-    }
+    this.lifecycle.dispose();
   }
 
   private async persistAndNotify(): Promise<void> {

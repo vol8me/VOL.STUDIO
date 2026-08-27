@@ -1,4 +1,5 @@
 import { Icon, type IconName } from './Icon';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export type ToolbarOrientation = 'horizontal' | 'vertical';
 export type ToolbarSelectionMode = 'none' | 'single' | 'multiple';
@@ -25,6 +26,7 @@ export class ToolButton {
   readonly isToggle: boolean;
   private readonly onPressHandler?: (pressed: boolean) => void;
   private readonly boundClick: () => void;
+  private readonly scope = new DisposableScope();
 
   constructor(options: ToolButtonOptions) {
     this.id = options.id;
@@ -66,7 +68,7 @@ export class ToolButton {
       );
       this.onPressHandler?.(this.isPressed());
     };
-    this.element.addEventListener('click', this.boundClick);
+    this.scope.addListener(this.element, 'click', this.boundClick);
   }
 
   isPressed(): boolean {
@@ -88,7 +90,7 @@ export class ToolButton {
   }
 
   destroy(): void {
-    this.element.removeEventListener('click', this.boundClick);
+    this.scope.dispose();
     this.element.remove();
   }
 }
@@ -109,6 +111,7 @@ export class Toolbar {
   private readonly selectionMode: ToolbarSelectionMode;
   private readonly buttons: ToolButton[] = [];
   private readonly onChangeHandler?: ToolbarOptions['onChange'];
+  private readonly scope = new DisposableScope();
   private activeIndex = 0;
   private readonly boundKeydown: (event: KeyboardEvent) => void;
   private readonly boundFocusIn: (event: FocusEvent) => void;
@@ -141,9 +144,9 @@ export class Toolbar {
       this.applyUserSelection(this.buttons[index]);
       this.updateTabStops();
     };
-    this.element.addEventListener('keydown', this.boundKeydown);
-    this.element.addEventListener('focusin', this.boundFocusIn);
-    this.element.addEventListener(ACTIVATE_EVENT, this.boundActivate);
+    this.scope.addListener(this.element, 'keydown', this.boundKeydown as EventListener);
+    this.scope.addListener(this.element, 'focusin', this.boundFocusIn as EventListener);
+    this.scope.addListener(this.element, ACTIVATE_EVENT, this.boundActivate as EventListener);
 
     for (const item of options.items ?? []) this.add(item);
     if (options.value !== undefined) this.setValue(options.value);
@@ -164,6 +167,7 @@ export class Toolbar {
       pressed: options.pressed ?? false,
     });
     this.buttons.push(button);
+    this.scope.addDestroyable(button);
     this.element.appendChild(button.element);
     this.updateTabStops();
     return button;
@@ -202,10 +206,7 @@ export class Toolbar {
   }
 
   destroy(): void {
-    this.element.removeEventListener('keydown', this.boundKeydown);
-    this.element.removeEventListener('focusin', this.boundFocusIn);
-    this.element.removeEventListener(ACTIVATE_EVENT, this.boundActivate);
-    for (const button of this.buttons) button.destroy();
+    this.scope.dispose();
     this.buttons.length = 0;
     this.element.remove();
   }

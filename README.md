@@ -41,6 +41,8 @@ pnpm --filter @volstudio/vol-asset-studio dev # yalnızca Asset Studio :5175
 pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # Oyun build
 pnpm build:tauri                           # PC installer build
+pnpm benchmark:core                        # CORE headless workload ölçümü
+pnpm benchmark:vol-hell                    # VOL.HELL simülasyon/render ölçümü
 ```
 
 ### Doğrulama
@@ -55,6 +57,11 @@ Kalite kapıları `just` ile localde çalıştırılır. GitHub yalnızca source
 | Uzun build      | `pnpm exec just tauri-build` | game build + Tauri prod build (manuel)                   |
 | Ortam           | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri deps kontrolü      |
 | Rapor           | `pnpm exec just report high` | Kapıyı koşar, sonucu yapılandırılmış raporlar (`--json`) |
+
+Benchmark komutları makineye özel süre eşiği koymaz; CORE mekanizmalarının ve
+VOL.HELL'in render'dan ayrılmış simülasyonunun medyan/p95 adım maliyetini
+ölçer. Ayrıntılı tekil tarifler için `pnpm exec just benchmark-core` ve
+`pnpm exec just benchmark-vol-hell` kullanılabilir.
 
 `pre-commit` → `pnpm quick` ve `pre-push` → `pnpm high` hook'ları `pnpm install`
 sırasında kurulur; atlamak için `SKIP_SIMPLE_GIT_HOOKS=1`. Test yükü bilerek

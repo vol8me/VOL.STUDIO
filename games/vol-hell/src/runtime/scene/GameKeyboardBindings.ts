@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { DisposableScope } from '@volstudio/core';
 import type { AbilitySlot } from '@/runtime/ability/types';
 
 export interface GameKeyboardBindingOptions {
@@ -7,11 +8,6 @@ export interface GameKeyboardBindingOptions {
   onPause: () => void;
   isAbilityBlocked: () => boolean;
   onAbility: (slot: AbilitySlot) => void;
-}
-
-interface BoundKey {
-  key: Phaser.Input.Keyboard.Key;
-  handler: () => void;
 }
 
 /**
@@ -23,7 +19,7 @@ interface BoundKey {
  * birlikte taşır; sahne yalnızca `destroy()` çağırır.
  */
 export class GameKeyboardBindings {
-  private readonly bound: BoundKey[] = [];
+  private readonly scope = new DisposableScope();
 
   constructor(
     private readonly keyboard: Phaser.Input.Keyboard.KeyboardPlugin,
@@ -41,16 +37,17 @@ export class GameKeyboardBindings {
 
   /** Dinleyicileri ve Phaser'ın key/capture sahipliğini kaldırır. */
   destroy(): void {
-    for (const { key, handler } of this.bound) {
-      key.off('down', handler);
-      this.keyboard.removeKey(key, true, true);
-    }
-    this.bound.length = 0;
+    this.scope.dispose();
   }
 
   private bind(keyCode: number, handler: () => void): void {
     const key = this.keyboard.addKey(keyCode);
     key.on('down', handler);
-    this.bound.push({ key, handler });
+    this.scope.add({
+      dispose: () => {
+        key.off('down', handler);
+        this.keyboard.removeKey(key, true, true);
+      },
+    });
   }
 }

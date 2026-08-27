@@ -1,4 +1,5 @@
 import { runButtonClick, type ButtonClickHandler } from './buttonBehavior';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export type ButtonVariant = 'default' | 'primary' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -23,6 +24,7 @@ export class Button {
   private readonly spinnerElement: HTMLSpanElement;
   private onClickHandler?: ButtonClickHandler;
   private boundHandleClick: () => void;
+  private readonly scope = new DisposableScope();
   private loading = false;
 
   constructor(label: string, options: ButtonOptions = {}) {
@@ -59,7 +61,7 @@ export class Button {
     this.boundHandleClick = () => {
       void this.handleClick();
     };
-    this.element.addEventListener('click', this.boundHandleClick);
+    this.scope.addListener(this.element, 'click', this.boundHandleClick);
 
     if (onClick) {
       this.onClick(onClick);
@@ -92,7 +94,7 @@ export class Button {
   }
 
   destroy(): void {
-    this.element.removeEventListener('click', this.boundHandleClick);
+    this.scope.dispose();
     this.element.remove();
   }
 

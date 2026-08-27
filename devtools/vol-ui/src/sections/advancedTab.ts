@@ -1,3 +1,4 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import {
   Accordion,
   Button,
@@ -18,24 +19,20 @@ import {
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid } from './shared';
 
-interface Destroyable {
-  destroy(): void;
-}
-
 /** DialogueBox demosu: showControls:true ile dallı diyalog ve ileri saralama. */
-function buildDialogueDemo(uiRootElement: HTMLElement, disposables: Destroyable[]): HTMLElement {
+function buildDialogueDemo(uiRootElement: HTMLElement, disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const dialogue = new DialogueBox({ typeSpeedMs: 18, showControls: true });
   uiRootElement.appendChild(dialogue.element);
-  disposables.push(dialogue);
+  disposables.addDestroyables(dialogue);
 
   const decisions: string[] = [];
   const result = new Text(i18next.t('volui:advanced.dialogueHint'), {
     variant: 'muted',
   });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const renderDecisions = (): void => {
     result.setContent(
@@ -106,7 +103,7 @@ function buildDialogueDemo(uiRootElement: HTMLElement, disposables: Destroyable[
       ]);
     },
   });
-  disposables.push(startButton);
+  disposables.addDestroyables(startButton);
 
   wrap.appendChild(startButton.element);
   wrap.appendChild(result.element);
@@ -114,7 +111,7 @@ function buildDialogueDemo(uiRootElement: HTMLElement, disposables: Destroyable[
   return wrap;
 }
 
-function buildTreeDemo(disposables: Destroyable[]): HTMLElement {
+function buildTreeDemo(disposables: DisposableScope): HTMLElement {
   const tree = new Tree(
     [
       {
@@ -138,11 +135,11 @@ function buildTreeDemo(disposables: Destroyable[]): HTMLElement {
     ],
     { selectableFolders: true },
   );
-  disposables.push(tree);
+  disposables.addDestroyables(tree);
   return tree.element;
 }
 
-function buildAccordionDemo(disposables: Destroyable[]): HTMLElement {
+function buildAccordionDemo(disposables: DisposableScope): HTMLElement {
   const graphicsText = new Text(i18next.t('volui:advanced.graphicsDesc'), {
     variant: 'muted',
   });
@@ -152,7 +149,7 @@ function buildAccordionDemo(disposables: Destroyable[]): HTMLElement {
   const controlsText = new Text(i18next.t('volui:advanced.controlsDesc'), {
     variant: 'muted',
   });
-  disposables.push(graphicsText, audioText, controlsText);
+  disposables.addDestroyables(graphicsText, audioText, controlsText);
 
   const graphics = document.createElement('div');
   graphics.appendChild(graphicsText.element);
@@ -179,7 +176,7 @@ function buildAccordionDemo(disposables: Destroyable[]): HTMLElement {
     ],
     { defaultOpen: ['graphics'] },
   );
-  disposables.push(accordion);
+  disposables.addDestroyables(accordion);
   return accordion.element;
 }
 
@@ -192,7 +189,7 @@ interface UnitRow {
 }
 
 /** DataTable demosu: sıralanabilir sütunlar, seçilebilir satırlar. */
-function buildDataTableDemo(disposables: Destroyable[]): HTMLElement {
+function buildDataTableDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -235,7 +232,7 @@ function buildDataTableDemo(disposables: Destroyable[]): HTMLElement {
   ];
 
   const result = new Text(i18next.t('volui:advanced.clickUnitHint'), { variant: 'muted' });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const table = new DataTable<UnitRow>({
     columns: [
@@ -252,7 +249,7 @@ function buildDataTableDemo(disposables: Destroyable[]): HTMLElement {
         i18next.t('volui:advanced.selectedUnit', { name: row.name, power: row.power, hp: row.hp }),
       ),
   });
-  disposables.push(table);
+  disposables.addDestroyables(table);
 
   wrap.appendChild(table.element);
   wrap.appendChild(result.element);
@@ -278,14 +275,14 @@ function buildLargeUnitRows(count: number): UnitRow[] {
 }
 
 /** Pencerelemeli DataTable: 5.000 satır, DOM'da yalnızca birkaç düzine. */
-function buildVirtualizedDataTableDemo(disposables: Destroyable[]): HTMLElement {
+function buildVirtualizedDataTableDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const result = new Text(i18next.t('volui:advanced.virtualizedTableHint', { n: 5000 }), {
     variant: 'muted',
   });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const table = new DataTable<UnitRow>({
     columns: [
@@ -302,7 +299,7 @@ function buildVirtualizedDataTableDemo(disposables: Destroyable[]): HTMLElement 
         i18next.t('volui:advanced.selectedUnitPower', { name: row.name, power: row.power }),
       ),
   });
-  disposables.push(table);
+  disposables.addDestroyables(table);
 
   wrap.appendChild(table.element);
   wrap.appendChild(result.element);
@@ -311,7 +308,7 @@ function buildVirtualizedDataTableDemo(disposables: Destroyable[]): HTMLElement 
 }
 
 /** Wizard demosu: karakter oluşturma. validate() sınıf seçilmeden ilerlemeyi engeller. "İleri Düzey" toggle 5 adıma çıkarır. */
-function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
+function buildWizardDemo(disposables: DisposableScope): HTMLElement {
   let characterName = '';
   let characterClass = '';
   let characterAppearance = i18next.t('volui:advanced.appearanceClassic');
@@ -324,19 +321,22 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
   const advancedToggle = new Checkbox({
     label: i18next.t('volui:advanced.advancedSetupLabel'),
     checked: advancedSetup,
-    onChange: (checked) => {
+    onCommit: (checked) => {
       advancedSetup = checked;
       mountWizard();
     },
   });
-  disposables.push(advancedToggle);
+  disposables.addDestroyables(advancedToggle);
 
   const wizardSlot = document.createElement('div');
 
   let currentWizard: Wizard | null = null;
+  let wizardScope: DisposableScope | null = null;
 
   const mountWizard = (): void => {
-    currentWizard?.destroy();
+    wizardScope?.dispose();
+    wizardScope = new DisposableScope();
+    currentWizard = null;
 
     const nameStep = document.createElement('div');
     const nameLabel = new Text(i18next.t('volui:advanced.charNameHint'), { variant: 'muted' });
@@ -348,10 +348,7 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
     const onNameInput = (): void => {
       characterName = nameInput.value;
     };
-    nameInput.addEventListener('input', onNameInput);
-    disposables.push({
-      destroy: () => nameInput.removeEventListener('input', onNameInput),
-    });
+    wizardScope.addListener(nameInput, 'input', onNameInput);
     nameStep.appendChild(nameLabel.element);
     nameStep.appendChild(nameInput);
 
@@ -364,7 +361,7 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
         { value: 'ranger', label: i18next.t('volui:advanced.rangerDesc') },
       ],
       value: characterClass || undefined,
-      onChange: (value) => {
+      onCommit: (value) => {
         characterClass = value;
       },
     });
@@ -391,7 +388,7 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
         },
       ],
       value: characterAppearance,
-      onChange: (value) => {
+      onCommit: (value) => {
         characterAppearance = value;
       },
     });
@@ -418,7 +415,7 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
         },
       ],
       value: characterDifficulty,
-      onChange: (value) => {
+      onCommit: (value) => {
         characterDifficulty = value;
       },
     });
@@ -501,14 +498,19 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
         );
       },
     });
+    wizardScope.addDestroyable(currentWizard);
 
     wizardSlot.replaceChildren(currentWizard.element);
   };
 
   mountWizard();
 
-  disposables.push({
-    destroy: () => currentWizard?.destroy(),
+  disposables.addDestroyables({
+    destroy: () => {
+      wizardScope?.dispose();
+      wizardScope = null;
+      currentWizard = null;
+    },
   });
 
   wrap.appendChild(advancedToggle.element);
@@ -520,20 +522,20 @@ function buildWizardDemo(disposables: Destroyable[]): HTMLElement {
 /** CommandPalette demosu: butonla açılır, kısayol tüketiciye bırakılmıştır. Yazarken fuzzy çoklu-kelime eşleşmesi, kategoriye göre gruplanır. */
 function buildCommandPaletteDemo(
   uiRootElement: HTMLElement,
-  disposables: Destroyable[],
+  disposables: DisposableScope,
 ): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const result = new Text(i18next.t('volui:advanced.awaitingCommand'), { variant: 'muted' });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const palette = new CommandPalette({
     placeholder: i18next.t('volui:advanced.commandPlaceholder'),
     noMatchText: i18next.t('volui:advanced.noMatchText'),
   });
   uiRootElement.appendChild(palette.element);
-  disposables.push(palette);
+  disposables.addDestroyables(palette);
 
   palette.setItems([
     {
@@ -646,7 +648,7 @@ function buildCommandPaletteDemo(
     variant: 'primary',
     onClick: () => palette.open(),
   });
-  disposables.push(openButton);
+  disposables.addDestroyables(openButton);
 
   wrap.appendChild(openButton.element);
   wrap.appendChild(result.element);
@@ -662,7 +664,7 @@ function buildCommandPaletteDemo(
  * "tüm önkoşullar açık olmalı" kuralı için CORE'un opsiyonel
  * `resolveSkillStates` tarifi kullanılır.
  */
-function buildSkillTreeDemo(disposables: Destroyable[]): HTMLElement {
+function buildSkillTreeDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -670,7 +672,7 @@ function buildSkillTreeDemo(disposables: Destroyable[]): HTMLElement {
   const pointsText = new Text(i18next.t('volui:advanced.skillPoints', { n: skillPoints }), {
     variant: 'body',
   });
-  disposables.push(pointsText);
+  disposables.addDestroyables(pointsText);
 
   const costs: Record<string, number> = {
     atk1: 1,
@@ -763,7 +765,7 @@ function buildSkillTreeDemo(disposables: Destroyable[]): HTMLElement {
       skillTree.setStates(resolveSkillStates(skillTree.getNodes(), unlockedIds));
     },
   });
-  disposables.push(skillTree);
+  disposables.addDestroyables(skillTree);
 
   // `resolveSkillStates` CORE'un OPSİYONEL tarifi: klasik "tüm önkoşullar
   // açık olmalı" kuralı. Farklı bir kural isteyen oyun kendi eşlemesini yazar.
@@ -773,7 +775,7 @@ function buildSkillTreeDemo(disposables: Destroyable[]): HTMLElement {
   const resetButton = new Button(i18next.t('volui:advanced.resetView'), {
     onClick: () => skillTree.resetView(),
   });
-  disposables.push(resetButton);
+  disposables.addDestroyables(resetButton);
 
   wrap.appendChild(pointsText.element);
   wrap.appendChild(skillTree.element);
@@ -783,14 +785,14 @@ function buildSkillTreeDemo(disposables: Destroyable[]): HTMLElement {
 }
 
 /** EventLog demosu: filtreler, yinelenenleri birleştirme (×N) ve satır sabitleme. "Sonraki Dalga" bilerek zamansız eklenir — hizalama bozulmaz. */
-function buildEventLogDemo(disposables: Destroyable[]): HTMLElement {
+function buildEventLogDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const pinResult = new Text(i18next.t('volui:advanced.eventLogPinHint'), {
     variant: 'muted',
   });
-  disposables.push(pinResult);
+  disposables.addDestroyables(pinResult);
 
   const eventLog = new EventLog({
     height: 220,
@@ -806,7 +808,7 @@ function buildEventLogDemo(disposables: Destroyable[]): HTMLElement {
       );
     },
   });
-  disposables.push(eventLog);
+  disposables.addDestroyables(eventLog);
 
   const sampleEvents: {
     text: string;
@@ -853,13 +855,13 @@ function buildEventLogDemo(disposables: Destroyable[]): HTMLElement {
   const pushButton = new Button(i18next.t('volui:advanced.randomEvent'), {
     onClick: () => pushRandomEvent(),
   });
-  disposables.push(pushButton);
+  disposables.addDestroyables(pushButton);
 
   const criticalButton = new Button(i18next.t('volui:advanced.criticalAlert'), {
     variant: 'danger',
     onClick: () => pushCriticalEvent(),
   });
-  disposables.push(criticalButton);
+  disposables.addDestroyables(criticalButton);
 
   const nextWaveButton = new Button(i18next.t('volui:advanced.nextWave'), {
     onClick: () => {
@@ -868,12 +870,12 @@ function buildEventLogDemo(disposables: Destroyable[]): HTMLElement {
       eventLog.push({ text: i18next.t('volui:advanced.waveStarted', { n: wave }), tone: 'info' });
     },
   });
-  disposables.push(nextWaveButton);
+  disposables.addDestroyables(nextWaveButton);
 
   const clearButton = new Button(i18next.t('volui:advanced.clear'), {
     onClick: () => eventLog.clear(),
   });
-  disposables.push(clearButton);
+  disposables.addDestroyables(clearButton);
 
   const controls = document.createElement('div');
   controls.className = 'vol-showcase-panel-demo__controls';
@@ -899,12 +901,12 @@ interface ProductionCard {
 }
 
 /** Kanban demosu: 3 sütun, "Üretimde" WIP limiti 2. Aşarsa sütun kırmızı, drop reddedilir. searchable:true kart filtreler. */
-function buildKanbanDemo(disposables: Destroyable[], uiRootElement: HTMLElement): HTMLElement {
+function buildKanbanDemo(disposables: DisposableScope, uiRootElement: HTMLElement): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const result = new Text(i18next.t('volui:advanced.kanbanHint'), { variant: 'muted' });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const cards: Record<string, ProductionCard[]> = {
     pending: [
@@ -984,7 +986,7 @@ function buildKanbanDemo(disposables: Destroyable[], uiRootElement: HTMLElement)
       );
     },
   });
-  disposables.push(kanban);
+  disposables.addDestroyables(kanban);
 
   wrap.appendChild(kanban.element);
   wrap.appendChild(result.element);
@@ -994,7 +996,7 @@ function buildKanbanDemo(disposables: Destroyable[], uiRootElement: HTMLElement)
 
 /** Pencerelemeli Kanban: sütun başına 300 kart, DOM'da yalnızca görünenler. virtualizeCards sabit kart yüksekliği varsayar. */
 function buildVirtualizedKanbanDemo(
-  disposables: Destroyable[],
+  disposables: DisposableScope,
   uiRootElement: HTMLElement,
 ): HTMLElement {
   const wrap = document.createElement('div');
@@ -1003,7 +1005,7 @@ function buildVirtualizedKanbanDemo(
   const result = new Text(i18next.t('volui:advanced.virtualizedKanbanHint'), {
     variant: 'muted',
   });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const makeCards = (prefix: string, count: number): ProductionCard[] =>
     Array.from({ length: count }, (_, i) => ({
@@ -1025,7 +1027,7 @@ function buildVirtualizedKanbanDemo(
       );
     },
   });
-  disposables.push(kanban);
+  disposables.addDestroyables(kanban);
 
   wrap.appendChild(kanban.element);
   wrap.appendChild(result.element);
@@ -1034,7 +1036,10 @@ function buildVirtualizedKanbanDemo(
 }
 
 /** RichTooltip demosu: silah kartında hover ile istatistik gösterimi. */
-function buildRichTooltipDemo(disposables: Destroyable[], uiRootElement: HTMLElement): HTMLElement {
+function buildRichTooltipDemo(
+  disposables: DisposableScope,
+  uiRootElement: HTMLElement,
+): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -1049,11 +1054,11 @@ function buildRichTooltipDemo(disposables: Destroyable[], uiRootElement: HTMLEle
   itemCard.style.cursor = 'help';
 
   const itemName = new Text(i18next.t('volui:advanced.flameSword'), { variant: 'heading' });
-  disposables.push(itemName);
+  disposables.addDestroyables(itemName);
   itemCard.appendChild(itemName.element);
 
   const itemDesc = new Text(i18next.t('volui:advanced.hoverForStats'), { variant: 'muted' });
-  disposables.push(itemDesc);
+  disposables.addDestroyables(itemDesc);
   itemCard.appendChild(itemDesc.element);
 
   wrap.appendChild(itemCard);
@@ -1072,7 +1077,7 @@ function buildRichTooltipDemo(disposables: Destroyable[], uiRootElement: HTMLEle
     },
     { placement: 'top', container: uiRootElement },
   );
-  disposables.push({ destroy: () => tooltip.destroy() });
+  disposables.addDestroyables({ destroy: () => tooltip.destroy() });
 
   return wrap;
 }
@@ -1083,7 +1088,7 @@ export function buildAdvancedTab(uiRootElement: HTMLElement): {
 } {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
-  const disposables: Destroyable[] = [];
+  const disposables = new DisposableScope();
 
   const cards = [
     card(i18next.t('volui:advanced.dialogue'), buildDialogueDemo(uiRootElement, disposables)),
@@ -1121,6 +1126,6 @@ export function buildAdvancedTab(uiRootElement: HTMLElement): {
 
   return {
     element: container,
-    destroy: () => disposables.forEach((d) => d.destroy()),
+    destroy: () => disposables.dispose(),
   };
 }

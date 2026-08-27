@@ -10,6 +10,7 @@
     "generate:sounds": "tsx scripts/audio/generate-sfx.ts public/assets/audio/sfx",
     "generate:music": "tsx scripts/audio/generate-music.ts public/assets/audio/music && tsx scripts/audio/generate-ambience.ts public/assets/audio/ambience",
     "audio:qa": "tsx ../../core/scripts/audio-qa.ts public/assets/audio",
+    "benchmark:simulation": "tsx scripts/simulation-benchmark.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

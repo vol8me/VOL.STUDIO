@@ -41,6 +41,8 @@ pnpm --filter @volstudio/vol-asset-studio dev # Asset Studio only    :5175
 pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # Build the game
 pnpm build:tauri                           # Build PC installers
+pnpm benchmark:core                        # Measure CORE headless workloads
+pnpm benchmark:vol-hell                    # Measure VOL.HELL simulation/render
 ```
 
 ### Verification
@@ -55,6 +57,11 @@ Quality gates run locally via `just`. There is no CI runner; GitHub is used only
 | Long build      | `pnpm exec just tauri-build` | game build + Tauri prod build (manual)                     |
 | Environment     | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri deps                 |
 | Report          | `pnpm exec just report high` | Runs a gate and reports the result structurally (`--json`) |
+
+Benchmark commands do not impose machine-specific performance thresholds; they
+measure median/p95 step cost for CORE mechanisms and VOL.HELL's renderer-free
+simulation. For the corresponding just recipes, use
+`pnpm exec just benchmark-core` and `pnpm exec just benchmark-vol-hell`.
 
 The `pre-commit` → `pnpm quick` and `pre-push` → `pnpm high` hooks are installed during `pnpm install`; set `SKIP_SIMPLE_GIT_HOOKS=1` to bypass them. Tests are deliberately deferred to push — use `pnpm fast` for the quick gate including tests.
 

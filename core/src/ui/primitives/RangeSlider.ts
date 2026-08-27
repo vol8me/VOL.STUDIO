@@ -1,3 +1,5 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+
 export interface RangeSliderValue {
   min: number;
   max: number;
@@ -16,8 +18,6 @@ export interface RangeSliderOptions {
   disabled?: boolean;
   onInput?: (value: RangeSliderValue) => void;
   onCommit?: (value: RangeSliderValue) => void;
-  /** @deprecated Canlı kullanıcı değişimleri için korunur; yeni kodda `onInput` kullanın. */
-  onChange?: (value: RangeSliderValue) => void;
 }
 
 /**
@@ -58,16 +58,13 @@ export class RangeSlider {
   private readonly formatValue: (value: number) => string;
   private onInputHandler?: (value: RangeSliderValue) => void;
   private onCommitHandler?: (value: RangeSliderValue) => void;
-  private onChangeHandler?: (value: RangeSliderValue) => void;
+  private readonly scope = new DisposableScope();
   private minValue: number;
   private maxValue: number;
   private disabled: boolean;
   private activeHandle: 'min' | 'max' | null = null;
   private activePointerId: number | null = null;
   private gestureStart: RangeSliderValue | null = null;
-  private boundPointerDown: (event: PointerEvent) => void;
-  private boundPointerMove: (event: PointerEvent) => void;
-  private boundPointerUp: (event: PointerEvent) => void;
   private boundHandleKeydown: (handle: 'min' | 'max') => (event: KeyboardEvent) => void;
   private boundMinHandleKeydown: (event: KeyboardEvent) => void;
   private boundMaxHandleKeydown: (event: KeyboardEvent) => void;
@@ -83,7 +80,6 @@ export class RangeSlider {
       disabled = false,
       onInput,
       onCommit,
-      onChange,
     } = options;
 
     this.min = min;
@@ -98,7 +94,6 @@ export class RangeSlider {
     this.formatValue = formatValue;
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
-    this.onChangeHandler = onChange;
     this.disabled = disabled;
 
     this.element = document.createElement('div');
@@ -147,7 +142,7 @@ export class RangeSlider {
 
     // Track tüm pointer olaylarını dinler (iki native range input üst üste koymak
     // yerine); boş track tıklaması ve doğrudan handle basışını tek tip ele alır.
-    this.boundPointerDown = (event) => {
+    const boundPointerDown = (event: PointerEvent): void => {
       if (this.disabled) return;
       // Handle'a doğrudan basış her zaman o handle'ı seçer — yakınlık tahmini
       // handle'lar yakınken (ör. Lv.22-Lv.24) güvenilmezdir. Boş track tıklaması
@@ -170,17 +165,17 @@ export class RangeSlider {
       this.track.setPointerCapture(event.pointerId);
       event.preventDefault();
     };
-    this.boundPointerMove = (event) => {
+    const boundPointerMove = (event: PointerEvent): void => {
       if (!this.activeHandle) return;
       this.commitUserInput(this.activeHandle, this.valueFromClientX(event.clientX));
     };
-    this.boundPointerUp = (event) => {
+    const boundPointerUp = (event: PointerEvent): void => {
       this.finishGesture(event, event.type === 'pointercancel');
     };
-    this.track.addEventListener('pointerdown', this.boundPointerDown);
-    this.track.addEventListener('pointermove', this.boundPointerMove);
-    this.track.addEventListener('pointerup', this.boundPointerUp);
-    this.track.addEventListener('pointercancel', this.boundPointerUp);
+    this.scope.addListener(this.track, 'pointerdown', boundPointerDown as EventListener);
+    this.scope.addListener(this.track, 'pointermove', boundPointerMove as EventListener);
+    this.scope.addListener(this.track, 'pointerup', boundPointerUp as EventListener);
+    this.scope.addListener(this.track, 'pointercancel', boundPointerUp as EventListener);
 
     this.boundHandleKeydown = (handle) => (event) => {
       if (this.disabled) return;
@@ -208,8 +203,8 @@ export class RangeSlider {
     };
     this.boundMinHandleKeydown = this.boundHandleKeydown('min');
     this.boundMaxHandleKeydown = this.boundHandleKeydown('max');
-    this.minHandle.addEventListener('keydown', this.boundMinHandleKeydown);
-    this.maxHandle.addEventListener('keydown', this.boundMaxHandleKeydown);
+    this.scope.addListener(this.minHandle, 'keydown', this.boundMinHandleKeydown as EventListener);
+    this.scope.addListener(this.maxHandle, 'keydown', this.boundMaxHandleKeydown as EventListener);
 
     this.render();
     this.setDisabled(disabled);
@@ -233,7 +228,6 @@ export class RangeSlider {
     const current = this.getValue();
     if (current.min === previous.min && current.max === previous.max) return;
     this.onInputHandler?.(current);
-    this.onChangeHandler?.(current);
     this.onCommitHandler?.(current);
   }
 
@@ -247,12 +241,7 @@ export class RangeSlider {
 
   destroy(): void {
     this.restoreGestureStart(false);
-    this.track.removeEventListener('pointerdown', this.boundPointerDown);
-    this.track.removeEventListener('pointermove', this.boundPointerMove);
-    this.track.removeEventListener('pointerup', this.boundPointerUp);
-    this.track.removeEventListener('pointercancel', this.boundPointerUp);
-    this.minHandle.removeEventListener('keydown', this.boundMinHandleKeydown);
-    this.maxHandle.removeEventListener('keydown', this.boundMaxHandleKeydown);
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -283,7 +272,6 @@ export class RangeSlider {
     const changed = current.min !== previous.min || current.max !== previous.max;
     if (changed) {
       this.onInputHandler?.(current);
-      this.onChangeHandler?.(current);
     }
     return changed;
   }
@@ -315,7 +303,6 @@ export class RangeSlider {
     this.setValue(start);
     if (notify && (previous.min !== start.min || previous.max !== start.max)) {
       this.onInputHandler?.(this.getValue());
-      this.onChangeHandler?.(this.getValue());
     }
     this.activeHandle = null;
     this.activePointerId = null;

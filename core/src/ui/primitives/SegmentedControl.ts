@@ -1,3 +1,5 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+
 export interface SegmentedControlOption {
   value: string;
   label: string;
@@ -10,8 +12,6 @@ export interface SegmentedControlOptions {
   disabled?: boolean;
   onInput?: (value: string) => void;
   onCommit?: (value: string) => void;
-  /** @deprecated Ayrık kullanıcı değişimlerinde korunur; yeni kodda `onCommit` kullanın. */
-  onChange?: (value: string) => void;
 }
 
 /**
@@ -25,22 +25,16 @@ export class SegmentedControl {
   private readonly thumb: HTMLDivElement;
   private readonly buttons = new Map<string, HTMLButtonElement>();
   private readonly itemDisabled = new Set<string>();
-  private readonly boundClicks = new Map<string, () => void>();
   private value: string | undefined;
   private onInputHandler?: (value: string) => void;
   private onCommitHandler?: (value: string) => void;
-  private onChangeHandler?: (value: string) => void;
-  private boundResize: () => void;
-  private resizeObserver?: ResizeObserver;
-  /** Ilk thumb konumlandirma karesi; destroy() iptal eder. */
-  private initialThumbFrame: number | null = null;
+  private readonly scope = new DisposableScope();
 
   constructor(options: SegmentedControlOptions) {
-    const { options: items, value, disabled = false, onInput, onCommit, onChange } = options;
+    const { options: items, value, disabled = false, onInput, onCommit } = options;
     this.value = value;
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
-    this.onChangeHandler = onChange;
 
     this.element = document.createElement('div');
     this.element.className = 'vol-segmented';
@@ -67,25 +61,22 @@ export class SegmentedControl {
       }
 
       const onClick = (): void => this.commitUser(item.value);
-      button.addEventListener('click', onClick);
-      this.boundClicks.set(item.value, onClick);
+      this.scope.addListener(button, 'click', onClick);
 
       this.buttons.set(item.value, button);
       this.element.appendChild(button);
     }
 
-    this.boundResize = () => this.moveThumb();
-    this.resizeObserver =
-      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(this.boundResize) : undefined;
-    this.resizeObserver?.observe(this.element);
-    window.addEventListener('resize', this.boundResize);
+    const boundResize = (): void => this.moveThumb();
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(boundResize) : undefined;
+    resizeObserver?.observe(this.element);
+    this.scope.add({ dispose: () => resizeObserver?.disconnect() });
+    this.scope.addListener(window, 'resize', boundResize);
 
     // İlk konum: layout'un tamamlanmasını bekler (offsetLeft/Width ilk
     // çizimde 0 dönebilir), aksi halde thumb açılışta yanlış yerde belirir.
-    this.initialThumbFrame = requestAnimationFrame(() => {
-      this.initialThumbFrame = null;
-      this.moveThumb();
-    });
+    this.scope.addAnimationFrame(() => this.moveThumb());
   }
 
   getValue(): string | undefined {
@@ -108,17 +99,7 @@ export class SegmentedControl {
   }
 
   destroy(): void {
-    for (const [value, button] of this.buttons) {
-      const handler = this.boundClicks.get(value);
-      if (handler) button.removeEventListener('click', handler);
-    }
-    // Ilk konumlandirma karesi destroy'dan once atesmezse kopmus element uzerinde calisirdi.
-    if (this.initialThumbFrame !== null) {
-      cancelAnimationFrame(this.initialThumbFrame);
-      this.initialThumbFrame = null;
-    }
-    this.resizeObserver?.disconnect();
-    window.removeEventListener('resize', this.boundResize);
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -139,7 +120,6 @@ export class SegmentedControl {
     this.select(value);
     this.onInputHandler?.(value);
     this.onCommitHandler?.(value);
-    this.onChangeHandler?.(value);
   }
 
   private moveThumb(): void {

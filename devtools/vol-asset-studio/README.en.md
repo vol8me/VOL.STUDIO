@@ -104,6 +104,8 @@ configuration error.
 
 API errors never carry display copy. Stable `error.code` values are translated
 to Turkish or English by the client i18n layer.
+When the page closes, the client releases the editor lease with a `keepalive`
+request; the server's short TTL remains the safe fallback if the network closes.
 
 ## Security boundary
 

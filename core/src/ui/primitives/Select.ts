@@ -1,5 +1,6 @@
 import { Popup } from '../overlays/Popup';
 import { i18next } from '../../systems/I18n';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export type SelectOptionTone = 'danger' | 'success' | 'warning';
 
@@ -17,8 +18,6 @@ export interface SelectOptions {
   disabled?: boolean;
   onInput?: (value: string) => void;
   onCommit?: (value: string) => void;
-  /** @deprecated Ayrık kullanıcı değişimlerinde korunur; yeni kodda `onCommit` kullanın. */
-  onChange?: (value: string) => void;
   /** Popup'ın ekleneceği kapsayıcı. Varsayılan document.body. */
   container?: HTMLElement;
 }
@@ -36,10 +35,8 @@ export class Select {
   private readonly placeholderIsI18n: boolean;
   private readonly onInputHandler?: (value: string) => void;
   private readonly onCommitHandler?: (value: string) => void;
-  private readonly onChangeHandler?: (value: string) => void;
   private readonly optionButtons = new Map<string, HTMLButtonElement>();
-  private readonly boundOptionClicks = new Map<string, () => void>();
-  private readonly boundOptionKeydowns = new Map<string, (event: KeyboardEvent) => void>();
+  private readonly scope = new DisposableScope();
   private value: string | undefined;
   private boundToggle: () => void;
   private boundTriggerKeydown: (event: KeyboardEvent) => void;
@@ -58,7 +55,6 @@ export class Select {
       disabled = false,
       onInput,
       onCommit,
-      onChange,
       container,
     } = options;
     this.options = items;
@@ -66,7 +62,6 @@ export class Select {
     this.placeholder = placeholder ?? i18next.t('core:select.placeholder');
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
-    this.onChangeHandler = onChange;
     this.value = value;
 
     this.element = document.createElement('button');
@@ -91,6 +86,7 @@ export class Select {
     });
     this.popup.element.classList.add('vol-select__listbox');
     this.popup.element.setAttribute('role', 'listbox');
+    this.scope.addDestroyable(this.popup);
 
     for (const [index, item] of items.entries()) {
       const optionButton = document.createElement('button');
@@ -104,13 +100,11 @@ export class Select {
       optionButton.tabIndex = -1;
 
       const onOptionClick = (): void => this.selectValue(item.value);
-      optionButton.addEventListener('click', onOptionClick);
-      this.boundOptionClicks.set(item.value, onOptionClick);
+      this.scope.addListener(optionButton, 'click', onOptionClick);
 
       const onOptionKeydown = (event: KeyboardEvent): void =>
         this.handleOptionKeydown(event, index);
-      optionButton.addEventListener('keydown', onOptionKeydown);
-      this.boundOptionKeydowns.set(item.value, onOptionKeydown);
+      this.scope.addListener(optionButton, 'keydown', onOptionKeydown as EventListener);
 
       this.optionButtons.set(item.value, optionButton);
       this.popup.element.appendChild(optionButton);
@@ -123,7 +117,7 @@ export class Select {
         this.focusOption(this.initialFocusIndex());
       }
     };
-    this.element.addEventListener('click', this.boundToggle);
+    this.scope.addListener(this.element, 'click', this.boundToggle);
 
     this.boundTriggerKeydown = (event) => {
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -135,11 +129,12 @@ export class Select {
         this.focusOption(this.initialFocusIndex());
       }
     };
-    this.element.addEventListener('keydown', this.boundTriggerKeydown);
+    this.scope.addListener(this.element, 'keydown', this.boundTriggerKeydown as EventListener);
 
     this.renderLabel();
 
     i18next.on('languageChanged', this.onLanguageChanged);
+    this.scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
   }
 
   getValue(): string | undefined {
@@ -159,16 +154,7 @@ export class Select {
   }
 
   destroy(): void {
-    i18next.off('languageChanged', this.onLanguageChanged);
-    this.element.removeEventListener('click', this.boundToggle);
-    this.element.removeEventListener('keydown', this.boundTriggerKeydown);
-    for (const [value, optionButton] of this.optionButtons) {
-      const onClick = this.boundOptionClicks.get(value);
-      if (onClick) optionButton.removeEventListener('click', onClick);
-      const onKeydown = this.boundOptionKeydowns.get(value);
-      if (onKeydown) optionButton.removeEventListener('keydown', onKeydown);
-    }
-    this.popup.destroy();
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -185,7 +171,6 @@ export class Select {
     if (!opts.silent) {
       this.onInputHandler?.(value);
       this.onCommitHandler?.(value);
-      this.onChangeHandler?.(value);
     }
   }
 

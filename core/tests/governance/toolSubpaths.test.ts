@@ -18,6 +18,13 @@ describe('Phaser taşımayan araç alt-yolları', () => {
       './lifecycle': { import: './src/lifecycle/index.ts', types: './src/lifecycle/index.ts' },
       './i18n': { import: './src/i18n/index.ts', types: './src/i18n/index.ts' },
       './fonts': { import: './src/fonts/index.ts', types: './src/fonts/index.ts' },
+      './benchmark': { import: './src/benchmark/index.ts', types: './src/benchmark/index.ts' },
+      './random': { import: './src/random/random.ts', types: './src/random/random.ts' },
+      './spatial': {
+        import: './src/spatial/SpatialIndex.ts',
+        types: './src/spatial/SpatialIndex.ts',
+      },
+      './stats': { import: './src/stats/StatBlock.ts', types: './src/stats/StatBlock.ts' },
     });
   });
 

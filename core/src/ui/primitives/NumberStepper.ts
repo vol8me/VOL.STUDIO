@@ -1,4 +1,5 @@
 import { i18next } from '../../systems/I18n';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export interface NumberStepperOptions {
   min?: number;
@@ -9,8 +10,6 @@ export interface NumberStepperOptions {
   disabled?: boolean;
   onInput?: (value: number) => void;
   onCommit?: (value: number) => void;
-  /** @deprecated Yeni kodda `onCommit` kullanın. Kullanıcı commit'lerinde korunur. */
-  onChange?: (value: number) => void;
 }
 
 /** +/- sayısal giriş. Slider'dan farkı: sürükleme yerine tıklamayla ayrı adımlar. */
@@ -25,11 +24,7 @@ export class NumberStepper {
   private value: number;
   private onInputHandler?: (value: number) => void;
   private onCommitHandler?: (value: number) => void;
-  private onChangeHandler?: (value: number) => void;
-  private boundDecrement: () => void;
-  private boundIncrement: () => void;
-  private boundInputChange: () => void;
-  private boundInput: () => void;
+  private readonly scope = new DisposableScope();
   private previewValue: number | null = null;
   private readonly onLanguageChanged = (): void => {
     this.decrementButton.setAttribute('aria-label', i18next.t('core:stepper.decrement'));
@@ -46,7 +41,6 @@ export class NumberStepper {
       disabled = false,
       onInput,
       onCommit,
-      onChange,
     } = options;
     this.min = min;
     this.max = max;
@@ -55,7 +49,6 @@ export class NumberStepper {
     this.value = this.clamp(value);
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
-    this.onChangeHandler = onChange;
 
     this.element = document.createElement('div');
     this.element.className = 'vol-stepper';
@@ -95,30 +88,31 @@ export class NumberStepper {
 
     this.element.appendChild(control);
 
-    this.boundDecrement = () => this.commitUser(this.value - this.step);
-    this.boundIncrement = () => this.commitUser(this.value + this.step);
-    this.boundInput = () => {
+    const boundDecrement = (): void => this.commitUser(this.value - this.step);
+    const boundIncrement = (): void => this.commitUser(this.value + this.step);
+    const boundInput = (): void => {
       const parsed = Number(this.input.value);
       if (Number.isFinite(parsed)) {
         this.previewValue = this.clamp(parsed);
         this.onInputHandler?.(this.previewValue);
       }
     };
-    this.boundInputChange = () => {
+    const boundInputChange = (): void => {
       const parsed = Number(this.input.value);
       const clamped = this.clamp(parsed);
       this.commitUser(parsed, this.previewValue !== clamped);
       this.previewValue = null;
     };
 
-    this.decrementButton.addEventListener('click', this.boundDecrement);
-    this.incrementButton.addEventListener('click', this.boundIncrement);
-    this.input.addEventListener('input', this.boundInput);
-    this.input.addEventListener('change', this.boundInputChange);
+    this.scope.addListener(this.decrementButton, 'click', boundDecrement);
+    this.scope.addListener(this.incrementButton, 'click', boundIncrement);
+    this.scope.addListener(this.input, 'input', boundInput);
+    this.scope.addListener(this.input, 'change', boundInputChange);
 
     this.setDisabled(disabled);
     this.updateButtonState();
 
+    this.scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
     i18next.on('languageChanged', this.onLanguageChanged);
   }
 
@@ -142,11 +136,7 @@ export class NumberStepper {
   }
 
   destroy(): void {
-    i18next.off('languageChanged', this.onLanguageChanged);
-    this.decrementButton.removeEventListener('click', this.boundDecrement);
-    this.incrementButton.removeEventListener('click', this.boundIncrement);
-    this.input.removeEventListener('input', this.boundInput);
-    this.input.removeEventListener('change', this.boundInputChange);
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -164,7 +154,6 @@ export class NumberStepper {
     if (!changed) return;
     if (emitInput) this.onInputHandler?.(this.value);
     this.onCommitHandler?.(this.value);
-    this.onChangeHandler?.(this.value);
   }
 
   private clamp(value: number): number {

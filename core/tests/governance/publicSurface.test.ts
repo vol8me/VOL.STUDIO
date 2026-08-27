@@ -32,7 +32,7 @@ const EXPECTED_EXPORT_COUNT = 185;
 // `analyzeSpriteDoc`, region/cache/material tarifleri ve teşhis yüzeyi
 // inspector/profil sözleşmesinin bilinçli public girişleridir; tip export'ları
 // runtime sayısını değiştirmez.
-const EXPECTED_VISUAL_SYNTH_EXPORT_COUNT = 69;
+const EXPECTED_VISUAL_SYNTH_EXPORT_COUNT = 70;
 
 describe('CORE public API yüzeyi', () => {
   it('export sayısı bilinçli bir kararla değişir', () => {

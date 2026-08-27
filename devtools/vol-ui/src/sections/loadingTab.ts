@@ -1,3 +1,4 @@
+import { DisposableScope, type CancellableDisposable } from '@volstudio/core/lifecycle';
 import {
   Button,
   LoadingScreen,
@@ -10,27 +11,24 @@ import {
 import { i18next } from '@volstudio/core/i18n';
 import { card, paletteGrid } from './shared';
 
-interface Destroyable {
-  destroy(): void;
-}
-
 /** Aktif loading preview'ı takip eder — aynı anda yalnızca bir tane olur. */
 let activePreview: {
   loading: LoadingScreen;
-  interval: ReturnType<typeof setInterval> | null;
-  hideTimeout: ReturnType<typeof setTimeout> | null;
+  interval: CancellableDisposable | null;
+  hideTimeout: CancellableDisposable | null;
 } | null = null;
 
 function clearActivePreview(): void {
   if (!activePreview) return;
-  if (activePreview.interval) clearInterval(activePreview.interval);
-  if (activePreview.hideTimeout) clearTimeout(activePreview.hideTimeout);
+  activePreview.interval?.cancel();
+  activePreview.hideTimeout?.cancel();
   activePreview.loading.destroy();
   activePreview = null;
 }
 
 /** Loading preview başlat — önceki preview'ı temizler, yenisini takip eder. */
 function startPreview(
+  disposables: DisposableScope,
   options: LoadingScreenOptions,
   progressStep: number,
   progressIntervalMs: number,
@@ -41,36 +39,39 @@ function startPreview(
   const loading = new LoadingScreen({
     ...options,
     onComplete: () => {
-      loading.destroy();
-      activePreview = null;
+      clearActivePreview();
     },
   });
   document.body.appendChild(loading.element);
   loading.show();
 
   let percent = 0;
-  const interval = setInterval(() => {
+  const preview: NonNullable<typeof activePreview> = {
+    loading,
+    interval: null,
+    hideTimeout: null,
+  };
+  activePreview = preview;
+  preview.interval = disposables.addInterval(() => {
     percent = Math.min(100, percent + progressStep);
     loading.update(percent);
     if (percent >= 100) {
-      clearInterval(interval);
-      const hideTimeout = setTimeout(() => loading.hide(), hideDelayMs);
-      if (activePreview) activePreview.hideTimeout = hideTimeout;
+      preview.interval?.cancel();
+      preview.interval = null;
+      preview.hideTimeout = disposables.addTimeout(() => loading.hide(), hideDelayMs);
     }
   }, progressIntervalMs);
-
-  activePreview = { loading, interval, hideTimeout: null };
 }
 
 /** Orbital-rings + energy-core gösterge tipi seçici. */
-function buildIndicatorTypeDemo(disposables: Destroyable[]): HTMLElement {
+function buildIndicatorTypeDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const info = new Text(i18next.t('volui:loading.selectTypeHint'), {
     variant: 'muted',
   });
-  disposables.push(info);
+  disposables.addDestroyables(info);
   wrap.appendChild(info.element);
 
   const btnRow = document.createElement('div');
@@ -105,7 +106,7 @@ function buildIndicatorTypeDemo(disposables: Destroyable[]): HTMLElement {
       typeBtn.element.textContent = typeLabels[currentType];
     },
   });
-  disposables.push(typeBtn);
+  disposables.addDestroyables(typeBtn);
   btnRow.appendChild(typeBtn.element);
 
   const transLabels: Record<LoadingTransitionType, string> = {
@@ -123,13 +124,14 @@ function buildIndicatorTypeDemo(disposables: Destroyable[]): HTMLElement {
       transBtn.element.textContent = transLabels[currentTransition];
     },
   });
-  disposables.push(transBtn);
+  disposables.addDestroyables(transBtn);
   btnRow.appendChild(transBtn.element);
 
   const previewBtn = new Button(i18next.t('volui:loading.fullScreenPreview'), {
     variant: 'primary',
     onClick: () => {
       startPreview(
+        disposables,
         {
           indicator: { type: currentType, size: 140 },
           showPercent: true,
@@ -142,7 +144,7 @@ function buildIndicatorTypeDemo(disposables: Destroyable[]): HTMLElement {
       );
     },
   });
-  disposables.push(previewBtn);
+  disposables.addDestroyables(previewBtn);
   btnRow.appendChild(previewBtn.element);
 
   wrap.appendChild(btnRow);
@@ -150,20 +152,21 @@ function buildIndicatorTypeDemo(disposables: Destroyable[]): HTMLElement {
 }
 
 /** Min. gösterim süresi demosu — hızlı yükleme ama yine de 2s göster. */
-function buildMinDisplayDemo(disposables: Destroyable[]): HTMLElement {
+function buildMinDisplayDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const info = new Text(i18next.t('volui:loading.minDisplayHint'), {
     variant: 'muted',
   });
-  disposables.push(info);
+  disposables.addDestroyables(info);
   wrap.appendChild(info.element);
 
   const btn = new Button(i18next.t('volui:loading.fastLoading'), {
     variant: 'primary',
     onClick: () => {
       startPreview(
+        disposables,
         {
           indicator: { type: 'orbital-rings' },
           showPercent: true,
@@ -176,14 +179,14 @@ function buildMinDisplayDemo(disposables: Destroyable[]): HTMLElement {
       );
     },
   });
-  disposables.push(btn);
+  disposables.addDestroyables(btn);
   wrap.appendChild(btn.element);
 
   return wrap;
 }
 
 /** Başlık + alt başlık demosu. */
-function buildTextDemo(disposables: Destroyable[]): HTMLElement {
+function buildTextDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -191,6 +194,7 @@ function buildTextDemo(disposables: Destroyable[]): HTMLElement {
     variant: 'primary',
     onClick: () => {
       startPreview(
+        disposables,
         {
           indicator: { type: 'energy-core', color: 'var(--vol-ui-support-solid)' },
           title: i18next.t('volui:loading.worldLoading'),
@@ -203,21 +207,21 @@ function buildTextDemo(disposables: Destroyable[]): HTMLElement {
       );
     },
   });
-  disposables.push(btn);
+  disposables.addDestroyables(btn);
   wrap.appendChild(btn.element);
 
   return wrap;
 }
 
 /** İçerik konumu demosu — göstergeyi ekranın farklı köşelerine yerleştir. */
-function buildContentPositionDemo(disposables: Destroyable[]): HTMLElement {
+function buildContentPositionDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const info = new Text(i18next.t('volui:loading.selectPositionHint'), {
     variant: 'muted',
   });
-  disposables.push(info);
+  disposables.addDestroyables(info);
   wrap.appendChild(info.element);
 
   const btnRow = document.createElement('div');
@@ -251,13 +255,14 @@ function buildContentPositionDemo(disposables: Destroyable[]): HTMLElement {
       posBtn.element.textContent = posLabels[currentPos];
     },
   });
-  disposables.push(posBtn);
+  disposables.addDestroyables(posBtn);
   btnRow.appendChild(posBtn.element);
 
   const previewBtn = new Button(i18next.t('volui:loading.fullScreenPreview'), {
     variant: 'primary',
     onClick: () => {
       startPreview(
+        disposables,
         {
           indicator: { type: 'bar', size: 200 },
           contentPosition: currentPos,
@@ -271,7 +276,7 @@ function buildContentPositionDemo(disposables: Destroyable[]): HTMLElement {
       );
     },
   });
-  disposables.push(previewBtn);
+  disposables.addDestroyables(previewBtn);
   btnRow.appendChild(previewBtn.element);
 
   wrap.appendChild(btnRow);
@@ -279,14 +284,14 @@ function buildContentPositionDemo(disposables: Destroyable[]): HTMLElement {
 }
 
 /** Progress animasyon hızı demosu — hızlı vs yavaş geçiş. */
-function buildProgressSpeedDemo(disposables: Destroyable[]): HTMLElement {
+function buildProgressSpeedDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const info = new Text(i18next.t('volui:loading.progressSpeedHint'), {
     variant: 'muted',
   });
-  disposables.push(info);
+  disposables.addDestroyables(info);
   wrap.appendChild(info.element);
 
   const btnRow = document.createElement('div');
@@ -299,6 +304,7 @@ function buildProgressSpeedDemo(disposables: Destroyable[]): HTMLElement {
       variant: 'default',
       onClick: () => {
         startPreview(
+          disposables,
           {
             indicator: { type: 'orbital-rings' },
             showPercent: true,
@@ -310,7 +316,7 @@ function buildProgressSpeedDemo(disposables: Destroyable[]): HTMLElement {
         );
       },
     });
-    disposables.push(btn);
+    disposables.addDestroyables(btn);
     btnRow.appendChild(btn.element);
   }
 
@@ -328,7 +334,7 @@ export function buildLoadingTab(): {
 } {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
-  const disposables: Destroyable[] = [];
+  const disposables = new DisposableScope();
 
   const cards = [
     card(i18next.t('volui:loading.indicatorTypes'), buildIndicatorTypeDemo(disposables), {
@@ -350,7 +356,7 @@ export function buildLoadingTab(): {
     element: container,
     destroy: () => {
       clearActivePreview();
-      disposables.forEach((d) => d.destroy());
+      disposables.dispose();
     },
   };
 }

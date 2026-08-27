@@ -24,6 +24,14 @@ export interface CommandHistoryOptions {
   onChange?: (snapshot: CommandHistorySnapshot) => void;
 }
 
+interface HistoryEntry {
+  command: HistoryCommand;
+  /** Bu komuttan önceki belge durumunu tanımlayan token. */
+  beforeToken: number;
+  /** Bu komut uygulandıktan sonraki belge durumunu tanımlayan token. */
+  afterToken: number;
+}
+
 const DEFAULT_MAX_BYTES = 256 * 1024 * 1024;
 
 function validateHistoryCommand(command: HistoryCommand): void {
@@ -37,9 +45,11 @@ function validateHistoryCommand(command: HistoryCommand): void {
 export class CommandHistory {
   private readonly maxBytes: number;
   private readonly onChangeHandler?: (snapshot: CommandHistorySnapshot) => void;
-  private readonly past: HistoryCommand[] = [];
-  private readonly future: HistoryCommand[] = [];
+  private readonly past: HistoryEntry[] = [];
+  private readonly future: HistoryEntry[] = [];
   private totalBytes = 0;
+  private stateToken = 0;
+  private nextStateToken = 1;
   private activeTransaction: CommandTransaction | null = null;
 
   constructor(options: CommandHistoryOptions = {}) {
@@ -98,26 +108,36 @@ export class CommandHistory {
     return this.future.length > 0;
   }
 
+  /**
+   * Geçmiş budget ile kırpılsa bile belge durumunu tekil olarak tanımlar.
+   * `DocumentSession` kirliliği adım dizisiyle değil bu token ile karşılaştırır.
+   */
+  getStateToken(): number {
+    return this.stateToken;
+  }
+
   undo(): boolean {
     this.assertNoTransaction();
-    const command = this.past.at(-1);
-    if (!command) return false;
-    command.revert();
+    const entry = this.past.at(-1);
+    if (!entry) return false;
+    entry.command.revert();
     this.past.pop();
-    this.totalBytes -= command.byteCost;
-    this.future.push(command);
+    this.totalBytes -= entry.command.byteCost;
+    this.future.push(entry);
+    this.stateToken = entry.beforeToken;
     this.emitChange();
     return true;
   }
 
   redo(): boolean {
     this.assertNoTransaction();
-    const command = this.future.at(-1);
-    if (!command) return false;
-    command.apply();
+    const entry = this.future.at(-1);
+    if (!entry) return false;
+    entry.command.apply();
     this.future.pop();
-    this.past.push(command);
-    this.totalBytes += command.byteCost;
+    this.past.push(entry);
+    this.totalBytes += entry.command.byteCost;
+    this.stateToken = entry.afterToken;
     this.emitChange();
     return true;
   }
@@ -134,8 +154,8 @@ export class CommandHistory {
     return {
       canUndo: this.canUndo(),
       canRedo: this.canRedo(),
-      undoLabel: this.past.at(-1)?.label,
-      redoLabel: this.future.at(-1)?.label,
+      undoLabel: this.past.at(-1)?.command.label,
+      redoLabel: this.future.at(-1)?.command.label,
       byteCost: this.totalBytes,
       undoCount: this.past.length,
       redoCount: this.future.length,
@@ -158,23 +178,29 @@ export class CommandHistory {
   private acceptApplied(command: HistoryCommand): void {
     this.future.length = 0;
     const previous = this.past.at(-1);
+    const beforeToken = this.stateToken;
     const merged =
-      previous?.mergeKey && previous.mergeKey === command.mergeKey
-        ? previous.mergeWith?.(command) ?? null
+      previous?.command.mergeKey && previous.command.mergeKey === command.mergeKey
+        ? previous.command.mergeWith?.(command) ?? null
         : null;
+    const afterToken = this.allocateStateToken();
     if (merged) {
       validateHistoryCommand(merged);
       this.past.pop();
-      this.totalBytes -= previous?.byteCost ?? 0;
+      this.totalBytes -= previous?.command.byteCost ?? 0;
       command = merged;
     }
 
     if (command.byteCost <= this.maxBytes) {
-      this.past.push(command);
+      this.past.push({
+        command,
+        beforeToken: merged ? previous?.beforeToken ?? beforeToken : beforeToken,
+        afterToken,
+      });
       this.totalBytes += command.byteCost;
       while (this.totalBytes > this.maxBytes && this.past.length > 0) {
         const discarded = this.past.shift();
-        if (discarded) this.totalBytes -= discarded.byteCost;
+        if (discarded) this.totalBytes -= discarded.command.byteCost;
       }
     } else {
       // Komut tek başına bütçeye sığmıyor: belgeye uygulandı ama saklanamaz.
@@ -185,7 +211,14 @@ export class CommandHistory {
       this.past.length = 0;
       this.totalBytes = 0;
     }
+    this.stateToken = afterToken;
     this.emitChange();
+  }
+
+  private allocateStateToken(): number {
+    const token = this.nextStateToken;
+    this.nextStateToken += 1;
+    return token;
   }
 
   private composite(label: string, commands: readonly HistoryCommand[]): HistoryCommand {

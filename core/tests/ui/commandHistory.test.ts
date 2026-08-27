@@ -26,6 +26,7 @@ describe('CommandHistory', () => {
     const history = new CommandHistory({ maxBytes: 10, onChange });
     history.execute(deltaCommand(state, 2, 'İki', 3));
     expect(state.value).toBe(2);
+    expect(history.getStateToken()).toBe(1);
     expect(history.getSnapshot()).toMatchObject({
       canUndo: true,
       canRedo: false,
@@ -35,9 +36,11 @@ describe('CommandHistory', () => {
     });
     expect(history.undo()).toBe(true);
     expect(state.value).toBe(0);
+    expect(history.getStateToken()).toBe(0);
     expect(history.getSnapshot().redoLabel).toBe('İki');
     expect(history.redo()).toBe(true);
     expect(state.value).toBe(2);
+    expect(history.getStateToken()).toBe(1);
     expect(history.redo()).toBe(false);
     history.clear();
     expect(history.canUndo()).toBe(false);
@@ -54,6 +57,8 @@ describe('CommandHistory', () => {
     expect(history.getSnapshot()).toMatchObject({ undoCount: 1, undoLabel: 'B', byteCost: 3 });
     expect(history.undo()).toBe(true);
     expect(state.value).toBe(1);
+    // A bütçeden düştü, fakat token belgeyi A sonrası duruma doğru tanımlar.
+    expect(history.getStateToken()).toBe(1);
   });
 
   it('bütçeden büyük komut uygulanır ama geçmiş tümüyle bırakılır', () => {
@@ -75,6 +80,7 @@ describe('CommandHistory', () => {
     expect(history.getSnapshot()).toMatchObject({ undoCount: 0, byteCost: 0 });
     expect(history.undo()).toBe(false);
     expect(state.value).toBe(7);
+    expect(history.getStateToken()).toBe(3);
   });
 
   it('record zaten uygulanmış komutu saklar ve yeni komut redo dalını temizler', () => {
@@ -162,6 +168,7 @@ describe('CommandHistory', () => {
     expect(state.value).toBe(0);
     history.redo();
     expect(state.value).toBe(3);
+    expect(history.getStateToken()).toBe(2);
   });
 
   it('geçersiz bütçe ve komutları durum değiştirmeden reddeder', () => {

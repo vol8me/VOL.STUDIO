@@ -19,15 +19,37 @@ pnpm --filter @volstudio/vol-hell dev
 
 ## Sistemler
 
-| Alan       | İçerik                                                                                               |
-| ---------- | ---------------------------------------------------------------------------------------------------- |
-| Koşu akışı | 20 dalga × 40 sn, dalga sonu dükkân, elit (10) ve boss (20) dalgaları                                |
-| Savaş      | Düşman kataloğu (rusher / swarmer / special), telegraph, elit ve boss davranışları                   |
-| İlerleme   | Spark/Flux ekonomisi, seviye atlama, kart kataloğu (ability / buff / takas), dükkan reroll/kilitleme |
-| Ability    | Zincir şimşek, ateş alanı, çoklu atış, kule — Q/E slotlarına takılır                                 |
-| Ses        | `@volstudio/core` müzik motoru üzerinden adaptif müzik + SFX yönetimi                                |
+| Alan       | İçerik                                                                                                      |
+| ---------- | ----------------------------------------------------------------------------------------------------------- |
+| Koşu akışı | 20 dalga × 40 sn, dalga sonu dükkân, elit (10) ve boss (20) dalgaları                                       |
+| Savaş      | Düşman kataloğu (rusher / swarmer / special), telegraph, elit ve boss davranışları                          |
+| İlerleme   | Spark/Flux ekonomisi, seviye atlama, kart kataloğu (ability / buff / takas), dükkan reroll/kilitleme        |
+| Ability    | Zincir şimşek, ateş alanı, çoklu atış, kule — Q/E slotlarına takılır; oyuncu hasarı/ateş temposuyla ilerler |
+| Ses        | `@volstudio/core` müzik motoru üzerinden adaptif müzik + SFX yönetimi                                       |
 
 Oynanış sayıları `src/config/` altında veri olarak durur; denge değişikliği kod değil config işidir.
+
+### Ability ilerleme dengesi
+
+Sabit parametre taşıyan ability hasarları oyuncunun güncel `damage` stat'ını
+izler; böylece zincir şimşek ve ateş alanı geç oyunda temel mermi hasarından
+kopmaz. Çoklu atış zaten mermi başına oyuncu hasarını kullanır. Kule bunun
+yanında oyuncu maksimum canına göre ölçeklenen bir can tavanına ve oyuncu
+`fireRate`'ini izleyen iç atış temposuna sahiptir; kule canı, can takasıyla
+minimum oranının altına inmez. Ability aktivasyon cooldown'ları da aynı
+`fireRate` kuralıyla çalışır. Bu ortak ölçekleme `src/runtime/ability/`
+altında, ayarları `src/config/abilities.ts` içinde tutulur ve regresyonlarla
+kilitlidir.
+
+### Simülasyon / render sınırı
+
+`src/runtime/simulation/VolHellSimulation.ts` Phaser bilmeyen dalga, düşman,
+ekonomi ve pickup modelidir. `VolHellSimulationDriver`, her adımda yalnızca
+kopyalanmış ve salt-okunur bir render snapshot'ı porta verir; benchmark ve
+uzun koşu testleri bu yüzeyi renderer kurmadan kullanır. Bu sınır üretim
+Phaser yolunun tamamının yerine geçmiş değildir: etkileşimli elite/boss
+kontrolcüleri ve mevcut görsel entity yöneticileri şimdilik Phaser tarafında
+kalır ve ayrı cihaz smoke testine tabidir.
 
 ## Dayanıklılık sözleşmesi
 
@@ -49,16 +71,17 @@ smoke test gerektirir.
 
 ## Komutlar
 
-| Komut                                              | Açıklama                       |
-| -------------------------------------------------- | ------------------------------ |
-| `pnpm --filter @volstudio/vol-hell dev`            | Vite dev server                |
-| `pnpm --filter @volstudio/vol-hell build`          | Prod build                     |
-| `pnpm --filter @volstudio/vol-hell preview`        | Prod build'i yerelde sun       |
-| `pnpm --filter @volstudio/vol-hell typecheck`      | TypeScript doğrulama           |
-| `pnpm --filter @volstudio/vol-hell test`           | Test                           |
-| `pnpm --filter @volstudio/vol-hell test:coverage`  | Test + kapsam eşikleri         |
-| `pnpm --filter @volstudio/vol-hell generate:audio` | Ses ve müzik asset'lerini üret |
-| `pnpm --filter @volstudio/vol-hell audio:qa`       | Üretilen ses asset'lerini ölç  |
+| Komut                                                    | Açıklama                        |
+| -------------------------------------------------------- | ------------------------------- |
+| `pnpm --filter @volstudio/vol-hell dev`                  | Vite dev server                 |
+| `pnpm --filter @volstudio/vol-hell build`                | Prod build                      |
+| `pnpm --filter @volstudio/vol-hell preview`              | Prod build'i yerelde sun        |
+| `pnpm --filter @volstudio/vol-hell typecheck`            | TypeScript doğrulama            |
+| `pnpm --filter @volstudio/vol-hell test`                 | Test                            |
+| `pnpm --filter @volstudio/vol-hell test:coverage`        | Test + kapsam eşikleri          |
+| `pnpm --filter @volstudio/vol-hell benchmark:simulation` | Headless simülasyon benchmark'ı |
+| `pnpm --filter @volstudio/vol-hell generate:audio`       | Ses ve müzik asset'lerini üret  |
+| `pnpm --filter @volstudio/vol-hell audio:qa`             | Üretilen ses asset'lerini ölç   |
 
 Shipped ses asset'leri (`public/assets/audio/**/*.ogg`) repoda tutulur; ses tasarımı değiştiğinde `pnpm --filter @volstudio/vol-hell generate:audio` ile yenilenir. Ara formatlar (WAV, MP3) repoda tutulmaz (bkz. [sound-synth](../../core/docs/sound-synth.md), [music-engine](../../core/docs/music-engine.md)).
 

@@ -30,6 +30,8 @@
     "audio:qa": "tsx core/scripts/audio-qa.ts games/vol-hell/public/assets/audio",
     "test:coverage": "pnpm -r --if-present test:coverage",
     "build:all": "pnpm -r --if-present build",
+    "benchmark:core": "pnpm --filter @volstudio/core benchmark",
+    "benchmark:vol-hell": "pnpm --filter @volstudio/vol-hell benchmark:simulation",
     "contract": "node scripts/workspace-contract.mjs"
   },
   "devDependencies": {

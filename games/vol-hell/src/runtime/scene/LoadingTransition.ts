@@ -1,11 +1,13 @@
 import { LoadingScreen, VOL_COLORS, i18next } from '@volstudio/core';
+import { DisposableScope, type CancellableDisposable } from '@volstudio/core/lifecycle';
 import { uiConfig } from '@/config/ui';
 
 /** Loading screen geçiş yöneticisi — MainMenu → Game arası yükleniyor ekranı. */
 export class LoadingTransition {
   private readonly loadingScreen: LoadingScreen;
-  private interval: ReturnType<typeof setInterval> | null = null;
-  private timeout: ReturnType<typeof setTimeout> | null = null;
+  private readonly lifecycle = new DisposableScope();
+  private interval: CancellableDisposable | null = null;
+  private timeout: CancellableDisposable | null = null;
   private percent = 0;
 
   /** Toplam gösterim süresi (ms) — minDisplayMs ile aynı olmalı. */
@@ -33,10 +35,11 @@ export class LoadingTransition {
    * box-sizing ile temel UI stilleri yalnızca o ağaçta uygulanıyor.
    */
   show(parent: HTMLElement): void {
+    this.interval?.cancel();
     parent.appendChild(this.loadingScreen.element);
     this.loadingScreen.show();
 
-    this.interval = setInterval(() => {
+    this.interval = this.lifecycle.addInterval(() => {
       this.percent = Math.min(
         uiConfig.loading.progressCap,
         this.percent +
@@ -49,26 +52,21 @@ export class LoadingTransition {
 
   /** Süre dolunca callback çağrılır. LoadingScreen referansı callback'e verilir. */
   scheduleTransition(onReady: (loadingScreen: LoadingScreen) => void): void {
-    this.timeout = setTimeout(() => {
-      this.clearTimers();
+    this.timeout?.cancel();
+    this.timeout = this.lifecycle.addTimeout(() => {
+      this.timeout = null;
+      this.interval?.cancel();
+      this.interval = null;
       onReady(this.loadingScreen);
     }, LoadingTransition.durationMs);
   }
 
-  /** Timer ve interval temizler. */
-  private clearTimers(): void {
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = null;
-    }
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-      this.timeout = null;
-    }
-  }
-
   destroy(): void {
-    this.clearTimers();
+    this.interval?.cancel();
+    this.timeout?.cancel();
+    this.interval = null;
+    this.timeout = null;
+    this.lifecycle.dispose();
     this.loadingScreen.destroy();
   }
 }

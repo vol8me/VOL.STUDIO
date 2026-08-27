@@ -1,3 +1,5 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+
 export interface RadioOption {
   value: string;
   label: string;
@@ -11,8 +13,6 @@ export interface RadioGroupOptions {
   disabled?: boolean;
   onInput?: (value: string) => void;
   onCommit?: (value: string) => void;
-  /** @deprecated Ayrık kullanıcı değişimlerinde korunur; yeni kodda `onCommit` kullanın. */
-  onChange?: (value: string) => void;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
 }
@@ -24,11 +24,10 @@ export class RadioGroup {
   readonly element: HTMLDivElement;
   private readonly inputs = new Map<string, HTMLInputElement>();
   private readonly itemDisabled = new Set<string>();
-  private readonly boundChanges = new Map<string, () => void>();
+  private readonly scope = new DisposableScope();
   private value: string | undefined;
   private onInputHandler?: (value: string) => void;
   private onCommitHandler?: (value: string) => void;
-  private onChangeHandler?: (value: string) => void;
 
   constructor(options: RadioGroupOptions) {
     // Grup `name`'i native radio'ları karşılıklı dışlayıcı yapar; artan sayaç (Math.random
@@ -40,12 +39,10 @@ export class RadioGroup {
       disabled = false,
       onInput,
       onCommit,
-      onChange,
     } = options;
     this.value = value;
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
-    this.onChangeHandler = onChange;
 
     this.element = document.createElement('div');
     this.element.className = ['vol-radio-group', options.className].filter(Boolean).join(' ');
@@ -77,8 +74,7 @@ export class RadioGroup {
       const onChangeBound = (): void => {
         this.commitUser(item.value);
       };
-      input.addEventListener('change', onChangeBound);
-      this.boundChanges.set(item.value, onChangeBound);
+      this.scope.addListener(input, 'change', onChangeBound);
 
       this.inputs.set(item.value, input);
       this.element.appendChild(label);
@@ -108,10 +104,7 @@ export class RadioGroup {
   }
 
   destroy(): void {
-    for (const [value, input] of this.inputs) {
-      const handler = this.boundChanges.get(value);
-      if (handler) input.removeEventListener('change', handler);
-    }
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -120,6 +113,5 @@ export class RadioGroup {
     this.setValue(value);
     this.onInputHandler?.(value);
     this.onCommitHandler?.(value);
-    this.onChangeHandler?.(value);
   }
 }

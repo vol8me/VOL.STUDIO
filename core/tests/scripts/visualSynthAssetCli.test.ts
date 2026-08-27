@@ -226,7 +226,15 @@ describe('visual-synth-asset CLI', () => {
         '--json',
       ]);
       const report = JSON.parse(result.stdout) as {
-        rows: { size: number[]; renderMs: number; qaMs: number; pixels: number }[];
+        rows: {
+          size: number[];
+          renderMs: number;
+          qaMs: number;
+          pixels: number;
+          estimatedPeakWorkingBytes: number;
+          memoryEstimate: { confidence: string };
+          cache: { setMs: number; hitMs: number; copyBytes: number; copyOperations: number };
+        }[];
       };
 
       expect(result.status).toBe(0);
@@ -234,6 +242,13 @@ describe('visual-synth-asset CLI', () => {
       expect(report.rows[0].size).toEqual([16, 16]);
       expect(report.rows.every((row) => row.renderMs >= 0 && row.qaMs >= 0)).toBe(true);
       expect(report.rows[1].pixels).toBe(24 * 24);
+      expect(report.rows.every((row) => row.estimatedPeakWorkingBytes > 0)).toBe(true);
+      expect(report.rows.every((row) => row.memoryEstimate.confidence === 'conservative')).toBe(
+        true,
+      );
+      expect(report.rows.every((row) => row.cache.setMs >= 0 && row.cache.hitMs >= 0)).toBe(true);
+      expect(report.rows.every((row) => row.cache.copyBytes > 0)).toBe(true);
+      expect(report.rows.every((row) => row.cache.copyOperations === 2)).toBe(true);
     },
     CLI_TIMEOUT_MS,
   );

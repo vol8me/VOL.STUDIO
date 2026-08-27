@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { UIRoot, i18next } from '@volstudio/core';
+import { DisposableScope } from '@volstudio/core/lifecycle';
 
 /**
  * DOM tabanlı UI kullanan sahnelerin ortak iskeleti.
@@ -19,8 +20,8 @@ export abstract class BaseScene extends Phaser.Scene {
   /** DOM UI kökü. `createScene()` çağrıldığında hazırdır. */
   protected ui!: UIRoot;
 
-  /** Bekleyen `show()` rAF'i; shutdown'da iptal edilir. */
-  private showRafId: number | null = null;
+  /** Sahne örneğinin o anki create/shutdown çevrimine ait kaynaklar. */
+  private lifecycleScope: DisposableScope | null = null;
   private shutdownHandled = false;
 
   private readonly onLanguageChangedBound = (): void => {
@@ -32,12 +33,24 @@ export abstract class BaseScene extends Phaser.Scene {
    * ÇALIŞMAZ; bu yüzden durum sıfırlama `createScene()` içinde yapılır.
    */
   create(data?: unknown): void {
+    // Phaser aynı Scene nesnesini yeniden kullanabilir. Önceki çevrim
+    // beklenmedik bir nedenle SHUTDOWN alamadıysa yeni listener'lar eklenmeden
+    // kaynakları yine de kapat.
+    this.lifecycleScope?.dispose();
     this.shutdownHandled = false;
+    const scope = (this.lifecycleScope = new DisposableScope());
     const container = this.game.canvas.parentElement ?? document.body;
     this.ui = new UIRoot(container);
+    // Scope kapanış sırası ters olduğu için UI ilk eklenir: diğer listener ve
+    // frame kaynakları kapandıktan sonra DOM kökü yok edilir.
+    scope.addDestroyable(this.ui);
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
+    scope.add({
+      dispose: () => this.events.off(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this),
+    });
     i18next.on('languageChanged', this.onLanguageChangedBound);
+    scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChangedBound));
 
     this.createScene(data);
   }
@@ -62,10 +75,7 @@ export abstract class BaseScene extends Phaser.Scene {
    * class değişmesini gerektirir — aynı frame'de yapılırsa tarayıcı geçişi atlar.
    */
   protected showOnNextFrame(show: () => void): void {
-    this.showRafId = requestAnimationFrame(() => {
-      this.showRafId = null;
-      show();
-    });
+    this.lifecycleScope?.addAnimationFrame(() => show());
   }
 
   private handleShutdown(): void {
@@ -78,12 +88,8 @@ export abstract class BaseScene extends Phaser.Scene {
       // Alt sınıf kısmi kurulumda hata verse bile taban listener/rAF/UI
       // kaynakları açık kalmamalı; aksi hâlde sonraki scene restart'ı eski
       // DOM ve i18n closure'larıyla birlikte çalışır.
-      i18next.off('languageChanged', this.onLanguageChangedBound);
-      if (this.showRafId !== null) {
-        cancelAnimationFrame(this.showRafId);
-        this.showRafId = null;
-      }
-      this.ui?.destroy();
+      this.lifecycleScope?.dispose();
+      this.lifecycleScope = null;
     }
   }
 }

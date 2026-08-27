@@ -7,6 +7,7 @@ import {
   type ShopInventoryEntry,
   type ShopPickerState,
 } from '@volstudio/core';
+import { DisposableScope, type CancellableDisposable } from '@volstudio/core/lifecycle';
 import type { CardDefinition } from '@/config/cards/types';
 import { economyConfig } from '@/config/economy';
 import { getCardSellValue } from '@/config/cards';
@@ -62,7 +63,8 @@ export class CardScreens {
   private rerollCost = economyConfig.reroll.baseCost;
   private shopWave = 0;
   private intermissionActive = false;
-  private closeTimeout: ReturnType<typeof setTimeout> | null = null;
+  private readonly lifecycle = new DisposableScope();
+  private closeTimeout: CancellableDisposable | null = null;
   private destroyed = false;
 
   constructor(
@@ -115,6 +117,7 @@ export class CardScreens {
       onAssign: (instanceId, slot) => this.handleAssign(instanceId, slot),
       onClear: (slot) => this.handleClear(slot),
     });
+    this.lifecycle.addDestroyables(this.levelUp, this.shop, this.loadout, this.toasts);
 
     parent.appendChild(this.container);
   }
@@ -164,14 +167,9 @@ export class CardScreens {
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
-    if (this.closeTimeout !== null) {
-      clearTimeout(this.closeTimeout);
-      this.closeTimeout = null;
-    }
-    this.levelUp.destroy();
-    this.shop.destroy();
-    this.loadout.destroy();
-    this.toasts.destroy();
+    this.closeTimeout?.cancel();
+    this.closeTimeout = null;
+    this.lifecycle.dispose();
     this.container.remove();
     this.pendingLevels.length = 0;
     this.intermissionActive = false;
@@ -220,13 +218,11 @@ export class CardScreens {
 
   private closeIntermission(): void {
     // Panel kapanış animasyonu tamamlansın, ardından katman yok olsun.
-    if (this.closeTimeout !== null) {
-      clearTimeout(this.closeTimeout);
-      this.closeTimeout = null;
-    }
+    this.closeTimeout?.cancel();
+    this.closeTimeout = null;
     this.levelUp.hide();
     this.shop.hide();
-    this.closeTimeout = setTimeout(() => {
+    this.closeTimeout = this.lifecycle.addTimeout(() => {
       this.closeTimeout = null;
       if (this.destroyed) return;
       this.container.hidden = true;

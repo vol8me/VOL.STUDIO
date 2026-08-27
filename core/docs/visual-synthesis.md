@@ -1118,8 +1118,13 @@ doğrudan örnekler ve bu sözleşme dışındaki belgeleri reddeder. `RenderCac
 global değildir, çağıran tarafından verilen byte/girdi bütçeli LRU'dur; profil
 açıkken bypass edilir ve typed-array sonuçlarını kopyalayarak çağıran
 mutasyonunu cache'e sızdırmaz.
-Bu iki yüzey cache/tile kararını ölçülebilir kılar; tek bir makineye ait süre
-eşikleri uydurmaz.
+`inspect` içindeki `memoryEstimate`, bilinen typed-array alanlarını, geçici
+scratch tamponlarını, metadata payını ve açıkça ayrılmış %50 güvenlik payını
+ayrı ayrı raporlar; `estimatedPeakWorkingBytes` muhafazakâr çalışma bütçesidir
+ve cache kopyalarını içermez. `benchmark` satırları buna ek olarak cache
+`set`/`get` süresini, saklanan byte'ı ve sahiplik kopyalarının byte/işlem
+sayısını verir. Bu iki yüzey cache/tile kararını ölçülebilir kılar; tek bir
+makineye ait süre eşikleri uydurmaz.
 
 ### 10.2 Katalog — agent'ın "ne yazacağını" bilmesi
 

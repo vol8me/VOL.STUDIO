@@ -84,6 +84,26 @@ export interface AbilityDefinition {
 export const MIN_ABILITY_COOLDOWN_MS = 250;
 
 /**
+ * Ability'lerin koşu ilerledikçe oyuncuyla birlikte büyüme ayarları.
+ *
+ * Ability hasarı ve kule canı ayrı bir ikinci stat defteri tutmaz. Oyuncu
+ * kartlarla güçlendikçe bu iki değer de oyuncunun ilgili stat oranını izler;
+ * etkinin ağırlığı burada tutulduğu için denge ayarı runtime koduna yayılmaz.
+ */
+export const abilityProgressionConfig = {
+  /** Oyuncu hasar oranının sabit ability hasarına etkisi. 1 = tam takip. */
+  damageStatInfluence: 1,
+  /** Oyuncu maksimum can oranının kule canına etkisi. 1 = tam takip. */
+  turretHealthStatInfluence: 1,
+  /** Oyuncu ateş temposunun kule iç atış beklemesine etkisi. 1 = tam takip. */
+  turretFireRateInfluence: 1,
+  /** Can takası kuleyi tamamen kâğıda çevirmesin. */
+  minTurretHealthRatio: 0.75,
+  /** Üst üste hız kartları kuleyi frame başına makineliye çevirmesin. */
+  minTurretFireIntervalMs: 120,
+} as const;
+
+/**
  * Kulenin görsel/his parametreleri.
  *
  * Kule önce yalnızca bir daireydi ve hitscan vuruyordu: ateş ettiği

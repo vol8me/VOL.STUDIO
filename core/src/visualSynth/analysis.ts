@@ -8,6 +8,7 @@
  */
 
 import { NODE_SCHEMAS } from './schema';
+import { MAX_UNIT_RADIUS } from './schema/types';
 import type { FieldNode, LayerSpec, LayerStack } from './types';
 import { validateSpriteDoc } from './validate';
 
@@ -27,8 +28,10 @@ export interface VisualSpriteAnalysis {
   readonly scatterNodeCount: number;
   readonly requestedScatterCount: number;
   readonly bufferedByKind: Readonly<Record<string, number>>;
-  /** Kanal + çalışma tamponları için yaklaşık tepe bellek, bayt. */
+  /** Kanal + çalışma tamponları için muhafazakâr tepe bellek, bayt. */
   readonly estimatedPeakWorkingBytes: number;
+  /** Tahminin nasıl kurulduğunu denetlenebilir biçimde taşır. */
+  readonly memoryEstimate: VisualMemoryEstimate;
   /**
    * Bölge render'ı için güvenlik sözleşmesi.
    *
@@ -45,6 +48,20 @@ export interface VisualSpriteAnalysis {
     readonly dither: boolean;
     readonly glow: boolean;
   };
+}
+
+export interface VisualMemoryEstimate {
+  /** Sonuçta ve aynı anda canlı olan bilinen typed-array alanı. */
+  readonly knownTypedArrayBytes: number;
+  /** Filtre, mesafe, outline ve benzeri geçici scratch alanı. */
+  readonly transientScratchBytes: number;
+  /** JSON graph, teşhis ve JS nesne başlıkları için ayrılan taban. */
+  readonly metadataBytes: number;
+  /** Bilinmeyen motor/allocator farklarına karşı açık pay. */
+  readonly safetyMarginBytes: number;
+  /** `known + scratch + metadata + margin`; cache kopyasını içermez. */
+  readonly estimatedPeakWorkingBytes: number;
+  readonly confidence: 'conservative';
 }
 
 export interface RegionRenderSupport {
@@ -192,18 +209,65 @@ export function analyzeSpriteDoc(input: unknown): VisualSpriteAnalysis {
   // derinlik seviyesinde tekrarlamak üstten bir tahmindir ama derinliği hiç
   // saymamaktan daha güvenlidir. Çıktı ve post/ışık kanalları da hesaba
   // katılır; bu nedenle inspector'daki rakam yalnız graph maliyetini değil,
-  // render sonucunun yaşayacağı temel tamponları da görünür kılar. Bu bir
-  // üstten tahmindir, kesin RSS iddiası değildir.
+  // render sonucunun yaşayacağı temel tamponları da görünür kılar.
   const stackMultiplier = Math.max(1, analysis.maxStackDepth + 1);
-  const channelBytes = 9 * stackMultiplier;
-  const layerBytes = (8 + analysis.maxLayerBufferCount * 4) * stackMultiplier;
-  const outputBytes = 4; // RGBA
-  const shadingBytes = doc.shade === undefined ? 0 : 16 + (doc.shade.ao === undefined ? 0 : 8);
-  const outlineBytes = doc.post?.outline && doc.post.outline.px > 0 ? 1 : 0;
-  const glowBytes = doc.post?.glow && doc.post.glow.radius > 0 ? 4 : 0;
-  const estimatedPeakWorkingBytes =
+  const channelBytes = pixelCount * 9 * stackMultiplier;
+  const layerBytes = pixelCount * (8 + analysis.maxLayerBufferCount * 4) * stackMultiplier;
+  const resultBytes =
     pixelCount *
-    (channelBytes + layerBytes + outputBytes + shadingBytes + outlineBytes + glowBytes);
+    (4 + // RGBA çıktısı
+      9 + // sonuç kanalları
+      (doc.shade === undefined ? 0 : 4) +
+      (doc.shade === undefined ? 0 : 12) + // normal x/y/z
+      (doc.post?.outline && doc.post.outline.px > 0 ? 1 : 0) +
+      (doc.post?.glow && doc.post.glow.radius > 0 ? 4 : 0));
+  const knownTypedArrayBytes = channelBytes + layerBytes + resultBytes;
+
+  // Ayrılabilir filtreler piksel başına değil, en uzun satır + padding kadar
+  // Float64 scratch ayırır. `MAX_UNIT_RADIUS`, doğrulayıcının gerçek sert
+  // tavanıdır; yalnızca `range`e güvenmek bu tahmini yine iyimser bırakırdı.
+  const span = Math.max(width, height);
+  const short = Math.min(width, height);
+  const maxFilterRadius = Math.ceil((MAX_UNIT_RADIUS * short) / 2);
+  const filterScratchBytes = 8 * (span + 2 * maxFilterRadius) + 8 * span; // padded + out
+  const hasFilter = ['blur', 'sharpen', 'dilate', 'erode'].some(
+    (kind) => (analysis.bufferedByKind[kind] ?? 0) > 0,
+  );
+  const filterCopyBytes = (analysis.bufferedByKind.sharpen ?? 0) > 0 ? pixelCount * 4 : 0;
+
+  // `distance` iki yönlü mesafe dönüşümünde Float64 alanlarını, dönüşüm
+  // scratch'lerini ve dış sonucu aynı anda yaşatır. Tileable kipte üç kat
+  // satır kopyası kullanıldığı için aynı formülle daha büyük sınır alınır.
+  const distanceTransformSpan = doc.tileable ? span * 3 : span;
+  const distanceScratchBytes =
+    (analysis.bufferedByKind.distance ?? 0) > 0
+      ? 8 * (2 * pixelCount + 4 * distanceTransformSpan)
+      : 0;
+
+  const aoScratchBytes = doc.shade?.ao === undefined ? 0 : pixelCount * 8 + filterScratchBytes;
+  const outlineScratchBytes = doc.post?.outline && doc.post.outline.px > 0 ? pixelCount * 13 : 0;
+  const glowScratchBytes =
+    doc.post?.glow && doc.post.glow.radius > 0 ? pixelCount * 4 + filterScratchBytes : 0;
+  const ditherScratchBytes = doc.post?.dither?.kind === 'blueNoise' ? 256 * 1024 : 0;
+  const transientScratchBytes =
+    (hasFilter ? filterScratchBytes + filterCopyBytes : 0) +
+    distanceScratchBytes +
+    aoScratchBytes +
+    outlineScratchBytes +
+    glowScratchBytes +
+    ditherScratchBytes;
+
+  // Typed array'ler JS nesnelerinin tamamı değildir. Graph, teşhis listeleri,
+  // Map/Set ve allocator başlıkları için ölçülebilir JSON boyutuna ek olarak
+  // düğüm/scatter başına sabit pay ayırıyoruz. Bu değer RSS değil, karar
+  // vermeye yarayan muhafazakâr bir bütçedir.
+  const serializedBytes =
+    JSON.stringify(doc).length * 2 + JSON.stringify(analysis.bufferedByKind).length * 2;
+  const metadataBytes =
+    64 * 1024 + serializedBytes + analysis.fieldNodeCount * 128 + analysis.scatterNodeCount * 32;
+  const subtotal = knownTypedArrayBytes + transientScratchBytes + metadataBytes;
+  const safetyMarginBytes = Math.ceil(subtotal * 0.5);
+  const estimatedPeakWorkingBytes = subtotal + safetyMarginBytes;
   const blockers = Object.keys(analysis.bufferedByKind)
     .sort()
     .map((kind) => `buffered:${kind}`);
@@ -234,6 +298,14 @@ export function analyzeSpriteDoc(input: unknown): VisualSpriteAnalysis {
     requestedScatterCount: analysis.requestedScatterCount,
     bufferedByKind: analysis.bufferedByKind,
     estimatedPeakWorkingBytes,
+    memoryEstimate: {
+      knownTypedArrayBytes,
+      transientScratchBytes,
+      metadataBytes,
+      safetyMarginBytes,
+      estimatedPeakWorkingBytes,
+      confidence: 'conservative',
+    },
     regionSupport,
     flags: {
       tileable: doc.tileable === true,

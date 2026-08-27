@@ -134,6 +134,26 @@ describe('AssetStudioClient', () => {
     });
   });
 
+  it('lease kapanışta keepalive DELETE ile bırakılır ve ikinci kez gönderilmez', () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new AssetStudioClient();
+    client.setLease('client-1', 'a'.repeat(32));
+
+    client.releaseLease();
+    client.releaseLease();
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/v1/session/lease');
+    expect(init.method).toBe('DELETE');
+    expect(init.keepalive).toBe(true);
+    expect(JSON.parse(init.body as string)).toEqual({
+      clientId: 'client-1',
+      leaseId: 'a'.repeat(32),
+    });
+  });
+
   it('ses önizlemesini blob olarak indirir', async () => {
     const payload = new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/ogg' });
     const fetchMock = vi.fn().mockResolvedValue(

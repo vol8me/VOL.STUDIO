@@ -1,3 +1,5 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+
 export interface TextAreaOptions {
   placeholder?: string;
   value?: string;
@@ -22,9 +24,7 @@ export class TextArea {
   private onInputHandler?: (value: string) => void;
   private onCommitHandler?: (value: string) => void;
   private committedValue: string;
-  private boundInput: () => void;
-  private boundChange: () => void;
-  private minHeightObserver: ResizeObserver | null = null;
+  private readonly scope = new DisposableScope();
 
   constructor(options: TextAreaOptions = {}) {
     const {
@@ -61,18 +61,18 @@ export class TextArea {
       this.counterElement = null;
     }
 
-    this.boundInput = () => {
+    const boundInput = (): void => {
       this.renderCounter();
       this.onInputHandler?.(this.textarea.value);
     };
-    this.boundChange = () => {
+    const boundChange = (): void => {
       const value = this.textarea.value;
       if (value === this.committedValue) return;
       this.committedValue = value;
       this.onCommitHandler?.(value);
     };
-    this.textarea.addEventListener('input', this.boundInput);
-    this.textarea.addEventListener('change', this.boundChange);
+    this.scope.addListener(this.textarea, 'input', boundInput);
+    this.scope.addListener(this.textarea, 'change', boundChange);
 
     this.renderCounter();
 
@@ -83,13 +83,14 @@ export class TextArea {
     // değil — ResizeObserver ile gerçekten ilk defa ölçülebilir bir boyuta
     // kavuştuğu an (offsetHeight > 0) min-height bir kerelik sabitlenir,
     // ardından gözlemci durdurulur.
-    this.minHeightObserver = new ResizeObserver(() => {
+    const minHeightObserver = new ResizeObserver(() => {
       if (this.textarea.offsetHeight > 0) {
         this.textarea.style.minHeight = `${this.textarea.offsetHeight}px`;
-        this.disconnectMinHeightObserver();
+        minHeightObserver.disconnect();
       }
     });
-    this.minHeightObserver.observe(this.textarea);
+    minHeightObserver.observe(this.textarea);
+    this.scope.add({ dispose: () => minHeightObserver.disconnect() });
   }
 
   getValue(): string {
@@ -125,15 +126,8 @@ export class TextArea {
     // Gözlemci kendini yalnızca ilk ölçülebilir boyutta durdurur; component
     // hiç görünür olmadan (ör. açılmamış bir sekmede) destroy edilirse
     // gözlemci bağlı kalır ve DOM'dan çıkan textarea'yı canlı tutar.
-    this.disconnectMinHeightObserver();
-    this.textarea.removeEventListener('input', this.boundInput);
-    this.textarea.removeEventListener('change', this.boundChange);
+    this.scope.dispose();
     this.element.remove();
-  }
-
-  private disconnectMinHeightObserver(): void {
-    this.minHeightObserver?.disconnect();
-    this.minHeightObserver = null;
   }
 
   private renderCounter(): void {

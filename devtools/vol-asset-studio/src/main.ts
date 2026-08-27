@@ -38,13 +38,16 @@ const handleLanguageChanged = (): void => {
   app.setTranslator(translate);
 };
 i18n.on('languageChanged', handleLanguageChanged);
-window.addEventListener(
-  'beforeunload',
-  () => {
-    i18n.off('languageChanged', handleLanguageChanged);
-    app.destroy();
-  },
-  { once: true },
-);
+let disposed = false;
+const handlePageExit = (): void => {
+  if (disposed) return;
+  disposed = true;
+  window.removeEventListener('pagehide', handlePageExit);
+  window.removeEventListener('beforeunload', handlePageExit);
+  i18n.off('languageChanged', handleLanguageChanged);
+  app.destroy();
+};
+window.addEventListener('pagehide', handlePageExit, { once: true });
+window.addEventListener('beforeunload', handlePageExit, { once: true });
 
 await app.start();

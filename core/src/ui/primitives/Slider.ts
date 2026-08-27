@@ -1,4 +1,5 @@
 import { UI_SIZE } from '../../constants';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export type SliderOrientation = 'horizontal' | 'vertical';
 
@@ -16,8 +17,6 @@ export interface SliderOptions {
   disabled?: boolean;
   onInput?: (value: number) => void;
   onCommit?: (value: number) => void;
-  /** @deprecated Canlı kullanıcı değişimleri için korunur; yeni kodda `onInput` kullanın. */
-  onChange?: (value: number) => void;
 }
 
 /**
@@ -39,13 +38,9 @@ export class Slider {
   private readonly formatValue: (value: number) => string;
   private onInputHandler?: (value: number) => void;
   private onCommitHandler?: (value: number) => void;
-  private onChangeHandler?: (value: number) => void;
+  private readonly scope = new DisposableScope();
   private committedValue: number;
   private gestureStartValue: number | null = null;
-  private boundInput: () => void;
-  private boundChange: () => void;
-  private boundKeydown: (event: KeyboardEvent) => void;
-  private boundPointerCancel: () => void;
 
   constructor(options: SliderOptions = {}) {
     const {
@@ -60,7 +55,6 @@ export class Slider {
       disabled = false,
       onInput,
       onCommit,
-      onChange,
     } = options;
 
     this.min = min;
@@ -69,7 +63,6 @@ export class Slider {
     this.formatValue = formatValue;
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
-    this.onChangeHandler = onChange;
     this.committedValue = value;
 
     this.element = document.createElement('div');
@@ -126,30 +119,29 @@ export class Slider {
 
     this.element.appendChild(track);
 
-    this.boundInput = () => {
+    const boundInput = (): void => {
       const value = Number(this.input.value);
       this.gestureStartValue ??= this.committedValue;
       this.render(value);
       this.onInputHandler?.(value);
-      this.onChangeHandler?.(value);
     };
-    this.boundChange = () => {
+    const boundChange = (): void => {
       const value = this.getValue();
       this.gestureStartValue = null;
       if (value === this.committedValue) return;
       this.committedValue = value;
       this.onCommitHandler?.(value);
     };
-    this.boundKeydown = (event) => {
+    const boundKeydown = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape' || this.gestureStartValue === null) return;
       event.preventDefault();
       this.cancelGesture();
     };
-    this.boundPointerCancel = () => this.cancelGesture();
-    this.input.addEventListener('input', this.boundInput);
-    this.input.addEventListener('change', this.boundChange);
-    this.input.addEventListener('keydown', this.boundKeydown);
-    this.input.addEventListener('pointercancel', this.boundPointerCancel);
+    const boundPointerCancel = (): void => this.cancelGesture();
+    this.scope.addListener(this.input, 'input', boundInput);
+    this.scope.addListener(this.input, 'change', boundChange);
+    this.scope.addListener(this.input, 'keydown', boundKeydown as EventListener);
+    this.scope.addListener(this.input, 'pointercancel', boundPointerCancel);
 
     this.render(value);
     this.committedValue = this.getValue();
@@ -161,9 +153,9 @@ export class Slider {
   }
 
   /**
-   * Degeri programatik olarak ayarlar. `onChange` TETIKLENMEZ — kullanici
-   * etkilesimi ile kod kaynakli degisikligi ayirmak, `onChange -> state ->
-   * setValue -> onChange` geri besleme dongusunu bastan imkansiz kilar.
+   * Degeri programatik olarak ayarlar. Kullanıcı callback'leri TETİKLENMEZ —
+   * etkileşimi ile kod kaynaklı değişikliği ayırmak geri besleme döngüsünü
+   * baştan imkânsız kılar.
    * Bildirim gerekiyorsa `setValueAndNotify()` kullan.
    */
   setValue(value: number): void {
@@ -180,7 +172,6 @@ export class Slider {
     this.setValue(value);
     const current = this.getValue();
     this.onInputHandler?.(current);
-    this.onChangeHandler?.(current);
     this.onCommitHandler?.(current);
   }
 
@@ -194,10 +185,7 @@ export class Slider {
   }
 
   destroy(): void {
-    this.input.removeEventListener('input', this.boundInput);
-    this.input.removeEventListener('change', this.boundChange);
-    this.input.removeEventListener('keydown', this.boundKeydown);
-    this.input.removeEventListener('pointercancel', this.boundPointerCancel);
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -213,7 +201,6 @@ export class Slider {
     this.input.value = String(start);
     this.render(this.getValue());
     this.onInputHandler?.(this.getValue());
-    this.onChangeHandler?.(this.getValue());
   }
 
   private render(value: number): void {

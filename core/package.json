@@ -58,10 +58,39 @@
     "./visualSynth/encode": {
       "import": "./src/visualSynth/encode/index.ts",
       "types": "./src/visualSynth/encode/index.ts"
+    },
+    "./benchmark": {
+      "import": "./src/benchmark/index.ts",
+      "types": "./src/benchmark/index.ts"
+    },
+    "./random": {
+      "import": "./src/random/random.ts",
+      "types": "./src/random/random.ts"
+    },
+    "./random/random": {
+      "import": "./src/random/random.ts",
+      "types": "./src/random/random.ts"
+    },
+    "./spatial": {
+      "import": "./src/spatial/SpatialIndex.ts",
+      "types": "./src/spatial/SpatialIndex.ts"
+    },
+    "./spatial/SpatialIndex": {
+      "import": "./src/spatial/SpatialIndex.ts",
+      "types": "./src/spatial/SpatialIndex.ts"
+    },
+    "./stats": {
+      "import": "./src/stats/StatBlock.ts",
+      "types": "./src/stats/StatBlock.ts"
+    },
+    "./stats/StatBlock": {
+      "import": "./src/stats/StatBlock.ts",
+      "types": "./src/stats/StatBlock.ts"
     }
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "benchmark": "tsx scripts/core-benchmark.ts",
     "download-fonts": "node scripts/download-fonts.js",
     "test": "vitest run",
     "test:watch": "vitest",

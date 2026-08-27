@@ -94,6 +94,21 @@ export class Turret {
     return this.alive;
   }
 
+  /** Kalan kule canı — HUD/diagnostic ve denge testleri için. */
+  getHealth(): number {
+    return this.health;
+  }
+
+  /** Kule can tavanı — oyuncu can statıyla ölçeklenmiş değer. */
+  getMaxHealth(): number {
+    return this.maxHealth;
+  }
+
+  /** Kule can oranı (0-1) — hasar göstergeleri için. */
+  getHealthRatio(): number {
+    return this.maxHealth > 0 ? Math.max(0, Math.min(1, this.health / this.maxHealth)) : 0;
+  }
+
   /** Uçuşta olan kule mermisi sayısı — teşhis/test için. */
   get activeShotCount(): number {
     return this.shots.length;

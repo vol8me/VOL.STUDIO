@@ -1,8 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { RunEconomy } from '@/runtime/systems/RunEconomy';
 import { ENEMY_CATALOG } from '@/config/enemies/catalog';
+import { ABILITY_CATALOG, abilityProgressionConfig } from '@/config/abilities';
 import { bulletConfig } from '@/config/bullet';
 import { enemyConfig } from '@/config/enemy';
+import { StatBlock } from '@volstudio/core';
+import {
+  scaleAbilityDamage,
+  scaleTurretFireInterval,
+  scaleTurretHealth,
+} from '@/runtime/ability/abilityScaling';
 
 /**
  * Seviye eğrisinin HİSSİYATINI kilitler: ilk dalga iki kart verir, sonraki
@@ -94,5 +101,87 @@ describe('temel saldırı dengesi', () => {
     expect(Math.max(bulletConfig.minFireCooldownMs, stacked)).toBeGreaterThanOrEqual(
       bulletConfig.minFireCooldownMs,
     );
+  });
+});
+
+describe('ability ilerleme dengesi', () => {
+  it('sabit hasarlı ability aileleri oyuncu hasarını takip eder', () => {
+    const stats = new StatBlock({
+      damage: bulletConfig.damage,
+      speed: 220,
+      health: 100,
+      fireRate: bulletConfig.fireCooldownMs,
+    });
+    const baseDamageRatio = 1.6;
+    stats.addModifier({
+      id: 'gec-oyun-hasar',
+      stat: 'damage',
+      type: 'multiply',
+      value: baseDamageRatio,
+    });
+
+    const expectedRatio = 1 + (baseDamageRatio - 1) * abilityProgressionConfig.damageStatInfluence;
+    const bases = [
+      ABILITY_CATALOG.turret.turret!.damage,
+      ABILITY_CATALOG.chainLightning.chain!.damage,
+      ABILITY_CATALOG.fireZone.fire!.damagePerTick,
+    ];
+
+    for (const base of bases) {
+      expect(scaleAbilityDamage(base, stats)).toBeCloseTo(base * expectedRatio, 6);
+      expect(scaleAbilityDamage(base, stats)).toBeGreaterThan(base);
+    }
+  });
+
+  it('kule canı oyuncu dayanıklılığıyla ilerler, riskli can takasında tabanını korur', () => {
+    const stats = new StatBlock({
+      damage: bulletConfig.damage,
+      speed: 220,
+      health: 100,
+      fireRate: bulletConfig.fireCooldownMs,
+    });
+    const baseHealth = ABILITY_CATALOG.turret.turret!.health;
+
+    stats.addModifier({ id: 'zirh', stat: 'health', type: 'add', value: 60 });
+    expect(scaleTurretHealth(baseHealth, stats)).toBeCloseTo(baseHealth * 1.6, 6);
+
+    stats.clearModifiers();
+    stats.addModifier({ id: 'son-silah-bedeli', stat: 'health', type: 'multiply', value: 0.6 });
+    expect(scaleTurretHealth(baseHealth, stats)).toBeCloseTo(
+      baseHealth * abilityProgressionConfig.minTurretHealthRatio,
+      6,
+    );
+  });
+
+  it('kule iç atış temposu ateş hızıyla ilerler ve alt sınıra doyar', () => {
+    const stats = new StatBlock({
+      damage: bulletConfig.damage,
+      speed: 220,
+      health: 100,
+      fireRate: bulletConfig.fireCooldownMs,
+    });
+    const baseInterval = ABILITY_CATALOG.turret.turret!.fireIntervalMs;
+
+    stats.addModifier({ id: 'hiz-karti', stat: 'fireRate', type: 'multiply', value: 0.5 });
+    expect(scaleTurretFireInterval(baseInterval, stats)).toBeCloseTo(baseInterval * 0.5, 6);
+
+    stats.clearModifiers();
+    stats.addModifier({ id: 'sonsuz-hiz', stat: 'fireRate', type: 'multiply', value: 0 });
+    expect(scaleTurretFireInterval(baseInterval, stats)).toBe(
+      abilityProgressionConfig.minTurretFireIntervalMs,
+    );
+  });
+
+  it('bozuk veya sıfır taban stat ability ölçeklemesini güvenli tutar', () => {
+    const stats = new StatBlock({
+      damage: bulletConfig.damage,
+      speed: 220,
+      health: 100,
+      fireRate: bulletConfig.fireCooldownMs,
+    });
+    stats.setBase('damage', 0);
+
+    const baseDamage = ABILITY_CATALOG.chainLightning.chain!.damage;
+    expect(scaleAbilityDamage(baseDamage, stats)).toBe(baseDamage);
   });
 });

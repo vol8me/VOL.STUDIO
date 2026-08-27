@@ -1,5 +1,6 @@
 import { Tabs } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { buildAdvancedTab } from './sections/advancedTab';
 import { buildButtonsTab } from './sections/buttonsTab';
 import { buildCardsTab } from './sections/cardsTab';
@@ -39,6 +40,8 @@ export class ShowcaseApp {
 
   private tabs: Tabs | null = null;
   private langButton: HTMLButtonElement | null = null;
+  private renderScope: DisposableScope | null = null;
+  private readonly lifecycle = new DisposableScope();
   private activeTabId: ShowcaseTabId = 'buttons';
   private destroyed = false;
   private readonly onLangButtonClick = (): void => {
@@ -52,24 +55,26 @@ export class ShowcaseApp {
     this.element = document.createElement('div');
     this.element.className = 'vol-showcase-root';
     this.mount.replaceChildren(this.element);
-    this.rebuild();
     i18next.on('languageChanged', this.onLanguageChanged);
+    this.lifecycle.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
+    this.rebuild();
   }
 
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
-    i18next.off('languageChanged', this.onLanguageChanged);
-    this.langButton?.removeEventListener('click', this.onLangButtonClick);
-    this.tabs?.destroy();
+    this.renderScope?.dispose();
+    this.renderScope = null;
+    this.lifecycle.dispose();
     this.tabs = null;
     this.langButton = null;
     this.element.remove();
   }
 
   private rebuild(): void {
-    this.langButton?.removeEventListener('click', this.onLangButtonClick);
-    this.tabs?.destroy();
+    this.renderScope?.dispose();
+    const renderScope = new DisposableScope();
+    this.renderScope = renderScope;
     this.element.replaceChildren();
 
     const header = document.createElement('header');
@@ -83,7 +88,7 @@ export class ShowcaseApp {
     this.langButton.className = 'vol-showcase-lang-button';
     this.langButton.textContent = i18next.t('volui:app.language');
     this.langButton.setAttribute('aria-label', i18next.t('volui:app.language'));
-    this.langButton.addEventListener('click', this.onLangButtonClick);
+    renderScope.addListener(this.langButton, 'click', this.onLangButtonClick);
     header.appendChild(this.langButton);
 
     const specs: TabSpec[] = [
@@ -105,7 +110,7 @@ export class ShowcaseApp {
       label: i18next.t(`volui:tabs.${spec.labelKey}`),
       content: spec.builder(),
     }));
-    this.tabs = new Tabs(entries, {
+    const tabs = new Tabs(entries, {
       orientation: 'vertical',
       listHeader: header,
       onChange: (id) => {
@@ -113,6 +118,7 @@ export class ShowcaseApp {
         if (selected) this.activeTabId = selected.id;
       },
     });
+    this.tabs = renderScope.addDestroyable(tabs);
     if (entries.some((entry) => entry.id === this.activeTabId)) {
       this.tabs.select(this.activeTabId);
     } else {

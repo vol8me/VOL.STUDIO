@@ -1,3 +1,4 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { Button, IconButton, Tooltip } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid, svgIcon } from './shared';
@@ -22,21 +23,17 @@ import {
   ICON_ZOOM_OUT,
 } from './icons';
 
-interface Destroyable {
-  destroy(): void;
-}
-
 /** equalWidth:true (varsayılan) en geniş butona hizalar; false doğal genişlik korur. */
 function buttonGroup(
   buttons: Button[],
-  disposables: Destroyable[],
+  disposables: DisposableScope,
   equalWidth = true,
 ): HTMLElement {
   const group = document.createElement('div');
   group.className = equalWidth ? 'vol-button-group' : 'vol-button-group vol-button-group--natural';
   for (const button of buttons) {
     group.appendChild(button.element);
-    disposables.push(button);
+    disposables.addDestroyables(button);
   }
   return group;
 }
@@ -69,7 +66,10 @@ function iconButtonGroup(title: string, buttons: IconButton[]): HTMLElement {
 }
 
 /** IconButton örnekleri: oyun kategorilerine göre gruplanmış, toggle ile gerçek durum değişimi gösterir. */
-function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElement): HTMLElement {
+function buildIconButtonDemo(
+  disposables: DisposableScope,
+  uiRootElement: HTMLElement,
+): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-icon-button-groups';
 
@@ -85,7 +85,6 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
       paused ? i18next.t('volui:buttons.resume') : i18next.t('volui:buttons.pause'),
     );
   };
-  pausePlay.element.addEventListener('click', onPausePlayClick);
 
   const speeds = [1, 2, 3];
   let speedIndex = 0;
@@ -96,7 +95,6 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
     speedIndex = (speedIndex + 1) % speeds.length;
     fastForward.setLabel(i18next.t('volui:buttons.fastForward', { n: speeds[speedIndex] }));
   };
-  fastForward.element.addEventListener('click', onFastForwardClick);
 
   let muted = false;
   const volume = new IconButton(svgIcon(ICON_VOLUME_ON), {
@@ -107,7 +105,6 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
     volume.setIcon(svgIcon(muted ? ICON_VOLUME_OFF : ICON_VOLUME_ON));
     volume.setLabel(muted ? i18next.t('volui:buttons.unmute') : i18next.t('volui:buttons.mute'));
   };
-  volume.element.addEventListener('click', onVolumeClick);
 
   // Kamera/harita: zoom + merkezle.
   const zoomIn = new IconButton(svgIcon(ICON_ZOOM_IN), {
@@ -153,7 +150,10 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
   const asyncSave = new IconButton(svgIcon(ICON_CHECK), {
     label: i18next.t('volui:buttons.asyncIconSave'),
     variant: 'primary',
-    onClick: () => new Promise<void>((resolve) => setTimeout(resolve, 1200)),
+    onClick: () =>
+      new Promise<void>((resolve) => {
+        disposables.addTimeout(resolve, 1200);
+      }),
   });
 
   // Boyut + tooltip: 3 boyut, her biri tooltip'li.
@@ -176,7 +176,7 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
     container: uiRootElement,
   });
 
-  disposables.push(
+  disposables.addDestroyables(
     pausePlay,
     fastForward,
     volume,
@@ -197,14 +197,10 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
     smallTooltip,
     gearTooltip,
     largeTooltip,
-    {
-      destroy: () => {
-        pausePlay.element.removeEventListener('click', onPausePlayClick);
-        fastForward.element.removeEventListener('click', onFastForwardClick);
-        volume.element.removeEventListener('click', onVolumeClick);
-      },
-    },
   );
+  disposables.addListener(pausePlay.element, 'click', onPausePlayClick);
+  disposables.addListener(fastForward.element, 'click', onFastForwardClick);
+  disposables.addListener(volume.element, 'click', onVolumeClick);
 
   wrap.appendChild(
     iconButtonGroup(i18next.t('volui:buttons.gameFlow'), [pausePlay, fastForward, volume]),
@@ -223,12 +219,12 @@ function buildIconButtonDemo(disposables: Destroyable[], uiRootElement: HTMLElem
 }
 
 /** fullWidth:true davranışı. .vol-button-group içine alınmaz — inline-flex fullWidth ile çakışır. */
-function buildFullWidthDemo(disposables: Destroyable[]): HTMLElement {
+function buildFullWidthDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   // width:100% olmadan wrap içeriğine küçülür, fullWidth dar referansa göre çözümlenir.
   wrap.style.width = '100%';
   const button = new Button(i18next.t('volui:buttons.confirmRecord'), { variant: 'primary' });
-  disposables.push(button);
+  disposables.addDestroyables(button);
   wrap.appendChild(button.element);
   return wrap;
 }
@@ -239,7 +235,7 @@ export function buildButtonsTab(uiRootElement: HTMLElement): {
 } {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
-  const disposables: Destroyable[] = [];
+  const disposables = new DisposableScope();
   const auto = { fullWidth: false } as const;
 
   const cards = [
@@ -275,7 +271,10 @@ export function buildButtonsTab(uiRootElement: HTMLElement): {
           buildLoadingButton(),
           new Button(i18next.t('volui:buttons.clickToLoad'), {
             ...auto,
-            onClick: () => new Promise((resolve) => setTimeout(resolve, 2000)),
+            onClick: () =>
+              new Promise<void>((resolve) => {
+                disposables.addTimeout(resolve, 2000);
+              }),
           }),
         ],
         disposables,
@@ -310,6 +309,6 @@ export function buildButtonsTab(uiRootElement: HTMLElement): {
 
   return {
     element: container,
-    destroy: () => disposables.forEach((d) => d.destroy()),
+    destroy: () => disposables.dispose(),
   };
 }

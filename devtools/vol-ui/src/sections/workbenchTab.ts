@@ -1,3 +1,4 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import {
   Button,
   CanvasViewportController,
@@ -16,11 +17,7 @@ import {
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid3 } from './shared';
 
-interface Destroyable {
-  destroy(): void;
-}
-
-function buildPropertyDemo(disposables: Destroyable[]): HTMLElement {
+function buildPropertyDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-workbench-fields';
   const commitState = new Text(i18next.t('volui:workbench.noCommit'), { variant: 'muted' });
@@ -46,11 +43,11 @@ function buildPropertyDemo(disposables: Destroyable[]): HTMLElement {
   const visible = new Checkbox({ label: i18next.t('volui:workbench.visible'), checked: true });
 
   wrap.append(nameField.element, opacityField.element, visible.element, commitState.element);
-  disposables.push(input, nameField, opacity, opacityField, visible, commitState);
+  disposables.addDestroyables(input, nameField, opacity, opacityField, visible, commitState);
   return wrap;
 }
 
-function buildHistoryDemo(disposables: Destroyable[]): HTMLElement {
+function buildHistoryDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-workbench-history';
   let value = 0;
@@ -96,11 +93,11 @@ function buildHistoryDemo(disposables: Destroyable[]): HTMLElement {
   actions.className = 'vol-showcase-row__group';
   actions.append(apply.element, undo.element, redo.element);
   wrap.append(actions, state.element);
-  disposables.push(apply, undo, redo, state);
+  disposables.addDestroyables(apply, undo, redo, state);
   return wrap;
 }
 
-function buildSplitViewportDemo(disposables: Destroyable[]): HTMLElement {
+function buildSplitViewportDemo(disposables: DisposableScope): HTMLElement {
   const assets = Array.from({ length: 240 }, (_, index) => ({
     id: `asset-${index + 1}`,
     label: i18next.t('volui:workbench.assetRow', { index: index + 1 }),
@@ -175,7 +172,7 @@ function buildSplitViewportDemo(disposables: Destroyable[]): HTMLElement {
     separatorLabel: i18next.t('volui:workbench.splitPane'),
   });
   split.element.classList.add('vol-showcase-workbench-split');
-  disposables.push(list, controller, zoomState, hint, fit, actual, split);
+  disposables.addDestroyables(list, controller, zoomState, hint, fit, actual, split);
   return split.element;
 }
 
@@ -186,14 +183,14 @@ function buildSplitViewportDemo(disposables: Destroyable[]): HTMLElement {
  * eklendiğinde showcase'e ayrıca eklenmesi gerekmez ve hiçbir ikon görsel
  * denetimden kaçamaz.
  */
-function buildIconRegistry(disposables: Destroyable[]): HTMLElement {
+function buildIconRegistry(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-workbench-icons';
   for (const name of Object.keys(VOL_ICONS) as (keyof typeof VOL_ICONS)[]) {
     const cell = document.createElement('div');
     cell.className = 'vol-showcase-workbench-icons__cell';
     const instance = new Icon({ name, label: name });
-    disposables.push(instance);
+    disposables.addDestroyables(instance);
     const caption = document.createElement('span');
     caption.textContent = name;
     cell.append(instance.element, caption);
@@ -206,7 +203,7 @@ export function buildWorkbenchTab(): {
   element: HTMLElement;
   destroy: () => void;
 } {
-  const disposables: Destroyable[] = [];
+  const disposables = new DisposableScope();
   const section = document.createElement('div');
   section.className = 'vol-showcase-section';
   section.append(
@@ -226,7 +223,7 @@ export function buildWorkbenchTab(): {
   return {
     element: section,
     destroy: () => {
-      for (const disposable of disposables.reverse()) disposable.destroy();
+      disposables.dispose();
     },
   };
 }

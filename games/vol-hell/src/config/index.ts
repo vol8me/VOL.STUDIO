@@ -21,3 +21,4 @@ export * from './sounds';
 export * from './telegraph';
 export * from './ui';
 export * from './music';
+export * from './simulation';

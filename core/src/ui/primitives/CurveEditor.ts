@@ -1,3 +1,5 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+
 export type CurvePoint = readonly [number, number];
 
 export interface CurveEditorOptions {
@@ -10,7 +12,10 @@ export interface CurveEditorOptions {
   height?: number;
   label?: string;
   disabled?: boolean;
-  onChange?: (points: CurvePoint[]) => void;
+  /** Kullanıcı sürüklerken güncel eğri. */
+  onInput?: (points: CurvePoint[]) => void;
+  /** Kullanıcı sürüklemeyi bıraktığında veya nokta ekleyip sildiğinde çağrılır. */
+  onCommit?: (points: CurvePoint[]) => void;
   className?: string;
 }
 
@@ -46,16 +51,16 @@ export class CurveEditor {
   private points: CurvePoint[];
   private readonly domainX: readonly [number, number];
   private readonly domainY: readonly [number, number];
-  private onChangeHandler?: (points: CurvePoint[]) => void;
+  private onInputHandler?: (points: CurvePoint[]) => void;
+  private onCommitHandler?: (points: CurvePoint[]) => void;
+  private readonly scope = new DisposableScope();
   private dragIndex = -1;
+  private gestureStartPoints: CurvePoint[] | null = null;
   private disabled: boolean;
-  private readonly boundDown: (event: PointerEvent) => void;
-  private readonly boundMove: (event: PointerEvent) => void;
-  private readonly boundUp: (event: PointerEvent) => void;
-  private readonly boundDouble: (event: MouseEvent) => void;
 
   constructor(options: CurveEditorOptions = {}) {
-    this.onChangeHandler = options.onChange;
+    this.onInputHandler = options.onInput;
+    this.onCommitHandler = options.onCommit;
     this.domainX = options.domainX ?? [0, 1];
     this.domainY = options.domainY ?? [0, 1];
     this.disabled = options.disabled ?? false;
@@ -81,16 +86,21 @@ export class CurveEditor {
     this.element.appendChild(this.canvas);
     this.context = this.canvas.getContext('2d');
 
-    this.boundDown = (event) => this.onPointerDown(event);
-    this.boundMove = (event) => this.onPointerMove(event);
-    this.boundUp = (event) => this.onPointerUp(event);
-    this.boundDouble = (event) => this.onDoubleClick(event);
-
-    this.canvas.addEventListener('pointerdown', this.boundDown);
-    this.canvas.addEventListener('pointermove', this.boundMove);
-    this.canvas.addEventListener('pointerup', this.boundUp);
-    this.canvas.addEventListener('pointercancel', this.boundUp);
-    this.canvas.addEventListener('dblclick', this.boundDouble);
+    this.scope.addListener(this.canvas, 'pointerdown', (event) =>
+      this.onPointerDown(event as PointerEvent),
+    );
+    this.scope.addListener(this.canvas, 'pointermove', (event) =>
+      this.onPointerMove(event as PointerEvent),
+    );
+    this.scope.addListener(this.canvas, 'pointerup', (event) =>
+      this.onPointerUp(event as PointerEvent),
+    );
+    this.scope.addListener(this.canvas, 'pointercancel', (event) =>
+      this.onPointerUp(event as PointerEvent),
+    );
+    this.scope.addListener(this.canvas, 'dblclick', (event) =>
+      this.onDoubleClick(event as MouseEvent),
+    );
 
     this.draw();
   }
@@ -99,7 +109,7 @@ export class CurveEditor {
     return this.points.map((point) => [point[0], point[1]] as CurvePoint);
   }
 
-  /** Noktaları dışarıdan ayarlar; `onChange` TETİKLENMEZ (döngüyü kırar). */
+  /** Noktaları dışarıdan ayarlar; kullanıcı callback'leri TETİKLENMEZ. */
   setPoints(points: readonly CurvePoint[]): void {
     this.points = sortPoints(points);
     this.draw();
@@ -130,11 +140,7 @@ export class CurveEditor {
   }
 
   destroy(): void {
-    this.canvas.removeEventListener('pointerdown', this.boundDown);
-    this.canvas.removeEventListener('pointermove', this.boundMove);
-    this.canvas.removeEventListener('pointerup', this.boundUp);
-    this.canvas.removeEventListener('pointercancel', this.boundUp);
-    this.canvas.removeEventListener('dblclick', this.boundDouble);
+    this.scope.dispose();
     this.element.remove();
   }
 
@@ -195,11 +201,12 @@ export class CurveEditor {
     if (event.altKey) {
       if (this.points.length <= MIN_POINTS) return;
       this.points = this.points.filter((_, i) => i !== index);
-      this.commit();
+      this.commitDiscreteChange();
       return;
     }
 
     this.dragIndex = index;
+    this.gestureStartPoints = this.getPoints();
     this.canvas.setPointerCapture?.(event.pointerId);
   }
 
@@ -213,13 +220,25 @@ export class CurveEditor {
     const sorted = sortPoints(next);
     this.dragIndex = sorted.findIndex((point) => point === moved);
     this.points = sorted;
-    this.commit();
+    this.draw();
+    this.onInputHandler?.(this.getPoints());
   }
 
   private onPointerUp(event: PointerEvent): void {
     if (this.dragIndex < 0) return;
+    const cancelled = event.type === 'pointercancel';
     this.dragIndex = -1;
     this.canvas.releasePointerCapture?.(event.pointerId);
+    const start = this.gestureStartPoints;
+    this.gestureStartPoints = null;
+    if (!start || samePoints(start, this.points)) return;
+    if (cancelled) {
+      this.points = start;
+      this.draw();
+      this.onInputHandler?.(this.getPoints());
+      return;
+    }
+    this.onCommitHandler?.(this.getPoints());
   }
 
   private onDoubleClick(event: MouseEvent): void {
@@ -227,12 +246,14 @@ export class CurveEditor {
     const [px, py] = this.eventToCanvas(event);
     if (this.findNear(px, py) >= 0) return;
     this.points = sortPoints([...this.points, this.toDomain(px, py)]);
-    this.commit();
+    this.commitDiscreteChange();
   }
 
-  private commit(): void {
+  private commitDiscreteChange(): void {
     this.draw();
-    this.onChangeHandler?.(this.getPoints());
+    const points = this.getPoints();
+    this.onInputHandler?.(points);
+    this.onCommitHandler?.(points);
   }
 
   /* ── çizim ───────────────────────────────────────────────────────────── */
@@ -283,4 +304,9 @@ function clamp(value: number, min: number, max: number): number {
 
 function sortPoints(points: readonly CurvePoint[]): CurvePoint[] {
   return [...points].sort((a, b) => a[0] - b[0]);
+}
+
+function samePoints(a: readonly CurvePoint[], b: readonly CurvePoint[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((point, index) => point[0] === b[index][0] && point[1] === b[index][1]);
 }

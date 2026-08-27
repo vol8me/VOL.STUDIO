@@ -1,3 +1,4 @@
+import { DisposableScope, type CancellableDisposable } from '@volstudio/core/lifecycle';
 import {
   Button,
   ContextMenu,
@@ -12,11 +13,7 @@ import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid, svgIcon } from './shared';
 import { ICON_COPY, ICON_EDIT, ICON_SHARE, ICON_TRASH } from './icons';
 
-interface Destroyable {
-  destroy(): void;
-}
-
-function buildFadeDemo(disposables: Destroyable[]): HTMLElement {
+function buildFadeDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -26,7 +23,7 @@ function buildFadeDemo(disposables: Destroyable[]): HTMLElement {
   const demoPanel = new Panel({ className: 'vol-showcase-demo-panel' })
     .add(new Text(i18next.t('volui:panels.panelVisible'), { variant: 'body', tag: 'h2' }))
     .add(new Text(i18next.t('volui:panels.fadeTransition'), { variant: 'muted' }));
-  disposables.push(demoPanel);
+  disposables.addDestroyables(demoPanel);
 
   stage.appendChild(demoPanel.element);
   wrap.appendChild(stage);
@@ -41,13 +38,13 @@ function buildFadeDemo(disposables: Destroyable[]): HTMLElement {
       }
     },
   });
-  disposables.push(toggle);
+  disposables.addDestroyables(toggle);
   wrap.appendChild(toggle.element);
 
   return wrap;
 }
 
-function buildDynamicContentDemo(disposables: Destroyable[]): HTMLElement {
+function buildDynamicContentDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -58,7 +55,7 @@ function buildDynamicContentDemo(disposables: Destroyable[]): HTMLElement {
     new Text(i18next.t('volui:panels.inventory'), { variant: 'body', tag: 'h2' }),
   );
   listPanel.show();
-  disposables.push(listPanel);
+  disposables.addDestroyables(listPanel);
 
   stage.appendChild(listPanel.element);
   wrap.appendChild(stage);
@@ -91,7 +88,7 @@ function buildDynamicContentDemo(disposables: Destroyable[]): HTMLElement {
       }
     },
   });
-  disposables.push(addButton, removeButton);
+  disposables.addDestroyables(addButton, removeButton);
 
   controls.appendChild(addButton.element);
   controls.appendChild(removeButton.element);
@@ -100,7 +97,7 @@ function buildDynamicContentDemo(disposables: Destroyable[]): HTMLElement {
   return wrap;
 }
 
-function buildStaticMenuDemo(disposables: Destroyable[]): HTMLElement {
+function buildStaticMenuDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
@@ -110,10 +107,10 @@ function buildStaticMenuDemo(disposables: Destroyable[]): HTMLElement {
   const menuPanel = new Panel({ className: 'vol-showcase-demo-panel' })
     .add(new Text(i18next.t('volui:panels.brandTitle'), { variant: 'heading', tag: 'h2' }))
     .add(new Text(i18next.t('volui:text.sampleBody'), { variant: 'muted' }));
-  disposables.push(menuPanel);
+  disposables.addDestroyables(menuPanel);
 
   const startButton = new Button(i18next.t('volui:panels.start'), { variant: 'primary' });
-  disposables.push(startButton);
+  disposables.addDestroyables(startButton);
   menuPanel.add(startButton);
   menuPanel.show();
 
@@ -121,23 +118,23 @@ function buildStaticMenuDemo(disposables: Destroyable[]): HTMLElement {
   wrap.appendChild(stage);
 
   const hint = new Text(i18next.t('volui:panels.staticMenuHint'), { variant: 'muted' });
-  disposables.push(hint);
+  disposables.addDestroyables(hint);
   wrap.appendChild(hint.element);
 
   return wrap;
 }
 
-function buildModalDemo(uiRootElement: HTMLElement, disposables: Destroyable[]): HTMLElement {
+function buildModalDemo(uiRootElement: HTMLElement, disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const result = new Text(i18next.t('volui:panels.modalClosed'), { variant: 'muted' });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const modal = new Modal({
     onClose: () => result.setContent(i18next.t('volui:panels.modalClosed')),
   }).add(new Text(i18next.t('volui:panels.gamePaused'), { variant: 'heading', tag: 'h2' }));
-  disposables.push(modal);
+  disposables.addDestroyables(modal);
 
   const resumeButton = new Button(i18next.t('volui:panels.resume'), {
     variant: 'primary',
@@ -145,7 +142,7 @@ function buildModalDemo(uiRootElement: HTMLElement, disposables: Destroyable[]):
     onClick: () => modal.close(),
   });
   modal.add(resumeButton);
-  disposables.push(resumeButton);
+  disposables.addDestroyables(resumeButton);
 
   uiRootElement.appendChild(modal.element);
 
@@ -153,7 +150,7 @@ function buildModalDemo(uiRootElement: HTMLElement, disposables: Destroyable[]):
     closeOnScrimClick: false,
     onClose: () => result.setContent(i18next.t('volui:panels.modalClosed')),
   }).add(new Text(i18next.t('volui:panels.criticalWarning'), { variant: 'heading', tag: 'h2' }));
-  disposables.push(lockedModal);
+  disposables.addDestroyables(lockedModal);
 
   const acknowledgeButton = new Button(i18next.t('volui:panels.acknowledge'), {
     variant: 'danger',
@@ -161,7 +158,7 @@ function buildModalDemo(uiRootElement: HTMLElement, disposables: Destroyable[]):
     onClick: () => lockedModal.close(),
   });
   lockedModal.add(acknowledgeButton);
-  disposables.push(acknowledgeButton);
+  disposables.addDestroyables(acknowledgeButton);
 
   uiRootElement.appendChild(lockedModal.element);
 
@@ -181,7 +178,7 @@ function buildModalDemo(uiRootElement: HTMLElement, disposables: Destroyable[]):
       lockedModal.open();
     },
   });
-  disposables.push(openButton, openLockedButton);
+  disposables.addDestroyables(openButton, openLockedButton);
 
   controls.appendChild(openButton.element);
   controls.appendChild(openLockedButton.element);
@@ -191,12 +188,12 @@ function buildModalDemo(uiRootElement: HTMLElement, disposables: Destroyable[]):
   return wrap;
 }
 
-function buildConfirmDemo(disposables: Destroyable[], uiRootElement: HTMLElement): HTMLElement {
+function buildConfirmDemo(disposables: DisposableScope, uiRootElement: HTMLElement): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const result = new Text(i18next.t('volui:panels.awaitingResult'), { variant: 'muted' });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const controls = document.createElement('div');
   controls.className = 'vol-showcase-panel-demo__controls';
@@ -235,7 +232,7 @@ function buildConfirmDemo(disposables: Destroyable[], uiRootElement: HTMLElement
       );
     },
   });
-  disposables.push(deleteButton, saveButton);
+  disposables.addDestroyables(deleteButton, saveButton);
 
   controls.appendChild(deleteButton.element);
   controls.appendChild(saveButton.element);
@@ -245,15 +242,15 @@ function buildConfirmDemo(disposables: Destroyable[], uiRootElement: HTMLElement
   return wrap;
 }
 
-function buildToastDemo(uiRootElement: HTMLElement, disposables: Destroyable[]): HTMLElement {
+function buildToastDemo(uiRootElement: HTMLElement, disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const toasts = new ToastManager(uiRootElement);
-  disposables.push(toasts);
+  disposables.addDestroyables(toasts);
 
   const hint = new Text(i18next.t('volui:panels.toastHint'), { variant: 'muted' });
-  disposables.push(hint);
+  disposables.addDestroyables(hint);
   wrap.appendChild(hint.element);
 
   const buttons = document.createElement('div');
@@ -269,7 +266,7 @@ function buildToastDemo(uiRootElement: HTMLElement, disposables: Destroyable[]):
     variant: 'danger',
     onClick: () => toasts.show(i18next.t('volui:panels.healthCritical'), { variant: 'danger' }),
   });
-  disposables.push(infoButton, successButton, dangerButton);
+  disposables.addDestroyables(infoButton, successButton, dangerButton);
 
   buttons.appendChild(infoButton.element);
   buttons.appendChild(successButton.element);
@@ -281,60 +278,53 @@ function buildToastDemo(uiRootElement: HTMLElement, disposables: Destroyable[]):
 
 function buildCornerNotificationDemo(
   uiRootElement: HTMLElement,
-  disposables: Destroyable[],
+  disposables: DisposableScope,
 ): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const hint = new Text(i18next.t('volui:panels.cornerHint'), { variant: 'muted' });
-  disposables.push(hint);
+  disposables.addDestroyables(hint);
   wrap.appendChild(hint.element);
 
   const cornerPanel = new Panel({ className: 'vol-showcase-corner-panel' })
     .add(new Text(i18next.t('volui:panels.newQuest'), { variant: 'body', tag: 'h3' }))
     .add(new Text(i18next.t('volui:panels.questDesc'), { variant: 'muted' }));
-  disposables.push(cornerPanel);
+  disposables.addDestroyables(cornerPanel);
 
   uiRootElement.appendChild(cornerPanel.element);
 
-  let hideTimeoutId: number | null = null;
+  let hideTimeout: CancellableDisposable | null = null;
 
   const button = new Button(i18next.t('volui:panels.showNotification'), {
     variant: 'primary',
     onClick: () => {
-      if (hideTimeoutId !== null) {
-        clearTimeout(hideTimeoutId);
-      }
+      hideTimeout?.cancel();
       cornerPanel.show();
-      hideTimeoutId = window.setTimeout(() => {
+      hideTimeout = disposables.addTimeout(() => {
         cornerPanel.hide();
-        hideTimeoutId = null;
+        hideTimeout = null;
       }, 2500);
     },
   });
-  disposables.push(button);
-  disposables.push({
-    destroy: () => {
-      if (hideTimeoutId !== null) {
-        clearTimeout(hideTimeoutId);
-        hideTimeoutId = null;
-      }
-    },
-  });
+  disposables.addDestroyables(button);
   wrap.appendChild(button.element);
 
   return wrap;
 }
 
-function buildContextMenuDemo(disposables: Destroyable[], uiRootElement: HTMLElement): HTMLElement {
+function buildContextMenuDemo(
+  disposables: DisposableScope,
+  uiRootElement: HTMLElement,
+): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const result = new Text(i18next.t('volui:panels.awaitingAction'), { variant: 'muted' });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const trigger = new Button(i18next.t('volui:panels.actions'), { fullWidth: false });
-  disposables.push(trigger);
+  disposables.addDestroyables(trigger);
 
   const menu = new ContextMenu(
     trigger.element,
@@ -365,7 +355,7 @@ function buildContextMenuDemo(disposables: Destroyable[], uiRootElement: HTMLEle
     ],
     { container: uiRootElement },
   );
-  disposables.push({ destroy: () => menu.destroy() });
+  disposables.addDestroyables({ destroy: () => menu.destroy() });
 
   wrap.appendChild(trigger.element);
   wrap.appendChild(result.element);
@@ -373,15 +363,15 @@ function buildContextMenuDemo(disposables: Destroyable[], uiRootElement: HTMLEle
   return wrap;
 }
 
-function buildPopupDemo(disposables: Destroyable[], uiRootElement: HTMLElement): HTMLElement {
+function buildPopupDemo(disposables: DisposableScope, uiRootElement: HTMLElement): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   const result = new Text(i18next.t('volui:panels.popupClosed'), { variant: 'muted' });
-  disposables.push(result);
+  disposables.addDestroyables(result);
 
   const trigger = new Button(i18next.t('volui:panels.openPopup'), { fullWidth: false });
-  disposables.push(trigger);
+  disposables.addDestroyables(trigger);
 
   const popup = new Popup(trigger.element, {
     placement: 'bottom-start',
@@ -391,7 +381,7 @@ function buildPopupDemo(disposables: Destroyable[], uiRootElement: HTMLElement):
       trigger.element.textContent = i18next.t('volui:panels.openPopup');
     },
   });
-  disposables.push({ destroy: () => popup.destroy() });
+  disposables.addDestroyables({ destroy: () => popup.destroy() });
 
   const popupContent = document.createElement('div');
   popupContent.style.padding = 'var(--vol-space-md)';
@@ -401,20 +391,20 @@ function buildPopupDemo(disposables: Destroyable[], uiRootElement: HTMLElement):
   popupContent.style.minWidth = '180px';
 
   const popupTitle = new Text(i18next.t('volui:panels.popupContent'), { variant: 'heading' });
-  disposables.push(popupTitle);
+  disposables.addDestroyables(popupTitle);
   popupContent.appendChild(popupTitle.element);
 
   const popupDesc = new Text(i18next.t('volui:panels.popupDesc'), { variant: 'body' });
-  disposables.push(popupDesc);
+  disposables.addDestroyables(popupDesc);
   popupContent.appendChild(popupDesc.element);
 
   const closeBtn = new Button(i18next.t('volui:panels.close'), {
     variant: 'primary',
     fullWidth: false,
   });
-  disposables.push(closeBtn);
+  disposables.addDestroyables(closeBtn);
   const onCloseBtnClick = (): void => popup.close();
-  closeBtn.element.addEventListener('click', onCloseBtnClick);
+  disposables.addListener(closeBtn.element, 'click', onCloseBtnClick);
   popupContent.appendChild(closeBtn.element);
 
   popup.element.appendChild(popupContent);
@@ -428,13 +418,7 @@ function buildPopupDemo(disposables: Destroyable[], uiRootElement: HTMLElement):
       trigger.element.textContent = i18next.t('volui:panels.closePopup');
     }
   };
-  trigger.element.addEventListener('click', onTriggerClick);
-  disposables.push({
-    destroy: () => {
-      closeBtn.element.removeEventListener('click', onCloseBtnClick);
-      trigger.element.removeEventListener('click', onTriggerClick);
-    },
-  });
+  disposables.addListener(trigger.element, 'click', onTriggerClick);
 
   wrap.appendChild(trigger.element);
   wrap.appendChild(result.element);
@@ -448,7 +432,7 @@ export function buildPanelsTab(uiRootElement: HTMLElement): {
 } {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
-  const disposables: Destroyable[] = [];
+  const disposables = new DisposableScope();
 
   const cards = [
     card(i18next.t('volui:panels.fade'), buildFadeDemo(disposables)),
@@ -470,6 +454,6 @@ export function buildPanelsTab(uiRootElement: HTMLElement): {
 
   return {
     element: container,
-    destroy: () => disposables.forEach((d) => d.destroy()),
+    destroy: () => disposables.dispose(),
   };
 }

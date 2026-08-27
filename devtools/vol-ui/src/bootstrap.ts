@@ -1,5 +1,6 @@
 import { FontManager, VOL_FONTS } from '@volstudio/core/fonts';
 import { i18n } from '@volstudio/core/i18n';
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import trResources from './i18n/tr.json';
 import enResources from './i18n/en.json';
 import './i18next-augment';
@@ -25,14 +26,15 @@ export async function bootShowcase(
   }
 
   const app = new ShowcaseApp(root);
+  const lifecycle = new DisposableScope();
   let destroyed = false;
   const destroy = (): void => {
     if (destroyed) return;
     destroyed = true;
-    window.removeEventListener('beforeunload', destroy);
+    lifecycle.dispose();
     app.destroy();
   };
-  window.addEventListener('beforeunload', destroy, { once: true });
+  lifecycle.addListener(window, 'beforeunload', destroy, { once: true });
 
   return { app, destroy };
 }

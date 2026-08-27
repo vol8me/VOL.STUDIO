@@ -53,7 +53,7 @@ export class SettingsScene extends BaseScene {
         label: LOCALE_LABELS[locale] ?? locale.toUpperCase(),
       })),
       value: currentLocale,
-      onChange: (value) => {
+      onCommit: (value) => {
         void this.changeLanguage(value);
       },
     });
@@ -68,7 +68,7 @@ export class SettingsScene extends BaseScene {
       step: 0.05,
       value: audioSettings.getMasterVolume(),
       label: i18next.t('volhell:settings.master'),
-      onChange: (value) => {
+      onCommit: (value) => {
         void audioSettings.setMasterVolume(value);
         void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
       },
@@ -80,7 +80,7 @@ export class SettingsScene extends BaseScene {
       step: 0.05,
       value: audioSettings.getSfxVolume(),
       label: i18next.t('volhell:settings.sfx'),
-      onChange: (value) => {
+      onCommit: (value) => {
         void audioSettings.setSfxVolume(value);
         void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
       },
@@ -92,7 +92,7 @@ export class SettingsScene extends BaseScene {
       step: 0.05,
       value: audioSettings.getMusicVolume(),
       label: i18next.t('volhell:settings.music'),
-      onChange: (value) => {
+      onCommit: (value) => {
         void audioSettings.setMusicVolume(value);
         void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
       },
@@ -101,7 +101,7 @@ export class SettingsScene extends BaseScene {
     this.shakeCheckbox = new Checkbox({
       checked: audioSettings.isScreenShakeEnabled(),
       label: i18next.t('volhell:settings.shake'),
-      onChange: (checked) => {
+      onCommit: (checked) => {
         void audioSettings.setScreenShakeEnabled(checked);
         void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
       },
@@ -113,7 +113,7 @@ export class SettingsScene extends BaseScene {
       step: 0.05,
       value: audioSettings.getScreenShakeIntensity(),
       label: i18next.t('volhell:settings.shakeIntensity'),
-      onChange: (value) => {
+      onCommit: (value) => {
         void audioSettings.setScreenShakeIntensity(value);
         void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
       },
@@ -125,7 +125,7 @@ export class SettingsScene extends BaseScene {
       step: 0.05,
       value: audioSettings.getAmbientVolume(),
       label: i18next.t('volhell:settings.ambient'),
-      onChange: (value) => {
+      onCommit: (value) => {
         void audioSettings.setAmbientVolume(value);
         void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
       },
@@ -134,7 +134,7 @@ export class SettingsScene extends BaseScene {
     this.muteCheckbox = new Checkbox({
       checked: audioSettings.isMuted(),
       label: i18next.t('volhell:settings.mute'),
-      onChange: (checked) => {
+      onCommit: (checked) => {
         void audioSettings.setMuted(checked);
         if (!checked) {
           void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });

@@ -1,4 +1,4 @@
-import { StatBlock } from '@volstudio/core';
+import { StatBlock } from '@volstudio/core/stats/StatBlock';
 import type { HellStat, HellStatBlock } from '@/config/stats';
 import { bulletConfig } from '@/config/bullet';
 import type { EnemyDefinition } from '@/config/enemies/types';

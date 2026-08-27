@@ -1,3 +1,4 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { Text } from '@volstudio/core/ui';
 import { i18n } from '@volstudio/core/i18n';
 import { card, paletteGrid } from './shared';
@@ -7,10 +8,6 @@ interface PaletteGroup {
   tokens: string[];
   /** 12 birimlik vol-palette-grid'de kart genişliği. Her satırın span toplamı 12. */
   span: 3 | 4 | 6;
-}
-
-interface Destroyable {
-  destroy(): void;
 }
 
 const GROUPS: PaletteGroup[] = [
@@ -149,7 +146,7 @@ const GROUPS: PaletteGroup[] = [
 function buildSwatch(
   token: string,
   rootStyle: CSSStyleDeclaration,
-  disposables: Destroyable[],
+  disposables: DisposableScope,
 ): HTMLElement {
   const value = rootStyle.getPropertyValue(token).trim();
 
@@ -169,14 +166,14 @@ function buildSwatch(
   hex.element.classList.add('vol-palette-swatch__hex');
   swatch.appendChild(hex.element);
 
-  disposables.push(name, hex);
+  disposables.addDestroyables(name, hex);
   return swatch;
 }
 
 function buildGroupGrid(
   group: PaletteGroup,
   rootStyle: CSSStyleDeclaration,
-  disposables: Destroyable[],
+  disposables: DisposableScope,
 ): HTMLElement {
   const grid = document.createElement('div');
   grid.className = 'vol-palette-group__grid';
@@ -189,7 +186,7 @@ function buildGroupGrid(
 export function buildPaletteTab(): { element: HTMLElement; destroy: () => void } {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
-  const disposables: Destroyable[] = [];
+  const disposables = new DisposableScope();
 
   const rootStyle = getComputedStyle(document.documentElement);
   const cards = GROUPS.map((group) =>
@@ -202,6 +199,6 @@ export function buildPaletteTab(): { element: HTMLElement; destroy: () => void }
 
   return {
     element: container,
-    destroy: () => disposables.forEach((d) => d.destroy()),
+    destroy: () => disposables.dispose(),
   };
 }

@@ -245,6 +245,26 @@ export class AssetStudioClient {
     }
   }
 
+  /** Sayfa kapanırken editör lease'ini bırakır; ağ kesilirse TTL geri dönüşüdür. */
+  releaseLease(): void {
+    const leaseId = this.leaseId;
+    if (leaseId === undefined) return;
+
+    this.leaseId = undefined;
+    this.leaseExpiresAt = undefined;
+    try {
+      void fetch(this.url('/api/v1/session/lease'), {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ clientId: this.clientId, leaseId }),
+        keepalive: true,
+      }).catch(() => undefined);
+    } catch {
+      // Sayfa kapanışında fetch başlatılamazsa sunucunun kısa TTL'i temizler.
+    }
+  }
+
   /** Test veya manuel senaryolar için client/lease kimliklerini sabitler. */
   setLease(clientId: string, leaseId: string): void {
     this.clientId = clientId;

@@ -1,4 +1,4 @@
-import { Button, Checkbox, Panel, Slider, Text, i18next } from '@volstudio/core';
+import { Button, Checkbox, DisposableScope, Panel, Slider, Text, i18next } from '@volstudio/core';
 import type { AudioSettings } from '@/app/AudioSettings';
 import { gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
@@ -10,6 +10,7 @@ import { sfxVolumes } from '@/config/audio';
  * Settings alt-panel: ses seviyeleri + mute + ekran sarsıntısı.
  */
 export class PauseScreen {
+  private readonly scope = new DisposableScope();
   private readonly overlay: HTMLDivElement;
   private readonly panel: Panel;
   private readonly settingsPanel: Panel;
@@ -94,7 +95,7 @@ export class PauseScreen {
         step: 0.05,
         value: get(),
         label,
-        onChange: (value) => {
+        onCommit: (value) => {
           void set(value).then(() => {
             void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
           });
@@ -120,7 +121,7 @@ export class PauseScreen {
     this.shakeCheckbox = new Checkbox({
       checked: audioSettings.isScreenShakeEnabled(),
       label: i18next.t('volhell:settings.shake'),
-      onChange: (checked) => {
+      onCommit: (checked) => {
         void audioSettings.setScreenShakeEnabled(checked).then(() => {
           void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
         });
@@ -130,7 +131,7 @@ export class PauseScreen {
     this.muteCheckbox = new Checkbox({
       checked: audioSettings.isMuted(),
       label: i18next.t('volhell:settings.mute'),
-      onChange: (checked) => {
+      onCommit: (checked) => {
         void audioSettings.setMuted(checked).then(() => {
           if (!checked) {
             void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
@@ -158,6 +159,19 @@ export class PauseScreen {
     parent.appendChild(this.overlay);
 
     i18next.on('languageChanged', this.onLanguageChanged);
+    this.scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
+    this.scope.addDestroyable(this.panel);
+    this.scope.addDestroyable(this.settingsPanel);
+    this.scope.addDestroyable(this.resumeButton);
+    this.scope.addDestroyable(this.restartButton);
+    this.scope.addDestroyable(this.settingsButton);
+    this.scope.addDestroyable(this.mainMenuButton);
+    this.scope.addDestroyable(this.settingsBackButton);
+    this.scope.addDestroyable(this.masterSlider);
+    this.scope.addDestroyable(this.sfxSlider);
+    this.scope.addDestroyable(this.musicSlider);
+    this.scope.addDestroyable(this.shakeCheckbox);
+    this.scope.addDestroyable(this.muteCheckbox);
   }
 
   show(): void {
@@ -188,19 +202,7 @@ export class PauseScreen {
   }
 
   destroy(): void {
-    i18next.off('languageChanged', this.onLanguageChanged);
-    this.resumeButton.destroy();
-    this.restartButton.destroy();
-    this.settingsButton.destroy();
-    this.mainMenuButton.destroy();
-    this.settingsBackButton.destroy();
-    this.masterSlider.destroy();
-    this.sfxSlider.destroy();
-    this.musicSlider.destroy();
-    this.shakeCheckbox.destroy();
-    this.muteCheckbox.destroy();
-    this.panel.destroy();
-    this.settingsPanel.destroy();
+    this.scope.dispose();
     this.overlay.remove();
   }
 }

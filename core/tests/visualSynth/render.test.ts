@@ -216,7 +216,14 @@ describe('bounded render cache', () => {
     const second = renderSprite(source, { cache });
     expect(Array.from(second.rgba)).toEqual(expected);
     expect(second.channels.coverage[0]).not.toBe(0.123);
-    expect(cache.stats).toMatchObject({ hits: 1, misses: 1, entries: 1, evictions: 0 });
+    expect(cache.stats).toMatchObject({
+      hits: 1,
+      misses: 1,
+      entries: 1,
+      evictions: 0,
+      copyOperations: 2,
+    });
+    expect(cache.stats.copyBytes).toBeGreaterThan(0);
   });
 
   it('profil açıkken cache kullanmaz ve gerçek süreyi ölçer', () => {

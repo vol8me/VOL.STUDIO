@@ -3,6 +3,7 @@ import { StatBlock, Vector2, createRandom } from '@volstudio/core';
 import type { HellStat, HellStatBlock } from '@/config/stats';
 import { ABILITY_CATALOG, MIN_ABILITY_COOLDOWN_MS, getAbilityDefinition } from '@/config/abilities';
 import { AbilityRuntime, createAbility } from '@/runtime/ability/AbilityRuntime';
+import { scaleTurretFireInterval } from '@/runtime/ability/abilityScaling';
 import type { ChainLightningAbility } from '@/runtime/ability/ChainLightningAbility';
 import type { MultiShotAbility } from '@/runtime/ability/MultiShotAbility';
 import { bulletConfig } from '@/config/bullet';
@@ -270,6 +271,45 @@ describe('Ability sistemi', () => {
       }
       expect(enemy.isAlive).toBe(false);
     });
+
+    it('kule hasarı ve canı oyuncu statlarıyla birlikte ilerler', () => {
+      stats.addModifier({ id: 'hasar-karti', stat: 'damage', type: 'multiply', value: 2 });
+      stats.addModifier({ id: 'can-karti', stat: 'health', type: 'add', value: 25 });
+      runtime.assign('primary', createAbility('turret'));
+      runtime.update(16, playerPos, aim, []);
+      runtime.tryActivate('primary');
+
+      const turret = runtime.getTurret()!;
+      expect(turret.getMaxHealth()).toBeCloseTo(75, 6);
+
+      const enemy = makeEnemyAt(playerPos.x + 40, playerPos.y);
+      const params = ABILITY_CATALOG.turret.turret!;
+      runtime.update(params.fireIntervalMs, playerPos, aim, [enemy]);
+      for (let i = 0; i < 10 && turret.activeShotCount > 0; i++) {
+        runtime.update(16, playerPos, aim, [enemy]);
+      }
+
+      // Taban 12 hasar, 2x oyuncu hasarıyla 24'e çıkar; grunt 44 canla kalır.
+      expect(enemy.getHealthRatio()).toBeCloseTo(20 / 44, 6);
+    });
+
+    it('kule iç atış temposu ateş hızı kartını takip eder', () => {
+      stats.addModifier({ id: 'hiz-karti', stat: 'fireRate', type: 'multiply', value: 0.5 });
+      runtime.assign('primary', createAbility('turret'));
+      runtime.update(16, playerPos, aim, []);
+      runtime.tryActivate('primary');
+
+      const enemy = makeEnemyAt(playerPos.x + 40, playerPos.y);
+      const expectedInterval = scaleTurretFireInterval(
+        ABILITY_CATALOG.turret.turret!.fireIntervalMs,
+        stats,
+      );
+      runtime.update(expectedInterval - 1, playerPos, aim, [enemy]);
+      expect(runtime.getTurret()!.activeShotCount).toBe(0);
+
+      runtime.update(1, playerPos, aim, [enemy]);
+      expect(runtime.getTurret()!.activeShotCount).toBe(1);
+    });
   });
 
   describe('zincir yıldırım', () => {
@@ -324,6 +364,19 @@ describe('Ability sistemi', () => {
       expect(effects.calls).not.toContain('chainHop');
       expect(runtime.getActiveStrikeCount()).toBe(0);
     });
+
+    it('şimşek hasarı geç oyundaki oyuncu hasarını takip eder', () => {
+      stats.addModifier({ id: 'hasar-karti', stat: 'damage', type: 'multiply', value: 1.5 });
+      runtime.assign('primary', createAbility('chainLightning'));
+      const enemy = makeEnemyAt(playerPos.x + 40, playerPos.y);
+
+      runtime.update(16, playerPos, aim, [enemy]);
+      runtime.tryActivate('primary');
+      runtime.update(ABILITY_CATALOG.chainLightning.chain!.hopIntervalMs, playerPos, aim, [enemy]);
+
+      // 22 x 1.5 = 33; grunt 44 canla tek sıçramada ölmez.
+      expect(enemy.getHealthRatio()).toBeCloseTo(11 / 44, 6);
+    });
   });
 
   describe('ateş alanı', () => {
@@ -357,6 +410,19 @@ describe('Ability sistemi', () => {
 
       runtime.update(ABILITY_CATALOG.fireZone.fire!.durationMs, playerPos, aim, []);
       expect(runtime.getActiveZoneCount()).toBe(1);
+    });
+
+    it('alan tick hasarı geç oyundaki oyuncu hasarını takip eder', () => {
+      stats.addModifier({ id: 'hasar-karti', stat: 'damage', type: 'multiply', value: 1.5 });
+      runtime.assign('primary', createAbility('fireZone'));
+      const enemy = makeEnemyAt(playerPos.x + 30, playerPos.y);
+
+      runtime.update(16, playerPos, aim, [enemy]);
+      runtime.tryActivate('primary');
+      runtime.update(ABILITY_CATALOG.fireZone.fire!.tickMs, playerPos, aim, [enemy]);
+
+      // 6 x 1.5 = 9; ilk tick sonrası grunt 35 can taşır.
+      expect(enemy.getHealthRatio()).toBeCloseTo(35 / 44, 6);
     });
   });
 

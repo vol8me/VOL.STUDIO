@@ -51,11 +51,7 @@ export class DocumentSession {
   #revision: string;
   #conflictRevision: string | null = null;
   #activeLayerId: string;
-  #nextStamp = 1;
-  #stamp = 0;
-  #savedStamp = 0;
-  #undoStamps: number[] = [];
-  #redoStamps: number[] = [];
+  #savedStateToken = 0;
   #nextLayerNumber = 2;
 
   public constructor(options: DocumentSessionOptions) {
@@ -72,6 +68,7 @@ export class DocumentSession {
     this.#history = new CommandHistory({
       ...(options.maxHistoryBytes === undefined ? {} : { maxBytes: options.maxHistoryBytes }),
     });
+    this.#savedStateToken = this.#history.getStateToken();
   }
 
   public get revision(): string {
@@ -79,7 +76,7 @@ export class DocumentSession {
   }
 
   public get isDirty(): boolean {
-    return this.#stamp !== this.#savedStamp;
+    return this.#history.getStateToken() !== this.#savedStateToken;
   }
 
   public get activeLayerId(): string {
@@ -116,22 +113,17 @@ export class DocumentSession {
   /** Zaten uygulanmış bir gesture komutunu geçmişe alır. */
   public record(command: HistoryCommand): void {
     this.#history.record(command);
-    this.#advanceStamp();
+    this.#emit();
   }
 
   /** Komutu uygular ve geçmişe alır (yapısal işlemler bunu kullanır). */
   public execute(command: HistoryCommand): void {
     this.#history.execute(command);
-    this.#advanceStamp();
+    this.#emit();
   }
 
   public undo(): boolean {
     if (!this.#history.undo()) return false;
-    // Damga yığını yalnız BAŞARILI undo'da hareket eder; geçmiş bütçe yüzünden
-    // kırpıldığında yığınlar sessizce ayrışmasın diye dönüş değeri beklenir.
-    const previous = this.#undoStamps.pop();
-    this.#redoStamps.push(this.#stamp);
-    this.#stamp = previous ?? 0;
     this.#clampSelection();
     this.#emit();
     return true;
@@ -139,9 +131,6 @@ export class DocumentSession {
 
   public redo(): boolean {
     if (!this.#history.redo()) return false;
-    const next = this.#redoStamps.pop();
-    this.#undoStamps.push(this.#stamp);
-    this.#stamp = next ?? this.#nextStamp++;
     this.#clampSelection();
     this.#emit();
     return true;
@@ -149,7 +138,7 @@ export class DocumentSession {
 
   public markSaved(revision: string): void {
     this.#revision = revision;
-    this.#savedStamp = this.#stamp;
+    this.#savedStateToken = this.#history.getStateToken();
     this.#conflictRevision = null;
     this.#emit();
   }
@@ -359,13 +348,6 @@ export class DocumentSession {
   /** Kaydedilecek tam RGBA tamponu (bileşik). */
   public toRgba(): Uint8ClampedArray {
     return this.composite().rgba;
-  }
-
-  #advanceStamp(): void {
-    this.#undoStamps.push(this.#stamp);
-    this.#redoStamps = [];
-    this.#stamp = this.#nextStamp++;
-    this.#emit();
   }
 
   /** Undo/redo yapısal bir işlemi geri aldıysa seçimler geçersizleşebilir. */

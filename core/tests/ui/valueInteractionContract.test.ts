@@ -55,11 +55,10 @@ describe('Değer kontrolleri — input/commit sözleşmesi', () => {
     control.destroy();
   });
 
-  it('NumberStepper yazarken input, tamamlanınca commit ve legacy onChange üretir', () => {
+  it('NumberStepper yazarken input, tamamlanınca tek commit üretir', () => {
     const onInput = vi.fn();
     const onCommit = vi.fn();
-    const onChange = vi.fn();
-    const control = new NumberStepper({ value: 2, min: 0, max: 10, onInput, onCommit, onChange });
+    const control = new NumberStepper({ value: 2, min: 0, max: 10, onInput, onCommit });
     const input = control.element.querySelector<HTMLInputElement>('input')!;
     input.value = '7';
     input.dispatchEvent(new Event('input'));
@@ -67,7 +66,6 @@ describe('Değer kontrolleri — input/commit sözleşmesi', () => {
     expect(onInput).toHaveBeenCalledTimes(1);
     expect(onInput).toHaveBeenCalledWith(7);
     expect(onCommit).toHaveBeenCalledWith(7);
-    expect(onChange).toHaveBeenCalledWith(7);
 
     control.element.querySelector<HTMLButtonElement>('.vol-stepper__button')!.click();
     expect(onInput).toHaveBeenLastCalledWith(6);
@@ -80,8 +78,7 @@ describe('Değer kontrolleri — input/commit sözleşmesi', () => {
   it('Slider input sırasında canlı, change sırasında tek commit üretir', () => {
     const onInput = vi.fn();
     const onCommit = vi.fn();
-    const onChange = vi.fn();
-    const control = new Slider({ value: 10, onInput, onCommit, onChange });
+    const control = new Slider({ value: 10, onInput, onCommit });
     const input = control.element.querySelector<HTMLInputElement>('input')!;
     input.value = '25';
     input.dispatchEvent(new Event('input'));
@@ -89,7 +86,6 @@ describe('Değer kontrolleri — input/commit sözleşmesi', () => {
     input.dispatchEvent(new Event('input'));
     input.dispatchEvent(new Event('change'));
     expect(onInput).toHaveBeenCalledTimes(2);
-    expect(onChange).toHaveBeenCalledTimes(2);
     expect(onCommit).toHaveBeenCalledTimes(1);
     expect(onCommit).toHaveBeenCalledWith(30);
 
@@ -145,8 +141,8 @@ describe('Değer kontrolleri — input/commit sözleşmesi', () => {
     control.destroy();
   });
 
-  it('ayrık kontroller kullanıcı değişiminde input/commit/legacy callbacklerini birer kez üretir', () => {
-    const callbacks = () => ({ onInput: vi.fn(), onCommit: vi.fn(), onChange: vi.fn() });
+  it('ayrık kontroller kullanıcı değişiminde input/commit callbacklerini birer kez üretir', () => {
+    const callbacks = () => ({ onInput: vi.fn(), onCommit: vi.fn() });
 
     const checkboxCallbacks = callbacks();
     const checkbox = new Checkbox({ ...checkboxCallbacks });
@@ -154,7 +150,6 @@ describe('Değer kontrolleri — input/commit sözleşmesi', () => {
     checkbox.element.querySelector<HTMLInputElement>('input')!.click();
     expect(checkboxCallbacks.onInput).toHaveBeenCalledWith(true);
     expect(checkboxCallbacks.onCommit).toHaveBeenCalledWith(true);
-    expect(checkboxCallbacks.onChange).toHaveBeenCalledWith(true);
     checkbox.setChecked(false);
     expect(checkboxCallbacks.onCommit).toHaveBeenCalledTimes(1);
 

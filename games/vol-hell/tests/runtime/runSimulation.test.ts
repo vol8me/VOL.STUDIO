@@ -1,202 +1,43 @@
-import { describe, it, expect, vi } from 'vitest';
-import { createRandom, Vector2 } from '@volstudio/core';
-import { EnemyManager } from '@/runtime/entity/EnemyManager';
-import { FluxPickupManager } from '@/runtime/entity/FluxPickupManager';
-import { RunEconomy } from '@/runtime/systems/RunEconomy';
-import { WaveManager } from '@/runtime/systems/WaveManager';
-import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
-import { getDifficultyState } from '@/runtime/systems/DifficultyCalculator';
-import { economyConfig } from '@/config/economy';
+import { describe, expect, it } from 'vitest';
+import { simulationConfig } from '@/config/simulation';
 import { difficultyConfig } from '@/config/difficulty';
+import { economyConfig } from '@/config/economy';
 import { waveConfig } from '@/config/wave';
-import { physicsConfig } from '@/config/physics';
-import { bulletConfig } from '@/config/bullet';
-import { getMaxEnemyRadius } from '@/config/enemies/catalog';
-import type { Border } from '@/runtime/entity/Border';
-import type { EffectManager } from '@/runtime/systems/EffectManager';
+import {
+  simulateVolHell,
+  VolHellSimulation,
+  VolHellSimulationDriver,
+  type VolHellSimulationSnapshot,
+} from '@/runtime/simulation';
 
 /**
  * Uzun koşu simülasyonu — birim testlerin göremediği ENTEGRASYON kusurlarını
  * arar: NaN'a kayan konumlar, sınırsız büyüyen diziler, dalga/ekonomi
  * sayaçlarının tutarsızlaşması, ölü düşmanların sahnede kalması.
  *
- * Gerçek Phaser sahnesi yerine sahte sahne kullanılır; amaç render değil,
- * sistemlerin birbirine bağlandığı yerdeki davranış.
+ * Bu test gerçek Phaser sahnesini kurmaz. `VolHellSimulation`, oyun kuralı ve
+ * render adaptörü arasındaki ortak, başsız sınırdır; render testi ayrıca kendi
+ * Phaser kapısında çalışır.
  */
 
-const BOUNDS = { left: 0, right: 900, top: 0, bottom: 700 };
+const BOUNDS = simulationConfig.bounds;
 
-function makeScene(): { scene: never; createdCount: () => number; destroyedCount: () => number } {
-  let created = 0;
-  let destroyed = 0;
-
-  const makeShape = (x: number, y: number) => {
-    created++;
-    const shape = {
-      x,
-      y,
-      setStrokeStyle: () => shape,
-      setOrigin: () => shape,
-      setSize: () => shape,
-      setVisible: () => shape,
-      setScale: () => shape,
-      setDepth: () => shape,
-      destroy: () => {
-        destroyed++;
-      },
-    };
-    return shape;
-  };
-
-  const scene = {
-    add: {
-      circle: (x: number, y: number) => makeShape(x, y),
-      rectangle: (x: number, y: number) => makeShape(x, y),
-    },
-  };
-
-  return {
-    scene: scene as never,
-    createdCount: () => created,
-    destroyedCount: () => destroyed,
-  };
-}
-
-function makeBorder(): Border {
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-  return {
-    bounds: {
-      ...BOUNDS,
-      width: BOUNDS.right - BOUNDS.left,
-      height: BOUNDS.bottom - BOUNDS.top,
-      centerX: (BOUNDS.left + BOUNDS.right) / 2,
-      centerY: (BOUNDS.top + BOUNDS.bottom) / 2,
-    },
-    clampX: (x: number, r = 0) => clamp(x, BOUNDS.left + r, BOUNDS.right - r),
-    clampY: (y: number, r = 0) => clamp(y, BOUNDS.top + r, BOUNDS.bottom - r),
-  } as unknown as Border;
-}
-
-function makeEffects(): EffectManager {
-  return {
-    play: vi.fn(),
-    getActiveParticleCount: () => 0,
-    destroy: vi.fn(),
-  } as unknown as EffectManager;
-}
-
-interface SimulationResult {
-  economy: RunEconomy;
-  waves: number[];
-  shopTriggers: number[];
-  levelUps: number[];
-  eliteWaves: number[];
-  bossWaves: number[];
-  runCompleted: boolean;
-  maxEnemies: number;
-  maxPickups: number;
-  enemyCount: number;
-  pickupCount: number;
-}
-
-/**
- * Koşuyu `frames` kare boyunca sürer. Oyuncu sahada dolaşır, menzile giren
- * düşmanlar öldürülür — böylece ölüm, Flux düşüşü, toplama ve seviye atlama
- * yollarının hepsi çalışır.
- */
-function simulate(frames: number, stepMs = 16): SimulationResult {
-  const { scene } = makeScene();
-  const border = makeBorder();
-  const effects = makeEffects();
-  const random = createRandom(20260813);
-  const grid = new SpatialGrid(
-    Math.max(getMaxEnemyRadius(), bulletConfig.radius) * physicsConfig.spatialGridCellMultiplier,
-  );
-
-  const economy = new RunEconomy({ onLevelUp: (level) => levelUps.push(level) });
-  const levelUps: number[] = [];
-  const waves: number[] = [];
-  const shopTriggers: number[] = [];
-  const eliteWaves: number[] = [];
-  const bossWaves: number[] = [];
-  let runCompleted = false;
-
-  const enemies = new EnemyManager(scene, effects, random);
-  const pickups = new FluxPickupManager(scene, border, effects, random, {
-    onCollected: (amount) => economy.addFlux(amount),
+function simulate(
+  frames: number,
+  stepMs: number = simulationConfig.defaultStepMs,
+): VolHellSimulationSnapshot {
+  return simulateVolHell(frames, {
+    seed: simulationConfig.defaultSeed,
+    stepMs,
   });
-  const waveManager = new WaveManager({
-    onWaveStart: (wave) => {
-      waves.push(wave);
-      enemies.setWave(wave);
-    },
-    onWaveEnd: (wave) => shopTriggers.push(wave),
-    onEliteWave: (wave) => eliteWaves.push(wave),
-    onBossWave: (wave) => bossWaves.push(wave),
-    onRunComplete: () => {
-      runCompleted = true;
-    },
-  });
-  waveManager.start();
-
-  const player = new Vector2(border.bounds.centerX, border.bounds.centerY);
-  let elapsedMs = 0;
-  let maxEnemies = 0;
-  let maxPickups = 0;
-
-  for (let frame = 0; frame < frames; frame++) {
-    elapsedMs += stepMs;
-    // Oyuncu saha içinde dolaşsın: hem mıknatıs hem temas yolları çalışsın.
-    player.set(
-      border.bounds.centerX + Math.cos(frame / 40) * 220,
-      border.bounds.centerY + Math.sin(frame / 55) * 160,
-    );
-
-    const difficulty = getDifficultyState(elapsedMs);
-    waveManager.update(stepMs);
-
-    grid.clear();
-    grid.rebuild(enemies.getEnemies());
-    enemies.update(stepMs, player, border, elapsedMs, grid, difficulty);
-    pickups.update(stepMs, player);
-    grid.clear();
-    grid.rebuild(enemies.getEnemies());
-
-    // Oyuncuya yaklaşan düşmanları öldür — ölüm/ödül yolunu sür.
-    for (const enemy of enemies.getEnemies()) {
-      if (!enemy.isAlive) continue;
-      if (Math.hypot(enemy.x - player.x, enemy.y - player.y) > 140) continue;
-      if (!enemy.takeDamage(9999)) continue;
-
-      economy.addSpark(enemy.sparkReward);
-      pickups.drop(enemy.x, enemy.y, enemy.fluxReward);
-    }
-
-    maxEnemies = Math.max(maxEnemies, enemies.getEnemies().length);
-    maxPickups = Math.max(maxPickups, pickups.getActiveCount());
-  }
-
-  return {
-    economy,
-    waves,
-    shopTriggers,
-    levelUps,
-    eliteWaves,
-    bossWaves,
-    runCompleted,
-    maxEnemies,
-    maxPickups,
-    enemyCount: enemies.getEnemies().length,
-    pickupCount: pickups.getActiveCount(),
-  };
 }
 
 describe('koşu simülasyonu — entegrasyon sağlamlığı', () => {
   it('bir dakikalık oyun hatasız akar ve ödül zinciri çalışır', () => {
-    const result = simulate(3750); // ~60 sn
+    const result = simulate(3750);
 
-    expect(result.economy.getSpark()).toBeGreaterThan(0);
-    expect(result.economy.getFlux()).toBeGreaterThan(0);
+    expect(result.economy.spark).toBeGreaterThan(0);
+    expect(result.economy.flux).toBeGreaterThan(0);
     expect(result.levelUps.length).toBeGreaterThan(0);
     // Seviyeler sırayla bildirilir, atlama olmaz.
     expect(result.levelUps).toEqual(result.levelUps.map((_, i) => i + 2));
@@ -232,32 +73,23 @@ describe('koşu simülasyonu — entegrasyon sağlamlığı', () => {
     const a = simulate(1200);
     const b = simulate(1200);
 
-    expect(a.economy.getSpark()).toBe(b.economy.getSpark());
-    expect(a.economy.getFlux()).toBe(b.economy.getFlux());
-    expect(a.enemyCount).toBe(b.enemyCount);
-    expect(a.pickupCount).toBe(b.pickupCount);
+    expect(a).toEqual(b);
   });
 
   it('uzun koşuda konumlar sonlu kalır ve saha dışına taşmaz', () => {
-    const { scene } = makeScene();
-    const border = makeBorder();
-    const effects = makeEffects();
-    const random = createRandom(7);
-    const grid = new SpatialGrid(64);
-    const enemies = new EnemyManager(scene, effects, random);
-    const player = new Vector2(border.bounds.centerX, border.bounds.centerY);
-    enemies.setWave(waveConfig.totalWaves);
+    const simulation = new VolHellSimulation({
+      seed: 7,
+      killRadius: null,
+      playerPosition: (_frame, bounds) => ({
+        x: (bounds.left + bounds.right) / 2,
+        y: (bounds.top + bounds.bottom) / 2,
+      }),
+    });
+    simulation.run(2000);
 
-    const difficulty = getDifficultyState(600_000);
-    for (let frame = 0; frame < 2000; frame++) {
-      grid.clear();
-      grid.rebuild(enemies.getEnemies());
-      enemies.update(16, player, border, frame * 16, grid, difficulty);
-    }
-
-    for (const enemy of enemies.getEnemies()) {
-      expect(Number.isFinite(enemy.x), enemy.definition.id).toBe(true);
-      expect(Number.isFinite(enemy.y), enemy.definition.id).toBe(true);
+    for (const enemy of simulation.getRenderSnapshot().enemies) {
+      expect(Number.isFinite(enemy.x), enemy.definitionId).toBe(true);
+      expect(Number.isFinite(enemy.y), enemy.definitionId).toBe(true);
       expect(enemy.x).toBeGreaterThanOrEqual(BOUNDS.left);
       expect(enemy.x).toBeLessThanOrEqual(BOUNDS.right);
       expect(enemy.y).toBeGreaterThanOrEqual(BOUNDS.top);
@@ -269,5 +101,62 @@ describe('koşu simülasyonu — entegrasyon sağlamlığı', () => {
     const result = simulate(3750);
     expect(result.enemyCount).toBeLessThanOrEqual(result.maxEnemies);
     expect(result.enemyCount).toBeGreaterThanOrEqual(0);
+  });
+
+  it('render katmanı oyuncu konumunu başsız sözleşmeden besleyebilir', () => {
+    let positionCalls = 0;
+    const simulation = new VolHellSimulation({
+      killRadius: null,
+      playerPosition: (_frame, bounds) => {
+        positionCalls += 1;
+        return { x: bounds.right + 100, y: bounds.bottom + 100 };
+      },
+    });
+
+    simulation.run(12);
+
+    expect(positionCalls).toBe(12);
+    expect(simulation.snapshot().player).toEqual({ x: BOUNDS.right, y: BOUNDS.bottom });
+  });
+
+  it('geçersiz delta yok sayılır, dar sahada güvenli spawn retry çalışır', () => {
+    const simulation = new VolHellSimulation({
+      bounds: { left: 0, right: 1, top: 0, bottom: 1 },
+      killRadius: null,
+      playerPosition: () => ({ x: 0, y: 0 }),
+    });
+
+    simulation.step(0);
+    simulation.step(-16);
+    simulation.step(Number.NaN);
+    expect(simulation.snapshot().frame).toBe(0);
+
+    simulation.run(100, 16);
+    expect(simulation.snapshot().enemyCount).toBe(0);
+    expect(simulateVolHell(0).frame).toBe(0);
+  });
+
+  it('render adapterı yalnızca kopyalanmış frame snapshotı görür', () => {
+    const frames: ReturnType<VolHellSimulation['getRenderSnapshot']>[] = [];
+    const simulation = new VolHellSimulation({ seed: 11, killRadius: null });
+    const driver = new VolHellSimulationDriver(simulation, {
+      render: (snapshot) => frames.push(snapshot),
+    });
+
+    for (let index = 0; index < 120; index++) driver.step(16);
+
+    expect(frames).toHaveLength(120);
+    const observed = frames.at(-1)!;
+    const observedEnemy = observed.enemies[0];
+    expect(observedEnemy).toBeDefined();
+    if (observedEnemy) {
+      const originalX = observedEnemy.x;
+      (observedEnemy as { x: number }).x = originalX + 1000;
+      expect(simulation.getRenderSnapshot().enemies[0]?.x).toBe(originalX);
+    }
+
+    driver.destroy();
+    expect(driver.step(16)).toBeNull();
+    expect(frames).toHaveLength(120);
   });
 });
