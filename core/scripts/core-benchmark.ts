@@ -28,7 +28,11 @@ function fail(message: string): never {
 function parseFlags(args: readonly string[]): Flags {
   let iterations = 1_000;
   let warmupIterations = 100;
-  let samples = 3;
+  // bkz. core/src/benchmark/harness.ts DEFAULT_SAMPLES: nearest-rank p95
+  // formülü N < 20'de her zaman maksimumu seçer, "p95" adını taşıyıp onu
+  // ÖLÇMEZDİ. CLI kendi varsayılanını taşıdığı için harness'teki değer
+  // tek başına yeterli değildi — ikisi birlikte güncellenir.
+  let samples = 25;
   let entities = 256;
   let gridSize = 48;
   let json = false;

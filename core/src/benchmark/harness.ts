@@ -42,6 +42,19 @@ export interface BenchmarkResult {
   readonly warmupIterations: number;
   readonly samples: readonly BenchmarkSample[];
   readonly medianMsPerIteration: number;
+  /**
+   * En-yakın-sıra (nearest-rank) yöntemiyle 95. yüzdelik dilim tahmini.
+   *
+   * **Düşük `samples` sayısında bu, pratikte gözlemlenen EN KÖTÜ örnektir,
+   * gerçek bir yüzdelik dilim değil.** Nearest-rank formülü
+   * `ceil(N × 0.95)`. dizinini seçer; `N < 20` için bu her zaman DİZİNİN
+   * SON elemanına (maksimuma) denk gelir — `samples: 3` ile "p95" tam
+   * olarak "3 örneğin en yavaşı" demektir. Yalnızca `N ≥ 20` itibarıyla
+   * formül maksimumdan farklı bir eleman seçmeye başlar ve `samples`
+   * arttıkça tahmin istatistiksel olarak anlamlılaşır (yine de gerçekten
+   * sağlam bir tahmin için onlarca değil YÜZLERCE örnek gerekir — bu alan
+   * her zaman göstergedir, garanti değil).
+   */
   readonly p95MsPerIteration: number;
   readonly operationsPerSecond: number;
 }
@@ -55,7 +68,15 @@ export interface BenchmarkSuiteResult {
 
 const DEFAULT_ITERATIONS = 1_000;
 const DEFAULT_WARMUP_ITERATIONS = 100;
-const DEFAULT_SAMPLES = 3;
+/**
+ * Önceden 3'tü. Nearest-rank p95 formülü `N < 20` için her zaman maksimumu
+ * seçtiğinden (bkz. `BenchmarkResult.p95MsPerIteration`), 3 örnekle raporlanan
+ * "p95" aslında "3 örneğin en yavaşı" idi — yüzdelik dilim adını taşıyan ama
+ * onu ÖLÇMEYEN bir değer. 25, maksimumdan ayrışan en düşük eşiğin (20)
+ * üzerinde makul bir hızlı-CLI varsayılanı; gerçekten sağlam bir tahmin
+ * isteyen çağıran `--samples`'ı yükseltebilir.
+ */
+const DEFAULT_SAMPLES = 25;
 
 /** Tek workload'ü ölçer. Her örnek taze bir senaryo ile başlar. */
 export function runBenchmark(

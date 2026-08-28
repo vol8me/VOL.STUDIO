@@ -178,6 +178,85 @@ describe('DocumentSession — harici revizyon', () => {
   });
 });
 
+describe('DocumentSession — harici revizyon × durum damgası entegrasyonu', () => {
+  // Aşağıdaki dört test yalnızca CommandHistory'nin state token'ını
+  // (kirlilik) VEYA yalnızca noteExternalRevision'ı izole test etmiyor;
+  // ikisinin AYNI oturumda birlikte nasıl davrandığını doğruluyor. İkisi
+  // kavramsal olarak BAĞIMSIZ eksenler: biri "yerel düzenleme diskteki
+  // yüklenen içerikten farklı mı" (stateToken), diğeri "disk, bu oturumun
+  // bildiği revizyondan farklı mı" (conflictRevision) sorusunu yanıtlar.
+  // Biri diğerini örtük olarak sıfırlarsa (ör. undo conflict'i temizlerse,
+  // ya da yeni bir edit conflict'i gizlice yutar), kullanıcı diskte
+  // kaybolmuş bir harici değişikliği hiç görmeden üstüne yazabilir.
+
+  it('kirliyken gelen conflict, undo ile temize dönünce de KALICI kalır', () => {
+    // conflictRevision "disk, bu oturumun bildiği revizyondan farklı"
+    // sorusuna cevaptır — yerel dirty durumuyla İLGİSİZDİR. Undo'nun onu
+    // örtük temizlemesi, dışarıdaki değişikliği kullanıcıya hiç
+    // göstermeden "sorun yok" izlenimi verirdi.
+    const session = makeSession();
+    paint(session, 1, 1, RED);
+    expect(session.isDirty).toBe(true);
+
+    session.noteExternalRevision('c'.repeat(64));
+    expect(session.getState().conflictRevision).toBe('c'.repeat(64));
+
+    session.undo();
+
+    expect(session.isDirty).toBe(false);
+    expect(session.getState().conflictRevision).toBe('c'.repeat(64));
+  });
+
+  it('conflict varken yapılan yeni düzenleme kirliliği kendi başına izler, conflict’i etkilemez', () => {
+    const session = makeSession();
+    session.noteExternalRevision('c'.repeat(64));
+    expect(session.isDirty).toBe(false);
+
+    paint(session, 2, 2, BLUE);
+
+    expect(session.isDirty).toBe(true);
+    expect(session.getState().conflictRevision).toBe('c'.repeat(64));
+  });
+
+  it('kayıt kirliyken gelen conflict’i de, yerel kirliliği de AYNI anda temizler', () => {
+    // Var olan "kayıt conflicti temizler" testi baştan temiz bir oturumla
+    // çalışıyordu; burada gerçek dünyadaki sıra korunuyor: önce yerel
+    // düzenleme, sonra harici değişiklik bildirimi, sonra "üzerine kaydet"
+    // çözümü — ikisi birlikte tek adımda kapanmalı.
+    const session = makeSession();
+    paint(session, 1, 1, RED);
+    session.noteExternalRevision('c'.repeat(64));
+    expect(session.isDirty).toBe(true);
+    expect(session.getState().conflictRevision).toBe('c'.repeat(64));
+
+    session.markSaved('d'.repeat(64));
+
+    const state = session.getState();
+    expect(session.isDirty).toBe(false);
+    expect(state.conflictRevision).toBeUndefined();
+    expect(session.revision).toBe('d'.repeat(64));
+  });
+
+  it('temizken gelen conflict, sonradan başlayan düzenlemeyle birlikte İKİSİ de doğru kalır', () => {
+    const session = makeSession();
+    session.noteExternalRevision('c'.repeat(64));
+    expect(session.isDirty).toBe(false);
+    expect(session.getState().conflictRevision).toBe('c'.repeat(64));
+
+    paint(session, 3, 3, BLUE);
+
+    expect(session.isDirty).toBe(true);
+    expect(session.getState().conflictRevision).toBe('c'.repeat(64));
+
+    session.undo();
+
+    // Geri kirlilik temize döner ama conflict hâlâ çözülmemiş disk
+    // farkını anlatıyor — undo'nun yan etkisi olmamalı.
+    expect(session.isDirty).toBe(false);
+    expect(session.getState().conflictRevision).toBe('c'.repeat(64));
+  });
+});
+
 describe('DocumentSession — bildirim', () => {
   it('her durum değişiminde onChange yayınlar', () => {
     const onChange = vi.fn();

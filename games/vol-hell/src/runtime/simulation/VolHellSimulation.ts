@@ -54,6 +54,30 @@ export type {
  * render katmanı yalnızca bu durumun üstüne görsel bir adaptör kurar. Böylece
  * uzun koşu regresyonu ve benchmark gerçek oyun akışını render maliyetiyle
  * karıştırmadan çalıştırır.
+ *
+ * **BU, ÜRETİM OYUNUNUN KANONİK SİMÜLASYONU DEĞİLDİR — kısmi, bilinçli bir
+ * modeldir.** Gerçek `GameScene` (Phaser) ile eşleşmeyen üç somut nokta:
+ *
+ * 1. **Savaş yaklaşıksamadır.** `resolveAutomaticAttack()` oyuncunun mermi/
+ *    ability sistemini simüle ETMEZ; `killRadius` içine giren her düşmanı o
+ *    karede doğrudan öldürür. Gerçek oyunda hasar, atış hızı, ability
+ *    cooldown'u ve ıskalama payı vardır — bu model bunların HİÇBİRİNİ
+ *    bilmez, yalnızca "oyuncu yakındaki düşmanı öldürür" varsayımını taşır.
+ * 2. **Elite/Boss AI'ı burada YOKTUR.** `eliteWaves`/`bossWaves` yalnızca
+ *    HANGİ dalgada bir elite/boss'un başladığını kaydeder; telegraph,
+ *    faz geçişi, özel saldırı gibi gerçek davranış tamamen Phaser
+ *    tarafındaki `EliteController`/`TelegraphManager`e aittir (bkz.
+ *    `games/vol-hell/README.md` "Simülasyon / render sınırı").
+ * 3. **Ability sistemi (kule, zincir şimşek, ateş alanı, çoklu atış)
+ *    burada YOKTUR** — oyuncunun aktif kart/yükseltme seçimi bu modele
+ *    hiç yansımaz.
+ *
+ * Bu sınırın ötesi: benchmark ve uzun-koşu regresyon testleri (`ölü
+ * düşmanlar listede birikmez`, `konumlar sonlu kalır` gibi) gerçek oyun
+ * DENEYİMİNİ değil, dalga/ekonomi/spawn/spatial-index ZİNCİRİNİN bütünlüğünü
+ * doğrular. Bu sınıftaki bir sayı (skor, DPS, zorluk hissi) oyunun gerçek
+ * dengesi için KANIT sayılmaz — yalnızca `games/vol-hell/src/runtime/
+ * scene/GameScene.ts` + gerçek cihaz smoke testi budur.
  */
 export class VolHellSimulation {
   readonly economy: RunEconomy;
@@ -250,7 +274,7 @@ export class VolHellSimulation {
         this.velocity,
       );
     } else if (enemy.swarmerState && enemy.definition.swarmer) {
-      enemy.swarmerState.aliveMinions = enemy.minions.filter((minion) => minion.isAlive).length;
+      enemy.swarmerState.aliveMinions = this.pruneMinions(enemy);
       return applySwarmerBehavior(
         enemy.swarmerState,
         context,
@@ -265,7 +289,7 @@ export class VolHellSimulation {
     // Elite kompozisyonunda rusher hareketi korunur; swarmer yalnızca doğurma
     // saatidir. Böylece headless model, EliteController'ın kuralıyla çelişmez.
     if (enemy.definition.archetype === 'elite' && enemy.swarmerState && enemy.definition.swarmer) {
-      enemy.swarmerState.aliveMinions = enemy.minions.filter((minion) => minion.isAlive).length;
+      enemy.swarmerState.aliveMinions = this.pruneMinions(enemy);
       return applySwarmerBehavior(
         enemy.swarmerState,
         context,
@@ -557,6 +581,29 @@ export class VolHellSimulation {
     if (removed) this.enemyIndex.remove(removed);
     const last = this.enemies.pop();
     if (last && index < this.enemies.length) this.enemies[index] = last;
+  }
+
+  /**
+   * Ölü minion referanslarını ebeveynin listesinden düşürür ve hayatta
+   * kalan sayıyı döner.
+   *
+   * Önceden `enemy.minions.filter(m => m.isAlive).length` kullanılıyordu:
+   * salt-okunur bir sayım, dizinin kendisini hiç küçültmüyordu. Bir
+   * swarmer/elite koşu boyunca doğurduğu HER minion'un referansını sonsuza
+   * kadar taşıyordu — hem bellek (ölü `SimulationEnemyState` nesneleri GC
+   * edilemez), hem CPU (sayım maliyeti doğan minion sayısıyla, hayatta kalan
+   * sayısıyla değil, büyür) sızıntısı. `Enemy.ts`teki Phaser eşleniği
+   * (`pruneMinions`) zaten takas-ve-küçült yapıyordu; headless model aynı
+   * disipline burada kavuşuyor.
+   */
+  private pruneMinions(enemy: SimulationEnemyState): number {
+    const minions = enemy.minions;
+    for (let index = minions.length - 1; index >= 0; index--) {
+      if (minions[index].isAlive) continue;
+      const last = minions.pop();
+      if (last && index < minions.length) minions[index] = last;
+    }
+    return minions.length;
   }
 
   private removePickupAt(index: number): void {

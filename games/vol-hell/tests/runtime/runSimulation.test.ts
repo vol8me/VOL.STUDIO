@@ -103,6 +103,55 @@ describe('koşu simülasyonu — entegrasyon sağlamlığı', () => {
     expect(result.enemyCount).toBeGreaterThanOrEqual(0);
   });
 
+  it('ölen minion referansları ebeveynde birikmez', () => {
+    // Önceden `aliveMinions` bir `.filter(...).length` SAYIMIYDI — diziyi
+    // hiç küçültmüyordu. Bir swarmer/elite koşu boyunca doğurduğu HER
+    // minion'un referansını sonsuza dek taşırdı (bkz. VolHellSimulation
+    // `pruneMinions`). Bu test doğrudan o özel metodu hedefler: gerçek bir
+    // spawn/ölüm döngüsü zamanlamaya bağımlı olduğu için, sahte bir
+    // ebeveyn + karışık hayatta/ölü minion listesiyle davranışı
+    // deterministik doğrular.
+    const simulation = new VolHellSimulation({ seed: 5, killRadius: null });
+    const prune = (
+      simulation as unknown as {
+        pruneMinions(enemy: { minions: { isAlive: boolean }[] }): number;
+      }
+    ).pruneMinions.bind(simulation);
+
+    const minions = Array.from({ length: 6 }, (_, index) => ({ isAlive: index % 2 === 0 }));
+    const parent = { minions };
+
+    const aliveCount = prune(parent);
+
+    expect(aliveCount).toBe(3);
+    expect(parent.minions).toHaveLength(3);
+    expect(parent.minions.every((minion) => minion.isAlive)).toBe(true);
+  });
+
+  it('minion referansları binlerce doğ-öl döngüsünden sonra bile büyümez', () => {
+    // Regresyon: eski `.filter().length` SAYIMDI, diziyi hiç küçültmüyordu —
+    // 2000 doğum döngüsü (4000 minion) sonunda dizi 4000 ölü referans
+    // taşırdı. Her döngüde bir ÖNCEKİ döngünün minion'ları ölür, iki yeni
+    // minion doğar; düzeltilmiş kodda dizi her zaman yalnızca O SON iki
+    // canlıyı taşımalı — geçmiş doğum sayısından bağımsız.
+    const simulation = new VolHellSimulation({ seed: 9, killRadius: null });
+    const prune = (
+      simulation as unknown as {
+        pruneMinions(enemy: { minions: { isAlive: boolean }[] }): number;
+      }
+    ).pruneMinions.bind(simulation);
+    const parent = { minions: [] as { isAlive: boolean }[] };
+
+    for (let cycle = 0; cycle < 2000; cycle++) {
+      for (const minion of parent.minions) minion.isAlive = false;
+      parent.minions.push({ isAlive: true }, { isAlive: true });
+      prune(parent);
+    }
+
+    expect(parent.minions).toHaveLength(2);
+    expect(parent.minions.every((minion) => minion.isAlive)).toBe(true);
+  });
+
   it('render katmanı oyuncu konumunu başsız sözleşmeden besleyebilir', () => {
     let positionCalls = 0;
     const simulation = new VolHellSimulation({

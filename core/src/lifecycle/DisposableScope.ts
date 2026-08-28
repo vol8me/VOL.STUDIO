@@ -26,6 +26,20 @@ export interface Destroyable {
  * ile kaydedilen her kaynak `dispose()` çağrıldığında EKLENİŞ SIRASININ
  * TERSİNDE kapatılır (son eklenen ilk kapanır — kaynaklar arası bağımlılık
  * genelde bu yönde kurulur). İkinci `dispose()` çağrısı no-op'tur.
+ *
+ * **Ne zaman ham timer/listener, ne zaman bu sınıf?** Kod tabanında ikisi
+ * de bilinçli olarak bir arada yaşıyor — TEK ölçüt kaynak SAYISI. Bir
+ * component'in yönettiği kaynak TEK ise (tek `setTimeout`, tek listener) ve
+ * `destroy()` yalnızca onu kapatmaktan ibaretse, kaynağı kendi alanında
+ * tutup doğrudan `clearTimeout`/`removeEventListener` çağırmak zarar
+ * vermez — bu sınıf o durumda gereksiz bir dolayım katmanıdır (bkz.
+ * `core/src/ui/controls/LongPressButton.ts`, `core/src/ui/cards/
+ * CardTile.ts`). Kaynak sayısı İKİ VEYA DAHA FAZLA olduğu an (birkaç
+ * listener, listener+timer karışımı, abonelik) bu sınıf kullanılır: elle
+ * tutulan N kaynak için simetrik N temizlik satırı — yukarıdaki paragrafın
+ * asıl anlattığı unutma riski — yalnızca kaynak sayısı arttıkça gerçek bir
+ * tehlike hâline gelir (bkz. `core/src/ui/controls/Carousel.ts`,
+ * `games/vol-hell/src/runtime/scene/GameScene.ts`).
  */
 export class DisposableScope implements Disposable {
   private readonly disposables: Disposable[] = [];

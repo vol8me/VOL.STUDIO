@@ -368,6 +368,12 @@ export class Enemy {
   private kill(): void {
     if (!this.alive) return;
     this.alive = false;
+    // Ebeveyn bir daha asla update()/runBehavior() çalıştırmayacağı için
+    // pruneMinions() bir daha tetiklenmez; referanslar burada bırakılmazsa
+    // ölü ebeveyn nesnesi kendi (belki hâlâ hayattaki) minion'larını süresiz
+    // tutar. destroy()/clearWithEffect() aynı temizliği zaten yapıyordu —
+    // en sık geçilen ölüm yolu (hasarla ölüm) eksikti.
+    this.minions.length = 0;
 
     diagnostics?.recordEvent('enemyDeath', {
       x: this.arc.x,

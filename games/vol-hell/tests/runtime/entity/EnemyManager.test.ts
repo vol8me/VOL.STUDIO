@@ -201,6 +201,43 @@ describe('EnemyManager', () => {
     expect(minions.length).toBeLessThanOrEqual(swarmerCount * params.maxMinions);
   });
 
+  it('swarmer hasarla ölünce minion referanslarını hemen bırakır', () => {
+    // Regresyon: `kill()` (hasarla ölüm — en sık geçilen yol) `this.minions`i
+    // temizlemiyordu; yalnızca `destroy()`/`clearWithEffect()` temizliyordu.
+    // Ölü ebeveyn bir daha update()/pruneMinions() çalıştırmayacağı için
+    // minion'lar KENDİLERİ hâlâ hayattayken bile ebeveyninde sonsuza dek
+    // referans olarak kalırdı.
+    const { scene } = makeScene();
+    const local = new EnemyManager(scene as never, makeEffects(), createRandom(1));
+    local.setWave(20);
+
+    for (
+      let i = 0;
+      i < 200 && !local.getEnemies().some((e) => e.definition.id === 'brooder');
+      i++
+    ) {
+      local.update(difficulty.spawnIntervalMs, playerPos, border, 0, grid, difficulty);
+    }
+    const brooder = local.getEnemies().find((e) => e.definition.id === 'brooder');
+    expect(brooder).toBeDefined();
+
+    const params = ENEMY_CATALOG.brooder.swarmer!;
+    for (let i = 0; i < 20; i++) {
+      local.update(params.spawnIntervalMs, playerPos, border, 0, grid, difficulty);
+    }
+    expect(brooder!.getAliveMinionCount()).toBeGreaterThan(0);
+
+    const minionsBeforeDeath = local
+      .getEnemies()
+      .filter((e) => e.definition.id === params.minionId);
+    expect(minionsBeforeDeath.some((minion) => minion.isAlive)).toBe(true);
+
+    brooder!.takeDamage(9999);
+
+    expect(brooder!.isAlive).toBe(false);
+    expect(brooder!.getAliveMinionCount()).toBe(0);
+  });
+
   it('destroy tüm düşmanları temizler', () => {
     for (let i = 0; i < 5; i++) tick(difficulty.spawnIntervalMs);
     expect(manager.getEnemies().length).toBeGreaterThan(0);

@@ -61,6 +61,20 @@ export interface VisualMemoryEstimate {
   readonly safetyMarginBytes: number;
   /** `known + scratch + metadata + margin`; cache kopyasını içermez. */
   readonly estimatedPeakWorkingBytes: number;
+  /**
+   * **`'conservative'` yalnızca modelin YAPISINI anlatır (üstten yuvarlama,
+   * +%50 pay) — gerçek çalışma zamanı ölçümüyle DOĞRULANMIŞ bir üst sınır
+   * değildir.** `--expose-gc` ile zorla ölçülen gerçek yığın artışı, örnek
+   * kataloğun 128×128 render'larında bu tahminin ~5–31 katına çıktı (bkz.
+   * `core/tests/visualSynth/memoryEstimateAccuracy.test.ts`). En olası
+   * açıklama: bu model yalnızca `category: 'buffered'` düğümlerin kalıcı
+   * tam-çözünürlük tamponunu sayıyor; tamponsuz düğümlerin render.ts'te
+   * gerçekten piksel-piksel akışla mı değerlendirildiği yoksa kendi ara
+   * dizisini mi ürettiği doğrulanmadı. Kök neden kanıtlanmadan formül
+   * değiştirilmedi (RenderCache/tile uygunluk kararlarını sessizce
+   * bozabilirdi) — bu alan tüketiciyi UYARMAK için var, iddiayı savunmak
+   * için değil.
+   */
   readonly confidence: 'conservative';
 }
 

@@ -10,8 +10,11 @@ describe('CORE simulation workload seti', () => {
       'core/spatial-rebuild',
       'core/spatial-incremental',
       'core/pathfinder-reuse',
+      'core/flowfield-compute',
       'core/scheduler-drain',
       'core/object-pool-cycle',
+      'core/stat-block-read',
+      'core/resource-pool-cycle',
     ]);
   });
 
@@ -21,7 +24,7 @@ describe('CORE simulation workload seti', () => {
       { iterations: 3, warmupIterations: 1, samples: 1 },
     );
 
-    expect(result.workloads).toHaveLength(5);
+    expect(result.workloads).toHaveLength(8);
     for (const workload of result.workloads) {
       expect(Number.isFinite(workload.medianMsPerIteration)).toBe(true);
       expect(Number.isFinite(workload.p95MsPerIteration)).toBe(true);

@@ -1,7 +1,10 @@
 import { ObjectPool } from '../pool/ObjectPool';
 import { PathFinder } from '../grid/findPath';
+import { FlowField } from '../grid/FlowField';
 import { Scheduler } from '../time/Scheduler';
 import { SpatialIndex, type SpatialEntity } from '../spatial/SpatialIndex';
+import { StatBlock } from '../stats/StatBlock';
+import { ResourcePool } from '../economy/ResourcePool';
 import type { BenchmarkScenario, BenchmarkWorkload } from './harness';
 
 export interface CoreBenchmarkWorkloadOptions {
@@ -30,8 +33,11 @@ export function createCoreSimulationWorkloads(
     createSpatialRebuildWorkload(entityCount),
     createSpatialIncrementalWorkload(entityCount),
     createPathFinderWorkload(gridSize),
+    createFlowFieldWorkload(gridSize),
     createSchedulerWorkload(),
     createObjectPoolWorkload(entityCount),
+    createStatBlockWorkload(),
+    createResourcePoolWorkload(),
   ];
 }
 
@@ -113,6 +119,42 @@ function createPathFinderWorkload(gridSize: number): BenchmarkWorkload {
   };
 }
 
+function createFlowFieldWorkload(gridSize: number): BenchmarkWorkload {
+  // `FlowField.compute()` bilinçli olarak kısmi/dirty yeniden hesap
+  // yapmaz (bkz. FlowField.ts JSDoc'u) — her çağrı tüm ızgarayı baştan
+  // tarar. `gridSize` PathFinder ile PAYLAŞILIR: ikisi aynı ızgara
+  // boyutunda karşılaştırılabilir olsun diye (tek hedef × N birim vs. N
+  // hedef × 1 birim maliyet eğrisi).
+  return {
+    name: 'core/flowfield-compute',
+    create: () => {
+      const field = new FlowField(gridSize, gridSize);
+      const isWalkable = (point: { col: number; row: number }): boolean =>
+        (point.col * 13 + point.row * 7) % 19 !== 0;
+      let frame = 0;
+      let checksum = 0;
+      return {
+        step(): void {
+          frame++;
+          // Hedef her karede kayar: sabit hedefte önbellek/optimizasyon
+          // motorunun sonucu atlamasına izin vermeyen gerçekçi bir desen.
+          const goalCol = frame % gridSize;
+          const goalRow = (frame * 7) % gridSize;
+          field.compute([{ col: goalCol, row: goalRow }], { isWalkable });
+          // Sabit bir köşe hücresi okunur (O(1)) — tüm ızgarayı taramak
+          // `compute()`'un kendi maliyetini bozardı. Hedef karede kaydıkça
+          // köşenin maliyeti değişir; ulaşılamazsa (Infinity) sıfır sayılır.
+          const cornerCost = field.getCost(gridSize - 1, gridSize - 1);
+          checksum += Number.isFinite(cornerCost) ? cornerCost : 0;
+        },
+        dispose(): void {
+          if (!Number.isFinite(checksum)) throw new Error('Benchmark checksum bozuldu');
+        },
+      } satisfies BenchmarkScenario;
+    },
+  };
+}
+
 function createSchedulerWorkload(): BenchmarkWorkload {
   return {
     name: 'core/scheduler-drain',
@@ -162,6 +204,89 @@ function createObjectPoolWorkload(entityCount: number): BenchmarkWorkload {
         dispose(): void {
           pool.clear();
           if (checksum < 0) throw new Error('Benchmark checksum bozuldu');
+        },
+      } satisfies BenchmarkScenario;
+    },
+  };
+}
+
+// CORE hiçbir oyunun stat sözlüğünü bilmez (bkz. AGENTS.md kural 3 ve
+// core/tests/governance/publicApi.test.ts) — isimler BİLEREK jenerik
+// tutulur, herhangi bir tüketicinin gerçek stat adlarıyla eşleşmemeli.
+type BenchStat = 'output' | 'durability' | 'velocity' | 'cadence';
+
+function createStatBlockWorkload(): BenchmarkWorkload {
+  // Gerçek tüketici deseni (vol-hell `Player`/`Enemy`in kendi stat kümesiyle
+  // parametrelenmiş kullanımı — bkz. `games/vol-hell/src/config/stats.ts`):
+  // birkaç stat, birkaç kalıcı `add`/`multiply` modifier VE en az bir
+  // KOŞULLU modifier (`condition` her okumada yeniden değerlendirilir —
+  // statik değerden daha pahalı yol). `getValue` her frame birden çok kez
+  // çağrılır; workload bunu yansıtır.
+  return {
+    name: 'core/stat-block-read',
+    create: () => {
+      const stats = new StatBlock<BenchStat>({
+        output: 10,
+        durability: 100,
+        velocity: 220,
+        cadence: 400,
+      });
+      stats.addModifier({ id: 'augment', stat: 'output', type: 'add', value: 4 });
+      stats.addModifier({ id: 'scaling', stat: 'durability', type: 'multiply', value: 1.4 });
+      stats.addModifier({ id: 'scaling', stat: 'velocity', type: 'multiply', value: 1.1 });
+      let surged = false;
+      stats.addModifier({
+        id: 'surge',
+        stat: 'output',
+        type: 'multiply',
+        value: 1.5,
+        condition: () => surged,
+      });
+      let checksum = 0;
+      let frame = 0;
+      return {
+        step(): void {
+          frame++;
+          // Koşullu modifier periyodik değişir — statik önbelleklemenin
+          // sonucu yanlışça sabitleyip sonucu bozamayacağını da doğrular.
+          surged = frame % 7 === 0;
+          checksum +=
+            stats.getValue('output') +
+            stats.getValue('durability') +
+            stats.getValue('velocity') +
+            stats.getValue('cadence');
+        },
+        dispose(): void {
+          if (!Number.isFinite(checksum)) throw new Error('Benchmark checksum bozuldu');
+        },
+      } satisfies BenchmarkScenario;
+    },
+  };
+}
+
+type BenchResource = 'spark' | 'flux';
+
+function createResourcePoolWorkload(): BenchmarkWorkload {
+  // Gerçek tüketici deseni (vol-hell `RunEconomy`): her karede kazanç
+  // eklenir, periyodik olarak bir satın alma denenir (canAfford + spend).
+  return {
+    name: 'core/resource-pool-cycle',
+    create: () => {
+      const pool = new ResourcePool<BenchResource>({ spark: 0, flux: 0 }, { flux: 999 });
+      let frame = 0;
+      let checksum = 0;
+      return {
+        step(): void {
+          frame++;
+          pool.add('spark', 3);
+          pool.add('flux', 1);
+          if (frame % 5 === 0 && pool.canAfford({ spark: 50 })) {
+            pool.spend({ spark: 50 });
+            checksum += 1;
+          }
+        },
+        dispose(): void {
+          if (!Number.isFinite(checksum)) throw new Error('Benchmark checksum bozuldu');
         },
       } satisfies BenchmarkScenario;
     },

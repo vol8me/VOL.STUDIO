@@ -5,6 +5,91 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-28 — Profesyonel bulgu turu: benchmark sıkılığı, bellek doğrulama, swarm sızıntısı
+
+Önceki turun raporundan sonra kullanıcı dokuz somut bulgu getirdi (P1: simülasyon
+kapsam netliği, allocation ölçümü, CommandHistory×revizyon entegrasyonu,
+lifecycle kuralı; P2: swarm sızıntısı, p95 istatistiği, killRadius'un saturasyonu
+gizlemesi, CORE benchmark kapsamı, VisualSynth bellek modeli) ve gerçek bir
+Android cihaz + bu Fedora makinesinin kendisinin baştan beri erişilebilir
+olduğunu belirtti (önceki turun "cihaz yok" raporu `adb`'yi PATH'te aramakla
+sınırlıydı — SDK `platform-tools` altında duruyordu). Her bulgu tek tek koda
+karşı doğrulandı; sekizi gerçek çıktı, biri (simülasyon kapsamı) zaten
+doğruydu ve yalnızca daha açık dokümantasyon istiyordu.
+
+- **Swarm ebeveyn-minion sızıntısı (gerçek bug):** `VolHellSimulation`
+  `aliveMinions`i `.filter(...).length` ile SAYIYORDU, diziyi hiç
+  küçültmüyordu — bir swarmer/elite koşu boyunca doğurduğu HER minion'un
+  referansını taşırdı (bellek + her frame büyüyen sayım maliyeti). `Enemy.ts`
+  (Phaser) tarafında da `kill()` (hasarla ölüm, en sık yol) `this.minions`i
+  temizlemiyordu — yalnızca `destroy()`/`clearWithEffect()` temizliyordu.
+  İkisi de düzeltildi; regresyon 2000 doğum döngüsü sonrası dizi boyutunun
+  sabit kaldığını ve hasarla ölen bir swarmer'ın minion referanslarını hemen
+  bıraktığını doğruluyor.
+- **Benchmark p95 yalancıydı:** nearest-rank formülü `N<20` örnekte her zaman
+  maksimumu seçiyor; varsayılan `samples: 3` ile "p95" aslında "3 örneğin en
+  yavaşı"ydı. Varsayılan 25'e çıkarıldı (CLI'lardaki KENDİ kopya varsayılanları
+  dahil), davranış iki yeni testle kilitlendi.
+- **`killRadius` saturasyonu gizliyordu:** varsayılan benchmark oyuncuya
+  yaklaşan her düşmanı o karede öldürüyor, popülasyonu gerçek performans
+  tavanının (80 eşzamanlı düşman) çok altında tutuyordu. Yeni "saturated"
+  workload'lar (`killRadius: null` + kaba adımlı ısıtma fazı) popülasyonu
+  koşunun gerçekten ulaşabileceği tavana taşıyor — ölçüm hafif yükten **~30x**
+  daha maliyetli çıktı, önceden tamamen görünmezdi. (Isıtmanın ilk sürümü
+  `runCompleted` no-op sınırını fark etmeden aşıp sahte ~0 ms rapor etmişti;
+  düzeltilip koşu ömrüne göre sınırlandırıldı.)
+- **CORE benchmark kapsamı genişletildi:** FlowField, ResourcePool, StatBlock
+  eklendi (önceden yalnızca SpatialIndex/PathFinder/Scheduler/ObjectPool
+  vardı). StatBlock workload'ı ilk sürümde CORE'un domain-neutrality
+  bekçisini kırdı (`damage`/`fireRate` — vol-hell'in gerçek stat sözlüğüyle
+  birebir çakıştı); jenerik adlara taşındı.
+- **Render snapshot allocation'ı artık ölçülüyor:** `getRenderSnapshot()`
+  her karede düşman/pickup sayısıyla orantılı yeni dizi+nesne ayırıyordu,
+  bu hiç ölçülmüyordu. `--expose-gc` ile zorla GC edilen bir ölçüm eklendi
+  (saturasyonda ~39 KB/çağrı, 56 düşmanda).
+- **VisualSynth bellek modeli gerçekle karşılaştırıldı — ve gerçek bir boşluk
+  bulundu.** `estimatedPeakWorkingBytes` kendini `confidence: 'conservative'`
+  diye etiketliyordu ama hiç doğrulanmamıştı. `--expose-gc` ile zorla ölçülen
+  gerçek yığın artışı, örnek preset kataloğunda tahminin **~5–31 katı**
+  çıktı. Kök neden KANITLANMADI (en olası açıklama: model yalnızca
+  `buffered` kategori düğümlerin kalıcı tamponunu sayıyor, tamponsuz
+  düğümlerin render.ts'te gerçekten akışla mı değerlendirildiği ayrı bir
+  profil incelemesi gerektiriyor) — formül köreltilmeden bırakıldı, ama
+  `confidence` alanının dokümantasyonu ve yeni bir regresyon testi bu boşluğu
+  dürüstçe kayda geçirdi.
+- **CommandHistory × harici revizyon entegrasyonu:** iki mekanizma
+  (`stateToken` kirlilik izleme, `conflictRevision` disk çakışması) ayrı ayrı
+  test ediliyordu ama birlikte hiç değil. Dört yeni test: kirliyken gelen
+  conflict undo ile temize dönünce de kalıcı kalıyor, conflict varken yeni
+  düzenleme kirliliği bağımsız izliyor, kayıt ikisini birden temizliyor.
+- **Lifecycle kuralı netleştirildi:** "ham timer mı, `DisposableScope` mı"
+  ayrımı hiç yazılı değildi. Kural (kaynak SAYISI: tek kaynak ham, iki+
+  DisposableScope) hem `AGENTS.md`ye hem `DisposableScope.ts`nin kendi
+  JSDoc'una işlendi.
+- **`VolHellSimulation` kapsamı** zaten doğruydu (savaş yaklaşıksaması,
+  elite/boss AI'sızlığı, ability sistemsizliği) ama örtük dokümante
+  edilmişti; sınıf yorumuna üç maddelik açık bir liste eklendi.
+
+**Cihaz doğrulaması (bu turda ilk kez gerçekten yapıldı):** taşınabilir JDK 17
+indirilip (`~/.local/jdk` — sistemde hiç JDK yoktu, `sudo` da yoktu) Android
+debug APK üretildi, gerçek Galaxy S21 FE'ye (`R5CXA3KZWNK`) kuruldu ve
+çalıştırıldı; ana menü, oyun içi dokunmatik kontroller ve ölüm/koşu özeti
+ekranı ekran görüntüsüyle doğrulandı — hiçbiri önceki turda mümkün değildi.
+Fedora masaüstü hedefi `tauri.conf.json`da hiç yapılandırılmamış
+(`targets: ["nsis","msi"]` yalnızca Windows) — AGENTS.md'nin "Hedefler:
+Windows ve Android" tanımıyla tutarlı; native paket formatı (deb/rpm/AppImage)
+bilinçli olarak eklenmedi (kapsamı genişletmek ayrı bir ürün kararı). Bunun
+yerine gerçek masaüstü ikili dosyası (`cargo build`, debug) bu makinede
+derlenip çalıştırıldı: ilk denemede WebView içeriği render olmadan boş
+pencere açtı (`Failed to create GBM buffer` — bu KDE/Wayland+GPU sürücü
+kombinasyonuna özgü, bilinen bir webkit2gtk donanım-compositing sorunu, kod
+kusuru değil), `WEBKIT_DISABLE_COMPOSITING_MODE=1` ile yazılım compositing'e
+düşürülünce ana menü Android sürümüyle birebir aynı biçimde doğru render etti
+(ekran görüntüsüyle doğrulandı). Pencere doğrulamadan hemen sonra kapatıldı.
+
+Doğrulama: `pnpm high` tam geçti (1772/1772 test, önceki turun 3 yeni
+dosyasındaki format/lint boşlukları dahil düzeltildi).
+
 ## 2026-08-28 — Android/dokunmatik platform katmanı ve sağlamlaştırma turu
 
 Önceki oturum limite takılıp yarım bıraktığı için bu tur önce çalışma
