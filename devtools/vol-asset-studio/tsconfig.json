@@ -8,6 +8,11 @@
       "@volstudio/core/i18n": ["../../core/src/i18n/index.ts"],
       "@volstudio/core/fonts": ["../../core/src/fonts/index.ts"],
       "@volstudio/core/lifecycle": ["../../core/src/lifecycle/index.ts"],
+      "@volstudio/visual-synth": ["../../devtools/visual-synth/src/index.ts"],
+      "@volstudio/visual-synth/*": [
+        "../../devtools/visual-synth/src/*/index.ts",
+        "../../devtools/visual-synth/src/*.ts"
+      ],
       "@shared/*": ["./shared/*"],
       "@/*": ["./src/*"]
     }

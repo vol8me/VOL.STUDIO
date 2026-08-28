@@ -10,8 +10,8 @@
  */
 
 import { resolve } from 'node:path';
-import type { SynthesisResult } from '@volstudio/core/audio/synth';
-import { writeOgg } from '@volstudio/core/audio/synth/writer';
+import type { SynthesisResult } from '@volstudio/audio-synth';
+import { writeOgg } from '@volstudio/audio-synth/writer';
 import { SFX_SPECS } from './sfx/specs';
 
 const outDir = process.argv[2];

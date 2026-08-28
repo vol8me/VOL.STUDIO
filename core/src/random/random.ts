@@ -8,10 +8,8 @@
  *
  * Bu modül ses sentezinde doğdu ama motor geneli bir yardımcıdır — oyun
  * tarafı da (spawn, davranış, kart RNG'si) aynı uygulamayı kullanır. Bu
- * yüzden `core/src/audio/synth/` yerine burada, bağımsız bir namespace'te
- * yaşar. Ses motoru içi göreli importları kırmamak için
- * `core/src/audio/synth/random.ts` bu dosyayı re-export eden bir
- * geriye-uyumluluk shim'idir.
+ * yüzden `devtools/audio-synth/src/` yerine burada, bağımsız bir namespace'te
+ * yaşar.
  */
 
 /** Kaynak seed verilmediğinde kullanılan sabit — üretim varsayılan olarak deterministiktir. */

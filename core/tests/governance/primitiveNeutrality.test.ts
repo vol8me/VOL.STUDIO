@@ -23,7 +23,6 @@ const PRIMITIVE_ROOTS = [
   'lifecycle',
   'random',
   'stats',
-  'visualSynth',
 ];
 
 /**
@@ -103,20 +102,17 @@ describe('Katman 1 primitifleri türden bağımsız kalmalı', () => {
    * yapıldı (bkz. TODO.md "Tür sızıntısı" turu) ve bekçi o yüzden dokümanı
    * da kapsar.
    */
-  it.each(['primitives.md', 'visual-synthesis.md'])(
-    '%s tek bir türü örnek olarak dayatmaz',
-    (name) => {
-      const doc = readFileSync(join(import.meta.dirname, '../../docs', name), 'utf-8');
+  it.each(['primitives.md'])('%s tek bir türü örnek olarak dayatmaz', (name) => {
+    const doc = readFileSync(join(import.meta.dirname, '../../docs', name), 'utf-8');
 
-      // Kural cümlesinin kendisi yasaklı terimleri SAYAR; onu hariç tut.
-      const prose = doc
-        .split('\n')
-        .filter((line) => !line.includes('taşımamalı'))
-        .join('\n')
-        .toLowerCase();
+    // Kural cümlesinin kendisi yasaklı terimleri SAYAR; onu hariç tut.
+    const prose = doc
+      .split('\n')
+      .filter((line) => !line.includes('taşımamalı'))
+      .join('\n')
+      .toLowerCase();
 
-      const violations = GENRE_TERMS.filter((term) => containsTerm(prose, term));
-      expect(violations).toEqual([]);
-    },
-  );
+    const violations = GENRE_TERMS.filter((term) => containsTerm(prose, term));
+    expect(violations).toEqual([]);
+  });
 });

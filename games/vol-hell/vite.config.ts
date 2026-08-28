@@ -57,6 +57,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@volstudio/core': resolve(import.meta.dirname, '../../core/src'),
+      '@volstudio/audio-synth': resolve(import.meta.dirname, '../../devtools/audio-synth/src'),
       '@volstudio/tauri-v2': resolve(import.meta.dirname, '../../tauri-v2/src'),
       '@': resolve(import.meta.dirname, './src'),
     },

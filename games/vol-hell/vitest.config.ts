@@ -35,6 +35,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@volstudio/core': resolve(import.meta.dirname, '../../core/src'),
+      '@volstudio/audio-synth': resolve(import.meta.dirname, '../../devtools/audio-synth/src'),
       '@': resolve(import.meta.dirname, './src'),
     },
   },

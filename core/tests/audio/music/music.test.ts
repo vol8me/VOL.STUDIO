@@ -1,12 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MusicEngine, MusicScheduler, resolveStemGain } from '../../../src/audio/music';
 import type { LoopTimingMismatch } from '../../../src/audio/music';
-import { synth } from '../../../src/audio/synth';
-import { FakeAudioContext, createFakeAudioBufferFromResult } from './mock-audio';
+import { FakeAudioContext } from './mock-audio';
 
 function makeBuffer(context: FakeAudioContext, duration = 2, sampleRate = 44100): AudioBuffer {
-  const result = synth(duration, { wave: 'sine', frequency: 440, sampleRate });
-  return createFakeAudioBufferFromResult(result, context) as unknown as AudioBuffer;
+  const length = Math.floor(duration * sampleRate);
+  const buffer = context.createBuffer(1, length, sampleRate);
+  const channel = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) {
+    channel[i] = Math.sin((2 * Math.PI * 440 * i) / sampleRate);
+  }
+  return buffer as unknown as AudioBuffer;
 }
 
 describe('MusicEngine', () => {

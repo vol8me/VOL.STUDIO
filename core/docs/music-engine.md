@@ -2,7 +2,7 @@
 
 `@volstudio/core/audio/music`, projenin Web Audio tabanlı müzik motorudur. Stem
 (katman) bazlı adaptive müzik, crossfade ve state'e göre gain haritalama sağlar.
-SFX motorundan (`@volstudio/core/audio/synth`) ayrıdır; müzik uzun loop'lar ve
+SFX motorundan (`@volstudio/audio-synth`) ayrıdır; müzik uzun loop'lar ve
 çok kanallı stem mix'i için optimize edilmiştir.
 
 > **Runtime'da sentez YAPILMAZ.** Motor yalnızca önceden üretilmiş OGG (iOS'ta MP3)

@@ -105,7 +105,7 @@ smoke test gerektirir.
 | `pnpm --filter @volstudio/vol-hell generate:audio`       | Ses ve müzik asset'lerini üret  |
 | `pnpm --filter @volstudio/vol-hell audio:qa`             | Üretilen ses asset'lerini ölç   |
 
-Shipped ses asset'leri (`public/assets/audio/**/*.ogg`) repoda tutulur; ses tasarımı değiştiğinde `pnpm --filter @volstudio/vol-hell generate:audio` ile yenilenir. Ara formatlar (WAV, MP3) repoda tutulmaz (bkz. [sound-synth](../../core/docs/sound-synth.md), [music-engine](../../core/docs/music-engine.md)).
+Shipped ses asset'leri (`public/assets/audio/**/*.ogg`) repoda tutulur; ses tasarımı değiştiğinde `pnpm --filter @volstudio/vol-hell generate:audio` ile yenilenir. Ara formatlar (WAV, MP3) repoda tutulmaz (bkz. [sound-synth](../../devtools/audio-synth/DESIGN.md), [music-engine](../../core/docs/music-engine.md)).
 
 ## UI
 

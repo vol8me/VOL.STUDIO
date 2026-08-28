@@ -3,7 +3,7 @@
  *
  * **Mimari karar: çalma zamanında beste YOKTUR.** Runtime yalnızca önceden
  * üretilmiş stem'leri (OGG/MP3) çalar; nota/melodi üretimi build-time'da
- * `audio/synth` ile yapılır ve sonuç repoya asset olarak girer.
+ * `@volstudio/audio-synth` ile yapılır ve sonuç repoya asset olarak girer.
  *
  * Kazancı: bir parçayı render etmek saniyeler sürebilir, kimse fark etmez —
  * kalite ile kare bütçesi arasındaki takas tamamen kalkar. `synthesize()`

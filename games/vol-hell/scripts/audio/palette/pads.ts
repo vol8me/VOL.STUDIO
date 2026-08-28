@@ -7,7 +7,7 @@
  * ve armonisiz yaşar.
  */
 
-import type { SynthesisResult } from '@volstudio/core/audio/synth';
+import type { SynthesisResult } from '@volstudio/audio-synth';
 import { renderVoice } from '../lib/mix';
 
 /** Void pad — detune'lu koyu testere zemini, yavaş filtre hareketi. */

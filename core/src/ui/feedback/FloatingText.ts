@@ -1,5 +1,5 @@
 import { UI_TIMING } from '../../constants';
-import type { Random } from '../../audio/synth/random';
+import type { Random } from '@volstudio/core/random';
 
 /**
  * Varyant, metnin GÖRSEL tonunu seçer — oyun anlamını değil.

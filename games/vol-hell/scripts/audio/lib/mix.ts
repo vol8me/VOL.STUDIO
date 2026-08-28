@@ -17,9 +17,9 @@
  *    `humanize` her vuruşa deterministik birkaç ms kaydırma verir.
  */
 
-import { synth } from '@volstudio/core/audio/synth';
-import type { SynthParams, SynthesisResult } from '@volstudio/core/audio/synth';
-import { writeOgg } from '@volstudio/core/audio/synth/writer';
+import { synth } from '@volstudio/audio-synth';
+import type { SynthParams, SynthesisResult } from '@volstudio/audio-synth';
+import { writeOgg } from '@volstudio/audio-synth/writer';
 
 export const SAMPLE_RATE = 44100;
 

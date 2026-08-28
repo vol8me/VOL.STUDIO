@@ -5,6 +5,58 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-28 — VisualSynth + AudioSynth: core'dan devtools paketlerine taşıma
+
+`core/src/visualSynth/` ve `core/src/audio/synth/` alt sistemleri kendi
+`devtools/visual-synth/` ve `devtools/audio-synth/` paketlerine çıkarıldı.
+Bu paketler deterministik asset compiler'dır; oyun ve araçlar yalnızca
+üretilmiş asset'leri (`public/assets/audio`, `export/`) tüketir.
+
+**Yapılanlar:**
+
+- Yeni `@volstudio/visual-synth` ve `@volstudio/audio-synth` paket iskeletleri
+  (`package.json`, `tsconfig.json`, `vitest.config.ts`, `README.md`, `export/`,
+  `presets/`, `recipes/`).
+- Kaynak kod, testler, script'ler ve dokümanlar ilgili paketlere taşındı.
+- `core/src/index.ts` ve `core/package.json` public surface'dan
+  `VisualSynth`/`Synth` namespace'leri ve alt yolları kaldırıldı.
+- `core/src/pool/index.ts` eklendi; `@volstudio/core/pool` alt yolu açıldı.
+- `@volstudio/core/math/interpolation` alt yolu açıldı.
+- `core/tests/governance/publicSurface.test.ts`, `numericContract.test.ts`,
+  `primitiveNeutrality.test.ts`, `publicApi.test.ts` yeni yapıya göre
+  güncellendi.
+- `core/tests/audio/music/music.test.ts` ve `mock-audio.ts` artık
+  `@volstudio/audio-synth`'e bağımlı kalmadan kendi `AudioBuffer` üretiyor.
+- Tüketiciler (`devtools/vol-asset-studio`, `games/vol-hell`) yeni paket
+  yollarına geçirildi; `tsconfig.json`/`vite.config.ts` alias'ları eklendi.
+- `core/docs/visual-synthesis.md` → `devtools/visual-synth/DESIGN.md`,
+  `core/docs/sound-synth.md` → `devtools/audio-synth/DESIGN.md` taşındı;
+  `core/docs/music-engine.md` ve `core/src/random/random.ts` yorumları
+  güncellendi.
+- Root `package.json` script'leri (`convert:ios`, `audio:qa`) ve `justfile`
+  yeni yollara göre güncellendi; `visual-synth-asset`/`visual-synth-qa`
+  just tarifleri eklendi.
+- `quality.json` yeni paketlerin kapsam eşiklerini içerecek şekilde
+  güncellendi.
+
+**Doğrulama:**
+
+- `pnpm contract` ✓
+- `pnpm quick` ✓ (contract, format-check, typecheck, lint)
+- `pnpm exec just coverage` ✓ (tüm paketler coverage eşiklerini geçti)
+- `pnpm exec just build` ✓ (vol-ui, vol-asset-studio, vol-hell build'leri)
+- `pnpm exec just lint-css` ✓
+- `pnpm -r --if-present test` ✓
+- `pnpm high` × (e2e aşamasında düştü; sebep: Playwright tarayıcı ikilikleri
+  kurulu değil. Çözüm: `pnpm exec playwright install` sonra `pnpm high`
+  yeniden koşulmalı.)
+
+**Kalan risk:**
+
+- `pnpm high`'ın e2e aşaması local Playwright browser'larına bağımlı;
+  yeni bir `pnpm install` sonrası `pnpm exec playwright install` unutulursa
+  `high` kapısı düşer.
+
 ## 2026-08-28 — VisualSynth + AudioSynth: harici statik analiz turu, 16 bulgu
 
 Kullanıcı, bu dalın bir zip snapshot'ı üzerinden yapılmış harici bir statik

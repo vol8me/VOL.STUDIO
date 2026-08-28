@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@volstudio/core": ["../../core/src/index.ts"],
+      "@volstudio/core/*": ["../../core/src/*"]
+    }
+  },
+  "include": ["src", "tests", "scripts"]
+}

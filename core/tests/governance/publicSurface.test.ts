@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import * as Core from '../../src/index';
-import * as VisualSynth from '../../src/visualSynth/index';
 
 /**
  * CORE'un public API yüzeyinin BÜYÜKLÜĞÜNÜ kilitler.
@@ -34,17 +33,10 @@ import * as VisualSynth from '../../src/visualSynth/index';
 // `isHapticsEnabled`, `isHapticsSupported`, `cancelHaptics`). Phaser'ın
 // titreşim yüzeyi yok; Vibration API tek yerde anlamlandırılmış desenlere
 // bağlanır ki aynı etkileşim her ekranda aynı hissetsin.
-const EXPECTED_EXPORT_COUNT = 197;
+const EXPECTED_EXPORT_COUNT = 195;
 
-/**
- * `visualSynth/` kök barrel'a TEK bir isimle (`VisualSynth`) girer, tıpkı
- * `Synth` gibi. Bu, alt sistemin kendi yüzeyini kök sayısının gölgesinde
- * büyütmesi demek olurdu; bu yüzden ayrıca ve kendi başına sayılır.
- */
-// `analyzeSpriteDoc`, region/cache/material tarifleri ve teşhis yüzeyi
-// inspector/profil sözleşmesinin bilinçli public girişleridir; tip export'ları
-// runtime sayısını değiştirmez.
-const EXPECTED_VISUAL_SYNTH_EXPORT_COUNT = 70;
+// 197 → 195: VisualSynth ve AudioSynth asset compiler paketlerine taşındı;
+// `VisualSynth` ve `Synth` namespace'leri CORE public surface'dan çıkarıldı.
 
 describe('CORE public API yüzeyi', () => {
   it('export sayısı bilinçli bir kararla değişir', () => {
@@ -73,11 +65,6 @@ describe('CORE public API yüzeyi', () => {
     });
 
     expect(suspicious).toEqual([]);
-  });
-
-  it('visual alt sistemi kok barrel icine TEK isimle girer', () => {
-    expect(Core.VisualSynth).toBeDefined();
-    expect(Object.keys(VisualSynth).length).toBe(EXPECTED_VISUAL_SYNTH_EXPORT_COUNT);
   });
 
   it('deprecated takma adlar yüzeyde ama sayıya dahil', () => {

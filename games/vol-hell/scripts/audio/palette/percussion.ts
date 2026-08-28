@@ -6,7 +6,7 @@
  * kullanılır. Gürültü yalnızca snare/impact transientinde ve dar bantta yaşar.
  */
 
-import type { SynthesisResult } from '@volstudio/core/audio/synth';
+import type { SynthesisResult } from '@volstudio/audio-synth';
 import { renderVoice } from '../lib/mix';
 import { layer } from './shared';
 

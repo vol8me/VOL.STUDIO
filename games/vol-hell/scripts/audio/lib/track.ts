@@ -6,7 +6,7 @@
  * (src/config/music.ts) BİREBİR eşleşmek zorundadır — loopEnd oradan hesaplanır.
  */
 
-import type { SynthesisResult } from '@volstudio/core/audio/synth';
+import type { SynthesisResult } from '@volstudio/audio-synth';
 import type { StereoMix } from './mix';
 import { addVoice, humanize } from './mix';
 import type { NoteEvent } from './theory';

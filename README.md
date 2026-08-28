@@ -17,6 +17,8 @@ games/vol-hell/             # @volstudio/vol-hell — oyun (Vite kökü)
 devtools/pen.dev/          # @volstudio/pen.dev — Pencil kaynağı, export hattı ve rig montajı
 devtools/vol-ui/            # @volstudio/vol-ui — CORE UI canlı bileşen kataloğu
 devtools/vol-asset-studio/  # @volstudio/vol-asset-studio — repo varlık çalışma ortamı
+devtools/visual-synth/      # @volstudio/visual-synth — deterministik görsel asset compiler'ı
+devtools/audio-synth/       # @volstudio/audio-synth — deterministik ses asset compiler'ı
 tauri-v2/                   # @volstudio/tauri-v2 — native oyun kabuğu ve Rust backend
 ```
 

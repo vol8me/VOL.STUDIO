@@ -5,6 +5,8 @@
     "paths": {
       "@volstudio/core": ["../../core/src"],
       "@volstudio/core/*": ["../../core/src/*"],
+      "@volstudio/audio-synth": ["../../devtools/audio-synth/src"],
+      "@volstudio/audio-synth/*": ["../../devtools/audio-synth/src/*"],
       "@volstudio/tauri-v2": ["../../tauri-v2/src"],
       "@/*": ["./src/*"]
     }

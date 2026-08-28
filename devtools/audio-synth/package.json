@@ -1,0 +1,35 @@
+{
+  "name": "@volstudio/audio-synth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./writer": {
+      "import": "./src/writer.ts",
+      "types": "./src/writer.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "qa": "tsx scripts/audio-qa.ts",
+    "convert:ios": "tsx scripts/convert-audio.ts"
+  },
+  "dependencies": {
+    "@volstudio/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "tsx": "^4.23.11",
+    "typescript": "^6.0.3",
+    "vitest": "3.0.5"
+  }
+}

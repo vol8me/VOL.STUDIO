@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createRandom } from '../../src/audio/synth/random';
+import { createRandom } from '@volstudio/core/random';
 import { FloatingTextManager } from '../../src/ui/feedback/FloatingText';
 import { ResourceBar } from '../../src/ui/feedback/ResourceBar';
 import { ResourceCounter } from '../../src/ui/feedback/ResourceCounter';

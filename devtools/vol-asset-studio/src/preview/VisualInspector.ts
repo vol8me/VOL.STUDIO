@@ -5,7 +5,7 @@ import {
   renderSprite,
   type RenderResult,
   type VisualSpriteAnalysis,
-} from '@volstudio/core/visualSynth';
+} from '@volstudio/visual-synth';
 import type { AssetSummary } from '../../shared/index';
 import type { AssetStudioClient } from '../api/AssetStudioClient';
 import type { Translate } from '../catalog/AssetLibrary';

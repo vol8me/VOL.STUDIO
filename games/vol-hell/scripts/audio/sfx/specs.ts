@@ -11,7 +11,7 @@
  * göre hiyerarşi kurar: UI ~0.42-0.55, ateş ~0.55, hasar ~0.75, ölüm ~0.88.
  */
 
-import type { SynthesisResult } from '@volstudio/core/audio/synth';
+import type { SynthesisResult } from '@volstudio/audio-synth';
 import { renderVoice } from '../lib/mix';
 import { hz } from '../lib/theory';
 import { layer } from '../palette/shared';

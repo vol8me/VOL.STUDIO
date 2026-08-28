@@ -6,7 +6,6 @@ import { Scheduler } from '../../src/time/Scheduler';
 import { ResourcePool } from '../../src/economy/ResourcePool';
 import { SpatialIndex } from '../../src/spatial/SpatialIndex';
 import { isFiniteNumber, requireFinite, finiteOr } from '../../src/math/numeric';
-import { collectSpriteDocIssues, validateSpriteDoc } from '../../src/visualSynth/validate';
 
 /**
  * Sonlu sayı sözleşmesi — primitiflerin ORTAK giriş bariyeri.
@@ -83,31 +82,6 @@ describe('sonlu sayı sözleşmesi', () => {
 
     it('SpatialIndex sonlu olmayan cellSize reddeder', () => {
       expect(() => new SpatialIndex<{ x: number; y: number }>(NaN)).toThrow(/sonlu/);
-    });
-
-    it('görsel belgede size/seed/freq reddedilir', () => {
-      // Görsel sentez yapılandırmadır, akış değil: bozuk bir `size` sessizce
-      // düzeltilirse hata render'a kadar ertelenir ve çıktı sessizce yanlış
-      // çözünürlükte üretilir.
-      const doc = {
-        schemaVersion: 1,
-        size: [32, 32],
-        seed: 1,
-        palette: { colors: ['#000000'], ramps: [{ id: 0, indices: [0] }] },
-        layers: [{ id: 'a', source: { kind: 'noise.value', freq: 4 }, material: 0 }],
-      };
-
-      expect(() => validateSpriteDoc({ ...doc, size: [NaN, 32] })).toThrow(/sonlu/);
-      expect(() => validateSpriteDoc({ ...doc, seed: Infinity })).toThrow(/sonlu/);
-      expect(
-        collectSpriteDocIssues({
-          ...doc,
-          layers: [{ id: 'a', source: { kind: 'noise.value', freq: NaN }, material: 0 }],
-        }).some((issue) => /freq.*sonlu/.test(issue)),
-      ).toBe(true);
-
-      // Sağlam belge geçmeye devam eder.
-      expect(collectSpriteDocIssues(doc)).toEqual([]);
     });
   });
 

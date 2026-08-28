@@ -160,6 +160,12 @@ generate-audio:
 audio-qa:
     pnpm audio:qa
 
+visual-synth-asset *args:
+    pnpm --filter @volstudio/visual-synth asset {{args}}
+
+visual-synth-qa *args:
+    pnpm --filter @volstudio/visual-synth qa {{args}}
+
 benchmark-core:
     pnpm benchmark:core
 

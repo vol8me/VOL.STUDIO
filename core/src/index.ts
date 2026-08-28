@@ -1,8 +1,7 @@
 export { Vector2 } from './math/Vector2';
 export { toStepVelocity } from './math/physics';
 
-// Deterministik PRNG. Ses ve oyun tarafı aynı uygulamayı kullanır
-// (`core/src/random/`); `audio/synth/random.ts` sentez modülü içi re-export içindir.
+// Deterministik PRNG. Ses, oyun ve asset compiler'lar aynı uygulamayı kullanır.
 export { createRandom, seedFromString, DEFAULT_SEED, type Random } from './random/random';
 
 export {
@@ -133,11 +132,6 @@ export { MovableController as PlayerController } from './entities/MovableControl
 // hangi tuşa bağlandığını tüketici tanımlar (bkz. games/vol-hell/src/config/input.ts).
 export * from './input';
 
-// Prosedürel raster sentezi. PNG yazma ve dosya sistemi BARREL'A GİRMEZ;
-// `@volstudio/core/visualSynth/encode` alt-yolunda yaşar (visual-synthesis.md D8).
-export * as VisualSynth from './visualSynth';
-
-export * as Synth from './audio/synth';
 export * as Music from './audio/music';
 export { MusicEngine } from './audio/music/engine';
 export { MusicPlaylist } from './audio/music/playlist';

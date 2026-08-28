@@ -9,7 +9,7 @@
  *   seviye hiyerarşisi gain ile kurulur, tepe ölçekleme master'dadır.
  */
 
-import type { SynthesisResult } from '@volstudio/core/audio/synth';
+import type { SynthesisResult } from '@volstudio/audio-synth';
 import { SAMPLE_RATE } from '../lib/mix';
 
 /** Katman tanımı — `layer` ile tek voice'a birleştirilir. */

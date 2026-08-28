@@ -104,7 +104,7 @@ smoke testing.
 | `pnpm --filter @volstudio/vol-hell generate:audio`       | Generate audio and music assets |
 | `pnpm --filter @volstudio/vol-hell audio:qa`             | Measure generated audio assets  |
 
-Shipped audio assets (`public/assets/audio/**/*.ogg`) are kept in the repo; regenerate them with `pnpm --filter @volstudio/vol-hell generate:audio` when the sound design changes. Intermediate formats (WAV, MP3) are not kept in the repo (see [sound-synth](../../core/docs/sound-synth.md), [music-engine](../../core/docs/music-engine.md)).
+Shipped audio assets (`public/assets/audio/**/*.ogg`) are kept in the repo; regenerate them with `pnpm --filter @volstudio/vol-hell generate:audio` when the sound design changes. Intermediate formats (WAV, MP3) are not kept in the repo (see [sound-synth](../../devtools/audio-synth/DESIGN.md), [music-engine](../../core/docs/music-engine.md)).
 
 ## UI
 

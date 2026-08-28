@@ -5,7 +5,7 @@
  * Üst bant her voice'ta lowpass ile sınırlanır — tema tizsiz ve koyudur.
  */
 
-import type { SynthesisResult } from '@volstudio/core/audio/synth';
+import type { SynthesisResult } from '@volstudio/audio-synth';
 import { renderVoice } from '../lib/mix';
 
 /** Cam tuş — koyu FM çan/tuş karışımı. Menü motiflerinin ana sesi. */

@@ -17,6 +17,8 @@ games/vol-hell/             # @volstudio/vol-hell — the game (Vite root)
 devtools/pen.dev/          # @volstudio/pen.dev — Pencil source, export pipeline and rig assembly
 devtools/vol-ui/            # @volstudio/vol-ui — live CORE UI component catalog
 devtools/vol-asset-studio/  # @volstudio/vol-asset-studio — repository asset workbench
+devtools/visual-synth/      # @volstudio/visual-synth — deterministic visual asset compiler
+devtools/audio-synth/       # @volstudio/audio-synth — deterministic audio asset compiler
 tauri-v2/                   # @volstudio/tauri-v2 — native game wrapper and Rust backend
 ```
 

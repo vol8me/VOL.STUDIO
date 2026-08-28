@@ -99,15 +99,7 @@ describe('CORE public API domain-neutral kalmalı', () => {
      * Gerekçeli muafiyet. Boş bırakılmaz: her giriş NEDEN muaf olduğunu
      * yazmak zorundadır, aksi halde bekçi zamanla anlamsızlaşır.
      */
-    const EXEMPT: ReadonlyArray<{ prefix: string; reason: string }> = [
-      {
-        prefix: 'audio/synth/presets/',
-        reason:
-          'Ses preset kütüphanesi. Buradaki adlar OYUN FİİLİ değil AKUSTİK ARKETİPtir: ' +
-          '`dash` bir savurma sesi, `damage` bir arama etiketi — kayıtlar `typicalFrequency`/' +
-          '`tags` taşır, oyun durumu değil. Ticari bir SFX paketiyle aynı kategori.',
-      },
-    ];
+    const EXEMPT: ReadonlyArray<{ prefix: string; reason: string }> = [];
 
     const offenders: string[] = [];
     await walkCoreSrc((relPath, code) => {

@@ -14,6 +14,14 @@
       "import": "./src/math/Vector2.ts",
       "types": "./src/math/Vector2.ts"
     },
+    "./math/interpolation": {
+      "import": "./src/math/interpolation.ts",
+      "types": "./src/math/interpolation.ts"
+    },
+    "./pool": {
+      "import": "./src/pool/index.ts",
+      "types": "./src/pool/index.ts"
+    },
     "./ui/colors": {
       "import": "./src/ui/colors.ts",
       "types": "./src/ui/colors.ts"
@@ -35,29 +43,9 @@
       "import": "./src/fonts/index.ts",
       "types": "./src/fonts/index.ts"
     },
-    "./audio/synth": {
-      "import": "./src/audio/synth/index.ts",
-      "types": "./src/audio/synth/index.ts"
-    },
-    "./audio/synth/writer": {
-      "import": "./src/audio/synth/writer.ts",
-      "types": "./src/audio/synth/writer.ts"
-    },
     "./audio/music": {
       "import": "./src/audio/music/index.ts",
       "types": "./src/audio/music/index.ts"
-    },
-    "./visualSynth": {
-      "import": "./src/visualSynth/index.ts",
-      "types": "./src/visualSynth/index.ts"
-    },
-    "./visualSynth/color": {
-      "import": "./src/visualSynth/color/index.ts",
-      "types": "./src/visualSynth/color/index.ts"
-    },
-    "./visualSynth/encode": {
-      "import": "./src/visualSynth/encode/index.ts",
-      "types": "./src/visualSynth/encode/index.ts"
     },
     "./benchmark": {
       "import": "./src/benchmark/index.ts",

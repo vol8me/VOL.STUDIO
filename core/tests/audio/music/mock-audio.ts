@@ -1,5 +1,3 @@
-import type { SynthesisResult } from '../../../src/audio/synth/types';
-
 /**
  * Zamanlamayi kabaca modelleyen AudioParam sahtesi.
  *
@@ -195,19 +193,4 @@ export class FakeAudioContext {
       if (errorCallback) errorCallback(null);
     });
   }
-}
-
-export function createFakeAudioBufferFromResult(
-  result: SynthesisResult,
-  context: FakeAudioContext,
-): AudioBuffer {
-  const buffer = context.createBuffer(
-    result.channels.length,
-    result.channels[0]?.length ?? 0,
-    result.sampleRate,
-  );
-  for (let ch = 0; ch < result.channels.length; ch++) {
-    buffer.copyToChannel(result.channels[ch] as Float32Array<ArrayBuffer>, ch);
-  }
-  return buffer;
 }
