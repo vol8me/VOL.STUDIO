@@ -10,6 +10,7 @@ export interface AudioSettingsData {
   ambientVolume: number;
   muted: boolean;
   screenShakeEnabled: boolean;
+  hapticsEnabled: boolean;
   screenShakeIntensity: number;
 }
 
@@ -46,6 +47,7 @@ function mergeWithDefaults(stored: unknown): AudioSettingsData {
     ambientVolume: safeVolume(raw.ambientVolume, audioConfig.ambientVolume),
     muted: safeFlag(raw.muted, audioConfig.muted),
     screenShakeEnabled: safeFlag(raw.screenShakeEnabled, audioConfig.screenShakeEnabled),
+    hapticsEnabled: safeFlag(raw.hapticsEnabled, audioConfig.hapticsEnabled),
     screenShakeIntensity: safeVolume(raw.screenShakeIntensity, audioConfig.screenShakeIntensity),
   };
 }
@@ -142,6 +144,10 @@ export class AudioSettings {
     return this.data.screenShakeIntensity;
   }
 
+  isHapticsEnabled(): boolean {
+    return this.data.hapticsEnabled;
+  }
+
   getData(): AudioSettingsData {
     return { ...this.data };
   }
@@ -173,6 +179,11 @@ export class AudioSettings {
 
   async setScreenShakeEnabled(enabled: boolean): Promise<void> {
     this.data.screenShakeEnabled = safeFlag(enabled, this.data.screenShakeEnabled);
+    await this.persistAndNotify();
+  }
+
+  async setHapticsEnabled(enabled: boolean): Promise<void> {
+    this.data.hapticsEnabled = safeFlag(enabled, this.data.hapticsEnabled);
     await this.persistAndNotify();
   }
 

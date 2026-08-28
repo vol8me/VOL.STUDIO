@@ -1,3 +1,4 @@
+import { vibrate } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
 import { playerConfig } from '@/config/player';
 import { physicsConfig } from '@/config/physics';
@@ -48,7 +49,7 @@ export class CollisionResolver {
    */
   private checkEnemyTurretCollisions(time: number): void {
     const turret = this.callbacks.getTurret?.();
-    if (!turret) return;
+    if (!turret || !turret.canTakeContactDamage(time)) return;
 
     const nearbyEnemies = this.spatialGrid.queryNearby(turret.x, turret.y);
     for (const enemy of nearbyEnemies) {
@@ -58,8 +59,11 @@ export class CollisionResolver {
       if (dist >= enemy.radius + turret.radius) continue;
 
       const damage = enemy.tryContactDamage(time);
-      if (damage > 0) {
-        turret.takeDamage(damage);
+      if (damage > 0 && turret.takeContactDamage(damage, time)) {
+        // Kule sabit bir çekim merkezidir; aynı karede bütün çevre halkasının
+        // hasarını toplamak düşman yoğunluğunu anlık tek-vuruşa çevirir.
+        // Ortak kapı açılana kadar başka düşmanın cooldown'unu da tüketme.
+        return;
       }
     }
   }
@@ -111,6 +115,9 @@ export class CollisionResolver {
         // efekt katmanına gider; burada yalnızca ses kalır.
         if (damage > 0 && this.player.takeDamage(damage)) {
           void gameAudio.playSfx('hurt', { volume: sfxVolumes.hurt });
+          // Oyuncunun hasar alması en önemli geri bildirim; kendi kısıt
+          // penceresi ateş salkımından bağımsızdır (bkz. MIN_INTERVAL_MS).
+          vibrate('warning');
         }
       }
     }

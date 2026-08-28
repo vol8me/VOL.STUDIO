@@ -41,9 +41,31 @@ pnpm --filter @volstudio/vol-asset-studio dev # Asset Studio only    :5175
 pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # Build the game
 pnpm build:tauri                           # Build PC installers
+pnpm tauri:android:dev                     # Android dev (connected device/emulator)
 pnpm benchmark:core                        # Measure CORE headless workloads
 pnpm benchmark:vol-hell                    # Measure VOL.HELL simulation/render
 ```
+
+### Android
+
+The native project under `tauri-v2/src-tauri/gen/android` is **kept in version
+control** (it is not reproducible): orientation lock, display-cutout layout and
+immersive fullscreen cannot be expressed in Tauri's configuration, so
+`AndroidManifest.xml`, the theme and `MainActivity.kt` are hand-edited.
+
+```bash
+export ANDROID_HOME="$HOME/Android/Sdk"
+export NDK_HOME="$ANDROID_HOME/ndk/<version>"
+export JAVA_HOME=<JDK 17>
+rustup target add aarch64-linux-android    # for devices; emulators need x86_64
+
+pnpm --filter @volstudio/tauri-v2 exec tauri android build --debug --target aarch64
+adb install -r tauri-v2/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
+```
+
+The game is locked to landscape, system bars are hidden, and safe-area insets
+(`env(safe-area-inset-*)`) are applied to HUD placement. On-screen controls are
+mounted only on touch-primary devices (`shouldUseTouchControls`).
 
 ### Verification
 

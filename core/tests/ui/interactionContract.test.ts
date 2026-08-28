@@ -82,6 +82,23 @@ describe('TouchButton — press/hold semantiği girdi cihazından bağımsız', 
     button.destroy();
   });
 
+  it('ikon değişimi düğmeyi ve odağı yeniden kurmaz', () => {
+    const button = new TouchButton({ label: 'Yetenek', icon: 'Q' });
+    const originalElement = button.element;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.dataset.kind = 'turret';
+
+    button.setIcon(svg);
+
+    expect(button.element).toBe(originalElement);
+    expect(button.element.querySelector('svg')).toBe(svg);
+    expect(button.element.textContent).not.toContain('Q');
+
+    button.setIcon(null);
+    expect(button.element.querySelector('.vol-touch-button__icon')).toBeNull();
+    button.destroy();
+  });
+
   it('klavyeyle basılıyken pointerleave basımı İPTAL ETMEZ', () => {
     // Fare imleci butonun üstünden geçip çıkarsa klavye basımı bozulmamalı.
     const onRelease = vi.fn();

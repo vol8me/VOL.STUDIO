@@ -13,6 +13,21 @@
 /** Ability'nin hangi mekaniği çalıştırdığı. */
 export type AbilityKind = 'turret' | 'chainLightning' | 'fireZone' | 'multiShot';
 
+/** Slot/HUD adlarının izin verilen, tam ad alanlı i18n anahtarları. */
+export type AbilityDisplayNameKey =
+  | 'volhell:cards.cardTurret.title'
+  | 'volhell:cards.cardTurretRapid.title'
+  | 'volhell:cards.cardTurretSiege.title'
+  | 'volhell:cards.cardChainLightning.title'
+  | 'volhell:cards.cardChainSurge.title'
+  | 'volhell:cards.cardChainStorm.title'
+  | 'volhell:cards.cardFireZone.title'
+  | 'volhell:cards.cardEmberField.title'
+  | 'volhell:cards.cardInferno.title'
+  | 'volhell:cards.cardMultiShot.title'
+  | 'volhell:cards.cardScatterShot.title'
+  | 'volhell:cards.cardBulletStorm.title';
+
 /** Kule parametreleri. */
 export interface TurretParams {
   /** Atış başına hasar. */
@@ -70,8 +85,8 @@ export interface AbilityDefinition {
   /** Katalog anahtarı ile aynı olmalıdır. */
   id: string;
   kind: AbilityKind;
-  /** Kart UI'ında ve slot göstergesinde kullanılan ad. */
-  displayName: string;
+  /** Kart UI'ı ve slot göstergesi için i18n anahtarı. */
+  displayNameKey: AbilityDisplayNameKey;
   /** Aktivasyonlar arası bekleme (ms). */
   cooldownMs: number;
   turret?: TurretParams;
@@ -101,6 +116,26 @@ export const abilityProgressionConfig = {
   minTurretHealthRatio: 0.75,
   /** Üst üste hız kartları kuleyi frame başına makineliye çevirmesin. */
   minTurretFireIntervalMs: 120,
+} as const;
+
+/**
+ * Sabit yapının temas dayanıklılığı.
+ *
+ * Kule hareket edip sürüden ayrılamaz ve yakındaki düşmanları özellikle
+ * üstüne çeker. Düşman başına cooldown tek başına yeterli değildir: aynı
+ * karede çevresini saran beş grunt, temel kulenin 60 canını tek frame'de
+ * silebilir. Yapı zırhı hasarı azaltır; ortak temas aralığı da düşman sayısı
+ * arttıkça alınan hasarın frame/düşman sayısına bağlanmasını engeller.
+ *
+ * Bu değerlerle kesintisiz temel grunt baskısında üç kule varyantı da kendi
+ * aktivasyon cooldown'unun en az yarısı kadar ayakta kalır. Elite/boss'un
+ * daha yüksek tek vuruşu hâlâ kuleyi belirgin biçimde daha hızlı yıpratır.
+ */
+export const turretDurabilityConfig = {
+  /** Düşman temas hasarının kuleye geçen oranı. */
+  contactDamageMultiplier: 0.5,
+  /** Kuleye ulaşan iki temas paketi arasındaki ortak alt sınır (ms). */
+  contactDamageCooldownMs: 500,
 } as const;
 
 /**
@@ -182,7 +217,7 @@ export const ABILITY_CATALOG: Record<string, AbilityDefinition> = {
   turret: {
     id: 'turret',
     kind: 'turret',
-    displayName: 'Kule',
+    displayNameKey: 'volhell:cards.cardTurret.title',
     cooldownMs: 9000,
     turret: {
       damage: 12,
@@ -197,7 +232,7 @@ export const ABILITY_CATALOG: Record<string, AbilityDefinition> = {
   turretRapid: {
     id: 'turretRapid',
     kind: 'turret',
-    displayName: 'Seri Kule',
+    displayNameKey: 'volhell:cards.cardTurretRapid.title',
     cooldownMs: 10000,
     turret: {
       damage: 9,
@@ -212,7 +247,7 @@ export const ABILITY_CATALOG: Record<string, AbilityDefinition> = {
   turretSiege: {
     id: 'turretSiege',
     kind: 'turret',
-    displayName: 'Kuşatma Kulesi',
+    displayNameKey: 'volhell:cards.cardTurretSiege.title',
     cooldownMs: 14000,
     turret: {
       damage: 40,
@@ -229,7 +264,7 @@ export const ABILITY_CATALOG: Record<string, AbilityDefinition> = {
   chainLightning: {
     id: 'chainLightning',
     kind: 'chainLightning',
-    displayName: 'Zincir Yıldırım',
+    displayNameKey: 'volhell:cards.cardChainLightning.title',
     cooldownMs: 5000,
     chain: {
       damage: 22,
@@ -242,7 +277,7 @@ export const ABILITY_CATALOG: Record<string, AbilityDefinition> = {
   chainSurge: {
     id: 'chainSurge',
     kind: 'chainLightning',
-    displayName: 'Çifte Zincir',
+    displayNameKey: 'volhell:cards.cardChainSurge.title',
     cooldownMs: 6000,
     chain: {
       damage: 30,
@@ -255,7 +290,7 @@ export const ABILITY_CATALOG: Record<string, AbilityDefinition> = {
   chainStorm: {
     id: 'chainStorm',
     kind: 'chainLightning',
-    displayName: 'Yıldırım Fırtınası',
+    displayNameKey: 'volhell:cards.cardChainStorm.title',
     cooldownMs: 9000,
     chain: {
       damage: 38,
@@ -270,7 +305,7 @@ export const ABILITY_CATALOG: Record<string, AbilityDefinition> = {
   fireZone: {
     id: 'fireZone',
     kind: 'fireZone',
-    displayName: 'Ateş Çemberi',
+    displayNameKey: 'volhell:cards.cardFireZone.title',
     cooldownMs: 7000,
     fire: {
       radius: 78,
@@ -283,7 +318,7 @@ export const ABILITY_CATALOG: Record<string, AbilityDefinition> = {
   emberField: {
     id: 'emberField',
     kind: 'fireZone',
-    displayName: 'Kor Tarlası',
+    displayNameKey: 'volhell:cards.cardEmberField.title',
     cooldownMs: 9000,
     fire: {
       radius: 108,
@@ -296,7 +331,7 @@ export const ABILITY_CATALOG: Record<string, AbilityDefinition> = {
   inferno: {
     id: 'inferno',
     kind: 'fireZone',
-    displayName: 'Cehennem',
+    displayNameKey: 'volhell:cards.cardInferno.title',
     cooldownMs: 12000,
     fire: {
       radius: 130,
@@ -311,21 +346,21 @@ export const ABILITY_CATALOG: Record<string, AbilityDefinition> = {
   multiShot: {
     id: 'multiShot',
     kind: 'multiShot',
-    displayName: 'Üçlü Atış',
+    displayNameKey: 'volhell:cards.cardMultiShot.title',
     cooldownMs: 3500,
     multiShot: { projectiles: 3, spreadDeg: 26, damageScale: 0.8 },
   },
   scatterShot: {
     id: 'scatterShot',
     kind: 'multiShot',
-    displayName: 'Saçma Atış',
+    displayNameKey: 'volhell:cards.cardScatterShot.title',
     cooldownMs: 5000,
     multiShot: { projectiles: 5, spreadDeg: 54, damageScale: 0.75 },
   },
   bulletStorm: {
     id: 'bulletStorm',
     kind: 'multiShot',
-    displayName: 'Mermi Fırtınası',
+    displayNameKey: 'volhell:cards.cardBulletStorm.title',
     cooldownMs: 8000,
     multiShot: { projectiles: 9, spreadDeg: 360, damageScale: 0.7 },
   },

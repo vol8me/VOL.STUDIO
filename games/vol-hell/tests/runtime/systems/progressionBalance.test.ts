@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { RunEconomy } from '@/runtime/systems/RunEconomy';
 import { ENEMY_CATALOG } from '@/config/enemies/catalog';
-import { ABILITY_CATALOG, abilityProgressionConfig } from '@/config/abilities';
+import {
+  ABILITY_CATALOG,
+  abilityProgressionConfig,
+  turretDurabilityConfig,
+} from '@/config/abilities';
 import { bulletConfig } from '@/config/bullet';
 import { enemyConfig } from '@/config/enemy';
 import { StatBlock } from '@volstudio/core';
@@ -183,5 +187,65 @@ describe('ability ilerleme dengesi', () => {
 
     const baseDamage = ABILITY_CATALOG.chainLightning.chain!.damage;
     expect(scaleAbilityDamage(baseDamage, stats)).toBe(baseDamage);
+  });
+
+  it('katalogdaki her sabit hasar/can/tempo parametresi ortak ölçeklemeye bağlıdır', () => {
+    const stats = new StatBlock({
+      damage: bulletConfig.damage,
+      speed: 220,
+      health: 100,
+      fireRate: bulletConfig.fireCooldownMs,
+    });
+    stats.addModifier({ id: 'hasar', stat: 'damage', type: 'multiply', value: 1.8 });
+    stats.addModifier({ id: 'can', stat: 'health', type: 'multiply', value: 1.6 });
+    stats.addModifier({ id: 'tempo', stat: 'fireRate', type: 'multiply', value: 0.7 });
+
+    for (const definition of Object.values(ABILITY_CATALOG)) {
+      if (definition.turret) {
+        expect(scaleAbilityDamage(definition.turret.damage, stats), definition.id).toBeCloseTo(
+          definition.turret.damage * 1.8,
+          6,
+        );
+        expect(scaleTurretHealth(definition.turret.health, stats), definition.id).toBeCloseTo(
+          definition.turret.health * 1.6,
+          6,
+        );
+        expect(
+          scaleTurretFireInterval(definition.turret.fireIntervalMs, stats),
+          definition.id,
+        ).toBeCloseTo(
+          Math.max(
+            abilityProgressionConfig.minTurretFireIntervalMs,
+            definition.turret.fireIntervalMs * 0.7,
+          ),
+          6,
+        );
+      }
+      if (definition.chain) {
+        expect(scaleAbilityDamage(definition.chain.damage, stats), definition.id).toBeCloseTo(
+          definition.chain.damage * 1.8,
+          6,
+        );
+      }
+      if (definition.fire) {
+        expect(scaleAbilityDamage(definition.fire.damagePerTick, stats), definition.id).toBeCloseTo(
+          definition.fire.damagePerTick * 1.8,
+          6,
+        );
+      }
+    }
+  });
+
+  it('kule varyantları kesintisiz grunt baskısında cooldownlarının en az yarısı yaşar', () => {
+    for (const definition of Object.values(ABILITY_CATALOG)) {
+      if (!definition.turret) continue;
+
+      const receivedDamage =
+        enemyConfig.contactDamage * turretDurabilityConfig.contactDamageMultiplier;
+      const hitsToDestroy = Math.ceil(definition.turret.health / receivedDamage);
+      const survivalMs = (hitsToDestroy - 1) * turretDurabilityConfig.contactDamageCooldownMs;
+
+      expect(survivalMs, definition.id).toBeGreaterThanOrEqual(definition.cooldownMs / 2);
+    }
   });
 });

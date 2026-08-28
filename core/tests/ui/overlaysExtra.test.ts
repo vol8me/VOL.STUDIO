@@ -189,6 +189,35 @@ describe('showConfirm', () => {
     cancelButton.click();
     vi.advanceTimersByTime(300);
   });
+
+  it('AbortSignal bekleyen onayı false ile bitirir ve global modal kilidini bırakır', async () => {
+    vi.useFakeTimers();
+    const controller = new AbortController();
+    const promise = showConfirm({ title: 'Sahne kapanıyor', signal: controller.signal });
+
+    expect(document.body.classList.contains('vol-modal__body-locked')).toBe(true);
+    controller.abort();
+
+    await expect(promise).resolves.toBe(false);
+    expect(document.body.classList.contains('vol-modal__body-locked')).toBe(false);
+    const closingModal = document.querySelector<HTMLElement>('.vol-modal');
+    expect(closingModal?.inert).toBe(true);
+    expect(closingModal?.classList.contains('vol-modal--visible')).toBe(false);
+
+    vi.advanceTimersByTime(300);
+    expect(document.querySelector('.vol-modal')).toBeNull();
+  });
+
+  it('önceden iptal edilmiş sinyal DOM veya i18n listenerı oluşturmadan false döner', async () => {
+    const controller = new AbortController();
+    controller.abort();
+
+    const promise = showConfirm({ title: 'Hiç açılmamalı', signal: controller.signal });
+
+    await expect(promise).resolves.toBe(false);
+    expect(document.querySelector('.vol-modal')).toBeNull();
+    expect(document.body.classList.contains('vol-modal__body-locked')).toBe(false);
+  });
 });
 
 describe('DialogueBox', () => {

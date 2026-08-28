@@ -1,0 +1,21 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+      Base application theme.
+
+      windowLayoutInDisplayCutoutMode=shortEdges: Kamera deliği/çentik bölgesi
+      de oyuna verilir. Varsayılan (`default`) kipte sistem, çentiğin bulunduğu
+      kenarı letterbox'lar ve tam ekranda o kenarda SİYAH BİR ŞERİT belirir —
+      istenmeyen tam da budur. `shortEdges` ile içerik çentiğin yanına kadar
+      uzanır; arayüzün oraya denk gelmemesi CSS tarafında `env(safe-area-inset-*)`
+      ile çözülür (bkz. core/src/ui/theme.css içindeki vol-safe token'ları).
+      Not: XML yorumlarında iki tire arka arkaya yazılamaz, bu yüzden token
+      adları burada kısa biçimde anılır.
+
+      Çubuklar MainActivity'de gizlenir; burada yalnızca YERLEŞİM sınırı açılır.
+      tools:targetApi=28 — attribute API 28'de eklendi, minSdk 24'te sessizce
+      yok sayılır ve lint'in uyarısı bu şekilde bilinçli olarak susturulur.
+    -->
+    <style name="Theme.volstudio_tauri" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="28">shortEdges</item>
+    </style>
+</resources>

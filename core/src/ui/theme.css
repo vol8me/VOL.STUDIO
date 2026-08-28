@@ -118,6 +118,26 @@
      (mouse) tanımsız kalıp min-height/min-width'te `auto`ya düşer, yani
      masaüstü görünümü sıfır etkilenir. Değeri yalnızca aşağıdaki
      `pointer: coarse` bloğunda gelir. */
+
+  /*
+   * GÜVENLİ ALAN — çentik, kamera deliği, jest çubuğu ve YUVARLATILMIŞ KÖŞE.
+   *
+   * `env(safe-area-inset-*)` yalnızca çentik/sistem çubuklarını anlatır;
+   * yuvarlatılmış köşeleri anlatmaz. Ekranı kaplayan bir arayüzde köşeye
+   * yapışan bir eleman, çentik olmasa bile köşe yarıçapı içinde kalır ve
+   * kırpılır (ör. Galaxy S21 FE: 108 px köşe yarıçapı). Bu yüzden taban bir
+   * pay ile `env()` toplanır ve tüm kenar-yapışık yerleşimler bu token'ı
+   * kullanır — çıplak `env()` değil.
+   *
+   * Masaüstünde `env()` sıfırdır ve taban pay da sıfır kalır: görünüm
+   * etkilenmez. Dokunmatik kip için değer aşağıdaki `pointer: coarse`
+   * bloğunda yükselir.
+   */
+  --vol-safe-area-base: 0px;
+  --vol-safe-top: max(env(safe-area-inset-top, 0px), var(--vol-safe-area-base));
+  --vol-safe-right: max(env(safe-area-inset-right, 0px), var(--vol-safe-area-base));
+  --vol-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--vol-safe-area-base));
+  --vol-safe-left: max(env(safe-area-inset-left, 0px), var(--vol-safe-area-base));
 }
 
 /*
@@ -131,5 +151,14 @@
   :root {
     /* WCAG 2.5.5 AAA / Apple HIG / Material dokunma hedefi önerisi. */
     --vol-hit-target-min: 44px;
+
+    /*
+     * Dokunmatik cihazlarda köşe yarıçapı payı. `env()` sıfır dönse bile
+     * (yatay kipte üst/alt çentik kenarı olmayabilir) köşeye yapışan bir
+     * eleman yuvarlatmanın içinde kalmamalı. 12 px, tipik 24-40 dp köşe
+     * yarıçaplarında elemanın görünür kalması için yeterli paydır ve
+     * `max()` sayesinde gerçek çentik daha büyükse o kazanır.
+     */
+    --vol-safe-area-base: 12px;
   }
 }

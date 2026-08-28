@@ -1,7 +1,6 @@
 {
   "bundle": {
-    "active": true,
-    "targets": ["ipa"]
+    "active": true
   },
   "app": {
     "security": {

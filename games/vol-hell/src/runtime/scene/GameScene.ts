@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
 import {
+  DisposableScope,
   InputManager,
   Vector2,
   createRandom,
+  vibrate,
   type InputState,
   type LoadingScreen,
   type Random,
@@ -38,15 +40,13 @@ import { GameAudioDirector } from '@/runtime/systems/GameAudioDirector';
 import { CardInventoryManager } from '@/runtime/systems/CardInventoryManager';
 import { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import { ABILITY_SLOTS, type AbilitySlot } from '@/runtime/ability/types';
-import { PauseScreen } from './PauseScreen';
-import { DeathScreen } from './DeathScreen';
-import { GameHud } from '@/runtime/ui/GameHud';
 import { PauseController } from '@/runtime/scene/PauseController';
 import { RunScoreboard } from '@/runtime/scene/RunScoreboard';
-import { RunFinisher } from '@/runtime/scene/RunFinisher';
+import { isScenePresent, RunFinisher } from '@/runtime/scene/RunFinisher';
 import { reportSceneTelemetry } from '@/runtime/scene/sceneTelemetry';
-import { CardScreens } from '@/runtime/ui/CardScreens';
+import { GameMobileControls } from './GameMobileControls';
 import { GameKeyboardBindings } from './GameKeyboardBindings';
+import { GameScreenStack } from './GameScreenStack';
 import { safeDeltaMs } from '@/runtime/utils/numeric';
 
 /** Q ve E — ability slotlarının klavye karşılığı. */
@@ -77,11 +77,10 @@ export class GameScene extends BaseScene {
   private cards!: CardInventoryManager;
   private runRandom!: Random;
 
-  private hud!: GameHud;
-  private cardScreens!: CardScreens;
+  private screens: GameScreenStack | null = null;
   private loadingScreen: LoadingScreen | null = null;
-  private pauseScreen: PauseScreen | null = null;
-  private deathScreen: DeathScreen | null = null;
+  /** Bir koşu çevriminde kurulan tüm runtime kaynaklarının tek sahibi. */
+  private runtimeScope: DisposableScope | null = null;
 
   // Hücre boyutu katalogdaki EN BÜYÜK düşmana göre: küçük hücrede iri düşman
   // komşu taramasından kaçabilir.
@@ -89,6 +88,7 @@ export class GameScene extends BaseScene {
     Math.max(getMaxEnemyRadius(), bulletConfig.radius) * physicsConfig.spatialGridCellMultiplier,
   );
   private keyboardBindings: GameKeyboardBindings | null = null;
+  private readonly mobileControls = new GameMobileControls();
 
   private runSeed = 0;
   /**
@@ -104,22 +104,22 @@ export class GameScene extends BaseScene {
   /**
    * Duraklatma ve sayaçlar sahnenin alanı değil ayrı birer nesne: ikisi de saf
    * mantık ve testte Phaser olmadan sürülebiliyor. Bağımlılıklar closure ile
-   * verilir — çağrıldıkları anda `this.deathScreen` gibi geç kurulan alanlar
+   * verilir — çağrıldıkları anda `this.screens` gibi geç kurulan alanlar
    * çözülsün diye.
    */
   private readonly pauseCtl = new PauseController({
     pauseScene: () => this.scene.pause(),
     resumeScene: () => this.scene.resume(),
     resetPointer: () => this.input.activePointer.reset(),
-    isDeathScreenVisible: () => this.deathScreen?.isVisible() === true,
-    isCardScreenOpen: () => this.cardScreens?.isOpen() === true,
+    isDeathScreenVisible: () => this.screens?.death.isVisible() === true,
+    isCardScreenOpen: () => this.screens?.cards.isOpen() === true,
     onMenuPause: () => {
       void gameAudio.playSfx('pause', { volume: sfxVolumes.pause });
-      this.pauseScreen?.show();
+      this.screens?.pause.show();
     },
     onMenuResume: () => {
       void gameAudio.playSfx('resume', { volume: sfxVolumes.resume });
-      this.pauseScreen?.hide();
+      this.screens?.pause.hide();
     },
     onResume: () => diagnostics?.markResume(),
   });
@@ -127,8 +127,11 @@ export class GameScene extends BaseScene {
   private readonly scoreboard = new RunScoreboard();
 
   private readonly finisher = new RunFinisher({
-    isSceneActive: () => this.isSceneActive(),
-    isSummaryVisible: () => this.deathScreen?.isVisible() === true,
+    isSceneActive: () => {
+      const key = this.scene?.key;
+      return Boolean(key && isScenePresent(this.scene, key));
+    },
+    isSummaryVisible: () => this.screens?.death.isVisible() === true,
     forcePause: () => this.pauseCtl.forcePause(),
     playOutcomeAudio: (outcome) => {
       if (outcome === 'defeat') this.audio.playDeath();
@@ -136,7 +139,7 @@ export class GameScene extends BaseScene {
     },
     submitStats: () => this.scoreboard.submitSafely(),
     showSummary: (outcome, result) => {
-      this.deathScreen?.show({
+      this.screens?.death.show({
         outcome,
         score: this.scoreboard.getScore(),
         bestScore: result.bestScore,
@@ -158,17 +161,24 @@ export class GameScene extends BaseScene {
   }
 
   protected override onLanguageChanged(): void {
-    this.hud?.refreshLabels();
-    this.cardScreens?.refreshLabels();
+    this.screens?.refreshLabels();
+    this.mobileControls.refreshLabels();
   }
 
   protected createScene(data?: unknown): void {
+    // Beklenmedik biçimde SHUTDOWN alamayan önceki çevrim varsa yeni kaynak
+    // kurmadan kapat; aksi hâlde listener ve Phaser nesneleri üst üste biner.
+    this.runtimeScope?.dispose();
+    const runtimeScope = new DisposableScope();
+    this.runtimeScope = runtimeScope;
+
     // Phaser sahne örneğini yeniden kullanır; alan başlatıcıları restart'ta
     // ÇALIŞMAZ. Sıfırlanması gereken her alan tek bir yerde toplanır ki
     // yeni alan eklendiğinde unutulmasın.
     this.resetSceneState();
     const { loadingScreen } = (data ?? {}) as { loadingScreen?: LoadingScreen };
     this.loadingScreen = loadingScreen ?? null;
+    if (this.loadingScreen) runtimeScope.addDestroyable(this.loadingScreen);
 
     // Koşu PRNG'si — spawn, kart çekimi ve davranışlardaki tüm rastgelelik
     // buradan gelir. Seed kaydedilir: bir koşu aynı seed ile tekrar oynatılabilir.
@@ -177,79 +187,90 @@ export class GameScene extends BaseScene {
     diagnostics?.recordEvent('runSeed', { seed: this.runSeed });
 
     this.audio = new GameAudioDirector(this, this.runRandom);
+    runtimeScope.add({ dispose: () => this.audio.stopAll() });
     this.audio.start();
 
-    this.border = new Border(this);
-    this.effects = new EffectManager(this, {
-      getShakeScale: () =>
-        audioSettings.isScreenShakeEnabled() ? audioSettings.getScreenShakeIntensity() : null,
-    });
-    this.telegraphs = new TelegraphManager(this);
+    this.border = runtimeScope.addDestroyable(new Border(this));
+    this.effects = runtimeScope.addDestroyable(
+      new EffectManager(this, {
+        getShakeScale: () =>
+          audioSettings.isScreenShakeEnabled() ? audioSettings.getScreenShakeIntensity() : null,
+      }),
+    );
+    this.telegraphs = runtimeScope.addDestroyable(new TelegraphManager(this));
 
-    this.player = new Player(
-      this,
-      this.border.bounds.centerX,
-      this.border.bounds.centerY,
-      this.effects,
+    this.player = runtimeScope.addDestroyable(
+      new Player(this, this.border.bounds.centerX, this.border.bounds.centerY, this.effects),
     );
     this.player.setBorder(this.border);
 
-    this.inputManager = new InputManager<HellAction>(this, {
-      actions: HELL_ACTIONS,
-      pcActionBindings: HELL_PC_BINDINGS,
-      moveKeys: HELL_MOVE_KEYS,
-      aimStickAction: HELL_AIM_STICK_ACTION,
-    });
-    this.bulletManager = new BulletManager(this, this.effects, this.player.getStats());
-    this.enemyManager = new EnemyManager(this, this.effects, this.runRandom, {
-      // Ödül ölümün kendisine bağlı: mermi, kule, zincir ve ateş alanı
-      // ölümleri aynı kapıdan geçer.
-      onEnemyDeath: (enemy) => this.onEnemyKilled(enemy),
-    });
+    this.inputManager = runtimeScope.addDestroyable(
+      new InputManager<HellAction>(this, {
+        actions: HELL_ACTIONS,
+        pcActionBindings: HELL_PC_BINDINGS,
+        moveKeys: HELL_MOVE_KEYS,
+        aimStickAction: HELL_AIM_STICK_ACTION,
+        actionSource: this.mobileControls.actionSource,
+      }),
+    );
+    this.bulletManager = runtimeScope.addDestroyable(
+      new BulletManager(this, this.effects, this.player.getStats()),
+    );
+    this.enemyManager = runtimeScope.addDestroyable(
+      new EnemyManager(this, this.effects, this.runRandom, {
+        // Ödül ölümün kendisine bağlı: mermi, kule, zincir ve ateş alanı
+        // ölümleri aynı kapıdan geçer.
+        onEnemyDeath: (enemy) => this.onEnemyKilled(enemy),
+      }),
+    );
 
-    this.abilities = new AbilityRuntime({
-      scene: this,
-      effects: this.effects,
-      border: this.border,
-      random: this.runRandom,
-      bullets: this.bulletManager,
-      playerStats: this.player.getStats(),
-    });
-
-    this.run = new RunDirector(
-      {
+    this.abilities = runtimeScope.addDestroyable(
+      new AbilityRuntime({
         scene: this,
-        border: this.border,
         effects: this.effects,
-        telegraphs: this.telegraphs,
+        border: this.border,
         random: this.runRandom,
-        enemyManager: this.enemyManager,
-        bulletManager: this.bulletManager,
+        bullets: this.bulletManager,
         playerStats: this.player.getStats(),
-        damagePlayer: (amount) => this.applyBossDamage(amount),
-        getPlayerPosition: () => this.player.getPosition(),
-        getDifficulty: () => this.difficulty,
-        onFluxCollected: () => {
-          void gameAudio.playSfx('fluxPickup', { volume: sfxVolumes.fluxPickup });
+      }),
+    );
+
+    this.run = runtimeScope.addDestroyable(
+      new RunDirector(
+        {
+          scene: this,
+          border: this.border,
+          effects: this.effects,
+          telegraphs: this.telegraphs,
+          random: this.runRandom,
+          enemyManager: this.enemyManager,
+          bulletManager: this.bulletManager,
+          playerStats: this.player.getStats(),
+          damagePlayer: (amount) => this.applyBossDamage(amount),
+          getPlayerPosition: () => this.player.getPosition(),
+          getDifficulty: () => this.difficulty,
+          onFluxCollected: () => {
+            void gameAudio.playSfx('fluxPickup', { volume: sfxVolumes.fluxPickup });
+          },
         },
-      },
-      {
-        // Seviye atlaması dövüşü kesmez: hak biriktirilir, dalga sonunda
-        // sırayla sunulur.
-        onLevelUp: (level) => {
-          void gameAudio.playSfx('levelUp', { volume: sfxVolumes.levelUp });
-          this.cardScreens.queueLevelUp(level);
+        {
+          // Seviye atlaması dövüşü kesmez: hak biriktirilir, dalga sonunda
+          // sırayla sunulur.
+          onLevelUp: (level) => {
+            void gameAudio.playSfx('levelUp', { volume: sfxVolumes.levelUp });
+            this.screens?.cards.queueLevelUp(level);
+          },
+          onShopOpen: (wave) => {
+            void gameAudio.playSfx('waveClear', { volume: sfxVolumes.waveClear });
+            this.screens?.cards.openIntermission(wave);
+          },
+          onWaveStart: (wave) => {
+            void gameAudio.playSfx('waveStart', { volume: sfxVolumes.waveStart });
+            this.screens?.hud.announceWave(wave);
+          },
+          onRunComplete: () => void this.onRunComplete(),
         },
-        onShopOpen: (wave) => {
-          void gameAudio.playSfx('waveClear', { volume: sfxVolumes.waveClear });
-          this.cardScreens.openIntermission(wave);
-        },
-        onWaveStart: (wave) => {
-          void gameAudio.playSfx('waveStart', { volume: sfxVolumes.waveStart });
-          this.hud.announceWave(wave);
-        },
-        onRunComplete: () => void this.onRunComplete(),
-      },
+      ),
     );
 
     this.cards = new CardInventoryManager({
@@ -278,9 +299,33 @@ export class GameScene extends BaseScene {
       },
     );
 
-    this.createHud();
-    this.createScreens();
-    this.bindKeys();
+    this.screens = runtimeScope.addDestroyable(
+      new GameScreenStack({
+        parent: this.ui.element,
+        player: this.player,
+        effects: this.effects,
+        cards: this.cards,
+        economy: this.run.economy,
+        audioSettings,
+        onPauseForCard: () => this.pauseCtl.pauseForScreen(),
+        onResumeAfterCard: () => this.pauseCtl.resumeAfterScreen(),
+        onResumeFromMenu: () => this.pauseCtl.resumeFromMenu(),
+        onRestart: () => this.scene.restart(),
+        onMainMenu: () => this.scene.start('MainMenu'),
+      }),
+    );
+    this.mobileControls.mount({
+      parent: this.ui.element,
+      onAbility: (slot) => this.abilities.tryActivate(slot),
+      onPauseToggle: () => this.pauseCtl.toggle(),
+      isPaused: () => this.pauseCtl.isPaused,
+      isAbilityBlocked: () => this.pauseCtl.isPaused || this.screens?.cards.isOpen() === true,
+      isCardScreenOpen: () => this.screens?.cards.isOpen() === true,
+      isDeathScreenVisible: () => this.screens?.death.isVisible() === true,
+      isRunEnding: () => this.finisher.isFinishing || this.finisher.isFinished,
+    });
+    runtimeScope.addDestroyable(this.mobileControls);
+    this.bindKeys(runtimeScope);
     this.run.start();
 
     // Yükleme tamamlandı — %100 yapıp gizle
@@ -354,66 +399,21 @@ export class GameScene extends BaseScene {
     diagnostics?.endFrame();
   }
 
-  // --- Kurulum --------------------------------------------------------------
-
-  private createHud(): void {
-    this.hud = new GameHud(this.ui.element, this.player, this.run.economy);
-    this.resetRun();
-  }
-
-  private createScreens(): void {
-    this.cardScreens = new CardScreens(this.ui.element, this.cards, this.run.economy, {
-      onOpen: () => this.pauseCtl.pauseForScreen(),
-      onClose: () => this.pauseCtl.resumeAfterScreen(),
-      onCardTaken: (source) => {
-        this.effects.play('cardPicked', this.player.getX(), this.player.getPosition().y);
-        const sound = source === 'shop' ? 'cardBuy' : 'cardPick';
-        void gameAudio.playSfx(sound, { volume: sfxVolumes[sound] });
-      },
-      onReroll: () => void gameAudio.playSfx('reroll', { volume: sfxVolumes.reroll }),
-      onLockToggle: () => void gameAudio.playSfx('lock', { volume: sfxVolumes.lock }),
-      onDeny: () => void gameAudio.playSfx('deny', { volume: sfxVolumes.deny }),
-    });
-
-    // Pause ekranı — UIRoot içine mount et, böylece box-sizing ve temel UI stilleri uygulanır
-    this.pauseScreen = new PauseScreen(this.ui.element, audioSettings, {
-      onResume: () => this.pauseCtl.resumeFromMenu(),
-      onRestart: () => {
-        void gameAudio.playSfx('restart', { volume: sfxVolumes.restart });
-        this.scene.restart();
-      },
-      onMainMenu: () => {
-        void gameAudio.playSfx('back', { volume: sfxVolumes.back });
-        this.scene.start('MainMenu');
-      },
-    });
-
-    this.deathScreen = new DeathScreen(this.ui.element, {
-      onRestart: () => {
-        void gameAudio.playSfx('restart', { volume: sfxVolumes.restart });
-        this.scene.restart();
-      },
-      onMainMenu: () => {
-        void gameAudio.playSfx('back', { volume: sfxVolumes.back });
-        this.scene.start('MainMenu');
-      },
-    });
-  }
-
-  private bindKeys(): void {
+  private bindKeys(runtimeScope: DisposableScope): void {
     const keyboard = this.input.keyboard;
     if (!keyboard) {
       throw new Error('[GameScene] Keyboard plugin etkin değil; ESC ile duraklatma kurulamıyor');
     }
 
-    this.keyboardBindings?.destroy();
-    this.keyboardBindings = new GameKeyboardBindings(keyboard, {
-      pauseKeyCode: Phaser.Input.Keyboard.KeyCodes.ESC,
-      abilityKeys: SLOT_KEYS,
-      onPause: () => this.pauseCtl.toggle(),
-      isAbilityBlocked: () => this.pauseCtl.isPaused || this.cardScreens.isOpen(),
-      onAbility: (slot) => this.abilities.tryActivate(slot),
-    });
+    this.keyboardBindings = runtimeScope.addDestroyable(
+      new GameKeyboardBindings(keyboard, {
+        pauseKeyCode: Phaser.Input.Keyboard.KeyCodes.ESC,
+        abilityKeys: SLOT_KEYS,
+        onPause: () => this.pauseCtl.toggle(),
+        isAbilityBlocked: () => this.pauseCtl.isPaused || this.screens?.cards.isOpen() === true,
+        onAbility: (slot) => this.abilities.tryActivate(slot),
+      }),
+    );
   }
 
   // --- Döngü ---------------------------------------------------------------
@@ -427,6 +427,7 @@ export class GameScene extends BaseScene {
 
     if (state.actions.dash && this.player.tryDash(this.aimDirBuf)) {
       void gameAudio.playSfx('dash', { volume: sfxVolumes.dash });
+      vibrate('select');
     }
 
     // Player update — dash dahil tüm hareket bu frame'de uygulanır
@@ -437,6 +438,9 @@ export class GameScene extends BaseScene {
     if (state.actions.fire && this.aimDirBuf.length() > 0) {
       if (this.bulletManager.tryFire(playerPos, this.aimDirBuf)) {
         void gameAudio.playSfx('fire', { volume: sfxVolumes.fire });
+        // Ateş salkım hâlinde gelir; `vibrate` deseni kendi içinde kısıtlar
+        // (bkz. MIN_INTERVAL_MS), yani sürekli bir uğultuya dönüşmez.
+        vibrate('tap');
       }
     }
   }
@@ -474,20 +478,23 @@ export class GameScene extends BaseScene {
 
   private updateHUD(deltaMs: number): void {
     const blocker = this.run.getBlocker();
-    this.hud.refresh({
+    this.screens?.hud.refresh({
       player: this.player,
       economy: this.run.economy,
       abilities: this.abilities,
       score: this.scoreboard.getScore(),
       kills: this.scoreboard.getKills(),
       elapsedTimeMs: this.scoreboard.getElapsedMs(),
-      pendingLevelUps: this.cardScreens.getPendingLevelUpCount(),
+      pendingLevelUps: this.screens.cards.getPendingLevelUpCount(),
       deltaMs,
       wave: this.run.getCurrentWave(),
       waveRemainingMs: this.run.getWaveRemainingMs(),
       awaitingBlocker: this.run.isAwaitingBlocker(),
       blockerHealthRatio: blocker?.getHealthRatio() ?? null,
     });
+    // Ekran üstü yetenek düğmeleri de cooldown/boş slot durumunu gösterir;
+    // yoksa oyuncu basıp neden hiçbir şey olmadığını anlayamaz.
+    this.mobileControls.refresh(this.abilities);
   }
 
   private reportDiagnostics(): void {
@@ -520,12 +527,6 @@ export class GameScene extends BaseScene {
     this.scoreboard.reset();
     this.finisher.reset();
     this.difficulty = getDifficultyState(0);
-  }
-
-  /** Koşu sayaçlarını sıfırlar ve HUD'a yansıtır. */
-  private resetRun(): void {
-    this.resetSceneState();
-    this.hud.reset();
   }
 
   /**
@@ -562,19 +563,6 @@ export class GameScene extends BaseScene {
   }
 
   /**
-   * Koşuyu bitirir ve özet ekranını açar — zafer ve yenilgi için ORTAK yol.
-   *
-   * İki çıkış da aynı işi yapıyordu (duraklat, skoru gönder, özet göster);
-   * ayrı iki kopya tutmak ikisinin zamanla ayrışmasını davet ederdi.
-   */
-  private isSceneActive(): boolean {
-    if (!this.scene) return false;
-    const key = this.scene.key;
-    if (!key) return false;
-    return this.scene.isActive(key);
-  }
-
-  /**
    * Boss saldırısının oyuncuya verdiği hasar.
    * Temas hasarından ayrı bir kapı: boss saldırıları kendi zamanlamasını
    * taşır, oyuncunun i-frame'lerine (dash) yine de tabidir.
@@ -582,6 +570,7 @@ export class GameScene extends BaseScene {
   private applyBossDamage(amount: number): void {
     if (this.player.takeDamage(amount)) {
       void gameAudio.playSfx('hurt', { volume: sfxVolumes.hurt });
+      vibrate('warning');
     }
   }
 
@@ -590,31 +579,10 @@ export class GameScene extends BaseScene {
     // yöneticileri burada kapatıyoruz. DisplayList'in genel temizliği,
     // yöneticilerin tuttuğu dizileri, async telegraph'ları ve key closure'larını
     // garanti etmez.
-    this.keyboardBindings?.destroy();
+    this.runtimeScope?.dispose();
+    this.runtimeScope = null;
     this.keyboardBindings = null;
-    this.audio?.stopAll();
-    if (this.deathScreen) {
-      this.deathScreen.destroy();
-      this.deathScreen = null;
-    }
-    if (this.pauseScreen) {
-      this.pauseScreen.destroy();
-      this.pauseScreen = null;
-    }
-    this.run?.destroy();
-    this.telegraphs?.destroy();
-    this.abilities?.destroy();
-    this.bulletManager?.destroy();
-    this.enemyManager?.destroy();
-    this.player?.destroy();
-    this.effects?.destroy();
-    this.inputManager?.destroy();
-    this.border?.destroy();
-    this.hud?.destroy();
-    this.cardScreens?.destroy();
-    if (this.loadingScreen) {
-      this.loadingScreen.destroy();
-      this.loadingScreen = null;
-    }
+    this.screens = null;
+    this.loadingScreen = null;
   }
 }

@@ -1,6 +1,21 @@
 import type { RunOutcome } from './DeathScreen';
 import type { RunResult } from '@/app/GameStats';
 
+export interface ScenePresenceQuery {
+  isActive(key: string): boolean;
+  isPaused(key: string): boolean;
+}
+
+/**
+ * Sahne çalışıyor ya da duraklatılmışsa hâlâ mevcut kabul edilir.
+ *
+ * `RunFinisher` sahneyi özet açmadan önce kendisi duraklatır; yalnız
+ * `isActive()` kullanmak kendi yaptığı duraklatmayı sahne kapanışı sanır.
+ */
+export function isScenePresent(scene: ScenePresenceQuery, key: string): boolean {
+  return scene.isActive(key) || scene.isPaused(key);
+}
+
 /**
  * Koşu sonu akışı — zafer ve yenilgi için ORTAK yol.
  *
@@ -34,11 +49,14 @@ export interface RunFinisherDeps {
 export class RunFinisher {
   private inProgress = false;
   private finished = false;
+  /** Restart, bekleyen eski submit sonucunu yeni koşudan ayırır. */
+  private generation = 0;
 
   constructor(private readonly deps: RunFinisherDeps) {}
 
   /** Sahne yeniden başlarken çağrılır. */
   reset(): void {
+    this.generation++;
     this.inProgress = false;
     this.finished = false;
   }
@@ -62,6 +80,7 @@ export class RunFinisher {
 
     this.inProgress = true;
     this.finished = true;
+    const generation = this.generation;
 
     try {
       if (this.deps.isSceneActive()) {
@@ -70,18 +89,22 @@ export class RunFinisher {
       this.deps.playOutcomeAudio(outcome);
 
       const result = await this.deps.submitStats();
-      if (this.deps.isSceneActive()) {
+      // Phaser aynı GameScene örneğini restart'ta yeniden kullanır. Yalnız
+      // sahne aktifliğine bakmak yetmez: eski koşunun IPC sonucu yeni koşu
+      // aktifken dönebilir ve onun üstüne ölüm ekranı açabilir.
+      if (generation === this.generation && this.deps.isSceneActive()) {
         this.deps.showSummary(outcome, result);
       }
     } catch (error) {
       // Beklenmedik bir hata (depolama/çeviri/DOM) özet ekranını bozarsa oyun
       // donmaz; ana menüye yönlendirilir ve hata loglanır.
       console.error('[RunFinisher] Koşu sonu işlemi başarısız:', error);
-      if (this.deps.isSceneActive()) {
+      if (generation === this.generation && this.deps.isSceneActive()) {
         this.deps.goToMainMenu();
       }
     } finally {
-      this.inProgress = false;
+      // Eski isteğin finally'si yeni koşudaki bitiş akışının kilidini açmasın.
+      if (generation === this.generation) this.inProgress = false;
     }
   }
 }

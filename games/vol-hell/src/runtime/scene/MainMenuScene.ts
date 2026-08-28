@@ -1,6 +1,6 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isTauri } from '@tauri-apps/api/core';
-import { Button, Panel, Text, i18next } from '@volstudio/core';
+import { Button, Panel, Text, i18next, showConfirm, vibrate } from '@volstudio/core';
 import { BaseScene } from './BaseScene';
 import { LoadingTransition } from './LoadingTransition';
 import { gameAudio } from '@/app/services';
@@ -8,6 +8,7 @@ import { sfxVolumes } from '@/config';
 import { startMenuMusic, stopMenuMusic } from '@/app/menuMusic';
 import { gameStats } from '@/app/services';
 import { formatTimeMs } from '@/utils/time';
+import { pushBackHandler } from '@/app/backNavigation';
 
 export class MainMenuScene extends BaseScene {
   private panel!: Panel;
@@ -15,6 +16,10 @@ export class MainMenuScene extends BaseScene {
   private exitButton!: Button;
   private settingsButton!: Button;
   private loadingTransition: LoadingTransition | null = null;
+  /** Android geri tuşu işleyicisinin kaydını kaldırır. */
+  private stopBackHandler: (() => void) | null = null;
+  /** Sahne ömrünü aşan veya yinelenen çıkış onaylarını tek noktadan iptal eder. */
+  private exitPromptAbort: AbortController | null = null;
   private nextScene: string | null = null;
   private titleText!: Text;
   private subtitleText!: Text;
@@ -39,6 +44,8 @@ export class MainMenuScene extends BaseScene {
     // calismaz. Sifirlanmazsa Ayarlar'dan donunce deger 'Settings' olarak asili
     // kalir ve onShutdown muzigi yanlislikla durdurmaz.
     this.nextScene = null;
+    this.exitPromptAbort?.abort();
+    this.exitPromptAbort = null;
 
     // Menü müziği bir parça listesidir ve sahnenin dışında yaşar: Ayarlar'a
     // gidip dönünce baştan sarmaz, bir parça bitince sıradakine geçer.
@@ -83,6 +90,17 @@ export class MainMenuScene extends BaseScene {
     this.ui.mount(this.panel.element);
 
     this.showOnNextFrame(() => this.panel.show());
+
+    // Menüde geri tuşu = çıkış, ama onay kutusuyla.
+    this.stopBackHandler?.();
+    this.stopBackHandler = pushBackHandler(() => {
+      if (this.exitPromptAbort) {
+        this.exitPromptAbort.abort();
+        return true;
+      }
+      void this.exitGame();
+      return true;
+    });
   }
 
   private updateBestStats(): void {
@@ -108,21 +126,52 @@ export class MainMenuScene extends BaseScene {
     });
   }
 
+  /**
+   * Çıkış GERİ ALINAMAZ, bu yüzden onay ister.
+   *
+   * Android'de bu ayrıca donanım/jest "geri" tuşunun da vardığı yerdir:
+   * yanlışlıkla bir kaydırma oyunu kapatmamalı. Onay kutusu `.vol-ui-root`
+   * içine mount edilir, yoksa `body`ye düşer ve oyunun tema/box-sizing
+   * kurallarının dışında kalırdı.
+   */
   private async exitGame(): Promise<void> {
-    if (isTauri()) {
-      try {
-        await getCurrentWindow().close();
-      } catch (error) {
-        console.error('[MainMenuScene] Pencere kapatılamadı:', error);
+    if (this.exitPromptAbort) return;
+
+    const promptAbort = new AbortController();
+    this.exitPromptAbort = promptAbort;
+    vibrate('warning');
+    try {
+      const confirmed = await showConfirm({
+        title: i18next.t('volhell:menu.exitConfirm'),
+        variant: 'danger',
+        container: this.ui.element,
+        signal: promptAbort.signal,
+      });
+      if (!confirmed || promptAbort.signal.aborted) return;
+
+      if (isTauri()) {
+        try {
+          await getCurrentWindow().close();
+        } catch (error) {
+          console.error('[MainMenuScene] Pencere kapatılamadı:', error);
+        }
+        return;
       }
-      return;
+      console.warn('[MainMenuScene] window.close() tarayıcıda çalışmaz; bu sekmeyi elle kapatın.');
+    } finally {
+      if (this.exitPromptAbort === promptAbort) {
+        this.exitPromptAbort = null;
+      }
     }
-    console.warn('[MainMenuScene] window.close() tarayıcıda çalışmaz; bu sekmeyi elle kapatın.');
   }
 
   protected override onSceneShutdown(): void {
     // Ayarlara geçerken müzik devam etsin; oyuna geçişte zaten transition'da durdurulur.
     // SFX'ler kısa olmakla birlikte sahneler arasında taşmaması için durdur.
+    this.stopBackHandler?.();
+    this.stopBackHandler = null;
+    this.exitPromptAbort?.abort();
+    this.exitPromptAbort = null;
     gameAudio.stopAllSfx();
     if (this.nextScene !== 'Settings') {
       stopMenuMusic();

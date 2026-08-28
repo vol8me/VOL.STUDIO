@@ -2,6 +2,7 @@ import { i18next } from '@volstudio/core';
 import { getAbilityDefinition } from '@/config/abilities';
 import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import { ABILITY_SLOTS, type AbilitySlot } from '@/runtime/ability/types';
+import { createAbilityIcon, getAbilityDisplayName } from './abilityPresentation';
 
 /** Slotların klavye karşılığı — HUD'da ve loadout panelinde aynı harfler görünür. */
 export const SLOT_KEY_LABELS: Record<AbilitySlot, string> = {
@@ -12,7 +13,9 @@ export const SLOT_KEY_LABELS: Record<AbilitySlot, string> = {
 interface SlotView {
   root: HTMLDivElement;
   name: HTMLSpanElement;
+  icon: HTMLSpanElement;
   fill: HTMLDivElement;
+  lastAbilityId: string | null | undefined;
   lastName: string;
   lastReady: number;
 }
@@ -40,6 +43,11 @@ export class AbilityHud {
       key.textContent = SLOT_KEY_LABELS[slot];
       root.appendChild(key);
 
+      const icon = document.createElement('span');
+      icon.className = 'vol-ability-slot__icon';
+      icon.appendChild(createAbilityIcon(null));
+      root.appendChild(icon);
+
       const name = document.createElement('span');
       name.className = 'vol-ability-slot__name';
       name.textContent = i18next.t('volhell:ability.empty');
@@ -53,7 +61,15 @@ export class AbilityHud {
       root.appendChild(gauge);
 
       this.container.appendChild(root);
-      this.slots.set(slot, { root, name, fill, lastName: '', lastReady: -1 });
+      this.slots.set(slot, {
+        root,
+        name,
+        icon,
+        fill,
+        lastAbilityId: undefined,
+        lastName: '',
+        lastReady: -1,
+      });
     }
 
     parent.appendChild(this.container);
@@ -66,9 +82,14 @@ export class AbilityHud {
       if (!view) continue;
 
       const ability = abilities.getAbility(slot);
-      const name = ability
-        ? getAbilityDefinition(ability.id).displayName
-        : i18next.t('volhell:ability.empty');
+      const abilityId = ability?.id ?? null;
+      const definition = ability ? getAbilityDefinition(ability.id) : null;
+      const name = ability ? getAbilityDisplayName(ability.id) : i18next.t('volhell:ability.empty');
+
+      if (abilityId !== view.lastAbilityId) {
+        view.lastAbilityId = abilityId;
+        view.icon.replaceChildren(createAbilityIcon(definition?.kind ?? null));
+      }
 
       if (name !== view.lastName) {
         view.lastName = name;

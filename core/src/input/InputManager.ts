@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { DisposableScope } from '../lifecycle/DisposableScope';
 import { Vector2 } from '../math/Vector2';
 import { PCController, type MoveKeyBindings } from './PCController';
 import type { PCActionBinding } from './PCInputState';
@@ -6,6 +7,7 @@ import type { InputProvider } from './InputProvider';
 import { createIdleActions, type InputState } from './InputState';
 import { idleSnapshot, type InputSnapshot } from './InputSnapshot';
 import { TouchController } from './TouchController';
+import type { VirtualActionSource } from './VirtualActionSource';
 
 export interface InputManagerOptions<TAction extends string> {
   /**
@@ -20,6 +22,11 @@ export interface InputManagerOptions<TAction extends string> {
   /** Sağ joystick deadzone'u aştığında basılı sayılacak eylem (dokunmatik). */
   aimStickAction?: TAction;
   /**
+   * Ekran üstü düğmelerin yazdığı eylem kaynağı; dokunmatik sağlayıcının
+   * eylem kümesine karışır (bkz. `VirtualActionSource`).
+   */
+  actionSource?: VirtualActionSource<TAction>;
+  /**
    * Provider'lar testler için enjekte edilebilir. Verilmezse gerçek
    * TouchController/PCController kurulur; ilk eleman her zaman "touch"
    * sağlayıcı kabul edilir.
@@ -31,29 +38,52 @@ export class InputManager<TAction extends string> {
   private readonly providers: InputProvider<TAction>[];
   private readonly touch: InputProvider<TAction>;
   private readonly actions: readonly TAction[];
+  private readonly lifecycle = new DisposableScope();
 
   constructor(scene: Phaser.Scene, options: InputManagerOptions<TAction>) {
     this.actions = options.actions;
-    this.providers =
-      options.providers ??
-      ([
-        new TouchController(scene, {
-          actions: options.actions,
-          aimStickAction: options.aimStickAction,
-        }),
-        new PCController(scene, {
-          actionBindings: options.pcActionBindings,
-          moveKeys: options.moveKeys,
-        }),
-      ] as InputProvider<TAction>[]);
+    if (options.providers) {
+      // Çağıranın diziyi sonradan değiştirmesi update/cleanup kümelerini
+      // birbirinden ayırmamalı; manager kurulduğu andaki sahipliği sabitler.
+      this.providers = [...options.providers];
+    } else {
+      try {
+        const touch = this.lifecycle.addDestroyable(
+          new TouchController(scene, {
+            actions: options.actions,
+            aimStickAction: options.aimStickAction,
+            actionSource: options.actionSource,
+          }),
+        );
+        const pc = this.lifecycle.addDestroyable(
+          new PCController(scene, {
+            actionBindings: options.pcActionBindings,
+            moveKeys: options.moveKeys,
+          }),
+        );
+        this.providers = [touch, pc];
+      } catch (error) {
+        // İkinci provider kurulurken hata oluşursa ilk provider'ın Phaser
+        // listener'ları constructor tamamlanamadı diye sahnede kalmamalı.
+        this.lifecycle.dispose();
+        throw error;
+      }
+    }
 
     const touch = this.providers[0];
     // noUncheckedIndexedAccess kapali oldugu icin TS bos diziyi yakalamiyor;
     // guard olmadan getState() ilk satirda anlamsiz bir TypeError atardi.
     if (!touch) {
+      this.lifecycle.dispose();
       throw new Error('InputManager: en az bir InputProvider gerekli (providers boş olamaz)');
     }
     this.touch = touch;
+
+    // Varsayılan provider'lar kurulum sırasında zaten kaydedildi. Enjekte
+    // edilen provider'lar da aynı sahiplik sözleşmesine alınır.
+    if (options.providers) {
+      for (const provider of this.providers) this.lifecycle.addDestroyable(provider);
+    }
   }
 
   /**
@@ -103,8 +133,6 @@ export class InputManager<TAction extends string> {
   }
 
   destroy(): void {
-    for (const provider of this.providers) {
-      provider.destroy();
-    }
+    this.lifecycle.dispose();
   }
 }

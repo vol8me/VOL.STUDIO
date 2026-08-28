@@ -41,9 +41,31 @@ pnpm --filter @volstudio/vol-asset-studio dev # yalnızca Asset Studio :5175
 pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # Oyun build
 pnpm build:tauri                           # PC installer build
+pnpm tauri:android:dev                     # Android dev (bağlı cihaz/emülatör)
 pnpm benchmark:core                        # CORE headless workload ölçümü
 pnpm benchmark:vol-hell                    # VOL.HELL simülasyon/render ölçümü
 ```
+
+### Android
+
+Native proje `tauri-v2/src-tauri/gen/android` altında **sürüm kontrolünde tutulur**
+(yeniden üretilebilir değildir): yön kilidi, çentik yerleşimi ve sürükleyici tam
+ekran Tauri yapılandırmasından ayarlanamadığı için `AndroidManifest.xml`, tema ve
+`MainActivity.kt` elle düzenlendi.
+
+```bash
+export ANDROID_HOME="$HOME/Android/Sdk"
+export NDK_HOME="$ANDROID_HOME/ndk/<sürüm>"
+export JAVA_HOME=<JDK 17>
+rustup target add aarch64-linux-android    # cihaz için; emülatör x86_64 ister
+
+pnpm --filter @volstudio/tauri-v2 exec tauri android build --debug --target aarch64
+adb install -r tauri-v2/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
+```
+
+Oyun yatay yöne kilitlidir, sistem çubukları gizlenir ve güvenli alan
+(`env(safe-area-inset-*)`) HUD yerleşimine uygulanır. Ekran üstü kontroller
+yalnızca dokunmatik birincil cihazlarda kurulur (`shouldUseTouchControls`).
 
 ### Doğrulama
 

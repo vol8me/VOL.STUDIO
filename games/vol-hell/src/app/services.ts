@@ -2,6 +2,7 @@ import {
   LocalServerTransport,
   createDiagnostics,
   isDiagnosticsEnabled,
+  setHapticsEnabled,
   type Diagnostics,
   type SaveManager,
 } from '@volstudio/core';
@@ -61,4 +62,11 @@ export async function loadPersistedState(): Promise<void> {
   // İkisi bağımsız; Tauri store'da her okuma bir IPC turu olduğu için
   // paralel yüklemek gecikmeyi azaltır.
   await Promise.all([audioSettings.load(), gameStats.load()]);
+
+  // CORE'un titreşim anahtarı varsayılan olarak KAPALIDIR; oyunun kayıtlı
+  // tercihi yüklendikten sonra bir kez uygulanır ve sonraki her değişiklikte
+  // izlenir. Tek yerde bağlanması, her çağrı yerinin ayarı sorgulamasını
+  // gereksiz kılar (bkz. core/src/platform/haptics.ts).
+  setHapticsEnabled(audioSettings.isHapticsEnabled());
+  audioSettings.onChange((data) => setHapticsEnabled(data.hapticsEnabled));
 }

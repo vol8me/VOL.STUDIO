@@ -6,6 +6,7 @@ import type { Border } from '@/runtime/entity/Border';
 import type { Player } from '@/runtime/entity/Player';
 import type { BulletManager } from '@/runtime/entity/BulletManager';
 import type { EnemyManager } from '@/runtime/entity/EnemyManager';
+import type { Turret } from '@/runtime/entity/Turret';
 import type { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 
 vi.mock('@/app/services', () => ({
@@ -38,6 +39,15 @@ interface FakePlayer {
   getPosition: () => Vector2;
   takeDamage: (_amount: number) => boolean;
   applyPush: (_x: number, _y: number) => void;
+}
+
+interface FakeTurret {
+  isAlive: boolean;
+  x: number;
+  y: number;
+  radius: number;
+  canTakeContactDamage: (time: number) => boolean;
+  takeContactDamage: (amount: number, time: number) => boolean;
 }
 
 function makePlayer(x = 0, y = 0): FakePlayer {
@@ -88,11 +98,23 @@ function makeEnemy(x: number, y: number, radius = 10, onDeath?: () => void): Fak
   return enemy;
 }
 
+function makeTurret(x = 0, y = 0): FakeTurret {
+  return {
+    isAlive: true,
+    x,
+    y,
+    radius: 10,
+    canTakeContactDamage: vi.fn(() => true),
+    takeContactDamage: vi.fn(() => true),
+  };
+}
+
 function makeResolver(opts: {
   player?: FakePlayer;
   bullets?: FakeBullet[];
   enemies?: FakeEnemy[];
   nearby?: FakeEnemy[];
+  turret?: FakeTurret;
 }): {
   resolver: CollisionResolver;
   player: FakePlayer;
@@ -136,6 +158,7 @@ function makeResolver(opts: {
     enemyManager as unknown as EnemyManager,
     spatialGrid as unknown as SpatialGrid,
     border,
+    opts.turret ? { getTurret: () => opts.turret as unknown as Turret } : {},
   );
 
   return {
@@ -247,6 +270,42 @@ describe('CollisionResolver', () => {
     vi.clearAllMocks();
     resolver.resolve(100);
     expect(player.takeDamage).not.toHaveBeenCalled();
+  });
+
+  it('kalabalık aynı karede kuleye yalnızca bir temas paketi ulaştırır', () => {
+    const enemies = Array.from({ length: 6 }, () => makeEnemy(0, 0));
+    const turret = makeTurret();
+    const { resolver } = makeResolver({
+      player: makePlayer(1_000, 1_000),
+      enemies,
+      nearby: enemies,
+      turret,
+    });
+
+    resolver.resolve(1_000);
+
+    expect(turret.takeContactDamage).toHaveBeenCalledTimes(1);
+    expect(turret.takeContactDamage).toHaveBeenCalledWith(10, 1_000);
+    expect(
+      enemies.filter((enemy) => vi.mocked(enemy.tryContactDamage).mock.calls.length > 0),
+    ).toHaveLength(1);
+  });
+
+  it('kule temas kapısı kapalıyken düşman cooldown’unu tüketmez', () => {
+    const enemy = makeEnemy(0, 0);
+    const turret = makeTurret();
+    vi.mocked(turret.canTakeContactDamage).mockReturnValue(false);
+    const { resolver } = makeResolver({
+      player: makePlayer(1_000, 1_000),
+      enemies: [enemy],
+      nearby: [enemy],
+      turret,
+    });
+
+    resolver.resolve(1_100);
+
+    expect(enemy.tryContactDamage).not.toHaveBeenCalled();
+    expect(turret.takeContactDamage).not.toHaveBeenCalled();
   });
 
   it('çakışma yoksa push çağrılmaz', () => {

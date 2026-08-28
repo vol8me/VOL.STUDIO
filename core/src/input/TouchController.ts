@@ -21,6 +21,17 @@ const STICK_BASE_COLOR = hexColorToNumber(VOL_COLORS.uiSurface3);
 const STICK_THUMB_COLOR = hexColorToNumber(VOL_COLORS.supportSolid);
 
 /**
+ * Aynı anda izlenmesi gereken en az işaretçi sayısı.
+ *
+ * Phaser VARSAYILAN OLARAK tek bir dokunma işaretçisi ayırır; ikinci parmak
+ * hiç olay üretmez. Çift joystick tanımı gereği iki eşzamanlı dokunuş ister,
+ * yani varsayılanla sol çubuk tutulurken sağ çubuk HİÇ çalışmaz — hareket
+ * ederken nişan alınamaz. Üçüncü işaretçi pay olarak istenir: ekranı sıyıran
+ * üçüncü bir parmak iki çubuğu düşürmemeli.
+ */
+const REQUIRED_POINTERS = 3;
+
+/**
  * İnce Phaser sarmalayıcısı: pointer olaylarını dinler, görseli çizer.
  * Stick atama/clamp/deadzone mantığı TouchStickState'te yaşar (bkz. TouchStickState.ts).
  */
@@ -45,10 +56,26 @@ export class TouchController<TAction extends string>
     this.graphics = new Phaser.GameObjects.Graphics(scene);
     this.add(this.graphics);
 
+    TouchController.ensureMultiTouch(scene);
+
     scene.input.on('pointerdown', this.onPointerDown, this);
     scene.input.on('pointermove', this.onPointerMove, this);
     scene.input.on('pointerup', this.onPointerUp, this);
     scene.input.on('pointerupoutside', this.onPointerUp, this);
+  }
+
+  /**
+   * Oyunun işaretçi havuzunu çift joystick için yeterli hâle getirir.
+   *
+   * Havuz OYUN genelindedir (`input.manager`), sahneye değil; bu yüzden sahne
+   * her yeniden başladığında körlemesine `addPointer` çağırmak havuzu sürekli
+   * büyütürdü. Eksik kadarı istenir, zaten yeterliyse hiç dokunulmaz.
+   */
+  private static ensureMultiTouch(scene: Phaser.Scene): void {
+    const manager = scene.input?.manager;
+    if (!manager) return;
+    const missing = REQUIRED_POINTERS - manager.pointersTotal;
+    if (missing > 0) scene.input.addPointer(missing);
   }
 
   get isActive(): boolean {

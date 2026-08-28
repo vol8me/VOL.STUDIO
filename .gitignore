@@ -37,7 +37,15 @@ blob-report/
 .nyc_output/
 
 # Tauri mobile/desktop generated projects
-/tauri-v2/src-tauri/gen/
+#
+# `gen/android` BİLEREK dışarıda tutulmaz: yön kilidi, çentik yerleşimi ve
+# sürükleyici tam ekran Tauri'nin yapılandırmasından ayarlanamıyor (schema
+# yalnızca minSdk/versionCode taşır), bu yüzden AndroidManifest, tema ve
+# MainActivity elle düzenlendi. Yeniden üretilebilir sanılıp yok sayılırsa bu
+# düzenlemeler ilk `android init`te sessizce kaybolur. Derleme çıktıları
+# (`build/`, `.gradle`, `local.properties`, imza anahtarları) `gen/android`
+# içindeki kendi .gitignore'u tarafından zaten dışarıda tutuluyor.
+/tauri-v2/src-tauri/gen/apple/
 /tauri-v2/src-tauri/target/
 
 # Editor

@@ -422,16 +422,20 @@
   font-weight: 600;
 }
 
+/*
+ * Çubuk GÖRSELDİR, dokunma hedefi DEĞİL.
+ *
+ * Burada `min-height: var(--vol-hit-target-min)` vardı ve dokunmatik cihazda
+ * 16 px'lik çubuğu 44 px'e şişiriyordu: kaydırıcı, içinde ince bir tutamağın
+ * yüzdüğü kocaman bir bloğa dönüşüyordu (gerçek cihazda görüldü). Hedef
+ * büyütmesi görünmez `input` katmanına taşındı — orası zaten tıklamayı alan
+ * eleman, bkz. `.vol-slider__input`.
+ */
 .vol-slider__track {
   border-radius: var(--vol-radius-sm);
   background: var(--vol-ui-surface-2);
   border: 1px solid var(--vol-ui-border-soft);
   position: relative;
-
-  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
-     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
-  min-height: var(--vol-hit-target-min, auto);
-  min-width: var(--vol-hit-target-min, auto);
 }
 
 .vol-slider--horizontal .vol-slider__track {
@@ -485,6 +489,15 @@
   transform: translate(-50%, 50%);
 }
 
+/*
+ * Görünmez `<input type=range>` — dokunma hedefi BURADA büyür.
+ *
+ * Çubuğun üstünde ortalanır ve `pointer: coarse` altında en az
+ * `--vol-hit-target-min` yüksekliğe/genişliğe çıkar. Böylece parmakla
+ * yakalanabilir bir alan doğar ama çubuğun görünen kalınlığı değişmez.
+ * Masaüstünde token tanımsızdır, `auto`ya düşer ve kutu tam olarak çubuğu
+ * kaplar — yani görünüm ve davranış birebir korunur.
+ */
 .vol-slider__input {
   opacity: 0;
   cursor: pointer;
@@ -495,11 +508,22 @@
   inset: 0;
 }
 
+.vol-slider--horizontal .vol-slider__input {
+  top: 50%;
+  bottom: auto;
+  min-height: var(--vol-hit-target-min, auto);
+  transform: translateY(-50%);
+}
+
 .vol-slider--vertical .vol-slider__input {
   -webkit-appearance: slider-vertical;
   appearance: auto;
   writing-mode: vertical-lr;
   direction: rtl;
+  left: 50%;
+  right: auto;
+  min-width: var(--vol-hit-target-min, auto);
+  transform: translateX(-50%);
 }
 
 .vol-slider__track:has(.vol-slider__input:focus-visible) .vol-slider__handle {
@@ -866,6 +890,12 @@
   font-weight: 600;
 }
 
+/*
+ * Çubuk GÖRSELDİR (bkz. `.vol-slider__track` — aynı gerekçe): `min-height`
+ * ile şişirilirse dokunmatikte 16 px'lik çubuk 44 px'e çıkıyor ve kaydırıcı
+ * kocaman bir bloğa dönüşüyordu. Hedef büyütmesi aşağıdaki görünmez
+ * `::before` şeridine bırakıldı.
+ */
 .vol-range-slider__track {
   border-radius: var(--vol-radius-sm);
   background: var(--vol-ui-surface-2);
@@ -874,17 +904,18 @@
   height: 16px;
   margin: 5px 0;
   position: relative;
-
-  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
-     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
-  min-height: var(--vol-hit-target-min, auto);
-  min-width: var(--vol-hit-target-min, auto);
 }
 
+/*
+ * Görünmez dokunma şeridi; çubuğun üstünde ve altında simetrik taşar.
+ * Fallback 26 px masaüstündeki eski `-5px` taşmasını BİREBİR korur
+ * ((26 − 16) / −2 = −5). `pointer: coarse` altında token 44 px olduğunda
+ * şerit kendiliğinden −14 px'e açılır ve tam 44 px'lik hedefi verir.
+ */
 .vol-range-slider__track::before {
   content: '';
   position: absolute;
-  inset: -5px 0;
+  inset: calc((var(--vol-hit-target-min, 26px) - 16px) / -2) 0;
 }
 
 .vol-range-slider__fill {

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SfxBank } from '@/app/SfxBank';
+import { sfxVoiceConfig } from '@/config/audio';
 import { soundKeys, type SoundEvent } from '@/config/sounds';
 import { FakeAudioContext } from '../mocks/audio';
 import type { FakeAudioBufferSourceNode } from '../mocks/audio';
@@ -22,12 +23,24 @@ describe('SfxBank', () => {
     ]);
   }
 
-  function activeSources(event: SoundEvent): FakeAudioBufferSourceNode[] {
-    const states = (
-      bank as unknown as { voiceStates: Map<string, { active: Set<FakeAudioBufferSourceNode> }> }
-    ).voiceStates;
+  interface TestVoice {
+    source: FakeAudioBufferSourceNode;
+    gain: GainNode;
+  }
+
+  function activeVoices(event: SoundEvent): TestVoice[] {
+    const states = (bank as unknown as { voiceStates: Map<string, { active: Set<TestVoice> }> })
+      .voiceStates;
     const state = states.get(soundKeys[event]);
     return state ? Array.from(state.active) : [];
+  }
+
+  function activeSources(event: SoundEvent): FakeAudioBufferSourceNode[] {
+    return activeVoices(event).map((voice) => voice.source);
+  }
+
+  function liveVoiceCount(): number {
+    return (bank as unknown as { liveVoices: Set<TestVoice> }).liveVoices.size;
   }
 
   it('stopAll() tüm aktif sesleri durdurur ve setleri temizler', async () => {
@@ -88,6 +101,49 @@ describe('SfxBank', () => {
     await bank.play('menuBlip', {});
 
     expect(activeSources('menuBlip')).toHaveLength(1);
+  });
+
+  it('sahne geçişinde sesi sert kesmek yerine kısa fade uygular', async () => {
+    seedBuffer('menuBlip');
+    context.currentTime = 3;
+    await bank.play('menuBlip');
+
+    const [voice] = activeVoices('menuBlip');
+    expect(voice).toBeDefined();
+
+    bank.stopAll();
+
+    expect(voice.gain.gain.value).toBe(0);
+    expect(voice.source.stop).toHaveBeenCalledWith(3 + sfxVoiceConfig.stopFadeSeconds);
+    expect(activeSources('menuBlip')).toHaveLength(0);
+  });
+
+  it('farklı olaylar toplansa da global SFX kaynak tavanını aşmaz', async () => {
+    seedBuffer('menuBlip');
+    context.currentTime = 1;
+    await bank.play('menuBlip', { maxVoices: 100, minInterval: 0 });
+    const first = activeSources('menuBlip')[0];
+
+    for (let i = 1; i <= sfxVoiceConfig.globalMaxVoices; i++) {
+      context.currentTime += 0.001;
+      await bank.play('menuBlip', { maxVoices: 100, minInterval: 0 });
+    }
+
+    expect(activeSources('menuBlip')).toHaveLength(sfxVoiceConfig.globalMaxVoices);
+    expect(first?.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('fade kuyruğu salkım altında gerçek bağlı Web Audio kaynak tavanını aşmaz', async () => {
+    seedBuffer('menuBlip');
+    const createSource = vi.spyOn(context, 'createBufferSource');
+
+    for (let i = 0; i < sfxVoiceConfig.globalMaxLiveVoices * 3; i++) {
+      context.currentTime += 0.0001;
+      await bank.play('menuBlip', { maxVoices: 100, minInterval: 0 });
+    }
+
+    expect(liveVoiceCount()).toBe(sfxVoiceConfig.globalMaxLiveVoices);
+    expect(createSource).toHaveBeenCalledTimes(sfxVoiceConfig.globalMaxLiveVoices);
   });
 
   it('geçersiz ses seçenekleri AudioParam içine NaN taşımaz', async () => {

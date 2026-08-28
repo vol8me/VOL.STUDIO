@@ -1,13 +1,14 @@
 import { soundAssets, soundKeys, type SoundEvent } from '@/config/sounds';
+import { sfxVoiceConfig, type SfxVoiceLimitConfig } from '@/config/audio';
 import { StemLoader } from '@volstudio/core/audio/music';
 import { clampFinite, finiteOr, nonNegativeFinite } from '@/runtime/utils/numeric';
 
-/** SFX ses olayı başına ses sınırı. */
-export interface SfxVoiceLimit {
-  /** Aynı anda çalabilecek maksimum ses sayısı. */
-  maxVoices: number;
-  /** Aynı olay için iki çalma arasındaki minimum süre (saniye). */
-  minInterval: number;
+interface ActiveVoice {
+  readonly key: string;
+  readonly source: AudioBufferSourceNode;
+  readonly gain: GainNode;
+  readonly startedAt: number;
+  stopping: boolean;
 }
 
 /** SFX için varyasyonlu AudioBuffer havuzu.
@@ -21,32 +22,12 @@ export class SfxBank {
   /** Devam eden yüklemeler — aynı ses için tekrar fetch'i önler. */
   private readonly pendingLoads = new Map<string, Promise<void>>();
   private readonly busGain: GainNode;
-  private readonly voiceStates = new Map<
-    string,
-    { active: Set<AudioBufferSourceNode>; lastStart: number }
-  >();
+  private readonly voiceStates = new Map<string, { active: Set<ActiveVoice>; lastStart: number }>();
+  /** Olaylar arası ortak kaynak bütçesi; insertion order en eski sesi verir. */
+  private readonly activeVoices = new Set<ActiveVoice>();
+  /** Fade ile duranlar dahil, hâlâ Web Audio ağına bağlı bütün kaynaklar. */
+  private readonly liveVoices = new Set<ActiveVoice>();
   private released = false;
-  private readonly voiceLimits: Partial<Record<SoundEvent, SfxVoiceLimit>> = {
-    // Slider `input` olayında tek bir sürükleme onlarca blip üretir;
-    // limit olmadan hepsi üst üste binip makineli tüfek sesi verir.
-    menuBlip: { maxVoices: 2, minInterval: 0.06 },
-    fire: { maxVoices: 3, minInterval: 0.05 },
-    dash: { maxVoices: 2, minInterval: 0.1 },
-    hurt: { maxVoices: 2, minInterval: 0.08 },
-    enemyHit: { maxVoices: 4, minInterval: 0.04 },
-    enemyDeath: { maxVoices: 3, minInterval: 0.05 },
-    bulletBounce: { maxVoices: 3, minInterval: 0.05 },
-    fluxPickup: { maxVoices: 3, minInterval: 0.04 },
-    turretFire: { maxVoices: 4, minInterval: 0.08 },
-    telegraph: { maxVoices: 4, minInterval: 0.03 },
-    eliteSpawn: { maxVoices: 1, minInterval: 0.2 },
-    bossSpawn: { maxVoices: 1, minInterval: 0.2 },
-    bossEnrage: { maxVoices: 1, minInterval: 0.2 },
-    bossDown: { maxVoices: 1, minInterval: 0.2 },
-    waveStart: { maxVoices: 1, minInterval: 0.2 },
-    waveClear: { maxVoices: 1, minInterval: 0.2 },
-    levelUp: { maxVoices: 1, minInterval: 0.2 },
-  };
 
   constructor(context: AudioContext, destination: AudioNode) {
     this.context = context;
@@ -139,19 +120,21 @@ export class SfxBank {
     }
 
     if (limit.maxVoices > 0 && state.active.size >= limit.maxVoices) {
-      // En eski sesi durdur; böylece en yeni ses duyulur.
+      // En eski sesi kısa rampayla bırak; sıfır olmayan örnekte sert `stop()`
+      // telefon hoparlöründe klik/cızırtı olarak duyulur.
       const oldest = state.active.values().next().value;
-      if (oldest) {
-        // Set'ten HEMEN silinir; onended asenkron oldugu icin ona birakilirsa
-        // aktif sayisi kisa sureligine maxVoices'i asar ve sayac yanlis olur.
-        state.active.delete(oldest);
-        try {
-          oldest.stop(now);
-        } catch {
-          // Zaten bitmek üzereyse görmezden gel
-        }
-      }
+      if (oldest) this.stopVoice(oldest, now);
     }
+
+    if (this.activeVoices.size >= sfxVoiceConfig.globalMaxVoices) {
+      const oldest = this.activeVoices.values().next().value;
+      if (oldest) this.stopVoice(oldest, now);
+    }
+
+    // stopVoice aktif setten hemen çıkarır ama kaynak kısa rampası bitene dek
+    // bağlı kalır. Fade kuyruğu doygunsa yeni sesi düşürmek, kaynak sayısını
+    // büyütmekten veya rampayı sert kesip yeniden klik üretmekten güvenlidir.
+    if (this.liveVoices.size >= sfxVoiceConfig.globalMaxLiveVoices) return;
 
     const buffer = variants[Math.floor(Math.random() * variants.length)];
     if (!buffer) return;
@@ -168,21 +151,71 @@ export class SfxBank {
       source.detune.value = cents;
     }
 
-    source.connect(gain);
-    gain.connect(this.busGain);
-    source.start();
+    const voice: ActiveVoice = { key, source, gain, startedAt: now, stopping: false };
+    source.onended = () => this.finalizeVoice(voice);
 
-    state.active.add(source);
+    try {
+      source.connect(gain);
+      gain.connect(this.busGain);
+      source.start();
+    } catch (error) {
+      this.disconnectVoice(voice);
+      throw error;
+    }
+
+    state.active.add(voice);
+    this.activeVoices.add(voice);
+    this.liveVoices.add(voice);
     state.lastStart = now;
+  }
 
-    source.onended = () => {
-      state.active.delete(source);
-      try {
-        gain.disconnect();
-      } catch {
-        // ignore
+  private finalizeVoice(voice: ActiveVoice): void {
+    this.voiceStates.get(voice.key)?.active.delete(voice);
+    this.activeVoices.delete(voice);
+    this.liveVoices.delete(voice);
+    this.disconnectVoice(voice);
+  }
+
+  private disconnectVoice(voice: ActiveVoice): void {
+    try {
+      voice.source.disconnect();
+    } catch {
+      // Kaynak bağlanmadan start() hata verdiyse disconnect de hata verebilir.
+    }
+    try {
+      voice.gain.disconnect();
+    } catch {
+      // Aynı onended bazı WebView sürümlerinde ikinci kez bildirilebiliyor.
+    }
+  }
+
+  /** Sesi sıfıra doğru çok kısa rampalayıp dalga biçimini kesmeden durdurur. */
+  private stopVoice(voice: ActiveVoice, now = finiteOr(this.context.currentTime, 0)): void {
+    if (voice.stopping) return;
+    voice.stopping = true;
+
+    // Sayaçlar hemen boşalır; `onended` yalnızca düğüm temizliğini tamamlar.
+    this.voiceStates.get(voice.key)?.active.delete(voice);
+    this.activeVoices.delete(voice);
+
+    const fade = nonNegativeFinite(sfxVoiceConfig.stopFadeSeconds, 0);
+    try {
+      const currentGain = clampFinite(voice.gain.gain.value, 0, 1, 0);
+      voice.gain.gain.cancelScheduledValues(now);
+      voice.gain.gain.setValueAtTime(currentGain, now);
+      if (fade > 0) {
+        voice.gain.gain.linearRampToValueAtTime(0, now + fade);
       }
-    };
+      voice.source.stop(now + fade);
+    } catch {
+      // Çoktan bitmiş kaynakta stop() InvalidStateError verebilir; sayısal
+      // sahiplik yukarıda bırakıldı, onended/disconnect güvenli biçimde gelir.
+      try {
+        voice.source.stop(now);
+      } catch {
+        // Zaten bitmiş.
+      }
+    }
   }
 
   /** Belirli bir event'in tüm aktif seslerini durdurur.
@@ -192,38 +225,22 @@ export class SfxBank {
     const state = this.voiceStates.get(key);
     if (!state) return;
     const now = finiteOr(this.context.currentTime, 0);
-    for (const source of state.active) {
-      try {
-        source.stop(now);
-      } catch {
-        // Zaten bitmek üzereyse görmezden gel
-      }
-    }
-    state.active.clear();
+    for (const voice of [...state.active]) this.stopVoice(voice, now);
   }
 
-  /** Tüm aktif SFX seslerini durdurur. Sahne geçişlerinde ses sızıntısını önler. */
+  /** Tüm aktif SFX seslerini kısa fade ile durdurur; sahne geçişi klik üretmez. */
   stopAll(): void {
     const now = finiteOr(this.context.currentTime, 0);
-    for (const state of this.voiceStates.values()) {
-      for (const source of state.active) {
-        try {
-          source.stop(now);
-        } catch {
-          // Zaten bitmek üzereyse görmezden gel
-        }
-      }
-      state.active.clear();
-    }
+    for (const voice of [...this.activeVoices]) this.stopVoice(voice, now);
   }
 
   private resolveLimit(
     event: SoundEvent,
     options: { maxVoices?: number; minInterval?: number },
-  ): SfxVoiceLimit {
-    const defaults = this.voiceLimits[event];
-    const defaultMaxVoices = defaults?.maxVoices ?? 0;
-    const defaultMinInterval = defaults?.minInterval ?? 0;
+  ): SfxVoiceLimitConfig {
+    const defaults = sfxVoiceConfig.eventLimits[event] ?? sfxVoiceConfig.defaultLimit;
+    const defaultMaxVoices = defaults.maxVoices;
+    const defaultMinInterval = defaults.minInterval;
     return {
       maxVoices: Math.floor(
         clampFinite(
@@ -237,7 +254,7 @@ export class SfxBank {
     };
   }
 
-  private getVoiceState(key: string): { active: Set<AudioBufferSourceNode>; lastStart: number } {
+  private getVoiceState(key: string): { active: Set<ActiveVoice>; lastStart: number } {
     let state = this.voiceStates.get(key);
     if (!state) {
       // currentTime=0'da minInterval ilk sesi yanlışlıkla susturmamalı.
@@ -251,8 +268,16 @@ export class SfxBank {
     if (this.released) return;
     this.released = true;
     this.stopAll();
+    for (const voice of this.liveVoices) {
+      // Uygulama kapanışında AudioContext de kapanır; bekleyen onended'e
+      // güvenmeden node bağlantılarını hemen bırak.
+      voice.source.onended = null;
+      this.disconnectVoice(voice);
+    }
     this.buffers.clear();
     this.voiceStates.clear();
+    this.activeVoices.clear();
+    this.liveVoices.clear();
     this.pendingLoads.clear();
   }
 }

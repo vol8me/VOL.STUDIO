@@ -50,6 +50,87 @@
   pointer-events: auto;
 }
 
+/*
+ * Ölüm özeti on satır istatistik + iki düğme taşır ve yatay telefonda görünür
+ * yükseklik 384 px'e kadar iner; sınırsız bırakıldığında panel 445 px'e çıkıp
+ * başlığı ÜSTTEN, "ANA MENÜ" düğmesini ALTTAN kırpıyordu — yani oyuncu koşu
+ * sonunda menüye dönemiyordu. `.vol-card-picker` aynı sorunu zaten
+ * `max-height` + iç kaydırma ile çözüyor; burada da o desen izlenir.
+ *
+ * Güvenli alan payı çıkarılır: yatay kipte çentik yan kenardadır ama
+ * cihaz/kip değişince üst-alt da paya girebilir.
+ */
+.death-panel,
+.pause-panel,
+.main-menu-panel {
+  max-height: calc(100vh - var(--vol-safe-top) - var(--vol-safe-bottom) - 2 * var(--vol-space-md));
+  overflow-y: auto;
+
+  /*
+   * `touch-action: pan-y` AÇIKÇA verilir: sayfa dokunma jestlerini bastırdığı
+   * için (`user-scalable=no`, tuval üzerinde `touch-action: none`) panelin
+   * dikey kaydırması aksi hâlde yutulabiliyor. `overscroll-behavior` panelin
+   * sonunda sayfanın sürüklenmesini engeller.
+   */
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+/*
+ * Ayarlar iki ayrı geometridir:
+ *
+ * 1. `.settings-scroll-surface` güvenli ekranın TAMAMINI kapsayan jest alanı;
+ *    oyuncu panelin boş sağ/sol yanından da kaydırabilir.
+ * 2. `.settings-panel` yalnızca okunabilir içerik sütunu; viewport genişlese
+ *    bile satırlar göz yoracak kadar uzamaz, telefonda ise kullanılabilir
+ *    genişliğin tamamına esner.
+ *
+ * Scrollbar yerine paneli kaydırmak ilk Android sürümünde yaklaşık 220 px'lik
+ * tek bir dokunma şeridi bırakmıştı. CORE ScrollView dış viewport olarak
+ * kullanıldığı için burada oyun-özel bir kaydırma davranışı tutulmaz.
+ */
+.settings-scroll-surface {
+  position: absolute;
+  inset: 0;
+  max-height: none;
+  overflow: hidden auto;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+.settings-scroll-surface > .vol-scroll-view__content {
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  min-height: 100%;
+  padding: calc(var(--vol-safe-top) + var(--vol-space-md))
+    calc(var(--vol-safe-right) + var(--vol-space-xl))
+    calc(var(--vol-safe-bottom) + var(--vol-space-md))
+    calc(var(--vol-safe-left) + var(--vol-space-xl));
+  display: flex;
+}
+
+.settings-panel {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: min(560px, 100%);
+  max-width: 100%;
+  transform: none;
+}
+
+/*
+ * İçeriği görünür alandan uzun olan flex paneller merkezlenemez. `center`,
+ * taşmanın yarısını negatif yönde üretir; `scrollTop: 0` başlık ve ilk
+ * kontrolleri ekranın üstünde bırakır ve kullanıcı o bölgeye hiçbir zaman
+ * kaydıramaz. Ayarlar ve koşu özeti başlangıçtan akar; içerik kısa olduğunda
+ * panel zaten içerik yüksekliğinde olduğu için görünüm değişmez.
+ */
+.death-panel,
+.settings-panel {
+  justify-content: flex-start;
+}
+
 .death-panel {
   top: 50%;
   left: 50%;
@@ -186,13 +267,15 @@
   transform: translateY(0);
 }
 
-/* Ability slotları — sol alt köşede Q ve E göstergeleri. */
+/* Ability slotları — masaüstünde sol altta Q ve E göstergeleri. */
 .vol-ability-hud {
   gap: var(--vol-space-sm);
   display: flex;
   position: absolute;
   bottom: var(--vol-space-md);
   left: var(--vol-space-md);
+  z-index: 50;
+  pointer-events: none;
 }
 
 .vol-ability-slot {
@@ -220,6 +303,19 @@
   font-family: var(--vol-font-family);
   font-size: 10px;
   font-weight: 700;
+}
+
+/* Mobil kipte Q/E yerine mekanik ikon görünür; masaüstünde gizlidir. */
+.vol-ability-slot__icon {
+  color: var(--vol-ui-text-secondary);
+  width: 20px;
+  height: 20px;
+  display: none;
+}
+
+.vol-ability-slot__icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .vol-ability-slot__name {
@@ -314,8 +410,21 @@
   flex: 1;
 }
 
+/*
+ * Slotu boşaltma düğmesi ("×").
+ *
+ * CORE'un kart/buton bileşenleri `--vol-hit-target-min` politikasına bağlıdır
+ * ama vol-hell'e özgü bu düğme politikanın dışında kalmıştı: 16 px yazı ve
+ * sıfır dikey dolgu, telefonda basılması güç bir hedef bırakıyordu. Token
+ * masaüstünde TANIMSIZDIR ve `auto`ya düşer, yani fare görünümü değişmez.
+ */
 .vol-loadout__slot-clear {
   cursor: pointer;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+  min-width: var(--vol-hit-target-min, auto);
+  min-height: var(--vol-hit-target-min, auto);
   color: var(--vol-ui-text-muted);
   background: none;
   border: none;
@@ -348,6 +457,155 @@
   outline-offset: 2px;
 }
 
+/*
+ * DOKUNMATİK KONTROLLER — dash, yetenekler ve duraklatma.
+ *
+ * Yalnızca `shouldUseTouchControls()` doğruyken kurulur (bkz. TouchControls.ts),
+ * yani masaüstünde bu ağaç hiç DOM'a girmez. Yerleşim sağ alt köşede toplanır:
+ * sağ başparmak nişan çubuğundayken aynı yayda düğmelere ulaşabilmelidir.
+ *
+ * Konumlar `--vol-safe-*` kullanır, çıplak `env()` değil: yatay kipte kamera
+ * deliği bir YAN kenara düşer ve cihazın yuvarlatılmış köşeleri (ör. Galaxy
+ * S21 FE'de 108 px yarıçap) `env()` sıfır dönse bile köşedeki düğmeyi kırpar.
+ */
+
+/*
+ * z-index: kart/dükkan katmanının (`--vol-z-dialog`) HEMEN ALTINDA durur.
+ *
+ * `.vol-card-layer` tam ekran, `pointer-events: auto` bir scrim'dir ve kapalıyken
+ * `display: none` olur. Bir üstte durursak (ilk denemede öyleydi) dükkan
+ * açıkken dash düğmesi kartların "KİLİTLE" düğmesinin üstüne biniyor ve
+ * tıklamayı çalıyordu. Bir altta durunca scrim hem örtüyor hem girdiyi kesiyor;
+ * ayrı bir "diyalog açıkken gizle" durumu tutmaya gerek kalmıyor. Duraklatma
+ * ve ölüm katmanları zaten çok daha yukarıda (200) olduğu için onlar da örter.
+ *
+ * `calc(... - 1)` bilinçli: token değişirse bu kural kendiliğinden izler.
+ */
+.vol-touch-controls {
+  position: absolute;
+  right: calc(var(--vol-safe-right) + var(--vol-space-md));
+  bottom: calc(var(--vol-safe-bottom) + var(--vol-space-md));
+  z-index: calc(var(--vol-z-dialog) - 1);
+  align-items: flex-end;
+  gap: var(--vol-space-md);
+  display: flex;
+}
+
+.vol-touch-controls__abilities {
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+/* Dolum göstergesi düğmenin ARKASINDA; pointer olaylarını kesmemeli. */
+.vol-touch-ability {
+  position: relative;
+  display: flex;
+}
+
+.vol-touch-ability__fill {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  height: 0;
+  border-radius: 999px;
+  background: var(--vol-ui-support-solid);
+  opacity: 0.28;
+  pointer-events: none;
+  transition: height var(--vol-transition-fast) linear;
+}
+
+.vol-touch-ability__button {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hazır yetenek kenarlıkla belli edilir — dolum halkası tamamlandığında. */
+.vol-touch-ability__button--ready {
+  border-color: var(--vol-ui-support-solid);
+}
+
+/* Boş slot basılamaz: sessizce hiçbir şey yapan düğme cooldown sanılır. */
+.vol-touch-ability__button--empty {
+  opacity: 0.35;
+}
+
+.vol-touch-controls__dash {
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-touch-pause {
+  position: absolute;
+  top: calc(var(--vol-safe-top) + var(--vol-space-md));
+  right: calc(var(--vol-safe-right) + var(--vol-space-md));
+  z-index: calc(var(--vol-z-dialog) - 1);
+  display: flex;
+}
+
+/*
+ * Dokunmatik kipte kenar-yapışık HUD'lar güvenli alanı gözetir; skor bloğu
+ * ayrıca duraklatma düğmesinin altına iner (ikisi de sağ üst köşede).
+ */
+.vol-touch-active .vol-hud__slot {
+  left: calc(var(--vol-safe-left) + var(--vol-space-md));
+}
+
+.vol-touch-active .vol-hud__slot--health {
+  top: calc(var(--vol-safe-top) + var(--vol-space-md));
+}
+
+.vol-touch-active .vol-hud__slot--dash {
+  top: calc(var(--vol-safe-top) + var(--vol-space-md) + var(--vol-hud-dash-offset));
+}
+
+.vol-touch-active .vol-hud__slot--spark {
+  top: calc(var(--vol-safe-top) + var(--vol-space-md) + var(--vol-hud-spark-offset));
+}
+
+.vol-touch-active .vol-hud-stats {
+  top: calc(var(--vol-safe-top) + var(--vol-space-md) + 52px);
+  right: calc(var(--vol-safe-right) + var(--vol-space-md));
+}
+
+.vol-touch-active .vol-wave {
+  top: calc(var(--vol-safe-top) + var(--vol-space-md));
+}
+
+/*
+ * Mobilde bilgi yüzeyi iki başparmak alanının arasına alınır. Sağdaki gerçek
+ * aksiyon düğmelerini tekrar eden ad/Q/E metni gizlenir; yalnız mekanik ikon +
+ * cooldown çizgisi kalır. 48 px'lik iki kompakt slot merkez görüşü kaplamaz.
+ */
+.vol-touch-active .vol-ability-hud {
+  bottom: calc(var(--vol-safe-bottom) + var(--vol-space-xs));
+  left: 50%;
+  gap: var(--vol-space-xs);
+  transform: translateX(-50%);
+}
+
+.vol-touch-active .vol-ability-slot {
+  align-items: center;
+  gap: 3px;
+  width: 48px;
+  min-width: 48px;
+  padding: 4px 6px;
+}
+
+.vol-touch-active .vol-ability-slot__key,
+.vol-touch-active .vol-ability-slot__name {
+  display: none;
+}
+
+.vol-touch-active .vol-ability-slot__icon {
+  display: flex;
+}
+
+.vol-touch-active .vol-ability-slot__gauge {
+  width: 100%;
+}
+
 .vol-fatal-error {
   position: fixed;
   inset: 0;
@@ -361,4 +619,17 @@
   font-family: monospace;
   font-size: 14px;
   text-align: center;
+}
+
+/*
+ * Ayarlar kapatma düğmesi panelden BAĞIMSIZDIR. Dar/kısa ekranda panel
+ * kaydırılırken veya genişliği değişirken içerikle çakışmaz; oyun içi
+ * duraklatma düğmesiyle aynı güvenli sağ üst ankrajı kullanır.
+ */
+.vol-settings-close {
+  position: absolute;
+  top: calc(var(--vol-safe-top) + var(--vol-space-md));
+  right: calc(var(--vol-safe-right) + var(--vol-space-md));
+  z-index: calc(var(--vol-z-dialog) - 1);
+  display: flex;
 }

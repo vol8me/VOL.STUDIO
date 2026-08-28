@@ -17,9 +17,67 @@ export const audioConfig = {
   screenShakeEnabled: true,
   /** Ekran sarsıntısı şiddeti (0-1). */
   screenShakeIntensity: 0.6,
+  /**
+   * Dokunsal geri bildirim (titreşim). Dokunmatik cihazlarda anlamlıdır;
+   * masaüstünde `navigator.vibrate` yoktur ve çağrılar sessizce düşer.
+   * Varsayılan AÇIK: mobilde düğme basımının hissedilmesi beklenir.
+   */
+  hapticsEnabled: true,
 } as const;
 
 export type AudioConfig = typeof audioConfig;
+
+/** Bir SFX olayının eşzamanlı ses ve tekrar aralığı bütçesi. */
+export interface SfxVoiceLimitConfig {
+  /** Aynı olaydan eşzamanlı yaşayabilecek kaynak sayısı. */
+  maxVoices: number;
+  /** Aynı olayın iki başlangıcı arasındaki en kısa süre (saniye). */
+  minInterval: number;
+}
+
+const eventVoiceLimits: Partial<Record<SoundEvent, SfxVoiceLimitConfig>> = {
+  // Tek bir UI niyeti tek ses olarak okunmalı; üst üste blip cızırtı gibi duyulur.
+  menuBlip: { maxVoices: 1, minInterval: 0.08 },
+  fire: { maxVoices: 3, minInterval: 0.05 },
+  dash: { maxVoices: 2, minInterval: 0.1 },
+  hurt: { maxVoices: 2, minInterval: 0.08 },
+  enemyHit: { maxVoices: 4, minInterval: 0.04 },
+  enemyDeath: { maxVoices: 3, minInterval: 0.05 },
+  bulletBounce: { maxVoices: 3, minInterval: 0.05 },
+  fluxPickup: { maxVoices: 3, minInterval: 0.04 },
+  turretFire: { maxVoices: 4, minInterval: 0.08 },
+  telegraph: { maxVoices: 4, minInterval: 0.03 },
+  eliteSpawn: { maxVoices: 1, minInterval: 0.2 },
+  bossSpawn: { maxVoices: 1, minInterval: 0.2 },
+  bossEnrage: { maxVoices: 1, minInterval: 0.2 },
+  bossDown: { maxVoices: 1, minInterval: 0.2 },
+  waveStart: { maxVoices: 1, minInterval: 0.2 },
+  waveClear: { maxVoices: 1, minInterval: 0.2 },
+  levelUp: { maxVoices: 1, minInterval: 0.2 },
+};
+
+/**
+ * SFX kaynak bütçesi.
+ *
+ * Olay başı limit tek bir ses ailesinin taşmasını önler; global tavan ise çok
+ * sayıda FARKLI olay aynı karede patladığında Web Audio kaynak sayısını ve
+ * toplam miks tepesini sınırlar. Ses çalarken aniden `stop()` etmek dalga
+ * biçimini sıfır olmayan noktada kesip özellikle telefon hoparlöründe klik/
+ * cızırtı üretir; kaynaklar kısa bir kazanç rampasından sonra durdurulur.
+ */
+export const sfxVoiceConfig = {
+  /** Yeni ses başlatabilen (fade kuyruğunda olmayan) eşzamanlı sesler. */
+  globalMaxVoices: 16,
+  /**
+   * Kısa fade ile kapanan kaynaklar `onended` gelene kadar Web Audio ağında
+   * yaşamaya devam eder. Ani salkımda aktif bütçe sabit kalsa bile bu kuyruk
+   * sınırsız büyümesin; doygunken yeni ve daha az önemli ses düşürülür.
+   */
+  globalMaxLiveVoices: 20,
+  defaultLimit: { maxVoices: 2, minInterval: 0.03 } satisfies SfxVoiceLimitConfig,
+  eventLimits: eventVoiceLimits,
+  stopFadeSeconds: 0.008,
+} as const;
 
 /**
  * Olay başına SFX kazancı (0-1). Sahne kodunda `playSfx(..., { volume: 0.45 })`

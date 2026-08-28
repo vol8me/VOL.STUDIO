@@ -11,6 +11,27 @@ export {
   type Destroyable,
   type Disposable,
 } from './lifecycle/DisposableScope';
+export {
+  getAppVisibility,
+  observeAppVisibility,
+  type AppVisibilityOptions,
+  type AppVisibilityState,
+} from './lifecycle/appVisibility';
+
+/*
+ * Cihaz yetenekleri — ekran üstü kontrol kurup kurmama kararı gibi ÖNCÜL
+ * sorular için. Girdi katmanının reaktif `pointer.wasTouch` ayrımından
+ * farklıdır; bkz. `platform/capabilities.ts`.
+ */
+export { canHover, hasTouchInput, isTouchPrimary, shouldUseTouchControls } from './platform';
+export {
+  cancelHaptics,
+  isHapticsEnabled,
+  isHapticsSupported,
+  setHapticsEnabled,
+  vibrate,
+  type HapticPattern,
+} from './platform';
 
 /*
  * KATMAN 1 — headless primitifler.

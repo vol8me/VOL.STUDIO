@@ -7,6 +7,19 @@
   z-index: 10;
   position: fixed;
   inset: 0;
+
+  /*
+   * Mobil WebView'in KENDİ dokunma vurgusunu kapatır.
+   *
+   * Android WebView her dokunulabilir elemanın üstüne yarı saydam mavi bir
+   * dikdörtgen basar (`-webkit-tap-highlight-color` varsayılanı) ve uzun
+   * basışta metin seçimi/"kopyala" balonunu açar. İkisi de tasarım sisteminin
+   * kendi `--pressed` durumunun ÜSTÜNE biner: düğme basılınca beklenen renk
+   * yerine mavi bir kopya gibi görünür. Devralınan bir davranış olduğu için
+   * bileşen bazında değil, tüm arayüz kökünde kapatılır.
+   */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 
 /**

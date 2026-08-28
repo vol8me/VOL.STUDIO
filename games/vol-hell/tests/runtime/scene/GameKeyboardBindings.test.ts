@@ -69,4 +69,29 @@ describe('GameKeyboardBindings', () => {
     bindings.destroy();
     expect(keyboard.removeKey).toHaveBeenCalledTimes(3);
   });
+
+  it('kurulum ikinci tuşta patlarsa daha önce bağlanan tuşu geri bırakır', () => {
+    const { keyboard, keys } = makeKeyboard();
+    const originalAddKey = keyboard.addKey;
+    keyboard.addKey = vi.fn((code: number) => {
+      if (code === 81) throw new Error('keyboard unavailable');
+      return originalAddKey(code);
+    });
+    const onPause = vi.fn();
+
+    expect(
+      () =>
+        new GameKeyboardBindings(keyboard as never, {
+          pauseKeyCode: 27,
+          abilityKeys: { primary: 81, secondary: 69 },
+          onPause,
+          isAbilityBlocked: () => false,
+          onAbility: vi.fn(),
+        }),
+    ).toThrow('keyboard unavailable');
+
+    expect(keyboard.removeKey).toHaveBeenCalledOnce();
+    keys.get(27)?.emitDown();
+    expect(onPause).not.toHaveBeenCalled();
+  });
 });

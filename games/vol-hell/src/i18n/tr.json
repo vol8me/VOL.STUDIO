@@ -6,7 +6,8 @@
     "title": "VOL.HELL",
     "subtitle": "Hayatta kalabildiğin kadar hayatta kal",
     "bestScore": "En Yüksek Skor: {{score}}",
-    "bestTime": "En Uzun Süre: {{time}}"
+    "bestTime": "En Uzun Süre: {{time}}",
+    "exitConfirm": "Oyundan çıkılsın mı?"
   },
   "loading": {
     "title": "YÜKLENİYOR"
@@ -39,7 +40,8 @@
     "shakeIntensity": "Sarsıntı Şiddeti",
     "mute": "Sesi Kapat",
     "back": "GERİ",
-    "ambient": "Ambiyans"
+    "ambient": "Ambiyans",
+    "haptics": "Titreşim"
   },
   "pause": {
     "title": "DURAKLATILDI",
@@ -243,5 +245,11 @@
   "fatal": {
     "title": "Oyun başlatılamadı",
     "description": "{{message}}"
+  },
+  "touch": {
+    "dash": "Dash",
+    "dashIcon": "»",
+    "ability": "{{name}} yeteneği",
+    "emptyAbility": "Boş yetenek slotu"
   }
 }

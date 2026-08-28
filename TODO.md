@@ -5,6 +5,75 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-28 — Android/dokunmatik platform katmanı ve sağlamlaştırma turu
+
+Önceki oturum limite takılıp yarım bıraktığı için bu tur önce çalışma
+ağacındaki tüm değişikliği ölçerek doğruladı, sonra kalan boşlukları kapattı.
+
+- CORE'a öncül cihaz yetenek tespiti (`core/src/platform/`: `isTouchPrimary`,
+  `hasTouchInput`, `canHover`, `shouldUseTouchControls`) ve tek sözleşmeli
+  arka plan/ön plan algısı (`observeAppVisibility` — hem `visibilitychange`
+  hem `blur`/`focus` dinler, Android'de bildirim gölgesi yalnızca `blur`
+  üretir) eklendi. `VirtualActionSource` ekran üstü düğme basımlarını
+  dokunmatik sağlayıcının kare durumuna, ayrı bir provider AÇMADAN, mandal
+  (latch) semantiğiyle katıyor — iki kare arasına sıkışan bir dokunuş
+  düşmüyor. Titreşim yüzeyi (`core/src/platform/haptics.ts`) adlandırılmış
+  desenler + desen başına minimum tekrar aralığıyla salkım halinde gelen oyun
+  olaylarında (art arda mermi/ölüm) eli uyuşturmuyor; varsayılan kapalı,
+  vol-hell tarafında kayıtlı tercihe bağlanıyor.
+- VOL.HELL'e dokunmatik kontroller (`TouchControls`: sağ altta dash + iki
+  yetenek düğmesi, sağ üstte duraklatma — mekanik ikonlu, cooldown halkalı),
+  Android donanım geri tuşu köprüsü (`MainActivity.kt` → `vol:androidback` →
+  `backNavigation.ts`'in yığın tabanlı işleyici zinciri) ve arka plana
+  geçince otomatik duraklatma + sanal basım temizliği eklendi. Ayarlar ekranı
+  artık tüm güvenli alanı kaplayan bir `ScrollView` içinde kayıyor ve kapatma
+  düğmesi panelden bağımsız, ekranın güvenli köşesinde sabit duruyor — kısa
+  yatay ekranda panel taştığında "GERİ" görünmez olsa bile geri tuşu ikinci
+  bir çıkış yolu sağlıyor. `gen/android` Tauri projesi elle düzenlenen
+  `AndroidManifest`/tema/`MainActivity.kt` içerdiği için bilinçli olarak
+  sürüm kontrolüne alındı (`gen/apple` hâlâ dışarıda — iOS hedeflenmiyor).
+- Ana menü ses cızırtısının kök nedeni bulundu: `SfxBank` aktif sesleri
+  `stop()` ile sıfır olmayan örnekte kesiyordu. Kaynaklar artık kısa bir
+  kazanç rampasından sonra durduruluyor; olay başı limitin yanında olaylar
+  ARASI global bir eşzamanlı ses tavanı (`globalMaxVoices`) ve fade kuyruğu
+  için ayrı bir bağlı-kaynak tavanı (`globalMaxLiveVoices`) eklendi, salkım
+  altında en eski/en az önemli ses düşürülüyor.
+- `GameScene`nin `createScene()`'i artık tek bir `DisposableScope`
+  (`runtimeScope`) sahipliğinde: her sistem oluşturulduğu anda kaydediliyor,
+  elle tutulan ters-sıralı `destroy()` listesi kalktı. `BaseScene.create()`
+  artık `createScene()` fırlatırsa `handleShutdown()`'ı kendisi tetikliyor —
+  Phaser `create()` hata verince SHUTDOWN göndermeyi garanti etmiyor, aksi
+  hâlde kısmi kurulum kaynakları açıkta kalırdı. `RunFinisher` bir kuşak
+  (generation) sayacı kazandı: restart sonrası dönen eski bir istatistik-
+  gönderim sonucu artık yeni koşunun üstüne özet ekranı açamıyor;
+  `isScenePresent` da duraklatılmış sahneyi (kendi zorladığı duraklatma
+  dâhil) "kapanmış" saymıyor.
+- Kule (turret) artık düşman temasına karşı zırhlı: hasarın yarısını alıyor
+  ve ortak bir temas-hasarı cooldown'u paylaşıyor, böylece aynı karede beşten
+  fazla düşmanla çevrilmek kuleyi tek vuruşta silmiyor. Regresyon testi üç
+  kule varyantının da kesintisiz grunt baskısında kendi aktivasyon
+  cooldown'unun en az yarısı kadar ayakta kaldığını sayısal olarak
+  doğruluyor.
+- Yarım bırakılan işlemler tamamlandı: `prettier` hiç koşmamıştı (3 dosya),
+  `eslint` iki gerçek hata taşıyordu (`SfxBank.test.ts`'te gereksiz `!`
+  assertion, `MainMenuScene.test.ts`'te `import()` tip anotasyonu ve `any`
+  member erişimi) — ikisi de kalıcı olarak düzeltildi, bastırılmadı. Kök ve
+  `games/vol-hell` README'lerine Android build talimatı ve mobil/dokunmatik
+  sözleşmesi bölümleri eklendi.
+
+Doğrulama: `pnpm quick`, `pnpm high`, `pnpm signoff` (cargo check/fmt/clippy
+dâhil) ve `pnpm exec just e2e-full` (Chromium + Firefox, ikinci turda
+Playwright'ın Firefox ikilisi bu makineye kuruldu) tamamı yeşil;
+`pnpm benchmark:core` ve `pnpm benchmark:vol-hell` regresyon göstermedi.
+
+**Kalan risk:** Bu ortamda bağlı bir Android cihaz veya emülatör yok; APK
+üretimi ve cihaz üstü menü/ayar/oyun/kart/pause/ölüm/zafer matrisi hâlâ elle
+doğrulanmalı (araçlar hazır: NDK 27.2.12479018 ve rustup Android target'ları
+kurulu, `ANDROID_HOME` bu kabukta tanımlı değildi). Fedora native paket
+üretimi (`just tauri-build`) bu turda koşulmadı. PC'de TR/EN tüm ekranların
+tam görsel/etkileşim taraması otomasyonla değil `pnpm dev` ile elle
+yapılmalı — bu projede görsel doğrulama zaten büyük ölçüde bu şekilde.
+
 ## 2026-08-27 — P1/P2 borç kapatma ve VOL-HELL ability ilerleme denetimi
 
 - Yaşam döngüsü kaynakları için `DisposableScope` ortaklaştırıldı; CORE,

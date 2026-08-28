@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { StatBlock, Vector2, createRandom } from '@volstudio/core';
 import type { HellStat, HellStatBlock } from '@/config/stats';
-import { ABILITY_CATALOG, MIN_ABILITY_COOLDOWN_MS, getAbilityDefinition } from '@/config/abilities';
+import {
+  ABILITY_CATALOG,
+  MIN_ABILITY_COOLDOWN_MS,
+  getAbilityDefinition,
+  turretDurabilityConfig,
+} from '@/config/abilities';
 import { AbilityRuntime, createAbility } from '@/runtime/ability/AbilityRuntime';
 import { scaleTurretFireInterval } from '@/runtime/ability/abilityScaling';
 import type { ChainLightningAbility } from '@/runtime/ability/ChainLightningAbility';
@@ -256,6 +261,33 @@ describe('Ability sistemi', () => {
       expect(runtime.getTurret()).toBeNull();
     });
 
+    it('kule kalabalık temasını yapı zırhı ve ortak cooldown ile sınırlar', () => {
+      runtime.assign('primary', createAbility('turret'));
+      runtime.update(16, playerPos, aim, []);
+      runtime.tryActivate('primary');
+
+      const turret = runtime.getTurret()!;
+      const baseHealth = turret.getHealth();
+      const contactDamage = 12;
+
+      expect(turret.takeContactDamage(contactDamage, 1_000)).toBe(true);
+      expect(turret.getHealth()).toBeCloseTo(
+        baseHealth - contactDamage * turretDurabilityConfig.contactDamageMultiplier,
+        6,
+      );
+      expect(
+        turret.canTakeContactDamage(1_000 + turretDurabilityConfig.contactDamageCooldownMs - 1),
+      ).toBe(false);
+      expect(turret.takeContactDamage(contactDamage, 1_100)).toBe(false);
+
+      expect(
+        turret.takeContactDamage(
+          contactDamage,
+          1_000 + turretDurabilityConfig.contactDamageCooldownMs,
+        ),
+      ).toBe(true);
+    });
+
     it('kule hasarı yükseltme kartıyla artar', () => {
       runtime.upgrades.add('turretDamage', 50);
       runtime.assign('primary', createAbility('turret'));
@@ -442,6 +474,26 @@ describe('Ability sistemi', () => {
 
       const expected = stats.getValue('damage') * ABILITY_CATALOG.multiShot.multiShot!.damageScale;
       expect(spawned[0].damage).toBeCloseTo(expected, 6);
+    });
+
+    it('tüm çoklu mermi varyantları güncel oyuncu hasarını kullanır', () => {
+      stats.addModifier({ id: 'gec-oyun-hasari', stat: 'damage', type: 'multiply', value: 1.75 });
+
+      for (const definition of Object.values(ABILITY_CATALOG)) {
+        if (definition.kind !== 'multiShot') continue;
+        spawned.length = 0;
+        runtime.assign('primary', createAbility(definition.id));
+        runtime.update(16, playerPos, aim, []);
+        runtime.tryActivate('primary');
+
+        expect(spawned, definition.id).toHaveLength(definition.multiShot!.projectiles);
+        for (const bullet of spawned) {
+          expect(bullet.damage, definition.id).toBeCloseTo(
+            stats.getValue('damage') * definition.multiShot!.damageScale,
+            6,
+          );
+        }
+      }
     });
 
     it('yükseltme kartı mermi sayısını artırır', () => {

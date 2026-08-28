@@ -1,3 +1,4 @@
 /target
-/gen
+# `gen/android` izlenir (gerekçe: repo kökündeki .gitignore).
+/gen/apple
 *.log

@@ -40,6 +40,20 @@ class TestScene extends BaseScene {
   }
 }
 
+class FailingCreateScene extends BaseScene {
+  shutdownCalls = 0;
+
+  protected createScene(): void {
+    this.showOnNextFrame(() => {});
+    throw new Error('asıl kurulum hatası');
+  }
+
+  protected onSceneShutdown(): void {
+    this.shutdownCalls += 1;
+    throw new Error('ikincil cleanup hatası');
+  }
+}
+
 describe('BaseScene lifecycle', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -87,5 +101,34 @@ describe('BaseScene lifecycle', () => {
     expect(scene.shutdownCalls).toBe(1);
     expect(i18next.off).toHaveBeenCalledOnce();
     expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  it('createScene yarıda patlarsa asıl hatayı korur ve SHUTDOWN beklemeden temizler', () => {
+    vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation(() => 29);
+    const cancel = vi.spyOn(globalThis, 'cancelAnimationFrame').mockImplementation(() => {});
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const scene = new FailingCreateScene();
+    Object.defineProperty(scene, 'game', {
+      configurable: true,
+      value: { canvas: { parentElement: document.body } },
+    });
+    Object.defineProperty(scene, 'events', {
+      configurable: true,
+      value: {
+        once: vi.fn(),
+        off: vi.fn(),
+      },
+    });
+
+    expect(() => scene.create()).toThrow('asıl kurulum hatası');
+    expect(scene.shutdownCalls).toBe(1);
+    expect(error).toHaveBeenCalledWith(
+      '[BaseScene] Kısmi kurulum temizliği başarısız:',
+      expect.objectContaining({ message: 'ikincil cleanup hatası' }),
+    );
+    expect(i18next.off).toHaveBeenCalledOnce();
+    expect(cancel).toHaveBeenCalledWith(29);
+    expect(roots[0]?.destroy).toHaveBeenCalledOnce();
   });
 });

@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import type { TurretParams } from '@/config/abilities';
-import { turretVisualConfig } from '@/config/abilities';
+import { turretDurabilityConfig, turretVisualConfig } from '@/config/abilities';
 import { RENDER_DEPTH } from '@/config/layers';
 import { sfxVolumes } from '@/config/audio';
 import { diagnostics, gameAudio } from '@/app/services';
@@ -28,6 +28,8 @@ export class Turret {
   private health: number;
   private alive = true;
   private fireTimerMs = 0;
+  /** Kalabalık temasının tek frame'de kule canını silmesini önleyen ortak kapı. */
+  private nextContactDamageAt = Number.NEGATIVE_INFINITY;
   /** Namlunun geri tepme miktarı (piksel) — atışta artar, hızla sönümlenir. */
   private recoilPx = 0;
   /** Kurulum animasyonunun ilerlemesi (ms). */
@@ -151,6 +153,24 @@ export class Turret {
     if (this.health > 0) return false;
 
     this.destroyWithEffect();
+    return true;
+  }
+
+  /** Verilen oyun zamanında yeni bir düşman temas paketi kabul edebilir mi? */
+  canTakeContactDamage(time: number): boolean {
+    return this.alive && Number.isFinite(time) && time >= this.nextContactDamageAt;
+  }
+
+  /**
+   * Düşman temasını yapı zırhından geçirir ve ortak hasar aralığını başlatır.
+   * `true`, paketin kabul edildiğini anlatır; kulenin yıkılıp yıkılmadığını
+   * çağıranın ayrıca bilmesine gerek yoktur (`isAlive` tek kaynaktır).
+   */
+  takeContactDamage(amount: number, time: number): boolean {
+    if (!this.canTakeContactDamage(time) || !Number.isFinite(amount) || amount <= 0) return false;
+
+    this.nextContactDamageAt = time + turretDurabilityConfig.contactDamageCooldownMs;
+    this.takeDamage(amount * turretDurabilityConfig.contactDamageMultiplier);
     return true;
   }
 

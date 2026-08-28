@@ -21,6 +21,7 @@ export {
   type TouchStickSnapshot,
 } from './InputSnapshot';
 export { InputManager } from './InputManager';
+export { VirtualActionSource } from './VirtualActionSource';
 export * as InputUtils from './InputUtils';
 export { PCController } from './PCController';
 export { TouchController } from './TouchController';

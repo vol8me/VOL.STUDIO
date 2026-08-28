@@ -11,6 +11,12 @@ const stylesContent = readFileSync(stylesPath, 'utf-8');
 const scenePath = resolve(import.meta.dirname, '../../../src/runtime/scene/GameScene.ts');
 const sceneContent = readFileSync(scenePath, 'utf-8');
 
+const settingsScenePath = resolve(
+  import.meta.dirname,
+  '../../../src/runtime/scene/SettingsScene.ts',
+);
+const settingsSceneContent = readFileSync(settingsScenePath, 'utf-8');
+
 const hudStatsPath = resolve(import.meta.dirname, '../../../src/runtime/ui/HUDStats.ts');
 const hudStatsContent = readFileSync(hudStatsPath, 'utf-8');
 
@@ -62,5 +68,119 @@ describe('HUD responsive — --vol-space-md', () => {
     expect(stylesContent).toContain('var(--vol-hud-bar-width)');
     expect(stylesContent).toContain('var(--vol-hud-dash-offset)');
     expect(stylesContent).toContain('var(--vol-hud-spark-offset)');
+  });
+});
+
+/**
+ * Dokunmatik/mobil yerleşim değişmezleri.
+ *
+ * Bu değişmezler gerçek bir cihazda (Galaxy S21 FE, yatay 832×384 CSS px)
+ * görülen hatalardan geldi; CSS'te tek bir satırla geri kırılabilir ve hiçbiri
+ * jsdom'da görünmez (jsdom yerleşim hesaplamaz). Bu yüzden stil sayfası
+ * METİN olarak denetlenir — kusurlu ama gerçek bir bekçi.
+ */
+describe('mobil yerleşim değişmezleri', () => {
+  it('güvenli alan token’ları theme.css’te env() üzerinden tanımlanır', () => {
+    // `viewport-fit=cover` olmadan env() hep 0 döner; ikisi birlikte anlamlı.
+    for (const token of ['--vol-safe-top', '--vol-safe-right', '--vol-safe-bottom']) {
+      expect(themeContent, `${token} tanımlı olmalı`).toContain(token + ':');
+    }
+    expect(themeContent).toContain('env(safe-area-inset-top');
+  });
+
+  it('kenara yapışan dokunmatik yüzeyler çıplak boşluk değil güvenli alan kullanır', () => {
+    for (const selector of ['.vol-touch-controls', '.vol-touch-pause', '.vol-settings-close']) {
+      const block = new RegExp(`\\${selector}\\s*\\{([^}]*)\\}`).exec(stylesContent);
+      expect(block, `${selector} tanımlı olmalı`).not.toBeNull();
+      expect(block![1], `${selector} güvenli alanı gözetmeli`).toMatch(/--vol-safe-/);
+    }
+  });
+
+  it('ayarlar kapatma düğmesi panel içinde değil ekran kökünde yaşar', () => {
+    const block = /\.vol-settings-close\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(block, 'ayarlar kapatma ankrajı tanımlı olmalı').not.toBeNull();
+    expect(block![1]).toContain('position: absolute');
+    expect(block![1]).toContain('--vol-safe-top');
+    expect(block![1]).toContain('--vol-safe-right');
+    expect(settingsSceneContent).toContain('this.ui.mount(this.closeButton.element)');
+    expect(settingsSceneContent).not.toContain(
+      'this.panel.element.appendChild(this.closeButton.element)',
+    );
+  });
+
+  it('ayarlar güvenli ekranın tamamından kaydırılır, panel yalnız içerik genişliğini sınırlar', () => {
+    const surfaceBlock = /\.settings-scroll-surface\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(surfaceBlock, 'tam ekran ayarlar kaydırma yüzeyi tanımlı olmalı').not.toBeNull();
+    expect(surfaceBlock![1]).toContain('position: absolute');
+    expect(surfaceBlock![1]).toContain('inset: 0');
+    expect(surfaceBlock![1]).toContain('overflow: hidden auto');
+    expect(surfaceBlock![1]).toContain('touch-action: pan-y');
+
+    const contentBlock =
+      /\.settings-scroll-surface\s*>\s*\.vol-scroll-view__content\s*\{([^}]*)\}/.exec(
+        stylesContent,
+      );
+    expect(contentBlock, 'güvenli alanlı ayarlar iç yüzeyi tanımlı olmalı').not.toBeNull();
+    expect(contentBlock![1]).toContain('width: 100%');
+    expect(contentBlock![1]).toContain('min-height: 100%');
+    expect(contentBlock![1]).toContain('--vol-safe-left');
+    expect(contentBlock![1]).toContain('--vol-safe-right');
+
+    const panelBlock = /\.settings-panel\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(panelBlock, 'ayarlar içerik sütunu tanımlı olmalı').not.toBeNull();
+    expect(panelBlock![1]).toContain('width: min(560px, 100%)');
+    expect(panelBlock![1]).toContain('position: relative');
+
+    expect(settingsSceneContent).toContain("new ScrollView({ direction: 'vertical' })");
+    expect(settingsSceneContent).toContain("classList.add('settings-scroll-surface')");
+    expect(settingsSceneContent).toContain('this.scrollSurface.add(this.panel)');
+    expect(settingsSceneContent).toContain('this.ui.mount(this.scrollSurface.element)');
+  });
+
+  it('dokunmatik kontroller diyalog katmanının ALTINDA kalır', () => {
+    // Üstte kalırsa dash düğmesi dükkân kartlarının "KİLİTLE" düğmesini örtüp
+    // dokunuşu çalıyor (cihazda görüldü). `.vol-card-layer` tam ekran ve
+    // pointer-events: auto olduğu için altta durmak hem örtmeyi hem girdi
+    // kesmeyi kendiliğinden sağlar.
+    for (const selector of ['.vol-touch-controls', '.vol-touch-pause']) {
+      const block = new RegExp(`\\${selector}\\s*\\{([^}]*)\\}`).exec(stylesContent);
+      expect(block![1], `${selector} z-index diyalogdan türemeli`).toContain(
+        'calc(var(--vol-z-dialog) - 1)',
+      );
+    }
+  });
+
+  it('duraklatma ve ölüm panelleri kısa ekranda taşmaz', () => {
+    // 384 px yükseklikte ölüm özeti 445 px'e çıkıp başlığı ve "ANA MENÜ"
+    // düğmesini kırpıyordu; oyuncu koşu sonunda menüye dönemiyordu.
+    const block = /\.death-panel,\s*\.pause-panel,\s*\.main-menu-panel\s*\{([^}]*)\}/.exec(
+      stylesContent,
+    );
+    expect(block, 'panel yükseklik sınırı tanımlı olmalı').not.toBeNull();
+    expect(block![1]).toContain('max-height');
+    expect(block![1]).toContain('overflow-y: auto');
+  });
+
+  it('uzun ayarlar ve ölüm panelleri negatif yönde ortalanmaz', () => {
+    // Flex `center`, taşan içeriğin başını negatif koordinata iter; scrollTop
+    // sıfırken bile başlık ve ilk kontroller geri getirilemez hâle gelir.
+    const block = /\.death-panel,\s*\.settings-panel\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(block, 'uzun paneller için başlangıç hizası tanımlı olmalı').not.toBeNull();
+    expect(block![1]).toContain('justify-content: flex-start');
+  });
+
+  it('mobil ability HUD başparmak alanlarından uzakta, alt ortada ve sadedir', () => {
+    const hudBlock = /\.vol-touch-active \.vol-ability-hud\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(hudBlock, 'mobil ability HUD tanımlı olmalı').not.toBeNull();
+    expect(hudBlock![1]).toContain('left: 50%');
+    expect(hudBlock![1]).toContain('translateX(-50%)');
+
+    const hiddenLabels =
+      /\.vol-touch-active \.vol-ability-slot__key,\s*\.vol-touch-active \.vol-ability-slot__name\s*\{([^}]*)\}/.exec(
+        stylesContent,
+      );
+    expect(hiddenLabels, 'mobilde Q/E ve tekrar eden ad gizlenmeli').not.toBeNull();
+    expect(hiddenLabels![1]).toContain('display: none');
+    expect(stylesContent).toContain('.vol-touch-active .vol-ability-slot__icon');
   });
 });

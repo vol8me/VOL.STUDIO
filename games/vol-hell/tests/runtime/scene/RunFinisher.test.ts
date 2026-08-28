@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { RunFinisher, type RunFinisherDeps } from '@/runtime/scene/RunFinisher';
+import { isScenePresent, RunFinisher, type RunFinisherDeps } from '@/runtime/scene/RunFinisher';
 import type { RunResult } from '@/app/GameStats';
 
 const RESULT: RunResult = {
@@ -28,6 +28,18 @@ function setup(over: Partial<RunFinisherDeps> = {}) {
 }
 
 describe('RunFinisher', () => {
+  it('Phaser duraklatılmış sahnesini kapanmış saymaz', () => {
+    expect(
+      isScenePresent(
+        {
+          isActive: () => false,
+          isPaused: () => true,
+        },
+        'Game',
+      ),
+    ).toBe(true);
+  });
+
   it('yenilgi akışı: duraklat, ses, gönder, özet göster', async () => {
     const s = setup();
     await s.finisher.finish('defeat');
@@ -44,6 +56,32 @@ describe('RunFinisher', () => {
     await s.finisher.finish('victory');
     expect(s.deps.playOutcomeAudio).toHaveBeenCalledWith('victory');
     expect(s.deps.showSummary).toHaveBeenCalledWith('victory', RESULT);
+  });
+
+  it('forcePause sonrası duraklatılmış sahnede özet yine gösterilir', async () => {
+    // Phaser `pause()` sonrası `isActive()` false, `isPaused()` true döner.
+    // Bitiş akışının kendi duraklatması sahneyi "yok" sayarsa Android store
+    // IPC'sinden dönüldüğünde özet atlanır ve oyuncu donuk tuvalde kalır.
+    let active = true;
+    let paused = false;
+    const showSummary = vi.fn();
+    const finisher = new RunFinisher({
+      isSceneActive: () => active || paused,
+      isSummaryVisible: () => false,
+      forcePause: () => {
+        active = false;
+        paused = true;
+      },
+      playOutcomeAudio: vi.fn(),
+      submitStats: () => Promise.resolve(RESULT),
+      showSummary,
+      goToMainMenu: vi.fn(),
+    });
+
+    await finisher.finish('defeat');
+
+    expect(paused).toBe(true);
+    expect(showSummary).toHaveBeenCalledWith('defeat', RESULT);
   });
 
   describe('çift bitiş koruması', () => {
@@ -101,6 +139,23 @@ describe('RunFinisher', () => {
 
       await finisher.finish('defeat');
       expect(showSummary).not.toHaveBeenCalled();
+    });
+
+    it('eski koşunun geciken sonucu restart edilen yeni koşuya özet açmaz', async () => {
+      let resolveSubmit: ((value: RunResult) => void) | undefined;
+      const pending = new Promise<RunResult>((resolve) => {
+        resolveSubmit = resolve;
+      });
+      const s = setup({ submitStats: () => pending });
+
+      const oldFinish = s.finisher.finish('defeat');
+      s.finisher.reset();
+      resolveSubmit?.(RESULT);
+      await oldFinish;
+
+      expect(s.deps.showSummary).not.toHaveBeenCalled();
+      expect(s.finisher.isFinished).toBe(false);
+      expect(s.finisher.isFinishing).toBe(false);
     });
   });
 

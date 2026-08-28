@@ -1,7 +1,6 @@
 {
   "bundle": {
-    "active": true,
-    "targets": ["apk"]
+    "active": true
   },
   "app": {
     "security": {

@@ -2,16 +2,31 @@
 <html lang="tr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <!--
+      viewport-fit=cover: `env(safe-area-inset-*)` YALNIZCA bu değerle sıfırdan
+      farklı raporlanır. Onsuz WebView güvenli alanı hep 0 döner ve çentikli
+      cihazlarda HUD kamera deliğinin altında kalır (bkz. core theme.css
+      `--vol-safe-*`). Android tarafında çentik bölgesi ayrıca
+      `windowLayoutInDisplayCutoutMode=shortEdges` ile açılır.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <title>VOL.HELL</title>
     <style>
-      html, body {
+      html,
+      body {
         margin: 0;
         padding: 0;
         width: 100%;
         height: 100%;
         background: #000;
         overflow: hidden;
+        /* WebView'in mavi dokunma vurgusu ve uzun-bas metin balonu; oyun
+           yüzeyinde ikisi de istenmez (bkz. core/src/ui/base.css). */
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
       }
       #game-container {
         width: 100%;

@@ -6,7 +6,8 @@
     "title": "VOL.HELL",
     "subtitle": "Survive as long as you can",
     "bestScore": "High Score: {{score}}",
-    "bestTime": "Best Time: {{time}}"
+    "bestTime": "Best Time: {{time}}",
+    "exitConfirm": "Exit the game?"
   },
   "loading": {
     "title": "LOADING"
@@ -39,7 +40,8 @@
     "shakeIntensity": "Shake Intensity",
     "mute": "Mute",
     "back": "BACK",
-    "ambient": "Ambience"
+    "ambient": "Ambience",
+    "haptics": "Vibration"
   },
   "pause": {
     "title": "PAUSED",
@@ -243,5 +245,11 @@
   "fatal": {
     "title": "Failed to start game",
     "description": "{{message}}"
+  },
+  "touch": {
+    "dash": "Dash",
+    "dashIcon": "»",
+    "ability": "{{name}} ability",
+    "emptyAbility": "Empty ability slot"
   }
 }

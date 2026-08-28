@@ -177,7 +177,7 @@ export class GameAudio {
     this.music.stop({ fadeOut });
   }
 
-  /** Tüm aktif SFX seslerini anında durdurur. */
+  /** Tüm aktif SFX seslerini klik üretmeyen çok kısa bir fade ile durdurur. */
   stopAllSfx(): void {
     this.sfx.stopAll();
   }

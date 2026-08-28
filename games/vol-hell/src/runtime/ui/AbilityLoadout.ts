@@ -1,8 +1,8 @@
 import { DisposableScope, CARD_DRAG_MIME, i18next } from '@volstudio/core';
-import { getAbilityDefinition } from '@/config/abilities';
 import type { OwnedCard } from '@/runtime/systems/CardInventoryManager';
 import { ABILITY_SLOTS, type AbilitySlot } from '@/runtime/ability/types';
 import { SLOT_KEY_LABELS } from './AbilityHud';
+import { getAbilityDisplayName } from './abilityPresentation';
 
 export interface AbilityLoadoutCallbacks {
   /** Kart bir slota bırakıldığında/atandığında. */
@@ -71,7 +71,7 @@ export class AbilityLoadout {
       const owned = state.equipped[slot] ?? null;
       const abilityId = owned?.definition.abilityId;
       const name = abilityId
-        ? getAbilityDefinition(abilityId).displayName
+        ? getAbilityDisplayName(abilityId)
         : i18next.t('volhell:ability.empty');
 
       view.name.textContent = `${SLOT_KEY_LABELS[slot]} · ${name}`;

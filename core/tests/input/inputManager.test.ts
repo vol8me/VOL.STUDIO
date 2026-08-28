@@ -158,6 +158,35 @@ describe('InputManager provider seçim önceliği', () => {
     expect(touch.destroy).toHaveBeenCalledTimes(1);
     expect(pc.destroy).toHaveBeenCalledTimes(1);
   });
+
+  it("bir provider destroy hatası verse de diğer provider'ları bırakır", () => {
+    const touch = makeProvider(false, idleState());
+    const pc = makeProvider(false, idleState());
+    vi.mocked(pc.destroy).mockImplementation(() => {
+      throw new Error('PC cleanup failed');
+    });
+    const manager = makeManager([touch, pc]);
+
+    expect(() => manager.destroy()).not.toThrow();
+    expect(pc.destroy).toHaveBeenCalledOnce();
+    expect(touch.destroy).toHaveBeenCalledOnce();
+  });
+
+  it('provider dizisinin kurulumdan sonraki dış mutasyonundan etkilenmez', () => {
+    const touch = makeProvider(false, idleState());
+    const providers = [touch];
+    const manager = makeManager(providers);
+    const lateProvider = makeProvider(true, idleState(), 'late');
+
+    providers.push(lateProvider);
+    manager.update(16);
+    manager.destroy();
+
+    expect(touch.update).toHaveBeenCalledOnce();
+    expect(touch.destroy).toHaveBeenCalledOnce();
+    expect(lateProvider.update).not.toHaveBeenCalled();
+    expect(lateProvider.destroy).not.toHaveBeenCalled();
+  });
 });
 
 describe('Diagnostics snapshot sağlayıcı kümesi AÇIK', () => {

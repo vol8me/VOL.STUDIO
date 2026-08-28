@@ -13,6 +13,11 @@ export interface ConfirmOptions {
   container?: HTMLElement;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
+  /**
+   * Sahne/panel kapanırken bekleyen onayı false ile sonlandırır. İptal,
+   * modal yığını ile gövde kaydırma kilidinin ekran ömrünü aşmasını önler.
+   */
+  signal?: AbortSignal;
 }
 
 /**
@@ -32,7 +37,11 @@ export const MODAL_TRANSITION_MS = 240;
  * modal'ı DOM'da sıkışmış bırakır.
  */
 export function showConfirm(options: ConfirmOptions): Promise<boolean> {
-  const { title, variant = 'primary', container = document.body, className } = options;
+  const { title, variant = 'primary', container = document.body, className, signal } = options;
+  if (signal?.aborted) {
+    return Promise.resolve(false);
+  }
+
   const confirmLabelIsI18n = options.confirmLabel === undefined;
   const cancelLabelIsI18n = options.cancelLabel === undefined;
   const confirmLabel = options.confirmLabel ?? i18next.t('core:confirm.yes');
@@ -43,6 +52,7 @@ export function showConfirm(options: ConfirmOptions): Promise<boolean> {
     const finish = (result: boolean): void => {
       if (resolved) return;
       resolved = true;
+      signal?.removeEventListener('abort', onAbort);
       resolve(result);
       modal.close();
       // Dil dinleyicisi hemen cozulur; DOM temizligi gecis bitince yapilir.
@@ -50,6 +60,8 @@ export function showConfirm(options: ConfirmOptions): Promise<boolean> {
       i18next.off('languageChanged', onLanguageChanged);
       window.setTimeout(() => modal.destroy(), MODAL_TRANSITION_MS);
     };
+
+    const onAbort = (): void => finish(false);
 
     const onLanguageChanged = (): void => {
       if (confirmLabelIsI18n) confirmButton.setLabel(i18next.t('core:confirm.yes'));
@@ -84,5 +96,6 @@ export function showConfirm(options: ConfirmOptions): Promise<boolean> {
     modal.open();
 
     i18next.on('languageChanged', onLanguageChanged);
+    signal?.addEventListener('abort', onAbort, { once: true });
   });
 }

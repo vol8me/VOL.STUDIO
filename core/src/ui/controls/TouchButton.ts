@@ -34,6 +34,7 @@ export interface TouchButtonOptions {
  */
 export class TouchButton {
   readonly element: HTMLButtonElement;
+  private iconWrapper: HTMLSpanElement | null = null;
   private readonly onPressHandler?: () => void;
   private readonly onReleaseHandler?: () => void;
   private pressed = false;
@@ -61,16 +62,7 @@ export class TouchButton {
     this.element.style.setProperty('--vol-touch-button-size', `${size}px`);
     this.element.setAttribute('aria-label', label);
 
-    if (icon) {
-      const iconWrapper = document.createElement('span');
-      iconWrapper.className = 'vol-touch-button__icon';
-      if (typeof icon === 'string') {
-        iconWrapper.textContent = icon;
-      } else {
-        iconWrapper.appendChild(icon);
-      }
-      this.element.appendChild(iconWrapper);
-    }
+    if (icon) this.setIcon(icon);
 
     this.boundPointerDown = (event) => {
       if (this.element.disabled) return;
@@ -130,6 +122,32 @@ export class TouchButton {
     this.element.disabled = disabled;
     if (disabled) {
       this.setPressed(false, this.pressSource ?? 'pointer');
+    }
+  }
+
+  /**
+   * İkonu bileşeni yeniden kurmadan değiştirir.
+   *
+   * Slot tabanlı aksiyonlarda aynı düğme farklı bir eyleme bağlanabilir;
+   * düğmeyi yıkıp kurmak basılı pointer sahipliğini ve odağı düşürürdü.
+   */
+  setIcon(icon: string | Node | null): void {
+    if (icon === null) {
+      this.iconWrapper?.remove();
+      this.iconWrapper = null;
+      return;
+    }
+
+    if (!this.iconWrapper) {
+      this.iconWrapper = document.createElement('span');
+      this.iconWrapper.className = 'vol-touch-button__icon';
+      this.element.appendChild(this.iconWrapper);
+    }
+
+    if (typeof icon === 'string') {
+      this.iconWrapper.textContent = icon;
+    } else {
+      this.iconWrapper.replaceChildren(icon);
     }
   }
 

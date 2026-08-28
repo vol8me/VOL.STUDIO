@@ -1,6 +1,7 @@
 import { Vector2 } from '../math/Vector2';
 import { normalizeAnalog, normalizeDirection } from './InputUtils';
 import { createIdleActions, type InputState } from './InputState';
+import type { VirtualActionSource } from './VirtualActionSource';
 import { INPUT } from '../constants';
 
 export interface Stick {
@@ -27,6 +28,15 @@ export interface TouchStickOptions<TAction extends string> {
    * "nişan al + otomatik ateş" deseni her oyunun tercihi değildir.
    */
   aimStickAction?: TAction;
+  /**
+   * Ekran üstü düğmelerin yazdığı eylem kaynağı.
+   *
+   * Verilirse düğme basımları stick durumuyla AYNI karede birleşir; ayrıca
+   * yalnızca düğmeye basılıyken de sağlayıcı aktif sayılır (bkz. `isActive`),
+   * yoksa hareket etmeden basılan bir düğme `InputManager` tarafından PC'ye
+   * düşer ve yutulurdu.
+   */
+  actionSource?: VirtualActionSource<TAction>;
   deadZone?: number;
   maxRadius?: number;
 }
@@ -44,18 +54,24 @@ export class TouchStickState<TAction extends string> {
 
   private readonly actions: readonly TAction[];
   private readonly aimStickAction?: TAction;
+  private readonly actionSource?: VirtualActionSource<TAction>;
   private readonly deadZone: number;
   public readonly maxRadius: number;
 
   constructor(options: TouchStickOptions<TAction>) {
     this.actions = options.actions;
     this.aimStickAction = options.aimStickAction;
+    this.actionSource = options.actionSource;
     this.deadZone = options.deadZone ?? INPUT.DEAD_ZONE_RATIO;
     this.maxRadius = options.maxRadius ?? INPUT.STICK_MAX_RADIUS;
   }
 
   get isActive(): boolean {
-    return this.leftStick !== undefined || this.rightStick !== undefined;
+    return (
+      this.leftStick !== undefined ||
+      this.rightStick !== undefined ||
+      this.actionSource?.hasPressed === true
+    );
   }
 
   getLeftStick(): Stick | undefined {
@@ -110,6 +126,9 @@ export class TouchStickState<TAction extends string> {
       actions[this.aimStickAction] =
         this.rightStick !== undefined && rightRaw.length() / this.maxRadius > this.deadZone;
     }
+    // Düğmeler stick'ten SONRA yazılır: aynı eyleme hem nişan çubuğu hem
+    // düğme bağlıysa, düğme basımı nişan çubuğunun `false`unu ezebilmeli.
+    this.actionSource?.applyTo(actions);
 
     return {
       move: normalizeAnalog(leftRaw, this.deadZone, this.maxRadius),

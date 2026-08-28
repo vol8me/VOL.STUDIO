@@ -52,7 +52,20 @@ export abstract class BaseScene extends Phaser.Scene {
     i18next.on('languageChanged', this.onLanguageChangedBound);
     scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChangedBound));
 
-    this.createScene(data);
+    try {
+      this.createScene(data);
+    } catch (createError) {
+      // Phaser, `create()` fırlattığında SHUTDOWN göndermeyi garanti etmez.
+      // Alt sınıf kısmen kurduğu kaynakları bırakmayı denesin; onun cleanup
+      // hatası asıl başlangıç nedenini MASKELEMEMELİ. `handleShutdown()` kendi
+      // finally'sinde UIRoot/i18n/rAF scope'unu her durumda kapatır.
+      try {
+        this.handleShutdown();
+      } catch (cleanupError) {
+        console.error('[BaseScene] Kısmi kurulum temizliği başarısız:', cleanupError);
+      }
+      throw createError;
+    }
   }
 
   /** Sahne kurulumunu alt sınıf burada yapar. `this.ui` hazırdır. */

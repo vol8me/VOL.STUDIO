@@ -26,6 +26,7 @@ pnpm --filter @volstudio/vol-hell dev
 | Progression | Spark/Flux economy, level-ups, card catalog (ability / buff / trade-off), shop reroll/lock      |
 | Abilities   | Chain lightning, fire zone, multi-shot, turret — Q/E slots; scales with player damage/fire rate |
 | Audio       | Adaptive music + SFX driven through the `@volstudio/core` music engine                          |
+| Mobile      | On-screen touch controls, Android back button, auto-pause on background, haptics                |
 
 Gameplay numbers live as data under `src/config/`; balancing is a config change, not a code change.
 
@@ -51,11 +52,31 @@ not yet a replacement for the entire production Phaser path: interactive
 elite/boss controllers and the existing visual entity managers remain Phaser
 owned and still require device smoke testing.
 
+### Mobile / touch
+
+`shouldUseTouchControls()` (CORE) mounts on-screen controls only when the
+primary pointer is coarse AND cannot hover: dash plus two ability buttons at
+the bottom right, pause at the top right (see `GameMobileControls`,
+`TouchControls`). Ability/pause inputs are edge-triggered on touch, matching
+their keyboard behaviour; `dash` carries frame state instead, so it merges
+into the touch joystick's action set through `VirtualActionSource` in the SAME
+frame — as separate providers, moving would have blocked pressing dash. The
+Android hardware back button is bridged through a `vol:androidback` event
+(`MainActivity.kt` → `backNavigation.ts`) and routed by whichever screen is
+open (exit confirmation in the menu, pause in-game, consumed by card/death
+screens). Backgrounding the app (`observeAppVisibility`) clears virtual button
+presses and auto-pauses the run. Haptics (`core/src/platform/haptics.ts`) use
+named patterns, default to enabled, and can be turned off in Settings; on
+platforms without `navigator.vibrate` they are silent no-ops.
+
 ## Hardening contract
 
 - Scene restarts do not leave keyboard keys, Phaser managers, DOM screens, i18n
   listeners, rAF/timers, or async telegraphs behind; owning systems expose an
   explicit `destroy()`/`stopAll()` boundary.
+- Run completion (victory/defeat) is guarded by a generation counter: a stale
+  stats-submission result returning after a restart cannot open the summary
+  screen over the new run.
 - Runtime inputs reject or safely saturate `NaN`, `Infinity`, negative deltas,
   invalid directions, and corrupt counters. Score, economy, health, cooldown,
   and audio parameters remain finite.

@@ -25,13 +25,20 @@ export class GameKeyboardBindings {
     private readonly keyboard: Phaser.Input.Keyboard.KeyboardPlugin,
     options: GameKeyboardBindingOptions,
   ) {
-    this.bind(options.pauseKeyCode, options.onPause);
+    try {
+      this.bind(options.pauseKeyCode, options.onPause);
 
-    for (const slot of ['primary', 'secondary'] as const) {
-      this.bind(options.abilityKeys[slot], () => {
-        if (options.isAbilityBlocked()) return;
-        options.onAbility(slot);
-      });
+      for (const slot of ['primary', 'secondary'] as const) {
+        this.bind(options.abilityKeys[slot], () => {
+          if (options.isAbilityBlocked()) return;
+          options.onAbility(slot);
+        });
+      }
+    } catch (error) {
+      // Constructor yarıda kalırsa çağıran nesne referansını alamaz. O ana
+      // kadar bağlanan key closure'larını burada geri bırakmak zorundayız.
+      this.scope.dispose();
+      throw error;
     }
   }
 

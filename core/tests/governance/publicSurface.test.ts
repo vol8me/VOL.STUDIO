@@ -22,7 +22,19 @@ import * as VisualSynth from '../../src/visualSynth/index';
  * geçici bir tip) `export`u kaldır. İkisi de meşru; sessizce olmaması
  * yeterli.
  */
-const EXPECTED_EXPORT_COUNT = 185;
+// 185 → 192: Android taşımasının açtığı yedi giriş. `VirtualActionSource`
+// ekran üstü düğmelerin eylemlerini dokunmatik sağlayıcının kare durumuna
+// katar; `observeAppVisibility`/`getAppVisibility` arka plana alınmayı tek
+// sözleşmede toplar (ses, duraklatma ve teşhis aynı soruyu ayrı ayrı
+// soruyordu); `isTouchPrimary`/`hasTouchInput`/`canHover`/
+// `shouldUseTouchControls` ise "ekran üstü kontrol kurulmalı mı?" sorusunun
+// ÖNCÜL cevabıdır — girdi katmanının reaktif `pointer.wasTouch` ayrımı ilk
+// kareden önce karar vermeye yetmiyordu.
+// 192 → 197: dokunsal geri bildirim yüzeyi (`vibrate`, `setHapticsEnabled`,
+// `isHapticsEnabled`, `isHapticsSupported`, `cancelHaptics`). Phaser'ın
+// titreşim yüzeyi yok; Vibration API tek yerde anlamlandırılmış desenlere
+// bağlanır ki aynı etkileşim her ekranda aynı hissetsin.
+const EXPECTED_EXPORT_COUNT = 197;
 
 /**
  * `visualSynth/` kök barrel'a TEK bir isimle (`VisualSynth`) girer, tıpkı

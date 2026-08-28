@@ -26,6 +26,7 @@ pnpm --filter @volstudio/vol-hell dev
 | İlerleme   | Spark/Flux ekonomisi, seviye atlama, kart kataloğu (ability / buff / takas), dükkan reroll/kilitleme        |
 | Ability    | Zincir şimşek, ateş alanı, çoklu atış, kule — Q/E slotlarına takılır; oyuncu hasarı/ateş temposuyla ilerler |
 | Ses        | `@volstudio/core` müzik motoru üzerinden adaptif müzik + SFX yönetimi                                       |
+| Mobil      | Dokunmatik ekran kontrolleri, Android geri tuşu, arka plana geçince otomatik duraklatma, titreşim           |
 
 Oynanış sayıları `src/config/` altında veri olarak durur; denge değişikliği kod değil config işidir.
 
@@ -51,11 +52,32 @@ Phaser yolunun tamamının yerine geçmiş değildir: etkileşimli elite/boss
 kontrolcüleri ve mevcut görsel entity yöneticileri şimdilik Phaser tarafında
 kalır ve ayrı cihaz smoke testine tabidir.
 
+### Mobil / dokunmatik
+
+`shouldUseTouchControls()` (CORE) yalnızca birincil işaretçi kaba VE hover
+üretemiyorken ekran üstü kontrolleri kurar: sağ altta dash + iki yetenek
+düğmesi, sağ üstte duraklatma (bkz. `GameMobileControls`, `TouchControls`).
+Klavyede kenar-tetikli olan yetenek/duraklatma girdileri dokunmatikte de kenar
+tetiklidir; kare durumu taşıyan `dash` ise `VirtualActionSource` üzerinden
+dokunmatik joystick'in eylem kümesiyle AYNI karede birleşir — ikisi ayrı
+provider olsaydı hareket ederken dash basılamazdı. Android donanım geri tuşu
+`vol:androidback` olayına köprülenir (`MainActivity.kt` → `backNavigation.ts`)
+ve hangi ekranın açık olduğuna göre yönlendirilir (menüde çıkış onayı, oyunda
+duraklatma, kart/ölüm ekranında tüketim). Uygulama arka plana alınınca
+(`observeAppVisibility`) sanal basımlar temizlenir ve oyun otomatik
+duraklatılır. Titreşim (`core/src/platform/haptics.ts`) adlandırılmış
+desenlerle çalışır, varsayılan açıktır ve Ayarlar'dan kapatılabilir;
+desteklemeyen platformda (`navigator.vibrate` yoksa) sessizce hiçbir şey
+yapmaz.
+
 ## Dayanıklılık sözleşmesi
 
 - Sahne yeniden başlatıldığında klavye tuşları, Phaser yöneticileri, DOM ekranları,
   i18n dinleyicileri, rAF/timer'lar ve async telegraph'lar açıkta kalmaz; sahip
   olan sistemlerin `destroy()`/`stopAll()` sınırı vardır.
+- Koşu bitişi (zafer/yenilgi) bir kuşak (generation) sayacıyla korunur: restart
+  sonrası dönen eski bir istatistik-gönderim sonucu yeni koşunun üstüne özet
+  ekranı açamaz.
 - Runtime girişlerinde `NaN`, `Infinity`, negatif delta, geçersiz yön ve bozuk
   sayaç değerleri reddedilir veya güvenli sınıra doyurulur. Skor, ekonomi,
   can, cooldown ve ses parametreleri sonlu kalır.

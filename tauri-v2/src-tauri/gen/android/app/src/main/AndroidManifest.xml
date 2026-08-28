@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!--
+      navigator.vibrate() bu izin OLMADAN sessizce başarısız olur: hata
+      fırlatmaz, yalnızca hiçbir şey olmaz. Dokunsal geri bildirim
+      (core/src/platform/haptics.ts) tamamen buna bağlıdır.
+    -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- AndroidTV support -->
+    <uses-feature android:name="android.software.leanback" android:required="false" />
+
+    <application
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.volstudio_tauri"
+        android:usesCleartextTraffic="${usesCleartextTraffic}">
+        <!--
+          screenOrientation: VOL.HELL'in arena sınırları görünür alanı birebir
+          doldurur (bkz. Border.ts) ve düşman doğma/telegraf mesafeleri yatay
+          orana göre dengelendi. Dikey kipte arena 9:19.5'e sıkışır ve denge
+          bozulur; bu yüzden yön YATAYA kilitlenir. `sensorLandscape` iki
+          yatay yönü de kabul eder — oyuncu telefonu istediği tarafa çevirebilir.
+
+          configChanges zaten orientation/screenSize taşıyor: dönüşte Activity
+          yeniden yaratılmaz, yalnızca WebView yeniden ölçülür. Bu olmadan her
+          dönüş koşuyu baştan başlatırdı.
+        -->
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:launchMode="singleTask"
+            android:label="@string/main_activity_title"
+            android:name=".MainActivity"
+            android:screenOrientation="sensorLandscape"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <!-- AndroidTV support -->
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <provider
+          android:name="androidx.core.content.FileProvider"
+          android:authorities="${applicationId}.fileprovider"
+          android:exported="false"
+          android:grantUriPermissions="true">
+          <meta-data
+            android:name="android.support.FILE_PROVIDER_PATHS"
+            android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+</manifest>

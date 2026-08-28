@@ -13,12 +13,31 @@ import { resolve } from 'node:path';
  */
 const CSS_DIR = resolve(import.meta.dirname, '../../src/ui');
 
-/** `cursor: pointer` taşımadığı hâlde politikaya dahil edilen seçiciler. */
-const ALSO_REQUIRED = [
-  // Kaydırıcılarda tıklanan yüzey track'tir; `cursor: pointer` görünmez
-  // `__input` overlay'inde durur (yatay) ya da hiç yoktur (aralık kaydırıcı).
-  '.vol-slider__track',
-  '.vol-range-slider__track',
+/**
+ * `cursor: pointer` taşımadığı hâlde politikaya dahil edilen seçiciler.
+ *
+ * Bunlar kare düğme değil; hedef büyütmesi TEK EKSENDE ya da bir taşma
+ * şeridiyle uygulanır. Bu yüzden `consumesToken`ın "hem min-height hem
+ * min-width" kuralı yerine yalnızca token'a DAYANDIKLARI aranır.
+ *
+ * Önceden liste `.vol-slider__track` / `.vol-range-slider__track` diyordu ve
+ * token doğrudan GÖRSEL çubuğa uygulanıyordu; dokunmatik cihazda 16 px'lik
+ * çubuk 44 px'e şişip kaydırıcıyı bozuyordu (gerçek cihazda görüldü). Hedef,
+ * çubuğun görünümünü değiştirmeyen görünmez yüzeylere taşındı.
+ */
+const ALSO_REQUIRED: ReadonlyArray<{ selector: string; reason: string }> = [
+  {
+    selector: '.vol-slider--horizontal .vol-slider__input',
+    reason: 'Yatay kaydırıcının tıklanan yüzeyi görünmez input; hedef dikeyde büyür.',
+  },
+  {
+    selector: '.vol-slider--vertical .vol-slider__input',
+    reason: 'Dikey kaydırıcıda aynı yüzey, hedef yatayda büyür.',
+  },
+  {
+    selector: '.vol-range-slider__track::before',
+    reason: 'Aralık kaydırıcısında hedef, çubuğun üstünde simetrik taşan görünmez şerittir.',
+  },
 ];
 
 /**
@@ -187,7 +206,7 @@ describe('Dokunmatik hedef politikası', () => {
   it('token gerektiren ek yüzeyler (cursor:pointer taşımayanlar) de politikaya dahil', () => {
     const violations: string[] = [];
 
-    for (const selector of ALSO_REQUIRED) {
+    for (const { selector } of ALSO_REQUIRED) {
       const found = [...files.values()]
         .flatMap(blocks)
         .find((block) => block.selector === selector);
@@ -195,10 +214,29 @@ describe('Dokunmatik hedef politikası', () => {
         violations.push(`${selector} hiçbir CSS dosyasında bulunamadı`);
         continue;
       }
-      if (!consumesToken(found.body)) violations.push(`${selector} token tüketmiyor`);
+      // Tek eksenli/şerit tabanlı hedefler için "her iki min-*" şartı geçerli
+      // değil; aranan şey ölçünün TOKEN'DAN türemesi.
+      if (!found.body.includes('--vol-hit-target-min')) {
+        violations.push(`${selector} --vol-hit-target-min'e dayanmıyor`);
+      }
     }
 
     expect(violations).toEqual([]);
+  });
+
+  it('kaydırıcı çubukları GÖRSEL kalır — hedef büyütmesi çubuğa uygulanmaz', () => {
+    // Regresyon: token doğrudan çubuğa uygulanınca 16 px'lik bar dokunmatikte
+    // 44 px'e çıkıyor ve kaydırıcı, içinde ince bir tutamağın yüzdüğü kocaman
+    // bir bloğa dönüşüyordu.
+    for (const selector of ['.vol-slider__track', '.vol-range-slider__track']) {
+      const found = [...files.values()]
+        .flatMap(blocks)
+        .find((block) => block.selector === selector);
+      expect(found, `${selector} tanımlı olmalı`).toBeDefined();
+      expect(found!.body, `${selector} görsel çubuktur, hedef değil`).not.toContain(
+        '--vol-hit-target-min',
+      );
+    }
   });
 
   it('her muafiyet bir gerekçe taşır ve gerçekten var olan bir seçiciyi işaret eder', () => {
