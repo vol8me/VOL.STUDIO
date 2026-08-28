@@ -5,6 +5,45 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-28 — VisualSynth + AudioSynth: extraction sonrası residue ve dependency sınırı
+
+Harici agent audit'inin bulguları dosya ağacı, import graph, package
+manifest ve source diff üzerinden kanıtlandı. Kullanıcı kararları netleştikten
+sonra uygulandı.
+
+**Kanıtlanan gerçekler:**
+
+- `core/src/visual*` ve `core/src/audio/synth*` fiziksel olarak yok.
+- `core/src/index.ts` ve `core/package.json` public surface'da VisualSynth/
+  Synth yok.
+- `visual-synth`/`audio-synth` yalnızca `core/math/interpolation`,
+  `core/random`, `core/pool` gibi generic primitiflere bağımlı; full
+  `@volstudio/core` import yok.
+- `core` source'u hiç `@volstudio/visual-synth`/`@volstudio/audio-synth`
+  import etmiyor.
+
+**Uygulanan kararlar:**
+
+- 5 dosyadaki audio-synth/visual-synth textual residue'leri
+  (`core/src/audio/music/types.ts`, `core/src/random/random.ts`,
+  `publicApi.test.ts`, `publicSurface.test.ts`, `core/docs/music-engine.md`)
+  generic build-time asset compiler / sentez aracı ifadelerine çevrildi.
+- `games/vol-hell/package.json`da `@volstudio/audio-synth` `dependencies`
+  yerine `devDependencies`'a çekildi (runtime `src/` import yok, sadece build
+  script'leri kullanıyor).
+- `export/` klasörleri mevcut haliyle `.gitkeep` ile korundu; otomatik
+  generated-output ignore politikası şu an gerekmedi.
+- `core/tests/governance/noSynthDependency.test.ts` eklendi: core'un
+  `@volstudio/visual-synth` ve `@volstudio/audio-synth`'e source ve manifest
+  seviyesinde bağımlı olmadığını regression testiyle kilitliyor.
+
+**Doğrulama:**
+
+- `pnpm high` ✓ (contract, format, typecheck, lint, lint-css, coverage,
+  build, e2e)
+- `core` testleri ve `noSynthDependency` testi ✓
+- Commit: `788d30e`, push: `feature/debt-closure`
+
 ## 2026-08-28 — VisualSynth + AudioSynth: core'dan devtools paketlerine taşıma
 
 `core/src/visualSynth/` ve `core/src/audio/synth/` alt sistemleri kendi
