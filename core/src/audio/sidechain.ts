@@ -56,16 +56,32 @@ export class SidechainDucker {
     const releaseStart = now + profile.attack + profile.hold;
     const end = releaseStart + profile.release;
 
-    if (end > this.activeUntil) {
-      this.activeUntil = end;
-      this.releaseStartAt = releaseStart;
-      // Release de audio saatinde: sekma arka plandayken context durursa
-      // ducking de donar ve geri donuldugunde kaldigi yerden dogru cozulur.
-      // `currentTarget` burada 1'e set EDILMEZ — release başladığında gain
-      // timeline tarafından 1'e çekilir; JS state olan currentTarget, hold
-      // aşamasında gelen yeni duck'lar için etkin hedefi korumalıdır.
-      this.gain.gain.setTargetAtTime(1, releaseStart, Math.max(0.001, profile.release / 3));
-    }
+    // `cancelScheduledValues` yukarıda ÖNCEKİ release'i (varsa) HER ZAMAN
+    // iptal eder. Release'in yeniden planlanması eskiden yalnızca
+    // `end > activeUntil` iken oluyordu — daha KISA/erken biten bir duck,
+    // hold aşamasında devam eden daha UZUN bir duck'ın üstüne binince bu
+    // şart sağlanmaz, ama önceki release zaten iptal edilmiş olur: hiçbiri
+    // yeniden planlanmaz ve gain sonsuza dek duck hedefinde TAKILI kalır.
+    // Bunun yerine iki adayın (önceki kazanan pencere vs. bu çağrının
+    // penceresi) en geç bitentarafı HER ZAMAN yeniden planlanır.
+    const previousReleaseStart = this.releaseStartAt;
+    const previousEnd = this.activeUntil;
+    const releaseWins = end >= previousEnd;
+    const winningEnd = releaseWins ? end : previousEnd;
+    const winningReleaseStart = releaseWins ? releaseStart : previousReleaseStart;
+
+    this.activeUntil = winningEnd;
+    this.releaseStartAt = winningReleaseStart;
+    // Release de audio saatinde: sekma arka plandayken context durursa
+    // ducking de donar ve geri donuldugunde kaldigi yerden dogru cozulur.
+    // `currentTarget` burada 1'e set EDILMEZ — release başladığında gain
+    // timeline tarafından 1'e çekilir; JS state olan currentTarget, hold
+    // aşamasında gelen yeni duck'lar için etkin hedefi korumalıdır.
+    this.gain.gain.setTargetAtTime(
+      1,
+      winningReleaseStart,
+      Math.max(0.001, (winningEnd - winningReleaseStart) / 3),
+    );
   }
 
   /** Anında sustain seviyesine geri dön (örn. sahne değişiminde). */

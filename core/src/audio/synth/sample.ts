@@ -24,20 +24,33 @@ export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
   let dataSize = 0;
 
   let offset = 12;
-  while (offset < bytes.byteLength - 8) {
+  while (offset + 8 <= bytes.byteLength) {
     const chunkId = readString(offset, 4);
     const chunkSize = dataView.getUint32(offset + 4, true);
+    const chunkDataStart = offset + 8;
+
     if (chunkId === 'fmt ') {
-      fmtOffset = offset + 8;
+      fmtOffset = chunkDataStart;
     } else if (chunkId === 'data') {
-      dataOffset = offset + 8;
-      dataSize = chunkSize;
+      dataOffset = chunkDataStart;
+      // Truncated dosyalarda (yarım kalan indirme/yazma) `data` chunk'ının
+      // beyan ettiği boyut gerçek dosya boyutunu aşabilir — mevcut baytlarla
+      // sınırlanır ki elde ne varsa ondan çözülebilsin.
+      dataSize = Math.min(chunkSize, bytes.byteLength - chunkDataStart);
     }
-    offset += 8 + chunkSize + (chunkSize % 2);
+
+    // Bir chunk beyan edilen boyutuyla dosya sınırlarını aşıyorsa devamı
+    // güvenilmezdir (bozuk/kesik dosya) — taramayı burada durdur, o ana kadar
+    // bulunanlarla devam edilir.
+    if (chunkDataStart + chunkSize > bytes.byteLength) break;
+    offset = chunkDataStart + chunkSize + (chunkSize % 2);
   }
 
   if (fmtOffset < 0 || dataOffset < 0) {
     throw new Error('WAV fmt veya data chunk bulunamadı');
+  }
+  if (fmtOffset + 16 > bytes.byteLength) {
+    throw new Error('WAV fmt chunk çok kısa (bozuk dosya)');
   }
 
   const format = dataView.getUint16(fmtOffset, true);
@@ -49,6 +62,9 @@ export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
   // gerçek format fmt chunk'ının uzantı kısmındaki GUID'in ilk 2 baytındadır.
   let effectiveFormat = format;
   if (format === 0xfffe) {
+    if (fmtOffset + 26 > bytes.byteLength) {
+      throw new Error('WAV extensible fmt chunk çok kısa (bozuk dosya)');
+    }
     effectiveFormat = dataView.getUint16(fmtOffset + 24, true);
   }
 
@@ -57,6 +73,19 @@ export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
   }
   if (effectiveFormat === 3 && bitsPerSample !== 32 && bitsPerSample !== 64) {
     throw new Error(`Float WAV yalnızca 32/64-bit destekler (verilen: ${bitsPerSample})`);
+  }
+  // PCM için desteklenmeyen/sıfır bit derinliği burada kesilmezse aşağıdaki
+  // `sampleCount` bölmesi (`dataSize / (numChannels * (bitsPerSample / 8))`)
+  // bitsPerSample=0 iken Infinity üretir → `new Float32Array(Infinity)`
+  // kontrolsüz RangeError fırlatır.
+  if (effectiveFormat === 1 && ![8, 16, 24, 32].includes(bitsPerSample)) {
+    throw new Error(`Desteklenmeyen bit derinliği: ${bitsPerSample}`);
+  }
+  if (numChannels <= 0) {
+    throw new Error(`Geçersiz WAV kanal sayısı: ${numChannels}`);
+  }
+  if (wavSampleRate <= 0) {
+    throw new Error(`Geçersiz WAV örnek oranı: ${wavSampleRate}`);
   }
 
   const sampleCount = Math.floor(dataSize / (numChannels * (bitsPerSample / 8)));
@@ -188,11 +217,17 @@ export function loopSamples(
 
   if (crossfade) {
     const fadeSamples = Math.min(50, Math.floor(samples.length / 2));
-    for (let i = 0; i < fadeSamples; i++) {
-      const tailPos = samples.length - fadeSamples + i;
-      const headPos = i;
-      const ratio = i / fadeSamples;
-      out[i] = samples[tailPos] * (1 - ratio) + samples[headPos] * ratio;
+    // Her İÇ loop sınırında (samples.length, 2×samples.length, ...) crossfade
+    // uygulanır — yalnızca ilkinde değil. `out[i] = samples[i % samples.length]`
+    // her `k * samples.length` noktasında kaynağın kuyruğundan başına aniden
+    // atlar; bu geçiş her tekrarda tıklar, tek bir kez değil.
+    for (let boundary = samples.length; boundary < targetLength; boundary += samples.length) {
+      for (let i = 0; i < fadeSamples; i++) {
+        const tailPos = samples.length - fadeSamples + i;
+        const headPos = i;
+        const ratio = i / fadeSamples;
+        out[boundary - fadeSamples + i] = samples[tailPos] * (1 - ratio) + samples[headPos] * ratio;
+      }
     }
   }
 

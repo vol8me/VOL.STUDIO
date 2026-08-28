@@ -255,6 +255,101 @@ describe('MusicPlaylist', () => {
     warn.mockRestore();
   });
 
+  describe('kalıcı başarısızlık — sonsuz yeniden-deneme döngüsü olmamalı', () => {
+    it('tek parçalık liste kalıcı olarak başarısız olursa hemen pes eder', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      e.engine.play.mockImplementation(() => Promise.reject(new Error('decode failed')));
+
+      const p = build(['a']);
+      p.start();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      // `queue.length === 1` — bir başarısızlık, listedeki HER parçanın
+      // başarısız olduğu anlamına gelir. Eskiden burada `advanceCursor()`
+      // aynı tek parçayı yeniden seçip bir retry zamanlar, o da başarısız
+      // olur, `gapMs` aralıklarla SONSUZA kadar tekrarlardı (kod yorumu bunu
+      // önlediğini iddia ediyordu ama önlemiyordu).
+      expect(t.pendingCount).toBe(0);
+      expect(p.isRunning).toBe(false);
+      expect(errorSpy).toHaveBeenCalled();
+
+      warn.mockRestore();
+      errorSpy.mockRestore();
+    });
+
+    it('çok parçalı liste TAMAMI başarısız olursa sırayla dener ve sonunda pes eder', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      e.engine.play.mockImplementation(() => Promise.reject(new Error('decode failed')));
+
+      const p = build(['a', 'b', 'c']);
+      p.start();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      // 1. deneme başarısız — henüz 2 parça daha denenmemiş, pes edilmez.
+      expect(p.isRunning).toBe(true);
+      expect(t.pendingCount).toBe(1);
+
+      t.runAll();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(p.isRunning).toBe(true);
+      expect(t.pendingCount).toBe(1);
+
+      t.runAll();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      // 3. parça da (queue.length=3) art arda başarısız oldu — artık pes edilir.
+      expect(p.isRunning).toBe(false);
+      expect(t.pendingCount).toBe(0);
+      expect(errorSpy).toHaveBeenCalled();
+      const attempted = e.engine.play.mock.calls.map((call) => call[0]);
+      expect(attempted).toEqual(['a', 'b', 'c']);
+
+      warn.mockRestore();
+      errorSpy.mockRestore();
+    });
+
+    it('bir başarı, art arda başarısızlık sayacını sıfırlar (çoklu tur boyunca pes etmez)', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      // 'a' hep başarısız, 'b' hep başarılı.
+      e.engine.play.mockImplementation((trackId: string) =>
+        trackId === 'a' ? Promise.reject(new Error('decode failed')) : Promise.resolve(),
+      );
+
+      const p = build(['a', 'b']);
+      p.start();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(t.pendingCount).toBe(1); // 'a' başarısız oldu, 'b' retry'ı bekliyor
+
+      // Art arda turlar boyunca (a başarısız → b başarılı → b doğal biter →
+      // a başarısız → ...) sayaç HER 'b' başarısından sonra sıfırlanmalı,
+      // `queue.length`e (2) ASLA ulaşmamalı.
+      for (let round = 0; round < 3; round++) {
+        t.runAll(); // 'b' denemesini tetikler — başarılı
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(p.isRunning).toBe(true);
+
+        e.endTrack('b'); // 'b' doğal biter → sıra 'a'ya döner
+        t.runAll(); // 'a' denemesini tetikler — yine başarısız
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(p.isRunning).toBe(true); // sayaç 'b' başarısıyla sıfırlanmıştı, pes edilmedi
+      }
+
+      expect(errorSpy).not.toHaveBeenCalled();
+      warn.mockRestore();
+      errorSpy.mockRestore();
+    });
+  });
+
   it('onTrackChange her parça değişiminde bildirir', async () => {
     const seen: string[] = [];
     const p = build(['a', 'b'], { onTrackChange: (id: string) => seen.push(id) });

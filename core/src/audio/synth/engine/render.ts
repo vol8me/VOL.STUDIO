@@ -5,6 +5,7 @@ import type { Distortion } from '../effects';
 import type { Voice } from './voice';
 import { frequencyAtTime, getFmSample } from './frequency';
 import { OVERSAMPLE_FACTOR } from './constants';
+import { clamp01 } from '../../../math/interpolation';
 
 export function renderDrySample(
   t: number,
@@ -60,9 +61,23 @@ export function renderDrySample(
       let sum = 0;
       for (let hi = 0; hi < voice.harmonics.length; hi++) {
         const h = voice.harmonics[hi];
-        const hFreq = Math.min(nyquistLimit, detunedFreq * h.ratio);
+        const hFreq = detunedFreq * h.ratio;
         const inc = hFreq / sampleRate;
-        sum += getWaveSampleWithPhase('sine', voice.phases[hi] + (h.phase ?? 0), pulseWidth, inc);
+        // Nyquist üstü harmonikler KELEPÇELENMEZ. `Math.min(nyquistLimit, hFreq)`
+        // frekansı nyquistLimit'e KATLARDI — farklı ratio'lu birden çok harmonik
+        // aynı katlanmış frekansta üst üste binip kaynak timbre'de olmayan yapay
+        // bir ton/beating üretirdi. Bunun yerine duyulmaz harmonik tamamen
+        // atlanır (sessiz). Faz biriktiricisi yine de gerçek frekansla
+        // ilerletilir ki slide/vibrato ile harmonik yeniden duyulur aralığa
+        // girdiğinde faz süreksizliği/tık oluşmasın.
+        if (hFreq < nyquistLimit) {
+          // `h.gain` (HarmonicParams) — presetler (örn. additivePad) harmonik
+          // başına kasıtlı azalan kazanç tanımlar; burada uygulanmazsa tüm
+          // harmonikler eşit sesle çalar ve tasarlanan timbre kaybolur.
+          sum +=
+            clamp01(h.gain) *
+            getWaveSampleWithPhase('sine', voice.phases[hi] + (h.phase ?? 0), pulseWidth, inc);
+        }
         voice.phases[hi] = (voice.phases[hi] + inc) % 1;
       }
       sample += sum;

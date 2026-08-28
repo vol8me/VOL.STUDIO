@@ -53,6 +53,8 @@ export class MusicPlaylist {
   private lastPlayed: string | null = null;
   /** `start()` ile `play()` arasında `stop()` gelirse sesi bastırmak için. */
   private startToken = 0;
+  /** Art arda (başarılı çalma olmadan) kaç parça başarısız oldu. */
+  private consecutiveFailures = 0;
 
   constructor(
     private readonly engine: Pick<MusicEngine, 'play' | 'stop' | 'onTrackEnd'>,
@@ -178,12 +180,34 @@ export class MusicPlaylist {
         this.engine.stop({ fadeOut: 0 });
         return;
       }
+      this.consecutiveFailures = 0;
       this.lastPlayed = trackId;
       this.onTrackChange?.(trackId);
     } catch (error) {
       console.warn(`[MusicPlaylist] Parça çalınamadı, atlanıyor: ${trackId}`, error);
       if (!this.running || token !== this.startToken) return;
-      // Tek parçalık listede sonsuz döngüye girmemek için boşluk kadar bekle.
+
+      // Listedeki HER parça art arda (tek bir başarı olmadan) başarısız
+      // olduysa pes edilir. Eskiden yalnızca `advanceCursor()` çağrılıp
+      // boşluk kadar beklenirdi — yorum bunun tek-parçalık listede sonsuz
+      // döngüyü önlediğini iddia ediyordu ama ÖNLEMİYORDU: tek parçalık
+      // (veya tamamı bozuk) bir listede `advanceCursor()` sırayla aynı
+      // kalıcı-bozuk parçaya geri döner ve `gapMs` aralıklarla sonsuza kadar
+      // yeniden dener. `queue.length` art arda başarısızlıktan sonra (yani
+      // listedeki her parça en az bir kez denenip başarısız olduktan sonra)
+      // durdurulur.
+      this.consecutiveFailures++;
+      if (this.consecutiveFailures >= this.queue.length) {
+        console.error(
+          '[MusicPlaylist] Listedeki tüm parçalar art arda başarısız oldu, durduruluyor.',
+        );
+        this.running = false;
+        this.clearGap();
+        this.unsubscribe?.();
+        this.unsubscribe = null;
+        return;
+      }
+
       this.advanceCursor();
       this.clearGap();
       this.gapHandle = this.setTimer(() => {

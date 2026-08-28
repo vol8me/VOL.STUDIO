@@ -75,4 +75,31 @@ describe('SidechainDucker — zamanlama tek saatte', () => {
 
     expect(gain.value).toBe(0.2);
   });
+
+  it("kısa bir duck, uzun bir duck'ın hold aşamasına binince release'i silmez", () => {
+    const ducker = makeDucker();
+    const gain = gainOf(ducker);
+
+    // Duck A: attack=0.01, hold=2, release=1 → releaseStart=2.01, end=3.01
+    ducker.duck({ target: 0.2, attack: 0.01, hold: 2, release: 1 });
+    expect(gain.value).toBe(0.2);
+
+    // Duck A'nın hold aşamasının ortasında (releaseStart'tan ÖNCE) daha KISA
+    // bir duck B gelir: end2=0.71, duck A'nın end'inden (3.01) KISA — eski
+    // `if (end > activeUntil)` şartı burada SAĞLANMAZ.
+    context.currentTime = 0.5;
+    ducker.duck({ target: 0.2, attack: 0.01, hold: 0.1, release: 0.1 });
+    expect(gain.value).toBe(0.2);
+
+    // `cancelScheduledValues` her duck() çağrısında ÖNCEKİ release'i (varsa)
+    // her zaman iptal eder. Eskiden bu 2. çağrı `end2 < activeUntil` olduğu
+    // için release'i YENİDEN PLANLAMIYORDU — duck A'nın release'i cancel
+    // edilmiş ama yerine hiçbiri konmamış olurdu, gain sonsuza dek 0.2'de
+    // TAKILI kalırdı. Duck A'nın gerçek release'i (2.01) hâlâ ayakta olmalı.
+    gain.advanceTo(1); // duck B'nin kendi release'i geçti ama duck A'nınki değil
+    expect(gain.value).toBe(0.2);
+
+    gain.advanceTo(3.5); // duck A'nın release'inden (2.01) sonra
+    expect(gain.value).toBe(1);
+  });
 });

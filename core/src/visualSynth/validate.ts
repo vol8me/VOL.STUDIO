@@ -15,9 +15,17 @@
  * kullanıma kadar erteler.
  */
 
-import { FIELD_KINDS, NODE_SCHEMAS } from './schema';
+import { FIELD_KINDS, NODE_SCHEMAS, resolveFieldDomain } from './schema';
 import type { NodeSchema, ParamConstraint, ParamSchema } from './schema';
-import type { CoverageBlend, FieldKind, FieldNode, HeightBlend, SpriteDoc } from './types';
+import type {
+  CoverageBlend,
+  FieldKind,
+  FieldNode,
+  HeightBlend,
+  LayerSpec,
+  LayerStack,
+  SpriteDoc,
+} from './types';
 
 /** En küçük ve en büyük çıktı kenarı (§2). */
 export const MIN_SIZE = 8;
@@ -615,6 +623,78 @@ function checkLayer(
   }
 }
 
+/**
+ * İzotropik olmayan `scale` (x≠y) bir signed-domain (SDF) alt-ağacını
+ * sarmalıyorsa reddeder.
+ *
+ * `scaleInverse` yalnızca KOORDİNATI uzatır; dönen SDF DEĞERİ kaynağın
+ * mesafesi kalır (bkz. `field/domain.ts` `scaleInverse` JSDoc'u — Lipschitz
+ * sabiti bozulur). Bu, iki SOMUT tüketicide gerçek, ölçülebilir yanlış
+ * sonuca dönüşür:
+ *
+ * 1. `toCoverageFn` (field/coverage.ts) `antialias: true` iken kenar
+ *    yumuşatma genişliğini `space.pixelUnit` (İZOTROPİK, tek sayı) ile
+ *    hesaplar — anizotropik ölçekli bir SDF'nin kenarı bir eksende
+ *    beklenenden yumuşak/keskin çıkar.
+ * 2. `sdf.smoothUnion`/`smoothSub`/`smoothIntersection` harman yarıçapı
+ *    `k`yı DOĞRUDAN girdi mesafe değerleri üzerinde uygular; bir girdi
+ *    anizotropik ölçekliyse harman simetrik olmaz.
+ *
+ * `post.outline` ve `distance` filtre düğümü bu sorundan MUAF: ikisi de
+ * kapsamaya (coverage) çevrilmiş, PİKSEL uzayında ayrık bir gösterim
+ * üzerinde çalışır — ham SDF değerini asla mesafe/uzunluk olarak okumazlar.
+ * Katman düzeyindeki `domain` zinciri de muaf: `renderLayer` `domain`ı
+ * `compileCoverage` SONRASINA uygular, yani kapsamaya çevrilmiş bir
+ * görüntüyü geometrik olarak yeniden örnekler (bitmap yeniden boyutlandırma
+ * gibi) — SDF değeri o noktada zaten kapsamaya dönüşmüştür.
+ *
+ * `resolveFieldDomain` yalnızca YAPISAL OLARAK GEÇERLİ bir ağaçta güvenlidir
+ * (bkz. kendi JSDoc'u — `NODE_SCHEMAS[node.kind]` doğrulanmamış bir `kind`de
+ * fırlatır). Bu yüzden bu fonksiyon `collectSpriteDocIssues` sıfır YAPISAL
+ * sorun bildirdikten SONRA, `input`i `SpriteDoc` olarak güvenle
+ * ele alabileceği noktada çağrılır.
+ */
+function checkAnisotropicScaleOverSignedFields(issues: IssueList, doc: SpriteDoc): void {
+  const visitField = (node: FieldNode, path: string): void => {
+    if (node.kind === 'scale' && node.x !== node.y && resolveFieldDomain(node.input) === 'signed') {
+      issues.add(
+        path,
+        'izotropik olmayan `scale` (x≠y) bir signed-distance (SDF) alt-ağacını sarmalıyor: ' +
+          'kenar yumuşatma genişliği ve sdf.smoothUnion/smoothSub/smoothIntersection harman ' +
+          'yarıçapı bu SDF üzerinde yanlış sonuç üretir (bkz. field/domain.ts scaleInverse). ' +
+          "x=y (izotropik) kullanın, ya da bu SDF alt-ağacını KENDİ scope'unda coverage'a " +
+          'çevirdikten sonra (ör. ayrı bir katman/maske olarak) ölçekleyin.',
+      );
+    }
+    for (const param of NODE_SCHEMAS[node.kind].params) {
+      if (param.type !== 'field') continue;
+      const child = (node as unknown as Record<string, unknown>)[param.name];
+      if (child && typeof child === 'object') {
+        visitField(child as FieldNode, `${path}.${param.name}`);
+      }
+    }
+  };
+
+  const visitLayers = (layers: readonly LayerSpec[], path: string): void => {
+    layers.forEach((layer, i) => {
+      const at = `${path}[${i}]`;
+      visitField(layer.source, `${at}.source`);
+      if (layer.mask) {
+        if (isLayerStackNode(layer.mask)) visitLayers(layer.mask.layers, `${at}.mask`);
+        else visitField(layer.mask, `${at}.mask`);
+      }
+      if (layer.height) visitField(layer.height, `${at}.height`);
+      if (layer.materialMask) visitField(layer.materialMask, `${at}.materialMask`);
+    });
+  };
+
+  visitLayers(doc.layers, 'layers');
+}
+
+function isLayerStackNode(value: FieldNode | LayerStack): value is LayerStack {
+  return Array.isArray((value as LayerStack).layers);
+}
+
 /** Bir katman yığınını doğrular; alt-yığınlar için özyinelemelidir (D10). */
 function checkLayerStack(
   issues: IssueList,
@@ -849,6 +929,13 @@ export function collectSpriteDocIssues(input: unknown): string[] {
   if (input.post !== undefined) checkPost(issues, input.post, colorCountOf(input.palette));
 
   checkLayerStack(issues, 'layers', input.layers, rampIds, new Set<string>(), 0);
+
+  // `resolveFieldDomain` YALNIZCA yapısal olarak geçerli bir ağaçta
+  // güvenlidir (bkz. kendi JSDoc'u) — buraya kadar hiç sorun toplanmadıysa
+  // `input` artık güvenle `SpriteDoc` sayılabilir.
+  if (issues.items.length === 0) {
+    checkAnisotropicScaleOverSignedFields(issues, input as unknown as SpriteDoc);
+  }
 
   return issues.items;
 }

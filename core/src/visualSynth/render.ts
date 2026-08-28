@@ -188,6 +188,20 @@ function createChannels(count: number): RenderChannels {
   };
 }
 
+/**
+ * Bir birikimcinin gerçekte hangi kanallara ihtiyacı var.
+ *
+ * Bir maske alt-yığını yalnızca `nested.coverage`yi okur (bkz. `renderLayer`
+ * (b) adımı) — `nested.height`/`nested.material` hesaplanıp tamamen çöpe
+ * giderdi. `'coverage'` bu iki kanalın per-pixel hesaplamasını (yükseklik
+ * alanı değerlendirmesi, `blendHeight`, malzeme seçici alanı, malzeme
+ * karşılaştırması) atlar; ÇIKTI TİPİ değişmez (`RenderChannels` üç alanı da
+ * taşımaya devam eder — tüketicileri sessizce daraltmak daha büyük, daha
+ * riskli bir API değişikliği olurdu), yalnızca height/material dizileri
+ * anlamsız (sıfır) kalır.
+ */
+type ChannelsNeeded = 'all' | 'coverage';
+
 function renderLayer(
   layer: LayerSpec,
   doc: SpriteDoc,
@@ -196,9 +210,11 @@ function renderLayer(
   accumulator: RenderChannels,
   depth: number,
   diagnostics: MutableRenderDiagnostics,
+  channelsNeeded: ChannelsNeeded,
 ): void {
   const { width, height } = space;
   const pixelCount = width * height;
+  const needsHeight = channelsNeeded === 'all';
 
   // Derleme bağlamı KATMAN BAŞINA kurulur ve katman bitince tamponlarını
   // iade eder: tamponlu düğümlerin (filtre, warp, scatter) tuttuğu bellek
@@ -213,7 +229,7 @@ function renderLayer(
   );
 
   const layerCoverage = pool.acquire(width, height);
-  const layerHeight = pool.acquire(width, height);
+  const layerHeight = needsHeight ? pool.acquire(width, height) : null;
 
   try {
     // (a) üreteç ∘ domain zinciri — fonksiyonel, ara raster yok.
@@ -229,7 +245,19 @@ function renderLayer(
     //     ezerdi — görünmeyen bir katmanın görünür yan etkisi.
     if (layer.mask) {
       if (isLayerStack(layer.mask)) {
-        const nested = renderStack(layer.mask.layers, doc, space, pool, depth + 1, diagnostics);
+        // Maske alt-yığını yalnızca coverage için render edilir (yukarıdaki
+        // ChannelsNeeded yorumu) — üstteki katmanın kendi channelsNeeded'i
+        // burada YAYILMAZ, çünkü maskenin height/material'i üst katmanınkinden
+        // bağımsız olarak zaten hiç okunmaz.
+        const nested = renderStack(
+          layer.mask.layers,
+          doc,
+          space,
+          pool,
+          depth + 1,
+          diagnostics,
+          'coverage',
+        );
         for (let i = 0; i < pixelCount; i++) layerCoverage.data[i] *= nested.coverage[i];
       } else {
         const mask = pool.acquire(width, height);
@@ -251,20 +279,25 @@ function renderLayer(
 
     // (e) ayrı yükseklik alanı; yoksa kapsama kullanılır. Ayrı olabilmesi
     //     gerekir, yoksa "düz siluet, dokulu yüzey" ifade edilemez.
-    if (layer.height) {
-      evaluateInto(
-        layerHeight,
-        compileCoverage(layer.height, `${layer.id}/height`, context, space),
-        space,
-      );
-    } else {
-      layerHeight.data.set(layerCoverage.data);
+    // `channelsNeeded === 'coverage'` iken bu adım tamamen ATLANIR — bir
+    // maske alt-yığınının height/material'i üst katman tarafından hiçbir
+    // zaman okunmaz (bkz. ChannelsNeeded yorumu).
+    if (needsHeight && layerHeight) {
+      if (layer.height) {
+        evaluateInto(
+          layerHeight,
+          compileCoverage(layer.height, `${layer.id}/height`, context, space),
+          space,
+        );
+      } else {
+        layerHeight.data.set(layerCoverage.data);
+      }
     }
 
     // İkinci malzeme: aşınma, pas, damar. Basit durum basit kalsın diye
     // opsiyoneldir; verilmezse katman tek rampa yazar.
     let materialSelector: FieldBuffer | null = null;
-    if (layer.materialMask && layer.materialAlt !== undefined) {
+    if (needsHeight && layer.materialMask && layer.materialAlt !== undefined) {
       materialSelector = pool.acquire(width, height);
       evaluateInto(
         materialSelector,
@@ -289,6 +322,7 @@ function renderLayer(
         const alpha = coverage * opacity;
 
         accumulator.coverage[i] = blendCoverage(blend, accumulator.coverage[i], alpha);
+        if (!needsHeight || !layerHeight) continue;
         accumulator.height[i] = blendHeight(
           heightBlend,
           accumulator.height[i],
@@ -306,7 +340,7 @@ function renderLayer(
     }
   } finally {
     releaseCompiled(context);
-    pool.release(layerHeight);
+    if (layerHeight) pool.release(layerHeight);
     pool.release(layerCoverage);
   }
 }
@@ -325,12 +359,15 @@ function renderStack(
   pool: FieldBufferPool,
   depth: number,
   diagnostics: MutableRenderDiagnostics,
+  channelsNeeded: ChannelsNeeded,
 ): RenderChannels {
   if (depth > MAX_STACK_DEPTH) {
     throw new Error(`Görsel: katman yığını ${MAX_STACK_DEPTH} seviyeden derin olamaz`);
   }
   const channels = createChannels(space.width * space.height);
-  for (const layer of layers) renderLayer(layer, doc, space, pool, channels, depth, diagnostics);
+  for (const layer of layers) {
+    renderLayer(layer, doc, space, pool, channels, depth, diagnostics, channelsNeeded);
+  }
   return channels;
 }
 
@@ -437,7 +474,7 @@ function renderValidatedDoc(
 
   const diagnostics = createRenderDiagnostics();
   const layersStart = profileEnabled ? now() : 0;
-  const channels = renderStack(doc.layers, doc, space, pool, 0, diagnostics);
+  const channels = renderStack(doc.layers, doc, space, pool, 0, diagnostics, 'all');
   const layersMs = profileEnabled ? now() - layersStart : 0;
 
   const shadingStart = profileEnabled ? now() : 0;

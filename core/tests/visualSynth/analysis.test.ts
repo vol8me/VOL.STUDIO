@@ -53,6 +53,80 @@ describe('render öncesi yapısal analiz', () => {
     );
   });
 
+  it('sdf.path segment sayısını ve piksel başına maliyetini raporlar (implementasyonu değiştirmez)', () => {
+    const analysis = analyzeSpriteDoc({
+      schemaVersion: 1,
+      size: [8, 8],
+      seed: 1,
+      palette: PALETTE,
+      layers: [
+        {
+          id: 'acik-yol',
+          // 5 nokta, açık yol → 4 segment (pathSdfField: points.length - 1).
+          source: {
+            kind: 'sdf.path',
+            points: [
+              [0.1, 0.1],
+              [0.2, 0.2],
+              [0.3, 0.1],
+              [0.4, 0.2],
+              [0.5, 0.1],
+            ],
+            r: 0.02,
+          },
+          material: 0,
+        },
+      ],
+    });
+
+    expect(analysis.pathSegmentCount).toBe(4);
+    // 64 piksel (8×8) × 4 segment.
+    expect(analysis.estimatedPathSegmentTests).toBe(256);
+  });
+
+  it('kapalı sdf.path nokta sayısı kadar segment üretir (bir eksik değil)', () => {
+    const analysis = analyzeSpriteDoc({
+      schemaVersion: 1,
+      size: [8, 8],
+      seed: 1,
+      palette: PALETTE,
+      layers: [
+        {
+          id: 'kapali-yol',
+          source: {
+            kind: 'sdf.path',
+            points: [
+              [0.1, 0.1],
+              [0.2, 0.2],
+              [0.3, 0.1],
+            ],
+            r: 0.02,
+            closed: true,
+          },
+          material: 0,
+        },
+      ],
+    });
+
+    // Kapalıda son noktadan ilk noktaya dönen ekstra bir segment vardır —
+    // pathSdfField bunu `points[(i+1) % points.length]` ile üretir.
+    expect(analysis.pathSegmentCount).toBe(3);
+    expect(analysis.estimatedPathSegmentTests).toBe(3 * 64);
+  });
+
+  it('sdf.path içermeyen belgede segment sayısı sıfırdır', () => {
+    const analysis = analyzeSpriteDoc({
+      schemaVersion: 1,
+      size: [8, 8],
+      seed: 1,
+      palette: PALETTE,
+      layers: [{ id: 'daire', source: { kind: 'sdf.circle', r: 0.3 }, material: 0 }],
+    });
+
+    expect(analysis.pathSegmentCount).toBe(0);
+    expect(analysis.estimatedPathSegmentTests).toBe(0);
+  });
+
   it('iç içe maske yığınını katman ve stack derinliğine katar', () => {
     const doc: SpriteDoc = {
       schemaVersion: 1,

@@ -39,6 +39,15 @@ export class MusicEngine {
   private scheduler?: MusicScheduler;
   private trackStartTime = 0;
   private isPlaying = false;
+  /**
+   * `play()`/`crossfadeTo()` her çağrıda arttırır ve kendi `loadTrack` await'i
+   * dönünce token'ı karşılaştırır — beklerken başka bir çağrı gelmişse (veya
+   * `stop()` çağrılmışsa) eski çağrı paylaşılan durumu (currentTrackId,
+   * scheduler, aktif stem'ler) EZMEDEN sessizce çıkar. `MusicPlaylist`'teki
+   * `startToken` deseniyle aynı gerekçe: async await noktaları arasında
+   * yarış olduğunda SON çağrının kazanmasını garantiler.
+   */
+  private playToken = 0;
   private masterVolume = 1;
   private isMuted = false;
   private state: MusicState = {};
@@ -96,18 +105,32 @@ export class MusicEngine {
     );
   }
 
+  /**
+   * Buffer önbelleği anahtarı. `src` varsa İÇERİK-adresli anahtar kullanılır:
+   * aynı URL'i paylaşan stem'ler (farklı track'lerde bile) tek buffer'ı
+   * paylaşır. `src` yoksa (doğrudan `buffer` verilmiş) içerik kimliği
+   * bilinemez; track'e özel kapsanır — İKİ FARKLI track'in aynı `stem.id`'yi
+   * FARKLI buffer'larla kullanması durumunda birbirinin buffer'ını
+   * "çalmasın" diye (eskiden anahtar salt `stem.id` idi, bu global bir
+   * çakışma yüzeyiydi).
+   */
+  private bufferCacheKey(trackId: string, stem: Stem): string {
+    return stem.src ? `src:${stem.src}` : `track:${trackId}:${stem.id}`;
+  }
+
   /** Track'i buffer'ları ile önceden yükler.
    *  Bir stem yüklenemezse diğerlerini engellemez, sadece uyarır. */
   async loadTrack(track: MusicTrack): Promise<void> {
     this.tracks.set(track.id, track);
     const tasks = track.stems.map(async (stem) => {
-      if (this.buffers.has(stem.id)) return;
+      const cacheKey = this.bufferCacheKey(track.id, stem);
+      if (this.buffers.has(cacheKey)) return;
       try {
         if (stem.buffer) {
-          this.buffers.set(stem.id, stem.buffer);
+          this.buffers.set(cacheKey, stem.buffer);
         } else if (stem.src) {
           const buffer = await this.loader.loadFromUrl(stem.src);
-          this.buffers.set(stem.id, buffer);
+          this.buffers.set(cacheKey, buffer);
         }
       } catch (err) {
         console.warn(`[MusicEngine] Stem yüklenemedi: ${stem.id}`, err);
@@ -126,7 +149,12 @@ export class MusicEngine {
 
     const track = this.tracks.get(trackId);
     if (!track) throw new Error(`Track bulunamadı: ${trackId}`);
+
+    const token = ++this.playToken;
     await this.loadTrack(track);
+    // `loadTrack` await'i sırasında başka bir play()/crossfadeTo()/stop()
+    // gelmiş olabilir — bu (artık eski) çağrı state'i EZMEDEN çıkar.
+    if (token !== this.playToken) return;
 
     if (this.isPlaying) {
       this.stop({ fadeOut: 0.05 });
@@ -138,13 +166,25 @@ export class MusicEngine {
     this.state = { ...track.defaultState, ...options.state };
     this.trackStartTime = this.context.currentTime + this.lookahead;
 
+    let startedAny = false;
     for (const stem of track.stems) {
-      const buffer = this.buffers.get(stem.id);
+      const buffer = this.buffers.get(this.bufferCacheKey(trackId, stem));
       if (!buffer) {
         console.warn(`[MusicEngine] Stem buffer bulunamadı: ${stem.id}`);
         continue;
       }
       this.startStem(stem, buffer, this.trackStartTime);
+      startedAny = true;
+    }
+
+    if (!startedAny) {
+      // Hiçbir stem başlamadıysa hiçbir `source.onended` asla tetiklenmez —
+      // `isPlaying` sonsuza dek `true`da TAKILI kalırdı (doğal bitiş hiç
+      // bildirilmezdi, playlist ilerlemesi de dahil hiçbir dinleyici tetiklenmezdi).
+      this.currentTrackId = undefined;
+      this.currentTrack = undefined;
+      this.scheduler = undefined;
+      throw new Error(`Track çalınamadı, hiçbir stem yüklenemedi: ${trackId}`);
     }
 
     this.isPlaying = true;
@@ -157,6 +197,10 @@ export class MusicEngine {
 
   /** Çalmayı durdurur. */
   stop(options: StopOptions = {}): void {
+    // Bekleyen bir play()/crossfadeTo() çağrısı varsa (loadTrack await'inde)
+    // bu explicit stop() onu iptal eder — beklenen çağrı döndüğünde sesi
+    // sessizce geri açmasın.
+    this.playToken++;
     if (!this.isPlaying) return;
 
     const fadeOut = options.fadeOut ?? 0.5;
@@ -186,7 +230,12 @@ export class MusicEngine {
   async crossfadeTo(trackId: string, duration = 2, options: CrossfadeOptions = {}): Promise<void> {
     const track = this.tracks.get(trackId);
     if (!track) throw new Error(`Track bulunamadı: ${trackId}`);
+
+    const token = ++this.playToken;
     await this.loadTrack(track);
+    // bkz. play() — loadTrack await'i sırasında başka bir play()/
+    // crossfadeTo()/stop() gelmişse bu eski çağrı state'i ezmeden çıkar.
+    if (token !== this.playToken) return;
 
     const now = this.context.currentTime;
     let transitionTime: number;
@@ -226,13 +275,23 @@ export class MusicEngine {
     this.state = { ...track.defaultState, ...options.state };
     this.trackStartTime = transitionTime;
 
+    let startedAny = false;
     for (const stem of track.stems) {
-      const buffer = this.buffers.get(stem.id);
+      const buffer = this.buffers.get(this.bufferCacheKey(trackId, stem));
       if (!buffer) {
         console.warn(`[MusicEngine] Stem buffer bulunamadı: ${stem.id}`);
         continue;
       }
       this.startStem(stem, buffer, transitionTime);
+      startedAny = true;
+    }
+
+    if (!startedAny) {
+      // bkz. play() — hiçbir stem başlamazsa isPlaying sonsuza dek takılı kalır.
+      this.currentTrackId = undefined;
+      this.currentTrack = undefined;
+      this.scheduler = undefined;
+      throw new Error(`Track'e crossfade yapılamadı, hiçbir stem yüklenemedi: ${trackId}`);
     }
 
     this.isPlaying = true;
@@ -304,6 +363,10 @@ export class MusicEngine {
     this.tracks.clear();
     this.reportedMismatches.clear();
     this.stemCounter = 0;
+    // dispose sonrası da tutulan dinleyici referansları — çağıran taraf
+    // (ör. MusicPlaylist) unsubscribe etmeyi unutursa closure'ları (ve
+    // yakaladıkları her şeyi) sonsuza dek canlı tutardı.
+    this.trackEndHandlers.clear();
   }
 
   private startStem(stem: Stem, buffer: AudioBuffer, when: number): void {

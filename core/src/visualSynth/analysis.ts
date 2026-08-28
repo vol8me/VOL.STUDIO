@@ -28,6 +28,18 @@ export interface VisualSpriteAnalysis {
   readonly scatterNodeCount: number;
   readonly requestedScatterCount: number;
   readonly bufferedByKind: Readonly<Record<string, number>>;
+  /** Belgedeki tüm `sdf.path` düğümlerinin toplam segment sayısı (kapalı yol
+   *  başına nokta sayısı kadar, açık yolda bir eksik). */
+  readonly pathSegmentCount: number;
+  /**
+   * `sdf.path` maliyet göstergesi: Σ(segment × pikselSayısı). `pathSdfField`
+   * her segmenti HER pikselde test eder (bkz. `field/sdf.ts`) — tek bir
+   * düğümde 64 nokta şema açısından legaldir ama 2048² bir render'da bu
+   * TEK BAŞINA ~8 milyar (63 segment × ~4.2M piksel) mesafe testi demektir.
+   * Bu alan implementasyonu değiştirmez, yalnızca maliyeti görünür kılar —
+   * tüketici (UI/CLI) bunu bir uyarı eşiğiyle karşılaştırabilir.
+   */
+  readonly estimatedPathSegmentTests: number;
   /** Kanal + çalışma tamponları için muhafazakâr tepe bellek, bayt. */
   readonly estimatedPeakWorkingBytes: number;
   /** Tahminin nasıl kurulduğunu denetlenebilir biçimde taşır. */
@@ -97,6 +109,7 @@ interface MutableAnalysis {
   scatterNodeCount: number;
   requestedScatterCount: number;
   bufferedByKind: Record<string, number>;
+  pathSegmentCount: number;
 }
 
 interface FieldStats {
@@ -149,6 +162,12 @@ function visitField(
   if (node.kind === 'scatter') {
     analysis.scatterNodeCount++;
     analysis.requestedScatterCount += node.count;
+  }
+  if (node.kind === 'sdf.path') {
+    // `pathSdfField` (field/sdf.ts): kapalıda nokta sayısı kadar, açıkta bir
+    // eksik segment üretir — 0/1 noktalı yollarda segment sayısı 0'dır.
+    const segmentCount = node.closed ? node.points.length : Math.max(0, node.points.length - 1);
+    analysis.pathSegmentCount += segmentCount;
   }
 
   for (const child of fieldChildren(node)) visitField(child, depth + 1, analysis, fieldStats);
@@ -207,6 +226,7 @@ export function analyzeSpriteDoc(input: unknown): VisualSpriteAnalysis {
     scatterNodeCount: 0,
     requestedScatterCount: 0,
     bufferedByKind: {},
+    pathSegmentCount: 0,
   };
 
   visitStack({ layers: doc.layers }, 0, analysis);
@@ -311,6 +331,8 @@ export function analyzeSpriteDoc(input: unknown): VisualSpriteAnalysis {
     scatterNodeCount: analysis.scatterNodeCount,
     requestedScatterCount: analysis.requestedScatterCount,
     bufferedByKind: analysis.bufferedByKind,
+    pathSegmentCount: analysis.pathSegmentCount,
+    estimatedPathSegmentTests: analysis.pathSegmentCount * pixelCount,
     estimatedPeakWorkingBytes,
     memoryEstimate: {
       knownTypedArrayBytes,

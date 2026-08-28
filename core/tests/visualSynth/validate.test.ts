@@ -534,6 +534,120 @@ describe('katman doğrulaması', () => {
   });
 });
 
+describe('izotropik olmayan scale + signed-distance (SDF) semantiği', () => {
+  // Regresyon: `scaleInverse` yalnızca koordinatı uzatır, dönen SDF DEĞERİ
+  // kaynağın mesafesi kalır (field/domain.ts). Bu, toCoverageFn'in izotropik
+  // `space.pixelUnit` kenar-yumuşatma genişliğini ve sdf.smoothUnion/
+  // smoothSub/smoothIntersection harman yarıçapını YANLIŞ hale getirir.
+  // `resolveFieldDomain`in kendi ön koşulu (yalnızca yapısal olarak geçerli
+  // bir ağaçta güvenli) bu denetimin YAPISAL sorunlar sıfırlandıktan SONRA
+  // koştuğunu da dolaylı doğruluyor: aşağıdaki her belge YAPISAL olarak
+  // tamamen geçerli, yalnızca bu semantik kural ihlal ediliyor.
+
+  it('anizotropik scale (x≠y) bir SDF alt-ağacını sarmalıyorsa reddedilir', () => {
+    const doc = baseDoc();
+    const layer = (doc.layers as Array<Record<string, unknown>>)[0];
+    layer.source = {
+      kind: 'scale',
+      x: 2,
+      y: 1,
+      input: { kind: 'sdf.circle', center: [0, 0], r: 0.5 },
+    };
+    const issues = issuesFor(doc, 'layers[0].source');
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatch(/izotropik olmayan `scale`/);
+    expect(issues[0]).toMatch(/signed-distance/);
+  });
+
+  it("izotropik scale (x=y) bir SDF'yi sarmalıyorsa REDDEDİLMEZ — Lipschitz sabiti bozulmaz", () => {
+    const doc = baseDoc();
+    const layer = (doc.layers as Array<Record<string, unknown>>)[0];
+    layer.source = {
+      kind: 'scale',
+      x: 1.5,
+      y: 1.5,
+      input: { kind: 'sdf.circle', center: [0, 0], r: 0.5 },
+    };
+    expect(collectSpriteDocIssues(doc)).toEqual([]);
+  });
+
+  it('anizotropik scale signed OLMAYAN bir alanı sarmalıyorsa REDDEDİLMEZ', () => {
+    const doc = baseDoc();
+    const layer = (doc.layers as Array<Record<string, unknown>>)[0];
+    layer.source = {
+      kind: 'scale',
+      x: 2,
+      y: 1,
+      input: { kind: 'noise.value', freq: 4 },
+    };
+    expect(collectSpriteDocIssues(doc)).toEqual([]);
+  });
+
+  it('katman düzeyindeki `domain` zincirindeki scale REDDEDİLMEZ — coverage SONRASINA uygulanır', () => {
+    // renderLayer domain zincirini compileCoverage'dan SONRA uygular (bkz.
+    // render.ts renderLayer): SDF değeri o noktada zaten kapsamaya
+    // dönüşmüştür, coordinat yeniden örneklemesi zararsızdır.
+    const doc = baseDoc();
+    const layer = (doc.layers as Array<Record<string, unknown>>)[0];
+    layer.source = { kind: 'sdf.circle', center: [0, 0], r: 0.5 };
+    layer.domain = [{ kind: 'scale', x: 2, y: 1 }];
+    expect(collectSpriteDocIssues(doc)).toEqual([]);
+  });
+
+  it("propagate: iki SDF'yi min/max ile birleştiren düğüm de signed sayılır", () => {
+    const doc = baseDoc();
+    const layer = (doc.layers as Array<Record<string, unknown>>)[0];
+    layer.source = {
+      kind: 'scale',
+      x: 2,
+      y: 1,
+      input: {
+        kind: 'min',
+        a: { kind: 'sdf.circle', center: [0, 0], r: 0.3 },
+        b: { kind: 'sdf.circle', center: [0.2, 0], r: 0.3 },
+      },
+    };
+    const issues = issuesFor(doc, 'layers[0].source');
+    expect(issues).toHaveLength(1);
+  });
+
+  it('sdf.smoothUnion operandı anizotropik ölçekliyse reddedilir', () => {
+    const doc = baseDoc();
+    const layer = (doc.layers as Array<Record<string, unknown>>)[0];
+    layer.source = {
+      kind: 'sdf.smoothUnion',
+      k: 0.1,
+      a: {
+        kind: 'scale',
+        x: 2,
+        y: 1,
+        input: { kind: 'sdf.circle', center: [0, 0], r: 0.3 },
+      },
+      b: { kind: 'sdf.circle', center: [0.3, 0], r: 0.3 },
+    };
+    const issues = issuesFor(doc, 'layers[0].source.a');
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatch(/izotropik olmayan `scale`/);
+  });
+
+  it('maske ve yükseklik alt-ağaçları da denetlenir', () => {
+    const dangerous = () => ({
+      kind: 'scale',
+      x: 2,
+      y: 1,
+      input: { kind: 'sdf.circle', center: [0, 0], r: 0.5 },
+    });
+    const doc = baseDoc();
+    const layer = (doc.layers as Array<Record<string, unknown>>)[0];
+    layer.mask = dangerous();
+    layer.height = dangerous();
+
+    const issues = collectSpriteDocIssues(doc);
+    expect(issues.some((i) => i.startsWith('layers[0].mask:'))).toBe(true);
+    expect(issues.some((i) => i.startsWith('layers[0].height:'))).toBe(true);
+  });
+});
+
 describe('parametre şeması doğrulaması', () => {
   it('zorunlu parametre eksikse bildirilir', () => {
     expect(collectFieldIssues({ kind: 'sdf.circle' })[0]).toMatch(/zorunlu alan eksik/);

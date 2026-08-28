@@ -9,30 +9,42 @@ import { createVoices } from './voice';
 import { renderDrySample, downsample2x } from './render';
 import { applyGlobalEffects } from './effects-chain';
 import { DEFAULT_SAMPLE_RATE, OVERSAMPLE_FACTOR } from './constants';
+import { clamp } from '../../../math/interpolation';
 
 /** Bir ses parametre setinden Float32Array kanalları üretir.
- *  2x oversampling ile aliasing azaltılmış, bandlimited dalga şekilleri. */
+ *  2x oversampling ile aliasing azaltılmış, bandlimited dalga şekilleri.
+ *
+ *  Tüm sayısal alanlar `clamp()` ile geçirilir — `Math.max`/`Math.min` NaN
+ *  karşısında NaN döner (`Math.max(1, NaN) === NaN`), yani çağıran taraftan
+ *  gelen bozuk bir değer (NaN/Infinity/0/negatif) eskiden buradan sessizce
+ *  sızıp `Float32Array(Infinity)` gibi kontrolsüz bir hataya ya da NaN'a
+ *  bulaşmış bir çıktı buffer'ına yol açabiliyordu. `clamp` NaN'ı güvenle
+ *  aralığın alt sınırına sabitler. */
 export function synthesize(params: SynthParams): SynthesisResult {
-  const sampleRate = params.sampleRate ?? DEFAULT_SAMPLE_RATE;
+  const sampleRate = clamp(params.sampleRate ?? DEFAULT_SAMPLE_RATE, 1000, 384000);
   const internalRate = sampleRate * OVERSAMPLE_FACTOR;
-  const duration = Math.max(0.001, params.duration);
-  const repeat = Math.max(1, Math.floor(params.repeat ?? 1));
+  const duration = clamp(params.duration, 0.001, 600);
+  const repeat = Math.floor(clamp(params.repeat ?? 1, 1, 1000));
   // `repeatTime` tekrarlar ARASINDAKİ süredir. 0 → tekrarlar üst üste biner
   // (overlap); sesler her tekrar için yeniden kurulduğu için faz farklıdır.
-  const repeatTime = Math.max(0, params.repeatTime ?? 0);
-  const totalDuration = duration + (repeat - 1) * repeatTime;
+  const repeatTime = clamp(params.repeatTime ?? 0, 0, 600);
+  // `duration`/`repeat`/`repeatTime` tek tek makul olsa da çarpımları
+  // (repeat × repeatTime) allocation'ı OOM'a götürecek kadar büyüyebilir —
+  // gerçek `internalSampleCount`'u belirleyen toplam süre burada ayrıca
+  // kelepçelenir.
+  const totalDuration = clamp(duration + (repeat - 1) * repeatTime, 0.001, 600);
   const internalSampleCount = Math.floor(internalRate * totalDuration);
 
-  const frequency = Math.max(1, params.frequency ?? 440);
-  const slide = params.slide ?? 0;
+  const frequency = clamp(params.frequency ?? 440, 1, sampleRate / 2);
+  const slide = clamp(params.slide ?? 0, -sampleRate / 2, sampleRate / 2);
   const slideCurve = params.slideCurve ?? 'exponential';
-  const pulseWidth = Math.max(0.01, Math.min(0.99, params.pulseWidth ?? 0.5));
-  const vibratoDepth = Math.max(0, params.vibratoDepth ?? 0);
-  const vibratoRate = Math.max(0, params.vibratoRate ?? 0);
-  const tremoloDepth = Math.max(0, Math.min(1, params.tremoloDepth ?? 0));
-  const tremoloRate = Math.max(0, params.tremoloRate ?? 0);
-  const gain = Math.max(0, Math.min(1, params.gain ?? 1));
-  const seed = params.seed ?? DEFAULT_SEED;
+  const pulseWidth = clamp(params.pulseWidth ?? 0.5, 0.01, 0.99);
+  const vibratoDepth = clamp(params.vibratoDepth ?? 0, 0, sampleRate / 2);
+  const vibratoRate = clamp(params.vibratoRate ?? 0, 0, 1000);
+  const tremoloDepth = clamp(params.tremoloDepth ?? 0, 0, 1);
+  const tremoloRate = clamp(params.tremoloRate ?? 0, 0, 1000);
+  const gain = clamp(params.gain ?? 1, 0, 1);
+  const seed = Number.isFinite(params.seed) ? (params.seed as number) : DEFAULT_SEED;
 
   // Zarf verilmemişse tüm süre boyunca duyulan varsayılan bir zarf kullan
   const envelopeParams = params.envelope ?? {

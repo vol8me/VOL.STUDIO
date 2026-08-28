@@ -33,6 +33,58 @@ function doc(layers: LayerSpec[], overrides: Partial<SpriteDoc> = {}): SpriteDoc
 /** Piksel indeksinden kanal okumaları — testleri okunur tutar. */
 const at = (width: number, x: number, y: number): number => y * width + x;
 
+describe('renderStack — maske alt-yığını yalnızca coverage tüketir', () => {
+  // Regresyon: renderLayer (b) adımı bir maske alt-yığınından yalnızca
+  // `nested.coverage`yi okur (bkz. render.ts — `layerCoverage.data[i] *=
+  // nested.coverage[i]`). `nested.height`/`nested.material` önceden HER
+  // ZAMAN hesaplanıp atılıyordu; artık maske çağrısı `channelsNeeded:
+  // 'coverage'` ile yapılıyor ve bu iki kanal atlanıyor. Height/material'i
+  // kasten FARKLI iki maske belgesi TAM OLARAK AYNI render'ı üretmeli —
+  // aksi hâlde ya optimizasyon yanlış (gerçekten okunan bir şeyi atlıyor)
+  // ya da her zaman zaten anlamsızdı.
+  it('maske alt-yığınının height/material alanı render çıktısını değiştirmez', () => {
+    const maskLayer = (heightValue: number, material: number): LayerSpec => ({
+      id: 'mask',
+      source: { kind: 'sdf.circle', center: [0, 0], r: 0.6 },
+      height: { kind: 'const', value: heightValue },
+      material,
+    });
+    const baseLayer = (mask: LayerSpec): LayerSpec => ({
+      id: 'base',
+      source: { kind: 'sdf.circle', center: [0, 0], r: 0.9 },
+      mask: { layers: [mask] },
+      material: 0,
+    });
+
+    const resultA = renderSprite(doc([baseLayer(maskLayer(0.1, 0))]));
+    const resultB = renderSprite(doc([baseLayer(maskLayer(0.9, 1))]));
+
+    expect(Array.from(resultA.rgba)).toEqual(Array.from(resultB.rgba));
+    expect(Array.from(resultA.channels.coverage)).toEqual(Array.from(resultB.channels.coverage));
+    expect(Array.from(resultA.channels.material)).toEqual(Array.from(resultB.channels.material));
+  });
+
+  it('üst düzey (maskesiz) katmanların height/material alanı hâlâ hesaplanır', () => {
+    // Optimizasyon YALNIZCA maske alt-yığınlarını hedeflemeli — belgenin
+    // kendi üst düzey katmanları hâlâ `channelsNeeded: 'all'` ile render
+    // edilir. Farklı height/material burada GERÇEKTEN farklı sonuç vermeli.
+    const layer = (heightValue: number, material: number): LayerSpec => ({
+      id: 'top',
+      source: { kind: 'sdf.circle', center: [0, 0], r: 0.9 },
+      height: { kind: 'const', value: heightValue },
+      material,
+    });
+
+    const resultA = renderSprite(doc([layer(0.1, 0)]));
+    const resultB = renderSprite(doc([layer(0.9, 1)]));
+
+    expect(Array.from(resultA.channels.height)).not.toEqual(Array.from(resultB.channels.height));
+    expect(Array.from(resultA.channels.material)).not.toEqual(
+      Array.from(resultB.channels.material),
+    );
+  });
+});
+
 describe('boru hattı — fixture kanıtı', () => {
   it.each(['composite', 'union', 'noise'])('%s belgesi palet uyumlu render olur', (name) => {
     const result = renderSprite(loadFixture(name));

@@ -5,6 +5,104 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-28 — VisualSynth + AudioSynth: harici statik analiz turu, 16 bulgu
+
+Kullanıcı, bu dalın bir zip snapshot'ı üzerinden yapılmış harici bir statik
+analiz raporu getirdi: VisualSynth ve AudioSynth alt sistemlerini implementasyon,
+test kapsamı, veri akışı, allocation, determinism ve edge-case açısından
+inceleyen, "agent'a verilecek bug-only liste" olarak damıtılmış 16 maddelik bir
+liste (5 VisualSynth + 11 AudioSynth). Her madde ayrı ayrı GERÇEK koda karşı
+doğrulandı — rapor build/test koşulmadan yazıldığı için iki VisualSynth
+maddesinde raporun kendi teşhisi hatalıydı, gerçek hata konumu ayrıca bulundu.
+
+**VisualSynth:**
+
+- **Anizotropik scale + SDF semantiği:** Rapor `post.outline` ve `distance`
+  filtresini işaret ediyordu; ikisi de okunup GÜVENLİ olduğu kanıtlandı (ikisi
+  de ham SDF mesafesini değil, coverage/piksel-uzayı temsilini kullanıyor).
+  Gerçek bug başka yerdeydi: `toCoverageFn`'in antialiasing genişliği
+  izotropik bir skalerle (`pixelUnit/2`) hesaplanıyor, ve
+  `sdf.smoothUnion`/`smoothSub`/`smoothIntersection` ham SDF değerini
+  doğrudan tüketiyor — ikisi de anizotropik `scale` bir SDF'yi bozduğunda
+  yanlış sonuç verir. `validate.ts`'e `resolveFieldDomain`'in kendi
+  belgelediği önkoşulu (yalnızca yapısal olarak geçerli ağaçta çağrılabilir)
+  gözeten yeni bir anizotropik-scale-üstünde-SDF denetimi eklendi.
+- **`renderStack` maske alt-yığını israfı:** Havuz-bypass'ın kasıtlı, zaten
+  dokümante edilmiş bir tasarım kararı olduğu doğrulandı (bug değil). Gerçek
+  israf: maske alt-yığınları yalnızca `coverage` kanalını okur ama
+  height/material alanları yine de hesaplanıp atılıyordu. `renderLayer`/
+  `renderStack`'e `channelsNeeded: 'all'|'coverage'` parametresi eklendi;
+  maske dalları artık height/material hesaplamıyor.
+- **`sdf.path` segment maliyeti artık analiz çıktısında:** implementasyon
+  DEĞİŞTİRİLMEDİ (rapor açıkça istemiyordu) — `analyzeSpriteDoc`'a
+  `pathSegmentCount`/`estimatedPathSegmentTests` eklendi ki bir tüketici
+  (UI/CLI) 64 nokta × büyük çözünürlük kombinasyonunu render'dan önce görebilsin.
+- CPU/evaluation karmaşıklık bütçesi (rapor: `maxComplexityScore`) BİLİNÇLİ
+  olarak ertelendi — bu bir hata düzeltmesi değil, yeni bir alt sistem
+  tasarımı gerektiriyor (FBM×octave×warp×scatter×path×iç-içe-stack maliyet
+  modeli). Yüzeysel/aceleye getirilmiş bir versiyonu, kaliteli bir versiyondan
+  daha kötü olurdu.
+
+**AudioSynth (11 madde, hepsi doğrulanıp düzeltildi):**
+
+- **Additive harmonics çifte hata:** Nyquist üstü harmonikler `Math.min` ile
+  nyquistLimit'e KATLANIYORDU — farklı ratio'lu harmonikler aynı katlanmış
+  frekansta üst üste binip kaynak sesle ilgisi olmayan bir ton/beating
+  üretiyordu; artık duyulmaz harmonik atlanır, faz biriktiricisi yine de
+  ilerletilir (slide/vibrato'da süreksizlik olmasın diye). AYRICA (rapor
+  DEMEDİ, koda bakarken bulundu): `HarmonicParams.gain` hiç okunmuyordu —
+  `additivePad` gibi presetlerin kasıtlı azalan harmonik kazancı (1.0→0.1)
+  tamamen yok sayılıyordu, tüm harmonikler eşit sesle çalıyordu.
+- **`synthesize()`/`pluck()` girdi doğrulaması yoktu:** NaN/Infinity/0/negatif
+  sampleRate, duration, frequency, repeat, seed vb. `Math.max/min` NaN
+  karşısında NaN döndüğü için sessizce sızıyordu (`Float32Array(Infinity)`
+  kontrolsüz RangeError, ya da `repeat=NaN` sessiz boş çıktı). Mevcut
+  `core/src/math/interpolation.ts`'teki NaN-güvenli `clamp()` (VisualSynth'in
+  zaten kullandığı, AudioSynth'in hiç kullanmadığı) tüm ilgili alanlara
+  uygulandı. `pluck()`'ta `decay >= 1` KS geri besleme döngüsünü
+  kararsızlaştırıp birkaç saniyede Float32 taşmasıyla Inf/NaN üretebiliyordu
+  — üst sınır 0.999'a çekildi.
+- **`loopSamples` crossfade yalnızca İLK sınırı düzeltiyordu:** kod
+  `out[0..fadeSamples)`'ı değiştiriyordu — bu gerçek bir loop sınırı bile
+  değil (oynatmanın başı). Gerçek sınırlar (`samples.length`, `2×`, `3×`, ...)
+  hiç dokunulmuyordu, her tekrarda tıklıyordu. Artık her iç sınırda uygulanıyor.
+- **`decodeWav` sınır doğrulaması yoktu:** chunk boyutu dosya sınırını
+  aşabiliyordu (kontrolsüz RangeError veya sessiz yanlış durum), `numChannels`/
+  `bitsPerSample`=0 bölme sıfıra gidip `Float32Array(Infinity)` üretebiliyordu.
+  Kesik (truncated) `data` chunk'ı artık mevcut baytlarla çözülüyor (atılmıyor);
+  yapısal bozukluk temiz `Error` fırlatıyor.
+- **`MusicEngine` buffer önbelleği salt `stem.id` ile anahtarlanıyordu:** iki
+  farklı track aynı stem id'yi farklı buffer'la kullanırsa ikinci track
+  birincinin sesini çalardı. Anahtar artık `src` varsa içerik-adresli
+  (paylaşılabilir), yoksa track'e özel kapsanmış.
+- **`play()`/`crossfadeTo()` eşzamanlılık yarışı:** `loadTrack` await'i
+  sırasında ikinci bir çağrı gelirse hangisinin kazanacağı network
+  zamanlamasına bağlıydı, ÇAĞRI SIRASINA değil. `MusicPlaylist`'in zaten
+  kullandığı `startToken` deseni motöre de taşındı (`playToken`); `stop()` de
+  bekleyen bir çağrıyı iptal etmek için token'ı arttırır.
+- **Tüm stem'ler yüklenemezse `isPlaying` sonsuza kadar `true` TAKILI
+  kalıyordu** (hiçbir `source` olmadığı için `onended` asla tetiklenmezdi).
+  Artık en az bir stem başlamazsa `play()`/`crossfadeTo()` reddedilir, state
+  tutarlı sıfırlanır.
+- **`dispose()` `trackEndHandlers`i temizlemiyordu** — çağıran unsubscribe
+  etmeyi unutursa closure referansları kalıcı sızardı.
+- **`SidechainDucker.duck()`:** `cancelScheduledValues` ÖNCEKİ release'i HER
+  ZAMAN iptal ediyordu ama yenisi yalnızca `end > activeUntil` iken
+  planlanıyordu — daha kısa bir duck, uzun bir duck'ın hold aşamasına binince
+  hiçbir release planlanmıyordu, gain sonsuza dek duck hedefinde takılı
+  kalıyordu. En geç biten pencere artık HER ZAMAN yeniden planlanıyor.
+- **`MusicPlaylist.advanceCursor()` sonsuz yeniden-deneme döngüsü:** yorum
+  tek-parçalık listede sonsuz döngüyü önlediğini iddia ediyordu, ETMİYORDU —
+  tek parça (veya tüm liste) kalıcı bozuksa `gapMs` aralıklarla sonsuza kadar
+  aynı parçayı yeniden dener, hiç pes etmezdi. `queue.length` art arda
+  başarısızlıktan sonra (bir başarı sayacı sıfırlar) artık durur.
+
+**Doğrulama:** her düzeltme için gerçek regresyon testi eklendi (VisualSynth
+409 test / 22 dosya, AudioSynth dahil core paketi 1810 test / 116 dosya —
+hepsi geçiyor). Tam kalite kapısı (`just signoff`: contract, format, typecheck,
+lint, lint-css, coverage eşikleri, tüm paket build'leri, Chromium+Firefox
+e2e-full, cargo check/fmt/clippy) baştan sona TEMİZ geçti.
+
 ## 2026-08-28 — Profesyonel bulgu turu: benchmark sıkılığı, bellek doğrulama, swarm sızıntısı
 
 Önceki turun raporundan sonra kullanıcı dokuz somut bulgu getirdi (P1: simülasyon

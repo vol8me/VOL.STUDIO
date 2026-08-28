@@ -13,6 +13,7 @@
 
 import { createRandom, DEFAULT_SEED } from './random';
 import type { SynthesisResult } from './types';
+import { clamp } from '../../math/interpolation';
 
 export interface PluckParams {
   /** Temel frekans (Hz). */
@@ -125,18 +126,25 @@ function generateExcitation(
  *
  *  Sonuç: karanlık, tok, ataklı telli enstrüman tonu. */
 export function pluck(params: PluckParams): SynthesisResult {
-  const sampleRate = params.sampleRate ?? 44100;
-  const freq = Math.max(20, params.frequency);
-  const duration = Math.max(0.05, params.duration);
+  const sampleRate = clamp(params.sampleRate ?? 44100, 1000, 384000);
+  const freq = clamp(params.frequency, 20, sampleRate / 2);
+  const duration = clamp(params.duration, 0.05, 600);
   const totalSamples = Math.floor(sampleRate * duration);
-  const decay = params.decay ?? 0.995;
-  const excitationMix = params.excitationMix ?? 0.5;
-  const excitationHarmonics = params.excitationHarmonics ?? 4;
-  const stereoWidth = params.stereoWidth ?? 0.3;
-  const gain = params.gain ?? 0.5;
-  const bodyResonance = params.bodyResonance ?? 0;
-  const bodyAmount = params.bodyAmount ?? 0.3;
-  const seed = params.seed ?? DEFAULT_SEED;
+  // `decay` >= 1 KS geri besleme döngüsünü kararsızlaştırır: her örnekte
+  // `feedback = filtered * decay` ile enerji sönmek yerine katlanarak büyür
+  // ve birkaç saniye içinde Float32 taşmasıyla Inf/NaN'a gider. Üst sınır
+  // 1'in kesin altında tutulur ki yakınsama matematiksel olarak garanti olsun.
+  const decay = clamp(params.decay ?? 0.995, 0, 0.999);
+  const excitationMix = clamp(params.excitationMix ?? 0.5, 0, 1);
+  const excitationHarmonics = Math.floor(clamp(params.excitationHarmonics ?? 4, 1, 8));
+  const stereoWidth = clamp(params.stereoWidth ?? 0.3, 0, 1);
+  const gain = clamp(params.gain ?? 0.5, 0, 1);
+  // Alt sınır 20Hz'e sabitlenir (0 hariç): `sampleRate / bodyResonance` delay
+  // hattı uzunluğunu belirler — sıfıra çok yakın bir değer (ör. 0.001Hz)
+  // milyonlarca örneklik bir buffer'a (`FractionalDelayLine`) yol açardı.
+  const bodyResonance = params.bodyResonance ? clamp(params.bodyResonance, 20, sampleRate / 2) : 0;
+  const bodyAmount = clamp(params.bodyAmount ?? 0.3, 0, 1);
+  const seed = Number.isFinite(params.seed) ? (params.seed as number) : DEFAULT_SEED;
   const random = createRandom(seed);
 
   // Delay line uzunluğu — frekansa göre

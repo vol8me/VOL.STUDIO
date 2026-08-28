@@ -261,6 +261,114 @@ describe('MusicEngine', () => {
   });
 });
 
+describe('MusicEngine — eşzamanlılık ve buffer önbelleği', () => {
+  let fakeContext: FakeAudioContext;
+
+  beforeEach(() => {
+    fakeContext = new FakeAudioContext();
+  });
+
+  afterEach(() => {
+    fakeContext = undefined as unknown as FakeAudioContext;
+    vi.restoreAllMocks();
+  });
+
+  it("aynı stem.id farklı track'lerde farklı buffer'ları karıştırmaz", async () => {
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    const bufferA = makeBuffer(fakeContext, 2);
+    const bufferB = makeBuffer(fakeContext, 3);
+
+    await engine.loadTrack({ id: 'trackA', bpm: 120, stems: [{ id: 'pad', buffer: bufferA }] });
+    // AYNI stem.id ('pad'), FARKLI buffer — eskiden buffer önbelleği salt
+    // `stem.id` ile anahtarlandığı için `loadTrack` burada sessizce
+    // atlıyordu (`if (buffers.has('pad')) return`) ve trackB, trackA'nın
+    // buffer'ını çalardı.
+    await engine.loadTrack({ id: 'trackB', bpm: 120, stems: [{ id: 'pad', buffer: bufferB }] });
+
+    await engine.play('trackB');
+    const activeStems = (engine as unknown as { activeStems: Map<string, { buffer: AudioBuffer }> })
+      .activeStems;
+    const active = activeStems.values().next().value!;
+    expect(active.buffer.duration).toBeCloseTo(bufferB.duration, 5);
+  });
+
+  it("play() yarışında SON çağrı kazanır (loadTrack await'i sırasında ikinci play gelirse)", async () => {
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    const bufferA = makeBuffer(fakeContext, 2);
+    const bufferB = makeBuffer(fakeContext, 3);
+
+    await engine.loadTrack({ id: 'trackA', bpm: 120, stems: [{ id: 'a', buffer: bufferA }] });
+    await engine.loadTrack({ id: 'trackB', bpm: 120, stems: [{ id: 'b', buffer: bufferB }] });
+
+    // İkisi de birbirini beklemeden çağrılır — trackA'nın loadTrack await'i
+    // sırasında trackB gelir. Eskiden hangisinin loadTrack'i önce dönerse o
+    // kazanırdı (çağrı sırasına değil, network/microtask zamanlamasına bağlı
+    // bir yarış); artık her zaman SON çağrı (trackB) kazanmalı.
+    const playA = engine.play('trackA');
+    const playB = engine.play('trackB');
+    await Promise.all([playA, playB]);
+
+    expect(engine.getCurrentState().trackId).toBe('trackB');
+    expect(engine.getCurrentState().playing).toBe(true);
+
+    const activeStems = (
+      engine as unknown as { activeStems: Map<string, { stem: { id: string } }> }
+    ).activeStems;
+    const stemIds = [...activeStems.values()].map((s) => s.stem.id);
+    expect(stemIds).toEqual(['b']);
+  });
+
+  it('play() beklerken stop() gelirse, play() döndüğünde sesi geri açmaz', async () => {
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    const buffer = makeBuffer(fakeContext, 2);
+    await engine.loadTrack({ id: 'trackA', bpm: 120, stems: [{ id: 'a', buffer }] });
+
+    const playPromise = engine.play('trackA');
+    engine.stop({ fadeOut: 0 });
+    await playPromise;
+
+    expect(engine.getCurrentState().playing).toBe(false);
+  });
+
+  it('tüm stemler yüklenemezse isPlaying takılı kalmaz, play() reddedilir', async () => {
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    await engine.loadTrack({
+      id: 'broken',
+      bpm: 120,
+      // Ne `buffer` ne `src` — loadTrack bu stem'i sessizce atlar, hiçbir
+      // buffer üretilmez.
+      stems: [{ id: 'missing' }],
+    });
+
+    // Eskiden bu, activeStems boşken bile `isPlaying = true` set ederdi —
+    // hiçbir stem başlamadığı için `onended` asla tetiklenmez ve motor
+    // sonsuza dek "çalıyor" durumunda TAKILI kalırdı.
+    await expect(engine.play('broken')).rejects.toThrow(/hiçbir stem/);
+    expect(engine.getCurrentState().playing).toBe(false);
+    expect(engine.getCurrentState().trackId).toBeUndefined();
+  });
+
+  it('dispose() sonrası trackEnd dinleyicileri temizlenir', async () => {
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    const buffer = makeBuffer(fakeContext, 2);
+    await engine.loadTrack({
+      id: 'menu',
+      bpm: 100,
+      stems: [{ id: 'menu-stem', buffer, loop: false }],
+    });
+    await engine.play('menu');
+
+    const ended: string[] = [];
+    engine.onTrackEnd((id) => ended.push(id));
+
+    const handlers = (engine as unknown as { trackEndHandlers: Set<unknown> }).trackEndHandlers;
+    expect(handlers.size).toBe(1);
+
+    engine.dispose();
+    expect(handlers.size).toBe(0);
+  });
+});
+
 describe('MusicScheduler', () => {
   it('bar ve beat dönüşümleri doğru', () => {
     const scheduler = new MusicScheduler(120, [4, 4]);

@@ -53,6 +53,28 @@ describe('Sample utils', () => {
     expect(Math.max(...samples.map(Math.abs))).toBeGreaterThan(0.5);
   });
 
+  it("decodeWav kesik (truncated) data chunk'ı çökmeden, mevcut baytlarla çözer", () => {
+    const wav = createTestWav(440, 0.1, 44100); // header(44) + data(4410*2=8820) = 8864 bayt
+    const truncated = wav.slice(0, 44 + 100); // data chunk 8820 bayt iddia ediyor, yalnızca 100 bayt var
+    expect(() => decodeWav(truncated)).not.toThrow();
+    const { samples } = decodeWav(truncated);
+    expect(samples.length).toBe(50); // 100 bayt / 2 bayt (16-bit mono)
+  });
+
+  it('decodeWav sıfır kanal sayısında temiz hata fırlatır (bölme sıfıra gitmez)', () => {
+    const wav = createTestWav(440, 0.05, 44100);
+    const corrupted = wav.slice();
+    new DataView(corrupted.buffer).setUint16(22, 0, true); // numChannels ofseti
+    expect(() => decodeWav(corrupted)).toThrow(/kanal sayısı/);
+  });
+
+  it('decodeWav desteklenmeyen PCM bit derinliğinde temiz hata fırlatır', () => {
+    const wav = createTestWav(440, 0.05, 44100);
+    const corrupted = wav.slice();
+    new DataView(corrupted.buffer).setUint16(34, 0, true); // bitsPerSample ofseti
+    expect(() => decodeWav(corrupted)).toThrow(/bit derinliği/);
+  });
+
   it('resampleLinear uzunluğu doğru değiştirir', () => {
     const data = new Float32Array([0, 1, 2, 3, 4, 5]);
     const resampled = resampleLinear(data, 2);
@@ -87,6 +109,31 @@ describe('Sample utils', () => {
     expect(looped.length).toBe(8);
     expect(looped[0]).toBe(1);
     expect(looped[3]).toBe(1);
+  });
+
+  it('loopSamples crossfade her iç loop sınırında uygulanır (yalnızca ilkinde değil)', () => {
+    const source = new Float32Array(20);
+    for (let i = 0; i < source.length; i++) {
+      source[i] = Math.sin((i / source.length) * Math.PI * 2);
+    }
+    const targetLength = source.length * 3 + 5;
+    const withCrossfade = loopSamples(source, targetLength, true, true);
+    const withoutCrossfade = loopSamples(source, targetLength, true, false);
+    const fadeSamples = Math.min(50, Math.floor(source.length / 2));
+
+    // Eski implementasyon yalnızca [0, fadeSamples) aralığını değiştiriyordu;
+    // 2. sınırda (2×source.length) hiçbir fark yaratmıyordu. Bu sınırda da
+    // fark olmalı ki her tekrarda değil yalnızca ilkinde crossfade
+    // uygulandığı regresyonu yakalasın.
+    const secondBoundary = source.length * 2;
+    let differsAtSecondBoundary = false;
+    for (let i = secondBoundary - fadeSamples; i < secondBoundary; i++) {
+      if (Math.abs(withCrossfade[i] - withoutCrossfade[i]) > 1e-6) {
+        differsAtSecondBoundary = true;
+        break;
+      }
+    }
+    expect(differsAtSecondBoundary).toBe(true);
   });
 
   it('applyEnvelopeToSample zarf uygular', () => {

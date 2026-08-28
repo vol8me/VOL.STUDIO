@@ -166,6 +166,94 @@ describe('Synth engine', () => {
     }
   });
 
+  it('additive harmonics: h.gain genliği kontrol eder (yoksayılmaz)', () => {
+    const envelope = { attack: 0, hold: 0.05, release: 0 };
+    const loud = synthesize({
+      harmonics: [
+        { ratio: 1, gain: 0.05 },
+        { ratio: 2, gain: 1.0 },
+      ],
+      frequency: 440,
+      duration: 0.05,
+      normalize: false,
+      envelope,
+    });
+    const quiet = synthesize({
+      harmonics: [
+        { ratio: 1, gain: 0.05 },
+        { ratio: 2, gain: 0.05 },
+      ],
+      frequency: 440,
+      duration: 0.05,
+      normalize: false,
+      envelope,
+    });
+    const energy = (ch: Float32Array) => ch.reduce((a, b) => a + b * b, 0);
+    // Yalnızca 2. harmonik'in gain'i farklı (1.0 vs 0.05) — `h.gain`
+    // uygulanmazsa iki çıktı da eşit enerjili olurdu.
+    expect(energy(loud.channels[0])).toBeGreaterThan(energy(quiet.channels[0]) * 2);
+  });
+
+  it('additive harmonics: Nyquist üstü harmonikler çıktıya katkı yapmaz', () => {
+    const base = {
+      frequency: 15000,
+      duration: 0.05,
+      normalize: false,
+      envelope: { attack: 0, hold: 0.05, release: 0 },
+    } as const;
+    // ratio=1 → 15000Hz, iç örnekleme Nyquist'inin (~39690Hz) altında, duyulur.
+    // ratio=3/5/7 → 45000/75000/105000Hz, kesinlikle üstünde.
+    const onlyFundamental = synthesize({ ...base, harmonics: [{ ratio: 1, gain: 1 }] });
+    const withInaudibleHarmonics = synthesize({
+      ...base,
+      harmonics: [
+        { ratio: 1, gain: 1 },
+        { ratio: 3, gain: 1 },
+        { ratio: 5, gain: 1 },
+        { ratio: 7, gain: 1 },
+      ],
+    });
+    // Nyquist üstü harmonikler tamamen sessiz olmalı — eskiden hepsi aynı
+    // katlanmış (nyquistLimit) frekansa binip fazladan enerji/yapay ton
+    // eklerdi, bu durumda iki çıktı FARKLI olurdu.
+    const chA = onlyFundamental.channels[0];
+    const chB = withInaudibleHarmonics.channels[0];
+    expect(chA.length).toBe(chB.length);
+    for (let i = 0; i < chA.length; i++) {
+      expect(chB[i]).toBeCloseTo(chA[i], 5);
+    }
+  });
+
+  it('SynthParams: NaN/Infinity/0/negatif değerler çökme veya sessiz-boş çıktı üretmez', () => {
+    const cases = [
+      { duration: NaN },
+      { duration: Infinity },
+      { duration: -5 },
+      { frequency: NaN },
+      { frequency: Infinity },
+      { frequency: -100 },
+      { sampleRate: 0 },
+      { sampleRate: NaN },
+      { sampleRate: -44100 },
+      { repeat: NaN },
+      { repeat: -5 },
+      { repeat: Infinity },
+      { repeatTime: NaN },
+      { seed: NaN },
+      { gain: NaN },
+      { pulseWidth: NaN },
+      { slide: NaN },
+      { slide: Infinity },
+    ];
+    for (const overrides of cases) {
+      const result = synthesize({ wave: 'sine', frequency: 440, duration: 0.05, ...overrides });
+      expect(result.channels[0].length).toBeGreaterThan(0);
+      for (const s of result.channels[0]) {
+        expect(Number.isFinite(s)).toBe(true);
+      }
+    }
+  });
+
   it('DelayLine istenen gecikme kadar sonra impulsu çıkarır', () => {
     const sampleRate = 44100;
     const delay = new DelayLine({ time: 0.05, feedback: 0, mix: 1 }, sampleRate);
