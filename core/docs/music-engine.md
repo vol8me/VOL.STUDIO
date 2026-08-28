@@ -2,13 +2,14 @@
 
 `@volstudio/core/audio/music`, projenin Web Audio tabanlı müzik motorudur. Stem
 (katman) bazlı adaptive müzik, crossfade ve state'e göre gain haritalama sağlar.
-SFX motorundan (`@volstudio/audio-synth`) ayrıdır; müzik uzun loop'lar ve
+SFX motorundan (build-time ses sentez aracından) ayrıdır; müzik uzun loop'lar ve
 çok kanallı stem mix'i için optimize edilmiştir.
 
 > **Runtime'da sentez YAPILMAZ.** Motor yalnızca önceden üretilmiş OGG (iOS'ta MP3)
-> stem'leri çalar. Müzik ve SFX dosyaları build-time script'lerle (`core/scripts/generate-*.ts`)
-> üretilir. Bu bilinçli bir karardır: runtime sentez CPU maliyeti ve mobilde
-> öngörülemeyen zamanlama getirir.
+> stem'leri çalar. Müzik ve SFX dosyaları build-time script'lerle
+> (`games/vol-hell/scripts/audio/` veya `devtools/audio-synth/scripts/`) üretilir.
+> Bu bilinçli bir karardır: runtime sentez CPU maliyeti ve mobilde öngörülemeyen
+> zamanlama getirir.
 
 ## Mimari
 
@@ -242,7 +243,7 @@ Kayıpsız WAV kopyası saklanmaz, gerektiğinde yeniden üretilir. iOS hedefi
 için `StemLoader` `.ogg` başarısız olursa `.mp3` fallback dener; proje
 build'inde `convert:ios` yokken yalnızca OGG üretilir.
 
-> **Uyarı — müzik için öneri:** `synth` motoru SFX, UI blip ve kısa drone için
+> **Uyarı — müzik için öneri:** Ses sentez aracı SFX, UI blip ve kısa drone için
 > designed. Çoksesli müzik, armoni ve uzun melodi üretmeye çalışmak aynı sonik
 > hissiyat ve sınırlı tımbr çıkarır. Müzik parçaları için DAW veya hazır royalty-free
 > stem'leri OGG olarak export edip bu motorla çalmak daha sağlıklıdır.
@@ -297,14 +298,14 @@ games/vol-hell/scripts/audio/
   lib/mix.ts          — master zincir: normalize, DC blocker, peak limitleme
   lib/theory.ts       — armoni, ölçek ve ritim yardımcıları
   lib/track.ts        — track render pipeline'ı
-  palette/*.ts        — synth ses paleti (bass, pads, keys, percussion, fx, ambience)
+  palette/*.ts        — sentez ses paleti (bass, pads, keys, percussion, fx, ambience)
   music/*.ts          — her track için ayrı render script'i
   ambience/*.ts       — gameplay ambiyans render'ları
   generate-music.ts   — müzik + ambiyans üretim giriş noktası
   generate-ambience.ts — ambiyans giriş noktası
 ```
 
-`core/scripts/audio-qa.ts` üretilen asset'leri ölçer (click, clip, bant profili) — paylaşılan CLI, `pnpm --filter @volstudio/vol-hell audio:qa` ile çağrılır.
+`devtools/audio-synth/scripts/audio-qa.ts` üretilen asset'leri ölçer (click, clip, bant profili) — paylaşılan CLI, `pnpm --filter @volstudio/vol-hell audio:qa` ile çağrılır.
 
 Mevcut müzik track'leri:
 
@@ -327,8 +328,8 @@ pnpm --filter @volstudio/vol-hell audio:qa
 
 Bu kurallar ölçümle konuldu; bozulduğunda sonuç duyulur şekilde kötüleşir.
 
-- **Voice'lar `normalize: false` ile üretilir.** `synth()` varsayılanı `true`'dur ve
-  her notayı tek tek 0.95 tepeye çeker; bu katmanlar arası doğal dinamiği yok eder.
+- **Voice'lar `normalize: false` ile üretilir.** Üretim aracının varsayılanı
+  `true`'dur ve her notayı tek tek 0.95 tepeye çeker; bu katmanlar arası doğal dinamiği yok eder.
   Seviye dengesi `gain` ile kurulur, normalize yalnızca master zincirde bir kez
   uygulanır (`masterChain` / `masterPeak`).
 - **Seviye hedefi RMS'tir, tepe değil.** Arka plan müziğinde algılanan yükseklik

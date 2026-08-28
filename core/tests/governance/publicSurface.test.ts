@@ -35,8 +35,8 @@ import * as Core from '../../src/index';
 // bağlanır ki aynı etkileşim her ekranda aynı hissetsin.
 const EXPECTED_EXPORT_COUNT = 195;
 
-// 197 → 195: VisualSynth ve AudioSynth asset compiler paketlerine taşındı;
-// `VisualSynth` ve `Synth` namespace'leri CORE public surface'dan çıkarıldı.
+// 195: asset compiler'lar (görsel/ses sentezi) CORE public surface'da
+// tutulmaz; runtime yalnızca üretilmiş asset'leri çalar.
 
 describe('CORE public API yüzeyi', () => {
   it('export sayısı bilinçli bir kararla değişir', () => {

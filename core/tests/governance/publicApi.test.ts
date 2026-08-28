@@ -7,11 +7,11 @@ import * as CoreExports from '../../src/index';
  *
  * Kapsam BİLİNÇLİ olarak dar tutulmuştur: yalnızca `core/src/index.ts`'in
  * export ettiği isimler taranır, dosya İÇERİKLERİ değil. Ham bir substring
- * taraması (`core/src/**`) yanlış pozitif üretir — `audio/synth/waveforms.ts`
- * gibi dosyalar "wave" kelimesini meşru bir DSP teriminde taşır. Aynı sebeple
- * `'wave'` ve `'card'` bu listede YOK: `WaveCounter` (round/dalga sayacı) ve
- * `CardTile`/`CardPicker` (jenerik seçim kartı UI'ı) zaten CORE'un kendi
- * export yüzeyinde meşru, domain-nötr isimler taşıyor.
+ * taraması (`core/src/**`) yanlış pozitif üretir; dosya içeriğindeki
+ * "wave" veya "card" kelimeleri meşru domain-nötr terimlerde geçebilir.
+ * Aynı sebeple `'wave'` ve `'card'` bu listede YOK: `WaveCounter`
+ * (round/dalga sayacı) ve `CardTile`/`CardPicker` (jenerik seçim kartı UI'ı)
+ * zaten CORE'un kendi export yüzeyinde meşru, domain-nötr isimler taşıyor.
  */
 const FORBIDDEN_DOMAIN_TERMS = ['enemy', 'boss', 'flux', 'spark', 'volhell'] as const;
 

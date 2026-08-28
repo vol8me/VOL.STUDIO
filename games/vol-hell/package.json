@@ -20,12 +20,12 @@
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",
     "@volstudio/core": "workspace:*",
-    "@volstudio/audio-synth": "workspace:*",
     "@volstudio/tauri-v2": "workspace:*",
     "phaser": "^4.2.1"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
+    "@volstudio/audio-synth": "workspace:*",
     "i18next": "26.3.6",
     "jsdom": "25.0.1",
     "tsx": "^4.23.11",

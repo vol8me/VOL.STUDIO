@@ -203,9 +203,6 @@ importers:
       '@tauri-apps/api':
         specifier: ^2.11.1
         version: 2.11.1
-      '@volstudio/audio-synth':
-        specifier: workspace:*
-        version: link:../../devtools/audio-synth
       '@volstudio/core':
         specifier: workspace:*
         version: link:../../core
@@ -219,6 +216,9 @@ importers:
       '@types/node':
         specifier: ^26.1.2
         version: 26.1.2
+      '@volstudio/audio-synth':
+        specifier: workspace:*
+        version: link:../../devtools/audio-synth
       i18next:
         specifier: 26.3.6
         version: 26.3.6(typescript@6.0.3)

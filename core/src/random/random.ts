@@ -1,15 +1,13 @@
 /**
  * Deterministik rastgelelik.
  *
- * Sentez `Math.random()` kullanıyordu; bu, build-time asset üretimini
- * tekrarlanamaz hale getiriyordu: `generate:sounds` her çalıştığında farklı WAV
- * üretiyor, üretilen dosyalar diff'lenemiyor ve bir hata raporu yeniden
- * oluşturulamıyordu. Aynı seed her zaman aynı sesi verir.
+ * `Math.random()` kullanımı build-time asset üretimini tekrarlanamaz hale
+ * getirir: aynı üretim adımı her çalıştığında farklı çıktı verir, dosyalar
+ * diff'lenemez ve hata raporları yeniden oluşturulamaz. Aynı seed her zaman
+ * aynı sonucu verir.
  *
- * Bu modül ses sentezinde doğdu ama motor geneli bir yardımcıdır — oyun
- * tarafı da (spawn, davranış, kart RNG'si) aynı uygulamayı kullanır. Bu
- * yüzden `devtools/audio-synth/src/` yerine burada, bağımsız bir namespace'te
- * yaşar.
+ * Bu modül oyun ve build-time asset compiler'lar tarafından paylaşılan
+ * jenerik bir yardımcıdır; bu yüzden bağımsız bir namespace'te yaşar.
  */
 
 /** Kaynak seed verilmediğinde kullanılan sabit — üretim varsayılan olarak deterministiktir. */
