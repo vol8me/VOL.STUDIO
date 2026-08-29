@@ -1,6 +1,6 @@
-import { createVolGame, shouldUseTouchControls, VOL_COLORS, i18n } from '@volstudio/core';
-import { isTauri } from '@tauri-apps/api/core';
+import { createVolGame, VOL_COLORS, i18n } from '@volstudio/core';
 import { TauriWindowAdapter } from '@volstudio/tauri-v2';
+import { hasNativeWindow } from '@/app/platform';
 import {
   diagnostics,
   gameAudio,
@@ -82,9 +82,7 @@ try {
   // uygulama ömrü boyunca senkron tutar.
   const videoController = new VideoSettingsController(videoSettings, {
     target: game.canvas.parentElement ?? document.documentElement,
-    windowAdapter: new TauriWindowAdapter({
-      enabled: isTauri() && !shouldUseTouchControls(),
-    }),
+    windowAdapter: new TauriWindowAdapter({ enabled: hasNativeWindow() }),
   });
   await videoController.start();
   game.events.once('destroy', () => videoController.destroy());

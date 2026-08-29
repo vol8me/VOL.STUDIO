@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { CustomCursor } from '@/runtime/ui/CustomCursor';
 import { PlayerAimIndicator } from '@/runtime/ui/PlayerAimIndicator';
+import { PlayerDirectionIndicator } from '@/runtime/ui/PlayerDirectionIndicator';
+import { uiConfig } from '@/config/ui';
 import {
   approachAngle,
   quantizeEightDirection,
@@ -146,6 +148,112 @@ describe('PlayerAimIndicator', () => {
 
     indicator.update(200, 100, 100);
     expect(graphics.visible).toBe(false);
+    indicator.destroy();
+  });
+});
+
+/**
+ * Phaser `Graphics` sahtesi — çizim çağrılarını sırayla kaydeder.
+ *
+ * Göstergeler `scene.add.graphics()` dışında Phaser'a hiç dokunmaz; gerçek bir
+ * sahne kurmak testi Phaser'ın canvas'ına bağlardı.
+ */
+function fakeGraphics() {
+  const lineStyles: { width: number; color: number; alpha: number }[] = [];
+  const positions: { x: number; y: number }[] = [];
+  const graphics = {
+    visible: false,
+    lineStyles,
+    positions,
+    setDepth: () => graphics,
+    setVisible: (value: boolean) => {
+      graphics.visible = value;
+      return graphics;
+    },
+    setPosition: (x: number, y: number) => {
+      positions.push({ x, y });
+      return graphics;
+    },
+    clear: () => graphics,
+    lineStyle: (width: number, color: number, alpha: number) => {
+      lineStyles.push({ width, color, alpha });
+      return graphics;
+    },
+    beginPath: () => graphics,
+    moveTo: () => graphics,
+    lineTo: () => graphics,
+    strokePath: () => graphics,
+    destroy: () => {},
+  };
+  return graphics;
+}
+
+describe('PlayerDirectionIndicator', () => {
+  function make() {
+    const graphics = fakeGraphics();
+    const indicator = new PlayerDirectionIndicator({
+      add: { graphics: () => graphics },
+    } as never);
+    return { graphics, indicator };
+  }
+
+  it('hareket varken görünür olur ve oyuncuyu takip eder', () => {
+    const { graphics, indicator } = make();
+
+    indicator.update(16, 300, 200, 1, 0);
+    expect(graphics.visible).toBe(true);
+    expect(graphics.positions.at(-1)).toEqual({ x: 300, y: 200 });
+
+    indicator.update(16, 320, 210, 1, 0);
+    expect(graphics.positions.at(-1)).toEqual({ x: 320, y: 210 });
+    indicator.destroy();
+  });
+
+  it('hareket kesilince sönerek görünmez olur', () => {
+    const { graphics, indicator } = make();
+    for (let i = 0; i < 20; i++) indicator.update(16, 0, 0, 1, 0);
+    expect(graphics.visible).toBe(true);
+
+    // Sönme üstel yaklaşımdır: tek kare yetmez, birkaç kare sonra eşiğin altına iner.
+    for (let i = 0; i < 60; i++) indicator.update(16, 0, 0, 0, 0);
+    expect(graphics.visible).toBe(false);
+    indicator.destroy();
+  });
+
+  it("rengi config'ten okur — runtime dosyasında hex sabiti kalmaz", () => {
+    const { graphics, indicator } = make();
+    indicator.update(16, 0, 0, 0, 1);
+
+    expect(graphics.lineStyles.at(-1)?.color).toBe(uiConfig.playerFeedback.direction.color);
+    expect(graphics.lineStyles.at(-1)?.width).toBe(uiConfig.playerFeedback.direction.lineWidthPx);
+    indicator.destroy();
+  });
+
+  it('reset dalga sınırında çizimi ve görünürlüğü bırakır', () => {
+    const { graphics, indicator } = make();
+    for (let i = 0; i < 10; i++) indicator.update(16, 0, 0, 1, 0);
+    expect(graphics.visible).toBe(true);
+
+    indicator.reset();
+    expect(graphics.visible).toBe(false);
+    indicator.destroy();
+  });
+
+  it('destroy iki kez çağrılabilir ve sonrasında update sessizdir', () => {
+    const { graphics, indicator } = make();
+    indicator.destroy();
+    expect(() => indicator.destroy()).not.toThrow();
+
+    const before = graphics.positions.length;
+    indicator.update(16, 5, 5, 1, 0);
+    indicator.reset();
+    expect(graphics.positions.length).toBe(before);
+  });
+
+  it('sonlu olmayan delta çizimi bozmaz', () => {
+    const { indicator } = make();
+    expect(() => indicator.update(Number.NaN, 0, 0, 1, 0)).not.toThrow();
+    expect(() => indicator.update(-50, 0, 0, 1, 0)).not.toThrow();
     indicator.destroy();
   });
 });

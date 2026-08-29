@@ -8,7 +8,13 @@
     "dosyayı okur; iki taraf ayrışamaz.",
     "",
     "floor: hiçbir paketin altına inemeyeceği taban. exempt: gerekçesi yazılı",
-    "muafiyetler (boş bırakılmaz)."
+    "muafiyetler (boş bırakılmaz).",
+    "",
+    "2026-08-30: audio-synth ve visual-synth eşikleri tabanda (50/50/50/40)",
+    "bırakılmıştı ama gerçek kapsam çok daha yüksekti (89 ve 97). Taban eşik,",
+    "kapsam yarıya düşse bile kapıyı YEŞİL tutuyordu — yani bu iki paket için",
+    "kapı hiçbir şey ölçmüyordu. Eşikler ölçülen değerin birkaç puan altına",
+    "çekildi: normal refactor kapıyı düşürmez, gerçek gerileme düşürür."
   ],
   "floor": {
     "lines": 50,
@@ -43,16 +49,16 @@
       "functions": 90
     },
     "@volstudio/visual-synth": {
-      "lines": 50,
-      "statements": 50,
-      "branches": 50,
-      "functions": 40
+      "lines": 95,
+      "statements": 95,
+      "branches": 89,
+      "functions": 95
     },
     "@volstudio/audio-synth": {
-      "lines": 50,
-      "statements": 50,
-      "branches": 50,
-      "functions": 40
+      "lines": 86,
+      "statements": 86,
+      "branches": 75,
+      "functions": 85
     },
     "@volstudio/pen.dev": {
       "lines": 96,

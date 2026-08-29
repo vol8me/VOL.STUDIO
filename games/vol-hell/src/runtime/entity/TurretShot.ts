@@ -5,7 +5,7 @@ import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { Enemy } from './Enemy';
 import type { Border } from './Border';
 import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
-import { segmentCircleOverlap } from '@volstudio/core';
+import { segmentCircleEntryT } from '@volstudio/core';
 
 /**
  * Kulenin attığı mermi — hedefi TAKİP EDER ve çarpınca hasar verir.
@@ -111,28 +111,37 @@ export class TurretShot {
     this.dot.destroy();
   }
 
-  /** Hedefe ya da yolda denk gelen başka bir düşmana çarpar. */
+  /**
+   * Yolda denk gelen İLK düşmana çarpar.
+   *
+   * "İlk" = süpürülen segment üzerindeki en küçük giriş parametresi, dizideki
+   * ilk eşleşme değil. Aksi hâlde kule mermisi kalabalıkta öndeki düşmanın
+   * içinden geçip arkadakini vurabiliyordu ve hangisinin vurulduğu düşman
+   * dizisinin sırasına bağlıydı.
+   */
   private checkHit(enemies: readonly Enemy[]): void {
+    let nearest: Enemy | null = null;
+    let nearestT = Number.POSITIVE_INFINITY;
     for (const enemy of enemies) {
       if (!enemy.isAlive) continue;
-      if (
-        !segmentCircleOverlap(
-          this.previousX,
-          this.previousY,
-          this.dot.x,
-          this.dot.y,
-          enemy.x,
-          enemy.y,
-          enemy.radius + turretVisualConfig.shotRadius,
-        )
-      )
-        continue;
-
-      this.effects.play('turretImpact', this.dot.x, this.dot.y);
-      enemy.takeDamage(this.damage);
-      this.destroy();
-      return;
+      const entryT = segmentCircleEntryT(
+        this.previousX,
+        this.previousY,
+        this.dot.x,
+        this.dot.y,
+        enemy.x,
+        enemy.y,
+        enemy.radius + turretVisualConfig.shotRadius,
+      );
+      if (entryT === null || entryT >= nearestT) continue;
+      nearest = enemy;
+      nearestT = entryT;
     }
+    if (!nearest) return;
+
+    this.effects.play('turretImpact', this.dot.x, this.dot.y);
+    nearest.takeDamage(this.damage);
+    this.destroy();
   }
 
   private hasHitArenaBorder(border: Border): boolean {

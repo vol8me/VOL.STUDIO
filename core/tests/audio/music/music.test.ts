@@ -626,3 +626,76 @@ describe('MusicEngine — onTrackEnd', () => {
     });
   });
 });
+
+describe('MusicEngine — geçiş işlem bütünlüğü', () => {
+  let fakeContext: FakeAudioContext;
+
+  beforeEach(() => {
+    fakeContext = new FakeAudioContext();
+  });
+
+  afterEach(() => {
+    fakeContext = undefined as unknown as FakeAudioContext;
+    vi.restoreAllMocks();
+  });
+
+  /** Buffer'ı hiç çözülemeyen, yani asla çalınamayacak bir track. */
+  function unplayableTrack(id: string) {
+    return { id, bpm: 120, stems: [{ id: 'lead', src: `${id}.ogg`, gain: 1 }] };
+  }
+
+  function playableTrack(id: string, buffer: AudioBuffer) {
+    return { id, bpm: 120, stems: [{ id: 'lead', buffer, gain: 1 }] };
+  }
+
+  it('crossfade hedefi çalınamıyorsa MEVCUT müzik ayakta kalır', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    const buffer = makeBuffer(fakeContext, 2);
+
+    await engine.loadTrack(playableTrack('menu', buffer));
+    await engine.play('menu');
+    expect(engine.getCurrentState().playing).toBe(true);
+
+    // Hedefin hiçbir stem'i yüklenemez.
+    await engine.loadTrack(unplayableTrack('broken'));
+    await expect(engine.crossfadeTo('broken', 1)).rejects.toThrow(/crossfade/i);
+
+    // Eski parça DOKUNULMAMIŞ olmalı: geçiş hiç başlamadı.
+    const state = engine.getCurrentState();
+    expect(state.playing).toBe(true);
+    expect(state.trackId).toBe('menu');
+  });
+
+  it('başarısız crossfade sonrası aynı hedefe yeniden geçiş yapılabilir', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    const buffer = makeBuffer(fakeContext, 2);
+
+    await engine.loadTrack(playableTrack('menu', buffer));
+    await engine.play('menu');
+    await engine.loadTrack(unplayableTrack('battle'));
+    await expect(engine.crossfadeTo('battle', 1)).rejects.toThrow();
+
+    // Buffer sonradan elde edilirse geçiş normal çalışır — motor kilitlenmez.
+    await engine.loadTrack(playableTrack('battle', makeBuffer(fakeContext, 2)));
+    await engine.crossfadeTo('battle', 1);
+    expect(engine.getCurrentState().trackId).toBe('battle');
+    expect(engine.getCurrentState().playing).toBe(true);
+  });
+
+  it('play hedefi çalınamıyorsa çalan müziği DURDURMAZ', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    const buffer = makeBuffer(fakeContext, 2);
+
+    await engine.loadTrack(playableTrack('menu', buffer));
+    await engine.play('menu');
+    await engine.loadTrack(unplayableTrack('ghost'));
+
+    await expect(engine.play('ghost')).rejects.toThrow(/çalınamadı/i);
+    const state = engine.getCurrentState();
+    expect(state.playing).toBe(true);
+    expect(state.trackId).toBe('menu');
+  });
+});

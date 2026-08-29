@@ -63,6 +63,12 @@ export class CardScreens {
   private readonly toasts: ToastManager;
   private readonly statsPanel: PlayerStatsPanel | null;
 
+  /**
+   * Son RENDER EDİLEN Flux bakiyesi — bakiye vurgusunun yönü buradan türetilir.
+   * `null` ilk render'ı işaretler; dükkanın ilk açılışı vurgu oynatmaz.
+   */
+  private lastRenderedFlux: number | null = null;
+
   /** Bekleyen seviye atlamaları — dalga sonunda sırayla sunulur. */
   private readonly pendingLevels: number[] = [];
   private levelUpOffer: CardDefinition[] = [];
@@ -305,7 +311,7 @@ export class CardScreens {
     this.lockedOfferIds.delete(cardId);
     this.autoEquip(owned.instanceId, card);
     this.callbacks.onCardTaken?.('shop');
-    this.shop.render(this.buildShopState(undefined, 'decrease'));
+    this.shop.render(this.buildShopState());
     this.refreshLoadout();
     this.statsPanel?.refresh();
   }
@@ -321,7 +327,7 @@ export class CardScreens {
       this.purchased.delete(owned.definition.id);
     }
 
-    this.shop.render(this.buildShopState(undefined, 'increase'));
+    this.shop.render(this.buildShopState());
     this.refreshLoadout();
     this.statsPanel?.refresh();
   }
@@ -337,7 +343,7 @@ export class CardScreens {
     this.refreshShopOffers();
     this.callbacks.onReroll?.();
     // Panel reroll'u tahmin etmez; niyet açıkça bildirilir.
-    this.shop.render(this.buildShopState('reroll', 'decrease'));
+    this.shop.render(this.buildShopState('reroll'));
     this.statsPanel?.refresh();
   }
 
@@ -482,12 +488,29 @@ export class CardScreens {
     });
   }
 
-  private buildShopState(
-    transition?: ShopPickerState['transition'],
-    balanceChange?: ShopPickerState['balanceChange'],
-  ): ShopPickerState {
+  /**
+   * Dükkan durumunu ekonomiden türetir; bakiye vurgusunun YÖNÜNÜ de burada
+   * hesaplar.
+   *
+   * Yön eskiden çağrı yerlerinden (`handleBuy` → `'decrease'`) geçiliyordu ve
+   * HİÇ görünmüyordu: satın alma önce `economy.spendFlux()` çağırıyor, bu da
+   * senkron `onFluxChange` aboneliğini tetikleyip dükkanı YÖNSÜZ bir kez
+   * render ettiriyordu. `ShopPicker` bakiye etiketini o ilk render'da
+   * güncellediği için ardından gelen yönlü render "değişiklik yok" sayılıp
+   * kırmızı/yeşil sınıfı hiç eklenmiyordu. Yönü tek kaynaktan (son RENDER
+   * EDİLEN bakiye) türetince hangi yolun önce geldiği önemsizleşir.
+   */
+  private buildShopState(transition?: ShopPickerState['transition']): ShopPickerState {
     const flux = this.economy.getFlux();
     const owned = this.cards.getOwned();
+    const previousFlux = this.lastRenderedFlux;
+    this.lastRenderedFlux = flux;
+    const balanceChange =
+      previousFlux === null || flux === previousFlux
+        ? undefined
+        : flux > previousFlux
+        ? ('increase' as const)
+        : ('decrease' as const);
 
     return {
       transition,

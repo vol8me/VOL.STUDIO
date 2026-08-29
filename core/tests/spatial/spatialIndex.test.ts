@@ -372,4 +372,78 @@ describe('SpatialIndex', () => {
       expect(index.queryInto(mine, 200, 0)).toEqual([...index.query(200, 0)]);
     });
   });
+
+  describe('refresh — artımlı konum tazeleme', () => {
+    it('hücre değiştiren varlığı taşır, değişmeyene dokunmaz', () => {
+      const index = new SpatialIndex<{ x: number; y: number }>(10);
+      const moving = { x: 5, y: 5 };
+      const still = { x: 15, y: 15 };
+      index.rebuild([moving, still]);
+
+      moving.x = 95;
+      moving.y = 95;
+      index.refresh([moving, still]);
+
+      expect(index.query(95, 95)).toContain(moving);
+      expect(index.query(5, 5)).not.toContain(moving);
+      expect(index.query(15, 15)).toContain(still);
+      expect(index.size).toBe(2);
+    });
+
+    it('rebuild ile AYNI sorgu sonucunu verir — semantik korunur', () => {
+      const entities = Array.from({ length: 40 }, (_, i) => ({ x: i * 3, y: (i % 7) * 4 }));
+      const incremental = new SpatialIndex<{ x: number; y: number }>(10);
+      const full = new SpatialIndex<{ x: number; y: number }>(10);
+      incremental.rebuild(entities);
+      full.rebuild(entities);
+
+      for (const entity of entities) {
+        entity.x += 11;
+        entity.y -= 6;
+      }
+      incremental.refresh(entities);
+      full.rebuild(entities);
+
+      for (const probe of [0, 25, 60, 120]) {
+        expect([...incremental.query(probe, probe)].sort(byPosition)).toEqual(
+          [...full.query(probe, probe)].sort(byPosition),
+        );
+      }
+      expect(incremental.size).toBe(full.size);
+    });
+
+    it('pasif olan varlığı indeksten çıkarır', () => {
+      interface Toggleable {
+        x: number;
+        y: number;
+        on: boolean;
+      }
+      const alive: Toggleable = { x: 5, y: 5, on: true };
+      const dying: Toggleable = { x: 6, y: 6, on: true };
+      const index = new SpatialIndex<Toggleable>(10, (e) => e.on);
+      index.rebuild([alive, dying]);
+      expect(index.size).toBe(2);
+
+      dying.on = false;
+      index.refresh([alive, dying]);
+      expect(index.size).toBe(1);
+      expect(index.has(dying)).toBe(false);
+    });
+
+    it('kümeye yeni katılan varlığı upsert eder', () => {
+      const index = new SpatialIndex<{ x: number; y: number }>(10);
+      const first = { x: 1, y: 1 };
+      index.rebuild([first]);
+
+      const born = { x: 40, y: 40 };
+      index.refresh([first, born]);
+      expect(index.query(40, 40)).toContain(born);
+      expect(index.size).toBe(2);
+    });
+  });
 });
+
+/** Sıralamadan bağımsız karşılaştırma için kararlı konum anahtarı. */
+function byPosition(a: { x: number; y: number }, b: { x: number; y: number }): number {
+  return a.x - b.x || a.y - b.y;
+}

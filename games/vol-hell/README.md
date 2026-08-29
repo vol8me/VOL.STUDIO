@@ -78,10 +78,33 @@ desenlerle çalışır, varsayılan açıktır ve Ayarlar'dan kapatılabilir;
 desteklemeyen platformda (`navigator.vibrate` yoksa) sessizce hiçbir şey
 yapmaz.
 
+Görüntü ayarları (ekran modu, pencere çözünürlüğü, grafik kalitesi) yalnız
+dokunmatik OLMAYAN yüzeylerde gösterilir. **Pencere çözünürlüğü ayrıca native
+bir pencere gerektirir** (`hasNativeWindow()`): tarayıcıda oynanan masaüstü
+sürümünde pencereyi yeniden boyutlandıracak bir API yoktur, bu yüzden kontrol
+devre dışıdır — etkin bırakılsa kullanıcı değeri değiştirir, değer kaydedilir
+ve hiçbir şey olmazdı. Grafik kalitesi hem render DPR'ını hem partikül
+yoğunluğunu CANLI değiştirir; DPR sağlayıcısı `bootstrap`ten geçer, kalite
+profilleri `src/config/video.ts`te veridir.
+
 Masaüstü ve Tauri WebView'da F11 tam ekranı açıp kapatır; aynı akış CORE
 `FullscreenController` üzerinden Phaser canvas + DOM kökünü birlikte kapsar.
 Tarayıcı F11'i kendi penceresine ayırıyorsa uygulama olayı almaz ve tarayıcının
 yerel davranışı korunur.
+
+## Simülasyon zamanı
+
+Render frame süresi `SimulationClock` üzerinden sabit adımlara bölünür
+(`src/runtime/simulation/SimulationClock.ts`). Politika tek yerde durur ve
+Phaser kurmadan test edilir: düşük FPS'te birden çok tam adımla gerçek zaman
+geri kazanılır, sekme dönüşü gibi devasa delta'larda catch-up sınırı uygulanır
+ve ATILAN süre raporlanır.
+
+**Bilinen sınır:** 60 FPS üstünde girdi tepkisini bir kare geciktirmemek için
+artık dilim değişken uzunlukta bir adım olarak koşulur. Bu, aynı girdinin
+farklı render hızlarında farklı sonuç vermesi demektir — simülasyon henüz TAM
+deterministik değil. Kaldırmak oynanış hissini değiştirir (16 ms'e kadar girdi
+gecikmesi) ve render tarafında interpolasyon ister; ayrı bir tur olarak planlı.
 
 ## Dayanıklılık sözleşmesi
 

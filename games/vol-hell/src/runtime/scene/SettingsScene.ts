@@ -9,6 +9,7 @@ import {
 } from '@volstudio/core';
 import { BaseScene } from './BaseScene';
 import { pushBackHandler } from '@/app/backNavigation';
+import { hasNativeWindow } from '@/app/platform';
 import { audioSettings, gameAudio, videoSettings } from '@/app/services';
 import { sfxVolumes } from '@/config';
 import { GameSettingsContent } from '@/runtime/ui/GameSettingsContent';
@@ -57,6 +58,7 @@ export class SettingsScene extends BaseScene {
       audioSettings,
       videoSettings,
       showVideoSettings: !shouldUseTouchControls(),
+      canResizeWindow: hasNativeWindow(),
     });
     this.panel = new Panel({ className: 'settings-panel' })
       .add(this.titleText)

@@ -10,6 +10,16 @@ export interface GameSettingsContentOptions {
   videoSettings: VideoSettings;
   /** Android/dokunmatik yüzeyde native masaüstü seçenekleri gösterilmez. */
   showVideoSettings: boolean;
+  /**
+   * Pencere boyutunu gerçekten uygulayabilen bir native pencere var mı.
+   *
+   * Tarayıcıda oynanan masaüstü sürümünde `VideoSettingsController` yalnız DOM
+   * tam ekranı uygular; çözünürlüğü uygulayacak bir pencere yoktur. Seçim
+   * etkin bırakılırsa kullanıcı değeri değiştirir, değer kalıcı olarak
+   * kaydedilir ve HİÇBİR ŞEY olmaz — ölü kontrol. Varsayılan `false`:
+   * yetenek kanıtlanmadıkça kontrol kapalıdır.
+   */
+  canResizeWindow?: boolean;
 }
 
 /** Ana menü ve pause ekranının paylaştığı tek ayar formu. */
@@ -34,8 +44,10 @@ export class GameSettingsContent {
   private readonly displayModeSelect: Select | null;
   private readonly resolutionSelect: Select | null;
   private readonly graphicsQualitySelect: Select | null;
+  private readonly canResizeWindow: boolean;
 
   constructor(options: GameSettingsContentOptions) {
+    this.canResizeWindow = options.canResizeWindow ?? false;
     this.element = document.createElement('div');
     this.element.className = 'vol-game-settings';
 
@@ -143,7 +155,7 @@ export class GameSettingsContent {
           label: `${preset.width} × ${preset.height}`,
         })),
         value: options.videoSettings.getResolutionId(),
-        disabled: options.videoSettings.getDisplayMode() === 'fullscreen',
+        disabled: this.isResolutionDisabled(options.videoSettings.getDisplayMode()),
         onCommit: (value) => {
           void options.videoSettings.setResolution(value);
           this.playCommitSound();
@@ -289,8 +301,13 @@ export class GameSettingsContent {
   private syncVideo(data: VideoSettingsData): void {
     this.displayModeSelect?.setValue(data.displayMode);
     this.resolutionSelect?.setValue(data.resolution);
-    this.resolutionSelect?.setDisabled(data.displayMode === 'fullscreen');
+    this.resolutionSelect?.setDisabled(this.isResolutionDisabled(data.displayMode));
     this.graphicsQualitySelect?.setValue(data.graphicsQuality);
+  }
+
+  /** Tam ekranda içerik boyutu anlamsızdır; native pencere yoksa hiç uygulanamaz. */
+  private isResolutionDisabled(displayMode: string): boolean {
+    return !this.canResizeWindow || displayMode === 'fullscreen';
   }
 
   private localeLabel(locale: string): string {

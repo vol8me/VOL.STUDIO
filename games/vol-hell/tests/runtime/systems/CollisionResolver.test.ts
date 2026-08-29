@@ -382,4 +382,83 @@ describe('CollisionResolver', () => {
     expect(enemy.applyPush).not.toHaveBeenCalled();
     expect(player.applyPush).not.toHaveBeenCalled();
   });
+
+  describe('süpürülmüş adımda ilk temas', () => {
+    /**
+     * Bir mermi tek adımda birden fazla düşmanı kesebilir. Dizideki İLK
+     * eşleşmeyi vurmak sonucu spatial grid'in hücre sırasına bağlar ve mermi
+     * öndekinin içinden geçip arkadakini vurabilir.
+     */
+    function sweptBullet(x: number, y: number, previousX: number, previousY: number) {
+      return {
+        ...makeBullet(x, y),
+        previousPositionX: previousX,
+        previousPositionY: previousY,
+        isExpired: false,
+      };
+    }
+
+    it('sıra ne olursa olsun YOLDAKİ İLK düşmanı vurur', () => {
+      const near = makeEnemy(30, 0, 5);
+      const far = makeEnemy(70, 0, 5);
+      // Uzaktaki önce listelenmiş: sıra bağımlı bir uygulama onu vururdu.
+      const bullet = sweptBullet(100, 0, 0, 0);
+      const { resolver } = makeResolver({
+        bullets: [bullet as never],
+        enemies: [far, near],
+        nearby: [far, near],
+      });
+
+      resolver.resolve(0);
+
+      expect(near.takeDamage).toHaveBeenCalledOnce();
+      expect(far.takeDamage).not.toHaveBeenCalled();
+    });
+
+    it('ters sırada da aynı düşmanı vurur — sonuç deterministik', () => {
+      const near = makeEnemy(30, 0, 5);
+      const far = makeEnemy(70, 0, 5);
+      const bullet = sweptBullet(100, 0, 0, 0);
+      const { resolver } = makeResolver({
+        bullets: [bullet as never],
+        enemies: [near, far],
+        nearby: [near, far],
+      });
+
+      resolver.resolve(0);
+
+      expect(near.takeDamage).toHaveBeenCalledOnce();
+      expect(far.takeDamage).not.toHaveBeenCalled();
+    });
+
+    it('yolda hiç düşman yoksa ve mermi ömrü dolduysa mermi toplanır', () => {
+      const bullet = { ...sweptBullet(100, 0, 0, 0), isExpired: true };
+      const { resolver, removeBulletSpy } = makeResolver({
+        bullets: [bullet as never],
+        enemies: [makeEnemy(0, 500, 5)],
+        nearby: [makeEnemy(0, 500, 5)],
+      });
+
+      resolver.resolve(0);
+
+      expect(removeBulletSpy).toHaveBeenCalledOnce();
+    });
+
+    it('ölü düşman ilk temas adayı olamaz', () => {
+      const dead = makeEnemy(30, 0, 5);
+      dead.isAlive = false;
+      const alive = makeEnemy(70, 0, 5);
+      const bullet = sweptBullet(100, 0, 0, 0);
+      const { resolver } = makeResolver({
+        bullets: [bullet as never],
+        enemies: [dead, alive],
+        nearby: [dead, alive],
+      });
+
+      resolver.resolve(0);
+
+      expect(dead.takeDamage).not.toHaveBeenCalled();
+      expect(alive.takeDamage).toHaveBeenCalledOnce();
+    });
+  });
 });

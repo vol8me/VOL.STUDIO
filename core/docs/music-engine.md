@@ -59,6 +59,12 @@ Bu maddeler kolayca yanlış varsayılan, ölçülerek doğrulanmış davranış
   o kadar bar sonraki sınıra hizalanır. Daha önce `bars` yokken geçiş `duration`
   kadar gecikiyordu: `fadeIn: 2` çağrısı 2 saniye hiçbir şey yapmayıp sonra 2
   saniyede geçiyordu.
+- **Geçişler İKİ FAZLIDIR ve yarım kalmaz.** `play()` ve `crossfadeTo()` önce
+  hedefin çalınabilir stem'lerini çözer; hiçbiri yoksa ÇALAN müziğe hiç
+  dokunmadan fırlatır. Eskiden `crossfadeTo()` önce eski stem'leri susturup
+  `stop()` planlıyor, sonra "hiç stem yok" diye fırlatıyordu: geçiş başarısız
+  olduğu hâlde mevcut müzik ölüyor, `isPlaying` `true` takılı kalıyor ve
+  playlist bir daha ilerlemiyordu.
 - **`play()` çalan parçayı yeniden başlatmaz** ama verilen `state`'i uygular.
   Yoğunluğu değiştirmek için ayrıca `setState()` çağırmak gerekmez.
 - **`mute(false)` ayarlanan seviyeye döner**, 1.0'a değil.

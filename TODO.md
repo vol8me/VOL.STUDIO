@@ -5,6 +5,91 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-30 — a579f69 denetim turu: 18 bulgunun kapatılması
+
+Bir önceki commit (`a579f69`, 131 dosya / +5261) iki bağımsız denetimden geçti;
+çıkan bulgular bu turda kapatıldı. Aşağıda yalnızca KARAR ve kalan risk var;
+dosya listeleri ve satır sayıları diff'te.
+
+**Oynanışı bozan iki kusur.** `Phaser.Input.Pointer.reset()` konumu da
+sıfırlıyor; nişan `worldX/worldY − oyuncu` olarak hesaplandığı için duraklatma
+dönüşünde ve dalga başında oyuncu, fare hareket edene kadar dünyanın (0,0)
+köşesine nişanlıyor ve aynı vektörle dash atıyordu. İki çağrı yeri de ortak,
+saf ve testli bir kapıya bağlandı (`runtime/input/pointerLatch.ts`): masaüstünde
+konum korunur, dokunmatikte tam sıfırlama uygulanır. İkincisi: dükkanın yönlü
+bakiye vurgusu (`balanceChange`) hiç görünmüyordu — `spendFlux` senkron
+`onFluxChange` aboneliğini tetikleyip paneli YÖNSÜZ render ettiriyor, bakiye
+etiketi o render'da güncellendiği için ardından gelen yönlü render "değişiklik
+yok" sayılıyordu. Yön artık çağrı yerlerinden değil, son RENDER EDİLEN bakiyeden
+türetiliyor; hangi yolun önce geldiği önemsiz.
+
+**Süpürülmüş çarpışmada ilk temas.** Mermi ve kule atışı, bir adımda kesişen
+düşmanlardan dizideki İLKİNİ vuruyordu: sonuç spatial grid'in hücre sırasına
+bağlıydı ve mermi öndekinin içinden geçip arkadakini vurabiliyordu. CORE'a
+`segmentCircleEntryT()` eklendi (parça-daire kesişiminin küçük kökü); iki çağrı
+yeri de en küçük `t`'yi seçiyor. Eşitlikte dizi sırası kazanır, yani
+deterministik.
+
+**MusicEngine geçiş bütünlüğü.** `crossfadeTo()` eski stem'leri susturup
+`stop()` planladıktan SONRA "hiç stem yüklenemedi" diye fırlatabiliyordu: geçiş
+başarısız, mevcut müzik ölü, `isPlaying` `true`da takılı, playlist bir daha
+ilerlemiyor. `play()` ve `crossfadeTo()` iki fazlı yapıldı — önce hedefin
+çalınabilir stem'leri çözülür, biri bile yoksa çalan müziğe DOKUNULMADAN
+fırlatılır.
+
+**Sayısal doyum.** `getLevelSpan()` yüksek seviyede 0 dönüyordu (eşik
+`MAX_SAFE_INTEGER`a doyunca `threshold(n)` ile `threshold(n-1)` eşitleniyor);
+XPBar bunu bölen olarak kullandığı için dolum oranı `Infinity`/`NaN` oluyordu.
+Doyumda taban eşiğe düşülüyor. Uç değer testleriyle kilitlendi.
+
+**Tauri tam ekran gözlemcisi.** Taban durum dinleyici kurulmadan önce
+okunuyordu (arada olan değişim kayboluyor) ve art arda resize'ların
+`isFullscreen()` sözleri sırasız dönebiliyordu (durum yanlış yöne düşüyor).
+Dinleyici önce bağlanıyor, sorgular tek kuyrukta sıralanıyor.
+
+**Performans ve yapı.** Spatial grid adım başına iki TAM rebuild yapıyordu;
+ikincisi `SpatialIndex.refresh()` ile artımlı tazelemeye çevrildi (hücre
+değişmeyende sıfır iş, sorgu sonucu birebir aynı — testle kilitli). Sabit adım
+mantığı sahneden `SimulationClock`a çıkarıldı: politika tek yerde, Phaser'sız
+test edilebilir ve atılan catch-up süresi raporlanıyor. God-object sınırını
+aşan üç dosyadan ikisi bölündü (`hudTab` 824→56 + iki aile dosyası,
+`ShopPicker` 666→546 + tip yüzeyi).
+
+**Küçükler.** Ölü `gameConfig.viewport.maxDpr` silindi (DPR artık sağlayıcı
+fonksiyondan geliyor). Oyuncu gösterge renkleri runtime'dan `config/ui.ts`e
+taşındı. Web build'inde hiçbir şey yapmayan "Pencere Çözünürlüğü" kontrolü
+`hasNativeWindow()` ile devre dışı bırakıldı. Dalga sınırında çift çalışan
+`clearTransientState` tekilleştirildi. Dalga duyurusu `aria-hidden` yerine
+kalıcı canlı bölge oldu. `Counter.setValue()`ın sessizce değişen varsayılanı
+(yön çıkarımı) dokümante edildi ve `change: 'none'` çıkış kapısı yazıldı.
+
+**Kapı sıkılaştırması.** `audio-synth` ve `visual-synth` eşikleri tabandaydı
+(50/50/50/40) ama gerçek kapsam 89 ve 97'ydi: kapsam yarıya düşse bile kapı
+yeşil kalıyordu. Eşikler ölçülen değerin birkaç puan altına çekildi. Elle
+düzenlenmiş `gen/android` kaynakları için sapma bekçisi eklendi — `android init`
+yön kilidini, tam ekranı ve geri tuşu köprüsünü SESSİZCE ezebiliyordu.
+
+### Kalan iş (bilinçli olarak bu turda YAPILMADI)
+
+- **Tam deterministik simülasyon.** `SimulationClock` politikayı tek yere
+  topladı ve sınırı dokümante etti, ama 60 FPS üstündeki değişken artık adım
+  duruyor. Kaldırmak render interpolasyonu ister ve oynanış hissini değiştirir.
+- **`GameScene` 681 satır.** İki bölme yapıldı; 600 altına inmek `createScene`
+  kurulum bloğunun (~177 satır) ayrılmasını gerektiriyor. Doğrudan testi olmayan
+  Phaser dosyasında, 18 maddelik bir turun sonunda yapılacak iş değil — kendi
+  turunu ve kendi doğrulamasını hak ediyor.
+- **`VolHellSimulation` üretim paritesi.** Sınır hâlâ tüm Phaser yolunun yerine
+  geçmiyor (README'de yazılı).
+- **Render snapshot allocation.** Her çağrıda yeni dizi/nesne üretiliyor; bu,
+  DTO'nun SAHİPLİK sözleşmesinin bedeli ve `simulation-benchmark.ts` içinde zaten
+  ayrı bir ölçümü var. Tampon yeniden kullanımı sahipliği bozar, çağıranın
+  opt-in'i gerekir.
+- **Dokunmatik kontrol fiziksel boyutu.** `STICK_MAX_RADIUS` sabit piksel;
+  DPR/ekran boyutuna göre ölçeklenmesi bir tasarım kararı.
+- **CORE lifecycle konvansiyonu.** `AGENTS.md` ikili konvansiyonu (tek kaynak →
+  ham timer, çok kaynak → `DisposableScope`) zaten bilinçli olarak tanımlıyor;
+  ek standartlaştırma yeni bir kural değil, mevcut kuralın uygulanması.
+
 ## 2026-08-29 — VOL.HELL masaüstü ve Android teslim doğrulaması
 
 Fedora/Wayland üzerinde üretilen native AppImage ilk açılışta beyaz pencere

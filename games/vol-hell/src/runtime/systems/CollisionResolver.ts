@@ -1,4 +1,4 @@
-import { segmentCircleOverlap, vibrate } from '@volstudio/core';
+import { segmentCircleEntryT, vibrate } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
 import { playerConfig } from '@/config/player';
 import { physicsConfig } from '@/config/physics';
@@ -7,6 +7,7 @@ import { getMaxEnemyRadius } from '@/config/enemies/catalog';
 import { gameAudio } from '@/app/services';
 import type { Player } from '@/runtime/entity/Player';
 import type { Bullet } from '@/runtime/entity/Bullet';
+import type { Enemy } from '@/runtime/entity/Enemy';
 import type { EnemyManager } from '@/runtime/entity/EnemyManager';
 import type { Turret } from '@/runtime/entity/Turret';
 import type { BulletManager } from '@/runtime/entity/BulletManager';
@@ -91,34 +92,43 @@ export class CollisionResolver {
               broadphaseRadius,
             )
           : this.spatialGrid.queryNearby(bullet.x, bullet.y);
-      let hit = false;
+      // Süpürülen adımda birden fazla düşman kesişebilir. Dizideki İLK
+      // eşleşmeyi vurmak sonucu spatial grid'in hücre sırasına bağlar: aynı
+      // kare, aynı geometri, farklı kurban — ve mermi arkadaki düşmanı
+      // vurmak için öndekinin içinden geçmiş olur. Segment üzerindeki en
+      // küçük giriş parametresi (`t`) gerçek ilk temastır ve sıralamadan
+      // bağımsızdır. Eşitlikte dizi sırası kazanır: deterministik kalır.
+      let nearest: Enemy | null = null;
+      let nearestT = Number.POSITIVE_INFINITY;
       for (const enemy of nearbyEnemies) {
         if (!enemy.isAlive) continue;
 
-        if (
-          segmentCircleOverlap(
-            previousX,
-            previousY,
-            bullet.x,
-            bullet.y,
-            enemy.x,
-            enemy.y,
-            enemy.radius + bulletConfig.radius,
-          )
-        ) {
-          const killed = enemy.takeDamage(bullet.damage);
-          this.bulletsToRemoveBuf.push(bullet);
-          hit = true;
-
-          // Ölüm anında hit çalmaz; death sesi GameScene.onEnemyKilled'da
-          // tüm kaynaklar için (mermi/kule/zincir/ateş) tek yerden verilir.
-          if (!killed) {
-            void gameAudio.playSfx('enemyHit', { volume: sfxVolumes.enemyHit });
-          }
-          break;
-        }
+        const entryT = segmentCircleEntryT(
+          previousX,
+          previousY,
+          bullet.x,
+          bullet.y,
+          enemy.x,
+          enemy.y,
+          enemy.radius + bulletConfig.radius,
+        );
+        if (entryT === null || entryT >= nearestT) continue;
+        nearest = enemy;
+        nearestT = entryT;
       }
-      if (bullet.isExpired && bullet.isAlive && !hit) this.bulletsToRemoveBuf.push(bullet);
+
+      if (nearest) {
+        const killed = nearest.takeDamage(bullet.damage);
+        this.bulletsToRemoveBuf.push(bullet);
+
+        // Ölüm anında hit çalmaz; death sesi GameScene.onEnemyKilled'da
+        // tüm kaynaklar için (mermi/kule/zincir/ateş) tek yerden verilir.
+        if (!killed) {
+          void gameAudio.playSfx('enemyHit', { volume: sfxVolumes.enemyHit });
+        }
+      } else if (bullet.isExpired && bullet.isAlive) {
+        this.bulletsToRemoveBuf.push(bullet);
+      }
     }
 
     for (const bullet of this.bulletsToRemoveBuf) {

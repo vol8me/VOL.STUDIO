@@ -27,6 +27,13 @@ export const uiConfig = {
   /** Oyuncunun hareket/ateş niyetini düşük kontrastlı saha çizgileriyle anlatır. */
   playerFeedback: {
     direction: {
+      /**
+       * Saha okunun rengi.
+       *
+       * Diğer tüm oyun renkleri gibi BURADA yaşar: runtime dosyasına gömülü
+       * bir hex, tema/palet turunda gözden kaçan tek yer olur.
+       */
+      color: 0xffc857,
       /** Oyuncudan okunabilir uzaklık (piksel). */
       radiusPx: 14,
       /** Ok ucunun oyuncudan uzaklığı (piksel). */
@@ -41,6 +48,8 @@ export const uiConfig = {
       headPx: 5.5,
     },
     aim: {
+      /** Ateş yönü çizgisinin rengi. */
+      color: 0xffb347,
       /** Ateş çizgisinin başlangıç yarıçapı (piksel). */
       startRadiusPx: 10,
       /** Ateş çizgisinin uzunluğu (piksel). */

@@ -9,6 +9,7 @@ import {
 } from '@volstudio/core';
 import type { AudioSettings } from '@/app/AudioSettings';
 import type { VideoSettings } from '@/app/VideoSettings';
+import { hasNativeWindow } from '@/app/platform';
 import { gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
 import { GameSettingsContent } from '@/runtime/ui/GameSettingsContent';
@@ -87,6 +88,7 @@ export class PauseScreen {
       audioSettings,
       videoSettings,
       showVideoSettings: !shouldUseTouchControls(),
+      canResizeWindow: hasNativeWindow(),
     });
     this.settingsBackButton = new Button(i18next.t('volhell:settings.back'), {
       variant: 'primary',

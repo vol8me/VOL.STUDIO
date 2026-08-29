@@ -84,6 +84,65 @@ export function segmentCircleOverlap(
   return distanceSquared(closestX, closestY, circleX, circleY) <= radius * radius;
 }
 
+/**
+ * Doğru parçasının daireye İLK temas ettiği parametre (`0..1`), yoksa `null`.
+ *
+ * `segmentCircleOverlap` "kesişti mi" sorusunu yanıtlar; süpürülen parça aynı
+ * adımda birden fazla daireyi kesiyorsa hangisinin ÖNCE geldiğini söylemez.
+ * Çağıran dizideki ilk eşleşmeyi seçerse sonuç aday listesinin SIRASINA bağlı
+ * kalır: aynı geometri, farklı sonuç. Bu fonksiyon süpürülmüş parça-daire
+ * kesişiminin küçük kökünü döndürür; çağıran en küçük `t`'yi seçerek
+ * sıralamadan bağımsız, deterministik bir "ilk temas" kurar.
+ *
+ * Parça daire İÇİNDE başlıyorsa `0` döner (temas zaten olmuştur). Sıfır
+ * uzunluktaki parça nokta testine indirgenir. Allocation yapmaz.
+ */
+export function segmentCircleEntryT(
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  circleX: number,
+  circleY: number,
+  radius: number,
+): number | null {
+  if (
+    !Number.isFinite(startX) ||
+    !Number.isFinite(startY) ||
+    !Number.isFinite(endX) ||
+    !Number.isFinite(endY) ||
+    !Number.isFinite(circleX) ||
+    !Number.isFinite(circleY) ||
+    !Number.isFinite(radius) ||
+    radius < 0
+  ) {
+    return null;
+  }
+
+  const originX = startX - circleX;
+  const originY = startY - circleY;
+  const radiusSquared = radius * radius;
+  // Başlangıç zaten dairenin içindeyse temas bu adımdan önce olmuştur.
+  if (originX * originX + originY * originY <= radiusSquared) return 0;
+
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const a = dx * dx + dy * dy;
+  // Sıfır uzunluklu parça: yukarıdaki içeride-başlama testi tek karardır.
+  if (a <= 0) return null;
+
+  const b = originX * dx + originY * dy;
+  const c = originX * originX + originY * originY - radiusSquared;
+  const discriminant = b * b - a * c;
+  if (discriminant < 0) return null;
+
+  // Küçük kök giriş anıdır; `b <= 0` olmadan parça daireden UZAKLAŞIYOR
+  // demektir ve giriş kökü negatife düşer.
+  const t = (-b - Math.sqrt(discriminant)) / a;
+  if (t < 0 || t > 1) return null;
+  return t;
+}
+
 /** İki daire kesişiyor mu? (Teğet durumu kesişme SAYILIR.) */
 export function circlesOverlap(a: Circle, b: Circle): boolean {
   const reach = a.radius + b.radius;

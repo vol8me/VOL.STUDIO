@@ -77,10 +77,32 @@ presses and auto-pauses the run. Haptics (`core/src/platform/haptics.ts`) use
 named patterns, default to enabled, and can be turned off in Settings; on
 platforms without `navigator.vibrate` they are silent no-ops.
 
+Video settings (display mode, window resolution, graphics quality) are shown
+only on non-touch surfaces. **Window resolution additionally requires a native
+window** (`hasNativeWindow()`): a desktop build played in a browser has no API
+to resize the window, so the control is disabled — left enabled, the user would
+change the value, the value would persist, and nothing would happen. Graphics
+quality changes both render DPR and particle density LIVE; the DPR provider is
+passed from `bootstrap` and quality profiles are data in `src/config/video.ts`.
+
 F11 toggles fullscreen in desktop and Tauri WebViews through the shared CORE
 `FullscreenController`, covering the Phaser canvas and DOM root together. If a
 browser reserves F11 for its own window, the app does not receive that event
 and the browser's native behaviour is preserved.
+
+## Simulation time
+
+Render frame time is split into fixed steps by `SimulationClock`
+(`src/runtime/simulation/SimulationClock.ts`). The policy lives in one place and
+is tested without constructing Phaser: at low FPS several full steps reclaim
+real time, at huge deltas (tab return) a catch-up ceiling applies and the
+DROPPED time is reported.
+
+**Known limit:** above 60 FPS the leftover slice runs as a variable-length step
+so input response is not delayed by a frame. That means identical input can
+produce different results at different render rates — the simulation is not yet
+fully deterministic. Removing it changes game feel (up to 16 ms of input
+latency) and requires render-side interpolation; planned as a separate round.
 
 ## Hardening contract
 

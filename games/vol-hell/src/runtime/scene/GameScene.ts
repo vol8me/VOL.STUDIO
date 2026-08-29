@@ -4,6 +4,7 @@ import {
   InputManager,
   Vector2,
   createRandom,
+  shouldUseTouchControls,
   vibrate,
   type InputState,
   type LoadingScreen,
@@ -49,6 +50,8 @@ import { GameMobileControls } from './GameMobileControls';
 import { GameKeyboardBindings } from './GameKeyboardBindings';
 import { GameScreenStack } from './GameScreenStack';
 import { safeDeltaMs } from '@/runtime/utils/numeric';
+import { releasePointerLatch } from '@/runtime/input/pointerLatch';
+import { SimulationClock } from '@/runtime/simulation/SimulationClock';
 import { PlayerAimIndicator } from '@/runtime/ui/PlayerAimIndicator';
 import { PlayerDirectionIndicator } from '@/runtime/ui/PlayerDirectionIndicator';
 import { writeFireDirection } from '@/runtime/utils/direction';
@@ -107,9 +110,15 @@ export class GameScene extends BaseScene {
   private readonly moveDirBuf: Vector2 = Vector2.zero();
   private readonly aimDirBuf: Vector2 = Vector2.zero();
   private readonly fireDirBuf: Vector2 = Vector2.zero();
-  /** Düşük FPS'te simülasyon zamanını render zamanından ayırır. */
-  private simulationAccumulatorMs = 0;
-  private simulationTimeMs = 0;
+  /**
+   * Düşük FPS'te simülasyon zamanını render zamanından ayıran adım saati.
+   * Politika (catch-up, artık dilim, üst sınır) `SimulationClock`ta yaşar ve
+   * Phaser olmadan test edilir.
+   */
+  private readonly clock = new SimulationClock({
+    fixedStepMs: gameConfig.fixedStepMs,
+    maxStepsPerFrame: gameConfig.maxSimulationStepsPerFrame,
+  });
 
   /**
    * Duraklatma ve sayaçlar sahnenin alanı değil ayrı birer nesne: ikisi de saf
@@ -120,7 +129,7 @@ export class GameScene extends BaseScene {
   private readonly pauseCtl = new PauseController({
     pauseScene: () => this.scene.pause(),
     resumeScene: () => this.scene.resume(),
-    resetPointer: () => this.input.activePointer.reset(),
+    resetPointer: () => this.releasePointerLatch(),
     isDeathScreenVisible: () => this.screens?.death.isVisible() === true,
     isCardScreenOpen: () => this.screens?.cards.isOpen() === true,
     onMenuPause: () => {
@@ -379,34 +388,7 @@ export class GameScene extends BaseScene {
     // gereksiz Vector2 uretiyor hem de iki farkli anlik goruntu yaratiyordu.
     const inputState = this.inputManager.getState(this.player.getPosition());
 
-    this.simulationAccumulatorMs += realDelta;
-    const fixedStep = gameConfig.fixedStepMs;
-    let steps = 0;
-    while (
-      this.simulationAccumulatorMs >= fixedStep &&
-      steps < gameConfig.maxSimulationStepsPerFrame
-    ) {
-      this.advanceSimulation(fixedStep, inputState);
-      this.simulationAccumulatorMs -= fixedStep;
-      steps++;
-    }
-
-    // 60 FPS üstünde input/dash tepkisini bir sonraki sabit adıma bırakma;
-    // kalan küçük dilimi de simüle et. 20 FPS gibi düşük hızlarda ise üstteki
-    // döngü tam sabit adımlarla gerçek frame süresini geri kazanır.
-    if (steps === 0 && this.simulationAccumulatorMs > 0) {
-      this.advanceSimulation(this.simulationAccumulatorMs, inputState);
-      this.simulationAccumulatorMs = 0;
-    }
-
-    // Sekme/uygulama dönüşü gibi çok büyük delta'lar sınırsız catch-up'a
-    // dönüşmesin. Normal düşük FPS frame'leri bu sınıra takılmaz.
-    if (
-      steps >= gameConfig.maxSimulationStepsPerFrame &&
-      this.simulationAccumulatorMs >= fixedStep
-    ) {
-      this.simulationAccumulatorMs %= fixedStep;
-    }
+    this.clock.advance(realDelta, (stepMs) => this.advanceSimulation(stepMs, inputState));
 
     diagnostics?.startStage('hud');
     this.updateHUD(realDelta);
@@ -422,7 +404,7 @@ export class GameScene extends BaseScene {
 
   private advanceSimulation(dt: number, inputState: InputState<HellAction>): void {
     this.scoreboard.advance(dt);
-    this.simulationTimeMs += dt;
+    const simulationTimeMs = this.clock.getSimulationTimeMs();
 
     diagnostics?.startStage('player');
     this.updatePlayer(dt, inputState);
@@ -447,11 +429,11 @@ export class GameScene extends BaseScene {
     diagnostics?.endStage('abilities');
 
     diagnostics?.startStage('entities');
-    this.updateEntities(dt, playerPos, this.simulationTimeMs);
+    this.updateEntities(dt, playerPos, simulationTimeMs);
     diagnostics?.endStage('entities');
 
     diagnostics?.startStage('collision');
-    this.collisionResolver.resolve(this.simulationTimeMs);
+    this.collisionResolver.resolve(simulationTimeMs);
     diagnostics?.endStage('collision');
 
     diagnostics?.startStage('death');
@@ -526,11 +508,19 @@ export class GameScene extends BaseScene {
     this.difficulty = getDifficultyState(this.scoreboard.getElapsedMs());
     const difficulty = this.difficulty;
 
-    // Spatial grid'i bu frame için yeniden kur — enemy update'inden ÖNCE.
-    // Tam rebuild bilinçli: VOL.HELL ölçeğinde (birkaç yüz düşman) maliyeti
-    // ölçülemez ve hangi entity'nin nerede hareket ettiğini takip etmeyi
-    // gerektirmez. Artımlı yol (insert/remove/update) sınıfta hazır ve test
-    // edilmiş durumda; binlerce entity taşıyan bir tüketici onu kullanır.
+    // Adım başına TEK tam rebuild + tek artımlı tazeleme.
+    //
+    // Önce iki kez TAM rebuild vardı: biri düşman hareketinden önce
+    // (separation için), biri sonra (çarpışma güncel konum okusun diye).
+    // İkinci rebuild indeksi boşaltıp her düşmanı yeniden ekliyordu — hareket
+    // etmemişler dahil. Küme aynı kaldığı için ikinci geçiş artık
+    // `refresh()`: `SpatialIndex.update()` hücre değişmediğinde hiçbir iş
+    // yapmaz, yani maliyet O(N)'den O(hücre değiştiren düşman)'a iner.
+    // Çarpışmanın gördüğü konumlar birebir aynı kalır.
+    //
+    // Tam rebuild (artımlı insert/remove yerine) ilk geçişte bilinçli:
+    // düşman kümesi doğum/geri dönüşümle DEĞİŞEBİLİR ve listeden tamamen
+    // düşen bir varlık yalnız rebuild ile indeksten kalkar.
     this.spatialGrid.rebuild(this.enemyManager.getEnemies());
 
     // Koşu yöneticisi Elite/Boss'u sürdüğü için grid HAZIR olmalı: özel
@@ -543,8 +533,8 @@ export class GameScene extends BaseScene {
       turret: this.abilities.getTurret(),
     });
 
-    // Grid'i enemy hareketinden sonra yeniden kur — çarpışma kontrolü güncel pozisyon kullanır
-    this.spatialGrid.rebuild(this.enemyManager.getEnemies());
+    // Hareketten sonra konumları tazele — çarpışma güncel konumu okur.
+    this.spatialGrid.refresh(this.enemyManager.getEnemies());
   }
 
   private updateHUD(deltaMs: number): void {
@@ -570,9 +560,13 @@ export class GameScene extends BaseScene {
   /**
    * Dalga sınırı sözleşmesi: geçici oyun varlıkları ve fiziksel input aynı
    * anda temizlenir; slot/kart ilerlemesi korunur.
+   *
+   * `clearTransientState()` burada TEKRAR çağrılmaz: dalga bitişinde
+   * `RunDirector` zaten çağırdı ve aradaki tek etkileşim yüzeyi (kart/dükkan
+   * ekranı) yeni geçici varlık üretmez. Çift çağrı input latch'ini iki kez
+   * bırakıp masaüstünde tuş tepkisini gereksiz yere geciktiriyordu.
    */
   private resetForWave(): void {
-    this.clearTransientState();
     this.player.resetForWave();
     this.directionIndicator.reset();
     this.aimIndicator.reset();
@@ -584,7 +578,15 @@ export class GameScene extends BaseScene {
     this.effects.clearActive();
     this.inputManager.reset();
     this.mobileControls.resetInput();
-    this.input.activePointer.reset();
+    this.releasePointerLatch();
+  }
+
+  /**
+   * Pointer'ın basılı durumunu bırakır; masaüstünde nişan konumunu korur.
+   * Duraklatma ve dalga sınırı aynı kapıyı kullanır (bkz. `releasePointerLatch`).
+   */
+  private releasePointerLatch(): void {
+    releasePointerLatch(this.input.activePointer, { preserveAim: !shouldUseTouchControls() });
   }
 
   private reportDiagnostics(): void {
@@ -617,8 +619,7 @@ export class GameScene extends BaseScene {
     this.scoreboard.reset();
     this.finisher.reset();
     this.difficulty = getDifficultyState(0);
-    this.simulationAccumulatorMs = 0;
-    this.simulationTimeMs = 0;
+    this.clock.reset();
   }
 
   /**

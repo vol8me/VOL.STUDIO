@@ -38,7 +38,7 @@ export class PlayerDirectionIndicator {
     this.graphics.clear();
     this.graphics.lineStyle(
       uiConfig.playerFeedback.direction.lineWidthPx,
-      0xffc857,
+      uiConfig.playerFeedback.direction.color,
       Math.max(0, Math.min(1, this.alpha)),
     );
     const { radiusPx, lengthPx, headPx } = uiConfig.playerFeedback.direction;

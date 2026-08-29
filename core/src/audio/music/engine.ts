@@ -146,6 +146,29 @@ export class MusicEngine {
     return loadedAny;
   }
 
+  /**
+   * Track'in GERÇEKTEN başlatılabilecek stem'lerini önceden çözer.
+   *
+   * `loadTrack` "en az bir stem yüklendi mi" der; hangi stem'in buffer'ının
+   * elde olduğunu söylemez. Geçiş yapan çağrılar bunu ÖNCE bilmek zorundadır:
+   * eski parçayı susturup sonra "hiç stem yok" diye fırlatmak, geri
+   * alınamayan bir yarım geçiş bırakır (eski stem'ler `stop()` planlanmış,
+   * `activeStems` hâlâ dolu, `isPlaying` true — müzik sessizce ölür ve
+   * playlist bir daha ilerlemez). Çözüm iki fazlı: önce çöz, sonra uygula.
+   */
+  private resolvePlayableStems(track: MusicTrack): { stem: Stem; buffer: AudioBuffer }[] {
+    const playable: { stem: Stem; buffer: AudioBuffer }[] = [];
+    for (const stem of track.stems) {
+      const buffer = this.buffers.get(this.bufferCacheKey(track.id, stem));
+      if (!buffer) {
+        console.warn(`[MusicEngine] Stem buffer bulunamadı: ${stem.id}`);
+        continue;
+      }
+      playable.push({ stem, buffer });
+    }
+    return playable;
+  }
+
   /** Belirtilen track'i çalmaya başlar. */
   async play(trackId: string, options: PlayOptions = {}): Promise<void> {
     // Aynı parça zaten çalıyorsa yeniden başlatılmaz; verilen state uygulanır.
@@ -163,6 +186,14 @@ export class MusicEngine {
     // gelmiş olabilir — bu (artık eski) çağrı state'i EZMEDEN çıkar.
     if (token !== this.playToken) return;
 
+    // FAZ 1 — doğrula. Hiçbir stem çalınamıyorsa çalan müziğe DOKUNMADAN çık;
+    // aksi hâlde `stop()` sonrası fırlatıp sahneyi sessiz bırakırdık.
+    const playable = this.resolvePlayableStems(track);
+    if (playable.length === 0) {
+      throw new Error(`Track çalınamadı, hiçbir stem yüklenemedi: ${trackId}`);
+    }
+
+    // FAZ 2 — uygula. Bu noktadan sonra başarısızlık yok.
     if (this.isPlaying) {
       this.stop({ fadeOut: 0.05 });
     }
@@ -173,25 +204,8 @@ export class MusicEngine {
     this.state = { ...track.defaultState, ...options.state };
     this.trackStartTime = this.context.currentTime + this.lookahead;
 
-    let startedAny = false;
-    for (const stem of track.stems) {
-      const buffer = this.buffers.get(this.bufferCacheKey(trackId, stem));
-      if (!buffer) {
-        console.warn(`[MusicEngine] Stem buffer bulunamadı: ${stem.id}`);
-        continue;
-      }
+    for (const { stem, buffer } of playable) {
       this.startStem(stem, buffer, this.trackStartTime);
-      startedAny = true;
-    }
-
-    if (!startedAny) {
-      // Hiçbir stem başlamadıysa hiçbir `source.onended` asla tetiklenmez —
-      // `isPlaying` sonsuza dek `true`da TAKILI kalırdı (doğal bitiş hiç
-      // bildirilmezdi, playlist ilerlemesi de dahil hiçbir dinleyici tetiklenmezdi).
-      this.currentTrackId = undefined;
-      this.currentTrack = undefined;
-      this.scheduler = undefined;
-      throw new Error(`Track çalınamadı, hiçbir stem yüklenemedi: ${trackId}`);
     }
 
     this.isPlaying = true;
@@ -244,6 +258,14 @@ export class MusicEngine {
     // crossfadeTo()/stop() gelmişse bu eski çağrı state'i ezmeden çıkar.
     if (token !== this.playToken) return;
 
+    // FAZ 1 — doğrula. Eski stem'leri susturmadan ÖNCE hedefin çalınabilir
+    // olduğundan emin ol; aksi hâlde başarısız geçiş mevcut müziği de öldürür.
+    const playable = this.resolvePlayableStems(track);
+    if (playable.length === 0) {
+      throw new Error(`Track'e crossfade yapılamadı, hiçbir stem yüklenemedi: ${trackId}`);
+    }
+
+    // FAZ 2 — uygula. Bu noktadan sonra başarısızlık yok.
     const now = this.context.currentTime;
     let transitionTime: number;
 
@@ -282,23 +304,8 @@ export class MusicEngine {
     this.state = { ...track.defaultState, ...options.state };
     this.trackStartTime = transitionTime;
 
-    let startedAny = false;
-    for (const stem of track.stems) {
-      const buffer = this.buffers.get(this.bufferCacheKey(trackId, stem));
-      if (!buffer) {
-        console.warn(`[MusicEngine] Stem buffer bulunamadı: ${stem.id}`);
-        continue;
-      }
+    for (const { stem, buffer } of playable) {
       this.startStem(stem, buffer, transitionTime);
-      startedAny = true;
-    }
-
-    if (!startedAny) {
-      // bkz. play() — hiçbir stem başlamazsa isPlaying sonsuza dek takılı kalır.
-      this.currentTrackId = undefined;
-      this.currentTrack = undefined;
-      this.scheduler = undefined;
-      throw new Error(`Track'e crossfade yapılamadı, hiçbir stem yüklenemedi: ${trackId}`);
     }
 
     this.isPlaying = true;

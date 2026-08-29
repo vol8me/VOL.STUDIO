@@ -46,9 +46,19 @@ export class RunEconomy {
     return Math.max(0, this.spark - this.thresholdForLevel(this.level - 1));
   }
 
-  /** Verilen seviyeyi tamamlamak için gereken Spark — XP barının max değeri. */
+  /**
+   * Verilen seviyeyi tamamlamak için gereken Spark — XP barının max değeri.
+   *
+   * **Asla 0 dönmez.** Geometrik eşik yüksek seviyelerde `MAX_SAFE_INTEGER`a
+   * doyar; doyum noktasında `threshold(level)` ile `threshold(level - 1)`
+   * EŞİTLENİR ve fark 0 olur. XPBar bu değeri bölen olarak kullandığı için
+   * sonuç `Infinity`/`NaN` dolum oranına dönüşür ve bar sessizce bozulur.
+   * Doyumda taban eşiğe düşülür: bar dolu görünür, sayısal olarak geçerli kalır.
+   */
   getLevelSpan(level: number = this.level): number {
-    return Math.max(0, this.thresholdForLevel(level) - this.thresholdForLevel(level - 1));
+    const span = this.thresholdForLevel(level) - this.thresholdForLevel(level - 1);
+    if (Number.isFinite(span) && span > 0) return span;
+    return economyConfig.spark.baseThreshold;
   }
 
   /** Toplanan Flux'u sayaca ekler. Negatif, NaN veya Infinity değer yok sayılır. */

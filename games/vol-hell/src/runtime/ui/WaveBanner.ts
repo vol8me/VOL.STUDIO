@@ -32,11 +32,16 @@ export class WaveBanner {
     this.counter.className = 'vol-wave__counter';
     this.element.appendChild(this.counter);
 
+    // Canlı bölge SÜREKLİ erişilebilir kalır ve yalnız İÇERİĞİ değişir.
+    // `hidden`/`aria-hidden` arasında gidip gelen bir `aria-live` bölgesi
+    // ekran okuyucularda güvenilir duyuru üretmez: bölge duyuru anında
+    // erişilebilirlik ağacına yeni giriyorsa değişim "değişim" sayılmayabilir.
+    // Görsel gizleme CSS'in `visibility: hidden` + `opacity: 0` çiftiyle
+    // yapılır; boş metin duyurulacak bir şey olmadığını zaten anlatır.
     this.announcement = document.createElement('div');
     this.announcement.className = 'vol-wave__announcement';
     this.announcement.setAttribute('role', 'status');
     this.announcement.setAttribute('aria-live', 'polite');
-    this.announcement.setAttribute('aria-hidden', 'true');
     this.element.appendChild(this.announcement);
 
     parent.appendChild(this.element);
@@ -45,7 +50,6 @@ export class WaveBanner {
   /** Yeni dalga başladı — ortada duyuru belirir. */
   announce(wave: number): void {
     this.announcement.textContent = i18next.t('volhell:hud.waveAnnounce', { wave });
-    this.announcement.setAttribute('aria-hidden', 'false');
     // Yeniden tetiklemede animasyon baştan oynasın diye sınıf sıfırlanır.
     this.announcement.classList.remove('vol-wave__announcement--visible');
     // Reflow: sınıfın kaldırılıp hemen eklenmesi tarayıcıda tek değişiklik
@@ -73,7 +77,8 @@ export class WaveBanner {
       this.announcementTimerMs -= safeDelta;
       if (this.announcementTimerMs <= 0) {
         this.announcement.classList.remove('vol-wave__announcement--visible');
-        this.announcement.setAttribute('aria-hidden', 'true');
+        // Metni boşalt: bölge ağaçta kalır, duyurulacak içerik kalmaz.
+        this.announcement.textContent = '';
       }
     }
 

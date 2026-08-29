@@ -45,9 +45,9 @@ export class PlayerAimIndicator {
   }
 
   private draw(alpha: number): void {
-    const { startRadiusPx, lengthPx, lineWidthPx } = uiConfig.playerFeedback.aim;
+    const { startRadiusPx, lengthPx, lineWidthPx, color } = uiConfig.playerFeedback.aim;
     this.graphics.clear();
-    this.graphics.lineStyle(lineWidthPx, 0xffb347, Math.max(0, Math.min(1, alpha)));
+    this.graphics.lineStyle(lineWidthPx, color, Math.max(0, Math.min(1, alpha)));
     this.graphics.beginPath();
     this.graphics.moveTo(
       Math.cos(this.angle) * startRadiusPx,

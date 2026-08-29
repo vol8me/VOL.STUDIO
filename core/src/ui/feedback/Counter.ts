@@ -12,7 +12,13 @@ export interface CounterOptions {
 export type CounterValueChange = 'increase' | 'decrease' | 'none';
 
 export interface CounterSetValueOptions {
-  /** Yön verilmezse eski ve yeni değer karşılaştırılarak otomatik bulunur. */
+  /**
+   * Yön verilmezse eski ve yeni değer karşılaştırılarak otomatik bulunur.
+   *
+   * **`'none'` vurguyu KAPATIR.** Değeri her karede yazan bir HUD (skor,
+   * süre, mesafe) varsayılan otomatik yönü kullanırsa sürekli animasyon
+   * alır; böyle bir tüketici açıkça `change: 'none'` geçer.
+   */
   change?: CounterValueChange;
   /** Değer değişmese bile nötr vurgu oynatır. */
   pulse?: boolean;
@@ -54,6 +60,19 @@ export class Counter {
     this.element.appendChild(this.announceElement);
   }
 
+  /**
+   * Değeri yazar ve varsayılan olarak DEĞİŞİM YÖNÜNÜ vurgular.
+   *
+   * Sözleşme (öncelik sırasıyla):
+   * - `change: 'increase' | 'decrease'` → o yön zorlanır.
+   * - `change: 'none'` → vurgu yok (`pulse: true` verilirse yalnız nötr pulse).
+   * - `change` yok, `pulse: true` → eski nötr sözleşme korunur.
+   * - Hiçbiri yok → yön eski/yeni değerden çıkarılır; değer aynıysa vurgu yok.
+   *
+   * Son madde `pulse` opt-in'i olan eski davranıştan farklıdır: yön çıkarımı
+   * artık varsayılandır. Her karede aynı sayacı yazan tüketiciler için
+   * `change: 'none'` çıkış kapısıdır.
+   */
   setValue(value: number, options: CounterSetValueOptions = {}): void {
     const from = this.value;
     this.value = value;

@@ -35,7 +35,9 @@ import * as Core from '../../src/index';
 // bağlanır ki aynı etkileşim her ekranda aynı hissetsin.
 // 196 → 198: `FullscreenController` ve generic `StatsPanel` CORE UI sözleşmesine
 // alındı. Her iki bileşen de oyun/devtool bağımsızdır ve showcase'te gösterilir.
-const EXPECTED_EXPORT_COUNT = 198;
+// 198 → 199: `segmentCircleEntryT`, süpürülmüş çarpışmada "en yakın vuruş"u
+// dizi sırasından bağımsız kılan geometri primitifi.
+const EXPECTED_EXPORT_COUNT = 199;
 
 // 196: asset compiler'lar (görsel/ses sentezi) CORE public surface'da
 // tutulmaz; runtime yalnızca üretilmiş asset'leri çalar.

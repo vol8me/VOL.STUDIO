@@ -43,6 +43,57 @@ describe('vol-ui sekme builderları', () => {
     });
   }
 
+  describe('HUD demo etkileşimleri', () => {
+    /**
+     * Kart üretimi iki dosyaya bölününce (`hudFeedbackCards`, `hudPanelCards`)
+     * demo düğmelerinin İÇİ hiç sürülmediği ortaya çıktı: `?? 0` yedekleri ve
+     * minimap zoom ternary'si hiçbir testte çalışmıyordu. "Sekme kuruldu mu"
+     * testi bunları yakalamaz, çünkü kurulumda tıklanmıyorlar.
+     *
+     * Düğmeler ETİKETLE değil YAPIYLA bulunur: showcase metinleri i18n'den
+     * gelir ve dil değişince test kırılırdı.
+     */
+    function demoControls(element: HTMLElement, demoSelector: string): HTMLButtonElement[] {
+      const demo = [...element.querySelectorAll<HTMLElement>('.vol-showcase-panel-demo')].find(
+        (node) => node.querySelector(demoSelector) !== null,
+      );
+      return [...(demo?.querySelectorAll<HTMLButtonElement>('button') ?? [])];
+    }
+
+    it('kaynak çubuğu topla/harca düğmeleri sayaçları güvenle değiştirir', () => {
+      const { element, destroy } = buildHudTab();
+      uiRoot.appendChild(element);
+
+      const buttons = demoControls(element, '.vol-resource-bar');
+      expect(buttons.length).toBeGreaterThanOrEqual(2);
+
+      // `getResource(...) ?? 0` yedeği bilinmeyen anahtarda NaN üretmemeli.
+      for (const button of buttons) button.click();
+      expect(element.textContent).not.toContain('NaN');
+
+      element.remove();
+      destroy();
+    });
+
+    it('minimap zoom düğmesi iki kip arasında gider gelir', () => {
+      const { element, destroy } = buildHudTab();
+      uiRoot.appendChild(element);
+
+      const buttons = demoControls(element, '.vol-minimap');
+      expect(buttons.length).toBeGreaterThan(0);
+
+      // `getZoom() > 1 ? 1 : 2` iki dalı da ancak iki tıklamada çalışır.
+      for (const button of buttons) {
+        button.click();
+        button.click();
+      }
+
+      expect(element.querySelector('.vol-minimap')).not.toBeNull();
+      element.remove();
+      destroy();
+    });
+  });
+
   describe('paylaşılan yardımcılar', () => {
     it('card, içeriği başlık ve gövdeyle sarar', () => {
       const body = document.createElement('span');

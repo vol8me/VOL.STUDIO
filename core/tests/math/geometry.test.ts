@@ -3,6 +3,7 @@ import { Vector2 } from '../../src/math/Vector2';
 import {
   distance,
   distanceSquared,
+  segmentCircleEntryT,
   segmentCircleOverlap,
   circlesOverlap,
   pointInCircle,
@@ -113,5 +114,68 @@ describe('raycastCircles', () => {
 
   it('hedef yoksa null döner', () => {
     expect(raycastCircles(origin, right, [])).toBeNull();
+  });
+
+  describe('segmentCircleEntryT — ilk temas parametresi', () => {
+    it('giriş noktasını segment üzerindeki oran olarak döndürür', () => {
+      // (0,0) → (100,0) parçası; merkezi (50,0), yarıçapı 10 olan daireye
+      // 40 birimde girer.
+      expect(segmentCircleEntryT(0, 0, 100, 0, 50, 0, 10)).toBeCloseTo(0.4, 6);
+    });
+
+    it('daireyi ıskalayan parçada null döner', () => {
+      expect(segmentCircleEntryT(0, 0, 100, 0, 50, 40, 10)).toBeNull();
+    });
+
+    it('parça daire İÇİNDE başlıyorsa 0 döner', () => {
+      expect(segmentCircleEntryT(50, 0, 100, 0, 50, 0, 10)).toBe(0);
+    });
+
+    it('daireye ulaşmadan biten parçada null döner', () => {
+      expect(segmentCircleEntryT(0, 0, 20, 0, 50, 0, 10)).toBeNull();
+    });
+
+    it('daireden UZAKLAŞAN parçada null döner — geçmişteki temas sayılmaz', () => {
+      // Başlangıç daireyi geçmiş; ileri yönde hiç kesişim yok.
+      expect(segmentCircleEntryT(70, 0, 200, 0, 50, 0, 10)).toBeNull();
+    });
+
+    it('sıfır uzunluklu parçayı nokta testine indirger', () => {
+      expect(segmentCircleEntryT(50, 0, 50, 0, 50, 0, 10)).toBe(0);
+      expect(segmentCircleEntryT(0, 0, 0, 0, 50, 0, 10)).toBeNull();
+    });
+
+    it('teğet temasta da giriş parametresi üretir', () => {
+      expect(segmentCircleEntryT(0, 10, 100, 10, 50, 0, 10)).toBeCloseTo(0.5, 6);
+    });
+
+    it('sonlu olmayan girdi ve negatif yarıçapta null döner', () => {
+      expect(segmentCircleEntryT(NaN, 0, 100, 0, 50, 0, 10)).toBeNull();
+      expect(segmentCircleEntryT(0, 0, Infinity, 0, 50, 0, 10)).toBeNull();
+      expect(segmentCircleEntryT(0, 0, 100, 0, 50, 0, -1)).toBeNull();
+    });
+
+    it('sıralamadan bağımsız "en yakın" seçimi sağlar', () => {
+      // Aynı süpürmede iki daire kesişiyor; küçük `t` gerçekten öndeki.
+      const near = segmentCircleEntryT(0, 0, 100, 0, 30, 0, 5);
+      const far = segmentCircleEntryT(0, 0, 100, 0, 70, 0, 5);
+      expect(near).not.toBeNull();
+      expect(far).not.toBeNull();
+      expect(near!).toBeLessThan(far!);
+    });
+
+    it('overlap ile tutarlıdır: t varsa overlap da true', () => {
+      const cases: [number, number, number, number, number, number, number][] = [
+        [0, 0, 100, 0, 50, 0, 10],
+        [0, 0, 100, 0, 50, 40, 10],
+        [0, 0, 20, 0, 50, 0, 10],
+        [50, 0, 100, 0, 50, 0, 10],
+      ];
+      for (const args of cases) {
+        if (segmentCircleEntryT(...args) !== null) {
+          expect(segmentCircleOverlap(...args)).toBe(true);
+        }
+      }
+    });
   });
 });

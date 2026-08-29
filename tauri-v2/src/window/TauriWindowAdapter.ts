@@ -58,27 +58,58 @@ export class TauriWindowAdapter {
 
   /**
    * Tam ekranın ESC/pencere yöneticisi tarafından değişmesini izler.
+   *
    * Tauri ayrı bir fullscreen olayı sunmadığı için resize sinyalinden sonra
-   * gerçek durum okunur; aynı durum tekrar bildirilmez.
+   * gerçek durum okunur. İki sıralama tuzağı vardır:
+   *
+   * 1. **Kayıt penceresi.** Taban durum `await` ile okunurken gelen bir resize,
+   *    dinleyici henüz bağlanmamışsa tamamen kaybolur ve durum bir sonraki
+   *    resize'a kadar yanlış kalır. Bu yüzden `onResized` ÖNCE bağlanır; taban
+   *    okuması da diğer sorgularla aynı kuyruğa girer, böylece o sırada gelen
+   *    olaylar taban oturduktan sonra sırayla değerlendirilir.
+   * 2. **Eşzamanlı sorgu.** Art arda iki resize iki `isFullscreen()` sözü
+   *    başlatır; ikincisi önce dönerse durum eski değere geri düşer ve
+   *    dinleyici yanlış yönde tetiklenir. Sorgular tek zincirde sıralanır ve
+   *    yalnız EN SON istek sonucu yayımlar.
+   *
+   * Kayıttan ÖNCE olmuş bir değişim bildirilmez: karşılaştırılacak bir önceki
+   * durum yoktur. Çağıran açılıştaki gerçek durumu `isFullscreen()` ile okur.
    */
   async onFullscreenChange(listener: (active: boolean) => void): Promise<() => void> {
     const target = this.window;
     if (!target) return () => {};
 
     let stopped = false;
-    let lastState = await target.isFullscreen();
-    const unlisten = await target.onResized(() => {
-      void target
-        .isFullscreen()
-        .then((active) => {
-          if (stopped || active === lastState) return;
+    let lastState: boolean | undefined;
+    let probeGeneration = 0;
+    let probeQueue: Promise<void> = Promise.resolve();
+
+    /** @param announce Taban okumasında `false`: durumu kurar, bildirmez. */
+    const probe = (announce: boolean): Promise<void> => {
+      const generation = ++probeGeneration;
+      probeQueue = probeQueue
+        .then(async () => {
+          // Taban okuması nesil kontrolünden MUAF: araya giren bir resize
+          // sorgusu tabanı geçersiz kılmaz, yalnız sırayı belirler.
+          if (stopped || (announce && generation !== probeGeneration)) return;
+          const active = await target.isFullscreen();
+          if (stopped || (announce && generation !== probeGeneration)) return;
+          const previous = lastState;
           lastState = active;
-          listener(active);
+          if (announce && previous !== undefined && previous !== active) listener(active);
         })
         .catch((error: unknown) => {
           console.warn('[TauriWindowAdapter] Tam ekran durumu okunamadı:', error);
         });
-    });
+      return probeQueue;
+    };
+
+    // Dinleyici ÖNCE bağlanır: taban okunurken gelen resize kaybolmaz.
+    const unlisten = await target.onResized(() => void probe(true));
+    // Taban okuması burada BEKLENİR: `stopped` yalnız aşağıdaki closure'dan
+    // set edilebiliyor ve çağıran o closure'ı bu satırdan sonra alıyor, yani
+    // "kurulum sırasında iptal" durumu OLUŞAMAZ — savunma dalı yazılmaz.
+    await probe(false);
 
     return () => {
       if (stopped) return;

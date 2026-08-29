@@ -235,6 +235,48 @@ describe('CardScreens — dalga arası akış', () => {
     expect(shopVisible()).toBe(true);
   });
 
+  it('satın alma bakiyeyi AZALIŞ yönünde vurgular', () => {
+    // Regresyon: yön bilgisi çağrı yerlerinden geçiyordu ve HİÇ görünmüyordu.
+    // `spendFlux` senkron `onFluxChange` aboneliğini tetikleyip dükkanı yönsüz
+    // bir kez render ediyor, ShopPicker bakiye etiketini o render'da
+    // güncellediği için ardından gelen yönlü render "değişiklik yok" sayılıyordu.
+    economy.addFlux(100);
+    screens.openIntermission(3);
+
+    const balance = root.querySelector<HTMLElement>('.vol-card-shop__balance')!;
+    root
+      .querySelector<HTMLButtonElement>(
+        '.vol-card-picker--shop .vol-card-picker__grid .vol-card__action',
+      )!
+      .click();
+
+    expect(balance.classList.contains('vol-card-shop__balance--changed')).toBe(true);
+    expect(balance.classList.contains('vol-card-shop__balance--decrease')).toBe(true);
+    expect(balance.classList.contains('vol-card-shop__balance--increase')).toBe(false);
+  });
+
+  it('satış bakiyeyi ARTIŞ yönünde vurgular', () => {
+    cards.acquire(CARD_CATALOG.keskinUc);
+    screens.openIntermission(5);
+
+    const balance = root.querySelector<HTMLElement>('.vol-card-shop__balance')!;
+    const sellButton = root.querySelector<HTMLButtonElement>(
+      '.vol-card-shop__passives .vol-card__action',
+    )!;
+    sellButton.click();
+
+    expect(balance.classList.contains('vol-card-shop__balance--increase')).toBe(true);
+    expect(balance.classList.contains('vol-card-shop__balance--decrease')).toBe(false);
+  });
+
+  it('dükkanın ilk açılışı bakiye vurgusu oynatmaz', () => {
+    economy.addFlux(50);
+    screens.openIntermission(3);
+
+    const balance = root.querySelector<HTMLElement>('.vol-card-shop__balance')!;
+    expect(balance.classList.contains('vol-card-shop__balance--changed')).toBe(false);
+  });
+
   it('bakiye yetmezse satın alma butonu kilitli', () => {
     screens.openIntermission(3);
 

@@ -160,6 +160,34 @@ export class SpatialIndex<T extends SpatialEntity> {
     }
   }
 
+  /**
+   * Zaten indekste olan bir kümenin KONUMLARINI tazeler — `rebuild`in artımlı
+   * kardeşi.
+   *
+   * `rebuild` her çağrıda indeksi boşaltıp her varlığı yeniden ekler: hücre
+   * dizileri yeniden ayrılır ve maliyet hareket etmemiş varlıklara da yüklenir.
+   * Bir simülasyon adımında varlık KÜMESİ değişmeyip yalnız konumlar
+   * kayıyorsa (tipik olarak "hareket ettir, sonra çarpışmayı çöz" sırası)
+   * doğru araç budur: `update()` hücre değişmediğinde hiçbir iş yapmaz, yani
+   * maliyet O(N) yerine O(hücre değiştiren) olur.
+   *
+   * Pasif varlıklar indeksten ÇIKARILIR; `isActive` zaten sorguları
+   * filtreliyor olsa da ölü varlığı hücrede tutmak taramayı gereksiz uzatır.
+   *
+   * Küme değiştiyse (yeni varlık doğduysa) `update()` upsert olduğu için yeni
+   * gelenler de girer; yalnızca listeden TAMAMEN düşen bir varlık indekste
+   * kalır — bu durumda çağıran `rebuild` kullanmalıdır.
+   */
+  refresh(entities: Iterable<T>): void {
+    for (const entity of entities) {
+      if (this.isActive && !this.isActive(entity)) {
+        this.remove(entity);
+        continue;
+      }
+      this.update(entity);
+    }
+  }
+
   /** Tüm kayıtları siler. */
   clear(): void {
     this.cells.clear();

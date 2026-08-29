@@ -75,6 +75,61 @@ describe('bootShowcase', () => {
   );
 
   it(
+    'tam ekrandayken düğme etiketi ve aria-pressed tersine döner',
+    async () => {
+      const session = await bootShowcase(root);
+      const button = root.querySelector<HTMLButtonElement>('.vol-showcase-fullscreen-button');
+      expect(button?.getAttribute('aria-pressed')).toBe('false');
+
+      // `fullscreenElement` doluyken etiket "çıkış" olmalı; yalnız GİRİŞ yolu
+      // test edilirse etiketin hiç güncellenmemesi fark edilmezdi.
+      Object.defineProperty(document, 'fullscreenElement', {
+        configurable: true,
+        value: session.app.element,
+      });
+      document.dispatchEvent(new Event('fullscreenchange'));
+
+      expect(button?.getAttribute('aria-pressed')).toBe('true');
+      expect(button?.getAttribute('aria-label')).toBe(i18next.t('volui:app.leaveFullscreen'));
+
+      Object.defineProperty(document, 'fullscreenElement', {
+        configurable: true,
+        value: null,
+      });
+      document.dispatchEvent(new Event('fullscreenchange'));
+      expect(button?.getAttribute('aria-pressed')).toBe('false');
+
+      session.destroy();
+    },
+    BOOT_TIMEOUT_MS,
+  );
+
+  it(
+    'F11 ortak fullscreen akışını tetikler',
+    async () => {
+      const requestFullscreen = vi.fn().mockResolvedValue(undefined);
+      const session = await bootShowcase(root);
+      Object.defineProperty(session.app.element, 'requestFullscreen', {
+        configurable: true,
+        value: requestFullscreen,
+      });
+
+      // Tarayıcı F11'i uygulamaya veriyorsa CORE controller devralır.
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F11' }));
+      await Promise.resolve();
+      expect(requestFullscreen).toHaveBeenCalledOnce();
+
+      // Tuş basılı tutulduğunda tekrar tetiklenmez.
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F11', repeat: true }));
+      await Promise.resolve();
+      expect(requestFullscreen).toHaveBeenCalledOnce();
+
+      session.destroy();
+    },
+    BOOT_TIMEOUT_MS,
+  );
+
+  it(
     'fullscreen butonu geniş tıklama alanıyla ortak controllerı çağırır',
     async () => {
       const requestFullscreen = vi.fn().mockResolvedValue(undefined);

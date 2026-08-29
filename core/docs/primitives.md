@@ -341,6 +341,7 @@ nesne başkasına referans tutuyorsa o da serbest kalmaz.
 const index = new SpatialIndex<T>(64, (t) => t.isActive);
 
 index.rebuild(items); // tüm dünyayı yeniden indeksle, O(N)
+index.refresh(items); // KÜME aynı, konumlar değişti — O(hücre değiştiren)
 index.update(item); // yalnızca değişeni bildir; hücre aynıysa false, iş yok
 
 index.query(x, y); // 3×3 hücre — YALNIZCA yarıçap ≤ cellSize iken doğru
@@ -368,6 +369,14 @@ hücre sayısını yarıçaptan hesaplar.
 İki model **aynı sonucu** verir (testle kilitli). Nesnelerin çoğu sabitse ve az
 sayıda öğe hareket ediyorsa artımlı model O(hareket eden)'e düşer; hepsi her
 kare hareket ediyorsa `rebuild` daha basittir.
+
+**`refresh` ikisinin arasıdır:** varlık KÜMESİ değişmeyip yalnız konumlar
+kaydığında (tipik "hareket ettir, sonra çarpışmayı çöz" sırası) `rebuild`
+indeksi boşaltıp her varlığı yeniden ekler — maliyet hareket etmemişlere de
+biner. `refresh` her varlık için `update` çağırır ve hücre değişmediğinde
+hiçbir iş yapmaz; pasif olanları indeksten düşürür. Listeden TAMAMEN çıkan bir
+varlığı yalnız `rebuild` temizler, o yüzden doğum/geri dönüşüm olan geçişte
+`rebuild` kullanılır.
 
 ## Rastgelelik
 
@@ -453,6 +462,19 @@ kabul eder; CORE oyun ikonlarını bilmez, yalnızca verilen elementi güvenli b
 kopya olarak yerleştirir. Scrim, `Modal` ile aynı karartma sözleşmesini kullanır;
 bulanıklaştırma eklemez. Yükseklik ekranı tamamen doldurur, içerik ise panelin
 içinde kayar. Oyun kuralları ve stat hesapları çağıranda kalır.
+
+`Counter.setValue()` **varsayılan olarak değişim yönünü vurgular**: artışta
+`--increase`, azalışta `--decrease` sınıfı oynar. Bu, `pulse: true` opt-in'i
+olan eski davranıştan farklıdır ve `ResourceCounter`/`ResourceBar` üzerinden
+tüm tüketicileri etkiler. Aynı sayacı HER KARE yazan bir HUD (skor, süre,
+mesafe) sürekli animasyon almamak için açıkça `change: 'none'` geçer; yön
+zorlamak için `change: 'increase' | 'decrease'` verilir.
+
+Süpürülmüş çarpışmada `segmentCircleOverlap` "kesişti mi" der, `segmentCircleEntryT`
+İLK TEMAS parametresini (`0..1`) döndürür. Bir adımda birden fazla daire
+kesişiyorsa çağıran en küçük `t`'yi seçerek sonucu aday listesinin sırasından
+bağımsız kılar — dizideki ilk eşleşmeyi almak, aynı geometride farklı sonuç
+üretir ve mermi öndekinin içinden geçebilir.
 
 `FullscreenController`, web araçları ve Phaser sahneleri için ortak F11/
 programatik tam ekran akışıdır. Standart Fullscreen API'yi, Android WebView

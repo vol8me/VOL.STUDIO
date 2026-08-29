@@ -184,4 +184,76 @@ describe('RunEconomy — Spark ve seviye', () => {
 
     expect(listener.mock.calls.map(([flux]) => flux as number)).toEqual([10, 6]);
   });
+
+  describe('uç seviyelerde sayısal dayanıklılık', () => {
+    it('doyurulmuş Spark ile seviye eşiği sonsuza kaçmaz', () => {
+      const economy = new RunEconomy();
+      // Geometrik eşik yüksek seviyede `Math.pow` ile Infinity üretebilir;
+      // kapalı form bunu MAX_SAFE_INTEGER'a doyurmalı, NaN/Infinity sızdırmamalı.
+      economy.addSpark(Number.MAX_SAFE_INTEGER);
+
+      expect(Number.isFinite(economy.getLevel())).toBe(true);
+      expect(Number.isFinite(economy.getSpark())).toBe(true);
+      expect(Number.isFinite(economy.getSparkInLevel())).toBe(true);
+      expect(Number.isFinite(economy.getLevelSpan())).toBe(true);
+      expect(economy.getSparkInLevel()).toBeGreaterThanOrEqual(0);
+      expect(economy.getLevelSpan()).toBeGreaterThan(0);
+    });
+
+    it('art arda doyurulmuş eklemeler sayaçları bozmaz', () => {
+      const economy = new RunEconomy();
+      for (let i = 0; i < 5; i++) economy.addSpark(Number.MAX_SAFE_INTEGER);
+
+      expect(Number.isNaN(economy.getSparkInLevel())).toBe(false);
+      expect(Number.isNaN(economy.getLevelSpan())).toBe(false);
+      expect(economy.getSpark()).toBeLessThanOrEqual(Number.MAX_SAFE_INTEGER);
+    });
+
+    it('istenen herhangi bir seviyenin aralığı sonlu ve pozitiftir', () => {
+      const economy = new RunEconomy();
+      for (const level of [1, 10, 100, 1_000, 100_000, 10_000_000]) {
+        const span = economy.getLevelSpan(level);
+        expect(Number.isFinite(span)).toBe(true);
+        expect(span).toBeGreaterThan(0);
+      }
+    });
+
+    it('geçersiz seviye isteği çökmez', () => {
+      const economy = new RunEconomy();
+      for (const level of [0, -5, Number.NaN, Number.POSITIVE_INFINITY]) {
+        expect(() => economy.getLevelSpan(level)).not.toThrow();
+        expect(Number.isNaN(economy.getLevelSpan(level))).toBe(false);
+      }
+    });
+
+    it('doyurulmuş Flux artışında dinleyici sonsuz değer görmez', () => {
+      const economy = new RunEconomy();
+      const seen: number[] = [];
+      economy.onFluxChange((flux) => seen.push(flux));
+
+      economy.addFlux(Number.MAX_SAFE_INTEGER);
+      // Doyuma ulaşıldıktan sonraki ekleme DEĞİŞİM üretmez, dinleyici de çağrılmaz.
+      economy.addFlux(Number.MAX_SAFE_INTEGER);
+
+      expect(seen).toHaveLength(1);
+      expect(Number.isFinite(seen[0])).toBe(true);
+    });
+
+    it('dinleyici hata fırlatsa da ekonomi işlemi tamamlanır', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const economy = new RunEconomy();
+      const healthy = vi.fn();
+      economy.onFluxChange(() => {
+        throw new Error('UI patladı');
+      });
+      economy.onFluxChange(healthy);
+
+      economy.addFlux(25);
+
+      expect(economy.getFlux()).toBe(25);
+      expect(healthy).toHaveBeenCalledWith(25);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+  });
 });

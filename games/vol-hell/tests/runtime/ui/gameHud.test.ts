@@ -218,12 +218,29 @@ describe('WaveBanner', () => {
 
     const announcement = parent.querySelector('.vol-wave__announcement');
     expect(announcement).not.toBeNull();
-    expect(announcement?.getAttribute('aria-hidden')).toBe('false');
+    expect(announcement?.classList.contains('vol-wave__announcement--visible')).toBe(true);
+    expect(announcement?.textContent).not.toBe('');
 
     // Duyuru sayacı `refresh`in deltasıyla akar; gerçek zaman beklenmez.
     for (let i = 0; i < 200; i++) banner.refresh(50, 2, 30_000, false, null);
     expect(announcement?.classList.contains('vol-wave__announcement--visible')).toBe(false);
-    expect(announcement?.getAttribute('aria-hidden')).toBe('true');
+    // Görsel gizleme CSS'in işi; canlı bölge ağaçta KALIR, içeriği boşalır.
+    expect(announcement?.textContent).toBe('');
+  });
+
+  it('dalga duyurusu kalıcı bir canlı bölgedir, aria-hidden ile gizlenmez', () => {
+    const banner = new WaveBanner(parent);
+    const announcement = parent.querySelector('.vol-wave__announcement');
+
+    // `aria-live` bölgesini erişilebilirlik ağacından çıkarıp geri sokmak
+    // duyuruyu güvenilmez kılar; bölge her zaman orada, yalnız metni değişir.
+    expect(announcement?.getAttribute('role')).toBe('status');
+    expect(announcement?.getAttribute('aria-live')).toBe('polite');
+    expect(announcement?.hasAttribute('aria-hidden')).toBe(false);
+
+    banner.announce(4);
+    expect(announcement?.hasAttribute('aria-hidden')).toBe(false);
+    expect(announcement?.textContent).toContain('4');
   });
 
   it('refresh kalan süreyi gösterir', () => {
