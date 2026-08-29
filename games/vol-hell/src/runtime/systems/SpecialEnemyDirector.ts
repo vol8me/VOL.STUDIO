@@ -165,6 +165,7 @@ export class SpecialEnemyDirector {
     if (this.elite) {
       if (this.elite.isAlive) {
         this.elite.update(deltaMs, playerPos, this.deps.border, grid);
+        grid.update(this.elite.getEnemy());
       } else {
         this.elite.destroy();
         this.elite = null;
@@ -175,6 +176,7 @@ export class SpecialEnemyDirector {
     if (this.boss) {
       if (this.boss.isAlive) {
         this.boss.update(deltaMs, playerPos, this.deps.border, grid);
+        grid.update(this.boss.getEnemy());
       } else {
         const position = this.boss.getEnemy();
         this.deps.effects.play('bossDefeat', position.x, position.y);

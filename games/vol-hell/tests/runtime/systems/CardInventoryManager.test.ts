@@ -230,6 +230,21 @@ describe('CardInventoryManager', () => {
       expect(cards.getEquipped('primary')?.instanceId).toBe(owned.instanceId);
     });
 
+    it('aynı karta aynı slotta yeniden bırakmak cooldownu sıfırlamaz', () => {
+      const owned = cards.acquire(CARD_CATALOG.cardTurret);
+      expect(cards.equip(owned.instanceId, 'primary')).toBe(true);
+      abilities.update(16, new Vector2(100, 100), new Vector2(1, 0), []);
+      expect(abilities.tryActivate('primary')).toBe(true);
+
+      const activeAbility = abilities.getAbility('primary');
+      const ratioBefore = activeAbility?.getReadyRatio();
+      expect(ratioBefore).toBeLessThan(1);
+
+      expect(cards.equip(owned.instanceId, 'primary')).toBe(true);
+      expect(abilities.getAbility('primary')).toBe(activeAbility);
+      expect(abilities.getAbility('primary')?.getReadyRatio()).toBe(ratioBefore);
+    });
+
     it('ability olmayan kart slota atanamaz', () => {
       const owned = cards.acquire(CARD_CATALOG.keskinUc);
       expect(cards.equip(owned.instanceId, 'primary')).toBe(false);

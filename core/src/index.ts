@@ -85,6 +85,7 @@ export { SpatialIndex, type SpatialEntity } from './spatial/SpatialIndex';
 export {
   distance,
   distanceSquared,
+  segmentCircleOverlap,
   circlesOverlap,
   pointInCircle,
   pointInRect,

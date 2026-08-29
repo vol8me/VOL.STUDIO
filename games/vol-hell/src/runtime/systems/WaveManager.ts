@@ -176,14 +176,16 @@ export class WaveManager {
       this.callbacks.onWaveClear?.(finished);
     }
 
-    this.callbacks.onWaveEnd?.(finished);
-
     if (finished >= waveConfig.totalWaves) {
+      // Terminal dalga intermission değildir: son boss ölümünde shop/level-up
+      // ekranı açılmadan doğrudan zafer akışına geçilir.
       this.complete = true;
       this.elapsedInWaveMs = 0;
       this.callbacks.onRunComplete?.();
       return;
     }
+
+    this.callbacks.onWaveEnd?.(finished);
 
     this.beginWave(finished + 1);
   }

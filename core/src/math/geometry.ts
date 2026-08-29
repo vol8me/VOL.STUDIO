@@ -38,6 +38,52 @@ export function distance(ax: number, ay: number, bx: number, by: number): number
   return Math.sqrt(distanceSquared(ax, ay, bx, by));
 }
 
+/**
+ * Sonlu bir doğru parçası ile dairenin kesişimini test eder.
+ *
+ * Hareketli mermiler için yalnızca son noktayı kontrol etmek küçük hedeflerin
+ * içinden tünellemeye yol açar. En yakın nokta izdüşümüyle çalışan bu yardımcı
+ * allocation yapmaz ve sıfır uzunluktaki parçayı da (nokta testi olarak)
+ * doğru ele alır. Teğet temas kesişme sayılır.
+ */
+export function segmentCircleOverlap(
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  circleX: number,
+  circleY: number,
+  radius: number,
+): boolean {
+  if (
+    !Number.isFinite(startX) ||
+    !Number.isFinite(startY) ||
+    !Number.isFinite(endX) ||
+    !Number.isFinite(endY) ||
+    !Number.isFinite(circleX) ||
+    !Number.isFinite(circleY) ||
+    !Number.isFinite(radius) ||
+    radius < 0
+  ) {
+    return false;
+  }
+
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const lengthSquared = dx * dx + dy * dy;
+  let closestX = startX;
+  let closestY = startY;
+
+  if (lengthSquared > 0) {
+    const projection = ((circleX - startX) * dx + (circleY - startY) * dy) / lengthSquared;
+    const t = Math.max(0, Math.min(1, projection));
+    closestX += dx * t;
+    closestY += dy * t;
+  }
+
+  return distanceSquared(closestX, closestY, circleX, circleY) <= radius * radius;
+}
+
 /** İki daire kesişiyor mu? (Teğet durumu kesişme SAYILIR.) */
 export function circlesOverlap(a: Circle, b: Circle): boolean {
   const reach = a.radius + b.radius;

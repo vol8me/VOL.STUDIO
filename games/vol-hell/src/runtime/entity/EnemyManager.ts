@@ -14,6 +14,7 @@ import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { DifficultyState } from '@/runtime/systems/DifficultyCalculator';
 import { diagnostics } from '@/app/services';
 import { nonNegativeFinite, safeDeltaMs, saturatingAdd } from '@/runtime/utils/numeric';
+import { gameConfig } from '@/config/game';
 
 /** Düşman güncellemesine dışarıdan verilen sahne durumu. */
 export interface EnemyUpdateContext {
@@ -78,13 +79,28 @@ export class EnemyManager {
     const maxEnemies = Number.isFinite(difficulty.maxEnemies)
       ? Math.max(0, Math.floor(difficulty.maxEnemies))
       : 0;
-    if (spawnInterval > 0 && this.spawnTimer >= spawnInterval && this.enemies.length < maxEnemies) {
-      const spawned = this.spawnFromCatalog(border, playerPos, difficulty);
-      if (spawned) {
-        this.spawnTimer = 0;
-      } else {
-        // Spawn başarısız (oyuncuya çok yakın) — kısa bekleme sonra tekrar dene
-        this.spawnTimer = spawnInterval * enemyConfig.spawnRetryIntervalFactor;
+    if (spawnInterval > 0 && this.enemies.length < maxEnemies) {
+      let attempts = 0;
+      while (
+        this.spawnTimer >= spawnInterval &&
+        this.enemies.length < maxEnemies &&
+        attempts < gameConfig.maxTimerCatchUpSteps
+      ) {
+        const spawned = this.spawnFromCatalog(border, playerPos, difficulty, grid);
+        if (spawned) {
+          this.spawnTimer -= spawnInterval;
+        } else {
+          // Spawn başarısız (oyuncuya çok yakın) — kısa bekleme sonra tekrar dene.
+          this.spawnTimer = Math.min(
+            this.spawnTimer,
+            spawnInterval * enemyConfig.spawnRetryIntervalFactor,
+          );
+          break;
+        }
+        attempts++;
+      }
+      if (attempts >= gameConfig.maxTimerCatchUpSteps && this.spawnTimer >= spawnInterval) {
+        this.spawnTimer %= spawnInterval;
       }
     }
 
@@ -97,8 +113,11 @@ export class EnemyManager {
         const target = this.pickTarget(enemy, playerPos, context.turret ?? null);
         const spawnRequest = enemy.update(safeDelta, target, border, grid, this.random);
         if (spawnRequest) {
-          this.spawnMinions(enemy, spawnRequest, difficulty);
+          this.spawnMinions(enemy, spawnRequest, difficulty, grid);
         }
+        // Separation sırasında grid'de eski hücre tutulmasın. Böylece bir
+        // düşman hücre sınırını geçtiğinde sonraki düşman onu kaçırmaz.
+        if (typeof grid.update === 'function') grid.update(enemy);
       }
 
       if (!enemy.isAlive) {
@@ -205,6 +224,7 @@ export class EnemyManager {
     border: Border,
     playerPos: Vector2,
     difficulty: DifficultyState,
+    grid?: SpatialGrid,
   ): boolean {
     if (!Number.isFinite(playerPos.x) || !Number.isFinite(playerPos.y)) return false;
     const definition = pickEnemyDefinition(this.random, this.currentWave);
@@ -216,7 +236,8 @@ export class EnemyManager {
     const distToPlayer = Math.hypot(position.x - playerPos.x, position.y - playerPos.y);
     if (distToPlayer < enemyConfig.spawnMinPlayerDistance) return false;
 
-    this.createEnemy(definition, position.x, position.y, difficulty);
+    const enemy = this.createEnemy(definition, position.x, position.y, difficulty);
+    if (grid && typeof grid.insert === 'function') grid.insert(enemy);
     return true;
   }
 
@@ -225,6 +246,7 @@ export class EnemyManager {
     parent: Enemy,
     request: MinionSpawnRequest,
     difficulty: DifficultyState,
+    grid?: SpatialGrid,
   ): void {
     if (this.destroyed || !parent.isAlive || !request || !Array.isArray(request.angles)) return;
     const radius = nonNegativeFinite(request.radius);
@@ -250,6 +272,7 @@ export class EnemyManager {
       const x = parent.x + Math.cos(angle) * radius;
       const y = parent.y + Math.sin(angle) * radius;
       const minion = this.createEnemy(definition, x, y, difficulty);
+      if (grid && typeof grid.insert === 'function') grid.insert(minion);
       parent.registerMinion(minion);
     }
   }

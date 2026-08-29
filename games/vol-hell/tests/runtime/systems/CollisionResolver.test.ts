@@ -238,7 +238,7 @@ describe('CollisionResolver', () => {
   });
 
   it('oyuncu düşmanla örtüşünce her ikisi de itilir', () => {
-    // dist 0 ise bölme hatasından kaçınmak için çakışma çözülmez; hafif örtüşme yeterli.
+    // Hafif örtüşmede iki gövde de deterministik biçimde itilir.
     const enemy = makeEnemy(10, 0, 20);
     const player = makePlayer(0, 0);
 
@@ -252,6 +252,65 @@ describe('CollisionResolver', () => {
 
     expect(enemy.applyPush).toHaveBeenCalled();
     expect(player.applyPush).toHaveBeenCalled();
+  });
+
+  it('tam merkez çakışmasında da sonlu, deterministik ayırma uygular', () => {
+    const enemy = makeEnemy(0, 0, 20);
+    const player = makePlayer(0, 0);
+    const { resolver } = makeResolver({ player, enemies: [enemy], nearby: [enemy] });
+
+    resolver.resolve(0);
+
+    expect(enemy.applyPush).toHaveBeenCalled();
+    expect(player.applyPush).toHaveBeenCalled();
+    const [pushX, pushY] = vi.mocked(player.applyPush).mock.calls[0];
+    expect(Number.isFinite(pushX)).toBe(true);
+    expect(Number.isFinite(pushY)).toBe(true);
+  });
+
+  it('mermi segmenti üzerindeki düşmanı endpoint dışında da vurur', () => {
+    const enemy = makeEnemy(50, 0, 3);
+    const bullet = { ...makeBullet(100, 0), previousPositionX: 0, previousPositionY: 0 };
+    const { resolver, removeBulletSpy } = makeResolver({
+      bullets: [bullet],
+      enemies: [enemy],
+      nearby: [enemy],
+    });
+
+    resolver.resolve(0);
+
+    expect(enemy.takeDamage).toHaveBeenCalledWith(bullet.damage);
+    expect(removeBulletSpy).toHaveBeenCalledWith(bullet);
+  });
+
+  it('ömrü dolan mermi son segment çarpışmasından önce atılmaz', () => {
+    const enemy = makeEnemy(50, 0, 3);
+    const bullet = {
+      ...makeBullet(100, 0),
+      previousPositionX: 0,
+      previousPositionY: 0,
+      isExpired: true,
+    };
+    const { resolver, removeBulletSpy } = makeResolver({
+      bullets: [bullet],
+      enemies: [enemy],
+      nearby: [enemy],
+    });
+
+    resolver.resolve(0);
+
+    expect(enemy.takeDamage).toHaveBeenCalledOnce();
+    expect(removeBulletSpy).toHaveBeenCalledOnce();
+  });
+
+  it('aynı frame kalabalık temasında oyuncu yalnızca bir paket alır', () => {
+    const enemies = [makeEnemy(0, 0), makeEnemy(0, 0)];
+    const player = makePlayer(0, 0);
+    const { resolver } = makeResolver({ player, enemies, nearby: enemies });
+
+    resolver.resolve(1_000);
+
+    expect(player.takeDamage).toHaveBeenCalledTimes(1);
   });
 
   it('temas hasarı cooldown’a uygun şekilde uygulanır', () => {

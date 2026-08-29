@@ -223,6 +223,24 @@ describe('Player', () => {
     expect(pos.x).toBeCloseTo(100 + playerConfig.dashSpeed * 0.1, 0);
   });
 
+  it('dash timer bu frame biterse son hareket normal hızla yapılır', () => {
+    const player = makePlayer(100, 100);
+    player.setMoveDirection(new Vector2(1, 0));
+    player.tryDash(new Vector2(1, 0));
+
+    player.update(playerConfig.dashDurationMs + 50);
+
+    expect(player.getX()).toBeCloseTo(100 + playerConfig.moveSpeed * 0.35, 6);
+  });
+
+  it('dash i-frame dash süresini aşmaz', () => {
+    const player = makePlayer(100, 100);
+    player.tryDash(new Vector2(1, 0));
+    player.update(playerConfig.dashDurationMs + 1);
+
+    expect(player.takeDamage(1)).toBe(true);
+  });
+
   it('destroy — hata fırlatmaz', () => {
     const player = makePlayer(0, 0);
     player.tryDash(new Vector2(1, 0));

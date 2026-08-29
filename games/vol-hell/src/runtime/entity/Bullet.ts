@@ -17,6 +17,9 @@ export class Bullet {
   private readonly velocity: Vector2 = Vector2.zero();
   private age = 0;
   private alive = true;
+  private expired = false;
+  private previousX: number;
+  private previousY: number;
   private readonly damageValue: number;
   private lastTrailTime = 0;
   private lastBounceSoundTime = -Infinity;
@@ -40,6 +43,8 @@ export class Bullet {
       bulletConfig.color,
       bulletConfig.fillAlpha,
     );
+    this.previousX = this.arc.x;
+    this.previousY = this.arc.y;
     this.arc.setStrokeStyle(
       bulletConfig.strokeWidth,
       bulletConfig.strokeColor,
@@ -69,18 +74,35 @@ export class Bullet {
     return this.damageValue;
   }
 
+  get previousPositionX(): number {
+    return this.previousX;
+  }
+
+  get previousPositionY(): number {
+    return this.previousY;
+  }
+
+  /** Ömrü doldu; çarpışma aşaması son hareketi hâlâ işleyebilir. */
+  get isExpired(): boolean {
+    return this.expired;
+  }
+
   update(delta: number, border: Border): void {
     if (!this.alive) return;
 
     const safeDelta = safeDeltaMs(delta);
-    const dt = safeDelta / 1000;
+    const remainingMs = Math.max(0, bulletConfig.lifetimeMs - this.age);
+    const movementDelta = Math.min(safeDelta, remainingMs);
+    const dt = movementDelta / 1000;
+    this.previousX = this.arc.x;
+    this.previousY = this.arc.y;
     this.arc.x += this.velocity.x * dt;
     this.arc.y += this.velocity.y * dt;
 
     this.handleBounce(border);
 
     // Trail partikül
-    this.lastTrailTime += safeDelta;
+    this.lastTrailTime += movementDelta;
     if (this.lastTrailTime >= bulletConfig.trailFrequencyMs) {
       this.lastTrailTime = 0;
       this.spawnTrailParticle();
@@ -88,7 +110,9 @@ export class Bullet {
 
     this.age += safeDelta;
     if (this.age >= bulletConfig.lifetimeMs) {
-      this.destroy();
+      // CollisionResolver bu frame'in süpürülmüş segmentini gördükten sonra
+      // mermiyi kaldırır. Önce yok etmek son kare vuruşunu kaybettiriyordu.
+      this.expired = true;
     }
   }
 

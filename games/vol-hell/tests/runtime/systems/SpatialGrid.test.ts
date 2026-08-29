@@ -309,16 +309,10 @@ describe('SpatialGrid artımlı güncelleme', () => {
 
 describe('artımlı API sözleşmesi', () => {
   /**
-   * `SpatialGrid`in sınıf dokümanı "artımlı yolun üretimde çağıranı yoktur"
-   * DİYOR. Bir doküman iddiası, onu doğrulayan bir şey olmadan çürür: biri
-   * `grid.update(...)` çağrısını oyun döngüsüne eklerse doküman sessizce
-   * yanlışa döner ve sonraki okuyucuyu yanıltır.
-   *
-   * Bu test iddiayı bekçiye bağlar. AMACI artımlı yolu YASAKLAMAK DEĞİL —
-   * düştüğünde doğru tepki, çağrıyı geri almak değil, sınıf dokümanını
-   * gerçeğe uydurmaktır.
+   * Hareketli düşmanlar artık artımlı API'nin gerçek tüketicileridir. Bu test,
+   * gelecekte bu correctness yolunun sessizce kaldırılmasını engeller.
    */
-  it('üretim kaynağı yalnızca rebuild kullanır (doküman iddiasıyla senkron)', () => {
+  it('hareketli düşman tüketicileri artımlı güncellemeyi kullanır', () => {
     const srcRoot = resolve(import.meta.dirname, '../../../src');
     const incremental =
       /\b(?:grid|spatialGrid|this\.spatialGrid)\.(insert|remove|update|has|getIndexedCount)\s*\(/;
@@ -341,10 +335,10 @@ describe('artımlı API sözleşmesi', () => {
     };
     walk(srcRoot);
 
-    expect(
-      offenders,
-      'Artımlı API üretimde kullanılmaya başlandı. SpatialGrid sınıf dokümanındaki ' +
-        '"üretimde çağıranı yoktur" uyarısını GÜNCELLE, sonra bu testi kaldır.',
-    ).toEqual([]);
+    expect(offenders).toEqual([
+      'runtime/entity/EnemyManager.ts',
+      'runtime/systems/CollisionResolver.ts',
+      'runtime/systems/SpecialEnemyDirector.ts',
+    ]);
   });
 });

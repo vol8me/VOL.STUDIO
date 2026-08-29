@@ -147,6 +147,10 @@ export class CardInventoryManager {
     const abilityId = owned?.definition.abilityId;
     if (!owned || !abilityId) return false;
 
+    // Aynı örneği aynı slota bırakmak yeni Ability üretmez; aksi halde mevcut
+    // cooldown yok edilir ve kart sürüklenerek bedava resetlenirdi.
+    if (this.equipped.get(slot) === instanceId) return true;
+
     // Aynı kart diğer slottaysa taşınır; iki slotta aynı yetenek durmasın.
     for (const other of ['primary', 'secondary'] as AbilitySlot[]) {
       if (other !== slot && this.equipped.get(other) === instanceId) {

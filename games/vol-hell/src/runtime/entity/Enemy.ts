@@ -341,10 +341,14 @@ export class Enemy {
       const d = Math.hypot(dx, dy);
       const minDistance =
         this.definition.radius + other.definition.radius + enemyConfig.separationGap;
-      if (Number.isFinite(d) && d > 0 && d < minDistance) {
+      if (Number.isFinite(d) && d < minDistance) {
         const force = (1 - d / minDistance) * enemyConfig.separationForce;
-        this.separationBuf.x += (dx / d) * force * separationScale;
-        this.separationBuf.y += (dy / d) * force * separationScale;
+        const normal =
+          d > 0
+            ? { x: dx / d, y: dy / d }
+            : deterministicSeparationNormal(this.definition.id, other.definition.id);
+        this.separationBuf.x += normal.x * force * separationScale;
+        this.separationBuf.y += normal.y * force * separationScale;
       }
     }
   }
@@ -423,4 +427,22 @@ export class Enemy {
     this.arc.destroy();
     this.healthBar.destroy();
   }
+}
+
+/** Exact düşman overlap'ında sıfıra bölmeyi önleyen kararlı yön. */
+function deterministicSeparationNormal(
+  firstId: string,
+  secondId: string,
+): { x: number; y: number } {
+  const ordered = firstId <= secondId ? `${firstId}:${secondId}` : `${secondId}:${firstId}`;
+  let hash = 2166136261;
+  for (let i = 0; i < ordered.length; i++) {
+    hash ^= ordered.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  // Aynı türde iki düşman daima aynı pair key'i üretir; yönün tersini
+  // seçmek için çağıranın kimlik sırasını kullanırız.
+  const angle = ((hash >>> 0) / 0x1_0000_0000) * Math.PI * 2;
+  const sign = firstId <= secondId ? 1 : -1;
+  return { x: Math.cos(angle) * sign, y: Math.sin(angle) * sign };
 }

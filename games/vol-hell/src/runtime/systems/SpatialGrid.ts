@@ -23,6 +23,21 @@ export class SpatialGrid extends SpatialIndex<Enemy> {
     return this.query(x, y);
   }
 
+  /** Bir merminin süpürdüğü eksen hizalı alanı kapsayan düşmanlar. */
+  querySegmentNearby(
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    radius: number,
+  ): readonly Enemy[] {
+    const minX = Math.min(startX, endX) - radius;
+    const minY = Math.min(startY, endY) - radius;
+    const width = Math.abs(endX - startX) + radius * 2;
+    const height = Math.abs(endY - startY) + radius * 2;
+    return this.queryBounds(minX, minY, width, height);
+  }
+
   /** Aktif hücre sayısı — diagnostic. */
   getIndexedCount(): number {
     return this.size;

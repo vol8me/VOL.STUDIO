@@ -56,6 +56,7 @@ export class EliteController {
   private dashTelegraphShown = false;
   private dashTelegraph: TelegraphHandle | null = null;
   private spawnTelegraph: TelegraphHandle | null = null;
+  private destroyed = false;
 
   constructor(
     private readonly enemy: Enemy,
@@ -64,7 +65,7 @@ export class EliteController {
   ) {}
 
   get isAlive(): boolean {
-    return this.enemy.isAlive;
+    return !this.destroyed && this.enemy.isAlive;
   }
 
   /** Elite'in kendisi — çarpışma/hasar için `EnemyManager` listesinde durur. */
@@ -77,7 +78,7 @@ export class EliteController {
    * ÇIKARIP bunu çağırır: hareket kontrolü tamamen buradadır.
    */
   update(deltaMs: number, playerPos: Vector2, border: Border, grid: SpatialGrid): void {
-    if (!this.enemy.isAlive) return;
+    if (this.destroyed || !this.enemy.isAlive) return;
     const safeDelta = safeDeltaMs(deltaMs);
 
     const context = this.syncContext(safeDelta, playerPos);
@@ -93,6 +94,8 @@ export class EliteController {
    * durdurulsun.
    */
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     this.dashTelegraph?.cancel();
     this.dashTelegraph = null;
     this.spawnTelegraph?.cancel();
@@ -192,7 +195,7 @@ export class EliteController {
       .then((result) => {
         this.spawnTelegraphActive = false;
         // Uyarı sırasında elite ölmüş veya iptal edilmişse sürü mezardan çıkmasın.
-        if (!result.completed || !this.enemy.isAlive) return;
+        if (!result.completed || this.destroyed || !this.enemy.isAlive) return;
         this.deps.spawnMinions(this.enemy, pending);
       })
       .finally(() => {

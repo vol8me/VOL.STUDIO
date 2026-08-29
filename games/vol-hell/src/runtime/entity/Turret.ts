@@ -9,6 +9,7 @@ import { EntityHealthBar } from './EntityHealthBar';
 import type { Enemy } from './Enemy';
 import { TurretShot } from './TurretShot';
 import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
+import { gameConfig } from '@/config/game';
 
 /**
  * Yerleştirilen savunma kulesi — menzilindeki en yakın düşmana namlusunu
@@ -133,13 +134,28 @@ export class Turret {
     this.barrel.setRotation(this.aimAngle);
     this.applyBarrelOffset();
 
-    this.fireTimerMs += safeDelta;
-    if (!target || this.fireTimerMs < this.params.fireIntervalMs) return;
+    const intervalMs = Math.max(1, nonNegativeFinite(this.params.fireIntervalMs, 1));
+    this.fireTimerMs = Math.min(
+      this.fireTimerMs + safeDelta,
+      intervalMs * gameConfig.maxTimerCatchUpSteps,
+    );
+    if (!target) return;
 
-    // Sayaç yalnızca ATIŞ yapıldığında sıfırlanır: hedefsiz beklerken dolu
-    // kalır ve menzile giren ilk düşmana anında ateş edilir.
-    this.fireTimerMs = 0;
-    this.fire(target);
+    let shots = 0;
+    while (
+      this.fireTimerMs >= intervalMs &&
+      shots < gameConfig.maxTimerCatchUpSteps &&
+      this.alive
+    ) {
+      // Interval'i düşürmek, 50 ms'lik bir frame'de geçen 20 ms'lik atışı
+      // kaybetmez; burst yine de bounded catch-up ile sınırlıdır.
+      this.fireTimerMs -= intervalMs;
+      this.fire(target);
+      shots++;
+    }
+    if (shots >= gameConfig.maxTimerCatchUpSteps && this.fireTimerMs >= intervalMs) {
+      this.fireTimerMs %= intervalMs;
+    }
   }
 
   /** Kuleye hasar verir. Yıkılırsa true döner. */

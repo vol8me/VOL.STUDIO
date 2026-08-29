@@ -59,6 +59,7 @@ export class BossController {
   private timerMs = 0;
   private attackIndex = 0;
   private enraged = false;
+  private destroyed = false;
   private readonly velocity: VelocityOutput = { x: 0, y: 0 };
   private context: MutableBehaviorContext | null = null;
   private readonly activeTelegraphs: TelegraphHandle[] = [];
@@ -76,7 +77,7 @@ export class BossController {
   ) {}
 
   get isAlive(): boolean {
-    return this.enemy.isAlive;
+    return !this.destroyed && this.enemy.isAlive;
   }
 
   getEnemy(): Enemy {
@@ -98,7 +99,7 @@ export class BossController {
   }
 
   update(deltaMs: number, playerPos: Vector2, border: Border, grid: SpatialGrid): void {
-    if (!this.enemy.isAlive) return;
+    if (this.destroyed || !this.enemy.isAlive) return;
     const safeDelta = safeDeltaMs(deltaMs);
 
     this.updateEnrage();
@@ -117,6 +118,8 @@ export class BossController {
 
   /** Boss öldü/sahne kapandı — bekleyen saldırılar uygulanmasın. */
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     this.state = 'idle';
     for (const handle of this.activeTelegraphs) {
       handle.cancel();
@@ -124,9 +127,17 @@ export class BossController {
     this.activeTelegraphs.length = 0;
   }
 
-  private getAttackIntervalMs(): number {
+  /** Ölçeklenmiş fireRate'ı gerçek saldırı temposuna bağlar. */
+  getAttackIntervalMs(): number {
     const base = bossConfig.attackIntervalMs;
-    return this.enraged ? base * bossConfig.enrageIntervalMultiplier : base;
+    const baseFireRate = this.definition.baseStats.fireRate;
+    const scaledFireRate = this.enemy.getStats().getValue('fireRate');
+    const scale =
+      Number.isFinite(baseFireRate) && baseFireRate > 0 && Number.isFinite(scaledFireRate)
+        ? Math.max(0.1, scaledFireRate / baseFireRate)
+        : 1;
+    const enrageScale = this.enraged ? bossConfig.enrageIntervalMultiplier : 1;
+    return nonNegativeFinite(base * scale * enrageScale, base);
   }
 
   private updateEnrage(): void {
@@ -176,7 +187,7 @@ export class BossController {
     } finally {
       // Saldırı sırasında boss ölmüş veya telegraph iptal edilmiş olabilir;
       // yaşarsa durumu saldırıya hazır hale getir.
-      if (this.enemy.isAlive) {
+      if (!this.destroyed && this.enemy.isAlive) {
         this.state = 'idle';
       }
     }
@@ -200,7 +211,7 @@ export class BossController {
       color: this.definition.color,
     });
     const result = await handle.promise;
-    if (!result.completed || !this.enemy.isAlive) return;
+    if (!result.completed || this.destroyed || !this.enemy.isAlive) return;
 
     this.deps.effects.play('bossSlam', x, y);
     // Hasar UYARI KONUMUNA göre çözülür (bossun güncel konumuna değil):
@@ -248,7 +259,7 @@ export class BossController {
       for (const h of handles) this.removeTelegraph(h);
     }
 
-    if (results.some((r) => !r.completed) || !this.enemy.isAlive) return;
+    if (results.some((r) => !r.completed) || this.destroyed || !this.enemy.isAlive) return;
 
     const target = this.deps.getPlayerPosition();
     for (const angle of angles) {
@@ -283,7 +294,7 @@ export class BossController {
       color: this.definition.color,
     });
     const result = await handle.promise;
-    if (!result.completed || !this.enemy.isAlive) return;
+    if (!result.completed || this.destroyed || !this.enemy.isAlive) return;
 
     this.spawnRequest.minionId = minionId;
     this.spawnRequest.count = count;

@@ -33,6 +33,8 @@ export interface AbilityRuntimeDeps {
   effects: EffectManager;
   border: Border;
   random: Random;
+  /** Görsel RNG için gameplay akışından bağımsız, run'dan türetilmiş seed. */
+  visualSeed?: number;
   bullets: BulletManager;
   playerStats: HellStatBlock;
 }
@@ -78,11 +80,12 @@ export class AbilityRuntime implements AbilityWorld {
   private readonly visualRandom: Random;
 
   constructor(private readonly deps: AbilityRuntimeDeps) {
-    this.visualRandom = createRandom(Math.floor(deps.random.next() * 0x7fffffff));
+    this.visualRandom = createRandom(deps.visualSeed ?? 0x51_7a_11);
   }
 
   /** Slota ability atar; slotta ability varsa yerini alır. `null` slotu boşaltır. */
   assign(slot: AbilitySlot, ability: Ability | null): void {
+    if (this.slots.get(slot) === ability) return;
     this.slots.get(slot)?.destroy();
     this.slots.set(slot, ability);
     diagnostics?.recordEvent('abilityAssigned', { slot, id: ability?.id ?? null });

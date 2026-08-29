@@ -7,6 +7,7 @@ export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
   sampleRate: number;
 } {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  if (bytes.byteLength < 12) throw new Error('Geçersiz WAV dosyası: RIFF başlığı eksik');
   const dataView = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
   const readString = (offset: number, length: number): string => {
@@ -18,38 +19,47 @@ export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
   if (readString(0, 4) !== 'RIFF' || readString(8, 4) !== 'WAVE') {
     throw new Error('Geçersiz WAV dosyası');
   }
+  const riffSize = dataView.getUint32(4, true);
+  if (riffSize < 4 || riffSize > bytes.byteLength - 8) {
+    throw new Error('Geçersiz WAV RIFF boyutu: chunk sınırları dosyayı aşıyor');
+  }
+  const riffEnd = riffSize + 8;
 
   let fmtOffset = -1;
+  let fmtSize = 0;
   let dataOffset = -1;
   let dataSize = 0;
 
   let offset = 12;
-  while (offset + 8 <= bytes.byteLength) {
+  while (offset < riffEnd) {
+    if (offset + 8 > riffEnd) {
+      throw new Error('WAV chunk başlığı kesik (bozuk dosya)');
+    }
     const chunkId = readString(offset, 4);
     const chunkSize = dataView.getUint32(offset + 4, true);
     const chunkDataStart = offset + 8;
+    if (chunkSize > riffEnd - chunkDataStart) {
+      throw new Error(`WAV ${chunkId} chunk boyutu dosya sınırını aşıyor`);
+    }
+    const nextOffset = chunkDataStart + chunkSize + (chunkSize % 2);
+    if (nextOffset > riffEnd) {
+      throw new Error(`WAV ${chunkId} chunk padding'i kesik (bozuk dosya)`);
+    }
 
     if (chunkId === 'fmt ') {
       fmtOffset = chunkDataStart;
+      fmtSize = chunkSize;
     } else if (chunkId === 'data') {
       dataOffset = chunkDataStart;
-      // Truncated dosyalarda (yarım kalan indirme/yazma) `data` chunk'ının
-      // beyan ettiği boyut gerçek dosya boyutunu aşabilir — mevcut baytlarla
-      // sınırlanır ki elde ne varsa ondan çözülebilsin.
-      dataSize = Math.min(chunkSize, bytes.byteLength - chunkDataStart);
+      dataSize = chunkSize;
     }
-
-    // Bir chunk beyan edilen boyutuyla dosya sınırlarını aşıyorsa devamı
-    // güvenilmezdir (bozuk/kesik dosya) — taramayı burada durdur, o ana kadar
-    // bulunanlarla devam edilir.
-    if (chunkDataStart + chunkSize > bytes.byteLength) break;
-    offset = chunkDataStart + chunkSize + (chunkSize % 2);
+    offset = nextOffset;
   }
 
   if (fmtOffset < 0 || dataOffset < 0) {
     throw new Error('WAV fmt veya data chunk bulunamadı');
   }
-  if (fmtOffset + 16 > bytes.byteLength) {
+  if (fmtSize < 16 || fmtOffset + fmtSize > bytes.byteLength) {
     throw new Error('WAV fmt chunk çok kısa (bozuk dosya)');
   }
 
@@ -62,7 +72,7 @@ export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
   // gerçek format fmt chunk'ının uzantı kısmındaki GUID'in ilk 2 baytındadır.
   let effectiveFormat = format;
   if (format === 0xfffe) {
-    if (fmtOffset + 26 > bytes.byteLength) {
+    if (fmtSize < 26) {
       throw new Error('WAV extensible fmt chunk çok kısa (bozuk dosya)');
     }
     effectiveFormat = dataView.getUint16(fmtOffset + 24, true);
@@ -88,7 +98,12 @@ export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
     throw new Error(`Geçersiz WAV örnek oranı: ${wavSampleRate}`);
   }
 
-  const sampleCount = Math.floor(dataSize / (numChannels * (bitsPerSample / 8)));
+  const bytesPerSample = bitsPerSample / 8;
+  const frameSize = numChannels * bytesPerSample;
+  if (dataSize % frameSize !== 0) {
+    throw new Error('WAV data chunk tam örnek frame içermiyor (bozuk dosya)');
+  }
+  const sampleCount = dataSize / frameSize;
   const samples = new Float32Array(sampleCount);
 
   let readIndex = dataOffset;
@@ -126,7 +141,9 @@ export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
         throw new Error(`Desteklenmeyen bit derinliği: ${bitsPerSample}`);
       }
     }
-    samples[i] = sum / numChannels;
+    const sample = sum / numChannels;
+    if (!Number.isFinite(sample)) throw new Error('WAV örnek verisi sonlu değil');
+    samples[i] = sample;
   }
 
   return { samples, sampleRate: wavSampleRate };
@@ -201,6 +218,9 @@ export function loopSamples(
   loop = true,
   crossfade = false,
 ): Float32Array {
+  if (!Number.isInteger(targetLength) || targetLength < 0) {
+    throw new Error(`loopSamples hedef uzunluğu negatif/tamsayı değil: ${targetLength}`);
+  }
   if (samples.length >= targetLength) return samples.slice(0, targetLength);
   if (samples.length === 0) return new Float32Array(targetLength);
 

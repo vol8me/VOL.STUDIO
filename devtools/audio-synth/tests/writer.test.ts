@@ -77,6 +77,22 @@ describe('WAV writer', () => {
     const header = readFileSync(outPath).subarray(0, 44);
     expect(header.readUInt16LE(22)).toBe(2); // stereo
   });
+
+  it('geçersiz sample rate, kanal uzunluğu ve finite olmayan örneği reddeder', () => {
+    const result = synth(0.05, { wave: 'sine', frequency: 440 });
+    expect(() => writeWav(join(TEST_DIR, 'bad-rate.wav'), { ...result, sampleRate: 0 })).toThrow(
+      /örnek oranı/,
+    );
+    expect(() =>
+      writeWav(join(TEST_DIR, 'bad-channels.wav'), {
+        ...result,
+        channels: [result.channels[0], new Float32Array(1)],
+      }),
+    ).toThrow(/uzunluğu eşit/);
+    const invalid = result.channels[0];
+    invalid[0] = Number.NaN;
+    expect(() => writeWav(join(TEST_DIR, 'bad-sample.wav'), result)).toThrow(/sonlu olmayan/);
+  });
 });
 
 describe('OGG writer', () => {
@@ -139,17 +155,16 @@ describe('OGG writer', () => {
     expect(Buffer.isBuffer(call?.[2]?.input)).toBe(true);
   });
 
-  it('PCM girdisi [-1,1] aralığına clamp edilir', () => {
-    const result = synth(0.02, { wave: 'sine', frequency: 440, normalize: false, gain: 5 });
-    writeOgg(join(TEST_DIR, 'clamp.ogg'), result, { targetGain: 3 });
+  it('geçersiz OGG kalite/gain değerlerini encode etmeden reddeder', () => {
+    const result = synth(0.02, { wave: 'sine', frequency: 440 });
 
-    const call = spawnSyncMock.mock.calls[0];
-    const input = call?.[2]?.input as Buffer;
-    for (let i = 0; i < input.length; i += 4) {
-      const sample = input.readFloatLE(i);
-      expect(sample).toBeGreaterThanOrEqual(-1);
-      expect(sample).toBeLessThanOrEqual(1);
-    }
+    expect(() => writeOgg(join(TEST_DIR, 'bad-quality.ogg'), result, { quality: 11 })).toThrow(
+      /kalite/,
+    );
+    expect(() => writeOgg(join(TEST_DIR, 'bad-gain.ogg'), result, { targetGain: 3 })).toThrow(
+      /gain/,
+    );
+    expect(spawnSyncMock).not.toHaveBeenCalled();
   });
 
   it('FFmpeg sıfırdan farklı çıkış koduyla dönerse hata fırlatır', () => {

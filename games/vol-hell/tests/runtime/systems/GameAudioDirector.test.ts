@@ -59,6 +59,24 @@ describe('GameAudioDirector', () => {
     expect(audio.playAmbient).toHaveBeenCalledOnce();
   });
 
+  it('tek bozuk opsiyonel track diğer müzik yollarını devre dışı bırakmaz', async () => {
+    audio.loadMusic.mockRejectedValueOnce(new Error('kırık death track'));
+    const director = new GameAudioDirector(makeScene(), createRandom(1));
+
+    director.start();
+    await settleMicrotasks();
+    audio.playMusic.mockClear();
+
+    director.setBossActive(true);
+    director.update(16, 12, true);
+
+    expect(audio.playMusic).toHaveBeenCalledWith(
+      'sovereign',
+      expect.objectContaining({ crossfade: true }),
+    );
+    expect(audio.playAmbient).toHaveBeenCalled();
+  });
+
   it('bozuk random değeri ölüm parçası seçimini bozmaz', () => {
     const random = { next: () => Number.NaN } as ReturnType<typeof createRandom>;
     const director = new GameAudioDirector(makeScene(), random);

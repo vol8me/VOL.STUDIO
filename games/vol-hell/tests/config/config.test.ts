@@ -89,9 +89,10 @@ describe('config ilişkileri — oyun dengesi', () => {
     }
   });
 
-  it('maxDeltaMs en az bir kare — sıfır delta oyunu dondurmaz', () => {
-    expect(gameConfig.maxDeltaMs).toBeGreaterThan(0);
-    expect(gameConfig.maxDeltaMs).toBeLessThanOrEqual(1000 / 20);
+  it('sabit simülasyon adımı ve catch-up sınırları geçerlidir', () => {
+    expect(gameConfig.fixedStepMs).toBeGreaterThan(0);
+    expect(gameConfig.maxSimulationStepsPerFrame).toBeGreaterThan(0);
+    expect(gameConfig.maxTimerCatchUpSteps).toBeGreaterThan(0);
   });
 
   it('overlap çözümü en az bir iterasyon çalışır', () => {

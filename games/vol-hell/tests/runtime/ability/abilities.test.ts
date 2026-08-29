@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { StatBlock, Vector2, createRandom } from '@volstudio/core';
 import type { HellStat, HellStatBlock } from '@/config/stats';
 import {
@@ -14,6 +14,7 @@ import type { MultiShotAbility } from '@/runtime/ability/MultiShotAbility';
 import { bulletConfig } from '@/config/bullet';
 import { ENEMY_CATALOG } from '@/config/enemies/catalog';
 import { Enemy } from '@/runtime/entity/Enemy';
+import { TurretShot } from '@/runtime/entity/TurretShot';
 import { createEnemyStats } from '@/runtime/entity/enemyStats';
 import type { BulletManager } from '@/runtime/entity/BulletManager';
 import type { Border } from '@/runtime/entity/Border';
@@ -103,11 +104,20 @@ describe('Ability sistemi', () => {
   const playerPos = new Vector2(400, 300);
   const aim = new Vector2(1, 0);
 
-  function makeEnemyAt(x: number, y: number): Enemy {
+  function makeEnemyAt(x: number, y: number, health?: number): Enemy {
     const definition = ENEMY_CATALOG.grunt;
+    const enemyStats = createEnemyStats(definition);
+    if (health !== undefined) {
+      enemyStats.addModifier({
+        id: 'test-health',
+        stat: 'health',
+        type: 'multiply',
+        value: health / definition.baseStats.health,
+      });
+    }
     return new Enemy(makeScene(), x, y, effects, {
       definition,
-      stats: createEnemyStats(definition),
+      stats: enemyStats,
       scoreValue: definition.scoreValue,
     });
   }
@@ -127,6 +137,24 @@ describe('Ability sistemi', () => {
   });
 
   describe('slotlar ve cooldown', () => {
+    it('görsel RNG için gameplay RNG tüketmez', () => {
+      const gameplayRandom = {
+        next: vi.fn(() => 0.5),
+        bipolar: vi.fn(() => 0),
+      };
+
+      new AbilityRuntime({
+        scene: makeScene(),
+        effects,
+        border: makeBorder(),
+        random: gameplayRandom,
+        bullets: makeBullets(spawned),
+        playerStats: stats,
+      });
+
+      expect(gameplayRandom.next).not.toHaveBeenCalled();
+    });
+
     it('boş slotta tuşa basmak sessizce hiçbir şey yapmaz', () => {
       runtime.update(16, playerPos, aim, []);
       expect(runtime.tryActivate('primary')).toBe(false);
@@ -455,6 +483,31 @@ describe('Ability sistemi', () => {
 
       // 6 x 1.5 = 9; ilk tick sonrası grunt 35 can taşır.
       expect(enemy.getHealthRatio()).toBeCloseTo(35 / 44, 6);
+    });
+
+    it('sürenin tam katındaki son hasar tickini kaybetmez', () => {
+      runtime.assign('primary', createAbility('fireZone'));
+      const enemy = makeEnemyAt(playerPos.x + 30, playerPos.y, 1_000);
+
+      runtime.update(16, playerPos, aim, [enemy]);
+      runtime.tryActivate('primary');
+      const params = ABILITY_CATALOG.fireZone.fire!;
+      runtime.update(params.durationMs, playerPos, aim, [enemy]);
+
+      expect(effects.calls.filter((id) => id === 'fireZoneBurn')).toHaveLength(10);
+      expect(runtime.getActiveZoneCount()).toBe(0);
+    });
+  });
+
+  describe('kule mermisi', () => {
+    it('tek frame içinde hedefi aşan projectile yine çarpar', () => {
+      const enemy = makeEnemyAt(30, 0, 1_000);
+      const shot = new TurretShot(makeScene(), 0, 0, enemy, 5, effects);
+
+      shot.update(100, [enemy]);
+
+      expect(effects.calls).toContain('turretImpact');
+      expect(shot.isActive).toBe(false);
     });
   });
 

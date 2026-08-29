@@ -107,7 +107,7 @@ describe('WaveManager', () => {
     expect(manager.isRunComplete()).toBe(true);
     expect(manager.getCurrentWave()).toBe(waveConfig.totalWaves);
     expect(events.onWaveStart).toHaveBeenCalledTimes(waveConfig.totalWaves);
-    expect(events.onWaveEnd).toHaveBeenCalledTimes(waveConfig.totalWaves);
+    expect(events.onWaveEnd).toHaveBeenCalledTimes(waveConfig.totalWaves - 1);
   });
 
   it('uzun frame maksimum adım sınırını aşarsa sonsuz döngüye girmez', () => {
@@ -285,7 +285,7 @@ describe('WaveManager', () => {
     isBlockerAlive.mockReturnValue(false);
     manager.notifyBlockerDefeated();
 
-    expect(events.onWaveEnd).toHaveBeenLastCalledWith(waveConfig.bossWave);
+    expect(events.onWaveEnd).not.toHaveBeenCalledWith(waveConfig.bossWave);
     expect(events.onRunComplete).toHaveBeenCalled();
     expect(events.onWaveClear).not.toHaveBeenCalled();
     expect(manager.isRunComplete()).toBe(true);

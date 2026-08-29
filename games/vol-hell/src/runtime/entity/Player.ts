@@ -137,12 +137,6 @@ export class Player extends MovableController {
   update(delta: number): void {
     const safeDelta = safeDeltaMs(delta);
     this.syncMaxHealth();
-    const isDashing = this.dashTimer > 0;
-
-    // Dash şarjı — dash dışında her zaman dolar (cooldown tabanlı)
-    if (!isDashing) {
-      this.dashCharge = Math.min(1, this.dashCharge + safeDelta / playerConfig.dashChargeMs);
-    }
 
     // Dash timer decrement
     if (this.dashTimer > 0) {
@@ -151,6 +145,15 @@ export class Player extends MovableController {
         this.dashTimer = 0;
         this.dashing = false;
       }
+    }
+
+    // Hız seçimi timer güncellendikten sonra yapılır. Eski snapshot, dash'in
+    // bittiği son frame'de bir frame daha dash hızını uyguluyordu.
+    const isDashing = this.dashing && this.dashTimer > 0;
+
+    // Dash şarjı — dash dışında her zaman dolar (cooldown tabanlı)
+    if (!isDashing) {
+      this.dashCharge = Math.min(1, this.dashCharge + safeDelta / playerConfig.dashChargeMs);
     }
 
     // Invulnerability timer decrement (sadece dash i-frame)
@@ -172,9 +175,6 @@ export class Player extends MovableController {
     // Hasar flash efekti — hasarı engellemez, sadece görsel geri bildirim
     if (this.hitFlashTimer > 0) {
       this.hitFlashTimer -= safeDelta;
-      if (this.hitFlashTimer <= 0 && !this.dashing) {
-        this.arc.setFillStyle(playerConfig.color, playerConfig.fillAlpha);
-      }
     }
 
     // Dash ghost bırakma
@@ -197,8 +197,11 @@ export class Player extends MovableController {
       this.arc.y = this.currentBorder.clampY(this.arc.y, playerConfig.hitboxRadius);
     }
 
-    // Dash görsel: dash sırasında renk değişimi (invulnerability yanıp sönmesi ile çakışmasın)
-    if (this.dashing) {
+    // Görsel öncelik: hasar flash > dash > normal. Her frame normal rengi
+    // yazmak, 150 ms'lik flash'ı tek frame'e indiriyordu.
+    if (this.hitFlashTimer > 0) {
+      this.arc.setFillStyle(playerConfig.hitColor, playerConfig.fillAlpha);
+    } else if (isDashing) {
       this.arc.setFillStyle(playerConfig.dashColor, playerConfig.dashAlpha);
     } else if (!this.invulnerable) {
       this.arc.setFillStyle(playerConfig.color, playerConfig.fillAlpha);
@@ -223,7 +226,10 @@ export class Player extends MovableController {
     this.dashTimer = playerConfig.dashDurationMs;
     this.dashCharge = 0;
     this.invulnerable = true;
-    this.invulnerabilityTimer = Math.max(playerConfig.dashIFrameMs, this.invulnerabilityTimer);
+    this.invulnerabilityTimer = Math.max(
+      Math.min(playerConfig.dashIFrameMs, playerConfig.dashDurationMs),
+      this.invulnerabilityTimer,
+    );
 
     this.ghostTimer = 0;
 

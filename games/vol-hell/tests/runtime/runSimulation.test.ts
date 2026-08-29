@@ -62,7 +62,7 @@ describe('koşu simülasyonu — entegrasyon sağlamlığı', () => {
 
     expect(result.waves).toEqual(Array.from({ length: waveConfig.totalWaves }, (_, i) => i + 1));
     expect(result.shopTriggers).toEqual(
-      Array.from({ length: waveConfig.totalWaves }, (_, i) => i + 1),
+      Array.from({ length: waveConfig.totalWaves - 1 }, (_, i) => i + 1),
     );
     expect(result.eliteWaves).toEqual([waveConfig.eliteWave]);
     expect(result.bossWaves).toEqual([waveConfig.bossWave]);

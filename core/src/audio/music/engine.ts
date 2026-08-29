@@ -120,23 +120,30 @@ export class MusicEngine {
 
   /** Track'i buffer'ları ile önceden yükler.
    *  Bir stem yüklenemezse diğerlerini engellemez, sadece uyarır. */
-  async loadTrack(track: MusicTrack): Promise<void> {
+  async loadTrack(track: MusicTrack): Promise<boolean> {
     this.tracks.set(track.id, track);
+    let loadedAny = false;
     const tasks = track.stems.map(async (stem) => {
       const cacheKey = this.bufferCacheKey(track.id, stem);
-      if (this.buffers.has(cacheKey)) return;
+      if (this.buffers.has(cacheKey)) {
+        loadedAny = true;
+        return;
+      }
       try {
         if (stem.buffer) {
           this.buffers.set(cacheKey, stem.buffer);
+          loadedAny = true;
         } else if (stem.src) {
           const buffer = await this.loader.loadFromUrl(stem.src);
           this.buffers.set(cacheKey, buffer);
+          loadedAny = true;
         }
       } catch (err) {
         console.warn(`[MusicEngine] Stem yüklenemedi: ${stem.id}`, err);
       }
     });
     await Promise.all(tasks);
+    return loadedAny;
   }
 
   /** Belirtilen track'i çalmaya başlar. */

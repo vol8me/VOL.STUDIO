@@ -473,7 +473,7 @@ export class CardScreens {
       }),
       // Yetenek kartında ikinci buton: sürüklemeyi keşfetmeyen oyuncu da takabilsin.
       equipLabel: draggable && !equippedSlot ? i18next.t('volhell:ability.equip') : undefined,
-      dragData: draggable ? owned.instanceId : undefined,
+      dragData: draggable && !equippedSlot ? owned.instanceId : undefined,
     };
   }
 }

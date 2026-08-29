@@ -48,14 +48,16 @@ export class FireZone {
     if (!this.active) return;
     const safeDelta = safeDeltaMs(deltaMs);
 
-    this.elapsedMs += safeDelta;
-    if (this.elapsedMs >= this.params.durationMs) {
-      this.destroy();
-      return;
-    }
+    // Süre sınırında önce o ana kadar düşen hasar tick'ini uygula. Aksi halde
+    // duration, tick aralığının tam katı olduğunda son tick sessizce kaybolur.
+    const remainingMs = Math.max(0, this.params.durationMs - this.elapsedMs);
+    const appliedDelta = Math.min(safeDelta, remainingMs);
+    this.elapsedMs += appliedDelta;
 
-    this.updateVisuals(safeDelta);
-    this.updateDamage(safeDelta, enemies);
+    this.updateVisuals(appliedDelta);
+    this.updateDamage(appliedDelta, enemies);
+
+    if (this.elapsedMs >= this.params.durationMs) this.destroy();
   }
 
   destroy(): void {
@@ -86,23 +88,32 @@ export class FireZone {
 
     this.emberTimerMs += deltaMs;
     if (this.emberTimerMs < fireZoneVisualConfig.emberIntervalMs) return;
-    this.emberTimerMs = 0;
+    this.emberTimerMs -= fireZoneVisualConfig.emberIntervalMs;
     this.effects.play('fireZoneTick', this.x, this.y);
   }
 
   private updateDamage(deltaMs: number, enemies: readonly Enemy[]): void {
     this.tickTimerMs += deltaMs;
-    if (this.tickTimerMs < this.params.tickMs) return;
-    this.tickTimerMs = 0;
+    const tickMs = this.params.tickMs;
+    if (!(tickMs > 0)) return;
 
-    for (const enemy of enemies) {
-      if (!enemy.isAlive) continue;
-      if (Math.hypot(enemy.x - this.x, enemy.y - this.y) > this.params.radius + enemy.radius) {
-        continue;
+    const maxTicks = Math.max(1, Math.ceil(this.params.durationMs / tickMs) + 1);
+    let ticks = 0;
+    while (this.tickTimerMs >= tickMs && ticks < maxTicks) {
+      this.tickTimerMs -= tickMs;
+      ticks++;
+      for (const enemy of enemies) {
+        if (!enemy.isAlive) continue;
+        if (Math.hypot(enemy.x - this.x, enemy.y - this.y) > this.params.radius + enemy.radius) {
+          continue;
+        }
+        // Yanan düşmanın üstünde kıvılcım: hasarın kimden geldiği görünür olsun.
+        this.effects.play('fireZoneBurn', enemy.x, enemy.y);
+        enemy.takeDamage(this.params.damagePerTick);
       }
-      // Yanan düşmanın üstünde kıvılcım: hasarın kimden geldiği görünür olsun.
-      this.effects.play('fireZoneBurn', enemy.x, enemy.y);
-      enemy.takeDamage(this.params.damagePerTick);
     }
+
+    // Süre finite olduğu için toplam tick sayısı duration/tick ile sınırlıdır;
+    // büyük frame'de bile final tick kaybolmaz.
   }
 }

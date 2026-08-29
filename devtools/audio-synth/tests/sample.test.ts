@@ -53,12 +53,27 @@ describe('Sample utils', () => {
     expect(Math.max(...samples.map(Math.abs))).toBeGreaterThan(0.5);
   });
 
-  it("decodeWav kesik (truncated) data chunk'ı çökmeden, mevcut baytlarla çözer", () => {
+  it("decodeWav kesik (truncated) data chunk'ı reddeder", () => {
     const wav = createTestWav(440, 0.1, 44100); // header(44) + data(4410*2=8820) = 8864 bayt
     const truncated = wav.slice(0, 44 + 100); // data chunk 8820 bayt iddia ediyor, yalnızca 100 bayt var
-    expect(() => decodeWav(truncated)).not.toThrow();
-    const { samples } = decodeWav(truncated);
-    expect(samples.length).toBe(50); // 100 bayt / 2 bayt (16-bit mono)
+    new DataView(truncated.buffer).setUint32(4, truncated.byteLength - 8, true);
+    expect(() => decodeWav(truncated)).toThrow(/data chunk boyutu/);
+  });
+
+  it('decodeWav imkânsız fmt chunk boyutunu DataView erişiminden önce reddeder', () => {
+    const wav = createTestWav(440, 0.05, 44100);
+    new DataView(wav.buffer).setUint32(16, 0xffff_ffff, true);
+
+    expect(() => decodeWav(wav)).toThrow(/fmt  chunk boyutu/);
+  });
+
+  it('decodeWav tam frame olmayan data chunkını reddeder', () => {
+    const wav = createTestWav(440, 0.05, 44100).slice(0, 46);
+    const view = new DataView(wav.buffer);
+    view.setUint32(4, 38, true);
+    view.setUint32(40, 1, true);
+
+    expect(() => decodeWav(wav)).toThrow(/tam örnek frame/);
   });
 
   it('decodeWav sıfır kanal sayısında temiz hata fırlatır (bölme sıfıra gitmez)', () => {
@@ -66,6 +81,13 @@ describe('Sample utils', () => {
     const corrupted = wav.slice();
     new DataView(corrupted.buffer).setUint16(22, 0, true); // numChannels ofseti
     expect(() => decodeWav(corrupted)).toThrow(/kanal sayısı/);
+  });
+
+  it('decodeWav sıfır örnek oranını reddeder', () => {
+    const wav = createTestWav(440, 0.05, 44100);
+    new DataView(wav.buffer).setUint32(24, 0, true);
+
+    expect(() => decodeWav(wav)).toThrow(/örnek oranı/);
   });
 
   it('decodeWav desteklenmeyen PCM bit derinliğinde temiz hata fırlatır', () => {

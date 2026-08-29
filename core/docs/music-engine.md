@@ -41,7 +41,9 @@ games/vol-hell/scripts/audio/
 
 Pipeline:
 
-1. Track tanımı `MusicEngine.loadTrack(track)` ile yüklenir.
+1. Track tanımı `MusicEngine.loadTrack(track)` ile yüklenir. Dönüş değeri,
+   en az bir stem'in başarıyla yüklendiğini bildirir; tek bir bozuk stem diğer
+   stem'leri veya diğer track'leri kilitlemez.
 2. Her stem için `StemLoader.loadFromUrl(src)` ile `AudioBuffer` çözülür.
 3. `MusicEngine.play(trackId)` tüm stem'leri aynı `AudioContext` zamanında başlatır.
 4. Her stem kendi `GainNode` kanalından master mix'e bağlanır.
@@ -69,6 +71,15 @@ Bu maddeler kolayca yanlış varsayılan, ölçülerek doğrulanmış davranış
   hata fırlatır, sessizce `Infinity` üretmez.
 - **Ducking zinciri `MusicEngineOptions.destination` ile verilir.** Motorun
   çıkışını dışarıdan koparıp yeniden bağlamak gerekmez.
+- **Buffer önbelleği içerik/track kapsamlıdır.** `src` veren stem'ler kaynak
+  adresiyle, doğrudan `AudioBuffer` veren stem'ler `trackId + stemId` ile
+  anahtarlanır; aynı stem adı iki track'in buffer'ını karıştıramaz.
+- **Eşzamanlı `play()` çağrılarında son çağrı kazanır.** Yükleme beklerken daha
+  yeni bir `play()`, `crossfadeTo()` veya `stop()` gelirse eski asenkron işlem
+  ortak çalma durumunu değiştiremez.
+- **`dispose()` abonelikleri de temizler.** `onTrackEnd()` ile eklenen
+  dinleyiciler motor ömrü bittiğinde tutulmaz; ayrıca buffer cache ve mixer
+  kanalları bırakılır.
 
 ## Hızlı Başlangıç
 
@@ -193,18 +204,18 @@ gainMap: {
 
 ## MusicEngine API
 
-| Metot                                       | Açıklama                                 |
-| ------------------------------------------- | ---------------------------------------- |
-| `loadTrack(track)`                          | Track buffer'larını önceden yükler       |
-| `play(trackId, options?)`                   | Track çalmaya başlar                     |
-| `stop(options?)`                            | Çalmayı fade out ile durdurur            |
-| `crossfadeTo(trackId, duration?, options?)` | Diğer track'e geçer (bkz. aşağıda)       |
-| `setState(state, fadeTime?)`                | State günceller                          |
-| `setIntensity(value, fadeTime?)`            | Yoğunluk (0-1) ayarlar                   |
-| `setMasterVolume(value, fadeTime?)`         | Master seviye ayarlar                    |
-| `mute(muted, fadeTime?)`                    | Susturur / ayarlanan seviyeye açar       |
-| `getCurrentState()`                         | Track id, state ve çalma durumu          |
-| `dispose()`                                 | Tüm kaynakları ve buffer cache'i bırakır |
+| Metot                                       | Açıklama                                                                  |
+| ------------------------------------------- | ------------------------------------------------------------------------- |
+| `loadTrack(track)`                          | Track buffer'larını yükler; `boolean`, en az bir stem başarısını bildirir |
+| `play(trackId, options?)`                   | Track çalmaya başlar                                                      |
+| `stop(options?)`                            | Çalmayı fade out ile durdurur                                             |
+| `crossfadeTo(trackId, duration?, options?)` | Diğer track'e geçer (bkz. aşağıda)                                        |
+| `setState(state, fadeTime?)`                | State günceller                                                           |
+| `setIntensity(value, fadeTime?)`            | Yoğunluk (0-1) ayarlar                                                    |
+| `setMasterVolume(value, fadeTime?)`         | Master seviye ayarlar                                                     |
+| `mute(muted, fadeTime?)`                    | Susturur / ayarlanan seviyeye açar                                        |
+| `getCurrentState()`                         | Track id, state ve çalma durumu                                           |
+| `dispose()`                                 | Tüm kaynakları ve buffer cache'i bırakır                                  |
 
 ## Çapraz Geçiş (Crossfade)
 

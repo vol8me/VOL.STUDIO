@@ -322,6 +322,33 @@ describe('MusicEngine — eşzamanlılık ve buffer önbelleği', () => {
     expect(stemIds).toEqual(['b']);
   });
 
+  it("load promise'ları ters sırada çözülse bile son play state'i kazanır", async () => {
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    const bufferA = makeBuffer(fakeContext, 2);
+    const bufferB = makeBuffer(fakeContext, 3);
+    const tracks = (engine as unknown as { tracks: Map<string, unknown> }).tracks;
+    tracks.set('trackA', { id: 'trackA', bpm: 120, stems: [{ id: 'a', src: 'a.ogg' }] });
+    tracks.set('trackB', { id: 'trackB', bpm: 120, stems: [{ id: 'b', src: 'b.ogg' }] });
+
+    let resolveA!: (buffer: AudioBuffer) => void;
+    let resolveB!: (buffer: AudioBuffer) => void;
+    vi.spyOn(engine.loader, 'loadFromUrl').mockImplementation((src) => {
+      return new Promise<AudioBuffer>((resolve) => {
+        if (src === 'a.ogg') resolveA = resolve;
+        else resolveB = resolve;
+      });
+    });
+
+    const playA = engine.play('trackA');
+    const playB = engine.play('trackB');
+    resolveB(bufferB as unknown as AudioBuffer);
+    await Promise.resolve();
+    resolveA(bufferA as unknown as AudioBuffer);
+    await Promise.all([playA, playB]);
+
+    expect(engine.getCurrentState().trackId).toBe('trackB');
+  });
+
   it('play() beklerken stop() gelirse, play() döndüğünde sesi geri açmaz', async () => {
     const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
     const buffer = makeBuffer(fakeContext, 2);

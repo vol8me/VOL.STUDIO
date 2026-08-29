@@ -1,6 +1,7 @@
 import { createRandom, type Random } from '@volstudio/core/random/random';
 import { SpatialIndex } from '@volstudio/core/spatial/SpatialIndex';
 import { simulationConfig } from '@/config/simulation';
+import { gameConfig } from '@/config/game';
 import { economyConfig } from '@/config/economy';
 import { enemyConfig } from '@/config/enemy';
 import { physicsConfig } from '@/config/physics';
@@ -206,13 +207,27 @@ export class VolHellSimulation {
     const spawnInterval = nonNegativeFinite(difficulty.spawnIntervalMs);
     const maxEnemies = Math.max(0, Math.floor(nonNegativeFinite(difficulty.maxEnemies)));
 
-    if (
-      spawnInterval > 0 &&
-      this.spawnTimerMs >= spawnInterval &&
-      this.enemies.length < maxEnemies
-    ) {
-      if (this.spawnFromCatalog(difficulty.scoreMultiplier)) this.spawnTimerMs = 0;
-      else this.spawnTimerMs = spawnInterval * enemyConfig.spawnRetryIntervalFactor;
+    if (spawnInterval > 0 && this.enemies.length < maxEnemies) {
+      let attempts = 0;
+      while (
+        this.spawnTimerMs >= spawnInterval &&
+        this.enemies.length < maxEnemies &&
+        attempts < gameConfig.maxTimerCatchUpSteps
+      ) {
+        if (this.spawnFromCatalog(difficulty.scoreMultiplier)) {
+          this.spawnTimerMs -= spawnInterval;
+        } else {
+          this.spawnTimerMs = Math.min(
+            this.spawnTimerMs,
+            spawnInterval * enemyConfig.spawnRetryIntervalFactor,
+          );
+          break;
+        }
+        attempts++;
+      }
+      if (attempts >= gameConfig.maxTimerCatchUpSteps && this.spawnTimerMs >= spawnInterval) {
+        this.spawnTimerMs %= spawnInterval;
+      }
     }
 
     // Her düşman aynı frame'in başındaki komşuluk görünümünü kullanır. İndeks

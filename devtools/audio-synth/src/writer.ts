@@ -10,15 +10,66 @@ const DITHER_SEED = 0x0d17;
 const BITS_PER_SAMPLE = 16;
 const BYTES_PER_SAMPLE = BITS_PER_SAMPLE / 8;
 
+interface ValidatedAudioInput {
+  numChannels: number;
+  sampleCount: number;
+  sampleRate: number;
+}
+
+/** Writer sınırlarını tek yerde doğrular; bozuk veri dosyaya sessizce yazılmaz. */
+function validateAudioInput(
+  result: SynthesisResult,
+  targetGain: number,
+  quality?: number,
+): ValidatedAudioInput {
+  if (!result || !Array.isArray(result.channels)) {
+    throw new Error('Ses çıktısı kanal dizisi içermeli');
+  }
+  const { channels, sampleRate } = result;
+  const numChannels = channels.length;
+  if (!Number.isInteger(numChannels) || numChannels < 1 || numChannels > 0xffff) {
+    throw new Error(`Geçersiz kanal sayısı: ${numChannels}`);
+  }
+  if (!Number.isInteger(sampleRate) || sampleRate <= 0 || sampleRate > 0xffff_ffff) {
+    throw new Error(`Geçersiz örnek oranı: ${sampleRate}`);
+  }
+  if (!Number.isFinite(targetGain) || targetGain < 0 || targetGain > 1) {
+    throw new Error(`Geçersiz hedef gain: ${targetGain}`);
+  }
+  if (quality !== undefined && (!Number.isFinite(quality) || quality < 0 || quality > 10)) {
+    throw new Error(`Geçersiz OGG kalite değeri: ${quality}`);
+  }
+
+  const first = channels[0];
+  if (!(first instanceof Float32Array)) throw new Error('Ses kanalları Float32Array olmalı');
+  const sampleCount = first.length;
+  for (const [index, channel] of channels.entries()) {
+    if (!(channel instanceof Float32Array)) throw new Error(`Kanal ${index} Float32Array değil`);
+    if (channel.length !== sampleCount) {
+      throw new Error(`Ses kanallarının uzunluğu eşit değil (kanal ${index})`);
+    }
+    for (const sample of channel) {
+      if (!Number.isFinite(sample)) throw new Error(`Kanal ${index} sonlu olmayan örnek içeriyor`);
+    }
+  }
+
+  const dataSize = sampleCount * numChannels * BYTES_PER_SAMPLE;
+  if (!Number.isSafeInteger(dataSize) || dataSize > 0xffff_ffff - 36) {
+    throw new Error('WAV veri boyutu RIFF sınırını aşıyor');
+  }
+  if (sampleRate * numChannels * BYTES_PER_SAMPLE > 0xffff_ffff) {
+    throw new Error('WAV byte rate alanı taşacak kadar büyük');
+  }
+  return { numChannels, sampleCount, sampleRate };
+}
+
 /**
  * SynthesisResult içeriğini 16-bit PCM WAV dosyasına yazar. Mono veya stereo.
  *
  * `targetGain` varsayılanı 1.0'dır; headroom kararı tek yerde (normalize) kalır.
  */
 export function writeWav(filePath: string, result: SynthesisResult, targetGain = 1): void {
-  const { channels, sampleRate } = result;
-  const numChannels = channels.length;
-  const sampleCount = channels[0]?.length ?? 0;
+  const { numChannels, sampleCount, sampleRate } = validateAudioInput(result, targetGain);
 
   const dataSize = sampleCount * numChannels * BYTES_PER_SAMPLE;
   const buffer = Buffer.alloc(44 + dataSize);
@@ -146,11 +197,9 @@ function toInterleavedPcm(result: SynthesisResult, targetGain: number): Buffer {
  * asset olarak kalmalı; OGG'nin bit-eşitliği beklenmemeli.
  */
 export function writeOgg(filePath: string, result: SynthesisResult, opts: OggOptions = {}): void {
-  ensureFfmpeg();
-
   const { quality = 4, targetGain = 1 } = opts;
-  const { sampleRate, channels } = result;
-  const numChannels = channels.length;
+  const { sampleRate, numChannels } = validateAudioInput(result, targetGain, quality);
+  ensureFfmpeg();
   const pcm = toInterleavedPcm(result, targetGain);
 
   mkdirSync(dirname(filePath), { recursive: true });

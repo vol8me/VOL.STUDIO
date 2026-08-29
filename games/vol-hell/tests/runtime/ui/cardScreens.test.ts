@@ -230,6 +230,17 @@ describe('CardScreens — dalga arası akış', () => {
     expect(cards.getEquipped('secondary')?.instanceId).toBe(owned.instanceId);
   });
 
+  it('takılı yetenek kartı aynı slota reset için sürüklenemez', () => {
+    const owned = cards.acquire(CARD_CATALOG.cardChainLightning);
+    cards.equip(owned.instanceId, 'primary');
+    screens.openIntermission(6);
+
+    const tile = root.querySelector<HTMLElement>('.vol-card-shop__abilities .vol-card');
+    expect(tile).not.toBeNull();
+    expect(tile?.draggable).toBe(false);
+    expect(owned.instanceId).toBeTruthy();
+  });
+
   it('slot temizleme butonu yeteneği söker', () => {
     cards.acquire(CARD_CATALOG.cardTurret);
     screens.openIntermission(7);

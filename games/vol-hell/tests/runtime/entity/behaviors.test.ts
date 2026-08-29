@@ -298,7 +298,7 @@ describe('applySwarmerBehavior', () => {
     expect(result!.radius).toBe(SWARMER_PARAMS.spawnRadius);
   });
 
-  it('kapasite doluysa doğurmaz ama sayacı sıfırlar', () => {
+  it('kapasite doluysa doğurmaz ama biriken süreyi korur', () => {
     const state = createSwarmerState();
     state.aliveMinions = SWARMER_PARAMS.maxMinions;
     const request = createMinionSpawnRequest();
@@ -313,7 +313,7 @@ describe('applySwarmerBehavior', () => {
     );
 
     expect(result).toBeNull();
-    expect(state.spawnTimerMs).toBe(0);
+    expect(state.spawnTimerMs).toBe(SWARMER_PARAMS.spawnIntervalMs);
   });
 
   it('kalan kapasite kadar doğurur — limiti aşmaz', () => {

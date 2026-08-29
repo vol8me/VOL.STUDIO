@@ -36,6 +36,8 @@ export class GameAudioDirector {
   /** Eski sahne örneğinin geç tamamlanan yüklemesi yeni koşuna sızmasın. */
   private lifecycleToken = 0;
   private stopped = false;
+  private readonly loadedMusicTrackIds = new Set<string>();
+  private readonly loadedAmbientTrackIds = new Set<string>();
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -55,35 +57,58 @@ export class GameAudioDirector {
     this.combatTimerMs = 0;
     this.ambientLoaded = false;
     this.musicLoaded = false;
+    this.loadedMusicTrackIds.clear();
+    this.loadedAmbientTrackIds.clear();
     this.bossActive = false;
     this.terminal = false;
 
-    void Promise.all([
-      ...deathTrackKeys.map((key) => gameAudio.loadMusic(musicTracks[key])),
-      ...ambientTrackKeys.map((key) => gameAudio.loadAmbient(musicTracks[key])),
-      gameAudio.loadMusic(musicTracks[combatTrackId]),
-      gameAudio.loadMusic(musicTracks[bossTrackId]),
-      gameAudio.loadMusic(musicTracks[victoryTrackId]),
-    ])
-      .then(() => {
-        // Oyuna hızlıca restart/MainMenu dönüşünde arka plan sesi çalmaya başlamasın.
-        if (
-          this.stopped ||
-          token !== this.lifecycleToken ||
-          !this.scene.scene.isActive(this.scene.scene.key)
-        ) {
-          return;
+    const musicTracksToLoad = [
+      ...deathTrackKeys.map((key) => musicTracks[key]),
+      musicTracks[combatTrackId],
+      musicTracks[bossTrackId],
+      musicTracks[victoryTrackId],
+    ];
+    const ambientTracksToLoad = ambientTrackKeys.map((key) => musicTracks[key]);
+    void Promise.allSettled([
+      ...musicTracksToLoad.map(async (track) => ({
+        kind: 'music' as const,
+        id: track.id,
+        loaded: await gameAudio.loadMusic(track),
+      })),
+      ...ambientTracksToLoad.map(async (track) => ({
+        kind: 'ambient' as const,
+        id: track.id,
+        loaded: await gameAudio.loadAmbient(track),
+      })),
+    ]).then((results) => {
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          console.warn('[GameAudioDirector] İsteğe bağlı parça yüklenemedi:', result.reason);
+          continue;
         }
-        this.ambientLoaded = true;
-        this.musicLoaded = true;
-        gameAudio.stopMusic(musicConfig.ambient.menuStopFadeSec);
+        if (result.value.loaded === false) continue;
+        if (result.value.kind === 'music') this.loadedMusicTrackIds.add(result.value.id);
+        else this.loadedAmbientTrackIds.add(result.value.id);
+      }
+
+      // Oyuna hızlıca restart/MainMenu dönüşünde arka plan sesi çalmaya başlamasın.
+      if (
+        this.stopped ||
+        token !== this.lifecycleToken ||
+        !this.scene.scene.isActive(this.scene.scene.key)
+      ) {
+        return;
+      }
+      this.ambientLoaded = this.loadedAmbientTrackIds.size > 0;
+      this.musicLoaded = this.loadedMusicTrackIds.size > 0;
+      if (!this.ambientLoaded && !this.musicLoaded) return;
+      gameAudio.stopMusic(musicConfig.ambient.menuStopFadeSec);
+      if (this.loadedAmbientTrackIds.has(musicConfig.ambient.calmTrackId)) {
         void gameAudio.playAmbient(musicConfig.ambient.calmTrackId, {
           fadeIn: musicConfig.ambient.fadeInSec,
         });
-      })
-      .catch((error: unknown) => {
-        console.warn('[GameAudioDirector] Ambiyans/müzik yüklenemedi:', error);
-      });
+      }
+    });
 
     void gameAudio.loadAllSfx();
   }
@@ -100,7 +125,7 @@ export class GameAudioDirector {
    */
   update(deltaMs: number, enemyCount: number, isPlaying: boolean): void {
     if (!isPlaying || this.terminal || this.stopped) return;
-    if (!this.ambientLoaded) return;
+    if (!this.ambientLoaded && !this.musicLoaded) return;
 
     const safeDelta = safeDeltaMs(deltaMs);
     const safeEnemyCount = Math.max(0, Math.floor(nonNegativeFinite(enemyCount)));
@@ -157,10 +182,12 @@ export class GameAudioDirector {
         this.ambientState = desired;
         const trackId =
           desired === 'tense' ? musicConfig.ambient.tenseTrackId : musicConfig.ambient.calmTrackId;
-        void gameAudio.playAmbient(trackId, {
-          crossfade: true,
-          fadeIn: musicConfig.ambient.fadeInSec,
-        });
+        if (this.loadedAmbientTrackIds.has(trackId)) {
+          void gameAudio.playAmbient(trackId, {
+            crossfade: true,
+            fadeIn: musicConfig.ambient.fadeInSec,
+          });
+        }
       }
     }
   }
@@ -170,10 +197,12 @@ export class GameAudioDirector {
       if (this.musicState !== 'boss') {
         this.musicState = 'boss';
         this.combatTimerMs = 0;
-        void gameAudio.playMusic(bossTrackId, {
-          crossfade: true,
-          fadeIn: musicConfig.boss.fadeInSec,
-        });
+        if (this.loadedMusicTrackIds.has(bossTrackId)) {
+          void gameAudio.playMusic(bossTrackId, {
+            crossfade: true,
+            fadeIn: musicConfig.boss.fadeInSec,
+          });
+        }
       }
       return;
     }
@@ -195,10 +224,12 @@ export class GameAudioDirector {
         if (this.combatTimerMs >= musicConfig.combat.holdMs) {
           this.musicState = 'combat';
           this.combatTimerMs = 0;
-          void gameAudio.playMusic(combatTrackId, {
-            crossfade: true,
-            fadeIn: musicConfig.combat.fadeInSec,
-          });
+          if (this.loadedMusicTrackIds.has(combatTrackId)) {
+            void gameAudio.playMusic(combatTrackId, {
+              crossfade: true,
+              fadeIn: musicConfig.combat.fadeInSec,
+            });
+          }
         }
       }
     } else {

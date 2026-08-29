@@ -5,6 +5,32 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-29 — VOL.HELL hardening turu: savaş döngüsü, ses ve zaman güvenliği
+
+Güncel ZIP'ten bildirilen 27 maddelik VOL.HELL denetimi kod ve regresyon
+testleriyle kapatıldı. Terminal dalga artık shop/intermission olayı üretmeden
+zafer akışına geçiyor; boss fire-rate ölçeklemesi gerçek saldırı aralığına
+bağlandı; aynı slota yeniden equip cooldown'u sıfırlamıyor. Mermi ve turret
+shot için ortak CORE `segmentCircleOverlap` süpürme yordamı kullanılıyor ve
+ömür sonu frame'i çarpışma çözümünden önce kaybolmuyor.
+
+Zaman tarafında sabit-adımlı accumulator simülasyonu, bounded catch-up ve
+interval çıkarma uygulandı; FireZone final tick'i, çoklu EnemyManager spawn'ı,
+dash/hit-flash önceliği, exact-overlap ayırma ve oyuncu temas grace'i korunuyor.
+SpatialGrid hareket sonrası artımlı güncelleniyor. Ability görsel RNG'si oyun
+RNG akışından ayrıldı; RunEconomy threshold hesabı kapalı formülle sabitlendi.
+
+Ses tarafında MusicEngine buffer anahtarı track/kaynak kimliğiyle ayrıştırıldı,
+play yarışları generation token ile bastırıldı ve dispose listener'ları
+temizliyor. GameAudioDirector track'leri `allSettled` ile bağımsız yüklüyor;
+tek bozuk opsiyonel asset kalan müzik ailelerini susturmuyor. AudioSynth WAV
+decoder chunk sınırlarını, writer'lar da rate/channel/gain/quality/data
+girdilerini yazmadan önce doğruluyor. Sidechain overlap release ve her loop
+sınırındaki crossfade için regresyonlar eklendi.
+
+**Doğrulama:** Paket testleri ve typecheck'ler kapı turunda yeniden
+çalıştırılacak; sonuçlar commit raporunda komut/çıktı olarak tutulacak.
+
 ## 2026-08-28 — VisualSynth + AudioSynth: extraction sonrası residue ve dependency sınırı
 
 Harici agent audit'inin bulguları dosya ağacı, import graph, package

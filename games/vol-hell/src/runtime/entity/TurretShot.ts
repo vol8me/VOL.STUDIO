@@ -4,6 +4,7 @@ import { RENDER_DEPTH } from '@/config/layers';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { Enemy } from './Enemy';
 import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
+import { segmentCircleOverlap } from '@volstudio/core';
 
 /**
  * Kulenin attığı mermi — hedefi TAKİP EDER ve çarpınca hasar verir.
@@ -23,6 +24,8 @@ export class TurretShot {
   private readonly damage: number;
   private ageMs = 0;
   private active = true;
+  private previousX: number;
+  private previousY: number;
 
   constructor(
     scene: Phaser.Scene,
@@ -48,6 +51,8 @@ export class TurretShot {
       turretVisualConfig.shotColor,
       1,
     );
+    this.previousX = this.dot.x;
+    this.previousY = this.dot.y;
     this.dot.setStrokeStyle(1, 0xffffff, 0.85);
     this.dot.setDepth(RENDER_DEPTH.bullet);
   }
@@ -59,12 +64,6 @@ export class TurretShot {
   update(deltaMs: number, enemies: readonly Enemy[]): void {
     if (!this.active) return;
     const safeDelta = safeDeltaMs(deltaMs);
-
-    this.ageMs += safeDelta;
-    if (this.ageMs >= turretVisualConfig.shotLifetimeMs) {
-      this.destroy();
-      return;
-    }
 
     if (this.target && !this.target.isAlive) {
       this.target = null;
@@ -78,11 +77,17 @@ export class TurretShot {
       this.dirY = dy / distance;
     }
 
-    const step = (turretVisualConfig.shotSpeed * safeDelta) / 1000;
+    const remainingMs = Math.max(0, turretVisualConfig.shotLifetimeMs - this.ageMs);
+    const movementDelta = Math.min(safeDelta, remainingMs);
+    this.previousX = this.dot.x;
+    this.previousY = this.dot.y;
+    const step = (turretVisualConfig.shotSpeed * movementDelta) / 1000;
     this.dot.x += this.dirX * step;
     this.dot.y += this.dirY * step;
 
     this.checkHit(enemies);
+    this.ageMs += safeDelta;
+    if (this.ageMs >= turretVisualConfig.shotLifetimeMs && this.active) this.destroy();
   }
 
   destroy(): void {
@@ -95,8 +100,18 @@ export class TurretShot {
   private checkHit(enemies: readonly Enemy[]): void {
     for (const enemy of enemies) {
       if (!enemy.isAlive) continue;
-      const distance = Math.hypot(enemy.x - this.dot.x, enemy.y - this.dot.y);
-      if (distance > enemy.radius + turretVisualConfig.shotRadius) continue;
+      if (
+        !segmentCircleOverlap(
+          this.previousX,
+          this.previousY,
+          this.dot.x,
+          this.dot.y,
+          enemy.x,
+          enemy.y,
+          enemy.radius + turretVisualConfig.shotRadius,
+        )
+      )
+        continue;
 
       this.effects.play('turretImpact', this.dot.x, this.dot.y);
       enemy.takeDamage(this.damage);

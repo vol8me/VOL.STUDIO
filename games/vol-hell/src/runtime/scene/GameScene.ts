@@ -100,6 +100,9 @@ export class GameScene extends BaseScene {
   // Reusable buffer'lar — her frame yeni obje yaratmaz
   private readonly moveDirBuf: Vector2 = Vector2.zero();
   private readonly aimDirBuf: Vector2 = Vector2.zero();
+  /** Düşük FPS'te simülasyon zamanını render zamanından ayırır. */
+  private simulationAccumulatorMs = 0;
+  private simulationTimeMs = 0;
 
   /**
    * Duraklatma ve sayaçlar sahnenin alanı değil ayrı birer nesne: ikisi de saf
@@ -230,6 +233,7 @@ export class GameScene extends BaseScene {
         effects: this.effects,
         border: this.border,
         random: this.runRandom,
+        visualSeed: (this.runSeed ^ 0x51_7a_11) | 0,
         bullets: this.bulletManager,
         playerStats: this.player.getStats(),
       }),
@@ -349,17 +353,61 @@ export class GameScene extends BaseScene {
 
     diagnostics?.beginFrame();
 
-    const dt = safeDeltaMs(delta, gameConfig.maxDeltaMs);
-    this.scoreboard.advance(dt);
+    const realDelta = safeDeltaMs(delta);
 
     diagnostics?.startStage('input');
-    this.inputManager.update(dt);
+    this.inputManager.update(realDelta);
     diagnostics?.setInput(this.inputManager.getDebugSnapshot());
     diagnostics?.endStage('input');
 
     // Input state frame basina BIR kez okunur. Iki ayri getState() cagrisi hem
     // gereksiz Vector2 uretiyor hem de iki farkli anlik goruntu yaratiyordu.
     const inputState = this.inputManager.getState(this.player.getPosition());
+
+    this.simulationAccumulatorMs += realDelta;
+    const fixedStep = gameConfig.fixedStepMs;
+    let steps = 0;
+    while (
+      this.simulationAccumulatorMs >= fixedStep &&
+      steps < gameConfig.maxSimulationStepsPerFrame
+    ) {
+      this.advanceSimulation(fixedStep, inputState);
+      this.simulationAccumulatorMs -= fixedStep;
+      steps++;
+    }
+
+    // 60 FPS üstünde input/dash tepkisini bir sonraki sabit adıma bırakma;
+    // kalan küçük dilimi de simüle et. 20 FPS gibi düşük hızlarda ise üstteki
+    // döngü tam sabit adımlarla gerçek frame süresini geri kazanır.
+    if (steps === 0 && this.simulationAccumulatorMs > 0) {
+      this.advanceSimulation(this.simulationAccumulatorMs, inputState);
+      this.simulationAccumulatorMs = 0;
+    }
+
+    // Sekme/uygulama dönüşü gibi çok büyük delta'lar sınırsız catch-up'a
+    // dönüşmesin. Normal düşük FPS frame'leri bu sınıra takılmaz.
+    if (
+      steps >= gameConfig.maxSimulationStepsPerFrame &&
+      this.simulationAccumulatorMs >= fixedStep
+    ) {
+      this.simulationAccumulatorMs %= fixedStep;
+    }
+
+    diagnostics?.startStage('hud');
+    this.updateHUD(realDelta);
+    diagnostics?.endStage('hud');
+
+    this.reportDiagnostics();
+    const blocker = this.run.getBlocker();
+    this.audio.setBossActive(blocker?.definition.id === BOSS_ENEMY_ID);
+    this.audio.update(realDelta, this.enemyManager.getEnemies().length, !this.finisher.isFinishing);
+
+    diagnostics?.endFrame();
+  }
+
+  private advanceSimulation(dt: number, inputState: InputState<HellAction>): void {
+    this.scoreboard.advance(dt);
+    this.simulationTimeMs += dt;
 
     diagnostics?.startStage('player');
     this.updatePlayer(dt, inputState);
@@ -376,27 +424,16 @@ export class GameScene extends BaseScene {
     diagnostics?.endStage('abilities');
 
     diagnostics?.startStage('entities');
-    this.updateEntities(dt, playerPos, _time);
+    this.updateEntities(dt, playerPos, this.simulationTimeMs);
     diagnostics?.endStage('entities');
 
     diagnostics?.startStage('collision');
-    this.collisionResolver.resolve(_time);
+    this.collisionResolver.resolve(this.simulationTimeMs);
     diagnostics?.endStage('collision');
-
-    diagnostics?.startStage('hud');
-    this.updateHUD(dt);
-    diagnostics?.endStage('hud');
 
     diagnostics?.startStage('death');
     this.checkDeath();
     diagnostics?.endStage('death');
-
-    this.reportDiagnostics();
-    const blocker = this.run.getBlocker();
-    this.audio.setBossActive(blocker?.definition.id === BOSS_ENEMY_ID);
-    this.audio.update(dt, this.enemyManager.getEnemies().length, !this.finisher.isFinishing);
-
-    diagnostics?.endFrame();
   }
 
   private bindKeys(runtimeScope: DisposableScope): void {
@@ -527,6 +564,8 @@ export class GameScene extends BaseScene {
     this.scoreboard.reset();
     this.finisher.reset();
     this.difficulty = getDifficultyState(0);
+    this.simulationAccumulatorMs = 0;
+    this.simulationTimeMs = 0;
   }
 
   /**

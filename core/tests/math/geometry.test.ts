@@ -3,6 +3,7 @@ import { Vector2 } from '../../src/math/Vector2';
 import {
   distance,
   distanceSquared,
+  segmentCircleOverlap,
   circlesOverlap,
   pointInCircle,
   pointInRect,
@@ -15,6 +16,12 @@ describe('geometri', () => {
   it('distanceSquared kare kök almadan hesaplar', () => {
     expect(distanceSquared(0, 0, 3, 4)).toBe(25);
     expect(distance(0, 0, 3, 4)).toBe(5);
+  });
+
+  it('segmentCircleOverlap segment içindeki daireyi endpoint olmadan yakalar', () => {
+    expect(segmentCircleOverlap(0, 0, 100, 0, 50, 0, 3)).toBe(true);
+    expect(segmentCircleOverlap(0, 0, 100, 0, 50, 5, 3)).toBe(false);
+    expect(segmentCircleOverlap(0, 0, 0, 0, 0, 0, 1)).toBe(true);
   });
 
   it('circlesOverlap teğet durumu kesişme SAYAR', () => {

@@ -2,6 +2,7 @@ import type { SwarmerParams } from '@/config/enemies/types';
 import { applyStandoffBehavior } from './seek';
 import type { BehaviorContext, VelocityOutput } from './types';
 import { nonNegativeFinite, safeDeltaMs, saturatingAdd } from '@/runtime/utils/numeric';
+import { gameConfig } from '@/config/game';
 
 /** Standoff bandının genişliği (mesafenin oranı) — yaklaş/kaç titremesini keser. */
 const STANDOFF_TOLERANCE_RATIO = 0.12;
@@ -46,18 +47,22 @@ export function applySwarmerBehavior(
 ): MinionSpawnRequest | null {
   applyStandoffBehavior(context, params.standoffDistance, STANDOFF_TOLERANCE_RATIO, out);
 
-  state.spawnTimerMs = saturatingAdd(state.spawnTimerMs, safeDeltaMs(context.deltaMs));
+  const deltaMs = safeDeltaMs(context.deltaMs);
   const spawnIntervalMs = nonNegativeFinite(params.spawnIntervalMs, Number.MAX_SAFE_INTEGER);
+  state.spawnTimerMs = Math.min(
+    saturatingAdd(state.spawnTimerMs, deltaMs),
+    spawnIntervalMs * gameConfig.maxTimerCatchUpSteps,
+  );
   if (state.spawnTimerMs < spawnIntervalMs) return null;
-
-  // Sayaç, kapasite dolu olsa bile sıfırlanır: yoksa bir minion öldüğü anda
-  // birikmiş sayaçla anında yeni sürü çıkar.
-  state.spawnTimerMs = 0;
 
   const free =
     Math.floor(nonNegativeFinite(params.maxMinions)) -
     Math.floor(nonNegativeFinite(state.aliveMinions));
   if (free <= 0) return null;
+
+  // Biriken süreyi sıfırlamak yerine tek aralığı düşür: kapasite açıldığında
+  // geçen süre kaybolmaz, ancak bir frame'de sınırsız sürü üretilmez.
+  state.spawnTimerMs -= spawnIntervalMs;
 
   const count = Math.min(Math.floor(nonNegativeFinite(params.spawnCount)), free);
   if (count <= 0) return null;

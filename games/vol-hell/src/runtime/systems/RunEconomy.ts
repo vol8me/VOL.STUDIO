@@ -102,18 +102,16 @@ export class RunEconomy {
   private thresholdForLevel(level: number): number {
     if (!Number.isFinite(level) || level <= 0) return 0;
     level = Math.min(100_000, Math.floor(level));
-    const { baseThreshold, thresholdGrowth } = economyConfig.spark;
-    let total = 0;
-    let step: number = baseThreshold;
-    for (let i = 0; i < level; i++) {
-      total = clampFinite(total + step, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
-      step = clampFinite(
-        step * thresholdGrowth,
-        0,
-        Number.MAX_SAFE_INTEGER,
-        Number.MAX_SAFE_INTEGER,
-      );
-    }
-    return Math.round(total);
+    const { baseThreshold } = economyConfig.spark;
+    const thresholdGrowth: number = economyConfig.spark.thresholdGrowth;
+    if (!(baseThreshold > 0) || !(thresholdGrowth > 0)) return 0;
+
+    // Geometrik seri kapalı formu: yüksek Spark/config değerlerinde her
+    // çağrıda 0..level döngüsü kurmak yerine O(1) hesaplanır.
+    const total =
+      thresholdGrowth === 1
+        ? baseThreshold * level
+        : (baseThreshold * (Math.pow(thresholdGrowth, level) - 1)) / (thresholdGrowth - 1);
+    return Math.round(clampFinite(total, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER));
   }
 }

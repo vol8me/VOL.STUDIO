@@ -12,8 +12,8 @@ export const playerConfig = {
   dashDurationMs: 300,
   /** Dash cooldown süresi (ms) — dash sonrası bu süre dolmadan tekrar dash atılamaz. */
   dashChargeMs: 1500,
-  /** Dash i-frame süresi (ms) — dash süresince hasar almaz. */
-  dashIFrameMs: 350,
+  /** Dash i-frame süresi (ms) — dash süresini aşamaz. */
+  dashIFrameMs: 300,
   /** Dash ghost sayısı — dash süresince bırakılan yarı saydam kopya. */
   dashGhostCount: 6,
   /** Dash ghost ömrü (ms). */
@@ -40,6 +40,8 @@ export const playerConfig = {
   hitFlashDurationMs: 150,
   /** Invulnerability yanıp sönme aralığı (ms). */
   invulnerabilityFlashIntervalMs: 80,
+  /** Kalabalık temasının oyuncuya aynı anda yığılmasını engelleyen pencere. */
+  contactDamageGraceMs: 100,
 } as const;
 
 export type PlayerConfig = typeof playerConfig;

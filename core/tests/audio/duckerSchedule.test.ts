@@ -102,4 +102,16 @@ describe('SidechainDucker — zamanlama tek saatte', () => {
     gain.advanceTo(3.5); // duck A'nın release'inden (2.01) sonra
     expect(gain.value).toBe(1);
   });
+
+  it('release sırasında gelen kısa duck son dönüşü kaybetmez', () => {
+    const ducker = makeDucker();
+    const gain = gainOf(ducker);
+
+    ducker.duck({ target: 0.2, attack: 0.01, hold: 0.1, release: 1 });
+    context.currentTime = 0.5;
+    ducker.duck({ target: 0.3, attack: 0.01, hold: 0.01, release: 0.05 });
+
+    gain.advanceTo(2);
+    expect(gain.value).toBe(1);
+  });
 });

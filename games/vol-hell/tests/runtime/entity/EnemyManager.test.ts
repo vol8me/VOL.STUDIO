@@ -98,6 +98,12 @@ describe('EnemyManager', () => {
     expect(ENEMY_CATALOG[manager.getEnemies()[0].definition.id]).toBeDefined();
   });
 
+  it('uzun frame içinde geçen birden fazla spawn aralığını kaybetmez', () => {
+    tick(difficulty.spawnIntervalMs * 3);
+
+    expect(manager.getEnemies()).toHaveLength(3);
+  });
+
   it('1. dalgada yalnızca ilk dalga havuzundaki türler doğar', () => {
     manager.setWave(1);
     for (let i = 0; i < 12; i++) {

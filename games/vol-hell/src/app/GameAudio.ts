@@ -153,8 +153,8 @@ export class GameAudio {
     if (profile.ambient) this.ambientDucker.duck(profile.ambient);
   }
 
-  async loadMusic(track: MusicTrack): Promise<void> {
-    await this.music.loadTrack(track);
+  async loadMusic(track: MusicTrack): Promise<boolean> {
+    return this.music.loadTrack(track);
   }
 
   async playMusic(
@@ -187,8 +187,8 @@ export class GameAudio {
     this.music.setState(state, fadeTime);
   }
 
-  async loadAmbient(track: MusicTrack): Promise<void> {
-    await this.ambient.loadTrack(track);
+  async loadAmbient(track: MusicTrack): Promise<boolean> {
+    return this.ambient.loadTrack(track);
   }
 
   async playAmbient(
