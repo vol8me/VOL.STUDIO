@@ -298,6 +298,24 @@ export class Player extends MovableController {
     return this.positionBuf;
   }
 
+  /** Dalga başlangıcında oyuncuyu merkezde ve geçici hareketler kapalı başlatır. */
+  resetForWave(): void {
+    const bounds = this.currentBorder?.bounds;
+    this.arc.x = bounds?.centerX ?? this.arc.x;
+    this.arc.y = bounds?.centerY ?? this.arc.y;
+    this.moveDirection.reset();
+    this.velocity.reset();
+    this.dashing = false;
+    this.dashTimer = 0;
+    this.invulnerable = false;
+    this.invulnerabilityTimer = 0;
+    this.hitFlashTimer = 0;
+    this.ghostTimer = 0;
+    this.dashCharge = 1;
+    this.arc.setVisible(true);
+    this.arc.setFillStyle(playerConfig.color, playerConfig.fillAlpha);
+  }
+
   /** Skalar X koordinatı — Vector2 yaratmaz. */
   getX(): number {
     return this.arc.x;

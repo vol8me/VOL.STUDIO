@@ -3,6 +3,7 @@ import { turretVisualConfig } from '@/config/abilities';
 import { RENDER_DEPTH } from '@/config/layers';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { Enemy } from './Enemy';
+import type { Border } from './Border';
 import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 import { segmentCircleOverlap } from '@volstudio/core';
 
@@ -61,7 +62,7 @@ export class TurretShot {
     return this.active;
   }
 
-  update(deltaMs: number, enemies: readonly Enemy[]): void {
+  update(deltaMs: number, enemies: readonly Enemy[], border: Border): void {
     if (!this.active) return;
     const safeDelta = safeDeltaMs(deltaMs);
 
@@ -86,6 +87,20 @@ export class TurretShot {
     this.dot.y += this.dirY * step;
 
     this.checkHit(enemies);
+    // Hedef kontrolü önce gelir: aynı süpürülmüş adımda duvar ve düşman
+    // kesişirse, mermi duvara ulaşmadan önceki hedef temasını kaybetmez.
+    // Duvar teması sekme değildir; görsel olarak kenara oturup anında söner.
+    if (this.active && this.hasHitArenaBorder(border)) {
+      const radius = turretVisualConfig.shotRadius;
+      const edgeX = border.clampX(this.dot.x, radius);
+      const edgeY = border.clampY(this.dot.y, radius);
+      this.dot.x = edgeX;
+      this.dot.y = edgeY;
+      this.effects.play('turretImpact', edgeX, edgeY);
+      this.destroy();
+      return;
+    }
+
     this.ageMs += safeDelta;
     if (this.ageMs >= turretVisualConfig.shotLifetimeMs && this.active) this.destroy();
   }
@@ -118,5 +133,16 @@ export class TurretShot {
       this.destroy();
       return;
     }
+  }
+
+  private hasHitArenaBorder(border: Border): boolean {
+    const radius = turretVisualConfig.shotRadius;
+    const { left, right, top, bottom } = border.bounds;
+    return (
+      this.dot.x - radius <= left ||
+      this.dot.x + radius >= right ||
+      this.dot.y - radius <= top ||
+      this.dot.y + radius >= bottom
+    );
   }
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { i18next } from '@volstudio/core/i18n';
 import { bootShowcase } from '../src/bootstrap';
 
@@ -21,6 +21,13 @@ describe('bootShowcase', () => {
     document.body.replaceChildren();
     root = document.createElement('div');
     document.body.appendChild(root);
+  });
+
+  afterEach(() => {
+    Reflect.deleteProperty(document.documentElement, 'requestFullscreen');
+    Reflect.deleteProperty(root, 'requestFullscreen');
+    const showcase = root.querySelector('.vol-showcase-root');
+    if (showcase) Reflect.deleteProperty(showcase, 'requestFullscreen');
   });
 
   it('kök verilmezse başlatmayı reddeder', async () => {
@@ -63,6 +70,26 @@ describe('bootShowcase', () => {
       window.dispatchEvent(new Event('beforeunload'));
 
       expect(session.app.element.isConnected).toBe(false);
+    },
+    BOOT_TIMEOUT_MS,
+  );
+
+  it(
+    'fullscreen butonu geniş tıklama alanıyla ortak controllerı çağırır',
+    async () => {
+      const requestFullscreen = vi.fn().mockResolvedValue(undefined);
+      const session = await bootShowcase(root);
+      Object.defineProperty(session.app.element, 'requestFullscreen', {
+        configurable: true,
+        value: requestFullscreen,
+      });
+      const button = root.querySelector<HTMLButtonElement>('.vol-showcase-fullscreen-button');
+      expect(button?.getAttribute('aria-label')).toBe(i18next.t('volui:app.fullscreen'));
+
+      button?.click();
+      await Promise.resolve();
+      expect(requestFullscreen).toHaveBeenCalledOnce();
+      session.destroy();
     },
     BOOT_TIMEOUT_MS,
   );

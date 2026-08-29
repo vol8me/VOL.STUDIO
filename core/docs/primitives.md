@@ -447,6 +447,19 @@ import '@volstudio/core/ui/styles.css';
 giriş noktalarıdır. Web araçları kök `@volstudio/core` barrel'ını kullanmaz;
 bu barrel oyun runtime yüzeyini de taşır.
 
+`StatsPanel`, tüketicinin verdiği kimlikli grupları ve satırları DOM'u yıkmadan
+güncelleyen, sağdan açılan modal çekmecedir. `icon` alanı `string | Element`
+kabul eder; CORE oyun ikonlarını bilmez, yalnızca verilen elementi güvenli bir
+kopya olarak yerleştirir. Scrim, `Modal` ile aynı karartma sözleşmesini kullanır;
+bulanıklaştırma eklemez. Yükseklik ekranı tamamen doldurur, içerik ise panelin
+içinde kayar. Oyun kuralları ve stat hesapları çağıranda kalır.
+
+`FullscreenController`, web araçları ve Phaser sahneleri için ortak F11/
+programatik tam ekran akışıdır. Standart Fullscreen API'yi, Android WebView
+uyumluluğu için WebKit isimlerini ve API reddedildiğinde hata callback'ini
+destekler. İki veya daha fazla listener'ı olduğu için `DisposableScope` ile
+`destroy()` edildiğinde klavye ve fullscreen listener'larını birlikte kaldırır.
+
 Workbench bileşenleri oyun kuralı tutmaz:
 
 - `SplitPane`, yatay/dikey panel ölçüsünü pointer ve klavye ile değiştirir;

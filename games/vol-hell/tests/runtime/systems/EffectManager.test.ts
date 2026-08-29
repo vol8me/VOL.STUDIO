@@ -8,10 +8,12 @@ interface FakeEmitter {
   emitted: { x: number; y: number; count: number }[];
   angleSets: { min: number; max: number }[];
   destroyed: boolean;
+  killed: boolean;
   setDepth: (d: number) => FakeEmitter;
   setEmitterAngle: (v: { min: number; max: number }) => FakeEmitter;
   emitParticleAt: (x: number, y: number, count: number) => void;
   getAliveParticleCount: () => number;
+  killAll: () => FakeEmitter;
   destroy: () => void;
 }
 
@@ -21,6 +23,7 @@ interface FakeScene {
   shakes: { duration: number; intensity: number }[];
   textureExists: boolean;
   time: { now: number };
+  cameras: { main: { resetFX: ReturnType<typeof vi.fn> } };
 }
 
 function makeScene(): { scene: FakeScene; asPhaser: never } {
@@ -40,6 +43,7 @@ function makeScene(): { scene: FakeScene; asPhaser: never } {
     cameras: {
       main: {
         shake: (duration: number, intensity: number) => shakes.push({ duration, intensity }),
+        resetFX: vi.fn(),
       },
     },
     add: {
@@ -59,6 +63,7 @@ function makeScene(): { scene: FakeScene; asPhaser: never } {
           emitted: [],
           angleSets: [],
           destroyed: false,
+          killed: false,
           setDepth(d: number) {
             this.depth = d;
             return this;
@@ -71,6 +76,10 @@ function makeScene(): { scene: FakeScene; asPhaser: never } {
             this.emitted.push({ x, y, count });
           },
           getAliveParticleCount: () => 3,
+          killAll() {
+            this.killed = true;
+            return this;
+          },
           destroy() {
             this.destroyed = true;
           },
@@ -131,6 +140,36 @@ describe('EffectManager', () => {
       y: 240,
       count: effectsConfig.enemyDeath.particles!.count,
     });
+  });
+
+  it('kalite sağlayıcısının canlı partikül ölçeğini her patlamada uygular', () => {
+    let scale = 0.5;
+    const effects = new EffectManager(asPhaser, { getParticleScale: () => scale });
+
+    effects.play('enemyDeath', 10, 20);
+    scale = 0.25;
+    effects.play('enemyDeath', 30, 40);
+
+    const base = effectsConfig.enemyDeath.particles!.count;
+    const emitted = scene.emitters.flatMap((emitter) => emitter.emitted);
+    expect(emitted.map((entry) => entry.count)).toEqual([
+      Math.max(1, Math.round(base * 0.5)),
+      Math.max(1, Math.round(base * 0.25)),
+    ]);
+  });
+
+  it('sıfır ölçek partikülü kapatır, geçersiz ölçek config sayısını korur', () => {
+    let scale = 0;
+    const effects = new EffectManager(asPhaser, { getParticleScale: () => scale });
+
+    effects.play('enemyDeath', 0, 0);
+    expect(scene.emitters.flatMap((emitter) => emitter.emitted)).toHaveLength(0);
+
+    scale = Number.NaN;
+    effects.play('enemyDeath', 0, 0);
+    expect(scene.emitters.flatMap((emitter) => emitter.emitted)[0]?.count).toBe(
+      effectsConfig.enemyDeath.particles!.count,
+    );
   });
 
   it('yönlü efektte açı, verilen yönün etrafına yayılır', () => {
@@ -206,6 +245,15 @@ describe('EffectManager', () => {
   it('aktif partikül sayısı tüm emitter’ların toplamıdır', () => {
     const effects = new EffectManager(asPhaser);
     expect(effects.getActiveParticleCount()).toBe(scene.emitters.length * 3);
+  });
+
+  it('clearActive havadaki partikülleri ve kamera efektini temizler', () => {
+    const effects = new EffectManager(asPhaser);
+
+    effects.clearActive();
+
+    expect(scene.emitters.every((emitter) => emitter.killed)).toBe(true);
+    expect(scene.cameras.main.resetFX).toHaveBeenCalledOnce();
   });
 
   it('destroy tüm emitter’ları yok eder', () => {

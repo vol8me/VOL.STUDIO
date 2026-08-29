@@ -61,6 +61,8 @@ export class EnemyManager {
   setWave(wave: number): void {
     if (!Number.isFinite(wave)) return;
     this.currentWave = Math.max(1, Math.floor(wave));
+    // Önceki dalganın kalan süresi yeni dalgada toplu spawn üretmesin.
+    this.spawnTimer = 0;
   }
 
   update(

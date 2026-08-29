@@ -67,6 +67,16 @@ describe('DeathScreen', () => {
     expect(statText).toContain('12');
   });
 
+  it('aynı ekran yeniden açılırken eski mobil scroll konumunu sıfırlar', () => {
+    screen.show(BASE_STATS);
+    const panel = parent.querySelector<HTMLElement>('.death-panel')!;
+    panel.scrollTop = 120;
+
+    screen.show({ ...BASE_STATS, wave: 13 });
+
+    expect(panel.scrollTop).toBe(0);
+  });
+
   describe('zafer / yenilgi ayrımı', () => {
     it('yenilgide zafer sınıfı taşımaz', () => {
       screen.show(BASE_STATS);

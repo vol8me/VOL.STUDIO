@@ -6,7 +6,7 @@ export interface WaveManagerCallbacks {
   onWaveStart?: (wave: number) => void;
   /**
    * Bir dalga tamamlandığında — DÜKKAN EKRANI buna bağlanır.
-   * Son dalganın bitiminde de çağrılır (ardından `onRunComplete`).
+   * Terminal dalgada çağrılmaz; son boss ölümü doğrudan `onRunComplete`e gider.
    */
   onWaveEnd?: (wave: number) => void;
   /**

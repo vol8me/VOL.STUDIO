@@ -35,6 +35,7 @@ const fakes = vi.hoisted(() => {
     constructor(
       _parent: unknown,
       _audio: unknown,
+      _video: unknown,
       readonly callbacks: Record<string, () => void>,
     ) {
       if (state.failPause) throw new Error('pause kurulamadı');
@@ -90,6 +91,7 @@ function makeOptions(): {
       cards: {},
       economy: {},
       audioSettings: {},
+      videoSettings: {},
       onPauseForCard: vi.fn(),
       onResumeAfterCard: vi.fn(),
       onResumeFromMenu: vi.fn(),

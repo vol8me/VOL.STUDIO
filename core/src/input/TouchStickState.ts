@@ -29,6 +29,11 @@ export interface TouchStickOptions<TAction extends string> {
    */
   aimStickAction?: TAction;
   /**
+   * Sağ stick yalnız dokunulduğunda da eylemi basılı sayar. Aim deadzone
+   * içinde sıfır kalır; çağıran isterse otomatik hedef seçebilir.
+   */
+  aimStickActivatesOnTouch?: boolean;
+  /**
    * Ekran üstü düğmelerin yazdığı eylem kaynağı.
    *
    * Verilirse düğme basımları stick durumuyla AYNI karede birleşir; ayrıca
@@ -54,6 +59,7 @@ export class TouchStickState<TAction extends string> {
 
   private readonly actions: readonly TAction[];
   private readonly aimStickAction?: TAction;
+  private readonly aimStickActivatesOnTouch: boolean;
   private readonly actionSource?: VirtualActionSource<TAction>;
   private readonly deadZone: number;
   public readonly maxRadius: number;
@@ -61,6 +67,7 @@ export class TouchStickState<TAction extends string> {
   constructor(options: TouchStickOptions<TAction>) {
     this.actions = options.actions;
     this.aimStickAction = options.aimStickAction;
+    this.aimStickActivatesOnTouch = options.aimStickActivatesOnTouch ?? false;
     this.actionSource = options.actionSource;
     this.deadZone = options.deadZone ?? INPUT.DEAD_ZONE_RATIO;
     this.maxRadius = options.maxRadius ?? INPUT.STICK_MAX_RADIUS;
@@ -117,6 +124,13 @@ export class TouchStickState<TAction extends string> {
     }
   }
 
+  /** Dalga/sahne sınırında parmaklar hâlâ ekranda olsa bile yönü bırakır. */
+  reset(): void {
+    this.leftStick = undefined;
+    this.rightStick = undefined;
+    this.actionSource?.clear();
+  }
+
   getState(): InputState<TAction> {
     const leftRaw = this.getRaw(this.leftStick);
     const rightRaw = this.getRaw(this.rightStick);
@@ -124,7 +138,8 @@ export class TouchStickState<TAction extends string> {
     const actions = createIdleActions(this.actions);
     if (this.aimStickAction !== undefined) {
       actions[this.aimStickAction] =
-        this.rightStick !== undefined && rightRaw.length() / this.maxRadius > this.deadZone;
+        this.rightStick !== undefined &&
+        (this.aimStickActivatesOnTouch || rightRaw.length() / this.maxRadius > this.deadZone);
     }
     // Düğmeler stick'ten SONRA yazılır: aynı eyleme hem nişan çubuğu hem
     // düğme bağlıysa, düğme basımı nişan çubuğunun `false`unu ezebilmeli.
@@ -140,6 +155,11 @@ export class TouchStickState<TAction extends string> {
   /** Görsel çizim için clamp edilmiş mutlak pozisyon (stick.base + getRaw()). */
   getClampedPosition(stick: Stick): Vector2 {
     return stick.base.add(this.getRaw(stick));
+  }
+
+  /** Görsel katmanın otomatik-hedef ve manuel-yön kiplerini ayırması için. */
+  hasDirectionalInput(stick: Stick): boolean {
+    return this.getRaw(stick).length() / this.maxRadius > this.deadZone;
   }
 
   private updateStick(stick: Stick | undefined, pointerId: number, x: number, y: number): void {

@@ -233,6 +233,21 @@ describe('Player', () => {
     expect(player.getX()).toBeCloseTo(100 + playerConfig.moveSpeed * 0.35, 6);
   });
 
+  it('resetForWave oyuncuyu merkeze alır ve hareket/dash durumunu bırakır', () => {
+    const player = makePlayer(100, 100);
+    const border = makeBorder();
+    player.setBorder(border as unknown as never);
+    player.setMoveDirection(new Vector2(1, 0));
+    player.tryDash(new Vector2(1, 0));
+
+    player.resetForWave();
+    player.update(100);
+
+    expect(player.getPosition().x).toBeCloseTo(border.bounds.centerX, 6);
+    expect(player.getPosition().y).toBeCloseTo(border.bounds.centerY, 6);
+    expect(player.getDashChargeRatio()).toBe(1);
+  });
+
   it('dash i-frame dash süresini aşmaz', () => {
     const player = makePlayer(100, 100);
     player.tryDash(new Vector2(1, 0));

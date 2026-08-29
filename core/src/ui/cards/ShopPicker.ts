@@ -62,6 +62,8 @@ export interface ShopPickerState {
    * - `'refresh'` (varsayılan): bakiye/satın alma durumu değişti, kartlar yerinde güncellenir.
    */
   transition?: 'reroll' | 'refresh';
+  /** Bakiye değişiminin yönü; shop bunu tahmin etmez, çağıran bildirir. */
+  balanceChange?: 'increase' | 'decrease';
 }
 
 export interface ShopPickerLabels {
@@ -165,6 +167,9 @@ export const REROLL_FLASH_MS = 240;
  */
 export const PURCHASE_FLASH_MS = 240;
 
+/** `.vol-card-shop__balance--changed` vurgu süresi. */
+export const BALANCE_FLASH_MS = 240;
+
 /**
  * Dalga arası dükkan — teklif edilen kartlar fiyatlarıyla, sahip olunan
  * kartlar satış butonuyla listelenir.
@@ -213,6 +218,8 @@ export class ShopPicker extends CardPicker {
   private readonly leavingInventory = new Map<string, LeavingTile>();
   /** Çıkış/vurgu zamanlayıcılar — destroy()'da iptal edilir. */
   private readonly pendingTimeouts = new Set<ReturnType<typeof setTimeout>>();
+  private lastBalanceLabel = '';
+  private balanceTimeout: ReturnType<typeof setTimeout> | undefined;
   /**
    * Henüz giriş animasyonu almamış yeni kartlar. Kartlar `show()` veya
    * görünür haldeki `render()` sonunda toplu olarak animate edilir; gizli
@@ -288,7 +295,11 @@ export class ShopPicker extends CardPicker {
   render(state: ShopPickerState): void {
     if (state.title !== undefined) this.setTitle(state.title);
     if (state.hint !== undefined) this.setHint(state.hint);
+    const balanceChanged =
+      this.lastBalanceLabel !== '' && this.lastBalanceLabel !== state.balanceLabel;
+    this.lastBalanceLabel = state.balanceLabel;
     this.balanceElement.textContent = state.balanceLabel;
+    if (balanceChanged) this.flashBalance(state.balanceChange);
 
     if (this.rerollButton && this.reroll) {
       this.rerollButton.textContent = state.reroll
@@ -318,6 +329,7 @@ export class ShopPicker extends CardPicker {
   override destroy(): void {
     for (const timeout of this.pendingTimeouts) clearTimeout(timeout);
     this.pendingTimeouts.clear();
+    this.balanceTimeout = undefined;
 
     this.rerollButton?.removeEventListener('click', this.handleReroll);
     this.closeButton.removeEventListener('click', this.handleClose);
@@ -374,6 +386,35 @@ export class ShopPicker extends CardPicker {
       this.element.classList.remove('vol-card-picker--rerolling');
     }, REROLL_FLASH_MS);
     this.rerollTimeout = timeout;
+    this.pendingTimeouts.add(timeout);
+  }
+
+  /** Bakiye değişimini satın alma/reroll sonrası okunur bir mikro-vurguyla bildirir. */
+  private flashBalance(change?: ShopPickerState['balanceChange']): void {
+    if (this.balanceTimeout !== undefined) {
+      this.pendingTimeouts.delete(this.balanceTimeout);
+      clearTimeout(this.balanceTimeout);
+    }
+    this.balanceElement.classList.remove(
+      'vol-card-shop__balance--changed',
+      'vol-card-shop__balance--increase',
+      'vol-card-shop__balance--decrease',
+    );
+    // Aynı düğüm üstünde peş peşe satın alma olursa animasyon yine başlasın.
+    void this.balanceElement.offsetWidth;
+    this.balanceElement.classList.add('vol-card-shop__balance--changed');
+    if (change) this.balanceElement.classList.add(`vol-card-shop__balance--${change}`);
+
+    const timeout = setTimeout(() => {
+      this.pendingTimeouts.delete(timeout);
+      this.balanceTimeout = undefined;
+      this.balanceElement.classList.remove(
+        'vol-card-shop__balance--changed',
+        'vol-card-shop__balance--increase',
+        'vol-card-shop__balance--decrease',
+      );
+    }, BALANCE_FLASH_MS);
+    this.balanceTimeout = timeout;
     this.pendingTimeouts.add(timeout);
   }
 

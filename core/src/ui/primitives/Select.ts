@@ -30,13 +30,14 @@ export class Select {
   readonly element: HTMLButtonElement;
   private readonly popup: Popup;
   private readonly labelElement: HTMLSpanElement;
-  private readonly options: SelectOption[];
+  private options: SelectOption[];
   private placeholder: string;
   private readonly placeholderIsI18n: boolean;
   private readonly onInputHandler?: (value: string) => void;
   private readonly onCommitHandler?: (value: string) => void;
   private readonly optionButtons = new Map<string, HTMLButtonElement>();
   private readonly scope = new DisposableScope();
+  private optionScope = new DisposableScope();
   private value: string | undefined;
   private boundToggle: () => void;
   private boundTriggerKeydown: (event: KeyboardEvent) => void;
@@ -57,7 +58,7 @@ export class Select {
       onCommit,
       container,
     } = options;
-    this.options = items;
+    this.options = [...items];
     this.placeholderIsI18n = placeholder === undefined;
     this.placeholder = placeholder ?? i18next.t('core:select.placeholder');
     this.onInputHandler = onInput;
@@ -87,28 +88,8 @@ export class Select {
     this.popup.element.classList.add('vol-select__listbox');
     this.popup.element.setAttribute('role', 'listbox');
     this.scope.addDestroyable(this.popup);
-
-    for (const [index, item] of items.entries()) {
-      const optionButton = document.createElement('button');
-      optionButton.type = 'button';
-      optionButton.className = item.tone
-        ? `vol-select__option vol-select__option--${item.tone}`
-        : 'vol-select__option';
-      optionButton.textContent = item.label;
-      optionButton.setAttribute('role', 'option');
-      optionButton.setAttribute('aria-selected', String(item.value === this.value));
-      optionButton.tabIndex = -1;
-
-      const onOptionClick = (): void => this.selectValue(item.value);
-      this.scope.addListener(optionButton, 'click', onOptionClick);
-
-      const onOptionKeydown = (event: KeyboardEvent): void =>
-        this.handleOptionKeydown(event, index);
-      this.scope.addListener(optionButton, 'keydown', onOptionKeydown as EventListener);
-
-      this.optionButtons.set(item.value, optionButton);
-      this.popup.element.appendChild(optionButton);
-    }
+    this.scope.add({ dispose: () => this.optionScope.dispose() });
+    this.renderOptions();
 
     this.boundToggle = () => {
       this.popup.toggle();
@@ -149,6 +130,25 @@ export class Select {
     this.selectValue(value);
   }
 
+  /**
+   * Açılır listenin veri/etiket kümesini programatik olarak yeniler.
+   * Mevcut değer yeni kümede varsa korunur; yoksa placeholder'a düşer.
+   */
+  setOptions(options: SelectOption[]): void {
+    this.popup.close();
+    this.element.setAttribute('aria-expanded', 'false');
+    this.optionScope.dispose();
+    this.optionScope = new DisposableScope();
+    this.optionButtons.clear();
+    this.popup.element.replaceChildren();
+    this.options = [...options];
+    if (this.value !== undefined && !this.options.some((option) => option.value === this.value)) {
+      this.value = undefined;
+    }
+    this.renderOptions();
+    this.renderLabel();
+  }
+
   setDisabled(disabled: boolean): void {
     this.element.disabled = disabled;
   }
@@ -171,6 +171,27 @@ export class Select {
     if (!opts.silent) {
       this.onInputHandler?.(value);
       this.onCommitHandler?.(value);
+    }
+  }
+
+  private renderOptions(): void {
+    for (const [index, item] of this.options.entries()) {
+      const optionButton = document.createElement('button');
+      optionButton.type = 'button';
+      optionButton.className = item.tone
+        ? `vol-select__option vol-select__option--${item.tone}`
+        : 'vol-select__option';
+      optionButton.textContent = item.label;
+      optionButton.setAttribute('role', 'option');
+      optionButton.setAttribute('aria-selected', String(item.value === this.value));
+      optionButton.tabIndex = -1;
+
+      this.optionScope.addListener(optionButton, 'click', () => this.selectValue(item.value));
+      this.optionScope.addListener(optionButton, 'keydown', (event: Event) =>
+        this.handleOptionKeydown(event as KeyboardEvent, index),
+      );
+      this.optionButtons.set(item.value, optionButton);
+      this.popup.element.appendChild(optionButton);
     }
   }
 

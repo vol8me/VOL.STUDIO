@@ -33,7 +33,9 @@ import * as Core from '../../src/index';
 // `isHapticsEnabled`, `isHapticsSupported`, `cancelHaptics`). Phaser'ın
 // titreşim yüzeyi yok; Vibration API tek yerde anlamlandırılmış desenlere
 // bağlanır ki aynı etkileşim her ekranda aynı hissetsin.
-const EXPECTED_EXPORT_COUNT = 196;
+// 196 → 198: `FullscreenController` ve generic `StatsPanel` CORE UI sözleşmesine
+// alındı. Her iki bileşen de oyun/devtool bağımsızdır ve showcase'te gösterilir.
+const EXPECTED_EXPORT_COUNT = 198;
 
 // 196: asset compiler'lar (görsel/ses sentezi) CORE public surface'da
 // tutulmaz; runtime yalnızca üretilmiş asset'leri çalar.

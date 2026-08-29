@@ -171,4 +171,17 @@ describe('RunEconomy — Spark ve seviye', () => {
     expect(economy.spendFlux(Infinity)).toBe(false);
     expect(economy.getFlux()).toBe(10);
   });
+
+  it('Flux değişimini yayınlar ve abonelik kaldırılabilir', () => {
+    const economy = new RunEconomy();
+    const listener = vi.fn();
+    const unsubscribe = economy.onFluxChange(listener);
+
+    economy.addFlux(10);
+    economy.spendFlux(4);
+    unsubscribe();
+    economy.addFlux(2);
+
+    expect(listener.mock.calls.map(([flux]) => flux as number)).toEqual([10, 6]);
+  });
 });

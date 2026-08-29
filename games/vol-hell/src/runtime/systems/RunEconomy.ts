@@ -15,6 +15,7 @@ export interface RunEconomyCallbacks {
  */
 export class RunEconomy {
   private flux = 0;
+  private readonly fluxListeners = new Set<(flux: number) => void>();
   private spark = 0;
   private level = economyConfig.spark.startLevel;
   /** Bir sonraki seviye için gereken toplam Spark. */
@@ -24,6 +25,12 @@ export class RunEconomy {
 
   getFlux(): number {
     return this.flux;
+  }
+
+  /** Flux değişimlerini izleyen UI/telemetri yüzeyleri için abonelik kapısı. */
+  onFluxChange(listener: (flux: number) => void): () => void {
+    this.fluxListeners.add(listener);
+    return () => this.fluxListeners.delete(listener);
   }
 
   getSpark(): number {
@@ -47,7 +54,10 @@ export class RunEconomy {
   /** Toplanan Flux'u sayaca ekler. Negatif, NaN veya Infinity değer yok sayılır. */
   addFlux(amount: number): void {
     if (!Number.isFinite(amount) || amount <= 0) return;
-    this.flux = saturatingAdd(this.flux, amount);
+    const next = saturatingAdd(this.flux, amount);
+    if (next === this.flux) return;
+    this.flux = next;
+    this.notifyFluxChange();
   }
 
   /**
@@ -57,6 +67,7 @@ export class RunEconomy {
   spendFlux(amount: number): boolean {
     if (!Number.isFinite(amount) || amount <= 0 || this.flux < amount) return false;
     this.flux -= amount;
+    this.notifyFluxChange();
     return true;
   }
 
@@ -89,10 +100,12 @@ export class RunEconomy {
 
   /** Yeni koşu — tüm sayaçlar başa döner. */
   reset(): void {
+    const hadFlux = this.flux !== 0;
     this.flux = 0;
     this.spark = 0;
     this.level = economyConfig.spark.startLevel;
     this.nextThreshold = economyConfig.spark.baseThreshold;
+    if (hadFlux) this.notifyFluxChange();
   }
 
   /**
@@ -113,5 +126,17 @@ export class RunEconomy {
         ? baseThreshold * level
         : (baseThreshold * (Math.pow(thresholdGrowth, level) - 1)) / (thresholdGrowth - 1);
     return Math.round(clampFinite(total, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER));
+  }
+
+  private notifyFluxChange(): void {
+    for (const listener of this.fluxListeners) {
+      try {
+        listener(this.flux);
+      } catch (error) {
+        // Bir UI aboneliği ekonomi işlemini bozmasın; sonraki frame tekrar
+        // sorgulandığında gerçek bakiye yine tek kaynaktan okunur.
+        console.warn('[RunEconomy] Flux dinleyicisi hata verdi:', error);
+      }
+    }
   }
 }

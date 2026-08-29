@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "VOL.UI",
-    "language": "Türkçe"
+    "language": "Türkçe",
+    "fullscreen": "Enter fullscreen",
+    "leaveFullscreen": "Leave fullscreen"
   },
   "tabs": {
     "buttons": "BUTTONS",
@@ -232,6 +234,13 @@
     "statDamage": "Damage",
     "statRange": "Range",
     "statFireRate": "Fire Rate",
+    "statsPanel": "Stats Panel",
+    "statsPanelTitle": "PLAYER STATS",
+    "openStatsPanel": "Open Statistics",
+    "closeStatsPanel": "Close Statistics",
+    "playerStats": "Player",
+    "statHealth": "Health",
+    "statSpeed": "Move Speed",
     "upgrade": "Upgrade",
     "clearSelection": "Clear Selection",
     "buildMenu": "Build Menu",

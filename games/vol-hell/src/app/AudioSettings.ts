@@ -80,6 +80,10 @@ export class AudioSettings {
     const stored = await this.saveManager.load<unknown>(STORAGE_KEY, {});
     if (this.disposed || generation !== this.loadGeneration) return;
     this.data = mergeWithDefaults(stored);
+    // GameAudio, açılıştan önce veya sonra yüklenmiş olabilir. Kayıtlı
+    // snapshot'ı setter'lar gibi yayınlamazsak ses varsayılan gain'de kalır ve
+    // kullanıcı slider'a dokunana kadar kapalı müzik yeniden açılır.
+    this.notify();
   }
 
   /**

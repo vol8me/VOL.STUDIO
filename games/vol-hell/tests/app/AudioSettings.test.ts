@@ -62,6 +62,25 @@ describe('AudioSettings', () => {
     expect(settings.getSfxVolume()).toBe(audioConfig.sfxVolume);
   });
 
+  it('load — kayıtlı snapshotı ses dinleyicilerine yayınlar', async () => {
+    const settings = new AudioSettings(
+      new SaveManager(
+        makeAdapter({
+          'vol-hell:audio-settings': { masterVolume: 0, musicVolume: 0, muted: true },
+        }),
+      ),
+    );
+    const listener = vi.fn();
+    settings.onChange(listener);
+
+    await settings.load();
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({ masterVolume: 0, musicVolume: 0, muted: true }),
+    );
+  });
+
   it('setMasterVolume — 0-1 aralığına kısar ve değişiklik bildirimi gönderir', async () => {
     const settings = new AudioSettings(new SaveManager(makeAdapter()));
     await settings.load();

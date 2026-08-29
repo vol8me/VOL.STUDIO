@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { TECH } from '../constants';
 
 export type ScaleStrategy = 'fit' | 'envelop' | 'resize';
+export type MaxDprSetting = number | (() => number | undefined);
 
 export interface ViewportConfig {
   /**
@@ -17,7 +18,7 @@ export interface ViewportConfig {
    * Yüksek DPR ekranlarda piksel fill-rate'i sınırlamak için maksimum DPR.
    * Verilmezse `window.devicePixelRatio` olduğu gibi kullanılır.
    */
-  maxDpr?: number;
+  maxDpr?: MaxDprSetting;
 }
 
 export interface ViewportResult {
@@ -94,7 +95,8 @@ export class ViewportManager {
         ? window.devicePixelRatio
         : TECH.DPR_FALLBACK;
 
-    const configuredMaxDpr = this.config.maxDpr;
+    const configuredMaxDpr =
+      typeof this.config.maxDpr === 'function' ? this.config.maxDpr() : this.config.maxDpr;
     const maxDpr =
       configuredMaxDpr !== undefined && Number.isFinite(configuredMaxDpr) && configuredMaxDpr > 0
         ? configuredMaxDpr

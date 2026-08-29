@@ -120,6 +120,11 @@ export class DeathScreen {
 
   show(stats: DeathStats): void {
     this.stats = stats;
+    // Aynı scene örneği restart'ta yeniden kullanılır. Önceki koşudan kalan
+    // mobil scroll konumu başlığı veya iki aksiyon düğmesini ekranın dışında
+    // bırakmamalı; her yeni ölüm özeti üstten başlar.
+    this.overlay.scrollTop = 0;
+    this.panel.element.scrollTop = 0;
     this.updateHeader();
     this.updateStatContents();
     this.overlay.classList.add('vol-death-overlay--visible');

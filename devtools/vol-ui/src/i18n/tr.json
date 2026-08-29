@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "VOL.UI",
-    "language": "English"
+    "language": "English",
+    "fullscreen": "Tam ekranı aç",
+    "leaveFullscreen": "Tam ekrandan çık"
   },
   "tabs": {
     "buttons": "BUTONLAR",
@@ -232,6 +234,13 @@
     "statDamage": "Hasar",
     "statRange": "Menzil",
     "statFireRate": "Ateş Hızı",
+    "statsPanel": "İstatistik Paneli",
+    "statsPanelTitle": "OYUNCU İSTATİSTİKLERİ",
+    "openStatsPanel": "İstatistikleri Aç",
+    "closeStatsPanel": "İstatistikleri Kapat",
+    "playerStats": "Oyuncu",
+    "statHealth": "Can",
+    "statSpeed": "Hareket Hızı",
     "upgrade": "Yükselt",
     "clearSelection": "Seçimi Temizle",
     "buildMenu": "Build Menu",

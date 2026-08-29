@@ -1,5 +1,15 @@
-import { createVolGame, VOL_COLORS, i18n } from '@volstudio/core';
-import { diagnostics, initServices, loadPersistedState, saveManager } from '@/app/services';
+import { createVolGame, shouldUseTouchControls, VOL_COLORS, i18n } from '@volstudio/core';
+import { isTauri } from '@tauri-apps/api/core';
+import { TauriWindowAdapter } from '@volstudio/tauri-v2';
+import {
+  diagnostics,
+  gameAudio,
+  initServices,
+  loadPersistedState,
+  saveManager,
+  videoSettings,
+} from '@/app/services';
+import { VideoSettingsController } from '@/app/VideoSettingsController';
 import { MainMenuScene } from '@/runtime/scene/MainMenuScene';
 import { GameScene } from '@/runtime/scene/GameScene';
 import { SettingsScene } from '@/runtime/scene/SettingsScene';
@@ -57,15 +67,33 @@ try {
   // SaveManager paylaşılır, ikinci bir adapter örneği yaratılmaz.
   await i18n.init({ saveManager });
   await loadPersistedState();
-
   document.title = gameConfig.title;
 
-  await createVolGame({
+  const game = await createVolGame({
     backgroundColor: VOL_COLORS.uiBg,
     strategy: gameConfig.viewport.strategy,
-    maxDpr: gameConfig.viewport.maxDpr,
+    maxDpr: () => videoSettings.getMaxDpr(),
     scenes: [MainMenuScene, GameScene, SettingsScene],
     diagnostics: diagnostics ?? undefined,
+  });
+
+  // Mobil Tauri penceresinde masaüstü çözünürlük API'leri anlamlı değildir.
+  // Masaüstünde ise tek controller F11, native fullscreen ve Phaser DPR'ını
+  // uygulama ömrü boyunca senkron tutar.
+  const videoController = new VideoSettingsController(videoSettings, {
+    target: game.canvas.parentElement ?? document.documentElement,
+    windowAdapter: new TauriWindowAdapter({
+      enabled: isTauri() && !shouldUseTouchControls(),
+    }),
+  });
+  await videoController.start();
+  game.events.once('destroy', () => videoController.destroy());
+
+  // Native WebView'larda GStreamer/codec kurulumu yavaş veya kısmi olabilir.
+  // SFX ön-yüklemesi oyun yüzeyinin açılmasını asla bloke etmez; SfxBank zaten
+  // her dosyayı bağımsız yükler ve ilk kullanımda eksik sesi güvenle atlar.
+  void gameAudio.loadAllSfx().catch((error: unknown) => {
+    console.warn('[bootstrap] SFX ön-yüklemesi tamamlanamadı:', error);
   });
 } catch (error: unknown) {
   showFatalError(error);

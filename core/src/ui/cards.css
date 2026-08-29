@@ -498,6 +498,42 @@
   font-weight: 700;
 }
 
+/* Shop içindeki stat düğmesi: HUD'da yaşamaz, footer'ın yanında her zaman
+   tam dokunma hedefi bırakır. */
+.vol-card-shop__stats-toggle {
+  position: absolute;
+  top: var(--vol-space-md);
+  right: var(--vol-space-md);
+  z-index: 2;
+  flex: 0 0 auto;
+  min-width: var(--vol-hit-target-min, 44px);
+  min-height: var(--vol-hit-target-min, 44px);
+}
+
+.vol-card-shop__balance--changed {
+  animation: vol-card-balance-change var(--vol-transition-medium) ease-out both;
+}
+
+.vol-card-shop__balance--increase {
+  --vol-card-balance-feedback: var(--vol-ui-success-solid);
+}
+
+.vol-card-shop__balance--decrease {
+  --vol-card-balance-feedback: var(--vol-ui-danger-solid);
+}
+
+@keyframes vol-card-balance-change {
+  0% {
+    color: var(--vol-card-balance-feedback, var(--vol-ui-accent-solid));
+    transform: translateY(-2px);
+  }
+
+  100% {
+    color: var(--vol-ui-text);
+    transform: translateY(0);
+  }
+}
+
 .vol-card-shop__close {
   cursor: pointer;
   letter-spacing: 0.08em;

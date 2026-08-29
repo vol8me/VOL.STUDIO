@@ -80,6 +80,22 @@ describe('SfxBank', () => {
     expect(activeSources('dash').length).toBe(1);
   });
 
+  it('stopAllExcept() UI geçiş sesini koruyup gameplay sesini durdurur', async () => {
+    seedBuffer('menuBlip');
+    seedBuffer('fire');
+    context.currentTime = 1;
+    await bank.play('menuBlip');
+    context.currentTime = 2;
+    await bank.play('fire');
+
+    const menuSource = activeSources('menuBlip')[0];
+    const fireSource = activeSources('fire')[0];
+    bank.stopAllExcept(['menuBlip', 'back']);
+
+    expect(menuSource?.stop).not.toHaveBeenCalled();
+    expect(fireSource?.stop).toHaveBeenCalledTimes(1);
+  });
+
   it('release() aktif sesleri durdurur ve cache/temizler', async () => {
     seedBuffer('fire');
     context.currentTime = 1;

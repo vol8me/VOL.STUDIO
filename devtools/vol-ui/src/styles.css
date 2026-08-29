@@ -42,21 +42,44 @@ body {
 
 .vol-showcase-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: var(--vol-space-sm);
   flex-shrink: 0;
-  padding: var(--vol-space-lg) var(--vol-space-lg) var(--vol-space-md);
-  font-size: 24px;
+  padding: var(--vol-space-lg) var(--vol-space-md) var(--vol-space-md);
+  font-size: 20px;
+  line-height: 1;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--vol-ui-text);
   border-bottom: 1px solid var(--vol-ui-border-soft);
 }
 
-.vol-showcase-lang-button {
+.vol-showcase-header__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  align-items: center;
+  width: 100%;
   flex-shrink: 0;
-  padding: var(--vol-space-xs) var(--vol-space-md);
-  font-size: 13px;
+  gap: var(--vol-space-xs);
+}
+
+.vol-showcase-header > span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.vol-showcase-lang-button {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  height: 40px;
+  padding: var(--vol-space-xs) var(--vol-space-sm);
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--vol-ui-text-secondary);
@@ -76,6 +99,43 @@ body {
 
 .vol-showcase-lang-button:active {
   transform: scale(0.96);
+}
+
+.vol-showcase-fullscreen-button {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: var(--vol-ui-text-secondary);
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  cursor: pointer;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.vol-showcase-fullscreen-button:focus-visible,
+.vol-showcase-lang-button:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-showcase-fullscreen-button:hover {
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-2);
+  border-color: var(--vol-ui-border-strong);
+}
+
+.vol-showcase-root:fullscreen {
+  width: 100%;
+  height: 100%;
+  background: var(--vol-ui-bg);
 }
 
 .vol-showcase-section {

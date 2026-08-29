@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { FontManager, type FontFaceSpec } from './systems/FontManager';
-import { ViewportManager, type ScaleStrategy } from './systems/ViewportManager';
+import { ViewportManager, type MaxDprSetting, type ScaleStrategy } from './systems/ViewportManager';
 import { VOL_FONTS, type VolFontFamily } from './systems/DefaultFonts';
 import { TECH } from './constants';
 import type { Diagnostics } from './debug/Diagnostics';
@@ -13,7 +13,7 @@ export interface VolGameConfig {
   backgroundColor?: string;
   strategy?: ScaleStrategy;
   /** Yüksek DPR ekranlarda piksel fill-rate'i sınırlamak için maksimum DPR. */
-  maxDpr?: number;
+  maxDpr?: MaxDprSetting;
   scenes: Phaser.Types.Core.GameConfig['scene'];
   physics?: Phaser.Types.Core.GameConfig['physics'];
   input?: Phaser.Types.Core.InputConfig;

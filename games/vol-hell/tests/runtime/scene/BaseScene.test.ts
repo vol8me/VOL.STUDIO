@@ -23,7 +23,10 @@ const { FakeUIRoot, i18next, roots } = vi.hoisted(() => {
   };
 });
 
-vi.mock('@volstudio/core', () => ({ UIRoot: FakeUIRoot, i18next }));
+vi.mock('@volstudio/core', () => ({
+  UIRoot: FakeUIRoot,
+  i18next,
+}));
 
 import { BaseScene } from '@/runtime/scene/BaseScene';
 

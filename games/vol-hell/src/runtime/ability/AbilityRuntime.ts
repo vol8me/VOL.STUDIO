@@ -166,7 +166,7 @@ export class AbilityRuntime implements AbilityWorld {
     // mermileri sahipsiz kalıp sahnede donmasın.
     this.turret?.destroyWithEffect();
     this.turret?.destroy();
-    this.turret = new Turret(this.deps.scene, x, y, this.deps.effects, {
+    this.turret = new Turret(this.deps.scene, x, y, this.deps.effects, this.deps.border, {
       ...params,
       damage: scaleAbilityDamage(
         params.damage + this.upgrades.get('turretDamage'),
@@ -226,17 +226,22 @@ export class AbilityRuntime implements AbilityWorld {
     }
   }
 
-  destroy(): void {
-    for (const slot of ABILITY_SLOTS) {
-      this.slots.get(slot)?.destroy();
-      this.slots.set(slot, null);
-    }
+  /** Dalga geçişinde slotlar korunur, sahadaki geçici ability varlıkları silinir. */
+  clearTransientState(): void {
     this.turret?.destroy();
     this.turret = null;
     for (const zone of this.zones) zone.destroy();
     this.zones.length = 0;
     for (const strike of this.strikes) strike.destroy();
     this.strikes.length = 0;
+  }
+
+  destroy(): void {
+    for (const slot of ABILITY_SLOTS) {
+      this.slots.get(slot)?.destroy();
+      this.slots.set(slot, null);
+    }
+    this.clearTransientState();
   }
 
   private refreshContext(

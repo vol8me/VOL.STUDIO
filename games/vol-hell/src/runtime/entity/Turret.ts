@@ -5,6 +5,7 @@ import { RENDER_DEPTH } from '@/config/layers';
 import { sfxVolumes } from '@/config/audio';
 import { diagnostics, gameAudio } from '@/app/services';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
+import type { Border } from './Border';
 import { EntityHealthBar } from './EntityHealthBar';
 import type { Enemy } from './Enemy';
 import { TurretShot } from './TurretShot';
@@ -43,6 +44,7 @@ export class Turret {
     x: number,
     y: number,
     private readonly effects: EffectManager,
+    private readonly border: Border,
     private readonly params: TurretParams,
   ) {
     this.maxHealth = params.health;
@@ -234,7 +236,7 @@ export class Turret {
   private updateShots(deltaMs: number, enemies: readonly Enemy[]): void {
     for (let i = this.shots.length - 1; i >= 0; i--) {
       const shot = this.shots[i];
-      shot.update(deltaMs, enemies);
+      shot.update(deltaMs, enemies, this.border);
       if (!shot.isActive) this.shots.splice(i, 1);
     }
   }

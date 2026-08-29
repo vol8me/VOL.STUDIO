@@ -8,6 +8,16 @@ export interface CounterOptions {
   animateMs?: number;
 }
 
+/** Sayı değişiminin kullanıcıya görsel olarak anlatılan yönü. */
+export type CounterValueChange = 'increase' | 'decrease' | 'none';
+
+export interface CounterSetValueOptions {
+  /** Yön verilmezse eski ve yeni değer karşılaştırılarak otomatik bulunur. */
+  change?: CounterValueChange;
+  /** Değer değişmese bile nötr vurgu oynatır. */
+  pulse?: boolean;
+}
+
 export class Counter {
   readonly element: HTMLSpanElement;
   private readonly displayElement: HTMLSpanElement;
@@ -16,7 +26,7 @@ export class Counter {
   private readonly format: (value: number) => string;
   private readonly animateMs: number;
   private cancelAnimation?: () => void;
-  private pulseTimeout?: ReturnType<typeof setTimeout>;
+  private feedbackTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(options: CounterOptions = {}) {
     const { value = 0, format = (v) => String(Math.round(v)), animateMs = 150 } = options;
@@ -44,7 +54,7 @@ export class Counter {
     this.element.appendChild(this.announceElement);
   }
 
-  setValue(value: number, options: { pulse?: boolean } = {}): void {
+  setValue(value: number, options: CounterSetValueOptions = {}): void {
     const from = this.value;
     this.value = value;
 
@@ -65,8 +75,19 @@ export class Counter {
 
     this.announceElement.textContent = this.format(value);
 
-    if (options.pulse) {
+    const change = options.change ?? inferValueChange(from, value);
+    if (options.change !== undefined) {
+      if (options.change === 'none') {
+        if (options.pulse) this.pulse();
+      } else {
+        this.flashChange(options.change);
+      }
+    } else if (options.pulse) {
+      // `pulse:true` eski API'nin nötr vurgu sözleşmesidir; yön bilgisi
+      // isteyen çağrı açıkça `change` verir veya varsayılan infer davranışını kullanır.
       this.pulse();
+    } else if (change !== 'none') {
+      this.flashChange(change);
     }
   }
 
@@ -76,20 +97,48 @@ export class Counter {
 
   /** Değer görsel olarak değişmese bile vurgu animasyonu tetikler (örn. hasar aldığında). */
   pulse(): void {
-    this.element.classList.remove('vol-counter--pulse');
+    this.clearFeedbackClasses();
     // Reflow zorunlu: aynı class art arda eklenirse animasyon oynamaz.
     void this.element.offsetWidth;
     this.element.classList.add('vol-counter--pulse');
 
-    clearTimeout(this.pulseTimeout);
-    this.pulseTimeout = setTimeout(() => {
-      this.element.classList.remove('vol-counter--pulse');
+    this.scheduleFeedbackCleanup();
+  }
+
+  /** Değer yönünü renk ve aynı kısa pulse animasyonuyla anlatır. */
+  private flashChange(change: Exclude<CounterValueChange, 'none'>): void {
+    this.clearFeedbackClasses();
+    void this.element.offsetWidth;
+    this.element.classList.add(`vol-counter--${change}`);
+    this.scheduleFeedbackCleanup();
+  }
+
+  private clearFeedbackClasses(): void {
+    this.element.classList.remove(
+      'vol-counter--pulse',
+      'vol-counter--increase',
+      'vol-counter--decrease',
+    );
+    clearTimeout(this.feedbackTimeout);
+    this.feedbackTimeout = undefined;
+  }
+
+  private scheduleFeedbackCleanup(): void {
+    this.feedbackTimeout = setTimeout(() => {
+      this.feedbackTimeout = undefined;
+      this.clearFeedbackClasses();
     }, 400);
   }
 
   destroy(): void {
     this.cancelAnimation?.();
-    clearTimeout(this.pulseTimeout);
+    clearTimeout(this.feedbackTimeout);
     this.element.remove();
   }
+}
+
+function inferValueChange(from: number, to: number): CounterValueChange {
+  if (to > from) return 'increase';
+  if (to < from) return 'decrease';
+  return 'none';
 }

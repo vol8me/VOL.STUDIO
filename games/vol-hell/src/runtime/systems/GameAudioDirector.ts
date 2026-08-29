@@ -162,7 +162,7 @@ export class GameAudioDirector {
   stopAll(): void {
     this.stopped = true;
     this.lifecycleToken++;
-    gameAudio.stopAllSfx();
+    gameAudio.stopGameplaySfx();
     gameAudio.stopMusic(1);
     gameAudio.stopAmbient(1);
   }

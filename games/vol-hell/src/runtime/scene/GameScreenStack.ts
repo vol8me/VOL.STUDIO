@@ -1,7 +1,9 @@
 import { DisposableScope } from '@volstudio/core';
 import type { AudioSettings } from '@/app/AudioSettings';
+import type { VideoSettings } from '@/app/VideoSettings';
 import { gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
+import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import type { Player } from '@/runtime/entity/Player';
 import type { CardInventoryManager } from '@/runtime/systems/CardInventoryManager';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
@@ -16,8 +18,10 @@ export interface GameScreenStackOptions {
   player: Player;
   effects: EffectManager;
   cards: CardInventoryManager;
+  abilities: AbilityRuntime;
   economy: RunEconomy;
   audioSettings: AudioSettings;
+  videoSettings: VideoSettings;
   onPauseForCard: () => void;
   onResumeAfterCard: () => void;
   onResumeFromMenu: () => void;
@@ -41,29 +45,40 @@ export class GameScreenStack {
   private readonly scope = new DisposableScope();
 
   constructor(options: GameScreenStackOptions) {
-    const { parent, player, effects, cards, economy, audioSettings } = options;
+    const { parent, player, effects, cards, economy, audioSettings, videoSettings } = options;
 
     try {
       this.hud = this.scope.addDestroyable(new GameHud(parent, player, economy));
       this.hud.reset();
 
       this.cards = this.scope.addDestroyable(
-        new CardScreens(parent, cards, economy, {
-          onOpen: options.onPauseForCard,
-          onClose: options.onResumeAfterCard,
-          onCardTaken: (source) => {
-            effects.play('cardPicked', player.getX(), player.getPosition().y);
-            const sound = source === 'shop' ? 'cardBuy' : 'cardPick';
-            void gameAudio.playSfx(sound, { volume: sfxVolumes[sound] });
+        new CardScreens(
+          parent,
+          cards,
+          economy,
+          {
+            onOpen: options.onPauseForCard,
+            onClose: options.onResumeAfterCard,
+            onCardTaken: (source) => {
+              effects.play('cardPicked', player.getX(), player.getPosition().y);
+              const sound = source === 'shop' ? 'cardBuy' : 'cardPick';
+              void gameAudio.playSfx(sound, { volume: sfxVolumes[sound] });
+            },
+            onReroll: () => void gameAudio.playSfx('reroll', { volume: sfxVolumes.reroll }),
+            onLockToggle: () => void gameAudio.playSfx('lock', { volume: sfxVolumes.lock }),
+            onDeny: () => void gameAudio.playSfx('deny', { volume: sfxVolumes.deny }),
+            onStatsOpen: () => void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip }),
+            onShopVisibilityChange: (visible) => this.hud.setFluxVisible(!visible),
           },
-          onReroll: () => void gameAudio.playSfx('reroll', { volume: sfxVolumes.reroll }),
-          onLockToggle: () => void gameAudio.playSfx('lock', { volume: sfxVolumes.lock }),
-          onDeny: () => void gameAudio.playSfx('deny', { volume: sfxVolumes.deny }),
-        }),
+          {
+            player,
+            abilities: options.abilities,
+          },
+        ),
       );
 
       this.pause = this.scope.addDestroyable(
-        new PauseScreen(parent, audioSettings, {
+        new PauseScreen(parent, audioSettings, videoSettings, {
           onResume: options.onResumeFromMenu,
           onRestart: () => {
             void gameAudio.playSfx('restart', { volume: sfxVolumes.restart });

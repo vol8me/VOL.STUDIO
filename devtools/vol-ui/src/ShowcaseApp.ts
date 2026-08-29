@@ -1,4 +1,4 @@
-import { Tabs } from '@volstudio/core/ui';
+import { FullscreenController, Tabs } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { buildAdvancedTab } from './sections/advancedTab';
@@ -42,6 +42,7 @@ export class ShowcaseApp {
   private langButton: HTMLButtonElement | null = null;
   private renderScope: DisposableScope | null = null;
   private readonly lifecycle = new DisposableScope();
+  private readonly fullscreen: FullscreenController;
   private activeTabId: ShowcaseTabId = 'buttons';
   private destroyed = false;
   private readonly onLangButtonClick = (): void => {
@@ -55,6 +56,13 @@ export class ShowcaseApp {
     this.element = document.createElement('div');
     this.element.className = 'vol-showcase-root';
     this.mount.replaceChildren(this.element);
+    this.fullscreen = this.lifecycle.addDestroyable(
+      new FullscreenController({
+        target: this.element,
+        onChange: () => this.renderFullscreenLabel(),
+        onError: (error) => console.warn('[VOL.UI] Tam ekran açılamadı:', error),
+      }),
+    );
     i18next.on('languageChanged', this.onLanguageChanged);
     this.lifecycle.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
     this.rebuild();
@@ -89,7 +97,18 @@ export class ShowcaseApp {
     this.langButton.textContent = i18next.t('volui:app.language');
     this.langButton.setAttribute('aria-label', i18next.t('volui:app.language'));
     renderScope.addListener(this.langButton, 'click', this.onLangButtonClick);
-    header.appendChild(this.langButton);
+
+    const fullscreenButton = document.createElement('button');
+    fullscreenButton.type = 'button';
+    fullscreenButton.className = 'vol-showcase-fullscreen-button';
+    fullscreenButton.textContent = '⛶';
+    renderScope.addListener(fullscreenButton, 'click', () => void this.fullscreen.toggle());
+    this.renderFullscreenLabel(fullscreenButton);
+
+    const actions = document.createElement('div');
+    actions.className = 'vol-showcase-header__actions';
+    actions.append(this.langButton, fullscreenButton);
+    header.appendChild(actions);
 
     const specs: TabSpec[] = [
       { id: 'buttons', labelKey: 'buttons', builder: () => buildButtonsTab(this.element) },
@@ -127,5 +146,17 @@ export class ShowcaseApp {
     this.element.appendChild(this.tabs.element);
     document.documentElement.lang = i18next.language ?? 'tr';
     document.title = i18next.t('volui:app.title');
+  }
+
+  private renderFullscreenLabel(button?: HTMLButtonElement): void {
+    const target =
+      button ?? this.element.querySelector<HTMLButtonElement>('.vol-showcase-fullscreen-button');
+    if (!target) return;
+    const key = this.fullscreen.isFullscreen()
+      ? 'volui:app.leaveFullscreen'
+      : 'volui:app.fullscreen';
+    target.setAttribute('aria-label', i18next.t(key));
+    target.setAttribute('title', i18next.t(key));
+    target.setAttribute('aria-pressed', String(this.fullscreen.isFullscreen()));
   }
 }

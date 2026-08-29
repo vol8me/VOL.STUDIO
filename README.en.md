@@ -58,12 +58,24 @@ immersive fullscreen cannot be expressed in Tauri's configuration, so
 ```bash
 export ANDROID_HOME="$HOME/Android/Sdk"
 export NDK_HOME="$ANDROID_HOME/ndk/<version>"
-export JAVA_HOME=<JDK 17>
+export JAVA_HOME=<JDK 21 LTS>
 rustup target add aarch64-linux-android    # for devices; emulators need x86_64
 
 pnpm --filter @volstudio/tauri-v2 exec tauri android build --debug --target aarch64
 adb install -r tauri-v2/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 ```
+
+Fedora/Linux release (deb, rpm and AppImage):
+
+```bash
+pnpm exec just tauri-build-linux
+```
+
+If Tauri's AppImage finalization fails on Fedora during the `linuxdeploy`/ELF
+strip step, the recipe keeps the AppDir and rebuilds the AppImage with
+`build:linux-appimage`, `NO_STRIP=1`, and the VOL.HELL WebKit launcher. This
+path is used for native desktop verification. Android builds require JDK 21
+LTS; JDK 25 is not supported.
 
 The game is locked to landscape, system bars are hidden, and safe-area insets
 (`env(safe-area-inset-*)`) are applied to HUD placement. On-screen controls are
@@ -73,14 +85,15 @@ mounted only on touch-primary devices (`shouldUseTouchControls`).
 
 Quality gates run locally via `just`. There is no CI runner; GitHub is used only for source control, pull requests and releases.
 
-| Level           | Command                      | What it runs                                               |
-| --------------- | ---------------------------- | ---------------------------------------------------------- |
-| Pre-commit      | `pnpm quick`                 | contract, format, typecheck, lint (~45 s)                  |
-| Pre-push        | `pnpm high`                  | quick + CSS lint + coverage thresholds + all builds        |
-| Release/signoff | `pnpm signoff`               | high + cargo check/fmt/clippy                              |
-| Long build      | `pnpm exec just tauri-build` | game build + Tauri prod build (manual)                     |
-| Environment     | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri deps                 |
-| Report          | `pnpm exec just report high` | Runs a gate and reports the result structurally (`--json`) |
+| Level           | Command                            | What it runs                                               |
+| --------------- | ---------------------------------- | ---------------------------------------------------------- |
+| Pre-commit      | `pnpm quick`                       | contract, format, typecheck, lint (~45 s)                  |
+| Pre-push        | `pnpm high`                        | quick + CSS lint + coverage thresholds + all builds        |
+| Release/signoff | `pnpm signoff`                     | high + cargo check/fmt/clippy                              |
+| Long build      | `pnpm exec just tauri-build`       | game build + Tauri prod build (manual)                     |
+| Fedora/Linux    | `pnpm exec just tauri-build-linux` | deb + rpm + AppImage delivery                              |
+| Environment     | `pnpm run doctor:env`              | Node, pnpm, Rust, just, FFmpeg, Tauri deps                 |
+| Report          | `pnpm exec just report high`       | Runs a gate and reports the result structurally (`--json`) |
 
 Benchmark commands do not impose machine-specific performance thresholds; they
 measure median/p95 step cost for CORE mechanisms and VOL.HELL's renderer-free

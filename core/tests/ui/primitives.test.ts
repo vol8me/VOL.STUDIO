@@ -391,6 +391,25 @@ describe('Select', () => {
     expect(optionButtons[0].getAttribute('aria-selected')).toBe('false');
   });
 
+  it('setOptions etiketleri yeniler, değeri korur ve kaldırılan değeri temizler', () => {
+    const onInput = vi.fn();
+    const select = new Select({ options: sampleOptions, value: 'b', onInput });
+    instances.push(select);
+    document.body.appendChild(select.element);
+
+    select.setOptions([
+      { value: 'a', label: 'Yeni A' },
+      { value: 'b', label: 'Yeni B', tone: 'success' },
+    ]);
+    expect(select.getValue()).toBe('b');
+    expect(select.element.querySelector('.vol-select__label')?.textContent).toBe('Yeni B');
+    expect(onInput).not.toHaveBeenCalled();
+
+    select.setOptions([{ value: 'a', label: 'Son A' }]);
+    expect(select.getValue()).toBeUndefined();
+    expect(select.element.querySelector('.vol-select__label')?.textContent).toBe('Seçiniz');
+  });
+
   it('seçenek tıklaması input callback çağırır, değeri ve etiketi günceller', async () => {
     const onInput = vi.fn();
     const select = new Select({ options: sampleOptions, onInput });

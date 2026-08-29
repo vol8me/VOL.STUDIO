@@ -5,6 +5,59 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-29 — VOL.HELL masaüstü ve Android teslim doğrulaması
+
+Fedora/Wayland üzerinde üretilen native AppImage ilk açılışta beyaz pencere
+bırakıyordu. Kök neden, WebKitGTK GBM renderer'ının bu sürücü birleşiminde
+ilk buffer'ı oluşturamamasıydı. Linux launcher'ı
+`WEBKIT_DISABLE_DMABUF_RENDERER` varsayılanıyla başlatacak şekilde paketlendi;
+Tauri'nin Fedora'da `linuxdeploy` aşamasında kırılan AppImage sonlandırması
+için de `scripts/build-linux-appimage.mjs` ile AppDir yeniden paketleniyor.
+Gerçek AppImage Fedora masaüstünde başlatıldı ve VOL.HELL ana menüsü ekran
+görüntüsüyle doğrulandı. Kullanıcı menüsündeki user-level `.desktop` girdisi
+güncellendi; sistem geneli RPM kurulumu sudo parolası gerektiği için yapılmadı.
+
+Gerçek Galaxy S21 FE cihazında JDK 21 ile debug aarch64 APK üretildi, kuruldu
+ve başlatıldı; ana menü ekran görüntüsüyle doğrulandı. Android Studio'nun JDK
+25'iyle yapılan ilk deneme Gradle'ın `25.0.2` sürümünü kabul etmemesi nedeniyle
+başarısız oldu; üretim yolu JDK 21 LTS olarak sabitlendi. Native Linux ve
+Android smoke testleri geçti. `pnpm quick`, `pnpm high` (e2e dahil) ve
+Tauri/Gradle üretim yolu yeniden çalıştırıldı; istisna olarak Playwright
+tarayıcıları `pnpm exec playwright install chromium` ile kuruldu.
+
+## 2026-08-29 — VOL.HELL hardening turu: shop UX, geri bildirim ve platform
+
+Oyuncu istatistikleri için CORE'a yeniden kullanılabilir, sağdan açılan ve
+modal scrim/odak tuzağı kullanan `StatsPanel` eklendi. VOL.HELL bu bileşeni
+yalnızca shop/intermission katmanında açıyor; HUD'da ekstra panel/buton yok.
+Shop stats'i ikonlu oyuncu, yetenek özeti ve Q/E detay kategorileriyle gerçek
+ölçeklenmiş değerleri gösteriyor; satın alma, satış, reroll ve equip/unequip
+sonrasında açık panel aynı instance'ları koruyarak yenileniyor.
+
+Shop bakiyesi anında yeniden render ediliyor ve düşüşte kısa bir görsel vurgu
+alıyor. Spark barındaki gereksiz “kart bekleniyor” metni kaldırıldı. Hareket
+ve joystick girdisi için sekiz yönlü, yumuşak VOL oku; gerçek mermi üretiminde
+merminin altında kısa ateş yönü çizgisi eklendi. Düşman ölüm kamera sarsıntısı
+hafifletildi. Desktop/Web/Tauri pointer'ı, basılı ve onay durumları olan
+üst-seviye VOL crosshair cursor ile değiştirildi; touch cihazlarında sistem
+pointer'ı zorlanmıyor.
+
+Wave sınırında düzenli düşman/mermi/pickup/telegraph temizliğine ek olarak kule,
+ateş alanı, zincir yıldırım, partikül ve kamera efektleri, joystick/klavye latch'i
+ve oyuncu dash/velocity/konumu tek kapıdan sıfırlanıyor. Oyuncu her yeni dalgada
+arena merkezine dönüyor; turret'in birden fazla atışı yalnızca büyük zaman
+adımını telafi eden bounded catch-up durumunda mümkün ve tek update sahibine
+sahip olduğu testle doğrulandı.
+
+Pause ayarları ana menüyle dil, master/SFX/müzik/ambiyans, sarsıntı şiddeti,
+titreşim ve mute alanlarında eşitlendi. Menü SFX'leri artık sahne kapanışında
+oyun seslerini susturan genel temizlik tarafından kesilmiyor; ilk etkileşimden
+önce bütün SFX'ler bağımsız ve dayanıklı biçimde yükleniyor. Mobil ölüm özeti
+güvenli alanlı, kaydırılabilir bir panel olarak düzenlendi; scene yeniden
+kullanıldığında eski scroll konumu sıfırlanıyor. VOL.UI ve VOL.HELL F11/
+programatik fullscreen akışı CORE `FullscreenController`a bağlandı; VOL.UI
+üst çubuk aksiyonlarına ayrı, tam dokunma hedefleri verildi.
+
 ## 2026-08-29 — VOL.HELL hardening turu: savaş döngüsü, ses ve zaman güvenliği
 
 Güncel ZIP'ten bildirilen 27 maddelik VOL.HELL denetimi kod ve regresyon

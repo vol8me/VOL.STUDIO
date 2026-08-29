@@ -65,6 +65,24 @@ function makeEffects(): EffectManager & { calls: string[] } {
   } as unknown as EffectManager & { calls: string[] };
 }
 
+/** Kule mermilerinin saha teması sözleşmesini de taşıyan geniş test arenası. */
+function makeBorder(): Border {
+  return {
+    bounds: {
+      left: 0,
+      right: 800,
+      top: 0,
+      bottom: 600,
+      width: 800,
+      height: 600,
+      centerX: 400,
+      centerY: 300,
+    },
+    clampX: (x: number) => x,
+    clampY: (y: number) => y,
+  } as unknown as Border;
+}
+
 /**
  * Ability'lerin ürettiği GameObject'lerin yaşam döngüsü.
  *
@@ -101,7 +119,7 @@ describe('ability yaşam döngüsü — sahnede artık kalmaz', () => {
     runtime = new AbilityRuntime({
       scene,
       effects,
-      border: { clampX: (x: number) => x, clampY: (y: number) => y } as unknown as Border,
+      border: makeBorder(),
       random: createRandom(5),
       bullets: { spawnBullet: () => {} } as unknown as BulletManager,
       playerStats: new StatBlock({
@@ -171,6 +189,21 @@ describe('ability yaşam döngüsü — sahnede artık kalmaz', () => {
     // Düşmanın kendi şekilleri hariç her şey kapanmış olmalı.
     const enemyShapes = 3; // gövde + can barı arka planı + dolgusu
     expect(liveShapes()).toBeLessThanOrEqual(enemyShapes);
+  });
+
+  it('clearTransientState slotları korurken sahadaki ability varlıklarını siler', () => {
+    runtime.assign('primary', createAbility('turret'));
+    runtime.assign('secondary', createAbility('fireZone'));
+    runtime.update(16, playerPos, aim, []);
+    runtime.tryActivate('primary');
+    runtime.tryActivate('secondary');
+
+    runtime.clearTransientState();
+
+    expect(runtime.getAbility('primary')).not.toBeNull();
+    expect(runtime.getAbility('secondary')).not.toBeNull();
+    expect(runtime.getTurret()).toBeNull();
+    expect(runtime.getActiveZoneCount()).toBe(0);
   });
 
   it('zincir yıldırım söndükten sonra grafiği kapanır', () => {

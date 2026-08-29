@@ -1,4 +1,5 @@
 import { ResourceCounter, type ResourceCounterOptions } from './ResourceCounter';
+import type { CounterSetValueOptions } from './Counter';
 import { i18next } from '../../systems/I18n';
 
 export interface ResourceBarEntry extends ResourceCounterOptions {
@@ -34,7 +35,7 @@ export class ResourceBar {
     i18next.on('languageChanged', this.onLanguageChanged);
   }
 
-  setResource(key: string, value: number, options: { pulse?: boolean } = {}): void {
+  setResource(key: string, value: number, options: CounterSetValueOptions = {}): void {
     this.counters.get(key)?.setValue(value, options);
   }
 

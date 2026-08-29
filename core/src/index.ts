@@ -152,6 +152,7 @@ export {
 } from './systems/FontManager';
 export {
   ViewportManager,
+  type MaxDprSetting,
   type ViewportConfig,
   type ViewportResult,
   type ScaleStrategy,

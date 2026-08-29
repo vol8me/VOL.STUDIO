@@ -13,6 +13,12 @@ export {
   type SelectionInfoData,
 } from './SelectionInfoPanel';
 export {
+  StatsPanel,
+  type StatsPanelEntry,
+  type StatsPanelGroup,
+  type StatsPanelOptions,
+} from './StatsPanel';
+export {
   SkillTree,
   // Opsiyonel KURAL tarifi — bileşen onu varsaymaz, çağıran seçer.
   resolveSkillStates,

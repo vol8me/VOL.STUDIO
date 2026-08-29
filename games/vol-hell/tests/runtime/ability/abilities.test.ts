@@ -370,6 +370,24 @@ describe('Ability sistemi', () => {
       runtime.update(1, playerPos, aim, [enemy]);
       expect(runtime.getTurret()!.activeShotCount).toBe(1);
     });
+
+    it('normal simülasyon adımında tek interval için çift atış üretmez', () => {
+      runtime.assign('primary', createAbility('turret'));
+      runtime.update(16, playerPos, aim, []);
+      runtime.tryActivate('primary');
+
+      const enemy = makeEnemyAt(playerPos.x + 180, playerPos.y, 100_000);
+      const interval = ABILITY_CATALOG.turret.turret!.fireIntervalMs;
+
+      runtime.update(interval - 1, playerPos, aim, [enemy]);
+      expect(effects.calls.filter((id) => id === 'turretShot')).toHaveLength(0);
+
+      runtime.update(1, playerPos, aim, [enemy]);
+      expect(effects.calls.filter((id) => id === 'turretShot')).toHaveLength(1);
+
+      runtime.update(16, playerPos, aim, [enemy]);
+      expect(effects.calls.filter((id) => id === 'turretShot')).toHaveLength(1);
+    });
   });
 
   describe('zincir yıldırım', () => {
@@ -504,10 +522,21 @@ describe('Ability sistemi', () => {
       const enemy = makeEnemyAt(30, 0, 1_000);
       const shot = new TurretShot(makeScene(), 0, 0, enemy, 5, effects);
 
-      shot.update(100, [enemy]);
+      shot.update(100, [enemy], makeBorder());
 
       expect(effects.calls).toContain('turretImpact');
       expect(shot.isActive).toBe(false);
+    });
+
+    it('arena sınırına ulaşınca sekmeden yok olur', () => {
+      const enemy = makeEnemyAt(1_000, 0, 1_000);
+      const shot = new TurretShot(makeScene(), 790, 300, enemy, 5, effects);
+
+      shot.update(100, [enemy], makeBorder());
+
+      expect(shot.isActive).toBe(false);
+      expect(enemy.getHealthRatio()).toBe(1);
+      expect(effects.calls).toContain('turretImpact');
     });
   });
 

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# Fedora/Wayland'de WebKitGTK'nin GBM renderer'ı bazı sürücülerde ilk buffer'ı
+# ayıramayıp beyaz pencere bırakır. AppImage alt sürecini de kapsaması için
+# değişken launcher seviyesinde ayarlanır; kullanıcı açıkça değiştirdiyse
+# tercihi korunur.
+set -e
+
+this_dir="$(readlink -f "$(dirname "$0")")"
+
+source "$this_dir/apprun-hooks/linuxdeploy-plugin-gtk.sh"
+
+export WEBKIT_DISABLE_DMABUF_RENDERER="${WEBKIT_DISABLE_DMABUF_RENDERER:-1}"
+
+# linuxdeploy AppRun, GStreamer sistem yolunu AppDir'e yönlendirir. Scanner ve
+# registry de aynı izole runtime'a sabitlenmezse host cache'i eski/uyumsuz
+# plugin sonuçlarını taşıyabilir ve WebKitGTK sessiz kalabilir.
+gst_plugin_dir="$this_dir/usr/lib/gstreamer-1.0"
+gst_scanner="$this_dir/usr/libexec/gstreamer-1.0/gst-plugin-scanner"
+gst_cache_root="${XDG_CACHE_HOME:-${HOME:-/tmp}/.cache}/vol-hell"
+mkdir -p "$gst_cache_root"
+
+export GST_PLUGIN_PATH_1_0="$gst_plugin_dir"
+export GST_PLUGIN_SYSTEM_PATH_1_0="$gst_plugin_dir"
+export GST_PLUGIN_SCANNER_1_0="$gst_scanner"
+export GST_REGISTRY_1_0="$gst_cache_root/gstreamer-registry.bin"
+
+exec "$this_dir/AppRun.wrapped" "$@"

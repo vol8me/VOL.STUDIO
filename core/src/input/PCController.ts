@@ -119,6 +119,10 @@ export class PCController<TAction extends string> implements InputProvider<TActi
     }
   }
 
+  reset(): void {
+    this.resetKeys();
+  }
+
   /** activePointer çalışma anında değişebilir; referans saklanmaz. */
   private get pointer(): Phaser.Input.Pointer {
     return this.scene.input.activePointer;

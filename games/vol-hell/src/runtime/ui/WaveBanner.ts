@@ -34,7 +34,9 @@ export class WaveBanner {
 
     this.announcement = document.createElement('div');
     this.announcement.className = 'vol-wave__announcement';
-    this.announcement.hidden = true;
+    this.announcement.setAttribute('role', 'status');
+    this.announcement.setAttribute('aria-live', 'polite');
+    this.announcement.setAttribute('aria-hidden', 'true');
     this.element.appendChild(this.announcement);
 
     parent.appendChild(this.element);
@@ -43,7 +45,7 @@ export class WaveBanner {
   /** Yeni dalga başladı — ortada duyuru belirir. */
   announce(wave: number): void {
     this.announcement.textContent = i18next.t('volhell:hud.waveAnnounce', { wave });
-    this.announcement.hidden = false;
+    this.announcement.setAttribute('aria-hidden', 'false');
     // Yeniden tetiklemede animasyon baştan oynasın diye sınıf sıfırlanır.
     this.announcement.classList.remove('vol-wave__announcement--visible');
     // Reflow: sınıfın kaldırılıp hemen eklenmesi tarayıcıda tek değişiklik
@@ -71,7 +73,7 @@ export class WaveBanner {
       this.announcementTimerMs -= safeDelta;
       if (this.announcementTimerMs <= 0) {
         this.announcement.classList.remove('vol-wave__announcement--visible');
-        this.announcement.hidden = true;
+        this.announcement.setAttribute('aria-hidden', 'true');
       }
     }
 

@@ -28,6 +28,14 @@ pnpm --filter @volstudio/vol-hell dev
 | Ses        | `@volstudio/core` müzik motoru üzerinden adaptif müzik + SFX yönetimi                                       |
 | Mobil      | Dokunmatik ekran kontrolleri, Android geri tuşu, arka plana geçince otomatik duraklatma, titreşim           |
 
+Oyuncu istatistikleri HUD'a eklenmez: yalnızca dalga arası shop/intermission
+açıldığında görünen `StatsPanel` butonundan sağa açılan modal çekmecede gösterilir.
+Çekmece küçük ekranlarda güvenli alanı gözetir, içeriği kaydırır ve oyuncu
+canı/hasarı/hızı/atış temposu ile takılı yeteneklerin gerçek ölçeklenmiş
+değerlerini ikonlu Q/E kategorileriyle listeler. Satın alma, satış, reroll ve
+slot değişiklikleri açık çekmeceye anında yansır. Panelin scrim'i kart/dükkan
+ekranlarıyla aynıdır, ekstra blur kullanmaz.
+
 Oynanış sayıları `src/config/` altında veri olarak durur; denge değişikliği kod değil config işidir.
 
 ### Ability ilerleme dengesi
@@ -69,6 +77,11 @@ duraklatılır. Titreşim (`core/src/platform/haptics.ts`) adlandırılmış
 desenlerle çalışır, varsayılan açıktır ve Ayarlar'dan kapatılabilir;
 desteklemeyen platformda (`navigator.vibrate` yoksa) sessizce hiçbir şey
 yapmaz.
+
+Masaüstü ve Tauri WebView'da F11 tam ekranı açıp kapatır; aynı akış CORE
+`FullscreenController` üzerinden Phaser canvas + DOM kökünü birlikte kapsar.
+Tarayıcı F11'i kendi penceresine ayırıyorsa uygulama olayı almaz ve tarayıcının
+yerel davranışı korunur.
 
 ## Dayanıklılık sözleşmesi
 

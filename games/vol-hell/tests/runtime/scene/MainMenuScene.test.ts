@@ -6,7 +6,6 @@ const fakes = vi.hoisted(() => ({
   vibrate: vi.fn(),
   isTauri: vi.fn(() => false),
   closeWindow: vi.fn(),
-  stopAllSfx: vi.fn(),
   startMenuMusic: vi.fn(),
   stopMenuMusic: vi.fn(),
 }));
@@ -24,7 +23,7 @@ vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ close: fakes.closeWindow }),
 }));
 vi.mock('@/app/services', () => ({
-  gameAudio: { playSfx: vi.fn(), stopAllSfx: fakes.stopAllSfx },
+  gameAudio: { playSfx: vi.fn() },
   gameStats: { getBestScore: vi.fn(() => 0), getBestTimeMs: vi.fn(() => 0) },
 }));
 vi.mock('@/app/menuMusic', () => ({
@@ -101,7 +100,6 @@ describe('MainMenuScene çıkış onayı yaşam döngüsü', () => {
     expect(signal.aborted).toBe(true);
     expect(scene.exitPromptAbort).toBeNull();
     expect(stopBackHandler).toHaveBeenCalledOnce();
-    expect(fakes.stopAllSfx).toHaveBeenCalledOnce();
     expect(fakes.stopMenuMusic).not.toHaveBeenCalled();
     for (const destroyer of destroyers) expect(destroyer.destroy).toHaveBeenCalledOnce();
   });

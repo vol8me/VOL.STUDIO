@@ -8,7 +8,7 @@ const { audio } = vi.hoisted(() => ({
     loadAllSfx: vi.fn(() => Promise.resolve()),
     stopMusic: vi.fn(),
     stopAmbient: vi.fn(),
-    stopAllSfx: vi.fn(),
+    stopGameplaySfx: vi.fn(),
     playAmbient: vi.fn(() => Promise.resolve()),
     playMusic: vi.fn(() => Promise.resolve()),
     playSfx: vi.fn(() => Promise.resolve()),
@@ -48,6 +48,7 @@ describe('GameAudioDirector', () => {
     await settleMicrotasks();
 
     expect(audio.playAmbient).not.toHaveBeenCalled();
+    expect(audio.stopGameplaySfx).toHaveBeenCalledOnce();
   });
 
   it('aktif sahnede yükleme tamamlanınca sakin ambiyansı başlatır', async () => {

@@ -8,7 +8,7 @@
 pnpm --filter @volstudio/vol-ui dev
 ```
 
-Vite dev server tarayıcıda açılır; Tauri veya Phaser oyun döngüsü gerekmez, showcase saf DOM üzerinde çalışır.
+Vite dev server tarayıcıda açılır; Tauri veya Phaser oyun döngüsü gerekmez, showcase saf DOM üzerinde çalışır. Üst çubuktaki tam ekran düğmesi ve F11 aynı CORE `FullscreenController` akışını kullanır.
 
 ## Sekmeler
 
@@ -17,7 +17,7 @@ Vite dev server tarayıcıda açılır; Tauri veya Phaser oyun döngüsü gerekm
 | BUTTONS   | Button, IconButton varyantları                                                                                                                                                                                                                 | `primitives/`                           |
 | TEXT      | Text, AnimatedLabel efektleri                                                                                                                                                                                                                  | `primitives/`                           |
 | PANELS    | Panel, Modal, Toast, Confirm, ContextMenu                                                                                                                                                                                                      | `overlays/`                             |
-| HUD       | Bar, XPBar, Counter, ResourceBar, MinimapPanel, BuildMenu, RoundCounter, SelectionInfoPanel                                                                                                                                                    | `feedback/`, `hud/`                     |
+| HUD       | Bar, XPBar, Counter, ResourceBar, MinimapPanel, BuildMenu, RoundCounter, SelectionInfoPanel, ikonlu/kaydırılabilir StatsPanel                                                                                                                  | `feedback/`, `hud/`                     |
 | KARTLAR   | CardTile (rarity kademeleri), LevelUpPicker, ShopPicker                                                                                                                                                                                        | `cards/`                                |
 | FORMS     | Input, TextArea, Slider, RangeSlider, Checkbox, ColorPicker, CurveEditor, PropertyField, Toolbar, RadioGroup, Select, SegmentedControl, NumberStepper, TimerBar                                                                                | `primitives/`                           |
 | WORKBENCH | PropertyField, CommandHistory, SplitPane, CanvasViewportController, KeyedVirtualList, Icon registry                                                                                                                                            | `primitives/`, `layout/`                |

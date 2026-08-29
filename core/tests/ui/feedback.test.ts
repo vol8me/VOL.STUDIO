@@ -266,6 +266,25 @@ describe('Counter', () => {
     counter.destroy();
   });
 
+  it('değer yönünü artış/azalış sınıfıyla bildirir ve aynı değerde nötr kalır', () => {
+    const counter = new Counter({ value: 10, animateMs: 0 });
+
+    counter.setValue(15);
+    expect(counter.element.classList.contains('vol-counter--increase')).toBe(true);
+    expect(counter.element.classList.contains('vol-counter--decrease')).toBe(false);
+
+    vi.advanceTimersByTime(400);
+    counter.setValue(4);
+    expect(counter.element.classList.contains('vol-counter--decrease')).toBe(true);
+
+    vi.advanceTimersByTime(400);
+    counter.setValue(4, { pulse: true });
+    expect(counter.element.classList.contains('vol-counter--pulse')).toBe(true);
+    expect(counter.element.classList.contains('vol-counter--increase')).toBe(false);
+
+    counter.destroy();
+  });
+
   it('destroy çalışan animasyonu ve pulse zamanlayıcılarını temizler', () => {
     const cancelSpy = vi.spyOn(globalThis, 'cancelAnimationFrame');
     const clearSpy = vi.spyOn(globalThis, 'clearTimeout');

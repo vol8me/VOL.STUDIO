@@ -90,6 +90,9 @@
   "selectionInfo": {
     "emptyState": "No selection"
   },
+  "statsPanel": {
+    "close": "Close statistics"
+  },
   "roundcounter": {
     "round": "Round {{round}}",
     "roundTotal": "Round {{round}} / {{total}}",

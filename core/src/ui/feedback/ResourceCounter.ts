@@ -1,4 +1,4 @@
-import { Counter, type CounterOptions } from './Counter';
+import { Counter, type CounterOptions, type CounterSetValueOptions } from './Counter';
 
 export interface ResourceCounterOptions extends CounterOptions {
   /** SVG veya metin/emoji ikon; sayının sol tarafına yerleşir. */
@@ -37,7 +37,7 @@ export class ResourceCounter {
     this.element.appendChild(this.counter.element);
   }
 
-  setValue(value: number, options: { pulse?: boolean } = {}): void {
+  setValue(value: number, options: CounterSetValueOptions = {}): void {
     this.counter.setValue(value, options);
   }
 

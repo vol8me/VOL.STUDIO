@@ -30,6 +30,8 @@ export interface RunDirectorDeps {
   getDifficulty: () => DifficultyState;
   /** Flux parçası toplandığında — ses vb. geri bildirim. */
   onFluxCollected?: () => void;
+  /** Dalga arası ekran açılmadan önce geçici savaş varlıklarını temizler. */
+  clearTransientState?: () => void;
 }
 
 export interface RunDirectorCallbacks {
@@ -58,12 +60,14 @@ export class RunDirector {
   private readonly bulletManager: BulletManager;
   private readonly telegraphs: TelegraphManager;
   private readonly specials: SpecialEnemyDirector;
+  private readonly clearTransientState?: () => void;
   private destroyed = false;
 
   constructor(deps: RunDirectorDeps, callbacks: RunDirectorCallbacks = {}) {
     this.enemyManager = deps.enemyManager;
     this.bulletManager = deps.bulletManager;
     this.telegraphs = deps.telegraphs;
+    this.clearTransientState = deps.clearTransientState;
 
     this.economy = new RunEconomy({
       onLevelUp: (level) => {
@@ -193,6 +197,7 @@ export class RunDirector {
     // Bekleyen saldırı uyarıları da silinir: dalga bittikten sonra görünmez
     // bir kaynaktan hasar gelmesin.
     this.telegraphs.cancelAll();
+    this.clearTransientState?.();
 
     diagnostics?.recordEvent('waveClear', { wave, enemies, bullets, pickups });
   }

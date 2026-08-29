@@ -25,6 +25,7 @@ interface FakePlayer {
   getHealth(): number;
   getMaxHealth(): number;
   getDashChargeRatio(): number;
+  getStats(): { getValue(stat: string): number };
 }
 
 function fakePlayer(overrides: Partial<FakePlayer> = {}): FakePlayer {
@@ -34,6 +35,12 @@ function fakePlayer(overrides: Partial<FakePlayer> = {}): FakePlayer {
     getHealth: () => state.health,
     getMaxHealth: () => state.maxHealth,
     getDashChargeRatio: () => state.dashRatio,
+    getStats: () => ({
+      getValue: (stat: string) =>
+        ({ damage: 10, speed: 200, health: state.maxHealth, fireRate: 250 })[stat] ?? 0,
+      getBase: (stat: string) =>
+        ({ damage: 10, speed: 200, health: 100, fireRate: 250 })[stat] ?? 0,
+    }),
   };
 }
 
@@ -60,7 +67,6 @@ function baseState(over: Record<string, unknown> = {}) {
     score: 0,
     kills: 0,
     elapsedTimeMs: 0,
-    pendingLevelUps: 0,
     deltaMs: 16,
     wave: 1,
     waveRemainingMs: 30_000,
@@ -77,6 +83,7 @@ describe('GameHud', () => {
     i18n.addResources('tr', 'volhell', trResources);
     i18n.addResources('en', 'volhell', enResources);
     if (!i18next.isInitialized) await i18n.init();
+    await i18next.changeLanguage('tr');
     parent = document.createElement('div');
     document.body.appendChild(parent);
   });
@@ -101,6 +108,30 @@ describe('GameHud', () => {
     const view = hud();
     view.refresh(baseState());
     expect(parent.children.length).toBeGreaterThan(0);
+  });
+
+  it('oyuncu istatistikleri oyun HUDunda görünmez — yalnızca shop sahibi olur', () => {
+    const view = hud();
+    view.refresh(baseState());
+    expect(parent.querySelector('.vol-hud-stats-toggle')).toBeNull();
+    expect(parent.querySelector('.vol-stats-panel-modal')).toBeNull();
+    view.destroy();
+  });
+
+  it('shop açıkken HUD Flux satırını gizler ve kapanınca geri getirir', () => {
+    const view = hud();
+    const fluxLine = parent.querySelector<HTMLElement>('.vol-hud-stats__line--flux');
+    expect(fluxLine?.hidden).toBe(false);
+
+    view.setFluxVisible(false);
+    expect(fluxLine?.hidden).toBe(true);
+    expect(fluxLine?.getAttribute('aria-hidden')).toBe('true');
+
+    view.setFluxVisible(true);
+    expect(fluxLine?.hidden).toBe(false);
+    expect(fluxLine?.getAttribute('aria-hidden')).toBe('false');
+
+    view.destroy();
   });
 
   it('maks. can DEĞİŞİNCE bar üst sınırı güncellenir', () => {
@@ -187,10 +218,12 @@ describe('WaveBanner', () => {
 
     const announcement = parent.querySelector('.vol-wave__announcement');
     expect(announcement).not.toBeNull();
+    expect(announcement?.getAttribute('aria-hidden')).toBe('false');
 
     // Duyuru sayacı `refresh`in deltasıyla akar; gerçek zaman beklenmez.
     for (let i = 0; i < 200; i++) banner.refresh(50, 2, 30_000, false, null);
     expect(announcement?.classList.contains('vol-wave__announcement--visible')).toBe(false);
+    expect(announcement?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('refresh kalan süreyi gösterir', () => {

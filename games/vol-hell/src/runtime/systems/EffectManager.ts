@@ -17,6 +17,8 @@ export interface EffectManagerOptions {
    * (ayarlardan kapatılmış). Verilmezse sarsıntı uygulanmaz.
    */
   getShakeScale?: () => number | null;
+  /** Partikül sayısı çarpanı; verilmez/geçersizse config sayısı korunur. */
+  getParticleScale?: () => number;
 }
 
 /**
@@ -69,7 +71,8 @@ export class EffectManager {
       if (spread !== undefined && angleDeg !== undefined && Number.isFinite(angleDeg)) {
         emitter.setEmitterAngle({ min: angleDeg - spread, max: angleDeg + spread });
       }
-      emitter.emitParticleAt(x, y, definition.particles.count);
+      const count = this.resolveParticleCount(definition.particles.count);
+      if (count > 0) emitter.emitParticleAt(x, y, count);
     }
 
     if (definition.shake) {
@@ -85,6 +88,14 @@ export class EffectManager {
       total += emitter.getAliveParticleCount();
     }
     return total;
+  }
+
+  /** Dalga sınırında havada kalan patlama/iz partiküllerini anında tüketir. */
+  clearActive(): void {
+    if (this.destroyed) return;
+    for (const emitter of this.emitters.values()) emitter.killAll();
+    this.lastShakeAt.clear();
+    this.scene.cameras.main.resetFX();
   }
 
   destroy(): void {
@@ -107,6 +118,13 @@ export class EffectManager {
 
     this.lastShakeAt.set(id, now);
     this.scene.cameras.main.shake(shake.durationMs, nonNegativeFinite(shake.intensity * scale));
+  }
+
+  private resolveParticleCount(baseCount: number): number {
+    const scale = this.options.getParticleScale?.() ?? 1;
+    if (!Number.isFinite(scale)) return baseCount;
+    if (scale <= 0) return 0;
+    return Math.max(1, Math.round(baseCount * scale));
   }
 
   private createEmitter(spec: ParticleBurstSpec): Phaser.GameObjects.Particles.ParticleEmitter {

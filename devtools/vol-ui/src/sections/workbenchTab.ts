@@ -211,7 +211,7 @@ export function buildWorkbenchTab(): {
       card(i18next.t('volui:workbench.propertyFields'), buildPropertyDemo(disposables), {
         spanAll: true,
       }),
-      card(i18next.t('volui:workbench.history'), buildHistoryDemo(disposables)),
+      card(i18next.t('volui:workbench.history'), buildHistoryDemo(disposables), { spanAll: true }),
     ]),
     card(i18next.t('volui:workbench.iconRegistry'), buildIconRegistry(disposables), {
       spanAll: true,

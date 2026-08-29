@@ -10,6 +10,12 @@
   transform: translate(-50%, -50%);
 }
 
+#game-container:fullscreen {
+  width: 100%;
+  height: 100%;
+  background: var(--vol-ui-bg);
+}
+
 .vol-pause-overlay {
   position: absolute;
   inset: 0;
@@ -17,6 +23,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  padding: calc(var(--vol-safe-top) + var(--vol-space-md))
+    calc(var(--vol-safe-right) + var(--vol-space-md))
+    calc(var(--vol-safe-bottom) + var(--vol-space-md))
+    calc(var(--vol-safe-left) + var(--vol-space-md));
+  overflow: auto;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--vol-transition-medium) ease;
@@ -37,6 +49,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  padding: calc(var(--vol-safe-top) + var(--vol-space-md))
+    calc(var(--vol-safe-right) + var(--vol-space-md))
+    calc(var(--vol-safe-bottom) + var(--vol-space-md))
+    calc(var(--vol-safe-left) + var(--vol-space-md));
+  overflow: auto;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--vol-transition-medium) ease;
@@ -63,7 +81,8 @@
 .death-panel,
 .pause-panel,
 .main-menu-panel {
-  max-height: calc(100vh - var(--vol-safe-top) - var(--vol-safe-bottom) - 2 * var(--vol-space-md));
+  max-height: calc(100dvh - var(--vol-safe-top) - var(--vol-safe-bottom) - 2 * var(--vol-space-md));
+  min-height: 0;
   overflow-y: auto;
 
   /*
@@ -132,9 +151,52 @@
 }
 
 .death-panel {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
+  inset: auto;
+  width: min(420px, 100%);
+  max-width: 100%;
+  transform: none;
+}
+
+.vol-death-overlay--visible .death-panel {
+  pointer-events: auto;
+}
+
+.pause-settings-panel {
+  position: relative;
+  inset: auto;
+  width: min(420px, 100%);
+  max-width: 100%;
+  transform: none;
+}
+
+.pause-settings-close {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  align-self: flex-end;
+  margin-bottom: calc(-1 * var(--vol-space-lg));
+}
+
+/* Ana menü ve pause aynı ayar formunu kullanır; yalnız dış panel değişir. */
+.vol-game-settings {
+  flex-direction: column;
+  gap: var(--vol-space-md);
+  width: 100%;
+  display: flex;
+}
+
+.vol-game-settings__section {
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+  width: 100%;
+  padding-top: var(--vol-space-md);
+  border-top: 1px solid var(--vol-ui-border-soft);
+  display: flex;
+}
+
+.vol-game-settings__section > .vol-text {
+  margin: 0;
 }
 
 /*
@@ -192,7 +254,9 @@
   position: absolute;
   top: var(--vol-space-md);
   right: var(--vol-space-md);
-  z-index: 50;
+
+  /* Modal/shop katmanı HUD metinlerinin üzerinde kalmalıdır. */
+  z-index: var(--vol-z-root);
   flex-direction: column;
   gap: var(--vol-space-xs);
   display: flex;
@@ -218,6 +282,143 @@
   color: var(--vol-ui-text);
 }
 
+/* Oyun pointer'ı: Phaser/DOM düğmelerinin üstünde, ancak pointer-events yok. */
+.vol-custom-cursor-enabled,
+.vol-custom-cursor-enabled * {
+  cursor: none !important;
+}
+
+.vol-custom-cursor {
+  --vol-cursor-color: var(--vol-ui-accent-solid, #ffc857);
+
+  position: fixed;
+  z-index: calc(var(--vol-z-debug, 999999) + 1);
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition:
+    opacity 100ms ease-out,
+    transform 100ms ease-out,
+    color 100ms ease-out;
+}
+
+.vol-custom-cursor--visible {
+  opacity: 0.86;
+}
+
+.vol-custom-cursor--hover {
+  --vol-cursor-color: var(--vol-ui-brand-solid, #ff8a3d);
+
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.vol-custom-cursor--pressed {
+  --vol-cursor-color: var(--vol-ui-brand-solid, #ff8a3d);
+
+  transform: translate(-50%, -50%) scale(0.78);
+  filter: brightness(1.18);
+}
+
+.vol-custom-cursor--confirm {
+  --vol-cursor-color: var(--vol-ui-success-solid, #a7f3d0);
+
+  animation: vol-cursor-confirm 120ms ease-out;
+}
+
+.vol-custom-cursor::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--vol-cursor-color);
+  border-radius: 50%;
+  opacity: 0.2;
+  transition:
+    opacity 100ms ease-out,
+    inset 100ms ease-out;
+}
+
+.vol-custom-cursor--hover::before,
+.vol-custom-cursor--confirm::before {
+  inset: 6px;
+  opacity: 0.55;
+}
+
+.vol-custom-cursor__corner,
+.vol-custom-cursor__center {
+  position: absolute;
+  display: block;
+  background: var(--vol-cursor-color);
+  box-shadow: 0 0 6px rgb(255 190 80 / 24%);
+}
+
+.vol-custom-cursor__corner {
+  width: 8px;
+  height: 8px;
+}
+
+.vol-custom-cursor__corner--nw {
+  top: 0;
+  left: 0;
+  border-top: 2px solid var(--vol-cursor-color);
+  border-left: 2px solid var(--vol-cursor-color);
+  background: none;
+}
+
+.vol-custom-cursor__corner--ne {
+  top: 0;
+  right: 0;
+  border-top: 2px solid var(--vol-cursor-color);
+  border-right: 2px solid var(--vol-cursor-color);
+  background: none;
+}
+
+.vol-custom-cursor__corner--sw {
+  bottom: 0;
+  left: 0;
+  border-bottom: 2px solid var(--vol-cursor-color);
+  border-left: 2px solid var(--vol-cursor-color);
+  background: none;
+}
+
+.vol-custom-cursor__corner--se {
+  right: 0;
+  bottom: 0;
+  border-right: 2px solid var(--vol-cursor-color);
+  border-bottom: 2px solid var(--vol-cursor-color);
+  background: none;
+}
+
+.vol-custom-cursor__center--h {
+  top: 13px;
+  left: 9px;
+  width: 10px;
+  height: 2px;
+}
+
+.vol-custom-cursor__center--v {
+  top: 9px;
+  left: 13px;
+  width: 2px;
+  height: 10px;
+}
+
+@keyframes vol-cursor-confirm {
+  0% {
+    transform: translate(-50%, -50%) scale(0.78);
+  }
+
+  55% {
+    transform: translate(-50%, -50%) scale(1.14);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 /*
  * Dalga göstergesi — üstte ortada duran sayaç ve geçiş duyurusu.
  * Duyurunun SÜRESİ JS'te tutulur (oyun duraklayınca donmalı); CSS yalnızca
@@ -228,7 +429,7 @@
   top: var(--vol-space-md);
   left: 50%;
   transform: translateX(-50%);
-  z-index: 50;
+  z-index: var(--vol-z-root);
   flex-direction: column;
   align-items: center;
   gap: var(--vol-space-xs);
@@ -238,6 +439,7 @@
 }
 
 .vol-wave__counter {
+  white-space: nowrap;
   letter-spacing: 0.12em;
   color: var(--vol-ui-text-muted);
   font-size: 12px;
@@ -250,21 +452,29 @@
 }
 
 .vol-wave__announcement {
+  position: absolute;
+  top: calc(100% + var(--vol-space-xs));
+  left: 50%;
   letter-spacing: 0.18em;
   color: var(--vol-ui-text);
   text-shadow: 0 0 12px var(--vol-ui-scrim);
   font-size: 30px;
   font-weight: 700;
+  white-space: nowrap;
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translate(-50%, -6px);
+  visibility: hidden;
   transition:
     opacity var(--vol-transition-medium) ease,
-    transform var(--vol-transition-medium) ease;
+    transform var(--vol-transition-medium) ease,
+    visibility 0s linear var(--vol-transition-medium);
 }
 
 .vol-wave__announcement--visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate(-50%, 0);
+  visibility: visible;
+  transition-delay: 0s;
 }
 
 /* Ability slotları — masaüstünde sol altta Q ve E göstergeleri. */
@@ -274,7 +484,7 @@
   position: absolute;
   bottom: var(--vol-space-md);
   left: var(--vol-space-md);
-  z-index: 50;
+  z-index: var(--vol-z-root);
   pointer-events: none;
 }
 
@@ -564,13 +774,14 @@
   top: calc(var(--vol-safe-top) + var(--vol-space-md) + var(--vol-hud-spark-offset));
 }
 
-.vol-touch-active .vol-hud-stats {
-  top: calc(var(--vol-safe-top) + var(--vol-space-md) + 52px);
-  right: calc(var(--vol-safe-right) + var(--vol-space-md));
-}
-
 .vol-touch-active .vol-wave {
   top: calc(var(--vol-safe-top) + var(--vol-space-md));
+}
+
+/* 44 px pause hedefinin altına gerçek bir boşluk bırak; skor/Flux arkada kalmaz. */
+.vol-touch-active .vol-hud-stats {
+  top: calc(var(--vol-safe-top) + var(--vol-space-md) + 44px + var(--vol-space-sm));
+  right: calc(var(--vol-safe-right) + var(--vol-space-md));
 }
 
 /*

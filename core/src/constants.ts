@@ -25,12 +25,20 @@ export const UI_DEPTH = {
 export const UI_ALPHA = {
   STICK_BASE: 0.4,
   STICK_THUMB: 0.7,
+  /** Dokun-bas aksiyon çubuğunun hazır halkası. */
+  STICK_ACTION_RING: 0.82,
+  /** Manuel nişan yön çizgisi. */
+  STICK_DIRECTION: 0.58,
 } as const;
 
 /** UI component default boyutları (piksel). */
 export const UI_SIZE = {
   /** TouchController stick thumb yarıçapı. */
   STICK_THUMB_RADIUS: 20,
+  /** Dokun-bas aksiyon çubuğu dış halka kalınlığı. */
+  STICK_ACTION_RING_WIDTH: 2,
+  /** Manuel nişan yön çizgisi kalınlığı. */
+  STICK_DIRECTION_WIDTH: 3,
   /** Joystick/SquareJoystick default yarıçap/kenar. */
   JOYSTICK_DEFAULT: 56,
   /** LongPressButton/ChargeButton default buton boyutu. */

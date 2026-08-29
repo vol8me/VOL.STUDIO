@@ -90,6 +90,9 @@
   "selectionInfo": {
     "emptyState": "Seçili öğe yok"
   },
+  "statsPanel": {
+    "close": "İstatistikleri kapat"
+  },
   "roundcounter": {
     "round": "Tur {{round}}",
     "roundTotal": "Tur {{round}} / {{total}}",

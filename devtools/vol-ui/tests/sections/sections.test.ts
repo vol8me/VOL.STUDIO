@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { missingTabModules, tabBuilders } from './tabBuilders';
 import { buildCardsTab } from '../../src/sections/cardsTab';
+import { buildHudTab } from '../../src/sections/hudTab';
 import { card, cardGrid, svgIcon, paletteGrid } from '../../src/sections/shared';
+import { buildWorkbenchTab } from '../../src/sections/workbenchTab';
 
 describe('vol-ui sekme builderları', () => {
   let uiRoot: HTMLDivElement;
@@ -49,6 +51,18 @@ describe('vol-ui sekme builderları', () => {
       expect(el.classList.contains('vol-showcase-card')).toBe(true);
       expect(el.textContent).toContain('Title');
       expect(el.textContent).toContain('demo');
+    });
+
+    it('card seçenekleri span ve center sınıflarını uygular', () => {
+      const el = card('Span', document.createElement('span'), {
+        span: 4,
+        center: true,
+      });
+      expect(el.classList.contains('vol-showcase-card--span-4')).toBe(true);
+      expect(el.querySelector('.vol-showcase-card__body--center')).not.toBeNull();
+
+      const full = card('Full', document.createElement('span'), { spanAll: true });
+      expect(full.classList.contains('vol-showcase-card--span-all')).toBe(true);
     });
 
     it('cardGrid kartları toplar', () => {
@@ -99,6 +113,28 @@ describe('vol-ui sekme builderları', () => {
 
       destroy();
       expect(document.querySelector('.vol-card-picker--shop')).toBeNull();
+    });
+  });
+
+  describe('geniş demo kartları', () => {
+    it('HUD StatsPanel kartını tam satıra yayar', () => {
+      const { element, destroy } = buildHudTab();
+      const cardElement = element
+        .querySelector('.vol-stats-panel-modal')
+        ?.closest<HTMLElement>('.vol-showcase-card');
+
+      expect(cardElement?.classList.contains('vol-showcase-card--span-all')).toBe(true);
+      destroy();
+    });
+
+    it('byte bütçeli komut geçmişini tam satıra yayar', () => {
+      const { element, destroy } = buildWorkbenchTab();
+      const cardElement = element
+        .querySelector('.vol-showcase-workbench-history')
+        ?.closest<HTMLElement>('.vol-showcase-card');
+
+      expect(cardElement?.classList.contains('vol-showcase-card--span-all')).toBe(true);
+      destroy();
     });
   });
 });

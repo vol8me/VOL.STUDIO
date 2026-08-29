@@ -150,6 +150,29 @@ describe('mobil yerleşim değişmezleri', () => {
     }
   });
 
+  it('mobil skor metni 44 px pause hedefinin altında kalır', () => {
+    const block = /\.vol-touch-active \.vol-hud-stats\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(block, 'mobil skor/pause ayrımı tanımlı olmalı').not.toBeNull();
+    expect(block![1]).toContain('--vol-safe-top');
+    expect(block![1]).toContain('44px');
+    expect(block![1]).toContain('--vol-safe-right');
+  });
+
+  it('pause ayar X düğmesi kaydırmada görünür kalır', () => {
+    const block = /\.pause-settings-close\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(block, 'pause ayar kapatma düğmesi tanımlı olmalı').not.toBeNull();
+    expect(block![1]).toContain('position: sticky');
+    expect(block![1]).toContain('top: 0');
+  });
+
+  it('dalga sayacı ve duyurusu numarayı yeni satıra düşürmez', () => {
+    for (const selector of ['.vol-wave__counter', '.vol-wave__announcement']) {
+      const block = new RegExp(`\\${selector}\\s*\\{([^}]*)\\}`).exec(stylesContent);
+      expect(block, `${selector} tanımlı olmalı`).not.toBeNull();
+      expect(block![1]).toContain('white-space: nowrap');
+    }
+  });
+
   it('duraklatma ve ölüm panelleri kısa ekranda taşmaz', () => {
     // 384 px yükseklikte ölüm özeti 445 px'e çıkıp başlığı ve "ANA MENÜ"
     // düğmesini kırpıyordu; oyuncu koşu sonunda menüye dönemiyordu.

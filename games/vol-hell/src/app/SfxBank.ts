@@ -234,6 +234,15 @@ export class SfxBank {
     for (const voice of [...this.activeVoices]) this.stopVoice(voice, now);
   }
 
+  /** UI geçiş seslerini koruyarak gameplay seslerini temizler. */
+  stopAllExcept(events: readonly SoundEvent[]): void {
+    const keepKeys = new Set<string>(events.map((event) => soundKeys[event]));
+    const now = finiteOr(this.context.currentTime, 0);
+    for (const voice of [...this.activeVoices]) {
+      if (!keepKeys.has(voice.key)) this.stopVoice(voice, now);
+    }
+  }
+
   private resolveLimit(
     event: SoundEvent,
     options: { maxVoices?: number; minInterval?: number },

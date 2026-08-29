@@ -109,6 +109,18 @@ tauri-build:
     pnpm build:game
     pnpm --filter @volstudio/tauri-v2 tauri build
 
+# Fedora/Linux teslimi — AppImage bundler'ı Fedora'nın güncel `.relr.dyn`
+# ELF bölümleriyle uyumlu değildir; NO_STRIP=1 yalnızca harici strip adımını
+# kapatır. Tauri AppDir'i hazırladıktan sonra `build:linux-appimage` AppDir'i
+# VOL launcher'ı ile yeniden paketler; böylece Tauri CLI'nin Fedora multilib/
+# AppImage sonlandırma kusuru teslim paketini geçersiz sayamaz.
+# `bundleMediaFramework` ses/video bağımlılıklarını taşır.
+tauri-build-linux:
+    pnpm build:game
+    pnpm --filter @volstudio/tauri-v2 exec tauri build --bundles deb,rpm --ci
+    NO_STRIP=1 APPIMAGE_EXTRACT_AND_RUN=1 pnpm --filter @volstudio/tauri-v2 exec tauri build --bundles appimage --ci || test -d tauri-v2/src-tauri/target/release/bundle/appimage/VOL.HELL.AppDir
+    pnpm build:linux-appimage
+
 tauri-dev:
     pnpm tauri:dev
 

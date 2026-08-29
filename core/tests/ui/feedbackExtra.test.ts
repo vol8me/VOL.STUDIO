@@ -106,6 +106,12 @@ describe('ResourceCounter', () => {
     expect(counter.getValue()).toBe(50);
   });
 
+  it('yön bilgisini içteki Countera aktarır', () => {
+    const counter = track(new ResourceCounter({ icon: 'F', label: 'Flux', value: 20 }));
+    counter.setValue(8, { change: 'decrease' });
+    expect(counter.element.querySelector('.vol-counter--decrease')).not.toBeNull();
+  });
+
   it("destroy içteki Counter'ı da yok eder", () => {
     const counter = new ResourceCounter({ icon: 'X', label: 'Test', value: 0 });
     const innerCounterEl = counter.element.querySelector('.vol-counter')!;

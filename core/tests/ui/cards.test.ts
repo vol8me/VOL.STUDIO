@@ -671,6 +671,37 @@ describe('ShopPicker', () => {
     shop.destroy();
   });
 
+  it('bakiye değişimini kısa bir görsel vurguyla bildirir', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const shop = makeShop();
+    shop.present(makeState({ balanceLabel: 'Flux: 10' }));
+    shop.render(makeState({ balanceLabel: 'Flux: 4' }));
+
+    const balance = shop.element.querySelector('.vol-card-shop__balance')!;
+    expect(balance.classList.contains('vol-card-shop__balance--changed')).toBe(true);
+
+    vi.advanceTimersByTime(240);
+    expect(balance.classList.contains('vol-card-shop__balance--changed')).toBe(false);
+    shop.destroy();
+    vi.useRealTimers();
+  });
+
+  it('bakiye yönünü satın alma ve satış için ayrı sınıfla bildirir', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const shop = makeShop();
+    shop.present(makeState({ balanceLabel: 'Flux: 10' }));
+    shop.render(makeState({ balanceLabel: 'Flux: 4', balanceChange: 'decrease' }));
+    const balance = shop.element.querySelector('.vol-card-shop__balance')!;
+    expect(balance.classList.contains('vol-card-shop__balance--decrease')).toBe(true);
+
+    vi.advanceTimersByTime(240);
+    shop.render(makeState({ balanceLabel: 'Flux: 9', balanceChange: 'increase' }));
+    expect(balance.classList.contains('vol-card-shop__balance--increase')).toBe(true);
+
+    shop.destroy();
+    vi.useRealTimers();
+  });
+
   describe('reroll (opsiyonel özellik)', () => {
     it('reroll option verilmezse buton hiç render edilmez', () => {
       const shop = makeShop();

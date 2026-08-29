@@ -21,6 +21,8 @@ export interface InputManagerOptions<TAction extends string> {
   moveKeys?: MoveKeyBindings;
   /** Sağ joystick deadzone'u aştığında basılı sayılacak eylem (dokunmatik). */
   aimStickAction?: TAction;
+  /** Sağ joystick dokunulduğu anda, deadzone aşılmadan da eylemi etkinleştirir. */
+  aimStickActivatesOnTouch?: boolean;
   /**
    * Ekran üstü düğmelerin yazdığı eylem kaynağı; dokunmatik sağlayıcının
    * eylem kümesine karışır (bkz. `VirtualActionSource`).
@@ -52,6 +54,7 @@ export class InputManager<TAction extends string> {
           new TouchController(scene, {
             actions: options.actions,
             aimStickAction: options.aimStickAction,
+            aimStickActivatesOnTouch: options.aimStickActivatesOnTouch,
             actionSource: options.actionSource,
           }),
         );
@@ -130,6 +133,11 @@ export class InputManager<TAction extends string> {
       return active.getDebugSnapshot();
     }
     return idleSnapshot();
+  }
+
+  /** Provider'ların tuttuğu joystick/tuş durumunu ortak geçiş kapısından bırakır. */
+  reset(): void {
+    for (const provider of this.providers) provider.reset?.();
   }
 
   destroy(): void {

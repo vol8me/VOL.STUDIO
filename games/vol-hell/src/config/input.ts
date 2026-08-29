@@ -33,8 +33,14 @@ export const HELL_PC_BINDINGS: Readonly<Record<HellAction, PCActionBinding>> = {
 export const HELL_MOVE_KEYS: MoveKeyBindings = DEFAULT_MOVE_KEYS;
 
 /**
- * Dokunmatikte sağ joystick deadzone'u aşınca `fire` basılı sayılır —
- * "nişan al + otomatik ateş" deseni. Bu bir OYUN tercihidir; CORE'un
- * dokunmatik katmanı kendi başına hiçbir eylem üretmez.
+ * Dokunmatikte sağ joystick'in ürettiği eylem. Dokunmanın deadzone içinde
+ * de eylem sayılıp sayılmayacağı aşağıdaki ayrı veriyle belirlenir; CORE'un
+ * dokunmatik katmanı kendi başına hiçbir eylem adı bilmez.
  */
 export const HELL_AIM_STICK_ACTION: HellAction = 'fire';
+
+/**
+ * Sağ ateş çubuğuna yalnız basmak otomatik hedeflemeyi başlatır; sürüklemek
+ * manuel nişana geçer. CORE varsayılanı false'tur, bu VOL.HELL tercihidir.
+ */
+export const HELL_AIM_STICK_ACTIVATES_ON_TOUCH = true;

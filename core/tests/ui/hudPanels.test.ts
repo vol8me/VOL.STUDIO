@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest';
 import { BuildMenu, type BuildMenuItem } from '../../src/ui/hud/BuildMenu';
 import { MinimapPanel } from '../../src/ui/hud/MinimapPanel';
 import { SelectionInfoPanel } from '../../src/ui/hud/SelectionInfoPanel';
+import { StatsPanel } from '../../src/ui/hud/StatsPanel';
 import {
   SkillTree,
   resolveSkillStates,
@@ -267,6 +268,86 @@ describe('SelectionInfoPanel', () => {
 
     expect(() => panel.destroy()).not.toThrow();
     expect(panel.element.isConnected).toBe(false);
+  });
+});
+
+describe('StatsPanel', () => {
+  it('başlangıçta kapalıdır ve grupları render eder', () => {
+    const panel = track(new StatsPanel({ title: 'Oyuncu', closeLabel: 'Kapat' }));
+    panel.setGroups([
+      {
+        id: 'player',
+        label: 'Oyuncu',
+        entries: [{ id: 'damage', label: 'Hasar', value: '12' }],
+      },
+    ]);
+
+    expect(panel.isOpen()).toBe(false);
+    expect(panel.element.querySelector('.vol-stats-panel__group-title')?.textContent).toBe(
+      'Oyuncu',
+    );
+    expect(panel.element.querySelector('.vol-stats-panel__entry-value')?.textContent).toBe('12');
+  });
+
+  it('bölüm ve satır ikonlarını güvenli şekilde yerleştirir', () => {
+    const panel = track(new StatsPanel({ title: 'Oyuncu', closeLabel: 'Kapat' }));
+    const groupIcon = document.createElement('span');
+    groupIcon.textContent = '⚡';
+    const entryIcon = document.createElement('span');
+    entryIcon.textContent = '✦';
+
+    panel.setGroups([
+      {
+        id: 'ability',
+        label: 'Yetenek',
+        icon: groupIcon,
+        entries: [{ id: 'damage', label: 'Hasar', value: '22', icon: entryIcon }],
+      },
+    ]);
+
+    expect(panel.element.querySelector('.vol-stats-panel__group-icon')?.textContent).toBe('⚡');
+    expect(panel.element.querySelector('.vol-stats-panel__entry-icon')?.textContent).toBe('✦');
+    expect(panel.element.querySelector('.vol-stats-panel__group-icon')?.firstElementChild).not.toBe(
+      groupIcon,
+    );
+  });
+
+  it('kimliğe göre diff yapar ve mevcut satır DOM kimliğini korur', () => {
+    const panel = track(new StatsPanel({ title: 'Oyuncu', closeLabel: 'Kapat' }));
+    panel.setGroups([
+      {
+        id: 'player',
+        entries: [
+          { id: 'health', label: 'Can', value: '100' },
+          { id: 'damage', label: 'Hasar', value: '10' },
+        ],
+      },
+    ]);
+    const row = panel.element.querySelector('.vol-stats-panel__entry')!;
+
+    panel.setGroups([
+      {
+        id: 'player',
+        entries: [{ id: 'health', label: 'Can', value: '80' }],
+      },
+    ]);
+
+    expect(panel.element.querySelector('.vol-stats-panel__entry')).toBe(row);
+    expect(panel.element.querySelector('.vol-stats-panel__entry-value')?.textContent).toBe('80');
+    expect(panel.element.querySelectorAll('.vol-stats-panel__entry')).toHaveLength(1);
+  });
+
+  it('açılır, kapanır ve destroy sonrasında güvenli no-op olur', () => {
+    const panel = track(new StatsPanel({ title: 'Oyuncu', closeLabel: 'Kapat' }));
+    panel.open();
+    expect(panel.isOpen()).toBe(true);
+    panel.close();
+    expect(panel.isOpen()).toBe(false);
+    panel.destroy();
+    expect(() => {
+      panel.open();
+      panel.setGroups([]);
+    }).not.toThrow();
   });
 });
 

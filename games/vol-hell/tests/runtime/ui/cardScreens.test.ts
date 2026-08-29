@@ -50,6 +50,7 @@ describe('CardScreens — dalga arası akış', () => {
   let cards: CardInventoryManager;
   let onOpen: ReturnType<typeof vi.fn>;
   let onClose: ReturnType<typeof vi.fn>;
+  let onShopVisibilityChange: ReturnType<typeof vi.fn>;
 
   function levelUpButtons(): HTMLButtonElement[] {
     return [
@@ -108,7 +109,25 @@ describe('CardScreens — dalga arası akış', () => {
 
     onOpen = vi.fn();
     onClose = vi.fn();
-    screens = new CardScreens(root, cards, economy, { onOpen, onClose });
+    onShopVisibilityChange = vi.fn();
+    screens = new CardScreens(
+      root,
+      cards,
+      economy,
+      {
+        onOpen,
+        onClose,
+        onShopVisibilityChange,
+      },
+      {
+        player: {
+          getStats: () => stats,
+          getHealth: () => 100,
+          getMaxHealth: () => 100,
+        } as never,
+        abilities,
+      },
+    );
   });
 
   afterEach(() => {
@@ -134,6 +153,7 @@ describe('CardScreens — dalga arası akış', () => {
     expect(onOpen).toHaveBeenCalledTimes(1);
     expect(levelUpVisible()).toBe(true);
     expect(shopVisible()).toBe(false);
+    expect(onShopVisibilityChange).not.toHaveBeenCalled();
 
     // İlk kart seçilir → ikinci hak açılır.
     levelUpButtons()[0].click();
@@ -144,6 +164,7 @@ describe('CardScreens — dalga arası akış', () => {
     levelUpButtons()[0].click();
     expect(levelUpVisible()).toBe(false);
     expect(shopVisible()).toBe(true);
+    expect(onShopVisibilityChange).toHaveBeenLastCalledWith(true);
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -152,6 +173,28 @@ describe('CardScreens — dalga arası akış', () => {
 
     expect(levelUpVisible()).toBe(false);
     expect(shopVisible()).toBe(true);
+  });
+
+  it('istatistik çekmecesi yalnız shopta açılır ve satın alma sonrası tazelenir', () => {
+    economy.addFlux(100);
+    vi.spyOn(cards, 'drawOffer').mockReturnValue([CARD_CATALOG.cardTurret, CARD_CATALOG.keskinUc]);
+
+    screens.openIntermission(4);
+
+    const button = root.querySelector<HTMLButtonElement>('.vol-card-shop__stats-toggle')!;
+    expect(button.hidden).toBe(false);
+    expect(
+      root.querySelector('.vol-stats-panel-modal')?.classList.contains('vol-modal--visible'),
+    ).toBe(false);
+
+    button.click();
+    expect(
+      root.querySelector('.vol-stats-panel-modal')?.classList.contains('vol-modal--visible'),
+    ).toBe(true);
+
+    root.querySelector<HTMLButtonElement>('.vol-card-picker__grid .vol-card__action')!.click();
+    expect(root.textContent).toContain('Kule Canı');
+    expect(root.querySelector('.vol-card-shop__balance')?.textContent).not.toBe('Flux: 100');
   });
 
   it('seçilen kart envantere girer', () => {
@@ -184,6 +227,9 @@ describe('CardScreens — dalga arası akış', () => {
     buyButton.click();
 
     expect(economy.getFlux()).toBeLessThan(before);
+    expect(root.querySelector('.vol-card-shop__balance')?.textContent).toBe(
+      `Flux: ${economy.getFlux()}`,
+    );
     expect(cards.getOwned()).toHaveLength(1);
     // Panel açık kalır: oyuncu ikinci kartı da alabilir.
     expect(shopVisible()).toBe(true);

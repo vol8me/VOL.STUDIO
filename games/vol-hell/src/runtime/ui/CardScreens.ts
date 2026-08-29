@@ -12,10 +12,13 @@ import type { CardDefinition } from '@/config/cards/types';
 import { economyConfig } from '@/config/economy';
 import { getCardSellValue } from '@/config/cards';
 import type { AbilitySlot } from '@/runtime/ability/types';
+import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
+import type { Player } from '@/runtime/entity/Player';
 import type { CardInventoryManager, OwnedCard } from '@/runtime/systems/CardInventoryManager';
 import type { RunEconomy } from '@/runtime/systems/RunEconomy';
 import { AbilityLoadout } from './AbilityLoadout';
 import { toCardTileData } from './cardText';
+import { PlayerStatsPanel } from './PlayerStatsPanel';
 
 export interface CardScreensCallbacks {
   /** Bir ekran açıldı — sahne oyunu duraklatır. */
@@ -30,6 +33,15 @@ export interface CardScreensCallbacks {
   onLockToggle?: () => void;
   /** Satın alma / ekipman takma reddedildiğinde — ses için. */
   onDeny?: () => void;
+  /** Shop içindeki istatistik çekmecesi açıldığında — ses için. */
+  onStatsOpen?: () => void;
+  /** Shop görünürlüğü — HUD'daki tekrar eden Flux satırını kapatmak için. */
+  onShopVisibilityChange?: (visible: boolean) => void;
+}
+
+export interface CardScreensStatsDependencies {
+  readonly player: Player;
+  readonly abilities: AbilityRuntime;
 }
 
 /** Dükkan teklif sayısı. */
@@ -49,6 +61,7 @@ export class CardScreens {
   private readonly shop: ShopPicker;
   private readonly loadout: AbilityLoadout;
   private readonly toasts: ToastManager;
+  private readonly statsPanel: PlayerStatsPanel | null;
 
   /** Bekleyen seviye atlamaları — dalga sonunda sırayla sunulur. */
   private readonly pendingLevels: number[] = [];
@@ -72,6 +85,7 @@ export class CardScreens {
     private readonly cards: CardInventoryManager,
     private readonly economy: RunEconomy,
     private readonly callbacks: CardScreensCallbacks,
+    statsDependencies?: CardScreensStatsDependencies,
   ) {
     this.container = document.createElement('div');
     this.container.className = 'vol-card-layer';
@@ -110,6 +124,15 @@ export class CardScreens {
       onClose: () => this.closeIntermission(),
     });
     this.container.appendChild(this.shop.element);
+    this.statsPanel = statsDependencies
+      ? new PlayerStatsPanel(
+          this.shop.element,
+          this.container,
+          statsDependencies.player,
+          statsDependencies.abilities,
+          callbacks.onStatsOpen,
+        )
+      : null;
 
     // Slotlar dükkan panelinin İÇİNDE: "elimde ne var, nereye takıyorum"
     // sorusu tek ekranda yanıtlanır.
@@ -117,7 +140,23 @@ export class CardScreens {
       onAssign: (instanceId, slot) => this.handleAssign(instanceId, slot),
       onClear: (slot) => this.handleClear(slot),
     });
-    this.lifecycle.addDestroyables(this.levelUp, this.shop, this.loadout, this.toasts);
+    this.lifecycle.addDestroyables(
+      this.levelUp,
+      this.shop,
+      this.loadout,
+      this.toasts,
+      ...(this.statsPanel ? [this.statsPanel] : []),
+    );
+    this.lifecycle.addSubscription(
+      this.economy.onFluxChange(() => {
+        if (this.destroyed || !this.shop.isVisible()) return;
+        // Bakiye değişimi yalnızca kart butonundan gelmek zorunda değil;
+        // ekonomi gözlemcisi, açık shop'u her kaynaktan sonra tek kaynaktan
+        // yeniden kurar. ShopPicker DOM düğümlerini kimlik ile korur.
+        this.shop.render(this.buildShopState());
+        this.statsPanel?.refresh();
+      }),
+    );
 
     parent.appendChild(this.container);
   }
@@ -161,6 +200,7 @@ export class CardScreens {
     if (this.shop.isVisible()) {
       this.shop.render(this.buildShopState());
       this.refreshLoadout();
+      this.statsPanel?.refreshLabels();
     }
   }
 
@@ -170,6 +210,7 @@ export class CardScreens {
     this.closeTimeout?.cancel();
     this.closeTimeout = null;
     this.lifecycle.dispose();
+    this.callbacks.onShopVisibilityChange?.(false);
     this.container.remove();
     this.pendingLevels.length = 0;
     this.intermissionActive = false;
@@ -197,6 +238,7 @@ export class CardScreens {
     // kalıyor, yalnızca İÇERİK değişiyor — levelUp'ın kendi giriş animasyonu
     // (`vol-card-picker-in`) geçişi zaten taşıyor.
     this.shop.hideImmediately();
+    this.statsPanel?.setVisible(false);
     this.levelUp.present(
       this.levelUpOffer.map((card) => toCardTileData(card, { showType: true })),
       {
@@ -214,6 +256,9 @@ export class CardScreens {
     this.levelUp.hideImmediately();
     this.shop.present(this.buildShopState());
     this.refreshLoadout();
+    this.statsPanel?.setVisible(true);
+    this.statsPanel?.refresh();
+    this.callbacks.onShopVisibilityChange?.(true);
   }
 
   private closeIntermission(): void {
@@ -222,6 +267,8 @@ export class CardScreens {
     this.closeTimeout = null;
     this.levelUp.hide();
     this.shop.hide();
+    this.statsPanel?.setVisible(false);
+    this.callbacks.onShopVisibilityChange?.(false);
     this.closeTimeout = this.lifecycle.addTimeout(() => {
       this.closeTimeout = null;
       if (this.destroyed) return;
@@ -258,8 +305,9 @@ export class CardScreens {
     this.lockedOfferIds.delete(cardId);
     this.autoEquip(owned.instanceId, card);
     this.callbacks.onCardTaken?.('shop');
-    this.shop.render(this.buildShopState());
+    this.shop.render(this.buildShopState(undefined, 'decrease'));
     this.refreshLoadout();
+    this.statsPanel?.refresh();
   }
 
   private handleSell(instanceId: string): void {
@@ -273,8 +321,9 @@ export class CardScreens {
       this.purchased.delete(owned.definition.id);
     }
 
-    this.shop.render(this.buildShopState());
+    this.shop.render(this.buildShopState(undefined, 'increase'));
     this.refreshLoadout();
+    this.statsPanel?.refresh();
   }
 
   private handleReroll(): void {
@@ -288,7 +337,8 @@ export class CardScreens {
     this.refreshShopOffers();
     this.callbacks.onReroll?.();
     // Panel reroll'u tahmin etmez; niyet açıkça bildirilir.
-    this.shop.render(this.buildShopState('reroll'));
+    this.shop.render(this.buildShopState('reroll', 'decrease'));
+    this.statsPanel?.refresh();
   }
 
   private handleToggleLock(cardId: string): void {
@@ -299,12 +349,14 @@ export class CardScreens {
     }
     this.callbacks.onLockToggle?.();
     this.shop.render(this.buildShopState());
+    this.statsPanel?.refresh();
   }
 
   private handleAssign(instanceId: string, slot: AbilitySlot): void {
     this.cards.equip(instanceId, slot);
     this.refreshLoadout();
     this.shop.render(this.buildShopState());
+    this.statsPanel?.refresh();
   }
 
   /** "TAK" butonu — boş slot varsa oraya, yoksa uyarı verir. */
@@ -323,6 +375,7 @@ export class CardScreens {
     this.cards.unequip(slot);
     this.refreshLoadout();
     this.shop.render(this.buildShopState());
+    this.statsPanel?.refresh();
   }
 
   /** Boş slot varsa yeni alınan yetenek doğrudan oraya girer. */
@@ -429,12 +482,16 @@ export class CardScreens {
     });
   }
 
-  private buildShopState(transition?: ShopPickerState['transition']): ShopPickerState {
+  private buildShopState(
+    transition?: ShopPickerState['transition'],
+    balanceChange?: ShopPickerState['balanceChange'],
+  ): ShopPickerState {
     const flux = this.economy.getFlux();
     const owned = this.cards.getOwned();
 
     return {
       transition,
+      balanceChange,
       offers: this.shopOffer.map((card) => ({
         card: toCardTileData(card, { showPrice: true, showType: true }),
         purchased: this.purchased.has(card.id),

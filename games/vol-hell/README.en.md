@@ -28,6 +28,14 @@ pnpm --filter @volstudio/vol-hell dev
 | Audio       | Adaptive music + SFX driven through the `@volstudio/core` music engine                          |
 | Mobile      | On-screen touch controls, Android back button, auto-pause on background, haptics                |
 
+Player stats are not part of the combat HUD: the `StatsPanel` button appears
+only in the shop/intermission and opens a right-side modal drawer. Player stats
+and Q/E abilities are categorized separately, with ability icons and effective
+runtime values: turret damage, turret health, fire-rate-scaled turret cadence,
+and chain lightning's total targets/jumps including the first target. Purchases,
+sales, rerolls, and slot changes refresh the open drawer immediately. Its scrim
+matches the card/shop screens and does not add blur.
+
 Gameplay numbers live as data under `src/config/`; balancing is a config change, not a code change.
 
 ### Ability progression balance
@@ -68,6 +76,11 @@ screens). Backgrounding the app (`observeAppVisibility`) clears virtual button
 presses and auto-pauses the run. Haptics (`core/src/platform/haptics.ts`) use
 named patterns, default to enabled, and can be turned off in Settings; on
 platforms without `navigator.vibrate` they are silent no-ops.
+
+F11 toggles fullscreen in desktop and Tauri WebViews through the shared CORE
+`FullscreenController`, covering the Phaser canvas and DOM root together. If a
+browser reserves F11 for its own window, the app does not receive that event
+and the browser's native behaviour is preserved.
 
 ## Hardening contract
 

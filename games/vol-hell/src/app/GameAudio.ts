@@ -6,6 +6,19 @@ import { sfxDucking } from '@/config/audio';
 import type { MusicTrack, MusicState } from '@volstudio/core/audio/music';
 import { SfxBank } from './SfxBank';
 
+const UI_SFX_EVENTS: readonly SoundEvent[] = [
+  'menuBlip',
+  'back',
+  'pause',
+  'resume',
+  'restart',
+  'deny',
+  'cardPick',
+  'cardBuy',
+  'reroll',
+  'lock',
+];
+
 /** Oyunun merkezi ses yöneticisi. Müzik, ambiyans ve SFX aynı AudioContext'te.
  *  Master çıkışta limiter; çok sayıda SFX üst üste geldiğinde clipping'i önler.
  */
@@ -180,6 +193,11 @@ export class GameAudio {
   /** Tüm aktif SFX seslerini klik üretmeyen çok kısa bir fade ile durdurur. */
   stopAllSfx(): void {
     this.sfx.stopAll();
+  }
+
+  /** Sahne geçişinde kısa UI geri bildirimini kesmeden oyun seslerini susturur. */
+  stopGameplaySfx(): void {
+    this.sfx.stopAllExcept(UI_SFX_EVENTS);
   }
 
   /** Müzik state'ini günceller; dikey adaptive layering (stem gain map) buradan tetiklenir. */

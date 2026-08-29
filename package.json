@@ -16,6 +16,7 @@
     "build:tauri": "pnpm run build:game && pnpm --filter @volstudio/tauri-v2 tauri build",
     "tauri:dev": "pnpm --filter @volstudio/tauri-v2 tauri dev --config tauri.dev.conf.json",
     "tauri:build": "pnpm --filter @volstudio/tauri-v2 tauri build",
+    "build:linux-appimage": "node scripts/build-linux-appimage.mjs",
     "tauri:android:dev": "pnpm --filter @volstudio/tauri-v2 tauri android dev --config tauri.dev.conf.json",
     "tauri:ios:dev": "pnpm --filter @volstudio/tauri-v2 tauri ios dev --config tauri.dev.conf.json",
     "typecheck": "pnpm -r typecheck",

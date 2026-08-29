@@ -167,12 +167,10 @@ export class MainMenuScene extends BaseScene {
 
   protected override onSceneShutdown(): void {
     // Ayarlara geçerken müzik devam etsin; oyuna geçişte zaten transition'da durdurulur.
-    // SFX'ler kısa olmakla birlikte sahneler arasında taşmaması için durdur.
     this.stopBackHandler?.();
     this.stopBackHandler = null;
     this.exitPromptAbort?.abort();
     this.exitPromptAbort = null;
-    gameAudio.stopAllSfx();
     if (this.nextScene !== 'Settings') {
       stopMenuMusic();
     }

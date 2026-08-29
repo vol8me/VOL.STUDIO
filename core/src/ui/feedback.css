@@ -63,6 +63,8 @@
 }
 
 .vol-counter {
+  --vol-counter-feedback-color: var(--vol-ui-warning-solid);
+
   font-family: var(--vol-font-family);
   color: var(--vol-ui-text);
   font-variant-numeric: tabular-nums;
@@ -74,9 +76,21 @@
   animation: 0.4s vol-counter-pulse;
 }
 
+.vol-counter--increase {
+  --vol-counter-feedback-color: var(--vol-ui-success-solid);
+
+  animation: 0.4s vol-counter-pulse;
+}
+
+.vol-counter--decrease {
+  --vol-counter-feedback-color: var(--vol-ui-danger-solid);
+
+  animation: 0.4s vol-counter-pulse;
+}
+
 @keyframes vol-counter-pulse {
   0% {
-    color: var(--vol-ui-warning-solid);
+    color: var(--vol-counter-feedback-color);
     transform: scale(1.3);
   }
 

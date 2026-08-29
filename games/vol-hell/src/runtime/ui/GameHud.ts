@@ -84,6 +84,12 @@ export class GameHud {
     this.stats.setKills(0);
     this.stats.setTime(0);
     this.stats.setFlux(0);
+    this.stats.setFluxVisible(true);
+  }
+
+  /** Kart shop'u HUD üzerindeki aynı Flux değerinin iki kez görünmesini engeller. */
+  setFluxVisible(visible: boolean): void {
+    this.stats.setFluxVisible(visible);
   }
 
   /** Tüm göstergeleri tazeler — her frame çağrılır. */
@@ -94,8 +100,6 @@ export class GameHud {
     score: number;
     kills: number;
     elapsedTimeMs: number;
-    /** Dalga sonunda seçilmeyi bekleyen kart hakkı sayısı. */
-    pendingLevelUps: number;
     /** Bu frame'in süresi (ms) — dalga duyurusunun sayacı için. */
     deltaMs: number;
     wave: number;
@@ -128,7 +132,7 @@ export class GameHud {
     this.stats.setKills(state.kills);
     this.stats.setTime(state.elapsedTimeMs);
     this.stats.setFlux(state.economy.getFlux());
-    this.sparkBar.refresh(state.pendingLevelUps);
+    this.sparkBar.refresh();
     this.abilityHud.refresh(state.abilities);
     this.waveBanner.refresh(
       state.deltaMs,

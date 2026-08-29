@@ -2,6 +2,9 @@
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(target_os = "linux")]
+    configure_linux_webview();
+
     // rustls, bazı hedeflerde açıkça bir crypto provider ister.
     // Eğer bir provider zaten kuruluysa, `install_default` hata döner;
     // bir uyarı logla ve devam et.
@@ -34,4 +37,17 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+/// Fedora/Wayland üzerindeki bazı WebKitGTK + GBM sürümleri, pencereyi
+/// oluşturduğu hâlde ilk compositing buffer'ını ayıramayıp beyaz bir WebView
+/// bırakabiliyor. VOL.HELL canvas tabanlı olduğu için WebKit'in DMA-BUF
+/// renderer'ını kapatmak güvenli yazılım fallback'ine geçer; yalnızca bu
+/// değişken dışarıdan verilmemişse uygulanır ve kullanıcının açık tercihi
+/// ezilmez. Bu ayar WebView yaratılmadan önce yapılmalıdır.
+#[cfg(target_os = "linux")]
+fn configure_linux_webview() {
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
 }

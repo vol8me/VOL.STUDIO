@@ -157,7 +157,8 @@ export const effectsConfig: Record<EffectId, EffectDefinition> = {
       tint: [enemyConfig.deathParticleColor, enemyConfig.color],
       depth: RENDER_DEPTH.impactEffect,
     },
-    shake: { durationMs: 60, intensity: 0.006, cooldownMs: 180 },
+    // Sık ölüm zincirlerinde görüşü titreştirmeden öldürmeyi hissettirir.
+    shake: { durationMs: 60, intensity: 0.0045, cooldownMs: 180 },
   },
 
   enemyDash: {

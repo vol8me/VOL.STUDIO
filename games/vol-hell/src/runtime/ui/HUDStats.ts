@@ -35,7 +35,7 @@ export class HUDStats {
       this.container.appendChild(el.element);
     }
 
-    // Flux para birimi: ikon + sayı. Toplandıkça `pulse` ile vurgulanır.
+    // Flux para birimi: ikon + sayı. Kazanç ve harcama yönlü renkle vurgulanır.
     this.fluxCounter = new ResourceCounter({
       icon: svgIcon(ICON_FLUX),
       label: i18next.t('volhell:hud.flux'),
@@ -69,12 +69,21 @@ export class HUDStats {
     this.killsLabel.setContent(formatted);
   }
 
-  /** Flux sayacını günceller; artışta vurgu (pulse) oynar. */
+  /** Flux sayacını günceller; kazanç ve harcamada yönlü vurgu oynar. */
   setFlux(value: number): void {
     if (value === this.flux) return;
-    const increased = value > this.flux;
     this.flux = value;
-    this.fluxCounter.setValue(value, { pulse: increased });
+    // Artış/azalış yönü core Counter tarafından otomatik anlaşılır; bu sayede
+    // pickup ve shop harcaması aynı, tekrar kullanılabilir geri bildirimi alır.
+    this.fluxCounter.setValue(value);
+  }
+
+  /** Shop açıldığında HUD para satırını gizler; gerçek değer shop panelinde kalır. */
+  setFluxVisible(visible: boolean): void {
+    const nextVisible = Boolean(visible);
+    if (this.fluxLine.hidden === !nextVisible) return;
+    this.fluxLine.hidden = !nextVisible;
+    this.fluxLine.setAttribute('aria-hidden', String(!nextVisible));
   }
 
   setTime(valueMs: number): void {

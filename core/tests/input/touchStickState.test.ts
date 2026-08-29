@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { TouchStickState } from '../../src/input/TouchStickState';
+import { VirtualActionSource } from '../../src/input/VirtualActionSource';
 
 /**
  * Testin KENDİ eylem sözlüğü — VOL.HELL'in `fire`/`dash` kümesinden bilinçli
@@ -23,6 +24,15 @@ function makeSticks(deadZone?: number, maxRadius?: number): TouchStickState<Test
 /** Sağ stick hiçbir eyleme bağlı DEĞİL — yalnızca nişan üretir. */
 function makeAimOnlySticks(): TouchStickState<TestAction> {
   return new TouchStickState<TestAction>({ actions: TEST_ACTIONS });
+}
+
+/** Dokunur dokunmaz engage; sürükleme yalnız aim yönünü belirler. */
+function makeTouchArmedSticks(): TouchStickState<TestAction> {
+  return new TouchStickState<TestAction>({
+    actions: TEST_ACTIONS,
+    aimStickAction: 'engage',
+    aimStickActivatesOnTouch: true,
+  });
 }
 
 describe('TouchStickState', () => {
@@ -108,6 +118,21 @@ describe('TouchStickState', () => {
     });
   });
 
+  it('reset aktif stickleri ve sanal eylemi birlikte bırakır', () => {
+    const source = new VirtualActionSource<TestAction>();
+    const sticks = new TouchStickState<TestAction>({
+      actions: TEST_ACTIONS,
+      actionSource: source,
+    });
+    sticks.onPointerDown(1, 100, 100, false);
+    source.press('engage');
+
+    sticks.reset();
+
+    expect(sticks.isActive).toBe(false);
+    expect(source.hasPressed).toBe(false);
+  });
+
   describe('clamp ve deadzone (getState)', () => {
     it('base ile aynı noktada hareket sıfırdır', () => {
       const sticks = makeSticks();
@@ -147,6 +172,30 @@ describe('TouchStickState', () => {
       const state = sticks.getState();
       expect(state.actions.engage).toBe(true);
       expect(state.aim.length()).toBeCloseTo(1, 5);
+    });
+
+    it('opt-in dokun-bas kipinde sağ stick merkezdeyken eylem true, aim sıfırdır', () => {
+      const sticks = makeTouchArmedSticks();
+      sticks.onPointerDown(1, 900, 100, true);
+
+      const held = sticks.getState();
+      expect(held.actions.engage).toBe(true);
+      expect(held.aim.length()).toBe(0);
+
+      sticks.onPointerUp(1);
+      expect(sticks.getState().actions.engage).toBe(false);
+    });
+
+    it('dokun-bas kipinde deadzone aşılınca manuel aim üretmeye devam eder', () => {
+      const sticks = makeTouchArmedSticks();
+      sticks.onPointerDown(1, 900, 100, true);
+      sticks.onPointerMove(1, 900, 20);
+
+      const state = sticks.getState();
+      expect(state.actions.engage).toBe(true);
+      expect(state.aim.x).toBeCloseTo(0, 5);
+      expect(state.aim.y).toBeCloseTo(-1, 5);
+      expect(sticks.hasDirectionalInput(sticks.getRightStick()!)).toBe(true);
     });
 
     it('aimStickAction verilmezse sağ stick HİÇBİR eylemi tetiklemez, yalnızca aim üretir', () => {

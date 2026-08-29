@@ -9,6 +9,7 @@ import {
   ResourceBar,
   ResourceCounter,
   SelectionInfoPanel,
+  StatsPanel,
   Text,
   VOL_COLORS,
   RoundCounter,
@@ -476,6 +477,58 @@ function buildSelectionInfoPanelCard(disposables: DisposableScope): HTMLElement 
   return card(i18next.t('volui:hud.selectionInfoPanel'), wrap);
 }
 
+/** StatsPanel: mobilde sağdan açılan, modal arka planlı jenerik stat çekmecesi. */
+function buildStatsPanelCard(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const statsPanel = new StatsPanel({
+    title: i18next.t('volui:hud.statsPanelTitle'),
+    closeLabel: i18next.t('volui:hud.closeStatsPanel'),
+  });
+  statsPanel.setGroups([
+    {
+      id: 'player',
+      label: i18next.t('volui:hud.playerStats'),
+      icon: svgIcon(ICON_TURRET),
+      entries: [
+        {
+          id: 'health',
+          label: i18next.t('volui:hud.statHealth'),
+          value: '120 / 120',
+          icon: svgIcon(ICON_AMMO),
+        },
+        {
+          id: 'damage',
+          label: i18next.t('volui:hud.statDamage'),
+          value: '18',
+          icon: svgIcon(ICON_SWORD),
+        },
+        {
+          id: 'speed',
+          label: i18next.t('volui:hud.statSpeed'),
+          value: '240 px/s',
+          icon: svgIcon(ICON_SPEED),
+        },
+        {
+          id: 'fireRate',
+          label: i18next.t('volui:hud.statFireRate'),
+          value: '3.6/s',
+          icon: svgIcon(ICON_FIRE),
+        },
+      ],
+    },
+  ]);
+  const openButton = new Button(i18next.t('volui:hud.openStatsPanel'), {
+    variant: 'primary',
+    onClick: () => statsPanel.open(),
+  });
+  disposables.addDestroyables(statsPanel, openButton);
+  wrap.append(openButton.element, statsPanel.element);
+
+  return card(i18next.t('volui:hud.statsPanel'), wrap, { spanAll: true });
+}
+
 /** BuildMenu: RTS/TD inşa menüsü — ikon+ad+maliyet+kısayol grid'i. */
 function buildBuildMenuCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
@@ -757,6 +810,7 @@ export function buildHudTab(): { element: HTMLElement; destroy: () => void } {
     buildResourceBarCard(disposables),
     buildRoundCounterCard(disposables),
     buildSelectionInfoPanelCard(disposables),
+    buildStatsPanelCard(disposables),
     buildBuildMenuCard(disposables),
     buildFloatingTextCard(disposables),
   ];

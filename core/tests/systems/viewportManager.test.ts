@@ -88,6 +88,23 @@ describe('ViewportManager — DPR kelepçesi', () => {
     expect(recorded.width).toBe(1600);
   });
 
+  it('maxDpr sağlayıcısını her resize anında yeniden okur', () => {
+    setEnvironment(3, 800, 600);
+    let maxDpr = 1.5;
+    const manager = new ViewportManager({ strategy: 'resize', maxDpr: () => maxDpr });
+    expect(manager.getConfig().width).toBe(1200);
+
+    const recorded = { width: 0, height: 0, zoom: NaN };
+    const detach = manager.attachResize(makeFakeGame(recorded));
+    maxDpr = 1;
+    window.dispatchEvent(new Event('resize'));
+    detach();
+
+    expect(recorded.width).toBe(800);
+    expect(recorded.height).toBe(600);
+    expect(recorded.zoom).toBe(1);
+  });
+
   it('detach sonrası resize dinleyicisi çalışmaz', () => {
     setEnvironment(1, 500, 500);
 

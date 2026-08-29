@@ -159,6 +159,19 @@ describe('InputManager provider seçim önceliği', () => {
     expect(pc.destroy).toHaveBeenCalledTimes(1);
   });
 
+  it('reset providerların geçici input durumunu bırakır', () => {
+    const touch = makeProvider(false, idleState());
+    const pc = makeProvider(false, idleState());
+    touch.reset = vi.fn();
+    pc.reset = vi.fn();
+    const manager = makeManager([touch, pc]);
+
+    manager.reset();
+
+    expect(touch.reset).toHaveBeenCalledOnce();
+    expect(pc.reset).toHaveBeenCalledOnce();
+  });
+
   it("bir provider destroy hatası verse de diğer provider'ları bırakır", () => {
     const touch = makeProvider(false, idleState());
     const pc = makeProvider(false, idleState());

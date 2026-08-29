@@ -98,6 +98,11 @@ export class GameMobileControls {
     this.touchControls?.refreshLabels();
   }
 
+  /** Dalga sınırında ekran düğmelerinin basılı/latch durumunu bırakır. */
+  resetInput(): void {
+    this.actionSource.clear();
+  }
+
   destroy(): void {
     this.scope?.dispose();
     this.scope = null;

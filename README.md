@@ -58,12 +58,24 @@ ekran Tauri yapılandırmasından ayarlanamadığı için `AndroidManifest.xml`,
 ```bash
 export ANDROID_HOME="$HOME/Android/Sdk"
 export NDK_HOME="$ANDROID_HOME/ndk/<sürüm>"
-export JAVA_HOME=<JDK 17>
+export JAVA_HOME=<JDK 21 LTS>
 rustup target add aarch64-linux-android    # cihaz için; emülatör x86_64 ister
 
 pnpm --filter @volstudio/tauri-v2 exec tauri android build --debug --target aarch64
 adb install -r tauri-v2/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 ```
+
+Fedora/Linux release (deb, rpm ve AppImage):
+
+```bash
+pnpm exec just tauri-build-linux
+```
+
+Fedora'da Tauri'nin AppImage sonlandırması `linuxdeploy`/ELF strip adımında
+kırılırsa tarif önce AppDir'i üretir, ardından `build:linux-appimage` ile
+`NO_STRIP=1` ve VOL.HELL'in WebKit launcher'ını kullanarak AppImage'i yeniden
+paketler. Bu yol native masaüstü doğrulamasında kullanılır. Android build için
+JDK 21 LTS gerekir; JDK 25 desteklenmez.
 
 Oyun yatay yöne kilitlidir, sistem çubukları gizlenir ve güvenli alan
 (`env(safe-area-inset-*)`) HUD yerleşimine uygulanır. Ekran üstü kontroller
@@ -73,14 +85,15 @@ yalnızca dokunmatik birincil cihazlarda kurulur (`shouldUseTouchControls`).
 
 Kalite kapıları `just` ile localde çalıştırılır. GitHub yalnızca source control, PR ve release için kullanılır; CI runner yoktur.
 
-| Seviye          | Komut                        | Ne yapar                                                 |
-| --------------- | ---------------------------- | -------------------------------------------------------- |
-| Pre-commit      | `pnpm quick`                 | sözleşme, format, typecheck, lint (~45 sn)               |
-| Push öncesi     | `pnpm high`                  | quick + css lint + coverage eşikleri + tüm build'ler     |
-| Release/signoff | `pnpm signoff`               | high + cargo check/fmt/clippy                            |
-| Uzun build      | `pnpm exec just tauri-build` | game build + Tauri prod build (manuel)                   |
-| Ortam           | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri deps kontrolü      |
-| Rapor           | `pnpm exec just report high` | Kapıyı koşar, sonucu yapılandırılmış raporlar (`--json`) |
+| Seviye          | Komut                              | Ne yapar                                                 |
+| --------------- | ---------------------------------- | -------------------------------------------------------- |
+| Pre-commit      | `pnpm quick`                       | sözleşme, format, typecheck, lint (~45 sn)               |
+| Push öncesi     | `pnpm high`                        | quick + css lint + coverage eşikleri + tüm build'ler     |
+| Release/signoff | `pnpm signoff`                     | high + cargo check/fmt/clippy                            |
+| Uzun build      | `pnpm exec just tauri-build`       | game build + Tauri prod build (manuel)                   |
+| Fedora/Linux    | `pnpm exec just tauri-build-linux` | deb + rpm + AppImage teslimi                             |
+| Ortam           | `pnpm run doctor:env`              | Node, pnpm, Rust, just, FFmpeg, Tauri deps kontrolü      |
+| Rapor           | `pnpm exec just report high`       | Kapıyı koşar, sonucu yapılandırılmış raporlar (`--json`) |
 
 Benchmark komutları makineye özel süre eşiği koymaz; CORE mekanizmalarının ve
 VOL.HELL'in render'dan ayrılmış simülasyonunun medyan/p95 adım maliyetini

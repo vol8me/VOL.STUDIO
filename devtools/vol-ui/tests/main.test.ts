@@ -32,6 +32,9 @@ describe('main', () => {
 
       showcaseSession.destroy();
       expect(root.querySelector('.vol-showcase-root')).toBeNull();
+
+      // İkinci app destroy idempotent olmalı.
+      expect(() => showcaseSession.app.destroy()).not.toThrow();
     },
     BOOT_TIMEOUT_MS,
   );

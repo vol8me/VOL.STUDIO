@@ -24,6 +24,37 @@ export const uiConfig = {
      */
     waveAnnounceMs: 1600,
   },
+  /** Oyuncunun hareket/ateş niyetini düşük kontrastlı saha çizgileriyle anlatır. */
+  playerFeedback: {
+    direction: {
+      /** Oyuncudan okunabilir uzaklık (piksel). */
+      radiusPx: 14,
+      /** Ok ucunun oyuncudan uzaklığı (piksel). */
+      lengthPx: 29,
+      /** Hedef yöne görsel yaklaşma süresi (ms). */
+      smoothingMs: 42,
+      /** Görsel çizgi kalınlığı (piksel). */
+      lineWidthPx: 1.75,
+      /** Hareketsizken görünürlük. */
+      alpha: 0.4,
+      /** Hedef yöne göre önden çizilen başlık uzunluğu (piksel). */
+      headPx: 5.5,
+    },
+    aim: {
+      /** Ateş çizgisinin başlangıç yarıçapı (piksel). */
+      startRadiusPx: 10,
+      /** Ateş çizgisinin uzunluğu (piksel). */
+      lengthPx: 38,
+      /** Atış yönü geri bildirim ömrü (ms). */
+      lifespanMs: 140,
+      /** Çizgi sönme süresi (ms). */
+      fadeMs: 105,
+      /** Görsel çizgi kalınlığı (piksel). */
+      lineWidthPx: 1.75,
+      /** Başlangıç görünürlüğü. */
+      alpha: 0.46,
+    },
+  },
   /** Loading ekranı geçiş parametreleri. */
   loading: {
     /** Toplam gösterim süresi (ms). */

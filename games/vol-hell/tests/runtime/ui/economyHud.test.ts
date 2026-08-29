@@ -34,13 +34,13 @@ describe('Ekonomi HUD’u', () => {
       hud.destroy();
     });
 
-    it('artışta vurgu (pulse) uygular', () => {
+    it('artışta yönlü vurgu uygular', () => {
       const hud = new HUDStats(root);
       const counter = root.querySelector('.vol-counter');
       expect(counter).not.toBeNull();
 
       hud.setFlux(1);
-      expect(counter!.classList.contains('vol-counter--pulse')).toBe(true);
+      expect(counter!.classList.contains('vol-counter--increase')).toBe(true);
 
       hud.destroy();
     });
@@ -49,10 +49,11 @@ describe('Ekonomi HUD’u', () => {
       const hud = new HUDStats(root);
       hud.setFlux(4);
       const counter = root.querySelector('.vol-counter')!;
-      counter.classList.remove('vol-counter--pulse');
+      counter.classList.remove('vol-counter--increase');
 
       hud.setFlux(4);
-      expect(counter.classList.contains('vol-counter--pulse')).toBe(false);
+      expect(counter.classList.contains('vol-counter--increase')).toBe(false);
+      expect(counter.classList.contains('vol-counter--decrease')).toBe(false);
 
       hud.destroy();
     });

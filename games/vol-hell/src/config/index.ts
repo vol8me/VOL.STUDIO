@@ -22,3 +22,4 @@ export * from './telegraph';
 export * from './ui';
 export * from './music';
 export * from './simulation';
+export * from './video';

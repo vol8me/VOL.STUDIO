@@ -1,10 +1,12 @@
+import { videoConfig } from './video';
+
 /** Genel oyun ayarları. `title` tek kaynak — index.html'deki `<title>` yalnızca ilk boyamadan önce statik yedek. */
 export const gameConfig = {
   title: 'VOL.HELL',
   viewport: {
     strategy: 'resize',
     /** Yüksek DPR ekranlarda GPU fill-rate'i sınırlar. */
-    maxDpr: 1.5,
+    maxDpr: videoConfig.quality[videoConfig.defaultGraphicsQuality].maxDpr,
   },
   /** Düşük FPS'te gerçek zamanı geri kazanmak için sabit simülasyon adımı. */
   fixedStepMs: 1000 / 60,

@@ -19,6 +19,9 @@ function hexColorToNumber(hex: string): number {
 
 const STICK_BASE_COLOR = hexColorToNumber(VOL_COLORS.uiSurface3);
 const STICK_THUMB_COLOR = hexColorToNumber(VOL_COLORS.supportSolid);
+const STICK_ARMED_BASE_COLOR = hexColorToNumber(VOL_COLORS.warningSubtle);
+const STICK_ARMED_COLOR = hexColorToNumber(VOL_COLORS.warningSolid);
+const STICK_MANUAL_COLOR = hexColorToNumber(VOL_COLORS.brandHover);
 
 /**
  * Aynı anda izlenmesi gereken en az işaretçi sayısı.
@@ -42,6 +45,7 @@ export class TouchController<TAction extends string>
   readonly id: string;
   private readonly graphics: Phaser.GameObjects.Graphics;
   private readonly sticks: TouchStickState<TAction>;
+  private readonly aimStickActivatesOnTouch: boolean;
   /** Ekranda çizili stick var mı — parmak kalkınca tek bir clear() için. */
   private hasDrawnSticks = false;
 
@@ -49,6 +53,7 @@ export class TouchController<TAction extends string>
     super(scene);
     this.id = stickOptions.id ?? 'touch';
     this.sticks = new TouchStickState(stickOptions);
+    this.aimStickActivatesOnTouch = stickOptions.aimStickActivatesOnTouch ?? false;
     scene.add.existing(this);
     this.setScrollFactor(0);
     this.setDepth(UI_DEPTH.OVERLAY);
@@ -102,6 +107,12 @@ export class TouchController<TAction extends string>
 
   getState(_playerPosition: Vector2): InputState<TAction> {
     return this.sticks.getState();
+  }
+
+  reset(): void {
+    this.sticks.reset();
+    this.graphics.clear();
+    this.hasDrawnSticks = false;
   }
 
   update(_delta: number): void {
@@ -163,11 +174,40 @@ export class TouchController<TAction extends string>
         continue;
       }
 
-      this.graphics.fillStyle(STICK_BASE_COLOR, UI_ALPHA.STICK_BASE);
+      const isArmedAimStick = stick.isRight && this.aimStickActivatesOnTouch;
+      const hasManualDirection = isArmedAimStick && this.sticks.hasDirectionalInput(stick);
+      this.graphics.fillStyle(
+        isArmedAimStick ? STICK_ARMED_BASE_COLOR : STICK_BASE_COLOR,
+        UI_ALPHA.STICK_BASE,
+      );
       this.graphics.fillCircle(stick.base.x, stick.base.y, this.sticks.maxRadius);
 
       const thumbPos = this.sticks.getClampedPosition(stick);
-      this.graphics.fillStyle(STICK_THUMB_COLOR, UI_ALPHA.STICK_THUMB);
+      if (isArmedAimStick) {
+        const feedbackColor = hasManualDirection ? STICK_MANUAL_COLOR : STICK_ARMED_COLOR;
+        this.graphics.lineStyle(
+          UI_SIZE.STICK_ACTION_RING_WIDTH,
+          feedbackColor,
+          UI_ALPHA.STICK_ACTION_RING,
+        );
+        this.graphics.strokeCircle(stick.base.x, stick.base.y, this.sticks.maxRadius);
+        if (hasManualDirection) {
+          this.graphics.lineStyle(
+            UI_SIZE.STICK_DIRECTION_WIDTH,
+            feedbackColor,
+            UI_ALPHA.STICK_DIRECTION,
+          );
+          this.graphics.lineBetween(stick.base.x, stick.base.y, thumbPos.x, thumbPos.y);
+        }
+      }
+      this.graphics.fillStyle(
+        isArmedAimStick
+          ? hasManualDirection
+            ? STICK_MANUAL_COLOR
+            : STICK_ARMED_COLOR
+          : STICK_THUMB_COLOR,
+        UI_ALPHA.STICK_THUMB,
+      );
       this.graphics.fillCircle(thumbPos.x, thumbPos.y, UI_SIZE.STICK_THUMB_RADIUS);
     }
   }

@@ -5,7 +5,8 @@ import { RENDER_DEPTH } from '@/config/layers';
 /**
  * Saha sınırı — kameradan küçük bir dikdörtgen.
  * Hiçbir şey (oyuncu, mermi, düşman) dışarı çıkamaz.
- * Mermiler duvardan seker, oyuncu ve düşman duvara çarpar.
+ * Normal oyuncu mermileri duvardan sekebilir; kule mermileri sınır temasında
+ * `TurretShot` tarafından sekmeden yok edilir. Oyuncu ve düşman duvara çarpar.
  */
 export class Border {
   readonly graphics: Phaser.GameObjects.Graphics;

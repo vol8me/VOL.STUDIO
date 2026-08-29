@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { UIRoot, i18next } from '@volstudio/core';
 import { DisposableScope } from '@volstudio/core/lifecycle';
+import { CustomCursor } from '@/runtime/ui/CustomCursor';
 
 /**
  * DOM tabanlı UI kullanan sahnelerin ortak iskeleti.
@@ -44,6 +45,11 @@ export abstract class BaseScene extends Phaser.Scene {
     // Scope kapanış sırası ters olduğu için UI ilk eklenir: diğer listener ve
     // frame kaynakları kapandıktan sonra DOM kökü yok edilir.
     scope.addDestroyable(this.ui);
+    // F11/görüntü ayarları bootstrap'teki uygulama-ömürlü controller'a aittir;
+    // sahne başına listener kurmak geçişlerde iki kez toggle üretebilirdi.
+    // Cursor yalnız oyun sahnesinde kurulursa menü ve ayarlar sistem imlecine
+    // döner. Ortak sahne yaşam döngüsü tüm VOL.HELL DOM yüzeyini kapsar.
+    scope.addDestroyable(new CustomCursor(document.body));
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
     scope.add({

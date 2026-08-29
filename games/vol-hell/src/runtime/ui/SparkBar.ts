@@ -8,8 +8,6 @@ import type { RunEconomy } from '@/runtime/systems/RunEconomy';
  * bar yalnızca `setState()` ile güncellenir. Seviye atlayınca XPBar'ın kendi
  * level-up vurgusu oynar.
  *
- * Seviye atlaması dalga içinde kart ekranı açmadığı için, bekleyen kart hakkı
- * etikette gösterilir: oyuncu dalga sonunda kendisini ne beklediğini bilir.
  */
 export class SparkBar {
   readonly element: HTMLDivElement;
@@ -17,7 +15,6 @@ export class SparkBar {
   private readonly economy: RunEconomy;
   private lastLevel: number;
   private lastSpark: number;
-  private lastPending = 0;
 
   constructor(parent: HTMLElement, economy: RunEconomy) {
     this.economy = economy;
@@ -39,25 +36,15 @@ export class SparkBar {
     parent.appendChild(this.element);
   }
 
-  /**
-   * Ekonomideki değişimi bara yansıtır — değer değişmediyse DOM'a dokunmaz.
-   * @param pendingLevelUps Dalga sonunda seçilmeyi bekleyen kart hakkı.
-   */
-  refresh(pendingLevelUps = 0): void {
+  /** Ekonomideki değişimi bara yansıtır — değer değişmediyse DOM'a dokunmaz. */
+  refresh(): void {
     const level = this.economy.getLevel();
     const spark = this.economy.getSparkInLevel();
-    if (
-      level === this.lastLevel &&
-      spark === this.lastSpark &&
-      pendingLevelUps === this.lastPending
-    )
-      return;
+    if (level === this.lastLevel && spark === this.lastSpark) return;
 
     this.lastLevel = level;
     this.lastSpark = spark;
-    this.lastPending = pendingLevelUps;
     this.bar.setState(level, spark);
-    this.element.classList.toggle('vol-hud__slot--pending', pendingLevelUps > 0);
   }
 
   /** Dil değişiminde etiketi yeniden yazdırır. */
@@ -74,8 +61,6 @@ export class SparkBar {
     const base = `${i18next.t('volhell:hud.spark')} ${i18next.t('volhell:hud.level', {
       level: this.lastLevel,
     })} — ${value} / ${max}`;
-
-    if (this.lastPending <= 0) return base;
-    return `${base} · ${i18next.t('volhell:hud.pendingCards', { count: this.lastPending })}`;
+    return base;
   }
 }

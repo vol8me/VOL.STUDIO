@@ -19,5 +19,7 @@ export interface InputProvider<TAction extends string> {
   getDebugSnapshot?(): InputSnapshot;
 
   update(delta: number): void;
+  /** Geçiş/yeniden başlatma sınırlarında tutulmuş fiziksel girdiyi bırakır. */
+  reset?(): void;
   destroy(): void;
 }

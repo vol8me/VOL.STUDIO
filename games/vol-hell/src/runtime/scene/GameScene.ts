@@ -20,6 +20,7 @@ import { bulletConfig } from '@/config/bullet';
 import {
   HELL_ACTIONS,
   HELL_AIM_STICK_ACTION,
+  HELL_AIM_STICK_ACTIVATES_ON_TOUCH,
   HELL_MOVE_KEYS,
   HELL_PC_BINDINGS,
   type HellAction,
@@ -29,7 +30,7 @@ import { gameConfig } from '@/config/game';
 import { physicsConfig } from '@/config/physics';
 import { sfxVolumes } from '@/config';
 import { BOSS_ENEMY_ID, getMaxEnemyRadius } from '@/config/enemies/catalog';
-import { diagnostics, gameAudio, audioSettings } from '@/app/services';
+import { diagnostics, gameAudio, audioSettings, videoSettings } from '@/app/services';
 import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import { EffectManager } from '@/runtime/systems/EffectManager';
 import { TelegraphManager } from '@/runtime/systems/TelegraphManager';
@@ -48,6 +49,9 @@ import { GameMobileControls } from './GameMobileControls';
 import { GameKeyboardBindings } from './GameKeyboardBindings';
 import { GameScreenStack } from './GameScreenStack';
 import { safeDeltaMs } from '@/runtime/utils/numeric';
+import { PlayerAimIndicator } from '@/runtime/ui/PlayerAimIndicator';
+import { PlayerDirectionIndicator } from '@/runtime/ui/PlayerDirectionIndicator';
+import { writeFireDirection } from '@/runtime/utils/direction';
 
 /** Q ve E — ability slotlarının klavye karşılığı. */
 const SLOT_KEYS: Record<AbilitySlot, number> = {
@@ -89,6 +93,8 @@ export class GameScene extends BaseScene {
   );
   private keyboardBindings: GameKeyboardBindings | null = null;
   private readonly mobileControls = new GameMobileControls();
+  private directionIndicator!: PlayerDirectionIndicator;
+  private aimIndicator!: PlayerAimIndicator;
 
   private runSeed = 0;
   /**
@@ -100,6 +106,7 @@ export class GameScene extends BaseScene {
   // Reusable buffer'lar — her frame yeni obje yaratmaz
   private readonly moveDirBuf: Vector2 = Vector2.zero();
   private readonly aimDirBuf: Vector2 = Vector2.zero();
+  private readonly fireDirBuf: Vector2 = Vector2.zero();
   /** Düşük FPS'te simülasyon zamanını render zamanından ayırır. */
   private simulationAccumulatorMs = 0;
   private simulationTimeMs = 0;
@@ -198,6 +205,7 @@ export class GameScene extends BaseScene {
       new EffectManager(this, {
         getShakeScale: () =>
           audioSettings.isScreenShakeEnabled() ? audioSettings.getScreenShakeIntensity() : null,
+        getParticleScale: () => videoSettings.getParticleScale(),
       }),
     );
     this.telegraphs = runtimeScope.addDestroyable(new TelegraphManager(this));
@@ -206,6 +214,8 @@ export class GameScene extends BaseScene {
       new Player(this, this.border.bounds.centerX, this.border.bounds.centerY, this.effects),
     );
     this.player.setBorder(this.border);
+    this.directionIndicator = runtimeScope.addDestroyable(new PlayerDirectionIndicator(this));
+    this.aimIndicator = runtimeScope.addDestroyable(new PlayerAimIndicator(this));
 
     this.inputManager = runtimeScope.addDestroyable(
       new InputManager<HellAction>(this, {
@@ -213,6 +223,7 @@ export class GameScene extends BaseScene {
         pcActionBindings: HELL_PC_BINDINGS,
         moveKeys: HELL_MOVE_KEYS,
         aimStickAction: HELL_AIM_STICK_ACTION,
+        aimStickActivatesOnTouch: HELL_AIM_STICK_ACTIVATES_ON_TOUCH,
         actionSource: this.mobileControls.actionSource,
       }),
     );
@@ -256,6 +267,7 @@ export class GameScene extends BaseScene {
           onFluxCollected: () => {
             void gameAudio.playSfx('fluxPickup', { volume: sfxVolumes.fluxPickup });
           },
+          clearTransientState: () => this.clearTransientState(),
         },
         {
           // Seviye atlaması dövüşü kesmez: hak biriktirilir, dalga sonunda
@@ -269,6 +281,7 @@ export class GameScene extends BaseScene {
             this.screens?.cards.openIntermission(wave);
           },
           onWaveStart: (wave) => {
+            this.resetForWave();
             void gameAudio.playSfx('waveStart', { volume: sfxVolumes.waveStart });
             this.screens?.hud.announceWave(wave);
           },
@@ -309,8 +322,10 @@ export class GameScene extends BaseScene {
         player: this.player,
         effects: this.effects,
         cards: this.cards,
+        abilities: this.abilities,
         economy: this.run.economy,
         audioSettings,
+        videoSettings,
         onPauseForCard: () => this.pauseCtl.pauseForScreen(),
         onResumeAfterCard: () => this.pauseCtl.resumeAfterScreen(),
         onResumeFromMenu: () => this.pauseCtl.resumeFromMenu(),
@@ -414,6 +429,14 @@ export class GameScene extends BaseScene {
     diagnostics?.endStage('player');
 
     const playerPos = this.player.getPosition();
+    this.directionIndicator.update(
+      dt,
+      playerPos.x,
+      playerPos.y,
+      this.moveDirBuf.x,
+      this.moveDirBuf.y,
+    );
+    this.aimIndicator.update(dt, playerPos.x, playerPos.y);
 
     diagnostics?.startStage('fire');
     this.fire(playerPos, inputState);
@@ -472,8 +495,19 @@ export class GameScene extends BaseScene {
   }
 
   private fire(playerPos: Vector2, state: InputState<HellAction>): void {
-    if (state.actions.fire && this.aimDirBuf.length() > 0) {
-      if (this.bulletManager.tryFire(playerPos, this.aimDirBuf)) {
+    if (!state.actions.fire) return;
+    if (
+      writeFireDirection(
+        this.fireDirBuf,
+        playerPos.x,
+        playerPos.y,
+        this.aimDirBuf.x,
+        this.aimDirBuf.y,
+        this.enemyManager.getEnemies(),
+      )
+    ) {
+      if (this.bulletManager.tryFire(playerPos, this.fireDirBuf)) {
+        this.aimIndicator.show(playerPos.x, playerPos.y, this.fireDirBuf.x, this.fireDirBuf.y);
         void gameAudio.playSfx('fire', { volume: sfxVolumes.fire });
         // Ateş salkım hâlinde gelir; `vibrate` deseni kendi içinde kısıtlar
         // (bkz. MIN_INTERVAL_MS), yani sürekli bir uğultuya dönüşmez.
@@ -522,7 +556,6 @@ export class GameScene extends BaseScene {
       score: this.scoreboard.getScore(),
       kills: this.scoreboard.getKills(),
       elapsedTimeMs: this.scoreboard.getElapsedMs(),
-      pendingLevelUps: this.screens.cards.getPendingLevelUpCount(),
       deltaMs,
       wave: this.run.getCurrentWave(),
       waveRemainingMs: this.run.getWaveRemainingMs(),
@@ -532,6 +565,26 @@ export class GameScene extends BaseScene {
     // Ekran üstü yetenek düğmeleri de cooldown/boş slot durumunu gösterir;
     // yoksa oyuncu basıp neden hiçbir şey olmadığını anlayamaz.
     this.mobileControls.refresh(this.abilities);
+  }
+
+  /**
+   * Dalga sınırı sözleşmesi: geçici oyun varlıkları ve fiziksel input aynı
+   * anda temizlenir; slot/kart ilerlemesi korunur.
+   */
+  private resetForWave(): void {
+    this.clearTransientState();
+    this.player.resetForWave();
+    this.directionIndicator.reset();
+    this.aimIndicator.reset();
+  }
+
+  /** Kule, ability efektleri ve fiziksel input için dalga arası ortak kapı. */
+  private clearTransientState(): void {
+    this.abilities.clearTransientState();
+    this.effects.clearActive();
+    this.inputManager.reset();
+    this.mobileControls.resetInput();
+    this.input.activePointer.reset();
   }
 
   private reportDiagnostics(): void {
