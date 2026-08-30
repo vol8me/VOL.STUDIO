@@ -147,18 +147,50 @@ export class TouchController<TAction extends string>
     super.destroy(fromScene);
   }
 
+  /**
+   * İşaretçi konumunu bu katmanın ÇİZİM uzayına çevirir.
+   *
+   * `pointer.x/y` rasterleme (backing store) pikselidir. Kamera bir
+   * yakınlaştırma uyguluyorsa — çözünürlük ölçeği ya da yüksek DPR yüzünden —
+   * `scrollFactor: 0` olan bu katman da o yakınlaştırmayla çizilir; ham
+   * işaretçi konumu kullanılırsa joystick parmaktan kayar ve yanlış boyutta
+   * görünür (bkz. `GetCalcMatrix`: scrollFactor yalnız ÖTELEMEYİ iptal eder,
+   * ölçeği değil).
+   *
+   * Kamera ötelemesi bilerek çıkarılır ve yakınlaştırma bölünür: sonuç, kamera
+   * nereye kayarsa kaysın ekrana sabit kalan bir uzaydır. Yan kazanç:
+   * yarıçaplar artık CSS pikseli cinsindendir, yani joystick 3x bir telefonda
+   * da tasarlandığı fiziksel büyüklükte çizilir (eskiden `1/dpr` kadar
+   * küçülüyordu).
+   */
+  private toLayerSpace(x: number, y: number): { x: number; y: number } {
+    const camera = this.scene.cameras?.main;
+    const zoom = camera && Number.isFinite(camera.zoom) && camera.zoom > 0 ? camera.zoom : 1;
+    const originX = camera?.x ?? 0;
+    const originY = camera?.y ?? 0;
+    return { x: (x - originX) / zoom, y: (y - originY) / zoom };
+  }
+
+  /** Ekranın çizim uzayındaki genişliği — sol/sağ yarı ayrımı için. */
+  private layerWidth(): number {
+    const camera = this.scene.cameras?.main;
+    const zoom = camera && Number.isFinite(camera.zoom) && camera.zoom > 0 ? camera.zoom : 1;
+    return (camera?.width ?? this.scene.scale.width) / zoom;
+  }
+
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
     if (!pointer.wasTouch) {
       return;
     }
 
-    const halfWidth = this.scene.scale.width * UI_RATIO.SCREEN_HALF;
-    const isRightSide = pointer.x >= halfWidth;
-    this.sticks.onPointerDown(pointer.id, pointer.x, pointer.y, isRightSide);
+    const position = this.toLayerSpace(pointer.x, pointer.y);
+    const isRightSide = position.x >= this.layerWidth() * UI_RATIO.SCREEN_HALF;
+    this.sticks.onPointerDown(pointer.id, position.x, position.y, isRightSide);
   }
 
   private onPointerMove(pointer: Phaser.Input.Pointer): void {
-    this.sticks.onPointerMove(pointer.id, pointer.x, pointer.y);
+    const position = this.toLayerSpace(pointer.x, pointer.y);
+    this.sticks.onPointerMove(pointer.id, position.x, position.y);
   }
 
   private onPointerUp(pointer: Phaser.Input.Pointer): void {

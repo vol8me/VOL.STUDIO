@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import { RENDER_DEPTH } from '@/config/layers';
 import { uiConfig } from '@/config/ui';
+import type { PlayerIndicatorOptions } from './playerIndicatorOptions';
 import { hasFiniteDirection } from '@/runtime/utils/numeric';
 
 /** Gerçek mermi üretildiğinde merminin altında kısa süre görünen nişan çizgisi. */
@@ -9,8 +10,11 @@ export class PlayerAimIndicator {
   private remainingMs = 0;
   private angle = 0;
   private destroyed = false;
+  /** Kalite kademesi kapatmışsa gösterge hiç çizilmez. */
+  private readonly isEnabled: () => boolean;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, options: PlayerIndicatorOptions = {}) {
+    this.isEnabled = options.isEnabled ?? (() => true);
     this.graphics = scene.add.graphics();
     // Bullet depth'inin altında kalır; çizgi merminin önüne geçmez.
     this.graphics.setDepth(RENDER_DEPTH.bullet - 1);
@@ -19,6 +23,10 @@ export class PlayerAimIndicator {
 
   show(x: number, y: number, directionX: number, directionY: number): void {
     if (this.destroyed || !hasFiniteDirection(directionX, directionY)) return;
+    if (!this.isEnabled()) {
+      this.reset();
+      return;
+    }
     this.graphics.setPosition(x, y);
     this.angle = Math.atan2(directionY, directionX);
     this.remainingMs = uiConfig.playerFeedback.aim.lifespanMs;

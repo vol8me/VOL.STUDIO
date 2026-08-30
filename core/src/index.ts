@@ -25,11 +25,15 @@ export {
 export { canHover, hasTouchInput, isTouchPrimary, shouldUseTouchControls } from './platform';
 export {
   cancelHaptics,
+  getHapticsCapability,
+  observeHapticsCapability,
   isHapticsEnabled,
   isHapticsSupported,
   setHapticsEnabled,
   vibrate,
   type HapticPattern,
+  type HapticsBackend,
+  type HapticsCapability,
 } from './platform';
 
 /*
@@ -152,14 +156,21 @@ export {
   type FontManagerOptions,
 } from './systems/FontManager';
 export {
+  GraphicsQuality,
+  type GraphicsQualityListener,
+  type GraphicsQualityOptions,
+  type GraphicsQualityProfiles,
+} from './quality';
+export {
   ViewportManager,
   type MaxDprSetting,
+  type ViewportScaleSetting,
   type ViewportConfig,
   type ViewportResult,
   type ScaleStrategy,
 } from './systems/ViewportManager';
 export { VOL_FONTS, type VolFontFamily } from './systems/DefaultFonts';
-export { createVolGame, type VolGameConfig } from './Game';
+export { applyVolViewport, createVolGame, VIEWPORT_REGISTRY_KEY, type VolGameConfig } from './Game';
 
 export * from './ui/primitives';
 export * from './ui/layout';

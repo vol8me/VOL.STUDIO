@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import { RENDER_DEPTH } from '@/config/layers';
 import { uiConfig } from '@/config/ui';
+import type { PlayerIndicatorOptions } from './playerIndicatorOptions';
 import { approachAngle, quantizeEightDirection } from '@/runtime/utils/direction';
 
 /** Oyuncu hareketinin sekiz yönlü, düşük dikkat dağıtan saha göstergesi. */
@@ -10,8 +11,11 @@ export class PlayerDirectionIndicator {
   private targetAngle = 0;
   private alpha = 0;
   private destroyed = false;
+  /** Kalite kademesi kapatmışsa gösterge hiç çizilmez. */
+  private readonly isEnabled: () => boolean;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, options: PlayerIndicatorOptions = {}) {
+    this.isEnabled = options.isEnabled ?? (() => true);
     this.graphics = scene.add.graphics();
     this.graphics.setDepth(RENDER_DEPTH.groundEffect);
     this.graphics.setVisible(false);
@@ -19,6 +23,10 @@ export class PlayerDirectionIndicator {
 
   update(deltaMs: number, x: number, y: number, directionX: number, directionY: number): void {
     if (this.destroyed) return;
+    if (!this.isEnabled()) {
+      if (this.alpha !== 0) this.reset();
+      return;
+    }
     const target = quantizeEightDirection(directionX, directionY);
     const smoothing =
       1 - Math.exp(-Math.max(0, deltaMs) / uiConfig.playerFeedback.direction.smoothingMs);

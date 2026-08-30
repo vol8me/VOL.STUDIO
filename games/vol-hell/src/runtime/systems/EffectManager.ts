@@ -19,6 +19,12 @@ export interface EffectManagerOptions {
   getShakeScale?: () => number | null;
   /** Partikül sayısı çarpanı; verilmez/geçersizse config sayısı korunur. */
   getParticleScale?: () => number;
+  /**
+   * Partikül ÖMRÜ çarpanı. Sayıdan bağımsız bir kaldıraç: aynı anda hayatta
+   * olan partikül sayısını düşürür, yani doldurma maliyetini partikül sayısını
+   * azaltmadan da kırpar. Emitter ayarı canlı güncellenir.
+   */
+  getParticleLifespanScale?: () => number;
 }
 
 /**
@@ -38,6 +44,13 @@ export class EffectManager {
   private readonly emitters = new Map<EffectId, Phaser.GameObjects.Particles.ParticleEmitter>();
   /** Efekt başına son sarsıntı zamanı (ms) — sarsıntı spam'ini keser. */
   private readonly lastShakeAt = new Map<EffectId, number>();
+  /**
+   * Emitter BAŞINA son uygulanan ömür çarpanı.
+   *
+   * Tek bir alan yetmez: kalite değiştiğinde yalnız o değişimden sonra ilk
+   * oynatılan efekt güncellenir, diğerleri eski ömürde kalırdı.
+   */
+  private readonly appliedLifespanScale = new Map<EffectId, number>();
   private destroyed = false;
 
   constructor(scene: Phaser.Scene, options: EffectManagerOptions = {}) {
@@ -71,6 +84,7 @@ export class EffectManager {
       if (spread !== undefined && angleDeg !== undefined && Number.isFinite(angleDeg)) {
         emitter.setEmitterAngle({ min: angleDeg - spread, max: angleDeg + spread });
       }
+      this.applyLifespanScale(id, emitter, definition.particles);
       const count = this.resolveParticleCount(definition.particles.count);
       if (count > 0) emitter.emitParticleAt(x, y, count);
     }
@@ -118,6 +132,28 @@ export class EffectManager {
 
     this.lastShakeAt.set(id, now);
     this.scene.cameras.main.shake(shake.durationMs, nonNegativeFinite(shake.intensity * scale));
+  }
+
+  /**
+   * Emitter'ın ömür aralığını geçerli kalite çarpanına göre tazeler.
+   *
+   * Emitter kurulumda bir kez yapılandırılıyor; kalite ÇALIŞMA ANINDA
+   * değiştiği için ömür her patlamada yeniden yazılır. Çarpan 1 iken hiç
+   * dokunulmaz — yüksek kalitede ek maliyet yoktur.
+   */
+  private applyLifespanScale(
+    id: EffectId,
+    emitter: Phaser.GameObjects.Particles.ParticleEmitter,
+    spec: ParticleBurstSpec,
+  ): void {
+    const scale = this.options.getParticleLifespanScale?.() ?? 1;
+    if (!Number.isFinite(scale) || scale <= 0) return;
+    if ((this.appliedLifespanScale.get(id) ?? 1) === scale) return;
+    this.appliedLifespanScale.set(id, scale);
+    emitter.setParticleLifespan({
+      min: Math.max(1, spec.lifespan.min * scale),
+      max: Math.max(1, spec.lifespan.max * scale),
+    });
   }
 
   private resolveParticleCount(baseCount: number): number {

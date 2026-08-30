@@ -42,7 +42,10 @@
     "fit": "Sığdır",
     "actualSize": "%100",
     "zoomState": "Zoom %{{zoom}}",
-    "iconRegistry": "İkon kaydı"
+    "iconRegistry": "İkon kaydı",
+    "graphicsQuality": "GraphicsQuality — kalite kademeleri",
+    "graphicsQualityToggle": "KADEMEYİ DEĞİŞTİR",
+    "graphicsQualityPixels": "Rasterlenen piksel"
   },
   "buttons": {
     "variant": "Varyant",

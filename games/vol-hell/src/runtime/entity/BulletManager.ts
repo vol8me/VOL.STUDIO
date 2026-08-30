@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import type { EntityVisualQualityProvider } from './entityVisuals';
 import type { HellStatBlock } from '@/config/stats';
 import { Vector2 } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
@@ -31,6 +32,8 @@ export class BulletManager {
     private readonly scene: Phaser.Scene,
     private readonly effects: EffectManager,
     private readonly stats: HellStatBlock,
+    /** Kalite kademesi görsel anahtarları; verilmezse tam kalite. */
+    private readonly visualsProvider?: EntityVisualQualityProvider,
   ) {}
 
   /** Ateş etmeye çalışır — cooldown aktifse reddedir. */
@@ -77,7 +80,15 @@ export class BulletManager {
 
     const safeDamage = nonNegativeFinite(damage);
     this.directionBuf.set(dirX, dirY);
-    const bullet = new Bullet(this.scene, x, y, this.directionBuf, this.effects, safeDamage);
+    const bullet = new Bullet(
+      this.scene,
+      x,
+      y,
+      this.directionBuf,
+      this.effects,
+      safeDamage,
+      this.visualsProvider,
+    );
     this.bullets.push(bullet);
 
     const angleDeg = Math.atan2(dirY, dirX) * (180 / Math.PI);

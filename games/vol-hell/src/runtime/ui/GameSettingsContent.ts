@@ -1,9 +1,18 @@
-import { Checkbox, DisposableScope, Select, Slider, Text, i18n, i18next } from '@volstudio/core';
+import {
+  Checkbox,
+  DisposableScope,
+  Select,
+  Slider,
+  Text,
+  i18n,
+  i18next,
+  observeHapticsCapability,
+} from '@volstudio/core';
 import type { AudioSettings, AudioSettingsData } from '@/app/AudioSettings';
 import type { VideoSettings, VideoSettingsData } from '@/app/VideoSettings';
 import { gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
-import { videoConfig, type GraphicsQuality } from '@/config/video';
+import { videoConfig, type GraphicsQualityLevel } from '@/config/video';
 
 export interface GameSettingsContentOptions {
   audioSettings: AudioSettings;
@@ -45,9 +54,11 @@ export class GameSettingsContent {
   private readonly resolutionSelect: Select | null;
   private readonly graphicsQualitySelect: Select | null;
   private readonly canResizeWindow: boolean;
+  private readonly graphicsLevels: readonly GraphicsQualityLevel[];
 
   constructor(options: GameSettingsContentOptions) {
     this.canResizeWindow = options.canResizeWindow ?? false;
+    this.graphicsLevels = options.videoSettings.getGraphicsLevels();
     this.element = document.createElement('div');
     this.element.className = 'vol-game-settings';
 
@@ -162,13 +173,13 @@ export class GameSettingsContent {
         },
       });
       this.graphicsQualitySelect = new Select({
-        options: (Object.keys(videoConfig.quality) as GraphicsQuality[]).map((quality) => ({
+        options: this.graphicsLevels.map((quality) => ({
           value: quality,
           label: this.qualityLabel(quality),
         })),
         value: options.videoSettings.getGraphicsQuality(),
         onCommit: (value) => {
-          void options.videoSettings.setGraphicsQuality(value as GraphicsQuality);
+          void options.videoSettings.setGraphicsQuality(value as GraphicsQualityLevel);
           this.playCommitSound();
         },
       });
@@ -222,6 +233,19 @@ export class GameSettingsContent {
     const onLanguageChanged = (): void => this.refreshLabels();
     i18next.on('languageChanged', onLanguageChanged);
     this.scope.addSubscription(() => i18next.off('languageChanged', onLanguageChanged));
+    // Titreşim ayarı YETENEĞE bağlıdır: masaüstünde `navigator.vibrate` yoktur
+    // ve klavye/fare titremez, yani kol takılı değilken kutu hiçbir şey
+    // yapmaz. Yetenek canlı izlenir — oyuncu kolu oyun ortasında takarsa ayar
+    // o anda etkinleşir, çıkarırsa pasifleşir.
+    this.scope.addSubscription(
+      observeHapticsCapability((capability) => {
+        this.hapticsCheckbox.setDisabled(!capability.supported);
+        this.hapticsCheckbox.element.classList.toggle(
+          'vol-game-settings__control--unavailable',
+          !capability.supported,
+        );
+      }),
+    );
     this.scope.addSubscription(options.audioSettings.onChange((data) => this.syncAudio(data)));
     this.scope.addSubscription(options.videoSettings.onChange((data) => this.syncVideo(data)));
   }
@@ -280,7 +304,7 @@ export class GameSettingsContent {
       { value: 'fullscreen', label: i18next.t('volhell:settings.fullscreen') },
     ]);
     this.graphicsQualitySelect?.setOptions(
-      (Object.keys(videoConfig.quality) as GraphicsQuality[]).map((quality) => ({
+      this.graphicsLevels.map((quality) => ({
         value: quality,
         label: this.qualityLabel(quality),
       })),
@@ -316,10 +340,10 @@ export class GameSettingsContent {
     return locale.toUpperCase();
   }
 
-  private qualityLabel(quality: GraphicsQuality): string {
-    if (quality === 'low') return i18next.t('volhell:settings.qualityLow');
-    if (quality === 'balanced') return i18next.t('volhell:settings.qualityBalanced');
-    return i18next.t('volhell:settings.qualityHigh');
+  private qualityLabel(quality: GraphicsQualityLevel): string {
+    return quality === 'low'
+      ? i18next.t('volhell:settings.qualityLow')
+      : i18next.t('volhell:settings.qualityHigh');
   }
 
   private playCommitSound(): void {

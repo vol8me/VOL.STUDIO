@@ -9,6 +9,7 @@ import type { Border } from './Border';
 import { EntityHealthBar } from './EntityHealthBar';
 import type { Enemy } from './Enemy';
 import { TurretShot, type SegmentQueryable } from './TurretShot';
+import type { EntityVisualQualityProvider } from './entityVisuals';
 import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 import { gameConfig } from '@/config/game';
 
@@ -46,6 +47,7 @@ export class Turret {
     private readonly effects: EffectManager,
     private readonly border: Border,
     private readonly spatialGrid: SegmentQueryable | undefined,
+    private readonly visualsProvider: EntityVisualQualityProvider | undefined,
     private readonly params: TurretParams,
   ) {
     this.maxHealth = params.health;
@@ -226,7 +228,15 @@ export class Turret {
     const muzzleY = this.body.y + Math.sin(this.aimAngle) * muzzleDistance;
 
     this.shots.push(
-      new TurretShot(this.scene, muzzleX, muzzleY, target, this.params.damage, this.effects),
+      new TurretShot(
+        this.scene,
+        muzzleX,
+        muzzleY,
+        target,
+        this.params.damage,
+        this.effects,
+        this.visualsProvider,
+      ),
     );
     this.effects.play('turretShot', muzzleX, muzzleY, (this.aimAngle * 180) / Math.PI);
     if (gameAudio) {

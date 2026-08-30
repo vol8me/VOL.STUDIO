@@ -50,6 +50,7 @@ import { GameMobileControls } from './GameMobileControls';
 import { GameKeyboardBindings } from './GameKeyboardBindings';
 import { GameScreenStack } from './GameScreenStack';
 import { safeDeltaMs } from '@/runtime/utils/numeric';
+import type { EntityVisualQuality } from '@/runtime/entity/entityVisuals';
 import { releasePointerLatch } from '@/runtime/input/pointerLatch';
 import { SimulationClock } from '@/runtime/simulation/SimulationClock';
 import { PlayerAimIndicator } from '@/runtime/ui/PlayerAimIndicator';
@@ -215,6 +216,7 @@ export class GameScene extends BaseScene {
         getShakeScale: () =>
           audioSettings.isScreenShakeEnabled() ? audioSettings.getScreenShakeIntensity() : null,
         getParticleScale: () => videoSettings.getParticleScale(),
+        getParticleLifespanScale: () => videoSettings.getParticleLifespanScale(),
       }),
     );
     this.telegraphs = runtimeScope.addDestroyable(new TelegraphManager(this));
@@ -223,8 +225,17 @@ export class GameScene extends BaseScene {
       new Player(this, this.border.bounds.centerX, this.border.bounds.centerY, this.effects),
     );
     this.player.setBorder(this.border);
-    this.directionIndicator = runtimeScope.addDestroyable(new PlayerDirectionIndicator(this));
-    this.aimIndicator = runtimeScope.addDestroyable(new PlayerAimIndicator(this));
+    // Saha göstergeleri kalite kademesine bağlıdır: her ikisi de HER KARE
+    // `Graphics` yeniden çizer, düşük kademede oyuncu okunabilirliği HUD'dan
+    // gelmeye devam eder.
+    this.directionIndicator = runtimeScope.addDestroyable(
+      new PlayerDirectionIndicator(this, {
+        isEnabled: () => videoSettings.areGroundIndicatorsEnabled(),
+      }),
+    );
+    this.aimIndicator = runtimeScope.addDestroyable(
+      new PlayerAimIndicator(this, { isEnabled: () => videoSettings.areGroundIndicatorsEnabled() }),
+    );
 
     this.inputManager = runtimeScope.addDestroyable(
       new InputManager<HellAction>(this, {
@@ -236,15 +247,27 @@ export class GameScene extends BaseScene {
         actionSource: this.mobileControls.actionSource,
       }),
     );
+    // Görsel kalite anahtarları entity'lere SAĞLAYICI olarak verilir; entity
+    // uygulama singleton'ına uzanmaz ve testte tam kalite varsayılır.
+    const entityVisuals = (): EntityVisualQuality => ({
+      entityStrokes: videoSettings.areEntityStrokesEnabled(),
+      bulletTrails: videoSettings.areBulletTrailsEnabled(),
+    });
     this.bulletManager = runtimeScope.addDestroyable(
-      new BulletManager(this, this.effects, this.player.getStats()),
+      new BulletManager(this, this.effects, this.player.getStats(), entityVisuals),
     );
     this.enemyManager = runtimeScope.addDestroyable(
-      new EnemyManager(this, this.effects, this.runRandom, {
-        // Ödül ölümün kendisine bağlı: mermi, kule, zincir ve ateş alanı
-        // ölümleri aynı kapıdan geçer.
-        onEnemyDeath: (enemy) => this.onEnemyKilled(enemy),
-      }),
+      new EnemyManager(
+        this,
+        this.effects,
+        this.runRandom,
+        {
+          // Ödül ölümün kendisine bağlı: mermi, kule, zincir ve ateş alanı
+          // ölümleri aynı kapıdan geçer.
+          onEnemyDeath: (enemy) => this.onEnemyKilled(enemy),
+        },
+        entityVisuals,
+      ),
     );
 
     this.abilities = runtimeScope.addDestroyable(
@@ -258,6 +281,7 @@ export class GameScene extends BaseScene {
         playerStats: this.player.getStats(),
         // Kule mermisi de oyuncu mermisiyle aynı broadphase'i kullanır.
         spatialGrid: this.spatialGrid,
+        visualsProvider: entityVisuals,
       }),
     );
 
@@ -279,6 +303,7 @@ export class GameScene extends BaseScene {
             void gameAudio.playSfx('fluxPickup', { volume: sfxVolumes.fluxPickup });
           },
           clearTransientState: () => this.clearTransientState(),
+          visualsProvider: entityVisuals,
         },
         {
           // Seviye atlaması dövüşü kesmez: hak biriktirilir, dalga sonunda

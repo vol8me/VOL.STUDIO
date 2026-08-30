@@ -4,6 +4,18 @@
   transform: translate(-50%, -50%);
 }
 
+/*
+ * Ayar formunun OKUMA SÜTUNU — ana menü ve pause aynı ölçüyü paylaşır.
+ *
+ * İki yüzey aynı `GameSettingsContent`i gösteriyor ama panel genişlikleri
+ * ayrışmıştı (560 / 420 px): pause'daki form belirgin biçimde sıkışık
+ * görünüyor, aynı etiket ve kontroller farklı yerlere sarıyordu. Tek
+ * değişkene bağlanınca ikisi de aynı ölçüde kalır ve ölçü tek yerden değişir.
+ */
+:root {
+  --vol-settings-column: min(560px, 100%);
+}
+
 .pause-panel {
   top: 50%;
   left: 50%;
@@ -24,10 +36,13 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+
+  /* Yatay boşluk ayarlar ekranıyla AYNI: aynı form iki yüzeyde aynı
+     genişlikte nefes alsın. */
   padding: calc(var(--vol-safe-top) + var(--vol-space-md))
-    calc(var(--vol-safe-right) + var(--vol-space-md))
+    calc(var(--vol-safe-right) + var(--vol-space-xl))
     calc(var(--vol-safe-bottom) + var(--vol-space-md))
-    calc(var(--vol-safe-left) + var(--vol-space-md));
+    calc(var(--vol-safe-left) + var(--vol-space-xl));
   overflow: auto;
   opacity: 0;
   pointer-events: none;
@@ -133,7 +148,7 @@
   position: relative;
   top: auto;
   left: auto;
-  width: min(560px, 100%);
+  width: var(--vol-settings-column);
   max-width: 100%;
   transform: none;
 }
@@ -165,7 +180,7 @@
 .pause-settings-panel {
   position: relative;
   inset: auto;
-  width: min(420px, 100%);
+  width: var(--vol-settings-column);
   max-width: 100%;
   transform: none;
 }
@@ -197,6 +212,19 @@
 
 .vol-game-settings__section > .vol-text {
   margin: 0;
+}
+
+/*
+ * Cihazın SAĞLAYAMADIĞI ayar — sunulur ama sunulduğu gibi de bırakılmaz.
+ *
+ * Titreşim masaüstünde ancak bağlı bir oyun kolunun rumble motoruyla mümkün.
+ * Kutuyu tamamen gizlemek yerine pasifleştirmek, kolunu takınca ayarın
+ * nerede olduğunu bilen oyuncuyu şaşırtmaz; solgunluk da neden
+ * tıklanamadığını anlatır.
+ */
+.vol-game-settings__control--unavailable {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /*
@@ -843,4 +871,31 @@
   right: calc(var(--vol-safe-right) + var(--vol-space-md));
   z-index: calc(var(--vol-z-dialog) - 1);
   display: flex;
+}
+
+/* Düşük grafik kademesi — DOM tarafındaki pahalı boyama kapatılır.
+ *
+ * `data-vol-graphics` özniteliğini CORE `GraphicsQuality` yazar. Öznitelik
+ * eskiden yazılıyor ama HİÇBİR YERDE okunmuyordu; artık gerçek bir karşılığı
+ * var. `backdrop-filter` ve büyük yarıçaplı gölgeler her karede yeniden
+ * boyama tetikler ve düşük donanımda HUD'u oyunla birlikte yavaşlatır. */
+:root[data-vol-graphics='low'] .vol-modal__scrim,
+:root[data-vol-graphics='low'] .vol-card-layer,
+:root[data-vol-graphics='low'] .vol-pause-overlay,
+:root[data-vol-graphics='low'] .vol-death-overlay {
+  backdrop-filter: none;
+}
+
+:root[data-vol-graphics='low'] .vol-hud-stats,
+:root[data-vol-graphics='low'] .vol-wave__announcement,
+:root[data-vol-graphics='low'] .vol-ability-hud,
+:root[data-vol-graphics='low'] .vol-custom-cursor {
+  text-shadow: none;
+  box-shadow: none;
+}
+
+/* Saha üstü imleç parıltısı da kapanır; iz bırakan filtreler en pahalı
+   katmandır ve düşük kademede oyunun kendisi önceliklidir. */
+:root[data-vol-graphics='low'] .vol-custom-cursor::before {
+  display: none;
 }

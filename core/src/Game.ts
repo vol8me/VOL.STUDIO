@@ -1,6 +1,10 @@
 import Phaser from 'phaser';
 import { FontManager, type FontFaceSpec } from './systems/FontManager';
-import { ViewportManager, type MaxDprSetting, type ScaleStrategy } from './systems/ViewportManager';
+import {
+  ViewportManager,
+  type ScaleStrategy,
+  type ViewportScaleSetting,
+} from './systems/ViewportManager';
 import { VOL_FONTS, type VolFontFamily } from './systems/DefaultFonts';
 import { TECH } from './constants';
 import type { Diagnostics } from './debug/Diagnostics';
@@ -13,7 +17,12 @@ export interface VolGameConfig {
   backgroundColor?: string;
   strategy?: ScaleStrategy;
   /** Yüksek DPR ekranlarda piksel fill-rate'i sınırlamak için maksimum DPR. */
-  maxDpr?: MaxDprSetting;
+  maxDpr?: ViewportScaleSetting;
+  /**
+   * Rasterleme çözünürlüğü çarpanı (0.25–1), DPR'den bağımsız. Dünya boyutu ve
+   * ekrandaki görüntü boyutu değişmez; yalnız işlenen piksel sayısı düşer.
+   */
+  renderScale?: ViewportScaleSetting;
   scenes: Phaser.Types.Core.GameConfig['scene'];
   physics?: Phaser.Types.Core.GameConfig['physics'];
   input?: Phaser.Types.Core.InputConfig;
@@ -79,6 +88,7 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     backgroundColor: config.backgroundColor,
     strategy: config.strategy,
     maxDpr: config.maxDpr,
+    renderScale: config.renderScale,
   });
 
   const gameConfig: Phaser.Types.Core.GameConfig = {
@@ -90,6 +100,11 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
   };
 
   const game = new Phaser.Game(gameConfig);
+  // Sahneler kamerayı geçerli rasterleme çarpanına göre kurabilsin diye
+  // yönetici registry'ye konur: `applyVolViewport(scene)` bunu okur.
+  // Gerçek `Phaser.Game`de registry her zaman vardır; opsiyonel erişim
+  // yalnızca Phaser'ı taklit eden test/araç ortamları içindir.
+  game.registry?.set(VIEWPORT_REGISTRY_KEY, viewportManager);
 
   const { diagnostics } = config;
   if (diagnostics) {
@@ -102,4 +117,22 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
   }
 
   return game;
+}
+
+/** `ViewportManager`ın Phaser registry anahtarı. */
+export const VIEWPORT_REGISTRY_KEY = 'volViewportManager';
+
+/**
+ * Sahnenin kamerasını oyunun viewport sözleşmesine göre kurar.
+ *
+ * `createVolGame` ile kurulmuş bir oyunda her sahne `create()` içinde bunu
+ * çağırmalıdır: kamera yakınlaştırması rasterleme çarpanına eşitlenir ve
+ * dünya birimleri CSS pikseline sabitlenir. Çağrılmazsa sahne, çözünürlük
+ * çarpanı 1 değilken dünyanın yalnız bir bölümünü gösterir.
+ *
+ * `createVolGame` dışında kurulmuş bir oyunda güvenle no-op olur.
+ */
+export function applyVolViewport(scene: Phaser.Scene): void {
+  const manager: unknown = scene.game?.registry?.get(VIEWPORT_REGISTRY_KEY);
+  if (manager instanceof ViewportManager) manager.applyToScene(scene);
 }

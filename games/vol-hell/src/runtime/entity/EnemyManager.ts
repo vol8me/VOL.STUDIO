@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import type { EntityVisualQualityProvider } from './entityVisuals';
 import type { Random } from '@volstudio/core';
 import type { HellStatBlock } from '@/config/stats';
 import { Vector2 } from '@volstudio/core';
@@ -60,6 +61,8 @@ export class EnemyManager {
     private readonly effects: EffectManager,
     private readonly random: Random,
     private readonly callbacks: EnemyManagerCallbacks = {},
+    /** Kalite kademesi görsel anahtarları; verilmezse tam kalite. */
+    private readonly visualsProvider?: EntityVisualQualityProvider,
   ) {}
 
   /** Aktif dalga — spawn havuzunu belirler. */
@@ -298,6 +301,7 @@ export class EnemyManager {
       // Ödül ölümün KENDİSİNE bağlı: kule/zincir/ateş ölümleri de sayılır.
       onDeath: (killed) => this.callbacks.onEnemyDeath?.(killed),
       spawnIndex: this.spawnSequence++,
+      visualsProvider: this.visualsProvider,
     });
     this.enemies.push(enemy);
 

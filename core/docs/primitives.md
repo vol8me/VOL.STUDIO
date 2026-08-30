@@ -463,6 +463,60 @@ kopya olarak yerleştirir. Scrim, `Modal` ile aynı karartma sözleşmesini kull
 bulanıklaştırma eklemez. Yükseklik ekranı tamamen doldurur, içerik ise panelin
 içinde kayar. Oyun kuralları ve stat hesapları çağıranda kalır.
 
+### Dokunsal geri bildirim yeteneği
+
+`vibrate()` hâlâ NİYET alır (`'tap'`, `'error'`), ama artık iki katmandan
+birine yönlenir ve hangisinin var olduğunu ÇALIŞMA ANINDA ölçer:
+
+- `navigator.vibrate` — Android WebView ve mobil tarayıcılar.
+- Oyun kolunun `vibrationActuator`'ı — masaüstünde ve Steam Deck'te titreşimin
+  tek gerçek kaynağı; klavye ve fare titremez.
+
+`getHapticsCapability()` o anki durumu, `observeHapticsCapability()` ise
+DEĞİŞİMLERİ verir (`gamepadconnected`/`gamepaddisconnected`). Tüketici ayarı
+buna bağlar: kol takılınca titreşim kutusu etkinleşir, çıkarılınca pasifleşir.
+Açılışta bir kez ölçüp karar vermek, kolunu sonradan takan oyuncuya ayarı
+sonsuza dek kapalı gösterirdi.
+
+Desen tablosu tek kaynaktır: ms dizisi Vibration API'ye, aynı desenin süre +
+şiddet karşılığı oyun koluna gider. Reddedilen efekt ya da izin hatası asla
+akışı kesmez — titreşimin olmaması bir hata değil, o platformun gerçeğidir.
+
+### Grafik kalitesi
+
+`GraphicsQuality<TLevel, TProfile>` kalite kademelerinin JENERİK kaydıdır:
+kademe listesi, geçerli kademe, değişim bildirimi ve opsiyonel DOM yansıması.
+**CORE profilin içini bilmez** — kademelerin adı ve knob'ların ne olduğu
+tamamen tüketicinindir; bir knob sözlüğü dayatmak bir sonraki oyunun
+ihtiyacını yanlış tahmin ederdi. Kalıcılıktan da habersizdir: tüketici kendi
+`SaveManager`'ı ile yükler ve `setLevel()` çağırır.
+
+```ts
+const quality = new GraphicsQuality({
+  levels: { high: { renderScale: 1 }, low: { renderScale: 0.7 } },
+  initial: 'high',
+  // Opsiyonel: CSS `[data-vol-graphics='low']` ile pahalı boyamayı kapatır.
+  reflect: { element: document.documentElement, attribute: 'vol-graphics' },
+});
+```
+
+`ViewportManager.renderScale` bunun RENDER ayağıdır ve DPR'den bağımsızdır.
+Kritik nokta: `strategy: 'resize'` modunda Phaser'ın dünya birimi doğrudan
+backing store pikselidir, yani çözünürlüğü değiştirmek DÜNYAYI da değiştirir —
+arena küçülür, dünya birimi/saniye cinsinden sabit olan hızlar ekranda
+hızlanır. Bu yüzden `applyToScene()` kamerayı rasterleme çarpanı kadar
+yakınlaştırır: görünen dünya alanı `viewport / zoom` = CSS pikseli olur ve
+çözünürlükten bağımsız kalır. Sahneler `applyVolViewport(scene)` ile bu
+sözleşmeye girer.
+
+**Ekran uzayına sabitlenen katmanlar (`scrollFactor: 0`) kamera
+yakınlaştırmasından MUAF DEĞİLDİR** (bkz. Phaser `GetCalcMatrix`: scrollFactor
+yalnız ötelemeyi iptal eder, ölçeği değil). Böyle bir katman işaretçi
+konumunu kullanacaksa önce kamera uzayına çevirmelidir:
+`(pointer.x - camera.x) / camera.zoom`. `TouchController` bunu yapar; yan
+kazanç olarak joystick yarıçapları CSS pikseline sabitlenir ve yüksek DPR'li
+telefonlarda `1/dpr` kadar küçülmez.
+
 `Counter.setValue()` **varsayılan olarak değişim yönünü vurgular**: artışta
 `--increase`, azalışta `--decrease` sınıfı oynar. Bu, `pulse: true` opt-in'i
 olan eski davranıştan farklıdır ve `ResourceCounter`/`ResourceBar` üzerinden

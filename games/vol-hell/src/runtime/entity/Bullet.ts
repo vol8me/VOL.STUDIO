@@ -1,4 +1,9 @@
 import type Phaser from 'phaser';
+import {
+  resolveEntityVisuals,
+  type EntityVisualQuality,
+  type EntityVisualQualityProvider,
+} from './entityVisuals';
 import { Vector2 } from '@volstudio/core';
 import { bulletConfig } from '@/config/bullet';
 import { RENDER_DEPTH } from '@/config/layers';
@@ -21,6 +26,7 @@ export class Bullet {
   private previousX: number;
   private previousY: number;
   /** Bu adımda duvara temas noktası; sekme olmadıysa `null` (bkz. getter). */
+  private readonly visuals: EntityVisualQuality;
   private bounceX: number | null = null;
   private bounceY: number | null = null;
   private readonly damageValue: number;
@@ -35,7 +41,9 @@ export class Bullet {
     private readonly effects: EffectManager,
     /** Ateşlendiği andaki hasar — oyuncunun stat bloğundan gelir. */
     damageValue: number = bulletConfig.damage,
+    visualsProvider?: EntityVisualQualityProvider,
   ) {
+    this.visuals = resolveEntityVisuals(visualsProvider);
     this.damageValue = nonNegativeFinite(damageValue);
     const directionX = finiteOr(direction.x, 0);
     const directionY = finiteOr(direction.y, 0);
@@ -48,11 +56,15 @@ export class Bullet {
     );
     this.previousX = this.arc.x;
     this.previousY = this.arc.y;
-    this.arc.setStrokeStyle(
-      bulletConfig.strokeWidth,
-      bulletConfig.strokeColor,
-      bulletConfig.strokeAlpha,
-    );
+    // Kenar çizgisi arc başına İKİNCİ bir çizim geçişidir; ekranda onlarca
+    // mermi olabildiği için kalite kademesi bunu kapatabilir.
+    if (this.visuals.entityStrokes) {
+      this.arc.setStrokeStyle(
+        bulletConfig.strokeWidth,
+        bulletConfig.strokeColor,
+        bulletConfig.strokeAlpha,
+      );
+    }
     this.arc.setDepth(RENDER_DEPTH.bullet);
 
     this.velocity.set(directionX, directionY);
@@ -124,11 +136,14 @@ export class Bullet {
 
     this.handleBounce(border);
 
-    // Trail partikül
-    this.lastTrailTime += movementDelta;
-    if (this.lastTrailTime >= bulletConfig.trailFrequencyMs) {
-      this.lastTrailTime = 0;
-      this.spawnTrailParticle();
+    // Trail partikül — mermi başına saniyede ~40 emisyon. Kalabalık bir
+    // ekranda tek başına en pahalı efekt kaynağı; kalite kademesi kapatır.
+    if (this.visuals.bulletTrails) {
+      this.lastTrailTime += movementDelta;
+      if (this.lastTrailTime >= bulletConfig.trailFrequencyMs) {
+        this.lastTrailTime = 0;
+        this.spawnTrailParticle();
+      }
     }
 
     this.age += safeDelta;

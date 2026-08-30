@@ -24,6 +24,8 @@ const { FakeUIRoot, i18next, roots } = vi.hoisted(() => {
 });
 
 vi.mock('@volstudio/core', () => ({
+  // Kamera sözleşmesi sahne kurulumunda çağrılır; testte no-op yeterli.
+  applyVolViewport: () => {},
   UIRoot: FakeUIRoot,
   i18next,
 }));

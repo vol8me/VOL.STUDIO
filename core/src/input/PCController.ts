@@ -156,6 +156,15 @@ export class PCController<TAction extends string> implements InputProvider<TActi
     );
   }
 
+  /**
+   * Fare durağan hâlde de nişan sinyali taşır — AMA son işaretçi olayı bir
+   * DOKUNUŞ ise taşımaz: o durumda `pointer` dokunuştan miras kalmış bir
+   * konumdur ve dokunmatik cihazda bayat bir yöne nişan aldırırdı.
+   */
+  get providesRestingState(): boolean {
+    return !this.pointer.wasTouch;
+  }
+
   get isActive(): boolean {
     return isPCInputActive(this.moveState, this.pointerState, this.actionState);
   }

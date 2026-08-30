@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { resolveEntityVisuals, type EntityVisualQualityProvider } from './entityVisuals';
 import { economyConfig } from '@/config/economy';
 import { RENDER_DEPTH } from '@/config/layers';
 import type { Border } from './Border';
@@ -38,6 +39,8 @@ export class FluxPickup {
     border: Border,
     /** Toplanınca sayaca eklenecek miktar. */
     amount: number,
+    /** Kalite kademesi görsel anahtarları; verilmezse tam kalite. */
+    visualsProvider?: EntityVisualQualityProvider,
   ) {
     const { radius, color, strokeColor, strokeWidth } = economyConfig.flux;
     this.amountValue = Math.floor(nonNegativeFinite(amount));
@@ -49,7 +52,9 @@ export class FluxPickup {
     this.landingY = border.clampY(landingY, radius);
 
     this.arc = scene.add.circle(this.originX, this.originY, radius, color, 1);
-    this.arc.setStrokeStyle(strokeWidth, strokeColor, 1);
+    if (resolveEntityVisuals(visualsProvider).entityStrokes) {
+      this.arc.setStrokeStyle(strokeWidth, strokeColor, 1);
+    }
     this.arc.setDepth(RENDER_DEPTH.fluxPickup);
     this.arc.setScale(economyConfig.flux.drop.popScale);
   }

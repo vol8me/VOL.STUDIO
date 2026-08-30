@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { resolveEntityVisuals, type EntityVisualQualityProvider } from './entityVisuals';
 import { Vector2, type Random } from '@volstudio/core';
 import type { HellStatBlock } from '@/config/stats';
 import { enemyConfig } from '@/config/enemy';
@@ -47,6 +48,8 @@ export interface EnemyOptions {
    * Tam üst üste binmede ayrışma yönünü türetmek için kullanılır.
    */
   spawnIndex: number;
+  /** Kalite kademesi görsel anahtarları; verilmezse tam kalite. */
+  visualsProvider?: EntityVisualQualityProvider;
 }
 
 /**
@@ -119,11 +122,13 @@ export class Enemy {
       this.definition.color,
       enemyConfig.fillAlpha,
     );
-    this.arc.setStrokeStyle(
-      enemyConfig.strokeWidth,
-      this.definition.strokeColor,
-      enemyConfig.strokeAlpha,
-    );
+    if (resolveEntityVisuals(options.visualsProvider).entityStrokes) {
+      this.arc.setStrokeStyle(
+        enemyConfig.strokeWidth,
+        this.definition.strokeColor,
+        enemyConfig.strokeAlpha,
+      );
+    }
     this.arc.setDepth(RENDER_DEPTH.enemy);
 
     this.rusherState = this.definition.archetype === 'rusher' ? createRusherState() : null;

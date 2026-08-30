@@ -82,7 +82,6 @@
     "resolution": "Window Resolution",
     "graphicsQuality": "Graphics Quality",
     "qualityLow": "Low",
-    "qualityBalanced": "Balanced",
     "qualityHigh": "High"
   },
   "pause": {

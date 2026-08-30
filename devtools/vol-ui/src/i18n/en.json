@@ -42,7 +42,10 @@
     "fit": "Fit",
     "actualSize": "100%",
     "zoomState": "Zoom {{zoom}}%",
-    "iconRegistry": "Icon registry"
+    "iconRegistry": "Icon registry",
+    "graphicsQuality": "GraphicsQuality — quality levels",
+    "graphicsQualityToggle": "SWITCH LEVEL",
+    "graphicsQualityPixels": "Rasterised pixels"
   },
   "buttons": {
     "variant": "Variant",

@@ -5,6 +5,104 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-30 — grafik kalitesi ayarı: iki kademe, gerçek fark
+
+Ölçüm turunda çıkan sonuç kabul edildi ve ayar yeniden kuruldu: üç kademe
+ikiye indi, kademeler ÖLÇÜLEBİLİR biçimde ayrıldı ve mekanizma CORE'a taşındı.
+
+**Önce kök sorun.** Render ölçeği naif eklenemezdi: `strategy: 'resize'` modunda
+Phaser'ın dünya birimi doğrudan backing store pikselidir, yani çözünürlüğü
+değiştirmek arenayı da değiştirir. Bu yalnız yeni knob'un değil MEVCUT
+`maxDpr` bacağının da sorunuydu — 2x bir ekranda "yüksek" arenayı %50
+genişletiyor ve dünya birimi/saniye cinsinden sabit olan oyuncu hızını ekranda
+1.5 kat yavaşlatıyordu. Kalite ayarı sessizce OYNANIŞ ayarıydı.
+
+`ViewportManager` artık dünyayı CSS pikselinde tutuyor: backing store
+rasterleme çarpanıyla büyüyor, kamera AYNI çarpanla yakınlaştırılıyor, görünen
+dünya alanı `viewport / zoom` = sabit. Sahneler `applyVolViewport(scene)` ile
+bu sözleşmeye giriyor. Yan etki olarak DPR tutarsızlığı da kapandı.
+
+**Ekran uzayı tuzağı.** Kamera yakınlaştırması `scrollFactor: 0` katmanları da
+ölçekler (Phaser `GetCalcMatrix`: scrollFactor yalnız ötelemeyi iptal eder).
+`TouchController` ham `pointer.x` kullandığı için joystick parmaktan kayacaktı;
+işaretçi artık kamera uzayına çevriliyor. Bunun yan kazancı, önceki denetimde
+"karar bekliyor" olarak bırakılan **dokunmatik fiziksel boyut** maddesidir:
+joystick yarıçapları CSS pikseline sabitlendi, 3x telefonda `1/dpr` kadar
+küçülmüyor.
+
+**CORE'a ne taşındı.** `GraphicsQuality<TLevel, TProfile>` — kademe listesi,
+geçerli kademe, değişim bildirimi, opsiyonel DOM yansıması. Profilin İÇİ
+jenerik: CORE hangi knob'ların var olduğunu bilmez, kalıcılıktan habersizdir.
+Oyuna özgü knob'lar `games/vol-hell/src/config/video.ts` içinde veri olarak
+kalır. Showcase WORKBENCH sekmesinde kendi kademelerini tanımlayarak gösteriyor.
+
+**İki kademe ne yapıyor.** Rasterleme ölçeği 1.0 / 0.7 (piksellerin ~%49'u),
+DPR tavanı 2 / 1, partikül sayısı ×1 / ×0.35, partikül ömrü ×1 / ×0.6, mermi
+izleri açık/kapalı, varlık kenar çizgileri açık/kapalı, saha göstergeleri
+açık/kapalı, DOM `backdrop-filter` ve gölgeler açık/kapalı. Kenar çizgisi
+anahtarı sahada ÇOK sayıda bulunan her varlığı kapsıyor (mermi, düşman, flux
+pickup, kule mermisi) — yarım kapsam knob'u yalancı yapardı.
+
+Varlıklar `@/app/services` singleton'ına UZANMIYOR: görsel anahtarlar
+sağlayıcı olarak enjekte ediliyor ve verilmezse tam kalite varsayılıyor, yani
+test ve simülasyon yolları etkilenmiyor.
+
+**Göç.** Kayıtlı `'balanced'` değeri DÜŞÜĞE göç ediyor: orta kademeyi seçen
+oyuncu ucuz tarafı istemiştir, yükseğe atlamak niyetin tersi olurdu. Tanınmayan
+değer varsayılana düşer.
+
+Ayar ekranında kademenin ne yaptığını anlatan açıklama satırı denendi ve
+kullanıcı isteğiyle kaldırıldı; seçim etiketleri tek başına duruyor.
+
+## 2026-08-30 — titreşim yeteneği: ayar cihazın gerçeğine bağlandı
+
+Titreşim ayarı masaüstünde de sunuluyordu; oysa orada `navigator.vibrate` yok
+ve klavye/fare titremiyor — kutu hiçbir şey yapmıyordu. CORE'a gerçek bir
+yetenek katmanı eklendi ve ayar ona bağlandı.
+
+`vibrate()` hâlâ NİYET alıyor, ama iki katmandan birine yönleniyor: Vibration
+API (Android/mobil) ya da bağlı oyun kolunun `vibrationActuator`'ı (masaüstü,
+Steam Deck). Desen tablosu tek kaynak kaldı — ms dizisi Vibration API'ye,
+aynı desenin süre + şiddet karşılığı kola gidiyor.
+
+`getHapticsCapability()` o anki durumu, `observeHapticsCapability()` ise
+DEĞİŞİMLERİ veriyor. Yetenek çalışma anında ölçülüyor çünkü kol oyun ortasında
+takılıp çıkarılabilir; açılışta bir kez bakmak, kolunu sonradan takan oyuncuya
+ayarı sonsuza dek kapalı gösterirdi. Ayar ekranı bu aboneliğe bağlı: kol
+takılınca kutu canlı etkinleşiyor, çıkarılınca pasifleşiyor ve solgunlaşıyor.
+Kutu GİZLENMİYOR — kolunu takan oyuncu ayarı bulabildiği yerde bulmalı.
+
+İzin hatası, reddedilen efekt ve `getGamepads` fırlatması sessizce yutuluyor:
+titreşimin olmaması bir hata değil, o platformun gerçeği.
+
+## 2026-08-30 — duran oyuncunun nişanı ve pause ayar yerleşimi
+
+Kullanıcı bildirimi: "çoklu atış oyuncu hareket etmeyince imleci hedeflemiyor,
+hep sağa ateşliyor." Avlandı, kök neden CORE'da çıktı ve etkisi bildirilenden
+genişti.
+
+`InputManager.getState()` hiçbir sağlayıcı "aktif" değilken SIFIR durum
+üretiyordu. `isPCInputActive` ise aktiflik için hareket tuşu, bir eylem ya da
+basılı pointer istiyor. Yani oyuncu WASD'ye basmadan, fare düğmesini tutmadan
+yalnız imleci gezdirip Q/E'ye bastığında nişan `(0,0)` oluyordu — Q/E
+`GameKeyboardBindings` üzerinden gidiyor ve eylem kümesine girmiyor. Nişana
+bağlı her mekanik kendi yedeğine düşüyordu:
+
+- `MultiShotAbility` → `DEFAULT_AIM_X = 1`, yani hep SAĞA yelpaze.
+- `FireZoneAbility` → ofset 0, yani alan oyuncunun ayağının dibine.
+
+Düzeltme sağlayıcı seçimindeydi: aktiflik CİHAZ TAHKİMİ içindir (dokunmatik mi
+fare mi), "girdi var mı" değil. Nişan SÜREKLİ bir sinyaldir — fare her zaman
+bir yerdedir. `InputProvider.providesRestingState` eklendi; hiçbir sağlayıcı
+aktif değilken bu bayrağı taşıyan sağlayıcıya sorulur. `PCController` bayrağı
+yalnız son işaretçi olayı DOKUNUŞ DEĞİLKEN taşır: dokunmatik cihazda parmak
+yokken nişan diye bir şey yoktur, orada bayat yön uydurulmaz.
+
+Ayrıca pause ayar formu ana menüden dar görünüyordu: aynı `GameSettingsContent`
+iki panelde farklı genişlikte kuruluyordu (ana menü 560 px, pause 420 px).
+Okuma sütunu tek bir `--vol-settings-column` değişkenine bağlandı ve pause
+kaplamasının yatay boşluğu ayarlar ekranıyla eşitlendi.
+
 ## 2026-08-30 — harici denetim turu 2: ses/çarpışma dayanıklılığı
 
 Üçüncü bir denetim listesi (22 madde) doğrulandı ve kapatıldı. **İki madde

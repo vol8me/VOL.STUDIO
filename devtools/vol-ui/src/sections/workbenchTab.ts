@@ -14,6 +14,7 @@ import {
   Text,
   type CommandHistorySnapshot,
 } from '@volstudio/core/ui';
+import { GraphicsQuality } from '@volstudio/core/quality';
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid3 } from './shared';
 
@@ -199,6 +200,67 @@ function buildIconRegistry(disposables: DisposableScope): HTMLElement {
   return wrap;
 }
 
+/**
+ * `GraphicsQuality` — kalite kademelerinin jenerik kaydı.
+ *
+ * Showcase kendi kademelerini ve kendi profil şeklini tanımlar; CORE hangi
+ * knob'ların var olduğunu bilmez. Demo tam da bunu gösterir: profil alanları
+ * burada uydurulmuştur ve panel onları olduğu gibi listeler.
+ */
+function buildGraphicsQualityDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  interface DemoProfile {
+    readonly renderScale: number;
+    readonly particles: number;
+    readonly trails: boolean;
+  }
+
+  const quality = new GraphicsQuality<'high' | 'low', DemoProfile>({
+    levels: {
+      high: { renderScale: 1, particles: 1, trails: true },
+      low: { renderScale: 0.7, particles: 0.35, trails: false },
+    },
+    initial: 'high',
+  });
+
+  const readout = new Text('', { variant: 'muted' });
+  const pixelText = new Text('', { variant: 'muted' });
+  const render = (): void => {
+    const profile = quality.getProfile();
+    readout.setContent(
+      `${quality.getLevel()} — renderScale ${profile.renderScale}, particles ${
+        profile.particles
+      }, trails ${String(profile.trails)}`,
+    );
+    // Rasterlenen piksel oranı ölçeğin KARESİDİR; kademeler arasındaki gerçek
+    // maliyet farkı burada görünür.
+    pixelText.setContent(
+      `${i18next.t('volui:workbench.graphicsQualityPixels')}: ${Math.round(
+        profile.renderScale ** 2 * 100,
+      )}%`,
+    );
+  };
+  disposables.addSubscription(quality.onChange(render));
+  render();
+
+  const controls = document.createElement('div');
+  controls.className = 'vol-showcase-panel-demo__controls';
+  const toggle = new Button(i18next.t('volui:workbench.graphicsQualityToggle'), {
+    variant: 'primary',
+    onClick: () => {
+      quality.setLevel(quality.getLevel() === 'high' ? 'low' : 'high');
+    },
+  });
+  disposables.addDestroyables(toggle, readout, pixelText);
+  disposables.add({ dispose: () => quality.destroy() });
+  controls.appendChild(toggle.element);
+
+  wrap.append(readout.element, pixelText.element, controls);
+  return wrap;
+}
+
 export function buildWorkbenchTab(): {
   element: HTMLElement;
   destroy: () => void;
@@ -217,6 +279,9 @@ export function buildWorkbenchTab(): {
       spanAll: true,
     }),
     card(i18next.t('volui:workbench.splitPane'), buildSplitViewportDemo(disposables), {
+      spanAll: true,
+    }),
+    card(i18next.t('volui:workbench.graphicsQuality'), buildGraphicsQualityDemo(disposables), {
       spanAll: true,
     }),
   );

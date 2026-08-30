@@ -75,8 +75,10 @@ duraklatma, kart/ölüm ekranında tüketim). Uygulama arka plana alınınca
 (`observeAppVisibility`) sanal basımlar temizlenir ve oyun otomatik
 duraklatılır. Titreşim (`core/src/platform/haptics.ts`) adlandırılmış
 desenlerle çalışır, varsayılan açıktır ve Ayarlar'dan kapatılabilir;
-desteklemeyen platformda (`navigator.vibrate` yoksa) sessizce hiçbir şey
-yapmaz.
+desteklemeyen platformda sessizce hiçbir şey yapmaz. Ayar YETENEĞE bağlıdır:
+masaüstünde `navigator.vibrate` bulunmadığı için titreşim ancak bağlı bir oyun
+kolunun rumble motoruyla mümkündür, o yüzden kol yokken kutu pasiftir ve kol
+takıldığı anda canlı olarak etkinleşir (bkz. `observeHapticsCapability`).
 
 Görüntü ayarları (ekran modu, pencere çözünürlüğü, grafik kalitesi) yalnız
 dokunmatik OLMAYAN yüzeylerde gösterilir. **Pencere çözünürlüğü ayrıca native
@@ -86,6 +88,30 @@ devre dışıdır — etkin bırakılsa kullanıcı değeri değiştirir, değer
 ve hiçbir şey olmazdı. Grafik kalitesi hem render DPR'ını hem partikül
 yoğunluğunu CANLI değiştirir; DPR sağlayıcısı `bootstrap`ten geçer, kalite
 profilleri `src/config/video.ts`te veridir.
+
+### Grafik kalitesi
+
+İki kademe vardır ve aralarındaki fark ÖLÇÜLEBİLİR:
+
+| Knob                        | Yüksek | Düşük                        |
+| --------------------------- | ------ | ---------------------------- |
+| Rasterleme ölçeği           | 1.0    | 0.7 (**piksellerin ~%49'u**) |
+| DPR tavanı                  | 2      | 1                            |
+| Partikül sayısı             | ×1     | ×0.35                        |
+| Partikül ömrü               | ×1     | ×0.6                         |
+| Mermi izleri                | açık   | kapalı                       |
+| Varlık kenar çizgileri      | açık   | kapalı                       |
+| Saha göstergeleri           | açık   | kapalı                       |
+| DOM `backdrop-filter`/gölge | açık   | kapalı                       |
+
+En ağır kaldıraç rasterleme ölçeğidir. **Dünya boyutunu DEĞİŞTİRMEZ**: kamera
+aynı çarpanla yakınlaştırıldığı için arena ve hızlar sabit kalır, fark yalnız
+netliktir (bkz. `core/docs/primitives.md`). Bu ayrım aynı zamanda eski bir
+tutarsızlığı kapatır — dünya eskiden cihaz pikseliydi ve 2x bir ekranda arena
+%50 daha geniş oluyordu, yani kalite ayarı sessizce oynanışı değiştiriyordu.
+
+Kademeler `src/config/video.ts` içinde VERİdir; mekanizma CORE
+`GraphicsQuality`dedir ve oyuna özgü hiçbir knob CORE'da yaşamaz.
 
 Masaüstü ve Tauri WebView'da F11 tam ekranı açıp kapatır; aynı akış CORE
 `FullscreenController` üzerinden Phaser canvas + DOM kökünü birlikte kapsar.

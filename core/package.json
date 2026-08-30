@@ -67,6 +67,10 @@
       "import": "./src/spatial/SpatialIndex.ts",
       "types": "./src/spatial/SpatialIndex.ts"
     },
+    "./quality": {
+      "import": "./src/quality/index.ts",
+      "types": "./src/quality/index.ts"
+    },
     "./stats": {
       "import": "./src/stats/StatBlock.ts",
       "types": "./src/stats/StatBlock.ts"

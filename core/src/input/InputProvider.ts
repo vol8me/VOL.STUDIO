@@ -18,6 +18,17 @@ export interface InputProvider<TAction extends string> {
   /** Diagnostics için ham input durumunu döner; isteğe bağlıdır. */
   getDebugSnapshot?(): InputSnapshot;
 
+  /**
+   * Bu sağlayıcı, kullanıcı AKTİF bir şey yapmasa da anlamlı bir durum
+   * bildiriyor mu?
+   *
+   * Fare böyledir: imleç her zaman bir yerdedir, yani nişan yönü SÜREKLİ bir
+   * sinyaldir. Dokunmatik değildir: parmak ekranda yoksa nişan diye bir şey
+   * yoktur. `InputManager` hiçbir sağlayıcı "aktif" değilken sıfır durum
+   * uydurmak yerine bu bayrağı taşıyan sağlayıcıya sorar.
+   */
+  readonly providesRestingState?: boolean;
+
   update(delta: number): void;
   /** Geçiş/yeniden başlatma sınırlarında tutulmuş fiziksel girdiyi bırakır. */
   reset?(): void;

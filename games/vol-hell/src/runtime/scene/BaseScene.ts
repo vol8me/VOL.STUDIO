@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { UIRoot, i18next } from '@volstudio/core';
+import { UIRoot, applyVolViewport, i18next } from '@volstudio/core';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { CustomCursor } from '@/runtime/ui/CustomCursor';
 
@@ -40,6 +40,10 @@ export abstract class BaseScene extends Phaser.Scene {
     this.lifecycleScope?.dispose();
     this.shutdownHandled = false;
     const scope = (this.lifecycleScope = new DisposableScope());
+    // Kamera, geçerli rasterleme çarpanına göre kurulur: dünya birimleri CSS
+    // pikseline sabitlenir, böylece çözünürlük ayarı sahanın BOYUTUNU
+    // değiştirmez. Sahne başına çağrılmalı — kamera sahneye aittir.
+    applyVolViewport(this);
     const container = this.game.canvas.parentElement ?? document.body;
     this.ui = new UIRoot(container);
     // Scope kapanış sırası ters olduğu için UI ilk eklenir: diğer listener ve

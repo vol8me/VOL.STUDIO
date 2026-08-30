@@ -98,9 +98,14 @@ export class VideoSettingsController {
   private applyGraphics(data: VideoSettingsData): void {
     if (this.lastGraphicsQuality === data.graphicsQuality) return;
     this.lastGraphicsQuality = data.graphicsQuality;
-    document.documentElement.dataset.volGraphicsQuality = data.graphicsQuality;
-    // ViewportManager maxDpr sağlayıcısını yeniden okur; EffectManager ise
-    // particleScale'i her patlamada canlı okur.
+    // DOM yansıması (`data-vol-graphics`) CORE `GraphicsQuality` tarafından
+    // `VideoSettings` içinde yazılır; burada yalnız RENDER yüzeyi tetiklenir.
+    //
+    // Yeniden boyutlandırma olayı, `ViewportManager`ın `maxDpr` ve
+    // `renderScale` sağlayıcılarını yeniden okumasını sağlar: canvas backing
+    // store'u ve kamera yakınlaştırması yeni kademeye göre kurulur. Partikül
+    // sayısı/ömrü, iz ve kenar çizgisi anahtarları ise ilgili sistemler
+    // tarafından canlı okunur, ek tetikleme gerektirmez.
     window.dispatchEvent(new Event('resize'));
   }
 

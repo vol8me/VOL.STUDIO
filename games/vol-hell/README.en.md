@@ -75,7 +75,11 @@ open (exit confirmation in the menu, pause in-game, consumed by card/death
 screens). Backgrounding the app (`observeAppVisibility`) clears virtual button
 presses and auto-pauses the run. Haptics (`core/src/platform/haptics.ts`) use
 named patterns, default to enabled, and can be turned off in Settings; on
-platforms without `navigator.vibrate` they are silent no-ops.
+platforms without support they are silent no-ops. The setting is
+CAPABILITY-bound: desktop has no `navigator.vibrate` and neither keyboard nor
+mouse rumbles, so haptics are only possible through a connected gamepad's
+rumble motor — the checkbox stays disabled without one and becomes live the
+moment a pad is plugged in (see `observeHapticsCapability`).
 
 Video settings (display mode, window resolution, graphics quality) are shown
 only on non-touch surfaces. **Window resolution additionally requires a native
@@ -84,6 +88,31 @@ to resize the window, so the control is disabled — left enabled, the user woul
 change the value, the value would persist, and nothing would happen. Graphics
 quality changes both render DPR and particle density LIVE; the DPR provider is
 passed from `bootstrap` and quality profiles are data in `src/config/video.ts`.
+
+### Graphics quality
+
+Two levels, with a MEASURABLE gap between them:
+
+| Knob                          | High | Low                          |
+| ----------------------------- | ---- | ---------------------------- |
+| Raster scale                  | 1.0  | 0.7 (**~49% of the pixels**) |
+| DPR ceiling                   | 2    | 1                            |
+| Particle count                | ×1   | ×0.35                        |
+| Particle lifespan             | ×1   | ×0.6                         |
+| Bullet trails                 | on   | off                          |
+| Entity outlines               | on   | off                          |
+| Ground markers                | on   | off                          |
+| DOM `backdrop-filter`/shadows | on   | off                          |
+
+Raster scale is the heaviest lever. It does NOT change world size: the camera
+is zoomed by the same factor, so the arena and all speeds stay fixed and only
+sharpness differs (see `core/docs/primitives.md`). That separation also closes
+an old inconsistency — the world used to be measured in device pixels, so a 2x
+display got a 50% wider arena, meaning the quality setting silently changed
+gameplay.
+
+Levels are DATA in `src/config/video.ts`; the mechanism lives in CORE
+`GraphicsQuality` and no game-specific knob lives in CORE.
 
 F11 toggles fullscreen in desktop and Tauri WebViews through the shared CORE
 `FullscreenController`, covering the Phaser canvas and DOM root together. If a

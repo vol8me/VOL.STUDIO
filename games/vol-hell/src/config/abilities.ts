@@ -164,6 +164,10 @@ export const turretVisualConfig = {
   rangeRingSpawnAlpha: 0.55,
   /** Kule mermisinin yarıçapı (piksel). */
   shotRadius: 3.5,
+  /** Kule mermisi kenar çizgisi — runtime'da hex gömülüydü, veriye taşındı. */
+  shotStrokeWidth: 1,
+  shotStrokeColor: 0xffffff,
+  shotStrokeAlpha: 0.85,
   /** Kule mermisinin hızı (piksel/saniye). */
   shotSpeed: 620,
   /** Mermi hedefini kaybederse bu süre sonunda söner (ms). */

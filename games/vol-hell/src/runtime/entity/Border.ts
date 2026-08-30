@@ -15,8 +15,8 @@ export class Border {
 
   constructor(scene: Phaser.Scene) {
     this.sceneRef = scene;
-    const { width, height } = scene.scale;
-    this.bounds = this.computeBounds(width, height);
+    const world = worldSizeOf(scene);
+    this.bounds = this.computeBounds(world.width, world.height);
 
     this.graphics = scene.add.graphics();
     this.graphics.setDepth(RENDER_DEPTH.border);
@@ -46,8 +46,11 @@ export class Border {
     };
   }
 
-  private onResize(gameSize: Phaser.Structs.Size): void {
-    this.bounds = this.computeBounds(gameSize.width, gameSize.height);
+  private onResize(): void {
+    // `gameSize` RASTERLEME boyutudur (backing store). Saha DÜNYA biriminde
+    // yaşar; ikisi kalite ayarına göre ayrışır, bu yüzden kameradan okunur.
+    const world = worldSizeOf(this.sceneRef);
+    this.bounds = this.computeBounds(world.width, world.height);
     this.draw();
   }
 
@@ -80,4 +83,19 @@ export class Border {
     this.sceneRef.scale.off(Phaser.Scale.Events.RESIZE, this.onResize, this);
     this.graphics.destroy();
   }
+}
+
+/**
+ * Sahnenin DÜNYA boyutu (CSS pikseli) — rasterleme boyutundan bağımsız.
+ *
+ * `scene.scale` backing store'u verir ve kalite ayarı onu küçültür. Kamera
+ * aynı çarpanla yakınlaştırıldığı için gerçek dünya alanı `viewport / zoom`
+ * olur ve çözünürlükten etkilenmez.
+ */
+function worldSizeOf(scene: Phaser.Scene): { width: number; height: number } {
+  const camera = scene.cameras?.main;
+  const zoom = camera && Number.isFinite(camera.zoom) && camera.zoom > 0 ? camera.zoom : 1;
+  const width = camera ? camera.width : scene.scale.width;
+  const height = camera ? camera.height : scene.scale.height;
+  return { width: width / zoom, height: height / zoom };
 }

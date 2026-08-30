@@ -37,7 +37,17 @@ import * as Core from '../../src/index';
 // alındı. Her iki bileşen de oyun/devtool bağımsızdır ve showcase'te gösterilir.
 // 198 → 199: `segmentCircleEntryT`, süpürülmüş çarpışmada "en yakın vuruş"u
 // dizi sırasından bağımsız kılan geometri primitifi.
-const EXPECTED_EXPORT_COUNT = 199;
+// 199 → 202: grafik kalitesi sözleşmesi — üç ÇALIŞMA ZAMANI export'u.
+// `GraphicsQuality` kademe kaydını jenerik tutar (CORE hangi knob'ların var
+// olduğunu bilmez); `applyVolViewport` + `VIEWPORT_REGISTRY_KEY` ise render
+// çözünürlüğünü dünya boyutundan ayıran viewport sözleşmesidir. Bu turda
+// eklenen tipler (`ViewportScaleSetting`, `GraphicsQualityOptions`…) derleme
+// zamanında silindiği için bu sayıya girmez.
+// 202 → 204: `getHapticsCapability` + `observeHapticsCapability`. Titreşim
+// artık YETENEĞE bağlı: `navigator.vibrate` yoksa bağlı bir oyun kolunun
+// rumble motoru kullanılır ve kol takılıp çıkarıldıkça yetenek canlı bildirilir
+// — tüketici ayarı buna göre etkinleştirir.
+const EXPECTED_EXPORT_COUNT = 204;
 
 // 196: asset compiler'lar (görsel/ses sentezi) CORE public surface'da
 // tutulmaz; runtime yalnızca üretilmiş asset'leri çalar.

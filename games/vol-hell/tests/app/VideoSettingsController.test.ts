@@ -38,7 +38,7 @@ function makeNativeAdapter() {
 }
 
 afterEach(() => {
-  document.documentElement.removeAttribute('data-vol-graphics-quality');
+  document.documentElement.removeAttribute('data-vol-graphics');
 });
 
 describe('VideoSettingsController', () => {
@@ -54,7 +54,7 @@ describe('VideoSettingsController', () => {
     await controller.start();
 
     expect(native.adapter.setResolution).toHaveBeenCalledWith(1280, 720);
-    expect(document.documentElement.dataset.volGraphicsQuality).toBe('high');
+    expect(document.documentElement.dataset.volGraphics).toBe('high');
     expect(resize).toHaveBeenCalled();
     controller.destroy();
     window.removeEventListener('resize', resize);
@@ -80,7 +80,7 @@ describe('VideoSettingsController', () => {
     await controller.flush();
     expect(native.adapter.setFullscreen).toHaveBeenCalledWith(false);
     expect(native.adapter.setResolution).toHaveBeenLastCalledWith(1600, 900);
-    expect(document.documentElement.dataset.volGraphicsQuality).toBe('low');
+    expect(document.documentElement.dataset.volGraphics).toBe('low');
     controller.destroy();
   });
 
@@ -132,11 +132,11 @@ describe('VideoSettingsController', () => {
     });
 
     await controller.start();
-    await settings.setGraphicsQuality('balanced');
+    await settings.setGraphicsQuality('low');
     await controller.flush();
 
     expect(onError).toHaveBeenCalled();
-    expect(document.documentElement.dataset.volGraphicsQuality).toBe('balanced');
+    expect(document.documentElement.dataset.volGraphics).toBe('low');
     controller.destroy();
   });
 });

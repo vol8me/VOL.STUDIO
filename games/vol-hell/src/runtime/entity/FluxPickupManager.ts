@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import type { EntityVisualQualityProvider } from './entityVisuals';
 import type { Random, Vector2 } from '@volstudio/core';
 import { economyConfig } from '@/config/economy';
 import { playerConfig } from '@/config/player';
@@ -29,6 +30,8 @@ export class FluxPickupManager {
     private readonly effects: EffectManager,
     private readonly random: Random,
     private readonly callbacks: FluxPickupCallbacks = {},
+    /** Kalite kademesi görsel anahtarları; verilmezse tam kalite. */
+    private readonly visualsProvider?: EntityVisualQualityProvider,
   ) {}
 
   /** Ölüm noktasına Flux düşürür; miktarı parçalara böler. */
@@ -68,6 +71,7 @@ export class FluxPickupManager {
           y + Math.sin(angle) * distance,
           this.border,
           pieceAmount,
+          this.visualsProvider,
         ),
       );
     }

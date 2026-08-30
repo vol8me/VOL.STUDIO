@@ -6,6 +6,7 @@ import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { Enemy } from './Enemy';
 import type { Border } from './Border';
 import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
+import { resolveEntityVisuals, type EntityVisualQualityProvider } from './entityVisuals';
 
 /**
  * Kule mermisinin ihtiyaç duyduğu EN DAR broadphase yüzeyi.
@@ -52,6 +53,7 @@ export class TurretShot {
     target: Enemy,
     damage: number,
     private readonly effects: EffectManager,
+    visualsProvider?: EntityVisualQualityProvider,
   ) {
     this.damage = nonNegativeFinite(damage);
     this.target = target;
@@ -71,7 +73,13 @@ export class TurretShot {
     );
     this.previousX = this.dot.x;
     this.previousY = this.dot.y;
-    this.dot.setStrokeStyle(1, 0xffffff, 0.85);
+    if (resolveEntityVisuals(visualsProvider).entityStrokes) {
+      this.dot.setStrokeStyle(
+        turretVisualConfig.shotStrokeWidth,
+        turretVisualConfig.shotStrokeColor,
+        turretVisualConfig.shotStrokeAlpha,
+      );
+    }
     this.dot.setDepth(RENDER_DEPTH.bullet);
   }
 

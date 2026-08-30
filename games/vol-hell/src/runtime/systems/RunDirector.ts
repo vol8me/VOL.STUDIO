@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import type { EntityVisualQualityProvider } from '@/runtime/entity/entityVisuals';
 import type { Random, Vector2 } from '@volstudio/core';
 import type { HellStatBlock } from '@/config/stats';
 import type { Border } from '@/runtime/entity/Border';
@@ -32,6 +33,8 @@ export interface RunDirectorDeps {
   onFluxCollected?: () => void;
   /** Dalga arası ekran açılmadan önce geçici savaş varlıklarını temizler. */
   clearTransientState?: () => void;
+  /** Kalite kademesi görsel anahtarları; verilmezse tam kalite. */
+  visualsProvider?: EntityVisualQualityProvider;
 }
 
 export interface RunDirectorCallbacks {
@@ -76,12 +79,19 @@ export class RunDirector {
       },
     });
 
-    this.pickups = new FluxPickupManager(deps.scene, deps.border, deps.effects, deps.random, {
-      onCollected: (amount) => {
-        this.economy.addFlux(amount);
-        deps.onFluxCollected?.();
+    this.pickups = new FluxPickupManager(
+      deps.scene,
+      deps.border,
+      deps.effects,
+      deps.random,
+      {
+        onCollected: (amount) => {
+          this.economy.addFlux(amount);
+          deps.onFluxCollected?.();
+        },
       },
-    });
+      deps.visualsProvider,
+    );
 
     this.specials = new SpecialEnemyDirector(
       {

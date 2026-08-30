@@ -73,6 +73,9 @@ try {
     backgroundColor: VOL_COLORS.uiBg,
     strategy: gameConfig.viewport.strategy,
     maxDpr: () => videoSettings.getMaxDpr(),
+    // Rasterleme çözünürlüğü: dünya boyutunu DEĞİŞTİRMEZ, yalnız işlenen
+    // piksel sayısını düşürür (kamera aynı çarpanla yakınlaştırılır).
+    renderScale: () => videoSettings.getRenderScale(),
     scenes: [MainMenuScene, GameScene, SettingsScene],
     diagnostics: diagnostics ?? undefined,
   });

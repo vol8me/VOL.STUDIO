@@ -100,7 +100,17 @@ export class InputManager<TAction extends string> {
    */
   private resolveActiveProvider(): InputProvider<TAction> | undefined {
     if (this.touch.isActive) return this.touch;
-    return this.providers.find((provider) => provider.isActive);
+    const active = this.providers.find((provider) => provider.isActive);
+    if (active) return active;
+    // Hiçbir sağlayıcı "aktif" değil demek, GİRDİ YOK demek DEĞİLDİR.
+    //
+    // Nişan SÜREKLİ bir sinyaldir: fare her zaman bir yerdedir. Burada sıfır
+    // durum uydurulunca duran bir oyuncunun nişanı (0,0) oluyordu ve nişana
+    // bağlı her mekanik kendi yedeğine düşüyordu — çoklu atış hep SAĞA
+    // ateşliyor, ateş alanı oyuncunun ayağının dibine düşüyordu. Sorun
+    // yalnızca fare ile nişan alıp WASD'ye ya da fare düğmesine dokunmayan
+    // oyuncuda görünüyordu, çünkü bunların hepsi sağlayıcıyı "aktif" yapıyor.
+    return this.providers.find((provider) => provider.providesRestingState === true);
   }
 
   update(delta: number): void {

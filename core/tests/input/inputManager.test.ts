@@ -246,4 +246,81 @@ describe('Diagnostics snapshot sağlayıcı kümesi AÇIK', () => {
     expect(snapshot.activeProvider).toBe(NO_ACTIVE_PROVIDER);
     expect(snapshot.providers).toBeUndefined();
   });
+
+  describe('durağan nişan sinyali', () => {
+    /** Nişanı olan ama "aktif" olmayan bir fare sağlayıcısı. */
+    function makeRestingPc(aim: { x: number; y: number }) {
+      return {
+        id: 'pc',
+        isActive: false,
+        providesRestingState: true,
+        getState: () => ({
+          move: Vector2.zero(),
+          aim: new Vector2(aim.x, aim.y),
+          actions: createIdleActions(TEST_ACTIONS),
+        }),
+        update: () => {},
+        destroy: () => {},
+      };
+    }
+
+    function makeIdleTouch() {
+      return {
+        id: 'touch',
+        isActive: false,
+        getState: () => idleState(),
+        update: () => {},
+        destroy: () => {},
+      };
+    }
+
+    it('hiçbir sağlayıcı aktif değilken nişan SIFIRLANMAZ', () => {
+      // Regresyon: duran oyuncunun nişanı (0,0) oluyordu; nişana bağlı her
+      // mekanik kendi yedeğine düşüyordu (çoklu atış hep sağa, ateş alanı
+      // ayağın dibine). Fare durağanken de bir yerdedir.
+      const manager = makeManager([
+        makeIdleTouch() as never,
+        makeRestingPc({ x: -1, y: 0 }) as never,
+      ]);
+
+      const state = manager.getState(new Vector2(0, 0));
+
+      expect(state.aim.x).toBe(-1);
+      expect(state.aim.y).toBe(0);
+      manager.destroy();
+    });
+
+    it('durağan sağlayıcı yoksa gerçekten sıfır durum döner', () => {
+      // Dokunmatik cihazda parmak yokken nişan diye bir şey YOKTUR; orada
+      // bayat bir yön uydurmak yanlış olurdu.
+      const manager = makeManager([makeIdleTouch() as never]);
+
+      const state = manager.getState(new Vector2(0, 0));
+
+      expect(state.aim.x).toBe(0);
+      expect(state.aim.y).toBe(0);
+      manager.destroy();
+    });
+
+    it('aktif sağlayıcı durağan olana göre ÖNCELİKLİDİR', () => {
+      const active = {
+        ...makeRestingPc({ x: 1, y: 0 }),
+        id: 'active',
+        isActive: true,
+        providesRestingState: false,
+        getState: () => ({
+          move: new Vector2(1, 0),
+          aim: new Vector2(0, 1),
+          actions: { ...createIdleActions(TEST_ACTIONS), engage: true },
+        }),
+      };
+      const manager = makeManager([active as never, makeRestingPc({ x: -1, y: 0 }) as never]);
+
+      const state = manager.getState(new Vector2(0, 0));
+
+      expect(state.aim.y).toBe(1);
+      expect(state.actions.engage).toBe(true);
+      manager.destroy();
+    });
+  });
 });

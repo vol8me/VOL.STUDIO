@@ -5,6 +5,7 @@ import { createRandom } from '@volstudio/core';
 import { getAbilityDefinition, type AbilityDefinition } from '@/config/abilities';
 import type { Border } from '@/runtime/entity/Border';
 import type { SegmentQueryable } from '@/runtime/entity/TurretShot';
+import type { EntityVisualQualityProvider } from '@/runtime/entity/entityVisuals';
 import type { Enemy } from '@/runtime/entity/Enemy';
 import type { BulletManager } from '@/runtime/entity/BulletManager';
 import { ChainLightningStrike } from '@/runtime/entity/ChainLightningStrike';
@@ -43,6 +44,8 @@ export interface AbilityRuntimeDeps {
    * grid'siz tüketiciler için güvenli yedek.
    */
   spatialGrid?: SegmentQueryable;
+  /** Kalite kademesi görsel anahtarları; verilmezse tam kalite. */
+  visualsProvider?: EntityVisualQualityProvider;
 }
 
 /** Tanımdan doğru ability sınıfını üretir — yeni mekanik eklenince tek yer değişir. */
@@ -179,6 +182,7 @@ export class AbilityRuntime implements AbilityWorld {
       this.deps.effects,
       this.deps.border,
       this.deps.spatialGrid,
+      this.deps.visualsProvider,
       {
         ...params,
         damage: scaleAbilityDamage(

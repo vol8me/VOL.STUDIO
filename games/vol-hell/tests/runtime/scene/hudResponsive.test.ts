@@ -128,7 +128,11 @@ describe('mobil yerleşim değişmezleri', () => {
 
     const panelBlock = /\.settings-panel\s*\{([^}]*)\}/.exec(stylesContent);
     expect(panelBlock, 'ayarlar içerik sütunu tanımlı olmalı').not.toBeNull();
-    expect(panelBlock![1]).toContain('width: min(560px, 100%)');
+    // Ölçü artık paylaşılan değişkende; okunabilir sütun sınırı orada tanımlı.
+    expect(panelBlock![1]).toContain('width: var(--vol-settings-column)');
+    const columnBlock = /--vol-settings-column:\s*([^;]+);/.exec(stylesContent);
+    expect(columnBlock, 'paylaşılan sütun ölçüsü tanımlı olmalı').not.toBeNull();
+    expect(columnBlock![1]).toContain('min(');
     expect(panelBlock![1]).toContain('position: relative');
 
     expect(settingsSceneContent).toContain("new ScrollView({ direction: 'vertical' })");
@@ -171,6 +175,22 @@ describe('mobil yerleşim değişmezleri', () => {
       expect(block, `${selector} tanımlı olmalı`).not.toBeNull();
       expect(block![1]).toContain('white-space: nowrap');
     }
+  });
+
+  it('ayar formu iki yüzeyde de AYNI okuma sütununu kullanır', () => {
+    // Regresyon: ana menü 560 px, pause 420 px kullanıyordu. Aynı
+    // `GameSettingsContent` iki ayrı genişlikte sarıyor ve pause'daki form
+    // gözle görülür biçimde sıkışık duruyordu.
+    const settings = /\.settings-panel\s*\{([^}]*)\}/.exec(stylesContent);
+    const pause = /\.pause-settings-panel\s*\{([^}]*)\}/.exec(stylesContent);
+
+    expect(settings, 'ayarlar paneli tanımlı olmalı').not.toBeNull();
+    expect(pause, 'pause ayar paneli tanımlı olmalı').not.toBeNull();
+    expect(settings![1]).toContain('var(--vol-settings-column)');
+    expect(pause![1]).toContain('var(--vol-settings-column)');
+    // Ölçü TEK yerde tanımlı olmalı; iki panelde ayrı sayı kalmamalı.
+    expect(settings![1]).not.toMatch(/min\(\d+px/);
+    expect(pause![1]).not.toMatch(/min\(\d+px/);
   });
 
   it('duraklatma ve ölüm panelleri kısa ekranda taşmaz', () => {
