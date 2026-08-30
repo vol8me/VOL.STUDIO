@@ -107,6 +107,7 @@ describe('uç stat değerlerine karşı sağlamlık', () => {
       definition,
       stats,
       scoreValue: definition.scoreValue,
+      spawnIndex: 3,
     });
 
     expect(enemy.tryContactDamage(10_000)).toBe(0);
@@ -122,6 +123,7 @@ describe('uç stat değerlerine karşı sağlamlık', () => {
       definition,
       stats,
       scoreValue: definition.scoreValue,
+      spawnIndex: 4,
     });
 
     const grid = { queryNearby: () => [] } as never;
@@ -142,6 +144,7 @@ describe('uç stat değerlerine karşı sağlamlık', () => {
       definition,
       stats,
       scoreValue: definition.scoreValue,
+      spawnIndex: 5,
     });
 
     // Tek mermilik hasar öldürür; sıfır canla doğup anında ölen düşman olmaz.
@@ -156,6 +159,7 @@ describe('uç stat değerlerine karşı sağlamlık', () => {
       definition,
       stats: createEnemyStats(definition),
       scoreValue: definition.scoreValue,
+      spawnIndex: 6,
     });
     const initialRatio = enemy.getHealthRatio();
 

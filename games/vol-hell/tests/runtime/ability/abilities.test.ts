@@ -119,6 +119,7 @@ describe('Ability sistemi', () => {
       definition,
       stats: enemyStats,
       scoreValue: definition.scoreValue,
+      spawnIndex: 1,
     });
   }
 
@@ -623,5 +624,36 @@ describe('Ability sistemi', () => {
     expect(runtime.getTurret()).toBeNull();
     expect(runtime.getActiveZoneCount()).toBe(0);
     expect(runtime.getAbility('primary')).toBeNull();
+  });
+
+  describe('kule mermisi broadphase', () => {
+    it('grid verildiğinde TÜM düşman listesi taranmaz', () => {
+      // Regresyon: kule mermisi her karede bütün düşman dizisini geziyordu;
+      // oyuncu mermisi zaten grid üzerinden süpürülmüş segmentle sorguluyor.
+      const querySegmentNearby = vi.fn(() => []);
+      const shot = new TurretShot(
+        makeScene(),
+        0,
+        0,
+        { x: 100, y: 0, isAlive: true, radius: 5 } as never,
+        10,
+        makeEffects(),
+      );
+
+      shot.update(16, [{ x: 100, y: 0, isAlive: true, radius: 5 } as never], makeBorder(), {
+        querySegmentNearby,
+      });
+
+      expect(querySegmentNearby).toHaveBeenCalledOnce();
+    });
+
+    it('grid verilmezse tam liste güvenli yedek olarak kalır', () => {
+      const target = { x: 20, y: 0, isAlive: true, radius: 40, takeDamage: vi.fn(() => true) };
+      const shot = new TurretShot(makeScene(), 0, 0, target as never, 10, makeEffects());
+
+      shot.update(16, [target as never], makeBorder());
+
+      expect(target.takeDamage).toHaveBeenCalled();
+    });
   });
 });

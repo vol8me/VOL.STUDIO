@@ -4,6 +4,7 @@ import type { HellStatBlock } from '@/config/stats';
 import { createRandom } from '@volstudio/core';
 import { getAbilityDefinition, type AbilityDefinition } from '@/config/abilities';
 import type { Border } from '@/runtime/entity/Border';
+import type { SegmentQueryable } from '@/runtime/entity/TurretShot';
 import type { Enemy } from '@/runtime/entity/Enemy';
 import type { BulletManager } from '@/runtime/entity/BulletManager';
 import { ChainLightningStrike } from '@/runtime/entity/ChainLightningStrike';
@@ -37,6 +38,11 @@ export interface AbilityRuntimeDeps {
   visualSeed?: number;
   bullets: BulletManager;
   playerStats: HellStatBlock;
+  /**
+   * Kule mermisinin broadphase'i. Verilmezse tam liste taranır — testler ve
+   * grid'siz tüketiciler için güvenli yedek.
+   */
+  spatialGrid?: SegmentQueryable;
 }
 
 /** Tanımdan doğru ability sınıfını üretir — yeni mekanik eklenince tek yer değişir. */
@@ -166,15 +172,23 @@ export class AbilityRuntime implements AbilityWorld {
     // mermileri sahipsiz kalıp sahnede donmasın.
     this.turret?.destroyWithEffect();
     this.turret?.destroy();
-    this.turret = new Turret(this.deps.scene, x, y, this.deps.effects, this.deps.border, {
-      ...params,
-      damage: scaleAbilityDamage(
-        params.damage + this.upgrades.get('turretDamage'),
-        this.deps.playerStats,
-      ),
-      health: scaleTurretHealth(params.health, this.deps.playerStats),
-      fireIntervalMs: scaleTurretFireInterval(params.fireIntervalMs, this.deps.playerStats),
-    });
+    this.turret = new Turret(
+      this.deps.scene,
+      x,
+      y,
+      this.deps.effects,
+      this.deps.border,
+      this.deps.spatialGrid,
+      {
+        ...params,
+        damage: scaleAbilityDamage(
+          params.damage + this.upgrades.get('turretDamage'),
+          this.deps.playerStats,
+        ),
+        health: scaleTurretHealth(params.health, this.deps.playerStats),
+        fireIntervalMs: scaleTurretFireInterval(params.fireIntervalMs, this.deps.playerStats),
+      },
+    );
     this.playSfx('turretDeploy', sfxVolumes.turretDeploy);
   }
 

@@ -63,6 +63,20 @@ export class TouchStickState<TAction extends string> {
   private readonly actionSource?: VirtualActionSource<TAction>;
   private readonly deadZone: number;
   public readonly maxRadius: number;
+  /**
+   * Yeniden kullanılan vektör tamponları — dokunmatik SICAK YOL.
+   *
+   * `getRaw()` her çağrıda yeni `Vector2` üretiyordu ve kare başına en az dört
+   * kez çağrılıyor (`getState` iki stick için, çizim katmanı konum ve yön
+   * için). `updateStick` ise her `pointermove` olayında bir tane daha
+   * ayırıyordu. Mobilde bu, oynanış sırasında sürekli küçük çöp üretip GC
+   * duraklamalarına dönüşüyor. Tamponlar SENKRON okunur: `getRaw` sonucu bir
+   * sonraki çağrıya kadar geçerlidir, saklanmaz.
+   */
+  private readonly leftRawBuf: Vector2 = Vector2.zero();
+  private readonly rightRawBuf: Vector2 = Vector2.zero();
+  private readonly scratchRawBuf: Vector2 = Vector2.zero();
+  private readonly clampedBuf: Vector2 = Vector2.zero();
 
   constructor(options: TouchStickOptions<TAction>) {
     this.actions = options.actions;
@@ -94,20 +108,32 @@ export class TouchStickState<TAction extends string> {
    * o yarı zaten doluysa dokunuş yok sayılır.
    */
   onPointerDown(pointerId: number, x: number, y: number, isRightSide: boolean): void {
-    const base = new Vector2(x, y);
-
+    // `base` ve `current` AYRI nesneler olmalı: `updateStick` artık `current`i
+    // yerinde günceller (allocation'sız sıcak yol) ve tek nesne paylaşılsaydı
+    // parmağın her hareketi stick'in TABANINI da sürükler, joystick ekranda
+    // kayardı. Dokunuş başına iki küçük ayırma, kare başına dörtten ucuzdur.
     if (isRightSide) {
       if (this.rightStick) {
         return;
       }
-      this.rightStick = { pointerId, base, current: base, isRight: true };
+      this.rightStick = {
+        pointerId,
+        base: new Vector2(x, y),
+        current: new Vector2(x, y),
+        isRight: true,
+      };
       return;
     }
 
     if (this.leftStick) {
       return;
     }
-    this.leftStick = { pointerId, base, current: base, isRight: false };
+    this.leftStick = {
+      pointerId,
+      base: new Vector2(x, y),
+      current: new Vector2(x, y),
+      isRight: false,
+    };
   }
 
   onPointerMove(pointerId: number, x: number, y: number): void {
@@ -132,8 +158,8 @@ export class TouchStickState<TAction extends string> {
   }
 
   getState(): InputState<TAction> {
-    const leftRaw = this.getRaw(this.leftStick);
-    const rightRaw = this.getRaw(this.rightStick);
+    const leftRaw = this.writeRaw(this.leftRawBuf, this.leftStick);
+    const rightRaw = this.writeRaw(this.rightRawBuf, this.rightStick);
 
     const actions = createIdleActions(this.actions);
     if (this.aimStickAction !== undefined) {
@@ -154,33 +180,47 @@ export class TouchStickState<TAction extends string> {
 
   /** Görsel çizim için clamp edilmiş mutlak pozisyon (stick.base + getRaw()). */
   getClampedPosition(stick: Stick): Vector2 {
-    return stick.base.add(this.getRaw(stick));
+    const raw = this.writeRaw(this.scratchRawBuf, stick);
+    this.clampedBuf.x = stick.base.x + raw.x;
+    this.clampedBuf.y = stick.base.y + raw.y;
+    return this.clampedBuf;
   }
 
   /** Görsel katmanın otomatik-hedef ve manuel-yön kiplerini ayırması için. */
   hasDirectionalInput(stick: Stick): boolean {
-    return this.getRaw(stick).length() / this.maxRadius > this.deadZone;
+    const raw = this.writeRaw(this.scratchRawBuf, stick);
+    return Math.hypot(raw.x, raw.y) / this.maxRadius > this.deadZone;
   }
 
   private updateStick(stick: Stick | undefined, pointerId: number, x: number, y: number): void {
     if (!stick || stick.pointerId !== pointerId) {
       return;
     }
-    stick.current = new Vector2(x, y);
+    // Yeni vektör yerine mevcut olanın alanları yazılır; `current` bu
+    // sınıfın dışına sızmaz, paylaşılan referans riski yok.
+    stick.current.x = x;
+    stick.current.y = y;
   }
 
-  /** stick.base -> stick.current vektörünü maxRadius'a clamp edilmiş şekilde döndürür. */
-  private getRaw(stick: Stick | undefined): Vector2 {
+  /**
+   * `stick.base -> stick.current` vektörünü maxRadius'a clamp ederek VERİLEN
+   * tampona yazar. Allocation yapmaz; sonuç bir sonraki çağrıya kadar geçerli.
+   */
+  private writeRaw(out: Vector2, stick: Stick | undefined): Vector2 {
     if (!stick) {
-      return Vector2.zero();
+      out.x = 0;
+      out.y = 0;
+      return out;
     }
 
-    const raw = new Vector2(stick.current.x - stick.base.x, stick.current.y - stick.base.y);
-    const len = raw.length();
+    out.x = stick.current.x - stick.base.x;
+    out.y = stick.current.y - stick.base.y;
+    const len = Math.hypot(out.x, out.y);
     if (len > this.maxRadius) {
-      return raw.scale(this.maxRadius / len);
+      const scale = this.maxRadius / len;
+      out.x *= scale;
+      out.y *= scale;
     }
-
-    return raw;
+    return out;
   }
 }

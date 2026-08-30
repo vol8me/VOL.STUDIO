@@ -387,3 +387,65 @@ describe('applySwarmerBehavior', () => {
     expect(Number.isFinite(state.spawnTimerMs)).toBe(true);
   });
 });
+
+describe('rusher faz zamanlaması — artık süre taşınır', () => {
+  /** Verilen kare süresiyle N kare sürer ve faz geçişlerini kaydeder. */
+  function runFrames(frameMs: number, frames: number) {
+    const state = createRusherState();
+    const out = makeOut();
+    const seen: { frame: number; phase: string }[] = [];
+    for (let frame = 0; frame < frames; frame++) {
+      applyRusherBehavior(
+        state,
+        makeContext({ targetX: 150, deltaMs: frameMs }),
+        RUSHER_PARAMS,
+        20,
+        out,
+      );
+      seen.push({ frame, phase: state.phase });
+    }
+    return { state, seen };
+  }
+
+  it('windup sonunda taşan süre dash fazına AKTARILIR', () => {
+    const state = createRusherState();
+    const out = makeOut();
+    const context = makeContext({ targetX: 150, deltaMs: 0 });
+
+    // approach -> windup (mesafe + cooldown hazır).
+    applyRusherBehavior(state, context, RUSHER_PARAMS, 20, out);
+    expect(state.phase).toBe('windup');
+
+    // 300 ms'lik telegraf, 320 ms'de dolar: 20 ms taşar.
+    context.deltaMs = 320;
+    applyRusherBehavior(state, context, RUSHER_PARAMS, 20, out);
+
+    expect(state.phase).toBe('dash');
+    // Regresyon: sayaç 0'a çekiliyordu ve 20 ms siliniyordu; her geçişte
+    // tekrarlandığı için devir config'de yazandan sistematik olarak uzuyordu.
+    expect(state.phaseTimerMs).toBeCloseTo(20, 6);
+  });
+
+  it('bir tam devir kare hızından BAĞIMSIZ sürede tamamlanır', () => {
+    // Aynı toplam süre, iki farklı kare hızı. Artık süre silinseydi kaba
+    // kareli koşu belirgin biçimde geride kalırdı.
+    const fine = runFrames(4, 300);
+    const coarse = runFrames(40, 30);
+
+    expect(fine.state.phase).toBe(coarse.state.phase);
+  });
+
+  it('taşan süre bir sonraki fazın süresiyle sınırlanır', () => {
+    const state = createRusherState();
+    const out = makeOut();
+    const context = makeContext({ targetX: 150, deltaMs: 0 });
+    applyRusherBehavior(state, context, RUSHER_PARAMS, 20, out);
+
+    // Devasa tek kare: sınırsız taşıma sonraki fazları anında bitirirdi.
+    context.deltaMs = 100_000;
+    applyRusherBehavior(state, context, RUSHER_PARAMS, 20, out);
+
+    expect(Number.isFinite(state.phaseTimerMs)).toBe(true);
+    expect(state.phaseTimerMs).toBeLessThanOrEqual(RUSHER_PARAMS.recoverMs);
+  });
+});

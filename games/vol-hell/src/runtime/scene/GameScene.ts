@@ -256,6 +256,8 @@ export class GameScene extends BaseScene {
         visualSeed: (this.runSeed ^ 0x51_7a_11) | 0,
         bullets: this.bulletManager,
         playerStats: this.player.getStats(),
+        // Kule mermisi de oyuncu mermisiyle aynı broadphase'i kullanır.
+        spatialGrid: this.spatialGrid,
       }),
     );
 
@@ -388,6 +390,11 @@ export class GameScene extends BaseScene {
     // gereksiz Vector2 uretiyor hem de iki farkli anlik goruntu yaratiyordu.
     const inputState = this.inputManager.getState(this.player.getPosition());
 
+    // Girdi anlık görüntüsü frame başına BİR kez okunur ve bütün adımlara
+    // aynı nesne verilir. Bugün tüketilen eylemlerin hepsi seviye tetikli
+    // (`fire` ve `dash` kendi bekleme sürelerine sahip), bu yüzden tekrar
+    // zararsız. Kenar tetikli bir eylem eklenirse `stepIndex === 0` ile
+    // sınırlanmalıdır (bkz. `SimulationStep`).
     this.clock.advance(realDelta, (stepMs) => this.advanceSimulation(stepMs, inputState));
 
     diagnostics?.startStage('hud');

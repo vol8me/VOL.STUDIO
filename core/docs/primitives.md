@@ -470,6 +470,14 @@ tüm tüketicileri etkiler. Aynı sayacı HER KARE yazan bir HUD (skor, süre,
 mesafe) sürekli animasyon almamak için açıkça `change: 'none'` geçer; yön
 zorlamak için `change: 'increase' | 'decrease'` verilir.
 
+`TouchStickState` dokunmatik SICAK YOLDUR: `getState`, çizim katmanı ve yön
+sorgusu kare başına en az dört kez ham vektör okur. Bu okumalar yeniden
+kullanılan tamponlara yazar, yeni `Vector2` üretmez — mobilde kare başına
+küçük çöp doğrudan GC duraklamasına dönüşür. Sonuçlar SENKRON okunmalıdır:
+bir sonraki çağrıya kadar geçerlidirler, saklanmazlar. Stick'in `base` ve
+`current` alanları AYRI nesnelerdir; tek nesne paylaşılsaydı parmağın her
+hareketi joystick'in tabanını da sürüklerdi.
+
 Süpürülmüş çarpışmada `segmentCircleOverlap` "kesişti mi" der, `segmentCircleEntryT`
 İLK TEMAS parametresini (`0..1`) döndürür. Bir adımda birden fazla daire
 kesişiyorsa çağıran en küçük `t`'yi seçerek sonucu aday listesinin sırasından

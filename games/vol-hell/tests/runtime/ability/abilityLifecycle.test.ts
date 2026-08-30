@@ -103,6 +103,7 @@ describe('ability yaşam döngüsü — sahnede artık kalmaz', () => {
       definition,
       stats: createEnemyStats(definition),
       scoreValue: definition.scoreValue,
+      spawnIndex: 2,
     });
   }
 

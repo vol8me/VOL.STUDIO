@@ -5,6 +5,97 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-08-30 — harici denetim turu 2: ses/çarpışma dayanıklılığı
+
+Üçüncü bir denetim listesi (22 madde) doğrulandı ve kapatıldı. **İki madde
+zaten kapalıydı** (`31f6fb8`): süpürülmüş çarpışmada en yakın vuruş ve
+MusicEngine'in iki fazlı geçişi. **Bir madde yanlış okumaydı**: `BaseScene`
+yorumu cursor'ı yalnız oyun sahnesinde kurmayı TARİF ETMİYOR, tam tersine
+BaseScene'e koyma gerekçesini yazıyor; yorum yine de iki ayrı gerekçeyi tek
+blokta topladığı için ayrıştırıldı.
+
+**Ses zinciri.** `menuMusic` üç ayrı biçimde kırılgandı: `Promise.all` tek bozuk
+parçayla bütün hazırlığı reddediyor, reddedilen söz `loadPromise`te asılı
+kalıp süreç ömrü boyunca yeniden denemeyi engelliyor ve liste yüklenip
+yüklenmediğine bakılmadan TÜM parçalarla kuruluyordu. Artık `allSettled`,
+red durumunda önbellek temizliği ve yalnız çalınabilir alt küme var.
+`playDeath()` ise parçayı yüklenmişler arasından seçiyor — ve seçimin kendisi
+de düzeltildi: `Math.floor(clamp(random.next(), 0, n - 1))` ifadesi `next()`
+[0, 1) döndürdüğü için HER ZAMAN 0 veriyordu. Bugün tek ölüm parçası olduğu
+için görünmüyordu; ikincisi eklendiğinde sessizce hiç seçilmezdi.
+
+**Çarpışma.** Mermi sekmesinde yol düz değildir (`önceki → temas → güncel`) ama
+çarpışma tek düz segment tarıyordu: merminin hiç uğramadığı bir kiriş üzerinden
+haksız vuruş, gerçek yolda atlama. `Bullet` artık temas noktasını yayınlıyor,
+çözümleyici iki parçayı SIRAYLA tarıyor (zaman sırası korunuyor). Kule mermisi
+de oyuncu mermisiyle aynı grid broadphase'ine bağlandı; grid yoksa tam liste
+güvenli yedek olarak kalıyor.
+
+**Simülasyon.** Rusher faz geçişinde taşan süre siliniyordu: 300 ms'lik telegraf
+16 ms'lik karelerde 304 ms'de dolup 4 ms kaybediyor, her geçişte tekrarlandığı
+için devir config'de yazandan sistematik olarak uzuyor ve düşük FPS'te daha da
+kayıyordu. Artık taşınıyor (bir sonraki fazın süresiyle sınırlı).
+
+Tam üst üste binmede ayrışma yönü `definition.id`den türetiliyordu: aynı türden
+bütün örnekler AYNI yöne itiliyor, yığın tek blok gibi kayıyordu. Yön artık
+doğum sırasını da içeriyor ve doğumda BİR KEZ hesaplanıyor — çarpışma
+döngüsünde hash maliyeti ve allocation yok. `spawnIndex` bilinçli olarak
+zorunlu: unutulursa kalabalık bias'ı sessizce geri gelirdi.
+
+**Dokunmatik ve ayarlar.** `TouchStickState` kare başına dört yeni `Vector2`
+üretiyordu; tampon tabanlı okumaya geçildi. Bu geçiş `base`/`current` aynı
+nesneyi paylaştığı için joystick tabanını sürükleyebilecekti — ayrıldı ve
+testle kilitlendi. Ayar yazma hataları `console.warn`e gömülüyordu; artık
+`settingsPersistence` üzerinden konsola, `diagnostics` akışına ve abonelere
+birlikte taşınıyor.
+
+`SimulationClock` adım geri çağrısına `stepIndex` eklendi: girdi anlık
+görüntüsü frame başına bir kez okunup bütün adımlara veriliyor ve bugün
+tüketilen eylemlerin hepsi seviye tetikli, ama kenar tetikli bir eylem
+eklendiğinde tuzak artık görünür.
+
+### VOL.HELL grafik kalitesi ayarı — ölçüm
+
+Ayar bugün ölçülebilir olarak SADECE partikül yoğunluğunu değiştiriyor:
+25 efekt boyunca toplam 314 / 251 / 173 partikül (high / balanced / low).
+Diğer iki bacak gerçekte çalışmıyor:
+
+- `maxDpr` (1 / 1.25 / 1.5) `Math.min(devicePixelRatio, maxDpr)` olarak
+  uygulanıyor. `devicePixelRatio === 1` olan standart masaüstü monitörde
+  ÜÇ AYAR DA aynı sonucu veriyor — fark yalnız HiDPI/mobil yüzeyde doğuyor,
+  orada da tavan 1.5'te sabit.
+- `document.documentElement.dataset.volGraphicsQuality` yazılıyor ama HİÇBİR
+  CSS ya da kod okumuyor; yalnız testler doğruluyor. Ölü yazım.
+
+Karar kullanıcıya bırakıldı: ya ayar gerçekten ölçülebilir bacaklar kazanmalı
+(render ölçeği, iz/gölge/bloom anahtarları, efekt ömrü) ya da dürüstçe
+"Partikül Yoğunluğu" olarak yeniden adlandırılıp ölü yazım silinmeli.
+
+### P3 — karar bekleyen tasarım maddeleri
+
+Bunlar kusur değil, YÖN kararıdır; kod değişikliği yapılmadı.
+
+- **Tam sabit tick (VOLDUSTRY).** Bugün 60 FPS üstünde değişken artık adım
+  koşuluyor. Kaldırmak render interpolasyonu ister ve 16 ms'e kadar girdi
+  gecikmesi getirir. Öneri: VOLDUSTRY başlarken saf sabit tick + interpolasyon;
+  VOL.HELL mevcut hissini korur.
+- **Catch-up sınırında zaman atma politikası.** `SimulationClock` atılan süreyi
+  raporluyor ama politika hâlâ "at". Alternatif: yavaşlatma (slow-motion) veya
+  duraklatma. Öneri: teşhis çıktısına bakıp gerçek sıklığı ölçmeden değişmesin.
+- **Dokunmatik + fare hibrit cihaz.** `shouldUseTouchControls()` tek seferlik
+  karar veriyor; 2'si 1 arada cihazda kullanıcı ortada kip değiştiremiyor.
+  Öneri: ayarlara açık "Kontrol kipi: Otomatik / Dokunmatik / Klavye+Fare".
+- **Oyuncu çoklu temas hasarı grace semantiği.** Bugün tek küresel pencere var;
+  iki düşman aynı anda değdiğinde ikinci temas yutuluyor. Öneri: kaynak başına
+  pencere — ama bu zorluk dengesini değiştirir, dengeleme turu ister.
+- **Replay determinizmi için ses rastgeleliği.** Ses RNG'si oyun RNG'sinden
+  ayrı (`visualSeed` deseni) ama ölüm parçası seçimi koşu RNG'sini tüketiyor.
+  Öneri: ses seçimlerine kendi türetilmiş seed'i verilsin.
+- **VisualSynth CPU karmaşıklık puanı** ve **AudioSynth headroom/limiter
+  sözleşmesi.** İkisi de üretim hattı kalite kapısı; ölçüm eşiği belirlenmeden
+  eklenmesi keyfi olur. Öneri: önce mevcut varlıklardan taban ölçülsün.
+- **Android üretilmiş ağaç sapması** `31f6fb8`te bekçiyle kapatıldı.
+
 ## 2026-08-30 — a579f69 denetim turu: 18 bulgunun kapatılması
 
 Bir önceki commit (`a579f69`, 131 dosya / +5261) iki bağımsız denetimden geçti;

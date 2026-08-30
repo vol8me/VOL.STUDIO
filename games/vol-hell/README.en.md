@@ -106,6 +106,15 @@ latency) and requires render-side interpolation; planned as a separate round.
 
 ## Hardening contract
 
+- Settings writes never fail SILENTLY: `settingsPersistence` forwards the error
+  to the console, to the `diagnostics` event stream (`settingsPersistFailed`)
+  and to subscribed UI together. A setting that looks applied at runtime but
+  cannot reach disk would otherwise go unnoticed until the player quits.
+- Menu music tolerates partial load success: a broken track is skipped and a
+  transient failure is retried on the next entry (see `app/menuMusic.ts`).
+- Death music is picked from LOADED candidates; with none known it is still
+  attempted and the engine swallows the error.
+
 - Scene restarts do not leave keyboard keys, Phaser managers, DOM screens, i18n
   listeners, rAF/timers, or async telegraphs behind; owning systems expose an
   explicit `destroy()`/`stopAll()` boundary.

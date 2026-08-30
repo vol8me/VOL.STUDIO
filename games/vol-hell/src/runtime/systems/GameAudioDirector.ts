@@ -140,13 +140,44 @@ export class GameAudioDirector {
     gameAudio.stopAmbient(musicConfig.ambient.terminalStopFadeSec);
     gameAudio.stopMusic(musicConfig.ambient.terminalStopFadeSec);
 
-    const index = Math.floor(clampFinite(this.random.next(), 0, deathTrackKeys.length - 1, 0));
-    const deathKey = deathTrackKeys[index] ?? deathTrackKeys[0];
-    void gameAudio.playMusic(musicTracks[deathKey].id, { fadeIn: musicConfig.death.fadeInSec });
+    const deathKey = this.pickDeathTrack();
+    if (deathKey) {
+      void gameAudio.playMusic(musicTracks[deathKey].id, { fadeIn: musicConfig.death.fadeInSec });
+    }
     void gameAudio.playSfx('death', {
       volume: sfxVolumes.death,
       stopEvents: ['hurt', 'fire'],
     });
+  }
+
+  /**
+   * Ölüm parçasını YÜKLENMİŞ olanlar arasından seçer.
+   *
+   * İki kusur birlikte kapatıldı:
+   *
+   * 1. **Yüklenmemiş parça seçilebiliyordu.** Yükleme `allSettled` ile kısmi
+   *    başarıya izin veriyor; seçim buna bakmayınca ölüm ekranı sessiz
+   *    kalabiliyordu. Aday kümesi artık `loadedMusicTrackIds` ile kesişiyor.
+   * 2. **Rastgelelik hiç çalışmıyordu.** `Math.floor(clamp(random.next(), 0,
+   *    n - 1))` ifadesi `next()` [0, 1) döndürdüğü için HER ZAMAN 0 veriyordu:
+   *    kesirli değer ölçeklenmeden taban alınıyordu. Bugün tek ölüm parçası
+   *    olduğu için görünmüyordu; ikinci parça eklendiğinde sessizce hiç
+   *    seçilmezdi. Doğru ölçek `next() * n`dir.
+   */
+  private pickDeathTrack(): (typeof deathTrackKeys)[number] | null {
+    const loaded = deathTrackKeys.filter((key) =>
+      this.loadedMusicTrackIds.has(musicTracks[key].id),
+    );
+    // Bilinen yüklü parça varsa rastgelelik YALNIZCA onların arasında dolaşır.
+    // Hiç bilinen yoksa yine de denenir: `GameAudio.playMusic` hatayı zaten
+    // yutuyor ve yükleme takibi dışından (ör. doğrudan çağrı) gelmiş bir
+    // parçayı sessizliğe mahkûm etmenin anlamı yok.
+    const candidates = loaded.length > 0 ? loaded : deathTrackKeys;
+    if (candidates.length === 0) return null;
+
+    const roll = clampFinite(this.random.next(), 0, 1, 0);
+    const index = Math.min(candidates.length - 1, Math.floor(roll * candidates.length));
+    return candidates[index];
   }
 
   /** Koşu zaferi — ambiyans ve müzik susar, zafer parçası çalar. */

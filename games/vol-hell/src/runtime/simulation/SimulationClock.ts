@@ -1,3 +1,20 @@
+/**
+ * Tek bir simülasyon adımı.
+ *
+ * `stepIndex` bir RENDER FRAME içindeki sıradır ve her frame'de 0'dan başlar.
+ *
+ * **Neden gerekli:** girdi anlık görüntüsü frame başına BİR kez okunur ve
+ * aynı nesne o frame'in bütün adımlarına verilir. Seviye tetikli eylemler
+ * (`fire`, `dash` — kendi bekleme süreleri var) için bu doğrudur. Ama KENAR
+ * tetikli bir eylem (bir kez basıldığında bir kez tetiklenmeli) aynı anlık
+ * görüntüyle N adım boyunca `true` kalır ve yakalanan tek basış N kez
+ * tetiklenir. Düşük FPS'te N büyür, yani hata kare hızına bağlı olur.
+ *
+ * Bugün böyle bir eylem tüketilmiyor; `stepIndex` bu tuzağı GÖRÜNÜR kılar:
+ * kenar tetikli bir eylem eklendiğinde `stepIndex === 0` koşulu yazılır.
+ */
+export type SimulationStep = (stepMs: number, stepIndex: number) => void;
+
 export interface SimulationClockConfig {
   /** Sabit simülasyon adımı (ms). */
   readonly fixedStepMs: number;
@@ -39,6 +56,7 @@ export interface SimulationClockFrame {
 export class SimulationClock {
   private accumulatorMs = 0;
   private simulationTimeMs = 0;
+  private stepIndexInFrame = 0;
 
   constructor(private readonly config: SimulationClockConfig) {}
 
@@ -64,12 +82,13 @@ export class SimulationClock {
    * @param realDeltaMs Ölçülmüş frame süresi. Sonlu olmayan/negatif değer
    *   çağıran tarafından temizlenmiş olmalıdır.
    */
-  advance(realDeltaMs: number, step: (stepMs: number) => void): SimulationClockFrame {
+  advance(realDeltaMs: number, step: SimulationStep): SimulationClockFrame {
     const fixedStep = this.config.fixedStepMs;
     if (!(fixedStep > 0) || !Number.isFinite(fixedStep)) {
       return { fixedSteps: 0, partialStepMs: 0, droppedMs: 0 };
     }
 
+    this.stepIndexInFrame = 0;
     this.accumulatorMs += Number.isFinite(realDeltaMs) ? Math.max(0, realDeltaMs) : 0;
 
     let fixedSteps = 0;
@@ -101,8 +120,8 @@ export class SimulationClock {
     return { fixedSteps, partialStepMs, droppedMs };
   }
 
-  private runStep(stepMs: number, step: (stepMs: number) => void): void {
+  private runStep(stepMs: number, step: SimulationStep): void {
     this.simulationTimeMs += stepMs;
-    step(stepMs);
+    step(stepMs, this.stepIndexInFrame++);
   }
 }

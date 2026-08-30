@@ -20,6 +20,9 @@ export class Bullet {
   private expired = false;
   private previousX: number;
   private previousY: number;
+  /** Bu adımda duvara temas noktası; sekme olmadıysa `null` (bkz. getter). */
+  private bounceX: number | null = null;
+  private bounceY: number | null = null;
   private readonly damageValue: number;
   private lastTrailTime = 0;
   private lastBounceSoundTime = -Infinity;
@@ -74,6 +77,24 @@ export class Bullet {
     return this.damageValue;
   }
 
+  /**
+   * Bu adımda duvara temas edilen nokta — sekme olmadıysa `null`.
+   *
+   * Çarpışma, merminin süpürdüğü yolu `previousPosition -> konum` DÜZ
+   * ÇİZGİSİYLE tarıyor. Sekmede bu çizgi yalan söyler: mermi duvara gidip
+   * geri döndüğü hâlde segment, iki uç arasında arenanın İÇİNDEN geçen ve
+   * merminin hiç uğramadığı bir kiriş çizer — o kiriş üzerindeki bir düşman
+   * haksız yere vurulabilir, gerçek yol üzerindeki ise atlanabilir.
+   * Temas noktası verilince çarpışma yolu iki gerçek parçaya bölünür.
+   */
+  get bouncePositionX(): number | null {
+    return this.bounceX;
+  }
+
+  get bouncePositionY(): number | null {
+    return this.bounceY;
+  }
+
   get previousPositionX(): number {
     return this.previousX;
   }
@@ -96,6 +117,8 @@ export class Bullet {
     const dt = movementDelta / 1000;
     this.previousX = this.arc.x;
     this.previousY = this.arc.y;
+    this.bounceX = null;
+    this.bounceY = null;
     this.arc.x += this.velocity.x * dt;
     this.arc.y += this.velocity.y * dt;
 
@@ -150,6 +173,10 @@ export class Bullet {
     }
 
     if (bounced) {
+      // Clamp sonrası konum, duvarla temas noktasının kendisidir: çarpışma
+      // yolunu `önceki -> temas` ve `temas -> güncel` diye ikiye böler.
+      this.bounceX = this.arc.x;
+      this.bounceY = this.arc.y;
       diagnostics?.recordEvent('bulletBounce', {
         x: this.arc.x,
         y: this.arc.y,

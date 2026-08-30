@@ -10,7 +10,9 @@ const { audio } = vi.hoisted(() => ({
     stopAmbient: vi.fn(),
     stopGameplaySfx: vi.fn(),
     playAmbient: vi.fn(() => Promise.resolve()),
-    playMusic: vi.fn(() => Promise.resolve()),
+    // İmza açıkça yazılır: `mock.calls` tipi boş demet olmasın, hangi
+    // parçanın çalındığı testte okunabilsin.
+    playMusic: vi.fn((_trackId: string, _options?: unknown) => Promise.resolve()),
     playSfx: vi.fn(() => Promise.resolve()),
   },
 }));
@@ -19,6 +21,7 @@ vi.mock('@/app/services', () => ({ gameAudio: audio }));
 
 import { createRandom } from '@volstudio/core';
 import { GameAudioDirector } from '@/runtime/systems/GameAudioDirector';
+import { deathTrackKeys, musicTracks } from '@/config';
 
 function makeScene(isActive = true): Phaser.Scene {
   return {
@@ -84,5 +87,38 @@ describe('GameAudioDirector', () => {
 
     expect(() => director.playDeath()).not.toThrow();
     expect(audio.playMusic).toHaveBeenCalledOnce();
+  });
+
+  it('ölüm parçası YÜKLENMİŞ adaylar arasından seçilir', async () => {
+    // Regresyon: seçim `loadedMusicTrackIds`e bakmıyordu; yüklenmemiş bir
+    // parça seçilirse ölüm ekranı sessiz kalabiliyordu.
+    const director = new GameAudioDirector(makeScene(), createRandom(7));
+    director.start();
+    // `start()` yüklemeyi arka planda kuyruğa alır; bekleyen mikro görevler
+    // boşalınca `loadedMusicTrackIds` dolar.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    audio.playMusic.mockClear();
+
+    director.playDeath();
+
+    expect(audio.playMusic).toHaveBeenCalledOnce();
+    const played = audio.playMusic.mock.calls[0]?.[0];
+    expect(deathTrackKeys.map((key) => musicTracks[key].id)).toContain(played);
+  });
+
+  it('rastgele seçim aday dizisinin TAMAMINI kullanabilir', () => {
+    // Regresyon: `Math.floor(clamp(random.next(), 0, n - 1))` ifadesi
+    // `next()` [0, 1) döndürdüğü için HER ZAMAN 0 veriyordu — ikinci bir ölüm
+    // parçası eklendiğinde sessizce hiç seçilmezdi. Doğru ölçek `next() * n`.
+    const rolls = [0, 0.99, 0.5, 0.01];
+    const picked = new Set<number>();
+    for (const roll of rolls) {
+      const index = Math.min(rolls.length - 1, Math.floor(roll * rolls.length));
+      picked.add(index);
+    }
+    // Aynı formül dört farklı diliminde dört farklı indeks üretmeli.
+    expect(picked.size).toBeGreaterThan(1);
+    expect(Math.min(...picked)).toBe(0);
+    expect(Math.max(...picked)).toBe(rolls.length - 1);
   });
 });

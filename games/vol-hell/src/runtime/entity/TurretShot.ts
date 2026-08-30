@@ -1,10 +1,27 @@
 import type Phaser from 'phaser';
 import { turretVisualConfig } from '@/config/abilities';
+import { getMaxEnemyRadius } from '@/config/enemies/catalog';
 import { RENDER_DEPTH } from '@/config/layers';
 import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { Enemy } from './Enemy';
 import type { Border } from './Border';
 import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
+
+/**
+ * Kule mermisinin ihtiyaç duyduğu EN DAR broadphase yüzeyi.
+ *
+ * `SpatialGrid`in tamamını istemek, kule mermisini uzamsal indeksin bütün
+ * sözleşmesine bağlardı; testte de tam bir grid kurmayı zorunlu kılardı.
+ */
+export interface SegmentQueryable {
+  querySegmentNearby(
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    radius: number,
+  ): readonly Enemy[];
+}
 import { segmentCircleEntryT } from '@volstudio/core';
 
 /**
@@ -62,7 +79,12 @@ export class TurretShot {
     return this.active;
   }
 
-  update(deltaMs: number, enemies: readonly Enemy[], border: Border): void {
+  update(
+    deltaMs: number,
+    enemies: readonly Enemy[],
+    border: Border,
+    spatialGrid?: SegmentQueryable,
+  ): void {
     if (!this.active) return;
     const safeDelta = safeDeltaMs(deltaMs);
 
@@ -86,7 +108,7 @@ export class TurretShot {
     this.dot.x += this.dirX * step;
     this.dot.y += this.dirY * step;
 
-    this.checkHit(enemies);
+    this.checkHit(enemies, spatialGrid);
     // Hedef kontrolü önce gelir: aynı süpürülmüş adımda duvar ve düşman
     // kesişirse, mermi duvara ulaşmadan önceki hedef temasını kaybetmez.
     // Duvar teması sekme değildir; görsel olarak kenara oturup anında söner.
@@ -119,10 +141,24 @@ export class TurretShot {
    * içinden geçip arkadakini vurabiliyordu ve hangisinin vurulduğu düşman
    * dizisinin sırasına bağlıydı.
    */
-  private checkHit(enemies: readonly Enemy[]): void {
+  private checkHit(enemies: readonly Enemy[], spatialGrid?: SegmentQueryable): void {
+    // Broadphase: kule mermisi her karede TÜM düşman listesini tarıyordu.
+    // Oyuncu mermisi zaten grid üzerinden süpürülmüş segmentle sorguluyor;
+    // kule de aynı yolu kullanır. Grid yoksa (test/eski tüketici) tam liste
+    // güvenli yedek olarak kalır — davranış aynı, yalnız maliyet değişir.
+    const radius = turretVisualConfig.shotRadius;
+    const candidates =
+      spatialGrid?.querySegmentNearby(
+        this.previousX,
+        this.previousY,
+        this.dot.x,
+        this.dot.y,
+        radius + getMaxEnemyRadius(),
+      ) ?? enemies;
+
     let nearest: Enemy | null = null;
     let nearestT = Number.POSITIVE_INFINITY;
-    for (const enemy of enemies) {
+    for (const enemy of candidates) {
       if (!enemy.isAlive) continue;
       const entryT = segmentCircleEntryT(
         this.previousX,
@@ -131,7 +167,7 @@ export class TurretShot {
         this.dot.y,
         enemy.x,
         enemy.y,
-        enemy.radius + turretVisualConfig.shotRadius,
+        enemy.radius + radius,
       );
       if (entryT === null || entryT >= nearestT) continue;
       nearest = enemy;

@@ -1,4 +1,5 @@
 import type { SaveManager } from '@volstudio/core';
+import { reportPersistenceFailure } from '@/app/settingsPersistence';
 import { DisposableScope, type CancellableDisposable } from '@volstudio/core/lifecycle';
 import { audioConfig } from '@/config/audio';
 
@@ -258,7 +259,10 @@ export class AudioSettings {
     // gelen yeni bir ayar, önceki yazının içeriğini geriye dönük değiştirmesin.
     const snapshot = { ...this.data };
     const write = this.persistQueue.then(() => this.saveManager.save(STORAGE_KEY, snapshot));
-    this.persistQueue = write.catch(() => {});
+    // Hata YUTULMAZ: tek kapıdan konsola, teşhis akışına ve abonelere taşınır.
+    this.persistQueue = write.catch((error: unknown) => {
+      reportPersistenceFailure(STORAGE_KEY, error);
+    });
     resolve?.(write);
   }
 }

@@ -1,4 +1,5 @@
 import type { SaveManager } from '@volstudio/core';
+import { reportPersistenceFailure } from '@/app/settingsPersistence';
 import {
   getResolutionPreset,
   videoConfig,
@@ -142,7 +143,7 @@ export class VideoSettings {
     const write = this.persistQueue
       .then(() => this.saveManager.save(STORAGE_KEY, snapshot))
       .catch((error: unknown) => {
-        console.warn('[VideoSettings] Ayarlar kaydedilemedi:', error);
+        reportPersistenceFailure(STORAGE_KEY, error);
       });
     this.persistQueue = write;
     return write;

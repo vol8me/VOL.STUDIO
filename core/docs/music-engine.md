@@ -59,6 +59,14 @@ Bu maddeler kolayca yanlış varsayılan, ölçülerek doğrulanmış davranış
   o kadar bar sonraki sınıra hizalanır. Daha önce `bars` yokken geçiş `duration`
   kadar gecikiyordu: `fadeIn: 2` çağrısı 2 saniye hiçbir şey yapmayıp sonra 2
   saniyede geçiyordu.
+- **Kısmi yükleme başarısı KULLANILABİLİR.** `loadTrack()` "en az bir stem
+  yüklendi mi" döner. Bir listeyi hazırlayan tüketici `Promise.all` yerine
+  `allSettled` kullanmalı ve YALNIZCA yüklenen parçalarla liste kurmalıdır:
+  tek bozuk dosya bütün listeyi düşürürse müzik hiç çalmaz, yüklenmemiş bir id
+  listeye girerse o tur sessiz geçer (bkz. `vol-hell/src/app/menuMusic.ts`).
+- **Reddedilen yükleme sözü ÖNBELLEKLENMEZ.** "Bir kez yükle" deseni sözü bir
+  alana yazıyorsa, red durumunda o alan temizlenmelidir; aksi hâlde geçici bir
+  hata süreç ömrü boyunca yeniden denemeyi engeller.
 - **Geçişler İKİ FAZLIDIR ve yarım kalmaz.** `play()` ve `crossfadeTo()` önce
   hedefin çalınabilir stem'lerini çözer; hiçbiri yoksa ÇALAN müziğe hiç
   dokunmadan fırlatır. Eskiden `crossfadeTo()` önce eski stem'leri susturup

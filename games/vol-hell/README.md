@@ -108,6 +108,15 @@ gecikmesi) ve render tarafında interpolasyon ister; ayrı bir tur olarak planl�
 
 ## Dayanıklılık sözleşmesi
 
+- Ayar yazımı başarısız olursa SESSİZ KALMAZ: `settingsPersistence` hatayı
+  konsola, `diagnostics` olay akışına (`settingsPersistFailed`) ve abone olan
+  UI'a birlikte taşır. Çalışma anında uygulanmış görünüp diske yazılamayan bir
+  ayar, oyuncu uygulamayı kapatana kadar fark edilmezdi.
+- Menü müziği kısmi yükleme başarısına dayanıklıdır: bozuk parça atlanır,
+  geçici hata sonraki girişte yeniden denenir (bkz. `app/menuMusic.ts`).
+- Ölüm müziği YÜKLENMİŞ adaylar arasından seçilir; hiç bilinen yoksa yine de
+  denenir ve motor hatayı yutar.
+
 - Sahne yeniden başlatıldığında klavye tuşları, Phaser yöneticileri, DOM ekranları,
   i18n dinleyicileri, rAF/timer'lar ve async telegraph'lar açıkta kalmaz; sahip
   olan sistemlerin `destroy()`/`stopAll()` sınırı vardır.

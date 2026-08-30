@@ -39,6 +39,11 @@ export interface EnemyManagerCallbacks {
 
 export class EnemyManager {
   private readonly enemies: Enemy[] = [];
+  /**
+   * Koşu içi doğum sayacı. Örnek yönetici koşu başına yeniden kurulduğu için
+   * aynı seed aynı sırayı üretir — ayrışma yönleri replay'de tekrarlanır.
+   */
+  private spawnSequence = 0;
   private spawnTimer = 0;
   private currentWave = 1;
   /**
@@ -292,6 +297,7 @@ export class EnemyManager {
       scoreValue: definition.scoreValue * difficulty.scoreMultiplier,
       // Ödül ölümün KENDİSİNE bağlı: kule/zincir/ateş ölümleri de sayılır.
       onDeath: (killed) => this.callbacks.onEnemyDeath?.(killed),
+      spawnIndex: this.spawnSequence++,
     });
     this.enemies.push(enemy);
 

@@ -42,6 +42,11 @@ export interface EnemyOptions {
    * `destroy()` ile sahneden kaldırma (dalga temizliği) bunu tetiklemez.
    */
   onDeath?: (enemy: Enemy) => void;
+  /**
+   * Koşu içinde artan doğum sırası — ÖRNEĞE özel kararlı bir ayırt edici.
+   * Tam üst üste binmede ayrışma yönünü türetmek için kullanılır.
+   */
+  spawnIndex: number;
 }
 
 /**
@@ -55,6 +60,17 @@ export interface EnemyOptions {
 export class Enemy {
   readonly arc: Phaser.GameObjects.Arc;
   readonly definition: EnemyDefinition;
+  /**
+   * Tam üst üste binmede (mesafe = 0) kullanılacak ayrışma normali.
+   *
+   * Önce YALNIZCA `definition.id`den türetiliyordu: aynı türden bütün
+   * örnekler aynı yöne itiliyor, üst üste yığılan bir sürü tek blok gibi
+   * kayıyordu (kalabalık bias'ı). Doğum sırası karışıma girince her örnek
+   * kendi yönünü alır; hesap doğumda BİR KEZ yapılır, çarpışma döngüsünde
+   * hash maliyeti ve allocation kalmaz.
+   */
+  readonly separationNormalX: number;
+  readonly separationNormalY: number;
   private readonly stats: HellStatBlock;
   private readonly healthBar: EntityHealthBar;
   private readonly maxHealth: number;
@@ -85,6 +101,9 @@ export class Enemy {
   ) {
     this.definition = options.definition;
     this.stats = options.stats;
+    const separationAngle = separationAngleFor(this.definition.id, options.spawnIndex);
+    this.separationNormalX = Math.cos(separationAngle);
+    this.separationNormalY = Math.sin(separationAngle);
     this.score = nonNegativeFinite(options.scoreValue);
     this.onDeath = options.onDeath;
 
@@ -445,4 +464,15 @@ function deterministicSeparationNormal(
   const angle = ((hash >>> 0) / 0x1_0000_0000) * Math.PI * 2;
   const sign = firstId <= secondId ? 1 : -1;
   return { x: Math.cos(angle) * sign, y: Math.sin(angle) * sign };
+}
+
+/** Tür + doğum sırasından kararlı bir açı (FNV-1a). Aynı koşu, aynı sonuç. */
+function separationAngleFor(definitionId: string, spawnIndex: number): number {
+  let hash = 2166136261;
+  const key = `${definitionId}:${Number.isFinite(spawnIndex) ? Math.trunc(spawnIndex) : 0}`;
+  for (let i = 0; i < key.length; i++) {
+    hash ^= key.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return ((hash >>> 0) / 0x1_0000_0000) * Math.PI * 2;
 }

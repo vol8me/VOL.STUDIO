@@ -28,6 +28,9 @@ interface FakeEnemy {
   x: number;
   y: number;
   radius: number;
+  /** Tam üst üste binmede kullanılan örnek başına kararlı normal. */
+  separationNormalX: number;
+  separationNormalY: number;
   scoreValue: number;
   lastContactDamage: number;
   takeDamage: (_amount: number) => boolean;
@@ -72,12 +75,19 @@ function makeBullet(x: number, y: number, damage = bulletConfig.damage): FakeBul
   };
 }
 
+let fakeSeparationSeed = 0;
+
 function makeEnemy(x: number, y: number, radius = 10, onDeath?: () => void): FakeEnemy {
+  // Gerçek `Enemy` bu normali doğumda bir kez hesaplar; sahte de örnek başına
+  // FARKLI bir yön taşımalı, yoksa kalabalık bias'ı testte görünmez olur.
+  const angle = (fakeSeparationSeed++ * Math.PI) / 3;
   const enemy: FakeEnemy = {
     isAlive: true,
     x,
     y,
     radius,
+    separationNormalX: Math.cos(angle),
+    separationNormalY: Math.sin(angle),
     scoreValue: 100,
     lastContactDamage: -Infinity,
     // Gerçek `Enemy.takeDamage` ölümde `onDeath` kancasını çağırır; ödül yolu
@@ -459,6 +469,92 @@ describe('CollisionResolver', () => {
 
       expect(dead.takeDamage).not.toHaveBeenCalled();
       expect(alive.takeDamage).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('sekmeli yol — iki parçalı tarama', () => {
+    function bouncedBullet(over: {
+      previous: [number, number];
+      bounce: [number, number];
+      current: [number, number];
+    }) {
+      return {
+        ...makeBullet(over.current[0], over.current[1]),
+        previousPositionX: over.previous[0],
+        previousPositionY: over.previous[1],
+        bouncePositionX: over.bounce[0],
+        bouncePositionY: over.bounce[1],
+        isExpired: false,
+      };
+    }
+
+    it('sekme kirişi üzerindeki ama GERÇEK yolda olmayan düşmanı vurmaz', () => {
+      // Mermi (0,0) -> duvar (100,0) -> geri (60,0). Düz kiriş (0,0)-(60,0)
+      // olurdu; (80,0)'daki düşman gerçek yolda AMA kirişte değil,
+      // (30,-40)'taki ise ne kirişte ne yolda. Kritik olan: kiriş yalan söylemesin.
+      const offPath = makeEnemy(30, 40, 3);
+      const bullet = bouncedBullet({ previous: [0, 0], bounce: [100, 0], current: [60, 0] });
+      const { resolver } = makeResolver({
+        bullets: [bullet as never],
+        enemies: [offPath],
+        nearby: [offPath],
+      });
+
+      resolver.resolve(0);
+
+      expect(offPath.takeDamage).not.toHaveBeenCalled();
+    });
+
+    it('sekmeden SONRAKİ parçadaki düşmanı vurur', () => {
+      const afterBounce = makeEnemy(80, 0, 4);
+      const bullet = bouncedBullet({ previous: [0, 0], bounce: [100, 0], current: [60, 0] });
+      const { resolver } = makeResolver({
+        bullets: [bullet as never],
+        enemies: [afterBounce],
+        nearby: [afterBounce],
+      });
+
+      resolver.resolve(0);
+
+      expect(afterBounce.takeDamage).toHaveBeenCalledOnce();
+    });
+
+    it('sekmeden ÖNCEKİ parça, sonrakine göre önceliklidir', () => {
+      // Zaman sırası korunmalı: mermi önce (40,0)'a, sonra duvara çarpar.
+      const beforeBounce = makeEnemy(40, 0, 4);
+      const afterBounce = makeEnemy(80, 0, 4);
+      const bullet = bouncedBullet({ previous: [0, 0], bounce: [100, 0], current: [60, 0] });
+      const { resolver } = makeResolver({
+        bullets: [bullet as never],
+        enemies: [afterBounce, beforeBounce],
+        nearby: [afterBounce, beforeBounce],
+      });
+
+      resolver.resolve(0);
+
+      expect(beforeBounce.takeDamage).toHaveBeenCalledOnce();
+      expect(afterBounce.takeDamage).not.toHaveBeenCalled();
+    });
+
+    it('sekme yoksa tek parça taranır — davranış değişmez', () => {
+      const enemy = makeEnemy(50, 0, 4);
+      const bullet = {
+        ...makeBullet(100, 0),
+        previousPositionX: 0,
+        previousPositionY: 0,
+        bouncePositionX: null,
+        bouncePositionY: null,
+        isExpired: false,
+      };
+      const { resolver } = makeResolver({
+        bullets: [bullet as never],
+        enemies: [enemy],
+        nearby: [enemy],
+      });
+
+      resolver.resolve(0);
+
+      expect(enemy.takeDamage).toHaveBeenCalledOnce();
     });
   });
 });

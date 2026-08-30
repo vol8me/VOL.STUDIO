@@ -82,39 +82,50 @@ export class CollisionResolver {
       const previousX = bullet.previousPositionX ?? bullet.x;
       const previousY = bullet.previousPositionY ?? bullet.y;
       const broadphaseRadius = bulletConfig.radius + getMaxEnemyRadius();
-      const nearbyEnemies =
-        typeof this.spatialGrid.querySegmentNearby === 'function'
-          ? this.spatialGrid.querySegmentNearby(
-              previousX,
-              previousY,
-              bullet.x,
-              bullet.y,
-              broadphaseRadius,
-            )
-          : this.spatialGrid.queryNearby(bullet.x, bullet.y);
-      // Süpürülen adımda birden fazla düşman kesişebilir. Dizideki İLK
-      // eşleşmeyi vurmak sonucu spatial grid'in hücre sırasına bağlar: aynı
-      // kare, aynı geometri, farklı kurban — ve mermi arkadaki düşmanı
-      // vurmak için öndekinin içinden geçmiş olur. Segment üzerindeki en
-      // küçük giriş parametresi (`t`) gerçek ilk temastır ve sıralamadan
-      // bağımsızdır. Eşitlikte dizi sırası kazanır: deterministik kalır.
-      let nearest: Enemy | null = null;
-      let nearestT = Number.POSITIVE_INFINITY;
-      for (const enemy of nearbyEnemies) {
-        if (!enemy.isAlive) continue;
 
-        const entryT = segmentCircleEntryT(
-          previousX,
-          previousY,
-          bullet.x,
-          bullet.y,
-          enemy.x,
-          enemy.y,
-          enemy.radius + bulletConfig.radius,
-        );
-        if (entryT === null || entryT >= nearestT) continue;
-        nearest = enemy;
-        nearestT = entryT;
+      // Sekmede yol DÜZ DEĞİLDİR: `önceki -> temas -> güncel`. Tek segmentle
+      // taramak, merminin hiç uğramadığı bir kirişi tarardı (bkz.
+      // `Bullet.bouncePositionX`). Parçalar SIRAYLA denenir; ilk parçada
+      // vuruş varsa ikinciye hiç bakılmaz — zaman sırası korunur.
+      const bounceX = bullet.bouncePositionX ?? null;
+      const bounceY = bullet.bouncePositionY ?? null;
+      const hasBounce = bounceX !== null && bounceY !== null;
+      const legs: readonly (readonly [number, number, number, number])[] = hasBounce
+        ? [
+            [previousX, previousY, bounceX, bounceY],
+            [bounceX, bounceY, bullet.x, bullet.y],
+          ]
+        : [[previousX, previousY, bullet.x, bullet.y]];
+
+      let nearest: Enemy | null = null;
+      for (const [startX, startY, endX, endY] of legs) {
+        const nearbyEnemies =
+          typeof this.spatialGrid.querySegmentNearby === 'function'
+            ? this.spatialGrid.querySegmentNearby(startX, startY, endX, endY, broadphaseRadius)
+            : this.spatialGrid.queryNearby(endX, endY);
+
+        // Aynı parça üzerinde birden fazla düşman kesişebilir; dizideki İLK
+        // eşleşmeyi almak sonucu grid'in hücre sırasına bağlar ve mermi
+        // öndekinin içinden geçebilir. En küçük giriş parametresi gerçek ilk
+        // temastır; eşitlikte dizi sırası kazanır, yani deterministik kalır.
+        let nearestT = Number.POSITIVE_INFINITY;
+        for (const enemy of nearbyEnemies) {
+          if (!enemy.isAlive) continue;
+
+          const entryT = segmentCircleEntryT(
+            startX,
+            startY,
+            endX,
+            endY,
+            enemy.x,
+            enemy.y,
+            enemy.radius + bulletConfig.radius,
+          );
+          if (entryT === null || entryT >= nearestT) continue;
+          nearest = enemy;
+          nearestT = entryT;
+        }
+        if (nearest) break;
       }
 
       if (nearest) {
@@ -186,17 +197,18 @@ export class CollisionResolver {
 
         if (dist < minDist) {
           hasOverlap = true;
-          const normal =
-            dist > 0
-              ? { x: dx / dist, y: dy / dist }
-              : deterministicSeparationNormal(enemy.definition?.id ?? 'enemy');
+          // Tam üst üste binmede yön düşmanın KENDİ kararlı normalinden gelir
+          // (bkz. `Enemy.separationNormalX`); tür başına tek yön kalabalığı
+          // aynı tarafa itip blok hâlinde kaydırıyordu.
+          const normalX = dist > 0 ? dx / dist : enemy.separationNormalX;
+          const normalY = dist > 0 ? dy / dist : enemy.separationNormalY;
           const overlap = minDist - dist;
           // İlk iterasyonda büyük itme, sonrakilerde giderek küçük — overlap
           // anında çözülür, titreme önlenir.
           const pushDist = (overlap * pushFactor) / (iter + 1);
-          pushX += normal.x * pushDist;
-          pushY += normal.y * pushDist;
-          enemy.applyPush(-normal.x * pushDist, -normal.y * pushDist, this.border);
+          pushX += normalX * pushDist;
+          pushY += normalY * pushDist;
+          enemy.applyPush(-normalX * pushDist, -normalY * pushDist, this.border);
           if (typeof this.spatialGrid.update === 'function') this.spatialGrid.update(enemy);
         }
       }
@@ -208,15 +220,4 @@ export class CollisionResolver {
       if (!hasOverlap) break;
     }
   }
-}
-
-/** Exact overlap'ta NaN üretmemek için düşman türünden kararlı normal. */
-function deterministicSeparationNormal(id: string): { x: number; y: number } {
-  let hash = 2166136261;
-  for (let i = 0; i < id.length; i++) {
-    hash ^= id.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  const angle = ((hash >>> 0) / 0x1_0000_0000) * Math.PI * 2;
-  return { x: Math.cos(angle), y: Math.sin(angle) };
 }

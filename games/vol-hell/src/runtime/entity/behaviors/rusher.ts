@@ -82,7 +82,7 @@ function advancePhase(state: RusherState, context: BehaviorContext, params: Rush
       if (state.phaseTimerMs < params.windupMs) return false;
       lockDashDirection(state, context);
       state.phase = 'dash';
-      state.phaseTimerMs = 0;
+      state.phaseTimerMs = carryOver(state.phaseTimerMs, params.windupMs);
       state.dashStarted = true;
       return true;
     }
@@ -90,18 +90,39 @@ function advancePhase(state: RusherState, context: BehaviorContext, params: Rush
     case 'dash': {
       if (state.phaseTimerMs < params.dashDurationMs) return false;
       state.phase = 'recover';
-      state.phaseTimerMs = 0;
+      state.phaseTimerMs = carryOver(state.phaseTimerMs, params.dashDurationMs);
       return true;
     }
 
     case 'recover': {
       if (state.phaseTimerMs < params.recoverMs) return false;
       state.phase = 'approach';
-      state.phaseTimerMs = 0;
+      state.phaseTimerMs = carryOver(state.phaseTimerMs, params.recoverMs);
       state.cooldownTimerMs = 0;
       return true;
     }
   }
+}
+
+/**
+ * Faz süresini aştıktan sonra ARTAN süreyi bir sonraki faza taşır.
+ *
+ * Sayaç eskiden `0`a çekiliyordu: 300 ms'lik bir telegraf, 16 ms'lik karelerde
+ * 304 ms'de dolar ve o 4 ms silinirdi. Her geçişte tekrarlandığı için bir tam
+ * atılım devri config'de yazandan sistematik olarak UZUN sürer ve süre düşük
+ * FPS'te daha da kayar — yani telegraf penceresi kare hızına bağlı hale gelir.
+ * Artığı taşımak devri config'e sabitler.
+ *
+ * `approach` fazı zamana değil mesafe/cooldown'a bağlı olduğu için taşıma
+ * uygulanmaz; orada sayaç gerçekten sıfırdan başlamalıdır.
+ */
+function carryOver(elapsedMs: number, phaseDurationMs: number): number {
+  if (!Number.isFinite(phaseDurationMs) || phaseDurationMs <= 0) return 0;
+  const remainder = elapsedMs - phaseDurationMs;
+  // Tek karede birden çok fazı aşan devasa delta'da artık, bir sonraki fazı da
+  // anında bitirmesin diye o fazın süresiyle sınırlanır (döngü zaten
+  // MAX_PHASE_STEPS ile kesiliyor; bu, süre birikmesini engeller).
+  return Math.max(0, Math.min(remainder, phaseDurationMs));
 }
 
 /** Atılım yönünü telegraf bitiminde kilitler. */

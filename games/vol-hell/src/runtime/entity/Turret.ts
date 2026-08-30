@@ -8,7 +8,7 @@ import type { EffectManager } from '@/runtime/systems/EffectManager';
 import type { Border } from './Border';
 import { EntityHealthBar } from './EntityHealthBar';
 import type { Enemy } from './Enemy';
-import { TurretShot } from './TurretShot';
+import { TurretShot, type SegmentQueryable } from './TurretShot';
 import { nonNegativeFinite, safeDeltaMs } from '@/runtime/utils/numeric';
 import { gameConfig } from '@/config/game';
 
@@ -45,6 +45,7 @@ export class Turret {
     y: number,
     private readonly effects: EffectManager,
     private readonly border: Border,
+    private readonly spatialGrid: SegmentQueryable | undefined,
     private readonly params: TurretParams,
   ) {
     this.maxHealth = params.health;
@@ -236,7 +237,7 @@ export class Turret {
   private updateShots(deltaMs: number, enemies: readonly Enemy[]): void {
     for (let i = this.shots.length - 1; i >= 0; i--) {
       const shot = this.shots[i];
-      shot.update(deltaMs, enemies, this.border);
+      shot.update(deltaMs, enemies, this.border, this.spatialGrid);
       if (!shot.isActive) this.shots.splice(i, 1);
     }
   }
