@@ -14,6 +14,7 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 ```
 core/                       # @volstudio/core — shared systems + DOM UI library
 games/vol-hell/             # @volstudio/vol-hell — the game (Vite root)
+games/vol-arachnid/         # @volstudio/vol-arachnid — articulated-spider arena vertical slice
 devtools/pen.dev/          # @volstudio/pen.dev — Pencil source, export pipeline and rig assembly
 devtools/vol-ui/            # @volstudio/vol-ui — live CORE UI component catalog
 devtools/vol-asset-studio/  # @volstudio/vol-asset-studio — repository asset workbench
@@ -36,8 +37,9 @@ primitives), [games/docs](games/docs) (game i18n), and each relevant
 
 ```bash
 pnpm install
-pnpm dev                                   # game + two developer tools
-pnpm --filter @volstudio/vol-hell dev      # game only               :5173
+pnpm dev                                   # VOL.ARACHNID + two developer tools
+pnpm --filter @volstudio/vol-hell dev      # VOL.HELL only           :5173
+pnpm --filter @volstudio/vol-arachnid dev  # VOL.ARACHNID only       :5178
 pnpm --filter @volstudio/vol-ui dev        # UI showcase only        :5174
 pnpm --filter @volstudio/vol-asset-studio dev # Asset Studio only    :5175
 pnpm tauri:dev                             # PC Tauri dev
@@ -47,6 +49,9 @@ pnpm tauri:android:dev                     # Android dev (connected device/emula
 pnpm benchmark:core                        # Measure CORE headless workloads
 pnpm benchmark:vol-hell                    # Measure VOL.HELL simulation/render
 ```
+
+VOL.ARACHNID is a fixed-camera arena vertical slice: WASD walks the spider,
+Space triggers its short dash, and the HUD shows speed and dash recharge.
 
 ### Android
 

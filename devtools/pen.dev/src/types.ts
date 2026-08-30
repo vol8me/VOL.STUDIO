@@ -41,10 +41,9 @@ export interface RigPartMetadata {
 
 /** Rig'in bir önizleme görseli — assemble edilmiş kartın tamamını gösterir. */
 export interface RigPreviewMetadata {
-  id: string;
   partId: string;
-  width: number;
-  height: number;
+  sourceNodeId: string;
+  logicalSizePx: Size;
   file: string;
 }
 

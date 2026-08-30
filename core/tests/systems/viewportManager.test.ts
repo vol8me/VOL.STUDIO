@@ -42,6 +42,46 @@ function makeFakeGame(recorded: {
   } as unknown as Parameters<ViewportManager['attachResize']>[0];
 }
 
+/** Phaser Scale.NONE'in resize/setZoom CSS sırasını gerekli kadarıyla taklit eder. */
+function makeCssAwareFakeGame(
+  initialWidth: number,
+  initialHeight: number,
+): {
+  game: Parameters<ViewportManager['attachResize']>[0];
+  canvas: HTMLCanvasElement;
+} {
+  const canvas = document.createElement('canvas');
+  canvas.style.width = `${initialWidth}px`;
+  canvas.style.height = `${initialHeight}px`;
+
+  let width = initialWidth;
+  let height = initialHeight;
+  let zoom = 1;
+
+  const game = {
+    canvas,
+    scale: {
+      resize: (nextWidth: number, nextHeight: number): void => {
+        width = nextWidth;
+        height = nextHeight;
+        // Phaser Scale.NONE, zoom 1 iken mevcut inline style'ı yeniden yazmaz.
+        if (zoom !== 1) {
+          canvas.style.width = `${width * zoom}px`;
+          canvas.style.height = `${height * zoom}px`;
+        }
+      },
+      setZoom: (nextZoom: number): void => {
+        zoom = nextZoom;
+        canvas.style.width = `${width * zoom}px`;
+        canvas.style.height = `${height * zoom}px`;
+      },
+    },
+    scene: { getScenes: () => [] },
+  } as unknown as Parameters<ViewportManager['attachResize']>[0];
+
+  return { game, canvas };
+}
+
 afterEach(() => {
   setEnvironment(1, 1024, 768);
 });
@@ -136,6 +176,19 @@ describe('ViewportManager — DPR kelepçesi', () => {
     expect(recorded.width).toBe(3000);
     expect(recorded.width * recorded.zoom).toBeCloseTo(window.innerWidth, 6);
     expect(recorded.height * recorded.zoom).toBeCloseTo(window.innerHeight, 6);
+  });
+
+  it('yön değişiminde eski inline CSS boyutu yeni viewport oranına taşınmaz', () => {
+    const manager = new ViewportManager({ strategy: 'resize' });
+    const { game, canvas } = makeCssAwareFakeGame(1200, 760);
+    const detach = manager.attachResize(game);
+
+    setEnvironment(1, 760, 1100);
+    window.dispatchEvent(new Event('resize'));
+    detach();
+
+    expect(canvas.style.width).toBe('760px');
+    expect(canvas.style.height).toBe('1100px');
   });
 
   it('negatif veya NaN maxDpr yok sayılır; ham DPR kullanılır', () => {

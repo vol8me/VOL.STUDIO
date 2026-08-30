@@ -14,6 +14,7 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 ```
 core/                       # @volstudio/core — paylaşılan sistemler + DOM UI kütüphanesi
 games/vol-hell/             # @volstudio/vol-hell — oyun (Vite kökü)
+games/vol-arachnid/         # @volstudio/vol-arachnid — eklemli örümcek arena dikey kesiti
 devtools/pen.dev/          # @volstudio/pen.dev — Pencil kaynağı, export hattı ve rig montajı
 devtools/vol-ui/            # @volstudio/vol-ui — CORE UI canlı bileşen kataloğu
 devtools/vol-asset-studio/  # @volstudio/vol-asset-studio — repo varlık çalışma ortamı
@@ -36,8 +37,9 @@ primitifleri), [games/docs](games/docs) (oyun i18n'i) ve ilgili
 
 ```bash
 pnpm install
-pnpm dev                                   # oyun + iki geliştirici aracı
-pnpm --filter @volstudio/vol-hell dev      # yalnızca oyun            :5173
+pnpm dev                                   # VOL.ARACHNID + iki geliştirici aracı
+pnpm --filter @volstudio/vol-hell dev      # yalnızca VOL.HELL         :5173
+pnpm --filter @volstudio/vol-arachnid dev  # yalnızca VOL.ARACHNID     :5178
 pnpm --filter @volstudio/vol-ui dev        # yalnızca UI showcase'i   :5174
 pnpm --filter @volstudio/vol-asset-studio dev # yalnızca Asset Studio :5175
 pnpm tauri:dev                             # PC Tauri dev
@@ -47,6 +49,9 @@ pnpm tauri:android:dev                     # Android dev (bağlı cihaz/emülat�
 pnpm benchmark:core                        # CORE headless workload ölçümü
 pnpm benchmark:vol-hell                    # VOL.HELL simülasyon/render ölçümü
 ```
+
+VOL.ARACHNID sabit kameralı arena dikey kesitidir: WASD örümceği yürütür,
+Space kısa atılmayı tetikler; HUD hız ile atılma dolumunu gösterir.
 
 ### Android
 

@@ -47,7 +47,13 @@ import * as Core from '../../src/index';
 // artık YETENEĞE bağlı: `navigator.vibrate` yoksa bağlı bir oyun kolunun
 // rumble motoru kullanılır ve kol takılıp çıkarıldıkça yetenek canlı bildirilir
 // — tüketici ayarı buna göre etkinleştirir.
-const EXPECTED_EXPORT_COUNT = 204;
+// 204 → 208: eklemli uzuv alanı — dört ÇALIŞMA ZAMANI export'u. `Spring1D`
+// (`core/math/Spring.ts`) hız taşıyan genel yay-damper integratörüdür;
+// `solveTwoBoneIk` (`core/math/ik.ts`) iki kemikli düzlemsel ters kinematik;
+// `RigMotionModel` sürekli hareket sinyalleri; `LegGait` ayak-sabitleyen
+// yürüyüş döngüsüdür. Uzuv sözlüğü bilinçli olarak tüketicide kalır
+// (bkz. `core/src/index.ts`daki not).
+const EXPECTED_EXPORT_COUNT = 208;
 
 // 196: asset compiler'lar (görsel/ses sentezi) CORE public surface'da
 // tutulmaz; runtime yalnızca üretilmiş asset'leri çalar.

@@ -1,0 +1,18 @@
+{
+  "app": {
+    "title": "VOL.ARACHNID"
+  },
+  "hud": {
+    "ariaLabel": "Movement indicators",
+    "dash": "Dash",
+    "dashReady": "Ready",
+    "dashCharging": "{{percent}}%",
+    "speed": "Speed {{speed}} px/s",
+    "status": "Status: {{state}}",
+    "state": {
+      "idle": "Idle",
+      "moving": "Walking",
+      "dashing": "Dashing"
+    }
+  }
+}

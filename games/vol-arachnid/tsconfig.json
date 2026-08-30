@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@volstudio/core": ["../../core/src"],
+      "@volstudio/core/*": ["../../core/src/*"],
+      "@volstudio/pen.dev": ["../../devtools/pen.dev/src"],
+      "@volstudio/pen.dev/*": ["../../devtools/pen.dev/src/*"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "tests"]
+}

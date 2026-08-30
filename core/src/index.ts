@@ -81,6 +81,8 @@ export {
   damp,
   wrap,
 } from './math/interpolation';
+export { Spring1D, type SpringConfig } from './math/Spring';
+export { solveTwoBoneIk, type TwoBoneIkResult } from './math/ik';
 export { StateMachine } from './state/StateMachine';
 export type { StateDefinition, StateMachineOptions } from './state/StateMachine';
 export { ResourcePool, type ResourceCost } from './economy/ResourcePool';
@@ -132,6 +134,17 @@ export { MovableController, type MovableGameObject } from './entities/MovableCon
  * bu takma ad bir sonraki büyük sürümde kaldırılacak.
  */
 export { MovableController as PlayerController } from './entities/MovableController';
+
+// Uzuv SÖZLÜĞÜ bilinçli olarak burada yok. `LegGait` yalnız gövde-yerel ev
+// konumu ve adım grubu alır; hangi rig'in kaç bacağı olduğunu tüketici bilir.
+export {
+  RigMotionModel,
+  LegGait,
+  type RigMotionModelConfig,
+  type RigMotionSignals,
+  type LegGaitConfig,
+  type LegGaitLeg,
+} from './rig';
 
 // Eylem SÖZLÜĞÜ bilinçli olarak burada yok. `InputState` jenerik
 // `actions: Record<TAction, boolean>` taşır; hangi eylemlerin var olduğunu ve

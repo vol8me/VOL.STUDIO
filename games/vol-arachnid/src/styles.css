@@ -1,0 +1,86 @@
+.vol-arachnid-hud {
+  position: fixed;
+  top: calc(var(--vol-safe-top) + var(--vol-space-md));
+  left: calc(var(--vol-safe-left) + var(--vol-space-md));
+  width: min(
+    300px,
+    calc(100vw - var(--vol-safe-left) - var(--vol-safe-right) - 2 * var(--vol-space-md))
+  );
+  padding: 12px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-left-color: var(--vol-ui-accent-solid);
+  border-radius: var(--vol-radius-md);
+  background: var(--vol-ui-overlay-panel);
+  box-shadow: 0 8px 32px var(--vol-ui-scrim);
+  backdrop-filter: blur(12px);
+  display: grid;
+  gap: var(--vol-space-sm);
+  pointer-events: none;
+}
+
+.vol-arachnid-hud__dash {
+  height: 22px;
+  border-color: var(--vol-ui-accent-border);
+}
+
+.vol-arachnid-hud--dash-ready .vol-arachnid-hud__dash {
+  border-color: var(--vol-ui-success-border);
+}
+
+.vol-arachnid-hud--dash-ready .vol-arachnid-hud__dash .vol-bar__fill {
+  background: var(--vol-ui-success-solid);
+}
+
+.vol-arachnid-hud--dashing .vol-arachnid-hud__dash {
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-arachnid-hud--dashing .vol-arachnid-hud__dash .vol-bar__fill {
+  background: var(--vol-ui-brand-solid);
+}
+
+.vol-arachnid-hud__telemetry {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--vol-space-sm);
+  display: grid;
+}
+
+.vol-arachnid-hud__speed,
+.vol-arachnid-hud__status {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.vol-arachnid-hud__speed {
+  font-family: var(--vol-font-family-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.vol-arachnid-hud__status {
+  text-align: right;
+}
+
+.vol-arachnid-hud--dashing .vol-arachnid-hud__status {
+  color: var(--vol-ui-brand-hover);
+}
+
+@media (width <= 520px) {
+  .vol-arachnid-hud {
+    width: min(
+      260px,
+      calc(100vw - var(--vol-safe-left) - var(--vol-safe-right) - 2 * var(--vol-space-md))
+    );
+  }
+
+  .vol-arachnid-hud__telemetry {
+    grid-template-columns: 1fr;
+    gap: var(--vol-space-xs);
+  }
+
+  .vol-arachnid-hud__status {
+    text-align: left;
+  }
+}

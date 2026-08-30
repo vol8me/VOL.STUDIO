@@ -1,0 +1,18 @@
+{
+  "app": {
+    "title": "VOL.ARACHNID"
+  },
+  "hud": {
+    "ariaLabel": "Hareket göstergeleri",
+    "dash": "Atılma",
+    "dashReady": "Hazır",
+    "dashCharging": "%{{percent}}",
+    "speed": "Hız {{speed}} px/sn",
+    "status": "Durum: {{state}}",
+    "state": {
+      "idle": "Beklemede",
+      "moving": "Yürüyor",
+      "dashing": "Atılıyor"
+    }
+  }
+}

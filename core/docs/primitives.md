@@ -507,7 +507,10 @@ arena küçülür, dünya birimi/saniye cinsinden sabit olan hızlar ekranda
 hızlanır. Bu yüzden `applyToScene()` kamerayı rasterleme çarpanı kadar
 yakınlaştırır: görünen dünya alanı `viewport / zoom` = CSS pikseli olur ve
 çözünürlükten bağımsız kalır. Sahneler `applyVolViewport(scene)` ile bu
-sözleşmeye girer.
+sözleşmeye girer. Pencere yeniden boyutlandığında backing store önce yeni
+ölçüye alınır, ardından zoom tazelenir; bu sıra Phaser'ın `Scale.NONE` inline
+CSS boyutunu ve input koordinatlarında kullanılan canvas sınırını yeni viewport
+oranına göre yeniden hesaplamasını sağlar.
 
 **Ekran uzayına sabitlenen katmanlar (`scrollFactor: 0`) kamera
 yakınlaştırmasından MUAF DEĞİLDİR** (bkz. Phaser `GetCalcMatrix`: scrollFactor
