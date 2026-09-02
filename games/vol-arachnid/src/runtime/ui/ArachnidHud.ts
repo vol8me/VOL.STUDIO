@@ -1,4 +1,14 @@
-import { Bar, DisposableScope, Text, UIRoot, clamp01, i18next } from '@volstudio/core';
+import {
+  Bar,
+  DisposableScope,
+  Icon,
+  IconButton,
+  Text,
+  UIRoot,
+  clamp01,
+  i18next,
+} from '@volstudio/core';
+import { arenaConfig } from '@/config/arena';
 import { arachnidUiConfig } from '@/config/ui';
 
 export interface ArachnidHudState {
@@ -8,62 +18,102 @@ export interface ArachnidHudState {
   isDashing: boolean;
 }
 
+export interface ArachnidHudOptions {
+  /** Tam ekran isteği; HUD kendi başına pencereyi değiştirmez. */
+  onToggleFullscreen: () => void;
+}
+
 type MotionState = 'idle' | 'moving' | 'dashing';
 
 /**
- * Phaser tuvalinden bağımsız hareket HUD'u. Sahne yalnızca gövde
- * durumunu aktarır; DOM, i18n ve temizleme sorumluluğu burada kalır.
+ * Phaser tuvalinden bağımsız hareket HUD'u.
+ *
+ * Yerleşim ARENAYA DEĞMEZ: kamera, arenayı `arenaConfig.viewportGutterPx`
+ * boşluklarının içine sığdırır ve HUD yalnız o boşluklarda yaşar. Ölçüler
+ * CSS değişkeni olarak buradan yazılır — iki tarafın ayrı sayı tutması,
+ * boşluk değiştiğinde HUD'un sessizce oyun alanının üstüne binmesi demekti.
+ *
+ * Metin en aza indirilmiştir: atılım durumu DİKEY bir barla, hareket durumu
+ * renkle okunur; sayı olarak yalnız hız kalır ve o da sağ alt boşluktadır.
  */
 export class ArachnidHud {
   private readonly scope = new DisposableScope();
   private readonly uiRoot: UIRoot;
   private readonly root: HTMLDivElement;
   private readonly dashBar: Bar;
+  private readonly titleText: Text;
   private readonly speedText: Text;
-  private readonly statusText: Text;
+  private readonly telemetry: HTMLDivElement;
+  private readonly fullscreenButton: IconButton;
   private dashPercent = 100;
   private speedPxPerSec = 0;
-  private motionState: MotionState = 'idle';
+  private fullscreenActive = false;
 
-  constructor(parent: HTMLElement) {
+  constructor(parent: HTMLElement, options: ArachnidHudOptions) {
     this.uiRoot = this.scope.addDestroyable(new UIRoot(parent));
 
     this.root = document.createElement('div');
     this.root.className = 'vol-arachnid-hud vol-arachnid-hud--dash-ready';
     this.root.setAttribute('role', 'group');
     this.root.setAttribute('aria-label', i18next.t('arachnid:hud.ariaLabel'));
+    this.root.style.setProperty(
+      '--vol-arachnid-gutter-left',
+      `${arenaConfig.viewportGutterPx.left}px`,
+    );
+    this.root.style.setProperty(
+      '--vol-arachnid-gutter-top',
+      `${arenaConfig.viewportGutterPx.top}px`,
+    );
+    this.root.style.setProperty(
+      '--vol-arachnid-gutter-bottom',
+      `${arenaConfig.viewportGutterPx.bottom}px`,
+    );
     this.uiRoot.mount(this.root);
     this.scope.add({ dispose: () => this.uiRoot.unmount(this.root) });
+
+    this.titleText = this.scope.addDestroyable(
+      new Text(i18next.t('arachnid:app.title'), { variant: 'title', tag: 'h1' }),
+    );
+    this.titleText.element.classList.add('vol-arachnid-hud__title');
+    this.root.appendChild(this.titleText.element);
 
     this.dashBar = this.scope.addDestroyable(
       new Bar({
         variant: 'cooldown',
+        orientation: 'vertical',
         max: 100,
         value: this.dashPercent,
         lowThreshold: null,
         animateMs: 0,
-        label: this.formatDashLabel,
+        ariaLabel: i18next.t('arachnid:hud.dashAria'),
         className: 'vol-arachnid-hud__dash',
       }),
     );
     this.root.appendChild(this.dashBar.element);
 
-    const telemetry = document.createElement('div');
-    telemetry.className = 'vol-arachnid-hud__telemetry';
-    this.root.appendChild(telemetry);
+    this.fullscreenButton = this.scope.addDestroyable(
+      new IconButton(new Icon({ name: 'fullscreen' }).element, {
+        size: 'sm',
+        label: this.fullscreenLabel(),
+        onClick: options.onToggleFullscreen,
+      }),
+    );
+    this.fullscreenButton.element.classList.add('vol-arachnid-hud__fullscreen');
+    this.root.appendChild(this.fullscreenButton.element);
+
+    this.telemetry = document.createElement('div');
+    this.telemetry.className = 'vol-arachnid-hud__telemetry';
+    // Rolsüz bir `div`in `aria-label`ı çoğu ekran okuyucuda YOK SAYILIR; ad
+    // ancak adlandırılabilir bir role bağlanınca duyulur.
+    this.telemetry.setAttribute('role', 'group');
+    this.telemetry.setAttribute('aria-label', i18next.t('arachnid:hud.speedAria'));
+    this.root.appendChild(this.telemetry);
 
     this.speedText = this.scope.addDestroyable(
-      new Text(this.formatSpeed(), { variant: 'body', tag: 'p' }),
+      new Text(this.formatSpeed(), { variant: 'muted', tag: 'p' }),
     );
     this.speedText.element.classList.add('vol-arachnid-hud__speed');
-    telemetry.appendChild(this.speedText.element);
-
-    this.statusText = this.scope.addDestroyable(
-      new Text(this.formatStatus(), { variant: 'muted', tag: 'p' }),
-    );
-    this.statusText.element.classList.add('vol-arachnid-hud__status');
-    this.statusText.element.setAttribute('aria-live', 'polite');
-    telemetry.appendChild(this.statusText.element);
+    this.telemetry.appendChild(this.speedText.element);
 
     i18next.on('languageChanged', this.onLanguageChanged);
     this.scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
@@ -90,47 +140,38 @@ export class ArachnidHud {
       : rawSpeed >= arachnidUiConfig.hud.movingThresholdPxPerSec
       ? 'moving'
       : 'idle';
-    if (nextMotionState !== this.motionState) {
-      this.motionState = nextMotionState;
-      this.statusText.setContent(this.formatStatus());
-    }
 
     this.root.classList.toggle('vol-arachnid-hud--dash-ready', nextDashPercent >= 100);
     this.root.classList.toggle('vol-arachnid-hud--dashing', nextMotionState === 'dashing');
+    this.root.classList.toggle('vol-arachnid-hud--moving', nextMotionState === 'moving');
+  }
+
+  /** Tam ekran durumunu yansıtır; butonun erişilebilirlik adı buna bağlıdır. */
+  setFullscreenActive(active: boolean): void {
+    if (active === this.fullscreenActive) return;
+    this.fullscreenActive = active;
+    this.fullscreenButton.setLabel(this.fullscreenLabel());
   }
 
   destroy(): void {
     this.scope.dispose();
   }
 
-  private readonly formatDashLabel = (value: number): string => {
-    const state =
-      value >= 100
-        ? i18next.t('arachnid:hud.dashReady')
-        : i18next.t('arachnid:hud.dashCharging', { percent: value });
-    return `${i18next.t('arachnid:hud.dash')} · ${state}`;
-  };
-
   private formatSpeed(): string {
     return i18next.t('arachnid:hud.speed', { speed: this.speedPxPerSec });
   }
 
-  private formatStatus(): string {
-    let state: string;
-    if (this.motionState === 'dashing') {
-      state = i18next.t('arachnid:hud.state.dashing');
-    } else if (this.motionState === 'moving') {
-      state = i18next.t('arachnid:hud.state.moving');
-    } else {
-      state = i18next.t('arachnid:hud.state.idle');
-    }
-    return i18next.t('arachnid:hud.status', { state });
+  private fullscreenLabel(): string {
+    return this.fullscreenActive
+      ? i18next.t('arachnid:hud.fullscreenExit')
+      : i18next.t('arachnid:hud.fullscreenEnter');
   }
 
   private readonly onLanguageChanged = (): void => {
     this.root.setAttribute('aria-label', i18next.t('arachnid:hud.ariaLabel'));
-    this.dashBar.setLabel(this.formatDashLabel);
+    this.titleText.setContent(i18next.t('arachnid:app.title'));
+    this.telemetry.setAttribute('aria-label', i18next.t('arachnid:hud.speedAria'));
     this.speedText.setContent(this.formatSpeed());
-    this.statusText.setContent(this.formatStatus());
+    this.fullscreenButton.setLabel(this.fullscreenLabel());
   };
 }

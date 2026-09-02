@@ -204,6 +204,8 @@
     "cooldown": "Cooldown",
     "criticalThreshold": "Critical Threshold",
     "lowThresholdHint": "lowThreshold: 0.5 — turns red below 50%.",
+    "verticalBar": "Vertical bar",
+    "verticalBarHint": "Fill grows from the bottom up; for narrow HUD columns.",
     "reset": "Reset",
     "counter": "Counter",
     "addScore": "Add Score (+10, pulse)",

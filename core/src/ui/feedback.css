@@ -44,6 +44,30 @@
   inset: 0;
 }
 
+/*
+ * Dikey bar. Genişlik/yükseklik yer değiştirir ve dolgu TABANA yaslanır:
+ * `flex-end` olmadan dolgu tepeden aşağı büyür ve dolan bir ölçek boşalıyormuş
+ * gibi okunur.
+ */
+.vol-bar--vertical {
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 20px;
+  height: 100%;
+  display: flex;
+}
+
+.vol-bar--vertical .vol-bar__fill {
+  width: 100%;
+  height: 100%;
+}
+
+/* Dikey barda etiket, dar sütunda okunmaz; yazma yönü çevrilir. */
+.vol-bar--vertical .vol-bar__label {
+  writing-mode: vertical-rl;
+  rotate: 180deg;
+}
+
 .vol-xp-bar--level-up {
   animation: 0.6s vol-xp-level-up;
 }

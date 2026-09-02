@@ -4,15 +4,10 @@
   },
   "hud": {
     "ariaLabel": "Hareket göstergeleri",
-    "dash": "Atılma",
-    "dashReady": "Hazır",
-    "dashCharging": "%{{percent}}",
-    "speed": "Hız {{speed}} px/sn",
-    "status": "Durum: {{state}}",
-    "state": {
-      "idle": "Beklemede",
-      "moving": "Yürüyor",
-      "dashing": "Atılıyor"
-    }
+    "dashAria": "Atılma hazırlığı",
+    "speed": "{{speed}} px/sn",
+    "speedAria": "Gövde hızı",
+    "fullscreenEnter": "Tam ekrana geç",
+    "fullscreenExit": "Tam ekrandan çık"
   }
 }

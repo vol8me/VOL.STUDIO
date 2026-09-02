@@ -360,6 +360,14 @@ body {
   gap: var(--vol-space-sm);
 }
 
+/* Dikey barlar kendi yüksekliklerini taşımaz; demo sütunu verir. */
+.vol-showcase-vertical-bars {
+  display: flex;
+  gap: var(--vol-space-md);
+  align-items: flex-end;
+  height: 120px;
+}
+
 /* Kart demoları — nadirlik kademeleri yan yana karşılaştırılabilsin. */
 .vol-showcase-card-row {
   display: grid;

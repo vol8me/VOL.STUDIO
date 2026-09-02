@@ -13,8 +13,16 @@ export type BarVariant = string;
 
 export type BarLabel = string | ((value: number, max: number) => string);
 
+/**
+ * Dolgunun büyüme ekseni. Dikey bar TABANDAN yukarı dolar — üstten dolan bir
+ * ölçek "azalan" okunur.
+ */
+export type BarOrientation = 'horizontal' | 'vertical';
+
 export interface BarOptions {
   variant?: BarVariant;
+  /** Dolgunun büyüme ekseni; varsayılan yatay. */
+  orientation?: BarOrientation;
   /**
    * Dolgu rengi (CSS renk değeri). CORE'un CSS'ine dokunmadan özel bir
    * varyant kurmak için: `{ variant: 'shield', fillColor: 'var(--kalkan)' }`.
@@ -56,6 +64,7 @@ export class Bar {
   private readonly fillElement: HTMLDivElement;
   private labelElement: HTMLSpanElement | null;
   private readonly variant: BarVariant;
+  private readonly orientation: BarOrientation;
   private readonly ariaLabel?: string;
   private max: number;
   private value: number;
@@ -79,9 +88,11 @@ export class Bar {
       lowThreshold = UI_RATIO.BAR_LOW_THRESHOLD,
       animateMs = UI_TIMING.BAR_DEFAULT_ANIMATE,
       label,
+      orientation = 'horizontal',
     } = options;
 
     this.variant = variant;
+    this.orientation = orientation;
     this.ariaLabel = options.ariaLabel;
     this.max = max;
     // Değer burada da kelepçelenmeli, aksi halde `new Bar({ max: 100, value: 150 })` gibi
@@ -92,11 +103,18 @@ export class Bar {
     this.label = label;
 
     this.element = document.createElement('div');
-    this.element.className = [`vol-bar vol-bar--${variant}`, options.className]
+    this.element.className = [
+      `vol-bar vol-bar--${variant}`,
+      orientation === 'vertical' ? 'vol-bar--vertical' : null,
+      options.className,
+    ]
       .filter(Boolean)
       .join(' ');
     this.element.setAttribute('role', 'progressbar');
     this.element.setAttribute('aria-valuemin', '0');
+    // Dikey bir progressbar'ın okuma yönü ekran okuyucuya ayrıca bildirilir;
+    // görsel eksen tek başına erişilebilirlik ağacına yansımaz.
+    if (orientation === 'vertical') this.element.setAttribute('aria-orientation', 'vertical');
 
     this.fillElement = document.createElement('div');
     this.fillElement.className = 'vol-bar__fill';
@@ -190,7 +208,9 @@ export class Bar {
 
   private renderFill(value: number): void {
     const ratio = this.max > 0 ? value / this.max : 0;
-    this.fillElement.style.width = `${Math.max(0, Math.min(1, ratio)) * 100}%`;
+    const percent = `${Math.max(0, Math.min(1, ratio)) * 100}%`;
+    if (this.orientation === 'vertical') this.fillElement.style.height = percent;
+    else this.fillElement.style.width = percent;
     this.element.classList.toggle(
       'vol-bar--low',
       this.lowThreshold !== null && ratio <= this.lowThreshold,

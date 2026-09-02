@@ -13,6 +13,7 @@
     "doctor:env": "just doctor",
     "dev": "pnpm --parallel -r --filter @volstudio/vol-arachnid --filter @volstudio/vol-ui --filter @volstudio/vol-asset-studio run dev",
     "build:game": "pnpm --filter @volstudio/vol-hell build",
+    "build:arachnid": "pnpm --filter @volstudio/vol-arachnid build",
     "build:tauri": "pnpm run build:game && pnpm --filter @volstudio/tauri-v2 tauri build",
     "tauri:dev": "pnpm --filter @volstudio/tauri-v2 tauri dev --config tauri.dev.conf.json",
     "tauri:build": "pnpm --filter @volstudio/tauri-v2 tauri build",

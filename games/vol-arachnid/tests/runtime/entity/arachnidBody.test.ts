@@ -85,6 +85,7 @@ describe('ArachnidBody hareketi', () => {
       new Vector2(-1, 0),
       'x',
       arenaConfig.bodyRadiusPx,
+      1,
     ],
     [
       'sağ',
@@ -93,6 +94,7 @@ describe('ArachnidBody hareketi', () => {
       new Vector2(1, 0),
       'x',
       arenaConfig.widthPx - arenaConfig.bodyRadiusPx,
+      -1,
     ],
     [
       'üst',
@@ -101,6 +103,7 @@ describe('ArachnidBody hareketi', () => {
       new Vector2(0, -1),
       'y',
       arenaConfig.bodyRadiusPx,
+      1,
     ],
     [
       'alt',
@@ -109,18 +112,94 @@ describe('ArachnidBody hareketi', () => {
       new Vector2(0, 1),
       'y',
       arenaConfig.heightPx - arenaConfig.bodyRadiusPx,
+      -1,
     ],
   ] as const)(
-    '%s duvarında konumu kelepçeler ve dışarı yönlü hızı sıfırlar',
-    (_label, x, y, intent, axis, edge) => {
+    '%s duvarında konumu kelepçeler ve atılımı SEKTİRİR',
+    (_label, x, y, intent, axis, edge, inwardSign) => {
       const body = new ArachnidBody(x, y);
 
       body.update(intent, true, FRAME_MS);
 
       expect(body.position[axis]).toBe(edge);
-      expect(body.velocity[axis]).toBe(0);
+      // Sekme: hız duvardan İÇERİ döner, sıfırlanmaz.
+      expect(body.velocity[axis] * inwardSign).toBeGreaterThan(0);
+      expect(body.isDashing).toBe(false);
+
+      const impact = body.consumeWallImpact();
+      expect(impact).not.toBeNull();
+      expect(impact?.strength01).toBeGreaterThan(0.9);
+      // Temas noktası DUVARIN üstündedir; gövde merkezi bir yarıçap içeridedir.
+      const contact = axis === 'x' ? impact?.x : impact?.y;
+      expect(contact).toBe(edge - inwardSign * arenaConfig.bodyRadiusPx);
+      // Aynı çarpma iki kez tüketilemez.
+      expect(body.consumeWallImpact()).toBeNull();
     },
   );
+
+  it('eşiğin altındaki temas sekmez, yalnız duvara dik bileşeni söndürür', () => {
+    const body = new ArachnidBody(arenaConfig.bodyRadiusPx + 1, CENTER_Y);
+
+    // Yürüyerek duvara dayanmak çarpma DEĞİLDİR: tam yürüyüş hızı bile
+    // (235 px/s) çarpma eşiğinin (300 px/s) altındadır.
+    for (let i = 0; i < 90; i++) body.update(new Vector2(-1, 0), false, FRAME_MS);
+    expect(body.speed).toBeLessThan(playerConfig.wall.impactSpeedPxPerSec);
+
+    expect(body.position.x).toBe(arenaConfig.bodyRadiusPx);
+    expect(body.velocity.x).toBe(0);
+    expect(body.consumeWallImpact()).toBeNull();
+  });
+
+  it('dönüş hızı tavanı aşılamaz ve 180° dönüş bir karede tamamlanmaz', () => {
+    const body = new ArachnidBody(CENTER_X, CENTER_Y);
+    const start = body.facingRad;
+
+    let maxTurnRate = 0;
+    for (let i = 0; i < 8; i++) {
+      body.update(intentAt(Math.PI / 2), false, FRAME_MS);
+      maxTurnRate = Math.max(maxTurnRate, Math.abs(body.turnRate));
+    }
+
+    expect(maxTurnRate).toBeLessThanOrEqual(playerConfig.maxTurnRateRadPerSec + 1e-9);
+    // Sekiz karede (128 ms) tavan hızla en fazla ~0.45 rad dönülebilir.
+    expect(circularDistance(body.facingRad, start)).toBeLessThan(
+      (playerConfig.maxTurnRateRadPerSec * 8 * FRAME_MS) / 1000 + 1e-6,
+    );
+  });
+
+  it('sert dönüşte hız kesilir', () => {
+    const straight = new ArachnidBody(CENTER_X, CENTER_Y);
+    for (let i = 0; i < 30; i++) straight.update(intentAt(-Math.PI / 2), false, FRAME_MS);
+
+    const turning = new ArachnidBody(CENTER_X, CENTER_Y);
+    for (let i = 0; i < 30; i++) turning.update(intentAt(Math.PI / 2), false, FRAME_MS);
+
+    expect(turning.speed).toBeLessThan(straight.speed);
+  });
+
+  it('atılım şiddeti anında dolar ve atılım bitince sönümlenerek iner', () => {
+    const body = new ArachnidBody(CENTER_X, CENTER_Y);
+
+    body.update(new Vector2(1, 0), true, FRAME_MS);
+    expect(body.dash01).toBe(1);
+
+    body.update(Vector2.zero(), false, playerConfig.dash.durationMs);
+    expect(body.dash01).toBeGreaterThan(0);
+    expect(body.dash01).toBeLessThan(1);
+
+    for (let i = 0; i < 30; i++) body.update(Vector2.zero(), false, FRAME_MS);
+    expect(body.dash01).toBe(0);
+  });
+
+  it('ivme vektörü hızlanma ve frenlemede zıt işaretlidir', () => {
+    const body = new ArachnidBody(CENTER_X, CENTER_Y);
+
+    body.update(new Vector2(1, 0), false, FRAME_MS);
+    expect(body.accelerationVector.x).toBeGreaterThan(0);
+
+    body.update(Vector2.zero(), false, FRAME_MS);
+    expect(body.accelerationVector.x).toBeLessThan(0);
+  });
 
   it('±π sınırında en kısa yönden dönüp açıyı sarılı aralıkta tutar', () => {
     const body = new ArachnidBody(CENTER_X, CENTER_Y);

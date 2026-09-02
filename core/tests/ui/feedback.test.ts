@@ -13,6 +13,35 @@ afterEach(() => {
 });
 
 describe('Bar', () => {
+  it('dikey yönelimde dolgu YÜKSEKLİKTEN büyür ve eksen erişilebilirlik ağacına yazılır', () => {
+    const bar = new Bar({ max: 100, value: 40, orientation: 'vertical', animateMs: 0 });
+    document.body.appendChild(bar.element);
+    const fill = bar.element.querySelector<HTMLElement>('.vol-bar__fill');
+
+    expect(bar.element.classList.contains('vol-bar--vertical')).toBe(true);
+    expect(bar.element.getAttribute('aria-orientation')).toBe('vertical');
+    expect(fill?.style.height).toBe('40%');
+    expect(fill?.style.width).toBe('');
+
+    bar.setValue(75);
+    expect(fill?.style.height).toBe('75%');
+
+    bar.destroy();
+  });
+
+  it('varsayılan yatay yönelim genişlikten büyür ve eksen bildirmez', () => {
+    const bar = new Bar({ max: 100, value: 40 });
+    document.body.appendChild(bar.element);
+    const fill = bar.element.querySelector<HTMLElement>('.vol-bar__fill');
+
+    expect(bar.element.classList.contains('vol-bar--vertical')).toBe(false);
+    expect(bar.element.hasAttribute('aria-orientation')).toBe(false);
+    expect(fill?.style.width).toBe('40%');
+    expect(fill?.style.height).toBe('');
+
+    bar.destroy();
+  });
+
   it('oluşturma ve yok etme', () => {
     const bar = new Bar({ max: 100 });
     document.body.appendChild(bar.element);

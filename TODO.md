@@ -5,6 +5,71 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-02 — VOL.ARACHNID hissiyat turu: gerçek uzuv, ağırlık, HUD
+
+Örümceğin "örümcek gibi durmaması" bir ayar sorunu değildi. Rig'de her bacak
+DÖRT kemik (`coxa/femur/tibia/claw`) ama kod yalnız ikisini sürüyordu: `femur`,
+`claw` ve eklem diskleri kök container'ın kardeşi olarak export pozunda
+donuyor, uzuv kopuk görünüyordu. Arka iki uzuvda da yalnız tek kemik
+sürülüyordu — "alt kısmı yok, pençe gövde altında kalıyor" bulgusunun kaynağı.
+
+**Eklem şeması veri oldu.** Yayımlanmış export DÜZ: metadata `parentPartId`
+taşımıyor. Şema `vol-arachnid/src/config/rig.ts` içinde bildiriliyor ve
+pen.dev'in yeni `articulateRigDefinition`'ı ile montajdan önce uygulanıyor;
+üretilmiş metadata dosyasına dokunulmuyor, yani bir sonraki export kararı
+ezmiyor. Fonksiyon kaynakta yazılı eklemleri korur, topolojik sıralar,
+döngüyü halkasını göstererek reddeder.
+
+**Duruş kaynak pozdan türetilmiyor.** Export'ta her uzuv düz bir çizgi;
+oradan okunan "dinlenme açısı" duruş değildir. Açılar artık İLERİ EKSENDEN
+ölçülüp config'te duruyor. Eski ofsetler ters işaretliydi: `r3/l3` ÖN, `r0/l0`
+ARKA bacaklar olduğu hâlde ön bacaklar geriye, arka bacaklar öne çekiliyordu —
+sekiz uzuv dar bir bantta toplanıp birbirinin üstüne biniyordu.
+
+**Arka iki uzvun zinciri yeniden kuruldu.** Kaynak yerleşim onları adlarının
+TERSİNE dizmiş: ok ucu (`tail_tip`) gövdenin altında, kalın çubuk dışarıda.
+Yerleşimden düzeltilemezdi; kemik boyları kaynak aralıkların ters sırası
+olarak atanıp parça konumları elle eklemlerin üstüne yazılıyor. Kalça da kök
+kemiğin gövdeye bakan ucuna taşındı — eski nokta gövde merkezine 30 px
+mesafedeydi ve uzuv boyunun yarısını kabuğun altında harcıyordu.
+
+**CORE'a taşınanlar.** `LegGait`in grup kilidi AÇLIK üretiyordu: aynı gruptaki
+bacaklar kaymalı bittiği sürece kilit hiç bırakılmayabiliyor, karşı gruptaki
+bacaklar dönüşlere bile tepkisiz yere yapışık kalıyordu ("dash sonrası takılı
+bacak"). Kilit SIRA modeline çevrildi: sıra ancak adım sayısı sıfıra inince
+yenilenir ve bekleyen grup her zaman en gergin olduğu için açlık matematiksel
+olarak mümkün değil. `maxStrainPx` sırayı delen acil eşiktir. Ayrıca
+`setLegHome` (canlı duruş), `justPlanted` (temas tetiği), `steppingCount`.
+
+Yeni: `GazeDriver` (sıçramalı bakış, yuvasından taşmaz), `core/src/fx/`
+(`samplePose` + `GhostTrail` + `PoseShadow`) ve `Bar`a dikey yönelim.
+Poz örnekleyici matrisleri YENİDEN KULLANIR: argümansız bir dünya-matris
+sorgusu çağrı başına iki matris ayırıyor, yetmiş parçalık bir rig'i her karede
+örnekleyen gölge saniyede sekiz binden fazla nesne üretecekti.
+
+**Ağırlık ve sınır.** İvme/fren düşürüldü, dönüş yayı yumuşatıldı ve dönüş
+hızı tavanlandı (yay tek başına büyük açı farkında ağır bir gövdeye
+yakışmayan bir açısal hıza fırlıyor); sert dönüş hızı kesiyor. Sınır artık
+gövde yarıçapına kelepçeliyor (eskiden bir gövde boyu uzakta görünmez ikinci
+bir duvardı) ve atılım hızındaki temas SEKİYOR. Çarpma eşiği `maxSpeed`in
+üstünde: yürüyerek duvara dayanmak çarpma değildir — daha düşük bir eşikte
+gövde duvarın önünde sürekli zıplıyordu.
+
+**HUD arenaya değmiyor.** Kamera arenayı `viewportGutterPx` boşluklarının
+İÇİNE sığdırıyor; HUD yalnız o boşluklarda yaşıyor ve ölçüler CSS değişkeni
+olarak tek yerden yayımlanıyor. Metin en aza indi: dikey bar + başlık + tam
+ekran butonu (F11 aynı denetleyiciden geçer) + sağ altta hız.
+
+**Kalan riskler.** Rig sanatındaki ters dizilim ve pençe/gövde çakışması
+kaynak `.pen` belgesinde duruyor; kod bunu tüketici tarafında düzeltiyor.
+Manifeste `parent` alanı eklenip export yeniden üretilirse hem eklem şeması
+hem yeniden kurma yolu gereksizleşir. CORE'un `-webkit-appearance:
+slider-vertical` yedeği Chromium'da uyarı üretiyor ama eski Android
+WebView'ları için bilinçli olarak duruyor.
+
+Kapsam eşikleri: vol-arachnid tabandaydı (50/50/50/40), gerçek kapsam
+98/86/97'ye çıktı ve eşikler ölçülenin ~2 puan altına çekildi.
+
 ## 2026-08-30 — grafik kalitesi ayarı: iki kademe, gerçek fark
 
 Ölçüm turunda çıkan sonuç kabul edildi ve ayar yeniden kuruldu: üç kademe

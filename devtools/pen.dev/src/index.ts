@@ -7,6 +7,7 @@ export type {
   RigDefinition,
 } from './types';
 export { buildRigDefinition } from './buildRig';
+export { articulateRigDefinition, type RigArticulation } from './articulateRig';
 export { validateRigMetadata } from './validateMetadata';
 export { computePartLayout, preloadRigTextures, assembleRig } from './assembleRig';
 export type { PartLayout, AssembledRig } from './assembleRig';

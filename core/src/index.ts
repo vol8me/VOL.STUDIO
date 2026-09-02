@@ -140,11 +140,33 @@ export { MovableController as PlayerController } from './entities/MovableControl
 export {
   RigMotionModel,
   LegGait,
+  GazeDriver,
   type RigMotionModelConfig,
   type RigMotionSignals,
   type LegGaitConfig,
   type LegGaitLeg,
+  type LegGaitStepTuning,
+  type GazeDriverConfig,
+  type GazeSignals,
 } from './rig';
+
+/*
+ * Sunum efektleri. Bir görüntü ağacının POZUNU okur ve ondan türetilmiş
+ * ikinci bir görüntü çizer (art-görüntü, gölge); simülasyona dokunmaz.
+ */
+export {
+  samplePose,
+  GhostTrail,
+  PoseShadow,
+  type PoseSample,
+  type PoseSampleScratch,
+  type PoseSourceNode,
+  type PoseTransform,
+  type PoseSprite,
+  type PoseSpriteScene,
+  type GhostTrailOptions,
+  type PoseShadowOptions,
+} from './fx';
 
 // Eylem SÖZLÜĞÜ bilinçli olarak burada yok. `InputState` jenerik
 // `actions: Record<TAction, boolean>` taşır; hangi eylemlerin var olduğunu ve

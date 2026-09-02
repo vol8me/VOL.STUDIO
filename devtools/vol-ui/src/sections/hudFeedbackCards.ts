@@ -105,6 +105,59 @@ export function buildLowThresholdCard(disposables: DisposableScope): HTMLElement
   return card(i18next.t('volui:hud.criticalThreshold'), wrap);
 }
 
+/**
+ * Dikey bar: dolgu TABANDAN yukarı büyür. Dar bir HUD sütununda (yan boşluk,
+ * araç çubuğu kenarı) yatay bir bar okunmaz; eksen `orientation` ile çevrilir.
+ */
+export function buildVerticalBarCard(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const row = document.createElement('div');
+  row.className = 'vol-showcase-vertical-bars';
+
+  const bars = (['health', 'stamina', 'cooldown'] as const).map((variant) => {
+    const bar = new Bar({
+      variant,
+      orientation: 'vertical',
+      max: 100,
+      value: 100,
+      ariaLabel: i18n.tDynamic(VARIANT_KEYS[variant]),
+    });
+    disposables.addDestroyables(bar);
+    row.appendChild(bar.element);
+    return bar;
+  });
+
+  wrap.appendChild(row);
+
+  const hint = new Text(i18next.t('volui:hud.verticalBarHint'), { variant: 'muted' });
+  disposables.addDestroyables(hint);
+  wrap.appendChild(hint.element);
+
+  const controls = document.createElement('div');
+  controls.className = 'vol-showcase-panel-demo__controls';
+
+  const decButton = new Button('-20', {
+    onClick: () => {
+      for (const bar of bars) bar.setValue(Math.max(0, bar.getValue() - 20));
+    },
+  });
+  const incButton = new Button('+20', {
+    variant: 'primary',
+    onClick: () => {
+      for (const bar of bars) bar.setValue(Math.min(100, bar.getValue() + 20));
+    },
+  });
+  disposables.addDestroyables(decButton, incButton);
+
+  controls.appendChild(decButton.element);
+  controls.appendChild(incButton.element);
+  wrap.appendChild(controls);
+
+  return card(i18next.t('volui:hud.verticalBar'), wrap);
+}
+
 export function buildCounterCard(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';

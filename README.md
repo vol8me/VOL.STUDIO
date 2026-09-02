@@ -43,7 +43,8 @@ pnpm --filter @volstudio/vol-arachnid dev  # yalnızca VOL.ARACHNID     :5178
 pnpm --filter @volstudio/vol-ui dev        # yalnızca UI showcase'i   :5174
 pnpm --filter @volstudio/vol-asset-studio dev # yalnızca Asset Studio :5175
 pnpm tauri:dev                             # PC Tauri dev
-pnpm build:game                            # Oyun build
+pnpm build:game                            # VOL.HELL build
+pnpm build:arachnid                        # VOL.ARACHNID build
 pnpm build:tauri                           # PC installer build
 pnpm tauri:android:dev                     # Android dev (bağlı cihaz/emülatör)
 pnpm benchmark:core                        # CORE headless workload ölçümü

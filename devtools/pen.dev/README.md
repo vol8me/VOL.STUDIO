@@ -50,6 +50,31 @@ bunları ebeveynin dönüşünü telafi ederek yerel uzaya çevirir. Eklem taş�
 bir rig, eklem desteği eklenmeden önceki çıktının birebir aynısını verir.
 Bu bir RENDER eklemidir; fizik/eklem kısıtı taşımaz.
 
+### Yayımlanmış düz bir export'a eklem eklemek
+
+Eklem bilgisinin ASIL yeri export manifestidir (`parent` alanı). Ne var ki
+yayımlanmış düz bir export'u yeniden üretmek her zaman mümkün değildir
+(kaynak staging çıktısı tüketilip silinmiştir) ve eklemsiz bir zincirde yalnız
+uçlar sürülebilir: ara kemikler kardeş kalır, sürülen parça dönerken onlar
+export pozunda donar ve uzuv kopuk görünür.
+
+`articulateRigDefinition` şemayı TÜKETİCİ tarafında bildirmeye izin verir:
+
+```typescript
+import { articulateRigDefinition, buildRigDefinition } from '@volstudio/pen.dev';
+
+const rig = articulateRigDefinition(buildRigDefinition(metadata, partUrls), {
+  leg_r0_femur: 'leg_r0_coxa',
+  leg_r0_tibia: 'leg_r0_femur',
+});
+```
+
+Dönen tanımda parçalar topolojik sıradadır (ebeveyn her zaman çocuktan önce),
+aynı ebeveynin çocuklarında kaynak çizim sırası korunur. Bilinmeyen parça,
+kendine bağlanma ve döngü reddedilir. Metadata dosyasına DOKUNULMAZ, yani bir
+sonraki export bu kararı ezmez; manifeste `parent` eklenip export yeniden
+üretildiğinde şema gereksizleşir.
+
 İlk iş metadata'yı çalışma zamanında doğrulamaktır (`validateRigMetadata`,
 ayrıca dışa açıktır): `schemaVersion`, zorunlu alanlar ve parça tipleri
 kontrol edilir, sorunlar tek mesajda toplanır. TypeScript arayüzü dosyadan

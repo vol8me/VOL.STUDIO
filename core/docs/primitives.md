@@ -435,6 +435,79 @@ his donanıma göre değişir. `damp` oranı delta ile üstel hesaplar.
 karede kalan mesafenin bir kısmını kapattığı için teorik olarak hiç varmaz ve
 bir eşitlik kontrolü asla tutmaz.
 
+## Eklemli uzuvlar ve poz-türevi sunum
+
+CORE burada uzuv SÖZLÜĞÜ taşımaz: kaç bacak olduğunu, hangi parçanın gövde
+olduğunu tüketici bilir. Verilen şey mekanizmadır.
+
+### `Spring1D`
+
+Hız TAŞIYAN tek boyutlu yay-damper. `damp`ten farkı: `damp` hafızasız üstel
+yumuşatmadır ve hedefi asla aşmaz; yay geriden gelip oturur. Bir kare
+hitch'inde `deltaMs` kelepçelenir, yoksa hız terimi patlar.
+
+### `solveTwoBoneIk(dx, dy, upper, lower, bendSign)`
+
+Kosinüs teoremiyle düzlemsel iki kemikli ters kinematik. Erişilemeyen hedef
+YOK sayılmaz: mesafe erişilebilir aralığa kelepçelenir ve uzuv gerilir. Ayna
+simetrik uzuvlar zıt `bendSign` alır.
+
+### `RigMotionModel`
+
+Ham hareket niyetinden sürekli, render-only sinyaller üretir: `motion01`,
+sonsuz ilerleyen `idlePhaseDeg`, yay-sönümlü `facingRad` ve
+`turnVelocityRadPerSec`. Simülasyona dokunmaz.
+
+### `LegGait`
+
+Ayak-sabitleyen yürüyüş döngüsü. Her ayak DÜNYA uzayında bir noktaya basar ve
+gövde ilerlerken orada kalır; evinden `stepTriggerPx` kadar geride kalınca
+adım başlar ve ayak hızın işaret ettiği yere taşınır.
+
+Adım sırası SIRA (turn) modeliyle dizginlenir: hiçbir bacak adımda değilken en
+gergin bacağın grubu sırayı alır ve sıra bitene kadar yalnız o grup adım atar.
+Bir dönem kural "karşı grup adımdayken başlama" idi; aynı gruptaki bacaklar
+kaymalı bittiği sürece kilidi hiç bırakmayabiliyor ve karşı gruptaki bacaklar
+dönüşlere bile tepkisiz biçimde yere yapışık kalıyordu. Sıra ancak adım sayısı
+sıfıra indiğinde yenilendiği ve bekleyen grup her zaman en gergin olduğu için
+açlık artık mümkün değildir.
+
+`maxStrainPx` sırayı delen ACİL eşiktir: gövde bir atılımda bir adım süresinde
+uzuv erişiminden daha çok yol alabilir, o durumda sıra beklemek bacağı yerde
+sürükler.
+
+`setLegHome(index, x, y)` duruşu canlı yeniden yazar (çömelme, atılım payı);
+basılı ayak yerinde kalır, yani ayaklar kaymaz. `justPlanted(index)` yalnız
+adımın bittiği karede doğrudur — temas efektlerinin tetiği.
+
+### `GazeDriver`
+
+Sıçramalı (saccadic) bakış. Canlı bir bakış sürekli değil KESİKLİ hareket
+eder: bir noktada durur, sonra bir sonrakine atlar. Bakış her zaman verilen
+yarıçapın içinde kalır; odak yönü verilirse hedefler o yaya ağırlıklandırılır
+ama tam kilitlenmez. Rastgelelik enjekte edilebilir, yani aynı tohum aynı
+bakış dizisini verir.
+
+### `samplePose`, `GhostTrail`, `PoseShadow`
+
+Bir görüntü AĞACININ pozunu okuyup ondan türetilmiş ikinci bir görüntü çizen
+sunum efektleri.
+
+`samplePose(root, out?)` ağacı dünya uzayına düzleştirir; görünmez düğümleri
+ve alt ağaçlarını atlar, `out` verilirse yeniden kullanır (kare başına
+ayırma yapmaz).
+
+`GhostTrail` sönümlenen art-görüntüler bırakır. Tek bir siluetin kopyası
+DEĞİLDİR: kaynak her yakalamada yeniden örneklendiği için iz, uzuvların o
+andaki gerçek pozunu taşır — bir atılımın hızını okutan şey budur.
+
+`PoseShadow` kaynağın POZUNDAN gölge üretir. Gövdenin altına konan bir elips
+üstten bakışta yalan söyler: bacaklar gövdeden uzaklaştıkça gölge onları takip
+etmez ve yaratık zeminden kopuk görünür.
+
+Üçü de Phaser tipine değil, kullandıkları YÜZEYE (yapısal arayüz) bağlanır;
+bir render motoru örneği olmadan test edilebilirler.
+
 ## Web araçları için UI yüzeyi
 
 Repo içindeki web araçları, Phaser bağımlılığını bundle'a taşımayan alt yolları

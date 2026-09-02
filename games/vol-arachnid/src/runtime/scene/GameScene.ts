@@ -1,6 +1,16 @@
 import Phaser from 'phaser';
-import { DisposableScope, InputManager, applyVolViewport } from '@volstudio/core';
 import {
+  DisposableScope,
+  FullscreenController,
+  GhostTrail,
+  InputManager,
+  PoseShadow,
+  applyVolViewport,
+  type CancellableDisposable,
+  type PoseSourceNode,
+} from '@volstudio/core';
+import {
+  articulateRigDefinition,
   assembleRig,
   buildRigDefinition,
   preloadRigTextures,
@@ -8,22 +18,22 @@ import {
   type RigDefinition,
 } from '@volstudio/pen.dev';
 import { arenaConfig } from '@/config/arena';
+import { fxConfig } from '@/config/fx';
 import {
   ARACHNID_ACTIONS,
   ARACHNID_MOVE_KEYS,
   ARACHNID_PC_BINDINGS,
   type ArachnidAction,
 } from '@/config/input';
+import { ARACHNID_ARTICULATION, RIG_FACING_OFFSET_RAD } from '@/config/rig';
 import { arachnidMetadata, arachnidPartUrls } from '@/config/rigAssets';
 import { ArachnidBody } from '@/runtime/entity/ArachnidBody';
 import { ArachnidLegs } from '@/runtime/entity/ArachnidLegs';
 import { Arena } from '@/runtime/entity/Arena';
+import { ArachnidDust } from '@/runtime/fx/ArachnidDust';
 import { prepareArachnidRig } from '@/runtime/rig/arachnidRig';
 import { ArachnidBodyMotion } from '@/runtime/rig/ArachnidBodyMotion';
 import { ArachnidHud } from '@/runtime/ui/ArachnidHud';
-
-const ARENA_FIT_MARGIN = 0.92;
-const RIG_FACING_OFFSET_RAD = Math.PI / 2;
 
 /** Sabit arena, eklemli örümcek ve ortak girdi akışının oyun sahnesi. */
 export class GameScene extends Phaser.Scene {
@@ -32,16 +42,27 @@ export class GameScene extends Phaser.Scene {
   private body!: ArachnidBody;
   private legs!: ArachnidLegs;
   private bodyMotion!: ArachnidBodyMotion;
+  private arena!: Arena;
+  private dust!: ArachnidDust;
+  private ghostTrail!: GhostTrail;
+  private shadow!: PoseShadow;
   private inputManager!: InputManager<ArachnidAction>;
   private hud: ArachnidHud | null = null;
   private runtimeScope: DisposableScope | null = null;
+  /** Bekleyen kamera tazeleme karesi; her resize'da yenisiyle DEĞİŞTİRİLİR. */
+  private pendingCameraFrame: CancellableDisposable | null = null;
 
   constructor() {
     super({ key: 'Game' });
   }
 
   preload(): void {
-    this.rig = buildRigDefinition(arachnidMetadata, arachnidPartUrls);
+    // Eklem şeması montajdan ÖNCE uygulanır: `assembleRig` ağacı tek geçişte
+    // kurar ve ara kemikler kardeş değil çocuk olur.
+    this.rig = articulateRigDefinition(
+      buildRigDefinition(arachnidMetadata, arachnidPartUrls),
+      ARACHNID_ARTICULATION,
+    );
     preloadRigTextures(this, this.rig);
   }
 
@@ -56,7 +77,10 @@ export class GameScene extends Phaser.Scene {
     );
 
     try {
-      runtimeScope.addDestroyable(new Arena(this));
+      this.arena = runtimeScope.addDestroyable(new Arena(this));
+      this.shadow = runtimeScope.addDestroyable(new PoseShadow(this, fxConfig.shadow));
+      this.ghostTrail = runtimeScope.addDestroyable(new GhostTrail(this, fxConfig.ghostTrail));
+      this.dust = runtimeScope.addDestroyable(new ArachnidDust(this));
 
       this.assembled = assembleRig(this, this.rig);
       const arachnidRig = prepareArachnidRig(arachnidMetadata, this.assembled);
@@ -65,13 +89,11 @@ export class GameScene extends Phaser.Scene {
       const centerY = arenaConfig.heightPx / 2;
       this.body = new ArachnidBody(centerX, centerY);
       this.assembled.container.setPosition(centerX, centerY);
-      // Metadata'da arka uzuvlar gövde merkezinin altında: rig yerel -Y'ye
-      // bakar. Atan2 yönü +X'i sıfır aldığı için ilk -π/2 yönünde ofset sıfırdır.
       this.assembled.container.rotation = this.body.facingRad + RIG_FACING_OFFSET_RAD;
 
       this.legs = new ArachnidLegs(arachnidRig);
       this.legs.reset(centerX, centerY, this.body.facingRad);
-      this.bodyMotion = new ArachnidBodyMotion(arachnidRig.bodyParts);
+      this.bodyMotion = new ArachnidBodyMotion(arachnidRig);
 
       this.inputManager = runtimeScope.addDestroyable(
         new InputManager<ArachnidAction>(this, {
@@ -80,38 +102,88 @@ export class GameScene extends Phaser.Scene {
           moveKeys: ARACHNID_MOVE_KEYS,
         }),
       );
+
+      // F11 ve buton aynı denetleyiciden geçer; sahne ömrüne bağlı olduğu için
+      // yeniden başlatmada ikinci bir keydown dinleyicisi birikmez.
+      const fullscreen = runtimeScope.addDestroyable(
+        new FullscreenController({
+          onChange: (active) => this.hud?.setFullscreenActive(active),
+          onError: (error) => console.warn('[VOL.ARACHNID] Tam ekran açılamadı:', error),
+        }),
+      );
       this.hud = runtimeScope.addDestroyable(
-        new ArachnidHud(this.game.canvas.parentElement ?? document.body),
+        new ArachnidHud(this.game.canvas.parentElement ?? document.body, {
+          onToggleFullscreen: () => void fullscreen.toggle(),
+        }),
       );
 
       this.applyArenaCamera();
       this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
-      runtimeScope.addSubscription(() =>
-        this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this),
-      );
+      runtimeScope.addSubscription(() => {
+        this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
+        this.pendingCameraFrame?.cancel();
+        this.pendingCameraFrame = null;
+      });
     } catch (error) {
       runtimeScope.dispose();
       this.runtimeScope = null;
+      this.hud = null;
       throw error;
     }
   }
 
   update(_time: number, delta: number): void {
+    // Kurulum yarıda patladıysa (ya da sahne kapandıysa) çalışma zamanı yoktur;
+    // Phaser sahneyi durdurmadığı için kare akışı her karede aynı hatayı
+    // fırlatarak konsolu doldururdu.
+    if (!this.runtimeScope) return;
+
     this.inputManager.update(delta);
     const state = this.inputManager.getState(this.body.position);
 
     this.body.update(state.move, state.actions.dash, delta);
     this.assembled.container.setPosition(this.body.position.x, this.body.position.y);
     this.assembled.container.rotation = this.body.facingRad + RIG_FACING_OFFSET_RAD;
-    this.legs.update(
-      this.body.position.x,
-      this.body.position.y,
-      this.body.facingRad,
-      this.body.velocity.x,
-      this.body.velocity.y,
+
+    const accel = this.body.accelerationVector;
+    const motion = this.bodyMotion.update(
+      {
+        speed: this.body.speed,
+        accelX: accel.x,
+        accelY: accel.y,
+        turnRate: this.body.turnRate,
+        facingRad: this.body.facingRad,
+        dash01: this.body.dash01,
+      },
       delta,
     );
-    this.bodyMotion.update(state.move, delta);
+
+    this.legs.update(
+      {
+        bodyX: this.body.position.x,
+        bodyY: this.body.position.y,
+        bodyRad: this.body.facingRad,
+        velX: this.body.velocity.x,
+        velY: this.body.velocity.y,
+        turnRate: this.body.turnRate,
+        motion01: motion.motion01,
+        dash01: this.body.dash01,
+        crouch01: motion.crouch01,
+      },
+      delta,
+    );
+
+    this.resolveWallImpact();
+    this.arena.update(delta);
+    this.emitFootDust();
+
+    // İz ve gölge, POZLANDIKTAN sonra örneklenir; aksi halde bir kare
+    // gecikmiş bir gövde çizerlerdi.
+    const poseRoot = this.assembled.container as unknown as PoseSourceNode;
+    if (this.body.isDashing) this.ghostTrail.capture(poseRoot);
+    this.ghostTrail.update(delta);
+    this.shadow.update(poseRoot);
+
     this.hud?.refresh({
       dashProgress: this.body.dashProgress,
       speedPxPerSec: this.body.speed,
@@ -119,25 +191,71 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  /** Duvar çarpmasının görsel yankısı: sınır parlaması, sarsıntı ve toz. */
+  private resolveWallImpact(): void {
+    const impact = this.body.consumeWallImpact();
+    if (!impact) return;
+
+    this.arena.strike(impact);
+    this.cameras.main.shake(
+      arenaConfig.impact.shakeDurationMs,
+      arenaConfig.impact.shakeIntensity * (0.4 + 0.6 * impact.strength01),
+    );
+    this.dust.puff(impact.x, impact.y, fxConfig.dust.fullSpeedPxPerSec);
+  }
+
+  /**
+   * Pençe temasında toz. Atılım SÜRERKEN kapalıdır: uzuvlar o sırada sıra
+   * disiplinini delip hızla adımlar ve toz, atılımın kendi izini bulanık bir
+   * buluta çeviriyordu. Atılımın görsel yükünü hayalet izi taşır.
+   */
+  private emitFootDust(): void {
+    if (this.body.isDashing) return;
+    const speed = this.body.speed;
+    this.legs.forEachPlant((x, y) => this.dust.puff(x, y, speed));
+  }
+
+  /**
+   * Arenayı kamera boşluklarının İÇİNE sığdırır ve o kutunun ortasına oturtur.
+   * Boşluklar HUD'un yaşam alanıdır; sığdırma onları yerse HUD oyun alanının
+   * üstüne binerdi.
+   */
   private applyArenaCamera(): void {
     applyVolViewport(this);
 
     const camera = this.cameras.main;
     const quality = camera.zoom;
+    const gutter = arenaConfig.viewportGutterPx;
     const viewportWidth = camera.width / quality;
     const viewportHeight = camera.height / quality;
+    const availableWidth = Math.max(1, viewportWidth - gutter.left - gutter.right);
+    const availableHeight = Math.max(1, viewportHeight - gutter.top - gutter.bottom);
     const fit =
-      Math.min(viewportWidth / arenaConfig.widthPx, viewportHeight / arenaConfig.heightPx) *
-      ARENA_FIT_MARGIN;
+      Math.min(availableWidth / arenaConfig.widthPx, availableHeight / arenaConfig.heightPx) *
+      arenaConfig.fitMargin;
 
     camera.setZoom(quality * fit);
-    camera.centerOn(arenaConfig.widthPx / 2, arenaConfig.heightPx / 2);
+    // Kutu merkezi ekran merkezinden bu kadar kayıktır (CSS px); kamerayı ters
+    // yönde kaydırmak arenayı oraya taşır. Dünya birimine çeviren `fit`tir.
+    const offsetX = (gutter.left - gutter.right) / 2 / fit;
+    const offsetY = (gutter.top - gutter.bottom) / 2 / fit;
+    camera.centerOn(arenaConfig.widthPx / 2 - offsetX, arenaConfig.heightPx / 2 - offsetY);
   }
 
+  /**
+   * `ViewportManager` aynı resize turunun sonunda kalite zoom'unu tazeler;
+   * arena fit'i bir sonraki kareye bırakmak bu son değerin üstüne uygular.
+   *
+   * Bekleyen kare her seferinde İPTAL EDİLİR: sürükleyerek yeniden boyutlanan
+   * bir pencere yüzlerce resize üretir ve her biri ayrı bir kare biriktirirdi.
+   */
   private handleResize(): void {
-    // ViewportManager aynı resize turunun sonunda kalite zoom'unu tazeler;
-    // arena fit'i bir sonraki kareye bırakmak bu son değerin üstüne uygular.
-    this.runtimeScope?.addAnimationFrame(() => this.applyArenaCamera());
+    this.pendingCameraFrame?.cancel();
+    this.pendingCameraFrame =
+      this.runtimeScope?.addAnimationFrame(() => {
+        this.pendingCameraFrame = null;
+        this.applyArenaCamera();
+      }) ?? null;
   }
 
   private handleShutdown(): void {

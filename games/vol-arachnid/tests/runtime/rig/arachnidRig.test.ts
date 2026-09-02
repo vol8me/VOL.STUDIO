@@ -1,105 +1,33 @@
 import { describe, expect, it } from 'vitest';
+import { LIMB_CHAINS, BODY_SHELL_PART_IDS, SNOUT_PART_IDS } from '@/config/rig';
+import { prepareArachnidRig } from '@/runtime/rig/arachnidRig';
 import {
-  assembleRig,
-  buildRigDefinition,
-  validateRigMetadata,
-  type AssembledRig,
-  type RigDefinition,
-} from '@volstudio/pen.dev';
-import arachnidMetadataRaw from '../../../../../devtools/pen.dev/pen_export/enemies/arachnid/metadata/arachnid.metadata.json';
-import { BODY_PART_IDS, LEG_IDS, TAIL_IDS, prepareArachnidRig } from '@/runtime/rig/arachnidRig';
+  arachnidTestMetadata as metadata,
+  assembleTestRig,
+  buildTestRigDefinition,
+  createFakeScene,
+  decomposeWorld,
+  type FakeContainer,
+  type FakeTransform,
+} from '../../support/phaserFakes';
 
-interface FakeTransform {
-  x: number;
-  y: number;
-  rotation: number;
-  parent: FakeContainer | null;
-}
-
-interface FakeContainer extends FakeTransform {
-  list: FakeTransform[];
-  add(child: FakeTransform): void;
-}
-
-interface FakeImage extends FakeTransform {
-  key: string;
-  scale: number;
-  setScale(value: number): void;
-}
-
-const metadata = validateRigMetadata(arachnidMetadataRaw, 'arachnid test metadata');
-
-function createHarness(definition: RigDefinition): { scene: unknown; transforms: FakeTransform[] } {
-  const textureKeys = new Set(definition.parts.map((part) => part.textureKey));
-  const transforms: FakeTransform[] = [];
-
-  const scene = {
-    textures: { exists: (key: string) => textureKeys.has(key) },
-    add: {
-      container: (x: number, y: number): FakeContainer => {
-        const container: FakeContainer = {
-          x,
-          y,
-          rotation: 0,
-          parent: null,
-          list: [],
-          add(child) {
-            child.parent = this;
-            this.list.push(child);
-          },
-        };
-        transforms.push(container);
-        return container;
-      },
-      image: (x: number, y: number, key: string): FakeImage => {
-        const image: FakeImage = {
-          x,
-          y,
-          key,
-          rotation: 0,
-          parent: null,
-          scale: 1,
-          setScale(value) {
-            this.scale = value;
-          },
-        };
-        transforms.push(image);
-        return image;
-      },
-    },
-  };
-
-  return { scene, transforms };
-}
-
-function assembleFixture(): AssembledRig {
-  const urls = Object.fromEntries(
-    metadata.parts.map((part) => [`/parts/${part.partId}.png`, `/mock/${part.partId}.png`]),
-  );
-  const definition = buildRigDefinition(metadata, urls);
-  const harness = createHarness(definition);
-  return assembleRig(harness.scene as never, definition);
+function assembleFixture() {
+  const definition = buildTestRigDefinition();
+  const scene = createFakeScene(definition);
+  return assembleTestRig(scene, definition);
 }
 
 function worldPosition(transform: FakeTransform): { x: number; y: number } {
-  let x = transform.x;
-  let y = transform.y;
-  let parent = transform.parent;
-
-  while (parent) {
-    const cos = Math.cos(parent.rotation);
-    const sin = Math.sin(parent.rotation);
-    const nextX = parent.x + x * cos - y * sin;
-    const nextY = parent.y + x * sin + y * cos;
-    x = nextX;
-    y = nextY;
-    parent = parent.parent;
-  }
-
-  return { x, y };
+  const decomposed = decomposeWorld(transform);
+  return { x: decomposed.translateX, y: decomposed.translateY };
 }
 
-const EXPECTED_HIPS = {
+/** Ölçülen eklem aralıkları (bkz. kaynak metadata). */
+const LEG_BONES = { shoulder: 36, upper: 54, lower: 72 };
+// Arka uzuvlarda kaynak dizilim ters olduğu için aralıklar TERS sırada atanır.
+const TAIL_BONES = { shoulder: 50, upper: 26, lower: 12 };
+
+const EXPECTED_HIPS: Readonly<Record<string, readonly [number, number]>> = {
   r0: [34.41898, 34.00194],
   r1: [35.35214, 12.99755],
   r2: [35.99786, -3.95245],
@@ -108,52 +36,105 @@ const EXPECTED_HIPS = {
   l1: [-35.34786, 13.00245],
   l2: [-36.00214, -3.94755],
   l3: [-27.00487, -33.92992],
-} as const;
+  // Arka uzuvlarda kalça, KÖK KEMİĞİN gövdeye bakan ucudur — kaynak zincirin
+  // en iç noktası değil (bkz. `sourceChainReversed`).
+  tl: [-20.63398, 48.17946],
+  tr: [20.63672, 48.18474],
+};
 
 describe('prepareArachnidRig', () => {
-  it('ölçülmüş gövde merkezi ile sekiz bacak ve iki arka uzuv üretir', () => {
+  it('ölçülmüş gövde merkezi ile on uzuv ve gövde parça kümelerini üretir', () => {
     const rig = prepareArachnidRig(metadata, assembleFixture());
 
     expect(rig.bodyCenterX).toBeCloseTo(171.14, 5);
     expect(rig.bodyCenterY).toBeCloseTo(93, 5);
-    expect(rig.legs.map((leg) => leg.id)).toEqual(LEG_IDS);
-    expect(rig.tails.map((tail) => tail.id)).toEqual(TAIL_IDS);
-    expect(rig.bodyParts).toHaveLength(BODY_PART_IDS.length);
+    expect(rig.limbs.map((limb) => limb.id)).toEqual(LIMB_CHAINS.map((spec) => spec.id));
+    expect(rig.shellParts).toHaveLength(BODY_SHELL_PART_IDS.length);
+    expect(rig.snoutParts).toHaveLength(SNOUT_PART_IDS.length);
+    expect(rig.gazePart).toBeDefined();
   });
 
-  it('tüm bacaklarda ölçülmüş 90/72 px kemik uzunluklarını korur', () => {
+  it('her uzuvda üç kemiğin ölçülmüş uzunluklarını korur', () => {
     const rig = prepareArachnidRig(metadata, assembleFixture());
 
-    for (const leg of rig.legs) {
+    for (const limb of rig.limbs) {
+      const expected = limb.id.startsWith('t') ? TAIL_BONES : LEG_BONES;
       // Metadata konumları 0.01 px hassasiyetle yazıldığı için iki uçtan
       // hesaplanan uzunluklarda en fazla yüzdelik piksel yuvarlama payı vardır.
-      expect(Math.abs(leg.upperLength - 90), `${leg.id} üst kemik`).toBeLessThan(0.01);
-      expect(Math.abs(leg.lowerLength - 72), `${leg.id} alt kemik`).toBeLessThan(0.01);
+      expect(Math.abs(limb.shoulderLength - expected.shoulder), `${limb.id} omuz`).toBeLessThan(
+        0.02,
+      );
+      expect(Math.abs(limb.upperLength - expected.upper), `${limb.id} üst`).toBeLessThan(0.02);
+      expect(Math.abs(limb.lowerLength - expected.lower), `${limb.id} alt`).toBeLessThan(0.02);
     }
   });
 
-  it('kalça noktalarını gövde merkezine göre ölçer ve sol/sağ bükümü aynalar', () => {
+  it('kalça noktalarını gövde merkezine göre ölçer', () => {
     const rig = prepareArachnidRig(metadata, assembleFixture());
 
-    for (const leg of rig.legs) {
-      const expected = EXPECTED_HIPS[leg.id as keyof typeof EXPECTED_HIPS];
-      expect(leg.hipX, `${leg.id} kalça x`).toBeCloseTo(expected[0], 4);
-      expect(leg.hipY, `${leg.id} kalça y`).toBeCloseTo(expected[1], 4);
-      expect(leg.bendSign).toBe(leg.id.startsWith('l') ? -1 : 1);
-      expect(leg.upper.x).toBeCloseTo(leg.hipX, 5);
-      expect(leg.upper.y).toBeCloseTo(leg.hipY, 5);
+    for (const limb of rig.limbs) {
+      const expected = EXPECTED_HIPS[limb.id];
+      expect(limb.hipX, `${limb.id} kalça x`).toBeCloseTo(expected[0], 4);
+      expect(limb.hipY, `${limb.id} kalça y`).toBeCloseTo(expected[1], 4);
+      expect(limb.shoulder.x).toBeCloseTo(limb.hipX, 5);
+      expect(limb.shoulder.y).toBeCloseTo(limb.hipY, 5);
     }
+  });
+
+  it('yalnız bacaklarda pençe vardır; arka uzuvlarda uç kemik zincirin sonudur', () => {
+    const rig = prepareArachnidRig(metadata, assembleFixture());
+
+    for (const limb of rig.limbs) {
+      expect(Boolean(limb.tip), `${limb.id} pençe`).toBe(!limb.id.startsWith('t'));
+    }
+  });
+
+  it('ters dizilmiş arka zinciri KALINDAN İNCEYE yeniden kurar', () => {
+    const rig = prepareArachnidRig(metadata, assembleFixture());
+
+    for (const id of ['tl', 'tr']) {
+      const limb = rig.limbs.find((item) => item.id === id)!;
+      // Kalın çubuk (`tail_upper`) gövdede, ok ucu (`tail_tip`) ayakta.
+      expect(limb.shoulderLength, id).toBeGreaterThan(limb.upperLength);
+      expect(limb.upperLength, id).toBeGreaterThan(limb.lowerLength);
+      // Uzuv fiziksel boyunu korur: kaynak aralıkların toplamı değişmez.
+      expect(limb.shoulderLength + limb.upperLength + limb.lowerLength).toBeCloseTo(88, 0);
+      // Zincir kopuk değildir: her kemik bir öncekinin ucuna oturur.
+      expect(limb.upper.x, `${id} üst kemik`).toBeCloseTo(limb.shoulderLength, 6);
+      expect(limb.upper.y).toBeCloseTo(0, 9);
+      expect(limb.lower.x, `${id} alt kemik`).toBeCloseTo(limb.upperLength, 6);
+      expect(limb.lower.y).toBeCloseTo(0, 9);
+      expect(limb.shoulder.x).toBeCloseTo(limb.hipX, 6);
+      expect(limb.shoulder.y).toBeCloseTo(limb.hipY, 6);
+    }
+  });
+
+  it('ara kemikleri ZİNCİRE bağlar: üst kemiği döndürmek alt kemiği taşır', () => {
+    const assembled = assembleFixture();
+    const rig = prepareArachnidRig(metadata, assembled);
+    const limb = rig.limbs[0];
+
+    const before = worldPosition(limb.lower as unknown as FakeTransform);
+    limb.upper.rotation += Math.PI / 2;
+    const after = worldPosition(limb.lower as unknown as FakeTransform);
+
+    expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeGreaterThan(1);
   });
 
   it('pivotları ekleme taşırken görünür çocukların dünya konumunu bozmaz', () => {
     const assembled = assembleFixture();
-    const pivotIds = [
-      ...LEG_IDS.flatMap((id) => [`leg_${id}_coxa`, `leg_${id}_tibia`]),
-      ...TAIL_IDS.map((id) => `tail_${id}_tail_upper`),
-    ];
-    const tracked = pivotIds.flatMap((partId) => {
+    // Yeniden kurulan zincirler bu kuralın DIŞINDADIR: onlarda parça konumları
+    // bilerek yeniden yazılır (bkz. `sourceChainReversed`).
+    const trackedIds = LIMB_CHAINS.filter((spec) => !spec.sourceChainReversed).flatMap((spec) =>
+      [spec.shoulderPartId, spec.upperPartId, spec.lowerPartId, spec.tipPartId].filter(
+        (id): id is string => id !== null,
+      ),
+    );
+    const tracked = trackedIds.flatMap((partId) => {
       const pivot = assembled.parts.get(partId) as unknown as FakeContainer;
-      return pivot.list.map((child) => ({ child, before: worldPosition(child), partId }));
+      return pivot.list
+        .filter((child) => !('list' in child))
+        .map((child) => ({ child, before: worldPosition(child), partId }));
     });
 
     const rig = prepareArachnidRig(metadata, assembled);
@@ -162,6 +143,7 @@ describe('prepareArachnidRig', () => {
     const shiftX = rootSize.width / 2 - rig.bodyCenterX;
     const shiftY = rootSize.height / 2 - rig.bodyCenterY;
 
+    expect(tracked.length).toBeGreaterThan(0);
     for (const { child, before, partId } of tracked) {
       const after = worldPosition(child);
       expect(after.x, `${partId} çocuk x`).toBeCloseTo(before.x + shiftX, 7);

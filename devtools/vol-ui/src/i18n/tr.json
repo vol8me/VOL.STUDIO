@@ -204,6 +204,8 @@
     "cooldown": "Cooldown",
     "criticalThreshold": "Kritik Eşik",
     "lowThresholdHint": "lowThreshold: 0.5 — değer %50 altına düşünce kırmızıya döner.",
+    "verticalBar": "Dikey bar",
+    "verticalBarHint": "Dolgu tabandan yukarı büyür; dar HUD sütunları için.",
     "reset": "Sıfırla",
     "counter": "Counter",
     "addScore": "Puan Ekle (+10, pulse)",

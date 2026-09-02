@@ -1,53 +1,44 @@
 import type Phaser from 'phaser';
-import type { RigMetadata, RigPartMetadata } from '@volstudio/pen.dev';
-import type { AssembledRig } from '@volstudio/pen.dev';
+import type { AssembledRig, RigMetadata, RigPartMetadata } from '@volstudio/pen.dev';
+import {
+  BODY_SHELL_PART_IDS,
+  GAZE_PART_ID,
+  LIMB_CHAINS,
+  SNOUT_PART_IDS,
+  type LimbChainSpec,
+} from '@/config/rig';
 
 const DEG = Math.PI / 180;
 
-export const LEG_IDS = ['r0', 'r1', 'r2', 'r3', 'l0', 'l1', 'l2', 'l3'] as const;
-export const TAIL_IDS = ['l', 'r'] as const;
-export const BODY_PART_IDS = [
-  'abdomen_shell',
-  'abdomen_plate',
-  'core_ring',
-  'reactor',
-  'reactor_slit',
-  'top_cap',
-  'top_cap_side_l',
-  'top_cap_side_r',
-] as const;
-
-export interface LegRig {
+/**
+ * Sürülebilir bir uzuv: üç kemik (omuz → üst → alt) ve ucunda kozmetik bir
+ * pençe. Uzunluklar kaynak sanatın ÖLÇÜLMÜŞ eklem aralıklarıdır; parça
+ * genişliği değildir (bitişik parçalar birbirinin üstüne birkaç piksel biner).
+ */
+export interface LimbRig {
   id: string;
-  /** Gövde merkezine göre kalça (coxa kemik başlangıcı). */
+  /** Gövde merkezine göre omuz eklemi. */
   hipX: number;
   hipY: number;
-  /** Kalça–diz ve diz–ayak kemik uzunlukları. */
+  shoulderLength: number;
   upperLength: number;
+  /** Alt kemik + pençe: ters kinematik bunları TEK kemik sayar. */
   lowerLength: number;
-  /** Dinlenme pozunda bacağın kalçadan baktığı yön (radyan). */
-  restRad: number;
-  /** Dizin büküleceği taraf; sol/sağ ayna simetrisi için zıt işaret. */
-  bendSign: number;
-  /** Üst kemiği süren container (coxa). */
+  shoulder: Phaser.GameObjects.Container;
   upper: Phaser.GameObjects.Container;
-  /** Alt kemiği süren container (tibia); dönüşü üst kemiğe GÖRELİdir. */
   lower: Phaser.GameObjects.Container;
-}
-
-export interface TailRig {
-  id: string;
-  hipX: number;
-  hipY: number;
-  length: number;
-  restRad: number;
-  root: Phaser.GameObjects.Container;
+  /** Pençe; yalnız bilek kıvrımı alır, IK çözümüne girmez. */
+  tip: Phaser.GameObjects.Container | null;
 }
 
 export interface ArachnidRig {
-  legs: LegRig[];
-  tails: TailRig[];
-  bodyParts: Phaser.GameObjects.Container[];
+  limbs: LimbRig[];
+  /** Uzuvlarla birlikte hareket etmeyen kabuk parçaları. */
+  shellParts: Phaser.GameObjects.Container[];
+  /** Öne bakan uç parçalar — dönüşe önden yatarlar. */
+  snoutParts: Phaser.GameObjects.Container[];
+  /** Bakışı taşıyan parça. */
+  gazePart: Phaser.GameObjects.Container;
   /** Gövde merkezinin metadata uzayındaki konumu — yerel uzayın orijini. */
   bodyCenterX: number;
   bodyCenterY: number;
@@ -68,15 +59,21 @@ const boneEnd = (p: RigPartMetadata) =>
 const centerOf = (p: RigPartMetadata) =>
   localToRig(p, p.logicalSizePx.width / 2, p.logicalSizePx.height / 2);
 
+const distance = (a: { x: number; y: number }, b: { x: number; y: number }): number =>
+  Math.hypot(a.x - b.x, a.y - b.y);
+
 /**
  * Bir pivot container'ının DÖNME ORİJİNİNİ, dünya konumlarını bozmadan kendi
  * yerel `(lx, ly)` noktasına taşır.
  *
  * `assembleRig` her parçayı sol-üst köşesinden döndürür (kaynak belgenin
- * sözleşmesi). Bir uzuv ise eklemden dönmelidir; kalçadan 9.5px kayan bir
- * dönme merkezi, bacak açıldıkça gövdeden görünür biçimde kopardı. Pivot
+ * sözleşmesi). Bir kemik ise eklemden dönmelidir; eklemden birkaç piksel kayan
+ * bir dönme merkezi, uzuv açıldıkça zinciri görünür biçimde kopardı. Pivot
  * ileri kaydırılır, çocukları aynı miktarda geri kaydırılır: net etki sıfır,
  * dönme merkezi eklemin üstünde.
+ *
+ * Alt kemikler artık pivotun ÇOCUĞU olduğu için onlar da birlikte kayar;
+ * zincirin geri kalanı ayrıca düzeltilmez.
  */
 function recenterPivot(pivot: Phaser.GameObjects.Container, lx: number, ly: number): void {
   const cos = Math.cos(pivot.rotation);
@@ -109,9 +106,144 @@ function requireContainer(rig: AssembledRig, partId: string): Phaser.GameObjects
 }
 
 /**
- * Montajlanmış rig'i IK ile sürülebilir hâle getirir: gövde merkezini yerel
- * uzayın orijinine taşır, eklem pivotlarını kemik eksenlerine oturtur ve her
- * uzvun ölçülmüş geometrisini döner.
+ * Kemik pivotunu kendi kemik ekseninin BAŞINA taşır; sanat pivotun yerel +x
+ * yönünde uzanır.
+ */
+function anchorBone(
+  assembled: AssembledRig,
+  part: RigPartMetadata,
+  offsetX = 0,
+): Phaser.GameObjects.Container {
+  const container = requireContainer(assembled, part.partId);
+  recenterPivot(container, offsetX, part.logicalSizePx.height / 2);
+  return container;
+}
+
+/** Kaynak yerleşimi doğru olan zincir: eklem aralıkları olduğu gibi ölçülür. */
+function buildAuthoredLimb(
+  metadata: RigMetadata,
+  assembled: AssembledRig,
+  spec: LimbChainSpec,
+  bodyCenter: { x: number; y: number },
+): LimbRig {
+  const shoulderPart = requirePart(metadata, spec.shoulderPartId);
+  const upperPart = requirePart(metadata, spec.upperPartId);
+  const lowerPart = requirePart(metadata, spec.lowerPartId);
+  const tipPart = spec.tipPartId ? requirePart(metadata, spec.tipPartId) : null;
+
+  const hip = boneStart(shoulderPart);
+  const knee1 = boneStart(upperPart);
+  const knee2 = boneStart(lowerPart);
+  const foot = boneEnd(tipPart ?? lowerPart);
+
+  return {
+    id: spec.id,
+    hipX: hip.x - bodyCenter.x,
+    hipY: hip.y - bodyCenter.y,
+    shoulderLength: distance(hip, knee1),
+    upperLength: distance(knee1, knee2),
+    lowerLength: distance(knee2, foot),
+    // Zincir kökten uca doğru sabitlenir; her pivot kendi ekleminin üstüne
+    // oturur ve çocuk kemikler ebeveynle birlikte taşınır.
+    shoulder: anchorBone(assembled, shoulderPart),
+    upper: anchorBone(assembled, upperPart),
+    lower: anchorBone(assembled, lowerPart),
+    tip: tipPart ? anchorBone(assembled, tipPart) : null,
+  };
+}
+
+/**
+ * Kaynak yerleşimi TERS dizilmiş zincir (bkz. `LimbChainSpec.sourceChainReversed`).
+ *
+ * Kemik boyları kaynaktaki eklem aralıklarının ters sırasıdır: uzuv fiziksel
+ * boyunu birebir korur, yalnız hangi parçanın hangi kemiği çizdiği değişir.
+ * Parça konumları kaynaktan MİRAS ALINMAZ — sıra değiştiği için miras alınan
+ * konumlar zinciri kopuk bırakırdı; her pivot doğrudan kendi ekleminin üstüne
+ * yazılır.
+ */
+function buildRebuiltLimb(
+  metadata: RigMetadata,
+  assembled: AssembledRig,
+  spec: LimbChainSpec,
+  bodyCenter: { x: number; y: number },
+): LimbRig {
+  const shoulderPart = requirePart(metadata, spec.shoulderPartId);
+  const upperPart = requirePart(metadata, spec.upperPartId);
+  const lowerPart = requirePart(metadata, spec.lowerPartId);
+
+  // Kaynak dizilimi, gövdeye en yakından en uzağa: lower(tip) → upper → shoulder.
+  const sourceSpacing = [
+    distance(boneEnd(lowerPart), boneEnd(upperPart)),
+    distance(boneEnd(upperPart), boneEnd(shoulderPart)),
+    distance(boneEnd(shoulderPart), boneStart(shoulderPart)),
+  ];
+
+  /*
+   * Kalça, KÖK KEMİĞİN gövdeye bakan ucudur.
+   *
+   * Kaynak zincirin en iç noktası (ok ucunun ucu) gövde merkezine 30 px
+   * mesafededir; oradan başlayan bir uzuv boyunun yarısını kabuğun altında
+   * harcar ve dışarıda bir çıkıntı olarak okunur. Kök kemiğin iç ucu ise
+   * kabuğun alt kenarındadır — referans kartında uzvun gövdeden çıktığı yer.
+   */
+  const attach = boneEnd(shoulderPart);
+
+  const shoulder = anchorBone(assembled, shoulderPart);
+  const upper = anchorBone(assembled, upperPart);
+  const lower = anchorBone(assembled, lowerPart);
+
+  const hipX = attach.x - bodyCenter.x;
+  const hipY = attach.y - bodyCenter.y;
+  const shoulderLength = sourceSpacing[2];
+  const upperLength = sourceSpacing[1];
+
+  shoulder.setPosition(hipX, hipY);
+  upper.setPosition(shoulderLength, 0);
+  lower.setPosition(upperLength, 0);
+
+  if (spec.rebuiltJointPartId) {
+    // Eklem diski kemik değildir; omuz–üst kemik dikişinin üstünde durur ve
+    // merkezinden döner.
+    const jointPart = requirePart(metadata, spec.rebuiltJointPartId);
+    const joint = requireContainer(assembled, spec.rebuiltJointPartId);
+    recenterPivot(joint, jointPart.logicalSizePx.width / 2, jointPart.logicalSizePx.height / 2);
+    joint.setPosition(shoulderLength, 0);
+    joint.rotation = 0;
+  }
+
+  return {
+    id: spec.id,
+    hipX,
+    hipY,
+    shoulderLength,
+    upperLength,
+    lowerLength: sourceSpacing[0],
+    shoulder,
+    upper,
+    lower,
+    tip: null,
+  };
+}
+
+function buildLimb(
+  metadata: RigMetadata,
+  assembled: AssembledRig,
+  spec: LimbChainSpec,
+  bodyCenter: { x: number; y: number },
+): LimbRig {
+  return spec.sourceChainReversed
+    ? buildRebuiltLimb(metadata, assembled, spec, bodyCenter)
+    : buildAuthoredLimb(metadata, assembled, spec, bodyCenter);
+}
+
+/**
+ * Montajlanmış rig'i ters kinematikle sürülebilir hâle getirir: gövde
+ * merkezini yerel uzayın orijinine taşır, eklem pivotlarını kemik uçlarına
+ * oturtur ve her uzvun ölçülmüş geometrisini döner.
+ *
+ * `assembled`, eklem şeması UYGULANMIŞ bir tanımdan gelmelidir (bkz.
+ * `ARACHNID_ARTICULATION`); düz bir montajda ara kemikler kardeş kalır ve
+ * yalnız uçlar döner.
  */
 export function prepareArachnidRig(metadata: RigMetadata, assembled: AssembledRig): ArachnidRig {
   const rootSize = metadata.source.rootSizePx;
@@ -121,7 +253,8 @@ export function prepareArachnidRig(metadata: RigMetadata, assembled: AssembledRi
 
   // `assembleRig` parçaları rootSize merkezine göre yerleştirir; gövde merkezi
   // ise bbox merkezinde DEĞİL. Kök çocukları kaydırılarak dönme ve konum
-  // orijini gövdenin üstüne alınır.
+  // orijini gövdenin üstüne alınır. Eklemli parçalar ebeveynleriyle taşındığı
+  // için burada yalnız kök seviyesindeki çocuklar gezilir.
   const shiftX = rootSize.width / 2 - bodyCenter.x;
   const shiftY = rootSize.height / 2 - bodyCenter.y;
   for (const child of assembled.container.list) {
@@ -130,60 +263,14 @@ export function prepareArachnidRig(metadata: RigMetadata, assembled: AssembledRi
     child.y += shiftY;
   }
 
-  const legs: LegRig[] = LEG_IDS.map((id) => {
-    const coxa = requirePart(metadata, `leg_${id}_coxa`);
-    const tibia = requirePart(metadata, `leg_${id}_tibia`);
-    const claw = requirePart(metadata, `leg_${id}_claw`);
+  const limbs = LIMB_CHAINS.map((spec) => buildLimb(metadata, assembled, spec, bodyCenter));
 
-    const hip = boneStart(coxa);
-    const knee = boneStart(tibia);
-    const foot = boneEnd(claw);
-
-    const upper = requireContainer(assembled, `leg_${id}_coxa`);
-    const lower = requireContainer(assembled, `leg_${id}_tibia`);
-    recenterPivot(upper, 0, coxa.logicalSizePx.height / 2);
-    recenterPivot(lower, 0, tibia.logicalSizePx.height / 2);
-
-    return {
-      id,
-      hipX: hip.x - bodyCenter.x,
-      hipY: hip.y - bodyCenter.y,
-      upperLength: Math.hypot(knee.x - hip.x, knee.y - hip.y),
-      lowerLength: Math.hypot(foot.x - knee.x, foot.y - knee.y),
-      restRad: Math.atan2(foot.y - hip.y, foot.x - hip.x),
-      // Sol ve sağ bacaklar ayna simetriktir; aynı işaret verilirse bir taraf
-      // dizini ters büker ve yürüyüş çarpık görünür.
-      bendSign: id.startsWith('l') ? -1 : 1,
-      upper,
-      lower,
-    };
-  });
-
-  const tails: TailRig[] = TAIL_IDS.map((id) => {
-    const upperPart = requirePart(metadata, `tail_${id}_tail_upper`);
-    const tipPart = requirePart(metadata, `tail_${id}_tail_tip`);
-
-    // Kuyruk sanatı AYAKTAN GÖVDEYE doğru çizilmiştir: zincirin kökü olan
-    // `tail_upper`'ın kemik başlangıcı ayakta, gövde bağlantısı ise `tail_tip`in
-    // ucundadır. Pivot o bağlantıya taşınır ki kuyruk gövdeden sallansın.
-    const foot = boneStart(upperPart);
-    const attach = boneEnd(tipPart);
-    const length = Math.hypot(foot.x - attach.x, foot.y - attach.y);
-
-    const root = requireContainer(assembled, `tail_${id}_tail_upper`);
-    recenterPivot(root, length, upperPart.logicalSizePx.height / 2);
-
-    return {
-      id,
-      hipX: attach.x - bodyCenter.x,
-      hipY: attach.y - bodyCenter.y,
-      length,
-      restRad: Math.atan2(foot.y - attach.y, foot.x - attach.x),
-      root,
-    };
-  });
-
-  const bodyParts = BODY_PART_IDS.map((partId) => requireContainer(assembled, partId));
-
-  return { legs, tails, bodyParts, bodyCenterX: bodyCenter.x, bodyCenterY: bodyCenter.y };
+  return {
+    limbs,
+    shellParts: BODY_SHELL_PART_IDS.map((partId) => requireContainer(assembled, partId)),
+    snoutParts: SNOUT_PART_IDS.map((partId) => requireContainer(assembled, partId)),
+    gazePart: requireContainer(assembled, GAZE_PART_ID),
+    bodyCenterX: bodyCenter.x,
+    bodyCenterY: bodyCenter.y,
+  };
 }

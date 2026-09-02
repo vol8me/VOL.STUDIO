@@ -1,160 +1,241 @@
-import { LegGait, clamp01, solveTwoBoneIk, type LegGaitLeg } from '@volstudio/core';
-import { gaitConfig } from '@/config/gait';
-import type { ArachnidRig } from '@/runtime/rig/arachnidRig';
+import {
+  LegGait,
+  clamp,
+  clamp01,
+  lerp,
+  solveTwoBoneIk,
+  wrap,
+  type LegGaitLeg,
+} from '@volstudio/core';
+import { gaitConfig, type LimbStance } from '@/config/gait';
+import { RIG_FACING_OFFSET_RAD } from '@/config/rig';
+import type { ArachnidRig, LimbRig } from '@/runtime/rig/arachnidRig';
 
 const DEG = Math.PI / 180;
+/** Duruş açıları İLERİ eksenden ölçülür; rig yerel uzayında ileri −Y'dir. */
+const FORWARD_RAD = -Math.PI / 2;
+
+export interface LimbDriveState {
+  bodyX: number;
+  bodyY: number;
+  /** Gövdenin görsel yönü (radyan) — rig ofseti burada eklenir. */
+  bodyRad: number;
+  velX: number;
+  velY: number;
+  /** Dönüşün anlık şiddeti (rad/s) — adım temposunun ikinci kaynağı. */
+  turnRate: number;
+  /** [0,1] yürüyüş temposu — arka uzuvların itiş payını ölçekler. */
+  motion01: number;
+  /** [0,1] atılım şiddeti — ön uzuvları öne, arka uzuvları geriye taşır. */
+  dash01: number;
+  /** [0,1] çömelme — uzuvları gövdeye çeker. */
+  crouch01: number;
+}
+
+interface LimbDriver {
+  rig: LimbRig;
+  stance: LimbStance;
+  /** Omuz + üst + alt kemiklerin toplamı; erişim oranı bununla çarpılır. */
+  totalLength: number;
+}
 
 /**
- * Alternating tetrapod dizilimi: komşu bacaklar zıt gruptadır, sol ve sağ
- * karşılıklıdır. Bir grup adım atarken diğeri yerde kalır, gövde hiçbir an
- * desteksiz kalmaz.
- */
-const LEG_GROUPS: Readonly<Record<string, number>> = {
-  r0: 0,
-  r1: 1,
-  r2: 0,
-  r3: 1,
-  l0: 1,
-  l1: 0,
-  l2: 1,
-  l3: 0,
-};
-const TAIL_GROUPS: Readonly<Record<string, number>> = { l: 1, r: 0 };
-const RIG_FACING_OFFSET_RAD = Math.PI / 2;
-
-/**
- * Bacakları yürüyüşe ve ters kinematiğe bağlar.
+ * Uzuvları yürüyüşe ve ters kinematiğe bağlar.
  *
  * Ayaklar DÜNYA uzayında sabitlenir; gövde ilerledikçe geride kalırlar ve
  * eşiği aşınca öne adım atarlar. Her kare her uzuv, ayağı gövde-yerel uzaya
- * çevirip iki kemikli IK ile pozlanır — bacak açısı elle animasyondan değil,
- * ayağın nerede durduğundan çıkar.
+ * çevirip pozlanır — uzuv açısı elle animasyondan değil, ayağın nerede
+ * durduğundan çıkar.
+ *
+ * Üç kemikli zincirde çözüm tek değildir. Belirsizlik OMUZLA kapatılır: omuz
+ * duruş açısıyla ayak yönü arasında sabit bir oranda paylaşır, kalan iki kemik
+ * iki kemikli IK ile çözülür. Böylece uzuv hem gövdeye bağlı bir dizilim
+ * korur hem ayağı takip eder.
  */
 export class ArachnidLegs {
   private readonly gait: LegGait;
-  private readonly rig: ArachnidRig;
-  private readonly legCount: number;
+  private readonly drivers: LimbDriver[];
+  /** Ayakların gövde merkezine ORTALAMA uzaklığı — dönüşün teğetsel hızı için. */
+  private readonly stanceRadiusPx: number;
 
   constructor(rig: ArachnidRig) {
-    this.rig = rig;
-    this.legCount = rig.legs.length;
+    this.drivers = rig.limbs.map((limb) => {
+      const stance = gaitConfig.stance[limb.id];
+      if (!stance) throw new Error(`"${limb.id}" uzvu için duruş tanımı yok`);
+      return {
+        rig: limb,
+        stance,
+        totalLength: limb.shoulderLength + limb.upperLength + limb.lowerLength,
+      };
+    });
 
-    const entries: LegGaitLeg[] = [
-      ...rig.legs.map((leg) => {
-        const reach = (leg.upperLength + leg.lowerLength) * gaitConfig.standReach;
-        const homeRad = leg.restRad + (gaitConfig.legStanceOffsetsDeg[leg.id] ?? 0) * DEG;
-        return {
-          homeX: leg.hipX + Math.cos(homeRad) * reach,
-          homeY: leg.hipY + Math.sin(homeRad) * reach,
-          group: LEG_GROUPS[leg.id] ?? 0,
-        };
-      }),
-      ...rig.tails.map((tail) => {
-        const reach = tail.length * gaitConfig.tailStandReach;
-        return {
-          homeX: tail.hipX + Math.cos(tail.restRad) * reach,
-          homeY: tail.hipY + Math.sin(tail.restRad) * reach,
-          group: TAIL_GROUPS[tail.id] ?? 0,
-        };
-      }),
-    ];
+    const entries: LegGaitLeg[] = this.drivers.map((driver) => {
+      const home = restingHome(driver, 0, 0, 0);
+      return { homeX: home.x, homeY: home.y, group: driver.stance.group };
+    });
+    this.stanceRadiusPx =
+      entries.reduce((total, entry) => total + Math.hypot(entry.homeX, entry.homeY), 0) /
+      entries.length;
 
     this.gait = new LegGait(entries, {
       stepTriggerPx: gaitConfig.stepTriggerPx,
       stepDurationMs: gaitConfig.stepDurationMs,
       stepLeadSeconds: gaitConfig.stepLeadSeconds,
+      maxStrainPx: gaitConfig.emergencyStrainPx,
     });
   }
 
   /** Ayakları gövdenin altına adımsız yerleştirir (doğuş/ışınlanma). */
   reset(bodyX: number, bodyY: number, bodyRad: number): void {
     const rigRad = bodyRad + RIG_FACING_OFFSET_RAD;
+    this.applyStance(0, 0, 0);
     this.gait.reset(bodyX, bodyY, rigRad);
-    this.pose(bodyX, bodyY, rigRad);
+    this.pose(bodyX, bodyY, rigRad, 0);
   }
 
-  update(
-    bodyX: number,
-    bodyY: number,
-    bodyRad: number,
-    velX: number,
-    velY: number,
-    deltaMs: number,
-  ): void {
-    const rigRad = bodyRad + RIG_FACING_OFFSET_RAD;
-    const speed = Math.hypot(velX, velY);
-    const tempo = clamp01(speed / gaitConfig.fullTempoSpeedPxPerSec);
+  update(state: LimbDriveState, deltaMs: number): void {
+    const rigRad = state.bodyRad + RIG_FACING_OFFSET_RAD;
+    const speed = Math.hypot(state.velX, state.velY);
+    /*
+     * Dönüş de bir TEMPO kaynağıdır. Yerinde dönen bir gövdenin doğrusal hızı
+     * sıfırdır ama ayakların ev konumları teğetsel olarak savrulur; tempoyu
+     * yalnız hızdan okumak adımları en yavaş ayarında bırakıyor ve uzuvlar
+     * gövdenin arkasında sürükleniyordu.
+     */
+    const tangentialSpeed = Math.abs(state.turnRate) * this.stanceRadiusPx;
+    const tempo = clamp01(Math.max(speed, tangentialSpeed) / gaitConfig.fullTempoSpeedPxPerSec);
+
+    this.applyStance(state.motion01, state.dash01, state.crouch01);
     this.gait.setStepTuning({
-      stepTriggerPx: mix(gaitConfig.stepTriggerPx, gaitConfig.runStepTriggerPx, tempo),
-      stepDurationMs: mix(gaitConfig.stepDurationMs, gaitConfig.runStepDurationMs, tempo),
+      stepTriggerPx: lerp(gaitConfig.stepTriggerPx, gaitConfig.runStepTriggerPx, tempo),
+      stepDurationMs: lerp(gaitConfig.stepDurationMs, gaitConfig.runStepDurationMs, tempo),
     });
 
-    // Dash hızı adım hedefini erişim dışına fırlatmamalı; gövde yine gerçek
+    // Atılım hızı adım hedefini erişim dışına fırlatmamalı; gövde yine gerçek
     // hızla ilerler, yalnız ayağın öngörü mesafesi tam tempo hızında doyar.
     const leadScale =
       speed > gaitConfig.fullTempoSpeedPxPerSec ? gaitConfig.fullTempoSpeedPxPerSec / speed : 1;
-    this.gait.update(bodyX, bodyY, rigRad, velX * leadScale, velY * leadScale, deltaMs);
-    this.pose(bodyX, bodyY, rigRad);
+    this.gait.update(
+      state.bodyX,
+      state.bodyY,
+      rigRad,
+      state.velX * leadScale,
+      state.velY * leadScale,
+      deltaMs,
+    );
+    this.pose(state.bodyX, state.bodyY, rigRad, state.dash01);
   }
 
-  /** Adım atan uzuv sayısı — teşhis/HUD için. */
-  get steppingCount(): number {
-    let count = 0;
-    for (let i = 0; i < this.gait.legCount; i++) if (this.gait.isStepping(i)) count++;
-    return count;
+  /**
+   * O anda havada olan UZUV sayısı — arka itici uzuvlar dahil, çünkü onlar da
+   * adım atar ve gövdeyi taşır. Teşhis ve denge okumaları için.
+   */
+  get steppingLimbCount(): number {
+    return this.gait.steppingCount;
   }
 
-  private pose(bodyX: number, bodyY: number, rigRad: number): void {
-    // IK hedefleri rig'in gerçek render dönüşüyle aynı uzayda çözülmelidir;
-    // atan2 yönü ile yukarı bakan kaynak rig arasında sabit 90° fark vardır.
+  /** Bu karede yere basan ayakların dünya konumlarını gezer (toz, ses). */
+  forEachPlant(visit: (x: number, y: number) => void): void {
+    for (let i = 0; i < this.drivers.length; i++) {
+      if (this.gait.justPlanted(i)) visit(this.gait.footX(i), this.gait.footY(i));
+    }
+  }
+
+  /**
+   * Duruşu canlı yeniden yazar. Ev konumu yalnız bir SONRAKİ adımın hedefini
+   * etkiler; basılı ayak yerinde kalır, yani çömelirken ya da atılırken
+   * ayaklar kaymaz, uzuvlar bükülür.
+   */
+  private applyStance(motion01: number, dash01: number, crouch01: number): void {
+    for (let i = 0; i < this.drivers.length; i++) {
+      const home = restingHome(this.drivers[i], motion01, dash01, crouch01);
+      this.gait.setLegHome(i, home.x, home.y);
+    }
+  }
+
+  private pose(bodyX: number, bodyY: number, rigRad: number, dash01: number): void {
+    // IK hedefleri rig'in gerçek render dönüşüyle aynı uzayda çözülmelidir.
     const cos = Math.cos(-rigRad);
     const sin = Math.sin(-rigRad);
 
-    for (let i = 0; i < this.legCount; i++) {
-      const leg = this.rig.legs[i];
+    for (let i = 0; i < this.drivers.length; i++) {
+      const driver = this.drivers[i];
+      const limb = driver.rig;
       const worldDx = this.gait.footX(i) - bodyX;
       const worldDy = this.gait.footY(i) - bodyY;
       const localX = worldDx * cos - worldDy * sin;
       const localY = worldDx * sin + worldDy * cos;
 
-      let dx = localX - leg.hipX;
-      let dy = localY - leg.hipY;
+      let dx = localX - limb.hipX;
+      let dy = localY - limb.hipY;
 
       // Havadaki ayağı kalçaya doğru çek: diz daha çok bükülür, uzuv yerden
       // kalkmış görünür. Üstten bakışta "yükseklik" ancak böyle okunur.
       const lift = this.gait.lift(i);
       if (lift > 0) {
-        const distance = Math.hypot(dx, dy);
-        if (distance > 1e-3) {
-          const tucked = Math.max(1, distance - gaitConfig.swingTuckPx * lift);
-          const scale = tucked / distance;
-          dx *= scale;
-          dy *= scale;
+        const reach = Math.hypot(dx, dy);
+        if (reach > 1e-3) {
+          // Kısaltma hedefi [1, reach] aralığına kelepçelenir: ayak zaten
+          // kalçanın dibindeyken çıkarma negatife düşer ve uzvu KISALTMAK
+          // yerine uzatırdı.
+          const tucked = clamp(reach - gaitConfig.swingTuckPx * lift, 1, reach);
+          dx *= tucked / reach;
+          dy *= tucked / reach;
         }
       }
 
-      const solved = solveTwoBoneIk(dx, dy, leg.upperLength, leg.lowerLength, leg.bendSign);
-      leg.upper.rotation = solved.upperRad;
-      // Alt kemiğin dönüşü ÜST kemiğe görelidir (container zinciri mirası).
-      leg.lower.rotation = solved.lowerRad - solved.upperRad;
-    }
+      const stanceRad = stanceAngleRad(driver.stance, dash01);
+      const aimRad = Math.atan2(dy, dx);
+      const yaw = clamp(
+        wrap(aimRad - stanceRad, -Math.PI, Math.PI) * gaitConfig.shoulderFollow,
+        -gaitConfig.shoulderYawLimitDeg * DEG,
+        gaitConfig.shoulderYawLimitDeg * DEG,
+      );
+      const shoulderRad = stanceRad + yaw;
 
-    for (let t = 0; t < this.rig.tails.length; t++) {
-      const tail = this.rig.tails[t];
-      const index = this.legCount + t;
-      const worldDx = this.gait.footX(index) - bodyX;
-      const worldDy = this.gait.footY(index) - bodyY;
-      const localX = worldDx * cos - worldDy * sin;
-      const localY = worldDx * sin + worldDy * cos;
+      const kneeX = dx - Math.cos(shoulderRad) * limb.shoulderLength;
+      const kneeY = dy - Math.sin(shoulderRad) * limb.shoulderLength;
+      const solved = solveTwoBoneIk(
+        kneeX,
+        kneeY,
+        limb.upperLength,
+        limb.lowerLength,
+        driver.stance.bendSign,
+      );
 
-      const aim = Math.atan2(localY - tail.hipY, localX - tail.hipX);
-      // Kuyruk sanatı ayaktan gövdeye çizilmiştir: pivot gövde bağlantısında
-      // olduğu için uzuv, container'ın yerel -x yönüne uzanır.
-      tail.root.rotation = aim - Math.PI;
+      // Container dönüşleri EBEVEYNE görelidir: omuz rig uzayında, alt
+      // kemikler bir üstteki kemiğe göre döner.
+      limb.shoulder.rotation = shoulderRad;
+      limb.upper.rotation = solved.upperRad - shoulderRad;
+      limb.lower.rotation = solved.lowerRad - solved.upperRad;
+      if (limb.tip) {
+        limb.tip.rotation =
+          lerp(gaitConfig.clawPlantedCurlDeg, gaitConfig.clawLiftCurlDeg, lift) * DEG;
+      }
     }
   }
 }
 
-function mix(from: number, to: number, amount: number): number {
-  return from + (to - from) * amount;
+/** Uzvun o kareki gövde-yerel ev (dinlenme) ayak konumu. */
+function restingHome(
+  driver: LimbDriver,
+  motion01: number,
+  dash01: number,
+  crouch01: number,
+): { x: number; y: number } {
+  const angle = stanceAngleRad(driver.stance, dash01);
+  const reach =
+    (driver.stance.reach +
+      driver.stance.dashReachDelta * dash01 +
+      driver.stance.pushReachGain * motion01) *
+    (1 - gaitConfig.crouchReachDrop * crouch01);
+  const radius = driver.totalLength * reach;
+  return {
+    x: driver.rig.hipX + Math.cos(angle) * radius,
+    y: driver.rig.hipY + Math.sin(angle) * radius,
+  };
+}
+
+function stanceAngleRad(stance: LimbStance, dash01: number): number {
+  return FORWARD_RAD + (stance.angleDeg + stance.dashAngleDeltaDeg * dash01) * DEG;
 }

@@ -53,7 +53,14 @@ import * as Core from '../../src/index';
 // `RigMotionModel` sürekli hareket sinyalleri; `LegGait` ayak-sabitleyen
 // yürüyüş döngüsüdür. Uzuv sözlüğü bilinçli olarak tüketicide kalır
 // (bkz. `core/src/index.ts`daki not).
-const EXPECTED_EXPORT_COUNT = 208;
+// 208 → 212: bakış ve poz-türevi sunum efektleri — dört ÇALIŞMA ZAMANI export'u.
+// `GazeDriver` (`core/rig/GazeDriver.ts`) sıçramalı bakışı bir yuvanın içinde
+// tutan sürücüdür; `samplePose` bir görüntü ağacını dünya uzayına düzleştirir
+// ve `GhostTrail`/`PoseShadow` o pozdan ikinci bir görüntü çizer (art-görüntü,
+// gölge). Hepsi mekanizma katmanıdır: hangi parçanın gövde, hangisinin uzuv
+// olduğunu bilmezler. Ortak sprite havuzu (`PoseSpriteSet`) bu ikisinin İÇ
+// aracıdır ve bilinçli olarak yüzeye çıkmaz.
+const EXPECTED_EXPORT_COUNT = 212;
 
 // 196: asset compiler'lar (görsel/ses sentezi) CORE public surface'da
 // tutulmaz; runtime yalnızca üretilmiş asset'leri çalar.

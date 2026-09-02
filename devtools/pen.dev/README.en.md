@@ -51,6 +51,31 @@ assembly converts them into local space, compensating for the parent's
 rotation. A rig without joints produces byte-identical output to before joint
 support existed. This is a RENDER joint; it carries no physics constraints.
 
+### Adding joints to a published flat export
+
+The manifest's `parent` field is the PRIMARY home for joint information. A
+published flat export cannot always be regenerated, though (the source staging
+output is consumed and deleted), and in a jointless chain only the ends can be
+driven: intermediate bones stay siblings, freeze in their export pose while the
+driven part rotates, and the limb reads as broken.
+
+`articulateRigDefinition` lets the CONSUMER declare the schema:
+
+```typescript
+import { articulateRigDefinition, buildRigDefinition } from '@volstudio/pen.dev';
+
+const rig = articulateRigDefinition(buildRigDefinition(metadata, partUrls), {
+  leg_r0_femur: 'leg_r0_coxa',
+  leg_r0_tibia: 'leg_r0_femur',
+});
+```
+
+The returned definition is topologically ordered (a parent always precedes its
+children) and preserves the source draw order among siblings. Unknown parts,
+self-parenting and cycles are rejected. The metadata file is NOT touched, so the
+next export cannot silently override the decision; once `parent` is added to the
+manifest and the export is regenerated, the schema becomes unnecessary.
+
 Its first step is to validate the metadata at runtime (`validateRigMetadata`,
 also exported): `schemaVersion`, required fields and part types are checked,
 and all problems are collected into a single message. The TypeScript interface

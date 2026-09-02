@@ -6,6 +6,7 @@ import { DisposableScope } from '@volstudio/core/lifecycle';
 import { cardGrid } from './shared';
 import {
   buildBarVariantCard,
+  buildVerticalBarCard,
   buildCounterCard,
   buildFloatingTextCard,
   buildFormattedCounterCard,
@@ -32,6 +33,7 @@ export function buildHudTab(): { element: HTMLElement; destroy: () => void } {
     buildBarVariantCard('stamina', disposables),
     buildBarVariantCard('cooldown', disposables),
     buildLowThresholdCard(disposables),
+    buildVerticalBarCard(disposables),
     buildXPBarCard(disposables),
     buildCounterCard(disposables),
     buildFormattedCounterCard(disposables),

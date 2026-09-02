@@ -1,26 +1,71 @@
+/*
+ * HUD YERLEŞİM SÖZLEŞMESİ
+ *
+ * Kamera arenayı `arenaConfig.viewportGutterPx` boşluklarının içine sığdırır;
+ * HUD yalnız o boşluklarda yaşar ve oyun alanına HİÇBİR koşulda binmez.
+ * Ölçüler `ArachnidHud` tarafından bu değişkenlere yazılır — CSS'te ikinci bir
+ * sayı tutmak, boşluk değiştiğinde HUD'un sessizce arenanın üstüne kaymasıydı.
+ */
 .vol-arachnid-hud {
-  position: fixed;
-  top: calc(var(--vol-safe-top) + var(--vol-space-md));
-  left: calc(var(--vol-safe-left) + var(--vol-space-md));
-  width: min(
-    300px,
-    calc(100vw - var(--vol-safe-left) - var(--vol-safe-right) - 2 * var(--vol-space-md))
-  );
-  padding: 12px;
-  border: 1px solid var(--vol-ui-border-soft);
-  border-left-color: var(--vol-ui-accent-solid);
-  border-radius: var(--vol-radius-md);
-  background: var(--vol-ui-overlay-panel);
-  box-shadow: 0 8px 32px var(--vol-ui-scrim);
-  backdrop-filter: blur(12px);
-  display: grid;
-  gap: var(--vol-space-sm);
   pointer-events: none;
+  position: fixed;
+  inset: 0;
 }
 
+/* Marka şeridi: üst boşlukta, VOL başlık fontuyla. */
+.vol-arachnid-hud__title {
+  text-align: left;
+  letter-spacing: 0.14em;
+  color: var(--vol-ui-text-secondary);
+  height: var(--vol-arachnid-gutter-top);
+  font-size: 17px;
+  line-height: var(--vol-arachnid-gutter-top);
+  position: absolute;
+  top: 0;
+  left: max(var(--vol-safe-left), 20px);
+}
+
+/*
+ * Atılım göstergesi: sol boşlukta DİKEY bir bar, etiketsiz.
+ * Yükseklik görünürlükle ölçeklenir ama üst/alt boşlukları hiç yemez.
+ */
 .vol-arachnid-hud__dash {
-  height: 22px;
   border-color: var(--vol-ui-accent-border);
+  width: 14px;
+  height: min(34vh, 300px);
+  position: absolute;
+  top: 50%;
+
+  /*
+   * Güvenli alan çentiği boşluktan genişse bile bar arenaya BİNEMEZ: sol
+   * kenar, boşluğun içinde kalacak biçimde tavanlanır.
+   */
+  left: min(max(var(--vol-safe-left), 24px), calc(var(--vol-arachnid-gutter-left) - 20px));
+  transform: translateY(-50%);
+}
+
+.vol-arachnid-hud__fullscreen {
+  position: absolute;
+  top: calc((var(--vol-arachnid-gutter-top) - 32px) / 2);
+  right: max(var(--vol-safe-right), 16px);
+}
+
+/* Sayısal telemetri: yalnız hız, alt boşluğun sağında. */
+.vol-arachnid-hud__telemetry {
+  align-items: center;
+  height: 20px;
+  display: flex;
+  position: absolute;
+  right: max(var(--vol-safe-right), 16px);
+  bottom: calc((var(--vol-arachnid-gutter-bottom) - 20px) / 2);
+}
+
+.vol-arachnid-hud__speed {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1;
 }
 
 .vol-arachnid-hud--dash-ready .vol-arachnid-hud__dash {
@@ -39,48 +84,27 @@
   background: var(--vol-ui-brand-solid);
 }
 
-.vol-arachnid-hud__telemetry {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: var(--vol-space-sm);
-  display: grid;
-}
-
-.vol-arachnid-hud__speed,
-.vol-arachnid-hud__status {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.25;
-  white-space: nowrap;
-}
-
-.vol-arachnid-hud__speed {
-  font-family: var(--vol-font-family-body);
-  font-variant-numeric: tabular-nums;
-}
-
-.vol-arachnid-hud__status {
-  text-align: right;
-}
-
-.vol-arachnid-hud--dashing .vol-arachnid-hud__status {
+.vol-arachnid-hud--dashing .vol-arachnid-hud__speed {
   color: var(--vol-ui-brand-hover);
 }
 
-@media (width <= 520px) {
-  .vol-arachnid-hud {
-    width: min(
-      260px,
-      calc(100vw - var(--vol-safe-left) - var(--vol-safe-right) - 2 * var(--vol-space-md))
-    );
+.vol-arachnid-hud--moving .vol-arachnid-hud__speed {
+  color: var(--vol-ui-text-secondary);
+}
+
+/*
+ * Dar ekranda boşluklar aynı kalır (kamera onları ayırır), yalnız bar kısalır
+ * ve başlık daralır; hiçbir öğe arenaya doğru büyümez.
+ */
+@media (width <= 620px) {
+  .vol-arachnid-hud__title {
+    letter-spacing: 0.08em;
+    font-size: 14px;
   }
 
-  .vol-arachnid-hud__telemetry {
-    grid-template-columns: 1fr;
-    gap: var(--vol-space-xs);
-  }
-
-  .vol-arachnid-hud__status {
-    text-align: left;
+  .vol-arachnid-hud__dash {
+    width: 11px;
+    height: min(28vh, 220px);
+    left: min(max(var(--vol-safe-left), 16px), calc(var(--vol-arachnid-gutter-left) - 17px));
   }
 }
