@@ -38,6 +38,22 @@ export interface LimbStance {
   bendSign: number;
   /** Eşzamanlı adım grubu — komşu ve karşı uzuvlar zıt gruptadır. */
   group: number;
+  /**
+   * Uzuv sıra bekler mi? Sıra disiplini "gövde her an desteklidir" güvencesidir
+   * ve gövdeyi SEKİZ bacak taşır; kısa itici uzuvlar o güvencenin parçası
+   * değildir. Sıraya sokulduklarında kendi eşiklerini çoktan aşmış hâlde
+   * bekliyor, kısa erişim payları bittiği için stride'ın yarısından fazlasını
+   * TAM GERİLİ geçiriyorlardı (ölçüldü: %52-56).
+   */
+  freeStep: boolean;
+  /**
+   * Adım ölçeği: tetik, acil eşik ve öngörü payı bununla çarpılır.
+   *
+   * Kısa uzuv kısa adım atar. Eşik uzvun erişim payını aşarsa ayak, uzuv TAM
+   * GERİLİ hâldeyken beklemeye devam eder — arka itici uzuvlarda strideın
+   * %86'sı bu hâlde geçiyor ve uzuv yerde sürükleniyormuş gibi görünüyordu.
+   */
+  strideScale: number;
   /** Atılım sırasında duruş açısına eklenen değer (derece). */
   dashAngleDeltaDeg: number;
   /** Atılım sırasında erişime eklenen oran. */
@@ -50,14 +66,19 @@ export interface LimbStance {
 }
 
 /** Kısa kök kemik IK dışında tutulur; iş uzun femur/tibia'dadır. */
-const LEG_ROOT = { rootFollow: 0.6, rootYawLimitDeg: 42 } as const;
+const LEG_ROOT = {
+  rootFollow: 0.6,
+  rootYawLimitDeg: 42,
+  strideScale: 1,
+  freeStep: false,
+} as const;
 
 const STANCE: Readonly<Record<string, LimbStance>> = {
   // Ön çift — atılımda öne fırlar, dengeyi önden yakalar.
   r3: {
     ...LEG_ROOT,
     angleDeg: 45,
-    reach: 0.78,
+    reach: 0.72,
     bendSign: -1,
     group: 0,
     dashAngleDeltaDeg: -16,
@@ -67,7 +88,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   l3: {
     ...LEG_ROOT,
     angleDeg: -45,
-    reach: 0.78,
+    reach: 0.72,
     bendSign: 1,
     group: 1,
     dashAngleDeltaDeg: 16,
@@ -77,7 +98,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   r2: {
     ...LEG_ROOT,
     angleDeg: 80,
-    reach: 0.78,
+    reach: 0.72,
     bendSign: -1,
     group: 1,
     dashAngleDeltaDeg: -8,
@@ -87,7 +108,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   l2: {
     ...LEG_ROOT,
     angleDeg: -80,
-    reach: 0.78,
+    reach: 0.72,
     bendSign: 1,
     group: 0,
     dashAngleDeltaDeg: 8,
@@ -98,7 +119,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   r1: {
     ...LEG_ROOT,
     angleDeg: 115,
-    reach: 0.78,
+    reach: 0.72,
     bendSign: 1,
     group: 0,
     dashAngleDeltaDeg: 6,
@@ -108,7 +129,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   l1: {
     ...LEG_ROOT,
     angleDeg: -115,
-    reach: 0.78,
+    reach: 0.72,
     bendSign: -1,
     group: 1,
     dashAngleDeltaDeg: -6,
@@ -118,7 +139,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   r0: {
     ...LEG_ROOT,
     angleDeg: 148,
-    reach: 0.78,
+    reach: 0.72,
     bendSign: 1,
     group: 1,
     dashAngleDeltaDeg: 9,
@@ -128,7 +149,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   l0: {
     ...LEG_ROOT,
     angleDeg: -148,
-    reach: 0.78,
+    reach: 0.72,
     bendSign: -1,
     group: 0,
     dashAngleDeltaDeg: -9,
@@ -147,7 +168,9 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   // birbirine yakın durur.
   tr: {
     angleDeg: 168,
-    reach: 0.92,
+    reach: 0.68,
+    strideScale: 0.55,
+    freeStep: true,
     bendSign: -1,
     group: 0,
     dashAngleDeltaDeg: 11,
@@ -156,7 +179,9 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   },
   tl: {
     angleDeg: -168,
-    reach: 0.92,
+    reach: 0.68,
+    strideScale: 0.55,
+    freeStep: true,
     bendSign: 1,
     group: 1,
     dashAngleDeltaDeg: -11,
@@ -168,23 +193,27 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
 export const gaitConfig = {
   stance: STANCE,
 
-  stepTriggerPx: 33,
-  runStepTriggerPx: 50,
+  stepTriggerPx: 26,
+  runStepTriggerPx: 38,
   stepDurationMs: 205,
   runStepDurationMs: 128,
   /**
    * Sıra disiplinini delen gerginlik.
    *
-   * Normal yürüyüşün ÜSTÜNDE seçilir: tam tempoda bekleyen bir uzvun en kötü
-   * gerginliği tetik (50) + bir adım süresince kat edilen yol
-   * (215 × 0.128 ≈ 28) ≈ 78'dir. Değer bunun altına inerse sıra disiplini düz
-   * yürüyüşte de delinir ve gövde desteksiz kalır.
+   * Normal yürüyüşün ÜSTÜNDE seçilir. Bekleyen bir uzvun en kötü gerginliği
+   * tetik (38) + sıranın sürdüğü boyunca kat edilen yoldur. Sıra TEK bir adım
+   * kadar sürmez: bir gruptaki beş uzuv kaymalı başlar, sıra ancak sonuncusu
+   * inince biter — pratikte ~iki adım süresi (215 × 0.128 × 2 ≈ 55). Yani
+   * eşik ~93'ün altına inerse sıra disiplini DÜZ YÜRÜYÜŞTE delinir ve gövde
+   * desteksiz kalır.
+   *
+   * `strideScale` ile ölçeklenmez: bu eşik bacağın değil GÖVDENİN ölçüsüdür.
    *
    * Üstünde kaldığı durumlar bilinçlidir: atılım ve sert dönüş. İkisinde de
    * gövde bir adım süresinde uzuv erişiminden çok yol alır; sırasını bekleyen
    * uzuv yerde sürüklenir ve gövde dönse bile yerinden kalkmaz.
    */
-  emergencyStrainPx: 88,
+  emergencyStrainPx: 100,
   /** Bu hızda koşu adımının tam tempo değerleri kullanılır. */
   fullTempoSpeedPxPerSec: 215,
   /** Adım hedefini hız yönünde ileri koyar; ayak gideceği yere basar. */
@@ -205,4 +234,14 @@ export const gaitConfig = {
    * Aşırıya kaçmak üstten bakışı bozar — oran bilinçli olarak küçüktür.
    */
   crouchReachDrop: 0.075,
+
+  /**
+   * ATILIM POZU. Atılım sırasında ayaklar yere değmez; yürüyüş döngüsü
+   * tamamen devre dışı kalır ve uzuvlar tek bir uçuş pozunda tutulur.
+   *
+   * Döngü açık bırakıldığında uzuvlar sıra disiplinini delip birbiri ardına
+   * acil adım atıyordu: gövde düz uçarken bacaklar yerinde TİTRİYOR, avlanan
+   * bir yaratık yerine bozuk bir makine gibi görünüyordu.
+   */
+  flightLift: 0.55,
 } as const;

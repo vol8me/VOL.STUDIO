@@ -1,16 +1,4 @@
 {
-  "$comment": [
-    "VOL.ARACHNID'i AYNI Tauri kabuğunda çalıştıran örtü yapılandırması.",
-    "",
-    "Yalnız ÖN YÜZ hedefi değişir: dev komutu, dev URL'i ve build çıktısı.",
-    "`identifier` bilinçli olarak DEĞİŞTİRİLMEZ — Android projesi (gen/android)",
-    "paket kimliğine bağlı olarak üretilmiştir ve kimliği değiştirmek projeyi",
-    "yeniden üretmeyi (yön kilidi, çentik yerleşimi, ikonlar) gerektirirdi.",
-    "Bunun bedeli, cihazda iki oyunun aynı paketi paylaşmasıdır: arachnid",
-    "kurulduğunda vol-hell'in yerini alır. Bağlı cihaz denemesi için kabul",
-    "edilebilir; iki oyun yan yana isteniyorsa ayrı bir kimlikle ikinci bir",
-    "Android projesi üretilmelidir."
-  ],
   "productName": "VOL.ARACHNID",
   "mainBinaryName": "VOL.ARACHNID",
   "build": {

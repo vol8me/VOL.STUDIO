@@ -2,6 +2,7 @@ import {
   LegGait,
   clamp,
   clamp01,
+  finiteOr,
   lerp,
   solveTwoBoneIk,
   wrap,
@@ -30,6 +31,11 @@ export interface LimbDriveState {
   dash01: number;
   /** [0,1] çömelme — uzuvları gövdeye çeker. */
   crouch01: number;
+  /**
+   * Ayaklar yerde DEĞİL mi? Atılım boyunca gövde uçar; yürüyüş döngüsü
+   * tamamen durur ve uzuvlar tek bir uçuş pozunda tutulur.
+   */
+  airborne: boolean;
 }
 
 interface LimbDriver {
@@ -59,6 +65,11 @@ export class ArachnidLegs {
   private readonly drivers: LimbDriver[];
   /** Ayakların gövde merkezine ORTALAMA uzaklığı — dönüşün teğetsel hızı için. */
   private readonly stanceRadiusPx: number;
+  /** Ayak hedefleri gövde-yerel uzayda; kaynağı ya yürüyüş döngüsü ya uçuş pozudur. */
+  private readonly footLocalX: number[];
+  private readonly footLocalY: number[];
+  private readonly footLift: number[];
+  private airborne = false;
 
   constructor(rig: ArachnidRig) {
     this.drivers = rig.limbs.map((limb) => {
@@ -82,8 +93,17 @@ export class ArachnidLegs {
 
     const entries: LegGaitLeg[] = this.drivers.map((driver) => {
       const home = restingHome(driver, 0, 0, 0);
-      return { homeX: home.x, homeY: home.y, group: driver.stance.group };
+      return {
+        homeX: home.x,
+        homeY: home.y,
+        group: driver.stance.group,
+        strideScale: driver.stance.strideScale,
+        freeStep: driver.stance.freeStep,
+      };
     });
+    this.footLocalX = new Array<number>(entries.length).fill(0);
+    this.footLocalY = new Array<number>(entries.length).fill(0);
+    this.footLift = new Array<number>(entries.length).fill(0);
     this.stanceRadiusPx =
       entries.reduce((total, entry) => total + Math.hypot(entry.homeX, entry.homeY), 0) /
       entries.length;
@@ -99,13 +119,41 @@ export class ArachnidLegs {
   /** Ayakları gövdenin altına adımsız yerleştirir (doğuş/ışınlanma). */
   reset(bodyX: number, bodyY: number, bodyRad: number): void {
     const rigRad = bodyRad + RIG_FACING_OFFSET_RAD;
+    this.airborne = false;
     this.applyStance(0, 0, 0);
     this.gait.reset(bodyX, bodyY, rigRad);
-    this.pose(bodyX, bodyY, rigRad, 0);
+    this.readGaitFeet(bodyX, bodyY, rigRad);
+    this.pose(0);
   }
 
-  update(state: LimbDriveState, deltaMs: number): void {
+  update(rawState: LimbDriveState, deltaMs: number): void {
+    /*
+     * Akış değerleri TEMİZLENİR, reddedilmez. Bir kare bozuk geldiğinde
+     * (sekme sonrası dev delta, sıfıra bölme ürünü bir hız) uzuv pozunun
+     * kalıcı olarak NaN'e düşmesi orantısız olurdu; CORE'un `Spring1D` ve
+     * `Cooldown` için izlediği politika da budur.
+     */
+    const state = sanitiseDriveState(rawState);
     const rigRad = state.bodyRad + RIG_FACING_OFFSET_RAD;
+    this.applyStance(state.motion01, state.dash01, state.crouch01);
+
+    if (state.airborne) {
+      // Yürüyüş döngüsü DURUR. Açık bırakıldığında uzuvlar sıra disiplinini
+      // delip acil adım yağmuruna giriyor, gövde düz uçarken bacaklar yerinde
+      // titriyordu.
+      this.airborne = true;
+      this.readFlightFeet();
+      this.pose(state.dash01);
+      return;
+    }
+
+    if (this.airborne) {
+      // İniş: bütün ayaklar aynı anda evlerine basar. Havadaki pozdan yürüyüşe
+      // adım adım dönmek, inişi bulanık bir sürüklenmeye çevirirdi.
+      this.airborne = false;
+      this.gait.reset(state.bodyX, state.bodyY, rigRad);
+    }
+
     const speed = Math.hypot(state.velX, state.velY);
     /*
      * Dönüş de bir TEMPO kaynağıdır. Yerinde dönen bir gövdenin doğrusal hızı
@@ -116,7 +164,6 @@ export class ArachnidLegs {
     const tangentialSpeed = Math.abs(state.turnRate) * this.stanceRadiusPx;
     const tempo = clamp01(Math.max(speed, tangentialSpeed) / gaitConfig.fullTempoSpeedPxPerSec);
 
-    this.applyStance(state.motion01, state.dash01, state.crouch01);
     this.gait.setStepTuning({
       stepTriggerPx: lerp(gaitConfig.stepTriggerPx, gaitConfig.runStepTriggerPx, tempo),
       stepDurationMs: lerp(gaitConfig.stepDurationMs, gaitConfig.runStepDurationMs, tempo),
@@ -134,7 +181,8 @@ export class ArachnidLegs {
       state.velY * leadScale,
       deltaMs,
     );
-    this.pose(state.bodyX, state.bodyY, rigRad, state.dash01);
+    this.readGaitFeet(state.bodyX, state.bodyY, rigRad);
+    this.pose(state.dash01);
   }
 
   /**
@@ -169,25 +217,40 @@ export class ArachnidLegs {
     }
   }
 
-  private pose(bodyX: number, bodyY: number, rigRad: number, dash01: number): void {
+  /** Yürüyüş döngüsünün dünya ayaklarını gövde-yerel uzaya çevirir. */
+  private readGaitFeet(bodyX: number, bodyY: number, rigRad: number): void {
     // IK hedefleri rig'in gerçek render dönüşüyle aynı uzayda çözülmelidir.
     const cos = Math.cos(-rigRad);
     const sin = Math.sin(-rigRad);
+    for (let i = 0; i < this.drivers.length; i++) {
+      const worldDx = this.gait.footX(i) - bodyX;
+      const worldDy = this.gait.footY(i) - bodyY;
+      this.footLocalX[i] = worldDx * cos - worldDy * sin;
+      this.footLocalY[i] = worldDx * sin + worldDy * cos;
+      this.footLift[i] = this.gait.lift(i);
+    }
+  }
 
+  /** Uçuş pozu: ayaklar EV konumlarında tutulur, hepsi eşit kaldırılır. */
+  private readFlightFeet(): void {
+    for (let i = 0; i < this.drivers.length; i++) {
+      this.footLocalX[i] = this.gait.homeX(i);
+      this.footLocalY[i] = this.gait.homeY(i);
+      this.footLift[i] = gaitConfig.flightLift;
+    }
+  }
+
+  private pose(dash01: number): void {
     for (let i = 0; i < this.drivers.length; i++) {
       const driver = this.drivers[i];
       const limb = driver.rig;
-      const worldDx = this.gait.footX(i) - bodyX;
-      const worldDy = this.gait.footY(i) - bodyY;
-      const localX = worldDx * cos - worldDy * sin;
-      const localY = worldDx * sin + worldDy * cos;
 
-      let dx = localX - limb.hipX;
-      let dy = localY - limb.hipY;
+      let dx = this.footLocalX[i] - limb.hipX;
+      let dy = this.footLocalY[i] - limb.hipY;
 
       // Havadaki ayağı kalçaya doğru çek: diz daha çok bükülür, uzuv yerden
       // kalkmış görünür. Üstten bakışta "yükseklik" ancak böyle okunur.
-      const lift = this.gait.lift(i);
+      const lift = this.footLift[i];
       if (lift > 0) {
         const reach = Math.hypot(dx, dy);
         if (reach > 1e-3) {
@@ -242,6 +305,21 @@ export class ArachnidLegs {
       }
     }
   }
+}
+
+function sanitiseDriveState(state: LimbDriveState): LimbDriveState {
+  return {
+    bodyX: finiteOr(state.bodyX, 0),
+    bodyY: finiteOr(state.bodyY, 0),
+    bodyRad: finiteOr(state.bodyRad, 0),
+    velX: finiteOr(state.velX, 0),
+    velY: finiteOr(state.velY, 0),
+    turnRate: finiteOr(state.turnRate, 0),
+    motion01: clamp01(finiteOr(state.motion01, 0)),
+    dash01: clamp01(finiteOr(state.dash01, 0)),
+    crouch01: clamp01(finiteOr(state.crouch01, 0)),
+    airborne: state.airborne,
+  };
 }
 
 /** Uzvun o kareki gövde-yerel ev (dinlenme) ayak konumu. */

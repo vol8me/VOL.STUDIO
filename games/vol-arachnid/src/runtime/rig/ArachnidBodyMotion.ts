@@ -7,6 +7,7 @@ import {
   clamp,
   clamp01,
   createRandom,
+  finiteOr,
 } from '@volstudio/core';
 import { bodyMotionConfig } from '@/config/bodyMotion';
 import { playerConfig } from '@/config/player';
@@ -89,8 +90,18 @@ export class ArachnidBodyMotion {
     );
   }
 
-  update(state: BodyMotionState, deltaMs: number): BodyMotionSignals {
-    const speed = Math.max(0, state.speed);
+  update(rawState: BodyMotionState, deltaMs: number): BodyMotionSignals {
+    // Akış değerleri temizlenir; bozuk tek bir kare kabuğun dönüşümünü kalıcı
+    // olarak NaN'e düşürmemeli (bkz. `ArachnidLegs.update`).
+    const state: BodyMotionState = {
+      speed: Math.max(0, finiteOr(rawState.speed, 0)),
+      accelX: finiteOr(rawState.accelX, 0),
+      accelY: finiteOr(rawState.accelY, 0),
+      turnRate: finiteOr(rawState.turnRate, 0),
+      facingRad: finiteOr(rawState.facingRad, 0),
+      dash01: clamp01(finiteOr(rawState.dash01, 0)),
+    };
+    const speed = state.speed;
     // `RigMotionModel` bir hareket NİYETİ bekler; gerçek hızın birim vektörü
     // aynı sözleşmeyi karşılar ve girdisiz hareketleri de kapsar.
     const magnitude = clamp01(speed / bodyMotionConfig.standSpeedPxPerSec);

@@ -197,7 +197,7 @@ describe('ArachnidBody hareketi', () => {
     // Sağa atıl, sonra sola basılı tut: yön SOLA değil, uçulan yöne (+x) döner.
     body.update(new Vector2(1, 0), true, FRAME_MS);
     const beforeLock = circularDistance(body.facingRad, 0);
-    for (let i = 0; i < 8; i++) body.update(new Vector2(-1, 0), false, FRAME_MS);
+    for (let i = 0; i < 5; i++) body.update(new Vector2(-1, 0), false, FRAME_MS);
 
     expect(body.isDashing).toBe(true);
     expect(body.velocity.x).toBeGreaterThan(0);

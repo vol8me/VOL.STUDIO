@@ -77,15 +77,23 @@ Ayaklar dünya uzayında sabitlenir (`LegGait`); gövde ilerledikçe geride
 kalırlar ve eşiği aşınca öne adım atarlar. Adım sırası gruplar arasında
 dönüşümlüdür, yani gövde her an en az bir grup ayak üstündedir.
 
-Arka iki uzuv (`tl`/`tr`) kısa İTİCİ bacaklardır: yürüyüş hızıyla daha geriye
-basar, atılımda gövdeyi iterler. Onlarda kemik sıralaması TERSTİR — kök kemik
-en uzun (50 px), alt kemikler 26 ve 12. Bu yüzden kök kemiğin ayak yönüne
-yapışma oranı (`shoulderFollow`) uzuv tipine göre ayrılır: bacaklarda iş uzun
-alt kemiklerde, arka uzuvlarda KÖK kemiktedir.
+Arka iki uzuv (`tl`/`tr`) kısa İTİCİ bacaklardır ve iki noktada bacaklardan
+ayrılırlar:
 
-Atılım sırasında ayaklar yere değmez; toz da o yüzden kesilir. Karşılığı
-atılımın bittiği karededir — bütün ayaklar aynı anda iner ve toplu bir toz
-patlaması bırakır.
+- **Adım boyu** (`strideScale`) kısadır. Ayak, evinden `stepTriggerPx` kadar
+  uzaklaşana dek yerde kalır; 88 px'lik bir uzuvda bacakların eşiği erişim
+  payını aşar ve uzuv stride'ın yarısından fazlasını TAM GERİLİ, yani yerde
+  sürüklenerek geçirirdi.
+- **Sıra beklemezler** (`freeStep`). Sıra disiplininin tek amacı "gövde her an
+  desteklidir" güvencesidir ve gövdeyi sekiz bacak taşır; kısa iticiler o
+  güvencenin parçası değildir. Sıraya sokulduklarında kendi eşiklerini çoktan
+  aşmış hâlde bekliyorlardı.
+
+Atılım boyunca yürüyüş döngüsü TAMAMEN durur ve uzuvlar tek bir uçuş pozunda
+tutulur (`gaitConfig.flightLift`); açık bırakıldığında uzuvlar acil adım
+yağmuruna girip yerinde titriyordu. Ayaklar yere değmediği için toz da kesilir;
+karşılığı atılımın bittiği karededir — bütün ayaklar aynı anda iner ve toplu
+bir toz patlaması bırakır.
 
 ### Duruş kaynak pozdan TÜRETİLMEZ
 

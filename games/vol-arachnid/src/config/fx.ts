@@ -15,10 +15,10 @@ export const fxConfig = {
    * taşır; tek bir siluet kopyası atılımın bacak salınımını gösteremezdi.
    */
   ghostTrail: {
-    maxGhosts: 4,
-    lifespanMs: 210,
-    captureIntervalMs: 44,
-    startAlpha: 0.34,
+    maxGhosts: 3,
+    lifespanMs: 150,
+    captureIntervalMs: 38,
+    startAlpha: 0.36,
     endAlpha: 0,
     tint: hex(VOL_COLORS.brandHover),
     depth: FX_DEPTH.ghost,

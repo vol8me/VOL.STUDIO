@@ -55,6 +55,7 @@ function driveState(overrides: Partial<LimbDriveState> = {}): LimbDriveState {
     motion01: 0,
     dash01: 0,
     crouch01: 0,
+    airborne: false,
     ...overrides,
   };
 }
@@ -188,11 +189,13 @@ describe('ArachnidLegs — yürüyüş', () => {
     const legs = new ArachnidLegs(rig);
     legs.reset(0, 0, BODY_RAD);
 
-    // Grup başına beş uzuv var; acil eşik devreye girmesin diye tam tempo
-    // hızının altında yürünür.
-    const groupSize = Object.values(gaitConfig.stance).filter(
-      (stance) => stance.group === 0,
+    // Sıraya dahil uzuvlarda grup başına dört bacak var; kısa itici uzuvlar
+    // sıra beklemez ve destek güvencesinin parçası değildir.
+    const lockedGroupSize = Object.values(gaitConfig.stance).filter(
+      (stance) => !stance.freeStep && stance.group === 0,
     ).length;
+    const freeCount = Object.values(gaitConfig.stance).filter((stance) => stance.freeStep).length;
+    const groupSize = lockedGroupSize + freeCount;
     let peak = 0;
     walk(legs, 400, 200, {}, () => {
       peak = Math.max(peak, legs.steppingLimbCount);
@@ -237,6 +240,38 @@ describe('ArachnidLegs — yürüyüş', () => {
           totalLength(limb) + 1e-6,
         );
       }
+    }
+  });
+
+  it('hiçbir uzuv stride boyunca TAM GERİLİ takılıp kalmaz', () => {
+    const rig = makeRig();
+    const legs = new ArachnidLegs(rig);
+    legs.reset(0, 0, BODY_RAD);
+
+    const frames = new Map(rig.limbs.map((limb) => [limb.id, 0]));
+    let total = 0;
+    const speed = 210;
+    let y = 0;
+    for (let i = 0; i < 500; i++) {
+      y -= (speed * DT) / 1000;
+      legs.update(driveState({ bodyY: y, velY: -speed, motion01: 1 }), DT);
+      total++;
+      for (const limb of rig.limbs) {
+        const foot = forwardKinematics(limb);
+        const reach = Math.hypot(foot.x - limb.hipX, foot.y - limb.hipY);
+        if (reach > totalLength(limb) * 0.97) {
+          frames.set(limb.id, frames.get(limb.id)! + 1);
+        }
+      }
+    }
+
+    /*
+     * Tam gerili geçen kare oranı, uzvun yerde SÜRÜKLENDİĞİ süredir. Kısa
+     * itici uzuvlar sıraya sokulduğunda bu oran %52-56'ya çıkıyordu: erişim
+     * payları sırayı beklemeye yetmiyordu.
+     */
+    for (const limb of rig.limbs) {
+      expect(frames.get(limb.id)! / total, `${limb.id} tam gerili oranı`).toBeLessThan(0.12);
     }
   });
 

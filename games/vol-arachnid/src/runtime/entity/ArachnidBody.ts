@@ -4,6 +4,7 @@ import {
   Vector2,
   clamp,
   clamp01,
+  finiteOr,
   wrap,
   type Vector2 as Vec,
 } from '@volstudio/core';
@@ -110,12 +111,22 @@ export class ArachnidBody {
 
   update(moveIntent: Vec, dashPressed: boolean, deltaMs: number): void {
     const dt = Math.min(deltaMs, 100) / MS_PER_SEC;
-    if (dt <= 0) return;
+    // `NaN <= 0` YANLIŞ'tır: kelepçesiz bir sonsuzluk kontrolü bozuk tek bir
+    // kareyi konuma ve hıza kalıcı olarak yazar, yaratık bir daha toparlanmaz.
+    if (!Number.isFinite(dt) || dt <= 0) return;
 
     this.dashCooldown.update(deltaMs);
     this.wallRecoveryMs = Math.max(0, this.wallRecoveryMs - deltaMs);
 
-    const intentLength = moveIntent.length();
+    /*
+     * Niyet TEMİZLENİR. Sonsuz bir bileşen `hypot`u da sonsuz yapar ve
+     * `x / uzunluk` NaN'e düşer — hız ve konum bir daha toparlanmamak üzere
+     * bozulurdu. Girdi katmanı bunu üretmez ama gövde tek bir bozuk kareye
+     * teslim olmamalıdır.
+     */
+    const intentX = finiteOr(moveIntent.x, 0);
+    const intentY = finiteOr(moveIntent.y, 0);
+    const intentLength = Math.hypot(intentX, intentY);
     // Sekmeden toparlanırken girdi yok sayılır: aksi halde duvara yaslanan
     // oyuncu sekmeyi anında ezer ve çarpma hiç hissedilmez.
     const hasIntent = intentLength > 1e-3 && this.wallRecoveryMs <= 0;
@@ -124,7 +135,7 @@ export class ArachnidBody {
       this.dashRemainingMs = playerConfig.dash.durationMs;
       // Dash yönü: girdi varsa oraya, yoksa gövdenin baktığı yöne.
       if (intentLength > 1e-3)
-        this.dashDirection.set(moveIntent.x / intentLength, moveIntent.y / intentLength);
+        this.dashDirection.set(intentX / intentLength, intentY / intentLength);
       else this.dashDirection.set(Math.cos(this.facing.value), Math.sin(this.facing.value));
     }
 
@@ -141,8 +152,8 @@ export class ArachnidBody {
     } else if (hasIntent) {
       // Niyetin BÜYÜKLÜĞÜ hız kesridir: yarıya itilen bir çubuk yarım hız verir.
       const scale = Math.min(1, intentLength) * this.turnSpeedScale();
-      const targetX = (moveIntent.x / intentLength) * playerConfig.maxSpeed * scale;
-      const targetY = (moveIntent.y / intentLength) * playerConfig.maxSpeed * scale;
+      const targetX = (intentX / intentLength) * playerConfig.maxSpeed * scale;
+      const targetY = (intentY / intentLength) * playerConfig.maxSpeed * scale;
       this.approachVelocity(targetX, targetY, playerConfig.accelerationPxPerSec2 * dt);
     } else {
       this.approachVelocity(0, 0, playerConfig.brakePxPerSec2 * dt);
@@ -159,7 +170,7 @@ export class ArachnidBody {
     // Duvara çarpma da atılımı bitirir; iniş her iki yolda da bildirilir.
     if (wasDashing && this.dashRemainingMs <= 0) this.pendingDashLanding = true;
 
-    this.updateFacing(moveIntent, hasIntent, deltaMs);
+    this.updateFacing(intentX, intentY, hasIntent, deltaMs);
     this.updateDashBlend(deltaMs);
   }
 
@@ -256,13 +267,18 @@ export class ArachnidBody {
    * Yayın kendi hızı ayrıca tavanlanır: büyük bir açı farkında yay ilk
    * karelerde ağır bir gövdeye yakışmayan bir açısal hıza fırlar.
    */
-  private updateFacing(moveIntent: Vec, hasIntent: boolean, deltaMs: number): void {
+  private updateFacing(
+    intentX: number,
+    intentY: number,
+    hasIntent: boolean,
+    deltaMs: number,
+  ): void {
     // Atılım sürerken yön KİLİTLİDİR: gövde uçtuğu yöne bakar. Dümen kırmak
     // hem ağırlığı hem uzuv duruşunu bozuyordu (bkz. `playerConfig.dash`).
     const target = this.isDashing
       ? Math.atan2(this.dashDirection.y, this.dashDirection.x)
       : hasIntent
-      ? Math.atan2(moveIntent.y, moveIntent.x)
+      ? Math.atan2(intentY, intentX)
       : this.facing.value;
     const shortest = wrap(target - this.facing.value, -Math.PI, Math.PI);
     const before = this.facing.value;

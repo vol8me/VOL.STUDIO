@@ -108,12 +108,16 @@ describe('duruş tablosu', () => {
     expect(gaitConfig.runStepTriggerPx).toBeGreaterThan(gaitConfig.stepTriggerPx);
     expect(gaitConfig.runStepDurationMs).toBeLessThan(gaitConfig.stepDurationMs);
 
-    // Tam tempoda bekleyen bir uzvun en kötü gerginliği: tetik + bir adım
-    // süresince kat edilen yol. Eşik bunun ALTINA inerse sıra disiplini düz
-    // yürüyüşte delinir ve gövde desteksiz kalır.
+    /*
+     * Tam tempoda bekleyen bir uzvun en kötü gerginliği: tetik + SIRA boyunca
+     * kat edilen yol. Sıra tek bir adım kadar sürmez — bir gruptaki uzuvlar
+     * kaymalı başlar ve sıra sonuncusu inince biter, pratikte ~iki adım.
+     * Eşik bunun altına inerse sıra disiplini düz yürüyüşte delinir.
+     */
+    const TURN_STEP_SPAN = 2;
     const worstWalkingStrain =
       gaitConfig.runStepTriggerPx +
-      (gaitConfig.fullTempoSpeedPxPerSec * gaitConfig.runStepDurationMs) / 1000;
+      (TURN_STEP_SPAN * gaitConfig.fullTempoSpeedPxPerSec * gaitConfig.runStepDurationMs) / 1000;
     expect(gaitConfig.emergencyStrainPx).toBeGreaterThan(worstWalkingStrain);
   });
 

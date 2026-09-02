@@ -43,8 +43,8 @@ export const playerConfig = {
    */
   dash: {
     speedPxPerSec: 900,
-    durationMs: 190,
-    cooldownMs: 780,
+    durationMs: 130,
+    cooldownMs: 700,
   },
 
   /**

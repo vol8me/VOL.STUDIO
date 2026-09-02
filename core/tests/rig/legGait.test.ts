@@ -246,6 +246,64 @@ describe('LegGait — sıra disiplini ve canlı duruş', () => {
     expect(plantedFrames).toBeGreaterThan(3);
   });
 
+  it('kısa adımlı bacak KENDİ eşiğiyle tetiklenir, uzun bacağınkiyle değil', () => {
+    const legs: LegGaitLeg[] = [
+      { homeX: 60, homeY: 0, group: 0 },
+      { homeX: -60, homeY: 0, group: 0, strideScale: 0.4 },
+    ];
+    const gait = new LegGait(legs, CONFIG);
+    gait.reset(0, 0, 0);
+
+    // Eşiğin %50'si kadar ilerle: uzun bacak beklemeli, kısa bacak (eşiği
+    // 12 px) çoktan adımını atmış olmalı.
+    let x = 0;
+    const target = CONFIG.stepTriggerPx * 0.5;
+    while (x < target) {
+      x = Math.min(target, x + 1);
+      gait.update(x, 0, 0, 60, 0, DT);
+    }
+
+    expect(gait.isStepping(0)).toBe(false);
+    expect(gait.isStepping(1)).toBe(true);
+  });
+
+  it('acil eşik adım ölçeğiyle ÇARPILMAZ — kısa bacak sırayı delmez', () => {
+    const legs: LegGaitLeg[] = [
+      { homeX: 60, homeY: 0, group: 0 },
+      { homeX: -60, homeY: 0, group: 1, strideScale: 0.3 },
+    ];
+    const gait = new LegGait(legs, { ...CONFIG, stepDurationMs: 4000, maxStrainPx: 60 });
+    gait.reset(0, 0, 0);
+
+    // Uzun bacağın evini uzağa taşıyıp sırayı ONA verdir; adımı 4 sn sürer.
+    gait.setLegHome(0, 260, 0);
+    gait.update(0, 0, 0, 0, 0, DT);
+    expect(gait.isStepping(0)).toBe(true);
+
+    // ~40 px ilerlenir: kısa bacağın gerginliği ölçekli eşiği (60 × 0.3 = 18)
+    // aşar ama ölçeksiz eşiğin (60) altında kalır.
+    let x = 0;
+    for (let i = 0; i < 13; i++) {
+      x += (200 * DT) / 1000;
+      gait.update(x, 0, 0, 200, 0, DT);
+    }
+
+    expect(gait.strain(1)).toBeGreaterThan(18);
+    expect(gait.strain(1)).toBeLessThan(60);
+    // Ölçeklenseydi kısa bacak sırayı deler ve gövde desteksiz kalırdı.
+    expect(gait.isStepping(1)).toBe(false);
+    expect(gait.steppingCount).toBe(1);
+  });
+
+  it('geçersiz adım ölçeği reddedilir', () => {
+    expect(() => new LegGait([{ homeX: 0, homeY: 0, group: 0, strideScale: 0 }], CONFIG)).toThrow(
+      /strideScale/,
+    );
+    expect(
+      () => new LegGait([{ homeX: 0, homeY: 0, group: 0, strideScale: Number.NaN }], CONFIG),
+    ).toThrow(/strideScale/);
+  });
+
   it('bacak listesini kopyalar: çağıranın dizisini değiştirmek gaiti bozmaz', () => {
     const source: LegGaitLeg[] = [{ homeX: 30, homeY: 0, group: 0 }];
     const gait = new LegGait(source, CONFIG);

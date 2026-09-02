@@ -189,6 +189,7 @@ export class GameScene extends Phaser.Scene {
         motion01: motion.motion01,
         dash01: this.body.dash01,
         crouch01: motion.crouch01,
+        airborne: this.body.isDashing,
       },
       delta,
     );

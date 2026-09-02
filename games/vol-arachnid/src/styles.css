@@ -139,9 +139,14 @@
   bottom: calc(var(--vol-arachnid-touch-bottom) + var(--vol-arachnid-touch-inset));
 }
 
+/*
+ * Basılıyken bile bölge SAYDAM kalır: tuş, oyun alanının yarısını kaplar ve
+ * dolu bir zemin yaratığı tamamen gizler (cihazda görüldü). Geri bildirim
+ * yalnız kenarlıktan ve çok ince bir tondan gelir.
+ */
 .vol-arachnid-touch__dash.vol-touch-button--pressed {
   opacity: 1;
-  background: var(--vol-ui-brand-subtle);
+  background: color-mix(in srgb, var(--vol-ui-brand-solid) 8%, transparent);
   transform: none;
 }
 

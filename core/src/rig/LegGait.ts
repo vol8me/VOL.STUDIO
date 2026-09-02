@@ -11,6 +11,35 @@ export interface LegGaitLeg {
    * (yarısı hep yerde kalır).
    */
   group: number;
+  /**
+   * Bu bacağın ADIM BOYU ölçeği (varsayılan 1). Tetik ve öngörü payı bununla
+   * çarpılır; acil eşik ÇARPILMAZ.
+   *
+   * Farklı boydaki bacaklar aynı adımı atamaz: eşik bacağın erişim payını
+   * aşarsa ayak, uzuv TAM GERİLİ hâldeyken beklemeye devam eder ve uzuv
+   * yürüyüş boyunca yerde sürükleniyormuş gibi görünür. Kısa bacak kısa adım
+   * atar.
+   *
+   * Acil eşiğin ölçeklenmemesi bilinçlidir: o eşik bacağın değil GÖVDENİN
+   * ölçüsüdür — gövdenin yürüyüş döngüsünü ne kadar geride bıraktığını sorar.
+   * Ölçeklenirse kısa bacak, gövde normal hızda yürürken bile sırayı deler ve
+   * "gövde her an desteklidir" güvencesi düşer.
+   */
+  strideScale?: number;
+  /**
+   * Bu bacak SIRA BEKLEMEZ (varsayılan `false`).
+   *
+   * Sıra disiplininin tek amacı "gövde her an desteklidir" güvencesidir. Gövdeyi
+   * taşımayan yardımcı uzuvlar (kısa itici bacaklar, duyargalar) o güvencenin
+   * parçası değildir; onları sıraya sokmak, kendi eşiklerini çoktan aşmış
+   * hâlde beklemeye zorlar. Kısa bir uzuvda bu bekleme erişim payını yer:
+   * uzuv stride'ın yarısından fazlasını TAM GERİLİ geçirir ve yerde
+   * sürükleniyormuş gibi görünür.
+   *
+   * Serbest bacaklar sırayı ne alır ne bloklar; yalnız kendi eşikleriyle
+   * tetiklenir.
+   */
+  freeStep?: boolean;
 }
 
 export interface LegGaitConfig {
@@ -34,6 +63,8 @@ export type LegGaitStepTuning = Pick<LegGaitConfig, 'stepTriggerPx' | 'stepDurat
 
 interface LegState {
   leg: LegGaitLeg;
+  /** `leg.strideScale`ın doğrulanmış hâli; her karede yeniden okunmaz. */
+  strideScale: number;
   plantedX: number;
   plantedY: number;
   fromX: number;
@@ -76,7 +107,12 @@ export class LegGait {
   private readonly states: LegState[];
   private readonly config: LegGaitConfig;
   private steppingTotal = 0;
-  /** Sırası gelen grup; hiçbir bacak adımda değilken `null`. */
+  /**
+   * Sıraya DAHİL bacaklardan kaç tanesi adımda. Serbest bacaklar sayılmaz;
+   * aksi halde sırayı bloklar ve destek güvencesini kendileri geciktirirlerdi.
+   */
+  private lockedStepping = 0;
+  /** Sırası gelen grup; sıraya dahil hiçbir bacak adımda değilken `null`. */
   private turnGroup: number | null = null;
   private initialised = false;
 
@@ -97,6 +133,7 @@ export class LegGait {
     this.config = { ...config };
     this.states = legs.map((leg) => ({
       leg: { ...leg },
+      strideScale: resolveStrideScale(leg.strideScale),
       plantedX: 0,
       plantedY: 0,
       fromX: 0,
@@ -179,6 +216,21 @@ export class LegGait {
   }
 
   /**
+   * Bacağın GÖVDE-YEREL ev konumu.
+   *
+   * Yürüyüş döngüsünün geçici olarak devre dışı kaldığı durumlarda (ör. gövde
+   * havadayken) tüketici uzvu doğrudan evine pozlayabilsin diye açıktır;
+   * `setLegHome` ile yazılan değerin okunmuş hâlidir.
+   */
+  homeX(index: number): number {
+    return this.states[index].leg.homeX;
+  }
+
+  homeY(index: number): number {
+    return this.states[index].leg.homeY;
+  }
+
+  /**
    * Ayağın evinden uzaklığı (dünya px) — adım eşiğiyle karşılaştırılan ölçü.
    * Yalnız YERE BASAN bacaklarda tazelenir; havadaki bacak zaten hedefine
    * gidiyordur ve gerginliği bir karar girdisi değildir.
@@ -209,6 +261,7 @@ export class LegGait {
       state.strain = 0;
     }
     this.steppingTotal = 0;
+    this.lockedStepping = 0;
     this.turnGroup = null;
     this.initialised = true;
   }
@@ -258,6 +311,7 @@ export class LegGait {
         state.stepping = false;
         state.justPlanted = true;
         this.steppingTotal--;
+        if (!state.leg.freeStep) this.lockedStepping--;
       }
     }
 
@@ -272,38 +326,48 @@ export class LegGait {
       state.lift = 0;
     }
 
-    // 3) Sıra: adım bittiyse yenilenir ve EN GERGİN bacağın grubu kazanır.
-    if (this.steppingTotal === 0) this.turnGroup = this.pickNeediestGroup();
+    // 3) Sıra: sıraya dahil adımlar bittiyse yenilenir ve EN AÇ grup kazanır.
+    if (this.lockedStepping === 0) this.turnGroup = this.pickNeediestGroup();
 
     // 4) Yeni adımlar.
     const emergency = this.resolveEmergencyStrain();
     for (const state of this.states) {
       if (state.stepping) continue;
-      if (state.strain <= this.config.stepTriggerPx) continue;
+      if (state.strain <= this.config.stepTriggerPx * state.strideScale) continue;
       const urgent = emergency !== null && state.strain >= emergency;
-      if (!urgent && state.leg.group !== this.turnGroup) continue;
+      if (!urgent && !state.leg.freeStep && state.leg.group !== this.turnGroup) continue;
 
       state.fromX = state.plantedX;
       state.fromY = state.plantedY;
-      state.toX = bodyX + state.leg.homeX * cos - state.leg.homeY * sin + leadX;
-      state.toY = bodyY + state.leg.homeX * sin + state.leg.homeY * cos + leadY;
+      state.toX = bodyX + state.leg.homeX * cos - state.leg.homeY * sin + leadX * state.strideScale;
+      state.toY = bodyY + state.leg.homeX * sin + state.leg.homeY * cos + leadY * state.strideScale;
       state.t = 0;
       state.stepping = true;
       state.lift = 0;
       this.steppingTotal++;
+      if (state.leg.freeStep) continue;
+      this.lockedStepping++;
       // Acil adım sırayı da devralır; aksi halde `turnGroup` bir sonraki kareye
       // kadar boşta kalan bir gruba işaret eder ve sıra iki kez dağıtılırdı.
       if (this.turnGroup === null) this.turnGroup = state.leg.group;
     }
   }
 
-  /** Adım isteyen bacaklar arasında en gergin olanın grubu; isteyen yoksa `null`. */
+  /**
+   * Adım isteyen bacaklar arasında en "aç" olanın grubu; isteyen yoksa `null`.
+   *
+   * Karşılaştırma ham gerginlikle değil, bacağın KENDİ eşiğine oranıyla
+   * yapılır: farklı adım ölçekli bacaklarda ham piksel kıyası uzun bacağı
+   * hep öne alır ve kısa bacak sırayı hiç almazdı.
+   */
   private pickNeediestGroup(): number | null {
     let best: number | null = null;
-    let bestStrain = this.config.stepTriggerPx;
+    let bestRatio = 1;
     for (const state of this.states) {
-      if (state.stepping || state.strain <= bestStrain) continue;
-      bestStrain = state.strain;
+      if (state.stepping || state.leg.freeStep) continue;
+      const ratio = state.strain / (this.config.stepTriggerPx * state.strideScale);
+      if (ratio <= bestRatio) continue;
+      bestRatio = ratio;
       best = state.leg.group;
     }
     return best;
@@ -315,6 +379,14 @@ export class LegGait {
     if (max === undefined || max <= this.config.stepTriggerPx) return null;
     return max;
   }
+}
+
+/** Adım ölçeği pozitif ve sonlu olmalıdır; verilmezse 1. */
+function resolveStrideScale(value: number | undefined): number {
+  if (value === undefined) return 1;
+  requireFinite(value, 'LegGaitLeg.strideScale');
+  if (value <= 0) throw new RangeError('LegGait: strideScale pozitif olmalı');
+  return value;
 }
 
 /** Adımın başında ve sonunda yavaşlayan eğri — ayak yere sertçe çarpmaz. */

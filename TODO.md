@@ -5,6 +5,45 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-02 — VOL.ARACHNID sağlamlaştırma turu: sürüklenmenin kökü, uçuş pozu, cihaz doğrulaması
+
+**Sürüklenmenin kökü ÖLÇÜLDÜ.** "Uzun kemik hiç dönmüyor" düzeltmesi yetmemişti;
+gerçek neden erişim payıydı. Bir uzvun ayağı, ev konumundan `stepTriggerPx`
+kadar uzaklaşana dek yerde kalır. Kısa itici uzuvda (88 px) duruş 0.92 iken
+erişim payı 7 px, tetik ise 50 px: uzuv stride'ın büyük kısmını TAM GERİLİ
+geçiriyordu. Üstelik sıra disiplini bekleme süresini uzatıyor, gerginlik
+erişimin çok üstüne çıkıyordu. Ölçüm: uzuv karelerin **%52-56'sını** tam gerili
+geçiriyordu; bacaklarda bu oran %0-8.
+
+İki CORE eklemesiyle çözüldü. `LegGaitLeg.strideScale` adım boyunu bacak
+başına ölçekler (kısa bacak kısa adım); acil eşik BİLİNÇLİ olarak
+ölçeklenmez — o eşik bacağın değil gövdenin ölçüsüdür.
+`LegGaitLeg.freeStep` ise bacağı sıra disiplininin dışında bırakır: sıranın
+tek amacı "gövde her an desteklidir" güvencesi ve gövdeyi sekiz bacak taşıyor;
+kısa iticiler o güvencenin parçası değil. Ölçüm turdan sonra **%0**.
+
+**Atılım artık gerçekten havada.** Yürüyüş döngüsü atılım boyunca tamamen
+durur ve uzuvlar tek bir uçuş pozunda tutulur. Açık bırakıldığında uzuvlar sıra
+disiplinini delip acil adım yağmuruna giriyordu: gövde düz uçarken bacaklar
+yerinde TİTRİYOR, avlanan bir yaratık yerine bozuk bir makine gibi
+görünüyordu. Atılım 190→130 ms'ye indi, iz kısaldı.
+
+**Sağlamlaştırma paketi.** Her genel giriş noktası düşmanca akış değerleriyle
+(NaN, ±Infinity, negatif ve dev delta) beslendi. İki gerçek hata çıktı:
+`NaN <= 0` YANLIŞ olduğu için sonsuz olmayan bir delta gövdenin konumunu
+kalıcı olarak NaN'e düşürüyordu; sonsuz bileşenli bir hareket niyeti ise
+`x / uzunluk` üzerinden aynı sonucu veriyordu. Akış değerleri artık
+temizleniyor (CORE'un `Spring1D`/`Cooldown` politikası). Ayrıca gövdenin arena
+dışına çıkamadığı, dönüş tavanının hiçbir karede aşılmadığı, atılım spam'inin
+cooldown'ı delemediği ve HUD'un tekrar tekrar kurulup yıkılınca DOM/dinleyici
+biriktirmediği testlerle kilitlendi.
+
+**Cihazda doğrulandı.** Bağlı Galaxy S21 FE'ye (SM-G990B2) debug APK kuruldu ve
+çalıştırıldı: yatay 2340x1080, çökme yok, HUD arenaya değmiyor. Sol bölge
+joystick'i gövdeyi 210 px/sn'de yürüttü, sağ bölge atılımı tetikledi. Cihazda
+BULUNAN hata: basılı atılım bölgesi dolu bir zemin çiziyor ve oyun alanının
+yarısını gizliyordu — zemin saydamlaştırıldı, geri bildirim kenarlıkta kaldı.
+
 ## 2026-09-02 — VOL.ARACHNID hissiyat turu 2: sürüklenen uzuv, atılım kilidi, Android
 
 **Arka itici uzuvlar SÜRÜKLENİYORDU.** Kök kemik sabit tutuluyor ve iş alt
