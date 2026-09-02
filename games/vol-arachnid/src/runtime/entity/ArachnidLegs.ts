@@ -35,8 +35,10 @@ export interface LimbDriveState {
 interface LimbDriver {
   rig: LimbRig;
   stance: LimbStance;
-  /** Omuz + üst + alt kemiklerin toplamı; erişim oranı bununla çarpılır. */
+  /** Tüm kemiklerin toplamı; erişim oranı bununla çarpılır. */
   totalLength: number;
+  /** Sabit kök kemiği olan uzuvlarda çözülmüş kök payı; yoksa `null`. */
+  rootDrive: { follow: number; yawLimitRad: number } | null;
 }
 
 /**
@@ -62,10 +64,19 @@ export class ArachnidLegs {
     this.drivers = rig.limbs.map((limb) => {
       const stance = gaitConfig.stance[limb.id];
       if (!stance) throw new Error(`"${limb.id}" uzvu için duruş tanımı yok`);
+      if (limb.root && (stance.rootFollow === undefined || stance.rootYawLimitDeg === undefined)) {
+        throw new Error(`"${limb.id}" uzvunun sabit kök kemiği var ama kök payı tanımlı değil`);
+      }
       return {
         rig: limb,
         stance,
-        totalLength: limb.shoulderLength + limb.upperLength + limb.lowerLength,
+        totalLength: limb.rootLength + limb.upperLength + limb.lowerLength,
+        rootDrive: limb.root
+          ? {
+              follow: stance.rootFollow ?? 0,
+              yawLimitRad: (stance.rootYawLimitDeg ?? 0) * DEG,
+            }
+          : null,
       };
     });
 
@@ -141,6 +152,11 @@ export class ArachnidLegs {
     }
   }
 
+  /** TÜM ayakların dünya konumlarını gezer — atılım inişi gibi toplu olaylar. */
+  forEachFoot(visit: (x: number, y: number) => void): void {
+    for (let i = 0; i < this.drivers.length; i++) visit(this.gait.footX(i), this.gait.footY(i));
+  }
+
   /**
    * Duruşu canlı yeniden yazar. Ev konumu yalnız bir SONRAKİ adımın hedefini
    * etkiler; basılı ayak yerinde kalır, yani çömelirken ya da atılırken
@@ -184,30 +200,42 @@ export class ArachnidLegs {
         }
       }
 
-      const stanceRad = stanceAngleRad(driver.stance, dash01);
-      const aimRad = Math.atan2(dy, dx);
-      const yaw = clamp(
-        wrap(aimRad - stanceRad, -Math.PI, Math.PI) * gaitConfig.shoulderFollow,
-        -gaitConfig.shoulderYawLimitDeg * DEG,
-        gaitConfig.shoulderYawLimitDeg * DEG,
-      );
-      const shoulderRad = stanceRad + yaw;
+      /*
+       * Sabit kök kemik varsa (bacaklar) önce o pozlanır ve IK onun UCUNDAN
+       * başlar; yoksa (arka itici uzuvlar) IK doğrudan kalçadan başlar ve uzun
+       * kemik çiftin ilki olur.
+       *
+       * Container dönüşleri EBEVEYNE görelidir. Göreli açılar ±π aralığına
+       * sarılır: atan2 farkları seam'de 360° sıçrar. Render için fark etmez
+       * (dönüş modülerdir) ama sarılmamış bir açı, bu değerleri yumuşatan her
+       * ileri adım için gizli bir tuzaktır.
+       */
+      let baseRad = 0;
+      let originX = 0;
+      let originY = 0;
+      if (limb.root && driver.rootDrive) {
+        const stanceRad = stanceAngleRad(driver.stance, dash01);
+        const yaw = clamp(
+          wrap(Math.atan2(dy, dx) - stanceRad, -Math.PI, Math.PI) * driver.rootDrive.follow,
+          -driver.rootDrive.yawLimitRad,
+          driver.rootDrive.yawLimitRad,
+        );
+        baseRad = stanceRad + yaw;
+        originX = Math.cos(baseRad) * limb.rootLength;
+        originY = Math.sin(baseRad) * limb.rootLength;
+        limb.root.rotation = wrap(baseRad, -Math.PI, Math.PI);
+      }
 
-      const kneeX = dx - Math.cos(shoulderRad) * limb.shoulderLength;
-      const kneeY = dy - Math.sin(shoulderRad) * limb.shoulderLength;
       const solved = solveTwoBoneIk(
-        kneeX,
-        kneeY,
+        dx - originX,
+        dy - originY,
         limb.upperLength,
         limb.lowerLength,
         driver.stance.bendSign,
       );
 
-      // Container dönüşleri EBEVEYNE görelidir: omuz rig uzayında, alt
-      // kemikler bir üstteki kemiğe göre döner.
-      limb.shoulder.rotation = shoulderRad;
-      limb.upper.rotation = solved.upperRad - shoulderRad;
-      limb.lower.rotation = solved.lowerRad - solved.upperRad;
+      limb.upper.rotation = wrap(solved.upperRad - baseRad, -Math.PI, Math.PI);
+      limb.lower.rotation = wrap(solved.lowerRad - solved.upperRad, -Math.PI, Math.PI);
       if (limb.tip) {
         limb.tip.rotation =
           lerp(gaitConfig.clawPlantedCurlDeg, gaitConfig.clawLiftCurlDeg, lift) * DEG;

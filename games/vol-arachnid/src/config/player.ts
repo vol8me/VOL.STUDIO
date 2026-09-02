@@ -5,11 +5,14 @@
  */
 export const playerConfig = {
   /** Sürekli yürüyüş hızı (px/s). */
-  maxSpeed: 235,
-  /** Hıza çıkış ivmesi (px/s²). */
-  accelerationPxPerSec2: 820,
-  /** Girdi yokken yavaşlama (px/s²). */
-  brakePxPerSec2: 1100,
+  maxSpeed: 210,
+  /**
+   * Hıza çıkış ivmesi (px/s²). Tam hıza ~0.38 sn'de ulaşılır; kütlesi olan bir
+   * yaratık tuşa basıldığı anda seyir hızında olmaz.
+   */
+  accelerationPxPerSec2: 560,
+  /** Girdi yokken yavaşlama (px/s²) — ivmeden yavaş, gövde süzülerek durur. */
+  brakePxPerSec2: 760,
   /**
    * Gövdenin görsel yöne dönüş yayı.
    *
@@ -18,23 +21,30 @@ export const playerConfig = {
    * dönüş hızı ayrıca tavanlandı — yay tek başına, büyük bir açı farkında
    * ilk karelerde çok yüksek bir açısal hız üretebilir.
    */
-  facingSpring: { stiffness: 58, damping: 11.5 },
+  facingSpring: { stiffness: 44, damping: 10 },
   /** Dönüşün üst sınırı (rad/s). 180°'lik bir dönüş bunun altına inemez. */
-  maxTurnRateRadPerSec: 3.5,
+  maxTurnRateRadPerSec: 2.7,
 
   /**
    * Sert dönüşte hız kesilir: ağır bir gövde yönünü tam hızda değiştiremez.
    * `turnRateForFullPenalty`e ulaşan bir dönüşte hız `maxTurnSpeedPenalty`
    * oranında düşer.
    */
-  turnRateForFullPenalty: 3,
-  maxTurnSpeedPenalty: 0.32,
+  turnRateForFullPenalty: 2.4,
+  maxTurnSpeedPenalty: 0.42,
 
-  /** Dash: kısa süreli, kontrolsüz bir atılım. */
+  /**
+   * Dash: kısa süreli, KONTROLSÜZ bir atılım.
+   *
+   * Yön atılımın başında kilitlenir ve gövdenin baktığı yön de o yöne
+   * sabitlenir. Atılım sürerken dümen kırabilmek ağırlık hissini öldürüyor,
+   * uzuvları da yanlış yönlendiriyordu: gövde düz uçarken duruş yelpazesi
+   * dönüyor, ayaklar gitmediği bir yöne basmaya çalışıyordu.
+   */
   dash: {
     speedPxPerSec: 900,
     durationMs: 190,
-    cooldownMs: 700,
+    cooldownMs: 780,
   },
 
   /**
@@ -42,7 +52,7 @@ export const playerConfig = {
    * duvarın normalinde tersine çevrilip sönümlenir ve atılım kesilir.
    * Sıfırlamak, sınırı görünmez bir yapışkan yüzeye çeviriyordu.
    *
-   * Eşik `maxSpeed`in (235) ÜSTÜNDEDİR: yürüyerek duvara dayanmak bir çarpma
+   * Eşik `maxSpeed`in ÜSTÜNDEDİR: yürüyerek duvara dayanmak bir çarpma
    * değildir. Daha düşük bir eşikte duvara doğru basılı tutulan tuş sürekli
    * sekme üretiyordu — gövde duvarın önünde zıplayıp duruyor, oyuncu kenara
    * hiç yaslanamıyordu. Sekme artık yalnız atılım hızındaki temasa aittir.

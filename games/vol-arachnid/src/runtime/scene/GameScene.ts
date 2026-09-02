@@ -5,7 +5,10 @@ import {
   GhostTrail,
   InputManager,
   PoseShadow,
+  VirtualActionSource,
   applyVolViewport,
+  observeAppVisibility,
+  shouldUseTouchControls,
   type CancellableDisposable,
   type PoseSourceNode,
 } from '@volstudio/core';
@@ -34,6 +37,7 @@ import { ArachnidDust } from '@/runtime/fx/ArachnidDust';
 import { prepareArachnidRig } from '@/runtime/rig/arachnidRig';
 import { ArachnidBodyMotion } from '@/runtime/rig/ArachnidBodyMotion';
 import { ArachnidHud } from '@/runtime/ui/ArachnidHud';
+import { ArachnidTouchControls } from '@/runtime/ui/ArachnidTouchControls';
 
 /** Sabit arena, eklemli örümcek ve ortak girdi akışının oyun sahnesi. */
 export class GameScene extends Phaser.Scene {
@@ -47,6 +51,8 @@ export class GameScene extends Phaser.Scene {
   private ghostTrail!: GhostTrail;
   private shadow!: PoseShadow;
   private inputManager!: InputManager<ArachnidAction>;
+  /** Ekran üstü düğmelerin yazdığı eylemler; dokunmatik sağlayıcıyla birleşir. */
+  private readonly actionSource = new VirtualActionSource<ArachnidAction>();
   private hud: ArachnidHud | null = null;
   private runtimeScope: DisposableScope | null = null;
   /** Bekleyen kamera tazeleme karesi; her resize'da yenisiyle DEĞİŞTİRİLİR. */
@@ -95,13 +101,29 @@ export class GameScene extends Phaser.Scene {
       this.legs.reset(centerX, centerY, this.body.facingRad);
       this.bodyMotion = new ArachnidBodyMotion(arachnidRig);
 
+      this.actionSource.clear();
       this.inputManager = runtimeScope.addDestroyable(
         new InputManager<ArachnidAction>(this, {
           actions: ARACHNID_ACTIONS,
           pcActionBindings: ARACHNID_PC_BINDINGS,
           moveKeys: ARACHNID_MOVE_KEYS,
+          actionSource: this.actionSource,
         }),
       );
+
+      const uiParent = this.game.canvas.parentElement ?? document.body;
+      if (shouldUseTouchControls()) {
+        runtimeScope.addDestroyable(
+          new ArachnidTouchControls(uiParent, { actionSource: this.actionSource }),
+        );
+        // Arka plana geçiş aktif pointer'ı sonlandırmayabilir; basılı kalan bir
+        // atılım geri dönüldüğünde kendiliğinden tetiklenirdi.
+        runtimeScope.addSubscription(
+          observeAppVisibility((state) => {
+            if (state === 'background') this.actionSource.clear();
+          }),
+        );
+      }
 
       // F11 ve buton aynı denetleyiciden geçer; sahne ömrüne bağlı olduğu için
       // yeniden başlatmada ikinci bir keydown dinleyicisi birikmez.
@@ -112,9 +134,7 @@ export class GameScene extends Phaser.Scene {
         }),
       );
       this.hud = runtimeScope.addDestroyable(
-        new ArachnidHud(this.game.canvas.parentElement ?? document.body, {
-          onToggleFullscreen: () => void fullscreen.toggle(),
-        }),
+        new ArachnidHud(uiParent, { onToggleFullscreen: () => void fullscreen.toggle() }),
       );
 
       this.applyArenaCamera();
@@ -205,11 +225,18 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
-   * Pençe temasında toz. Atılım SÜRERKEN kapalıdır: uzuvlar o sırada sıra
-   * disiplinini delip hızla adımlar ve toz, atılımın kendi izini bulanık bir
-   * buluta çeviriyordu. Atılımın görsel yükünü hayalet izi taşır.
+   * Pençe temasında toz.
+   *
+   * Atılım SÜRERKEN kapalıdır: ayaklar o sırada yere değmez, gövde havada
+   * uçar. Bunun karşılığı atılımın BİTTİĞİ karededir — bütün ayaklar aynı anda
+   * yere iner ve toplu bir toz patlaması bırakır.
    */
   private emitFootDust(): void {
+    if (this.body.consumeDashLanding()) {
+      this.legs.forEachFoot((x, y) => this.dust.puff(x, y, fxConfig.dust.landingSpeedPxPerSec));
+      this.cameras.main.shake(fxConfig.dust.landingShakeMs, fxConfig.dust.landingShakeIntensity);
+      return;
+    }
     if (this.body.isDashing) return;
     const speed = this.body.speed;
     this.legs.forEachPlant((x, y) => this.dust.puff(x, y, speed));

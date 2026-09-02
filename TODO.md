@@ -5,6 +5,44 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-02 — VOL.ARACHNID hissiyat turu 2: sürüklenen uzuv, atılım kilidi, Android
+
+**Arka itici uzuvlar SÜRÜKLENİYORDU.** Kök kemik sabit tutuluyor ve iş alt
+kemiklere bırakılıyordu; bacaklarda doğru (kök 36 px, alt kemikler 54/72) ama
+arka uzuvlarda sıralama ters (kök 50, kalan 26/12). Gövde ileri yürürken ayak
+duruş EKSENİ boyunca gidip gelir: açı değişmez, yalnız mesafe değişir. Sabit
+kök bu mesafeyi göremediği için uzun kemik hiç dönmüyor, uzuv salınmak yerine
+sürükleniyordu (ölçüldü: 4-6° gezinim). Model artık opsiyonel sabit kök +
+iki kemikli IK; arka uzuvlarda kök doğrudan IK çiftinin ilkidir. Ölçülen
+gezinim 31-33°'ye çıktı ve sol/sağ simetrik.
+
+**Atılımda dümen kilitlendi.** Atılım sürerken girdiyle dönebilmek hem ağırlık
+hissini öldürüyor hem uzuvları yanlış yönlendiriyordu: gövde düz uçarken duruş
+yelpazesi dönüyor, ayaklar gitmediği bir yöne basmaya çalışıyordu. Yön atılımın
+başında kilitlenir ve gövde uçtuğu yöne bakar.
+
+**Toz mantığa oturdu.** Atılım sırasında ayaklar yere değmez, o yüzden toz da
+kesilir. Karşılığı atılımın BİTTİĞİ karededir: bütün ayaklar aynı anda iner,
+toplu bir toz patlaması ve kısa bir yer sarsıntısı bırakır.
+
+**Ağırlık.** Hız 235→210, ivme 820→560 (tam hıza ~0.38 sn), fren 1100→760,
+dönüş yayı 58→44 ve tavan 3.5→2.7 rad/s, dönüş hız cezası 0.32→0.42. Adımlar
+uzadı (185→205 ms), öngörü hızı 250→215, havadaki ayağın kalçaya çekilmesi
+17→20 px.
+
+**Android çıkışı.** `tauri.arachnid.conf.json` örtüsü yalnız ön yüz hedefini
+değiştirir; paket kimliği bilinçli olarak aynı kalır (Android projesi kimliğe
+bağlı üretilmiş, yön kilidi ve ikonlar orada). Bedeli cihazda iki oyunun aynı
+paketi paylaşmasıdır. Dokunmatikte ekran ikiye bölünür: sol bölge CORE'un
+hareket çubuğu (oraya DOM elemanı konmaz, yoksa dokunuş Phaser'a hiç ulaşmaz),
+sağ bölge atılım düğmesidir; ikisi de dokunulmadıkça görünmez.
+
+**Ayrıca.** `pnpm dev` artık vol-hell'i de açıyor (eksikti). `samplePose`
+matrisleri yeniden kullanıyor. `articulateRigDefinition` kaynakta yazılı
+eklemleri ezmiyor. Duvar yankısı gövdenin kelepçe noktasına değil DUVARA
+çiziliyor; çarpma eşiği yürüyüş hızının üstüne alındı (altındayken duvara
+doğru basılı tutulan tuş sürekli sekme üretiyordu).
+
 ## 2026-09-02 — VOL.ARACHNID hissiyat turu: gerçek uzuv, ağırlık, HUD
 
 Örümceğin "örümcek gibi durmaması" bir ayar sorunu değildi. Rig'de her bacak

@@ -18,7 +18,7 @@ function makeRig(): ArachnidRig {
 }
 
 function totalLength(limb: LimbRig): number {
-  return limb.shoulderLength + limb.upperLength + limb.lowerLength;
+  return limb.rootLength + limb.upperLength + limb.lowerLength;
 }
 
 /**
@@ -27,18 +27,18 @@ function totalLength(limb: LimbRig): number {
  * ölçülebilir; container dönüşlerine tek tek bakmak bunu göstermez.
  */
 function forwardKinematics(limb: LimbRig): { x: number; y: number } {
-  const shoulderDir = limb.shoulder.rotation;
-  const upperDir = shoulderDir + limb.upper.rotation;
+  const rootDir = limb.root ? limb.root.rotation : 0;
+  const upperDir = rootDir + limb.upper.rotation;
   const lowerDir = upperDir + limb.lower.rotation;
   return {
     x:
       limb.hipX +
-      Math.cos(shoulderDir) * limb.shoulderLength +
+      Math.cos(rootDir) * limb.rootLength +
       Math.cos(upperDir) * limb.upperLength +
       Math.cos(lowerDir) * limb.lowerLength,
     y:
       limb.hipY +
-      Math.sin(shoulderDir) * limb.shoulderLength +
+      Math.sin(rootDir) * limb.rootLength +
       Math.sin(upperDir) * limb.upperLength +
       Math.sin(lowerDir) * limb.lowerLength,
   };
@@ -237,6 +237,32 @@ describe('ArachnidLegs — yürüyüş', () => {
           totalLength(limb) + 1e-6,
         );
       }
+    }
+  });
+
+  it('İLERİ yürüyüşte arka itici uzuvların uzun kemiği SALINIR, sürüklenmez', () => {
+    const rig = makeRig();
+    const legs = new ArachnidLegs(rig);
+    legs.reset(0, 0, BODY_RAD);
+
+    const travel = new Map(rig.limbs.map((limb) => [limb.id, [] as number[]]));
+    // Gövde baktığı yöne (rig yerel −y) yürür: ayak duruş EKSENİ boyunca
+    // gidip gelir. Uzun kemik sabit bir kök olsaydı açısı hiç değişmez,
+    // uzuv salınmak yerine sürüklenirdi.
+    const speed = 210;
+    let y = 0;
+    for (let i = 0; i < 400; i++) {
+      y -= (speed * DT) / 1000;
+      legs.update(driveState({ bodyY: y, velY: -speed, motion01: 1 }), DT);
+      for (const limb of rig.limbs) travel.get(limb.id)!.push(limb.upper.rotation);
+    }
+    const range = (id: string) => {
+      const values = travel.get(id)!;
+      return Math.max(...values) - Math.min(...values);
+    };
+
+    for (const id of ['tl', 'tr']) {
+      expect(range(id), `${id} uzun kemik`).toBeGreaterThan(0.35);
     }
   });
 

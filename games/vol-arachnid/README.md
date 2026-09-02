@@ -59,18 +59,33 @@ src/
 
 ### Uzuv çözümü
 
-Her uzuv ÜÇ kemiktir: omuz (`coxa`), üst (`femur`), alt (`tibia` + `claw`).
-Üç eklemli bir zincirde çözüm tek olmadığı için belirsizlik omuzla kapatılır:
-omuz, duruş açısı ile ayak yönü arasında sabit bir oranda paylaşır
-(`gaitConfig.shoulderFollow`), kalan iki kemik CORE'un `solveTwoBoneIk`'i ile
+Her uzuv, opsiyonel bir SABİT kök kemik + iki kemikli ters kinematik çiftidir.
+
+Bacaklarda kök `coxa`'dır (36 px, en kısa) ve IK dışında tutulur: üç eklemli
+zincirdeki çözüm belirsizliğini kapatır ve uzvu gövdeye bağlı bir dizilimde
+tutar. Duruş açısı ile ayak yönü arasında `rootFollow` oranında paylaşır;
+kalan `femur` (54) ve `tibia`+`claw` (72) CORE'un `solveTwoBoneIk`'iyle
 çözülür.
+
+Arka itici uzuvlarda sıralama TERSTİR — kök 50 px, kalan kemikler 26 ve 12.
+Orada kök SABİTLENMEZ, doğrudan IK çiftinin ilki olur. Sabitlenseydi o uzun
+kemik hiç dönmezdi: gövde ileri yürürken ayak duruş EKSENİ boyunca gidip
+gelir, yani açı değişmez yalnız mesafe değişir; uzuv salınmak yerine
+sürüklenirdi.
 
 Ayaklar dünya uzayında sabitlenir (`LegGait`); gövde ilerledikçe geride
 kalırlar ve eşiği aşınca öne adım atarlar. Adım sırası gruplar arasında
 dönüşümlüdür, yani gövde her an en az bir grup ayak üstündedir.
 
 Arka iki uzuv (`tl`/`tr`) kısa İTİCİ bacaklardır: yürüyüş hızıyla daha geriye
-basar, atılımda gövdeyi iterler.
+basar, atılımda gövdeyi iterler. Onlarda kemik sıralaması TERSTİR — kök kemik
+en uzun (50 px), alt kemikler 26 ve 12. Bu yüzden kök kemiğin ayak yönüne
+yapışma oranı (`shoulderFollow`) uzuv tipine göre ayrılır: bacaklarda iş uzun
+alt kemiklerde, arka uzuvlarda KÖK kemiktedir.
+
+Atılım sırasında ayaklar yere değmez; toz da o yüzden kesilir. Karşılığı
+atılımın bittiği karededir — bütün ayaklar aynı anda iner ve toplu bir toz
+patlaması bırakır.
 
 ### Duruş kaynak pozdan TÜRETİLMEZ
 

@@ -1,8 +1,9 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { fullscreenControllers, inputManagers } = vi.hoisted(() => ({
+const { fullscreenControllers, inputManagers, touchEnabled } = vi.hoisted(() => ({
   fullscreenControllers: [] as Array<{ destroyed: boolean; toggle: () => void }>,
-  inputManagers: [] as Array<{ destroyed: boolean }>,
+  inputManagers: [] as Array<{ destroyed: boolean; options: unknown }>,
+  touchEnabled: { value: false },
 }));
 
 vi.mock('@volstudio/core', async () => {
@@ -11,8 +12,10 @@ vi.mock('@volstudio/core', async () => {
 
   class FakeInputManager {
     destroyed = false;
+    readonly options: unknown;
 
-    constructor() {
+    constructor(_scene: unknown, options: unknown) {
+      this.options = options;
       inputManagers.push(this);
     }
 
@@ -47,6 +50,8 @@ vi.mock('@volstudio/core', async () => {
     InputManager: FakeInputManager,
     FullscreenController: FakeFullscreenController,
     applyVolViewport: () => {},
+    // Cihaz yeteneği testte anahtarlanır; jsdom her zaman "dokunmatik değil".
+    shouldUseTouchControls: () => touchEnabled.value,
   };
 });
 
@@ -101,6 +106,7 @@ describe('GameScene yaşam döngüsü', () => {
   beforeEach(() => {
     fullscreenControllers.length = 0;
     inputManagers.length = 0;
+    touchEnabled.value = false;
   });
 
   afterEach(() => {
@@ -125,6 +131,22 @@ describe('GameScene yaşam döngüsü', () => {
     expect(fake.scale.off).toHaveBeenCalledTimes(1);
     expect(fake.events.off).toHaveBeenCalledTimes(1);
     expect(document.querySelector('.vol-arachnid-hud')).toBeNull();
+  });
+
+  it('ekran üstü kontroller YALNIZ dokunmatik cihazda kurulur', () => {
+    const { shutdown } = boot();
+    expect(document.querySelector('.vol-arachnid-touch')).toBeNull();
+    shutdown();
+
+    touchEnabled.value = true;
+    const touch = boot();
+    expect(document.querySelector('.vol-arachnid-touch')).not.toBeNull();
+    // Düğme basımı girdi yığınına aynı karede karışmalı.
+    const options = inputManagers.at(-1)?.options as { actionSource?: unknown } | undefined;
+    expect(options?.actionSource).toBeDefined();
+
+    touch.shutdown();
+    expect(document.querySelector('.vol-arachnid-touch')).toBeNull();
   });
 
   it('kamerayı arenayı boşlukların İÇİNE alacak şekilde kurar', () => {

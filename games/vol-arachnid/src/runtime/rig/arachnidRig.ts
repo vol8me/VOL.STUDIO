@@ -11,23 +11,35 @@ import {
 const DEG = Math.PI / 180;
 
 /**
- * Sürülebilir bir uzuv: üç kemik (omuz → üst → alt) ve ucunda kozmetik bir
- * pençe. Uzunluklar kaynak sanatın ÖLÇÜLMÜŞ eklem aralıklarıdır; parça
- * genişliği değildir (bitişik parçalar birbirinin üstüne birkaç piksel biner).
+ * Sürülebilir bir uzuv: opsiyonel SABİT bir kök kemik, ardından iki kemikli
+ * ters kinematik çifti ve ucunda kozmetik bir uç parça.
+ *
+ * Uzunluklar kaynak sanatın ÖLÇÜLMÜŞ eklem aralıklarıdır; parça genişliği
+ * değildir (bitişik parçalar birbirinin üstüne birkaç piksel biner).
+ *
+ * **Kök kemik neden opsiyonel?** Sabit kök, üç eklemli zincirdeki çözüm
+ * belirsizliğini kapatır ve uzvu gövdeye bağlı bir dizilimde tutar. Bacaklarda
+ * doğru seçimdir: kök EN KISA kemiktir (36 px), iş uzun femur/tibia'dadır.
+ * Arka itici uzuvlarda sıralama TERSTİR — kök 50 px, kalan iki kemik 26 ve 12.
+ * Orada kök sabitlenirse uzun kemik hiç dönmez: ayak duruş EKSENİ boyunca
+ * gidip geldiği için açı neredeyse değişmez, yalnız mesafe değişir ve uzuv
+ * salınmak yerine SÜRÜKLENİR. Bu yüzden arka uzuvlarda kök kemik doğrudan
+ * IK çiftinin ilk kemiğidir.
  */
 export interface LimbRig {
   id: string;
-  /** Gövde merkezine göre omuz eklemi. */
+  /** Gövde merkezine göre kalça eklemi. */
   hipX: number;
   hipY: number;
-  shoulderLength: number;
+  /** Sabit kök kemik; yoksa IK doğrudan kalçadan başlar. */
+  root: Phaser.GameObjects.Container | null;
+  rootLength: number;
   upperLength: number;
-  /** Alt kemik + pençe: ters kinematik bunları TEK kemik sayar. */
+  /** Alt kemik + uç parça: ters kinematik bunları TEK kemik sayar. */
   lowerLength: number;
-  shoulder: Phaser.GameObjects.Container;
   upper: Phaser.GameObjects.Container;
   lower: Phaser.GameObjects.Container;
-  /** Pençe; yalnız bilek kıvrımı alır, IK çözümüne girmez. */
+  /** Uç parça; yalnız bilek kıvrımı alır, IK çözümüne girmez. */
   tip: Phaser.GameObjects.Container | null;
 }
 
@@ -140,12 +152,12 @@ function buildAuthoredLimb(
     id: spec.id,
     hipX: hip.x - bodyCenter.x,
     hipY: hip.y - bodyCenter.y,
-    shoulderLength: distance(hip, knee1),
+    rootLength: distance(hip, knee1),
     upperLength: distance(knee1, knee2),
     lowerLength: distance(knee2, foot),
     // Zincir kökten uca doğru sabitlenir; her pivot kendi ekleminin üstüne
     // oturur ve çocuk kemikler ebeveynle birlikte taşınır.
-    shoulder: anchorBone(assembled, shoulderPart),
+    root: anchorBone(assembled, shoulderPart),
     upper: anchorBone(assembled, upperPart),
     lower: anchorBone(assembled, lowerPart),
     tip: tipPart ? anchorBone(assembled, tipPart) : null,
@@ -194,34 +206,39 @@ function buildRebuiltLimb(
 
   const hipX = attach.x - bodyCenter.x;
   const hipY = attach.y - bodyCenter.y;
-  const shoulderLength = sourceSpacing[2];
-  const upperLength = sourceSpacing[1];
+  const upperLength = sourceSpacing[2];
+  const lowerLength = sourceSpacing[1];
 
   shoulder.setPosition(hipX, hipY);
-  upper.setPosition(shoulderLength, 0);
-  lower.setPosition(upperLength, 0);
+  upper.setPosition(upperLength, 0);
+  lower.setPosition(lowerLength, 0);
 
   if (spec.rebuiltJointPartId) {
-    // Eklem diski kemik değildir; omuz–üst kemik dikişinin üstünde durur ve
+    // Eklem diski kemik değildir; iki kemiğin dikişinin üstünde durur ve
     // merkezinden döner.
     const jointPart = requirePart(metadata, spec.rebuiltJointPartId);
     const joint = requireContainer(assembled, spec.rebuiltJointPartId);
     recenterPivot(joint, jointPart.logicalSizePx.width / 2, jointPart.logicalSizePx.height / 2);
-    joint.setPosition(shoulderLength, 0);
+    joint.setPosition(upperLength, 0);
     joint.rotation = 0;
   }
 
+  /*
+   * Sabit kök kemik YOKTUR: uzun kemik doğrudan IK çiftinin ilki olur, böylece
+   * ayak mesafesi değiştikçe SALINIR. Uçtaki küçük parça bilek gibi davranır
+   * ve alt kemiğin uzunluğuna dahildir.
+   */
   return {
     id: spec.id,
     hipX,
     hipY,
-    shoulderLength,
+    root: null,
+    rootLength: 0,
     upperLength,
-    lowerLength: sourceSpacing[0],
-    shoulder,
-    upper,
-    lower,
-    tip: null,
+    lowerLength: lowerLength + sourceSpacing[0],
+    upper: shoulder,
+    lower: upper,
+    tip: lower,
   };
 }
 

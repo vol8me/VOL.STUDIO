@@ -37,7 +37,7 @@ primitifleri), [games/docs](games/docs) (oyun i18n'i) ve ilgili
 
 ```bash
 pnpm install
-pnpm dev                                   # VOL.ARACHNID + iki geliştirici aracı
+pnpm dev                                   # VOL.HELL + VOL.ARACHNID + iki geliştirici aracı
 pnpm --filter @volstudio/vol-hell dev      # yalnızca VOL.HELL         :5173
 pnpm --filter @volstudio/vol-arachnid dev  # yalnızca VOL.ARACHNID     :5178
 pnpm --filter @volstudio/vol-ui dev        # yalnızca UI showcase'i   :5174
@@ -47,6 +47,7 @@ pnpm build:game                            # VOL.HELL build
 pnpm build:arachnid                        # VOL.ARACHNID build
 pnpm build:tauri                           # PC installer build
 pnpm tauri:android:dev                     # Android dev (bağlı cihaz/emülatör)
+pnpm tauri:arachnid:android:dev            # Android dev — bağlı cihazda VOL.ARACHNID
 pnpm benchmark:core                        # CORE headless workload ölçümü
 pnpm benchmark:vol-hell                    # VOL.HELL simülasyon/render ölçümü
 ```

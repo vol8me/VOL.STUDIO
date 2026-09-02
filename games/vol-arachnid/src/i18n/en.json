@@ -9,5 +9,8 @@
     "speedAria": "Body speed",
     "fullscreenEnter": "Enter fullscreen",
     "fullscreenExit": "Exit fullscreen"
+  },
+  "touch": {
+    "dash": "Dash"
   }
 }

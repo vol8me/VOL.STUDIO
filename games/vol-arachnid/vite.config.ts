@@ -2,6 +2,10 @@ import { defineConfig, normalizePath } from 'vite';
 import { resolve } from 'node:path';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
+// Tauri, bağlı bir Android cihazında dev sunucusunu LAN üzerinden açar ve
+// host'u bu değişkenle bildirir. Verilmediğinde sunucu localhost'ta kalır.
+const host = process.env.TAURI_DEV_HOST;
+
 // Fontlar CORE'daki tek kaynaktan hem dev sunucusuna hem build'e taşınır.
 const coreFontsDir = normalizePath(resolve(import.meta.dirname, '../../core/public/assets/fonts'));
 
@@ -16,6 +20,10 @@ export default defineConfig({
   server: {
     port: 5178,
     strictPort: true,
+    host: host || false,
+    // HMR soketi vol-hell'in 1421'iyle çakışmaz; iki oyun aynı anda cihaza
+    // bağlanabilir.
+    hmr: host ? { protocol: 'ws', host, port: 1422 } : undefined,
     fs: {
       allow: [resolve(import.meta.dirname, '../..')],
     },

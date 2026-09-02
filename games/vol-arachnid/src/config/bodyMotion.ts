@@ -16,7 +16,7 @@ export const bodyMotionConfig = {
   /** Yalpalama (derece). */
   walkRollDeg: 0.8,
   turnRollDeg: 3,
-  turnVelocityForMaxRadPerSec: 3.5,
+  turnVelocityForMaxRadPerSec: 2.7,
 
   /**
    * İvme yaslanması: gövde, ivmenin TERSİNE kayar (kalkışta geriye, frende
@@ -35,7 +35,7 @@ export const bodyMotionConfig = {
   crouchSpring: { stiffness: 46, damping: 8.5 },
   crouchBodyScaleDrop: 0.035,
   /** Bu hızın üstünde çömelme tamamen açılır. */
-  standSpeedPxPerSec: 90,
+  standSpeedPxPerSec: 85,
 
   /** Atılımda gövde hareket ekseninde uzar, dikine incelir. */
   dashStretch: 0.075,
@@ -60,6 +60,6 @@ export const bodyMotionConfig = {
     /** Bakış açısının parçaya yansıyan kısmı (derece / tam yarıçap). */
     slitTiltDeg: 9,
     /** Bu hızda uyanıklık tamamlanır. */
-    alertSpeedPxPerSec: 160,
+    alertSpeedPxPerSec: 145,
   },
 } as const;

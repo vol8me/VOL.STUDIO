@@ -191,6 +191,46 @@ describe('ArachnidBody hareketi', () => {
     expect(body.dash01).toBe(0);
   });
 
+  it('atılım sürerken yön KİLİTLİDİR, girdiyle dümen kırılamaz', () => {
+    const body = new ArachnidBody(CENTER_X, CENTER_Y);
+
+    // Sağa atıl, sonra sola basılı tut: yön SOLA değil, uçulan yöne (+x) döner.
+    body.update(new Vector2(1, 0), true, FRAME_MS);
+    const beforeLock = circularDistance(body.facingRad, 0);
+    for (let i = 0; i < 8; i++) body.update(new Vector2(-1, 0), false, FRAME_MS);
+
+    expect(body.isDashing).toBe(true);
+    expect(body.velocity.x).toBeGreaterThan(0);
+    // Girdi kazansaydı bu mesafe BÜYÜRDÜ (sol = π uzakta).
+    expect(circularDistance(body.facingRad, 0)).toBeLessThan(beforeLock);
+
+    // Atılım bitince kilit kalkar ve gövde girdiye dönmeye başlar.
+    body.update(Vector2.zero(), false, playerConfig.dash.durationMs);
+    const released = body.facingRad;
+    for (let i = 0; i < 20; i++) body.update(new Vector2(-1, 0), false, FRAME_MS);
+    expect(circularDistance(body.facingRad, released)).toBeGreaterThan(0.05);
+  });
+
+  it('atılımın bittiği kareyi BİR KEZ bildirir', () => {
+    const body = new ArachnidBody(CENTER_X, CENTER_Y);
+
+    body.update(new Vector2(1, 0), true, FRAME_MS);
+    expect(body.consumeDashLanding()).toBe(false);
+
+    body.update(Vector2.zero(), false, playerConfig.dash.durationMs);
+    expect(body.consumeDashLanding()).toBe(true);
+    expect(body.consumeDashLanding()).toBe(false);
+  });
+
+  it('duvara çarparak biten atılım da iniş bildirir', () => {
+    const body = new ArachnidBody(arenaConfig.bodyRadiusPx + 1, CENTER_Y);
+
+    body.update(new Vector2(-1, 0), true, FRAME_MS);
+
+    expect(body.isDashing).toBe(false);
+    expect(body.consumeDashLanding()).toBe(true);
+  });
+
   it('ivme vektörü hızlanma ve frenlemede zıt işaretlidir', () => {
     const body = new ArachnidBody(CENTER_X, CENTER_Y);
 

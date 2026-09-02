@@ -55,5 +55,13 @@ export const fxConfig = {
     minSpeedPxPerSec: 45,
     /** Toz sayısının hızla tam ölçeğe ulaştığı eşik. */
     fullSpeedPxPerSec: 320,
+    /**
+     * Atılım inişinde her ayağa uygulanan "hız". Gövdenin o karedeki gerçek
+     * hızı değildir: iniş bir ÇARPMADIR, tozu da tam ölçekte olmalıdır.
+     */
+    landingSpeedPxPerSec: 340,
+    /** İnişin kısa, hafif yer sarsıntısı. */
+    landingShakeMs: 110,
+    landingShakeIntensity: 0.0035,
   },
 } as const;

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { arenaConfig } from '@/config/arena';
+import { bodyMotionConfig } from '@/config/bodyMotion';
+import { playerConfig } from '@/config/player';
+import { arachnidUiConfig } from '@/config/ui';
 import { fxConfig, FX_DEPTH } from '@/config/fx';
 import { gaitConfig } from '@/config/gait';
 import {
@@ -102,9 +105,50 @@ describe('duruş tablosu', () => {
   });
 
   it('acil adım eşiği normal tetiğin üstündedir', () => {
-    expect(gaitConfig.emergencyStrainPx).toBeGreaterThan(gaitConfig.runStepTriggerPx);
     expect(gaitConfig.runStepTriggerPx).toBeGreaterThan(gaitConfig.stepTriggerPx);
     expect(gaitConfig.runStepDurationMs).toBeLessThan(gaitConfig.stepDurationMs);
+
+    // Tam tempoda bekleyen bir uzvun en kötü gerginliği: tetik + bir adım
+    // süresince kat edilen yol. Eşik bunun ALTINA inerse sıra disiplini düz
+    // yürüyüşte delinir ve gövde desteksiz kalır.
+    const worstWalkingStrain =
+      gaitConfig.runStepTriggerPx +
+      (gaitConfig.fullTempoSpeedPxPerSec * gaitConfig.runStepDurationMs) / 1000;
+    expect(gaitConfig.emergencyStrainPx).toBeGreaterThan(worstWalkingStrain);
+  });
+
+  it('kök payı yalnız SABİT kök kemiği olan uzuvlarda tanımlıdır', () => {
+    for (const [id, stance] of Object.entries(gaitConfig.stance)) {
+      const isPusher = id.startsWith('t');
+      if (isPusher) {
+        // Arka uzuvlarda kök kemik doğrudan IK çiftinin ilkidir; sabit bir
+        // kök payı olsaydı o uzun kemik hiç dönmez, uzuv sürüklenirdi.
+        expect(stance.rootFollow, id).toBeUndefined();
+        expect(stance.rootYawLimitDeg, id).toBeUndefined();
+        continue;
+      }
+      expect(stance.rootFollow, id).toBeGreaterThan(0);
+      expect(stance.rootFollow, id).toBeLessThanOrEqual(1);
+      expect(stance.rootYawLimitDeg, id).toBeGreaterThan(0);
+    }
+  });
+
+  it('gövde yalpası ile dönüş tavanı aynı ölçeği paylaşır', () => {
+    // Yalpa sinyali dönüş hızını [-1,1] aralığına indirger; ölçek tavandan
+    // ayrışırsa sinyal ya hiç doymaz ya erkenden kırpılır.
+    expect(bodyMotionConfig.turnVelocityForMaxRadPerSec).toBe(playerConfig.maxTurnRateRadPerSec);
+  });
+
+  it('duvar çarpma eşiği yürüyüş hızının üstündedir', () => {
+    // Altında kalırsa duvara doğru basılı tutulan tuş sürekli sekme üretir.
+    expect(playerConfig.wall.impactSpeedPxPerSec).toBeGreaterThan(playerConfig.maxSpeed);
+    expect(playerConfig.wall.impactSpeedPxPerSec).toBeLessThan(playerConfig.dash.speedPxPerSec);
+  });
+
+  it('dokunmatik bölge oranı ekranı gerçekten böler', () => {
+    expect(arachnidUiConfig.touch.dashZoneWidthRatio).toBeGreaterThan(0);
+    expect(arachnidUiConfig.touch.dashZoneWidthRatio).toBeLessThan(1);
+    expect(arachnidUiConfig.touch.edgeInsetPx).toBeGreaterThanOrEqual(0);
   });
 });
 

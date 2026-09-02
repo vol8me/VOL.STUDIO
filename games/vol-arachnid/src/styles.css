@@ -108,3 +108,45 @@
     left: min(max(var(--vol-safe-left), 16px), calc(var(--vol-arachnid-gutter-left) - 17px));
   }
 }
+
+/*
+ * DOKUNMATİK KATMAN
+ *
+ * Ekran ikiye bölünür: sol bölge CORE'un hareket çubuğuna aittir ve burada
+ * hiçbir eleman yoktur (bir eleman dokunuşu Phaser'dan önce yakalar, çubuk
+ * hiç doğmaz). Sağ bölge atılım düğmesidir ve bölgenin TAMAMINI kaplar.
+ *
+ * İkisi de dokunulmadıkça görünmez: çubuğu CORE yalnız aktifken çizer, düğme
+ * ise basılana kadar saydamdır.
+ */
+.vol-arachnid-touch {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+}
+
+.vol-arachnid-touch__dash {
+  opacity: 0;
+  background: none;
+  border: 2px solid var(--vol-ui-brand-border);
+  border-radius: var(--vol-radius-md);
+  width: calc(var(--vol-arachnid-dash-zone) - 2 * var(--vol-arachnid-touch-inset));
+  height: auto;
+  transition: opacity var(--vol-transition-fast);
+  position: absolute;
+  top: calc(var(--vol-arachnid-touch-top) + var(--vol-arachnid-touch-inset));
+  right: var(--vol-arachnid-touch-inset);
+  bottom: calc(var(--vol-arachnid-touch-bottom) + var(--vol-arachnid-touch-inset));
+}
+
+.vol-arachnid-touch__dash.vol-touch-button--pressed {
+  opacity: 1;
+  background: var(--vol-ui-brand-subtle);
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-arachnid-touch__dash {
+    transition: none;
+  }
+}

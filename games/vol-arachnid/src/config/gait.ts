@@ -16,6 +16,19 @@
 export interface LimbStance {
   /** İleri eksenden duruş açısı (derece); + sağ, − sol. */
   angleDeg: number;
+  /**
+   * SABİT kök kemiğin ayak yönüne yapışma oranı [0,1].
+   *
+   * Yalnız kök kemiği IK dışında tutulan uzuvlarda (bacaklar) anlamlıdır; arka
+   * itici uzuvlarda kök kemik doğrudan IK çiftinin ilkidir ve bu alan
+   * verilmez (bkz. `LimbRig.root`).
+   *
+   * Oran DURUŞ ile AYAK YÖNÜ arasındaki paylaşımdır: 0 kökü duruşa çivileyip
+   * tüm işi alt kemiklere bırakır, 1 kökü ayağa kilitler.
+   */
+  rootFollow?: number;
+  /** Kök kemiğin duruş açısından sapabileceği en büyük değer (derece). */
+  rootYawLimitDeg?: number;
   /** Uzvun TAM uzanımına oran olarak kalça–ayak mesafesi. */
   reach: number;
   /**
@@ -36,9 +49,13 @@ export interface LimbStance {
   pushReachGain: number;
 }
 
+/** Kısa kök kemik IK dışında tutulur; iş uzun femur/tibia'dadır. */
+const LEG_ROOT = { rootFollow: 0.6, rootYawLimitDeg: 42 } as const;
+
 const STANCE: Readonly<Record<string, LimbStance>> = {
   // Ön çift — atılımda öne fırlar, dengeyi önden yakalar.
   r3: {
+    ...LEG_ROOT,
     angleDeg: 45,
     reach: 0.78,
     bendSign: -1,
@@ -48,6 +65,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     pushReachGain: 0,
   },
   l3: {
+    ...LEG_ROOT,
     angleDeg: -45,
     reach: 0.78,
     bendSign: 1,
@@ -57,6 +75,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     pushReachGain: 0,
   },
   r2: {
+    ...LEG_ROOT,
     angleDeg: 80,
     reach: 0.78,
     bendSign: -1,
@@ -66,6 +85,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     pushReachGain: 0,
   },
   l2: {
+    ...LEG_ROOT,
     angleDeg: -80,
     reach: 0.78,
     bendSign: 1,
@@ -76,6 +96,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   },
   // Arka çift — atılımda ve yürüyüşte geriye basar.
   r1: {
+    ...LEG_ROOT,
     angleDeg: 115,
     reach: 0.78,
     bendSign: 1,
@@ -85,6 +106,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     pushReachGain: 0.03,
   },
   l1: {
+    ...LEG_ROOT,
     angleDeg: -115,
     reach: 0.78,
     bendSign: -1,
@@ -94,6 +116,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     pushReachGain: 0.03,
   },
   r0: {
+    ...LEG_ROOT,
     angleDeg: 148,
     reach: 0.78,
     bendSign: 1,
@@ -103,6 +126,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     pushReachGain: 0.05,
   },
   l0: {
+    ...LEG_ROOT,
     angleDeg: -148,
     reach: 0.78,
     bendSign: -1,
@@ -144,25 +168,25 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
 export const gaitConfig = {
   stance: STANCE,
 
-  stepTriggerPx: 30,
-  runStepTriggerPx: 46,
-  stepDurationMs: 185,
-  runStepDurationMs: 110,
+  stepTriggerPx: 33,
+  runStepTriggerPx: 50,
+  stepDurationMs: 205,
+  runStepDurationMs: 128,
   /**
    * Sıra disiplinini delen gerginlik.
    *
    * Normal yürüyüşün ÜSTÜNDE seçilir: tam tempoda bekleyen bir uzvun en kötü
-   * gerginliği tetik (46) + bir adım süresince kat edilen yol (250 × 0.11 ≈ 28)
-   * ≈ 74'tür. Değer bunun altına inerse sıra disiplini düz yürüyüşte de
-   * delinir ve gövde desteksiz kalır.
+   * gerginliği tetik (50) + bir adım süresince kat edilen yol
+   * (215 × 0.128 ≈ 28) ≈ 78'dir. Değer bunun altına inerse sıra disiplini düz
+   * yürüyüşte de delinir ve gövde desteksiz kalır.
    *
    * Üstünde kaldığı durumlar bilinçlidir: atılım ve sert dönüş. İkisinde de
    * gövde bir adım süresinde uzuv erişiminden çok yol alır; sırasını bekleyen
    * uzuv yerde sürüklenir ve gövde dönse bile yerinden kalkmaz.
    */
-  emergencyStrainPx: 82,
+  emergencyStrainPx: 88,
   /** Bu hızda koşu adımının tam tempo değerleri kullanılır. */
-  fullTempoSpeedPxPerSec: 250,
+  fullTempoSpeedPxPerSec: 215,
   /** Adım hedefini hız yönünde ileri koyar; ayak gideceği yere basar. */
   stepLeadSeconds: 0.13,
 
@@ -170,19 +194,7 @@ export const gaitConfig = {
    * Adım havadayken ayağı kalçaya doğru KISALTIR: diz daha çok bükülür, uzuv
    * yerden çekilmiş görünür. Salt ekran kaydırması tek başına bunu vermez.
    */
-  swingTuckPx: 17,
-
-  /**
-   * Omuz (coxa) kemiğinin ayak yönüne yapışma oranı [0,1].
-   *
-   * Üç eklemli bir uzuvda çözüm tek değildir; omuz duruş açısıyla ayak yönü
-   * arasında sabit bir oranda paylaştırılarak belirsizlik kaldırılır. 0 omzu
-   * donuk bırakır (uzuv gövdeden kopuk salınır), 1 üç kemiği tek çizgiye
-   * yaklaştırır (diz kaybolur).
-   */
-  shoulderFollow: 0.45,
-  /** Omzun duruş açısından sapabileceği en büyük değer (derece). */
-  shoulderYawLimitDeg: 34,
+  swingTuckPx: 20,
 
   /** Pençenin (bilek) havadayken kıvrılması ve yerdeyken düzelmesi (derece). */
   clawLiftCurlDeg: 14,

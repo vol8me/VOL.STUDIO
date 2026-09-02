@@ -9,5 +9,8 @@
     "speedAria": "Gövde hızı",
     "fullscreenEnter": "Tam ekrana geç",
     "fullscreenExit": "Tam ekrandan çık"
+  },
+  "touch": {
+    "dash": "Atılma"
   }
 }

@@ -23,9 +23,13 @@ function worldPosition(transform: FakeTransform): { x: number; y: number } {
 }
 
 /** Ölçülen eklem aralıkları (bkz. kaynak metadata). */
-const LEG_BONES = { shoulder: 36, upper: 54, lower: 72 };
-// Arka uzuvlarda kaynak dizilim ters olduğu için aralıklar TERS sırada atanır.
-const TAIL_BONES = { shoulder: 50, upper: 26, lower: 12 };
+const LEG_BONES = { root: 36, upper: 54, lower: 72 };
+/*
+ * Arka uzuvlarda kaynak dizilim ters olduğu için aralıklar TERS sırada
+ * atanır ve SABİT kök kemik yoktur: uzun kemik doğrudan IK çiftinin ilkidir,
+ * uçtaki küçük parça alt kemiğe dahildir (26 + 12).
+ */
+const TAIL_BONES = { root: 0, upper: 50, lower: 38 };
 
 const EXPECTED_HIPS: Readonly<Record<string, readonly [number, number]>> = {
   r0: [34.41898, 34.00194],
@@ -61,9 +65,7 @@ describe('prepareArachnidRig', () => {
       const expected = limb.id.startsWith('t') ? TAIL_BONES : LEG_BONES;
       // Metadata konumları 0.01 px hassasiyetle yazıldığı için iki uçtan
       // hesaplanan uzunluklarda en fazla yüzdelik piksel yuvarlama payı vardır.
-      expect(Math.abs(limb.shoulderLength - expected.shoulder), `${limb.id} omuz`).toBeLessThan(
-        0.02,
-      );
+      expect(Math.abs(limb.rootLength - expected.root), `${limb.id} kök`).toBeLessThan(0.02);
       expect(Math.abs(limb.upperLength - expected.upper), `${limb.id} üst`).toBeLessThan(0.02);
       expect(Math.abs(limb.lowerLength - expected.lower), `${limb.id} alt`).toBeLessThan(0.02);
     }
@@ -76,16 +78,17 @@ describe('prepareArachnidRig', () => {
       const expected = EXPECTED_HIPS[limb.id];
       expect(limb.hipX, `${limb.id} kalça x`).toBeCloseTo(expected[0], 4);
       expect(limb.hipY, `${limb.id} kalça y`).toBeCloseTo(expected[1], 4);
-      expect(limb.shoulder.x).toBeCloseTo(limb.hipX, 5);
-      expect(limb.shoulder.y).toBeCloseTo(limb.hipY, 5);
+      const chainStart = limb.root ?? limb.upper;
+      expect(chainStart.x).toBeCloseTo(limb.hipX, 5);
+      expect(chainStart.y).toBeCloseTo(limb.hipY, 5);
     }
   });
 
-  it('yalnız bacaklarda pençe vardır; arka uzuvlarda uç kemik zincirin sonudur', () => {
+  it('her uzvun bilek gibi davranan bir uç parçası vardır', () => {
     const rig = prepareArachnidRig(metadata, assembleFixture());
 
     for (const limb of rig.limbs) {
-      expect(Boolean(limb.tip), `${limb.id} pençe`).toBe(!limb.id.startsWith('t'));
+      expect(limb.tip, `${limb.id} uç parça`).not.toBeNull();
     }
   });
 
@@ -94,18 +97,21 @@ describe('prepareArachnidRig', () => {
 
     for (const id of ['tl', 'tr']) {
       const limb = rig.limbs.find((item) => item.id === id)!;
-      // Kalın çubuk (`tail_upper`) gövdede, ok ucu (`tail_tip`) ayakta.
-      expect(limb.shoulderLength, id).toBeGreaterThan(limb.upperLength);
+      // Sabit kök YOKTUR: uzun kemik doğrudan IK çiftinin ilkidir, yoksa ayak
+      // duruş ekseni boyunca gidip gelirken uzuv salınmaz, sürüklenir.
+      expect(limb.root, id).toBeNull();
+      expect(limb.rootLength, id).toBe(0);
+      // Kalın çubuk (`tail_upper`) gövdede, ince uç ayakta.
       expect(limb.upperLength, id).toBeGreaterThan(limb.lowerLength);
       // Uzuv fiziksel boyunu korur: kaynak aralıkların toplamı değişmez.
-      expect(limb.shoulderLength + limb.upperLength + limb.lowerLength).toBeCloseTo(88, 0);
+      expect(limb.upperLength + limb.lowerLength).toBeCloseTo(88, 0);
       // Zincir kopuk değildir: her kemik bir öncekinin ucuna oturur.
-      expect(limb.upper.x, `${id} üst kemik`).toBeCloseTo(limb.shoulderLength, 6);
-      expect(limb.upper.y).toBeCloseTo(0, 9);
+      expect(limb.upper.x, `${id} kalça`).toBeCloseTo(limb.hipX, 6);
+      expect(limb.upper.y).toBeCloseTo(limb.hipY, 6);
       expect(limb.lower.x, `${id} alt kemik`).toBeCloseTo(limb.upperLength, 6);
       expect(limb.lower.y).toBeCloseTo(0, 9);
-      expect(limb.shoulder.x).toBeCloseTo(limb.hipX, 6);
-      expect(limb.shoulder.y).toBeCloseTo(limb.hipY, 6);
+      // Uç parça alt kemiğin İÇİNDE bir bilek olarak durur.
+      expect(limb.tip, id).not.toBeNull();
     }
   });
 

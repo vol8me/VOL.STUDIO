@@ -45,6 +45,7 @@ export class ArachnidBody {
   private readonly acceleration = new Vector2(0, 0);
   private dashRemainingMs = 0;
   private dashBlend = 0;
+  private pendingDashLanding = false;
   private wallRecoveryMs = 0;
   private pendingImpact: WallImpact | null = null;
 
@@ -88,6 +89,18 @@ export class ArachnidBody {
     return this.dashCooldown.getProgress();
   }
 
+  /**
+   * Atılımın BİTTİĞİ kareyi bir kez verir.
+   *
+   * Atılım sırasında ayaklar yere değmez; toz da o yüzden kesilir. Yere dönüş
+   * tek bir olaydır ve kendi tozunu hak eder.
+   */
+  consumeDashLanding(): boolean {
+    const landed = this.pendingDashLanding;
+    this.pendingDashLanding = false;
+    return landed;
+  }
+
   /** Duvar çarpmasını bir KEZ verir; sunum katmanı tetiklediğinde tükenir. */
   consumeWallImpact(): WallImpact | null {
     const impact = this.pendingImpact;
@@ -118,6 +131,7 @@ export class ArachnidBody {
     const previousX = this.velocity.x;
     const previousY = this.velocity.y;
 
+    const wasDashing = this.dashRemainingMs > 0;
     if (this.dashRemainingMs > 0) {
       this.dashRemainingMs -= deltaMs;
       this.velocity.set(
@@ -141,6 +155,9 @@ export class ArachnidBody {
       this.position.y + this.velocity.y * dt,
     );
     this.resolveArenaBounds();
+
+    // Duvara çarpma da atılımı bitirir; iniş her iki yolda da bildirilir.
+    if (wasDashing && this.dashRemainingMs <= 0) this.pendingDashLanding = true;
 
     this.updateFacing(moveIntent, hasIntent, deltaMs);
     this.updateDashBlend(deltaMs);
@@ -240,7 +257,13 @@ export class ArachnidBody {
    * karelerde ağır bir gövdeye yakışmayan bir açısal hıza fırlar.
    */
   private updateFacing(moveIntent: Vec, hasIntent: boolean, deltaMs: number): void {
-    const target = hasIntent ? Math.atan2(moveIntent.y, moveIntent.x) : this.facing.value;
+    // Atılım sürerken yön KİLİTLİDİR: gövde uçtuğu yöne bakar. Dümen kırmak
+    // hem ağırlığı hem uzuv duruşunu bozuyordu (bkz. `playerConfig.dash`).
+    const target = this.isDashing
+      ? Math.atan2(this.dashDirection.y, this.dashDirection.x)
+      : hasIntent
+      ? Math.atan2(moveIntent.y, moveIntent.x)
+      : this.facing.value;
     const shortest = wrap(target - this.facing.value, -Math.PI, Math.PI);
     const before = this.facing.value;
 

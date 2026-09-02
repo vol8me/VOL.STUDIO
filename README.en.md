@@ -37,7 +37,7 @@ primitives), [games/docs](games/docs) (game i18n), and each relevant
 
 ```bash
 pnpm install
-pnpm dev                                   # VOL.ARACHNID + two developer tools
+pnpm dev                                   # VOL.HELL + VOL.ARACHNID + two developer tools
 pnpm --filter @volstudio/vol-hell dev      # VOL.HELL only           :5173
 pnpm --filter @volstudio/vol-arachnid dev  # VOL.ARACHNID only       :5178
 pnpm --filter @volstudio/vol-ui dev        # UI showcase only        :5174
@@ -47,6 +47,7 @@ pnpm build:game                            # Build VOL.HELL
 pnpm build:arachnid                        # Build VOL.ARACHNID
 pnpm build:tauri                           # Build PC installers
 pnpm tauri:android:dev                     # Android dev (connected device/emulator)
+pnpm tauri:arachnid:android:dev            # Android dev — VOL.ARACHNID on a connected device
 pnpm benchmark:core                        # Measure CORE headless workloads
 pnpm benchmark:vol-hell                    # Measure VOL.HELL simulation/render
 ```
