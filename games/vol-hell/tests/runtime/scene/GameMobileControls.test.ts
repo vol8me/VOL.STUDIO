@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { i18n, i18next } from '@volstudio/core';
 import { GameMobileControls } from '@/runtime/scene/GameMobileControls';
-import { backHandlerCount } from '@/app/backNavigation';
+import { backHandlerCount } from '@volstudio/core';
 import trResources from '@/i18n/tr.json';
 import enResources from '@/i18n/en.json';
 

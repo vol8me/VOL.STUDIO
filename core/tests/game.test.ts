@@ -120,6 +120,21 @@ describe(
       expect(gameConstructorCalls).toHaveLength(1);
     });
 
+    it('oyunun açık renderer kalite ayarlarını Phaser configine taşır', async () => {
+      const { createVolGame } = await import('../src/Game');
+      const render = {
+        antialias: true,
+        antialiasGL: true,
+        pixelArt: false,
+        roundPixels: false,
+        powerPreference: 'high-performance',
+      };
+
+      await createVolGame({ width: 800, height: 600, scenes: [], fonts: [], render });
+
+      expect(gameConstructorCalls[0]).toMatchObject({ render });
+    });
+
     it('onBeforeSceneInit reddedilirse (throw) oyun başlatılmaz', async () => {
       const { createVolGame } = await import('../src/Game');
 

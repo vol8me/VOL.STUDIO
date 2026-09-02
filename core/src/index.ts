@@ -23,6 +23,7 @@ export {
  * farklıdır; bkz. `platform/capabilities.ts`.
  */
 export { canHover, hasTouchInput, isTouchPrimary, shouldUseTouchControls } from './platform';
+export { pushBackHandler, backHandlerCount, type BackHandler } from './platform';
 export {
   cancelHaptics,
   getHapticsCapability,
@@ -217,4 +218,10 @@ export * from './ui/hud';
 export * from './ui/cards';
 export { VOL_COLORS, type VolColorToken } from './ui/colors';
 export { Easing, animateValue, type AnimateValueOptions } from './ui/animation';
+
+/*
+ * Tek-atış ses bankası. Müzik motoru katmanlı ve zamanlanmış akış içindir;
+ * bu ise varyantlı, bütçeli, anlık tetiklemelerdir.
+ */
+export { SoundBank, type SoundBankOptions, type PlayOptions } from './audio/sfx';
 export * from './debug';

@@ -47,6 +47,8 @@ blob-report/
 # içindeki kendi .gitignore'u tarafından zaten dışarıda tutuluyor.
 /tauri-v2/src-tauri/gen/apple/
 /tauri-v2/src-tauri/target/
+/games/vol-arachnid/src-tauri/gen/apple/
+/games/vol-arachnid/src-tauri/target/
 
 # Editor
 .vscode/*

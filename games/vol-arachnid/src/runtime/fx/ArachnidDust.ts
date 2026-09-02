@@ -46,6 +46,18 @@ export class ArachnidDust {
     if (count > 0) this.emitter.emitParticleAt(x, y, count);
   }
 
+  /**
+   * Havada asılı tüm tozu anında tüketir.
+   *
+   * Atılım başladığında yürüyüşten kalan partiküller hâlâ yaşıyor (ömür
+   * 180-380 ms) ve gövdenin etrafında sürükleniyor; oyuncu bunu "atılım tozu"
+   * olarak görüyor. Atılım temiz bir kare ister.
+   */
+  clear(): void {
+    if (this.destroyed) return;
+    this.emitter.killAll();
+  }
+
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;

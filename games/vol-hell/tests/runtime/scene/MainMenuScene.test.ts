@@ -5,6 +5,7 @@ const fakes = vi.hoisted(() => ({
   showConfirm: vi.fn(),
   vibrate: vi.fn(),
   isTauri: vi.fn(() => false),
+  invoke: vi.fn(),
   closeWindow: vi.fn(),
   startMenuMusic: vi.fn(),
   stopMenuMusic: vi.fn(),
@@ -18,7 +19,7 @@ vi.mock('@volstudio/core', async (importOriginal) => {
     vibrate: fakes.vibrate,
   };
 });
-vi.mock('@tauri-apps/api/core', () => ({ isTauri: fakes.isTauri }));
+vi.mock('@tauri-apps/api/core', () => ({ isTauri: fakes.isTauri, invoke: fakes.invoke }));
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ close: fakes.closeWindow }),
 }));
@@ -102,5 +103,64 @@ describe('MainMenuScene çıkış onayı yaşam döngüsü', () => {
     expect(stopBackHandler).toHaveBeenCalledOnce();
     expect(fakes.stopMenuMusic).not.toHaveBeenCalled();
     for (const destroyer of destroyers) expect(destroyer.destroy).toHaveBeenCalledOnce();
+  });
+
+  it('onaylanınca native uygulama çıkış komutunu çağırır ve durum temizlenir', async () => {
+    fakes.isTauri.mockReturnValue(true);
+    fakes.showConfirm.mockResolvedValueOnce(true);
+    const scene = makeScene();
+
+    await scene.exitGame();
+    // `windowAdapter.close()` microtask queue'ya gider; invoke mock'unun
+    // çağrıldığını görmek için bir makro task beklenir.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(fakes.invoke).toHaveBeenCalledOnce();
+    expect(fakes.invoke).toHaveBeenLastCalledWith('exit_application');
+    expect(scene.exitPromptAbort).toBeNull();
+  });
+
+  it('onaylanıp çıkış istendiğinde tekrar çıkışa basmak yeni onay açar', async () => {
+    fakes.isTauri.mockReturnValue(true);
+    fakes.showConfirm.mockResolvedValue(true);
+    const scene = makeScene();
+
+    await scene.exitGame();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await scene.exitGame();
+
+    expect(fakes.showConfirm).toHaveBeenCalledTimes(2);
+    expect(scene.exitPromptAbort).toBeNull();
+  });
+
+  it('onay reddedilirse durum temizlenir ve tekrar çıkış denenebilir', async () => {
+    fakes.isTauri.mockReturnValue(true);
+    fakes.showConfirm.mockResolvedValueOnce(false);
+    const scene = makeScene();
+
+    await scene.exitGame();
+    expect(scene.exitPromptAbort).toBeNull();
+
+    fakes.showConfirm.mockResolvedValueOnce(true);
+    await scene.exitGame();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(fakes.showConfirm).toHaveBeenCalledTimes(2);
+    expect(fakes.invoke).toHaveBeenCalledOnce();
+  });
+
+  it('native kapatma hatasını console.error ile yazar', async () => {
+    fakes.isTauri.mockReturnValue(true);
+    const error = new Error('IPC reddedildi');
+    fakes.invoke.mockRejectedValueOnce(error);
+    fakes.showConfirm.mockResolvedValueOnce(true);
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const scene = makeScene();
+
+    await scene.exitGame();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(log).toHaveBeenCalledWith('[MainMenuScene] Uygulama kapatılamadı:', error);
+    log.mockRestore();
   });
 });

@@ -90,10 +90,12 @@ export interface FakeGraphics {
 
 export interface FakeEmitter {
   bursts: Array<{ x: number; y: number; count: number }>;
+  killed: number;
   destroyed: boolean;
   depth: number;
   setDepth(depth: number): void;
   emitParticleAt(x: number, y: number, count: number): void;
+  killAll(): void;
   destroy(): void;
 }
 
@@ -111,6 +113,7 @@ export interface FakeScene {
       zoom: number;
       width: number;
       height: number;
+      midPoint: { x: number; y: number };
       setZoom(zoom: number): void;
       centerOn(x: number, y: number): void;
       shake(durationMs: number, intensity: number): void;
@@ -177,6 +180,7 @@ export function createFakeScene(definition?: RigDefinition): FakeScene {
         zoom: 1,
         width: 1280,
         height: 720,
+        midPoint: { x: 0, y: 0 },
         centeredOn: null,
         shakes: [],
         setZoom(zoom) {
@@ -184,6 +188,7 @@ export function createFakeScene(definition?: RigDefinition): FakeScene {
         },
         centerOn(x, y) {
           this.centeredOn = { x, y };
+          this.midPoint = { x, y };
         },
         shake(durationMs, intensity) {
           this.shakes.push({ durationMs, intensity });
@@ -397,6 +402,7 @@ function createGraphics(keys: Set<string>): FakeGraphics {
 function createEmitter(): FakeEmitter {
   return {
     bursts: [],
+    killed: 0,
     destroyed: false,
     depth: 0,
     setDepth(depth) {
@@ -404,6 +410,9 @@ function createEmitter(): FakeEmitter {
     },
     emitParticleAt(x, y, count) {
       this.bursts.push({ x, y, count });
+    },
+    killAll() {
+      this.killed++;
     },
     destroy() {
       this.destroyed = true;

@@ -149,10 +149,12 @@ describe('duruş tablosu', () => {
     expect(playerConfig.wall.impactSpeedPxPerSec).toBeLessThan(playerConfig.dash.speedPxPerSec);
   });
 
-  it('dokunmatik bölge oranı ekranı gerçekten böler', () => {
-    expect(arachnidUiConfig.touch.dashZoneWidthRatio).toBeGreaterThan(0);
-    expect(arachnidUiConfig.touch.dashZoneWidthRatio).toBeLessThan(1);
-    expect(arachnidUiConfig.touch.edgeInsetPx).toBeGreaterThanOrEqual(0);
+  it('atılım düğmesi dokunma hedefi tabanının üstündedir', () => {
+    // 44 px, dokunma hedefi için yaygın erişilebilirlik tabanıdır.
+    expect(arachnidUiConfig.touch.dashButtonSizePx).toBeGreaterThanOrEqual(44);
+    expect(arachnidUiConfig.touch.edgeInsetPx).toBeGreaterThan(0);
+    expect(arachnidUiConfig.touch.idleOpacity).toBeGreaterThan(0);
+    expect(arachnidUiConfig.touch.idleOpacity).toBeLessThan(1);
   });
 });
 

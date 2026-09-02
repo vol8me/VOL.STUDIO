@@ -11,6 +11,12 @@
     "fullscreenExit": "Tam ekrandan çık"
   },
   "touch": {
-    "dash": "Atılma"
+    "dash": "Atılma",
+    "dashShort": "ATIL"
+  },
+  "exit": {
+    "title": "VOL.ARACHNID kapatılsın mı?",
+    "confirm": "Çık",
+    "cancel": "Devam et"
   }
 }

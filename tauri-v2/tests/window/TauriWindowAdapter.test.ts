@@ -1,5 +1,15 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TauriWindowAdapter } from '../../src/window/TauriWindowAdapter';
+
+const fakes = vi.hoisted(() => ({
+  invoke: vi.fn(),
+  isTauri: vi.fn().mockReturnValue(false),
+}));
+
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: fakes.invoke,
+  isTauri: fakes.isTauri,
+}));
 
 /**
  * Bekleyen promise zincirlerini boşaltır.
@@ -168,5 +178,39 @@ describe('TauriWindowAdapter', () => {
 
     expect(listener).not.toHaveBeenCalled();
     stop();
+  });
+});
+
+describe('TauriWindowAdapter.close', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('native yüzey varsa uygulama çıkış komutunu çağırır', async () => {
+    const { target } = makeWindow();
+    const exitApplication = vi.fn().mockResolvedValue(undefined);
+    const adapter = new TauriWindowAdapter({ enabled: true, window: target, exitApplication });
+
+    await adapter.close();
+
+    expect(exitApplication).toHaveBeenCalledTimes(1);
+  });
+
+  it('native yüzey varsa varsayılan exitApplication invoke ile exit_application çağırır', async () => {
+    fakes.invoke.mockResolvedValue(undefined);
+    const { target } = makeWindow();
+    const adapter = new TauriWindowAdapter({ enabled: true, window: target });
+
+    await adapter.close();
+
+    expect(fakes.invoke).toHaveBeenCalledTimes(1);
+    expect(fakes.invoke).toHaveBeenCalledWith('exit_application');
+  });
+
+  it('native yüzey yokken sessizce hiçbir şey yapmaz', async () => {
+    const adapter = new TauriWindowAdapter({ enabled: false });
+
+    await expect(adapter.close()).resolves.toBeUndefined();
+    expect(adapter.isAvailable()).toBe(false);
   });
 });

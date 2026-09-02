@@ -47,6 +47,9 @@ export class ArachnidBody {
   private dashRemainingMs = 0;
   private dashBlend = 0;
   private pendingDashLanding = false;
+  private pendingDashLaunch = false;
+  /** Basılı tutmak cooldown sonunda kendiliğinden ikinci atılım üretmemeli. */
+  private dashHeld = false;
   private wallRecoveryMs = 0;
   private pendingImpact: WallImpact | null = null;
 
@@ -90,6 +93,13 @@ export class ArachnidBody {
     return this.dashCooldown.getProgress();
   }
 
+  /** Atılımın BAŞLADIĞI kareyi bir kez verir. */
+  consumeDashLaunch(): boolean {
+    const launched = this.pendingDashLaunch;
+    this.pendingDashLaunch = false;
+    return launched;
+  }
+
   /**
    * Atılımın BİTTİĞİ kareyi bir kez verir.
    *
@@ -115,6 +125,9 @@ export class ArachnidBody {
     // kareyi konuma ve hıza kalıcı olarak yazar, yaratık bir daha toparlanmaz.
     if (!Number.isFinite(dt) || dt <= 0) return;
 
+    const dashJustPressed = dashPressed && !this.dashHeld;
+    this.dashHeld = dashPressed;
+
     this.dashCooldown.update(deltaMs);
     this.wallRecoveryMs = Math.max(0, this.wallRecoveryMs - deltaMs);
 
@@ -131,8 +144,9 @@ export class ArachnidBody {
     // oyuncu sekmeyi anında ezer ve çarpma hiç hissedilmez.
     const hasIntent = intentLength > 1e-3 && this.wallRecoveryMs <= 0;
 
-    if (dashPressed && this.wallRecoveryMs <= 0 && this.dashCooldown.tryTrigger()) {
+    if (dashJustPressed && this.wallRecoveryMs <= 0 && this.dashCooldown.tryTrigger()) {
       this.dashRemainingMs = playerConfig.dash.durationMs;
+      this.pendingDashLaunch = true;
       // Dash yönü: girdi varsa oraya, yoksa gövdenin baktığı yöne.
       if (intentLength > 1e-3)
         this.dashDirection.set(intentX / intentLength, intentY / intentLength);

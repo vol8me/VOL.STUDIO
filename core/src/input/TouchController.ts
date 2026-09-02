@@ -1,6 +1,12 @@
 import Phaser from 'phaser';
 import type { Vector2 } from '../math/Vector2';
 import { VOL_COLORS } from '../ui/colors';
+import {
+  isPointInNormalizedRegion,
+  resolveNormalizedInputRegion,
+  screenToCameraLayer,
+  type NormalizedInputRegion,
+} from './InputUtils';
 import { TouchStickState, type TouchStickOptions } from './TouchStickState';
 import type { InputProvider } from './InputProvider';
 import type { InputState } from './InputState';
@@ -34,6 +40,26 @@ const STICK_MANUAL_COLOR = hexColorToNumber(VOL_COLORS.brandHover);
  */
 const REQUIRED_POINTERS = 3;
 
+const DEFAULT_LEFT_REGION: NormalizedInputRegion = {
+  minX: 0,
+  maxX: UI_RATIO.SCREEN_HALF,
+  minY: 0,
+  maxY: 1,
+};
+const DEFAULT_RIGHT_REGION: NormalizedInputRegion = {
+  minX: UI_RATIO.SCREEN_HALF,
+  maxX: 1,
+  minY: 0,
+  maxY: 1,
+};
+
+export interface TouchControllerOptions<TAction extends string> extends TouchStickOptions<TAction> {
+  /** Sol stick'in başlayabildiği ekran bölgesi; `null` stick'i kapatır. */
+  leftStickRegion?: NormalizedInputRegion | null;
+  /** Sağ stick'in başlayabildiği ekran bölgesi; `null` stick'i kapatır. */
+  rightStickRegion?: NormalizedInputRegion | null;
+}
+
 /**
  * İnce Phaser sarmalayıcısı: pointer olaylarını dinler, görseli çizer.
  * Stick atama/clamp/deadzone mantığı TouchStickState'te yaşar (bkz. TouchStickState.ts).
@@ -46,14 +72,24 @@ export class TouchController<TAction extends string>
   private readonly graphics: Phaser.GameObjects.Graphics;
   private readonly sticks: TouchStickState<TAction>;
   private readonly aimStickActivatesOnTouch: boolean;
+  private readonly leftStickRegion: NormalizedInputRegion | null;
+  private readonly rightStickRegion: NormalizedInputRegion | null;
   /** Ekranda çizili stick var mı — parmak kalkınca tek bir clear() için. */
   private hasDrawnSticks = false;
 
-  constructor(scene: Phaser.Scene, stickOptions: TouchStickOptions<TAction>) {
+  constructor(scene: Phaser.Scene, stickOptions: TouchControllerOptions<TAction>) {
     super(scene);
     this.id = stickOptions.id ?? 'touch';
     this.sticks = new TouchStickState(stickOptions);
     this.aimStickActivatesOnTouch = stickOptions.aimStickActivatesOnTouch ?? false;
+    this.leftStickRegion = resolveNormalizedInputRegion(
+      stickOptions.leftStickRegion,
+      DEFAULT_LEFT_REGION,
+    );
+    this.rightStickRegion = resolveNormalizedInputRegion(
+      stickOptions.rightStickRegion,
+      DEFAULT_RIGHT_REGION,
+    );
     scene.add.existing(this);
     this.setScrollFactor(0);
     this.setDepth(UI_DEPTH.OVERLAY);
@@ -157,25 +193,39 @@ export class TouchController<TAction extends string>
    * görünür (bkz. `GetCalcMatrix`: scrollFactor yalnız ÖTELEMEYİ iptal eder,
    * ölçeği değil).
    *
-   * Kamera ötelemesi bilerek çıkarılır ve yakınlaştırma bölünür: sonuç, kamera
-   * nereye kayarsa kaysın ekrana sabit kalan bir uzaydır. Yan kazanç:
-   * yarıçaplar artık CSS pikseli cinsindendir, yani joystick 3x bir telefonda
-   * da tasarlandığı fiziksel büyüklükte çizilir (eskiden `1/dpr` kadar
-   * küçülüyordu).
+   * Ölçek kameranın orta noktası etrafında uygulanır; tersi de öyle alınır
+   * (bkz. `screenToCameraLayer`).
    */
   private toLayerSpace(x: number, y: number): { x: number; y: number } {
     const camera = this.scene.cameras?.main;
-    const zoom = camera && Number.isFinite(camera.zoom) && camera.zoom > 0 ? camera.zoom : 1;
-    const originX = camera?.x ?? 0;
-    const originY = camera?.y ?? 0;
-    return { x: (x - originX) / zoom, y: (y - originY) / zoom };
+    const zoom = camera?.zoom ?? 1;
+    return {
+      x: screenToCameraLayer(
+        x,
+        camera?.x ?? 0,
+        (camera?.width ?? this.scene.scale.width) / 2,
+        zoom,
+      ),
+      y: screenToCameraLayer(
+        y,
+        camera?.y ?? 0,
+        (camera?.height ?? this.scene.scale.height) / 2,
+        zoom,
+      ),
+    };
   }
 
-  /** Ekranın çizim uzayındaki genişliği — sol/sağ yarı ayrımı için. */
-  private layerWidth(): number {
+  /** İşaretçiyi kamera viewport'una göre [0,1] ekran oranına çevirir. */
+  private toViewportRatio(x: number, y: number): { x: number; y: number } {
     const camera = this.scene.cameras?.main;
-    const zoom = camera && Number.isFinite(camera.zoom) && camera.zoom > 0 ? camera.zoom : 1;
-    return (camera?.width ?? this.scene.scale.width) / zoom;
+    const originX = camera?.x ?? 0;
+    const originY = camera?.y ?? 0;
+    const width = camera?.width ?? this.scene.scale.width;
+    const height = camera?.height ?? this.scene.scale.height;
+    return {
+      x: width > 0 ? (x - originX) / width : Number.NaN,
+      y: height > 0 ? (y - originY) / height : Number.NaN,
+    };
   }
 
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
@@ -183,9 +233,19 @@ export class TouchController<TAction extends string>
       return;
     }
 
+    const ratio = this.toViewportRatio(pointer.x, pointer.y);
+    // Orta çizgi iki varsayılan bölgeye de dahildir; mevcut sözleşmedeki gibi
+    // sağ taraf kazanır. Sağ stick kapalıysa aynı çizgiyi sol stick alabilir.
+    const isRight =
+      this.rightStickRegion !== null &&
+      isPointInNormalizedRegion(ratio.x, ratio.y, this.rightStickRegion);
+    const isLeft =
+      this.leftStickRegion !== null &&
+      isPointInNormalizedRegion(ratio.x, ratio.y, this.leftStickRegion);
+    if (!isRight && !isLeft) return;
+
     const position = this.toLayerSpace(pointer.x, pointer.y);
-    const isRightSide = position.x >= this.layerWidth() * UI_RATIO.SCREEN_HALF;
-    this.sticks.onPointerDown(pointer.id, position.x, position.y, isRightSide);
+    this.sticks.onPointerDown(pointer.id, position.x, position.y, isRight);
   }
 
   private onPointerMove(pointer: Phaser.Input.Pointer): void {

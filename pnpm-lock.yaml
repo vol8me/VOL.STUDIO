@@ -206,13 +206,28 @@ importers:
       '@volstudio/pen.dev':
         specifier: workspace:*
         version: link:../../devtools/pen.dev
+      '@volstudio/tauri-v2':
+        specifier: workspace:*
+        version: link:../../tauri-v2
       phaser:
         specifier: ^4.2.1
         version: 4.2.1
     devDependencies:
+      '@tauri-apps/cli':
+        specifier: ^2.11.4
+        version: 2.11.4
+      '@types/node':
+        specifier: ^26.1.2
+        version: 26.1.2
+      '@volstudio/audio-synth':
+        specifier: workspace:*
+        version: link:../../devtools/audio-synth
       i18next:
         specifier: 26.3.6
         version: 26.3.6(typescript@6.0.3)
+      tsx:
+        specifier: ^4.23.11
+        version: 4.23.11
       typescript:
         specifier: ^6.0.3
         version: 6.0.3

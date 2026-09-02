@@ -4,7 +4,7 @@ import {
   observeAppVisibility,
   shouldUseTouchControls,
 } from '@volstudio/core';
-import { pushBackHandler } from '@/app/backNavigation';
+import { pushBackHandler } from '@volstudio/core';
 import type { HellAction } from '@/config/input';
 import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import type { AbilitySlot } from '@/runtime/ability/types';

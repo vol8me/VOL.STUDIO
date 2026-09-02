@@ -8,7 +8,7 @@ import {
   shouldUseTouchControls,
 } from '@volstudio/core';
 import { BaseScene } from './BaseScene';
-import { pushBackHandler } from '@/app/backNavigation';
+import { pushBackHandler } from '@volstudio/core';
 import { hasNativeWindow } from '@/app/platform';
 import { audioSettings, gameAudio, videoSettings } from '@/app/services';
 import { sfxVolumes } from '@/config';

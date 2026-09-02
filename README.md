@@ -46,21 +46,28 @@ pnpm tauri:dev                             # PC Tauri dev
 pnpm build:game                            # VOL.HELL build
 pnpm build:arachnid                        # VOL.ARACHNID build
 pnpm build:tauri                           # PC installer build
+pnpm tauri:arachnid:build                  # VOL.ARACHNID PC installer build
 pnpm tauri:android:dev                     # Android dev (bağlı cihaz/emülatör)
 pnpm tauri:arachnid:android:dev            # Android dev — bağlı cihazda VOL.ARACHNID
+pnpm tauri:arachnid:android:build          # VOL.ARACHNID Android APK
 pnpm benchmark:core                        # CORE headless workload ölçümü
 pnpm benchmark:vol-hell                    # VOL.HELL simülasyon/render ölçümü
 ```
 
-VOL.ARACHNID sabit kameralı arena dikey kesitidir: WASD örümceği yürütür,
-Space kısa atılmayı tetikler; HUD hız ile atılma dolumunu gösterir.
+VOL.ARACHNID arena dikey kesitidir: WASD örümceği yürütür, Space kısa atılmayı
+tetikler; HUD hız ile atılma dolumunu gösterir. Masaüstünde arena sığdırılır,
+dokunmatikte kamera gövdeyi sınırlar içinde takip eder.
 
 ### Android
 
-Native proje `tauri-v2/src-tauri/gen/android` altında **sürüm kontrolünde tutulur**
-(yeniden üretilebilir değildir): yön kilidi, çentik yerleşimi ve sürükleyici tam
-ekran Tauri yapılandırmasından ayarlanamadığı için `AndroidManifest.xml`, tema ve
-`MainActivity.kt` elle düzenlendi.
+İki oyunun native projeleri ayrıdır: VOL.HELL
+`tauri-v2/src-tauri/gen/android`, VOL.ARACHNID ise
+`games/vol-arachnid/src-tauri/gen/android` altında yaşar. İkisi de **sürüm
+kontrolünde tutulur** (yeniden üretilebilir değildir): yön kilidi, çentik
+yerleşimi, geri hareketi ve sürükleyici tam ekran Tauri yapılandırmasından
+ayarlanamadığı için `AndroidManifest.xml`, tema ve `MainActivity.kt` elle
+düzenlendi. Ayrı paket kimlikleri (`com.volstudio.game` ve
+`com.volstudio.arachnid`) iki oyunun aynı cihazda birlikte kurulmasını sağlar.
 
 ```bash
 export ANDROID_HOME="$HOME/Android/Sdk"
@@ -70,6 +77,9 @@ rustup target add aarch64-linux-android    # cihaz için; emülatör x86_64 iste
 
 pnpm --filter @volstudio/tauri-v2 exec tauri android build --debug --target aarch64
 adb install -r tauri-v2/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
+
+pnpm --filter @volstudio/vol-arachnid exec tauri android build --debug --target aarch64
+adb install -r games/vol-arachnid/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 ```
 
 Fedora/Linux release (deb, rpm ve AppImage):
@@ -84,7 +94,7 @@ kırılırsa tarif önce AppDir'i üretir, ardından `build:linux-appimage` ile
 paketler. Bu yol native masaüstü doğrulamasında kullanılır. Android build için
 JDK 21 LTS gerekir; JDK 25 desteklenmez.
 
-Oyun yatay yöne kilitlidir, sistem çubukları gizlenir ve güvenli alan
+Oyunlar yatay yöne kilitlidir, sistem çubukları gizlenir ve güvenli alan
 (`env(safe-area-inset-*)`) HUD yerleşimine uygulanır. Ekran üstü kontroller
 yalnızca dokunmatik birincil cihazlarda kurulur (`shouldUseTouchControls`).
 

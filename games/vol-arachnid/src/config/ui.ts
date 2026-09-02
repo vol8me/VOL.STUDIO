@@ -7,20 +7,21 @@ export const arachnidUiConfig = {
   },
 
   /**
-   * Dokunmatik yerleşim: ekran İKİYE bölünür.
+   * Dokunmatik yerleşim.
    *
-   * Sol bölge CORE'un hareket çubuğuna aittir ve orada DOM elemanı YOKTUR —
-   * bir eleman koymak dokunuşu Phaser'dan önce yakalar ve çubuk hiç doğmaz.
-   * Sağ bölge atılım düğmesidir; küçük bir daire yerine bölgenin tamamını
-   * kaplar, çünkü başparmak yatay tutuşta sabit bir noktaya nişan alamaz.
+   * Sol yarı CORE'un hareket çubuğuna aittir ve orada DOM elemanı YOKTUR —
+   * bir eleman dokunuşu Phaser'dan önce yakalar ve çubuk hiç doğmaz.
+   * Sağ altta gerçek bir DÜĞME durur: bölgenin tamamını kaplayan bir tuş oyun
+   * alanının yarısını yutuyor ve basıldığında yaratığı gizliyordu.
    *
-   * İkisi de dokunulmadıkça GÖRÜNMEZ: çubuğu CORE yalnız aktifken çizer,
-   * düğme ise basılana kadar saydamdır.
+   * Düğme beklerken SÖNÜKTÜR, görünmez değil: sabit bir noktadaki görünmez
+   * tuş bulunamaz. Basıldığında tam parlaklığa çıkar.
    */
   touch: {
-    /** Sağ bölgenin ekran genişliğine oranı. */
-    dashZoneWidthRatio: 0.5,
-    /** Bölgenin HUD boşluklarından uzak duracağı pay (px). */
-    edgeInsetPx: 4,
+    dashButtonSizePx: 84,
+    /** Ekran kenarından pay (px). */
+    edgeInsetPx: 22,
+    /** Beklerken saydamlık; basınca 1'e çıkar. */
+    idleOpacity: 0.35,
   },
 } as const;

@@ -2,7 +2,12 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 const { fullscreenControllers, inputManagers, touchEnabled } = vi.hoisted(() => ({
   fullscreenControllers: [] as Array<{ destroyed: boolean; toggle: () => void }>,
-  inputManagers: [] as Array<{ destroyed: boolean; options: unknown }>,
+  inputManagers: [] as Array<{
+    destroyed: boolean;
+    options: unknown;
+    update: ReturnType<typeof vi.fn>;
+    reset: ReturnType<typeof vi.fn>;
+  }>,
   touchEnabled: { value: false },
 }));
 
@@ -19,7 +24,8 @@ vi.mock('@volstudio/core', async () => {
       inputManagers.push(this);
     }
 
-    update(): void {}
+    readonly update = vi.fn();
+    readonly reset = vi.fn();
 
     getState(): unknown {
       return { move: new Vector2(0, 0), actions: { dash: false } };
@@ -55,8 +61,10 @@ vi.mock('@volstudio/core', async () => {
   };
 });
 
-import { i18n, i18next } from '@volstudio/core';
+import { Vector2, i18n, i18next } from '@volstudio/core';
+import type { ArachnidAudioPort } from '@/app/ArachnidAudio';
 import { arenaConfig } from '@/config/arena';
+import { ARACHNID_LEFT_STICK_REGION } from '@/config/input';
 import tr from '@/i18n/tr.json';
 import en from '@/i18n/en.json';
 import '@/i18next-augment';
@@ -83,8 +91,8 @@ function attach(scene: GameScene, fake: FakeScene): void {
   }
 }
 
-function boot(): SceneHarness {
-  const scene = new GameScene();
+function boot(audio: ArachnidAudioPort | null = null): SceneHarness {
+  const scene = new GameScene(audio);
   const fake = createFakeScene();
   attach(scene, fake);
   scene.preload();
@@ -144,9 +152,63 @@ describe('GameScene yaşam döngüsü', () => {
     // Düğme basımı girdi yığınına aynı karede karışmalı.
     const options = inputManagers.at(-1)?.options as { actionSource?: unknown } | undefined;
     expect(options?.actionSource).toBeDefined();
+    expect(options).toMatchObject({
+      leftStickRegion: ARACHNID_LEFT_STICK_REGION,
+      rightStickRegion: null,
+    });
 
     touch.shutdown();
     expect(document.querySelector('.vol-arachnid-touch')).toBeNull();
+  });
+
+  it('dokunmatik cihazda arenayı sığdırmaz, gövdeyi TAKİP eder', () => {
+    touchEnabled.value = true;
+    const { scene, fake, shutdown } = boot();
+
+    // Telefonda tam sığdırma yaratığı okunmaz hâle getiriyordu; ölçek taban
+    // değerde tutulur ve kamera gövdenin üstünde kalır.
+    expect(fake.cameras.main.zoom).toBeCloseTo(arenaConfig.touchWorldScale, 9);
+
+    const start = { ...fake.cameras.main.centeredOn! };
+    for (let i = 0; i < 20; i++) scene.update(i * 16, 16);
+    // Gövde merkezde duruyor; kamera da onun üstünde kalmalı.
+    expect(fake.cameras.main.centeredOn?.x).toBeCloseTo(start.x, 3);
+
+    shutdown();
+  });
+
+  it('takip modunda görüş alanı arenanın DIŞINA taşmaz', () => {
+    touchEnabled.value = true;
+    const { scene, fake, shutdown } = boot();
+    const camera = fake.cameras.main;
+    const halfWidth = camera.width / camera.zoom / 2;
+    const halfHeight = camera.height / camera.zoom / 2;
+
+    for (let i = 0; i < 400; i++) scene.update(i * 16, 16);
+
+    const centre = camera.centeredOn!;
+    if (halfWidth * 2 < arenaConfig.widthPx) {
+      expect(centre.x).toBeGreaterThanOrEqual(halfWidth - 1e-6);
+      expect(centre.x).toBeLessThanOrEqual(arenaConfig.widthPx - halfWidth + 1e-6);
+    }
+    if (halfHeight * 2 < arenaConfig.heightPx) {
+      expect(centre.y).toBeGreaterThanOrEqual(halfHeight - 1e-6);
+      expect(centre.y).toBeLessThanOrEqual(arenaConfig.heightPx - halfHeight + 1e-6);
+    }
+
+    shutdown();
+  });
+
+  it('dokunmatik cihazda tam ekran düğmesi GÖSTERİLMEZ', () => {
+    touchEnabled.value = true;
+    const { shutdown } = boot();
+    expect(document.querySelector('.vol-arachnid-hud__fullscreen')).toBeNull();
+    shutdown();
+
+    touchEnabled.value = false;
+    const desktop = boot();
+    expect(document.querySelector('.vol-arachnid-hud__fullscreen')).not.toBeNull();
+    desktop.shutdown();
   });
 
   it('kamerayı arenayı boşlukların İÇİNE alacak şekilde kurar', () => {
@@ -219,6 +281,68 @@ describe('GameScene yaşam döngüsü', () => {
     shutdown();
 
     expect(() => scene.update(0, 16)).not.toThrow();
+  });
+
+  it('arka plana geçiş aktif joystick ve sanal eylemleri birlikte sıfırlar', () => {
+    touchEnabled.value = true;
+    const { shutdown } = boot();
+    const manager = inputManagers.at(-1)!;
+
+    window.dispatchEvent(new Event('blur'));
+
+    expect(manager.reset).toHaveBeenCalledTimes(1);
+    shutdown();
+  });
+
+  it('çıkış modalı açıkken simülasyonu durdurur, kapanınca devam eder', async () => {
+    touchEnabled.value = true;
+    const { scene, shutdown } = boot();
+    const manager = inputManagers.at(-1)!;
+
+    window.dispatchEvent(new Event('vol:androidback'));
+    scene.update(0, 16);
+    expect(document.querySelector('.vol-modal')).not.toBeNull();
+    expect(manager.reset).toHaveBeenCalledTimes(1);
+    expect(manager.update).not.toHaveBeenCalled();
+
+    const cancel = [...document.querySelectorAll<HTMLButtonElement>('.vol-modal button')].find(
+      (button) => button.textContent === 'Devam et',
+    );
+    cancel?.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    scene.update(16, 16);
+    expect(manager.update).toHaveBeenCalledTimes(1);
+
+    shutdown();
+  });
+
+  it('gerçek atılım ve duvar olaylarını ses katmanına iletir', () => {
+    const audio = { play: vi.fn() } satisfies ArachnidAudioPort;
+    const dashHarness = boot(audio);
+    const dashInternals = dashHarness.scene as unknown as {
+      body: {
+        position: { set(x: number, y: number): void };
+        update(move: Vector2, dash: boolean, delta: number): void;
+      };
+      resolveWallImpact(): void;
+    };
+
+    dashInternals.body.update(new Vector2(1, 0), true, 16);
+    dashHarness.scene.update(0, 16);
+    expect(audio.play).toHaveBeenCalledWith('dashLaunch');
+    dashHarness.shutdown();
+
+    // Atılım hâlindeki aynı gövde ters yöne çevrilemez; duvar çarpmasını temiz
+    // bir sahnede sol duvara doğru gerçek bir atılımla üret.
+    audio.play.mockClear();
+    const wallHarness = boot(audio);
+    const wallInternals = wallHarness.scene as unknown as typeof dashInternals;
+    wallInternals.body.position.set(arenaConfig.bodyRadiusPx + 1, arenaConfig.heightPx / 2);
+    wallInternals.body.update(new Vector2(-1, 0), true, 16);
+    wallInternals.resolveWallImpact();
+    expect(audio.play).toHaveBeenCalledWith('wallImpact', expect.any(Number));
+
+    wallHarness.shutdown();
   });
 
   it('kurulum yarıda patlarsa açılan kaynakları geride bırakmaz', () => {

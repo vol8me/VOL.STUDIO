@@ -26,6 +26,8 @@ export interface VolGameConfig {
   scenes: Phaser.Types.Core.GameConfig['scene'];
   physics?: Phaser.Types.Core.GameConfig['physics'];
   input?: Phaser.Types.Core.InputConfig;
+  /** Phaser renderer ayarları; oyun kalite profilinden açıkça verilebilir. */
+  render?: Phaser.Types.Core.RenderConfig;
   /** Yüklenecek font alt seti. Belirtilmezse tüm VOL fontları yüklenir. */
   fonts?: VolFontFamily[];
   /**
@@ -96,6 +98,7 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     scene: config.scenes,
     physics: config.physics,
     input: config.input,
+    render: config.render,
     audio: { noAudio: true },
   };
 

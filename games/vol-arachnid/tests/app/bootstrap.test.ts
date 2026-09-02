@@ -1,12 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const { createVolGame, gameEvents } = vi.hoisted(() => {
+const { audioDestroy, createArachnidAudio, createVolGame, gameEvents } = vi.hoisted(() => {
   const events = { once: vi.fn() };
+  const destroy = vi.fn();
   return {
     createVolGame: vi.fn((config: unknown) => {
       void config;
       return Promise.resolve({ events });
     }),
+    audioDestroy: destroy,
+    createArachnidAudio: vi.fn(() => ({ destroy })),
     gameEvents: events,
   };
 });
@@ -16,14 +19,20 @@ vi.mock('@volstudio/core', async () => {
   return { ...actual, createVolGame };
 });
 
+vi.mock('@/app/ArachnidAudio', () => ({ createArachnidAudio }));
+
 // Sahne, gerçek bir Phaser bağlamı olmadan içe aktarılamayacak kadar ağır
 // değil ama boot sırasını ölçen bu testte hiç kurulmaz.
 vi.mock('@/runtime/scene/GameScene', () => ({ GameScene: class {} }));
 
 describe('bootstrap', () => {
   afterEach(() => {
+    const destroyCall = gameEvents.once.mock.calls.find((call) => call[0] === 'destroy');
+    (destroyCall?.[1] as (() => void) | undefined)?.();
     vi.resetModules();
     createVolGame.mockClear();
+    createArachnidAudio.mockClear();
+    audioDestroy.mockClear();
     gameEvents.once.mockClear();
   });
 
@@ -32,7 +41,18 @@ describe('bootstrap', () => {
     const { i18next } = await import('@volstudio/core');
 
     expect(createVolGame).toHaveBeenCalledTimes(1);
-    expect(createVolGame).toHaveBeenCalledWith(expect.objectContaining({ strategy: 'resize' }));
+    expect(createVolGame).toHaveBeenCalledWith(
+      expect.objectContaining({
+        strategy: 'resize',
+        renderScale: 1,
+        render: expect.objectContaining({
+          antialias: true,
+          antialiasGL: true,
+          pixelArt: false,
+          powerPreference: 'high-performance',
+        }) as unknown,
+      }),
+    );
     expect(document.documentElement.lang).toBe(i18next.language);
     expect(document.title).toBe('VOL.ARACHNID');
     expect(i18next.t('arachnid:hud.ariaLabel')).not.toBe('');
@@ -49,5 +69,15 @@ describe('bootstrap', () => {
     const off = vi.spyOn(i18next, 'off');
     (handler as () => void)();
     expect(off).toHaveBeenCalledWith('languageChanged', expect.any(Function));
+  });
+
+  it('Phaser kurulumu düşerse ses ve haptik yaşam döngüsünü geri toplar', async () => {
+    const failure = new Error('boot failed');
+    createVolGame.mockRejectedValueOnce(failure);
+
+    await expect(import('@/app/bootstrap')).rejects.toThrow(failure);
+    const { isHapticsEnabled } = await import('@volstudio/core');
+    expect(audioDestroy).toHaveBeenCalledTimes(1);
+    expect(isHapticsEnabled()).toBe(false);
   });
 });

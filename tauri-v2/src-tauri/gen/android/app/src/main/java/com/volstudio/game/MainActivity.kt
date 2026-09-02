@@ -21,6 +21,17 @@ class MainActivity : TauriActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
+    // Callback'i Activity yaşam döngüsünde, ana thread'de kaydet. WebView
+    // kurulumu bazı cihazlarda dispatcher kaydı için geç/uygunsuz bir sınır
+    // olabiliyor; referans hazır değilse geri olayı güvenle tüketilir.
+    onBackPressedDispatcher.addCallback(
+      this,
+      object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+          dispatchBackToWebView()
+        }
+      },
+    )
     hideSystemBars()
   }
 
@@ -33,21 +44,17 @@ class MainActivity : TauriActivity() {
    * hangi ekranın ne yapacağına oyun karar verir (menüde onay kutusu, oyunda
    * duraklatma, ayarlarda geri dönüş).
    *
-   * `onWebViewCreate`, WryActivity kendi işleyicisini EKLEDİKTEN SONRA
-   * çağrılır; dispatcher son ekleneni önce çalıştırdığı için bizimki kazanır.
+   * Callback `onCreate` içinde Activity'ye bağlanır; bu fonksiyon yalnız
+   * WebView referansını hazır eder.
    */
   override fun onWebViewCreate(webView: WebView) {
     this.webView = webView
-    onBackPressedDispatcher.addCallback(
-      this,
-      object : OnBackPressedCallback(true) {
-        override fun handleOnBackPressed() {
-          this@MainActivity.webView?.evaluateJavascript(
-            "window.dispatchEvent(new CustomEvent('vol:androidback'))",
-            null,
-          )
-        }
-      },
+  }
+
+  private fun dispatchBackToWebView() {
+    webView?.evaluateJavascript(
+      "window.dispatchEvent(new CustomEvent('vol:androidback'))",
+      null,
     )
   }
 

@@ -8,6 +8,8 @@ export type {
 } from './PCInputState';
 export { resolvePCActions, computePCInputState, isPCInputActive } from './PCInputState';
 export type { TouchStickOptions } from './TouchStickState';
+export type { TouchControllerOptions } from './TouchController';
+export type { NormalizedInputRegion } from './InputUtils';
 export type { InputManagerOptions } from './InputManager';
 export { DEFAULT_MOVE_KEYS, type MoveKeyBindings, type PCControllerOptions } from './PCController';
 export {

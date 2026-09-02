@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { backHandlerCount, pushBackHandler } from '@/app/backNavigation';
+import { backHandlerCount, pushBackHandler } from '../../src/platform/backNavigation';
 
 const disposers: Array<() => void> = [];
 

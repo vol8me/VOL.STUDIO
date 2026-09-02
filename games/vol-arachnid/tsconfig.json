@@ -6,9 +6,10 @@
       "@volstudio/core": ["../../core/src"],
       "@volstudio/core/*": ["../../core/src/*"],
       "@volstudio/pen.dev": ["../../devtools/pen.dev/src"],
+      "@volstudio/tauri-v2": ["../../tauri-v2/src"],
       "@volstudio/pen.dev/*": ["../../devtools/pen.dev/src/*"],
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "scripts"]
 }

@@ -1,4 +1,4 @@
-import { isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 import { LogicalSize, getCurrentWindow, type Window as TauriWindow } from '@tauri-apps/api/window';
 
 type WindowHandle = Pick<
@@ -13,6 +13,8 @@ export interface TauriWindowAdapterOptions {
   window?: WindowHandle;
   /** LogicalSize üretimi testte IPC sınıfına bağımlı kalmamak için enjekte edilebilir. */
   createLogicalSize?: (width: number, height: number) => LogicalSize;
+  /** Uygulama çıkış komutunu testte IPC'den ayırır. */
+  exitApplication?: () => Promise<void>;
 }
 
 /**
@@ -25,10 +27,14 @@ export interface TauriWindowAdapterOptions {
 export class TauriWindowAdapter {
   private readonly window: WindowHandle | null;
   private readonly createLogicalSize: (width: number, height: number) => LogicalSize;
+  private readonly exitApplication: (() => Promise<void>) | null;
 
   constructor(options: TauriWindowAdapterOptions = {}) {
     const enabled = options.enabled ?? isTauri();
     this.window = enabled ? options.window ?? getCurrentWindow() : null;
+    this.exitApplication = enabled
+      ? options.exitApplication ?? (() => invoke<void>('exit_application'))
+      : null;
     this.createLogicalSize =
       options.createLogicalSize ?? ((width, height) => new LogicalSize(width, height));
   }
@@ -43,6 +49,23 @@ export class TauriWindowAdapter {
 
   async setFullscreen(active: boolean): Promise<void> {
     await this.window?.setFullscreen(active);
+  }
+
+  /**
+   * Uygulama sürecini kapatır — onaylanmış native uygulama çıkışı.
+   *
+   * `Window.close()` / `Window.destroy()` pencere yaşam döngüsü
+   * primitive'leridir; ürünün "uygulamadan çık" niyetini Android Activity
+   * yaşam döngüsüne bırakmak belirsizdir. Kullanıcı zaten ürün modalında onay
+   * verdiği için Rust tarafındaki açık uygulama semantiğine,
+   * `AppHandle::exit(0)` komutuna gideriz.
+   *
+   * Native yüzey yoksa (web, test) sessizce hiçbir şey yapmaz: çıkış niyeti
+   * her platformda ifade edilebilmeli, ama yalnız native olan yerde sonuç
+   * doğurmalıdır.
+   */
+  async close(): Promise<void> {
+    await this.exitApplication?.();
   }
 
   /** Pencerenin içerik çözünürlüğünü değiştirir ve görünür ekrana ortalar. */

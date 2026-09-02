@@ -16,7 +16,11 @@ Monorepo geneli için [kök README](../../README.md)'ye bakın.
 | Komut                                             | İş                                   |
 | ------------------------------------------------- | ------------------------------------ |
 | `pnpm --filter @volstudio/vol-arachnid dev`       | Vite dev sunucusu (`localhost:5178`) |
-| `pnpm build:arachnid`                             | Üretim derlemesi (`dist/`)           |
+| `pnpm build:arachnid`                             | Web üretim derlemesi (`dist/`)       |
+| `pnpm tauri:arachnid:build`                       | Masaüstü native paket                |
+| `pnpm tauri:arachnid:android:dev`                 | Bağlı Android cihazda geliştirme     |
+| `pnpm tauri:arachnid:android:build`               | Android APK                          |
+| `pnpm --filter @volstudio/vol-arachnid audio:qa`  | Üretilmiş ses varlıklarını doğrular  |
 | `pnpm --filter @volstudio/vol-arachnid test`      | Vitest                               |
 | `pnpm --filter @volstudio/vol-arachnid typecheck` | `tsc --noEmit`                       |
 
@@ -31,6 +35,16 @@ Kök `pnpm dev` bu paketi vol-ui ve vol-asset-studio ile birlikte açar.
 | `Space` | Atılım (dash)                                |
 | `F11`   | Tam ekran (HUD'daki buton da aynı işi yapar) |
 
+Dokunmatik cihazda hareket çubuğu yalnız ekranın sol-alt başparmak bölgesinde
+doğar; sağ-alt düğme atılımdır. Üst bölgedeki HUD/modal dokunuşları ve ekranın
+sağ tarafı görünmez joystick olarak çalışmaz. Android geri hareketi oyunu
+doğrudan kapatmaz, yerelleştirilmiş çıkış onayını açar.
+
+Atılım, iniş, duvar çarpması ve adımlarda kısa efektler; ilk kullanıcı
+etkileşiminden sonra başlayan döngüsel bir ambiyans vardır. Atılım/çarpma
+olayları Android'de çok hafif haptik desen üretir. Grafik profili sabit
+YÜKSEK'tir: tam render ölçeği ve kenar yumuşatma açıktır, kalite ayarı sunulmaz.
+
 ## Mimari
 
 ```
@@ -38,6 +52,7 @@ src/
   config/    Ölçüler ve denge — VERİ. Runtime dosyalarında sihirli sayı yoktur.
   runtime/   Çalışan sistemler.
   app/       Boot (i18n, font, Phaser oyunu).
+  src-tauri/ VOL.ARACHNID'e ait native masaüstü/Android kabuğu.
 ```
 
 | Dosya                               | Sorumluluk                                                  |
@@ -48,6 +63,10 @@ src/
 | `config/arena.ts`                   | Alan ölçüleri, kamera boşlukları, çarpma yankısı            |
 | `config/bodyMotion.ts`              | Yalpalama, yaslanma, çömelme, uç parça öncülüğü, bakış      |
 | `config/fx.ts`                      | Hayalet iz, gölge, toz ve çizim derinlikleri                |
+| `config/audio.ts`                   | Ses varlıkları, miks, bütçe ve olay şiddetleri              |
+| `config/graphics.ts`                | Sabit yüksek kalite render profili                          |
+| `config/input.ts`                   | Tuşlar ve sol başparmak joystick bölgesi                    |
+| `app/ArachnidAudio.ts`              | WebAudio kilit açma, ambiyans/SFX ve yaşam döngüsü          |
 | `runtime/rig/arachnidRig.ts`        | Montajlanmış rig'i sürülebilir uzuv geometrisine çevirir    |
 | `runtime/rig/ArachnidBodyMotion.ts` | Gövde kabuğunun ikincil hareketi ve bakış                   |
 | `runtime/entity/ArachnidBody.ts`    | Konum, hız, yön, atılım, sınır çözümü (headless)            |
@@ -56,6 +75,7 @@ src/
 | `runtime/fx/ArachnidDust.ts`        | Pençe temasında toz                                         |
 | `runtime/ui/ArachnidHud.ts`         | CORE bileşenleriyle HUD (dikey bar, başlık, tam ekran, hız) |
 | `runtime/scene/GameScene.ts`        | Kurulum, kare akışı, kamera, yaşam döngüsü                  |
+| `runtime/ui/ArachnidExitPrompt.ts`  | Android/masaüstü geri hareketi ve çıkış onayı               |
 
 ### Uzuv çözümü
 
@@ -125,3 +145,8 @@ Kamera arenayı `arenaConfig.viewportGutterPx` boşluklarının İÇİNE sığd�
 HUD yalnız o boşluklarda yaşar ve oyun alanına hiçbir koşulda binmez. Ölçüler
 `ArachnidHud` tarafından CSS değişkeni olarak yayımlanır, yani iki taraf ayrı
 sayı tutmaz.
+
+Dokunmatik cihazda tam arena küçültülmez; kamera gövdeyi arena sınırları içinde
+takip eder. HUD, atılım ve modal aynı CORE `UIRoot` katmanını paylaşır. Bu kök
+mobil metin seçimini, çağrı balonunu ve dokunma parlamasını kapatır; butona uzun
+basmak tarayıcının kopyalama/seçim davranışına dönüşmez.

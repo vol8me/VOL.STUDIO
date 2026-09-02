@@ -23,8 +23,11 @@ log = "0.4"
 rustls = { version = "0.23", default-features = false, features = ["ring"] }
 
 [features]
-default = ["custom-protocol"]
+default = ["custom-protocol", "mobile-entry"]
 custom-protocol = ["tauri/custom-protocol"]
+# JNI köprüsünü dışa aktaran mobil giriş noktası. Kabuk başka bir uygulamaya
+# kütüphane olarak bağlanırken KAPATILIR; aksi halde semboller çakışır.
+mobile-entry = []
 
 [profile.release]
 codegen-units = 1

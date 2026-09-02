@@ -6,7 +6,7 @@ import type { PCActionBinding } from './PCInputState';
 import type { InputProvider } from './InputProvider';
 import { createIdleActions, type InputState } from './InputState';
 import { idleSnapshot, type InputSnapshot } from './InputSnapshot';
-import { TouchController } from './TouchController';
+import { TouchController, type TouchControllerOptions } from './TouchController';
 import type { VirtualActionSource } from './VirtualActionSource';
 
 export interface InputManagerOptions<TAction extends string> {
@@ -23,6 +23,10 @@ export interface InputManagerOptions<TAction extends string> {
   aimStickAction?: TAction;
   /** Sağ joystick dokunulduğu anda, deadzone aşılmadan da eylemi etkinleştirir. */
   aimStickActivatesOnTouch?: boolean;
+  /** Sol stick'in başlayabildiği normalize ekran bölgesi; `null` kapatır. */
+  leftStickRegion?: TouchControllerOptions<TAction>['leftStickRegion'];
+  /** Sağ stick'in başlayabildiği normalize ekran bölgesi; `null` kapatır. */
+  rightStickRegion?: TouchControllerOptions<TAction>['rightStickRegion'];
   /**
    * Ekran üstü düğmelerin yazdığı eylem kaynağı; dokunmatik sağlayıcının
    * eylem kümesine karışır (bkz. `VirtualActionSource`).
@@ -56,6 +60,8 @@ export class InputManager<TAction extends string> {
             aimStickAction: options.aimStickAction,
             aimStickActivatesOnTouch: options.aimStickActivatesOnTouch,
             actionSource: options.actionSource,
+            leftStickRegion: options.leftStickRegion,
+            rightStickRegion: options.rightStickRegion,
           }),
         );
         const pc = this.lifecycle.addDestroyable(

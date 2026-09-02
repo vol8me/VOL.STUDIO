@@ -33,8 +33,14 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@volstudio/core/random': resolve(import.meta.dirname, '../../core/src/random/random.ts'),
+      '@volstudio/core/math/interpolation': resolve(
+        import.meta.dirname,
+        '../../core/src/math/interpolation.ts',
+      ),
       '@volstudio/core': resolve(import.meta.dirname, '../../core/src'),
       '@volstudio/pen.dev': resolve(import.meta.dirname, '../../devtools/pen.dev/src'),
+      '@volstudio/tauri-v2': resolve(import.meta.dirname, '../../tauri-v2/src'),
       '@': resolve(import.meta.dirname, './src'),
     },
   },

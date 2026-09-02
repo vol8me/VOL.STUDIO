@@ -7,8 +7,13 @@ import {
   PoseShadow,
   VirtualActionSource,
   applyVolViewport,
+  cancelHaptics,
+  clamp,
+  clamp01,
+  damp,
   observeAppVisibility,
   shouldUseTouchControls,
+  vibrate,
   type CancellableDisposable,
   type PoseSourceNode,
 } from '@volstudio/core';
@@ -21,13 +26,16 @@ import {
   type RigDefinition,
 } from '@volstudio/pen.dev';
 import { arenaConfig } from '@/config/arena';
+import { arachnidAudioConfig } from '@/config/audio';
 import { fxConfig } from '@/config/fx';
 import {
   ARACHNID_ACTIONS,
+  ARACHNID_LEFT_STICK_REGION,
   ARACHNID_MOVE_KEYS,
   ARACHNID_PC_BINDINGS,
   type ArachnidAction,
 } from '@/config/input';
+import type { ArachnidAudioPort } from '@/app/ArachnidAudio';
 import { ARACHNID_ARTICULATION, RIG_FACING_OFFSET_RAD } from '@/config/rig';
 import { arachnidMetadata, arachnidPartUrls } from '@/config/rigAssets';
 import { ArachnidBody } from '@/runtime/entity/ArachnidBody';
@@ -37,7 +45,14 @@ import { ArachnidDust } from '@/runtime/fx/ArachnidDust';
 import { prepareArachnidRig } from '@/runtime/rig/arachnidRig';
 import { ArachnidBodyMotion } from '@/runtime/rig/ArachnidBodyMotion';
 import { ArachnidHud } from '@/runtime/ui/ArachnidHud';
+import { ArachnidExitPrompt } from '@/runtime/ui/ArachnidExitPrompt';
 import { ArachnidTouchControls } from '@/runtime/ui/ArachnidTouchControls';
+
+/** Görüş alanını arenanın içinde tutar; arena görüşten darsa ortalar. */
+function clampView(center: number, halfExtent: number, arenaExtent: number): number {
+  if (halfExtent * 2 >= arenaExtent) return arenaExtent / 2;
+  return clamp(center, halfExtent, arenaExtent - halfExtent);
+}
 
 /** Sabit arena, eklemli örümcek ve ortak girdi akışının oyun sahnesi. */
 export class GameScene extends Phaser.Scene {
@@ -57,9 +72,22 @@ export class GameScene extends Phaser.Scene {
   private runtimeScope: DisposableScope | null = null;
   /** Bekleyen kamera tazeleme karesi; her resize'da yenisiyle DEĞİŞTİRİLİR. */
   private pendingCameraFrame: CancellableDisposable | null = null;
+  /**
+   * Kamera arenayı sığdırmak yerine gövdeyi TAKİP mi ediyor? Küçük ekranlarda
+   * arenanın tamamını sığdırmak yaratığı okunmaz hâle getirir.
+   */
+  private cameraFollowsBody = false;
+  /** Dokunmatik cihazda kamera arenayı sığdırmaz, gövdeyi takip eder. */
+  private prefersFollowCamera = false;
+  /** Yürürlükteki dünya→CSS ölçeği; takip kelepçesi bunu kullanır. */
+  private worldScale = 1;
+  /** Çıkış onayı açıkken dünya ilerlemez; modal arkasında hareket edilmez. */
+  private exitPromptOpen = false;
+  private readonly audio: ArachnidAudioPort | null;
 
-  constructor() {
+  constructor(audio: ArachnidAudioPort | null = null) {
     super({ key: 'Game' });
+    this.audio = audio;
   }
 
   preload(): void {
@@ -108,11 +136,15 @@ export class GameScene extends Phaser.Scene {
           pcActionBindings: ARACHNID_PC_BINDINGS,
           moveKeys: ARACHNID_MOVE_KEYS,
           actionSource: this.actionSource,
+          leftStickRegion: ARACHNID_LEFT_STICK_REGION,
+          rightStickRegion: null,
         }),
       );
 
       const uiParent = this.game.canvas.parentElement ?? document.body;
-      if (shouldUseTouchControls()) {
+      const touchDevice = shouldUseTouchControls();
+      this.prefersFollowCamera = touchDevice;
+      if (touchDevice) {
         runtimeScope.addDestroyable(
           new ArachnidTouchControls(uiParent, { actionSource: this.actionSource }),
         );
@@ -120,7 +152,20 @@ export class GameScene extends Phaser.Scene {
         // atılım geri dönüldüğünde kendiliğinden tetiklenirdi.
         runtimeScope.addSubscription(
           observeAppVisibility((state) => {
-            if (state === 'background') this.actionSource.clear();
+            if (state === 'background') {
+              this.inputManager.reset();
+              cancelHaptics();
+            }
+          }),
+        );
+        // Geri hareketi uygulamayı sessizce kapatmaz; onay sorar.
+        runtimeScope.addDestroyable(
+          new ArachnidExitPrompt({
+            container: uiParent,
+            onVisibilityChange: (open) => {
+              this.exitPromptOpen = open;
+              if (open) this.inputManager.reset();
+            },
           }),
         );
       }
@@ -134,7 +179,12 @@ export class GameScene extends Phaser.Scene {
         }),
       );
       this.hud = runtimeScope.addDestroyable(
-        new ArachnidHud(uiParent, { onToggleFullscreen: () => void fullscreen.toggle() }),
+        new ArachnidHud(uiParent, {
+          // Android uygulaması zaten tam ekran açılır; orada düğme hem
+          // anlamsız hem de başparmağın yolunda duruyor.
+          showFullscreenToggle: !touchDevice,
+          onToggleFullscreen: () => void fullscreen.toggle(),
+        }),
       );
 
       this.applyArenaCamera();
@@ -156,7 +206,7 @@ export class GameScene extends Phaser.Scene {
     // Kurulum yarıda patladıysa (ya da sahne kapandıysa) çalışma zamanı yoktur;
     // Phaser sahneyi durdurmadığı için kare akışı her karede aynı hatayı
     // fırlatarak konsolu doldururdu.
-    if (!this.runtimeScope) return;
+    if (!this.runtimeScope || this.exitPromptOpen) return;
 
     this.inputManager.update(delta);
     const state = this.inputManager.getState(this.body.position);
@@ -194,6 +244,7 @@ export class GameScene extends Phaser.Scene {
       delta,
     );
 
+    if (this.cameraFollowsBody) this.followBody(delta);
     this.resolveWallImpact();
     this.arena.update(delta);
     this.emitFootDust();
@@ -223,6 +274,9 @@ export class GameScene extends Phaser.Scene {
       arenaConfig.impact.shakeIntensity * (0.4 + 0.6 * impact.strength01),
     );
     this.dust.puff(impact.x, impact.y, fxConfig.dust.fullSpeedPxPerSec);
+    const impactFloor = arachnidAudioConfig.intensity.wallImpactFloor;
+    this.audio?.play('wallImpact', impactFloor + (1 - impactFloor) * impact.strength01);
+    vibrate('select');
   }
 
   /**
@@ -233,14 +287,36 @@ export class GameScene extends Phaser.Scene {
    * yere iner ve toplu bir toz patlaması bırakır.
    */
   private emitFootDust(): void {
+    if (this.body.consumeDashLaunch()) {
+      // Yürüyüşten kalan toz atılımın ilk karesinde silinir; havada asılı
+      // partiküller "atılım tozu" gibi okunuyordu.
+      this.dust.clear();
+      this.audio?.play('dashLaunch');
+      vibrate('tap');
+      return;
+    }
     if (this.body.consumeDashLanding()) {
       this.legs.forEachFoot((x, y) => this.dust.puff(x, y, fxConfig.dust.landingSpeedPxPerSec));
       this.cameras.main.shake(fxConfig.dust.landingShakeMs, fxConfig.dust.landingShakeIntensity);
+      this.audio?.play('dashLand');
+      vibrate('tap');
       return;
     }
     if (this.body.isDashing) return;
     const speed = this.body.speed;
-    this.legs.forEachPlant((x, y) => this.dust.puff(x, y, speed));
+    let planted = 0;
+    this.legs.forEachPlant((x, y) => {
+      planted++;
+      this.dust.puff(x, y, speed);
+    });
+    // Aynı karede birden çok pençe basabilir; tek varyantlı temas sesi, pençe
+    // sayısıyla hafifçe güçlenir ama ses bankasını sekiz kaynakla doldurmaz.
+    if (planted > 0) {
+      const speed01 = clamp01(speed / fxConfig.dust.fullSpeedPxPerSec);
+      const { stepBase, stepPerPlant, stepPlantCap } = arachnidAudioConfig.intensity;
+      const plantScale = stepBase + Math.min(planted, stepPlantCap) * stepPerPlant;
+      this.audio?.play('step', speed01 * plantScale);
+    }
   }
 
   /**
@@ -262,12 +338,55 @@ export class GameScene extends Phaser.Scene {
       Math.min(availableWidth / arenaConfig.widthPx, availableHeight / arenaConfig.heightPx) *
       arenaConfig.fitMargin;
 
-    camera.setZoom(quality * fit);
+    /*
+     * Arenanın tamamını göstermek masaüstünde doğrudur; dokunmatik cihazda
+     * yaratığı okunmaz hâle getirir. Ölçek girdi türüne göre ayrılır ve taban
+     * çok küçültülmüş pencereleri de yakalar.
+     */
+    const floor = this.prefersFollowCamera
+      ? arenaConfig.touchWorldScale
+      : arenaConfig.minWorldScale;
+    this.cameraFollowsBody = fit < floor;
+    this.worldScale = Math.max(fit, floor);
+    camera.setZoom(quality * this.worldScale);
+
+    if (this.cameraFollowsBody) {
+      this.followBody(0);
+      return;
+    }
+
     // Kutu merkezi ekran merkezinden bu kadar kayıktır (CSS px); kamerayı ters
-    // yönde kaydırmak arenayı oraya taşır. Dünya birimine çeviren `fit`tir.
-    const offsetX = (gutter.left - gutter.right) / 2 / fit;
-    const offsetY = (gutter.top - gutter.bottom) / 2 / fit;
-    camera.centerOn(arenaConfig.widthPx / 2 - offsetX, arenaConfig.heightPx / 2 - offsetY);
+    // yönde kaydırmak arenayı oraya taşır. Dünya birimine çeviren ölçektir.
+    const offsetX = gutter.left - gutter.right;
+    const offsetY = gutter.top - gutter.bottom;
+    camera.centerOn(
+      arenaConfig.widthPx / 2 - offsetX / 2 / this.worldScale,
+      arenaConfig.heightPx / 2 - offsetY / 2 / this.worldScale,
+    );
+  }
+
+  /**
+   * Kamerayı gövdenin üstünde tutar ve görüş alanını arenanın İÇİNE kelepçeler:
+   * oyuncu kenara gittiğinde ekranın yarısı boş kalmamalıdır. Arena bir eksende
+   * görüş alanından darsa o eksen ortalanır.
+   */
+  private followBody(deltaMs: number): void {
+    const camera = this.cameras.main;
+    const halfWidth = camera.width / camera.zoom / 2;
+    const halfHeight = camera.height / camera.zoom / 2;
+    const targetX = clampView(this.body.position.x, halfWidth, arenaConfig.widthPx);
+    const targetY = clampView(this.body.position.y, halfHeight, arenaConfig.heightPx);
+
+    if (deltaMs <= 0) {
+      camera.centerOn(targetX, targetY);
+      return;
+    }
+    // Sert takip her adımda kamerayı titretir; yumuşatma kare hızından
+    // BAĞIMSIZDIR (bkz. CORE `damp`).
+    camera.centerOn(
+      damp(camera.midPoint.x, targetX, arenaConfig.followSmoothingMs, deltaMs),
+      damp(camera.midPoint.y, targetY, arenaConfig.followSmoothingMs, deltaMs),
+    );
   }
 
   /**
@@ -290,5 +409,6 @@ export class GameScene extends Phaser.Scene {
     this.runtimeScope?.dispose();
     this.runtimeScope = null;
     this.hud = null;
+    this.exitPromptOpen = false;
   }
 }

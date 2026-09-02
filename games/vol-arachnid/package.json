@@ -10,15 +10,29 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
+    "tauri:build": "tauri build",
+    "tauri:android:dev": "tauri android dev --config src-tauri/tauri.dev.conf.json",
+    "tauri:android:build": "tauri android build --apk",
+    "audio:generate": "tsx scripts/audio/generate.ts public/assets/audio",
+    "audio:qa": "pnpm run audio:qa:metrics && pnpm run audio:qa:contracts",
+    "audio:qa:metrics": "tsx ../../devtools/audio-synth/scripts/audio-qa.ts public/assets/audio",
+    "audio:qa:contracts": "tsx scripts/audio/verify.ts public/assets/audio"
   },
   "dependencies": {
     "@volstudio/core": "workspace:*",
     "@volstudio/pen.dev": "workspace:*",
+    "@volstudio/tauri-v2": "workspace:*",
     "phaser": "^4.2.1"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "@types/node": "^26.1.2",
+    "@volstudio/audio-synth": "workspace:*",
     "i18next": "26.3.6",
+    "tsx": "^4.23.11",
     "typescript": "^6.0.3",
     "vite": "^8.2.0",
     "vite-plugin-static-copy": "^4.1.1",

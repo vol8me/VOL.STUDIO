@@ -1,7 +1,41 @@
 // Tauri komutları hakkında bilgi almak için: https://tauri.app/develop/calling-rust/
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
+/*
+ * Mobil giriş noktası ÖZELLİĞE bağlıdır.
+ *
+ * `tauri::mobile_entry_point` makrosu JNI köprüsünü (`Java_app_tauri_plugin_*`)
+ * dışa aktarır. Bu kabuk ikinci bir uygulamaya kütüphane olarak bağlandığında
+ * aynı semboller iki kez üretiliyor ve bağlayıcı "duplicate symbol" ile
+ * düşüyordu. Kendi kimliğiyle paketlenen her uygulama giriş noktasını KENDİ
+ * kütüphanesinde tanımlar; paylaşılan kabuk yalnız `run()`u verir.
+ */
+#[cfg_attr(all(mobile, feature = "mobile-entry"), tauri::mobile_entry_point)]
 pub fn run() {
+    // Bağlam BU crate'in `tauri.conf.json`undan üretilir (VOL.HELL).
+    run_with_context(tauri::generate_context!())
+}
+
+/// Ürün içindeki çıkış onayından sonra uygulamayı gerçekten sonlandırır.
+///
+/// Pencere `close`/`destroy` çağrıları bir pencerenin yaşam döngüsünü yönetir;
+/// ürünün "uygulamadan çık" niyeti için uygulama düzeyindeki çağrı masaüstü
+/// ve mobilde aynı kesin semantiği sağlar.
+#[tauri::command]
+fn exit_application(app: tauri::AppHandle) {
+    app.exit(0);
+}
+
+/// Kabuğu VERİLEN bağlamla çalıştırır.
+///
+/// `tauri::generate_context!()` çağrıldığı CRATE'in yapılandırmasını ve
+/// gömülü ön yüz varlıklarını paketler. Paylaşılan kabuk bağlamı kendi
+/// içinde üretirse, onu kütüphane olarak kullanan ikinci uygulama da BİRİNCİ
+/// uygulamanın kimliğini, penceresini ve ön yüzünü çalıştırır — cihazda
+/// VOL.ARACHNID paketi açılıp VOL.HELL menüsünü gösteriyordu.
+///
+/// Her uygulama bağlamı kendi crate'inde üretir; ortak olan yalnız eklenti
+/// kurulumu ve platform ayarlarıdır.
+pub fn run_with_context(context: tauri::Context<tauri::Wry>) {
     #[cfg(target_os = "linux")]
     configure_linux_webview();
 
@@ -16,6 +50,7 @@ pub fn run() {
     }
 
     tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![exit_application])
         // Log seviyesi acikca sinirlanir; varsayilan builder release build'de de
         // her seviyeyi yazar.
         .plugin(
@@ -35,13 +70,13 @@ pub fn run() {
             log::info!("VOL.STUDIO Tauri app starting");
             Ok(())
         })
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running tauri application");
 }
 
 /// Fedora/Wayland üzerindeki bazı WebKitGTK + GBM sürümleri, pencereyi
 /// oluşturduğu hâlde ilk compositing buffer'ını ayıramayıp beyaz bir WebView
-/// bırakabiliyor. VOL.HELL canvas tabanlı olduğu için WebKit'in DMA-BUF
+/// bırakabiliyor. Oyunlar canvas tabanlı olduğu için WebKit'in DMA-BUF
 /// renderer'ını kapatmak güvenli yazılım fallback'ine geçer; yalnızca bu
 /// değişken dışarıdan verilmemişse uygulanır ve kullanıcının açık tercihi
 /// ezilmez. Bu ayar WebView yaratılmadan önce yapılmalıdır.

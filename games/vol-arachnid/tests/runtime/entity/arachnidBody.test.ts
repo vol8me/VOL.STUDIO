@@ -77,6 +77,24 @@ describe('ArachnidBody hareketi', () => {
     expect(body.velocity.y).toBeCloseTo(-playerConfig.dash.speedPxPerSec, 8);
   });
 
+  it('tuş basılı tutulunca cooldown sonunda kendiliğinden yeniden atılmaz', () => {
+    const body = new ArachnidBody(CENTER_X, CENTER_Y);
+
+    body.update(new Vector2(1, 0), true, FRAME_MS);
+    expect(body.consumeDashLaunch()).toBe(true);
+
+    for (let elapsed = 0; elapsed < playerConfig.dash.cooldownMs + 100; elapsed += FRAME_MS) {
+      body.update(new Vector2(1, 0), true, FRAME_MS);
+    }
+    expect(body.consumeDashLaunch()).toBe(false);
+    expect(body.isDashing).toBe(false);
+
+    // Yeniden tetiklemek için gerçek bir bırakma + basma kenarı gerekir.
+    body.update(new Vector2(1, 0), false, FRAME_MS);
+    body.update(new Vector2(1, 0), true, FRAME_MS);
+    expect(body.consumeDashLaunch()).toBe(true);
+  });
+
   it.each([
     [
       'sol',
@@ -209,6 +227,15 @@ describe('ArachnidBody hareketi', () => {
     const released = body.facingRad;
     for (let i = 0; i < 20; i++) body.update(new Vector2(-1, 0), false, FRAME_MS);
     expect(circularDistance(body.facingRad, released)).toBeGreaterThan(0.05);
+  });
+
+  it('atılımın başladığı kareyi BİR KEZ bildirir', () => {
+    const body = new ArachnidBody(CENTER_X, CENTER_Y);
+
+    expect(body.consumeDashLaunch()).toBe(false);
+    body.update(new Vector2(1, 0), true, FRAME_MS);
+    expect(body.consumeDashLaunch()).toBe(true);
+    expect(body.consumeDashLaunch()).toBe(false);
   });
 
   it('atılımın bittiği kareyi BİR KEZ bildirir', () => {

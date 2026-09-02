@@ -15,10 +15,17 @@ export const fxConfig = {
    * taşır; tek bir siluet kopyası atılımın bacak salınımını gösteremezdi.
    */
   ghostTrail: {
-    maxGhosts: 3,
-    lifespanMs: 150,
-    captureIntervalMs: 38,
-    startAlpha: 0.36,
+    /*
+     * İzin OKUNABİLİR olması yakalama SIKLIĞINA bağlıdır, süresine değil.
+     * Atılım 140 ms sürüyor ve gövde o sürede yaklaşık kendi boyu kadar yol
+     * alıyor; seyrek yakalamada hayaletler gövdenin altında kalıyor ve iz hiç
+     * görünmüyordu. Sık yakalama + atılımdan UZUN ömür, gövde geçtikten sonra
+     * da duran bir çizgi bırakır.
+     */
+    maxGhosts: 7,
+    lifespanMs: 340,
+    captureIntervalMs: 18,
+    startAlpha: 0.45,
     endAlpha: 0,
     tint: hex(VOL_COLORS.brandHover),
     depth: FX_DEPTH.ghost,

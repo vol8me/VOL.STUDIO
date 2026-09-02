@@ -1,0 +1,24 @@
+{
+  "desktop-capability": {
+    "identifier": "desktop-capability",
+    "description": "Permissions for the desktop main window",
+    "local": true,
+    "windows": ["main"],
+    "permissions": [
+      "core:default",
+      "core:window:allow-center",
+      "core:window:allow-set-fullscreen",
+      "core:window:allow-set-size",
+      "log:default",
+      "store:default",
+      "sql:default"
+    ]
+  },
+  "mobile-capability": {
+    "identifier": "mobile-capability",
+    "description": "Permissions for the mobile main window",
+    "local": true,
+    "windows": ["main"],
+    "permissions": ["core:default", "log:default", "store:default", "sql:default"]
+  }
+}

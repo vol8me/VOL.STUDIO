@@ -35,6 +35,19 @@ describe('ArachnidDust', () => {
     expect(emitter.bursts).toHaveLength(0);
   });
 
+  it('clear havada asılı tozu tüketir, destroy sonrası sessizdir', () => {
+    const scene = createFakeScene();
+    const dust = new ArachnidDust(scene as never);
+    const emitter = scene.emitters[0];
+
+    dust.clear();
+    expect(emitter.killed).toBe(1);
+
+    dust.destroy();
+    dust.clear();
+    expect(emitter.killed).toBe(1);
+  });
+
   it('toz dokusunu bir KEZ üretir', () => {
     const scene = createFakeScene();
     new ArachnidDust(scene as never);

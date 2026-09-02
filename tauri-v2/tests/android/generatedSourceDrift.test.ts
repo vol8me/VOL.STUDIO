@@ -63,6 +63,7 @@ describe('Android üretilmiş kaynak sapması', () => {
 
     // Wry'ın varsayılanı tek sayfalı uygulamada her geri basışında çıkış yapar.
     expect(activity).toContain('onBackPressedDispatcher.addCallback');
+    expect(activity).toMatch(/onCreate[\s\S]*onBackPressedDispatcher\.addCallback/);
     expect(activity).toContain('vol:androidback');
   });
 

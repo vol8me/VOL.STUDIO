@@ -29,6 +29,25 @@ export const arenaConfig = {
   /** Sığdırmadan sonra bırakılan ek nefes payı. */
   fitMargin: 0.97,
 
+  /**
+   * Arenanın TAMAMINI göstermek MASAÜSTÜNDE doğrudur: taktik bir bakış verir
+   * ve yaratık ekranın dörtte biri kadar yer kaplar. Telefonda aynı oran
+   * fiziksel olarak bir buçuk santimetreye düşer — uzuvlar da atılım izi de
+   * okunmaz.
+   *
+   * Bu yüzden ölçek girdi türüne göre ayrılır. Dokunmatik cihazda kamera
+   * arenayı sığdırmayı bırakır, sabit bir ölçekte gövdeyi TAKİP eder ve görüş
+   * alanı arena sınırlarının içinde kelepçelenir.
+   */
+  touchWorldScale: 0.62,
+  /**
+   * Masaüstünde bile kabul edilmeyecek taban. Çok küçültülmüş bir pencerede
+   * sığdırma buranın altına düşerse takip moduna geçilir.
+   */
+  minWorldScale: 0.34,
+  /** Takip modunda kameranın gövdeye yetişme yumuşatması (ms). */
+  followSmoothingMs: 90,
+
   /** Duvar çarpmasının görsel yankısı. */
   impact: {
     color: 0xd67434,

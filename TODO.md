@@ -5,6 +5,53 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-02 — VOL.ARACHNID mobil geri bildirim ve gerçek bug avı
+
+Kullanıcı cihaz geri bildiriminin her maddesi kaynak akışına kadar izlendi.
+"Ses yok" sorunu yalnız asset eksikliği değildi: Phaser sesi bilinçli kapalıydı
+ve VOL.ARACHNID'in haricî bir WebAudio yaşam döngüsü hiç yoktu. CORE'a oyun
+kelimesi bilmeyen varyantlı/bütçeli `SoundBank`; oyuna ortak limiter altında
+ambiyans ve SFX, ilk kullanıcı hareketinde AudioContext kilit açma, arka
+planda suspend ve tam temizlik eklendi. Adım, atılım kalkış/iniş ve duvar
+çarpması gerçek simülasyon olaylarından ses üretir; ses hataları oyun döngüsüne
+taşınmaz. Üretim OGG'leri deterministik script ve QA komutuyla birlikte
+gönderilir.
+
+**Android çıkışının iki ayrı kökü vardı.** Önceki config örtüsü VOL.HELL'in
+native projesini ve paket kimliğini paylaşıyordu; bu karar aşağıdaki aynı gün
+kaydını GEÇERSİZ kılar. VOL.ARACHNID artık kendi Tauri crate'i, üretilmiş
+Android projesi ve `com.volstudio.arachnid` kimliğiyle bağımsız kurulabilir.
+Android geri hareketi `vol:androidback` olayına çevrilir; onaydan sonraki gerçek
+pencere kapatma için `core:window:allow-close` capability'si verildi. Modal
+açıkken simülasyon/girdi durur, kapatma reddi yakalanır.
+
+**Dokunmatik girdi görünmez değildi, sınırsızdı.** CORE denetleyicisi stick'i
+varsayılan olarak ekranın tüm yarısında doğuruyor, sağ tarafta nişan
+kullanılmasa bile ikinci stick ayırıyordu. Normalize giriş bölgeleri eklendi;
+Arachnid hareketi yalnız sol-alt başparmak alanında, sağ stick tamamen kapalı.
+Arka plana ve modal açılışına geçerken stick + sanal eylemler birlikte
+sıfırlanır. Ayrıca basılı tutulan atılım cooldown sonunda kendi kendine yeniden
+ateşleniyordu; atılım artık basım KENARINA bağlıdır.
+
+**Mobil tarayıcı artefaktı.** HUD ortak `UIRoot`tayken exit modalı ve atılım
+düğmesi doğrudan container'a bağlanmıştı; bu yüzden kökteki `user-select`,
+`-webkit-touch-callout` ve tap-highlight korumasını miras almıyorlardı. Üçü de
+aynı referans sayımlı köke taşındı; uzun basma artık mavi seçim/kopyalama
+davranışına dönüşmez.
+
+**Haptik ve görüntü.** Haptik çağrıları eklemek tek başına yetmiyordu: Android
+manifestinde `VIBRATE` izni yoktu ve CORE anahtarı açılmıyordu. İzin + yaşam
+döngüsü anahtarı eklendi; yalnız kabul edilmiş atılım ve duvar çarpmasında kısa
+`tap`/`select` desenleri kullanılır, arka planda iptal edilir. Grafik seçeneği
+açılmadan tek sabit YÜKSEK profil veri olarak kilitlendi: tam render ölçeği,
+WebGL antialias ve high-performance tercihi.
+
+Bug avının yan bulguları da kapatıldı: yarıda kalan Phaser boot'u AudioContext
+ve haptik durumunu sızdırıyordu; başlatılamayan bir WebAudio source'u ses
+bütçesinde ölü voice bırakıyordu. Her ikisinin de regresyon testi var. Native
+kimlik/izin/geri/capability, ses dosyası varlığı, joystick bölgesi ve yüksek
+grafik profili kaynak sözleşmesi testleriyle korunuyor.
+
 ## 2026-09-02 — VOL.ARACHNID sağlamlaştırma turu: sürüklenmenin kökü, uçuş pozu, cihaz doğrulaması
 
 **Sürüklenmenin kökü ÖLÇÜLDÜ.** "Uzun kemik hiç dönmüyor" düzeltmesi yetmemişti;
@@ -69,12 +116,11 @@ dönüş yayı 58→44 ve tavan 3.5→2.7 rad/s, dönüş hız cezası 0.32→0.
 uzadı (185→205 ms), öngörü hızı 250→215, havadaki ayağın kalçaya çekilmesi
 17→20 px.
 
-**Android çıkışı.** `tauri.arachnid.conf.json` örtüsü yalnız ön yüz hedefini
-değiştirir; paket kimliği bilinçli olarak aynı kalır (Android projesi kimliğe
-bağlı üretilmiş, yön kilidi ve ikonlar orada). Bedeli cihazda iki oyunun aynı
-paketi paylaşmasıdır. Dokunmatikte ekran ikiye bölünür: sol bölge CORE'un
-hareket çubuğu (oraya DOM elemanı konmaz, yoksa dokunuş Phaser'a hiç ulaşmaz),
-sağ bölge atılım düğmesidir; ikisi de dokunulmadıkça görünmez.
+**Android çıkışı (aynı gün sonraki turda GEÇERSİZ KILINDI).** Bu turda
+`tauri.arachnid.conf.json` örtüsüyle paket kimliği paylaşılmıştı; yukarıdaki
+mobil geri bildirim turu VOL.ARACHNID'e ayrı native proje ve kimlik verdi.
+Buradaki yarım-ekran dokunmatik modeli de sol-alt joystick + sağ-alt gerçek
+düğme modeliyle değiştirildi.
 
 **Ayrıca.** `pnpm dev` artık vol-hell'i de açıyor (eksikti). `samplePose`
 matrisleri yeniden kullanıyor. `articulateRigDefinition` kaynakta yazılı

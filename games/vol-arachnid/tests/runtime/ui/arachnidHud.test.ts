@@ -55,6 +55,18 @@ describe('ArachnidHud', () => {
     expect(telemetry?.getAttribute('aria-label')).toBe('Gövde hızı');
   });
 
+  it('dokunmatik yerleşimde hızı sağ-alt atılım düğmesinden uzak tutar', () => {
+    hud?.destroy();
+    hud = new ArachnidHud(parent, {
+      onToggleFullscreen,
+      showFullscreenToggle: false,
+    });
+
+    expect(root()?.classList.contains('vol-arachnid-hud--touch-layout')).toBe(true);
+    expect(root()?.querySelector('.vol-arachnid-hud__fullscreen')).toBeNull();
+    expect(root()?.querySelector('.vol-arachnid-hud__telemetry')).not.toBeNull();
+  });
+
   it('kamera boşluklarını CSS değişkeni olarak yayımlar', () => {
     const element = root();
 

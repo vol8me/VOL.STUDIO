@@ -1,0 +1,42 @@
+[package]
+name = "vol-arachnid-tauri"
+version = "0.1.0"
+description = "VOL.ARACHNID native wrapper for desktop and mobile"
+authors = ["VOL.STUDIO"]
+edition = "2021"
+
+# Android/iOS giriş noktası kütüphaneden gelir; üretilen native proje bu adı
+# arar. Masaüstünde `main.rs` aynı `run()`u çağırır.
+[lib]
+name = "vol_arachnid_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6", features = [] }
+
+[dependencies]
+# Native kabuk PAYLAŞILIR: iki oyunun ayrı Rust kopyası tutması, tek bir
+# platform düzeltmesini iki yerde yapmak demekti.
+volstudio-tauri = { path = "../../../tauri-v2/src-tauri", default-features = false, features = [
+  "custom-protocol",
+] }
+tauri = { version = "2.11", features = ["protocol-asset", "rustls-tls"] }
+
+# Eklentiler DOĞRUDAN bağımlılıktır: izin tanımları (`log:default` vb.)
+# uygulama crate'inin bağımlılık ağacından toplanır. Yalnız paylaşılan kabuk
+# üzerinden gelmeleri, `capabilities/` dosyalarındaki izinleri "bulunamadı"
+# hatasına düşürüyordu.
+tauri-plugin-log = "2.9"
+tauri-plugin-store = "2.4"
+tauri-plugin-sql = { version = "2.4", features = ["sqlite"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

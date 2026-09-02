@@ -1,5 +1,5 @@
 /**
- * Android donanım/jest "geri" hareketinin oyun içindeki karşılığı.
+ * Android donanım/jest "geri" hareketinin uygulama içindeki karşılığı.
  *
  * Native taraf (bkz. `MainActivity.onWebViewCreate`) geri basışını
  * `vol:androidback` olayına çevirir ve uygulamayı KENDİ BAŞINA kapatmaz.
@@ -11,7 +11,11 @@
  * kendisi karşılayabilir.
  *
  * Hiçbir işleyici sahiplenmezse HİÇBİR ŞEY olmaz — geri tuşunun sessizce
- * uygulamayı kapatması, kullanıcının koşusunu tek jestle kaybetmesi demekti.
+ * uygulamayı kapatması, kullanıcının oturumunu tek jestle kaybetmesi demekti.
+ *
+ * CORE'da yaşar çünkü mekanizma oyun kelimesi taşımaz: hangi yüzeyin geri
+ * tuşunu sahipleneceğine tüketici karar verir. İki oyunun ayrı kopya tutması
+ * aynı native olayı iki farklı sözleşmeyle yorumlamak demekti.
  */
 
 export type BackHandler = () => boolean;

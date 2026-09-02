@@ -1,0 +1,55 @@
+{
+  "productName": "VOL.ARACHNID",
+  "mainBinaryName": "VOL.ARACHNID",
+  "version": "0.1.0",
+  "identifier": "com.volstudio.arachnid",
+  "build": {
+    "beforeDevCommand": "pnpm --filter @volstudio/vol-arachnid dev",
+    "beforeBuildCommand": "pnpm --filter @volstudio/vol-arachnid build",
+    "devUrl": "http://localhost:5178",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "VOL.ARACHNID",
+        "width": 1280,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self' customprotocol: asset:",
+        "script-src": "'self'",
+        "style-src": "'unsafe-inline' 'self'",
+        "img-src": "'self' asset: http://asset.localhost blob: data:",
+        "font-src": "'self'",
+        "connect-src": "'self' ipc: http://ipc.localhost",
+        "media-src": "'self'",
+        "object-src": "'none'",
+        "frame-src": "'none'",
+        "base-uri": "'self'",
+        "form-action": "'none'",
+        "frame-ancestors": "'none'"
+      },
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$RESOURCE/**", "$APPDATA/**"]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi"],
+    "icon": [
+      "../../../tauri-v2/src-tauri/icons/32x32.png",
+      "../../../tauri-v2/src-tauri/icons/128x128.png",
+      "../../../tauri-v2/src-tauri/icons/128x128@2x.png",
+      "../../../tauri-v2/src-tauri/icons/icon.icns",
+      "../../../tauri-v2/src-tauri/icons/icon.ico"
+    ]
+  }
+}

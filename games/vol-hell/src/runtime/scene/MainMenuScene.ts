@@ -1,6 +1,5 @@
-import { getCurrentWindow } from '@tauri-apps/api/window';
-import { isTauri } from '@tauri-apps/api/core';
 import { Button, Panel, Text, i18next, showConfirm, vibrate } from '@volstudio/core';
+import { TauriWindowAdapter } from '@volstudio/tauri-v2';
 import { BaseScene } from './BaseScene';
 import { LoadingTransition } from './LoadingTransition';
 import { gameAudio } from '@/app/services';
@@ -8,7 +7,7 @@ import { sfxVolumes } from '@/config';
 import { startMenuMusic, stopMenuMusic } from '@/app/menuMusic';
 import { gameStats } from '@/app/services';
 import { formatTimeMs } from '@/utils/time';
-import { pushBackHandler } from '@/app/backNavigation';
+import { pushBackHandler } from '@volstudio/core';
 
 export class MainMenuScene extends BaseScene {
   private panel!: Panel;
@@ -20,6 +19,8 @@ export class MainMenuScene extends BaseScene {
   private stopBackHandler: (() => void) | null = null;
   /** Sahne ömrünü aşan veya yinelenen çıkış onaylarını tek noktadan iptal eder. */
   private exitPromptAbort: AbortController | null = null;
+  /** Uygulama çıkış niyetini Rust tarafına `exit_application` komutuyla iletir. */
+  private readonly windowAdapter = new TauriWindowAdapter();
   private nextScene: string | null = null;
   private titleText!: Text;
   private subtitleText!: Text;
@@ -133,6 +134,13 @@ export class MainMenuScene extends BaseScene {
    * yanlışlıkla bir kaydırma oyunu kapatmamalı. Onay kutusu `.vol-ui-root`
    * içine mount edilir, yoksa `body`ye düşer ve oyunun tema/box-sizing
    * kurallarının dışında kalırdı.
+   *
+   * `getCurrentWindow().close()` yerine `TauriWindowAdapter.close()` kullanılır;
+   * ilki Tauri Android'de WebView pencere yaşam döngüsüne girer ve uygulamayı
+   * sonlandırmaz, `exitPromptAbort`'ı asılı bırakarak ikinci çıkış denemesini
+   * sessizce engeller. `exit_application` komutu `AppHandle::exit(0)` ile süreci
+   * kapatır. Onaydan hemen önce `exitPromptAbort` temizlenir ki kullanıcı hızlıca
+   * tekrar basarsa yeni modal açılabilsin.
    */
   private async exitGame(): Promise<void> {
     if (this.exitPromptAbort) return;
@@ -149,15 +157,10 @@ export class MainMenuScene extends BaseScene {
       });
       if (!confirmed || promptAbort.signal.aborted) return;
 
-      if (isTauri()) {
-        try {
-          await getCurrentWindow().close();
-        } catch (error) {
-          console.error('[MainMenuScene] Pencere kapatılamadı:', error);
-        }
-        return;
-      }
-      console.warn('[MainMenuScene] window.close() tarayıcıda çalışmaz; bu sekmeyi elle kapatın.');
+      this.exitPromptAbort = null;
+      this.windowAdapter.close().catch((error) => {
+        console.error('[MainMenuScene] Uygulama kapatılamadı:', error);
+      });
     } finally {
       if (this.exitPromptAbort === promptAbort) {
         this.exitPromptAbort = null;

@@ -1,6 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { VirtualActionSource, i18n, i18next } from '@volstudio/core';
-import { arenaConfig } from '@/config/arena';
 import { arachnidUiConfig } from '@/config/ui';
 import type { ArachnidAction } from '@/config/input';
 import tr from '@/i18n/tr.json';
@@ -41,24 +40,27 @@ describe('ArachnidTouchControls', () => {
     const root = parent.querySelector<HTMLElement>('.vol-arachnid-touch');
 
     expect(root).not.toBeNull();
+    expect(root?.parentElement?.classList.contains('vol-ui-root')).toBe(true);
     // Katmanda yalnız atılım düğmesi vardır.
     expect(root?.children).toHaveLength(1);
     expect(root?.firstElementChild).toBe(dash());
   });
 
-  it('bölge ölçülerini ve HUD boşluklarını CSS değişkeni olarak yayımlar', () => {
+  it('gerçek bir DÜĞMEDİR — oyun alanını kaplayan bir bölge değil', () => {
+    const button = dash();
     const root = parent.querySelector<HTMLElement>('.vol-arachnid-touch');
 
-    expect(root?.style.getPropertyValue('--vol-arachnid-dash-zone')).toBe(
-      `${arachnidUiConfig.touch.dashZoneWidthRatio * 100}%`,
+    expect(button?.classList.contains('vol-touch-button--circle')).toBe(true);
+    expect(button?.textContent).toBe('ATIL');
+    expect(button?.style.getPropertyValue('--vol-touch-button-size')).toBe(
+      `${arachnidUiConfig.touch.dashButtonSizePx}px`,
     );
-    // Üstteki tam ekran düğmesi ve alttaki telemetri dokunulabilir kalmalı.
-    expect(root?.style.getPropertyValue('--vol-arachnid-touch-top')).toBe(
-      `${arenaConfig.viewportGutterPx.top}px`,
+    // Beklerken sönüktür, görünmez değil: görünmez bir tuş bulunamaz.
+    expect(root?.style.getPropertyValue('--vol-arachnid-touch-idle')).toBe(
+      String(arachnidUiConfig.touch.idleOpacity),
     );
-    expect(root?.style.getPropertyValue('--vol-arachnid-touch-bottom')).toBe(
-      `${arenaConfig.viewportGutterPx.bottom}px`,
-    );
+    expect(arachnidUiConfig.touch.idleOpacity).toBeGreaterThan(0);
+    expect(arachnidUiConfig.touch.idleOpacity).toBeLessThan(1);
   });
 
   it('basım eylem kaynağına yazılır, bırakma düşürür', () => {
@@ -81,6 +83,7 @@ describe('ArachnidTouchControls', () => {
 
     await i18next.changeLanguage('en');
     expect(dash()?.getAttribute('aria-label')).toBe('Dash');
+    expect(dash()?.textContent).toBe('DASH');
   });
 
   it('destroy katmanı toplar ve ikinci çağrıda güvenlidir', () => {
@@ -88,5 +91,6 @@ describe('ArachnidTouchControls', () => {
     controls?.destroy();
 
     expect(parent.querySelector('.vol-arachnid-touch')).toBeNull();
+    expect(parent.querySelector('.vol-ui-root')).toBeNull();
   });
 });

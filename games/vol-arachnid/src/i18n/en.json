@@ -11,6 +11,12 @@
     "fullscreenExit": "Exit fullscreen"
   },
   "touch": {
-    "dash": "Dash"
+    "dash": "Dash",
+    "dashShort": "DASH"
+  },
+  "exit": {
+    "title": "Close VOL.ARACHNID?",
+    "confirm": "Exit",
+    "cancel": "Keep playing"
   }
 }

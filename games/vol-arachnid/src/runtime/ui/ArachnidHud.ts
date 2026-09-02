@@ -21,6 +21,11 @@ export interface ArachnidHudState {
 export interface ArachnidHudOptions {
   /** Tam ekran isteği; HUD kendi başına pencereyi değiştirmez. */
   onToggleFullscreen: () => void;
+  /**
+   * Tam ekran düğmesi gösterilsin mi? Android uygulaması zaten tam ekran
+   * açılır; orada düğme hem anlamsız hem de başparmağın yolundadır.
+   */
+  showFullscreenToggle?: boolean;
 }
 
 type MotionState = 'idle' | 'moving' | 'dashing';
@@ -44,7 +49,7 @@ export class ArachnidHud {
   private readonly titleText: Text;
   private readonly speedText: Text;
   private readonly telemetry: HTMLDivElement;
-  private readonly fullscreenButton: IconButton;
+  private readonly fullscreenButton: IconButton | null;
   private dashPercent = 100;
   private speedPxPerSec = 0;
   private fullscreenActive = false;
@@ -54,6 +59,10 @@ export class ArachnidHud {
 
     this.root = document.createElement('div');
     this.root.className = 'vol-arachnid-hud vol-arachnid-hud--dash-ready';
+    this.root.classList.toggle(
+      'vol-arachnid-hud--touch-layout',
+      options.showFullscreenToggle === false,
+    );
     this.root.setAttribute('role', 'group');
     this.root.setAttribute('aria-label', i18next.t('arachnid:hud.ariaLabel'));
     this.root.style.setProperty(
@@ -91,15 +100,20 @@ export class ArachnidHud {
     );
     this.root.appendChild(this.dashBar.element);
 
-    this.fullscreenButton = this.scope.addDestroyable(
-      new IconButton(new Icon({ name: 'fullscreen' }).element, {
-        size: 'sm',
-        label: this.fullscreenLabel(),
-        onClick: options.onToggleFullscreen,
-      }),
-    );
-    this.fullscreenButton.element.classList.add('vol-arachnid-hud__fullscreen');
-    this.root.appendChild(this.fullscreenButton.element);
+    this.fullscreenButton =
+      options.showFullscreenToggle ?? true
+        ? this.scope.addDestroyable(
+            new IconButton(new Icon({ name: 'fullscreen' }).element, {
+              size: 'sm',
+              label: this.fullscreenLabel(),
+              onClick: options.onToggleFullscreen,
+            }),
+          )
+        : null;
+    if (this.fullscreenButton) {
+      this.fullscreenButton.element.classList.add('vol-arachnid-hud__fullscreen');
+      this.root.appendChild(this.fullscreenButton.element);
+    }
 
     this.telemetry = document.createElement('div');
     this.telemetry.className = 'vol-arachnid-hud__telemetry';
@@ -150,7 +164,7 @@ export class ArachnidHud {
   setFullscreenActive(active: boolean): void {
     if (active === this.fullscreenActive) return;
     this.fullscreenActive = active;
-    this.fullscreenButton.setLabel(this.fullscreenLabel());
+    this.fullscreenButton?.setLabel(this.fullscreenLabel());
   }
 
   destroy(): void {
@@ -172,6 +186,6 @@ export class ArachnidHud {
     this.titleText.setContent(i18next.t('arachnid:app.title'));
     this.telemetry.setAttribute('aria-label', i18next.t('arachnid:hud.speedAria'));
     this.speedText.setContent(this.formatSpeed());
-    this.fullscreenButton.setLabel(this.fullscreenLabel());
+    this.fullscreenButton?.setLabel(this.fullscreenLabel());
   };
 }
