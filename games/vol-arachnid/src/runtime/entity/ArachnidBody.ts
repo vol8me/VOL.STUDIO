@@ -4,6 +4,7 @@ import {
   Vector2,
   clamp,
   clamp01,
+  clampSimulationStep,
   finiteOr,
   wrap,
   type Vector2 as Vec,
@@ -15,7 +16,15 @@ const MS_PER_SEC = 1000;
 /** Atılım şiddetinin sönme süresi — iz ve duruş payı bir anda kesilmez. */
 const DASH_BLEND_FALLOFF_MS = 220;
 
-/** Duvara çarpma yankısı; sunum katmanı bunu bir kez tüketir. */
+/**
+ * Duvara çarpma yankısı; sunum katmanı bunu bir kez tüketir.
+ *
+ * Bir karede birden çok eksende temas olabilir (köşeye atılım). Bunlar AYRI
+ * olaylar değildir: tek bir çarpmanın iki bileşenidir ve `mergeImpact` onları
+ * bileşke normalde birleştirir. Ayrı tutulduklarında ikincisi birincisini
+ * eziyordu — köşeye çarpan gövde iki eksende birden sekiyor ama tek, üstelik
+ * YANLIŞ yönlü bir yankı bırakıyordu.
+ */
 export interface WallImpact {
   /** Temas noktasının dünya konumu — gövde merkezi değil, DUVARIN üstü. */
   x: number;
@@ -120,16 +129,27 @@ export class ArachnidBody {
   }
 
   update(moveIntent: Vec, dashPressed: boolean, deltaMs: number): void {
-    const dt = Math.min(deltaMs, 100) / MS_PER_SEC;
-    // `NaN <= 0` YANLIŞ'tır: kelepçesiz bir sonsuzluk kontrolü bozuk tek bir
-    // kareyi konuma ve hıza kalıcı olarak yazar, yaratık bir daha toparlanmaz.
-    if (!Number.isFinite(dt) || dt <= 0) return;
+    /*
+     * TEK etkin delta. Bir dönem bu metot üç farklı zaman anlayışı taşıyordu:
+     * konum entegrasyonu kelepçeli `dt`yi, cooldown/atılım/sekme sayaçları ham
+     * `deltaMs`i, dönüş adımı ise ayrı bir kelepçeyi kullanıyordu. 500 ms'lik
+     * tek bir karede gövde 100 ms yol alıyor ama atılımın 140 ms'si bir anda
+     * tükeniyordu — aynı karede farklı sistemler farklı kadar yaşıyordu.
+     *
+     * Kelepçe `clampSimulationStep` ile CORE'dan gelir; sahne de aynı tavanı
+     * uygular, yani burada ikinci kez kelepçelemek işlemsizdir. Yine de
+     * yapılır: gövde bir genel giriş noktasıdır ve tek bir bozuk kareye teslim
+     * olmamalıdır.
+     */
+    const stepMs = clampSimulationStep(deltaMs);
+    if (stepMs <= 0) return;
+    const dt = stepMs / MS_PER_SEC;
 
     const dashJustPressed = dashPressed && !this.dashHeld;
     this.dashHeld = dashPressed;
 
-    this.dashCooldown.update(deltaMs);
-    this.wallRecoveryMs = Math.max(0, this.wallRecoveryMs - deltaMs);
+    this.dashCooldown.update(stepMs);
+    this.wallRecoveryMs = Math.max(0, this.wallRecoveryMs - stepMs);
 
     /*
      * Niyet TEMİZLENİR. Sonsuz bir bileşen `hypot`u da sonsuz yapar ve
@@ -157,35 +177,81 @@ export class ArachnidBody {
     const previousY = this.velocity.y;
 
     const wasDashing = this.dashRemainingMs > 0;
+    /*
+     * Atılımın bu karedeki PAYI. `dashRemainingMs -= stepMs` deyip tüm kareyi
+     * atılım hızında geçirmek, atılımı kare sınırına yuvarlıyordu: 140 ms'lik
+     * bir atılım 16 ms'lik karelerde 144 ms sürüyor, kat edilen yol kare
+     * hızına göre değişiyordu. Pay ayrı ölçülür ve konum entegrasyonu ikiye
+     * bölünür — atılım mesafesi artık kare hızından bağımsızdır.
+     */
+    const dashDt = Math.max(0, Math.min(this.dashRemainingMs, stepMs)) / MS_PER_SEC;
+    const cruiseDt = dt - dashDt;
     if (this.dashRemainingMs > 0) {
-      this.dashRemainingMs -= deltaMs;
+      this.dashRemainingMs -= stepMs;
       this.velocity.set(
         this.dashDirection.x * playerConfig.dash.speedPxPerSec,
         this.dashDirection.y * playerConfig.dash.speedPxPerSec,
       );
-    } else if (hasIntent) {
-      // Niyetin BÜYÜKLÜĞÜ hız kesridir: yarıya itilen bir çubuk yarım hız verir.
-      const scale = Math.min(1, intentLength) * this.turnSpeedScale();
-      const targetX = (intentX / intentLength) * playerConfig.maxSpeed * scale;
-      const targetY = (intentY / intentLength) * playerConfig.maxSpeed * scale;
-      this.approachVelocity(targetX, targetY, playerConfig.accelerationPxPerSec2 * dt);
+      // Atılım kare ORTASINDA bittiyse kalan süre atılım hızıyla geçmez; gövde
+      // o payda normal sürüşe (ivme ya da fren) döner. Kalan süreyi de atılım
+      // hızında saymak, atılımı kare sınırına yuvarlıyordu.
+      if (cruiseDt > 0) this.driveVelocity(hasIntent, intentX, intentY, intentLength, cruiseDt);
     } else {
-      this.approachVelocity(0, 0, playerConfig.brakePxPerSec2 * dt);
+      this.driveVelocity(hasIntent, intentX, intentY, intentLength, dt);
     }
 
-    this.acceleration.set((this.velocity.x - previousX) / dt, (this.velocity.y - previousY) / dt);
-
+    /*
+     * Konum iki payda entegre edilir: atılım payı atılım hızıyla, kalanı kare
+     * sonundaki hızla. Atılım dışı karelerde `dashDt` sıfırdır ve bu, tek
+     * terimli entegrasyona indirgenir.
+     */
+    const dashSpeed = playerConfig.dash.speedPxPerSec;
     this.position.set(
-      this.position.x + this.velocity.x * dt,
-      this.position.y + this.velocity.y * dt,
+      this.position.x + this.dashDirection.x * dashSpeed * dashDt + this.velocity.x * cruiseDt,
+      this.position.y + this.dashDirection.y * dashSpeed * dashDt + this.velocity.y * cruiseDt,
     );
     this.resolveArenaBounds();
+
+    /*
+     * İvme sınır çözümünden SONRA okunur.
+     *
+     * Önce okunduğunda sekmenin hız değişimi ivmeye HİÇ girmiyordu: sonraki
+     * karenin `previousX`i zaten sekme sonrası değerdi, yani impulse iki kare
+     * arasında kayboluyordu. Gövde yaslanması duvara çarpmayı göremiyor, temas
+     * yalnız kamera sarsıntısıyla anlatılıyordu.
+     */
+    this.acceleration.set((this.velocity.x - previousX) / dt, (this.velocity.y - previousY) / dt);
 
     // Duvara çarpma da atılımı bitirir; iniş her iki yolda da bildirilir.
     if (wasDashing && this.dashRemainingMs <= 0) this.pendingDashLanding = true;
 
-    this.updateFacing(intentX, intentY, hasIntent, deltaMs);
-    this.updateDashBlend(deltaMs);
+    this.updateFacing(intentX, intentY, hasIntent, stepMs);
+    this.updateDashBlend(stepMs);
+  }
+
+  /**
+   * Bir zaman payı boyunca hızı sürer: niyet varsa hedefe ivmelenir, yoksa
+   * frenler. Pay `dt`den küçük olabilir — atılımın karenin ortasında bittiği
+   * durumda kalan süre buradan geçer.
+   */
+  private driveVelocity(
+    hasIntent: boolean,
+    intentX: number,
+    intentY: number,
+    intentLength: number,
+    dtSeconds: number,
+  ): void {
+    if (!hasIntent) {
+      this.approachVelocity(0, 0, playerConfig.brakePxPerSec2 * dtSeconds);
+      return;
+    }
+    // Niyetin BÜYÜKLÜĞÜ hız kesridir: yarıya itilen bir çubuk yarım hız verir.
+    const scale = Math.min(1, intentLength) * this.turnSpeedScale();
+    this.approachVelocity(
+      (intentX / intentLength) * playerConfig.maxSpeed * scale,
+      (intentY / intentLength) * playerConfig.maxSpeed * scale,
+      playerConfig.accelerationPxPerSec2 * dtSeconds,
+    );
   }
 
   /** Hızı hedefe doğru en fazla `maxDelta` kadar taşır; hedefi AŞMAZ. */
@@ -253,7 +319,7 @@ export class ArachnidBody {
       );
       this.dashRemainingMs = 0;
       this.wallRecoveryMs = playerConfig.wall.recoveryMs;
-      this.pendingImpact = {
+      this.mergeImpact({
         x,
         y,
         normalX,
@@ -262,7 +328,7 @@ export class ArachnidBody {
           (speedIntoWall - playerConfig.wall.impactSpeedPxPerSec) /
             Math.max(1, playerConfig.dash.speedPxPerSec - playerConfig.wall.impactSpeedPxPerSec),
         ),
-      };
+      });
       return;
     }
 
@@ -274,6 +340,38 @@ export class ArachnidBody {
   }
 
   /**
+   * Aynı karedeki ikinci teması BİRLEŞTİRİR.
+   *
+   * Köşeye çarpan gövde X ve Y eksenlerinde ayrı ayrı seker ama bu tek bir
+   * olaydır. Tek slotu ezmek ikinci normali yazıp birincisini siliyordu: ses,
+   * titreşim ve arena parlaması köşeyi düz bir duvar gibi gösteriyordu.
+   * Bileşke normal normalize edilir, şiddet ise en güçlü temasınkidir.
+   */
+  private mergeImpact(impact: WallImpact): void {
+    const previous = this.pendingImpact;
+    if (!previous) {
+      this.pendingImpact = impact;
+      return;
+    }
+
+    const nx = previous.normalX + impact.normalX;
+    const ny = previous.normalY + impact.normalY;
+    const length = Math.hypot(nx, ny);
+    const strongest = impact.strength01 >= previous.strength01 ? impact : previous;
+
+    this.pendingImpact = {
+      // Temas noktası köşenin kendisidir: her eksenin kelepçelenmiş bileşeni.
+      x: impact.normalX !== 0 ? impact.x : previous.x,
+      y: impact.normalY !== 0 ? impact.y : previous.y,
+      // Zıt normaller (iki karşılıklı duvar aynı karede) toplamda sıfırlanır;
+      // o durumda en güçlü temasın normali korunur.
+      normalX: length > 1e-6 ? nx / length : strongest.normalX,
+      normalY: length > 1e-6 ? ny / length : strongest.normalY,
+      strength01: Math.max(previous.strength01, impact.strength01),
+    };
+  }
+
+  /**
    * Hedef yön: girdi varsa oraya, yoksa son yön korunur (durunca gövde
    * savrulmaz). Yay ±π sarımında sıçramasın diye hedef, mevcut açıya en yakın
    * "sarılmamış" karşılığına taşınır.
@@ -281,12 +379,7 @@ export class ArachnidBody {
    * Yayın kendi hızı ayrıca tavanlanır: büyük bir açı farkında yay ilk
    * karelerde ağır bir gövdeye yakışmayan bir açısal hıza fırlar.
    */
-  private updateFacing(
-    intentX: number,
-    intentY: number,
-    hasIntent: boolean,
-    deltaMs: number,
-  ): void {
+  private updateFacing(intentX: number, intentY: number, hasIntent: boolean, stepMs: number): void {
     // Atılım sürerken yön KİLİTLİDİR: gövde uçtuğu yöne bakar. Dümen kırmak
     // hem ağırlığı hem uzuv duruşunu bozuyordu (bkz. `playerConfig.dash`).
     const target = this.isDashing
@@ -297,7 +390,7 @@ export class ArachnidBody {
     const shortest = wrap(target - this.facing.value, -Math.PI, Math.PI);
     const before = this.facing.value;
 
-    this.facing.update(before + shortest, deltaMs, playerConfig.facingSpring);
+    this.facing.update(before + shortest, stepMs, playerConfig.facingSpring);
     this.facing.velocity = clamp(
       this.facing.velocity,
       -playerConfig.maxTurnRateRadPerSec,
@@ -305,16 +398,16 @@ export class ArachnidBody {
     );
     // Yayın ürettiği adım da tavana göre yeniden kurulur; yalnız hızı kırpmak
     // aynı karede zaten alınmış büyük adımı geri almazdı.
-    const maxStep = (playerConfig.maxTurnRateRadPerSec * Math.min(deltaMs, 100)) / MS_PER_SEC;
+    const maxStep = (playerConfig.maxTurnRateRadPerSec * stepMs) / MS_PER_SEC;
     const step = clamp(wrap(this.facing.value - before, -Math.PI, Math.PI), -maxStep, maxStep);
     this.facing.value = wrap(before + step, -Math.PI, Math.PI);
   }
 
-  private updateDashBlend(deltaMs: number): void {
+  private updateDashBlend(stepMs: number): void {
     if (this.dashRemainingMs > 0) {
       this.dashBlend = 1;
       return;
     }
-    this.dashBlend = Math.max(0, this.dashBlend - deltaMs / DASH_BLEND_FALLOFF_MS);
+    this.dashBlend = Math.max(0, this.dashBlend - stepMs / DASH_BLEND_FALLOFF_MS);
   }
 }

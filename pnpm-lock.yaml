@@ -91,10 +91,16 @@ importers:
 
   devtools/pen.dev:
     dependencies:
-      phaser:
-        specifier: ^4.2.1
-        version: 4.2.1
+      '@volstudio/core':
+        specifier: workspace:*
+        version: link:../../core
     devDependencies:
+      '@types/node':
+        specifier: ^26.1.2
+        version: 26.1.2
+      tsx:
+        specifier: ^4.23.11
+        version: 4.23.11
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -203,9 +209,6 @@ importers:
       '@volstudio/core':
         specifier: workspace:*
         version: link:../../core
-      '@volstudio/pen.dev':
-        specifier: workspace:*
-        version: link:../../devtools/pen.dev
       '@volstudio/tauri-v2':
         specifier: workspace:*
         version: link:../../tauri-v2
@@ -222,6 +225,9 @@ importers:
       '@volstudio/audio-synth':
         specifier: workspace:*
         version: link:../../devtools/audio-synth
+      '@volstudio/pen.dev':
+        specifier: workspace:*
+        version: link:../../devtools/pen.dev
       i18next:
         specifier: 26.3.6
         version: 26.3.6(typescript@6.0.3)

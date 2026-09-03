@@ -1,97 +1,95 @@
 # pen.dev
 
-VOL.STUDIO'nun paylaşılan tasarım kaynağı ve export pipeline'ı: bir Pencil
-canvas dosyası (`pen/entities.pen`), ondan export edilen parça/önizleme
-görselleri (`pen_export/`) ve bunları bir Phaser sahnesinde birleştiren
-çalışma zamanı katmanı (`@volstudio/pen.dev`, `src/`).
+VOL.STUDIO'nun paylaşılan tasarım kaynağı ve **export/gönderim** hattı: bir
+Pencil canvas dosyası (`pen/entities.pen`), ondan export edilen parça/önizleme
+görselleri (`pen_export/`) ve bu çıktıyı doğrulayıp tüketicisine gönderen araç
+(`@volstudio/pen.dev`, `src/`).
 
-**Bağımsız.** `core/` ve hiçbir `games/<oyun>` paketi bu klasörün varlığını
-bilmez; bağımlılık tek yönlüdür, oyunlar `@volstudio/pen.dev`'ı tüketir, tersi
-olmaz. Kendi `package.json`'ı, kendi `tsconfig.json`'ı, kendi testleri
-vardır — pnpm workspace'in `devtools/*` glob'u tarafından otomatik yakalanır,
-başka hiçbir dosyada elle kayıt gerekmez.
+**Rig'i çalışma zamanında okuyan katman burada değildir.** Metadata'yı
+doğrulayan, `RigDefinition` kuran, eklemlendiren ve Phaser sahnesinde
+montajlayan yüzey `@volstudio/core/rig`de yaşar — bir oyunun çalışma zamanı
+asset'ini üreten araca bağlanmamalıdır (bkz. kök `AGENTS.md`, "Bozulamaz
+Kurallar" 4). Bu paket üretir ve gönderir; CORE tüketir.
 
-**Sökülmeye hazır.** Bu klasör olduğu gibi kesilip başka bir yere (ayrı bir
-repo, başka bir stüdyo projesi) taşınabilir: dışarıya tek bağımlılığı
-`phaser`'dır, hiçbir `@volstudio/*` paketini import etmez.
+**Build-time bir araçtır.** Hiçbir oyunun bundle'ına girmez, Phaser'a bağımlı
+değildir ve tüketen paketlerde `devDependencies` altında durur. Dışarıya tek
+bağımlılığı `@volstudio/core/rig/metadata`dır (devtool → core serbesttir).
+
+[English](README.en.md)
 
 ## Kullanım
 
-Tüketen oyun `@volstudio/pen.dev` alias'ını kendi `vite.config.ts` ve
-`tsconfig.json`'ında tanımlar, ardından:
+### 1. Export'u düzenle
+
+Pencil'den PNG çıkarma iki adımlıdır: Pencil MCP `execute` ile native
+`Export()` çağrılır, sonra çıktı entity düzenine taşınır ve metadata'sı yazılır.
+Script'in başındaki kullanım yorumu manifest şeklini ve tüm doğrulama
+kurallarını belgeler.
+
+```bash
+node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
+```
+
+### 2. Tüketiciye gönder
+
+Üretilen çıktı `pen_export/` altında **ara çıktıdır**; oyunun build'i onu
+doğrudan okumaz. (Ara çıktı olması silinebilir olduğu anlamına gelmez: bu export
+repodan yeniden üretilemez ve commit'lenir.) `rig:sync` onu doğrular ve tüketen paketin sahipliğine
+kopyalar: metadata onun kaynak ağacına, parçalar onun statik asset köküne.
+
+```bash
+pnpm --filter @volstudio/vol-arachnid rig:sync
+```
+
+Gönderilen metadata'nın `file` alanları tüketicinin kendi yoluna göre yeniden
+yazılır (`assets/rig/<entity>/parts/<partId>.png`) ve `previews` düşürülür —
+önizleme bir yazarlık referansıdır, çalışma zamanı yükü değil. Hedefte kalan
+fazlalıklar silinir: yeniden adlandırılmış bir parçanın eskisi hem bundle'ı
+şişirir hem bir sonraki okuyucuyu yanıltır.
+
+Gönderim **doğrulanmamış bir export'u kopyalamaz**. Metadata'da yazılı ama
+diskte olmayan bir parça da, diskte olup metadata'da geçmeyen bir dosya da
+hatadır.
+
+### 3. Oyunda kullan
 
 ```typescript
-import { buildRigDefinition, preloadRigTextures, assembleRig } from '@volstudio/pen.dev';
-import metadata from '.../metadata/<entity>.metadata.json';
+import {
+  articulateRigDefinition,
+  assembleRig,
+  buildRigDefinition,
+  preloadRigTextures,
+  validateRigMetadata,
+} from '@volstudio/core';
+import metadataRaw from '@/assets/rig/<entity>.metadata.json';
 
-// Parça PNG'lerini bundler'ın glob'u ile topla (Vite örneği):
-const partUrls = import.meta.glob('.../parts/*.png', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-});
-
-const rig = buildRigDefinition(metadata, partUrls);
+const metadata = validateRigMetadata(metadataRaw, '<entity>.metadata.json');
+const partUrls = Object.fromEntries(metadata.parts.map((part) => [part.file, part.file]));
 
 // Scene.preload() içinde:
+const rig = articulateRigDefinition(buildRigDefinition(metadata, partUrls), ARTICULATION);
 preloadRigTextures(this, rig);
 
 // Scene.create() içinde:
 const { container, parts } = assembleRig(this, rig);
 ```
 
-`buildRigDefinition` düz bir `Record<string, string>` aldığı için paket
-Vite'a bağlı değildir; glob'u tüketen oyun yapar.
+Ayrıntı (eklem şeması, pivot sözleşmesi, montaj kuralları) CORE'un rig
+modülündedir.
 
-Bir parça `parentPartId` taşıyorsa kökün değil ÜST PARÇANIN container'ına
-girer: üst parçayı döndürmek alt zinciri de döndürür (kol → önkol → el).
-Metadata'daki konum ve dönüş her zaman rig kökü uzayında yazılır; montaj
-bunları ebeveynin dönüşünü telafi ederek yerel uzaya çevirir. Eklem taşımayan
-bir rig, eklem desteği eklenmeden önceki çıktının birebir aynısını verir.
-Bu bir RENDER eklemidir; fizik/eklem kısıtı taşımaz.
+## Paket yüzeyi
 
-### Yayımlanmış düz bir export'a eklem eklemek
+| Fonksiyon               | İş                                                                       |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `auditRigExport`        | Metadata ile disk arasındaki farkı **toplar** (eksik parça, yetim dosya) |
+| `verifyRigExport`       | Aynı denetim; fark varsa **fırlatır**. Yayımlanabilirlik kapısı          |
+| `syncRigExport`         | Doğrulanmış export'u tüketicinin sahipliğine kopyalar                    |
+| `auditShippedRig`       | Gönderilmiş metadata ile statik dizin arasındaki fark                    |
+| `resolveRigExportPaths` | Bir export referansını mutlak dosya yollarına çevirir                    |
 
-Eklem bilgisinin ASIL yeri export manifestidir (`parent` alanı). Ne var ki
-yayımlanmış düz bir export'u yeniden üretmek her zaman mümkün değildir
-(kaynak staging çıktısı tüketilip silinmiştir) ve eklemsiz bir zincirde yalnız
-uçlar sürülebilir: ara kemikler kardeş kalır, sürülen parça dönerken onlar
-export pozunda donar ve uzuv kopuk görünür.
-
-`articulateRigDefinition` şemayı TÜKETİCİ tarafında bildirmeye izin verir:
-
-```typescript
-import { articulateRigDefinition, buildRigDefinition } from '@volstudio/pen.dev';
-
-const rig = articulateRigDefinition(buildRigDefinition(metadata, partUrls), {
-  leg_r0_femur: 'leg_r0_coxa',
-  leg_r0_tibia: 'leg_r0_femur',
-});
-```
-
-Dönen tanımda parçalar topolojik sıradadır (ebeveyn her zaman çocuktan önce),
-aynı ebeveynin çocuklarında kaynak çizim sırası korunur. Bilinmeyen parça,
-kendine bağlanma ve döngü reddedilir. Metadata dosyasına DOKUNULMAZ, yani bir
-sonraki export bu kararı ezmez; manifeste `parent` eklenip export yeniden
-üretildiğinde şema gereksizleşir.
-
-İlk iş metadata'yı çalışma zamanında doğrulamaktır (`validateRigMetadata`,
-ayrıca dışa açıktır): `schemaVersion`, zorunlu alanlar ve parça tipleri
-kontrol edilir, sorunlar tek mesajda toplanır. TypeScript arayüzü dosyadan
-okunan JSON hakkında hiçbir garanti vermez — bir agent ya da dış araç bozuk
-metadata ürettiğinde hata, anlaşılmaz bir `TypeError` yerine nerede olduğunu
-söyleyen bir mesaj olur.
-
-## Export
-
-Pencil'den PNG çıkarma iki adımlıdır: Pencil MCP `execute` ile native
-`Export()` çağrılır, sonra çıktı `scripts/organize-pen-export.mjs` ile
-entity düzenine taşınır ve metadata'sı yazılır. Script'in başındaki kullanım
-yorumu manifest şeklini ve tüm doğrulama kurallarını belgeler.
-
-```bash
-node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
-```
+`auditRigExport` bilinçli olarak fırlatmaz: bozuk bir export'ta eksiklerin
+tamamı tek turda görülsün diye. `verifyRigExport` ise bir kapıdır ve fark
+gördüğü anda durur.
 
 ## Test
 
@@ -100,4 +98,6 @@ pnpm --filter @volstudio/pen.dev typecheck
 pnpm --filter @volstudio/pen.dev test:coverage
 ```
 
-[English](README.en.md)
+Testler gerçek bir geçici dizinde koşar. `fs` mock'lamak burada yanlış olurdu:
+doğrulanan şey tam olarak "diskte ne var, metadata ne diyor" farkıdır ve
+mock'lanan bir disk o farkı tanım gereği üretemez.

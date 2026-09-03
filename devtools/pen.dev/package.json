@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -10,9 +18,11 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "phaser": "^4.2.1"
+    "@volstudio/core": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^26.1.2",
+    "tsx": "^4.23.11",
     "typescript": "^6.0.3",
     "vitest": "3.0.5"
   }

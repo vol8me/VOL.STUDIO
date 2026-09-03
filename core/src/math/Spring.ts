@@ -20,13 +20,13 @@ export interface SpringConfig {
  * verir, üstel yumuşatma bunu üretemez.
  *
  * Bir kare hitch'inde (`deltaMs` çok büyük) hız terimi patlamasın diye
- * `deltaMs` `MAX_DELTA_MS`'e kelepçelenir.
+ * `deltaMs` ortak simülasyon tavanına (`TECH.MAX_SIM_STEP_MS`) kelepçelenir —
+ * bu tavan yaya özel DEĞİLDİR, zamanı tüketen her alt sistemle paylaşılır
+ * (bkz. `time/simulationStep.ts`).
  */
 export class Spring1D {
   value: number;
   velocity = 0;
-
-  private static readonly MAX_DELTA_MS = 100;
 
   constructor(initial = 0) {
     this.value = finiteOr(initial, 0);
@@ -57,7 +57,7 @@ export class Spring1D {
       return this.value;
     }
 
-    const dtSec = Math.min(deltaMs, Spring1D.MAX_DELTA_MS) / TECH.MS_PER_SECOND;
+    const dtSec = Math.min(deltaMs, TECH.MAX_SIM_STEP_MS) / TECH.MS_PER_SECOND;
     this.velocity += (target - this.value) * stiffness * dtSec;
     this.velocity *= Math.max(0, 1 - damping * dtSec);
     this.value += this.velocity * dtSec;

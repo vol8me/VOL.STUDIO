@@ -1,5 +1,14 @@
 {
   "$comment": [
+    "2026-09-03: rig VARLIK katmanı pen.dev'den CORE'a taşındı (AGENTS Kural 4:",
+    "bir oyunun çalışma zamanı asset'ini üreten araca bağlanmaz). Taşınan kod",
+    "%96+ kapsamlıydı ve CORE'un sayılarını yukarı çekti; pen.dev ise tamamen",
+    "yeni bir yüzeye (export doğrulama + gönderim) sahip. Eşikler ölçülenin",
+    "birkaç puan altına çekildi — devir sırasında kapsamın sessizce düşmemesi",
+    "için. CORE 87/87/82/89 → 89/89/84/91 (ölçülen 89.69/89.69/84.18/92),",
+    "pen.dev 96/96/92/100 → 97/97/94/100 (ölçülen 98.87/98.87/96.42/100),",
+    "vol-arachnid branch 84 → 85 (ölçülen 86.01).",
+    "",
     "Kalite kapılarının TEK doğruluk kaynağı.",
     "Eşikler bir dönem her paketin vitest.config.ts dosyasında yaşıyordu ve",
     "workspace-contract.mjs onları REGEX ile okuyordu. Regex ilk `}` karakterinde",
@@ -30,10 +39,10 @@
   "exempt": {},
   "packages": {
     "@volstudio/core": {
-      "lines": 87,
-      "statements": 87,
-      "branches": 82,
-      "functions": 89
+      "lines": 89,
+      "statements": 89,
+      "branches": 84,
+      "functions": 91
     },
     "@volstudio/vol-hell": {
       "lines": 70,
@@ -44,8 +53,8 @@
     "@volstudio/vol-arachnid": {
       "lines": 96,
       "statements": 96,
-      "branches": 84,
-      "functions": 95
+      "branches": 85,
+      "functions": 96
     },
     "@volstudio/vol-ui": {
       "lines": 94,
@@ -72,9 +81,9 @@
       "functions": 85
     },
     "@volstudio/pen.dev": {
-      "lines": 96,
-      "statements": 96,
-      "branches": 92,
+      "lines": 97,
+      "statements": 97,
+      "branches": 94,
       "functions": 100
     },
     "@volstudio/tauri-v2": {

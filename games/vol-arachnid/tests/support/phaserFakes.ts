@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
-import type { AssembledRig, RigDefinition } from '@volstudio/pen.dev';
-import { assembleRig, buildRigDefinition, validateRigMetadata } from '@volstudio/pen.dev';
-import { articulateRigDefinition } from '@volstudio/pen.dev';
+import type { AssembledRig, RigDefinition } from '@volstudio/core';
+import { assembleRig, buildRigDefinition, validateRigMetadata } from '@volstudio/core';
+import { articulateRigDefinition } from '@volstudio/core';
 import arachnidMetadataRaw from '../../../../devtools/pen.dev/pen_export/enemies/arachnid/metadata/arachnid.metadata.json';
 import { ARACHNID_ARTICULATION } from '@/config/rig';
 

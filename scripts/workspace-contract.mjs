@@ -3,6 +3,10 @@
  * Workspace sözleşmesi — kapıların kapsamının repo büyüdükçe sessizce
  * daralmasını engeller.
  *
+ * İki şeyi doğrular: (1) her paketin kapılara dahil olduğunu, (2) katman
+ * sınırlarının korunduğunu (`quality/layers.mjs`). İkisi de aynı sınıf hatayı
+ * önler — repo büyürken bir kuralın SESSİZCE geçersizleşmesini.
+ *
  * Kapılar `pnpm -r` üzerinden çalışır ve `--if-present` bayrağı, script'i
  * olmayan paketi HATA VERMEDEN atlar. Yani test script'i yazılmamış yeni bir
  * paket eklendiğinde bütün kapılar yeşil kalır ve o paket ölçülmeden repoya
@@ -16,6 +20,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadQualityConfig, validateQualityWorkspaceParity } from './quality/config.mjs';
+import { validateLayerBoundaries } from './quality/layers.mjs';
 
 /** Her paketin sahip olması gereken script'ler ve hangi kapının kullandığı. */
 const REQUIRED_SCRIPTS = {
@@ -74,6 +79,9 @@ problems.push(
     packages.map((pkg) => pkg.name),
   ),
 );
+
+// Katman sınırları: oyun/devtool/core bağımlılık yönü (AGENTS.md Kural 3-4).
+problems.push(...validateLayerBoundaries(root));
 
 for (const pkg of packages) {
   const manifest = readJson(join(root, pkg.dir, 'package.json'));
@@ -140,4 +148,6 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-console.log(`[workspace-contract] ${packages.length} paket, kapı kapsamı tam.`);
+console.log(
+  `[workspace-contract] ${packages.length} paket, kapı kapsamı tam, katman sınırları temiz.`,
+);

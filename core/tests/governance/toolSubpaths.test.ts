@@ -5,6 +5,7 @@ import * as Ui from '../../src/ui/index';
 import * as Lifecycle from '../../src/lifecycle/index';
 import * as I18n from '../../src/i18n/index';
 import * as Fonts from '../../src/fonts/index';
+import * as RigMetadata from '../../src/rig/metadata';
 
 describe('Phaser taşımayan araç alt-yolları', () => {
   const packageJson = JSON.parse(
@@ -25,6 +26,7 @@ describe('Phaser taşımayan araç alt-yolları', () => {
         types: './src/spatial/SpatialIndex.ts',
       },
       './stats': { import: './src/stats/StatBlock.ts', types: './src/stats/StatBlock.ts' },
+      './rig/metadata': { import: './src/rig/metadata.ts', types: './src/rig/metadata.ts' },
     });
   });
 
@@ -37,6 +39,9 @@ describe('Phaser taşımayan araç alt-yolları', () => {
     expect(I18n.I18n).toBeDefined();
     expect(Fonts.FontManager).toBeDefined();
     expect(Fonts.VOL_FONTS).toBeDefined();
+    expect(RigMetadata.validateRigMetadata).toBeDefined();
+    expect(RigMetadata.buildRigDefinition).toBeDefined();
+    expect(RigMetadata.articulateRigDefinition).toBeDefined();
   });
 
   it('alt-yol barrel dosyaları oyun runtime veya Phaser import etmez', () => {
@@ -45,6 +50,7 @@ describe('Phaser taşımayan araç alt-yolları', () => {
       '../../src/lifecycle/index.ts',
       '../../src/i18n/index.ts',
       '../../src/fonts/index.ts',
+      '../../src/rig/metadata.ts',
     ];
     for (const file of files) {
       const source = readFileSync(resolve(import.meta.dirname, file), 'utf8');

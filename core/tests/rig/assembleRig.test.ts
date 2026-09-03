@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { computePartLayout } from '@/assembleRig';
-import type { RigPartAsset } from '@/types';
+import { computePartLayout } from '../../src/rig/assembleRig';
+import type { RigPartAsset } from '../../src/rig/types';
 
 const RIG = { exportScale: 2, rootSizePx: { width: 200, height: 200 } };
 

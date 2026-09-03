@@ -1,5 +1,4 @@
 export { Vector2 } from './math/Vector2';
-export { toStepVelocity } from './math/physics';
 
 // Deterministik PRNG. Ses, oyun ve asset compiler'lar aynı uygulamayı kullanır.
 export { createRandom, seedFromString, DEFAULT_SEED, type Random } from './random/random';
@@ -43,7 +42,12 @@ export {
  * Hiçbiri oyun kelimesi bilmez ve hiçbiri sunum katmanına bağlı değildir.
  * Yeni bir oyun bunları doğrudan alır.
  */
-export { Scheduler, Cooldown, RoundLoop, Clock } from './time';
+/*
+ * Zaman. `clampSimulationStep` bir SÖZLEŞMEDİR, kolaylık değil: zamanı tüketen
+ * bütün alt sistemler aynı tavanı paylaşmazsa aynı karede farklı kadar zaman
+ * yaşarlar (bkz. `time/simulationStep.ts`).
+ */
+export { Scheduler, Cooldown, RoundLoop, Clock, clampSimulationStep } from './time';
 export type { CancelScheduled, RoundLoopOptions } from './time';
 export type { SchedulerOptions } from './time/Scheduler';
 export { EventBus, type Unsubscribe } from './events/EventBus';
@@ -149,6 +153,36 @@ export {
   type LegGaitStepTuning,
   type GazeDriverConfig,
   type GazeSignals,
+} from './rig';
+
+/*
+ * Rig VARLIK katmanı: üretilmiş bir parça ağacını (metadata + texture) doğrular,
+ * montaja hazır bir tanıma çevirir ve sahnede kurar.
+ *
+ * Bu yüzey ÜRETİLMİŞ VERİNİN sözleşmesidir, bir aracın API'si değil. Metadata'yı
+ * hangi tasarım aracının yazdığı CORE'un konusu değildir; tüketici dosyayı verir,
+ * CORE onu okur. Böylece bir oyunun çalışma zamanı, asset'ini üreten araca
+ * bağlanmadan eklemli bir varlığı sahneye kurabilir.
+ */
+export type {
+  Point,
+  Size,
+  RigPartMetadata,
+  RigPreviewMetadata,
+  RigMetadata,
+  RigPartAsset,
+  RigDefinition,
+  RigArticulation,
+  PartLayout,
+  AssembledRig,
+} from './rig';
+export {
+  validateRigMetadata,
+  buildRigDefinition,
+  articulateRigDefinition,
+  computePartLayout,
+  preloadRigTextures,
+  assembleRig,
 } from './rig';
 
 /*

@@ -1,0 +1,1242 @@
+{
+  "schemaVersion": 1,
+  "entityId": "arachnid",
+  "domain": "enemies",
+  "source": {
+    "penFile": "devtools/pen.dev/pen/entities.pen",
+    "sheetNodeId": "bBlFU",
+    "sheetNodeName": "Arachnid Parts Export Sheet",
+    "exportScale": 2,
+    "rootSizePx": {
+      "width": 368.93,
+      "height": 202.3
+    }
+  },
+  "parts": [
+    {
+      "partId": "tail_l_tail_upper",
+      "sourceNodeId": "btB5H",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 50,
+        "height": 11
+      },
+      "positionPx": {
+        "x": 154.77,
+        "y": 191.3
+      },
+      "rotationDeg": -101.14,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/tail_l_tail_upper.png"
+    },
+    {
+      "partId": "tail_l_tail_lower",
+      "sourceNodeId": "mHN09",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 30,
+        "height": 9
+      },
+      "positionPx": {
+        "x": 146.86,
+        "y": 145.98
+      },
+      "rotationDeg": -101.14,
+      "parentPartId": "tail_l_tail_upper",
+      "file": "assets/rig/arachnid/parts/tail_l_tail_lower.png"
+    },
+    {
+      "partId": "tail_l_tail_tip",
+      "sourceNodeId": "I7tLB",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 16,
+        "height": 10
+      },
+      "positionPx": {
+        "x": 141.34,
+        "y": 120.57
+      },
+      "rotationDeg": -101.14,
+      "parentPartId": "tail_l_tail_lower",
+      "file": "assets/rig/arachnid/parts/tail_l_tail_tip.png"
+    },
+    {
+      "partId": "tail_l_tail_joint",
+      "sourceNodeId": "y5u72",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 9,
+        "height": 9
+      },
+      "positionPx": {
+        "x": 147.25,
+        "y": 147.94
+      },
+      "rotationDeg": -101.14,
+      "parentPartId": "tail_l_tail_upper",
+      "file": "assets/rig/arachnid/parts/tail_l_tail_joint.png"
+    },
+    {
+      "partId": "tail_r_tail_upper",
+      "sourceNodeId": "i9CoMi",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 50,
+        "height": 11
+      },
+      "positionPx": {
+        "x": 176.72,
+        "y": 189.18
+      },
+      "rotationDeg": 281.14,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/tail_r_tail_upper.png"
+    },
+    {
+      "partId": "tail_r_tail_lower",
+      "sourceNodeId": "e70r0",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 30,
+        "height": 9
+      },
+      "positionPx": {
+        "x": 186.59,
+        "y": 144.24
+      },
+      "rotationDeg": 281.14,
+      "parentPartId": "tail_r_tail_upper",
+      "file": "assets/rig/arachnid/parts/tail_r_tail_lower.png"
+    },
+    {
+      "partId": "tail_r_tail_tip",
+      "sourceNodeId": "YSqif",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 16,
+        "height": 10
+      },
+      "positionPx": {
+        "x": 191.13,
+        "y": 118.63
+      },
+      "rotationDeg": 281.14,
+      "parentPartId": "tail_r_tail_lower",
+      "file": "assets/rig/arachnid/parts/tail_r_tail_tip.png"
+    },
+    {
+      "partId": "tail_r_tail_joint",
+      "sourceNodeId": "J3WXWa",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 9,
+        "height": 9
+      },
+      "positionPx": {
+        "x": 186.2,
+        "y": 146.2
+      },
+      "rotationDeg": 281.14,
+      "parentPartId": "tail_r_tail_upper",
+      "file": "assets/rig/arachnid/parts/tail_r_tail_joint.png"
+    },
+    {
+      "partId": "leg_r0_coxa",
+      "sourceNodeId": "T63f5L",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 40,
+        "height": 19
+      },
+      "positionPx": {
+        "x": 200.11,
+        "y": 119.22
+      },
+      "rotationDeg": -35,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/leg_r0_coxa.png"
+    },
+    {
+      "partId": "leg_r0_femur",
+      "sourceNodeId": "k8ZPoV",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 58,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 230.46,
+        "y": 99.8
+      },
+      "rotationDeg": -35,
+      "parentPartId": "leg_r0_coxa",
+      "file": "assets/rig/arachnid/parts/leg_r0_femur.png"
+    },
+    {
+      "partId": "leg_r0_tibia",
+      "sourceNodeId": "U8Z9s",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 50,
+        "height": 13
+      },
+      "positionPx": {
+        "x": 275.55,
+        "y": 70.05
+      },
+      "rotationDeg": -35,
+      "parentPartId": "leg_r0_femur",
+      "file": "assets/rig/arachnid/parts/leg_r0_tibia.png"
+    },
+    {
+      "partId": "leg_r0_claw",
+      "sourceNodeId": "hFDPn",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 26,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 312.37,
+        "y": 42.44
+      },
+      "rotationDeg": -35,
+      "parentPartId": "leg_r0_tibia",
+      "file": "assets/rig/arachnid/parts/leg_r0_claw.png"
+    },
+    {
+      "partId": "leg_r0_joint_coxa_femur",
+      "sourceNodeId": "Xi5we",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 15,
+        "height": 15
+      },
+      "positionPx": {
+        "x": 225.83,
+        "y": 103.65
+      },
+      "rotationDeg": -35,
+      "parentPartId": "leg_r0_coxa",
+      "file": "assets/rig/arachnid/parts/leg_r0_joint_coxa_femur.png"
+    },
+    {
+      "partId": "leg_r0_joint_femur_tibia",
+      "sourceNodeId": "mMr4Q",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 16,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 268.14,
+        "y": 73.41
+      },
+      "rotationDeg": -35,
+      "parentPartId": "leg_r0_femur",
+      "file": "assets/rig/arachnid/parts/leg_r0_joint_femur_tibia.png"
+    },
+    {
+      "partId": "leg_r0_femur_hi",
+      "sourceNodeId": "u2bQQX",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 34,
+        "height": 3.5
+      },
+      "positionPx": {
+        "x": 238.16,
+        "y": 96.85
+      },
+      "rotationDeg": -35,
+      "parentPartId": "leg_r0_femur",
+      "file": "assets/rig/arachnid/parts/leg_r0_femur_hi.png"
+    },
+    {
+      "partId": "leg_r1_coxa",
+      "sourceNodeId": "TeYCO",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 40,
+        "height": 19
+      },
+      "positionPx": {
+        "x": 205.17,
+        "y": 96.59
+      },
+      "rotationDeg": -8,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/leg_r1_coxa.png"
+    },
+    {
+      "partId": "leg_r1_femur",
+      "sourceNodeId": "j96JjD",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 58,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 241.03,
+        "y": 93.07
+      },
+      "rotationDeg": -8,
+      "parentPartId": "leg_r1_coxa",
+      "file": "assets/rig/arachnid/parts/leg_r1_femur.png"
+    },
+    {
+      "partId": "leg_r1_tibia",
+      "sourceNodeId": "XXUg4",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 50,
+        "height": 13
+      },
+      "positionPx": {
+        "x": 294.71,
+        "y": 87.04
+      },
+      "rotationDeg": -8,
+      "parentPartId": "leg_r1_femur",
+      "file": "assets/rig/arachnid/parts/leg_r1_tibia.png"
+    },
+    {
+      "partId": "leg_r1_claw",
+      "sourceNodeId": "XWFOH",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 26,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 340.05,
+        "y": 79.15
+      },
+      "rotationDeg": -8,
+      "parentPartId": "leg_r1_tibia",
+      "file": "assets/rig/arachnid/parts/leg_r1_claw.png"
+    },
+    {
+      "partId": "leg_r1_joint_coxa_femur",
+      "sourceNodeId": "QZEkS",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 15,
+        "height": 15
+      },
+      "positionPx": {
+        "x": 235.15,
+        "y": 94.4
+      },
+      "rotationDeg": -8,
+      "parentPartId": "leg_r1_coxa",
+      "file": "assets/rig/arachnid/parts/leg_r1_joint_coxa_femur.png"
+    },
+    {
+      "partId": "leg_r1_joint_femur_tibia",
+      "sourceNodeId": "VWJfx",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 16,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 286.58,
+        "y": 86.67
+      },
+      "rotationDeg": -8,
+      "parentPartId": "leg_r1_femur",
+      "file": "assets/rig/arachnid/parts/leg_r1_joint_femur_tibia.png"
+    },
+    {
+      "partId": "leg_r1_femur_hi",
+      "sourceNodeId": "wrKVs",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 34,
+        "height": 3.5
+      },
+      "positionPx": {
+        "x": 249.23,
+        "y": 93.93
+      },
+      "rotationDeg": -8,
+      "parentPartId": "leg_r1_femur",
+      "file": "assets/rig/arachnid/parts/leg_r1_femur_hi.png"
+    },
+    {
+      "partId": "leg_r2_coxa",
+      "sourceNodeId": "TRLk4",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 40,
+        "height": 19
+      },
+      "positionPx": {
+        "x": 208.46,
+        "y": 79.64
+      },
+      "rotationDeg": 8,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/leg_r2_coxa.png"
+    },
+    {
+      "partId": "leg_r2_femur",
+      "sourceNodeId": "IOkK2",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 58,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 243.9,
+        "y": 86.14
+      },
+      "rotationDeg": 8,
+      "parentPartId": "leg_r2_coxa",
+      "file": "assets/rig/arachnid/parts/leg_r2_femur.png"
+    },
+    {
+      "partId": "leg_r2_tibia",
+      "sourceNodeId": "QMl6O",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 50,
+        "height": 13
+      },
+      "positionPx": {
+        "x": 297.17,
+        "y": 95.14
+      },
+      "rotationDeg": 8,
+      "parentPartId": "leg_r2_femur",
+      "file": "assets/rig/arachnid/parts/leg_r2_tibia.png"
+    },
+    {
+      "partId": "leg_r2_claw",
+      "sourceNodeId": "F34Z2",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 26,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 342.93,
+        "y": 100.06
+      },
+      "rotationDeg": 8,
+      "parentPartId": "leg_r2_tibia",
+      "file": "assets/rig/arachnid/parts/leg_r2_claw.png"
+    },
+    {
+      "partId": "leg_r2_joint_coxa_femur",
+      "sourceNodeId": "mBPnz",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 15,
+        "height": 15
+      },
+      "positionPx": {
+        "x": 237.89,
+        "y": 85.8
+      },
+      "rotationDeg": 8,
+      "parentPartId": "leg_r2_coxa",
+      "file": "assets/rig/arachnid/parts/leg_r2_joint_coxa_femur.png"
+    },
+    {
+      "partId": "leg_r2_joint_femur_tibia",
+      "sourceNodeId": "tyXt5",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 16,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 289.46,
+        "y": 92.54
+      },
+      "rotationDeg": 8,
+      "parentPartId": "leg_r2_femur",
+      "file": "assets/rig/arachnid/parts/leg_r2_joint_femur_tibia.png"
+    },
+    {
+      "partId": "leg_r2_femur_hi",
+      "sourceNodeId": "XqjGW",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 34,
+        "height": 3.5
+      },
+      "positionPx": {
+        "x": 251.55,
+        "y": 89.23
+      },
+      "rotationDeg": 8,
+      "parentPartId": "leg_r2_femur",
+      "file": "assets/rig/arachnid/parts/leg_r2_femur_hi.png"
+    },
+    {
+      "partId": "leg_r3_coxa",
+      "sourceNodeId": "RPamq",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 40,
+        "height": 19
+      },
+      "positionPx": {
+        "x": 202.15,
+        "y": 50.46
+      },
+      "rotationDeg": 25,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/leg_r3_coxa.png"
+    },
+    {
+      "partId": "leg_r3_femur",
+      "sourceNodeId": "xqhZF",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 58,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 234.15,
+        "y": 67.04
+      },
+      "rotationDeg": 25,
+      "parentPartId": "leg_r3_coxa",
+      "file": "assets/rig/arachnid/parts/leg_r3_femur.png"
+    },
+    {
+      "partId": "leg_r3_tibia",
+      "sourceNodeId": "lEEUq",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 50,
+        "height": 13
+      },
+      "positionPx": {
+        "x": 282.45,
+        "y": 91.22
+      },
+      "rotationDeg": 25,
+      "parentPartId": "leg_r3_femur",
+      "file": "assets/rig/arachnid/parts/leg_r3_tibia.png"
+    },
+    {
+      "partId": "leg_r3_claw",
+      "sourceNodeId": "XWYd0",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 26,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 324.78,
+        "y": 109.3
+      },
+      "rotationDeg": 25,
+      "parentPartId": "leg_r3_tibia",
+      "file": "assets/rig/arachnid/parts/leg_r3_claw.png"
+    },
+    {
+      "partId": "leg_r3_joint_coxa_femur",
+      "sourceNodeId": "BNRv9",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 15,
+        "height": 15
+      },
+      "positionPx": {
+        "x": 228.5,
+        "y": 64.95
+      },
+      "rotationDeg": 25,
+      "parentPartId": "leg_r3_coxa",
+      "file": "assets/rig/arachnid/parts/leg_r3_joint_coxa_femur.png"
+    },
+    {
+      "partId": "leg_r3_joint_femur_tibia",
+      "sourceNodeId": "DmQIn",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 16,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 275.84,
+        "y": 86.48
+      },
+      "rotationDeg": 25,
+      "parentPartId": "leg_r3_femur",
+      "file": "assets/rig/arachnid/parts/leg_r3_joint_femur_tibia.png"
+    },
+    {
+      "partId": "leg_r3_femur_hi",
+      "sourceNodeId": "suWJc",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 34,
+        "height": 3.5
+      },
+      "positionPx": {
+        "x": 240.55,
+        "y": 72.23
+      },
+      "rotationDeg": 25,
+      "parentPartId": "leg_r3_femur",
+      "file": "assets/rig/arachnid/parts/leg_r3_femur_hi.png"
+    },
+    {
+      "partId": "leg_l0_coxa",
+      "sourceNodeId": "R9Vee",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 40,
+        "height": 19
+      },
+      "positionPx": {
+        "x": 131.28,
+        "y": 134.78
+      },
+      "rotationDeg": -145,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/leg_l0_coxa.png"
+    },
+    {
+      "partId": "leg_l0_femur",
+      "sourceNodeId": "kWTUa",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 58,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 102.65,
+        "y": 112.9
+      },
+      "rotationDeg": -145,
+      "parentPartId": "leg_l0_coxa",
+      "file": "assets/rig/arachnid/parts/leg_l0_femur.png"
+    },
+    {
+      "partId": "leg_l0_tibia",
+      "sourceNodeId": "rrddN",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 50,
+        "height": 13
+      },
+      "positionPx": {
+        "x": 59.27,
+        "y": 80.7
+      },
+      "rotationDeg": -145,
+      "parentPartId": "leg_l0_femur",
+      "file": "assets/rig/arachnid/parts/leg_l0_tibia.png"
+    },
+    {
+      "partId": "leg_l0_claw",
+      "sourceNodeId": "d6bQhA",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 26,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 20.73,
+        "y": 55.55
+      },
+      "rotationDeg": -145,
+      "parentPartId": "leg_l0_tibia",
+      "file": "assets/rig/arachnid/parts/leg_l0_claw.png"
+    },
+    {
+      "partId": "leg_l0_joint_coxa_femur",
+      "sourceNodeId": "exy4A",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 15,
+        "height": 15
+      },
+      "positionPx": {
+        "x": 107.85,
+        "y": 115.94
+      },
+      "rotationDeg": -145,
+      "parentPartId": "leg_l0_coxa",
+      "file": "assets/rig/arachnid/parts/leg_l0_joint_coxa_femur.png"
+    },
+    {
+      "partId": "leg_l0_joint_femur_tibia",
+      "sourceNodeId": "sKvlu",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 16,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 64.97,
+        "y": 86.52
+      },
+      "rotationDeg": -145,
+      "parentPartId": "leg_l0_femur",
+      "file": "assets/rig/arachnid/parts/leg_l0_joint_femur_tibia.png"
+    },
+    {
+      "partId": "leg_l0_femur_hi",
+      "sourceNodeId": "ketU4",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 34,
+        "height": 3.5
+      },
+      "positionPx": {
+        "x": 97.24,
+        "y": 106.68
+      },
+      "rotationDeg": -145,
+      "parentPartId": "leg_l0_femur",
+      "file": "assets/rig/arachnid/parts/leg_l0_femur_hi.png"
+    },
+    {
+      "partId": "leg_l1_coxa",
+      "sourceNodeId": "ZKdg7",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 40,
+        "height": 19
+      },
+      "positionPx": {
+        "x": 134.47,
+        "y": 115.41
+      },
+      "rotationDeg": -172,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/leg_l1_coxa.png"
+    },
+    {
+      "partId": "leg_l1_femur",
+      "sourceNodeId": "D34yb",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 58,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 99.03,
+        "y": 108.91
+      },
+      "rotationDeg": -172,
+      "parentPartId": "leg_l1_coxa",
+      "file": "assets/rig/arachnid/parts/leg_l1_femur.png"
+    },
+    {
+      "partId": "leg_l1_tibia",
+      "sourceNodeId": "O35pSL",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 50,
+        "height": 13
+      },
+      "positionPx": {
+        "x": 45.76,
+        "y": 99.91
+      },
+      "rotationDeg": -172,
+      "parentPartId": "leg_l1_femur",
+      "file": "assets/rig/arachnid/parts/leg_l1_tibia.png"
+    },
+    {
+      "partId": "leg_l1_claw",
+      "sourceNodeId": "m90Q3",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 26,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 0,
+        "y": 94.99
+      },
+      "rotationDeg": -172,
+      "parentPartId": "leg_l1_tibia",
+      "file": "assets/rig/arachnid/parts/leg_l1_claw.png"
+    },
+    {
+      "partId": "leg_l1_joint_coxa_femur",
+      "sourceNodeId": "L0Xdz",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 15,
+        "height": 15
+      },
+      "positionPx": {
+        "x": 105.04,
+        "y": 109.25
+      },
+      "rotationDeg": -172,
+      "parentPartId": "leg_l1_coxa",
+      "file": "assets/rig/arachnid/parts/leg_l1_joint_coxa_femur.png"
+    },
+    {
+      "partId": "leg_l1_joint_femur_tibia",
+      "sourceNodeId": "lqDQR",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 16,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 53.47,
+        "y": 102.51
+      },
+      "rotationDeg": -172,
+      "parentPartId": "leg_l1_femur",
+      "file": "assets/rig/arachnid/parts/leg_l1_joint_femur_tibia.png"
+    },
+    {
+      "partId": "leg_l1_femur_hi",
+      "sourceNodeId": "KdHj1",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 34,
+        "height": 3.5
+      },
+      "positionPx": {
+        "x": 91.38,
+        "y": 105.82
+      },
+      "rotationDeg": -172,
+      "parentPartId": "leg_l1_femur",
+      "file": "assets/rig/arachnid/parts/leg_l1_femur_hi.png"
+    },
+    {
+      "partId": "leg_l2_coxa",
+      "sourceNodeId": "rLXpP",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 40,
+        "height": 19
+      },
+      "positionPx": {
+        "x": 136.46,
+        "y": 98.46
+      },
+      "rotationDeg": 172,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/leg_l2_coxa.png"
+    },
+    {
+      "partId": "leg_l2_femur",
+      "sourceNodeId": "tjE8e",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 58,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 100.6,
+        "y": 101.98
+      },
+      "rotationDeg": 172,
+      "parentPartId": "leg_l2_coxa",
+      "file": "assets/rig/arachnid/parts/leg_l2_femur.png"
+    },
+    {
+      "partId": "leg_l2_tibia",
+      "sourceNodeId": "L6TyzW",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 50,
+        "height": 13
+      },
+      "positionPx": {
+        "x": 46.92,
+        "y": 108.01
+      },
+      "rotationDeg": 172,
+      "parentPartId": "leg_l2_femur",
+      "file": "assets/rig/arachnid/parts/leg_l2_tibia.png"
+    },
+    {
+      "partId": "leg_l2_claw",
+      "sourceNodeId": "cIZ1k",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 26,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 1.58,
+        "y": 115.9
+      },
+      "rotationDeg": 172,
+      "parentPartId": "leg_l2_tibia",
+      "file": "assets/rig/arachnid/parts/leg_l2_claw.png"
+    },
+    {
+      "partId": "leg_l2_joint_coxa_femur",
+      "sourceNodeId": "uEbg5",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 15,
+        "height": 15
+      },
+      "positionPx": {
+        "x": 106.48,
+        "y": 100.65
+      },
+      "rotationDeg": 172,
+      "parentPartId": "leg_l2_coxa",
+      "file": "assets/rig/arachnid/parts/leg_l2_joint_coxa_femur.png"
+    },
+    {
+      "partId": "leg_l2_joint_femur_tibia",
+      "sourceNodeId": "fEDFf",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 16,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 55.05,
+        "y": 108.39
+      },
+      "rotationDeg": 172,
+      "parentPartId": "leg_l2_femur",
+      "file": "assets/rig/arachnid/parts/leg_l2_joint_femur_tibia.png"
+    },
+    {
+      "partId": "leg_l2_femur_hi",
+      "sourceNodeId": "AwH3W",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 34,
+        "height": 3.5
+      },
+      "positionPx": {
+        "x": 92.4,
+        "y": 101.12
+      },
+      "rotationDeg": 172,
+      "parentPartId": "leg_l2_femur",
+      "file": "assets/rig/arachnid/parts/leg_l2_femur_hi.png"
+    },
+    {
+      "partId": "leg_l3_coxa",
+      "sourceNodeId": "egz7j",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 40,
+        "height": 19
+      },
+      "positionPx": {
+        "x": 148.15,
+        "y": 67.68
+      },
+      "rotationDeg": 155,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/leg_l3_coxa.png"
+    },
+    {
+      "partId": "leg_l3_femur",
+      "sourceNodeId": "SNJkf",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 58,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 114.89,
+        "y": 81.54
+      },
+      "rotationDeg": 155,
+      "parentPartId": "leg_l3_coxa",
+      "file": "assets/rig/arachnid/parts/leg_l3_femur.png"
+    },
+    {
+      "partId": "leg_l3_tibia",
+      "sourceNodeId": "zhPx9",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 50,
+        "height": 13
+      },
+      "positionPx": {
+        "x": 65.32,
+        "y": 103
+      },
+      "rotationDeg": 155,
+      "parentPartId": "leg_l3_femur",
+      "file": "assets/rig/arachnid/parts/leg_l3_tibia.png"
+    },
+    {
+      "partId": "leg_l3_claw",
+      "sourceNodeId": "D23lF",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 26,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 24.26,
+        "y": 123.8
+      },
+      "rotationDeg": 155,
+      "parentPartId": "leg_l3_tibia",
+      "file": "assets/rig/arachnid/parts/leg_l3_claw.png"
+    },
+    {
+      "partId": "leg_l3_joint_coxa_femur",
+      "sourceNodeId": "c0Y2qq",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 15,
+        "height": 15
+      },
+      "positionPx": {
+        "x": 120.12,
+        "y": 78.55
+      },
+      "rotationDeg": 155,
+      "parentPartId": "leg_l3_coxa",
+      "file": "assets/rig/arachnid/parts/leg_l3_joint_coxa_femur.png"
+    },
+    {
+      "partId": "leg_l3_joint_femur_tibia",
+      "sourceNodeId": "KBEjJ",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 16,
+        "height": 16
+      },
+      "positionPx": {
+        "x": 73.2,
+        "y": 100.98
+      },
+      "rotationDeg": 155,
+      "parentPartId": "leg_l3_femur",
+      "file": "assets/rig/arachnid/parts/leg_l3_joint_femur_tibia.png"
+    },
+    {
+      "partId": "leg_l3_femur_hi",
+      "sourceNodeId": "j2OSP",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 34,
+        "height": 3.5
+      },
+      "positionPx": {
+        "x": 106.8,
+        "y": 83.1
+      },
+      "rotationDeg": 155,
+      "parentPartId": "leg_l3_femur",
+      "file": "assets/rig/arachnid/parts/leg_l3_femur_hi.png"
+    },
+    {
+      "partId": "abdomen_shell",
+      "sourceNodeId": "nfKus",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 140,
+        "height": 140
+      },
+      "positionPx": {
+        "x": 101.14,
+        "y": 23
+      },
+      "rotationDeg": 0,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/abdomen_shell.png"
+    },
+    {
+      "partId": "abdomen_plate",
+      "sourceNodeId": "H6xENS",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 96,
+        "height": 90
+      },
+      "positionPx": {
+        "x": 123.14,
+        "y": 48
+      },
+      "rotationDeg": 0,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/abdomen_plate.png"
+    },
+    {
+      "partId": "core_ring",
+      "sourceNodeId": "sHgcI",
+      "shapeType": "path",
+      "category": null,
+      "logicalSizePx": {
+        "width": 48,
+        "height": 48
+      },
+      "positionPx": {
+        "x": 147.14,
+        "y": 64
+      },
+      "rotationDeg": 0,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/core_ring.png"
+    },
+    {
+      "partId": "reactor",
+      "sourceNodeId": "Gv2EO",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 22,
+        "height": 22
+      },
+      "positionPx": {
+        "x": 160.14,
+        "y": 77
+      },
+      "rotationDeg": 0,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/reactor.png"
+    },
+    {
+      "partId": "reactor_slit",
+      "sourceNodeId": "Won00",
+      "shapeType": "ellipse",
+      "category": null,
+      "logicalSizePx": {
+        "width": 4,
+        "height": 14
+      },
+      "positionPx": {
+        "x": 169.14,
+        "y": 81
+      },
+      "rotationDeg": 0,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/reactor_slit.png"
+    },
+    {
+      "partId": "top_cap",
+      "sourceNodeId": "PqKhX",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 16,
+        "height": 10
+      },
+      "positionPx": {
+        "x": 163.14,
+        "y": 2
+      },
+      "rotationDeg": 0,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/top_cap.png"
+    },
+    {
+      "partId": "top_cap_side_l",
+      "sourceNodeId": "J8DAly",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 5,
+        "height": 12
+      },
+      "positionPx": {
+        "x": 151.14,
+        "y": 0
+      },
+      "rotationDeg": 0,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/top_cap_side_l.png"
+    },
+    {
+      "partId": "top_cap_side_r",
+      "sourceNodeId": "YW7QX",
+      "shapeType": "rectangle",
+      "category": null,
+      "logicalSizePx": {
+        "width": 5,
+        "height": 12
+      },
+      "positionPx": {
+        "x": 186.14,
+        "y": 0
+      },
+      "rotationDeg": 0,
+      "parentPartId": null,
+      "file": "assets/rig/arachnid/parts/top_cap_side_r.png"
+    }
+  ],
+  "previews": []
+}

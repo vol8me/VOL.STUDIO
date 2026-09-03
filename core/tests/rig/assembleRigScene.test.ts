@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { assembleRig, preloadRigTextures } from '@/assembleRig';
-import type { RigDefinition } from '@/types';
+import { assembleRig, preloadRigTextures } from '../../src/rig/assembleRig';
+import type { RigDefinition } from '../../src/rig/types';
 
 /**
  * Phaser sahnesinin `assembleRig`/`preloadRigTextures` tarafından kullanılan

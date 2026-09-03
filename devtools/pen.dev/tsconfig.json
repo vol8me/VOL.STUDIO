@@ -2,9 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "types": ["node"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@volstudio/core/rig/metadata": ["../../core/src/rig/metadata.ts"]
     }
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "scripts"]
 }

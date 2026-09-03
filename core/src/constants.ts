@@ -138,4 +138,13 @@ export const TECH = {
   DPR_FALLBACK: 1,
   /** Delta-time ms → saniye çevrimi (MovableController). */
   MS_PER_SECOND: 1000,
+  /**
+   * Bir simülasyon adımının üst sınırı (ms).
+   *
+   * Zamanı tüketen HER ŞEY bu tavanı paylaşır: yaylar, bekleme sayaçları,
+   * yürüyüş döngüsü, gövde entegrasyonu. Ayrı ayrı kelepçelemek sistemi
+   * hızlandırmaz, TUTARSIZLAŞTIRIR — bir alt sistem 100 ms yaşarken diğeri
+   * aynı karede 500 ms yaşar (bkz. `time/simulationStep.ts`).
+   */
+  MAX_SIM_STEP_MS: 100,
 } as const;

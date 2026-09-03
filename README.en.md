@@ -15,7 +15,7 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 core/                       # @volstudio/core — shared systems + DOM UI library
 games/vol-hell/             # @volstudio/vol-hell — the game (Vite root)
 games/vol-arachnid/         # @volstudio/vol-arachnid — articulated-spider arena vertical slice
-devtools/pen.dev/          # @volstudio/pen.dev — Pencil source, export pipeline and rig assembly
+devtools/pen.dev/          # @volstudio/pen.dev — Pencil source, export pipeline and ship tool
 devtools/vol-ui/            # @volstudio/vol-ui — live CORE UI component catalog
 devtools/vol-asset-studio/  # @volstudio/vol-asset-studio — repository asset workbench
 devtools/visual-synth/      # @volstudio/visual-synth — deterministic visual asset compiler

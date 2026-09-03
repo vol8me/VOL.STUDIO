@@ -10,6 +10,28 @@ const CENTER_Y = arenaConfig.heightPx / 2;
 
 const intentAt = (rad: number) => new Vector2(Math.cos(rad), Math.sin(rad));
 
+/**
+ * Atılımı gerçek karelerle tüketir.
+ *
+ * Testler bir dönem tüm atılımı TEK bir `durationMs` karesiyle geçiriyordu; bu
+ * yalnız atılım sayacı ham `deltaMs`i harcadığı için işe yarıyordu. Simülasyon
+ * adımı `TECH.MAX_SIM_STEP_MS`e kelepçelendiğinden 140 ms'lik bir kare artık
+ * 100 ms yaşar — doğrusu da budur, çünkü aynı karede gövde de yalnız 100 ms
+ * yol alır. Atılım artık gerçekten geçmesi gereken kadar kare sürüyor.
+ */
+function runOutDash(body: ArachnidBody, frameMs = FRAME_MS): void {
+  for (let i = 0; i < 200 && body.isDashing; i++) {
+    body.update(Vector2.zero(), false, frameMs);
+  }
+}
+
+/** Bekleme süresini kelepçeye uyan karelerle geçirir. */
+function waitMs(body: ArachnidBody, totalMs: number, frameMs = FRAME_MS): void {
+  for (let elapsed = 0; elapsed < totalMs; elapsed += frameMs) {
+    body.update(Vector2.zero(), false, frameMs);
+  }
+}
+
 function circularDistance(a: number, b: number): number {
   return Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
 }
@@ -57,12 +79,12 @@ describe('ArachnidBody hareketi', () => {
     body.update(new Vector2(-1, 0), true, FRAME_MS);
     expect(body.velocity.x).toBeGreaterThan(0);
 
-    body.update(Vector2.zero(), false, playerConfig.dash.durationMs);
+    runOutDash(body);
     expect(body.isDashing).toBe(false);
     body.update(new Vector2(-1, 0), true, 1);
     expect(body.isDashing).toBe(false);
 
-    body.update(Vector2.zero(), false, playerConfig.dash.cooldownMs);
+    waitMs(body, playerConfig.dash.cooldownMs);
     body.update(new Vector2(-1, 0), true, 1);
     expect(body.isDashing).toBe(true);
     expect(body.velocity.x).toBeLessThan(0);
@@ -201,7 +223,8 @@ describe('ArachnidBody hareketi', () => {
     body.update(new Vector2(1, 0), true, FRAME_MS);
     expect(body.dash01).toBe(1);
 
-    body.update(Vector2.zero(), false, playerConfig.dash.durationMs);
+    runOutDash(body);
+    body.update(Vector2.zero(), false, FRAME_MS);
     expect(body.dash01).toBeGreaterThan(0);
     expect(body.dash01).toBeLessThan(1);
 
@@ -223,7 +246,7 @@ describe('ArachnidBody hareketi', () => {
     expect(circularDistance(body.facingRad, 0)).toBeLessThan(beforeLock);
 
     // Atılım bitince kilit kalkar ve gövde girdiye dönmeye başlar.
-    body.update(Vector2.zero(), false, playerConfig.dash.durationMs);
+    runOutDash(body);
     const released = body.facingRad;
     for (let i = 0; i < 20; i++) body.update(new Vector2(-1, 0), false, FRAME_MS);
     expect(circularDistance(body.facingRad, released)).toBeGreaterThan(0.05);
@@ -244,7 +267,7 @@ describe('ArachnidBody hareketi', () => {
     body.update(new Vector2(1, 0), true, FRAME_MS);
     expect(body.consumeDashLanding()).toBe(false);
 
-    body.update(Vector2.zero(), false, playerConfig.dash.durationMs);
+    runOutDash(body);
     expect(body.consumeDashLanding()).toBe(true);
     expect(body.consumeDashLanding()).toBe(false);
   });

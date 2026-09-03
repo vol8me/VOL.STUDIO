@@ -2,6 +2,7 @@ import {
   LegGait,
   clamp,
   clamp01,
+  clampSimulationStep,
   finiteOr,
   lerp,
   solveTwoBoneIk,
@@ -132,8 +133,15 @@ export class ArachnidLegs {
      * (sekme sonrası dev delta, sıfıra bölme ürünü bir hız) uzuv pozunun
      * kalıcı olarak NaN'e düşmesi orantısız olurdu; CORE'un `Spring1D` ve
      * `Cooldown` için izlediği politika da budur.
+     *
+     * Süre gövdeyle AYNI tavana kelepçelenir. Sahne zaten kelepçelenmiş bir
+     * değer verir, yani bu işlemsizdir; savunma amaçlıdır. Yürüyüş döngüsü
+     * gövdeden farklı bir zaman yaşadığında ayaklar gövdenin gitmediği yere
+     * basar ve hata uzuvda değil, ZAMANDA olduğu için uzuv koduna bakarak
+     * bulunamaz.
      */
     const state = sanitiseDriveState(rawState);
+    const stepMs = clampSimulationStep(deltaMs);
     const rigRad = state.bodyRad + RIG_FACING_OFFSET_RAD;
     this.applyStance(state.motion01, state.dash01, state.crouch01);
 
@@ -179,7 +187,7 @@ export class ArachnidLegs {
       rigRad,
       state.velX * leadScale,
       state.velY * leadScale,
-      deltaMs,
+      stepMs,
     );
     this.readGaitFeet(state.bodyX, state.bodyY, rigRad);
     this.pose(state.dash01);

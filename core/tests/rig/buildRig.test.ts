@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildRigDefinition } from '@/buildRig';
-import type { RigMetadata } from '@/types';
+import { buildRigDefinition } from '../../src/rig/buildRig';
+import type { RigMetadata } from '../../src/rig/types';
 
 function metadataFixture(): RigMetadata {
   return {

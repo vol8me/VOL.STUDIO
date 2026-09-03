@@ -1,4 +1,4 @@
-import type { RigArticulation } from '@volstudio/pen.dev';
+import type { RigArticulation } from '@volstudio/core';
 
 /**
  * Rig'in kaynak pozu ile atan2 açı uzayı arasındaki sabit fark.

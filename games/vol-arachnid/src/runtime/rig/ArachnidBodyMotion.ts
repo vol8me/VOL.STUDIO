@@ -6,6 +6,7 @@ import {
   Vector2,
   clamp,
   clamp01,
+  clampSimulationStep,
   createRandom,
   finiteOr,
 } from '@volstudio/core';
@@ -90,7 +91,10 @@ export class ArachnidBodyMotion {
     );
   }
 
-  update(rawState: BodyMotionState, deltaMs: number): BodyMotionSignals {
+  update(rawState: BodyMotionState, rawDeltaMs: number): BodyMotionSignals {
+    // Süre gövde ve uzuvlarla AYNI tavanı paylaşır: ikincil hareket, sürdüğü
+    // gövdeden farklı bir zaman yaşarsa yaslanma ve yalpa gövdeden ayrışır.
+    const deltaMs = clampSimulationStep(rawDeltaMs);
     // Akış değerleri temizlenir; bozuk tek bir kare kabuğun dönüşümünü kalıcı
     // olarak NaN'e düşürmemeli (bkz. `ArachnidLegs.update`).
     const state: BodyMotionState = {

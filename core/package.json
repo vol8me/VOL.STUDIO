@@ -22,6 +22,10 @@
       "import": "./src/pool/index.ts",
       "types": "./src/pool/index.ts"
     },
+    "./rig/metadata": {
+      "import": "./src/rig/metadata.ts",
+      "types": "./src/rig/metadata.ts"
+    },
     "./ui/colors": {
       "import": "./src/ui/colors.ts",
       "types": "./src/ui/colors.ts"

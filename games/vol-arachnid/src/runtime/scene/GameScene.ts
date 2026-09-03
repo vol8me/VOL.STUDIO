@@ -7,24 +7,23 @@ import {
   PoseShadow,
   VirtualActionSource,
   applyVolViewport,
-  cancelHaptics,
-  clamp,
-  clamp01,
-  damp,
-  observeAppVisibility,
-  shouldUseTouchControls,
-  vibrate,
-  type CancellableDisposable,
-  type PoseSourceNode,
-} from '@volstudio/core';
-import {
   articulateRigDefinition,
   assembleRig,
   buildRigDefinition,
+  cancelHaptics,
+  clamp,
+  clamp01,
+  clampSimulationStep,
+  damp,
+  observeAppVisibility,
   preloadRigTextures,
+  shouldUseTouchControls,
+  vibrate,
   type AssembledRig,
+  type CancellableDisposable,
+  type PoseSourceNode,
   type RigDefinition,
-} from '@volstudio/pen.dev';
+} from '@volstudio/core';
 import { arenaConfig } from '@/config/arena';
 import { arachnidAudioConfig } from '@/config/audio';
 import { fxConfig } from '@/config/fx';
@@ -208,10 +207,26 @@ export class GameScene extends Phaser.Scene {
     // fırlatarak konsolu doldururdu.
     if (!this.runtimeScope || this.exitPromptOpen) return;
 
-    this.inputManager.update(delta);
+    /*
+     * SİMÜLASYON deltası bir kere hesaplanır ve zamanı tüketen HER alt sisteme
+     * o verilir.
+     *
+     * Ham `delta` altı ayrı sisteme dağıtıldığında her biri onu kendi
+     * kelepçesiyle yorumluyordu: gövde 100 ms'e kelepçeliyor, yürüyüş döngüsü
+     * kelepçelemiyordu. Sekme değişimi ya da mobil resume sonrası gelen 500
+     * ms'lik bir karede gövde 100 ms yol alıyor, ayak döngüsü 500 ms
+     * ilerliyordu — ayaklar gövdenin GİTMEDİĞİ yere basıyordu.
+     *
+     * SUNUM deltası (`delta`) bilinçli olarak ham kalır: bir izin sönmesi ve
+     * kameranın yumuşaması gerçek geçen zamanı izlemelidir, aksi halde uzun bir
+     * donmadan sonra ekranda asılı kalırlar.
+     */
+    const simDeltaMs = clampSimulationStep(delta);
+
+    this.inputManager.update(simDeltaMs);
     const state = this.inputManager.getState(this.body.position);
 
-    this.body.update(state.move, state.actions.dash, delta);
+    this.body.update(state.move, state.actions.dash, simDeltaMs);
     this.assembled.container.setPosition(this.body.position.x, this.body.position.y);
     this.assembled.container.rotation = this.body.facingRad + RIG_FACING_OFFSET_RAD;
 
@@ -225,7 +240,7 @@ export class GameScene extends Phaser.Scene {
         facingRad: this.body.facingRad,
         dash01: this.body.dash01,
       },
-      delta,
+      simDeltaMs,
     );
 
     this.legs.update(
@@ -241,12 +256,12 @@ export class GameScene extends Phaser.Scene {
         crouch01: motion.crouch01,
         airborne: this.body.isDashing,
       },
-      delta,
+      simDeltaMs,
     );
 
     if (this.cameraFollowsBody) this.followBody(delta);
     this.resolveWallImpact();
-    this.arena.update(delta);
+    this.arena.update(simDeltaMs);
     this.emitFootDust();
 
     // İz ve gölge, POZLANDIKTAN sonra örneklenir; aksi halde bir kare

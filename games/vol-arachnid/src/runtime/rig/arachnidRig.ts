@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import type { AssembledRig, RigMetadata, RigPartMetadata } from '@volstudio/pen.dev';
+import type { AssembledRig, RigMetadata, RigPartMetadata } from '@volstudio/core';
 import {
   BODY_SHELL_PART_IDS,
   GAZE_PART_ID,

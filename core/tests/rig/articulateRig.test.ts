@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { articulateRigDefinition } from '../src/articulateRig';
-import type { RigDefinition, RigPartAsset } from '../src/types';
+import { articulateRigDefinition } from '../../src/rig/articulateRig';
+import type { RigDefinition, RigPartAsset } from '../../src/rig/types';
 
 function part(partId: string): RigPartAsset {
   return {

@@ -24,8 +24,19 @@ export default defineConfig({
     // HMR soketi vol-hell'in 1421'iyle çakışmaz; iki oyun aynı anda cihaza
     // bağlanabilir.
     hmr: host ? { protocol: 'ws', host, port: 1422 } : undefined,
+    /*
+     * Dev sunucusunun okuyabileceği ağaç, gerçekten TÜKETİLEN paketlerle
+     * sınırlıdır. Bir dönem repo kökü açıktı çünkü rig asset'leri devtools
+     * ağacından import ediliyordu; asset'ler bu paketin sahipliğine taşındıktan
+     * sonra o genişliğin gerekçesi kalmadı.
+     */
     fs: {
-      allow: [resolve(import.meta.dirname, '../..')],
+      allow: [
+        import.meta.dirname,
+        resolve(import.meta.dirname, '../../core'),
+        resolve(import.meta.dirname, '../../tauri-v2'),
+        resolve(import.meta.dirname, '../../node_modules'),
+      ],
     },
   },
   build: {
@@ -54,7 +65,6 @@ export default defineConfig({
         '../../core/src/math/interpolation.ts',
       ),
       '@volstudio/core': resolve(import.meta.dirname, '../../core/src'),
-      '@volstudio/pen.dev': resolve(import.meta.dirname, '../../devtools/pen.dev/src'),
       '@volstudio/tauri-v2': resolve(import.meta.dirname, '../../tauri-v2/src'),
       '@': resolve(import.meta.dirname, './src'),
     },

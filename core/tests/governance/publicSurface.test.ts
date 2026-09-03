@@ -63,7 +63,22 @@ import * as Core from '../../src/index';
 // 212 → 215: iki oyunun ortak Android geri-yönlendirme yığını
 // (`pushBackHandler`, `backHandlerCount`) ve varyant/bütçe taşıyan tek-atış
 // `SoundBank`. Oyunlar yalnız olay kimliklerini ve asset'lerini tanımlar.
-const EXPECTED_EXPORT_COUNT = 215;
+// 215 → 220: rig VARLIK katmanı CORE'a alındı (+6) ve ölü `toStepVelocity`
+// düştü (−1). Altı çalışma zamanı girişi — `validateRigMetadata`,
+// `buildRigDefinition`, `articulateRigDefinition`, `computePartLayout`,
+// `preloadRigTextures`, `assembleRig` — üretilmiş bir parça ağacını doğrulayıp
+// sahnede kurar. Bunlar bir tasarım aracının API'si DEĞİL, üretilmiş verinin
+// sözleşmesidir: bir oyunun çalışma zamanı asset'ini üreten araca bağlanmamalı
+// (AGENTS.md, "Bozulamaz Kurallar" 4). `toStepVelocity` ise Matter.js'e hız
+// çeviren, repoda hiç tüketicisi olmayan bir kalıntıydı; sildiği yer
+// (`math/physics`) gerçek bir temas/destek katmanına açık kaldı.
+// 220 → 221: `clampSimulationStep`. Kare süresini simülasyona vermeden önce
+// kelepçeleyen tek sözleşme. Alt sistemler bunu ayrı ayrı yaptığında sistem
+// hızlanmıyor, TUTARSIZLAŞIYORDU: 500 ms'lik bir karede gövde 100 ms yol
+// alırken yürüyüş döngüsü 500 ms ilerliyor ve ayaklar gövdenin gitmediği yere
+// basıyordu. Tavanın kendisi `TECH.MAX_SIM_STEP_MS`tir ve `Spring1D` de artık
+// kendi özel sabiti yerine onu okur.
+const EXPECTED_EXPORT_COUNT = 221;
 
 // 196: asset compiler'lar (görsel/ses sentezi) CORE public surface'da
 // tutulmaz; runtime yalnızca üretilmiş asset'leri çalar.

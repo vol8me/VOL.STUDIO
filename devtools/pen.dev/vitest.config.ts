@@ -28,14 +28,17 @@ export default defineConfig({
       // Burada sayı yazmak, bekçinin okuduğu değerle ayrışmaya davetiyedir.
       thresholds: quality.packages['@volstudio/pen.dev'],
     },
-    environment: 'jsdom',
+    environment: 'node',
     globals: true,
-    setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
   },
   resolve: {
     alias: {
+      '@volstudio/core/rig/metadata': resolve(
+        import.meta.dirname,
+        '../../core/src/rig/metadata.ts',
+      ),
       '@': resolve(import.meta.dirname, './src'),
     },
   },
