@@ -168,6 +168,14 @@ neredeyse tamamı SUNUM tarafındadır — gölge her karede 72 dönüşüm gün
 atılım boyunca art-görüntü bunu çoğaltır. Bir bütçe aşımında bakılacak yer
 burasıdır, yürüyüş döngüsü değil.
 
+Ölçüm ayrıca poz gölgesinin PARÇA SAYISINA göre eğrisini verir; ölçülen değer
+parça başına ~0,8 µs/kare ve doğrusaldır. Yani sınır uzuv sayısı değil parça
+sayısıdır: 16 ms'lik bir karenin %10'unu efektlere ayırmak istersen üst sınır
+~2000 parçadır. Kare adımının yığın ayırması da ölçülür (~600-700 bayt/kare);
+sıcak yol bilinçli olarak ödünç nesnelerle çalışır ve bu sayı o kararın tutup
+tutmadığını söyler. Temiz ayırma ölçümü için `NODE_OPTIONS=--expose-gc` ile
+çalıştır.
+
 Sayılar makineye özeldir ve kapı EŞİĞİ DEĞİLDİR; oran ve büyüme yönü anlamlıdır.
 
 ## HUD ve arena

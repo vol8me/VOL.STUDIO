@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`rig montaj geometrisi > dinlenme duruşunda her uzvun ayak konumu SABİTTİR 1`] = `"r0:96.2277,132.9166|r1:141.0603,62.2901|r2:150.8681,-24.2072|r3:109.4758,-116.4108|l0:-96.2215,132.9154|l1:-141.0617,62.2976|l2:-150.8662,-24.2012|l3:-109.4817,-116.4068|tl:-33.0743,106.7065|tr:33.0788,106.7203"`;

@@ -45,7 +45,15 @@ export interface LegGaitLeg {
 export interface LegGaitConfig {
   /** Ayak evinden bu kadar uzaklaşınca adım tetiklenir (dünya px). */
   stepTriggerPx: number;
-  /** Bir adımın (havada geçen) süresi. */
+  /**
+   * Bir adımın (havada geçen) süresi.
+   *
+   * Adım kare sınırına YUVARLANIR: bir karede biten adımın artan süresi bir
+   * sonraki adıma taşınmaz. Bu bilinçlidir — taşımak, aynı karede ikinci bir
+   * adım başlatabilir ve sıra disiplinini kare hızına bağımlı kılardı. Kare
+   * süresi `TECH.MAX_SIM_STEP_MS`e kelepçeli olduğu için sapma en fazla bir
+   * kareliktir ve adım süresinin küçük bir kesridir.
+   */
   stepDurationMs: number;
   /** Adım hedefini hız yönünde şu kadar saniye ileriye koyar — ayak gideceği yere basar. */
   stepLeadSeconds: number;

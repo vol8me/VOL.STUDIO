@@ -11,8 +11,11 @@ import {
 } from '@volstudio/core';
 import { arenaConfig } from '@/config/arena';
 import { playerConfig } from '@/config/player';
+import type { LocomotionSignals } from '@/runtime/entity/locomotionSignals';
 
 const MS_PER_SEC = 1000;
+/** Bunun altındaki hızda seyahat yönü anlamsızdır; bakış yönü kullanılır. */
+const TRAVEL_HEADING_MIN_SPEED = 1e-3;
 /** Atılım şiddetinin sönme süresi — iz ve duruş payı bir anda kesilmez. */
 const DASH_BLEND_FALLOFF_MS = 220;
 
@@ -61,9 +64,60 @@ export class ArachnidBody {
   private dashHeld = false;
   private wallRecoveryMs = 0;
   private pendingImpact: WallImpact | null = null;
+  /**
+   * Kare sinyallerinin TEK örneği; her karede yeniden yazılır.
+   *
+   * Her karede yeni bir nesne kurmak sıcak yolda gereksiz bir tahsisti ve
+   * tüketici sayısıyla çarpılıyordu. Nesne ÖDÜNÇTÜR: çağıran onu bir sonraki
+   * kareye taşımak isterse kopyalamalıdır.
+   */
+  private readonly frameSignals: LocomotionSignals = {
+    x: 0,
+    y: 0,
+    velX: 0,
+    velY: 0,
+    speed: 0,
+    accelX: 0,
+    accelY: 0,
+    travelHeadingRad: 0,
+    facingHeadingRad: 0,
+    turnRateRadPerSec: 0,
+    dash01: 0,
+    grounded: true,
+  };
 
   constructor(x: number, y: number) {
     this.position.set(x, y);
+  }
+
+  /**
+   * Gövdenin bu kareki durumu — tüketicilerin ORTAK sözlüğü.
+   *
+   * Dönen nesne ödünçtür ve bir sonraki `update`te yeniden yazılır.
+   */
+  get signals(): LocomotionSignals {
+    const signals = this.frameSignals;
+    signals.x = this.position.x;
+    signals.y = this.position.y;
+    signals.velX = this.velocity.x;
+    signals.velY = this.velocity.y;
+    signals.speed = this.velocity.length();
+    signals.accelX = this.acceleration.x;
+    signals.accelY = this.acceleration.y;
+    /*
+     * SEYAHAT yönü hızdan okunur; gövde duruyorken hızın yönü anlamsızdır ve
+     * son bakış yönüne düşülür. Bakış yönünü seyahat yerine kullanmak sert bir
+     * dönüşte tempoyu gövdenin GİTMEDİĞİ yöne bağlardı.
+     */
+    signals.travelHeadingRad =
+      signals.speed > TRAVEL_HEADING_MIN_SPEED
+        ? Math.atan2(this.velocity.y, this.velocity.x)
+        : this.facing.value;
+    signals.facingHeadingRad = this.facing.value;
+    signals.turnRateRadPerSec = this.facing.velocity;
+    signals.dash01 = this.dashBlend;
+    signals.grounded = this.dashRemainingMs <= 0;
+    return signals;
   }
 
   /** Yay ile yumuşatılmış görsel yön (radyan). */

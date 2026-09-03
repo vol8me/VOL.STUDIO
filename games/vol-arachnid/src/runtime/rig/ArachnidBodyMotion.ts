@@ -13,31 +13,12 @@ import {
 import { bodyMotionConfig } from '@/config/bodyMotion';
 import { playerConfig } from '@/config/player';
 import { RIG_FACING_OFFSET_RAD } from '@/config/rig';
+import type { LocomotionSignals, PoseSignals } from '@/runtime/entity/locomotionSignals';
 import type { ArachnidRig } from '@/runtime/rig/arachnidRig';
 
 const DEG = Math.PI / 180;
 /** Bakış dizisi tekrarlanabilir olsun diye sabit tohum. */
 const GAZE_SEED = 0x4172_4348;
-
-export interface BodyMotionState {
-  speed: number;
-  /** Gövdenin dünya-uzayı ivmesi (px/s²) — yaslanmanın kaynağı. */
-  accelX: number;
-  accelY: number;
-  /** Dönüşün anlık şiddeti (rad/s). */
-  turnRate: number;
-  /** Gövdenin görsel yönü (radyan). */
-  facingRad: number;
-  /** [0,1] atılım şiddeti. */
-  dash01: number;
-}
-
-export interface BodyMotionSignals {
-  /** [0,1] hareket temposu — uzuv duruşu ve bakış uyanıklığı bunu tüketir. */
-  motion01: number;
-  /** [0,1] çömelme — dururken 1'e, yürürken 0'a gider. */
-  crouch01: number;
-}
 
 interface RestTransform {
   part: Phaser.GameObjects.Container;
@@ -74,6 +55,10 @@ export class ArachnidBodyMotion {
   private readonly snoutRest: RestTransform[];
   private readonly gazeRest: RestTransform;
   private readonly velocityDirection = new Vector2(0, 0);
+  /** Yaslanma çıktısının tek örneği — sıcak yolda tahsis yok. */
+  private readonly lean = { x: 0, y: 0 };
+  /** Poz sinyallerinin tek örneği; her karede yeniden yazılır ve ÖDÜNÇ verilir. */
+  private readonly poseSignals: PoseSignals = { motion01: 0, crouch01: 0 };
 
   constructor(rig: ArachnidRig) {
     this.shellRest = rig.shellParts.map(captureRest);
@@ -91,36 +76,39 @@ export class ArachnidBodyMotion {
     );
   }
 
-  update(rawState: BodyMotionState, rawDeltaMs: number): BodyMotionSignals {
+  update(raw: LocomotionSignals, rawDeltaMs: number): PoseSignals {
     // Süre gövde ve uzuvlarla AYNI tavanı paylaşır: ikincil hareket, sürdüğü
     // gövdeden farklı bir zaman yaşarsa yaslanma ve yalpa gövdeden ayrışır.
     const deltaMs = clampSimulationStep(rawDeltaMs);
-    // Akış değerleri temizlenir; bozuk tek bir kare kabuğun dönüşümünü kalıcı
-    // olarak NaN'e düşürmemeli (bkz. `ArachnidLegs.update`).
-    const state: BodyMotionState = {
-      speed: Math.max(0, finiteOr(rawState.speed, 0)),
-      accelX: finiteOr(rawState.accelX, 0),
-      accelY: finiteOr(rawState.accelY, 0),
-      turnRate: finiteOr(rawState.turnRate, 0),
-      facingRad: finiteOr(rawState.facingRad, 0),
-      dash01: clamp01(finiteOr(rawState.dash01, 0)),
-    };
-    const speed = state.speed;
-    // `RigMotionModel` bir hareket NİYETİ bekler; gerçek hızın birim vektörü
-    // aynı sözleşmeyi karşılar ve girdisiz hareketleri de kapsar.
+    /*
+     * Akış değerleri TEMİZLENİR; bozuk tek bir kare kabuğun dönüşümünü kalıcı
+     * olarak NaN'e düşürmemeli (bkz. `ArachnidLegs.update`). Temizlik yerinde
+     * yapılır, yeni bir nesneye kopyalanarak değil: bu sıcak yol her karede
+     * koşar ve tahsis gerektirmez.
+     */
+    const speed = Math.max(0, finiteOr(raw.speed, 0));
+    const accelX = finiteOr(raw.accelX, 0);
+    const accelY = finiteOr(raw.accelY, 0);
+    const turnRate = finiteOr(raw.turnRateRadPerSec, 0);
+    const facingRad = finiteOr(raw.facingHeadingRad, 0);
+    const travelRad = finiteOr(raw.travelHeadingRad, facingRad);
+    const dash01 = clamp01(finiteOr(raw.dash01, 0));
+
+    /*
+     * `RigMotionModel` bir hareket NİYETİ bekler ve gerçek hızın birim vektörü
+     * aynı sözleşmeyi karşılar. Yön SEYAHATTEN okunur, bakıştan değil: sert bir
+     * dönüşte ikisi ayrışır ve model o anda gövdenin GİTMEDİĞİ yöne bakardı.
+     */
     const magnitude = clamp01(speed / bodyMotionConfig.standSpeedPxPerSec);
     if (speed > 1e-3) {
-      this.velocityDirection.set(
-        Math.cos(state.facingRad) * magnitude,
-        Math.sin(state.facingRad) * magnitude,
-      );
+      this.velocityDirection.set(Math.cos(travelRad) * magnitude, Math.sin(travelRad) * magnitude);
     } else {
       this.velocityDirection.set(0, 0);
     }
     const signals = this.motionModel.update(this.velocityDirection, deltaMs);
 
     const phaseRad = signals.idlePhaseDeg * DEG;
-    const turn01 = clamp(state.turnRate / bodyMotionConfig.turnVelocityForMaxRadPerSec, -1, 1);
+    const turn01 = clamp(turnRate / bodyMotionConfig.turnVelocityForMaxRadPerSec, -1, 1);
 
     const sway = this.swaySpring.update(
       Math.sin(phaseRad) *
@@ -137,20 +125,16 @@ export class ArachnidBodyMotion {
       bodyMotionConfig.transformSpring,
     );
 
-    const lean = this.updateLean(state, deltaMs);
+    const lean = this.updateLean(facingRad, accelX, accelY, deltaMs);
     const crouch = this.crouchSpring.update(
       1 - signals.motion01,
       deltaMs,
       bodyMotionConfig.crouchSpring,
     );
-    const stretch = this.stretchSpring.update(
-      state.dash01,
-      deltaMs,
-      bodyMotionConfig.dashStretchSpring,
-    );
+    const stretch = this.stretchSpring.update(dash01, deltaMs, bodyMotionConfig.dashStretchSpring);
     const snoutLead = this.snoutLeadSpring.update(
       clamp(
-        state.turnRate * bodyMotionConfig.snoutLeadDegPerRadPerSec,
+        turnRate * bodyMotionConfig.snoutLeadDegPerRadPerSec,
         -bodyMotionConfig.maxSnoutLeadDeg,
         bodyMotionConfig.maxSnoutLeadDeg,
       ) * DEG,
@@ -171,36 +155,48 @@ export class ArachnidBodyMotion {
     for (const rest of this.snoutRest) {
       applyTransform(rest, sway, lean, roll + snoutLead, scaleX, scaleY);
     }
-    this.applyGaze(state, signals.motion01, sway, lean, roll, scaleX, scaleY, deltaMs);
+    this.applyGaze(speed, turnRate, signals.motion01, sway, lean, roll, scaleX, scaleY, deltaMs);
 
-    return { motion01: signals.motion01, crouch01 };
+    this.poseSignals.motion01 = signals.motion01;
+    this.poseSignals.crouch01 = crouch01;
+    return this.poseSignals;
   }
 
   /**
    * İvme yaslanması. İvme gövde-yerel eksenlere çevrilir ve gövde onun
    * TERSİNE kayar: kalkışta geriye, frende öne.
    */
-  private updateLean(state: BodyMotionState, deltaMs: number): { x: number; y: number } {
-    const rigRad = state.facingRad + RIG_FACING_OFFSET_RAD;
+  private updateLean(
+    facingRad: number,
+    accelX: number,
+    accelY: number,
+    deltaMs: number,
+  ): { x: number; y: number } {
+    /*
+     * İvme GÖVDE-YEREL eksenlere çevrilir, yani BAKIŞ yönüne göre — seyahat
+     * yönüne göre değil. Gövde nereye bakıyorsa "ileri" odur; sert bir dönüşte
+     * yaslanma gövdenin kendi eksenlerinde okunmalıdır.
+     */
+    const rigRad = facingRad + RIG_FACING_OFFSET_RAD;
     const cos = Math.cos(-rigRad);
     const sin = Math.sin(-rigRad);
-    const localX = state.accelX * cos - state.accelY * sin;
-    const localY = state.accelX * sin + state.accelY * cos;
+    const localX = accelX * cos - accelY * sin;
+    const localY = accelX * sin + accelY * cos;
     const scale = bodyMotionConfig.leanPxPerAccelUnit / bodyMotionConfig.accelForMaxLeanPxPerSec2;
     const limit = bodyMotionConfig.maxLeanPx;
 
-    return {
-      x: this.leanXSpring.update(
-        clamp(-localX * scale, -limit, limit),
-        deltaMs,
-        bodyMotionConfig.leanSpring,
-      ),
-      y: this.leanYSpring.update(
-        clamp(-localY * scale, -limit, limit),
-        deltaMs,
-        bodyMotionConfig.leanSpring,
-      ),
-    };
+    // Yaslanma vektörü ödünçtür; sıcak yolda her karede yeni nesne kurulmaz.
+    this.lean.x = this.leanXSpring.update(
+      clamp(-localX * scale, -limit, limit),
+      deltaMs,
+      bodyMotionConfig.leanSpring,
+    );
+    this.lean.y = this.leanYSpring.update(
+      clamp(-localY * scale, -limit, limit),
+      deltaMs,
+      bodyMotionConfig.leanSpring,
+    );
+    return this.lean;
   }
 
   /**
@@ -209,7 +205,8 @@ export class ArachnidBodyMotion {
    * "avlanıyorum" hissi bekleme süresinden okunur.
    */
   private applyGaze(
-    state: BodyMotionState,
+    speed: number,
+    turnRate: number,
     motion01: number,
     sway: number,
     lean: { x: number; y: number },
@@ -220,8 +217,8 @@ export class ArachnidBodyMotion {
   ): void {
     const alert = clamp01(
       Math.max(
-        clamp01(state.speed / bodyMotionConfig.gaze.alertSpeedPxPerSec),
-        Math.abs(state.turnRate) / playerConfig.maxTurnRateRadPerSec,
+        clamp01(speed / bodyMotionConfig.gaze.alertSpeedPxPerSec),
+        Math.abs(turnRate) / playerConfig.maxTurnRateRadPerSec,
       ),
     );
     // Rig yerel uzayında ileri −Y, yani −π/2. Hareket varken bakış o yaya

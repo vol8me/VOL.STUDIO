@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { gaitConfig } from '@/config/gait';
-import { ArachnidLegs, type LimbDriveState } from '@/runtime/entity/ArachnidLegs';
+import { ArachnidLegs } from '@/runtime/entity/ArachnidLegs';
+import type { LocomotionSignals, PoseSignals } from '@/runtime/entity/locomotionSignals';
 import { prepareArachnidRig, type ArachnidRig, type LimbRig } from '@/runtime/rig/arachnidRig';
 import {
   arachnidTestMetadata as metadata,
@@ -8,6 +9,7 @@ import {
   buildTestRigDefinition,
   createFakeScene,
 } from '../../support/phaserFakes';
+import { bodySignals, poseSignals } from '../../support/locomotion';
 
 const DT = 16;
 const BODY_RAD = -Math.PI / 2;
@@ -44,34 +46,33 @@ function forwardKinematics(limb: LimbRig): { x: number; y: number } {
   };
 }
 
-function driveState(overrides: Partial<LimbDriveState> = {}): LimbDriveState {
-  return {
-    bodyX: 0,
-    bodyY: 0,
-    bodyRad: BODY_RAD,
-    velX: 0,
-    velY: 0,
-    turnRate: 0,
-    motion01: 0,
-    dash01: 0,
-    crouch01: 0,
-    airborne: false,
-    ...overrides,
-  };
+/** Uzuvları bir kare sürer; gövde ve poz sinyalleri ayrı verilir. */
+function drive(
+  legs: ArachnidLegs,
+  body: Partial<LocomotionSignals> = {},
+  pose: Partial<PoseSignals> = {},
+  deltaMs = DT,
+): void {
+  legs.update(bodySignals(body), poseSignals(pose), deltaMs);
 }
 
 /** Gövdeyi +x yönünde sürer ve kat edilen mesafeyi döner. */
+interface WalkOverrides {
+  body?: Partial<LocomotionSignals>;
+  pose?: Partial<PoseSignals>;
+}
+
 function walk(
   legs: ArachnidLegs,
   frames: number,
   speedPxPerSec: number,
-  extra: Partial<LimbDriveState> = {},
+  overrides: WalkOverrides = {},
   onFrame?: (x: number) => void,
 ): number {
   let x = 0;
   for (let i = 0; i < frames; i++) {
     x += (speedPxPerSec * DT) / 1000;
-    legs.update(driveState({ bodyX: x, velX: speedPxPerSec, motion01: 1, ...extra }), DT);
+    drive(legs, { x, velX: speedPxPerSec, ...overrides.body }, { motion01: 1, ...overrides.pose });
     onFrame?.(x);
   }
   return x;
@@ -153,7 +154,7 @@ describe('ArachnidLegs — duruş', () => {
     // gövdenin bir adım atacak kadar hareket etmesi gerekir.
     const crouched = new ArachnidLegs(rig);
     crouched.reset(0, 0, BODY_RAD);
-    walk(crouched, 90, 120, { crouch01: 1 });
+    walk(crouched, 90, 120, { pose: { crouch01: 1 } });
     const crouchedPose = forwardKinematics(rig.limbs[front]);
     const crouchedReach = Math.hypot(
       crouchedPose.x - rig.limbs[front].hipX,
@@ -170,7 +171,7 @@ describe('ArachnidLegs — yürüyüş', () => {
     const legs = new ArachnidLegs(rig);
     legs.reset(0, 0, BODY_RAD);
 
-    for (let i = 0; i < 180; i++) legs.update(driveState(), DT);
+    for (let i = 0; i < 180; i++) drive(legs);
     expect(legs.steppingLimbCount).toBe(0);
   });
 
@@ -217,7 +218,7 @@ describe('ArachnidLegs — yürüyüş', () => {
     let plants = 0;
     for (let i = 0; i < 200; i++) {
       rad += (turnRate * DT) / 1000;
-      legs.update(driveState({ bodyRad: rad, turnRate, motion01: 0 }), DT);
+      drive(legs, { facingHeadingRad: rad, travelHeadingRad: rad, turnRateRadPerSec: turnRate });
       legs.forEachPlant(() => plants++);
     }
 
@@ -233,7 +234,7 @@ describe('ArachnidLegs — yürüyüş', () => {
     let rad = BODY_RAD;
     for (let i = 0; i < 300; i++) {
       rad += (turnRate * DT) / 1000;
-      legs.update(driveState({ bodyRad: rad, turnRate, motion01: 0 }), DT);
+      drive(legs, { facingHeadingRad: rad, travelHeadingRad: rad, turnRateRadPerSec: turnRate });
       for (const limb of rig.limbs) {
         const foot = forwardKinematics(limb);
         expect(Math.hypot(foot.x - limb.hipX, foot.y - limb.hipY), limb.id).toBeLessThanOrEqual(
@@ -254,7 +255,7 @@ describe('ArachnidLegs — yürüyüş', () => {
     let y = 0;
     for (let i = 0; i < 500; i++) {
       y -= (speed * DT) / 1000;
-      legs.update(driveState({ bodyY: y, velY: -speed, motion01: 1 }), DT);
+      drive(legs, { y, velY: -speed }, { motion01: 1 });
       total++;
       for (const limb of rig.limbs) {
         const foot = forwardKinematics(limb);
@@ -288,7 +289,7 @@ describe('ArachnidLegs — yürüyüş', () => {
     let y = 0;
     for (let i = 0; i < 400; i++) {
       y -= (speed * DT) / 1000;
-      legs.update(driveState({ bodyY: y, velY: -speed, motion01: 1 }), DT);
+      drive(legs, { y, velY: -speed }, { motion01: 1 });
       for (const limb of rig.limbs) travel.get(limb.id)!.push(limb.upper.rotation);
     }
     const range = (id: string) => {
@@ -309,7 +310,7 @@ describe('ArachnidLegs — yürüyüş', () => {
       let furthest = 0;
       // `forwardKinematics` gövde-yerel uzayda çalışır: ayağın merkeze
       // uzaklığı doğrudan duruş yarıçapı + öngörü payıdır.
-      walk(legs, 60, speed, { dash01: speed > 400 ? 1 : 0 }, () => {
+      walk(legs, 60, speed, { body: { dash01: speed > 400 ? 1 : 0 } }, () => {
         for (const limb of rig.limbs) {
           const foot = forwardKinematics(limb);
           furthest = Math.max(furthest, Math.hypot(foot.x, foot.y));

@@ -25,6 +25,11 @@ const USAGE = [
   'Kullanım:',
   '  pnpm --filter @volstudio/vol-arachnid benchmark:locomotion',
   '    [--iterations N] [--warmup N] [--samples N] [--step-ms N] [--json]',
+  '    [--skip-allocation]',
+  '',
+  'Ayırma (allocation) ölçümü `global.gc()` gerektirir; onsuz GC baskısı dahil',
+  'gürültülü bir tahmine düşer. Temiz ölçüm için:',
+  '  NODE_OPTIONS=--expose-gc pnpm benchmark:vol-arachnid',
 ].join('\n');
 
 interface Flags {
@@ -33,6 +38,7 @@ interface Flags {
   readonly samples: number;
   readonly stepMs: number;
   readonly json: boolean;
+  readonly skipAllocation: boolean;
 }
 
 function fail(message: string): never {
@@ -49,11 +55,16 @@ function parseFlags(args: readonly string[]): Flags {
   let samples = 25;
   let stepMs = 16;
   let json = false;
+  let skipAllocation = false;
 
   for (let index = 0; index < args.length; index++) {
     const flag = args[index];
     if (flag === '--json') {
       json = true;
+      continue;
+    }
+    if (flag === '--skip-allocation') {
+      skipAllocation = true;
       continue;
     }
     const raw = args[++index];
@@ -83,7 +94,7 @@ function parseFlags(args: readonly string[]): Flags {
     }
   }
 
-  return { iterations, warmupIterations, samples, stepMs, json };
+  return { iterations, warmupIterations, samples, stepMs, json, skipAllocation };
 }
 
 async function main(): Promise<void> {
@@ -161,33 +172,9 @@ async function main(): Promise<void> {
             const dash = random.next() < 0.03;
 
             chain.body.update(intent, dash, stepMs);
-            const accel = chain.body.accelerationVector;
-            const signals = chain.motion.update(
-              {
-                speed: chain.body.speed,
-                accelX: accel.x,
-                accelY: accel.y,
-                turnRate: chain.body.turnRate,
-                facingRad: chain.body.facingRad,
-                dash01: chain.body.dash01,
-              },
-              stepMs,
-            );
-            chain.legs.update(
-              {
-                bodyX: chain.body.position.x,
-                bodyY: chain.body.position.y,
-                bodyRad: chain.body.facingRad,
-                velX: chain.body.velocity.x,
-                velY: chain.body.velocity.y,
-                turnRate: chain.body.turnRate,
-                motion01: signals.motion01,
-                dash01: chain.body.dash01,
-                crouch01: signals.crouch01,
-                airborne: chain.body.isDashing,
-              },
-              stepMs,
-            );
+            const signals = chain.body.signals;
+            const pose = chain.motion.update(signals, stepMs);
+            chain.legs.update(signals, pose, stepMs);
 
             frame += 1;
             if (frame % 32 === 0) checksum += chain.body.position.x + chain.legs.steppingLimbCount;
@@ -224,33 +211,9 @@ async function main(): Promise<void> {
             const dash = random.next() < 0.12;
 
             chain.body.update(intent, dash, stepMs);
-            const accel = chain.body.accelerationVector;
-            const signals = chain.motion.update(
-              {
-                speed: chain.body.speed,
-                accelX: accel.x,
-                accelY: accel.y,
-                turnRate: chain.body.turnRate,
-                facingRad: chain.body.facingRad,
-                dash01: chain.body.dash01,
-              },
-              stepMs,
-            );
-            chain.legs.update(
-              {
-                bodyX: chain.body.position.x,
-                bodyY: chain.body.position.y,
-                bodyRad: chain.body.facingRad,
-                velX: chain.body.velocity.x,
-                velY: chain.body.velocity.y,
-                turnRate: chain.body.turnRate,
-                motion01: signals.motion01,
-                dash01: chain.body.dash01,
-                crouch01: signals.crouch01,
-                airborne: chain.body.isDashing,
-              },
-              stepMs,
-            );
+            const signals = chain.body.signals;
+            const pose = chain.motion.update(signals, stepMs);
+            chain.legs.update(signals, pose, stepMs);
 
             if (chain.body.isDashing) trail.capture(poseRoot);
             trail.update(stepMs);
@@ -269,6 +232,109 @@ async function main(): Promise<void> {
     },
   ];
 
+  /**
+   * Kare adımının yığın AYIRMA maliyeti.
+   *
+   * Süre ölçen harness bunu GÖRMEZ: bir adım hızlı olabilir ama saniyede 60 kez
+   * onlarca nesne ayırıyorsa GC baskısı gerçek cihazda fren tutukluğuna
+   * dönüşür. Sıcak yol bilinçli olarak ödünç nesnelerle çalışır (gövde
+   * sinyalleri, poz sinyalleri, yaslanma vektörü, duruş evi); bu ölçüm o
+   * kararın gerçekten tutup tutmadığını söyler.
+   */
+  function measureStepAllocation(): {
+    label: string;
+    calls: number;
+    bytesPerCall: number;
+    gcForced: boolean;
+  } {
+    const forcedGc = (globalThis as { gc?: () => void }).gc;
+    const gcForced = typeof forcedGc === 'function';
+
+    const chain = createChain();
+    const random = createRandom(INPUT_SEED);
+    const intent = new Vector2(1, 0.4);
+    /*
+     * Çağrı sayısı BİLİNÇLİ olarak yüksek.
+     *
+     * 2.000 kareyle ölçüldüğünde sonuç ~5.400 bayt/kare çıkıyordu; 20.000
+     * kareyle ~570. Fark gerçek bir tahsis değil, V8'in yığını parça parça
+     * büyütmesinin tek seferlik maliyetiydi — kısa bir pencerede o maliyet
+     * kare başına dağıldığında ölçüm on kat şişiyor. Küçük tahsisleri ölçerken
+     * pencere, tek seferlik büyümeyi amorti edecek kadar geniş olmalı.
+     */
+    const calls = 20_000;
+
+    // Isınma: ilk çağrılarda V8 nesne şekillerini (hidden class) henüz
+    // kurmamış olabilir; ölçülmeyen bir tur bunu ayırır.
+    for (let index = 0; index < 200; index++) {
+      chain.body.update(intent, false, stepMs);
+      const signals = chain.body.signals;
+      chain.legs.update(signals, chain.motion.update(signals, stepMs), stepMs);
+    }
+
+    if (gcForced) forcedGc();
+    const before = process.memoryUsage().heapUsed;
+    let sink = 0;
+    for (let index = 0; index < calls; index++) {
+      chain.body.update(intent, random.next() < 0.02, stepMs);
+      const signals = chain.body.signals;
+      chain.legs.update(signals, chain.motion.update(signals, stepMs), stepMs);
+      sink += signals.x;
+    }
+    const after = process.memoryUsage().heapUsed;
+    if (!Number.isFinite(sink)) throw new Error('Benchmark sink tutarsız');
+
+    return {
+      label: gcForced ? 'locomotion-step-allocation' : 'locomotion-step-allocation (gürültülü)',
+      calls,
+      bytesPerCall: Math.max(0, after - before) / calls,
+      gcForced,
+    };
+  }
+
+  /**
+   * Poz efektlerinin PARÇA SAYISIYLA nasıl ölçeklendiği.
+   *
+   * Gölge ve art-görüntü, sürdükleri ağacın her görünür yaprağı için bir
+   * dönüşüm günceller; maliyet uzuv sayısıyla değil PARÇA sayısıyla büyür. Bir
+   * "kare başına ms" sayısı bu eğriyi göstermez ve "efektler pahalı mı?"
+   * sorusuna cevap veremez — asıl soru "kaç parçaya kadar ucuz?"dur.
+   *
+   * Rig'in ilk N parçası alınarak alt kümeler kurulur; ağacın kendisi aynı
+   * montaj koduyla kurulduğu için ölçüm gerçek yükü temsil eder.
+   */
+  function measureFxScale(): Array<{ parts: number; msPerFrame: number }> {
+    const curve: Array<{ parts: number; msPerFrame: number }> = [];
+    const total = definition.parts.length;
+
+    for (const fraction of [0.25, 0.5, 0.75, 1]) {
+      const count = Math.max(1, Math.round(total * fraction));
+      // Alt küme TOPOLOJİK sırayı korur: ebeveyni alınmamış bir parça montajı
+      // kıracağı için yalnız ilk N parça alınır.
+      const subset = { ...definition, parts: definition.parts.slice(0, count) };
+      const scene = createHeadlessScene(subset.parts.map((part) => part.textureKey));
+      const assembled = assembleRig(scene as never, subset);
+      const shadow = new PoseShadow(scene as never, fxConfig.shadow);
+      const root = assembled.container as never;
+
+      const frames = 2_000;
+      for (let index = 0; index < 100; index++) shadow.update(root);
+      const started = performance.now();
+      for (let index = 0; index < frames; index++) {
+        assembled.container.rotation += 0.01;
+        shadow.update(root);
+      }
+      const elapsed = performance.now() - started;
+      shadow.destroy();
+
+      curve.push({ parts: count, msPerFrame: elapsed / frames });
+    }
+    return curve;
+  }
+
+  const fxScale = flags.skipAllocation ? null : measureFxScale();
+  const allocation = flags.skipAllocation ? null : measureStepAllocation();
+
   const suite = runBenchmarkSuite(workloads, {
     iterations: flags.iterations,
     warmupIterations: flags.warmupIterations,
@@ -276,7 +342,7 @@ async function main(): Promise<void> {
   });
 
   if (flags.json) {
-    console.log(JSON.stringify(suite, null, 2));
+    console.log(JSON.stringify({ ...suite, allocation, fxScale }, null, 2));
     return;
   }
 
@@ -292,6 +358,23 @@ async function main(): Promise<void> {
         `medyan ${result.medianMsPerIteration.toFixed(4)} ms/kare  ` +
         `p95 ${result.p95MsPerIteration.toFixed(4)} ms  ` +
         `kare bütçesinin %${share.toFixed(2)}'si`,
+    );
+  }
+  if (fxScale) {
+    console.log('\n  Poz gölgesi — parça sayısına göre ölçek:');
+    for (const point of fxScale) {
+      console.log(
+        `    ${String(point.parts).padStart(3)} parça  ` +
+          `${point.msPerFrame.toFixed(4)} ms/kare  ` +
+          `${((point.msPerFrame / point.parts) * 1000).toFixed(2)} µs/parça`,
+      );
+    }
+  }
+  if (allocation) {
+    console.log(
+      `\n  ${allocation.label.padEnd(44)} ` +
+        `${allocation.bytesPerCall.toFixed(1)} bayt/kare  ` +
+        `(${allocation.calls} kare${allocation.gcForced ? '' : ', --expose-gc yok'})`,
     );
   }
   console.log('');

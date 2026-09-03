@@ -54,33 +54,8 @@ function makeChain(): Chain {
 function step(chain: Chain, intent: Vector2, dash: boolean, deltaMs: number): void {
   const { body, legs, motion } = chain;
   body.update(intent, dash, deltaMs);
-  const accel = body.accelerationVector;
-  const signals = motion.update(
-    {
-      speed: body.speed,
-      accelX: accel.x,
-      accelY: accel.y,
-      turnRate: body.turnRate,
-      facingRad: body.facingRad,
-      dash01: body.dash01,
-    },
-    deltaMs,
-  );
-  legs.update(
-    {
-      bodyX: body.position.x,
-      bodyY: body.position.y,
-      bodyRad: body.facingRad,
-      velX: body.velocity.x,
-      velY: body.velocity.y,
-      turnRate: body.turnRate,
-      motion01: signals.motion01,
-      dash01: body.dash01,
-      crouch01: signals.crouch01,
-      airborne: body.isDashing,
-    },
-    deltaMs,
-  );
+  const signals = body.signals;
+  legs.update(signals, motion.update(signals, deltaMs), deltaMs);
 }
 
 interface LimbGeometry {

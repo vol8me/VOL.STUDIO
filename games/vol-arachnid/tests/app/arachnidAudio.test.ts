@@ -225,4 +225,149 @@ describe('ArachnidAudio', () => {
     expect(createArachnidAudio()).toBeNull();
     expect(warn).toHaveBeenCalled();
   });
+
+  describe('dayanıklılık', () => {
+    it('başarısız ön yükleme SONSUZA dek "tamamlandı" sayılmaz', async () => {
+      /*
+       * Söz bir kez kurulup hata yakalanarak `resolve` ediliyordu: başarısız bir
+       * yükleme "tamamlandı" sayılıyor ve o oturum boyunca bir daha hiç
+       * denenmiyordu. Yerel dosyada hata genelde kalıcıdır ama WebView'da
+       * değildir; geçici bir decode hatası sesi kalıcı olarak öldürüyordu.
+       */
+      const context = new FakeContext();
+      const soundBank = makeSoundBank();
+      soundBank.loadAll.mockRejectedValueOnce(new Error('geçici decode hatası'));
+      const ambience = makeAmbience();
+      const audio = new ArachnidAudio({
+        context: context as unknown as AudioContext,
+        soundBank,
+        ambience,
+      });
+      await flush();
+      expect(soundBank.loadAll).toHaveBeenCalledTimes(1);
+
+      window.dispatchEvent(new PointerEvent('pointerdown'));
+      await flush();
+
+      // İkinci deneme yapıldı ve bu kez başardı: ambiyans çalıyor.
+      expect(soundBank.loadAll).toHaveBeenCalledTimes(2);
+      expect(ambience.play).toHaveBeenCalledTimes(1);
+
+      audio.destroy();
+    });
+
+    it('ön yükleme sonsuza dek yeniden denenmez', async () => {
+      const context = new FakeContext();
+      const soundBank = makeSoundBank();
+      soundBank.loadAll.mockRejectedValue(new Error('kalıcı hata'));
+      const audio = new ArachnidAudio({
+        context: context as unknown as AudioContext,
+        soundBank,
+        ambience: makeAmbience(),
+      });
+      await flush();
+
+      for (let attempt = 0; attempt < 10; attempt++) {
+        window.dispatchEvent(new PointerEvent('pointerdown'));
+        await flush();
+      }
+
+      // Sınır 3: hatanın kendisinden daha kötü bir yük olmasın.
+      expect(soundBank.loadAll.mock.calls.length).toBeLessThanOrEqual(3);
+      audio.destroy();
+    });
+
+    it('başlatma patlarsa SONRAKİ kullanıcı hareketi yeniden dener', async () => {
+      /*
+       * Dinleyiciler `resumeAndStart`tan ÖNCE bırakılıyordu: ilk deneme
+       * patladığında ikinci bir kullanıcı hareketi hiç denenmiyordu.
+       */
+      const context = new FakeContext();
+      const ambience = makeAmbience();
+      ambience.play.mockRejectedValueOnce(new Error('autoplay kapısı'));
+      const audio = new ArachnidAudio({
+        context: context as unknown as AudioContext,
+        soundBank: makeSoundBank(),
+        ambience,
+      });
+      await flush();
+
+      window.dispatchEvent(new PointerEvent('pointerdown'));
+      await flush();
+      expect(ambience.play).toHaveBeenCalledTimes(1);
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Space' }));
+      await flush();
+
+      expect(ambience.play).toHaveBeenCalledTimes(2);
+      audio.destroy();
+    });
+
+    it('askıya alma BAŞARISIZ olsa bile öne dönüşte yeniden denenir', async () => {
+      /*
+       * Öne dönüş yolu eskiden yalnız `context.state === 'suspended'` iken
+       * çalışıyordu. O koşul "neden devam ediyoruz" sorusunu cevaplıyordu,
+       * "ne istiyoruz" sorusunu değil.
+       *
+       * Askıya alma başarısız olabilir (yakalanıp loglanıyor). O zaman uygulama
+       * arka plandayken context 'running' kalır, platform sesi kendi durdurur ve
+       * öne dönüşte eski koşul geçmez: ambiyans o oturum boyunca ölü kalırdı.
+       */
+      const context = new FakeContext();
+      context.suspend.mockRejectedValue(new Error('askıya alınamadı'));
+      const ambience = makeAmbience();
+      ambience.play.mockRejectedValueOnce(new Error('geçici hata'));
+      const audio = new ArachnidAudio({
+        context: context as unknown as AudioContext,
+        soundBank: makeSoundBank(),
+        ambience,
+      });
+      await flush();
+
+      window.dispatchEvent(new PointerEvent('pointerdown'));
+      await flush();
+      expect(ambience.play).toHaveBeenCalledTimes(1);
+      expect(context.state).toBe('running');
+
+      // Arka plana git (askıya alma patlar, context 'running' kalır) ve dön.
+      window.dispatchEvent(new Event('blur'));
+      await flush();
+      expect(context.state).toBe('running');
+      window.dispatchEvent(new Event('focus'));
+      await flush();
+
+      expect(ambience.play).toHaveBeenCalledTimes(2);
+      audio.destroy();
+    });
+
+    it('bekleme noktasında yıkım gelirse kapanmış context üzerinde çalmaz', async () => {
+      const context = new FakeContext();
+      const ambience = makeAmbience();
+      // Bir NESNE alanı kullanılır: TypeScript, yerel bir değişkene yalnız
+      // callback içinde yapılan atamayı göremiyor ve tipi `never`e daraltıyor.
+      const deferred: { release?: () => void } = {};
+      ambience.loadTrack.mockImplementationOnce(
+        () =>
+          new Promise<boolean>((resolve) => {
+            deferred.release = () => resolve(true);
+          }),
+      );
+      const audio = new ArachnidAudio({
+        context: context as unknown as AudioContext,
+        soundBank: makeSoundBank(),
+        ambience,
+      });
+
+      window.dispatchEvent(new PointerEvent('pointerdown'));
+      await flush();
+
+      // Yükleme HÂLÂ beklerken yıkım gelir.
+      audio.destroy();
+      deferred.release?.();
+      await flush();
+
+      expect(ambience.play).not.toHaveBeenCalled();
+      expect(context.state).toBe('closed');
+    });
+  });
 });

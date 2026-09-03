@@ -7,7 +7,7 @@ import type { RigMotionSignals } from './types';
 export interface RigMotionModelConfig {
   /** Görsel facing'in yay sabitleri. Varsayılan: akıcı ama gecikmesiz bir dönüş. */
   facingSpring?: SpringConfig;
-  /** Idle-dalga fazının saniyede ilerleme hızı (derece). */
+  /** Boşta-salınım fazının saniyede ilerleme hızı (derece). */
   idlePhaseSpeedDegPerSec?: number;
   /** Bu büyüklüğün altındaki hareket niyeti "durmuş" sayılır (facing donar). */
   moveDeadzone?: number;
@@ -18,9 +18,13 @@ const DEFAULT_IDLE_PHASE_SPEED_DEG_PER_SEC = 90;
 const DEFAULT_MOVE_DEADZONE = 0.05;
 
 /**
- * Ham WASD niyetinden (rig/yaratık kelime dağarcığından bağımsız) sürekli,
- * render-only sinyaller üreten model: anlık locomotion (motion01), yay-
- * sönümlü facing/dönüş sinyali ve hiç durmadan ilerleyen bir idle-dalga fazı.
+ * Ham hareket niyetinden (rig/yaratık kelime dağarcığından bağımsız) sürekli,
+ * render-only sinyaller üreten model: anlık locomotion (motion01), NİYETİN
+ * yay-sönümlü yönü ve hiç durmadan ilerleyen bir boşta-salınım fazı.
+ *
+ * Yön sinyalleri `intent` önekini taşır çünkü GÖVDENİN yönü değildirler. Kendi
+ * hareket modeli olan bir tüketici yönünü zaten kendi taşır ve bunları
+ * okumamalıdır; alan, kendi gövde fiziği olmayan basit bir rig içindir.
  *
  * Simülasyona/determinizme dokunmaz; yalnız çizim anının poz sinyallerini
  * sürer. `RigPartAnimator` bu sinyalleri per-grup hedeflere çevirir.
@@ -73,8 +77,8 @@ export class RigMotionModel {
     return {
       motion01,
       idlePhaseDeg: this.idlePhaseDeg,
-      facingRad: wrap(this.facingSpring.value, -Math.PI, Math.PI),
-      turnVelocityRadPerSec: this.facingSpring.velocity,
+      intentFacingRad: wrap(this.facingSpring.value, -Math.PI, Math.PI),
+      intentTurnRateRadPerSec: this.facingSpring.velocity,
     };
   }
 }

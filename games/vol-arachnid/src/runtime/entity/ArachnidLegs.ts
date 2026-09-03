@@ -11,33 +11,12 @@ import {
 } from '@volstudio/core';
 import { gaitConfig, type LimbStance } from '@/config/gait';
 import { RIG_FACING_OFFSET_RAD } from '@/config/rig';
+import type { LocomotionSignals, PoseSignals } from '@/runtime/entity/locomotionSignals';
 import type { ArachnidRig, LimbRig } from '@/runtime/rig/arachnidRig';
 
 const DEG = Math.PI / 180;
 /** Duruş açıları İLERİ eksenden ölçülür; rig yerel uzayında ileri −Y'dir. */
 const FORWARD_RAD = -Math.PI / 2;
-
-export interface LimbDriveState {
-  bodyX: number;
-  bodyY: number;
-  /** Gövdenin görsel yönü (radyan) — rig ofseti burada eklenir. */
-  bodyRad: number;
-  velX: number;
-  velY: number;
-  /** Dönüşün anlık şiddeti (rad/s) — adım temposunun ikinci kaynağı. */
-  turnRate: number;
-  /** [0,1] yürüyüş temposu — arka uzuvların itiş payını ölçekler. */
-  motion01: number;
-  /** [0,1] atılım şiddeti — ön uzuvları öne, arka uzuvları geriye taşır. */
-  dash01: number;
-  /** [0,1] çömelme — uzuvları gövdeye çeker. */
-  crouch01: number;
-  /**
-   * Ayaklar yerde DEĞİL mi? Atılım boyunca gövde uçar; yürüyüş döngüsü
-   * tamamen durur ve uzuvlar tek bir uçuş pozunda tutulur.
-   */
-  airborne: boolean;
-}
 
 interface LimbDriver {
   rig: LimbRig;
@@ -127,7 +106,7 @@ export class ArachnidLegs {
     this.pose(0);
   }
 
-  update(rawState: LimbDriveState, deltaMs: number): void {
+  update(body: LocomotionSignals, pose: PoseSignals, deltaMs: number): void {
     /*
      * Akış değerleri TEMİZLENİR, reddedilmez. Bir kare bozuk geldiğinde
      * (sekme sonrası dev delta, sıfıra bölme ürünü bir hız) uzuv pozunun
@@ -140,18 +119,28 @@ export class ArachnidLegs {
      * basar ve hata uzuvda değil, ZAMANDA olduğu için uzuv koduna bakarak
      * bulunamaz.
      */
-    const state = sanitiseDriveState(rawState);
     const stepMs = clampSimulationStep(deltaMs);
-    const rigRad = state.bodyRad + RIG_FACING_OFFSET_RAD;
-    this.applyStance(state.motion01, state.dash01, state.crouch01);
+    // Temizlik YERİNDE yapılır, yeni bir nesneye kopyalanarak değil: bu sıcak
+    // yol her karede koşar ve tahsis gerektirmez.
+    const bodyX = finiteOr(body.x, 0);
+    const bodyY = finiteOr(body.y, 0);
+    const velX = finiteOr(body.velX, 0);
+    const velY = finiteOr(body.velY, 0);
+    const turnRate = finiteOr(body.turnRateRadPerSec, 0);
+    const motion01 = clamp01(finiteOr(pose.motion01, 0));
+    const dash01 = clamp01(finiteOr(body.dash01, 0));
+    const crouch01 = clamp01(finiteOr(pose.crouch01, 0));
 
-    if (state.airborne) {
+    const rigRad = finiteOr(body.facingHeadingRad, 0) + RIG_FACING_OFFSET_RAD;
+    this.applyStance(motion01, dash01, crouch01);
+
+    if (!body.grounded) {
       // Yürüyüş döngüsü DURUR. Açık bırakıldığında uzuvlar sıra disiplinini
       // delip acil adım yağmuruna giriyor, gövde düz uçarken bacaklar yerinde
       // titriyordu.
       this.airborne = true;
       this.readFlightFeet();
-      this.pose(state.dash01);
+      this.pose(dash01);
       return;
     }
 
@@ -159,17 +148,17 @@ export class ArachnidLegs {
       // İniş: bütün ayaklar aynı anda evlerine basar. Havadaki pozdan yürüyüşe
       // adım adım dönmek, inişi bulanık bir sürüklenmeye çevirirdi.
       this.airborne = false;
-      this.gait.reset(state.bodyX, state.bodyY, rigRad);
+      this.gait.reset(bodyX, bodyY, rigRad);
     }
 
-    const speed = Math.hypot(state.velX, state.velY);
+    const speed = Math.hypot(velX, velY);
     /*
      * Dönüş de bir TEMPO kaynağıdır. Yerinde dönen bir gövdenin doğrusal hızı
      * sıfırdır ama ayakların ev konumları teğetsel olarak savrulur; tempoyu
      * yalnız hızdan okumak adımları en yavaş ayarında bırakıyor ve uzuvlar
      * gövdenin arkasında sürükleniyordu.
      */
-    const tangentialSpeed = Math.abs(state.turnRate) * this.stanceRadiusPx;
+    const tangentialSpeed = Math.abs(turnRate) * this.stanceRadiusPx;
     const tempo = clamp01(Math.max(speed, tangentialSpeed) / gaitConfig.fullTempoSpeedPxPerSec);
 
     this.gait.setStepTuning({
@@ -181,16 +170,9 @@ export class ArachnidLegs {
     // hızla ilerler, yalnız ayağın öngörü mesafesi tam tempo hızında doyar.
     const leadScale =
       speed > gaitConfig.fullTempoSpeedPxPerSec ? gaitConfig.fullTempoSpeedPxPerSec / speed : 1;
-    this.gait.update(
-      state.bodyX,
-      state.bodyY,
-      rigRad,
-      state.velX * leadScale,
-      state.velY * leadScale,
-      stepMs,
-    );
-    this.readGaitFeet(state.bodyX, state.bodyY, rigRad);
-    this.pose(state.dash01);
+    this.gait.update(bodyX, bodyY, rigRad, velX * leadScale, velY * leadScale, stepMs);
+    this.readGaitFeet(bodyX, bodyY, rigRad);
+    this.pose(dash01);
   }
 
   /**
@@ -324,22 +306,15 @@ export class ArachnidLegs {
   }
 }
 
-function sanitiseDriveState(state: LimbDriveState): LimbDriveState {
-  return {
-    bodyX: finiteOr(state.bodyX, 0),
-    bodyY: finiteOr(state.bodyY, 0),
-    bodyRad: finiteOr(state.bodyRad, 0),
-    velX: finiteOr(state.velX, 0),
-    velY: finiteOr(state.velY, 0),
-    turnRate: finiteOr(state.turnRate, 0),
-    motion01: clamp01(finiteOr(state.motion01, 0)),
-    dash01: clamp01(finiteOr(state.dash01, 0)),
-    crouch01: clamp01(finiteOr(state.crouch01, 0)),
-    airborne: state.airborne,
-  };
-}
+/**
+ * Uzvun o kareki gövde-yerel ev (dinlenme) ayak konumu.
+ *
+ * Sonuç ÖDÜNÇ bir nesneye yazılır. Her uzuv için karede bir `{x, y}` kurmak on
+ * uzuvda saniyede altı yüz tahsis demekti; `TouchStickState` aynı sınıf sorunu
+ * çoktan buffer'larla çözmüşken burada duruyordu.
+ */
+const restingHomeScratch = { x: 0, y: 0 };
 
-/** Uzvun o kareki gövde-yerel ev (dinlenme) ayak konumu. */
 function restingHome(
   driver: LimbDriver,
   motion01: number,
@@ -353,10 +328,9 @@ function restingHome(
       driver.stance.pushReachGain * motion01) *
     (1 - gaitConfig.crouchReachDrop * crouch01);
   const radius = driver.totalLength * reach;
-  return {
-    x: driver.rig.hipX + Math.cos(angle) * radius,
-    y: driver.rig.hipY + Math.sin(angle) * radius,
-  };
+  restingHomeScratch.x = driver.rig.hipX + Math.cos(angle) * radius;
+  restingHomeScratch.y = driver.rig.hipY + Math.sin(angle) * radius;
+  return restingHomeScratch;
 }
 
 function stanceAngleRad(stance: LimbStance, dash01: number): number {

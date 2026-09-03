@@ -36,6 +36,14 @@ const DEFAULT_MIN_RADIUS_RATIO = 0.35;
 const DEFAULT_ALERT_HOLD_SCALE = 0.45;
 /** Bakışın odak yönüne yapışabileceği en dar yay — tam kilitlenme cansız görünür. */
 const FOCUS_SPREAD_RAD = Math.PI * 0.28;
+/**
+ * Tek bir karede işlenebilecek en fazla faz geçişi.
+ *
+ * Dev bir delta (sekme değişimi, uyku) onlarca bekleme+sıçrama döngüsü
+ * içerebilir; hepsini oynatmak kare döngüsünü kilitler ve zaten görünmez —
+ * bakış nerede biteceğine varır. Tavan bir doğruluk ayarı değil, bir güvenliktir.
+ */
+const PHASE_CARRY_LIMIT = 8;
 
 /**
  * Sıçramalı (saccadic) bakış sürücüsü.
@@ -96,20 +104,42 @@ export class GazeDriver {
     const dt = Number.isFinite(deltaMs) && deltaMs > 0 ? deltaMs : 0;
     const alert = clamp01(Number.isFinite(alertness01) ? alertness01 : 0);
 
-    if (dt > 0) {
+    /*
+     * Kalan süre TAŞINIR: bir faz kare ortasında bittiğinde artan süre bir
+     * sonraki faza işlenir.
+     *
+     * Atıldığında bakış, kare hızına bağımlı hâle geliyordu: 150 ms'lik tek bir
+     * karede bekleme bitiyor, sıçrama başlıyor ama sıçramaya hiç zaman
+     * işlenmiyordu — aynı sürenin on küçük kareye bölünmüş hâli ise sıçramayı
+     * neredeyse bitiriyordu. Uzun bir donmadan sonra bakış görünür biçimde
+     * geriden geliyordu.
+     *
+     * Döngü sınırlıdır: her tur ya `remaining`i tüketir ya bir fazı bitirir;
+     * `saccadeMs` pozitif ve `holdMs` negatif olamayacağı için sonsuz dönemez.
+     * Yine de bir tavan konur — bozuk bir yapılandırma kare döngüsünü kilitlemez.
+     */
+    let remaining = dt;
+    for (let guard = 0; remaining > 0 && guard < PHASE_CARRY_LIMIT; guard++) {
       if (this.saccading) {
-        this.saccadeElapsedMs += dt;
+        const left = this.config.saccadeMs - this.saccadeElapsedMs;
+        const consumed = Math.min(remaining, left);
+        this.saccadeElapsedMs += consumed;
+        remaining -= consumed;
+
         const t = clamp01(this.saccadeElapsedMs / this.config.saccadeMs);
         const eased = easeOutCubic(t);
         this.x = lerp(this.fromX, this.toX, eased);
         this.y = lerp(this.fromY, this.toY, eased);
-        if (t >= 1) {
-          this.saccading = false;
-          this.holdRemainingMs = this.rollHoldMs(alert);
-        }
+        if (t < 1) break;
+
+        this.saccading = false;
+        this.holdRemainingMs = this.rollHoldMs(alert);
       } else {
-        this.holdRemainingMs -= dt;
-        if (this.holdRemainingMs <= 0) this.beginSaccade(focusRad);
+        const consumed = Math.min(remaining, this.holdRemainingMs);
+        this.holdRemainingMs -= consumed;
+        remaining -= consumed;
+        if (this.holdRemainingMs > 0) break;
+        this.beginSaccade(focusRad);
       }
     }
 

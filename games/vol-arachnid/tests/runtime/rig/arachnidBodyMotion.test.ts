@@ -1,37 +1,29 @@
 import { describe, expect, it } from 'vitest';
 import { prepareArachnidRig, type ArachnidRig } from '@/runtime/rig/arachnidRig';
-import { ArachnidBodyMotion, type BodyMotionState } from '@/runtime/rig/ArachnidBodyMotion';
+import { ArachnidBodyMotion } from '@/runtime/rig/ArachnidBodyMotion';
+import type { LocomotionSignals } from '@/runtime/entity/locomotionSignals';
 import {
   arachnidTestMetadata as metadata,
   assembleTestRig,
   buildTestRigDefinition,
   createFakeScene,
 } from '../../support/phaserFakes';
+import { bodySignals } from '../../support/locomotion';
 
 function makeRig(): ArachnidRig {
   const definition = buildTestRigDefinition();
   return prepareArachnidRig(metadata, assembleTestRig(createFakeScene(definition), definition));
 }
 
-function state(overrides: Partial<BodyMotionState> = {}): BodyMotionState {
-  return {
-    speed: 0,
-    accelX: 0,
-    accelY: 0,
-    turnRate: 0,
-    facingRad: -Math.PI / 2,
-    dash01: 0,
-    ...overrides,
-  };
-}
-
 function drive(
   motion: ArachnidBodyMotion,
   frames: number,
-  overrides: Partial<BodyMotionState> = {},
+  overrides: Partial<LocomotionSignals> = {},
 ): { motion01: number; crouch01: number } {
   let signals = { motion01: 0, crouch01: 0 };
-  for (let i = 0; i < frames; i++) signals = motion.update(state(overrides), 16);
+  // Dönen nesne ÖDÜNÇTÜR ve bir sonraki karede yeniden yazılır; test onu
+  // kareler arasında taşıyacaksa kopyalamalıdır.
+  for (let i = 0; i < frames; i++) signals = { ...motion.update(bodySignals(overrides), 16) };
   return signals;
 }
 
@@ -74,10 +66,10 @@ describe('ArachnidBodyMotion', () => {
     const motion = new ArachnidBodyMotion(rig);
     const shell = rig.shellParts[0];
 
-    drive(motion, 30, { speed: 200, accelX: 1400, facingRad: 0 });
+    drive(motion, 30, { speed: 200, accelX: 1400, facingHeadingRad: 0, travelHeadingRad: 0 });
     const launching = shell.y;
 
-    drive(motion, 30, { speed: 200, accelX: -1400, facingRad: 0 });
+    drive(motion, 30, { speed: 200, accelX: -1400, facingHeadingRad: 0, travelHeadingRad: 0 });
     const braking = shell.y;
 
     // Rig yerel uzayında ileri −y; +x'e hızlanırken gövde yerel +y'ye kayar.
@@ -88,7 +80,7 @@ describe('ArachnidBodyMotion', () => {
     const rig = makeRig();
     const motion = new ArachnidBodyMotion(rig);
 
-    drive(motion, 60, { speed: 200, turnRate: 3 });
+    drive(motion, 60, { speed: 200, turnRateRadPerSec: 3 });
 
     const shellRotation = rig.shellParts[0].rotation;
     const snoutRotation = rig.snoutParts[0].rotation;
@@ -103,7 +95,7 @@ describe('ArachnidBodyMotion', () => {
 
     let moved = false;
     for (let i = 0; i < 900; i++) {
-      motion.update(state({ speed: i % 300 < 150 ? 0 : 220 }), 16);
+      motion.update(bodySignals({ speed: i % 300 < 150 ? 0 : 220 }), 16);
       const offset = Math.hypot(rig.gazePart.x - restX, rig.gazePart.y - restY);
       // Yaslanma ve salınım da katkı verdiği için sınır cömert tutulur;
       // ölçülen şey bakışın YUVASINDAN taşmamasıdır.

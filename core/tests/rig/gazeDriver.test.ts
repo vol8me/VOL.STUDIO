@@ -110,4 +110,33 @@ describe('GazeDriver', () => {
     expect(afterReset.y).toBe(0);
     expect(afterReset.settle01).toBe(1);
   });
+
+  it('kare süresinden BAĞIMSIZ ilerler: artan süre bir sonraki faza taşınır', () => {
+    /*
+     * Bir faz kare ortasında bittiğinde artan süre atılıyordu: 150 ms'lik tek
+     * bir karede bekleme bitiyor, sıçrama başlıyor ama sıçramaya hiç zaman
+     * işlenmiyordu. Aynı süre on küçük kareye bölündüğünde sıçrama neredeyse
+     * bitiyordu — yani bakış kare hızına bağımlıydı ve uzun bir donmadan sonra
+     * görünür biçimde geriden geliyordu.
+     */
+    const coarse = new GazeDriver(CONFIG, createRandom(99));
+    const fine = new GazeDriver(CONFIG, createRandom(99));
+
+    const totalMs = 900;
+    coarse.update(totalMs);
+    for (let elapsed = 0; elapsed < totalMs; elapsed += 15) fine.update(15);
+
+    const a = coarse.update(0);
+    const b = fine.update(0);
+    expect(a.x).toBeCloseTo(b.x, 6);
+    expect(a.y).toBeCloseTo(b.y, 6);
+  });
+
+  it('dev bir delta kare döngüsünü kilitlemez', () => {
+    const gaze = new GazeDriver(CONFIG, createRandom(7));
+    const signals = gaze.update(1e9);
+
+    expect(Number.isFinite(signals.x)).toBe(true);
+    expect(Math.hypot(signals.x, signals.y)).toBeLessThanOrEqual(CONFIG.radiusPx + 1e-9);
+  });
 });

@@ -12,6 +12,9 @@ import {
   type ArachnidSoundEvent,
 } from '@/config/audio';
 
+/** Ön yüklemenin en fazla kaç kez deneneceği — sonsuz yeniden yükleme yok. */
+const MAX_PREPARE_ATTEMPTS = 3;
+
 type SoundBankPort = Pick<SoundBank, 'register' | 'loadAll' | 'play' | 'setBusVolume' | 'dispose'>;
 type AmbiencePort = Pick<MusicEngine, 'loadTrack' | 'play' | 'dispose'>;
 
@@ -42,8 +45,19 @@ export class ArachnidAudio implements ArachnidAudioPort {
   private readonly lifecycle = new DisposableScope();
   private readonly unlockScope = new DisposableScope();
   private preparePromise: Promise<void> | null = null;
+  /**
+   * Ön yükleme kalıcı olarak başarısız oldu mu?
+   *
+   * Yerel dosyalarda hata genellikle kalıcıdır ama WebView'da değildir: geçici
+   * bir decode/ağ hatası tek bir turda görülüp bir daha denenmezse ses o oturum
+   * boyunca ölür. Deneme SINIRLI: sonsuz yeniden yükleme, hatanın kendisinden
+   * daha kötü bir yük olurdu.
+   */
+  private prepareAttempts = 0;
   private ambienceReady = false;
   private unlocked = false;
+  /** Süren bir başlatma denemesi var mı? Eşzamanlı iki olayı tekler. */
+  private unlockPending = false;
   private ambienceStarted = false;
   private destroyed = false;
 
@@ -90,7 +104,18 @@ export class ArachnidAudio implements ArachnidAudioPort {
           if (this.context.state === 'running') void this.suspend();
           return;
         }
-        if (this.unlocked && this.context.state === 'suspended') void this.resumeAndStart();
+        /*
+         * Öne dönüşte KOŞULSUZ yeniden denenir.
+         *
+         * Eskiden koşul `context.state === 'suspended'`ti; o koşul "neden devam
+         * ediyoruz" sorusunu cevaplıyordu, "ne istiyoruz" sorusunu değil.
+         * Askıya alma BAŞARISIZ olabilir (yakalanıp loglanıyor) ve o zaman
+         * uygulama arka plandayken context 'running' kalır: platform sesi kendi
+         * durdurur, öne dönüşte eski koşul geçmez ve ambiyans o oturum boyunca
+         * ölü kalırdı. `resumeAndStart` yeniden girilebilirdir — zaten
+         * çalıyorsa hemen döner.
+         */
+        if (this.unlocked) void this.resumeAndStart();
       }),
     );
     // Decode açılışı bloke etmez; ilk olay gelmeden buffer'ların hazır olma
@@ -128,47 +153,106 @@ export class ArachnidAudio implements ArachnidAudioPort {
     }
   }
 
+  /**
+   * İlk gerçek kullanıcı hareketinde AudioContext'i açar.
+   *
+   * İki ayrı soru, iki ayrı bayrak:
+   *
+   * - `unlocked` — kullanıcı hareketi OLDU mu? Bir kez doğru olur ve geri
+   *   alınmaz; öne dönüş yolu bunu okuyup yeniden denemeye karar verir.
+   * - `unlockPending` — süren bir başlatma var mı? Aynı karede gelen
+   *   `pointerdown` ve `keydown` ikinci bir denemeyi başlatmamalı.
+   *
+   * Dinleyiciler başlatma BAŞARILI olana kadar bırakılmaz. Eskiden hemen
+   * kaldırılıyordu ve ilk deneme patlarsa (WebView'ın autoplay kapısı, geçici
+   * bir decode hatası) ikinci bir kullanıcı hareketi hiç denenmiyordu.
+   */
   private armUnlock(): void {
     const unlock = (): void => {
-      if (this.unlocked || this.destroyed) return;
+      if (this.destroyed || this.unlockPending) return;
+      this.unlockPending = true;
+      // Kullanıcı hareketi OLDU; bu geri alınmaz. Öne dönüş yolu bunu okur.
       this.unlocked = true;
-      this.unlockScope.dispose();
-      void this.resumeAndStart();
+      void this.resumeAndStart().then((started) => {
+        this.unlockPending = false;
+        // Dinleyiciler ancak ses gerçekten başladığında bırakılır.
+        if (started || this.destroyed) this.unlockScope.dispose();
+      });
     };
     for (const event of ['pointerdown', 'touchstart', 'keydown'] as const) {
       this.unlockScope.addListener(window, event, unlock, { passive: true });
     }
   }
 
+  /**
+   * SFX ve ambiyansı ön yükler.
+   *
+   * Söz (promise) BİR KEZ kurulup sonsuza dek paylaşılmıyor: eskiden hata
+   * yakalanıp `resolve` ediliyordu, yani başarısız bir yükleme "tamamlandı"
+   * sayılıyor ve bir daha hiç denenmiyordu. Şimdi başarısız bir tur sözü
+   * bırakır; bir sonraki çağrı — genelde uygulama öne geldiğinde —
+   * `MAX_PREPARE_ATTEMPTS` sınırına kadar yeniden dener.
+   */
   private prepare(): Promise<void> {
     if (this.preparePromise) return this.preparePromise;
-    this.preparePromise = Promise.all([
-      this.soundBank.loadAll().catch((error: unknown) => {
-        console.warn('[ArachnidAudio] SFX ön-yüklemesi tamamlanamadı:', error);
-      }),
-      this.ambience
-        .loadTrack(arachnidAmbienceTrack)
-        .then((loaded) => {
+    if (this.prepareAttempts >= MAX_PREPARE_ATTEMPTS) return Promise.resolve();
+
+    this.prepareAttempts += 1;
+    const attempt = Promise.all([
+      this.soundBank.loadAll().then(
+        () => true,
+        (error: unknown) => {
+          console.warn('[ArachnidAudio] SFX ön-yüklemesi tamamlanamadı:', error);
+          return false;
+        },
+      ),
+      this.ambience.loadTrack(arachnidAmbienceTrack).then(
+        (loaded) => {
           this.ambienceReady = loaded;
-        })
-        .catch((error: unknown) => {
+          return loaded;
+        },
+        (error: unknown) => {
           console.warn('[ArachnidAudio] Ambiyans yüklenemedi:', error);
-        }),
-    ]).then(() => undefined);
-    return this.preparePromise;
+          return false;
+        },
+      ),
+    ]).then(([sfxOk, ambienceOk]) => {
+      // Bir parça bile eksikse söz BIRAKILIR; sonraki çağrı yeniden dener.
+      if (!sfxOk || !ambienceOk) this.preparePromise = null;
+    });
+
+    this.preparePromise = attempt;
+    return attempt;
   }
 
-  private async resumeAndStart(): Promise<void> {
+  /**
+   * Context'i açar ve ambiyansı başlatır. Ses BAŞLADIYSA (ya da zaten
+   * çalıyorsa) `true` döner.
+   *
+   * Her `await`ten sonra `destroyed` yeniden okunur: yıkım bir bekleme
+   * noktasında araya girebilir ve kapanmış bir context üzerinde çalmak
+   * anlamsızdır. Yalnız başta bakmak yetmiyordu.
+   */
+  private async resumeAndStart(): Promise<boolean> {
     try {
+      if (this.destroyed) return false;
       if (this.context.state === 'suspended') await this.context.resume();
+      if (this.destroyed) return false;
+
       await this.prepare();
-      if (this.destroyed || this.ambienceStarted || !this.ambienceReady) return;
+      if (this.destroyed) return false;
+      if (this.ambienceStarted) return true;
+      if (!this.ambienceReady) return false;
+
       await this.ambience.play(arachnidAmbienceTrack.id, { fadeIn: 1.2 });
-      if (!this.destroyed) this.ambienceStarted = true;
+      if (this.destroyed) return false;
+      this.ambienceStarted = true;
+      return true;
     } catch (error) {
       // Ses hiçbir zaman oyunu durduracak bir hata yüzeyi değildir; sonraki
-      // foreground olayı yeniden resume etmeyi deneyebilir.
+      // kullanıcı hareketi ya da foreground olayı yeniden deneyebilir.
       console.warn('[ArachnidAudio] Ses başlatılamadı:', error);
+      return false;
     }
   }
 

@@ -6,10 +6,11 @@ import tr from '@/i18n/tr.json';
 import en from '@/i18n/en.json';
 import '@/i18next-augment';
 import { ArachnidBody } from '@/runtime/entity/ArachnidBody';
-import { ArachnidLegs, type LimbDriveState } from '@/runtime/entity/ArachnidLegs';
+import { ArachnidLegs } from '@/runtime/entity/ArachnidLegs';
+import type { LocomotionSignals, PoseSignals } from '@/runtime/entity/locomotionSignals';
 import { Arena } from '@/runtime/entity/Arena';
 import { ArachnidDust } from '@/runtime/fx/ArachnidDust';
-import { ArachnidBodyMotion, type BodyMotionState } from '@/runtime/rig/ArachnidBodyMotion';
+import { ArachnidBodyMotion } from '@/runtime/rig/ArachnidBodyMotion';
 import { prepareArachnidRig, type ArachnidRig } from '@/runtime/rig/arachnidRig';
 import { ArachnidHud } from '@/runtime/ui/ArachnidHud';
 import {
@@ -18,6 +19,7 @@ import {
   buildTestRigDefinition,
   createFakeScene,
 } from '../support/phaserFakes';
+import { bodySignals, poseSignals } from '../support/locomotion';
 
 /**
  * SAĞLAMLAŞTIRMA
@@ -46,32 +48,14 @@ const isFinitePose = (rig: ArachnidRig): boolean =>
       (limb.root === null || Number.isFinite(limb.root.rotation)),
   );
 
-function limbState(overrides: Partial<LimbDriveState> = {}): LimbDriveState {
-  return {
-    bodyX: 0,
-    bodyY: 0,
-    bodyRad: -Math.PI / 2,
-    velX: 0,
-    velY: 0,
-    turnRate: 0,
-    motion01: 0,
-    dash01: 0,
-    crouch01: 0,
-    airborne: false,
-    ...overrides,
-  };
-}
-
-function motionState(overrides: Partial<BodyMotionState> = {}): BodyMotionState {
-  return {
-    speed: 0,
-    accelX: 0,
-    accelY: 0,
-    turnRate: 0,
-    facingRad: -Math.PI / 2,
-    dash01: 0,
-    ...overrides,
-  };
+/** Uzuvları bir kare sürer; gövde ve poz sinyalleri ayrı verilir. */
+function driveLegs(
+  legs: ArachnidLegs,
+  body: Partial<LocomotionSignals> = {},
+  pose: Partial<PoseSignals> = {},
+  deltaMs = 16,
+): void {
+  legs.update(bodySignals(body), poseSignals(pose), deltaMs);
 }
 
 describe('sağlamlaştırma — gövde', () => {
@@ -139,11 +123,13 @@ describe('sağlamlaştırma — uzuvlar', () => {
     legs.reset(0, 0, -Math.PI / 2);
 
     for (const value of HOSTILE) {
-      legs.update(
-        limbState({ bodyX: value, velX: value, motion01: value, dash01: value, crouch01: value }),
+      driveLegs(
+        legs,
+        { x: value, velX: value, speed: value, dash01: value },
+        { motion01: value, crouch01: value },
         value,
       );
-      legs.update(limbState({ bodyY: -10, velY: -210, motion01: 1 }), 16);
+      driveLegs(legs, { y: -10, velY: -210 }, { motion01: 1 });
       expect(isFinitePose(rig), `değer ${value}`).toBe(true);
     }
   });
@@ -157,16 +143,16 @@ describe('sağlamlaştırma — uzuvlar', () => {
     for (let cycle = 0; cycle < 6; cycle++) {
       for (let i = 0; i < 10; i++) {
         y -= 14;
-        legs.update(limbState({ bodyY: y, velY: -900, airborne: true, dash01: 1 }), 16);
+        driveLegs(legs, { y, velY: -900, grounded: false, dash01: 1 });
       }
       // İniş karesi: bütün ayaklar aynı anda evlerine basar.
       y -= 3;
-      legs.update(limbState({ bodyY: y, velY: -210, motion01: 1 }), 16);
+      driveLegs(legs, { y, velY: -210 }, { motion01: 1 });
       expect(legs.steppingLimbCount, `tur ${cycle} iniş`).toBe(0);
 
       for (let i = 0; i < 20; i++) {
         y -= 3;
-        legs.update(limbState({ bodyY: y, velY: -210, motion01: 1 }), 16);
+        driveLegs(legs, { y, velY: -210 }, { motion01: 1 });
       }
       expect(isFinitePose(rig), `tur ${cycle}`).toBe(true);
     }
@@ -182,7 +168,7 @@ describe('sağlamlaştırma — uzuvlar', () => {
     let y = 0;
     for (let i = 0; i < 200; i++) {
       y -= 3;
-      legs.update(limbState({ bodyY: y, velY: -210, motion01: 1 }), 16);
+      driveLegs(legs, { y, velY: -210 }, { motion01: 1 });
     }
     legs.reset(0, 0, -Math.PI / 2);
 
@@ -197,10 +183,16 @@ describe('sağlamlaştırma — gövde hareketi ve sunum', () => {
 
     for (const value of HOSTILE) {
       motion.update(
-        motionState({ speed: value, accelX: value, accelY: value, turnRate: value, dash01: value }),
+        bodySignals({
+          speed: value,
+          accelX: value,
+          accelY: value,
+          turnRateRadPerSec: value,
+          dash01: value,
+        }),
         value,
       );
-      motion.update(motionState({ speed: 200 }), 16);
+      motion.update(bodySignals({ speed: 200 }), 16);
       for (const part of [...rig.shellParts, ...rig.snoutParts, rig.gazePart]) {
         expect(Number.isFinite(part.x), `değer ${value}`).toBe(true);
         expect(Number.isFinite(part.y)).toBe(true);

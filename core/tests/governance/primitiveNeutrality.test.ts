@@ -23,6 +23,12 @@ const PRIMITIVE_ROOTS = [
   'lifecycle',
   'random',
   'stats',
+  // `rig` ve `math` bu listeye SONRADAN girdi. İkisi de ilk tüketicisi tek bir
+  // yaratık olan alanlar: yürüyüş döngüsü, bakış sürücüsü ve ters kinematik
+  // "örümcek" kelimesini hiç bilmemeli, ama tek tüketicinin sözlüğüne kaymak
+  // için en kolay yer tam olarak burasıdır.
+  'rig',
+  'math',
 ];
 
 /**
@@ -30,6 +36,11 @@ const PRIMITIVE_ROOTS = [
  * `hedef`) BİLİNÇLİ olarak listede yok: onlar altyapının kendi kelimeleri.
  */
 const GENRE_TERMS = [
+  // Yaratık/varlık adları da bir sözlüktür: bir primitif, ilk tüketicisinin
+  // kim olduğunu bilmemeli.
+  'örümcek',
+  'spider',
+  'arachnid',
   'tower defense',
   'tower-defense',
   'roguelite',

@@ -227,37 +227,19 @@ export class GameScene extends Phaser.Scene {
     const state = this.inputManager.getState(this.body.position);
 
     this.body.update(state.move, state.actions.dash, simDeltaMs);
-    this.assembled.container.setPosition(this.body.position.x, this.body.position.y);
-    this.assembled.container.rotation = this.body.facingRad + RIG_FACING_OFFSET_RAD;
 
-    const accel = this.body.accelerationVector;
-    const motion = this.bodyMotion.update(
-      {
-        speed: this.body.speed,
-        accelX: accel.x,
-        accelY: accel.y,
-        turnRate: this.body.turnRate,
-        facingRad: this.body.facingRad,
-        dash01: this.body.dash01,
-      },
-      simDeltaMs,
-    );
+    /*
+     * Gövde durumu TEK bir sözleşmeden okunur. Sahne bir dönem her tüketici
+     * için ayrı bir durum nesnesi kuruyordu; aynı gerçeğin iki şekli, iki
+     * tahsis ve `turnRate`in birimi değişirse sessizce kayacak üç çağrı yeri
+     * demekti (bkz. `runtime/entity/locomotionSignals.ts`).
+     */
+    const signals = this.body.signals;
+    this.assembled.container.setPosition(signals.x, signals.y);
+    this.assembled.container.rotation = signals.facingHeadingRad + RIG_FACING_OFFSET_RAD;
 
-    this.legs.update(
-      {
-        bodyX: this.body.position.x,
-        bodyY: this.body.position.y,
-        bodyRad: this.body.facingRad,
-        velX: this.body.velocity.x,
-        velY: this.body.velocity.y,
-        turnRate: this.body.turnRate,
-        motion01: motion.motion01,
-        dash01: this.body.dash01,
-        crouch01: motion.crouch01,
-        airborne: this.body.isDashing,
-      },
-      simDeltaMs,
-    );
+    const pose = this.bodyMotion.update(signals, simDeltaMs);
+    this.legs.update(signals, pose, simDeltaMs);
 
     if (this.cameraFollowsBody) this.followBody(delta);
     this.resolveWallImpact();

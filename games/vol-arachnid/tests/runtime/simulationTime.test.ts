@@ -3,7 +3,7 @@ import { TECH, Vector2 } from '@volstudio/core';
 import { arenaConfig } from '@/config/arena';
 import { playerConfig } from '@/config/player';
 import { ArachnidBody } from '@/runtime/entity/ArachnidBody';
-import { ArachnidLegs, type LimbDriveState } from '@/runtime/entity/ArachnidLegs';
+import { ArachnidLegs } from '@/runtime/entity/ArachnidLegs';
 import { prepareArachnidRig, type ArachnidRig, type LimbRig } from '@/runtime/rig/arachnidRig';
 import {
   arachnidTestMetadata as metadata,
@@ -11,6 +11,7 @@ import {
   buildTestRigDefinition,
   createFakeScene,
 } from '../support/phaserFakes';
+import { bodySignals, poseSignals } from '../support/locomotion';
 
 /**
  * ZAMAN SÖZLEŞMESİ.
@@ -36,22 +37,6 @@ const CENTER_Y = arenaConfig.heightPx / 2;
 function makeRig(): ArachnidRig {
   const definition = buildTestRigDefinition();
   return prepareArachnidRig(metadata, assembleTestRig(createFakeScene(definition), definition));
-}
-
-function driveState(overrides: Partial<LimbDriveState> = {}): LimbDriveState {
-  return {
-    bodyX: 0,
-    bodyY: 0,
-    bodyRad: -Math.PI / 2,
-    velX: 0,
-    velY: 0,
-    turnRate: 0,
-    motion01: 0,
-    dash01: 0,
-    crouch01: 0,
-    airborne: false,
-    ...overrides,
-  };
 }
 
 function footOf(limb: LimbRig): { x: number; y: number } {
@@ -119,9 +104,10 @@ describe('simülasyon zamanı — tek tavan', () => {
     const speed = playerConfig.maxSpeed;
     for (let i = 1; i <= 8; i++) {
       const x = (speed * (CEILING * i)) / 1000;
-      const state = driveState({ bodyX: x, velX: speed, motion01: 1 });
-      legsA.update(state, CEILING);
-      legsB.update(state, CEILING * 50);
+      const signals = bodySignals({ x, velX: speed });
+      const pose = poseSignals({ motion01: 1 });
+      legsA.update(signals, pose, CEILING);
+      legsB.update(signals, pose, CEILING * 50);
     }
 
     for (let i = 0; i < rigA.limbs.length; i++) {

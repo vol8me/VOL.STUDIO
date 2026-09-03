@@ -5,12 +5,23 @@
 export interface RigMotionSignals {
   /** [0,1] — hareket niyetinin büyüklüğü, yumuşatılmış. */
   motion01: number;
-  /** [0,360) derece — hiç durmadan ilerleyen idle-dalga fazı. */
+  /** [0,360) derece — hiç durmadan ilerleyen boşta-salınım fazı. */
   idlePhaseDeg: number;
-  /** Radyan — yay-yumuşatılmış görsel yön. */
-  facingRad: number;
-  /** Radyan/saniye — facing yayının anlık hızı; dönüş şiddetini verir. */
-  turnVelocityRadPerSec: number;
+  /**
+   * Radyan — GİRDİ NİYETİNİN yay-yumuşatılmış yönü.
+   *
+   * Bu, gövdenin yönü DEĞİLDİR. Kendi hareket modeli olan bir tüketici (ivmesi,
+   * dönüş tavanı, atılım kilidi olan bir gövde) yönünü zaten kendi taşır ve bu
+   * alanı okumamalıdır: iki yay iki defter demektir ve iki defter kaçınılmaz
+   * olarak kayar. Alan, kendi gövde fiziği OLMAYAN bir tüketici için vardır —
+   * ham niyetten doğrudan pozlanan basit bir rig.
+   *
+   * Adı bilinçli olarak `intent` ile başlar; `facingRad` diye okunduğunda "asıl"
+   * yön sanılıyor ve tam olarak yukarıdaki hataya davetiye çıkarıyordu.
+   */
+  intentFacingRad: number;
+  /** Radyan/saniye — `intentFacingRad` yayının anlık hızı. */
+  intentTurnRateRadPerSec: number;
 }
 
 /* ------------------------------------------------------------------------ *
