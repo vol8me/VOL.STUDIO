@@ -79,6 +79,8 @@ interface LegState {
   lift: number;
   /** Bu karede adım tamamlanıp ayak yere BASTI mı (toz/ses tetikleyicisi). */
   justPlanted: boolean;
+  /** Bu adım sıra disiplinini delerek mi başladı (acil rejim ölçüsü)? */
+  brokeTurn: boolean;
   /** Ayağın evinden o kareki uzaklığı — adım kararının ham girdisi. */
   strain: number;
 }
@@ -93,8 +95,22 @@ interface LegState {
  *
  * Adım sırası SIRA (turn) modeliyle dizginlenir: hiçbir bacak adımda değilken
  * en gergin bacağın grubu sırayı alır ve sıra bitene (o gruptaki tüm adımlar
- * tamamlanana) kadar yalnız o grup adım atar. Böylece gövde her an en az bir
- * grup ayak üstünde kalır.
+ * tamamlanana) kadar yalnız o grup adım atar.
+ *
+ * DESTEK GÜVENCESİ İKİ REJİMLİDİR ve ikisi aynı şey değildir:
+ *
+ * - **Normal rejim** (`emergencySteppingCount === 0`): aynı anda yalnız SIRASI
+ *   GELEN grup ve sıra beklemeyen (`freeStep`) bacaklar havadadır. Gövde her an
+ *   karşı grubun tamamı üstünde kalır — asıl güvence budur.
+ * - **Acil rejim**: `maxStrainPx`i aşan bir bacak sırayı DELER. O anda birden
+ *   çok grup aynı anda havada olabilir ve yukarıdaki güvence GEÇERSİZDİR.
+ *
+ * Acil rejim bir kaçış değil bilinçli bir takastır: gövde bir atılımda bir adım
+ * süresinde bacak erişiminden daha çok yol alabilir ve sıra beklemek bacağı
+ * yerde SÜRÜKLER. Sürüklenen bir bacak her karede görünür, bir karelik zayıf
+ * destek görünmez. `emergencySteppingCount` bu takasın ne zaman yapıldığını
+ * ölçülebilir kılar — tüketici hangi rejimde olduğunu bilmeden destek sayısına
+ * bakarsa yanlış bir güvence varsayar.
  *
  * Sıra modeli, bir grubun kilidi süresiz tutmasını da engeller: eski kural
  * ("karşı grup adımdayken başlama") aynı gruptaki bacaklar kaymalı bittiği
@@ -112,6 +128,11 @@ export class LegGait {
    * aksi halde sırayı bloklar ve destek güvencesini kendileri geciktirirlerdi.
    */
   private lockedStepping = 0;
+  /**
+   * Sıra disiplinini DELEREK adıma girmiş ve hâlâ havada olan bacak sayısı.
+   * Sıfırsa normal rejim, sıfırdan büyükse acil rejim geçerlidir.
+   */
+  private emergencyStepping = 0;
   /** Sırası gelen grup; sıraya dahil hiçbir bacak adımda değilken `null`. */
   private turnGroup: number | null = null;
   private initialised = false;
@@ -146,6 +167,7 @@ export class LegGait {
       footY: 0,
       lift: 0,
       justPlanted: false,
+      brokeTurn: false,
       strain: 0,
     }));
   }
@@ -157,6 +179,18 @@ export class LegGait {
   /** O anda havada olan bacak sayısı — teşhis, HUD ve denge hesapları için. */
   get steppingCount(): number {
     return this.steppingTotal;
+  }
+
+  /**
+   * Sırayı DELEREK adıma girmiş ve hâlâ havada olan bacak sayısı.
+   *
+   * Sıfır olduğu sürece "gövde karşı grubun tamamı üstündedir" güvencesi
+   * geçerlidir; sıfırdan büyükse o güvence bilinçli olarak askıdadır. İki rejimi
+   * ayırt etmeden `steppingCount`a bakan bir tüketici, olmayan bir güvence
+   * varsayar.
+   */
+  get emergencySteppingCount(): number {
+    return this.emergencyStepping;
   }
 
   /**
@@ -258,10 +292,12 @@ export class LegGait {
       state.stepping = false;
       state.lift = 0;
       state.justPlanted = false;
+      state.brokeTurn = false;
       state.strain = 0;
     }
     this.steppingTotal = 0;
     this.lockedStepping = 0;
+    this.emergencyStepping = 0;
     this.turnGroup = null;
     this.initialised = true;
   }
@@ -311,6 +347,10 @@ export class LegGait {
         state.stepping = false;
         state.justPlanted = true;
         this.steppingTotal--;
+        if (state.brokeTurn) {
+          state.brokeTurn = false;
+          this.emergencyStepping--;
+        }
         if (!state.leg.freeStep) this.lockedStepping--;
       }
     }
@@ -336,6 +376,11 @@ export class LegGait {
       if (state.strain <= this.config.stepTriggerPx * state.strideScale) continue;
       const urgent = emergency !== null && state.strain >= emergency;
       if (!urgent && !state.leg.freeStep && state.leg.group !== this.turnGroup) continue;
+
+      // Sırayı gerçekten DELEN adım: acil olmasa reddedilirdi. Sırası gelmiş ya
+      // da serbest bir bacağın acil eşiği aşması disiplini delmez.
+      state.brokeTurn = urgent && !state.leg.freeStep && state.leg.group !== this.turnGroup;
+      if (state.brokeTurn) this.emergencyStepping++;
 
       state.fromX = state.plantedX;
       state.fromY = state.plantedY;

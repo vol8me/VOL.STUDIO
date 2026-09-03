@@ -63,4 +63,47 @@ describe('solveTwoBoneIk', () => {
     expect(Number.isFinite(solved.upperRad)).toBe(true);
     expect(Number.isFinite(solved.lowerRad)).toBe(true);
   });
+
+  describe('giriş sözleşmesi', () => {
+    it('kemik uzunluğu YAPILANDIRMADIR: sonlu değilse reddedilir', () => {
+      expect(() => solveTwoBoneIk(10, 0, Number.NaN, 20, 1)).toThrow(TypeError);
+      expect(() => solveTwoBoneIk(10, 0, 20, Number.POSITIVE_INFINITY, 1)).toThrow(TypeError);
+      expect(() => solveTwoBoneIk(10, 0, 20, 20, Number.NaN)).toThrow(TypeError);
+    });
+
+    it('sıfır ya da negatif kemik uzunluğu reddedilir', () => {
+      // Sıfır uzunlukta bir kemikte erişim aralığı TERSİNE döner (alt sınır üst
+      // sınırın üstüne çıkar) ve kelepçe negatif bir erişim üretirdi; çözüm
+      // sessizce anlamsız olurdu.
+      expect(() => solveTwoBoneIk(10, 0, 0, 20, 1)).toThrow(RangeError);
+      expect(() => solveTwoBoneIk(10, 0, 20, -5, 1)).toThrow(RangeError);
+    });
+
+    it('hedef vektörü AKIŞ değeridir: bozuk kare pozu fırlatmaz', () => {
+      const solved = solveTwoBoneIk(Number.NaN, Number.POSITIVE_INFINITY, 20, 20, 1);
+
+      expect(Number.isFinite(solved.upperRad)).toBe(true);
+      expect(Number.isFinite(solved.lowerRad)).toBe(true);
+      // Sıfır hedefle aynı sonucu verir; bozuk bileşen 0 sayılır.
+      const atOrigin = solveTwoBoneIk(0, 0, 20, 20, 1);
+      expect(solved.upperRad).toBeCloseTo(atOrigin.upperRad, 12);
+      expect(solved.lowerRad).toBeCloseTo(atOrigin.lowerRad, 12);
+    });
+
+    it('minik kemiklerde bile erişim aralığı ters dönmez', () => {
+      // Sabit bir 1e-4 payı bu uzuvda alt sınırı üst sınırın üstüne çıkarıyordu.
+      const solved = solveTwoBoneIk(5e-5, 0, 5e-5, 5e-5, 1);
+
+      expect(Number.isFinite(solved.upperRad)).toBe(true);
+      expect(Number.isFinite(solved.lowerRad)).toBe(true);
+    });
+
+    it('çok farklı uzunluktaki kemiklerde de sonlu kalır', () => {
+      const solved = solveTwoBoneIk(1000, -1000, 1e-3, 400, -1);
+
+      expect(Number.isFinite(solved.upperRad)).toBe(true);
+      expect(Number.isFinite(solved.lowerRad)).toBe(true);
+      expect(solved.clamped).toBe(true);
+    });
+  });
 });

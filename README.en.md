@@ -51,6 +51,7 @@ pnpm tauri:android:dev                     # Android dev (connected device/emula
 pnpm tauri:arachnid:android:dev            # Android dev — VOL.ARACHNID on a connected device
 pnpm tauri:arachnid:android:build          # Build VOL.ARACHNID Android APK
 pnpm benchmark:core                        # Measure CORE headless workloads
+pnpm benchmark:vol-arachnid                # VOL.ARACHNID locomotion/pose-fx measurement
 pnpm benchmark:vol-hell                    # Measure VOL.HELL simulation/render
 ```
 

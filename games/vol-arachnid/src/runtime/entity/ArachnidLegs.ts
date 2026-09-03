@@ -201,6 +201,15 @@ export class ArachnidLegs {
     return this.gait.steppingCount;
   }
 
+  /**
+   * Sırayı DELEREK adıma girmiş uzuv sayısı. Sıfırken "gövde karşı grubun
+   * tamamı üstündedir" güvencesi geçerlidir; sıfırdan büyükken bilinçli olarak
+   * askıdadır (bkz. CORE `LegGait`).
+   */
+  get emergencyLimbCount(): number {
+    return this.gait.emergencySteppingCount;
+  }
+
   /** Bu karede yere basan ayakların dünya konumlarını gezer (toz, ses). */
   forEachPlant(visit: (x: number, y: number) => void): void {
     for (let i = 0; i < this.drivers.length; i++) {

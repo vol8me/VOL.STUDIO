@@ -184,6 +184,9 @@ benchmark-core:
 benchmark-vol-hell:
     pnpm benchmark:vol-hell
 
+benchmark-vol-arachnid:
+    pnpm benchmark:vol-arachnid
+
 convert-ios:
     pnpm convert:ios
 

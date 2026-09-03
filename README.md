@@ -52,6 +52,7 @@ pnpm tauri:arachnid:android:dev            # Android dev — bağlı cihazda VOL
 pnpm tauri:arachnid:android:build          # VOL.ARACHNID Android APK
 pnpm benchmark:core                        # CORE headless workload ölçümü
 pnpm benchmark:vol-hell                    # VOL.HELL simülasyon/render ölçümü
+pnpm benchmark:vol-arachnid                # VOL.ARACHNID locomotion/poz-efekt ölçümü
 ```
 
 VOL.ARACHNID arena dikey kesitidir: WASD örümceği yürütür, Space kısa atılmayı
@@ -114,8 +115,9 @@ Kalite kapıları `just` ile localde çalıştırılır. GitHub yalnızca source
 
 Benchmark komutları makineye özel süre eşiği koymaz; CORE mekanizmalarının ve
 VOL.HELL'in render'dan ayrılmış simülasyonunun medyan/p95 adım maliyetini
-ölçer. Ayrıntılı tekil tarifler için `pnpm exec just benchmark-core` ve
-`pnpm exec just benchmark-vol-hell` kullanılabilir.
+ölçer. Ayrıntılı tekil tarifler için `pnpm exec just benchmark-core`,
+`pnpm exec just benchmark-vol-hell` ve `pnpm exec just benchmark-vol-arachnid`
+kullanılabilir.
 
 `pre-commit` → `pnpm quick` ve `pre-push` → `pnpm high` hook'ları `pnpm install`
 sırasında kurulur; atlamak için `SKIP_SIMPLE_GIT_HOOKS=1`. Test yükü bilerek

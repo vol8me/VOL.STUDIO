@@ -21,6 +21,8 @@ Monorepo geneli için [kök README](../../README.md)'ye bakın.
 | `pnpm tauri:arachnid:android:dev`                 | Bağlı Android cihazda geliştirme     |
 | `pnpm tauri:arachnid:android:build`               | Android APK                          |
 | `pnpm --filter @volstudio/vol-arachnid audio:qa`  | Üretilmiş ses varlıklarını doğrular  |
+| `pnpm --filter @volstudio/vol-arachnid rig:sync`  | Rig export'unu bu pakete gönderir    |
+| `pnpm benchmark:vol-arachnid`                     | Locomotion ve poz-efekt ölçümü       |
 | `pnpm --filter @volstudio/vol-arachnid test`      | Vitest                               |
 | `pnpm --filter @volstudio/vol-arachnid typecheck` | `tsc --noEmit`                       |
 
@@ -127,9 +129,22 @@ yan yana koymak içindir. Duruş açıları `config/gait.ts` içinde İLERİ EKS
 Rig sanatı `devtools/pen.dev/pen/entities.pen` içinde yaşar ve
 `pen_export/enemies/arachnid/` altına export edilir; hattın kuralları
 [devtools/pen.dev/AGENTS.md](../../devtools/pen.dev/AGENTS.md) ve
-[README](../../devtools/pen.dev/README.md) dosyalarındadır. Bu paket export'u
-`config/rigAssets.ts` üzerinden (metadata JSON + `import.meta.glob` PNG'leri)
-tüketir.
+[README](../../devtools/pen.dev/README.md) dosyalarındadır.
+
+**Bu paket export ağacını OKUMAZ.** `rig:sync` doğrulanmış export'u buraya
+kopyalar — metadata `src/assets/rig/`, parça PNG'leri `public/assets/rig/` —
+ve çalışma zamanı yalnız kendi ağacını görür. `devtools/` silinse bile
+`pnpm build:arachnid` geçer. Bir oyunun çalışma zamanı asset'ini üreten araca
+bağlanmamalıdır (bkz. kök [AGENTS.md](../../AGENTS.md), "Bozulamaz Kurallar" 4);
+kural `pnpm quick` içindeki `workspace-contract` kapısıyla korunur.
+
+Rig'i okuyan katman (`validateRigMetadata`, `buildRigDefinition`,
+`articulateRigDefinition`, `assembleRig`) `@volstudio/core`dadır: bunlar bir
+aracın API'si değil, üretilmiş verinin sözleşmesidir. `config/rigAssets.ts`
+metadata'yı çalışma zamanında doğrular ve parça URL'lerini onun `file`
+alanlarından türetir; disk paritesi `tests/config/rigAssets.test.ts` ile
+kapatılır — `import.meta.glob`un bıraktığı derleme zamanı garantisinin
+karşılığı odur.
 
 Yayımlanmış export DÜZDÜR: metadata `parentPartId` taşımaz, yani tüm parçalar
 kökün kardeşidir. Eklemsiz bir zincirde yalnız uçlar sürülebilir; ara kemikler
@@ -138,6 +153,22 @@ export pozunda donar ve uzuv kopuk görünür. Eklem şeması bu yüzden
 `articulateRigDefinition` ile uygulanır — üretilmiş metadata dosyasına
 dokunulmaz, bir sonraki export bu kararı ezmez. Manifest'e `parent` alanı
 eklenip export yeniden üretilirse bu şema gereksizleşir.
+
+## Ölçüm
+
+`pnpm benchmark:vol-arachnid` iki yükü AYRI ölçer, çünkü ikisi farklı sebeplerle
+büyür: **simülasyon** (gövde + ikincil hareket + yürüyüş + IK) uzuv sayısıyla,
+**sunum** (poz gölgesi + art-görüntü) rig'in parça sayısıyla. Tek bir "kare
+başına ms" sayısı hangisinin pahalandığını gizler.
+
+Referans ölçüm (1000 kare × 25 örnek, 16 ms adım): simülasyon
+~0,005 ms/kare (kare bütçesinin ~%0,03'ü), poz efektleriyle birlikte
+~0,071 ms/kare (~%0,45). Yani 72 parçalık bir rig'de yaratığın CPU maliyetinin
+neredeyse tamamı SUNUM tarafındadır — gölge her karede 72 dönüşüm günceller ve
+atılım boyunca art-görüntü bunu çoğaltır. Bir bütçe aşımında bakılacak yer
+burasıdır, yürüyüş döngüsü değil.
+
+Sayılar makineye özeldir ve kapı EŞİĞİ DEĞİLDİR; oran ve büyüme yönü anlamlıdır.
 
 ## HUD ve arena
 

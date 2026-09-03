@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 import type { AssembledRig, RigDefinition } from '@volstudio/core';
 import { assembleRig, buildRigDefinition, validateRigMetadata } from '@volstudio/core';
 import { articulateRigDefinition } from '@volstudio/core';
-import arachnidMetadataRaw from '../../../../devtools/pen.dev/pen_export/enemies/arachnid/metadata/arachnid.metadata.json';
+import arachnidMetadataRaw from '@/assets/rig/arachnid.metadata.json';
 import { ARACHNID_ARTICULATION } from '@/config/rig';
 
 /**
@@ -129,6 +129,14 @@ export interface FakeScene {
   images: FakeImage[];
 }
 
+/**
+ * Testler GÖNDERİLEN metadata'yı sürer, export ağacındakini değil.
+ *
+ * Bir dönem burası `devtools/pen.dev/pen_export/`e uzanıyordu; o hâlde testler
+ * oyunun gerçekten yüklediği dosyayı değil, onun üretildiği ARA ÇIKTIYI
+ * doğruluyordu. İkisi ayrıştığında (senkron atlanmış, bir parça yeniden
+ * adlandırılmış) testler yeşil kalır, oyun kırılırdı.
+ */
 export const arachnidTestMetadata = validateRigMetadata(
   arachnidMetadataRaw,
   'arachnid test metadata',
