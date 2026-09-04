@@ -182,11 +182,13 @@ export class ArachnidAudio implements ArachnidAudioPort {
   /**
    * SFX ve ambiyansı ön yükler.
    *
-   * Söz (promise) BİR KEZ kurulup sonsuza dek paylaşılmıyor: eskiden hata
-   * yakalanıp `resolve` ediliyordu, yani başarısız bir yükleme "tamamlandı"
-   * sayılıyor ve bir daha hiç denenmiyordu. Şimdi başarısız bir tur sözü
-   * bırakır; bir sonraki çağrı — genelde uygulama öne geldiğinde —
-   * `MAX_PREPARE_ATTEMPTS` sınırına kadar yeniden dener.
+   * Başarısız bir tur sözü BIRAKIR; bir sonraki çağrı (genelde uygulama öne
+   * geldiğinde) `MAX_PREPARE_ATTEMPTS` sınırına kadar yeniden dener. Sözü bir
+   * kez kurup hatayı yutmak, başarısız bir yüklemeyi "tamamlandı" sayar.
+   *
+   * Pratikte yeniden deneme ambiyansı kurtarır: CORE'un `SoundBank`ı varyant
+   * hatalarını kendi içinde izole eder ve hiç reddetmez, yani SFX yolu buraya
+   * ancak enjekte edilmiş bir port üzerinden düşer.
    */
   private prepare(): Promise<void> {
     if (this.preparePromise) return this.preparePromise;

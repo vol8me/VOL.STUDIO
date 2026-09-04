@@ -374,9 +374,26 @@ describe('I18n — reset', () => {
     expect((i18next.t as (key: string) => string)('volhell:menu.start')).not.toBe('BAŞLA');
   });
 
-  it('reset pendingResources i temizler', () => {
+  it('reset, init ÖNCESİ eklenmiş bekleyen kaynakları düşürür', async () => {
+    /*
+     * Test bir dönem yalnız `addResources` + `reset` çağırıp hiçbir şey
+     * doğrulamıyordu: `reset` no-op olsa da geçerdi. Bekleyen kaynaklar
+     * `init` sırasında uygulandığı için etki ancak init SONRASI görülür.
+     */
     i18n.addResources('tr', 'volhell', { menu: { start: 'BAŞLA' } });
     i18n.reset();
+    await i18n.init();
+
+    expect(i18next.exists('volhell:menu.start')).toBe(false);
+  });
+
+  it('reset EDİLMEDİĞİNDE bekleyen kaynak init sırasında uygulanır', async () => {
+    // Karşı taraf: yukarıdaki testin `reset` yüzünden mi yoksa mekanizma hiç
+    // çalışmadığı için mi geçtiğini ayırt eder.
+    i18n.addResources('tr', 'volhell', { menu: { start: 'BAŞLA' } });
+    await i18n.init();
+
+    expect(i18next.exists('volhell:menu.start')).toBe(true);
   });
 
   it('reset sonrasi initialized false doner', async () => {

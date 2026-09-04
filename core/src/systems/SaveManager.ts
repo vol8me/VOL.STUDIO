@@ -31,9 +31,29 @@ export class StorageError extends Error {
   }
 }
 
+/**
+ * `localStorage` üstünde depolama.
+ *
+ * OKUMA ve SİLME hiçbir koşulda fırlatmaz. `localStorage`a erişimin kendisi
+ * bir `SecurityError` fırlatabilir (özel mod, depolamayı engelleyen gizlilik
+ * ayarları, bazı gömülü WebView'lar); okuma orada fırlatırsa ayarları paralel
+ * yükleyen açılış yolu reddedilir ve oyun HİÇ AÇILMAZ. Depolamanın erişilemez
+ * olması "kayıtlı değer yok" ile aynı şeydir.
+ *
+ * YAZMA reddeder: bir kaydın diske gitmediğini çağıran bilmelidir.
+ */
 export class LocalStorageAdapter implements IStorageAdapter {
   get<T>(key: string): Promise<T | undefined> {
-    const raw = localStorage.getItem(key);
+    let raw: string | null;
+    try {
+      raw = localStorage.getItem(key);
+    } catch (error) {
+      console.warn(
+        `[LocalStorageAdapter] Depolama okunamadı ('${key}'); varsayılana dönülüyor.`,
+        error,
+      );
+      return Promise.resolve(undefined);
+    }
     if (raw === null) return Promise.resolve(undefined);
     try {
       return Promise.resolve(JSON.parse(raw) as T);
@@ -53,17 +73,25 @@ export class LocalStorageAdapter implements IStorageAdapter {
       localStorage.setItem(key, JSON.stringify(value));
       return Promise.resolve();
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        return Promise.reject(
-          new StorageError(`Depolama kotası doldu; '${key}' kaydedilemedi.`, { cause: error }),
-        );
-      }
-      return Promise.reject(error instanceof Error ? error : new Error(String(error)));
+      const quota = error instanceof DOMException && error.name === 'QuotaExceededError';
+      return Promise.reject(
+        new StorageError(
+          quota
+            ? `Depolama kotası doldu; '${key}' kaydedilemedi.`
+            : `Depolamaya yazılamadı; '${key}' kaydedilemedi.`,
+          { cause: error },
+        ),
+      );
     }
   }
 
   remove(key: string): Promise<void> {
-    localStorage.removeItem(key);
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      // Erişilemeyen bir depodan silmek zaten istenen sonucu verir.
+      console.warn(`[LocalStorageAdapter] Depolamadan silinemedi ('${key}').`, error);
+    }
     return Promise.resolve();
   }
 }

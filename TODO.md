@@ -5,6 +5,65 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-04 — sağlamlaştırma turu: ölü kod, sessiz hatalar, yorum doktrini
+
+Kapı koşturmak değil, kod okuyup avlanmak. Beş gerçek hata çıktı; her biri
+kendi testiyle sınandı (düzeltmeyi geri alınca test düşüyor).
+
+**Açılışı düşüren depolama hatası.** `LocalStorageAdapter.get` içinde
+`localStorage.getItem` try bloğunun DIŞINDAYDI. Erişimin kendisi
+`SecurityError` fırlatabilir (özel mod, depolamayı engelleyen gizlilik ayarı,
+bazı gömülü WebView'lar); o durumda ayarları paralel yükleyen açılış yolu
+reddediliyor ve oyun HİÇ açılmıyordu. Okuma ve silme artık fırlatmaz —
+depolamanın erişilemez olması "kayıtlı değer yok" ile aynı şeydir. Yazma
+reddetmeye devam eder: bir kaydın gitmediğini çağıran bilmelidir.
+
+**İlişki listesi eziliyordu.** Asset studio'da bir çıktıya iki belge bakınca
+(sprite tarifi + sidecar metadata) `relatedIds` tek elemanlı bir diziyle
+üzerine yazılıyor, çıktı son işlenen dışındaki bütün bağlarını kaybediyordu.
+`recipeId` de son yazana kalıyordu — metadata bir sidecar'dır, üretici değil.
+Belgeler artık iki turda geziliyor (önce gerçek tarifler) ve alan yalnız boşsa
+doldurulur.
+
+**NaN üreten girdi sözleşmesi.** `normalizeAnalog(v, 1)` tam güçle itilen bir
+çubukta `0 / 0` döndürüyordu; NaN bir hareket niyeti gövdeye ve konuma geçer.
+Deadzone/yarıçap artık CORE'un kendi politikasına göre reddediliyor.
+
+**Yarım kalan dayanıklılık deseni.** `runSaveTransaction` geçici dosyayı
+fsync'liyor ama rename'i kalıcı kılan DİZİN fsync'ini atlıyordu: POSIX'te
+içerik sağlam, ad eski kalabilir.
+
+**Doğrulamasız test.** `reset pendingResources i temizler` hiçbir şey
+doğrulamıyordu; `reset` no-op olsa da geçerdi. Gerçek teste dönüştürüldü ve
+karşı tarafı (reset edilmezse kaynak uygulanır) da eklendi.
+
+**Ölü kod.** 1826 export adı tarandı, 33'ünün tüketicisi yoktu. Çoğu
+`export type XxxConfig = typeof xxxConfig` kalıbıydı — 18 kez kopyalanmış,
+yalnız biri kullanılıyordu. Silme sırasında kullanılan bir tipi de götüren
+regex yakalandı ve geri kondu; silinen her satır tek tek denetlendi. Tarama
+artık sıfır bildiriyor.
+
+**Yetim preset kapısı.** Katalog ile `getPreset` iki ayrı listeden
+besleniyordu: bir aile `all`a eklenmezse katalogda görünmez, `it.each` ile
+sentezlenmez ve kimse fark etmeden ölürdü — iki jingle tam olarak böyle yetim
+kalmıştı. Bütünlük iki yönde de bekçiye bağlandı.
+
+**Yanlış alarmlar (kayda değer).** Doğrulayıcının `ignore` alanını zorunlu
+tutması bug sanıldı; tip zaten zorunlu tanımlıyor ve tüketici korumasız
+yayıyor — doğrulayıcı haklıydı, test config'i eksikti. "Gezinirken değiştirilen
+koleksiyon" taraması 10 aday buldu, hepsi doğru desendi (döngü biter, `clear`
+sonraki satırda). Paylaşılan hedeflere bağlanan dinleyicilerin hepsinde
+temizlik var.
+
+**Yorum doktrini.** Yorum sözleşmeyi anlatır, olayı değil. Kural `AGENTS.md`ye
+yazıldı ve uygulandı: `FlowField`in ölçüm günlüğü ve D\* Lite gerekçesi
+`core/docs/primitives.md`ye taşındı, vol-arachnid'in yorum satırları 635 → 479
+düştü. Sözleşme taşıyan uzun bloklar (`StatBlock`) olduğu gibi kaldı.
+
+**Doküman.** `vol-arachnid/README.md` 231 → 89 satır; tasarım kararları
+`DESIGN.md`ye taşındı (devtools'taki konvansiyon). Bir kırık bağlantı
+düzeltildi, tüm doküman komutları geçerlilik için tarandı.
+
 ## 2026-09-04 — borç kapanışı: sınır, zaman, ölçüm
 
 Dış bir analiz raporu repo üzerinde doğrulandı ve üç dalgada kapatıldı. Raporun
