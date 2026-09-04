@@ -114,6 +114,15 @@
   --vol-z-loading: 50;
   --vol-z-debug: 999999;
 
+  /*
+   * Kanban sütununun OKUNABİLİR tabanı.
+   *
+   * Sütunlar bu değerin altına küçülmez; sığmadıklarında pano yatay kayar.
+   * Token olması bilinçli: bir tüketici daha dar kartlarla çalışıyorsa değeri
+   * kendi kökünde düşürebilir, bileşeni çatallamak zorunda kalmaz.
+   */
+  --vol-kanban-column-min: 200px;
+
   /* --vol-hit-target-min BURADA BİLİNÇLİ OLARAK TANIMLANMAZ: varsayılanda
      (mouse) tanımsız kalıp min-height/min-width'te `auto`ya düşer, yani
      masaüstü görünümü sıfır etkilenir. Değeri yalnızca aşağıdaki

@@ -5,6 +5,64 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-04 — vol-ui görsel sözleşme kapısı: iki yerleşim hatası, üç katman
+
+vol-ui, CORE'un DOM bileşen kütüphanesinin showcase'i — yani CORE'un GÖRSEL
+sözleşmesi orada yaşıyor. Birim testler yapıyı doğruluyordu (sınıf adı, ARIA,
+olay bağlama) ama hiçbiri bileşenin doğru GÖRÜNDÜĞÜNÜ görmüyordu: bir token'ın
+düşmesi, bir panelin taşması ya da bir sütunun ezilmesi bütün kapılar yeşilken
+gönderilebilirdi.
+
+**Önce kapının kendisi kanıtlandı.** Görsel regresyonun bilinen ölüm sebebi
+kararsızlıktır: kapı gerçek bir gerileme olmadan kırılırsa görmezden gelinmeye
+başlanır ve fiilen ölür. Dondurma katmanı ÜRETİM kodunda değil test tarafında
+yaşar (`addInitScript`), böylece showcase'e yalnız test için var olan bir dal
+girmez ve sonradan eklenen bir rastgelelik de kapsam dışında kalmaz.
+
+İlk ölçüm on iki sekmenin on birini birebir aynı, `forms`u kayar buldu. Sebep
+öğreticiydi: `performance.now` tek başına dondurulmuştu ama CORE'un
+`animateValue`ı ilerlemeyi rAF DAMGASINDAN okuyor. İkisi spec'e göre aynı zaman
+kaynağıdır; yalnız birini dondurmak hiç dondurmamaktan KÖTÜDÜR — başlangıç 0,
+ilerleme gerçek, animasyon ilk karede rastgele bir noktaya sıçrıyordu. İkisi
+birlikte dondurulunca 12/12 birebir, üç ardışık koşuda da aynı.
+
+**Yatay kaydırma hatası.** `hud` sekmesi 393 px'de sayfayı 57 px yatay
+kaydırılabilir yapıyordu. Kaynak `.vol-tabs__panels`: `overflow: auto` taşıyor
+ama `position: static`ti. `overflow` yalnızca containing block'u kendisi olan
+kutuları kırpar; statik bir kap mutlak konumlu bir torunun containing block'u
+olamaz, o yüzden panelin `.vol-sr-only` açıklamaları kırpmadan kaçıp belgeyi
+genişletiyordu. Tarayıcıda geri alınabilir biçimde kanıtlandı (57 → 0 → 57).
+
+**Kanban ezilmesi.** Dar kapta altı sütun `flex: 1` + `min-width: 0` ile 54 px'e,
+kartlar 36 px'e iniyordu: bileşen küçülmüş gibi görünüyor ama fiilen çalışmıyor
+— kart okunmuyor, sürükleme hedefi parmakla vurulamıyor. Sütunlar artık
+okunabilir bir tabandan başlayıp küçülmüyor, sığmadıklarında pano kendi kabında
+kayıyor. Sütun 54 → 200 px, kart 36 → 182 px.
+
+**Toleransı ölçmeden koymak.** Piksel kapısı savunmacı bir
+`maxDiffPixelRatio: 0.002` ile yazılmıştı. Gerçek bir gerilemeyle sınandığında
+yanlış çıktı: metin renginin ~%5 kayması on iki sekmenin yalnız BİRİNDE
+yakalanıyordu — kapı açık görünüp fiilen kördü. Asıl körlük piksel BAŞINA
+eşikteydi (varsayılan 0.2, koyu üstüne koyuyu yutuyor). Kararlılık birebir
+ölçüldüğü için tolerans sıfıra çekildi: aynı renk kayması artık 12/12
+yakalanıyor, temiz koşu hâlâ tertemiz geçiyor.
+
+**Dokunma hedefi boşluğu.** `hitTargetSync.test.ts` kendi yorumunda sınırını
+yazıyordu: jsdom yerleşim hesaplamadığı için doğrulama metin tabanlı. Kural
+doğruyken kutunun küçük kalması mümkündür. Kapının konusu artık CSS'in
+KENDİSİNDEN türetiliyor (token'ı tüketen 31 seçici) ve gerçek tarayıcıda
+ölçülüyor — politikaya yeni bir bileşen katıldığında liste kendiliğinden büyür.
+Bugünkü ölçüm: sıfır ihlal.
+
+**Bekçi yorumu koduyla çelişiyordu.** `cssTokens.test.ts` "yedeği olan
+kullanımlar muaf" diyordu; kod hiç öyle davranmadı. Doğru olan koddur — yanlış
+yazılmış bir token adı, yedeği yüzünden sayfada hiçbir belirti göstermez.
+Yorum gerçeğe çekildi.
+
+Her iki düzeltme mutasyonla sınandı: geri alındığında tam da ilgili test düşüyor.
+Kapı `justfile`'ın `e2e` aşamasına, `build`den sonra bağlandı — üçü de
+`vite preview` ile gönderilen çıktıyı sınar, kaynağı değil.
+
 ## 2026-09-04 — sağlamlaştırma turu: ölü kod, sessiz hatalar, yorum doktrini
 
 Kapı koşturmak değil, kod okuyup avlanmak. Beş gerçek hata çıktı; her biri

@@ -818,6 +818,18 @@
   align-items: flex-start;
   width: 100%;
   display: flex;
+
+  /*
+   * Sütunlar sığmadığında pano KAYAR, ezilmez.
+   *
+   * Sütunlar bir dönem `flex: 1` + `min-width: 0` taşıyordu: dar bir kapta altı
+   * sütun 54 px'e iniyor, kartlar 36 px kalıyordu (telefonda ölçüldü). O
+   * genişlikte pano okunmuyor ve sürükleme hedefi parmakla vurulamıyor —
+   * yani bileşen dar ekranda çalışmıyor, sadece küçülmüş gibi görünüyordu.
+   *
+   * Yatay kaydırma, panonun kendi kabıdır; taşma dışarı sızmaz.
+   */
+  overflow-x: auto;
 }
 
 .vol-kanban__column {
@@ -825,13 +837,24 @@
   background: var(--vol-ui-bg-subtle);
   border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-md);
+
+  /*
+   * `min-width: 0` KALIR: sütun içindeki başlık/etiketler ancak bu değerle
+   * kırpılabilir (flex çocuğu varsayılan olarak içeriğinden küçülmez). Ezilmeyi
+   * engelleyen şey bu değil, aşağıdaki `flex-shrink: 0`dır.
+   */
   min-width: 0;
   padding: var(--vol-space-sm);
   transition:
     border-color var(--vol-transition-fast),
     background-color var(--vol-transition-fast);
   flex-direction: column;
-  flex: 1;
+
+  /*
+   * Büyür, KÜÇÜLMEZ, okunabilir bir tabandan başlar. Geniş panoda sütunlar
+   * alanı paylaşır; dar panoda tabanda durup panoyu kaydırılabilir yapar.
+   */
+  flex: 1 0 var(--vol-kanban-column-min, 200px);
   display: flex;
 }
 

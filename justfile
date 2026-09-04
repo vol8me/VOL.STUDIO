@@ -56,9 +56,14 @@ build:
 
 # Gerçek tarayıcı kritik akışları (Chromium). jsdom testleri font yüklemesini,
 # gerçek yerleşimi ve bundle içeriğini göremez; bu kapı o boşluğu kapatır.
+#
+# vol-ui CORE'un GÖRSEL sözleşmesini taşır: geometri iddiaları (taşma, dokunma
+# hedefi) artı sekme başına piksel temeli. `build`den SONRA koşar — üçü de
+# `vite preview` ile GÖNDERİLEN çıktıyı sınar, kaynağı değil.
 e2e:
     pnpm --filter @volstudio/vol-asset-studio test:e2e
     pnpm --filter @volstudio/vol-arachnid test:e2e
+    pnpm --filter @volstudio/vol-ui test:e2e
 
 # Chromium + Firefox tam matris — yalnız signoff'ta koşar.
 e2e-full:

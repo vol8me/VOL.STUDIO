@@ -10,17 +10,20 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test --project=chromium",
+    "test:e2e:update": "playwright test --project=chromium --update-snapshots"
   },
   "dependencies": {
     "@volstudio/core": "workspace:*"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^26.1.2",
     "i18next": "26.3.6",
+    "jsdom": "25.0.1",
     "typescript": "^6.0.3",
     "vite": "^8.2.0",
-    "vitest": "3.0.5",
-    "jsdom": "25.0.1"
+    "vitest": "3.0.5"
   }
 }

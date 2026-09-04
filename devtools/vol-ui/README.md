@@ -35,10 +35,36 @@ token'ı yalnızca `pointer: coarse` altında bir değer taşır (bkz.
 değişmez; dokunmatik cihazda ya da tarayıcının cihaz emülasyonunda kutular
 gerçekten 44px'e büyür.
 
-Politika `core/tests/ui/hitTargetSync.test.ts` tarafından zorlanır: `cursor:
-pointer` taşıyan her CSS kuralı ya token'ı tüketmek ya da gerekçesi yazılı bir
-muafiyet taşımak zorundadır. Yeni bir interaktif bileşen eklendiğinde kapı,
-biri karar verene kadar kırılır.
+Politika iki katmanda zorlanır. `core/tests/ui/hitTargetSync.test.ts` kuralın
+CSS'te VAR olduğunu doğrular; jsdom yerleşim hesaplamadığı için orada kalan
+boşluğu — kutunun gerçekten 44px çizilip çizilmediğini — aşağıdaki tarayıcı
+kapısı kapatır.
+
+## Görsel sözleşme kapısı
+
+```bash
+pnpm --filter @volstudio/vol-ui build      # kapı GÖNDERİLEN çıktıyı sınar
+pnpm --filter @volstudio/vol-ui test:e2e
+```
+
+Üç katman, üç ayrı soru:
+
+| Dosya                 | Soru                                                  |
+| --------------------- | ----------------------------------------------------- |
+| `determinism.spec.ts` | Kapı güvenilir mi? Rastgelelik ve saat donduruldu mu? |
+| `layout.spec.ts`      | Yerleşim doğru mu? Taşma, dokunma hedefi, ezilme.     |
+| `visual.spec.ts`      | Görünüm değişti mi? Sekme başına piksel temeli.       |
+
+Görüntü karşılaştırması SIFIR toleransla koşar; bu, `determinism.spec.ts`in on
+iki sekmenin ayrı yüklemelerde birebir aynı çizildiğini ölçmesiyle mümkün olur.
+Beklenen bir görsel değişiklikten sonra temeller bilinçli olarak yenilenir:
+
+```bash
+pnpm --filter @volstudio/vol-ui test:e2e:update
+```
+
+Fark beklenmiyorsa güncellemeden önce sebebi aranır — kapının değeri tam olarak
+o anda ortaya çıkar.
 
 ## Lisans
 
