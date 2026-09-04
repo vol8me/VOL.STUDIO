@@ -137,8 +137,14 @@ Rig sanatı `devtools/pen.dev/pen/entities.pen` içinde yaşar ve
 
 **Bu paket export ağacını OKUMAZ.** `rig:sync` doğrulanmış export'u buraya
 kopyalar — metadata `src/assets/rig/`, parça PNG'leri `public/assets/rig/` —
-ve çalışma zamanı yalnız kendi ağacını görür. `devtools/` silinse bile
-`pnpm build:arachnid` geçer. Bir oyunun çalışma zamanı asset'ini üreten araca
+ve çalışma zamanı yalnız kendi ağacını görür.
+
+**Ölçüldü:** `devtools/` tamamen kaldırılıp `vite build` doğrudan çağrıldığında
+derleme geçiyor ve 72 rig parçasının hepsi çıktıya giriyor — build grafiği o
+ağaca hiç uzanmıyor. (`pnpm build:arachnid` yine de düşer: pnpm, kayıp bir
+workspace paketini kendi tutarlılık kontrolünde yakalar. Bu bir kod bağımlılığı
+değil paket yöneticisi sorunudur; `devDependencies` girdisi de silinirse o da
+kalkar.) Bir oyunun çalışma zamanı asset'ini üreten araca
 bağlanmamalıdır (bkz. kök [AGENTS.md](../../AGENTS.md), "Bozulamaz Kurallar" 4);
 kural `pnpm quick` içindeki `workspace-contract` kapısıyla korunur.
 

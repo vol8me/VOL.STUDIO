@@ -17,10 +17,15 @@ en ağırıydı.
 (`vol-hell`, `audio-synth`i yalnız `scripts/` içinde ve `devDependencies`
 olarak kullanıyor) ama sapmayı gören bir kapı yoktu. Rig VARLIK katmanı CORE'a
 alındı — bunlar bir aracın API'si değil, ÜRETİLMİŞ VERİNİN sözleşmesidir — ve
-72 parça oyunun kendi ağacına senkronlandı. `devtools/` silinse bile oyunun
-build'i geçiyor. Kural "paket" değil "zaman" üzerinden yeniden yazıldı ve
-`workspace-contract` kapısına bağlandı; bekçi düzeltilen ihlalin kendisiyle
-sınandı ve ayrıca önceden bilinmeyen bir devtool→devtool kenarı buldu (asset
+72 parça oyunun kendi ağacına senkronlandı. Ölçüldü: `devtools/` ağacı tamamen
+kaldırılıp `vite build` doğrudan çağrıldığında derleme geçiyor ve 72 parçanın
+hepsi çıktıya giriyor — build grafiği o ağaca hiç uzanmıyor. (`pnpm` sarmalayıcısı
+kayıp bir workspace paketini kendi tutarlılık kontrolünde yakalar; o ayrı bir
+katman.) Kural "paket" değil "zaman" üzerinden yeniden yazıldı ve
+`workspace-contract` kapısına bağlandı. Kuralın METNİ `AGENTS.md`dedir ve o
+dosya bilinçli olarak `.gitignore`da; repoya giren şey metin değil ZORLAYICIDIR
+(`scripts/quality/layers.mjs`). Taze bir klonda kuralı okuyamayan biri bile onu
+ihlal edemez. Bekçi düzeltilen ihlalin kendisiyle sınandı ve ayrıca önceden bilinmeyen bir devtool→devtool kenarı buldu (asset
 studio → visual-synth). O kenar silinmedi: gerekçesiyle BİLDİRİLDİ ve döngü
 her hâlükârda reddediliyor.
 
