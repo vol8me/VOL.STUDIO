@@ -17,7 +17,7 @@
  * değildir; bu yüzden yalnız `.ts` import'ları taranır, JSON içerikleri değil.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 
 /**
  * Devtool → devtool kenarları. BOŞ OLMAYAN her giriş bilinçli bir karardır.
@@ -100,6 +100,12 @@ function walkTypeScript(dir, visit) {
   }
 }
 
+/** `child`, `parent` ağacının içinde mi? (Aynı dizin de içeridir.) */
+function isInside(parent, child) {
+  const rel = relative(parent, child);
+  return rel === '' || (!rel.startsWith('..') && !rel.startsWith('/'));
+}
+
 function specifiersOf(source) {
   const found = [];
   for (const match of source.matchAll(SPECIFIER_PATTERN)) found.push(match[1]);
@@ -140,18 +146,45 @@ export function validateLayerBoundaries(root) {
         if (pkg && forbidden.has(pkg)) {
           problems.push(`${rel}: çalışma zamanı bir ${label} import ediyor ("${pkg}").`);
         }
-        if (/(^|\/)\.\.\/(?:\.\.\/)*devtools\//.test(specifier)) {
-          problems.push(
-            `${rel}: çalışma zamanı devtools ağacına göreli yolla uzanıyor ("${specifier}"). ` +
-              `Üretilmiş asset paketin kendi ağacına senkronlanmalı.`,
-          );
-        }
       }
     });
   };
 
-  // 1) Oyunların ÇALIŞMA ZAMANI hiçbir devtool'a bağlanmaz.
-  for (const game of gameDirs) scanRuntime(game, devtoolPackages, 'devtool');
+  /**
+   * Paketin DIŞINA göreli yolla uzanan import'lar.
+   *
+   * Ayrı bir geçiştir çünkü `scanRuntime` sahip başına birden çok kez koşar
+   * (farklı yasak kümeleri için) ve aynı ihlali her turda yeniden raporlardı.
+   *
+   * Yol DESENLE aranmaz, ÇÖZÜLÜR: paket adıyla import etmeyi yukarıdaki kontrol
+   * yakalar, `../../` ile kaçmak aynı bağı kurar ve bir dönem tam olarak öyle
+   * kurulmuştu (rig metadata'sı oyunun kaynağından export ağacına uzanıyordu).
+   * Desen araması yetmez — kardeş bir pakete giden yol (`../../../vol-hell/`)
+   * hiçbir grup adı içermez ve sessizce geçerdi.
+   */
+  const scanEscapes = (owner) => {
+    const ownerRoot = join(root, owner.dir);
+    walkTypeScript(join(ownerRoot, 'src'), (file, source) => {
+      const rel = relative(root, file);
+      for (const specifier of specifiersOf(source)) {
+        if (!specifier.startsWith('.')) continue;
+        if (isInside(ownerRoot, resolve(dirname(file), specifier))) continue;
+        problems.push(
+          `${rel}: çalışma zamanı paketin DIŞINA göreli yolla uzanıyor ("${specifier}"). ` +
+            `Paylaşılan kod CORE'a alınır, üretilmiş asset paketin kendi ağacına senkronlanır.`,
+        );
+      }
+    });
+  };
+
+  // 1) Oyunların ÇALIŞMA ZAMANI ne bir devtool'a ne BAŞKA BİR OYUNA bağlanır.
+  //    Paylaşılacak bir şey varsa CORE'a taşınır (AGENTS.md Kural 4).
+  for (const game of gameDirs) {
+    const otherGames = new Set([...gamePackages].filter((pkg) => pkg !== game.pkg));
+    scanRuntime(game, devtoolPackages, 'devtool');
+    scanRuntime(game, otherGames, 'başka oyun');
+    scanEscapes(game);
+  }
 
   // 2) Devtool'lar bir OYUNA hiç bağlanmaz; başka bir devtool'a yalnız
   //    `DEVTOOL_EDGES`de yazılı olduğu kadar bağlanır.
@@ -161,6 +194,7 @@ export function validateLayerBoundaries(root) {
     others.delete(tool.pkg);
     scanRuntime(tool, others, 'bildirilmemiş devtool');
     scanRuntime(tool, gamePackages, 'oyun');
+    scanEscapes(tool);
   }
 
   problems.push(...findDevtoolCycles(devtoolPackages));

@@ -78,7 +78,13 @@ import * as Core from '../../src/index';
 // alırken yürüyüş döngüsü 500 ms ilerliyor ve ayaklar gövdenin gitmediği yere
 // basıyordu. Tavanın kendisi `TECH.MAX_SIM_STEP_MS`tir ve `Spring1D` de artık
 // kendi özel sabiti yerine onu okur.
-const EXPECTED_EXPORT_COUNT = 221;
+// 221 → 222: `measureSupport`. Basılı ayakların dışbükey zarfını kurar ve
+// gövdenin ona göre denge payını ölçer. Yürüyüş döngüsünün sıra disiplini
+// "gövde her an desteklidir" güvencesini DOLAYLI olarak veriyordu ama kimse
+// ölçemiyordu; acil adım sırayı deldiğinde güvencenin hâlâ geçerli olup
+// olmadığı görünmüyordu. Bir fizik motoru değil, tek bir soruyu cevaplayan bir
+// ölçüm: merkez destek alanının içinde mi?
+const EXPECTED_EXPORT_COUNT = 222;
 
 // 196: asset compiler'lar (görsel/ses sentezi) CORE public surface'da
 // tutulmaz; runtime yalnızca üretilmiş asset'leri çalar.

@@ -259,4 +259,50 @@ describe('TouchStickState', () => {
       expect(pos.y).toBeCloseTo(100, 5);
     });
   });
+
+  describe('hibrit cihaz önceliği', () => {
+    /*
+     * "Dokunmatik her zaman PC'den önceliklidir" kuralı bir dönem hibrit
+     * cihazlarda fazla agresif sanıldı: dokunmatik ekranlı bir dizüstünde
+     * klavyeyi ikinci plana atıyor gibi görünüyordu. Ölçüldüğünde öncül yanlış
+     * çıktı — öncelik yalnız parmak GERÇEKTEN ekrandayken geçerli.
+     *
+     * Kuralı "son etkinlik kazansın"a çevirmek, tam da onu var eden hatayı geri
+     * getirirdi: bir dokunuştan miras kalan bayat `activePointer` PC'yi aktif
+     * gösterir ve öncelik ona geçerdi. Bu yüzden sözleşme burada KİLİTLENİR;
+     * değiştirilecekse bilinçli olarak değiştirilsin.
+     */
+    it('parmak kalkınca sağlayıcı hemen pasifleşir — PC devralabilir', () => {
+      const sticks = makeSticks();
+
+      sticks.onPointerDown(1, 100, 100, false);
+      expect(sticks.isActive).toBe(true);
+
+      sticks.onPointerUp(1);
+      expect(sticks.isActive).toBe(false);
+    });
+
+    it('ekran üstü düğme basılıyken hareket olmasa da aktif kalır', () => {
+      // Hareket etmeden basılan bir düğme PC'ye düşerse yutulurdu.
+      const actionSource = new VirtualActionSource<TestAction>();
+      const sticks = new TouchStickState<TestAction>({ actions: TEST_ACTIONS, actionSource });
+
+      expect(sticks.isActive).toBe(false);
+      actionSource.press('boost');
+      expect(sticks.isActive).toBe(true);
+
+      /*
+       * Bırakma sağlayıcıyı HEMEN pasifleştirmez: okunmamış bir basım bir kare
+       * daha mandalda tutulur. Kısa bir dokunuşta `pointerup` aynı karede
+       * gelirse, pasifleşen sağlayıcı yüzünden `InputManager` PC'ye düşer ve
+       * basım yutulurdu.
+       */
+      actionSource.release('boost');
+      expect(sticks.isActive).toBe(true);
+
+      // Mandal OKUNDUĞUNDA tükenir; sağlayıcı ancak o zaman pasifleşir.
+      actionSource.applyTo({ engage: false, boost: false });
+      expect(sticks.isActive).toBe(false);
+    });
+  });
 });

@@ -38,6 +38,15 @@ export interface LocomotionSignals {
   /** [0,1] atılım şiddeti — sert `isDashing` anahtarının yumuşatılmış hâli. */
   dash01: number;
   /**
+   * [0,1] duvar çarpmasının SÖNEN yankısı.
+   *
+   * Çarpma tek karelik bir olaydır; uzuvların onu görebilmesi için bir kaç kare
+   * yaşaması gerekir. Gövde ivmeden zaten yaslanır (sekmenin impulse'u ivmeye
+   * girdiğinden beri); bu sinyal aynı olayı UZUVLARA taşır ve darbeyi emen bir
+   * çöküş verir.
+   */
+  impact01: number;
+  /**
    * Ayaklar yerde mi?
    *
    * Bugün yalnız atılım gövdeyi yerden keser, ama alan bir SORU sorar

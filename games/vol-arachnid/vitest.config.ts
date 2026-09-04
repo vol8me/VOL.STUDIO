@@ -21,7 +21,18 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       // Tip-only dosyalarda çalıştırılabilir satır yok; dahil edilmeleri kapsam
       // oranını yapay olarak seyreltir.
-      exclude: ['src/**/*.d.ts', 'src/vite-env.d.ts'],
+      /*
+       * TİP-ONLY modüller kapsam dışıdır: çalıştırılabilir tek satırları yoktur
+       * ve dahil edildiklerinde oranı YAPAY olarak seyreltirler — v8 onları
+       * %0 sayar. `locomotionSignals.ts` yalnız sözleşme arayüzleri,
+       * `i18next-augment.ts` ise bir modül genişletmesi taşır.
+       */
+      exclude: [
+        'src/**/*.d.ts',
+        'src/vite-env.d.ts',
+        'src/i18next-augment.ts',
+        'src/runtime/entity/locomotionSignals.ts',
+      ],
       // Burada sayı yazmak, bekçinin okuduğu değerle ayrışmaya davetiyedir.
       thresholds: quality.packages['@volstudio/vol-arachnid'],
     },

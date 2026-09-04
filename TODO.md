@@ -5,6 +5,67 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-04 — borç kapanışı: sınır, zaman, ölçüm
+
+Dış bir analiz raporu repo üzerinde doğrulandı ve üç dalgada kapatıldı. Raporun
+bulgularının çoğu isabetliydi; üçü düzeltildi, biri kaçırılmıştı ve o kaçırılan
+en ağırıydı.
+
+**Sınır bir anayasa ihlaliydi.** `vol-arachnid` çalışma zamanı
+`@volstudio/pen.dev`i import ediyor ve onu `dependencies` altında taşıyordu —
+`AGENTS.md` Kural 4'ün doğrudan ihlali. Aynı repoda doğru desen zaten vardı
+(`vol-hell`, `audio-synth`i yalnız `scripts/` içinde ve `devDependencies`
+olarak kullanıyor) ama sapmayı gören bir kapı yoktu. Rig VARLIK katmanı CORE'a
+alındı — bunlar bir aracın API'si değil, ÜRETİLMİŞ VERİNİN sözleşmesidir — ve
+72 parça oyunun kendi ağacına senkronlandı. `devtools/` silinse bile oyunun
+build'i geçiyor. Kural "paket" değil "zaman" üzerinden yeniden yazıldı ve
+`workspace-contract` kapısına bağlandı; bekçi düzeltilen ihlalin kendisiyle
+sınandı ve ayrıca önceden bilinmeyen bir devtool→devtool kenarı buldu (asset
+studio → visual-synth). O kenar silinmedi: gerekçesiyle BİLDİRİLDİ ve döngü
+her hâlükârda reddediliyor.
+
+**Zaman alt sistemler arasında kaymıştı.** Sahne ham `delta`yı altı alt sisteme
+dağıtıyor, her biri kendi kelepçesini uyguluyordu: gövde 100 ms, yürüyüş
+döngüsü kelepçesiz. 500 ms'lik bir karede gövde 100 ms yol alıyor, ayak döngüsü
+500 ms ilerliyordu — ayaklar gövdenin GİTMEDİĞİ yere basıyordu. Tavan tek yere
+alındı (`TECH.MAX_SIM_STEP_MS`) ve `Spring1D` de kendi özel sabitini bıraktı.
+Aynı turda atılımın kare sınırına yuvarlanması, köşe çarpmasında ikinci
+darbenin birinciyi ezmesi ve sekme impulse'unun ivmeye hiç girmemesi düzeldi.
+
+**Ölçüm en çok şeyi ölçmediğimizi gösterdi.** Yeni benchmark, simülasyon ve
+sunum yüklerini ayrı ölçüyor: yaratığın CPU maliyetinin neredeyse tamamı SUNUM
+tarafında (poz gölgesi parça başına ~0,8 µs, doğrusal — sınır uzuv sayısı değil
+PARÇA sayısı). Destek poligonu eklendiğinde ise gizli bir gerçek çıktı: düz
+yürüyüşte gövde karelerin %98'inde destekli, ama atılım inişinden sonraki acil
+adım fırtınasında bu oran %22'ye düşüyor. Görünür bir hata değil (devrilme
+modeli yok) ama yorumların iddia ettiğinden zayıf. Ölçüldü, mandalla kilitlendi,
+değiştirilmedi — adım zamanlamasına dokunmak ölçmeden yapılmayacak bir iştir.
+
+**Raporun düzeltilen iddiaları.** (1) "facing/travel takası görsel kaymaya yol
+açıyor": `RigMotionModel`in yön çıktıları hiç tüketilmiyordu, bugünkü etkisi
+yoktu — altın imza değişmedi. Yine de yorum/kod yalanı kapandı ve alanlar
+`intent` önekiyle yeniden adlandırıldı. (2) "gerçek geometrik runtime invariant
+yok": vardı; eksik olan diz yönü kontrolü ve determinizm kilidiydi, ikisi de
+eklendi. (3) "hostile delta testleri eksik": değildi; eksik olan sonluluk değil
+alt sistemler arası zaman tutarlılığıydı.
+
+**Öncülü yanlış çıkan iki madde.** Hibrit cihazda dokunmatik önceliğinin fazla
+agresif olduğu iddiası ölçüldüğünde tutmadı: öncelik yalnız parmak gerçekten
+ekrandayken geçerli ve "son etkinlik kazansın"a çevirmek bayat-pointer hatasını
+geri getirirdi. `touchWorldScale` de sabit bir ölçek değil okunabilirlik
+tabanı; `fit < floor` zaten cihaza uyum sağlıyor. İkisi de değiştirilmedi,
+sözleşmeleri testle kilitlendi.
+
+**Bilinçli olarak yapılmayanlar.** Metachronal yürüyüş (mevcut alternating
+tetrapod netlik veriyor), rijit gövde motoru (destek poligonu ölçüm katmanı
+olarak yeterli; kuvvet/tork bir sonraki aşama), doku atlası (ölçüm CPU
+dönüşümünü işaret ediyor, draw call'u değil — atlas yükleme süresini
+iyileştirir ve o ayrı bir ölçüm ister), kalite kademesine bağlı efekt bütçesi
+(F3 eğrisi bugünkü 72 parçanın kare bütçesinin %0,45'ini aldığını söylüyor;
+kısıtlamak için bir sebep yok). İkinci bir rig'in pipeline genelliğini kanıtlaması
+birim testlerde sentetik bir varlıkla zaten yapılıyor; ikinci bir OYUN tarafı
+tüketicisi ayrı bir turun konusu.
+
 ## 2026-09-02 — VOL.ARACHNID mobil geri bildirim ve gerçek bug avı
 
 Kullanıcı cihaz geri bildiriminin her maddesi kaynak akışına kadar izlendi.

@@ -222,4 +222,78 @@ describe('duvar teması', () => {
     expect(body.consumeWallImpact()).not.toBeNull();
     expect(body.accelerationVector.x).toBeGreaterThan(0);
   });
+
+  it('çarpma UZUVLARA sönen bir yankı olarak taşınır', () => {
+    /*
+     * Çarpma tek karelik bir olaydır; sunum katmanı onu tüketip yok eder.
+     * Uzuvların darbeyi görebilmesi için birkaç kare yaşaması gerekir —
+     * yoksa yaratık duvara dimdik çarpıp dimdik sekerdi.
+     */
+    const r = arenaConfig.bodyRadiusPx;
+    const body = new ArachnidBody(r + 2, CENTER_Y);
+    expect(body.impact01).toBe(0);
+
+    body.update(new Vector2(-1, 0), true, 16);
+    const atImpact = body.impact01;
+    expect(atImpact).toBeGreaterThan(0);
+
+    // Sunum katmanı darbeyi tüketse bile yankı sönerek devam eder.
+    body.consumeWallImpact();
+    body.update(Vector2.zero(), false, 16);
+    const afterOneFrame = body.impact01;
+    expect(afterOneFrame).toBeGreaterThan(0);
+    expect(afterOneFrame).toBeLessThan(atImpact);
+
+    for (let i = 0; i < 40; i++) body.update(Vector2.zero(), false, 16);
+    expect(body.impact01).toBe(0);
+  });
+
+  it('yankı, darbeyi TÜKETEN olmasa da söner', () => {
+    /*
+     * Yankı bir dönem `pendingImpact` YOKLANARAK kuruluyordu ve bu, ömrünü
+     * bekleyen darbeyi kimin ne zaman tükettiğine bağlıyordu. Sunum katmanı
+     * onu her karede tüketir; tüketmeyen bir çağıranda (ölçüm koşuları, başsız
+     * testler) `impact01` sonsuza dek 1'de takılı kalıyor ve uzuvlar kalıcı
+     * olarak çökük duruyordu.
+     */
+    const r = arenaConfig.bodyRadiusPx;
+    const body = new ArachnidBody(r + 2, CENTER_Y);
+    body.update(new Vector2(-1, 0), true, 16);
+    expect(body.impact01).toBeGreaterThan(0);
+
+    // Bilerek TÜKETİLMİYOR.
+    for (let i = 0; i < 40; i++) body.update(Vector2.zero(), false, 16);
+
+    expect(body.impact01).toBe(0);
+    // Darbe hâlâ bekliyor: sönme onu yutmaz, ikisi ayrı sözleşmedir.
+    expect(body.consumeWallImpact()).not.toBeNull();
+  });
+
+  it('çarpma uzuvları BÜKER — ayak yerinde kalırken uzuv kısalır', () => {
+    const rigA = makeRig();
+    const rigB = makeRig();
+    const legsA = new ArachnidLegs(rigA);
+    const legsB = new ArachnidLegs(rigB);
+    legsA.reset(0, 0, -Math.PI / 2);
+    legsB.reset(0, 0, -Math.PI / 2);
+
+    const calm = bodySignals({ impact01: 0 });
+    const hit = bodySignals({ impact01: 1 });
+    const pose = poseSignals({ motion01: 0 });
+    legsA.update(calm, pose, CEILING);
+    legsB.update(hit, pose, CEILING);
+
+    const reachOf = (limb: LimbRig): number => {
+      const foot = footOf(limb);
+      return Math.hypot(foot.x - limb.hipX, foot.y - limb.hipY);
+    };
+    /*
+     * Çöküş DURUŞ evine yazılsaydı bu test geçmezdi: ev yalnız bir sonraki
+     * adımın hedefini etkiler ve 260 ms'lik bir yankıda çoğu ayak adım atmaz.
+     * Poza yazıldığı için uzuv o karede bükülür.
+     */
+    for (let i = 0; i < rigA.limbs.length; i++) {
+      expect(reachOf(rigB.limbs[i]), rigA.limbs[i].id).toBeLessThan(reachOf(rigA.limbs[i]));
+    }
+  });
 });

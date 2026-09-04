@@ -6,8 +6,11 @@ sunum efektlerinin (iz, gölge, toz) çalışıldığı yüzeydir.
 
 ## Yığın
 
-Phaser 4 · TypeScript · Vite · `@volstudio/core` (paylaşılan sistemler + UI
-kiti) · `@volstudio/pen.dev` (rig montajı)
+Phaser 4 · TypeScript · Vite · `@volstudio/core` (paylaşılan sistemler, UI kiti
+ve rig çalışma zamanı)
+
+`@volstudio/pen.dev` yalnız BUILD-TIME bir araçtır (`rig:sync`) ve
+`devDependencies` altındadır; çalışma zamanı ona bağlı değildir.
 
 Monorepo geneli için [kök README](../../README.md)'ye bakın.
 
@@ -24,6 +27,7 @@ Monorepo geneli için [kök README](../../README.md)'ye bakın.
 | `pnpm --filter @volstudio/vol-arachnid rig:sync`  | Rig export'unu bu pakete gönderir    |
 | `pnpm benchmark:vol-arachnid`                     | Locomotion ve poz-efekt ölçümü       |
 | `pnpm --filter @volstudio/vol-arachnid test`      | Vitest                               |
+| `pnpm --filter @volstudio/vol-arachnid test:e2e`  | Gerçek tarayıcıda render smoke'u     |
 | `pnpm --filter @volstudio/vol-arachnid typecheck` | `tsc --noEmit`                       |
 
 Kök `pnpm dev` bu paketi vol-ui ve vol-asset-studio ile birlikte açar.
@@ -177,6 +181,36 @@ tutmadığını söyler. Temiz ayırma ölçümü için `NODE_OPTIONS=--expose-g
 çalıştır.
 
 Sayılar makineye özeldir ve kapı EŞİĞİ DEĞİLDİR; oran ve büyüme yönü anlamlıdır.
+
+## Denge ölçümü
+
+Yürüyüş döngüsü dengeyi SIRA disipliniyle korur: bir grup adım atarken diğeri
+yerde kalır. O disiplin bir güvence verir ama ÖLÇMEZ — acil adım sırayı
+deldiğinde güvencenin hâlâ tuttuğunu kimse söyleyemiyordu.
+
+CORE'un `measureSupport`u basılı ayakların dışbükey zarfını kurar ve gövdenin
+ona göre payını ölçer (`legs.support`). Bu bir fizik motoru değildir: kütle,
+kuvvet, kısıt çözücü yok. Tek soruyu cevaplar — gövde, üzerine bastığı alanın
+içinde mi?
+
+İlk ölçüm gizli bir gerçeği gösterdi (6000 kare, sabit tohum):
+
+| Rejim                             | Desteklenen kare | Üçten az ayak yerde |
+| --------------------------------- | ---------------- | ------------------- |
+| 16 ms — sabit yön                 | %98,4            | %1,0                |
+| 16 ms — sık yön değişimi          | %67,2            | %23,9               |
+| 16 ms — sık yön değişimi + atılım | %22,2            | %47,0               |
+| Karışık delta — aynı akış         | %54,8            | %22,9               |
+
+Atılım inişinden sonraki acil adım fırtınasında üçten az ayak yerde kalıyor ve
+destek alanı çöküyor: 16 ms'lik karelerde bu, karelerin neredeyse yarısı.
+Karışık delta satırının daha "iyi" görünmesi bir iyileşme DEĞİL — dev kareler
+adım döngüsünü hızla ilerletip fırtınayı daha az karede geçirtiyor. Görünür bir hata DEĞİL — oyunda devrilme modeli yok,
+yaratık düşmez — ama kod yorumlarının iddia ettiğinden zayıf. Adım
+zamanlamasına dokunmak büyük bir davranış değişikliğidir ve ölçmeden
+yapılmamalıydı; ölçüldü, `tests/runtime/locomotion.test.ts` içinde mandalla
+kilitlendi, değiştirilmedi. Oranı yükseltmenin yolu denge düştüğünde
+DÜZELTİCİ ADIM planlamaktır ve o ayrı bir turun konusudur.
 
 ## HUD ve arena
 

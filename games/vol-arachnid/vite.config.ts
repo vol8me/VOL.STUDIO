@@ -39,6 +39,12 @@ export default defineConfig({
       ],
     },
   },
+  // `vite preview` gerçek build'i sunar; E2E kapısı buradan geçer.
+  preview: {
+    port: 5179,
+    strictPort: true,
+    host: '127.0.0.1',
+  },
   build: {
     target: 'es2022',
     outDir: 'dist',

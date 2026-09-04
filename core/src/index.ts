@@ -142,6 +142,16 @@ export { MovableController as PlayerController } from './entities/MovableControl
 
 // Uzuv SÖZLÜĞÜ bilinçli olarak burada yok. `LegGait` yalnız gövde-yerel ev
 // konumu ve adım grubu alır; hangi rig'in kaç bacağı olduğunu tüketici bilir.
+/*
+ * Destek poligonu bir FİZİK MOTORU değildir: kütle, kuvvet ve kısıt çözücü
+ * taşımaz. Tek soruyu ölçer — gövde, yere basan ayakların çevrelediği alanın
+ * içinde mi? Bacaklı bir yaratıkta "devriliyor mu?" sorusunun ilk yaklaşımı
+ * budur ve yürüyüş döngüsünün SIRA disipliniyle verdiği dolaylı güvenceyi
+ * ölçülebilir kılar. Ne yapılacağına tüketici karar verir.
+ */
+export { measureSupport } from './rig';
+export type { SupportFoot, SupportQuery, SupportState } from './rig';
+
 export {
   RigMotionModel,
   LegGait,

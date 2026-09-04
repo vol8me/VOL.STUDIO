@@ -91,9 +91,24 @@ function attach(scene: GameScene, fake: FakeScene): void {
   }
 }
 
-function boot(audio: ArachnidAudioPort | null = null): SceneHarness {
-  const scene = new GameScene(audio);
+interface BootOptions {
+  audio?: ArachnidAudioPort | null;
+  /** Kamera görüş alanı (CSS px) — cihaz sınıfını taklit eder. */
+  viewport?: { width: number; height: number };
+}
+
+function boot(options: ArachnidAudioPort | null | BootOptions = null): SceneHarness {
+  const opts: BootOptions =
+    options !== null && 'play' in (options as ArachnidAudioPort)
+      ? { audio: options as ArachnidAudioPort }
+      : ((options ?? {}) as BootOptions);
+
+  const scene = new GameScene(opts.audio ?? null);
   const fake = createFakeScene();
+  if (opts.viewport) {
+    fake.cameras.main.width = opts.viewport.width;
+    fake.cameras.main.height = opts.viewport.height;
+  }
   attach(scene, fake);
   scene.preload();
   scene.create();
@@ -173,6 +188,31 @@ describe('GameScene yaşam döngüsü', () => {
     for (let i = 0; i < 20; i++) scene.update(i * 16, 16);
     // Gövde merkezde duruyor; kamera da onun üstünde kalmalı.
     expect(fake.cameras.main.centeredOn?.x).toBeCloseTo(start.x, 3);
+
+    shutdown();
+  });
+
+  it('GENİŞ bir dokunmatik görüş alanında arena yine SIĞDIRILIR', () => {
+    /*
+     * `touchWorldScale` sabit bir ölçek DEĞİL, okunabilirlik TABANIDIR.
+     *
+     * Telefonda sığdırma o tabanın altına düştüğü için takip devreye girer;
+     * geniş bir tablette sığdırma zaten tabanın üstündedir ve arenanın tamamı
+     * gösterilir. Sabit bir ölçek olsaydı tablet kullanıcısı sebepsiz yere dar
+     * bir pencereden bakardı.
+     */
+    touchEnabled.value = true;
+    const { fake, shutdown } = boot({ viewport: { width: 2400, height: 1600 } });
+
+    expect(fake.cameras.main.zoom).toBeGreaterThan(arenaConfig.touchWorldScale);
+    // Sığdırma modunda kamera arenanın ortasına oturur, gövdeyi takip etmez.
+    expect(fake.cameras.main.centeredOn?.x).toBeCloseTo(
+      arenaConfig.widthPx / 2 -
+        (arenaConfig.viewportGutterPx.left - arenaConfig.viewportGutterPx.right) /
+          2 /
+          fake.cameras.main.zoom,
+      3,
+    );
 
     shutdown();
   });

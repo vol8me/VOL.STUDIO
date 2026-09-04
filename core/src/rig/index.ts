@@ -1,6 +1,12 @@
 export { RigMotionModel, type RigMotionModelConfig } from './RigMotionModel';
 export { LegGait, type LegGaitConfig, type LegGaitLeg, type LegGaitStepTuning } from './LegGait';
 export { GazeDriver, type GazeDriverConfig, type GazeSignals } from './GazeDriver';
+export {
+  measureSupport,
+  type SupportFoot,
+  type SupportQuery,
+  type SupportState,
+} from './SupportPolygon';
 export type { RigMotionSignals } from './types';
 
 /*

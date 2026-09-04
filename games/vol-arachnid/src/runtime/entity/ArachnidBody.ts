@@ -18,6 +18,13 @@ const MS_PER_SEC = 1000;
 const TRAVEL_HEADING_MIN_SPEED = 1e-3;
 /** Atılım şiddetinin sönme süresi — iz ve duruş payı bir anda kesilmez. */
 const DASH_BLEND_FALLOFF_MS = 220;
+/**
+ * Çarpma yankısının sönme süresi.
+ *
+ * Kısa tutulur: darbe bir çöküştür, bir duruş değil. Uzun bir sönme yaratığı
+ * çarpmadan sonra saniyelerce çömelmiş bırakırdı.
+ */
+const IMPACT_BLEND_FALLOFF_MS = 260;
 
 /**
  * Duvara çarpma yankısı; sunum katmanı bunu bir kez tüketir.
@@ -58,6 +65,7 @@ export class ArachnidBody {
   private readonly acceleration = new Vector2(0, 0);
   private dashRemainingMs = 0;
   private dashBlend = 0;
+  private impactBlend = 0;
   private pendingDashLanding = false;
   private pendingDashLaunch = false;
   /** Basılı tutmak cooldown sonunda kendiliğinden ikinci atılım üretmemeli. */
@@ -83,6 +91,7 @@ export class ArachnidBody {
     facingHeadingRad: 0,
     turnRateRadPerSec: 0,
     dash01: 0,
+    impact01: 0,
     grounded: true,
   };
 
@@ -116,6 +125,7 @@ export class ArachnidBody {
     signals.facingHeadingRad = this.facing.value;
     signals.turnRateRadPerSec = this.facing.velocity;
     signals.dash01 = this.dashBlend;
+    signals.impact01 = this.impactBlend;
     signals.grounded = this.dashRemainingMs <= 0;
     return signals;
   }
@@ -149,6 +159,11 @@ export class ArachnidBody {
    */
   get dash01(): number {
     return this.dashBlend;
+  }
+
+  /** [0,1] — duvar çarpmasının sönen yankısı; uzuv çöküşünü sürer. */
+  get impact01(): number {
+    return this.impactBlend;
   }
 
   /** [0,1] — dash'in yeniden hazır olma ilerlemesi; HUD tüketir. */
@@ -204,6 +219,8 @@ export class ArachnidBody {
 
     this.dashCooldown.update(stepMs);
     this.wallRecoveryMs = Math.max(0, this.wallRecoveryMs - stepMs);
+    // Sönme kare BAŞINDA alınır: bu karede kurulan bir yankı anında sönmemeli.
+    this.impactBlend = Math.max(0, this.impactBlend - stepMs / IMPACT_BLEND_FALLOFF_MS);
 
     /*
      * Niyet TEMİZLENİR. Sonsuz bir bileşen `hypot`u da sonsuz yapar ve
@@ -402,6 +419,15 @@ export class ArachnidBody {
    * Bileşke normal normalize edilir, şiddet ise en güçlü temasınkidir.
    */
   private mergeImpact(impact: WallImpact): void {
+    /*
+     * Uzuv yankısı temasın ÜRETİLDİĞİ anda kurulur, `update` içinde
+     * `pendingImpact` yoklanarak değil. Yoklama, yankının ömrünü bekleyen
+     * darbeyi kimin ne zaman TÜKETTİĞİNE bağlıyordu: tüketmeyen bir çağıranda
+     * (ölçüm koşuları, başsız testler) `impact01` sonsuza dek 1'de takılı kalır
+     * ve uzuvlar kalıcı olarak çökük dururdu.
+     */
+    this.impactBlend = Math.max(this.impactBlend, clamp01(impact.strength01));
+
     const previous = this.pendingImpact;
     if (!previous) {
       this.pendingImpact = impact;

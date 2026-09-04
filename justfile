@@ -58,6 +58,7 @@ build:
 # gerçek yerleşimi ve bundle içeriğini göremez; bu kapı o boşluğu kapatır.
 e2e:
     pnpm --filter @volstudio/vol-asset-studio test:e2e
+    pnpm --filter @volstudio/vol-arachnid test:e2e
 
 # Chromium + Firefox tam matris — yalnız signoff'ta koşar.
 e2e-full:

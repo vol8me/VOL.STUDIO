@@ -56,6 +56,17 @@ function step(chain: Chain, intent: Vector2, dash: boolean, deltaMs: number): vo
   body.update(intent, dash, deltaMs);
   const signals = body.signals;
   legs.update(signals, motion.update(signals, deltaMs), deltaMs);
+  /*
+   * Bekleyen olaylar TÜKETİLİR — sahne de her karede tüketir.
+   *
+   * Tüketmemek sessizce farklı bir akış sürerdi: `consumeWallImpact` sunum
+   * katmanının sözleşmesidir ve bir dönem uzuv yankısının ömrü de ona
+   * bağlıydı. Altın imza gerçek oyunun izlediği yolu kilitlemeli, testin kendi
+   * uydurduğu bir yolu değil.
+   */
+  body.consumeWallImpact();
+  body.consumeDashLaunch();
+  body.consumeDashLanding();
 }
 
 interface LimbGeometry {
@@ -202,6 +213,19 @@ describe('locomotion değişmezleri — 10.000 kare', () => {
         note(`${at}: dash01 aralık dışı (${body.dash01})`);
       }
 
+      // --- Destek ölçümü SONLU ve aralıkta ---
+      const support = legs.support;
+      if (!Number.isFinite(support.marginPx) || !Number.isFinite(support.areaPx2)) {
+        note(`${at}: destek ölçümü sonlu değil`);
+      }
+      if (support.stability01 < 0 || support.stability01 > 1) {
+        note(`${at}: stability01 aralık dışı (${support.stability01})`);
+      }
+      if (body.isDashing && support.groundedCount !== 0) {
+        // Havadayken destek YOKTUR; bir önceki karenin ölçümü taşınmamalı.
+        note(`${at}: atılımda destek bildirildi (${support.groundedCount})`);
+      }
+
       // --- Uzuvlar ---
       peakStepping = Math.max(peakStepping, legs.steppingLimbCount);
       if (legs.emergencyLimbCount === 0) {
@@ -247,12 +271,94 @@ describe('locomotion değişmezleri — 10.000 kare', () => {
 
     // Akış gerçekten çalıştı mı? Hiçbir şey tetiklenmeden geçen bir test,
     // yalnız kendini doğrular.
+
     expect(dashPresses).toBeGreaterThan(100);
     expect(peakStepping).toBeGreaterThan(0);
     expect(bendChecks).toBeGreaterThan(10_000);
     // Acil rejim bu akışta gerçekten yaşanmalı; yaşanmıyorsa yukarıdaki
     // rejim ayrımı hiç sınanmamış demektir.
     expect(emergencyFrames).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * STATİK DENGE — ÖLÇÜM, GÜVENCE DEĞİL.
+ *
+ * Yürüyüş döngüsünün "gövde her an desteklidir" güvencesi bugüne kadar SIRA
+ * disiplininden ÇIKARSANIYORDU; kimse ölçmüyordu. Destek poligonu eklendiğinde
+ * ilk ölçüm şunu söyledi:
+ *
+ *   16 ms, sabit yön                 → %98,4 kare desteklenmiş
+ *   16 ms, sık yön değişimi          → %67,2
+ *   16 ms, sık yön değişimi + atılım → %22,2
+ *   karışık delta, aynı akış         → %54,8
+ *
+ * Yani güvence, atılım inişinin ardından gelen ACİL ADIM fırtınasında büyük
+ * ölçüde askıya alınıyor: üçten az ayak yerde kalıyor ve destek alanı çöküyor.
+ *
+ * Bu görünür bir hata DEĞİLDİR — oyunda devrilme modeli yok, yaratık düşmez.
+ * Ama gizli bir gerçektir ve yorumların iddia ettiğinden zayıftır. Adım
+ * zamanlamasını değiştirmek büyük bir davranış değişikliği olur ve ölçmeden
+ * yapılmamalıydı; ölçüldü, kayda geçti, kararı ayrı bir turun konusu.
+ *
+ * Buradaki testler bir MANDAL kurar: sakin rejim sıkı sıkıya, saldırgan rejim
+ * ölçülen tabanın altına düşmeyecek biçimde kilitlenir.
+ */
+describe('statik denge', () => {
+  function measureSupportRatio(options: {
+    dashRate: number;
+    intentChangeRate: number;
+    deltas: readonly number[];
+    frames: number;
+  }): { ratio: number; lowSupportFrames: number } {
+    const chain = makeChain();
+    const random = createRandom(SEED);
+    let intent = randomIntent(random);
+    let grounded = 0;
+    let inside = 0;
+    let lowSupportFrames = 0;
+
+    for (let frame = 0; frame < options.frames; frame++) {
+      if (random.next() < options.intentChangeRate) intent = randomIntent(random);
+      const dash = random.next() < options.dashRate;
+      const deltaMs = options.deltas[Math.floor(random.next() * options.deltas.length)];
+      step(chain, intent, dash, deltaMs);
+
+      if (chain.body.isDashing) continue;
+      grounded++;
+      if (chain.legs.support.inside) inside++;
+      if (chain.legs.support.groundedCount < 3) lowSupportFrames++;
+    }
+    return { ratio: inside / Math.max(1, grounded), lowSupportFrames };
+  }
+
+  it('DÜZ yürüyüşte gövde neredeyse her kare desteklidir', () => {
+    // Sakin rejim sıkı kilitlenir: burada bir gerileme gerçek bir yürüyüş
+    // regresyonudur, rejim takası değil.
+    const { ratio } = measureSupportRatio({
+      dashRate: 0,
+      intentChangeRate: 0.001,
+      deltas: [16],
+      frames: 6_000,
+    });
+    expect(ratio).toBeGreaterThan(0.95);
+  });
+
+  it('ATILIMLI saldırgan akışta destek ölçülen tabanın altına düşmez', () => {
+    /*
+     * Ölçülen taban ~%55. Eşik bilinçli olarak DÜŞÜK: bu test iyi bir sayıyı
+     * savunmuyor, ölçülen sayının sessizce KÖTÜLEŞMESİNİ engelliyor. Sayı
+     * yükseltilmek isteniyorsa yol I4'tür — denge düştüğünde düzeltici adım.
+     */
+    const { ratio, lowSupportFrames } = measureSupportRatio({
+      dashRate: 0.05,
+      intentChangeRate: 0.08,
+      deltas: DELTA_POOL,
+      frames: 6_000,
+    });
+    expect(ratio).toBeGreaterThan(0.45);
+    // Üçten az ayakla geçen kareler de bir tavan taşır; hepsi havalanamaz.
+    expect(lowSupportFrames).toBeLessThan(3_000);
   });
 });
 
@@ -275,7 +381,15 @@ const SCENARIO: ReadonlyArray<{ intent: [number, number]; dash: boolean; ms: num
   { intent: [-1, 0], dash: true, ms: 300 },
   { intent: [-1, -1], dash: false, ms: 900 },
   { intent: [0, 1], dash: true, ms: 600 },
-  { intent: [0, 0], dash: false, ms: 500 },
+  /*
+   * Duvara SERT çarpma. İlk sürümde senaryo yalnız duvara sürtüyordu: gövde
+   * kelepçeleniyor ama eşiği aşan bir temas hiç olmuyordu — yani sekme, bileşke
+   * darbe ve uzuv çöküşü altın imzanın kapsamı DIŞINDAYDI (ölçüldü: çarpma
+   * sayısı 0). Sol duvara doğru bir atılım o zinciri de kilide alır.
+   */
+  { intent: [0, 1], dash: false, ms: 400 },
+  { intent: [-1, 0], dash: true, ms: 250 },
+  { intent: [0, 0], dash: false, ms: 150 },
 ];
 const SCENARIO_FRAME_MS = 16;
 

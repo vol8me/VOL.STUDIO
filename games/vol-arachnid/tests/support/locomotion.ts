@@ -20,6 +20,7 @@ export function bodySignals(overrides: Partial<LocomotionSignals> = {}): Locomot
     facingHeadingRad: -Math.PI / 2,
     turnRateRadPerSec: 0,
     dash01: 0,
+    impact01: 0,
     grounded: true,
   };
   const signals = { ...base, ...overrides };

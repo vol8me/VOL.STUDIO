@@ -214,6 +214,14 @@ export const gaitConfig = {
    * uzuv yerde sürüklenir ve gövde dönse bile yerinden kalkmaz.
    */
   emergencyStrainPx: 100,
+  /**
+   * Denge payının [0,1] ölçeğinde 1'e ulaştığı kenar mesafesi (dünya px).
+   *
+   * Yaratığın duruş yarıçapına göre seçilir: ayaklar gövdeden ~120 px uzakta
+   * durur, yani gövdenin destek kenarına 60 px kalması hâlâ rahat bir paydır.
+   * Bunun altında denge okunur biçimde daralmaya başlar.
+   */
+  supportSafeMarginPx: 60,
   /** Bu hızda koşu adımının tam tempo değerleri kullanılır. */
   fullTempoSpeedPxPerSec: 215,
   /** Adım hedefini hız yönünde ileri koyar; ayak gideceği yere basar. */
@@ -224,6 +232,19 @@ export const gaitConfig = {
    * yerden çekilmiş görünür. Salt ekran kaydırması tek başına bunu vermez.
    */
   swingTuckPx: 20,
+  /**
+   * Duvara çarpmada ayağın kalçaya doğru çekildiği mesafe (px).
+   *
+   * Gövde çarpmada ivmeden yaslanır ama uzuvlar olayı hiç görmüyordu; yaratık
+   * duvara dimdik çarpıp dimdik sekiyordu.
+   *
+   * Ayar DURUŞ evine değil POZA uygulanır ve fark önemlidir: ev konumu yalnız
+   * bir SONRAKİ adımın hedefini etkiler, basılı ayak yerinde kalır. 260 ms'lik
+   * bir yankıda çoğu ayak hiç adım atmaz — duruşa yazılan bir çöküş görünmezdi
+   * (ölçüldü: erişim birebir aynı kaldı). Poza yazıldığında uzuvlar o karede
+   * bükülür, ayaklar ise yerinde kalır: darbe EMİLMİŞ görünür.
+   */
+  impactTuckPx: 16,
 
   /** Pençenin (bilek) havadayken kıvrılması ve yerdeyken düzelmesi (derece). */
   clawLiftCurlDeg: 14,

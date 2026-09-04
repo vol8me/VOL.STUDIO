@@ -325,4 +325,41 @@ describe('ArachnidLegs — yürüyüş', () => {
     // yarıçapının üstüne binen bu fark burada 1.25 katını aşardı.
     expect(dash).toBeLessThan(tempo * 1.25);
   });
+
+  describe('kurulum sözleşmesi', () => {
+    /*
+     * Kurucunun REDDETTİĞİ iki durum. İkisi de yapılandırma hatasıdır ve
+     * sessizce kabul edilirlerse uzuv yanlış pozlanır — hata, kaynağından çok
+     * uzakta bir görsel tuhaflık olarak görünürdü.
+     */
+    it('duruş tanımı olmayan uzvu REDDEDER', () => {
+      const rig = makeRig();
+      // Rig'e duruş tablosunda karşılığı olmayan bir uzuv eklenir.
+      const stranger = { ...rig.limbs[0], id: 'bilinmeyen_uzuv' };
+      const broken = { ...rig, limbs: [...rig.limbs, stranger] };
+
+      expect(() => new ArachnidLegs(broken)).toThrow(/bilinmeyen_uzuv/);
+    });
+
+    it('SABİT kök kemiği olup kök payı bildirilmemiş uzvu REDDEDER', () => {
+      /*
+       * Arka itici uzuvlarda kök kemik IK çiftinin ilkidir ve `rootFollow`
+       * taşımazlar. Böyle bir uzva sabit kök kemik verilirse çözücü kökü neye
+       * göre süreceğini bilemez; sessizce sıfır pay kullanmak uzvu duruşa
+       * çivilerdi.
+       */
+      const rig = makeRig();
+      const tail = rig.limbs.find((limb) => limb.id === 'tl');
+      if (!tail) throw new Error('tl uzvu yok');
+      expect(gaitConfig.stance.tl.rootFollow).toBeUndefined();
+
+      const withRoot = { ...tail, root: rig.limbs[0].upper };
+      const broken = {
+        ...rig,
+        limbs: rig.limbs.map((limb) => (limb.id === 'tl' ? withRoot : limb)),
+      };
+
+      expect(() => new ArachnidLegs(broken)).toThrow(/kök payı tanımlı değil/);
+    });
+  });
 });

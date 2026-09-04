@@ -5,9 +5,12 @@ import {
   clampSimulationStep,
   finiteOr,
   lerp,
+  measureSupport,
   solveTwoBoneIk,
   wrap,
   type LegGaitLeg,
+  type SupportFoot,
+  type SupportState,
 } from '@volstudio/core';
 import { gaitConfig, type LimbStance } from '@/config/gait';
 import { RIG_FACING_OFFSET_RAD } from '@/config/rig';
@@ -50,6 +53,27 @@ export class ArachnidLegs {
   private readonly footLocalY: number[];
   private readonly footLift: number[];
   private airborne = false;
+  /**
+   * Destek ölçümünün ödünç girdisi ve çıktısı.
+   *
+   * Ölçüm her karede koşar; ayak dizisini ve sonuç nesnesini her seferinde
+   * yeniden kurmak sıcak yolda gereksiz bir tahsis olurdu.
+   */
+  private readonly supportFeet: SupportFoot[];
+  /**
+   * Adım ayarının ödünç nesnesi.
+   *
+   * `setStepTuning` alanları KOPYALAR, referansı tutmaz; her karede yeni bir
+   * nesne kurmak sıcak yolda gereksiz bir tahsisti.
+   */
+  private readonly stepTuning = { stepTriggerPx: 0, stepDurationMs: 0 };
+  private readonly supportState: SupportState = {
+    groundedCount: 0,
+    areaPx2: 0,
+    inside: false,
+    marginPx: 0,
+    stability01: 0,
+  };
 
   constructor(rig: ArachnidRig) {
     this.drivers = rig.limbs.map((limb) => {
@@ -84,6 +108,7 @@ export class ArachnidLegs {
     this.footLocalX = new Array<number>(entries.length).fill(0);
     this.footLocalY = new Array<number>(entries.length).fill(0);
     this.footLift = new Array<number>(entries.length).fill(0);
+    this.supportFeet = entries.map(() => ({ x: 0, y: 0, grounded: false }));
     this.stanceRadiusPx =
       entries.reduce((total, entry) => total + Math.hypot(entry.homeX, entry.homeY), 0) /
       entries.length;
@@ -103,6 +128,7 @@ export class ArachnidLegs {
     this.applyStance(0, 0, 0);
     this.gait.reset(bodyX, bodyY, rigRad);
     this.readGaitFeet(bodyX, bodyY, rigRad);
+    this.measureSupportState(bodyX, bodyY, 0, 0);
     this.pose(0);
   }
 
@@ -130,6 +156,7 @@ export class ArachnidLegs {
     const motion01 = clamp01(finiteOr(pose.motion01, 0));
     const dash01 = clamp01(finiteOr(body.dash01, 0));
     const crouch01 = clamp01(finiteOr(pose.crouch01, 0));
+    const impact01 = clamp01(finiteOr(body.impact01, 0));
 
     const rigRad = finiteOr(body.facingHeadingRad, 0) + RIG_FACING_OFFSET_RAD;
     this.applyStance(motion01, dash01, crouch01);
@@ -140,7 +167,10 @@ export class ArachnidLegs {
       // titriyordu.
       this.airborne = true;
       this.readFlightFeet();
-      this.pose(dash01);
+      // Havadayken destek yoktur; ölçüm sıfırlanır ki tüketici bir önceki
+      // karenin dengesini "hâlâ geçerli" sanmasın.
+      this.clearSupportState();
+      this.pose(dash01, impact01);
       return;
     }
 
@@ -161,10 +191,17 @@ export class ArachnidLegs {
     const tangentialSpeed = Math.abs(turnRate) * this.stanceRadiusPx;
     const tempo = clamp01(Math.max(speed, tangentialSpeed) / gaitConfig.fullTempoSpeedPxPerSec);
 
-    this.gait.setStepTuning({
-      stepTriggerPx: lerp(gaitConfig.stepTriggerPx, gaitConfig.runStepTriggerPx, tempo),
-      stepDurationMs: lerp(gaitConfig.stepDurationMs, gaitConfig.runStepDurationMs, tempo),
-    });
+    this.stepTuning.stepTriggerPx = lerp(
+      gaitConfig.stepTriggerPx,
+      gaitConfig.runStepTriggerPx,
+      tempo,
+    );
+    this.stepTuning.stepDurationMs = lerp(
+      gaitConfig.stepDurationMs,
+      gaitConfig.runStepDurationMs,
+      tempo,
+    );
+    this.gait.setStepTuning(this.stepTuning);
 
     // Atılım hızı adım hedefini erişim dışına fırlatmamalı; gövde yine gerçek
     // hızla ilerler, yalnız ayağın öngörü mesafesi tam tempo hızında doyar.
@@ -172,7 +209,8 @@ export class ArachnidLegs {
       speed > gaitConfig.fullTempoSpeedPxPerSec ? gaitConfig.fullTempoSpeedPxPerSec / speed : 1;
     this.gait.update(bodyX, bodyY, rigRad, velX * leadScale, velY * leadScale, stepMs);
     this.readGaitFeet(bodyX, bodyY, rigRad);
-    this.pose(dash01);
+    this.measureSupportState(bodyX, bodyY, velX, velY);
+    this.pose(dash01, impact01);
   }
 
   /**
@@ -181,6 +219,20 @@ export class ArachnidLegs {
    */
   get steppingLimbCount(): number {
     return this.gait.steppingCount;
+  }
+
+  /**
+   * Gövdenin DESTEK ölçümü — hangi ayaklar yerde, çevreledikleri alan ne kadar
+   * ve gövde o alanın içinde mi?
+   *
+   * Yürüyüş döngüsü dengeyi SIRA disipliniyle dolaylı olarak koruyor; bu ölçüm
+   * güvencenin gerçekten tuttuğunu SÖYLER. Bir karar üretmez: düzeltici adım,
+   * çömelme ya da sendeleme gibi tepkiler tüketicinin işidir.
+   *
+   * Dönen nesne ödünçtür ve bir sonraki `update`te yeniden yazılır.
+   */
+  get support(): SupportState {
+    return this.supportState;
   }
 
   /**
@@ -216,6 +268,42 @@ export class ArachnidLegs {
     }
   }
 
+  /**
+   * Destek poligonunu ve denge payını ölçer.
+   *
+   * İleri bakış BİR ADIM SÜRESİDİR: anlık denge çok geç bir sinyaldir, gövde
+   * devrildiğini ancak devrildikten sonra bildirir. Bir adım kadar ileriye
+   * bakmak, düzeltici bir adımın yetişebileceği kadar erken uyarır.
+   */
+  private measureSupportState(bodyX: number, bodyY: number, velX: number, velY: number): void {
+    for (let i = 0; i < this.drivers.length; i++) {
+      const foot = this.supportFeet[i];
+      foot.x = this.gait.footX(i);
+      foot.y = this.gait.footY(i);
+      foot.grounded = !this.gait.isStepping(i);
+    }
+    measureSupport(
+      this.supportFeet,
+      {
+        centerX: bodyX,
+        centerY: bodyY,
+        velX,
+        velY,
+        lookaheadSeconds: gaitConfig.stepDurationMs / 1000,
+        safeMarginPx: gaitConfig.supportSafeMarginPx,
+      },
+      this.supportState,
+    );
+  }
+
+  private clearSupportState(): void {
+    this.supportState.groundedCount = 0;
+    this.supportState.areaPx2 = 0;
+    this.supportState.inside = false;
+    this.supportState.marginPx = 0;
+    this.supportState.stability01 = 0;
+  }
+
   /** Yürüyüş döngüsünün dünya ayaklarını gövde-yerel uzaya çevirir. */
   private readGaitFeet(bodyX: number, bodyY: number, rigRad: number): void {
     // IK hedefleri rig'in gerçek render dönüşüyle aynı uzayda çözülmelidir.
@@ -239,7 +327,7 @@ export class ArachnidLegs {
     }
   }
 
-  private pose(dash01: number): void {
+  private pose(dash01: number, impact01 = 0): void {
     for (let i = 0; i < this.drivers.length; i++) {
       const driver = this.drivers[i];
       const limb = driver.rig;
@@ -247,16 +335,24 @@ export class ArachnidLegs {
       let dx = this.footLocalX[i] - limb.hipX;
       let dy = this.footLocalY[i] - limb.hipY;
 
-      // Havadaki ayağı kalçaya doğru çek: diz daha çok bükülür, uzuv yerden
-      // kalkmış görünür. Üstten bakışta "yükseklik" ancak böyle okunur.
+      /*
+       * Ayağı kalçaya doğru ÇEK. İki kaynak aynı mekanizmayı paylaşır:
+       *
+       * - `lift` — havadaki ayak: diz daha çok bükülür, uzuv yerden kalkmış
+       *   görünür. Üstten bakışta "yükseklik" ancak böyle okunur.
+       * - `impact01` — duvar çarpması: uzuv o karede bükülür ama AYAK YERİNDE
+       *   kalır, yani darbe emilmiş görünür. Duruş evine yazılsaydı görünmezdi;
+       *   ev yalnız bir sonraki adımın hedefini etkiler.
+       */
       const lift = this.footLift[i];
-      if (lift > 0) {
+      const tuckPx = gaitConfig.swingTuckPx * lift + gaitConfig.impactTuckPx * impact01;
+      if (tuckPx > 0) {
         const reach = Math.hypot(dx, dy);
         if (reach > 1e-3) {
           // Kısaltma hedefi [1, reach] aralığına kelepçelenir: ayak zaten
           // kalçanın dibindeyken çıkarma negatife düşer ve uzvu KISALTMAK
           // yerine uzatırdı.
-          const tucked = clamp(reach - gaitConfig.swingTuckPx * lift, 1, reach);
+          const tucked = clamp(reach - tuckPx, 1, reach);
           dx *= tucked / reach;
           dy *= tucked / reach;
         }
