@@ -10,5 +10,3 @@ export const physicsConfig = {
     pushFactor: 0.5,
   },
 } as const;
-
-export type PhysicsConfig = typeof physicsConfig;

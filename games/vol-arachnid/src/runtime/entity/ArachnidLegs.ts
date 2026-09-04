@@ -134,16 +134,9 @@ export class ArachnidLegs {
 
   update(body: LocomotionSignals, pose: PoseSignals, deltaMs: number): void {
     /*
-     * Akış değerleri TEMİZLENİR, reddedilmez. Bir kare bozuk geldiğinde
-     * (sekme sonrası dev delta, sıfıra bölme ürünü bir hız) uzuv pozunun
-     * kalıcı olarak NaN'e düşmesi orantısız olurdu; CORE'un `Spring1D` ve
-     * `Cooldown` için izlediği politika da budur.
-     *
-     * Süre gövdeyle AYNI tavana kelepçelenir. Sahne zaten kelepçelenmiş bir
-     * değer verir, yani bu işlemsizdir; savunma amaçlıdır. Yürüyüş döngüsü
-     * gövdeden farklı bir zaman yaşadığında ayaklar gövdenin gitmediği yere
-     * basar ve hata uzuvda değil, ZAMANDA olduğu için uzuv koduna bakarak
-     * bulunamaz.
+     * Akış değerleri TEMİZLENİR, reddedilmez (CORE'un `Spring1D`/`Cooldown`
+     * politikası). Süre gövdeyle AYNI tavana kelepçelenir: yürüyüş döngüsü
+     * farklı bir zaman yaşarsa ayaklar gövdenin gitmediği yere basar.
      */
     const stepMs = clampSimulationStep(deltaMs);
     // Temizlik YERİNDE yapılır, yeni bir nesneye kopyalanarak değil: bu sıcak
@@ -222,13 +215,9 @@ export class ArachnidLegs {
   }
 
   /**
-   * Gövdenin DESTEK ölçümü — hangi ayaklar yerde, çevreledikleri alan ne kadar
-   * ve gövde o alanın içinde mi?
+   * Gövdenin DESTEK ölçümü: hangi ayaklar yerde, alan ne kadar, gövde içinde mi?
    *
-   * Yürüyüş döngüsü dengeyi SIRA disipliniyle dolaylı olarak koruyor; bu ölçüm
-   * güvencenin gerçekten tuttuğunu SÖYLER. Bir karar üretmez: düzeltici adım,
-   * çömelme ya da sendeleme gibi tepkiler tüketicinin işidir.
-   *
+   * Bir ÖLÇÜMDÜR, karar değil — düzeltici adım ya da çömelme tüketicinin işidir.
    * Dönen nesne ödünçtür ve bir sonraki `update`te yeniden yazılır.
    */
   get support(): SupportState {
@@ -336,13 +325,11 @@ export class ArachnidLegs {
       let dy = this.footLocalY[i] - limb.hipY;
 
       /*
-       * Ayağı kalçaya doğru ÇEK. İki kaynak aynı mekanizmayı paylaşır:
-       *
-       * - `lift` — havadaki ayak: diz daha çok bükülür, uzuv yerden kalkmış
-       *   görünür. Üstten bakışta "yükseklik" ancak böyle okunur.
-       * - `impact01` — duvar çarpması: uzuv o karede bükülür ama AYAK YERİNDE
-       *   kalır, yani darbe emilmiş görünür. Duruş evine yazılsaydı görünmezdi;
-       *   ev yalnız bir sonraki adımın hedefini etkiler.
+       * Ayağı kalçaya doğru ÇEK — iki kaynak aynı mekanizmayı paylaşır:
+       * `lift` havadaki ayağı büker (üstten bakışta "yükseklik" böyle okunur),
+       * `impact01` çarpmayı emen bir çöküş verir. İkisi de POZA uygulanır;
+       * duruş evi yalnız bir sonraki adımın hedefini etkiler, bu karede
+       * görünmezdi.
        */
       const lift = this.footLift[i];
       const tuckPx = gaitConfig.swingTuckPx * lift + gaitConfig.impactTuckPx * impact01;
@@ -359,13 +346,9 @@ export class ArachnidLegs {
       }
 
       /*
-       * Sabit kök kemik varsa (bacaklar) önce o pozlanır ve IK onun UCUNDAN
-       * başlar; yoksa (arka itici uzuvlar) IK doğrudan kalçadan başlar ve uzun
-       * kemik çiftin ilki olur.
-       *
-       * Container dönüşleri EBEVEYNE görelidir. Göreli açılar ±π aralığına
-       * sarılır: atan2 farkları seam'de 360° sıçrar. Render için fark etmez
-       * (dönüş modülerdir) ama sarılmamış bir açı, bu değerleri yumuşatan her
+       * Sabit kök kemik varsa önce o pozlanır ve IK onun UCUNDAN başlar; yoksa
+       * IK doğrudan kalçadan başlar. Container dönüşleri EBEVEYNE görelidir ve
+       * ±π aralığına sarılır — sarılmamış bir açı, bu değerleri yumuşatan her
        * ileri adım için gizli bir tuzaktır.
        */
       let baseRad = 0;
@@ -403,11 +386,8 @@ export class ArachnidLegs {
 }
 
 /**
- * Uzvun o kareki gövde-yerel ev (dinlenme) ayak konumu.
- *
- * Sonuç ÖDÜNÇ bir nesneye yazılır. Her uzuv için karede bir `{x, y}` kurmak on
- * uzuvda saniyede altı yüz tahsis demekti; `TouchStickState` aynı sınıf sorunu
- * çoktan buffer'larla çözmüşken burada duruyordu.
+ * Uzvun o kareki gövde-yerel ev (dinlenme) ayak konumu. Sonuç ÖDÜNÇ bir nesneye
+ * yazılır — sıcak yolda uzuv başına tahsis yapılmaz.
  */
 const restingHomeScratch = { x: 0, y: 0 };
 

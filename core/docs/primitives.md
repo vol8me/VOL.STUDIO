@@ -244,6 +244,18 @@ Bedeli: tüm ızgara taranır ve hedef değişince yeniden hesaplanır. Az birim
 da sık değişen hedefte A\* daha ucuzdur — ikisi rakip değil, farklı sorulara
 verilen cevaplardır.
 
+**Kısmi/dirty yeniden hesap yok — bilinçli.** `compute()` her çağrıda ızgarayı
+sıfırlayıp baştan tarar. Ölçüldü (200×200, engelsiz): **13,7 ms/çağrı**, yani
+tek yeniden hesap bir karenin tamamını yer. Gevşek-silme atlaması eklendikten
+sonra da aynı kaldı — darboğaz yeniden genişletme değil, 40.000 hücrelik tam
+taramanın kendisi.
+
+Artımlı onarım (D\* Lite tarzı "raise & lower") bu sayıyı düşürür ama yalnız
+tek senaryoda: **hedef sabitken engellerin yerel olarak değişmesi.** Hedef
+değiştiğinde alanın tamamı zaten geçersizdir ve artımlı onarım tam taramadan
+pahalıya gelir. O senaryonun bugün tüketicisi yok; geldiğinde
+`markDirty(points)` + `repair()` olarak eklenmelidir.
+
 ### Doğru ve görüş
 
 ```ts

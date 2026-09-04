@@ -65,5 +65,3 @@ export const bulletConfig = {
   /** Sekme partikül alpha (0-1). */
   bounceParticleAlpha: 0.8,
 } as const;
-
-export type BulletConfig = typeof bulletConfig;

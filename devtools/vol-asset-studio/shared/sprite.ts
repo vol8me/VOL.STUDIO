@@ -71,4 +71,3 @@ export interface VolSpriteDocumentV1 {
 }
 
 export const SPRITE_DOCUMENT_SUFFIX = '.volsprite.json';
-export const SPRITE_ASSET_SUFFIX = '.volsprite';

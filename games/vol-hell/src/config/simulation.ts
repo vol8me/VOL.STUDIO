@@ -22,5 +22,3 @@ export const simulationConfig = {
     yPeriodFrames: 55,
   },
 } as const;
-
-export type SimulationConfig = typeof simulationConfig;

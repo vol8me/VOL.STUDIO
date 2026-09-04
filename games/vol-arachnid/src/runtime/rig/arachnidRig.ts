@@ -18,13 +18,9 @@ const DEG = Math.PI / 180;
  * değildir (bitişik parçalar birbirinin üstüne birkaç piksel biner).
  *
  * **Kök kemik neden opsiyonel?** Sabit kök, üç eklemli zincirdeki çözüm
- * belirsizliğini kapatır ve uzvu gövdeye bağlı bir dizilimde tutar. Bacaklarda
- * doğru seçimdir: kök EN KISA kemiktir (36 px), iş uzun femur/tibia'dadır.
- * Arka itici uzuvlarda sıralama TERSTİR — kök 50 px, kalan iki kemik 26 ve 12.
- * Orada kök sabitlenirse uzun kemik hiç dönmez: ayak duruş EKSENİ boyunca
- * gidip geldiği için açı neredeyse değişmez, yalnız mesafe değişir ve uzuv
- * salınmak yerine SÜRÜKLENİR. Bu yüzden arka uzuvlarda kök kemik doğrudan
- * IK çiftinin ilk kemiğidir.
+ * belirsizliğini kapatır. Bacaklarda kök EN KISA kemiktir (36 px) ve doğru
+ * seçimdir; arka itici uzuvlarda sıralama terstir (kök 50, kalan 26 ve 12) ve
+ * kök sabitlenirse uzun kemik hiç dönmez — uzuv salınmak yerine SÜRÜKLENİR.
  */
 export interface LimbRig {
   id: string;
@@ -78,14 +74,10 @@ const distance = (a: { x: number; y: number }, b: { x: number; y: number }): num
  * Bir pivot container'ının DÖNME ORİJİNİNİ, dünya konumlarını bozmadan kendi
  * yerel `(lx, ly)` noktasına taşır.
  *
- * `assembleRig` her parçayı sol-üst köşesinden döndürür (kaynak belgenin
- * sözleşmesi). Bir kemik ise eklemden dönmelidir; eklemden birkaç piksel kayan
- * bir dönme merkezi, uzuv açıldıkça zinciri görünür biçimde kopardı. Pivot
- * ileri kaydırılır, çocukları aynı miktarda geri kaydırılır: net etki sıfır,
- * dönme merkezi eklemin üstünde.
- *
- * Alt kemikler artık pivotun ÇOCUĞU olduğu için onlar da birlikte kayar;
- * zincirin geri kalanı ayrıca düzeltilmez.
+ * `assembleRig` her parçayı sol-üst köşesinden döndürür; bir kemik ise
+ * eklemden dönmelidir. Pivot ileri, çocukları aynı miktarda geri kaydırılır:
+ * net etki sıfır, dönme merkezi eklemin üstünde. Alt kemikler pivotun çocuğu
+ * olduğu için birlikte kayar.
  */
 function recenterPivot(pivot: Phaser.GameObjects.Container, lx: number, ly: number): void {
   const cos = Math.cos(pivot.rotation);

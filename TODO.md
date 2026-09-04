@@ -1275,10 +1275,9 @@ silinir; kronolojiye not düşülmez.
   yüzey şimdilik SAYIYLA korunuyor.
 - `PlayerController` → `MovableController` takma adı hâlâ `@deprecated`
   duruyor; kaldırma bir sonraki büyük sürüme bırakıldı.
-- `AGENTS.md` ve `devtools/pen.dev/AGENTS.md` `.gitignore`da — bilinçli
-  tercih (agent talimatları yerelde kalır) ama bu dosyalara yapılan
-  güncellemeler hiçbir commit'e girmez. Kalıcı olması gereken bir kural
-  mutlaka `README.md`ye de işlenmeli.
+- ~~`AGENTS.md` ve `devtools/pen.dev/AGENTS.md` `.gitignore`da~~ — **kapandı
+  (2026-09-04).** Yerelde tutuldukları sürece kural güncellemeleri hiçbir
+  commit'e girmiyordu; ikisi de artık repoda.
 - CORE headless primitiflerinin benchmark/workload tüketimi genişledi; ancak
   `EventBus`, `Deck`, `SlotContainer`, `FlowField` ve benzeri bazı yüzeylerin
   hâlâ ikinci gerçek ürün tüketicisi yok. Bu, mekanizma doğrulamasından ayrı

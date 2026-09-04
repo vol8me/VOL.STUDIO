@@ -84,5 +84,3 @@ export const uiConfig = {
     progressCap: 90,
   },
 } as const;
-
-export type UiConfig = typeof uiConfig;

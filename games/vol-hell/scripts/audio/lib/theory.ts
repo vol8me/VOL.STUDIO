@@ -34,19 +34,9 @@ export function hz(note: string): number {
   return 440 * Math.pow(2, (midi - 69) / 12);
 }
 
-/** Frekansı yarım ton cinsinden kaydırır. */
-export function transposeHz(frequency: number, semitones: number): number {
-  return frequency * Math.pow(2, semitones / 12);
-}
-
 /** Bir vuruşun süresi (saniye). */
 export function beatSec(bpm: number): number {
   return 60 / bpm;
-}
-
-/** Bir ölçünün süresi (saniye); `beatsPerBar` varsayılan 4. */
-export function barSec(bpm: number, beatsPerBar = 4): number {
-  return beatSec(bpm) * beatsPerBar;
 }
 
 /**
@@ -61,12 +51,4 @@ export interface NoteEvent {
   dur: number;
   /** Voice'a geçilecek ek kazanç (0-1). Varsayılan 1. */
   gain?: number;
-}
-
-/**
- * Bir deseni belirli bir vuruş ofsetiyle tekrarlar — 8 barlık bir motifi
- * parçanın farklı bölümlerine kopyalarken kullanılır.
- */
-export function repeatAt(pattern: NoteEvent[], beatOffset: number): NoteEvent[] {
-  return pattern.map((event) => ({ ...event, beat: event.beat + beatOffset }));
 }

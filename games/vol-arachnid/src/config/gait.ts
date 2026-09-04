@@ -7,10 +7,9 @@
  * ölçülen açılarla bildirilir: 0° tam ileri, +90° tam sağ, 180° tam arka.
  * Sağ/sol simetriktir, işaret yalnız tarafı verir.
  *
- * `r3/l3` ÖN, `r0/l0` ARKA bacaklardır (kaynak metadata'da kalça y'si öne
- * doğru azalır). Bir dönem bunun tersi varsayılmıştı: ön bacaklar geriye,
- * arka bacaklar öne çekildiği için sekiz uzuv dar bir bantta toplanıp
- * birbirinin üstüne biniyordu.
+ * `r3/l3` ÖN, `r0/l0` ARKA bacaklardır — kaynak metadata'da kalça y'si öne
+ * doğru azalır. Ters varsayılırsa sekiz uzuv dar bir bantta toplanıp üst üste
+ * biner.
  */
 
 export interface LimbStance {
@@ -19,12 +18,9 @@ export interface LimbStance {
   /**
    * SABİT kök kemiğin ayak yönüne yapışma oranı [0,1].
    *
-   * Yalnız kök kemiği IK dışında tutulan uzuvlarda (bacaklar) anlamlıdır; arka
-   * itici uzuvlarda kök kemik doğrudan IK çiftinin ilkidir ve bu alan
-   * verilmez (bkz. `LimbRig.root`).
-   *
-   * Oran DURUŞ ile AYAK YÖNÜ arasındaki paylaşımdır: 0 kökü duruşa çivileyip
-   * tüm işi alt kemiklere bırakır, 1 kökü ayağa kilitler.
+   * Yalnız kök kemiği IK dışında tutulan uzuvlarda anlamlıdır (bkz.
+   * `LimbRig.root`). Oran DURUŞ ile AYAK YÖNÜ arasındaki paylaşımdır: 0 kökü
+   * duruşa çivileyip işi alt kemiklere bırakır, 1 kökü ayağa kilitler.
    */
   rootFollow?: number;
   /** Kök kemiğin duruş açısından sapabileceği en büyük değer (derece). */
@@ -200,18 +196,13 @@ export const gaitConfig = {
   /**
    * Sıra disiplinini delen gerginlik.
    *
-   * Normal yürüyüşün ÜSTÜNDE seçilir. Bekleyen bir uzvun en kötü gerginliği
-   * tetik (38) + sıranın sürdüğü boyunca kat edilen yoldur. Sıra TEK bir adım
-   * kadar sürmez: bir gruptaki beş uzuv kaymalı başlar, sıra ancak sonuncusu
-   * inince biter — pratikte ~iki adım süresi (215 × 0.128 × 2 ≈ 55). Yani
-   * eşik ~93'ün altına inerse sıra disiplini DÜZ YÜRÜYÜŞTE delinir ve gövde
-   * desteksiz kalır.
+   * Normal yürüyüşün ÜSTÜNDE seçilir: bekleyen bir uzvun en kötü gerginliği
+   * tetik (38) + sıra boyunca kat edilen yoldur (~55). Eşik ~93'ün altına
+   * inerse sıra disiplini DÜZ YÜRÜYÜŞTE delinir ve gövde desteksiz kalır.
    *
    * `strideScale` ile ölçeklenmez: bu eşik bacağın değil GÖVDENİN ölçüsüdür.
-   *
-   * Üstünde kaldığı durumlar bilinçlidir: atılım ve sert dönüş. İkisinde de
-   * gövde bir adım süresinde uzuv erişiminden çok yol alır; sırasını bekleyen
-   * uzuv yerde sürüklenir ve gövde dönse bile yerinden kalkmaz.
+   * Aşıldığı durumlar bilinçlidir (atılım, sert dönüş): orada sıra beklemek
+   * uzvu yerde sürükler.
    */
   emergencyStrainPx: 100,
   /**
@@ -235,14 +226,9 @@ export const gaitConfig = {
   /**
    * Duvara çarpmada ayağın kalçaya doğru çekildiği mesafe (px).
    *
-   * Gövde çarpmada ivmeden yaslanır ama uzuvlar olayı hiç görmüyordu; yaratık
-   * duvara dimdik çarpıp dimdik sekiyordu.
-   *
-   * Ayar DURUŞ evine değil POZA uygulanır ve fark önemlidir: ev konumu yalnız
-   * bir SONRAKİ adımın hedefini etkiler, basılı ayak yerinde kalır. 260 ms'lik
-   * bir yankıda çoğu ayak hiç adım atmaz — duruşa yazılan bir çöküş görünmezdi
-   * (ölçüldü: erişim birebir aynı kaldı). Poza yazıldığında uzuvlar o karede
-   * bükülür, ayaklar ise yerinde kalır: darbe EMİLMİŞ görünür.
+   * DURUŞ evine değil POZA uygulanır: ev yalnız bir sonraki adımın hedefini
+   * etkiler ve 260 ms'lik bir yankıda çoğu ayak adım atmaz, yani çöküş
+   * görünmezdi. Poza yazıldığında uzuv o karede bükülür, ayak yerinde kalır.
    */
   impactTuckPx: 16,
 

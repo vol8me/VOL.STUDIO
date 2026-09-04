@@ -24,9 +24,6 @@ export const ELITE_ENEMY_ID = 'warden';
 /** Boss dalgasında çağrılan düşmanın katalog kimliği. */
 export const BOSS_ENEMY_ID = 'sovereign';
 
-/** Katalogda tanımlı düşman kimlikleri. */
-export type EnemyId = keyof typeof ENEMY_CATALOG;
-
 /** Katalog içinde düşman arar; sorgu alanları AND ile birleşir. */
 export function findEnemies(query: FindEnemiesQuery = {}): string[] {
   return Object.entries(ENEMY_CATALOG)

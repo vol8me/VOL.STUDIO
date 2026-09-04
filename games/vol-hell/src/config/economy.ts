@@ -75,5 +75,3 @@ export const economyConfig = {
     thresholdGrowth: 1.28,
   },
 } as const;
-
-export type EconomyConfig = typeof economyConfig;

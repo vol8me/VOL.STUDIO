@@ -22,5 +22,3 @@ export const waveConfig = {
 
 /** Bir koşunun toplam süresi (ms) — 20 x 40 sn = 800 sn. */
 export const WAVE_RUN_DURATION_MS = waveConfig.totalWaves * waveConfig.waveDurationMs;
-
-export type WaveConfig = typeof waveConfig;

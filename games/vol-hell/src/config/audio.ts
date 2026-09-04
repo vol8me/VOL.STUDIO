@@ -25,8 +25,6 @@ export const audioConfig = {
   hapticsEnabled: true,
 } as const;
 
-export type AudioConfig = typeof audioConfig;
-
 /** Bir SFX olayının eşzamanlı ses ve tekrar aralığı bütçesi. */
 export interface SfxVoiceLimitConfig {
   /** Aynı olaydan eşzamanlı yaşayabilecek kaynak sayısı. */

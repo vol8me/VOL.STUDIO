@@ -98,11 +98,6 @@ export function stopMenuMusic(): void {
   playlist?.stop();
 }
 
-/** Menü müziği şu an çalıyor mu? */
-export function isMenuMusicRunning(): boolean {
-  return playlist?.isRunning === true;
-}
-
 /** Testler için: modül durumunu sıfırlar. */
 export function resetMenuMusicForTests(): void {
   playlist?.stop();

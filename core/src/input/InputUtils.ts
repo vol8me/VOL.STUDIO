@@ -1,5 +1,26 @@
 import { Vector2 } from '../math/Vector2';
+import { requireFinite } from '../math/numeric';
 import { INPUT } from '../constants';
+
+/**
+ * Deadzone ve yarıçapın YAPILANDIRMA sözleşmesi.
+ *
+ * CORE'un politikası gereği yapılandırma reddedilir, akış yok sayılır (bkz.
+ * `math/numeric.ts`). Burada reddedilmesinin somut sebebi var: `deadZone === 1`
+ * `normalizeAnalog` içinde `0 / 0` üretiyor ve tam güçle itilen bir çubukta
+ * NaN bir hareket niyeti dönüyordu. Niyet oradan gövdeye, gövdeden konuma
+ * geçer; bir kare sonra hatanın nereden geldiği görülmez.
+ */
+function assertStickBounds(deadZone: number, maxRadius: number): void {
+  requireFinite(deadZone, 'deadZone');
+  requireFinite(maxRadius, 'maxRadius');
+  if (deadZone < 0 || deadZone >= 1) {
+    throw new RangeError(`deadZone [0,1) aralığında olmalı (gelen: ${deadZone})`);
+  }
+  if (maxRadius <= 0) {
+    throw new RangeError(`maxRadius pozitif olmalı (gelen: ${maxRadius})`);
+  }
+}
 
 /**
  * Yalnızca yön gerektiren inputları (sağ joystick vb.) normalize eder; çıktı uzunluğu her zaman 0 ya da 1.
@@ -13,8 +34,9 @@ export function normalizeDirection(
   deadZone: number = INPUT.DEAD_ZONE_RATIO,
   maxRadius: number = 1.0,
 ): Vector2 {
+  assertStickBounds(deadZone, maxRadius);
   const len = v.length();
-  if (len <= 0 || len / maxRadius < deadZone) {
+  if (!Number.isFinite(len) || len <= 0 || len / maxRadius < deadZone) {
     return Vector2.zero();
   }
 
@@ -31,8 +53,9 @@ export function normalizeAnalog(
   deadZone: number = INPUT.DEAD_ZONE_RATIO,
   maxRadius: number = 1.0,
 ): Vector2 {
+  assertStickBounds(deadZone, maxRadius);
   const len = v.length();
-  if (len <= 0) {
+  if (!Number.isFinite(len) || len <= 0) {
     return Vector2.zero();
   }
 

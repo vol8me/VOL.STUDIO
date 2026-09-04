@@ -105,15 +105,10 @@ export class ArachnidAudio implements ArachnidAudioPort {
           return;
         }
         /*
-         * Öne dönüşte KOŞULSUZ yeniden denenir.
-         *
-         * Eskiden koşul `context.state === 'suspended'`ti; o koşul "neden devam
-         * ediyoruz" sorusunu cevaplıyordu, "ne istiyoruz" sorusunu değil.
-         * Askıya alma BAŞARISIZ olabilir (yakalanıp loglanıyor) ve o zaman
-         * uygulama arka plandayken context 'running' kalır: platform sesi kendi
-         * durdurur, öne dönüşte eski koşul geçmez ve ambiyans o oturum boyunca
-         * ölü kalırdı. `resumeAndStart` yeniden girilebilirdir — zaten
-         * çalıyorsa hemen döner.
+         * Öne dönüşte KOŞULSUZ yeniden denenir: askıya alma başarısız olabilir
+         * ve context 'running' kalır, o zaman duruma bakan bir koşul geçmez ve
+         * ambiyans oturum boyunca ölü kalır. `resumeAndStart` yeniden
+         * girilebilirdir; zaten çalıyorsa hemen döner.
          */
         if (this.unlocked) void this.resumeAndStart();
       }),
@@ -163,9 +158,9 @@ export class ArachnidAudio implements ArachnidAudioPort {
    * - `unlockPending` — süren bir başlatma var mı? Aynı karede gelen
    *   `pointerdown` ve `keydown` ikinci bir denemeyi başlatmamalı.
    *
-   * Dinleyiciler başlatma BAŞARILI olana kadar bırakılmaz. Eskiden hemen
-   * kaldırılıyordu ve ilk deneme patlarsa (WebView'ın autoplay kapısı, geçici
-   * bir decode hatası) ikinci bir kullanıcı hareketi hiç denenmiyordu.
+   * Dinleyiciler başlatma BAŞARILI olana kadar bırakılmaz: ilk deneme
+   * patlarsa (autoplay kapısı, geçici decode hatası) ikinci bir kullanıcı
+   * hareketi yeniden denemelidir.
    */
   private armUnlock(): void {
     const unlock = (): void => {

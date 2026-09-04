@@ -30,5 +30,3 @@ export const difficultyConfig = {
   /** Skor çarpanı tavanı. */
   maxScoreMultiplier: 8,
 } as const;
-
-export type DifficultyConfig = typeof difficultyConfig;

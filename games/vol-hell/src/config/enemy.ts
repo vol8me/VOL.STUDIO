@@ -69,5 +69,3 @@ export const enemyConfig = {
   /** Spawn pozisyonunun oyuncudan minimum uzaklığı (piksel). */
   spawnMinPlayerDistance: 120,
 } as const;
-
-export type EnemyConfig = typeof enemyConfig;

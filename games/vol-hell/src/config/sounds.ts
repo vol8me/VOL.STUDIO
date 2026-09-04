@@ -109,4 +109,3 @@ export const soundKeys = {
 } as const;
 
 export type SoundEvent = keyof typeof soundAssets;
-export type SoundKey = (typeof soundKeys)[SoundEvent];

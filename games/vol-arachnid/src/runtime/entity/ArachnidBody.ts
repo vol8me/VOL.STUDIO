@@ -29,11 +29,9 @@ const IMPACT_BLEND_FALLOFF_MS = 260;
 /**
  * Duvara çarpma yankısı; sunum katmanı bunu bir kez tüketir.
  *
- * Bir karede birden çok eksende temas olabilir (köşeye atılım). Bunlar AYRI
- * olaylar değildir: tek bir çarpmanın iki bileşenidir ve `mergeImpact` onları
- * bileşke normalde birleştirir. Ayrı tutulduklarında ikincisi birincisini
- * eziyordu — köşeye çarpan gövde iki eksende birden sekiyor ama tek, üstelik
- * YANLIŞ yönlü bir yankı bırakıyordu.
+ * Bir karede birden çok eksende temas olabilir (köşe). Bunlar ayrı olaylar
+ * değil, tek bir çarpmanın bileşenleridir; `mergeImpact` onları bileşke
+ * normalde birleştirir.
  */
 export interface WallImpact {
   /** Temas noktasının dünya konumu — gövde merkezi değil, DUVARIN üstü. */
@@ -73,11 +71,8 @@ export class ArachnidBody {
   private wallRecoveryMs = 0;
   private pendingImpact: WallImpact | null = null;
   /**
-   * Kare sinyallerinin TEK örneği; her karede yeniden yazılır.
-   *
-   * Her karede yeni bir nesne kurmak sıcak yolda gereksiz bir tahsisti ve
-   * tüketici sayısıyla çarpılıyordu. Nesne ÖDÜNÇTÜR: çağıran onu bir sonraki
-   * kareye taşımak isterse kopyalamalıdır.
+   * Kare sinyallerinin tek örneği; her karede yeniden yazılır ve ÖDÜNÇ verilir.
+   * Çağıran onu bir sonraki kareye taşıyacaksa kopyalamalıdır.
    */
   private readonly frameSignals: LocomotionSignals = {
     x: 0,
@@ -199,16 +194,9 @@ export class ArachnidBody {
 
   update(moveIntent: Vec, dashPressed: boolean, deltaMs: number): void {
     /*
-     * TEK etkin delta. Bir dönem bu metot üç farklı zaman anlayışı taşıyordu:
-     * konum entegrasyonu kelepçeli `dt`yi, cooldown/atılım/sekme sayaçları ham
-     * `deltaMs`i, dönüş adımı ise ayrı bir kelepçeyi kullanıyordu. 500 ms'lik
-     * tek bir karede gövde 100 ms yol alıyor ama atılımın 140 ms'si bir anda
-     * tükeniyordu — aynı karede farklı sistemler farklı kadar yaşıyordu.
-     *
-     * Kelepçe `clampSimulationStep` ile CORE'dan gelir; sahne de aynı tavanı
-     * uygular, yani burada ikinci kez kelepçelemek işlemsizdir. Yine de
-     * yapılır: gövde bir genel giriş noktasıdır ve tek bir bozuk kareye teslim
-     * olmamalıdır.
+     * TEK etkin delta: konum, sayaçlar ve dönüş aynı süreyi yaşar. Sahne de
+     * aynı tavanı uyguladığı için buradaki kelepçe işlemsizdir; gövde bir genel
+     * giriş noktası olduğu için yine de uygulanır.
      */
     const stepMs = clampSimulationStep(deltaMs);
     if (stepMs <= 0) return;
@@ -249,11 +237,9 @@ export class ArachnidBody {
 
     const wasDashing = this.dashRemainingMs > 0;
     /*
-     * Atılımın bu karedeki PAYI. `dashRemainingMs -= stepMs` deyip tüm kareyi
-     * atılım hızında geçirmek, atılımı kare sınırına yuvarlıyordu: 140 ms'lik
-     * bir atılım 16 ms'lik karelerde 144 ms sürüyor, kat edilen yol kare
-     * hızına göre değişiyordu. Pay ayrı ölçülür ve konum entegrasyonu ikiye
-     * bölünür — atılım mesafesi artık kare hızından bağımsızdır.
+     * Atılımın bu karedeki PAYI ayrı ölçülür ve konum iki payda entegre edilir;
+     * aksi hâlde atılım kare sınırına yuvarlanır ve kat edilen yol kare hızına
+     * göre değişir.
      */
     const dashDt = Math.max(0, Math.min(this.dashRemainingMs, stepMs)) / MS_PER_SEC;
     const cruiseDt = dt - dashDt;
@@ -284,12 +270,8 @@ export class ArachnidBody {
     this.resolveArenaBounds();
 
     /*
-     * İvme sınır çözümünden SONRA okunur.
-     *
-     * Önce okunduğunda sekmenin hız değişimi ivmeye HİÇ girmiyordu: sonraki
-     * karenin `previousX`i zaten sekme sonrası değerdi, yani impulse iki kare
-     * arasında kayboluyordu. Gövde yaslanması duvara çarpmayı göremiyor, temas
-     * yalnız kamera sarsıntısıyla anlatılıyordu.
+     * İvme sınır çözümünden SONRA okunur: önce okunursa sekmenin impulse'u iki
+     * kare arasında kaybolur ve gövde yaslanması çarpmayı hiç görmez.
      */
     this.acceleration.set((this.velocity.x - previousX) / dt, (this.velocity.y - previousY) / dt);
 
@@ -346,10 +328,8 @@ export class ArachnidBody {
 
   /**
    * Sınır teması. Gövde kelepçelenir; eşiği aşan bir hızla çarptıysa normal
-   * ekseninde SEKER ve atılım kesilir.
-   *
-   * Hızı sıfırlamak, sınırı görünmez bir yapışkan yüzeye çeviriyordu: gövde
-   * duvarda duruyor, çarpmanın hiçbir yankısı olmuyordu.
+   * ekseninde SEKER ve atılım kesilir. Hızı sıfırlamak sınırı yapışkan bir
+   * yüzeye çevirirdi.
    */
   private resolveArenaBounds(): void {
     const r = arenaConfig.bodyRadiusPx;
@@ -411,20 +391,14 @@ export class ArachnidBody {
   }
 
   /**
-   * Aynı karedeki ikinci teması BİRLEŞTİRİR.
-   *
-   * Köşeye çarpan gövde X ve Y eksenlerinde ayrı ayrı seker ama bu tek bir
-   * olaydır. Tek slotu ezmek ikinci normali yazıp birincisini siliyordu: ses,
-   * titreşim ve arena parlaması köşeyi düz bir duvar gibi gösteriyordu.
-   * Bileşke normal normalize edilir, şiddet ise en güçlü temasınkidir.
+   * Aynı karedeki ikinci teması BİRLEŞTİRİR: köşe tek bir olaydır. Bileşke
+   * normal normalize edilir, şiddet en güçlü temasınkidir.
    */
   private mergeImpact(impact: WallImpact): void {
     /*
-     * Uzuv yankısı temasın ÜRETİLDİĞİ anda kurulur, `update` içinde
-     * `pendingImpact` yoklanarak değil. Yoklama, yankının ömrünü bekleyen
-     * darbeyi kimin ne zaman TÜKETTİĞİNE bağlıyordu: tüketmeyen bir çağıranda
-     * (ölçüm koşuları, başsız testler) `impact01` sonsuza dek 1'de takılı kalır
-     * ve uzuvlar kalıcı olarak çökük dururdu.
+     * Yankı temasın ÜRETİLDİĞİ anda kurulur, `pendingImpact` yoklanarak değil:
+     * yoklama ömrünü, darbeyi kimin ne zaman tükettiğine bağlar ve tüketmeyen
+     * bir çağıranda `impact01` sonsuza dek 1'de takılı kalır.
      */
     this.impactBlend = Math.max(this.impactBlend, clamp01(impact.strength01));
 

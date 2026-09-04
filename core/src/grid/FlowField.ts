@@ -13,34 +13,16 @@ export interface FlowFieldOptions {
 /**
  * Akış alanı — TEK hedefe giden çok sayıda birim için.
  *
- * A* ile farkı yön: `findPath` BİR başlangıçtan BİR hedefe yol arar, yani N
- * birim için N arama gerekir. `FlowField` hedeften geriye doğru TEK bir
- * Dijkstra taraması yapar ve her hücre için "buradan hangi komşuya gitmeli"
- * bilgisini üretir. Birim sayısı arttıkça maliyet değişmez: 10 birim de 5000
- * birim de aynı alanı okur.
+ * `findPath` bir başlangıçtan bir hedefe yol arar; N birim N arama demektir.
+ * `FlowField` hedeften geriye tek bir Dijkstra taraması yapar ve her hücre için
+ * "buradan hangi komşuya" bilgisini üretir. Maliyet birim sayısından
+ * bağımsızdır, ızgara boyutuna bağlıdır.
  *
- * Bedeli: tüm ızgara taranır ve hedef değişince yeniden hesaplanır. Az sayıda
- * birim ya da sık değişen hedefler varsa A* daha ucuzdur. İkisi rakip değil,
- * farklı sorulara verilen cevaplardır.
+ * `compute()` her çağrıda tüm ızgarayı baştan tarar; kısmi/dirty yeniden hesap
+ * yoktur. Hedef sık değişiyorsa ya da birim sayısı azsa A* daha ucuzdur.
  *
- * **Kısmi/dirty yeniden hesap YOKTUR — bilinçli.** `compute()` her çağrıda
- * tüm ızgarayı sıfırlayıp baştan tarar. Ölçüm (200×200, engelsiz):
- * **13.7 ms/çağrı**, yani tek yeniden hesap bir karenin tamamını yer.
- * Gevşek-silme atlaması eklendikten SONRA da aynı kaldı (13.72 ms) —
- * darboğaz yeniden genişletme değil, 40.000 hücrelik tam taramanın kendisi.
- *
- * Artımlı onarım (D* Lite tarzı "raise & lower") bu sayıyı gerçekten
- * düşürür ama YALNIZCA belirli bir senaryoda: hedef sabitken engellerin
- * YEREL olarak değişmesi. Hedef değiştiğinde alanın tamamı zaten geçersizdir
- * ve artımlı onarım tam taramadan pahalıya gelir.
- *
- * O senaryonun bugün bir tüketicisi yok. Yazmak, ölçülmemiş bir kullanım
- * için karmaşık bir algoritma eklemek olurdu; gerçek bir oyun "hedef sabit,
- * engel değişiyor" desenini getirdiğinde `markDirty(points)` + `repair()`
- * olarak eklenmelidir. Bu blok o zamana kadar kararın kaydıdır.
- *
- * Ulaşılamayan hücrelerde `getCost` `Infinity`, `getNext` `null` döner —
- * "yol yok" durumu sessizce sıfır maliyetli bir hücreye dönüşmez.
+ * Ulaşılamayan hücrelerde `getCost` `Infinity`, `getNext` `null` döner — "yol
+ * yok" sessizce sıfır maliyetli bir hücreye dönüşmez.
  */
 export class FlowField {
   private readonly costs: Float64Array;

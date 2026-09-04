@@ -1,7 +1,5 @@
 import type { SequenceParams } from '../types';
 
-export type SequencePresetFn = (rootFreq?: number) => SequenceParams;
-
 /** Yukarı arpej: root - büyük üçlü - beşli - oktav. */
 export function arpeggioUp(rootFreq = 440): SequenceParams {
   return {

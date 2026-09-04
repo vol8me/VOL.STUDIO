@@ -217,8 +217,6 @@ export const musicConfig = {
   },
 } as const;
 
-export type MusicConfig = typeof musicConfig;
-
 /** Death ekranı rastgele seçenekleri — tek track. */
 export const deathTrackKeys: readonly MusicTrackId[] = ['terminal-echo'];
 

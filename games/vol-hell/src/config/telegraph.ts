@@ -30,5 +30,3 @@ export const telegraphConfig = {
   /** Varsayılan uyarı rengi (0xRRGGBB) — saldırı sahibi ezebilir. */
   defaultColor: 0xff4466,
 } as const;
-
-export type TelegraphConfig = typeof telegraphConfig;

@@ -227,7 +227,7 @@ ile sınırlı (bkz. D10):
 
 Yani havuzlama isteğe bağlı bir iyileştirme değil, bütçenin parçasıdır.
 
-Tamponlar `ObjectPool` (bkz. [`primitives.md`](./primitives.md)) ile devredilir;
+Tamponlar `ObjectPool` (bkz. [`core/docs/primitives.md`](../../core/docs/primitives.md)) ile devredilir;
 boyut başına bir havuz tutulur.
 
 ### D8 — Çekirdek headless, üretim yüzeyi tüketici

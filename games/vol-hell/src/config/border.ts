@@ -12,8 +12,6 @@ export const borderConfig = {
   alpha: 0.6,
 } as const;
 
-export type BorderConfig = typeof borderConfig;
-
 /** Saha sınırlarını temsil eden dikdörtgen. */
 export interface BorderBounds {
   left: number;

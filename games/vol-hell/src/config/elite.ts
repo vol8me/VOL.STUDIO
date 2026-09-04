@@ -13,5 +13,3 @@ export const eliteConfig = {
   /** Doğurma uyarı dairesinin doğum yarıçapına eklediği pay (piksel). */
   spawnTelegraphPaddingPx: 14,
 } as const;
-
-export type EliteConfig = typeof eliteConfig;

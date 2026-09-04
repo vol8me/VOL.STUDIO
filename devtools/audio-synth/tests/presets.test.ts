@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Presets, synth } from '@volstudio/audio-synth';
+import { Presets, compose, synth } from '@volstudio/audio-synth';
 
 const presetNames = Presets.findPresets();
 
@@ -77,5 +77,59 @@ describe('Preset kütüphanesi', () => {
       const result = synth(params.duration, params);
       expect(result.channels[0]?.length).toBeGreaterThan(0);
     }
+  });
+
+  it('çağrılabilen HER preset katalogda kayıtlıdır', () => {
+    /*
+     * Katalog ve `getPreset` iki ayrı listeden besleniyordu: bir aileyi
+     * `all`'a eklemek onu çağrılabilir yapıyor ama katalogda görünmez
+     * bırakıyordu. Görünmez bir preset aranamaz, `it.each` ile sentezlenmez ve
+     * kimse fark etmeden ölür — `levelUpJingle`/`menuJingle` tam olarak böyle
+     * yetim kalmıştı.
+     */
+    const callable = Presets.callablePresetNames();
+    const catalogued = new Set(Object.keys(Presets.PRESET_CATALOG));
+    const orphans = callable.filter((name) => !catalogued.has(name));
+
+    expect(orphans, 'katalogda karşılığı olmayan preset').toEqual([]);
+  });
+
+  it('katalogdaki HER kayıt gerçekten çağrılabilir', () => {
+    // Ters yön: katalogda adı geçip karşılığı olmayan bir kayıt, arama
+    // sonucunda görünür ama çağrıldığında patlar.
+    const callable = new Set(Presets.callablePresetNames());
+    const missing = Object.keys(Presets.PRESET_CATALOG).filter((name) => !callable.has(name));
+
+    expect(missing, 'katalogda olup çağrılamayan preset').toEqual([]);
+  });
+});
+
+describe('Sekans presetleri', () => {
+  /*
+   * Sekanslar `SynthParams` değil `SequenceParams` döner ve bu yüzden
+   * `PRESET_CATALOG`un dışındadır — `getPreset`in sözleşmesine girmezler.
+   * Katalog dışında olmak TESTSİZ olmayı gerektirmez: iki jingle bir dönem
+   * ne katalogda ne testte yer alıyordu ve sessizce çürüyordu.
+   */
+  const sequences = {
+    arpeggioUp: Presets.arpeggioUp,
+    levelUpJingle: Presets.levelUpJingle,
+    menuJingle: Presets.menuJingle,
+  };
+
+  it.each(Object.entries(sequences))('%s geçerli bir nota dizisi döner', (name, factory) => {
+    const sequence = factory();
+
+    expect(sequence.notes.length, name).toBeGreaterThan(0);
+    for (const note of sequence.notes) {
+      expect(note.duration, name).toBeGreaterThan(0);
+      const pitch = note.freq ?? note.semitone;
+      expect(Number.isFinite(pitch), `${name}: nota perdesi sonlu değil`).toBe(true);
+    }
+  });
+
+  it.each(Object.entries(sequences))('%s taban sesle sentezlenebilir', (name, factory) => {
+    const result = compose(factory(), Presets.blip(440, 0.1));
+    expect(result.channels[0]?.length, name).toBeGreaterThan(0);
   });
 });

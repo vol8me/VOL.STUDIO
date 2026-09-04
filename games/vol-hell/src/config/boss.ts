@@ -83,5 +83,3 @@ export const bossConfig = {
   /** Öfke fazında saldırı arasının çarpanı (0.65 = %35 daha sık). */
   enrageIntervalMultiplier: 0.65,
 } as const;
-
-export type BossConfig = typeof bossConfig;

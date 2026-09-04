@@ -180,5 +180,3 @@ export class DerivedDocument {
     this.#edits.clear();
   }
 }
-
-export const POST_PROCESS_SUFFIX = '.volpost.json';

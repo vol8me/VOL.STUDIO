@@ -1,6 +1,9 @@
 # Local-only files
-AGENTS.md
-**/AGENTS.md
+#
+# `AGENTS.md` BİLİNÇLİ olarak burada DEĞİL: yerelde tutulduğu sürece kurallara
+# yapılan güncellemeler hiçbir commit'e girmiyor ve taze bir klon anayasasız
+# kalıyordu (bkz. TODO.md, bu borcun kaydı). Kural metni repoda yaşar;
+# zorlayıcısı `scripts/quality/layers.mjs` ve kalite kapılarıdır.
 .claude/
 
 # Secrets / credentials — asla commit edilmez

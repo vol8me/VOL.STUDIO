@@ -478,5 +478,3 @@ export const effectsConfig: Record<EffectId, EffectDefinition> = {
     shake: { durationMs: 460, intensity: 0.02, cooldownMs: 1000 },
   },
 };
-
-export type EffectsConfig = typeof effectsConfig;

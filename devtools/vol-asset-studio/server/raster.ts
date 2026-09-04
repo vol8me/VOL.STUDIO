@@ -88,35 +88,6 @@ export async function decodeRaster(input: Buffer, limits: RasterLimits): Promise
   };
 }
 
-/**
- * RGBA tamponunu deterministik PNG'ye kodlar.
- *
- * `compressionLevel` ve `effort` sabittir: aynı piksellerin her kaydında aynı
- * baytların çıkması, "dosya değişti mi" sorusunu içerik hash'iyle
- * yanıtlayabilmenin ön koşuludur. Sharp varsayılanları sürümle değişebildiği
- * için burada açıkça sabitlenir.
- */
-export async function encodeRasterPng(
-  width: number,
-  height: number,
-  rgba: Buffer,
-): Promise<Buffer> {
-  if (rgba.length !== width * height * 4) {
-    throw new AssetStudioError('invalid_request', 400, {
-      field: 'rgba',
-      expected: width * height * 4,
-      received: rgba.length,
-    });
-  }
-  try {
-    return await sharp(rgba, { raw: { width, height, channels: 4 } })
-      .png({ compressionLevel: 9, effort: 7, palette: false })
-      .toBuffer();
-  } catch (error) {
-    throw new AssetStudioError('decode_failed', 422, { kind: 'image' }, { cause: error });
-  }
-}
-
 /** İlk normalize kaydında düşecek metadata alanlarını adlandırır. */
 function collectStrippedMetadata(metadata: Metadata): string[] {
   const stripped: string[] = [];

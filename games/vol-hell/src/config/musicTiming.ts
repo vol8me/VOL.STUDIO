@@ -53,8 +53,6 @@ export const MUSIC_TIMING = {
   'deep-current': { bpm: 60, beats: 64 },
 } as const satisfies Record<string, MusicTiming>;
 
-export type MusicTimingId = keyof typeof MUSIC_TIMING;
-
 /** Bir vuruşun süresi (saniye). */
 export function beatSeconds(timing: MusicTiming): number {
   return 60 / timing.bpm;

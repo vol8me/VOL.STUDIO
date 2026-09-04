@@ -27,6 +27,14 @@ import * as fm from './fm';
 import * as instruments from './instruments';
 import * as textures from './textures';
 
+/**
+ * İsimle çağrılabilen presetler.
+ *
+ * `sequences` BİLİNÇLİ olarak dışarıdadır: `SequenceParams` döner, `SynthParams`
+ * değil — `getPreset`in sözleşmesine girmez. Bir aileyi buraya eklemek onu aynı
+ * anda `PRESET_CATALOG`a da eklemeyi gerektirir; `tests/presets.test.ts`
+ * içindeki bütünlük bekçisi ikisinin ayrışmasına izin vermez.
+ */
 const all = {
   ...combat,
   ...ui,
@@ -37,8 +45,10 @@ const all = {
   ...textures,
 } as const;
 
-/** İsimle preset çağırma (runtime lookup). */
-export const presetMap: Record<string, PresetFn> = { ...all };
+/** `getPreset` ile çağrılabilen preset adları — bütünlük bekçisinin girdisi. */
+export function callablePresetNames(): string[] {
+  return Object.keys(all).sort();
+}
 
 export function getPreset(name: string, frequency?: number, duration?: number) {
   const fn = all[name as keyof typeof all] as PresetFn | undefined;

@@ -3,14 +3,16 @@ import { createReadStream } from 'node:fs';
 import { lstat, open, opendir, readFile, stat } from 'node:fs/promises';
 import { basename, extname, relative, sep } from 'node:path';
 import sharp from 'sharp';
-import type {
-  AssetKind,
-  AssetRelation,
-  AssetRole,
-  AssetStudioProjectConfig,
-  AssetSummary,
-  CatalogResponse,
-  ProblemCode,
+import {
+  AUDIO_DOCUMENT_SUFFIX,
+  METADATA_DOCUMENT_SUFFIX,
+  SPRITE_DOCUMENT_SUFFIX,
+  type AssetKind,
+  type AssetRole,
+  type AssetStudioProjectConfig,
+  type AssetSummary,
+  type CatalogResponse,
+  type ProblemCode,
 } from '../shared/index.js';
 import { AssetStudioError } from './errors.js';
 import { AssetEventJournal } from './events.js';
@@ -64,12 +66,32 @@ function toPosixPath(path: string): string {
   return sep === '/' ? path : path.split(sep).join('/');
 }
 
+/**
+ * Belge son ekleri, UZUNDAN KISAYA.
+ *
+ * Sıra bir doğruluk koşuludur, stil değil: `.volsprite.json` de `.json` ile
+ * biter, kısa olan önce denenirse her belge `metadata` sayılır. Tek bir tablo
+ * hem sınıflandırmayı hem ilişki taban yolunu besler; ikisi ayrı yazıldığında
+ * biri güncellenip diğeri unutuluyordu.
+ */
+const DOCUMENT_SUFFIXES: readonly { readonly suffix: string; readonly kind: AssetKind }[] = [
+  { suffix: SPRITE_DOCUMENT_SUFFIX, kind: 'sprite-document' },
+  { suffix: AUDIO_DOCUMENT_SUFFIX, kind: 'audio-recipe' },
+  { suffix: METADATA_DOCUMENT_SUFFIX, kind: 'metadata' },
+  { suffix: '.json', kind: 'metadata' },
+];
+
+/** Yola uyan en UZUN belge son eki; yoksa `null`. */
+function documentSuffixOf(lower: string): (typeof DOCUMENT_SUFFIXES)[number] | null {
+  return DOCUMENT_SUFFIXES.find((entry) => lower.endsWith(entry.suffix)) ?? null;
+}
+
 function classify(path: string): AssetKind | null {
   const lower = path.toLowerCase();
-  if (lower.endsWith('.volsprite.json')) return 'sprite-document';
-  if (lower.endsWith('.volaudio.json')) return 'audio-recipe';
+  // `.pen` bir belge son eki değil, kaynak dosya uzantısıdır; tabloya girmez.
   if (lower.endsWith('.pen')) return 'sprite-document';
-  if (lower.endsWith('.volmeta.json') || lower.endsWith('.json')) return 'metadata';
+  const document = documentSuffixOf(lower);
+  if (document) return document.kind;
   const extension = extname(lower);
   if (IMAGE_EXTENSIONS.has(extension)) return 'image';
   if (AUDIO_EXTENSIONS.has(extension)) return 'audio';
@@ -322,41 +344,62 @@ async function scanRoot(
   return records;
 }
 
+/** Varlığın ilişki kurarken kullanılan son ek'siz yolu. */
 function basePathForRelation(record: AssetRecord): string {
-  const lower = record.relativeToRoot.toLowerCase();
-  if (lower.endsWith('.volsprite.json'))
-    return record.relativeToRoot.slice(0, -'.volsprite.json'.length);
-  if (lower.endsWith('.volaudio.json'))
-    return record.relativeToRoot.slice(0, -'.volaudio.json'.length);
-  if (lower.endsWith('.volmeta.json'))
-    return record.relativeToRoot.slice(0, -'.volmeta.json'.length);
-  if (lower.endsWith('.json')) return record.relativeToRoot.slice(0, -'.json'.length);
-  return record.relativeToRoot.slice(0, -extname(record.relativeToRoot).length);
+  const document = documentSuffixOf(record.relativeToRoot.toLowerCase());
+  const cut = document ? document.suffix.length : extname(record.relativeToRoot).length;
+  return record.relativeToRoot.slice(0, record.relativeToRoot.length - cut);
 }
 
+/** Bir belge, ürettiği çıktının TARİFİ sayılır mı? */
+function isRecipeKind(kind: AssetKind): boolean {
+  return kind === 'sprite-document' || kind === 'audio-recipe';
+}
+
+/**
+ * Belgeleri ürettikleri medyayla eşler.
+ *
+ * Bir çıktıya BİRDEN ÇOK belge işaret edebilir — bir sprite tarifi ve yanındaki
+ * serbest metadata aynı `car.png`e bakar. `relatedIds` bu yüzden BİRİKTİRİLİR;
+ * eskiden her belge onu tek elemanlı bir diziyle EZİYORDU ve çıktı, son işlenen
+ * belge dışındaki bütün bağlarını kaybediyordu.
+ *
+ * `recipeId` tekildir. Belgeler İKİ TURDA gezilir — önce gerçek tarifler, sonra
+ * sidecar'lar — ve alan yalnız boşsa doldurulur. Sıra, "kim kazanır?" sorusunu
+ * bir bayrak tutmadan cevaplar: metadata bir sidecar'dır, çıktıyı üreten
+ * değildir. Aynı çıktıya iki tarif bakarsa ilk gelen kalır; kayıtlar yola göre
+ * sıralı geldiği için bu deterministiktir.
+ */
 function applyRelations(records: AssetRecord[]): void {
   const byRootAndPath = new Map(
     records.map((record) => [`${record.root.id}\0${record.relativeToRoot}`, record]),
   );
-  for (const recipe of records) {
-    if (!['sprite-document', 'audio-recipe', 'metadata'].includes(recipe.summary.kind)) continue;
-    const base = basePathForRelation(recipe);
-    const related = RELATED_MEDIA_EXTENSIONS.map((extension) =>
-      byRootAndPath.get(`${recipe.root.id}\0${base}${extension}`),
-    ).filter((record): record is AssetRecord => record !== undefined);
-    if (related.length === 0) continue;
 
-    const relation: AssetRelation = { relatedIds: related.map((record) => record.summary.id) };
-    if (recipe.summary.kind === 'sprite-document' || recipe.summary.kind === 'audio-recipe') {
-      relation.derivedIds = related.map((record) => record.summary.id);
-    }
-    recipe.summary.relation = relation;
-    for (const output of related) {
-      output.summary.relation = {
-        ...output.summary.relation,
-        recipeId: recipe.summary.id,
-        relatedIds: [recipe.summary.id],
-      };
+  for (const recipePass of [true, false]) {
+    for (const document of records) {
+      const isRecipe = isRecipeKind(document.summary.kind);
+      if (isRecipe !== recipePass) continue;
+      if (!isRecipe && document.summary.kind !== 'metadata') continue;
+
+      const base = basePathForRelation(document);
+      const related = RELATED_MEDIA_EXTENSIONS.map((extension) =>
+        byRootAndPath.get(`${document.root.id}\0${base}${extension}`),
+      ).filter((record): record is AssetRecord => record !== undefined);
+      if (related.length === 0) continue;
+
+      const relatedIds = related.map((record) => record.summary.id);
+      document.summary.relation = isRecipe
+        ? { relatedIds, derivedIds: relatedIds }
+        : { relatedIds };
+
+      for (const output of related) {
+        const previous = output.summary.relation;
+        output.summary.relation = {
+          ...previous,
+          recipeId: previous?.recipeId ?? document.summary.id,
+          relatedIds: [...new Set([...(previous?.relatedIds ?? []), document.summary.id])],
+        };
+      }
     }
   }
 }

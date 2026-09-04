@@ -43,5 +43,3 @@ export const playerConfig = {
   /** Kalabalık temasının oyuncuya aynı anda yığılmasını engelleyen pencere. */
   contactDamageGraceMs: 100,
 } as const;
-
-export type PlayerConfig = typeof playerConfig;

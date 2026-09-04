@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Vector2 } from '../../src/math/Vector2';
+import { normalizeAnalog, normalizeDirection } from '../../src/input/InputUtils';
 import {
   computePCInputState,
   isPCInputActive,
@@ -176,5 +177,49 @@ describe('resolvePCActions', () => {
     expect(Object.keys(actions).sort()).toEqual(['boost', 'engage']);
     expect(actions.engage).toBe(false);
     expect(actions.boost).toBe(false);
+  });
+});
+
+describe('joystick sınır sözleşmesi', () => {
+  const full = new Vector2(1, 0);
+
+  /*
+   * `deadZone === 1` bir dönem `(ratio - 1) / (1 - 1)` üretiyordu: tam güçle
+   * itilen bir çubukta `0 / 0`, yani NaN bir hareket niyeti. Niyet oradan
+   * gövdeye, gövdeden konuma geçer ve bir kare sonra hatanın nereden geldiği
+   * görülmez. Yapılandırma bu yüzden AKIŞ gibi yok sayılmaz, REDDEDİLİR.
+   */
+  it('deadZone [0,1) dışındaysa reddedilir', () => {
+    expect(() => normalizeAnalog(full, 1)).toThrow(RangeError);
+    expect(() => normalizeAnalog(full, 1.5)).toThrow(RangeError);
+    expect(() => normalizeAnalog(full, -0.1)).toThrow(RangeError);
+    expect(() => normalizeDirection(full, 1)).toThrow(RangeError);
+  });
+
+  it('sonlu olmayan deadZone/maxRadius reddedilir', () => {
+    expect(() => normalizeAnalog(full, Number.NaN)).toThrow(TypeError);
+    expect(() => normalizeAnalog(full, 0.15, Number.POSITIVE_INFINITY)).toThrow(TypeError);
+    expect(() => normalizeDirection(full, Number.NaN)).toThrow(TypeError);
+  });
+
+  it('maxRadius pozitif olmalı', () => {
+    expect(() => normalizeAnalog(full, 0.15, 0)).toThrow(RangeError);
+    expect(() => normalizeDirection(full, 0.15, -1)).toThrow(RangeError);
+  });
+
+  it('geçerli sınırlarda çıktı her zaman SONLU kalır', () => {
+    for (const deadZone of [0, 0.15, 0.5, 0.99]) {
+      for (const magnitude of [0, 1e-9, 0.15, 0.5, 1, 4]) {
+        const result = normalizeAnalog(new Vector2(magnitude, 0), deadZone);
+        expect(Number.isFinite(result.x), `deadZone ${deadZone} × ${magnitude}`).toBe(true);
+        expect(Number.isFinite(result.y)).toBe(true);
+        expect(result.length()).toBeLessThanOrEqual(1 + 1e-9);
+      }
+    }
+  });
+
+  it('BOZUK bir vektör akış değeridir: sıfırlanır, fırlatmaz', () => {
+    expect(normalizeAnalog(new Vector2(Number.NaN, 0)).length()).toBe(0);
+    expect(normalizeDirection(new Vector2(Number.POSITIVE_INFINITY, 0)).length()).toBe(0);
   });
 });

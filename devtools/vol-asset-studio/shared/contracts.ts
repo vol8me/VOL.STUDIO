@@ -132,13 +132,13 @@ export interface ApiErrorResponse {
 }
 
 /** `GET /assets/:id/raster` yanıt başlıklarının gövdesiz özeti. */
-export interface RasterInfo {
-  width: number;
-  height: number;
-  revision: string;
-  /** İlk normalize kaydında düşecek metadata alanları (icc, exif…). */
-  strippedMetadata: string[];
-}
+/**
+ * Bir varlığa iliştirilen serbest metadata belgesinin son eki.
+ *
+ * `.volsprite.json` ve `.volaudio.json` gibi TÜRE ait belgelerin yanında,
+ * herhangi bir varlığa eşlik edebilen genel bir belgedir.
+ */
+export const METADATA_DOCUMENT_SUFFIX = '.volmeta.json';
 
 export interface SaveTargetRequest {
   assetId: string;

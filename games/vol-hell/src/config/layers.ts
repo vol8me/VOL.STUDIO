@@ -31,5 +31,3 @@ export const RENDER_DEPTH = {
   /** Vuruş/ölüm/toplama efektleri — en üstte okunur. */
   impactEffect: 30,
 } as const;
-
-export type RenderDepth = typeof RENDER_DEPTH;

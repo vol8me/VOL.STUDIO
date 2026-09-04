@@ -113,19 +113,13 @@ interface LegState {
  * - **Acil rejim**: `maxStrainPx`i aşan bir bacak sırayı DELER. O anda birden
  *   çok grup aynı anda havada olabilir ve yukarıdaki güvence GEÇERSİZDİR.
  *
- * Acil rejim bir kaçış değil bilinçli bir takastır: gövde bir atılımda bir adım
- * süresinde bacak erişiminden daha çok yol alabilir ve sıra beklemek bacağı
- * yerde SÜRÜKLER. Sürüklenen bir bacak her karede görünür, bir karelik zayıf
- * destek görünmez. `emergencySteppingCount` bu takasın ne zaman yapıldığını
- * ölçülebilir kılar — tüketici hangi rejimde olduğunu bilmeden destek sayısına
- * bakarsa yanlış bir güvence varsayar.
+ * Acil rejim bilinçli bir takastır: sürüklenen bir bacak her karede görünür,
+ * bir karelik zayıf destek görünmez. Rejimi ayırt etmeden `steppingCount`a
+ * bakan tüketici olmayan bir güvence varsayar.
  *
- * Sıra modeli, bir grubun kilidi süresiz tutmasını da engeller: eski kural
- * ("karşı grup adımdayken başlama") aynı gruptaki bacaklar kaymalı bittiği
- * sürece kilidi hiç bırakmayabiliyordu ve karşı gruptaki bacaklar dönüşlere
- * bile tepkisiz biçimde yere yapışık kalıyordu. Sıra ancak adım sayısı sıfıra
- * indiğinde yenilenir ve yeni sırayı EN GERGİN bacak kazanır; bekleyen grup
- * her zaman en gergin olduğu için açlık matematiksel olarak mümkün değildir.
+ * Sıra ancak adım sayısı sıfıra indiğinde yenilenir ve yeni sırayı EN GERGİN
+ * bacak kazanır; bekleyen grup her zaman en gergin olduğu için açlık mümkün
+ * değildir.
  */
 export class LegGait {
   private readonly states: LegState[];

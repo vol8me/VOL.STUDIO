@@ -1,21 +1,13 @@
 /**
- * Gövdenin bir karedeki durumu — onu TÜKETEN her katmanın ortak sözlüğü.
+ * Gövdenin bir karedeki durumu — onu tüketen her katmanın ortak sözlüğü.
  *
- * Bu tip bir kolaylık değil, bir SÖZLEŞMEDİR. Sinyaller bir dönem tüketici
- * başına elle kurulan ayrı nesnelerdi (`BodyMotionState`, `LimbDriveState`) ve
- * aynı gerçeğin iki farklı şeklini taşıyorlardı: `turnRate` üç ayrı tüketiciye
- * ham sayı olarak gidiyordu, biri birimini değiştirse diğer ikisi sessizce
- * kayardı. Tek bir üretici (gövde) ve tek bir şekil bunu imkânsız kılar.
+ * Tek üretici (gövde), tek şekil: aynı gerçeğin tüketici başına ayrı nesnelerle
+ * taşınması, bir alanın birimi değiştiğinde diğerlerinin sessizce kaymasına
+ * açıktır.
  *
- * İki YÖN ayrı taşınır ve karıştırılmamalıdır:
- *
- * - `travelHeadingRad` gövdenin gerçekten GİTTİĞİ yöndür (hızın yönü).
- * - `facingHeadingRad` gövdenin BAKTIĞI yöndür; dönüş yayı onu geriden getirir.
- *
- * Sert bir dönüşte ikisi belirgin biçimde ayrışır. Hareket temposu ve yürüyüş
- * öngörüsü SEYAHATE, gövde-yerel dönüşümler (yaslanma, rig dönüşü) BAKIŞA
- * bakar. Tek bir "yön" alanı bu ayrımı gizler ve yanlış tarafın kullanıldığı
- * yerde hata görsel bir tuhaflık olarak, kaynağından uzakta görünür.
+ * İki YÖN ayrı taşınır ve karıştırılmamalıdır: `travelHeadingRad` gövdenin
+ * GİTTİĞİ, `facingHeadingRad` BAKTIĞI yöndür. Sert dönüşte ayrışırlar; tempo ve
+ * yürüyüş öngörüsü seyahate, gövde-yerel dönüşümler bakışa bakar.
  */
 export interface LocomotionSignals {
   /** Gövde merkezinin dünya konumu. */
@@ -38,30 +30,21 @@ export interface LocomotionSignals {
   /** [0,1] atılım şiddeti — sert `isDashing` anahtarının yumuşatılmış hâli. */
   dash01: number;
   /**
-   * [0,1] duvar çarpmasının SÖNEN yankısı.
-   *
-   * Çarpma tek karelik bir olaydır; uzuvların onu görebilmesi için bir kaç kare
-   * yaşaması gerekir. Gövde ivmeden zaten yaslanır (sekmenin impulse'u ivmeye
-   * girdiğinden beri); bu sinyal aynı olayı UZUVLARA taşır ve darbeyi emen bir
-   * çöküş verir.
+   * [0,1] duvar çarpmasının SÖNEN yankısı — çarpma tek karelik bir olaydır,
+   * uzuvların görebilmesi için birkaç kare yaşaması gerekir.
    */
   impact01: number;
   /**
-   * Ayaklar yerde mi?
-   *
-   * Bugün yalnız atılım gövdeyi yerden keser, ama alan bir SORU sorar
-   * ("yerde mi?"), bir sebep bildirmez ("atılıyor mu?"). Zıplama, sendeleme ya
-   * da geri savrulma eklendiğinde tüketicilerin hiçbiri değişmez; yalnız bu
-   * alanı yazan yer değişir.
+   * Ayaklar yerde mi? Alan bir SORU sorar, sebep bildirmez ("atılıyor mu?"
+   * değil): yeni bir yerden-kesme sebebi geldiğinde tüketiciler değişmez.
    */
   grounded: boolean;
 }
 
 /**
- * İkincil hareketin ürettiği ve uzuvların tükettiği poz sinyalleri.
- *
- * `LocomotionSignals`ten AYRI durur çünkü kaynağı farklıdır: bunlar gövdenin
- * fiziksel durumu değil, o durumdan türetilmiş SUNUM kararlarıdır.
+ * İkincil hareketin ürettiği, uzuvların tükettiği poz sinyalleri.
+ * `LocomotionSignals`ten ayrıdır: gövdenin durumu değil, ondan türetilmiş
+ * SUNUM kararlarıdır.
  */
 export interface PoseSignals {
   /** [0,1] hareket temposu — uzuv duruşu ve bakış uyanıklığı bunu tüketir. */

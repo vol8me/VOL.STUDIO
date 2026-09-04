@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { constants } from 'node:fs';
-import { open, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { open, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type { AssetRole } from '../shared/contracts.js';
 import { openVerifiedAsset } from './assetFile.js';
@@ -145,7 +145,16 @@ export async function runSaveTransaction(
     throw error;
   }
 
-  // 4) Başarı: yedekleri temizle.
+  /*
+   * 4) Rename'leri KALICI kıl, sonra yedekleri temizle.
+   *
+   * Sıra önemlidir: yedek, rename dayanıklı olmadan silinirse çökme sonrası
+   * geri dönülecek bir kopya kalmaz. Aynı dizin birden çok hedef taşıyabilir,
+   * bir kez senkronlamak yeter.
+   */
+  const directories = new Set(prepared.map((entry) => dirname(entry.record.absolutePath)));
+  await Promise.all([...directories].map((directory) => fsyncDirectory(directory)));
+
   await Promise.allSettled(prepared.map((entry) => rm(entry.backupPath, { force: true })));
   await catalog.refresh();
   return prepared.map((entry) => ({
@@ -186,11 +195,26 @@ async function fsyncFile(path: string): Promise<void> {
   }
 }
 
-/** Kaydedilmiş dosyayı geri okuyup beklenen revizyonu taşıdığını doğrular. */
-export async function verifySavedRevision(path: string, expected: string): Promise<boolean> {
+/**
+ * Rename'in KENDİSİNİ kalıcı kılar.
+ *
+ * Dosyayı fsync'lemek içeriği diske indirir ama adı bağlayan dizin girdisini
+ * indirmez: POSIX'te bir rename ancak kapsayan DİZİN fsync'lendiğinde
+ * dayanıklıdır. Yalnız dosyayı senkronlamak deseni yarım bırakıyordu — içeriği
+ * sağlam ama adı eski çökme senaryosu tam olarak buradan doğar.
+ *
+ * Hata YUTULUR: bazı dosya sistemleri (ve Windows) dizin fsync'ini
+ * desteklemez. Desteklenen yerde dayanıklılık kazanılır, desteklenmeyende
+ * kayıt yine de başarılıdır — bu, yazmayı reddetmek için bir sebep değildir.
+ */
+async function fsyncDirectory(path: string): Promise<void> {
+  let handle;
   try {
-    return sha256(await readFile(path)) === expected;
+    handle = await open(path, constants.O_RDONLY);
+    await handle.sync();
   } catch {
-    return false;
+    return;
+  } finally {
+    await handle?.close().catch(() => undefined);
   }
 }
