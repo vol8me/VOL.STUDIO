@@ -5,6 +5,41 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-05 — belge yüzeyi ve yorum doktrini
+
+**README'ler tanıtıma indirildi.** İki README karar günlüğüne dönüşmüştü:
+`vol-hell` 188 satırın 145'ini sistem/denge/mobil/grafik kararlarına,
+`vol-asset-studio` 139 satırın 40'ını sunucu sözleşmesi ve güvenlik sınırına
+ayırıyordu. Repo'da zaten `DESIGN.md` konvansiyonu vardı (audio-synth,
+visual-synth, vol-arachnid); iki paket ona alındı. İçerik silinmedi, taşındı:
+384 satır DESIGN belgelerine gitti, README toplamı 1398 → 1054. Kök README'nin
+kapı tablosu bayattı; `high`e bundle bütçesi, `signoff`a ses tazeliği ve
+`pnpm benchmark:device` satırı eklendi. 26 belgede kırık bağlantı: 0.
+
+**Yorum doktrini uygulandı.** "Bir dönem X'ti" anlatısı 28 dosyada şimdiki
+zaman sözleşmesine çevrildi — kaybolan bilgi yok, her birinde ayakta kalan
+kısım "bu sınır neden var" idi. Beş vite/vitest config'inde aynı 10 satırlık
+gerekçe kopyalanmıştı; sözleşme `scripts/vite/coreAliases.mjs`te kaldı, çağrı
+yerlerine işaretçi kondu. `publicSurface.test.ts` tek bir sabitin üstünde ~75
+satırlık değişiklik günlüğü taşıyordu (139 → 65 satır); günlük
+`core/docs/public-surface.md`ye alındı.
+
+**Bayat referans taraması.** Yorumların andığı sembol ve dosya yollarının
+gerçekten var olup olmadığı mekanik olarak tarandı. Dokuz bayat sembol
+(`RigPartAnimator`, `getRaw()`, `WaveCounter`, `assertEveryTabCovered`,
+`applyCard()`, `minReachRatio`, `ParticlePool`) ve dokuz bayat yol düzeltildi.
+`devtools/visual-synth/DESIGN.md` paket ayrılmadan önceki `core/` düzenini
+anlatıyordu: belgedeki CLI komutlarını izleyen biri hata alırdı.
+
+**Yazım.** Bir grup dosyada Türkçe karakterler düşürülmüştü ("oldugu icin",
+"cop deger"); 275 kelime düzeltildi. Yalnız yorum satırlarında, backtick
+içine dokunmadan.
+
+Bu tur için kapı EKLENMEDİ: bayat-sembol taraması denendi ama sinyal oranı
+8'de 2 çıktı (kalanı `getBoundingClientRect` gibi DOM API'leri). Büyüyen bir
+muafiyet listesiyle yaşayacak böyle bir kapı bastırılır; sınıf, incelemeye
+bırakıldı.
+
 ## 2026-09-05 — bütünsel denetim: PNG editörünün veri bütünlüğü
 
 | Kimlik | Seviye | Somut durum ve kullanıcı sonucu                                                                                                                                                          | Karar ve kanıt                                                                                                                                                                                                                                                                                                                                |
