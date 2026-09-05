@@ -26,6 +26,23 @@ Session'ın her geçmiş değişimi onu geçersiz kılıyor. Renderer tile günc
 zaten yüzey kimliğini ve sürümünü birlikte izliyordu; yalnız sürüme bakan
 ayrı `SpriteDocument` önbelleği modelle birlikte kaldırıldı.
 
+## 2026-09-05 — kod okuma: Kanban’da uçuşta kalan sürükleme hayaleti
+
+| Kimlik | Seviye | İhlal ve sonuç                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Yapılan ve kanıt                                                                                                                                                                                                                              |
+| ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D15    | P2     | `Kanban.destroy()` uçuştaki bir sürüklemeyi temizlemiyordu. Hayalet `dragContainer`a eklenir ve varsayılanı `document.body` — yani bileşenin KENDİ ağacının DIŞI; `this.element.remove()` onu götürmüyordu. Somut senaryo: oyuncu bir kartı sürüklerken sahne kapanır (modal kapanışı, sahne geçişi, panelin yok edilmesi) ve ekranda sahipsiz, imleci takip etmeyen bir kart asılı kalır. `destroy()` çağrılmış olmasına rağmen bileşenden geriye GÖRÜNÜR bir artık kalıyordu. | `cancelDrag()` çıkarıldı ve `destroy()`a bağlandı. Test önce kırmızıydı (`destroy() sonrası hayalet DOM’da kaldı: expected 1 to be 0`); çağrı kaldırılınca yeniden düşüyor. Dinleyici tarafı zaten doğruymuş — ikinci test ilk koşuşta geçti. |
+
+**Çapraz kontrol yapıldı ve aile temiz çıktı.** Bileşenin kendi ağacının dışına
+eleman ekleyen yedi bileşen var. `SlotGrid` birebir aynı hayalet mekanizmasını
+taşıyor ama `destroy()`u ilk satırda `endDrag()` çağırıyor — doğru. `FloatingText`,
+`Popup`, `Toast`, `Tooltip`, `RichTooltip` de eklediklerini topluyor. Kanban
+yedide tek aykırıydı.
+
+**Karar: bu sınıf için ayrı bir kapı yazılmadı.** "destroy, dışarı eklediğini
+toplamalı" statik olarak ifade edilmesi zor bir kural ve yedi bileşenin altısı
+zaten doğru; kapı, olmayan bir sorunu kovalardı. Bunun yerine bulgu ve çapraz
+kontrol yazıldı.
+
 ## 2026-09-05 — ses boru hattı: bayt kararlılığı ve bayat bir varlık
 
 Boru hattı ilk kez uçtan uca sınandı. Repoda **sıfır ses kaynak dosyası** var

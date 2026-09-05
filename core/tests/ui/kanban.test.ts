@@ -386,3 +386,67 @@ describe('Kanban - son taşınan kart vurgusu (flash)', () => {
     vi.useRealTimers();
   });
 });
+
+describe('sürükleme ortasında destroy', () => {
+  it('destroy(), UÇUŞTAKİ sürükleme hayaletini de toplar', () => {
+    /*
+     * Hayalet `dragContainer`a eklenir ve varsayılanı `document.body` — yani
+     * bileşenin KENDİ ağacının DIŞI. `destroy()` `this.element.remove()`
+     * yapıyordu ama hayalet o ağaçta olmadığı için geride kalıyordu.
+     *
+     * Somut senaryo: oyuncu bir kartı sürüklerken sahne kapanır (modal kapanışı,
+     * sahne geçişi, panelin yok edilmesi). Ekranda sahipsiz, imleci takip
+     * etmeyen bir kart asılı kalır ve hiçbir şey onu kaldırmaz — `destroy()`
+     * çağrılmış olmasına rağmen bileşenden geriye görünür bir artık kalır.
+     */
+    const kanban = new Kanban({
+      columns: [
+        { id: 'pending', title: 'Beklemede', cards: makeCards('p', 2) },
+        { id: 'active', title: 'İşlemde', cards: [] },
+      ],
+    });
+    document.body.appendChild(kanban.element);
+    mockBoardGeometry(kanban, ['pending', 'active']);
+
+    const card = kanban.element.querySelector<HTMLDivElement>('[data-card-id="p-0"]')!;
+    pointerDown(card, 100, 30);
+    pointerMove(300, 30);
+
+    // Eşik aşıldı: hayalet gerçekten gövdeye eklenmiş olmalı, yoksa test
+    // hiçbir şey kanıtlamaz.
+    expect(document.querySelectorAll('.vol-kanban__card--ghost').length).toBe(1);
+
+    kanban.destroy();
+
+    expect(
+      document.querySelectorAll('.vol-kanban__card--ghost').length,
+      'destroy() sonrası hayalet DOM’da kaldı',
+    ).toBe(0);
+  });
+
+  it('destroy() sürükleme dinleyicilerini de bırakır', () => {
+    /*
+     * `handlePointerUp` dinleyicileri kaldırır ama uçuştaki bir sürüklemede o
+     * hiç çağrılmaz. Kalan `pointermove` dinleyicisi yok edilmiş bir bileşenin
+     * kapanışlarını canlı tutar.
+     */
+    const kanban = new Kanban({
+      columns: [{ id: 'pending', title: 'Beklemede', cards: makeCards('p', 1) }],
+    });
+    document.body.appendChild(kanban.element);
+    mockBoardGeometry(kanban, ['pending']);
+
+    const card = kanban.element.querySelector<HTMLDivElement>('[data-card-id="p-0"]')!;
+    pointerDown(card, 100, 30);
+    pointerMove(160, 30);
+
+    const removeSpy = vi.spyOn(document, 'removeEventListener');
+    kanban.destroy();
+
+    const removed = removeSpy.mock.calls.map((call) => call[0]);
+    expect(removed).toContain('pointermove');
+    expect(removed).toContain('pointerup');
+    expect(removed).toContain('pointercancel');
+    removeSpy.mockRestore();
+  });
+});

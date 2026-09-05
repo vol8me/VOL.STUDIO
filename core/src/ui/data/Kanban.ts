@@ -174,6 +174,10 @@ export class Kanban {
     document.removeEventListener('pointermove', this.boundPointerMove);
     document.removeEventListener('pointerup', this.boundPointerUp);
     document.removeEventListener('pointercancel', this.boundPointerUp);
+    // Uçuştaki sürükleme, `element.remove()` ile TOPLANMAZ: hayalet
+    // `dragContainer`a (varsayılan `document.body`) eklenir, yani bu bileşenin
+    // ağacının dışına.
+    this.cancelDrag();
     for (const rafId of this.columnScrollRaf.values()) cancelAnimationFrame(rafId);
     this.columnScrollRaf.clear();
     if (this.highlightTimeout !== null) window.clearTimeout(this.highlightTimeout);
@@ -418,6 +422,23 @@ export class Kanban {
     drag.ghostEl.style.top = `${event.clientY - drag.offsetY}px`;
 
     this.updateDropTarget(event.clientX, event.clientY, drag.fromColumnId);
+  }
+
+  /**
+   * Uçuştaki sürüklemenin GÖRSEL izlerini toplar; taşımayı uygulamaz.
+   *
+   * `handlePointerUp` normal bitişi yönetir ama bir sürükleme ortasında
+   * bileşen yok edilirse o hiç çağrılmaz. Hayalet bileşenin ağacının dışında
+   * yaşadığı için `element.remove()` de onu götürmez: ekranda sahipsiz,
+   * imleci takip etmeyen bir kart asılı kalırdı.
+   */
+  private cancelDrag(): void {
+    const drag = this.drag;
+    if (!drag) return;
+    this.drag = null;
+    drag.cardEl.classList.remove('vol-kanban__card--dragging');
+    drag.ghostEl.remove();
+    this.clearDropTargetVisuals();
   }
 
   private handlePointerUp(event: PointerEvent): void {
