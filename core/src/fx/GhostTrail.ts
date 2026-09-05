@@ -54,6 +54,7 @@ export class GhostTrail {
   constructor(scene: PoseSpriteScene, options: GhostTrailOptions) {
     requireFinite(options.lifespanMs, 'GhostTrailOptions.lifespanMs');
     requireFinite(options.startAlpha, 'GhostTrailOptions.startAlpha');
+    requireFinite(options.maxGhosts, 'GhostTrailOptions.maxGhosts');
     if (!Number.isInteger(options.maxGhosts) || options.maxGhosts <= 0) {
       throw new RangeError('GhostTrail: maxGhosts pozitif bir tam sayı olmalı');
     }

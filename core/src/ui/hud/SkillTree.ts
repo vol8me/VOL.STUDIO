@@ -123,13 +123,11 @@ let measureCanvasContext: CanvasRenderingContext2D | null = null;
 
 /**
  * Bir etiketin piksel genişliğini, DOM'a bağlı olup olmadığından TAMAMEN
- * BAĞIMSIZ ölçer — önceki tasarım `button.scrollWidth` kullanıyordu, ama
- * bu yalnızca element gerçekten `document`'a mount edilip layout aldıktan
- * SONRA doğru değer döner (bağlı olmayan/henüz mount edilmemiş bir alt
- * ağaçta her zaman 0'dır). SkillTree constructor'ı, kendi elementini
- * tüketicinin DOM'a EKLEMESİNDEN ÖNCE (bir showcase kartı, bir sahne
- * container'ı içine appendChild ile eklenmeden önce) `recomputeLayout()`'u
- * çağırdığı için scrollWidth ölçümü her zaman 0 dönüyordu, tüm düğümler
+ * BAĞIMSIZ ölçer. `button.scrollWidth` bu işi GÖREMEZ: yalnız element
+ * `document`'a mount edilip layout aldıktan sonra doğru değer döner, bağlı
+ * olmayan bir alt ağaçta her zaman 0'dır. SkillTree constructor'ı kendi
+ * elementini tüketici DOM'a EKLEMEDEN ÖNCE `recomputeLayout()` çağırır;
+ * scrollWidth ile ölçseydi her düğüm 0 genişlik alırdı, tüm düğümler
  * MIN_NODE_WIDTH'e sabitlenip uzun etiketler (ör. "Hızlı Toparlanma")
  * kutudan taşıyordu. `<canvas>` 2D context'in `measureText()`'i ise saf
  * bir font-metrikleri hesaplamasıdır, hiçbir DOM bağlantısı gerektirmez —

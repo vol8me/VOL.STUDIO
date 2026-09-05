@@ -3,11 +3,10 @@ export type DisplayMode = 'windowed' | 'fullscreen';
 /**
  * Grafik kalitesi İKİ kademedir ve aralarındaki fark ölçülebilir olmalıdır.
  *
- * Üç kademeli eski sürüm ("low/balanced/high") pratikte tek bir şeyi
- * değiştiriyordu — partikül sayısı — ve `maxDpr` bacağı standart 1x monitörde
- * hiçbir işe yaramıyordu. İki kademe, her birinin ne anlama geldiğini
- * savunulabilir kılar: "Yüksek" tam kalite, "Düşük" ölçülebilir biçimde daha
- * ucuz.
+ * Üç kademe ("low/balanced/high") bu ölçüyü KARŞILAMAZ: pratikte tek bir şeyi
+ * (partikül sayısını) değiştirir ve `maxDpr` bacağı standart 1x monitörde
+ * hiçbir işe yaramaz. İki kademe her birini savunulabilir kılar: "Yüksek" tam
+ * kalite, "Düşük" ölçülebilir biçimde daha ucuz.
  */
 export type GraphicsQualityLevel = 'high' | 'low';
 

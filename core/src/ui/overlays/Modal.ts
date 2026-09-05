@@ -22,10 +22,10 @@ const BODY_LOCK_CLASS = 'vol-modal__body-locked';
 const openModals: Modal[] = [];
 
 /**
- * Govde kilidini acik modal yığınının uzunluğundan TURETIR. Önceki tasarım ayri
- * bir sayac tutuyordu; modal açıkken destroy() çağrılmadan sahne yikilirsa sayac
- * hiç azalmaz ve sayfa kalıcı olarak kaydırılamaz halde kalırdı. Yığın zaten tek
- * doğruluk kaynağı — ikinci bir sayac tutmak bu ayrışmaya davetiye çıkarıyordu.
+ * Gövde kilidini açık modal YIĞINININ uzunluğundan TÜRETİR, ayrı bir sayaç
+ * tutmaz. Sayaç tutulsaydı modal açıkken `destroy()` çağrılmadan sahne
+ * yıkıldığında hiç azalmaz, sayfa kalıcı olarak kaydırılamaz hâlde kalırdı.
+ * Yığın zaten tek doğruluk kaynağıdır; ikincisi ondan ayrışabilir.
  */
 function syncBodyLock(): void {
   document.body.classList.toggle(BODY_LOCK_CLASS, openModals.length > 0);

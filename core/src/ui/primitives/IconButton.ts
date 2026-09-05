@@ -46,10 +46,10 @@ export class IconButton {
     this.element.appendChild(this.iconWrapper);
     this.setIcon(icon);
 
-    // Listener BİR kez bağlanır; handler değişince yeniden bağlanmaz. Eski
-    // hâlde handler'ın kendisi listener'dı, yani `onClick()` iki kez
-    // çağrıldığında eskisini kaldırmak çağıranın referansı saklamasına
-    // bağlıydı ve asenkron sarmalayıcı eklenemiyordu.
+    // Listener BİR kez bağlanır; `onClick()` yalnız handler alanını değiştirir.
+    // Handler'ın kendisi listener olsaydı ikinci `onClick()` çağrısında eskisini
+    // kaldırmak çağıranın referansı saklamasına bağlı kalır ve asenkron
+    // sarmalayıcı (loading, hata yakalama) hiç eklenemezdi.
     this.boundHandleClick = () => {
       void this.handleClick();
     };

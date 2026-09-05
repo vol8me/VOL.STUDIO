@@ -1,3 +1,5 @@
+import { requireFinite } from '../../math/numeric';
+
 export interface HistoryCommand {
   label: string;
   /** Undo verisinin yaklaşık bellek maliyeti; negatif/NaN kabul edilmez. */
@@ -36,8 +38,12 @@ const DEFAULT_MAX_BYTES = 256 * 1024 * 1024;
 
 function validateHistoryCommand(command: HistoryCommand): void {
   if (!command.label) throw new Error('HistoryCommand.label boş olamaz');
-  if (!Number.isFinite(command.byteCost) || command.byteCost < 0) {
-    throw new Error('HistoryCommand.byteCost sonlu ve negatif olmayan bir sayı olmalıdır');
+  // Sonlu sayı sözleşmesi (`math/numeric.ts`): tip ihlali `TypeError`, aralık
+  // ihlali `RangeError`. İkisini tek `Error`e katlamak, çağıranın hangi
+  // durumu yakaladığını ayırt etmesini imkânsız kılar.
+  requireFinite(command.byteCost, 'HistoryCommand.byteCost');
+  if (command.byteCost < 0) {
+    throw new RangeError('HistoryCommand.byteCost negatif olamaz');
   }
 }
 
@@ -54,8 +60,9 @@ export class CommandHistory {
 
   constructor(options: CommandHistoryOptions = {}) {
     const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
-    if (!Number.isFinite(maxBytes) || maxBytes < 0) {
-      throw new Error('CommandHistory.maxBytes sonlu ve negatif olmayan bir sayı olmalıdır');
+    requireFinite(maxBytes, 'CommandHistory.maxBytes');
+    if (maxBytes < 0) {
+      throw new RangeError('CommandHistory.maxBytes negatif olamaz');
     }
     this.maxBytes = maxBytes;
     this.onChangeHandler = options.onChange;

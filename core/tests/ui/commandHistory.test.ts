@@ -186,4 +186,26 @@ describe('CommandHistory', () => {
     ).toThrow(/byteCost/);
     transaction.rollback();
   });
+
+  /**
+   * Sonlu sayı sözleşmesi (`math/numeric.ts`) hata TİPİNİ de bağlar: sonlu
+   * olmayan değer `TypeError`, sonlu ama aralık dışı değer `RangeError`.
+   * İkisini tek `Error`e katlamak çağıranın bunları ayırt etmesini engeller —
+   * `normalizeAnalog` ve `solveTwoBoneIk` aynı ayrımı zaten uyguluyor.
+   */
+  it('sonlu olmayanı TypeError, aralık dışını RangeError ile reddeder', () => {
+    expect(() => new CommandHistory({ maxBytes: Number.NaN })).toThrow(TypeError);
+    expect(() => new CommandHistory({ maxBytes: Number.POSITIVE_INFINITY })).toThrow(TypeError);
+    expect(() => new CommandHistory({ maxBytes: -1 })).toThrow(RangeError);
+
+    const history = new CommandHistory();
+    const cmd = (byteCost: number) => ({
+      label: 'X',
+      byteCost,
+      apply: vi.fn(),
+      revert: vi.fn(),
+    });
+    expect(() => history.record(cmd(Number.NaN))).toThrow(TypeError);
+    expect(() => history.record(cmd(-1))).toThrow(RangeError);
+  });
 });

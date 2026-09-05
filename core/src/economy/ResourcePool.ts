@@ -49,8 +49,8 @@ export class ResourcePool<TResource extends string> {
 
   /**
    * Miktar ekler (negatif verilmez; düşürmek için `spend`). Sınır varsa
-   * kelepçelenir. Sonlu olmayan miktar REDDEDİLİR — `NaN <= 0` yanlış
-   * olduğu için eski kod onu geçiriyor ve bakiyeyi kalıcı NaN yapıyordu.
+   * kelepçelenir. Sonlu olmayan miktar REDDEDİLİR: `NaN <= 0` yanlış olduğu
+   * için erken çıkış onu tutamaz ve bakiye kalıcı olarak NaN'a düşer.
    */
   add(resource: TResource, amount: number): void {
     requireFinite(amount, 'ResourcePool add amount');

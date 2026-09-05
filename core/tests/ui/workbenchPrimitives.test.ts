@@ -294,6 +294,25 @@ describe('KeyedVirtualList', () => {
     list.destroy();
   });
 
+  /**
+   * Sonlu sayı sözleşmesi (`math/numeric.ts`) hata TİPİNİ de bağlar: sonlu
+   * olmayan `TypeError`, sonlu ama aralık dışı `RangeError`. Tek bir `Error`
+   * çağıranın ikisini ayırt etmesini engeller.
+   */
+  it('itemHeight: sonlu olmayanı TypeError, pozitif olmayanı RangeError ile reddeder', () => {
+    const make = (itemHeight: number) =>
+      new KeyedVirtualList({
+        items: [],
+        getKey: () => 'x',
+        itemHeight,
+        renderItem: () => document.createElement('div'),
+      });
+    expect(() => make(Number.NaN)).toThrow(TypeError);
+    expect(() => make(Number.POSITIVE_INFINITY)).toThrow(TypeError);
+    expect(() => make(0)).toThrow(RangeError);
+    expect(() => make(-5)).toThrow(RangeError);
+  });
+
   it('geçersiz yükseklik ve yinelenen keyleri reddeder, string height destekler', () => {
     expect(
       () =>

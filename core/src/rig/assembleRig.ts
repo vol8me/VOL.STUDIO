@@ -98,8 +98,8 @@ export interface AssembledRig {
  *
  * `parentPartId` taşıyan parçalar kökün değil ÜST PARÇANIN container'ına
  * girer: üst parçayı döndürmek alt zinciri de döndürür (kol → önkol → el).
- * Eklem taşımayan bir rig, eklem desteği eklenmeden önceki davranışın
- * birebir aynısını üretir.
+ * Eklem taşımayan bir rig'de her parça kökün altında kalır — düz bir rig'in
+ * çıktısı eklem desteğinden ETKİLENMEZ.
  */
 export function assembleRig(scene: Phaser.Scene, rig: RigDefinition): AssembledRig {
   // Phaser bilinmeyen bir texture key'inde sessizce `__MISSING` dokusunu

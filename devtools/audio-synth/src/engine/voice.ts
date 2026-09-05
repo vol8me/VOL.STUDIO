@@ -12,11 +12,10 @@ export type FmState = {
 
 /**
  * Bir osilatör sesi. `phase` alanları KRİTİK: faz her örnekte anlık frekansla
- * ilerletilir. Faz `frekans * t` ile hesaplanırsa — önceki tasarım böyleydi —
- * zamanla değişen frekansta (slide, vibrato, pitchJump, FM) duyulan frekans
- * yanlış olur, çünkü faz frekansın İNTEGRALİDİR. Lineer bir slide'da nota
- * sonunda `f₁` yerine `2·f₁ - f₀` duyuluyordu; vibrato derinliği de zamanla
- * lineer büyüyordu.
+ * ilerletilir; `frekans * t` ile HESAPLANMAZ. Faz frekansın İNTEGRALİ olduğu
+ * için zamanla değişen frekansta (slide, vibrato, pitchJump, FM) duyulan
+ * frekans yanlış çıkar: lineer bir slide'da nota sonunda `f₁` yerine
+ * `2·f₁ - f₀` duyulur ve vibrato derinliği zamanla lineer büyür.
  */
 export type Voice =
   | { type: 'noise'; noise: NoiseSource; detuneCents: 0 }

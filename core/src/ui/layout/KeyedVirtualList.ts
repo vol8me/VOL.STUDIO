@@ -1,3 +1,5 @@
+import { requireFinite } from '../../math/numeric';
+
 export type VirtualListKey = string | number;
 
 export interface KeyedVirtualListOptions<T> {
@@ -51,8 +53,11 @@ export class KeyedVirtualList<T> {
   private readonly resizeObserver: ResizeObserver | null;
 
   constructor(options: KeyedVirtualListOptions<T>) {
-    if (!Number.isFinite(options.itemHeight) || options.itemHeight <= 0) {
-      throw new Error('KeyedVirtualList.itemHeight pozitif ve sonlu olmalıdır');
+    // Sonlu sayı sözleşmesi (`math/numeric.ts`): tip ihlali `TypeError`,
+    // aralık ihlali `RangeError`.
+    requireFinite(options.itemHeight, 'KeyedVirtualList.itemHeight');
+    if (options.itemHeight <= 0) {
+      throw new RangeError('KeyedVirtualList.itemHeight pozitif olmalı');
     }
     this.items = options.items;
     this.itemHeight = options.itemHeight;

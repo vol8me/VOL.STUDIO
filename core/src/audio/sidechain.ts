@@ -31,19 +31,19 @@ export class SidechainDucker {
   }
 
   /**
-   * Duck profilini uygular. Hem duck hem release AudioContext zaman cizelgesine
-   * zamanlanır — önceki tasarım release'i `setTimeout` ile tetikliyordu ve iki
-   * ayri saat kullanmak sekme arka plana alındığında kirilyordu: setTimeout
-   * throttle edilir, üstelik GameAudio context'i suspend ettiği için
-   * `currentTime` tamamen durur. Sonuc: sekmeye dönüldüğünde muzik kisik kalırdı.
+   * Duck profilini uygular. Hem duck hem release AudioContext zaman çizelgesine
+   * zamanlanır; `setTimeout` KULLANILMAZ. İki ayrı saat kullanmak sekme arka
+   * plana alındığında kırılır: setTimeout throttle edilir, üstelik GameAudio
+   * context'i suspend ettiği için `currentTime` tamamen durur — sekmeye
+   * dönüldüğünde müzik kısık kalır.
    */
   duck(profile: DuckingProfile): void {
     const now = this.context.currentTime;
     // Release aşamasında yeni duck gelirse gain zaten 1'e gidiyordur; yeni
     // target'a çek. Hold/attack aşamasındaysa en güçlü (en düşük) duck uygulanır.
-    // Önceki tasarım release planlandığı an `currentTarget = 1` yapıyordu — bu,
-    // hold devam ederken gelen ikinci duck'ın min(1, target) = target ile
-    // önceki duck'ı zayıflatmasına yol açıyordu.
+    // Release PLANLANDIĞI an `currentTarget = 1` yazılmaz: hold sürerken gelen
+    // ikinci duck'ın min(1, target) = target ile öncekini zayıflatmasına yol
+    // açardı.
     const inReleasePhase = this.activeUntil > 0 && now >= this.releaseStartAt;
     this.currentTarget = inReleasePhase
       ? profile.target

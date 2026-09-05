@@ -191,6 +191,11 @@ describe('GhostTrail', () => {
   it('geçersiz yapılandırmayı reddeder', () => {
     const { scene } = createScene();
     expect(() => new GhostTrail(scene, { ...OPTIONS, maxGhosts: 0 })).toThrow(/maxGhosts/);
+    // Sonlu sayı sözleşmesi: sonlu olmayan `TypeError`, aralık dışı `RangeError`.
+    // `Number.isInteger(NaN)` yanlış döndüğü için NaN tek başına aralık kontrolüne
+    // düşer ve tip ihlali aralık ihlali gibi raporlanırdı.
+    expect(() => new GhostTrail(scene, { ...OPTIONS, maxGhosts: Number.NaN })).toThrow(TypeError);
+    expect(() => new GhostTrail(scene, { ...OPTIONS, maxGhosts: 0 })).toThrow(RangeError);
     expect(() => new GhostTrail(scene, { ...OPTIONS, lifespanMs: 0 })).toThrow(/lifespanMs/);
   });
 
