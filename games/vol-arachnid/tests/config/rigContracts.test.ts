@@ -104,6 +104,39 @@ describe('duruş tablosu', () => {
     }
   });
 
+  it('katlanma tabanı erişimin ALTINDA ve fiziksel olarak makuldür', () => {
+    /*
+     * Eklemli bir bacak tamamen katlanamaz. Model bu sınırı taşımıyordu: tek
+     * kelepçe 1 pikseldi ve ayak kalçanın dibine çekilebiliyordu. Ölçüldü —
+     * ön çift adım çevriminde 0.423'e kadar katlanıp keskin bir V yapıyordu.
+     *
+     * Taban `reach`in ALTINDA olmalı (aksi hâlde duruş evinin kendisi
+     * kelepçelenir ve uzuv hiç hareket edemez) ama sıfırın da üstünde.
+     */
+    for (const [id, stance] of Object.entries(gaitConfig.stance)) {
+      expect(stance.minReach, id).toBeGreaterThan(0);
+      expect(stance.minReach, id).toBeLessThan(stance.reach);
+    }
+  });
+
+  it('BACAKLARIN tabanı kuyruklardan yüksektir', () => {
+    /*
+     * Kuyruk bacak değildir: sıkı kıvrılması doğaldır ve aynı tabanı ona
+     * dayatmak hareketini yapaylaştırır. Ayrım uzuv başına verildiği için
+     * burada korunur — tek bir global değere geri dönülürse bu düşer.
+     */
+    // Kimlikler `stance` anahtarlarından türetilir: kaynağın export yüzeyini
+    // yalnız bir test için genişletmek, sözleşmeyi test kolaylığına feda eder.
+    const entries = Object.entries(gaitConfig.stance);
+    const legs = entries.filter(([id]) => !id.startsWith('t')).map(([, s]) => s.minReach);
+    const tails = entries.filter(([id]) => id.startsWith('t')).map(([, s]) => s.minReach);
+
+    expect(legs.length).toBe(8);
+    expect(tails.length).toBe(2);
+
+    expect(Math.min(...legs)).toBeGreaterThan(Math.max(...tails));
+  });
+
   it('acil adım eşiği normal tetiğin üstündedir', () => {
     expect(gaitConfig.runStepTriggerPx).toBeGreaterThan(gaitConfig.stepTriggerPx);
     expect(gaitConfig.runStepDurationMs).toBeLessThan(gaitConfig.stepDurationMs);

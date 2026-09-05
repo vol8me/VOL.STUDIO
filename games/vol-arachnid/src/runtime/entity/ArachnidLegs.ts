@@ -333,16 +333,21 @@ export class ArachnidLegs {
        */
       const lift = this.footLift[i];
       const tuckPx = gaitConfig.swingTuckPx * lift + gaitConfig.impactTuckPx * impact01;
-      if (tuckPx > 0) {
-        const reach = Math.hypot(dx, dy);
-        if (reach > 1e-3) {
-          // Kısaltma hedefi [1, reach] aralığına kelepçelenir: ayak zaten
-          // kalçanın dibindeyken çıkarma negatife düşer ve uzvu KISALTMAK
-          // yerine uzatırdı.
-          const tucked = clamp(reach - tuckPx, 1, reach);
-          dx *= tucked / reach;
-          dy *= tucked / reach;
-        }
+
+      /*
+       * Hedef, uzvun katlanabileceği EN KISA mesafenin altına inemez.
+       *
+       * Eklemli bir bacak tamamen katlanamaz. Bu taban bir dönem yalnız 1
+       * pikseldi; gövde basılı ayağın üstünden geçerken ön çift 0.423'e kadar
+       * katlanıp keskin bir V yapıyordu (ölçüldü). Taban `minReachRatio` ile
+       * uzuv boyuna orantılı olarak konur — kısaltma da bu tabanı aşamaz.
+       */
+      const minReach = driver.totalLength * driver.stance.minReach;
+      const reach = Math.hypot(dx, dy);
+      if (reach > 1e-3) {
+        const tucked = clamp(reach - tuckPx, minReach, Math.max(reach, minReach));
+        dx *= tucked / reach;
+        dy *= tucked / reach;
       }
 
       /*

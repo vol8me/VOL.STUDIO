@@ -28,6 +28,18 @@ export interface LimbStance {
   /** Uzvun TAM uzanımına oran olarak kalça–ayak mesafesi. */
   reach: number;
   /**
+   * Uzvun katlanabileceği EN KISA kalça–ayak mesafesi (aynı orana göre).
+   *
+   * Eklemli bir bacak tamamen katlanamaz: femur ve tibia birbirine değer.
+   * Modelde bu sınır YOKTU; tek kelepçe 1 pikseldi ve ayak kalçanın dibine
+   * çekilebiliyordu. Ölçüldü — ön çift adım çevriminde 0.423'e kadar katlanıp
+   * keskin bir V yapıyordu.
+   *
+   * Uzuv BAŞINA verilir çünkü kuyruk bacak değildir: bir kuyruğun sıkı
+   * kıvrılması doğaldır, aynı tabanı ona dayatmak hareketini yapaylaştırır.
+   */
+  minReach: number;
+  /**
    * Dizin büküleceği taraf (+1/−1). Ön uzuvlarda diz ÖNE, arka uzuvlarda ARKAYA
    * taşar: uzuvlar birbirinden uzaklaşır ve dizler kesişmez.
    */
@@ -75,6 +87,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     ...LEG_ROOT,
     angleDeg: 45,
     reach: 0.72,
+    minReach: 0.55,
     bendSign: -1,
     group: 0,
     dashAngleDeltaDeg: -16,
@@ -85,6 +98,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     ...LEG_ROOT,
     angleDeg: -45,
     reach: 0.72,
+    minReach: 0.55,
     bendSign: 1,
     group: 1,
     dashAngleDeltaDeg: 16,
@@ -95,6 +109,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     ...LEG_ROOT,
     angleDeg: 80,
     reach: 0.72,
+    minReach: 0.55,
     bendSign: -1,
     group: 1,
     dashAngleDeltaDeg: -8,
@@ -105,6 +120,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     ...LEG_ROOT,
     angleDeg: -80,
     reach: 0.72,
+    minReach: 0.55,
     bendSign: 1,
     group: 0,
     dashAngleDeltaDeg: 8,
@@ -116,6 +132,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     ...LEG_ROOT,
     angleDeg: 115,
     reach: 0.72,
+    minReach: 0.55,
     bendSign: 1,
     group: 0,
     dashAngleDeltaDeg: 6,
@@ -126,6 +143,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     ...LEG_ROOT,
     angleDeg: -115,
     reach: 0.72,
+    minReach: 0.55,
     bendSign: -1,
     group: 1,
     dashAngleDeltaDeg: -6,
@@ -136,6 +154,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     ...LEG_ROOT,
     angleDeg: 148,
     reach: 0.72,
+    minReach: 0.55,
     bendSign: 1,
     group: 1,
     dashAngleDeltaDeg: 9,
@@ -146,6 +165,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
     ...LEG_ROOT,
     angleDeg: -148,
     reach: 0.72,
+    minReach: 0.55,
     bendSign: -1,
     group: 0,
     dashAngleDeltaDeg: -9,
@@ -165,6 +185,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   tr: {
     angleDeg: 168,
     reach: 0.68,
+    minReach: 0.32,
     strideScale: 0.55,
     freeStep: true,
     bendSign: -1,
@@ -176,6 +197,7 @@ const STANCE: Readonly<Record<string, LimbStance>> = {
   tl: {
     angleDeg: -168,
     reach: 0.68,
+    minReach: 0.32,
     strideScale: 0.55,
     freeStep: true,
     bendSign: 1,

@@ -79,6 +79,20 @@ sıfır kırık, 505 dosyada sıfır yetim), platform matrisi, veri akışları.
 - **iOS hiç sınanmadı**, benchmark'lar hâlâ eşiksiz (boyut ekseni kapılı, hız
   değil), `.git` geçmişi yeniden yazılmadı.
 
+## 2026-09-05 — arachnid: ön bacakların aşırı katlanması
+
+| Kimlik | Seviye | İhlal ve sonuç                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Yapılan ve kanıt                                                                                                                                                                                                                                       |
+| ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D20    | P2     | Uzvun katlanabileceği EN KISA mesafe için sınır YOKTU: tek kelepçe `clamp(reach - tuckPx, 1, reach)` idi, yani taban BİR PİKSEL. Ayak kalçanın dibine kadar çekilebiliyordu. Ölçüldü (400 kare ileri koşu, erişim / toplam uzuv boyu): ön çift `r3`/`l3` adım çevriminde **0.423**'e kadar katlanıp keskin bir V yapıyor, arka çift aynı anda **0.99**'a gerilip düz bir çubuğa dönüyordu. Eklemli bir bacak tamamen katlanamaz — femur ve tibia birbirine değer. | `minReach` uzuv başına eklendi. Ön çiftin tabanı 0.423 → **0.550**; sınır kaldırılınca 0.423'e geri düşüyor. İki sözleşme testi: taban `reach`in altında ve sıfırın üstünde olmalı; bacakların tabanı kuyruklarınkinden yüksek olmalı. 180 test yeşil. |
+
+**Global değerden uzuv başına taşındı — bir golden testi bunu gösterdi.** İlk
+uygulama tek bir `minReachRatio: 0.55` idi ve determinizm golden'ı düştü. Fark
+okundu: 28 alanın ilk 24'ü birebir aynıydı, değişen son 4 sayı **kuyruklara**
+aitti. Kuyruk bacak değildir; sıkı kıvrılması doğaldır ve aynı tabanı ona
+dayatmak hareketini yapaylaştırırdı. Sınır uzuv başına verilince (bacak 0.55,
+kuyruk 0.32) golden dokunulmadan geçti. Golden'ı düşünmeden yenilemek, bu ayrımı
+sessizce gömerdi.
+
 ## 2026-09-05 — bildirilen UI hataları: sürükleme seçimi ve yerleşim boşlukları
 
 | Kimlik | Seviye | İhlal ve sonuç                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Yapılan ve kanıt                                                                                                                                                                                                                                                                                                                              |
