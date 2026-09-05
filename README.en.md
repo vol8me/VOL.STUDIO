@@ -103,15 +103,16 @@ mounted only on touch-primary devices (`shouldUseTouchControls`).
 
 Quality gates run locally via `just`. There is no CI runner; GitHub is used only for source control, pull requests and releases.
 
-| Level           | Command                            | What it runs                                                   |
-| --------------- | ---------------------------------- | -------------------------------------------------------------- |
-| Pre-commit      | `pnpm quick`                       | contract, format, typecheck, lint (~45 s)                      |
-| Pre-push        | `pnpm high`                        | quick + CSS lint + coverage thresholds + builds + Chromium E2E |
-| Release/signoff | `pnpm signoff`                     | high + Chromium/Firefox E2E + Rust                             |
-| Long build      | `pnpm exec just tauri-build`       | game build + Tauri prod build (manual)                         |
-| Fedora/Linux    | `pnpm exec just tauri-build-linux` | deb + rpm + AppImage delivery                                  |
-| Environment     | `pnpm run doctor:env`              | Node, pnpm, Rust, just, FFmpeg, Tauri deps                     |
-| Report          | `pnpm exec just report high`       | Runs a gate and reports the result structurally (`--json`)     |
+| Level           | Command                            | What it runs                                                                   |
+| --------------- | ---------------------------------- | ------------------------------------------------------------------------------ |
+| Pre-commit      | `pnpm quick`                       | contract, format, typecheck, lint (~45 s)                                      |
+| Pre-push        | `pnpm high`                        | quick + CSS lint + coverage thresholds + builds + bundle budget + Chromium E2E |
+| Release/signoff | `pnpm signoff`                     | high + Chromium/Firefox E2E + Rust + audio freshness                           |
+| Long build      | `pnpm exec just tauri-build`       | game build + Tauri prod build (manual)                                         |
+| Fedora/Linux    | `pnpm exec just tauri-build-linux` | deb + rpm + AppImage delivery                                                  |
+| Environment     | `pnpm run doctor:env`              | Node, pnpm, Rust, just, FFmpeg, Tauri deps                                     |
+| Device          | `pnpm benchmark:device`            | Startup, frame and memory on a connected Android device (NOT a gate)           |
+| Report          | `pnpm exec just report high`       | Runs a gate and reports the result structurally (`--json`)                     |
 
 Benchmark commands do not impose machine-specific performance thresholds; they
 measure median/p95 step cost for CORE mechanisms and VOL.HELL's renderer-free

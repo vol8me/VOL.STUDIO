@@ -103,15 +103,16 @@ yalnızca dokunmatik birincil cihazlarda kurulur (`shouldUseTouchControls`).
 
 Kalite kapıları `just` ile localde çalıştırılır. GitHub yalnızca source control, PR ve release için kullanılır; CI runner yoktur.
 
-| Seviye          | Komut                              | Ne yapar                                                 |
-| --------------- | ---------------------------------- | -------------------------------------------------------- |
-| Pre-commit      | `pnpm quick`                       | sözleşme, format, typecheck, lint (~45 sn)               |
-| Push öncesi     | `pnpm high`                        | quick + CSS lint + coverage + build + Chromium E2E       |
-| Release/signoff | `pnpm signoff`                     | high + Chromium/Firefox E2E + Rust                       |
-| Uzun build      | `pnpm exec just tauri-build`       | game build + Tauri prod build (manuel)                   |
-| Fedora/Linux    | `pnpm exec just tauri-build-linux` | deb + rpm + AppImage teslimi                             |
-| Ortam           | `pnpm run doctor:env`              | Node, pnpm, Rust, just, FFmpeg, Tauri deps kontrolü      |
-| Rapor           | `pnpm exec just report high`       | Kapıyı koşar, sonucu yapılandırılmış raporlar (`--json`) |
+| Seviye          | Komut                              | Ne yapar                                                            |
+| --------------- | ---------------------------------- | ------------------------------------------------------------------- |
+| Pre-commit      | `pnpm quick`                       | sözleşme, format, typecheck, lint (~45 sn)                          |
+| Push öncesi     | `pnpm high`                        | quick + CSS lint + coverage + build + bundle bütçesi + Chromium E2E |
+| Release/signoff | `pnpm signoff`                     | high + Chromium/Firefox E2E + Rust + ses tazeliği                   |
+| Uzun build      | `pnpm exec just tauri-build`       | game build + Tauri prod build (manuel)                              |
+| Fedora/Linux    | `pnpm exec just tauri-build-linux` | deb + rpm + AppImage teslimi                                        |
+| Ortam           | `pnpm run doctor:env`              | Node, pnpm, Rust, just, FFmpeg, Tauri deps kontrolü                 |
+| Cihaz ölçümü    | `pnpm benchmark:device`            | Bağlı Android cihazda açılış, kare ve bellek (kapı DEĞİL)           |
+| Rapor           | `pnpm exec just report high`       | Kapıyı koşar, sonucu yapılandırılmış raporlar (`--json`)            |
 
 Benchmark komutları makineye özel süre eşiği koymaz; CORE mekanizmalarının ve
 VOL.HELL'in render'dan ayrılmış simülasyonunun medyan/p95 adım maliyetini
