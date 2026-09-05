@@ -217,6 +217,26 @@ export function writeOgg(filePath: string, result: SynthesisResult, opts: OggOpt
     'libvorbis',
     '-q:a',
     String(quality),
+
+    /*
+     * BAYT KARARLILIĞI.
+     *
+     * FFmpeg varsayılanda her çağrıda rastgele bir Ogg akış seri numarası
+     * üretir ve kodlayıcı sürümünü üstveriye yazar. Sonuç: aynı girdiden
+     * üretilen iki dosya bayt bayt farklı olur.
+     *
+     * Ölçüldü: sekiz sesi yeniden üretmek 8/8 farklı dosya verdi ama çözülmüş
+     * PCM 8/8 birebir aynıydı ve ilk farklı bayt 15'inciydi — tam da seri
+     * numarasının yeri. Yani sentez zaten deterministikti, kararsız olan kaptı.
+     *
+     * Bunun bedeli pratikti: her yeniden üretim, hiçbir şey değişmese bile bir
+     * git farkı üretiyordu. Ses farklarını görmezden gelmeyi öğrenen bir ekip,
+     * gerçekten değişen sesi de göremez.
+     *
+     * `-bitexact` seri numarasını sabitler ve kodlayıcı sürüm dizesini düşürür
+     * — araç sürümünün gönderilen varlığa sızmaması ayrıca istenen şeydir.
+     */
+    '-bitexact',
     '-y',
     filePath,
   ];

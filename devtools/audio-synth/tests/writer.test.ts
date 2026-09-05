@@ -208,3 +208,28 @@ describe('writeAudio format seçimi', () => {
     expect(spawnSyncMock).toHaveBeenCalled();
   });
 });
+
+describe('writeOgg bayt kararlılığı', () => {
+  it('FFmpeg BİTEXACT ile çağrılır', () => {
+    /*
+     * FFmpeg varsayılanda her çağrıda rastgele bir Ogg akış seri numarası
+     * üretir ve kodlayıcı sürümünü üstveriye yazar. Ölçüldü: sekiz sesi
+     * yeniden üretmek 8/8 farklı DOSYA verdi ama çözülmüş PCM 8/8 birebir
+     * aynıydı ve ilk farklı bayt 15'inciydi — tam da seri numarasının yeri.
+     * Yani sentez zaten deterministikti, kararsız olan kaptı.
+     *
+     * Bedeli pratikti: her yeniden üretim, hiçbir şey değişmese bile bir git
+     * farkı üretiyordu ve ses farklarını görmezden gelmeyi öğrenen bir ekip
+     * gerçekten değişeni de göremez. Gerçek bir bayatlama tam da böyle
+     * gizlenmişti (`first-light.ogg` eski bir reçeteyle üretilmişti).
+     *
+     * Burada yalnız ARGÜMAN doğrulanır; bayt kararlılığının kendisi
+     * `just audio-verify` kapısında gerçek FFmpeg ile ölçülür — bu dosya
+     * `spawnSync`i mock'lar ve gerçek kodlayıcıyı hiç çalıştırmaz.
+     */
+    const result = synth(0.05, { wave: 'sine', frequency: 440 });
+    writeOgg(join(TEST_DIR, 'stable.ogg'), result);
+
+    expect(spawnSyncMock.mock.calls[0]?.[1]).toContain('-bitexact');
+  });
+});

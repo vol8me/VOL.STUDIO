@@ -100,8 +100,26 @@ fast: quick test
 # Push öncesi kapısı: quick + css lint + kapsam eşikleri + build + Chromium smoke
 high: quick lint-css coverage build bundle e2e
 
-# Release/milestone kapısı: high + iki motorlu E2E + Rust
-signoff: high e2e-full rust
+# Gönderilen sesin reçetesiyle AYNI olduğunu kanıtlar.
+#
+# Ses üretimi deterministiktir (ölçüldü: ardışık iki koşu birebir aynı bayt,
+# `-bitexact` sayesinde). Bu yüzden "yeniden üret ve farka bak" geçerli bir
+# doğrulamadır: fark varsa ya reçete değişip dosya yenilenmemiştir ya da dosya
+# elle düzenlenmiştir. İkisi de sessizce olmamalı.
+#
+# Gerçek bir bayatlama bu şekilde bulundu: `first-light.ogg` eski bir reçeteyle
+# üretilmişti ve kimse fark etmemişti.
+#
+# `high`da DEĞİL, `signoff`ta: 73 saniye sürüyor ve ffmpeg gerektiriyor — her
+# push'a bu maliyeti yüklemek kapıyı atlanır hâle getirirdi. Sürüm anı ise
+# gönderilenin kaynağıyla eşleştiğini bilmek için doğru an.
+audio-verify:
+    pnpm --filter @volstudio/vol-arachnid audio:generate
+    pnpm --filter @volstudio/vol-hell generate:audio
+    git diff --exit-code -- 'games/*/public/assets/audio/**'
+
+# Release/milestone kapısı: high + iki motorlu E2E + Rust + ses tazeliği
+signoff: high e2e-full rust audio-verify
 
 # Kapıyı koşar ve sonucu MAKİNE-OKUNUR raporlar (agent döngüleri için).
 # Kapıları yeniden tanımlamaz, yukarıdaki tarifleri çağırır; aşama haritasının

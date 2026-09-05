@@ -26,6 +26,39 @@ Session'ın her geçmiş değişimi onu geçersiz kılıyor. Renderer tile günc
 zaten yüzey kimliğini ve sürümünü birlikte izliyordu; yalnız sürüme bakan
 ayrı `SpriteDocument` önbelleği modelle birlikte kaldırıldı.
 
+## 2026-09-05 — ses boru hattı: bayt kararlılığı ve bayat bir varlık
+
+Boru hattı ilk kez uçtan uca sınandı. Repoda **sıfır ses kaynak dosyası** var
+(`.wav` master'lar geçmişte silinmişti — `.git`in 220 MB'ının sebebi onlar);
+gönderilen 54 `.ogg` prosedürel olarak üretiliyor. Soru şuydu: gerçekten
+yeniden üretilebilir mi, ve ayrıştığında fark eden bir şey var mı?
+
+| Kimlik | Seviye | İhlal ve sonuç                                                                                                                                                                                                                                                                                                                                           | Yapılan ve kanıt                                                                                                                                                                                                                                                                                                                                                       |
+| ------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D13    | P2     | FFmpeg her çağrıda rastgele bir Ogg akış seri numarası üretiyor ve kodlayıcı sürümünü üstveriye yazıyordu; aynı girdiden üretilen iki dosya bayt bayt farklı oluyordu. Bunun bedeli pratikti: her yeniden üretim, hiçbir şey değişmese bile bir git farkı üretiyordu ve ses farklarını görmezden gelmeyi öğrenen bir ekip gerçekten değişeni de göremez. | Önce sebep ölçüldü: sekiz sesi yeniden üretmek 8/8 farklı DOSYA verdi ama çözülmüş PCM 8/8 birebir aynıydı ve ilk farklı bayt 15'inciydi — tam da seri numarasının yeri. Yani sentez zaten deterministikti, kararsız olan kaptı. `-bitexact` eklendi (kodlayıcı sürümünün gönderilen varlığa sızmaması ayrıca istenen şey). Ardışık iki üretim artık 8/8 birebir aynı. |
+| D14    | P2     | `first-light.ogg` eski bir reçeteyle üretilmişti ve yenilenmemişti: üretici 2026-09-04'te değişmiş, dosya 2026-08-18'den kalma. Kaynak ile gönderilen ayrışmıştı ve bunu fark eden HİÇBİR ŞEY yoktu.                                                                                                                                                     | Bayatlama, kap kararsızlığı giderilince ölçülebilir hâle geldi. 54 dosya yeniden üretildi; 53'ünün ses İÇERİĞİ (PCM) değişmedi, yalnız `first-light` gerçekten farklıydı — yani sessizce bayatlamış tek varlık oydu. `just audio-verify` kapısı eklendi: yeniden üret, farka bak.                                                                                      |
+
+**Kapı `high`da değil `signoff`ta.** Üretim 73 saniye sürüyor (vol-hell 68,
+vol-arachnid 5) ve ffmpeg gerektiriyor; her push'a bu maliyeti yüklemek kapıyı
+atlanır hâle getirirdi. Sürüm anı ise gönderilenin kaynağıyla eşleştiğini bilmek
+için doğru an.
+
+Kendi hatam: kapının ilk `git diff` pathspec'i (`games/*/public/assets/audio`)
+hiçbir şeyle eşleşmiyordu — 54 dosya değişmişken "fark yok" diyordu. Ateşlemeyen
+bir kapı yazmıştım; `/**` eklenerek düzeltildi ve fark varken çıkış 1 verdiği
+doğrulandı.
+
+**Geliştirici deneyimi — ölçüldü.** Temiz klon 470 ms (245 MB), `pnpm install`
+8.4 sn, `typecheck` 20.8 sn, `build:all` 5.2 sn — klondan derlenmiş hâle ~35
+saniye, hepsi çıkış 0. 22 dokümandaki 1151 komut satırı tarandı: **sıfır kırık
+komut**. 505 kaynak dosyasında **sıfır yetim** (hiçbir yerden erişilmeyen).
+245 MB'lık klon, geçmişteki ses master'larının somut maliyetidir.
+
+**Platform matrisi (iddia değil kanıt).** web: build geçti, e2e + bundle
+kapılı. desktop-linux: build var, rust kapılı. android: 11 MB release APK,
+kapı yok ama cihazda ölçüldü. **iOS: yapılandırma yok, build hiç alınmadı,
+kapı yok** — ve hiçbir doküman aksini iddia etmiyor.
+
 ## 2026-09-05 — çapraz denetim: birim sözleşmesi
 
 Prompt'un "iki alt sistem aynı gerçeği farklı birimle mi taşıyor" sorusu
