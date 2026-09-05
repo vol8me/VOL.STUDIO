@@ -26,6 +26,59 @@ Session'ın her geçmiş değişimi onu geçersiz kılıyor. Renderer tile günc
 zaten yüzey kimliğini ve sürümünü birlikte izliyordu; yalnız sürüme bakan
 ayrı `SpriteDocument` önbelleği modelle birlikte kaldırıldı.
 
+## 2026-09-05 — denetim: veri akışları ve kapanış durumu
+
+`pnpm signoff` YEŞİL — artık `audio-verify` de dahil: 54 ses yeniden üretildi,
+sıfır fark.
+
+### Veri akışları
+
+```
+RIG      pen.dev(entities.pen) → pen_export/{metadata,parts,previews}
+         → syncRigExport → oyun public/assets/rig (previews GÖNDERİLMEZ)
+         → CORE validate → build → assemble → Phaser
+         kapı: rigAssets.test.ts
+
+SES      audio-synth presetleri (KOD; kaynak dosya yok)
+         → oyun scripts/audio/generate*.ts → writeOgg(-bitexact)
+         → oyun public/assets/audio → CORE SoundBank → WebAudio
+         kapı: just audio-verify (signoff)
+
+GÖRSEL   visual-synth belgesi (.volsprite.json, schemaVersion'lı)
+         → vol-asset-studio SALT OKUNUR inceler (bildirilmiş devtool kenarı)
+         → üretilen PNG → oyun public/assets
+
+DURUM    oyun → CORE SaveManager → localStorage
+                                 → (Tauri) GameStateDb → SQLite(schema_version)
+         sözleşme: load<unknown> + tüketicide temizlik
+
+KARE     Phaser delta → GameScene
+         vol-hell : SimulationClock (sabit adım + catch-up sınırı + droppedMs)
+         arachnid : clampSimulationStep (100 ms tavan)
+```
+
+### Bu turda kapatılan eksenler
+
+Araç zinciri (sıfır sürüm ayrışması / kullanılmayan / fantom), çapraz birim
+denetimi, bekçilerin mutasyonla doğrulanması (11 kapı), veri şeması sürüklenmesi,
+ses boru hattı, geliştirici deneyimi (temiz klon 35 sn, 1151 doküman komutu
+sıfır kırık, 505 dosyada sıfır yetim), platform matrisi, veri akışları.
+
+### HÂLÂ YAPILMAYANLAR — dürüst liste
+
+- **Dosya dosya okuma tamamlanmadı.** 782 dosya / 155k satır. Bu turda hedefli
+  okunanlar: `Kanban` (bir sızıntı bulundu), `VolHellSimulation` +
+  `SimulationClock` + iki `GameScene` (bir yer değişikliği bulundu),
+  `validateMetadata`, `TimerBar`, `writer`, `numeric`. Hiç açılmayanlar arasında
+  `advancedTab.ts` (1131), `validate.ts` (977), `touchTab.ts` (818) var.
+- **Testlerin İDDİALARI okunmadı.** 55.845 satır testin başlıkları tarandı,
+  gövdeleri değil. "Doğrulama yapmayan test" taraması bu turda koşulmadı.
+- **CORE API yüzeyi semantik olarak denetlenmedi.** 223 export'un isimlendirme,
+  dönüş tipi ve hata sözleşmesi tutarlılığı ölçülmedi; sürümleme stratejisi
+  hiç ele alınmadı.
+- **iOS hiç sınanmadı**, benchmark'lar hâlâ eşiksiz (boyut ekseni kapılı, hız
+  değil), `.git` geçmişi yeniden yazılmadı.
+
 ## 2026-09-05 — yanlış pakette yaşayan primitif: SimulationClock CORE'a
 
 | Kimlik | Seviye | İhlal ve sonuç                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Yapılan ve kanıt                                                                                                                                                                                                                                                                |
