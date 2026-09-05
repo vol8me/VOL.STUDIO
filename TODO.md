@@ -5,6 +5,30 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-05 — CORE hata sözleşmesi: aynı arıza, üç farklı tip
+
+CORE'un sonlu sayı sözleşmesi (`math/numeric.ts`) hata TİPİNİ de bağlıyor ve
+ayrım `pcInputState.test.ts` ile `ik.test.ts`te sabitlenmiş: sonlu değilse
+`TypeError`, sonlu ama aralık dışıysa `RangeError`. Yüzey tarandığında üç yer
+bu sözleşmenin dışında çıktı — `CommandHistory.maxBytes`,
+`HistoryCommand.byteCost` ve `KeyedVirtualList.itemHeight` iki farklı arızayı
+tek düz `Error`e katlıyordu. Sonuç, `e instanceof RangeError` yazan bir
+tüketicinin hangi bileşeni çağırdığına göre farklı davranış görmesiydi.
+
+`GhostTrail.maxGhosts` ayrı bir kenar durum: `Number.isInteger(NaN)` yanlış
+döndüğü için NaN tip kontrolüne hiç uğramadan aralık dalına düşüyor, tip
+ihlali aralık ihlali gibi raporlanıyordu.
+
+Dördü de düzeltildi ve mutasyonla kanıtlandı. Mevcut testler yalnız hata
+MESAJINI sınadığı için kırılmayı göremiyorlardı; yeni testler tipi sabitliyor.
+
+Aynı turda iki tarama daha koşuldu, ikisi de temiz çıktı ve KAYDA GEÇİYOR ki
+tekrar edilmesin: 3347 testin tamamı bir şey doğruluyor (iddiasız test yok;
+tek aday, `close()` asıldığında timeout ile reddeden SSE kapanış testiydi ve
+reddetme yoluyla doğruluyor), ve vol-ui showcase'te oluşturulup scope'a
+kaydedilmeyen 89 bileşenin hiçbiri sızdırmıyor — dinleyicileri kendi
+elementlerinde, DOM atılınca birlikte toplanıyorlar.
+
 ## 2026-09-05 — belge yüzeyi ve yorum doktrini
 
 **README'ler tanıtıma indirildi.** İki README karar günlüğüne dönüşmüştü:
