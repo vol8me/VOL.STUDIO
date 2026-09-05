@@ -114,7 +114,7 @@ neyi varsaymamalıdır. Olayı anlatmaz.
 | `README.md` / `README.en.md` | Monorepo girişi, yapı, komutlar, kapılar                             |
 | `TODO.md`                    | Tarih sıralı denetim/çalışma kaydı                                   |
 | `core/docs/`                 | i18n, ses/müzik motorları, CORE primitifleri, görsel sentez doktrini |
-| `games/docs/`                | Oyun tarafı i18n rehberi                                             |
+| `games/docs/`                | Oyun tarafı i18n rehberi; yeni oyun paketi ekleme listesi            |
 | `games/<paket>/README.md`    | O paketin ne olduğu ve komutları — TANITIM, tasarım belgesi değil    |
 | `<paket>/DESIGN.md`          | O paketin NEDEN böyle olduğu; README'nin taşımadığı tasarım kararı   |
 | `devtools/<paket>/README.md` | Geliştirici aracının amacı ve komutları                              |

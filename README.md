@@ -24,7 +24,8 @@ tauri-v2/                   # @volstudio/tauri-v2 — native oyun kabuğu ve Rus
 ```
 
 Doküman yüzeyi: [core/docs](core/docs) (i18n, ses/müzik motorları, CORE
-primitifleri), [games/docs](games/docs) (oyun i18n'i) ve ilgili
+primitifleri, public API yüzeyi), [games/docs](games/docs) (oyun i18n'i ve
+[yeni oyun paketi ekleme listesi](games/docs/new-game.md)) ve ilgili
 `devtools/<paket>/README.md` dosyalarıdır.
 
 ## Gereksinimler

@@ -24,7 +24,8 @@ tauri-v2/                   # @volstudio/tauri-v2 — native game wrapper and Ru
 ```
 
 Documentation lives in [core/docs](core/docs) (i18n, audio/music engines, CORE
-primitives), [games/docs](games/docs) (game i18n), and each relevant
+primitives, public API surface), [games/docs](games/docs) (game i18n and the
+[new game package checklist](games/docs/new-game.md)), and each relevant
 `devtools/<package>/README.md`.
 
 ## Requirements
