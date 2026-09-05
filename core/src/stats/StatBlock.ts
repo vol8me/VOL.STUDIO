@@ -56,7 +56,13 @@ export interface StatModifier<TStat extends string> {
 /**
  * Taban değer + modifier listesinden sonuç stat üreten blok.
  *
- * **Hesaplama sırası (RPG standardı):** önce tüm aktif `add` modifier'ları
+ * **Hesaplama sırası — toplamalar önce, çarpanlar sonra.** Sıra bir konvansiyon
+ * değil, bir GEREKLİLİKTİR: çarpan önce uygulansaydı sonuç modifier'ların
+ * ekleniş sırasına bağlı olurdu (`(taban × 2) + 10` ile `(taban + 10) × 2`
+ * farklıdır) ve aynı iki etki, kazanılma sırasına göre farklı sonuç verirdi.
+ * Bu sırayla toplama kümesi ve çarpan kümesi kendi içlerinde değişmeli kalır.
+ *
+ * Önce tüm aktif `add` modifier'ları
  * taban değere toplanır, ardından tüm aktif `multiply` modifier'ları bu
  * ara sonuçla çarpılır:
  *

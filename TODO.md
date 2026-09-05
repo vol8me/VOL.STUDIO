@@ -26,6 +26,40 @@ Session'ın her geçmiş değişimi onu geçersiz kılıyor. Renderer tile günc
 zaten yüzey kimliğini ve sürümünü birlikte izliyordu; yalnız sürüme bakan
 ayrı `SpriteDocument` önbelleği modelle birlikte kaldırıldı.
 
+## 2026-09-05 — bekçilerin bekçisi: 11 kapı mutasyonla sınandı
+
+Önceki turlarda yalnız kendi eklediğim bekçileri mutasyonla doğrulamıştım;
+mevcut 11 yönetişim kapısını hiç sınamamıştım. Sınandı: **9'u ısırıyor**
+(`publicApi`, `publicSurface`, `cssTokens`, `noSynthDependency`,
+`hiddenAttribute` iki yarısıyla, `lifecycleIdiom`, `qualityConfig`,
+`qualityReport`, `numericContract` kısmen). İki gerçek boşluk çıktı.
+
+| Kimlik | Seviye | İhlal ve sonuç                                                                                                                                                                                                                                                                                                                                                      | Yapılan ve kanıt                                                                                                                                                                                                                                 |
+| ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D08    | P3     | `finitePositiveOr`un NEGATİF reddi hiçbir testle korunmuyordu. `value >= 0` kaldırıldığında tek test bile düşmüyor; yani fonksiyonun `finiteOr`dan tek farkı ölçülemiyordu. Sıfır tüketicisi ve sıfır testi olmasına rağmen public API'de. Negatif bir süre `NaN` kadar zehirlidir — geriye akan bir cooldown hiç bitmez.                                           | Sınır değerleriyle (-1, -0.001, -Infinity, 0, NaN) test yazıldı. Kontrol kaldırılınca düşüyor. Silinmedi: public API üyesi ve üçlünün (`requireFinite`/`finiteOr`/`finitePositiveOr`) simetrisini bozardı.                                       |
+| D09    | P2     | `primitiveNeutrality` yalnız bu repo'nun ŞİMDİYE KADAR yaptığı türleri tanıyordu (örümcek, tower defense, roguelike). Katman-1 bir modüle "platformer" ya da "soulslike" yazmak hiçbir kapıyı düşürmüyordu. Bekçinin amacı primitifin İLK TÜKETİCİSİNİN sözlüğüne kaymasını engellemek; gelecek tüketicinin türü bilinmiyorken liste dünün sızıntılarına ayarlıydı. | 17 tür terimi eklendi ve MEVCUT bir ihlal ortaya çıktı: `StatBlock` hesaplama sırasını "RPG standardı" diye anlatıyordu. Prosa nötrleştirildi ve sıranın SEBEBİ yazıldı (çarpan önce uygulansaydı sonuç modifier ekleniş sırasına bağlı olurdu). |
+| D10    | P2     | `RigMetadata` tipini doğrulayıcısına bağlayan hiçbir şey yoktu. Doğrulayıcı bugün 11 alanın hepsini örtüyor ama tipe yeni alan eklenip doğrulama unutulduğunda hiçbir kapı düşmez; eksik alan sessizce içeri girer ve hata çok sonra, montaj sırasında, kaynağını söylemeyen bir mesajla patlar.                                                                    | Sürüklenme dedektörü yazıldı. Metin tabanlı olması bilinçli: davranışsal bir test yalnız VAR OLAN alanları kanıtlar, gelecekte EKLENENİ değil — sorulan soru tam olarak gelecekle ilgili. Tipe doğrulanmayan bir alan eklenince düşüyor.         |
+
+**Kendi eklediğim üç kelimeyi geri çektim.** `fps`, `idle` ve `yarış` listeye
+konduğunda on sekiz dosyada yanlış alarm ürettiler — üçünün de baskın teknik
+anlamı var (kare/saniye, havuzdaki boş nesne ve duruş animasyonu, race
+condition). Kalıcı yanlış alarm üreten bir bekçi görmezden gelinmeye başlar ve
+fiilen ölür; gerekçe testin içine yazıldı.
+
+**Araç zinciri denetimi — tamamen temiz.** 30 doğrudan bağımlılıkta **sıfır**
+sürüm ayrışması; **sıfır** kullanılmayan bağımlılık (`@tauri-apps/cli` 3 ve 5
+script'ten çağrılıyor, `@types/jsdom` benchmark'ın `JSDOM` importu için gerekli);
+**sıfır** fantom bağımlılık. `phaser` deseni doğru (CORE'da peer + dev, oyunlarda
+dep), `i18next` de doğru (hiçbir tüketici doğrudan import etmiyor,
+`@volstudio/core/i18n` üzerinden alıyor). Lockfile'daki 37 mükerrer sürümün
+hepsi geliştirme araçlarının geçişli bağımlılıkları — yukarı akış kısıtı.
+
+**Yöntem notu.** Bu turda beş yanlış alarm ürettim ve hepsinin sebebi aynıydı:
+metin taraması, bu repo'nun yoğun Türkçe yorumlarına takılıyor. `audio-synth`
+"fantom phaser bağımlılığı" bir yorum satırındaki ad çakışması açıklamasıydı;
+`[hidden]` kuralını sildiğimi sandığım mutasyon bir örneği silmişti. Tarama
+harita, kanıt değil — her isabet okunmadan bulgu sayılamaz.
+
 ## 2026-09-05 — denetim kapanışı: sistem haritası ve kalan riskler
 
 `pnpm signoff` YEŞİL: quick + lint-css + coverage + build + bundle + e2e

@@ -54,6 +54,42 @@ const GENRE_TERMS = [
   'minecraft',
   'rts',
   'moba',
+
+  /*
+   * Aşağıdakiler mutasyonla eklendi: liste yalnızca bu repo'nun ŞİMDİYE KADAR
+   * yaptığı türleri tanıyordu (örümcek, tower defense, roguelike). Katman-1 bir
+   * modüle "nişancı" ya da "platformer" yazmak hiçbir kapıyı düşürmüyordu.
+   *
+   * Bekçinin amacı bir primitifin İLK TÜKETİCİSİNİN sözlüğüne kaymasını
+   * engellemek. Gelecek tüketicinin türü bilinmiyor; liste dünün sızıntılarına
+   * ayarlı kalırsa yarınkini kaçırır ve tam da o an — altyapı ikinci bir gerçek
+   * oyuna açılırken — işe yaraması gerekiyordu.
+   */
+  'nişancı',
+  'shooter',
+  'platformer',
+  'platform oyunu',
+  'racing',
+  'survival',
+  'hayatta kalma',
+  'puzzle',
+  'bulmaca',
+  'rpg',
+  'soulslike',
+  'battle royale',
+  'deckbuilder',
+  'deste kurma',
+  'city builder',
+  'şehir kurma',
+  'gacha',
+
+  /*
+   * BİLİNÇLİ OLARAK LİSTEDE YOK: `fps`, `idle`, `yarış`. Üçünün de baskın
+   * teknik anlamı var — kare/saniye, havuzdaki boş nesne ve duruş animasyonu,
+   * race condition. Ölçüldü: eklendiklerinde on sekiz dosyada yanlış alarm
+   * ürettiler. Kalıcı yanlış alarm üreten bir bekçi görmezden gelinmeye başlar
+   * ve fiilen ölür; kapsamı dar tutmak, güvenilirliği korumaktır.
+   */
 ];
 
 /**

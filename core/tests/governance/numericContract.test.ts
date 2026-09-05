@@ -5,7 +5,7 @@ import { RoundLoop } from '../../src/time/RoundLoop';
 import { Scheduler } from '../../src/time/Scheduler';
 import { ResourcePool } from '../../src/economy/ResourcePool';
 import { SpatialIndex } from '../../src/spatial/SpatialIndex';
-import { isFiniteNumber, requireFinite, finiteOr } from '../../src/math/numeric';
+import { isFiniteNumber, requireFinite, finiteOr, finitePositiveOr } from '../../src/math/numeric';
 
 /**
  * Sonlu sayı sözleşmesi — primitiflerin ORTAK giriş bariyeri.
@@ -28,6 +28,28 @@ describe('sonlu sayı sözleşmesi', () => {
       expect(isFiniteNumber(Infinity)).toBe(false);
       expect(isFiniteNumber('1')).toBe(false);
       expect(isFiniteNumber(null)).toBe(false);
+    });
+
+    it('finitePositiveOr NEGATİFİ de yedeğe düşürür', () => {
+      /*
+       * Mutasyonla bulundu: `value >= 0` kontrolü kaldırıldığında hiçbir test
+       * düşmüyordu. Fonksiyonun `finiteOr`dan tek farkı bu koşul — korunmadığı
+       * sürece ikisi arasında ölçülebilir bir fark yoktu.
+       *
+       * Sözleşme, dokümanının söylediği şeydir: süre, mesafe, miktar gibi
+       * doğası gereği negatif olamayan alanlar. Negatif bir süre, `NaN` kadar
+       * zehirlidir — geriye akan bir cooldown hiç bitmez.
+       */
+      expect(finitePositiveOr(-1, 7)).toBe(7);
+      expect(finitePositiveOr(-0.001, 7)).toBe(7);
+      expect(finitePositiveOr(Number.NEGATIVE_INFINITY, 7)).toBe(7);
+
+      // Sınır: sıfır NEGATİF DEĞİLDİR ve geçmelidir.
+      expect(finitePositiveOr(0, 7)).toBe(0);
+      expect(finitePositiveOr(3.5, 7)).toBe(3.5);
+
+      // `NaN` yolu da aynı yedeğe düşer.
+      expect(finitePositiveOr(Number.NaN, 7)).toBe(7);
     });
 
     it('requireFinite alan adıyla birlikte fırlatır', () => {

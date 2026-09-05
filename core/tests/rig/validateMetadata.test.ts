@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { validateRigMetadata } from '../../src/rig/validateMetadata';
 import { buildRigDefinition } from '../../src/rig/buildRig';
@@ -220,5 +222,63 @@ describe('eklem (parentPartId) doğrulaması', () => {
     (metadata.parts[0] as unknown as Record<string, unknown>).parentPartId = 7;
 
     expect(() => validateRigMetadata(metadata)).toThrow(/parentPartId/);
+  });
+});
+
+describe('tip ↔ doğrulayıcı sürüklenmesi', () => {
+  /*
+   * `RigMetadata` bir TypeScript arayüzü; derleme zamanında yardımcı olur ama
+   * dosyadan okunan JSON hakkında hiçbir şey söylemez. Doğrulayıcı bugün tipin
+   * her alanını örtüyor — ama ONU BUNA ZORLAYAN HİÇBİR ŞEY YOKTU.
+   *
+   * Tipe yeni bir alan eklenip doğrulayıcı unutulduğunda hiçbir kapı düşmez;
+   * eksik alan sessizce içeri girer ve hata çok sonra, montaj sırasında ve
+   * kaynağını söylemeyen bir mesajla patlar. Bu bekçi o sessizliği kaldırır.
+   *
+   * Metin tabanlı olması bilinçli: davranışsal bir test yalnızca VAR OLAN
+   * alanları kanıtlayabilir, gelecekte EKLENEN bir alanı değil. Sorulan soru
+   * tam olarak gelecekle ilgili.
+   */
+  const typesSource = readFileSync(resolve(import.meta.dirname, '../../src/rig/types.ts'), 'utf8');
+  const validatorSource = readFileSync(
+    resolve(import.meta.dirname, '../../src/rig/validateMetadata.ts'),
+    'utf8',
+  );
+
+  /** Bir arayüzün doğrudan alan adlarını çıkarır (iç içe blokları atlar). */
+  function fieldsOf(interfaceName: string): string[] {
+    const match = new RegExp(`export interface ${interfaceName} \\{([\\s\\S]*?)\\n\\}`).exec(
+      typesSource,
+    );
+    expect(match, `${interfaceName} bulunamadı — tarama bozulmuş`).not.toBeNull();
+
+    const fields: string[] = [];
+    let depth = 0;
+    for (const line of match![1].split('\n')) {
+      const trimmed = line.trim();
+      if (depth === 0) {
+        const field = /^(\w+)\??:/.exec(trimmed);
+        if (field) fields.push(field[1]);
+      }
+      depth += (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length;
+    }
+    return fields;
+  }
+
+  it.each([
+    ['RigMetadata', ['schemaVersion', 'entityId', 'domain', 'source', 'parts', 'previews']],
+    ['RigPartMetadata', []],
+  ])('%s alanlarının HEPSİ doğrulayıcıda geçer', (interfaceName, expectedSample) => {
+    const fields = fieldsOf(interfaceName);
+    expect(fields.length, `${interfaceName} alansız görünüyor`).toBeGreaterThan(0);
+    if (expectedSample.length > 0) expect(fields).toEqual(expect.arrayContaining(expectedSample));
+
+    const missing = fields.filter((field) => !new RegExp(`\\b${field}\\b`).test(validatorSource));
+    expect(
+      missing,
+      `${interfaceName} alanları tipte var ama doğrulayıcıda hiç geçmiyor. ` +
+        `Alan eklendiyse doğrulamasını da yaz; bilinçli olarak doğrulanmıyorsa ` +
+        `validateMetadata.ts içinde gerekçesini yaz.`,
+    ).toEqual([]);
   });
 });
