@@ -53,6 +53,12 @@ contract:
 build:
     pnpm build:all
 
+# Gönderilen bundle bütçesi. `build`den SONRA koşmak ZORUNDA: ölçtüğü şey
+# diskteki `dist`tir, kaynak değil. Ölçü gzip'lenmiş bayttır ve `app`/`vendor`
+# ayrı bütçelenir (bkz. scripts/quality/bundleSize.mjs).
+bundle:
+    node scripts/bundle-report.mjs
+
 # Gerçek tarayıcı kritik akışları (Chromium). jsdom testleri font yüklemesini,
 # gerçek yerleşimi ve bundle içeriğini göremez; bu kapı o boşluğu kapatır.
 #
@@ -92,7 +98,7 @@ fast: quick test
 # `coverage` aynı testleri eşikleriyle koştuğu için düz `test` burada bilerek
 # tekrarlanmaz; `high` yine de `fast`'in her kapısını kapsar.
 # Push öncesi kapısı: quick + css lint + kapsam eşikleri + build + Chromium smoke
-high: quick lint-css coverage build e2e
+high: quick lint-css coverage build bundle e2e
 
 # Release/milestone kapısı: high + iki motorlu E2E + Rust
 signoff: high e2e-full rust

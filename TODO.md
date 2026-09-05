@@ -26,6 +26,34 @@ Session'ın her geçmiş değişimi onu geçersiz kılıyor. Renderer tile günc
 zaten yüzey kimliğini ve sürümünü birlikte izliyordu; yalnız sürüme bakan
 ayrı `SpriteDocument` önbelleği modelle birlikte kaldırıldı.
 
+## 2026-09-05 — çalışma zamanı: bundle bütçesi ve cihaz ölçümü
+
+| Kimlik | Seviye | İhlal ve sonuç                                                                                                                                                                                                                                              | Yapılan ve kanıt                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D06    | P2     | Gönderilen bundle için HİÇBİR kapı yoktu; kod boyutu sessizce büyüyebilirdi. Üç benchmark da (`core`, `vol-hell`, `vol-arachnid`) ölçüp yazdırıyor ama hiçbir kapıda koşmuyor — yani bugün bir performans ya da boyut gerilemesi fark edilmez.              | Bundle bütçesi eklendi ve `high`e `build`den SONRA bağlandı. Ölçü gzip'lenmiş bayttır. Bütçe `app` ve `vendor` olarak AYRILIR: ölçüldüğünde vol-hell'in 1731 KB ham JS'inin 1343 KB'ı Phaser'dı (%78) — tek toplam rakam, uygulama kodu iki katına çıksa bile yalnız %22 artar ve kapı susardı. Ölçülen (gzip): vol-hell app 107 / vendor 345.1 / css 18.3 KB, vol-arachnid app 57.9 / 345.1 / 16.8 KB. Bütçeyi ölçülenin altına çekince kapı düşüyor; 4 bekçi testi (vendor ayrımı, gzip ölçümü, `dist` yoksa geçersiz sayma, bütçe sınırı). |
+| D07    | P2     | Bundle kapısı yazıldı, kendi testleriyle 4/4 geçti ve elle çağrıldığında doğru çalıştı — ama justfile tarifi dosyayı YANLIŞ YOLDAN çağırıyordu. Kapı, `high` koşana kadar sessizce kırıktı. Bir bekçinin doğru çalışması, ONA ULAŞILDIĞI anlamına gelmiyor. | Yol düzeltildi ve kablonun kendisini sınayan bir kapı yazıldı: justfile'ın çağırdığı her script var mı, kapı aşamaları tanımlı tarifleri mi gösteriyor, ve `just` bunları gerçekten çözebiliyor mu. İki mutasyon (yanlış yol, aşama adında yazım hatası) doğru testlerle yakalanıyor.                                                                                                                                                                                                                                                         |
+
+**Cihaz ölçümü — ilk kez yapıldı.** Bağlı Samsung SM-G990B2 (Android 16, SDK 36,
+1080x2340, 7.5 GB RAM) üzerinde, kurulu release paketleriyle:
+
+|              | soğuk açılış | kare (12 sn)  | jank  | p50/p90/p99    | PSS    |
+| ------------ | ------------ | ------------- | ----- | -------------- | ------ |
+| vol-arachnid | 407–551 ms   | 666 (~55 fps) | %0.60 | 8 / 10 / 13 ms | 188 MB |
+| vol-hell     | 400–413 ms   | 537 (~45 fps) | %0.74 | 9 / 10 / 14 ms | 163 MB |
+
+Sekiz IK bacaklı yaratık gerçek telefonda kare bütçesinin (16.7 ms) altında ve
+%99.4 takılmasız koşuyor. Konsolda hata yok. WebView penceresi `0,0-2340,1080`
+— yön kilidi gerçekten uygulanıyor. Release APK 11 MB.
+
+Ölçüm `pnpm benchmark:device` ile tekrarlanabilir hâle getirildi. Bu bir KAPI
+DEĞİLDİR ve olamaz: bir kapının koşulu geliştiricinin masasındaki donanım
+olamaz. Cihaz yoksa betik sessizce geçmez, açıkça durur.
+
+**İncelendi, temiz.** Rig boru hattının (pen.dev export → oyun) kapısız
+olduğunu sandım: 72/72 dosya, sıfır fark ve `vol-arachnid/tests/config/
+rigAssets.test.ts` zaten eksik PNG, yetim PNG, yol doğrulaması ve önizleme
+dışlamasını kapsıyor — üstelik devtool'a bağlanmadan. Mükerrer test yazılmadı.
+
 ## 2026-09-05 — denetim (devir): yüzey sözleşmesi ve depoya güven
 
 Önceki oturum bir düzenlemenin ortasında kesildi. Ağaç kurtarıldı: `typecheck`,
