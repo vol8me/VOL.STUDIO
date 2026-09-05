@@ -5,6 +5,46 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-06 — "katman mı, motor mu?" sorusu ölçülebilir hâle getirildi
+
+Kullanıcının sorusu: saf Phaser yerine katman kurarken farkında olmadan
+sıfırdan motor mu yazıyoruz?
+
+**Ölçüm cevap verdi: katman.** CORE'un 191 kaynak dosyasından Phaser'ı import
+eden 5 tanesi var (`Game.ts` + dört modül, her birinde tek çalışma-zamanı
+importu). CORE hiçbir yerde renderer, sahne grafiği, kamera, tween, fizik ya da
+asset yükleyici yazmıyor. En büyük modül `ui/` (17.824 satır, %61) ve Phaser
+importu SIFIR — çünkü Phaser'ın DOM UI toolkit'i yok, orada yarışılmıyor.
+
+**Ama sınır altı yerde zaten kaymış** ve hiçbirinin gerekçesi yazılı değildi:
+`audio`, `time`, `math`, `events`, `pool`, `random` Phaser'ın verdiğini yeniden
+yazıyor. Altısı da savunulabilir; artık gerekçeleri kapıda.
+
+**Kapı** (`phaserBoundary.test.ts`): her CORE modülü duruşunu beyan eder ve
+`replaces` SAYISI sabittir. Büyütmek yasak değil, sessiz olamaz.
+
+Kapının kendisi bir şey öğretti: `fx` "delegates" diye sınıflandırılmıştı, ilk
+koşuşta Phaser importu olmadığını söyledi. Meğer kasıtlıymış — ihtiyaç duyduğu
+yüzeyi yapısal arayüzle bildiriyor ki render motoru olmadan test edilebilsin.
+Modele dördüncü duruş (`structural`) eklendi ve o özellik ters yönde de
+korunuyor: modüle Phaser importu girerse kapı kırılır.
+
+**Renderer görünür oldu.** `type` hiç ayarlanmamıştı; Phaser varsayılanı AUTO
+olduğu için WebGL kurulamadığında sessizce Canvas2D'ye düşüyor ve bu hiçbir
+yerde görünmüyordu. Vektör çizim yükünde belirti "cihazda yavaş" olur, sebebi
+görünmez — kullanıcının "belki Phaser'ı performanssız buldum" şüphesi tam da
+böyle doğardı. Artık teşhiste, overlay'de, konsolda ve `benchmark:device`
+çıktısında. `debug/` Phaser'sız kaldı; bilgiyi `Game.ts` besliyor.
+
+**`noAudio` arkeolojisi.** Satır 2026-08-10'dan beri yorumsuzdu, commit mesajı
+boştu ("sağlanan ilerlemeler"). `Phaser.Sound` git geçmişinin TAMAMINDA hiç
+geçmiyor: denenip elenmemiş, doğrudan Web Audio'ya gidilmiş. Yani "performanssız
+buldum" diye bir olay yok. Gerekçe artık satırın yanında.
+
+Kararın senin mi agent'ın mı olduğu repo'dan çıkarılamıyor — o dönemin commit
+mesajları içeriksizdi. Bugünkü doktrin (karar sitesinde yorum + TODO kaydı +
+anlamlı commit mesajı) tam olarak bunu önlemek için var.
+
 ## 2026-09-06 — CORE public yüzeyinin semantik denetimi
 
 223 export (129 sınıf, 67 fonksiyon, 19 nesne, 8 sabit) adlandırma, dönüş tipi
