@@ -5,6 +5,25 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-06 — signoff kırmızı yandı: e2e fixture yarışı
+
+Turun son kapısı `e2e-full`de düştü: "gerçek PNG açılır, düzenlenir ve diske
+kaydedilir" 409 Conflict aldı. Aynı kapı bu turda daha önce iki kez yeşil
+geçmişti — yani kararsızdı, ve kararsız bir kapı kırık bir kapıdır.
+
+Sebep testin KENDİ kurulumundaydı: `beforeEach` fixture'ı doğrudan diske
+yazıyor, sunucu onu kendi izleyicisiyle fark ediyor. Aradaki pencerede editör
+açılırsa belge bayat revizyonla yüklenir ve kaydetme revizyon kontrolüne
+takılır. Ürün hatası gibi görünen şey, kurulum yarışıydı.
+
+Pencere ölçüldü — izleyicinin yazımı görmesi 4 ile 323 ms arasında sürüyor.
+Kurulum artık gözlemlenebilir bir olguya bağlı: `writeEditorFixture` yazdığı
+baytların SHA-256'sını döner, `waitForFixtureRevision` katalog o revizyonu
+bildirene kadar yoklar. Zaman aşımı gevşetilmedi, tekrar denemesi eklenmedi,
+iddia zayıflatılmadı.
+
+Tam matris (chromium + firefox) arka arkaya üç kez 40/40.
+
 ## 2026-09-05 — e2e kapısının ters yönü ve yeni oyun yolu
 
 "Gerçek bir oyuna geçmeye hazır mı?" sorusu iki somut eksik verdi.
