@@ -5,6 +5,29 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-05 — e2e kapısının ters yönü ve yeni oyun yolu
+
+"Gerçek bir oyuna geçmeye hazır mı?" sorusu iki somut eksik verdi.
+
+**Kapı, ulaşılmayan bekçiyi görmüyordu.** `justfile`ın `e2e` tarifi paket
+listesini ELLE tutuyor. Rust kapısı manifestleri tarayarak keşfeder, e2e etmez:
+`test:e2e` tanımlayıp tarife eklenmeyen bir paketin tarayıcı testleri `high` ve
+`signoff` dahil hiçbir kapıda koşmaz ve bunu hiçbir şey bildirmez — paket kendi
+birim testleriyle yeşil görünür. Bu, `justfileWiring.test.mjs`in doğuş
+hikâyesinin aynısı (bundle bekçisi 4/4 geçiyordu ama tarif yanlış yoldan
+çağırıyordu); dosya İLERİ yönü sınıyordu, TERS yön eklendi ve mutasyonla
+kanıtlandı.
+
+**Yeni oyun ekleme yolu yazılı değildi.** Kapılar gereksinimi zorluyor ama
+kişi bunları tek tek kapı hatası yiyerek keşfediyordu. `games/docs/new-game.md`
+her maddeyi onu ZORLAYAN kapıdan türetiyor ve neyin otomatik olduğunu (Rust
+manifest keşfi) neyin olmadığını (e2e listesi, `quality.json` bundle girdisi)
+ayırıyor.
+
+Kalan bilinen sınır: `vol-hell`in hiç E2E'si yok. Yeni kapı bunu bildirmez —
+`test:e2e` script'i olmayan paketi aramaz — ve bu bilinçli: var olmayan bir
+testi zorunlu kılmak kapının işi değil.
+
 ## 2026-09-05 — CORE hata sözleşmesi: aynı arıza, üç farklı tip
 
 CORE'un sonlu sayı sözleşmesi (`math/numeric.ts`) hata TİPİNİ de bağlıyor ve
