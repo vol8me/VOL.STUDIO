@@ -288,7 +288,7 @@
 
 .vol-pull-refresh__label {
   letter-spacing: 0.02em;
-  font-size: 12px;
+  font-size: var(--vol-text-label);
   font-weight: 600;
 }
 
@@ -668,7 +668,7 @@
 
 .vol-radial-menu__item-label {
   text-align: center;
-  font-size: 10px;
+  font-size: var(--vol-text-micro);
   font-weight: 600;
   line-height: 1.1;
 }
@@ -762,7 +762,7 @@
 
 .vol-charge-button__label {
   pointer-events: none;
-  font-size: 10px;
+  font-size: var(--vol-text-micro);
   font-weight: 600;
 }
 
@@ -863,7 +863,7 @@
   color: var(--vol-ui-icon);
   justify-content: center;
   align-items: center;
-  font-size: 22px;
+  font-size: var(--vol-text-title);
   display: inline-flex;
 }
 
@@ -878,7 +878,7 @@
   text-overflow: ellipsis;
   pointer-events: none;
   max-width: calc(100% - 8px);
-  font-size: 9px;
+  font-size: var(--vol-text-micro);
   font-weight: 700;
   position: absolute;
   bottom: 2px;
@@ -892,7 +892,7 @@
   pointer-events: none;
   border-radius: 3px;
   padding: 0 3px;
-  font-size: 10px;
+  font-size: var(--vol-text-micro);
   font-weight: 700;
   position: absolute;
   bottom: 2px;
@@ -1055,7 +1055,7 @@
   font-variant-numeric: tabular-nums;
   pointer-events: none;
   color: var(--vol-ui-text-secondary);
-  font-size: 11px;
+  font-size: var(--vol-text-label);
   font-weight: 700;
 }
 
@@ -1133,7 +1133,7 @@
 .vol-action-bar__initial {
   color: var(--vol-ui-text-secondary);
   pointer-events: none;
-  font-size: 18px;
+  font-size: var(--vol-text-lead);
   font-weight: 700;
 }
 
@@ -1176,7 +1176,7 @@
   font-variant-numeric: tabular-nums;
   color: var(--vol-ui-on-brand);
   text-shadow: 0 1px 2px var(--vol-ui-scrim);
-  font-size: 15px;
+  font-size: var(--vol-text-body);
   font-weight: 700;
 }
 

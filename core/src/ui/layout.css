@@ -55,7 +55,7 @@
   background: 0 0;
   border: none;
   border-bottom: 2px solid transparent;
-  font-size: 15px;
+  font-size: var(--vol-text-body);
   font-weight: 600;
 
   /*

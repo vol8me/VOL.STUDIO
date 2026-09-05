@@ -37,15 +37,37 @@ function cssVarDurationMs(css: string, varName: string): number {
   return match![2] === 'ms' ? value : value * 1000;
 }
 
-/** Bir kural bloğundaki tek bir bildirimin değerini döndürür. */
+/**
+ * Bir kural bloğundaki tek bir bildirimin değerini döndürür.
+ *
+ * Yorumlar eşleştirmeden ÖNCE atılır ve bildirim bir satır başından da
+ * yakalanır. Ayrıştırıcı bir dönem her bildirimin bir `;`den sonra geldiğini
+ * varsayıyordu: araya bir açıklama bloğu giren ilk bildirimde sessizce
+ * "bulunamadı" demeye başlıyordu — yani test, sınadığı dosyanın YORUMLANMASINA
+ * karşı kırılgandı.
+ */
 function cssDeclaration(css: string, selector: string, property: string): string {
+  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
   const block = new RegExp(
     `${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`,
-  ).exec(css);
+  ).exec(withoutComments);
   expect(block, `${selector} bulunamadı`).not.toBeNull();
-  const decl = new RegExp(`(?:^|;)\\s*${property}:\\s*([^;]+)`).exec(block![1]);
+  const decl = new RegExp(`(?:^|;|\\n)\\s*${property}:\\s*([^;]+)`).exec(block![1]);
   expect(decl, `${selector} içinde ${property} yok`).not.toBeNull();
   return decl![1].trim();
+}
+
+/**
+ * `var(--x)` biçimindeki bir değeri `theme.css`teki tanımına çözer.
+ *
+ * Boyutlar tip ölçeğine bağlandığında CSS artık ham piksel taşımaz; sabiti
+ * doğrudan `var(...)` metniyle karşılaştırmak testi anlamsız kılardı. Çözerek
+ * karşılaştırmak sözleşmeyi GÜÇLENDİRİR: hem sabitin doğru olduğunu hem de
+ * bileşenin doğru ölçek kademesini kullandığını aynı anda doğrular.
+ */
+function resolveToken(value: string): string {
+  const match = /^var\(\s*(--[a-z0-9-]+)\s*\)$/.exec(value.trim());
+  return match ? resolveToken(cssDeclaration(theme, ':root', match[1])) : value;
 }
 
 function pxToNumber(value: string): number {
@@ -124,7 +146,7 @@ describe('CSS sabit senkronu — geometri birebir eşleşmeli', () => {
     // measureText() bu string ile ölçüm yapıyor; CSS'ten saparsa düğüm
     // genişlikleri yanlış hesaplanır ve uzun etiketler kutudan taşar.
     const fontFamily = cssDeclaration(theme, ':root', '--vol-font-family');
-    const fontSize = cssDeclaration(hud, '.vol-skill-tree__node-label', 'font-size');
+    const fontSize = resolveToken(cssDeclaration(hud, '.vol-skill-tree__node-label', 'font-size'));
     const fontWeight = cssDeclaration(hud, '.vol-skill-tree__node-label', 'font-weight');
 
     expect(NODE_LABEL_FONT).toBe(`${fontWeight} ${fontSize} ${fontFamily}`);

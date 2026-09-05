@@ -5,6 +5,42 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-05 — tip ölçeği: 15 doğaçlama boyut, 7 rol
+
+CORE'da 15 farklı `font-size` vardı ve altısı birer piksel arayla duruyordu:
+10-11-12-13-14-15. Bu bir ölçek değil, her dosyada yeniden verilmiş bir karar
+birikimiydi — aynı işi gören iki etiketin 12 ve 13 px olması bir tercih değil,
+kimsenin fark etmediği bir sapmaydı.
+
+105 kullanım yedi role bağlandı; kademeler piksel değil ROL taşır (micro,
+label, body, lead, title, heading, display). Boyutu `font` kısayolunda saklayan
+bir kural ve uçları ölçek dışında kalan bir `clamp` da kapsama alındı. Geriye
+yalnız `debug.css`in monospace katmanı kaldı: ayrı bir yazı ailesi, ölçeğin
+konusu değil.
+
+**Bu iş ÖZELLEŞTİRME için değil TUTARLILIK için yapıldı.** Bir oyunun CORE'u
+kendi kapsamında yeniden temalandırması ayrı bir tartışmadır ve bilinçli olarak
+ERTELENDİ: repo'nun kendi "en az iki tüketici" kuralı gereği, iki tüketici aynı
+anda farklı değer istemeden o altyapı kurulmaz. Ölçüldü ve doğrulandı — token
+üzerinden gelen değerler bugün de bir oyun tarafından ezilebiliyor (tarayıcıda
+sınandı: renk ve yarıçap ezildi), sabit yazılmış değerler ezilemiyor.
+
+**Senkron testi gevşetilmedi, GÜÇLENDİRİLDİ.** `NODE_LABEL_FONT`, CSS'teki
+etiket boyutunu birebir yansıtmak zorunda; boyut token'a taşınınca test ham
+piksel bulamaz oldu. Değeri `var(...)` metniyle karşılaştırmak testi anlamsız
+kılardı, o yüzden test artık token'ı ÇÖZÜYOR: hem sabitin doğruluğunu hem de
+bileşenin doğru ölçek kademesini kullandığını aynı anda doğruluyor. Mutasyonla
+sınandı — kademe `label`dan `body`ye kaydırılınca test düşüyor.
+
+Aynı testin CSS ayrıştırıcısı da düzeltildi: her bildirimin bir `;`den sonra
+geldiğini varsayıyordu ve araya bir açıklama bloğu giren ilk bildirimde sessizce
+"bulunamadı" demeye başlıyordu. Yani test, sınadığı dosyanın YORUMLANMASINA
+karşı kırılgandı.
+
+On iki görsel temelin onu değiştiği için bilinçli olarak yenilendi; `palette` ve
+`scroll` etkilenmedi. Geometri kapıları (taşma, dokunma hedefi, ezilme) ve
+kararlılık ölçümü değişmeden geçti — yani yerleşimde hiçbir kayma yok.
+
 ## 2026-09-04 — vol-ui görsel sözleşme kapısı: iki yerleşim hatası, üç katman
 
 vol-ui, CORE'un DOM bileşen kütüphanesinin showcase'i — yani CORE'un GÖRSEL

@@ -22,7 +22,7 @@
   transition:
     opacity var(--vol-transition-medium),
     transform var(--vol-transition-medium);
-  font-size: 14px;
+  font-size: var(--vol-text-body);
   font-weight: 600;
   transform: translateY(8px);
 }
@@ -112,7 +112,7 @@
   transition:
     opacity var(--vol-transition-fast),
     transform var(--vol-transition-fast);
-  font-size: 13px;
+  font-size: var(--vol-text-body);
   font-weight: 600;
   position: fixed;
   transform: translateY(4px);
@@ -172,7 +172,7 @@
 .vol-dialogue__portrait--placeholder {
   font-family: var(--vol-font-family);
   color: var(--vol-ui-brand-hover);
-  font-size: 28px;
+  font-size: var(--vol-text-display);
   font-weight: 700;
 }
 
@@ -189,7 +189,7 @@
   margin-bottom: var(--vol-space-sm);
   border-bottom: 2px solid var(--vol-ui-brand-border);
   padding-bottom: 4px;
-  font-size: 13px;
+  font-size: var(--vol-text-body);
   font-weight: 700;
   display: inline-block;
 }
@@ -197,7 +197,7 @@
 .vol-dialogue__text {
   color: var(--vol-ui-text);
   min-height: 3.4em;
-  font-size: 17px;
+  font-size: var(--vol-text-lead);
   line-height: 1.6;
 }
 
@@ -212,7 +212,7 @@
   border-radius: 50%;
   justify-content: center;
   align-items: center;
-  font-size: 10px;
+  font-size: var(--vol-text-micro);
   animation: 1s ease-in-out infinite vol-dialogue-bounce;
   display: flex;
   position: absolute;
@@ -304,7 +304,7 @@
   transition:
     background-color var(--vol-transition-fast),
     border-color var(--vol-transition-fast);
-  font-size: 15px;
+  font-size: var(--vol-text-body);
 
   /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
      bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
@@ -388,7 +388,7 @@
   padding: var(--vol-space-lg) 0;
   background: 0 0;
   border: none;
-  font-size: 17px;
+  font-size: var(--vol-text-lead);
 }
 
 .vol-command-palette__input::placeholder {
@@ -410,7 +410,7 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--vol-ui-text-disabled);
-  font-size: 11px;
+  font-size: var(--vol-text-label);
   font-weight: 700;
 }
 
@@ -459,7 +459,7 @@
 .vol-command-palette__item-label {
   font-family: var(--vol-font-family);
   color: var(--vol-ui-text);
-  font-size: 15px;
+  font-size: var(--vol-text-body);
 }
 
 .vol-command-palette__highlight {
@@ -472,7 +472,7 @@
   color: var(--vol-ui-text-muted);
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: var(--vol-text-label);
   overflow: hidden;
 }
 
@@ -484,7 +484,7 @@
   border-radius: 4px;
   flex-shrink: 0;
   padding: 2px 6px;
-  font-size: 11px;
+  font-size: var(--vol-text-label);
 }
 
 .vol-command-palette__empty {
@@ -540,7 +540,7 @@
     border-color var(--vol-transition-fast),
     background-color var(--vol-transition-fast),
     box-shadow var(--vol-transition-fast);
-  font-size: 16px;
+  font-size: var(--vol-text-lead);
   display: flex;
 
   /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
@@ -596,7 +596,7 @@
   cursor: pointer;
   background: 0 0;
   border: none;
-  font-size: 15px;
+  font-size: var(--vol-text-body);
 
   /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
      bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
@@ -665,7 +665,7 @@
   cursor: pointer;
   background: 0 0;
   border: none;
-  font-size: 15px;
+  font-size: var(--vol-text-body);
   display: flex;
 
   /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
@@ -743,13 +743,13 @@
 .vol-rich-tooltip__title {
   font-family: var(--vol-font-family);
   color: var(--vol-ui-text);
-  font-size: 14px;
+  font-size: var(--vol-text-body);
   font-weight: 700;
 }
 
 .vol-rich-tooltip__description {
   color: var(--vol-ui-text-muted);
-  font-size: 12px;
+  font-size: var(--vol-text-label);
   line-height: 1.4;
 }
 
@@ -765,7 +765,7 @@
   justify-content: space-between;
   align-items: center;
   gap: var(--vol-space-md);
-  font-size: 12px;
+  font-size: var(--vol-text-label);
   display: flex;
 }
 

@@ -31,7 +31,7 @@
   min-width: var(--vol-hit-target-min, 32px);
   min-height: var(--vol-hit-target-min, 32px);
   padding: 6px;
-  font: 600 14px/1 var(--vol-font-family-body);
+  font: 600 var(--vol-text-body) / 1 var(--vol-font-family-body);
   cursor: pointer;
   justify-content: center;
   align-items: center;
@@ -82,7 +82,7 @@
 
 .vol-property-field__label {
   color: var(--vol-ui-text-secondary);
-  font-size: 14px;
+  font-size: var(--vol-text-body);
   font-weight: 600;
 }
 
@@ -116,7 +116,7 @@
 .vol-property-field__description,
 .vol-property-field__status {
   color: var(--vol-ui-text-muted);
-  font-size: 13px;
+  font-size: var(--vol-text-body);
   line-height: 1.35;
 }
 

@@ -73,6 +73,34 @@
   --vol-ui-selection-glow: #7c84ff33;
   --vol-font-family: 'Jura', sans-serif;
   --vol-font-family-body: 'Exo 2', sans-serif;
+
+  /*
+   * TİP ÖLÇEĞİ — kademeler ROL taşır, piksel değil.
+   *
+   * Ölçek yokken CORE'da 15 farklı boyut vardı ve altısı (10-11-12-13-14-15)
+   * birer piksel arayla duruyordu: bir ölçek değil, her dosyada yeniden verilmiş
+   * bir karar birikimi. Aynı işi gören iki etiketin 12 ve 13 px olması bir
+   * tasarım tercihi değil, kimsenin fark etmediği bir sapmaydı.
+   *
+   * Yeni bir boyut EKLEME; en yakın rolü seç. Hiçbir rol uymuyorsa tartışılacak
+   * bir eksiklik vardır — sessizce yeni bir sayı değil.
+   *
+   *   micro   rozet, sayaç üstü, ikincil birim
+   *   label   HUD etiketi, düğme, sekme, tablo başlığı
+   *   body    okunacak metin, açıklama, diyalog
+   *   lead    öne çıkan gövde, büyük düğme
+   *   title   panel/kart başlığı
+   *   heading bölüm başlığı
+   *   display ekran başlığı, hasar sayısı
+   */
+  --vol-text-micro: 10px;
+  --vol-text-label: 12px;
+  --vol-text-body: 14px;
+  --vol-text-lead: 16px;
+  --vol-text-title: 20px;
+  --vol-text-heading: 24px;
+  --vol-text-display: 28px;
+
   --vol-space-xs: 4px;
   --vol-space-sm: 8px;
   --vol-space-md: 16px;
