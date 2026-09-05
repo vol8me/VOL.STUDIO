@@ -1,6 +1,6 @@
 import type { CanvasViewportTransform } from '@volstudio/core/ui';
 import { TILE_SIZE, type RasterSurface } from './RasterSurface';
-import type { SpriteDocument } from './SpriteDocument';
+import type { LayerStack } from './LayerStack';
 import type { RasterBuffer } from './transform';
 
 export interface PixelRendererOptions {
@@ -39,8 +39,6 @@ export class PixelRenderer {
   #composite: HTMLCanvasElement | null = null;
   #compositeContext: CanvasRenderingContext2D | null = null;
   readonly #layers = new Map<string, LayerCanvas>();
-  readonly #onionBuffers = new WeakMap<Uint8ClampedArray, HTMLCanvasElement>();
-  #documentFrame = '';
   #devicePixelRatio = 1;
 
   public constructor(options: PixelRendererOptions) {
@@ -63,29 +61,11 @@ export class PixelRenderer {
     this.#canvas.style.height = `${cssHeight}px`;
   }
 
-  /**
-   * @param onionSkin Belge rasterının ALTINA çizilecek komşu kareler. Yalnız
-   * ekranda yaşarlar; kayda ve export'a hiç girmezler.
-   */
-  public render(
-    surface: RasterBuffer,
-    transform: CanvasViewportTransform,
-    onionSkin: readonly { buffer: RasterBuffer; opacity: number }[] = [],
-  ): void {
-    this.#drawScene(this.#syncBuffer(surface), surface.width, surface.height, transform, onionSkin);
+  public render(surface: RasterBuffer, transform: CanvasViewportTransform): void {
+    this.#drawScene(this.#syncBuffer(surface), surface.width, surface.height, transform);
   }
 
-  public renderDocument(
-    document: SpriteDocument,
-    transform: CanvasViewportTransform,
-    onionSkin: readonly { buffer: RasterBuffer; opacity: number }[] = [],
-  ): void {
-    const frame = document.frameAt(document.activeFrameIndex);
-    const frameKey = `${document.id}:${frame?.id ?? 'none'}`;
-    if (this.#documentFrame !== frameKey) {
-      this.#documentFrame = frameKey;
-      this.#layers.clear();
-    }
+  public renderDocument(document: LayerStack, transform: CanvasViewportTransform): void {
     const composite = this.#ensureComposite(document.width, document.height);
     const context = this.#compositeContext;
     if (context === null) throw new Error('[PixelRenderer] bileşik tuval hazır değil');
@@ -93,8 +73,7 @@ export class PixelRenderer {
     context.clearRect(0, 0, document.width, document.height);
     const liveLayers = new Set<string>();
     for (const meta of document.layers) {
-      const surface = frame?.cels.get(meta.id);
-      if (surface === undefined) continue;
+      const surface = meta.surface;
       liveLayers.add(meta.id);
       const layer = this.#syncLayer(meta.id, surface);
       if (!meta.visible || meta.opacity <= 0) continue;
@@ -107,7 +86,7 @@ export class PixelRenderer {
     for (const id of this.#layers.keys()) {
       if (!liveLayers.has(id)) this.#layers.delete(id);
     }
-    this.#drawScene(composite, document.width, document.height, transform, onionSkin);
+    this.#drawScene(composite, document.width, document.height, transform);
   }
 
   public destroy(): void {
@@ -146,7 +125,6 @@ export class PixelRenderer {
     surfaceWidth: number,
     surfaceHeight: number,
     transform: CanvasViewportTransform,
-    onionSkin: readonly { buffer: RasterBuffer; opacity: number }[],
   ): void {
     const ratio = this.#devicePixelRatio;
     const context = this.#context;
@@ -160,16 +138,6 @@ export class PixelRenderer {
     this.#drawWorkbench(context, width, height);
     this.#drawChecker(context, transform.offsetX, transform.offsetY, documentWidth, documentHeight);
     context.imageSmoothingEnabled = false;
-    for (const layer of onionSkin) {
-      context.globalAlpha = layer.opacity;
-      context.drawImage(
-        this.#onionCanvas(layer.buffer),
-        transform.offsetX,
-        transform.offsetY,
-        documentWidth,
-        documentHeight,
-      );
-    }
     context.globalAlpha = 1;
     context.drawImage(source, transform.offsetX, transform.offsetY, documentWidth, documentHeight);
     this.#drawGrid(context, { width: surfaceWidth, height: surfaceHeight }, transform);
@@ -223,21 +191,6 @@ export class PixelRenderer {
     }
     layer.version = surface.version;
     return layer.canvas;
-  }
-
-  #onionCanvas(buffer: RasterBuffer): HTMLCanvasElement {
-    const cached = this.#onionBuffers.get(buffer.rgba);
-    if (cached !== undefined) return cached;
-    const canvas = document.createElement('canvas');
-    canvas.width = buffer.width;
-    canvas.height = buffer.height;
-    const context = canvas.getContext('2d', { alpha: true });
-    if (context === null) throw new Error('[PixelRenderer] onion skin context alınamadı');
-    const image = context.createImageData(buffer.width, buffer.height);
-    image.data.set(buffer.rgba);
-    context.putImageData(image, 0, 0);
-    this.#onionBuffers.set(buffer.rgba, canvas);
-    return canvas;
   }
 
   #drawWorkbench(context: CanvasRenderingContext2D, width: number, height: number): void {

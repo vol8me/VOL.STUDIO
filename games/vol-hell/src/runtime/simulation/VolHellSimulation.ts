@@ -1,5 +1,5 @@
-import { createRandom, type Random } from '@volstudio/core/random/random';
-import { SpatialIndex } from '@volstudio/core/spatial/SpatialIndex';
+import { createRandom, type Random } from '@volstudio/core/random';
+import { SpatialIndex } from '@volstudio/core/spatial';
 import { simulationConfig } from '@/config/simulation';
 import { gameConfig } from '@/config/game';
 import { economyConfig } from '@/config/economy';

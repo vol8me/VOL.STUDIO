@@ -133,6 +133,39 @@ describe('I18n — SaveManager entegrasyonu', () => {
     expect(i18n.getLocale()).toBe('tr');
   });
 
+  it('TANINMAYAN kayitli dil kabul edilmez, tespit yoluna duser', async () => {
+    /*
+     * `detectLocale()` bir dili ancak `locales` kumesinde varsa dondurur;
+     * yoksa fallback'e duser. Depodan gelen deger bir donem bu dogrulamayi
+     * TAMAMEN atliyordu: `load<string>(key, detectLocale())` ifadesi yedegi
+     * ozenle dogruluyor ama kayitli degeri oldugu gibi `i18next.init`e
+     * tasiyordu.
+     *
+     * Depo elle duzenlenebilir, eski bir surumde kaldirilmis bir dil kodu
+     * tasiyabilir ya da `JSON.parse` sonucu hic string olmayabilir. CORE'un
+     * kendi tuketicileri depoya guvenmemeyi ogrenmisken (hepsi
+     * `load<unknown>` + temizlik yapar) CORE'un kendisi tek yerde guveniyordu.
+     */
+    const saveManager = makeSaveManager('de');
+    await i18n.init({ saveManager });
+    expect(i18n.getLocale()).toBe('tr');
+  });
+
+  it('string OLMAYAN kayitli deger kabul edilmez', async () => {
+    const store = new Map<string, unknown>([['vol-locale', 42]]);
+    const saveManager = {
+      load: <T>(key: string, fallback: T): Promise<T> =>
+        Promise.resolve((store.get(key) ?? fallback) as T),
+      save: <T>(key: string, value: T): Promise<void> => {
+        store.set(key, value);
+        return Promise.resolve();
+      },
+    } as unknown as SaveManager;
+
+    await i18n.init({ saveManager });
+    expect(i18n.getLocale()).toBe('tr');
+  });
+
   it('ozel saveKey desteklenir', async () => {
     const store = new Map<string, unknown>([['oyun-dili', 'en']]);
     const saveManager = {
@@ -150,7 +183,16 @@ describe('I18n — SaveManager entegrasyonu', () => {
     } as unknown as SaveManager;
     await i18n.init({ saveManager, saveKey: 'oyun-dili' });
     expect(i18n.getLocale()).toBe('en');
-    expect(saveManager.load).toHaveBeenCalledWith('oyun-dili', 'tr');
+
+    /*
+     * Sözleşme: ÖZEL ANAHTAR okunur. İddia bir dönem `load`un ikinci
+     * argümanını da (`'tr'`) kilitliyordu — yani değerin nasıl getirildiğini,
+     * ne getirildiğini değil. Doğrulama depodan gelen değere taşınınca yedek
+     * artık çağrıya geçilmiyor ve test, davranış hiç değişmediği hâlde
+     * kırıldı. Uygulama detayını kilitleyen bir iddia, doğru bir düzeltmeyi
+     * yanlışmış gibi gösterir.
+     */
+    expect(vi.mocked(saveManager.load).mock.calls[0][0]).toBe('oyun-dili');
   });
 });
 

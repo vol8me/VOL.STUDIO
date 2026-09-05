@@ -20,20 +20,23 @@ changes, and provides a preview appropriate for each asset kind.
 - read-only VisualSynth inspector for `.volsprite.json` documents, showing the
   source graph, channel preview, QA, real render profile, buffer cost, and
   region/halo decision;
-- tile-backed pixel surface, layers/frames/palette, onion skin, undo/redo, and
+- tile-backed PNG pixel surface, layers/palette, undo/redo, and
   revision-checked atomic PNG saves;
 - peak-pyramid waveform, selection, zoom, transport, gain, trim, fades, peak
   normalization, reverse, and atomic OGG/WAV saves;
 - read-only reference search, rename preview, and recoverable trash.
 
-Layers and frames are currently flattened into the composite when a direct PNG
-is saved; reopening native `.volsprite.json` documents is not complete yet. An
-audio processing chain is applied to the current OGG/WAV only after an explicit
-save; persistence as a `.volaudio.json` recipe is not wired yet. MP3/FLAC files
-can be inspected but require the OGG/WAV conversion path before saving. The
-VisualSynth inspector renders the JSON source read-only in the browser through
-CORE; it does not edit pixels or write files. Native `.volsprite.json` editing
-and saving remains a separate debt.
+Saving PNG flattens visible layers; layer separation and history survive
+only while the document stays open. Edits made during a save remain dirty.
+Undoing layer deletion or merging preserves the pixel surfaces referenced by
+brush history. The history budget counts retained tile buffers.
+
+Animation authoring and native sprite project saves are outside the scope.
+The unwired frame strip, sprite project model, sheet/metadata export draft,
+and unused `.volpost.json` delta model have been removed. The VisualSynth
+`.volsprite.json` inspector remains a read-only synthesis viewer. Audio chains
+are applied to the current OGG/WAV on explicit save. MP3/FLAC can be inspected;
+editing requires conversion to OGG/WAV.
 
 ## Running
 

@@ -1,6 +1,10 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { readFile, writeFile } from 'node:fs/promises';
+import {
+  EDITOR_FIXTURE_NAME as FIXTURE_NAME,
+  EDITOR_FIXTURE_PATH as FIXTURE_PATH,
+  writeEditorFixture as writeFixture,
+} from './fixtures';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
@@ -10,23 +14,6 @@ import { expect, test, type Page } from '@playwright/test';
  * gerçekten çizdiğini, `toBlob`un PNG ürettiğini ve multipart kaydın diskteki
  * baytları değiştirdiğini gösteremez. Bu dosya o zinciri uçtan uca yürütür.
  */
-const REPO_ROOT = resolve(import.meta.dirname, '../../../..');
-const SANDBOX_DIR = join(REPO_ROOT, 'devtools/pen.dev/pen_export');
-const FIXTURE_NAME = '__e2e-editor-fixture.png';
-const FIXTURE_PATH = join(SANDBOX_DIR, FIXTURE_NAME);
-
-/** 8×8 tek renkli PNG; küçük tutulur ki karşılaştırma hızlı ve kesin olsun. */
-async function writeFixture(): Promise<void> {
-  const sharp = (await import('sharp')).default;
-  await mkdir(SANDBOX_DIR, { recursive: true });
-  const png = await sharp({
-    create: { width: 8, height: 8, channels: 4, background: '#204060ff' },
-  })
-    .png()
-    .toBuffer();
-  await writeFile(FIXTURE_PATH, png);
-}
-
 async function openFixtureInEditor(page: Page): Promise<void> {
   await page.goto('/');
   await page.locator('.asset-card').first().waitFor({ timeout: 30_000 });
@@ -49,9 +36,8 @@ async function openFixtureInEditor(page: Page): Promise<void> {
 // Her test TAZE fixture ile başlar. Paylaşılan dosyada önceki testin darbesi
 // kalıyor ve "beyaz üstüne beyaz" boyayan bir sonraki test hiç değişiklik
 // üretmiyordu — testler birbirinin sonucunu sessizce bozuyordu.
-test.beforeEach(writeFixture);
-test.afterAll(async () => {
-  await rm(FIXTURE_PATH, { force: true });
+test.beforeEach(async () => {
+  await writeFixture();
 });
 
 test('gerçek PNG açılır, düzenlenir ve diske kaydedilir', async ({ page }) => {
@@ -130,7 +116,7 @@ test('harici değişiklik çakışma şeridini açar ve dosyayı ezmez', async (
   expect(original.equals(external)).toBe(false);
 });
 
-test('katman, kare ve palet panelleri gerçekten çalışır', async ({ page }) => {
+test('katman ve palet panelleri gerçekten çalışır', async ({ page }) => {
   await openFixtureInEditor(page);
 
   // Palet belgeden çıkarılır; tek renkli fixture en az bir swatch verir.
@@ -147,15 +133,15 @@ test('katman, kare ve palet panelleri gerçekten çalışır', async ({ page }) 
   await topVisible.click();
   await expect(topVisible).toHaveAttribute('aria-pressed', 'false');
 
-  // Kare ekle → şerit iki hücre gösterir ve ikincisi aktif olur.
-  await expect(page.locator('.frame-cell')).toHaveCount(1);
-  await page.locator('.frame-panel__frameCopy').click();
-  await expect(page.locator('.frame-cell')).toHaveCount(2);
-  await expect(page.locator('.frame-cell--active')).toHaveText('2');
-
-  // Yapısal işlemler geçmişe girer: undo kareyi geri alır.
+  // PNG oturumu yalnız katman bileşiğini kaydeder; kayıt dışı animasyon yoktur.
+  await expect(page.locator('.frame-panel')).toHaveCount(0);
   await page.locator('.editor-panel__undo').click();
-  await expect(page.locator('.frame-cell')).toHaveCount(1);
+  await expect(page.locator('.layer-row').first().locator('.layer-row__visible')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await page.locator('.editor-panel__undo').click();
+  await expect(page.locator('.layer-row')).toHaveCount(1);
 });
 
 test('ses editörü dalga formu seçimini gerçek işlem zincirine alır', async ({ page }) => {

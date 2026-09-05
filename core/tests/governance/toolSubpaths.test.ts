@@ -44,6 +44,38 @@ describe('Phaser taşımayan araç alt-yolları', () => {
     expect(RigMetadata.articulateRigDefinition).toBeDefined();
   });
 
+  it('iki alt yol AYNI dosyayı göstermez', () => {
+    /*
+     * Aynı dosyaya iki ad vermek, hangisinin kullanılacağına dair bir kural
+     * bırakmaz ve tüketiciler kaçınılmaz olarak ayrışır. Tam olarak bu oldu:
+     * harita hem `./random` hem `./random/random`, hem `./spatial` hem
+     * `./spatial/SpatialIndex`, hem `./stats` hem `./stats/StatBlock`
+     * taşıyordu. Yukarıdaki test KISA biçimi kanonik ilan ediyordu ama
+     * VOL.HELL üç dosyada uzun biçimi kullanıyor, kısa biçimin ise hiç
+     * tüketicisi yoktu — yani kanonik olan fiilen ölüydü.
+     *
+     * Bir export haritası bir SÖZDÜR: her girdi sonsuza kadar korunmak
+     * zorundadır. Mükerrer bir giriş, karşılığı olmayan bir söz demektir.
+     */
+    const targets = new Map<string, string[]>();
+    for (const [subpath, entry] of Object.entries(packageJson.exports)) {
+      const target =
+        typeof entry === 'string' ? entry : (entry as { import?: string }).import ?? undefined;
+      if (target === undefined) continue;
+      targets.set(target, [...(targets.get(target) ?? []), subpath]);
+    }
+
+    const duplicated = [...targets.entries()]
+      .filter(([, subpaths]) => subpaths.length > 1)
+      .map(([target, subpaths]) => `${target} ← ${subpaths.join(' , ')}`);
+
+    expect(
+      duplicated,
+      'Aynı dosyaya birden çok alt yol açılmış. Birini kanonik seç, ' +
+        'tüketicileri ona taşı, diğerini haritadan kaldır.',
+    ).toEqual([]);
+  });
+
   it('alt-yol barrel dosyaları oyun runtime veya Phaser import etmez', () => {
     const files = [
       '../../src/ui/index.ts',

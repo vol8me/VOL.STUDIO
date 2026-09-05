@@ -1,3 +1,4 @@
+import { coreAliases } from '../../scripts/vite/coreAliases.mjs';
 import { loadQualityConfig } from '../../scripts/quality/config.mjs';
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
@@ -33,10 +34,24 @@ export default defineConfig({
     exclude: ['node_modules', 'dist'],
   },
   resolve: {
-    alias: {
-      '@volstudio/core': resolve(import.meta.dirname, '../../core/src'),
-      '@volstudio/audio-synth': resolve(import.meta.dirname, '../../devtools/audio-synth/src'),
-      '@': resolve(import.meta.dirname, './src'),
-    },
+    alias: [
+      /*
+       * CORE alias'ları `core/package.json` exports haritasından TÜRETİLİR.
+       *
+       * Buradaki liste bir dönem elle yazılıyordu ve tek bir önek girdisi
+       * (`'@volstudio/core' -> core/src`) taşıyordu. Vite öneki dizine eşler:
+       * `@volstudio/core/random` -> `core/src/random` (bir DİZİN) çözülemez,
+       * ama `@volstudio/core/systems/SaveManager` gibi haritada HİÇ OLMAYAN
+       * bir yol çözülür. Yani testler CORE'un iç yapısına uzanabiliyor,
+       * yayınlanmış yüzeyi ise kısmen görünmez kalıyordu — sözleşme fiilen
+       * uygulanmıyordu.
+       */
+      ...coreAliases(),
+      {
+        find: '@volstudio/audio-synth',
+        replacement: resolve(import.meta.dirname, '../../devtools/audio-synth/src'),
+      },
+      { find: '@', replacement: resolve(import.meta.dirname, './src') },
+    ],
   },
 });

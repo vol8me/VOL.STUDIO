@@ -1786,7 +1786,6 @@ audio:focus-visible {
 }
 
 .layer-panel,
-.frame-panel,
 .palette-panel {
   display: flex;
   flex-direction: column;
@@ -1804,15 +1803,7 @@ audio:focus-visible {
   overflow-y: auto;
 }
 
-.frame-panel {
-  max-height: 176px;
-  border-top: 1px solid var(--vol-ui-border-soft);
-  border-bottom: 0;
-  background: var(--studio-drawer-bg);
-}
-
 .layer-panel__header,
-.frame-panel__header,
 .palette-panel__header {
   display: flex;
   align-items: center;
@@ -1820,7 +1811,6 @@ audio:focus-visible {
 }
 
 .layer-panel__title,
-.frame-panel__title,
 .palette-panel__title {
   color: var(--vol-ui-text);
   font-family: var(--vol-font-family);
@@ -1915,62 +1905,17 @@ audio:focus-visible {
   gap: 4px;
 }
 
-.frame-panel__strip {
-  display: flex;
-  gap: 8px;
-  min-height: 50px;
-  overflow-x: auto;
-  padding: 2px 2px 6px;
-}
-
-.frame-panel__controls {
-  display: grid;
-  grid-template-columns: minmax(150px, 220px) minmax(180px, 1fr);
-  gap: 20px;
-  align-items: end;
-}
-
-.frame-cell {
-  position: relative;
-  display: flex;
-  padding: 2px;
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-sm);
-  background: var(--studio-card-bg);
-  color: var(--vol-ui-text-muted);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.frame-cell--active {
-  border-color: var(--vol-ui-accent-border);
-  background: var(--vol-ui-accent-subtle);
-  color: var(--vol-ui-text);
-}
-
-.frame-panel__settings,
 .palette-panel__actions {
   display: flex;
   gap: 10px;
   align-items: center;
 }
 
-.frame-panel__field,
 .palette-panel__field {
   display: flex;
   gap: 6px;
   align-items: center;
   color: var(--vol-ui-text-muted);
-  font-size: 11px;
-}
-
-.frame-panel__duration {
-  width: 68px;
-  padding: 3px 5px;
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-sm);
-  background: var(--studio-input-bg);
-  color: var(--vol-ui-text);
   font-size: 11px;
 }
 
@@ -2038,24 +1983,12 @@ audio:focus-visible {
   gap: 4px;
 }
 
-.layer-row__thumb,
-.frame-cell__thumb {
+.layer-row__thumb {
   display: block;
   border: 1px solid var(--vol-ui-border-soft);
   border-radius: 3px;
   background: var(--studio-checker-bg);
   image-rendering: pixelated;
-}
-
-.frame-cell__index {
-  position: absolute;
-  right: 3px;
-  bottom: 2px;
-  padding: 0 3px;
-  border-radius: 2px;
-  background: var(--studio-state-bg);
-  color: var(--vol-ui-text);
-  font-size: 10px;
 }
 
 /* ===== Ses editörü =====
@@ -2339,9 +2272,5 @@ audio:focus-visible {
 
   .editor-panel__settings .vol-slider {
     width: 150px;
-  }
-
-  .frame-panel {
-    max-height: 190px;
   }
 }

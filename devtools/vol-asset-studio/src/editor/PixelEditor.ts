@@ -2,7 +2,6 @@ import { CanvasViewportController, type CanvasViewportTransform } from '@volstud
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import type { DocumentSession } from './DocumentSession';
 import { PixelRenderer } from './PixelRenderer';
-import { buildOnionSkin } from './spriteSheet';
 import type { Rgba } from './RasterSurface';
 import {
   EyedropperTool,
@@ -47,8 +46,6 @@ export class PixelEditor {
   #secondaryColor: Rgba = { r: 0, g: 0, b: 0, a: 255 };
   #brushSize = 1;
   #frame: number | null = null;
-  #onionBefore = 0;
-  #onionAfter = 0;
   #resizeObserver: ResizeObserver | null = null;
   #destroyed = false;
 
@@ -124,13 +121,6 @@ export class PixelEditor {
     this.#secondaryColor = { ...color };
   }
 
-  /** Onion skin komşu kare sayısı; 0 kapatır. */
-  public setOnionSkin(before: number, after: number): void {
-    this.#onionBefore = Math.max(0, Math.min(4, Math.trunc(before)));
-    this.#onionAfter = Math.max(0, Math.min(4, Math.trunc(after)));
-    this.requestRender();
-  }
-
   public setBrushSize(size: number): void {
     this.#brushSize = Math.max(1, Math.min(64, Math.trunc(size)));
   }
@@ -156,16 +146,7 @@ export class PixelEditor {
     this.#frame = requestAnimationFrame(() => {
       this.#frame = null;
       if (this.#destroyed) return;
-      const onion =
-        this.#onionBefore + this.#onionAfter > 0
-          ? buildOnionSkin(
-              this.#session.document,
-              this.#session.document.activeFrameIndex,
-              this.#onionBefore,
-              this.#onionAfter,
-            )
-          : [];
-      this.#renderer.renderDocument(this.#session.document, this.#camera.getTransform(), onion);
+      this.#renderer.renderDocument(this.#session.document, this.#camera.getTransform());
     });
   }
 

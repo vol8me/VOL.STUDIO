@@ -1,3 +1,4 @@
+import { coreAliases } from '../../scripts/vite/coreAliases.mjs';
 import { defineConfig, normalizePath } from 'vite';
 import { resolve } from 'node:path';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
@@ -64,16 +65,25 @@ export default defineConfig({
     assetsInlineLimit: 4096,
   },
   resolve: {
-    alias: {
-      '@volstudio/core/random': resolve(import.meta.dirname, '../../core/src/random/random.ts'),
-      '@volstudio/core/math/interpolation': resolve(
-        import.meta.dirname,
-        '../../core/src/math/interpolation.ts',
-      ),
-      '@volstudio/core': resolve(import.meta.dirname, '../../core/src'),
-      '@volstudio/tauri-v2': resolve(import.meta.dirname, '../../tauri-v2/src'),
-      '@': resolve(import.meta.dirname, './src'),
-    },
+    alias: [
+      /*
+       * CORE alias'ları `core/package.json` exports haritasından TÜRETİLİR.
+       *
+       * Buradaki liste bir dönem elle yazılıyordu ve tek bir önek girdisi
+       * (`'@volstudio/core' -> core/src`) taşıyordu. Vite öneki dizine eşler:
+       * `@volstudio/core/random` -> `core/src/random` (bir DİZİN) çözülemez,
+       * ama `@volstudio/core/systems/SaveManager` gibi haritada HİÇ OLMAYAN
+       * bir yol çözülür. Yani testler CORE'un iç yapısına uzanabiliyor,
+       * yayınlanmış yüzeyi ise kısmen görünmez kalıyordu — sözleşme fiilen
+       * uygulanmıyordu.
+       */
+      ...coreAliases(),
+      {
+        find: '@volstudio/tauri-v2',
+        replacement: resolve(import.meta.dirname, '../../tauri-v2/src'),
+      },
+      { find: '@', replacement: resolve(import.meta.dirname, './src') },
+    ],
   },
   optimizeDeps: {
     include: ['phaser'],

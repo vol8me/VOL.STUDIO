@@ -28,6 +28,7 @@ function mount(size = 32): {
   Object.defineProperty(container, 'clientHeight', { get: () => 256 });
 
   const session = new DocumentSession({
+    t: (key, options) => (key === 'editor.layerName' ? `Katman ${String(options?.index)}` : key),
     assetId: 'a1',
     width: size,
     height: size,

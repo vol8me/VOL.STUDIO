@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
+import { browserBoundary } from '../../scripts/vite/browserBoundary.mjs';
 import { coreAliases } from '../../scripts/vite/coreAliases.mjs';
 
 // Fontlar tek kaynaktan (core/public) çözümlenir — paketlere kopya yapılmaz.
@@ -10,7 +11,7 @@ export default defineConfig({
   base: './',
   publicDir: corePublicDir,
   clearScreen: false,
-  plugins: [],
+  plugins: [browserBoundary()],
   server: {
     port: 5174,
     strictPort: true,

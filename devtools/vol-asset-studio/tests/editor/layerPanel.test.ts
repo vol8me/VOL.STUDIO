@@ -1,9 +1,10 @@
+import type { LayerState } from '../../src/editor/LayerStack';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LayerPanel } from '../../src/editor/panels/LayerPanel';
 import { translate } from '../client/helpers';
-import type { BlendMode, SpriteLayerMeta } from '../../shared/index';
+import type { BlendMode } from '../../shared/index';
 
-const LAYERS: SpriteLayerMeta[] = [
+const LAYERS: LayerState[] = [
   {
     id: 'layer-1',
     name: 'Arka',

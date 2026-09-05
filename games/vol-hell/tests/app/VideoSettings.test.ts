@@ -203,6 +203,25 @@ describe('VideoSettings', () => {
       expect(settings.getGraphicsQuality()).toBe('low');
     });
 
+    it.each(['constructor', 'toString', '__proto__'])(
+      'prototip adı %s kalite kademesi olamaz',
+      async (graphicsQuality) => {
+        const settings = new VideoSettings(makeStore({ graphicsQuality }).manager);
+        try {
+          await settings.load();
+          expect(settings.getGraphicsQuality()).toBe(videoConfig.defaultGraphicsQuality);
+          expect(settings.getGraphicsProfile()).toBe(
+            videoConfig.quality[videoConfig.defaultGraphicsQuality],
+          );
+          expect(document.documentElement.getAttribute('data-vol-graphics')).toBe(
+            videoConfig.defaultGraphicsQuality,
+          );
+        } finally {
+          settings.dispose();
+        }
+      },
+    );
+
     it('tanınmayan kademe varsayılana düşer', async () => {
       const settings = new VideoSettings(
         makeStore({

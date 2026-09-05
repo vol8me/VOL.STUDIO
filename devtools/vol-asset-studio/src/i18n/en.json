@@ -120,13 +120,6 @@
     "layerVisible": "Visibility",
     "layerOpacity": "Layer opacity",
     "layerBlend": "Blend mode",
-    "frames": "Frames",
-    "frameAdd": "Add empty frame",
-    "frameCopy": "Duplicate frame",
-    "frameRemove": "Delete frame",
-    "framePlay": "Play / stop",
-    "frameDuration": "Duration (ms)",
-    "onionSkin": "Onion skin",
     "palette": "Palette",
     "paletteCount": "{{count}} colours",
     "quantize": "Reduce to palette",
@@ -144,9 +137,10 @@
       "overlay": "Overlay",
       "add": "Add"
     },
-    "framePause": "Pause",
-    "frameNumber": "Frame {{index}}",
-    "paletteSwatch": "{{hex}} · {{count}} pixels"
+    "paletteSwatch": "{{hex}} · {{count}} pixels",
+    "layerName": "Layer {{index}}",
+    "pixels": "{{value}} px",
+    "pngLayers": "Saving PNG flattens visible layers. Layers are kept only in the open session."
   },
   "audio": {
     "play": "Play",

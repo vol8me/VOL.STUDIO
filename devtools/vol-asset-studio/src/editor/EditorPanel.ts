@@ -1,16 +1,16 @@
-import { DisposableScope } from '@volstudio/core/lifecycle';
+import { DisposableScope, type CancellableDisposable } from '@volstudio/core/lifecycle';
 import { ColorPicker, Slider, SplitPane, Toolbar } from '@volstudio/core/ui';
 import type { AssetSummary } from '../../shared/index';
 import { AssetStudioApiError, type AssetStudioClient } from '../api/AssetStudioClient';
 import { element, replaceChildren } from '../ui/dom';
 import { icon, type IconName } from '../ui/icons';
 import { DocumentSession, type DocumentSessionState } from './DocumentSession';
-import { fromHex as paletteFromHex, quantizeToPalette, replaceColor } from './Palette';
+import { fromHex, toHex, quantizeToPalette, replaceColor } from './Palette';
 import { PixelEditor } from './PixelEditor';
-import type { Rgba } from './RasterSurface';
 import type { RasterBuffer } from './transform';
 import { StrokeRecorder } from './StrokeRecorder';
-import { FramePanel } from './panels/FramePanel';
+import { encodePng } from './encodePng';
+import { editorShortcut } from './editorShortcut';
 import { LayerPanel } from './panels/LayerPanel';
 import { PalettePanel } from './panels/PalettePanel';
 import type { ToolId } from './tools';
@@ -66,25 +66,6 @@ const TOOL_SHORTCUTS: Record<ToolId, string> = {
   eyedropper: 'I',
 };
 
-function toHex(color: Rgba): string {
-  const part = (value: number): string => value.toString(16).padStart(2, '0');
-  return `#${part(color.r)}${part(color.g)}${part(color.b)}`;
-}
-
-function fromHex(hex: string): Rgba {
-  const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!match) return { r: 0, g: 0, b: 0, a: 255 };
-  const value = Number.parseInt(match[1], 16);
-  return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255, a: 255 };
-}
-
-/**
- * Odaklı piksel düzenleme yüzeyi.
- *
- * Kütüphane merkezli açılışın karşılığı: bir görsel düzenlenmek üzere
- * açıldığında kabuk buna geçer, kapatılınca kütüphaneye döner. Aynı anda tek
- * belge açıktır.
- */
 export class EditorPanel {
   readonly element: HTMLElement;
 
@@ -106,19 +87,17 @@ export class EditorPanel {
   readonly #conflictText: HTMLSpanElement;
   readonly #reloadButton: HTMLButtonElement;
   readonly #layerPanel: LayerPanel;
-  readonly #framePanel: FramePanel;
   readonly #palettePanel: PalettePanel;
   readonly #sidebar: HTMLElement;
   readonly #splitPane: SplitPane;
-  #playbackTimer: ReturnType<typeof setTimeout> | null = null;
-  #panelTimer: ReturnType<typeof setTimeout> | null = null;
+  #panelTimer: CancellableDisposable | null = null;
   #lastState: DocumentSessionState | null = null;
   #t: Translate;
   #asset: AssetSummary | null = null;
   #session: DocumentSession | null = null;
   #editor: PixelEditor | null = null;
   #request: AbortController | null = null;
-  #saving = false;
+  #saveRequest: AbortController | null = null;
 
   public constructor(options: EditorPanelOptions) {
     this.#options = options;
@@ -171,7 +150,7 @@ export class EditorPanel {
       step: 1,
       value: 1,
       label: options.t('editor.brush'),
-      formatValue: (value) => `${Math.round(value)} px`,
+      formatValue: (value) => this.#t('editor.pixels', { value: Math.round(value) }),
       onInput: (value) => this.#editor?.setBrushSize(value),
     });
     this.#brush.element.classList.add('editor-panel__brush');
@@ -225,25 +204,15 @@ export class EditorPanel {
       onMergeDown: (layerId) => this.#session?.mergeLayerDown(layerId),
     });
 
-    this.#framePanel = new FramePanel({
-      t: (key, opts) => this.#t(key, opts),
-      onSelect: (index) => this.#session?.setActiveFrame(index),
-      onAdd: (copyCurrent) => this.#session?.addFrame(copyCurrent),
-      onRemove: (index) => this.#session?.removeFrame(index),
-      onDuration: (index, durationMs) => this.#session?.setFrameDuration(index, durationMs),
-      onOnionSkin: (before, after) => this.#editor?.setOnionSkin(before, after),
-      onPlayToggle: (playing) => this.#setPlayback(playing),
-    });
-
     this.#palettePanel = new PalettePanel({
       t: (key, opts) => this.#t(key, opts),
       onPick: (hex) => {
         this.#colorPicker.setValue(hex);
-        this.#editor?.setPrimaryColor(paletteFromHex(hex));
+        this.#editor?.setPrimaryColor(fromHex(hex));
       },
       onReplace: (from, to) =>
         this.#applyBufferEdit(this.#t('editor.palette'), (buffer) =>
-          replaceColor(buffer, paletteFromHex(from), paletteFromHex(to)),
+          replaceColor(buffer, fromHex(from), fromHex(to)),
         ),
       onQuantize: (palette, dither) =>
         this.#applyBufferEdit(this.#t('editor.quantize'), (buffer) =>
@@ -269,7 +238,7 @@ export class EditorPanel {
     });
     const workspace = element('div', {
       className: 'editor-panel__workspace',
-      children: [settings, this.#stage, this.#framePanel.element],
+      children: [settings, this.#stage],
     });
     this.#splitPane = new SplitPane({
       primary: workspace,
@@ -329,7 +298,6 @@ export class EditorPanel {
     this.#t = t;
     this.renderLabels();
     this.#layerPanel.setTranslator(t);
-    this.#framePanel.setTranslator(t);
     this.#palettePanel.setTranslator(t);
     this.#syncState();
   }
@@ -354,7 +322,10 @@ export class EditorPanel {
         height: raster.height,
         rgba: raster.rgba,
         revision: raster.revision,
-        onChange: (state) => this.#applyState(state),
+        t: (key, options) => this.#t(key, options),
+        onChange: (state) => {
+          if (this.#session === session) this.#applyState(state);
+        },
       });
       this.#session = session;
       this.#editor = new PixelEditor({
@@ -405,28 +376,35 @@ export class EditorPanel {
   public async save(): Promise<void> {
     const session = this.#session;
     const asset = this.#asset;
-    if (session === null || asset === null || this.#saving) return;
-    // Temiz belge YAZILMAZ. Kaydetmek dosyayı yeniden kodlar; içerik aynı olsa
-    // bile baytlar değişebilir, mtime kayar ve `git status` sebepsiz kirlenir.
-    // Düğme zaten pasiftir; bu koruma programatik çağrıyı da kapsar.
-    if (!session.isDirty) return;
-    this.#saving = true;
+    if (session === null || asset === null || this.#saveRequest !== null || !session.isDirty)
+      return;
+    // Kodlama başlamadan gesture tamamlanır; geçmişte olmayan piksel kaydedilmez.
+    this.#editor?.cancelGesture();
+    const token = session.stateToken;
+    const revision = session.revision;
+    const request = new AbortController();
+    this.#saveRequest = request;
     this.#saveButton.disabled = true;
     this.#status.textContent = this.#t('editor.saving');
     try {
-      const png = await this.#encodePng(session);
-      const response = await this.#options.client.saveRaster(asset, session.revision, png);
+      const png = await encodePng(session.composite());
+      if (request.signal.aborted) return;
+      const response = await this.#options.client.saveRaster(asset, revision, png, request.signal);
+      if (request.signal.aborted) return;
       const result = response.results[0];
-      session.markSaved(result.revision);
+      session.markSaved(result.revision, token);
       this.#options.onSaved(asset.id, result.revision);
       this.#options.onToast(this.#t('editor.saved'));
     } catch (error) {
+      if (request.signal.aborted) return;
       this.#syncState();
       this.#status.textContent = this.#errorText(error);
       this.#options.onToast(this.#errorText(error));
     } finally {
-      this.#saving = false;
-      this.#saveButton.disabled = !(this.#session?.isDirty ?? false);
+      if (this.#saveRequest === request) {
+        this.#saveRequest = null;
+        this.#saveButton.disabled = !session.isDirty;
+      }
     }
   }
 
@@ -442,7 +420,6 @@ export class EditorPanel {
     this.#colorPicker.destroy();
     this.#brush.destroy();
     this.#layerPanel.destroy();
-    this.#framePanel.destroy();
     this.#palettePanel.destroy();
     this.#splitPane.destroy();
     this.#scope.dispose();
@@ -451,66 +428,32 @@ export class EditorPanel {
 
   #handleKeydown(event: KeyboardEvent): void {
     if (!this.isOpen) return;
-    const target = event.target;
-    if (
-      target instanceof HTMLInputElement ||
-      target instanceof HTMLTextAreaElement ||
-      target instanceof HTMLSelectElement ||
-      (target instanceof HTMLElement && target.isContentEditable)
-    ) {
-      return;
-    }
-    const key = event.key.toLocaleLowerCase();
-    const command = event.ctrlKey || event.metaKey;
-    if (command && key === 's') {
-      event.preventDefault();
-      void this.save();
-      return;
-    }
-    if (command && key === 'z') {
-      event.preventDefault();
-      if (event.shiftKey) this.#session?.redo();
-      else this.#session?.undo();
-      return;
-    }
-    const tool =
-      key === 'b'
-        ? 'pencil'
-        : key === 'e'
-        ? 'eraser'
-        : key === 'g'
-        ? 'fill'
-        : key === 'i'
-        ? 'eyedropper'
-        : null;
-    if (tool !== null) {
-      event.preventDefault();
-      this.setTool(tool);
-      return;
-    }
-    if (key === 'f') {
-      event.preventDefault();
-      this.#editor?.fit();
-    } else if (key === '1') {
-      event.preventDefault();
-      this.#editor?.actualSize();
-    } else if (key === '[' || key === ']') {
-      event.preventDefault();
-      const next = this.#brush.getValue() + (key === '[' ? -1 : 1);
-      this.#brush.setValue(next);
-      this.#editor?.setBrushSize(next);
-    } else if (key === 'escape') {
-      this.#editor?.cancelGesture();
-    }
+    const action = editorShortcut(event);
+    if (action === null) return;
+    event.preventDefault();
+    const commands = {
+      save: () => void this.save(),
+      undo: () => this.#session?.undo(),
+      redo: () => this.#session?.redo(),
+      pencil: () => this.setTool('pencil'),
+      eraser: () => this.setTool('eraser'),
+      fill: () => this.setTool('fill'),
+      eyedropper: () => this.setTool('eyedropper'),
+      fit: () => this.#editor?.fit(),
+      actualSize: () => this.#editor?.actualSize(),
+      brushDown: () => this.#stepBrush(-1),
+      brushUp: () => this.#stepBrush(1),
+      cancel: () => this.#editor?.cancelGesture(),
+    };
+    commands[action]();
   }
 
-  /**
-   * Bütün bileşiği dönüştüren işlemleri tek undo adımına indirir.
-   *
-   * Palet indirgeme ve renk değiştirme AKTİF KATMANA uygulanır; bileşiğe
-   * yazmak alttaki katmanları düzleştirir ve kullanıcının katman ayrımını
-   * sessizce yok ederdi.
-   */
+  #stepBrush(direction: number): void {
+    this.#brush.setValue(this.#brush.getValue() + direction);
+    this.#editor?.setBrushSize(this.#brush.getValue());
+  }
+
+  /** Palet işlemi yalnız aktif yüzeye yazılır; diğer katmanlar korunur. */
   #applyBufferEdit(label: string, transform: (buffer: RasterBuffer) => RasterBuffer): void {
     const session = this.#session;
     if (session === null) return;
@@ -534,27 +477,9 @@ export class EditorPanel {
     this.#editor?.requestRender();
   }
 
-  /** Kare önizlemesi: her karenin kendi süresiyle ilerler. */
-  #setPlayback(playing: boolean): void {
-    if (this.#playbackTimer !== null) {
-      clearTimeout(this.#playbackTimer);
-      this.#playbackTimer = null;
-    }
-    if (!playing) return;
-    const step = (): void => {
-      const session = this.#session;
-      if (session === null || !this.#framePanel.isPlaying) return;
-      const next = (session.document.activeFrameIndex + 1) % session.document.frameCount;
-      session.setActiveFrame(next);
-      this.#editor?.requestRender();
-      const frame = session.document.frameAt(next);
-      this.#playbackTimer = setTimeout(step, frame?.durationMs ?? 100);
-    };
-    this.#playbackTimer = setTimeout(step, 100);
-  }
-
   public renderLabels(): void {
     this.#saveButton.textContent = this.#t('editor.save');
+    this.#saveButton.title = this.#t('editor.pngLayers');
     this.#labelButton(this.#undoButton, 'editor.undo');
     this.#labelButton(this.#redoButton, 'editor.redo');
     this.#labelButton(this.#fitButton, 'editor.fit');
@@ -576,16 +501,13 @@ export class EditorPanel {
   }
 
   #teardownDocument(): void {
-    this.#framePanel.stopPlayback();
     if (this.#panelTimer !== null) {
-      clearTimeout(this.#panelTimer);
+      this.#panelTimer.cancel();
       this.#panelTimer = null;
     }
     this.#lastState = null;
-    if (this.#playbackTimer !== null) {
-      clearTimeout(this.#playbackTimer);
-      this.#playbackTimer = null;
-    }
+    this.#saveRequest?.abort();
+    this.#saveRequest = null;
     this.#request?.abort();
     this.#request = null;
     this.#editor?.destroy();
@@ -594,24 +516,6 @@ export class EditorPanel {
     this.#asset = null;
     replaceChildren(this.#stage);
     this.#conflictBar.hidden = true;
-  }
-
-  /** Belge yüzeyini PNG'ye kodlar. */
-  async #encodePng(session: DocumentSession): Promise<Blob> {
-    const canvas = document.createElement('canvas');
-    canvas.width = session.surface.width;
-    canvas.height = session.surface.height;
-    const context = canvas.getContext('2d');
-    if (!context) throw new Error('[EditorPanel] PNG kodlama contexti alınamadı');
-    const image = context.createImageData(canvas.width, canvas.height);
-    image.data.set(session.toRgba());
-    context.putImageData(image, 0, 0);
-    return new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('[EditorPanel] PNG üretilemedi'));
-      }, 'image/png');
-    });
   }
 
   #iconButton(key: string, iconName: IconName, run: () => void): HTMLButtonElement {
@@ -630,20 +534,11 @@ export class EditorPanel {
     button.title = label;
   }
 
-  /**
-   * Ucuz durum: her değişimde koşar.
-   *
-   * Pahalı panel yenilemesi (katman ve kare küçük önizlemeleri, palet taraması)
-   * BURADA YAPILMAZ. Bir dönem yapılıyordu ve tek fırça darbesi 1024² belgede
-   * 700 ms sürüyordu: darbe boyunca her hareket tam bileşik, her katman için
-   * tam tampon kopyası ve 1M piksellik palet taraması tetikliyordu. Pahalı iş
-   * artık gecikmeli ve yalnız gesture bittikten sonra koşar.
-   */
   #applyState(state: DocumentSessionState): void {
     this.#lastState = state;
     this.#undoButton.disabled = !state.canUndo;
     this.#redoButton.disabled = !state.canRedo;
-    this.#saveButton.disabled = this.#saving || !state.dirty;
+    this.#saveButton.disabled = this.#saveRequest !== null || !state.dirty;
     this.#status.textContent = state.dirty ? this.#t('editor.unsaved') : this.#t('editor.clean');
     const conflict = state.conflictRevision !== undefined;
     this.#conflictBar.hidden = !conflict;
@@ -660,8 +555,8 @@ export class EditorPanel {
 
   /** Pahalı panel yenilemesini geciktirir; hızlı ardışık değişimler tek sefere iner. */
   #schedulePanelRefresh(): void {
-    if (this.#panelTimer !== null) clearTimeout(this.#panelTimer);
-    this.#panelTimer = setTimeout(() => {
+    if (this.#panelTimer !== null) this.#panelTimer.cancel();
+    this.#panelTimer = this.#scope.addTimeout(() => {
       this.#panelTimer = null;
       this.#refreshPanels();
     }, PANEL_REFRESH_DELAY_MS);
@@ -671,18 +566,16 @@ export class EditorPanel {
     const session = this.#session;
     const state = this.#lastState;
     if (session === null || state === null) return;
-    this.#layerPanel.setLayers(state.layers, state.activeLayerId, (layerId) => ({
-      width: session.document.width,
-      height: session.document.height,
-      rgba: session.document.celSurface(session.document.activeFrameIndex, layerId).toRgba(),
-    }));
-    const frame = session.document.frameAt(state.activeFrameIndex);
-    this.#framePanel.setFrames(
-      state.frameCount,
-      state.activeFrameIndex,
-      frame?.durationMs ?? 100,
-      (index) => session.document.compositeFrame(index),
-    );
+    this.#layerPanel.setLayers(state.layers, state.activeLayerId, (layerId) => {
+      const layer = session.document.get(layerId);
+      return layer === null
+        ? null
+        : {
+            width: session.document.width,
+            height: session.document.height,
+            rgba: layer.surface.toRgba(),
+          };
+    });
     this.#palettePanel.update(session.composite());
   }
 

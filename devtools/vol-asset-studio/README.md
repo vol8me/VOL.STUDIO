@@ -20,20 +20,23 @@ değişiklikleri izler ve türüne uygun önizleme sunar.
 - `.volsprite.json` belgeleri için salt-okunur VisualSynth inspector:
   kaynak graph, kanal önizlemesi, QA, gerçek render profili, tampon maliyeti
   ve region/halo kararı;
-- tile tabanlı piksel yüzeyi, katman/kare/palet, onion skin, undo/redo ve
+- tile tabanlı PNG piksel yüzeyi, katman/palet, undo/redo ve
   revizyon kontrollü atomik PNG kaydı;
 - peak piramitli ses dalga formu, seçim, yakınlaştırma, transport, gain, trim,
   fade, peak normalize ve reverse zinciriyle atomik OGG/WAV kaydı;
 - salt okunur referans arama, rename önizleme ve kurtarılabilir çöp.
 
-Katman ve kareler mevcut doğrudan PNG kaydında bileşiğe düzleştirilir; native
-`.volsprite.json` kapanıp yeniden açma hattı henüz tamamlanmamıştır. Ses zinciri
-mevcut OGG/WAV dosyasına açık kaydet eylemiyle uygulanır; `.volaudio.json`
-reçetesine kalıcılaştırma henüz bağlı değildir. MP3/FLAC sesler incelenebilir,
-ancak kaydetmeden önce OGG/WAV dönüşüm hattı gerektirir. VisualSynth inspector
-JSON kaynağını tarayıcıda CORE ile salt-okunur render eder; piksel düzenlemez
-ve dosyaya yazmaz. Native `.volsprite.json` düzenleme/kaydetme hattı yine
-ayrı bir borçtur.
+PNG kaydı görünür katmanları birleştirir; katman ayrımı ve geçmiş yalnız
+belge açıkken korunur. Kayıt sırasında yapılan sonraki düzenlemeler kirli
+kalmaya devam eder. Katman silme ve birleştirme geri alındığında fırça geçmişi
+aynı piksel yüzeyine bağlı kalır; geçmiş bütçesi tutulan tile tamponlarını sayar.
+
+Animasyon oluşturma ve native sprite proje kaydı kapsamda değildir. Dosyaya
+bağlanmamış kare şeridi, sprite proje modeli, sheet/metadata export taslağı ve
+kullanıcısı olmayan `.volpost.json` delta modeli kaldırılmıştır. VisualSynth
+`.volsprite.json` inspector'ı salt okunur sentez incelemesi olarak korunur.
+Ses zinciri açık kaydet eylemiyle mevcut OGG/WAV'a uygulanır; MP3/FLAC
+incelenebilir, düzenleme için OGG/WAV dönüşümü gerekir.
 
 ## Çalıştırma
 

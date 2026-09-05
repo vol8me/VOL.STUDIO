@@ -1,5 +1,3 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
@@ -9,25 +7,6 @@ import { expect, test, type Page } from '@playwright/test';
  * tercihini ve bundle içeriğini göremez. Bu dosya ürünü kullanıcının gerçekten
  * karşılaştığı koşullarda sürer: dar ekran, yalnız klavye, hareket kapalı.
  */
-const REPO_ROOT = resolve(import.meta.dirname, '../../../..');
-const SANDBOX_DIR = join(REPO_ROOT, 'devtools/pen.dev/pen_export');
-const FIXTURE = join(SANDBOX_DIR, '__e2e-hardening.png');
-
-test.beforeAll(async () => {
-  const sharp = (await import('sharp')).default;
-  await mkdir(SANDBOX_DIR, { recursive: true });
-  await writeFile(
-    FIXTURE,
-    await sharp({ create: { width: 16, height: 16, channels: 4, background: '#3a5a78ff' } })
-      .png()
-      .toBuffer(),
-  );
-});
-
-test.afterAll(async () => {
-  await rm(FIXTURE, { force: true });
-});
-
 async function waitForLibrary(page: Page): Promise<void> {
   await page.goto('/');
   await page.locator('.asset-card').first().waitFor({ timeout: 30_000 });
@@ -54,6 +33,8 @@ test.describe('çözünürlük matrisi', () => {
 
 test('yalnız klavyeyle gezinilebilir', async ({ page }) => {
   await waitForLibrary(page);
+  const indicator = page.locator('.asset-search');
+  const unfocused = await indicator.evaluate((node) => getComputedStyle(node).boxShadow);
 
   // Arama alanına odaklanana kadar Tab'la ilerle; sonsuz döngüye düşmemek
   // için adım sayısı sınırlı.
@@ -67,14 +48,11 @@ test('yalnız klavyeyle gezinilebilir', async ({ page }) => {
 
   expect(reachedSearch, 'arama alanına Tab ile ulaşılamadı').toBe(true);
 
-  // Odaklanmış her eleman GÖRÜNÜR bir odak göstergesi taşımalı.
-  const outline = await page.evaluate(() => {
-    const active = document.activeElement;
-    if (!active) return null;
-    const style = getComputedStyle(active);
-    return { outlineStyle: style.outlineStyle, boxShadow: style.boxShadow };
-  });
-  expect(outline).not.toBeNull();
+  // Gösterge input'ta değil :focus-within kapsayıcısındadır.
+  await expect
+    .poll(() => indicator.evaluate((node) => getComputedStyle(node).boxShadow))
+    .not.toBe(unfocused);
+  expect(await indicator.evaluate((node) => getComputedStyle(node).boxShadow)).not.toBe('none');
 });
 
 test('azaltılmış hareket tercihinde uygulama çalışır', async ({ page }) => {
@@ -109,25 +87,22 @@ test('katalog istekleri paralel geldiğinde sunucu tutarlı kalır', async ({ pa
   expect(Math.min(...revisions)).toBe(Math.max(...revisions));
 });
 
-test('sunucu yeniden başlatıldığında istemci yeniden bağlanır', async ({ page }) => {
+test('ilk katalog yüklemesinde canlı bağlantı kurulur', async ({ page }) => {
   await waitForLibrary(page);
   await expect(page.locator('.studio-connection')).toHaveAttribute('data-state', 'live', {
     timeout: 15_000,
   });
 });
 
-test('bundle Phaser ve Node yerleşiği taşımaz', async ({ page, baseURL }) => {
-  const scripts: string[] = [];
-  page.on('response', (response) => {
-    const url = response.url();
-    if (url.endsWith('.js') || url.includes('/src/')) scripts.push(url);
-  });
-  await waitForLibrary(page);
-
-  expect(scripts.some((url) => /phaser/i.test(url))).toBe(false);
-  // Node-only alt yol tarayıcıya sızmamalı.
-  expect(scripts.some((url) => /visualSynth\/encode/i.test(url))).toBe(false);
-  void baseURL;
+test('tarayıcı modül grafiği Node yerleşiği taşımaz', async ({ request }) => {
+  const response = await request.get('/browser-modules.json');
+  expect(response.ok()).toBe(true);
+  const manifest = (await response.json()) as { schemaVersion: number; modules: string[] };
+  expect(manifest.schemaVersion).toBe(1);
+  expect(manifest.modules.length).toBeGreaterThan(0);
+  expect(
+    manifest.modules.filter((id) => /node:|vite-browser-external|visualSynth\/encode/.test(id)),
+  ).toEqual([]);
 });
 
 test('bilinmeyen varlık kimliği yapılandırılmış hata verir', async ({ page, baseURL }) => {

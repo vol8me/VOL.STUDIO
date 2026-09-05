@@ -120,13 +120,6 @@
     "layerVisible": "Görünürlük",
     "layerOpacity": "Katman opaklığı",
     "layerBlend": "Karıştırma kipi",
-    "frames": "Kareler",
-    "frameAdd": "Boş kare ekle",
-    "frameCopy": "Kareyi kopyala",
-    "frameRemove": "Kareyi sil",
-    "framePlay": "Oynat / durdur",
-    "frameDuration": "Süre (ms)",
-    "onionSkin": "Onion skin",
     "palette": "Palet",
     "paletteCount": "{{count}} renk",
     "quantize": "Palete indirge",
@@ -144,9 +137,10 @@
       "overlay": "Kaplama",
       "add": "Ekle"
     },
-    "framePause": "Duraklat",
-    "frameNumber": "Kare {{index}}",
-    "paletteSwatch": "{{hex}} · {{count}} piksel"
+    "paletteSwatch": "{{hex}} · {{count}} piksel",
+    "layerName": "Katman {{index}}",
+    "pixels": "{{value}} px",
+    "pngLayers": "PNG kaydı görünür katmanları birleştirir. Katmanlar yalnız açık oturumda korunur."
   },
   "audio": {
     "play": "Oynat",

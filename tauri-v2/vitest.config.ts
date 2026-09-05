@@ -1,3 +1,4 @@
+import { coreAliases } from '../scripts/vite/coreAliases.mjs';
 import { loadQualityConfig } from '../scripts/quality/config.mjs';
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
@@ -33,9 +34,14 @@ export default defineConfig({
     globals: true,
   },
   resolve: {
-    alias: {
-      '@volstudio/core': resolve(__dirname, '../core/src'),
-      '@': resolve(__dirname, './src'),
-    },
+    alias: [
+      /*
+       * CORE alias'ları `core/package.json` exports haritasından TÜRETİLİR.
+       * Elle yazılan tek önek girdisi hem yayınlanmış alt yolları çözemiyor
+       * (dizine eşliyor) hem de haritada olmayan iç yolları çözüyordu.
+       */
+      ...coreAliases(),
+      { find: '@', replacement: resolve(__dirname, './src') },
+    ],
   },
 });

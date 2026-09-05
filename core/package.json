@@ -10,10 +10,6 @@
       "import": "./src/index.ts",
       "types": "./src/index.ts"
     },
-    "./math/Vector2": {
-      "import": "./src/math/Vector2.ts",
-      "types": "./src/math/Vector2.ts"
-    },
     "./math/interpolation": {
       "import": "./src/math/interpolation.ts",
       "types": "./src/math/interpolation.ts"
@@ -25,10 +21,6 @@
     "./rig/metadata": {
       "import": "./src/rig/metadata.ts",
       "types": "./src/rig/metadata.ts"
-    },
-    "./ui/colors": {
-      "import": "./src/ui/colors.ts",
-      "types": "./src/ui/colors.ts"
     },
     "./ui": {
       "import": "./src/ui/index.ts",
@@ -59,15 +51,7 @@
       "import": "./src/random/random.ts",
       "types": "./src/random/random.ts"
     },
-    "./random/random": {
-      "import": "./src/random/random.ts",
-      "types": "./src/random/random.ts"
-    },
     "./spatial": {
-      "import": "./src/spatial/SpatialIndex.ts",
-      "types": "./src/spatial/SpatialIndex.ts"
-    },
-    "./spatial/SpatialIndex": {
       "import": "./src/spatial/SpatialIndex.ts",
       "types": "./src/spatial/SpatialIndex.ts"
     },
@@ -76,10 +60,6 @@
       "types": "./src/quality/index.ts"
     },
     "./stats": {
-      "import": "./src/stats/StatBlock.ts",
-      "types": "./src/stats/StatBlock.ts"
-    },
-    "./stats/StatBlock": {
       "import": "./src/stats/StatBlock.ts",
       "types": "./src/stats/StatBlock.ts"
     }
@@ -101,7 +81,7 @@
     "phaser": "^4.2.1",
     "tsx": "^4.23.11",
     "typescript": "^6.0.3",
-    "vitest": "3.0.5"
+    "vitest": "3.2.6"
   },
   "dependencies": {
     "i18next": "26.3.6"

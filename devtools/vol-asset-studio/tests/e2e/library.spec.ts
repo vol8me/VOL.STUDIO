@@ -43,9 +43,12 @@ test('Jura ve Exo 2 gerçekten yüklenir', async ({ page }) => {
   await waitForCatalog(page);
 
   // Font DOSYALARI 200 dönmeli: yol yanlışsa tarayıcı sessizce yedek fonta düşer.
-  const fontResponses = await page.evaluate(() => {
+  const fontResponses = await page.evaluate(async () => {
+    await document.fonts.ready;
     const families = ['Jura', 'Exo 2'];
-    const loaded = [...document.fonts].map((face) => face.family.replace(/["']/g, ''));
+    const loaded = [...document.fonts]
+      .filter((face) => face.status === 'loaded')
+      .map((face) => face.family.replace(/["']/g, ''));
     return families.map((family) => ({ family, present: loaded.includes(family) }));
   });
   for (const font of fontResponses) {
@@ -58,16 +61,12 @@ test('Jura ve Exo 2 gerçekten yüklenir', async ({ page }) => {
   expect(computed.toLowerCase()).toContain('jura');
 });
 
-test('istemci paketinde Phaser kalıntısı yoktur', async ({ page }) => {
-  const scripts: string[] = [];
-  page.on('response', (response) => {
-    const url = response.url();
-    if (url.endsWith('.js') || url.includes('/src/')) scripts.push(url);
-  });
-
-  await waitForCatalog(page);
-
-  expect(scripts.some((url) => /phaser/i.test(url))).toBe(false);
+test('istemci paketinin gerçek modül grafiğinde Phaser yoktur', async ({ request }) => {
+  const response = await request.get('/browser-modules.json');
+  expect(response.ok()).toBe(true);
+  const manifest = (await response.json()) as { modules: string[] };
+  expect(manifest.modules.length).toBeGreaterThan(0);
+  expect(manifest.modules.filter((id) => /(?:^|\/)phaser(?:\/|$)/.test(id))).toEqual([]);
 });
 
 test('Quick Look bir varlık seçilince açılır ve kapanır', async ({ page }) => {

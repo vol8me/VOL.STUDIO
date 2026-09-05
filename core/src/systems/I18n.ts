@@ -73,12 +73,25 @@ export class I18n {
       this.locales.add(lng);
     }
 
-    let initialLocale = this.fallbackLocale;
-    if (this.saveManager) {
-      initialLocale = await this.saveManager.load<string>(this.saveKey, this.detectLocale());
-    } else {
-      initialLocale = this.detectLocale();
-    }
+    /*
+     * Depodan gelen dil de TANINMAK zorunda.
+     *
+     * Bu satır bir dönem `load<string>(key, detectLocale())` idi: yedeği
+     * (`detectLocale`) özenle doğruluyor ama kayıtlı değeri olduğu gibi
+     * `i18next.init`e taşıyordu. Aynı ifadenin iki ucu farklı sözleşme
+     * uyguluyordu.
+     *
+     * Depo güvenilir bir kaynak değildir: elle düzenlenebilir, `JSON.parse`
+     * sonucu hiç string olmayabilir ve — asıl senaryo — ÖNCEKİ bir sürümde
+     * kayıtlı bir dil bu sürümde artık kaldırılmış olabilir. Tanınmayan değer
+     * yok sayılır ve tespit yoluna düşülür; oyuncu bilinmeyen bir dile
+     * kilitlenmez.
+     */
+    const stored = this.saveManager
+      ? await this.saveManager.load<unknown>(this.saveKey, undefined)
+      : undefined;
+    const initialLocale =
+      typeof stored === 'string' && this.locales.has(stored) ? stored : this.detectLocale();
 
     await i18next.init({
       lng: initialLocale,

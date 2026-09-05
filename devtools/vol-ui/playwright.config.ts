@@ -29,7 +29,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
   workers: 1,
-  forbidOnly: Boolean(process.env.CI),
+  forbidOnly: true,
   reporter: [['list']],
   timeout: 60_000,
   expect: {
@@ -79,7 +79,7 @@ export default defineConfig({
     command: `pnpm exec vite preview --port ${PORT} --strictPort --host 127.0.0.1`,
     url: BASE_URL,
     name: 'VOL.UI preview sunucusu',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
     stdout: 'ignore',
     stderr: 'pipe',

@@ -1,10 +1,12 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
+import { browserBoundary } from '../../scripts/vite/browserBoundary.mjs';
 import { coreAliases } from '../../scripts/vite/coreAliases.mjs';
 
 export default defineConfig({
   base: '/',
   clearScreen: false,
+  plugins: [browserBoundary()],
   publicDir: resolve(import.meta.dirname, '../../core/public'),
   server: {
     port: 5175,

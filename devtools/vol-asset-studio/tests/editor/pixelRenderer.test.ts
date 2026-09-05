@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PixelRenderer } from '../../src/editor/PixelRenderer';
-import { SpriteDocument } from '../../src/editor/SpriteDocument';
+import { LayerStack } from '../../src/editor/LayerStack';
 import type { RasterBuffer } from '../../src/editor/transform';
 
 /** Saydam test tamponu. */
@@ -167,15 +167,11 @@ describe('PixelRenderer', () => {
     const canvas = document.createElement('canvas');
     const renderer = new PixelRenderer({ canvas });
     renderer.resize(256, 256, 1);
-    const documentModel = SpriteDocument.fromFlat(
-      'sprite',
-      128,
-      128,
-      new Uint8ClampedArray(128 * 128 * 4),
-    );
+    const documentModel = new LayerStack(128, 128);
+    const layer = documentModel.add({ id: 'layer-1', name: 'test' });
 
     renderer.renderDocument(documentModel, { offsetX: 0, offsetY: 0, zoom: 1 });
-    documentModel.celSurface(0, 'layer-1').setPixel(70, 70, { r: 255, g: 0, b: 0, a: 255 });
+    layer.surface.setPixel(70, 70, { r: 255, g: 0, b: 0, a: 255 });
     renderer.renderDocument(documentModel, { offsetX: 0, offsetY: 0, zoom: 1 });
 
     const tileContext = contexts.find((context) =>

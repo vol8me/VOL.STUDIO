@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssetStudioApiError, AssetStudioClient } from '../../src/api/AssetStudioClient';
+import { PixelEditor } from '../../src/editor/PixelEditor';
 import { EditorPanel } from '../../src/editor/EditorPanel';
 import type { AssetSummary } from '../../shared/index';
 
@@ -170,6 +171,104 @@ describe('EditorPanel — kaydetme', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it('ağ yanıtını beklerken yapılan düzenleme kirli kalır', async () => {
+    let finish: (response: Response) => void = () => {
+      throw new Error('Yanıt henüz beklenmiyor');
+    };
+    const response = new Promise<Response>((resolve) => {
+      finish = resolve;
+    });
+    const fetchMock = vi.fn().mockResolvedValueOnce(rasterResponse()).mockReturnValueOnce(response);
+    vi.stubGlobal('fetch', fetchMock);
+    const { panel } = mount();
+    await panel.open(IMAGE);
+    paintOnce(panel);
+    const save = panel.save();
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    panel.setTool('eraser');
+    paintOnce(panel);
+    finish(
+      new Response(
+        JSON.stringify({ results: [{ assetId: IMAGE.id, revision: 'b'.repeat(64), bytes: 4 }] }),
+      ),
+    );
+    await save;
+    expect(panel.isDirty).toBe(true);
+    expect(panel.element.querySelector('.editor-panel__status')?.textContent).toBe(
+      'editor.unsaved',
+    );
+    panel.element.querySelector<HTMLButtonElement>('.editor-panel__undo')?.click();
+    expect(panel.isDirty).toBe(false);
+  });
+
+  it('eski kaydın yanıtı yeniden açılan belgeye ve bildirimlere dokunmaz', async () => {
+    let finish: (response: Response) => void = () => {
+      throw new Error('Yanıt henüz beklenmiyor');
+    };
+    const response = new Promise<Response>((resolve) => {
+      finish = resolve;
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(rasterResponse())
+      .mockReturnValueOnce(response)
+      .mockResolvedValueOnce(rasterResponse());
+    vi.stubGlobal('fetch', fetchMock);
+    const { panel, onToast, onSaved } = mount();
+    await panel.open(IMAGE);
+    paintOnce(panel);
+    const save = panel.save();
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const { signal } = fetchMock.mock.calls[1][1] as RequestInit;
+    await panel.open({ ...IMAGE, id: 'second' });
+    paintOnce(panel);
+    expect(signal?.aborted).toBe(true);
+    finish(
+      new Response(JSON.stringify({ results: [{ assetId: IMAGE.id, revision: 'b', bytes: 4 }] })),
+    );
+    await save;
+    expect(panel.isDirty).toBe(true);
+    expect(panel.element.querySelector('.editor-panel__status')?.textContent).toBe(
+      'editor.unsaved',
+    );
+    expect(panel.element.querySelector<HTMLButtonElement>('.editor-panel__save')?.disabled).toBe(
+      false,
+    );
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(onToast).not.toHaveBeenCalled();
+  });
+
+  it('PNG kodlanırken kapanan oturum ağa kayıt göndermez', async () => {
+    let encoded: BlobCallback = () => {
+      throw new Error('PNG kodlaması başlamadı');
+    };
+    HTMLCanvasElement.prototype.toBlob = (callback) => {
+      encoded = callback;
+    };
+    const fetchMock = vi.fn().mockResolvedValueOnce(rasterResponse());
+    vi.stubGlobal('fetch', fetchMock);
+    const { panel, onSaved } = mount();
+    await panel.open(IMAGE);
+    paintOnce(panel);
+    const save = panel.save();
+    panel.close();
+    encoded(new Blob(['png']));
+    await save;
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
+  it('PNG oturumunda kalıcılaştırılamayan animasyon denetimleri sunmaz', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(rasterResponse()));
+    const { panel } = mount();
+    await panel.open(IMAGE);
+    expect(panel.element.querySelector('.frame-panel')).toBeNull();
+    expect(panel.element.querySelector<HTMLButtonElement>('.editor-panel__save')?.title).toBe(
+      'editor.pngLayers',
+    );
+    expect(panel.element.querySelector('.layer-panel')).not.toBeNull();
+  });
+
   it('temiz belgeyi kaydetmez — sebepsiz yeniden yazma yok', async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(rasterResponse());
     vi.stubGlobal('fetch', fetchMock);
@@ -243,6 +342,38 @@ describe('EditorPanel — araç ve yaşam döngüsü', () => {
     expect(panel.element.querySelector('[data-tool="eraser"]')?.getAttribute('aria-pressed')).toBe(
       'true',
     );
+  });
+
+  it('klavye geri alma, yineleme ve kayıt aynı belge durumunu yönetir', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(rasterResponse())
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ results: [{ assetId: IMAGE.id, revision: 'b', bytes: 4 }] })),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const { panel, onSaved } = mount();
+    await panel.open(IMAGE);
+    paintOnce(panel);
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true }));
+    expect(panel.isDirty).toBe(false);
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, shiftKey: true }));
+    expect(panel.isDirty).toBe(true);
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true }));
+    await vi.waitFor(() => expect(onSaved).toHaveBeenCalledWith(IMAGE.id, 'b'));
+    expect(panel.isDirty).toBe(false);
+  });
+
+  it('fırça kısayolu gösterilen sınırı aşan bir boyutu tuvale göndermez', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(rasterResponse()));
+    const applied = vi.spyOn(PixelEditor.prototype, 'setBrushSize');
+    const { panel } = mount();
+    await panel.open(IMAGE);
+    for (let i = 0; i < 20; i++) window.dispatchEvent(new KeyboardEvent('keydown', { key: ']' }));
+    expect(applied).toHaveBeenLastCalledWith(16);
+    for (let i = 0; i < 20; i++) window.dispatchEvent(new KeyboardEvent('keydown', { key: '[' }));
+    expect(applied).toHaveBeenLastCalledWith(1);
+    applied.mockRestore();
   });
 
   it('kapatma belgeyi bırakır ve tuvali söker', async () => {

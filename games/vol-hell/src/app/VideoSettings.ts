@@ -42,7 +42,9 @@ function toGraphicsQuality(value: unknown): GraphicsQualityLevel | undefined {
   if (Object.prototype.hasOwnProperty.call(videoConfig.quality, value)) {
     return value as GraphicsQualityLevel;
   }
-  return LEGACY_QUALITY_ALIASES[value];
+  return Object.prototype.hasOwnProperty.call(LEGACY_QUALITY_ALIASES, value)
+    ? LEGACY_QUALITY_ALIASES[value]
+    : undefined;
 }
 
 function mergeWithDefaults(stored: unknown): VideoSettingsData {

@@ -8,8 +8,6 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-cargo_dir := "tauri-v2/src-tauri"
-
 # Varsayılan: tarif listesi
 default:
     @just --list
@@ -60,7 +58,7 @@ build:
 #
 # vol-ui CORE'un GÖRSEL sözleşmesini taşır: geometri iddiaları (taşma, dokunma
 # hedefi) artı sekme başına piksel temeli. `build`den SONRA koşar — üçü de
-# `vite preview` ile GÖNDERİLEN çıktıyı sınar, kaynağı değil.
+# production host/preview ile derlenmiş çıktıyı sınar.
 e2e:
     pnpm --filter @volstudio/vol-asset-studio test:e2e
     pnpm --filter @volstudio/vol-arachnid test:e2e
@@ -76,12 +74,9 @@ build-game:
 build-ui:
     pnpm --filter @volstudio/vol-ui build
 
-# Her satır kendi kabuğunda koştuğu için `cd` her satırda tekrarlanır.
-# Rust kapıları: cargo check + fmt + clippy
+# Git görünürlüğündeki bütün Cargo manifestleri: check + fmt + clippy.
 rust:
-    cd {{ cargo_dir }} && cargo check --locked
-    cd {{ cargo_dir }} && cargo fmt --check
-    cd {{ cargo_dir }} && cargo clippy --locked -- -D warnings
+    node scripts/quality/rust.mjs
 
 # === BİRLEŞİK KAPILAR ===
 
@@ -166,7 +161,7 @@ clean:
 
 # Rust target'ı da siler. Sonraki `cargo check` sıfırdan derler; ayrı tutuldu.
 clean-all: clean
-    rm -rf {{ cargo_dir }}/target
+    rm -rf tauri-v2/src-tauri/target games/*/src-tauri/target
 
 # === SES / ASSET HATTI ===
 

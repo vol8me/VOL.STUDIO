@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 const { audioDestroy, createArachnidAudio, createVolGame, gameEvents } = vi.hoisted(() => {
   const events = { once: vi.fn() };
@@ -26,6 +26,28 @@ vi.mock('@/app/ArachnidAudio', () => ({ createArachnidAudio }));
 vi.mock('@/runtime/scene/GameScene', () => ({ GameScene: class {} }));
 
 describe('bootstrap', () => {
+  /*
+   * Modül grafiğini testlerin DIŞINDA ısıt.
+   *
+   * Testler `vi.resetModules()` + dinamik `import` ile izole çalışır; bunun
+   * bedeli `@volstudio/core`un GERÇEK grafiğinin yeniden değerlendirilmesidir
+   * ve testin değeri tam da bunu sahtelememesinde. Ölçüm: ısıtma olmadan ilk
+   * test 4170/4199/4217 ms, sonrakiler ~6 ms — süre davranışa değil, tek
+   * seferlik yüklemeye ait. Varsayılan 5000 ms bu değere fazlasıyla yakın ve
+   * tam takım koşarken test, üründe hiçbir şey bozulmadan kırmızıya dönüyordu.
+   *
+   * Denenen ve TERK EDİLEN çözüm: sınırı 20 sn'ye çekmek. Aynı sonucu verir
+   * ama gerçek bir kilitlenmenin fark edilme süresini de dörde katlar.
+   * Maliyeti hook'a taşımak sınırı hiç zayıflatmaz.
+   * Hook'un KENDİ bütçesi ayrıca verilir. Coverage koşusu sourcemap ürettiği
+   * için aynı grafik ~4 kat yavaş yüklenir ve varsayılan 10 sn'lik hook
+   * bütçesi de yetmez. Bir hook davranış değil KURULUMDUR: bütçesini açmak
+   * hiçbir testin son tarihini zayıflatmaz — test gövdeleri 5000 ms'de kalır.
+   */
+  beforeAll(async () => {
+    await import('@volstudio/core');
+  }, 120_000);
+
   afterEach(() => {
     const destroyCall = gameEvents.once.mock.calls.find((call) => call[0] === 'destroy');
     (destroyCall?.[1] as (() => void) | undefined)?.();

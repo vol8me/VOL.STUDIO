@@ -8,6 +8,7 @@ const BLUE: Rgba = { r: 0, g: 0, b: 255, a: 255 };
 
 function makeSession(onChange?: (state: unknown) => void): DocumentSession {
   return new DocumentSession({
+    t: (key, options) => (key === 'editor.layerName' ? `Katman ${String(options?.index)}` : key),
     assetId: 'asset-1',
     width: 32,
     height: 32,
@@ -96,6 +97,7 @@ describe('DocumentSession — kirlilik sözleşmesi', () => {
 
   it('history budget kırpılsa da undo belge damgasını yanlış duruma taşımaz', () => {
     const session = new DocumentSession({
+      t: (key, options) => (key === 'editor.layerName' ? `Katman ${String(options?.index)}` : key),
       assetId: 'asset-1',
       width: 2,
       height: 2,
@@ -126,6 +128,7 @@ describe('DocumentSession — kirlilik sözleşmesi', () => {
 
   it('bütçeye sığmayan komut yeni durumu damgalar fakat sahte undo bırakmaz', () => {
     const session = new DocumentSession({
+      t: (key, options) => (key === 'editor.layerName' ? `Katman ${String(options?.index)}` : key),
       assetId: 'asset-1',
       width: 2,
       height: 2,
@@ -388,61 +391,6 @@ describe('DocumentSession — yapısal işlemler', () => {
     const lower = session.document.layers[0].id;
     session.mergeLayerDown(lower);
     expect(session.document.layers.length).toBe(1);
-  });
-
-  it('kare ekler, siler, geri alır ve yeniler', () => {
-    const session = makeSession();
-
-    session.addFrame(false);
-    expect(session.document.frameCount).toBe(2);
-    expect(session.document.activeFrameIndex).toBe(1);
-
-    session.removeFrame(1);
-    expect(session.document.frameCount).toBe(1);
-
-    session.undo();
-    expect(session.document.frameCount).toBe(2);
-
-    session.redo();
-    expect(session.document.frameCount).toBe(1);
-  });
-
-  it('son kareyi silmeye çalışmaz', () => {
-    const session = makeSession();
-    session.removeFrame(0);
-    expect(session.document.frameCount).toBe(1);
-  });
-
-  it('mevcut kareyi kopyalayarak kare ekler', () => {
-    const session = makeSession();
-    paint(session, 1, 1, RED);
-
-    session.addFrame(true);
-    expect(session.document.frameCount).toBe(2);
-
-    const state = session.getState();
-    expect(state.frameCount).toBe(2);
-  });
-
-  it('kare süresini değiştirir ve geri alır', () => {
-    const session = makeSession();
-
-    session.setFrameDuration(0, 250);
-    expect(session.document.frames[0].durationMs).toBe(250);
-
-    session.undo();
-    expect(session.document.frames[0].durationMs).toBe(100);
-  });
-
-  it('aktif kareyi değiştirir', () => {
-    const session = makeSession();
-    session.addFrame(false);
-
-    session.setActiveFrame(0);
-    expect(session.document.activeFrameIndex).toBe(0);
-
-    session.setActiveFrame(99);
-    expect(session.document.activeFrameIndex).toBe(session.document.frameCount - 1);
   });
 
   it('aktif katman yüzeyine yazar ve bileşiği döner', () => {

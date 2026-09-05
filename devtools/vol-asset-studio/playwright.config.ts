@@ -8,10 +8,10 @@ const FULL_MATRIX = process.env.VOL_E2E_FULL === '1';
 
 function webServer(port: number, name: string) {
   return {
-    command: `pnpm exec tsx server/cli.ts --port ${port}`,
+    command: `node dist-server/server/cli.js --production --port ${port}`,
     url: `http://127.0.0.1:${port}/api/v1/health`,
     name,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
     // İstek logu E2E çıktısını boğuyordu; hatalar stderr'de görünmeye devam eder.
     stdout: 'ignore' as const,
@@ -32,9 +32,10 @@ function webServer(port: number, name: string) {
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  globalSetup: './tests/e2e/fixtures.ts',
   fullyParallel: false,
   workers: 1,
-  forbidOnly: Boolean(process.env.CI),
+  forbidOnly: true,
   reporter: process.env.CI ? 'list' : [['list']],
   timeout: 60_000,
   expect: { timeout: 10_000 },

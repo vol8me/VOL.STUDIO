@@ -1,5 +1,6 @@
+import type { LayerState } from '../LayerStack';
 import { Icon, IconButton, Select, Slider, Text } from '@volstudio/core/ui';
-import type { BlendMode, SpriteLayerMeta } from '../../../shared/index';
+import type { BlendMode } from '../../../shared/index';
 import { element, replaceChildren } from '../../ui/dom';
 import { BLEND_MODES } from '../blend';
 import type { RasterBuffer } from '../transform';
@@ -77,12 +78,12 @@ export class LayerPanel {
   }
 
   /**
-   * @param thumbnailFor Katmanın aktif karedeki içeriğini döner; küçük önizleme
+   * @param thumbnailFor Katmanın içeriğini döner; küçük önizleme
    * kullanıcının hangi katmanda çalıştığını isimden değil GÖRÜNTÜDEN anlamasını
    * sağlar.
    */
   public setLayers(
-    layers: readonly SpriteLayerMeta[],
+    layers: readonly LayerState[],
     activeId: string,
     thumbnailFor: (layerId: string) => RasterBuffer | null,
   ): void {
@@ -108,7 +109,7 @@ export class LayerPanel {
   }
 
   #buildRow(
-    layer: SpriteLayerMeta,
+    layer: LayerState,
     index: number,
     total: number,
     activeId: string,
@@ -198,7 +199,7 @@ export class LayerPanel {
     return row;
   }
 
-  /** Katmanın aktif karedeki küçük önizlemesi. */
+  /** Katmanın küçük önizlemesi. */
   #thumbnail(buffer: RasterBuffer | null): HTMLElement {
     const canvas = element('canvas', { className: 'layer-row__thumb' });
     canvas.width = THUMBNAIL_SIZE;
