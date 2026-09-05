@@ -278,14 +278,14 @@ export class TouchController<TAction extends string>
       if (isArmedAimStick) {
         const feedbackColor = hasManualDirection ? STICK_MANUAL_COLOR : STICK_ARMED_COLOR;
         this.graphics.lineStyle(
-          UI_SIZE.STICK_ACTION_RING_WIDTH,
+          UI_SIZE.STICK_ACTION_RING_WIDTH_PX,
           feedbackColor,
           UI_ALPHA.STICK_ACTION_RING,
         );
         this.graphics.strokeCircle(stick.base.x, stick.base.y, this.sticks.maxRadius);
         if (hasManualDirection) {
           this.graphics.lineStyle(
-            UI_SIZE.STICK_DIRECTION_WIDTH,
+            UI_SIZE.STICK_DIRECTION_WIDTH_PX,
             feedbackColor,
             UI_ALPHA.STICK_DIRECTION,
           );
@@ -300,7 +300,7 @@ export class TouchController<TAction extends string>
           : STICK_THUMB_COLOR,
         UI_ALPHA.STICK_THUMB,
       );
-      this.graphics.fillCircle(thumbPos.x, thumbPos.y, UI_SIZE.STICK_THUMB_RADIUS);
+      this.graphics.fillCircle(thumbPos.x, thumbPos.y, UI_SIZE.STICK_THUMB_RADIUS_PX);
     }
   }
 }

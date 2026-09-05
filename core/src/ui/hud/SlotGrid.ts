@@ -508,7 +508,7 @@ export class SlotGrid {
     const dy = event.clientY - drag.startY;
 
     if (!drag.moved) {
-      if (Math.hypot(dx, dy) < UI_THRESHOLD.DRAG_START) return;
+      if (Math.hypot(dx, dy) < UI_THRESHOLD.DRAG_START_PX) return;
       drag.moved = true;
       drag.itemView.toggleDragging(true);
       this.dragContainer.appendChild(drag.ghostEl);

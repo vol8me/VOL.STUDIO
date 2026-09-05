@@ -50,7 +50,7 @@ export class Slider {
       value = min,
       label,
       orientation = 'horizontal',
-      length = UI_SIZE.SLIDER_DEFAULT_LENGTH,
+      length = UI_SIZE.SLIDER_DEFAULT_LENGTH_PX,
       formatValue = (v) => String(v),
       disabled = false,
       onInput,

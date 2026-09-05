@@ -96,7 +96,7 @@ export class TimerBar {
     this.cancelAnimation = animateValue({
       from,
       to: 0,
-      durationMs: UI_TIMING.TIMER_RESET,
+      durationMs: UI_TIMING.TIMER_RESET_MS,
       easing: Easing.easeOutCubic,
       onUpdate: (value) => {
         this.elapsedSeconds = value;
@@ -144,7 +144,7 @@ export class TimerBar {
             this.render(0);
             this.running = true;
             this.runFrom(0);
-          }, UI_TIMING.TIMER_LOOP_DELAY);
+          }, UI_TIMING.TIMER_LOOP_DELAY_MS);
         }
       },
     });

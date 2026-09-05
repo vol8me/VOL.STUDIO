@@ -33,7 +33,7 @@ export class Tooltip {
   constructor(target: HTMLElement, text: string, options: TooltipOptions = {}) {
     const {
       placement = 'top',
-      delayMs = UI_TIMING.TOOLTIP_DEFAULT_DELAY,
+      delayMs = UI_TIMING.TOOLTIP_DEFAULT_DELAY_MS,
       container = document.body,
     } = options;
     this.target = target;

@@ -26,6 +26,25 @@ Session'ın her geçmiş değişimi onu geçersiz kılıyor. Renderer tile günc
 zaten yüzey kimliğini ve sürümünü birlikte izliyordu; yalnız sürüme bakan
 ayrı `SpriteDocument` önbelleği modelle birlikte kaldırıldı.
 
+## 2026-09-05 — çapraz denetim: birim sözleşmesi
+
+Prompt'un "iki alt sistem aynı gerçeği farklı birimle mi taşıyor" sorusu
+tarandı. Yedi kavram hem `Ms` hem `Seconds` biçiminde görünüyordu; altısı ayrı
+alt sistemlerde ve aralarında akış yok. Yedincisi — `TimerBar` — ikisini birden
+taşıyor ve baştan sona okundu: public sözleşme saniye, `animateValue`ın süresi
+milisaniye, dönüşüm satır 129'da açık. **Birim hatası yok.**
+
+Ama tarama başka bir şey gösterdi:
+
+| Kimlik | Seviye | İhlal ve sonuç                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Yapılan ve kanıt                                                                                                                                                                                                                                                                                                                                                  |
+| ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D11    | P2     | Repo ALAN adlarında birime titiz (138 `…Ms`, 42 `…Seconds`, 49 `…Px`) ama SABİT adlarında değildi: 45 sayısal sabitin yalnız 2'si birim eki taşıyordu. `UI_TIMING.TIMER_RESET: 300` ms mi saniye mi, addan anlaşılmıyor; birim yalnız yorumdaydı. Yorum bir sözleşme değildir — bir sonraki kişi `NEW_DELAY: 2` yazıp saniye kastettiğinde hata 1000 KAT olur ve zaman biriminde bu, testte fark edilmeyecek kadar küçük bir gecikme ya da fark edilmeyecek kadar büyük bir donma üretir. | 30 sabit birim ekiyle yeniden adlandırıldı (25 dosya). Boyutsuz gruplar (`UI_ALPHA`, `UI_RATIO`, `UI_DEPTH`, `UI_CAPACITY`, `PINCH_ZOOM`) gerekçeleriyle muaf. Kapı yazıldı; ilk koşuşunda gözden kaçırdığım 13. sabiti (`EVENT_LOG_LEAVE`) yakaladı. Birimsiz sabit eklenince düşüyor.                                                                           |
+| D12    | P3     | `UI_TIMING.EVENT_LOG_LEAVE_MS: 220` sabitinin SIFIR tüketicisi vardı: `EventLog` kendi `EVENT_LOG_LEAVE_DURATION_MS = 220` sabitini tanımlayıp onu kullanıyordu. Aynı sürenin iki kaynağı, biri ölü — `constants.ts`teki değeri değiştirmek hiçbir şey yapmıyor ama okuyana "burası tek kaynak" diyordu.                                                                                                                                                                                  | Ölü sabit silindi; canlı olan CSS senkron testine bağlı olduğu için `EventLog`ta kaldı. Tüketicisiz sabiti reddeden kapı eklendi. İlk hâli sabit başına bir `grep` süreci açıyordu ve testi 7.8 sn'ye çıkarıp sınırı aşıyordu; korpusu tek geçişte okuyacak şekilde yazıldı — bir bekçi yavaşlığı yüzünden kırmızıya dönerse önce kendi güvenilirliğini kaybeder. |
+
+Kendi hatam: sınırsız bir metin değiştirme `EVENT_LOG_LEAVE_DURATION_MS`i
+`EVENT_LOG_LEAVE_MS_DURATION_MS` yaptı. Typecheck geçiyordu çünkü değişiklik
+tutarlıydı; çift birim eki taraması yakaladı ve geri alındı.
+
 ## 2026-09-05 — bekçilerin bekçisi: 11 kapı mutasyonla sınandı
 
 Önceki turlarda yalnız kendi eklediğim bekçileri mutasyonla doğrulamıştım;

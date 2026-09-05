@@ -97,7 +97,7 @@ export class AnimatedLabel {
       const glyph = document.createElement('span');
       glyph.className = 'vol-animated-label__glyph';
       glyph.textContent = char;
-      glyph.style.animationDelay = `${visibleIndex * UI_TIMING.ANIMATED_LABEL_GLYPH_STAGGER}ms`;
+      glyph.style.animationDelay = `${visibleIndex * UI_TIMING.ANIMATED_LABEL_GLYPH_STAGGER_MS}ms`;
       this.element.appendChild(glyph);
       visibleIndex += 1;
     }

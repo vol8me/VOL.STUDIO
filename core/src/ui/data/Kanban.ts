@@ -367,7 +367,7 @@ export class Kanban {
     return cardEl;
   }
 
-  /** Sürüklemeyi başlatır: imleci takip eden bir "ghost" kopya document.body'ye eklenir. Eşik (UI_THRESHOLD.DRAG_START) aşılana kadar hareket "tıklama" sayılır, böylece kart hem tıklanabilir hem sürüklenebilir kalır. */
+  /** Sürüklemeyi başlatır: imleci takip eden bir "ghost" kopya document.body'ye eklenir. Eşik (UI_THRESHOLD.DRAG_START_PX) aşılana kadar hareket "tıklama" sayılır, böylece kart hem tıklanabilir hem sürüklenebilir kalır. */
   private beginDrag(
     event: PointerEvent,
     card: KanbanCard,
@@ -405,7 +405,7 @@ export class Kanban {
     const dy = event.clientY - drag.startY;
 
     if (!drag.moved) {
-      if (Math.hypot(dx, dy) < UI_THRESHOLD.DRAG_START) return;
+      if (Math.hypot(dx, dy) < UI_THRESHOLD.DRAG_START_PX) return;
       // Eşik aşıldı: gerçek kart yarı saydam bırakılır, ghost imleci takip etmeye başlar.
       drag.moved = true;
       drag.cardEl.classList.add('vol-kanban__card--dragging');

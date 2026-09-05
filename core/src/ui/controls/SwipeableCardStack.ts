@@ -65,7 +65,7 @@ export class SwipeableCardStack {
     this.cards = [...options.cards];
     this.onSwipeHandler = options.onSwipe;
     this.onEmptyHandler = options.onEmpty;
-    this.swipeThreshold = options.swipeThreshold ?? UI_THRESHOLD.CARD_SWIPE_DEFAULT;
+    this.swipeThreshold = options.swipeThreshold ?? UI_THRESHOLD.CARD_SWIPE_DEFAULT_PX;
 
     this.element = document.createElement('div');
     this.element.className = 'vol-card-stack';
@@ -191,11 +191,11 @@ export class SwipeableCardStack {
       topCardEl.style.transform = `translateX(${this.dragOffsetX}px) rotate(${rotation}deg)`;
       topCardEl.classList.toggle(
         'vol-card-stack__card--swipe-right',
-        this.dragOffsetX > UI_THRESHOLD.CARD_SWIPE_HINT,
+        this.dragOffsetX > UI_THRESHOLD.CARD_SWIPE_HINT_PX,
       );
       topCardEl.classList.toggle(
         'vol-card-stack__card--swipe-left',
-        this.dragOffsetX < -UI_THRESHOLD.CARD_SWIPE_HINT,
+        this.dragOffsetX < -UI_THRESHOLD.CARD_SWIPE_HINT_PX,
       );
 
       // İpucu rozetlerinin opacity'si sürükleme mesafesinin eşiğe oranıyla kademeli büyür (on/off yerine).
@@ -275,7 +275,7 @@ export class SwipeableCardStack {
       this.renderTimeoutId = null;
       this.isCommitting = false;
       this.renderStack();
-    }, UI_TIMING.CARD_FLY_ANIMATION);
+    }, UI_TIMING.CARD_FLY_ANIMATION_MS);
   }
 
   private buildXIcon(): SVGSVGElement {

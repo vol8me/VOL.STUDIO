@@ -62,7 +62,7 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     specs.push(spec);
   }
 
-  const fontManager = new FontManager({ fonts: specs, timeoutMs: TECH.FONT_LOAD_TIMEOUT });
+  const fontManager = new FontManager({ fonts: specs, timeoutMs: TECH.FONT_LOAD_TIMEOUT_MS });
   const loaded = await fontManager.load();
   const failed = loaded.filter((f) => f.status === 'error');
 
@@ -76,7 +76,7 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
 
   await Promise.race([
     document.fonts.ready,
-    new Promise<void>((resolve) => setTimeout(resolve, TECH.FONT_READY_FALLBACK)),
+    new Promise<void>((resolve) => setTimeout(resolve, TECH.FONT_READY_FALLBACK_MS)),
   ]);
 
   if (config.onBeforeSceneInit) {

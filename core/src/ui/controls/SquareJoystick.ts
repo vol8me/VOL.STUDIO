@@ -46,7 +46,7 @@ export class SquareJoystick {
 
   constructor(options: SquareJoystickOptions = {}) {
     const {
-      size = UI_SIZE.JOYSTICK_DEFAULT,
+      size = UI_SIZE.JOYSTICK_DEFAULT_PX,
       deadZone = INPUT.DEAD_ZONE_RATIO,
       onMove,
       onRelease,

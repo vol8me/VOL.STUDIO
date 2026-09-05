@@ -84,7 +84,7 @@ export class TouchStickState<TAction extends string> {
     this.aimStickActivatesOnTouch = options.aimStickActivatesOnTouch ?? false;
     this.actionSource = options.actionSource;
     this.deadZone = options.deadZone ?? INPUT.DEAD_ZONE_RATIO;
-    this.maxRadius = options.maxRadius ?? INPUT.STICK_MAX_RADIUS;
+    this.maxRadius = options.maxRadius ?? INPUT.STICK_MAX_RADIUS_PX;
   }
 
   get isActive(): boolean {

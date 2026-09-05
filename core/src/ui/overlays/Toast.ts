@@ -47,7 +47,7 @@ export class ToastManager {
   }
 
   show(message: string, options: ToastOptions = {}): void {
-    const { variant = 'default', durationMs = UI_TIMING.TOAST_DEFAULT_DURATION } = options;
+    const { variant = 'default', durationMs = UI_TIMING.TOAST_DEFAULT_DURATION_MS } = options;
 
     while (this.active.length >= MAX_VISIBLE_TOASTS) {
       const oldest = this.active.shift();

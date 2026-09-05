@@ -27,7 +27,7 @@ export class FontManager {
 
   constructor(options: FontManagerOptions) {
     this.specs = options.fonts;
-    this.timeoutMs = options.timeoutMs ?? TECH.FONT_LOAD_TIMEOUT;
+    this.timeoutMs = options.timeoutMs ?? TECH.FONT_LOAD_TIMEOUT_MS;
   }
 
   async load(): Promise<LoadedFont[]> {

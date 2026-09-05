@@ -80,7 +80,7 @@ export class FloatingTextManager {
         el.remove();
         const index = this.active.indexOf(entry);
         if (index !== -1) this.active.splice(index, 1);
-      }, UI_TIMING.FLOATING_TEXT_FADE_OUT);
+      }, UI_TIMING.FLOATING_TEXT_FADE_OUT_MS);
       entry.timeoutIds.push(removeTimeoutId);
     }, durationMs);
     entry.timeoutIds.push(fadeTimeoutId);

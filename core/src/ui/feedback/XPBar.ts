@@ -31,7 +31,7 @@ export class XPBar {
       xp = 0,
       xpForLevel,
       label,
-      animateMs = UI_TIMING.BAR_DEFAULT_ANIMATE,
+      animateMs = UI_TIMING.BAR_DEFAULT_ANIMATE_MS,
     } = options;
     this.level = level;
     this.xp = xp;
@@ -91,7 +91,7 @@ export class XPBar {
     clearTimeout(this.levelUpTimeout);
     this.levelUpTimeout = setTimeout(() => {
       this.element.classList.remove('vol-xp-bar--level-up');
-    }, UI_TIMING.XP_LEVEL_UP_EFFECT);
+    }, UI_TIMING.XP_LEVEL_UP_EFFECT_MS);
   }
 }
 

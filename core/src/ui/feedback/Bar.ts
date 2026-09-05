@@ -86,7 +86,7 @@ export class Bar {
       max,
       value = max,
       lowThreshold = UI_RATIO.BAR_LOW_THRESHOLD,
-      animateMs = UI_TIMING.BAR_DEFAULT_ANIMATE,
+      animateMs = UI_TIMING.BAR_DEFAULT_ANIMATE_MS,
       label,
       orientation = 'horizontal',
     } = options;

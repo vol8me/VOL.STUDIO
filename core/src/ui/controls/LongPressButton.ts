@@ -45,8 +45,8 @@ export class LongPressButton {
   private boundPointerLeave: () => void;
 
   constructor(options: LongPressButtonOptions) {
-    const { shape = 'circle', size = UI_SIZE.BUTTON_DEFAULT, icon, label } = options;
-    this.longPressDurationMs = options.longPressDurationMs ?? UI_TIMING.LONG_PRESS_DURATION;
+    const { shape = 'circle', size = UI_SIZE.BUTTON_DEFAULT_PX, icon, label } = options;
+    this.longPressDurationMs = options.longPressDurationMs ?? UI_TIMING.LONG_PRESS_DURATION_MS;
     this.onTapHandler = options.onTap;
     this.onLongPressHandler = options.onLongPress;
     this.onPressStartHandler = options.onPressStart;

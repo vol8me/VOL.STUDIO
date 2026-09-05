@@ -43,13 +43,13 @@ export class ChargeButton {
   private boundPointerUp: (event: PointerEvent) => void;
 
   constructor(options: ChargeButtonOptions) {
-    this.chargeDurationMs = options.chargeDurationMs ?? UI_TIMING.CHARGE_DURATION;
+    this.chargeDurationMs = options.chargeDurationMs ?? UI_TIMING.CHARGE_DURATION_MS;
     this.allowPartialRelease = options.allowPartialRelease ?? true;
     this.onChargeProgressHandler = options.onChargeProgress;
     this.onChargedHandler = options.onCharged;
     this.onReleaseHandler = options.onRelease;
 
-    const size = options.size ?? UI_SIZE.BUTTON_DEFAULT;
+    const size = options.size ?? UI_SIZE.BUTTON_DEFAULT_PX;
     this.element = document.createElement('button');
     this.element.type = 'button';
     this.element.className = 'vol-charge-button';

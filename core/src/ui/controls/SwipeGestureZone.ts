@@ -74,8 +74,9 @@ export class SwipeGestureZone {
   private boundPointerUp: (event: PointerEvent) => void;
 
   constructor(options: SwipeGestureZoneOptions = {}) {
-    this.thresholdPx = options.threshold ?? UI_THRESHOLD.SWIPE_DEFAULT;
-    this.velocityThresholdPxMs = options.velocityThreshold ?? UI_THRESHOLD.SWIPE_VELOCITY_DEFAULT;
+    this.thresholdPx = options.threshold ?? UI_THRESHOLD.SWIPE_DEFAULT_PX;
+    this.velocityThresholdPxMs =
+      options.velocityThreshold ?? UI_THRESHOLD.SWIPE_VELOCITY_DEFAULT_PX_PER_MS;
     this.onSwipeHandler = options.onSwipe;
     this.onSwipeMoveHandler = options.onSwipeMove;
 
@@ -146,7 +147,7 @@ export class SwipeGestureZone {
 
     const dx = event.clientX - drag.startX;
     const dy = event.clientY - drag.startY;
-    if (Math.hypot(dx, dy) < UI_THRESHOLD.DRAG_START) return;
+    if (Math.hypot(dx, dy) < UI_THRESHOLD.DRAG_START_PX) return;
 
     this.onSwipeMoveHandler?.(dx, dy);
   }

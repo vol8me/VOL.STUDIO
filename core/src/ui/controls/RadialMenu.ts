@@ -60,8 +60,8 @@ export class RadialMenu {
   constructor(options: RadialMenuOptions) {
     this.items = options.items;
     this.onSelectHandler = options.onSelect;
-    this.radius = options.radius ?? UI_SIZE.RADIAL_MENU_DEFAULT_RADIUS;
-    this.deadzone = options.deadzone ?? UI_SIZE.RADIAL_MENU_DEFAULT_DEADZONE;
+    this.radius = options.radius ?? UI_SIZE.RADIAL_MENU_DEFAULT_RADIUS_PX;
+    this.deadzone = options.deadzone ?? UI_SIZE.RADIAL_MENU_DEFAULT_DEADZONE_PX;
 
     this.element = document.createElement('div');
     this.element.className = 'vol-radial-menu';

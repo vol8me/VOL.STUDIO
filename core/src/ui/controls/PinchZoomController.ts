@@ -80,7 +80,7 @@ export class PinchZoomController {
       this.animationTimer = window.setTimeout(() => {
         this.animationTimer = null;
         this.canvas.classList.remove('vol-pinch-zoom__canvas--animated');
-      }, UI_TIMING.ZOOM_TRANSITION);
+      }, UI_TIMING.ZOOM_TRANSITION_MS);
     }
   }
 

@@ -30,7 +30,7 @@ export class PullToRefresh {
   private boundPointerUp: (event: PointerEvent) => void;
 
   constructor(options: PullToRefreshOptions) {
-    this.threshold = options.threshold ?? UI_THRESHOLD.PULL_REFRESH_DEFAULT;
+    this.threshold = options.threshold ?? UI_THRESHOLD.PULL_REFRESH_DEFAULT_PX;
     this.onRefreshHandler = options.onRefresh;
 
     this.element = document.createElement('div');

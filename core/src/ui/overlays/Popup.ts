@@ -139,7 +139,7 @@ export class Popup {
     const targetRect = this.target.getBoundingClientRect();
     const popupWidth = this.element.offsetWidth;
     const popupHeight = this.element.offsetHeight;
-    const margin = UI_THRESHOLD.POPUP_MARGIN;
+    const margin = UI_THRESHOLD.POPUP_MARGIN_PX;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 

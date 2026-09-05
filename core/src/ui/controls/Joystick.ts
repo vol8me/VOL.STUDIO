@@ -43,7 +43,7 @@ export class Joystick {
 
   constructor(options: JoystickOptions = {}) {
     const {
-      radius = UI_SIZE.JOYSTICK_DEFAULT,
+      radius = UI_SIZE.JOYSTICK_DEFAULT_PX,
       deadZone = INPUT.DEAD_ZONE_RATIO,
       onMove,
       onRelease,
