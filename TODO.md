@@ -26,6 +26,24 @@ Session'ın her geçmiş değişimi onu geçersiz kılıyor. Renderer tile günc
 zaten yüzey kimliğini ve sürümünü birlikte izliyordu; yalnız sürüme bakan
 ayrı `SpriteDocument` önbelleği modelle birlikte kaldırıldı.
 
+## 2026-09-05 — yanlış pakette yaşayan primitif: SimulationClock CORE'a
+
+| Kimlik | Seviye | İhlal ve sonuç                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Yapılan ve kanıt                                                                                                                                                                                                                                                                |
+| ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D16    | P2     | `SimulationClock` — sabit adımlı biriktirici, catch-up sınırı ve atılan sürenin raporlanması — VOL.HELL'in içinde yaşıyordu ama hiçbir oyun kavramı bilmiyor: sıfır import, sıfır alan terimi. Yani jenerik bir zaman primitifi ATILACAK bir test oyununun içindeydi. vol-hell silindiğinde desen de gidecek ve gerçek oyun yalnız `clampSimulationStep` ile başlayacaktı. İkisi aynı sorunu çözer ama farklı güçte: kelepçe fazla zamanı SESSİZCE yutar, biriktirici sabit adımlara böler, catch-up'ı sınırlar ve atılanı `droppedMs` olarak RAPORLAR. | Kod, testi ve dokümanıyla CORE'a taşındı (`core/src/time/`), kök barrel'a eklendi. Yeni yetenek değil YER DEĞİŞİKLİĞİ — "en az iki tüketici" kuralı yeni soyutlama içindir. Yüzey kapısı 222→223 diye ateşledi ve gerekçesiyle güncellendi. CORE 1535, vol-hell 689 test yeşil. |
+
+**Bu bulguya giden yol, bir yanlış alarmın düzeltilmesiydi.** Önce iki oyunun
+delta kelepçesini farklı yaptığını gördüm (`clampSimulationStep` 100 ms tavanla
+vs `safeDeltaMs` tavansız) ve vol-hell'de tavan eksik sandım. Ölçüm iddiayı
+DESTEKLEMEDİ: 4800 ms'lik tek adım ile 300×16 ms neredeyse aynı sonucu verdi.
+Sonra `GameScene`i okuyunca sebebi görüldü — vol-hell kelepçelemiyor çünkü
+sabit adımlı biriktirici kullanıyor, ki bu daha iyi bir çözüm. Yanlış alarmın
+altından gerçek bulgu çıktı: iyi olan yanlış yerdeydi.
+
+**Üç alt sistem de aynı kuralı uyguluyor** (`Player`, `BulletManager`,
+`EnemyManager` — hepsi `safeDeltaMs`), yani vol-hell içinde arachnid'de
+görülen türden bir desenkronizasyon YOK.
+
 ## 2026-09-05 — kod okuma: Kanban’da uçuşta kalan sürükleme hayaleti
 
 | Kimlik | Seviye | İhlal ve sonuç                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Yapılan ve kanıt                                                                                                                                                                                                                              |

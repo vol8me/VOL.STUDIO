@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SimulationClock } from '@/runtime/simulation/SimulationClock';
+import { SimulationClock } from '../../src/time/SimulationClock';
 
 const FIXED = 1000 / 60;
 

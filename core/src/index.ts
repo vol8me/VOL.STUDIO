@@ -47,8 +47,21 @@ export {
  * bütün alt sistemler aynı tavanı paylaşmazsa aynı karede farklı kadar zaman
  * yaşarlar (bkz. `time/simulationStep.ts`).
  */
-export { Scheduler, Cooldown, RoundLoop, Clock, clampSimulationStep } from './time';
-export type { CancelScheduled, RoundLoopOptions } from './time';
+export {
+  Scheduler,
+  Cooldown,
+  RoundLoop,
+  Clock,
+  clampSimulationStep,
+  SimulationClock,
+} from './time';
+export type {
+  CancelScheduled,
+  RoundLoopOptions,
+  SimulationStep,
+  SimulationClockConfig,
+  SimulationClockFrame,
+} from './time';
 export type { SchedulerOptions } from './time/Scheduler';
 export { EventBus, type Unsubscribe } from './events/EventBus';
 export {

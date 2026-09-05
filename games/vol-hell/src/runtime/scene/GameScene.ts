@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import {
+  SimulationClock,
   DisposableScope,
   InputManager,
   Vector2,
@@ -52,7 +53,6 @@ import { GameScreenStack } from './GameScreenStack';
 import { safeDeltaMs } from '@/runtime/utils/numeric';
 import type { EntityVisualQuality } from '@/runtime/entity/entityVisuals';
 import { releasePointerLatch } from '@/runtime/input/pointerLatch';
-import { SimulationClock } from '@/runtime/simulation/SimulationClock';
 import { PlayerAimIndicator } from '@/runtime/ui/PlayerAimIndicator';
 import { PlayerDirectionIndicator } from '@/runtime/ui/PlayerDirectionIndicator';
 import { writeFireDirection } from '@/runtime/utils/direction';

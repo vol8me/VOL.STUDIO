@@ -84,7 +84,19 @@ import * as Core from '../../src/index';
 // ölçemiyordu; acil adım sırayı deldiğinde güvencenin hâlâ geçerli olup
 // olmadığı görünmüyordu. Bir fizik motoru değil, tek bir soruyu cevaplayan bir
 // ölçüm: merkez destek alanının içinde mi?
-const EXPECTED_EXPORT_COUNT = 222;
+// 222 → 223: `SimulationClock`. VOL.HELL'in içinde yaşıyordu ama hiçbir oyun
+// kavramı bilmiyor — sıfır import, sıfır alan terimi. Yani jenerik bir zaman
+// primitifi, ATILACAK bir test oyununun içinde duruyordu; vol-hell silindiğinde
+// desen de gidecekti ve gerçek oyun yalnız `clampSimulationStep` ile başlardı.
+//
+// İkisi aynı sorunu çözer ama farklı güçte: kelepçe fazla zamanı SESSİZCE
+// yutar, biriktirici onu sabit adımlara böler, catch-up'ı sınırlar ve atılanı
+// `droppedMs` olarak RAPORLAR. Daha iyi olanın framework dışında kalması,
+// "yanlış pakette yaşayan kod" sorusunun somut cevabıydı.
+//
+// Yeni yetenek DEĞİL, yer değişikliği: kod, testi ve dokümanıyla olduğu gibi
+// taşındı; "en az iki tüketici" kuralı yeni soyutlama için geçerlidir.
+const EXPECTED_EXPORT_COUNT = 223;
 
 // 196: asset compiler'lar (görsel/ses sentezi) CORE public surface'da
 // tutulmaz; runtime yalnızca üretilmiş asset'leri çalar.
