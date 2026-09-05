@@ -153,7 +153,7 @@ export class Slider {
   }
 
   /**
-   * Degeri programatik olarak ayarlar. Kullanıcı callback'leri TETİKLENMEZ —
+   * Değeri programatik olarak ayarlar. Kullanıcı callback'leri TETİKLENMEZ —
    * etkileşimi ile kod kaynaklı değişikliği ayırmak geri besleme döngüsünü
    * baştan imkânsız kılar.
    * Bildirim gerekiyorsa `setValueAndNotify()` kullan.
@@ -161,7 +161,7 @@ export class Slider {
   setValue(value: number): void {
     const clamped = this.clamp(value);
     this.input.value = String(clamped);
-    // Native input step'e yuvarlayabilir; gorunen deger her zaman gercek degerdir.
+    // Native input step'e yuvarlayabilir; görünen değer her zaman gerçek değerdir.
     this.render(this.getValue());
     this.committedValue = this.getValue();
     this.gestureStartValue = null;

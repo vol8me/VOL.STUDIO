@@ -12,9 +12,9 @@ import { getMaxEnemyRadius } from '@/config/enemies/catalog';
 import { getDifficultyState } from '@/runtime/systems/DifficultyCalculator';
 
 /**
- * Bu dosya SABITIN SABIT OLDUGUNU degil, config degerleri arasindaki
- * ILISKILERI dogrular. "moveSpeed pozitif" gibi tautolojiler kaldirildi:
- * davranissal degeri yoktu ve olu config anahtarlarinin silinmesini
+ * Bu dosya SABİTİN SABİT OLDUĞUNU değil, config değerleri arasındaki
+ * ILISKILERI doğrular. "moveSpeed pozitif" gibi tautolojiler kaldırıldı:
+ * davranışsal değeri yoktu ve olu config anahtarlarinin silinmesini
  * engelliyorlardi.
  */
 describe('config ilişkileri — oyun dengesi', () => {

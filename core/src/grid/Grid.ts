@@ -57,11 +57,10 @@ export class Grid<T> {
   /**
    * Koordinat ızgaranın içinde mi?
    *
-   * TAM SAYI olması da şarttır. Eskiden yalnızca sınır kontrol ediliyordu ve
-   * `set(1.5, 1, x)` `true` dönüyordu: değer dizide `"1.5"` adlı normal bir
-   * ÖZELLİK olarak yazılıyor, `get(1.5, 1)` onu geri veriyor, ama
-   * `forEach`/`filledCount`/`clear` hiç görmüyordu — görünmez, temizlenmeyen
-   * veri.
+   * Sınırın yanında TAM SAYI olması da şarttır: kesirli bir koordinat dizide
+   * `"1.5"` adlı sıradan bir ÖZELLİK olur — `get` onu geri verir ama
+   * `forEach`/`filledCount`/`clear` hiç görmez, yani görünmez ve
+   * temizlenmeyen veri doğar.
    */
   inBounds(col: number, row: number): boolean {
     return (

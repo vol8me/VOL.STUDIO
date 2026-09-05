@@ -325,7 +325,7 @@ describe('Ability sistemi', () => {
 
       const enemy = makeEnemyAt(playerPos.x + 30, playerPos.y);
       // Taban hasar 12; +50 ile tek mermide grunt'ı devirir. Mermi artık
-      // gerçek bir cisim: yolu almasi icin birkac kare gerekir.
+      // gerçek bir cisim: yolu alması için birkaç kare gerekir.
       runtime.update(ABILITY_CATALOG.turret.turret!.fireIntervalMs, playerPos, aim, [enemy]);
       for (let i = 0; i < 10 && enemy.isAlive; i++) {
         runtime.update(16, playerPos, aim, [enemy]);

@@ -4,8 +4,9 @@ import { TouchStickState } from '../../src/input/TouchStickState';
 /**
  * Dokunmatik sıcak yol — kare başına allocation üretmemeli.
  *
- * `getRaw()` her çağrıda yeni `Vector2` üretiyordu ve kare başına en az dört
- * kez çağrılıyordu; mobilde bu sürekli küçük çöp ve GC duraklaması demek.
+ * Ham vektör kare başına en az dört kez okunur; her okumada yeni bir
+ * `Vector2` ayrılsaydı mobilde sürekli küçük çöp ve GC duraklaması doğardı.
+ * Bu test okuma yollarının tamponları YENİDEN KULLANDIĞINI kilitler.
  */
 describe('TouchStickState allocation davranışı', () => {
   function makeState() {

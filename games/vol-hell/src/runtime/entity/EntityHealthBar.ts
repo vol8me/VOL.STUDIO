@@ -55,7 +55,7 @@ export class EntityHealthBar {
       options.fillColor ?? enemyConfig.healthBarFillColor,
       enemyConfig.healthBarFillAlpha,
     );
-    // Sol kenara sabitlenir ki genislik azalinca bar soldan buyuyup sagdan kisalsin.
+    // Sol kenara sabitlenir ki genişlik azalinca bar soldan buyuyup sağdan kisalsin.
     this.fill.setOrigin(0, 0.5);
 
     // Barlar gövdelerin üstünde: kalabalıkta başka bir gövdenin altında kalıp
@@ -82,10 +82,10 @@ export class EntityHealthBar {
     this.bg.setVisible(alive);
     this.fill.setVisible(alive && safeRatio > 0);
 
-    // setSize() kullanilir: `.width`'e dogrudan atamak geom'u ve displayOrigin'i
-    // guncellemez, yalnizca WebGL renderer'in src.width okumasi sayesinde
-    // tesadufen calisirdi. Origin sola sabitlenmis oldugu icin bar soldan
-    // sabit kalip sagdan kisalir — klasik can bari davranisi.
+    // setSize() kullanılır: `.width`'e doğrudan atamak geom'u ve displayOrigin'i
+    // guncellemez, yalnızca WebGL renderer'in src.width okuması sayesinde
+    // tesadüfen çalışırdı. Origin sola sabitlenmiş olduğu için bar soldan
+    // sabit kalip sağdan kısalır — klasik can bari davranışı.
     this.fill.setSize(
       Math.max(enemyConfig.healthBarMinWidth, this.width * safeRatio),
       enemyConfig.healthBarHeight,

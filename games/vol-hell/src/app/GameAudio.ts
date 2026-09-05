@@ -242,9 +242,9 @@ export class GameAudio {
   }
 
   /**
-   * Tum ses kaynaklarini birakir ve AudioContext'i kapatir. Tarayicida
-   * escanli AudioContext sayisi sinirli; kapatmadan birakmak sayfa yasam
-   * dongusu boyunca sizinti yaratir.
+   * Tüm ses kaynaklarını bırakır ve AudioContext'i kapatır. Tarayıcıda
+   * eşzamanlı AudioContext sayısı sınırlı; kapatmadan bırakmak sayfa yaşam
+   * döngüsü boyunca sızıntı yaratır.
    */
   async dispose(): Promise<void> {
     if (this.disposed) return;

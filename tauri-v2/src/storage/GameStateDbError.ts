@@ -1,4 +1,4 @@
-/** GameStateDb islemlerinde olusan hatalari temsil eder. */
+/** GameStateDb islemlerinde oluşan hataları temsil eder. */
 export class GameStateDbError extends Error {
   override readonly cause?: unknown;
 

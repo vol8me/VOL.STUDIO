@@ -135,7 +135,7 @@ export class WaveManager {
       if (this.elapsedInWaveMs < waveConfig.waveDurationMs) break;
 
       if (this.shouldWaitForBlocker()) {
-        // Sayaç tam sınırda dondurulur: `getRemainingMs()` 0, ilerleme %100.
+        // Sayaç tam sınırda döndürülür: `getRemainingMs()` 0, ilerleme %100.
         this.elapsedInWaveMs = waveConfig.waveDurationMs;
         this.blockedAtTimeUp = true;
         break;

@@ -5,7 +5,7 @@ import { expect, test, type Page } from '@playwright/test';
  *
  * Bu dosyanın var olma sebebi somut: bütün sunucu testleri `frontend: 'none'`
  * ile koşarken Vite ara katmanı `/api/**` isteklerini yutuyordu ve uygulama
- * geliştirme modunda katalogu HİÇ yükleyemiyordu. Tek bir gerçek tarayıcı
+ * geliştirme modunda kataloğu HİÇ yükleyemiyordu. Tek bir gerçek tarayıcı
  * yüklemesi o hatayı ilk saniyede gösterirdi.
  */
 

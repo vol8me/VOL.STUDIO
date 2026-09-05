@@ -12,7 +12,7 @@ import { join, relative } from 'node:path';
  *    patlar — yani en geç fark edilen yerde.
  * 2. **Node sızıntısı.** `node:fs`/`node:zlib` barrel'a girerse tarayıcı
  *    paketi build sırasında kırılır. Ses tarafında `writer` alt-yolu bu
- *    yüzden ayrıdır; görsel tarafta karşılığı `visualSynth/encode/`dir.
+ *    yüzden ayrıdır; görsel tarafta karşılığı `src/encode/`dir.
  */
 const DOM_GLOBALS = ['document', 'window', 'HTMLCanvasElement', 'ImageData', 'navigator'];
 

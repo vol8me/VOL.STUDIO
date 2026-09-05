@@ -2,7 +2,7 @@
  * DEEP CURRENT — Derin oynanış ambiyansı (dalga 11+ zemini).
  *
  * Null Drift'in kardeşi ama daha huzursuz: D drone'unun yanına yarım ton
- * üstten (Eb) ikinci bir drone sokulur — iki ton arasındaki yavaş vuru
+ * üstten (Eb) ikinci bir drone sökülür — iki ton arasındaki yavaş vuru
  * (beating) bilinçaltı bir gerginlik üretir. Yine ritim yok, melodi yok;
  * gerilim armonik sürtünmeden ve daha koyu zeminden gelir.
  *

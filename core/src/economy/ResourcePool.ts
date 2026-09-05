@@ -61,9 +61,9 @@ export class ResourcePool<TResource extends string> {
   /** Maliyetin TAMAMI karşılanabiliyor mu? */
   canAfford(cost: ResourceCost<TResource>): boolean {
     for (const [resource, amount] of Object.entries(cost) as [TResource, number][]) {
-      // Sonlu olmayan kalem karşılanamaz sayılır: eskiden `NaN > 0` yanlış
-      // olduğu için kalem atlanıyor, `spend` `true` dönüyor ve HİÇBİR ŞEY
-      // düşülmüyordu — sessiz bir bedava alışveriş.
+      // Sonlu olmayan kalem karşılanamaz SAYILIR. Sayısal karşılaştırmaya
+      // bırakılsaydı `NaN > 0` yanlış olacağı için kalem atlanır, `spend`
+      // `true` döner ve hiçbir şey düşülmezdi — sessiz bedava alışveriş.
       if (!isFiniteNumber(amount)) return false;
       if (amount > 0 && this.get(resource) < amount) return false;
     }

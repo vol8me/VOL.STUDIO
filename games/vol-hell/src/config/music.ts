@@ -8,10 +8,10 @@ import { MUSIC_TIMING, trackSeconds } from './musicTiming';
 /**
  * `loopEnd` değerleri `musicTiming.ts`ten TÜRETİLİR, elle yazılmaz.
  *
- * Bu sayılar bir dönem hem burada hem üretim script'lerinde ayrı ayrı
- * duruyordu ve "birebir eşleşmek zorunda" diye bir yorumla korunuyordu.
- * Ayrışma sessizdi: `loopEnd` dosyadan uzunsa Web Audio loop aralığını yok
- * sayar, kısaysa parça erken başa sarar.
+ * Aynı sayıyı üretim script'lerinin yanında BURADA da tutmak, ayrışması
+ * sessiz olan bir kopya yaratır: `loopEnd` dosyadan uzunsa Web Audio loop
+ * aralığını yok sayar, kısaysa parça erken başa sarar. İkisi de çalışma
+ * zamanında hata vermez.
  */
 const loopEndOf = (id: keyof typeof MUSIC_TIMING): number => trackSeconds(MUSIC_TIMING[id]);
 

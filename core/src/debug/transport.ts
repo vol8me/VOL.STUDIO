@@ -3,11 +3,10 @@ import type { DiagnosticsSnapshot } from './types';
 /**
  * Snapshot'ı bir yere GÖNDEREN katman.
  *
- * Diagnostics bir dönem hem ölçüm topluyor hem de `http://127.0.0.1:9876/debug`
- * adresine `fetch` atıyordu: CORE'un normal çalışma zamanı, geliştiricinin
- * makinesindeki bir hata ayıklama sunucusunun adresini biliyordu. Yakalama
- * (capture) ile taşıma (transport) ayrıldı — CORE artık "sunucu nerede?"
- * sorusunu sormaz, tüketici cevabı verir.
+ * Yakalama (capture) ile taşıma ayrı tutulur: CORE ölçümü toplar, hedefi
+ * BİLMEZ. Adresi, protokolü ve kimlik doğrulamayı tüketici bu arayüzü
+ * uygulayarak verir — CORE'un çalışma zamanına hiçbir geliştirme makinesi
+ * adresi gömülmez.
  */
 export interface DiagnosticsTransport {
   /**

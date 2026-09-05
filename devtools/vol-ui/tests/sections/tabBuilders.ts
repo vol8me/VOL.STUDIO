@@ -32,10 +32,10 @@ export interface TabBuilder {
  * Showcase sekmelerinin TEK listesi.
  *
  * Kurulum (`sections.test.ts`) ve etkileşim (`interaction.test.ts`) testleri
- * bir dönem kendi listelerini tutuyordu. Yeni eklenen `workbench` sekmesi
- * ikisine de girmedi: sekme aylarca hiç sürülmeden kaldı, içindeki Toolbar
- * hatası testlerden görünmez geçti. `assertEveryTabCovered` bu sınıfın geri
- * dönmesini engeller.
+ * bu listeyi PAYLAŞIR, kendi kopyalarını tutmaz: ayrı listelerde yeni bir
+ * sekme ikisine de eklenmeyi unutulabilir ve hiç sürülmeden, içindeki hata
+ * testlerden görünmez geçerek kalır. `missingTabModules()` sekme modülü
+ * eklenip listeye girmediğinde bunu yakalar.
  */
 /**
  * @param getRoot Overlay kökünü ÇAĞRI ANINDA veren fonksiyon. Kök `beforeEach`

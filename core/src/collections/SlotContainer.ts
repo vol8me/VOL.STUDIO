@@ -142,9 +142,9 @@ export class SlotContainer<TItem> {
    * Slotu boşaltır ve içeriğini döner. Geçersiz indekste `null` döner ve
    * HİÇBİR ŞEY yazmaz.
    *
-   * Eskiden sınır kontrolü `inRange` yerine elle yapılıyor ve tam sayılığı
-   * atlıyordu: `clearSlot(1.5)` diziye `"1.5"` adlı bir özellik ekliyor,
-   * `fill()` onu temizleyemiyordu.
+   * İndeksin TAM SAYI olması şarttır ve `inRange` bunu kapsar: kesirli bir
+   * indeks diziye `"1.5"` adlı sıradan bir ÖZELLİK yazar, `fill()` onu
+   * temizleyemez.
    */
   clearSlot(index: number): Slot<TItem> | null {
     if (!this.inRange(index)) return null;

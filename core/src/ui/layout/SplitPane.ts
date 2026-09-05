@@ -112,9 +112,9 @@ export class SplitPane {
         : new ResizeObserver(() => {
             if (this.collapsed) return;
             // Görünen boyut kullanıcının TERCİHİNDEN yeniden türetilir, mevcut
-            // boyuttan değil. Bir dönem clamp sonucu tercihin üzerine yazılıyordu:
+            // boyuttan değil; clamp sonucu tercihin üzerine YAZILMAZ. Yazsaydı
             // pencere daraltılıp yeniden genişletildiğinde kullanıcının seçtiği
-            // bölme boyutu kalıcı olarak küçülmüş kalıyordu.
+            // bölme boyutu kalıcı olarak küçülmüş kalırdı.
             const next = this.clamp(this.desiredSize);
             if (next === this.size) return;
             this.size = next;

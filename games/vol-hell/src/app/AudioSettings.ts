@@ -231,8 +231,8 @@ export class AudioSettings {
     }
   }
 
-  /** Dinleyicilere KOPYA verilir — getData() ile ayni sozlesme; canli referans
-   *  bir dinleyicinin ayarlari farkinda olmadan mutasyona ugratmasina izin verirdi. */
+  /** Dinleyicilere KOPYA verilir — getData() ile aynı sözleşme; canlı referans
+   *  bir dinleyicinin ayarları farkında olmadan mutasyona ugratmasina izin verirdi. */
   private notify(): void {
     const snapshot = this.getData();
     for (const listener of this.listeners) {

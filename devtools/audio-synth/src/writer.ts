@@ -225,9 +225,8 @@ export function writeOgg(filePath: string, result: SynthesisResult, opts: OggOpt
      * üretir ve kodlayıcı sürümünü üstveriye yazar. Sonuç: aynı girdiden
      * üretilen iki dosya bayt bayt farklı olur.
      *
-     * Ölçüldü: sekiz sesi yeniden üretmek 8/8 farklı dosya verdi ama çözülmüş
-     * PCM 8/8 birebir aynıydı ve ilk farklı bayt 15'inciydi — tam da seri
-     * numarasının yeri. Yani sentez zaten deterministikti, kararsız olan kaptı.
+     * Kararsız olan sentez DEĞİL, kaptır: çözülmüş PCM yeniden üretimlerde
+     * birebir aynı kalır, ilk farklı bayt akış seri numarasının yerine düşer.
      *
      * Bunun bedeli pratikti: her yeniden üretim, hiçbir şey değişmese bile bir
      * git farkı üretiyordu. Ses farklarını görmezden gelmeyi öğrenen bir ekip,

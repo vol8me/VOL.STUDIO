@@ -136,14 +136,14 @@ describe('I18n — SaveManager entegrasyonu', () => {
   it('TANINMAYAN kayitli dil kabul edilmez, tespit yoluna duser', async () => {
     /*
      * `detectLocale()` bir dili ancak `locales` kumesinde varsa dondurur;
-     * yoksa fallback'e duser. Depodan gelen deger bir donem bu dogrulamayi
-     * TAMAMEN atliyordu: `load<string>(key, detectLocale())` ifadesi yedegi
-     * ozenle dogruluyor ama kayitli degeri oldugu gibi `i18next.init`e
-     * tasiyordu.
+     * yoksa fallback'e düşer. Depodan gelen değer bir donem bu doğrulamayı
+     * TAMAMEN atlıyordu: `load<string>(key, detectLocale())` ifadesi yedeği
+     * özenle doğruluyor ama kayıtlı değeri olduğu gibi `i18next.init`e
+     * taşıyordu.
      *
-     * Depo elle duzenlenebilir, eski bir surumde kaldirilmis bir dil kodu
-     * tasiyabilir ya da `JSON.parse` sonucu hic string olmayabilir. CORE'un
-     * kendi tuketicileri depoya guvenmemeyi ogrenmisken (hepsi
+     * Depo elle düzenlenebilir, eski bir sürümde kaldırılmış bir dil kodu
+     * taşıyabilir ya da `JSON.parse` sonucu hiç string olmayabilir. CORE'un
+     * kendi tüketicileri depoya guvenmemeyi ogrenmisken (hepsi
      * `load<unknown>` + temizlik yapar) CORE'un kendisi tek yerde guveniyordu.
      */
     const saveManager = makeSaveManager('de');

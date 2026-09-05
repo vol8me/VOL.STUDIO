@@ -31,7 +31,7 @@ export class GameAudioDirector {
   private ambientLoaded = false;
   private musicLoaded = false;
   private bossActive = false;
-  /** Ölüm/zafer terminal müziği çaldıktan sonra update'i dondur. */
+  /** Ölüm/zafer terminal müziği çaldıktan sonra update'i döndür. */
   private terminal = false;
   /** Eski sahne örneğinin geç tamamlanan yüklemesi yeni koşuna sızmasın. */
   private lifecycleToken = 0;

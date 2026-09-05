@@ -72,9 +72,9 @@ export class SquareJoystick {
     this.boundPointerMove = (event) => this.onPointerMove(event);
     this.boundPointerUp = (event) => this.onPointerUp(event);
 
-    // Global dinleyiciler yalnizca surukleme suresince bagli tutulur. Constructor'da
-    // baglamak, hic dokunulmayan bir joystick icin bile sayfadaki her pointermove'u
-    // handler'a sokardi (bkz. RadialMenu/Kanban ayni deseni kullanir).
+    // Global dinleyiciler yalnızca sürükleme süresince bağlı tutulur. Constructor'da
+    // bağlamak, hiç dokunulmayan bir joystick için bile sayfadaki her pointermove'u
+    // handler'a sokardı (bkz. RadialMenu/Kanban aynı deseni kullanır).
     this.scope.addListener(this.base, 'pointerdown', this.boundPointerDown as EventListener);
   }
 

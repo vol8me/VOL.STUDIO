@@ -109,7 +109,7 @@ and the browser's native behaviour is preserved.
 ## Simulation time
 
 Render frame time is split into fixed steps by `SimulationClock`
-(`src/runtime/simulation/SimulationClock.ts`). The policy lives in one place and
+(`core/src/time/SimulationClock.ts`). The policy lives in one place and
 is tested without constructing Phaser: at low FPS several full steps reclaim
 real time, at huge deltas (tab return) a catch-up ceiling applies and the
 DROPPED time is reported.

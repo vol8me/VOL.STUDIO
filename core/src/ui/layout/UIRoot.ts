@@ -1,7 +1,7 @@
 import '../theme.css';
 
 const ROOT_CLASS = 'vol-ui-root';
-/** Ayni DOM element'ini paylasan UIRoot ornek sayisi (dataset uzerinde tutulur). */
+/** Aynı DOM element'ini paylasan UIRoot ornek sayısı (dataset üzerinde tutulur). */
 const REF_COUNT_ATTR = 'volUiRootRefs';
 
 /**
@@ -51,9 +51,9 @@ export class UIRoot {
   }
 
   /**
-   * Element paylasildigi icin (ayni parent'ta ikinci bir UIRoot mevcut olani
-   * yeniden kullanir) kosulsuz remove() digerinin altindaki zemini de silerdi.
-   * Yalnizca son sahip DOM'dan kaldirir.
+   * Element paylaşıldığı için (aynı parent'ta ikinci bir UIRoot mevcut olanı
+   * yeniden kullanır) koşulsuz remove() diğerinin altındaki zemini de silerdi.
+   * Yalnızca son sahip DOM'dan kaldırır.
    */
   destroy(): void {
     if (this.released) return;

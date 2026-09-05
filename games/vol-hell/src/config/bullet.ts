@@ -9,7 +9,7 @@ export const bulletConfig = {
   /** Mermi ömrü (ms) — süre dolunca yok edilir. */
   lifetimeMs: 2000,
   /**
-   * Sekme sonrasi KORUNAN hiz orani (0-1). Hiz bu degerle carpilir:
+   * Sekme sonrası KORUNAN hiz orani (0-1). Hiz bu değerle çarpılır:
    * 1 = kayip yok, 0 = tam dur. 0.8 -> her sekmede %20 hiz kaybi.
    */
   bounceDamping: 0.8,

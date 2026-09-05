@@ -22,14 +22,14 @@ let loadPromise: Promise<readonly MusicTrackId[]> | null = null;
  *
  * İki dayanıklılık kuralı:
  *
- * 1. **Kısmi başarı yeterlidir.** Önce `Promise.all` kullanılıyordu: tek bir
- *    bozuk/eksik parça bütün hazırlığı reddediyor ve menü müziği hiç
- *    çalmıyordu. `allSettled` ile sağlam parçalar listeye girer, bozuk olan
- *    yalnızca kendi kaybını yaşar.
+ * 1. **Kısmi başarı yeterlidir.** `allSettled` kullanılır, `all` DEĞİL: tek
+ *    bir bozuk/eksik parça bütün hazırlığı reddetseydi menü müziği hiç
+ *    çalmazdı. Sağlam parçalar listeye girer, bozuk olan yalnız kendi
+ *    kaybını yaşar.
  * 2. **Başarısızlık kalıcı değildir.** Söz reddedilirse önbellek TEMİZLENİR.
- *    Eskiden reddedilmiş söz `loadPromise`te asılı kalıyordu ve sonraki her
- *    `startMenuMusic()` aynı reddi yeniden kullanıyordu: geçici bir ağ/disk
- *    hatası menü müziğini SÜREÇ ÖMRÜ BOYUNCA kapatıyordu.
+ *    Reddedilmiş söz `loadPromise`te asılı kalsaydı sonraki her
+ *    `startMenuMusic()` aynı reddi yeniden kullanır, yani geçici bir ağ/disk
+ *    hatası menü müziğini süreç ömrü boyunca kapatırdı.
  */
 function ensureLoaded(): Promise<readonly MusicTrackId[]> {
   loadPromise ??= loadPlayableMenuTracks().catch((error: unknown) => {

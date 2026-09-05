@@ -1,11 +1,11 @@
 import Database from '@tauri-apps/plugin-sql';
 import { GameStateDbError } from './GameStateDbError';
 
-/** Mevcut sema surumu. Migration eklendiginde artirilir. */
+/** Mevcut şema sürümü. Migration eklendiğinde artırılır. */
 const CURRENT_SCHEMA_VERSION = 1;
 
 export interface GameStateDbOptions {
-  /** SQLite dosya adi. Varsayilan 'game-state.db'. */
+  /** SQLite dosya adı. Varsayılan 'game-state.db'. */
   path?: string;
 }
 
@@ -17,17 +17,17 @@ export interface SaveGame<T = unknown> {
 }
 
 /**
- * SQLite tabanli oyun kayit yonetimi.
- * Offline-first tasarlanmistir; ileride cloud sync katmani eklenebilir.
+ * SQLite tabanlı oyun kayıt yönetimi.
+ * Offline-first tasarlanmıştır; ileride cloud sync katmanı eklenebilir.
  */
 export class GameStateDb {
   private db: Database | null = null;
   private readonly path: string;
   private initialized = false;
   /**
-   * Devam eden init'in promise'i. Her public metot basinda `await this.init()`
-   * cagrildigi icin escanlilik istisna degil normal durum; bu olmadan
-   * `Promise.all([saveGame(a), saveGame(b)])` veritabanini iki kez yukler ve
+   * Devam eden init'in promise'i. Her public metot başında `await this.init()`
+   * çağrıldığı için eşzamanlılık istisna değil normal durum; bu olmadan
+   * `Promise.all([saveGame(a), saveGame(b)])` veritabanını iki kez yükler ve
    * migrate()'i iki kez calistirirdi.
    */
   private initPromise: Promise<void> | null = null;
@@ -36,7 +36,7 @@ export class GameStateDb {
     this.path = options.path ?? 'game-state.db';
   }
 
-  /** Veritabanini yukler, tablolari ve schema version'u olusturur. Idempotent. */
+  /** Veritabanini yükler, tabloları ve schema version'u oluşturur. Idempotent. */
   async init(): Promise<void> {
     if (this.initialized) return;
     if (this.initPromise) return this.initPromise;
@@ -53,11 +53,11 @@ export class GameStateDb {
     try {
       this.db = await Database.load(`sqlite:${this.path}`);
 
-      // `id` PK + CHECK(id = 1): tabloda YALNIZCA tek satir olabilir.
-      // Onceki sema `version`'i PK yapiyordu; ileride VALUES (2) eklenince
-      // versiyon 1 ile cakismayacagi icin tabloda iki satir birden olusur,
-      // `SELECT ... LIMIT 1` de ORDER BY'siz oldugu icin hangi satirin gelecegi
-      // belirsiz kalirdi.
+      // `id` PK + CHECK(id = 1): tabloda YALNIZCA tek satır olabilir.
+      // Önceki şema `version`'i PK yapıyordu; ileride VALUES (2) eklenince
+      // versiyon 1 ile çakışmayacağı için tabloda iki satır birden oluşur,
+      // `SELECT ... LIMIT 1` de ORDER BY'siz olduğu için hangi satırın geleceği
+      // belirsiz kalırdı.
       await this.db.execute(`
         CREATE TABLE IF NOT EXISTS schema_version (
           id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -97,7 +97,7 @@ export class GameStateDb {
     await this.setSchemaVersion(CURRENT_SCHEMA_VERSION);
   }
 
-  /** Sema versiyonunu yazar. `id = 1` sabit oldugu icin her zaman tek satir kalir. */
+  /** Şema versiyonunu yazar. `id = 1` sabit olduğu için her zaman tek satır kalır. */
   private async setSchemaVersion(version: number): Promise<void> {
     await this.db!.execute(
       'INSERT INTO schema_version (id, version) VALUES (1, ?) ' +
@@ -106,7 +106,7 @@ export class GameStateDb {
     );
   }
 
-  /** Veritabani baglantisini kapatir. init() sonrasi tekrar acilabilir. */
+  /** Veritabani baglantisini kapatır. init() sonrası tekrar açılabilir. */
   async close(): Promise<void> {
     if (!this.db) return;
     try {
@@ -122,7 +122,7 @@ export class GameStateDb {
     }
   }
 
-  /** Bir kayit slot'una veri kaydeder. Varolan slotun created_at'i korunur. */
+  /** Bir kayıt slot'una veri kaydeder. Varolan slotun created_at'i korunur. */
   async saveGame<T>(slot: string, data: T): Promise<void> {
     await this.init();
     try {
@@ -212,7 +212,7 @@ export class GameStateDb {
   }
 
   /**
-   * Tüm kayitlari siler. Bu islem geri alınamaz; yanlışlıkla çağrılmaması
+   * Tüm kayıtları siler. Bu islem geri alınamaz; yanlışlıkla çağrılmaması
    * için `{ confirm: true }` zorunludur.
    */
   async clear(options?: { confirm?: boolean }): Promise<void> {

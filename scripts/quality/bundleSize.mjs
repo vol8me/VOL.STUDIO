@@ -5,12 +5,12 @@
  * değil, tarayıcıya İNEN koddur. Ölçü bu yüzden gzip'lenmiş bayttır: sunucular
  * sıkıştırarak gönderir ve kullanıcının beklediği süre o boyutla orantılıdır.
  *
- * BÜTÇE İKİ KATEGORİYE AYRILIR ve bu ayrım bu bekçinin asıl fikridir. Ölçüldü:
- * `vol-hell`in 1731 KB'lık ham JS'inin 1343 KB'ı Phaser'dır — yani %78'i.
- * Tek bir toplam rakam, ekibin gerçekten yazdığı kodu (389 KB) bir bağımlılığın
- * gölgesinde saklar; uygulama kodu iki katına çıksa toplam yalnız %22 artar ve
- * kapı hiçbir şey söylemez. `vendor` bağımlılık yükseltmesinde değişir,
- * `app` her gün değişir; ikisi ayrı ölçülmezse ikincisi görünmez.
+ * BÜTÇE İKİ KATEGORİYE AYRILIR ve bu ayrım bu bekçinin asıl fikridir. Bir
+ * oyunun JS'inin ezici çoğunluğu Phaser'dır; tek bir toplam rakam, ekibin
+ * gerçekten yazdığı kodu bağımlılığın gölgesinde saklar — uygulama kodu iki
+ * katına çıksa bile toplam pek kıpırdamaz ve kapı hiçbir şey söylemez.
+ * `vendor` bağımlılık yükseltmesinde değişir, `app` her gün değişir; ayrı
+ * ölçülmezlerse ikincisi görünmez.
  *
  * Bütçeler `quality.json`da yaşar — kapı eşiklerinin tek kaynağı orasıdır.
  */

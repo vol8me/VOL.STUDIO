@@ -31,9 +31,8 @@ export interface LimbStance {
    * Uzvun katlanabileceği EN KISA kalça–ayak mesafesi (aynı orana göre).
    *
    * Eklemli bir bacak tamamen katlanamaz: femur ve tibia birbirine değer.
-   * Modelde bu sınır YOKTU; tek kelepçe 1 pikseldi ve ayak kalçanın dibine
-   * çekilebiliyordu. Ölçüldü — ön çift adım çevriminde 0.423'e kadar katlanıp
-   * keskin bir V yapıyordu.
+   * Sınır uzuv boyuna ORANLI olmalı — sabit birkaç piksellik bir kelepçe ayağın
+   * kalçanın dibine çekilmesine izin verir ve uzuv keskin bir V'ye katlanır.
    *
    * Uzuv BAŞINA verilir çünkü kuyruk bacak değildir: bir kuyruğun sıkı
    * kıvrılması doğaldır, aynı tabanı ona dayatmak hareketini yapaylaştırır.
@@ -50,8 +49,8 @@ export interface LimbStance {
    * Uzuv sıra bekler mi? Sıra disiplini "gövde her an desteklidir" güvencesidir
    * ve gövdeyi SEKİZ bacak taşır; kısa itici uzuvlar o güvencenin parçası
    * değildir. Sıraya sokulduklarında kendi eşiklerini çoktan aşmış hâlde
-   * bekliyor, kısa erişim payları bittiği için stride'ın yarısından fazlasını
-   * TAM GERİLİ geçiriyorlardı (ölçüldü: %52-56).
+   * bekler, kısa erişim payları bittiği için stride'ın yarısından fazlasını
+   * TAM GERİLİ geçirirlerdi.
    */
   freeStep: boolean;
   /**

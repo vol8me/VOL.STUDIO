@@ -5,10 +5,9 @@ import type { InputState } from './InputState';
 /**
  * Hareket eksenlerinin o karedeki basılı durumu.
  *
- * Adı bir dönem `WasdDownState`'ti ve YANILTICIYDI: tuş eşlemesi artık
- * yapılandırılabilir (`MoveKeyBindings`, varsayılanı WASD ama ok tuşları da
- * verilebilir). Tip adının tek bir klavye düzenini çivilemesi, mekanizmanın
- * düzenden bağımsız olduğu gerçeğini gizliyordu.
+ * Eksenler klavye düzeninden BAĞIMSIZDIR: eşleme `MoveKeyBindings` ile
+ * verilir (varsayılan WASD, ok tuşları da geçerlidir). Tüketici bu tipten
+ * belirli bir tuşu çıkarsayamaz.
  */
 export interface MoveDownState {
   up: boolean;

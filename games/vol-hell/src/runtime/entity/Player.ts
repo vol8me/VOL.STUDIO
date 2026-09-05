@@ -288,10 +288,10 @@ export class Player extends MovableController {
   }
 
   /**
-   * DIKKAT: Her cagrida AYNI Vector2 ornegi doner (GC baskisini azaltmak icin).
-   * Donen degeri SAKLAMA — bir sonraki getPosition() cagrisi uzerine yazar.
-   * Kalici bir kopya gerekiyorsa `.clone()` kullan.
-   * (Ayni sozlesme SpatialGrid.queryNearby() icin de gecerli.)
+   * DİKKAT: Her çağrıda AYNI Vector2 örneği döner (GC baskısını azaltmak için).
+   * Donen değeri SAKLAMA — bir sonraki getPosition() cagrisi üzerine yazar.
+   * Kalıcı bir kopya gerekiyorsa `.clone()` kullan.
+   * (Aynı sözleşme SpatialGrid.queryNearby() için de geçerli.)
    */
   getPosition(): Vector2 {
     this.positionBuf.set(this.arc.x, this.arc.y);

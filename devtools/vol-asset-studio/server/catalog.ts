@@ -360,9 +360,9 @@ function isRecipeKind(kind: AssetKind): boolean {
  * Belgeleri ürettikleri medyayla eşler.
  *
  * Bir çıktıya BİRDEN ÇOK belge işaret edebilir — bir sprite tarifi ve yanındaki
- * serbest metadata aynı `car.png`e bakar. `relatedIds` bu yüzden BİRİKTİRİLİR;
- * eskiden her belge onu tek elemanlı bir diziyle EZİYORDU ve çıktı, son işlenen
- * belge dışındaki bütün bağlarını kaybediyordu.
+ * serbest metadata aynı `car.png`e bakar. `relatedIds` bu yüzden BİRİKTİRİLİR,
+ * atanmaz: her belge onu kendi kimliğiyle ezseydi çıktı, son işlenen belge
+ * dışındaki bütün bağlarını kaybederdi.
  *
  * `recipeId` tekildir. Belgeler İKİ TURDA gezilir — önce gerçek tarifler, sonra
  * sidecar'lar — ve alan yalnız boşsa doldurulur. Sıra, "kim kazanır?" sorusunu

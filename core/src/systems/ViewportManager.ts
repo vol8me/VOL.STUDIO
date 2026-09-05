@@ -116,11 +116,10 @@ export class ViewportManager {
   /**
    * Dünyanın CSS piksel cinsinden boyutu — rasterleme çözünürlüğünden BAĞIMSIZ.
    *
-   * Oyun mantığı (saha sınırı, hız, yarıçap) bu birimde yaşar. Eskiden dünya
-   * doğrudan CİHAZ pikseliydi: 2x bir ekranda arena iki kat geniş oluyor,
-   * dünya birimi/saniye cinsinden sabit olan oyuncu hızı ekranda yarı hıza
-   * düşüyordu. Yani DPR ve kalite ayarı sessizce OYNANIŞI değiştiriyordu.
-   * Dünya artık her cihazda aynı.
+   * Oyun mantığı (saha sınırı, hız, yarıçap) bu birimde yaşar ve her cihazda
+   * AYNIDIR. Dünya cihaz pikseli olsaydı 2x bir ekranda arena iki kat geniş
+   * olur, dünya birimi/saniye cinsinden sabit oyuncu hızı ekranda yarıya
+   * düşerdi: DPR ve kalite ayarı sessizce oynanışı değiştirirdi.
    */
   getWorldSize(): { width: number; height: number } {
     if (this.config.strategy === 'resize') {

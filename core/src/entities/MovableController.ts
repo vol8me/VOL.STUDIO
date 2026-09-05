@@ -13,10 +13,9 @@ export type MovableGameObject = Phaser.GameObjects.GameObject &
 /**
  * Hız tabanlı hareket eden bir varlığın taban sınıfı.
  *
- * Adı bir dönem `PlayerController`'dı ve YANILTICIYDI: sınıfta tek satır
- * oyuncu semantiği yok — yalnızca `velocity`, kelepçeli `move()` ve
- * `destroy()` var. Bir düşmana, bir araca ya da bir konveyör taşıyıcısına
- * aynen hizmet eder; "Player" adı CORE'da olmayan bir rolü ima ediyordu.
+ * Sınıfta oyuncu semantiği YOKTUR: yalnızca `velocity`, kelepçeli `move()`
+ * ve `destroy()`. Bir düşmana, bir araca ya da bir konveyör taşıyıcısına
+ * aynen hizmet eder — tüketici buradan bir oyuncu rolü varsaymaz.
  *
  * `sprite` composition ile tutulur (extend edilmez), bu yüzden Phaser'in
  * destroy() zinciri otomatik gelmez. Alt sınıflar destroy() override ederse

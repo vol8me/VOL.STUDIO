@@ -188,14 +188,11 @@ export class MusicPlaylist {
       if (!this.running || token !== this.startToken) return;
 
       // Listedeki HER parça art arda (tek bir başarı olmadan) başarısız
-      // olduysa pes edilir. Eskiden yalnızca `advanceCursor()` çağrılıp
-      // boşluk kadar beklenirdi — yorum bunun tek-parçalık listede sonsuz
-      // döngüyü önlediğini iddia ediyordu ama ÖNLEMİYORDU: tek parçalık
-      // (veya tamamı bozuk) bir listede `advanceCursor()` sırayla aynı
-      // kalıcı-bozuk parçaya geri döner ve `gapMs` aralıklarla sonsuza kadar
-      // yeniden dener. `queue.length` art arda başarısızlıktan sonra (yani
-      // listedeki her parça en az bir kez denenip başarısız olduktan sonra)
-      // durdurulur.
+      // olduysa pes edilir. Sayaç ŞART: imleci ilerletmek tek başına
+      // durdurmaz — tek parçalık (ya da tamamı bozuk) bir listede imleç aynı
+      // kalıcı-bozuk parçaya döner ve `gapMs` aralıklarla sonsuza dek yeniden
+      // denenir. `queue.length` art arda başarısızlık, listedeki her parçanın
+      // en az bir kez denenip başarısız olduğu anlamına gelir.
       this.consecutiveFailures++;
       if (this.consecutiveFailures >= this.queue.length) {
         console.error(

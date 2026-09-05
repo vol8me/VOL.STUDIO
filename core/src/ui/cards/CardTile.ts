@@ -167,7 +167,7 @@ export class CardTile {
   }
 
   /**
-   * Kartı izgarada yeni belirmiş gibi animasyonla gösterir.
+   * Kartı ızgarada yeni belirmiş gibi animasyonla gösterir.
    * Parent (`CardPicker`/`ShopPicker`) kart görünür olduktan SONRA çağırır;
    * bu sayede gizli katmandayken animasyon boşta opacity:0'da takılı kalmaz.
    */

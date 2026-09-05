@@ -38,8 +38,6 @@ export function buildHudTab(): { element: HTMLElement; destroy: () => void } {
     buildCounterCard(disposables),
     buildFormattedCounterCard(disposables),
     buildResourceCounterCard(disposables),
-    // Minimap eskiden FloatingText'in yerinde (tekli sütun). FloatingText
-    // BuildMenu'nün hemen altına, tam satır olarak taşındı (bkz. aşağıda).
     buildMinimapCard(disposables),
     buildResourceBarCard(disposables),
     buildRoundCounterCard(disposables),

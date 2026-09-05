@@ -69,12 +69,11 @@ export interface BenchmarkSuiteResult {
 const DEFAULT_ITERATIONS = 1_000;
 const DEFAULT_WARMUP_ITERATIONS = 100;
 /**
- * Önceden 3'tü. Nearest-rank p95 formülü `N < 20` için her zaman maksimumu
- * seçtiğinden (bkz. `BenchmarkResult.p95MsPerIteration`), 3 örnekle raporlanan
- * "p95" aslında "3 örneğin en yavaşı" idi — yüzdelik dilim adını taşıyan ama
- * onu ÖLÇMEYEN bir değer. 25, maksimumdan ayrışan en düşük eşiğin (20)
- * üzerinde makul bir hızlı-CLI varsayılanı; gerçekten sağlam bir tahmin
- * isteyen çağıran `--samples`'ı yükseltebilir.
+ * 20'nin ALTINA düşürülemez: nearest-rank p95 formülü `N < 20` için her zaman
+ * maksimumu seçer (bkz. `BenchmarkResult.p95MsPerIteration`), yani raporlanan
+ * "p95" yüzdelik dilim adını taşıyan ama onu ölçmeyen bir değere dönüşür.
+ * 25 hızlı bir CLI varsayılanıdır; daha sağlam tahmin isteyen çağıran
+ * `--samples`'ı yükseltir.
  */
 const DEFAULT_SAMPLES = 25;
 

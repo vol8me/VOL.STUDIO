@@ -9,7 +9,7 @@ import { createFixtureProject, type FixtureProject } from '../server/fixtures.js
  * Diğer sunucu testleri `frontend: 'none'` ile koşar; o kurulumda Vite ara
  * katmanı hiç bağlanmaz. Tam da bu boşlukta bir regresyon üretime kaçtı: Vite
  * ara katmanı filtresiz bağlandığında SPA fallback'i her `/api/**` isteğini
- * `index.html`e çeviriyor, geliştirme modunda uygulama katalogu hiç
+ * `index.html`e çeviriyor, geliştirme modunda uygulama kataloğu hiç
  * yükleyemiyordu. Bu dosya iki frontend modunu da gerçek sunucuyla dener.
  *
  * Vite dev sunucusu bu testler için gerçekten başlatılır; süre onun maliyetidir.

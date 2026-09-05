@@ -116,13 +116,13 @@ if (typeof globalThis.FontFace === 'undefined') {
   } as unknown as typeof FontFace;
 }
 
-// document.fonts stub'i KOSULSUZ kurulur. Yeni jsdom surumleri native bir
-// `document.fonts` sagliyor ama `ready` promise'i hicbir zaman resolve
+// document.fonts stub'i KOŞULSUZ kurulur. Yeni jsdom surumleri native bir
+// `document.fonts` sağlıyor ama `ready` promise'i hiçbir zaman resolve
 // olmuyor: Game.ts'teki `Promise.race([document.fonts.ready, timeout])` her
-// createVolGame cagrisinda tam TECH.FONT_READY_FALLBACK_MS (5 sn) bekliyor,
-// vitest'in 5 sn test timeout'una carpiyor ve yarida kalan promise zinciri
-// bir sonraki teste siziyordu. Kosullu stub (`if (!('fonts' in document))`)
-// native implementasyon varken devreye girmedigi icin sorunu cozmuyor.
+// createVolGame çağrısında tam TECH.FONT_READY_FALLBACK_MS (5 sn) bekliyor,
+// vitest'in 5 sn test timeout'una carpiyor ve yarıda kalan promise zinciri
+// bir sonraki teste sızıyordu. Koşullu stub (`if (!('fonts' in document))`)
+// native implementasyon varken devreye girmediği için sorunu çözmüyor.
 if (typeof document !== 'undefined') {
   const fontSet = new Set<FontFace>();
   Object.defineProperty(document, 'fonts', {

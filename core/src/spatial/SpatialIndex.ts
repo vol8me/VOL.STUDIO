@@ -46,8 +46,8 @@ export class SpatialIndex<T extends SpatialEntity> {
   /**
    * Her tamponun hangi sorguya ait olduğunu tutan devir damgası.
    *
-   * Halkanın sessiz tehlikesi ölçüldü: 5 sonuç aynı anda saklandığında
-   * birinci sonuç beşincinin verisine dönüşüyor ve HİÇBİR hata çıkmıyordu.
+   * Halka DÖRT tampon taşır: aynı anda saklanan beşinci sorgu birincinin
+   * verisini üzerine yazar ve kendiliğinden hiçbir hata çıkmaz.
    * Damga, `assertQueryValid` ile bu bozulmayı gürültülü hâle getirir;
    * sonucu saklaması gereken çağıran ise `queryInto()` ile kendi dizisini
    * verir ve halkaya hiç girmez.
@@ -90,9 +90,8 @@ export class SpatialIndex<T extends SpatialEntity> {
   /**
    * Varlığı mevcut konumuna göre ekler. Zaten varsa konumu tazelenir.
    *
-   * Sonlu olmayan konum REDDEDİLİR: eskiden böyle bir varlık indekse GİRİYOR
-   * (`size` artıyor) ama hiçbir sorgu onu bulamıyordu — indekste görünen ama
-   * erişilemeyen bir kara delik.
+   * Sonlu olmayan konum REDDEDİLİR (atar). Kabul edilseydi varlık `size`'a
+   * sayılır ama hiçbir hücreye düşmediği için hiçbir sorgu onu bulamazdı.
    */
   insert(entity: T): void {
     if (!isFiniteNumber(entity.x) || !isFiniteNumber(entity.y)) {

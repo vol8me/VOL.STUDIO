@@ -32,7 +32,7 @@ describe('GameStateDb migration', () => {
     const db = new GameStateDb();
     await db.init();
 
-    // v0 -> v1: tek satirli semaya (id = 1) version = 1 yazilir
+    // v0 -> v1: tek satirli şemaya (id = 1) version = 1 yazılır
     expect(mockExecute).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO schema_version'),
       [1],

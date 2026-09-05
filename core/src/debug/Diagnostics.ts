@@ -9,7 +9,7 @@ import type {
   ScreenInfo,
 } from './types';
 
-/** Kayan istatistik penceresinin ornek sayisi. */
+/** Kayan istatistik penceresinin ornek sayısı. */
 const SAMPLE_WINDOW = 60;
 
 interface RollingStats {
@@ -34,7 +34,7 @@ export class Diagnostics {
   private readonly sampleEvery: number;
   private readonly transport: DiagnosticsTransport;
   private readonly overlay: boolean;
-  /** Aktif asamalarin baslangic damgalari — sureden AYRI tutulur (bkz. endStage). */
+  /** Aktif asamalarin başlangıç damgalari — süreden AYRI tutulur (bkz. endStage). */
   private readonly stageStarts = new Map<string, number>();
   private readonly stageTimes = new Map<string, number>();
   private readonly counts = new Map<string, number>();
@@ -62,7 +62,7 @@ export class Diagnostics {
 
     if (this.overlay && typeof document !== 'undefined') {
       this.panel = document.createElement('div');
-      // Stil CSS'ten gelir; satir ici cssText tasarim sistemini baypas eder
+      // Stil CSS'ten gelir; satır içi cssText tasarım sistemini baypas eder
       // ve Tauri CSP'sinde style-src 'unsafe-inline' ister.
       this.panel.className = 'vol-diagnostics-panel';
       document.body.appendChild(this.panel);
@@ -116,10 +116,10 @@ export class Diagnostics {
   }
 
   /**
-   * Asamayi bitirir. Baslangic damgasi ile sure AYRI map'lerde tutulur: tek
-   * map'te tutulup uzerine yazilirsa ikinci bir endStage() cagrisi
-   * `now - sure` hesaplayip devasa bir cop deger yazar ve overlay sessizce
-   * yanlis veri gosterir.
+   * Aşamayı bitirir. Başlangıç damgası ile sure AYRI map'lerde tutulur: tek
+   * map'te tutulup üzerine yazılırsa ikinci bir endStage() cagrisi
+   * `now - sure` hesaplayıp devasa bir çöp değer yazar ve overlay sessizce
+   * yanlış veri gösterir.
    */
   endStage(name: string): void {
     const start = this.stageStarts.get(name);
@@ -170,9 +170,9 @@ export class Diagnostics {
   }
 
   /**
-   * Ornek ekler. min/max yalnizca pencereden eleman dustugunde tam tarama
-   * yapilarak guncellenir; her cagrida `Math.min(...values)` hesaplamak olcum
-   * aracinin kendi maliyetini artirir.
+   * Ornek ekler. min/max yalnızca pencereden eleman düştüğünde tam tarama
+   * yapılarak güncellenir; her çağrıda `Math.min(...values)` hesaplamak ölçüm
+   * aracının kendi maliyetini artırır.
    */
   private pushSample(stats: RollingStats, value: number): void {
     stats.values.push(value);
@@ -181,7 +181,7 @@ export class Diagnostics {
     if (stats.values.length > SAMPLE_WINDOW) {
       const removed = stats.values.shift()!;
       stats.sum -= removed;
-      // Dusen deger uc degerlerden biriyse tam tarama kacinilmaz.
+      // Düşen değer uc değerlerden biriyse tam tarama kaçınılmaz.
       if (removed === stats.min || removed === stats.max) {
         this.recomputeExtremes(stats);
         return;

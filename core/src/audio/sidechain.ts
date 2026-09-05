@@ -32,10 +32,10 @@ export class SidechainDucker {
 
   /**
    * Duck profilini uygular. Hem duck hem release AudioContext zaman cizelgesine
-   * zamanlanir — onceki tasarim release'i `setTimeout` ile tetikliyordu ve iki
-   * ayri saat kullanmak sekme arka plana alindiginda kirilyordu: setTimeout
-   * throttle edilir, ustelik GameAudio context'i suspend ettigi icin
-   * `currentTime` tamamen durur. Sonuc: sekmeye donuldugunde muzik kisik kalirdi.
+   * zamanlanır — önceki tasarım release'i `setTimeout` ile tetikliyordu ve iki
+   * ayri saat kullanmak sekme arka plana alındığında kirilyordu: setTimeout
+   * throttle edilir, üstelik GameAudio context'i suspend ettiği için
+   * `currentTime` tamamen durur. Sonuc: sekmeye dönüldüğünde muzik kisik kalırdı.
    */
   duck(profile: DuckingProfile): void {
     const now = this.context.currentTime;
@@ -57,13 +57,12 @@ export class SidechainDucker {
     const end = releaseStart + profile.release;
 
     // `cancelScheduledValues` yukarıda ÖNCEKİ release'i (varsa) HER ZAMAN
-    // iptal eder. Release'in yeniden planlanması eskiden yalnızca
-    // `end > activeUntil` iken oluyordu — daha KISA/erken biten bir duck,
-    // hold aşamasında devam eden daha UZUN bir duck'ın üstüne binince bu
-    // şart sağlanmaz, ama önceki release zaten iptal edilmiş olur: hiçbiri
-    // yeniden planlanmaz ve gain sonsuza dek duck hedefinde TAKILI kalır.
-    // Bunun yerine iki adayın (önceki kazanan pencere vs. bu çağrının
-    // penceresi) en geç bitentarafı HER ZAMAN yeniden planlanır.
+    // iptal eder; bu yüzden bir release HER ÇAĞRIDA yeniden planlanmalıdır.
+    // Yalnız `end > activeUntil` iken planlamak YETMEZ: daha kısa/erken biten
+    // bir duck, hold aşamasındaki daha uzun bir duck'ın üstüne bindiğinde şart
+    // sağlanmaz, ama önceki release zaten iptal edilmiştir — gain sonsuza dek
+    // duck hedefinde takılı kalır. İki adaydan (önceki kazanan pencere ve bu
+    // çağrının penceresi) en GEÇ bitenin release'i planlanır.
     const previousReleaseStart = this.releaseStartAt;
     const previousEnd = this.activeUntil;
     const releaseWins = end >= previousEnd;
@@ -73,7 +72,7 @@ export class SidechainDucker {
     this.activeUntil = winningEnd;
     this.releaseStartAt = winningReleaseStart;
     // Release de audio saatinde: sekma arka plandayken context durursa
-    // ducking de donar ve geri donuldugunde kaldigi yerden dogru cozulur.
+    // ducking de donar ve geri dönüldüğünde kaldığı yerden dogru çözülür.
     // `currentTarget` burada 1'e set EDILMEZ — release başladığında gain
     // timeline tarafından 1'e çekilir; JS state olan currentTarget, hold
     // aşamasında gelen yeni duck'lar için etkin hedefi korumalıdır.

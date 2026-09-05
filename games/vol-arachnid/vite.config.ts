@@ -27,9 +27,9 @@ export default defineConfig({
     hmr: host ? { protocol: 'ws', host, port: 1422 } : undefined,
     /*
      * Dev sunucusunun okuyabileceği ağaç, gerçekten TÜKETİLEN paketlerle
-     * sınırlıdır. Bir dönem repo kökü açıktı çünkü rig asset'leri devtools
-     * ağacından import ediliyordu; asset'ler bu paketin sahipliğine taşındıktan
-     * sonra o genişliğin gerekçesi kalmadı.
+     * sınırlıdır — repo kökü AÇILMAZ. Rig asset'leri bu paketin sahipliğinde
+     * durur; bir devtool ağacından import gerekiyorsa çözüm listeyi genişletmek
+     * değil, asset'i buraya taşımaktır.
      */
     fs: {
       allow: [
@@ -66,17 +66,8 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      /*
-       * CORE alias'ları `core/package.json` exports haritasından TÜRETİLİR.
-       *
-       * Buradaki liste bir dönem elle yazılıyordu ve tek bir önek girdisi
-       * (`'@volstudio/core' -> core/src`) taşıyordu. Vite öneki dizine eşler:
-       * `@volstudio/core/random` -> `core/src/random` (bir DİZİN) çözülemez,
-       * ama `@volstudio/core/systems/SaveManager` gibi haritada HİÇ OLMAYAN
-       * bir yol çözülür. Yani testler CORE'un iç yapısına uzanabiliyor,
-       * yayınlanmış yüzeyi ise kısmen görünmez kalıyordu — sözleşme fiilen
-       * uygulanmıyordu.
-       */
+      // CORE alias'ları `core/package.json` exports haritasından TÜRETİLİR;
+      // liste burada elle tutulmaz (sözleşme: `scripts/vite/coreAliases.mjs`).
       ...coreAliases(),
       {
         find: '@volstudio/tauri-v2',

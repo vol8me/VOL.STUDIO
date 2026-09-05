@@ -397,8 +397,8 @@ export class GameScene extends BaseScene {
 
   update(_time: number, delta: number): void {
     if (this.pauseCtl.isPaused) {
-      // beginFrame() ilk isi counts.clear() — duraklamada cagirmak overlay'deki
-      // tum sayaclari (dusman, mermi, partikul) tam da incelenmek istenen anda siler.
+      // beginFrame() ilk isi counts.clear() — duraklamada çağırmak overlay'deki
+      // tüm sayaçları (düşman, mermi, partikül) tam da incelenmek istenen anda siler.
       return;
     }
 
@@ -411,8 +411,8 @@ export class GameScene extends BaseScene {
     diagnostics?.setInput(this.inputManager.getDebugSnapshot());
     diagnostics?.endStage('input');
 
-    // Input state frame basina BIR kez okunur. Iki ayri getState() cagrisi hem
-    // gereksiz Vector2 uretiyor hem de iki farkli anlik goruntu yaratiyordu.
+    // Input state frame başına BIR kez okunur. Iki ayri getState() cagrisi hem
+    // gereksiz Vector2 üretiyor hem de iki farklı anlik görüntü yaratiyordu.
     const inputState = this.inputManager.getState(this.player.getPosition());
 
     // Girdi anlık görüntüsü frame başına BİR kez okunur ve bütün adımlara

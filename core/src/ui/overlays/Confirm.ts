@@ -55,8 +55,8 @@ export function showConfirm(options: ConfirmOptions): Promise<boolean> {
       signal?.removeEventListener('abort', onAbort);
       resolve(result);
       modal.close();
-      // Dil dinleyicisi hemen cozulur; DOM temizligi gecis bitince yapilir.
-      // Boylece timeout atesmeden once sayfa degisse bile listener sizmaz.
+      // Dil dinleyicisi hemen çözülür; DOM temizliği gecis bitince yapılır.
+      // Böylece timeout atesmeden once sayfa değişse bile listener sızmaz.
       i18next.off('languageChanged', onLanguageChanged);
       window.setTimeout(() => modal.destroy(), MODAL_TRANSITION_MS);
     };

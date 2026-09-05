@@ -62,8 +62,8 @@ export class Popup {
       }
     };
 
-    // Popup viewport koordinatlariyla konumlanir; acikken sayfa kaydirilir veya
-    // pencere yeniden boyutlanirsa hedefinden kopup havada kalirdi.
+    // Popup viewport koordinatlariyla konumlanır; açıkken sayfa kaydırılır veya
+    // pencere yeniden boyutlanirsa hedefinden kopup havada kalırdı.
     this.boundReposition = () => this.reposition();
   }
 
@@ -93,7 +93,7 @@ export class Popup {
       });
     }
     document.addEventListener('keydown', this.boundKeydown);
-    // capture: true — ic scroll konteynerlerinin kaydirmasi da yakalanmali.
+    // capture: true — ic scroll konteynerlerinin kaydırması da yakalanmali.
     window.addEventListener('scroll', this.boundReposition, { capture: true, passive: true });
     window.addEventListener('resize', this.boundReposition);
   }

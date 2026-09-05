@@ -65,8 +65,8 @@ export function getDifficultyState(elapsedMs: number): DifficultyState {
       difficultyConfig.minSpawnIntervalMs,
       enemyConfig.spawnIntervalMs * spawnMultiplier,
     ),
-    // Tavan sart: extraEnemies dakikada +4 buyuyor ve spawn araligi 200 ms'de
-    // tabanlandigi icin uzun kosularda dusman sayisi sinirsiz artardi.
+    // Tavan sart: extraEnemies dakikada +4 büyüyor ve spawn aralığı 200 ms'de
+    // tabanlandığı için uzun koşularda düşman sayısı sınırsız artardı.
     maxEnemies: Math.min(difficultyConfig.maxEnemiesCap, enemyConfig.maxCount + extraEnemies),
     scoreMultiplier: Math.min(difficultyConfig.maxScoreMultiplier, scoreMultiplier),
   };

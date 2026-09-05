@@ -27,7 +27,8 @@ const DEFAULT_MOVE_DEADZONE = 0.05;
  * okumamalıdır; alan, kendi gövde fiziği olmayan basit bir rig içindir.
  *
  * Simülasyona/determinizme dokunmaz; yalnız çizim anının poz sinyallerini
- * sürer. `RigPartAnimator` bu sinyalleri per-grup hedeflere çevirir.
+ * (`RigMotionSignals`) sürer. Bu sinyalleri parça hedeflerine çevirmek
+ * TÜKETİCİNİN işidir — model hiçbir parça adı ya da grup şeması bilmez.
  */
 export class RigMotionModel {
   private readonly facingSpring = new Spring1D(0);

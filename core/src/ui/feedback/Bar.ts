@@ -175,7 +175,7 @@ export class Bar {
     return this.value;
   }
 
-  /** Etiketi runtime'da degistirir. Yeni etiket hemen render edilir. */
+  /** Etiketi runtime'da değiştirir. Yeni etiket hemen render edilir. */
   setLabel(label: BarLabel): void {
     this.label = label;
 

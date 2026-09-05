@@ -7,9 +7,8 @@
  * çalışan bir arama döngüsünde nesne kutulama, algoritmanın kendisinden pahalı
  * hâle gelir.
  *
- * `findPath` (A*) ve `FlowField` (Dijkstra) bir dönem KENDİ kopyalarını
- * taşıyordu — aynı yapının iki bağımsız uygulaması, ikisi de elle senkron
- * tutulmak zorundaydı.
+ * `findPath` (A*) ve `FlowField` (Dijkstra) bu TEK uygulamayı paylaşır;
+ * öncelik kuyruğu davranışı ikisinde de aynıdır.
  */
 export class MinHeap {
   private readonly values: number[] = [];

@@ -38,7 +38,7 @@ export class Wizard {
   private boundBackClick: () => void;
   private boundNextClick: () => void;
   private transitionToken = 0;
-  /** Bekleyen gecis zamanlayicisi/karesi — destroy() iptal eder. */
+  /** Bekleyen gecis zamanlayıcısı/karesi — destroy() iptal eder. */
   private transitionTimer: number | null = null;
   private transitionFrame: number | null = null;
   /** validate() beklenirken ikinci bir ilerleme baslatilmasini engeller. */
@@ -98,8 +98,8 @@ export class Wizard {
 
     // İlk render'da geçiş animasyonu yok — kayacak önceki içerik yoktur.
     this.contentSlot.replaceChildren(this.steps[this.currentIndex].content.element);
-    // notify:false — tüketici henüz Wizard referansına sahip degil; constructor'dan
-    // onStepChange tetiklemek cagirani hazir olmadigi bir callback'e sokar.
+    // notify:false — tüketici henüz Wizard referansına sahip değil; constructor'dan
+    // onStepChange tetiklemek çağıranı hazir olmadığı bir callback'e sokar.
     this.updateChrome({ notify: false });
 
     i18next.on('languageChanged', this.onLanguageChanged);
@@ -125,7 +125,7 @@ export class Wizard {
   }
 
   destroy(): void {
-    // Gecis zamanlayicisi kopmus DOM uzerinde replaceChildren cagirmamali.
+    // Gecis zamanlayıcısı kopmus DOM üzerinde replaceChildren cagirmamali.
     if (this.transitionTimer !== null) {
       window.clearTimeout(this.transitionTimer);
       this.transitionTimer = null;
@@ -164,7 +164,7 @@ export class Wizard {
 
   /**
    * Async `validate()` beklenirken buton kilitlenir. Aksi halde yavas bir
-   * dogrulama sirasinda cift tiklama iki gecisi kuyruga alir ve bir adim atlanir.
+   * doğrulama sırasında cift tıklama iki geçişi kuyruğa alir ve bir adim atlanır.
    */
   private async handleNext(): Promise<void> {
     if (this.advancing) return;

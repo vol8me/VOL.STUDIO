@@ -41,9 +41,9 @@ export class MainMenuScene extends BaseScene {
   }
 
   protected createScene(): void {
-    // Phaser sahne ornegini yeniden kullanir; alan baslaticisi restart'ta
-    // calismaz. Sifirlanmazsa Ayarlar'dan donunce deger 'Settings' olarak asili
-    // kalir ve onShutdown muzigi yanlislikla durdurmaz.
+    // Phaser sahne örneğini yeniden kullanır; alan baslaticisi restart'ta
+    // çalışmaz. Sıfırlanmazsa Ayarlar'dan dönünce değer 'Settings' olarak asılı
+    // kalır ve onShutdown müziği yanlışlıkla durdurmaz.
     this.nextScene = null;
     this.exitPromptAbort?.abort();
     this.exitPromptAbort = null;

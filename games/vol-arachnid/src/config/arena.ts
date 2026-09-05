@@ -5,11 +5,10 @@ export const arenaConfig = {
   /**
    * Gövde MERKEZİNİN duvara yaklaşabileceği en küçük mesafe.
    *
-   * Bir dönem 180px'ti: uzuvların tamamı sınırın içinde kalsın diye gövde
-   * duvardan bir gövde boyu uzakta tutuluyordu ve sınır, oyun alanını
-   * daraltan görünmez ikinci bir duvar gibi davranıyordu. Ölçü artık gövde
-   * kabuğunun yarıçapıdır; uzuvlar sınırın üstüne taşabilir — bir örümcek
-   * zaten duvara basar.
+   * Ölçü gövde KABUĞUNUN yarıçapıdır, uzuv açıklığı değil: uzuvlar sınırın
+   * üstüne taşabilir — bir örümcek zaten duvara basar. Uzuvları da içeride
+   * tutmak gövdeyi duvardan bir gövde boyu uzakta tutar ve sınır, oyun alanını
+   * daraltan görünmez ikinci bir duvara dönüşür.
    */
   bodyRadiusPx: 84,
   borderColor: 0x3a4b5c,

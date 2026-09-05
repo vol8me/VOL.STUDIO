@@ -492,13 +492,12 @@ export class CardScreens {
    * Dükkan durumunu ekonomiden türetir; bakiye vurgusunun YÖNÜNÜ de burada
    * hesaplar.
    *
-   * Yön eskiden çağrı yerlerinden (`handleBuy` → `'decrease'`) geçiliyordu ve
-   * HİÇ görünmüyordu: satın alma önce `economy.spendFlux()` çağırıyor, bu da
-   * senkron `onFluxChange` aboneliğini tetikleyip dükkanı YÖNSÜZ bir kez
-   * render ettiriyordu. `ShopPicker` bakiye etiketini o ilk render'da
-   * güncellediği için ardından gelen yönlü render "değişiklik yok" sayılıp
-   * kırmızı/yeşil sınıfı hiç eklenmiyordu. Yönü tek kaynaktan (son RENDER
-   * EDİLEN bakiye) türetince hangi yolun önce geldiği önemsizleşir.
+   * Yön çağrı yerinden GEÇİRİLMEZ, son RENDER EDİLEN bakiyeden türetilir.
+   * Geçirilseydi hiç görünmezdi: satın alma önce `economy.spendFlux()`
+   * çağırır, bu senkron `onFluxChange` aboneliğini tetikler ve dükkanı yönsüz
+   * bir kez render ettirir; `ShopPicker` bakiye etiketini o ilk render'da
+   * güncellediği için ardından gelen yönlü render "değişiklik yok" sayılır.
+   * Tek kaynaktan türetmek hangi yolun önce geldiğini önemsizleştirir.
    */
   private buildShopState(transition?: ShopPickerState['transition']): ShopPickerState {
     const flux = this.economy.getFlux();

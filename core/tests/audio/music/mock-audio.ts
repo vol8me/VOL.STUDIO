@@ -1,13 +1,13 @@
 /**
  * Zamanlamayi kabaca modelleyen AudioParam sahtesi.
  *
- * `when` parametresi ARTIK yok sayilmiyor: gelecege zamanlanan bir degisiklik
- * `value`'yu aninda degistirmez. Onceki sahte, "simdi kis, 130 ms sonra ac"
- * gibi iki asamali bir zamanlamayi tek adima indirgeyip son cagriyi aninda
- * uyguluyordu — gercek Web Audio'da olmayan bir davranis.
+ * `when` parametresi ARTIK yok sayilmiyor: gelecege zamanlanan bir değişiklik
+ * `value`'yu anında değiştirmez. Önceki sahte, "simdi kis, 130 ms sonra ac"
+ * gibi iki aşamalı bir zamanlamayi tek adima indirgeyip son çağrıyı anında
+ * uyguluyordu — gerçek Web Audio'da olmayan bir davranış.
  *
- * `ownerContext` currentTime'i okumak icin baglanir; verilmezse eski davranis
- * (aninda uygula) korunur.
+ * `ownerContext` currentTime'i okumak için bağlanır; verilmezse eski davranış
+ * (anında uygula) korunur.
  */
 class FakeAudioParam {
   value = 0;
@@ -18,7 +18,7 @@ class FakeAudioParam {
     this.ownerContext = context;
   }
 
-  /** `when` simdiden sonraysa deger hemen degismez, yalnizca kuyruga girer. */
+  /** `when` şimdiden sonraysa değer hemen değişmez, yalnızca kuyruğa girer. */
   private applyAt(value: number, when: number): void {
     this.scheduled.push({ when, value });
     const now = this.ownerContext?.currentTime;
@@ -27,7 +27,7 @@ class FakeAudioParam {
     }
   }
 
-  /** Test yardimcisi: saati ilerletip zamani gelen degisiklikleri uygular. */
+  /** Test yardimcisi: saati ilerletip zamanı gelen değişiklikleri uygular. */
   advanceTo(time: number): void {
     for (const entry of this.scheduled) {
       if (entry.when <= time) this.value = entry.value;
@@ -49,7 +49,7 @@ class FakeAudioParam {
     return this;
   }
 
-  /** Zamanlanan olaylari iptal eder ama o andaki degeri korur. */
+  /** Zamanlanan olayları iptal eder ama o andaki değeri korur. */
   cancelAndHoldAtTime(when: number): this {
     this.scheduled = this.scheduled.filter((s) => s.when < when);
     return this;
@@ -158,7 +158,7 @@ export class FakeAudioContext {
 
   createGain(): AudioNode {
     const node = new FakeGainNode();
-    // Param'in `when` degerlendirmesi icin context saatine erisimi olmali.
+    // Param'in `when` değerlendirmesi için context saatine erişimi olmalı.
     node.gain.attachContext(this);
     return node as unknown as GainNode;
   }

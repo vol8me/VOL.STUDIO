@@ -337,10 +337,11 @@ export class ArachnidLegs {
       /*
        * Hedef, uzvun katlanabileceği EN KISA mesafenin altına inemez.
        *
-       * Eklemli bir bacak tamamen katlanamaz. Bu taban bir dönem yalnız 1
-       * pikseldi; gövde basılı ayağın üstünden geçerken ön çift 0.423'e kadar
-       * katlanıp keskin bir V yapıyordu (ölçüldü). Taban `minReachRatio` ile
-       * uzuv boyuna orantılı olarak konur — kısaltma da bu tabanı aşamaz.
+       * Eklemli bir bacak tamamen katlanamaz: femur ile tibia birbirine
+       * dayanır. Taban `LimbStance.minReach` ile uzuv boyuna ORANTILI konur,
+       * sabit bir piksel değeriyle değil — sabit taban, gövde basılı ayağın
+       * üstünden geçerken ön çiftin keskin bir V'ye katlanmasına izin verir.
+       * Kısaltma (`tuckPx`) da bu tabanı aşamaz.
        */
       const minReach = driver.totalLength * driver.stance.minReach;
       const reach = Math.hypot(dx, dy);

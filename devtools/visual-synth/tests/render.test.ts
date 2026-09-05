@@ -431,7 +431,7 @@ describe('üç kanallı bileşim (D3)', () => {
       ]),
     );
 
-    // Siluet her yerde dolu…
+    // Silüet her yerde dolu…
     expect(result.channels.coverage[at(32, 4, 16)]).toBe(1);
     expect(result.channels.coverage[at(32, 28, 16)]).toBe(1);
     // …ama yüzey soldan sağa yükseliyor.

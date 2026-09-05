@@ -14,12 +14,11 @@ import { clamp } from '@volstudio/core/math/interpolation';
 /** Bir ses parametre setinden Float32Array kanalları üretir.
  *  2x oversampling ile aliasing azaltılmış, bandlimited dalga şekilleri.
  *
- *  Tüm sayısal alanlar `clamp()` ile geçirilir — `Math.max`/`Math.min` NaN
- *  karşısında NaN döner (`Math.max(1, NaN) === NaN`), yani çağıran taraftan
- *  gelen bozuk bir değer (NaN/Infinity/0/negatif) eskiden buradan sessizce
- *  sızıp `Float32Array(Infinity)` gibi kontrolsüz bir hataya ya da NaN'a
- *  bulaşmış bir çıktı buffer'ına yol açabiliyordu. `clamp` NaN'ı güvenle
- *  aralığın alt sınırına sabitler. */
+ *  Tüm sayısal alanlar `clamp()` ile geçirilir; `Math.max`/`Math.min` bu iş
+ *  için YETMEZ çünkü NaN karşısında NaN döner (`Math.max(1, NaN) === NaN`) ve
+ *  çağırandan gelen bozuk bir değer (NaN/Infinity/0/negatif) sessizce sızarak
+ *  `Float32Array(Infinity)` gibi kontrolsüz bir hataya ya da NaN'a bulaşmış
+ *  çıktı buffer'ına yol açar. `clamp` NaN'ı aralığın alt sınırına sabitler. */
 export function synthesize(params: SynthParams): SynthesisResult {
   const sampleRate = clamp(params.sampleRate ?? DEFAULT_SAMPLE_RATE, 1000, 384000);
   const internalRate = sampleRate * OVERSAMPLE_FACTOR;

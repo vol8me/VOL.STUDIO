@@ -31,7 +31,7 @@ export interface BossScaling {
  * - Ateş hızı çarpanı oyuncunun HAREKET hızını takip eder (`^0.5`, [1, 1.8]):
  *   hızlı oyuncu daha sık saldırıyla baskılanır.
  *
- * Sonuç spawn anında BİR KEZ hesaplanır ve dondurulur; boss dövüşünün
+ * Sonuç spawn anında BİR KEZ hesaplanır ve döndürülür; boss dövüşünün
  * ortasında alınan bir kart boss'u güçlendirmez.
  */
 export function computeBossScaling(playerStats: HellStatBlock): BossScaling {

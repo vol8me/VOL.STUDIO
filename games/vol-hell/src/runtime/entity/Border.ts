@@ -26,9 +26,9 @@ export class Border {
   }
 
   private computeBounds(width: number, height: number): BorderBounds {
-    // Cok dar pencerede sabit margin `right < left` uretir; Phaser.Math.Clamp
-    // min > max durumunda min dondurdugu icin her sey sol kenara yapisir ve
-    // oyun oynanamaz hale gelirdi. Margin viewport'un bir oranina kelepcelenir.
+    // Cok dar pencerede sabit margin `right < left` üretir; Phaser.Math.Clamp
+    // min > max durumunda min döndürdüğü için her şey sol kenara yapışır ve
+    // oyun oynanamaz hale gelirdi. Margin viewport'un bir oranına kelepçelenir.
     const margin = Math.min(
       borderConfig.margin,
       width * borderConfig.maxMarginRatio,

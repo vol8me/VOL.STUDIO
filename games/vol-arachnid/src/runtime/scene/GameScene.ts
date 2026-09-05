@@ -229,10 +229,10 @@ export class GameScene extends Phaser.Scene {
     this.body.update(state.move, state.actions.dash, simDeltaMs);
 
     /*
-     * Gövde durumu TEK bir sözleşmeden okunur. Sahne bir dönem her tüketici
-     * için ayrı bir durum nesnesi kuruyordu; aynı gerçeğin iki şekli, iki
-     * tahsis ve `turnRate`in birimi değişirse sessizce kayacak üç çağrı yeri
-     * demekti (bkz. `runtime/entity/locomotionSignals.ts`).
+     * Gövde durumu TEK bir sözleşmeden okunur (bkz.
+     * `runtime/entity/locomotionSignals.ts`). Her tüketiciye ayrı bir durum
+     * nesnesi kurmak aynı gerçeğin iki şeklini, kare başına fazladan tahsisi
+     * ve `turnRate`in birimi değişirse sessizce kayacak çağrı yerleri doğurur.
      */
     const signals = this.body.signals;
     this.assembled.container.setPosition(signals.x, signals.y);

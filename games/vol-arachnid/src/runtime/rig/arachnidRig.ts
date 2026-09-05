@@ -185,7 +185,7 @@ function buildRebuiltLimb(
   /*
    * Kalça, KÖK KEMİĞİN gövdeye bakan ucudur.
    *
-   * Kaynak zincirin en iç noktası (ok ucunun ucu) gövde merkezine 30 px
+   * Kaynak zincirin en iç noktası (ok üçünün ucu) gövde merkezine 30 px
    * mesafededir; oradan başlayan bir uzuv boyunun yarısını kabuğun altında
    * harcar ve dışarıda bir çıkıntı olarak okunur. Kök kemiğin iç ucu ise
    * kabuğun alt kenarındadır — referans kartında uzvun gövdeden çıktığı yer.

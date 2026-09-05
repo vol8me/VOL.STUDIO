@@ -602,14 +602,12 @@ export class VolHellSimulation {
    * Ölü minion referanslarını ebeveynin listesinden düşürür ve hayatta
    * kalan sayıyı döner.
    *
-   * Önceden `enemy.minions.filter(m => m.isAlive).length` kullanılıyordu:
-   * salt-okunur bir sayım, dizinin kendisini hiç küçültmüyordu. Bir
-   * swarmer/elite koşu boyunca doğurduğu HER minion'un referansını sonsuza
-   * kadar taşıyordu — hem bellek (ölü `SimulationEnemyState` nesneleri GC
-   * edilemez), hem CPU (sayım maliyeti doğan minion sayısıyla, hayatta kalan
-   * sayısıyla değil, büyür) sızıntısı. `Enemy.ts`teki Phaser eşleniği
-   * (`pruneMinions`) zaten takas-ve-küçült yapıyordu; headless model aynı
-   * disipline burada kavuşuyor.
+   * Sayım DİZİYİ DE küçültür; salt-okunur bir `filter(...).length` yetmez.
+   * Yetseydi bir swarmer/elite koşu boyunca doğurduğu her minion'un
+   * referansını sonsuza kadar taşırdı: ölü `SimulationEnemyState` nesneleri GC
+   * edilemez (bellek) ve sayım maliyeti hayatta kalan sayısıyla değil doğan
+   * sayısıyla büyür (CPU). `Enemy.ts`teki Phaser eşleniği (`pruneMinions`)
+   * aynı takas-ve-küçült disiplinini uygular.
    */
   private pruneMinions(enemy: SimulationEnemyState): number {
     const minions = enemy.minions;

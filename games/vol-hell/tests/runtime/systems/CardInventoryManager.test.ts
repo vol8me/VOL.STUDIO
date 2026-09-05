@@ -322,10 +322,12 @@ describe('CardInventoryManager işlem sınırı', () => {
   /**
    * Yarım commit regresyonu.
    *
-   * Eski sıralama `owned.push()` → `applyCard()` idi: uygulama fırlatırsa kart
-   * envanterde görünüyor, etkileri yarım kalıyor, satın almada Flux da gitmiş
-   * oluyordu. Bugünkü kartlarda fırlatma yolu yok — bu test o yolu YAPAY olarak
-   * açar (stat motoru fırlatacak şekilde sabote edilir) ve sözleşmeyi kilitler.
+   * Sıra: `planCardEffect` (hiçbir durum değişmez) → `commitCardEffect`
+   * (tümü-ya-hiç) → `owned.push()`. Kart envantere EN SON girer; push öne
+   * alınsaydı uygulama fırlattığında kart envanterde görünür, etkileri yarım
+   * kalır ve satın almada Flux da gitmiş olurdu. Bugünkü kartlarda
+   * fırlatma yolu yok; bu test o yolu YAPAY olarak açar (stat motoru
+   * fırlatacak şekilde sabote edilir) ve sözleşmeyi kilitler.
    */
   function makeFailingSetup(): {
     cards: CardInventoryManager;

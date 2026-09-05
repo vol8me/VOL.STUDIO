@@ -37,7 +37,7 @@ export class PinchZoomController {
    * düz `for` döngüsü ilk hatada duruyor ve kalan her şeyi sızdırıyordu.
    */
   private readonly scope = new DisposableScope();
-  /** Animasyon class'ini kaldiran bekleyen zamanlayici; destroy() iptal eder. */
+  /** Animasyon class'ini kaldıran bekleyen zamanlayıcı; destroy() iptal eder. */
   private animationTimer: number | null = null;
   private zoom: number;
   private panX = 0;

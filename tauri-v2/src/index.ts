@@ -1,4 +1,4 @@
-// Tauri v2 wrapper paketi — native Rust kodu src-tauri/ altinda.
+// Tauri v2 wrapper paketi — native Rust kodu src-tauri/ altında.
 // Frontend storage adapter'lari ve native API'ler buradan disa aktarilir.
 
 export { TauriStoreAdapter } from './adapters/TauriStoreAdapter';

@@ -2,16 +2,16 @@ import { LazyStore } from '@tauri-apps/plugin-store';
 import type { IStorageAdapter } from '@volstudio/core';
 
 export interface TauriStoreAdapterOptions {
-  /** Store dosyasinin adi. Belirtilmezse gameId'den turetilir. */
+  /** Store dosyasının adı. Belirtilmezse gameId'den türetilir. */
   path?: string;
-  /** Oyun kimligi. Store dosyasi "{gameId}-store.json" olarak adlandirilir. */
+  /** Oyun kimliği. Store dosyası "{gameId}-store.json" olarak adlandirilir. */
   gameId?: string;
 }
 
 /**
- * Tauri native store tabanli IStorageAdapter implementasyonu.
- * WebView localStorage yerine uygulamanin veri dizinine JSON dosyasi yazar.
- * autoSave kapali tutulur; her set/remove sonrasi explicit save yapilarak
+ * Tauri native store tabanlı IStorageAdapter implementasyonu.
+ * WebView localStorage yerine uygulamanin veri dizinine JSON dosyası yazar.
+ * autoSave kapalı tutulur; her set/remove sonrası explicit save yapılarak
  * veri kaybi riski minimize edilir.
  */
 export class TauriStoreAdapter implements IStorageAdapter {

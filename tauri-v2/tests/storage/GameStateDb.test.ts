@@ -36,7 +36,7 @@ describe('GameStateDb', () => {
     expect(mockExecute).toHaveBeenCalledWith(
       expect.stringContaining('CREATE TABLE IF NOT EXISTS saves'),
     );
-    // Tek satir garantisi: id = 1 sabit, ON CONFLICT ile guncellenir.
+    // Tek satır garantisi: id = 1 sabit, ON CONFLICT ile güncellenir.
     expect(mockExecute).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO schema_version'),
       [1],

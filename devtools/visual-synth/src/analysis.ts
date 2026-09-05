@@ -78,7 +78,7 @@ export interface VisualMemoryEstimate {
    * +%50 pay) — gerçek çalışma zamanı ölçümüyle DOĞRULANMIŞ bir üst sınır
    * değildir.** `--expose-gc` ile zorla ölçülen gerçek yığın artışı, örnek
    * kataloğun 128×128 render'larında bu tahminin ~5–31 katına çıktı (bkz.
-   * `core/tests/visualSynth/memoryEstimateAccuracy.test.ts`). En olası
+   * `tests/memoryEstimateAccuracy.test.ts`). En olası
    * açıklama: bu model yalnızca `category: 'buffered'` düğümlerin kalıcı
    * tam-çözünürlük tamponunu sayıyor; tamponsuz düğümlerin render.ts'te
    * gerçekten piksel-piksel akışla mı değerlendirildiği yoksa kendi ara

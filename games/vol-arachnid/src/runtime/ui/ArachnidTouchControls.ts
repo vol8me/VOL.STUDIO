@@ -12,13 +12,13 @@ export interface ArachnidTouchControlsOptions {
  * Dokunmatik cihazlarda klavyeye bağlı kalan tek girdiyi ekrana taşır.
  *
  * Hareket çubuğu CORE'un `TouchController`'ında zaten var ve yalnız parmak
- * ekrandayken çizilir. Atılım (Space) ise yalnız klavyeden tetiklenebiliyordu,
- * yani dokunmatik bir cihazda oyun EKSİK oynanıyordu.
+ * ekrandayken çizilir. Ekrana taşınan tek girdi atılımdır (klavyede Space):
+ * karşılığı olmadan oyun dokunmatik bir cihazda EKSİK oynanır.
  *
- * **Neden gerçek bir düğme?** Bir dönem sağ yarının tamamı basılabilir bir
- * alandı; cihazda basıldığında oyun alanının yarısını kaplayıp yaratığı
- * tamamen gizliyordu. Sabit, yuvarlak ve sağ alt köşede duran bir düğme hem
- * başparmağın doğal yayında hem de arenanın dışında kalır.
+ * **Neden gerçek bir düğme?** Sağ yarının tamamını basılabilir alan yapmak
+ * cihazda oyun alanının yarısını kaplar ve yaratığı gizler. Sabit, yuvarlak ve
+ * sağ alt köşede duran bir düğme hem başparmağın doğal yayında hem de
+ * arenanın dışında kalır.
  *
  * **Neden sol bölgede DOM yok?** Bir eleman dokunuşu Phaser'dan önce yakalar;
  * sol yarıya konan görünmez bir katman hareket çubuğunun hiç doğmamasına yol

@@ -107,11 +107,10 @@ function advancePhase(state: RusherState, context: BehaviorContext, params: Rush
 /**
  * Faz süresini aştıktan sonra ARTAN süreyi bir sonraki faza taşır.
  *
- * Sayaç eskiden `0`a çekiliyordu: 300 ms'lik bir telegraf, 16 ms'lik karelerde
- * 304 ms'de dolar ve o 4 ms silinirdi. Her geçişte tekrarlandığı için bir tam
- * atılım devri config'de yazandan sistematik olarak UZUN sürer ve süre düşük
- * FPS'te daha da kayar — yani telegraf penceresi kare hızına bağlı hale gelir.
- * Artığı taşımak devri config'e sabitler.
+ * Sayaç `0`a ÇEKİLMEZ. Bir faz kare sınırına tam oturmadığı için her geçişte
+ * küçük bir artık birikir; silinirse tam devir config'de yazandan sistematik
+ * olarak uzun sürer ve sapma düşük FPS'te büyür — telegraf penceresi kare
+ * hızına bağlı hâle gelir. Artığı taşımak devri config'e sabitler.
  *
  * `approach` fazı zamana değil mesafe/cooldown'a bağlı olduğu için taşıma
  * uygulanmaz; orada sayaç gerçekten sıfırdan başlamalıdır.

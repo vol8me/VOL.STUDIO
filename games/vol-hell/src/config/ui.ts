@@ -36,7 +36,7 @@ export const uiConfig = {
       color: 0xffc857,
       /** Oyuncudan okunabilir uzaklık (piksel). */
       radiusPx: 14,
-      /** Ok ucunun oyuncudan uzaklığı (piksel). */
+      /** Ok üçünün oyuncudan uzaklığı (piksel). */
       lengthPx: 29,
       /** Hedef yöne görsel yaklaşma süresi (ms). */
       smoothingMs: 42,

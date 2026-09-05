@@ -7,7 +7,7 @@ import { INPUT } from '../constants';
 export interface Stick {
   pointerId: number;
   base: Vector2;
-  /** Ham (clamp edilmemiş) pointer pozisyonu. Clamp yalnızca getRaw()'da uygulanır. */
+  /** Ham (clamp edilmemiş) pointer pozisyonu. Clamp `writeRaw` içinde uygulanır. */
   current: Vector2;
   isRight: boolean;
 }
@@ -66,12 +66,13 @@ export class TouchStickState<TAction extends string> {
   /**
    * Yeniden kullanılan vektör tamponları — dokunmatik SICAK YOL.
    *
-   * `getRaw()` her çağrıda yeni `Vector2` üretiyordu ve kare başına en az dört
-   * kez çağrılıyor (`getState` iki stick için, çizim katmanı konum ve yön
-   * için). `updateStick` ise her `pointermove` olayında bir tane daha
-   * ayırıyordu. Mobilde bu, oynanış sırasında sürekli küçük çöp üretip GC
-   * duraklamalarına dönüşüyor. Tamponlar SENKRON okunur: `getRaw` sonucu bir
-   * sonraki çağrıya kadar geçerlidir, saklanmaz.
+   * Ham vektör kare başına en az dört kez okunur (`getState` iki stick için,
+   * çizim katmanı konum ve yön için) ve `onPointerMove` her olayda bir kez
+   * daha yazar. Her okumada yeni `Vector2` ayırmak mobilde oynanış boyunca
+   * sürekli küçük çöp üretir ve GC duraklamasına dönüşür.
+   *
+   * Tamponlar SENKRON okunur: dönen vektör bir SONRAKİ çağrıya kadar
+   * geçerlidir, çağıran onu saklamaz.
    */
   private readonly leftRawBuf: Vector2 = Vector2.zero();
   private readonly rightRawBuf: Vector2 = Vector2.zero();
@@ -178,7 +179,7 @@ export class TouchStickState<TAction extends string> {
     };
   }
 
-  /** Görsel çizim için clamp edilmiş mutlak pozisyon (stick.base + getRaw()). */
+  /** Görsel çizim için clamp edilmiş mutlak pozisyon (`stick.base` + ham vektör). */
   getClampedPosition(stick: Stick): Vector2 {
     const raw = this.writeRaw(this.scratchRawBuf, stick);
     this.clampedBuf.x = stick.base.x + raw.x;

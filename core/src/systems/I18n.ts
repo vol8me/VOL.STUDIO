@@ -25,7 +25,7 @@ export class I18n {
   private saveManager: SaveManager | null = null;
   private saveKey = 'vol-locale';
   private locales = new Set<string>(['tr', 'en']);
-  /** Devam eden init'in promise'i — escanli cagrilarda ikinci init()'i engeller. */
+  /** Devam eden init'in promise'i — eşzamanlı çağrılarda ikinci init()'i engeller. */
   private initPromise: Promise<void> | null = null;
   /** init() öncesi addResources() ile eklenen bundle'lar — init sonrası uygulanır. */
   private pendingResources: Array<{
@@ -39,9 +39,9 @@ export class I18n {
   /**
    * i18next'i başlatır. Birden fazla çağrılsa ilk çağrı geçerlidir.
    *
-   * `initialized` bayragi tum await'lerden SONRA atandigi icin iki paralel
+   * `initialized` bayrağı tüm await'lerden SONRA atandığı için iki paralel
    * init() ikisi de guard'i gecip i18next.init()'i iki kez cagirirdi; devam
-   * eden promise saklanarak escanlilik tekillestirilir.
+   * eden promise saklanarak eşzamanlılık tekillestirilir.
    */
   async init(options?: I18nOptions): Promise<void> {
     if (this.initialized) return;
@@ -75,11 +75,6 @@ export class I18n {
 
     /*
      * Depodan gelen dil de TANINMAK zorunda.
-     *
-     * Bu satır bir dönem `load<string>(key, detectLocale())` idi: yedeği
-     * (`detectLocale`) özenle doğruluyor ama kayıtlı değeri olduğu gibi
-     * `i18next.init`e taşıyordu. Aynı ifadenin iki ucu farklı sözleşme
-     * uyguluyordu.
      *
      * Depo güvenilir bir kaynak değildir: elle düzenlenebilir, `JSON.parse`
      * sonucu hiç string olmayabilir ve — asıl senaryo — ÖNCEKİ bir sürümde
@@ -116,10 +111,10 @@ export class I18n {
   }
 
   /**
-   * Sarmalayici durumunu sifirlar ve runtime'da eklenen bundle'lari kaldirir.
+   * Sarmalayici durumunu sıfırlar ve runtime'da eklenen bundle'lari kaldırır.
    *
-   * DIKKAT: i18next'in kendi ic durumu (baslatilmis olmasi, yuklu ana
-   * kaynaklar) KORUNUR — i18next tekrar init edilebilir bir kutuphane degil.
+   * DİKKAT: i18next'in kendi ic durumu (baslatilmis olması, yuklu ana
+   * kaynaklar) KORUNUR — i18next tekrar init edilebilir bir kütüphane değil.
    * Sadece test amaçlı; production'da kullanmayın.
    */
   reset(): void {

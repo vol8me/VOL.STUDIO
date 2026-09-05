@@ -31,8 +31,8 @@ export interface EffectManagerOptions {
  * Merkezî efekt tetikleyici — oyunun her yerinden `effects.play('enemyDeath', x, y)`.
  *
  * Partikül işini Phaser'ın kendi `ParticleEmitter`'ı yapar: havuzlama, ömür ve
- * interpolasyon motorda zaten var. Elle yazılmış Arc havuzu + tween zinciri
- * (eski `ParticlePool`) bunun üstüne ikinci bir motor koyuyordu.
+ * interpolasyon motorda zaten var. Elle yazılmış bir Arc havuzu + tween
+ * zinciri aynı işin üstüne ikinci bir motor koyar; bu yüzden yazılmaz.
  *
  * Efekt başına bir emitter kurulur ve kapalı tutulur; olay geldiğinde
  * `emitParticleAt()` ile patlatılır. Hangi olayın hangi görüntüyü verdiği

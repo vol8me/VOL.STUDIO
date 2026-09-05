@@ -68,7 +68,7 @@ export class ObjectPool<T> {
    *
    * Aynı örneği İKİ KEZ iade etmek sessiz ve ayıklanması çok zor bir hataya
    * yol açar (aynı nesne iki farklı sahibe dağıtılır), bu yüzden yakalanır.
-   * Kontrol O(1) — `idleSet.has` eskiden `idle.includes` (O(n)) idi.
+   * `idleSet` sayesinde kontrol O(1)'dir; iade sıcak yolda çağrılır.
    */
   release(item: T): void {
     if (this.idleSet.has(item)) {

@@ -298,10 +298,10 @@ export class AssetStudioClient {
 
     const handleOpen = (): void => onConnection('live');
     const handleError = (): void => {
-      // Durum EventSource'un KENDİ readyState'inden okunur. Bir dönem yerel bir
-      // `opened` bayrağı tutuluyordu; ikinci hatada bayrak çoktan sıfırlandığı
-      // için tarayıcı hâlâ yeniden bağlanmaya çalışırken arayüz "bağlantı yok"
-      // gösteriyordu. CLOSED gerçekten bitmiş demektir, CONNECTING denemede.
+      // Durum EventSource'un KENDİ readyState'inden okunur, yerel bir bayraktan
+      // değil: elde tutulan bir "açıldı" bayrağı ikinci hatada çoktan sıfırlanmış
+      // olur ve tarayıcı hâlâ yeniden bağlanmayı denerken arayüz "bağlantı yok"
+      // gösterir. CLOSED gerçekten bitmiş demektir, CONNECTING denemede.
       onConnection(source.readyState === EventSource.CLOSED ? 'offline' : 'reconnecting');
     };
     const handleMessage = (rawEvent: Event): void => {

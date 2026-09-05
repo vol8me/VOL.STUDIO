@@ -1,12 +1,10 @@
 /**
  * `Button` ve `IconButton`ın PAYLAŞTIĞI tıklama davranışı.
  *
- * İkisi bir dönem aynı sözleşmenin iki farklı yorumunu taşıyordu: `Button`
- * asenkron handler'ı bekliyor, loading gösteriyor ve hatayı yakalıyordu;
- * `IconButton` handler'ı doğrudan listener olarak takıyordu — asenkron yok,
- * loading yok, fırlatılan hata yakalanmıyordu. Aynı "buton" adını taşıyan iki
- * bileşenin farklı garantiler vermesi, çağıranın hangisini kullandığına göre
- * davranış değiştirmesi demekti.
+ * Sözleşme TEKTİR ve iki bileşende de aynıdır: asenkron handler beklenir,
+ * süresince loading gösterilir, fırlatılan hata yakalanır ve tıklama yeniden
+ * mümkün hâle gelir. Çağıran, hangi butonu kullandığına göre farklı bir
+ * garanti varsaymaz — bu yüzden davranış burada paylaşılır, kopyalanmaz.
  */
 
 export type ButtonClickHandler = () => void | Promise<void>;

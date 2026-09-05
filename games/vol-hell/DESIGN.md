@@ -108,7 +108,7 @@ yerel davranışı korunur.
 ## Simülasyon zamanı
 
 Render frame süresi `SimulationClock` üzerinden sabit adımlara bölünür
-(`src/runtime/simulation/SimulationClock.ts`). Politika tek yerde durur ve
+(`core/src/time/SimulationClock.ts`). Politika tek yerde durur ve
 Phaser kurmadan test edilir: düşük FPS'te birden çok tam adımla gerçek zaman
 geri kazanılır, sekme dönüşü gibi devasa delta'larda catch-up sınırı uygulanır
 ve ATILAN süre raporlanır.

@@ -116,10 +116,9 @@ function runQa(pngPath: string, args: readonly string[]): void {
       if (!docPath) fail('--doc bir belge yolu bekliyor');
       continue;
     }
-    // `render` ile AYNI ezmeleri kabul eder. Bir dönem etmiyordu: `render
-    // --size 256` ile üretilen PNG belgeyle karşılaştırılamıyor, doğrulayıcı
-    // belgeyi kendi doğal boyutunda render edip bütün pikselleri uyumsuz
-    // sayıyordu. Üretimde kullanılan bayraklar doğrulamada da geçerli olmalı.
+    // Doğrulama, `render` ile AYNI ezmeleri kabul etmek ZORUNDA: üretimde
+    // `--size 256` ile çıkarılan bir PNG, belge kendi doğal boyutunda render
+    // edilerek karşılaştırılırsa bütün pikseller uyumsuz sayılır.
     if (args[i] === '--size') {
       const value = args[++i];
       if (value === undefined) fail('--size bir değer bekliyor');

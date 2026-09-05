@@ -873,11 +873,11 @@ src/encode/            ← ayrı ALT-YOL, barrel'da değil (D8)
   png.ts              node:zlib ile PNG kodlayıcı + writePng
   artifact.ts         render + QA + PNG için CLI/sunucu ortak girişi
 
-core/scripts/visual-synth-asset.ts       §10.1 CLI (render / validate / qa / palette)
+scripts/visual-synth-asset.ts       §10.1 CLI (render / validate / qa / palette)
 scripts/visual-synth-qa.ts          §9 ölçüm aracının İNCE sarmalayıcısı
 
-core/tests/visualSynth/fixtures/*.json  elle yazılmış kanıt belgeleri
-core/tests/scripts/                CLI uçtan uca sözleşme testleri
+tests/fixtures/*.json  elle yazılmış kanıt belgeleri
+tests/scripts/                CLI uçtan uca sözleşme testleri
 ```
 
 İki ayrım kasıtlı:
@@ -885,12 +885,12 @@ core/tests/scripts/                CLI uçtan uca sözleşme testleri
 - **`schema/` ve `validate.ts` ayrı.** Şema veridir; doğrulama onun bir
   tüketicisidir. Agent/CLI introspeksiyonu şemayı doğrulama yürütmeden
   okuyabilir ve tek dosya 1200 satırı aşmaz.
-- **Ölçüm `visualSynth/qa.ts` içinde, script'te değil.** Script bir sarmalayıcıdır;
+- **Ölçüm `src/qa.ts` içinde, script'te değil.** Script bir sarmalayıcıdır;
   metrikler çekirdekte olduğu için hem testler hem CLI aynı sayıları taşır.
   D8 ve D12 birlikte bunu gerektirir.
 
-`core/package.json` `exports` alanına iki giriş eklenir:
-`"./visualSynth"` ve `"./visualSynth/encode"`.
+Paket kendi `exports` alanını taşır: `"."`, `"./color"` ve `"./encode"`.
+Alt yollar barrel'a girmez (D8).
 
 ### PNG kodlayıcı neden ffmpeg değil
 
@@ -969,11 +969,11 @@ arayüzdü.
 
 Bugünkü tüketiciler:
 
-| Tüketici         | Ne yapar                                                 | Nasıl bağlanır           |
-| ---------------- | -------------------------------------------------------- | ------------------------ |
-| Agent            | `SpriteDoc` yazar, render ve QA eder — asıl üretim yolu  | CLI (§10.1)              |
-| Katalog          | Agent'ın "ne yazabileceğini" bildiği hazır tarifler      | `visualSynth/catalog.ts` |
-| VOL Asset Studio | Üretilen PNG'yi açar, inceler, piksel düzenler, kaydeder | Dosya sistemi — üretmez  |
+| Tüketici         | Ne yapar                                                 | Nasıl bağlanır          |
+| ---------------- | -------------------------------------------------------- | ----------------------- |
+| Agent            | `SpriteDoc` yazar, render ve QA eder — asıl üretim yolu  | CLI (§10.1)             |
+| Katalog          | Agent'ın "ne yazabileceğini" bildiği hazır tarifler      | `src/catalog.ts`        |
+| VOL Asset Studio | Üretilen PNG'yi açar, inceler, piksel düzenler, kaydeder | Dosya sistemi — üretmez |
 
 Asset Studio bu hattın **üreticisi değil tüketicisidir**: çekirdeğe hiç
 bağlanmaz, yalnızca çıktısını bir varlık olarak görür. Üretilen varlık
@@ -1011,9 +1011,9 @@ kabul eder — biri `--size`/`--seed` alıp diğeri almazsa ölçeklenmiş çık
 doğrulanamaz:
 
 ```bash
-pnpm exec tsx core/scripts/visual-synth-asset.ts render belge.json çıktı.png --size 256
-pnpm exec tsx core/scripts/visual-synth-asset.ts qa çıktı.png --doc belge.json --size 256
-pnpm exec tsx core/scripts/visual-synth-asset.ts qa çıktı.png --doc belge.json --json
+pnpm --filter @volstudio/visual-synth asset render belge.json çıktı.png --size 256
+pnpm --filter @volstudio/visual-synth asset qa çıktı.png --doc belge.json --size 256
+pnpm --filter @volstudio/visual-synth asset qa çıktı.png --doc belge.json --json
 ```
 
 Boyutlar tutmadığında rapor ham piksel sayısı değil açık bir
@@ -1088,13 +1088,13 @@ Rapor makine-okunur (`--json`), tıpkı `scripts/quality/report.mjs` gibi.
 ### 10.1 CLI
 
 ```bash
-tsx core/scripts/visual-synth-asset.ts render <doc.json> <out.png> [--size 256x384] [--seed 42]
-tsx core/scripts/visual-synth-asset.ts validate <doc.json>
-tsx core/scripts/visual-synth-asset.ts qa <out.png> --doc <doc.json> [--json]
-tsx core/scripts/visual-synth-asset.ts palette <istek.json>      # palet sentezi
-tsx core/scripts/visual-synth-asset.ts capabilities [--json]     # gerçek yetenek/sınır manifesti
-tsx core/scripts/visual-synth-asset.ts inspect <doc.json> [--json] # graph/tampon maliyeti
-tsx core/scripts/visual-synth-asset.ts benchmark <doc.json> [--sizes 32,64,128] [--iterations N] [--json]
+pnpm --filter @volstudio/visual-synth asset render <doc.json> <out.png> [--size 256x384] [--seed 42]
+pnpm --filter @volstudio/visual-synth asset validate <doc.json>
+pnpm --filter @volstudio/visual-synth asset qa <out.png> --doc <doc.json> [--json]
+pnpm --filter @volstudio/visual-synth asset palette <istek.json>      # palet sentezi
+pnpm --filter @volstudio/visual-synth asset capabilities [--json]     # gerçek yetenek/sınır manifesti
+pnpm --filter @volstudio/visual-synth asset inspect <doc.json> [--json] # graph/tampon maliyeti
+pnpm --filter @volstudio/visual-synth asset benchmark <doc.json> [--sizes 32,64,128] [--iterations N] [--json]
 ```
 
 `--size` ve `--seed` belgeyi **ezmek** içindir: aynı belgeden farklı boyut/
@@ -1162,7 +1162,7 @@ render edilir ve QA kapısını geçer; yani arama sonucu yalnızca açıklama d
 
 ### Malzeme tarifleri
 
-`visualSynth/materials.ts` şekil seçmez; `source` alanına uygulanacak
+`src/materials.ts` şekil seçmez; `source` alanına uygulanacak
 yeniden kullanılabilir bir `height`, palet, ikinci malzeme maskesi ve
 başlangıç ışıklandırması taşır. `brushedMetal`, `warmWood`, `coarseStone`,
 `organicFlesh` ve `emissiveGlow` tarifleri
@@ -1190,17 +1190,17 @@ kapılardan doğar; sürpriz olmasınlar diye önden yazıldı.
 | UI kontrolleri                      | ✅         | `Slider`, `NumberStepper`, `Select`, `SegmentedControl`, `Checkbox`, `Tabs`, `Accordion`, `Tree`, `ScrollView` |
 | Node-only izolasyon deseni          | ✅         | `audio/synth/writer` alt-yolu                                                                                  |
 | Katalog deseni                      | ✅         | `audio/synth/presets/catalog/`                                                                                 |
-| CLI deseni                          | ✅         | `tsx core/scripts/*.ts`                                                                                        |
+| CLI deseni                          | ✅         | `pnpm --filter <paket> asset`                                                                                  |
 
 ### 11.2 Turlarda eklenen CORE parçaları
 
 | Parça                    | Neden yok                                 | Nereye                                                                      |
 | ------------------------ | ----------------------------------------- | --------------------------------------------------------------------------- |
-| **OKLab dönüşümü**       | Depoda renk uzayı matematiği **hiç yok**  | `visualSynth/color/oklab.ts`                                                |
+| **OKLab dönüşümü**       | Depoda renk uzayı matematiği **hiç yok**  | `src/color/oklab.ts`                                                        |
 | **ColorPicker bileşeni** | UI setinde renk kontrolü yok              | `core/src/ui/primitives/ColorPicker.ts` + **vol-ui showcase FORMS sekmesi** |
 | **CurveEditor bileşeni** | Eğri verisini görsel düzenlemek için      | `core/src/ui/primitives/CurveEditor.ts` + **vol-ui showcase FORMS sekmesi** |
-| **Artefakt hattı**       | Tüketicilerin ayrışmasını engellemek için | `visualSynth/encode/artifact.ts`                                            |
-| **PNG kodlayıcı**        | Raster yazma yok                          | `visualSynth/encode/png.ts` (alt-yol)                                       |
+| **Artefakt hattı**       | Tüketicilerin ayrışmasını engellemek için | `src/encode/artifact.ts`                                                    |
+| **PNG kodlayıcı**        | Raster yazma yok                          | `src/encode/png.ts` (alt-yol)                                               |
 
 Bu ikisi CORE'a girdiği an [AGENTS.md](../../AGENTS.md) UI kuralı devreye
 girer: showcase'e eklenir, README sekme tablosu güncellenir, i18n key paritesi
@@ -1211,7 +1211,7 @@ sağlanır.
 - **`workspace-contract`**: hiçbir paket `typecheck`, `test`,
   `test:coverage` script'leri ve `quality.json`da eşik **olmadan** repoya
   giremez. Taban: 50/50/50/40.
-- **`publicSurface`**: `visualSynth/` kök barrel'a `Synth` gibi TEK bir isimle
+- **`publicSurface`**: `src/` kök barrel'a `Synth` gibi TEK bir isimle
   (`export * as VisualSynth`) girer, yani kök sayısını yalnızca 1 artırır. Alt
   sistemin kendi yüzeyi kök sayının gölgesinde büyümesin diye AYRICA ve kendi
   başına kilitlenir (`EXPECTED_VISUAL_SYNTH_EXPORT_COUNT`). İki sayı da bilinçli
@@ -1219,12 +1219,12 @@ sağlanır.
 - **`publicApi`**: export adları `enemy`/`boss`/`flux`/`spark`/`volhell`
   içeremez.
 - **`primitiveNeutrality`**: `PRIMITIVE_ROOTS` dizisine `'visualSynth'` **eklenir**;
-  o andan itibaren `visualSynth/` altında bir oyun türünü adlandıran terim hem kodda
+  o andan itibaren `src/` altında bir oyun türünü adlandıran terim hem kodda
   hem yorumda yasaktır. Yasaklı terimler bekçideki `GENRE_TERMS` dizisinde
   tutulur; bu belge onları tekrarlamaz.
 
   **Bu belge de taranmalıdır.** Bekçi bugün `core/docs/primitives.md`i tarıyor;
-  `visualSynth/` bir primitif kökü olduğunda tarama listesine
+  `src/` bir primitif kökü olduğunda tarama listesine
   `devtools/visual-synth/DESIGN.md` de eklenmelidir — bir modülün kodu nötr olup
   dokümanı bir türe demirlerse, kod nötr sayılsa da REPO değildir (bu hata bir
   kez yapıldı, bkz. `TODO.md` "Tür sızıntısı" turu).
@@ -1232,7 +1232,7 @@ sağlanır.
 - **`numericContract`**: sonlu olmayan girdi ya reddedilir (yapılandırma) ya
   yoksayılır (akış). `size`, `seed`, `freq` **reddedilir**.
 - **`lifecycleIdiom`**: elle `(() => void)[]` temizlik dizisi yasak.
-- **`visualHeadless`** (Tur 1'de eklendi): `visualSynth/` altındaki hiçbir dosya
+- **`visualHeadless`** (Tur 1'de eklendi): `src/` altındaki hiçbir dosya
   DOM global'ine dokunamaz ve `node:` importu yalnızca `encode/` altında
   bulunabilir; barrel `encode/`i yeniden dışa açamaz. İki sızıntı da sessizdir
   — DOM sızıntısı testlerde (jsdom) görünmez ve yalnızca `tsx` ile asset

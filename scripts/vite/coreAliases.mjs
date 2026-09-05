@@ -5,17 +5,14 @@ import { fileURLToPath } from 'node:url';
 /**
  * CORE alt-yol alias'larının TEK doğruluk kaynağı.
  *
- * Bir dönem her `vite.config.ts` alias listesini elle yazıyor, `vitest.config.ts`
- * ise tek bir `'@volstudio/core' -> core/src` prefix alias'ı kullanıyordu. Vite
- * (rollup) string alias'ı prefix olarak eşler; bu yüzden vitest tarafında
- * `@volstudio/core/ui/styles.css` sessizce `core/src/ui/styles.css` oluyordu —
- * gerçek dosya `theme.css` olduğu için testler build'in çözdüğü grafiği
- * çözemiyordu. Test ile build'in farklı modül grafiği görmesi, ikisinin de
- * birbirini doğrulayamaması demekti.
+ * Liste `core/package.json` `exports` haritasından TÜRETİLİR; hiçbir araç
+ * kendi kopyasını tutmaz. CORE yeni bir alt yol yayınladığında araçlar onu
+ * elle eklenmeyi beklemez, kaldırdığında da ölü alias geride kalmaz.
  *
- * Liste artık `core/package.json` `exports` haritasından türetiliyor: CORE yeni
- * bir alt yol yayınladığında araçlar onu elle eklenmeyi beklemez, kaldırdığında
- * da ölü alias geride kalmaz.
+ * Elle yazılan tek bir önek girdisi (`'@volstudio/core' -> core/src`) bu işi
+ * GÖREMEZ: Vite (rollup) string alias'ı önek olarak eşler, yani haritada hiç
+ * olmayan bir yol da çözülür. Böyle bir kurulumda test ile build farklı modül
+ * grafiği görür ve ikisi birbirini doğrulayamaz.
  */
 
 const CORE_PACKAGE_NAME = '@volstudio/core';

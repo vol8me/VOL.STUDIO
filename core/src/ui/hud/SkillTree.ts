@@ -38,13 +38,10 @@ export type SkillNodeState = 'unlocked' | 'available' | 'locked';
 /**
  * Klasik "TÜM önkoşullar açık olmalı" (AND) kuralını uygulayan saf fonksiyon.
  *
- * Bu kural bir dönem `SkillTree`in İÇİNDE gömülüydü ve bileşen kendi
- * `unlockedIds` defterini tutuyordu — yani CORE, bir oyunun beceri ağacının
- * nasıl açıldığına karar veriyordu ve oyunun kendi ilerleme sistemiyle iki
- * ayrı defter kaçınılmaz olarak kayıyordu.
- *
- * Kural silinmedi, DIŞARI ALINDI: en yaygın davranış hazır durur ve tek
- * satırda kullanılır, ama bileşen onu arkanda varsaymaz. "Önkoşullardan
+ * Kural bileşenin DIŞINDADIR: `SkillTree` kendi `unlockedIds` defterini
+ * TUTMAZ, yalnızca verilen durumları çizer — açılma kararının tek sahibi
+ * oyunun ilerleme sistemidir, ikinci bir defter doğmaz. En yaygın davranış
+ * burada hazır durur ve tek satırda kullanılır. "Önkoşullardan
  * HERHANGİ biri yeterli" (OR) ya da "dalda N puan harcanmış olmalı" gibi bir
  * kural isteyen oyun kendi eşlemesini yazar ve `setStates()`e verir.
  *
@@ -95,9 +92,9 @@ export interface SkillTreeOptions {
   zoomable?: boolean;
 }
 
-/** .vol-skill-tree__canvas--resetting gecisi (hud.css: transform 0.4s) + kare payi. */
+/** .vol-skill-tree__canvas--resetting geçişi (hud.css: transform 0.4s) + kare payi. */
 const RESET_VIEW_TRANSITION_MS = 420;
-/** Baglanti dolum animasyonunun suresi; bittiginde --filling class'i kaldirilir. */
+/** Baglanti dolum animasyonunun süresi; bittiğinde --filling class'i kaldırılır. */
 const CONNECTION_FILL_MS = 500;
 
 const MIN_ZOOM = 0.5;
@@ -198,7 +195,7 @@ export class SkillTree {
    * düz `for` döngüsü ilk hatada duruyor ve kalan her şeyi sızdırıyordu.
    */
   private readonly scope = new DisposableScope();
-  /** Bekleyen zamanlayici/rAF handle'lari — destroy() hepsini iptal eder. */
+  /** Bekleyen zamanlayıcı/rAF handle'lari — destroy() hepsini iptal eder. */
   private readonly pendingTimers = new Set<number>();
   private readonly pendingFrames = new Set<number>();
   private destroyed = false;
@@ -259,14 +256,14 @@ export class SkillTree {
   }
 
   /**
-   * measureLabelWidth() 'Jura' metriklerine gore olcum yapar, ama font
-   * createVolGame tarafindan asenkron yuklenir. SkillTree font hazir olmadan
-   * kurulursa olcumler sistem fontuyla yapilir ve dugum genislikleri kalici
-   * olarak yanlis kalir — uzun etiketler kutudan tasar. Font yerlesince tek
-   * seferlik yeniden olcum yapilir.
+   * measureLabelWidth() 'Jura' metriklerine göre ölçüm yapar, ama font
+   * createVolGame tarafından asenkron yüklenir. SkillTree font hazir olmadan
+   * kurulursa olcumler sistem fontuyla yapılır ve dugum genislikleri kalıcı
+   * olarak yanlış kalır — uzun etiketler kutudan taşar. Font yerleşince tek
+   * seferlik yeniden ölçüm yapılır.
    *
-   * Container yeniden boyutlanmasi dinlenmez: recomputeLayout() yalnizca
-   * etiket metnine ve cellSize'a bagli, container genisligini hic okumaz.
+   * Container yeniden boyutlanmasi dinlenmez: recomputeLayout() yalnızca
+   * etiket metnine ve cellSize'a bağlı, container genişliğini hiç okumaz.
    */
   private recomputeWhenFontReady(): void {
     if (typeof document === 'undefined' || !document.fonts) return;
@@ -338,7 +335,7 @@ export class SkillTree {
     this.element.remove();
   }
 
-  /** destroy() sonrasi calismayan, handle'i takip edilen setTimeout. */
+  /** destroy() sonrası calismayan, handle'i takip edilen setTimeout. */
   private trackTimeout(fn: () => void, delayMs: number): void {
     const id = window.setTimeout(() => {
       this.pendingTimers.delete(id);
@@ -347,7 +344,7 @@ export class SkillTree {
     this.pendingTimers.add(id);
   }
 
-  /** destroy() sonrasi calismayan, handle'i takip edilen requestAnimationFrame. */
+  /** destroy() sonrası calismayan, handle'i takip edilen requestAnimationFrame. */
   private trackFrame(fn: () => void): void {
     const id = requestAnimationFrame(() => {
       this.pendingFrames.delete(id);
@@ -498,8 +495,8 @@ export class SkillTree {
 
     for (const node of this.nodes) {
       for (const reqId of node.requires ?? []) {
-        // layout yalnizca tanimli dugumler icin doldurulur; ayrica nodes.find()
-        // ile aramak ayni kontrolu O(n) maliyetle tekrarlardi.
+        // layout yalnızca tanımlı düğümler için doldurulur; ayrıca nodes.find()
+        // ile aramak aynı kontrolü O(n) maliyetle tekrarlardı.
         const fromPos = this.layout.get(reqId);
         const toPos = this.layout.get(node.id);
         if (!fromPos || !toPos) continue;

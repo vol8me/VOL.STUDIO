@@ -36,17 +36,8 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      /*
-       * CORE alias'ları `core/package.json` exports haritasından TÜRETİLİR.
-       *
-       * Buradaki liste bir dönem elle yazılıyordu ve tek bir önek girdisi
-       * (`'@volstudio/core' -> core/src`) taşıyordu. Vite öneki dizine eşler:
-       * `@volstudio/core/random` -> `core/src/random` (bir DİZİN) çözülemez,
-       * ama `@volstudio/core/systems/SaveManager` gibi haritada HİÇ OLMAYAN
-       * bir yol çözülür. Yani testler CORE'un iç yapısına uzanabiliyor,
-       * yayınlanmış yüzeyi ise kısmen görünmez kalıyordu — sözleşme fiilen
-       * uygulanmıyordu.
-       */
+      // CORE alias'ları `core/package.json` exports haritasından TÜRETİLİR;
+      // liste burada elle tutulmaz (sözleşme: `scripts/vite/coreAliases.mjs`).
       ...coreAliases(),
       { find: '@', replacement: resolve(import.meta.dirname, './src') },
     ],

@@ -80,8 +80,8 @@ export class InputManager<TAction extends string> {
     }
 
     const touch = this.providers[0];
-    // noUncheckedIndexedAccess kapali oldugu icin TS bos diziyi yakalamiyor;
-    // guard olmadan getState() ilk satirda anlamsiz bir TypeError atardi.
+    // noUncheckedIndexedAccess kapalı olduğu için TS boş diziyi yakalamıyor;
+    // guard olmadan getState() ilk satırda anlamsız bir TypeError atardi.
     if (!touch) {
       this.lifecycle.dispose();
       throw new Error('InputManager: en az bir InputProvider gerekli (providers boş olamaz)');
@@ -96,9 +96,9 @@ export class InputManager<TAction extends string> {
   }
 
   /**
-   * Aktif saglayiciyi secer. getState() ve getDebugSnapshot() AYNI secimi
-   * kullanmali — aksi halde debug overlay 'pc' gosterirken oyun touch state'i
-   * kullanir ve hata ayiklama araci yaniltir.
+   * Aktif sağlayıcıyı seçer. getState() ve getDebugSnapshot() AYNI seçimi
+   * kullanmalı — aksi halde debug overlay 'pc' gosterirken oyun touch state'i
+   * kullanır ve hata ayıklama araci yanıltır.
    *
    * Öncelik: touch her zaman PC'den öncelikli (hibrit cihazlarda dokunmatik
    * aktifken fare/klavye ikincil). PC provider'lar arasında `find()` ilk

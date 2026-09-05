@@ -111,8 +111,7 @@ export class MusicEngine {
    * paylaşır. `src` yoksa (doğrudan `buffer` verilmiş) içerik kimliği
    * bilinemez; track'e özel kapsanır — İKİ FARKLI track'in aynı `stem.id`'yi
    * FARKLI buffer'larla kullanması durumunda birbirinin buffer'ını
-   * "çalmasın" diye (eskiden anahtar salt `stem.id` idi, bu global bir
-   * çakışma yüzeyiydi).
+   * "çalmasın" diye. Salt `stem.id` global bir çakışma yüzeyi olurdu.
    */
   private bufferCacheKey(trackId: string, stem: Stem): string {
     return stem.src ? `src:${stem.src}` : `track:${trackId}:${stem.id}`;
