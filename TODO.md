@@ -5,6 +5,41 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-06 — CORE public yüzeyinin semantik denetimi
+
+223 export (129 sınıf, 67 fonksiyon, 19 nesne, 8 sabit) adlandırma, dönüş tipi
+ve sürümleme açısından denetlendi.
+
+**Yokluk sözleşmesi — asıl bulgu.** 29 public üye "yok" bildiriyor: 22 `undefined`,
+7 `null`. Kural veriden ÇIKARILDI ve 25'ine oturdu: `undefined` yokluktur,
+`null` HESAPLANMIŞ yokluktur (işlem koştu ve sonucun olmadığını kanıtladı).
+Dışında kalan tam dört üye vardı, ikisi aynı şeklin zıt cevabıydı —
+`Grid.get(index)` undefined ama `SlotContainer.get(index)` null; dört
+`getValue()` undefined ama `SplitPane.getCollapsedPane()` null. En net örnek
+`music/`de: `engine` aynı kavramı `undefined` tutarken `playlist` `?? null`
+ile çevirip `null` dönüyordu. Tutarsızlık tüketiciyi zaten normalize etmeye
+zorluyordu (`AbilityRuntime.ts` sınırında `?? null`). Dördü hizalandı;
+`SplitPane`in özel alanı da, çünkü sınırda çevirmek hatanın içeriden tekrarı
+olurdu.
+
+**Adlandırma.** Dört yeniden adlandırma: `applyXpGain` → `applyXPGain` (XPBar
+ile aynı DOSYADA iki kısaltma yazımı), `idleSnapshot`/`singleProviderSnapshot`
+→ `create*` (kardeşi `createIdleActions` zaten öyle), `backHandlerCount` →
+`getBackHandlerCount`. Rol sonekleri zaten tutarlıydı ve doğrulandı:
+`*Manager` bir kümeyi sahiplenir, `*Controller` tek bir şeyi sürer.
+
+**Kapı.** `absenceContract.test.ts`, `null` dönen public üyeleri sayılı tutar.
+Kural otomatik çıkarılamaz — "hesap ısmarlandı mı?" anlamsal bir sorudur — bu
+yüzden liste `EXPECTED_EXPORT_COUNT` gibi bilinçli düzenleme ister. İki yönde
+mutasyonla kanıtlandı.
+
+**Açık karar (repo sahibine).** İki geriye-dönük takma adın repo çapında SIFIR
+tüketicisi var: `PlayerController` (çalışma zamanı, sayıda yer kaplıyor) ve
+`MaxDprSetting` (yalnız tip). İlki "bir sonraki büyük sürümde kaldırılacak"
+diyordu ama CORE `private` ve `0.1.0`; o eşik hiç gelmeyecek. İkisinin de
+sözleşmesi gerçeğe bağlandı, silme kararı verilmedi — repo dışı bir tüketici
+olup olmadığını buradan doğrulayamam.
+
 ## 2026-09-06 — signoff kırmızı yandı: e2e fixture yarışı
 
 Turun son kapısı `e2e-full`de düştü: "gerçek PNG açılır, düzenlenir ve diske
