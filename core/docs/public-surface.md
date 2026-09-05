@@ -42,7 +42,7 @@ Bakış ve poz-türevi sunum efektleri — dört ÇALIŞMA ZAMANI export'u. `Gaz
 
 ### 212 → 215
 
-Iki oyunun ortak Android geri-yönlendirme yığını (`pushBackHandler`, `backHandlerCount`) ve varyant/bütçe taşıyan tek-atış `SoundBank`. Oyunlar yalnız olay kimliklerini ve asset'lerini tanımlar.
+Iki oyunun ortak Android geri-yönlendirme yığını (`pushBackHandler`, `getBackHandlerCount`) ve varyant/bütçe taşıyan tek-atış `SoundBank`. Oyunlar yalnız olay kimliklerini ve asset'lerini tanımlar.
 
 ### 215 → 220
 

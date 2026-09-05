@@ -75,9 +75,9 @@ export class MusicPlaylist {
     this.onTrackChange = options.onTrackChange;
   }
 
-  /** Şu an çalan parça (boşluk sırasında `null`). */
-  get currentTrackId(): string | null {
-    return this.running ? this.queue[this.cursor] ?? null : null;
+  /** Şu an çalan parça; boşluk sırasında ve liste durmuşken `undefined`. */
+  get currentTrackId(): string | undefined {
+    return this.running ? this.queue[this.cursor] : undefined;
   }
 
   get isRunning(): boolean {

@@ -9,7 +9,12 @@ export type ScaleStrategy = 'fit' | 'envelop' | 'resize';
  */
 export type ViewportScaleSetting = number | (() => number | undefined);
 
-/** Geriye dönük ad — `maxDpr` alanının tipi. */
+/**
+ * @deprecated `ViewportScaleSetting` kullan.
+ *
+ * `maxDpr` alanının eski adı. Yalnız TİP olduğu için public export sayısına
+ * girmez ve repoda tüketicisi yoktur.
+ */
 export type MaxDprSetting = ViewportScaleSetting;
 
 /**

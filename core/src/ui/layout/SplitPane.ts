@@ -35,7 +35,7 @@ export class SplitPane {
   private size: number;
   /** Kullanıcının seçtiği boyut; pencere daralsa da korunur. */
   private desiredSize: number;
-  private collapsed: SplitPaneSide | null = null;
+  private collapsed: SplitPaneSide | undefined;
   private drag: { pointerId: number; origin: number; size: number } | null = null;
   private readonly boundPointerDown: (event: PointerEvent) => void;
   private readonly boundPointerMove: (event: PointerEvent) => void;
@@ -130,7 +130,7 @@ export class SplitPane {
 
   /** Programatik resize sessizdir. */
   setSize(size: number): void {
-    this.collapsed = null;
+    this.collapsed = undefined;
     this.desiredSize = size;
     this.size = this.clamp(size);
     this.render();
@@ -144,7 +144,7 @@ export class SplitPane {
 
   expandPane(): void {
     if (!this.collapsed) return;
-    this.collapsed = null;
+    this.collapsed = undefined;
     this.size = this.clamp(this.desiredSize);
     this.render();
   }
@@ -154,7 +154,7 @@ export class SplitPane {
     else this.collapsePane(side);
   }
 
-  getCollapsedPane(): SplitPaneSide | null {
+  getCollapsedPane(): SplitPaneSide | undefined {
     return this.collapsed;
   }
 

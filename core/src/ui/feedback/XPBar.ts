@@ -95,7 +95,7 @@ export class XPBar {
   }
 }
 
-/** `applyXpGain` sonucu. */
+/** `applyXPGain` sonucu. */
 export interface XpGainResult {
   level: number;
   /** Yeni seviyenin İÇİNDEKİ ilerleme. */
@@ -111,14 +111,14 @@ export interface XpGainResult {
  * fonksiyonu çağırmaz, kendi hesabını yapıp `bar.setState()` der.
  *
  * ```ts
- * const next = applyXpGain(level, xp, kazanılan, xpForLevel);
+ * const next = applyXPGain(level, xp, kazanılan, xpForLevel);
  * bar.setState(next.level, next.xp);
  * ```
  *
  * `xpForLevel` sıfır ya da negatif dönerse döngü DURUR: aksi halde sonsuz
  * seviye atlama olurdu (eşiksiz seviye her zaman aşılmış sayılır).
  */
-export function applyXpGain(
+export function applyXPGain(
   level: number,
   xp: number,
   amount: number,

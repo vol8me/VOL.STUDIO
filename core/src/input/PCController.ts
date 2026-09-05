@@ -10,7 +10,11 @@ import {
 } from './PCInputState';
 import type { InputProvider } from './InputProvider';
 import type { InputState } from './InputState';
-import { singleProviderSnapshot, type InputSnapshot, type PcInputSnapshot } from './InputSnapshot';
+import {
+  createSingleProviderSnapshot,
+  type InputSnapshot,
+  type PcInputSnapshot,
+} from './InputSnapshot';
 
 interface MoveKeys {
   up: Phaser.Input.Keyboard.Key;
@@ -170,7 +174,7 @@ export class PCController<TAction extends string> implements InputProvider<TActi
   }
 
   getDebugSnapshot(): InputSnapshot {
-    // Şekil AÇIKÇA tiplenir: `singleProviderSnapshot` gövdeyi `ProviderSnapshot`
+    // Şekil AÇIKÇA tiplenir: `createSingleProviderSnapshot` gövdeyi `ProviderSnapshot`
     // (yani `Record<string, unknown>`) olarak kabul ettiği için satır içi bir
     // nesne hiçbir kontrolden geçmezdi ve `PcInputSnapshot` sessizce
     // gerçeklikten kopardı.
@@ -179,7 +183,7 @@ export class PCController<TAction extends string> implements InputProvider<TActi
       pointer: { ...this.pointerState },
       actions: this.actionState,
     };
-    return singleProviderSnapshot(this.id, snapshot);
+    return createSingleProviderSnapshot(this.id, snapshot);
   }
 
   getState(playerPosition: Vector2): InputState<TAction> {

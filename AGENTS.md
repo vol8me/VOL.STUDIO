@@ -228,7 +228,7 @@ CORE üç katmandır ve sınırları karışmaz (ayrıntı: `core/docs/primitive
    `StateMachine`, `ResourcePool`, `ObjectPool`, `SpatialIndex`, geometri).
 2. **Sunum** — durumu çizer, niyeti callback ile bildirir; **kural taşımaz**.
 3. **Tarif** — yaygın kuralı hazır verir ama **opt-in**'dir; hiçbir bileşen
-   onu arkanda varsaymaz (`resolveSkillStates`, `applyXpGain`).
+   onu arkanda varsaymaz (`resolveSkillStates`, `applyXPGain`).
 
 **Bir sunum bileşeni kendi defterini tutmaz.** `XPBar` seviye hesabını, `SkillTree`
 kilit açmayı, `WaveCounter` tur ilerletmeyi bir dönem KENDİ yapıyordu; oyunun

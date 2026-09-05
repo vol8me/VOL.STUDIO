@@ -14,8 +14,8 @@ export type { InputManagerOptions } from './InputManager';
 export { DEFAULT_MOVE_KEYS, type MoveKeyBindings, type PCControllerOptions } from './PCController';
 export {
   NO_ACTIVE_PROVIDER,
-  singleProviderSnapshot,
-  idleSnapshot,
+  createSingleProviderSnapshot,
+  createIdleSnapshot,
   type ProviderSnapshot,
   type InputSnapshot,
   type PcInputSnapshot,

@@ -11,4 +11,4 @@ export {
   type HapticsBackend,
   type HapticsCapability,
 } from './haptics';
-export { pushBackHandler, backHandlerCount, type BackHandler } from './backNavigation';
+export { pushBackHandler, getBackHandlerCount, type BackHandler } from './backNavigation';

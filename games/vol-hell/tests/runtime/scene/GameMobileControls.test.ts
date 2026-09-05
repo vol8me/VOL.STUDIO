@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { i18n, i18next } from '@volstudio/core';
 import { GameMobileControls } from '@/runtime/scene/GameMobileControls';
-import { backHandlerCount } from '@volstudio/core';
+import { getBackHandlerCount } from '@volstudio/core';
 import trResources from '@/i18n/tr.json';
 import enResources from '@/i18n/en.json';
 
@@ -130,7 +130,7 @@ describe('GameMobileControls', () => {
     expect(() => mount()).toThrow('native bridge unavailable');
     expect(parent.querySelector('.vol-touch-controls')).toBeNull();
     expect(parent.classList.contains('vol-touch-active')).toBe(false);
-    expect(backHandlerCount()).toBe(0);
+    expect(getBackHandlerCount()).toBe(0);
     expect(remove).toHaveBeenCalledWith('blur', expect.any(Function));
     expect(remove).toHaveBeenCalledWith('focus', expect.any(Function));
 

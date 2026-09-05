@@ -5,7 +5,7 @@ import { ResourceBar } from '../../src/ui/feedback/ResourceBar';
 import { ResourceCounter } from '../../src/ui/feedback/ResourceCounter';
 import { RoundCounter } from '../../src/ui/feedback/RoundCounter';
 import { RoundLoop } from '../../src/time/RoundLoop';
-import { XPBar, applyXpGain } from '../../src/ui/feedback/XPBar';
+import { XPBar, applyXPGain } from '../../src/ui/feedback/XPBar';
 
 // Her testte fake timer'lar açık başlar; Counter ve XPBar'ın clearTimeout
 // çağrıları bu ortamda tanımlı olur.
@@ -246,11 +246,11 @@ describe('XPBar', () => {
     expect(xpBar.getXP()).toBe(50);
   });
 
-  it('ilerleme kuralı applyXpGain tarifinde, bar yalnızca çizer', () => {
-    // XPBar durumu çizer; kural applyXpGain'de kalır.
+  it('ilerleme kuralı applyXPGain tarifinde, bar yalnızca çizer', () => {
+    // XPBar durumu çizer; kural applyXPGain'de kalır.
     const xpBar = track(new XPBar({ level: 1, xp: 90, xpForLevel, animateMs: 0 }));
 
-    const next = applyXpGain(1, 90, 30, xpForLevel); // eşik(1)=100 -> lv2, kalan 20
+    const next = applyXPGain(1, 90, 30, xpForLevel); // eşik(1)=100 -> lv2, kalan 20
     xpBar.setState(next.level, next.xp);
 
     expect(next.levelsGained).toBe(1);

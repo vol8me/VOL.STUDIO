@@ -2,7 +2,7 @@ export { Bar, type BarVariant, type BarLabel, type BarOptions } from './Bar';
 export {
   XPBar,
   // Opsiyonel KURAL tarifi — "taşan XP sonraki seviyeye devreder".
-  applyXpGain,
+  applyXPGain,
   type XPBarOptions,
   type XpGainResult,
 } from './XPBar';

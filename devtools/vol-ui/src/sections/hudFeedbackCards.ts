@@ -16,7 +16,7 @@ import {
   ResourceCounter,
   Text,
   XPBar,
-  applyXpGain,
+  applyXPGain,
 } from '@volstudio/core/ui';
 import type { BarVariant } from '@volstudio/core/ui';
 import { i18n, i18next } from '@volstudio/core/i18n';
@@ -202,7 +202,7 @@ export function buildFormattedCounterCard(disposables: DisposableScope): HTMLEle
 
 /**
  * XPBar: saf görüntü. İlerleme KURALI (taşan XP sonraki seviyeye devreder)
- * bileşende değil, CORE'un opsiyonel `applyXpGain` tarifindedir — bar yalnızca
+ * bileşende değil, CORE'un opsiyonel `applyXPGain` tarifindedir — bar yalnızca
  * `setState()` ile eşitlenir. Farklı bir kural isteyen oyun tarifi çağırmaz.
  */
 export function buildXPBarCard(disposables: DisposableScope): HTMLElement {
@@ -215,7 +215,7 @@ export function buildXPBarCard(disposables: DisposableScope): HTMLElement {
   const xpBar = new XPBar({ level: progress.level, xp: progress.xp, xpForLevel });
 
   const gainXp = (amount: number): void => {
-    const next = applyXpGain(progress.level, progress.xp, amount, xpForLevel);
+    const next = applyXPGain(progress.level, progress.xp, amount, xpForLevel);
     progress = { level: next.level, xp: next.xp };
     xpBar.setState(progress.level, progress.xp);
   };

@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { backHandlerCount, i18n, i18next } from '@volstudio/core';
+import { getBackHandlerCount, i18n, i18next } from '@volstudio/core';
 import type { TauriWindowAdapter } from '@volstudio/tauri-v2';
 import tr from '@/i18n/tr.json';
 import en from '@/i18n/en.json';
@@ -88,13 +88,13 @@ describe('ArachnidExitPrompt', () => {
 
   it('destroy geri işleyicisini bırakır ve tekrar çağrılabilir', () => {
     const { adapter } = fakeAdapter();
-    const before = backHandlerCount();
+    const before = getBackHandlerCount();
     prompt = new ArachnidExitPrompt({ container: document.body, windowAdapter: adapter });
-    expect(backHandlerCount()).toBe(before + 1);
+    expect(getBackHandlerCount()).toBe(before + 1);
 
     prompt.destroy();
     prompt.destroy();
-    expect(backHandlerCount()).toBe(before);
+    expect(getBackHandlerCount()).toBe(before);
   });
 
   it('açılma/kapanma durumunu simülasyon sahibine bildirir', async () => {

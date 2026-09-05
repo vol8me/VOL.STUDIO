@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { backHandlerCount, pushBackHandler } from '../../src/platform/backNavigation';
+import { getBackHandlerCount, pushBackHandler } from '../../src/platform/backNavigation';
 
 const disposers: Array<() => void> = [];
 
 afterEach(() => {
   while (disposers.length > 0) disposers.pop()?.();
-  expect(backHandlerCount()).toBe(0);
+  expect(getBackHandlerCount()).toBe(0);
 });
 
 describe('Android geri navigasyonu', () => {
@@ -42,7 +42,7 @@ describe('Android geri navigasyonu', () => {
 
     expect(handler).not.toHaveBeenCalled();
     expect(removeListener).toHaveBeenCalledWith('vol:androidback', expect.any(Function));
-    expect(backHandlerCount()).toBe(0);
+    expect(getBackHandlerCount()).toBe(0);
   });
 
   it('işleyici yığını olay sırasında değişse bile aynı handlerı iki kez çağırmaz', () => {
@@ -90,7 +90,7 @@ describe('Android geri navigasyonu', () => {
     const handler = vi.fn(() => true);
 
     expect(() => pushBackHandler(handler)).toThrow('WebView listener rejected');
-    expect(backHandlerCount()).toBe(0);
+    expect(getBackHandlerCount()).toBe(0);
 
     const dispose = pushBackHandler(handler);
     disposers.push(dispose);

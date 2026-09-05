@@ -5,7 +5,7 @@ import { InputManager } from '../../src/input/InputManager';
 import type { InputProvider } from '../../src/input/InputProvider';
 import type { InputState } from '../../src/input/InputState';
 import type { PCActionBinding } from '../../src/input/PCInputState';
-import { NO_ACTIVE_PROVIDER, singleProviderSnapshot } from '../../src/input/InputSnapshot';
+import { NO_ACTIVE_PROVIDER, createSingleProviderSnapshot } from '../../src/input/InputSnapshot';
 import { createIdleActions } from '../../src/input/InputState';
 
 /**
@@ -212,7 +212,7 @@ describe('Diagnostics snapshot sağlayıcı kümesi AÇIK', () => {
       },
       getState: vi.fn(() => idleState()),
       getDebugSnapshot: () =>
-        singleProviderSnapshot('gamepad', {
+        createSingleProviderSnapshot('gamepad', {
           leftStick: { x: 0.5, y: -0.25 },
           buttons: { engage: true, boost: false },
         }),

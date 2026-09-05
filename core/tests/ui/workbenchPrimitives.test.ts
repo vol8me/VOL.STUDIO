@@ -203,7 +203,7 @@ describe('SplitPane', () => {
     split.collapsePane('primary');
     expect(split.primaryPane.hidden).toBe(true);
     split.togglePane('primary');
-    expect(split.getCollapsedPane()).toBeNull();
+    expect(split.getCollapsedPane()).toBeUndefined();
     split.collapsePane('secondary');
     expect(split.secondaryPane.hidden).toBe(true);
     split.expandPane();

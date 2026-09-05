@@ -60,15 +60,15 @@ export class SlotContainer<TItem> {
   }
 
   /**
-   * Slot içeriği (kopya); boş ya da geçersiz indekste `null`.
+   * Slot içeriği (kopya); boş ya da geçersiz indekste `undefined`.
    *
-   * Aralık dışı ve kesirli indeks de `null` döner — dizi erişimi `undefined`
-   * verse bile sözleşme `null`dur.
+   * Aralık dışı ve kesirli indeks de `undefined` döner. Yokluk sözleşmesi
+   * (`core/docs/primitives.md`): arama boşa düştüğünde `undefined`.
    */
-  get(index: number): Slot<TItem> | null {
-    if (!this.inRange(index)) return null;
+  get(index: number): Slot<TItem> | undefined {
+    if (!this.inRange(index)) return undefined;
     const slot = this.slots[index];
-    return slot ? { ...slot } : null;
+    return slot ? { ...slot } : undefined;
   }
 
   /** Bir öğeden toplam kaç adet var? */
@@ -139,16 +139,16 @@ export class SlotContainer<TItem> {
   }
 
   /**
-   * Slotu boşaltır ve içeriğini döner. Geçersiz indekste `null` döner ve
+   * Slotu boşaltır ve içeriğini döner. Geçersiz indekste `undefined` döner ve
    * HİÇBİR ŞEY yazmaz.
    *
    * İndeksin TAM SAYI olması şarttır ve `inRange` bunu kapsar: kesirli bir
    * indeks diziye `"1.5"` adlı sıradan bir ÖZELLİK yazar, `fill()` onu
    * temizleyemez.
    */
-  clearSlot(index: number): Slot<TItem> | null {
-    if (!this.inRange(index)) return null;
-    const slot = this.slots[index] ?? null;
+  clearSlot(index: number): Slot<TItem> | undefined {
+    if (!this.inRange(index)) return undefined;
+    const slot = this.slots[index] ?? undefined;
     this.slots[index] = null;
     return slot;
   }

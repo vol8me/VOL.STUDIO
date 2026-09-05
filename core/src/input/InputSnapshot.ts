@@ -80,11 +80,14 @@ export interface TouchStickSnapshot {
  * hem `providers` anahtarını elle senkron tutmasını engeller (ayrışırlarsa
  * overlay aktif sağlayıcının verisini bulamaz ve sessizce boş görünür).
  */
-export function singleProviderSnapshot(id: string, snapshot: ProviderSnapshot): InputSnapshot {
+export function createSingleProviderSnapshot(
+  id: string,
+  snapshot: ProviderSnapshot,
+): InputSnapshot {
   return { activeProvider: id, providers: { [id]: snapshot } };
 }
 
 /** Hiçbir sağlayıcının aktif olmadığı snapshot. */
-export function idleSnapshot(): InputSnapshot {
+export function createIdleSnapshot(): InputSnapshot {
   return { activeProvider: NO_ACTIVE_PROVIDER };
 }

@@ -20,13 +20,58 @@ tamamen ilgisiz bir yerde fark edilir.
 
 `core/tests/governance/numericContract.test.ts` bunu kapıda doğrular.
 
+## Adlandırma sözleşmesi
+
+Tüketici bir adı GÖRMEDEN tahmin edebilmeli. Yüzeyde üç kural geçerlidir:
+
+| Kalıp                      | Ne zaman                           | Örnek                                                             |
+| -------------------------- | ---------------------------------- | ----------------------------------------------------------------- |
+| `get*`                     | O anki durumu okur, yan etkisi yok | `getAppVisibility`, `getHapticsCapability`, `getBackHandlerCount` |
+| `create*`                  | Yeni bir değer/nesne üretir        | `createRandom`, `createIdleActions`, `createIdleSnapshot`         |
+| `is*` / `has*` / `should*` | Boolean soru                       | `isFiniteNumber`, `hasTouchInput`, `shouldUseTouchControls`       |
+
+**Rol sonekleri ayrımı taşır:**
+
+- **`*Manager`** bir KÜMEYİ sahiplenir ve koordine eder — `InputManager`
+  (sağlayıcılar), `FontManager`, `SaveManager`, `ToastManager`.
+- **`*Controller`** TEK bir şeyi sürer — `PinchZoomController` (bir jest),
+  `FullscreenController` (bir API), `CanvasViewportController` (bir tuvalin
+  kamerası).
+
+`ViewportManager` ile `CanvasViewportController` bu yüzden çelişmez: ilki
+oyunun global ölçek/DPR politikasını sahiplenir, ikincisi bir editör tuvalinin
+kamerasını sürer.
+
+**Kısaltmalar TEK yazımlıdır** ve büyük harf kalır: `XP`, `PC`, `UI`, `DPR`.
+`applyXpGain` gibi bir karışım, aynı kavramın iki adı olduğu izlenimi verir.
+
+## Yokluk sözleşmesi — `undefined` mı `null` mı?
+
+Bir tüketicinin ezberleyebileceği TEK kural olmalı; her metodun kendi seçimini
+belgelemesi yetmez, çünkü çağıran o metodu okumadan `?.`/`??` yazar.
+
+| Değer       | Anlamı                                                                         | Örnek                                                                                                   |
+| ----------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `undefined` | **Yokluk.** Arama boşa düştü, kap boş, seçim yapılmamış, sağlayıcı aktif değil | `Grid.get`, `Deck.draw`, `MinHeap.pop`, `Select.getValue`, `getLeftStick`                               |
+| `null`      | **Hesaplanmış yokluk.** İşlem koştu ve sonucun var OLMADIĞINI kanıtladı        | `findPath.find` (yol yok), `SpatialIndex.findNearest` (yarıçapta yok), `FlowField.getNext` (ulaşılamaz) |
+
+Ayrım pratikte şu soruya iner: **çağıran bir hesap ısmarladı mı?** Ismarladıysa
+`null` bir CEVAPTIR ("aradım, yok"). Ismarlamadıysa `undefined` bir yokluktur.
+
+`undefined` varsayılandır çünkü dilin kendisiyle bileşir: `Array.at`, `Map.get`,
+opsiyonel alanlar ve `?.` hep onu üretir. Sınırda `?? null` yazmak zorunda kalan
+bir tüketici, sözleşmenin kaydığının işaretidir.
+
+`core/tests/governance/absenceContract.test.ts` `null` dönen public üyeleri
+sayılı tutar: listeye yeni bir ad eklemek bilinçli bir düzenleme gerektirir.
+
 ## CORE'un üç katmanı
 
 | Katman        | Ne yapar                                     | Örnek                                       |
 | ------------- | -------------------------------------------- | ------------------------------------------- |
 | **Mekanizma** | Sunumdan bağımsız, oyun kelimesi bilmez      | `Scheduler`, `StateMachine`, `SpatialIndex` |
 | **Sunum**     | Durumu çizer, niyet bildirir — kural taşımaz | `Bar`, `SkillTree`, `ShopPicker`            |
-| **Tarif**     | Yaygın kuralı hazır verir — ama **opt-in**   | `resolveSkillStates()`, `applyXpGain()`     |
+| **Tarif**     | Yaygın kuralı hazır verir — ama **opt-in**   | `resolveSkillStates()`, `applyXPGain()`     |
 
 Ayrımın sebebi somuttur: bir kural sunum bileşeninin içinde yaşarsa bileşen
 kendi defterini tutar ve tüketicinin kendi sistemiyle **kayar**. `XPBar` bir

@@ -77,6 +77,6 @@ export function pushBackHandler(handler: BackHandler): () => void {
 }
 
 /** Testler için: kayıtlı işleyici sayısı. */
-export function backHandlerCount(): number {
+export function getBackHandlerCount(): number {
   return handlers.length;
 }

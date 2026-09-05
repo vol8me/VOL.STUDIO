@@ -304,7 +304,7 @@ describe('SlotContainer', () => {
 
     expect(bag.clearSlot(0)).toEqual({ item: 'a', count: 1 });
     expect(bag.usedSlots).toBe(0);
-    expect(bag.clearSlot(0)).toBeNull();
+    expect(bag.clearSlot(0)).toBeUndefined();
   });
 
   it('isFull ve clear', () => {
@@ -323,9 +323,9 @@ describe('koleksiyon sınır sözleşmeleri', () => {
     const bag = new SlotContainer<string>({ size: 2 });
     bag.add('a');
 
-    expect(bag.get(99)).toBeNull();
-    expect(bag.get(-1)).toBeNull();
-    expect(bag.get(1.5)).toBeNull();
+    expect(bag.get(99)).toBeUndefined();
+    expect(bag.get(-1)).toBeUndefined();
+    expect(bag.get(1.5)).toBeUndefined();
   });
 
   it('SlotContainer.clearSlot kesirli indekste diziyi KİRLETMEZ', () => {
@@ -334,7 +334,7 @@ describe('koleksiyon sınır sözleşmeleri', () => {
     const bag = new SlotContainer<string>({ size: 2 });
     bag.add('a');
 
-    expect(bag.clearSlot(1.5)).toBeNull();
+    expect(bag.clearSlot(1.5)).toBeUndefined();
     const raw = (bag as unknown as { slots: unknown[] }).slots;
     expect(Object.keys(raw)).toEqual(['0', '1']);
   });

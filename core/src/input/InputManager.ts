@@ -5,7 +5,7 @@ import { PCController, type MoveKeyBindings } from './PCController';
 import type { PCActionBinding } from './PCInputState';
 import type { InputProvider } from './InputProvider';
 import { createIdleActions, type InputState } from './InputState';
-import { idleSnapshot, type InputSnapshot } from './InputSnapshot';
+import { createIdleSnapshot, type InputSnapshot } from './InputSnapshot';
 import { TouchController, type TouchControllerOptions } from './TouchController';
 import type { VirtualActionSource } from './VirtualActionSource';
 
@@ -148,7 +148,7 @@ export class InputManager<TAction extends string> {
     if (active?.getDebugSnapshot) {
       return active.getDebugSnapshot();
     }
-    return idleSnapshot();
+    return createIdleSnapshot();
   }
 
   /** Provider'ların tuttuğu joystick/tuş durumunu ortak geçiş kapısından bırakır. */

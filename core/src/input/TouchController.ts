@@ -11,7 +11,7 @@ import { TouchStickState, type TouchStickOptions } from './TouchStickState';
 import type { InputProvider } from './InputProvider';
 import type { InputState } from './InputState';
 import {
-  singleProviderSnapshot,
+  createSingleProviderSnapshot,
   type InputSnapshot,
   type TouchInputSnapshot,
   type TouchStickSnapshot,
@@ -131,7 +131,7 @@ export class TouchController<TAction extends string>
       left: left ? this.toStickSnapshot(left) : undefined,
       right: right ? this.toStickSnapshot(right) : undefined,
     };
-    return singleProviderSnapshot(this.id, snapshot);
+    return createSingleProviderSnapshot(this.id, snapshot);
   }
 
   private toStickSnapshot(stick: { base: Vector2; current: Vector2 }): TouchStickSnapshot {

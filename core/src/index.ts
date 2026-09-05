@@ -22,7 +22,7 @@ export {
  * farklıdır; bkz. `platform/capabilities.ts`.
  */
 export { canHover, hasTouchInput, isTouchPrimary, shouldUseTouchControls } from './platform';
-export { pushBackHandler, backHandlerCount, type BackHandler } from './platform';
+export { pushBackHandler, getBackHandlerCount, type BackHandler } from './platform';
 export {
   cancelHaptics,
   getHapticsCapability,
@@ -148,8 +148,13 @@ export type { BaseEntity } from './entities/BaseEntity';
 export { BaseSprite } from './entities/BaseSprite';
 export { MovableController, type MovableGameObject } from './entities/MovableController';
 /**
- * @deprecated `MovableController` kullan. Bu takma ad yanlış rol iması yaratır;
- * bu takma ad bir sonraki büyük sürümde kaldırılacak.
+ * @deprecated `MovableController` kullan — bu ad CORE'da olmayan bir oyuncu
+ * rolü ima eder.
+ *
+ * Repoda TÜKETİCİSİ YOK ve CORE yayınlanmıyor (`private`, 0.1.0), yani
+ * "bir sonraki büyük sürüm" diye beklenecek bir eşik de yok: silmenin tek
+ * maliyeti `EXPECTED_EXPORT_COUNT`u düşürmektir. Kaldırma kararı repo
+ * sahibinindir; o karar verilene kadar burada duruyor.
  */
 export { MovableController as PlayerController } from './entities/MovableController';
 
