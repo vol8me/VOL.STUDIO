@@ -26,6 +26,83 @@ Session'ın her geçmiş değişimi onu geçersiz kılıyor. Renderer tile günc
 zaten yüzey kimliğini ve sürümünü birlikte izliyordu; yalnız sürüme bakan
 ayrı `SpriteDocument` önbelleği modelle birlikte kaldırıldı.
 
+## 2026-09-05 — denetim kapanışı: sistem haritası ve kalan riskler
+
+`pnpm signoff` YEŞİL: quick + lint-css + coverage + build + bundle + e2e
+(Chromium) + e2e-full (Firefox) + Rust (iki crate). 9 pakette 3483 birim testi,
+27 bekçi testi, 8 tarayıcı spec'i, 12 görsel temel.
+
+### Bağımlılık grafiği (gerçek import'lardan türetildi)
+
+```
+core              → hiçbir şey            (Kural 3 sağlam)
+audio-synth       → core
+pen.dev           → core
+visual-synth      → core
+vol-ui            → core
+tauri-v2          → core
+vol-asset-studio  → core, visual-synth    (DEVTOOL_EDGES'te BİLDİRİLMİŞ tek kenar)
+vol-hell          → core, audio-synth, tauri-v2
+vol-arachnid      → core, audio-synth, tauri-v2
+```
+
+Sıfır döngü. Ham tarama dört sahte kenar üretti (`core → vol-hell` vb.); hepsi
+yönetişim testlerindeki string sabitleri, bir CLI yardım mesajı ve bir yorum
+satırı çıktı — import değil.
+
+### Kapıların kör noktaları
+
+| Alan                 | Durum                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| cihaz performansı    | Kapı OLAMAZ — bir kapının koşulu masadaki donanım olamaz. `pnpm benchmark:device` ile tekrarlanabilir. |
+| iOS                  | Hiç kapı yok, hiç build yok. Bilinçli boşluk.                                                          |
+| Firefox/WebKit e2e   | Yalnız vol-asset-studio (`e2e-full`). vol-ui ve vol-arachnid yalnız Chromium.                          |
+| benchmark gerilemesi | Üç benchmark ölçüyor, EŞİK YOK. Boyut ekseni artık bundle bütçesiyle kapılı; hız ekseni değil.         |
+| erişilebilirlik      | Yapısal testler var (BEM, dokunma hedefi, ARIA); gerçek yardımcı teknolojiyle doğrulama yok.           |
+
+### İncelendi ve TEMİZ çıktı
+
+Bunlar yazılıyor çünkü aksi hâlde denetim sığ görünür — dört hipotezim ölçümle
+çürüdü:
+
+- **Kaynak sızıntısı yok.** 163 `addEventListener` / 155 `removeEventListener`
+  ve 399 `DisposableScope` kullanımı. İptal edilmeyen üç `rAF` adayının üçü de
+  yanlış alarm: `CardPicker`/`ShopPicker` callback'leri `isConnected` koruması
+  taşıyor ve `destroy()` diziyi boşaltıyor; `BaseScene` rAF'i hiç doğrudan
+  çağırmıyor (taramam yorum satırına takıldı). `Scheduler` da `setInterval`
+  kullanmıyor — yorumu zaten kullanmadığını açıklıyor.
+- **Tip kaçamağı yok.** 0 `any`, 0 `as any`, 0 `@ts-ignore`, 0
+  `eslint-disable`. Dokuz `as unknown as`ın hepsi meşru DOM/platform interop'u
+  (`document.fonts`, `getGamepads()`, jenerik ağaç gezinme).
+- **Yutulmuş hata yok.** 0 boş `catch`; 57 `catch`in hepsi gerekçe yorumu
+  taşıyor.
+- **Ölü export yok.** Kaba tarama 1580 export içinde 181 aday gösterdi;
+  doğrulandığında hepsi `export *` barrel'ları üzerinden erişilebilen meşru
+  kütüphane tipleri çıktı.
+- **Rig boru hattı kapılı.** 72/72 dosya, sıfır fark;
+  `rigAssets.test.ts` eksik PNG, yetim PNG, yol doğrulaması ve önizleme
+  dışlamasını zaten kapsıyor.
+
+### Bilinçli olarak YAPILMAYANLAR
+
+- **`.git` geçmişi yeniden yazılmadı.** 220 MB'ın kaynağı geçmişte commit
+  edilmiş 8-11 MB'lık ses master'ları. Temizlemek bütün commit hash'lerini
+  değiştirir; tekrarını önleyen kapı kuruldu, geçmişin kendisi bırakıldı.
+- **Bundle bütçesine hız ekseni eklenmedi.** Benchmark'ların eşiğe bağlanması
+  ayrı bir tur; ölçüm gürültüsünün hangi iş yükünde bütçelenebilir olduğu
+  ayrıca çalışılmalı (daha önce ölçüldü: doymuş iş yükleri 1.1x yayılma,
+  hafifler 8.5x).
+- **CORE'a yeni yetenek eklenmedi.** Repo'nun kendi "en az iki tüketici"
+  kuralı gereği; gerçek oyun gelmeden soyutlama uydurmak yanlış olurdu.
+
+### Kalan riskler
+
+1. **iOS hiç sınanmadı.** Tauri yapılandırması var, build alınmadı.
+2. **Hız gerilemesi görünmez.** Bundle boyutu kapılı, kare süresi değil.
+3. **Tek makine bağımlılığı.** Görsel temeller `-chromium-linux` ekli; başka
+   bir yazı tipi kümesi farkı üretirse temel o makinede yenilenmeli.
+4. **`vol-ui` ve `vol-arachnid` yalnız Chromium'da sınanıyor.**
+
 ## 2026-09-05 — çalışma zamanı: bundle bütçesi ve cihaz ölçümü
 
 | Kimlik | Seviye | İhlal ve sonuç                                                                                                                                                                                                                                              | Yapılan ve kanıt                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
