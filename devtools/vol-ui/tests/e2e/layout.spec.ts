@@ -172,3 +172,46 @@ test.describe('telefon genişliği', () => {
     expect(broken).toEqual([]);
   });
 });
+
+test.describe('sürükleme jesti', () => {
+  test('sürüklemek METİN SEÇMEZ', async ({ page }) => {
+    /*
+     * Tarayıcı aynı jesti hem sürükleme hem metin seçimi olarak yorumlar:
+     * kart mavi vurguya boyanır, imleç I-beam'e döner, mobilde "kopyala"
+     * balonu açılır. Ölçüldü — düzeltmeden önce bir Kanban kartını sürüklemek
+     * 36 karakter seçiyordu.
+     *
+     * Koruma bir dönem yalnız `.vol-ui-root` üzerindeydi; o oyunların tam ekran
+     * kabuğudur. Bileşen başka bir yere monte edildiğinde korumasız kalıyordu —
+     * yani davranış NEREYE ASILDIĞINA bağlıydı.
+     */
+    await openShowcase(page);
+    await selectTab(page, 'advanced');
+
+    const card = page.locator('.vol-kanban__card').first();
+    const box = await card.boundingBox();
+    expect(box, 'Kanban kartı bulunamadı').not.toBeNull();
+
+    await page.mouse.move(box!.x + 10, box!.y + 10);
+    await page.mouse.down();
+    await page.mouse.move(box!.x + 160, box!.y + 60, { steps: 8 });
+    const selected = await page.evaluate(() => window.getSelection()?.toString() ?? '');
+    await page.mouse.up();
+
+    expect(selected, `sürüklerken metin seçildi: "${selected.slice(0, 40)}"`).toBe('');
+  });
+
+  test('her sürükleme yüzeyi seçimi KENDİ kapatır', async ({ page }) => {
+    // Bir bileşenin sözleşmesi, monte edildiği yere bağlı olamaz.
+    await openShowcase(page);
+    await selectTab(page, 'advanced');
+
+    const leaked = await page.evaluate(() =>
+      ['.vol-kanban-wrap', '.vol-skill-tree', '.vol-carousel'].filter((selector) => {
+        const element = document.querySelector<HTMLElement>(selector);
+        return element !== null && getComputedStyle(element).userSelect !== 'none';
+      }),
+    );
+    expect(leaked).toEqual([]);
+  });
+});

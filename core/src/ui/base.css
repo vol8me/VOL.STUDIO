@@ -53,3 +53,44 @@
 .vol-ui-root * {
   box-sizing: border-box;
 }
+
+/*
+ * SÜRÜKLEME YÜZEYLERİNDE METİN SEÇİMİ KAPALIDIR.
+ *
+ * Bir öğeyi sürüklerken tarayıcı aynı jesti metin seçimi olarak da yorumlar:
+ * kart mavi vurguya boyanır, imleç I-beam'e döner, mobilde "kopyala" balonu
+ * açılır. Ölçüldü — Kanban'da bir kartı sürüklemek 36 karakter metin seçiyordu.
+ *
+ * Koruma bir dönem YALNIZCA `.vol-ui-root` üzerindeydi; o tam ekran katmanı
+ * oyunların kullandığı kabuktur. Bileşenler başka bir yere monte edildiğinde
+ * (VOL.UI showcase, bir araç paneli, herhangi bir tüketici) korumasız kalıyordu:
+ * yani bileşenin davranışı NEREYE ASILDIĞINA bağlıydı. Bir sözleşme, konumuna
+ * göre değişemez.
+ *
+ * Liste sürükleme yüzeyleriyle SINIRLI tutulur: metin seçimini genel olarak
+ * kapatmak, kullanıcının bir açıklamayı ya da bir değeri kopyalamasını
+ * engellerdi. Sürüklenebilir bir yüzeyde ise seçim zaten aynı jestle mümkün
+ * değildir — kapatmak bir yeteneği almaz, çakışmayı kaldırır.
+ */
+.vol-kanban-wrap,
+.vol-slot-grid__item,
+.vol-card-stack,
+.vol-carousel,
+.vol-skill-tree,
+.vol-split-pane__separator,
+.vol-range-slider,
+.vol-curve-editor,
+.vol-joystick,
+.vol-square-joystick,
+.vol-radial-menu,
+.vol-charge-button,
+.vol-long-press-button,
+.vol-multitouch-zone,
+.vol-pinch-zoom,
+.vol-pull-refresh,
+.vol-swipe-zone,
+.vol-dual-scroll,
+.vol-touch-button {
+  -webkit-user-select: none;
+  user-select: none;
+}
