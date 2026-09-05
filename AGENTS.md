@@ -16,7 +16,8 @@ varsa (ör. `devtools/pen.dev/`) o dosya bu kuralları **daraltır**, gevşetmez
 
 - Tauri v2 + Phaser 4 + TypeScript, pnpm workspace monorepo.
 - Paketler: `core`, `games/vol-hell`, `games/vol-arachnid`, `devtools/pen.dev`,
-  `devtools/vol-ui`, `devtools/vol-asset-studio`, `tauri-v2`.
+  `devtools/vol-ui`, `devtools/vol-asset-studio`, `devtools/audio-synth`,
+  `devtools/visual-synth`, `tauri-v2`.
 - Hedefler: Windows (MSI/NSIS) ve Android (APK), tek kod tabanından.
 - **Oyunun ve dokümantasyonun ana dili Türkçe'dir.** Kod yorumları ve `.md`
   dosyaları Türkçe yazılır; kod identifier'ları Türkçeleştirilmez.
@@ -31,7 +32,7 @@ varsa (ör. `devtools/pen.dev/`) o dosya bu kuralları **daraltır**, gevşetmez
    oyunlar ve geliştirici araçları `core`'u tüketir. `core` içinde oyuna özel
    varsayım (kart adı, dalga sayısı, düşman türü) bulunmaz.
 4. **Sınır ZAMANDIR, paket değil.** Bir oyunun **çalışma zamanı** (`src/`)
-   yalnız `core`'u ve dış bağımlılıkları import eder — hiçbir devtool'u,
+   yalnız `core`'u, platform adaptörü `tauri-v2`yi ve dış bağımlılıkları import eder — hiçbir devtool'u,
    hiçbir başka oyunu. **Build/doğrulama zamanı** (`scripts/`, `tests/`) bir
    devtool üreticisini kullanabilir, ama `devDependencies` olarak: `dependencies`
    o paketi gönderilen bundle'ın sözleşmesine sokar. Üretilen asset, üreten
@@ -46,8 +47,8 @@ varsa (ör. `devtools/pen.dev/`) o dosya bu kuralları **daraltır**, gevşetmez
    birbirine bağlandığında ikisi de tek başına sökülemez hâle gelir.
    Bir paketin repo dosyalarını **veri** olarak okuması modül bağımlılığı
    değildir. Bu kuralın makine karşılığı `pnpm quick` içindeki
-   `workspace-contract` kapısıdır; metin ile kapı ayrı düşerse metin değil
-   **kapı** doğruyu söyler.
+   `workspace-contract` kapısıdır; metin ile kapı ayrışırsa somut ihlal
+   girdisiyle ikisi de sınanır; hatalı olan gerekçesi ve regresyon testiyle düzeltilir.
 5. **Ölçüler ve denge kod değil veri işidir.** Oynanış sayıları `src/config/`
    altında yaşar; bir dengeleme değişikliği runtime dosyasına dokunmamalıdır.
 6. **Listener eklenen her yerde kaldırılır.** `languageChanged`, DOM olayları,
@@ -135,12 +136,12 @@ başlık yapıları aynı kalır.
 yalnızca source control, PR ve release içindir. Yeşili doğrulayan tek merci
 senin çalıştırdığın komuttur — koşmadığın bir kapıyı "geçti" yazamazsın.
 
-| Kapı           | Komut                 | Kapsam                                      |
-| -------------- | --------------------- | ------------------------------------------- |
-| Pre-commit     | `pnpm quick`          | sözleşme, format, typecheck, lint (~45 sn)  |
-| Push öncesi    | `pnpm high`           | quick + css lint + coverage + tüm build'ler |
-| Release        | `pnpm signoff`        | high + cargo check/fmt/clippy               |
-| Ortam kontrolü | `pnpm run doctor:env` | Node, pnpm, Rust, just, FFmpeg, Tauri deps  |
+| Kapı           | Komut                 | Kapsam                                             |
+| -------------- | --------------------- | -------------------------------------------------- |
+| Pre-commit     | `pnpm quick`          | sözleşme, format, typecheck, lint (~45 sn)         |
+| Push öncesi    | `pnpm high`           | quick + CSS lint + coverage + build + Chromium E2E |
+| Release        | `pnpm signoff`        | high + Chromium/Firefox E2E + Rust                 |
+| Ortam kontrolü | `pnpm run doctor:env` | Node, pnpm, Rust, just, FFmpeg, Tauri deps         |
 
 `pre-commit` → `pnpm quick`, `pre-push` → `pnpm high` git hook'ları
 `simple-git-hooks` ile kurulur (`pnpm install` sırasında). Test yükü bilerek
@@ -190,7 +191,8 @@ olmuyordu.
 **Kapsam eşikleri kök `quality.json`da yaşar — tek doğruluk kaynağı.** Paket
 `vitest.config.ts` dosyaları bu dosyayı okur, bekçi de aynı dosyayı okur;
 ayrışamazlar.
-Bir config'e eşiği SATIR İÇİ yazmak `contract` kapısını kırar.
+Bekçi Vitest yapılandırmasını gerçekten yükleyip eşik değerini karşılaştırır;
+eksiği, yanlış paketi veya sonradan yapılan override'ı `contract` reddeder.
 
 **Kapsam eşikleri ratchet'tir.** Ölçülen gerçek kapsamın ~2 puan altına
 kilitlenir. Kapsamı düşüren bir değişiklik kapıyı kırar; eşiği düşürerek

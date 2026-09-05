@@ -103,15 +103,15 @@ mounted only on touch-primary devices (`shouldUseTouchControls`).
 
 Quality gates run locally via `just`. There is no CI runner; GitHub is used only for source control, pull requests and releases.
 
-| Level           | Command                            | What it runs                                               |
-| --------------- | ---------------------------------- | ---------------------------------------------------------- |
-| Pre-commit      | `pnpm quick`                       | contract, format, typecheck, lint (~45 s)                  |
-| Pre-push        | `pnpm high`                        | quick + CSS lint + coverage thresholds + all builds        |
-| Release/signoff | `pnpm signoff`                     | high + cargo check/fmt/clippy                              |
-| Long build      | `pnpm exec just tauri-build`       | game build + Tauri prod build (manual)                     |
-| Fedora/Linux    | `pnpm exec just tauri-build-linux` | deb + rpm + AppImage delivery                              |
-| Environment     | `pnpm run doctor:env`              | Node, pnpm, Rust, just, FFmpeg, Tauri deps                 |
-| Report          | `pnpm exec just report high`       | Runs a gate and reports the result structurally (`--json`) |
+| Level           | Command                            | What it runs                                                   |
+| --------------- | ---------------------------------- | -------------------------------------------------------------- |
+| Pre-commit      | `pnpm quick`                       | contract, format, typecheck, lint (~45 s)                      |
+| Pre-push        | `pnpm high`                        | quick + CSS lint + coverage thresholds + builds + Chromium E2E |
+| Release/signoff | `pnpm signoff`                     | high + Chromium/Firefox E2E + Rust                             |
+| Long build      | `pnpm exec just tauri-build`       | game build + Tauri prod build (manual)                         |
+| Fedora/Linux    | `pnpm exec just tauri-build-linux` | deb + rpm + AppImage delivery                                  |
+| Environment     | `pnpm run doctor:env`              | Node, pnpm, Rust, just, FFmpeg, Tauri deps                     |
+| Report          | `pnpm exec just report high`       | Runs a gate and reports the result structurally (`--json`)     |
 
 Benchmark commands do not impose machine-specific performance thresholds; they
 measure median/p95 step cost for CORE mechanisms and VOL.HELL's renderer-free
@@ -131,11 +131,18 @@ A gate test rejects script names that collide with pnpm builtins.
 
 Coverage thresholds live in the root `quality.json`; package `vitest.config.ts`
 files read it and the guard reads the same file, so the two cannot drift.
-Writing a threshold inline in a config breaks the gate. The file is schema
+The guard loads the actual Vitest configuration and rejects missing, mismatched,
+or overridden thresholds. The file is schema
 validated on every read (`scripts/quality/config.mjs`), so a typo yields a
 single message that says where to look.
 
 The `just` binary lands in `node_modules/.bin` and is not on the global `PATH` — use `pnpm fast` or `pnpm exec just fast`, not a bare `just fast`. For single gates (`typecheck`, `lint`, `coverage`, `rust`, `test-pkg <package>` …): `pnpm exec just --list`.
+
+Source imports must resolve to files visible to Git; an ignored local helper
+will be missing from a fresh clone. `contract` checks this and the 2 MiB file
+limit in both the index and working tree. The Pencil source exception is
+justified in `scripts/quality/blobSize.mjs`. Guard regression tests use real
+temporary Git repositories and run as part of `contract`.
 
 ## License
 

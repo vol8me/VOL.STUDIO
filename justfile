@@ -48,6 +48,7 @@ coverage:
 # `pnpm -r --if-present` script'i olmayan paketi sessizce atladığı için,
 # test/eşik yazılmamış yeni bir paket bu bekçi olmadan kapılardan görünmez geçer.
 contract:
+    node --test scripts/quality/tests/*.test.mjs
     pnpm run contract
 
 # build script'i olan HER paketi build eder — yeni paket elle eklenmeyi beklemez.

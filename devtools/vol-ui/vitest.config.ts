@@ -1,4 +1,4 @@
-import { coreAliases } from '../../scripts/build/coreAliases.mjs';
+import { coreAliases } from '../../scripts/vite/coreAliases.mjs';
 import { loadQualityConfig } from '../../scripts/quality/config.mjs';
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
@@ -35,7 +35,7 @@ export default defineConfig({
   },
   // Alias listesi `vite.config.ts` ile AYNI kaynaktan gelir. Elle yazıldığı
   // dönemde ikisi ayrışmış, testler build'in çözdüğü modül grafiğini
-  // çözemez olmuştu (bkz. scripts/build/coreAliases.mjs).
+  // çözemez olmuştu (bkz. scripts/vite/coreAliases.mjs).
   resolve: {
     alias: [...coreAliases(), { find: '@', replacement: resolve(import.meta.dirname, './src') }],
   },

@@ -106,8 +106,8 @@ Kalite kapıları `just` ile localde çalıştırılır. GitHub yalnızca source
 | Seviye          | Komut                              | Ne yapar                                                 |
 | --------------- | ---------------------------------- | -------------------------------------------------------- |
 | Pre-commit      | `pnpm quick`                       | sözleşme, format, typecheck, lint (~45 sn)               |
-| Push öncesi     | `pnpm high`                        | quick + css lint + coverage eşikleri + tüm build'ler     |
-| Release/signoff | `pnpm signoff`                     | high + cargo check/fmt/clippy                            |
+| Push öncesi     | `pnpm high`                        | quick + CSS lint + coverage + build + Chromium E2E       |
+| Release/signoff | `pnpm signoff`                     | high + Chromium/Firefox E2E + Rust                       |
 | Uzun build      | `pnpm exec just tauri-build`       | game build + Tauri prod build (manuel)                   |
 | Fedora/Linux    | `pnpm exec just tauri-build-linux` | deb + rpm + AppImage teslimi                             |
 | Ortam           | `pnpm run doctor:env`              | Node, pnpm, Rust, just, FFmpeg, Tauri deps kontrolü      |
@@ -133,8 +133,8 @@ komutudur ve aynı adlı bir script'i sessizce gölgeler — script hiç çalı�
 Yerleşik bir komutla çakışan script adları bir kapı testiyle engellenir.
 
 Kapsam eşikleri kök `quality.json`da yaşar; paket `vitest.config.ts` dosyaları onu okur ve
-bekçi de aynı dosyayı okur, yani ayrışamazlar. Bir config'e eşiği satır içi
-yazmak kapıyı kırar. Dosya her okunuşta şema doğrulamasından geçer
+bekçi de aynı dosyayı okur, yani ayrışamazlar. Bekçi Vitest yapılandırmasını gerçekten yükler; kaldırılmış, başka paketten
+alınmış veya sonradan ezilmiş eşik kapıyı kırar. Dosya her okunuşta şema doğrulamasından geçer
 (`scripts/quality/config.mjs`) — bir yazım hatası, nereye bakılacağını söyleyen
 tek bir hata mesajı verir.
 
@@ -142,6 +142,12 @@ tek bir hata mesajı verir.
 çıplak `just fast` değil `pnpm fast` ya da `pnpm exec just fast` kullanılır.
 Tekil kapılar (`typecheck`, `lint`, `coverage`, `rust`, `test-pkg <paket>` …)
 için: `pnpm exec just --list`.
+
+Kaynak import'ları Git'in görebildiği dosyalara dayanmalıdır; ignore edilmiş
+bir yerel yardımcı temiz klonda bulunamaz. `contract` bunu ve hem index hem
+çalışma ağacındaki 2 MiB dosya sınırını doğrular. Kaynak Pencil belgesinin
+muafiyeti `scripts/quality/blobSize.mjs` içinde gerekçelidir. Bekçilerin gerçek
+geçici Git depolarıyla çalışan regresyon testleri de `contract` içindedir.
 
 ## Lisans
 

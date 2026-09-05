@@ -5,6 +5,47 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-05 — bütünsel denetim: kaynak girdileri ve bekçilerin sınırları
+
+Denetim `feature/holistic-audit` dalında sürüyor; aşağıdakiler tamamlanmış
+ilk düzeltmelerdir. Tam kaynak okuması, cihaz ölçümleri ve son signoff henüz
+bu kaydın iddiası değildir. Başlangıçtaki sahnelenmemiş `blobSize.mjs` ve
+`workspace-contract.mjs` çalışması korunarak tamamlandı.
+
+| Kimlik | Seviye | Tetikleyici, ihlal ve sonuç                                                                                                                                              | Yapılan ve kanıt                                                                                                                                                                                                                                          |
+| ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F01    | P1     | Temiz klonda VOL.UI/Asset Studio config import'u eksik: `scripts/build/` genel `build/` ignore'ına takılmış. Yerel build geçse de klon derlenemiyor.                     | Yardımcı `scripts/vite/`ye taşındı. `git clone --no-hardlinks --local` 0,40 sn; boş pnpm store ile frozen install 14,08 sn. Eski klonda `pnpm --filter @volstudio/vol-ui build`: `UNRESOLVED_IMPORT`. Kaynak girdi bekçisinde eski import'a dönüş exit 1. |
+| F02    | P1     | Büyük dosya index'e eklendikten sonra diskte küçültülür veya silinirse eski boyut bekçisi commit edilecek master'ı kaçırıyor. Git hatasını da başarı sayıyor.            | Index blob boyutu ve çalışma ağacı birlikte ölçülüyor; okunamayan Git hata. Gerçek tmp Git testleri 4/4; başlangıç kodunu geri koyunca 3 test düşüyor.                                                                                                    |
+| F03    | P1     | Backtick dinamik import, araya yorum, JS dosyası, tsconfig aliası ve devtool sunucu/script import'u katman regex'inden kaçıyor. Döngü yalnız izin tablosunda aranıyordu. | AST import keşfi, TypeScript alias çözümü, manifest kenarları ve gerçek grafikte döngü taraması. 8 test; eski dosya geri konduğunda ihlal testleri düşüyor. Yorumdaki örnek import artık yanlış alarm üretmiyor.                                          |
+| F04    | P1     | `thresholds` satırını kaldırmak regex bekçisini geçiriyor; coverage gerilemesi sessiz kalıyor.                                                                           | Vitest config'i gerçekten yüklenip `quality.json` ile karşılaştırılıyor. Eksik, yanlış paket, dolaylı override ve bozuk config gerçek modül yüklemesiyle sınanıyor.                                                                                       |
+
+Doğrulama: `node --test scripts/quality/tests/*.test.mjs` 17/17;
+`pnpm quick` exit 0. Yedi geri alma/mutasyon deneyi exit 1 verdi;
+düzeltmeler geri konunca bütün bekçi testleri yeniden geçti. Yardımcı
+overlay uygulanmış temiz klonda VOL.UI build de geçti (385 ms).
+
+Android derlemesi ek bir kapı kusurunu ortaya çıkardı: Prettier yalnız
+`tauri-v2` altındaki üretilen JSON'u dışlıyordu. Arachnid APK üretimi
+format kapısını kırıyordu. Aynı üretim yolları bütün `src-tauri` paketlerinde
+dışlandı; elle yazılan `tauri.conf.json` kapsamda kaldı. Gerçek Prettier
+dosya keşfiyle test edildi; eski ignore listesi testi düşürdü.
+
+Mimari karar: beş devtool şu aşamada ayrı tutuluyor. Sentez derleyicileri,
+Pencil yazarlık/export hattı, CORE showcase'i ve repo varlık editörü farklı
+sorumluluklar taşıyor. Asset Studio → VisualSynth kenarı yazarlık şemasını
+incelemek için gerekçeli; oyunlar bu kenarı çalışma zamanında tüketmiyor.
+Oyun → platform adaptörü (`tauri-v2`) kenarı kuralda açıkça adlandırıldı.
+
+Başlangıç `pnpm signoff`: `high` aşamaları geçti; `e2e-full` kırmızı.
+Firefox 1538 ikilisi yoktu (19 hata); Chromium editör açılışı ayrıca bir kez
+60 sn zaman aşımına uğradı. Tekil aynı Chromium testi tekrar 6,6 sn'de geçti;
+bu olay henüz ürün kusuru diye sınıflandırılmadı. Firefox indirildi. Rust ilk
+zincirde çalışmadı. Güncel manifest/sürüm ölçümleri ayrı düzeltme turunda.
+
+Yanlış alarm: `coreAliases.mjs` yeniden üretilebilir build çıktısı değildi;
+`core/package.json` exports haritasını çözen gerekli kaynak koddu. Silinmedi,
+ignore dışına taşındı. `.git` 220 MiB ölçüldü; geçmiş yeniden yazılmadı.
+
 ## 2026-09-05 — tip ölçeği: 15 doğaçlama boyut, 7 rol
 
 CORE'da 15 farklı `font-size` vardı ve altısı birer piksel arayla duruyordu:

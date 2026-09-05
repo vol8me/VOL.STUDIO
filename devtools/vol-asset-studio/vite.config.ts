@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
-import { coreAliases } from '../../scripts/build/coreAliases.mjs';
+import { coreAliases } from '../../scripts/vite/coreAliases.mjs';
 
 export default defineConfig({
   base: '/',
@@ -20,7 +20,7 @@ export default defineConfig({
     assetsDir: 'assets',
   },
   // Alias listesi `vitest.config.ts` ile AYNI kaynaktan gelir; CORE'un
-  // `exports` haritasından türer (bkz. scripts/build/coreAliases.mjs).
+  // `exports` haritasından türer (bkz. scripts/vite/coreAliases.mjs).
   resolve: {
     alias: [
       ...coreAliases(),

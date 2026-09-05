@@ -9,8 +9,8 @@ core/public/assets/fonts/
 
 # Tauri CLI/Gradle tarafından üretilir; elle düzenlenen Android kaynakları
 # (manifest, Kotlin, tema) bu kapsamın dışında kalır ve normal kapılardan geçer.
-tauri-v2/src-tauri/gen/schemas/
-tauri-v2/src-tauri/gen/android/app/src/main/assets/tauri.conf.json
+**/src-tauri/gen/schemas/
+**/src-tauri/gen/android/app/src/main/assets/tauri.conf.json
 
 # Test coverage raporlari
 coverage/

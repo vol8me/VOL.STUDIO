@@ -1,270 +1,174 @@
-/**
- * Katman sınırı bekçisi — AGENTS.md "Bozulamaz Kurallar" 3 ve 4'ün makine
- * karşılığı.
- *
- * Kural bir dönem yalnız `.md`de yazılıydı ve gerçekten kaydı: bir oyunun
- * ÇALIŞMA ZAMANI bir devtool paketini import ediyor, üstelik onu `dependencies`
- * altında taşıyordu. Aynı repoda doğru desen zaten vardı (build-time üretici,
- * `devDependencies`, üretilen asset oyunun `public/`i) — sapmayı gören bir kapı
- * yoktu.
- *
- * Ayrım ZAMANDIR, paket değil:
- *   - `src/`      = çalışma zamanı. Yalnız `core` ve dış bağımlılıklar.
- *   - `scripts/`, `tests/` = build/doğrulama zamanı. Devtool üreticileri serbest,
- *     ama `devDependencies` olarak.
- *
- * Bir devtool'un repo dosyalarını VERİ olarak okuması modül bağımlılığı
- * değildir; bu yüzden yalnız `.ts` import'ları taranır, JSON içerikleri değil.
- */
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { dirname, join, relative, resolve, sep } from 'node:path';
+import ts from 'typescript';
+import { sourceImports } from './sourceImports.mjs';
 
-/**
- * Devtool → devtool kenarları. BOŞ OLMAYAN her giriş bilinçli bir karardır.
- *
- * "Hiçbir devtool bir diğerini import etmez" kuralı gönderilen bundle'ı
- * korumak için yazıldı; iki devtool arasında o kaygı yoktur — ikisi de
- * oyuncuya gitmez. Kalan gerçek risk düğümlenmedir, o yüzden kenar YASAK
- * değil GÖRÜNÜR olmalı: burada yazılı olmayan bir kenar kapıyı düşürür ve
- * döngü her hâlükârda reddedilir.
- */
+/** Yazarlık formatının sahibi üreticidir; çalışma zamanı CORE'a taşınmaz. */
 const DEVTOOL_EDGES = {
   '@volstudio/vol-asset-studio': {
-    '@volstudio/visual-synth':
-      'Asset studio, VisualSynth belgelerini (.volsprite.json) SALT OKUNUR inceler; ' +
-      'biçimin sahibi üreticidir ve onu CORE’a taşımak bir yazarlık formatını ' +
-      'çalışma zamanı çerçevesine sokardı.',
+    '@volstudio/visual-synth': 'Asset Studio, VisualSynth belgelerini salt okunur inceler.',
   },
 };
-
 const SKIP_DIRS = new Set([
   'node_modules',
   'dist',
+  'dist-server',
   'coverage',
   'test-results',
   '.cache',
   'gen',
   'target',
 ]);
+const SOURCE = /\.(?:[cm]?[jt]s|[jt]sx)$/;
 
-/** `from '<x>'`, `import '<x>'`, `import('<x>')`, `require('<x>')`. */
-const SPECIFIER_PATTERN = /(?:from|import|require)\s*\(?\s*['"]([^'"]+)['"]/g;
-
-function listPackageDirs(root, group) {
-  const groupDir = join(root, group);
-  let entries;
-  try {
-    entries = readdirSync(groupDir);
-  } catch {
-    return [];
-  }
-  return entries.filter((entry) => {
-    if (SKIP_DIRS.has(entry)) return false;
-    try {
-      return statSync(join(groupDir, entry)).isDirectory();
-    } catch {
-      return false;
-    }
-  });
+function inside(parent, child) {
+  const path = relative(parent, child);
+  return path === '' || (path !== '..' && !path.startsWith(`..${sep}`) && !path.startsWith(sep));
 }
 
-function readPackageName(root, dir) {
-  try {
-    return JSON.parse(readFileSync(join(root, dir, 'package.json'), 'utf8')).name ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function walkTypeScript(dir, visit) {
-  let entries;
-  try {
-    entries = readdirSync(dir);
-  } catch {
-    return;
-  }
-  for (const entry of entries) {
-    if (SKIP_DIRS.has(entry)) continue;
-    const full = join(dir, entry);
-    let stat;
-    try {
-      stat = statSync(full);
-    } catch {
-      continue;
-    }
-    if (stat.isDirectory()) {
-      walkTypeScript(full, visit);
-    } else if (entry.endsWith('.ts') && !entry.endsWith('.d.ts')) {
-      visit(full, readFileSync(full, 'utf8'));
+function packagesAt(root) {
+  const dirs = ['core', 'tauri-v2'];
+  for (const group of ['games', 'devtools']) {
+    if (!existsSync(join(root, group))) continue;
+    for (const entry of readdirSync(join(root, group), { withFileTypes: true })) {
+      if (entry.isDirectory() && !SKIP_DIRS.has(entry.name)) dirs.push(`${group}/${entry.name}`);
     }
   }
+  return dirs
+    .filter((dir) => existsSync(join(root, dir, 'package.json')))
+    .map((dir) => {
+      const manifest = JSON.parse(readFileSync(join(root, dir, 'package.json'), 'utf8'));
+      return {
+        dir,
+        root: resolve(root, dir),
+        name: manifest.name,
+        manifest,
+        kind: dir.startsWith('games/')
+          ? 'game'
+          : dir.startsWith('devtools/')
+          ? 'tool'
+          : dir === 'core'
+          ? 'core'
+          : 'platform',
+      };
+    });
 }
 
-/** `child`, `parent` ağacının içinde mi? (Aynı dizin de içeridir.) */
-function isInside(parent, child) {
-  const rel = relative(parent, child);
-  return rel === '' || (!rel.startsWith('..') && !rel.startsWith('/'));
-}
-
-function specifiersOf(source) {
-  const found = [];
-  for (const match of source.matchAll(SPECIFIER_PATTERN)) found.push(match[1]);
-  return found;
+function walk(dir, visit) {
+  if (!existsSync(dir)) return;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (SKIP_DIRS.has(entry.name) || entry.isSymbolicLink()) continue;
+    const file = join(dir, entry.name);
+    if (entry.isDirectory()) walk(file, visit);
+    else if (SOURCE.test(entry.name) && !/\.d\.[cm]?ts$/.test(entry.name)) visit(file);
+  }
 }
 
 /**
- * Katman sınırlarını doğrular ve ihlalleri döner (fırlatmaz — çağıran hepsini
- * tek listede toplar).
+ * Runtime, manifest ve devtool sunucu/script kenarları aynı kurala tabidir.
+ * Import sözdizimi AST'den, tsconfig alias'ları TypeScript çözümleyicisinden
+ * gelir. Yorumlar kenar değildir; ts/js ve sabit dinamik importlar kenardır.
+ * Değişkenle kurulan import hedefleri statik olarak çözülemez.
  */
 export function validateLayerBoundaries(root) {
   const problems = [];
-
-  const gameDirs = listPackageDirs(root, 'games').map((name) => ({
-    dir: join('games', name),
-    pkg: readPackageName(root, join('games', name)),
-  }));
-  const devtoolDirs = listPackageDirs(root, 'devtools').map((name) => ({
-    dir: join('devtools', name),
-    pkg: readPackageName(root, join('devtools', name)),
-  }));
-
-  const devtoolPackages = new Set(devtoolDirs.map((entry) => entry.pkg).filter(Boolean));
-  const gamePackages = new Set(gameDirs.map((entry) => entry.pkg).filter(Boolean));
-
-  /** `@volstudio/audio-synth/writer` gibi alt yollar da aynı pakete sayılır. */
-  const packageOf = (specifier) => {
-    if (!specifier.startsWith('@volstudio/')) return null;
-    const [scope, name] = specifier.split('/');
-    return `${scope}/${name}`;
+  const packages = packagesAt(root);
+  const byName = new Map(packages.map((pkg) => [pkg.name, pkg]));
+  const graph = new Map(packages.map((pkg) => [pkg.name, new Set()]));
+  const configCache = new Map();
+  const ownerOf = (file) => packages.find((pkg) => inside(pkg.root, file));
+  const optionsFor = (file) => {
+    const config = ts.findConfigFile(dirname(file), ts.sys.fileExists);
+    if (!config) return { moduleResolution: ts.ModuleResolutionKind.Bundler, allowJs: true };
+    if (!configCache.has(config)) {
+      const raw = ts.readConfigFile(config, ts.sys.readFile);
+      configCache.set(
+        config,
+        ts.parseJsonConfigFileContent(raw.config ?? {}, ts.sys, dirname(config)).options,
+      );
+    }
+    return configCache.get(config);
   };
-
-  const scanRuntime = (owner, forbidden, label) => {
-    walkTypeScript(join(root, owner.dir, 'src'), (file, source) => {
-      const rel = relative(root, file);
-      for (const specifier of specifiersOf(source)) {
-        const pkg = packageOf(specifier);
-        if (pkg && forbidden.has(pkg)) {
-          problems.push(`${rel}: çalışma zamanı bir ${label} import ediyor ("${pkg}").`);
+  const targetOf = (specifier, file) => {
+    const name = specifier.startsWith('@')
+      ? specifier.split('/').slice(0, 2).join('/')
+      : specifier.split('/')[0];
+    if (byName.has(name)) return byName.get(name);
+    if (specifier.startsWith('.')) return ownerOf(resolve(dirname(file), specifier));
+    const resolved = ts.resolveModuleName(specifier, file, optionsFor(file), ts.sys).resolvedModule;
+    return resolved ? ownerOf(resolved.resolvedFileName) : undefined;
+  };
+  const check = (owner, target, where, runtime) => {
+    if (!target || target === owner) return;
+    graph.get(owner.name).add(target.name);
+    const allowed = DEVTOOL_EDGES[owner.name]?.[target.name];
+    if (owner.kind === 'core' && target.kind !== 'core') {
+      problems.push(`${where}: CORE bir tüketici paketi import ediyor ("${target.name}").`);
+    } else if (owner.kind === 'platform' && (target.kind === 'game' || target.kind === 'tool')) {
+      problems.push(`${where}: platform katmanı bir oyun/devtool tüketiyor ("${target.name}").`);
+    } else if (
+      owner.kind === 'game' &&
+      (target.kind === 'game' || (runtime && target.kind === 'tool'))
+    ) {
+      problems.push(
+        `${where}: oyun ${runtime ? 'çalışma zamanı' : 'bağımlılığı'} yasak pakete uzanıyor ("${
+          target.name
+        }").`,
+      );
+    } else if (
+      owner.kind === 'tool' &&
+      (target.kind === 'game' || (target.kind === 'tool' && !allowed?.trim()))
+    ) {
+      problems.push(`${where}: devtool bildirilmemiş/yasak pakete uzanıyor ("${target.name}").`);
+    }
+  };
+  for (const owner of packages) {
+    for (const field of [
+      'dependencies',
+      'optionalDependencies',
+      'peerDependencies',
+      'devDependencies',
+    ]) {
+      for (const name of Object.keys(owner.manifest[field] ?? {})) {
+        check(
+          owner,
+          byName.get(name),
+          `${owner.dir}/package.json (${field})`,
+          field !== 'devDependencies',
+        );
+      }
+    }
+    const roots = owner.kind === 'tool' ? ['src', 'server', 'shared', 'scripts'] : ['src'];
+    for (const directory of roots)
+      walk(join(owner.root, directory), (file) => {
+        for (const specifier of sourceImports(readFileSync(file, 'utf8'), file)) {
+          const where = relative(root, file);
+          check(owner, targetOf(specifier, file), where, directory !== 'scripts');
+          if (
+            directory !== 'scripts' &&
+            specifier.startsWith('.') &&
+            !inside(owner.root, resolve(dirname(file), specifier))
+          ) {
+            problems.push(
+              `${where}: çalışma zamanı paketin dışına göreli yolla uzanıyor ("${specifier}").`,
+            );
+          }
         }
-      }
-    });
-  };
-
-  /**
-   * Paketin DIŞINA göreli yolla uzanan import'lar.
-   *
-   * Ayrı bir geçiştir çünkü `scanRuntime` sahip başına birden çok kez koşar
-   * (farklı yasak kümeleri için) ve aynı ihlali her turda yeniden raporlardı.
-   *
-   * Yol DESENLE aranmaz, ÇÖZÜLÜR: paket adıyla import etmeyi yukarıdaki kontrol
-   * yakalar, `../../` ile kaçmak aynı bağı kurar ve bir dönem tam olarak öyle
-   * kurulmuştu (rig metadata'sı oyunun kaynağından export ağacına uzanıyordu).
-   * Desen araması yetmez — kardeş bir pakete giden yol (`../../../vol-hell/`)
-   * hiçbir grup adı içermez ve sessizce geçerdi.
-   */
-  const scanEscapes = (owner) => {
-    const ownerRoot = join(root, owner.dir);
-    walkTypeScript(join(ownerRoot, 'src'), (file, source) => {
-      const rel = relative(root, file);
-      for (const specifier of specifiersOf(source)) {
-        if (!specifier.startsWith('.')) continue;
-        if (isInside(ownerRoot, resolve(dirname(file), specifier))) continue;
-        problems.push(
-          `${rel}: çalışma zamanı paketin DIŞINA göreli yolla uzanıyor ("${specifier}"). ` +
-            `Paylaşılan kod CORE'a alınır, üretilmiş asset paketin kendi ağacına senkronlanır.`,
-        );
-      }
-    });
-  };
-
-  // 1) Oyunların ÇALIŞMA ZAMANI ne bir devtool'a ne BAŞKA BİR OYUNA bağlanır.
-  //    Paylaşılacak bir şey varsa CORE'a taşınır (AGENTS.md Kural 4).
-  for (const game of gameDirs) {
-    const otherGames = new Set([...gamePackages].filter((pkg) => pkg !== game.pkg));
-    scanRuntime(game, devtoolPackages, 'devtool');
-    scanRuntime(game, otherGames, 'başka oyun');
-    scanEscapes(game);
+      });
   }
-
-  // 2) Devtool'lar bir OYUNA hiç bağlanmaz; başka bir devtool'a yalnız
-  //    `DEVTOOL_EDGES`de yazılı olduğu kadar bağlanır.
-  for (const tool of devtoolDirs) {
-    const declared = new Set(Object.keys(DEVTOOL_EDGES[tool.pkg] ?? {}));
-    const others = new Set([...devtoolPackages].filter((pkg) => !declared.has(pkg)));
-    others.delete(tool.pkg);
-    scanRuntime(tool, others, 'bildirilmemiş devtool');
-    scanRuntime(tool, gamePackages, 'oyun');
-    scanEscapes(tool);
-  }
-
-  problems.push(...findDevtoolCycles(devtoolPackages));
-
-  // 3) CORE hiçbir oyun ya da devtool import etmez (Kural 3).
-  const coreForbidden = new Set([...devtoolPackages, ...gamePackages]);
-  walkTypeScript(join(root, 'core', 'src'), (file, source) => {
-    const rel = relative(root, file);
-    for (const specifier of specifiersOf(source)) {
-      const pkg = packageOf(specifier);
-      if (pkg && coreForbidden.has(pkg)) {
-        problems.push(`${rel}: CORE bir tüketici paketi import ediyor ("${pkg}").`);
-      }
-      if (/(^|\/)\.\.\/(?:\.\.\/)*(?:games|devtools)\//.test(specifier)) {
-        problems.push(`${rel}: CORE tüketici ağacına göreli yolla uzanıyor ("${specifier}").`);
-      }
-    }
-  });
-
-  // 4) Devtool bir oyunun ÇALIŞMA ZAMANI bağımlılığı olamaz. Build-time
-  //    kullanım (`scripts/`, `tests/`) meşrudur ama `devDependencies`e yazılır:
-  //    `dependencies` o paketi gönderilen bundle'ın sözleşmesine sokar.
-  for (const game of gameDirs) {
-    let manifest;
-    try {
-      manifest = JSON.parse(readFileSync(join(root, game.dir, 'package.json'), 'utf8'));
-    } catch {
-      continue;
-    }
-    for (const dep of Object.keys(manifest.dependencies ?? {})) {
-      if (devtoolPackages.has(dep)) {
-        problems.push(
-          `${game.dir}/package.json: "${dep}" dependencies altında. ` +
-            `Devtool'lar yalnız build-time kullanılır; devDependencies'e taşı.`,
-        );
-      }
-    }
-  }
-
-  return problems;
-}
-
-/**
- * Bildirilmiş kenarlarda döngü aramaz — döngüyü REDDEDER.
- *
- * İki devtool birbirini import ettiğinde ikisi de tek başına sökülemez hâle
- * gelir; kenarı görünür kılmanın amacı tam olarak bunu engellemekti.
- */
-function findDevtoolCycles(devtoolPackages) {
-  const problems = [];
   const visiting = new Set();
   const done = new Set();
-
-  const walk = (pkg, chain) => {
-    if (done.has(pkg)) return;
-    if (visiting.has(pkg)) {
-      problems.push(
-        `devtool bağımlılıklarında döngü var (${[...chain, pkg].join(' -> ')}). ` +
-          `Paylaşılan yüzey CORE'a ya da bağımsız bir pakete taşınmalı.`,
-      );
+  const visit = (name, chain) => {
+    if (visiting.has(name)) {
+      problems.push(`Paket bağımlılıklarında döngü var: ${[...chain, name].join(' -> ')}`);
       return;
     }
-    visiting.add(pkg);
-    for (const next of Object.keys(DEVTOOL_EDGES[pkg] ?? {})) {
-      if (devtoolPackages.has(next)) walk(next, [...chain, pkg]);
-    }
-    visiting.delete(pkg);
-    done.add(pkg);
+    if (done.has(name)) return;
+    visiting.add(name);
+    for (const target of graph.get(name)) visit(target, [...chain, name]);
+    visiting.delete(name);
+    done.add(name);
   };
-
-  for (const pkg of devtoolPackages) walk(pkg, []);
-  return problems;
+  for (const name of graph.keys()) visit(name, []);
+  return [...new Set(problems)];
 }

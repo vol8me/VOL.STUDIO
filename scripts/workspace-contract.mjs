@@ -1,26 +1,17 @@
 #!/usr/bin/env node
 /**
- * Workspace sözleşmesi — kapıların kapsamının repo büyüdükçe sessizce
- * daralmasını engeller.
- *
- * İki şeyi doğrular: (1) her paketin kapılara dahil olduğunu, (2) katman
- * sınırlarının korunduğunu (`quality/layers.mjs`). İkisi de aynı sınıf hatayı
- * önler — repo büyürken bir kuralın SESSİZCE geçersizleşmesini.
- *
- * Kapılar `pnpm -r` üzerinden çalışır ve `--if-present` bayrağı, script'i
- * olmayan paketi HATA VERMEDEN atlar. Yani test script'i yazılmamış yeni bir
- * paket eklendiğinde bütün kapılar yeşil kalır ve o paket ölçülmeden repoya
- * girer. Bu betik o boşluğu kapatır: her workspace paketinin kapılara dahil
- * olduğunu ve kapsam eşiğinden muaf tutulmadığını doğrular.
- *
- * `just quick` içinde koşar (pre-commit), maliyeti milisaniye mertebesinde.
+ * Workspace kapı kapsamı, gerçek Vitest eşikleri, paket sınırları ve git
+ * girdileri birlikte doğrulanır. Bir ihlal diğerinin teşhisini gizlemez.
  */
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadQualityConfig, validateQualityWorkspaceParity } from './quality/config.mjs';
+import { validateBlobSizes } from './quality/blobSize.mjs';
 import { validateLayerBoundaries } from './quality/layers.mjs';
+import { validateTrackedImports } from './quality/trackedImports.mjs';
+import { validateCoverageBinding } from './quality/coverageBinding.mjs';
 
 /** Her paketin sahip olması gereken script'ler ve hangi kapının kullandığı. */
 const REQUIRED_SCRIPTS = {
@@ -32,16 +23,6 @@ const REQUIRED_SCRIPTS = {
 const root = process.cwd();
 const problems = [];
 
-/**
- * Kalite sözleşmesi TEK dosyadan okunur (`quality.json`).
- *
- * Eşikler bir dönem her paketin `vitest.config.ts` dosyasındaydı ve buradan
- * REGEX ile okunuyordu: `/thresholds\s*:\s*\{([\s\S]*?)\}/` ilk `}`
- * karakterinde kestiği için `thresholds` bloğuna iç içe bir nesne eklemek
- * bekçiyi sessizce yanlış bloğu okumaya iterdi — üstelik dosyadaki İLK
- * `thresholds` eşleşmesi neredeyse doğru olurdu. Bekçi ile config artık aynı
- * dosyayı tüketiyor, ayrışamazlar.
- */
 const quality = loadQualityConfig(join(root, 'quality.json'));
 const THRESHOLD_FLOOR = quality.floor;
 /** Kapsam eşiği aranmayan paketler — gerekçesi `quality.json`da yazılı olmalı. */
@@ -82,6 +63,8 @@ problems.push(
 
 // Katman sınırları: oyun/devtool/core bağımlılık yönü (AGENTS.md Kural 3-4).
 problems.push(...validateLayerBoundaries(root));
+problems.push(...validateBlobSizes(root));
+problems.push(...validateTrackedImports(root));
 
 for (const pkg of packages) {
   const manifest = readJson(join(root, pkg.dir, 'package.json'));
@@ -104,8 +87,7 @@ for (const pkg of packages) {
     continue;
   }
 
-  // Config'in eşiği ELLE yazmadığını da doğrula: `quality.json`u atlayıp
-  // vitest.config.ts'e sayı yazmak, bekçi yeşilken kapsamın düşmesine yol açar.
+  // Vitest gerçek config ile yüklenir: eksik veya ezilmiş eşik de hatadır.
   const configPath = join(root, pkg.dir, 'vitest.config.ts');
   if (!existsSync(configPath)) {
     problems.push(
@@ -114,13 +96,7 @@ for (const pkg of packages) {
     );
     continue;
   }
-  const configSource = readFileSync(configPath, 'utf8');
-  if (/thresholds:\s*\{/.test(configSource)) {
-    problems.push(
-      `${pkg.name}: vitest.config.ts eşikleri satır içi yazıyor. ` +
-        `Eşikler quality.json'dan gelmeli (thresholds: quality.packages[...]).`,
-    );
-  }
+  problems.push(...(await validateCoverageBinding(configPath, thresholds)));
 
   for (const [key, floor] of Object.entries(THRESHOLD_FLOOR)) {
     const value = thresholds[key];
@@ -149,5 +125,6 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `[workspace-contract] ${packages.length} paket, kapı kapsamı tam, katman sınırları temiz.`,
+  `[workspace-contract] ${packages.length} paket, kapı kapsamı tam, ` +
+    `katman sınırları temiz, dosya boyutları ve kaynak girdileri geçerli.`,
 );
