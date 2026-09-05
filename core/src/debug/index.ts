@@ -11,5 +11,7 @@ export type {
   DiagnosticsEvent,
   DiagnosticsSnapshot,
   ScreenInfo,
+  RendererInfo,
+  RendererKind,
   DiagnosticsOptions,
 } from './types';

@@ -268,7 +268,13 @@ export {
   type ScaleStrategy,
 } from './systems/ViewportManager';
 export { VOL_FONTS, type VolFontFamily } from './systems/DefaultFonts';
-export { applyVolViewport, createVolGame, VIEWPORT_REGISTRY_KEY, type VolGameConfig } from './Game';
+export {
+  applyVolViewport,
+  createVolGame,
+  VIEWPORT_REGISTRY_KEY,
+  type VolGameConfig,
+  type RendererRequest,
+} from './Game';
 
 export * from './ui/primitives';
 export * from './ui/layout';

@@ -6,6 +6,7 @@ import type {
   InputSnapshot,
   DiagnosticsEvent,
   StatsSummary,
+  RendererInfo,
   ScreenInfo,
 } from './types';
 
@@ -48,6 +49,8 @@ export class Diagnostics {
   private frameCount = 0;
   private currentScene?: string;
   private currentInput: InputSnapshot = { activeProvider: 'none' };
+  /** Besleyen olmazsa `unknown` kalır — "ölçülemedi", "canvas" değil. */
+  private renderer: RendererInfo = { kind: 'unknown', requested: 'auto', fellBack: false };
   private panel?: HTMLDivElement;
   private readonly onVisibilityChange: () => void;
 
@@ -76,6 +79,14 @@ export class Diagnostics {
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', this.onVisibilityChange);
     }
+  }
+
+  /**
+   * Aktif renderer'ı bildirir. CORE'un teşhis katmanı Phaser'ı TANIMAZ; bu
+   * bilgiyi Phaser'ı zaten tanıyan `createVolGame` besler.
+   */
+  setRenderer(info: RendererInfo): void {
+    this.renderer = info;
   }
 
   setScene(scene: string): void {
@@ -245,6 +256,7 @@ export class Diagnostics {
       input: this.currentInput,
       events: [...this.pendingEvents],
       screen: this.screenInfo(),
+      renderer: this.renderer,
     };
   }
 
@@ -259,6 +271,8 @@ export class Diagnostics {
       `render: ${snapshot.render.avg.toFixed(2)}ms [${snapshot.render.min.toFixed(
         2,
       )}-${snapshot.render.max.toFixed(2)}]`,
+      // Geri düşüş sessiz kalmasın: overlay'de en görünür yerde işaretlenir.
+      `gpu: ${snapshot.renderer.kind}${snapshot.renderer.fellBack ? ' ⚠ GERİ DÜŞTÜ' : ''}`,
       `update: ${snapshot.update.avg.toFixed(2)}ms [${snapshot.update.min.toFixed(
         2,
       )}-${snapshot.update.max.toFixed(2)}]`,

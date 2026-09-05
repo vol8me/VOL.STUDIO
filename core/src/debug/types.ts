@@ -51,6 +51,31 @@ export interface DiagnosticsSnapshot {
   events: DiagnosticsEvent[];
   /** Ekran / viewport bilgisi. */
   screen: ScreenInfo;
+  /** Aktif renderer; oyun boot etmeden ya da Phaser taklit edilirken `unknown`. */
+  renderer: RendererInfo;
+}
+
+/**
+ * Gerçekten kullanılan renderer.
+ *
+ * `unknown`, Phaser'ı taklit eden test ortamları ve henüz boot etmemiş oyun
+ * içindir — "ölçülemedi" ile "canvas" karıştırılmamalıdır.
+ */
+export type RendererKind = 'webgl' | 'canvas' | 'headless' | 'unknown';
+
+/**
+ * Hangi renderer'da koşuyoruz ve bu İSTENEN miydi?
+ *
+ * Phaser `AUTO` ile başlatıldığında WebGL kurulamıyorsa SESSİZCE Canvas2D'ye
+ * düşer. Vektör çizim ve partikül yükü altında bu, "oyun bu cihazda yavaş"
+ * belirtisini sebebi görünmeden üretir. `requested: 'auto'` iken `kind:
+ * 'canvas'` gelmesi tam olarak o geri düşüştür.
+ */
+export interface RendererInfo {
+  kind: RendererKind;
+  requested: 'auto' | 'webgl' | 'canvas' | 'headless';
+  /** İstenen ile gerçekleşen ayrıştıysa `true` — sessiz geri düşüşün işareti. */
+  fellBack: boolean;
 }
 
 export interface ScreenInfo {

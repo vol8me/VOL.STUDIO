@@ -20,6 +20,13 @@ tamamen ilgisiz bir yerde fark edilir.
 
 `core/tests/governance/numericContract.test.ts` bunu kapıda doğrular.
 
+## Phaser sınırı
+
+CORE bir katmandır, motor değil: renderer'ı Phaser yazar. Bu sınırın nasıl
+korunduğu, hangi modülün Phaser karşısında hangi duruşta olduğu ve yerine
+geçilen altı alt sistemin gerekçesi ayrı bir belgede:
+[phaser-boundary.md](phaser-boundary.md).
+
 ## Adlandırma sözleşmesi
 
 Tüketici bir adı GÖRMEDEN tahmin edebilmeli. Yüzeyde üç kural geçerlidir:

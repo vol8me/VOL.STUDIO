@@ -8,6 +8,7 @@ import {
 import { VOL_FONTS, type VolFontFamily } from './systems/DefaultFonts';
 import { TECH } from './constants';
 import type { Diagnostics } from './debug/Diagnostics';
+import type { RendererInfo, RendererKind } from './debug/types';
 
 export interface VolGameConfig {
   /** Yalnızca strategy: 'resize' iken opsiyoneldir — bkz. ViewportConfig.width. */
@@ -28,6 +29,17 @@ export interface VolGameConfig {
   input?: Phaser.Types.Core.InputConfig;
   /** Phaser renderer ayarları; oyun kalite profilinden açıkça verilebilir. */
   render?: Phaser.Types.Core.RenderConfig;
+  /**
+   * Hangi renderer istensin? Varsayılan `'auto'`.
+   *
+   * `'auto'`: WebGL denenir, kurulamazsa Canvas2D'ye düşülür — cihazda hiç
+   * açılmamaktansa yavaş açılmak yeğdir. Geri düşüş SESSİZ kalmaz: teşhis
+   * anlık görüntüsünde `renderer.fellBack` işaretlenir ve konsola uyarı düşer.
+   *
+   * `'webgl'`: geri düşüş YOK. WebGL kurulamıyorsa oyun açılmaz — belirsiz bir
+   * yavaşlık yerine açık bir hata isteyen sürüm/ölçüm koşuları içindir.
+   */
+  renderer?: RendererRequest;
   /** Yüklenecek font alt seti. Belirtilmezse tüm VOL fontları yüklenir. */
   fonts?: VolFontFamily[];
   /**
@@ -93,12 +105,33 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     renderScale: config.renderScale,
   });
 
+  const requestedRenderer: RendererRequest = config.renderer ?? 'auto';
   const gameConfig: Phaser.Types.Core.GameConfig = {
     ...viewportManager.getConfig(),
+    // Renderer AÇIKÇA seçilir; varsayılanın ne olduğu okunabilir olmalıdır.
+    type:
+      requestedRenderer === 'webgl'
+        ? Phaser.WEBGL
+        : requestedRenderer === 'canvas'
+        ? Phaser.CANVAS
+        : Phaser.AUTO,
     scene: config.scenes,
     physics: config.physics,
     input: config.input,
     render: config.render,
+    /*
+     * Phaser'ın SES sistemi KAPALIDIR ve bu bilinçli bir sınırdır.
+     *
+     * CORE'un ses katmanı ham Web Audio üzerine kuruludur çünkü Phaser'ın
+     * `SoundManager`'ı adaptive stem mix'i, sidechain ducking'i ve
+     * `AudioContext` yaşam döngüsünün (ilk dokunuşta kilit açma, arka planda
+     * suspend) tek elden yönetimini vermez. İkisi birden açık olsaydı iki ayrı
+     * `AudioContext` doğar, mobilde biri suspend olurken diğeri çalmaya devam
+     * ederdi.
+     *
+     * Bu bir performans kararı DEĞİLDİR: Phaser'ın ses API'si repoda hiç
+     * denenmedi, doğrudan Web Audio'ya gidildi.
+     */
     audio: { noAudio: true },
   };
 
@@ -114,12 +147,51 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     game.events.once(Phaser.Core.Events.DESTROY, () => diagnostics.destroy());
   }
 
+  // Renderer boot ile birlikte kesinleşir; READY'den önce okumak `unknown` verir.
+  const reportRenderer = (): void => {
+    const info = describeRenderer(game, requestedRenderer);
+    diagnostics?.setRenderer(info);
+    if (info.fellBack) {
+      console.warn(
+        `[vol] WebGL kurulamadı, ${info.kind} renderer'a düşüldü — ` +
+          'vektör çizim ve partikül yükü altında kare süresi belirgin artar.',
+      );
+    }
+  };
+  if (game.isBooted) reportRenderer();
+  else game.events.once(Phaser.Core.Events.READY, reportRenderer);
+
   if (config.strategy === 'resize') {
     const detachResize = viewportManager.attachResize(game);
     game.events.once(Phaser.Core.Events.DESTROY, detachResize);
   }
 
   return game;
+}
+
+/** `createVolGame`in kabul ettiği renderer talebi. */
+export type RendererRequest = 'auto' | 'webgl' | 'canvas';
+
+/**
+ * Phaser'ın renderer tipini teşhis sözleşmesine çevirir.
+ *
+ * `Phaser.AUTO` VARSAYILANDIR ve bilinçlidir: WebGL kurulamayan bir cihazda
+ * hiç açılmamaktansa yavaş açılmak yeğdir. Bedeli, geri düşüşün SESSİZ
+ * olmasıdır — bu yüzden ölçülür ve raporlanır, yutulmaz.
+ */
+function describeRenderer(game: Phaser.Game, requested: RendererRequest): RendererInfo {
+  const type: unknown = (game as { renderer?: { type?: unknown } }).renderer?.type;
+  const kind: RendererKind =
+    type === Phaser.WEBGL
+      ? 'webgl'
+      : type === Phaser.CANVAS
+      ? 'canvas'
+      : type === Phaser.HEADLESS
+      ? 'headless'
+      : 'unknown';
+  // `unknown` bir ayrışma DEĞİLDİR: ölçüm yapılamamıştır (Phaser taklidi, boot öncesi).
+  const fellBack = kind !== 'unknown' && requested !== 'auto' && kind !== requested;
+  return { kind, requested, fellBack: fellBack || (requested === 'auto' && kind === 'canvas') };
 }
 
 /** `ViewportManager`ın Phaser registry anahtarı. */
