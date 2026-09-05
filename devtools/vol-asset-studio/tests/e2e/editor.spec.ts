@@ -4,6 +4,7 @@ import {
   EDITOR_FIXTURE_NAME as FIXTURE_NAME,
   EDITOR_FIXTURE_PATH as FIXTURE_PATH,
   writeEditorFixture as writeFixture,
+  waitForFixtureRevision,
 } from './fixtures';
 import { expect, test, type Page } from '@playwright/test';
 
@@ -36,8 +37,8 @@ async function openFixtureInEditor(page: Page): Promise<void> {
 // Her test TAZE fixture ile başlar. Paylaşılan dosyada önceki testin darbesi
 // kalıyor ve "beyaz üstüne beyaz" boyayan bir sonraki test hiç değişiklik
 // üretmiyordu — testler birbirinin sonucunu sessizce bozuyordu.
-test.beforeEach(async () => {
-  await writeFixture();
+test.beforeEach(async ({ request }) => {
+  await waitForFixtureRevision(request, await writeFixture());
 });
 
 test('gerçek PNG açılır, düzenlenir ve diske kaydedilir', async ({ page }) => {
