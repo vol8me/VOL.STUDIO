@@ -5,6 +5,55 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-06 — dış denetimin yedi maddesi
+
+Harici bir analiz yedi maddelik bir kapanış listesi verdi. **Her iddia
+uygulanmadan ÖNCE doğrulandı**; biri yanlış çıktı, biri kısmen, beşi doğru.
+
+**1 — SupportPolygon dejenerasyon bug'ı: YANLIŞ.** Beş dejenere varyantın
+hepsi sözleşmeye uyuyor ve bildirilen senaryonun testi zaten vardı. Ama kilit
+eksikti: iki AYRI kod yolu var (merkez doğrunun üstünde → `signed > 0`
+katılığı; dışında → kenar işaretinin değişmesi) ve ikincisi hiç kapsanmıyordu.
+Altı varyant eklendi, ikisi de mutasyonla kanıtlandı.
+
+**2 — SimulationClock strict değil: DOĞRU.** Artık dilim politikası
+`partialStep` ile açık bir seçime dönüştü (`'simulate'` / `'defer'`),
+`'defer'`in eksik yarısı `getInterpolationAlpha()` eklendi. Varsayılan
+değişmedi. Testler sınırı iki yönde kilitliyor: aynı toplam süre 60 ve 120 FPS
+temposunda `'defer'` ile aynı, `'simulate'` ile farklı çizelge üretiyor —
+ikincisi varsayılanı savunmuyor, SINIRINI kanıtlıyor.
+
+**3 — Sayı sözleşme değil: DOĞRU.** 223 adın tamamı manifest oldu. Sayı bütçe,
+isimler sözleşme. Mutasyonla kanıtlandı: bir ad silinip yerine yenisi
+konduğunda (223 → 223) sayı testi geçmeye devam ediyor, isim testi düşüyor.
+
+**4 — Golden yalnız son durum: DOĞRU.** Ara kareler (0/30/60/120/180/240) ve
+olay zarfı eklendi. Dürüst sınır: imzanın kaçırıp yeni testlerin yakaladığı bir
+mutasyon ÜRETİLEMEDİ — sistem sıkı bağlı. Kazanç teşhis keskinliği ve kapsam
+güvencesi; ikincisi mutasyonla kanıtlandı.
+
+**5 — Benchmark eşiği yok: DOĞRU, ama istenen biçimde değil.** Hız kapı
+olamaz (doktrin) ve ayırma da olamaz: ölçüldü, `--expose-gc` ile bile 146–408
+bayt arası salınıyor. Kapılanabilen üçüncü sinyal ORAN: girdi dört katına
+çıkınca süre kaç katına çıkıyor? Makineden bağımsız. Sekiz örnek (2.83–3.20),
+tavan 4.5, `high`e bağlandı.
+
+**6 — Production/headless ayrışması: DOĞRU ve somut.** Benchmark 16 ms
+(62,5 Hz), production 16,667 ms (60 Hz) ile koşuyordu ve iki sayı bağlı
+değildi. Adım artık production'dan türüyor, kapı hizayı koruyor. Sınır açıkça
+yazıldı: bu TEMPOYU hizalar, modelleri değil.
+
+**7 — Büyük dosyalar: DOĞRU.** Kanban'ın saf taşıma kuralları DOM'dan
+çıkarıldı (9 test artık jsdom'suz). Dürüst ölçüm: 852 → 841, yani boyut
+neredeyse değişmedi — kazanılan satır değil sınır. Sürükleme, `buildCard` ve
+`GameScene.create` incelendi ve ZORLANMADI; üçü de geniş geri-çağrı yüzeyi
+ister, karmaşıklığı taşır. Onun yerine boyut kararı kapılandı: eşiği aşan 12
+dosyanın her biri neden büyük kaldığını yazıyor, ölü muafiyet de bildiriliyor.
+
+Ayrıca 2. maddede verilen bir söz düzeltildi: `'defer'` bu turda tüketici
+bulacaktı, bulmadı — headless'a zorlamak yanlış olurdu (`run()` ısıtmada
+1000 ms'lik kaba adım besliyor). Uydurma tüketici eklemektense söz düzeltildi.
+
 ## 2026-09-06 — yetersiz çıkan düzeltme: e2e fixture yarışı (ikinci tur)
 
 Bir tur önce bu 409'u "kökten kapattım" demiştim. **Kapatmamışım.** signoff
