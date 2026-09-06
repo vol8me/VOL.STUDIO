@@ -48,16 +48,104 @@ describe('measureSupport', () => {
     expect(state.stability01).toBe(0);
   });
 
-  it('tek doğru üstündeki ayaklar denge vermez', () => {
-    const feet: SupportFoot[] = [
-      { x: -100, y: 0, grounded: true },
-      { x: 0, y: 0, grounded: true },
-      { x: 100, y: 0, grounded: true },
-    ];
-    const state = measureSupport(feet, { centerX: 0, centerY: 0 });
+  /**
+   * DEJENERE POLİGON — sözleşmenin en kolay sessizce kırılacak maddesi.
+   *
+   * Üç ayak aynı doğrudaysa alan sıfırdır ama en yakın KENAR uzaklığı pozitif
+   * çıkabilir; `inside`ı yalnız o uzaklığın işaretinden türeten bir uygulama
+   * "alanı sıfır ama dengede" gibi fiziksel olarak imkânsız bir durum
+   * bildirirdi. Bir çizgi üstünde denge yoktur.
+   *
+   * Merkez tam ORTA NOKTADA olduğunda kusur gizlenebilir; bu yüzden merkezin
+   * kaydığı, doğrunun döndüğü ve ayakların çakıştığı varyantlar da kilitlenir.
+   */
+  it.each([
+    {
+      ad: 'yatay doğru, merkez ortada',
+      feet: [
+        [-100, 0],
+        [0, 0],
+        [100, 0],
+      ],
+      center: [0, 0],
+    },
+    {
+      ad: 'yatay doğru, merkez orta noktada DEĞİL',
+      feet: [
+        [-100, 0],
+        [0, 0],
+        [100, 0],
+      ],
+      center: [50, 0],
+    },
+    {
+      // Merkez doğrunun ÜSTÜNDE değil: uzaklık sıfır değil, karar işaret
+      // değişiminden gelmeli. Diğer vakalardan farklı bir kod yolu.
+      ad: 'yatay doğru, merkez doğrunun DIŞINDA',
+      feet: [
+        [-100, 0],
+        [0, 0],
+        [100, 0],
+      ],
+      center: [50, 30],
+    },
+    {
+      ad: 'dikey doğru',
+      feet: [
+        [0, -100],
+        [0, 0],
+        [0, 100],
+      ],
+      center: [0, 50],
+    },
+    {
+      ad: 'eğik doğru',
+      feet: [
+        [0, 0],
+        [50, 50],
+        [100, 100],
+      ],
+      center: [40, 40],
+    },
+    {
+      ad: 'dört ayak da AYNI noktada',
+      feet: [
+        [10, 10],
+        [10, 10],
+        [10, 10],
+        [10, 10],
+      ],
+      center: [10, 10],
+    },
+  ])('dejenere poligonda denge YOKTUR: $ad', ({ feet, center }) => {
+    const state = measureSupport(
+      feet.map(([x, y]) => ({ x, y, grounded: true }) as SupportFoot),
+      { centerX: center[0], centerY: center[1] },
+    );
 
+    expect(state.groundedCount).toBe(feet.length);
     expect(state.areaPx2).toBeCloseTo(0, 9);
-    expect(state.inside).toBe(false);
+    expect(state.inside, 'çizgi üstünde denge yoktur').toBe(false);
+    expect(state.stability01, 'dejenere poligon denge PAYI da vermez').toBe(0);
+    expect(state.marginPx, 'içeride sayılmayan merkez pozitif pay taşıyamaz').toBeLessThanOrEqual(
+      0,
+    );
+  });
+
+  it('dejenere olmayan poligon KONTROL: gerçek üçgen denge verir', () => {
+    /* Yukarıdaki testin "her şeye false döndürerek" geçmediğinin kanıtı. */
+    const state = measureSupport(
+      [
+        { x: 0, y: 0, grounded: true },
+        { x: 100, y: 0, grounded: true },
+        { x: 50, y: 80, grounded: true },
+      ],
+      { centerX: 50, centerY: 30 },
+    );
+
+    expect(state.areaPx2).toBeCloseTo(4000, 6);
+    expect(state.inside).toBe(true);
+    expect(state.stability01).toBeGreaterThan(0);
   });
 
   it('İLERİ BAKIŞ dengeyi gelecek konum için ölçer', () => {
