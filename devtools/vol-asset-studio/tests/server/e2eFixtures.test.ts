@@ -13,7 +13,7 @@ it('E2E varlıkları dosyalar arasında korunur ve yalnız matris kapanışında
     expect(files.sort()).toEqual([EDITOR_FIXTURE_NAME, '__e2e-hardening.png', 'user.txt'].sort());
     const png = await readFile(join(directory, EDITOR_FIXTURE_NAME));
     await writeFile(join(directory, EDITOR_FIXTURE_NAME), 'test düzenlemesi');
-    await writeEditorFixture(directory);
+    await writeEditorFixture(EDITOR_FIXTURE_NAME, directory);
     expect(await readFile(join(directory, EDITOR_FIXTURE_NAME))).toEqual(png);
     await cleanup();
     expect(await readdir(directory)).toEqual(['user.txt']);

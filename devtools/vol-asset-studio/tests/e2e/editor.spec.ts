@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import {
-  EDITOR_FIXTURE_NAME as FIXTURE_NAME,
-  EDITOR_FIXTURE_PATH as FIXTURE_PATH,
+  editorFixtureName,
+  removeEditorFixture,
   writeEditorFixture as writeFixture,
   waitForFixtureRevision,
 } from './fixtures';
@@ -15,6 +16,12 @@ import { expect, test, type Page } from '@playwright/test';
  * gerçekten çizdiğini, `toBlob`un PNG ürettiğini ve multipart kaydın diskteki
  * baytları değiştirdiğini gösteremez. Bu dosya o zinciri uçtan uca yürütür.
  */
+const FIXTURE_DIRECTORY = resolve(import.meta.dirname, '../../../pen.dev/pen_export');
+
+/** O anki testin fixture adı ve yolu; `beforeEach` kurar, testler okur. */
+let FIXTURE_NAME = '';
+let FIXTURE_PATH = '';
+
 async function openFixtureInEditor(page: Page): Promise<void> {
   await page.goto('/');
   await page.locator('.asset-card').first().waitFor({ timeout: 30_000 });
@@ -34,11 +41,25 @@ async function openFixtureInEditor(page: Page): Promise<void> {
   expect(box!.height, 'tuval yüksekliği çöktü').toBeGreaterThan(200);
 }
 
-// Her test TAZE fixture ile başlar. Paylaşılan dosyada önceki testin darbesi
-// kalıyor ve "beyaz üstüne beyaz" boyayan bir sonraki test hiç değişiklik
-// üretmiyordu — testler birbirinin sonucunu sessizce bozuyordu.
-test.beforeEach(async ({ request }) => {
-  await waitForFixtureRevision(request, await writeFixture());
+/*
+ * Her test KENDİ fixture'ıyla başlar.
+ *
+ * Paylaşılan tek dosya iki şeyi birden bozuyordu: kaydeden testin darbesi
+ * sonraki teste taşınıyor, ve tam matriste İKİ sunucu süreci aynı dosyayı
+ * izlediği için yük altında "kaydet 409 aldı" yarışı çıkıyordu (ölçüldü: üç
+ * koşunun ikisi). Teste özel ad ikisini de yapısal olarak kapatır ve
+ * `waitForFixtureRevision`ı anlamlı kılar — yol her seferinde YENİ olduğu için
+ * gerçek bir keşif beklenir, "zaten doğruydu" diye anında dönülmez.
+ */
+test.beforeEach(async ({ request }, testInfo) => {
+  FIXTURE_NAME = editorFixtureName(testInfo.testId);
+  FIXTURE_PATH = join(FIXTURE_DIRECTORY, FIXTURE_NAME);
+  const revision = await writeFixture(FIXTURE_NAME);
+  await waitForFixtureRevision(request, revision, FIXTURE_NAME);
+});
+
+test.afterEach(async () => {
+  await removeEditorFixture(FIXTURE_NAME);
 });
 
 test('gerçek PNG açılır, düzenlenir ve diske kaydedilir', async ({ page }) => {

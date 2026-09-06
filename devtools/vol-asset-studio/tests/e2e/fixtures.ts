@@ -10,16 +10,44 @@ export const EDITOR_FIXTURE_NAME = '__e2e-editor-fixture.png';
 export const EDITOR_FIXTURE_PATH = join(DEFAULT_DIRECTORY, EDITOR_FIXTURE_NAME);
 const HARDENING_FIXTURE_NAME = '__e2e-hardening.png';
 
-/** Diske yazar ve sunucunun bildirmesi BEKLENEN revizyonu döner (içerik SHA-256'sı). */
-export async function writeEditorFixture(directory = DEFAULT_DIRECTORY): Promise<string> {
+/**
+ * Teste ÖZEL fixture yazar ve sunucunun bildirmesi beklenen revizyonu döner.
+ *
+ * Paylaşılan tek bir fixture, testleri birbirine bağlar: kaydeden test dosyayı
+ * değiştirir, sonraki testin kurulumu onu geri yazar ve iki sunucu süreci
+ * (tam matriste chromium + firefox) aynı dosyayı izler. Ortaya çıkan yarış
+ * "kaydet 409 aldı" belirtisini yük altında rastgele üretir.
+ *
+ * Dosya adı teste özel olduğunda o sınıf YAPISAL olarak kapanır: hiçbir test
+ * başka bir testin dosyasını görmez ve her fixture sunucu için YENİ bir yoldur,
+ * yani `waitForFixtureRevision` gerçekten bir keşif bekler — "zaten doğruydu"
+ * diye anında dönmez.
+ */
+export async function writeEditorFixture(
+  name = EDITOR_FIXTURE_NAME,
+  directory = DEFAULT_DIRECTORY,
+): Promise<string> {
   await mkdir(directory, { recursive: true });
   const bytes = await sharp({
     create: { width: 8, height: 8, channels: 4, background: '#204060ff' },
   })
     .png()
     .toBuffer();
-  await writeFile(join(directory, EDITOR_FIXTURE_NAME), bytes);
+  await writeFile(join(directory, name), bytes);
   return createHash('sha256').update(bytes).digest('hex');
+}
+
+/** Teste özel fixture adı — `__e2e-editor-fixture` ön ekiyle aranabilir kalır. */
+export function editorFixtureName(testId: string): string {
+  return `__e2e-editor-fixture-${testId.replace(/[^a-z0-9]/gi, '').slice(0, 24)}.png`;
+}
+
+/** Teste özel fixture'ı siler; watcher artığı sonraki koşuya taşınmaz. */
+export async function removeEditorFixture(
+  name: string,
+  directory = DEFAULT_DIRECTORY,
+): Promise<void> {
+  await rm(join(directory, name), { force: true });
 }
 
 /**
@@ -34,6 +62,7 @@ export async function writeEditorFixture(directory = DEFAULT_DIRECTORY): Promise
 export async function waitForFixtureRevision(
   request: APIRequestContext,
   revision: string,
+  name = EDITOR_FIXTURE_NAME,
   timeoutMs = 15_000,
 ): Promise<void> {
   const deadline = Date.now() + timeoutMs;
@@ -42,7 +71,7 @@ export async function waitForFixtureRevision(
     const response = await request.get('/api/v1/catalog');
     if (response.ok()) {
       const catalog = (await response.json()) as CatalogResponse;
-      seen = catalog.assets.find((asset) => asset.name === EDITOR_FIXTURE_NAME)?.revision;
+      seen = catalog.assets.find((asset) => asset.name === name)?.revision;
       if (seen === revision) return;
     }
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -64,7 +93,7 @@ export async function setupFixtures(directory = DEFAULT_DIRECTORY): Promise<() =
     );
   };
   try {
-    await writeEditorFixture(directory);
+    await writeEditorFixture(EDITOR_FIXTURE_NAME, directory);
     await writeFile(
       join(directory, HARDENING_FIXTURE_NAME),
       await sharp({
