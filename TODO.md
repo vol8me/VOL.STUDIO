@@ -5,6 +5,36 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-06 — ölü ağırlık denetimi
+
+Repo çapında tarandı: bağımlılıklar, ulaşılabilirlik, varlıklar, i18n, CSS,
+izlenen ağır dosyalar.
+
+**Sonuç repo lehine.** Kullanılmayan bağımlılık YOK. Yetim kaynak dosya YOK —
+611 dosyanın hepsi bir giriş noktasından erişilebilir (ilk tarama 97 yetim
+dedi; `@/` yol alias'ını çözemediği için tüm oyun grafiği görünmüyordu).
+İzlenen 26 MB'ın ağır kalemlerinin hepsi gerekçeli: `entities.pen` kaynak
+varlık, `gen/android` `.gitignore`'da yazılı gerekçeyle izleniyor (yön kilidi,
+çentik yerleşimi orada yaşıyor), ses dosyaları tazelik kapısıyla korunuyor.
+Geçici planlama belgesi kalmamış.
+
+**Silinen:** 7 i18n anahtarı (×2 dil) ve 2 CSS sınıfı. Her biri dinamik
+kullanıma karşı tek tek doğrulandı — `touch.dir_*` bu yüzden SİLİNMEDİ:
+statik aramada hiç geçmiyor ama `touchTab.ts` onu template literal ile kuruyor.
+33 CSS adayının 31'i de dinamik BEM modifikatörü çıktı.
+
+**Kapı** (`deadI18n.mjs`, `contract` üzerinden `quick`e bağlı). İlk tasarımı
+kendi mutasyonumda düştü: muafiyeti ÖNEK olarak vermek (`settings.`) bütün
+namespace'i kapatıyor ve kapıyı işlevsiz kılıyordu — az önce sildiğim türden
+bir anahtarı koruyamıyordu. Muafiyet tam anahtar listesine indirildi ve
+ölçüldüğünde yalnız dört anahtarın muafiyete ihtiyacı olduğu görüldü. Ters yön
+de kapılı: anahtarı üreten kod silinirse muafiyet düşer.
+
+**Karar bekleyen (silinmedi):** `tauri-v2/src-tauri/icons/Square*Logo.png` +
+`StoreLogo.png` (10 dosya, 40 KB — bundle hedefleri `nsis`/`msi`, msix yok) ve
+`.github/assets/mark/*` (5 dosya, 152 KB — PWA manifesti yok, referans yok).
+İkisi de repo dışı bir tüketici olabileceği için buradan silinmedi.
+
 ## 2026-09-06 — "katman mı, motor mu?" sorusu ölçülebilir hâle getirildi
 
 Kullanıcının sorusu: saf Phaser yerine katman kurarken farkında olmadan
