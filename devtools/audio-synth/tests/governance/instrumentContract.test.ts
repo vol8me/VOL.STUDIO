@@ -72,8 +72,15 @@ describe('enstrüman kataloğu sözleşmesi', () => {
     expect(meta.typicalFrequency).toBeLessThanOrEqual(high);
   });
 
-  it.each(INSTRUMENTS)('$name aralık boyunca sağlam ses üretir', ({ name, meta }) => {
-    for (const frequency of testPitches(meta.range!)) {
+  const RANGE_CASES = INSTRUMENTS.flatMap(({ name, meta }) =>
+    testPitches(meta.range!).map((frequency) => ({ name, meta, frequency })),
+  );
+
+  // Her (enstrüman, frekans) çifti ayrı bir testte; tek testte 3 frekansı
+  // dönmek coverage altında zaman aşımına düşüyor (örn. `additivePad`).
+  it.each(RANGE_CASES)(
+    '$name $frequency Hz aralık boyunca sağlam ses üretir',
+    ({ name, meta, frequency }) => {
       const at = `${name}@${frequency.toFixed(0)}Hz`;
       const m = measure(synthesize(Presets.getPreset(name, frequency, meta.typicalDuration)));
 
@@ -88,32 +95,27 @@ describe('enstrüman kataloğu sözleşmesi', () => {
        * toplayan bir tüketici için asıl soru başkadır — `gain` çıkış
        * seviyesini GERÇEKTEN öngörüyor mu? Öngörmüyorsa iki sesi toplarken
        * beklenen dengeyi kuramaz.
-       *
-       * Ölçüldü: oran katalog boyunca 0,929 ile 1,000 arasında. Alt sınır
-       * pay bırakılarak 0,88'e konur; oranın düşmesi `normalize: false`
-       * geçildiği ya da zincirin sonunda seviyeyi bozan bir şey eklendiği
-       * anlamına gelir.
        */
       const declaredGain = Presets.getPreset(name, frequency, meta.typicalDuration).gain ?? 1;
       const levelRatio = m.peak / (0.95 * declaredGain);
       expect(levelRatio, `${at} seviyesi \`gain\`den öngörülemiyor`).toBeGreaterThan(0.88);
       expect(levelRatio, `${at} beyan ettiğinden yüksek çalıyor`).toBeLessThan(1.02);
 
-      // DC hem tepe payını yer hem katmanlar toplandığında birikir. Ölçülen
-      // en kötü 0,0068; eşik onun biraz üstünde.
+      // DC hem tepe payını yer hem katmanlar toplandığında birikir.
       expect(m.dc, `${at} DC kaymalı`).toBeLessThan(0.01);
       // Nota sıfırdan başlamazsa girişte tık olur.
       expect(m.first, `${at} sıfırdan başlamıyor`).toBeLessThan(0.01);
-    }
-  });
+    },
+  );
 
-  it.each(INSTRUMENTS)('$name tipik süresinde sessizce biter', ({ name, meta }) => {
-    for (const frequency of testPitches(meta.range!)) {
+  it.each(RANGE_CASES)(
+    '$name $frequency Hz tipik süresinde sessizce biter',
+    ({ name, meta, frequency }) => {
       const m = measure(synthesize(Presets.getPreset(name, frequency, meta.typicalDuration)));
       // Art arda dizilen notalarda son örnek duyulur bir tık bırakmamalı.
       expect(m.last, `${name}@${frequency.toFixed(0)}Hz kuyrukta kesiliyor`).toBeLessThan(0.02);
-    }
-  });
+    },
+  );
 
   it.each(INSTRUMENTS)('$name uzun süreyi bozulmadan taşır', ({ name, meta }) => {
     const m = measure(synthesize(Presets.getPreset(name, meta.typicalFrequency, 6)));

@@ -224,12 +224,11 @@ describe('zaman çizelgesi', () => {
       instrument: Presets.mellowKeys,
       notes: scaleChord('C3', SCALES.major, 0, 3),
       bar: 0,
-      beats: 4,
-      gain: 0.5,
+      beats: 2,
+      gain: 0.6,
       spread: 0.4,
     });
-    t.note({ instrument: Presets.heavyDrum, note: 'A1', bar: 0, beats: 2, gain: 0.6 });
-    return t.render({ targetRms: 0.1 });
+    return t.render({ targetRms: 0.1, tailSeconds: 2 });
   }
 
   it('çıkış stereo: iki kanal üretir', () => {
