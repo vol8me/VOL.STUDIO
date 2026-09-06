@@ -194,6 +194,13 @@ function polygonArea(polygon: readonly number[]): number {
  * İçeride/dışarıda kararı, dışbükey bir poligonda tüm kenarların aynı tarafında
  * olmakla verilir; uzaklık ise en yakın kenar SEGMENTİNE olan mesafedir.
  * Sonsuz doğruya olan mesafe köşelerde yanlış (fazla büyük) çıkar.
+ *
+ * **Hiçbir kenar taraf bildirmezse İÇERİSİ YOKTUR.** Bütün cross çarpımlarının
+ * sıfır olması, noktanın her kenarın doğrusu üstünde olması demektir; bu ancak
+ * zarf dejenere olduğunda (tüm ayaklar tek doğruda ya da tek noktada) mümkündür
+ * ve öyle bir zarfın iç bölgesi yoktur. Bu durum ayrıca ele alınmazsa `inside`
+ * başlangıç değeri olan `true`da kalır ve fonksiyon POZİTİF uzaklık döndürür —
+ * yani ağırlık merkezi destek çizgisinin ötesindeyken tam denge raporlanır.
  */
 function signedEdgeDistance(polygon: readonly number[], x: number, y: number): number {
   const count = polygon.length / 2;
@@ -219,6 +226,8 @@ function signedEdgeDistance(polygon: readonly number[], x: number, y: number): n
   }
 
   if (!Number.isFinite(nearest)) return 0;
+  if (sign === 0) inside = false;
+  if (nearest === 0) return 0;
   return inside ? nearest : -nearest;
 }
 

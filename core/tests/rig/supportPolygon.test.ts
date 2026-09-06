@@ -117,6 +117,49 @@ describe('measureSupport', () => {
       ],
       center: [10, 10],
     },
+    /*
+     * AŞAĞIDAKİ DÖRT VAKA AYRI BİR KOD YOLUDUR ve bir kez gerçekten kırıldı.
+     * Merkez doğruyla EŞDOĞRUSAL ama ayakların ötesindeyse hiçbir kenar taraf
+     * bildirmez (bütün cross çarpımları sıfır); işaret değişimine dayanan karar
+     * hiç tetiklenmez. Üstteki vakalar bunu yakalayamaz: onlarda ya işaret
+     * değişir ya uzaklık sıfırdır.
+     */
+    {
+      ad: 'yatay doğru, merkez ayakların ÖTESİNDE',
+      feet: [
+        [0, 0],
+        [100, 0],
+        [200, 0],
+      ],
+      center: [500, 0],
+    },
+    {
+      ad: 'yatay doğru, merkez ayakların GERİSİNDE',
+      feet: [
+        [0, 0],
+        [100, 0],
+        [200, 0],
+      ],
+      center: [-300, 0],
+    },
+    {
+      ad: 'dikey doğru, merkez ötesinde',
+      feet: [
+        [50, 0],
+        [50, 100],
+        [50, 200],
+      ],
+      center: [50, 900],
+    },
+    {
+      ad: 'tüm ayaklar tek noktada, merkez UZAKTA',
+      feet: [
+        [70, 70],
+        [70, 70],
+        [70, 70],
+      ],
+      center: [400, 400],
+    },
   ])('dejenere poligonda denge YOKTUR: $ad', ({ feet, center }) => {
     const state = measureSupport(
       feet.map(([x, y]) => ({ x, y, grounded: true }) as SupportFoot),
@@ -130,6 +173,34 @@ describe('measureSupport', () => {
     expect(state.marginPx, 'içeride sayılmayan merkez pozitif pay taşıyamaz').toBeLessThanOrEqual(
       0,
     );
+  });
+
+  it('dejenere yolların ikisi de AYNI sıfırı döner, negatif sıfır değil', () => {
+    /*
+     * `-0` bir sayı olarak `0`a eşittir ama `Object.is` ve `toBe` onları ayırır.
+     * İki ayağın verdiği sıfır (`groundedCount < 3` dalı) ile üç eşdoğrusal
+     * ayağın verdiği sıfır aynı olmalı; aksi hâlde tüketicinin eşitlik testi
+     * kaynağa göre farklı sonuç verir.
+     */
+    const iki = measureSupport(
+      [
+        { x: 0, y: 0, grounded: true },
+        { x: 100, y: 0, grounded: true },
+      ],
+      { centerX: 50, centerY: 0 },
+    );
+    const uc = measureSupport(
+      [
+        { x: 0, y: 0, grounded: true },
+        { x: 50, y: 0, grounded: true },
+        { x: 100, y: 0, grounded: true },
+      ],
+      { centerX: 50, centerY: 0 },
+    );
+
+    expect(Object.is(iki.marginPx, -0)).toBe(false);
+    expect(Object.is(uc.marginPx, -0)).toBe(false);
+    expect(uc.marginPx).toBe(iki.marginPx);
   });
 
   it('dejenere olmayan poligon KONTROL: gerçek üçgen denge verir', () => {

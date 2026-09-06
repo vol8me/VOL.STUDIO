@@ -367,9 +367,26 @@ Kısa seslerde attack ve release'te `cosine` eğrisi, başlangıç ve bitişteki
 
 ## Sınırlar
 
-İyi sonuç verir: retro/synth SFX, UI blip, vuruş, zıplama, laser, dash, whoosh, kısa patlama ve hasar.
+**Motor müzik için yetersiz DEĞİLDİR.** Bu belge bir dönem öyle yazıyordu ve
+tersini repo kendi kapısında kanıtlıyor: VOL.HELL'in gönderilen müzik
+parçalarının HEPSİ bu motorla üretiliyor ve `just audio-verify` (signoff'un
+parçası) onları yeniden üretip bayt-birebir olduklarını doğruluyor. İddia
+motorun tek osilatör + ADSR döneminden kalmıştı; additive, FM, filtre, LFO,
+efekt zinciri ve Karplus-Strong eklendikten sonra geçerliliğini yitirdi.
 
-Yetersiz kalır: gerçekçi foley, insan sesi, uzun ambient, **müzik, armoni ve uzun melodi**. Hollywood patlaması. Bunun nedeni sınırlı osilatör paleti, matematiksel dalgalardan gelen "plastik" timbre ve paylaşılan master zinciri: bu motorla çoksesli müzik üretmeye çalışmak farklı parametrelerle aynı sonik hissiyat verir. Bu durumlarda WAV/OGG sample tabanlı veya hybrid yaklaşım gerekir; müzik için DAW'da üretilmiş stem'leri `music-engine` ile çalmak daha sağlıklıdır.
+Gerçek sınır **motorda değil KATALOĞDA**. Primitifler güçlü, paketlenmiş
+enstrüman modeli az: bugün tek fiziksel model `pluck()` (Karplus-Strong).
+Akustik piyano, yaylı, nefesli ve bakır üflemeli sesler yeni fiziksel model
+ister — yeni bir motor değil.
+
+Kapsam DIŞINDA olanlar (bunlar bilinçli):
+
+- **Çalışma zamanında canlı sentez.** Hat şudur ve öyle kalır:
+  kod → offline render → OGG → MusicEngine. Motor hazır tampon çalar; canlı
+  sentez istenirse onun içine gömülmez, ayrı bir çalışma zamanı katmanı
+  açılır.
+- **Real-time MIDI, ritmik grid, beatmatching, DAW/VST entegrasyonu.**
+- **Gerçekçi foley ve insan sesi.** İkincisi formant modeli ister.
 
 ## Doğrulama
 

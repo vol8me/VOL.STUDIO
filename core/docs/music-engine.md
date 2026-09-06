@@ -268,11 +268,10 @@ Kayıpsız WAV kopyası saklanmaz, gerektiğinde yeniden üretilir. iOS hedefi
 için `StemLoader` `.ogg` başarısız olursa `.mp3` fallback dener; proje
 build'inde `convert:ios` yokken yalnızca OGG üretilir.
 
-> **Uyarı — müzik için öneri:** Ses sentez aracı SFX, UI blip ve kısa drone için
-> designed. Çoksesli müzik, armoni ve uzun melodi üretmeye çalışmak aynı sonik
-> hissiyat ve sınırlı tımbr çıkarır. Müzik parçaları için DAW veya hazır royalty-free
-> stem'leri OGG olarak export edip bu motorla çalmak daha sağlıklıdır.
-> Prosedürel müzik denemeleri yalnızca kısa jingle / drone düzeyinde tutarlıdır.
+Parçalar build zamanında sentezle üretilir; elle hazırlanmış bir stem de aynı
+yoldan çalınır — motor ikisini ayırt etmez ve üretenini bilmez. Sentezin
+gerçek sınırı [devtools/audio-synth/DESIGN.md](../../devtools/audio-synth/DESIGN.md)
+"Sınırlar" bölümündedir.
 
 ```bash
 pnpm --filter @volstudio/vol-hell generate:audio   # SFX + müzik (hepsi)
@@ -407,9 +406,10 @@ Yetersiz kalır:
 - Real-time MIDI zamanlama / ritmik grid
 - Real-time ritim / beatmatching
 - DAW/VST entegrasyonu ve canlı orkestrasyon
+- **Çalışma zamanında sentez.** Motor `AudioBuffer` çalar; enstrümanı üreten
+  taraf build-time'dadır ve bu sınır bilinçlidir.
 
-Sample tabanlı stem çalma desteklenir, ancak adaptif gain dışında real-time
-arrange/anlaşma yoktur.
+Adaptif gain dışında real-time arrange yoktur.
 
 ## Doğrulama
 
