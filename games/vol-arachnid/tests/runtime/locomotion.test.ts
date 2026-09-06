@@ -51,7 +51,13 @@ function makeChain(): Chain {
 }
 
 /** Sahnenin `update` akışının test karşılığı — aynı sıra, aynı sinyaller. */
-function step(chain: Chain, intent: Vector2, dash: boolean, deltaMs: number): void {
+function step(
+  chain: Chain,
+  intent: Vector2,
+  dash: boolean,
+  deltaMs: number,
+  observe?: ScenarioObserver,
+): void {
   const { body, legs, motion } = chain;
   body.update(intent, dash, deltaMs);
   const signals = body.signals;
@@ -64,10 +70,25 @@ function step(chain: Chain, intent: Vector2, dash: boolean, deltaMs: number): vo
    * bağlıydı. Altın imza gerçek oyunun izlediği yolu kilitlemeli, testin kendi
    * uydurduğu bir yolu değil.
    */
-  body.consumeWallImpact();
-  body.consumeDashLaunch();
-  body.consumeDashLanding();
+  const wallImpact = body.consumeWallImpact();
+  const dashLaunch = body.consumeDashLaunch();
+  const dashLanding = body.consumeDashLanding();
+  observe?.(chain, { wallImpact: wallImpact !== null, dashLaunch, dashLanding });
 }
+
+/**
+ * Bir karede olan OLAYLAR — yörünge imzasının göremediği şey.
+ *
+ * `consume*` çağrıları sahnenin sözleşmesi gereği her karede tüketilir;
+ * gözlemci onları yutmadan önce sayar.
+ */
+interface FrameEvents {
+  wallImpact: boolean;
+  dashLaunch: boolean;
+  dashLanding: boolean;
+}
+
+type ScenarioObserver = (chain: Chain, events: FrameEvents) => void;
 
 interface LimbGeometry {
   /** IK zincirinin başladığı nokta (kalça + varsa sabit kök kemik). */
@@ -393,18 +414,36 @@ const SCENARIO: ReadonlyArray<{ intent: [number, number]; dash: boolean; ms: num
 ];
 const SCENARIO_FRAME_MS = 16;
 
-/** Senaryoyu koşar ve son durumu okunabilir bir imzaya indirger. */
-function runScenario(): string {
-  const chain = makeChain();
-  for (const leg of SCENARIO) {
-    const intent = new Vector2(leg.intent[0], leg.intent[1]);
-    for (let elapsed = 0; elapsed < leg.ms; elapsed += SCENARIO_FRAME_MS) {
-      step(chain, intent, leg.dash, SCENARIO_FRAME_MS);
-    }
-  }
+/**
+ * Yörüngenin ARA noktaları.
+ *
+ * Yalnız son durumu kilitlemek yeterli değildir: farklı bir yol izleyip aynı
+ * yere varan bir regresyon sessizce geçer. Bu kareler yolun kendisini örnekler.
+ */
+const CHECKPOINT_FRAMES: readonly number[] = [0, 30, 60, 120, 180, 240];
 
+/** Senaryo boyunca biriken OLAY zarfı — imzanın göremediği davranış. */
+interface ScenarioEnvelope {
+  frames: number;
+  wallImpacts: number;
+  dashLaunches: number;
+  dashLandings: number;
+  emergencyFrames: number;
+  lowSupportFrames: number;
+  peakStepping: number;
+  maxSpeed: string;
+}
+
+interface ScenarioRun {
+  signature: string;
+  checkpoints: readonly string[];
+  envelope: ScenarioEnvelope;
+}
+
+/** Gövde ve ayakları tek satırlık okunabilir bir imzaya indirger. */
+function snapshot(chain: Chain): string {
   const { body, legs, rig } = chain;
-  const parts = [
+  const parts: number[] = [
     body.position.x,
     body.position.y,
     body.velocity.x,
@@ -418,7 +457,51 @@ function runScenario(): string {
     const geometry = geometryOf(limb);
     parts.push(geometry.footX, geometry.footY);
   }
-  return parts.map((value) => (typeof value === 'number' ? value.toFixed(6) : value)).join('|');
+  return parts.map((value) => value.toFixed(6)).join('|');
+}
+
+/** Senaryoyu koşar; son durumu, ara noktaları ve olay zarfını birlikte döner. */
+function runScenarioFull(): ScenarioRun {
+  const chain = makeChain();
+  const checkpoints: string[] = [];
+  const envelope: ScenarioEnvelope = {
+    frames: 0,
+    wallImpacts: 0,
+    dashLaunches: 0,
+    dashLandings: 0,
+    emergencyFrames: 0,
+    lowSupportFrames: 0,
+    peakStepping: 0,
+    maxSpeed: '0.000000',
+  };
+  let maxSpeed = 0;
+
+  const observe: ScenarioObserver = (current, events) => {
+    if (CHECKPOINT_FRAMES.includes(envelope.frames)) checkpoints.push(snapshot(current));
+    envelope.frames++;
+    if (events.wallImpact) envelope.wallImpacts++;
+    if (events.dashLaunch) envelope.dashLaunches++;
+    if (events.dashLanding) envelope.dashLandings++;
+    if (current.legs.emergencyLimbCount > 0) envelope.emergencyFrames++;
+    if (current.legs.support.groundedCount < 3) envelope.lowSupportFrames++;
+    envelope.peakStepping = Math.max(envelope.peakStepping, current.legs.steppingLimbCount);
+    maxSpeed = Math.max(maxSpeed, Math.hypot(current.body.velocity.x, current.body.velocity.y));
+  };
+
+  for (const leg of SCENARIO) {
+    const intent = new Vector2(leg.intent[0], leg.intent[1]);
+    for (let elapsed = 0; elapsed < leg.ms; elapsed += SCENARIO_FRAME_MS) {
+      step(chain, intent, leg.dash, SCENARIO_FRAME_MS, observe);
+    }
+  }
+  envelope.maxSpeed = maxSpeed.toFixed(6);
+
+  return { signature: snapshot(chain), checkpoints, envelope };
+}
+
+/** Senaryoyu koşar ve son durumu okunabilir bir imzaya indirger. */
+function runScenario(): string {
+  return runScenarioFull().signature;
 }
 
 describe('locomotion determinizmi', () => {
@@ -440,5 +523,64 @@ describe('locomotion determinizmi', () => {
 
     expect(fields).toHaveLength(8 + 10 * 2);
     expect(signature).toMatchSnapshot();
+  });
+});
+
+describe('locomotion yörünge regresyonu', () => {
+  /**
+   * Yol da kilitlenir, yalnız varış değil.
+   *
+   * Son durum imzası tek başına YETMEZ: farklı bir yol izleyip aynı yere varan
+   * bir regresyon sessizce geçer. Ara kareler yolun kendisini örnekler, olay
+   * zarfı ise imzanın hiç göremediğini sayar — kaç duvar çarpması, kaç atılım,
+   * kaç kare acil adımda ve kaç kare üçten az ayakla geçildi.
+   *
+   * Düştüğünde soru yine aynıdır: davranışı bilerek mi değiştirdim?
+   */
+  const CHECKPOINT_SIGNATURES: readonly string[] = [
+    '800.000000|549.856640|0.000000|-8.960000|-1.570796|0.000000|0.000000|0.000000|96.227694|133.059929|141.060320|62.433438|150.868145|-24.063825|109.475820|-116.267410|-96.221463|133.058796|-141.061725|62.441000|-150.866247|-24.057827|-109.481711|-116.263402|-33.074296|106.849904|33.078835|106.863651',
+    '800.000000|483.552640|0.000000|-210.000000|-1.570796|0.000000|0.000000|6.000000|91.357323|185.510676|142.417573|63.049196|150.868145|42.240175|107.169907|-113.978676|-94.737670|130.370139|-141.061725|128.745000|-147.655430|-23.508853|-114.468228|-50.928538|-30.048344|105.850716|30.052806|105.864613',
+    '837.648454|415.727195|126.628224|-126.628224|-0.887645|0.774551|0.000000|4.000000|158.996006|95.716691|137.230635|37.035044|99.163938|-66.794921|89.898285|-127.549955|-74.994268|162.417524|-129.622038|83.500569|-153.496588|9.891724|-129.034066|-88.170158|-19.630777|110.417566|42.790602|96.873093',
+    '758.834881|360.989563|-900.000000|0.000000|-2.141130|-2.700000|1.000000|7.000000|75.945374|131.832007|126.449116|67.734129|143.191014|-38.781622|85.533947|-139.536903|-75.938698|131.831125|-126.450242|67.742290|-143.188966|-38.774656|-85.540708|-139.531365|-21.584222|102.618750|21.587125|102.633497',
+    '139.151024|329.286162|-386.844115|-85.642137|-2.362974|0.097018|0.000000|6.000000|107.607119|145.259861|168.232003|105.474440|149.860417|0.333183|132.635403|-78.872079|-79.149698|170.595414|-111.546845|80.846412|-124.663640|21.516174|-95.139998|-91.344173|-10.950621|135.637015|52.724370|130.131162',
+    '89.697526|918.794951|0.000000|521.440000|1.838285|-1.666098|0.000000|8.000000|64.850966|189.544554|120.059844|133.069885|154.634369|44.606222|134.930207|-23.722549|-71.341347|191.352350|-134.587781|79.658727|-110.731911|44.567775|-71.007528|-111.406099|-42.000812|133.537838|20.158740|136.188185',
+  ];
+
+  const EXPECTED_ENVELOPE = {
+    frames: 279,
+    wallImpacts: 1,
+    dashLaunches: 3,
+    dashLandings: 3,
+    emergencyFrames: 158,
+    lowSupportFrames: 118,
+    peakStepping: 10,
+    maxSpeed: '900.000000',
+  };
+
+  it('ara kareler SABİTLENMİŞ yörüngeyi izler', () => {
+    const run = runScenarioFull();
+
+    expect(run.checkpoints).toHaveLength(CHECKPOINT_FRAMES.length);
+    for (const [index, expected] of CHECKPOINT_SIGNATURES.entries()) {
+      expect(run.checkpoints[index], `kare ${CHECKPOINT_FRAMES[index]}: yörünge ayrıştı`).toBe(
+        expected,
+      );
+    }
+  });
+
+  it('olay zarfı SABİTTİR — imzanın göremediği davranış', () => {
+    expect(runScenarioFull().envelope).toEqual(EXPECTED_ENVELOPE);
+  });
+
+  it('zarf senaryonun gerçekten sürdüğü yolları kapsar', () => {
+    /*
+     * Zarfın kendisi anlamlı olmalı: sıfır çarpma ya da sıfır atılım taşıyan
+     * bir zarf, o kod yollarının hiç sürülmediğini gizler.
+     */
+    const { envelope } = runScenarioFull();
+    expect(envelope.wallImpacts, 'duvar çarpması sürülmeli').toBeGreaterThan(0);
+    expect(envelope.dashLaunches, 'atılım sürülmeli').toBeGreaterThan(0);
+    expect(envelope.dashLandings, 'atılım inişi sürülmeli').toBeGreaterThan(0);
+    expect(envelope.emergencyFrames, 'acil adım sürülmeli').toBeGreaterThan(0);
   });
 });
