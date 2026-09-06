@@ -11,6 +11,13 @@ const quality = loadQualityConfig(new URL('../../quality.json', import.meta.url)
 
 export default defineConfig({
   test: {
+    // Vitest 3.2.x worker RPC siğilâsi coverage altında çok sayıda ağır
+    // testle tıkanabiliyor. `forks` ile işlem başına ayrı süreç ve düşük
+    // paralellik bu tıkanıklığı önlüyor; test sayısı zaten yüksek.
+    pool: 'forks',
+    poolOptions: {
+      forks: { maxForks: 2, minForks: 1 },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'lcov'],
