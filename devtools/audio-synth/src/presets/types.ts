@@ -31,6 +31,15 @@ export interface PresetMetadata {
   typicalFrequency: number;
   /** Tipik süre (saniye). */
   typicalDuration: number;
+  /**
+   * Kullanılabilir frekans aralığı (Hz), `[en pes, en tiz]`.
+   *
+   * Bir preset her frekansta ANLAMLI değildir: glockenspiel 65 Hz'de kısmi
+   * tonları temelinden güçlü bir gürültüye döner, klavsen 4 kHz'de gerçek
+   * enstrümanın kayıt dışına çıkar. Aralık verildiğinde `registerSweep` kapısı
+   * presetin karakterini o aralık BOYUNCA korumasını sınar.
+   */
+  range?: [number, number];
   /** Kullanım senaryosu. */
   useCase: string;
   /** Arama etiketleri. */

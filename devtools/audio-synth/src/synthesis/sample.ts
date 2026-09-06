@@ -1,4 +1,4 @@
-import type { EnvelopeParams, SampleParams } from './types';
+import type { EnvelopeParams, SampleParams } from '../types';
 import { Envelope } from './envelope';
 
 /** Ham WAV dosyasından mono Float32Array ve orijinal örnek oranını döner. */

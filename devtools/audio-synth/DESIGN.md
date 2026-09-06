@@ -18,32 +18,99 @@
   kararı tek yerde, normalize adımındadır.
 - **16-bit dönüşümde TPDF dither** uygulanır; dither de deterministiktir.
 
-## Mimari
+## Mimari — dört katman, dört ayrı soru
+
+| Katman         | Soru                                 | İçinde ne var                                      |
+| -------------- | ------------------------------------ | -------------------------------------------------- |
+| `synthesis/`   | Örnek NASIL üretilir?                | osilatör, gürültü, zarf, filtre, örnek kaynağı     |
+| `engine/`      | Parametreler nasıl BİRLEŞTİRİLİR?    | `SynthParams` → örnek; subtractive + FM + additive |
+| `instruments/` | Bir enstrüman ailesi NASIL DAVRANIR? | fiziksel modeller                                  |
+| `presets/`     | Bu sesin ADI ne?                     | parametre kümeleri + katalog                       |
+
+Ayrıca `effects/` (master zinciri), `sequencer.ts` (arp/BPM), `types.ts` ve
+Node-only `writer.ts` (WAV + OGG; OGG için FFmpeg). Dosya dökümü `src/`
+ağacının kendisidir; burada tekrarlanmaz.
+
+### `instrument ≠ preset`
+
+Bu ayrım bu paketin büyüme biçimidir ve bulanıklaşırsa katalog motoru yutar.
+
+- **Model** (`instruments/`), `SynthParams` ile ifade EDİLEMEYEN yapı taşır:
+  gecikme hattı, rezonatör, uyarım. Çıktısı doğrudan `SynthesisResult`tır.
+  Bugün tek model `pluck` (Karplus-Strong).
+- **Preset** (`presets/`), ad verilmiş bir parametre kümesidir ve **yeni DSP
+  taşımaz**. Ya `engine`e ya bir modele biner.
+
+Sonuç: `guitar` bir presettir, `PluckedString` bir modeldir. On enstrüman on
+motor değil, bir modelin on presetidir.
+
+Bugün `presets/acoustic.ts` altında beş akustik preset var ve hiçbiri yeni DSP
+taşımaz: `drawbarOrgan`, `harpsichord`, `marimba`, `vibraphone`,
+`glockenspiel`. Değerleri kodda değil ORANLARDADIR — Hammond ayak uzunlukları,
+oyulmuş çubuğun 4:1 akordu, oyulmamış çubuğun harmonik OLMAYAN
+1 : 2,76 : 5,40 : 8,93 modları, koparma noktasının 7. harmonikte açtığı çukur.
+
+### Bir preset ölçülerek doğrulanır
+
+Uydurulmuş bir harmonik dizisi de hatasız sentezlenir; "çalışıyor" bir kalite
+ölçüsü değildir. `tests/acousticSpectrum.test.ts` her presetin BELGELENMİŞ
+yapısını sesin kendisinde arar ve beş mutasyonun beşini de yakalar: modları
+tam sayıya çevirmek, marimbanın boş katlarını doldurmak, klavsenin çukurunu
+kapatmak, orga sönüm vermek, vibrafonun tremolosunu kaldırmak.
+
+İki ölçüm aracı, iki ayrı soru:
+
+- **Goertzel** — tek hedef frekanstaki enerji. FFT değil, çünkü kısmi tonların
+  çoğu tam sayı katı değildir ve bir FFT kutusuna oturmaz.
+- **Periyot içi tepe-dip** — LFO derinliği. Zarf spektrumu burada işe yaramaz:
+  sönüm ve reverb kabarması düşük frekansları doldurup LFO'yu gömer. Analiz
+  penceresi en pes kısmi tonun periyodundan UZUN, LFO periyodundan KISA
+  olmalıdır; ikisini karıştırmak bir tur ölçümü çöpe attı.
+
+**Kapı:** `tests/governance/publicSurface.test.ts` kök yüzeydeki isimleri
+kilitler. Yeni bir enstrüman `Presets` altında bir kalem olarak gelir ve
+yüzeyi BÜYÜTMEZ; yüzey ancak yeni bir sentez tekniği ya da yeni bir MODEL
+girdiğinde büyür. Kilit olmadan bu ayrım bir niyettir; kilitle bir kapıdır.
+
+### Düzenleme katmanı
+
+`compose` tek seslidir: notaları art arda dizer, tek preset kullanır ve mono
+döner. Akor kurmak, iki enstrümanı üst üste çalmak ya da bir sesi diğerinin
+ortasında başlatmak orada mümkün değildir — müzik üreten her betik kendi
+karıştırıcısını yeniden yazıyordu. `arrange/` bunu kapatır:
+
+- **`Timeline`** — ölçü/vuruş zamanlı, çok sesli, çok enstrümanlı, stereo.
+  Bozuk olayı EKLENİRKEN reddeder (render sırasında değil: yüzlerce nota
+  arasında bozuğunu aramak istenmez). Tohumlu insanlaştırma taşır, yani
+  mekanik duyulmaz ama deterministik kalır.
+- **Perde sözlüğü** — `noteToHz`, `transposeNote`, `SCALES`, `scaleDegree`,
+  `scaleChord`. Akor dizinin RENGİNİ alır: majör dizinin ikinci derecesinde
+  kurulan üçlü doğal olarak minördür.
+- **`matchLoudness`** — tepe değil RMS eşitler. Tepeye göre normalize etmek
+  parçaları eşit YÜKSEKLİKTE yapmaz: vurmalı ve sürekli dokular aynı tepede
+  10 dB farkla çalar (ölçüldü). `targetRms: 0` "dokunma" demektir, "sustur"
+  değil — bu ayrım bir kez yanlış tasarlandı ve testler yakaladı.
+
+Kök yüzeye tek isimle girer (`Arrange`); içindekiler yüzey sayısını büyütmez.
+
+### Zaman sınırı
+
+Modeller BUILD zamanında yaşar. Hat şudur ve öyle kalır:
 
 ```
-src/
-  types.ts      — tüm parametre tipleri
-  waveforms.ts  — periyodik dalga şekilleri
-  noise.ts      — white / pink / brown gürültü
-  envelope.ts   — ADSR zarf
-  filter.ts     — değişken lowpass / highpass
-  effects/      — reverb, delay, modulation, distortion, pan, stereo width
-  engine/       — synthesize(), compose(), applyGlobalEffects(), voice/render
-  sequencer.ts  — arp / sequence / BPM
-  sample.ts     — WAV decode, resample, loop, trim
-  physical.ts   — fiziksel model (pluck / string)
-  random.ts     — seed'li PRNG
-  presets/      — kategorili hazır ses tarifleri
-  writer.ts     — WAV + OGG yazıcı (OGG için FFmpeg)
-  index.ts      — public API
+kod → offline render → OGG → MusicEngine
 ```
 
-Pipeline:
+Çalışma zamanı hazır tampon çalar. Canlı sentez istenirse bu pakete ya da
+MusicEngine'in içine değil, ayrı bir çalışma zamanı katmanına gider.
+
+### Boru hattı
 
 1. Osilatör / gürültü / sample / harmonik serisi sesi üretir.
 2. Zarf, filtre, vibrato, tremolo ve LFO'lar şekillendirir.
 3. `distortion` per-voice uygulanır.
-4. Master efektler sırayla işlenir: `delay` → `flanger` → `phaser` → `chorus` → `pan` → `reverb` → `stereoWidth`.
+4. Master zinciri sırayla: `delay` → `flanger` → `phaser` → `chorus` → `pan`
+   → `reverb` → `stereoWidth`.
 5. Normalize ile çıkış hazırlanır.
 
 ## Hızlı Başlangıç

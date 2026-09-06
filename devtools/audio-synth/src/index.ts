@@ -1,24 +1,21 @@
 /**
- * @volstudio/audio-synth
+ * @volstudio/audio-synth — prosedürel ses sentezi, saf matematik.
  *
- * Prosedürel ses sentez motoru.
- * Node.js ve tarayıcıda çalışabilecek şekilde saf matematikle yazılmıştır.
- * WAV yazma işlemi ayrı `@volstudio/audio-synth/writer` subpath'inde bulunur.
+ * Dört katman, dört ayrı soru:
+ *
+ *   synthesis/    Örnek NASIL üretilir? (osilatör, gürültü, zarf, filtre)
+ *   engine/       Parametreler nasıl BİRLEŞTİRİLİR? (`SynthParams` → örnek)
+ *   instruments/  Bir enstrüman ailesi NASIL DAVRANIR? (fiziksel model)
+ *   presets/      Bu sesin ADI ne? (parametre kümesi, yeni DSP taşımaz)
+ *   arrange/      Bu sesler ZAMANDA nasıl dizilir? (perde, çizelge, yükseklik)
+ *
+ * Node ve tarayıcıda çalışır; dosya yazma `@volstudio/audio-synth/writer`
+ * alt yolundadır (Node-only).
  */
 
 export type * from './types';
 
-export { getWaveSampleConstantFreq, getWaveSampleWithPhase } from './waveforms';
-export { WhiteNoise, PinkNoise, BrownNoise, createNoiseSource } from './noise';
-export { Envelope, applyCurve } from './envelope';
-export {
-  LowpassFilter,
-  HighpassFilter,
-  BiquadFilter,
-  Cascade4Filter,
-  createFilter,
-  getCutoffAtTime,
-} from './filter';
+export * from './synthesis';
 export {
   Chorus,
   DelayLine,
@@ -30,17 +27,8 @@ export {
   getPanGains,
 } from './effects';
 export { applyGlobalEffects, synthesize, synth, normalize, limitBuffer, mix } from './engine';
-export { pluck } from './physical';
-export type { PluckParams } from './physical';
+export * from './instruments';
 export { compose } from './sequencer';
-export {
-  decodeWav,
-  resampleLinear,
-  trimSamples,
-  loopSamples,
-  applyEnvelopeToSample,
-  processSample,
-  mixSampleLayer,
-} from './sample';
 
 export * as Presets from './presets';
+export * as Arrange from './arrange';

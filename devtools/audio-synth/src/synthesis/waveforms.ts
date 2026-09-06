@@ -1,4 +1,4 @@
-import type { Waveform } from './types';
+import type { Waveform } from '../types';
 
 const TABLE_SIZE = 4096;
 

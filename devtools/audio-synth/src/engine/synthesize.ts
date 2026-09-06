@@ -1,8 +1,8 @@
 import type { SynthesisResult, SynthParams } from '../types';
-import { Envelope } from '../envelope';
-import { createFilter } from '../filter';
-import { mixSampleLayer, processSample } from '../sample';
-import { getWaveSampleWithPhase } from '../waveforms';
+import { Envelope } from '../synthesis/envelope';
+import { createFilter } from '../synthesis/filter';
+import { mixSampleLayer, processSample } from '../synthesis/sample';
+import { getWaveSampleWithPhase } from '../synthesis/waveforms';
 import { DEFAULT_SEED } from '@volstudio/core/random';
 import { Distortion } from '../effects';
 import { createVoices } from './voice';

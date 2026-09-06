@@ -1,7 +1,7 @@
 import type { SequenceParams, SequenceNote, SynthesisResult, SynthParams } from './types';
 import { applyGlobalEffects, synth } from './engine';
 import { estimateDelayTail, Reverb } from './effects';
-import { mixSampleLayer, processSample } from './sample';
+import { mixSampleLayer, processSample } from './synthesis/sample';
 
 const DEFAULT_SAMPLE_RATE = 44100;
 

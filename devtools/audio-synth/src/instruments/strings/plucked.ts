@@ -12,7 +12,7 @@
  */
 
 import { createRandom, DEFAULT_SEED } from '@volstudio/core/random';
-import type { SynthesisResult } from './types';
+import type { SynthesisResult } from '../../types';
 import { clamp } from '@volstudio/core/math/interpolation';
 
 export interface PluckParams {

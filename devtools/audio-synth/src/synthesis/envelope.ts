@@ -1,4 +1,4 @@
-import type { Curve, EnvelopeParams } from './types';
+import type { Curve, EnvelopeParams } from '../types';
 
 /** `1 - 10^-3` — eğrinin normalize edilmemiş halinin t=1'deki değeri. */
 const SATURATING_SPAN = 1 - Math.pow(10, -3);

@@ -21,6 +21,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "qa": "tsx scripts/audio-qa.ts",
+    "demo:music": "tsx scripts/music-demo.ts",
     "convert:ios": "tsx scripts/convert-audio.ts"
   },
   "dependencies": {

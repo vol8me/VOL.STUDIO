@@ -6,6 +6,7 @@ import { REWARDS_CATALOG } from './rewards';
 import { FM_CATALOG } from './fm';
 import { TEXTURES_CATALOG } from './textures';
 import { INSTRUMENTS_CATALOG } from './instruments';
+import { ACOUSTIC_CATALOG } from './acoustic';
 
 /**
  * Tüm presetlerin keşfedilebilir metadata kataloğu.
@@ -22,6 +23,7 @@ export const PRESET_CATALOG: Record<string, PresetMetadata> = {
   ...FM_CATALOG,
   ...TEXTURES_CATALOG,
   ...INSTRUMENTS_CATALOG,
+  ...ACOUSTIC_CATALOG,
 };
 
 export interface FindPresetsQuery {

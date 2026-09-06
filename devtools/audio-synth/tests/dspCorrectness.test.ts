@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { synth, limitBuffer, applyGlobalEffects } from '../src/engine';
 import { StereoWidener, Distortion, estimateDelayTail } from '../src/effects';
-import { getWaveSampleWithPhase } from '../src/waveforms';
-import { Envelope } from '../src/envelope';
+import { getWaveSampleWithPhase } from '../src/synthesis/waveforms';
+import { Envelope } from '../src/synthesis/envelope';
 import { createRandom } from '@volstudio/core/random';
 import { writeWav } from '../src/writer';
 

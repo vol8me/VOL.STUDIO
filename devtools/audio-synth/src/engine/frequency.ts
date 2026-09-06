@@ -1,4 +1,4 @@
-import { getWaveSampleWithPhase } from '../waveforms';
+import { getWaveSampleWithPhase } from '../synthesis/waveforms';
 import type { Voice } from './voice';
 
 function lerp(start: number, end: number, t: number): number {

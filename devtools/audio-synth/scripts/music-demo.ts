@@ -1,0 +1,320 @@
+import { writeWav } from '../src/writer';
+import { Arrange, Presets } from '../src';
+import type { SynthesisResult } from '../src/types';
+
+const { Timeline, measureRms, measurePeak, matchLoudness } = Arrange;
+const { noteToHz, SCALES, scaleDegree, scaleChord } = Arrange;
+
+const SAMPLE_RATE = 44100;
+const OUT_DIR = new URL('../export', import.meta.url).pathname;
+
+interface Track {
+  name: string;
+  result: SynthesisResult;
+}
+
+function rmsWindows(channels: Float32Array[], windowSize: number): number[] {
+  const mono = channels[1] ? new Float32Array(channels[0].length) : channels[0];
+  if (channels[1] && mono) {
+    for (let i = 0; i < mono.length; i++) mono[i] = (channels[0][i] + channels[1][i]) * 0.5;
+  }
+  const out: number[] = [];
+  for (let start = 0; start + windowSize <= (mono?.length ?? 0); start += windowSize) {
+    let sum = 0;
+    for (let i = 0; i < windowSize; i++) sum += (mono as Float32Array)[start + i] ** 2;
+    out.push(Math.sqrt(sum / windowSize));
+  }
+  return out;
+}
+
+function verifyTrack(track: Track, actionRange?: [number, number]) {
+  const { result } = track;
+  const rms = measureRms(result.channels);
+  const peak = measurePeak(result.channels);
+  const finite = result.channels.every((ch) => ch.every(Number.isFinite));
+
+  if (!finite) throw new Error(`${track.name}: sonlu olmayan örnek var`);
+  if (peak >= 0.999) throw new Error(`${track.name}: kırpma var`);
+  if (peak > 0.95) throw new Error(`${track.name}: tepe -0.5 dB'yi aşıyor`);
+
+  const targetDb = -20;
+  const actualDb = 20 * Math.log10(rms);
+  if (actualDb < -23 || actualDb > -17) {
+    throw new Error(`${track.name}: RMS ${actualDb.toFixed(1)} dB, hedef ~-20 dB`);
+  }
+
+  for (const ch of result.channels) {
+    const last = Math.abs(ch[ch.length - 1] ?? 0);
+    if (last > 0.02) throw new Error(`${track.name}: son tık (${last.toFixed(3)})`);
+  }
+
+  if (actionRange) {
+    const winSize = Math.floor(SAMPLE_RATE);
+    const windows = rmsWindows(result.channels, winSize);
+    const [fromSec, toSec] = actionRange;
+    const from = Math.floor((fromSec * SAMPLE_RATE) / winSize);
+    const to = Math.ceil((toSec * SAMPLE_RATE) / winSize);
+    const others = windows.slice(0, from).concat(windows.slice(to));
+    const action = windows.slice(from, to);
+    const maxOther = Math.max(...others);
+    const maxAction = Math.max(...action);
+    if (maxAction < maxOther * 1.2) {
+      throw new Error(`${track.name}: aksiyon bölümü yeterince yüksek değil`);
+    }
+  }
+
+  console.log(
+    `  ${track.name}: ${result.duration.toFixed(1)}s  RMS ${actualDb.toFixed(1)} dB  peak ${(
+      20 * Math.log10(peak)
+    ).toFixed(1)} dB`,
+  );
+}
+
+function chordProgression(root: string, scale: readonly number[], degrees: number[]): string[][] {
+  return degrees.map((d) => scaleChord(root, scale, d, 4));
+}
+
+function buildOrganPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 64, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 11 });
+  const root = 'C3';
+  const scale = SCALES.major;
+  const chords = chordProgression(root, scale, [0, 3, 4, 2]);
+  for (let bar = 0; bar < 16; bar++) {
+    const notes = chords[bar % chords.length];
+    t.chord({
+      instrument: Presets.drawbarOrgan,
+      notes,
+      bar,
+      beats: 4,
+      gain: 0.85,
+      spread: 0.25,
+    });
+  }
+  return t.render({ targetRms: 0.1, tailSeconds: 3 });
+}
+
+function buildHarpsichordPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 110, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 12 });
+  const root = 'C3';
+  const scale = SCALES.minor;
+  const chords = chordProgression(root, scale, [0, 3, 4, 0]);
+  for (let bar = 0; bar < 24; bar++) {
+    const notes = chords[bar % chords.length];
+    for (let i = 0; i < notes.length; i++) {
+      t.note({
+        instrument: Presets.harpsichord,
+        note: notes[i] ?? 'C4',
+        bar,
+        beat: i,
+        beats: 0.5,
+        gain: 0.75,
+        pan: (i / (notes.length - 1) - 0.5) * 1.2,
+      });
+    }
+  }
+  return t.render({ targetRms: 0.1, tailSeconds: 2 });
+}
+
+function buildMarimbaPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 100, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 13 });
+  const root = 'C4';
+  const scale = SCALES.majorPentatonic;
+  const degrees = [0, 1, 0, 2, 4, 3, 2, 1];
+  for (let bar = 0; bar < 28; bar++) {
+    for (let step = 0; step < 8; step++) {
+      const degree = degrees[step % degrees.length];
+      const note = scaleDegree(root, scale, degree + Math.floor(step / 5) * 5);
+      t.note({
+        instrument: Presets.marimba,
+        note,
+        bar,
+        beat: step * 0.5,
+        beats: 0.5,
+        gain: 0.7,
+      });
+    }
+  }
+  return t.render({ targetRms: 0.1, tailSeconds: 2 });
+}
+
+function buildVibraphonePiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 78, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 14 });
+  const root = 'F#4';
+  const scale = SCALES.major;
+  const chords = chordProgression(root, scale, [0, 4, 5, 3]);
+  for (let bar = 0; bar < 20; bar++) {
+    t.chord({
+      instrument: Presets.vibraphone,
+      notes: chords[bar % chords.length],
+      bar,
+      beats: 4,
+      gain: 0.75,
+      spread: 0.35,
+    });
+  }
+  return t.render({ targetRms: 0.1, tailSeconds: 3 });
+}
+
+function buildGlockenspielPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 120, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 15 });
+  const root = 'C6';
+  const scale = SCALES.majorPentatonic;
+  const melody = [0, 2, 4, 2, 0, -1, 0, 4, 2, 3, 2, 1, 0, 2, -2, 0];
+  for (let bar = 0; bar < 20; bar++) {
+    for (let step = 0; step < 8; step++) {
+      const degree = melody[(bar * 8 + step) % melody.length];
+      t.note({
+        instrument: Presets.glockenspiel,
+        note: scaleDegree(root, scale, degree),
+        bar,
+        beat: step * 0.5,
+        beats: 0.5,
+        gain: 0.8,
+      });
+    }
+  }
+  return t.render({ targetRms: 0.1, tailSeconds: 2 });
+}
+
+function buildDrumPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 95, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 16 });
+  for (let bar = 0; bar < 28; bar++) {
+    t.note({ instrument: Presets.heavyDrum, note: 'A1', bar, beat: 0, beats: 0.5, gain: 1 });
+    t.note({ instrument: Presets.heavyDrum, note: 'C2', bar, beat: 1, beats: 0.5, gain: 0.85 });
+    t.note({ instrument: Presets.heavyDrum, note: 'A1', bar, beat: 2, beats: 0.5, gain: 0.95 });
+    t.note({ instrument: Presets.heavyDrum, note: 'E2', bar, beat: 2.5, beats: 0.5, gain: 0.7 });
+    t.note({ instrument: Presets.heavyDrum, note: 'A1', bar, beat: 3, beats: 0.5, gain: 0.9 });
+  }
+  return t.render({ targetRms: 0.1, tailSeconds: 2 });
+}
+
+function buildMellowKeysPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 68, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 17 });
+  const root = 'C3';
+  const scale = SCALES.major;
+  const chords = chordProgression(root, scale, [0, 5, 3, 4]);
+  for (let bar = 0; bar < 18; bar++) {
+    t.chord({
+      instrument: Presets.mellowKeys,
+      notes: chords[bar % chords.length],
+      bar,
+      beats: 4,
+      gain: 0.85,
+      spread: 0.4,
+    });
+  }
+  return t.render({ targetRms: 0.1, tailSeconds: 3 });
+}
+
+function buildMainMenu(): SynthesisResult {
+  const t = new Timeline({ bpm: 92, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 100 });
+  const root = 'C3';
+  const scale = SCALES.minor;
+  const chords = chordProgression(root, scale, [0, 3, 4, 0]);
+
+  for (let bar = 0; bar < 36; bar++) {
+    const section = bar < 8 ? 'intro' : bar < 16 ? 'build' : bar < 28 ? 'action' : 'outro';
+    const chord = chords[bar % chords.length] ?? ['C3', 'Eb3', 'G3'];
+
+    if (section === 'intro' || section === 'build' || section === 'outro') {
+      t.chord({
+        instrument: section === 'outro' ? Presets.mellowKeys : Presets.mellowKeys,
+        notes: chord,
+        bar,
+        beats: 4,
+        gain: 0.75,
+        spread: 0.35,
+      });
+      if (section === 'build' || section === 'outro') {
+        t.chord({
+          instrument: Presets.vibraphone,
+          notes: chord.slice(0, 3),
+          bar,
+          beat: 2,
+          beats: 2,
+          gain: 0.55,
+          spread: 0.3,
+        });
+      }
+    }
+
+    if (section === 'action') {
+      t.chord({
+        instrument: Presets.drawbarOrgan,
+        notes: chord,
+        bar,
+        beats: 2,
+        gain: 0.8,
+        spread: 0.25,
+      });
+      t.chord({
+        instrument: Presets.subBass,
+        notes: [chord[0] ?? 'C2'],
+        bar,
+        beat: 2,
+        beats: 2,
+        gain: 0.9,
+      });
+      t.note({
+        instrument: Presets.heavyDrum,
+        note: 'A1',
+        bar,
+        beat: 0,
+        beats: 0.5,
+        gain: 1,
+      });
+      t.note({
+        instrument: Presets.heavyDrum,
+        note: 'A1',
+        bar,
+        beat: 2,
+        beats: 0.5,
+        gain: 0.95,
+      });
+
+      const melodyRoot = 'C5';
+      const leadScale = SCALES.minorPentatonic;
+      const leadDegrees = [0, 1, -1, 2, 1, 0, -2, 1];
+      for (let step = 0; step < 8; step++) {
+        const degree = leadDegrees[step % leadDegrees.length];
+        t.note({
+          instrument: step % 4 === 0 ? Presets.glockenspiel : Presets.brightLead,
+          note: scaleDegree(melodyRoot, leadScale, degree),
+          bar,
+          beat: step * 0.5,
+          beats: 0.5,
+          gain: 0.7,
+          pan: step % 2 === 0 ? -0.2 : 0.3,
+        });
+      }
+    }
+  }
+
+  return t.render({ targetRms: 0.1, tailSeconds: 3 });
+}
+
+const TRACKS: { name: string; builder: () => SynthesisResult; actionRange?: [number, number] }[] = [
+  { name: '1-org-gecit', builder: buildOrganPiece },
+  { name: '2-klavsen-bulus', builder: buildHarpsichordPiece },
+  { name: '3-marimba-yagmur', builder: buildMarimbaPiece },
+  { name: '4-vibrafon-gece', builder: buildVibraphonePiece },
+  { name: '5-glockenspiel-muzik-kutusu', builder: buildGlockenspielPiece },
+  { name: '6-davul-yuruyus', builder: buildDrumPiece },
+  { name: '7-klavye-safak', builder: buildMellowKeysPiece },
+  { name: 'ANA-MENU-esik', builder: buildMainMenu, actionRange: [34, 74] },
+];
+
+async function main() {
+  console.log('Müzik parçaları üretiliyor...');
+  for (const { name, builder, actionRange } of TRACKS) {
+    const result = builder();
+    verifyTrack({ name, result }, actionRange);
+    writeWav(`${OUT_DIR}/${name}.wav`, result);
+  }
+  console.log('Tüm parçalar export/ altına yazıldı.');
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

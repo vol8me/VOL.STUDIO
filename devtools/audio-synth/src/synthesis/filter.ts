@@ -1,4 +1,4 @@
-import type { FilterParams, FilterType } from './types';
+import type { FilterParams, FilterType } from '../types';
 
 /**
  * 4. derece Butterworth'ün iki biquad kaskadı için Q değerleri.

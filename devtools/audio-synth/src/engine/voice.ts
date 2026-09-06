@@ -1,6 +1,6 @@
 import type { FmParams, HarmonicParams, Waveform } from '../types';
-import { Envelope } from '../envelope';
-import { createNoiseSource, type NoiseSource } from '../noise';
+import { Envelope } from '../synthesis/envelope';
+import { createNoiseSource, type NoiseSource } from '../synthesis/noise';
 
 export type FmState = {
   params: FmParams;

@@ -1,6 +1,6 @@
-import type { Envelope } from '../envelope';
-import { getWaveSampleWithPhase } from '../waveforms';
-import { BiquadFilter, BUTTERWORTH_Q4, getCutoffAtTime, type Filter } from '../filter';
+import type { Envelope } from '../synthesis/envelope';
+import { getWaveSampleWithPhase } from '../synthesis/waveforms';
+import { BiquadFilter, BUTTERWORTH_Q4, getCutoffAtTime, type Filter } from '../synthesis/filter';
 import type { Distortion } from '../effects';
 import type { Voice } from './voice';
 import { frequencyAtTime, getFmSample } from './frequency';
