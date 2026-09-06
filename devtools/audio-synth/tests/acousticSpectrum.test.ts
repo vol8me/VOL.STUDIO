@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Presets, synthesize } from '../src/index';
+import { Presets, pluck, synthesize } from '../src/index';
 import type { SynthParams } from '../src/types';
 
 /**
@@ -93,6 +93,10 @@ describe('akustik presetler — kısmi ton yapısı ölçülür', () => {
     'glockenspiel',
     'heavyDrum',
     'mellowKeys',
+    'guitar',
+    'bassGuitar',
+    'harp',
+    'mandolin',
   ];
 
   // Her preset kendi testinde incelenir; tek bir döngüde hepsini sentezlemek
@@ -257,5 +261,122 @@ describe('akustik presetler — kısmi ton yapısı ölçülür', () => {
     expect(at(2.76)).toBeGreaterThan(at(3) * 2);
     expect(at(5.4)).toBeGreaterThan(at(5) * 2);
     expect(at(5.4)).toBeGreaterThan(at(6) * 2);
+  });
+});
+
+describe('telli presetler — kısmi ton yapısı ölçülür', () => {
+  it('gitarın temel baskın; lowpass üst tonları sınırlıyor', () => {
+    const f0 = 330;
+    const { samples, sampleRate } = render(Presets.guitar(f0, 1.0));
+    const p = (n: number) => toneEnergy(samples, sampleRate, f0 * n);
+    expect(p(1)).toBeGreaterThan(p(8) * 6);
+    expect(p(2)).toBeGreaterThan(p(8) * 2);
+  });
+
+  it('mutasyon: gitar lowpass kesimi kaldırılırsa 8. kısmi ton artar', () => {
+    const f0 = 330;
+    const normal = Presets.guitar(f0, 1.0);
+    const mutant = {
+      ...normal,
+      lowpass: { ...normal.lowpass, cutoff: 18000, resonance: 0 },
+    };
+    const { samples, sampleRate } = render(mutant as unknown as SynthParams);
+    const p8 = toneEnergy(samples, sampleRate, f0 * 8);
+    const p1 = toneEnergy(samples, sampleRate, f0);
+    expect(p8).toBeGreaterThan(p1 * 0.04);
+  });
+
+  it('bas gitarın temel baskın; üst tona hızla solar', () => {
+    const f0 = 82.4;
+    const { samples, sampleRate } = render(Presets.bassGuitar(f0, 1.2));
+    const p = (n: number) => toneEnergy(samples, sampleRate, f0 * n);
+    expect(p(1)).toBeGreaterThan(p(5) * 8);
+    expect(p(2)).toBeGreaterThan(p(5) * 2);
+  });
+
+  it('mutasyon: bas gitar lowpass kesimi açılırsa 5. kısmi ton yükselir', () => {
+    const f0 = 82.4;
+    const normal = Presets.bassGuitar(f0, 1.2);
+    const mutant = {
+      ...normal,
+      lowpass: { ...normal.lowpass, cutoff: 10000, resonance: 0 },
+    };
+    const { samples, sampleRate } = render(mutant as unknown as SynthParams);
+    const p5 = toneEnergy(samples, sampleRate, f0 * 5);
+    const p1 = toneEnergy(samples, sampleRate, f0);
+    expect(p5).toBeGreaterThan(p1 * 0.03);
+  });
+
+  it('arp 2. ve 3. harmonikleri güçlü', () => {
+    const f0 = 523.25;
+    const { samples, sampleRate } = render(Presets.harp(f0, 1.5));
+    const p = (n: number) => toneEnergy(samples, sampleRate, f0 * n);
+    expect(p(2)).toBeGreaterThan(p(1) * 0.3);
+    expect(p(3)).toBeGreaterThan(p(1) * 0.2);
+  });
+
+  it('mutasyon: arp harmonikleri tek temele indirilirse 2. kısmi ton düşer', () => {
+    const f0 = 523.25;
+    const normal = Presets.harp(f0, 1.5);
+    const mutant = { ...normal, harmonics: [{ ratio: 1, gain: 1.0 }] };
+    const { samples, sampleRate } = render(mutant as unknown as SynthParams);
+    const p2 = toneEnergy(samples, sampleRate, f0 * 2);
+    const p1 = toneEnergy(samples, sampleRate, f0);
+    expect(p2).toBeLessThan(p1 * 0.05);
+  });
+
+  it('mandolinin tremolosu ölçülebilir', () => {
+    const mandolin = Presets.mandolin(660, 1.2);
+    // Ölçüm, zarfın sürdürüm bölümünde yapılır; yoksa doğal sönüm tremoloyu
+    // bastırır.
+    const withLfo = rippleDepth(mandolin, 6.0, 0.2, 0.45);
+    const without = rippleDepth({ ...mandolin, lfos: undefined } as SynthParams, 6.0, 0.2, 0.45);
+    expect(without, 'kontrol dalgalanıyor').toBeLessThan(0.14);
+    expect(withLfo, 'tremolo enstrümanın imzası değil').toBeGreaterThan(0.22);
+  });
+
+  it('mutasyon: mandolin LFO sıfırlanınca tremolo derinliği kaybolur', () => {
+    const mandolin = Presets.mandolin(660, 1.2);
+    // Ölçüm, zarfın sürdürüm bölümünde yapılır; yoksa doğal sönüm tremoloyu
+    // bastırır.
+    const withLfo = rippleDepth(mandolin, 6.0, 0.2, 0.45);
+    const without = rippleDepth({ ...mandolin, lfos: undefined } as SynthParams, 6.0, 0.2, 0.45);
+    expect(withLfo).toBeGreaterThan(without * 2);
+  });
+});
+
+describe('pluck fiziksel modeli', () => {
+  it('temelde enerji vardır ve harmonikler sönümlenir', () => {
+    const { channels, sampleRate } = pluck({ frequency: 220, duration: 1.0, decay: 0.995 });
+    const samples = channels[0];
+    const p1 = toneEnergy(samples, sampleRate, 220);
+    const p4 = toneEnergy(samples, sampleRate, 220 * 4);
+    expect(p1).toBeGreaterThan(0);
+    expect(p4).toBeLessThan(p1);
+  });
+
+  it('mutasyon: düşük decay üst tonları hızla solar', () => {
+    const hi = pluck({ frequency: 220, duration: 0.8, decay: 0.995 });
+    const lo = pluck({ frequency: 220, duration: 0.8, decay: 0.92 });
+    const p4hi = toneEnergy(hi.channels[0], hi.sampleRate, 220 * 4);
+    const p4lo = toneEnergy(lo.channels[0], lo.sampleRate, 220 * 4);
+    expect(p4hi).toBeGreaterThan(p4lo);
+  });
+
+  it("mutasyon: bodyResonance 440 Hz'i temele göre yükseltir", () => {
+    const withBody = pluck({
+      frequency: 220,
+      duration: 1.0,
+      bodyResonance: 440,
+      bodyAmount: 0.5,
+    });
+    const without = pluck({ frequency: 220, duration: 1.0, bodyResonance: 0 });
+    const p440with = toneEnergy(withBody.channels[0], withBody.sampleRate, 440);
+    const p220with = toneEnergy(withBody.channels[0], withBody.sampleRate, 220);
+    const p440without = toneEnergy(without.channels[0], without.sampleRate, 440);
+    const p220without = toneEnergy(without.channels[0], without.sampleRate, 220);
+    const ratioWith = p440with / p220with;
+    const ratioWithout = p440without / p220without;
+    expect(ratioWith).toBeGreaterThan(ratioWithout * 2);
   });
 });

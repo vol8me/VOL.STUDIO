@@ -12,6 +12,7 @@ export * from './movement';
 export * from './rewards';
 export * from './fm';
 export * from './instruments';
+export * from './plucked';
 export * from './acoustic';
 export * from './sequences';
 export * from './textures';
@@ -26,6 +27,7 @@ import * as movement from './movement';
 import * as rewards from './rewards';
 import * as fm from './fm';
 import * as instruments from './instruments';
+import * as plucked from './plucked';
 import * as acoustic from './acoustic';
 import * as textures from './textures';
 
@@ -44,6 +46,7 @@ const all = {
   ...rewards,
   ...fm,
   ...instruments,
+  ...plucked,
   ...acoustic,
   ...textures,
 } as const;

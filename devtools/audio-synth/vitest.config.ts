@@ -16,8 +16,11 @@ export default defineConfig({
     // paralellik bu tıkanıklığı önlüyor; test sayısı zaten yüksek.
     pool: 'forks',
     poolOptions: {
-      forks: { maxForks: 2, minForks: 1 },
+      forks: { maxForks: 1, minForks: 1 },
     },
+    // Dosya düzeyinde de seri koş: `instrumentContract` gibi ağır dosyalar
+    // paralel yüklemede RPC anında tıkanıyor, bölünmelerine rağmen.
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'lcov'],

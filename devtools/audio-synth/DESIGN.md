@@ -44,9 +44,11 @@ Bu ayrım bu paketin büyüme biçimidir ve bulanıklaşırsa katalog motoru yut
 Sonuç: `guitar` bir presettir, `PluckedString` bir modeldir. On enstrüman on
 motor değil, bir modelin on presetidir.
 
-Bugün `presets/acoustic.ts` altında beş akustik preset var ve hiçbiri yeni DSP
-taşımaz: `drawbarOrgan`, `harpsichord`, `marimba`, `vibraphone`,
-`glockenspiel`. Değerleri kodda değil ORANLARDADIR — Hammond ayak uzunlukları,
+Bugün `presets/acoustic.ts` altında beş akustik preset ve `presets/plucked.ts`
+altında dört telli çalgı preset var; hepsi yeni DSP taşımaz:
+`drawbarOrgan`, `harpsichord`, `marimba`, `vibraphone`, `glockenspiel`,
+`guitar`, `bassGuitar`, `harp`, `mandolin`. Değerleri kodda değil ORANLARDADIR —
+Hammond ayak uzunlukları,
 oyulmuş çubuğun 4:1 akordu, oyulmamış çubuğun harmonik OLMAYAN
 1 : 2,76 : 5,40 : 8,93 modları, koparma noktasının 7. harmonikte açtığı çukur.
 
@@ -54,9 +56,11 @@ oyulmuş çubuğun 4:1 akordu, oyulmamış çubuğun harmonik OLMAYAN
 
 Uydurulmuş bir harmonik dizisi de hatasız sentezlenir; "çalışıyor" bir kalite
 ölçüsü değildir. `tests/acousticSpectrum.test.ts` her presetin BELGELENMİŞ
-yapısını sesin kendisinde arar ve beş mutasyonun beşini de yakalar: modları
-tam sayıya çevirmek, marimbanın boş katlarını doldurmak, klavsenin çukurunu
-kapatmak, orga sönüm vermek, vibrafonun tremolosunu kaldırmak.
+yapısını sesin kendisinde arar ve dokuz mutasyonu yakalar: modları tam sayıya
+çevirmek, marimbanın boş katlarını doldurmak, klavsenin çukurunu kapatmak,
+orga sönüm vermek, vibrafonun tremolosunu kaldırmak, gitar/bas gitar/arp
+kısmi ton yapısını bozmak, mandolinin tremolosunu kaldırmak, `pluck` modelin
+`decay` veya `bodyResonance` değerini değiştirmek.
 
 İki ölçüm aracı, iki ayrı soru:
 

@@ -1,4 +1,4 @@
-import { writeWav } from '../src/writer';
+import { writeWav, writeOgg } from '../src/writer';
 import { Arrange, Presets } from '../src';
 import type { SynthesisResult } from '../src/types';
 
@@ -115,26 +115,62 @@ function buildHarpsichordPiece(): SynthesisResult {
   return t.render({ targetRms: 0.1, tailSeconds: 2 });
 }
 
-function buildMarimbaPiece(): SynthesisResult {
-  const t = new Timeline({ bpm: 100, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 13 });
-  const root = 'C4';
-  const scale = SCALES.majorPentatonic;
-  const degrees = [0, 1, 0, 2, 4, 3, 2, 1];
-  for (let bar = 0; bar < 28; bar++) {
+function buildPluckedPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 92, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 23 });
+  const root = 'C3';
+  const scale = SCALES.major;
+  const chords = chordProgression(root, scale, [0, 4, 5, 3]);
+  const melodyRoot = 'C5';
+  const melodyDegrees = [0, 2, 4, 2, 0, -1, 0, 4, 2, 3, 2, 1, 0, 2, -2, 0];
+
+  for (let bar = 0; bar < 24; bar++) {
+    const chord = chords[bar % chords.length] ?? ['C3', 'E3', 'G3'];
+    t.chord({
+      instrument: Presets.guitar,
+      notes: chord,
+      bar,
+      beats: 4,
+      gain: 0.75,
+      spread: 0.35,
+    });
+    t.chord({
+      instrument: Presets.bassGuitar,
+      notes: [chord[0] ?? 'C2'],
+      bar,
+      beat: 0,
+      beats: 4,
+      gain: 0.8,
+    });
+
+    if (bar % 4 === 0) {
+      for (let i = 0; i < chord.length; i++) {
+        t.note({
+          instrument: Presets.harp,
+          note: chord[i] ?? 'C4',
+          bar,
+          beat: i * 0.5,
+          beats: 1.5,
+          gain: 0.6,
+          pan: (i - 1) * 0.2,
+        });
+      }
+    }
+
     for (let step = 0; step < 8; step++) {
-      const degree = degrees[step % degrees.length];
-      const note = scaleDegree(root, scale, degree + Math.floor(step / 5) * 5);
+      const degree = melodyDegrees[(bar * 8 + step) % melodyDegrees.length];
       t.note({
-        instrument: Presets.marimba,
-        note,
+        instrument: step % 6 === 0 ? Presets.mandolin : Presets.guitar,
+        note: scaleDegree(melodyRoot, scale, degree),
         bar,
         beat: step * 0.5,
         beats: 0.5,
         gain: 0.7,
+        pan: step % 2 === 0 ? -0.25 : 0.25,
       });
     }
   }
-  return t.render({ targetRms: 0.1, tailSeconds: 2 });
+
+  return t.render({ targetRms: 0.1, tailSeconds: 3 });
 }
 
 function buildVibraphonePiece(): SynthesisResult {
@@ -235,6 +271,15 @@ function buildMainMenu(): SynthesisResult {
           gain: 0.55,
           spread: 0.3,
         });
+        t.chord({
+          instrument: Presets.harp,
+          notes: chord.slice(0, 3),
+          bar,
+          beat: 0.25,
+          beats: 1.75,
+          gain: 0.45,
+          spread: 0.4,
+        });
       }
     }
 
@@ -248,7 +293,16 @@ function buildMainMenu(): SynthesisResult {
         spread: 0.25,
       });
       t.chord({
-        instrument: Presets.subBass,
+        instrument: Presets.guitar,
+        notes: chord,
+        bar,
+        beat: 0.25,
+        beats: 1.75,
+        gain: 0.7,
+        spread: 0.3,
+      });
+      t.chord({
+        instrument: Presets.bassGuitar,
         notes: [chord[0] ?? 'C2'],
         bar,
         beat: 2,
@@ -277,8 +331,11 @@ function buildMainMenu(): SynthesisResult {
       const leadDegrees = [0, 1, -1, 2, 1, 0, -2, 1];
       for (let step = 0; step < 8; step++) {
         const degree = leadDegrees[step % leadDegrees.length];
+        const pick = step % 4;
+        const instrument =
+          pick === 0 ? Presets.glockenspiel : pick === 2 ? Presets.mandolin : Presets.brightLead;
         t.note({
-          instrument: step % 4 === 0 ? Presets.glockenspiel : Presets.brightLead,
+          instrument,
           note: scaleDegree(melodyRoot, leadScale, degree),
           bar,
           beat: step * 0.5,
@@ -296,7 +353,7 @@ function buildMainMenu(): SynthesisResult {
 const TRACKS: { name: string; builder: () => SynthesisResult; actionRange?: [number, number] }[] = [
   { name: '1-org-gecit', builder: buildOrganPiece },
   { name: '2-klavsen-bulus', builder: buildHarpsichordPiece },
-  { name: '3-marimba-yagmur', builder: buildMarimbaPiece },
+  { name: '3-tellerin-hikayesi', builder: buildPluckedPiece },
   { name: '4-vibrafon-gece', builder: buildVibraphonePiece },
   { name: '5-glockenspiel-muzik-kutusu', builder: buildGlockenspielPiece },
   { name: '6-davul-yuruyus', builder: buildDrumPiece },
@@ -309,7 +366,11 @@ async function main() {
   for (const { name, builder, actionRange } of TRACKS) {
     const result = builder();
     verifyTrack({ name, result }, actionRange);
+    // WAV üretiminin kaynak-doğrusu (byte-eş deterministik) olduğu, OGG'nin
+    // ise FFmpeg/libvorbis sürümüne göre değişebileceği varsayılır. QA, OGG
+    // üzerinde koşar çünkü gönderilecek format OGG'dir.
     writeWav(`${OUT_DIR}/${name}.wav`, result);
+    writeOgg(`${OUT_DIR}/${name}.ogg`, result, { quality: 8 });
   }
   console.log('Tüm parçalar export/ altına yazıldı.');
 }

@@ -164,8 +164,9 @@ export function pluck(params: PluckParams): SynthesisResult {
 
   // Lowpass feedback — coefficient decay'e bağlı
   // Yüksek decay = daha az sönüm = daha parlak kalır
-  const lpLeft = new OnePoleLowpass(0.5 + (decay - 0.9) * 2); // decay 0.9→0.5, 0.999→0.698
-  const lpRight = new OnePoleLowpass(0.5 + (decay - 0.9) * 2);
+  // Yüksek decay = daha az lowpass sönümü = üst tonlar daha uzun sürer.
+  const lpLeft = new OnePoleLowpass(0.5 - (decay - 0.9) * 2);
+  const lpRight = new OnePoleLowpass(0.5 - (decay - 0.9) * 2);
 
   // Body resonance — ek delay line
   let bodyDlLeft: FractionalDelayLine | null = null;

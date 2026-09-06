@@ -1,4 +1,5 @@
 import type { SynthParams } from '../types';
+import { reach, belowFundamental } from './utils';
 
 /**
  * PERDEYE GÖRE filtre kesimi.
@@ -10,21 +11,8 @@ import type { SynthParams } from '../types';
  * malzemenin kendi parlaklığıdır ve pes kayıtta kaybolmamalıdır.
  *
  * Tavan 20 kHz: 44,1 kHz'de Nyquist'in altında kalır.
+ * `reach` ve `belowFundamental` `utils.ts`te tek kaynakta yaşar.
  */
-function reach(frequency: number, harmonic: number, floorHz: number): number {
-  return Math.min(20000, Math.max(floorHz, frequency * harmonic));
-}
-
-/**
- * TEMELİ KESMEYEN highpass kesimi.
- *
- * Sabit bir highpass, enstrüman pes kayıtta çalındığında temeli yutar
- * (ölçüldü: klavsen 65 Hz'de temelinin beşte dördünü kaybediyordu). Kesim
- * temelin altında kalmaya zorlanır.
- */
-function belowFundamental(frequency: number, ceilingHz: number): number {
-  return Math.min(ceilingHz, frequency * 0.5);
-}
 
 /**
  * Akustik enstrümanlara öykünen presetler — YENİ DSP YOK.
