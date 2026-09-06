@@ -5,6 +5,32 @@ kaydıdır**: ne değişti, hangi karar verildi, geriye ne kaldı. Bug-bug anali
 tam test sayıları ve dosya listeleri commit diff'inde ve git geçmişindedir;
 burada tekrarlanmaz. Güncel kapsam eşikleri `quality.json`da tek kaynaktır.
 
+## 2026-09-06 — yetersiz çıkan düzeltme: e2e fixture yarışı (ikinci tur)
+
+Bir tur önce bu 409'u "kökten kapattım" demiştim. **Kapatmamışım.** signoff
+aynı hatayla yine düştü.
+
+Neyi yanlış yaptığım net: `waitForFixtureRevision` eklendikten sonra tam matris
+üç kez arka arkaya geçti ve bunu kanıt saydım. Değilmiş — tekrar üretildiğinde
+oran üç koşunun ikisi çıktı. Üç geçiş, yük'e duyarlı bir yarış için kanıt
+değil.
+
+Beklemenin neden yetmediği de ölçüldü: fixture her seferinde AYNI baytları
+yazıyor, dolayısıyla beklenen revizyon hep aynı değer; katalog onu zaten
+bildirdiği için yoklama ilk denemede dönüyor ve hiçbir şey kanıtlamıyordu.
+
+Asıl kusur paylaşılan tek dosyaydı — kaydeden testin darbesi sonrakine
+taşınıyor ve tam matriste iki sunucu süreci aynı dosyayı izliyor. Her test
+artık kendi fixture'ını yazıyor; sınıf zamanlamayla değil YAPISAL olarak
+kapandı. Yan fayda: bekleme de anlamlı hâle geldi, çünkü yol her seferinde yeni.
+
+Doğrulama bu sefer yük altında da yapıldı: tam matris 3 kez 40/40, ayrıca dört
+paralel CPU yüküyle bir kez daha (koşu 44 sn yerine 54 sn sürdü). Ardından
+signoff yeşil.
+
+Ders kayda geçiyor: kararsız bir testte "N kez geçti" bir kanıt değildir;
+kanıt, arızayı üreten MEKANİZMANIN kapandığını gösterebilmektir.
+
 ## 2026-09-06 — ölü ağırlık denetimi
 
 Repo çapında tarandı: bağımlılıklar, ulaşılabilirlik, varlıklar, i18n, CSS,
