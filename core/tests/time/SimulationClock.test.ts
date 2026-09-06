@@ -130,3 +130,81 @@ describe('SimulationClock', () => {
     expect(steps).toHaveLength(0);
   });
 });
+
+describe('artık dilim politikası', () => {
+  /** Verilen frame temposunu koşar ve simülasyon zaman çizelgesini döner. */
+  function timeline(policy: 'simulate' | 'defer', frames: readonly number[]): string[] {
+    const clock = new SimulationClock({
+      fixedStepMs: 16,
+      maxStepsPerFrame: 8,
+      partialStep: policy,
+    });
+    const steps: string[] = [];
+    for (const delta of frames) {
+      clock.advance(delta, (stepMs) => steps.push(stepMs.toFixed(4)));
+    }
+    return steps;
+  }
+
+  /* Aynı TOPLAM süre, iki farklı tempo: 60 FPS ve 120 FPS. */
+  const AT_60 = Array.from({ length: 30 }, () => 16);
+  const AT_120 = Array.from({ length: 60 }, () => 8);
+
+  it('`defer`: aynı toplam süre, farklı tempo → AYNI simülasyon çizelgesi', () => {
+    /*
+     * Strict determinizmin tanımı budur. Adım dizisi frame temposundan
+     * bağımsız olmalı; aksi halde bir tekrar oynatma ya da ölçüm, kaydedildiği
+     * makinenin kare hızına bağlı kalır.
+     */
+    expect(timeline('defer', AT_60)).toEqual(timeline('defer', AT_120));
+    expect(timeline('defer', AT_60).every((step) => step === '16.0000')).toBe(true);
+  });
+
+  it('`defer` artık dilimi HİÇ simüle etmez, biriktiricide bekletir', () => {
+    const clock = new SimulationClock({
+      fixedStepMs: 16,
+      maxStepsPerFrame: 8,
+      partialStep: 'defer',
+    });
+    const frame = clock.advance(10, () => undefined);
+
+    expect(frame.fixedSteps).toBe(0);
+    expect(frame.partialStepMs, 'defer kipinde kısmi adım koşulmaz').toBe(0);
+    expect(clock.getAccumulatorMs()).toBeCloseTo(10, 9);
+    expect(clock.getSimulationTimeMs(), 'simülasyon saati ilerlememeli').toBe(0);
+  });
+
+  it('`simulate` (varsayılan) tempoya DUYARLIDIR — belgelenen ödün gerçektir', () => {
+    /*
+     * Bu test varsayılanı savunmuyor, SINIRINI kanıtlıyor. Ödün belgede
+     * yazılı; yazılı bir sınırın gerçekten var olduğunu göstermek, sonradan
+     * "aslında deterministikti" diye yanlış hatırlanmasını engeller.
+     */
+    expect(timeline('simulate', AT_60)).not.toEqual(timeline('simulate', AT_120));
+  });
+
+  it('varsayılan politika `simulate` — mevcut oynanış hissi değişmez', () => {
+    const clock = new SimulationClock({ fixedStepMs: 16, maxStepsPerFrame: 8 });
+    expect(clock.getPartialStepPolicy()).toBe('simulate');
+
+    const frame = clock.advance(10, () => undefined);
+    expect(frame.partialStepMs).toBeCloseTo(10, 9);
+  });
+
+  it('interpolasyon payı bir sonraki adıma yaklaşımı [0,1) aralığında verir', () => {
+    const clock = new SimulationClock({
+      fixedStepMs: 16,
+      maxStepsPerFrame: 8,
+      partialStep: 'defer',
+    });
+
+    expect(clock.getInterpolationAlpha()).toBe(0);
+    clock.advance(12, () => undefined);
+    expect(clock.getInterpolationAlpha()).toBeCloseTo(12 / 16, 9);
+
+    // Tam adım tüketildiğinde pay başa döner; 1'e ULAŞMAZ.
+    clock.advance(4, () => undefined);
+    expect(clock.getInterpolationAlpha()).toBeLessThan(1);
+    expect(clock.getInterpolationAlpha()).toBeCloseTo(0, 6);
+  });
+});

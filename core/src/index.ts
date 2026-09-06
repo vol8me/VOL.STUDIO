@@ -60,6 +60,7 @@ export type {
   RoundLoopOptions,
   SimulationStep,
   SimulationClockConfig,
+  PartialStepPolicy,
   SimulationClockFrame,
 } from './time';
 export type { SchedulerOptions } from './time/Scheduler';

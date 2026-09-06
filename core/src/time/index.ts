@@ -7,5 +7,6 @@ export {
   SimulationClock,
   type SimulationStep,
   type SimulationClockConfig,
+  type PartialStepPolicy,
   type SimulationClockFrame,
 } from './SimulationClock';

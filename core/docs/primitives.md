@@ -20,6 +20,30 @@ tamamen ilgisiz bir yerde fark edilir.
 
 `core/tests/governance/numericContract.test.ts` bunu kapıda doğrular.
 
+## Simülasyon saati — determinizm bir SEÇİMDİR
+
+`SimulationClock` render frame süresini sabit simülasyon adımlarına böler.
+Sabit adıma sığmayan ARTIK dilimin ne olacağı tek sözleşme kararıdır ve
+`partialStep` ile açıkça verilir:
+
+| Politika     | Davranış                                          | Bedeli                                                       |
+| ------------ | ------------------------------------------------- | ------------------------------------------------------------ |
+| `'simulate'` | Artık, değişken uzunlukta bir adım olarak koşulur | Aynı girdi farklı render hızında FARKLI sonuç verir          |
+| `'defer'`    | Artık biriktiricide bekler; yalnız tam adım       | Bir adıma kadar girdi gecikmesi; render interpolasyonu ister |
+
+**Varsayılan `'simulate'`** ve bu bilinçlidir: doğrudan oynanan bir sahnede 60
+FPS üstü girdi tepkisini bir sonraki adıma ertelemek hissedilir. Bedeli
+`SimulationClockFrame.partialStepMs` olarak her frame'de RAPORLANIR.
+
+**`'defer'`**, sonucun frame temposundan bağımsız olması gerektiğinde seçilir:
+ölçüm, tekrar oynatma, headless simülasyon. Bu kipte render'ın kesik
+görünmemesi için `getInterpolationAlpha()` önceki ve güncel durum arasında ara
+değer hesaplamayı sağlar.
+
+Sınır ölçülüdür: `core/tests/time/SimulationClock.test.ts` aynı toplam sürenin
+60 ve 120 FPS temposunda `'defer'` ile AYNI, `'simulate'` ile FARKLI çizelge
+ürettiğini kilitler.
+
 ## Phaser sınırı
 
 CORE bir katmandır, motor değil: renderer'ı Phaser yazar. Bu sınırın nasıl

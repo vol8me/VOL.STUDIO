@@ -15,11 +15,37 @@
  */
 export type SimulationStep = (stepMs: number, stepIndex: number) => void;
 
+/**
+ * Sabit adıma sığmayan ARTIK dilim ne olsun?
+ *
+ * Bu, saatin tek sözleşme kararıdır ve iki değeri de meşrudur:
+ *
+ * - `'simulate'` — artık dilim değişken uzunlukta bir adım olarak koşulur.
+ *   60 FPS üstünde girdi tepkisi bir sonraki sabit adıma ertelenmez, yani
+ *   oynanış daha canlı hisseder. Bedeli: aynı girdi farklı render hızlarında
+ *   FARKLI simülasyon sonucu verir — bu kip strict deterministik DEĞİLDİR.
+ *
+ * - `'defer'` — artık dilim biriktiricide bekler; simülasyon YALNIZ tam
+ *   `fixedStepMs` katlarıyla ilerler. Aynı girdi ve aynı toplam süre, frame
+ *   temposundan bağımsız olarak aynı sonucu verir. Bedeli: bir sabit adıma
+ *   kadar girdi gecikmesi, ve render'ın akıcı görünmesi için
+ *   `getInterpolationAlpha()` ile ara değer hesaplanması gerekir.
+ *
+ * Determinizm bir ölçüm ya da tekrar oynatma gerektiriyorsa `'defer'`,
+ * doğrudan oynanan bir sahne için `'simulate'` seçilir.
+ */
+export type PartialStepPolicy = 'simulate' | 'defer';
+
 export interface SimulationClockConfig {
   /** Sabit simülasyon adımı (ms). */
   readonly fixedStepMs: number;
   /** Tek render frame'inde yapılabilecek azami sabit adım sayısı. */
   readonly maxStepsPerFrame: number;
+  /**
+   * Artık dilim politikası. Varsayılan `'simulate'` — oynanış hissi korunur.
+   * Strict deterministik davranış için `'defer'` verilir.
+   */
+  readonly partialStep?: PartialStepPolicy;
 }
 
 /** Bir frame'de gerçekten ne olduğunu anlatan ölçüm — teşhis ve test için. */
@@ -45,20 +71,42 @@ export interface SimulationClockFrame {
  *    atıldığını rapor eder — determinizm çalışması (render'dan tamamen
  *    bağımsız simülasyon) buradan ölçülür.
  *
- * **Bilinen sınır — henüz TAM deterministik değil:** `partialStepMs`, 60 FPS
- * üstünde girdi tepkisini bir sonraki sabit adıma bırakmamak için değişken
- * uzunlukta bir adım koşar. Bu, aynı girdinin farklı render hızlarında farklı
- * simülasyon sonucu vermesi demektir. Kaldırmak oynanış hissini değiştirir
- * (16 ms'e kadar girdi gecikmesi) ve render tarafında interpolasyon ister;
- * ayrı bir tur olarak planlıdır. Şimdilik politika en azından TEK yerde,
- * adlandırılmış ve ölçülüyor.
+ * **Determinizm bir SEÇİMDİR, kaza değil.** Artık dilimin ne olacağı
+ * `partialStep` ile açıkça verilir (bkz. `PartialStepPolicy`). Varsayılan
+ * `'simulate'` oynanış tepkisini korur ama render hızına duyarlıdır;
+ * `'defer'` strict sabit adım verir ve render'ın akıcı kalması için
+ * `getInterpolationAlpha()` sunar. Politika tek yerde, adlandırılmış,
+ * ölçülüyor ve tüketici tarafından seçiliyor.
  */
 export class SimulationClock {
   private accumulatorMs = 0;
   private simulationTimeMs = 0;
   private stepIndexInFrame = 0;
 
-  constructor(private readonly config: SimulationClockConfig) {}
+  private readonly partialStepPolicy: PartialStepPolicy;
+
+  constructor(private readonly config: SimulationClockConfig) {
+    this.partialStepPolicy = config.partialStep ?? 'simulate';
+  }
+
+  /** Yürürlükteki artık dilim politikası. */
+  getPartialStepPolicy(): PartialStepPolicy {
+    return this.partialStepPolicy;
+  }
+
+  /**
+   * Bir sonraki sabit adıma ne kadar yaklaşıldığı: [0, 1).
+   *
+   * `'defer'` kipinde render, simülasyondan geride kalan bu payı kullanarak
+   * ÖNCEKİ ve GÜNCEL durum arasında ara değer hesaplar; aksi halde sabit adım
+   * render hızından yavaşken görüntü kesik kesik ilerler. `'simulate'` kipinde
+   * artık zaten simüle edildiği için değer sıfıra yakın kalır.
+   */
+  getInterpolationAlpha(): number {
+    const fixedStep = this.config.fixedStepMs;
+    if (!(fixedStep > 0) || !Number.isFinite(fixedStep)) return 0;
+    return Math.min(0.999999, Math.max(0, this.accumulatorMs / fixedStep));
+  }
 
   /** Simülasyonun başından beri geçen süre (ms) — koşu içi mantık saati. */
   getSimulationTimeMs(): number {
@@ -98,11 +146,12 @@ export class SimulationClock {
       fixedSteps++;
     }
 
-    // 60 FPS üstünde input/dash tepkisini bir sonraki sabit adıma bırakma;
-    // kalan küçük dilimi de simüle et. Düşük FPS'te üstteki döngü zaten tam
-    // sabit adımlarla gerçek frame süresini geri kazanmış olur.
+    // `'simulate'` kipinde 60 FPS üstünde input/dash tepkisi bir sonraki sabit
+    // adıma bırakılmaz; kalan küçük dilim de simüle edilir. Düşük FPS'te
+    // üstteki döngü zaten tam sabit adımlarla gerçek frame süresini geri
+    // kazanmış olur. `'defer'` kipinde artık biriktiricide bekler.
     let partialStepMs = 0;
-    if (fixedSteps === 0 && this.accumulatorMs > 0) {
+    if (this.partialStepPolicy === 'simulate' && fixedSteps === 0 && this.accumulatorMs > 0) {
       partialStepMs = this.accumulatorMs;
       this.runStep(partialStepMs, step);
       this.accumulatorMs = 0;
