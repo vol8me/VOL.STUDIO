@@ -1,3 +1,5 @@
+import { gameConfig } from './game';
+
 /**
  * Headless koşu simülasyonunun workload ayarları.
  *
@@ -7,7 +9,16 @@
  */
 export const simulationConfig = {
   defaultSeed: 20_260_813,
-  defaultStepMs: 16,
+  /**
+   * Adım boyu PRODUCTION'dan türer, ayrı bir sayı DEĞİLDİR.
+   *
+   * Headless koşu, ölçtüğü yükün oyunda gerçekten oluşan yük olduğunu iddia
+   * eder; farklı bir tempoda koşarsa o iddia boşa düşer. İki sayı elle
+   * tutulduğunda ayrışma SESSİZDİR: biri değişir, benchmark eskisini ölçmeye
+   * devam eder ve kimse fark etmez. (Ölçüldü: bir dönem 16 ms ile koşuyordu,
+   * yani 62,5 Hz — production 60 Hz'ken.)
+   */
+  defaultStepMs: gameConfig.fixedStepMs,
   defaultKillRadius: 140,
   bounds: {
     left: 0,
