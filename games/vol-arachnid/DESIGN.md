@@ -53,7 +53,6 @@ yan yana koymak içindir. Duruş açıları `config/gait.ts` içinde İLERİ EKS
 
 Rig sanatı `devtools/pen.dev/pen/entities.pen` içinde yaşar ve
 `pen_export/enemies/arachnid/` altına export edilir; hattın kuralları
-[devtools/pen.dev/AGENTS.md](../../devtools/pen.dev/AGENTS.md) ve
 [README](../../devtools/pen.dev/README.md) dosyalarındadır.
 
 **Bu paket export ağacını OKUMAZ.** `rig:sync` doğrulanmış export'u buraya
@@ -66,7 +65,7 @@ ağaca hiç uzanmıyor. (`pnpm build:arachnid` yine de düşer: pnpm, kayıp bir
 workspace paketini kendi tutarlılık kontrolünde yakalar. Bu bir kod bağımlılığı
 değil paket yöneticisi sorunudur; `devDependencies` girdisi de silinirse o da
 kalkar.) Bir oyunun çalışma zamanı asset'ini üreten araca
-bağlanmamalıdır (bkz. kök [AGENTS.md](../../AGENTS.md), "Bozulamaz Kurallar" 4);
+bağlanmamalıdır — sınır PAKET değil ZAMANDIR;
 kural `pnpm quick` içindeki `workspace-contract` kapısıyla korunur.
 
 Rig'i okuyan katman (`validateRigMetadata`, `buildRigDefinition`,
@@ -132,11 +131,12 @@ içinde mi?
 Atılım inişinden sonraki acil adım fırtınasında üçten az ayak yerde kalıyor ve
 destek alanı çöküyor: 16 ms'lik karelerde bu, karelerin neredeyse yarısı.
 Karışık delta satırının daha "iyi" görünmesi bir iyileşme DEĞİL — dev kareler
-adım döngüsünü hızla ilerletip fırtınayı daha az karede geçirtiyor. Görünür bir hata DEĞİL — oyunda devrilme modeli yok,
-yaratık düşmez — ama kod yorumlarının iddia ettiğinden zayıf. Adım
-zamanlamasına dokunmak büyük bir davranış değişikliğidir ve ölçmeden
-yapılmamalıydı; ölçüldü, `tests/runtime/locomotion.test.ts` içinde mandalla
-kilitlendi, değiştirilmedi. Oranı yükseltmenin yolu denge düştüğünde
+adım döngüsünü hızla ilerletip fırtınayı daha az karede geçirtiyor.
+
+Görünür bir hata değil (oyunda devrilme modeli yok, yaratık düşmez) ama sıra
+disiplininin iddia ettiğinden zayıf. Adım zamanlamasına dokunmak büyük bir
+davranış değişikliğidir ve ölçmeden yapılmamalıydı; ölçüldü,
+`tests/runtime/locomotion.test.ts` içinde mandalla kilitlendi, değiştirilmedi. Oranı yükseltmenin yolu denge düştüğünde
 DÜZELTİCİ ADIM planlamaktır ve o ayrı bir turun konusudur.
 
 ## HUD ve arena
@@ -150,3 +150,35 @@ Dokunmatik cihazda tam arena küçültülmez; kamera gövdeyi arena sınırları
 takip eder. HUD, atılım ve modal aynı CORE `UIRoot` katmanını paylaşır. Bu kök
 mobil metin seçimini, çağrı balonunu ve dokunma parlamasını kapatır; butona uzun
 basmak tarayıcının kopyalama/seçim davranışına dönüşmez.
+
+## Mimari
+
+```
+src/
+  config/    Ölçüler ve denge — VERİ. Runtime dosyalarında sihirli sayı yoktur.
+  runtime/   Çalışan sistemler.
+  app/       Boot (i18n, font, Phaser oyunu).
+  src-tauri/ VOL.ARACHNID'e ait native masaüstü/Android kabuğu.
+```
+
+| Dosya                               | Sorumluluk                                                  |
+| ----------------------------------- | ----------------------------------------------------------- |
+| `config/rig.ts`                     | Eklem şeması, uzuv zincirleri, rig yön ofseti (TEK kaynak)  |
+| `config/gait.ts`                    | Duruş tablosu (açı/erişim/büküm/grup), adım tempoları       |
+| `config/player.ts`                  | İvme, fren, dönüş yayı ve tavanı, atılım, duvar sekmesi     |
+| `config/arena.ts`                   | Alan ölçüleri, kamera boşlukları, çarpma yankısı            |
+| `config/bodyMotion.ts`              | Yalpalama, yaslanma, çömelme, uç parça öncülüğü, bakış      |
+| `config/fx.ts`                      | Hayalet iz, gölge, toz ve çizim derinlikleri                |
+| `config/audio.ts`                   | Ses varlıkları, miks, bütçe ve olay şiddetleri              |
+| `config/graphics.ts`                | Sabit yüksek kalite render profili                          |
+| `config/input.ts`                   | Tuşlar ve sol başparmak joystick bölgesi                    |
+| `app/ArachnidAudio.ts`              | WebAudio kilit açma, ambiyans/SFX ve yaşam döngüsü          |
+| `runtime/rig/arachnidRig.ts`        | Montajlanmış rig'i sürülebilir uzuv geometrisine çevirir    |
+| `runtime/rig/ArachnidBodyMotion.ts` | Gövde kabuğunun ikincil hareketi ve bakış                   |
+| `runtime/entity/ArachnidBody.ts`    | Konum, hız, yön, atılım, sınır çözümü (headless)            |
+| `runtime/entity/ArachnidLegs.ts`    | Duruş → yürüyüş → ters kinematik                            |
+| `runtime/entity/Arena.ts`           | Zemin, ızgara, sınır ve çarpma yankısı                      |
+| `runtime/fx/ArachnidDust.ts`        | Pençe temasında toz                                         |
+| `runtime/ui/ArachnidHud.ts`         | CORE bileşenleriyle HUD (dikey bar, başlık, tam ekran, hız) |
+| `runtime/scene/GameScene.ts`        | Kurulum, kare akışı, kamera, yaşam döngüsü                  |
+| `runtime/ui/ArachnidExitPrompt.ts`  | Android/masaüstü geri hareketi ve çıkış onayı               |

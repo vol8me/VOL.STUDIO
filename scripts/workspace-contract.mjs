@@ -64,7 +64,7 @@ problems.push(
   ),
 );
 
-// Katman sınırları: oyun/devtool/core bağımlılık yönü (AGENTS.md Kural 3-4).
+// Katman sınırları: oyun/devtool/core bağımlılık yönü.
 problems.push(...validateLayerBoundaries(root));
 problems.push(...validateBlobSizes(root));
 problems.push(...validateTrackedImports(root));

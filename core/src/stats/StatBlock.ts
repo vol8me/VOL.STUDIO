@@ -45,37 +45,23 @@ export interface StatModifier<TStat extends string> {
 /**
  * Taban değer + modifier listesinden sonuç stat üreten blok.
  *
- * **Hesaplama sırası — toplamalar önce, çarpanlar sonra.** Sıra bir konvansiyon
- * değil, bir GEREKLİLİKTİR: çarpan önce uygulansaydı sonuç modifier'ların
- * ekleniş sırasına bağlı olurdu (`(taban × 2) + 10` ile `(taban + 10) × 2`
- * farklıdır) ve aynı iki etki, kazanılma sırasına göre farklı sonuç verirdi.
- * Bu sırayla toplama kümesi ve çarpan kümesi kendi içlerinde değişmeli kalır.
- *
- * Önce tüm aktif `add` modifier'ları
- * taban değere toplanır, ardından tüm aktif `multiply` modifier'ları bu
- * ara sonuçla çarpılır:
- *
  * ```
  * sonuç = (taban + Σ add) × Π multiply
  * ```
  *
- * Böylece sıralama kaynakların ekleniş sırasından bağımsızdır.
+ * **Sıra bir konvansiyon değil GEREKLİLİKTİR.** Çarpan önce uygulansaydı sonuç
+ * modifier'ların ekleniş sırasına bağlı olurdu — `(taban × 2) + 10` ile
+ * `(taban + 10) × 2` farklıdır — ve aynı iki etki kazanılma sırasına göre
+ * farklı sonuç verirdi.
  *
- * **Kimlik sözleşmesi:** bir `id` her stat için EN FAZLA bir modifier
- * taşıyabilir; aynı `id` + `stat` ikilisiyle ikinci kez eklenen modifier
- * öncekinin yerine geçer (dinamik güncellemeler için idempotent). Aynı `id`
- * farklı stat'lara ayrı modifier ekleyebilir; `removeModifier(id)` bunların
- * hepsini birden kaldırır.
+ * **Bir `id` her stat için EN FAZLA bir modifier taşır**; aynı `id` + `stat`
+ * ikilisi ikinci kez eklenirse öncekinin yerine geçer (idempotent güncelleme).
+ * `removeModifier(id)` o id'nin tüm stat'lardaki modifier'larını kaldırır.
  *
  * **Kelepçeleme yoktur:** yeterince güçlü negatif modifier sonucu sıfırın
- * altına indirebilir. Anlamlı alt sınır entity'nin sorumluluğundadır.
+ * altına indirir. Anlamlı alt sınır tüketicinin sorumluluğudur.
  *
- * **Jenerik stat kümesi:** mekanizma stat adlarından tamamen bağımsızdır ve
- * `TStat` ZORUNLUDUR — varsayılan bir küme yoktur. Bir tüketici kendi
- * sözlüğünü verir (`new StatBlock<'armor' | 'range'>({ armor: 5, range: 120 })`);
- * çoğu durumda tip parametresi taban obje literalinden çıkarsanır, ama
- * paylaşılan bir union kullanılıyorsa açıkça yazmak (`StatBlock<HellStat>`)
- * yanlış bir stat adının derleme zamanında yakalanmasını garanti eder.
+ * `TStat` ZORUNLUDUR; varsayılan stat kümesi yoktur.
  */
 export class StatBlock<TStat extends string> {
   private readonly base: Record<TStat, number>;

@@ -1,150 +1,61 @@
 <img src="./.github/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
 
-Cross-platform monorepo combining a Tauri v2 + Phaser 4 game runtime with
-browser-based developer tools in one workspace.
+Cross-platform monorepo bringing a Tauri v2 + Phaser 4 game runtime and
+web-based developer tools into one workspace.
 
-[Türkçe](README.md)
+[Türkçe](README.md) · [Quality gates](docs/gates.md) · [Android](docs/android.md)
 
 ## Stack
 
 Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 
-## Structure
+## Layout
 
 ```
-core/                       # @volstudio/core — shared systems + DOM UI library
-games/vol-hell/             # @volstudio/vol-hell — the game (Vite root)
-games/vol-arachnid/         # @volstudio/vol-arachnid — articulated-spider arena vertical slice
-devtools/pen.dev/          # @volstudio/pen.dev — Pencil source, export pipeline and ship tool
-devtools/vol-ui/            # @volstudio/vol-ui — live CORE UI component catalog
-devtools/vol-asset-studio/  # @volstudio/vol-asset-studio — repository asset workbench
-devtools/visual-synth/      # @volstudio/visual-synth — deterministic visual asset compiler
-devtools/audio-synth/       # @volstudio/audio-synth — deterministic audio asset compiler
-tauri-v2/                   # @volstudio/tauri-v2 — native game wrapper and Rust backend
+core/                       # shared systems + DOM UI library
+games/vol-hell/             # game (Vite root)
+games/vol-arachnid/         # articulated spider arena vertical slice
+devtools/pen.dev/           # Pencil source, export pipeline and sync tool
+devtools/vol-ui/            # live component catalogue for CORE UI
+devtools/vol-asset-studio/  # repository asset workspace
+devtools/visual-synth/      # deterministic visual asset compiler
+devtools/audio-synth/       # deterministic audio asset compiler
+tauri-v2/                   # native game shell and Rust backend
 ```
-
-Documentation lives in [core/docs](core/docs) (i18n, audio/music engines, CORE
-primitives, public API surface), [games/docs](games/docs) (game i18n and the
-[new game package checklist](games/docs/new-game.md)), and each relevant
-`devtools/<package>/README.md`.
 
 ## Requirements
 
-- Node.js `^20.19.0` or `>=22.12.0`, pnpm >= 11.18
-- Rust + Cargo, Visual Studio C++ Build Tools (Windows)
-- Android Studio + SDK + NDK
+Node.js `^20.19.0` or `>=22.12.0` · pnpm >= 11.18 · Rust + Cargo ·
+Android Studio (SDK + NDK) · Visual Studio C++ Build Tools on Windows
+
+`pnpm run doctor:env` checks all of them.
 
 ## Commands
 
 ```bash
 pnpm install
-pnpm dev                                   # VOL.HELL + VOL.ARACHNID + two developer tools
-pnpm --filter @volstudio/vol-hell dev      # VOL.HELL only           :5173
-pnpm --filter @volstudio/vol-arachnid dev  # VOL.ARACHNID only       :5178
-pnpm --filter @volstudio/vol-ui dev        # UI showcase only        :5174
-pnpm --filter @volstudio/vol-asset-studio dev # Asset Studio only    :5175
-pnpm tauri:dev                             # PC Tauri dev
-pnpm build:game                            # Build VOL.HELL
-pnpm build:arachnid                        # Build VOL.ARACHNID
-pnpm build:tauri                           # Build PC installers
-pnpm tauri:arachnid:build                  # Build VOL.ARACHNID PC installers
-pnpm tauri:android:dev                     # Android dev (connected device/emulator)
-pnpm tauri:arachnid:android:dev            # Android dev — VOL.ARACHNID on a connected device
-pnpm tauri:arachnid:android:build          # Build VOL.ARACHNID Android APK
-pnpm benchmark:core                        # Measure CORE headless workloads
-pnpm benchmark:vol-arachnid                # VOL.ARACHNID locomotion/pose-fx measurement
-pnpm benchmark:vol-hell                    # Measure VOL.HELL simulation/render
+pnpm dev                                       # both games + both dev tools
+pnpm --filter @volstudio/vol-hell dev          # :5173
+pnpm --filter @volstudio/vol-arachnid dev      # :5178
+pnpm --filter @volstudio/vol-ui dev            # UI showcase  :5174
+pnpm --filter @volstudio/vol-asset-studio dev  # Asset Studio :5175
+
+pnpm quick                                     # pre-commit gate
+pnpm high                                      # pre-push gate
+pnpm signoff                                   # release gate
 ```
 
-VOL.ARACHNID is an arena vertical slice: WASD walks the spider, Space triggers
-its short dash, and the HUD shows speed and dash recharge. The arena is fitted
-on desktop; on touch devices the camera follows the body within arena bounds.
+Build and Android recipes in [docs/android.md](docs/android.md); what the gates
+do in [docs/gates.md](docs/gates.md). Every recipe: `pnpm exec just --list`.
 
-### Android
+## Where to look
 
-Each game owns a separate native project: VOL.HELL lives under
-`tauri-v2/src-tauri/gen/android`, while VOL.ARACHNID lives under
-`games/vol-arachnid/src-tauri/gen/android`. Both are **kept in version control**
-(they are not reproducible): orientation lock, display-cutout layout, back
-navigation, and immersive fullscreen cannot be fully expressed in Tauri's
-configuration, so `AndroidManifest.xml`, the theme, and `MainActivity.kt` are
-hand-edited. Separate identifiers (`com.volstudio.game` and
-`com.volstudio.arachnid`) let both games coexist on one device.
-
-```bash
-export ANDROID_HOME="$HOME/Android/Sdk"
-export NDK_HOME="$ANDROID_HOME/ndk/<version>"
-export JAVA_HOME=<JDK 21 LTS>
-rustup target add aarch64-linux-android    # for devices; emulators need x86_64
-
-pnpm --filter @volstudio/tauri-v2 exec tauri android build --debug --target aarch64
-adb install -r tauri-v2/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
-
-pnpm --filter @volstudio/vol-arachnid exec tauri android build --debug --target aarch64
-adb install -r games/vol-arachnid/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
-```
-
-Fedora/Linux release (deb, rpm and AppImage):
-
-```bash
-pnpm exec just tauri-build-linux
-```
-
-If Tauri's AppImage finalization fails on Fedora during the `linuxdeploy`/ELF
-strip step, the recipe keeps the AppDir and rebuilds the AppImage with
-`build:linux-appimage`, `NO_STRIP=1`, and the VOL.HELL WebKit launcher. This
-path is used for native desktop verification. Android builds require JDK 21
-LTS; JDK 25 is not supported.
-
-The games are locked to landscape, system bars are hidden, and safe-area insets
-(`env(safe-area-inset-*)`) are applied to HUD placement. On-screen controls are
-mounted only on touch-primary devices (`shouldUseTouchControls`).
-
-### Verification
-
-Quality gates run locally via `just`. There is no CI runner; GitHub is used only for source control, pull requests and releases.
-
-| Level           | Command                            | What it runs                                                                   |
-| --------------- | ---------------------------------- | ------------------------------------------------------------------------------ |
-| Pre-commit      | `pnpm quick`                       | contract, format, typecheck, lint (~45 s)                                      |
-| Pre-push        | `pnpm high`                        | quick + CSS lint + coverage thresholds + builds + bundle budget + Chromium E2E |
-| Release/signoff | `pnpm signoff`                     | high + Chromium/Firefox E2E + Rust + audio freshness                           |
-| Long build      | `pnpm exec just tauri-build`       | game build + Tauri prod build (manual)                                         |
-| Fedora/Linux    | `pnpm exec just tauri-build-linux` | deb + rpm + AppImage delivery                                                  |
-| Environment     | `pnpm run doctor:env`              | Node, pnpm, Rust, just, FFmpeg, Tauri deps                                     |
-| Device          | `pnpm benchmark:device`            | Startup, frame and memory on a connected Android device (NOT a gate)           |
-| Report          | `pnpm exec just report high`       | Runs a gate and reports the result structurally (`--json`)                     |
-
-Benchmark commands do not impose machine-specific performance thresholds; they
-measure median/p95 step cost for CORE mechanisms and VOL.HELL's renderer-free
-simulation. For the corresponding just recipes, use
-`pnpm exec just benchmark-core` and `pnpm exec just benchmark-vol-hell`.
-
-The `pre-commit` → `pnpm quick` and `pre-push` → `pnpm high` hooks are installed during `pnpm install`; set `SKIP_SIMPLE_GIT_HOOKS=1` to bypass them. Tests are deliberately deferred to push — use `pnpm fast` for the quick gate including tests.
-
-Gates derive from the workspace: a new package is never wired into a gate by
-hand — `pnpm -r` and repo-wide globs pick it up automatically.
-`scripts/workspace-contract.mjs` enforces this on every commit: a package cannot
-enter the repo without `test`/`test:coverage` scripts and coverage thresholds.
-
-The `:env` suffix is not incidental: `pnpm doctor` is pnpm's OWN diagnostic
-command and silently shadows a script of the same name — the script never runs.
-A gate test rejects script names that collide with pnpm builtins.
-
-Coverage thresholds live in the root `quality.json`; package `vitest.config.ts`
-files read it and the guard reads the same file, so the two cannot drift.
-The guard loads the actual Vitest configuration and rejects missing, mismatched,
-or overridden thresholds. The file is schema
-validated on every read (`scripts/quality/config.mjs`), so a typo yields a
-single message that says where to look.
-
-The `just` binary lands in `node_modules/.bin` and is not on the global `PATH` — use `pnpm fast` or `pnpm exec just fast`, not a bare `just fast`. For single gates (`typecheck`, `lint`, `coverage`, `rust`, `test-pkg <package>` …): `pnpm exec just --list`.
-
-Source imports must resolve to files visible to Git; an ignored local helper
-will be missing from a fresh clone. `contract` checks this and the 2 MiB file
-limit in both the index and working tree. The Pencil source exception is
-justified in `scripts/quality/blobSize.mjs`. Guard regression tests use real
-temporary Git repositories and run as part of `contract`.
+| Topic                            | Location                                                     |
+| -------------------------------- | ------------------------------------------------------------ |
+| CORE primitives, i18n, audio     | [core/docs](core/docs)                                       |
+| Phaser boundary: layer or engine | [core/docs/phaser-boundary.md](core/docs/phaser-boundary.md) |
+| Adding a new game package        | [games/docs/new-game.md](games/docs/new-game.md)             |
+| Open debt and accepted limits    | [TODO.md](TODO.md)                                           |
 
 ## License
 

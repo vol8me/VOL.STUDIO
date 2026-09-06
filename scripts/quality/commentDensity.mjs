@@ -2,7 +2,7 @@
  * Yorum yoğunluğu kapısı.
  *
  * Yorumlar tek tek masum, toplu hâlde yüktür: her biri okunacak, bakılacak ve
- * bayatlayacak. Doktrin (AGENTS.md) varsayılanı "yorum yok" yapar; bu kapı o
+ * bayatlayacak. Varsayılan "yorum yok"tur; bu kapı o
  * varsayılanın ölçülebilir hâlidir.
  *
  * Eşik BÖLMEYİ değil GEREKÇEYİ dayatır: bazı dosyalar meşru biçimde yoğundur
@@ -13,11 +13,21 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
-/** Doktrinin duraksama oranı (AGENTS.md, Yorum Doktrini). */
+/** Duraksama oranı: bunun üstünde dosya kodundan çok anlatı taşıyordur. */
 export const DENSITY_THRESHOLD = 0.4;
 
 /** Oranın anlamlı olduğu en küçük dosya; kısa dosyada tek blok oranı uçurur. */
 export const MIN_LINES = 60;
+
+/**
+ * Tek bir yorum bloğunun duraksama uzunluğu.
+ *
+ * Oran tek başına yetmez: 800 satırlık bir dosya 60 satırlık bir mimari
+ * anlatıyı oranı bozmadan taşıyabilir. Uzun blok ayrı bir kokudur — o
+ * uzunluktaki bir metin bir belgedir, ve belgeler `docs/` ile `DESIGN.md`
+ * dosyalarında yaşar; orada aranır, bağlanır ve tek yerde güncellenir.
+ */
+export const MAX_BLOCK_LINES = 24;
 
 /** Eşiği bilinçli aşan dosyalar ve gerekçeleri. */
 export const ACKNOWLEDGED = {
@@ -70,6 +80,14 @@ export function validateCommentDensity(
     }
     if (lines.length < MIN_LINES) continue;
 
+    const longest = longestCommentBlock(lines);
+    if (longest.length > MAX_BLOCK_LINES) {
+      problems.push(
+        `${file}:${longest.start}: ${longest.length} satırlık tek yorum bloğu ` +
+          `(eşik ${MAX_BLOCK_LINES}). Sözleşmeyi bırak, anlatıyı DESIGN.md'ye taşı.`,
+      );
+    }
+
     const comments = lines.filter((line) => /^\s*(\/\/|\*|\/\*)/.test(line)).length;
     const ratio = comments / lines.length;
     if (ratio <= threshold) continue;
@@ -94,4 +112,24 @@ export function validateCommentDensity(
   }
 
   return problems;
+}
+
+/**
+ * @param lines Dosya satırları.
+ * @returns En uzun kesintisiz yorum bloğunun uzunluğu ve 1-tabanlı başlangıcı.
+ */
+function longestCommentBlock(lines) {
+  let best = { length: 0, start: 0 };
+  let run = 0;
+  let start = 0;
+  for (let index = 0; index < lines.length; index++) {
+    if (/^\s*(\/\/|\*|\/\*)/.test(lines[index])) {
+      if (run === 0) start = index + 1;
+      run += 1;
+      if (run > best.length) best = { length: run, start };
+    } else {
+      run = 0;
+    }
+  }
+  return best;
 }

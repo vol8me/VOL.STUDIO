@@ -47,6 +47,20 @@ Phaser yolunun tamamının yerine geçmiş değildir: etkileşimli elite/boss
 kontrolcüleri ve mevcut görsel entity yöneticileri şimdilik Phaser tarafında
 kalır ve ayrı cihaz smoke testine tabidir.
 
+Model üç noktada üretimden BİLİNÇLİ olarak ayrışır:
+
+1. **Savaş yaklaşıksamadır.** `resolveAutomaticAttack()` `killRadius` içine
+   giren düşmanı o karede öldürür; hasar, atış hızı, cooldown ve ıskalama payı
+   yoktur.
+2. **Elite/boss davranışı yoktur.** `eliteWaves`/`bossWaves` yalnız HANGİ
+   dalgada başladığını kaydeder; telegraph ve faz geçişi Phaser tarafındadır.
+3. **Ability sistemi yoktur.** Oyuncunun kart/yükseltme seçimi modele hiç
+   yansımaz.
+
+Bu yüzden modelden çıkan bir sayı (skor, DPS, zorluk hissi) denge KANITI
+sayılmaz. Model dalga/ekonomi/spawn/spatial-index zincirinin BÜTÜNLÜĞÜNÜ
+doğrular; denge `GameScene` + gerçek cihaz smoke testiyle doğrulanır.
+
 ### Mobil / dokunmatik
 
 `shouldUseTouchControls()` (CORE) yalnızca birincil işaretçi kaba VE hover

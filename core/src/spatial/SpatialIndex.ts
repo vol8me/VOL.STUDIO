@@ -13,23 +13,20 @@ const CELL_STRIDE = CELL_OFFSET * 2;
 
 /**
  * Hücre bazlı uzamsal indeks — "yakınımda ne var?" sorusunu O(N)'den O(k)'ya
- * düşürür: çarpışma, en yakın komşu, etki alanı, ayrım kuvveti.
+ * düşürür. Sorgu başına sıfır allocation çalışır (numeric key + yeniden
+ * kullanılan sonuç tamponları).
  *
  * **İki güncelleme modeli vardır ve ayrım bilinçlidir:**
  *
  * 1. `rebuild(entities)` — tüm dünyayı yeniden indeksler, O(N). Birkaç yüz
- *    varlıkla maliyeti ölçülemez ve kodu basit tutar: hangi varlığın kimin
- *    elinde hareket ettiğini takip etmek gerekmez.
- * 2. `insert`/`remove`/`update` — yalnızca DEĞİŞEN varlığa dokunur. Hareket
- *    eden varlık sayısı toplamın küçük bir kısmıysa (binlerce sabit nesne,
- *    az sayıda hareketli birim) bu model O(hareket eden)'e düşer.
+ *    varlıkta maliyeti ölçülemez ve hangi varlığın kimin elinde hareket
+ *    ettiğini takip etmeyi gerektirmez.
+ * 2. `insert`/`remove`/`update` — yalnız DEĞİŞEN varlığa dokunur, yani
+ *    O(hareket eden). Binlerce sabit nesne + az hareketli birimde bu kazanır.
  *
- * `rebuild()` bir KOLAYLIK metodudur, ana model değil. "Her frame her şeyi
- * yeniden indeksle" varsayımını API'ye gömmek, binlerce varlık taşıyan bir
- * tüketiciyi baştan cezalandırırdı.
- *
- * Numeric key ve yeniden kullanılan sonuç tamponlarıyla sorgu başına sıfır
- * allocation çalışır.
+ * `rebuild()` bir KOLAYLIKTIR, ana model değil: "her frame her şeyi yeniden
+ * indeksle" varsayımını API'ye gömmek binlerce varlıklı tüketiciyi baştan
+ * cezalandırırdı.
  */
 export class SpatialIndex<T extends SpatialEntity> {
   private readonly cells = new Map<number, T[]>();

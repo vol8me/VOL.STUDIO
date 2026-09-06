@@ -5,7 +5,7 @@
  * Rig'i çalışma zamanında okuyan/montajlayan katman burada DEĞİLDİR; o
  * üretilmiş verinin sözleşmesidir ve `@volstudio/core/rig`de yaşar. Bu ayrım
  * bilinçlidir: bir oyunun çalışma zamanı, asset'ini üreten araca bağlanmaz
- * (bkz. AGENTS.md, "Bozulamaz Kurallar" 4).
+ * sınır PAKET değil ZAMANDIR.
  */
 export {
   resolveRigExportPaths,

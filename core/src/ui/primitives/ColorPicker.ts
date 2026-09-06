@@ -73,7 +73,7 @@ export class ColorPicker {
     this.swatchButton.style.backgroundColor = this.value;
     this.swatchButton.disabled = options.disabled ?? false;
     // Görünür bir alan etiketi varsa erişilebilir ada da yeniden kullanılır —
-    // ayrı bir i18n anahtarı gerektirmez (bkz. AGENTS.md Bozulamaz Kural #1).
+    // ayrı bir i18n anahtarı gerektirmez.
     if (options.label) this.swatchButton.setAttribute('aria-label', options.label);
     row.appendChild(this.swatchButton);
 

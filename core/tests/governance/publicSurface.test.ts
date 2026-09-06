@@ -1,28 +1,28 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import * as Core from '../../src/index';
 
 /**
  * CORE'un public API yüzeyinin BÜYÜKLÜĞÜNÜ kilitler.
  *
- * `index.ts` dokuz adet `export *` barrel'ı taşıyor (`ui/primitives`,
- * `ui/layout`, `ui/overlays`, `ui/data`, `ui/feedback`, `ui/controls`,
- * `ui/hud`, `ui/cards`, `debug`). Bu bilinçli bir kolaylık — bileşen
- * eklerken barrel'ı elle güncellemek unutuluyordu — ama bir bedeli var:
- * yeni bir dosyaya `export` yazmak, o ismi HİÇBİR KARAR NOKTASI OLMADAN
- * public API'ye sokuyor. Yüzey büyürken kimse "bu dışarıya açılmalı mı?"
- * sorusunu sormuyor.
+ * `index.ts` `export *` barrel'ları taşır: bileşen eklerken barrel'ı elle
+ * güncellemeyi unutma sorununu çözer, ama bir bedeli vardır — yeni bir dosyaya
+ * `export` yazmak, o ismi HİÇBİR KARAR NOKTASI OLMADAN public API'ye sokar.
  *
- * Barrel'ları elle yazılmış listelere çevirmek bu sorunu çözerdi ama 120+
- * satırlık kalıcı bir bakım yükü getirirdi. Bunun yerine yüzey SAYILIYOR:
- * değiştiğinde kapı kırılır ve biri kararı bilinçli olarak verir.
+ * Barrel'ları elle listeye çevirmek bunu çözerdi ama kalıcı bir bakım yükü
+ * getirirdi. Bunun yerine yüzey SAYILIR: değişince kapı kırılır ve biri kararı
+ * bilinçli verir. Barrel sayısı da aynı testte kilitlidir.
  *
- * **Bu test düştüğünde:** yüzey gerçekten büyümeli/küçülmeliyse aşağıdaki
- * sayıyı güncelle. Beklenmedik bir isim sızdıysa (dahili bir yardımcı,
- * geçici bir tip) `export`u kaldır. İkisi de meşru; sessizce olmaması
+ * **Düştüğünde:** yüzey gerçekten değişmeliyse sayıyı güncelle; beklenmedik
+ * bir isim sızdıysa `export`u kaldır. İkisi de meşru — sessizce olmaması
  * yeterli.
  */
 // Sayının hangi yeteneklerle değiştiğinin kaydı: `core/docs/public-surface.md`.
 const EXPECTED_EXPORT_COUNT = 223;
+
+/** `index.ts`teki `export *` barrel sayısı — kolaylığın bedeli sayılır. */
+const EXPECTED_BARREL_COUNT = 10;
 
 /**
  * Public yüzeyin TAM isim listesi.
@@ -265,6 +265,12 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
 // üretilmiş asset'leri çalar, üreteni taşımaz.
 
 describe('CORE public API yüzeyi', () => {
+  it('barrel sayısı sabittir', () => {
+    const index = readFileSync(join(import.meta.dirname, '../../src/index.ts'), 'utf8');
+    const barrels = index.match(/^export \* from/gm) ?? [];
+    expect(barrels.length).toBe(EXPECTED_BARREL_COUNT);
+  });
+
   it('dışa açılan İSİMLER birebir sabittir', () => {
     const actual = Object.keys(Core).sort();
     const expected = [...EXPECTED_PUBLIC_SURFACE];

@@ -496,10 +496,6 @@ Toplam 40 küsur. Her biri D9'a (ortogonallik) uyar. `kind` alanı JSON'daki kim
 | `pattern.grid`     | `freq, thickness`                       |                                                |
 | `pattern.hex`      | `freq`                                  | Dikdörtgen olmayan kafes.                      |
 
-**Tablolarda `|` yerine `·` kullanılır.** Kaçırılmamış bir boru işareti hücreyi
-böler ve satır hayalet sütunlara dağılır; bu belgede bir kez oldu ve
-`mirror` satırının açıklaması görünmez hâle geldi.
-
 SDF'ler **işaretli mesafe** döndürür; katman sınırında kapsamaya çevrilir
 (§3). Çerçeve için ayrı primitif gerekmez: `sub(abs(d), w)` kalınlığı `w`
 olan bir kontur bandı verir ve sonucu yine işaretli bir alandır, yani
@@ -826,71 +822,30 @@ yok, karar açıkça piksel tarafındadır.
 
 ## 6. Modül yerleşimi
 
-```
-src/
-  types.ts            SpriteDoc, Layer, FieldNode, Palette
-  schema/             parametre şeması + çıktı etki alanı (D11)
-    types.ts          ParamSchema, NodeSchema, OutputRule
-    generators.ts  domain.ts  buffered.ts  combine.ts
-    index.ts          birleştirilmiş kayıt + resolveFieldDomain
-  validate.ts         belge doğrulaması — şemayı TÜKETİR
-  field/
-    space.ts          piksel ↔ birim uzay (D2 koordinat sözleşmesi)
-    fn.ts             FieldFn (derlenmiş biçim) + ortak eğri
-    buffer.ts         FieldBuffer ayırma/havuzlama
-    hash.ts           konumsal karma (gürültü ve serpme kaynağı)
-    lattice.ts        gürültü kafesi + döşeme periyodu (§5.2)
-    generators.ts     §4.1 — sabit ve gradyanlar
-    noise.ts          §4.1 — value / simplex / worley / fbm
-    sdf.ts            §4.1 — işaretli mesafe alanları
-    patterns.ts       §4.1 — desenler
-    domain.ts         §4.2  (ters eşleme burada)
-    combine.ts        §4.3
-    blend.ts          kapsama/yükseklik harmanlama modları
-    coverage.ts       alan → kapsama çevrimi (§5.8'in tek yeri)
-    sample.ts         tampon örnekleme (nearest/bilinear, clamp/wrap)
-    filter.ts         §4.4  (koşan toplam, monoton kuyruk)
-    distance.ts       §5.4  (Felzenszwalb, işaretli)
-    warp.ts           §4.2  tamponlu bozma
-    scatter.ts        §4.2b damgalama
-    evaluate.ts       iki aşamalı derleyici + tohum türetimi (D4, D5)
-  shade/
-    normal.ts         yükseklikten normal (birim uzayda türev)
-    lighting.ts       lambert + ambient + rim
-    ao.ts             yerel ortalama farkı
-    outline.ts        dilate/erode tabanlı halka maskesi
-  color/
-    oklab.ts          §5.6
-    palette.ts        Palette tipi, kilit kümesi
-    generate.ts       §7 palet sentezi (OKLab + gamut kısma)
-    dither.ts         §5.5 Bayer + void-and-cluster
-    quantize.ts       gölge tabloları + `ramp`/`nearest`
-  qa.ts               §9 metrikleri — HEADLESS, dolayısıyla test edilebilir
-  render.ts           §3 boru hattı — TEK giriş noktası
-  index.ts            barrel (Node-only HİÇBİR ŞEY yok — D8)
+Dosya dosya döküm `src/` ağacının kendisindedir; burada yalnız KLASÖR
+sorumlulukları ve kasıtlı ayrımlar durur.
 
-src/encode/            ← ayrı ALT-YOL, barrel'da değil (D8)
-  png.ts              node:zlib ile PNG kodlayıcı + writePng
-  artifact.ts         render + QA + PNG için CLI/sunucu ortak girişi
+| Yol           | Sorumluluk                                                      |
+| ------------- | --------------------------------------------------------------- |
+| `types.ts`    | `SpriteDoc`, `Layer`, `FieldNode`, `Palette`                    |
+| `schema/`     | Parametre şeması + çıktı etki alanı (D11) — VERİ                |
+| `validate.ts` | Belge doğrulaması — şemayı TÜKETİR                              |
+| `field/`      | §4.1–§4.4: uzay, üreteçler, alan-uzayı, birleştirici, filtre    |
+| `shade/`      | §4.5: normal, ışık, AO, dış çizgi                               |
+| `color/`      | §5.5–§5.6, §7: OKLab, palet sentezi, dither, nicemleme          |
+| `render.ts`   | §3 boru hattı — TEK giriş noktası                               |
+| `qa.ts`       | §9 metrikleri — headless, dolayısıyla test edilebilir           |
+| `encode/`     | Node-only ALT-YOL: PNG yazma + artefakt hattı (barrel'da DEĞİL) |
 
-scripts/visual-synth-asset.ts       §10.1 CLI (render / validate / qa / palette)
-scripts/visual-synth-qa.ts          §9 ölçüm aracının İNCE sarmalayıcısı
-
-tests/fixtures/*.json  elle yazılmış kanıt belgeleri
-tests/scripts/                CLI uçtan uca sözleşme testleri
-```
-
-İki ayrım kasıtlı:
+Üç ayrım kasıtlı:
 
 - **`schema/` ve `validate.ts` ayrı.** Şema veridir; doğrulama onun bir
-  tüketicisidir. Agent/CLI introspeksiyonu şemayı doğrulama yürütmeden
-  okuyabilir ve tek dosya 1200 satırı aşmaz.
-- **Ölçüm `src/qa.ts` içinde, script'te değil.** Script bir sarmalayıcıdır;
-  metrikler çekirdekte olduğu için hem testler hem CLI aynı sayıları taşır.
-  D8 ve D12 birlikte bunu gerektirir.
-
-Paket kendi `exports` alanını taşır: `"."`, `"./color"` ve `"./encode"`.
-Alt yollar barrel'a girmez (D8).
+  tüketicisidir. Agent/CLI introspeksiyonu şemayı doğrulama yürütmeden okur.
+- **Ölçüm `src/qa.ts` içinde, script'te değil.** Script ince bir
+  sarmalayıcıdır; metrikler çekirdekte olduğu için testler ve CLI aynı
+  sayıları taşır (D8 + D12).
+- **`encode/` barrel'a girmez.** Paket `exports`u `"."`, `"./color"` ve
+  `"./encode"` taşır; `node:` importu yalnız üçüncüsünün altındadır (D8).
 
 ### PNG kodlayıcı neden ffmpeg değil
 
@@ -900,9 +855,9 @@ değil). PNG öyle değil: `node:zlib` yerleşiktir, PNG konteyneri basittir
 gerektirmemesi gerçek bir kazançtır — `just doctor`'da bir önkoşul daha
 olmaz.
 
-Not: paletli (indexed, renk tipi 3) PNG yazmak dosyayı ciddi küçültür ve
-palet kilidini dosya formatında da garanti eder. Öneri: **varsayılan indexed**,
-palet 256'yı aşarsa truecolor'a düş.
+Kodlayıcı **indexed (renk tipi 3) yazmayı önce dener**; ayrık (renk, alfa)
+çifti 256'yı aşarsa truecolor'a düşer. Indexed dosyayı ciddi küçültür ve palet
+kilidini dosya formatının kendisinde garanti eder.
 
 ---
 
@@ -1173,38 +1128,10 @@ ama aynı yüzey tarifini her nesne için yeniden yazma borcunu azaltır.
 
 ---
 
-## 11. Depodan gelen yükümlülükler
+## 11. Bu paketin üstündeki kapılar
 
-Bu bölüm "yeni kod yazarken nelere takılacaksın" listesidir. Hepsi mevcut
-kapılardan doğar; sürpriz olmasınlar diye önden yazıldı.
-
-### 11.1 Yeniden kullanılacaklar (yazma, al)
-
-| İhtiyaç                             | Depoda var | Yol                                                                                                            |
-| ----------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------- |
-| Tohumlanmış PRNG                    | ✅         | `createRandom`, `seedFromString`                                                                               |
-| `lerp`/`clamp`/`smoothstep`/`remap` | ✅         | `core/src/math/interpolation.ts`                                                                               |
-| Sonlu sayı bariyeri                 | ✅         | `requireFinite`, `finiteOr` — **D5 için zorunlu**                                                              |
-| Tampon havuzu                       | ✅         | `ObjectPool` — D7                                                                                              |
-| Yaşam döngüsü                       | ✅         | `DisposableScope` — yüzey listener/timer'larında zorunlu                                                       |
-| UI kontrolleri                      | ✅         | `Slider`, `NumberStepper`, `Select`, `SegmentedControl`, `Checkbox`, `Tabs`, `Accordion`, `Tree`, `ScrollView` |
-| Node-only izolasyon deseni          | ✅         | `audio/synth/writer` alt-yolu                                                                                  |
-| Katalog deseni                      | ✅         | `audio/synth/presets/catalog/`                                                                                 |
-| CLI deseni                          | ✅         | `pnpm --filter <paket> asset`                                                                                  |
-
-### 11.2 Turlarda eklenen CORE parçaları
-
-| Parça                    | Neden yok                                 | Nereye                                                                      |
-| ------------------------ | ----------------------------------------- | --------------------------------------------------------------------------- |
-| **OKLab dönüşümü**       | Depoda renk uzayı matematiği **hiç yok**  | `src/color/oklab.ts`                                                        |
-| **ColorPicker bileşeni** | UI setinde renk kontrolü yok              | `core/src/ui/primitives/ColorPicker.ts` + **vol-ui showcase FORMS sekmesi** |
-| **CurveEditor bileşeni** | Eğri verisini görsel düzenlemek için      | `core/src/ui/primitives/CurveEditor.ts` + **vol-ui showcase FORMS sekmesi** |
-| **Artefakt hattı**       | Tüketicilerin ayrışmasını engellemek için | `src/encode/artifact.ts`                                                    |
-| **PNG kodlayıcı**        | Raster yazma yok                          | `src/encode/png.ts` (alt-yol)                                               |
-
-Bu ikisi CORE'a girdiği an [AGENTS.md](../../AGENTS.md) UI kuralı devreye
-girer: showcase'e eklenir, README sekme tablosu güncellenir, i18n key paritesi
-sağlanır.
+Aşağıdakiler bu pakete ÖZEL olan ya da davranışı şaşırtıcı olanlardır; kapıların
+genel listesi [docs/gates.md](../../docs/gates.md).
 
 ### 11.3 Kapılar ve bekçiler
 
@@ -1227,7 +1154,7 @@ sağlanır.
   `src/` bir primitif kökü olduğunda tarama listesine
   `devtools/visual-synth/DESIGN.md` de eklenmelidir — bir modülün kodu nötr olup
   dokümanı bir türe demirlerse, kod nötr sayılsa da REPO değildir (bu hata bir
-  kez yapıldı, bkz. `TODO.md` "Tür sızıntısı" turu).
+  kez yapıldı).
 
 - **`numericContract`**: sonlu olmayan girdi ya reddedilir (yapılandırma) ya
   yoksayılır (akış). `size`, `seed`, `freq` **reddedilir**.
@@ -1249,82 +1176,36 @@ fonksiyonunun İÇİNDE olur.
 
 ---
 
-## 12. Uygulama geçmişi
+## 12. Açık kalanlar
 
-Motor beş turda kuruldu; her tur kendi kapısıyla (`pnpm high`) kapandı. Turlar
-sırasında ortaya çıkan düzeltmeler kalıcı yerlerine (D4, D5, §3, §4, §5, §7.1,
-§9) zaten işlendi ve orada anlatılır — burada ikinci kez tekrarlanmaz. Turdan
-tura tam döküm için tek kaynak git geçmişi ve `TODO.md`dir.
-
-### Tur 1–3 — çekirdek, cebir, biçim ve stil (TAMAMLANDI)
-
-- **Tur 1:** veri modeli, `FieldBuffer` + havuz, temel üreteç/alan-uzayı/
-  birleştirici seti, üç kanallı bileşim, OKLab + `ramp` nicemleme, indeksli
-  PNG kodlayıcı, piksel-düzeyinde determinizm testi.
-- **Tur 2:** kalan üreteçler (worley/simplex/fbm/desenler), kalan alan-uzayı
-  işlemleri (`mirror`/`repeat`/`polar`/`warp`/`skew`), `scatter`, komşuluk
-  filtreleri, `tileable` uçtan uca ve dikiş farkı metriği.
-- **Tur 3:** gölgeleme (`normal`/`lambert`/`rim`/`ao`), `outline`, dither
-  (Bayer + mavi gürültü), `nearest` nicemleme, palet sentezi (ton kayması +
-  doygunluk kemeri), alt-yığın maskeler, kalan `visual-synth-qa` metrikleri.
-
-### Tur 4 ve Tur 5 — kaldırılmış ürün yüzeyleri
-
-Tur 4 (`SpriteDoc`un DOM editörü) ve Tur 5 (tek ekranlı üretim arayüzü) ikisi
-de web UI'ıydı; ikisi de Asset Studio migrasyonunda TÜMÜYLE kaldırıldı ve
-bugün çalışan bir kip değildir. Kanıtladıkları teknik (değişmez belge
-geçmişi, şema doğrulaması, adaptif önizleme, katalog tarifleri, CORE
-`PinchZoomController`) çekirdeğe (§1–§11) ve CLI'a (§10) kalıcı olarak
-taşındı; arayüzün kendisi yoktur. Genel amaçlı bir editör bu çekirdeğin
-hedefi değildir (§13 madde 5) — kaldırılan paneller sessizce geri eklenmez.
-
----
-
-## 13. Açık kalanlar
-
-Bunlar tamamlanmış gibi sunulmaz; gerçek tüketici veya ölçüm tetiklemeden kod
+Tamamlanmış gibi sunulmazlar; gerçek tüketici veya ölçüm tetiklemeden kod
 yazılmaz.
 
-1. **Çoklu çıktı.** Bir belgeden atlas/varyant seti üretmek
-   (`--variants 8`) doğal bir istek, fakat `seed` ezmesiyle bugün
-   betiklenebilir. Ayrı veri modeli gerçek kullanım çıkınca değerlendirilir.
+1. **Çoklu çıktı** (`--variants 8`). Bugün `seed` ezmesiyle betiklenebilir;
+   ayrı veri modeli gerçek kullanım çıkınca değerlendirilir.
 2. **Normal/height haritası dışa aktarımı.** Motor kanalları zaten üretir;
-   dosya sözleşmesi ve tüketicisi çıkınca Node-only artifact hattına eklenir.
-3. **Nesne sözlüğünün genişliği.** “Solucan” sözlük mimarisini ve gerçek tarif
-   zorunluluğunu kanıtlar. Yeni nesneler yalnız terim ekleyerek katalog
+   dosya sözleşmesi ve tüketicisi çıkınca `encode/` hattına eklenir.
+3. **Nesne sözlüğünün genişliği.** Yeni nesne yalnız terim eklenerek katalog
    presetine düşürülmez; her biri piksel testi olan gerçek bir `SpriteDoc`
    tarifi ister.
-4. **Web Worker.** Asset Studio inspector'ı kaynak graphı analiz eder, fakat
-   önizleme renderını en fazla 256² ile sınırlar; böylece bugün 2048² kaynak
-   belgenin tamamını ana iş parçacığında çizmez. `benchmark --json` aşama
-   sürelerini verir; gerçek hedef makinede seçilen önizleme bütçesi aşılırsa
-   aynı saf render hattı Worker'a taşınır. Evrensel donanım eşiği uydurulmaz.
-5. **Genel amaçlı teknik editör.** Bu çekirdeğin hedefi değildir; prosedürel
-   sentez tarifi üretir, elle çizim yüzeyi sunmaz. Piksel düzenleme ayrı bir
-   ürünün (VOL Asset Studio) işidir ve çekirdeğe bağlanmaz. Kaldırılan Tur 4
-   panelleri sessizce geri eklenmez.
-6. **Halo kapsamının genişletilmesi.** Halo'suz graph'lar için gerçek bölge
-   render'ı ve bounded LRU cache tamamlandı. `blur`, `warp`, `distance`,
-   `scatter`, normal/AO, outline, dither ve glow bugün bilinçli olarak
-   `fullFrame` kalır; bunlar için düğüm zincirinden türetilen sonlu halo,
-   sarmalı sınır ve cache anahtarı doğrulaması gerekir. Bu iş yapılmadan
-   bölgeyi “destekleniyor” göstermek yasaktır.
-7. **Inspector'ın ilerletilmesi.** Asset Studio içinde salt-okunur kullanıcı
-   inspector'ı tamamlandı: kaynak graph, kanal önizlemesi, QA, profile ve
-   region/halo kararı görünür. Kaynak çözünürlüğü 2048² olsa da panelin
-   önizlemesi 256² ile sınırlıdır; gerçek hedefte bu bütçe aşılırsa Worker
-   aktarımı yapılacaktır. Bugünkü paneli sahte asenkron göstermek yerine
-   benchmark ile ölçülmüş bir aktarım kapısı beklenir.
-8. **Malzeme tariflerinin genişletilmesi.** İlk beş generic tarif ve test
-   kartları tamamlandı. Doku/normal/roughness haritası gibi PBR yüzeyleri ve
-   fiziksel ışık hâlâ bilinçli kapsam dışıdır; yeni tarif ancak tüketicisi ve
-   regresyon görseli olduğunda eklenir.
+4. **Web Worker.** Önizleme bugün 256² ile sınırlı olduğu için 2048² kaynak
+   ana iş parçacığını bloklamıyor. `benchmark --json` aşama sürelerini verir;
+   gerçek hedef makinede bütçe aşılırsa aynı saf hat Worker'a taşınır. Evrensel
+   donanım eşiği uydurulmaz.
+5. **Genel amaçlı editör YAPILMAZ.** Bu çekirdek prosedürel tarif üretir, elle
+   çizim yüzeyi sunmaz; piksel düzenleme ayrı bir ürünün işidir.
+6. **Halo kapsamı.** `blur`, `warp`, `distance`, `scatter`, normal/AO, outline,
+   dither ve glow bilinçli olarak `fullFrame` kalır. Bunlar için düğüm
+   zincirinden türetilen sonlu halo, sarmalı sınır ve cache anahtarı
+   doğrulaması gerekir; bu iş yapılmadan bölge desteği "var" gösterilemez.
+7. **PBR yüzeyleri ve fiziksel ışık** kapsam dışıdır. Yeni malzeme tarifi ancak
+   tüketicisi ve regresyon görseli olduğunda eklenir.
 
 ---
 
-## 14. Bu belgeyi değiştirmek
+## 13. Bu belgeyi değiştirmek
 
 Doktrinler (§1) numaralıdır ve gerekçelidir. Bir doktrini değiştirmek için
 **gerekçesinin neden geçersiz olduğunu** yazmak gerekir; "daha kolay olurdu"
 yeterli değildir. Kararı değiştiren tur, bu belgeyi aynı turda günceller
-([AGENTS.md](../../AGENTS.md) — Doküman gerçeğin gerisine düşürülmez).
+— doküman gerçeğin gerisine düşürülmez.

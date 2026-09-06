@@ -1,44 +1,25 @@
 # @volstudio/vol-ui
 
-`core/src/ui` altındaki DOM tabanlı UI kütüphanesinin canlı showcase'i.
-
-## Çalıştırma
+`core/src/ui` altındaki DOM UI kütüphanesinin canlı showcase'i. Saf DOM üzerinde
+çalışır; Tauri ya da Phaser oyun döngüsü gerekmez.
 
 ```bash
-pnpm --filter @volstudio/vol-ui dev
+pnpm --filter @volstudio/vol-ui dev     # :5174
 ```
-
-Vite dev server tarayıcıda açılır; Tauri veya Phaser oyun döngüsü gerekmez, showcase saf DOM üzerinde çalışır. Üst çubuktaki tam ekran düğmesi ve F11 aynı CORE `FullscreenController` akışını kullanır.
 
 ## Sekmeler
 
-| Sekme     | İçerik                                                                                                                                                                                                                                         | `core/src/ui/` klasörü                  |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| BUTTONS   | Button, IconButton varyantları                                                                                                                                                                                                                 | `primitives/`                           |
-| TEXT      | Text, AnimatedLabel efektleri                                                                                                                                                                                                                  | `primitives/`                           |
-| PANELS    | Panel, Modal, Toast, Confirm, ContextMenu                                                                                                                                                                                                      | `overlays/`                             |
-| HUD       | Bar (yatay/dikey), XPBar, Counter, ResourceBar, MinimapPanel, BuildMenu, RoundCounter, SelectionInfoPanel, ikonlu/kaydırılabilir StatsPanel                                                                                                    | `feedback/`, `hud/`                     |
-| KARTLAR   | CardTile (rarity kademeleri), LevelUpPicker, ShopPicker                                                                                                                                                                                        | `cards/`                                |
-| FORMS     | Input, TextArea, Slider, RangeSlider, Checkbox, ColorPicker, CurveEditor, PropertyField, Toolbar, RadioGroup, Select, SegmentedControl, NumberStepper, TimerBar                                                                                | `primitives/`                           |
-| WORKBENCH | PropertyField, CommandHistory, SplitPane, CanvasViewportController, KeyedVirtualList, Icon registry, GraphicsQuality kademe kaydı                                                                                                              | `primitives/`, `layout/`, `quality/`    |
-| PALETTE   | `--vol-ui-*` renk token'ları, tipografi, spacing referansı                                                                                                                                                                                     | `theme.css`                             |
-| ADVANCED  | Tree, Accordion, DataTable, Wizard, CommandPalette, SkillTree, EventLog, Kanban, DialogueBox                                                                                                                                                   | `layout/`, `data/`, `hud/`, `overlays/` |
-| SCROLL    | ScrollView, VirtualList, Carousel                                                                                                                                                                                                              | `layout/`                               |
-| TOUCH     | Joystick, TouchButton, DPad, DirectionButton, ActionBar, ChargeButton, PauseResumeButton, LongPressButton, RadialMenu, PinchZoomController, PullToRefresh, SwipeableCardStack, SwipeGestureZone, MultiTouchZone, DualAxisScrollPanel, SlotGrid | `controls/`, `hud/`                     |
-| YÜKLEME   | LoadingScreen — gösterge tipleri, geçiş tipleri, içerik konumları                                                                                                                                                                              | `overlays/`                             |
-
-## Dokunmatik hedef politikası
-
-Showcase, dokunmatik hedef boyutunu doğrulamanın yeridir. `--vol-hit-target-min`
-token'ı yalnızca `pointer: coarse` altında bir değer taşır (bkz.
-`core/src/ui/theme.css`), yani masaüstünde hiçbir bileşenin görünümü
-değişmez; dokunmatik cihazda ya da tarayıcının cihaz emülasyonunda kutular
-gerçekten 44px'e büyür.
-
-Politika iki katmanda zorlanır. `core/tests/ui/hitTargetSync.test.ts` kuralın
-CSS'te VAR olduğunu doğrular; jsdom yerleşim hesaplamadığı için orada kalan
-boşluğu — kutunun gerçekten 44px çizilip çizilmediğini — aşağıdaki tarayıcı
-kapısı kapatır.
+| Sekme                | `core/src/ui/`                          |
+| -------------------- | --------------------------------------- |
+| BUTTONS, TEXT, FORMS | `primitives/`                           |
+| PANELS, YÜKLEME      | `overlays/`                             |
+| HUD                  | `feedback/`, `hud/`                     |
+| KARTLAR              | `cards/`                                |
+| WORKBENCH            | `primitives/`, `layout/`, `quality/`    |
+| PALETTE              | `theme.css`                             |
+| ADVANCED             | `layout/`, `data/`, `hud/`, `overlays/` |
+| SCROLL               | `layout/`                               |
+| TOUCH                | `controls/`, `hud/`                     |
 
 ## Görsel sözleşme kapısı
 
@@ -55,16 +36,24 @@ pnpm --filter @volstudio/vol-ui test:e2e
 | `layout.spec.ts`      | Yerleşim doğru mu? Taşma, dokunma hedefi, ezilme.     |
 | `visual.spec.ts`      | Görünüm değişti mi? Sekme başına piksel temeli.       |
 
-Görüntü karşılaştırması SIFIR toleransla koşar; bu, `determinism.spec.ts`in on
-iki sekmenin ayrı yüklemelerde birebir aynı çizildiğini ölçmesiyle mümkün olur.
-Beklenen bir görsel değişiklikten sonra temeller bilinçli olarak yenilenir:
+Karşılaştırma SIFIR toleransladır; bunu mümkün kılan şey `determinism.spec.ts`in
+on iki sekmenin ayrı yüklemelerde birebir aynı çizildiğini ÖLÇMESİDİR.
+
+Beklenen bir görsel değişiklikten sonra temeller bilinçli yenilenir:
 
 ```bash
 pnpm --filter @volstudio/vol-ui test:e2e:update
 ```
 
-Fark beklenmiyorsa güncellemeden önce sebebi aranır — kapının değeri tam olarak
+Fark beklenmiyorsa güncellemeden ÖNCE sebebi aranır — kapının değeri tam olarak
 o anda ortaya çıkar.
+
+## Dokunmatik hedef politikası
+
+`--vol-hit-target-min` token'ı yalnız `pointer: coarse` altında değer taşır:
+masaüstünde hiçbir bileşen değişmez, dokunmatikte kutular gerçekten 44px olur.
+`core/tests/ui/hitTargetSync.test.ts` kuralın CSS'te VAR olduğunu doğrular;
+kutunun gerçekten o boyutta ÇİZİLDİĞİNİ tarayıcı kapısı doğrular.
 
 ## Lisans
 

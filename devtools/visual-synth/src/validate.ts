@@ -627,32 +627,18 @@ function checkLayer(
  * İzotropik olmayan `scale` (x≠y) bir signed-domain (SDF) alt-ağacını
  * sarmalıyorsa reddeder.
  *
- * `scaleInverse` yalnızca KOORDİNATI uzatır; dönen SDF DEĞERİ kaynağın
- * mesafesi kalır (bkz. `field/domain.ts` `scaleInverse` JSDoc'u — Lipschitz
- * sabiti bozulur). Bu, iki SOMUT tüketicide gerçek, ölçülebilir yanlış
- * sonuca dönüşür:
+ * `scaleInverse` yalnız KOORDİNATI uzatır; dönen SDF DEĞERİ kaynağın mesafesi
+ * kalır, yani Lipschitz sabiti bozulur. İki tüketicide ölçülebilir yanlışa
+ * dönüşür: `toCoverageFn` kenar genişliğini izotropik `pixelUnit` ile hesaplar,
+ * `sdf.smooth*` harman yarıçapını doğrudan mesafe değerine uygular.
  *
- * 1. `toCoverageFn` (field/coverage.ts) `antialias: true` iken kenar
- *    yumuşatma genişliğini `space.pixelUnit` (İZOTROPİK, tek sayı) ile
- *    hesaplar — anizotropik ölçekli bir SDF'nin kenarı bir eksende
- *    beklenenden yumuşak/keskin çıkar.
- * 2. `sdf.smoothUnion`/`smoothSub`/`smoothIntersection` harman yarıçapı
- *    `k`yı DOĞRUDAN girdi mesafe değerleri üzerinde uygular; bir girdi
- *    anizotropik ölçekliyse harman simetrik olmaz.
+ * `post.outline`, `distance` ve katman düzeyindeki `domain` MUAFTIR: üçü de
+ * kapsamaya çevrilmiş piksel-uzayı gösterimi üzerinde çalışır, ham SDF
+ * değerini mesafe olarak okumaz.
  *
- * `post.outline` ve `distance` filtre düğümü bu sorundan MUAF: ikisi de
- * kapsamaya (coverage) çevrilmiş, PİKSEL uzayında ayrık bir gösterim
- * üzerinde çalışır — ham SDF değerini asla mesafe/uzunluk olarak okumazlar.
- * Katman düzeyindeki `domain` zinciri de muaf: `renderLayer` `domain`ı
- * `compileCoverage` SONRASINA uygular, yani kapsamaya çevrilmiş bir
- * görüntüyü geometrik olarak yeniden örnekler (bitmap yeniden boyutlandırma
- * gibi) — SDF değeri o noktada zaten kapsamaya dönüşmüştür.
- *
- * `resolveFieldDomain` yalnızca YAPISAL OLARAK GEÇERLİ bir ağaçta güvenlidir
- * (bkz. kendi JSDoc'u — `NODE_SCHEMAS[node.kind]` doğrulanmamış bir `kind`de
- * fırlatır). Bu yüzden bu fonksiyon `collectSpriteDocIssues` sıfır YAPISAL
- * sorun bildirdikten SONRA, `input`i `SpriteDoc` olarak güvenle
- * ele alabileceği noktada çağrılır.
+ * `resolveFieldDomain` yalnız YAPISAL olarak geçerli ağaçta güvenlidir; bu
+ * yüzden çağrı `collectSpriteDocIssues` sıfır yapısal sorun bildirdikten
+ * SONRA yapılır.
  */
 function checkAnisotropicScaleOverSignedFields(issues: IssueList, doc: SpriteDoc): void {
   const visitField = (node: FieldNode, path: string): void => {

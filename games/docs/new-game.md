@@ -13,7 +13,7 @@ kırar ya da — daha kötüsü — testlerinizin sessizce hiç koşmamasına yo
 | `quality.json` → paket adı altında kapsam eşikleri      | Eşikler `floor`un altına inemez; muafiyetin gerekçesi yazılı olmalı |
 | `tsconfig.json`, `vite.config.ts`, `index.html`         | Build ve typecheck kapıları                                         |
 | `vite.config.ts` + `vitest.config.ts` → `coreAliases()` | CORE alt yolları elle yazılmaz; alias sızıntı testi bunu sınar      |
-| `src/i18n/tr.json` + `en.json` ve bir `keyParity` testi | AGENTS.md Kural 1 — kullanıcıya görünen metin hard-code edilmez     |
+| `src/i18n/tr.json` + `en.json` ve bir `keyParity` testi | Kullanıcıya görünen metin hard-code edilmez                         |
 
 ## Sınırlar
 

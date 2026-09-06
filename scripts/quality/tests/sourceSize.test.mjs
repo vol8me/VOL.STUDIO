@@ -57,5 +57,5 @@ test('gerçek repoda her aşım GEREKÇELİ', () => {
   const problems = validateSourceSize(process.cwd());
   assert.deepEqual(problems, [], problems.join('\n'));
   assert.ok(Object.keys(ACKNOWLEDGED).length > 0, 'liste boşsa tarama anlamsızdır');
-  assert.equal(LINE_THRESHOLD, 600, 'eşik AGENTS.md doktriniyle aynı olmalı');
+  assert.equal(LINE_THRESHOLD, 600, 'eşik doktrindeki satır sayısıyla aynı olmalı');
 });

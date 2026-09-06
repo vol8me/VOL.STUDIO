@@ -1,47 +1,35 @@
 # VOL-HELL
 
-Dalga tabanlı taktiksel arena-survival oyunu. Bir koşu 20 dalga sürer; her dalga arasında kart seçimi ve dükkân açılır, 10. dalgada elit, 20. dalgada boss karşınıza çıkar.
+Dalga tabanlı taktiksel arena-survival. Bir koşu 20 dalga sürer; dalgalar arası
+kart seçimi ve dükkân açılır, 10. dalgada elit, 20. dalgada boss gelir.
 
-[English](README.en.md)
+Phaser 4 · TypeScript · Vite · `@volstudio/core`. Monorepo'nun Vite kökü de bu
+pakettir (`index.html`, `public/`).
 
-## Yığın
-
-Phaser 4 · TypeScript · Vite · `@volstudio/core` (paylaşılan sistemler + UI kiti)
-
-Bu paket monorepo'nun oyun paketidir, Vite kökü de buradadır (`index.html`, `public/`). Monorepo geneli için [kök README](../../README.md)'ye bakın.
+[English](README.en.md) · [kök README](../../README.md)
 
 ## Çalıştırma
 
 ```bash
-pnpm install
 pnpm --filter @volstudio/vol-hell dev
 ```
 
-## Komutlar
+Tüm tarifler `pnpm exec just --list`; paket script'leri `package.json`.
 
-| Komut                                                    | Açıklama                        |
-| -------------------------------------------------------- | ------------------------------- |
-| `pnpm --filter @volstudio/vol-hell dev`                  | Vite dev server                 |
-| `pnpm --filter @volstudio/vol-hell build`                | Prod build                      |
-| `pnpm --filter @volstudio/vol-hell preview`              | Prod build'i yerelde sun        |
-| `pnpm --filter @volstudio/vol-hell typecheck`            | TypeScript doğrulama            |
-| `pnpm --filter @volstudio/vol-hell test`                 | Test                            |
-| `pnpm --filter @volstudio/vol-hell test:coverage`        | Test + kapsam eşikleri          |
-| `pnpm --filter @volstudio/vol-hell benchmark:simulation` | Headless simülasyon benchmark'ı |
-| `pnpm --filter @volstudio/vol-hell generate:audio`       | Ses ve müzik asset'lerini üret  |
-| `pnpm --filter @volstudio/vol-hell audio:qa`             | Üretilen ses asset'lerini ölç   |
+## İki sözleşme
 
-Shipped ses asset'leri (`public/assets/audio/**/*.ogg`) repoda tutulur; ses tasarımı değiştiğinde `pnpm --filter @volstudio/vol-hell generate:audio` ile yenilenir. Ara formatlar (WAV, MP3) repoda tutulmaz (bkz. [sound-synth](../../devtools/audio-synth/DESIGN.md), [music-engine](../../core/docs/music-engine.md)).
+**UI kendi bileşenini icat etmez.** Her arayüz parçası `@volstudio/core`'dan
+gelir; canlı örnekler [devtools/vol-ui](../../devtools/vol-ui/README.md).
 
-## UI
+**Ses asset'i üretilir, yazılmaz.** Gönderilen `.ogg` dosyaları repoda durur;
+ses tasarımı değişince `generate:audio` ile yenilenir. Ara formatlar (WAV, MP3)
+repoda tutulmaz — [audio-synth](../../devtools/audio-synth/DESIGN.md),
+[music-engine](../../core/docs/music-engine.md).
 
-vol-hell kendi UI bileşenini icat etmez; tüm arayüz bileşenleri `@volstudio/core`'dan (`core/src/ui/`) gelir. Canlı örnekler için [devtools/vol-ui](../../devtools/vol-ui/README.md)'ye bakın.
+## Daha derine
 
-## Devamı
-
-- [DESIGN.md](DESIGN.md) — sistemler, denge, simülasyon/render sınırı, mobil ve
-  grafik kalitesi kararları, dayanıklılık sözleşmesi
-- [kök README](../../README.md) — monorepo geneli, kurulum, kalite kapıları
+Sistemler, denge, simülasyon/render sınırı, mobil ve grafik kalitesi kararları
+için [DESIGN.md](DESIGN.md).
 
 ## Lisans
 

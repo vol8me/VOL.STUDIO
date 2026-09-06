@@ -48,37 +48,13 @@ export type {
 } from './types';
 
 /**
- * VOL.HELL'in render-free oyun modeli.
+ * VOL.HELL'in render-free oyun modeli. Phaser, Scene, GameObject, efekt ya da
+ * ses bilmez; render katmanı bu durumun üstüne görsel bir adaptör kurar.
  *
- * Bu sınıf Phaser, Scene, GameObject, EffectManager veya ses bilmez. Katalog,
- * davranış fonksiyonları, dalga ve ekonomi sistemlerini bir araya getirir;
- * render katmanı yalnızca bu durumun üstüne görsel bir adaptör kurar. Böylece
- * uzun koşu regresyonu ve benchmark gerçek oyun akışını render maliyetiyle
- * karıştırmadan çalıştırır.
- *
- * **BU, ÜRETİM OYUNUNUN KANONİK SİMÜLASYONU DEĞİLDİR — kısmi, bilinçli bir
- * modeldir.** Gerçek `GameScene` (Phaser) ile eşleşmeyen üç somut nokta:
- *
- * 1. **Savaş yaklaşıksamadır.** `resolveAutomaticAttack()` oyuncunun mermi/
- *    ability sistemini simüle ETMEZ; `killRadius` içine giren her düşmanı o
- *    karede doğrudan öldürür. Gerçek oyunda hasar, atış hızı, ability
- *    cooldown'u ve ıskalama payı vardır — bu model bunların HİÇBİRİNİ
- *    bilmez, yalnızca "oyuncu yakındaki düşmanı öldürür" varsayımını taşır.
- * 2. **Elite/Boss AI'ı burada YOKTUR.** `eliteWaves`/`bossWaves` yalnızca
- *    HANGİ dalgada bir elite/boss'un başladığını kaydeder; telegraph,
- *    faz geçişi, özel saldırı gibi gerçek davranış tamamen Phaser
- *    tarafındaki `EliteController`/`TelegraphManager`e aittir (bkz.
- *    `games/vol-hell/README.md` "Simülasyon / render sınırı").
- * 3. **Ability sistemi (kule, zincir şimşek, ateş alanı, çoklu atış)
- *    burada YOKTUR** — oyuncunun aktif kart/yükseltme seçimi bu modele
- *    hiç yansımaz.
- *
- * Bu sınırın ötesi: benchmark ve uzun-koşu regresyon testleri (`ölü
- * düşmanlar listede birikmez`, `konumlar sonlu kalır` gibi) gerçek oyun
- * DENEYİMİNİ değil, dalga/ekonomi/spawn/spatial-index ZİNCİRİNİN bütünlüğünü
- * doğrular. Bu sınıftaki bir sayı (skor, DPS, zorluk hissi) oyunun gerçek
- * dengesi için KANIT sayılmaz — yalnızca `games/vol-hell/src/runtime/
- * scene/GameScene.ts` + gerçek cihaz smoke testi budur.
+ * **Üretim oyununun kanonik simülasyonu DEĞİLDİR.** Savaş yaklaşıksamadır,
+ * elite/boss davranışı ve ability sistemi burada yoktur. Buradan çıkan bir
+ * sayı denge kanıtı sayılmaz — ayrışmanın üç noktası ve gerekçesi
+ * `DESIGN.md`, "Simülasyon / render sınırı".
  */
 export class VolHellSimulation {
   readonly economy: RunEconomy;

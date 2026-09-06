@@ -6,26 +6,20 @@ import { resolve } from 'node:path';
 /**
  * KATMAN MI, MOTOR MU? — sınırın kaydını tutar.
  *
- * CORE bir katmandır: Phaser'ı BOOT eder, sahnesini, renderer'ını, girdi
- * yüzeyini ve sahne grafiğini KULLANIR. Motor olsaydı bunları kendi yazardı.
+ * CORE bir katmandır: Phaser'ı BOOT eder, sahnesini, renderer'ını ve sahne
+ * grafiğini KULLANIR. Ama bu sınır tek kararla değil BİRİKEREK kayar; her yeni
+ * primitif masum görünür ve Phaser'ın zaten verdiğini yeniden yazdığında bunu
+ * söyleyen kimse olmaz. Bu dosya soruyu cevaplanabilir tutar.
  *
- * Ama bu sınır tek bir kararla değil, birikerek kayar. Her yeni primitif
- * masum görünür; Phaser'ın zaten verdiği bir şeyi yeniden yazdığında bunu
- * SÖYLEYEN kimse olmaz ve altı ay sonra "biz ne zaman motor yazmaya başladık?"
- * sorusu cevapsız kalır. Bu dosya o soruyu cevaplanabilir tutar.
+ * Her CORE modülü duruşunu BEYAN eder:
  *
- * Her CORE modülü Phaser karşısındaki duruşunu BEYAN eder:
+ *   gap        Phaser bunu HİÇ vermez.
+ *   delegates  Phaser verir, CORE import eder ve KULLANIR.
+ *   structural Phaser nesnesiyle beslenir ama Phaser'a BAĞLANMAZ.
+ *   replaces   Phaser verir, CORE KENDİ uygulamasını taşır. Sınır burada.
  *
- *   gap        Phaser bunu HİÇ vermez. Doldurmak katmanın işidir.
- *   delegates  Phaser verir, CORE onu import eder ve KULLANIR.
- *   structural Phaser nesnesiyle beslenir ama Phaser'a BAĞLANMAZ — ihtiyacı
- *              olan yüzeyi kendi yapısal arayüzüyle bildirir, böylece render
- *              motoru örneği olmadan test edilebilir.
- *   replaces   Phaser verir, CORE KENDİ uygulamasını taşır. Motor sınırı burada.
- *
- * `replaces` sayısı SABİTLENMİŞTİR. Yeni bir tane eklemek, `quality.json`
- * eşiğini düşürmek gibi bilinçli bir düzenleme gerektirir — ve o düzenlemeyi
- * yapan kişi Phaser'ın neyi vermediğini yazmak zorundadır.
+ * `replaces` sayısı SABİTLENMİŞTİR; yeni bir tane eklemek Phaser'ın neyi
+ * vermediğini yazmayı gerektirir.
  */
 const ROOT = resolve(import.meta.dirname, '../..');
 

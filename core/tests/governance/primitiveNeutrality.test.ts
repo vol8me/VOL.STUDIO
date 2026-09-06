@@ -146,7 +146,7 @@ describe('Katman 1 primitifleri türden bağımsız kalmalı', () => {
    *
    * Kodu nötr olup dokümanı bir türe demirleyen bir modülde kod nötr sayılsa
    * da repo değildir: okuyucu belgeyi okur, kaynağı değil. Bu hata bir kez
-   * yapıldı (bkz. TODO.md "Tür sızıntısı" turu) ve bekçi o yüzden dokümanı
+   * yapıldı — bir modülün kodu nötrken dokümanı türe demirlemişti — ve bekçi o yüzden dokümanı
    * da kapsar.
    */
   it.each(['primitives.md'])('%s tek bir türü örnek olarak dayatmaz', (name) => {

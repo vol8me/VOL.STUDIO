@@ -1,27 +1,18 @@
 /**
- * Serpme — §4.2b. Alan-uzayı işlemi DEĞİL, örnekleme işlemi.
+ * Serpme — §4.2b. Alan-uzayı işlemi DEĞİL, örnekleme işlemi: bir çıktı
+ * noktasına N aday demektir ve ters dönüşümü yoktur.
  *
- * Bir alan-uzayı işlemi tek çıktı noktasını tek girdi noktasına götürür ve
- * tersi vardır; `scatter` bir çıktı noktasına N aday demektir. Yanlış
- * kategoride durması, ters dönüşümü varmış gibi uygulanmasına yol açardı.
+ * **Uzamsal kova YOK, bu bilinçli.** Kova indeksi "bu pikseli hangi örnekler
+ * kapsıyor?" sorusu içindir; örnekler üzerinde dönüp her birini kendi kutusuna
+ * damgalamak aynı soruyu inşa gereği cevaplar. Maliyet damgalanan toplam alan
+ * kadardır — kovalı çözümle aynı sınıf, bir veri yapısı eksiğiyle.
  *
- * **Maliyet.** Piksel başına N örnek denemek 1024²'de N=200 ile 200 milyon
- * değerlendirmedir; kabul edilemez. Belge bunun çözümü olarak sınırlayıcı
- * kutu + uzamsal kova önerir. Burada kutu var, kova YOK ve bu bilinçlidir:
- * kova indeksi "bu pikseli hangi örnekler kapsıyor?" sorusunu cevaplamak
- * içindir; örnekler üzerinde dönüp HER BİRİNİ KENDİ KUTUSUNA damgalamak aynı
- * soruyu inşa gereği cevaplar. Maliyet damgalanan toplam alan kadardır —
- * kovalı çözümle aynı sınıf, bir veri yapısı eksiğiyle.
+ * Örnekler DÜZENLİ IZGARAYA yerleşip `jitter` kadar sapar; tamamen rastgele
+ * konum kümelenme ve boşluk üretirdi.
  *
- * Örnekler DÜZENLİ IZGARAYA yerleştirilip `jitter` kadar sapar. Tamamen
- * rastgele konum kümelenme ve boşluk üretir; ızgara + sapma hem düzgün
- * dağılım hem doğal görünüm verir ve `jitter: 1` neredeyse rastgeleye eşittir.
- *
- * **Kaynak tampona yazılırken KIRPILIR.** Kaynak alanı tuvalin dışına taşacak
- * kadar ötelenmişse taşan kısım hiç üretilmez ve damgalarda da bulunmaz;
- * `tileable` sarması ÖRNEĞİN çıktı konumuna uygulanır, kaynağın kendi
- * çizimine değil. Bu yüzden kaynak KÖKENDE ORTALANMIŞ olmalıdır (şemada da
- * öyle yazar) — konumlandırma serpmenin işidir, kaynağın değil.
+ * **Kaynak tampona yazılırken KIRPILIR** ve `tileable` sarması ÖRNEĞİN çıktı
+ * konumuna uygulanır, kaynağın çizimine değil. Bu yüzden kaynak KÖKENDE
+ * ORTALANMIŞ olmalıdır — konumlandırma serpmenin işidir, kaynağın değil.
  */
 
 import { hash1 } from './hash';

@@ -21,29 +21,21 @@ export interface RangeSliderOptions {
 }
 
 /**
- * Tek-değerli Slider yerine iki handle'lı "X'ten Y'ye" aralık seçicisi
- * (fiyat/seviye filtreleme).
+ * İki handle'lı "X'ten Y'ye" aralık seçicisi.
  *
- * Native `<input type="range">` üzerine kurulu değil: iki native range input'u
- * aynı track'te üst üste koymak tarayıcılar arasında tutarsız "track'e tıkla en
- * yakın thumb'a atla" davranışı verir ve thumb'lar yakalamayı zorlaştırır.
- * Bunun yerine tek bir `pointerdown/move/up` döngüsü "tıklanan veya işaretçiye
- * en yakın handle"ı doğrudan sürer.
+ * Native `<input type="range">` üzerine kurulu DEĞİL: aynı track'te üst üste
+ * iki native range, tarayıcılar arasında tutarsız "track'e tıkla en yakına
+ * atla" davranışı verir. Tek bir `pointerdown/move/up` döngüsü en yakın
+ * handle'ı doğrudan sürer.
  *
- * ÇAKIŞMA: min ve max birbirini itmez — her biri diğerinin mevcut değerinde
- * kilitlenir ve eşit durabilir (ör. "Lv.1-Lv.1" geçerli). Bir handle'ı taşımak
- * diğerini sürüklemez.
+ * **Handle'lar birbirini İTMEZ:** her biri diğerinin değerinde kilitlenir ve
+ * eşit durabilir.
  *
- * HANDLE TAŞMASI — SAF CSS ÇÖZÜMÜ: değerler ham 0-100%'e çevrilip doğrudan
- * `left: X%` olarak yazılır, JS tarafında "handle yarım genişliği" telafisi
- * yapılmaz. Taşma önleme CSS'tedir: track `padding-inline: calc(handle-width / 2)`
- * + `box-sizing: border-box` alır, böylece `left: 0%..100%` ile konumlanan
- * handle'lar `translateX(-50%)` ile ortalandığında track'in gerçek sınırları
- * içinde kalır. Bu, JS'te `track.getBoundingClientRect().width`'ten ofset
- * hesaplamayı bilerek kaçınır — o rect ilk render'da `{width: 0}`'dır (render()
- * constructor'da, element DOM'a eklenmeden önce çalışır) ve ilk render'da taşma
- * yapardı. Saf CSS yaklaşımı DOM bağlantı durumundan bağımsız olarak, ilk render
- * dahil her zaman doğrudur.
+ * **Taşma önleme SAF CSS'tir.** Değerler ham `left: X%` olarak yazılır; JS'te
+ * yarım-genişlik telafisi yoktur. Track `padding-inline: calc(handle-width/2)`
+ * + `box-sizing: border-box` alır. Gerekçe: `getBoundingClientRect()` ilk
+ * render'da `{width: 0}` döner (`render()` constructor'da, element DOM'a
+ * eklenmeden çalışır) ve JS telafisi ilk karede taşardı.
  */
 export class RangeSlider {
   readonly element: HTMLDivElement;

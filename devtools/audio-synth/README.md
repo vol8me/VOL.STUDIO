@@ -7,25 +7,13 @@ Bu paket prosedürel ses sentezi, efekt zinciri, WAV/OGG yazma ve ses QA altyap�
 Kardeş paket: `@volstudio/visual-synth`.
 Runtime tüketici: `games/vol-hell` (`public/assets/audio`), `core/src/audio/music/` (stem çalar).
 
-## Komutlar
-
-| Komut                | Açıklama                                 |
-| -------------------- | ---------------------------------------- |
-| `pnpm typecheck`     | Tür denetimi                             |
-| `pnpm test`          | Testleri çalıştır                        |
-| `pnpm test:coverage` | Test + kapsam                            |
-| `pnpm qa`            | `audio-qa.ts` ölçüm aracı                |
-| `pnpm convert:ios`   | `convert-audio.ts` OGG→MP3 dönüştürücüsü |
-
 ## Yapı
 
 - `src/` — sentez motoru
 - `src/writer.ts` — WAV/OGG yazma (Node-only, FFmpeg gerekir)
 - `tests/` — motor, writer ve preset testleri
 - `scripts/` — QA ve dönüştürücü CLI'ları
-- `presets/` — hazır ses tarifleri
-- `recipes/` — proje özel ses tarifleri
-- `export/` — üretilmiş WAV/OGG/MP3 çıktıları (`.gitkeep` ile korunur, içerik geçici/generated olabilir)
+- `export/` — yerel üretim çıktısı (izlenmez).
 
 ## Doktrin
 

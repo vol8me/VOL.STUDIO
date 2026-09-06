@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
  * hattından geçirir; bu testin süresi o modül grafiğinin maliyetidir, bir
  * takılma değil.
  *
- * Genel `testTimeout` ARTIRILMAZ (bkz. AGENTS.md Test Disiplini): o, başka
+ * Genel `testTimeout` ARTIRILMAZ: o, başka
  * testlerdeki gerçek takılmaları gizler. Süre yalnızca bölünemeyen bu bütünsel
  * teste, gerekçesiyle verilir. Kapı `pnpm -r` ile tüm paketlerin kapsamını arka
  * arkaya koştuğu için 5 sn yüklü makinede yetmiyor.

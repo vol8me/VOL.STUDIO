@@ -1,22 +1,17 @@
 /**
  * Dokunsal geri bildirim (titreşim).
  *
- * **Neden Phaser değil?** Phaser'ın titreşim yüzeyi yoktur; yalnızca bazı
- * sürümlerde gamepad rumble bulunur ve o da ekran dokunuşuyla ilgisizdir.
- * Tarayıcı/WebView tarafında karşılığı Vibration API'dir (`navigator.vibrate`)
- * ve Android WebView'de desteklenir. iOS Safari/WKWebView desteklemez; bu
- * yüzden çağrılar sessizce yok sayılabilir olmalıdır — titreşimin olmaması
+ * Phaser'ın titreşim yüzeyi yoktur; karşılığı Vibration API'dir
+ * (`navigator.vibrate`), Android WebView destekler, iOS WKWebView desteklemez.
+ * Bu yüzden çağrılar sessizce yok sayılabilir olmalıdır — titreşimin olmaması
  * bir hata değil, o platformun gerçeğidir.
  *
- * **Neden anlamlandırılmış desenler?** Çağrı yerlerine ham milisaniye dizileri
- * yazmak, aynı etkileşimin iki ekranda farklı hissetmesine yol açar. Desenler
- * burada tek yerde tanımlanır; çağıran NİYETİ söyler (`'tap'`, `'error'`),
- * süreyi değil.
+ * Desenler burada tek yerde tanımlanır; çağıran NİYETİ söyler (`'tap'`,
+ * `'error'`), süreyi değil. Çağrı yerlerine ham milisaniye dizileri yazmak
+ * aynı etkileşimi iki ekranda farklı hissettirirdi.
  *
- * **Neden bir açma/kapama anahtarı?** Titreşim bir erişilebilirlik ve pil
- * meselesidir; kullanıcı kapatabilmelidir. Varsayılan KAPALIDIR: tüketici
- * ayarını yükleyip açıkça açar, böylece hiçbir oyun istemeden titremeye
- * başlamaz.
+ * **Varsayılan KAPALIDIR.** Titreşim bir erişilebilirlik ve pil meselesidir;
+ * tüketici ayarını yükleyip açıkça açar.
  */
 
 /**

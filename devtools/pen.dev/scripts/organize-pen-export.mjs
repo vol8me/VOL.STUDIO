@@ -1,44 +1,8 @@
 #!/usr/bin/env node
-// Ham bir Pencil `Export()` çıktısını (`<nodeId>.png` adlı dosyalar) entity
-// bazlı düzene taşır ve yanına metadata yazar:
-//   pen_export/<domain>/<entityId>/{parts,previews}/<partId>.png
-//   pen_export/<domain>/<entityId>/metadata/<entityId>.metadata.json
+// Ham Pencil `Export()` çıktısını entity düzenine taşır ve metadata yazar.
+// Manifest sözleşmesi ve `parent` / `positionPx` kuralları: ../DESIGN.md
 //
-// Bu script Pencil ile konuşmaz; yalnızca dosya taşır ve JSON üretir. Export
-// sheet düğümlerini bulup native `Export()`'u çağırma adımı MCP `execute`
-// üzerinden ayrıca yapılır ve buranın tükettiği staging dizinini üretir.
-//
-// Kullanım:
 //   node organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
-//
-// Manifest şekli:
-// {
-//   "entityId": "arachnid",
-//   "domain": "enemies",
-//   "sourcePenFile": "devtools/pen.dev/pen/entities.pen",
-//   "sourceSheetNodeId": "bBlFU",
-//   "sourceSheetName": "Arachnid Parts Export Sheet",
-//   "exportScale": 2,
-//   "rootSizePx": { "width": 224, "height": 268.8 },
-//   "parts": [
-//     { "id": "PqKhX", "partId": "top_cap", "type": "rectangle",
-//       "width": 16, "height": 10, "x": 104, "y": 32, "rotation": 0 },
-//     { "id": "QrLmY", "partId": "barrel", "type": "rectangle", "parent": "top_cap",
-//       "width": 24, "height": 6, "x": 118, "y": 34, "rotation": 15 }
-//   ],
-//   "previews": [{ "id": "mjtTL", "partId": "reference_card", "width": 520, "height": 520 }]
-// }
-//
-// `parent` opsiyoneldir: verilirse parça o partId'nin ALT PARÇASI olur ve üst
-// parça döndüğünde birlikte döner (kol → önkol → el). Ebeveyn manifestte bu
-// parçadan ÖNCE tanımlanmalıdır. Verilmezse parça doğrudan rig köküne bağlanır.
-// Bu bir RENDER eklemidir; eklem limiti/kütle/kısıt taşımaz.
-//
-// x/y/rotation parça başına opsiyoneldir: bir export sheet'in hücre düzeninden
-// gelen pozisyon gerçek rig yerleşimi değildir, o durumda atlanır ve metadata'ya
-// `positionPx: null` yazılır. Verildiğinde x/y parçanın rig kökünün yerel
-// uzayındaki sol-üst köşesi, rotation ise aynı köşe etrafında CCW derecedir.
-
 import {
   copyFileSync,
   existsSync,

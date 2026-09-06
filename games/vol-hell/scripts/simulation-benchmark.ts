@@ -98,28 +98,18 @@ function parseFlags(args: readonly string[]): Flags {
 const RAMP_STEP_MS = 1000;
 
 /**
- * Popülasyonu ısıtan, ölçülmeyen TOPLAM süre (ms) — adım SAYISI değil. Adım
- * sayısına çevirmek çağıranın işi (`RAMP_STEP_MS`e böler).
+ * Popülasyonu ısıtan, ölçülmeyen TOPLAM süre (ms) — adım SAYISI değil.
  *
- * **Hedef `difficultyConfig.maxEnemiesCap` (80) DEĞİL, bir koşunun
- * ULAŞABİLECEĞİ gerçek tavan.** İlk denemede tavana analitik olarak çözülen
- * süre (~14,25 dk) `WAVE_RUN_DURATION_MS`i (20 dalga × 40 sn = 13,3 dk)
- * AŞTI — yani 80'e gerçek bir koşunun ömrü içinde hiçbir zaman ulaşılamaz;
- * `maxEnemiesCap` çalışma zamanı sınırlaması içindir ("performans koruması"),
- * ulaşılması beklenen bir hedef değildir. `step()` `runCompleted` sonrası
- * no-op'a düşer (bkz. VolHellSimulation.step) — ısıtma bunu aşarsa ÖLÇÜLEN
- * kısım koşu bitmiş bir simülasyonda hiçbir şey yapmadan ~0 ms raporlardı;
- * ilk sürümde tam olarak bu oldu. Bu yüzden hedef koşunun SONUNDA doğal
- * olarak ulaşılan popülasyona çekildi (`WAVE_RUN_DURATION_MS` anındaki
- * `maxEnemies` — gerçek bir oyuncunun görebileceği en yoğun an) ve küçük bir
- * pay (`SATURATION_SAFETY_MARGIN_MS`) bırakılarak koşunun TAM sınırına
- * yapışılması önlendi.
+ * **Hedef `maxEnemiesCap` (80) DEĞİL, bir koşunun ULAŞABİLECEĞİ tavan.**
+ * 80'e çözülen süre (~14,25 dk) koşunun kendisinden (20 dalga × 40 sn) uzun:
+ * cap bir performans koruması, ulaşılan bir hedef değil. `step()` koşu
+ * bitince no-op'a düştüğü için ısıtma koşuyu aşarsa ölçülen kısım ~0 ms
+ * raporlar. Bu yüzden hedef, koşunun SONUNDAKİ doğal popülasyondur ve
+ * `SATURATION_SAFETY_MARGIN_MS` kadar pay bırakılır.
  *
- * `getDifficultyState` formülünden ANALİTİK olarak çözülür — config
- * değişirse (`maxEnemiesGrowthPerMinute`, `rampMinutes` vb.) bu da otomatik
- * doğru kalır. `killRadius: null` ile birlikte kullanılmalı: aksi hâlde
- * varsayılan `killRadius` yaklaşan her düşmanı anında öldürür ve popülasyon
- * hiçbir zaman tavana yaklaşmaz (bkz. bu dosyanın en alt yorumu).
+ * `getDifficultyState` formülünden ANALİTİK çözülür, yani config değişince
+ * doğru kalır. `killRadius: null` ile kullanılmalı — aksi hâlde varsayılan
+ * yarıçap yaklaşan düşmanı öldürür ve popülasyon tavana yaklaşmaz.
  */
 function computeSaturationRampMs(): number {
   const targetMs = Math.min(

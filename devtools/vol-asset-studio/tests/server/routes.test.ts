@@ -133,74 +133,95 @@ describe('Asset Studio API', () => {
     expect(metadata.json()).toMatchObject({ codec: 'pcm_s16le', sampleRate: 8000, channels: 1 });
   });
 
-  it('ses işlem zincirini FFmpeg ile uygulayıp revizyon kontrollü kaydeder', async () => {
-    const { server, assets, fixture } = await setup();
-    const audio = assets.find((asset) => asset.name === 'tone.wav')!;
-    const { clientId, leaseId } = await acquireLease(server);
-    const before = await readFile(fixture.wavPath);
-    const response = await server.app.inject({
-      method: 'POST',
-      url: `/api/v1/assets/${audio.id}/audio/render`,
-      headers: {
-        'content-type': 'application/json',
-        'x-vol-client-id': clientId,
-        'x-vol-lease-id': leaseId,
-      },
-      payload: {
-        expectedRevision: audio.revision,
-        operations: [{ kind: 'gain', decibels: -6 }],
-      },
-    });
+  /*
+   * FFMPEG BÜTÇESİ. Aşağıdaki iki test bir alt süreç başlatır; maliyetleri
+   * kendi kodları değil, o sürecin CPU'yu ne kadar beklediğidir. Tek başına
+   * ~450 ms sürüyorlar, ama `pnpm signoff` dokuz paketin vitest worker'ını
+   * aynı anda koştururken 5 sn'lik varsayılan bütçe yazı-turaya dönüyor ve
+   * kapı makinenin o anki yüküne göre kırılıyor.
+   *
+   * Bütçe GLOBAL olarak artırılmaz: o, gerçekten asılı kalan bir testi de
+   * saklardı. Yük duyarlılığı yalnız alt süreç başlatan testlerin sorunudur,
+   * bu yüzden bütçe yalnız onlara verilir.
+   */
+  const FFMPEG_TIMEOUT_MS = 30_000;
 
-    expect(response.statusCode).toBe(200);
-    const result = response.json<{ assetId: string; bytes: number }>();
-    expect(result).toMatchObject({ assetId: audio.id });
-    expect(typeof result.bytes).toBe('number');
-    const after = await readFile(fixture.wavPath);
-    expect(after.subarray(0, 4).toString('ascii')).toBe('RIFF');
-    expect(after.equals(before)).toBe(false);
+  it(
+    'ses işlem zincirini FFmpeg ile uygulayıp revizyon kontrollü kaydeder',
+    async () => {
+      const { server, assets, fixture } = await setup();
+      const audio = assets.find((asset) => asset.name === 'tone.wav')!;
+      const { clientId, leaseId } = await acquireLease(server);
+      const before = await readFile(fixture.wavPath);
+      const response = await server.app.inject({
+        method: 'POST',
+        url: `/api/v1/assets/${audio.id}/audio/render`,
+        headers: {
+          'content-type': 'application/json',
+          'x-vol-client-id': clientId,
+          'x-vol-lease-id': leaseId,
+        },
+        payload: {
+          expectedRevision: audio.revision,
+          operations: [{ kind: 'gain', decibels: -6 }],
+        },
+      });
 
-    const stale = await server.app.inject({
-      method: 'POST',
-      url: `/api/v1/assets/${audio.id}/audio/render`,
-      headers: {
-        'content-type': 'application/json',
-        'x-vol-client-id': clientId,
-        'x-vol-lease-id': leaseId,
-      },
-      payload: {
-        expectedRevision: audio.revision,
-        operations: [{ kind: 'reverse' }],
-      },
-    });
-    expect(stale.statusCode).toBe(409);
-    expect((await readFile(fixture.wavPath)).equals(after)).toBe(true);
-  });
+      expect(response.statusCode).toBe(200);
+      const result = response.json<{ assetId: string; bytes: number }>();
+      expect(result).toMatchObject({ assetId: audio.id });
+      expect(typeof result.bytes).toBe('number');
+      const after = await readFile(fixture.wavPath);
+      expect(after.subarray(0, 4).toString('ascii')).toBe('RIFF');
+      expect(after.equals(before)).toBe(false);
 
-  it('ses işlemlerinin önizlemesini blob olarak döner ve dosyayı kaydetmez', async () => {
-    const { server, assets, fixture } = await setup();
-    const audio = assets.find((asset) => asset.name === 'tone.wav')!;
-    const before = await readFile(fixture.wavPath);
+      const stale = await server.app.inject({
+        method: 'POST',
+        url: `/api/v1/assets/${audio.id}/audio/render`,
+        headers: {
+          'content-type': 'application/json',
+          'x-vol-client-id': clientId,
+          'x-vol-lease-id': leaseId,
+        },
+        payload: {
+          expectedRevision: audio.revision,
+          operations: [{ kind: 'reverse' }],
+        },
+      });
+      expect(stale.statusCode).toBe(409);
+      expect((await readFile(fixture.wavPath)).equals(after)).toBe(true);
+    },
+    FFMPEG_TIMEOUT_MS,
+  );
 
-    const response = await server.app.inject({
-      method: 'POST',
-      url: `/api/v1/assets/${audio.id}/audio/preview`,
-      payload: {
-        expectedRevision: audio.revision,
-        operations: [{ kind: 'gain', decibels: -6 }],
-      },
-    });
+  it(
+    'ses işlemlerinin önizlemesini blob olarak döner ve dosyayı kaydetmez',
+    async () => {
+      const { server, assets, fixture } = await setup();
+      const audio = assets.find((asset) => asset.name === 'tone.wav')!;
+      const before = await readFile(fixture.wavPath);
 
-    expect(response.statusCode).toBe(200);
-    expect(response.headers['content-type']).toBe('audio/wav');
-    expect(response.headers['x-vol-asset-revision']).toBe(audio.revision);
-    const preview = Buffer.from(response.payload, 'binary');
-    expect(preview.length).toBeGreaterThan(0);
-    expect(preview.subarray(0, 4).toString('ascii')).toBe('RIFF');
+      const response = await server.app.inject({
+        method: 'POST',
+        url: `/api/v1/assets/${audio.id}/audio/preview`,
+        payload: {
+          expectedRevision: audio.revision,
+          operations: [{ kind: 'gain', decibels: -6 }],
+        },
+      });
 
-    const after = await readFile(fixture.wavPath);
-    expect(after.equals(before)).toBe(true);
-  });
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['content-type']).toBe('audio/wav');
+      expect(response.headers['x-vol-asset-revision']).toBe(audio.revision);
+      const preview = Buffer.from(response.payload, 'binary');
+      expect(preview.length).toBeGreaterThan(0);
+      expect(preview.subarray(0, 4).toString('ascii')).toBe('RIFF');
+
+      const after = await readFile(fixture.wavPath);
+      expect(after.equals(before)).toBe(true);
+    },
+    FFMPEG_TIMEOUT_MS,
+  );
 
   it('boyut sınırını aşan medyayı stream eder fakat decode işlemine almaz', async () => {
     const fixture = await createFixtureProject();

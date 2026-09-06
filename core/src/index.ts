@@ -262,7 +262,6 @@ export {
 } from './quality';
 export {
   ViewportManager,
-  type MaxDprSetting,
   type ViewportScaleSetting,
   type ViewportConfig,
   type ViewportResult,

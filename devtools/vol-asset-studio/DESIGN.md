@@ -39,3 +39,20 @@ kapanışında sunucunun kısa TTL'i güvenli geri dönüş olarak kalır.
 - Yazma yalnız açık kaydet eyleminde, beklenen içerik revizyonu iki kez
   doğrulandıktan sonra temp/yedek/rollback transaction'ıyla yapılır; `readonly`
   kökler yazma uçlarında reddedilir.
+
+## Üretim paketi ve yayın
+
+```bash
+pnpm --filter @volstudio/vol-asset-studio build
+pnpm --filter @volstudio/vol-asset-studio start
+```
+
+Yerel ağda yayın yalnız üretim frontend'iyle kabul edilir:
+
+```bash
+pnpm --filter @volstudio/vol-asset-studio exec \
+  node dist-server/server/cli.js --production --host 0.0.0.0
+```
+
+Erişim anahtarı URL'ye yazılmaz ve tarayıcı depolamasında tutulmaz; oturum
+`HttpOnly` çerezle taşınır.

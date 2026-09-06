@@ -10,14 +10,6 @@ export type ScaleStrategy = 'fit' | 'envelop' | 'resize';
 export type ViewportScaleSetting = number | (() => number | undefined);
 
 /**
- * @deprecated `ViewportScaleSetting` kullan.
- *
- * `maxDpr` alanının eski adı. Yalnız TİP olduğu için public export sayısına
- * girmez ve repoda tüketicisi yoktur.
- */
-export type MaxDprSetting = ViewportScaleSetting;
-
-/**
  * `renderScale` için güvenli aralık. 0 veya negatif değer canvas'ı yok eder;
  * 1'in üstü ise "kalite ayarı" olmaktan çıkıp süper-örnekleme olur ve DPR
  * kelepçesinin anlamını bozar.

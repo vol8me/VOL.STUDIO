@@ -7,7 +7,7 @@ import arachnidMetadataRaw from '@/assets/rig/arachnid.metadata.json';
  * Metadata bu paketin kaynağında, parça PNG'leri `public/assets/rig/` altında
  * yaşar; ikisini de `pnpm --filter @volstudio/vol-arachnid rig:sync` yazar.
  * Oyun artık asset'ini ÜRETEN araca bakmaz — üretilmiş veriyi kendi ağacından
- * okur (bkz. AGENTS.md, "Bozulamaz Kurallar" 4).
+ * okur; sınır PAKET değil ZAMANDIR.
  *
  * Doğrulama bir tip DÖNÜŞTÜRMESİNİN yerini alır. `as RigMetadata` derleme
  * zamanında `schemaVersion`in genel `number` çıkarımını susturuyordu ama

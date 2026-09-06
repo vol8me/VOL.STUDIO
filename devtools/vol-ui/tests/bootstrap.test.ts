@@ -7,7 +7,7 @@ import { bootShowcase } from '../src/bootstrap';
  * seferde ayağa kaldırır; süre o modül grafiğinin maliyetidir, bir takılma
  * değil.
  *
- * Genel `testTimeout` ARTIRILMAZ (bkz. AGENTS.md Test Disiplini): o, başka
+ * Genel `testTimeout` ARTIRILMAZ: o, başka
  * testlerdeki gerçek takılmaları gizler. Süre yalnızca bölünemeyen bu boot
  * testlerine, gerekçesiyle verilir. Kapı `pnpm -r` ile bütün paketlerin
  * kapsamını yan yana koştuğu için 5 sn yüklü makinede yetmiyor.

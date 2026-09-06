@@ -47,6 +47,20 @@ not yet a replacement for the entire production Phaser path: interactive
 elite/boss controllers and the existing visual entity managers remain Phaser
 owned and still require device smoke testing.
 
+The model diverges from production at three DELIBERATE points:
+
+1. **Combat is an approximation.** `resolveAutomaticAttack()` kills any enemy
+   inside `killRadius` that frame; there is no damage, fire rate, cooldown or
+   miss chance.
+2. **No elite/boss behaviour.** `eliteWaves`/`bossWaves` only record WHICH wave
+   starts one; telegraphs and phase changes live on the Phaser side.
+3. **No ability system.** The player's card/upgrade picks never reach the model.
+
+A number produced here (score, DPS, perceived difficulty) is therefore not
+balance EVIDENCE. The model proves the INTEGRITY of the wave/economy/spawn/
+spatial-index chain; balance is proven by `GameScene` plus a device smoke
+test.
+
 ### Mobile / touch
 
 `shouldUseTouchControls()` (CORE) mounts on-screen controls only when the

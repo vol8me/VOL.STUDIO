@@ -13,26 +13,18 @@ export interface BossScaling {
 }
 
 /**
- * Oyuncunun o anki gücünü boss'un stat'larına oranlar.
+ * Oyuncunun o anki gücünü boss'un stat'larına oranlar: boss'un zorluğu
+ * koşunun NEREYE geldiğine bağlıdır, saatine değil.
  *
- * Neden: sabit bir boss, güçlü bir build karşısında saniyeler içinde eriyor;
- * zayıf bir build karşısındaysa aşılmaz oluyor. Boss'un zorluğu koşunun
- * NEREYE geldiğine bağlı olmalı, saatine değil.
+ * - `powerRatio = (hasar / taban hasar) × (taban fireRate / fireRate)` —
+ *   gerçek DPS oranı; `fireRate` ters stat olduğu için oranı ters çevrilir.
+ * - Can çarpanı `powerRatio ^ 0.85`, [1, 4.5]. Üs 1'in ALTINDA: boss güçlü
+ *   build'i takip eder ama tam yakalamaz, build kurmak ödüllendirici kalır.
+ * - Hasar çarpanı oyuncunun MAX CANINI takip eder (`^0.6`, [1, 2.5]).
+ * - Ateş hızı çarpanı HAREKET hızını takip eder (`^0.5`, [1, 1.8]).
  *
- * Formül:
- * - `powerRatio = (güncel hasar / taban hasar) × (taban fireRate / güncel fireRate)`
- *   yani gerçek DPS oranı — hem hasar hem ateş hızı kartları sayılır.
- *   `fireRate` ters stat olduğu için oran ters çevrilir.
- * - Can çarpanı = `powerRatio ^ 0.85`, [1, 4.5] arasına kelepçelenir.
- *   Üs 1'in ALTINDA: boss güçlü build'i takip eder ama tam yakalamaz —
- *   build kurmak hâlâ ödüllendirici kalsın.
- * - Hasar çarpanı oyuncunun MAX CANINI takip eder (`^0.6`, [1, 2.5]):
- *   can kartları alan oyuncu daha sert vuruş yer.
- * - Ateş hızı çarpanı oyuncunun HAREKET hızını takip eder (`^0.5`, [1, 1.8]):
- *   hızlı oyuncu daha sık saldırıyla baskılanır.
- *
- * Sonuç spawn anında BİR KEZ hesaplanır ve döndürülür; boss dövüşünün
- * ortasında alınan bir kart boss'u güçlendirmez.
+ * Spawn anında BİR KEZ hesaplanır; dövüş ortasında alınan kart boss'u
+ * güçlendirmez.
  */
 export function computeBossScaling(playerStats: HellStatBlock): BossScaling {
   const damageRatio = safeRatio(playerStats.getValue('damage'), playerStats.getBase('damage'));

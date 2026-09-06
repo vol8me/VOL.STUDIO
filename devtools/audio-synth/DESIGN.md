@@ -77,116 +77,16 @@ pnpm --filter @volstudio/vol-hell generate:sounds
 gameAudio.playSfx('fire', { volume: 0.3 });
 ```
 
-## Parametre Referansı
+## Parametre yüzeyi
 
-### `SynthParams`
+`SynthParams` ve alt tipleri (`FmParams`, `EnvelopeParams`, `SampleParams`, …)
+`src/types.ts` içinde JSDoc'larıyla birlikte durur. **Tek kaynak odur**; bu
+belge onları tekrarlamaz — tekrarlanan tablo bir kez bayatladı ve
+`stereoWidth`in sayı da kabul ettiğini söylemiyordu.
 
-| Alan                           | Tip                               | Açıklama                                                                    |
-| ------------------------------ | --------------------------------- | --------------------------------------------------------------------------- |
-| `wave`                         | `Waveform \| Waveform[]`          | `sine`, `triangle`, `sawtooth`, `square`, `pulse`, `noise`, `pink`, `brown` |
-| `frequency`                    | `number`                          | Temel frekans (Hz)                                                          |
-| `slide`                        | `number`                          | Süre boyunca frekans değişimi (Hz)                                          |
-| `slideCurve`                   | `linear \| exponential \| cosine` | Frekans kayma eğrisi                                                        |
-| `detune`                       | `number`                          | İkinci osilatör detune (cent)                                               |
-| `pitchJump`                    | `{ amount, time, duration }`      | Ani frekans zıplaması                                                       |
-| `pulseWidth`                   | `number`                          | `pulse` duty cycle (0-1)                                                    |
-| `harmonics`                    | `HarmonicParams[]`                | Additive synthesis — sine osilatör listesi                                  |
-| `fm`                           | `FmParams`                        | 2-operator phase modulation                                                 |
-| `envelope`                     | `EnvelopeParams`                  | attack, hold, decay, sustain, release, sustainLevel, curve                  |
-| `lowpass`                      | `FilterParams`                    | `{ cutoff, slide }` — yüksekleri kes                                        |
-| `highpass`                     | `FilterParams`                    | `{ cutoff, slide }` — düşükleri kes                                         |
-| `lfos`                         | `LfoParams[]`                     | pitch / filter / amplitude modülasyonu                                      |
-| `vibratoDepth` / `vibratoRate` | `number`                          | Frekans modülasyon derinliği / hızı (Hz)                                    |
-| `tremoloDepth` / `tremoloRate` | `number`                          | Genlik modülasyon derinliği / hızı                                          |
-| `reverb`                       | `ReverbParams`                    | `{ amount, decay, roomSize, damp, preDelay }`                               |
-| `delay`                        | `DelayParams`                     | `{ time, feedback, mix }`                                                   |
-| `flanger`                      | `FlangerParams`                   | `{ time, depth, rate, feedback, mix }`                                      |
-| `phaser`                       | `PhaserParams`                    | `{ minFreq, maxFreq, rate, wave, stages, feedback, mix }`                   |
-| `chorus`                       | `ChorusParams`                    | `{ depth, rate, mix }`                                                      |
-| `distortion`                   | `DistortionParams`                | `{ amount, type, mix }` — `soft` / `hard` / `foldback`                      |
-| `stereoWidth`                  | `StereoWidthParams`               | `{ width }` — 0 mono, 1 bypass, >1 genişlet                                 |
-| `pan`                          | `number`                          | -1 (sol) ile 1 (sağ) arası stereo pan                                       |
-| `sample`                       | `SampleParams`                    | WAV / Float32Array mixing                                                   |
-| `repeat`                       | `number`                          | Arka arkaya tekrar sayısı                                                   |
-| `repeatTime`                   | `number`                          | Tekrarlar arası süre (saniye)                                               |
-| `duration`                     | `number`                          | Toplam süre (saniye)                                                        |
-| `gain`                         | `number`                          | Genel kazanç (0-1)                                                          |
-
-### `FmParams`
-
-| Alan                | Tip              | Açıklama                                                       |
-| ------------------- | ---------------- | -------------------------------------------------------------- |
-| `modulatorWave`     | `Waveform`       | `sine`, `triangle`, `sawtooth`, `square`, `pulse`              |
-| `ratio`             | `number`         | `modulatorFreq = carrierFreq * ratio`                          |
-| `index`             | `number`         | Modülasyon derinliği (radian, pik faz sapması). 0 = FM kapalı. |
-| `modulatorLevel`    | `number`         | Modulator seviyesi.                                            |
-| `feedback`          | `number`         | Modulator kendini besleme.                                     |
-| `modulatorEnvelope` | `EnvelopeParams` | `index`'i zamanla çarpar.                                      |
-
-### `SampleParams`
-
-| Alan            | Tip                                         | Açıklama                                                      |
-| --------------- | ------------------------------------------- | ------------------------------------------------------------- |
-| `data`          | `Float32Array \| ArrayBuffer \| Uint8Array` | Decode edilmiş örnekler veya ham WAV.                         |
-| `sampleRate`    | `number`                                    | `data` WAV ise kaynak örnek oranı.                            |
-| `trim`          | `{ start?, end? }`                          | Saniye cinsinden kırpma. `end` negatifse sondan geriye doğru. |
-| `pitchShift`    | `number`                                    | Semitone cinsinden pitch shift.                               |
-| `loop`          | `boolean`                                   | Hedef süre aşılırsa loop; false ise zero-pad.                 |
-| `loopCrossfade` | `boolean`                                   | Loop geçişlerinde kısa crossfade.                             |
-| `gain`          | `number`                                    | Sample kazancı (0-1).                                         |
-| `envelope`      | `EnvelopeParams`                            | Sample zarfı.                                                 |
-
-PCM16 (ve temel PCM8) WAV decode edilir. Dinamik sample yükleme runtime'da yok; build-time pipeline.
-
-### `PhaserParams`
-
-| Alan       | Tip                | Açıklama                                |
-| ---------- | ------------------ | --------------------------------------- |
-| `minFreq`  | `number`           | Allpass merkez frekansı minimumu (Hz).  |
-| `maxFreq`  | `number`           | Allpass merkez frekansı maksimumu (Hz). |
-| `rate`     | `number`           | LFO hızı (Hz).                          |
-| `wave`     | `sine \| triangle` | LFO dalga şekli.                        |
-| `stages`   | `number`           | Allpass aşama sayısı.                   |
-| `feedback` | `number`           | Geri besleme (-0.95..0.95).             |
-| `mix`      | `number`           | Karışım (0-1).                          |
-
-### `EnvelopeParams` ve eğrileri
-
-```typescript
-interface EnvelopeParams {
-  attack?: number;
-  hold?: number;
-  decay?: number;
-  sustain?: number;
-  release?: number;
-  sustainLevel?: number;
-  curve?: 'linear' | 'exponential' | 'cosine';
-}
-```
-
-- `linear` — düz çizgi
-- `exponential` — doğal sönüş
-- `cosine` — yumuşak giriş/çıkış
-
-Belirtilmezse motor varsayılan zarf uygular:
-
-```
-attack: 0.01
-sustain: duration * 0.5
-release: duration * 0.4
-sustainLevel: 0.7
-```
-
-### Waveform türleri
-
-- `sine` — saf ton
-- `triangle` — yumuşak, az harmonik
-- `sawtooth` — tiz, agresif
-- `square` — retro kare
-- `pulse` — duty cycle ayarlanabilir kare
-- `noise` — beyaz
-- `pink` — beyazdan daha az yorucu
-- `brown` — yoğun, baslı
+Belge yalnız tipten okunamayacak şeyi taşır: hangi parametrenin neden var
+olduğunu ve hangi bileşimin kötü ses ürettiğini (bkz. "Cızırtı ve ucuz sesten
+kaçınma").
 
 ## Arp / Sequence
 
@@ -219,43 +119,19 @@ interface SequenceParams {
 
 Sınırlar: swing, MIDI, real-time scheduling yok; polifoni yok, notalar üst üste binebilir.
 
-## Hazır Presetler
+## Hazır presetler
+
+Preset adlarının listesi kodda yaşar; belge kopyasını tutmaz.
 
 ```typescript
 import { Presets } from '@volstudio/audio-synth';
 
-// combat
-Presets.fire(freq?, dur?)        Presets.bulletBounce(freq?, dur?)
-Presets.laser(freq?, dur?)       Presets.explosion(freq?, dur?)
-Presets.hit(freq?, dur?)         Presets.metallicClang(freq?, dur?)
-Presets.fmLaser(freq?, dur?)
-
-// ui
-Presets.blip(freq?, dur?)        Presets.pause(freq?, dur?)
-Presets.resume(freq?, dur?)      Presets.restart(freq?, dur?)
-
-// rewards
-Presets.coin(freq?, dur?)        Presets.powerup(freq?, dur?)
-Presets.bell(freq?, dur?)        Presets.electricPiano(freq?, dur?)
-
-// movement
-Presets.hurt(freq?, dur?)        Presets.death(freq?, dur?)
-Presets.jump(freq?, dur?)        Presets.dash(freq?, dur?)
-Presets.whoosh(freq?, dur?)      Presets.dubBass(freq?, dur?)
-
-// sequence
-Presets.arpeggioUp(rootFreq?)
-Presets.levelUpJingle(rootFreq?)
-Presets.menuJingle(rootFreq?)
-```
-
-Katalog ve arama:
-
-```typescript
-Presets.PRESET_CATALOG['laser'];
+Presets.PRESET_CATALOG; // ad → tanım
 Presets.findPresets({ category: 'combat', tags: ['weapon'] });
 Presets.getPreset('laser', 880, 0.15);
 ```
+
+Kategoriler: `combat`, `ui`, `rewards`, `movement`, `sequence`.
 
 ## VOL.HELL SFX'leri
 

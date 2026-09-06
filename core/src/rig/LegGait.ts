@@ -97,29 +97,22 @@ interface LegState {
  * Ayak-sabitleyen (planted foot) yürüyüş döngüsü.
  *
  * Her ayak DÜNYA uzayında bir noktaya basar ve gövde hareket ederken orada
- * KALIR — yere tutunma hissinin kaynağı budur. Ayak, gövdeyle birlikte dönen
- * "ev" konumundan `stepTriggerPx` kadar geride kalınca bir adım başlar ve
- * ayak, hızın işaret ettiği yere (gideceği noktaya) taşınır.
+ * KALIR — yere tutunma hissinin kaynağı budur. Ayak "ev" konumundan
+ * `stepTriggerPx` kadar geride kalınca adım başlar. Adım sırası SIRA (turn)
+ * modeliyle dizginlenir: hiçbir bacak adımda değilken en gergin bacağın grubu
+ * sırayı alır ve sıra bitene kadar yalnız o grup adım atar.
  *
- * Adım sırası SIRA (turn) modeliyle dizginlenir: hiçbir bacak adımda değilken
- * en gergin bacağın grubu sırayı alır ve sıra bitene (o gruptaki tüm adımlar
- * tamamlanana) kadar yalnız o grup adım atar.
+ * **Destek güvencesi iki rejimlidir ve ikisi aynı şey değildir:**
  *
- * DESTEK GÜVENCESİ İKİ REJİMLİDİR ve ikisi aynı şey değildir:
+ * - Normal (`emergencySteppingCount === 0`): yalnız sırası gelen grup ve sıra
+ *   beklemeyen (`freeStep`) bacaklar havadadır; gövde her an karşı grubun
+ *   tamamı üstündedir.
+ * - Acil: `maxStrainPx`i aşan bacak sırayı DELER. Birden çok grup aynı anda
+ *   havada olabilir ve yukarıdaki güvence GEÇERSİZDİR.
  *
- * - **Normal rejim** (`emergencySteppingCount === 0`): aynı anda yalnız SIRASI
- *   GELEN grup ve sıra beklemeyen (`freeStep`) bacaklar havadadır. Gövde her an
- *   karşı grubun tamamı üstünde kalır — asıl güvence budur.
- * - **Acil rejim**: `maxStrainPx`i aşan bir bacak sırayı DELER. O anda birden
- *   çok grup aynı anda havada olabilir ve yukarıdaki güvence GEÇERSİZDİR.
- *
- * Acil rejim bilinçli bir takastır: sürüklenen bir bacak her karede görünür,
- * bir karelik zayıf destek görünmez. Rejimi ayırt etmeden `steppingCount`a
- * bakan tüketici olmayan bir güvence varsayar.
- *
- * Sıra ancak adım sayısı sıfıra indiğinde yenilenir ve yeni sırayı EN GERGİN
- * bacak kazanır; bekleyen grup her zaman en gergin olduğu için açlık mümkün
- * değildir.
+ * Rejimi ayırt etmeden `steppingCount`a bakan tüketici olmayan bir güvence
+ * varsayar. Acil rejim bilinçli takastır: sürüklenen bacak her karede görünür,
+ * bir karelik zayıf destek görünmez.
  */
 export class LegGait {
   private readonly states: LegState[];

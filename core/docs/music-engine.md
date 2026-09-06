@@ -281,11 +281,6 @@ pnpm --filter @volstudio/vol-hell generate:sounds  # yalnız SFX
 pnpm --filter @volstudio/vol-hell audio:qa         # üretileni ölç
 ```
 
-> Daha önce bu doküman `ProceduralStemGenerator`, `procedural-presets.ts`,
-> `playStinger()`, `setTension()` ve `setBossPhase()` belgeliyordu. Bunların
-> hiçbiri kodda yok — planlanmış ama yazılmamış bir API'ydi. One-shot ses
-> gerekiyorsa oyun tarafındaki SFX yolu (`GameAudio.playSfx`) kullanılır.
-
 ## VOL.HELL Kullanımı
 
 ```

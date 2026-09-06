@@ -46,7 +46,7 @@ Iki oyunun ortak Android geri-yönlendirme yığını (`pushBackHandler`, `getBa
 
 ### 215 → 220
 
-Rig VARLIK katmanı CORE'a alındı (+6) ve ölü `toStepVelocity` düştü (−1). Altı çalışma zamanı girişi — `validateRigMetadata`, `buildRigDefinition`, `articulateRigDefinition`, `computePartLayout`, `preloadRigTextures`, `assembleRig` — üretilmiş bir parça ağacını doğrulayıp sahnede kurar. Bunlar bir tasarım aracının API'si DEĞİL, üretilmiş verinin sözleşmesidir: bir oyunun çalışma zamanı asset'ini üreten araca bağlanmamalı (AGENTS.md, "Bozulamaz Kurallar" 4). `toStepVelocity` ise Matter.js'e hız çeviren, repoda hiç tüketicisi olmayan bir kalıntıydı; sildiği yer (`math/physics`) gerçek bir temas/destek katmanına açık kaldı.
+Rig VARLIK katmanı CORE'a alındı (+6) ve ölü `toStepVelocity` düştü (−1). Altı çalışma zamanı girişi — `validateRigMetadata`, `buildRigDefinition`, `articulateRigDefinition`, `computePartLayout`, `preloadRigTextures`, `assembleRig` — üretilmiş bir parça ağacını doğrulayıp sahnede kurar. Bunlar bir tasarım aracının API'si DEĞİL, üretilmiş verinin sözleşmesidir: bir oyunun çalışma zamanı asset'ini üreten araca bağlanmamalı — sınır PAKET değil ZAMANDIR. `toStepVelocity` ise Matter.js'e hız çeviren, repoda hiç tüketicisi olmayan bir kalıntıydı; sildiği yer (`math/physics`) gerçek bir temas/destek katmanına açık kaldı.
 
 ### 220 → 221
 

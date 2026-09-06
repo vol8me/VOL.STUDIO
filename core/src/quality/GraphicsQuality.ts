@@ -31,25 +31,18 @@ export type GraphicsQualityListener<TLevel extends string, TProfile> = (
 ) => void;
 
 /**
- * Grafik kalite kademelerinin jenerik kaydı.
+ * Grafik kalite kademelerinin jenerik kaydı: kademe listesi, geçerli kademe,
+ * değişim bildirimi ve canlı profil okuma.
  *
- * **Neden CORE'da:** "kademe listesi + geçerli kademe + değişim bildirimi +
- * canlı profil okuma" mekanizması hiçbir oyun bilgisi taşımaz; her oyun aynı
- * iskeleti yeniden yazardı. **Neden jenerik:** kademelerin ADI (`high`/`low`
- * mu, `ultra`/`medium` mi) ve profilin İÇERİĞİ tamamen tüketicinindir; CORE
- * bir knob sözlüğü dayatsaydı bir sonraki oyunun ihtiyacını yanlış tahmin
- * ederdi.
- *
- * Kalıcılıktan da habersizdir: tüketici `SaveManager` ile kendi yükler/yazar
- * ve `setLevel()` çağırır. Böylece aynı sınıf hem oyunda hem showcase'te
- * hem de bir editörde çalışır.
+ * Kademelerin ADI ve profilin İÇERİĞİ tümüyle tüketicinindir; CORE bir knob
+ * sözlüğü dayatmaz. Kalıcılıktan da habersizdir — tüketici kendi yükler ve
+ * `setLevel()` çağırır.
  *
  * ```ts
  * const quality = new GraphicsQuality({
  *   levels: { high: { renderScale: 1 }, low: { renderScale: 0.7 } },
  *   initial: 'high',
  * });
- * quality.getProfile().renderScale; // 1
  * ```
  */
 export class GraphicsQuality<TLevel extends string, TProfile> {

@@ -145,28 +145,17 @@ function measureLabelWidth(label: string): number {
 }
 
 /**
- * Beceri ağacı / teknoloji ağacı görünümü. Temel kullanım minimaldir —
- * yalnızca `nodes` (id, label, x, y, requires) ile basit bir açılabilir
- * düğüm ağı elde edilir. İhtiyaç arttıkça katman katman zenginleştirilebilir:
- * `branch` ile dal renklendirmesi, `cost`/`description` + `showTooltips`
- * ile hover'da maliyet/açıklama kartı, `zoomable` ile büyük ağaçlarda
- * yakınlaştır/kaydır. Hiçbiri zorunlu değildir — geliştirici ihtiyacı
- * kadarını kullanır.
+ * Serbest 2B yerleşimli, çoklu önkoşullu (AND) düğüm ağı. `Tree`den farkı
+ * budur: orada tek kök ve hiyerarşi vardır, burada düğüm birden fazla
+ * önkoşula bağlanabilir. Düğüm üç durumdan birindedir: unlocked, available
+ * (önkoşulları tamam), locked.
  *
- * Düğümler arası önkoşul bağımlılıkları bağlantı çizgileriyle gösterilir,
- * her düğüm üç durumdan birinde olur: unlocked (açık), available
- * (önkoşulları tamam, açılabilir), locked (önkoşulu eksik, tıklanamaz).
- * Tree'nin hiyerarşik tek-kök listesinden farkı: düğümler serbest 2B
- * yerleşimde durur, birden fazla önkoşula (çoklu bağımlılık/AND) sahip
- * olabilir — RTS teknoloji ağacı, RPG beceri ağacı, otomasyon oyunlarında
- * araştırma ağacı için.
+ * **`x`/`y` piksel DEĞİL, SIRA bildirir.** Aynı `y` bir satırdır ve soldan
+ * sağa dizilir; düğüm genişliği etiket metnine göre büyür (metin kırpılmaz),
+ * çakışan komşular arasında en az `MIN_NODE_GAP` kalacak şekilde birbirini
+ * iter. Ağaç en geniş satıra göre yatayda ortalanır.
  *
- * Yerleşim: `x`/`y` yalnızca SIRA bildiren grid koordinatlarıdır, piksel
- * değildir. Her satır (aynı `y`) kendi içinde soldan sağa dizilir; her
- * düğümün gerçek genişliği etiket metnine göre otomatik büyür (metin asla
- * kırpılmaz) ve komşu düğümlerle çakışırsa aralarında en az `MIN_NODE_GAP`
- * kalacak şekilde birbirini iter. Tüm ağaç canvas'ın en geniş satırına göre
- * yatayda ortalanır — küçük ağaçlar viewport'ta sola yapışık durmaz.
+ * `branch`, `cost`/`description` + `showTooltips` ve `zoomable` opsiyoneldir.
  */
 export class SkillTree {
   readonly element: HTMLDivElement;

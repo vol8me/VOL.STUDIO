@@ -1,106 +1,55 @@
 # @volstudio/vol-asset-studio
 
-A repository asset workbench for discovering visual, audio, font, and source
-documents that actually exist in VOL.STUDIO. It is neither a game nor a
-text-to-image generator: it indexes files on disk, follows live repository
-changes, and provides a preview appropriate for each asset kind.
+Asset workspace that surfaces the repository's images, audio, fonts and
+production documents in one web view. It is **not** a text-to-image generator:
+it indexes what actually exists on disk, watches live changes, previews by type
+and saves editable assets under revision control.
 
 [Türkçe](README.md)
 
-## Current scope
-
-- live catalog, search, and kind/problem/Git-status filters across repo roots;
-- file-size, media-signature, JSON-structure, and image-decoding diagnostics;
-- PNG/JPEG/WebP/GIF/AVIF previews with server-side thumbnails;
-- OGG/MP3/WAV/FLAC playback and FFmpeg/ffprobe metadata;
-- WOFF/WOFF2/TTF/OTF font samples;
-- source, derived-output, and recipe relationship metadata;
-- identity-based incremental SSE updates with full resync after a sequence gap;
-- Quick Look metadata and repository-relative path copying;
-- read-only VisualSynth inspector for `.volsprite.json` documents, showing the
-  source graph, channel preview, QA, real render profile, buffer cost, and
-  region/halo decision;
-- tile-backed PNG pixel surface, layers/palette, undo/redo, and
-  revision-checked atomic PNG saves;
-- peak-pyramid waveform, selection, zoom, transport, gain, trim, fades, peak
-  normalization, reverse, and atomic OGG/WAV saves;
-- read-only reference search, rename preview, and recoverable trash.
-
-Saving PNG flattens visible layers; layer separation and history survive
-only while the document stays open. Edits made during a save remain dirty.
-Undoing layer deletion or merging preserves the pixel surfaces referenced by
-brush history. The history budget counts retained tile buffers.
-
-Animation authoring and native sprite project saves are outside the scope.
-The unwired frame strip, sprite project model, sheet/metadata export draft,
-and unused `.volpost.json` delta model have been removed. The VisualSynth
-`.volsprite.json` inspector remains a read-only synthesis viewer. Audio chains
-are applied to the current OGG/WAV on explicit save. MP3/FLAC can be inspected;
-editing requires conversion to OGG/WAV.
-
 ## Running
 
-From the repository root:
-
 ```bash
-pnpm --filter @volstudio/vol-asset-studio dev
+pnpm --filter @volstudio/vol-asset-studio dev     # :5175
 ```
 
-The repository host and Vite share `http://127.0.0.1:5175`. The root `pnpm
-dev` command also starts Asset Studio alongside VOL.HELL and VOL.UI.
+The root `pnpm dev` starts it too. Production packaging and LAN exposure are in
+[DESIGN.md](DESIGN.md).
 
-Production package:
+The server prints a one-time access key on startup; you enter it once and the
+rest of the session travels in an `HttpOnly` cookie.
 
-```bash
-pnpm --filter @volstudio/vol-asset-studio build
-pnpm --filter @volstudio/vol-asset-studio start
-```
+## What it does
 
-LAN exposure is accepted only with the production frontend:
+- Live catalogue across repository roots: search, type/problem/Git filters,
+  incremental updates over SSE.
+- Previews: PNG/JPEG/WebP/GIF/AVIF plus thumbnails, OGG/MP3/WAV/FLAC playback
+  with metadata, WOFF/WOFF2/TTF/OTF font samples.
+- **PNG editor**: tiled pixel surface, layers/palette, undo/redo, atomic save.
+  Saving FLATTENS visible layers; layer separation and history live only while
+  the document is open.
+- **Audio editor**: waveform, selection, gain, trim, fade, normalize, reverse
+  and atomic OGG/WAV save. MP3/FLAC can be inspected; editing needs conversion.
+- Read-only VisualSynth inspector for `.volsprite.json`.
+- Reference lookup, rename preview, recoverable trash.
 
-```bash
-pnpm --filter @volstudio/vol-asset-studio build
-pnpm --filter @volstudio/vol-asset-studio exec node dist-server/server/cli.js --production --host 0.0.0.0
-```
+Animation authoring and native sprite project files are **out of scope**.
 
-The repository host prints a temporary access key to the terminal at startup.
-Enter it once in the web UI; subsequent image, audio, font, and SSE requests
-use an `HttpOnly` session cookie. The key is never placed in a URL or browser
-storage.
-
-## Project configuration
+## Configuration
 
 The root [`asset-studio.json`](../../asset-studio.json) declares which folders
-belong in the catalog. Each root has a stable identifier, repository-relative
-path, role, and allowed asset kinds.
-
-| Role       | Meaning                                       |
-| ---------- | --------------------------------------------- |
-| `source`   | Editable source document for production       |
-| `derived`  | Output that can be regenerated from a source  |
-| `shipped`  | Runtime asset distributed with the game       |
-| `readonly` | Discoverable asset that is not a write target |
-
-Missing optional roots remain visible in the project response without
-crashing the service. Unknown fields, duplicate root identifiers,
-absolute/escaping paths, and invalid limits are rejected as a single startup
-configuration error.
+appear in the catalogue and each root's role (`source`, `derived`, `shipped`,
+`readonly`). Unknown fields, duplicate ids or escaping paths are rejected at
+startup with a single error.
 
 ## Verification
 
 ```bash
-pnpm --filter @volstudio/vol-asset-studio typecheck
 pnpm --filter @volstudio/vol-asset-studio test
-pnpm --filter @volstudio/vol-asset-studio test:coverage
-pnpm --filter @volstudio/vol-asset-studio build
 ```
 
-The repository-wide closing gate is `pnpm high`. Audio metadata requires
-`ffprobe`; `pnpm run doctor:env` checks it.
-
-## Further reading
-
-- [DESIGN.en.md](DESIGN.en.md) — server contract and security boundary
+Repository gate is `pnpm high`. Audio metadata needs `ffprobe`;
+`pnpm run doctor:env` checks for it.
 
 ## License
 

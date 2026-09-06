@@ -17,29 +17,15 @@ export interface Destroyable {
 }
 
 /**
- * Birden fazla `Disposable`'ı tek bir birim olarak yönetir.
+ * Birden fazla `Disposable`'ı tek birim olarak yönetir. `add()` ile kaydedilen
+ * her kaynak `dispose()` çağrısında EKLENİŞ SIRASININ TERSİNDE kapatılır
+ * (bağımlılık genelde bu yönde kurulur). İkinci `dispose()` no-op'tur.
  *
- * Bir component'in aynı ömre sahip birden fazla kaynağı (birkaç event
- * listener, bir observer, bir timer) olduğunda, her birini `destroy()`
- * içinde tek tek ve simetrik biçimde kapatmak kolayca unutulan bir adım
- * haline gelir — kaynak eklenir, kapatma satırı eklenmeyi unutulur. `add()`
- * ile kaydedilen her kaynak `dispose()` çağrıldığında EKLENİŞ SIRASININ
- * TERSİNDE kapatılır (son eklenen ilk kapanır — kaynaklar arası bağımlılık
- * genelde bu yönde kurulur). İkinci `dispose()` çağrısı no-op'tur.
- *
- * **Ne zaman ham timer/listener, ne zaman bu sınıf?** Kod tabanında ikisi
- * de bilinçli olarak bir arada yaşıyor — TEK ölçüt kaynak SAYISI. Bir
- * component'in yönettiği kaynak TEK ise (tek `setTimeout`, tek listener) ve
- * `destroy()` yalnızca onu kapatmaktan ibaretse, kaynağı kendi alanında
- * tutup doğrudan `clearTimeout`/`removeEventListener` çağırmak zarar
- * vermez — bu sınıf o durumda gereksiz bir dolayım katmanıdır (bkz.
- * `core/src/ui/controls/LongPressButton.ts`, `core/src/ui/cards/
- * CardTile.ts`). Kaynak sayısı İKİ VEYA DAHA FAZLA olduğu an (birkaç
- * listener, listener+timer karışımı, abonelik) bu sınıf kullanılır: elle
- * tutulan N kaynak için simetrik N temizlik satırı — yukarıdaki paragrafın
- * asıl anlattığı unutma riski — yalnızca kaynak sayısı arttıkça gerçek bir
- * tehlike hâline gelir (bkz. `core/src/ui/controls/Carousel.ts`,
- * `games/vol-hell/src/runtime/scene/GameScene.ts`).
+ * **Ölçüt kaynak SAYISIDIR.** Tek kaynaklı bir bileşen (tek timer, tek
+ * listener) onu kendi alanında tutup doğrudan kapatır; bu sınıf orada
+ * gereksiz bir dolayımdır. İki ve daha fazlasında bu sınıf kullanılır — elle
+ * tutulan N kaynağın simetrik N temizlik satırı, ancak N büyüdükçe gerçek bir
+ * unutma riski hâline gelir.
  */
 export class DisposableScope implements Disposable {
   private readonly disposables: Disposable[] = [];

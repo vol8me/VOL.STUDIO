@@ -8,40 +8,20 @@ import {
 } from '../src';
 
 /**
- * `analyzeSpriteDoc().estimatedPeakWorkingBytes` gerçek çalışma zamanı bellek
- * kullanımına karşı ÖLÇÜLEREK doğrulanır — önceden hiç ölçülmüyordu.
- * `visual-synth-asset benchmark` komutu tahmini VE gerçek RSS'i yan yana
- * raporluyor ama ikisini hiç KARŞILAŞTIRMIYORDU.
+ * `estimatedPeakWorkingBytes` ile GERÇEK yığın artışını karşılaştırır.
  *
- * **Gerçek bulgu (bu test yazılırken ölçüldü):** model kendini
- * `confidence: 'conservative'` diye etiketliyor (bkz. analysis.ts — bilinen
- * typed-array + geçici scratch + metadata + %50 pay) ama `--expose-gc` ile
- * zorla ölçülen gerçek yığın artışı, 128×128 örnek belgelerde tahminin
- * **~5–31 katı** çıktı (7 kategoriden örnek: brushedSurface 4.8x, liquidRipples
- * 13.0x, softGlow 18.8x, organicCluster 22.3x, structureGrid 25.4x,
- * terrainCells 25.6x, cutMineral 30.7x). Kök neden KANITLANMADI ama en
- * olası açıklama: `analyzeSpriteDoc` yalnızca `category: 'buffered'` düğümler
- * için kalıcı tam-çözünürlük tampon SAYAR (bkz. `bufferCount()`); tamponsuz
- * (non-buffered) düğümlerin render.ts'te GERÇEKTEN piksel-piksel akışla mı
- * değerlendirildiği, yoksa her düğümün kendi ara Float64Array'ini mi
- * ürettiği doğrulanmadı — ikincisi doğruysa kümülatif ayırma, tamponlu alt
- * kümeyi değil TÜM graph düğüm sayısını ölçeklerdi. Bu, ayrı bir profil
- * incelemesi gerektiren AÇIK bir bulgu olarak bırakılıyor.
+ * Model kendini `confidence: 'conservative'` diye etiketler ama ölçüm 128²
+ * belgelerde tahminin **~5–31 katını** verdi. Kök neden kanıtlanmadı; açık
+ * bulgu olarak `TODO.md`de duruyor.
  *
- * Bu test formülü "düzeltmeye" ÇALIŞMAZ (hangi tarafın — model mi,
- * render.ts mi — yanlış olduğu kanıtlanmadan formülü değiştirmek
- * `RenderCache`/tile uygunluk kararlarını sessizce bozabilirdi). Bunun yerine
- * BUGÜNKÜ ölçülen tavanın üstünde, KEŞFEDİLEN gerçeğe dayalı bir sınır
- * kilitler: gelecekte bu oran fark edilmeden KATLANARAK büyürse (ör. yeni
- * bir non-buffered filtre kümülatif ayırmayı ikiye katlarsa) test kırılır;
- * bugünkü bilinen boşluğu tekrar tekrar "başarısız" diye raporlamaz.
+ * Bu test formülü DÜZELTMEYE çalışmaz — hangi tarafın yanlış olduğu
+ * kanıtlanmadan formülü değiştirmek `RenderCache`/tile kararlarını sessizce
+ * bozardı. Bugünkü ölçülen tavanın üstüne bir sınır kilitler: oran fark
+ * edilmeden katlanarak büyürse test kırılır, bilinen boşluk için sürekli
+ * "başarısız" raporlamaz.
  *
- * `global.gc()` (Node `--expose-gc`) varsa ölçüm öncesi zorla toplanır ve
- * gürültü büyük ölçüde elenir. Yoksa (normal `pnpm test` GC'yi açığa
- * çıkarmaz) aynı ölçüm ek GC gürültüsüyle yapılır ve daha gevşek bir sınırla
- * karşılaştırılır — sıkı doğrulama
- * `NODE_OPTIONS=--expose-gc pnpm --filter @volstudio/core test` ile
- * istenince koşar, ama test normal koşuda da ATLANMAZ.
+ * `global.gc()` varsa (`--expose-gc`) ölçüm öncesi zorla toplanır; yoksa aynı
+ * ölçüm daha gevşek sınırla yapılır — test hiçbir koşuda ATLANMAZ.
  */
 
 const SIZE: readonly [number, number] = [128, 128];

@@ -1,7 +1,7 @@
 /**
  * KAYNAK DOSYA BOYUTU — doktrini bir karara çevirir.
  *
- * AGENTS.md ~600 satırdan sonra mantık sınırının yeniden düşünülmesini
+ * ~600 satırdan sonra dosyanın mantık sınırının yeniden düşünülmesini
  * istiyor. Bu bir yasak değil, bir DURAKSAMA noktası: bazı dosyalar meşru
  * biçimde büyüktür (bir showcase sekmesi kurucu koleksiyonudur, bir şema
  * dosyası veri taşır), bazıları ise gerçekten bölünmelidir.
@@ -17,7 +17,7 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
-/** Doktrinin duraksama eşiği (AGENTS.md). */
+/** Duraksama eşiği: bunun üstünde bir dosya tek sorumluluk taşımıyordur. */
 export const LINE_THRESHOLD = 600;
 
 /**

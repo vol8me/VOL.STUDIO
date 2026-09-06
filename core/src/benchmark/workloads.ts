@@ -210,7 +210,7 @@ function createObjectPoolWorkload(entityCount: number): BenchmarkWorkload {
   };
 }
 
-// CORE hiçbir oyunun stat sözlüğünü bilmez (bkz. AGENTS.md kural 3 ve
+// CORE hiçbir oyunun stat sözlüğünü bilmez (bkz.
 // core/tests/governance/publicApi.test.ts) — isimler BİLEREK jenerik
 // tutulur, herhangi bir tüketicinin gerçek stat adlarıyla eşleşmemeli.
 type BenchStat = 'output' | 'durability' | 'velocity' | 'cadence';
