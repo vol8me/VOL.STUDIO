@@ -59,6 +59,12 @@ build:
 bundle:
     node scripts/bundle-report.mjs
 
+# ALGORİTMİK ölçekleme kapısı. Mutlak süre kapı olamaz (donanıma bağlı) ama
+# "girdi dört katına çıkınca süre kaç katına çıkıyor" oranı makineden
+# bağımsızdır: O(n^2) sızması oradan görünür (bkz. scripts/quality/scalingBudget.mjs).
+scaling:
+    node scripts/scaling-report.mjs
+
 # Gerçek tarayıcı kritik akışları (Chromium). jsdom testleri font yüklemesini,
 # gerçek yerleşimi ve bundle içeriğini göremez; bu kapı o boşluğu kapatır.
 #
@@ -98,7 +104,7 @@ fast: quick test
 # `coverage` aynı testleri eşikleriyle koştuğu için düz `test` burada bilerek
 # tekrarlanmaz; `high` yine de `fast`'in her kapısını kapsar.
 # Push öncesi kapısı: quick + css lint + kapsam eşikleri + build + Chromium smoke
-high: quick lint-css coverage build bundle e2e
+high: quick lint-css coverage build bundle scaling e2e
 
 # Gönderilen sesin reçetesiyle AYNI olduğunu kanıtlar.
 #
