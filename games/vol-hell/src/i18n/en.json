@@ -65,7 +65,6 @@
     "master": "Master Volume",
     "sfx": "SFX Volume",
     "music": "Music Volume",
-    "mainMenuTrack": "Main Menu Music",
     "shake": "Screen Shake",
     "shakeIntensity": "Shake Intensity",
     "mute": "Mute",
@@ -271,9 +270,7 @@
   },
   "ability": {
     "empty": "Empty",
-    "slotHint": "{{key}} — {{name}}",
     "loadoutTitle": "Ability Slots",
-    "noCards": "No ability cards",
     "loadoutHint": "Drag a card onto a slot, or select it and click a slot",
     "clearSlot": "Clear slot",
     "equipped": "EQUIPPED",

@@ -27,7 +27,6 @@
     "modified": "Değiştirilenler",
     "filters": "Varlık türleri",
     "view": "Görünüm biçimi",
-    "selectHint": "Önizlemek için bir varlık seç.",
     "live": "Repo ile canlı",
     "offline": "Canlı bağlantı kesildi",
     "reconnecting": "Repo bağlantısı yenileniyor"
@@ -80,10 +79,7 @@
     "dimensions": "Boyutlar",
     "codec": "Codec",
     "notTracked": "Durum yok",
-    "problems": "Sorunlar",
-    "relations": "Kaynak ilişkisi",
-    "sourceRelation": "Kaynağa bağlı",
-    "derivedCount": "{{count}} türetilmiş çıktı"
+    "problems": "Sorunlar"
   },
   "editor": {
     "open": "Piksel düzenle",

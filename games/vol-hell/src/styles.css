@@ -681,10 +681,6 @@
 }
 
 /* Kart seçiliyken slotlar hedef olduklarını belli eder. */
-.vol-loadout__slot--target {
-  border-color: var(--vol-ui-focus-ring);
-}
-
 .vol-loadout__slot--hover {
   background: var(--vol-ui-selected-fill);
 }

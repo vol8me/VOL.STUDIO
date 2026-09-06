@@ -65,7 +65,6 @@
     "master": "Genel Ses",
     "sfx": "Efekt Sesi",
     "music": "Müzik Sesi",
-    "mainMenuTrack": "Ana Menü Müziği",
     "shake": "Ekran Sarsıntısı",
     "shakeIntensity": "Sarsıntı Şiddeti",
     "mute": "Sesi Kapat",
@@ -271,9 +270,7 @@
   },
   "ability": {
     "empty": "Boş",
-    "slotHint": "{{key}} — {{name}}",
     "loadoutTitle": "Yetenek Slotları",
-    "noCards": "Yetenek kartın yok",
     "loadoutHint": "Kartı slota sürükle ya da kartı seçip slota tıkla",
     "clearSlot": "Slotu boşalt",
     "equipped": "TAKILI",

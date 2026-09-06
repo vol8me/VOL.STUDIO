@@ -27,7 +27,6 @@
     "modified": "Modified",
     "filters": "Asset types",
     "view": "View style",
-    "selectHint": "Select an asset to preview it.",
     "live": "Live with repository",
     "offline": "Live connection lost",
     "reconnecting": "Reconnecting to repository"
@@ -80,10 +79,7 @@
     "dimensions": "Dimensions",
     "codec": "Codec",
     "notTracked": "No status",
-    "problems": "Problems",
-    "relations": "Source relation",
-    "sourceRelation": "Linked to source",
-    "derivedCount": "{{count}} derived outputs"
+    "problems": "Problems"
   },
   "editor": {
     "open": "Edit pixels",
