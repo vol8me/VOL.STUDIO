@@ -2,6 +2,16 @@ import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_THRESHOLD } from '../../constants';
 import { i18next } from '../../systems/I18n';
 
+import {
+  adjustIndexForSameColumn,
+  cardMatchesSearch,
+  isColumnFull,
+  locateCard,
+  modelIndexFromVisibleIndex,
+  moveCard,
+  visibleCards,
+} from './kanbanModel';
+
 export type KanbanPriority = 'low' | 'medium' | 'high';
 
 export interface KanbanCard {
@@ -203,16 +213,13 @@ export class Kanban {
     this.cardScopes.delete(columnId);
   }
 
-  private isColumnFull(column: KanbanColumn): boolean {
-    return column.wipLimit !== undefined && column.cards.length >= column.wipLimit;
+  /** Arama/karşılaştırma yerel ayarı — kurallar `kanbanModel`de, dil burada. */
+  private get locale(): string {
+    return i18next.language ?? 'tr';
   }
 
   private cardMatchesSearch(card: KanbanCard): boolean {
-    if (!this.searchQuery) return true;
-    const haystack = [card.title, card.description ?? '', ...(card.tags ?? [])]
-      .join(' ')
-      .toLocaleLowerCase(i18next.language ?? 'tr');
-    return haystack.includes(this.searchQuery);
+    return cardMatchesSearch(card, this.searchQuery, this.locale);
   }
 
   private buildSearchBar(): HTMLDivElement {
@@ -483,7 +490,7 @@ export class Kanban {
     const column = this.columns.find((c) => c.id === target.columnId);
     if (!columnEl || !column) return;
 
-    const full = target.columnId !== fromColumnId && this.isColumnFull(column);
+    const full = target.columnId !== fromColumnId && isColumnFull(column);
     columnEl.classList.toggle('vol-kanban__column--drag-over', !full);
     columnEl.classList.toggle('vol-kanban__column--drag-rejected', full);
 
@@ -564,11 +571,11 @@ export class Kanban {
     const located = this.locateCard(cardId);
     if (!located) return;
 
-    // `toIndex`, sürüklenen kart hâlâ dizide dururken hesaplandı. Aynı sütun
-    // içinde kartı eski yerinden çıkarmak sonraki index'leri bir kaydırır,
-    // bu yüzden hedef eski konumdan sonraysa index bir azaltılır.
-    const sameColumn = toColumnId === fromColumnId;
-    const targetIndex = sameColumn && toIndex > located.index ? toIndex - 1 : toIndex;
+    const targetIndex = adjustIndexForSameColumn(
+      toIndex,
+      located.index,
+      toColumnId === fromColumnId,
+    );
 
     this.applyMove(cardId, fromColumnId, toColumnId, targetIndex);
   }
@@ -580,23 +587,13 @@ export class Kanban {
     toColumnId: string,
     targetIndex: number,
   ): boolean {
-    const fromColumn = this.columns.find((c) => c.id === fromColumnId);
-    const toColumn = this.columns.find((c) => c.id === toColumnId);
-    if (!fromColumn || !toColumn) return false;
-
-    // Aynı sütun içinde yeniden sıralama WIP limitini artırmaz; yalnızca farklı sütuna taşınırken limit kontrol edilir.
-    if (toColumnId !== fromColumnId && this.isColumnFull(toColumn)) {
-      this.onWipLimitExceededHandler?.(toColumnId, cardId);
+    const result = moveCard(this.columns, cardId, fromColumnId, toColumnId, targetIndex);
+    if (!result.moved) {
+      // WIP reddi tüketiciye BİLDİRİLİR; eksik sütun/kart sessiz bir no-op'tur.
+      if (result.reason === 'wip-limit') this.onWipLimitExceededHandler?.(toColumnId, cardId);
       return false;
     }
-
-    const cardIndex = fromColumn.cards.findIndex((c) => c.id === cardId);
-    if (cardIndex === -1) return false;
-
-    const [card] = fromColumn.cards.splice(cardIndex, 1);
-
-    const clampedIndex = Math.max(0, Math.min(targetIndex, toColumn.cards.length));
-    toColumn.cards.splice(clampedIndex, 0, card);
+    const clampedIndex = result.toIndex;
 
     this.rerenderColumn(fromColumnId);
     if (toColumnId !== fromColumnId) this.rerenderColumn(toColumnId);
@@ -625,11 +622,7 @@ export class Kanban {
   }
 
   private locateCard(cardId: string): { column: KanbanColumn; index: number } | null {
-    for (const column of this.columns) {
-      const index = column.cards.findIndex((c) => c.id === cardId);
-      if (index !== -1) return { column, index };
-    }
-    return null;
+    return locateCard(this.columns, cardId);
   }
 
   private cardAriaLabel(card: KanbanCard, columnId: string): string {
@@ -771,17 +764,13 @@ export class Kanban {
     return cardEls.length;
   }
 
-  private visibleCards(column: KanbanColumn): KanbanCard[] {
-    if (!this.searchQuery) return column.cards;
-    return column.cards.filter((card) => this.cardMatchesSearch(card));
+  private visibleCards(column: KanbanColumn): readonly KanbanCard[] {
+    return visibleCards(column, this.searchQuery, this.locale);
   }
 
   /** Görünür kartlar arasındaki sırayı gerçek model index'ine çevirir — arama filtresi etkinken ikisi ayrışır. */
   private modelIndexFromVisibleIndex(column: KanbanColumn, visibleIndex: number): number {
-    if (!this.searchQuery) return visibleIndex;
-    const visible = this.visibleCards(column);
-    if (visibleIndex >= visible.length) return column.cards.length;
-    return column.cards.indexOf(visible[visibleIndex]);
+    return modelIndexFromVisibleIndex(column, visibleIndex, this.searchQuery, this.locale);
   }
 
   private rerenderColumn(columnId: string): void {
@@ -847,6 +836,6 @@ export class Kanban {
           ? `${column.cards.length} / ${column.wipLimit}`
           : String(column.cards.length);
     }
-    columnEl.classList.toggle('vol-kanban__column--full', this.isColumnFull(column));
+    columnEl.classList.toggle('vol-kanban__column--full', isColumnFull(column));
   }
 }
