@@ -1,34 +1,19 @@
 /**
- * Uygulamanın ön planda mı arka planda mı olduğunu tek bir olayda toplar.
+ * Ön plan/arka plan sorusunu TEK olayda toplar — ses, duraklatma ve teşhis
+ * aynı soruyu soruyor ve ayrı dinleyicilerle farklı cevaplar alıyorlardı.
  *
- * **Neden `visibilitychange` tek başına yetmez?** İki farklı "artık
- * görünmüyorum" biçimi var ve ikisi de oyunu duraklatmayı gerektirir:
- *
- * - `document.visibilitychange` — sekme/uygulama gerçekten gizlendi
- *   (uygulama değiştirme, ekran kilidi, sekme arkaya alındı).
- * - `window.blur` — pencere odağı gitti ama içerik hâlâ görünür olabilir
- *   (üstte açılan bir bildirim gölgesi, bölünmüş ekranda diğer uygulamaya
- *   dokunma, masaüstünde alt-tab). Burada `document.hidden` `false` kalır.
- *
- * Yalnızca birine abone olan tüketici diğer durumu kaçırır. Android'de bu
- * fark özellikle önemlidir: bildirim gölgesini aşağı çekmek çoğu cihazda
- * `blur` üretir ama `visibilitychange` üretmez.
- *
- * **Neden CORE'da?** Ses motoru, oyun duraklatması ve teşhis katmanı aynı
- * soruyu soruyor ve bugüne kadar her biri kendi dinleyicisini kurdu. Tek bir
- * sözleşme olmadan biri `blur`u, diğeri `visibilitychange`i dinliyor ve aynı
- * olayda farklı davranıyorlardı.
+ * İki geçiş biçimi vardır ve ikisi de duraklatmayı gerektirir:
+ * `visibilitychange` gerçekten gizlenmeyi, `blur` ise odak kaybını bildirir
+ * (bildirim gölgesi, bölünmüş ekran) ve orada `document.hidden` `false` kalır.
+ * Android'de bildirim gölgesi çoğu cihazda yalnız `blur` üretir.
  */
 
 export type AppVisibilityState = 'foreground' | 'background';
 
 export interface AppVisibilityOptions {
   /**
-   * Pencere odağı kaybını da arka plan saymak. Varsayılan `true`.
-   *
-   * Sesi susturmak için `blur` genellikle fazla agresiftir (kullanıcı başka
-   * pencereye tıkladı diye müzik kesilmesin istenebilir), oyunu duraklatmak
-   * içinse tam olarak istenen davranıştır. Bu yüzden karar çağıranındır.
+   * Odak kaybı da arka plan sayılsın mı (varsayılan `true`). Sesi susturmak
+   * için `blur` fazla agresiftir, duraklatmak için tam isabet — karar çağıranın.
    */
   readonly includeWindowFocus?: boolean;
 }
@@ -40,11 +25,8 @@ export function getAppVisibility(): AppVisibilityState {
 }
 
 /**
- * Görünürlük değişimlerine abone olur; aboneliği kaldıran fonksiyonu döner.
- *
- * Dinleyici yalnızca durum GERÇEKTEN değiştiğinde çağrılır — `blur` ve
- * `visibilitychange` aynı geçişte arka arkaya gelebilir ve filtrelenmezse
- * oyunu iki kez duraklatmaya çalışırdı.
+ * Yalnız durum GERÇEKTEN değiştiğinde çağırır: `blur` ve `visibilitychange`
+ * aynı geçişte arka arkaya gelir, filtrelenmezse oyun iki kez duraklatılırdı.
  */
 export function observeAppVisibility(
   onChange: (state: AppVisibilityState) => void,

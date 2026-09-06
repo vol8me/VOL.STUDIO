@@ -50,7 +50,7 @@ export class Bullet {
     this.arc = scene.add.circle(
       finiteOr(x, 0),
       finiteOr(y, 0),
-      bulletConfig.radius,
+      bulletConfig.radiusPx,
       bulletConfig.color,
       bulletConfig.fillAlpha,
     );
@@ -60,7 +60,7 @@ export class Bullet {
     // mermi olabildiği için kalite kademesi bunu kapatabilir.
     if (this.visuals.entityStrokes) {
       this.arc.setStrokeStyle(
-        bulletConfig.strokeWidth,
+        bulletConfig.strokeWidthPx,
         bulletConfig.strokeColor,
         bulletConfig.strokeAlpha,
       );
@@ -69,7 +69,7 @@ export class Bullet {
 
     this.velocity.set(directionX, directionY);
     if (this.velocity.length() > 0) {
-      this.velocity.normalizeInPlace().scaleInPlace(bulletConfig.speed);
+      this.velocity.normalizeInPlace().scaleInPlace(bulletConfig.speedPxPerSec);
     }
   }
 
@@ -163,7 +163,7 @@ export class Bullet {
 
   /** Border duvarından sekme — hız vektörünü yansıt. */
   private handleBounce(border: Border): void {
-    const r = bulletConfig.radius;
+    const r = bulletConfig.radiusPx;
     const b = border.bounds;
     let bounced = false;
 

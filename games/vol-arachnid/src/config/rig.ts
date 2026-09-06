@@ -1,12 +1,9 @@
 import type { RigArticulation } from '@volstudio/core';
 
 /**
- * Rig'in kaynak pozu ile atan2 açı uzayı arasındaki sabit fark.
- *
- * Kaynak belgede yaratık YUKARI (yerel -Y) bakar; `Math.atan2` ise +X'i sıfır
- * kabul eder. Gövdenin görsel yönü bu ofsetle rig dönüşüne çevrilir. TEK
- * kaynaktır: sahne ile uzuv çözücüsü ayrı sabitler tuttuğunda birinde yapılan
- * bir düzeltme diğerinde sessizce eksik kalır ve ayaklar gövdeden ayrışır.
+ * Kaynak poz ile atan2 açı uzayı arasındaki fark: belgede yaratık YUKARI
+ * (yerel -Y) bakar, `Math.atan2` +X'i sıfır sayar. TEK kaynaktır — sahne ile
+ * uzuv çözücüsü ayrı sabit tutarsa düzeltme birinde eksik kalır.
  */
 export const RIG_FACING_OFFSET_RAD = Math.PI / 2;
 
@@ -27,10 +24,7 @@ export const BODY_SHELL_PART_IDS = [
 /** Bakışı taşıyan parça — `core_ring`in içinde, yuvasından taşmadan gezinir. */
 export const GAZE_PART_ID = 'reactor_slit';
 
-/**
- * Öndeki uç parçalar. Gövdeyle birebir dönerlerse yaratık tek parça bir levha
- * gibi görünür; dönüşe önden yatarak yönü OKUTURLAR.
- */
+/** Dönüşe önden yatıp yönü okuturlar; birebir dönerlerse yaratık levha olur. */
 export const SNOUT_PART_IDS = ['top_cap', 'top_cap_side_l', 'top_cap_side_r'] as const;
 
 export interface LimbChainSpec {
@@ -42,16 +36,10 @@ export interface LimbChainSpec {
   /** Uçtaki kozmetik parça; kemik uzunluğuna dahildir, ayrıca bilek açısı alır. */
   tipPartId: string | null;
   /**
-   * Kaynak yerleşim, parçaları ADLARININ TERSİNE dizmiş mi?
-   *
-   * Arka uzuvlarda kaynak belge zinciri ters kurmuş: ok ucu olan `tail_tip`
-   * gövdenin ALTINDA, kalın `tail_upper` çubuğu ise dışarıda duruyor. Pençe
-   * gövdenin altında kaldığı için uzuv "ters" okunuyordu.
-   *
-   * Bu bir çizim hatasıdır ve yerleşimden düzeltilemez: parçalar fiziksel
-   * olarak o sırada durur. Zincir bu yüzden YENİDEN KURULUR — kemik boyları
-   * kaynaktaki eklem aralıklarının ters sırasıdır (uzuv aynı fiziksel boyu
-   * korur), parça konumları ise elle eklemlerin üstüne yazılır.
+   * Kaynak yerleşim parçaları ADLARININ TERSİNE mi dizmiş? Arka uzuvlarda
+   * ok ucu gövdenin altında, kalın çubuk dışarıda kalıyor. Yerleşimden
+   * düzeltilemez (parçalar fiziksel olarak o sırada); zincir YENİDEN KURULUR:
+   * kemik boyları ters sırayla alınır, parça konumları eklemlerin üstüne yazılır.
    */
   sourceChainReversed: boolean;
   /**

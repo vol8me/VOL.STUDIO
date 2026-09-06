@@ -44,7 +44,7 @@ describe('ArachnidBody hareketi', () => {
     body.update(new Vector2(1, 0), false, deltaMs);
 
     const expectedSpeed = Math.min(
-      playerConfig.maxSpeed,
+      playerConfig.maxSpeedPxPerSec,
       playerConfig.accelerationPxPerSec2 * (deltaMs / 1000),
     );
     expect(body.velocity.x).toBeCloseTo(expectedSpeed, 8);

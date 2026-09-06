@@ -95,8 +95,8 @@ describe('temel saldırı dengesi', () => {
   });
 
   it('temel düşman iki mermide ölür — hasar/can hizası korunur', () => {
-    expect(enemyConfig.health % bulletConfig.damage).toBe(0);
-    expect(enemyConfig.health / bulletConfig.damage).toBe(2);
+    expect(enemyConfig.healthPoints % bulletConfig.damage).toBe(0);
+    expect(enemyConfig.healthPoints / bulletConfig.damage).toBe(2);
   });
 
   it('üst üste binen ateş hızı kartları bile alt sınırı aşamaz', () => {

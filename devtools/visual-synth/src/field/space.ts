@@ -1,19 +1,12 @@
 /**
- * Piksel ↔ birim uzay eşlemesi — D2'nin koordinat sözleşmesi.
+ * Piksel ↔ birim uzay eşlemesi (D2 koordinat sözleşmesi). Köken MERKEZDE,
+ * birim KISA KENARIN YARISI: kısa eksen `[-1,1]`, uzun eksen `[-a,a]`.
  *
- * Birim uzayın **kökeni merkezdedir** ve birim **kısa kenarın yarısıdır**:
- * kısa eksen `[-1, 1]`, uzun eksen `[-a, a]` (`a = uzun / kısa`).
+ * `[0,1]²`yi esnetmek daireyi elipse çevirir ve her SDF'yi en-boy oranına
+ * bağlar; kısa kenar normalizasyonu şekli korur. Simetri de ucuzlar.
  *
- * İki gerekçe (§ D2):
- * 1. `[0,1]²`yi dikdörtgene esnetmek daireyi elipse çevirir ve her SDF'yi
- *    en-boy oranına bağımlı kılar. Kısa kenar normalizasyonu şekli korur.
- * 2. Simetri doğal olur: `x = 0` etrafında aynalamak, `x = 0.5` etrafında
- *    aynalamaktan daha az parametre taşır.
- *
- * **+y AŞAĞIDIR.** Çıktı bir görüntüdür ve tampon indeksi doğrudan satıra
- * eşlenir; ayrıca ışık yönü `[-0.55, -0.7, …]` bu eksende sol-üst demektir
- * ki piksel sanatının alışılmış anahtar ışığı odur. Bunun yan sonucu:
- * pozitif açı görsel olarak SAAT YÖNÜNDE döner.
+ * **+y AŞAĞIDIR:** tampon indeksi doğrudan satıra eşlenir ve ışık yönü bu
+ * eksende sol-üst olur. Yan sonucu, pozitif açı SAAT YÖNÜNDE döner.
  */
 
 export interface UnitSpace {

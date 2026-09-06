@@ -81,7 +81,7 @@ export class CollisionResolver {
 
       const previousX = bullet.previousPositionX ?? bullet.x;
       const previousY = bullet.previousPositionY ?? bullet.y;
-      const broadphaseRadius = bulletConfig.radius + getMaxEnemyRadius();
+      const broadphaseRadius = bulletConfig.radiusPx + getMaxEnemyRadius();
 
       // Sekmede yol DÜZ DEĞİLDİR: `önceki -> temas -> güncel`. Tek segmentle
       // taramak, merminin hiç uğramadığı bir kirişi tarardı (bkz.
@@ -119,7 +119,7 @@ export class CollisionResolver {
             endY,
             enemy.x,
             enemy.y,
-            enemy.radius + bulletConfig.radius,
+            enemy.radius + bulletConfig.radiusPx,
           );
           if (entryT === null || entryT >= nearestT) continue;
           nearest = enemy;

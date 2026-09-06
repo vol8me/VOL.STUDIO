@@ -30,11 +30,11 @@ function legacyEnemyStats(elapsedMs: number): { health: number; speed: number } 
     rampedFactor * difficultyConfig.speedGrowthPerMinute +
     beyondRamp * difficultyConfig.speedGrowthPerMinute;
 
-  const scaledHealth = enemyConfig.health * healthMultiplier;
+  const scaledHealth = enemyConfig.healthPoints * healthMultiplier;
 
   return {
     health: Math.round(scaledHealth / bulletConfig.damage) * bulletConfig.damage,
-    speed: enemyConfig.speed * speedMultiplier,
+    speed: enemyConfig.speedPxPerSec * speedMultiplier,
   };
 }
 
@@ -55,19 +55,19 @@ describe('düşman stat zinciri — refaktör regresyonu', () => {
 
   it('zorluk verilmezse taban değerler aynen kalır', () => {
     const stats = createEnemyStats(ENEMY_CATALOG.grunt);
-    expect(stats.getValue('health')).toBe(enemyConfig.health);
-    expect(stats.getValue('speed')).toBe(enemyConfig.speed);
+    expect(stats.getValue('health')).toBe(enemyConfig.healthPoints);
+    expect(stats.getValue('speed')).toBe(enemyConfig.speedPxPerSec);
     expect(stats.getValue('damage')).toBe(enemyConfig.contactDamage);
     expect(stats.getValue('fireRate')).toBe(enemyConfig.contactDamageCooldownMs);
   });
 
   it('zorluk modifier’ı tek kimlik altında toplanır — kaldırılınca taban dönülür', () => {
     const stats = createEnemyStats(ENEMY_CATALOG.grunt, getDifficultyState(600_000));
-    expect(stats.getValue('health')).toBeGreaterThan(enemyConfig.health);
+    expect(stats.getValue('health')).toBeGreaterThan(enemyConfig.healthPoints);
 
     expect(stats.removeModifier('difficulty')).toBe(2);
-    expect(stats.getValue('health')).toBe(enemyConfig.health);
-    expect(stats.getValue('speed')).toBe(enemyConfig.speed);
+    expect(stats.getValue('health')).toBe(enemyConfig.healthPoints);
+    expect(stats.getValue('speed')).toBe(enemyConfig.speedPxPerSec);
   });
 
   it('spawn anındaki çarpan sabitlenir — düşman zamanla kendiliğinden güçlenmez', () => {

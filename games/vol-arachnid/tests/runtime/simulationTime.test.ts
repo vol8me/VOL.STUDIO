@@ -101,7 +101,7 @@ describe('simülasyon zamanı — tek tavan', () => {
 
     // Aynı gövde YÖRÜNGESİ, farklı kare süreleri. Gövde konumu dışarıdan
     // verildiği için fark yalnız yürüyüş döngüsünün yaşadığı zamandan gelir.
-    const speed = playerConfig.maxSpeed;
+    const speed = playerConfig.maxSpeedPxPerSec;
     for (let i = 1; i <= 8; i++) {
       const x = (speed * (CEILING * i)) / 1000;
       const signals = bodySignals({ x, velX: speed });

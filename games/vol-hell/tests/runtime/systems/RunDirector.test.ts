@@ -83,7 +83,7 @@ function makeEffects(): EffectManager {
 
 function makeGrid(): SpatialGrid {
   return new SpatialGrid(
-    Math.max(getMaxEnemyRadius(), bulletConfig.radius) * physicsConfig.spatialGridCellMultiplier,
+    Math.max(getMaxEnemyRadius(), bulletConfig.radiusPx) * physicsConfig.spatialGridCellMultiplier,
   );
 }
 

@@ -1,45 +1,26 @@
 /**
- * Hareket, anlık hız ataması değil İVMELİ bir modeldir: yön tuşu bırakıldığında
- * gövde sürtünmeyle yavaşlar, tuşa basıldığında hıza rampayla çıkar. Kütlesi
- * olan bir yaratık hissi buradan gelir.
+ * Hareket İVMELİDİR, anlık hız ataması değil: tuş bırakılınca gövde sürtünmeyle
+ * yavaşlar, basılınca hıza rampayla çıkar. Kütle hissi buradan gelir.
  */
 export const playerConfig = {
-  /** Sürekli yürüyüş hızı (px/s). */
-  maxSpeed: 210,
-  /**
-   * Hıza çıkış ivmesi (px/s²). Tam hıza ~0.38 sn'de ulaşılır; kütlesi olan bir
-   * yaratık tuşa basıldığı anda seyir hızında olmaz.
-   */
+  maxSpeedPxPerSec: 210,
+  /** Tam hıza ~0.38 sn'de ulaşılır. */
   accelerationPxPerSec2: 560,
-  /** Girdi yokken yavaşlama (px/s²) — ivmeden yavaş, gövde süzülerek durur. */
+  /** İvmeden YAVAŞ: gövde süzülerek durur. */
   brakePxPerSec2: 760,
-  /**
-   * Gövdenin görsel yöne dönüş yayı.
-   *
-   * Eski değerler (150/17) yarım saniyenin altında 180° döndürüyordu: yaratık
-   * yönünü kütlesi yokmuş gibi anında değiştiriyordu. Yay yumuşatıldı ve
-   * dönüş hızı ayrıca tavanlandı — yay tek başına, büyük bir açı farkında
-   * ilk karelerde çok yüksek bir açısal hız üretebilir.
-   */
+  /** Yumuşak tutulur; sert bir yay büyük açı farkında ilk karelerde fırlar. */
   facingSpring: { stiffness: 44, damping: 10 },
-  /** Dönüşün üst sınırı (rad/s). 180°'lik bir dönüş bunun altına inemez. */
+  /** Yayın üstünde ayrı bir tavan: 180°'lik dönüş bunun altına inemez. */
   maxTurnRateRadPerSec: 2.7,
 
-  /**
-   * Sert dönüşte hız kesilir: ağır bir gövde yönünü tam hızda değiştiremez.
-   * `turnRateForFullPenalty`e ulaşan bir dönüşte hız `maxTurnSpeedPenalty`
-   * oranında düşer.
-   */
+  /** Sert dönüşte hız kesilir; ağır gövde yönünü tam hızda değiştiremez. */
   turnRateForFullPenalty: 2.4,
   maxTurnSpeedPenalty: 0.42,
 
   /**
-   * Dash: kısa süreli, KONTROLSÜZ bir atılım.
-   *
-   * Yön atılımın başında kilitlenir ve gövdenin baktığı yön de o yöne
-   * sabitlenir. Atılım sürerken dümen kırabilmek ağırlık hissini öldürüyor,
-   * uzuvları da yanlış yönlendiriyordu: gövde düz uçarken duruş yelpazesi
-   * dönüyor, ayaklar gitmediği bir yöne basmaya çalışıyordu.
+   * KONTROLSÜZ atılım: yön başta kilitlenir, bakış da o yöne sabitlenir.
+   * Atılım sürerken dümen kırmak ağırlık hissini öldürüyor ve uzuvları
+   * gövdenin gitmediği yöne bastırıyordu.
    */
   dash: {
     speedPxPerSec: 900,
@@ -48,19 +29,15 @@ export const playerConfig = {
   },
 
   /**
-   * Duvar teması. Bu hızın üstünde çarpan gövde SEKER: hız sıfırlanmaz,
-   * duvarın normalinde tersine çevrilip sönümlenir ve atılım kesilir.
-   * Sıfırlamak, sınırı görünmez bir yapışkan yüzeye çeviriyordu.
+   * Bu hızın üstünde çarpan gövde SEKER; hız sıfırlanmaz, normalde tersine
+   * çevrilip sönümlenir. Sıfırlamak sınırı yapışkan bir yüzeye çeviriyordu.
    *
-   * Eşik `maxSpeed`in ÜSTÜNDEDİR: yürüyerek duvara dayanmak bir çarpma
-   * değildir. Daha düşük bir eşikte duvara doğru basılı tutulan tuş sürekli
-   * sekme üretiyordu — gövde duvarın önünde zıplayıp duruyor, oyuncu kenara
-   * hiç yaslanamıyordu. Sekme artık yalnız atılım hızındaki temasa aittir.
+   * Eşik `maxSpeedPxPerSec`in ÜSTÜNDE: yürüyerek dayanmak çarpma değildir.
+   * Düşük eşikte duvara basılı tutulan tuş sürekli sekme üretiyordu.
    */
   wall: {
     impactSpeedPxPerSec: 300,
     restitution: 0.55,
-    /** Sekmenin ardından kontrolün geri gelme süresi (ms). */
     recoveryMs: 130,
   },
 } as const;

@@ -92,20 +92,32 @@ DisposableScope.ts` sınıf yorumu): TEK bir kaynağı (bir `setTimeout`,
 
 ## Yorum Doktrini
 
-Yorum **sözleşmeyi** anlatır: ne garanti edilir, hangi sınır geçerlidir, çağıran
-neyi varsaymamalıdır. Olayı anlatmaz.
+**Varsayılan: YORUM YOK.** Yorum bir istisnadır ve gerekçesini kendisi taşır.
+Yazılan her yorum okunacak, bakılacak ve bayatlayacak bir yüktür.
 
-- **Bugünkü okuyucuya yaz.** "Bir dönem şöyleydi, şu oldu, bu yüzden böyle"
-  anlatısı altı ay sonra kimseye lazım değildir; kalan bilgi "bu sınır neden
-  var"dır. Bir alternatifin denenip elendiği BİLGİ ise tek cümleye iner.
-- **Karar kaydı yorum değildir.** Ölçüm sayıları, "şunu ekleyeceğiz",
-  "bu blok kararın kaydıdır" gibi içerik `TODO.md`ye ya da `core/docs/`e
-  gider. Sınıf yorumu tüketicinin okuduğu yerdir, geliştirme günlüğü değil.
-- **Uzunluk sözleşmeden gelir.** `StatBlock` gibi gerçekten karmaşık bir
-  sözleşme uzun yazılır; onlarca satırlık bir blok yalnız hikâye anlatıyorsa
-  kısaltılır.
-- **Kod kendini anlatıyorsa yorum yazılmaz.** Yorum, koda bakarak
-  ÇIKARILAMAYACAK olanı söyler.
+Yorum yalnız şunu söyler: koda bakarak **çıkarılamayacak** olan. Ne garanti
+edilir, hangi sınır geçerlidir, çağıran neyi varsaymamalıdır.
+
+**Yazma:**
+
+- Kodun ne yaptığını tekrar eden cümle. `// sayacı artır` gibi.
+- Anlatı: "bir dönem şöyleydi", "önceki tasarım", "eskiden". Kalan bilgi
+  varsa şimdiki zamanda tek cümleye iner.
+- Ölçüm sayısı, karar kaydı, "şunu ekleyeceğiz". Bunlar `TODO.md`ye gider.
+- Bölüm başlığı, ayraç, ASCII kutu. Dosya bölünmesi gerekiyorsa bölünür.
+- Aynı gerekçenin iki dosyada kopyası. Sözleşme sahibinde durur, ötekiler
+  tek satırla ona işaret eder.
+
+**Yaz:**
+
+- Sessiz bir tuzak: neden bu sıra, neden bu katı karşılaştırma, ne olurdu.
+- Tüketicinin varsayamayacağı sözleşme: ödünç tampon, tek çağrılık geçerlilik.
+- Dış dünyanın dayattığı gariplik: tarayıcı kusuru, upstream issue.
+
+**Ölçü.** Bir dosyanın yorum oranı **%40'ı** aşıyorsa sözleşme değil anlatı
+birikmiştir; `scripts/quality/commentDensity.mjs` bunu kapıda sorar. Aşan dosya
+ya sadeleşir ya gerekçesini yazar (tip/şema dosyaları alan başına tek satırla
+meşru biçimde aşabilir).
 
 ## Doküman Yüzeyi
 

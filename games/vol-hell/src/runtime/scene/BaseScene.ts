@@ -4,18 +4,12 @@ import { DisposableScope } from '@volstudio/core/lifecycle';
 import { CustomCursor } from '@/runtime/ui/CustomCursor';
 
 /**
- * DOM tabanlı UI kullanan sahnelerin ortak iskeleti.
+ * DOM UI kullanan sahnelerin iskeleti: `UIRoot`, `languageChanged`, ilk
+ * frame'de `show()` ve `SHUTDOWN` temizliği. Amaç tekrarı azaltmak değil,
+ * TEMİZLİĞİ zorunlu kılmak — dördünden birinin unutulması sızıntı demek.
  *
- * Üç sahnede birebir tekrarlanan dört iş burada toplanır: `UIRoot` kurulumu,
- * `languageChanged` aboneliği, ilk frame'de `show()` için `requestAnimationFrame`
- * ve `SHUTDOWN`'da bunların temizliği. Tekrarın kendisi zararsızdı, ama her yeni
- * sahnede dördünden birinin unutulması sızıntı demek — soyutlamanın asıl amacı
- * temizliği zorunlu kılmak.
- *
- * Alt sınıf `create()` yerine `createScene()` yazar; `SHUTDOWN` kaydı ve UIRoot
- * kurulumu taban tarafından zaten yapılmıştır. Ek kaynak temizliği için
- * `onSceneShutdown()` override edilir — taban temizliği ondan SONRA çalışır,
- * böylece alt sınıf `this.ui` hâlâ ayaktayken kendi işini bitirebilir.
+ * Alt sınıf `create()` değil `createScene()` yazar; ek temizlik için
+ * `onSceneShutdown()` override edilir ve taban temizliği ondan SONRA çalışır.
  */
 export abstract class BaseScene extends Phaser.Scene {
   /** DOM UI kökü. `createScene()` çağrıldığında hazırdır. */
@@ -29,33 +23,22 @@ export abstract class BaseScene extends Phaser.Scene {
     this.onLanguageChanged();
   };
 
-  /**
-   * Phaser sahne örneğini yeniden kullanır ve alan başlatıcıları restart'ta
-   * ÇALIŞMAZ; bu yüzden durum sıfırlama `createScene()` içinde yapılır.
-   */
+  /** Alan başlatıcıları restart'ta ÇALIŞMAZ; sıfırlama `createScene()` içinde yapılır. */
   create(data?: unknown): void {
-    // Phaser aynı Scene nesnesini yeniden kullanabilir. Önceki çevrim
-    // beklenmedik bir nedenle SHUTDOWN alamadıysa yeni listener'lar eklenmeden
-    // kaynakları yine de kapat.
+    // Önceki çevrim SHUTDOWN alamadıysa yeni listener'lar eklenmeden kapat.
     this.lifecycleScope?.dispose();
     this.shutdownHandled = false;
     const scope = (this.lifecycleScope = new DisposableScope());
-    // Kamera, geçerli rasterleme çarpanına göre kurulur: dünya birimleri CSS
-    // pikseline sabitlenir, böylece çözünürlük ayarı sahanın BOYUTUNU
-    // değiştirmez. Sahne başına çağrılmalı — kamera sahneye aittir.
+    // Dünya birimlerini CSS pikseline sabitler: çözünürlük ayarı sahanın
+    // BOYUTUNU değiştirmez. Kamera sahneye ait, bu yüzden sahne başına.
     applyVolViewport(this);
     const container = this.game.canvas.parentElement ?? document.body;
     this.ui = new UIRoot(container);
-    // Scope kapanış sırası ters olduğu için UI ilk eklenir: diğer listener ve
-    // frame kaynakları kapandıktan sonra DOM kökü yok edilir.
+    // Kapanış TERS sırayla: UI ilk eklenir, en son yok edilir.
     scope.addDestroyable(this.ui);
-    // Cursor BİLEREK burada, yani HER sahnede kurulur: yalnız oyun sahnesine
-    // konsaydı menü ve ayarlar sistem imlecine düşer, imleç ekranlar arasında
-    // değişirdi. Sahne yaşam döngüsü onu geçişte toplayıp yeniden kurar.
-    //
-    // (F11/görüntü ayarları bunun AKSİNE burada DEĞİL, bootstrap'teki
-    // uygulama-ömürlü controller'dadır: sahne başına listener kurmak geçişlerde
-    // iki kez toggle üretirdi.)
+    // HER sahnede kurulur: yalnız oyun sahnesinde olsaydı imleç ekranlar
+    // arasında değişirdi. (F11 bunun AKSİNE bootstrap'te uygulama ömürlüdür;
+    // sahne başına listener geçişlerde iki kez toggle üretirdi.)
     scope.addDestroyable(new CustomCursor(document.body));
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
@@ -68,10 +51,8 @@ export abstract class BaseScene extends Phaser.Scene {
     try {
       this.createScene(data);
     } catch (createError) {
-      // Phaser, `create()` fırlattığında SHUTDOWN göndermeyi garanti etmez.
-      // Alt sınıf kısmen kurduğu kaynakları bırakmayı denesin; onun cleanup
-      // hatası asıl başlangıç nedenini MASKELEMEMELİ. `handleShutdown()` kendi
-      // finally'sinde UIRoot/i18n/rAF scope'unu her durumda kapatır.
+      // Phaser `create()` fırlattığında SHUTDOWN'ı GARANTİ ETMEZ. Alt sınıfın
+      // cleanup hatası asıl nedeni maskelememeli.
       try {
         this.handleShutdown();
       } catch (cleanupError) {

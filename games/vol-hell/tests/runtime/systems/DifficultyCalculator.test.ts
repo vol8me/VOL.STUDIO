@@ -69,6 +69,6 @@ describe('getDifficultyState', () => {
     // 20 dalga x 40 sn = 800 sn'lik koşu sonunda bile düşman oyuncuyu
     // hızda geçmemeli; yoksa kaçmak imkânsız hale gelir.
     const runEnd = getDifficultyState(WAVE_RUN_DURATION_MS);
-    expect(enemyConfig.speed * runEnd.speedMultiplier).toBeLessThan(playerConfig.moveSpeed);
+    expect(enemyConfig.speedPxPerSec * runEnd.speedMultiplier).toBeLessThan(playerConfig.moveSpeed);
   });
 });

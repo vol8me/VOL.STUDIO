@@ -42,7 +42,7 @@ export class FluxPickup {
     /** Kalite kademesi görsel anahtarları; verilmezse tam kalite. */
     visualsProvider?: EntityVisualQualityProvider,
   ) {
-    const { radius, color, strokeColor, strokeWidth } = economyConfig.flux;
+    const { radiusPx: radius, color, strokeColor, strokeWidthPx: strokeWidth } = economyConfig.flux;
     this.amountValue = Math.floor(nonNegativeFinite(amount));
 
     // Sahne dışına düşen parça toplanamaz; iniş noktası sınır içine çekilir.
@@ -93,7 +93,7 @@ export class FluxPickup {
   /** Oyuncu bu parçayı toplayacak kadar yakın mı? İniş bitmeden toplanmaz. */
   isWithinCollectRange(playerX: number, playerY: number, playerRadius: number): boolean {
     if (!this.settled) return false;
-    const reach = playerRadius + economyConfig.flux.radius + economyConfig.flux.collectDistance;
+    const reach = playerRadius + economyConfig.flux.radiusPx + economyConfig.flux.collectDistancePx;
     return Math.hypot(playerX - this.arc.x, playerY - this.arc.y) <= reach;
   }
 
@@ -117,7 +117,7 @@ export class FluxPickup {
    * Tween yerine elle yürütülür — delta tabanlı, deterministik ve test edilebilir.
    */
   private updateDrop(deltaMs: number): void {
-    const { durationMs, arcHeight, popScale } = economyConfig.flux.drop;
+    const { durationMs, arcHeightPx: arcHeight, popScale } = economyConfig.flux.drop;
     this.dropElapsedMs += deltaMs;
     const t = Math.min(1, this.dropElapsedMs / durationMs);
     const eased = 1 - Math.pow(1 - t, 3);
@@ -138,7 +138,7 @@ export class FluxPickup {
 
   /** Mıknatıs menzilindeyse oyuncuya doğru çeker. Çektiyse true döner. */
   private applyMagnet(deltaMs: number, playerX: number, playerY: number): boolean {
-    const { magnetRadius, magnetSpeed } = economyConfig.flux;
+    const { magnetRadiusPx: magnetRadius, magnetSpeedPxPerSec: magnetSpeed } = economyConfig.flux;
     const dx = playerX - this.arc.x;
     const dy = playerY - this.arc.y;
     const distance = Math.hypot(dx, dy);

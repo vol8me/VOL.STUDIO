@@ -244,7 +244,7 @@ export class EnemyManager {
 
     // Oyuncuya çok yakın spawn etme
     const distToPlayer = Math.hypot(position.x - playerPos.x, position.y - playerPos.y);
-    if (distToPlayer < enemyConfig.spawnMinPlayerDistance) return false;
+    if (distToPlayer < enemyConfig.spawnMinPlayerDistancePx) return false;
 
     const enemy = this.createEnemy(definition, position.x, position.y, difficulty);
     if (grid && typeof grid.insert === 'function') grid.insert(enemy);

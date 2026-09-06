@@ -166,7 +166,7 @@ export class BossController {
     }
 
     const context = this.syncContext(deltaMs, playerPos);
-    applyStandoffBehavior(context, bossConfig.slam.radius, 0.2, this.velocity);
+    applyStandoffBehavior(context, bossConfig.slam.radiusPx, 0.2, this.velocity);
     this.enemy.moveBy(this.velocity.x, this.velocity.y, deltaMs, border, grid);
   }
 
@@ -207,7 +207,7 @@ export class BossController {
       shape: 'circle',
       x,
       y,
-      radius: bossConfig.slam.radius,
+      radius: bossConfig.slam.radiusPx,
       color: this.definition.color,
     });
     const result = await handle.promise;
@@ -217,7 +217,7 @@ export class BossController {
     // Hasar UYARI KONUMUNA göre çözülür (bossun güncel konumuna değil):
     // oyuncunun kaçtığı alan gerçekten güvenli olsun.
     const player = this.deps.getPlayerPosition();
-    if (Math.hypot(player.x - x, player.y - y) <= bossConfig.slam.radius) {
+    if (Math.hypot(player.x - x, player.y - y) <= bossConfig.slam.radiusPx) {
       this.deps.damagePlayer(this.enemy.getContactDamage() * bossConfig.slam.damageMultiplier);
     }
   }

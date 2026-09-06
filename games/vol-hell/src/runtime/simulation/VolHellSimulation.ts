@@ -120,7 +120,8 @@ export class VolHellSimulation {
     this.playerX = this.bounds.centerX;
     this.playerY = this.bounds.centerY;
     this.enemyIndex = new SpatialIndex<SimulationEnemyState>(
-      Math.max(getMaxEnemyRadius(), bulletConfig.radius) * physicsConfig.spatialGridCellMultiplier,
+      Math.max(getMaxEnemyRadius(), bulletConfig.radiusPx) *
+        physicsConfig.spatialGridCellMultiplier,
       (enemy) => enemy.isAlive,
     );
 
@@ -349,7 +350,7 @@ export class VolHellSimulation {
       const dx = enemy.x - other.x;
       const dy = enemy.y - other.y;
       const distance = Math.hypot(dx, dy);
-      const minDistance = enemy.radius + other.radius + enemyConfig.separationGap;
+      const minDistance = enemy.radius + other.radius + enemyConfig.separationGapPx;
       if (!Number.isFinite(distance) || distance <= 0 || distance >= minDistance) continue;
       const force = (1 - distance / minDistance) * enemyConfig.separationForce;
       pushX += (dx / distance) * force * separationScale;
@@ -365,7 +366,7 @@ export class VolHellSimulation {
     const position = this.pickEdgePosition(definition.radius);
     if (
       Math.hypot(position.x - this.playerX, position.y - this.playerY) <
-      enemyConfig.spawnMinPlayerDistance
+      enemyConfig.spawnMinPlayerDistancePx
     ) {
       return false;
     }
@@ -443,7 +444,9 @@ export class VolHellSimulation {
       if (!pickup.settled) continue;
       if (
         Math.hypot(this.playerX - pickup.x, this.playerY - pickup.y) >
-        playerConfig.hitboxRadius + economyConfig.flux.radius + economyConfig.flux.collectDistance
+        playerConfig.hitboxRadius +
+          economyConfig.flux.radiusPx +
+          economyConfig.flux.collectDistancePx
       ) {
         continue;
       }
@@ -462,7 +465,7 @@ export class VolHellSimulation {
       pickup.y =
         pickup.originY +
         (pickup.landingY - pickup.originY) * eased -
-        Math.sin(t * Math.PI) * economyConfig.flux.drop.arcHeight;
+        Math.sin(t * Math.PI) * economyConfig.flux.drop.arcHeightPx;
       if (t >= 1) {
         pickup.x = pickup.landingX;
         pickup.y = pickup.landingY;
@@ -474,8 +477,12 @@ export class VolHellSimulation {
     const dx = this.playerX - pickup.x;
     const dy = this.playerY - pickup.y;
     const distance = Math.hypot(dx, dy);
-    if (Number.isFinite(distance) && distance > 0 && distance <= economyConfig.flux.magnetRadius) {
-      const travel = Math.min((economyConfig.flux.magnetSpeed * deltaMs) / 1000, distance);
+    if (
+      Number.isFinite(distance) &&
+      distance > 0 &&
+      distance <= economyConfig.flux.magnetRadiusPx
+    ) {
+      const travel = Math.min((economyConfig.flux.magnetSpeedPxPerSec * deltaMs) / 1000, distance);
       pickup.x += (dx / distance) * travel;
       pickup.y += (dy / distance) * travel;
       pickup.bobElapsedMs = 0;
@@ -521,7 +528,7 @@ export class VolHellSimulation {
   private dropFlux(x: number, y: number, amount: number): void {
     const total = Math.floor(nonNegativeFinite(amount));
     if (total <= 0) return;
-    const { maxDropsPerDeath, scatterRadius, maxActive } = economyConfig.flux;
+    const { maxDropsPerDeath, scatterRadiusPx: scatterRadius, maxActive } = economyConfig.flux;
     const pieceCount = Math.min(total, maxDropsPerDeath);
     const perPiece = Math.floor(total / pieceCount);
     let remainder = total - perPiece * pieceCount;
@@ -536,13 +543,13 @@ export class VolHellSimulation {
       const distance = this.random.next() * scatterRadius;
       const landingX = clampToBounds(
         x + Math.cos(angle) * distance,
-        this.bounds.left + economyConfig.flux.radius,
-        this.bounds.right - economyConfig.flux.radius,
+        this.bounds.left + economyConfig.flux.radiusPx,
+        this.bounds.right - economyConfig.flux.radiusPx,
       );
       const landingY = clampToBounds(
         y + Math.sin(angle) * distance,
-        this.bounds.top + economyConfig.flux.radius,
-        this.bounds.bottom - economyConfig.flux.radius,
+        this.bounds.top + economyConfig.flux.radiusPx,
+        this.bounds.bottom - economyConfig.flux.radiusPx,
       );
       this.pickups.push({
         x,

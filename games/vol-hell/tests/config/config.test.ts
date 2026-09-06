@@ -31,19 +31,19 @@ describe('config ilişkileri — oyun dengesi', () => {
   });
 
   it('oyuncu düşmandan hızlı — kaçış her zaman mümkün', () => {
-    expect(playerConfig.moveSpeed).toBeGreaterThan(enemyConfig.speed);
+    expect(playerConfig.moveSpeed).toBeGreaterThan(enemyConfig.speedPxPerSec);
   });
 
   it('mermi oyuncudan hızlı — atış kendini geçemez', () => {
-    expect(bulletConfig.speed).toBeGreaterThan(playerConfig.moveSpeed);
+    expect(bulletConfig.speedPxPerSec).toBeGreaterThan(playerConfig.moveSpeed);
   });
 
   it('düşman canı mermi hasarının tam katı — can barı vuruş başına anlamlı', () => {
-    expect(enemyConfig.health % bulletConfig.damage).toBe(0);
+    expect(enemyConfig.healthPoints % bulletConfig.damage).toBe(0);
   });
 
   it('separation boşluğu pozitif — düşmanlar teğet geçmek yerine aralık bırakır', () => {
-    expect(enemyConfig.separationGap).toBeGreaterThan(0);
+    expect(enemyConfig.separationGapPx).toBeGreaterThan(0);
   });
 
   it('spatial grid hücresi en büyük düşmanın ayrılma mesafesini kapsar', () => {
@@ -51,13 +51,13 @@ describe('config ilişkileri — oyun dengesi', () => {
     // düşmanlar birbirini görmeden iç içe geçer.
     const maxRadius = getMaxEnemyRadius();
     const cellSize =
-      Math.max(maxRadius, bulletConfig.radius) * physicsConfig.spatialGridCellMultiplier;
-    expect(cellSize).toBeGreaterThanOrEqual(maxRadius * 2 + enemyConfig.separationGap);
+      Math.max(maxRadius, bulletConfig.radiusPx) * physicsConfig.spatialGridCellMultiplier;
+    expect(cellSize).toBeGreaterThanOrEqual(maxRadius * 2 + enemyConfig.separationGapPx);
   });
 
   it('spawn mesafesi temas mesafesinden çok uzak — anında hasar olmaz', () => {
-    expect(enemyConfig.spawnMinPlayerDistance).toBeGreaterThan(
-      (enemyConfig.radius + playerConfig.hitboxRadius) * 3,
+    expect(enemyConfig.spawnMinPlayerDistancePx).toBeGreaterThan(
+      (enemyConfig.radiusPx + playerConfig.hitboxRadius) * 3,
     );
   });
 

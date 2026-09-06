@@ -1,12 +1,9 @@
 /**
- * Sayısal ara değer ve kelepçeleme yardımcıları.
- *
- * Hepsi saf fonksiyondur ve NaN/Infinity geçirmez: bozuk bir değerin oyun
- * durumuna sızıp konumu/canı `NaN`e çevirmesi, kaynağı çok sonra fark edilen
- * bir hata biçimidir.
+ * Ara değer ve kelepçeleme. Hepsi SAF ve NaN/Infinity GEÇİRMEZ: bozuk bir
+ * değerin konuma/cana sızması kaynağından çok sonra fark edilir.
  */
 
-/** Değeri [min, max] aralığına kelepçeler. Sınırlar ters verilirse takas edilir. */
+/** Sınırlar ters verilirse takas edilir. */
 export function clamp(value: number, min: number, max: number): number {
   if (!Number.isFinite(value)) return Number.isFinite(min) ? min : 0;
   const lo = Math.min(min, max);
@@ -14,32 +11,23 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(hi, Math.max(lo, value));
 }
 
-/** Değeri [0, 1] aralığına kelepçeler. */
 export function clamp01(value: number): number {
   return clamp(value, 0, 1);
 }
 
-/**
- * `a` ile `b` arasında doğrusal ara değer. `t` kelepçelenmez — dışarı taşan
- * `t` bilinçli bir ekstrapolasyon olabilir; kelepçe isteyen `clamp01` ile
- * sarar.
- */
+/** `t` KELEPÇELENMEZ; taşan `t` bilinçli ekstrapolasyon olabilir. */
 export function lerp(a: number, b: number, t: number): number {
   if (!Number.isFinite(a) || !Number.isFinite(b) || !Number.isFinite(t)) return a;
   return a + (b - a) * t;
 }
 
-/**
- * `lerp`in tersi: `value`nun `a`-`b` aralığındaki oranı. Aralık sıfır
- * genişlikteyse 0 döner (sıfıra bölme yok).
- */
+/** `lerp`in tersi. Sıfır genişlikte aralık 0 döner. */
 export function inverseLerp(a: number, b: number, value: number): number {
   const span = b - a;
   if (span === 0 || !Number.isFinite(span)) return 0;
   return (value - a) / span;
 }
 
-/** Bir aralıktaki değeri başka bir aralığa eşler. */
 export function remap(
   value: number,
   fromMin: number,
@@ -51,12 +39,8 @@ export function remap(
 }
 
 /**
- * `current`ı `target`a doğru en fazla `maxDelta` kadar yaklaştırır ve hedefi
- * AŞMAZ.
- *
- * `lerp`ten farkı: sabit hızlı yaklaşmadır ve hedefe gerçekten ULAŞIR.
- * `lerp(current, target, 0.1)` her karede kalan mesafenin bir kısmını kapatır,
- * yani teorik olarak hiç varmaz ve bir eşitlik kontrolü asla tutmaz.
+ * Sabit hızla yaklaşır, hedefi AŞMAZ ve ona gerçekten ULAŞIR. `lerp` her karede
+ * kalanın bir kısmını kapatır, yani teorik olarak hiç varmaz.
  */
 export function approach(current: number, target: number, maxDelta: number): number {
   if (!Number.isFinite(current) || !Number.isFinite(target)) return current;

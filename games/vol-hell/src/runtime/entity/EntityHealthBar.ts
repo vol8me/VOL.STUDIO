@@ -35,7 +35,7 @@ export class EntityHealthBar {
     options: EntityHealthBarOptions = {},
   ) {
     this.width = radius * enemyConfig.healthBarWidthRatio;
-    this.offset = radius + enemyConfig.healthBarGap;
+    this.offset = radius + enemyConfig.healthBarGapPx;
     const barY = y - this.offset;
     const depth = options.depth ?? RENDER_DEPTH.enemyHealthBar;
 
@@ -43,7 +43,7 @@ export class EntityHealthBar {
       x,
       barY,
       this.width,
-      enemyConfig.healthBarHeight,
+      enemyConfig.healthBarHeightPx,
       enemyConfig.healthBarBgColor,
       enemyConfig.healthBarBgAlpha,
     );
@@ -51,7 +51,7 @@ export class EntityHealthBar {
       x,
       barY,
       this.width,
-      enemyConfig.healthBarHeight,
+      enemyConfig.healthBarHeightPx,
       options.fillColor ?? enemyConfig.healthBarFillColor,
       enemyConfig.healthBarFillAlpha,
     );
@@ -87,8 +87,8 @@ export class EntityHealthBar {
     // tesadüfen çalışırdı. Origin sola sabitlenmiş olduğu için bar soldan
     // sabit kalip sağdan kısalır — klasik can bari davranışı.
     this.fill.setSize(
-      Math.max(enemyConfig.healthBarMinWidth, this.width * safeRatio),
-      enemyConfig.healthBarHeight,
+      Math.max(enemyConfig.healthBarMinWidthPx, this.width * safeRatio),
+      enemyConfig.healthBarHeightPx,
     );
     this.fill.x = x - this.width / 2;
   }

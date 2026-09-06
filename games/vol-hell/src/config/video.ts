@@ -17,40 +17,19 @@ export interface ResolutionPreset {
 }
 
 /**
- * Bir kalite kademesinin taşıdığı bütün knob'lar.
- *
- * CORE `GraphicsQuality` bu nesnenin içini bilmez; hangi kaldıraçların var
- * olduğu OYUNUN kararıdır ve hepsi burada, veri olarak durur.
+ * Bir kalite kademesinin knob'ları. CORE `GraphicsQuality` içini bilmez;
+ * hangi kaldıraçların olduğu OYUNUN kararıdır.
  */
 export interface GraphicsQualityProfile {
-  /**
-   * Rasterleme çözünürlüğü çarpanı (DPR'den bağımsız).
-   *
-   * En ağır kaldıraç: 0.7 çarpanı GPU'nun işlediği piksel sayısını ~%51'e
-   * indirir. Dünya boyutu ve ekrandaki görüntü boyutu DEĞİŞMEZ — kamera aynı
-   * çarpanla yakınlaştırıldığı için fark yalnızca netliktir.
-   */
+  /** En ağır kaldıraç: 0.7 çarpanı işlenen pikseli ~%51'e indirir. Dünya boyutu değişmez. */
   readonly renderScale: number;
-  /** Yüksek DPR ekranlarda rasterleme tavanı. */
   readonly maxDpr: number;
-  /** Efekt patlamalarında partikül sayısı çarpanı. */
   readonly particleScale: number;
-  /**
-   * Partikül ömrü çarpanı. Sayıdan bağımsız bir kaldıraç: aynı anda HAYATTA
-   * olan partikül sayısını düşürür, yani doldurma (fill-rate) maliyetini
-   * partikül sayısını azaltmadan da kırpar.
-   */
+  /** Sayıdan bağımsız: aynı anda HAYATTA olanı düşürür, doldurma maliyetini kırpar. */
   readonly particleLifespanScale: number;
-  /**
-   * Mermi izi. Her mermi saniyede ~40 kez partikül üretiyor; 30 mermilik bir
-   * ekranda saniyede 1200 emisyon demek. Kapatmak tek başına belirgin fark
-   * yaratır.
-   */
+  /** Her mermi saniyede ~40 emisyon; 30 mermide saniyede 1200 eder. */
   readonly bulletTrails: boolean;
-  /**
-   * Varlık kenar çizgileri (mermi, düşman, pickup). Her kenar çizgisi arc
-   * başına ikinci bir çizim geçişidir; ekranda onlarca varlık olur.
-   */
+  /** Her kenar çizgisi arc başına İKİNCİ bir çizim geçişidir. */
   readonly entityStrokes: boolean;
   /**
    * Saha üstü yön/nişan göstergeleri. İkisi de her karede `Graphics` yeniden

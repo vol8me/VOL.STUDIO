@@ -14,6 +14,7 @@ import { validateTrackedImports } from './quality/trackedImports.mjs';
 import { validateCoverageBinding } from './quality/coverageBinding.mjs';
 import { validateI18nKeys } from './quality/deadI18n.mjs';
 import { validateSourceSize } from './quality/sourceSize.mjs';
+import { validateCommentDensity } from './quality/commentDensity.mjs';
 
 /** Her paketin sahip olması gereken script'ler ve hangi kapının kullandığı. */
 const REQUIRED_SCRIPTS = {
@@ -69,6 +70,7 @@ problems.push(...validateBlobSizes(root));
 problems.push(...validateTrackedImports(root));
 problems.push(...validateI18nKeys(root));
 problems.push(...validateSourceSize(root));
+problems.push(...validateCommentDensity(root));
 
 for (const pkg of packages) {
   const manifest = readJson(join(root, pkg.dir, 'package.json'));

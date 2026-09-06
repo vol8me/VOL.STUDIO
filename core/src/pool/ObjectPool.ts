@@ -14,15 +14,11 @@ export interface ObjectPoolOptions<T> {
 }
 
 /**
- * Nesne havuzu — sık doğup ölen kısa ömürlü nesneler için. Nesnenin ne olduğu
- * havuzu ilgilendirmez; üretimi ve sıfırlamayı çağıran verir.
+ * Nesne havuzu. Amaç allocation'ı değil ÇÖP TOPLAMAYI azaltmak: kare başına
+ * yüzlerce kısa ömürlü nesne GC'yi görünür takılma üretecek sıklıkta tetikler.
  *
- * Amaç allocation'ı değil ÇÖP TOPLAMAYI azaltmaktır: kare başına yüzlerce
- * kısa ömürlü nesne, GC'yi görünür takılmalar üretecek sıklıkta tetikler.
- *
- * Havuz nesnenin ne olduğunu bilmez; üretimi ve sıfırlamayı çağıran verir.
- * `reset` içinde referansları bırakmak ÇAĞIRANIN sorumluluğudur: boşta duran
- * bir nesne hâlâ bir başkasına referans tutuyorsa o da serbest kalmaz.
+ * Nesnenin ne olduğunu bilmez. `reset` içinde referansları bırakmak ÇAĞIRANIN
+ * işidir: boştaki nesne başkasına referans tutuyorsa o da serbest kalmaz.
  */
 export class ObjectPool<T> {
   private readonly idle: T[] = [];
@@ -32,12 +28,8 @@ export class ObjectPool<T> {
   /** Boştaki örneklerin O(1) iade kontrolü için kümesi. */
   private readonly idleSet: Set<T> = new Set();
   /**
-   * DIŞARIDA kullanımdaki örnekler.
-   *
-   * Yalnızca sayaç tutmak yetmiyordu: havuzdan HİÇ alınmamış yabancı bir
-   * nesne `release` edilebiliyor, havuza giriyor, `activeCount`ı sahibi
-   * olmadığı hâlde düşürüyor ve bir sonraki `acquire()` ile başka bir
-   * çağırana dağıtılıyordu.
+   * DIŞARIDA kullanımdakiler. Salt sayaç yetmez: yabancı bir nesne `release`
+   * edilip havuza girer ve bir sonraki `acquire()` ile başkasına dağıtılırdı.
    */
   private readonly activeSet: Set<T> = new Set();
 
@@ -64,19 +56,13 @@ export class ObjectPool<T> {
   }
 
   /**
-   * Örneği havuza iade eder ve `reset` uygular.
-   *
-   * Aynı örneği İKİ KEZ iade etmek sessiz ve ayıklanması çok zor bir hataya
-   * yol açar (aynı nesne iki farklı sahibe dağıtılır), bu yüzden yakalanır.
-   * `idleSet` sayesinde kontrol O(1)'dir; iade sıcak yolda çağrılır.
+   * İade eder ve `reset` uygular. İKİ KEZ iade yakalanır — aynı nesne iki
+   * sahibe dağıtılırdı. `idleSet` sayesinde kontrol O(1); iade sıcak yoldadır.
    */
   release(item: T): void {
     if (this.idleSet.has(item)) {
       throw new Error('ObjectPool: aynı örnek iki kez iade edildi');
     }
-    // Sahiplik kontrolü: havuzdan alınmamış bir nesne havuza giremez.
-    // Aksi halde havuz, ömrünü yönetmediği bir nesneyi başka bir çağırana
-    // dağıtır ve iki sahip aynı örneği paylaşır.
     if (!this.activeSet.has(item)) {
       throw new Error('ObjectPool: bu havuzdan alınmamış bir örnek iade edilemez');
     }
@@ -90,23 +76,17 @@ export class ObjectPool<T> {
     }
   }
 
-  /** Dışarıda kullanımda olan örnek sayısı. */
   getActiveCount(): number {
     return this.activeSet.size;
   }
 
-  /** Havuzda bekleyen örnek sayısı. */
   getIdleCount(): number {
     return this.idle.length;
   }
 
   /**
-   * Boştaki örnekleri bırakır. Aktif örnekler ETKİLENMEZ — havuz onların
-   * sahibi değildir, yalnızca iade edilenleri saklar.
-   */
-  /**
-   * Boştaki örnekleri bırakır. Aktif örnekler ETKİLENMEZ ve sahiplikleri
-   * korunur — havuz onların sahibi değildir, iade edilebilmeleri gerekir.
+   * Boştakileri bırakır. Aktif örnekler ETKİLENMEZ ve sahiplikleri korunur:
+   * havuz onların sahibi değildir, iade edilebilmeleri gerekir.
    */
   clear(): void {
     this.idle.length = 0;

@@ -42,7 +42,7 @@ export class FluxPickupManager {
     const total = Math.floor(nonNegativeFinite(amount));
     if (total <= 0) return;
 
-    const { maxDropsPerDeath, scatterRadius, maxActive } = economyConfig.flux;
+    const { maxDropsPerDeath, scatterRadiusPx: scatterRadius, maxActive } = economyConfig.flux;
     const pieceCount = Math.min(total, maxDropsPerDeath);
     const perPiece = Math.floor(total / pieceCount);
     // Bölünemeyen artık ilk parçaya biner; toplam miktar korunur.

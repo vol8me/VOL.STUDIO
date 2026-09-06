@@ -1,27 +1,16 @@
 /**
- * Stat/modifier motoru — bir oyunun tüm varlıkları (karakter, birim, yapı)
- * için ORTAK istatistik katmanı.
+ * Stat/modifier motoru: taban değerlerin üzerine kaynak bazlı (kart, zorluk,
+ * arketip) modifier'lar biner.
  *
- * Taban değerlerin üzerine kaynak (kart, zorluk eğrisi, arketip) bazlı
- * modifier'lar binerek sonuç değeri verir. Her entity tipi için ayrı bir
- * ölçekleme mantığı yazmak yerine tek motor kullanılır.
- *
- * **Stat kümesi bu modülde TANIMLI DEĞİLDİR.** `TStat` zorunlu bir tip
- * parametresidir; hangi stat'ların var olduğu tüketicinin kararıdır
- * (`new StatBlock<'armor' | 'range'>({ armor: 5, range: 120 })`). Motorun
- * `'damage'`/`'health'` gibi bir kelime bilmesi, CORE'u tek bir oyunun
- * sözlüğüne bağlar — bu yüzden varsayılan bir stat kümesi BİLİNÇLİ OLARAK
- * sunulmaz. VOL.HELL'in kendi kümesi için bkz.
- * `games/vol-hell/src/config/stats.ts`.
+ * Stat kümesi bu modülde TANIMLI DEĞİLDİR — `TStat` zorunlu tip parametresidir
+ * ve hangi stat'ların olduğu tüketicinin kararıdır. Motorun `'damage'` gibi bir
+ * kelime bilmesi CORE'u tek bir oyunun sözlüğüne bağlardı.
  */
 
 /**
- * Özyinelemeli getValue çağrısını tespit etmek için çağrı yığını.
- *
- * Modül-seviyesinde TEK yığın — farklı `TStat` ile parametrelenmiş
- * `StatBlock` örnekleri de aynı yığını paylaşır (yalnızca referans/kimlik
- * karşılaştırması yapılır, `stat` alanı hangi somut union'dan geldiğine
- * bakılmaksızın string olarak tutulur).
+ * Özyinelemeli `getValue` çağrısını yakalayan yığın. Modül seviyesinde TEK:
+ * farklı `TStat` ile parametrelenmiş örnekler de paylaşır, karşılaştırma
+ * referans üzerinden yapılır.
  */
 interface ComputationFrame {
   block: unknown;

@@ -178,7 +178,7 @@ describe('duruş tablosu', () => {
 
   it('duvar çarpma eşiği yürüyüş hızının üstündedir', () => {
     // Altında kalırsa duvara doğru basılı tutulan tuş sürekli sekme üretir.
-    expect(playerConfig.wall.impactSpeedPxPerSec).toBeGreaterThan(playerConfig.maxSpeed);
+    expect(playerConfig.wall.impactSpeedPxPerSec).toBeGreaterThan(playerConfig.maxSpeedPxPerSec);
     expect(playerConfig.wall.impactSpeedPxPerSec).toBeLessThan(playerConfig.dash.speedPxPerSec);
   });
 

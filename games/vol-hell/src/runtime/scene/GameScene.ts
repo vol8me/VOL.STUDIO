@@ -93,7 +93,7 @@ export class GameScene extends BaseScene {
   // Hücre boyutu katalogdaki EN BÜYÜK düşmana göre: küçük hücrede iri düşman
   // komşu taramasından kaçabilir.
   private spatialGrid: SpatialGrid = new SpatialGrid(
-    Math.max(getMaxEnemyRadius(), bulletConfig.radius) * physicsConfig.spatialGridCellMultiplier,
+    Math.max(getMaxEnemyRadius(), bulletConfig.radiusPx) * physicsConfig.spatialGridCellMultiplier,
   );
   private keyboardBindings: GameKeyboardBindings | null = null;
   private readonly mobileControls = new GameMobileControls();

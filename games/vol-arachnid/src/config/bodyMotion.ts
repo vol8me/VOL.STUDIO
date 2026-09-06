@@ -9,29 +9,20 @@ export const bodyMotionConfig = {
   idlePhaseSpeedDegPerSec: 135,
   transformSpring: { stiffness: 95, damping: 16 },
 
-  /** Yanal salınım (px) — bekleme, yürüyüş ve dönüş katkıları. */
   idleSwayPx: 0.8,
   walkSwayPx: 2.2,
   turnSwayPx: 3.4,
-  /** Yalpalama (derece). */
   walkRollDeg: 0.8,
   turnRollDeg: 3,
   turnVelocityForMaxRadPerSec: 2.7,
 
-  /**
-   * İvme yaslanması: gövde, ivmenin TERSİNE kayar (kalkışta geriye, frende
-   * öne). Kütle hissinin en okunur kaynağı budur.
-   */
+  /** Gövde ivmenin TERSİNE kayar: kalkışta geriye, frende öne. */
   leanSpring: { stiffness: 78, damping: 13 },
   leanPxPerAccelUnit: 5.2,
   accelForMaxLeanPxPerSec2: 1400,
   maxLeanPx: 9,
 
-  /**
-   * Çömelme. Durunca gövde biraz alçalır ve uzuvlar bükülür; kalkışta yayın
-   * kendi taşması hafif bir "toparlanma" verir. Üstten bakışta alçalma
-   * ÖLÇEKLE okunur — abartılırsa 2B düzlem bozulur.
-   */
+  /** Üstten bakışta alçalma ÖLÇEKLE okunur; abartılırsa 2B düzlem bozulur. */
   crouchSpring: { stiffness: 46, damping: 8.5 },
   crouchBodyScaleDrop: 0.035,
   /** Bu hızın üstünde çömelme tamamen açılır. */
@@ -41,10 +32,7 @@ export const bodyMotionConfig = {
   dashStretch: 0.075,
   dashStretchSpring: { stiffness: 150, damping: 15 },
 
-  /**
-   * Öndeki uç parçalar dönüşe ÖNDEN yatar. Gövdeyle birebir dönerlerse yaratık
-   * tek parça bir levha gibi okunur; küçük bir öncülük yönü belli eder.
-   */
+  /** Uç parçalar dönüşe ÖNDEN yatar; birebir dönerlerse yaratık levha gibi okunur. */
   snoutLeadSpring: { stiffness: 130, damping: 14 },
   snoutLeadDegPerRadPerSec: 3.6,
   maxSnoutLeadDeg: 13,

@@ -172,7 +172,7 @@ describe('EnemyManager', () => {
       previous = enemies.length;
       const spawned = enemies[enemies.length - 1];
       expect(Math.hypot(spawned.x, spawned.y)).toBeGreaterThan(
-        enemyConfig.spawnMinPlayerDistance - maxDriftPerFrame,
+        enemyConfig.spawnMinPlayerDistancePx - maxDriftPerFrame,
       );
     }
 

@@ -1,21 +1,13 @@
 /**
- * Ekran üstü düğmelerin ürettiği eylemleri taşıyan kayıt.
+ * Ekran üstü düğmelerin eylem kaydı. Eylem adı bilmez; `TAction` çağıranındır.
  *
- * **Neden ayrı bir provider değil?** `InputManager` her karede TEK bir
- * `InputProvider` seçer (bkz. `InputManager.resolveActiveProvider`). Dokunmatik
- * düğmeler ayrı bir provider olsaydı, oyuncu parmağıyla hareket ederken dash
- * düğmesine bastığında yalnızca biri kazanırdı: ya hareket ya da dash. Oysa
- * ikisi AYNI karede geçerli olmalı. Bu yüzden düğmeler kendi provider'ı olmaz;
- * dokunmatik sağlayıcının eylem kümesine KARIŞIRLAR.
+ * **Ayrı provider DEĞİL:** `InputManager` karede tek provider seçer. Ayrı
+ * olsaydı parmakla hareket ederken dash'e basmak birini yutardı; ikisi aynı
+ * karede geçerli olmalı, bu yüzden dokunmatik sağlayıcının kümesine karışır.
  *
- * **Neden bir mandal (latch) var?** Bir dokunuş iki kare arasına sığabilir:
- * `pointerdown` ve `pointerup` aynı 16 ms'lik pencerede gelirse, basit bir
- * "şu an basılı mı" bayrağı o dokunuşu tamamen düşürür ve oyuncu düğmeye
- * bastığı hâlde hiçbir şey olmaz. Bu yüzden HİÇ OKUNMADAN bırakılan bir basım
- * bir kare daha yaşatılır; okunduktan sonra bırakılan basım ise anında düşer
- * (basılı tutmak, tuşu basılı tutmakla aynı davranır).
- *
- * Sınıf hiçbir eylem adı bilmez; `TAction` çağıranın sözlüğüdür.
+ * **Mandal:** `pointerdown` ve `pointerup` aynı 16 ms'lik pencereye sığabilir;
+ * salt "basılı mı" bayrağı o dokunuşu tümden düşürürdü. Hiç OKUNMADAN
+ * bırakılan basım bir kare daha yaşar, okunmuş olan anında düşer.
  */
 export class VirtualActionSource<TAction extends string> {
   /** Parmağın şu an fiziksel olarak üstünde olduğu eylemler. */
@@ -39,12 +31,7 @@ export class VirtualActionSource<TAction extends string> {
     }
   }
 
-  /**
-   * Sahne kapanışı/duraklatma gibi durumlarda tüm basımları düşürür.
-   *
-   * Mandal da temizlenir: duraklatmadan önce okunmamış bir dash, oyun geri
-   * geldiğinde tetiklenmemelidir.
-   */
+  /** Mandal DA temizlenir: duraklatmadan önce okunmamış dash sonradan tetiklenmez. */
   clear(): void {
     this.#held.clear();
     this.#observed.clear();
@@ -52,21 +39,16 @@ export class VirtualActionSource<TAction extends string> {
   }
 
   /**
-   * Bildirilecek bir basım var mı — `InputProvider.isActive` bunu kullanır.
-   *
-   * Mandal dâhildir: yalnızca `#held`e bakmak, tek karelik dokunuşta
-   * sağlayıcıyı pasif gösterir ve `InputManager` PC'ye düşerek basımı yutardı.
+   * `InputProvider.isActive` bunu kullanır. Mandal DÂHİLDİR: salt `#held`e
+   * bakmak tek karelik dokunuşta sağlayıcıyı pasif gösterir ve basım yutulur.
    */
   get hasPressed(): boolean {
     return this.#held.size > 0 || this.#latched.size > 0;
   }
 
   /**
-   * Basılı eylemleri karenin action kaydına yazar ve mandalı TÜKETİR.
-   *
-   * Okuma ile mandal tüketimi tek çağrıda birleşiktir; ayrı bir `commit()`
-   * olsaydı çağıranın sırayı yanlış kurması sessizce ya yinelenen ya da
-   * düşen basımlar üretirdi.
+   * Yazar ve mandalı TÜKETİR — tek çağrıda. Ayrı bir `commit()` olsaydı yanlış
+   * sıra sessizce yinelenen ya da düşen basım üretirdi.
    */
   applyTo(actions: Record<TAction, boolean>): void {
     for (const action of this.#held) {

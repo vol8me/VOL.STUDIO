@@ -1,12 +1,7 @@
 /**
- * Tipli sonlu durum makinesi — oyun fazları (dağıtım/bahis/gösterim,
- * hazırlık/çatışma/ödül, keşif/inşa), entity davranışı, UI akışı.
- *
- * vol-hell'de faz yönetimi boolean bayrakların (`isPaused`, `isFinishing`,
- * `awaitingBlocker`) birleşimiyle yapılıyordu ve geçersiz kombinasyonlar
- * (`isPaused && isFinishing`) tipte İFADE EDİLEBİLİR kalıyordu. Durum makinesi
- * geçersiz durumu temsil edilemez kılar: her an TEK bir durum vardır ve
- * hangi geçişlerin meşru olduğu veriyle bildirilir.
+ * Tipli sonlu durum makinesi. Boolean bayrak birleşimleri geçersiz durumu
+ * (`isPaused && isFinishing`) tipte İFADE EDİLEBİLİR bırakır; burada her an
+ * TEK durum vardır ve meşru geçişler veriyle bildirilir.
  */
 
 /** Bir durumun yaşam döngüsü kancaları. Hepsi opsiyoneldir. */
@@ -27,19 +22,12 @@ export interface StateDefinition<TState extends string> {
 export interface StateMachineOptions<TState extends string> {
   initial: TState;
   states: Readonly<Record<TState, StateDefinition<TState>>>;
-  /**
-   * Reddedilen bir geçiş bildirilir. Verilmezse geçiş sessizce yok sayılır —
-   * sessizlik, "neden faz değişmedi?" sorusunu ayıklanamaz kılar, bu yüzden
-   * geliştirmede bağlanması önerilir.
-   */
+  /** Verilmezse geçiş SESSİZCE yok sayılır ve "neden faz değişmedi?" ayıklanamaz. */
   onRejected?: (from: TState, to: TState) => void;
   /**
-   * Bir yaşam döngüsü kancası hata fırlattığında çağrılır; ardından hata
-   * yeniden fırlatılır.
-   *
-   * Makine kaynağa geri döndürülmüş olur ama `onExit(from)` zaten çalıştığı
-   * için durum YIRTIKTIR (bkz. `transition`). Bu kanca, tüketicinin bilinçli
-   * bir kurtarma yapabilmesi içindir — sessiz bir yarı-geçiş bırakmak yerine.
+   * Kanca hata fırlattığında çağrılır, ardından hata yeniden fırlatılır. Makine
+   * kaynağa döner ama `onExit` zaten çalıştığı için durum YIRTIKTIR; bu kanca
+   * bilinçli kurtarma içindir.
    */
   onTransitionError?: (error: unknown, from: TState, to: TState) => void;
 }
@@ -77,11 +65,9 @@ export class StateMachine<TState extends string> {
   }
 
   /**
-   * Duruma geçer. Geçiş meşru değilse `false` döner ve HİÇBİR kanca çalışmaz.
-   *
-   * Sıra: `onExit(hedef)` → durum değişir → `onEnter(kaynak)`. Bu sıra
-   * bilinçlidir: çıkış kancası hâlâ eski durumun bağlamındayken çalışır,
-   * giriş kancası ise `getState()` çağırdığında YENİ durumu görür.
+   * Meşru değilse `false` döner ve HİÇBİR kanca çalışmaz. Sıra bilinçlidir:
+   * `onExit` hâlâ eski bağlamdayken, `onEnter` ise `getState()`te YENİ durumu
+   * görerek çalışır.
    */
   transition(to: TState): boolean {
     if (this.transitioning) return false;

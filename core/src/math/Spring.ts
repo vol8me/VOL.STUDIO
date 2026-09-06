@@ -1,28 +1,22 @@
 import { finiteOr, requireFinite } from './numeric';
 import { TECH } from '../constants';
 
-/** Bir tek boyutlu yayın sertlik/sönüm katsayıları. */
 export interface SpringConfig {
-  /** Hedefe çekim kuvveti — büyüdükçe daha hızlı tepki, daha çok salınım. */
+  /** Büyüdükçe daha hızlı tepki, daha çok salınım. */
   stiffness: number;
-  /** Hız sönümü — büyüdükçe salınım daha çabuk yatışır. */
+  /** Büyüdükçe salınım daha çabuk yatışır. */
   damping: number;
 }
 
 /**
- * Yarı-örtük (semi-implicit) Euler ile entegre edilen tek boyutlu
- * pozisyon+hız yayı — kamera sarsıntısı, ikincil parça hareketi (bkz.
- * `core/src/rig/`), UI'da "geriden gelip oturan" değer geçişleri.
+ * Yarı-örtük Euler ile entegre edilen pozisyon+hız yayı.
  *
- * `damp()`'ten (bkz. `interpolation.ts`) farkı: `damp` anlık, hafızasız bir
- * üstel yumuşatmadır (hedefe asla taşmaz), bu ise hız TAŞIYAN gerçek bir
- * yaydır — hedef aniden değiştiğinde geriden gelip oturan bir "canlı" his
- * verir, üstel yumuşatma bunu üretemez.
+ * `damp()` (bkz. `interpolation.ts`) hafızasız üstel yumuşatmadır ve hedefe
+ * asla taşmaz; bu ise hız TAŞIR — hedef aniden değiştiğinde geriden gelip
+ * oturan his verir.
  *
- * Bir kare hitch'inde (`deltaMs` çok büyük) hız terimi patlamasın diye
- * `deltaMs` ortak simülasyon tavanına (`TECH.MAX_SIM_STEP_MS`) kelepçelenir —
- * bu tavan yaya özel DEĞİLDİR, zamanı tüketen her alt sistemle paylaşılır
- * (bkz. `time/simulationStep.ts`).
+ * `deltaMs`, kare hitch'inde hız terimi patlamasın diye ORTAK simülasyon
+ * tavanına kelepçelenir (`TECH.MAX_SIM_STEP_MS`; yaya özel değildir).
  */
 export class Spring1D {
   value: number;
@@ -33,16 +27,9 @@ export class Spring1D {
   }
 
   /**
-   * Bir kare ilerletir ve yeni `value`'yu döner.
-   *
-   * `stiffness`/`damping` YAPILANDIRMADIR: sonsuz değilse ya da negatifse
-   * `TypeError` fırlatır — bozuk bir yay sabitinin sessizce kabul edilmesi,
-   * salınımın neden hiç yatışmadığını (ya da hiç hareket etmediğini)
-   * kaynağından çok uzakta görünür kılardı.
-   *
-   * `target`/`deltaMs` AKIŞ değeridir: sonsuz değilse mevcut `value`/`velocity`
-   * değişmeden döner — tek bir bozuk kare yüzünden yayın kalıcı olarak
-   * `NaN`e düşmesi orantısız olurdu (bkz. `Cooldown.update`'in aynı politikası).
+   * `stiffness`/`damping` YAPILANDIRMADIR: bozuksa atar. `target`/`deltaMs`
+   * AKIŞTIR: bozuksa kare yok sayılır — tek bozuk kare yayı kalıcı `NaN`e
+   * düşürmemeli (bkz. `Cooldown.update`, aynı politika).
    */
   update(target: number, deltaMs: number, config: SpringConfig): number {
     const stiffness = requireFinite(config.stiffness, 'SpringConfig.stiffness');

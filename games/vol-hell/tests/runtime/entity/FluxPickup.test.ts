@@ -137,7 +137,7 @@ describe('FluxPickupManager', () => {
     const landedX = pickup.x;
     const landedY = pickup.y;
     expect(Math.hypot(landedX - 400, landedY - 300)).toBeLessThanOrEqual(
-      economyConfig.flux.scatterRadius,
+      economyConfig.flux.scatterRadiusPx,
     );
   });
 
@@ -189,7 +189,7 @@ describe('FluxPickupManager', () => {
     land(manager);
     const pickup = circles[0];
     // Menzil içinde ama toplama mesafesinin dışında bir oyuncu.
-    const playerX = pickup.x + economyConfig.flux.magnetRadius - 5;
+    const playerX = pickup.x + economyConfig.flux.magnetRadiusPx - 5;
     const distanceBefore = Math.abs(playerX - pickup.x);
 
     manager.update(16, new Vector2(playerX, pickup.y));
@@ -219,8 +219,8 @@ describe('FluxPickupManager', () => {
     // Tam menzilin biraz dışında: mıknatıs çeker ama bu frame'de toplanmaz.
     const justOutside =
       playerConfig.hitboxRadius +
-      economyConfig.flux.radius +
-      economyConfig.flux.collectDistance +
+      economyConfig.flux.radiusPx +
+      economyConfig.flux.collectDistancePx +
       1;
 
     manager.update(1, new Vector2(pickup.x + justOutside, pickup.y));

@@ -18,11 +18,11 @@ export class LoadingTransition {
       indicator: {
         type: 'hexagon-pulse',
         color: VOL_COLORS.brandSolid,
-        size: uiConfig.loading.indicatorSize,
+        size: uiConfig.loading.indicatorSizePx,
       },
       backgroundColor: VOL_COLORS.uiBg,
       title: i18next.t('volhell:loading.title'),
-      fontSize: { title: uiConfig.loading.titleFontSize },
+      fontSize: { title: uiConfig.loading.titleFontSizePx },
       contentPosition: 'center',
       minDisplayMs: uiConfig.loading.durationMs,
       progressMs: uiConfig.loading.progressMs,

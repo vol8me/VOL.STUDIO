@@ -2,29 +2,12 @@
 export type Unsubscribe = () => void;
 
 /**
- * Tipli olay veri yolu — sistemler arası gevşek bağ.
+ * Tipli olay veri yolu. Olay kümesini TÜKETİCİ tanımlar; kazancı yayıncının
+ * dinleyicileri TANIMAMASIDIR — yeni tüketici eklemek yayıncıya dokunmaz.
  *
- * Olay kümesini TÜKETİCİ tanımlar; CORE hiçbir olay adı bilmez.
- *
- * Kısıt `Record<string, unknown>` DEĞİL `object`tir: TypeScript'te bir
- * `interface` örtük indeks imzası taşımaz ve `Record<string, unknown>`ı
- * sağlamaz. Tüketicinin doğal olarak yazacağı `interface Events { … }`
- * biçimini reddeden bir kısıt, tip güvenliği kazandırmadan kullanımı
- * zorlaştırırdı; anahtarlar zaten `keyof TEvents` ile tipli kalıyor.
- *
- * ```ts
- * interface Events {
- *   scoreChanged: { total: number };
- *   phaseEnded: void;
- * }
- * const bus = new EventBus<Events>();
- * bus.on('scoreChanged', ({ total }) => hud.setScore(total));
- * bus.emit('scoreChanged', { total: 120 });
- * ```
- *
- * Doğrudan callback geçirmeye göre kazancı, yayıncının dinleyicileri
- * TANIMAMASIDIR: bir sistemin çıktısına yeni bir tüketici eklemek yayıncıya
- * dokunmayı gerektirmez.
+ * Kısıt `object`tir, `Record<string, unknown>` değil: TypeScript'te bir
+ * `interface` örtük indeks imzası taşımaz ve tüketicinin doğal olarak yazacağı
+ * `interface Events { … }` biçimi reddedilirdi.
  */
 export class EventBus<TEvents extends object> {
   private readonly handlers = new Map<keyof TEvents, Set<(payload: never) => void>>();
@@ -54,21 +37,11 @@ export class EventBus<TEvents extends object> {
   }
 
   /**
-   * Olayı yayınlar.
+   * Yayınlar; hata fırlatan dinleyici SAYISINI döner (0 = tümü sağlıklı).
    *
-   * Dinleyici kümesinin KOPYASI üzerinde yürünür: bir handler yayın sırasında
-   * abone olur ya da aboneliği bırakırsa (yaygın bir desen — `once`, kendini
-   * kapatan sistemler) canlı küme üzerinde yürümek atlanan ya da iki kez
-   * çağrılan dinleyicilere yol açardı.
-   *
-   * Bir handler hata fırlatırsa YAKALANIR ve kalan dinleyiciler yine çalışır;
-   * tek bozuk abonenin yayını yarıda kesmesine izin verilmez. Hata
-   * `onHandlerError`a bildirilir (verilmezse sessizce yutulmaz, konsola
-   * yazılır).
-   */
-  /**
-   * Olayı yayınlar. Hata fırlatan dinleyici sayısını döner (0 = tümü sağlıklı);
-   * çağıran, sessiz failure yerine yayının kısmen başarısız olduğunu öğrenebilir.
+   * Kümenin KOPYASI üzerinde yürünür: yayın sırasında abone olan/ayrılan bir
+   * handler (`once`) canlı kümede atlanan ya da iki kez çağrılan dinleyici
+   * üretirdi. Fırlatan handler YAKALANIR, kalanlar yine çalışır.
    */
   emit<K extends keyof TEvents>(event: K, payload: TEvents[K]): number {
     const set = this.handlers.get(event);
@@ -98,7 +71,7 @@ export class EventBus<TEvents extends object> {
     return this.handlers.get(event)?.size ?? 0;
   }
 
-  /** Verilen olayın (ya da hiç argümansız çağrılırsa TÜM olayların) abonelerini siler. */
+  /** Argümansız çağrılırsa TÜM olayların abonelerini siler. */
   clear(event?: keyof TEvents): void {
     if (event === undefined) {
       this.handlers.clear();

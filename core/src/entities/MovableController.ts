@@ -3,23 +3,16 @@ import type { BaseEntity } from './BaseEntity';
 import { Vector2 } from '../math/Vector2';
 import { TECH } from '../constants';
 
-/**
- * `Sprite`'a kilitlenmez: yalnızca x/y ve destroy() kullanılır, böylece
- * placeholder geometri (texture'suz GameObject'ler) de doğrudan kullanılabilir.
- */
+/** `Sprite`'a kilitlenmez; texture'suz placeholder geometri de kullanılabilsin. */
 export type MovableGameObject = Phaser.GameObjects.GameObject &
   Phaser.GameObjects.Components.Transform;
 
 /**
- * Hız tabanlı hareket eden bir varlığın taban sınıfı.
+ * Hız tabanlı hareketin taban sınıfı. Oyuncu semantiği YOKTUR — düşmana da
+ * araca da aynen hizmet eder.
  *
- * Sınıfta oyuncu semantiği YOKTUR: yalnızca `velocity`, kelepçeli `move()`
- * ve `destroy()`. Bir düşmana, bir araca ya da bir konveyör taşıyıcısına
- * aynen hizmet eder — tüketici buradan bir oyuncu rolü varsaymaz.
- *
- * `sprite` composition ile tutulur (extend edilmez), bu yüzden Phaser'in
- * destroy() zinciri otomatik gelmez. Alt sınıflar destroy() override ederse
- * `super.destroy()` çağırmalıdır.
+ * `sprite` composition ile tutulur, yani Phaser'in destroy() zinciri otomatik
+ * gelmez: `destroy()` override eden alt sınıf `super.destroy()` çağırmalıdır.
  */
 export abstract class MovableController implements BaseEntity {
   protected velocity = Vector2.zero();
@@ -38,13 +31,10 @@ export abstract class MovableController implements BaseEntity {
   }
 
   /**
-   * `direction` ASLA yerinde değiştirilmez — çağıranlar (bkz. vol-hell Player.moveDirection)
-   * burayı kalıcı bir alanla besliyor, normalize etmek o alanı kalıcı olarak birim
-   * uzunluğa çevirir ve analog girdiyi yok ederdi.
+   * `direction` ASLA yerinde değiştirilmez: çağıran burayı kalıcı bir alanla
+   * besliyor olabilir, normalize etmek o alanı birim uzunluğa çevirirdi.
    *
-   * Büyüklük yalnızca 1'i aşarsa kelepçelenir; altındaysa korunur. Yarıya kadar
-   * itilen bir çubuk yarım hız üretmelidir — InputUtils.normalizeAnalog() zaten
-   * 0..1 aralığında bir vektör döndürüyor.
+   * Büyüklük yalnız 1'i AŞARSA kelepçelenir; yarıya itilen çubuk yarım hız verir.
    */
   protected move(direction: Vector2, speed: number, delta: number): void {
     this.moveDirBuf.copyFrom(direction);

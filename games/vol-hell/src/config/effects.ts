@@ -104,9 +104,9 @@ export const effectsConfig: Record<EffectId, EffectDefinition> = {
   bulletTrail: {
     particles: {
       count: 1,
-      speed: { min: bulletConfig.trailSpeed * 0.5, max: bulletConfig.trailSpeed },
+      speed: { min: bulletConfig.trailSpeedPxPerSec * 0.5, max: bulletConfig.trailSpeedPxPerSec },
       lifespan: { min: bulletConfig.trailLifespanMs * 0.7, max: bulletConfig.trailLifespanMs },
-      scale: { start: bulletConfig.trailParticleSize / PARTICLE_TEXTURE_RADIUS, end: 0 },
+      scale: { start: bulletConfig.trailParticleSizePx / PARTICLE_TEXTURE_RADIUS, end: 0 },
       alpha: { start: bulletConfig.trailAlpha, end: 0 },
       tint: bulletConfig.color,
       // Mermi yönünün tersine dar bir koni — iz izlenebilir kalsın.
@@ -119,12 +119,15 @@ export const effectsConfig: Record<EffectId, EffectDefinition> = {
   bulletBounce: {
     particles: {
       count: bulletConfig.bounceParticleCount,
-      speed: { min: bulletConfig.bounceParticleSpeedMin, max: bulletConfig.bounceParticleSpeedMax },
+      speed: {
+        min: bulletConfig.bounceParticleSpeedMinPxPerSec,
+        max: bulletConfig.bounceParticleSpeedMaxPxPerSec,
+      },
       lifespan: {
         min: bulletConfig.bounceParticleLifespanMs * 0.6,
         max: bulletConfig.bounceParticleLifespanMs,
       },
-      scale: { start: bulletConfig.bounceParticleSize / PARTICLE_TEXTURE_RADIUS, end: 0 },
+      scale: { start: bulletConfig.bounceParticleSizePx / PARTICLE_TEXTURE_RADIUS, end: 0 },
       alpha: { start: bulletConfig.bounceParticleAlpha, end: 0 },
       tint: [...bulletConfig.bounceColors],
       depth: RENDER_DEPTH.groundEffect,
@@ -147,12 +150,15 @@ export const effectsConfig: Record<EffectId, EffectDefinition> = {
   enemyDeath: {
     particles: {
       count: enemyConfig.deathParticleCount,
-      speed: { min: enemyConfig.deathParticleSpeed * 0.6, max: enemyConfig.deathParticleSpeed },
+      speed: {
+        min: enemyConfig.deathParticleSpeedPxPerSec * 0.6,
+        max: enemyConfig.deathParticleSpeedPxPerSec,
+      },
       lifespan: {
         min: enemyConfig.deathParticleLifespanMs * 0.7,
         max: enemyConfig.deathParticleLifespanMs,
       },
-      scale: { start: enemyConfig.deathParticleSize / PARTICLE_TEXTURE_RADIUS, end: 0 },
+      scale: { start: enemyConfig.deathParticleSizePx / PARTICLE_TEXTURE_RADIUS, end: 0 },
       alpha: { start: enemyConfig.deathParticleAlpha, end: 0 },
       tint: [enemyConfig.deathParticleColor, enemyConfig.color],
       depth: RENDER_DEPTH.impactEffect,

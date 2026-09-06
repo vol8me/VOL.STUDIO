@@ -301,8 +301,8 @@ export class ArachnidBody {
     // Niyetin BÜYÜKLÜĞÜ hız kesridir: yarıya itilen bir çubuk yarım hız verir.
     const scale = Math.min(1, intentLength) * this.turnSpeedScale();
     this.approachVelocity(
-      (intentX / intentLength) * playerConfig.maxSpeed * scale,
-      (intentY / intentLength) * playerConfig.maxSpeed * scale,
+      (intentX / intentLength) * playerConfig.maxSpeedPxPerSec * scale,
+      (intentY / intentLength) * playerConfig.maxSpeedPxPerSec * scale,
       playerConfig.accelerationPxPerSec2 * dtSeconds,
     );
   }

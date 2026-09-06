@@ -124,7 +124,7 @@ export class Enemy {
     );
     if (resolveEntityVisuals(options.visualsProvider).entityStrokes) {
       this.arc.setStrokeStyle(
-        enemyConfig.strokeWidth,
+        enemyConfig.strokeWidthPx,
         this.definition.strokeColor,
         enemyConfig.strokeAlpha,
       );
@@ -364,7 +364,7 @@ export class Enemy {
       const dy = this.arc.y - other.y;
       const d = Math.hypot(dx, dy);
       const minDistance =
-        this.definition.radius + other.definition.radius + enemyConfig.separationGap;
+        this.definition.radius + other.definition.radius + enemyConfig.separationGapPx;
       if (Number.isFinite(d) && d < minDistance) {
         const force = (1 - d / minDistance) * enemyConfig.separationForce;
         const normal =

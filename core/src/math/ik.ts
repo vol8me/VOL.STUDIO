@@ -11,25 +11,15 @@ export interface TwoBoneIkResult {
 }
 
 /**
- * İki kemikli (kök → diz → uç) düzlemsel ters kinematik — kosinüs teoremi.
+ * İki kemikli düzlemsel ters kinematik (kosinüs teoremi). Hedef erişim
+ * dışındaysa mesafe KELEPÇELENİR ve uzuv gerilir — hedefin bir karede
+ * fırlaması pozu NaN'e düşürmez.
  *
- * Hedef erişim dışındaysa çözüm YOK sayılmaz: mesafe erişilebilir aralığa
- * kelepçelenir ve uzuv hedefe doğru tam gerilir (ya da katlanır). Böylece bir
- * kare içinde hedefin fırlaması uzvu NaN'e düşürmez, sadece gerdirir.
+ * Sözleşme `math/numeric.ts` politikasını izler: kemik uzunlukları ve büküm
+ * yönü YAPILANDIRMADIR (reddedilir), hedef vektörü AKIŞTIR (yok sayılır).
  *
- * Giriş sözleşmesi CORE'un ortak politikasını izler (bkz. `math/numeric.ts`):
- * kemik uzunlukları ve büküm yönü YAPILANDIRMADIR ve reddedilir — bozuk bir
- * kemik uzunluğu çağıranın hatasıdır ve sessizce düzeltilirse uzvun neden
- * yanlış durduğu kaynağından çok uzakta aranır. Hedef vektörü ise AKIŞ
- * değeridir ve yok sayılır: tek bir bozuk kare yüzünden pozu fırlatmak
- * orantısız olurdu.
- *
- * @param dx Kökten hedefe vektörün x bileşeni (akış; sonlu değilse 0).
- * @param dy Kökten hedefe vektörün y bileşeni (akış; sonlu değilse 0).
- * @param upperLength Kök–diz kemik uzunluğu; sonlu ve POZİTİF olmalı.
- * @param lowerLength Diz–uç kemik uzunluğu; sonlu ve POZİTİF olmalı.
- * @param bendSign Dizin hangi tarafa büküleceği (+1/-1). Ayna simetrik uzuvlar
- *   zıt işaret alır, aksi halde bir taraf ters bükülür.
+ * @param bendSign Dizin büküm yönü (+1/-1). Ayna simetrik uzuvlar ZIT işaret
+ *   alır, aksi halde bir taraf ters bükülür.
  */
 export function solveTwoBoneIk(
   dx: number,
@@ -54,14 +44,10 @@ export function solveTwoBoneIk(
   const raw = Math.hypot(targetX, targetY);
 
   /*
-   * Erişim aralığı ve KENDİ payı.
-   *
-   * Tam gerili ve tam katlanmış uçlarda `acos` girdisi ±1'e dayanır; küçük bir
-   * pay sayısal gürültünün oraya taşmasını engeller. Pay SABİT olamaz: 1e-4'lük
-   * bir sabit, iki kemiği de 5e-5 uzunluğunda olan bir uzuvda alt sınırı üst
-   * sınırın ÜSTÜNE çıkarır ve `clamp` negatif bir erişim döndürürdü — çözüm
-   * sessizce anlamsız olurdu. Pay bu yüzden aralığın kendisinden türetilir ve
-   * hiçbir zaman aralığın yarısını aşmaz.
+   * Uçlarda `acos` girdisi ±1'e dayanır; pay sayısal gürültüyü dışarıda tutar.
+   * SABİT bir pay olamaz: 1e-4, çok kısa kemiklerde alt sınırı üstün ÜZERİNE
+   * çıkarır ve `clamp` negatif erişim döndürürdü. Pay aralığın kendisinden
+   * türer ve yarısını aşmaz.
    */
   const lo = Math.abs(upperLength - lowerLength);
   const hi = upperLength + lowerLength;

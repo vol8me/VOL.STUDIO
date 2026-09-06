@@ -1,31 +1,24 @@
 /**
- * `Button` ve `IconButton`ın PAYLAŞTIĞI tıklama davranışı.
- *
- * Sözleşme TEKTİR ve iki bileşende de aynıdır: asenkron handler beklenir,
- * süresince loading gösterilir, fırlatılan hata yakalanır ve tıklama yeniden
- * mümkün hâle gelir. Çağıran, hangi butonu kullandığına göre farklı bir
- * garanti varsaymaz — bu yüzden davranış burada paylaşılır, kopyalanmaz.
+ * `Button` ve `IconButton`ın PAYLAŞTIĞI tıklama davranışı. Sözleşme tektir:
+ * asenkron handler beklenir, süresince loading gösterilir, hata yakalanır ve
+ * tıklama yeniden mümkün olur. Çağıran hangi butonu kullandığına göre farklı
+ * garanti varsaymaz.
  */
 
 export type ButtonClickHandler = () => void | Promise<void>;
 
 /** Tıklama süresince görsel/erişilebilirlik durumunu uygulayan geri çağrı. */
 export interface ButtonBehaviorHost {
-  /** Bileşenin kendi loading gösterimi (spinner, disabled, aria-busy). */
   setLoading(loading: boolean): void;
-  /** Loading zaten sürüyor mu — yeniden giriş bu bayrakla engellenir. */
+  /** Yeniden giriş bu bayrakla engellenir. */
   isLoading(): boolean;
-  /** Hata logunda görünecek bileşen adı. */
   readonly logLabel: string;
 }
 
 /**
- * "Beklenebilir mi?" — `instanceof Promise` DEĞİL.
- *
- * `instanceof` yalnızca bu realm'in native Promise'lerini tanır. Farklı bir
- * realm'den (iframe, vm) gelen bir söz ya da `then` taşıyan bir thenable —
- * birçok kütüphanenin döndürdüğü şey — beklenmeden geçer, loading anında
- * kalkar ve çağıran işin bittiğini sanır.
+ * `instanceof Promise` DEĞİL: o yalnız bu realm'in native söz'ünü tanır. Farklı
+ * realm'den gelen ya da `then` taşıyan bir değer beklenmeden geçer ve loading
+ * anında kalkar.
  */
 function isThenable(value: unknown): value is PromiseLike<unknown> {
   return (
@@ -36,13 +29,9 @@ function isThenable(value: unknown): value is PromiseLike<unknown> {
 }
 
 /**
- * Handler'ı çalıştırır, sonucunu bekler ve loading durumunu yönetir.
- *
- * **Senkron handler senkron kalır.** `await Promise.resolve(handler())` yazmak
- * kısa olurdu ama sonucu beklenecek bir şey OLMASA BİLE en az bir microtask
- * gecikme yaratır: art arda iki tıklamada ikincisi hâlâ "loading" görüp
- * sessizce düşerdi. Bu yüzden bekleme yalnızca sonuç gerçekten thenable ise
- * yapılır.
+ * Senkron handler SENKRON kalır: `await Promise.resolve(...)` beklenecek bir şey
+ * olmasa bile bir microtask geciktirir ve art arda iki tıklamada ikincisi
+ * "loading" görüp düşerdi. Bekleme yalnız sonuç thenable ise yapılır.
  */
 export async function runButtonClick(
   host: ButtonBehaviorHost,
@@ -59,8 +48,6 @@ export async function runButtonClick(
       await result;
     }
   } catch (error) {
-    // Handler senkron veya asenkron hata fırlatırsa loading kalksın;
-    // unhandled rejection yerine loglanır.
     console.error(`[${host.logLabel}] onClick handler hatası:`, error);
   } finally {
     host.setLoading(false);
