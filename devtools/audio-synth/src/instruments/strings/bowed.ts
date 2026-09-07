@@ -135,23 +135,30 @@ export function bowedString(params: BowedStringParams): SynthesisResult {
 
   const oscillators: Oscillator[] = [];
 
-  for (let n = 1; n <= maxPartials; n++) {
-    const fn = inharmonicFrequency(n, f0, inharmonicity);
-    if (fn > sampleRate / 2) break;
+  // Nyquist payı: vibrato anlık frekansı en çok %25 yukarı itebilir;
+  // kısmi ton tavanı fn × 1,25 < sr/2 garantisi için 0.4·sr'de tutulur.
+  const partialCeiling = sampleRate * 0.4;
 
-    const amp = sawtoothGain(n) * gain;
+  // Unison: her "tel" kendi detune'unu TÜM kısmi tonlarına uygular.
+  // Kısmi ton başına ayrı detune fiziksel olarak yanlıştır — ikinci tel,
+  // spektrumun tamamını aynı cent sapmasıyla taşır.
+  for (let u = 0; u < unisonCount; u++) {
+    const detuneL = unisonCount === 1 ? 0 : (random.bipolar() * unisonDetune) / 2;
+    const detuneR = unisonCount === 1 ? 0 : (random.bipolar() * unisonDetune) / 2;
+    const phaseL0 = random.next();
+    const phaseR0 = random.next();
 
-    for (let u = 0; u < unisonCount; u++) {
-      const detuneL = unisonCount === 1 ? 0 : (random.bipolar() * unisonDetune) / 2;
-      const detuneR = unisonCount === 1 ? 0 : (random.bipolar() * unisonDetune) / 2;
+    for (let n = 1; n <= maxPartials; n++) {
+      const fn = inharmonicFrequency(n, f0, inharmonicity);
+      if (fn > partialCeiling) break;
 
       oscillators.push({
         fn,
-        gain: amp,
+        gain: sawtoothGain(n) * gain,
         detuneL,
         detuneR,
-        phaseL: random.next(),
-        phaseR: random.next(),
+        phaseL: (phaseL0 + n * 0.31) % 1,
+        phaseR: (phaseR0 + n * 0.73) % 1,
       });
     }
   }

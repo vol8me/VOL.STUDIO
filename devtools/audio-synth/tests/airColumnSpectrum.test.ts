@@ -31,12 +31,27 @@ function highPartialRatio(samples: Float32Array, sampleRate: number, fundamental
 }
 
 describe('airColumn preset spektrumu', () => {
+  // Yapısal iddialar (harmonik spektrum) modülasyonsuz ölçülür: vibrato
+  // frekans modülasyonudur ve her kısmi tonun enerjisini ±vibratoRate
+  // yan bantlara yayar — Goertzel tek frekans ölçtüğü için taşıyıcı
+  // enerjisi düşer, ama kısmi ton kaybolmaz. Vibrato'nun canlı olduğu
+  // ayrı bir yan bant testiyle doğrulanır.
+  const NO_VIBRATO = { vibratoDepth: 0, vibratoRate: 0 } as const;
+
   it('flüt aynı perdede fagottan daha parlaktır (daha fazla üst ton)', () => {
     const fundamental = 440;
     const duration = 1.2;
 
-    const fluteResult = synth(duration, { ...flute(fundamental, duration), normalize: false });
-    const bassoonResult = synth(duration, { ...bassoon(fundamental, duration), normalize: false });
+    const fluteResult = synth(duration, {
+      ...flute(fundamental, duration),
+      ...NO_VIBRATO,
+      normalize: false,
+    });
+    const bassoonResult = synth(duration, {
+      ...bassoon(fundamental, duration),
+      ...NO_VIBRATO,
+      normalize: false,
+    });
 
     const fluteRatio = highPartialRatio(
       fluteResult.channels[0],
@@ -71,7 +86,11 @@ describe('airColumn preset spektrumu', () => {
   it('flüt spektrumu açık boru karakterine uyar — çift kat harmonikler vardır', () => {
     const fundamental = 440;
     const duration = 1.0;
-    const result = synth(duration, { ...flute(fundamental, duration), normalize: false });
+    const result = synth(duration, {
+      ...flute(fundamental, duration),
+      ...NO_VIBRATO,
+      normalize: false,
+    });
     const samples = result.channels[0];
 
     const f0 = toneEnergy(samples, result.sampleRate, fundamental);
@@ -81,6 +100,23 @@ describe('airColumn preset spektrumu', () => {
     expect(f0).toBeGreaterThan(0);
     expect(f2).toBeGreaterThan(f0 * 0.1);
     expect(f3).toBeGreaterThan(f0 * 0.05);
+  });
+
+  it('flüt vibratosu f0 ± vibratoRate yan bandında enerji üretir', () => {
+    const fundamental = 440;
+    const duration = 1.0;
+    const withVibrato = synth(duration, { ...flute(fundamental, duration), normalize: false });
+    const muted = synth(duration, {
+      ...flute(fundamental, duration),
+      ...NO_VIBRATO,
+      normalize: false,
+    });
+
+    const sideband = fundamental + 5; // vibratoRate = 5 Hz
+    const eVib = toneEnergy(withVibrato.channels[0], withVibrato.sampleRate, sideband);
+    const eMuted = toneEnergy(muted.channels[0], muted.sampleRate, sideband);
+
+    expect(eVib).toBeGreaterThan(eMuted * 1.5);
   });
 
   it('klarnet spektrumu kapalı boru karakterine uyar — tek kat harmonikler baskın', () => {

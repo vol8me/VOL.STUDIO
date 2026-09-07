@@ -124,15 +124,6 @@ export function airColumn(params: AirColumnParams): SynthesisResult {
     modes.push({ filter, gain: modeBaseGain(q, 1, rolloff), freq: frequency });
   }
 
-  // Ön ısıtma: sıfır girişle filtre durumlarını kararlı hale getir.
-  // Sıfır state ile başlayan biquad yüksek Q'da ilk örneklerde tık üretebilir.
-  const warmupSamples = Math.floor(sampleRate * 0.005);
-  for (let i = 0; i < warmupSamples; i++) {
-    for (const mode of modes) {
-      mode.filter.process(0, mode.freq);
-    }
-  }
-
   // Uyarım ve türbülans için bağımsız gürültü kaynakları.
   const excitationNoise = createNoise(noiseColor, seed);
   const turbulenceNoise = createNoise(noiseColor, seed + 1);
@@ -141,9 +132,6 @@ export function airColumn(params: AirColumnParams): SynthesisResult {
   // tarafından maskelenmez.
   const turbCutoff = Math.min(resonatorCutoff, Math.max(frequency * 3, 1200));
   const turbFilter = new BiquadFilter(sampleRate, 'lowpass', 0.707);
-  for (let i = 0; i < warmupSamples; i++) {
-    turbFilter.process(0, turbCutoff);
-  }
 
   const raw = new Float32Array(totalSamples);
   let rawPeak = 0;

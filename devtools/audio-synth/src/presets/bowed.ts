@@ -51,7 +51,7 @@ interface BowedBodyParams {
   maxPartials: number;
   lowpassHarmonic: number;
   lowpassFloor: number;
-  vibratoDepthCents: number;
+  vibratoDepthRatio: number;
   vibratoRate: number;
   attack: number;
   decay: number;
@@ -102,7 +102,7 @@ function bowedBody(frequency: number, duration: number, params: BowedBodyParams)
       roomSize: 0.55,
       damp: 0.5,
     },
-    vibratoDepth: frequency * params.vibratoDepthCents,
+    vibratoDepth: frequency * params.vibratoDepthRatio,
     vibratoRate: params.vibratoRate,
     stereoWidth: params.stereoWidth,
     gain: params.gain,
@@ -118,7 +118,7 @@ export function violin(frequency = 440, duration = 2.0): SynthParams {
     maxPartials: 16,
     lowpassHarmonic: 14,
     lowpassFloor: 8000,
-    vibratoDepthCents: 0.012,
+    vibratoDepthRatio: 0.012,
     vibratoRate: 5.5,
     attack: 0.2,
     decay: 0.15,
@@ -140,7 +140,7 @@ export function viola(frequency = 220, duration = 2.0): SynthParams {
     maxPartials: 14,
     lowpassHarmonic: 10,
     lowpassFloor: 5000,
-    vibratoDepthCents: 0.012,
+    vibratoDepthRatio: 0.012,
     vibratoRate: 5.2,
     attack: 0.22,
     decay: 0.18,
@@ -162,7 +162,7 @@ export function cello(frequency = 130.8, duration = 2.2): SynthParams {
     maxPartials: 12,
     lowpassHarmonic: 6,
     lowpassFloor: 1500,
-    vibratoDepthCents: 0.012,
+    vibratoDepthRatio: 0.012,
     vibratoRate: 4.8,
     attack: 0.25,
     decay: 0.2,
@@ -184,7 +184,7 @@ export function doubleBass(frequency = 82.4, duration = 2.0): SynthParams {
     maxPartials: 10,
     lowpassHarmonic: 4,
     lowpassFloor: 700,
-    vibratoDepthCents: 0.012,
+    vibratoDepthRatio: 0.012,
     vibratoRate: 4.0,
     attack: 0.28,
     decay: 0.22,

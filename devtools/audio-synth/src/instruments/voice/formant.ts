@@ -11,6 +11,7 @@ import { clamp } from '@volstudio/core/math/interpolation';
 import type { SynthesisResult } from '../../types';
 import { BiquadFilter } from '../../synthesis/filter';
 import { Envelope } from '../../synthesis/envelope';
+import { getPanGains } from '../../effects';
 
 export interface Formant {
   /** Formant merkez frekansı (Hz). */
@@ -91,16 +92,16 @@ export function formant(params: FormantParams): SynthesisResult {
   );
 
   const nyquist = sampleRate * 0.49;
-  const maxPartial = Math.min(50, Math.floor(nyquist / f0));
+  // Kısmi ton tavanı vibrato (%10) + unison detune (≤50 cent ≈ ×1,029) en
+  // kötü durumunu karşılayacak payla tutulur: 0,43 × 1,1 × 1,029 < 0,49.
+  const maxPartial = Math.min(50, Math.floor((sampleRate * 0.43) / f0));
 
   type Voice = {
-    detune: number;
-    pan: number;
+    panGainL: number;
+    panGainR: number;
     phases: Float64Array;
     phaseSteps: Float64Array;
     filters: { filter: BiquadFilter; gain: number; freq: number }[];
-    seed: number;
-    random: ReturnType<typeof createRandom>;
   };
 
   const voiceList: Voice[] = [];
@@ -111,6 +112,7 @@ export function formant(params: FormantParams): SynthesisResult {
     const detune = voices === 1 ? 0 : (baseRandom.bipolar() * unisonDetune) / 2;
     const voiceSeed = seed + v * 0x9e3779b9;
     const random = createRandom(voiceSeed);
+    const [panGainL, panGainR] = getPanGains(pan);
 
     const filters = formants
       .filter((f) => f.frequency < nyquist)
@@ -127,7 +129,7 @@ export function formant(params: FormantParams): SynthesisResult {
       phases[n] = random.next();
     }
 
-    voiceList.push({ detune, pan, phases, phaseSteps, filters, seed: voiceSeed, random });
+    voiceList.push({ panGainL, panGainR, phases, phaseSteps, filters });
   }
 
   const left = new Float32Array(totalSamples);
@@ -136,8 +138,11 @@ export function formant(params: FormantParams): SynthesisResult {
   for (let i = 0; i < totalSamples; i++) {
     const t = i / sampleRate;
     const env = envelope.value(t);
-    const vibrato =
-      vibratoDepth > 0 && vibratoRate > 0 ? Math.sin(2 * Math.PI * vibratoRate * t) : 0;
+    // Vibrato, temelin anlık frekansını Hz cinsinden kaydırır; kısmi ton
+    // adımları f0 ile orantılı olduğundan aynı bağıl sapma tüm spektruma
+    // uygulanır (fiziksel olarak doğru: kısmi ton = n × anlık f0).
+    const lfo = Math.sin(2 * Math.PI * vibratoRate * t);
+    const frequencyRatio = 1 + (vibratoDepth * lfo) / f0;
 
     let sumL = 0;
     let sumR = 0;
@@ -146,9 +151,7 @@ export function formant(params: FormantParams): SynthesisResult {
       let source = 0;
       for (let n = 0; n < maxPartial; n++) {
         source += sawGain(n + 1) * Math.sin(2 * Math.PI * voice.phases[n]);
-        // Vibrato'yu tüm kısmi tonlara orantılı uygula.
-        const detunedStep = voice.phaseSteps[n] * (1 + (vibrato / f0) * (n + 1) * 0.01);
-        voice.phases[n] += detunedStep;
+        voice.phases[n] += voice.phaseSteps[n] * frequencyRatio;
         voice.phases[n] -= Math.floor(voice.phases[n]);
       }
 
@@ -164,24 +167,22 @@ export function formant(params: FormantParams): SynthesisResult {
         }
       }
 
-      // Pan uygula.
-      const panGainL = Math.sqrt(1 - Math.max(-1, Math.min(1, voice.pan)) * 0.5);
-      const panGainR = Math.sqrt(1 + Math.max(-1, Math.min(1, voice.pan)) * 0.5);
-      sumL += filtered * panGainL;
-      sumR += filtered * panGainR;
+      sumL += filtered * voice.panGainL;
+      sumR += filtered * voice.panGainR;
     }
 
-    left[i] = sumL * env * gain;
-    right[i] = sumR * env * gain;
+    left[i] = sumL * env;
+    right[i] = sumR * env;
   }
 
-  // İç normalize: kırpma yok.
+  // Tepeyi 0.95 × gain'e normalize et — `gain` çıkış seviyesini gerçekten
+  // belirler; sabit 0.95'e çekmek parametreyi etkisiz kılardı.
   let peak = 0;
   for (let i = 0; i < totalSamples; i++) {
     peak = Math.max(peak, Math.abs(left[i]), Math.abs(right[i]));
   }
   if (peak > 0) {
-    const scale = 0.95 / peak;
+    const scale = (0.95 * gain) / peak;
     for (let i = 0; i < totalSamples; i++) {
       left[i] *= scale;
       right[i] *= scale;

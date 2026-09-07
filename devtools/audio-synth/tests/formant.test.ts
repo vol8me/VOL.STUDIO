@@ -71,6 +71,35 @@ describe('formant (formant / koro fiziksel modeli)', () => {
     expect(eNoFormant).toBeGreaterThan(eFormant * 1.5);
   });
 
+  it('mutasyon: vibratoDepth=0 frekans modülasyon yan bandını kaldırır', () => {
+    // Formantsız kaynak (sawtooth) + tek ses: f0=220, oran=5 Hz.
+    // Vibrato derinliği 10 Hz → yan bant f0+5=225 Hz'te ölçülür.
+    const base = {
+      frequency: 220,
+      duration: 1.0,
+      formants: [],
+      voices: 1,
+      vibratoRate: 5,
+      gain: 0.6,
+      seed: 33,
+    };
+    const withVibrato = formant({ ...base, vibratoDepth: 10 });
+    const withoutVibrato = formant({ ...base, vibratoDepth: 0 });
+
+    const sideband = 225;
+    const eVib = toneEnergy(withVibrato.channels[0], withVibrato.sampleRate, sideband);
+    const eMuted = toneEnergy(withoutVibrato.channels[0], withoutVibrato.sampleRate, sideband);
+
+    expect(eVib).toBeGreaterThan(eMuted * 3);
+  });
+
+  it('mutasyon: düşük gain daha düşük tepe üretir (gain parametresi canlı)', () => {
+    const base = { frequency: 220, duration: 0.5, voices: 1, seed: 44 };
+    const quiet = formant({ ...base, gain: 0.2 });
+    const loud = formant({ ...base, gain: 0.8 });
+    expect(peak(quiet.channels)).toBeLessThan(peak(loud.channels));
+  });
+
   it('geçersiz parametreler çökme veya sonsuz değer üretmez', () => {
     const cases = [
       { frequency: NaN },

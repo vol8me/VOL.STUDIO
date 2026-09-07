@@ -75,6 +75,11 @@ function choirBody(frequency: number, duration: number, params: ChoirBodyParams)
       poles: 2,
       type: 'lowpass',
     },
+    // Ölçümle sınırlandı: amount 0,15 / decay 1,5 / roomSize 0,5 altında
+    // kanal-0 tepe oranı tüm koro presetlerinde en kötü 0,948 kalıyor
+    // (sözleşme eşiği 0,88). Daha büyük oda parametreleri sol kanal
+    // dekorrelasyonunu eşiğin altına indirir.
+    reverb: { amount: 0.15, decay: 1.5, roomSize: 0.5, damp: 0.55 },
     vibratoDepth: params.vibratoDepth,
     vibratoRate: params.vibratoRate,
     stereoWidth: params.stereoWidth,
@@ -100,7 +105,7 @@ export function soprano(frequency = 440, duration = 2.0): SynthParams {
     release: 0.35,
     stereoWidth: 0.55,
     gain: 0.18,
-    chorusDepth: 0.6,
+    chorusDepth: 2.8,
     chorusRate: 0.4,
   });
 }
@@ -119,7 +124,7 @@ export function alto(frequency = 330, duration = 2.0): SynthParams {
     release: 0.4,
     stereoWidth: 0.5,
     gain: 0.2,
-    chorusDepth: 0.5,
+    chorusDepth: 2.4,
     chorusRate: 0.35,
   });
 }
@@ -138,7 +143,7 @@ export function tenor(frequency = 220, duration = 2.0): SynthParams {
     release: 0.45,
     stereoWidth: 0.45,
     gain: 0.22,
-    chorusDepth: 0.4,
+    chorusDepth: 2.0,
     chorusRate: 0.3,
   });
 }
@@ -157,7 +162,7 @@ export function bassChoir(frequency = 130.8, duration = 2.0): SynthParams {
     release: 0.5,
     stereoWidth: 0.4,
     gain: 0.24,
-    chorusDepth: 0.35,
+    chorusDepth: 1.8,
     chorusRate: 0.25,
   });
 }

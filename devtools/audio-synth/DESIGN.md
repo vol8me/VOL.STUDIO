@@ -138,7 +138,9 @@ MusicEngine'in içine değil, ayrı bir çalışma zamanı katmanına gider.
 3. `distortion` per-voice uygulanır.
 4. Master zinciri sırayla: `delay` → `flanger` → `phaser` → `chorus` → `pan`
    → `reverb` → `stereoWidth`.
-5. Normalize ile çıkış hazırlanır.
+5. Normalize ile çıkış hazırlanır; son ~10 ms yükselen-kosinüs de-click
+   sönümü uygulanır. Tampon `duration` sınırında kesilir — efekt kuyruğu
+   uzatılmaz ama kesim yumuşak iner, dikişsiz dizi için zorunludur.
 
 ## Hızlı Başlangıç
 

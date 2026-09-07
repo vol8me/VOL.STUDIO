@@ -80,8 +80,8 @@ export function flute(frequency = 440, duration = 1.2): SynthParams {
     lowpassHarmonic: 14,
     lowpassFloor: 7000,
     gain: 0.35,
-    vibratoDepth: 0.4,
-    vibratoRate: 3.0,
+    vibratoDepth: 4,
+    vibratoRate: 5.0,
   });
 }
 
@@ -124,8 +124,8 @@ export function oboe(frequency = 440, duration = 1.0): SynthParams {
     lowpassHarmonic: 12,
     lowpassFloor: 6000,
     gain: 0.28,
-    vibratoDepth: 0.6,
-    vibratoRate: 4.0,
+    vibratoDepth: 3,
+    vibratoRate: 5.5,
   });
 }
 

@@ -49,24 +49,36 @@ describe('enstrüman kataloğu sözleşmesi', () => {
     expect(differing, `${name} aynı girdiye farklı çıktı verdi`).toBe(0);
   });
 
-  it('KISA nota kuyruğu kesilir — bu bilinen ve BELGELENMİŞ bir sınırdır', () => {
+  it('KISA nota kuyruğu uzatılmaz ama kesim yumuşatılır — BELGELENMİŞ sözleşme', () => {
     /*
      * `synthesize` tamponu tam `duration` kadar üretir; reverb ve delay
-     * kuyruğunu UZATMAZ (`compose` uzatır). Kısa bir nota istendiğinde ses
-     * hâlâ yüksekken tampon biter ve duyulur bir tık kalır.
+     * kuyruğunu UZATMAZ (`compose` uzatır). Kesim sert değildir:
+     * `applyGlobalEffects` tamponun son ~10 ms'ine de-click sönümü uygular,
+     * bu yüzden tampon sıfıra iner ama sesin sönümü tamamlanmaz — kısa
+     * notada ses eksiktir, tık yoktur.
      *
-     * Bu test o davranışı KİLİTLER, düzeltmez: tampon uzunluğunu değiştirmek
-     * `duration` kadar örnek bekleyen her çağıranı ve gönderilen ses
-     * varlıklarının bayt eşitliğini etkiler. Kuyruk isteyen çağıran ya
-     * `compose` kullanır ya süreye kendi payını ekler.
-     *
-     * Kilit ters yönde de çalışır: biri tamponu uzatırsa bu test düşer ve
-     * karar bilinçli olarak verilir.
+     * Kilit üç yönde çalışır: tamponu uzatan, de-click'i kaldıran ya da
+     * kesimi doğal sönüme çeviren her değişiklik bu testi düşürür.
      */
-    const short = measure(synthesize(Presets.heavyDrum(40, 0.12)));
+    const short = synthesize(Presets.heavyDrum(40, 0.12));
     const natural = measure(synthesize(Presets.heavyDrum(40, 1.1)));
 
-    expect(short.last, 'kısa nota artık kesilmiyor — davranış değişti').toBeGreaterThan(0.05);
+    // Tampon uzunluğu sözleşmesi: duration'dan fazla örnek üretilmez.
+    expect(short.channels[0].length).toBe(Math.floor(0.12 * short.sampleRate));
+
+    // Kesim hâlâ gerçek: fade'in hemen öncesinde ses yüksekte kesiliyor —
+    // yani kuyruk doğal sönümle değil, tampon sınırıyla bitiyor.
+    const samples = short.channels[0];
+    const fadeLen = Math.floor(short.sampleRate * 0.01);
+    let sumSq = 0;
+    const probeEnd = samples.length - fadeLen;
+    const probeStart = probeEnd - Math.floor(short.sampleRate * 0.02);
+    for (let i = probeStart; i < probeEnd; i++) sumSq += samples[i] * samples[i];
+    const rmsBeforeCut = Math.sqrt(sumSq / (probeEnd - probeStart));
+    expect(rmsBeforeCut, 'kısa nota kesim öncesi hâlâ seste').toBeGreaterThan(0.05);
+
+    // Kesim yumuşak: son örnek sıfıra iner, doğal sürede de öyle.
+    expect(Math.abs(samples[samples.length - 1]), 'kuyruk tık üretmemeli').toBeLessThan(0.02);
     expect(natural.last, 'tipik sürede kesilme olmamalı').toBeLessThan(0.02);
   });
 });

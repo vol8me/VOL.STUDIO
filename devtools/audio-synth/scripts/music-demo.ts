@@ -3,7 +3,7 @@ import { Arrange, Presets } from '../src';
 import type { SynthesisResult } from '../src/types';
 
 const { Timeline, measureRms, measurePeak, matchLoudness } = Arrange;
-const { noteToHz, SCALES, scaleDegree, scaleChord } = Arrange;
+const { noteToHz, transposeNote, SCALES, scaleDegree, scaleChord } = Arrange;
 
 const SAMPLE_RATE = 44100;
 const OUT_DIR = new URL('../export', import.meta.url).pathname;
@@ -378,9 +378,11 @@ function buildBowedPiece(): SynthesisResult {
 
   for (let bar = 0; bar < 16; bar++) {
     const chord = chords[bar % chords.length] ?? ['D3', 'F3', 'A3'];
+    // Keman yazılış tabanı 196 Hz — akoru bir oktav yukarı taşı.
+    const isViolin = bar % 2 !== 0;
     t.chord({
-      instrument: bar % 2 === 0 ? Presets.viola : Presets.violin,
-      notes: chord.slice(0, 3),
+      instrument: isViolin ? Presets.violin : Presets.viola,
+      notes: isViolin ? chord.slice(0, 3).map((n) => transposeNote(n, 12)) : chord.slice(0, 3),
       bar,
       beats: 4,
       gain: 0.65,
@@ -388,7 +390,7 @@ function buildBowedPiece(): SynthesisResult {
     });
     t.chord({
       instrument: Presets.doubleBass,
-      notes: [chord[0] ?? 'D2'],
+      notes: [transposeNote(chord[0] ?? 'D3', -12)],
       bar,
       beat: 0,
       beats: 4,
@@ -416,9 +418,11 @@ function buildWindPiece(): SynthesisResult {
 
   for (let bar = 0; bar < 16; bar++) {
     const chord = chords[bar % chords.length] ?? ['G3', 'B3', 'D4'];
+    // Flüt yazılış tabanı 262 Hz — akoru bir oktav yukarı taşı.
+    const isFlute = bar % 2 === 0;
     t.chord({
-      instrument: bar % 2 === 0 ? Presets.flute : Presets.clarinet,
-      notes: chord.slice(0, 3),
+      instrument: isFlute ? Presets.flute : Presets.clarinet,
+      notes: isFlute ? chord.slice(0, 3).map((n) => transposeNote(n, 12)) : chord.slice(0, 3),
       bar,
       beats: 4,
       gain: 0.6,
@@ -427,7 +431,7 @@ function buildWindPiece(): SynthesisResult {
     if (bar % 4 === 0) {
       t.chord({
         instrument: Presets.bassoon,
-        notes: [chord[0] ?? 'G2'],
+        notes: [transposeNote(chord[0] ?? 'G3', -12)],
         bar,
         beat: 0,
         beats: 4,
@@ -466,7 +470,7 @@ function buildBrassPiece(): SynthesisResult {
     });
     t.chord({
       instrument: Presets.tuba,
-      notes: [chord[0] ?? 'Bb1'],
+      notes: [transposeNote(chord[0] ?? 'Bb3', -12)],
       bar,
       beat: 0,
       beats: 4,
@@ -475,7 +479,7 @@ function buildBrassPiece(): SynthesisResult {
     if (bar % 4 === 0) {
       t.note({
         instrument: Presets.trombone,
-        note: scaleDegree('Bb4', scale, (bar * 2) % 7),
+        note: scaleDegree('Bb3', scale, (bar * 2) % 7),
         bar,
         beat: 2,
         beats: 1,
@@ -488,15 +492,17 @@ function buildBrassPiece(): SynthesisResult {
 
 function buildChoirPiece(): SynthesisResult {
   const t = new Timeline({ bpm: 60, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 44 });
-  const root = 'C3';
+  const root = 'C4';
   const scale = SCALES.major;
   const chords = chordProgression(root, scale, [0, 5, 3, 4]);
 
   for (let bar = 0; bar < 12; bar++) {
-    const chord = chords[bar % chords.length] ?? ['C3', 'E3', 'G3'];
+    const chord = chords[bar % chords.length] ?? ['C4', 'E4', 'G4'];
+    // Dört ses kendi yazılış aralığında: bas kökün bir oktav altında,
+    // tenor kökte, alto üçlüde, soprano dönüşümlü akor sesinde bir oktav üstte.
     t.chord({
       instrument: Presets.soprano,
-      notes: chord.slice(0, 3).map((n) => scaleDegree(n, scale, 0)),
+      notes: [transposeNote(chord[bar % 3] ?? 'C4', 12)],
       bar,
       beats: 4,
       gain: 0.45,
@@ -504,7 +510,7 @@ function buildChoirPiece(): SynthesisResult {
     });
     t.chord({
       instrument: Presets.alto,
-      notes: [chord[0] ?? 'C3'],
+      notes: [chord[1] ?? 'E4'],
       bar,
       beat: 0,
       beats: 4,
@@ -512,7 +518,7 @@ function buildChoirPiece(): SynthesisResult {
     });
     t.chord({
       instrument: Presets.tenor,
-      notes: [chord[2] ?? 'G3'],
+      notes: [chord[0] ?? 'C4'],
       bar,
       beat: 0,
       beats: 4,
@@ -520,7 +526,7 @@ function buildChoirPiece(): SynthesisResult {
     });
     t.chord({
       instrument: Presets.bassChoir,
-      notes: [chord[0] ?? 'C2'],
+      notes: [transposeNote(chord[0] ?? 'C4', -12)],
       bar,
       beat: 0,
       beats: 4,

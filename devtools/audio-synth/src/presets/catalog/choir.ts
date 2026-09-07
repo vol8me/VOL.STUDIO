@@ -53,7 +53,7 @@ export const CHOIR_CATALOG: Record<string, PresetMetadata> = {
     typicalDuration: 2.0,
     range: [82.4, 392],
     useCase: 'Koro bas zemin, derin vokal pad',
-    tags: ['choir', 'vocal', 'bass', 'bass', 'realistic'],
+    tags: ['choir', 'vocal', 'bass', 'low', 'realistic'],
     related: ['tenor', 'alto', 'soprano'],
   },
 };

@@ -1,5 +1,6 @@
 /**
- * Fiziksel model — duduk/horoz (lip-reed) üflemeli çalgı ailesi.
+ * Fiziksel model — bakır üflemeli çalgılar (lip-reed): trompet, trombon,
+ * korno, tuba.
  *
  * Model, bakır çalgıların ana karakterini modal toplama ile kurar:
  * - silindirik gövde harmonik kısmi tonları (lip türnak atışları)

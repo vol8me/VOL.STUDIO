@@ -4,7 +4,7 @@
  * Bir model, `SynthParams` ile ifade EDİLEMEYEN yapı taşır — gecikme hattı,
  * rezonatör, uyarım — ve çıktısı doğrudan `SynthesisResult`tır. Bu yüzden
  * `presets/`ten ayrıdır: preset ad verilmiş bir parametre kümesidir ve yeni
- * DSP taşımaz. `guitar` bir presettir; `PluckedString` bir modeldir.
+ * DSP taşımaz. `guitar` bir presettir; `pluck` bir modeldir.
  *
  * Model burada, yani BUILD zamanında yaşar. Motorun çaldığı şey offline
  * render edilmiş tampondur; canlı sentez istenirse bu katmana değil, ayrı bir

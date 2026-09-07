@@ -46,7 +46,7 @@ class OnePoleLowpass {
   private prev = 0;
   private readonly coefficient: number;
 
-  /** coefficient: 0-1 arası. Yüksek = daha fazla geçiş. */
+  /** coefficient: 0-1 arası. Yüksek = daha fazla yumuşatma (daha koyu). */
   constructor(coefficient: number) {
     this.coefficient = Math.max(0, Math.min(0.99, coefficient));
   }
@@ -100,7 +100,9 @@ export function piano(params: PianoParams): SynthesisResult {
   // Çekiç gürültüsü — kısa, lowpass ile yumuşatılmış patlama.
   const hammerMs = 0.003 + 0.004 * (1 - hammerHardness);
   const hammerSamples = Math.floor(sampleRate * hammerMs);
-  const hammerLp = new OnePoleLowpass(0.2 + 0.75 * hammerHardness);
+  // Sert çekiç daha keskin temas gürültüsü üretir: katsayı sertlikle
+  // DÜŞMELİ (yüksek katsayı = koyu lowpass, bak. sınıf yorumu).
+  const hammerLp = new OnePoleLowpass(0.95 - 0.75 * hammerHardness);
   const hammerBuffer = new Float32Array(hammerSamples);
   for (let i = 0; i < hammerSamples; i++) {
     const noise = random.bipolar();
@@ -112,20 +114,22 @@ export function piano(params: PianoParams): SynthesisResult {
     right[i] += hammerBuffer[i] * gain;
   }
 
-  // Kısmi tonlar: her biri için unison tel sayısı kadar osilatör.
-  for (let n = 1; n <= partials; n++) {
-    const fn = inharmonicFrequency(n, f0, b);
-    if (fn > sampleRate / 2) break;
+  // Unison: her ek tel kendi detune'unu TÜM kısmi tonlarına uygular —
+  // kısmi ton başına ayrı detune fiziksel olarak yanlıştır; aynı telin
+  // bütün modları aynı cent sapmasıyla kayar.
+  for (let u = 0; u < unisonCount; u++) {
+    const detuneL = unisonCount === 1 ? 0 : (random.bipolar() * unisonDetune) / 2;
+    const detuneR = unisonCount === 1 ? 0 : (random.bipolar() * unisonDetune) / 2;
+    const detuneRatioL = Math.pow(2, detuneL / 1200);
+    const detuneRatioR = Math.pow(2, detuneR / 1200);
 
-    const amp = partialGain(n, hammerHardness) * gain;
-    const tau = partialDecay(n, baseDecay, highDamping);
-    const releaseRate = tau > 0 ? 1 / tau : 1;
+    for (let n = 1; n <= partials; n++) {
+      const fn = inharmonicFrequency(n, f0, b);
+      if (fn > sampleRate / 2) break;
 
-    for (let u = 0; u < unisonCount; u++) {
-      const detuneL = unisonCount === 1 ? 0 : (random.bipolar() * unisonDetune) / 2;
-      const detuneR = unisonCount === 1 ? 0 : (random.bipolar() * unisonDetune) / 2;
-      const detuneRatioL = Math.pow(2, detuneL / 1200);
-      const detuneRatioR = Math.pow(2, detuneR / 1200);
+      const amp = partialGain(n, hammerHardness) * gain;
+      const tau = partialDecay(n, baseDecay, highDamping);
+      const releaseRate = tau > 0 ? 1 / tau : 1;
       const phaseStepL = (2 * Math.PI * fn * detuneRatioL) / sampleRate;
       const phaseStepR = (2 * Math.PI * fn * detuneRatioR) / sampleRate;
 

@@ -17,8 +17,36 @@ import { join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { ensureFfmpeg } from '../src/writer';
 
-/** Tek örnek içinde bu farkı aşan atlama duyulur sertlik sayılır. */
+/**
+ * Tık eşiği: örnek farkı 0,35'i aşmalı VE ardından gelen ~1 ms'lik
+ * pencerede sinyal seviyesi neredeyse sıfıra düşmeli (içerik bir örnekte
+ * "yok olur"). Tek başına eşik parlak içeriği tık sayar — ölçüldü:
+ * 9 kHz'lik bir kısmi ton, genlik ~0,26'da zaten örnek başına 0,35
+ * fark üretir ve sıfır geçişinde dik eğim birkaç örnek sürer. Komşu-delta
+ * testi de yanılır: sinüsün tepe bölgesinde farklar doğal olarak küçülür.
+ * Duyulur kusur, sesin devam ederken bir örnekte kesilmesidir — bu ancak
+ * genlik penceresinin çökmesiyle ölçülür.
+ */
 const CLICK_DELTA_THRESHOLD = 0.35;
+const CLICK_DROP_LEVEL = 0.05;
+const CLICK_DROP_WINDOW = 48;
+
+/** Büyük bir örnek farkından sonra sinyal çöküyorsa tık say. */
+function countClicks(left: Float32Array, right: Float32Array): number {
+  const n = left.length;
+  let clicks = 0;
+  for (let i = 1; i < n; i++) {
+    const d = Math.max(Math.abs(left[i]! - left[i - 1]!), Math.abs(right[i]! - right[i - 1]!));
+    if (d <= CLICK_DELTA_THRESHOLD) continue;
+    let after = 0;
+    const count = Math.min(CLICK_DROP_WINDOW, n - i);
+    for (let k = i; k < i + count; k++) {
+      after += Math.max(Math.abs(left[k]!), Math.abs(right[k]!));
+    }
+    if (after / Math.max(1, count) < CLICK_DROP_LEVEL) clicks++;
+  }
+  return clicks;
+}
 
 interface Decoded {
   channels: Float32Array[];
@@ -168,7 +196,6 @@ function analyze(path: string, label: string): void {
   let sumSq = 0;
   let dcSum = 0;
   let clip = 0;
-  let clicks = 0;
   let maxDelta = 0;
   let corrNum = 0;
   let leftSq = 0;
@@ -188,9 +215,9 @@ function analyze(path: string, label: string): void {
     if (i > 0) {
       const d = Math.max(Math.abs(l - left[i - 1]!), Math.abs(r - right[i - 1]!));
       if (d > maxDelta) maxDelta = d;
-      if (d > CLICK_DELTA_THRESHOLD) clicks++;
     }
   }
+  const clicks = countClicks(left, right);
 
   const rms = Math.sqrt(sumSq / n);
   const toDb = (v: number): number => (v > 0 ? 20 * Math.log10(v) : -Infinity);
@@ -249,17 +276,18 @@ if (files.length === 0) {
 }
 
 console.log(
-  `Ölçüm: ${files.length} dosya (click eşiği: tek örnekte ${CLICK_DELTA_THRESHOLD} fark)\n`,
+  `Ölçüm: ${files.length} dosya (click: >${CLICK_DELTA_THRESHOLD} fark ve ardından ~1 ms çöküş)\n`,
 );
 let totalClicks = 0;
 let totalClip = 0;
 for (const file of files) {
   const { channels } = decodeOgg(file);
   const l = channels[0]!;
-  for (let i = 1; i < l.length; i++) {
-    if (Math.abs(l[i]! - l[i - 1]!) > CLICK_DELTA_THRESHOLD) totalClicks++;
+  const r = channels[1] ?? l;
+  for (let i = 0; i < l.length; i++) {
     if (Math.abs(l[i]!) >= 0.999) totalClip++;
   }
+  totalClicks += countClicks(l, r);
   analyze(file, relative(root, file).replace(/\\/g, '/'));
 }
 

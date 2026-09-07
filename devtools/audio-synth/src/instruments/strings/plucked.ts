@@ -29,7 +29,7 @@ export interface PluckParams {
   excitationMix?: number;
   /** Excitation harmonik sayısı (1-8). Yüksek = daha zengin atak. Varsayılan 4. */
   excitationHarmonics?: number;
-  /** Stereo yayılım (0-1). 0 = mono, 1 = tam stereo. Varsayılan 0.3. */
+  /** Stereo yayılım (0-1). 0 = mono, 1 = tam stereo. Varsayılan 0.6. */
   stereoWidth?: number;
   /** Genel kazanç (0-1). Varsayılan 0.5. */
   gain?: number;
@@ -82,7 +82,7 @@ class OnePoleLowpass {
   private prev = 0;
   private readonly coefficient: number;
 
-  /** coefficient: 0-1 arası. Yüksek = daha az sönüm (daha parlak kalır). */
+  /** coefficient: 0-1 arası. Yüksek = daha fazla yumuşatma (daha koyu). */
   constructor(coefficient: number) {
     this.coefficient = Math.max(0, Math.min(0.99, coefficient));
   }
@@ -137,7 +137,7 @@ export function pluck(params: PluckParams): SynthesisResult {
   const decay = clamp(params.decay ?? 0.995, 0, 0.999);
   const excitationMix = clamp(params.excitationMix ?? 0.5, 0, 1);
   const excitationHarmonics = Math.floor(clamp(params.excitationHarmonics ?? 4, 1, 8));
-  const stereoWidth = clamp(params.stereoWidth ?? 0.3, 0, 1);
+  const stereoWidth = clamp(params.stereoWidth ?? 0.6, 0, 1);
   const gain = clamp(params.gain ?? 0.5, 0, 1);
   // Alt sınır 20Hz'e sabitlenir (0 hariç): `sampleRate / bodyResonance` delay
   // hattı uzunluğunu belirler — sıfıra çok yakın bir değer (ör. 0.001Hz)
@@ -186,7 +186,9 @@ export function pluck(params: PluckParams): SynthesisResult {
   // Sentez döngüsü
   const left = new Float32Array(totalSamples);
   const right = new Float32Array(totalSamples);
-  const stereoGain = Math.min(1, stereoWidth * 2);
+  // Karışım doğrudan parametredir: `w*2` gibi bir ölçek 0,5 üstünü
+  // doyurur ve aralığın yarısını ölü bırakır.
+  const stereoGain = stereoWidth;
 
   for (let i = 0; i < totalSamples; i++) {
     // KS döngüsü: oku → lowpass → decay → yaz

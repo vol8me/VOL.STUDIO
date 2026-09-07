@@ -13,8 +13,8 @@ import { NORMALIZE_TARGET_PEAK } from './constants';
 /**
  * Mono kuru buffer'a master efektleri, pan, stereo reverb ve normalize uygular.
  * Zincir: delay → flanger → phaser → chorus → pan → stereo reverb →
- * stereo width → normalize. Pan reverb öncesi — her kanal kendi reverb
- * kuyruğuna girer, geniş imaj.
+ * stereo width → normalize → kuyruk de-click fade. Pan reverb öncesi —
+ * her kanal kendi reverb kuyruğuna girer, geniş imaj.
  *
  * `dryBuffer` değiştirilmez; fonksiyon kendi kopyasında çalışır.
  */
@@ -128,6 +128,23 @@ export function applyGlobalEffects(
     for (const ch of channels) {
       for (let i = 0; i < ch.length; i++) {
         ch[i] *= gain;
+      }
+    }
+  }
+
+  // Kuyruk de-click'i: tampon, kuyruğun (reverb, filtre ringing'i) bittiği
+  // yerde değil `duration`'ın bittiği yerde kesilir; kesimde kalan seviye,
+  // ard arda dizilen tamponlarda tek örnekte duyulur sıçrama demektir.
+  // Son ~10 ms yükselen-kosinüsle sıfıra iner — zaten sönen nota
+  // değişmez, kesilen kuyruk yumuşak yere iner. Çok kısa tamponlarda
+  // oransal küçülür; kasıtlı tık (ör. UI tick) karakteri korunur.
+  const fadeSamples = Math.min(Math.floor(sampleRate * 0.01), Math.floor(channels[0].length / 4));
+  if (fadeSamples > 1) {
+    const start = channels[0].length - fadeSamples;
+    for (const ch of channels) {
+      for (let i = 0; i < fadeSamples; i++) {
+        const r = i / fadeSamples;
+        ch[start + i] *= 0.5 + 0.5 * Math.cos(Math.PI * r);
       }
     }
   }
