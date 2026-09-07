@@ -31,13 +31,17 @@ const EXPECTED_SURFACE = [
   'Reverb',
   'StereoWidener',
   'WhiteNoise',
+  'airColumn',
   'applyCurve',
   'applyEnvelopeToSample',
   'applyGlobalEffects',
+  'bowedString',
+  'brass',
   'compose',
   'createFilter',
   'createNoiseSource',
   'decodeWav',
+  'formant',
   'getCutoffAtTime',
   'getPanGains',
   'getWaveSampleConstantFreq',
@@ -80,7 +84,7 @@ describe('audio-synth public yüzeyi', () => {
   it('enstrüman modelleri `instruments/` altından gelir', () => {
     // `pluck` bugün tek fiziksel model. Yeni model eklendiğinde bu liste ve
     // yukarıdaki yüzey birlikte güncellenir — model eklemek sessiz olamaz.
-    const MODELS = ['piano', 'pluck'];
+    const MODELS = ['piano', 'pluck', 'bowedString', 'airColumn', 'brass', 'formant'];
     for (const model of MODELS) {
       expect(EXPECTED_SURFACE, `${model} yüzeyde beyan edilmeli`).toContain(model);
       expect(typeof (AudioSynth as Record<string, unknown>)[model]).toBe('function');

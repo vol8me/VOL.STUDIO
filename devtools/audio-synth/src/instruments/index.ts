@@ -13,5 +13,13 @@
 
 export { pluck } from './strings/plucked';
 export type { PluckParams } from './strings/plucked';
+export { bowedString } from './strings/bowed';
+export type { BowedStringParams } from './strings/bowed';
 export { piano } from './keyboard/piano';
 export type { PianoParams } from './keyboard/piano';
+export { airColumn } from './wind/airColumn';
+export type { AirColumnParams } from './wind/airColumn';
+export { brass } from './brass/brass';
+export type { BrassParams } from './brass/brass';
+export { formant } from './voice/formant';
+export type { FormantParams } from './voice/formant';

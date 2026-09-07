@@ -368,6 +368,168 @@ function buildMainMenu(): SynthesisResult {
   return t.render({ targetRms: 0.1, tailSeconds: 3 });
 }
 
+function buildBowedPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 72, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 41 });
+  const root = 'D3';
+  const scale = SCALES.minor;
+  const chords = chordProgression(root, scale, [0, 3, 4, 0]);
+  const melodyRoot = 'D4';
+  const melody = [0, 2, 4, 2, 0, -1, 0, 4, 2, 3, 2, 1, 0, 2, -2, 0];
+
+  for (let bar = 0; bar < 16; bar++) {
+    const chord = chords[bar % chords.length] ?? ['D3', 'F3', 'A3'];
+    t.chord({
+      instrument: bar % 2 === 0 ? Presets.viola : Presets.violin,
+      notes: chord.slice(0, 3),
+      bar,
+      beats: 4,
+      gain: 0.65,
+      spread: 0.3,
+    });
+    t.chord({
+      instrument: Presets.doubleBass,
+      notes: [chord[0] ?? 'D2'],
+      bar,
+      beat: 0,
+      beats: 4,
+      gain: 0.75,
+    });
+    const degree = melody[(bar * 2) % melody.length];
+    t.note({
+      instrument: bar % 3 === 0 ? Presets.cello : Presets.violin,
+      note: scaleDegree(melodyRoot, scale, degree),
+      bar,
+      beat: 1,
+      beats: 2,
+      gain: 0.55,
+      pan: bar % 2 === 0 ? -0.15 : 0.15,
+    });
+  }
+  return t.render({ targetRms: 0.1, tailSeconds: 3 });
+}
+
+function buildWindPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 84, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 42 });
+  const root = 'G3';
+  const scale = SCALES.major;
+  const chords = chordProgression(root, scale, [0, 4, 5, 2]);
+
+  for (let bar = 0; bar < 16; bar++) {
+    const chord = chords[bar % chords.length] ?? ['G3', 'B3', 'D4'];
+    t.chord({
+      instrument: bar % 2 === 0 ? Presets.flute : Presets.clarinet,
+      notes: chord.slice(0, 3),
+      bar,
+      beats: 4,
+      gain: 0.6,
+      spread: 0.3,
+    });
+    if (bar % 4 === 0) {
+      t.chord({
+        instrument: Presets.bassoon,
+        notes: [chord[0] ?? 'G2'],
+        bar,
+        beat: 0,
+        beats: 4,
+        gain: 0.75,
+      });
+    }
+    if (bar % 3 === 0) {
+      t.note({
+        instrument: Presets.oboe,
+        note: scaleDegree('G4', scale, (bar * 2) % 7),
+        bar,
+        beat: 2,
+        beats: 1.5,
+        gain: 0.55,
+      });
+    }
+  }
+  return t.render({ targetRms: 0.1, tailSeconds: 3 });
+}
+
+function buildBrassPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 76, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 43 });
+  const root = 'Bb3';
+  const scale = SCALES.major;
+  const chords = chordProgression(root, scale, [0, 4, 5, 3]);
+
+  for (let bar = 0; bar < 16; bar++) {
+    const chord = chords[bar % chords.length] ?? ['Bb3', 'D4', 'F4'];
+    t.chord({
+      instrument: bar % 2 === 0 ? Presets.trumpet : Presets.frenchHorn,
+      notes: chord.slice(0, 3),
+      bar,
+      beats: 4,
+      gain: 0.55,
+      spread: 0.25,
+    });
+    t.chord({
+      instrument: Presets.tuba,
+      notes: [chord[0] ?? 'Bb1'],
+      bar,
+      beat: 0,
+      beats: 4,
+      gain: 0.8,
+    });
+    if (bar % 4 === 0) {
+      t.note({
+        instrument: Presets.trombone,
+        note: scaleDegree('Bb4', scale, (bar * 2) % 7),
+        bar,
+        beat: 2,
+        beats: 1,
+        gain: 0.6,
+      });
+    }
+  }
+  return t.render({ targetRms: 0.1, tailSeconds: 3 });
+}
+
+function buildChoirPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 60, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 44 });
+  const root = 'C3';
+  const scale = SCALES.major;
+  const chords = chordProgression(root, scale, [0, 5, 3, 4]);
+
+  for (let bar = 0; bar < 12; bar++) {
+    const chord = chords[bar % chords.length] ?? ['C3', 'E3', 'G3'];
+    t.chord({
+      instrument: Presets.soprano,
+      notes: chord.slice(0, 3).map((n) => scaleDegree(n, scale, 0)),
+      bar,
+      beats: 4,
+      gain: 0.45,
+      spread: 0.4,
+    });
+    t.chord({
+      instrument: Presets.alto,
+      notes: [chord[0] ?? 'C3'],
+      bar,
+      beat: 0,
+      beats: 4,
+      gain: 0.5,
+    });
+    t.chord({
+      instrument: Presets.tenor,
+      notes: [chord[2] ?? 'G3'],
+      bar,
+      beat: 0,
+      beats: 4,
+      gain: 0.5,
+    });
+    t.chord({
+      instrument: Presets.bassChoir,
+      notes: [chord[0] ?? 'C2'],
+      bar,
+      beat: 0,
+      beats: 4,
+      gain: 0.65,
+    });
+  }
+  return t.render({ targetRms: 0.1, tailSeconds: 4 });
+}
+
 const TRACKS: { name: string; builder: () => SynthesisResult; actionRange?: [number, number] }[] = [
   { name: '1-org-gecit', builder: buildOrganPiece },
   { name: '2-piyano-gecesi', builder: buildPianoPiece },
@@ -376,6 +538,10 @@ const TRACKS: { name: string; builder: () => SynthesisResult; actionRange?: [num
   { name: '5-glockenspiel-muzik-kutusu', builder: buildGlockenspielPiece },
   { name: '6-davul-yuruyus', builder: buildDrumPiece },
   { name: '7-klavye-safak', builder: buildMellowKeysPiece },
+  { name: '8-yayli-safak', builder: buildBowedPiece },
+  { name: '9-ufleme-yeli', builder: buildWindPiece },
+  { name: '10-bakir-ates', builder: buildBrassPiece },
+  { name: '11-koro-daglar', builder: buildChoirPiece },
   { name: 'ANA-MENU-esik', builder: buildMainMenu, actionRange: [34, 74] },
 ];
 

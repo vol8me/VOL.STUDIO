@@ -36,9 +36,12 @@ ağacının kendisidir; burada tekrarlanmaz.
 Bu ayrım bu paketin büyüme biçimidir ve bulanıklaşırsa katalog motoru yutar.
 
 - **Model** (`instruments/`), `SynthParams` ile ifade EDİLEMEYEN yapı taşır:
-  gecikme hattı, rezonatör, uyarım, inharmonik kısmi ton bankası. Çıktısı
-  doğrudan `SynthesisResult`tır. Bugün iki model var: `pluck`
-  (Karplus-Strong) ve `piano` (modal sentez).
+  gecikme hattı, rezonatör, uyarım, inharmonik kısmi ton bankası, modal
+  rezonatör, yay-sürtünme gürültüsü, hava-sütunu rezonatörü, dudak-reed
+  uyarımı, formant bandpass filtresi. Çıktısı doğrudan `SynthesisResult`tır.
+  Bugün altı model var: `pluck` (Karplus-Strong), `piano` (modal sentez),
+  `bowedString` (yaylı tel), `airColumn` (açık/kapalı boru), `brass`
+  (lip-reed), `formant` (vokal formant).
 - **Preset** (`presets/`), ad verilmiş bir parametre kümesidir ve **yeni DSP
   taşımaz**. Ya `engine`e ya bir modele biner.
 
@@ -46,11 +49,17 @@ Sonuç: `guitar` bir presettir, `PluckedString` bir modeldir. On enstrüman on
 motor değil, bir modelin on presetidir.
 
 Bugün `presets/acoustic.ts` altında beş akustik preset, `presets/plucked.ts`
-altında dört telli çalgı ve `presets/piano.ts` altında dört piyano preset var;
-hepsi yeni DSP taşımaz:
+altında dört telli çalgı, `presets/piano.ts` altında dört piyano,
+`presets/bowed.ts` altında dört yaylı, `presets/airColumn.ts` altında dört
+ahşap üflemeli, `presets/brass.ts` altında dört bakır ve
+`presets/choir.ts` altında dört koro sesi var; hepsi yeni DSP taşımaz:
 `drawbarOrgan`, `harpsichord`, `marimba`, `vibraphone`, `glockenspiel`,
 `guitar`, `bassGuitar`, `harp`, `mandolin`,
-`grandPiano`, `uprightPiano`, `honkyTonkPiano`, `preparedPiano`.
+`grandPiano`, `uprightPiano`, `honkyTonkPiano`, `preparedPiano`,
+`violin`, `viola`, `cello`, `doubleBass`,
+`flute`, `clarinet`, `oboe`, `bassoon`,
+`trumpet`, `trombone`, `frenchHorn`, `tuba`,
+`soprano`, `alto`, `tenor`, `bassChoir`.
 
 Değerler kodda değil ORANLARDADIR — Hammond ayak uzunlukları,
 oyulmuş çubuğun 4:1 akordu, oyulmamış çubuğun harmonik OLMAYAN
@@ -61,14 +70,20 @@ sert çekiç oranı ve gövde rezonansı.
 ### Bir preset ölçülerek doğrulanır
 
 Uydurulmuş bir harmonik dizisi de hatasız sentezlenir; "çalışıyor" bir kalite
-ölçüsü değildir. `tests/acousticSpectrum.test.ts` her presetin BELGELENMİŞ
-yapısını sesin kendisinde arar ve dokuz mutasyonu yakalar: modları tam sayıya
-çevirmek, marimbanın boş katlarını doldurmak, klavsenin çukurunu kapatmak,
-orga sönüm vermek, vibrafonun tremolosunu kaldırmak, gitar/bas gitar/arp
-kısmi ton yapısını bozmak, mandolinin tremolosunu kaldırmak, `pluck` modelin
-`decay` veya `bodyResonance` değerini değiştirmek,
-piyano presetinin inharmonik katsayısını sıfırlamak, lowpass zarfını kapatmak,
-`detune` değerini kapatmak.
+ölçüsü değildir. `tests/acousticSpectrum.test.ts` akustik presetleri,
+`tests/pianoSpectrum.test.ts` piyano presetlerini,
+`tests/bowedSpectrum.test.ts` yaylı presetleri,
+`tests/airColumnSpectrum.test.ts` ahşap üflemeli presetleri,
+`tests/brassSpectrum.test.ts` bakır presetlerini ve
+`tests/choirSpectrum.test.ts` koro presetlerini sesin kendisinde arar.
+Her dosya aynı yaklaşımı izler: belgelenmiş fiziksel karakter spektrumda
+ölçülür, bir DSP parametresi tek başına değiştirildiğinde beklenen mutasyon
+görülür.
+
+`tests/bowed.test.ts`, `tests/airColumn.test.ts`, `tests/brass.test.ts` ve
+`tests/formant.test.ts` fiziksel modelleri doğrudan sınar: determinizm,
+seed farkı, geçersiz parametre güvenliği, sürdürülebilirlik, kaynak-seçici
+mutasyonlar.
 
 İki ölçüm aracı, iki ayrı soru:
 
@@ -453,10 +468,11 @@ parçası) onları yeniden üretip bayt-birebir olduklarını doğruluyor. İddi
 motorun tek osilatör + ADSR döneminden kalmıştı; additive, FM, filtre, LFO,
 efekt zinciri ve Karplus-Strong eklendikten sonra geçerliliğini yitirdi.
 
-Gerçek sınır **motorda değil KATALOĞDA**. Primitifler güçlü, paketlenmiş
-enstrüman modeli az: bugün tek fiziksel model `pluck()` (Karplus-Strong).
-Akustik piyano, yaylı, nefesli ve bakır üflemeli sesler yeni fiziksel model
-ister — yeni bir motor değil.
+Gerçek sınır **motorda değil KATALOGDA**. Primitifler güçlü; altı fiziksel
+model (`pluck`, `piano`, `bowedString`, `airColumn`, `brass`, `formant`)
+yirmi beş enstrüman presetini taşıyor. Akustik aileler artık ayrı modellerde
+yaşıyor; yeni bir enstrüman presetlerle büyür, model gerekiyorsa model
+dosyasına eklenir.
 
 Kapsam DIŞINDA olanlar (bunlar bilinçli):
 

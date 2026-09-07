@@ -14,6 +14,10 @@ export * from './fm';
 export * from './instruments';
 export * from './plucked';
 export * from './piano';
+export * from './bowed';
+export * from './airColumn';
+export * from './brass';
+export * from './choir';
 export * from './acoustic';
 export * from './sequences';
 export * from './textures';
@@ -30,6 +34,10 @@ import * as fm from './fm';
 import * as instruments from './instruments';
 import * as plucked from './plucked';
 import * as piano from './piano';
+import * as bowed from './bowed';
+import * as airColumn from './airColumn';
+import * as brass from './brass';
+import * as choir from './choir';
 import * as acoustic from './acoustic';
 import * as textures from './textures';
 
@@ -50,6 +58,10 @@ const all = {
   ...instruments,
   ...plucked,
   ...piano,
+  ...bowed,
+  ...airColumn,
+  ...brass,
+  ...choir,
   ...acoustic,
   ...textures,
 } as const;

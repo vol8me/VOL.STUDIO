@@ -9,6 +9,10 @@ import { INSTRUMENTS_CATALOG } from './instruments';
 import { PLUCKED_CATALOG } from './plucked';
 import { ACOUSTIC_CATALOG } from './acoustic';
 import { PIANO_CATALOG } from './piano';
+import { BOWED_CATALOG } from './bowed';
+import { AIR_COLUMN_CATALOG } from './airColumn';
+import { BRASS_CATALOG } from './brass';
+import { CHOIR_CATALOG } from './choir';
 
 /**
  * Tüm presetlerin keşfedilebilir metadata kataloğu.
@@ -27,6 +31,10 @@ export const PRESET_CATALOG: Record<string, PresetMetadata> = {
   ...INSTRUMENTS_CATALOG,
   ...PLUCKED_CATALOG,
   ...PIANO_CATALOG,
+  ...BOWED_CATALOG,
+  ...AIR_COLUMN_CATALOG,
+  ...BRASS_CATALOG,
+  ...CHOIR_CATALOG,
   ...ACOUSTIC_CATALOG,
 };
 
