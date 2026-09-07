@@ -1138,11 +1138,11 @@ genel listesi [docs/gates.md](../../docs/gates.md).
 - **`workspace-contract`**: hiçbir paket `typecheck`, `test`,
   `test:coverage` script'leri ve `quality.json`da eşik **olmadan** repoya
   giremez. Taban: 50/50/50/40.
-- **`publicSurface`**: `src/` kök barrel'a `Synth` gibi TEK bir isimle
-  (`export * as VisualSynth`) girer, yani kök sayısını yalnızca 1 artırır. Alt
-  sistemin kendi yüzeyi kök sayının gölgesinde büyümesin diye AYRICA ve kendi
-  başına kilitlenir (`EXPECTED_VISUAL_SYNTH_EXPORT_COUNT`). İki sayı da bilinçli
-  olarak güncellenir.
+- **Public yüzey.** Bu paketin kök yüzeyi bugün KİLİTLİ DEĞİL. Belge bir dönem
+  kilitli olduğunu yazıyordu; o, motor CORE'un içindeyken doğruydu ve paket
+  ayrıldığında geçerliliğini yitirdi. Kardeş paket `audio-synth`te kilit var
+  (`tests/governance/publicSurface.test.ts`); burada yoktur ve yokluğu bilinçli
+  bir karar DEĞİL, kapanmamış bir boşluktur.
 - **`publicApi`**: export adları `enemy`/`boss`/`flux`/`spark`/`volhell`
   içeremez.
 - **`primitiveNeutrality`**: `PRIMITIVE_ROOTS` dizisine `'visualSynth'` **eklenir**;

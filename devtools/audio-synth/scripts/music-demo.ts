@@ -93,26 +93,44 @@ function buildOrganPiece(): SynthesisResult {
   return t.render({ targetRms: 0.1, tailSeconds: 3 });
 }
 
-function buildHarpsichordPiece(): SynthesisResult {
-  const t = new Timeline({ bpm: 110, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 12 });
+function buildPianoPiece(): SynthesisResult {
+  const t = new Timeline({ bpm: 76, beatsPerBar: 4, sampleRate: SAMPLE_RATE, humanizeSeed: 31 });
   const root = 'C3';
   const scale = SCALES.minor;
   const chords = chordProgression(root, scale, [0, 3, 4, 0]);
-  for (let bar = 0; bar < 24; bar++) {
-    const notes = chords[bar % chords.length];
-    for (let i = 0; i < notes.length; i++) {
-      t.note({
-        instrument: Presets.harpsichord,
-        note: notes[i] ?? 'C4',
+  for (let bar = 0; bar < 20; bar++) {
+    const chord = chords[bar % chords.length] ?? ['C3', 'Eb3', 'G3'];
+    t.chord({
+      instrument: Presets.grandPiano,
+      notes: chord,
+      bar,
+      beats: 4,
+      gain: 0.85,
+      spread: 0.3,
+    });
+    if (bar % 2 === 1) {
+      t.chord({
+        instrument: Presets.uprightPiano,
+        notes: chord,
         bar,
-        beat: i,
+        beat: 2,
+        beats: 2,
+        gain: 0.8,
+        spread: 0.25,
+      });
+    }
+    if (bar % 4 === 0) {
+      t.note({
+        instrument: Presets.honkyTonkPiano,
+        note: chord[0] ?? 'C4',
+        bar,
+        beat: 3,
         beats: 0.5,
-        gain: 0.75,
-        pan: (i / (notes.length - 1) - 0.5) * 1.2,
+        gain: 0.7,
       });
     }
   }
-  return t.render({ targetRms: 0.1, tailSeconds: 2 });
+  return t.render({ targetRms: 0.1, tailSeconds: 3 });
 }
 
 function buildPluckedPiece(): SynthesisResult {
@@ -254,11 +272,11 @@ function buildMainMenu(): SynthesisResult {
 
     if (section === 'intro' || section === 'build' || section === 'outro') {
       t.chord({
-        instrument: section === 'outro' ? Presets.mellowKeys : Presets.mellowKeys,
+        instrument: section === 'build' ? Presets.mellowKeys : Presets.grandPiano,
         notes: chord,
         bar,
         beats: 4,
-        gain: 0.75,
+        gain: 0.8,
         spread: 0.35,
       });
       if (section === 'build' || section === 'outro') {
@@ -352,7 +370,7 @@ function buildMainMenu(): SynthesisResult {
 
 const TRACKS: { name: string; builder: () => SynthesisResult; actionRange?: [number, number] }[] = [
   { name: '1-org-gecit', builder: buildOrganPiece },
-  { name: '2-klavsen-bulus', builder: buildHarpsichordPiece },
+  { name: '2-piyano-gecesi', builder: buildPianoPiece },
   { name: '3-tellerin-hikayesi', builder: buildPluckedPiece },
   { name: '4-vibrafon-gece', builder: buildVibraphonePiece },
   { name: '5-glockenspiel-muzik-kutusu', builder: buildGlockenspielPiece },

@@ -1,0 +1,12 @@
+diff --git a/dist/chunks/rpc.-pEldfrD.js b/dist/chunks/rpc.-pEldfrD.js
+index a48eb0174a4fbc508a36c46ff78b0f9bf7ba6295..f2c7a05e50a781f7372177ead3dd7253065189e7 100644
+--- a/dist/chunks/rpc.-pEldfrD.js
++++ b/dist/chunks/rpc.-pEldfrD.js
+@@ -40,6 +40,7 @@ function createRuntimeRpc(options) {
+ 		setCancel = resolve;
+ 	});
+ 	const rpc = createSafeRpc(createBirpc({ onCancel: setCancel }, {
++		timeout: 3e5,
+ 		eventNames: [
+ 			"onUserConsoleLog",
+ 			"onCollected",

@@ -13,3 +13,5 @@
 
 export { pluck } from './strings/plucked';
 export type { PluckParams } from './strings/plucked';
+export { piano } from './keyboard/piano';
+export type { PianoParams } from './keyboard/piano';

@@ -4,13 +4,16 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  vitest@3.2.6: 05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765
+
 importers:
 
   .:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 3.2.6
-        version: 3.2.6(supports-color@7.2.0)(vitest@3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11))
+        version: 3.2.6(supports-color@7.2.0)(vitest@3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11))
       eslint:
         specifier: 9.0.0
         version: 9.0.0(supports-color@7.2.0)
@@ -68,7 +71,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 3.2.6
-        version: 3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
+        version: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
 
   devtools/audio-synth:
     dependencies:
@@ -87,7 +90,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 3.2.6
-        version: 3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
+        version: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
 
   devtools/pen.dev:
     dependencies:
@@ -106,7 +109,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 3.2.6
-        version: 3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
+        version: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
 
   devtools/visual-synth:
     dependencies:
@@ -125,7 +128,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 3.2.6
-        version: 3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
+        version: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
 
   devtools/vol-asset-studio:
     dependencies:
@@ -177,7 +180,7 @@ importers:
         version: 8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)
       vitest:
         specifier: 3.2.6
-        version: 3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
+        version: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
 
   devtools/vol-ui:
     dependencies:
@@ -205,7 +208,7 @@ importers:
         version: 8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)
       vitest:
         specifier: 3.2.6
-        version: 3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
+        version: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
 
   games/vol-arachnid:
     dependencies:
@@ -257,7 +260,7 @@ importers:
         version: 4.1.1(vite@8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11))
       vitest:
         specifier: 3.2.6
-        version: 3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
+        version: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
 
   games/vol-hell:
     dependencies:
@@ -300,7 +303,7 @@ importers:
         version: 4.1.1(vite@8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11))
       vitest:
         specifier: 3.2.6
-        version: 3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
+        version: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
 
   tauri-v2:
     dependencies:
@@ -325,7 +328,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 3.2.6
-        version: 3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
+        version: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
 
 packages:
 
@@ -3940,7 +3943,7 @@ snapshots:
       '@typescript-eslint/types': 8.58.0
       eslint-visitor-keys: 5.0.1
 
-  '@vitest/coverage-v8@3.2.6(supports-color@7.2.0)(vitest@3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11))':
+  '@vitest/coverage-v8@3.2.6(supports-color@7.2.0)(vitest@3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -3955,7 +3958,7 @@ snapshots:
       std-env: 3.10.0
       test-exclude: 7.0.2
       tinyrainbow: 2.0.0
-      vitest: 3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
+      vitest: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
     transitivePeerDependencies:
       - supports-color
 
@@ -5537,7 +5540,7 @@ snapshots:
       jiti: 2.7.0
       tsx: 4.23.11
 
-  vitest@3.2.6(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11):
+  vitest@3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.6

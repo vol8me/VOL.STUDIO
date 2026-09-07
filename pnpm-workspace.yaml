@@ -9,3 +9,5 @@ allowBuilds:
   esbuild: true
   just-install: true
   simple-git-hooks: true
+patchedDependencies:
+  vitest@3.2.6: patches/vitest@3.2.6.patch

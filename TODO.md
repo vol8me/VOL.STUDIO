@@ -36,6 +36,11 @@ ait oldukları belgede yaşar: [core/docs](core/docs),
   `Deck`, `SlotContainer`, `FlowField` benchmark/workload'da tüketiliyor ama
   ikinci bir üründe değil. Mekanizma doğrulaması ayrı, entegrasyon borcu ayrı.
 
+- **Tuş atama veri, ama oyuncuya açık değil.** Eylem → tuş eşlemesi
+  `PCActionBinding` olarak veri hâlinde duruyor (`core/src/input/`), yani
+  yeniden atama mekanizması hazır; bunu sunan bir ayar ekranı yok. Kapanması
+  için UI + kalıcılık + çakışma çözümü gerekir, yeni mekanizma değil.
+
 - **`TouchButton` adı semantiğini karşılamıyor** (girdi cihazından bağımsız
   press/hold). Yeniden adlandırma bedeli public API + showcase + i18n olduğu
   için ertelendi.

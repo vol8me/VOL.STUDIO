@@ -36,21 +36,27 @@ ağacının kendisidir; burada tekrarlanmaz.
 Bu ayrım bu paketin büyüme biçimidir ve bulanıklaşırsa katalog motoru yutar.
 
 - **Model** (`instruments/`), `SynthParams` ile ifade EDİLEMEYEN yapı taşır:
-  gecikme hattı, rezonatör, uyarım. Çıktısı doğrudan `SynthesisResult`tır.
-  Bugün tek model `pluck` (Karplus-Strong).
+  gecikme hattı, rezonatör, uyarım, inharmonik kısmi ton bankası. Çıktısı
+  doğrudan `SynthesisResult`tır. Bugün iki model var: `pluck`
+  (Karplus-Strong) ve `piano` (modal sentez).
 - **Preset** (`presets/`), ad verilmiş bir parametre kümesidir ve **yeni DSP
   taşımaz**. Ya `engine`e ya bir modele biner.
 
 Sonuç: `guitar` bir presettir, `PluckedString` bir modeldir. On enstrüman on
 motor değil, bir modelin on presetidir.
 
-Bugün `presets/acoustic.ts` altında beş akustik preset ve `presets/plucked.ts`
-altında dört telli çalgı preset var; hepsi yeni DSP taşımaz:
+Bugün `presets/acoustic.ts` altında beş akustik preset, `presets/plucked.ts`
+altında dört telli çalgı ve `presets/piano.ts` altında dört piyano preset var;
+hepsi yeni DSP taşımaz:
 `drawbarOrgan`, `harpsichord`, `marimba`, `vibraphone`, `glockenspiel`,
-`guitar`, `bassGuitar`, `harp`, `mandolin`. Değerleri kodda değil ORANLARDADIR —
-Hammond ayak uzunlukları,
+`guitar`, `bassGuitar`, `harp`, `mandolin`,
+`grandPiano`, `uprightPiano`, `honkyTonkPiano`, `preparedPiano`.
+
+Değerler kodda değil ORANLARDADIR — Hammond ayak uzunlukları,
 oyulmuş çubuğun 4:1 akordu, oyulmamış çubuğun harmonik OLMAYAN
-1 : 2,76 : 5,40 : 8,93 modları, koparma noktasının 7. harmonikte açtığı çukur.
+1 : 2,76 : 5,40 : 8,93 modları, koparma noktasının 7. harmonikte açtığı çukur,
+piyanonun inharmonik `n * sqrt(1 + B * n^2)` kısmi ton serisi,
+sert çekiç oranı ve gövde rezonansı.
 
 ### Bir preset ölçülerek doğrulanır
 
@@ -60,7 +66,9 @@ yapısını sesin kendisinde arar ve dokuz mutasyonu yakalar: modları tam sayı
 çevirmek, marimbanın boş katlarını doldurmak, klavsenin çukurunu kapatmak,
 orga sönüm vermek, vibrafonun tremolosunu kaldırmak, gitar/bas gitar/arp
 kısmi ton yapısını bozmak, mandolinin tremolosunu kaldırmak, `pluck` modelin
-`decay` veya `bodyResonance` değerini değiştirmek.
+`decay` veya `bodyResonance` değerini değiştirmek,
+piyano presetinin inharmonik katsayısını sıfırlamak, lowpass zarfını kapatmak,
+`detune` değerini kapatmak.
 
 İki ölçüm aracı, iki ayrı soru:
 

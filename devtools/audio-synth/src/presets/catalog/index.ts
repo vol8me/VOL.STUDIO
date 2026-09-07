@@ -8,6 +8,7 @@ import { TEXTURES_CATALOG } from './textures';
 import { INSTRUMENTS_CATALOG } from './instruments';
 import { PLUCKED_CATALOG } from './plucked';
 import { ACOUSTIC_CATALOG } from './acoustic';
+import { PIANO_CATALOG } from './piano';
 
 /**
  * Tüm presetlerin keşfedilebilir metadata kataloğu.
@@ -25,6 +26,7 @@ export const PRESET_CATALOG: Record<string, PresetMetadata> = {
   ...TEXTURES_CATALOG,
   ...INSTRUMENTS_CATALOG,
   ...PLUCKED_CATALOG,
+  ...PIANO_CATALOG,
   ...ACOUSTIC_CATALOG,
 };
 

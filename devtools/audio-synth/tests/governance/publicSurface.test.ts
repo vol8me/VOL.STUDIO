@@ -47,6 +47,7 @@ const EXPECTED_SURFACE = [
   'mix',
   'mixSampleLayer',
   'normalize',
+  'piano',
   'pluck',
   'processSample',
   'resampleLinear',
@@ -79,7 +80,7 @@ describe('audio-synth public yüzeyi', () => {
   it('enstrüman modelleri `instruments/` altından gelir', () => {
     // `pluck` bugün tek fiziksel model. Yeni model eklendiğinde bu liste ve
     // yukarıdaki yüzey birlikte güncellenir — model eklemek sessiz olamaz.
-    const MODELS = ['pluck'];
+    const MODELS = ['piano', 'pluck'];
     for (const model of MODELS) {
       expect(EXPECTED_SURFACE, `${model} yüzeyde beyan edilmeli`).toContain(model);
       expect(typeof (AudioSynth as Record<string, unknown>)[model]).toBe('function');

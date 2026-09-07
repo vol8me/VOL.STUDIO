@@ -13,6 +13,7 @@ export * from './rewards';
 export * from './fm';
 export * from './instruments';
 export * from './plucked';
+export * from './piano';
 export * from './acoustic';
 export * from './sequences';
 export * from './textures';
@@ -28,6 +29,7 @@ import * as rewards from './rewards';
 import * as fm from './fm';
 import * as instruments from './instruments';
 import * as plucked from './plucked';
+import * as piano from './piano';
 import * as acoustic from './acoustic';
 import * as textures from './textures';
 
@@ -47,6 +49,7 @@ const all = {
   ...fm,
   ...instruments,
   ...plucked,
+  ...piano,
   ...acoustic,
   ...textures,
 } as const;
