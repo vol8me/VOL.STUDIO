@@ -39,8 +39,16 @@ test-pkg pkg:
 
 # Test + kapsam eşikleri. Eşikler kök `quality.json`da (tek kaynak); paketlerin
 # vitest.config.ts dosyaları onu okur, `contract` ikisinin ayrışmadığını doğrular.
+#
+# `audio-synth` coverage'i (ağır spektrum/fiziksel model testleri) pre-push
+# yerine release/signoff kapısında koşulur; ~4 dakikalik yük push'a takılmalar
+# yapıyordu ve spektrum testleri zaten release anına yakışan bir doğrulama.
 coverage:
-    pnpm -r --if-present test:coverage
+    pnpm -r --if-present --filter !@volstudio/audio-synth test:coverage
+
+# Ağır ses/spektrum kapsamı; yalnızca release (signoff) kapısında koşulur.
+coverage-audio:
+    pnpm --filter @volstudio/audio-synth test:coverage
 
 # Workspace sözleşmesi: her paketin kapılara dahil olduğunu doğrular.
 # `pnpm -r --if-present` script'i olmayan paketi sessizce atladığı için,
@@ -103,6 +111,8 @@ fast: quick test
 
 # `coverage` aynı testleri eşikleriyle koştuğu için düz `test` burada bilerek
 # tekrarlanmaz; `high` yine de `fast`'in her kapısını kapsar.
+# `audio-synth` coverage `signoff`'ta; kapsam eşikleri burada product paketleri
+# ve araçlar için koşulur.
 # Push öncesi kapısı: quick + css lint + kapsam eşikleri + build + Chromium smoke
 high: quick lint-css coverage build bundle scaling e2e
 
@@ -124,8 +134,8 @@ audio-verify:
     pnpm --filter @volstudio/vol-hell generate:audio
     git diff --exit-code -- 'games/*/public/assets/audio/**'
 
-# Release/milestone kapısı: high + iki motorlu E2E + Rust + ses tazeliği
-signoff: high e2e-full rust audio-verify
+# Release/milestone kapısı: high + ağır ses kapsamı + iki motorlu E2E + Rust + ses tazeliği
+signoff: high coverage-audio e2e-full rust audio-verify
 
 # Kapıyı koşar ve sonucu MAKİNE-OKUNUR raporlar (agent döngüleri için).
 # Kapıları yeniden tanımlamaz, yukarıdaki tarifleri çağırır; aşama haritasının

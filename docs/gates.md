@@ -3,14 +3,14 @@
 Kapılar `just` ile **localde** koşar. GitHub yalnız source control, PR ve
 release içindir; CI runner yoktur.
 
-| Seviye       | Komut                        | Ne yapar                                                       |
-| ------------ | ---------------------------- | -------------------------------------------------------------- |
-| Pre-commit   | `pnpm quick`                 | sözleşme, format, typecheck, lint (~45 sn)                     |
-| Push öncesi  | `pnpm high`                  | quick + CSS lint + coverage + build + bundle + ölçekleme + E2E |
-| Release      | `pnpm signoff`               | high + Chromium/Firefox E2E + Rust + ses tazeliği              |
-| Ortam        | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri bağımlılıkları           |
-| Cihaz ölçümü | `pnpm benchmark:device`      | Bağlı Android'de açılış/kare/bellek — **kapı DEĞİL**           |
-| Rapor        | `pnpm exec just report high` | Kapıyı koşar, sonucu yapılandırılmış verir (`--json`)          |
+| Seviye       | Komut                        | Ne yapar                                                                           |
+| ------------ | ---------------------------- | ---------------------------------------------------------------------------------- |
+| Pre-commit   | `pnpm quick`                 | sözleşme, format, typecheck, lint (~45 sn)                                         |
+| Push öncesi  | `pnpm high`                  | quick + CSS lint + coverage (audio-synth hariç) + build + bundle + ölçekleme + E2E |
+| Release      | `pnpm signoff`               | high + audio-synth coverage + Chromium/Firefox E2E + Rust + ses tazeliği           |
+| Ortam        | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri bağımlılıkları                               |
+| Cihaz ölçümü | `pnpm benchmark:device`      | Bağlı Android'de açılış/kare/bellek — **kapı DEĞİL**                               |
+| Rapor        | `pnpm exec just report high` | Kapıyı koşar, sonucu yapılandırılmış verir (`--json`)                              |
 
 Hook'lar `pnpm install` sırasında kurulur (`pre-commit` → `quick`,
 `pre-push` → `high`); atlamak için `SKIP_SIMPLE_GIT_HOOKS=1`. Test yükü
