@@ -17,6 +17,7 @@ import {
 } from './hudFeedbackCards';
 import {
   buildBuildMenuCard,
+  buildFpsMeterCard,
   buildMinimapCard,
   buildRoundCounterCard,
   buildSelectionInfoPanelCard,
@@ -45,6 +46,7 @@ export function buildHudTab(): { element: HTMLElement; destroy: () => void } {
     buildStatsPanelCard(disposables),
     buildBuildMenuCard(disposables),
     buildFloatingTextCard(disposables),
+    buildFpsMeterCard(disposables),
   ];
 
   container.appendChild(cardGrid(cards));

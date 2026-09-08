@@ -1,0 +1,15 @@
+{
+  "app": {
+    "title": "VOL.LIFE"
+  },
+  "hud": {
+    "ariaLabel": "World indicators",
+    "fullscreenEnter": "Enter fullscreen",
+    "fullscreenExit": "Exit fullscreen"
+  },
+  "exit": {
+    "title": "Close VOL.LIFE?",
+    "confirm": "Exit",
+    "cancel": "Continue"
+  }
+}

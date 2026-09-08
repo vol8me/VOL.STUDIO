@@ -305,6 +305,46 @@ importers:
         specifier: 3.2.6
         version: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
 
+  games/vol-life:
+    dependencies:
+      '@volstudio/core':
+        specifier: workspace:*
+        version: link:../../core
+      '@volstudio/tauri-v2':
+        specifier: workspace:*
+        version: link:../../tauri-v2
+      phaser:
+        specifier: ^4.2.1
+        version: 4.2.1
+    devDependencies:
+      '@tauri-apps/cli':
+        specifier: ^2.11.4
+        version: 2.11.4
+      '@types/node':
+        specifier: ^26.1.2
+        version: 26.1.2
+      i18next:
+        specifier: 26.3.6
+        version: 26.3.6(typescript@6.0.3)
+      jsdom:
+        specifier: 25.0.1
+        version: 25.0.1(supports-color@7.2.0)
+      tsx:
+        specifier: ^4.23.11
+        version: 4.23.11
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vite:
+        specifier: ^8.2.0
+        version: 8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)
+      vite-plugin-static-copy:
+        specifier: ^4.1.1
+        version: 4.1.1(vite@8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11))
+      vitest:
+        specifier: 3.2.6
+        version: 3.2.6(patch_hash=05e9b9dde42ffec235fa78c3004b7ff59c64a1c4a56809c0337baa222caf5765)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@25.0.1(supports-color@7.2.0))(lightningcss@1.33.0)(supports-color@7.2.0)(tsx@4.23.11)
+
   tauri-v2:
     dependencies:
       '@tauri-apps/api':

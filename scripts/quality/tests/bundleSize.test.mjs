@@ -71,3 +71,23 @@ test('bütçe aşımı reddedilir, sınır içindeki geçer', (t) => {
   assert.deepEqual(validateBundleSizes(root, { game: { app: appKb + 1 } }), []);
   assert.match(validateBundleSizes(root, { game: { app: appKb - 1 } }).join('\n'), /bütçe/);
 });
+
+/*
+ * `quality.json` bir GEREKÇE dosyasıdır ve her bölümüne açıklama yazılabilir.
+ * `scalingBudget.mjs` `$` önekli anahtarları atlar; bu bekçi atlamıyordu ve
+ * `bundles` altına yazılan tek bir açıklama satırı kapıyı "dist yok" ile
+ * düşürüyordu. İki kapı aynı dosyayı okur, aynı sözleşmeyi uygular.
+ */
+test('`$` önekli açıklama anahtarları paket sayılmaz', (t) => {
+  const root = fixture(t, {
+    'phaser-abc123.js': filler(200),
+    'index-def456.js': filler(20),
+  });
+
+  const problems = validateBundleSizes(root, {
+    $comment: ['Bu bir açıklamadır', 'ikinci satır'],
+    game: { $comment: 'alan açıklaması', app: 500, vendor: 500 },
+  });
+
+  assert.deepEqual(problems, []);
+});

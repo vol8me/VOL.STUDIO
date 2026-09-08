@@ -21,10 +21,37 @@ altındadır, global `PATH`e girmez — çıplak `just fast` değil `pnpm exec j
 
 ## Kapılar workspace'ten TÜRER
 
-Yeni bir paket hiçbir kapıya elle eklenmez; `pnpm -r` ve repo geneli glob'lar
-onu kendiliğinden kapsar. `scripts/workspace-contract.mjs` her commit'te bunu
-doğrular: bir paket `test`/`test:coverage` script'i ya da coverage eşiği
-olmadan repoya giremez.
+Yeni bir paket `typecheck`/`test`/`coverage`/`build`/`lint` kapılarına elle
+eklenmez; `pnpm -r` ve repo geneli glob'lar onu kendiliğinden kapsar.
+`scripts/workspace-contract.mjs` her commit'te bunu doğrular: bir paket
+`test`/`test:coverage` script'i ya da coverage eşiği olmadan repoya giremez.
+
+**Üç kapı bu türetmenin DIŞINDADIR ve listesini elle tutar.** Atlandıklarında
+hata vermezler, sessizce ölçmezler:
+
+| Kapı      | Elle tutulan yer           | Atlanırsa                    |
+| --------- | -------------------------- | ---------------------------- |
+| `bundle`  | `quality.json` → `bundles` | Paketin boyutu hiç ölçülmez  |
+| `e2e`     | `justfile` → `e2e` tarifi  | Tarayıcı testleri hiç koşmaz |
+| `scaling` | `quality.json` → `scaling` | Ölçekleme bütçelenemez       |
+
+`e2e`nin bir yönü kapılıdır: `scripts/quality/tests/justfileWiring.test.mjs`
+`test:e2e` tanımlayıp tarifte görünmeyen paketi reddeder. Ters yön — tarifte
+olup script'i olmayan — ve diğer iki kapı için böyle bir bekçi yoktur.
+
+`scaling` ayrıca bugün GENEL DEĞİLDİR: `scripts/quality/scalingBudget.mjs`
+bütçeleri paket paket okur ama runner `measureArachnidScaling`e sabittir ve her
+pakette `scripts/benchmark/locomotion-benchmark.ts` arar. `games/vol-arachnid`
+dışında bir pakete bütçe yazmak kapıyı "ölçülemedi" ile düşürür.
+
+**Geliştirme portlarının tekilliği kapılıdır.** `scripts/quality/devPorts.mjs`
+`vite.config.ts` ve `playwright.config.ts` dosyalarından port bildirimlerini
+okur ve İKİ AYRI paketin aynı portu istemesini reddeder. Bir paketin kendi
+preview portu ile kendi e2e portunun aynı olması meşrudur — playwright o
+sunucuyu kendisi başlatır.
+
+Yeni paket eklerken izlenecek liste:
+[games/docs/new-game.md](../games/docs/new-game.md).
 
 Sözleşmenin doğruladığı diğer şeyler:
 

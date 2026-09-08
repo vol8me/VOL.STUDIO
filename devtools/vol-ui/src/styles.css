@@ -968,3 +968,11 @@ body {
   text-align: center;
   word-break: break-all;
 }
+
+/*
+ * Showcase içindeki FpsMeter örneği akışa alınır: bileşenin kendisi
+ * `position: fixed`tir ve kart içinde sayfanın köşesine kaçardı.
+ */
+.vol-showcase-fps-meter {
+  position: static;
+}

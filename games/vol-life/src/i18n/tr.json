@@ -1,0 +1,15 @@
+{
+  "app": {
+    "title": "VOL.LIFE"
+  },
+  "hud": {
+    "ariaLabel": "Dünya göstergeleri",
+    "fullscreenEnter": "Tam ekrana geç",
+    "fullscreenExit": "Tam ekrandan çık"
+  },
+  "exit": {
+    "title": "VOL.LIFE kapatılsın mı?",
+    "confirm": "Çık",
+    "cancel": "Devam et"
+  }
+}

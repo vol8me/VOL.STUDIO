@@ -55,6 +55,10 @@
       "import": "./src/spatial/SpatialIndex.ts",
       "types": "./src/spatial/SpatialIndex.ts"
     },
+    "./time": {
+      "import": "./src/time/index.ts",
+      "types": "./src/time/index.ts"
+    },
     "./quality": {
       "import": "./src/quality/index.ts",
       "types": "./src/quality/index.ts"

@@ -1,4 +1,5 @@
 import '../ui/debug.css';
+import { FrameRateSampler, RollingWindow } from '../time/FrameRateSampler';
 import { NoopTransport, type DiagnosticsTransport } from './transport';
 import type {
   DiagnosticsSnapshot,
@@ -12,13 +13,6 @@ import type {
 
 /** Kayan istatistik penceresinin ornek sayısı. */
 const SAMPLE_WINDOW = 60;
-
-interface RollingStats {
-  values: number[];
-  min: number;
-  max: number;
-  sum: number;
-}
 
 /**
  * Oyun performans ve input metriklerini toplayan geliştirme aracı.
@@ -40,11 +34,11 @@ export class Diagnostics {
   private readonly stageTimes = new Map<string, number>();
   private readonly counts = new Map<string, number>();
   private readonly pendingEvents: DiagnosticsEvent[] = [];
-  private readonly updateStats: RollingStats = { values: [], min: 0, max: 0, sum: 0 };
-  private readonly renderStats: RollingStats = { values: [], min: 0, max: 0, sum: 0 };
-  private readonly frameStats: RollingStats = { values: [], min: 0, max: 0, sum: 0 };
+  private readonly updateStats = new RollingWindow(SAMPLE_WINDOW);
+  private readonly renderStats = new RollingWindow(SAMPLE_WINDOW);
+  /** Kare aralığı — `FpsMeter` ile AYNI örnekleyici (bkz. FrameRateSampler). */
+  private readonly frameStats = new FrameRateSampler(SAMPLE_WINDOW);
   private startTime = 0;
-  private lastFrameTime = 0;
   private lastEndTime = 0;
   private frameCount = 0;
   private currentScene?: string;
@@ -100,7 +94,7 @@ export class Diagnostics {
    */
   markResume(): void {
     const now = performance.now();
-    this.lastFrameTime = now;
+    this.frameStats.markBaseline(now);
     this.lastEndTime = now;
   }
 
@@ -113,7 +107,7 @@ export class Diagnostics {
     const now = performance.now();
 
     if (this.lastEndTime > 0) {
-      this.pushSample(this.renderStats, now - this.lastEndTime);
+      this.renderStats.push(now - this.lastEndTime);
     }
 
     this.startTime = now;
@@ -152,15 +146,8 @@ export class Diagnostics {
   /** Kareyi bitir ve periyodik olarak gönder. */
   endFrame(): void {
     const now = performance.now();
-    const updateTime = now - this.startTime;
-    this.pushSample(this.updateStats, updateTime);
-
-    if (this.lastFrameTime > 0) {
-      const frameTime = now - this.lastFrameTime;
-      this.pushSample(this.frameStats, frameTime);
-    }
-
-    this.lastFrameTime = now;
+    this.updateStats.push(now - this.startTime);
+    this.frameStats.sample(now);
     this.lastEndTime = now;
 
     this.frameCount++;
@@ -180,54 +167,8 @@ export class Diagnostics {
     }
   }
 
-  /**
-   * Ornek ekler. min/max yalnızca pencereden eleman düştüğünde tam tarama
-   * yapılarak güncellenir; her çağrıda `Math.min(...values)` hesaplamak ölçüm
-   * aracının kendi maliyetini artırır.
-   */
-  private pushSample(stats: RollingStats, value: number): void {
-    stats.values.push(value);
-    stats.sum += value;
-
-    if (stats.values.length > SAMPLE_WINDOW) {
-      const removed = stats.values.shift()!;
-      stats.sum -= removed;
-      // Düşen değer uc değerlerden biriyse tam tarama kaçınılmaz.
-      if (removed === stats.min || removed === stats.max) {
-        this.recomputeExtremes(stats);
-        return;
-      }
-    } else if (stats.values.length === 1) {
-      stats.min = value;
-      stats.max = value;
-      return;
-    }
-
-    if (value < stats.min) stats.min = value;
-    if (value > stats.max) stats.max = value;
-  }
-
-  private recomputeExtremes(stats: RollingStats): void {
-    let min = Infinity;
-    let max = -Infinity;
-    for (const sample of stats.values) {
-      if (sample < min) min = sample;
-      if (sample > max) max = sample;
-    }
-    stats.min = Number.isFinite(min) ? min : 0;
-    stats.max = Number.isFinite(max) ? max : 0;
-  }
-
-  private avg(stats: RollingStats): number {
-    return stats.values.length > 0 ? stats.sum / stats.values.length : 0;
-  }
-
-  private summary(stats: RollingStats): StatsSummary {
-    return {
-      min: stats.min,
-      max: stats.max,
-      avg: this.avg(stats),
-    };
+  private summary(stats: { min: number; max: number; average: number }): StatsSummary {
+    return { min: stats.min, max: stats.max, avg: stats.average };
   }
 
   private screenInfo(): ScreenInfo {
@@ -242,12 +183,11 @@ export class Diagnostics {
   }
 
   private buildSnapshot(): DiagnosticsSnapshot {
-    const avgFrame = this.avg(this.frameStats);
     return {
       t: performance.now(),
       gameId: this.gameId,
       scene: this.currentScene,
-      fps: avgFrame > 0 ? 1000 / avgFrame : 0,
+      fps: this.frameStats.fps,
       frame: this.summary(this.frameStats),
       render: this.summary(this.renderStats),
       update: this.summary(this.updateStats),

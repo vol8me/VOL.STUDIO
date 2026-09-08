@@ -1,6 +1,7 @@
 import {
   Bar,
   DisposableScope,
+  FpsMeter,
   Icon,
   IconButton,
   Text,
@@ -85,6 +86,19 @@ export class ArachnidHud {
     );
     this.titleText.element.classList.add('vol-arachnid-hud__title');
     this.root.appendChild(this.titleText.element);
+
+    /*
+     * SOL ALT tek boş köşedir. Ölçüldü (1280×720): başlık sol üstte, tam ekran
+     * düğmesi sağ üstte (1232,8), atılım barı solda (24,238–482), hız
+     * telemetrisi SAĞ ALTTA (1211,680–1264,700). Gösterge sağ alta konduğunda
+     * telemetrinin üstüne biniyordu.
+     *
+     * Dokunmatik yerleşimde sol yarı hareket çubuğuna aittir; gösterge
+     * `pointer-events: none` taşıdığı için dokunuşu yakalamaz.
+     */
+    this.root.appendChild(
+      this.scope.addDestroyable(new FpsMeter({ position: 'bottom-left' })).element,
+    );
 
     this.dashBar = this.scope.addDestroyable(
       new Bar({

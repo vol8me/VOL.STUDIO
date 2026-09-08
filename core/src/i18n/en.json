@@ -97,5 +97,9 @@
     "round": "Round {{round}}",
     "roundTotal": "Round {{round}} / {{total}}",
     "next": "Next: {{seconds}}s"
+  },
+  "fpsMeter": {
+    "value": "{{fps}} FPS",
+    "ariaLabel": "Frame rate"
   }
 }

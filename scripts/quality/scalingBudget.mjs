@@ -24,15 +24,16 @@ import { execFileSync } from 'node:child_process';
  * @param runner Ölçümü döndüren fonksiyon; testler kendi sahtesini verir.
  * @returns Sorun listesi; boşsa ölçekleme bütçe içindedir.
  */
-export function validateScaling(root, budgets, runner = measureArachnidScaling) {
+export function validateScaling(root, budgets, runner = measureScaling) {
   const problems = [];
 
   for (const [packageDir, budget] of Object.entries(budgets ?? {})) {
     if (packageDir.startsWith('$')) continue;
 
+    const keys = Object.keys(budget).filter((key) => !key.startsWith('$'));
     let measured;
     try {
-      measured = runner(root, packageDir);
+      measured = runner(root, packageDir, budget.$measure, keys);
     } catch (error) {
       problems.push(
         `${packageDir}: ölçekleme ölçümü koşulamadı (${
@@ -61,28 +62,50 @@ export function validateScaling(root, budgets, runner = measureArachnidScaling) 
   return problems;
 }
 
-/** vol-arachnid locomotion benchmark'ını koşar ve ölçekleme oranlarını çıkarır. */
-function measureArachnidScaling(root, packageDir) {
-  const raw = execFileSync(
-    'pnpm',
-    [
-      'exec',
-      'tsx',
-      'scripts/benchmark/locomotion-benchmark.ts',
-      '--iterations',
-      '400',
-      '--samples',
-      '3',
-      '--json',
-    ],
-    { cwd: `${root}/${packageDir}`, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
-  );
-  const report = JSON.parse(raw.slice(raw.indexOf('{')));
-  const byParts = new Map(report.fxScale.map((entry) => [entry.parts, entry.msPerFrame]));
-  const base = byParts.get(18);
-  const top = byParts.get(72);
-  if (!(base > 0) || !(top > 0)) {
-    throw new Error('fxScale ölçümü 18 ve 72 parça değerlerini taşımıyor');
+/**
+ * Bütçedeki ölçüm TARİFİNİ koşar ve oran anahtarlarını üretir.
+ *
+ * Tarif `quality.json` → `scaling.<paket>.$measure` içinde VERİ olarak durur;
+ * bekçi hiçbir paketin betik adını ya da rapor alanını bilmez. Bir dönem bu
+ * fonksiyon `vol-arachnid`in `locomotion-benchmark.ts`ini ve `fxScale` alanını
+ * doğrudan çağırıyordu: başka bir pakete bütçe yazmak kapıyı "ölçülemedi" ile
+ * düşürüyordu, yani kapı tek pakete kilitliydi.
+ *
+ * Oran anahtarı kendi girdilerini taşır: `fxParts72Over18` = 72 girdideki süre
+ * bölü 18 girdideki süre.
+ */
+export function measureScaling(root, packageDir, measure, keys) {
+  if (!measure || typeof measure.script !== 'string') {
+    throw new Error(
+      `"$measure" tarifi yok. Ölçüm komutu, seri ve alan adları ${packageDir} ` +
+        'için `quality.json` → scaling içinde bildirilmelidir.',
+    );
   }
-  return { fxParts72Over18: top / base };
+
+  const raw = execFileSync('pnpm', ['exec', 'tsx', measure.script, ...(measure.args ?? [])], {
+    cwd: `${root}/${packageDir}`,
+    encoding: 'utf8',
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  const report = JSON.parse(raw.slice(raw.indexOf('{')));
+  const series = report[measure.series];
+  if (!Array.isArray(series)) {
+    throw new Error(`raporda "${measure.series}" dizisi yok`);
+  }
+
+  const byInput = new Map(series.map((entry) => [entry[measure.input], entry[measure.value]]));
+  const measured = {};
+  for (const key of keys) {
+    const match = /(\d+)Over(\d+)$/.exec(key);
+    if (!match) continue;
+    const high = byInput.get(Number(match[1]));
+    const low = byInput.get(Number(match[2]));
+    if (!(high > 0) || !(low > 0)) {
+      throw new Error(
+        `"${measure.series}" ölçümü ${match[2]} ve ${match[1]} girdilerini taşımıyor`,
+      );
+    }
+    measured[key] = high / low;
+  }
+  return measured;
 }

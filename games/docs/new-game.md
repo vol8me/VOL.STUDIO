@@ -33,6 +33,16 @@ kapsar.
 `signoff` dahil hiçbir kapıda koşmaz. Aynı şey bundle bütçesi için de geçerli:
 `quality.json` → `bundles` altına paket girdisi eklenmezse boyut ölçülmez.
 
+**Ölçekleme bütçesi yazacaksanız ölçüm tarifini de yazın.**
+`quality.json` → `scaling.<paket>.$measure` benchmark betiğini, argümanlarını ve
+rapordaki seri/alan adlarını taşır; tarif olmadan bütçe "ölçülemedi" sayılır.
+Oran anahtarı girdilerini kendi adında taşır: `fxParts72Over18` = 72 girdideki
+süre ÷ 18 girdideki süre.
+
+**Geliştirme portu seçerken çakışmayı kapı sınar** (`scripts/quality/
+devPorts.mjs`): iki AYRI paket aynı portu bildiremez. Kendi preview portunuzla
+kendi e2e portunuz aynı olabilir.
+
 İkisinden ilki artık kapılıdır — `scripts/quality/tests/justfileWiring.test.mjs`
 `test:e2e` tanımlayıp tarifte görünmeyen paketi reddeder.
 

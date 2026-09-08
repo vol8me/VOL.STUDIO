@@ -289,7 +289,15 @@
     "minimap": "Minimap",
     "minimapHint": "Minimap üzerinde bir noktaya tıkla.",
     "cameraJumped": "Kamera zıplatıldı: ({{x}}, {{y}})",
-    "zoomIn2x": "Yakınlaştır (2x)"
+    "zoomIn2x": "Yakınlaştır (2x)",
+    "fpsMeterTitle": "FPS Göstergesi",
+    "fpsMeterHint": "Gerçek kare akışından ölçer; Diagnostics ile aynı örnekleyiciyi kullanır.",
+    "fpsMeterPin": "Köşeye tuttur",
+    "fpsMeterUnpin": "Köşeden kaldır",
+    "fpsMeterTopLeft": "Sol üst",
+    "fpsMeterTopRight": "Sağ üst",
+    "fpsMeterBottomLeft": "Sol alt",
+    "fpsMeterBottomRight": "Sağ alt"
   },
   "forms": {
     "input": "Input",

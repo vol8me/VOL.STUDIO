@@ -54,6 +54,11 @@ describe('VOL.ARACHNID fiziksel ses paleti', () => {
     expect(first.channels[1]).toEqual(second.channels[1]);
   });
 
+  /*
+   * 6 saniyelik ambiyans üretimi CPU'ya bağımlıdır; `pnpm -r test:coverage`
+   * koşarken diğer paketlerle paralelde 5 saniyelik varsayılan sınır aşılabilir.
+   * Süre testin bütünlüğüne aittir, bölünemez.
+   */
   it('ambiyansı sessiz uçlar yerine sürekli bir stereo loop olarak kurar', () => {
     const ambience = darkAmbience(4271, 6);
     const sampleCount = ambience.channels[0].length;
@@ -69,5 +74,5 @@ describe('VOL.ARACHNID fiziksel ses paleti', () => {
     expect(rms(ambience, 0, window)).toBeGreaterThan(fullRms * 0.45);
     expect(rms(ambience, sampleCount - window, sampleCount)).toBeGreaterThan(fullRms * 0.45);
     expect(seamJump).toBeLessThan(0.05);
-  });
+  }, 15000);
 });

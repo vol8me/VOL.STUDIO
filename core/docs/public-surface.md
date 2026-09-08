@@ -34,11 +34,11 @@ Grafik kalitesi sözleşmesi — üç ÇALIŞMA ZAMANI export'u. `GraphicsQualit
 
 ### 204 → 208
 
-Eklemli uzuv alanı — dört ÇALIŞMA ZAMANI export'u. `Spring1D` (`core/math/Spring.ts`) hız taşıyan genel yay-damper integratörüdür; `solveTwoBoneIk` (`core/math/ik.ts`) iki kemikli düzlemsel ters kinematik; `RigMotionModel` sürekli hareket sinyalleri; `LegGait` ayak-sabitleyen yürüyüş döngüsüdür. Uzuv sözlüğü bilinçli olarak tüketicide kalır (bkz. `core/src/index.ts`daki not).
+Eklemli uzuv alanı — dört ÇALIŞMA ZAMANI export'u. `Spring1D` (`core/src/math/Spring.ts`) hız taşıyan genel yay-damper integratörüdür; `solveTwoBoneIk` (`core/src/math/ik.ts`) iki kemikli düzlemsel ters kinematik; `RigMotionModel` sürekli hareket sinyalleri; `LegGait` ayak-sabitleyen yürüyüş döngüsüdür. Uzuv sözlüğü bilinçli olarak tüketicide kalır (bkz. `core/src/index.ts`daki not).
 
 ### 208 → 212
 
-Bakış ve poz-türevi sunum efektleri — dört ÇALIŞMA ZAMANI export'u. `GazeDriver` (`core/rig/GazeDriver.ts`) sıçramalı bakışı bir yuvanın içinde tutan sürücüdür; `samplePose` bir görüntü ağacını dünya uzayına düzleştirir ve `GhostTrail`/`PoseShadow` o pozdan ikinci bir görüntü çizer (art-görüntü, gölge). Hepsi mekanizma katmanıdır: hangi parçanın gövde, hangisinin uzuv olduğunu bilmezler. Ortak sprite havuzu (`PoseSpriteSet`) bu ikisinin İÇ aracıdır ve bilinçli olarak yüzeye çıkmaz.
+Bakış ve poz-türevi sunum efektleri — dört ÇALIŞMA ZAMANI export'u. `GazeDriver` (`core/src/rig/GazeDriver.ts`) sıçramalı bakışı bir yuvanın içinde tutan sürücüdür; `samplePose` bir görüntü ağacını dünya uzayına düzleştirir ve `GhostTrail`/`PoseShadow` o pozdan ikinci bir görüntü çizer (art-görüntü, gölge). Hepsi mekanizma katmanıdır: hangi parçanın gövde, hangisinin uzuv olduğunu bilmezler. Ortak sprite havuzu (`PoseSpriteSet`) bu ikisinin İÇ aracıdır ve bilinçli olarak yüzeye çıkmaz.
 
 ### 212 → 215
 
@@ -61,3 +61,9 @@ Rig VARLIK katmanı CORE'a alındı (+6) ve ölü `toStepVelocity` düştü (−
 `SimulationClock`. VOL.HELL'in içinde yaşıyordu ama hiçbir oyun kavramı bilmiyor — sıfır import, sıfır alan terimi. Yani jenerik bir zaman primitifi, ATILACAK bir test oyununun içinde duruyordu; vol-hell silindiğinde desen de gidecekti ve gerçek oyun yalnız `clampSimulationStep` ile başlardı.
 İkisi aynı sorunu çözer ama farklı güçte: kelepçe fazla zamanı SESSİZCE yutar, biriktirici onu sabit adımlara böler, catch-up'ı sınırlar ve atılanı `droppedMs` olarak RAPORLAR. Daha iyi olanın framework dışında kalması, "yanlış pakette yaşayan kod" sorusunun somut cevabıydı.
 Yeni yetenek DEĞİL, yer değişikliği: kod, testi ve dokümanıyla olduğu gibi taşındı; "en az iki tüketici" kuralı yeni soyutlama için geçerlidir.
+
+### 223 → 224
+
+`FpsMeter`. `Diagnostics` zaten FPS hesaplıyordu ama yanında kare min/max'ı, render/update sürelerini ve renderer bilgisini taşıyor; istenen ürünün üstünde sürekli durabilen TEK bir sayıydı. Ayrı bileşen olmasının koşulu ölçümü paylaşmasıydı: `time/FrameRateSampler` bu turda çıkarıldı, `Diagnostics` ona bağlandı ve kendi kayan-pencere kopyasından 58 satır silindi. İki ayrı FPS hesabının aynı anda 58 ve 60 göstermesi artık yapısal olarak mümkün değil.
+
+`FrameRateSampler` ve `RollingWindow` yüzeye ÇIKMAZ: ikisi de `time/index.ts` barrel'ında listelenmez. Sayının bire artması bunun kanıtıdır.

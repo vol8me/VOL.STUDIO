@@ -43,3 +43,37 @@ test('`$comment` anahtarları bütçe sanılmaz', () => {
   );
   assert.deepEqual(problems, []);
 });
+
+/*
+ * Bekçi bir dönem `vol-arachnid`in betiğine ve `fxScale` alanına kilitliydi;
+ * başka bir pakete bütçe yazmak kapıyı "ölçülemedi" ile düşürüyordu. Tarif
+ * artık VERİDİR ve oran anahtarı kendi girdilerini taşır.
+ */
+test('ölçüm tarifi bütçeden okunur; oran anahtarı girdilerini taşır', () => {
+  const calls = [];
+  const runner = (root, dir, measure, keys) => {
+    calls.push({ dir, measure, keys });
+    return { fxParts72Over18: 3.1, agentsSteps40000Over10000: 3.9 };
+  };
+  const problems = validateScaling(
+    '/repo',
+    {
+      'games/demo': {
+        $measure: { script: 'scripts/benchmark/x.ts', series: 's', input: 'n', value: 'ms' },
+        fxParts72Over18: 4.5,
+        agentsSteps40000Over10000: 4.5,
+      },
+    },
+    runner,
+  );
+
+  assert.deepEqual(problems, []);
+  assert.equal(calls[0].measure.script, 'scripts/benchmark/x.ts');
+  assert.deepEqual(calls[0].keys, ['fxParts72Over18', 'agentsSteps40000Over10000']);
+});
+
+test('tarif yoksa ölçüm KOŞULMAZ ve bütçe geçerli sayılmaz', () => {
+  const problems = validateScaling('/repo', { 'games/demo': { fxParts72Over18: 4.5 } });
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /geçerli SAYILMAZ/);
+});

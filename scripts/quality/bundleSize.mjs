@@ -73,6 +73,9 @@ export function validateBundleSizes(root, budgets) {
   const problems = [];
 
   for (const [packageDir, budget] of Object.entries(budgets)) {
+    // `$` önekli anahtarlar AÇIKLAMADIR, paket değil (`scalingBudget.mjs` ile
+    // aynı sözleşme). Atlanmazsa bir gerekçe satırı kapıyı "dist yok" ile düşürür.
+    if (packageDir.startsWith('$')) continue;
     const distDir = join(root, packageDir, 'dist');
     const measured = measureBundle(distDir);
 
@@ -90,6 +93,7 @@ export function validateBundleSizes(root, budgets) {
     }
 
     for (const [key, limit] of Object.entries(budget)) {
+      if (key.startsWith('$')) continue;
       const actual = measured[`${key}Kb`];
       if (actual === undefined) continue;
       if (actual > limit) {

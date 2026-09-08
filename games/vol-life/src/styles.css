@@ -1,0 +1,32 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--vol-ui-bg);
+}
+
+.vol-life-hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Marka şeridi: sol üstte, VOL başlık fontuyla. */
+.vol-life-hud__title {
+  position: absolute;
+  top: max(var(--vol-safe-top), 12px);
+  left: max(var(--vol-safe-left), 20px);
+  margin: 0;
+  color: var(--vol-ui-text-secondary);
+  font-size: 17px;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-align: left;
+}
+
+.vol-life-hud__fullscreen {
+  position: absolute;
+  top: max(var(--vol-safe-top), 8px);
+  right: max(var(--vol-safe-right), 16px);
+  pointer-events: auto;
+}

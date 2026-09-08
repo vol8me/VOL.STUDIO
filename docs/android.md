@@ -1,14 +1,15 @@
 # Android
 
-İki oyunun native projeleri AYRIDIR: VOL.HELL `tauri-v2/src-tauri/gen/android`,
-VOL.ARACHNID `games/vol-arachnid/src-tauri/gen/android`.
+Her oyunun native projesi AYRIDIR: VOL.HELL `tauri-v2/src-tauri/gen/android`,
+VOL.ARACHNID `games/vol-arachnid/src-tauri/gen/android`, VOL.LIFE
+`games/vol-life/src-tauri/gen/android`.
 
-İkisi de **sürüm kontrolünde tutulur** ve yeniden üretilebilir değildir: yön
+Hepsi **sürüm kontrolünde tutulur** ve yeniden üretilebilir değildir: yön
 kilidi, çentik yerleşimi, geri hareketi ve sürükleyici tam ekran Tauri
 yapılandırmasından ayarlanamadığı için `AndroidManifest.xml`, tema ve
 `MainActivity.kt` elle düzenlendi. Ayrı paket kimlikleri
-(`com.volstudio.game`, `com.volstudio.arachnid`) ikisinin aynı cihazda
-birlikte kurulmasını sağlar.
+(`com.volstudio.game`, `com.volstudio.arachnid`, `com.volstudio.life`) üçünün
+aynı cihazda birlikte kurulmasını sağlar.
 
 ## Build
 
@@ -25,6 +26,9 @@ adb install -r tauri-v2/src-tauri/gen/android/app/build/outputs/apk/universal/de
 
 pnpm --filter @volstudio/vol-arachnid exec tauri android build --debug --target aarch64
 adb install -r games/vol-arachnid/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
+
+pnpm --filter @volstudio/vol-life exec tauri android build --debug --target aarch64
+adb install -r games/vol-life/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 ```
 
 Drift testleri manifest, yön, `VIBRATE` izni, geri çağrısı, tam ekran ve paket
@@ -33,9 +37,14 @@ sessizce ayrışamaz.
 
 ## Çalışma zamanı davranışı
 
-Oyunlar yatay yöne kilitlidir, sistem çubukları gizlenir ve güvenli alan
-(`env(safe-area-inset-*)`) HUD yerleşimine uygulanır. Ekran üstü kontroller
-yalnız dokunmatik BİRİNCİL cihazlarda kurulur (`shouldUseTouchControls`).
+Sistem çubukları gizlenir ve güvenli alan (`env(safe-area-inset-*)`) HUD
+yerleşimine uygulanır. Ekran üstü kontroller yalnız dokunmatik BİRİNCİL
+cihazlarda kurulur (`shouldUseTouchControls`); tam ekran düğmesi orada
+gösterilmez, çünkü uygulama zaten tam ekran açılır.
+
+VOL.HELL ve VOL.ARACHNID yatay yöne KİLİTLİDİR. VOL.LIFE kilitlemez: izlenen
+bir dünya iki yönde de okunur ve kilit için bir gerekçe ölçülmedi. Yön değişimi
+Activity'yi yeniden yaratmaz (`configChanges`), yani dünya sıfırlanmaz.
 
 ## Fedora / Linux release
 

@@ -1,0 +1,14 @@
+{
+  "identifier": "desktop-capability",
+  "description": "Permissions for the desktop main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-center",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-set-size",
+    "log:default",
+    "store:default",
+    "sql:default"
+  ]
+}

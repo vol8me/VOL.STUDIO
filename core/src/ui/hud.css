@@ -452,3 +452,72 @@
     width: min(100vw, 420px);
   }
 }
+
+/*
+ * FPS göstergesi. Konum `data-position`, renk eşiği `data-level` ile gelir;
+ * ikisi de satır içi stil KULLANMAZ — Tauri CSP'si `style-src 'unsafe-inline'`
+ * istemesin diye.
+ */
+.vol-fps-meter {
+  position: fixed;
+  z-index: var(--vol-z-float);
+  padding: 2px 8px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
+  color: var(--vol-ui-text-secondary);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  pointer-events: none;
+  user-select: none;
+
+  /*
+   * GENİŞLİK SABİTLENİR. Gösterge bir köşeye sabitlidir; kutusu her okumada
+   * yeniden boyutlanırsa karşı kenarı oynar ve gözle "gösterge yer değiştirdi"
+   * diye okunur. `tabular-nums` tek başına yetmez: VOL fontları tabular rakam
+   * varyantı taşımaz, o yüzden aynı basamak sayısındaki iki değer bile farklı
+   * genişlik üretir. Ölçüldü — 1214/1211/1208 px arası oynuyordu.
+   *
+   * Ölçülen en dar KARARLI değer 9ch'tir (63 px): "1 FPS" ile "999 FPS" arası
+   * her okuma aynı kutuya sığar. 8ch'te üç basamaklı değerler taşıyor ve
+   * genişlik 56/60/62/63 arasında salınıyordu.
+   */
+  min-width: 9ch;
+  text-align: center;
+}
+
+/*
+ * Kenar boşluğu safe-area'nın ALTINA düşmez ama masaüstünde de sıfır kalmaz:
+ * `--vol-safe-*` çentiksiz ekranlarda 0'dır ve gösterge cama yapışırdı.
+ */
+.vol-fps-meter[data-position='top-left'] {
+  top: max(var(--vol-safe-top), var(--vol-space-sm));
+  left: max(var(--vol-safe-left), var(--vol-space-md));
+}
+
+.vol-fps-meter[data-position='top-right'] {
+  top: max(var(--vol-safe-top), var(--vol-space-sm));
+  right: max(var(--vol-safe-right), var(--vol-space-md));
+}
+
+.vol-fps-meter[data-position='bottom-left'] {
+  bottom: max(var(--vol-safe-bottom), var(--vol-space-sm));
+  left: max(var(--vol-safe-left), var(--vol-space-md));
+}
+
+.vol-fps-meter[data-position='bottom-right'] {
+  bottom: max(var(--vol-safe-bottom), var(--vol-space-sm));
+  right: max(var(--vol-safe-right), var(--vol-space-md));
+}
+
+.vol-fps-meter[data-level='warn'] {
+  color: var(--vol-ui-warning-solid);
+  border-color: var(--vol-ui-warning-border);
+}
+
+.vol-fps-meter[data-level='danger'] {
+  color: var(--vol-ui-danger-solid);
+  border-color: var(--vol-ui-danger-border);
+}

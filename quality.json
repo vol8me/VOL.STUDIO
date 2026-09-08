@@ -62,6 +62,12 @@
       "branches": 84,
       "functions": 91
     },
+    "@volstudio/vol-life": {
+      "lines": 87,
+      "statements": 87,
+      "branches": 83,
+      "functions": 86
+    },
     "@volstudio/vol-hell": {
       "lines": 70,
       "statements": 70,
@@ -112,6 +118,11 @@
     }
   },
   "bundles": {
+    "games/vol-life": {
+      "app": 40,
+      "vendor": 360,
+      "css": 24
+    },
     "games/vol-hell": {
       "app": 125,
       "vendor": 360,
@@ -126,6 +137,13 @@
   "scaling": {
     "$comment": "Algoritmik ÖLÇEKLEME tavanı. Mutlak süre kapı OLAMAZ (donanıma bağlı) ama iki ölçüm arasındaki ORAN makineden bağımsızdır: parça sayısı 4 katına çıktığında süre kaç katına çıkıyor? Doğrusal 4.0'dır, ölçülen ~3.0 (sabit maliyet amorti oluyor). Tavan 4.5: gözlenen tepeye (3.20) %40 pay bırakır ve O(n^2) sızmasını (~16.0) rahatça yakalar.",
     "games/vol-arachnid": {
+      "$measure": {
+        "script": "scripts/benchmark/locomotion-benchmark.ts",
+        "args": ["--iterations", "400", "--samples", "3", "--json"],
+        "series": "fxScale",
+        "input": "parts",
+        "value": "msPerFrame"
+      },
       "fxParts72Over18": 4.5
     }
   }

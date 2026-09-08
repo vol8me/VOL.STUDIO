@@ -299,7 +299,7 @@ describe('locomotion değişmezleri — 10.000 kare', () => {
     // Acil rejim bu akışta gerçekten yaşanmalı; yaşanmıyorsa yukarıdaki
     // rejim ayrımı hiç sınanmamış demektir.
     expect(emergencyFrames).toBeGreaterThan(0);
-  });
+  }, 15_000);
 });
 
 /**

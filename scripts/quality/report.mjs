@@ -34,8 +34,8 @@ import { pathToFileURL } from 'node:url';
 const GATES = {
   quick: ['contract', 'format-check', 'typecheck', 'lint'],
   fast: ['quick', 'test'],
-  high: ['quick', 'lint-css', 'coverage', 'build', 'e2e'],
-  signoff: ['high', 'e2e-full', 'rust'],
+  high: ['quick', 'lint-css', 'coverage', 'build', 'bundle', 'scaling', 'e2e'],
+  signoff: ['high', 'e2e-full', 'rust', 'audio-verify'],
 };
 
 /**

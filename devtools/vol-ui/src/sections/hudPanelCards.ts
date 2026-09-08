@@ -6,12 +6,15 @@ import type { CancellableDisposable, DisposableScope } from '@volstudio/core/lif
 import {
   BuildMenu,
   Button,
+  FpsMeter,
   MinimapPanel,
+  SegmentedControl,
   SelectionInfoPanel,
   StatsPanel,
   Text,
   VOL_COLORS,
   RoundCounter,
+  type FpsMeterPosition,
 } from '@volstudio/core/ui';
 import { i18n, i18next } from '@volstudio/core/i18n';
 import { card, svgIcon } from './shared';
@@ -472,4 +475,66 @@ export function buildMinimapCard(disposables: DisposableScope): HTMLElement {
   wrap.appendChild(result.element);
 
   return card(i18next.t('volui:hud.minimap'), wrap);
+}
+
+/**
+ * FpsMeter GERÇEK karelerden beslenir; sahte bir sayı göstermek bileşenin
+ * ölçtüğü şeyi gizlerdi. Kart içindeki örnek `position: fixed`i bir showcase
+ * class'ıyla akışa alır — köşeye yapışan canlı örnek düğmeyle ayrıca açılır.
+ */
+export function buildFpsMeterCard(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const inline = new FpsMeter({ className: 'vol-showcase-fps-meter' });
+  disposables.addDestroyables(inline);
+  wrap.appendChild(inline.element);
+
+  const hint = new Text(i18next.t('volui:hud.fpsMeterHint'), { variant: 'muted' });
+  disposables.addDestroyables(hint);
+  wrap.appendChild(hint.element);
+
+  const controls = document.createElement('div');
+  controls.className = 'vol-showcase-panel-demo__controls';
+
+  let pinned: FpsMeter | null = null;
+  let corner: FpsMeterPosition = 'top-right';
+
+  const positions = new SegmentedControl({
+    options: [
+      { value: 'top-left', label: i18next.t('volui:hud.fpsMeterTopLeft') },
+      { value: 'top-right', label: i18next.t('volui:hud.fpsMeterTopRight') },
+      { value: 'bottom-left', label: i18next.t('volui:hud.fpsMeterBottomLeft') },
+      { value: 'bottom-right', label: i18next.t('volui:hud.fpsMeterBottomRight') },
+    ],
+    value: corner,
+    onCommit: (value: string) => {
+      corner = value as FpsMeterPosition;
+      pinned?.setPosition(corner);
+    },
+  });
+  disposables.addDestroyables(positions);
+  controls.appendChild(positions.element);
+
+  const toggle = new Button(i18next.t('volui:hud.fpsMeterPin'), {
+    variant: 'default',
+    onClick: () => {
+      if (pinned) {
+        pinned.destroy();
+        pinned = null;
+        toggle.setLabel(i18next.t('volui:hud.fpsMeterPin'));
+        return;
+      }
+      pinned = new FpsMeter({ position: corner });
+      document.body.appendChild(pinned.element);
+      toggle.setLabel(i18next.t('volui:hud.fpsMeterUnpin'));
+    },
+  });
+  disposables.addDestroyables(toggle);
+  /* Kart yıkılırken köşeye tutturulmuş örnek sayfada KALMAMALI. */
+  disposables.addDestroyables({ destroy: () => pinned?.destroy() });
+  controls.appendChild(toggle.element);
+
+  wrap.appendChild(controls);
+  return card(i18next.t('volui:hud.fpsMeterTitle'), wrap);
 }

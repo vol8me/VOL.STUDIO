@@ -292,8 +292,12 @@ describe('GameScene yaşam döngüsü', () => {
     handler();
     handler();
 
-    // Üç resize, tek bekleyen kare: eskiler iptal edilmiş olmalı.
-    expect(pending.size).toBe(1);
+    /*
+     * Üç resize, tek BEKLEYEN kamera karesi bırakmalı. ArachnidHud artık
+     * FpsMeter tutuyor; onun kendi rAF'ı kamera karesinden BAĞIMSIZ ve
+     * sürekli ayaktadır. Sadece kamera tarafındaki iptali ölçüyoruz.
+     */
+    expect(pending.size).toBe(2);
 
     shutdown();
     expect(pending.size).toBe(0);

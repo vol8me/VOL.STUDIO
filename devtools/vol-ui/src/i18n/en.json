@@ -289,7 +289,15 @@
     "minimap": "Minimap",
     "minimapHint": "Click a point on the minimap.",
     "cameraJumped": "Camera jumped to: ({{x}}, {{y}})",
-    "zoomIn2x": "Zoom In (2x)"
+    "zoomIn2x": "Zoom In (2x)",
+    "fpsMeterTitle": "FPS Meter",
+    "fpsMeterHint": "Measures the real frame stream; shares its sampler with Diagnostics.",
+    "fpsMeterPin": "Pin to corner",
+    "fpsMeterUnpin": "Unpin",
+    "fpsMeterTopLeft": "Top left",
+    "fpsMeterTopRight": "Top right",
+    "fpsMeterBottomLeft": "Bottom left",
+    "fpsMeterBottomRight": "Bottom right"
   },
   "forms": {
     "input": "Input",

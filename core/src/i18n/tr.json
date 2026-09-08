@@ -97,5 +97,9 @@
     "round": "Tur {{round}}",
     "roundTotal": "Tur {{round}} / {{total}}",
     "next": "Sonraki: {{seconds}}s"
+  },
+  "fpsMeter": {
+    "value": "{{fps}} FPS",
+    "ariaLabel": "Kare hızı"
   }
 }
