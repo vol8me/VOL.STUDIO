@@ -1,4 +1,4 @@
-import { DisposableScope, TouchButton, UIRoot, i18next } from '@volstudio/core';
+import { DisposableScope, HoldButton, UIRoot, i18next } from '@volstudio/core';
 import type { VirtualActionSource } from '@volstudio/core';
 import type { ArachnidAction } from '@/config/input';
 import { arachnidUiConfig } from '@/config/ui';
@@ -28,7 +28,7 @@ export class ArachnidTouchControls {
   private readonly scope = new DisposableScope();
   private readonly uiRoot: UIRoot;
   private readonly root: HTMLDivElement;
-  private readonly dashButton: TouchButton;
+  private readonly dashButton: HoldButton;
 
   constructor(parent: HTMLElement, options: ArachnidTouchControlsOptions) {
     const { touch } = arachnidUiConfig;
@@ -43,7 +43,7 @@ export class ArachnidTouchControls {
     this.root.style.setProperty('--vol-arachnid-touch-idle', String(touch.idleOpacity));
 
     this.dashButton = this.scope.addDestroyable(
-      new TouchButton({
+      new HoldButton({
         shape: 'circle',
         size: touch.dashButtonSizePx,
         icon: i18next.t('arachnid:touch.dashShort'),

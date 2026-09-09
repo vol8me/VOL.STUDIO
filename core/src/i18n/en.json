@@ -101,5 +101,12 @@
   "fpsMeter": {
     "value": "{{fps}} FPS",
     "ariaLabel": "Frame rate"
+  },
+  "keyBindings": {
+    "listening": "Press a key…",
+    "rebind": "Rebind {{action}}",
+    "reset": "Reset",
+    "resetAction": "Reset {{action}} to default",
+    "conflict": "Conflicts with {{action}}"
   }
 }

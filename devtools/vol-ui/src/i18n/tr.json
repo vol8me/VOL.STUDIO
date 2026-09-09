@@ -620,7 +620,7 @@
       "Nil",
       "Emir"
     ],
-    "touchButton": "Touch Button",
+    "holdButton": "Hold Button",
     "chargeButton": "Charge Button",
     "radialMenu": "Radial Menu",
     "dpad": "DPad",
@@ -710,7 +710,13 @@
     "quest3Desc": "Ödül: 50 Altın",
     "quest4Title": "Ejderha İzini Takip Et",
     "quest4Desc": "Ödül: 300 Altın (Riskli)",
-    "touchButtonKeyboardHint": "Tab ile odaklan, Space/Enter ile basılı tut — aynı press/release olayları klavyeden de gelir."
+    "holdButtonKeyboardHint": "Tab ile odaklan, Space/Enter ile basılı tut — aynı press/release olayları klavyeden de gelir.",
+    "keyBindings": "Tuş Atama",
+    "bindingMoveUp": "İleri",
+    "bindingDash": "Atılım",
+    "bindingFire": "Ateş",
+    "bindingHint": "Bir bağa tıkla ve yeni tuşa bas. Esc iptal eder; çakışma olursa tuşlar takas edilir.",
+    "bindingSwapped": "{{action}} ile takas edildi."
   },
   "loading": {
     "indicatorTypes": "Gösterge Tipleri",

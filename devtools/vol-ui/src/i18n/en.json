@@ -620,7 +620,7 @@
       "Nil",
       "Emir"
     ],
-    "touchButton": "Touch Button",
+    "holdButton": "Hold Button",
     "chargeButton": "Charge Button",
     "radialMenu": "Radial Menu",
     "dpad": "DPad",
@@ -710,7 +710,13 @@
     "quest3Desc": "Reward: 50 Gold",
     "quest4Title": "Follow the Dragon Trail",
     "quest4Desc": "Reward: 300 Gold (Risky)",
-    "touchButtonKeyboardHint": "Focus with Tab, hold Space/Enter — the same press/release events arrive from the keyboard."
+    "holdButtonKeyboardHint": "Focus with Tab, hold Space/Enter — the same press/release events arrive from the keyboard.",
+    "keyBindings": "Key Bindings",
+    "bindingMoveUp": "Move up",
+    "bindingDash": "Dash",
+    "bindingFire": "Fire",
+    "bindingHint": "Click a binding and press a new key. Esc cancels; conflicting keys are swapped.",
+    "bindingSwapped": "Swapped with {{action}}."
   },
   "loading": {
     "indicatorTypes": "Indicator Types",

@@ -1,80 +1,36 @@
-# VOL.STUDIO — Açık borç kaydı
+# VOL.STUDIO — iş listesi
 
-Bu dosya bir günlük değildir. **Yalnızca kapatılmamış, bilinçli olarak taşınan
-maddeleri** tutar: her madde ne olduğunu, neden açık bırakıldığını ve kapanması
-için neyin gerektiğini söyler. Bir madde kapandığında buradan **silinir** —
-yerine not düşülmez, çünkü ne yapıldığının kaydı commit'in kendisidir.
+Repo genelinde **sıradaki işi** tutar: ne yapılacak, neden gerekli, ne zaman
+kapanmış sayılır. Tek pakete sığan kalemler o paketin kendi `TODO.md`sinde
+yaşar; buraya yalnız birden çok pakete ya da kök altyapıya (`scripts/`,
+`justfile`, `quality.json`) dokunan işler girer.
 
-Tamamlanmış turların dökümü `git log`dadır. Kalıcı kararlar bu dosyada değil,
-ait oldukları belgede yaşar: [core/docs](core/docs),
+Kapanan madde **silinir** — ne yapıldığının kaydı commit'in kendisidir. Kalıcı
+kararlar burada değil ait oldukları belgede yaşar: [core/docs](core/docs),
 [docs/gates.md](docs/gates.md), paketlerin `DESIGN.md` dosyaları.
 
-## Yapı
+## Aktif cephe — VOL.LIFE
 
-- **God-object sınırının üstünde üç dosya.** `GameScene.ts` (618),
-  `SlotGrid.ts` (687), `core/src/ui/data/Kanban.ts` (831) ~600 satır
-  duraksama eşiğinin üstünde ve `scripts/quality/sourceSize.mjs` içinde
-  gerekçeli muafiyet taşıyor. Kalan kod sahnenin/bileşenin kendi
-  sorumluluğu; daha fazla bölmek satırı taşır, test edilebilirlik
-  kazandırmaz. Kapanması için sorumluluğun gerçekten ikiye ayrıldığı bir
-  kullanım gerekir, satır sayısı değil.
+Repo şu an tek bir yöne çalışıyor: VOL.LIFE'ı kurulu zeminden oynanabilir bir
+oyuna taşımak. `vol-hell` ve `vol-arachnid` özellik işi beklemiyor; onlardan
+istenen yalnız kapıları yeşil tutmak.
 
-- **`SpatialIndex` iki yolda farklı çalışıyor.** Artımlı yol
-  renderer-neutral `VolHellSimulation` içinde; Phaser `GameScene` aynı frame
-  snapshot'ını ve separation sırasını korumak için hâlâ `rebuild()`
-  kullanıyor. Kapanması için iki hareket fazının davranış eşitliğini kanıtlayan
-  bir entegrasyon testi ve cihaz benchmark'ı gerekir.
+Sıradaki adım **Adım 1 — dünya substratı**. Kalemler, gerekçeler ve kabul
+ölçütleri [games/vol-life/TODO.md](games/vol-life/TODO.md)'de; ürün kararları
+ve inşa sırası [games/vol-life/DESIGN.md](games/vol-life/DESIGN.md)'de.
 
-- **CORE yüzeyi sayıyla korunuyor, listeyle değil.** 10 `export *` barrel'ı
-  var; kilitli sayı `core/tests/governance/publicSurface.test.ts`te. Barrel'ları
-  elle listeye çevirmenin bakım yükü, sayının verdiği korumadan büyük.
+Kök altyapıdan beklenen iki kalem o listede duruyor ve **bilerek** erken
+alınmıyor: `justfile`ın `e2e` tarifi VOL.LIFE'ın `test:e2e` script'i yazıldığı
+turda, `quality.json`daki ölçekleme bütçesi de benchmark betiği yazıldığı turda
+eklenir. İkisi de öncesinde eklenirse tarif var olmayan bir script'i çağırır ve
+kapı, ölçtüğü bir şey olmadan yeşil görünür.
 
-- **`PlayerController` → `MovableController` takma adı `@deprecated`.**
-  Kaldırma bir sonraki büyük sürüme bırakıldı.
+## Taşınan borçlar
 
-- **Bazı CORE primitiflerinin ikinci gerçek tüketicisi yok.** `EventBus`,
-  `Deck`, `SlotContainer`, `FlowField` benchmark/workload'da tüketiliyor ama
-  ikinci bir üründe değil. Mekanizma doğrulaması ayrı, entegrasyon borcu ayrı.
+Kapatılmamış, bilinçli kararla açık bırakılan maddeler. Her biri neden açık
+durduğunu ve kapanması için neyin gerektiğini söyler.
 
-- **Tuş atama veri, ama oyuncuya açık değil.** Eylem → tuş eşlemesi
-  `PCActionBinding` olarak veri hâlinde duruyor (`core/src/input/`), yani
-  yeniden atama mekanizması hazır; bunu sunan bir ayar ekranı yok. Kapanması
-  için UI + kalıcılık + çakışma çözümü gerekir, yeni mekanizma değil.
-
-- **`TouchButton` adı semantiğini karşılamıyor** (girdi cihazından bağımsız
-  press/hold). Yeniden adlandırma bedeli public API + showcase + i18n olduğu
-  için ertelendi.
-
-- **Bellek tahmini modeli 5–31 kat düşük ölçüyor.**
-  `analyzeSpriteDoc().estimatedPeakWorkingBytes` kendini `conservative` diye
-  etiketliyor ama 128² belgelerde gerçek yığın artışı tahminin ~5–31 katı
-  çıktı (`devtools/visual-synth/tests/memoryEstimateAccuracy.test.ts`). Kök
-  neden kanıtlanmadı; en olası açıklama tamponsuz düğümlerin de ara dizi
-  ayırıyor olması. Formül, hangi tarafın yanlış olduğu kanıtlanmadan
-  değiştirilmiyor — değiştirmek `RenderCache`/tile kararlarını sessizce
-  bozardı. Test bugünkü tavanı kilitliyor, yani sapma büyürse görülür.
-
-## Kalite kapıları
-
-- **Bulut CI yok** (bilinçli). Kapılar yalnız yerel `just` ile koşar ve
-  hook'lar `--no-verify` / `SKIP_SIMPLE_GIT_HOOKS=1` ile atlanabilir. Atlanan
-  bir hook raporlanmalıdır.
-
-- **Görsel doğrulama iki uçlu.** `devtools/vol-ui` piksel temelli kapıya
-  sahip; `games/*` sahneleri hâlâ elle (`pnpm dev`) doğrulanıyor.
-
-- **Phaser sahneleri düşük kapsamda.** `GameScene`/`MainMenuScene`/
-  `SettingsScene` mock maliyeti yüksek olduğu için kabul edilmiş bir sınırda
-  duruyor; eşikler `quality.json`da.
-
-## Oynanış / UI
-
-- **20 dalgalık manuel smoke testi hâlâ gerekli.** Ability ölçeklemesi ve kule
-  dayanıklılık/tempo bağı regresyon testinde; hedefleme, alan kapsaması ve
-  gerçek cihaz FPS'i matematiksel benchmark'ta temsil edilmiyor.
-
-- **`ShopPicker` reroll'unda çıkış animasyonu yok** — yeni kartların aynı
-  hücreye girişini engellememek için bilinçli "sert değişim" hissi.
-
-- **iOS/WKWebView MP3 fallback'i manuel** (`pnpm convert:ios`). iOS bugün
-  hedeflenmiyor; hedefler Windows ve Android.
+- **iOS/WKWebView MP3 fallback'i manuel** (`pnpm convert:ios`). Ses ardışık
+  düzeni OGG üretir; WKWebView OGG çalmaz. Dönüştürme elle koşulur çünkü iOS
+  bugün hedeflenmiyor — hedefler Windows ve Android. iOS hedefe girdiği gün bu
+  adım ses build'ine bağlanır.

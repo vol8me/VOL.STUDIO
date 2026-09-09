@@ -285,6 +285,18 @@ describe('GameScene yaşam döngüsü', () => {
     });
 
     const { fake, shutdown } = boot();
+
+    /*
+     * KAMERA karesini diğerlerinden ayıran taban. `ArachnidHud` bir `FpsMeter`
+     * tutar ve onun rAF'ı kamera karesinden bağımsız, sürekli ayaktadır.
+     *
+     * Ham `pending.size` sayılırsa iddia toplamı ölçer: bu hem yanıltıcıdır
+     * (yorum "kamerayı ölçüyoruz" der, kod toplamı ölçer) hem kırılgandır —
+     * HUD'a rAF kullanan ikinci bir bileşen girdiğinde test ALAKASIZ bir
+     * sebeple düşer. Boot sonrası açık olan handle'lar dışlanınca geriye
+     * yalnız resize'ın ürettikleri kalır.
+     */
+    const beforeResize = new Set(pending);
     const resize = fake.scale.on.mock.calls[0];
     const handler = () => (resize[1] as () => void).call(resize[2]);
 
@@ -292,12 +304,8 @@ describe('GameScene yaşam döngüsü', () => {
     handler();
     handler();
 
-    /*
-     * Üç resize, tek BEKLEYEN kamera karesi bırakmalı. ArachnidHud artık
-     * FpsMeter tutuyor; onun kendi rAF'ı kamera karesinden BAĞIMSIZ ve
-     * sürekli ayaktadır. Sadece kamera tarafındaki iptali ölçüyoruz.
-     */
-    expect(pending.size).toBe(2);
+    const cameraFrames = [...pending].filter((handle) => !beforeResize.has(handle));
+    expect(cameraFrames).toHaveLength(1);
 
     shutdown();
     expect(pending.size).toBe(0);

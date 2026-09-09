@@ -84,6 +84,7 @@ describe('Phaser taşımayan araç alt-yolları', () => {
       '../../src/fonts/index.ts',
       '../../src/rig/metadata.ts',
       '../../src/time/index.ts',
+      '../../src/input/bindingLabels.ts',
     ];
     for (const file of files) {
       const source = readFileSync(resolve(import.meta.dirname, file), 'utf8');

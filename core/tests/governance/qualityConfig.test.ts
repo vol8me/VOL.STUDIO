@@ -112,6 +112,28 @@ describe('quality.json şema doğrulaması', () => {
     }
   });
 
+  it('coverageShape geçersiz tipleri ve boş gerekçeleri reddeder', () => {
+    const broken = validConfig();
+    broken.coverageShape = 'string';
+    expect(
+      validateQualityConfig(broken).some((p: string) => p.includes('coverageShape: nesne olmalı')),
+    ).toBe(true);
+
+    const brokenNumbers = validConfig();
+    brokenNumbers.coverageShape = { minLines: -5, floorPct: 150 };
+    const problems = validateQualityConfig(brokenNumbers);
+    expect(
+      problems.some((p: string) => p.includes('minLines') && p.includes('pozitif tam sayı')),
+    ).toBe(true);
+    expect(problems.some((p: string) => p.includes('floorPct') && p.includes('0-100'))).toBe(true);
+
+    const brokenAck = validConfig();
+    brokenAck.coverageShape = { acknowledged: { 'some/file.ts': '   ' } };
+    expect(
+      validateQualityConfig(brokenAck).some((p: string) => p.includes('Sessiz muafiyet yok')),
+    ).toBe(true);
+  });
+
   it('workspace ile quality kayıtlarının iki yönlü paritesini korur', () => {
     const config = validConfig();
 

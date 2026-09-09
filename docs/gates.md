@@ -44,6 +44,18 @@ bütçeleri paket paket okur ama runner `measureArachnidScaling`e sabittir ve he
 pakette `scripts/benchmark/locomotion-benchmark.ts` arar. `games/vol-arachnid`
 dışında bir pakete bütçe yazmak kapıyı "ölçülemedi" ile düşürür.
 
+**Modül döngüsü kapılıdır.** `scripts/quality/moduleCycles.mjs` her paketin
+İÇİNDEKİ dosya grafiğini kurar ve döngüyü reddeder. `layers.mjs` de döngü arar
+ama grafiğini PAKET adlarından kurar; bir paketin içindeki dosya döngüsü ona
+görünmezdi ve ölçüldü — `vol-hell` içinde
+`AudioSettings → settingsPersistence → services → AudioSettings` döngüsü repoya
+girdi, yaşadı ve hiçbir kapı ses çıkarmadı.
+
+Yalnız ÇALIŞMA ZAMANINDA kalan import'lar sayılır: `import type` ve tümü `type`
+olan listeler derlemede silinir (repoda dört tane var, hiçbiri hata değil),
+dinamik `import()` döngüyü zaten kırar. Paket içi `@/` alias'ları çözülür —
+yalnız göreli yolları izleyen bir bekçi, yakalaması gereken döngüyü kaçırırdı.
+
 **Geliştirme portlarının tekilliği kapılıdır.** `scripts/quality/devPorts.mjs`
 `vite.config.ts` ve `playwright.config.ts` dosyalarından port bildirimlerini
 okur ve İKİ AYRI paketin aynı portu istemesini reddeder. Bir paketin kendi
@@ -62,8 +74,10 @@ Sözleşmenin doğruladığı diğer şeyler:
 - **Kaynak import'ları** Git'in gördüğü dosyalara dayanmalıdır; ignore edilmiş
   bir yerel yardımcı temiz klonda bulunamaz.
 - **Dosya boyutu**: hem index hem çalışma ağacında 2 MiB sınırı.
-- **Kaynak dosya satırı** (`sourceSize.mjs`): ~600 satırı aşan dosya
-  gerekçesini yazar.
+- **Kaynak dosya satırı** (`sourceSize.mjs`): 1000 satır SERT sınırdır, testler
+  dahil ve muafiyet yoktur. Eşik bir dönem 600'dü ve gerekçe listesiyle
+  çalışıyordu; liste sürekli büyüdüğü için sınır gerçekten büyük dosyaların
+  başladığı yere çekildi.
 - **Yorum yoğunluğu** (`commentDensity.mjs`): dosya oranı %40'ı aşarsa
   gerekçe ister; **tek bir yorum bloğu 24 satırı aşarsa gerekçeyle
   susturulamaz** — o uzunluktaki metin bir belgedir ve `docs/` ya da
@@ -84,6 +98,38 @@ Yanlış belge derlenmez, test edilmez, kimse fark etmez. Üç kapı bunu kırar
 
 Her birinin ters yönü de kapılıdır: ölü bir muafiyet ya da belgede olmayan bir
 `kind` de kapıyı kırar.
+
+## Piksel temeli TAM paneli çeker
+
+Sekme paneli kendi kaydırıcısıdır (`.vol-tabs__panels` → `overflow: auto`) ve
+Playwright iç içe bir kaydırıcının görünmeyen kısmını çekemez; kalanı siyah
+dolgu yapar. Ölçüldü: temellerin içeriği her sekmede ~715. satırda bitiyordu,
+`advanced` sekmesinin %79'u boştu ve `hud` sekmesinin on yedi kartından yalnız
+ilk yedisi kapılıydı — karta eklenen bir bileşen temeli hiç değiştirmiyordu.
+
+`visual.spec.ts` ekran görüntüsünden ÖNCE zinciri açar (`html`, `body`,
+`.vol-showcase-root`, `.vol-tabs`, `.vol-tabs__panels`, `[role="tabpanel"]`).
+Tek öğeyi açmak yetmez: ölçüldü, panel 900 px'te kalıyordu çünkü üstündeki üç
+kap da 900 px + `overflow: hidden` taşıyor. Açıldıktan sonra boş oran her
+sekmede %0'dır.
+
+Kaydırma yalnız görüntü için açılır; `layout.spec.ts` gerçek kaydırıcıyı
+ölçmeye devam eder, yani taşma ve dokunma hedefi iddiaları ürünün gerçek
+yerleşiminden gelir.
+
+## Yamalı bağımlılık
+
+`vitest@3.2.6` YAMALIDIR (`patches/vitest@3.2.6.patch`,
+`pnpm-workspace.yaml` → `patchedDependencies`). Yama tek satırdır: worker
+tarafındaki birpc zaman aşımını 300 sn'ye çıkarır. Ağır v8 coverage altında
+`onTaskUpdate` çağrısı varsayılan süreye takılıp koşuyu düşürüyordu; testlerin
+KENDİ `testTimeout`u 5 sn'de bırakıldı, yani yama bir testin son tarihini
+gevşetmez, yalnız ölçüm kanalının kopmasını engeller.
+
+Vitest yükseltildiğinde yama sürüm eşleşmediği için uygulanmaz ve `pnpm
+install` düşer. Bu bilinçlidir: sessizce düşen bir yama, geri gelen bir
+zaman aşımından iyidir. Yükseltirken önce yamanın hâlâ gerekli olup olmadığı
+ölçülür.
 
 ## Benchmark neyi ölçer, neyi ölçmez
 

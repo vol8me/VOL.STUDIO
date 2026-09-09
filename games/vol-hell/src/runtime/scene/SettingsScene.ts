@@ -10,7 +10,7 @@ import {
 import { BaseScene } from './BaseScene';
 import { pushBackHandler } from '@volstudio/core';
 import { hasNativeWindow } from '@/app/platform';
-import { audioSettings, gameAudio, videoSettings } from '@/app/services';
+import { audioSettings, gameAudio, keyBindings, videoSettings } from '@/app/services';
 import { sfxVolumes } from '@/config';
 import { GameSettingsContent } from '@/runtime/ui/GameSettingsContent';
 
@@ -59,6 +59,8 @@ export class SettingsScene extends BaseScene {
       videoSettings,
       showVideoSettings: !shouldUseTouchControls(),
       canResizeWindow: hasNativeWindow(),
+      // Dokunmatik birincil cihazda yeniden atanacak bir tuş yoktur.
+      keyBindings: shouldUseTouchControls() ? undefined : keyBindings,
     });
     this.panel = new Panel({ className: 'settings-panel' })
       .add(this.titleText)

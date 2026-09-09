@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { TouchButton } from '../../src/ui/controls/TouchButton';
+import { HoldButton } from '../../src/ui/controls/HoldButton';
 import { MultiTouchZone } from '../../src/ui/controls/MultiTouchZone';
 import { SwipeGestureZone, type SwipeGestureEvent } from '../../src/ui/controls/SwipeGestureZone';
 import { Button } from '../../src/ui/primitives/Button';
@@ -18,11 +18,11 @@ function pointer(type: string, init: PointerEventInit = {}): PointerEvent {
   return new PointerEvent(type, { pointerId: 1, bubbles: true, cancelable: true, ...init });
 }
 
-describe('TouchButton — press/hold semantiği girdi cihazından bağımsız', () => {
+describe('HoldButton — press/hold semantiği girdi cihazından bağımsız', () => {
   it('Space basılı tutmak onPress, bırakmak onRelease üretir', () => {
     const onPress = vi.fn();
     const onRelease = vi.fn();
-    const button = new TouchButton({ label: 'Ateş', onPress, onRelease });
+    const button = new HoldButton({ label: 'Ateş', onPress, onRelease });
 
     button.element.dispatchEvent(key('keydown', ' '));
     expect(onPress).toHaveBeenCalledTimes(1);
@@ -37,7 +37,7 @@ describe('TouchButton — press/hold semantiği girdi cihazından bağımsız', 
 
   it('Enter de aktivasyon tuşudur', () => {
     const onPress = vi.fn();
-    const button = new TouchButton({ label: 'Ateş', onPress });
+    const button = new HoldButton({ label: 'Ateş', onPress });
 
     button.element.dispatchEvent(key('keydown', 'Enter'));
     expect(onPress).toHaveBeenCalledTimes(1);
@@ -49,7 +49,7 @@ describe('TouchButton — press/hold semantiği girdi cihazından bağımsız', 
     // Tarayıcı basılı tutmada keydown'ı tekrarlar; her tekrar bir "basıldı"
     // sayılsaydı çağıran saniyede onlarca sahte olay görürdü.
     const onPress = vi.fn();
-    const button = new TouchButton({ label: 'Ateş', onPress });
+    const button = new HoldButton({ label: 'Ateş', onPress });
 
     button.element.dispatchEvent(key('keydown', ' '));
     button.element.dispatchEvent(key('keydown', ' ', true));
@@ -62,7 +62,7 @@ describe('TouchButton — press/hold semantiği girdi cihazından bağımsız', 
   it('native click yutulur — Space tek bir press/release çifti üretir', () => {
     const onPress = vi.fn();
     const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
-    const button = new TouchButton({ label: 'Ateş', onPress });
+    const button = new HoldButton({ label: 'Ateş', onPress });
 
     button.element.dispatchEvent(clickEvent);
     expect(onPress).not.toHaveBeenCalled();
@@ -73,7 +73,7 @@ describe('TouchButton — press/hold semantiği girdi cihazından bağımsız', 
 
   it('devre dışıyken klavye basımı yok sayılır', () => {
     const onPress = vi.fn();
-    const button = new TouchButton({ label: 'Ateş', onPress });
+    const button = new HoldButton({ label: 'Ateş', onPress });
     button.setDisabled(true);
 
     button.element.dispatchEvent(key('keydown', ' '));
@@ -83,7 +83,7 @@ describe('TouchButton — press/hold semantiği girdi cihazından bağımsız', 
   });
 
   it('ikon değişimi düğmeyi ve odağı yeniden kurmaz', () => {
-    const button = new TouchButton({ label: 'Yetenek', icon: 'Q' });
+    const button = new HoldButton({ label: 'Yetenek', icon: 'Q' });
     const originalElement = button.element;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.dataset.kind = 'turret';
@@ -95,14 +95,14 @@ describe('TouchButton — press/hold semantiği girdi cihazından bağımsız', 
     expect(button.element.textContent).not.toContain('Q');
 
     button.setIcon(null);
-    expect(button.element.querySelector('.vol-touch-button__icon')).toBeNull();
+    expect(button.element.querySelector('.vol-hold-button__icon')).toBeNull();
     button.destroy();
   });
 
   it('klavyeyle basılıyken pointerleave basımı İPTAL ETMEZ', () => {
     // Fare imleci butonun üstünden geçip çıkarsa klavye basımı bozulmamalı.
     const onRelease = vi.fn();
-    const button = new TouchButton({ label: 'Ateş', onRelease });
+    const button = new HoldButton({ label: 'Ateş', onRelease });
 
     button.element.dispatchEvent(key('keydown', ' '));
     button.element.dispatchEvent(new PointerEvent('pointerleave', { bubbles: true }));
@@ -116,7 +116,7 @@ describe('TouchButton — press/hold semantiği girdi cihazından bağımsız', 
   it('basılıyken destroy edilirse onRelease gelir (mandallı durum bırakmaz)', () => {
     // Basılı durumda destroy çağrılırsa çağıran temiz kapanmalı.
     const onRelease = vi.fn();
-    const button = new TouchButton({ label: 'Ateş', onRelease });
+    const button = new HoldButton({ label: 'Ateş', onRelease });
 
     button.element.dispatchEvent(pointer('pointerdown'));
     expect(button.isPressed()).toBe(true);

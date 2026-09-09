@@ -33,7 +33,7 @@ export default defineConfig({
       allow: [resolve(import.meta.dirname, '../..')],
     },
     watch: {
-      ignored: ['**/tauri-v2/src-tauri/**'],
+      ignored: ['**/src-tauri/**'],
     },
   },
   envPrefix: ['VITE_', 'TAURI_ENV_*'],

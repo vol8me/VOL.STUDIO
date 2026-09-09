@@ -2,6 +2,7 @@ export { Vector2 } from './math/Vector2';
 
 // Deterministik PRNG. Ses, oyun ve asset compiler'lar aynı uygulamayı kullanır.
 export { createRandom, seedFromString, DEFAULT_SEED, type Random } from './random/random';
+export { describePCBinding, findBindingConflicts, isSameBinding } from './input/bindingLabels';
 
 export {
   DisposableScope,
@@ -157,7 +158,6 @@ export { MovableController, type MovableGameObject } from './entities/MovableCon
  * maliyeti `EXPECTED_EXPORT_COUNT`u düşürmektir. Kaldırma kararı repo
  * sahibinindir; o karar verilene kadar burada duruyor.
  */
-export { MovableController as PlayerController } from './entities/MovableController';
 
 // Uzuv SÖZLÜĞÜ bilinçli olarak burada yok. `LegGait` yalnız gövde-yerel ev
 // konumu ve adım grubu alır; hangi rig'in kaç bacağı olduğunu tüketici bilir.

@@ -483,7 +483,18 @@ body {
   border-bottom: 1px solid var(--vol-ui-border-soft);
 }
 
+/*
+ * Köşe bildirimi EKRANIN köşesindedir, sayfanın değil.
+ *
+ * `position: absolute` + `z-index: auto` ile bildirim kartlarla AYNI boyama
+ * katmanında kalıyordu ve sağ üstteki kartın arkasında kayboluyordu (ölçüldü:
+ * `elementsFromPoint` merkezinde panel yerine `vol-showcase-card` dönüyordu).
+ * Bir bildirim, üzerine geldiği içeriği örtmek için vardır; katmanı da
+ * `Toast`la aynıdır.
+ */
 .vol-showcase-corner-panel {
+  position: fixed;
+  z-index: var(--vol-z-toast);
   top: var(--vol-space-md);
   right: var(--vol-space-md);
   left: auto;
@@ -972,7 +983,13 @@ body {
 /*
  * Showcase içindeki FpsMeter örneği akışa alınır: bileşenin kendisi
  * `position: fixed`tir ve kart içinde sayfanın köşesine kaçardı.
+ *
+ * `align-self` ŞART: `position: fixed` bir kutu içeriğine göre büzülür, ama
+ * akışa alınan blok flex kabı tarafından kartın tamamına gerilir. Ölçüldü —
+ * gösterge 63 px yerine 1058 px görünüyordu, yani showcase bileşeni oyunda
+ * asla almadığı bir biçimde tanıtıyordu.
  */
 .vol-showcase-fps-meter {
   position: static;
+  align-self: flex-start;
 }

@@ -21,7 +21,7 @@ devtools/vol-ui/            # CORE UI canlı bileşen kataloğu
 devtools/vol-asset-studio/  # repo varlık çalışma ortamı
 devtools/visual-synth/      # deterministik görsel asset compiler'ı
 devtools/audio-synth/       # deterministik ses asset compiler'ı
-tauri-v2/                   # native oyun kabuğu ve Rust backend
+tauri-v2/                   # PAYLAŞILAN native kabuk (uygulama değil); her oyun kendi src-tauri'sini taşır
 ```
 
 ## Gereksinimler

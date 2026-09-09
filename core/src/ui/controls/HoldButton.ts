@@ -3,10 +3,10 @@ function isActivationKey(event: KeyboardEvent): boolean {
   return event.key === ' ' || event.key === 'Enter' || event.key === 'Spacebar';
 }
 
-export type TouchButtonShape = 'circle' | 'square';
+export type HoldButtonShape = 'circle' | 'square';
 
-export interface TouchButtonOptions {
-  shape?: TouchButtonShape;
+export interface HoldButtonOptions {
+  shape?: HoldButtonShape;
   /** Buton çapı/kenar uzunluğu (piksel). Varsayılan 72. */
   size?: number;
   icon?: string | Node;
@@ -32,7 +32,7 @@ export interface TouchButtonOptions {
  * ile bastırılır — aksi halde tek bir Space basımı hem keydown/keyup çiftini
  * hem de click'i tetikler.
  */
-export class TouchButton {
+export class HoldButton {
   readonly element: HTMLButtonElement;
   private iconWrapper: HTMLSpanElement | null = null;
   private readonly onPressHandler?: () => void;
@@ -51,15 +51,15 @@ export class TouchButton {
   private boundKeyUp!: (event: KeyboardEvent) => void;
   private boundClick!: (event: MouseEvent) => void;
 
-  constructor(options: TouchButtonOptions) {
+  constructor(options: HoldButtonOptions) {
     const { shape = 'circle', size = 72, icon, label, onPress, onRelease } = options;
     this.onPressHandler = onPress;
     this.onReleaseHandler = onRelease;
 
     this.element = document.createElement('button');
     this.element.type = 'button';
-    this.element.className = `vol-touch-button vol-touch-button--${shape}`;
-    this.element.style.setProperty('--vol-touch-button-size', `${size}px`);
+    this.element.className = `vol-hold-button vol-hold-button--${shape}`;
+    this.element.style.setProperty('--vol-hold-button-size', `${size}px`);
     this.element.setAttribute('aria-label', label);
 
     if (icon) this.setIcon(icon);
@@ -140,7 +140,7 @@ export class TouchButton {
 
     if (!this.iconWrapper) {
       this.iconWrapper = document.createElement('span');
-      this.iconWrapper.className = 'vol-touch-button__icon';
+      this.iconWrapper.className = 'vol-hold-button__icon';
       this.element.appendChild(this.iconWrapper);
     }
 
@@ -174,7 +174,7 @@ export class TouchButton {
     }
     this.pressed = pressed;
     this.pressSource = pressed ? source : null;
-    this.element.classList.toggle('vol-touch-button--pressed', pressed);
+    this.element.classList.toggle('vol-hold-button--pressed', pressed);
     if (pressed) {
       this.onPressHandler?.();
     } else {

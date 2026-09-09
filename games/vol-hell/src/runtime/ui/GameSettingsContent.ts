@@ -1,4 +1,6 @@
 import {
+  KeyBindingList,
+  type KeyBindingRow,
   Checkbox,
   DisposableScope,
   Select,
@@ -10,6 +12,8 @@ import {
 } from '@volstudio/core';
 import type { AudioSettings, AudioSettingsData } from '@/app/AudioSettings';
 import type { VideoSettings, VideoSettingsData } from '@/app/VideoSettings';
+import type { HellBindings, KeyBindings } from '@/app/KeyBindings';
+import { HELL_ACTIONS, type HellAction } from '@/config/input';
 import { gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
 import { videoConfig, type GraphicsQualityLevel } from '@/config/video';
@@ -29,6 +33,11 @@ export interface GameSettingsContentOptions {
    * yetenek kanıtlanmadıkça kontrol kapalıdır.
    */
   canResizeWindow?: boolean;
+  /**
+   * Tuş eşlemesi. Dokunmatik birincil cihazda VERİLMEZ: orada klavye/fare
+   * yoktur ve yeniden atanacak bir tuş da yoktur.
+   */
+  keyBindings?: KeyBindings;
 }
 
 /** Ana menü ve pause ekranının paylaştığı tek ayar formu. */
@@ -246,6 +255,8 @@ export class GameSettingsContent {
         );
       }),
     );
+    if (options.keyBindings) this.buildBindingSection(options.keyBindings);
+
     this.scope.addSubscription(options.audioSettings.onChange((data) => this.syncAudio(data)));
     this.scope.addSubscription(options.videoSettings.onChange((data) => this.syncVideo(data)));
   }
@@ -253,6 +264,43 @@ export class GameSettingsContent {
   destroy(): void {
     this.scope.dispose();
     this.element.remove();
+  }
+
+  /**
+   * Tuş atama bölümü.
+   *
+   * Çakışma politikası (takas) `KeyBindings`te yaşar; buradaki iş yalnız
+   * niyeti iletmek ve dönen yeni durumu çizmek. Bileşen kendi defterini
+   * tutmadığı için `setRows` çağrısı ZORUNLUDUR.
+   */
+  private buildBindingSection(bindings: KeyBindings): void {
+    const heading = this.scope.addDestroyable(
+      new Text(i18next.t('volhell:settings.controls'), { variant: 'heading' }),
+    );
+
+    const toRows = (data: HellBindings): KeyBindingRow[] =>
+      HELL_ACTIONS.map((action) => ({
+        action,
+        label: i18next.t(`volhell:settings.action.${action}`),
+        binding: data[action],
+      }));
+
+    const list = this.scope.addDestroyable(
+      new KeyBindingList({
+        rows: toRows(bindings.getAll()),
+        onRebind: (action, binding) => {
+          void bindings.rebind(action as HellAction, binding);
+        },
+        onReset: (action) => {
+          void bindings.reset(action as HellAction);
+        },
+      }),
+    );
+    this.scope.addSubscription(bindings.subscribe((data) => list.setRows(toRows(data))));
+
+    const section = this.makeSection('vol-game-settings__controls');
+    section.append(heading.element, list.element);
+    this.element.appendChild(section);
   }
 
   private makeSection(className: string): HTMLDivElement {

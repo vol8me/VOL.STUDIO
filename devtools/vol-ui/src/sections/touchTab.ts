@@ -19,9 +19,12 @@ import {
   SwipeableCardStack,
   SwipeGestureZone,
   Text,
-  TouchButton,
+  HoldButton,
+  KeyBindingList,
+  type KeyBindingRow,
 } from '@volstudio/core/ui';
 import { i18n, i18next } from '@volstudio/core/i18n';
+import { findBindingConflicts } from '@volstudio/core/input/bindings';
 import { card, cardGrid, svgIcon } from './shared';
 import {
   ICON_DASH,
@@ -87,14 +90,14 @@ function buildSquareJoystickDemo(disposables: DisposableScope): HTMLElement {
   return wrap;
 }
 
-function buildTouchButtonDemo(disposables: DisposableScope): HTMLElement {
+function buildHoldButtonDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-row__group';
 
   const status = new Text(i18next.t('volui:touch.released'), { variant: 'muted' });
   disposables.addDestroyables(status);
 
-  const fireButton = new TouchButton({
+  const fireButton = new HoldButton({
     shape: 'circle',
     icon: svgIcon(ICON_FIRE),
     label: i18next.t('volui:touch.fire'),
@@ -102,7 +105,7 @@ function buildTouchButtonDemo(disposables: DisposableScope): HTMLElement {
     onRelease: () => status.setContent(i18next.t('volui:touch.released')),
   });
 
-  const dashButton = new TouchButton({
+  const dashButton = new HoldButton({
     shape: 'square',
     icon: svgIcon(ICON_DASH),
     label: i18next.t('volui:touch.dash'),
@@ -116,10 +119,10 @@ function buildTouchButtonDemo(disposables: DisposableScope): HTMLElement {
   wrap.appendChild(dashButton.element);
   wrap.appendChild(status.element);
 
-  // TouchButton dokunmatiğe ÖZEL değildir: taşıdığı şey press/hold semantiği.
+  // HoldButton dokunmatiğe ÖZEL değildir: taşıdığı şey press/hold semantiği.
   // Klavye de aynı olayları üretir; showcase bunu görünür kılmalı, aksi hâlde
   // yetenek yalnızca testte var olur.
-  const keyboardHint = new Text(i18next.t('volui:touch.touchButtonKeyboardHint'), {
+  const keyboardHint = new Text(i18next.t('volui:touch.holdButtonKeyboardHint'), {
     variant: 'muted',
   });
   disposables.addDestroyables(keyboardHint);
@@ -293,13 +296,13 @@ function buildRadialMenuDemo(disposables: DisposableScope): HTMLElement {
   document.body.appendChild(menu.element);
   const menuElement = menu.element;
 
-  const openButton = new TouchButton({
+  const openButton = new HoldButton({
     shape: 'circle',
     label: i18next.t('volui:touch.inventory'),
     icon: svgIcon(ICON_INVENTORY),
     size: 72,
     onPress: () => {
-      // TouchButton.onPress koordinat vermez, butonun merkezi kullanılır.
+      // HoldButton.onPress koordinat vermez, butonun merkezi kullanılır.
       const rect = openButton.element.getBoundingClientRect();
       menu.open(rect.left + rect.width / 2, rect.top + rect.height / 2);
     },
@@ -383,7 +386,7 @@ function buildPinchZoomDemo(disposables: DisposableScope): HTMLElement {
   disposables.addDestroyables(controller);
   controller.element.style.height = '260px';
 
-  // TouchButton yerine Button: TouchButton etiketi aria-only, "Sıfırla" tek seferlik komut.
+  // HoldButton yerine Button: HoldButton etiketi aria-only, "Sıfırla" tek seferlik komut.
   const resetButton = new Button(i18next.t('volui:touch.reset'), {
     onClick: () => controller.reset(),
   });
@@ -760,7 +763,8 @@ export function buildTouchTab(): { element: HTMLElement; destroy: () => void } {
     card(i18next.t('volui:touch.squareJoystick'), buildSquareJoystickDemo(disposables), {
       center: true,
     }),
-    card(i18next.t('volui:touch.touchButton'), buildTouchButtonDemo(disposables)),
+    card(i18next.t('volui:touch.holdButton'), buildHoldButtonDemo(disposables)),
+    buildKeyBindingDemo(disposables),
     card(i18next.t('volui:touch.chargeButton'), buildChargeButtonDemo(disposables), {
       center: true,
     }),
@@ -815,4 +819,73 @@ export function buildTouchTab(): { element: HTMLElement; destroy: () => void } {
     element: container,
     destroy: () => disposables.dispose(),
   };
+}
+
+/**
+ * Tuş atama listesi CANLI çalışır: gerçekten dinler, gerçekten çakışma bulur.
+ * Sahte bir görüntü, bileşenin asıl zor kısmını (yakalama ve çakışma) gizlerdi.
+ *
+ * Çakışma çözümü ÇAĞIRANIN: burada takas edilir — çakışan eylem, yeni bağı
+ * alan eylemin eski bağını devralır. Bu bir CORE kuralı değil, bu demonun
+ * tercihidir.
+ */
+function buildKeyBindingDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const defaults: Record<string, KeyBindingRow['binding']> = {
+    moveUp: { source: 'key', keyCode: 87 },
+    dash: { source: 'key', keyCode: 32 },
+    fire: { source: 'pointerButton', button: 'left' },
+  };
+  const labels: Record<string, string> = {
+    moveUp: i18next.t('volui:touch.bindingMoveUp'),
+    dash: i18next.t('volui:touch.bindingDash'),
+    fire: i18next.t('volui:touch.bindingFire'),
+  };
+  let current = { ...defaults };
+
+  const status = new Text('', { variant: 'muted' });
+  disposables.addDestroyables(status);
+
+  const rows = (): KeyBindingRow[] =>
+    Object.keys(current).map((action) => ({
+      action,
+      label: labels[action],
+      binding: current[action],
+    }));
+
+  /*
+   * Takas TEK yerdedir ve sıfırlama da ondan geçer. Ayrı yazıldığında
+   * sıfırlama çakışmayı atlıyordu: varsayılana dönen eylem, o tuşu tutan başka
+   * bir eylemle aynı bağa oturuyor ve iki satır aynı tuşu gösteriyordu
+   * (tarayıcıda görüldü).
+   */
+  const apply = (action: string, binding: KeyBindingRow['binding']): void => {
+    const conflicts = findBindingConflicts(current, action, binding);
+    const previous = current[action];
+    current = { ...current, [action]: binding };
+    for (const other of conflicts) current[other] = previous;
+    status.setContent(
+      conflicts.length > 0
+        ? i18next.t('volui:touch.bindingSwapped', { action: labels[conflicts[0]] })
+        : '',
+    );
+    list.setRows(rows());
+  };
+
+  const list = new KeyBindingList({
+    rows: rows(),
+    onRebind: apply,
+    onReset: (action) => apply(action, defaults[action]),
+  });
+  disposables.addDestroyables(list);
+  wrap.appendChild(list.element);
+
+  const hint = new Text(i18next.t('volui:touch.bindingHint'), { variant: 'muted' });
+  disposables.addDestroyables(hint);
+  wrap.appendChild(hint.element);
+  wrap.appendChild(status.element);
+
+  return card(i18next.t('volui:touch.keyBindings'), wrap);
 }

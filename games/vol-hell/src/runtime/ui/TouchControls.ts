@@ -1,4 +1,4 @@
-import { i18next, TouchButton, vibrate, type VirtualActionSource } from '@volstudio/core';
+import { i18next, HoldButton, vibrate, type VirtualActionSource } from '@volstudio/core';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import type { HellAction } from '@/config/input';
 import { getAbilityDefinition } from '@/config/abilities';
@@ -19,7 +19,7 @@ export interface TouchControlsOptions {
 }
 
 interface AbilityButtonView {
-  button: TouchButton;
+  button: HoldButton;
   /** Cooldown halkasını besleyen katman; yalnız oran değişince yazılır. */
   fill: HTMLDivElement;
   lastReady: number;
@@ -66,8 +66,8 @@ export class TouchControls {
   private readonly scope = new DisposableScope();
   private readonly root: HTMLDivElement;
   private readonly pauseRoot: HTMLDivElement;
-  private readonly dashButton: TouchButton;
-  private readonly pauseButton: TouchButton;
+  private readonly dashButton: HoldButton;
+  private readonly pauseButton: HoldButton;
   private readonly abilityViews = new Map<AbilitySlot, AbilityButtonView>();
 
   constructor(
@@ -84,7 +84,7 @@ export class TouchControls {
       const wrapper = document.createElement('div');
       wrapper.className = 'vol-touch-ability';
 
-      const button = new TouchButton({
+      const button = new HoldButton({
         size: ABILITY_SIZE,
         label: i18next.t('volhell:touch.emptyAbility'),
         icon: createAbilityIcon(null),
@@ -115,7 +115,7 @@ export class TouchControls {
       });
     }
 
-    this.dashButton = new TouchButton({
+    this.dashButton = new HoldButton({
       size: DASH_SIZE,
       label: i18next.t('volhell:touch.dash'),
       icon: i18next.t('volhell:touch.dashIcon'),
@@ -134,7 +134,7 @@ export class TouchControls {
 
     this.pauseRoot = document.createElement('div');
     this.pauseRoot.className = 'vol-touch-pause';
-    this.pauseButton = new TouchButton({
+    this.pauseButton = new HoldButton({
       shape: 'square',
       size: PAUSE_SIZE,
       label: i18next.t('volhell:pause.button'),

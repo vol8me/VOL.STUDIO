@@ -66,12 +66,12 @@
   transform: translate(-50%, -50%);
 }
 
-.vol-touch-button {
+.vol-hold-button {
   pointer-events: auto;
   touch-action: none;
-  width: var(--vol-touch-button-size);
-  height: var(--vol-touch-button-size);
-  font-size: calc(var(--vol-touch-button-size) * 0.4);
+  width: var(--vol-hold-button-size);
+  height: var(--vol-hold-button-size);
+  font-size: calc(var(--vol-hold-button-size) * 0.4);
   color: var(--vol-ui-text);
   background: var(--vol-ui-surface-1);
   border: 2px solid var(--vol-ui-border-strong);
@@ -86,28 +86,28 @@
   display: inline-flex;
 }
 
-.vol-touch-button--circle {
+.vol-hold-button--circle {
   border-radius: 50%;
 }
 
-.vol-touch-button--square {
+.vol-hold-button--square {
   border-radius: var(--vol-radius-md);
 }
 
-.vol-touch-button--pressed {
+.vol-hold-button--pressed {
   background: var(--vol-ui-brand-solid);
   border-color: var(--vol-ui-brand-border);
   transform: scale(0.94);
 }
 
-.vol-touch-button:disabled {
+.vol-hold-button:disabled {
   cursor: default;
   background: var(--vol-ui-disabled-fill);
   border-color: var(--vol-ui-disabled-border);
   color: var(--vol-ui-disabled-text);
 }
 
-.vol-touch-button__icon {
+.vol-hold-button__icon {
   justify-content: center;
   align-items: center;
   width: 1em;
@@ -115,7 +115,7 @@
   display: inline-flex;
 }
 
-.vol-touch-button__icon svg {
+.vol-hold-button__icon svg {
   width: 100%;
   height: 100%;
 }
@@ -1189,4 +1189,67 @@
 
 .vol-action-bar__slot--active::after {
   opacity: 1;
+}
+
+/*
+ * Tuş atama listesi. Bağ düğmesi SABİT genişliktir: yakalama sırasında metin
+ * "Space"ten "Tuşa bas…"a döner ve sabitlenmezse satırın tamamı kayar.
+ */
+.vol-key-bindings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-xs);
+}
+
+.vol-key-bindings__row {
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-sm);
+}
+
+.vol-key-bindings__label {
+  flex: 1;
+  color: var(--vol-ui-text);
+}
+
+.vol-key-bindings__binding {
+  min-width: 9ch;
+  min-height: var(--vol-hit-target-min, 32px);
+  padding: 4px var(--vol-space-sm);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-surface-2);
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  text-align: center;
+  cursor: pointer;
+}
+
+.vol-key-bindings__binding:disabled {
+  border-color: var(--vol-ui-disabled-border);
+  color: var(--vol-ui-text-muted);
+  cursor: default;
+}
+
+.vol-key-bindings__binding[data-capturing='true'] {
+  border-color: var(--vol-ui-brand-border);
+  color: var(--vol-ui-brand-solid);
+}
+
+.vol-key-bindings__reset {
+  min-height: var(--vol-hit-target-min, 32px);
+  min-width: var(--vol-hit-target-min, auto);
+  padding: 4px var(--vol-space-sm);
+  border: 1px solid transparent;
+  border-radius: var(--vol-radius-sm);
+  background: none;
+  color: var(--vol-ui-text-secondary);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  cursor: pointer;
+}
+
+.vol-key-bindings__reset:hover {
+  color: var(--vol-ui-text);
 }

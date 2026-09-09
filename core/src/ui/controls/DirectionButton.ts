@@ -13,7 +13,7 @@ export interface DirectionButtonOptions {
 
 /**
  * Tek başına kullanılabilen bir yön/aksiyon butonu — DPad'e gömülü değildir.
- * TouchButton'dan farkı yalnızca isimlendirme/amaç netliğidir: aynı
+ * HoldButton'dan farkı yalnızca isimlendirme/amaç netliğidir: aynı
  * pointerdown/up press/release modelini kullanır ama `arrow` ile standart bir
  * yön oku çizer. DPad içeride bu component'ten 4 tanesini bir araya getirir.
  */

@@ -215,3 +215,37 @@ test.describe('sürükleme jesti', () => {
     expect(leaked).toEqual([]);
   });
 });
+
+test.describe('FPS göstergesi', () => {
+  /*
+   * Bu kapı gerçek bir hatayla yazıldı. Gösterge bir köşeye SABİTLENİR; kutusu
+   * her okumada yeniden boyutlanırsa karşı kenarı oynar ve gözle "gösterge yer
+   * değiştirdi" diye okunur. Ölçüldü: sol kenar 1214/1211/1208 px arasında
+   * salınıyordu.
+   *
+   * `font-variant-numeric: tabular-nums` tek başına YETMEZ — VOL fontları
+   * tabular rakam varyantı taşımaz, yani aynı basamak sayısındaki iki değer
+   * bile farklı genişlik üretir. Çözüm sabit bir `min-width`tir ve bu ancak
+   * gerçek font metrikleriyle ölçülebilir; jsdom bunu göremez.
+   */
+  test('okuma değiştiğinde kutu genişliği DEĞİŞMEZ', async ({ page }) => {
+    await openShowcase(page);
+    await selectTab(page, 'hud');
+
+    const meter = page.locator('.vol-showcase-fps-meter');
+    await meter.waitFor();
+
+    const widths = await meter.evaluate((element) => {
+      const readings = ['1 FPS', '9 FPS', '60 FPS', '99 FPS', '144 FPS', '240 FPS', '999 FPS'];
+      const original = element.textContent;
+      const measured = readings.map((text) => {
+        element.textContent = text;
+        return Math.round(element.getBoundingClientRect().width);
+      });
+      element.textContent = original;
+      return measured;
+    });
+
+    expect(new Set(widths).size, `okumaya göre değişen genişlikler: ${widths.join(', ')}`).toBe(1);
+  });
+});

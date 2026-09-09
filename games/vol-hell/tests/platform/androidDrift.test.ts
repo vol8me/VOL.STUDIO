@@ -21,7 +21,7 @@ import { resolve } from 'node:path';
  * Yeni bir elle düzenleme yapıldığında BURAYA da bir satır eklenir. Aksi hâlde
  * bir sonraki regenerate onu da götürür ve kimse fark etmez.
  */
-const ANDROID_ROOT = resolve(import.meta.dirname, '../../../../tauri-v2/src-tauri/gen/android');
+const ANDROID_ROOT = resolve(import.meta.dirname, '../../src-tauri/gen/android');
 
 function read(relativePath: string): string {
   return readFileSync(resolve(ANDROID_ROOT, relativePath), 'utf8');
@@ -64,6 +64,10 @@ const ACTIVITY_EDITS: readonly HandEdit[] = [
     marker: /override fun onCreate[\s\S]*onBackPressedDispatcher\.addCallback/,
   },
   {
+    decision: 'Kenardan kenara yerleşim: içerik sistem çubuklarının ALTINA uzanır',
+    marker: 'enableEdgeToEdge()',
+  },
+  {
     decision: 'Sürükleyici tam ekran: sistem çubukları gizlenir',
     marker: 'hide(WindowInsetsCompat.Type.systemBars())',
   },
@@ -101,18 +105,31 @@ describe('Android üretilmiş ağaç drifti', () => {
     );
   });
 
-  it('paket kimliği VOL.ARACHNID ile paylaşılmaz', () => {
+  /*
+   * Kimlik SABİT YAZILMAZ, `tauri.conf.json`dan türetilir: iki taraf ayrı
+   * yazıldığında regenerate sonrası sessizce ayrışabilirler ve Kotlin paketi
+   * ile bundle kimliği farklı kalır. Config artık bu paketin altındadır, yani
+   * kaynak ile üretilmiş ağaç aynı yerde durur.
+   */
+  it('Kotlin paketi Tauri identifier ile AYNI kalır', () => {
+    const config = JSON.parse(
+      readFileSync(resolve(import.meta.dirname, '../../src-tauri/tauri.conf.json'), 'utf8'),
+    ) as { identifier: string };
+
+    expect(config.identifier).toBe('com.volstudio.game');
+    expect(
+      read(`app/src/main/java/${config.identifier.split('.').join('/')}/MainActivity.kt`),
+    ).toContain(`package ${config.identifier}`);
+  });
+
+  it('paket kimliği diğer oyunlarla paylaşılmaz', () => {
     /*
      * İki oyun bir dönem aynı native projeyi ve paket kimliğini paylaşıyordu;
-     * biri diğerinin üzerine kuruluyordu. Kimlik ayrımı iki ayrı ağacın var olma
-     * sebebidir ve regenerate sırasında yanlış `identifier` ile geri gelmesi
-     * sessiz bir çakışma üretirdi.
+     * biri diğerinin üzerine kuruluyordu. Kimlik ayrımı üç ayrı ağacın var olma
+     * sebebidir.
      */
-    expect(read('app/src/main/java/com/volstudio/game/MainActivity.kt')).toContain(
-      'package com.volstudio.game',
-    );
-    expect(read('app/src/main/java/com/volstudio/game/MainActivity.kt')).not.toContain(
-      'com.volstudio.arachnid',
-    );
+    const activity = read('app/src/main/java/com/volstudio/game/MainActivity.kt');
+    expect(activity).not.toContain('com.volstudio.arachnid');
+    expect(activity).not.toContain('com.volstudio.life');
   });
 });

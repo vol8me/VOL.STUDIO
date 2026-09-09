@@ -12,6 +12,7 @@ import { AudioSettings } from '@/app/AudioSettings';
 import { GameAudio } from '@/app/GameAudio';
 import { GameStats } from '@/app/GameStats';
 import { VideoSettings } from '@/app/VideoSettings';
+import { KeyBindings } from '@/app/KeyBindings';
 
 /**
  * Uygulama genelindeki tekil servisler.
@@ -27,6 +28,9 @@ export let audioSettings: AudioSettings;
 export let gameStats: GameStats;
 export let gameAudio: GameAudio;
 export let videoSettings: VideoSettings;
+
+/** Oyuncunun tuş eşlemesi — varsayılanlar `config/input.ts`te. */
+export let keyBindings: KeyBindings;
 
 /**
  * Ölçüm örneği — `?debug`/`?perf` yoksa `null`.
@@ -50,6 +54,7 @@ export function initServices(): void {
   audioSettings = new AudioSettings(saveManager);
   gameStats = new GameStats(saveManager);
   videoSettings = new VideoSettings(saveManager);
+  keyBindings = new KeyBindings(saveManager);
   gameAudio = new GameAudio(audioSettings);
   diagnostics = isDiagnosticsEnabled()
     ? createDiagnostics({
@@ -66,7 +71,12 @@ export function initServices(): void {
 export async function loadPersistedState(): Promise<void> {
   // İkisi bağımsız; Tauri store'da her okuma bir IPC turu olduğu için
   // paralel yüklemek gecikmeyi azaltır.
-  await Promise.all([audioSettings.load(), gameStats.load(), videoSettings.load()]);
+  await Promise.all([
+    audioSettings.load(),
+    gameStats.load(),
+    videoSettings.load(),
+    keyBindings.load(),
+  ]);
 
   // CORE'un titreşim anahtarı varsayılan olarak KAPALIDIR; oyunun kayıtlı
   // tercihi yüklendikten sonra bir kez uygulanır ve sonraki her değişiklikte

@@ -1,16 +1,19 @@
 [package]
 name = "volstudio-tauri"
 version = "0.1.0"
-description = "VOL.STUDIO native wrapper for desktop and mobile"
+description = "VOL.STUDIO shared Tauri runtime — consumed by each game's own app crate"
 authors = ["VOL.STUDIO"]
 edition = "2021"
 
+# Yalnız KÜTÜPHANE. `staticlib`/`cdylib` mobil giriş noktası üreten uygulama
+# crate'lerinin işidir; paylaşılan kabuk onların içine `rlib` olarak girer.
 [lib]
 name = "volstudio_tauri_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+crate-type = ["rlib"]
 
-[build-dependencies]
-tauri-build = { version = "2.6", features = [] }
+# `tauri-build` YOKTUR ve build.rs de yoktur: o adım `generate_context!()`
+# çağıran UYGULAMA crate'lerinin işidir ve bir `tauri.conf.json` arar. Bu crate
+# bir uygulama olmadığı için kendi config'ini taşımaz.
 
 [dependencies]
 tauri = { version = "2.11", features = ["protocol-asset", "rustls-tls"] }
@@ -23,11 +26,8 @@ log = "0.4"
 rustls = { version = "0.23", default-features = false, features = ["ring"] }
 
 [features]
-default = ["custom-protocol", "mobile-entry"]
+default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-# JNI köprüsünü dışa aktaran mobil giriş noktası. Kabuk başka bir uygulamaya
-# kütüphane olarak bağlanırken KAPATILIR; aksi halde semboller çakışır.
-mobile-entry = []
 
 [profile.release]
 codegen-units = 1

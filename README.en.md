@@ -21,7 +21,7 @@ devtools/vol-ui/            # live component catalogue for CORE UI
 devtools/vol-asset-studio/  # repository asset workspace
 devtools/visual-synth/      # deterministic visual asset compiler
 devtools/audio-synth/       # deterministic audio asset compiler
-tauri-v2/                   # native game shell and Rust backend
+tauri-v2/                   # SHARED native shell (not an app); each game carries its own src-tauri
 ```
 
 ## Requirements

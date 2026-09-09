@@ -50,6 +50,10 @@ coverage:
 coverage-audio:
     pnpm --filter @volstudio/audio-synth test:coverage
 
+# Kapsamın şekli: büyük ve kritik dosyaların test dağılımını denetler. `coverage`den SONRA koşar.
+coverage-shape:
+    node scripts/coverage-shape-report.mjs
+
 # Workspace sözleşmesi: her paketin kapılara dahil olduğunu doğrular.
 # `pnpm -r --if-present` script'i olmayan paketi sessizce atladığı için,
 # test/eşik yazılmamış yeni bir paket bu bekçi olmadan kapılardan görünmez geçer.
@@ -82,6 +86,7 @@ scaling:
 e2e:
     pnpm --filter @volstudio/vol-asset-studio test:e2e
     pnpm --filter @volstudio/vol-arachnid test:e2e
+    pnpm --filter @volstudio/vol-hell test:e2e
     pnpm --filter @volstudio/vol-ui test:e2e
 
 # Chromium + Firefox tam matris — yalnız signoff'ta koşar.
@@ -114,7 +119,7 @@ fast: quick test
 # `audio-synth` coverage `signoff`'ta; kapsam eşikleri burada product paketleri
 # ve araçlar için koşulur.
 # Push öncesi kapısı: quick + css lint + kapsam eşikleri + build + Chromium smoke
-high: quick lint-css coverage build bundle scaling e2e
+high: quick lint-css coverage coverage-shape build bundle scaling e2e
 
 # Gönderilen sesin reçetesiyle AYNI olduğunu kanıtlar.
 #
@@ -146,10 +151,11 @@ report gate='high' *flags:
 
 # === TAURİ ===
 
-# Tauri prod build: uzun, ağır, manuel.
-tauri-build:
-    pnpm build:game
-    pnpm --filter @volstudio/tauri-v2 tauri build
+# Tauri prod build: uzun, ağır, manuel. Oyun ADIYLA seçilir — `tauri-v2` bir
+# uygulama değil, üç oyunun paylaştığı native runtime'dır.
+tauri-build game='hell':
+    pnpm build:{{ game }}
+    pnpm tauri:{{ game }}:build
 
 # Fedora/Linux teslimi — AppImage bundler'ı Fedora'nın güncel `.relr.dyn`
 # ELF bölümleriyle uyumlu değildir; NO_STRIP=1 yalnızca harici strip adımını
@@ -159,15 +165,15 @@ tauri-build:
 # `bundleMediaFramework` ses/video bağımlılıklarını taşır.
 tauri-build-linux:
     pnpm build:game
-    pnpm --filter @volstudio/tauri-v2 exec tauri build --bundles deb,rpm --ci
-    NO_STRIP=1 APPIMAGE_EXTRACT_AND_RUN=1 pnpm --filter @volstudio/tauri-v2 exec tauri build --bundles appimage --ci || test -d tauri-v2/src-tauri/target/release/bundle/appimage/VOL.HELL.AppDir
+    pnpm --filter @volstudio/vol-hell exec tauri build --bundles deb,rpm --ci
+    NO_STRIP=1 APPIMAGE_EXTRACT_AND_RUN=1 pnpm --filter @volstudio/vol-hell exec tauri build --bundles appimage --ci || test -d games/vol-hell/src-tauri/target/release/bundle/appimage/VOL.HELL.AppDir
     pnpm build:linux-appimage
 
-tauri-dev:
-    pnpm tauri:dev
+tauri-dev game='hell':
+    pnpm tauri:{{ game }}:dev
 
-tauri-android:
-    pnpm tauri:android:dev
+tauri-android game='hell':
+    pnpm tauri:{{ game }}:android:dev
 
 tauri-ios:
     pnpm tauri:ios:dev

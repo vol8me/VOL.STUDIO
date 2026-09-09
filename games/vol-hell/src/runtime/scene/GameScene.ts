@@ -32,7 +32,7 @@ import { gameConfig } from '@/config/game';
 import { physicsConfig } from '@/config/physics';
 import { sfxVolumes } from '@/config';
 import { BOSS_ENEMY_ID, getMaxEnemyRadius } from '@/config/enemies/catalog';
-import { diagnostics, gameAudio, audioSettings, videoSettings } from '@/app/services';
+import { diagnostics, gameAudio, audioSettings, keyBindings, videoSettings } from '@/app/services';
 import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import { EffectManager } from '@/runtime/systems/EffectManager';
 import { TelegraphManager } from '@/runtime/systems/TelegraphManager';
@@ -240,7 +240,12 @@ export class GameScene extends BaseScene {
     this.inputManager = runtimeScope.addDestroyable(
       new InputManager<HellAction>(this, {
         actions: HELL_ACTIONS,
-        pcActionBindings: HELL_PC_BINDINGS,
+        /*
+         * Eşleme KAYITTAN okunur, sabitten değil: oyuncu ayarlardan tuş
+         * değiştirdiğinde sonraki koşu onu görmelidir. `HELL_PC_BINDINGS`
+         * artık yalnız VARSAYILANDIR ve `KeyBindings` yüklenemezse yedektir.
+         */
+        pcActionBindings: keyBindings?.getAll() ?? HELL_PC_BINDINGS,
         moveKeys: HELL_MOVE_KEYS,
         aimStickAction: HELL_AIM_STICK_ACTION,
         aimStickActivatesOnTouch: HELL_AIM_STICK_ACTIVATES_ON_TOUCH,

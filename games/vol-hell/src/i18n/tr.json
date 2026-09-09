@@ -81,7 +81,12 @@
     "resolution": "Pencere Çözünürlüğü",
     "graphicsQuality": "Grafik Kalitesi",
     "qualityLow": "Düşük",
-    "qualityHigh": "Yüksek"
+    "qualityHigh": "Yüksek",
+    "controls": "Kontroller",
+    "action": {
+      "fire": "Ateş",
+      "dash": "Atılım"
+    }
   },
   "pause": {
     "title": "DURAKLATILDI",

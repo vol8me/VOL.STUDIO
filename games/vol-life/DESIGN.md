@@ -38,6 +38,31 @@ Bu yüzden nüfus bir hedef değil, bir bütçedir. Hedef şudur:
 Nüfus bu koşulu bozmayacak en yüksek sayıdır. İlk sürüm **100 parçacık**
 hedefler ve bu bir geçici basamak değil, ürünün ilk gerçek hâlidir.
 
+**Üç ayrı bütçe vardır ve tek sayıya indirilemez:**
+
+| Bütçe         | Ne sayar               | Maliyeti ne belirler   |
+| ------------- | ---------------------- | ---------------------- |
+| Parçacık      | Fiziksel madde         | Kuvvet ve ızgara       |
+| Organizma     | Kimliği izlenen varlık | Küme eşleştirme, kayıt |
+| Bilişsel ajan | Karar veren organizma  | Algı ve değerlendirme  |
+
+"100.000 parçacık" ile "100.000 organizma" aynı şey değildir; ikincisi bir
+büyüklük mertebesi daha pahalıdır. `100k parçacık / 500 organizma / 50 bilişsel
+ajan` makul bir hedef sınıfıdır, `100k bilişsel ajan` değildir. Ölçek sorusu
+bu üç sayı ayrı ayrı ölçülmeden cevaplanamaz.
+
+### Üç ürün kipi
+
+Ürünün kimliği "oynanış" değil, dünyayla kurulan üç ilişkidir:
+
+- **Gözlem** — dünya kendi akar, oyuncu bakar.
+- **Deney** — oyuncu koşulu değiştirir, sonucu bekler.
+- **Tekrar** — dünyanın geçmişi yeniden oynatılır.
+
+Üçü de aynı deterministik çekirdeğe dayanır (§7) ve bu yüzden üçü de bedavaya
+gelmez ama ucuza gelir. Kipler ilk sürümde ayrı bir arayüz olarak açılmaz;
+belge burada yalnız neyin mümkün kalması gerektiğini kilitler.
+
 ### Başarı ölçütü: zincir uzunluğu
 
 Kaç özellik olduğu değil, **tek bir olaydan kaç anlamlı sonuç çıktığı** ölçülür.
@@ -64,6 +89,21 @@ beslemesinden çıkar. Beş temel alan:
 
 `habitability` bu alanlardan TÜRETİLİR, ayrı bir alan olarak tutulmaz.
 
+### Alan ile kaynak AYNI ŞEY DEĞİLDİR
+
+İkisi de ızgarada yaşar ama davranışları farklıdır ve tek kavrama sıkıştırmak
+ileride ikisini de bozar:
+
+- **Alan** uzayın sürekli bir özelliğidir. Sıcaklık "tükenmez"; yayılır,
+  dengelenir, taşınır.
+- **Kaynak** tüketilebilir bir niceliktir. Üretilir, azalır, biriktirilebilir
+  ve yeniden doğar.
+
+`flow`, `temperature`, `disturbance` alandır. `nutrient` ve `energy` kaynak
+davranışı taşır — tüketim/yenilenme döngüsü onlara aittir. İlk sürüm ikisini de
+aynı ızgara altyapısında saklayabilir; ayrım VERİ YAPISINDA değil, üzerlerinde
+çalışan kuralların ayrı olmasında yaşar.
+
 ### Çift yönlü bağ zorunludur
 
 Dünya organizmayı etkiler, organizma dünyayı değiştirir. Tek yönlü bir bağ
@@ -87,8 +127,15 @@ yeni bir koloni bulmalıdır. "Devasa" hissi kaplama alanından değil, bu
 Zincir tek yönde büyür ve her basamak bir öncekinin ORTAYA ÇIKMIŞ hâlidir:
 
 ```
-parçacık → çekirdek → zar → organizma → grup → koloni → faksiyon
+parçacık → küme → çekirdek adayı → çekirdek → zar → organizma
+         → grup → koloni → faksiyon
 ```
+
+**Küme ile çekirdek arasındaki ara basamak zorunludur.** Her yoğunlaşma bir
+canlı değildir: birkaç adımda oluşup dağılan bir küme yalnızca çarpışmadır. Bu
+basamak olmadan "parçacıklar birbirine değdi" ile "bir canlı doğdu" aynı olaya
+dönüşür ve doğum sayacı gürültü sayar. Çekirdek adayı bir SÜREKLİLİK eşiğidir:
+küme belli bir yoğunluğu belli bir süre korursa çekirdek olur.
 
 Organizma önceden çizilmez; parçacıklardan **oluşur**. Zar görsel bir kabuk
 değil, madde/enerji geçişini yöneten işlevsel bir sınırdır. Çekirdek zamanla
@@ -142,6 +189,16 @@ doğru araç değildir.
 tereddüt, aşım, düzeltme, kaçınma ve sürüklenme "akıllı" hissini üretir. Ama
 gürültü tek başına zekâ değildir — hedef yönü, atalet, gürültü ve hafızanın
 birlikte çalışması gerekir.
+
+### Organizma dünyayı GÖRMEZ, çevresini örnekler
+
+Global bilgi zekâyı öldürür. Bir organizma bütün kaynak alanını okuyabiliyorsa
+en iyi noktayı her zaman bulur; kararı hesaplama olur, davranış olmaz. Aynı
+dünyada iki organizmanın FARKLI karar vermesi ancak girdileri farklıysa mümkün.
+
+Bu yüzden algı bütçelidir: görüş yarıçapı, iz duyarlılığı, alan örnekleme
+yarıçapı. Organizma dünya durumunu değil YEREL GÖZLEMİNİ alır. Aynı kısıt
+performansı da korur — ama gerekçe performans değil, davranıştır.
 
 ### Hafıza kusurludur ve bir KAYNAKTIR
 
@@ -220,7 +277,14 @@ Bu ayrım ürünün en özgün yanıdır ve korunmalıdır:
 - **Sunum aklı** — oyuncuya neyin gösterileceği.
 
 Sistem eşzamanlı olayları ilginçlik açısından puanlar (yenilik, süre, nüfus
-etkisi, nadirlik, coğrafi yayılım) ve kamerayı ilginç olana götürebilir. Üç mod
+etkisi, nadirlik, coğrafi yayılım) ve kamerayı ilginç olana götürebilir.
+
+**İlginçlik tek bir skalara indirilmez.** Bileşenler ayrı ölçülür, ağırlıkları
+`config/` altında veri olarak durur. Tek sayıya indirmek, iptal edilen
+denemedeki `maxCellOccupancy` hatasının aynısıdır (§14, ders 3): ölçtüğünü
+sandığın şeyi ölçmeyen bir metrik, yanlış sonucu ikna edici biçimde üretir.
+"İlk kez olan" olaylar (ilk organizma, ilk bölünme, ilk avlanma, ilk koloni)
+ayrıca işaretlenir — nadirlik en güçlü ilginçlik bileşenidir. Üç mod
 yeter: `Observe` (sistem önerir), `Follow` (oyuncu seçer), `Free` (oyuncu
 gezer). Oyuncu kameraya asla zorla kilitlenmez.
 
@@ -272,11 +336,18 @@ Bu katman için yazılacak yeni kod yoktur.
 
 ### Dünya → VOL.LIFE'ın kendi formatı
 
-Dünya `SaveManager`a KONULMAZ. `JSON.stringify` yüz parçacıkta sorun değildir;
-alan ızgaraları, ilişki matrisleri ve olay geçmişi eklendiğinde model çöker —
-metin serileştirme hem boyutu hem ayrıştırma süresini gereksiz büyütür, hem de
-`Float32Array` verisini sayı dizisine çevirip geri okurken hassasiyet
-sözleşmesini çağırana bırakır.
+Dünya `SaveManager`a KONULMAZ; kendi `WorldSnapshot` sözleşmesini taşır.
+
+**Ama format ilk turda BİNARY'ye kilitlenmez.** Yüz parçacıkta JSON fazlasıyla
+yeterlidir ve okunabilir olması geliştirme sırasında ölçülemeyecek kadar
+değerlidir: bozuk bir dünyayı gözle incelemek, hex dökümü okumaktan başka bir
+iştir. Kilitlenecek olan format değil ARAYÜZDÜR — `WorldSnapshot` bir seri
+hâle getirici arkasında durur; JSON bugünkü uygulamasıdır, binary ölçüm
+gerektirdiğinde ikinci uygulama olur.
+
+Ölçüm sırası nüfusla gelir: 100'de JSON, 5.000/50.000'de ÖLÇ, 100.000'de
+binary'yi tartış. İlk kilometre taşında binary serializer yazmak, henüz var
+olmayan bir problemi çözmektir.
 
 Dünya anlık görüntüsü şunları taşır: tohum, tick sayısı, **RNG durumu**, tür
 tanımları, parçacık dizileri (SoA), alan ızgaraları, organizma kayıtları,
@@ -336,6 +407,27 @@ olan: yüksek düşmanlık + kıt kaynak koşulunda çatışma olasılığı tab
 ÜSTÜNDE olmalıdır. Aynı şekilde evrim testi "100. nesilde hız tam 1,7423 olur"
 demez; seçilim baskısı altında özellik medyanının beklenen YÖNDE kaydığını
 ölçer.
+
+### Dört seviye ve nerede biterler
+
+| Seviye      | Neyi sınar                     | Örnek                              |
+| ----------- | ------------------------------ | ---------------------------------- |
+| Birim       | Tek algoritma                  | Küme mesafesi hesabı               |
+| Entegrasyon | Sistemlerin birlikte çalışması | Küme → organizma geçişi            |
+| Senaryo     | Tohum + dünya + N tick         | 100 parçacık → organizma → bölünme |
+| Gözlem      | Gerçek tarayıcı/cihaz          | Bölünme EKRANDA görünüyor          |
+
+İlk üçü yeşilken dördüncüsü kırmızı olabilir; iptal edilen denemede tam olarak
+bu oldu. Gözlem seviyesi otomatikleştirilemediği yerde elle yapılır ama
+ATLANMAZ.
+
+### İstatistik testleri tekrar üretilebilir olmalı
+
+"1000 tohumla çatışma oranı" ölçmek doğrudur ama her koşuda 1000 tohum üretmek
+pahalıdır ve sonucu koşudan koşuya oynatır. Tohumlar bir KORPUS olarak saklanır
+(sürümlenmiş bir veri dosyası); test o korpusu okur. Böylece istatistiksel iddia
+hem ucuzlar hem tekrarlanabilir olur, ve korpus büyüdüğünde bu bilinçli bir
+karar hâline gelir.
 
 ### Yasak test biçimi
 
@@ -480,6 +572,32 @@ eşleşme vardır. İlk denemede Web Worker seçeneği hiç masaya konmadı ve b
 eksikliktir: SoA veri paylaşılabilir bellekte durur, ızgara zaten bölgelere
 ayrıktır, kuvvet hesabı paralelleştirilebilir. **Worker havuzu değerlendirilmemiş
 bir yoldur** ve ölçek sorusu ona bakılmadan kapatılmamalıdır.
+
+### Paralellikten ÖNCE: güncelleme frekansı bütçesi
+
+Her sistemin 60 Hz koşması bir varsayımdır, gereklilik değil. Organizma hareketi
+60 Hz ister; besin difüzyonu istemez, territory hiç istemez, evrim saniyede bir
+bile fazladır.
+
+| Sistem                | Makul tempo |
+| --------------------- | ----------- |
+| Hareket / entegrasyon | 60 Hz       |
+| Kuvvetler             | 30 Hz       |
+| Algı ve karar         | 15 Hz       |
+| Alan difüzyonu        | 10 Hz       |
+| Territory / grup      | 5 Hz        |
+| Evrim                 | 1 Hz        |
+| Tarih                 | olay bazlı  |
+
+**Bu, yasaklanan kamera-LOD'u DEĞİLDİR** (§14, ders 2) ve karıştırılmamalıdır.
+Orada yasak olan şey kuralın bakış açısına göre değişmesiydi: yakındaki ajan
+başka fizik, uzaktaki başka fizik. Burada kural her yerde AYNIDIR; değişen tek
+şey aynı kuralın ne sıklıkla yeniden değerlendirildiğidir ve bu dünyanın her
+noktasında eşittir.
+
+Bu bütçeleme Web Worker'dan önce denenir: tempo ayarlamak paralellik eklemekten
+hem ucuz hem geri alınabilirdir. İptal edilen denemede bütün alanlar aynı
+kademeli döngüye bağlıydı ve bu açık borç olarak kayda geçmişti.
 
 ### CORE — ne alınır
 

@@ -146,5 +146,17 @@
       },
       "fxParts72Over18": 4.5
     }
+  },
+  "coverageShape": {
+    "minLines": 100,
+    "floorPct": 50,
+    "acknowledged": {
+      "core/src/input/PCController.ts": "Phaser klavye/fare girdi bağdaştırıcısı: mock maliyeti yüksek.",
+      "core/src/input/TouchController.ts": "Phaser dokunmatik pointer bağdaştırıcısı: DOM ve çoklu dokunma mock maliyeti yüksek.",
+      "games/vol-hell/src/app/GameAudio.ts": "Web Audio API / AudioContext donanım bağımlılığı: tarayıcı e2e ile test edilir.",
+      "games/vol-hell/src/runtime/entity/BossController.ts": "Dalga 20 boss görsel efekt ve telgraf animasyonları: headless simülasyonda görsel pipeline atlanır.",
+      "games/vol-hell/src/runtime/scene/GameScene.ts": "Phaser oyun sahnesi (WebGL/Canvas/Audio orkestrasyonu): e2e/boot.spec.ts ile korunur.",
+      "games/vol-hell/src/runtime/scene/MainMenuScene.ts": "Phaser ana menü sahnesi (DOM/Canvas arayüzü): e2e/boot.spec.ts ile korunur."
+    }
   }
 }

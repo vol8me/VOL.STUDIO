@@ -81,7 +81,12 @@
     "resolution": "Window Resolution",
     "graphicsQuality": "Graphics Quality",
     "qualityLow": "Low",
-    "qualityHigh": "High"
+    "qualityHigh": "High",
+    "controls": "Controls",
+    "action": {
+      "fire": "Fire",
+      "dash": "Dash"
+    }
   },
   "pause": {
     "title": "PAUSED",

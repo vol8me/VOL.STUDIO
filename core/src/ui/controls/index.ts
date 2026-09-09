@@ -1,4 +1,4 @@
-export { TouchButton, type TouchButtonShape, type TouchButtonOptions } from './TouchButton';
+export { HoldButton, type HoldButtonShape, type HoldButtonOptions } from './HoldButton';
 export { ChargeButton, type ChargeButtonOptions } from './ChargeButton';
 export {
   DirectionButton,
@@ -47,3 +47,4 @@ export {
   type CommandHistorySnapshot,
   type CommandHistoryOptions,
 } from './CommandHistory';
+export { KeyBindingList, type KeyBindingRow, type KeyBindingListOptions } from './KeyBindingList';

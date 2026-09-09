@@ -34,7 +34,7 @@ import { pathToFileURL } from 'node:url';
 const GATES = {
   quick: ['contract', 'format-check', 'typecheck', 'lint'],
   fast: ['quick', 'test'],
-  high: ['quick', 'lint-css', 'coverage', 'build', 'bundle', 'scaling', 'e2e'],
+  high: ['quick', 'lint-css', 'coverage', 'coverage-shape', 'build', 'bundle', 'scaling', 'e2e'],
   signoff: ['high', 'coverage-audio', 'e2e-full', 'rust', 'audio-verify'],
 };
 
@@ -176,93 +176,95 @@ if (isMain) {
 }
 
 function runCli() {
-const [, , gateArg = 'high', ...flags] = process.argv;
-const asJson = flags.includes('--json');
-const root = process.cwd();
+  const [, , gateArg = 'high', ...flags] = process.argv;
+  const asJson = flags.includes('--json');
+  const root = process.cwd();
 
-if (!(gateArg in GATES)) {
-  console.error(`Bilinmeyen kapı: ${gateArg}. Seçenekler: ${Object.keys(GATES).join(', ')}`);
-  process.exit(2);
-}
-
-const graphProblems = verifyGateGraph(root);
-if (graphProblems.length > 0) {
-  console.error('[quality-report] justfile ile aşama haritası ayrışmış:');
-  for (const problem of graphProblems) console.error(`  ✗ ${problem}`);
-  console.error('  scripts/quality/report.mjs içindeki GATES haritasını güncelle.');
-  process.exit(2);
-}
-
-/** Birleşik kapıyı tekil aşamalara açar (bir kez, iç içe kapılar dahil). */
-function flatten(gate) {
-  return GATES[gate].flatMap((stage) => (stage in GATES ? flatten(stage) : [stage]));
-}
-
-const stages = [...new Set(flatten(gateArg))];
-const started = Date.now();
-const results = [];
-let failure = null;
-
-for (const stage of stages) {
-  const stageStart = Date.now();
-  const run = spawnSync('pnpm', ['exec', 'just', stage], {
-    cwd: root,
-    encoding: 'utf8',
-    maxBuffer: 64 * 1024 * 1024,
-  });
-  const output = `${run.stdout ?? ''}${run.stderr ?? ''}`;
-  const durationMs = Date.now() - stageStart;
-
-  if (run.status === 0) {
-    results.push({ stage, status: 'passed', durationMs });
-    continue;
+  if (!(gateArg in GATES)) {
+    console.error(`Bilinmeyen kapı: ${gateArg}. Seçenekler: ${Object.keys(GATES).join(', ')}`);
+    process.exit(2);
   }
 
-  // Kapı zinciri ilk düşen aşamada durur — sonraki aşamaları koşmak, zaten
-  // bilinen bir hatanın üstüne dakikalar eklemekten başka bir şey yapmaz.
-  failure = { stage, durationMs, exitCode: run.status ?? 1, ...classify(stage, output), output };
-  results.push({ stage, status: 'failed', durationMs });
-  break;
-}
-
-const report = {
-  gate: gateArg,
-  status: failure ? 'failed' : 'passed',
-  durationMs: Date.now() - started,
-  stages: results,
-  ...(failure && {
-    failure: {
-      stage: failure.stage,
-      kind: failure.kind,
-      package: failure.package,
-      reason: failure.reason,
-      exitCode: failure.exitCode,
-      ...(failure.tail && { tail: failure.tail }),
-    },
-  }),
-};
-
-if (asJson) {
-  console.log(JSON.stringify(report, null, 2));
-} else {
-  console.log(`[quality-report] ${report.gate}: ${report.status} (${report.durationMs} ms)`);
-  for (const stage of report.stages) {
-    console.log(`  ${stage.status === 'passed' ? '✓' : '✗'} ${stage.stage} (${stage.durationMs} ms)`);
+  const graphProblems = verifyGateGraph(root);
+  if (graphProblems.length > 0) {
+    console.error('[quality-report] justfile ile aşama haritası ayrışmış:');
+    for (const problem of graphProblems) console.error(`  ✗ ${problem}`);
+    console.error('  scripts/quality/report.mjs içindeki GATES haritasını güncelle.');
+    process.exit(2);
   }
-  if (failure) {
-    console.log(`\n  aşama : ${failure.stage}`);
-    console.log(`  tür   : ${failure.kind}`);
-    console.log(`  paket : ${failure.package ?? '-'}`);
-    console.log(`  sebep : ${failure.reason}`);
-    if (failure.tail) {
-      // Sınıflandırma tutmadı; en azından son satırlar görünsün.
-      for (const line of failure.tail) console.log(`  son   : ${line}`);
+
+  /** Birleşik kapıyı tekil aşamalara açar (bir kez, iç içe kapılar dahil). */
+  function flatten(gate) {
+    return GATES[gate].flatMap((stage) => (stage in GATES ? flatten(stage) : [stage]));
+  }
+
+  const stages = [...new Set(flatten(gateArg))];
+  const started = Date.now();
+  const results = [];
+  let failure = null;
+
+  for (const stage of stages) {
+    const stageStart = Date.now();
+    const run = spawnSync('pnpm', ['exec', 'just', stage], {
+      cwd: root,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    const output = `${run.stdout ?? ''}${run.stderr ?? ''}`;
+    const durationMs = Date.now() - stageStart;
+
+    if (run.status === 0) {
+      results.push({ stage, status: 'passed', durationMs });
+      continue;
     }
-    console.log('');
-    // Ham çıktı bastırılmaz: rapor bir ÖZETtir, teşhisin yerine geçmez.
-    console.log(failure.output);
-  }
-}
 
-process.exit(failure ? failure.exitCode : 0);
+    // Kapı zinciri ilk düşen aşamada durur — sonraki aşamaları koşmak, zaten
+    // bilinen bir hatanın üstüne dakikalar eklemekten başka bir şey yapmaz.
+    failure = { stage, durationMs, exitCode: run.status ?? 1, ...classify(stage, output), output };
+    results.push({ stage, status: 'failed', durationMs });
+    break;
+  }
+
+  const report = {
+    gate: gateArg,
+    status: failure ? 'failed' : 'passed',
+    durationMs: Date.now() - started,
+    stages: results,
+    ...(failure && {
+      failure: {
+        stage: failure.stage,
+        kind: failure.kind,
+        package: failure.package,
+        reason: failure.reason,
+        exitCode: failure.exitCode,
+        ...(failure.tail && { tail: failure.tail }),
+      },
+    }),
+  };
+
+  if (asJson) {
+    console.log(JSON.stringify(report, null, 2));
+  } else {
+    console.log(`[quality-report] ${report.gate}: ${report.status} (${report.durationMs} ms)`);
+    for (const stage of report.stages) {
+      console.log(
+        `  ${stage.status === 'passed' ? '✓' : '✗'} ${stage.stage} (${stage.durationMs} ms)`,
+      );
+    }
+    if (failure) {
+      console.log(`\n  aşama : ${failure.stage}`);
+      console.log(`  tür   : ${failure.kind}`);
+      console.log(`  paket : ${failure.package ?? '-'}`);
+      console.log(`  sebep : ${failure.reason}`);
+      if (failure.tail) {
+        // Sınıflandırma tutmadı; en azından son satırlar görünsün.
+        for (const line of failure.tail) console.log(`  son   : ${line}`);
+      }
+      console.log('');
+      // Ham çıktı bastırılmaz: rapor bir ÖZETtir, teşhisin yerine geçmez.
+      console.log(failure.output);
+    }
+  }
+
+  process.exit(failure ? failure.exitCode : 0);
 }

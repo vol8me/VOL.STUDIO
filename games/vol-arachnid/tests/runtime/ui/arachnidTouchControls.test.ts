@@ -50,9 +50,9 @@ describe('ArachnidTouchControls', () => {
     const button = dash();
     const root = parent.querySelector<HTMLElement>('.vol-arachnid-touch');
 
-    expect(button?.classList.contains('vol-touch-button--circle')).toBe(true);
+    expect(button?.classList.contains('vol-hold-button--circle')).toBe(true);
     expect(button?.textContent).toBe('ATIL');
-    expect(button?.style.getPropertyValue('--vol-touch-button-size')).toBe(
+    expect(button?.style.getPropertyValue('--vol-hold-button-size')).toBe(
       `${arachnidUiConfig.touch.dashButtonSizePx}px`,
     );
     // Beklerken sönüktür, görünmez değil: görünmez bir tuş bulunamaz.
@@ -69,13 +69,13 @@ describe('ArachnidTouchControls', () => {
     press('pointerdown');
     actionSource.applyTo(actions);
     expect(actions.dash).toBe(true);
-    expect(dash()?.classList.contains('vol-touch-button--pressed')).toBe(true);
+    expect(dash()?.classList.contains('vol-hold-button--pressed')).toBe(true);
 
     press('pointerup');
     const after = { dash: false };
     actionSource.applyTo(after);
     expect(after.dash).toBe(false);
-    expect(dash()?.classList.contains('vol-touch-button--pressed')).toBe(false);
+    expect(dash()?.classList.contains('vol-hold-button--pressed')).toBe(false);
   });
 
   it('erişilebilirlik adı dil değişimini izler', async () => {

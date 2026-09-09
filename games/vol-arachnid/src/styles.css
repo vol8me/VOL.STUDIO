@@ -147,15 +147,15 @@
   bottom: max(var(--vol-safe-bottom), var(--vol-arachnid-touch-inset));
 }
 
-.vol-arachnid-touch__dash.vol-touch-button--pressed {
+.vol-arachnid-touch__dash.vol-hold-button--pressed {
   opacity: 1;
 }
 
-.vol-arachnid-touch__dash .vol-touch-button__icon {
+.vol-arachnid-touch__dash .vol-hold-button__icon {
   width: auto;
   height: auto;
   font-family: var(--vol-font-family);
-  font-size: calc(var(--vol-touch-button-size) * 0.14);
+  font-size: calc(var(--vol-hold-button-size) * 0.14);
   font-weight: 700;
   letter-spacing: 0.08em;
 }

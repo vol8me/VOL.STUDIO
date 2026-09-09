@@ -97,6 +97,37 @@ export function validateQualityConfig(raw) {
     }
   }
 
+  if (raw.coverageShape !== undefined) {
+    if (!isPlainObject(raw.coverageShape)) {
+      problems.push('coverageShape: nesne olmalı');
+    } else {
+      const { minLines, floorPct, acknowledged } = raw.coverageShape;
+      if (minLines !== undefined) {
+        if (typeof minLines !== 'number' || !Number.isInteger(minLines) || minLines < 1) {
+          problems.push('coverageShape.minLines: pozitif tam sayı olmalı');
+        }
+      }
+      if (floorPct !== undefined) {
+        if (typeof floorPct !== 'number' || !Number.isFinite(floorPct) || floorPct < 0 || floorPct > 100) {
+          problems.push('coverageShape.floorPct: yüzde olmalı, 0-100 aralığında');
+        }
+      }
+      if (acknowledged !== undefined) {
+        if (!isPlainObject(acknowledged)) {
+          problems.push('coverageShape.acknowledged: nesne olmalı (dosya yolu → gerekçe metni)');
+        } else {
+          for (const [file, reason] of Object.entries(acknowledged)) {
+            if (typeof reason !== 'string' || reason.trim() === '') {
+              problems.push(
+                `coverageShape.acknowledged[${JSON.stringify(file)}]: gerekçe boş olamaz. Sessiz muafiyet yok.`,
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
   // Muaf bir paket aynı anda eşik taşıyorsa hangisinin geçerli olduğu belirsiz.
   if (isPlainObject(raw.exempt) && isPlainObject(raw.packages)) {
     for (const name of Object.keys(raw.exempt)) {

@@ -22,7 +22,7 @@ export interface ChargeButtonOptions {
 
 /**
  * Basılı tutuldukça dolan bir halka göstergesiyle çevrili buton (saldırı gücü
- * biriktirme, cast time gibi yetenekler için). TouchButton'dan farkı: basılı
+ * biriktirme, cast time gibi yetenekler için). HoldButton'dan farkı: basılı
  * tutma süresi bir değer taşır (0-1 doluluk oranı), ani bas-bırak değil.
  */
 export class ChargeButton {

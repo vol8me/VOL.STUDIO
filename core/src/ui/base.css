@@ -90,7 +90,7 @@
 .vol-pull-refresh,
 .vol-swipe-zone,
 .vol-dual-scroll,
-.vol-touch-button {
+.vol-hold-button {
   -webkit-user-select: none;
   user-select: none;
 }

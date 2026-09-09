@@ -67,3 +67,9 @@ Yeni yetenek DEĞİL, yer değişikliği: kod, testi ve dokümanıyla olduğu gi
 `FpsMeter`. `Diagnostics` zaten FPS hesaplıyordu ama yanında kare min/max'ı, render/update sürelerini ve renderer bilgisini taşıyor; istenen ürünün üstünde sürekli durabilen TEK bir sayıydı. Ayrı bileşen olmasının koşulu ölçümü paylaşmasıydı: `time/FrameRateSampler` bu turda çıkarıldı, `Diagnostics` ona bağlandı ve kendi kayan-pencere kopyasından 58 satır silindi. İki ayrı FPS hesabının aynı anda 58 ve 60 göstermesi artık yapısal olarak mümkün değil.
 
 `FrameRateSampler` ve `RollingWindow` yüzeye ÇIKMAZ: ikisi de `time/index.ts` barrel'ında listelenmez. Sayının bire artması bunun kanıtıdır.
+
+### 224 → 223
+
+`PlayerController` takma adı kaldırıldı ve `TouchButton` → `HoldButton` olarak yeniden adlandırıldı; sayı net bir azalır. İkisi de ADLANDIRMA sözleşmesinin uygulanmasıdır: CORE'un yüzeyi oyun kelimesi taşımaz ("player" bir oyun kavramıdır, hareket eden şey mekanizmadır) ve bir bileşenin adı GİRDİ CİHAZINI değil davranışını anlatır — `HoldButton` fare, kalem ve klavyeyle de aynı press/hold semantiğini verir.
+
+Takma adın hiçbir tüketicisi yoktu; yeniden adlandırmanın bedeli public API + showcase + i18n + CSS sınıfıydı ve bir kerede ödendi.

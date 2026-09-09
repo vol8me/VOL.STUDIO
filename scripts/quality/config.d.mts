@@ -14,6 +14,11 @@ export interface QualityConfig {
   floor: Record<string, number>;
   packages: Record<string, Record<string, number>>;
   exempt?: Record<string, string>;
+  coverageShape?: {
+    minLines?: number;
+    floorPct?: number;
+    acknowledged?: Record<string, string>;
+  };
 }
 
 /**

@@ -101,5 +101,12 @@
   "fpsMeter": {
     "value": "{{fps}} FPS",
     "ariaLabel": "Kare hızı"
+  },
+  "keyBindings": {
+    "listening": "Tuşa bas…",
+    "rebind": "{{action}} için yeni tuş ata",
+    "reset": "Sıfırla",
+    "resetAction": "{{action}} tuşunu varsayılana döndür",
+    "conflict": "{{action}} ile çakışıyor"
   }
 }

@@ -6,9 +6,6 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "tauri": "tauri",
-    "tauri:dev": "tauri dev --config tauri.dev.conf.json",
-    "tauri:build": "tauri build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

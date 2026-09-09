@@ -64,9 +64,8 @@ const EXEMPT: ReadonlyArray<{ selector: string; reason: string }> = [
       'Boyut `--vol-square-joystick-size`×2; dokunmatik için tasarlandı, hedefin altına inemez.',
   },
   {
-    selector: '.vol-touch-button',
-    reason:
-      'Varsayılan 72px; boyutu `--vol-touch-button-size` ile tüketici verir, hedefin üstünde.',
+    selector: '.vol-hold-button',
+    reason: 'Varsayılan 72px; boyutu `--vol-hold-button-size` ile tüketici verir, hedefin üstünde.',
   },
   {
     selector: '.vol-long-press-button',
@@ -99,6 +98,14 @@ const EXEMPT: ReadonlyArray<{ selector: string; reason: string }> = [
   {
     selector: '.vol-skill-tree__node',
     reason: 'height 44px + min-width 88px — hedefi kendi sabit ölçüleriyle zaten karşılıyor.',
+  },
+
+  {
+    selector: '.vol-key-bindings__binding',
+    reason:
+      "min-height token'ı tüketiyor; min-width 9ch tuş adının kısalıp uzamasında " +
+      'kutunun zıplamaması için sabit. Tarayıcıda ölçüldü: 63×44 (pointer:coarse) — ' +
+      'yatay eksende hedefin zaten üstünde ve etiket yalnız BÜYÜYEBİLİR.',
   },
 
   // --- Hedef başka bir kutuda ---

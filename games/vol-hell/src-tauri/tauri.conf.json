@@ -7,7 +7,7 @@
     "beforeDevCommand": "pnpm --filter @volstudio/vol-hell dev",
     "beforeBuildCommand": "pnpm --filter @volstudio/vol-hell build",
     "devUrl": "http://localhost:5173",
-    "frontendDist": "../../games/vol-hell/dist"
+    "frontendDist": "../dist"
   },
   "app": {
     "windows": [
@@ -56,11 +56,11 @@
       }
     },
     "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
+      "../../../tauri-v2/src-tauri/icons/32x32.png",
+      "../../../tauri-v2/src-tauri/icons/128x128.png",
+      "../../../tauri-v2/src-tauri/icons/128x128@2x.png",
+      "../../../tauri-v2/src-tauri/icons/icon.icns",
+      "../../../tauri-v2/src-tauri/icons/icon.ico"
     ]
   },
   "plugins": {}

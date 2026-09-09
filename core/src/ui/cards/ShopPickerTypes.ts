@@ -4,7 +4,7 @@ import type { CardTile, CardTileData } from './CardTile';
 /**
  * `ShopPicker`ın VERİ SÖZLEŞMESİ — tüketicinin gördüğü yüzey.
  *
- * Dosya, `ShopPicker.ts` anti-borç sınırını (~600 satır) aştığı için ayrıldı.
+ * Dosya, `ShopPicker.ts` anti-borç sınırını aştığı için ayrıldı.
  * Ayrım keyfî değil: burada oyunun panele NE anlattığı yaşar; `ShopPicker.ts`
  * o veriyi DOM'a nasıl çevirdiğini bilir. Bir oyun bu dosyayı okuyarak paneli
  * beslemeyi öğrenir, render stratejisine hiç bakmak zorunda kalmaz.

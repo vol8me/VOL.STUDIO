@@ -1,19 +1,15 @@
-// Tauri komutları hakkında bilgi almak için: https://tauri.app/develop/calling-rust/
+//! VOL.STUDIO'nun PAYLAŞILAN native kabuğu.
+//!
+//! Bu crate bir uygulama DEĞİLDİR: kendi `tauri.conf.json`u, kimliği, giriş
+//! noktası ve üretilmiş native projesi yoktur. Yalnız eklenti kurulumunu ve
+//! platform ayarlarını taşır; her oyun kendi uygulama crate'inde bağlamını
+//! üretip `run_with_context()` çağırır.
+//!
+//! Bir dönem bu crate AYNI ZAMANDA VOL.HELL'in uygulamasıydı ve adı taşıdığı
+//! vaadi karşılamıyordu: ortak yuva dolu olduğu için sonradan gelen oyunlar
+//! kendi kabuklarını kurmak zorunda kaldı. Kimlik artık tüketicinin.
 
-/*
- * Mobil giriş noktası ÖZELLİĞE bağlıdır.
- *
- * `tauri::mobile_entry_point` makrosu JNI köprüsünü (`Java_app_tauri_plugin_*`)
- * dışa aktarır. Bu kabuk ikinci bir uygulamaya kütüphane olarak bağlandığında
- * aynı semboller iki kez üretiliyor ve bağlayıcı "duplicate symbol" ile
- * düşüyordu. Kendi kimliğiyle paketlenen her uygulama giriş noktasını KENDİ
- * kütüphanesinde tanımlar; paylaşılan kabuk yalnız `run()`u verir.
- */
-#[cfg_attr(all(mobile, feature = "mobile-entry"), tauri::mobile_entry_point)]
-pub fn run() {
-    // Bağlam BU crate'in `tauri.conf.json`undan üretilir (VOL.HELL).
-    run_with_context(tauri::generate_context!())
-}
+// Tauri komutları hakkında bilgi almak için: https://tauri.app/develop/calling-rust/
 
 /// Ürün içindeki çıkış onayından sonra uygulamayı gerçekten sonlandırır.
 ///
@@ -28,10 +24,10 @@ fn exit_application(app: tauri::AppHandle) {
 /// Kabuğu VERİLEN bağlamla çalıştırır.
 ///
 /// `tauri::generate_context!()` çağrıldığı CRATE'in yapılandırmasını ve
-/// gömülü ön yüz varlıklarını paketler. Paylaşılan kabuk bağlamı kendi
-/// içinde üretirse, onu kütüphane olarak kullanan ikinci uygulama da BİRİNCİ
-/// uygulamanın kimliğini, penceresini ve ön yüzünü çalıştırır — cihazda
-/// VOL.ARACHNID paketi açılıp VOL.HELL menüsünü gösteriyordu.
+/// gömülü ön yüz varlıklarını paketler. Bu yüzden bağlam BURADA üretilemez:
+/// paylaşılan kabuk kendi bağlamını üretseydi, onu kütüphane olarak kullanan
+/// her uygulama o kabuğun kimliğini, penceresini ve ön yüzünü çalıştırırdı —
+/// ölçüldü, cihazda VOL.ARACHNID paketi açılıp VOL.HELL menüsünü gösteriyordu.
 ///
 /// Her uygulama bağlamı kendi crate'inde üretir; ortak olan yalnız eklenti
 /// kurulumu ve platform ayarlarıdır.

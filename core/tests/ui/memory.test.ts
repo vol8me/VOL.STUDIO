@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { TextArea } from '../../src/ui/primitives/TextArea';
-import { TouchButton } from '../../src/ui/controls/TouchButton';
+import { HoldButton } from '../../src/ui/controls/HoldButton';
 import { Tabs } from '../../src/ui/layout/Tabs';
 
 describe('Bellek sızıntısı regresyonları', () => {
@@ -25,10 +25,10 @@ describe('Bellek sızıntısı regresyonları', () => {
     expect(instances.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('TouchButton pointer capture serbest bırakılır ve listenerlar SİMETRİK temizlenir', () => {
+  it('HoldButton pointer capture serbest bırakılır ve listenerlar SİMETRİK temizlenir', () => {
     const onPress = vi.fn();
     const onRelease = vi.fn();
-    const button = new TouchButton({ label: 'Ateş', onPress, onRelease });
+    const button = new HoldButton({ label: 'Ateş', onPress, onRelease });
     document.body.appendChild(button.element);
 
     const releaseSpy = vi.spyOn(button.element, 'releasePointerCapture');

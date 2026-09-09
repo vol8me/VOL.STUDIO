@@ -1,8 +1,9 @@
 # Android
 
-Her oyunun native projesi AYRIDIR: VOL.HELL `tauri-v2/src-tauri/gen/android`,
-VOL.ARACHNID `games/vol-arachnid/src-tauri/gen/android`, VOL.LIFE
-`games/vol-life/src-tauri/gen/android`.
+Her oyunun native projesi AYRIDIR ve KENDİ paketinin altındadır:
+`games/<oyun>/src-tauri/gen/android`. Ortak Rust kabuğu
+`tauri-v2/src-tauri`dedir ve bir uygulama değildir — kendi `tauri.conf.json`u,
+kimliği ya da üretilmiş projesi yoktur.
 
 Hepsi **sürüm kontrolünde tutulur** ve yeniden üretilebilir değildir: yön
 kilidi, çentik yerleşimi, geri hareketi ve sürükleyici tam ekran Tauri
@@ -21,8 +22,8 @@ export NDK_HOME="$ANDROID_HOME/ndk/<sürüm>"
 export JAVA_HOME=<JDK 21 LTS>
 rustup target add aarch64-linux-android    # cihaz için; emülatör x86_64 ister
 
-pnpm --filter @volstudio/tauri-v2 exec tauri android build --debug --target aarch64
-adb install -r tauri-v2/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
+pnpm --filter @volstudio/vol-hell exec tauri android build --debug --target aarch64
+adb install -r games/vol-hell/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 
 pnpm --filter @volstudio/vol-arachnid exec tauri android build --debug --target aarch64
 adb install -r games/vol-arachnid/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk

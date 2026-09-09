@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    volstudio_tauri_lib::run()
+    vol_hell_lib::run()
 }

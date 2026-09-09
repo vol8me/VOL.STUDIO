@@ -15,7 +15,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "generate:audio": "pnpm run generate:sounds && pnpm run generate:music"
+    "generate:audio": "pnpm run generate:sounds && pnpm run generate:music",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
+    "tauri:build": "tauri build",
+    "tauri:android:dev": "tauri android dev --config src-tauri/tauri.dev.conf.json",
+    "tauri:android:build": "tauri android build --apk",
+    "tauri:ios:dev": "tauri ios dev --config src-tauri/tauri.dev.conf.json",
+    "test:e2e": "playwright test --project=chromium"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",
@@ -24,6 +31,8 @@
     "phaser": "^4.2.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@tauri-apps/cli": "^2.11.4",
     "@types/node": "^26.1.2",
     "@volstudio/audio-synth": "workspace:*",
     "i18next": "26.3.6",

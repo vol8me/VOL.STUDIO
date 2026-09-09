@@ -19,14 +19,14 @@ import {
 } from './linux-appimage-media.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-const bundleDir = join(root, 'tauri-v2/src-tauri/target/release/bundle/appimage');
+const bundleDir = join(root, 'games/vol-hell/src-tauri/target/release/bundle/appimage');
 const appDir = join(bundleDir, 'VOL.HELL.AppDir');
-const binary = join(root, 'tauri-v2/src-tauri/target/release/VOL.HELL');
+const binary = join(root, 'games/vol-hell/src-tauri/target/release/VOL.HELL');
 const deploy =
   process.env.LINUXDEPLOY ?? join(homedir(), '.cache/tauri/linuxdeploy-x86_64.AppImage');
 const canonical = join(bundleDir, 'VOL.HELL_0.1.0_amd64.AppImage');
 const legacyGenerated = join(bundleDir, 'VOL.HELL-x86_64.AppImage');
-const launcher = join(root, 'tauri-v2/src-tauri/linux.AppRun');
+const launcher = join(root, 'games/vol-hell/src-tauri/linux.AppRun');
 
 function run(command, args, options = {}) {
   execFileSync(command, args, { stdio: 'inherit', ...options });

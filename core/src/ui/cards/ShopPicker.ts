@@ -41,6 +41,12 @@ export const LEAVE_ANIMATION_MS = 240;
 /**
  * `.vol-card-picker--rerolling .vol-card-picker__grid` animasyon süresiyle
  * (`vol-card-grid-reroll`, 0.24s) eşleşir.
+ *
+ * **Reroll'da ÇIKIŞ animasyonu bilinçli olarak yoktur.** Eski kartlar çıkış
+ * animasyonuyla süzülseydi yeni kartlar aynı hücreye ancak o süre bittikten
+ * sonra girebilirdi; iki animasyon üst üste gelince ızgara boş kalıyor ve
+ * reroll "yavaş" hissettiriyordu. Sert değişim, satın almanın aksine bir
+ * TAZELEME jestidir ve anlık olması gerekir. Bu bir eksik değil, karardır.
  */
 export const REROLL_FLASH_MS = 240;
 

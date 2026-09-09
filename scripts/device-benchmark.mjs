@@ -21,6 +21,7 @@ const SECONDS = Number(process.argv[2] ?? 12);
 const APPS = [
   { name: 'vol-arachnid', pkg: 'com.volstudio.arachnid' },
   { name: 'vol-hell', pkg: 'com.volstudio.game' },
+  { name: 'vol-life', pkg: 'com.volstudio.life' },
 ];
 
 function adb(args) {

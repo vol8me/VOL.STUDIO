@@ -19,7 +19,7 @@ import * as Core from '../../src/index';
  * yeterli.
  */
 // Sayının hangi yeteneklerle değiştiğinin kaydı: `core/docs/public-surface.md`.
-const EXPECTED_EXPORT_COUNT = 224;
+const EXPECTED_EXPORT_COUNT = 227;
 
 /** `index.ts`teki `export *` barrel sayısı — kolaylığın bedeli sayılır. */
 const EXPECTED_BARREL_COUNT = 10;
@@ -93,6 +93,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'InputUtils',
   'Joystick',
   'Kanban',
+  'KeyBindingList',
   'KeyedVirtualList',
   'LEAVE_ANIMATION_MS',
   'LegGait',
@@ -120,7 +121,6 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'PathFinder',
   'PauseResumeButton',
   'PinchZoomController',
-  'PlayerController',
   'Popover',
   'Popup',
   'PoseShadow',
@@ -169,7 +169,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'ToolButton',
   'Toolbar',
   'Tooltip',
-  'TouchButton',
+  'HoldButton',
   'TouchController',
   'Tree',
   'UIRoot',
@@ -215,8 +215,10 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'createSingleProviderSnapshot',
   'createVolGame',
   'damp',
+  'describePCBinding',
   'distance',
   'distanceSquared',
+  'findBindingConflicts',
   'findPath',
   'finiteOr',
   'finitePositiveOr',
@@ -233,6 +235,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'isHapticsEnabled',
   'isHapticsSupported',
   'isPCInputActive',
+  'isSameBinding',
   'isTouchPrimary',
   'lerp',
   'measureSupport',
@@ -314,9 +317,14 @@ describe('CORE public API yüzeyi', () => {
     expect(suspicious).toEqual([]);
   });
 
-  it('deprecated takma adlar yüzeyde ama sayıya dahil', () => {
-    // `PlayerController` → `MovableController` geçişinin takma adı. Kaldırma
-    // turu geldiğinde bu testin de güncellenmesi gerektiğini hatırlatır.
-    expect(Core.PlayerController).toBe(Core.MovableController);
+  /*
+   * `PlayerController` takma adı KALDIRILDI. CORE'un adları oyun kelimesi
+   * taşımaz: "player" bir oyun kavramıdır, hareket eden şey ise mekanizmadır.
+   * Takma ad hiçbir tüketici tarafından kullanılmıyordu; geri gelmesi adlandırma
+   * sözleşmesinin sessizce gevşemesi olurdu.
+   */
+  it('oyun kelimesi taşıyan takma ad yüzeye geri GELMEZ', () => {
+    expect('PlayerController' in Core).toBe(false);
+    expect(Core.MovableController).toBeTypeOf('function');
   });
 });
