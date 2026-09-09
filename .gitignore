@@ -3,6 +3,12 @@
 # `AGENTS.md` agent yönergesidir; BİLİNÇLİ olarak gönderilmez.
 AGENTS.md
 **/AGENTS.md
+
+# `CLAUDE.md` Claude Code'a özgü oturum belleğidir; AGENTS.md'nin damıtılmışı
+# + Claude'a özel ek pratikler. Aynı gerekçeyle BİLİNÇLİ olarak gönderilmez.
+CLAUDE.md
+**/CLAUDE.md
+
 .claude/
 
 # Secrets / credentials — asla commit edilmez
@@ -31,6 +37,11 @@ target/
 # Sentez araçlarının yerel çıktısı. Gönderilen asset oyunun `public/` ağacında
 # yaşar; buradaki dosyalar ara üretimdir ve yeniden üretilebilir.
 devtools/*/export/
+
+# graphify'ın ürettiği bilgi grafiği (graph.json, graph.html, GRAPH_REPORT.md).
+# Yerel, yeniden üretilebilir bir analiz çıktısıdır; büyük boyutu ve sık
+# değişkenliği yüzünden commit edilmez.
+graphify-out/
 
 # Test coverage raporlari
 coverage/
