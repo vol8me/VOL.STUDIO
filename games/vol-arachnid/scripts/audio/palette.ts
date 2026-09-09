@@ -15,21 +15,23 @@
  * İşlem build-time'dır; runtime yalnız gönderilmiş OGG dosyalarını çalar.
  */
 
-import {
-  BiquadFilter,
-  BrownNoise,
-  PinkNoise,
-  Reverb,
-  WhiteNoise,
-  type SynthesisResult,
-} from '@volstudio/audio-synth';
+import { BiquadFilter, BrownNoise, PinkNoise, Reverb, WhiteNoise } from '@volstudio/audio-synth';
 import { createRandom } from '@volstudio/core/random';
 
 const SAMPLE_RATE = 48_000;
 const TAU = Math.PI * 2;
 
-interface StereoResult extends SynthesisResult {
+/**
+ * `writeOgg` ile yapısal eşleşen stereo sentez çıktısı.
+ *
+ * `audio-synth`'ün `SynthesisResult` tipinden inherit edilmiyor; palet burada
+ * kendi sözleşmesini taşır. `audio-synth` içinde bir tip değişikliği olursa
+ * burası tek dosyada ve tek arayüzde belli olur.
+ */
+interface StereoResult {
   channels: [Float32Array, Float32Array];
+  sampleRate: number;
+  duration: number;
 }
 
 interface NoiseSource {
@@ -279,7 +281,7 @@ function master(result: StereoResult, options: MasterOptions): StereoResult {
 }
 
 /** Pençenin sert zemindeki çift mikro-teması; her seed gerçek bir varyanttır. */
-export function clawStep(seed: number, brightness = 1): SynthesisResult {
+export function clawStep(seed: number, brightness = 1): StereoResult {
   const result = stereo(0.18);
   const random = createRandom(seed);
   const pan = random.bipolar() * 0.32;
@@ -307,7 +309,7 @@ export function clawStep(seed: number, brightness = 1): SynthesisResult {
 }
 
 /** Atılım kalkışı: sekiz pençe itişi, kütle impulsu ve stereo hava yarılması. */
-export function dashLaunch(seed: number): SynthesisResult {
+export function dashLaunch(seed: number): StereoResult {
   const result = stereo(0.44);
   const random = createRandom(seed);
   for (let contact = 0; contact < 5; contact++) {
@@ -349,7 +351,7 @@ export function dashLaunch(seed: number): SynthesisResult {
 }
 
 /** Atılım inişi: mikro-zamanlanmış çoklu pençe, toz ve ağır gövde aktarımı. */
-export function dashLand(seed: number): SynthesisResult {
+export function dashLand(seed: number): StereoResult {
   const result = stereo(0.62);
   const random = createRandom(seed);
   for (let contact = 0; contact < 8; contact++) {
@@ -407,7 +409,7 @@ export function dashLand(seed: number): SynthesisResult {
 }
 
 /** Duvar çarpması: geniş bant darbe, kabuk modları, sürtünme ve oda kuyruğu. */
-export function wallImpact(seed: number): SynthesisResult {
+export function wallImpact(seed: number): StereoResult {
   const result = stereo(0.78);
   addNoiseBurst(result, {
     startSeconds: 0.003,
@@ -561,7 +563,7 @@ export function crossfadeLoop(
 }
 
 /** Karanlık temayı koruyan, uzun ve gerçekten dikişsiz stereo mağara yatağı. */
-export function darkAmbience(seed: number, durationSeconds: number): SynthesisResult {
+export function darkAmbience(seed: number, durationSeconds: number): StereoResult {
   const crossfadeSeconds = Math.min(4, durationSeconds * 0.2);
   const raw = renderAmbienceBed(seed, durationSeconds + crossfadeSeconds);
   // Durum taşıyan filtre loop oluşturulduktan SONRA çalışırsa çıkışın ilk

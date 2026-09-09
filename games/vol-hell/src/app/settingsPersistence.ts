@@ -1,6 +1,13 @@
-import { diagnostics } from '@/app/services';
+import type { Diagnostics } from '@volstudio/core';
 
 /** Kalıcılık hatasını gözlemleyen taraf (ayar ekranı, telemetri). */
+
+let diagnostics: Diagnostics | null = null;
+
+/** Telemetri örneğini enjekte eder; `initServices()` çağrır. */
+export function setDiagnostics(instance: Diagnostics | null): void {
+  diagnostics = instance;
+}
 export type PersistenceFailureListener = (failure: PersistenceFailure) => void;
 
 export interface PersistenceFailure {

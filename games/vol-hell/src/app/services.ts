@@ -7,6 +7,7 @@ import {
   type SaveManager,
 } from '@volstudio/core';
 import { createSaveManager } from '@/app/storage';
+import { setDiagnostics } from '@/app/settingsPersistence';
 import { AudioSettings } from '@/app/AudioSettings';
 import { GameAudio } from '@/app/GameAudio';
 import { GameStats } from '@/app/GameStats';
@@ -56,6 +57,7 @@ export function initServices(): void {
         transport: new LocalServerTransport({ url: 'http://127.0.0.1:9876/debug' }),
       })
     : null;
+  setDiagnostics(diagnostics);
 
   initialized = true;
 }
