@@ -63,6 +63,20 @@ bu üç sayı ayrı ayrı ölçülmeden cevaplanamaz.
 gelmez ama ucuza gelir. Kipler ilk sürümde ayrı bir arayüz olarak açılmaz;
 belge burada yalnız neyin mümkün kalması gerektiğini kilitler.
 
+### Canlı dünya hızlandırılmaz
+
+Gözlem kipinde zaman gerçek hızında akar: canlı dünyada ileri sarma, 2× / 4×
+gibi hız çarpanları ve yavaşlatma yoktur. İzlemenin değeri anın kendisidir.
+Hızlandırılmış bir dünyada tereddüt, kaçış ve bölünme gibi küçük olaylar gözden
+kaçar; hareketi canlı gösteren tereddüt ve düzeltme (§4) seçilemez hâle gelir;
+sunum aklı kamerayı ilginç olana götürdüğünde olay çoktan bitmiş olur.
+
+Zaman denetimi **Tekrar** kipinindir. Tekrar deterministik çekirdekten yeniden
+üretildiği için (§7) orada hız serbesttir: yavaşlatılır, hızlandırılır,
+durdurulur. Bir deneyin uzun vadeli sonucu da canlı dünya hızlandırılarak
+görülmez; aynı tohum ve komutlarla ekransız ve gerçek zamandan hızlı koşulur,
+sonra tekrar olarak izlenir. Bu yol Adım 8'de kurulur.
+
 ### Başarı ölçütü: zincir uzunluğu
 
 Kaç özellik olduğu değil, **tek bir olaydan kaç anlamlı sonuç çıktığı** ölçülür.
@@ -83,7 +97,7 @@ beslemesinden çıkar. Beş temel alan:
 | ------------- | --------------------------------------------------- |
 | `flow`        | İki bileşenli sürükleme; dünyanın "sıvı" hissi      |
 | `nutrient`    | Yaşam kaynağı; tüketilir ve yenilenir               |
-| `energy`      | Isı/ışık benzeri dış girdi                          |
+| `light`       | Işık benzeri dış girdi; tükenmez, besini yeniler    |
 | `temperature` | Tür tercihlerini ve yaşanabilirliği belirler        |
 | `disturbance` | Hareket, çatışma ve patlamanın dünyada bıraktığı iz |
 
@@ -99,10 +113,19 @@ ileride ikisini de bozar:
 - **Kaynak** tüketilebilir bir niceliktir. Üretilir, azalır, biriktirilebilir
   ve yeniden doğar.
 
-`flow`, `temperature`, `disturbance` alandır. `nutrient` ve `energy` kaynak
-davranışı taşır — tüketim/yenilenme döngüsü onlara aittir. İlk sürüm ikisini de
-aynı ızgara altyapısında saklayabilir; ayrım VERİ YAPISINDA değil, üzerlerinde
-çalışan kuralların ayrı olmasında yaşar.
+`flow`, `light`, `temperature`, `disturbance` alandır. `nutrient` kaynaktır:
+tüketim/yenilenme döngüsü ona aittir ve yenilenmeyi `light` besler. İkisi aynı
+ızgara altyapısında saklanır; ayrım VERİ YAPISINDA değil, üzerlerinde çalışan
+kuralların ayrı olmasında yaşar.
+
+`light` sabit bir harita değildir: tohumdan türeyen birkaç yumuşak kaynak
+yavaşça kayar. Dünyanın bölgeleri bu yüzden zamanla zenginleşir ve fakirleşir;
+§1'deki kaynak patlaması ve tükenme zincirinin dünya tarafındaki sürücüsü budur.
+
+**"Enerji" dünyada bir alan değildir.** Enerji organizmanın iç deposudur (§3).
+İlk taslakta dış girdi de `energy` adını taşıyordu; aynı ad hem ışık/ısı
+girdisini hem canlının deposunu anlatıyordu ve ısı zaten `temperature`dır. Aynı
+ad iki kavramı taşıdığında kod da konuşma da karışır.
 
 ### Çift yönlü bağ zorunludur
 
@@ -121,6 +144,21 @@ Görsel hedef %70–90 boş/az yoğun, %10–30 anlamlı etkinliktir. Kullanıc�
 gezdirdiğinde bir bölgede sakin bir ekosistem, başkasında çatışma, başkasında
 yeni bir koloni bulmalıdır. "Devasa" hissi kaplama alanından değil, bu
 çeşitlilikten gelir.
+
+### Dünya kenarsızdır — fizikte de görüntüde de
+
+Dünya toroidaldir: sağ kenardan çıkan sol kenardan girer. Bu yalnız mesafe
+hesabının kuralı olamaz; görüntü de aynı kuralı izler. Aksi hâlde kenarın
+üstündeki bir organizma ekranın iki ucunda iki yarım olarak çizilir.
+
+- **Mesafe:** iki nokta arasındaki en kısa toroidal fark kullanılır; x=1 ile
+  x=1023 arası 2 birimdir.
+- **Parçacık çizimi:** her parçacık kameranın merkezine en yakın kopyasının
+  konumunda çizilir. Görüş alanı bir dünya genişliğini aşmadıkça dikiş görünmez;
+  uzaklaşma bu yüzden bir dünya genişliğiyle sınırlanır.
+- **Alan dokusu:** tekrarlı örneklenir. Phaser WebGL1 kullanır (§11) ve WebGL1
+  tekrarlı örneklemeyi yalnız kenarları 2'nin kuvveti olan dokuda yapar; alan
+  çözünürlüğü bu yüzden 256² ya da 512² gibi değerlerden seçilir.
 
 ## 3. Yaşam modeli
 
@@ -172,6 +210,45 @@ olan saklanır.
 
 Bu, "ilginç matris" için bir metrik gerektirir ve o metriği seçerken sorulacak
 soru bellidir (bkz. §14, ders 3).
+
+### Madde korunur, enerji akar
+
+İki ayrı nicelik vardır ve biri ötekine dönüşmez:
+
+| Nicelik    | Nerede yaşar        | Nasıl değişir                                   |
+| ---------- | ------------------- | ----------------------------------------------- |
+| **Madde**  | Parçacık            | Korunur: yaratılmaz, yok olmaz, el değiştirir   |
+| **Enerji** | Organizmanın deposu | `nutrient`ten alınır; yaşamak ve büyümek harcar |
+
+- **Parçacık sayısı sabit bir bütçedir** (§1). Büyüme yeni parçacık üretmek
+  değil, serbest parçacığı bünyeye katmaktır. Nüfusun doğal tavanı maddenin
+  kendisidir; ayrıca bir üst sınır yazılmaz.
+- **Parçacığın tek durumu üyeliktir:** serbesttir ya da bir organizmanındır. Bu
+  bir akıl değildir; aptal parçacık ilkesi bozulmaz.
+- **Ölüm bir etiket değil, fiziksel bir geçiştir.** Enerjisi biten organizmanın
+  üyeleri serbest kalır ve yapı dağılır; madde dünyaya döner, başkası onu
+  toplar. Yalnız kimliği silen bir ölüm ekranda hiçbir şey değiştirmezdi; ölüm
+  bu yüzden üyelerin kuvvetine dokunmak ZORUNDADIR.
+- **Enerji üyeler üzerinden alınır.** Üye, bulunduğu yerin besinini pasif bir
+  kuralla emer; alınan besin ızgaradan düşer ve toplam organizmanın deposuna
+  yazılır. Zar bu geçişin sınırıdır.
+- **Bölünme önce kendiliğinden aranır.** Büyüyen yapı kararlılık sınırını aşınca
+  bölünüyorsa kural yazılmaz, tespit edilir. Adım 3'ün matrisleri bölünme
+  üretmiyorsa enerji eşiğine bağlı bir kural eklenir; karar Adım 5'te gözlemle
+  verilir.
+- **Kimlik üye örtüşmesiyle izlenir.** Parçacık hiç silinmediği için kimliği
+  kalıcıdır; iki karedeki organizmalar üye kümelerinin örtüşmesiyle
+  eşleştirilir. Bölünme bir kümenin ikiye, füzyon ikisinin bire örtüşmesidir.
+- **Koparma ve taşıma ayrı mekanik değildir.** Avcının avın gövdesinden parçacık
+  çekip kendine katması fizikten doğan bir koparmadır (Adım 9); organizmanın
+  içindeki madde onunla birlikte zaten taşınır. Envanter ya da taşıma görevi
+  yoktur (§15).
+
+Büyümenin enerji bedeli, zarın geçişi nasıl sınırladığı ve ölümün kuvvete nasıl
+dokunduğu Adım 5'te ölçülerek seçilir. Tek koşul pazarlıksızdır: canlı
+organizmada Adım 3'ün morfolojisi bozulmaz ve §8'deki geometrik değişmez
+testleri yeşil kalır. Ekolojiye bağlanan bir kuvvetin morfolojiyi
+dağıtabileceği §14'ün altıncı dersidir.
 
 ## 4. Akıl modeli
 
@@ -249,10 +326,10 @@ deneyimden çıkar. Daha büyük çekirdek, kalın zar, farklı hareket ve farkl
 bu sürecin görünür sonucudur.
 
 **Virüs özellikle görünmez olmalıdır.** Oyuncu önce enerjinin düştüğünü,
-sağlığın gerilediğini görür; sebebi görmez. Gözlem moduna geçtiğinde enfeksiyon
-izini bulur. Aynı şey yırtıcı için de geçerlidir: oyuncu yırtıcıyı görmeden
-nüfus çöküşünü görür ve "burada ne oldu?" diye sorar. Bu, boss dövüşünden
-ölçülebilir biçimde daha uygun bir gizemdir.
+sağlığın gerilediğini görür; sebebi görmez. Katman görünümünü açtığında (§6)
+enfeksiyon izini bulur. Aynı şey yırtıcı için de geçerlidir: oyuncu yırtıcıyı
+görmeden nüfus çöküşünü görür ve "burada ne oldu?" diye sorar. Bu, boss
+dövüşünden ölçülebilir biçimde daha uygun bir gizemdir.
 
 Evrim kalıtım, mutasyon ve seçilimden ibarettir. Renk de evrimleşir: tür rengi
 nesiller boyunca kayabilir, böylece kullanıcı "bu türün rengi değişmiş"
@@ -296,25 +373,86 @@ rengi dört katmandan çıkar: tür rengi, enerji modülasyonu, durum modülasyo
 çevre etkileşimi. Aynı organizmada zar, çekirdek ve iç parçacıklar farklı rol ve
 farklı renk taşır — okunabilirliği bu sağlar.
 
+### Tüketim nasıl görünür
+
+Tüketim bir olay değil, her adımda süren bir süreçtir ve ekranda iki yerde
+okunur:
+
+- **Dünyada:** organizmanın beslendiği yerde besin alanı söner ve zamanla
+  yeniden dolar; geçen canlının izi (`disturbance`, §2) de aynı katmanda söner.
+- **Canlıda:** enerji rengin modülasyon katmanıdır; aç organizma solar, doygun
+  olanın rengi dolgundur.
+
+Canlının üstüne enerji çubuğu, lokma animasyonu ya da tüketim efekti konmaz:
+ekranın %90'ı dünyadır ve durum renkle anlatılır. Enerjinin sayısal değeri
+yalnız seçilen organizmanın künyesinde görünür; onu değiştiren kural görünmez
+(gizli kurallar, aşağıda).
+
+Günlüğe ve bildirime tüketimin kendisi girmez, eşik aşıldığında doğan olaylar
+girer: bölünme, açlıktan ölüm ve bir bölgedeki besinin tükenmesi. Her lokmayı
+olay saymak günlüğü gürültüye çevirir ve ilginçlik puanını anlamsızlaştırır.
+
+### Katman görünümü
+
+Alanlar varsayılan görünümde çok hafif çizilir ve dünya çoğunlukla karanlık
+kalır (§2). Oyuncu katman görünümünü açtığında seçtiği alan (besin, ışık,
+sıcaklık, iz) tam kontrastla görünür; virüs izi gibi gizli sonuçlar orada
+bulunur (§5).
+
+Ad bilinçlidir: ürün kiplerindeki **Gözlem** (§1) ve kamera kiplerindeki
+`Observe` (yukarıda) başka şeylerdir; üçüncü bir "gözlem" kavramı eklenmez.
+
+### Kabuk yerleşimi
+
+Dünya ekranın tamamını alır; kabuk dört köşeye dağılır ve her köşenin sahibi
+sabittir:
+
+| Köşe    | İçerik                                                           |
+| ------- | ---------------------------------------------------------------- |
+| Sol üst | Marka şeridi                                                     |
+| Sağ üst | Düğme kümesi: seçenekler köşede, tam ekran yalnız web'de solunda |
+| Sol alt | Mini harita (Adım 7)                                             |
+| Sağ alt | Kare hızı göstergesi                                             |
+
+Seçenekler düğmesi her platformda aynı yerde durur; tam ekran düğmesi yoksa
+küme boşluk bırakmaz. Düğme köşeye hizalı, aşağı açılan bir panel açar; panel
+Escape ve Android geri tuşuyla kapanır. Bütün konumlar `--vol-safe-*`
+token'larıyla çentikten uzak tutulur.
+
+| Platform        | Tam ekran düğmesi          | Görüntü kipi seçeneği | Dikey / yatay               |
+| --------------- | -------------------------- | --------------------- | --------------------------- |
+| Web             | Var (DOM tam ekranı)       | Yok                   | Pasif, gerçek yönü gösterir |
+| Windows / Linux | Yok                        | Pencere / tam ekran   | Pasif, gerçek yönü gösterir |
+| Android         | Yok (çubuklar zaten gizli) | Yok                   | Seçilebilir (§9)            |
+
 ### CORE UI'dan ne alınır — bileşen eşlemesi
 
-Hiçbir UI bileşeni sıfırdan yazılmaz. Envanter bu turda dosya dosya doğrulandı;
-VOL.LIFE'ın ihtiyacı olan her yüzeyin karşılığı zaten CORE'da duruyor:
+Hiçbir UI bileşeni oyunda sıfırdan yazılmaz; eksik olan CORE'a eklenir.
+VOL.LIFE'ın yüzeylerinin karşılığı:
 
-| İhtiyaç                          | CORE bileşeni                                          |
-| -------------------------------- | ------------------------------------------------------ |
-| Seçilen organizmanın künyesi     | `ui/hud/SelectionInfoPanel`                            |
-| Dünya/yaşam/çatışma sayaçları    | `ui/hud/StatsPanel` (grup + girdi, kural taşımaz)      |
-| Dünya haritası, işaretler        | `ui/hud/MinimapPanel` (world boyutu, marker, viewport) |
-| Olay geçmişi                     | `ui/data/EventLog`                                     |
-| Zaman hızı (0.5× / 1× / 2× / 4×) | `ui/primitives/SegmentedControl`                       |
-| Müdahale menüsü                  | `ui/overlays/CommandPalette`                           |
-| Anlık olay bildirimi             | `ui/overlays/Toast`                                    |
-| Panel, sekme, kaydırma           | `ui/layout/Panel`, `Tabs`, `ScrollView`                |
+| İhtiyaç                                                  | CORE bileşeni                                          |
+| -------------------------------------------------------- | ------------------------------------------------------ |
+| Seçilen organizmanın künyesi                             | `ui/hud/SelectionInfoPanel`                            |
+| Dünya/yaşam/çatışma sayaçları                            | `ui/hud/StatsPanel` (grup + girdi, kural taşımaz)      |
+| Dünya haritası, işaretler                                | `ui/hud/MinimapPanel` (world boyutu, marker, viewport) |
+| Olay geçmişi                                             | `ui/data/EventLog`                                     |
+| Tekrar hızı (0.5× / 1× / 2× / 4×), yalnız Tekrar kipinde | `ui/primitives/SegmentedControl`                       |
+| Seçenekler düğmesi ve paneli                             | `ui/primitives/IconButton` + `ui/overlays/Popover`     |
+| Dikey / yatay, görüntü kipi                              | `ui/primitives/SegmentedControl`                       |
+| Müdahale menüsü                                          | `ui/overlays/CommandPalette`                           |
+| Anlık olay bildirimi                                     | `ui/overlays/Toast`                                    |
+| Panel, sekme, kaydırma                                   | `ui/layout/Panel`, `Tabs`, `ScrollView`                |
 
 `StatsPanel` ve `SelectionInfoPanel` bilinçli olarak generic tutulmuştur: etiket
 ve değer gruplarını çizerler, oyun kuralını çağırandan alırlar. VOL.LIFE'ın
 domain'i CORE'a bu yüzden sızmaz.
+
+Bilinen eksikler CORE'a eklenecek parçalardır ve işleri TODO'dadır: simge
+setinde ayar simgesi yok; `SegmentedControl` etiket yenileme, grup adı, ok tuşu
+gezinmesi ve pasif görünüm taşımıyor; açılır katmanlar Android geri tuşunda
+kapanmıyor; Phaser dünya kamerası için sürükleme, tekerlek ve iki parmakla
+yakınlaştırma denetleyicisi yok (`CanvasViewportController` editör tuvalidir,
+`PinchZoomController` bir DOM sarmalayıcısıdır).
 
 ### Gizli kalan kurallar
 
@@ -329,7 +467,9 @@ ve bu ayrım pazarlıksızdır.**
 
 ### Küçük durum → CORE `SaveManager`
 
-Ayarlar, dil, kalite kademesi, son kamera konumu, tercih edilen görünüm modu.
+Ayarlar, dil, kalite kademesi, masaüstü görüntü kipi, son kamera konumu,
+tercih edilen görünüm modu. Ekran yönü istisnadır: Android'de native tarafta
+saklanır, çünkü sayfa yüklenmeden uygulanmalıdır (§9).
 `SaveManager` adaptör tabanlıdır (`IStorageAdapter`): web'de
 `LocalStorageAdapter`, masaüstü/Android'de `tauri-v2`nin `TauriStoreAdapter`ı.
 Bu katman için yazılacak yeni kod yoktur.
@@ -367,7 +507,8 @@ yüzden vardır (§11).
 Tekrarın anlık görüntüye ihtiyacı yoktur; deterministik çekirdek aynı tohum ve
 aynı komut dizisinden aynı dünyayı yeniden üretir. Bu ayrım korunursa
 "deney" kavramı bedavaya gelir: aynı dünya, farklı müdahale, karşılaştırılabilir
-sonuç.
+sonuç. Zaman denetimi (yavaşlatma, hızlandırma, durdurma) yalnız tekrarda
+bulunur; canlı dünya hızlandırılmaz (§1).
 
 Ve bu, ürünün en özgün konumlandırmasını mümkün kılar — VOL.LIFE bir simülasyon
 oyunundan çok bir **yapay yaşam laboratuvarıdır**: kullanıcı bir deneyi
@@ -466,15 +607,14 @@ Mutlak süre kapı olamaz — donanıma bağlıdır. Ama girdi dört katına ç�
 sürenin kaç katına çıktığı makineden bağımsızdır ve `O(n²)` sızmasını yakalar.
 Repo bu kapıya sahiptir (`scripts/quality/scalingBudget.mjs`) ve kapı geneldir:
 bütçe yazan paket ölçüm tarifini `quality.json` → `scaling.<paket>.$measure`
-altına yazar. VOL.LIFE'ın bütçesi benchmark betiğiyle birlikte gelir (§17).
+altına yazar. VOL.LIFE'ın bütçesi benchmark betiğiyle birlikte Adım 2'de gelir.
 
 ## 9. Android
 
-Android sona bırakılmaz ama şimdi de kurulmaz.
-
-Şikâyet yerindedir: cihaz genellikle bağlıdır ve atlanır. Kural bu yüzden
-açıktır: **VOL.LIFE masaüstü-önce geliştirilir, ama Android bir smoke hedefi
-olarak ilk gerçek dilimden itibaren listede kalır.**
+**VOL.LIFE masaüstü-önce geliştirilir, ama Android bir smoke hedefi olarak ilk
+gerçek dilimden itibaren listede kalır.** Cihaz geliştirme sırasında genellikle
+bağlıdır; kabuğa ya da sunuma dokunan her tur cihazda açılıp ekran
+görüntüsüyle doğrulanır.
 
 Bilinen ve doğrulanmış olan: `pnpm benchmark:device`
 (`scripts/device-benchmark.mjs`) bağlı cihazda soğuk açılış, fps, bellek ve
@@ -496,9 +636,39 @@ düzlemindeki karşılığıdır.
 başarımının masaüstünden ~3–5× düşük olduğu. Bu sayı bir tahmindir ve plan
 üzerine kurulmaz.
 
+### Ekran yönü oyuncunun seçimidir
+
+Dünya kare ve kenarsızdır (§2); ne dikey ne yatay ona göre daha doğrudur. Yön
+seçenekler panelinden seçilir: **dikey** ya da **yatay**, varsayılan dikey.
+Telefon başlatıcıdan dikey açılır; varsayılan yatay olsaydı ilk açılış ekranı
+döndürürdü.
+
+- **Yön native tarafta uygulanır.** WebView'ın `screen.orientation.lock()`u
+  cihazda hem normalde hem DOM tam ekranında `NotSupportedError` veriyor
+  (SM-G990B2, Android 16, WebView 152). Uygulama tauri-v2'nin Android
+  köprüsüyle yapılır.
+- **Aile `user*`dır:** `userPortrait` / `userLandscape`. `sensor*` aileleri
+  telefonun sistem döndürme kilidini yok sayar; yatarken izlenen bir dünyada
+  ekranın habersizce ters dönmesi istenmez. vol-hell ve vol-arachnid'in
+  `sensorLandscape` kilidi kendi kararlarıdır.
+- **Tercih native tarafta saklanır** ve Activity açılışında uygulanır; sayfa
+  yüklendikten sonra uygulanan bir yön her açılışta ekranı bir kez döndürürdü.
+- **İstek yok sayılabilir.** Android 16'da en dar kenarı 600dp ve üstü
+  ekranlarda yön istekleri yok sayılır; `android:appCategory="game"` taşıyan
+  uygulamalar muaftır. Uygulanmayan seçim gerçek yöne geri döner.
+- **Yön değişimi dünyayı sıfırlamaz:** manifest `configChanges` içinde
+  `orientation` taşır ve Activity yeniden kurulmaz; kamera bakılan noktayı ve
+  yakınlaştırmayı korur.
+
+### Tam ekran düğmesi yoktur
+
+`MainActivity` sistem çubuklarını zaten gizler. DOM tam ekranı Android'de
+görünür bir şey değiştirmez ve geri tuşundan sonra açık kalır (ölçüldü,
+2026-09-10); düğme bu yüzden yalnız web'de bulunur (§6, kabuk yerleşimi).
+
 ## 10. FpsMeter — CORE'a eklendi, tek koşulla
 
-Soruya cevap: **evet, eklendi.** Ama `Diagnostics`in içine değil.
+`FpsMeter` CORE'a eklendi, ama `Diagnostics`in içine değil.
 
 `Diagnostics` zaten FPS hesaplıyor (`SAMPLE_WINDOW = 60`) ve yanında kare
 min/max/ortalama, render/update süreleri, sayaçlar ve renderer bilgisini
@@ -542,24 +712,39 @@ Bu bölümdeki her satır bu turda kurulu kaynaktan doğrulandı.
 
 ### Phaser 4.2.1 — GPU compute YOKTUR
 
-`WebGLRenderer.js:709` yalnız `canvas.getContext('webgl', …)` ve
-`'experimental-webgl'` dener; **`'webgl2'` hiç denenmez.** Instancing bir
-uzantıdan gelir: `WebGLRenderer.js:904` `drawArraysInstancedANGLE`'ı bağlar.
+`WebGLRenderer` bağlamı yalnız `canvas.getContext('webgl', …)` ve
+`'experimental-webgl'` ile ister; **`'webgl2'` hiç denenmez.** Instancing
+`ANGLE_instanced_arrays` uzantısından gelir; uzantı yoksa renderer hata
+fırlatır.
 Repo genelinde `webgpu` / `WGSL` / `GPUDevice` / `navigator.gpu` için **sıfır**
 eşleşme vardır.
 
 **Sonuç: simülasyon CPU'da koşar.** WebGPU compute içeren bir plan yazmak, var
 olmayan bir yetenek üzerine bina kurmaktır.
 
-### Tek geçerli yoğun render yolu: `SpriteGPULayer`
+### Yoğun render yolu adayı: `SpriteGPULayer` — ölçülmeden seçilmez
 
 `src/gameobjects/spritegpulayer/` altında yaşar ve tek instanced draw call ile
 çizer. `getDataByteSize()` üye adımını (`instanceBufferLayout.layout.stride`)
-verir; doğrudan tampon yazımı DESTEKLENEN bir kullanımdır.
+verir; doğrudan tampon yazımı desteklenen bir kullanımdır. Üye başına renk
+(`tint*`) ve saydamlık (`alpha*`) taşır.
+
+**Kendi belgesi VOL.LIFE'ın kullanım biçimine karşı uyarır:** içeriği sık
+değiştirmekten kaçınılmasını ister; üye eklemeyi, düzenlemeyi ve silmeyi tampon
+güncellemesi gerektirdiği için pahalı sayar; üyeyi silmek yerine `scaleX`,
+`scaleY` ve `alpha`yı sıfırlamayı önerir; tamponun küçük bir dilimini
+güncellemenin daha ucuz olduğunu söyler. VOL.LIFE ise konumu ve rengi her adımda
+CPU'da değiştirir. "Tek geçerli yol" bu yüzden bir hipotezdir:
+
+- Adım 2 render yolunu tek bir adaptörün arkasına koyar ve 100 / 1.000 / 5.000
+  parçacıkta kare süresini ölçer; o ölçekte seçilen yol mimariyi kilitlemez.
+- Yoğun ölçekte (10k–250k) `SpriteGPULayer` en az bir alternatifle CPU
+  güncelleme, GPU yükleme ve kare süresi p50/p95 üzerinden karşılaştırılır;
+  karar Adım 11'e girerken buraya yazılır.
 
 Alternatifler (`Blitter`, `ParticleEmitter`, `Mesh`, `Rope`) `BatchHandlerQuad`
-üzerinden batch başına 16384 quad ve kare başına obje başına JS döngüsü demektir;
-bu ölçekte değerlendirmeye değmez.
+üzerinden batch başına 16384 quad ve kare başına obje başına JS döngüsü
+demektir; bu maliyet de aynı ölçümle sınanır, varsayılmaz.
 
 Ham yazımda kullanılacak ease **kurulumda bir kez** açılmalıdır
 (`setAnimationEnabled('Linear', true)`) — o çağrı shader'ı yeniden derler.
@@ -652,20 +837,22 @@ games/vol-life/
 │   ├── config/       dünya ve grafik ölçüleri — VERİ (AGENTS Kural 5)
 │   ├── i18n/         tr.json + en.json
 │   └── runtime/
-│       ├── sim/      simülasyon — Phaser'ı İMPORT ETMEZ
+│       ├── sim/      simülasyon — Phaser'ı İMPORT ETMEZ (bugün: rng)
 │       ├── render/   Phaser bağlama (henüz yok)
 │       ├── scene/    LifeScene — yalnız bağlama
-│       └── ui/       HUD (henüz yok)
+│       └── ui/       kabuk: LifeHud, LifeExitPrompt
+├── src-tauri/        masaüstü ve Android kabuğu (com.volstudio.life)
 └── tests/            src ağacını AYNALAR
 ```
 
-`render/` ve `ui/` **bilinçli olarak açılmadı**: bir klasör ancak gerçekten
-anlamlı bir dosya ailesi geldiğinde açılır. Boş dizin bırakmak ölü yapıdır.
+`render/` **bilinçli olarak açılmadı**: bir klasör ancak gerçekten anlamlı bir
+dosya ailesi geldiğinde açılır. Boş dizin bırakmak ölü yapıdır.
 
 Tek kural pazarlıksızdır: **`runtime/sim/` Phaser'ı import etmez.** Mantık
 sahnede biriktiğinde headless ölçüm ve kapsam ikisi birden imkânsız hâle gelir.
 İlk denemede kapsam eşiği mantığı sahneden iki kez çıkmaya zorladı ve her
-ikisinde de sonuç daha iyi mimari oldu.
+ikisinde de sonuç daha iyi mimari oldu. Bugün bu kuralı bir test kapılamıyor;
+bekçisi TODO'nun Zemin bölümündedir.
 
 ## 13. İnşa sırası
 
@@ -673,24 +860,30 @@ Sıra bir tercih değil, iptal edilen denemenin doğrudan tersidir: orada üç f
 altyapı kuruldu ve ekranda hâlâ içerik yoktu. Kural şudur — **önce anlam, sonra
 ölçek** ve **her adımın sonunda gerçek tarayıcıda görüntü.**
 
-| #   | Adım                                                                 | Bittiğinde ekranda ne var         |
-| --- | -------------------------------------------------------------------- | --------------------------------- |
-| 0   | **Zemin** — paket, kapılar, config, deterministik RNG                | Boş tuval; kablolar kanıtlı       |
-| 1   | **Dünya substratı** — alanlar, difüzyon, örnekleme, kaynak tohumlama | Yavaşça değişen alan görüntüsü    |
-| 2   | **Parçacık yaşamı** — SoA depo, uzamsal hash, çift yönlü kuvvet      | 100 parçacık, kümelenme           |
-| 3   | **Matris araması** — ilginç etkileşim matrislerini ARA, elle yazma   | Zar-çekirdek benzeri kararlı yapı |
-| 4   | **Organizma kimliği** — küme tespiti, kareler arası eşleştirme       | Takip edilebilen BİR organizma    |
-| 5   | **Yaşam döngüsü** — enerji, tüketim, büyüme, bölünme, ölüm           | Doğum ve bölünme İZLENEBİLİR      |
-| 6   | **Akıl** — algı, ihtiyaç, utility karar, hafıza                      | "Bu niye oraya gitti?" sorusu     |
-| 7   | **Sunum** — seçim paneli, olay bildirimi, gözlem modları             | Oyuncu keşfedebiliyor             |
-| 8   | **Kalıcılık** — anlık görüntü, olay günlüğü, tekrar                  | Deney tekrarlanabiliyor           |
-| 9   | **Toplum ve tehdit** — grup, territory, yırtıcı, çatışma             | Dünyada hikâye çıkıyor            |
-| 10  | **Evrim** — kalıtım, mutasyon, seçilim                               | Tür zamanla değişiyor             |
-| 11  | **Ölçek** — nüfusu §1'in izin verdiği tavana kadar aç                | Aynı dünya, daha kalabalık        |
+| #   | Adım                                                                     | Bittiğinde ekranda ne var          |
+| --- | ------------------------------------------------------------------------ | ---------------------------------- |
+| 0   | **Zemin** — paket, kapılar, config, deterministik RNG                    | Boş tuval; kablolar kanıtlı        |
+| 1   | **Dünya substratı** — alanlar, difüzyon, besin yenilenmesi, kamera       | Gezilebilen, yavaşça değişen alan  |
+| 2   | **Parçacık yaşamı** — SoA depo, uzamsal hash, çift yönlü kuvvet          | 100 parçacık, kümelenme            |
+| 3   | **Matris araması** — tek kare küme tespiti, çok bileşenli metrik, tarama | Zar-çekirdek benzeri kararlı yapı  |
+| 4   | **Organizma kimliği** — üye örtüşmesiyle kareler arası eşleştirme        | Takip edilebilen BİR organizma     |
+| 5   | **Yaşam döngüsü** — enerji, tüketim, büyüme, dağılarak ölüm, bölünme     | Doğum, bölünme ve ölüm İZLENEBİLİR |
+| 6   | **Akıl** — algı, ihtiyaç, utility karar, hafıza                          | "Bu niye oraya gitti?" sorusu      |
+| 7   | **Sunum** — seçim paneli, olay bildirimi, gözlem modları                 | Oyuncu keşfedebiliyor              |
+| 8   | **Kalıcılık** — anlık görüntü, olay günlüğü, tekrar ve tekrar hızı       | Deney tekrarlanabiliyor            |
+| 9   | **Toplum ve tehdit** — grup, territory, yırtıcı, çatışma                 | Dünyada hikâye çıkıyor             |
+| 10  | **Evrim** — kalıtım, mutasyon, seçilim                                   | Tür zamanla değişiyor              |
+| 11  | **Ölçek** — render yolu ve Worker kararı, nüfusu §1'in tavanına aç       | Aynı dünya, daha kalabalık         |
 
-Adım 0 tamamlandı (§16). **Adım 3 bir karar noktasıdır:** matris araması bir
-tarama altyapısı ve "ilginç"in bir metriği demektir; §8'deki metrik sorusu orada
-cevaplanmalıdır.
+Adım 0'ın kabuk işleri sürüyor; viewport sözleşmesi ve açılış hata sınırı
+TODO'nun Zemin bölümündedir. Seçenekler düğmesi, ekran yönü ve görüntü kipi bir
+adım değil kabuk işidir ve adımların önünde durur.
+
+**Adım 3 bir karar noktasıdır:** matris araması bir tarama altyapısı, tek kare
+küme tespiti ve "ilginç"in çok bileşenli bir metriği demektir; §8'deki metrik
+sorusu orada cevaplanmalıdır. Metrik zar-çekirdek yapısını ölçmek için kümeyi
+tanımak zorundadır; tek kare küme tespiti bu yüzden Adım 3'tedir, Adım 4 ona
+yalnız kareler arası kimliği ekler.
 
 Ölçek EN SONA bırakılır. Nüfusu erken açmak, iptal edilen denemede ekranı halıya
 çevirip birey algısını yok etti; ölçek bir sonuçtur (§1).
@@ -749,37 +942,36 @@ işlendi.
 
 ## 16. Bugünkü durum
 
-Bu turda kurulan şey bir simülasyon değil, **kapılardan geçen bir zemindir**:
+Kurulan şey bir simülasyon değil, **kapılardan geçen bir zemin ve kabuktur**
+(ölçüm 2026-09-10):
 
-- `pnpm quick` yeşil; `workspace-contract` 10 paketi görüyor ve katman sınırları
-  temiz.
-- 21 test geçiyor. Kapsam 100/100/100/100 ölçüldü, eşikler ratchet gereği
-  98/98/98/98'e kilitlendi.
-- `build` geçiyor; ölçülen gzip **app 18,4 KB / vendor 345,1 KB / css 16,8 KB**,
+- 8 test dosyasında 42 test geçiyor. Kapsam eşikleri `quality.json`da
+  87/87/83/86'dır (satır/ifade/dal/fonksiyon) ve ratchet gereği düşürülerek
+  geçilmez.
+- `build` geçiyor; gzip boyutu **app 29 KB / vendor 345,1 KB / css 17 KB**,
   bütçe 40/360/24.
-- Dünya ölçüleri `config/world.ts` içinde VERİ olarak durur.
-- Deterministik ve durumu okunabilir RNG (`runtime/sim/rng.ts`) yazıldı ve CORE
-  dizisiyle parite testine bağlandı.
+- Dünya ölçüleri `config/world.ts` içinde VERİ olarak durur. Tekrar hızına
+  bağlı adım tavanı (`resolveMaxStepsForSpeed`) yazılı; canlı dünya
+  hızlandırılmadığı için (§1) yalnız tekrar kipinde kullanılacak.
+- Deterministik ve durumu okunabilir RNG (`runtime/sim/rng.ts`) CORE dizisiyle
+  parite testine bağlı.
+- Kabuk: marka şeridi, tam ekran (F11 + düğme), Android geri tuşu ve çıkış
+  onayı, kare hızı göstergesi, Tauri masaüstü ve Android kabuğu
+  (`com.volstudio.life`). Cihazda (SM-G990B2) açılışta konsol hatası yok.
+  Android'de tam ekran düğmesi görünür bir şey değiştirmiyor; yerine seçenekler
+  düğmesi geliyor (§6, §9).
 
-Kabuk bu turda genişledi: marka şeridi, tam ekran (F11 + düğme), Android geri
-tuşu + çıkış onayı, kare hızı göstergesi ve Tauri/Android kabuğu
-(`com.volstudio.life`). Cihazda doğrulandı (SM-G990B2): tam ekran açılıyor,
-konsol hatası yok.
+Simülasyonun kendisi — alanlar, kuvvetler, ızgara, organizma tespiti — KASITLI
+OLARAK yazılmadı. Sıra §13'tedir; açık işler TODO'dadır.
 
-Simülasyonun kendisi — alanlar, kuvvetler, ızgara, organizma tespiti —
-KASITLI OLARAK yazılmadı. §3'teki "matris aranır" ve §1'deki yoğunluk kararı
-onaylanmadan yazılan her satır, ilk denemenin hatasını tekrarlama riski taşır.
+## 17. Ölçülmemiş varsayımlar
 
-## 17. Açık borçlar
+Açık işler burada değil TODO'dadır. Burada yalnız ölçülene kadar üzerine plan
+kurulmayacak varsayımlar durur:
 
-- Ölçekleme bütçesi yoktur: kapı genelleştirildi ama VOL.LIFE'ın benchmark
-  betiği henüz yazılmadı (Adım 2).
-- E2E yoktur. `justfile`daki `e2e` tarifi paket listesini ELLE tutar; VOL.LIFE
-  `test:e2e` tanımlarsa tarife de eklenmelidir.
-- Android tek çekirdek başarımının masaüstünden ~3–5× düşük olduğu varsayımı
-  ÖLÇÜLMEMİŞTİR.
-- Gerçek GPU'da fps hiç ölçülmedi. Headless Chromium yazılım rasterizer
-  kullanır; oradaki sayı donanım hakkında hiçbir şey söylemez.
-- Gerçek GPU'da uzun süreli fps profili çıkarılmadı; ölçülen tek şey boş
+- Android tek çekirdek başarımının masaüstünden ~3–5× düşük olduğu (§9).
+- Gerçek GPU'da kare hızı. Headless Chromium yazılım rasterizer kullanır;
+  oradaki sayı donanım hakkında hiçbir şey söylemez. Ölçülen tek şey boş
   sahnenin kare aralığıdır (masaüstü 143,88 Hz ekranda 7,07 ms ortalama,
   5,5–13,9 ms uç değerler).
+- `SpriteGPULayer`ın her adım CPU'da güncellenen içerikle başarımı (§11).

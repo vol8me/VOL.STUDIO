@@ -9,6 +9,84 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
 
 ## Açık
 
+- [ ] **[P1] Oyunlar Android'i tek bir platform yüklemiyle tanısın.** Üç oyun
+      "Android mi?" sorusunu işaretçi türüne soruyor: vol-arachnid çıkış onayını
+      ve tam ekran düğmesini `shouldUseTouchControls()` ile kapılıyor; vol-hell
+      `hasNativeWindow()` = `isTauri() && !shouldUseTouchControls()` kullanıyor
+      ve oyun içi geri işleyicisini yalnız dokunmatikte kuruyor
+      (`GameMobileControls.ts`); VOL.LIFE `6b82b2d`de kararı silip düğmeyi sabit
+      gösterdi. vol-hell ve vol-arachnid `MainActivity`'si geri tuşunu koşulsuz
+      tüketip JS'e iletiyor (`OnBackPressedCallback(true)`); fareli Android'de
+      (DeX) dinleyici kurulmayan ekranda geri tuşu hiçbir şey yapmaz — bu kısım
+      statik okumadır, DeX'te sınanmadı. VOL.LIFE'ın seçenekler ve ekran yönü
+      işi bu yükleme bağlı. vol-hell `vite.config.ts` `TAURI_ENV_*`
+      değişkenlerini istemciye açıyor (`envPrefix`); VOL.LIFE ve vol-arachnid
+      açmıyor. Kapanır: tauri-v2'de ortak bir yüklem (Android / masaüstü Tauri /
+      tarayıcı) testle yazılır; üç oyun tam ekran düğmesi, çıkış onayı ve native
+      pencere özellikleri için onu kullanır.
+- [ ] **[P1] tauri-v2 Android'de ekran yönünü uygulayabilsin.** WebView'ın
+      `screen.orientation.lock()`u cihazda `NotSupportedError` veriyor (VOL.LIFE,
+      SM-G990B2, Android 16, WebView 152; DOM tam ekranında da) ve resmî Tauri
+      eklentileri arasında yön kilidi yok. Kapanır: tauri-v2'ye Kotlin eklentisi
+      girer (`setRequestedOrientation`); oyun kelimesi bilmez, yönü uygular,
+      uygulanan gerçek yönü döner ve kayıtlı yönü Activity açılışında
+      uygulayacak yardımcıyı sunar; izni yetenek dosyalarına ve üretilen şemaya
+      eklenir; masaüstü derlemesi etkilenmez (Rust kapısı). Köprü iki aileyi de
+      sunar: `sensor*` telefonun döndürme kilidini yok sayar (vol-hell ve
+      vol-arachnid manifestte bunu kullanıyor), `user*` kilide uyar; VOL.LIFE
+      `user*`ı seçti ([games/vol-life/DESIGN.md](games/vol-life/DESIGN.md) §9).
+- [ ] **[P1] Görüntü kipi uygulayıcısı ortak pakete çıksın.** vol-hell'in
+      `VideoSettingsController`ı F11'i native pencereye yönlendirmeyi, pencere
+      yöneticisinden gelen değişimi ayara yansıtmayı ve sıralı uygulamayı oyunun
+      çözünürlük ve grafik kalitesiyle aynı sınıfta taşıyor. VOL.LIFE masaüstünde
+      aynı davranışa ihtiyaç duyuyor; kopyalanırsa sıralama ve nesil denetimi iki
+      yerde yaşar. Kapanır: oyun bilmeyen kısım tauri-v2'ye (CORE
+      `FullscreenController` ve `TauriWindowAdapter` üstüne) taşınır ve
+      testlenir; vol-hell onu kullanır ve mevcut testleri geçer; VOL.LIFE aynı
+      parçayı kullanır.
+- [ ] **[P1] CORE `SegmentedControl` genel eksikleri kapansın.** Bileşen belirli
+      bir ayara bağlı değil, ama dört eksiği var: seçenek etiketleri sonradan
+      güncellenemiyor, dil değişince eski kalıyor (`Select.setOptions` ve
+      `IconButton.setLabel` var); seçeneklerinde grup için erişilebilir ad yok
+      (`role="radiogroup"` adsız kalıyor); ok tuşlarıyla gezinme yok, her segment
+      ayrı sekme durağı; pasifken kayan vurgu marka renginde kalıyor, CSS kapalı
+      durumda yalnız metin rengini değiştiriyor. Kapanır: dördü testle sınanır ve
+      sessiz setter sözleşmesi (`valueInteractionContract`) korunur; vol-ui
+      `formsTab`'a pasif örnek eklenir.
+- [ ] **[P1] CORE simge setine ayar simgesi girsin.** Somun simgesi yalnız
+      vol-ui'de (`devtools/vol-ui/src/sections/icons.ts`, `ICON_GEAR`); CORE
+      `VOL_ICONS`ta yok ve oyun runtime'ı devtool import edemez. Kapanır: simge
+      `VOL_ICONS`a girer (vol-ui simge galerisi kaydı gezdiği için orada
+      kendiliğinden görünür) ve vol-ui'deki `ICON_GEAR` kopyası kalkar.
+- [ ] **[P1] CORE açılır katmanları Android geri tuşunda kapansın.** `Popup`
+      (`Popover`, `Select` ve `ContextMenu` tabanı) yalnız Escape dinliyor; katman
+      açıkken geri tuşu alttaki işleyiciye gidiyor (VOL.LIFE'ta bu çıkış
+      onayıdır). Kapanır: açıkken `pushBackHandler` kaydı tutulur, kapanınca
+      kaldırılır; yığın sırası testle sınanır.
+- [ ] **[P2] Android 16 geniş ekranda yön kilidini yok saymasın.** Üç oyunda
+      `targetSdk = 36` ve hiçbir manifestte `android:appCategory` yok. Android 16
+      davranış değişikliğine göre en dar kenarı 600dp ve üstü ekranlarda
+      `screenOrientation` ve `setRequestedOrientation()` yok sayılır; oyunlar
+      (`android:appCategory="game"`) muaf. Yani tablette vol-hell ve
+      vol-arachnid'in `sensorLandscape` kilidi tutmaz, VOL.LIFE'ın yön seçimi
+      işlemez. SM-G990B2 (384dp) etkilenmez; geniş ekranda sınanmadı. Kapanır: üç
+      manifestin `<application>`ına `android:appCategory="game"` girer ve drift
+      testleri kilitler; en dar kenarı 600dp ve üstü emülatörde yön kilidi
+      doğrulanır.
+- [ ] **[P3] vol-hell telefonda HUD arenayı örtüyor.** Cihazda ölçüldü
+      (SM-G990B2, yatay 832×384 CSS): sol üst Can/Dash/Spark panelleri arena
+      köşesinin üstünde duruyor ve bir düşman Dash çubuğunun altında kaldı; sağ
+      istatistik sütunu arena çizgisini kesiyor. Arena kenar boşluğu HUD'u
+      hesaba katmıyor; `Border.ts` onu yalnız ekran boyutundan hesaplıyor:
+      `min(60, genişlik × 0,25, yükseklik × 0,25)`. Kapanır: dokunmatik ve
+      küçük ekranda arena HUD bölgelerini dışarıda bırakır ya da HUD sıkışır;
+      cihaz ekran görüntüsüyle doğrulanır.
+- [ ] **[P3] vol-hell dokunmatikte yetenek yuvalarını iki kez gösteriyor.**
+      Cihazda ölçüldü: alttaki `AbilityHud` kutuları ile sağdaki `TouchControls`
+      yetenek düğmeleri aynı iki yuvayı birlikte çiziyor. `AbilityHud`
+      dokunmatiği hiç bilmiyor ve klavye tuş etiketi (`SLOT_KEY_LABELS`)
+      üretiyor; bunu bilinçli kılan bir kod ya da belge yok. Kapanır: dokunmatikte
+      tek temsil seçilir, karar kodda yazılı olur ve cihazda doğrulanır.
 - [ ] **[P3] CORE `createRandom(0)` ayrı bir dizi üretsin.** 0 sessizce
       varsayılan tohuma (`0x5eed`) çevriliyor. Ölçüldü: `createRandom(0)` ile
       `createRandom()` aynı diziyi veriyor; mulberry32 için 0 dejenere değil

@@ -6,9 +6,10 @@ export interface LifeGraphicsConfig {
   /**
    * Renderer AÇIKÇA istenir.
    *
-   * `'webgl'` seçilir çünkü tek geçerli yoğun-parçacık yolu instanced
-   * çizimdir; Canvas2D'ye sessizce düşen bir koşu ölçümü de görüntüyü de
-   * yanıltır. Kurulamıyorsa belirsiz bir yavaşlık yerine açık bir hata yeğdir.
+   * `'webgl'` seçilir çünkü yoğun parçacık çizimi GPU'ya dayanır; hangi WebGL
+   * yolunun kullanılacağı ölçümle seçilir (DESIGN.md §11). Canvas2D'ye sessizce
+   * düşen bir koşu ölçümü de görüntüyü de yanıltır. Kurulamıyorsa belirsiz bir
+   * yavaşlık yerine açık bir hata yeğdir.
    */
   readonly renderer: RendererRequest;
 }

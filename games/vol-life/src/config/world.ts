@@ -27,9 +27,12 @@ export const worldConfig: WorldConfig = {
 };
 
 /**
- * Hız çarpanına (0.5× - 4×) göre kare başına adım tavanını belirler.
- * 1x tabanında 2 adım ölüm sarmalını engellerken, 4x hızda 8 adıma kadar
- * izin vererek 30/60 FPS ekranlarda hız kaybını ve adım atılmasını engeller.
+ * Tekrar kipinin hız çarpanına (0.5× - 4×) göre kare başına adım tavanı.
+ *
+ * Canlı dünya hızlandırılmaz ve her zaman taban tavanla koşar (DESIGN.md §1);
+ * çarpan yalnız tekrarda anlamlıdır. 1× tabanında 2 adım ölüm sarmalını
+ * engellerken 4× tekrarda 8 adıma kadar izin vermek, 30/60 Hz ekranlarda
+ * tekrarın geri kalmasını önler.
  */
 export function resolveMaxStepsForSpeed(
   multiplier: number,
