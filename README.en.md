@@ -57,7 +57,7 @@ do in [docs/gates.md](docs/gates.md). Every recipe: `pnpm exec just --list`.
 | CORE primitives, i18n, audio     | [core/docs](core/docs)                                       |
 | Phaser boundary: layer or engine | [core/docs/phaser-boundary.md](core/docs/phaser-boundary.md) |
 | Adding a new game package        | [games/docs/new-game.md](games/docs/new-game.md)             |
-| Open debt and accepted limits    | [TODO.md](TODO.md)                                           |
+| Work list (open and closed)      | [TODO.md](TODO.md)                                           |
 
 ## License
 

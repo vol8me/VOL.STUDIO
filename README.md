@@ -58,7 +58,7 @@ ne yaptığı için [docs/gates.md](docs/gates.md). Tüm tarifler:
 | CORE primitifleri, i18n, ses      | [core/docs](core/docs)                                       |
 | Phaser sınırı: katman mı motor mu | [core/docs/phaser-boundary.md](core/docs/phaser-boundary.md) |
 | Yeni oyun paketi eklemek          | [games/docs/new-game.md](games/docs/new-game.md)             |
-| Açık borç ve kabul edilmiş sınır  | [TODO.md](TODO.md)                                           |
+| İş listesi (açık ve kapatılan)    | [TODO.md](TODO.md)                                           |
 
 ## Lisans
 
