@@ -1,36 +1,55 @@
 # VOL.STUDIO — iş listesi
 
-Repo genelinde **sıradaki işi** tutar: ne yapılacak, neden gerekli, ne zaman
-kapanmış sayılır. Tek pakete sığan kalemler o paketin kendi `TODO.md`sinde
-yaşar; buraya yalnız birden çok pakete ya da kök altyapıya (`scripts/`,
-`justfile`, `quality.json`) dokunan işler girer.
+Repo geneli işler; paket işleri paketin `TODO.md`sinde. Kapanan madde silinir.
+Aktif iş: VOL.LIFE Adım 1 — [games/vol-life/TODO.md](games/vol-life/TODO.md).
 
-Kapanan madde **silinir** — ne yapıldığının kaydı commit'in kendisidir. Kalıcı
-kararlar burada değil ait oldukları belgede yaşar: [core/docs](core/docs),
-[docs/gates.md](docs/gates.md), paketlerin `DESIGN.md` dosyaları.
+## Kalite ve altyapı
 
-## Aktif cephe — VOL.LIFE
+### P1
 
-Repo şu an tek bir yöne çalışıyor: VOL.LIFE'ı kurulu zeminden oynanabilir bir
-oyuna taşımak. `vol-hell` ve `vol-arachnid` özellik işi beklemiyor; onlardan
-istenen yalnız kapıları yeşil tutmak.
+- [ ] **Kapsam şekli gerekçeleri koda dayansın.** `quality.json` →
+      `coverageShape.acknowledged`: `BossController.ts` durum makinesi birim
+      testi alır; vol-hell e2e'si BAŞLA'ya basıp `GameScene`'i açar;
+      `GameAudio.ts` test ya da sınanabilir gerekçe alır; `PCController.ts` ve
+      `TouchController.ts` gerekçeleri kodla doğrulanır.
+- [ ] **`quick` kapsam çıktısına bağlı kalmasın.** Gerçek repo şekil
+      doğrulaması `coverageShape.test.mjs`ten çıkar, yalnız
+      `just coverage-shape`te koşar; temiz klonda `pnpm quick` yeşil kalır.
 
-Sıradaki adım **Adım 1 — dünya substratı**. Kalemler, gerekçeler ve kabul
-ölçütleri [games/vol-life/TODO.md](games/vol-life/TODO.md)'de; ürün kararları
-ve inşa sırası [games/vol-life/DESIGN.md](games/vol-life/DESIGN.md)'de.
+### P2
 
-Kök altyapıdan beklenen iki kalem o listede duruyor ve **bilerek** erken
-alınmıyor: `justfile`ın `e2e` tarifi VOL.LIFE'ın `test:e2e` script'i yazıldığı
-turda, `quality.json`daki ölçekleme bütçesi de benchmark betiği yazıldığı turda
-eklenir. İkisi de öncesinde eklenirse tarif var olmayan bir script'i çağırır ve
-kapı, ölçtüğü bir şey olmadan yeşil görünür.
+- [ ] **Kapsam şekli yalnız o koşunun lcov'unu okusun.** Eşiği olup lcov'u
+      olmayan paket geçmez; `high`da ölçülmeyen paket (audio-synth) `high`
+      kararına girmez.
+- [ ] **Rust `high`a girsin** ya da `signoff`ta kalma gerekçesi
+      `docs/gates.md`ye yazılsın.
+- [ ] **`sourceSize`, `commentDensity` ve `deadI18n` izlenmeyen dosyaları da
+      görsün** (`git ls-files --cached --others --exclude-standard`); testle
+      kilitlenir.
+- [ ] **Her oyun kendi ikon setini taşısın** (masaüstü `bundle.icon`, Android
+      mipmap); `tauri-v2/src-tauri/icons` kalkar.
+- [ ] **`just tauri-ios` tarifi silinsin.**
 
-## Taşınan borçlar
+### P3
 
-Kapatılmamış, bilinçli kararla açık bırakılan maddeler. Her biri neden açık
-durduğunu ve kapanması için neyin gerektiğini söyler.
+- [ ] **`validateDeviceApps` `workspace-contract.mjs`e bağlansın;** test yalnız
+      fixture'ları sınar.
+- [ ] **Bundle ölçüsü Σ gzip(dosya) olsun** (`bundleSize.mjs`).
+- [ ] **Bundle vendor sınıflaması yol ayırıcısından bağımsız olsun;** win32
+      yoluyla test edilir.
+- [ ] **Satır sınırı `.mjs`yi de kapsasın.** CSS için karar verilir: kapsama
+      alınıp 1000+ satırlık beş dosya bölünür ya da dışarıda kalma gerekçesi
+      `docs/gates.md`ye yazılır.
+- [ ] **`docs/gates.md` `deviceApps` ve `coverage-shape` kapılarını anlatsın.**
+- [ ] **`pnpm dev` vol-life'ı da açsın;** `README.md` ve `README.en.md`
+      güncellenir.
+- [ ] **Dört `Cargo.lock`taki `tauri` sürüm eşitliği bir bekçiyle kilitlensin.**
+- [ ] **`games/vol-hell/tests/platform/androidDrift.test.ts` açıklamasındaki
+      yol düzeltilsin** (`games/vol-hell/src-tauri/gen/android`).
+- [ ] **`devtools/visual-synth/tests/memoryEstimateAccuracy.test.ts` yorumu
+      TODO'ya işaret etmesin;** "borç değil" kararını söylesin.
 
-- **iOS/WKWebView MP3 fallback'i manuel** (`pnpm convert:ios`). Ses ardışık
-  düzeni OGG üretir; WKWebView OGG çalmaz. Dönüştürme elle koşulur çünkü iOS
-  bugün hedeflenmiyor — hedefler Windows ve Android. iOS hedefe girdiği gün bu
-  adım ses build'ine bağlanır.
+## Ertelenen
+
+- **iOS/WKWebView MP3 fallback'i manuel** (`pnpm convert:ios`); iOS hedefe
+  girdiğinde ses build'ine bağlanır.
