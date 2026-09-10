@@ -447,12 +447,10 @@ VOL.LIFE'ın yüzeylerinin karşılığı:
 ve değer gruplarını çizerler, oyun kuralını çağırandan alırlar. VOL.LIFE'ın
 domain'i CORE'a bu yüzden sızmaz.
 
-Bilinen eksikler CORE'a eklenecek parçalardır ve işleri TODO'dadır: simge
-setinde ayar simgesi yok; `SegmentedControl` etiket yenileme, grup adı, ok tuşu
-gezinmesi ve pasif görünüm taşımıyor; açılır katmanlar Android geri tuşunda
-kapanmıyor; Phaser dünya kamerası için sürükleme, tekerlek ve iki parmakla
-yakınlaştırma denetleyicisi yok (`CanvasViewportController` editör tuvalidir,
-`PinchZoomController` bir DOM sarmalayıcısıdır).
+Bilinen eksik CORE'a eklenecek bir parçadır ve işi TODO'dadır: Phaser dünya
+kamerası için sürükleme, tekerlek ve iki parmakla yakınlaştırma denetleyicisi
+yok (`CanvasViewportController` editör tuvalidir, `PinchZoomController` bir DOM
+sarmalayıcısıdır).
 
 ### Gizli kalan kurallar
 

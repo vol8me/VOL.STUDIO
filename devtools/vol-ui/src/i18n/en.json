@@ -361,7 +361,11 @@
     "trash": "Delete",
     "toolbarIdle": "Select a tool",
     "toolbarSelected": "Selected: {{value}}",
-    "toolbarAction": "Action: {{action}}"
+    "toolbarAction": "Action: {{action}}",
+    "segmentedControlPassive": "Segmented Control — passive",
+    "orientation": "Screen orientation",
+    "portrait": "Portrait",
+    "landscape": "Landscape"
   },
   "palette": {
     "surface": "Surface",

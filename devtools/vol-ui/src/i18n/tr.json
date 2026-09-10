@@ -361,7 +361,11 @@
     "trash": "Sil",
     "toolbarIdle": "Bir araç seç",
     "toolbarSelected": "Seçili: {{value}}",
-    "toolbarAction": "Aksiyon: {{action}}"
+    "toolbarAction": "Aksiyon: {{action}}",
+    "segmentedControlPassive": "Segmented Control — pasif",
+    "orientation": "Ekran yönü",
+    "portrait": "Dikey",
+    "landscape": "Yatay"
   },
   "palette": {
     "surface": "Surface",

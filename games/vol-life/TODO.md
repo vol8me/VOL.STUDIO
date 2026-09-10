@@ -75,10 +75,6 @@ kararı §9'da.
       `render/` katmanlarını ya da kök `@volstudio/core` barrel'ını (Phaser'a
       bağlı modülleri yeniden ihraç ediyor, DESIGN §11) import ederse düşen bir
       test yazılır ve bilerek bozulmuş bir importla sınanır.
-- [ ] **[P3] `createSimRandom(0)` `0x5eed` ile aynı diziyi üretmesin.**
-      Ölçüldü: iki tohum bayt bayt aynı diziyi veriyor; mulberry32 için 0
-      dejenere değil, `rng.ts` yorumu yanlış. Kapanır: 0 geçerli tohum olur ve
-      takma adı yakalayan test yazılır. CORE eşi kök TODO'da.
 - [ ] **[P3] Tauri izinleri en az yetkiye insin.** Frontend yalnız
       `TauriWindowAdapter`ı (`exit_application`) kullanıyor; `store:default`,
       `sql:default` ve `6b82b2d`de eklenen `sql:allow-execute` hiç
@@ -227,6 +223,12 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
   bakılan noktayı ve yakınlaştırmayı sıfırlamaz.
 
 ## Kapatılanlar
+
+### 2026-09-10 — rastgelelik sözleşmesi
+
+- [x] **[P3] `createSimRandom(0)` ayrı bir dizi üretiyor;** sözleşme CORE ile
+      aynı (0 geçerli, 32 bite indirgeme, sonlu olmayan tohum ve durum
+      reddediliyor); parite testi sınır tohumlarını kapsıyor.
 
 ### 2026-09-10 — tasarım kararları ve belge güncellemesi
 

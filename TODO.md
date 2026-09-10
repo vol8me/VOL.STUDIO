@@ -44,25 +44,6 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
       `FullscreenController` ve `TauriWindowAdapter` üstüne) taşınır ve
       testlenir; vol-hell onu kullanır ve mevcut testleri geçer; VOL.LIFE aynı
       parçayı kullanır.
-- [ ] **[P1] CORE `SegmentedControl` genel eksikleri kapansın.** Bileşen belirli
-      bir ayara bağlı değil, ama dört eksiği var: seçenek etiketleri sonradan
-      güncellenemiyor, dil değişince eski kalıyor (`Select.setOptions` ve
-      `IconButton.setLabel` var); seçeneklerinde grup için erişilebilir ad yok
-      (`role="radiogroup"` adsız kalıyor); ok tuşlarıyla gezinme yok, her segment
-      ayrı sekme durağı; pasifken kayan vurgu marka renginde kalıyor, CSS kapalı
-      durumda yalnız metin rengini değiştiriyor. Kapanır: dördü testle sınanır ve
-      sessiz setter sözleşmesi (`valueInteractionContract`) korunur; vol-ui
-      `formsTab`'a pasif örnek eklenir.
-- [ ] **[P1] CORE simge setine ayar simgesi girsin.** Somun simgesi yalnız
-      vol-ui'de (`devtools/vol-ui/src/sections/icons.ts`, `ICON_GEAR`); CORE
-      `VOL_ICONS`ta yok ve oyun runtime'ı devtool import edemez. Kapanır: simge
-      `VOL_ICONS`a girer (vol-ui simge galerisi kaydı gezdiği için orada
-      kendiliğinden görünür) ve vol-ui'deki `ICON_GEAR` kopyası kalkar.
-- [ ] **[P1] CORE açılır katmanları Android geri tuşunda kapansın.** `Popup`
-      (`Popover`, `Select` ve `ContextMenu` tabanı) yalnız Escape dinliyor; katman
-      açıkken geri tuşu alttaki işleyiciye gidiyor (VOL.LIFE'ta bu çıkış
-      onayıdır). Kapanır: açıkken `pushBackHandler` kaydı tutulur, kapanınca
-      kaldırılır; yığın sırası testle sınanır.
 - [ ] **[P2] Android 16 geniş ekranda yön kilidini yok saymasın.** Üç oyunda
       `targetSdk = 36` ve hiçbir manifestte `android:appCategory` yok. Android 16
       davranış değişikliğine göre en dar kenarı 600dp ve üstü ekranlarda
@@ -87,17 +68,25 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
       dokunmatiği hiç bilmiyor ve klavye tuş etiketi (`SLOT_KEY_LABELS`)
       üretiyor; bunu bilinçli kılan bir kod ya da belge yok. Kapanır: dokunmatikte
       tek temsil seçilir, karar kodda yazılı olur ve cihazda doğrulanır.
-- [ ] **[P3] CORE `createRandom(0)` ayrı bir dizi üretsin.** 0 sessizce
-      varsayılan tohuma (`0x5eed`) çevriliyor. Ölçüldü: `createRandom(0)` ile
-      `createRandom()` aynı diziyi veriyor; mulberry32 için 0 dejenere değil
-      (0 durumundan dizi 0,2664 · 0,0003 · 0,2233), kaynaktaki yorum yanlış.
-      Kapanır: varsayılan yalnız parametre verilmediğinde uygulanır ve takma adı
-      yakalayan test yazılır (`core/src/random/random.ts`). VOL.LIFE eşi
-      [games/vol-life/TODO.md](games/vol-life/TODO.md)'de.
 - [ ] **[P3] iOS/WKWebView MP3 fallback'i ses build'ine bağlansın.** Bugün elle
       koşuluyor (`pnpm convert:ios`); iOS hedefe girdiğinde yapılır.
 
 ## Kapatılanlar
+
+### 2026-09-10 — CORE önkoşulları: rastgelelik, simge, SegmentedControl, geri tuşu
+
+- [x] **[P1] `SegmentedControl` genel eksikleri kapandı:** `setOptions` ile
+      etiket yenileme, `ariaLabel` / `setAriaLabel`, WAI-ARIA radyo grubu
+      klavyesi (tek sekme durağı, oklar, Home/End, sağdan sola) ve pasif görünüm
+      (`vol-segmented--disabled`); 12 test, vol-ui forms sekmesinde pasif örnek.
+- [x] **[P1] CORE simge setine `settings` girdi;** vol-ui'deki `ICON_GEAR`
+      kopyası kalktı, buttons sekmesi CORE simgesini kullanıyor.
+- [x] **[P1] Açılır katmanlar Android geri tuşunda kapanıyor:** `Popup` açıkken
+      `pushBackHandler` kaydı tutuyor (Popover, Select, ContextMenu da); yığın
+      sırası ve kayıt sızıntısı testle sınandı.
+- [x] **[P3] `createRandom(0)` ayrı bir dizi üretiyor;** varsayılan tohumun ve
+      0'ın dizisi testle kilitli, sonlu olmayan tohum `RangeError` veriyor. İki
+      oyunun sesi yeniden üretildi; varlıklarda fark yok.
 
 ### 2026-09-10 — denetim düzeltmeleri (`6b82b2d`)
 

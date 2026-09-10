@@ -65,6 +65,14 @@ describe('createSimRandom', () => {
     expect(values.size).toBeGreaterThan(1);
   });
 
+  it('seed 0 varsayılan tohumun takma adı değildir', () => {
+    const zero = createSimRandom(0);
+    const fallback = createSimRandom(0x5eed);
+    expect(Array.from({ length: 16 }, () => zero.next())).not.toEqual(
+      Array.from({ length: 16 }, () => fallback.next()),
+    );
+  });
+
   it('setState(0) da dejenere diziye düşmez', () => {
     const rng = createSimRandom(5);
     rng.setState(0);
@@ -86,16 +94,27 @@ describe('createSimRandom', () => {
     expect(targetSequence).toEqual(sourceSequence);
   });
 
+  it('sonlu olmayan tohum ve durum reddedilir, durum bozulmaz', () => {
+    expect(() => createSimRandom(Number.NaN)).toThrow(RangeError);
+
+    const rng = createSimRandom(3);
+    expect(() => rng.setState(Number.POSITIVE_INFINITY)).toThrow(RangeError);
+    expect(rng.getState()).toBe(3);
+  });
+
   /*
    * Bu dizinin CORE'unkiyle aynı olması bir tesadüf değil sözleşmedir: burada
    * eklenen tek şey durumun OKUNABİLİR olmasıdır. Ayrışırlarsa CORE ile
-   * üretilmiş bir tohumlama vol-life'ta başka bir dünya verir.
+   * üretilmiş bir tohumlama vol-life'ta başka bir dünya verir. Sınır tohumları
+   * (0, negatif, 32 bitin tepesi) ayrışmanın en olası olduğu yerlerdir.
    */
   it('CORE createRandom ile aynı diziyi üretir', () => {
-    const mine = createSimRandom(2026);
-    const core = createRandom(2026);
-    const left = Array.from({ length: 24 }, () => mine.next());
-    const right = Array.from({ length: 24 }, () => core.next());
-    expect(left).toEqual(right);
+    for (const seed of [2026, 0, -1, 0x5eed, 0x7fffffff]) {
+      const mine = createSimRandom(seed);
+      const core = createRandom(seed);
+      const left = Array.from({ length: 24 }, () => mine.next());
+      const right = Array.from({ length: 24 }, () => core.next());
+      expect(left).toEqual(right);
+    }
   });
 });

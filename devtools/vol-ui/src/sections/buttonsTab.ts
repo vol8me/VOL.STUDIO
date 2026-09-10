@@ -1,5 +1,5 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
-import { Button, IconButton, Tooltip } from '@volstudio/core/ui';
+import { Button, Icon, IconButton, Tooltip } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid, svgIcon } from './shared';
 import {
@@ -9,7 +9,6 @@ import {
   ICON_COIN,
   ICON_FAST_FORWARD,
   ICON_FOLLOW,
-  ICON_GEAR,
   ICON_GUARD,
   ICON_LOCK,
   ICON_PAUSE,
@@ -157,12 +156,16 @@ function buildIconButtonDemo(
   });
 
   // Boyut + tooltip: 3 boyut, her biri tooltip'li.
-  const small = new IconButton(svgIcon(ICON_GEAR), {
+  // Ayar simgesi CORE kaydından gelir: oyunlar da aynı simgeyi kullanır ve
+  // showcase'te yerel bir kopya tutulursa ikisi sessizce ayrışır.
+  const small = new IconButton(new Icon({ name: 'settings' }).element, {
     label: i18next.t('volui:buttons.smallSm'),
     size: 'sm',
   });
-  const gear = new IconButton(svgIcon(ICON_GEAR), { label: i18next.t('volui:buttons.mediumMd') });
-  const large = new IconButton(svgIcon(ICON_GEAR), {
+  const gear = new IconButton(new Icon({ name: 'settings' }).element, {
+    label: i18next.t('volui:buttons.mediumMd'),
+  });
+  const large = new IconButton(new Icon({ name: 'settings' }).element, {
     label: i18next.t('volui:buttons.largeLg'),
     size: 'lg',
   });

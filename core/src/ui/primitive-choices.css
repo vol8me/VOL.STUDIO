@@ -217,6 +217,23 @@
   color: var(--vol-ui-disabled-text);
 }
 
+/*
+ * Pasif grup: seçim okunur kalır ama vurgu marka renginden çekilir. Aksi hâlde
+ * kapalı bir kontrol, parlak vurgusuyla dokunulabilir sanılıyordu.
+ */
+.vol-segmented--disabled {
+  border-color: var(--vol-ui-disabled-border);
+}
+
+.vol-segmented--disabled .vol-segmented__thumb {
+  background: var(--vol-ui-disabled-fill);
+  box-shadow: inset 0 0 0 1px var(--vol-ui-disabled-border);
+}
+
+.vol-segmented--disabled .vol-segmented__item--active:disabled {
+  color: var(--vol-ui-text-secondary);
+}
+
 .vol-segmented__item:focus-visible {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;

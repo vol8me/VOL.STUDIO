@@ -19,11 +19,16 @@ export interface SimRandom {
   setState(state: number): void;
 }
 
-/** Seed 0 mulberry32'yi dejenere bir diziye sokar; sıfır olmayan bir değere taşınır. */
-const FALLBACK_STATE = 0x5eed;
-
+/**
+ * Her 32-bit tohum ayrı bir dizidir, 0 dahil; sözleşme CORE `createRandom` ile
+ * aynıdır ve parite testiyle kilitlidir. Tohum ve geri yüklenen durum 32 bite
+ * indirgenir.
+ *
+ * @throws {RangeError} Tohum ya da geri yüklenen durum sonlu bir sayı değilse;
+ *   bozuk bir anlık görüntü sessizce başka bir diziye devam etmez.
+ */
 export function createSimRandom(seed: number): SimRandom {
-  let state = (seed | 0) === 0 ? FALLBACK_STATE : seed | 0;
+  let state = toState(seed, 'tohum');
 
   const next = (): number => {
     state = (state + 0x6d2b79f5) | 0;
@@ -37,7 +42,16 @@ export function createSimRandom(seed: number): SimRandom {
     bipolar: () => next() * 2 - 1,
     getState: () => state,
     setState: (value: number) => {
-      state = value | 0;
+      state = toState(value, 'durum');
     },
   };
+}
+
+function toState(value: number, label: string): number {
+  if (!Number.isFinite(value)) {
+    throw new RangeError(
+      `createSimRandom: ${label} sonlu bir sayı olmalı, gelen: ${String(value)}`,
+    );
+  }
+  return value | 0;
 }

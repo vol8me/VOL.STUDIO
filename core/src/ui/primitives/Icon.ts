@@ -41,6 +41,7 @@ export type IconName =
   | 'reset'
   | 'save'
   | 'search'
+  | 'settings'
   | 'undo'
   | 'warning'
   | 'zoom-in'
@@ -172,6 +173,15 @@ export const VOL_ICONS: Readonly<Record<IconName, IconDefinition>> = {
   reset: { viewBox: '0 0 24 24', paths: ['M4 12a8 8 0 1 0 2-5.3', 'M4 4v6h6'] },
   save: { viewBox: '0 0 24 24', paths: ['M5 4h12l2 2v14H5z', 'M8 4v6h8V4', 'M8 20v-6h8v6'] },
   search: { viewBox: '0 0 24 24', paths: ['M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z', 'm16 16 4 4'] },
+  // Ayarlar: sekiz dişli çark. Dişlerin arası taban dairesi üstünde yaydır;
+  // merkezdeki halka küçük boyutta çarkı dolu bir yıldızdan ayırır.
+  settings: {
+    viewBox: '0 0 24 24',
+    paths: [
+      'M10.52 5.57L10.72 2.89L13.28 2.89L13.48 5.57A6.6 6.6 0 0 1 15.5 6.4L17.54 4.65L19.35 6.46L17.6 8.5A6.6 6.6 0 0 1 18.43 10.52L21.11 10.72L21.11 13.28L18.43 13.48A6.6 6.6 0 0 1 17.6 15.5L19.35 17.54L17.54 19.35L15.5 17.6A6.6 6.6 0 0 1 13.48 18.43L13.28 21.11L10.72 21.11L10.52 18.43A6.6 6.6 0 0 1 8.5 17.6L6.46 19.35L4.65 17.54L6.4 15.5A6.6 6.6 0 0 1 5.57 13.48L2.89 13.28L2.89 10.72L5.57 10.52A6.6 6.6 0 0 1 6.4 8.5L4.65 6.46L6.46 4.65L8.5 6.4A6.6 6.6 0 0 1 10.52 5.57Z',
+      'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+    ],
+  },
   undo: { viewBox: '0 0 24 24', paths: ['m9 7-4 4 4 4', 'M5 11h8a6 6 0 0 1 6 6'] },
   warning: { viewBox: '0 0 24 24', paths: ['M12 3 2 21h20Z', 'M12 9v5', 'M12 18h.01'] },
   'zoom-in': {

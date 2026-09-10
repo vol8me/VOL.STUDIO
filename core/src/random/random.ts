@@ -21,13 +21,15 @@ export interface Random {
 }
 
 /**
- * mulberry32 — 32-bit durumlu, hızlı ve istatistiksel olarak yeterli bir PRNG.
- * Ses gürültüsü için kriptografik kalite gerekmez; tekrarlanabilirlik ve düzgün
- * dağılım yeterlidir.
+ * mulberry32: hızlı, kriptografik olmayan 32-bit PRNG. Her 32-bit tohum ayrı bir
+ * dizidir, 0 dahil; varsayılan yalnız tohum verilmediğinde uygulanır. Sonlu
+ * olmayan tohum `RangeError` fırlatır.
  */
 export function createRandom(seed: number = DEFAULT_SEED): Random {
-  // Seed 0 mulberry32'yi dejenere bir diziye sokar; sıfır olmayan bir değere taşı.
-  let state = (seed | 0) === 0 ? DEFAULT_SEED : seed | 0;
+  if (!Number.isFinite(seed)) {
+    throw new RangeError(`createRandom: tohum sonlu bir sayı olmalı, gelen: ${String(seed)}`);
+  }
+  let state = seed | 0;
 
   const next = (): number => {
     state = (state + 0x6d2b79f5) | 0;

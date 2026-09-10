@@ -20,6 +20,24 @@ import {
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid } from './shared';
 
+/**
+ * Pasif SegmentedControl: seçim okunur kalır ama değiştirilemez. Platformun
+ * uygulayamadığı bir ayarın o anki gerçek değerini göstermenin desenidir.
+ */
+function buildPassiveSegmentedDemo(disposables: DisposableScope): HTMLElement {
+  const control = new SegmentedControl({
+    options: [
+      { value: 'portrait', label: i18next.t('volui:forms.portrait') },
+      { value: 'landscape', label: i18next.t('volui:forms.landscape') },
+    ],
+    value: 'landscape',
+    disabled: true,
+    ariaLabel: i18next.t('volui:forms.orientation'),
+  });
+  disposables.addDestroyables(control);
+  return control.element;
+}
+
 /** Checkbox'ı ayar listesi içinde gösterir. */
 function buildCheckboxGroupDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
@@ -378,6 +396,7 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:forms.select'), difficultySelect.element),
     card(i18next.t('volui:forms.radioGroup'), gameModeRadio.element),
     card(i18next.t('volui:forms.segmentedControl'), qualitySegmented.element),
+    card(i18next.t('volui:forms.segmentedControlPassive'), buildPassiveSegmentedDemo(disposables)),
     card(i18next.t('volui:forms.numberStepper'), unitStepper.element, { center: true }),
     card(i18next.t('volui:forms.timerBarVariations'), buildTimerBarVariationsDemo(disposables)),
     card(i18next.t('volui:forms.timerBar'), buildTimerBarDemo(disposables), { span: 2 }),

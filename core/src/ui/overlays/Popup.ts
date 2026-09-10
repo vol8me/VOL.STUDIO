@@ -1,4 +1,5 @@
 import { UI_THRESHOLD } from '../../constants';
+import { pushBackHandler } from '../../platform/backNavigation';
 
 export type PopupPlacement = 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end';
 
@@ -31,6 +32,7 @@ export class Popup {
   private boundOutsideClick: (event: MouseEvent) => void;
   private readonly boundReposition: () => void;
   private boundKeydown: (event: KeyboardEvent) => void;
+  private releaseBackHandler: (() => void) | null = null;
 
   constructor(target: HTMLElement, options: PopupOptions = {}) {
     const {
@@ -93,6 +95,13 @@ export class Popup {
       });
     }
     document.addEventListener('keydown', this.boundKeydown);
+    // Android geri hareketi Escape'in karşılığıdır: açık katman olayı önce
+    // kendisi tüketir. Kayıt olmasaydı geri tuşu alttaki ekranın işleyicisine
+    // (ör. uygulamadan çıkış onayı) gider, katman ise açık kalırdı.
+    this.releaseBackHandler = pushBackHandler(() => {
+      this.close();
+      return true;
+    });
     // capture: true — ic scroll konteynerlerinin kaydırması da yakalanmali.
     window.addEventListener('scroll', this.boundReposition, { capture: true, passive: true });
     window.addEventListener('resize', this.boundReposition);
@@ -103,10 +112,7 @@ export class Popup {
     this.open = false;
 
     this.element.classList.remove('vol-popup--visible');
-    document.removeEventListener('click', this.boundOutsideClick);
-    document.removeEventListener('keydown', this.boundKeydown);
-    window.removeEventListener('scroll', this.boundReposition, { capture: true });
-    window.removeEventListener('resize', this.boundReposition);
+    this.detachWhileOpenListeners();
     this.onCloseHandler?.();
   }
 
@@ -127,11 +133,18 @@ export class Popup {
     this.destroyed = true;
     this.open = false;
     this.element.classList.remove('vol-popup--visible');
+    this.detachWhileOpenListeners();
+    this.element.remove();
+  }
+
+  /** Yalnız açıkken yaşayan dinleyiciler: dış tıklama, klavye, geri hareketi, konum. */
+  private detachWhileOpenListeners(): void {
     document.removeEventListener('click', this.boundOutsideClick);
     document.removeEventListener('keydown', this.boundKeydown);
+    this.releaseBackHandler?.();
+    this.releaseBackHandler = null;
     window.removeEventListener('scroll', this.boundReposition, { capture: true });
     window.removeEventListener('resize', this.boundReposition);
-    this.element.remove();
   }
 
   /** Tercih edilen `placement` boyunca konumlandırır, viewport'tan taşarsa karşı tarafa çevirir. */
