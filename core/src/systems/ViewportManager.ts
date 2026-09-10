@@ -151,12 +151,13 @@ export class ViewportManager {
   /**
    * Sahnenin kamerasını geçerli rasterleme çarpanına göre kurar.
    *
-   * Kamera yakınlaştırması çarpana EŞİTLENİR ve dünya merkezine odaklanır:
-   * görünen dünya alanı `backing / quality` = CSS piksel boyutu olur, yani
-   * çözünürlük değişse de oyuncunun gördüğü alan sabit kalır. Sahne
-   * kurulumunda ve her yeniden boyutlandırmada çağrılmalıdır.
+   * Varsayılan olarak kamera yakınlaştırması çarpana eşitlenir ve dünya merkezine
+   * odaklanır. Serbest/gözlem kameraları (pan/zoom gezen sahneler) için
+   * `options.preserveCameraState` veya `camera.data.get('preserveCameraState')`
+   * bayrağı verildiğinde viewport backing güncellenir fakat kullanıcının kamera
+   * konumu ve zoom seviyesi dünya merkezine sıfırlanmaz.
    */
-  applyToScene(scene: Phaser.Scene): void {
+  applyToScene(scene: Phaser.Scene, options?: { preserveCameraState?: boolean }): void {
     if (this.config.strategy !== 'resize') return;
     const quality = this.resolveRenderQuality();
     const world = this.getWorldSize();
@@ -164,6 +165,12 @@ export class ViewportManager {
     if (!camera) return;
 
     camera.setViewport(0, 0, world.width * quality, world.height * quality);
+
+    const cameraData = (camera as unknown as { data?: { get(key: string): unknown } }).data;
+    if (options?.preserveCameraState || cameraData?.get('preserveCameraState') === true) {
+      return;
+    }
+
     camera.setZoom(quality);
     camera.centerOn(world.width / 2, world.height / 2);
   }

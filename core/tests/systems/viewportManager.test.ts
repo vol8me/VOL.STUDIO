@@ -222,10 +222,12 @@ describe('ViewportManager — DPR kelepçesi', () => {
 describe('ViewportManager — render ölçeği ve dünya ayrımı', () => {
   /** Kamera çağrılarını yakalayan sahte sahne. */
   function makeFakeScene() {
+    const dataMap = new Map<string, unknown>();
     const camera = {
       viewport: { x: 0, y: 0, width: 0, height: 0 },
       zoom: 1,
       center: { x: 0, y: 0 },
+      data: dataMap,
       setViewport(x: number, y: number, width: number, height: number) {
         camera.viewport = { x, y, width, height };
         return camera;
@@ -354,5 +356,46 @@ describe('ViewportManager — render ölçeği ve dünya ayrımı', () => {
 
     expect(camera.zoom).toBe(1);
     expect(camera.viewport).toEqual({ x: 0, y: 0, width: 0, height: 0 });
+  });
+
+  it('preserveCameraState verildiğinde viewport boyutu güncellenir ama zoom ve merkez korunur', () => {
+    setEnvironment(1, 1000, 800);
+    const manager = new ViewportManager({ strategy: 'resize', renderScale: 0.5 });
+    const { scene, camera } = makeFakeScene();
+    camera.zoom = 3.5;
+    camera.center = { x: 123, y: 456 };
+
+    manager.applyToScene(scene, { preserveCameraState: true });
+
+    // Viewport backing güncellendi (1000 * 0.5 = 500, 800 * 0.5 = 400)
+    expect(camera.viewport.width).toBe(500);
+    expect(camera.viewport.height).toBe(400);
+    // Ama kullanıcının kamerası sıfırlanmadı!
+    expect(camera.zoom).toBe(3.5);
+    expect(camera.center).toEqual({ x: 123, y: 456 });
+  });
+
+  it('kamera datasında preserveCameraState bayrağı varsa attachResize kamerayı sıfırlamaz', () => {
+    setEnvironment(1, 1000, 800);
+    let scale = 1;
+    const manager = new ViewportManager({ strategy: 'resize', renderScale: () => scale });
+    const { scene, camera } = makeFakeScene();
+    camera.data.set('preserveCameraState', true);
+    camera.zoom = 2.5;
+    camera.center = { x: 777, y: 888 };
+
+    const game = makeFakeGame({ width: 0, height: 0, zoom: NaN });
+    (game as unknown as { scene: { getScenes: () => unknown[] } }).scene = {
+      getScenes: () => [scene],
+    };
+
+    const detach = manager.attachResize(game);
+    scale = 0.5;
+    window.dispatchEvent(new Event('resize'));
+
+    expect(camera.viewport.width).toBe(500);
+    expect(camera.zoom).toBe(2.5);
+    expect(camera.center).toEqual({ x: 777, y: 888 });
+    detach();
   });
 });

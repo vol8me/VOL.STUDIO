@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { DisposableScope, FullscreenController, shouldUseTouchControls } from '@volstudio/core';
+import { DisposableScope, FullscreenController } from '@volstudio/core';
 import { LifeExitPrompt } from '@/runtime/ui/LifeExitPrompt';
 import { LifeHud } from '@/runtime/ui/LifeHud';
 
@@ -32,11 +32,10 @@ export class LifeScene extends Phaser.Scene {
 
     try {
       const uiParent = this.game.canvas.parentElement ?? undefined;
-      const touchDevice = shouldUseTouchControls();
 
-      if (touchDevice) {
-        scope.addDestroyable(new LifeExitPrompt({ container: uiParent ?? document.body }));
-      }
+      // Android geri hareketi (vol:androidback) fareli cihazda da onaya bağlanmalı;
+      // web/masaüstünde bu olay hiç gelmediği için dinleyici zararsızdır.
+      scope.addDestroyable(new LifeExitPrompt({ container: uiParent ?? document.body }));
 
       // F11 ve düğme AYNI denetleyiciden geçer; sahne ömrüne bağlı olduğu için
       // yeniden başlatmada ikinci bir keydown dinleyicisi birikmez.
@@ -47,14 +46,15 @@ export class LifeScene extends Phaser.Scene {
         }),
       );
 
+      const isCurrentFullscreen = fullscreen.isFullscreen();
       this.hud = scope.addDestroyable(
         new LifeHud(uiParent, {
-          // Android uygulaması zaten tam ekran açılır; orada düğme hem
-          // anlamsız hem de başparmağın yolunda durur.
-          showFullscreenToggle: !touchDevice,
+          showFullscreenToggle: true,
+          initialFullscreen: isCurrentFullscreen,
           onToggleFullscreen: () => void fullscreen.toggle(),
         }),
       );
+      this.hud.setFullscreenActive(isCurrentFullscreen);
     } catch (error) {
       scope.dispose();
       this.runtimeScope = null;
@@ -62,11 +62,17 @@ export class LifeScene extends Phaser.Scene {
       throw error;
     }
 
-    // SHUTDOWN sahne yeniden başlatıldığında da gelir; DESTROY gelmeyebilir.
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+    // SHUTDOWN sahne yeniden başlatıldığında gelir; doğrudan yok edilmede (SceneManager.remove)
+    // ise yalnız DESTROY yayılır. İkisi de aynı temizliği idempotent tetikler.
+    const cleanup = (): void => {
+      this.events.off(Phaser.Scenes.Events.SHUTDOWN, cleanup);
+      this.events.off(Phaser.Scenes.Events.DESTROY, cleanup);
       this.runtimeScope?.dispose();
       this.runtimeScope = null;
       this.hud = null;
-    });
+    };
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, cleanup);
+    this.events.once(Phaser.Scenes.Events.DESTROY, cleanup);
   }
 }

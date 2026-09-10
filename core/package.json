@@ -14,6 +14,18 @@
       "import": "./src/math/interpolation.ts",
       "types": "./src/math/interpolation.ts"
     },
+    "./math": {
+      "import": "./src/math/index.ts",
+      "types": "./src/math/index.ts"
+    },
+    "./grid": {
+      "import": "./src/grid/index.ts",
+      "types": "./src/grid/index.ts"
+    },
+    "./collections": {
+      "import": "./src/collections/index.ts",
+      "types": "./src/collections/index.ts"
+    },
     "./input/bindings": {
       "import": "./src/input/bindingLabels.ts",
       "types": "./src/input/bindingLabels.ts"

@@ -9,6 +9,7 @@
     "core:window:allow-set-size",
     "log:default",
     "store:default",
-    "sql:default"
+    "sql:default",
+    "sql:allow-execute"
   ]
 }

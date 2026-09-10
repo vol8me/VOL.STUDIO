@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { worldConfig } from '@/config/world';
+import { resolveMaxStepsForSpeed, worldConfig } from '@/config/world';
 import { lifeGraphicsConfig } from '@/config/graphics';
 
 describe('worldConfig', () => {
@@ -24,6 +24,16 @@ describe('worldConfig', () => {
 
   it('seed tam sayıdır — dünya tekrar üretilebilir', () => {
     expect(Number.isInteger(worldConfig.seed)).toBe(true);
+  });
+
+  it('resolveMaxStepsForSpeed hız çarpanına göre tavanı güvenle ölçekler', () => {
+    expect(resolveMaxStepsForSpeed(1)).toBe(2);
+    expect(resolveMaxStepsForSpeed(2)).toBe(4);
+    expect(resolveMaxStepsForSpeed(4)).toBe(8);
+    expect(resolveMaxStepsForSpeed(0.5)).toBe(1);
+    // Güvenlik sınırları: 4x üzerini kelepçeler, bozuk değerde 1x tabanını korur
+    expect(resolveMaxStepsForSpeed(10)).toBe(8);
+    expect(resolveMaxStepsForSpeed(NaN)).toBe(2);
   });
 });
 

@@ -72,6 +72,20 @@ describe('createSimRandom', () => {
     expect(values.size).toBeGreaterThan(1);
   });
 
+  it('sıfır durumuna ulaşmış snapshot başka örneğe aktarıldığında ayrışmaz', () => {
+    const source = createSimRandom(-0x6d2b79f5);
+    source.next();
+    expect(source.getState()).toBe(0);
+
+    const target = createSimRandom(12345);
+    target.setState(source.getState());
+    expect(target.getState()).toBe(0);
+
+    const sourceSequence = Array.from({ length: 16 }, () => source.next());
+    const targetSequence = Array.from({ length: 16 }, () => target.next());
+    expect(targetSequence).toEqual(sourceSequence);
+  });
+
   /*
    * Bu dizinin CORE'unkiyle aynı olması bir tesadüf değil sözleşmedir: burada
    * eklenen tek şey durumun OKUNABİLİR olmasıdır. Ayrışırlarsa CORE ile

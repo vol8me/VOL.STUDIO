@@ -613,14 +613,14 @@ determinizmi kare hızına bağlar.
 
 ### CORE — ne alınmaz ve neden
 
-| Primitif       | Neden uyumsuz                                               |
-| -------------- | ----------------------------------------------------------- |
-| `SpatialIndex` | `Map<T, number>` ile nesne KİMLİĞİNE bağlıdır; SoA imkânsız |
-| `random.ts`    | Durum closure'da; `getState`/`setState` yok                 |
-| `StateMachine` | Hook'lar context almaz → ajan başına closure                |
-| `ObjectPool`   | acquire/release başına hash işlemi                          |
-| `entities/`    | Varlık başına Phaser nesnesi; ECS yok                       |
-| `collections/` | SoA/TypedArray koleksiyon yok                               |
+| Primitif       | Neden uyumsuz                                                                |
+| -------------- | ---------------------------------------------------------------------------- |
+| `SpatialIndex` | Doğrudan sayısal handle API'si yoktur; SoA için nesne/getter wrapper gerekir |
+| `random.ts`    | Durum closure'da; `getState`/`setState` yok                                  |
+| `StateMachine` | Hook'lar context almaz → ajan başına closure                                 |
+| `ObjectPool`   | acquire/release başına hash işlemi                                           |
+| `entities/`    | Varlık başına Phaser nesnesi; ECS yok                                        |
+| `collections/` | SoA/TypedArray koleksiyon yok                                                |
 
 Bunlar CORE'un kusuru değildir: hepsi birkaç yüz varlıklı, nesne tabanlı bir
 oyun için doğru tasarlanmıştır. VOL.LIFE'ın veri modeli farklıdır, o kadar.

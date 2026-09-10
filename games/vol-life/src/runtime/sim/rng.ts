@@ -37,7 +37,7 @@ export function createSimRandom(seed: number): SimRandom {
     bipolar: () => next() * 2 - 1,
     getState: () => state,
     setState: (value: number) => {
-      state = (value | 0) === 0 ? FALLBACK_STATE : value | 0;
+      state = value | 0;
     },
   };
 }

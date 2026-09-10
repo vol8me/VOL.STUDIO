@@ -16,6 +16,8 @@ export interface LifeHudOptions {
    * açılır; orada düğme hem anlamsız hem de başparmağın yolundadır.
    */
   showFullscreenToggle?: boolean;
+  /** Başlangıçtaki tam ekran durumu; düğme etiketini baştan doğru kurar. */
+  initialFullscreen?: boolean;
 }
 
 /**
@@ -33,11 +35,13 @@ export class LifeHud {
   private readonly fullscreenButton: IconButton | null;
   private fullscreenActive = false;
   private readonly onLanguageChanged = (): void => {
+    this.root.setAttribute('aria-label', i18next.t('life:hud.ariaLabel'));
     this.titleText.setContent(i18next.t('life:app.title'));
     this.fullscreenButton?.setLabel(this.fullscreenLabel());
   };
 
   constructor(parent: HTMLElement | undefined, options: LifeHudOptions) {
+    this.fullscreenActive = options.initialFullscreen ?? false;
     this.uiRoot = this.scope.addDestroyable(new UIRoot(parent));
 
     this.root = document.createElement('div');

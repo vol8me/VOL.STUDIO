@@ -86,6 +86,28 @@ describe('LifeHud', () => {
     hud.destroy();
   });
 
+  it('dil değişince kök aria-label değerini yeniden yazar', () => {
+    const hud = new LifeHud(undefined, { onToggleFullscreen: () => {} });
+    const root = document.querySelector('.vol-life-hud');
+    const translate = vi.spyOn(i18next, 't').mockReturnValue('YENİ_GRUP_ADI' as never);
+
+    i18next.emit('languageChanged', 'en');
+
+    expect(root?.getAttribute('aria-label')).toBe('YENİ_GRUP_ADI');
+    translate.mockRestore();
+    hud.destroy();
+  });
+
+  it('initialFullscreen true ile kurulduğunda doğru etiketle başlar', () => {
+    const hud = new LifeHud(undefined, {
+      onToggleFullscreen: () => {},
+      initialFullscreen: true,
+    });
+    const button = document.querySelector<HTMLElement>('.vol-life-hud__fullscreen');
+    expect(button?.getAttribute('aria-label')).toBe(i18next.t('life:hud.fullscreenExit'));
+    hud.destroy();
+  });
+
   /* Listener eklenen her yerde kaldırılır (AGENTS Kural 6). */
   it('destroy aboneliği bırakır ve DOM`u temizler', () => {
     const off = vi.spyOn(i18next, 'off');

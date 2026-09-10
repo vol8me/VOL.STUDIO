@@ -25,3 +25,16 @@ export const worldConfig: WorldConfig = {
   maxStepsPerFrame: 2,
   seed: 0x10fe1,
 };
+
+/**
+ * Hız çarpanına (0.5× - 4×) göre kare başına adım tavanını belirler.
+ * 1x tabanında 2 adım ölüm sarmalını engellerken, 4x hızda 8 adıma kadar
+ * izin vererek 30/60 FPS ekranlarda hız kaybını ve adım atılmasını engeller.
+ */
+export function resolveMaxStepsForSpeed(
+  multiplier: number,
+  baseMaxSteps = worldConfig.maxStepsPerFrame,
+): number {
+  const safeMultiplier = Math.max(0.5, Math.min(4, Number.isFinite(multiplier) ? multiplier : 1));
+  return Math.ceil(baseMaxSteps * safeMultiplier);
+}
