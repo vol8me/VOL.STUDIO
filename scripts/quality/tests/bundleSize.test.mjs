@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { measureBundle, validateBundleSizes } from '../bundleSize.mjs';
+import { classifyBundleFiles, measureBundle, validateBundleSizes } from '../bundleSize.mjs';
 
 /** Gerçek bir `dist` ağacı kurar; bekçi diskteki dosyaları ölçer, sahteyi değil. */
 function fixture(t, files) {
@@ -90,4 +90,40 @@ test('`$` önekli açıklama anahtarları paket sayılmaz', (t) => {
   });
 
   assert.deepEqual(problems, []);
+});
+
+/*
+ * Sunucu her dosyayı ayrı sıkıştırır. Birleştirip sıkıştırmak aynı içeriğin
+ * ikinci kopyasını neredeyse sıfıra indirir ve gönderileni küçük gösterirdi.
+ */
+test('sıkıştırma dosya başına yapılır — iki özdeş parça iki kez sayılır', (t) => {
+  const single = fixture(t, { 'index-a.js': filler(200) });
+  const double = fixture(t, { 'index-a.js': filler(200), 'chunk-b.js': filler(200) });
+
+  const one = measureBundle(join(single, 'game', 'dist')).appKb;
+  const two = measureBundle(join(double, 'game', 'dist')).appKb;
+
+  assert.ok(two >= one * 1.9, `birleşik sıkıştırılıyor: tek ${one} KB, iki ${two} KB`);
+});
+
+test('Windows yolunda vendor ayrımı bozulmaz', () => {
+  const windows = classifyBundleFiles([
+    'C:\\VOL\\game\\dist\\assets\\phaser-a1.js',
+    'C:\\VOL\\game\\dist\\assets\\index-b2.js',
+    'C:\\VOL\\game\\dist\\assets\\index-c3.css',
+  ]);
+  const posix = classifyBundleFiles([
+    '/vol/game/dist/assets/phaser-a1.js',
+    '/vol/game/dist/assets/index-b2.js',
+    '/vol/game/dist/assets/index-c3.css',
+  ]);
+
+  assert.equal(windows.vendor.length, 1);
+  assert.match(windows.vendor[0], /phaser-a1\.js$/);
+  assert.equal(windows.app.length, 1);
+  assert.equal(windows.css.length, 1);
+  assert.deepEqual(
+    [posix.app.length, posix.vendor.length, posix.css.length],
+    [windows.app.length, windows.vendor.length, windows.css.length],
+  );
 });

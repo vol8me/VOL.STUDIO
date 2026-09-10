@@ -40,19 +40,24 @@ test-pkg pkg:
 # Test + kapsam eşikleri. Eşikler kök `quality.json`da (tek kaynak); paketlerin
 # vitest.config.ts dosyaları onu okur, `contract` ikisinin ayrışmadığını doğrular.
 #
+# Koşunun ölçtüğü paketler `quality.json` → `coverageRuns` içinde yazılıdır ve
+# koşu neyi ne zaman ölçtüğünü kaydeder; `coverage-shape` yalnız o kaydı okur.
+#
 # `audio-synth` coverage'i (ağır spektrum/fiziksel model testleri) pre-push
 # yerine release/signoff kapısında koşulur; ~4 dakikalik yük push'a takılmalar
 # yapıyordu ve spektrum testleri zaten release anına yakışan bir doğrulama.
 coverage:
-    pnpm -r --if-present --filter !@volstudio/audio-synth test:coverage
+    node scripts/quality/coverageRun.mjs coverage
 
-# Ağır ses/spektrum kapsamı; yalnızca release (signoff) kapısında koşulur.
+# Ağır ses/spektrum kapsamı ve şekli; yalnızca release (signoff) kapısında koşulur.
 coverage-audio:
-    pnpm --filter @volstudio/audio-synth test:coverage
+    node scripts/quality/coverageRun.mjs coverage-audio
+    node scripts/coverage-shape-report.mjs coverage-audio
 
-# Kapsamın şekli: büyük ve kritik dosyaların test dağılımını denetler. `coverage`den SONRA koşar.
+# Kapsamın şekli: büyük ve düşük kapsamlı dosya test ya da kanıtlı gerekçe ister.
+# `coverage`den SONRA koşar; yalnız o koşuda yazılmış lcov'u değerlendirir.
 coverage-shape:
-    node scripts/coverage-shape-report.mjs
+    node scripts/coverage-shape-report.mjs coverage
 
 # Workspace sözleşmesi: her paketin kapılara dahil olduğunu doğrular.
 # `pnpm -r --if-present` script'i olmayan paketi sessizce atladığı için,
@@ -118,8 +123,11 @@ fast: quick test
 # tekrarlanmaz; `high` yine de `fast`'in her kapısını kapsar.
 # `audio-synth` coverage `signoff`'ta; kapsam eşikleri burada product paketleri
 # ve araçlar için koşulur.
-# Push öncesi kapısı: quick + css lint + kapsam eşikleri + build + Chromium smoke
-high: quick lint-css coverage coverage-shape build bundle scaling e2e
+#
+# Rust push kapısındadır: paylaşılan native runtime ve üç oyun kabuğu ürünün
+# parçasıdır; dört crate'in check + fmt + clippy'si sıcak önbellekle ~12 sn.
+# Push öncesi kapısı: quick + Rust + css lint + kapsam eşikleri + build + Chromium smoke
+high: quick rust lint-css coverage coverage-shape build bundle scaling e2e
 
 # Gönderilen sesin reçetesiyle AYNI olduğunu kanıtlar.
 #
@@ -139,8 +147,8 @@ audio-verify:
     pnpm --filter @volstudio/vol-hell generate:audio
     git diff --exit-code -- 'games/*/public/assets/audio/**'
 
-# Release/milestone kapısı: high + ağır ses kapsamı + iki motorlu E2E + Rust + ses tazeliği
-signoff: high coverage-audio e2e-full rust audio-verify
+# Release/milestone kapısı: high + ağır ses kapsamı + iki motorlu E2E + ses tazeliği
+signoff: high coverage-audio e2e-full audio-verify
 
 # Kapıyı koşar ve sonucu MAKİNE-OKUNUR raporlar (agent döngüleri için).
 # Kapıları yeniden tanımlamaz, yukarıdaki tarifleri çağırır; aşama haritasının
@@ -175,9 +183,6 @@ tauri-dev game='hell':
 tauri-android game='hell':
     pnpm tauri:{{ game }}:android:dev
 
-tauri-ios:
-    pnpm tauri:ios:dev
-
 # === GELİŞTİRME ===
 
 dev:
@@ -204,6 +209,7 @@ clean:
     rm -rf core/coverage devtools/*/coverage games/*/coverage tauri-v2/coverage
     rm -rf devtools/*/test-results devtools/*/playwright-report
     find . -name '*.tsbuildinfo' -not -path './node_modules/*' -delete
+    rm -rf node_modules/.cache/vol-quality
 
 # Rust target'ı da siler. Sonraki `cargo check` sıfırdan derler; ayrı tutuldu.
 clean-all: clean

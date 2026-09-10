@@ -464,9 +464,9 @@ varlığını ölçmüyordu ve ondan çıkarılan morfoloji sonucunu görüntü 
 
 Mutlak süre kapı olamaz — donanıma bağlıdır. Ama girdi dört katına çıktığında
 sürenin kaç katına çıktığı makineden bağımsızdır ve `O(n²)` sızmasını yakalar.
-Repo bu kapıya sahiptir (`scripts/quality/scalingBudget.mjs`) ama runner
-`vol-arachnid`e sabittir; VOL.LIFE'ın kullanabilmesi için önce genelleştirilmesi
-gerekir (§17).
+Repo bu kapıya sahiptir (`scripts/quality/scalingBudget.mjs`) ve kapı geneldir:
+bütçe yazan paket ölçüm tarifini `quality.json` → `scaling.<paket>.$measure`
+altına yazar. VOL.LIFE'ın bütçesi benchmark betiğiyle birlikte gelir (§17).
 
 ## 9. Android
 
@@ -481,11 +481,11 @@ Bilinen ve doğrulanmış olan: `pnpm benchmark:device`
 WebGL geri düşüşünü ölçer. Betiğin kendi sözleşmesi bunu açıkça söylüyor:
 **kapı DEĞİLDİR ve olamaz** — bir kapının koşulu geliştiricinin masasındaki
 donanım olamaz. Çıktısı bir referanstır; bir sonraki ölçüm onunla kıyaslanır.
-Betik uygulama listesini elle tutar ve şu an yalnız `vol-arachnid` ile
-`vol-hell`i tanır.
+Betik uygulama listesini elle tutar; `deviceApps` bekçisi listeyi her oyunun
+`tauri.conf.json` kimliğiyle karşılaştırır ve VOL.LIFE listededir.
 
-`games/vol-arachnid` Tauri Android hattının emsalidir. VOL.LIFE'ta `src-tauri`
-henüz yoktur.
+`games/vol-arachnid` Tauri Android hattının emsalidir. VOL.LIFE'ın kabuğu da
+kuruludur (`src-tauri`, `com.volstudio.life`) ve Android drift testi taşır.
 
 **Kalite düşer, kural düşmez.** Android'de görsel ayrıntı, parçacık LOD'u ve
 efekt yoğunluğu azalabilir; ama dünya kuralları, olaylar ve organizmalar aynı
@@ -776,8 +776,6 @@ onaylanmadan yazılan her satır, ilk denemenin hatasını tekrarlama riski taş
   betiği henüz yazılmadı (Adım 2).
 - E2E yoktur. `justfile`daki `e2e` tarifi paket listesini ELLE tutar; VOL.LIFE
   `test:e2e` tanımlarsa tarife de eklenmelidir.
-- `scripts/device-benchmark.mjs` VOL.LIFE'ı tanımaz; `APPS` listesi elle
-  tutulur ve cihaz ölçümü paketi sessizce atlar.
 - Android tek çekirdek başarımının masaüstünden ~3–5× düşük olduğu varsayımı
   ÖLÇÜLMEMİŞTİR.
 - Gerçek GPU'da fps hiç ölçülmedi. Headless Chromium yazılım rasterizer

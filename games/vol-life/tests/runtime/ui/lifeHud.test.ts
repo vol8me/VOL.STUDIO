@@ -69,12 +69,20 @@ describe('LifeHud', () => {
     hud.destroy();
   });
 
+  /*
+   * Başlık iki dilde de "VOL.LIFE"tır; "önceki metinle aynı kaldı" iddiası
+   * dinleyici hiç bağlanmasa da doğru olurdu. Çeviri bu yüzden ayırt edilebilir
+   * bir değere çekilir ve YENİDEN YAZIM iddia edilir.
+   */
   it('dil değişince başlığı yeniden yazar', () => {
     const hud = new LifeHud(undefined, { onToggleFullscreen: () => {} });
     const title = document.querySelector('.vol-life-hud__title');
-    const before = title?.textContent;
+    const translate = vi.spyOn(i18next, 't').mockReturnValue('ÇEVRİLDİ' as never);
+
     i18next.emit('languageChanged', 'en');
-    expect(title?.textContent).toBe(before);
+
+    expect(title?.textContent).toBe('ÇEVRİLDİ');
+    translate.mockRestore();
     hud.destroy();
   });
 

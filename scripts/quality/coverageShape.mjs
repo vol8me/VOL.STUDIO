@@ -1,42 +1,27 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { isAbsolute, join, relative, sep } from 'node:path';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { basename, extname, isAbsolute, join, relative, sep } from 'node:path';
 
 /**
  * KAPSAMIN ŞEKLİ — ortalamanın gizlediği şey.
  *
  * Paket kapsamı tek bir yüzde olarak raporlanır ve o yüzde yüksekse iş bitmiş
- * görünür. Ama ortalama, yükü nereye koyduğunu söylemez: izole matematik
- * (`lerp`, `clamp`, `Vector2`) %100 test edilirken oyunun kalbi hiç
- * koşulmayabilir. Ölçüldü — `vol-hell` %84,27 raporlarken `GameScene.ts` 503
- * ifadeyle %0'daydı ve kapsanmayan 1779 ifadenin %62'si altı dosyada
- * toplanmıştı.
+ * görünür. Ortalama yükü nereye koyduğunu söylemez: ölçüldü, `vol-hell` %84
+ * raporlarken `GameScene.ts` 503 satırla %0'daydı.
  *
- * Bu bekçi kapsamı YÜKSELTMEZ; şekli GÖRÜNÜR kılar. Büyük ve düşük kapsamlı bir
- * dosya ya test alır ya da gerekçesini yazar. İkisi de meşrudur; kaydedilmemiş
- * olması meşru değildir.
+ * Büyük ve düşük kapsamlı dosya ya test alır ya da gerekçe VE KANIT yazar.
+ * Kanıt, gerekçeyi sınayan test dosyasıdır; bekçi var olduğunu ve modülü
+ * adıyla andığını doğrular. Bir dönem gerekçeler serbest metindi ve üçü koda
+ * karşı yanlış çıktı ("e2e ile korunur" denen sahneyi e2e hiç açmıyordu).
  *
- * Ölçü `coverage/lcov.info`dan okunur — her paketin zaten ürettiği dosya.
+ * Değerlendirilen veri yalnız kaydı olan koşunun ölçtüğü paketlerin ve o
+ * koşuda yazılmış lcov'lardır (bkz. `coverageRun.mjs`).
  */
-const SKIP_DIRS = new Set(['node_modules', 'dist', 'coverage', 'target', 'gen']);
-
-function packageDirs(root) {
-  const dirs = ['core', 'tauri-v2'];
-  for (const group of ['games', 'devtools']) {
-    const base = join(root, group);
-    if (!existsSync(base)) continue;
-    for (const entry of readdirSync(base, { withFileTypes: true })) {
-      if (entry.isDirectory() && !SKIP_DIRS.has(entry.name)) dirs.push(`${group}/${entry.name}`);
-    }
-  }
-  return dirs.filter((dir) => existsSync(join(root, dir, 'package.json')));
-}
+const EVIDENCE_FILE = /\.(?:test|spec)\.[cm]?[jt]s$/;
 
 /**
- * lcov'dan dosya başına (satır sayısı, kapsanan) çıkarır.
- *
- * `SF:` kaydı dosyayı açar, `DA:<satır>,<vurulma>` her çalıştırılabilir satırı
- * bildirir, `end_of_record` kaydı kapatır. Özet `LF`/`LH` alanları da vardır
- * ama her üretici onları yazmaz; `DA` sayımı her zaman doğrudur.
+ * lcov'dan dosya başına (satır sayısı, kapsanan) çıkarır. `DA:<satır>,<vurulma>`
+ * her çalıştırılabilir satırı bildirir; özet `LF`/`LH` alanlarını her üretici
+ * yazmaz, `DA` sayımı her zaman doğrudur.
  */
 function parseLcov(text) {
   const files = [];
@@ -46,9 +31,8 @@ function parseLcov(text) {
     if (line.startsWith('SF:')) {
       current = { file: line.slice(3), total: 0, covered: 0 };
     } else if (line.startsWith('DA:') && current) {
-      const hits = Number(line.slice(3).split(',')[1] ?? '0');
       current.total += 1;
-      if (hits > 0) current.covered += 1;
+      if (Number(line.slice(3).split(',')[1] ?? '0') > 0) current.covered += 1;
     } else if (line === 'end_of_record' && current) {
       files.push(current);
       current = null;
@@ -57,58 +41,85 @@ function parseLcov(text) {
   return files;
 }
 
+/** Anahtar HER ZAMAN repo köküne göredir; lcov yolu mutlak da pakete göreli de yazabilir. */
+function repoPath(root, dir, file) {
+  return isAbsolute(file)
+    ? relative(root, file).split(sep).join('/')
+    : `${dir}/${file.split(sep).join('/')}`;
+}
+
+function checkEvidence(root, file, entry) {
+  const symbol = basename(file, extname(file));
+  const problems = [];
+  for (const evidence of entry.evidence ?? []) {
+    const path = join(root, evidence);
+    if (!EVIDENCE_FILE.test(evidence) || !existsSync(path)) {
+      problems.push(`${file}: kanıt "${evidence}" bir test dosyası değil ya da yok.`);
+    } else if (!readFileSync(path, 'utf8').includes(symbol)) {
+      problems.push(
+        `${file}: kanıt "${evidence}" \`${symbol}\` adını hiç anmıyor — gerekçe koda dayanmıyor.`,
+      );
+    }
+  }
+  return problems;
+}
+
 /**
  * @param root Repo kökü.
  * @param config `quality.json` → `coverageShape`.
- * @returns Sorun listesi; boşsa her büyük-düşük dosya gerekçeli.
+ * @param stamp Kapsam koşusunun kaydı (`readStamp`); yoksa `null`.
+ * @param run Koşu adı — iletilerde görünür.
+ * @returns Sorun listesi; boşsa şekil kabul edilebilir.
  */
-export function validateCoverageShape(root, config) {
+export function validateCoverageShape(root, config, stamp, run = 'coverage') {
+  if (!stamp) {
+    return [`"${run}" kapsam koşusunun kaydı yok — kapı \`just ${run}\` koşusundan SONRA koşar.`];
+  }
+  if (!stamp.finishedAt) {
+    return [`"${run}" kapsam koşusu tamamlanmamış — yarım koşunun lcov'u değerlendirilmez.`];
+  }
+
   const minLines = config?.minLines ?? 100;
   const floorPct = config?.floorPct ?? 50;
   const acknowledged = config?.acknowledged ?? {};
   const problems = [];
   const flagged = new Set();
-  let measuredAny = false;
 
-  for (const dir of packageDirs(root)) {
-    const lcov = join(root, dir, 'coverage', 'lcov.info');
-    if (!existsSync(lcov)) continue;
-    measuredAny = true;
-
+  for (const pkg of stamp.packages) {
+    const lcov = join(root, pkg.dir, 'coverage', 'lcov.info');
+    if (!existsSync(lcov)) {
+      problems.push(`${pkg.name}: bu koşuda ölçüldü ama ${pkg.dir}/coverage/lcov.info yok.`);
+      continue;
+    }
+    if (statSync(lcov).mtimeMs < stamp.startedAt) {
+      problems.push(
+        `${pkg.name}: ${pkg.dir}/coverage/lcov.info bu koşudan ESKİ — başka bir koşunun verisi değerlendirilmez.`,
+      );
+      continue;
+    }
     for (const entry of parseLcov(readFileSync(lcov, 'utf8'))) {
       if (entry.total < minLines) continue;
       const pct = (entry.covered / entry.total) * 100;
       if (pct >= floorPct) continue;
-
-      /*
-       * Anahtar HER ZAMAN repo köküne göredir. lcov üreticisi yolu mutlak da
-       * yazabilir pakete göreli de; iki biçim karışırsa aynı dosya için iki
-       * ayrı gerekçe anahtarı doğar ve ölü muafiyet kontrolü yanlış öter.
-       */
-      const normalized = isAbsolute(entry.file)
-        ? relative(root, entry.file).split(sep).join('/')
-        : `${dir}/${entry.file.split(sep).join('/')}`;
-      flagged.add(normalized);
-      if (!(normalized in acknowledged)) {
+      const file = repoPath(root, pkg.dir, entry.file);
+      flagged.add(file);
+      if (!(file in acknowledged)) {
         problems.push(
-          `${normalized}: ${entry.total} satırın %${pct.toFixed(1)}'i kapsanıyor ` +
-            `(taban %${floorPct}). Test yaz, ya da neden kapsanmadığını ` +
-            '`coverageShape.acknowledged` altına gerekçesiyle yaz.',
+          `${file}: ${entry.total} satırın %${pct.toFixed(1)}'i kapsanıyor (taban %${floorPct}). ` +
+            'Test yaz, ya da gerekçesini ve kanıtını `coverageShape.acknowledged` altına yaz.',
         );
       }
     }
   }
 
-  if (!measuredAny) {
-    return ['Hiçbir pakette `coverage/lcov.info` yok — şekil ölçülemedi. Kapı `coverage`den SONRA koşar.'];
-  }
-
-  for (const file of Object.keys(acknowledged)) {
+  const measured = stamp.packages.map((pkg) => `${pkg.dir}/`);
+  for (const [file, entry] of Object.entries(acknowledged)) {
+    if (!measured.some((prefix) => file.startsWith(prefix))) continue;
     if (!flagged.has(file)) {
-      problems.push(
-        `${file}: artık tabanın üstünde ya da ölçümde yok — ölü gerekçe kaldırılmalı.`,
-      );
+      problems.push(`${file}: artık tabanın üstünde ya da ölçümde yok — ölü gerekçe kaldırılmalı.`);
+      continue;
     }
+    problems.push(...checkEvidence(root, file, entry));
   }
 
   return problems;

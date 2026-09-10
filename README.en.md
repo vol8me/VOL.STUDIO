@@ -35,7 +35,7 @@ Android Studio (SDK + NDK) · Visual Studio C++ Build Tools on Windows
 
 ```bash
 pnpm install
-pnpm dev                                       # vol-hell + vol-arachnid + both dev tools
+pnpm dev                                       # vol-hell + vol-arachnid + vol-life + both dev tools
 pnpm --filter @volstudio/vol-hell dev          # :5173
 pnpm --filter @volstudio/vol-arachnid dev      # :5178
 pnpm --filter @volstudio/vol-life dev          # :5180

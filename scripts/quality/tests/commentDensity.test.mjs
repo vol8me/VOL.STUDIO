@@ -103,3 +103,14 @@ test('gerçek repoda her aşım GEREKÇELİ', () => {
   assert.equal(DENSITY_THRESHOLD, 0.4, 'eşik doktrindeki oranla aynı olmalı');
   assert.equal(MAX_BLOCK_LINES, 24, 'blok eşiği doktrindeki uzunlukla aynı olmalı');
 });
+
+test('henüz eklenmemiş yoğun dosya da yakalanır', (t) => {
+  const root = repo(t, { 'src/plain.ts': { comment: 0, code: 80 } });
+  const dense = ('// y\n'.repeat(3) + 'const x = 1;\n').repeat(20);
+  writeFileSync(join(root, 'src/fresh.ts'), dense);
+
+  const problems = validateCommentDensity(root, {}, DENSITY_THRESHOLD);
+
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /src\/fresh\.ts/);
+});

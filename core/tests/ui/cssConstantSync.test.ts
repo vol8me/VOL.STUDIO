@@ -25,8 +25,8 @@ function readCss(name: string): string {
 const theme = readCss('theme.css');
 const overlays = readCss('overlays.css');
 const hud = readCss('hud.css');
-const primitives = readCss('primitives.css');
-const data = readCss('data.css');
+const primitiveChoices = readCss('primitive-choices.css');
+const dataBoards = readCss('data-boards.css');
 const cards = readCss('cards.css');
 
 /** `--vol-transition-medium: 0.24s ease` → 240 */
@@ -87,7 +87,7 @@ describe('CSS sabit senkronu — teardown zamanlayıcıları', () => {
   });
 
   it('EVENT_LOG_LEAVE_DURATION_MS, leave animasyonundan kısa değil', () => {
-    const animation = cssDeclaration(data, '.vol-event-log__row--leave', 'animation');
+    const animation = cssDeclaration(dataBoards, '.vol-event-log__row--leave', 'animation');
     const match = /([0-9.]+)(m?s)/.exec(animation);
     expect(match, 'leave animasyon süresi okunamadı').not.toBeNull();
     const cssMs = match![2] === 'ms' ? Number(match![1]) : Number(match![1]) * 1000;
@@ -138,7 +138,7 @@ describe('CSS sabit senkronu — geometri birebir eşleşmeli', () => {
   });
 
   it('HANDLE_WIDTH_PX === .vol-range-slider__handle width', () => {
-    const cssWidth = cssDeclaration(primitives, '.vol-range-slider__handle', 'width');
+    const cssWidth = cssDeclaration(primitiveChoices, '.vol-range-slider__handle', 'width');
     expect(pxToNumber(cssWidth)).toBe(HANDLE_WIDTH_PX);
   });
 

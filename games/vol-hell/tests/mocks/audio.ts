@@ -73,7 +73,7 @@ class FakeAudioBuffer {
 
 export class FakeAudioContext {
   currentTime = 0;
-  state: 'running' | 'suspended' = 'running';
+  state: 'running' | 'suspended' | 'closed' = 'running';
   destination = new FakeAudioNode() as unknown as AudioDestinationNode;
 
   createBuffer(): AudioBuffer {
@@ -98,6 +98,16 @@ export class FakeAudioContext {
 
   resume(): Promise<void> {
     this.state = 'running';
+    return Promise.resolve();
+  }
+
+  suspend(): Promise<void> {
+    this.state = 'suspended';
+    return Promise.resolve();
+  }
+
+  close(): Promise<void> {
+    this.state = 'closed';
     return Promise.resolve();
   }
 }

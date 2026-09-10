@@ -259,8 +259,8 @@ describe('Dokunmatik hedef politikası', () => {
   it('.vol-button ve .vol-checkbox görünmez ::before overlay kullanmaz', () => {
     // Görünmez overlay yerine gerçek kutu boyutu (min-height/min-width) kullanılır;
     // komşu öğelerle örtüşme riski azalır.
-    const primitives = files.get('primitives.css')!;
-    expect(primitives).not.toMatch(/\.vol-button::before/);
-    expect(primitives).not.toMatch(/\.vol-checkbox::before/);
+    const allCss = [...files.values()].join('\n');
+    expect(allCss).not.toMatch(/\.vol-button::before/);
+    expect(allCss).not.toMatch(/\.vol-checkbox::before/);
   });
 });

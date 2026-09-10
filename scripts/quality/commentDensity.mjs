@@ -10,8 +10,8 @@
  * biriktirmiştir. İkisini ayırt eden tek şey, birinin yazılmış olmasıdır.
  */
 import { readFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
+import { workingTreeFiles } from './gitFiles.mjs';
 
 /** Duraksama oranı: bunun üstünde dosya kodundan çok anlatı taşıyordur. */
 export const DENSITY_THRESHOLD = 0.4;
@@ -63,9 +63,8 @@ export function validateCommentDensity(
   acknowledged = ACKNOWLEDGED,
   threshold = DENSITY_THRESHOLD,
 ) {
-  const files = execFileSync('git', ['ls-files', '*.ts', '*.mjs'], { cwd: root, encoding: 'utf8' })
-    .split('\n')
-    .filter((file) => file && !file.includes('node_modules') && !file.endsWith('.d.ts'))
+  const files = workingTreeFiles(root, ['*.ts', '*.mjs'])
+    .filter((file) => !file.endsWith('.d.ts'))
     .filter((file) => !/\.test\.|\.spec\.|(^|\/)tests?\//.test(file));
 
   const problems = [];

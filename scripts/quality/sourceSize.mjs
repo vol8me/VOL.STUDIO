@@ -1,21 +1,19 @@
 /**
- * KAYNAK DOSYA BOYUTU — 1000 satır SERT sınırdır.
+ * KAYNAK DOSYA BOYUTU — 1000 satır SERT sınırdır, muafiyet yoktur.
  *
- * Eşik bir dönem 600'dü ve gerekçeli muafiyet listesiyle çalışıyordu. Pratikte
- * o liste büyümeye devam etti: bir showcase sekmesi kurucu koleksiyonudur, bir
- * şema dosyası veri taşır, bir Phaser sahnesi alan ataması yapar — hepsi meşru
- * biçimde 600'ü aşıyordu ve her biri ayrı bir muafiyet satırı istiyordu.
- * Sürekli muafiyet yazılan bir eşik, eşik değildir.
+ * Eşik bir dönem 600'dü ve gerekçe listesiyle çalışıyordu; liste sürekli büyüdü
+ * ve sürekli muafiyet yazılan bir eşik eşik değildir. Sınır gerçekten büyük
+ * dosyaların başladığı yere çekildi: bin satırın üstü bölünür.
  *
- * Sınır bu yüzden gerçekten büyük dosyaların başladığı yere, 1000'e çekildi ve
- * MUAFİYET KALDIRILDI. Bin satırın üstünde bir dosya artık tartışılmaz: bölünür.
- *
- * TESTLER DE KAPSAMDADIR. Bir test dosyası da birikir ve bin satırı aşan bir
- * test, aynı sebeple, birden çok konuyu tek dosyada tutuyordur.
+ * Testler, betikler (`.mjs`), stil ve native kaynak da kapsamdadır. Kapsam bir
+ * dönem yalnız `*.ts` idi ve beş stil dosyası 1083–2276 satıra ulaşmıştı.
  */
 import { readFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
+import { workingTreeFiles } from './gitFiles.mjs';
+
+/** Satır sınırının uygulandığı kaynak türleri. */
+export const SOURCE_PATTERNS = ['*.ts', '*.mjs', '*.js', '*.css', '*.rs', '*.kt'];
 
 /** Sert sınır: bunun üstünde bir dosya bölünür, gerekçe kabul edilmez. */
 export const LINE_THRESHOLD = 1000;
@@ -35,9 +33,7 @@ export const ACKNOWLEDGED = {};
  * @returns Sorun listesi; boşsa her aşım gerekçeli.
  */
 export function validateSourceSize(root, acknowledged = ACKNOWLEDGED, threshold = LINE_THRESHOLD) {
-  const files = execFileSync('git', ['ls-files', '*.ts'], { cwd: root, encoding: 'utf8' })
-    .split('\n')
-    .filter((file) => file && !file.includes('node_modules'));
+  const files = workingTreeFiles(root, SOURCE_PATTERNS);
 
   const problems = [];
   const oversized = new Set();

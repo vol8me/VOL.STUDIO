@@ -1,0 +1,439 @@
+/* === LoadingScreen === */
+
+.vol-loading {
+  position: fixed;
+  inset: 0;
+  z-index: var(--vol-z-loading);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+
+  --vol-loading-color: var(--vol-ui-accent-solid);
+  --vol-loading-size: clamp(80px, 22vmin, 160px);
+  --vol-loading-progress: 0%;
+  --vol-loading-bg: var(--vol-ui-bg);
+  --vol-loading-scrim: var(--vol-ui-scrim);
+  --vol-loading-title-size: clamp(18px, 5vmin, 32px);
+  --vol-loading-subtitle-size: clamp(12px, 2.5vmin, 18px);
+  --vol-loading-percent-size: clamp(14px, 3vmin, 22px);
+
+  transition: opacity var(--vol-loading-transition, 400ms) ease;
+}
+
+.vol-loading--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.vol-loading--hidden {
+  display: none !important;
+}
+
+/* Geçiş: slide */
+.vol-loading--slide {
+  transform: translateY(100%);
+  transition:
+    opacity var(--vol-loading-transition, 400ms) ease,
+    transform var(--vol-loading-transition, 400ms) ease;
+}
+
+.vol-loading--slide.vol-loading--visible {
+  transform: translateY(0);
+}
+
+.vol-loading--slide.vol-loading--exit {
+  transform: translateY(-100%);
+}
+
+/* Geçiş: zoom */
+.vol-loading--zoom {
+  transform: scale(1.1);
+  transition:
+    opacity var(--vol-loading-transition, 400ms) ease,
+    transform var(--vol-loading-transition, 400ms) ease;
+}
+
+.vol-loading--zoom.vol-loading--visible {
+  transform: scale(1);
+}
+
+.vol-loading--zoom.vol-loading--exit {
+  transform: scale(0.9);
+}
+
+/* Arkaplan */
+.vol-loading__background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.vol-loading__background--css {
+  background: radial-gradient(
+    ellipse at center,
+    var(--vol-ui-bg-subtle) 0%,
+    var(--vol-loading-bg) 70%
+  );
+}
+
+.vol-loading__background--css::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 40%, var(--vol-ui-accent-subtle) 0%, transparent 50%);
+  opacity: 0.6;
+}
+
+.vol-loading__background--image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.vol-loading__background--image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--vol-loading-scrim);
+}
+
+.vol-loading__background--video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vol-loading__background--video::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--vol-loading-scrim);
+}
+
+/* İçerik */
+.vol-loading__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--vol-space-lg);
+  text-align: center;
+  max-width: min(640px, 90vw);
+  padding: var(--vol-space-md);
+}
+
+/* Gösterge konteyner */
+.vol-loading__indicator {
+  width: var(--vol-loading-size);
+  height: var(--vol-loading-size);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Orbital Rings === */
+
+.vol-loading__indicator--orbital .vol-loading__ring {
+  position: absolute;
+  border-radius: 50%;
+  border-style: solid;
+}
+
+.vol-loading__indicator--orbital .vol-loading__ring--outer {
+  width: 100%;
+  height: 100%;
+  border-width: 3px;
+  border-color: var(--vol-loading-color) transparent transparent transparent;
+  transform: rotate(0deg);
+  animation: vol-loading-spin-cw 1.5s linear infinite;
+  filter: drop-shadow(0 0 6px var(--vol-loading-color));
+}
+
+/* Dış halka progress arc — conic gradient ile */
+.vol-loading__indicator--orbital .vol-loading__ring--outer::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from -90deg,
+    var(--vol-loading-color) 0%,
+    var(--vol-loading-color) var(--vol-loading-progress),
+    transparent var(--vol-loading-progress),
+    transparent 100%
+  );
+  mask: radial-gradient(
+    transparent calc(50% - 4px),
+    black calc(50% - 4px),
+    black calc(50% - 1px),
+    transparent calc(50% - 1px)
+  );
+  opacity: 0.9;
+  filter: drop-shadow(0 0 8px var(--vol-loading-color));
+}
+
+.vol-loading__indicator--orbital .vol-loading__ring--mid {
+  width: 70%;
+  height: 70%;
+  border-width: 2px;
+  border-color: transparent var(--vol-loading-color) transparent var(--vol-loading-color);
+  opacity: 0.5;
+  animation: vol-loading-spin-ccw 2s linear infinite;
+}
+
+.vol-loading__indicator--orbital .vol-loading__ring--inner {
+  width: 45%;
+  height: 45%;
+  border-width: 2px;
+  border-color: var(--vol-loading-color) transparent var(--vol-loading-color) transparent;
+  opacity: 0.3;
+  animation: vol-loading-spin-cw 1s linear infinite;
+}
+
+@keyframes vol-loading-spin-cw {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vol-loading-spin-ccw {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+/* === Energy Core === */
+
+.vol-loading__indicator--energy .vol-loading__core {
+  width: 20%;
+  height: 20%;
+  border-radius: 50%;
+  background: var(--vol-loading-color);
+  filter: drop-shadow(0 0 12px var(--vol-loading-color));
+  animation: vol-loading-pulse 1.2s ease-in-out infinite;
+  z-index: 2;
+}
+
+.vol-loading__indicator--energy .vol-loading__arc {
+  position: absolute;
+  border-radius: 50%;
+  border-style: solid;
+  border-color: var(--vol-loading-color) transparent transparent transparent;
+}
+
+.vol-loading__indicator--energy .vol-loading__arc--1 {
+  width: 100%;
+  height: 100%;
+  border-width: 3px;
+  opacity: 0.8;
+  animation: vol-loading-spin-cw 1.8s linear infinite;
+  filter: drop-shadow(0 0 6px var(--vol-loading-color));
+}
+
+.vol-loading__indicator--energy .vol-loading__arc--2 {
+  width: 75%;
+  height: 75%;
+  border-width: 2px;
+  border-color: transparent transparent var(--vol-loading-color) transparent;
+  opacity: 0.5;
+  animation: vol-loading-spin-ccw 2.5s linear infinite;
+}
+
+.vol-loading__indicator--energy .vol-loading__arc--3 {
+  width: 55%;
+  height: 55%;
+  border-width: 2px;
+  border-color: transparent var(--vol-loading-color) transparent transparent;
+  opacity: 0.3;
+  animation: vol-loading-spin-cw 1.2s linear infinite;
+}
+
+@keyframes vol-loading-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.4);
+    opacity: 0.7;
+  }
+}
+
+/* Yüzde metni */
+.vol-loading__percent {
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-loading-percent-size);
+  font-weight: 700;
+  color: var(--vol-ui-text);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 8px var(--vol-loading-color);
+  text-align: center;
+}
+
+/* Başlık */
+.vol-loading__title {
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-loading-title-size);
+  font-weight: 700;
+  color: var(--vol-ui-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+/* Alt başlık */
+.vol-loading__subtitle {
+  font-family: var(--vol-font-family-body);
+  font-size: var(--vol-loading-subtitle-size);
+  color: var(--vol-ui-text-muted);
+  letter-spacing: 0.03em;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+/* === Particle Orbit === */
+
+.vol-loading__indicator--particle .vol-loading__particle-center {
+  width: 15%;
+  height: 15%;
+  border-radius: 50%;
+  background: var(--vol-loading-color);
+  filter: drop-shadow(0 0 10px var(--vol-loading-color));
+  z-index: 2;
+  animation: vol-loading-pulse 1.5s ease-in-out infinite;
+}
+
+.vol-loading__indicator--particle .vol-loading__particle-orbit {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  animation: vol-loading-spin-cw 3s linear infinite;
+}
+
+.vol-loading__indicator--particle .vol-loading__particle {
+  position: absolute;
+  width: 12%;
+  height: 12%;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  background: var(--vol-loading-color);
+  filter: drop-shadow(0 0 4px var(--vol-loading-color));
+  transform: translate(-50%, -50%) rotate(var(--vol-loading-particle-angle, 0deg))
+    translateX(calc(var(--vol-loading-size) * 0.4));
+  opacity: 0.7;
+  animation: vol-loading-particle-fade 1.5s ease-in-out infinite;
+  animation-delay: var(--vol-loading-particle-delay, 0s);
+}
+
+@keyframes vol-loading-particle-fade {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* === Hexagon Pulse === */
+
+.vol-loading__indicator--hexagon {
+  --vol-loading-hex-size: calc(var(--vol-loading-size) * 0.5);
+}
+
+.vol-loading__indicator--hexagon .vol-loading__hexagon {
+  position: absolute;
+  width: var(--vol-loading-hex-size);
+  height: var(--vol-loading-hex-size);
+  background: var(--vol-loading-color);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  opacity: 0.15;
+  animation: vol-loading-hex-spin 4s linear infinite;
+}
+
+.vol-loading__indicator--hexagon .vol-loading__hexagon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(
+    from -90deg,
+    var(--vol-loading-color) 0%,
+    var(--vol-loading-color) var(--vol-loading-progress),
+    transparent var(--vol-loading-progress),
+    transparent 100%
+  );
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  opacity: 0.9;
+  filter: drop-shadow(0 0 8px var(--vol-loading-color));
+}
+
+.vol-loading__indicator--hexagon .vol-loading__hexagon-inner {
+  position: absolute;
+  width: calc(var(--vol-loading-hex-size) * 0.6);
+  height: calc(var(--vol-loading-hex-size) * 0.6);
+  background: var(--vol-loading-color);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  opacity: 0.4;
+  animation: vol-loading-hex-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes vol-loading-hex-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vol-loading-hex-pulse {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: scale(0.7) rotate(180deg);
+    opacity: 0.8;
+  }
+}
+
+/* === Bar === */
+
+.vol-loading__indicator--bar {
+  width: calc(var(--vol-loading-size) * 2);
+  height: auto;
+}
+
+.vol-loading__indicator--bar .vol-loading__bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--vol-ui-surface-2);
+  border-radius: var(--vol-radius-sm);
+  overflow: hidden;
+  position: relative;
+}
+
+.vol-loading__indicator--bar .vol-loading__bar-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  pointer-events: none;
+}
+
+.vol-loading__indicator--bar .vol-loading__bar-fill {
+  height: 100%;
+  width: var(--vol-loading-progress);
+  background: var(--vol-loading-color);
+  border-radius: var(--vol-radius-sm);
+  filter: drop-shadow(0 0 6px var(--vol-loading-color));
+}

@@ -1,0 +1,519 @@
+/* ===== Piksel editörü =====
+   Kütüphanenin üzerine tam alan kaplayan odaklı düzenleme kipi. Kabuk
+   `studio-shell--editing` sınıfıyla bu kipe geçer. */
+.editor-panel {
+  /* Gövde grid'inin HER İKİ sütununu da kapsar (ray + çalışma alanı).
+     Tek hücreye bırakıldığında panel QuickLook sütununun genişliğine
+     sıkışıyordu. */
+  grid-column: 1 / -1;
+  grid-row: 1;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--studio-drawer-bg);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.995);
+  transition:
+    opacity var(--vol-transition-medium),
+    visibility var(--vol-transition-medium),
+    transform var(--vol-transition-medium);
+}
+
+/* Flex kolon, KONUMA BAĞLI grid track'lerine yeğlenir: çakışma şeridi
+   gizlendiğinde grid'de sahne bir üst track'e kayıyor ve yüksekliği sıfıra
+   düşüyordu — tuval 1 piksel kalıyor, tıklamalar araca hiç ulaşmıyordu. */
+.editor-panel--open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.editor-panel__bar {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 60px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  background: var(--studio-topbar-glass);
+}
+
+/* Üst bar KOMPAKTTIR: bileşenlerin görünür etiket satırları burada taşıyor ve
+   bara sığmıyordu. Erişilebilir ad `aria-label` ile korunur. */
+.editor-panel__bar .vol-color-picker__label,
+.editor-panel__bar .vol-color-picker__hex,
+.editor-panel__bar .vol-slider__label {
+  display: none;
+}
+
+.editor-panel__bar .vol-color-picker__row {
+  gap: 0;
+}
+
+.editor-panel__bar .vol-slider {
+  width: 150px;
+}
+
+.editor-panel__bar .vol-slider__label-row {
+  justify-content: flex-end;
+}
+
+.editor-panel__identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.editor-panel__title {
+  overflow: hidden;
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: 15px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.editor-panel__status {
+  color: var(--vol-ui-text-muted);
+  font-size: 12px;
+}
+
+.editor-panel__tools,
+.editor-panel__settings,
+.editor-panel__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.editor-panel__tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--vol-hit-target-min);
+  min-height: var(--vol-hit-target-min);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: transparent;
+  color: var(--vol-ui-text-muted);
+  cursor: pointer;
+  transition:
+    border-color var(--vol-transition-fast),
+    background var(--vol-transition-fast);
+}
+
+.editor-panel__tool:hover {
+  background: var(--vol-ui-hover-fill);
+}
+
+.editor-panel__tool[aria-pressed='true'] {
+  border-color: var(--vol-ui-accent-border);
+  background: var(--vol-ui-accent-subtle);
+  color: var(--vol-ui-text);
+}
+
+.editor-panel__color .vol-color-picker__swatch {
+  width: 40px;
+  height: 36px;
+}
+
+.editor-panel__color .vol-color-picker__hex {
+  width: 92px;
+  min-height: 36px;
+  font-size: 13px;
+}
+
+.editor-panel__save {
+  padding: 8px 18px;
+  border: 1px solid var(--vol-ui-accent-border);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-accent-solid);
+  color: var(--vol-ui-on-accent);
+  font-family: var(--vol-font-family-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.editor-panel__save:disabled {
+  border-color: var(--vol-ui-disabled-border);
+  background: var(--vol-ui-disabled-fill);
+  color: var(--vol-ui-disabled-text);
+  cursor: not-allowed;
+}
+
+/* Çakışma şeridi: kirli belge asla sessizce ezilmez, karar kullanıcınındır. */
+.editor-panel__conflict {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--vol-ui-warning-border);
+  background: var(--vol-ui-warning-subtle);
+  color: var(--vol-ui-text);
+  font-size: 13px;
+}
+
+.editor-panel__conflict-action {
+  padding: 6px 12px;
+  border: 1px solid var(--vol-ui-warning-border);
+  border-radius: var(--vol-radius-sm);
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.editor-panel__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--studio-preview-bg);
+}
+
+.pixel-editor {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.pixel-editor__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* İmleç araca bağlıdır; kamera kipinin imlecini CORE yönetir. */
+.pixel-editor[data-tool='pencil'],
+.pixel-editor[data-tool='eraser'],
+.pixel-editor[data-tool='fill'] {
+  cursor: crosshair;
+}
+
+.pixel-editor[data-tool='eyedropper'] {
+  cursor: copy;
+}
+
+.quick-look__edit,
+.quick-look__audio {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 1px solid var(--vol-ui-accent-border);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-accent-subtle);
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family-body);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.quick-look__edit:hover,
+.quick-look__audio:hover {
+  background: var(--vol-ui-accent-hover);
+}
+
+.quick-look__edit[hidden],
+.quick-look__audio[hidden] {
+  display: none;
+}
+
+/* Editör gövdesi: sahne + sağ panel sütunu. */
+.editor-panel__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.editor-panel__tools {
+  flex: 0 0 56px;
+  align-self: stretch;
+  gap: 6px;
+  padding: 10px 8px;
+  border: 0;
+  border-right: 1px solid var(--vol-ui-border-soft);
+  background: var(--studio-rail-bg);
+}
+
+.editor-panel__tools .vol-tool-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--vol-radius-md);
+}
+
+.editor-panel__tools .vol-icon {
+  width: 21px;
+  height: 21px;
+}
+
+.editor-panel__split {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.editor-panel__split > .vol-split-pane__pane {
+  min-width: 0;
+  min-height: 0;
+}
+
+.editor-panel__split > .vol-split-pane__pane--secondary {
+  background: var(--studio-drawer-bg);
+}
+
+.editor-panel__workspace {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.editor-panel__settings {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  min-height: 58px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  background: var(--studio-topbar-glass);
+}
+
+.editor-panel__settings .vol-color-picker {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-panel__settings .vol-slider {
+  width: min(220px, 28vw);
+}
+
+.editor-panel__sidebar {
+  display: grid;
+  grid-template-rows: minmax(220px, 1fr) minmax(180px, auto);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--studio-drawer-bg);
+}
+
+.layer-panel,
+.palette-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+}
+
+.layer-panel {
+  overflow: hidden;
+}
+
+.palette-panel {
+  overflow-y: auto;
+}
+
+.layer-panel__header,
+.palette-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.layer-panel__title,
+.palette-panel__title {
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.palette-panel__count {
+  color: var(--vol-ui-text-muted);
+  font-size: 11px;
+}
+
+.layer-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.layer-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--studio-card-bg);
+  cursor: pointer;
+}
+
+.layer-row--active {
+  border-color: var(--vol-ui-accent-border);
+  background: var(--vol-ui-accent-subtle);
+}
+
+.layer-row__top {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.layer-row__name {
+  overflow: hidden;
+  color: var(--vol-ui-text);
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.layer-row__visible {
+  display: inline-flex;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  color: var(--vol-ui-text-muted);
+  cursor: pointer;
+}
+
+.layer-row__visible[aria-pressed='true'] {
+  color: var(--vol-ui-accent-solid);
+}
+
+.layer-row__controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.layer-row__opacity-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.layer-row__blend {
+  flex: 0 0 104px;
+  min-width: 104px;
+  min-height: 30px;
+  padding: 3px 5px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--studio-input-bg);
+  color: var(--vol-ui-text);
+  font-size: 12px;
+}
+
+.layer-row__actions {
+  display: flex;
+  gap: 4px;
+}
+
+.palette-panel__actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.palette-panel__field {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--vol-ui-text-muted);
+  font-size: 11px;
+}
+
+.palette-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+  gap: 6px;
+}
+
+.palette-swatch {
+  aspect-ratio: 1;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: 3px;
+  background: var(--swatch-color, #000);
+  cursor: pointer;
+}
+
+.palette-swatch--selected {
+  outline: 2px solid var(--vol-ui-accent-solid);
+  outline-offset: 1px;
+}
+
+.palette-panel__quantize {
+  padding: 5px 10px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: transparent;
+  color: var(--vol-ui-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* Ses: dalga formu görünümü. */
+
+/* Editör kipinde kütüphane rayı GİZLENİR.
+   Ray filtreleri yalnız kütüphaneye aittir; editör açıkken tıklanamıyor ama
+   ekranın solunda ölü bir sütun olarak duruyordu. */
+.studio-shell--editing .asset-rail {
+  display: none;
+}
+
+/* Panel bölümleri: başlık sola dayalı, aksiyonlar sağda. */
+.panel-section__header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+}
+
+.panel-section__actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.panel-section__actions--spread {
+  justify-content: space-between;
+  width: 100%;
+}
+
+.panel-section__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.layer-row__thumb {
+  display: block;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: 3px;
+  background: var(--studio-checker-bg);
+  image-rendering: pixelated;
+}

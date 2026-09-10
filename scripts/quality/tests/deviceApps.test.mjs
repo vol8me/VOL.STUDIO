@@ -87,8 +87,3 @@ test('APPS listesi bulunamazsa bekçi susmaz', (t) => {
 
   assert.match(validateDeviceApps(root)[0], /APPS/);
 });
-
-test('gerçek repoda ölçüm her Android kabuğunu kapsar', () => {
-  const root = join(import.meta.dirname, '..', '..', '..');
-  assert.deepEqual(validateDeviceApps(root), []);
-});

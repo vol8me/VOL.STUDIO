@@ -11,7 +11,7 @@
     "high": "just high",
     "signoff": "just signoff",
     "doctor:env": "just doctor",
-    "dev": "pnpm --parallel -r --filter @volstudio/vol-hell --filter @volstudio/vol-arachnid --filter @volstudio/vol-ui --filter @volstudio/vol-asset-studio run dev",
+    "dev": "pnpm --parallel -r --filter @volstudio/vol-hell --filter @volstudio/vol-arachnid --filter @volstudio/vol-life --filter @volstudio/vol-ui --filter @volstudio/vol-asset-studio run dev",
     "build:game": "pnpm --filter @volstudio/vol-hell build",
     "build:arachnid": "pnpm --filter @volstudio/vol-arachnid build",
     "build:life": "pnpm --filter @volstudio/vol-life build",

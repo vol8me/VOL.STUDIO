@@ -73,3 +73,32 @@ test('gerçek repoda hiçbir dosya sınırı AŞMAZ', () => {
   assert.equal(Object.keys(ACKNOWLEDGED).length, 0, 'muafiyet listesi boş kalmalı');
   assert.equal(LINE_THRESHOLD, 1000, 'eşik doktrindeki satır sayısıyla aynı olmalı');
 });
+
+test('henüz eklenmemiş dosya da ölçülür, .gitignore’daki ölçülmez', (t) => {
+  const root = repo(t, { 'src/small.ts': 10 });
+  writeFileSync(join(root, 'src/fresh.ts'), 'x\n'.repeat(200));
+  writeFileSync(join(root, '.gitignore'), 'ignored/\n');
+  mkdirSync(join(root, 'ignored'), { recursive: true });
+  writeFileSync(join(root, 'ignored/big.ts'), 'x\n'.repeat(200));
+
+  const problems = validateSourceSize(root, {}, 100);
+
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /src\/fresh\.ts/);
+});
+
+test('sınır betik, stil ve native kaynağı da kapsar; veri dosyasını kapsamaz', (t) => {
+  const root = repo(t, {
+    'a/big.mjs': 200,
+    'b/big.css': 200,
+    'c/lib.rs': 200,
+    'd/data.json': 200,
+  });
+
+  const problems = validateSourceSize(root, {}, 100).join('\n');
+
+  assert.match(problems, /a\/big\.mjs/);
+  assert.match(problems, /b\/big\.css/);
+  assert.match(problems, /c\/lib\.rs/);
+  assert.doesNotMatch(problems, /data\.json/);
+});

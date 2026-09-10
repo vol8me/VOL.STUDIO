@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
 
+/*
+ * MainMenuScene ve SettingsScene gerçek tarayıcıda: birim kapsamı düşük kalan
+ * iki sahnenin kapsam şekli kapısındaki kanıtıdır.
+ */
+
 test('oyun gerçek tarayıcıda açılır ve ana menü çizilir', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {

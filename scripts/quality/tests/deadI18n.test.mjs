@@ -7,9 +7,9 @@ import { test } from 'node:test';
 import { validateI18nKeys, DYNAMIC_KEYS } from '../deadI18n.mjs';
 
 /**
- * Bekçi GERÇEK bir git ağacında sınanır: `git ls-files` kullandığı için
- * sahnelenmemiş dosyaları görmez, ve bu davranışın kendisi sözleşmenin
- * parçasıdır.
+ * Bekçi GERÇEK bir git ağacında sınanır: çalışma ağacını görür — henüz
+ * eklenmemiş dosyalar dahil, `.gitignore` hariç — ve bu davranışın kendisi
+ * sözleşmenin parçasıdır.
  */
 function repo(t, files) {
   const root = mkdtempSync(join(tmpdir(), 'vol-i18n-'));
@@ -75,4 +75,14 @@ test('beyan edilen her önek gerçek repoda KURULUYOR', () => {
   const problems = validateI18nKeys(process.cwd());
   assert.deepEqual(problems, [], `i18n yüzeyi temiz olmalı:\n${problems.join('\n')}`);
   assert.ok(DYNAMIC_KEYS.length > 0, 'muafiyet listesi boşalmışsa tarama anlamsızdır');
+});
+
+test('henüz eklenmemiş kod dosyasındaki kullanım anahtarı ölü saydırmaz', (t) => {
+  const root = repo(t, {
+    'pkg/src/i18n/tr.json': JSON.stringify({ menu: { play: 'Oyna' } }),
+    'pkg/src/app.ts': 'export {};\n',
+  });
+  writeFileSync(join(root, 'pkg/src/split.ts'), "i18next.t('menu.play');\n");
+
+  assert.deepEqual(validateI18nKeys(root, []), []);
 });

@@ -18,10 +18,30 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { join } from 'node:path';
 
-/** Ham baytı değil, TELDEN GEÇEN baytı ölçer. */
+/**
+ * Ham baytı değil, TELDEN GEÇEN baytı ölçer. Sunucu her dosyayı AYRI sıkıştırır;
+ * dosyaları birleştirip tek seferde sıkıştırmak parçalar arası tekrarı da
+ * sıkıştırır ve gönderileni olduğundan küçük gösterir.
+ */
 function gzippedBytes(files) {
-  if (files.length === 0) return 0;
-  return gzipSync(Buffer.concat(files.map((file) => readFileSync(file))), { level: 9 }).length;
+  return files.reduce((sum, file) => sum + gzipSync(readFileSync(file), { level: 9 }).length, 0);
+}
+
+/**
+ * `vendor`, Vite'ın `manualChunks` ile ayırdığı bağımlılık parçasıdır; dosya
+ * ADINDAN tanınır çünkü ayrımın kaynağı zaten o kuraldır (bkz. oyunların
+ * `vite.config.ts`i). Yol ayırıcısı platforma göre değişir: Windows'ta `join`
+ * ters eğik çizgi üretir ve ayırıcıya bağlı bir desen Phaser'ı `app`e sayar.
+ */
+export function classifyBundleFiles(files) {
+  const isVendor = (file) =>
+    /(?:^|\/)(?:phaser|vendor)-[^/]*\.js$/.test(file.replaceAll('\\', '/'));
+  const js = files.filter((file) => file.endsWith('.js'));
+  return {
+    app: js.filter((file) => !isVendor(file)),
+    vendor: js.filter(isVendor),
+    css: files.filter((file) => file.endsWith('.css')),
+  };
 }
 
 function collect(directory, found = []) {
@@ -39,20 +59,12 @@ function collect(directory, found = []) {
   return found;
 }
 
-/**
- * Bir dist klasörünü ölçer.
- *
- * `vendor`, Vite'ın `manualChunks` ile ayırdığı bağımlılık parçasıdır; dosya
- * adından tanınır çünkü ayrımın kaynağı zaten o kuraldır (bkz. oyunların
- * `vite.config.ts`i). Geri kalan JS `app`tır.
- */
+/** Bir dist klasörünü ölçer; `vendor` dışındaki JS `app`tır. */
 export function measureBundle(distDir) {
   const files = collect(distDir);
   if (files.length === 0) return null;
 
-  const js = files.filter((file) => file.endsWith('.js'));
-  const vendor = js.filter((file) => /\/(?:phaser|vendor)-[^/]*\.js$/.test(file));
-  const app = js.filter((file) => !vendor.includes(file));
+  const { app, vendor, css } = classifyBundleFiles(files);
 
   /*
    * Tam sayı KB'a yuvarlamak küçük bir parçayı 0 gösteriyordu ve "ölçülmedi"
@@ -64,7 +76,7 @@ export function measureBundle(distDir) {
   return {
     appKb: kb(gzippedBytes(app)),
     vendorKb: kb(gzippedBytes(vendor)),
-    cssKb: kb(gzippedBytes(files.filter((file) => file.endsWith('.css')))),
+    cssKb: kb(gzippedBytes(css)),
   };
 }
 

@@ -17,6 +17,9 @@ import { validateSourceSize } from './quality/sourceSize.mjs';
 import { validateCommentDensity } from './quality/commentDensity.mjs';
 import { validateDevPorts } from './quality/devPorts.mjs';
 import { validateModuleCycles } from './quality/moduleCycles.mjs';
+import { validateDeviceApps } from './quality/deviceApps.mjs';
+import { validateCargoLockParity } from './quality/cargoLockParity.mjs';
+import { validateProductIcons } from './quality/productIcons.mjs';
 
 /** Her paketin sahip olması gereken script'ler ve hangi kapının kullandığı. */
 const REQUIRED_SCRIPTS = {
@@ -75,6 +78,9 @@ problems.push(...validateSourceSize(root));
 problems.push(...validateDevPorts(root));
 problems.push(...validateModuleCycles(root));
 problems.push(...validateCommentDensity(root));
+problems.push(...validateDeviceApps(root));
+problems.push(...validateCargoLockParity(root));
+problems.push(...validateProductIcons(root));
 
 for (const pkg of packages) {
   const manifest = readJson(join(root, pkg.dir, 'package.json'));

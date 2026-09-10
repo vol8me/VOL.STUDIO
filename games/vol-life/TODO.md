@@ -11,12 +11,6 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       geldiğinde birlikte eklenir.
 - [ ] **Ölçekleme bütçesi:** benchmark betiği ve `quality.json` →
       `scaling.<paket>.$measure` Adım 2'de yazılır.
-- [ ] **`DESIGN.md` koda göre güncellenir:** §8 ölçekleme kapısı (runner
-      genel), §9 cihaz ölçümü (vol-life `APPS`te) ve `src-tauri` (kurulu), §17
-      `device-benchmark` maddesi.
-- [ ] **`lifeHud.test.ts` dil testi yeniden yazılır:** başlığın yeniden
-      yazıldığını iddia eder; `languageChanged` aboneliği kaldırıldığında
-      düşer.
 
 ## Adım 1 — dünya substratı
 

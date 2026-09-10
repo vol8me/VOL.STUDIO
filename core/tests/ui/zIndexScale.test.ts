@@ -12,7 +12,11 @@ import { resolve } from 'node:path';
  */
 const theme = readFileSync(resolve(import.meta.dirname, '../../src/ui/theme.css'), 'utf-8');
 const overlays = readFileSync(resolve(import.meta.dirname, '../../src/ui/overlays.css'), 'utf-8');
-const controls = readFileSync(resolve(import.meta.dirname, '../../src/ui/controls.css'), 'utf-8');
+const actionControls = readFileSync(
+  resolve(import.meta.dirname, '../../src/ui/action-controls.css'),
+  'utf-8',
+);
+const loading = readFileSync(resolve(import.meta.dirname, '../../src/ui/loading.css'), 'utf-8');
 const debugCss = readFileSync(resolve(import.meta.dirname, '../../src/ui/debug.css'), 'utf-8');
 
 const TIERS = ['root', 'float', 'toast', 'dialog', 'dialog-content', 'loading', 'debug'] as const;
@@ -50,8 +54,8 @@ describe('Katman (z-index) ölçeği', () => {
     ['.vol-tooltip', '--vol-z-dialog-content', overlays],
     ['.vol-popup', '--vol-z-dialog-content', overlays],
     ['.vol-rich-tooltip', '--vol-z-dialog-content', overlays],
-    ['.vol-loading', '--vol-z-loading', overlays],
-    ['.vol-radial-menu', '--vol-z-float', controls],
+    ['.vol-loading', '--vol-z-loading', loading],
+    ['.vol-radial-menu', '--vol-z-float', actionControls],
     ['.vol-diagnostics-panel', '--vol-z-debug', debugCss],
   ];
 

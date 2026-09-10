@@ -1,0 +1,429 @@
+.vol-checkbox {
+  pointer-events: auto;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  cursor: pointer;
+  display: inline-flex;
+
+  /* bkz. .vol-button — aynı gerekçe: yalnızca pointer:coarse'da devreye girer. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-checkbox__input {
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  overflow: hidden;
+}
+
+.vol-checkbox__track {
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  width: 40px;
+  height: 22px;
+  transition:
+    border-color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  flex-shrink: 0;
+  align-items: center;
+  padding: 2px;
+  display: inline-flex;
+  position: relative;
+}
+
+.vol-checkbox__thumb {
+  background: var(--vol-ui-text-muted);
+  width: 16px;
+  height: 16px;
+  transition:
+    transform var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  border-radius: 2px;
+  transform: translate(0);
+}
+
+.vol-checkbox__input:checked ~ .vol-checkbox__track {
+  background: var(--vol-ui-brand-subtle);
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-checkbox__input:checked ~ .vol-checkbox__track .vol-checkbox__thumb {
+  background: var(--vol-ui-brand-solid);
+
+  /* track content-box genişliği (40 - 2*1 border - 2*2 padding = 34) eksi
+     thumb genişliği (16) = 18. Farklı bir değer thumb'ı track'in sağ iç
+     kenarına tam yaslamaz. */
+  transform: translate(18px);
+}
+
+.vol-checkbox__input:focus-visible ~ .vol-checkbox__track {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-checkbox__input:disabled ~ .vol-checkbox__track {
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+}
+
+.vol-checkbox__input:disabled ~ .vol-checkbox__track .vol-checkbox__thumb {
+  background: var(--vol-ui-disabled-text);
+}
+
+.vol-checkbox__label {
+  color: var(--vol-ui-text);
+  font-size: var(--vol-text-body);
+}
+
+.vol-radio-group {
+  pointer-events: auto;
+  gap: var(--vol-space-sm);
+  flex-direction: column;
+  display: flex;
+}
+
+.vol-radio {
+  pointer-events: auto;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  cursor: pointer;
+  display: inline-flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-radio__input {
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  overflow: hidden;
+}
+
+.vol-radio__dot {
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  width: 20px;
+  height: 20px;
+  transition:
+    border-color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  flex-shrink: 0;
+  display: inline-flex;
+  position: relative;
+}
+
+.vol-radio__dot::after {
+  content: '';
+  background: var(--vol-ui-brand-solid);
+  transition: transform var(--vol-transition-fast);
+  border-radius: 2px;
+  position: absolute;
+  inset: 4px;
+  transform: scale(0);
+}
+
+.vol-radio__input:checked ~ .vol-radio__dot {
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-radio__input:checked ~ .vol-radio__dot::after {
+  transform: scale(1);
+}
+
+.vol-radio__input:focus-visible ~ .vol-radio__dot {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-radio__input:disabled ~ .vol-radio__dot {
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+}
+
+.vol-radio__input:disabled ~ .vol-radio__dot::after {
+  background: var(--vol-ui-disabled-text);
+}
+
+.vol-radio__label {
+  color: var(--vol-ui-text);
+  font-size: var(--vol-text-body);
+}
+
+.vol-segmented {
+  pointer-events: auto;
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  gap: 2px;
+  padding: 2px;
+  display: inline-flex;
+  position: relative;
+}
+
+.vol-segmented__thumb {
+  background: var(--vol-ui-brand-solid);
+  border-radius: var(--vol-radius-sm);
+  opacity: 0;
+  transition:
+    transform var(--vol-transition-fast),
+    width var(--vol-transition-fast),
+    opacity var(--vol-transition-fast);
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+}
+
+.vol-segmented__item {
+  z-index: 1;
+  pointer-events: auto;
+  cursor: pointer;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text-secondary);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-xs) var(--vol-space-md);
+  transition: color var(--vol-transition-fast);
+  background: 0 0;
+  border: none;
+  font-size: var(--vol-text-body);
+  font-weight: 600;
+  position: relative;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-segmented__item:hover {
+  color: var(--vol-ui-text);
+}
+
+.vol-segmented__item--active,
+.vol-segmented__item--active:hover {
+  color: var(--vol-ui-on-brand);
+}
+
+.vol-segmented__item:disabled {
+  cursor: default;
+  color: var(--vol-ui-disabled-text);
+}
+
+.vol-segmented__item:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-stepper {
+  pointer-events: auto;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  flex-direction: column;
+  display: flex;
+}
+
+.vol-stepper__label {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vol-ui-text-muted);
+  font-size: var(--vol-text-body);
+}
+
+.vol-stepper__control {
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+  width: fit-content;
+  box-shadow: 0 1px 0 0 var(--vol-ui-scrim) inset;
+  align-items: stretch;
+  display: inline-flex;
+  overflow: hidden;
+}
+
+.vol-stepper__button {
+  pointer-events: auto;
+  cursor: pointer;
+  width: 40px;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text-secondary);
+  transition:
+    background-color var(--vol-transition-fast),
+    color var(--vol-transition-fast);
+  background: 0 0;
+  border: none;
+  font-size: var(--vol-text-title);
+  font-weight: 700;
+  line-height: 1;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-stepper__button:hover {
+  background: var(--vol-ui-hover-fill);
+  color: var(--vol-ui-text);
+}
+
+.vol-stepper__button:active {
+  background: var(--vol-ui-pressed-fill);
+}
+
+.vol-stepper__button:disabled {
+  cursor: default;
+  color: var(--vol-ui-disabled-text);
+  background: 0 0;
+}
+
+.vol-stepper__button:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.vol-stepper__input {
+  pointer-events: auto;
+  text-align: center;
+  width: 56px;
+  font-family: var(--vol-font-family);
+  font-variant-numeric: tabular-nums;
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-2);
+  border: none;
+  border-left: 1px solid var(--vol-ui-border-soft);
+  border-right: 1px solid var(--vol-ui-border-soft);
+  appearance: textfield;
+  font-size: var(--vol-text-title);
+  font-weight: 700;
+}
+
+.vol-stepper__input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.vol-stepper__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.vol-stepper__input:focus-visible {
+  background: var(--vol-ui-surface-1);
+  outline: none;
+}
+
+.vol-stepper__input:disabled {
+  color: var(--vol-ui-disabled-text);
+  background: var(--vol-ui-disabled-fill);
+}
+
+.vol-range-slider {
+  pointer-events: auto;
+  gap: var(--vol-space-xs);
+  flex-direction: column;
+  width: 100%;
+  display: flex;
+}
+
+.vol-range-slider__label-row {
+  justify-content: space-between;
+  font-size: var(--vol-text-body);
+  display: flex;
+}
+
+.vol-range-slider__label {
+  color: var(--vol-ui-text-secondary);
+}
+
+.vol-range-slider__value {
+  color: var(--vol-ui-text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/*
+ * Çubuk GÖRSELDİR (bkz. `.vol-slider__track` — aynı gerekçe): `min-height`
+ * ile şişirilirse dokunmatikte 16 px'lik çubuk 44 px'e çıkıyor ve kaydırıcı
+ * kocaman bir bloğa dönüşüyordu. Hedef büyütmesi aşağıdaki görünmez
+ * `::before` şeridine bırakıldı.
+ */
+.vol-range-slider__track {
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-soft);
+  width: 100%;
+  height: 16px;
+  margin: 5px 0;
+  position: relative;
+}
+
+/*
+ * Görünmez dokunma şeridi; çubuğun üstünde ve altında simetrik taşar.
+ * Fallback 26 px masaüstündeki eski `-5px` taşmasını BİREBİR korur
+ * ((26 − 16) / −2 = −5). `pointer: coarse` altında token 44 px olduğunda
+ * şerit kendiliğinden −14 px'e açılır ve tam 44 px'lik hedefi verir.
+ */
+.vol-range-slider__track::before {
+  content: '';
+  position: absolute;
+  inset: calc((var(--vol-hit-target-min, 26px) - 16px) / -2) 0;
+}
+
+.vol-range-slider__fill {
+  background: var(--vol-ui-brand-solid);
+  border-radius: var(--vol-radius-sm);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.vol-range-slider__handle {
+  background: var(--vol-ui-on-brand);
+  border: 2px solid var(--vol-ui-brand-solid);
+  border-radius: var(--vol-radius-sm);
+  cursor: grab;
+  touch-action: none;
+  width: 18px;
+  height: 26px;
+  transition: transform var(--vol-transition-fast);
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.vol-range-slider__handle--min {
+  z-index: 1;
+}
+
+.vol-range-slider__handle--max {
+  z-index: 2;
+}
+
+.vol-range-slider__handle:active {
+  cursor: grabbing;
+}
+
+.vol-range-slider__handle:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+  z-index: 3;
+}
+
+.vol-range-slider--disabled .vol-range-slider__handle {
+  cursor: default;
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+}
+
+.vol-range-slider--disabled .vol-range-slider__track {
+  pointer-events: none;
+}

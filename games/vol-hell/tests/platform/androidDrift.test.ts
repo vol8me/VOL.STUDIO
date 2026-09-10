@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 /**
  * ÜRETİLMİŞ ANDROID AĞACININ ELLE DÜZENLENMİŞ YERLERİ.
  *
- * `tauri-v2/src-tauri/gen/android` Tauri CLI tarafından üretilir ama repoda tutulur ve
+ * `games/vol-hell/src-tauri/gen/android` Tauri CLI tarafından üretilir ama repoda tutulur ve
  * içinde ELLE yazılmış kararlar vardır: yön kilidi, titreşim izni, geri tuşunun
  * oyuna devri, sürükleyici tam ekran. VOL.ARACHNID'in kendi ağacı için aynı
  * kapı `games/vol-arachnid/tests/platform/androidDrift.test.ts` içindedir. `tauri android init` bu ağacı yeniden

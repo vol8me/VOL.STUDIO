@@ -114,15 +114,45 @@ export function validateQualityConfig(raw) {
       }
       if (acknowledged !== undefined) {
         if (!isPlainObject(acknowledged)) {
-          problems.push('coverageShape.acknowledged: nesne olmalı (dosya yolu → gerekçe metni)');
+          problems.push('coverageShape.acknowledged: nesne olmalı (dosya yolu → { reason, evidence })');
         } else {
-          for (const [file, reason] of Object.entries(acknowledged)) {
-            if (typeof reason !== 'string' || reason.trim() === '') {
-              problems.push(
-                `coverageShape.acknowledged[${JSON.stringify(file)}]: gerekçe boş olamaz. Sessiz muafiyet yok.`,
-              );
+          for (const [file, entry] of Object.entries(acknowledged)) {
+            const where = `coverageShape.acknowledged[${JSON.stringify(file)}]`;
+            if (!isPlainObject(entry) || typeof entry.reason !== 'string' || !entry.reason.trim()) {
+              problems.push(`${where}: gerekçe boş olamaz. Sessiz muafiyet yok.`);
+            }
+            const evidence = isPlainObject(entry) ? entry.evidence : undefined;
+            if (
+              !Array.isArray(evidence) ||
+              evidence.length === 0 ||
+              evidence.some((path) => typeof path !== 'string' || !path.trim())
+            ) {
+              problems.push(`${where}: kanıt listesi boş olamaz — gerekçeyi sınayan testi yaz.`);
             }
           }
+        }
+      }
+    }
+  }
+
+  if (raw.coverageRuns !== undefined) {
+    if (!isPlainObject(raw.coverageRuns)) {
+      problems.push('coverageRuns: nesne olmalı (koşu adı → { only } ya da { exclude })');
+    } else {
+      for (const [run, spec] of Object.entries(raw.coverageRuns)) {
+        const where = `coverageRuns[${JSON.stringify(run)}]`;
+        const lists = isPlainObject(spec)
+          ? ['only', 'exclude'].filter((key) => spec[key] !== undefined)
+          : [];
+        if (lists.length !== 1) {
+          problems.push(`${where}: tam olarak biri olmalı — "only" ya da "exclude".`);
+          continue;
+        }
+        const names = spec[lists[0]];
+        if (!Array.isArray(names) || names.some((name) => typeof name !== 'string' || !name.trim())) {
+          problems.push(`${where}.${lists[0]}: paket adı listesi olmalı.`);
+        } else if (lists[0] === 'only' && names.length === 0) {
+          problems.push(`${where}.only: boş — koşu hiçbir paketi ölçmez.`);
         }
       }
     }
@@ -162,6 +192,14 @@ export function validateQualityWorkspaceParity(raw, workspacePackageNames) {
       problems.push(
         `${name}: workspace paketi quality.json içinde eşik veya gerekçeli muafiyet taşımıyor.`,
       );
+    }
+  }
+
+  for (const [run, spec] of Object.entries(raw.coverageRuns ?? {})) {
+    for (const name of [...(spec.only ?? []), ...(spec.exclude ?? [])]) {
+      if (!workspace.has(name)) {
+        problems.push(`coverageRuns[${JSON.stringify(run)}]: "${name}" bir workspace paketi değil.`);
+      }
     }
   }
 

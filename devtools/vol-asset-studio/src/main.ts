@@ -7,6 +7,9 @@ import trResources from './i18n/tr.json';
 import enResources from './i18n/en.json';
 import './i18next-augment';
 import './styles.css';
+import './inspector.css';
+import './pixel-editor.css';
+import './audio-editor.css';
 
 i18n.addResources('tr', 'assetstudio', trResources);
 i18n.addResources('en', 'assetstudio', enResources);

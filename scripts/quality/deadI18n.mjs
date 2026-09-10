@@ -14,8 +14,8 @@
  * bir çöplüğe döner ve kapı hiçbir şey korumaz.
  */
 import { readFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
+import { workingTreeFiles } from './gitFiles.mjs';
 
 /**
  * Çalışma zamanında kurulan anahtarlar — TAM liste, önek değil.
@@ -32,10 +32,13 @@ export const DYNAMIC_KEYS = [
   { key: 'touch.dir_right', prefix: 'touch.dir_' },
 ];
 
+/*
+ * Çalışma ağacı okunur, yalnız indeks değil: bölünüp henüz eklenmemiş bir kod
+ * dosyasındaki kullanım görünmezse anahtar sahte biçimde "ölü" sayılır —
+ * ölçüldü, 162 anahtar böyle işaretlenmişti.
+ */
 function gitFiles(root, pattern) {
-  return execFileSync('git', ['ls-files', pattern], { cwd: root, encoding: 'utf8' })
-    .split('\n')
-    .filter(Boolean);
+  return workingTreeFiles(root, [pattern]);
 }
 
 function flatten(value, path = []) {

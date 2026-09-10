@@ -1,0 +1,521 @@
+.vol-event-log {
+  pointer-events: auto;
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+  flex-direction: column;
+  width: 100%;
+  display: flex;
+  overflow: hidden;
+}
+
+.vol-event-log__filters {
+  padding: var(--vol-space-xs);
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  flex-wrap: wrap;
+  gap: 4px;
+  display: flex;
+}
+
+.vol-event-log__filter {
+  pointer-events: auto;
+  cursor: pointer;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text-muted);
+  border: 1px solid var(--vol-ui-border-soft);
+  transition:
+    color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  background: 0 0;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: var(--vol-text-label);
+  font-weight: 600;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-event-log__filter:hover {
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-hover-fill);
+}
+
+.vol-event-log__filter--active {
+  color: var(--vol-ui-on-brand);
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-event-log__scroll-area {
+  height: 200px;
+  overflow-y: auto;
+}
+
+.vol-event-log__list {
+  flex-direction: column;
+  display: flex;
+}
+
+.vol-event-log__row {
+  align-items: baseline;
+  gap: var(--vol-space-sm);
+  padding: 6px var(--vol-space-md);
+  font-family: var(--vol-font-family);
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  font-size: var(--vol-text-body);
+  display: flex;
+}
+
+.vol-event-log__row:last-child {
+  border-bottom: none;
+}
+
+.vol-event-log__row--pinned {
+  background: var(--vol-ui-surface-2);
+  border-bottom-color: var(--vol-ui-border-strong);
+}
+
+.vol-event-log__row--enter {
+  animation: 0.28s ease-out vol-event-log-row-enter;
+}
+
+@keyframes vol-event-log-row-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vol-event-log__row--leave {
+  animation: 0.2s ease-in forwards vol-event-log-row-leave;
+  overflow: hidden;
+}
+
+@keyframes vol-event-log-row-leave {
+  0% {
+    opacity: 1;
+    max-height: 60px;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    max-height: 0;
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.vol-event-log__timestamp {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  width: 52px;
+  color: var(--vol-ui-text-disabled);
+  flex-shrink: 0;
+  font-size: var(--vol-text-label);
+  overflow: hidden;
+}
+
+.vol-event-log__icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+}
+
+.vol-event-log__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-event-log__text {
+  min-width: 0;
+  color: var(--vol-ui-text-secondary);
+  flex: 1;
+}
+
+.vol-event-log__row--success .vol-event-log__text {
+  color: var(--vol-ui-success-border);
+}
+
+.vol-event-log__row--warning .vol-event-log__text {
+  color: var(--vol-ui-warning-border);
+}
+
+.vol-event-log__row--danger .vol-event-log__text {
+  color: var(--vol-ui-danger-border);
+}
+
+.vol-event-log__row--info .vol-event-log__text {
+  color: var(--vol-ui-info-border);
+}
+
+.vol-event-log__count {
+  font-variant-numeric: tabular-nums;
+  color: var(--vol-ui-text-muted);
+  background: var(--vol-ui-surface-2);
+  border-radius: 999px;
+  flex-shrink: 0;
+  padding: 1px 7px;
+  font-size: var(--vol-text-label);
+  font-weight: 700;
+}
+
+.vol-event-log__pin {
+  pointer-events: auto;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  color: var(--vol-ui-text-disabled);
+  border-radius: var(--vol-radius-sm);
+  opacity: 0;
+  transition:
+    opacity var(--vol-transition-fast),
+    color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  background: 0 0;
+  border: none;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-event-log__pin:hover {
+  background: var(--vol-ui-hover-fill);
+  color: var(--vol-ui-text);
+}
+
+.vol-event-log__pin--active {
+  color: var(--vol-ui-brand-hover);
+}
+
+.vol-event-log__row:hover .vol-event-log__pin,
+.vol-event-log__pin--active {
+  opacity: 1;
+}
+
+.vol-event-log__pin svg {
+  width: 12px;
+  height: 12px;
+}
+
+.vol-kanban-wrap {
+  gap: var(--vol-space-sm);
+  flex-direction: column;
+  width: 100%;
+  display: flex;
+}
+
+.vol-kanban__search-bar {
+  pointer-events: auto;
+}
+
+.vol-kanban__search-input {
+  pointer-events: auto;
+  width: 100%;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-xs) var(--vol-space-md);
+  transition: border-color var(--vol-transition-fast);
+  font-size: var(--vol-text-body);
+}
+
+.vol-kanban__search-input::placeholder {
+  color: var(--vol-ui-text-disabled);
+}
+
+.vol-kanban__search-input:focus-visible {
+  border-color: var(--vol-ui-focus-ring);
+  outline: none;
+}
+
+.vol-kanban {
+  pointer-events: auto;
+  gap: var(--vol-space-md);
+  align-items: flex-start;
+  width: 100%;
+  display: flex;
+
+  /*
+   * Sütunlar sığmadığında pano KAYAR, ezilmez.
+   *
+   * Sütunlar bir dönem `flex: 1` + `min-width: 0` taşıyordu: dar bir kapta altı
+   * sütun 54 px'e iniyor, kartlar 36 px kalıyordu (telefonda ölçüldü). O
+   * genişlikte pano okunmuyor ve sürükleme hedefi parmakla vurulamıyor —
+   * yani bileşen dar ekranda çalışmıyor, sadece küçülmüş gibi görünüyordu.
+   *
+   * Yatay kaydırma, panonun kendi kabıdır; taşma dışarı sızmaz.
+   */
+  overflow-x: auto;
+}
+
+.vol-kanban__column {
+  gap: var(--vol-space-sm);
+  background: var(--vol-ui-bg-subtle);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+
+  /*
+   * `min-width: 0` KALIR: sütun içindeki başlık/etiketler ancak bu değerle
+   * kırpılabilir (flex çocuğu varsayılan olarak içeriğinden küçülmez). Ezilmeyi
+   * engelleyen şey bu değil, aşağıdaki `flex-shrink: 0`dır.
+   */
+  min-width: 0;
+  padding: var(--vol-space-sm);
+  transition:
+    border-color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  flex-direction: column;
+
+  /*
+   * Büyür, KÜÇÜLMEZ, okunabilir bir tabandan başlar. Geniş panoda sütunlar
+   * alanı paylaşır; dar panoda tabanda durup panoyu kaydırılabilir yapar.
+   */
+  flex: 1 0 var(--vol-kanban-column-min, 200px);
+  display: flex;
+}
+
+.vol-kanban__column--drag-over {
+  border-color: var(--vol-ui-brand-border);
+  background: var(--vol-ui-brand-subtle);
+}
+
+.vol-kanban__column--drag-rejected {
+  border-color: var(--vol-ui-danger-border);
+  background: var(--vol-ui-danger-subtle);
+}
+
+.vol-kanban__column-header {
+  padding: 4px var(--vol-space-xs);
+  justify-content: space-between;
+  align-items: center;
+  display: flex;
+}
+
+.vol-kanban__column-title {
+  font-family: var(--vol-font-family);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vol-ui-text-secondary);
+  font-size: var(--vol-text-body);
+  font-weight: 700;
+}
+
+.vol-kanban__column-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--vol-ui-text-muted);
+  background: var(--vol-ui-surface-2);
+  transition:
+    color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: var(--vol-text-label);
+}
+
+.vol-kanban__column--full .vol-kanban__column-count {
+  color: var(--vol-ui-danger-border);
+  background: var(--vol-ui-danger-subtle);
+}
+
+.vol-kanban__column-body {
+  gap: var(--vol-space-xs);
+  flex-direction: column;
+  min-height: 40px;
+  display: flex;
+}
+
+.vol-kanban__column-body--virtualized {
+  position: relative;
+  overflow-y: auto;
+}
+
+.vol-kanban__column-spacer {
+  pointer-events: none;
+  width: 1px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.vol-kanban__column-viewport {
+  gap: var(--vol-space-xs);
+  flex-direction: column;
+  display: flex;
+  position: relative;
+}
+
+.vol-kanban__card {
+  pointer-events: auto;
+  cursor: grab;
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-sm);
+  padding-left: calc(var(--vol-space-sm) + 6px);
+  transition:
+    opacity var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  position: relative;
+}
+
+.vol-kanban__card:hover {
+  border-color: var(--vol-ui-border-strong);
+  cursor: pointer;
+}
+
+.vol-kanban__card:active {
+  cursor: grabbing;
+}
+
+.vol-kanban__card--dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.vol-kanban__card:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-kanban__card--keyboard-grabbed {
+  border-color: var(--vol-ui-brand-border);
+  box-shadow:
+    0 0 0 1px var(--vol-ui-brand-border),
+    0 8px 20px var(--vol-ui-scrim);
+  transform: scale(1.02);
+}
+
+.vol-kanban__card--ghost {
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 12px 28px var(--vol-ui-scrim);
+  cursor: grabbing;
+  position: fixed;
+  transform: rotate(-2deg) scale(1.03);
+}
+
+.vol-kanban__card--ghost-active {
+  opacity: 1;
+}
+
+.vol-kanban__drop-indicator {
+  background: var(--vol-ui-brand-solid);
+  height: 3px;
+  box-shadow: 0 0 0 3px var(--vol-ui-brand-subtle);
+  pointer-events: none;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.vol-kanban__card--just-moved {
+  animation: 1.6s ease-out vol-kanban-card-flash;
+}
+
+@keyframes vol-kanban-card-flash {
+  0% {
+    background: var(--vol-ui-brand-subtle);
+    border-color: var(--vol-ui-brand-border);
+  }
+
+  100% {
+    background: var(--vol-ui-surface-1);
+    border-color: var(--vol-ui-border-soft);
+  }
+}
+
+.vol-kanban__card-priority {
+  left: 0;
+  top: var(--vol-radius-sm);
+  bottom: var(--vol-radius-sm);
+  background: var(--vol-ui-border-soft);
+  border-radius: 2px;
+  width: 3px;
+  position: absolute;
+}
+
+.vol-kanban__card-priority--low {
+  background: var(--vol-ui-info-border);
+}
+
+.vol-kanban__card-priority--medium {
+  background: var(--vol-ui-warning-border);
+}
+
+.vol-kanban__card-priority--high {
+  background: var(--vol-ui-danger-border);
+}
+
+.vol-kanban__card-header {
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-kanban__card-title {
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  font-size: var(--vol-text-body);
+  font-weight: 600;
+}
+
+.vol-kanban__card-avatar {
+  width: 22px;
+  height: 22px;
+  color: var(--vol-ui-on-support);
+  background: var(--vol-ui-support-solid);
+  border-radius: var(--vol-radius-sm);
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  font-size: var(--vol-text-micro);
+  font-weight: 700;
+  display: inline-flex;
+}
+
+.vol-kanban__card-description {
+  color: var(--vol-ui-text-muted);
+  margin-top: 2px;
+  font-size: var(--vol-text-label);
+}
+
+.vol-kanban__card-tags {
+  margin-top: var(--vol-space-xs);
+  flex-wrap: wrap;
+  gap: 4px;
+  display: flex;
+}
+
+.vol-kanban__card-tag {
+  letter-spacing: 0.02em;
+  color: var(--vol-ui-text-secondary);
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: var(--vol-text-micro);
+  font-weight: 600;
+}

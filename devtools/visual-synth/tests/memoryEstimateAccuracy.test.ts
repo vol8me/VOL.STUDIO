@@ -11,8 +11,8 @@ import {
  * `estimatedPeakWorkingBytes` ile GERÇEK yığın artışını karşılaştırır.
  *
  * Model kendini `confidence: 'conservative'` diye etiketler ama ölçüm 128²
- * belgelerde tahminin **~5–31 katını** verdi. Kök neden kanıtlanmadı; açık
- * bulgu olarak `TODO.md`de duruyor.
+ * belgelerde tahminin **~5–31 katını** verdi. Kök neden kanıtlanmadı ve bu
+ * fark borç olarak taşınmıyor: visual-synth yalnız bir test ortamıdır.
  *
  * Bu test formülü DÜZELTMEYE çalışmaz — hangi tarafın yanlış olduğu
  * kanıtlanmadan formülü değiştirmek `RenderCache`/tile kararlarını sessizce
