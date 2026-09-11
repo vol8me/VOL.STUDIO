@@ -5,11 +5,30 @@
   "hud": {
     "ariaLabel": "World indicators",
     "fullscreenEnter": "Enter fullscreen",
-    "fullscreenExit": "Exit fullscreen"
+    "fullscreenExit": "Exit fullscreen",
+    "options": "Options"
   },
   "exit": {
     "title": "Close VOL.LIFE?",
     "confirm": "Exit",
     "cancel": "Continue"
+  },
+  "options": {
+    "title": "Options",
+    "close": "Close options",
+    "language": "Language",
+    "turkish": "Turkish",
+    "english": "English",
+    "showFps": "Show frame rate",
+    "haptics": "Haptic feedback",
+    "orientation": "Screen orientation",
+    "portrait": "Portrait",
+    "landscape": "Landscape",
+    "displayMode": "Display",
+    "windowed": "Windowed",
+    "fullscreen": "Fullscreen"
+  },
+  "fatal": {
+    "title": "VOL.LIFE could not start"
   }
 }

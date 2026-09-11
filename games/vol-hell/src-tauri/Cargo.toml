@@ -17,9 +17,7 @@ tauri-build = { version = "2.6", features = [] }
 [dependencies]
 # Native kabuk PAYLAŞILIR: her oyunun ayrı Rust kopyası tutması, tek bir
 # platform düzeltmesini birden çok yerde yapmak demekti.
-volstudio-tauri = { path = "../../../tauri-v2/src-tauri", default-features = false, features = [
-  "custom-protocol",
-] }
+volstudio-tauri = { path = "../../../tauri-v2/src-tauri", default-features = false }
 tauri = { version = "2.11", features = ["protocol-asset", "rustls-tls"] }
 
 # Eklentiler DOĞRUDAN bağımlılıktır: izin tanımları (`log:default` vb.)
@@ -28,9 +26,12 @@ tauri-plugin-log = "2.9"
 tauri-plugin-store = "2.4"
 tauri-plugin-sql = { version = "2.4", features = ["sqlite"] }
 
+# `custom-protocol` yalnız bu özellikten açılır. Bağımlılık satırında sabit
+# açıldığında `tauri dev`in `--no-default-features`ı onu kapatamıyor, pencere dev
+# sunucusu yerine son `vite build` çıktısını gösteriyordu (ölçüldü).
 [features]
 default = ["custom-protocol"]
-custom-protocol = ["tauri/custom-protocol"]
+custom-protocol = ["tauri/custom-protocol", "volstudio-tauri/custom-protocol"]
 
 [profile.release]
 codegen-units = 1

@@ -412,12 +412,21 @@ sabittir:
 | Sol üst | Marka şeridi                                                     |
 | Sağ üst | Düğme kümesi: seçenekler köşede, tam ekran yalnız web'de solunda |
 | Sol alt | Mini harita (Adım 7)                                             |
-| Sağ alt | Kare hızı göstergesi                                             |
+| Sağ alt | İsteğe bağlı kare hızı göstergesi                                |
 
 Seçenekler düğmesi her platformda aynı yerde durur; tam ekran düğmesi yoksa
-küme boşluk bırakmaz. Düğme köşeye hizalı, aşağı açılan bir panel açar; panel
-Escape ve Android geri tuşuyla kapanır. Bütün konumlar `--vol-safe-*`
-token'larıyla çentikten uzak tutulur.
+küme boşluk bırakmaz. İki düğme ve çekmece kapatma düğmesi aynı 40 px
+`IconButton` ölçüsündedir. Seçenekler, `StatsPanel` ile aynı CORE `Sheet`
+kabuğunda sağdan açılır: en az yarım genişlik kaplar ve dünya scrim altında
+görünür kalır; 480 px ve altında (dikey telefon) tam genişliğe çıkar. Ölçüldü:
+masaüstü 1280 px'te 640, yatay telefonda 832 px'in 420'si, dikey telefonda
+tamamı. İçerik kendi içinde kayar. Satırlar: dil (`Select`), kare hızı ve
+dokunsal geri bildirim (`Checkbox`; ikincisi yalnız titreşim motoru olan
+cihazda), ekran yönü, masaüstünde görüntü kipi. Scrim, Escape, Android geri
+hareketi ve X kapatır; odak seçenekler düğmesine döner. Bütün konumlar `--vol-safe-*`
+token'larıyla çentikten uzak tutulur. FPS seçeneği açıksa gösterge çekmecenin
+üst katmanında görünür kalır; ölçüm en fazla 250 ms'de bir yazıya çevrilir ve
+simülasyon temposuna bağlanmaz.
 
 | Platform        | Tam ekran düğmesi          | Görüntü kipi seçeneği | Dikey / yatay               |
 | --------------- | -------------------------- | --------------------- | --------------------------- |
@@ -437,7 +446,7 @@ VOL.LIFE'ın yüzeylerinin karşılığı:
 | Dünya haritası, işaretler                                | `ui/hud/MinimapPanel` (world boyutu, marker, viewport) |
 | Olay geçmişi                                             | `ui/data/EventLog`                                     |
 | Tekrar hızı (0.5× / 1× / 2× / 4×), yalnız Tekrar kipinde | `ui/primitives/SegmentedControl`                       |
-| Seçenekler düğmesi ve paneli                             | `ui/primitives/IconButton` + `ui/overlays/Popover`     |
+| Seçenekler düğmesi ve paneli                             | `ui/primitives/IconButton` + `ui/overlays/Sheet`       |
 | Dikey / yatay, görüntü kipi                              | `ui/primitives/SegmentedControl`                       |
 | Müdahale menüsü                                          | `ui/overlays/CommandPalette`                           |
 | Anlık olay bildirimi                                     | `ui/overlays/Toast`                                    |
@@ -941,13 +950,14 @@ işlendi.
 ## 16. Bugünkü durum
 
 Kurulan şey bir simülasyon değil, **kapılardan geçen bir zemin ve kabuktur**
-(ölçüm 2026-09-10):
+(ölçüm 2026-09-11):
 
-- 8 test dosyasında 42 test geçiyor. Kapsam eşikleri `quality.json`da
-  87/87/83/86'dır (satır/ifade/dal/fonksiyon) ve ratchet gereği düşürülerek
-  geçilmez.
-- `build` geçiyor; gzip boyutu **app 29 KB / vendor 345,1 KB / css 17 KB**,
-  bütçe 40/360/24.
+- 14 test dosyasında 83 test geçiyor; ölçülen kapsam 98,6/98,6/94,6/88,9.
+  Eşikler `quality.json`da 96/96/92/86'dır (satır/ifade/dal/fonksiyon) ve
+  ratchet gereği düşürülerek geçilmez.
+- `build` geçiyor; gzip boyutu **app 37,6 KB / vendor 345,1 KB / css 17,1 KB**,
+  bütçe 40/360/24. Seçenekler çekmecesi ve tercih deposu uygulama payını 29
+  KB'tan 37,6 KB'a çıkardı; bütçede 2,4 KB kaldı.
 - Dünya ölçüleri `config/world.ts` içinde VERİ olarak durur. Tekrar hızına
   bağlı adım tavanı (`resolveMaxStepsForSpeed`) yazılı; canlı dünya
   hızlandırılmadığı için (§1) yalnız tekrar kipinde kullanılacak.

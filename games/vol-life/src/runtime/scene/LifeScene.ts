@@ -1,22 +1,43 @@
 import Phaser from 'phaser';
-import { DisposableScope, FullscreenController } from '@volstudio/core';
+import {
+  DisposableScope,
+  FullscreenController,
+  applyVolViewport,
+  i18n,
+  setHapticsEnabled,
+} from '@volstudio/core';
+import { getRuntimePlatform, type RuntimePlatform } from '@volstudio/tauri-v2';
+import { DEFAULT_LIFE_PREFERENCES, type LifePreferences } from '@/app/LifePreferences';
+import { OrientationPreference } from '@/app/OrientationPreference';
 import { LifeExitPrompt } from '@/runtime/ui/LifeExitPrompt';
 import { LifeHud } from '@/runtime/ui/LifeHud';
+import { LifeOptionsPanel } from '@/runtime/ui/LifeOptionsPanel';
+
+export interface LifeSceneServices {
+  readonly platform: RuntimePlatform;
+  readonly preferences: LifePreferences | null;
+  readonly orientation: OrientationPreference;
+}
 
 /**
  * Dünyanın sunum kabuğu.
  *
  * Sahne BAĞLAMA katmanıdır: simülasyon `runtime/sim` içinde Phaser'sız koşar,
- * sahne yalnız onu kurar ve çizdirir. Kural bir tercihe değil ölçüme dayanır —
- * mantık sahnede biriktiğinde headless ölçüm ve kapsam ikisi birden imkânsız
- * hale gelir.
+ * sahne yalnız onu kurar ve çizdirir. Platform kararları (tam ekran düğmesi,
+ * çıkış onayı, görüntü kipi) kabuğa bağlıdır, işaretçi türüne değil.
  */
 export class LifeScene extends Phaser.Scene {
   private runtimeScope: DisposableScope | null = null;
   private hud: LifeHud | null = null;
+  private readonly services: LifeSceneServices;
 
-  constructor() {
+  constructor(services: Partial<LifeSceneServices> = {}) {
     super({ key: 'LifeScene' });
+    this.services = {
+      platform: services.platform ?? getRuntimePlatform(),
+      preferences: services.preferences ?? null,
+      orientation: services.orientation ?? new OrientationPreference(null),
+    };
   }
 
   create(): void {
@@ -31,30 +52,85 @@ export class LifeScene extends Phaser.Scene {
     this.runtimeScope = scope;
 
     try {
+      // Kamera rasterleme çarpanına göre kurulur; çağrılmazsa arka tampon DPR ile
+      // büyür ama kamera yakınlaşmaz ve dünya küçük çizilir.
+      applyVolViewport(this);
+
+      const { platform, preferences, orientation } = this.services;
+      const preferenceState = preferences?.get() ?? DEFAULT_LIFE_PREFERENCES;
       const uiParent = this.game.canvas.parentElement ?? undefined;
 
-      // Android geri hareketi (vol:androidback) fareli cihazda da onaya bağlanmalı;
-      // web/masaüstünde bu olay hiç gelmediği için dinleyici zararsızdır.
-      scope.addDestroyable(new LifeExitPrompt({ container: uiParent ?? document.body }));
+      // Geri hareketi yalnız Android kabuğunda gelir; fareli Android'de de gelir.
+      if (platform === 'android') {
+        scope.addDestroyable(new LifeExitPrompt({ container: uiParent ?? document.body }));
+      }
 
-      // F11 ve düğme AYNI denetleyiciden geçer; sahne ömrüne bağlı olduğu için
-      // yeniden başlatmada ikinci bir keydown dinleyicisi birikmez.
-      const fullscreen = scope.addDestroyable(
-        new FullscreenController({
-          onChange: (active) => this.hud?.setFullscreenActive(active),
-          onError: (error) => console.warn('[VOL.LIFE] Tam ekran açılamadı:', error),
+      // Tam ekran düğmesi yalnız web'dedir: Android kabuğu çubukları zaten gizler,
+      // masaüstünde kip seçenekler panelinden ve F11'den native pencereye gider.
+      const fullscreen =
+        platform === 'web'
+          ? scope.addDestroyable(
+              new FullscreenController({
+                onChange: (active) => this.hud?.setFullscreenActive(active),
+                onError: (error) => console.warn('[VOL.LIFE] Tam ekran açılamadı:', error),
+              }),
+            )
+          : null;
+
+      const panel = scope.addDestroyable(
+        new LifeOptionsPanel({
+          language: {
+            value: i18n.getLocale(),
+            onSelect: (value) => {
+              void i18n.changeLanguage(value).catch((error: unknown) => {
+                console.warn('[VOL.LIFE] Dil tercihi uygulanamadı:', error);
+              });
+            },
+          },
+          showFps: {
+            value: preferenceState.showFps,
+            onSelect: (value) => void preferences?.setShowFps(value),
+          },
+          haptics: {
+            value: preferenceState.hapticsEnabled,
+            onSelect: (value) => void preferences?.setHapticsEnabled(value),
+          },
+          orientation: {
+            value: orientation.current(),
+            interactive: orientation.isInteractive(),
+            onSelect: (value) => void orientation.select(value),
+          },
+          displayMode:
+            platform === 'desktop' && preferences
+              ? {
+                  value: preferenceState.displayMode,
+                  onSelect: (mode) => void preferences.setDisplayMode(mode),
+                }
+              : undefined,
         }),
       );
+      scope.addSubscription(orientation.subscribe((value) => panel.setOrientation(value)));
 
-      const isCurrentFullscreen = fullscreen.isFullscreen();
       this.hud = scope.addDestroyable(
         new LifeHud(uiParent, {
-          showFullscreenToggle: true,
-          initialFullscreen: isCurrentFullscreen,
-          onToggleFullscreen: () => void fullscreen.toggle(),
+          fullscreen: fullscreen
+            ? { initialActive: fullscreen.isFullscreen(), onToggle: () => void fullscreen.toggle() }
+            : undefined,
+          optionsContent: panel,
+          showFps: preferenceState.showFps,
         }),
       );
-      this.hud.setFullscreenActive(isCurrentFullscreen);
+      if (preferences) {
+        scope.addSubscription(
+          preferences.subscribe((state) => {
+            panel.setDisplayMode(state.displayMode);
+            panel.setShowFps(state.showFps);
+            panel.setHapticsEnabled(state.hapticsEnabled);
+            this.hud?.setFpsVisible(state.showFps);
+            setHapticsEnabled(state.hapticsEnabled);
+          }),
+        );
+      }
     } catch (error) {
       scope.dispose();
       this.runtimeScope = null;

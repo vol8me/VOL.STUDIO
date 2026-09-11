@@ -47,6 +47,23 @@ const ACTIVITY_EDITS: readonly HandEdit[] = [
       'Callback `onCreate` içinde kurulur — WebView callback`inde bazı cihazlarda kaçıyordu',
     marker: /override fun onCreate[\s\S]*onBackPressedDispatcher\.addCallback/,
   },
+  {
+    decision:
+      'Kayıtlı ekran yönü pencere kurulmadan uygulanır — sonra uygulansa her açılışta ekran dönerdi',
+    marker:
+      /override fun onCreate[^{]*\{\s*(\/\/[^\n]*\n\s*)*OrientationStore\.applySaved\(this\)\s*enableEdgeToEdge\(\)/,
+  },
+];
+
+const MANIFEST_EDITS: readonly HandEdit[] = [
+  {
+    decision: 'Varsayılan yön dikey ve sistem döndürme kilidine uyar (DESIGN.md §9)',
+    marker: 'android:screenOrientation="userPortrait"',
+  },
+  {
+    decision: 'Oyun kategorisi — Android 16 geniş ekranda yön isteğini ancak böyle uygular',
+    marker: /<application[^>]*android:appCategory="game"/,
+  },
 ];
 
 function assertEdits(source: string, file: string, edits: readonly HandEdit[]): void {
@@ -69,6 +86,10 @@ const ACTIVITY_PATH = 'app/src/main/java/com/volstudio/life/MainActivity.kt';
 describe('Android üretilmiş ağaç drifti', () => {
   it('MainActivity elle alınmış kararları taşır', () => {
     assertEdits(read(ACTIVITY_PATH), 'MainActivity.kt', ACTIVITY_EDITS);
+  });
+
+  it('AndroidManifest elle alınmış kararları taşır', () => {
+    assertEdits(read('app/src/main/AndroidManifest.xml'), 'AndroidManifest.xml', MANIFEST_EDITS);
   });
 
   /*

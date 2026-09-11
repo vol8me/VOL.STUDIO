@@ -1,4 +1,4 @@
-import { Bar, i18next } from '@volstudio/core';
+import { Bar, DisposableScope, i18next } from '@volstudio/core';
 import { uiConfig } from '@/config/ui';
 import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import type { Player } from '@/runtime/entity/Player';
@@ -8,23 +8,31 @@ import { HUDStats } from './HUDStats';
 import { SparkBar } from './SparkBar';
 import { WaveBanner } from './WaveBanner';
 
+export interface GameHudOptions {
+  /** Masaüstü Q/E yetenek satırı kurulsun mu; dokunmatikte `false` (bkz. kurucu). */
+  readonly abilitySlots?: boolean;
+}
+
+/** HUD'un ekranın üst ve alt kenarında kapladığı bant, parent'a göre CSS pikseli. */
+export interface GameHudReserve {
+  readonly top: number;
+  readonly bottom: number;
+}
+
 /**
- * Oyun içi HUD'un tamamı — can/dash/Spark barları, skor bloğu ve ability
- * slotları tek bir yerden kurulur ve tazelenir.
- *
- * Sahne dosyasından ayrıldı: HUD kurulumu ve her frame'lik tazeleme oynanış
- * mantığıyla ilgisiz ama `GameScene`'de en çok yer kaplayan bölümdü.
- * Değerler DEĞİŞMEDİKÇE DOM'a dokunulmaz; kıyaslar burada tutulur.
+ * Oyun içi HUD'un tamamı: üst şerit (can/dash/Spark, dalga, istatistikler) ve
+ * masaüstünde Q/E yetenek satırı. Değerler DEĞİŞMEDİKÇE DOM'a dokunulmaz;
+ * kıyaslar burada tutulur.
  */
 export class GameHud {
+  private readonly scope = new DisposableScope();
   private readonly healthBar: Bar;
   private readonly dashBar: Bar;
-  private readonly healthContainer: HTMLDivElement;
-  private readonly dashContainer: HTMLDivElement;
   private readonly stats: HUDStats;
   private readonly sparkBar: SparkBar;
-  private readonly abilityHud: AbilityHud;
+  private readonly abilityHud: AbilityHud | null;
   private readonly waveBanner: WaveBanner;
+  private readonly topStrip: HTMLDivElement;
   private prevHealth: number;
   private prevMaxHealth: number;
   private prevDashCharge = 1;
@@ -33,44 +41,57 @@ export class GameHud {
     private readonly parent: HTMLElement,
     player: Player,
     economy: RunEconomy,
+    options: GameHudOptions = {},
   ) {
-    // HUD ölçüleri config'te tek kaynak; CSS bunları custom property olarak okur.
     parent.style.setProperty('--vol-hud-bar-width', `${uiConfig.hud.barWidth}px`);
-    parent.style.setProperty('--vol-hud-dash-offset', `${uiConfig.hud.dashBarTopOffset}px`);
-    parent.style.setProperty('--vol-hud-spark-offset', `${uiConfig.hud.sparkBarTopOffset}px`);
+    this.scope.add({
+      dispose: () => parent.style.removeProperty('--vol-hud-bar-width'),
+    });
+
+    this.topStrip = document.createElement('div');
+    this.topStrip.className = 'vol-hud-top';
+    const vitals = document.createElement('div');
+    vitals.className = 'vol-hud-top__vitals';
+    this.topStrip.appendChild(vitals);
+    parent.appendChild(this.topStrip);
+    this.scope.add({ dispose: () => this.topStrip.remove() });
 
     const maxHealth = player.getMaxHealth();
     this.prevHealth = maxHealth;
     this.prevMaxHealth = maxHealth;
 
-    this.healthContainer = document.createElement('div');
-    this.healthContainer.className = 'vol-hud__slot vol-hud__slot--health';
-    this.healthBar = new Bar({
-      variant: 'health',
-      max: maxHealth,
-      value: maxHealth,
-      lowThreshold: uiConfig.lowHealthThreshold,
-      label: i18next.t('volhell:hud.health'),
-    });
-    this.healthContainer.appendChild(this.healthBar.element);
-    parent.appendChild(this.healthContainer);
+    this.healthBar = this.scope.addDestroyable(
+      new Bar({
+        variant: 'health',
+        max: maxHealth,
+        value: maxHealth,
+        lowThreshold: uiConfig.lowHealthThreshold,
+        label: i18next.t('volhell:hud.health'),
+      }),
+    );
+    this.healthBar.element.classList.add('vol-hud__slot', 'vol-hud__slot--health');
+    vitals.appendChild(this.healthBar.element);
 
-    this.dashContainer = document.createElement('div');
-    this.dashContainer.className = 'vol-hud__slot vol-hud__slot--dash';
-    this.dashBar = new Bar({
-      variant: 'stamina',
-      max: 1,
-      value: 1,
-      animateMs: uiConfig.hud.dashBar.animateMs,
-      label: i18next.t('volhell:hud.dash'),
-    });
-    this.dashContainer.appendChild(this.dashBar.element);
-    parent.appendChild(this.dashContainer);
+    this.dashBar = this.scope.addDestroyable(
+      new Bar({
+        variant: 'stamina',
+        max: 1,
+        value: 1,
+        animateMs: uiConfig.hud.dashBar.animateMs,
+        label: i18next.t('volhell:hud.dash'),
+      }),
+    );
+    this.dashBar.element.classList.add('vol-hud__slot', 'vol-hud__slot--dash');
+    vitals.appendChild(this.dashBar.element);
 
-    this.stats = new HUDStats(parent);
-    this.sparkBar = new SparkBar(parent, economy);
-    this.abilityHud = new AbilityHud(parent);
-    this.waveBanner = new WaveBanner(parent);
+    this.sparkBar = this.scope.addDestroyable(new SparkBar(vitals, economy));
+    this.waveBanner = this.scope.addDestroyable(new WaveBanner(this.topStrip));
+    this.stats = this.scope.addDestroyable(new HUDStats(this.topStrip));
+    // Dokunmatikte yeteneklerin TEK temsili `TouchControls` düğmeleridir: simge,
+    // bekleme dolumu, hazır/boş durumu ve adı taşıyan etiket orada. Bu satır aynı
+    // iki yuvayı ikinci kez çizer ve dokunmatikte karşılığı olmayan Q/E yazardı.
+    this.abilityHud =
+      options.abilitySlots === false ? null : this.scope.addDestroyable(new AbilityHud(parent));
   }
 
   /** Yeni dalga başladı — ortada duyuru belirir. */
@@ -90,6 +111,36 @@ export class GameHud {
   /** Kart shop'u HUD üzerindeki aynı Flux değerinin iki kez görünmesini engeller. */
   setFluxVisible(visible: boolean): void {
     this.stats.setFluxVisible(visible);
+  }
+
+  /**
+   * Şeridin alt kenarı ve yetenek satırının üst kenarı, parent'a göre. Oyun tuvali
+   * parent'ı birebir kapladığı için değerler dünya birimidir; `Border` sahayı bu
+   * bantların dışında kurar.
+   */
+  measureReserve(): GameHudReserve {
+    const parentRect = this.parent.getBoundingClientRect();
+    const topRect = this.topStrip.getBoundingClientRect();
+    const abilityRect = this.abilityHud?.element.getBoundingClientRect();
+    return {
+      top: Math.max(0, topRect.bottom - parentRect.top),
+      bottom: abilityRect ? Math.max(0, parentRect.bottom - abilityRect.top) : 0,
+    };
+  }
+
+  /** Şerit ya da yetenek satırı boyut değiştirince (dil, satır kırılması, dokunmatik kip) haber verir. */
+  observeLayout(listener: () => void): () => void {
+    const scope = new DisposableScope();
+    if (typeof ResizeObserver === 'function') {
+      const observer = new ResizeObserver(listener);
+      observer.observe(this.parent);
+      observer.observe(this.topStrip);
+      if (this.abilityHud) observer.observe(this.abilityHud.element);
+      scope.add({ dispose: () => observer.disconnect() });
+    } else {
+      scope.addListener(window, 'resize', listener);
+    }
+    return () => scope.dispose();
   }
 
   /** Tüm göstergeleri tazeler — her frame çağrılır. */
@@ -133,7 +184,7 @@ export class GameHud {
     this.stats.setTime(state.elapsedTimeMs);
     this.stats.setFlux(state.economy.getFlux());
     this.sparkBar.refresh();
-    this.abilityHud.refresh(state.abilities);
+    this.abilityHud?.refresh(state.abilities);
     this.waveBanner.refresh(
       state.deltaMs,
       state.wave,
@@ -148,19 +199,11 @@ export class GameHud {
     this.healthBar.setLabel(i18next.t('volhell:hud.health'));
     this.dashBar.setLabel(i18next.t('volhell:hud.dash'));
     this.sparkBar.refreshLabel();
-    this.abilityHud.refreshLabels();
+    this.abilityHud?.refreshLabels();
     this.waveBanner.refreshLabels();
   }
 
   destroy(): void {
-    this.healthBar.destroy();
-    this.dashBar.destroy();
-    this.healthContainer.remove();
-    this.dashContainer.remove();
-    this.stats.destroy();
-    this.sparkBar.destroy();
-    this.abilityHud.destroy();
-    this.waveBanner.destroy();
-    this.parent.style.removeProperty('--vol-hud-spark-offset');
+    this.scope.dispose();
   }
 }

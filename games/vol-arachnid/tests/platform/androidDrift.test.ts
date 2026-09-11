@@ -39,6 +39,10 @@ const MANIFEST_EDITS: readonly HandEdit[] = [
     marker: 'android:screenOrientation="sensorLandscape"',
   },
   {
+    decision: 'Oyun kategorisi — Android 16 geniş ekranda yön kilidini ancak böyle uygular',
+    marker: /<application[^>]*android:appCategory="game"/,
+  },
+  {
     decision: 'VIBRATE izni — izinsiz `navigator.vibrate()` hata vermeden yutulur',
     marker: 'android.permission.VIBRATE',
   },

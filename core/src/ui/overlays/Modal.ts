@@ -1,4 +1,5 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { pushBackHandler } from '../../platform/backNavigation';
 
 export interface ModalOptions {
   /** Scrim'e (arka plan karartması) tıklayınca kapat. Varsayılan true. */
@@ -98,7 +99,13 @@ export class Modal {
     this.sessionScope = new DisposableScope();
     openModals.push(this);
     this.sessionScope.add({ dispose: () => this.removeFromStack() });
-    this.sessionScope.addListener(document, 'keydown', this.boundKeydown as EventListener);
+    this.sessionScope.addListener(window, 'keydown', this.boundKeydown as EventListener);
+    this.sessionScope.addSubscription(
+      pushBackHandler(() => {
+        this.close();
+        return true;
+      }),
+    );
     syncBodyLock();
 
     const firstFocusable = this.content.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);

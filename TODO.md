@@ -9,69 +9,118 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
 
 ## Açık
 
-- [ ] **[P1] Oyunlar Android'i tek bir platform yüklemiyle tanısın.** Üç oyun
-      "Android mi?" sorusunu işaretçi türüne soruyor: vol-arachnid çıkış onayını
-      ve tam ekran düğmesini `shouldUseTouchControls()` ile kapılıyor; vol-hell
-      `hasNativeWindow()` = `isTauri() && !shouldUseTouchControls()` kullanıyor
-      ve oyun içi geri işleyicisini yalnız dokunmatikte kuruyor
-      (`GameMobileControls.ts`); VOL.LIFE `6b82b2d`de kararı silip düğmeyi sabit
-      gösterdi. vol-hell ve vol-arachnid `MainActivity`'si geri tuşunu koşulsuz
-      tüketip JS'e iletiyor (`OnBackPressedCallback(true)`); fareli Android'de
-      (DeX) dinleyici kurulmayan ekranda geri tuşu hiçbir şey yapmaz — bu kısım
-      statik okumadır, DeX'te sınanmadı. VOL.LIFE'ın seçenekler ve ekran yönü
-      işi bu yükleme bağlı. vol-hell `vite.config.ts` `TAURI_ENV_*`
-      değişkenlerini istemciye açıyor (`envPrefix`); VOL.LIFE ve vol-arachnid
-      açmıyor. Kapanır: tauri-v2'de ortak bir yüklem (Android / masaüstü Tauri /
-      tarayıcı) testle yazılır; üç oyun tam ekran düğmesi, çıkış onayı ve native
-      pencere özellikleri için onu kullanır.
-- [ ] **[P1] tauri-v2 Android'de ekran yönünü uygulayabilsin.** WebView'ın
-      `screen.orientation.lock()`u cihazda `NotSupportedError` veriyor (VOL.LIFE,
-      SM-G990B2, Android 16, WebView 152; DOM tam ekranında da) ve resmî Tauri
-      eklentileri arasında yön kilidi yok. Kapanır: tauri-v2'ye Kotlin eklentisi
-      girer (`setRequestedOrientation`); oyun kelimesi bilmez, yönü uygular,
-      uygulanan gerçek yönü döner ve kayıtlı yönü Activity açılışında
-      uygulayacak yardımcıyı sunar; izni yetenek dosyalarına ve üretilen şemaya
-      eklenir; masaüstü derlemesi etkilenmez (Rust kapısı). Köprü iki aileyi de
-      sunar: `sensor*` telefonun döndürme kilidini yok sayar (vol-hell ve
-      vol-arachnid manifestte bunu kullanıyor), `user*` kilide uyar; VOL.LIFE
-      `user*`ı seçti ([games/vol-life/DESIGN.md](games/vol-life/DESIGN.md) §9).
-- [ ] **[P1] Görüntü kipi uygulayıcısı ortak pakete çıksın.** vol-hell'in
-      `VideoSettingsController`ı F11'i native pencereye yönlendirmeyi, pencere
-      yöneticisinden gelen değişimi ayara yansıtmayı ve sıralı uygulamayı oyunun
-      çözünürlük ve grafik kalitesiyle aynı sınıfta taşıyor. VOL.LIFE masaüstünde
-      aynı davranışa ihtiyaç duyuyor; kopyalanırsa sıralama ve nesil denetimi iki
-      yerde yaşar. Kapanır: oyun bilmeyen kısım tauri-v2'ye (CORE
-      `FullscreenController` ve `TauriWindowAdapter` üstüne) taşınır ve
-      testlenir; vol-hell onu kullanır ve mevcut testleri geçer; VOL.LIFE aynı
-      parçayı kullanır.
-- [ ] **[P2] Android 16 geniş ekranda yön kilidini yok saymasın.** Üç oyunda
-      `targetSdk = 36` ve hiçbir manifestte `android:appCategory` yok. Android 16
-      davranış değişikliğine göre en dar kenarı 600dp ve üstü ekranlarda
-      `screenOrientation` ve `setRequestedOrientation()` yok sayılır; oyunlar
-      (`android:appCategory="game"`) muaf. Yani tablette vol-hell ve
-      vol-arachnid'in `sensorLandscape` kilidi tutmaz, VOL.LIFE'ın yön seçimi
-      işlemez. SM-G990B2 (384dp) etkilenmez; geniş ekranda sınanmadı. Kapanır: üç
-      manifestin `<application>`ına `android:appCategory="game"` girer ve drift
-      testleri kilitler; en dar kenarı 600dp ve üstü emülatörde yön kilidi
-      doğrulanır.
-- [ ] **[P3] vol-hell telefonda HUD arenayı örtüyor.** Cihazda ölçüldü
-      (SM-G990B2, yatay 832×384 CSS): sol üst Can/Dash/Spark panelleri arena
-      köşesinin üstünde duruyor ve bir düşman Dash çubuğunun altında kaldı; sağ
-      istatistik sütunu arena çizgisini kesiyor. Arena kenar boşluğu HUD'u
-      hesaba katmıyor; `Border.ts` onu yalnız ekran boyutundan hesaplıyor:
-      `min(60, genişlik × 0,25, yükseklik × 0,25)`. Kapanır: dokunmatik ve
-      küçük ekranda arena HUD bölgelerini dışarıda bırakır ya da HUD sıkışır;
-      cihaz ekran görüntüsüyle doğrulanır.
-- [ ] **[P3] vol-hell dokunmatikte yetenek yuvalarını iki kez gösteriyor.**
-      Cihazda ölçüldü: alttaki `AbilityHud` kutuları ile sağdaki `TouchControls`
-      yetenek düğmeleri aynı iki yuvayı birlikte çiziyor. `AbilityHud`
-      dokunmatiği hiç bilmiyor ve klavye tuş etiketi (`SLOT_KEY_LABELS`)
-      üretiyor; bunu bilinçli kılan bir kod ya da belge yok. Kapanır: dokunmatikte
-      tek temsil seçilir, karar kodda yazılı olur ve cihazda doğrulanır.
-- [ ] **[P3] iOS/WKWebView MP3 fallback'i ses build'ine bağlansın.** Bugün elle
-      koşuluyor (`pnpm convert:ios`); iOS hedefe girdiğinde yapılır.
+- [ ] **[P2] Android 16 geniş ekranda yön kilidini yok saymasın.** Android 16,
+      en dar kenarı 600dp ve üstü ekranlarda `screenOrientation`ı ve
+      `setRequestedOrientation()`ı yok sayar; oyun kategorisi
+      (`android:appCategory="game"`) muaftır. Kod tarafı bitti: üç manifestin
+      `<application>`ında kategori var ve drift testleri kilitliyor. Kalan tek
+      şart geniş ekran ölçümü. Telefonda `wm size` / `wm density` ile büyük ekran
+      taklidi kuralı üretmedi (kategorisiz kontrol uygulaması da döndü), kanıt
+      sayılmadı. `vol-tablet-36` AVD'si (Android 16, pixel_tablet, sw800) bu
+      makinede başsız açılışta sessizce kapanıyor (`swiftshader_indirect`, üç
+      deneme). Kapanır: 600dp ve üstü emülatörde ya da tablette, kategori varken
+      yön isteğinin uygulandığı ve kategori geçici kaldırılınca yok sayıldığı
+      ölçülür.
+- [ ] **[P2] vol-hell AppImage'ı Linux çizim kuralına girmiyor.** `linux.AppRun`
+      `WEBKIT_DISABLE_DMABUF_RENDERER`ı başlatıcı düzeyinde `1` yapıyor; kabuk
+      dışarıdan verilen değişkeni ezmediği için AppImage NVIDIA + yerel Wayland'da
+      da DMA-BUF'suz yolda kalır. Aynı yol `tauri dev`de 18 FPS ölçüldü (kök
+      Kapatılanlar, 2026-09-11); AppImage ayrıca ölçülmedi. Başlatıcının bu
+      satırı kabuğun alt süreçleri kapsamadığı gerekçesiyle eklenmişti; kabuk
+      değişkenleri WebView yaratılmadan önce koyduğu için gerekçe artık
+      geçerli olmayabilir. Kapanır: satır kaldırılıp AppImage derlenir; NVIDIA +
+      Wayland'da 60 FPS ve XWayland'da çizim ölçülür.
 
 ## Kapatılanlar
+
+### 2026-09-11 — platform yüklemi, Android yönü, görüntü kipi, vol-hell HUD, CORE `Sheet`
+
+- [x] **[P1] Oyunlar Android'i tek yüklemle tanıyor.** `@volstudio/tauri-v2`
+      `getRuntimePlatform()` (`web` / `desktop` / `android`) testle yazıldı;
+      vol-arachnid tam ekran düğmesini ve çıkış onayını, vol-hell native pencere
+      ve görüntü ayarlarını, VOL.LIFE düğme kümesini ve çıkış onayını ona bağladı.
+      Ekran üstü kontroller işaretçi türüne bağlı kaldı. Telefonda (SM-G990B2):
+      vol-arachnid'de tam ekran düğmesi yok, geri tuşu onayı açıyor, ikinci geri
+      onayı kapatıyor. Madde metnindeki "vol-hell oyun içi geri işleyicisini
+      yalnız dokunmatikte kuruyor" okuması yanlıştı: `GameMobileControls` onu
+      zaten koşulsuz kuruyordu.
+- [x] **[P1] tauri-v2 Android'de ekran yönünü uyguluyor.**
+      `tauri-v2/plugins/vol-orientation`: Kotlin `setRequestedOrientation`,
+      `user*` ve `sensor*` aileleri, uygulanan gerçek yön ve Activity açılışında
+      kayıtlı yönü uygulayan `OrientationStore.applySaved`. İzin `mobile.json`da
+      ve üretilen şemada; masaüstünde komutlar hata döner. Telefonda yatay seçimi
+      `ROTATION_90`, sistem tersini isterken kilit tutuyor, yeniden açılışta
+      tercih geliyor; açılış dönüşü VOL.LIFE odak almadan bitiyor (541 ms /
+      728 ms, odaklıyken 66 örneğin hiçbiri dikey değil).
+- [x] **[P1] Görüntü kipi uygulayıcısı `@volstudio/tauri-v2`de.**
+      `DisplayModeController` native pencereyi ya da DOM tam ekranını uygular,
+      F11'i yönlendirir, dış değişimi tercihe yazar ve yalnız en son isteği
+      uygular (11 test); vol-hell `VideoSettingsController`ı ve VOL.LIFE
+      masaüstü onu kullanıyor. Linux'ta pencere yöneticisinin değişimi
+      görünmüyordu: tao 0.35 `is_fullscreen()` yalnız uygulamanın kendi
+      isteğini hatırlıyor. Paylaşılan kabuğa GDK durumunu okuyan
+      `window_fullscreen_state` komutu girdi, `TauriWindowAdapter` onu okuyor.
+      KDE Plasma'da girdisiz ölçüldü: KWin pencereyi pencere / tam ekran /
+      pencere yapınca tercih `windowed` / `fullscreen` / `windowed` oldu
+      (düzeltmeden önce üçünde de `fullscreen` kalıyordu); tercih tam ekranken
+      uygulama tam ekran açıldı. Çekmeceden seçim ve F11 kullanıcı tarafından
+      elle doğrulandı.
+- [x] **[P2] `tauri dev` üç oyunda dev sunucusu yerine son derlemeyi
+      gösteriyordu.** Oyun crate'leri paylaşılan kabuğu
+      `features = ["custom-protocol"]` ile bağlıyordu; `tauri dev`in
+      `--no-default-features`ı bağımlılığın özelliğini kapatamadığı için pencere
+      son `vite build` çıktısını yüklüyordu (ölçüldü: yeni komut `dist`te yoktu
+      ve hiç çağrılmıyordu).
+      Özellik artık oyunun `custom-protocol`una bağlı. Üretim yolu değişmedi:
+      üç APK yeniden derlenip telefonda `http://tauri.localhost/` üzerinden
+      tuvaliyle açıldı. Aynı turda VOL.LIFE ve vol-arachnid vite ayarı
+      `src-tauri`yi izleme dışı bıraktı (Android derlemesi açık dev penceresini
+      defalarca yeniden yüklüyordu) ve VOL.LIFE'ın dev sunucusu izin listesine
+      tükettiği `tauri-v2` girdi.
+- [x] **[P1] Linux masaüstünde kare hızı NVIDIA + Wayland'da 18'e kilitliydi
+      (kullanıcı bildirdi).** Paylaşılan kabuk WebKit'in DMA-BUF çizicisini
+      koşulsuz kapatıyordu; o yolda her kare CPU üzerinden kopyalanıyor. Ölçüldü
+      (RTX 3050 / sürücü 610.57, KDE Plasma 6.7, WebKitGTK 2.52, 1920×1080, boş
+      sahne, arka plan boşta): çizici kapalıyken 18 FPS ve web işlemi %89;
+      açıkken yerel Wayland'da explicit sync protokol hatasıyla (Gdk Error 71)
+      açılışta çöküş, XWayland'da boş pencere; açık ve
+      `__NV_DISABLE_EXPLICIT_SYNC=1` ile sabit 60 FPS ve %12. GBM'siz yol 36–40,
+      SHM zorlama 24–25, vblank zamanlayıcısı 17–18 FPS'te kaldı. Kabuk artık
+      yalnız ekranı tek başına NVIDIA sürücüsünün sürdüğü yerel Wayland
+      oturumunda çiziciyi açık bırakıp explicit sync'i kapatıyor; XWayland'da
+      ve diğer sürücülerde güvenli yol sürüyor, dışarıdan verilen değişken
+      ezilmiyor. Hiçbir değişken verilmeden ölçüldü: yerel Wayland 60 FPS / %12,
+      XWayland çiziliyor (44 FPS). Ölçümlerin kaynağı `FpsMeter` tarayıcıda
+      bağımsız bir kare sayacıyla karşılaştırıldı: yüksüz, 25 ms, 45 ms ve 8/40 ms
+      dalgalı yükte sayım 60,0 / 33,9 / 20,2 / 34,4, gösterge 60 / 34 / 20 / 34.
+- [x] **[P3] vol-hell HUD arenayı örtmüyor.** HUD tek üst şerit: can ve dash
+      yan yana, altlarında Spark; ortada dalga; sağda 2×2 istatistik (44 px).
+      `GameHud.measureReserve` şeridin ve masaüstü yetenek satırının gerçek
+      yüksekliğini ölçüyor, `Border` sahayı bu bantların dışında kuruyor (toplam
+      rezerv en çok ekranın %70'i). Telefonda (832×384): şerit ve duraklatma
+      28–72 px, arena çizgisi 83 px'ten başlıyor, arena 241 px (HUD'u hesaba
+      katmayan kenarla 264 px'ti ve HUD sahaya biniyordu). Web: 1280×720'de 577,
+      640×360 dokunmatikte 218 px; hiçbir HUD dikdörtgeni arenayla kesişmiyor.
+- [x] **[P3] vol-hell dokunmatikte yetenekleri tek yerde gösteriyor.**
+      Dokunmatik kararı sahne açılışında bir kez alınıyor; `TouchControls`
+      düğmeleri tek temsil, `GameHud` masaüstü Q/E satırını kurmuyor ve karar
+      kurucuda yazılı. Mobil kopya CSS'i ve kullanılmayan simge dalı silindi.
+      Telefonda `.vol-ability-hud` yok, iki dokunmatik yetenek düğmesi var.
+- [x] **[P3] iOS/WKWebView MP3 fallback'i karar olarak kapatıldı.** iOS cihaz
+      erişimi yok; kullanıcı yeniden açana kadar kilitli. Dönüşüm elle koşuyor
+      (`pnpm convert:ios`).
+- [x] **[P2] CORE `Sheet` girdi.** Sağdan açılan, başlıklı ve kendi içinde
+      kayan çekmece; en az yarım genişlik, 480 px ve altında tam genişlik. Scrim,
+      odak, Escape ve Android geri sözleşmesi `Modal`dan gelir; açık `Modal`
+      artık geri hareketini de tüketiyor, `Select` ve `Popup` Escape'i önce
+      kendileri tüketiyor. `StatsPanel` bu kabuğa taşındı; vol-ui PANELS
+      sekmesi, layout e2e'si ve `core/docs/public-surface.md` (227 → 228; kayda
+      geçmemiş 223 → 227 girdisi de eklendi) güncellendi.
+- [x] **[P2] Dokunsal yetenek masaüstü Chromium'da yanlış pozitifti.**
+      `navigator.vibrate` tanımlı ama motorsuz; VOL.LIFE seçeneklerinde işe
+      yaramayan bir anahtar olarak görüldü. Titreşim katmanı artık yalnız mobil
+      cihazda sayılıyor (UA-CH `mobile`, yoksa kullanıcı ajanı); telefonda satır
+      görünür kaldı.
 
 ### 2026-09-10 — CORE önkoşulları: rastgelelik, simge, SegmentedControl, geri tuşu
 

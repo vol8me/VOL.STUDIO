@@ -2437,6 +2437,36 @@
           "type": "string",
           "const": "store:deny-values",
           "markdownDescription": "Denies the values command without any pre-configured scope."
+        },
+        {
+          "description": "Ekran yönünü okuma ve seçme izni.\n#### This default permission set includes:\n\n- `allow-get-state`\n- `allow-set-orientation`",
+          "type": "string",
+          "const": "vol-orientation:default",
+          "markdownDescription": "Ekran yönünü okuma ve seçme izni.\n#### This default permission set includes:\n\n- `allow-get-state`\n- `allow-set-orientation`"
+        },
+        {
+          "description": "Enables the get_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-orientation:allow-get-state",
+          "markdownDescription": "Enables the get_state command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_orientation command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-orientation:allow-set-orientation",
+          "markdownDescription": "Enables the set_orientation command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-orientation:deny-get-state",
+          "markdownDescription": "Denies the get_state command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_orientation command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-orientation:deny-set-orientation",
+          "markdownDescription": "Denies the set_orientation command without any pre-configured scope."
         }
       ]
     },

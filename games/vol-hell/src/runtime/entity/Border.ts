@@ -2,6 +2,48 @@ import Phaser from 'phaser';
 import { borderConfig, type BorderBounds } from '@/config/border';
 import { RENDER_DEPTH } from '@/config/layers';
 
+export interface ArenaReserve {
+  readonly top: number;
+  readonly bottom: number;
+}
+
+export type ArenaReserveProvider = () => ArenaReserve;
+
+export function computeArenaBounds(
+  width: number,
+  height: number,
+  reserve: ArenaReserve = { top: 0, bottom: 0 },
+): BorderBounds {
+  const margin = Math.min(
+    borderConfig.margin,
+    width * borderConfig.maxMarginRatio,
+    height * borderConfig.maxMarginRatio,
+  );
+  const safeTop = Number.isFinite(reserve.top) ? Math.max(0, reserve.top) : 0;
+  const safeBottom = Number.isFinite(reserve.bottom) ? Math.max(0, reserve.bottom) : 0;
+  const desiredTop = Math.max(margin, safeTop + borderConfig.hudGapPx);
+  const desiredBottom = Math.max(margin, safeBottom + borderConfig.hudGapPx);
+  const topExtra = desiredTop - margin;
+  const bottomExtra = desiredBottom - margin;
+  const extraTotal = topExtra + bottomExtra;
+  const maxReserved = Math.max(margin * 2, height * borderConfig.maxReserveRatio);
+  const allowedExtra = Math.max(0, maxReserved - margin * 2);
+  const scale = extraTotal > allowedExtra && extraTotal > 0 ? allowedExtra / extraTotal : 1;
+  const top = margin + topExtra * scale;
+  const bottomInset = margin + bottomExtra * scale;
+
+  return {
+    left: margin,
+    right: width - margin,
+    top,
+    bottom: height - bottomInset,
+    width: width - margin * 2,
+    height: height - top - bottomInset,
+    centerX: width / 2,
+    centerY: (top + height - bottomInset) / 2,
+  };
+}
+
 /**
  * Saha sınırı — kameradan küçük bir dikdörtgen.
  * Hiçbir şey (oyuncu, mermi, düşman) dışarı çıkamaz.
@@ -13,10 +55,13 @@ export class Border {
   bounds: BorderBounds;
   private readonly sceneRef: Phaser.Scene;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(
+    scene: Phaser.Scene,
+    private readonly reserveProvider: ArenaReserveProvider = () => ({ top: 0, bottom: 0 }),
+  ) {
     this.sceneRef = scene;
     const world = worldSizeOf(scene);
-    this.bounds = this.computeBounds(world.width, world.height);
+    this.bounds = computeArenaBounds(world.width, world.height, this.reserveProvider());
 
     this.graphics = scene.add.graphics();
     this.graphics.setDepth(RENDER_DEPTH.border);
@@ -25,32 +70,15 @@ export class Border {
     scene.scale.on(Phaser.Scale.Events.RESIZE, this.onResize, this);
   }
 
-  private computeBounds(width: number, height: number): BorderBounds {
-    // Cok dar pencerede sabit margin `right < left` üretir; Phaser.Math.Clamp
-    // min > max durumunda min döndürdüğü için her şey sol kenara yapışır ve
-    // oyun oynanamaz hale gelirdi. Margin viewport'un bir oranına kelepçelenir.
-    const margin = Math.min(
-      borderConfig.margin,
-      width * borderConfig.maxMarginRatio,
-      height * borderConfig.maxMarginRatio,
-    );
-    return {
-      left: margin,
-      right: width - margin,
-      top: margin,
-      bottom: height - margin,
-      width: width - margin * 2,
-      height: height - margin * 2,
-      centerX: width / 2,
-      centerY: height / 2,
-    };
-  }
-
   private onResize(): void {
     // `gameSize` RASTERLEME boyutudur (backing store). Saha DÜNYA biriminde
     // yaşar; ikisi kalite ayarına göre ayrışır, bu yüzden kameradan okunur.
+    this.refresh();
+  }
+
+  refresh(): void {
     const world = worldSizeOf(this.sceneRef);
-    this.bounds = this.computeBounds(world.width, world.height);
+    this.bounds = computeArenaBounds(world.width, world.height, this.reserveProvider());
     this.draw();
   }
 

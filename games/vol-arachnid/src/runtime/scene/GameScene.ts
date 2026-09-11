@@ -24,6 +24,7 @@ import {
   type PoseSourceNode,
   type RigDefinition,
 } from '@volstudio/core';
+import { getRuntimePlatform } from '@volstudio/tauri-v2';
 import { arenaConfig } from '@/config/arena';
 import { arachnidAudioConfig } from '@/config/audio';
 import { fxConfig } from '@/config/fx';
@@ -142,6 +143,10 @@ export class GameScene extends Phaser.Scene {
 
       const uiParent = this.game.canvas.parentElement ?? document.body;
       const touchDevice = shouldUseTouchControls();
+      // Kabuk ile işaretçi türü ayrı sorulardır: fareli Android'de (DeX) geri tuşu
+      // yine uygulamaya gelir, telefon tarayıcısında ise DOM tam ekranı gerçek bir
+      // iş yapar. Ekran üstü kontroller işaretçiye, kabuk kararları kabuğa bağlıdır.
+      const androidShell = getRuntimePlatform() === 'android';
       this.prefersFollowCamera = touchDevice;
       if (touchDevice) {
         runtimeScope.addDestroyable(
@@ -157,6 +162,8 @@ export class GameScene extends Phaser.Scene {
             }
           }),
         );
+      }
+      if (androidShell) {
         // Geri hareketi uygulamayı sessizce kapatmaz; onay sorar.
         runtimeScope.addDestroyable(
           new ArachnidExitPrompt({
@@ -179,9 +186,9 @@ export class GameScene extends Phaser.Scene {
       );
       this.hud = runtimeScope.addDestroyable(
         new ArachnidHud(uiParent, {
-          // Android uygulaması zaten tam ekran açılır; orada düğme hem
+          // Android kabuğu sistem çubuklarını zaten gizler; orada düğme hem
           // anlamsız hem de başparmağın yolunda duruyor.
-          showFullscreenToggle: !touchDevice,
+          showFullscreenToggle: !androidShell,
           onToggleFullscreen: () => void fullscreen.toggle(),
         }),
       );

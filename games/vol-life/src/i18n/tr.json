@@ -5,11 +5,30 @@
   "hud": {
     "ariaLabel": "Dünya göstergeleri",
     "fullscreenEnter": "Tam ekrana geç",
-    "fullscreenExit": "Tam ekrandan çık"
+    "fullscreenExit": "Tam ekrandan çık",
+    "options": "Seçenekler"
   },
   "exit": {
     "title": "VOL.LIFE kapatılsın mı?",
     "confirm": "Çık",
     "cancel": "Devam et"
+  },
+  "options": {
+    "title": "Seçenekler",
+    "close": "Seçenekleri kapat",
+    "language": "Dil",
+    "turkish": "Türkçe",
+    "english": "İngilizce",
+    "showFps": "Kare hızını göster",
+    "haptics": "Dokunsal geri bildirim",
+    "orientation": "Ekran yönü",
+    "portrait": "Dikey",
+    "landscape": "Yatay",
+    "displayMode": "Görüntü",
+    "windowed": "Pencere",
+    "fullscreen": "Tam ekran"
+  },
+  "fatal": {
+    "title": "VOL.LIFE başlatılamadı"
   }
 }

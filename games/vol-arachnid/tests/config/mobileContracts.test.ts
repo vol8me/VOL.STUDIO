@@ -69,7 +69,9 @@ describe('VOL.ARACHNID mobil sözleşmeleri', () => {
     expect(activity).toContain("CustomEvent('vol:androidback')");
     expect(activity).toMatch(/onCreate[\s\S]*onBackPressedDispatcher\.addCallback/);
     expect(nativeShell).toMatch(/fn exit_application\([\s\S]*app\.exit\(0\)/);
-    expect(nativeShell).toContain('tauri::generate_handler![exit_application]');
+    // Komut listesinde olması yeter; yanına başka komut girip rustfmt satırı bölünce
+    // tam dize eşleşmesi yanlış yere düşüyordu.
+    expect(nativeShell).toMatch(/tauri::generate_handler!\[[^\]]*\bexit_application\b[^\]]*\]/);
     expect(mobileCapability.permissions).not.toContain('core:window:allow-destroy');
   });
 });

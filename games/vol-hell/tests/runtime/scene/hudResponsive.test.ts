@@ -42,14 +42,12 @@ describe('HUD responsive — --vol-space-md', () => {
     }
   });
 
-  it("HUD slot'ları CSS'te --vol-space-md kullanır — sabit piksel değil", () => {
-    const slotBlock = /\.vol-hud__slot\s*\{([^}]*)\}/.exec(stylesContent);
-    expect(slotBlock, '.vol-hud__slot tanımlı olmalı').not.toBeNull();
-    expect(slotBlock![1]).toContain('var(--vol-space-md)');
-
-    const statsBlock = /\.vol-hud-stats\s*\{([^}]*)\}/.exec(stylesContent);
-    expect(statsBlock, '.vol-hud-stats tanımlı olmalı').not.toBeNull();
-    expect(statsBlock![1]).toContain('var(--vol-space-md)');
+  it('HUD üst şeridi güvenli alan ve tema boşluğuyla kenarlara bağlanır', () => {
+    const block = /\.vol-hud-top\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(block, '.vol-hud-top tanımlı olmalı').not.toBeNull();
+    expect(block![1]).toContain('--vol-safe-top');
+    expect(block![1]).toContain('--vol-space-md');
+    expect(block![1]).toContain('grid-template-columns');
   });
 
   it('HUD stilleri TS içinde satır içi yazılmaz — tasarım sistemi baypas edilmez', () => {
@@ -63,11 +61,7 @@ describe('HUD responsive — --vol-space-md', () => {
 
   it('HUD ölçüleri config üzerinden CSS custom property olarak verilir', () => {
     expect(gameHudContent).toContain('--vol-hud-bar-width');
-    expect(gameHudContent).toContain('--vol-hud-dash-offset');
-    expect(gameHudContent).toContain('--vol-hud-spark-offset');
     expect(stylesContent).toContain('var(--vol-hud-bar-width)');
-    expect(stylesContent).toContain('var(--vol-hud-dash-offset)');
-    expect(stylesContent).toContain('var(--vol-hud-spark-offset)');
   });
 });
 
@@ -154,10 +148,9 @@ describe('mobil yerleşim değişmezleri', () => {
     }
   });
 
-  it('mobil skor metni 44 px pause hedefinin altında kalır', () => {
-    const block = /\.vol-touch-active \.vol-hud-stats\s*\{([^}]*)\}/.exec(stylesContent);
-    expect(block, 'mobil skor/pause ayrımı tanımlı olmalı').not.toBeNull();
-    expect(block![1]).toContain('--vol-safe-top');
+  it('mobil üst şerit 44 px pause hedefinden yatayda ayrılır', () => {
+    const block = /\.vol-touch-active \.vol-hud-top\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(block, 'mobil HUD/pause ayrımı tanımlı olmalı').not.toBeNull();
     expect(block![1]).toContain('44px');
     expect(block![1]).toContain('--vol-safe-right');
   });
@@ -212,18 +205,32 @@ describe('mobil yerleşim değişmezleri', () => {
     expect(block![1]).toContain('justify-content: flex-start');
   });
 
-  it('mobil ability HUD başparmak alanlarından uzakta, alt ortada ve sadedir', () => {
-    const hudBlock = /\.vol-touch-active \.vol-ability-hud\s*\{([^}]*)\}/.exec(stylesContent);
-    expect(hudBlock, 'mobil ability HUD tanımlı olmalı').not.toBeNull();
-    expect(hudBlock![1]).toContain('left: 50%');
-    expect(hudBlock![1]).toContain('translateX(-50%)');
+  it('üst şerit tek banttır: can ve dash yan yana, Spark tam satır, istatistikler 2×2', () => {
+    // Dört satırlık istatistik sütunu bandı 87 px'e çıkarıp 384 px yüksek
+    // telefonda arenanın dörtte birini yiyordu (ölçüldü); bant iki satırda kalır.
+    const vitals = /\.vol-hud-top__vitals\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(vitals, 'vitals ızgarası tanımlı olmalı').not.toBeNull();
+    expect(vitals![1]).toContain('grid-template-columns: repeat(2,');
 
-    const hiddenLabels =
-      /\.vol-touch-active \.vol-ability-slot__key,\s*\.vol-touch-active \.vol-ability-slot__name\s*\{([^}]*)\}/.exec(
-        stylesContent,
-      );
-    expect(hiddenLabels, 'mobilde Q/E ve tekrar eden ad gizlenmeli').not.toBeNull();
-    expect(hiddenLabels![1]).toContain('display: none');
-    expect(stylesContent).toContain('.vol-touch-active .vol-ability-slot__icon');
+    const spark = /\.vol-hud__slot--spark\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(spark, 'Spark tam satır olmalı').not.toBeNull();
+    expect(spark![1]).toContain('grid-column: 1 / -1');
+
+    const stats = /\.vol-hud-stats\s*\{([^}]*)\}/.exec(stylesContent);
+    expect(stats, 'istatistik ızgarası tanımlı olmalı').not.toBeNull();
+    expect(stats![1]).toContain('grid-template-columns: repeat(2, max-content)');
+
+    expect(stylesContent).toMatch(/@media \(width < 600px\)[\s\S]*?\.vol-hud-top \.vol-wave/);
+  });
+
+  it('masaüstü ability HUD mobil kopya seçicileri ve ikonları taşımaz', () => {
+    expect(stylesContent).not.toContain('.vol-touch-active .vol-ability-hud');
+    expect(stylesContent).not.toContain('.vol-ability-slot__icon');
+    expect(gameHudContent).toContain('abilitySlots');
+  });
+
+  it('dokunmatik yüzey kararı sahne açılışında yalnız bir kez alınır', () => {
+    expect(sceneContent.match(/shouldUseTouchControls\(\)/g)).toHaveLength(1);
+    expect(sceneContent).toContain('this.touchControlsEnabled = shouldUseTouchControls();');
   });
 });

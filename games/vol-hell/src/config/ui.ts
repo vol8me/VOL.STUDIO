@@ -4,8 +4,6 @@ export const uiConfig = {
   lowHealthThreshold: 0.25,
   hud: {
     barWidth: 200,
-    dashBarTopOffset: 36,
-    sparkBarTopOffset: 72,
     dashBar: {
       /** 0 = animasyon yok; her frame rAF zinciri kurmamak için. */
       animateMs: 0,

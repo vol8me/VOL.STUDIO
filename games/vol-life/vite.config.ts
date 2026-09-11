@@ -32,8 +32,14 @@ export default defineConfig({
       allow: [
         import.meta.dirname,
         resolve(import.meta.dirname, '../../core'),
+        resolve(import.meta.dirname, '../../tauri-v2'),
         resolve(import.meta.dirname, '../../node_modules'),
       ],
+    },
+    // Android derlemesi `src-tauri/target` ve `gen/android` altına yazar; izlenirse
+    // açık dev penceresi derleme boyunca defalarca yeniden yüklenir (ölçüldü).
+    watch: {
+      ignored: ['**/src-tauri/**'],
     },
   },
   /*

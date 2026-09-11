@@ -60,6 +60,8 @@ export class Popup {
 
     this.boundKeydown = (event) => {
       if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
         this.close();
       }
     };

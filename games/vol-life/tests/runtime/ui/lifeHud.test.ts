@@ -1,124 +1,138 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { LifeHud } from '@/runtime/ui/LifeHud';
-import { i18n, i18next } from '@volstudio/core';
+import { i18n, i18next, pushBackHandler } from '@volstudio/core';
+import { LifeHud, type LifeHudOptions } from '@/runtime/ui/LifeHud';
 import tr from '@/i18n/tr.json';
 import en from '@/i18n/en.json';
 
-afterEach(() => {
+const huds: LifeHud[] = [];
+
+function mount(options: Partial<LifeHudOptions> = {}) {
+  const content = document.createElement('div');
+  content.className = 'test-options-content';
+  content.appendChild(document.createElement('button'));
+  const hud = new LifeHud(undefined, {
+    optionsContent: { element: content },
+    showFps: false,
+    ...options,
+  });
+  huds.push(hud);
+  return { hud, content };
+}
+
+function optionsButton(): HTMLButtonElement {
+  return document.querySelector<HTMLButtonElement>('.vol-life-hud__options')!;
+}
+
+beforeAll(async () => {
+  i18n.addResources('tr', 'life', tr);
+  i18n.addResources('en', 'life', en);
+  await i18n.init();
+}, 60_000);
+
+afterEach(async () => {
+  while (huds.length > 0) huds.pop()?.destroy();
   document.body.innerHTML = '';
+  await i18n.changeLanguage('tr');
+  vi.restoreAllMocks();
 });
 
 describe('LifeHud', () => {
-  /* Kaynaklar yüklenmeden `t()` BOŞ string döner (AGENTS Kural 2). */
-  beforeAll(async () => {
-    i18n.addResources('tr', 'life', tr);
-    i18n.addResources('en', 'life', en);
-    await i18n.init();
-  }, 60_000);
-
-  it('marka şeridini sol üste, göstergeyi sağ alta koyar', () => {
-    const hud = new LifeHud(undefined, { onToggleFullscreen: () => {} });
-
-    const title = document.querySelector('.vol-life-hud__title');
-    expect(title?.textContent).toBe('VOL.LIFE');
-
-    const meter = document.querySelector<HTMLElement>('.vol-fps-meter');
-    expect(meter).not.toBeNull();
-    /* Sağ ÜST tam ekran düğmesinindir; gösterge onunla çakışmaz. */
-    expect(meter?.dataset.position).toBe('bottom-right');
-
-    hud.destroy();
-  });
-
-  it('tam ekran düğmesi sağ üstte durur ve tıklandığında niyeti bildirir', () => {
-    let toggled = 0;
-    const hud = new LifeHud(undefined, { onToggleFullscreen: () => (toggled += 1) });
-
-    const button = document.querySelector<HTMLElement>('.vol-life-hud__fullscreen');
-    expect(button).not.toBeNull();
-    button?.click();
-    expect(toggled).toBe(1);
-
-    hud.destroy();
-  });
-
-  /* Android tam ekran açılır; orada düğme hem anlamsız hem başparmağın yolunda. */
-  it('dokunmatik yerleşimde tam ekran düğmesi HİÇ kurulmaz', () => {
-    const hud = new LifeHud(undefined, {
-      onToggleFullscreen: () => {},
-      showFullscreenToggle: false,
-    });
+  it('marka şeridini ve sağ üst seçenek kümesini kurar', () => {
+    mount();
+    expect(document.querySelector('.vol-life-hud__title')?.textContent).toBe('VOL.LIFE');
+    expect(optionsButton()).not.toBeNull();
+    expect(optionsButton().classList.contains('vol-icon-button--sm')).toBe(false);
     expect(document.querySelector('.vol-life-hud__fullscreen')).toBeNull();
-    hud.destroy();
   });
 
-  it('setFullscreenActive düğme etiketini değiştirir', () => {
-    const hud = new LifeHud(undefined, { onToggleFullscreen: () => {} });
-    const button = document.querySelector<HTMLElement>('.vol-life-hud__fullscreen');
-    const before = button?.getAttribute('aria-label');
-    hud.setFullscreenActive(true);
-    expect(button?.getAttribute('aria-label')).not.toBe(before);
-    hud.destroy();
+  it('FPS kapalıyken ölçer kurmaz; ayar açılıp kapanınca yaşam döngüsünü izler', () => {
+    const { hud } = mount();
+    expect(document.querySelector('.vol-fps-meter')).toBeNull();
+
+    hud.setFpsVisible(true);
+    expect(document.querySelector<HTMLElement>('.vol-fps-meter')?.dataset.position).toBe(
+      'bottom-right',
+    );
+    expect(document.querySelector('.vol-fps-meter')?.parentElement).toBe(
+      document.querySelector('.vol-ui-root'),
+    );
+
+    hud.setFpsVisible(false);
+    expect(document.querySelector('.vol-fps-meter')).toBeNull();
   });
 
-  it('kök bir erişilebilirlik grubudur', () => {
-    const hud = new LifeHud(undefined, { onToggleFullscreen: () => {} });
-    const root = document.querySelector('.vol-life-hud');
-    expect(root?.getAttribute('role')).toBe('group');
-    expect(root?.getAttribute('aria-label')).toBeTruthy();
-    hud.destroy();
+  it('web tam ekran düğmesini seçeneklerin soluna ekler ve durumu izler', () => {
+    const onToggle = vi.fn();
+    const { hud } = mount({ fullscreen: { initialActive: true, onToggle } });
+    const actions = [...document.querySelectorAll('.vol-life-hud__actions > button')];
+    const button = document.querySelector<HTMLButtonElement>('.vol-life-hud__fullscreen')!;
+
+    expect(actions).toEqual([button, optionsButton()]);
+    expect(button.classList.contains('vol-icon-button--sm')).toBe(false);
+    expect(button.getAttribute('aria-label')).toBe(i18next.t('life:hud.fullscreenExit'));
+    button.click();
+    expect(onToggle).toHaveBeenCalledOnce();
+    hud.setFullscreenActive(false);
+    expect(button.getAttribute('aria-label')).toBe(i18next.t('life:hud.fullscreenEnter'));
   });
 
-  /*
-   * Başlık iki dilde de "VOL.LIFE"tır; "önceki metinle aynı kaldı" iddiası
-   * dinleyici hiç bağlanmasa da doğru olurdu. Çeviri bu yüzden ayırt edilebilir
-   * bir değere çekilir ve YENİDEN YAZIM iddia edilir.
-   */
-  it('dil değişince başlığı yeniden yazar', () => {
-    const hud = new LifeHud(undefined, { onToggleFullscreen: () => {} });
-    const title = document.querySelector('.vol-life-hud__title');
-    const translate = vi.spyOn(i18next, 't').mockReturnValue('ÇEVRİLDİ' as never);
+  it('seçenekleri UI kökünde Sheet olarak açar, kapatır ve odağı geri verir', () => {
+    const { hud, content } = mount();
+    const button = optionsButton();
+    button.focus();
 
-    i18next.emit('languageChanged', 'en');
+    button.click();
+    const sheet = document.querySelector('.vol-life-options-sheet')!;
+    expect(hud.isOptionsOpen()).toBe(true);
+    expect(sheet.contains(content)).toBe(true);
+    expect(sheet.closest('.vol-ui-root')).not.toBeNull();
+    expect(sheet.querySelector('.vol-sheet__title')?.textContent).toBe(tr.options.title);
 
-    expect(title?.textContent).toBe('ÇEVRİLDİ');
-    translate.mockRestore();
-    hud.destroy();
+    sheet.querySelector<HTMLButtonElement>('.vol-sheet__close')?.click();
+    expect(hud.isOptionsOpen()).toBe(false);
+    expect(document.activeElement).toBe(button);
   });
 
-  it('dil değişince kök aria-label değerini yeniden yazar', () => {
-    const hud = new LifeHud(undefined, { onToggleFullscreen: () => {} });
-    const root = document.querySelector('.vol-life-hud');
-    const translate = vi.spyOn(i18next, 't').mockReturnValue('YENİ_GRUP_ADI' as never);
+  it('Sheet Android geri hareketini tüketir, alttaki işleyiciye sızdırmaz', () => {
+    const lower = vi.fn(() => true);
+    const stopLower = pushBackHandler(lower);
+    const { hud } = mount();
+    optionsButton().click();
 
-    i18next.emit('languageChanged', 'en');
+    window.dispatchEvent(new Event('vol:androidback'));
 
-    expect(root?.getAttribute('aria-label')).toBe('YENİ_GRUP_ADI');
-    translate.mockRestore();
-    hud.destroy();
+    expect(hud.isOptionsOpen()).toBe(false);
+    expect(lower).not.toHaveBeenCalled();
+    stopLower();
   });
 
-  it('initialFullscreen true ile kurulduğunda doğru etiketle başlar', () => {
-    const hud = new LifeHud(undefined, {
-      onToggleFullscreen: () => {},
-      initialFullscreen: true,
-    });
-    const button = document.querySelector<HTMLElement>('.vol-life-hud__fullscreen');
-    expect(button?.getAttribute('aria-label')).toBe(i18next.t('life:hud.fullscreenExit'));
-    hud.destroy();
+  it('dil değişince HUD ve Sheet etiketlerini canlı yeniler', async () => {
+    mount({ fullscreen: { initialActive: false, onToggle: () => {} } });
+    optionsButton().click();
+
+    await i18n.changeLanguage('en');
+
+    expect(document.querySelector('.vol-life-hud')?.getAttribute('aria-label')).toBe(
+      en.hud.ariaLabel,
+    );
+    expect(optionsButton().getAttribute('aria-label')).toBe(en.hud.options);
+    expect(document.querySelector('.vol-sheet__title')?.textContent).toBe(en.options.title);
+    expect(document.querySelector('.vol-sheet__close')?.getAttribute('aria-label')).toBe(
+      en.options.close,
+    );
   });
 
-  /* Listener eklenen her yerde kaldırılır (AGENTS Kural 6). */
-  it('destroy aboneliği bırakır ve DOM`u temizler', () => {
+  it('destroy abonelik, Sheet ve FPS kaynaklarını temizler', () => {
     const off = vi.spyOn(i18next, 'off');
-    const hud = new LifeHud(undefined, { onToggleFullscreen: () => {} });
-    expect(document.querySelector('.vol-life-hud')).not.toBeNull();
+    const { hud } = mount({ showFps: true });
+    huds.pop();
+    optionsButton().click();
 
     hud.destroy();
 
     expect(off).toHaveBeenCalledWith('languageChanged', expect.any(Function));
     expect(document.querySelector('.vol-life-hud')).toBeNull();
     expect(document.querySelector('.vol-fps-meter')).toBeNull();
-    off.mockRestore();
+    expect(document.querySelector('.vol-life-options-sheet')).toBeNull();
   });
 });

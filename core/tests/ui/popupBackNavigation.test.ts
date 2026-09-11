@@ -85,6 +85,23 @@ describe('Açılır katmanlar ve Android geri hareketi', () => {
     expect(outer.isOpen()).toBe(false);
   });
 
+  it('Popover açılışta odağı roving tabindex grubunun seçili öğesine verir', async () => {
+    const popover = new Popover(makeTarget());
+    const first = document.createElement('button');
+    first.tabIndex = -1;
+    const selected = document.createElement('button');
+    selected.tabIndex = 0;
+    const group = document.createElement('div');
+    group.append(first, selected);
+    popover.add(group);
+    cleanups.push(() => popover.destroy());
+
+    popover.show();
+    await Promise.resolve();
+
+    expect(document.activeElement).toBe(selected);
+  });
+
   it('Popover aynı sözleşmeyi taşır ve odağı tetikleyiciye döndürür', () => {
     const trigger = makeTarget();
     const popover = new Popover(trigger);

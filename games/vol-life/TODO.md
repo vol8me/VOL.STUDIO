@@ -7,82 +7,6 @@
 Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 [TODO.md](../../TODO.md)'de.
 
-## Öncelikli — seçenekler ve ekran yönü
-
-Platform kararı kök TODO'daki ortak yüklemden gelir; CORE ve tauri-v2
-önkoşulları da orada. Yerleşim ve platform tablosu DESIGN §6'da, ekran yönü
-kararı §9'da.
-
-- [ ] **[P1] Sağ üst düğme kümesi platforma göre kurulsun.** Web: tam ekran ve
-      seçenekler düğmesi; Windows/Linux ve Android çıktısı: yalnız seçenekler.
-      Bugün `LifeScene` her platformda `showFullscreenToggle: true` geçiriyor
-      (`6b82b2d`); Android'de ölçüldü (SM-G990B2, 2026-09-10): DOM tam ekranı
-      görünür etki olmadan açılıyor ve geri tuşundan sonra açık kalıyor.
-      Seçenekler düğmesi (`IconButton`, ayar simgesi) her platformda köşede aynı
-      yerde durur; tam ekran yalnız web'de onun soluna eklenir. Konum tek bir
-      flex kümesinden gelir, platforma göre koordinat yazılmaz (bugün
-      `.vol-life-hud__fullscreen` tek başına mutlak konumlu). Düğme UI kökünün
-      içine kurulan bir `Popover` (`bottom-end`) açar; Escape ve Android geri
-      tuşu onu kapatır. Android'de DOM tam ekranı kurulmaz; masaüstünde F11
-      native pencereye gider (görüntü kipi maddesi). Kapanır: `LifeScene` testi
-      kümeyi üç platformda sınar; tarayıcıda iki düğme, telefonda dikey ve
-      yatayda tek düğme ekran görüntüsüyle doğrulanır.
-- [ ] **[P1] Dikey / yatay seçimi eklensin.** Seçenekler panelinde CORE
-      `SegmentedControl`; etiketler tr/en. Android'de seçim native uygulanır:
-      WebView'ın `screen.orientation.lock()`u cihazda hem normalde hem DOM tam
-      ekranında `NotSupportedError` veriyor (SM-G990B2, Android 16, WebView 152).
-      Tercih native tarafta saklanır ve `MainActivity` açılışında uygulanır;
-      sayfa yüklendikten sonra uygulanırsa her açılışta ekran bir kez döner. Web
-      ve masaüstünde kontrol pasiftir, ekranın o anki yönünü gösterir ve yön
-      değişince güncellenir. Android isteği uygulamazsa (en dar kenarı 600dp ve
-      üstü ekran, DeX) seçim gerçek yöne döner; Android TV'de pasiftir. Yön
-      değişimi simülasyonu sıfırlamaz (`configChanges` `orientation` taşıyor) ve
-      kamera bakılan noktayı korur. Varsayılan dikey, aile `userPortrait` /
-      `userLandscape` (DESIGN §9). Kapanır: manifest başlangıcı varsayılanla
-      aynı olur ve drift testi kilitler; platform matrisi ve istek
-      uygulanmadığında gerçek yöne dönüş testle sınanır; telefonda iki seçim,
-      telefon çevrilince kilidin tutması ve kapatıp açınca tercihin geri gelmesi
-      ekran görüntüsüyle doğrulanır.
-- [ ] **[P1] Masaüstünde görüntü kipi seçeneği eklensin.** Windows/Linux
-      çıktısında tam ekran düğmesi yok; seçenekler panelinde pencere / tam ekran
-      seçimi olur (vol-hell deseni; iki seçenek olduğu için `SegmentedControl`).
-      Web ve Android panelinde bu seçenek yer almaz. Bugün `LifeScene` F11'i DOM
-      tam ekranına bağlıyor (`FullscreenController`, `onToggleRequest` yok);
-      masaüstünde F11 native pencereyi değiştirir ve pencere yöneticisinden
-      gelen değişim seçeneğe yansır. Tercih `SaveManager` ve `TauriStoreAdapter`
-      ile saklanıp açılışta uygulanır; VOL.LIFE'ta henüz `SaveManager` yok.
-      Uygulama mantığı vol-hell'den kopyalanmaz (kök TODO). Kapanır: kip
-      değişimi, F11 ve dış değişim testle sınanır; Linux masaüstü derlemesinde
-      elle doğrulanır.
-
-## Zemin
-
-- [ ] **[P1] `LifeScene` viewport sözleşmesine bağlansın.** `create()`
-      `applyVolViewport(this)` çağırmıyor; vol-hell ve vol-arachnid çağırıyor.
-      Arka tampon DPR ile büyüyor ama kamera yakınlaştırılmıyor. Ölçüldü:
-      tarayıcıda DPR 2 → 1600×1200 tampon / 800×600 CSS; cihazda (SM-G990B2)
-      DPR 2,81 → 1080×2340 / 384×832. Kapanır: çağrı eklenir; DPR 1/2/3'te
-      kamera zoom'unun rasterleme çarpanına eşit olduğunu doğrulayan
-      entegrasyon testi yazılır.
-- [ ] **[P2] Açılış hata sınırı kurulsun.** `bootstrap.ts` üst düzey `await`
-      ile korumasız koşuyor. Ölçüldü: WebGL kurulamazsa canvas 0, HUD yok, ekran
-      boş; hata yalnız konsolda ("Cannot create WebGL context, aborting.").
-      Kapanır: açılış zinciri korunur, i18n'li görünür hata yüzeyi çıkar
-      (vol-hell `showFatalError` deseni) ve WebGL kapalı tarayıcıda sınanır.
-- [ ] **[P2] `runtime/sim` sınırı testle kapılansın.** DESIGN §12 bu sınırı
-      pazarlıksız sayıyor ama hiçbir test ya da betik `src/runtime/sim/`
-      importlarını denetlemiyor. Kapanır: `sim/` Phaser'ı, `scene/`, `ui/`,
-      `render/` katmanlarını ya da kök `@volstudio/core` barrel'ını (Phaser'a
-      bağlı modülleri yeniden ihraç ediyor, DESIGN §11) import ederse düşen bir
-      test yazılır ve bilerek bozulmuş bir importla sınanır.
-- [ ] **[P3] Tauri izinleri en az yetkiye insin.** Frontend yalnız
-      `TauriWindowAdapter`ı (`exit_application`) kullanıyor; `store:default`,
-      `sql:default` ve `6b82b2d`de eklenen `sql:allow-execute` hiç
-      kullanılmıyor (vol-hell ve vol-arachnid'de `allow-execute` yok). Kapanır:
-      kalıcılık gelene kadar üçü masaüstü/mobil yetkilerinden ve üretilen
-      şemadan kalkar; masaüstü görüntü kipi maddesi önce kapanırsa `store`
-      masaüstünde kalır; cihazda açılış ve çıkış onayı doğrulanır.
-
 ## Adım 1 — dünya substratı
 
 - [ ] **Saat:** `SimulationClock` `partialStep: 'defer'` ile kurulur ve seçim
@@ -223,6 +147,62 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
   bakılan noktayı ve yakınlaştırmayı sıfırlamaz.
 
 ## Kapatılanlar
+
+### 2026-09-11 — seçenekler çekmecesi, ekran yönü, görüntü kipi ve zemin
+
+- [x] **[P1] Seçenekler çekmecesi (kullanıcı isteği).** Dişli düğmesi CORE
+      `Sheet`ini açıyor: sağdan, en az yarım genişlik, içerik kendi içinde
+      kayıyor; dikey telefonda tam genişlik (kullanıcı kabul etti). Ölçüldü:
+      masaüstü tarayıcıda 1280 px'in 640'ı, yatay telefonda 832 px'in 420'si.
+      Scrim, X, Escape ve Android geri tuşu kapatıyor; telefonda geri tuşu önce
+      çekmeceyi kapatıyor, çıkış onayı açılmıyor. Linux masaüstünde Escape
+      çekmeceyi kapatıp odağı dişliye döndürüyor. Eski `Popover` paneli kalktı.
+- [x] **[P1] Dil seçeneği (kullanıcı isteği).** TR/EN, CORE `Select` ile;
+      `SaveManager` üzerinden kalıcı. Telefonda İngilizce seçilince başlık ve
+      etiketler değişti, yeniden açılışta dil korundu; tarayıcıda yeniden
+      yüklemede korundu.
+- [x] **[P1] Kare hızı seçeneği (kullanıcı isteği).** CORE `FpsMeter`,
+      varsayılan kapalı, en fazla 250 ms'de bir yazıya çevrilir; tercih kalıcı.
+      Telefonda "60 FPS" görüldü ve yeniden açılışta açık kaldı.
+- [x] **[P1] Dokunsal geri bildirim seçeneği (kullanıcı isteği, vol-hell
+      deseni).** Satır yalnız titreşim motoru olan cihazda görünür; varsayılan
+      kapalı ve kalıcı; seçenek değişimleri `select` deseniyle titrer. Telefonda
+      görünür ve yeniden açılışta açık kaldı; Linux Tauri'de ve masaüstü
+      Chromium'da gizli (kök TODO'daki yetenek düzeltmesi).
+- [x] **[P1] Sağ üst düğme kümesi platforma göre kuruluyor.** `LifeScene`
+      testi kümeyi üç platformda sınıyor. Tarayıcıda iki düğme (tam ekran ve
+      seçenekler); telefonda dikey ve yatayda ve Linux masaüstünde yalnız
+      seçenekler (ekran görüntüleri).
+- [x] **[P1] Dikey / yatay seçimi eklendi.** Seçim `vol-orientation`
+      köprüsüyle native uygulanıyor; manifest başlangıcı `userPortrait` ve drift
+      testi kilitliyor; platform matrisi ve istek uygulanmayınca gerçek yöne
+      dönüş testte. Telefonda iki seçim, sistem tersini isterken kilidin tutması
+      ve yeniden açılışta tercihin gelmesi ölçüldü (`ROTATION_90` /
+      `ROTATION_0`); web ve masaüstünde kontrol pasif.
+- [x] **[P1] Masaüstünde görüntü kipi seçeneği eklendi.** Çekmecede pencere /
+      tam ekran (`SegmentedControl`); tercih `LifePreferences` ve
+      `TauriStoreAdapter` ile kalıcı, uygulama ortak `DisplayModeController`dan.
+      Kip değişimi, F11 ve dış değişim testte. Linux'ta (KDE Plasma) girdisiz
+      ölçüldü: tercih tam ekranken uygulama tam ekran açılıyor, KWin'in pencere
+      ve tam ekran değişimi tercihe yansıyor (kök TODO,
+      `window_fullscreen_state`). Çekmeceden seçim ve F11 kullanıcı tarafından
+      elle doğrulandı.
+- [x] **[P1] `LifeScene` viewport sözleşmesine bağlandı.** `create()`
+      `applyVolViewport(this)` çağırıyor; DPR 1/2/3'te kamera zoom'unun
+      rasterleme çarpanına eşit olduğu `lifeScene.test.ts`te sınanıyor.
+- [x] **[P2] Açılış hata sınırı kuruldu.** Açılış zinciri tek korumada, i18n'li
+      `showFatalError` yüzeyi `role="alert"` taşıyor. WebGL kapalı Chromium'da
+      (`--disable-webgl --disable-3d-apis`) "VOL.LIFE başlatılamadı" başlığı ve
+      neden görünüyor.
+- [x] **[P2] `runtime/sim` sınırı testle kapılandı.**
+      `tests/governance/simBoundary.test.ts` Phaser'ı, sunum ve uygulama
+      katmanlarını, kök CORE barrel'ını ve native kabuğu yasaklıyor; bilerek
+      bozulmuş sekiz import biçimini yakalıyor.
+- [x] **[P3] Tauri izinleri en az yetkiye indi.** `sql:default` ve
+      `sql:allow-execute` kalktı; kalıcılık geldiği için `store:default` iki
+      yetkide kaldı; masaüstünde ek olarak `core:window:allow-set-fullscreen`,
+      mobilde `vol-orientation:default`. Telefonda açılış, tercih kalıcılığı ve
+      çıkış onayı doğrulandı.
 
 ### 2026-09-10 — rastgelelik sözleşmesi
 

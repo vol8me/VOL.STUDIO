@@ -73,3 +73,11 @@ Yeni yetenek DEĞİL, yer değişikliği: kod, testi ve dokümanıyla olduğu gi
 `PlayerController` takma adı kaldırıldı ve `TouchButton` → `HoldButton` olarak yeniden adlandırıldı; sayı net bir azalır. İkisi de ADLANDIRMA sözleşmesinin uygulanmasıdır: CORE'un yüzeyi oyun kelimesi taşımaz ("player" bir oyun kavramıdır, hareket eden şey mekanizmadır) ve bir bileşenin adı GİRDİ CİHAZINI değil davranışını anlatır — `HoldButton` fare, kalem ve klavyeyle de aynı press/hold semantiğini verir.
 
 Takma adın hiçbir tüketicisi yoktu; yeniden adlandırmanın bedeli public API + showcase + i18n + CSS sınıfıydı ve bir kerede ödendi.
+
+### 223 → 227
+
+`KeyBindingList`, `describePCBinding`, `findBindingConflicts`, `isSameBinding`. Tuş atama arayüzü ve üç yardımcı, yukarıdaki yeniden adlandırmayla aynı turda (`a38fe22`) yüzeye girdi ama kayda geçmemişti; sayının 223'ten 227'ye atlaması bundandır. Liste yakaladığı girdiyi yalnız bildirir: çakışmayı çözmez, hiçbir şey kaydetmez. Yardımcılar bir bağı ekran metnine çevirir, iki bağın aynı fiziksel girdi olup olmadığını söyler ve çakışan eylemleri listeler. Çakışmanın ne anlama geldiğine oyun karar verir; bu yüzden `findBindingConflicts` tarif katmanıdır.
+
+### 227 → 228
+
+`Sheet`. Sağdan açılan, başlıklı ve kendi içinde kayan çekmece. Scrim, odak, Escape ve Android geri sözleşmesi `Modal`dan gelir. İkinci tüketici gelince ortak kabuk oldu: `StatsPanel` kendi başlık, kapatma, kaydırma ve kayma CSS'ini bırakıp bunun üstüne kuruldu; VOL.LIFE seçenekleri de aynı kabuğu kullanıyor. Aynı turda açık `Modal`, Escape'teki gibi Android geri hareketini de tüketip kapanır hâle geldi; bu bir davranış değişikliğidir, yeni ad değildir.

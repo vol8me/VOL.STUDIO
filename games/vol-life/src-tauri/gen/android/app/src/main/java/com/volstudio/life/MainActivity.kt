@@ -7,9 +7,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.volstudio.orientation.OrientationStore
 
 /**
- * VOL.LIFE'ın Android giriş noktası — sürükleyici tam ekran ve geri tuşu.
+ * VOL.LIFE'ın Android giriş noktası — sürükleyici tam ekran, geri tuşu ve
+ * oyuncunun seçtiği ekran yönü.
  *
  * `enableEdgeToEdge()` şablondan gelir ve içeriği sistem çubuklarının ALTINA
  * uzatır; ama çubukları GİZLEMEZ, yalnızca üzerine çizim yapılmasına izin
@@ -19,6 +21,10 @@ class MainActivity : TauriActivity() {
   private var webView: WebView? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    // Kayıtlı yön pencere kurulmadan uygulanır: sayfa yüklendikten sonra
+    // uygulansaydı her açılışta ekran bir kez dönerdi. Kayıt yoksa manifestteki
+    // varsayılan (dikey) geçerlidir.
+    OrientationStore.applySaved(this)
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
     // Callback'i WebView kurulum callback'inde eklemek bazı cihazlarda native

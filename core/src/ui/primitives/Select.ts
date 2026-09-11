@@ -227,6 +227,8 @@ export class Select {
     } else if (event.key === 'End') {
       nextIndex = this.options.length - 1;
     } else if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
       this.popup.close();
       this.element.setAttribute('aria-expanded', 'false');
       this.element.focus();

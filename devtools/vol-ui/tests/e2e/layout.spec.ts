@@ -31,6 +31,25 @@ test.describe('geniş ekran', () => {
     }
     expect(overflowing).toEqual([]);
   });
+
+  test('Sheet sağdan açılır, ekranın en az yarısını ve tam yüksekliğini kaplar', async ({
+    page,
+  }) => {
+    await openShowcase(page);
+    await selectTab(page, 'panels');
+    await page.locator('.vol-showcase-sheet-trigger').click();
+    const geometry = await page
+      .locator('.vol-showcase-sheet .vol-modal__content')
+      .evaluate((node) => {
+        const rect = node.getBoundingClientRect();
+        return { left: rect.left, width: rect.width, height: rect.height };
+      });
+    const viewport = page.viewportSize();
+
+    expect(geometry.left).toBeGreaterThanOrEqual(0);
+    expect(geometry.width).toBeGreaterThanOrEqual(viewport!.width / 2);
+    expect(geometry.height).toBe(viewport!.height);
+  });
 });
 
 test.describe('telefon genişliği', () => {
@@ -57,6 +76,19 @@ test.describe('telefon genişliği', () => {
       'Bir eleman kaydırma kabının kırpmasından kaçıyor olabilir: ' +
         '`overflow` taşıyan kabın `position: relative` olduğundan emin ol.',
     ).toEqual([]);
+  });
+
+  test('Sheet telefonda tam genişlikte kalır ve kapatma hedefi 44 px olur', async ({ page }) => {
+    await openShowcase(page);
+    await selectTab(page, 'panels');
+    await page.locator('.vol-showcase-sheet-trigger').click();
+    const content = page.locator('.vol-showcase-sheet .vol-modal__content');
+    const close = page.locator('.vol-showcase-sheet .vol-sheet__close');
+
+    await expect(content).toBeVisible();
+    expect((await content.boundingBox())?.width).toBe(393);
+    expect((await close.boundingBox())?.width).toBeGreaterThanOrEqual(44);
+    expect((await close.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   });
 
   test('politika kapsamındaki dokunma hedefleri GERÇEKTEN 44 px çizilir', async ({ page }) => {

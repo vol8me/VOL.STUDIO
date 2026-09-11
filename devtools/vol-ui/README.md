@@ -12,7 +12,7 @@ pnpm --filter @volstudio/vol-ui dev     # :5174
 | Sekme                | `core/src/ui/`                          |
 | -------------------- | --------------------------------------- |
 | BUTTONS, TEXT, FORMS | `primitives/`                           |
-| PANELS, YÜKLEME      | `overlays/`                             |
+| PANELS, YÜKLEME      | `overlays/` (`Sheet` dâhil)             |
 | HUD                  | `feedback/`, `hud/`                     |
 | KARTLAR              | `cards/`                                |
 | WORKBENCH            | `primitives/`, `layout/`, `quality/`    |

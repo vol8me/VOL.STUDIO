@@ -5,6 +5,7 @@ import {
   Modal,
   Panel,
   Popup,
+  Sheet,
   Text,
   ToastManager,
   showConfirm,
@@ -185,6 +186,35 @@ function buildModalDemo(uiRootElement: HTMLElement, disposables: DisposableScope
   wrap.appendChild(controls);
   wrap.appendChild(result.element);
 
+  return wrap;
+}
+
+function buildSheetDemo(uiRootElement: HTMLElement, disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+  const sheet = new Sheet({
+    title: i18next.t('volui:panels.sheetTitle'),
+    closeLabel: i18next.t('volui:panels.closeSheet'),
+    className: 'vol-showcase-sheet',
+  });
+  const list = document.createElement('div');
+  list.className = 'vol-showcase-list-panel';
+  for (let index = 1; index <= 16; index += 1) {
+    const item = document.createElement('p');
+    item.className = 'vol-showcase-list-panel__item';
+    item.textContent = i18next.t('volui:panels.itemN', { n: index });
+    list.appendChild(item);
+  }
+  sheet.add({ element: list });
+  uiRootElement.appendChild(sheet.element);
+
+  const open = new Button(i18next.t('volui:panels.openSheet'), {
+    variant: 'primary',
+    onClick: () => sheet.open(),
+  });
+  open.element.classList.add('vol-showcase-sheet-trigger');
+  disposables.addDestroyables(sheet, open);
+  wrap.appendChild(open.element);
   return wrap;
 }
 
@@ -441,6 +471,9 @@ export function buildPanelsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:panels.contextMenu'), buildContextMenuDemo(disposables, uiRootElement)),
     card(i18next.t('volui:panels.popup'), buildPopupDemo(disposables, uiRootElement)),
     card(i18next.t('volui:panels.modal'), buildModalDemo(uiRootElement, disposables)),
+    card(i18next.t('volui:panels.sheet'), buildSheetDemo(uiRootElement, disposables), {
+      span: 4,
+    }),
     card(i18next.t('volui:panels.confirm'), buildConfirmDemo(disposables, uiRootElement)),
     card(i18next.t('volui:panels.toast'), buildToastDemo(uiRootElement, disposables)),
     card(

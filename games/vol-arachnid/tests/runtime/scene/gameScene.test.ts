@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { fullscreenControllers, inputManagers, touchEnabled } = vi.hoisted(() => ({
+const { fullscreenControllers, inputManagers, touchEnabled, platform } = vi.hoisted(() => ({
   fullscreenControllers: [] as Array<{ destroyed: boolean; toggle: () => void }>,
   inputManagers: [] as Array<{
     destroyed: boolean;
@@ -9,7 +9,14 @@ const { fullscreenControllers, inputManagers, touchEnabled } = vi.hoisted(() => 
     reset: ReturnType<typeof vi.fn>;
   }>,
   touchEnabled: { value: false },
+  platform: { value: 'web' as 'web' | 'desktop' | 'android' },
 }));
+
+// Kabuk da testte anahtarlanır: işaretçi türü ile Android kabuğu ayrı sorulardır.
+vi.mock('@volstudio/tauri-v2', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('@volstudio/tauri-v2');
+  return { ...actual, getRuntimePlatform: () => platform.value };
+});
 
 vi.mock('@volstudio/core', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@volstudio/core');
@@ -130,6 +137,7 @@ describe('GameScene yaşam döngüsü', () => {
     fullscreenControllers.length = 0;
     inputManagers.length = 0;
     touchEnabled.value = false;
+    platform.value = 'web';
   });
 
   afterEach(() => {
@@ -239,16 +247,43 @@ describe('GameScene yaşam döngüsü', () => {
     shutdown();
   });
 
-  it('dokunmatik cihazda tam ekran düğmesi GÖSTERİLMEZ', () => {
+  it('tam ekran düğmesi Android kabuğunda GÖSTERİLMEZ; dokunmatik tarayıcıda gösterilir', () => {
+    platform.value = 'android';
     touchEnabled.value = true;
-    const { shutdown } = boot();
+    const android = boot();
     expect(document.querySelector('.vol-arachnid-hud__fullscreen')).toBeNull();
-    shutdown();
+    android.shutdown();
 
+    // Telefon tarayıcısında DOM tam ekranı tarayıcı çubuklarını gerçekten kaldırır.
+    platform.value = 'web';
+    const mobileWeb = boot();
+    expect(document.querySelector('.vol-arachnid-hud__fullscreen')).not.toBeNull();
+    mobileWeb.shutdown();
+
+    platform.value = 'desktop';
     touchEnabled.value = false;
     const desktop = boot();
     expect(document.querySelector('.vol-arachnid-hud__fullscreen')).not.toBeNull();
     desktop.shutdown();
+  });
+
+  it('çıkış onayı işaretçi türüne değil Android kabuğuna bağlıdır', () => {
+    // Fareli Android (DeX): dokunmatik değil ama geri tuşu uygulamaya gelir.
+    platform.value = 'android';
+    touchEnabled.value = false;
+    const dex = boot();
+    window.dispatchEvent(new Event('vol:androidback'));
+    expect(document.querySelector('.vol-modal')).not.toBeNull();
+    dex.shutdown();
+    document.body.replaceChildren();
+
+    // Dokunmatik tarayıcıda `vol:androidback` hiç gelmez; dinleyici de kurulmaz.
+    platform.value = 'web';
+    touchEnabled.value = true;
+    const mobileWeb = boot();
+    window.dispatchEvent(new Event('vol:androidback'));
+    expect(document.querySelector('.vol-modal')).toBeNull();
+    mobileWeb.shutdown();
   });
 
   it('kamerayı arenayı boşlukların İÇİNE alacak şekilde kurar', () => {
@@ -347,7 +382,7 @@ describe('GameScene yaşam döngüsü', () => {
   });
 
   it('çıkış modalı açıkken simülasyonu durdurur, kapanınca devam eder', async () => {
-    touchEnabled.value = true;
+    platform.value = 'android';
     const { scene, shutdown } = boot();
     const manager = inputManagers.at(-1)!;
 

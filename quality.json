@@ -1,5 +1,11 @@
 {
   "$comment": [
+    "2026-09-11: tauri-v2 ve vol-life eşikleri ölçülenin ~2 puan altına çekildi",
+    "(satır/ifade/dal/fonksiyon). tauri-v2 95,8/95,8/92,8/100 ölçüldü — platform",
+    "yüklemi, görüntü kipi uygulayıcısı ve yön köprüsü testleriyle — ve",
+    "93/93/90/100'e; vol-life 98,6/98,6/94,6/88,9 ölçüldü — seçenekler, tercih",
+    "deposu ve açılış hata sınırı testleriyle — ve 96/96/92/86'ya kilitlendi.",
+    "",
     "2026-09-05: gönderilen bundle bütçeleri eklendi. Ölçü gzip'lenmiş bayttır —",
     "kullanıcının beklediği süre telden geçen boyutla orantılıdır, diskteki dist",
     "toplamıyla değil. Bütçe `app` ve `vendor` olarak AYRILIR: ölçüldüğünde",
@@ -63,9 +69,9 @@
       "functions": 91
     },
     "@volstudio/vol-life": {
-      "lines": 87,
-      "statements": 87,
-      "branches": 83,
+      "lines": 96,
+      "statements": 96,
+      "branches": 92,
       "functions": 86
     },
     "@volstudio/vol-hell": {
@@ -111,9 +117,9 @@
       "functions": 100
     },
     "@volstudio/tauri-v2": {
-      "lines": 88,
-      "statements": 88,
-      "branches": 77,
+      "lines": 93,
+      "statements": 93,
+      "branches": 90,
       "functions": 100
     }
   },

@@ -4861,6 +4861,7 @@ dependencies = [
 name = "volstudio-tauri"
 version = "0.1.0"
 dependencies = [
+ "gtk",
  "log",
  "rustls",
  "serde",

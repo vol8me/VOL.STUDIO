@@ -1,6 +1,5 @@
 import { i18next } from '../../systems/I18n';
-import { IconButton } from '../primitives/IconButton';
-import { Modal } from '../overlays/Modal';
+import { Sheet } from '../overlays/Sheet';
 
 /** İstatistik satırının sunum verisi — oyun kuralları CORE'a girmez. */
 export interface StatsPanelEntry {
@@ -47,9 +46,7 @@ interface GroupView {
 /** Sağdan açılan, modal davranışlı jenerik istatistik paneli. */
 export class StatsPanel {
   readonly element: HTMLElement;
-  private readonly modal: Modal;
-  private readonly titleElement: HTMLHeadingElement;
-  private readonly closeButton: IconButton;
+  private readonly sheet: Sheet;
   private readonly groupsElement: HTMLDivElement;
   private readonly groups = new Map<string, GroupView>();
   private readonly closeLabelIsI18n: boolean;
@@ -58,39 +55,25 @@ export class StatsPanel {
   constructor(options: StatsPanelOptions) {
     const closeLabel = options.closeLabel ?? i18next.t('core:statsPanel.close');
     this.closeLabelIsI18n = options.closeLabel === undefined;
-    this.modal = new Modal({
-      closeOnScrimClick: true,
+    this.sheet = new Sheet({
+      title: options.title,
+      closeLabel,
       className: ['vol-stats-panel-modal', options.className].filter(Boolean).join(' '),
     });
-    this.element = this.modal.element;
-
-    const header = document.createElement('div');
-    header.className = 'vol-stats-panel__header';
-    this.titleElement = document.createElement('h2');
-    this.titleElement.className = 'vol-stats-panel__title';
-    this.titleElement.textContent = options.title;
-    this.closeButton = new IconButton('×', {
-      label: closeLabel,
-      size: 'md',
-      onClick: () => this.close(),
-    });
-    header.append(this.titleElement, this.closeButton.element);
+    this.element = this.sheet.element;
 
     this.groupsElement = document.createElement('div');
     this.groupsElement.className = 'vol-stats-panel__groups';
-    const content = document.createElement('div');
-    content.className = 'vol-stats-panel__content';
-    content.append(header, this.groupsElement);
-    this.modal.add({ element: content });
+    this.sheet.add({ element: this.groupsElement });
     i18next.on('languageChanged', this.handleLanguageChanged);
   }
 
   setTitle(title: string): void {
-    if (!this.destroyed) this.titleElement.textContent = title;
+    if (!this.destroyed) this.sheet.setTitle(title);
   }
 
   setCloseLabel(label: string): void {
-    if (!this.destroyed) this.closeButton.setLabel(label);
+    if (!this.destroyed) this.sheet.setCloseLabel(label);
   }
 
   /** Satırları kimliğe göre günceller; her çağrıda DOM'u yıkıp kurmaz. */
@@ -111,24 +94,23 @@ export class StatsPanel {
   }
 
   open(): void {
-    if (!this.destroyed) this.modal.open();
+    if (!this.destroyed) this.sheet.open();
   }
 
   close(): void {
-    if (!this.destroyed) this.modal.close();
+    if (!this.destroyed) this.sheet.close();
   }
 
   isOpen(): boolean {
-    return !this.destroyed && this.modal.isOpen();
+    return !this.destroyed && this.sheet.isOpen();
   }
 
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
     i18next.off('languageChanged', this.handleLanguageChanged);
-    this.closeButton.destroy();
     this.groups.clear();
-    this.modal.destroy();
+    this.sheet.destroy();
   }
 
   private readonly handleLanguageChanged = (): void => {

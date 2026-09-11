@@ -1,0 +1,20 @@
+[package]
+name = "tauri-plugin-vol-orientation"
+version = "0.1.0"
+description = "VOL.STUDIO Android ekran yönü köprüsü — yön seçimi native tarafta uygulanır ve saklanır"
+authors = ["VOL.STUDIO"]
+edition = "2021"
+# `tauri-build`, Android kütüphane yolunu `DEP_<links>_ANDROID_LIBRARY_PATH`
+# üzerinden okur; `links` olmadan Kotlin kaynağı APK'ya girmez.
+links = "tauri-plugin-vol-orientation"
+
+[lib]
+name = "tauri_plugin_vol_orientation"
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-plugin = { version = "2.6", features = ["build"] }
+
+[dependencies]
+tauri = { version = "2.11", features = ["protocol-asset", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }

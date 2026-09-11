@@ -4208,6 +4208,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-vol-orientation"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-plugin",
+]
+
+[[package]]
 name = "tauri-runtime"
 version = "2.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4860,6 +4869,7 @@ dependencies = [
  "tauri-plugin-log",
  "tauri-plugin-sql",
  "tauri-plugin-store",
+ "tauri-plugin-vol-orientation",
  "volstudio-tauri",
 ]
 
@@ -4867,6 +4877,7 @@ dependencies = [
 name = "volstudio-tauri"
 version = "0.1.0"
 dependencies = [
+ "gtk",
  "log",
  "rustls",
  "serde",

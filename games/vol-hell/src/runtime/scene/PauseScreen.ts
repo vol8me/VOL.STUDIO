@@ -1,15 +1,7 @@
-import {
-  Button,
-  DisposableScope,
-  IconButton,
-  Panel,
-  Text,
-  i18next,
-  shouldUseTouchControls,
-} from '@volstudio/core';
+import { Button, DisposableScope, IconButton, Panel, Text, i18next } from '@volstudio/core';
 import type { AudioSettings } from '@/app/AudioSettings';
 import type { VideoSettings } from '@/app/VideoSettings';
-import { hasNativeWindow } from '@/app/platform';
+import { hasNativeWindow, supportsDisplaySettings } from '@/app/platform';
 import { gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
 import { GameSettingsContent } from '@/runtime/ui/GameSettingsContent';
@@ -87,7 +79,7 @@ export class PauseScreen {
     this.settingsContent = new GameSettingsContent({
       audioSettings,
       videoSettings,
-      showVideoSettings: !shouldUseTouchControls(),
+      showVideoSettings: supportsDisplaySettings(),
       canResizeWindow: hasNativeWindow(),
     });
     this.settingsBackButton = new Button(i18next.t('volhell:settings.back'), {

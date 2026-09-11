@@ -4,6 +4,10 @@ export const borderConfig = {
   margin: 60,
   /** Margin'in viewport boyutuna oranla ust sınırı — dar pencerede sahanin ters dönmesini onler. */
   maxMarginRatio: 0.25,
+  /** HUD ile oynanabilir saha arasında bırakılan görsel nefes payı. */
+  hudGapPx: 12,
+  /** Üst ve alt rezervin birlikte kaplayabileceği viewport oranı. */
+  maxReserveRatio: 0.7,
   /** Çizgi kalınlığı (piksel). */
   lineWidth: 2,
   /** Çizgi rengi (0xRRGGBB, Phaser sayısal format). */

@@ -92,22 +92,79 @@ describe('GameHud', () => {
     document.body.replaceChildren();
   });
 
-  function hud() {
-    return new GameHud(parent, fakePlayer() as never, fakeEconomy() as never);
+  function hud(options: { abilitySlots?: boolean } = {}) {
+    return new GameHud(parent, fakePlayer() as never, fakeEconomy() as never, options);
   }
 
-  it('kurulumda HUD ölçülerini CSS custom property olarak yazar', () => {
-    // CSS bu değerleri okuyor; config ile DOM ayrışırsa bar yanlış yerde çizilir.
-    hud();
+  it('kurulumda bar genişliğini CSS custom property olarak yazar ve destroy temizler', () => {
+    const view = hud();
     expect(parent.style.getPropertyValue('--vol-hud-bar-width')).not.toBe('');
-    expect(parent.style.getPropertyValue('--vol-hud-dash-offset')).not.toBe('');
-    expect(parent.style.getPropertyValue('--vol-hud-spark-offset')).not.toBe('');
+    view.destroy();
+    expect(parent.style.getPropertyValue('--vol-hud-bar-width')).toBe('');
   });
 
   it('refresh hata vermeden çalışır ve DOM üretir', () => {
     const view = hud();
     view.refresh(baseState());
     expect(parent.children.length).toBeGreaterThan(0);
+  });
+
+  it('üst şeridi vitals | wave | stats sırasıyla tek ölçüm yüzeyinde kurar', () => {
+    const view = hud();
+    const strip = parent.querySelector('.vol-hud-top')!;
+    expect([...strip.children].map((node) => node.className)).toEqual([
+      'vol-hud-top__vitals',
+      'vol-wave',
+      'vol-hud-stats',
+    ]);
+    view.destroy();
+  });
+
+  it('dokunmatik kararı ability HUD kurulumunu tek noktadan kapatır', () => {
+    const touch = hud({ abilitySlots: false });
+    expect(parent.querySelector('.vol-ability-hud')).toBeNull();
+    touch.destroy();
+
+    const desktop = hud({ abilitySlots: true });
+    expect(parent.querySelector('.vol-ability-hud')).not.toBeNull();
+    desktop.destroy();
+  });
+
+  it('üst ve alt HUD rezervini parent koordinatında ölçer', () => {
+    const view = hud();
+    vi.spyOn(parent, 'getBoundingClientRect').mockReturnValue({ top: 10, bottom: 610 } as DOMRect);
+    vi.spyOn(parent.querySelector('.vol-hud-top')!, 'getBoundingClientRect').mockReturnValue({
+      bottom: 130,
+    } as DOMRect);
+    vi.spyOn(parent.querySelector('.vol-ability-hud')!, 'getBoundingClientRect').mockReturnValue({
+      top: 520,
+    } as DOMRect);
+
+    expect(view.measureReserve()).toEqual({ top: 120, bottom: 90 });
+    view.destroy();
+  });
+
+  it('ResizeObserver üst şerit değişimini bildirir ve destroy ile ayrılır', () => {
+    const disconnect = vi.fn();
+    const notifications: Array<() => void> = [];
+    class FakeResizeObserver {
+      constructor(callback: () => void) {
+        notifications.push(callback);
+      }
+      observe = vi.fn();
+      disconnect = disconnect;
+    }
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver);
+    const view = hud();
+    const listener = vi.fn();
+    const stop = view.observeLayout(listener);
+
+    notifications[0]?.();
+    expect(listener).toHaveBeenCalledOnce();
+    stop();
+    expect(disconnect).toHaveBeenCalledOnce();
+    view.destroy();
+    vi.unstubAllGlobals();
   });
 
   it('oyuncu istatistikleri oyun HUDunda görünmez — yalnızca shop sahibi olur', () => {

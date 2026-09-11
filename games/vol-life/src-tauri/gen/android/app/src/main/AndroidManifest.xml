@@ -5,16 +5,30 @@
     <!-- AndroidTV support -->
     <uses-feature android:name="android.software.leanback" android:required="false" />
 
+    <!--
+      appCategory="game": Android 16, en dar kenarı 600dp ve üstü ekranlarda
+      yön isteklerini yok sayar; oyun kategorisi bundan muaftır. Muafiyet
+      olmadan tablette oyuncunun yön seçimi uygulanmazdı.
+    -->
     <application
+        android:appCategory="game"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Theme.vol_life_tauri"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
+        <!--
+          screenOrientation: yön oyuncunun seçimidir (DESIGN.md §9); manifest
+          yalnız seçim yokken geçerli varsayılanı taşır. Telefon başlatıcıdan
+          dikey açıldığı için varsayılan dikeydir ve ilk açılış ekranı döndürmez.
+          `userPortrait` sistem döndürme kilidine uyar. Kayıtlı seçim
+          `MainActivity` açılışında `OrientationStore` üzerinden uygulanır.
+        -->
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
             android:launchMode="singleTask"
             android:label="@string/main_activity_title"
             android:name=".MainActivity"
+            android:screenOrientation="userPortrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

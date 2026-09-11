@@ -11,11 +11,20 @@ import {
 /**
  * Titreşim yeteneği — "ayar sunulmalı mı" sorusunun tek doğru kaynağı.
  *
- * Masaüstünde `navigator.vibrate` yoktur ve klavye/fare titremez: ayarın
- * etkin sunulması oyuncuya hiçbir şey yapmayan bir kutu göstermek demekti.
+ * Masaüstünde klavye/fare titremez; Chromium `navigator.vibrate`i tanımlasa da
+ * motor yoktur. Ayarın etkin sunulması oyuncuya hiçbir şey yapmayan bir kutu
+ * göstermek demekti.
  */
 function setVibrationApi(fn: ((pattern: number | number[]) => boolean) | undefined): void {
   Object.defineProperty(navigator, 'vibrate', { value: fn, configurable: true });
+  if (fn) {
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value: 'Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/152.0 Mobile Safari/537.36',
+    });
+  } else {
+    Reflect.deleteProperty(navigator, 'userAgent');
+  }
 }
 
 function setGamepads(pads: unknown[]): void {

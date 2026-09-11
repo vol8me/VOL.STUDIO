@@ -23,6 +23,18 @@ değerlerini ikonlu Q/E kategorileriyle listeler. Satın alma, satış, reroll v
 slot değişiklikleri açık çekmeceye anında yansır. Panelin scrim'i kart/dükkan
 ekranlarıyla aynıdır, ekstra blur kullanmaz.
 
+Oyun HUD'u tek bir üst şerittir: solda can ve dash yan yana, altlarında Spark;
+ortada dalga; sağda 2×2 istatistik. Bant iki satırdır (44 px) ve dokunmatikte
+duraklatma düğmesiyle aynı hizada biter. Arena sınırı bu şeridin ve
+masaüstündeki alt yetenek satırının gerçek yüksekliğini `ResizeObserver` ile
+alır; oynanabilir alanı bu rezervlerin dışında kurar ve toplam rezervi ekranın
+%70'iyle sınırlar. Böylece kısa ekranda arena sıfıra sıkışmaz. İstatistikler
+dört satır alt alta dizildiğinde bant 87 px'e çıkıyor ve 384 px yüksek telefonda
+arenanın dörtte biri gidiyordu; tek bantla arena 241 px'tir (HUD'u hesaba
+katmayan eski kenar boşluğunda 264 px, ama HUD sahanın üstüne biniyordu). Dokunmatik yüzey kararı sahne açılışında
+bir kez alınır: mobilde yetenekleri yalnız `TouchControls`, masaüstünde yalnız
+Q/E `AbilityHud` gösterir.
+
 Oynanış sayıları `src/config/` altında veri olarak durur; denge değişikliği kod değil config işidir.
 
 ### Ability ilerleme dengesi

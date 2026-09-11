@@ -1,8 +1,7 @@
 import { i18next } from '@volstudio/core';
-import { getAbilityDefinition } from '@/config/abilities';
 import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import { ABILITY_SLOTS, type AbilitySlot } from '@/runtime/ability/types';
-import { createAbilityIcon, getAbilityDisplayName } from './abilityPresentation';
+import { getAbilityDisplayName } from './abilityPresentation';
 
 /** Slotların klavye karşılığı — HUD'da ve loadout panelinde aynı harfler görünür. */
 export const SLOT_KEY_LABELS: Record<AbilitySlot, string> = {
@@ -13,7 +12,6 @@ export const SLOT_KEY_LABELS: Record<AbilitySlot, string> = {
 interface SlotView {
   root: HTMLDivElement;
   name: HTMLSpanElement;
-  icon: HTMLSpanElement;
   fill: HTMLDivElement;
   lastAbilityId: string | null | undefined;
   lastName: string;
@@ -27,12 +25,12 @@ interface SlotView {
  * atanmadığını görür (boş slotta tuşa basmak sessizce hiçbir şey yapmaz).
  */
 export class AbilityHud {
-  private readonly container: HTMLDivElement;
+  readonly element: HTMLDivElement;
   private readonly slots = new Map<AbilitySlot, SlotView>();
 
   constructor(parent: HTMLElement) {
-    this.container = document.createElement('div');
-    this.container.className = 'vol-ability-hud';
+    this.element = document.createElement('div');
+    this.element.className = 'vol-ability-hud';
 
     for (const slot of ABILITY_SLOTS) {
       const root = document.createElement('div');
@@ -42,11 +40,6 @@ export class AbilityHud {
       key.className = 'vol-ability-slot__key';
       key.textContent = SLOT_KEY_LABELS[slot];
       root.appendChild(key);
-
-      const icon = document.createElement('span');
-      icon.className = 'vol-ability-slot__icon';
-      icon.appendChild(createAbilityIcon(null));
-      root.appendChild(icon);
 
       const name = document.createElement('span');
       name.className = 'vol-ability-slot__name';
@@ -60,11 +53,10 @@ export class AbilityHud {
       gauge.appendChild(fill);
       root.appendChild(gauge);
 
-      this.container.appendChild(root);
+      this.element.appendChild(root);
       this.slots.set(slot, {
         root,
         name,
-        icon,
         fill,
         lastAbilityId: undefined,
         lastName: '',
@@ -72,7 +64,7 @@ export class AbilityHud {
       });
     }
 
-    parent.appendChild(this.container);
+    parent.appendChild(this.element);
   }
 
   /** Slot adlarını ve cooldown göstergelerini tazeler — değişmedikçe DOM'a dokunmaz. */
@@ -83,12 +75,10 @@ export class AbilityHud {
 
       const ability = abilities.getAbility(slot);
       const abilityId = ability?.id ?? null;
-      const definition = ability ? getAbilityDefinition(ability.id) : null;
       const name = ability ? getAbilityDisplayName(ability.id) : i18next.t('volhell:ability.empty');
 
       if (abilityId !== view.lastAbilityId) {
         view.lastAbilityId = abilityId;
-        view.icon.replaceChildren(createAbilityIcon(definition?.kind ?? null));
       }
 
       if (name !== view.lastName) {
@@ -116,7 +106,7 @@ export class AbilityHud {
   }
 
   destroy(): void {
-    this.container.remove();
+    this.element.remove();
     this.slots.clear();
   }
 }

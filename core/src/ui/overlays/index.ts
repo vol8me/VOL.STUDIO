@@ -1,4 +1,5 @@
 export { Modal, type ModalOptions } from './Modal';
+export { Sheet, type SheetOptions } from './Sheet';
 export {
   LoadingScreen,
   type LoadingScreenOptions,

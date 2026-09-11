@@ -47,6 +47,7 @@ function mount(
   bridge = new GameMobileControls();
   bridge.mount({
     parent,
+    touchControls: true,
     onAbility: () => false,
     onPauseToggle: vi.fn(),
     isPaused: () => false,
@@ -67,6 +68,24 @@ describe('GameMobileControls', () => {
 
     bridge!.destroy();
     bridge = null;
+    expect(parent.querySelector('.vol-touch-controls')).toBeNull();
+    expect(parent.classList.contains('vol-touch-active')).toBe(false);
+  });
+
+  it('çağıranın tek seferlik kararı false ise ekran kontrollerini kurmaz', () => {
+    bridge = new GameMobileControls();
+    bridge.mount({
+      parent,
+      touchControls: false,
+      onAbility: () => false,
+      onPauseToggle: vi.fn(),
+      isPaused: () => false,
+      isAbilityBlocked: () => false,
+      isCardScreenOpen: () => false,
+      isDeathScreenVisible: () => false,
+      isRunEnding: () => false,
+    });
+
     expect(parent.querySelector('.vol-touch-controls')).toBeNull();
     expect(parent.classList.contains('vol-touch-active')).toBe(false);
   });

@@ -11,8 +11,10 @@ Monorepo geneli için [kök README](../../README.md).
 ## Durum
 
 Paket şu anda **zemin ve kabuk** hâlindedir: kapılardan geçen bir iskelet, dünya
-ölçüleri, durumu kaydedilebilir deterministik rastgelelik ve kabuk (HUD, çıkış
-onayı, Tauri masaüstü ve Android). Simülasyon — alanlar, kuvvetler, organizma
+ölçüleri, durumu kaydedilebilir deterministik rastgelelik ve kabuk. Kabukta
+seçenekler çekmecesi (dil, kare hızı, dokunsal geri bildirim, ekran yönü,
+masaüstünde görüntü kipi), Android çıkış onayı, açılış hata yüzeyi ve Tauri
+masaüstü/Android kabuğu var. Simülasyon — alanlar, kuvvetler, organizma
 tespiti — henüz yazılmadı ve bu KASITLIDIR. İnşa sırası
 [DESIGN.md](DESIGN.md) §13'te, bugünkü durum §16'da, açık işler
 [TODO.md](TODO.md)'de.
@@ -34,7 +36,8 @@ pnpm --filter @volstudio/vol-life tauri:android:build   # Android APK
 ```
 src/config/    Dünya ve grafik ölçüleri — VERİ. Runtime'da sihirli sayı yoktur.
 src/runtime/   sim/ Phaser'ı import ETMEZ; scene/ yalnız bağlamadır; ui/ kabuktur.
-src/app/       Boot (i18n, tema, font, Phaser).
+src/app/       Boot (i18n, tema, font, Phaser), tercih deposu, ekran yönü tercihi,
+               depolama seçimi ve açılış hata yüzeyi.
 src-tauri/     Masaüstü ve Android kabuğu (com.volstudio.life).
 ```
 

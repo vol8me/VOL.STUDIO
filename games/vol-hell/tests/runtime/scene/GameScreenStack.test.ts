@@ -10,7 +10,8 @@ const fakes = vi.hoisted(() => {
     readonly refreshLabels = vi.fn();
     readonly destroy = vi.fn();
 
-    constructor() {
+    constructor(...args: unknown[]) {
+      state.hudArguments.push(args);
       state.huds.push(this);
     }
   }
@@ -61,6 +62,7 @@ const fakes = vi.hoisted(() => {
     pauses: [] as FakePause[],
     deaths: [] as FakeDeath[],
     playSfx: vi.fn(() => Promise.resolve()),
+    hudArguments: [] as unknown[][],
   };
 
   return { state, FakeHud, FakeCards, FakePause, FakeDeath };
@@ -92,6 +94,7 @@ function makeOptions(): {
       economy: {},
       audioSettings: {},
       videoSettings: {},
+      abilitySlots: false,
       onPauseForCard: vi.fn(),
       onResumeAfterCard: vi.fn(),
       onResumeFromMenu: vi.fn(),
@@ -111,6 +114,7 @@ afterEach(() => {
   fakes.state.pauses.length = 0;
   fakes.state.deaths.length = 0;
   fakes.state.playSfx.mockClear();
+  fakes.state.hudArguments.length = 0;
 });
 
 describe('GameScreenStack', () => {
@@ -122,6 +126,7 @@ describe('GameScreenStack', () => {
     expect(fakes.state.pauses).toHaveLength(1);
     expect(fakes.state.deaths).toHaveLength(1);
     expect(fakes.state.huds[0].reset).toHaveBeenCalledOnce();
+    expect(fakes.state.hudArguments[0][3]).toEqual({ abilitySlots: false });
 
     stack.refreshLabels();
     expect(fakes.state.huds[0].refreshLabels).toHaveBeenCalledOnce();

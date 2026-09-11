@@ -39,6 +39,11 @@ export default defineConfig({
         resolve(import.meta.dirname, '../../node_modules'),
       ],
     },
+    // Android derlemesi `src-tauri/target` ve `gen/android` altına yazar; izlenirse
+    // açık dev penceresi derleme boyunca defalarca yeniden yüklenir.
+    watch: {
+      ignored: ['**/src-tauri/**'],
+    },
   },
   // `vite preview` gerçek build'i sunar; E2E kapısı buradan geçer.
   preview: {

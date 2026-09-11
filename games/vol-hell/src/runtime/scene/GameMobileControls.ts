@@ -1,9 +1,4 @@
-import {
-  DisposableScope,
-  VirtualActionSource,
-  observeAppVisibility,
-  shouldUseTouchControls,
-} from '@volstudio/core';
+import { DisposableScope, VirtualActionSource, observeAppVisibility } from '@volstudio/core';
 import { pushBackHandler } from '@volstudio/core';
 import type { HellAction } from '@/config/input';
 import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
@@ -12,6 +7,7 @@ import { TouchControls } from '@/runtime/ui/TouchControls';
 
 export interface GameMobileControlsOptions {
   readonly parent: HTMLElement;
+  readonly touchControls: boolean;
   readonly onAbility: (slot: AbilitySlot) => boolean;
   readonly onPauseToggle: () => void;
   readonly isPaused: () => boolean;
@@ -42,7 +38,7 @@ export class GameMobileControls {
     this.scope = scope;
 
     try {
-      if (shouldUseTouchControls()) {
+      if (options.touchControls) {
         this.touchControls = scope.addDestroyable(
           new TouchControls(options.parent, {
             actionSource: this.actionSource,

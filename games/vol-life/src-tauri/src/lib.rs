@@ -8,6 +8,9 @@
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Bağlam BU crate'te üretilir: kimlik, pencere ve gömülü ön yüz buradan
-    // gelir. Paylaşılan kabuk yalnız eklentileri ve platform ayarlarını kurar.
-    volstudio_tauri_lib::run_with_context(tauri::generate_context!())
+    // gelir. Paylaşılan kabuk ortak eklentileri kurar; ekran yönü köprüsü
+    // yalnız bu uygulamaya aittir.
+    volstudio_tauri_lib::run_with_context_and(tauri::generate_context!(), |builder| {
+        builder.plugin(tauri_plugin_vol_orientation::init())
+    })
 }

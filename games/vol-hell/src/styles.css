@@ -260,41 +260,72 @@
 
 /* HUD ve açılış hatası katmanları */
 
-.vol-hud__slot {
+/*
+ * Üst şerit TEK banttır: solda can ve dash yan yana, altlarında Spark; ortada
+ * dalga; sağda 2×2 istatistik. İki 20 px satır, dokunmatik duraklatma
+ * düğmesiyle (44 px) aynı hizada biter. Arena bu bandın altından başlar
+ * (`GameHud.measureReserve` → `Border`). İstatistikler dört satır alt alta
+ * dizildiğinde bant 87 px'e çıkıyor, 384 px yüksek telefonda arenanın dörtte
+ * biri gidiyordu (ölçüldü).
+ */
+.vol-hud-top {
   position: absolute;
-  left: var(--vol-space-md);
-  width: var(--vol-hud-bar-width);
-}
-
-.vol-hud__slot--health {
-  top: var(--vol-space-md);
-}
-
-.vol-hud__slot--dash {
-  top: calc(var(--vol-space-md) + var(--vol-hud-dash-offset));
-}
-
-.vol-hud__slot--spark {
-  top: calc(var(--vol-space-md) + var(--vol-hud-spark-offset));
-}
-
-.vol-hud-stats {
-  position: absolute;
-  top: var(--vol-space-md);
-  right: var(--vol-space-md);
+  top: calc(var(--vol-safe-top) + var(--vol-space-md));
+  right: calc(var(--vol-safe-right) + var(--vol-space-md));
+  left: calc(var(--vol-safe-left) + var(--vol-space-md));
 
   /* Modal/shop katmanı HUD metinlerinin üzerinde kalmalıdır. */
   z-index: var(--vol-z-root);
-  flex-direction: column;
-  gap: var(--vol-space-xs);
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 1fr;
+  gap: var(--vol-space-md);
+  align-items: center;
   pointer-events: none;
-  text-align: right;
+}
+
+.vol-hud-top__vitals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--vol-space-xs);
+  width: min(100%, calc(var(--vol-hud-bar-width) * 2 + var(--vol-space-xs)));
+}
+
+.vol-hud__slot {
+  width: 100%;
+  min-width: 0;
+}
+
+.vol-hud__slot--spark {
+  grid-column: 1 / -1;
+}
+
+.vol-hud-stats {
+  justify-self: end;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: var(--vol-space-xs) var(--vol-space-md);
+  justify-items: end;
+  pointer-events: none;
 }
 
 .vol-hud-stats__line {
   margin: 0;
+  line-height: 20px;
   text-align: right;
+  white-space: nowrap;
+}
+
+/* Dikey telefon tarayıcısında üç sütun sığmaz: dalga ikinci satıra iner, bant
+   uzar ve arena ölçümle aşağı kayar. */
+@media (width < 600px) {
+  .vol-hud-top {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .vol-hud-top .vol-wave {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
 }
 
 /*
@@ -453,11 +484,7 @@
  * beliriş/kayboluş geçişini yapar.
  */
 .vol-wave {
-  position: absolute;
-  top: var(--vol-space-md);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--vol-z-root);
+  position: relative;
   flex-direction: column;
   align-items: center;
   gap: var(--vol-space-xs);
@@ -466,7 +493,10 @@
   font-family: var(--vol-font-family);
 }
 
+/* Sabit genişlikli rakamlar: saniye her değiştiğinde orta sütun, dolayısıyla
+   yan sütunlardaki çubuklar titremez. */
 .vol-wave__counter {
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   letter-spacing: 0.12em;
   color: var(--vol-ui-text-muted);
@@ -541,19 +571,6 @@
   font-family: var(--vol-font-family);
   font-size: 10px;
   font-weight: 700;
-}
-
-/* Mobil kipte Q/E yerine mekanik ikon görünür; masaüstünde gizlidir. */
-.vol-ability-slot__icon {
-  color: var(--vol-ui-text-secondary);
-  width: 20px;
-  height: 20px;
-  display: none;
-}
-
-.vol-ability-slot__icon svg {
-  width: 100%;
-  height: 100%;
 }
 
 .vol-ability-slot__name {
@@ -779,66 +796,12 @@
 }
 
 /*
- * Dokunmatik kipte kenar-yapışık HUD'lar güvenli alanı gözetir; skor bloğu
- * ayrıca duraklatma düğmesinin altına iner (ikisi de sağ üst köşede).
+ * Dokunmatik kipte şerit sağ üstteki 44 px duraklatma düğmesinin SOLUNDA biter.
+ * Yükseklikleri aynı olduğu için ikisi tek bir bant oluşturur ve arena ikisinin
+ * altından başlar; skor bloğunu düğmenin altına itmek bandı iki katına çıkarırdı.
  */
-.vol-touch-active .vol-hud__slot {
-  left: calc(var(--vol-safe-left) + var(--vol-space-md));
-}
-
-.vol-touch-active .vol-hud__slot--health {
-  top: calc(var(--vol-safe-top) + var(--vol-space-md));
-}
-
-.vol-touch-active .vol-hud__slot--dash {
-  top: calc(var(--vol-safe-top) + var(--vol-space-md) + var(--vol-hud-dash-offset));
-}
-
-.vol-touch-active .vol-hud__slot--spark {
-  top: calc(var(--vol-safe-top) + var(--vol-space-md) + var(--vol-hud-spark-offset));
-}
-
-.vol-touch-active .vol-wave {
-  top: calc(var(--vol-safe-top) + var(--vol-space-md));
-}
-
-/* 44 px pause hedefinin altına gerçek bir boşluk bırak; skor/Flux arkada kalmaz. */
-.vol-touch-active .vol-hud-stats {
-  top: calc(var(--vol-safe-top) + var(--vol-space-md) + 44px + var(--vol-space-sm));
-  right: calc(var(--vol-safe-right) + var(--vol-space-md));
-}
-
-/*
- * Mobilde bilgi yüzeyi iki başparmak alanının arasına alınır. Sağdaki gerçek
- * aksiyon düğmelerini tekrar eden ad/Q/E metni gizlenir; yalnız mekanik ikon +
- * cooldown çizgisi kalır. 48 px'lik iki kompakt slot merkez görüşü kaplamaz.
- */
-.vol-touch-active .vol-ability-hud {
-  bottom: calc(var(--vol-safe-bottom) + var(--vol-space-xs));
-  left: 50%;
-  gap: var(--vol-space-xs);
-  transform: translateX(-50%);
-}
-
-.vol-touch-active .vol-ability-slot {
-  align-items: center;
-  gap: 3px;
-  width: 48px;
-  min-width: 48px;
-  padding: 4px 6px;
-}
-
-.vol-touch-active .vol-ability-slot__key,
-.vol-touch-active .vol-ability-slot__name {
-  display: none;
-}
-
-.vol-touch-active .vol-ability-slot__icon {
-  display: flex;
-}
-
-.vol-touch-active .vol-ability-slot__gauge {
-  width: 100%;
+.vol-touch-active .vol-hud-top {
+  right: calc(var(--vol-safe-right) + var(--vol-space-md) + 44px + var(--vol-space-sm));
 }
 
 .vol-fatal-error {

@@ -25,6 +25,12 @@ serde_json = "1.0"
 log = "0.4"
 rustls = { version = "0.23", default-features = false, features = ["ring"] }
 
+# Pencerenin gerçek tam ekran durumu Linux'ta GDK'dan okunur
+# (`window_fullscreen_state`). Sürüm Tauri'nin zaten kullandığı gtk'dır;
+# yeni bir kütüphane değil, ona doğrudan erişimdir.
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18"
+
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]

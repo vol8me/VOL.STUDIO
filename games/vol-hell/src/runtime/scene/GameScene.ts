@@ -97,6 +97,7 @@ export class GameScene extends BaseScene {
   );
   private keyboardBindings: GameKeyboardBindings | null = null;
   private readonly mobileControls = new GameMobileControls();
+  private touchControlsEnabled = false;
   private directionIndicator!: PlayerDirectionIndicator;
   private aimIndicator!: PlayerAimIndicator;
 
@@ -196,6 +197,7 @@ export class GameScene extends BaseScene {
     // ÇALIŞMAZ. Sıfırlanması gereken her alan tek bir yerde toplanır ki
     // yeni alan eklendiğinde unutulmasın.
     this.resetSceneState();
+    this.touchControlsEnabled = shouldUseTouchControls();
     const { loadingScreen } = (data ?? {}) as { loadingScreen?: LoadingScreen };
     this.loadingScreen = loadingScreen ?? null;
     if (this.loadingScreen) runtimeScope.addDestroyable(this.loadingScreen);
@@ -210,7 +212,9 @@ export class GameScene extends BaseScene {
     runtimeScope.add({ dispose: () => this.audio.stopAll() });
     this.audio.start();
 
-    this.border = runtimeScope.addDestroyable(new Border(this));
+    this.border = runtimeScope.addDestroyable(
+      new Border(this, () => this.screens?.hud.measureReserve() ?? { top: 0, bottom: 0 }),
+    );
     this.effects = runtimeScope.addDestroyable(
       new EffectManager(this, {
         getShakeScale: () =>
@@ -367,6 +371,7 @@ export class GameScene extends BaseScene {
         economy: this.run.economy,
         audioSettings,
         videoSettings,
+        abilitySlots: !this.touchControlsEnabled,
         onPauseForCard: () => this.pauseCtl.pauseForScreen(),
         onResumeAfterCard: () => this.pauseCtl.resumeAfterScreen(),
         onResumeFromMenu: () => this.pauseCtl.resumeFromMenu(),
@@ -376,6 +381,7 @@ export class GameScene extends BaseScene {
     );
     this.mobileControls.mount({
       parent: this.ui.element,
+      touchControls: this.touchControlsEnabled,
       onAbility: (slot) => this.abilities.tryActivate(slot),
       onPauseToggle: () => this.pauseCtl.toggle(),
       isPaused: () => this.pauseCtl.isPaused,
@@ -385,6 +391,8 @@ export class GameScene extends BaseScene {
       isRunEnding: () => this.finisher.isFinishing || this.finisher.isFinished,
     });
     runtimeScope.addDestroyable(this.mobileControls);
+    this.border.refresh();
+    runtimeScope.addSubscription(this.screens.hud.observeLayout(() => this.border.refresh()));
     this.bindKeys(runtimeScope);
     this.run.start();
 
@@ -623,7 +631,7 @@ export class GameScene extends BaseScene {
    * Duraklatma ve dalga sınırı aynı kapıyı kullanır (bkz. `releasePointerLatch`).
    */
   private releasePointerLatch(): void {
-    releasePointerLatch(this.input.activePointer, { preserveAim: !shouldUseTouchControls() });
+    releasePointerLatch(this.input.activePointer, { preserveAim: !this.touchControlsEnabled });
   }
 
   private reportDiagnostics(): void {

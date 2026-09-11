@@ -617,19 +617,28 @@ import '@volstudio/core/ui/styles.css';
 giriş noktalarıdır. Web araçları kök `@volstudio/core` barrel'ını kullanmaz;
 bu barrel oyun runtime yüzeyini de taşır.
 
-`StatsPanel`, tüketicinin verdiği kimlikli grupları ve satırları DOM'u yıkmadan
-güncelleyen, sağdan açılan modal çekmecedir. `icon` alanı `string | Element`
-kabul eder; CORE oyun ikonlarını bilmez, yalnızca verilen elementi güvenli bir
-kopya olarak yerleştirir. Scrim, `Modal` ile aynı karartma sözleşmesini kullanır;
-bulanıklaştırma eklemez. Yükseklik ekranı tamamen doldurur, içerik ise panelin
-içinde kayar. Oyun kuralları ve stat hesapları çağıranda kalır.
+`Sheet`, sağdan açılan başlıklı çekmecedir. Scrim, odak hapsi, Escape ve
+Android geri hareketi `Modal`dan gelir: açık bir `Modal` geri hareketini tüketir
+ve Escape'teki gibi kapanır. Gövde bir `ScrollView`dır; içerik biriktikçe
+yükseklik değişmez, çekmece kendi içinde kayar. Geniş ekranda en az yarım
+genişlik kaplar ve arkadaki sahne scrim altında görünür kalır; 480 px ve altında
+tam genişliğe çıkar. İçteki `Select` ve `Popup` Escape'i önce kendileri tüketir,
+yani açık liste kapanırken çekmece açık kalır. Bulanıklaştırma eklemez.
+
+`StatsPanel` bu kabuğun üstüne kurulu istatistik çekmecesidir: tüketicinin
+verdiği kimlikli grupları ve satırları DOM'u yıkmadan günceller. `icon` alanı
+`string | Element` kabul eder; CORE oyun ikonlarını bilmez, yalnızca verilen
+elementi güvenli bir kopya olarak yerleştirir. Oyun kuralları ve stat hesapları
+çağıranda kalır.
 
 ### Dokunsal geri bildirim yeteneği
 
 `vibrate()` hâlâ NİYET alır (`'tap'`, `'error'`), ama artık iki katmandan
 birine yönlenir ve hangisinin var olduğunu ÇALIŞMA ANINDA ölçer:
 
-- `navigator.vibrate` — Android WebView ve mobil tarayıcılar.
+- `navigator.vibrate` — Android WebView ve mobil tarayıcılar. Masaüstü Chromium
+  ve WebView2 API'yi tanımlar ama motor yoktur; bu katman yalnız mobil cihazda
+  sayılır (UA-CH `mobile` ipucu, yoksa kullanıcı ajanı).
 - Oyun kolunun `vibrationActuator`'ı — masaüstünde ve Steam Deck'te titreşimin
   tek gerçek kaynağı; klavye ve fare titremez.
 

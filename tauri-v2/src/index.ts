@@ -10,3 +10,21 @@ export { GameStateDbError } from './storage/GameStateDbError';
 
 export { TauriWindowAdapter } from './window/TauriWindowAdapter';
 export type { TauriWindowAdapterOptions } from './window/TauriWindowAdapter';
+
+export { DisplayModeController } from './window/DisplayModeController';
+export type {
+  DisplayMode,
+  DisplayModeControllerOptions,
+  DisplayWindow,
+} from './window/DisplayModeController';
+
+export { getRuntimePlatform } from './platform/runtimePlatform';
+export type { RuntimePlatform, RuntimePlatformProbe } from './platform/runtimePlatform';
+
+export {
+  androidScreenOrientation,
+  observeViewportOrientation,
+  readViewportOrientation,
+  waitForViewportOrientation,
+} from './platform/screenOrientation';
+export type { ScreenOrientation, ScreenOrientationState } from './platform/screenOrientation';

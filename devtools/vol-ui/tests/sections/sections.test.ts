@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { missingTabModules, tabBuilders } from './tabBuilders';
 import { buildCardsTab } from '../../src/sections/cardsTab';
 import { buildHudTab } from '../../src/sections/hudTab';
+import { buildPanelsTab } from '../../src/sections/panelsTab';
 import { card, cardGrid, svgIcon, paletteGrid } from '../../src/sections/shared';
 import { buildWorkbenchTab } from '../../src/sections/workbenchTab';
 
@@ -168,6 +169,15 @@ describe('vol-ui sekme builderları', () => {
   });
 
   describe('geniş demo kartları', () => {
+    it('PANELS Sheet kartını ortak sağ çekmece sınıfıyla sunar', () => {
+      const { destroy } = buildPanelsTab(uiRoot);
+      const sheet = uiRoot.querySelector('.vol-showcase-sheet');
+
+      expect(sheet?.classList.contains('vol-sheet')).toBe(true);
+      expect(sheet?.querySelector('.vol-scroll-view')).not.toBeNull();
+      destroy();
+    });
+
     it('HUD StatsPanel kartını tam satıra yayar', () => {
       const { element, destroy } = buildHudTab();
       const cardElement = element

@@ -1,13 +1,21 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-const { createVolGame, gameEvents } = vi.hoisted(() => {
+type Platform = 'web' | 'desktop' | 'android';
+
+const { createVolGame, gameEvents, platform, displayControllers } = vi.hoisted(() => {
   const events = { once: vi.fn() };
   return {
     createVolGame: vi.fn((config: unknown) => {
       void config;
-      return Promise.resolve({ events });
+      return Promise.resolve({ events, canvas: document.createElement('canvas') });
     }),
     gameEvents: events,
+    platform: { value: 'web' as Platform },
+    displayControllers: [] as Array<{
+      options: unknown;
+      start: ReturnType<typeof vi.fn>;
+      destroy: ReturnType<typeof vi.fn>;
+    }>,
   };
 });
 
@@ -16,7 +24,41 @@ vi.mock('@volstudio/core', async () => {
   return { ...actual, createVolGame };
 });
 
-vi.mock('@/runtime/scene/LifeScene', () => ({ LifeScene: class {} }));
+vi.mock('@volstudio/tauri-v2', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('@volstudio/tauri-v2');
+  class FakeDisplayModeController {
+    readonly start = vi.fn(() => Promise.resolve());
+    readonly destroy = vi.fn();
+    constructor(readonly options: unknown) {
+      displayControllers.push(this);
+    }
+  }
+  return {
+    ...actual,
+    getRuntimePlatform: () => platform.value,
+    DisplayModeController: FakeDisplayModeController,
+  };
+});
+
+vi.mock('@/app/storage', () => ({
+  createSaveManager: () => ({
+    load: () => Promise.resolve(undefined),
+    save: () => Promise.resolve(),
+  }),
+}));
+
+vi.mock('@/runtime/scene/LifeScene', () => ({
+  LifeScene: class {
+    constructor(readonly services: unknown) {}
+  },
+}));
+
+function sceneServices(): { platform: Platform; preferences: unknown } {
+  const config = createVolGame.mock.calls[0]?.[0] as {
+    scenes: Array<{ services: { platform: Platform; preferences: unknown } }>;
+  };
+  return config.scenes[0].services;
+}
 
 describe('bootstrap', () => {
   /*
@@ -36,6 +78,10 @@ describe('bootstrap', () => {
     vi.resetModules();
     createVolGame.mockClear();
     gameEvents.once.mockClear();
+    platform.value = 'web';
+    displayControllers.length = 0;
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
   });
 
   it('oyunu açıkça WebGL isteyerek kurar', async () => {
@@ -65,5 +111,44 @@ describe('bootstrap', () => {
     const off = vi.spyOn(i18next, 'off');
     call[1]();
     expect(off).toHaveBeenCalledWith('languageChanged', expect.any(Function));
+  });
+
+  it('tarayıcıda görüntü kipi denetleyicisi kurulmaz; sahne kabuğu ve tercihleri alır', async () => {
+    await import('@/app/bootstrap');
+
+    expect(displayControllers).toHaveLength(0);
+    expect(sceneServices().platform).toBe('web');
+    expect(sceneServices().preferences).not.toBeNull();
+  });
+
+  it('masaüstünde görüntü kipi denetleyicisi başlar ve oyun ömrüne bağlanır', async () => {
+    platform.value = 'desktop';
+    await import('@/app/bootstrap');
+
+    expect(sceneServices().platform).toBe('desktop');
+    expect(sceneServices().preferences).not.toBeNull();
+    expect(displayControllers).toHaveLength(1);
+    expect(displayControllers[0].start).toHaveBeenCalledOnce();
+
+    for (const [event, handler] of gameEvents.once.mock.calls as Array<[string, () => void]>) {
+      if (event === 'destroy') handler();
+    }
+    expect(displayControllers[0].destroy).toHaveBeenCalledOnce();
+  });
+
+  it('açılış zinciri kırılırsa i18n başlıklı görünür hata yüzeyi çıkar', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    createVolGame.mockRejectedValueOnce(new Error('Cannot create WebGL context, aborting.'));
+
+    await import('@/app/bootstrap');
+    const { i18next } = await import('@volstudio/core');
+
+    const overlay = document.querySelector('.vol-life-fatal');
+    expect(overlay?.getAttribute('role')).toBe('alert');
+    expect(overlay?.querySelector('.vol-life-fatal__title')?.textContent).toBe(
+      i18next.t('life:fatal.title'),
+    );
+    expect(overlay?.textContent).toContain('Cannot create WebGL context, aborting.');
+    expect(consoleError).toHaveBeenCalled();
   });
 });

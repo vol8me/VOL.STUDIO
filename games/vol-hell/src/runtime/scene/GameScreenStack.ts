@@ -22,6 +22,8 @@ export interface GameScreenStackOptions {
   economy: RunEconomy;
   audioSettings: AudioSettings;
   videoSettings: VideoSettings;
+  /** Dokunmatik yüzey yetenekleri çiziyorsa masaüstü Q/E HUD'u kurulmaz. */
+  abilitySlots: boolean;
   onPauseForCard: () => void;
   onResumeAfterCard: () => void;
   onResumeFromMenu: () => void;
@@ -48,7 +50,9 @@ export class GameScreenStack {
     const { parent, player, effects, cards, economy, audioSettings, videoSettings } = options;
 
     try {
-      this.hud = this.scope.addDestroyable(new GameHud(parent, player, economy));
+      this.hud = this.scope.addDestroyable(
+        new GameHud(parent, player, economy, { abilitySlots: options.abilitySlots }),
+      );
       this.hud.reset();
 
       this.cards = this.scope.addDestroyable(

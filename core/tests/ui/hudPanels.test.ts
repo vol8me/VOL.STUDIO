@@ -287,6 +287,8 @@ describe('StatsPanel', () => {
       'Oyuncu',
     );
     expect(panel.element.querySelector('.vol-stats-panel__entry-value')?.textContent).toBe('12');
+    expect(panel.element.classList.contains('vol-sheet')).toBe(true);
+    expect(panel.element.querySelector('.vol-sheet__body')).not.toBeNull();
   });
 
   it('bölüm ve satır ikonlarını güvenli şekilde yerleştirir', () => {

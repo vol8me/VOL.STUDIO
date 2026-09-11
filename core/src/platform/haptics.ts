@@ -102,8 +102,18 @@ interface HapticGamepad {
   vibrationActuator?: HapticActuator | null;
 }
 
+const MOBILE_USER_AGENT = /Android|iPhone|iPad|iPod/i;
+
+/**
+ * Titreşim motoru olan cihazın Vibration API'si. Masaüstü Chromium ve WebView2
+ * `navigator.vibrate`i TANIMLAR ama çağrı hiçbir şey yapmaz; yalnız API'ye bakmak
+ * masaüstünde işe yaramayan bir ayar gösteriyordu (VOL.LIFE seçeneklerinde
+ * görüldü). Mobil ipucu (UA-CH) yoksa kullanıcı ajanına bakılır.
+ */
 function hasVibrationApi(): boolean {
-  return typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+  if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return false;
+  const hints = (navigator as Navigator & { userAgentData?: { mobile?: boolean } }).userAgentData;
+  return hints?.mobile === true || MOBILE_USER_AGENT.test(navigator.userAgent);
 }
 
 /** Titreşim motoru olan İLK bağlı oyun kolu. */

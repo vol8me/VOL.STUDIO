@@ -116,9 +116,20 @@ export class Popover {
     return active !== null && (this.element.contains(active) || this.target === active);
   }
 
+  /**
+   * Sekme sırasındaki ilk eleman. `tabindex="-1"` taşıyan düğmeler atlanır:
+   * roving tabindex kullanan gruplarda (radyo grubu, SegmentedControl) odak
+   * seçili öğeye gitmeli, grubun ilk düğmesine değil.
+   */
   private firstFocusable(): HTMLElement | null {
     return this.element.querySelector<HTMLElement>(
-      'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
+      [
+        'button:not(:disabled):not([tabindex="-1"])',
+        'input:not(:disabled):not([tabindex="-1"])',
+        'select:not(:disabled):not([tabindex="-1"])',
+        'textarea:not(:disabled):not([tabindex="-1"])',
+        '[tabindex]:not([tabindex="-1"])',
+      ].join(', '),
     );
   }
 

@@ -28,7 +28,6 @@ function makeWindow() {
   const unlisten = vi.fn();
   const target = {
     center: vi.fn().mockResolvedValue(undefined),
-    isFullscreen: vi.fn().mockResolvedValue(false),
     onResized: vi.fn((handler: () => void) => {
       resized = handler;
       return Promise.resolve(unlisten);
@@ -36,15 +35,21 @@ function makeWindow() {
     setFullscreen: vi.fn().mockResolvedValue(undefined),
     setSize: vi.fn().mockResolvedValue(undefined),
   };
+  const readFullscreen = vi.fn<() => Promise<boolean>>().mockResolvedValue(false);
 
   return {
     target,
+    readFullscreen,
     unlisten,
     emitResize: () => resized?.(),
   };
 }
 
 describe('TauriWindowAdapter', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('native olmayan ortamda pencere çağrılarını güvenli no-op yapar', async () => {
     const adapter = new TauriWindowAdapter({ enabled: false });
 
@@ -76,6 +81,17 @@ describe('TauriWindowAdapter', () => {
     expect(target.center).toHaveBeenCalledOnce();
   });
 
+  it('gerçek tam ekran durumunu varsayılan olarak kabuk komutundan okur', async () => {
+    // Linux'ta `Window.isFullscreen()` yalnız uygulamanın kendi isteğini
+    // hatırlar; pencere yöneticisinin değişimini GDK'dan okuyan komut görür.
+    fakes.invoke.mockResolvedValue(true);
+    const { target } = makeWindow();
+    const adapter = new TauriWindowAdapter({ enabled: true, window: target as never });
+
+    await expect(adapter.isFullscreen()).resolves.toBe(true);
+    expect(fakes.invoke).toHaveBeenCalledExactlyOnceWith('window_fullscreen_state');
+  });
+
   it('geçersiz çözünürlüğü reddeder ve varsayılan LogicalSize üreticisi çalışır', async () => {
     const { target } = makeWindow();
     const adapter = new TauriWindowAdapter({ enabled: true, window: target as never });
@@ -93,16 +109,20 @@ describe('TauriWindowAdapter', () => {
   });
 
   it('resize sonrası yalnız değişen tam ekran durumunu bildirir ve aboneliği kaldırır', async () => {
-    const { target, emitResize, unlisten } = makeWindow();
+    const { target, readFullscreen, emitResize, unlisten } = makeWindow();
     const listener = vi.fn();
-    const adapter = new TauriWindowAdapter({ enabled: true, window: target as never });
+    const adapter = new TauriWindowAdapter({
+      enabled: true,
+      window: target as never,
+      readFullscreen,
+    });
     const stop = await adapter.onFullscreenChange(listener);
 
     emitResize();
     await flushPromises();
     expect(listener).not.toHaveBeenCalled();
 
-    target.isFullscreen.mockResolvedValue(true);
+    readFullscreen.mockResolvedValue(true);
     emitResize();
     await flushPromises();
     expect(listener).toHaveBeenCalledOnce();
@@ -114,13 +134,17 @@ describe('TauriWindowAdapter', () => {
   });
 
   it('resize durum okuması reddedilirse listener zinciri ayakta kalır', async () => {
-    const { target, emitResize } = makeWindow();
+    const { target, readFullscreen, emitResize } = makeWindow();
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const listener = vi.fn();
-    const adapter = new TauriWindowAdapter({ enabled: true, window: target as never });
+    const adapter = new TauriWindowAdapter({
+      enabled: true,
+      window: target as never,
+      readFullscreen,
+    });
     const stop = await adapter.onFullscreenChange(listener);
 
-    target.isFullscreen.mockRejectedValueOnce(new Error('IPC kapandı'));
+    readFullscreen.mockRejectedValueOnce(new Error('IPC kapandı'));
     emitResize();
     await flushPromises();
 
@@ -131,17 +155,21 @@ describe('TauriWindowAdapter', () => {
   });
 
   it('taban okunurken gelen resize kaybolmaz', async () => {
-    const { target, emitResize } = makeWindow();
+    const { target, readFullscreen, emitResize } = makeWindow();
     const listener = vi.fn();
 
     // Taban okuması GEÇ dönsün; tam bu sırada bir resize gelsin. Dinleyici
     // taban okumasından SONRA bağlansaydı bu olay tamamen kaybolurdu.
     let resolveBaseline: ((value: boolean) => void) | undefined;
-    target.isFullscreen
+    readFullscreen
       .mockImplementationOnce(() => new Promise<boolean>((resolve) => (resolveBaseline = resolve)))
       .mockResolvedValue(true);
 
-    const adapter = new TauriWindowAdapter({ enabled: true, window: target as never });
+    const adapter = new TauriWindowAdapter({
+      enabled: true,
+      window: target as never,
+      readFullscreen,
+    });
     const subscription = adapter.onFullscreenChange(listener);
     await flushPromises();
     emitResize();
@@ -156,9 +184,13 @@ describe('TauriWindowAdapter', () => {
   });
 
   it('art arda resize sorgularında sonucu sıralar, eski yanıt yenisini ezmez', async () => {
-    const { target, emitResize } = makeWindow();
+    const { target, readFullscreen, emitResize } = makeWindow();
     const listener = vi.fn();
-    const adapter = new TauriWindowAdapter({ enabled: true, window: target as never });
+    const adapter = new TauriWindowAdapter({
+      enabled: true,
+      window: target as never,
+      readFullscreen,
+    });
     const stop = await adapter.onFullscreenChange(listener);
     await flushPromises();
     listener.mockClear();
@@ -167,7 +199,7 @@ describe('TauriWindowAdapter', () => {
     // eski yanıt `lastState`i `true`ya çekip ardından `false` bildirir; yani
     // dinleyici pencere hiç pencere kipine dönmemişken "çıktı" derdi.
     let resolveSlow: ((value: boolean) => void) | undefined;
-    target.isFullscreen
+    readFullscreen
       .mockImplementationOnce(() => new Promise<boolean>((resolve) => (resolveSlow = resolve)))
       .mockResolvedValue(false);
 

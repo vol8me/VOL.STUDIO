@@ -7,6 +7,10 @@ import {
   vibrate,
 } from '../../src/platform/haptics';
 
+const ANDROID_USER_AGENT =
+  'Mozilla/5.0 (Linux; Android 16; SM-G990B2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0 Mobile Safari/537.36';
+
+/** Titreşim motoru olan bir telefon: API tanımlı ve kullanıcı ajanı mobil. */
 function mockVibrate(impl?: () => boolean): ReturnType<typeof vi.fn> {
   const spy = vi.fn(impl ?? (() => true));
   Object.defineProperty(navigator, 'vibrate', {
@@ -14,6 +18,7 @@ function mockVibrate(impl?: () => boolean): ReturnType<typeof vi.fn> {
     writable: true,
     value: spy,
   });
+  Object.defineProperty(navigator, 'userAgent', { configurable: true, value: ANDROID_USER_AGENT });
   return spy;
 }
 
@@ -28,6 +33,8 @@ function removeVibrate(): void {
 afterEach(() => {
   setHapticsEnabled(false);
   removeVibrate();
+  Reflect.deleteProperty(navigator, 'userAgent');
+  Reflect.deleteProperty(navigator, 'userAgentData');
 });
 
 describe('dokunsal geri bildirim', () => {
@@ -98,6 +105,29 @@ describe('dokunsal geri bildirim', () => {
     expect(isHapticsSupported()).toBe(false);
     expect(() => vibrate('tap')).not.toThrow();
     expect(() => cancelHaptics()).not.toThrow();
+  });
+
+  it('masaüstü tarayıcı API’yi tanımlasa da motor yoktur — titremez, ayar sunulmaz', () => {
+    // Masaüstü Chromium ve WebView2 `navigator.vibrate`i tanımlar ama çağrı boşa
+    // gider; VOL.LIFE seçeneklerinde işe yaramayan bir anahtar olarak görüldü.
+    const spy = mockVibrate();
+    Reflect.deleteProperty(navigator, 'userAgent');
+    setHapticsEnabled(true);
+
+    expect(isHapticsSupported()).toBe(false);
+    vibrate('tap');
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('UA-CH mobil ipucu kullanıcı ajanından önce okunur', () => {
+    mockVibrate();
+    Reflect.deleteProperty(navigator, 'userAgent');
+    Object.defineProperty(navigator, 'userAgentData', {
+      configurable: true,
+      value: { mobile: true },
+    });
+
+    expect(isHapticsSupported()).toBe(true);
   });
 
   it('platform çağrıyı reddederse hata yüzeye çıkmaz', () => {

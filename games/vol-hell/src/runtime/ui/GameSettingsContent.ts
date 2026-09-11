@@ -242,10 +242,10 @@ export class GameSettingsContent {
     const onLanguageChanged = (): void => this.refreshLabels();
     i18next.on('languageChanged', onLanguageChanged);
     this.scope.addSubscription(() => i18next.off('languageChanged', onLanguageChanged));
-    // Titreşim ayarı YETENEĞE bağlıdır: masaüstünde `navigator.vibrate` yoktur
-    // ve klavye/fare titremez, yani kol takılı değilken kutu hiçbir şey
-    // yapmaz. Yetenek canlı izlenir — oyuncu kolu oyun ortasında takarsa ayar
-    // o anda etkinleşir, çıkarırsa pasifleşir.
+    // Titreşim ayarı YETENEĞE bağlıdır: masaüstünde motor yoktur (Chromium
+    // `navigator.vibrate`i tanımlasa da) ve klavye/fare titremez, yani kol takılı
+    // değilken kutu hiçbir şey yapmaz. Yetenek canlı izlenir — oyuncu kolu oyun
+    // ortasında takarsa ayar o anda etkinleşir, çıkarırsa pasifleşir.
     this.scope.addSubscription(
       observeHapticsCapability((capability) => {
         this.hapticsCheckbox.setDisabled(!capability.supported);

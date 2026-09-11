@@ -34,15 +34,14 @@ afterEach(() => {
 });
 
 describe('AbilityHud', () => {
-  it('masaüstü Q/E gerçeğini korur, mobil yüzey için mekanik ikonları hazırlar', () => {
+  it('masaüstü Q/E gerçeğini korur, dokunmatik ikonlarını tekrar etmez', () => {
     hud = new AbilityHud(parent);
     hud.refresh(fakeRuntime('turretSiege', 'chainStorm'));
 
     const keys = [...parent.querySelectorAll<HTMLElement>('.vol-ability-slot__key')];
     expect(keys.map((key) => key.textContent)).toEqual(['Q', 'E']);
 
-    const icons = [...parent.querySelectorAll<SVGSVGElement>('.vol-ability-slot__icon svg')];
-    expect(icons.map((icon) => icon.dataset.abilityKind)).toEqual(['turret', 'chainLightning']);
+    expect(parent.querySelector('.vol-ability-slot__icon')).toBeNull();
   });
 
   it('yetenek adı dil değişiminde i18n kaynağından yenilenir', async () => {

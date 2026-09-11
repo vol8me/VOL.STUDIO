@@ -24,9 +24,67 @@ body {
   text-align: left;
 }
 
-.vol-life-hud__fullscreen {
+/*
+ * Sağ üst düğme kümesi. Seçenekler düğmesi DOM'da sondadır ve köşeye oturur;
+ * tam ekran düğmesi (yalnız web) onun soluna eklenir. Konum platforma göre
+ * yazılmaz, küme kendiliğinden daralır (DESIGN.md §6, kabuk yerleşimi).
+ */
+.vol-life-hud__actions {
   position: absolute;
   top: max(var(--vol-safe-top), 8px);
   right: max(var(--vol-safe-right), 16px);
+  display: flex;
+  gap: var(--vol-space-sm);
+  align-items: center;
   pointer-events: auto;
+}
+
+.vol-life-options {
+  display: grid;
+  gap: var(--vol-space-md);
+  padding: var(--vol-space-xs);
+}
+
+/* Satır ortalanır: grid öğesi esneseydi segment grubu içeriğinden geniş kalır ve
+   sağında boş bir şerit bırakırdı (cihazda görüldü). */
+.vol-life-options__row {
+  display: grid;
+  gap: var(--vol-space-xs);
+  justify-items: center;
+}
+
+.vol-life-options__row .vol-select {
+  width: 100%;
+}
+
+.vol-life-fps-meter {
+  z-index: var(--vol-z-dialog-content);
+}
+
+/* Açılış hata yüzeyi: boş ekran yerine neden görünür. */
+.vol-life-fatal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-content: center;
+  gap: var(--vol-space-sm);
+  padding: var(--vol-space-lg);
+  background: var(--vol-ui-bg);
+  color: var(--vol-ui-text);
+  text-align: center;
+}
+
+.vol-life-fatal__title {
+  margin: 0;
+  color: var(--vol-ui-danger-solid);
+  font-size: 20px;
+}
+
+.vol-life-fatal__detail {
+  margin: 0;
+  color: var(--vol-ui-text-secondary);
+  font-family: monospace;
+  font-size: 14px;
+  overflow-wrap: anywhere;
 }
