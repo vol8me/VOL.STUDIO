@@ -30,6 +30,26 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
       değişkenleri WebView yaratılmadan önce koyduğu için gerekçe artık
       geçerli olmayabilir. Kapanır: satır kaldırılıp AppImage derlenir; NVIDIA +
       Wayland'da 60 FPS ve XWayland'da çizim ölçülür.
+- [ ] **[P3] Paylaşılan Tauri kabuğu `sql` eklentisini her oyuna koşulsuz
+      gömüyor — "en az yetki" yalnız çağrı katmanında doğru.**
+      `tauri-v2/src-tauri/src/lib.rs`deki `run_with_context_and`, `store` ve
+      `log` yanında `tauri_plugin_sql::Builder::default().build()`i HER oyun
+      için koşulsuz kaydediyor; her üç oyunun kendi `Cargo.toml`u da
+      `tauri-plugin-sql`i doğrudan bağımlılık olarak listeliyor. Hiçbir oyunun
+      `src/`i şu an `@tauri-apps/plugin-sql` ya da `GameStateDb`yi (tauri-v2'de
+      hazır ama tüketilmeyen bir sarmalayıcı) İÇE AKTARMIYOR — üçü de SQL
+      kullanmıyor (doğrulandı: `rg` taraması). VOL.LIFE'ın capability
+      dosyalarından `sql:default`/`sql:allow-execute` kalktı (bu TODO'nun
+      önceki bir turda kapatılan "en az yetki" maddesi) ama bu yalnız JS→native
+      ÇAĞRI iznini (ACL) kapatıyor; eklentinin kendisi — komut işleyicileri,
+      SQLite sürücüsü, native durumu — VOL.LIFE'ın gönderilen ikili dosyasına
+      hâlâ gömülü giriyor (vol-hell ve vol-arachnid'in capability dosyalarında
+      `sql:default` hâlâ VAR, onlar da kullanmıyor). Kapanır: eklenti kaydı
+      `vol-orientation`ın izlediği desende (`run_with_context_and`in
+      `configure` parametresi) kullanan oyunun kendi çağrısına taşınır ve
+      Cargo bağımlılığı da yalnız onu isteyen oyunda kalır; hiçbir oyun SQL
+      kullanmıyorsa üçünden de kaldırılır; VOL.LIFE'ın gönderilen ikilisinin
+      SQL sembolleri TAŞIMADIĞI doğrulanır.
 
 ## Kapatılanlar
 

@@ -7,6 +7,85 @@
 Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 [TODO.md](../../TODO.md)'de.
 
+## Zemin
+
+- [ ] **[P1] Uygulama paket bütçesi Adım 1 başlamadan neredeyse tükendi.**
+      Ölçüldü (`node scripts/bundle-report.mjs`, 2026-09-12):
+      `games/vol-life: app 37,6 KB` / bütçe `40 KB` (gzip, %94 doluluk).
+      Adım 1 henüz simülasyon kodu (`FieldSet`, difüzyon, render adaptörü)
+      eklemedi — §16 bunu "KASITLI OLARAK yazılmadı" diye kaydediyor; bugünkü
+      37,6 KB tamamen kabuğun (seçenekler çekmecesi, HUD, tercih deposu,
+      yön/görüntü kipi köprüleri). Kalan pay 2,4 KB, Adım 1'in ilk satırı
+      (`FieldSet` + difüzyon) bile muhtemelen bunu aşar. Kapanır: Adım 1
+      başlamadan `app` bütçesi ya gerçek bir tavan olarak yeniden ölçülür
+      (kabuk + tahmini simülasyon ağırlığına göre) ya da bütçe aşımı riski
+      DESIGN §16'ya açıkça yazılır ve bir eşik kararı verilir; karar
+      gerekçesiyle kayda geçer.
+- [ ] **[P1] Kabuk hiçbir gerçek tarayıcı/WebGL testiyle kanıtlanmıyor.**
+      `bootstrap.test.ts` `createVolGame`i tamamen `vi.mock`lar
+      (`Promise.resolve({ events, canvas: document.createElement('canvas') })`);
+      paketin 14 test dosyası da `jsdom`da koşar (`vitest.config.ts`), hiçbiri
+      gerçek Phaser, gerçek WebGL bağlamı ya da gerçek tarayıcı kurmaz.
+      vol-hell'in `tests/e2e/boot.spec.ts`i (gerçek Chromium, `vite preview`,
+      kanvas boyutu + menü + tema token'ı + konsol hatası yok) VOL.LIFE'ta
+      karşılıksız; `justfile`ın `e2e:` tarifi VOL.LIFE'ı hiç çağırmıyor ve
+      `workspace-contract.mjs` bunu bir paketin eksik kapısı olarak
+      YAKALAMIYOR. Bu, Adım 1'in kendi E2E maddesinden (aşağıda — dünya
+      substratının DPR/WebGL-kapalı senaryosu) AYRIDIR: o madde henüz
+      yazılmamış simülasyonu kapsayacak, bu madde bugün GÖNDERİLMİŞ kabuğu
+      (seçenekler çekmecesi, HUD, tam ekran, ekran yönü) kapsar. Kapanır:
+      vol-hell deseninde bir `boot.spec.ts` eklenir (kanvas görünür ve ölçülü,
+      seçenekler düğmesi görünür, tema token'ı dolu, konsol hatası yok);
+      `test:e2e` script'i ve `justfile e2e:` tarifine paket eklenir.
+- [ ] **[P2] Ekran yönü "desteklenir" durumu çalışma anında bayatlıyor.**
+      `OrientationPreference.isInteractive()` yalnız `load()`da BİR KEZ okunan
+      `this.interactive`i döner; `LifeScene.create()` bunu sahne kurulurken tek
+      seferlik okuyup panele geçirir. Native tarafta `isSupported()`
+      (`OrientationPlugin.kt`) `activity.isInMultiWindowMode`i her çağrıda
+      YENİDEN ölçer — gerçek durum dinamik ama JS tarafı onu dondurup saklıyor.
+      Oyuncu açılıştan sonra bölünmüş ekrana/DeX pencere kipine girip çıkarsa
+      (ya da tersi) seçenekler panelindeki yön kontrolü YANLIŞ etkin/pasif
+      kalır: destek giderken kontrol hâlâ tıklanabilir görünür (`select()`
+      cihazda sessizce hiçbir şey yapmaz, yalnız görüntü yönünü bekler) ya da
+      destek geri gelince kontrol gereksiz yere pasif kalır. Kapanır:
+      Android'de pencere/mod değişimini (native olay ya da görünürlük
+      dönüşünde yeniden `getState()` sorgusu) izleyen bir yol eklenir;
+      `OrientationPreference` yeni durumu `subscribe()` üzerinden panele
+      taşır; cihazda bölünmüş ekrana giriş/çıkışla doğrulanır.
+- [ ] **[P2] `applySaved()` çalışma anı yön sözleşmesinden farklı davranıyor.**
+      `OrientationPlugin.setOrientation()` isteği yalnız `isSupported()`
+      doğruyken (`!television && !isInMultiWindowMode`) pencereye uygular;
+      `OrientationStore.applySaved()` ise `MainActivity.onCreate`da bu
+      kontrolü YAPMADAN `requestedOrientation`ı koşulsuz yazar (bkz.
+      `OrientationStore.kt:33-37`). Android TV'de ya da bölünmüş ekranda
+      başlayan bir soğuk açılışta kayıtlı tercih varsa, çalışma anı kuralının
+      izin vermeyeceği bir yön isteği yine de pencereye uygulanmış olur.
+      Kapanır: `applySaved()` `isSupported()`le aynı kontrolü paylaşır (ortak
+      bir yardımcıya taşınır) ya da TV/çoklu pencerede kaydı hiç uygulamaz;
+      iki yolun aynı kuralı kullandığını kilitleyen bir test eklenir.
+- [ ] **[P3] Açılış zinciri geç hatada oluşturulmuş oyunu geri almıyor.**
+      `bootstrap.ts` tek `try/catch` içinde `createVolGame()`den SONRA da
+      masaüstünde `DisplayModeController` kuruyor (`controller.start()`); bu
+      adım (ya da gelecekte eklenecek bir adım) fırlatırsa `catch` yalnız
+      `showFatalError()` çağırır — halihazırda oluşturulmuş `Phaser.Game`
+      (kanvas, WebGL bağlamı, RAF döngüsü) hiç `destroy()` edilmez ve hata
+      katmanının ALTINDA çalışmaya devam eder. Nadir bir yol (yalnız
+      masaüstünde, oyun kurulduktan SONRAKİ bir adım fırlatırsa) ama kod
+      yorumunun "Açılış zincirinin TAMAMI tek korumadadır" iddiasını tam
+      karşılamıyor. Kapanır: `catch` bloğu `game` değişkenine erişebiliyorsa
+      `game.destroy(true)` çağırır; oyun kurulduktan sonraki bir hatayla
+      bilerek sınanan bir test eklenir.
+- [ ] **[P3] Tercih kaydı başarısızlığı yalnız loglanıyor.**
+      `LifePreferences.update()` bellek durumunu ve dinleyicileri HEMEN
+      günceller (kullanıcı arayüzü "kaydedildi" gösterir), sonra
+      `saveManager.save()`i sıraya alır; yazma başarısız olursa yalnız
+      `console.warn` yazılır — kullanıcıya görünür hiçbir geri bildirim
+      gitmez. Uygulama bu oturumda kapanmadan yeniden başlarsa (ör.
+      Android'de arka plana atılıp sistem tarafından öldürülme) bellek
+      durumu diskle HİÇ eşleşmez ve tercih sessizce kaybolur. Kapanır: yazma
+      başarısız olduğunda kullanıcıya görünür bir uyarı çıkar ya da yeniden
+      deneme kuyruğa girer; davranış DESIGN'a yazılır ve testle sınanır.
+
 ## Adım 1 — dünya substratı
 
 - [ ] **Saat:** `SimulationClock` `partialStep: 'defer'` ile kurulur ve seçim
