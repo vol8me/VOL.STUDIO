@@ -85,6 +85,28 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       durumu diskle HİÇ eşleşmez ve tercih sessizce kaybolur. Kapanır: yazma
       başarısız olduğunda kullanıcıya görünür bir uyarı çıkar ya da yeniden
       deneme kuyruğa girer; davranış DESIGN'a yazılır ve testle sınanır.
+- [ ] **[P2] Organizma fenotipi → ses ailesi eşleşmesi VOL.LIFE'ın kendi
+      çözümleyicisinde yaşamalı, `@volstudio/audio-synth`ta değil.**
+      `devtools/audio-synth` paketi Dalga 5'te ("generic SoundFamily
+      üretimi", bkz. `devtools/audio-synth/TODO.md`) domain-agnostik bir
+      `SoundFamilyBank` publish formatı kazanacak — bank yalnız generic
+      semantic variant metadata (id, tags/state, program hash, descriptor
+      özeti) taşır, organizma/fenotip kavramını BİLMEZ. VOL.LIFE'ın
+      simülasyonu (kuvvet çekirdeği/tür matrisi, Adım 2-3) çalışma anında bir
+      organizmanın (tür kimliği, boyut, davranış durumu gibi) hangi bank
+      variant'ına karşılık geldiğine karar vermek zorunda; bu eşleşme mantığı
+      `@volstudio/audio-synth`a SIZDIRILMAZ (paket sınırı, kök `CLAUDE.md`
+      §Kırmızı Çizgiler madde 1) — VOL.LIFE kendi `runtime`/`sim` katmanında
+      (ya da ayrı bir `runtime/audio` alt katmanında) ince bir
+      fenotip→variant çözümleyicisi taşır. Bu madde henüz uygulanabilir
+      değildir: `SoundFamilyBank` formatı yayınlanmadan (Dalga 5 kapanmadan)
+      somut bir çözümleyici yazılamaz; VOL.LIFE'ın kendi ses ihtiyacı da
+      DESIGN'da henüz karara bağlanmadı. Kapanır: `SoundFamilyBank`
+      yayınlandıktan ve VOL.LIFE'ın ses gereksinimi DESIGN'a yazıldıktan
+      sonra, `runtime/sim` sınır testinin (`simBoundary.test.ts`) izin
+      verdiği bir katmanda organizma durumunu bank variant kimliğine çeviren
+      saf bir fonksiyon eklenir; `audio-synth` paketi bu fonksiyonu ne
+      import eder ne de organizma/fenotip tipini bilir.
 
 ## Adım 1 — dünya substratı
 
