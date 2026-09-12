@@ -1,5 +1,12 @@
 {
   "$comment": [
+    "2026-09-12: VOL.LIFE Adım 1 dünya substratıyla app 42,6 KB ölçüldü; 40 KB",
+    "kabuk tavanı artık gerçek ürünü taşımadığı için 52 KB'ye çıkarıldı. Bu, ölçülen",
+    "değere %22 Adım 2 payıdır; Phaser vendor ve CSS bütçeleri değişmedi. Kapsam",
+    "ratchet'i ölçülen CORE 92,8/92,8/86,9/92,5 için satır/ifade 89 → 90;",
+    "VOL.LIFE 97,1/97,1/92,6/92,9 için fonksiyon 86 → 90; VOL.UI",
+    "95,3/95,3/92,4/84,3 için dal 89 → 90 olarak yükseltildi.",
+    "",
     "2026-09-11: tauri-v2 ve vol-life eşikleri ölçülenin ~2 puan altına çekildi",
     "(satır/ifade/dal/fonksiyon). tauri-v2 95,8/95,8/92,8/100 ölçüldü — platform",
     "yüklemi, görüntü kipi uygulayıcısı ve yön köprüsü testleriyle — ve",
@@ -63,8 +70,8 @@
   "exempt": {},
   "packages": {
     "@volstudio/core": {
-      "lines": 89,
-      "statements": 89,
+      "lines": 90,
+      "statements": 90,
       "branches": 84,
       "functions": 91
     },
@@ -72,7 +79,7 @@
       "lines": 96,
       "statements": 96,
       "branches": 92,
-      "functions": 86
+      "functions": 90
     },
     "@volstudio/vol-hell": {
       "lines": 70,
@@ -89,7 +96,7 @@
     "@volstudio/vol-ui": {
       "lines": 94,
       "statements": 94,
-      "branches": 89,
+      "branches": 90,
       "functions": 83
     },
     "@volstudio/vol-asset-studio": {
@@ -125,7 +132,7 @@
   },
   "bundles": {
     "games/vol-life": {
-      "app": 40,
+      "app": 52,
       "vendor": 360,
       "css": 24
     },

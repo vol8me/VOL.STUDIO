@@ -5,6 +5,7 @@ import {
   IconButton,
   Sheet,
   Text,
+  ToastManager,
   UIRoot,
   i18next,
 } from '@volstudio/core';
@@ -27,6 +28,7 @@ export class LifeHud {
   private readonly fullscreenButton: IconButton | null;
   private readonly optionsButton: IconButton;
   private readonly optionsSheet: Sheet;
+  private readonly toasts: ToastManager;
   private fpsMeter: FpsMeter | null = null;
   private fullscreenActive: boolean;
   private readonly onLanguageChanged = (): void => this.refreshLabels();
@@ -34,6 +36,7 @@ export class LifeHud {
   constructor(parent: HTMLElement | undefined, options: LifeHudOptions) {
     this.fullscreenActive = options.fullscreen?.initialActive ?? false;
     this.uiRoot = this.scope.addDestroyable(new UIRoot(parent));
+    this.toasts = this.scope.addDestroyable(new ToastManager(this.uiRoot.element));
 
     this.root = document.createElement('div');
     this.root.className = 'vol-life-hud';
@@ -118,6 +121,10 @@ export class LifeHud {
 
   isOptionsOpen(): boolean {
     return this.optionsSheet.isOpen();
+  }
+
+  showPreferenceSaveError(): void {
+    this.toasts.show(i18next.t('life:options.saveFailed'), { variant: 'danger' });
   }
 
   destroy(): void {

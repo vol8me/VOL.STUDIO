@@ -38,6 +38,9 @@ export const ACKNOWLEDGED = {
   'core/src/ui/cards/ShopPickerTypes.ts': 'Tip bildirimi — seçenek sözleşmesi.',
   'games/vol-hell/src/config/enemies/types.ts': 'Tip bildirimi — arketip alanları.',
   'games/vol-hell/src/config/cards/types.ts': 'Tip bildirimi — kart alanları.',
+  'games/vol-life/src/config/world.ts':
+    'Yapılandırma bildirimi — alan başına tek satır sözleşme; adım tavanı ' +
+    'blokları ölüm-sarmalı ve tekrar-kipi gerekçesini taşır.',
   'devtools/audio-synth/src/types.ts':
     'Sentez parametrelerinin tip bildirimi; her alan birimini ve varsayılanını taşır.',
   'devtools/visual-synth/src/field/domain.ts':

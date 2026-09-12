@@ -26,6 +26,12 @@ describe('worldConfig', () => {
     expect(Number.isInteger(worldConfig.seed)).toBe(true);
   });
 
+  it('canlı yapılandırma 256² alanı 10 Hz tam günceller', () => {
+    expect(worldConfig.fieldResolution).toBe(256);
+    expect(worldConfig.fieldHz).toBe(10);
+    expect(worldConfig.fieldUpdateBands).toBe(1);
+  });
+
   it('resolveMaxStepsForSpeed hız çarpanına göre tavanı güvenle ölçekler', () => {
     expect(resolveMaxStepsForSpeed(1)).toBe(2);
     expect(resolveMaxStepsForSpeed(2)).toBe(4);

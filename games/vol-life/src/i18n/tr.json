@@ -26,7 +26,8 @@
     "landscape": "Yatay",
     "displayMode": "Görüntü",
     "windowed": "Pencere",
-    "fullscreen": "Tam ekran"
+    "fullscreen": "Tam ekran",
+    "saveFailed": "Seçenekler kaydedilemedi. Değişiklik bu oturumda geçerli."
   },
   "fatal": {
     "title": "VOL.LIFE başlatılamadı"

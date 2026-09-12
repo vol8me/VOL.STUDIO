@@ -29,6 +29,8 @@ function syncDocumentLocale(): void {
   document.title = i18next.t('life:app.title');
 }
 
+let game: Awaited<ReturnType<typeof createVolGame>> | null = null;
+
 /*
  * Açılış zincirinin TAMAMI tek korumadadır: i18n, tercih okuması, Phaser ve
  * native pencere. Biri kırılırsa ekran boş kalmaz, neden görünür; korumasız
@@ -50,7 +52,7 @@ try {
   );
   await orientation.load();
 
-  const game = await createVolGame({
+  game = await createVolGame({
     backgroundColor: VOL_COLORS.uiBg,
     strategy: 'resize',
     renderScale: lifeGraphicsConfig.renderScale,
@@ -76,5 +78,6 @@ try {
     await controller.start();
   }
 } catch (error) {
+  game?.destroy(true);
   showFatalError(error);
 }

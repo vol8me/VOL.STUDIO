@@ -135,4 +135,13 @@ describe('LifeHud', () => {
     expect(document.querySelector('.vol-fps-meter')).toBeNull();
     expect(document.querySelector('.vol-life-options-sheet')).toBeNull();
   });
+
+  it('tercih kaydı başarısızlığını çevrilmiş tehlike bildirimi olarak gösterir', () => {
+    const { hud } = mount();
+
+    hud.showPreferenceSaveError();
+
+    const toast = document.querySelector('.vol-toast--danger');
+    expect(toast?.textContent).toBe(tr.options.saveFailed);
+  });
 });

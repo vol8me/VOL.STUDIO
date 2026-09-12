@@ -481,6 +481,12 @@ saklanır, çünkü sayfa yüklenmeden uygulanmalıdır (§9).
 `LocalStorageAdapter`, masaüstü/Android'de `tauri-v2`nin `TauriStoreAdapter`ı.
 Bu katman için yazılacak yeni kod yoktur.
 
+Yazma başarısızlığı sessiz geçmez: `LifePreferences` bellek durumunu hemen
+günceller, kuyruklanan yazma reddedilirse `onSaveError` dinleyicilerine taşır
+ve `LifeHud` bir danger toast gösterir (`life:options.saveFailed`). Tercih
+yine kaybedilebilir ama oyuncu bunu görür; otomatik yeniden deneme bilinçli
+olarak eklenmedi — toast, kuru kuyruğa göre daha dürüst bir yüzeydir.
+
 ### Dünya → VOL.LIFE'ın kendi formatı
 
 Dünya `SaveManager`a KONULMAZ; kendi `WorldSnapshot` sözleşmesini taşır.
@@ -949,28 +955,41 @@ işlendi.
 
 ## 16. Bugünkü durum
 
-Kurulan şey bir simülasyon değil, **kapılardan geçen bir zemin ve kabuktur**
-(ölçüm 2026-09-11):
+Zemin ve kabuğun üstüne **Adım 1 dünya substratı** kuruldu
+(ölçüm 2026-09-12):
 
-- 14 test dosyasında 83 test geçiyor; ölçülen kapsam 98,6/98,6/94,6/88,9.
-  Eşikler `quality.json`da 96/96/92/86'dır (satır/ifade/dal/fonksiyon) ve
+- 20 test dosyasında 118 test geçiyor; ölçülen kapsam 97,1/97,1/92,6/92,9
+  (satır/ifade/dal/fonksiyon). Eşikler `quality.json`da 96/96/92/90 ve
   ratchet gereği düşürülerek geçilmez.
-- `build` geçiyor; gzip boyutu **app 37,6 KB / vendor 345,1 KB / css 17,1 KB**,
-  bütçe 40/360/24. Seçenekler çekmecesi ve tercih deposu uygulama payını 29
-  KB'tan 37,6 KB'a çıkardı; bütçede 2,4 KB kaldı.
-- Dünya ölçüleri `config/world.ts` içinde VERİ olarak durur. Tekrar hızına
-  bağlı adım tavanı (`resolveMaxStepsForSpeed`) yazılı; canlı dünya
-  hızlandırılmadığı için (§1) yalnız tekrar kipinde kullanılacak.
-- Deterministik ve durumu okunabilir RNG (`runtime/sim/rng.ts`) CORE dizisiyle
-  parite testine bağlı.
+- `build` geçiyor; gzip boyutu **app 42,5 KB / vendor 345,1 KB / css 17,1
+  KB**, bütçe 52/360/24. App tavanı substratın ölçülen ağırlığıyla yeniden
+  tabanlandı; gerekçe `quality.json` yorumlarında.
+- `runtime/sim`: `FieldSet` altı alanı (`flowX`/`flowY`, `nutrient`, `light`,
+  `temperature`, `disturbance`) paralel `Float32Array`lerde tutar — toroidal
+  indeks, çift doğrusal örnekleme, tam veya satır-bantlı difüzyon.
+  `LifeWorld` ışık kaynaklarını tohumdan kurar, besini tohumlar ve ışığa
+  doğru yeniler; `SimulationTempo` alan güncellemesini 60 Hz simülasyon
+  içinde 10 Hz'e böler. Aynı tohum + aynı tick aynı dizileri verir
+  (snapshot/restore dahil). Çözünürlük ölçümle seçildi: 256² tam güncelleme
+  ~5,4 ms/tick, 512²/4 bant tam tur ~21,9 ms (`benchmark:fields`).
+- `runtime/render`: `FieldRenderer` alanları 256² canvas dokusuna rasterler
+  ve toroidal süreklilik için 3×3 döşer. Doku yükleme ölçüsü ~0,1 ms
+  (256² RGBA `texImage2D` + `finish`, Chromium p50; p95 0,3 ms) — 10 Hz
+  temposunda ihmal edilebilir.
+- CORE `WorldCameraController` açılışta dünyayı sığdırır; sürükleme, tekerlek
+  ve iki parmakla gezer, merkezi toroidal sarar. Masaüstü sürüklemesi ve
+  telefon kaydırması ekran görüntüsüyle doğrulandı.
 - Kabuk: marka şeridi, tam ekran (F11 + düğme), Android geri tuşu ve çıkış
-  onayı, kare hızı göstergesi, Tauri masaüstü ve Android kabuğu
-  (`com.volstudio.life`). Cihazda (SM-G990B2) açılışta konsol hatası yok.
-  Android'de tam ekran düğmesi görünür bir şey değiştirmiyor; yerine seçenekler
-  düğmesi geliyor (§6, §9).
+  onayı, kare hızı göstergesi, seçenekler çekmecesi, Tauri masaüstü ve
+  Android kabuğu (`com.volstudio.life`). Cihazlarda (SM-G990B2, TB350FU)
+  açılışta konsol hatası yok; ~58–109 FPS ölçüldü. Android'de çoklu pencere
+  kipinde yön kontrolü çalışma anında pasifleşir (`vol:windowmodechange`).
+- Gerçek tarayıcı E2E: `tests/e2e/boot.spec.ts` üretim derlemesini gerçek
+  WebGL Chromium'da açar (kanvas + Sheet, DPR 2, WebGL kapalı iken i18n'li
+  fatal yüzey); `test:e2e` script'i ve `justfile e2e` tarifi paketi kapsar.
 
-Simülasyonun kendisi — alanlar, kuvvetler, ızgara, organizma tespiti — KASITLI
-OLARAK yazılmadı. Sıra §13'tedir; açık işler TODO'dadır.
+Organizmalar, kuvvetler, küme tespiti ve katman görünümü (§6) henüz yok —
+sıra §13'tedir; açık işler TODO'dadır.
 
 ## 17. Ölçülmemiş varsayımlar
 

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openShowcase, selectTab, SHOWCASE_TABS } from './support/determinism';
+import { openShowcase, selectTab, SHOWCASE_TABS, type ShowcaseTab } from './support/determinism';
 
 /**
  * PİKSEL temeli.
@@ -41,14 +41,27 @@ html, body, .vol-showcase-root, .vol-tabs, .vol-tabs__panels,
   overflow: visible !important;
 }`;
 
+/*
+ * `freezeEnvironment` rAF'ı ve saati dondurur ama timer tekerleğine
+ * (`setInterval`) dokunmaz. Duvar saatiyle işleyen haneler — `touch`
+ * sekmesindeki `PauseResumeButton` sayacı (1 sn'lik interval) — karenin ne
+ * zaman alındığına göre farklı rakam basar; sözleşme o hane maskelenerek
+ * korunur.
+ */
+const TAB_MASKS: Partial<Record<ShowcaseTab, string>> = {
+  touch: '.vol-pause-resume-button__counter',
+};
+
 test.describe('görsel sözleşme', () => {
   for (const tab of SHOWCASE_TABS) {
     test(`${tab} sekmesi görsel olarak değişmedi`, async ({ page }) => {
       await openShowcase(page);
       await selectTab(page, tab);
       await page.addStyleTag({ content: UNSCROLL_PANELS });
+      const maskSelector = TAB_MASKS[tab];
       await expect(page.locator(`[role="tabpanel"][id$="-panel-${tab}"]`)).toHaveScreenshot(
         `${tab}.png`,
+        maskSelector ? { mask: [page.locator(maskSelector)] } : {},
       );
     });
   }

@@ -28,6 +28,7 @@ function isDisplayMode(value: unknown): value is DisplayMode {
 export class LifePreferences {
   private state: LifePreferenceState = DEFAULT_LIFE_PREFERENCES;
   private readonly listeners = new Set<(state: LifePreferenceState) => void>();
+  private readonly saveErrorListeners = new Set<(error: unknown) => void>();
   private writeQueue: Promise<void> = Promise.resolve();
 
   constructor(private readonly saveManager: SaveManager) {}
@@ -67,6 +68,11 @@ export class LifePreferences {
     return () => this.listeners.delete(listener);
   }
 
+  subscribeSaveErrors(listener: (error: unknown) => void): () => void {
+    this.saveErrorListeners.add(listener);
+    return () => this.saveErrorListeners.delete(listener);
+  }
+
   private update(patch: Partial<LifePreferenceState>): Promise<void> {
     const next = { ...this.state, ...patch };
     if (
@@ -84,6 +90,7 @@ export class LifePreferences {
       .then(() => this.saveManager.save(STORAGE_KEY, snapshot))
       .catch((error: unknown) => {
         console.warn('[VOL.LIFE] Tercihler kaydedilemedi:', error);
+        for (const listener of this.saveErrorListeners) listener(error);
       });
     return this.writeQueue;
   }

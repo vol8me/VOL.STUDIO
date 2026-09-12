@@ -137,4 +137,40 @@ describe('OrientationPreference', () => {
     stopSecond();
     expect(viewport.listenerCount()).toBe(0);
   });
+
+  it('native pencere kipi değişince destek durumunu yeniden okuyup bildirir', async () => {
+    stubViewport('portrait');
+    const native = bridge(true);
+    const preference = new OrientationPreference(native);
+    await preference.load();
+    const listener = vi.fn();
+    const stop = preference.subscribeInteractive(listener);
+
+    native.getState.mockResolvedValueOnce({
+      current: 'portrait',
+      preferred: null,
+      supported: false,
+    });
+    window.dispatchEvent(new Event('vol:windowmodechange'));
+    await vi.waitFor(() => expect(listener).toHaveBeenCalledWith(false));
+
+    expect(preference.isInteractive()).toBe(false);
+    expect(native.getState).toHaveBeenCalledTimes(2);
+    stop();
+  });
+
+  it('son abone kalkınca native pencere kipi dinleyicisini bırakır', async () => {
+    const native = bridge(true);
+    const preference = new OrientationPreference(native);
+    await preference.load();
+    const listener = vi.fn();
+    const stop = preference.subscribeInteractive(listener);
+    stop();
+
+    window.dispatchEvent(new Event('vol:windowmodechange'));
+    await Promise.resolve();
+
+    expect(native.getState).toHaveBeenCalledTimes(1);
+    expect(listener).not.toHaveBeenCalled();
+  });
 });

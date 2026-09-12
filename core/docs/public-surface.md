@@ -81,3 +81,7 @@ Takma adın hiçbir tüketicisi yoktu; yeniden adlandırmanın bedeli public API
 ### 227 → 228
 
 `Sheet`. Sağdan açılan, başlıklı ve kendi içinde kayan çekmece. Scrim, odak, Escape ve Android geri sözleşmesi `Modal`dan gelir. İkinci tüketici gelince ortak kabuk oldu: `StatsPanel` kendi başlık, kapatma, kaydırma ve kayma CSS'ini bırakıp bunun üstüne kuruldu; VOL.LIFE seçenekleri de aynı kabuğu kullanıyor. Aynı turda açık `Modal`, Escape'teki gibi Android geri hareketini de tüketip kapanır hâle geldi; bu bir davranış değişikliğidir, yeni ad değildir.
+
+### 228 → 229
+
+`WorldCameraController`. Phaser sınıfına bağlanmadan, küçük bir kamera portu üzerinden kare dünyayı sığdırır; tek işaretçiyle kaydırma, işaretçi altında tekerlek yakınlaştırması ve iki parmak yakınlaştırması sağlar. Merkez toroidal sarılır, resize yakınlaştırma ve odağı korur. Böylece oyunlar aynı giriş matematiğini yeniden yazmaz; canlı sözleşme VOL.UI TOUCH sekmesindedir.

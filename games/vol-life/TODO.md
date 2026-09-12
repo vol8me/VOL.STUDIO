@@ -9,82 +9,6 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 
 ## Zemin
 
-- [ ] **[P1] Uygulama paket bütçesi Adım 1 başlamadan neredeyse tükendi.**
-      Ölçüldü (`node scripts/bundle-report.mjs`, 2026-09-12):
-      `games/vol-life: app 37,6 KB` / bütçe `40 KB` (gzip, %94 doluluk).
-      Adım 1 henüz simülasyon kodu (`FieldSet`, difüzyon, render adaptörü)
-      eklemedi — §16 bunu "KASITLI OLARAK yazılmadı" diye kaydediyor; bugünkü
-      37,6 KB tamamen kabuğun (seçenekler çekmecesi, HUD, tercih deposu,
-      yön/görüntü kipi köprüleri). Kalan pay 2,4 KB, Adım 1'in ilk satırı
-      (`FieldSet` + difüzyon) bile muhtemelen bunu aşar. Kapanır: Adım 1
-      başlamadan `app` bütçesi ya gerçek bir tavan olarak yeniden ölçülür
-      (kabuk + tahmini simülasyon ağırlığına göre) ya da bütçe aşımı riski
-      DESIGN §16'ya açıkça yazılır ve bir eşik kararı verilir; karar
-      gerekçesiyle kayda geçer.
-- [ ] **[P1] Kabuk hiçbir gerçek tarayıcı/WebGL testiyle kanıtlanmıyor.**
-      `bootstrap.test.ts` `createVolGame`i tamamen `vi.mock`lar
-      (`Promise.resolve({ events, canvas: document.createElement('canvas') })`);
-      paketin 14 test dosyası da `jsdom`da koşar (`vitest.config.ts`), hiçbiri
-      gerçek Phaser, gerçek WebGL bağlamı ya da gerçek tarayıcı kurmaz.
-      vol-hell'in `tests/e2e/boot.spec.ts`i (gerçek Chromium, `vite preview`,
-      kanvas boyutu + menü + tema token'ı + konsol hatası yok) VOL.LIFE'ta
-      karşılıksız; `justfile`ın `e2e:` tarifi VOL.LIFE'ı hiç çağırmıyor ve
-      `workspace-contract.mjs` bunu bir paketin eksik kapısı olarak
-      YAKALAMIYOR. Bu, Adım 1'in kendi E2E maddesinden (aşağıda — dünya
-      substratının DPR/WebGL-kapalı senaryosu) AYRIDIR: o madde henüz
-      yazılmamış simülasyonu kapsayacak, bu madde bugün GÖNDERİLMİŞ kabuğu
-      (seçenekler çekmecesi, HUD, tam ekran, ekran yönü) kapsar. Kapanır:
-      vol-hell deseninde bir `boot.spec.ts` eklenir (kanvas görünür ve ölçülü,
-      seçenekler düğmesi görünür, tema token'ı dolu, konsol hatası yok);
-      `test:e2e` script'i ve `justfile e2e:` tarifine paket eklenir.
-- [ ] **[P2] Ekran yönü "desteklenir" durumu çalışma anında bayatlıyor.**
-      `OrientationPreference.isInteractive()` yalnız `load()`da BİR KEZ okunan
-      `this.interactive`i döner; `LifeScene.create()` bunu sahne kurulurken tek
-      seferlik okuyup panele geçirir. Native tarafta `isSupported()`
-      (`OrientationPlugin.kt`) `activity.isInMultiWindowMode`i her çağrıda
-      YENİDEN ölçer — gerçek durum dinamik ama JS tarafı onu dondurup saklıyor.
-      Oyuncu açılıştan sonra bölünmüş ekrana/DeX pencere kipine girip çıkarsa
-      (ya da tersi) seçenekler panelindeki yön kontrolü YANLIŞ etkin/pasif
-      kalır: destek giderken kontrol hâlâ tıklanabilir görünür (`select()`
-      cihazda sessizce hiçbir şey yapmaz, yalnız görüntü yönünü bekler) ya da
-      destek geri gelince kontrol gereksiz yere pasif kalır. Kapanır:
-      Android'de pencere/mod değişimini (native olay ya da görünürlük
-      dönüşünde yeniden `getState()` sorgusu) izleyen bir yol eklenir;
-      `OrientationPreference` yeni durumu `subscribe()` üzerinden panele
-      taşır; cihazda bölünmüş ekrana giriş/çıkışla doğrulanır.
-- [ ] **[P2] `applySaved()` çalışma anı yön sözleşmesinden farklı davranıyor.**
-      `OrientationPlugin.setOrientation()` isteği yalnız `isSupported()`
-      doğruyken (`!television && !isInMultiWindowMode`) pencereye uygular;
-      `OrientationStore.applySaved()` ise `MainActivity.onCreate`da bu
-      kontrolü YAPMADAN `requestedOrientation`ı koşulsuz yazar (bkz.
-      `OrientationStore.kt:33-37`). Android TV'de ya da bölünmüş ekranda
-      başlayan bir soğuk açılışta kayıtlı tercih varsa, çalışma anı kuralının
-      izin vermeyeceği bir yön isteği yine de pencereye uygulanmış olur.
-      Kapanır: `applySaved()` `isSupported()`le aynı kontrolü paylaşır (ortak
-      bir yardımcıya taşınır) ya da TV/çoklu pencerede kaydı hiç uygulamaz;
-      iki yolun aynı kuralı kullandığını kilitleyen bir test eklenir.
-- [ ] **[P3] Açılış zinciri geç hatada oluşturulmuş oyunu geri almıyor.**
-      `bootstrap.ts` tek `try/catch` içinde `createVolGame()`den SONRA da
-      masaüstünde `DisplayModeController` kuruyor (`controller.start()`); bu
-      adım (ya da gelecekte eklenecek bir adım) fırlatırsa `catch` yalnız
-      `showFatalError()` çağırır — halihazırda oluşturulmuş `Phaser.Game`
-      (kanvas, WebGL bağlamı, RAF döngüsü) hiç `destroy()` edilmez ve hata
-      katmanının ALTINDA çalışmaya devam eder. Nadir bir yol (yalnız
-      masaüstünde, oyun kurulduktan SONRAKİ bir adım fırlatırsa) ama kod
-      yorumunun "Açılış zincirinin TAMAMI tek korumadadır" iddiasını tam
-      karşılamıyor. Kapanır: `catch` bloğu `game` değişkenine erişebiliyorsa
-      `game.destroy(true)` çağırır; oyun kurulduktan sonraki bir hatayla
-      bilerek sınanan bir test eklenir.
-- [ ] **[P3] Tercih kaydı başarısızlığı yalnız loglanıyor.**
-      `LifePreferences.update()` bellek durumunu ve dinleyicileri HEMEN
-      günceller (kullanıcı arayüzü "kaydedildi" gösterir), sonra
-      `saveManager.save()`i sıraya alır; yazma başarısız olursa yalnız
-      `console.warn` yazılır — kullanıcıya görünür hiçbir geri bildirim
-      gitmez. Uygulama bu oturumda kapanmadan yeniden başlarsa (ör.
-      Android'de arka plana atılıp sistem tarafından öldürülme) bellek
-      durumu diskle HİÇ eşleşmez ve tercih sessizce kaybolur. Kapanır: yazma
-      başarısız olduğunda kullanıcıya görünür bir uyarı çıkar ya da yeniden
-      deneme kuyruğa girer; davranış DESIGN'a yazılır ve testle sınanır.
 - [ ] **[P2] Organizma fenotipi → ses ailesi eşleşmesi VOL.LIFE'ın kendi
       çözümleyicisinde yaşamalı, `@volstudio/audio-synth`ta değil.**
       `devtools/audio-synth` paketi Dalga 5'te ("generic SoundFamily
@@ -110,54 +34,12 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 
 ## Adım 1 — dünya substratı
 
-- [ ] **Saat:** `SimulationClock` `partialStep: 'defer'` ile kurulur ve seçim
-      testle kilitlenir. Canlı dünya 1× koşar ve hız çarpanı almaz (DESIGN §1);
-      `resolveMaxStepsForSpeed` yalnız tekrar kipinde (Adım 8) bağlanır.
-- [ ] **Tempo zamanlayıcısı:** DESIGN §11'deki tempo tablosu tek bir
-      deterministik zamanlayıcıda uygulanır; her sistem duvar saatinden değil
-      tick sayısından koşar. İlk tüketici difüzyondur. Kapanır: 60 tick'te
-      10 Hz'lik sistemin tam 10 kez koştuğu test.
-- [ ] **`FieldSet`:** `flow` (iki bileşen), `nutrient`, `light`,
-      `temperature`, `disturbance`; `Float32Array` paralel diziler, alan başına
-      nesne yok. Dış girdinin adı `energy` değil `light`tır (DESIGN §2).
-- [ ] **Difüzyon:** çözünürlük ve tempo bu makinede ölçülerek seçilir (512²
-      kademeli ve 256² tam güncelleme karşılaştırılır); çözünürlük 2'nin
-      kuvvetidir çünkü alan dokusu tekrarlı örneklenir (WebGL1, DESIGN §2);
-      ölçülmeden bütçe yazılmaz.
-- [ ] **Çift doğrusal örnekleme:** alan değeri parçacığın konumunda okunur,
-      hücre merkezine yuvarlanmaz.
-- [ ] **Kaynak tohumlama ve yenilenme:** besin açılışta tohumdan tohumlanır ve
-      `light` girdisiyle tavana doğru yenilenir; `light` tohumdan türeyen,
-      yavaşça kayan yumuşak kaynaklardır (DESIGN §2). Kapanır: aynı tohum aynı
-      alanları verir; kaynaklar kaydıkça zenginleşen ve fakirleşen bölgeler
-      ekranda görülür.
-- [ ] **Toroidal sarma:** kenar `worldConfig.sizeUnits`; alan indeksinde ve
-      mesafe hesabında tutarlı. Komşuluk mesafesi özellik testiyle kilitlenir:
-      x=1 ile x=1023 arası 2 birimdir, 1022 değil.
-- [ ] **[P1] Dünya kamerası:** açılışta dünyayı sığdırır; sürükleme, tekerlek
-      ve iki parmakla gezilir; uzaklaşma bir dünya genişliğiyle sınırlıdır ve
-      görüntü kameraya göre sarılır (DESIGN §2); resize ve yön değişiminde
-      bakılan nokta ve yakınlaştırma korunur (`preserveCameraState`). Zemin'deki
-      viewport maddesine bağlıdır. CORE'da Phaser dünya kamerası için bu
-      denetleyici yok: `CanvasViewportController` editör tuvalidir (sol sürükleme
-      pan değildir), `PinchZoomController` bir DOM elemanını sarar; vol-hell ve
-      vol-arachnid'de de yok. Mekanizma oyun kelimesi bilmediği için CORE'a
-      girer. Kapanır: CORE denetleyicisi testle sınanır ve vol-ui'de sergilenir;
-      VOL.LIFE'ta masaüstünde ve telefonda gezinme ekran görüntüsüyle
+- [ ] **Katman görünümü (Adım 7'ye bağlı):** oyuncu katman görünümünü
+      açtığında seçili alan (besin, ışık, sıcaklık, iz) tam kontrastla görünür
+      (DESIGN §6). Oyuncuya açan düğme Adım 7'nin sunum işidir; varsayılan
+      görünüm ve doku yükleme ölçümü kapandı (Kapatılanlar, 2026-09-12).
+      Kapanır: katman görünümü tarayıcıda ve telefonda ekran görüntüsüyle
       doğrulanır.
-- [ ] **Alan görüntüsü:** varsayılan görünümde alanlar çok hafif çizilir ve
-      dünya çoğunlukla karanlık kalır; katman görünümü seçili alanı tam
-      kontrastla gösterir (DESIGN §6). Katman görünümünü oyuncuya açan düğme
-      Adım 7'de gelir. Kapanır: iki görünüm tarayıcıda ve telefonda ekran
-      görüntüsüyle doğrulanır; alan dokusunun yüklenme süresi ölçülüp
-      `DESIGN.md`ye yazılır.
-- [ ] **Determinizm testi başlar:** aynı tohum ve aynı tick sayısı alan
-      dizilerini bayt bayt aynı verir; ara noktada alınan kopyadan devam aynı
-      sonuca varır (DESIGN §8). Sonraki her adım bu testi kendi durumuyla
-      genişletir.
-- [ ] **E2E:** ilk görsel substratla birlikte gerçek WebGL Playwright testi
-      (DPR 2 ve WebGL kapalı senaryosu dahil); `test:e2e` script'i ve
-      `justfile` `e2e` tarifi birlikte eklenir.
 
 ## Adım 2 — parçacık yaşamı
 
@@ -248,6 +130,71 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
   bakılan noktayı ve yakınlaştırmayı sıfırlamaz.
 
 ## Kapatılanlar
+
+### 2026-09-12 — Adım 1: dünya substratı ve zemin kalanları
+
+- [x] **Saat:** `SimulationClock` `partialStep: 'defer'` ile kurulur;
+      `LifeRuntime.test.ts` seçimi kilitler. `resolveMaxStepsForSpeed` yalnız
+      tekrar kipine (Adım 8) ayrıldı.
+- [x] **Tempo zamanlayıcısı:** `SimulationTempo` 60 taban tick'te 10 Hz'lik
+      sistemi tam 10 kez koşar (`SimulationTempo.test.ts`); ilk tüketici
+      difüzyon.
+- [x] **`FieldSet`:** `flowX`/`flowY`, `nutrient`, `light`, `temperature`,
+      `disturbance` — `Float32Array` paralel diziler, alan başına nesne yok.
+- [x] **Difüzyon:** 256² tam güncelleme seçildi; bu makinede 512²/4 bant tam
+      tur ~21,9 ms iken 256² tam tur ~5,4 ms/tick ölçüldü
+      (`benchmark:fields`, 2026-09-12). Çözünürlük 2'nin kuvveti (WebGL1
+      tekrarlı örnekleme, DESIGN §2).
+- [x] **Çift doğrusal örnekleme:** `FieldSet.sample` hücre merkezleri arasında
+      interpolasyon yapar; `FieldSet.test.ts` hücre ortası değerleri kilitler.
+- [x] **Kaynak tohumlama ve yenilenme:** besin tohumdan tohumlanır ve `light`
+      girdisiyle tavana yenilenir; `light` tohumdan türeyen, yavaşça kayan 5
+      yumuşak kaynaktır (`LifeWorld`). Aynı tohum aynı alanları verir;
+      kaynakların ürettiği zenginleşme/fakirleşme ekran görüntülerinde görüldü
+      (masaüstü sürükleme, SM-G990B2 kaydırma).
+- [x] **Toroidal sarma:** `index` maskeli sarar (negatif koordinat dahil);
+      difüzyon karşı kenara ulaşır (`index(7,0)`/`index(0,7)` komşudur) —
+      komşuluk mesafesi testle kilitli.
+- [x] **[P1] Dünya kamerası:** CORE `WorldCameraController` — sığdırma,
+      sürükleme, tekerlek, çift parmak, bir dünya genişliği sınırı, toroidal
+      merkez sarması; resize'da bakılan nokta korunur. 6 birim testi +
+      vol-ui showcase; VOL.LIFE'ta masaüstü sürüklemesi (1280×800 Chromium)
+      ve telefon kaydırması (SM-G990B2) ekran görüntüsüyle doğrulandı.
+- [x] **Alan görüntüsü — varsayılan:** alanlar çok hafif çizilir, dünya
+      çoğunlukla karanlık kalır; `FieldRenderer` alanları 256² canvas dokusuna
+      rasterler ve toroidal süreklilik için 3×3 döşer. Preview tarayıcısında
+      ve iki cihazda (SM-G990B2, TB350FU) ekran görüntüsüyle doğrulandı;
+      doku yükleme ~0,1 ms ölçüldü ve DESIGN §16'ya yazıldı. Katman
+      görünümünün doğrulaması Adım 7'de açık kaldı.
+- [x] **Determinizm testi başladı:** aynı tohum + aynı tick bayt bayt aynı
+      alan dizilerini verir; ara nokta snapshot'tan devam aynı sonuca varır;
+      kademeli alan imleci snapshot/restore'da korunur (`LifeWorld.test.ts`).
+- [x] **E2E:** `boot.spec.ts` üretim derlemesini gerçek WebGL Chromium'da
+      açar: kanvas + Sheet, DPR 2 görüntü alanı, WebGL kapalı iken i18n'li
+      fatal yüzey. `test:e2e` script'i ve `justfile e2e` tarifi paketi
+      kapsıyor.
+- [x] **[P1] Paket bütçesi yeniden tabanlandı.** Substratla birlikte app
+      42,5 KB ölçüldü (`bundle-report`); tavan 40 → 52 KB'a çıkarıldı, gerekçe
+      `quality.json` yorumlarında.
+- [x] **[P1] Kabuğun gerçek tarayıcı/WebGL kanıtı:** yukarıdaki
+      `boot.spec.ts` ile kapandı — kanvas görünür ve ölçülü, seçenekler
+      düğmesi görünür, konsol hatası yok.
+- [x] **[P2] Yön desteği çalışma anında tazeleniyor.** `OrientationPreference`
+      `subscribeInteractive` + `vol:windowmodechange` (native
+      `onMultiWindowModeChanged` köprüsü) ile panele taşır. SM-G990B2'de
+      (Android 16): çalışma anında `isInMultiWindowMode=true` olunca yön
+      kontrolü canlı pasifleşti; çıkışta yeniden etkinleşti ve Dikey/Yatay
+      istekleri uygulandı (ROTATION_0/ROTATION_90 ölçüldü).
+- [x] **[P2] `applySaved` çalışma anı kuralıyla aynı kontrolü paylaşıyor.**
+      `OrientationPolicy.isSupported` ortak; iki yolun aynı kuralı kullandığı
+      `OrientationPolicyTest` (JUnit) ile kilitli.
+- [x] **[P3] Geç açılış hatası oyunu geri alıyor.** `bootstrap` catch'i
+      `game.destroy(true)` çağırır; oyun kurulduktan sonra fırlatılan adım
+      `bootstrap.test.ts`te sınandı.
+- [x] **[P3] Tercih kaydı başarısızlığı görünür.** `LifePreferences` yazma
+      hatasını `onSaveError` dinleyicilerine taşır; `LifeHud` danger toast
+      gösterir (`life:options.saveFailed`, testle kilitli). Davranış DESIGN
+      §7'ye yazıldı.
 
 ### 2026-09-11 — seçenekler çekmecesi, ekran yönü, görüntü kipi ve zemin
 

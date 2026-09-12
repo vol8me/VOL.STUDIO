@@ -92,6 +92,7 @@ e2e:
     pnpm --filter @volstudio/vol-asset-studio test:e2e
     pnpm --filter @volstudio/vol-arachnid test:e2e
     pnpm --filter @volstudio/vol-hell test:e2e
+    pnpm --filter @volstudio/vol-life test:e2e
     pnpm --filter @volstudio/vol-ui test:e2e
 
 # Chromium + Firefox tam matris — yalnız signoff'ta koşar.

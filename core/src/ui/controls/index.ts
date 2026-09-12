@@ -13,6 +13,11 @@ export {
   type SquareJoystickOptions,
 } from './SquareJoystick';
 export { PinchZoomController, type PinchZoomControllerOptions } from './PinchZoomController';
+export {
+  WorldCameraController,
+  type WorldCamera,
+  type WorldCameraControllerOptions,
+} from './WorldCameraController';
 export { FullscreenController, type FullscreenControllerOptions } from './FullscreenController';
 export {
   CanvasViewportController,

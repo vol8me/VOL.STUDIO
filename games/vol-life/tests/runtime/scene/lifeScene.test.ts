@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import Phaser from 'phaser';
-import { ViewportManager, VIEWPORT_REGISTRY_KEY, i18n } from '@volstudio/core';
+import { ViewportManager, VIEWPORT_REGISTRY_KEY, i18n, i18next } from '@volstudio/core';
 import type { SaveManager } from '@volstudio/core';
 import { LifePreferences } from '@/app/LifePreferences';
 import { OrientationPreference } from '@/app/OrientationPreference';
@@ -13,6 +13,11 @@ import { stubViewport } from '../../support/viewport';
 interface Harness {
   scene: LifeScene;
   camera: { setViewport: ReturnType<typeof vi.fn>; setZoom: ReturnType<typeof vi.fn> };
+  worldRuntime: {
+    update: ReturnType<typeof vi.fn>;
+    refreshViewport: ReturnType<typeof vi.fn>;
+    destroy: ReturnType<typeof vi.fn>;
+  };
 }
 
 const scenes: LifeScene[] = [];
@@ -21,7 +26,11 @@ function mountScene(
   services: Partial<LifeSceneServices>,
   registry?: { get(key: string): unknown },
 ): Harness {
-  const scene = new LifeScene(services);
+  const worldRuntime = { update: vi.fn(), refreshViewport: vi.fn(), destroy: vi.fn() };
+  const scene = new LifeScene({
+    ...services,
+    createRuntime: services.createRuntime ?? (() => worldRuntime),
+  });
   const container = document.createElement('div');
   const canvas = document.createElement('canvas');
   container.appendChild(canvas);
@@ -34,7 +43,7 @@ function mountScene(
   });
   scene.create();
   scenes.push(scene);
-  return { scene, camera };
+  return { scene, camera, worldRuntime };
 }
 
 function actionOrder(): string[] {
@@ -84,6 +93,7 @@ afterEach(() => {
   document.body.innerHTML = '';
   vi.unstubAllGlobals();
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe('LifeScene yaşam döngüsü', () => {
@@ -114,18 +124,27 @@ describe('LifeScene yaşam döngüsü', () => {
   });
 
   it('SHUTDOWN ve DESTROY olaylarının her ikisi de kapsamı temizler', () => {
-    const { scene } = mountScene({ platform: 'web' });
+    const { scene, worldRuntime } = mountScene({ platform: 'web' });
     const scope = () => (scene as unknown as { runtimeScope: unknown }).runtimeScope;
     expect(scope()).not.toBeNull();
 
     scene.events.emit('shutdown');
     expect(scope()).toBeNull();
     expect(document.querySelector('.vol-life-hud')).toBeNull();
+    expect(worldRuntime.destroy).toHaveBeenCalledOnce();
 
     scene.create();
     expect(scope()).not.toBeNull();
     scene.events.emit('destroy');
     expect(scope()).toBeNull();
+  });
+
+  it('Phaser update deltasını dünya runtimeına iletir', () => {
+    const { scene, worldRuntime } = mountScene({ platform: 'web' });
+
+    scene.update(100, 16.67);
+
+    expect(worldRuntime.update).toHaveBeenCalledWith(16.67);
   });
 });
 
@@ -153,6 +172,20 @@ describe('LifeScene platform matrisi (DESIGN.md §6)', () => {
 
     windowed.click();
     expect(preferences.getDisplayMode()).toBe('windowed');
+  });
+
+  it('tercih yazılamazsa kullanıcıya görünür uyarı çıkarır', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const saveManager = memorySaveManager();
+    vi.mocked(saveManager.save).mockRejectedValueOnce(new Error('disk dolu'));
+    const preferences = new LifePreferences(saveManager);
+    mountScene({ platform: 'web', preferences });
+
+    await preferences.setShowFps(true);
+
+    expect(document.querySelector('.vol-toast--danger')?.textContent).toBe(
+      i18next.t('life:options.saveFailed'),
+    );
   });
 
   it('Android: yalnız seçenekler; geri hareketi önce paneli kapatır, sonra çıkış onayı sorar', () => {
@@ -211,6 +244,30 @@ describe('LifeScene ekran yönü', () => {
 
     await vi.advanceTimersByTimeAsync(500);
     expect(portrait.getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('Android: çoklu pencere değişimi yön kontrolünün etkinliğine canlı yansır', async () => {
+    stubViewport('portrait');
+    const bridge = {
+      getState: vi.fn(() =>
+        Promise.resolve({ current: 'portrait' as const, preferred: null, supported: true }),
+      ),
+      set: vi.fn(),
+    };
+    const orientation = new OrientationPreference(bridge);
+    await orientation.load();
+    mountScene({ platform: 'android', orientation });
+    const buttons = rowButtons('orientation');
+    expect(buttons.every((button) => !button.disabled)).toBe(true);
+
+    bridge.getState.mockResolvedValueOnce({
+      current: 'portrait',
+      preferred: null,
+      supported: false,
+    });
+    window.dispatchEvent(new Event('vol:windowmodechange'));
+
+    await vi.waitFor(() => expect(buttons.every((button) => button.disabled)).toBe(true));
   });
 });
 

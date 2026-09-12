@@ -53,6 +53,10 @@ const ACTIVITY_EDITS: readonly HandEdit[] = [
     marker:
       /override fun onCreate[^{]*\{\s*(\/\/[^\n]*\n\s*)*OrientationStore\.applySaved\(this\)\s*enableEdgeToEdge\(\)/,
   },
+  {
+    decision: 'Çoklu pencere değişimi yön kontrolünün destek durumunu JS tarafına taşır',
+    marker: /onMultiWindowModeChanged[\s\S]*CustomEvent\('vol:windowmodechange'\)/,
+  },
 ];
 
 const MANIFEST_EDITS: readonly HandEdit[] = [

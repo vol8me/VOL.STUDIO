@@ -1,8 +1,6 @@
 package com.volstudio.orientation
 
 import android.app.Activity
-import android.app.UiModeManager
-import android.content.Context
 import android.content.res.Configuration
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
@@ -40,7 +38,7 @@ class OrientationPlugin(private val activity: Activity) : Plugin(activity) {
       OrientationStore.save(activity, args.orientation, args.family)
       // Uygulanamayan kipte istek yine saklanır: tercih bir sonraki uygun
       // açılışta geçerlidir, ama çoklu pencerede pencereyi zorlamaz.
-      if (isSupported()) {
+      if (OrientationStore.isSupported(activity)) {
         activity.requestedOrientation = OrientationStore.requestedFor(args.orientation, args.family)
       }
       invoke.resolve(state())
@@ -51,7 +49,7 @@ class OrientationPlugin(private val activity: Activity) : Plugin(activity) {
     val result = JSObject()
     result.put("current", currentOrientation())
     result.put("preferred", OrientationStore.load(activity) ?: JSONObject.NULL)
-    result.put("supported", isSupported())
+    result.put("supported", OrientationStore.isSupported(activity))
     return result
   }
 
@@ -61,10 +59,4 @@ class OrientationPlugin(private val activity: Activity) : Plugin(activity) {
     } else {
       OrientationStore.PORTRAIT
     }
-
-  private fun isSupported(): Boolean {
-    val uiMode = activity.getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
-    val television = uiMode?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
-    return !television && !activity.isInMultiWindowMode
-  }
 }

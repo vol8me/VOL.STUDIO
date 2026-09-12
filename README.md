@@ -15,7 +15,7 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 core/                       # paylaşılan sistemler + DOM UI kütüphanesi
 games/vol-hell/             # oyun (Vite kökü)
 games/vol-arachnid/         # eklemli örümcek arena dikey kesiti
-games/vol-life/             # izlenen yapay dünya — zemin aşamasında
+games/vol-life/             # izlenen yapay dünya — dünya substratı (Adım 1)
 devtools/pen.dev/           # Pencil kaynağı, export hattı ve gönderim aracı
 devtools/vol-ui/            # CORE UI canlı bileşen kataloğu
 devtools/vol-asset-studio/  # repo varlık çalışma ortamı

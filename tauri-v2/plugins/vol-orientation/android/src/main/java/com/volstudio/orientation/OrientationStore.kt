@@ -1,8 +1,10 @@
 package com.volstudio.orientation
 
 import android.app.Activity
+import android.app.UiModeManager
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 
 /**
  * Yön tercihinin native kaydı.
@@ -31,6 +33,7 @@ object OrientationStore {
   /** Kayıtlı yönü içerik çizilmeden uygular; kayıt yoksa manifestteki varsayılan geçerli kalır. */
   @JvmStatic
   fun applySaved(activity: Activity) {
+    if (!isSupported(activity)) return
     val orientation = load(activity) ?: return
     val family = preferences(activity).getString(KEY_FAMILY, FAMILY_USER) ?: FAMILY_USER
     activity.requestedOrientation = requestedFor(orientation, family)
@@ -48,6 +51,12 @@ object OrientationStore {
   fun isOrientation(value: String): Boolean = value == PORTRAIT || value == LANDSCAPE
 
   fun isFamily(value: String): Boolean = value == FAMILY_USER || value == FAMILY_SENSOR
+
+  fun isSupported(activity: Activity): Boolean {
+    val uiMode = activity.getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
+    val television = uiMode?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
+    return OrientationPolicy.isSupported(television, activity.isInMultiWindowMode)
+  }
 
   private fun preferences(context: Context) =
     context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)

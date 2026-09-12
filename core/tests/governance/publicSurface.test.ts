@@ -19,7 +19,7 @@ import * as Core from '../../src/index';
  * yeterli.
  */
 // Sayının hangi yeteneklerle değiştiğinin kaydı: `core/docs/public-surface.md`.
-const EXPECTED_EXPORT_COUNT = 228;
+const EXPECTED_EXPORT_COUNT = 229;
 
 /** `index.ts`teki `export *` barrel sayısı — kolaylığın bedeli sayılır. */
 const EXPECTED_BARREL_COUNT = 10;
@@ -187,6 +187,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'VOL_ICONS',
   'Vector2',
   'ViewportManager',
+  'WorldCameraController',
   'VirtualActionSource',
   'VirtualList',
   'WeightedPicker',

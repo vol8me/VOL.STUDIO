@@ -111,4 +111,22 @@ describe('LifePreferences', () => {
     expect(manager.save).toHaveBeenCalledTimes(2);
     expect(warn).toHaveBeenCalledTimes(2);
   });
+
+  it('yazma hatasını kullanıcı yüzeyine taşıyacak abonelere bildirir', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { manager, saveManager } = memorySaveManager();
+    const failure = new Error('disk dolu');
+    manager.save.mockRejectedValueOnce(failure);
+    const preferences = new LifePreferences(saveManager);
+    const listener = vi.fn();
+    const stop = preferences.subscribeSaveErrors(listener);
+
+    await preferences.setShowFps(true);
+
+    expect(listener).toHaveBeenCalledExactlyOnceWith(failure);
+    stop();
+    manager.save.mockRejectedValueOnce(new Error('ikinci hata'));
+    await preferences.setHapticsEnabled(true);
+    expect(listener).toHaveBeenCalledOnce();
+  });
 });

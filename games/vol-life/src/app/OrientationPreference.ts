@@ -5,7 +5,10 @@ import {
   type ScreenOrientation,
   type ScreenOrientationState,
 } from '@volstudio/tauri-v2';
+import { DisposableScope } from '@volstudio/core';
 import { displayConfig } from '@/config/display';
+
+const WINDOW_MODE_EVENT = 'vol:windowmodechange';
 
 /** Android yön köprüsünün uygulamanın gördüğü yüzü; testte sahtesi verilir. */
 export interface OrientationBridge {
@@ -23,7 +26,8 @@ export interface OrientationBridge {
 export class OrientationPreference {
   private interactive = false;
   private readonly listeners = new Set<(orientation: ScreenOrientation) => void>();
-  private stopViewport: (() => void) | null = null;
+  private readonly interactiveListeners = new Set<(interactive: boolean) => void>();
+  private observationScope: DisposableScope | null = null;
 
   constructor(
     private readonly bridge: OrientationBridge | null,
@@ -61,16 +65,52 @@ export class OrientationPreference {
 
   subscribe(listener: (orientation: ScreenOrientation) => void): () => void {
     this.listeners.add(listener);
-    this.stopViewport ??= observeViewportOrientation((orientation) => this.emit(orientation));
+    this.ensureObserving();
     return () => {
       this.listeners.delete(listener);
-      if (this.listeners.size > 0) return;
-      this.stopViewport?.();
-      this.stopViewport = null;
+      this.stopObservingIfIdle();
+    };
+  }
+
+  subscribeInteractive(listener: (interactive: boolean) => void): () => void {
+    this.interactiveListeners.add(listener);
+    this.ensureObserving();
+    return () => {
+      this.interactiveListeners.delete(listener);
+      this.stopObservingIfIdle();
     };
   }
 
   private emit(orientation: ScreenOrientation): void {
     for (const listener of this.listeners) listener(orientation);
+  }
+
+  private ensureObserving(): void {
+    if (this.observationScope) return;
+    const scope = new DisposableScope();
+    scope.addSubscription(observeViewportOrientation((orientation) => this.emit(orientation)));
+    if (this.bridge) {
+      scope.addListener(window, WINDOW_MODE_EVENT, () => void this.refreshInteractive());
+    }
+    this.observationScope = scope;
+  }
+
+  private stopObservingIfIdle(): void {
+    if (this.listeners.size > 0 || this.interactiveListeners.size > 0) return;
+    this.observationScope?.dispose();
+    this.observationScope = null;
+  }
+
+  private async refreshInteractive(): Promise<void> {
+    if (!this.bridge) return;
+    let next = false;
+    try {
+      next = (await this.bridge.getState()).supported;
+    } catch (error) {
+      console.warn('[VOL.LIFE] Ekran yönü desteği yenilenemedi:', error);
+    }
+    if (next === this.interactive) return;
+    this.interactive = next;
+    for (const listener of this.interactiveListeners) listener(next);
   }
 }

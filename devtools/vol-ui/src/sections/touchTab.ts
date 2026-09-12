@@ -11,6 +11,8 @@ import {
   MultiTouchZone,
   PauseResumeButton,
   PinchZoomController,
+  WorldCameraController,
+  type WorldCamera,
   PullToRefresh,
   RadialMenu,
   SlotGrid,
@@ -400,6 +402,69 @@ function buildPinchZoomDemo(disposables: DisposableScope): HTMLElement {
   wrap.appendChild(controller.element);
   wrap.appendChild(controls);
 
+  return wrap;
+}
+
+function buildWorldCameraDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+  const canvas = document.createElement('canvas');
+  canvas.className = 'vol-showcase-world-camera';
+  canvas.width = 640;
+  canvas.height = 360;
+  canvas.setAttribute('aria-label', i18next.t('volui:touch.worldCameraLabel'));
+  const context = canvas.getContext('2d');
+  if (!context) return canvas;
+
+  const camera: WorldCamera = {
+    width: canvas.width,
+    height: canvas.height,
+    zoom: 1,
+    scrollX: 0,
+    scrollY: 0,
+    setZoom(zoom) {
+      camera.zoom = zoom;
+      draw();
+      return camera;
+    },
+    centerOn(x, y) {
+      camera.scrollX = x - camera.width / (2 * camera.zoom);
+      camera.scrollY = y - camera.height / (2 * camera.zoom);
+      draw();
+      return camera;
+    },
+  };
+  const draw = (): void => {
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.fillStyle = '#090e18';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.setTransform(
+      camera.zoom,
+      0,
+      0,
+      camera.zoom,
+      -camera.scrollX * camera.zoom,
+      -camera.scrollY * camera.zoom,
+    );
+    for (let y = -400; y <= 800; y += 400) {
+      for (let x = -400; x <= 800; x += 400) {
+        context.fillStyle = '#111827';
+        context.fillRect(x, y, 400, 400);
+        context.fillStyle = '#d6c783';
+        context.fillRect(x + 80, y + 110, 70, 70);
+        context.fillStyle = '#315c59';
+        context.fillRect(x + 245, y + 255, 95, 60);
+        context.strokeStyle = '#365266';
+        context.strokeRect(x, y, 400, 400);
+      }
+    }
+  };
+
+  const controller = new WorldCameraController(canvas, camera, { worldSize: 400 });
+  disposables.addDestroyables(controller);
+  const hint = new Text(i18next.t('volui:touch.worldCameraHint'), { variant: 'muted' });
+  disposables.addDestroyables(hint);
+  wrap.append(canvas, hint.element);
   return wrap;
 }
 
@@ -799,6 +864,7 @@ export function buildTouchTab(): { element: HTMLElement; destroy: () => void } {
 
     // Geniş içerik span:2 — Forms'taki Timer Bar/Range Slider ile aynı mantık.
     card(i18next.t('volui:touch.pinchZoom'), buildPinchZoomDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:touch.worldCamera'), buildWorldCameraDemo(disposables), { span: 2 }),
     card(i18next.t('volui:touch.pullToRefresh'), buildPullToRefreshDemo(disposables), { span: 2 }),
     card(i18next.t('volui:touch.slotGrid'), buildSlotGridDemo(disposables), { span: 2 }),
 

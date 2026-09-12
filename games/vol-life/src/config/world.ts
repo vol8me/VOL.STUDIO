@@ -17,6 +17,18 @@ export interface WorldConfig {
   readonly maxStepsPerFrame: number;
   /** Dünyanın tohumu — aynı seed aynı dünyayı verir. */
   readonly seed: number;
+  /** Sürekli alanların kare ızgara çözünürlüğü. */
+  readonly fieldResolution: number;
+  /** Alan sistemlerinin çalışma temposu. */
+  readonly fieldHz: number;
+  /** Bir tam alan turunun kaç ardışık güncellemeye bölündüğü. */
+  readonly fieldUpdateBands: number;
+  /** Tohumdan üretilen, yavaşça kayan ışık kaynağı sayısı. */
+  readonly lightSourceCount: number;
+  readonly lightSourceRadiusUnits: number;
+  readonly lightSourceDriftUnits: number;
+  readonly nutrientDiffusion: number;
+  readonly nutrientRenewal: number;
 }
 
 export const worldConfig: WorldConfig = {
@@ -24,6 +36,14 @@ export const worldConfig: WorldConfig = {
   fixedStepMs: 1000 / 60,
   maxStepsPerFrame: 2,
   seed: 0x10fe1,
+  fieldResolution: 256,
+  fieldHz: 10,
+  fieldUpdateBands: 1,
+  lightSourceCount: 5,
+  lightSourceRadiusUnits: 112,
+  lightSourceDriftUnits: 72,
+  nutrientDiffusion: 0.12,
+  nutrientRenewal: 0.018,
 };
 
 /**

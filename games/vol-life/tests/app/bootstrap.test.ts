@@ -2,22 +2,27 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 type Platform = 'web' | 'desktop' | 'android';
 
-const { createVolGame, gameEvents, platform, displayControllers } = vi.hoisted(() => {
-  const events = { once: vi.fn() };
-  return {
-    createVolGame: vi.fn((config: unknown) => {
-      void config;
-      return Promise.resolve({ events, canvas: document.createElement('canvas') });
-    }),
-    gameEvents: events,
-    platform: { value: 'web' as Platform },
-    displayControllers: [] as Array<{
-      options: unknown;
-      start: ReturnType<typeof vi.fn>;
-      destroy: ReturnType<typeof vi.fn>;
-    }>,
-  };
-});
+const { createVolGame, gameDestroy, gameEvents, platform, displayStart, displayControllers } =
+  vi.hoisted(() => {
+    const events = { once: vi.fn() };
+    const destroy = vi.fn();
+    const start = vi.fn(() => Promise.resolve());
+    return {
+      createVolGame: vi.fn((config: unknown) => {
+        void config;
+        return Promise.resolve({ events, canvas: document.createElement('canvas'), destroy });
+      }),
+      gameDestroy: destroy,
+      gameEvents: events,
+      platform: { value: 'web' as Platform },
+      displayStart: start,
+      displayControllers: [] as Array<{
+        options: unknown;
+        start: ReturnType<typeof vi.fn>;
+        destroy: ReturnType<typeof vi.fn>;
+      }>,
+    };
+  });
 
 vi.mock('@volstudio/core', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@volstudio/core');
@@ -27,7 +32,7 @@ vi.mock('@volstudio/core', async () => {
 vi.mock('@volstudio/tauri-v2', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@volstudio/tauri-v2');
   class FakeDisplayModeController {
-    readonly start = vi.fn(() => Promise.resolve());
+    readonly start = displayStart;
     readonly destroy = vi.fn();
     constructor(readonly options: unknown) {
       displayControllers.push(this);
@@ -77,7 +82,10 @@ describe('bootstrap', () => {
     (destroyCall?.[1] as (() => void) | undefined)?.();
     vi.resetModules();
     createVolGame.mockClear();
+    gameDestroy.mockClear();
     gameEvents.once.mockClear();
+    displayStart.mockReset();
+    displayStart.mockResolvedValue(undefined);
     platform.value = 'web';
     displayControllers.length = 0;
     document.body.innerHTML = '';
@@ -150,5 +158,15 @@ describe('bootstrap', () => {
     );
     expect(overlay?.textContent).toContain('Cannot create WebGL context, aborting.');
     expect(consoleError).toHaveBeenCalled();
+  });
+
+  it('oyun kurulduktan sonraki açılış hatasında çalışan oyunu yok eder', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    platform.value = 'desktop';
+    displayStart.mockRejectedValueOnce(new Error('pencere kipi'));
+    await import('@/app/bootstrap');
+
+    expect(gameDestroy).toHaveBeenCalledExactlyOnceWith(true);
+    expect(document.querySelector('.vol-life-fatal')).not.toBeNull();
   });
 });

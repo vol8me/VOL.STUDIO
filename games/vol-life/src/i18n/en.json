@@ -26,7 +26,8 @@
     "landscape": "Landscape",
     "displayMode": "Display",
     "windowed": "Windowed",
-    "fullscreen": "Fullscreen"
+    "fullscreen": "Fullscreen",
+    "saveFailed": "Options could not be saved. The change applies to this session."
   },
   "fatal": {
     "title": "VOL.LIFE could not start"

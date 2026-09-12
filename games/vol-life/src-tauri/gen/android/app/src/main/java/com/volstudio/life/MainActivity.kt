@@ -1,6 +1,7 @@
 package com.volstudio.life
 
 import android.os.Bundle
+import android.content.res.Configuration
 import android.webkit.WebView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
@@ -52,6 +53,14 @@ class MainActivity : TauriActivity() {
    */
   override fun onWebViewCreate(webView: WebView) {
     this.webView = webView
+  }
+
+  override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration) {
+    super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig)
+    webView?.evaluateJavascript(
+      "window.dispatchEvent(new CustomEvent('vol:windowmodechange'))",
+      null,
+    )
   }
 
   private fun dispatchBackToWebView() {
