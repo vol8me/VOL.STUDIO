@@ -4,6 +4,7 @@ import {
   getHapticsCapability,
   isHapticsSupported,
   observeHapticsCapability,
+  setHapticsDriver,
   setHapticsEnabled,
   vibrate,
 } from '../../src/platform/haptics';
@@ -45,12 +46,14 @@ function makeRumblePad(overrides: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
+  setHapticsDriver(null);
   setVibrationApi(undefined);
   setGamepads([]);
   setHapticsEnabled(false);
 });
 
 afterEach(() => {
+  setHapticsDriver(null);
   setHapticsEnabled(false);
   vi.restoreAllMocks();
 });
@@ -64,6 +67,45 @@ describe('titreşim yeteneği', () => {
   it('Vibration API varsa onu kullanır', () => {
     setVibrationApi(() => true);
     expect(getHapticsCapability()).toEqual({ supported: true, backend: 'vibration' });
+  });
+
+  it('kayıtlı platform sürücüsünü tarayıcı tahmininden önce kullanır', () => {
+    const play = vi.fn();
+    setVibrationApi(() => true);
+    setHapticsDriver({ play });
+    setHapticsEnabled(true);
+
+    expect(getHapticsCapability()).toEqual({ supported: true, backend: 'native' });
+    vibrate('select');
+    expect(play).toHaveBeenCalledWith('select');
+  });
+
+  it('platform sürücüsü varken iptali fallback katmanlarına yaymaz', () => {
+    const vibrateApi = vi.fn(() => true);
+    const { pad, reset } = makeRumblePad();
+    const cancel = vi.fn(() => Promise.resolve());
+    setVibrationApi(vibrateApi);
+    setGamepads([pad]);
+    setHapticsDriver({ play: vi.fn(), cancel });
+
+    cancelHaptics();
+
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(vibrateApi).not.toHaveBeenCalled();
+    expect(reset).not.toHaveBeenCalled();
+  });
+
+  it('platform sürücüsü eklenip kaldırılınca yeteneği canlı bildirir', () => {
+    const listener = vi.fn();
+    const stop = observeHapticsCapability(listener);
+    listener.mockClear();
+
+    setHapticsDriver({ play: vi.fn() });
+    setHapticsDriver(null);
+
+    expect(listener).toHaveBeenNthCalledWith(1, { supported: true, backend: 'native' });
+    expect(listener).toHaveBeenNthCalledWith(2, { supported: false, backend: 'none' });
+    stop();
   });
 
   it('Vibration API yoksa rumble motoru olan oyun kolunu bulur', () => {

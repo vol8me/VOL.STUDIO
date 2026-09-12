@@ -153,12 +153,14 @@ hesabının kuralı olamaz; görüntü de aynı kuralı izler. Aksi hâlde kenar
 
 - **Mesafe:** iki nokta arasındaki en kısa toroidal fark kullanılır; x=1 ile
   x=1023 arası 2 birimdir.
-- **Parçacık çizimi:** her parçacık kameranın merkezine en yakın kopyasının
-  konumunda çizilir. Görüş alanı bir dünya genişliğini aşmadıkça dikiş görünmez;
-  uzaklaşma bu yüzden bir dünya genişliğiyle sınırlanır.
-- **Alan dokusu:** tekrarlı örneklenir. Phaser WebGL1 kullanır (§11) ve WebGL1
-  tekrarlı örneklemeyi yalnız kenarları 2'nin kuvveti olan dokuda yapar; alan
-  çözünürlüğü bu yüzden 256² ya da 512² gibi değerlerden seçilir.
+- **Uzak görünüm:** kare dünya bütünüyle ortalanır, uzun eksendeki dış alan
+  karanlık kalır ve kaydırma kilitlidir. Böylece duvar kâğıdı tekrarları
+  yerine tek kanonik dünya okunur.
+- **Yakın görünüm:** alan dokusunun kameraya komşu 3×3 kopyası çizilir;
+  parçacık kameranın merkezine en yakın toroidal kopyasında görünür. Kamera
+  merkezi sarılmaz, yalnız simülasyon erişimi ve kopya seçimi normalize edilir.
+- **Alan dokusu:** Phaser WebGL1 nedeniyle 2'nin kuvveti çözünürlüktedir;
+  256²/512² adayları bu kısıttan gelir (§11).
 
 ## 3. Yaşam modeli
 
@@ -207,6 +209,10 @@ morfolojisi 6 türlü bir sistemde 36 boyutlu uzayda dar bir bölgedir; elle isa
 ettirme ihtimali yok denecek kadar azdır. Matris bir arama probleminin
 çıktısıdır: deterministik tohumlarla taranır, ortaya çıkan yapı ölçülür, ilginç
 olan saklanır.
+
+Adım 2'deki 6×6 matris yalnız çekirdeğin asimetri, çekim ve itme yollarını
+çalıştıran başlangıç verisidir; morfoloji sonucu diye kabul edilmez. Kalıcı
+aday Adım 3'te ölçülerek aranır.
 
 Bu, "ilginç matris" için bir metrik gerektirir ve o metriği seçerken sorulacak
 soru bellidir (bkz. §14, ders 3).
@@ -428,6 +434,10 @@ token'larıyla çentikten uzak tutulur. FPS seçeneği açıksa gösterge çekme
 üst katmanında görünür kalır; ölçüm en fazla 250 ms'de bir yazıya çevrilir ve
 simülasyon temposuna bağlanmaz.
 
+Form geniş ekranda ortak label/control sütunları, dar ekranda yığılmış satırlar
+kullanır. Checkbox anahtarları aynı sağ ankraja oturur; dil ve yön kontrolleri
+aynı kontrol sütununu doldurur. X ile dişli aynı üst/sağ safe-area ankrajındadır.
+
 | Platform        | Tam ekran düğmesi          | Görüntü kipi seçeneği | Dikey / yatay               |
 | --------------- | -------------------------- | --------------------- | --------------------------- |
 | Web             | Var (DOM tam ekranı)       | Yok                   | Pasif, gerçek yönü gösterir |
@@ -456,10 +466,8 @@ VOL.LIFE'ın yüzeylerinin karşılığı:
 ve değer gruplarını çizerler, oyun kuralını çağırandan alırlar. VOL.LIFE'ın
 domain'i CORE'a bu yüzden sızmaz.
 
-Bilinen eksik CORE'a eklenecek bir parçadır ve işi TODO'dadır: Phaser dünya
-kamerası için sürükleme, tekerlek ve iki parmakla yakınlaştırma denetleyicisi
-yok (`CanvasViewportController` editör tuvalidir, `PinchZoomController` bir DOM
-sarmalayıcısıdır).
+CORE `WorldCameraController` fare sürükleme, delta-mode normalize tekerlek,
+yumuşatılmış cursor-anchor zoom ve başlangıç anına bağlı pinch'i ortaklaştırır.
 
 ### Gizli kalan kurallar
 
@@ -620,7 +628,8 @@ Mutlak süre kapı olamaz — donanıma bağlıdır. Ama girdi dört katına ç�
 sürenin kaç katına çıktığı makineden bağımsızdır ve `O(n²)` sızmasını yakalar.
 Repo bu kapıya sahiptir (`scripts/quality/scalingBudget.mjs`) ve kapı geneldir:
 bütçe yazan paket ölçüm tarifini `quality.json` → `scaling.<paket>.$measure`
-altına yazar. VOL.LIFE'ın bütçesi benchmark betiğiyle birlikte Adım 2'de gelir.
+altına yazar. VOL.LIFE 512→2048 parçacıkta sabit yoğunluğu korur; ölçülen
+4,94 oran `quality.json`daki 5,5 tavanla kapılıdır.
 
 ## 9. Android
 
@@ -639,6 +648,11 @@ Betik uygulama listesini elle tutar; `deviceApps` bekçisi listeyi her oyunun
 
 `games/vol-arachnid` Tauri Android hattının emsalidir. VOL.LIFE'ın kabuğu da
 kuruludur (`src-tauri`, `com.volstudio.life`) ve Android drift testi taşır.
+
+Dokunsal geri bildirim Tauri'nin resmi mobil eklentisinden gelir. Android
+`VIBRATE` izni ve kullanılan impact/selection/notification izinleri
+manifest/capability drift testinde korunur. Web'de mobil Vibration API ve masaüstü
+oyun kolu CORE fallback'idir; native sürücü varsa UA tahmini yerine o seçilir.
 
 **Kalite düşer, kural düşmez.** Android'de görsel ayrıntı, parçacık LOD'u ve
 efekt yoğunluğu azalabilir; ama dünya kuralları, olaylar ve organizmalar aynı
@@ -763,6 +777,13 @@ Ham yazımda kullanılacak ease **kurulumda bir kez** açılmalıdır
 (`setAnimationEnabled('Linear', true)`) — o çağrı shader'ı yeniden derler.
 `EasingEncoding.Linear` **1**'dir, sıfır değil.
 
+Adım 2'nin sabit tek üyeli `Phaser.WebGL.Graphics` adaptörü gerçek Chromium
+WebGL'de ölçüldü (180 kare, 60 ısınma): 100 parçacıkta CPU p50/p95
+0,0/0,1 ms ve kare p50/p95 16,66/16,67 ms; 1.000'de 0,1/0,2 ms ve
+16,67/19,99 ms; 5.000'de 0,5/0,6 ms ve 73,32/91,67 ms. Bu yol 100'lük Adım 2
+için yeterlidir ama yoğun ölçek için reddedilmiştir; Adım 11 karşılaştırması
+açık kalır.
+
 ### Repoda paralellik altyapısı YOKTUR
 
 `new Worker`, `OffscreenCanvas`, `SharedArrayBuffer` için repo genelinde sıfır
@@ -847,25 +868,20 @@ Repo konvansiyonu `app` / `config` / `runtime` / `i18n`'dir (bkz. `vol-hell`,
 games/vol-life/
 ├── src/
 │   ├── app/          bootstrap
-│   ├── config/       dünya ve grafik ölçüleri — VERİ (AGENTS Kural 5)
+│   ├── config/       dünya, parçacık ve grafik ölçüleri — VERİ
 │   ├── i18n/         tr.json + en.json
 │   └── runtime/
-│       ├── sim/      simülasyon — Phaser'ı İMPORT ETMEZ (bugün: rng)
-│       ├── render/   Phaser bağlama (henüz yok)
+│       ├── sim/      alan + parçacık simülasyonu — Phaser'ı İMPORT ETMEZ
+│       ├── render/   alan ve parçacık Phaser adaptörleri
 │       ├── scene/    LifeScene — yalnız bağlama
 │       └── ui/       kabuk: LifeHud, LifeExitPrompt
 ├── src-tauri/        masaüstü ve Android kabuğu (com.volstudio.life)
 └── tests/            src ağacını AYNALAR
 ```
 
-`render/` **bilinçli olarak açılmadı**: bir klasör ancak gerçekten anlamlı bir
-dosya ailesi geldiğinde açılır. Boş dizin bırakmak ölü yapıdır.
-
 Tek kural pazarlıksızdır: **`runtime/sim/` Phaser'ı import etmez.** Mantık
 sahnede biriktiğinde headless ölçüm ve kapsam ikisi birden imkânsız hâle gelir.
-İlk denemede kapsam eşiği mantığı sahneden iki kez çıkmaya zorladı ve her
-ikisinde de sonuç daha iyi mimari oldu. Bugün bu kuralı bir test kapılamıyor;
-bekçisi TODO'nun Zemin bölümündedir.
+Bu sınır `simBoundary.test.ts` ile kapılıdır.
 
 ## 13. İnşa sırası
 
@@ -888,9 +904,7 @@ altyapı kuruldu ve ekranda hâlâ içerik yoktu. Kural şudur — **önce anlam
 | 10  | **Evrim** — kalıtım, mutasyon, seçilim                                   | Tür zamanla değişiyor              |
 | 11  | **Ölçek** — render yolu ve Worker kararı, nüfusu §1'in tavanına aç       | Aynı dünya, daha kalabalık         |
 
-Adım 0'ın kabuk işleri sürüyor; viewport sözleşmesi ve açılış hata sınırı
-TODO'nun Zemin bölümündedir. Seçenekler düğmesi, ekran yönü ve görüntü kipi bir
-adım değil kabuk işidir ve adımların önünde durur.
+Seçenekler düğmesi, ekran yönü ve görüntü kipi bir adım değil kabuk işidir.
 
 **Adım 3 bir karar noktasıdır:** matris araması bir tarama altyapısı, tek kare
 küme tespiti ve "ilginç"in çok bileşenli bir metriği demektir; §8'deki metrik
@@ -928,16 +942,8 @@ dersler:
 8. **`maxStepsPerFrame` ölüm sarmalı üretir.** 5'te kare bütçesi aşıldıkça saat
    daha çok telafi adımı istiyor, o da kareyi uzatıyordu. `config/world.ts`
    bunu 2'de tutar ve bir test sayıyı kilitler.
-9. **CSS import edilmemişti.** CORE teması yüklenmediği için tüm `--vol-*`
-   token'ları tanımsızdı; bileşenler stilsiz düz elemanlara düşüyordu. Fontlar
-   `createVolGame` tarafından yükleniyor ama token olmadığı için
-   uygulanmıyordu. `src/styles.css` bu içe aktarımı gerekçesiyle taşır.
-10. **Port çakışması `pnpm high`'ı düşürür.** 5181 `devtools/vol-ui`'nin e2e
-    varsayılanıdır. VOL.LIFE önizlemesi 5182'dedir. Portlar elle tutulur ve
-    tekillikleri hiçbir kapıda sınanmaz.
-
-Bu turda 9 ve 10 kuruluşta uygulandı; 1–8 tasarım kararı olarak yukarıya
-işlendi.
+9. **Tema açıkça yüklenir.** Transitif CSS yan etkisine güvenilmez.
+10. **E2E portları ayrıdır.** VOL.LIFE 5182, VOL.UI 5181 kullanır.
 
 ## 15. Açıkça kapsam DIŞI
 
@@ -955,41 +961,29 @@ işlendi.
 
 ## 16. Bugünkü durum
 
-Zemin ve kabuğun üstüne **Adım 1 dünya substratı** kuruldu
-(ölçüm 2026-09-12):
+**Adım 2 parçacık yaşamı** kuruldu (ölçüm 2026-09-13):
 
-- 20 test dosyasında 118 test geçiyor; ölçülen kapsam 97,1/97,1/92,6/92,9
-  (satır/ifade/dal/fonksiyon). Eşikler `quality.json`da 96/96/92/90 ve
-  ratchet gereği düşürülerek geçilmez.
-- `build` geçiyor; gzip boyutu **app 42,5 KB / vendor 345,1 KB / css 17,1
-  KB**, bütçe 52/360/24. App tavanı substratın ölçülen ağırlığıyla yeniden
-  tabanlandı; gerekçe `quality.json` yorumlarında.
-- `runtime/sim`: `FieldSet` altı alanı (`flowX`/`flowY`, `nutrient`, `light`,
-  `temperature`, `disturbance`) paralel `Float32Array`lerde tutar — toroidal
-  indeks, çift doğrusal örnekleme, tam veya satır-bantlı difüzyon.
-  `LifeWorld` ışık kaynaklarını tohumdan kurar, besini tohumlar ve ışığa
-  doğru yeniler; `SimulationTempo` alan güncellemesini 60 Hz simülasyon
-  içinde 10 Hz'e böler. Aynı tohum + aynı tick aynı dizileri verir
-  (snapshot/restore dahil). Çözünürlük ölçümle seçildi: 256² tam güncelleme
-  ~5,4 ms/tick, 512²/4 bant tam tur ~21,9 ms (`benchmark:fields`).
-- `runtime/render`: `FieldRenderer` alanları 256² canvas dokusuna rasterler
-  ve toroidal süreklilik için 3×3 döşer. Doku yükleme ölçüsü ~0,1 ms
-  (256² RGBA `texImage2D` + `finish`, Chromium p50; p95 0,3 ms) — 10 Hz
-  temposunda ihmal edilebilir.
-- CORE `WorldCameraController` açılışta dünyayı sığdırır; sürükleme, tekerlek
-  ve iki parmakla gezer, merkezi toroidal sarar. Masaüstü sürüklemesi ve
-  telefon kaydırması ekran görüntüsüyle doğrulandı.
-- Kabuk: marka şeridi, tam ekran (F11 + düğme), Android geri tuşu ve çıkış
-  onayı, kare hızı göstergesi, seçenekler çekmecesi, Tauri masaüstü ve
-  Android kabuğu (`com.volstudio.life`). Cihazlarda (SM-G990B2, TB350FU)
-  açılışta konsol hatası yok; ~58–109 FPS ölçüldü. Android'de çoklu pencere
-  kipinde yön kontrolü çalışma anında pasifleşir (`vol:windowmodechange`).
-- Gerçek tarayıcı E2E: `tests/e2e/boot.spec.ts` üretim derlemesini gerçek
-  WebGL Chromium'da açar (kanvas + Sheet, DPR 2, WebGL kapalı iken i18n'li
-  fatal yüzey); `test:e2e` script'i ve `justfile e2e` tarifi paketi kapsar.
+- `ParticleStore` 100 sabit kimliği paralel `Float32Array`/`Uint8Array`
+  dizilerinde tutar. Altı renk ve asimetrik 6×6 matris config verisidir.
+- Counting-sort spatial hash; ortak yakın itme, yönlü orta menzil kuvveti,
+  sürtünme, hız tavanı ve toroidal mesafe her tickte Phaser'sız çalışır.
+  Kuvvetler önce birikir, bütün konumlar sonra entegre edilir. Alan kuvveti
+  bilinçli olarak kapalıdır.
+- Seed ve snapshot/restore alanlarla birlikte bütün parçacık dizilerini bayt
+  düzeyinde yeniden üretir. 512→2048 sabit yoğunluk çekirdek oranı 4,94'tür;
+  5,5 ölçekleme tavanı O(n²) sızmasını kapılar.
+- `ParticleRenderer` tek sabit Phaser Graphics üyesidir; dünya birimli
+  yarıçapı ve kameraya en yakın toroidal kopyayı çizer. Chromium WebGL
+  100/1.000/5.000 ölçümleri §11'dedir; mevcut yol yalnız Adım 2 ölçeği içindir.
+- Uzak kamera tek kanonik dünyayı gösterir; yakın görünümde alan 3×3 tekrar
+  eder. Kamera koordinatı süreklidir; wheel birimi, yumuşak cursor anchor,
+  mutlak pinch başlangıcı ve pointer değişimleri birim testleriyle kilitlidir.
+- Native haptics, hizalı Sheet formu ve kanonik alan sunumu ürün kabul
+  turunda düzeltildi. E2E; Sheet edge/control geometrisini, scroll taşmasını,
+  DPR 2'yi ve çevrilmiş fatal yüzeyi gerçek Chromium'da ölçer.
 
-Organizmalar, kuvvetler, küme tespiti ve katman görünümü (§6) henüz yok —
-sıra §13'tedir; açık işler TODO'dadır.
+Organizma, küme tespiti, enerji ve katman görünümü henüz yoktur; sıradaki
+karar noktası §13'teki Adım 3 matris aramasıdır.
 
 ## 17. Ölçülmemiş varsayımlar
 

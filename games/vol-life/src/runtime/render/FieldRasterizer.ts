@@ -14,9 +14,9 @@ export function rasterizeFields(
     const n = finiteUnit(nutrient[i]);
     const t = finiteUnit(temperature[i]);
     const d = finiteUnit(disturbance[i]);
-    target[pixel] = channel(5 + l * 128 + n * 18 + t * 12 - d * 22);
-    target[pixel + 1] = channel(10 + l * 62 + n * 104 + t * 8 - d * 28);
-    target[pixel + 2] = channel(17 + l * 30 + n * 74 + (1 - t) * 20 + d * 20);
+    target[pixel] = channel(4 + l * 38 + n * 6 + t * 4 - d * 10);
+    target[pixel + 1] = channel(7 + l * 18 + n * 30 + t * 4 - d * 12);
+    target[pixel + 2] = channel(12 + l * 10 + n * 22 + (1 - t) * 12 + d * 8);
     target[pixel + 3] = 255;
   }
   return target;

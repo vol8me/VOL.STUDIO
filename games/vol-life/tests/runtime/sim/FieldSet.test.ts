@@ -52,16 +52,25 @@ describe('FieldSet', () => {
     expect(fields.nutrient[fields.index(0, 7)]).toBeCloseTo(0.2, 6);
   });
 
-  it('kademeli difüzyonda yalnız seçili satır aralığını yazar', () => {
+  it('kademeli difüzyonda bütün bantları aynı kaynak zamanından okur', () => {
     const fields = new FieldSet(8);
-    fields.nutrient.fill(0.25);
-    fields.nutrient[fields.index(3, 2)] = 1;
-    const before = fields.nutrient.slice();
+    fields.nutrient[fields.index(3, 1)] = 1;
+    fields.nutrient[fields.index(6, 6)] = 0.5;
+    const sourceEpoch = fields.nutrient.slice();
+    const expected = new FieldSet(8);
+    expected.nutrient.set(sourceEpoch);
+    expected.diffuse('nutrient', 0.2);
 
-    fields.diffuseRows('nutrient', 0.2, 2, 2);
+    for (let startRow = 0; startRow < 8; startRow += 2) {
+      fields.diffuseRows('nutrient', 0.2, startRow, 2, sourceEpoch);
+    }
 
-    expect(fields.nutrient.slice(0, 16)).toEqual(before.slice(0, 16));
-    expect(fields.nutrient.slice(32)).toEqual(before.slice(32));
-    expect(fields.nutrient.slice(16, 32)).not.toEqual(before.slice(16, 32));
+    expect(fields.nutrient).toEqual(expected.nutrient);
+  });
+
+  it('kısmi difüzyon için açık bir kaynak zamanı zorunlu kılar', () => {
+    const fields = new FieldSet(8);
+
+    expect(() => fields.diffuseRows('nutrient', 0.2, 0, 2)).toThrow(/kaynak zamanı/i);
   });
 });

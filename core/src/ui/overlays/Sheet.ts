@@ -1,5 +1,6 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { IconButton } from '../primitives/IconButton';
+import { Icon } from '../primitives/Icon';
 import { ScrollView } from '../layout/ScrollView';
 import { Modal } from './Modal';
 
@@ -42,7 +43,8 @@ export class Sheet {
     this.title.className = 'vol-sheet__title';
     this.title.textContent = options.title ?? '';
 
-    this.closeButton = new IconButton('×', {
+    this.closeButton = new IconButton(new Icon({ name: 'close' }).element, {
+      size: 'md',
       label: options.closeLabel ?? '',
       onClick: () => this.close(),
     });

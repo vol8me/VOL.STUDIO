@@ -26,6 +26,7 @@ tauri-plugin-log = "2.9"
 tauri-plugin-store = "2.4"
 # Kotlin kaynağı taşır: yalnız doğrudan bağımlı uygulamanın APK'sına girer.
 tauri-plugin-vol-orientation = { path = "../../../tauri-v2/plugins/vol-orientation" }
+tauri-plugin-haptics = "2.3.3"
 
 # `custom-protocol` yalnız bu özellikten açılır. Bağımlılık satırında sabit
 # açıldığında `tauri dev`in `--no-default-features`ı onu kapatamıyor, pencere dev

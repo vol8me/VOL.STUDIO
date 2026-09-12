@@ -1,6 +1,14 @@
-import { VOL_COLORS, createVolGame, i18n, i18next, setHapticsEnabled } from '@volstudio/core';
+import {
+  VOL_COLORS,
+  createVolGame,
+  i18n,
+  i18next,
+  setHapticsDriver,
+  setHapticsEnabled,
+} from '@volstudio/core';
 import {
   DisplayModeController,
+  TauriHapticsDriver,
   androidScreenOrientation,
   getRuntimePlatform,
 } from '@volstudio/tauri-v2';
@@ -44,6 +52,7 @@ try {
   syncDocumentLocale();
 
   const platform = getRuntimePlatform();
+  setHapticsDriver(platform === 'android' ? new TauriHapticsDriver() : null);
   const preferences = new LifePreferences(saveManager);
   await preferences.load();
   setHapticsEnabled(preferences.get().hapticsEnabled);
@@ -63,6 +72,7 @@ try {
   i18next.on('languageChanged', syncDocumentLocale);
   game.events.once('destroy', () => {
     i18next.off('languageChanged', syncDocumentLocale);
+    setHapticsDriver(null);
   });
 
   // Pencere kipi uygulama ömrüne bağlıdır: sahne yeniden kurulsa da F11
@@ -79,5 +89,6 @@ try {
   }
 } catch (error) {
   game?.destroy(true);
+  setHapticsDriver(null);
   showFatalError(error);
 }

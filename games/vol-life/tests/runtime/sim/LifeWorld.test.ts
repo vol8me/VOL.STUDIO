@@ -19,6 +19,11 @@ describe('LifeWorld', () => {
     for (const name of left.fields.names()) {
       expect(bytes(left.fields.get(name))).toEqual(bytes(right.fields.get(name)));
     }
+    expect(bytes(left.particles.x)).toEqual(bytes(right.particles.x));
+    expect(bytes(left.particles.y)).toEqual(bytes(right.particles.y));
+    expect(bytes(left.particles.vx)).toEqual(bytes(right.particles.vx));
+    expect(bytes(left.particles.vy)).toEqual(bytes(right.particles.vy));
+    expect([...left.particles.type]).toEqual([...right.particles.type]);
   });
 
   it('anlık görüntüden devam eden dünya kesintisiz koşuyla aynı sona varır', () => {
@@ -37,6 +42,17 @@ describe('LifeWorld', () => {
     for (const name of continuous.fields.names()) {
       expect(bytes(restored.fields.get(name))).toEqual(bytes(continuous.fields.get(name)));
     }
+    expect(restored.particles.snapshot()).toEqual(continuous.particles.snapshot());
+  });
+
+  it('her simülasyon tickinde parçacıkları hareket ettirir ve sabit sayıyı korur', () => {
+    const world = new LifeWorld({ ...worldConfig, fieldResolution: 32, seed: 19 });
+    const initialX = world.particles.x.slice();
+
+    world.step();
+
+    expect(world.particles.count).toBe(100);
+    expect(bytes(world.particles.x)).not.toEqual(bytes(initialX));
   });
 
   it('ışık kaynakları alanı eşitsiz tohumlar ve zamanla yer değiştirir', () => {

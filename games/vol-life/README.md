@@ -10,12 +10,15 @@ Monorepo geneli için [kök README](../../README.md).
 
 ## Durum
 
-Paket şu anda **zemin ve kabuk** hâlindedir: kapılardan geçen bir iskelet, dünya
-ölçüleri, durumu kaydedilebilir deterministik rastgelelik ve kabuk. Kabukta
-seçenekler çekmecesi (dil, kare hızı, dokunsal geri bildirim, ekran yönü,
-masaüstünde görüntü kipi), Android çıkış onayı, açılış hata yüzeyi ve Tauri
-masaüstü/Android kabuğu var. Simülasyon — alanlar, kuvvetler, organizma
-tespiti — henüz yazılmadı ve bu KASITLIDIR. İnşa sırası
+Paket **Adım 2 parçacık yaşamı** düzeyindedir: yavaş çevre alanlarının üstünde
+altı türden 100 parçacık, toroidal dünyada yönlü çekim/itme fiziğiyle hareket
+eder ve geçici kümeler kurar. SoA depo, counting-sort spatial hash, alanlar ve
+snapshot/restore deterministiktir; Phaser yalnız render adaptöründedir. Henüz
+organizma, enerji, yaşam döngüsü ya da AI yoktur.
+
+Kabukta seçenekler çekmecesi (dil, kare hızı, dokunsal geri bildirim, ekran
+yönü, masaüstünde görüntü kipi), native Android haptics, Android çıkış onayı,
+açılış hata yüzeyi ve Tauri masaüstü/Android kabuğu var. İnşa sırası
 [DESIGN.md](DESIGN.md) §13'te, bugünkü durum §16'da, açık işler
 [TODO.md](TODO.md)'de.
 
@@ -26,6 +29,8 @@ pnpm --filter @volstudio/vol-life dev                   # :5180
 pnpm --filter @volstudio/vol-life build                 # web üretim derlemesi
 pnpm --filter @volstudio/vol-life tauri:dev             # masaüstü kabuğu
 pnpm --filter @volstudio/vol-life tauri:android:build   # Android APK
+pnpm --filter @volstudio/vol-life benchmark:particles  # çekirdek p50/p95
+pnpm --filter @volstudio/vol-life benchmark:particle-render # Chromium WebGL
 ```
 
 Önizleme :5182'dedir. 5181 KULLANILMAZ — `devtools/vol-ui` e2e varsayılanıdır ve
@@ -34,8 +39,8 @@ pnpm --filter @volstudio/vol-life tauri:android:build   # Android APK
 ## Yapı
 
 ```
-src/config/    Dünya ve grafik ölçüleri — VERİ. Runtime'da sihirli sayı yoktur.
-src/runtime/   sim/ Phaser'ı import ETMEZ; scene/ yalnız bağlamadır; ui/ kabuktur.
+src/config/    Dünya, parçacık ve grafik ölçüleri — VERİ.
+src/runtime/   sim/ Phaser'sızdır; render/ adaptördür; scene/ yalnız bağlamadır.
 src/app/       Boot (i18n, tema, font, Phaser), tercih deposu, ekran yönü tercihi,
                depolama seçimi ve açılış hata yüzeyi.
 src-tauri/     Masaüstü ve Android kabuğu (com.volstudio.life).

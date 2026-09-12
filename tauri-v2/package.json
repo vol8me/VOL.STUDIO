@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-haptics": "^2.3.3",
     "@tauri-apps/plugin-store": "^2.0.0",
     "@volstudio/core": "workspace:*"
   },

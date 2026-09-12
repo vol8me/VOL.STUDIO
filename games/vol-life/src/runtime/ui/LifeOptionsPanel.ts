@@ -146,7 +146,7 @@ export class LifeOptionsPanel {
     const label = this.scope.addDestroyable(new Text(this.labelFor(key), { variant: 'muted' }));
     this.labels.set(key, label);
     const row = this.appendControlRow(key, label.element, control.element);
-    row.classList.add('vol-life-options__row--stacked');
+    row.classList.add('vol-life-options__row--labeled');
   }
 
   private appendControlRow(key: string, ...children: HTMLElement[]): HTMLDivElement {

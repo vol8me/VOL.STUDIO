@@ -17,6 +17,8 @@ export type {
 export { getRuntimePlatform } from './platform/runtimePlatform';
 export type { RuntimePlatform, RuntimePlatformProbe } from './platform/runtimePlatform';
 
+export { TauriHapticsDriver } from './platform/TauriHapticsDriver';
+
 export {
   androidScreenOrientation,
   observeViewportOrientation,

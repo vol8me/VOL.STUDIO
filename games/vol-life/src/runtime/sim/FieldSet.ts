@@ -66,7 +66,13 @@ export class FieldSet {
     this.diffuseRows(name, amount, 0, this.resolution);
   }
 
-  diffuseRows(name: FieldName, amount: number, startRow: number, rowCount: number): void {
+  diffuseRows(
+    name: FieldName,
+    amount: number,
+    startRow: number,
+    rowCount: number,
+    sourceEpoch?: Float32Array,
+  ): void {
     if (!(amount >= 0 && amount <= 0.25)) {
       throw new RangeError(`Difüzyon miktarı 0–0,25 aralığında olmalı: ${amount}`);
     }
@@ -80,17 +86,25 @@ export class FieldSet {
       throw new RangeError(`Difüzyon satır aralığı geçersiz: ${startRow}+${rowCount}`);
     }
     const source = this[name];
+    const partial = startRow !== 0 || rowCount !== this.resolution;
+    if (partial && (!sourceEpoch || sourceEpoch === source)) {
+      throw new Error('Kısmi difüzyon ayrı ve değişmez bir kaynak zamanı gerektirir.');
+    }
+    if (sourceEpoch && sourceEpoch.length !== this.length) {
+      throw new RangeError(`Difüzyon kaynak zamanı ${this.length} değer taşımalı`);
+    }
+    const readSource = sourceEpoch ?? source;
     const centerWeight = 1 - amount * 4;
     const endRow = startRow + rowCount;
     for (let y = startRow; y < endRow; y++) {
       for (let x = 0; x < this.resolution; x++) {
         const index = this.index(x, y);
         this.scratch[index] =
-          source[index] * centerWeight +
-          (source[this.index(x - 1, y)] +
-            source[this.index(x + 1, y)] +
-            source[this.index(x, y - 1)] +
-            source[this.index(x, y + 1)]) *
+          readSource[index] * centerWeight +
+          (readSource[this.index(x - 1, y)] +
+            readSource[this.index(x + 1, y)] +
+            readSource[this.index(x, y - 1)] +
+            readSource[this.index(x, y + 1)]) *
             amount;
       }
     }

@@ -13,6 +13,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test --project=chromium",
     "benchmark:fields": "tsx scripts/benchmark-fields.mts",
+    "benchmark:particles": "tsx scripts/benchmark-particles.mts",
+    "benchmark:particle-render": "tsx scripts/benchmark-particle-render.mts",
     "tauri": "tauri",
     "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
     "tauri:build": "tauri build",

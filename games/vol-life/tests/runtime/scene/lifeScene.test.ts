@@ -1,6 +1,13 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import Phaser from 'phaser';
-import { ViewportManager, VIEWPORT_REGISTRY_KEY, i18n, i18next } from '@volstudio/core';
+import {
+  ViewportManager,
+  VIEWPORT_REGISTRY_KEY,
+  i18n,
+  i18next,
+  setHapticsDriver,
+  setHapticsEnabled,
+} from '@volstudio/core';
 import type { SaveManager } from '@volstudio/core';
 import { LifePreferences } from '@/app/LifePreferences';
 import { OrientationPreference } from '@/app/OrientationPreference';
@@ -89,6 +96,8 @@ beforeAll(async () => {
 }, 60_000);
 
 afterEach(() => {
+  setHapticsDriver(null);
+  setHapticsEnabled(false);
   while (scenes.length > 0) scenes.pop()?.events.emit('shutdown');
   document.body.innerHTML = '';
   vi.unstubAllGlobals();
@@ -201,6 +210,19 @@ describe('LifeScene platform matrisi (DESIGN.md §6)', () => {
 
     window.dispatchEvent(new Event('vol:androidback'));
     expect(document.querySelector('.vol-modal--visible')).not.toBeNull();
+  });
+
+  it('Android: dokunsalı açan ilk seçim native geri bildirimi hemen üretir', async () => {
+    const play = vi.fn();
+    setHapticsDriver({ play });
+    const preferences = new LifePreferences(memorySaveManager());
+    mountScene({ platform: 'android', preferences });
+    const input = document.querySelector<HTMLInputElement>('[data-option="haptics"] input')!;
+
+    input.click();
+
+    expect(play).toHaveBeenCalledWith('select');
+    await vi.waitFor(() => expect(preferences.get().hapticsEnabled).toBe(true));
   });
 });
 

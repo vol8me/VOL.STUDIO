@@ -633,12 +633,13 @@ elementi güvenli bir kopya olarak yerleştirir. Oyun kuralları ve stat hesapla
 
 ### Dokunsal geri bildirim yeteneği
 
-`vibrate()` hâlâ NİYET alır (`'tap'`, `'error'`), ama artık iki katmandan
-birine yönlenir ve hangisinin var olduğunu ÇALIŞMA ANINDA ölçer:
+`vibrate()` NİYET alır (`'tap'`, `'error'`) ve kullanılabilir ilk
+katmana yönlenir:
 
-- `navigator.vibrate` — Android WebView ve mobil tarayıcılar. Masaüstü Chromium
-  ve WebView2 API'yi tanımlar ama motor yoktur; bu katman yalnız mobil cihazda
-  sayılır (UA-CH `mobile` ipucu, yoksa kullanıcı ajanı).
+- `setHapticsDriver` ile kayıtlı native platform sürücüsü — UA tahmininden
+  önce gelir; Tauri Android/iOS resmi haptics eklentisini burada bağlar.
+- `navigator.vibrate` — mobil tarayıcı fallback'i. Masaüstü Chromium ve
+  WebView2 API'yi tanımlasa da motor sayılmaz.
 - Oyun kolunun `vibrationActuator`'ı — masaüstünde ve Steam Deck'te titreşimin
   tek gerçek kaynağı; klavye ve fare titremez.
 

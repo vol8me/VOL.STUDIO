@@ -24,8 +24,10 @@ describe('rasterizeFields', () => {
     const lightLuma = pixels[0] + pixels[1] + pixels[2];
     const nutrientLuma = pixels[4] + pixels[5] + pixels[6];
 
-    expect(lightLuma).toBeGreaterThan(darkLuma + 80);
-    expect(nutrientLuma).toBeGreaterThan(darkLuma + 40);
+    expect(lightLuma).toBeGreaterThan(darkLuma + 35);
+    expect(lightLuma).toBeLessThan(darkLuma + 90);
+    expect(nutrientLuma).toBeGreaterThan(darkLuma + 25);
+    expect(nutrientLuma).toBeLessThan(darkLuma + 75);
     expect(pixels[5]).toBeGreaterThan(pixels[4]);
   });
 

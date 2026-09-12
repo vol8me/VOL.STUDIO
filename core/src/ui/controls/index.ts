@@ -15,6 +15,7 @@ export {
 export { PinchZoomController, type PinchZoomControllerOptions } from './PinchZoomController';
 export {
   WorldCameraController,
+  type WorldCameraState,
   type WorldCamera,
   type WorldCameraControllerOptions,
 } from './WorldCameraController';

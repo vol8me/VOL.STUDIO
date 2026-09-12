@@ -1,10 +1,9 @@
 /**
  * Dokunsal geri bildirim (titreşim).
  *
- * Phaser'ın titreşim yüzeyi yoktur; karşılığı Vibration API'dir
- * (`navigator.vibrate`), Android WebView destekler, iOS WKWebView desteklemez.
- * Bu yüzden çağrılar sessizce yok sayılabilir olmalıdır — titreşimin olmaması
- * bir hata değil, o platformun gerçeğidir.
+ * Phaser'ın titreşim yüzeyi yoktur. Native kabuk sürücüsü önceliklidir;
+ * mobil tarayıcı Vibration API'ye, masaüstü bağlı oyun koluna geri düşer.
+ * Bütün çağrılar sessizce yok sayılabilir olmalıdır.
  *
  * Desenler burada tek yerde tanımlanır; çağıran NİYETİ söyler (`'tap'`,
  * `'error'`), süreyi değil. Çağrı yerlerine ham milisaniye dizileri yazmak
@@ -17,12 +16,13 @@
 /**
  * Titreşimi gerçekten üretebilen katman.
  *
- * - `vibration` — `navigator.vibrate`. Android WebView ve mobil tarayıcılar.
+ * - `native` — kabuğun kaydettiği mobil platform sürücüsü.
+ * - `vibration` — `navigator.vibrate`. Mobil tarayıcılar.
  * - `gamepad` — bağlı bir oyun kolunun `vibrationActuator`'ı. Masaüstünde ve
  *   Steam Deck'te titreşimin TEK gerçek kaynağı budur; klavye/fare titremez.
  * - `none` — hiçbir kaynak yok. Ayarın sunulması anlamsızdır.
  */
-export type HapticsBackend = 'vibration' | 'gamepad' | 'none';
+export type HapticsBackend = 'native' | 'vibration' | 'gamepad' | 'none';
 
 export interface HapticsCapability {
   /** Şu anda titreşim üretilebilir mi. */
@@ -33,6 +33,11 @@ export interface HapticsCapability {
 
 /** Niyet adları — süreler tek yerde, çağıran yalnızca anlamı söyler. */
 export type HapticPattern = 'tap' | 'select' | 'success' | 'warning' | 'error';
+
+export interface HapticsDriver {
+  play(pattern: HapticPattern): void | Promise<void>;
+  cancel?(): void | Promise<void>;
+}
 
 /**
  * Desen tabloları milisaniye dizisidir: [titreşim, duraklama, titreşim…].
@@ -85,6 +90,7 @@ const lastFiredAt = new Map<HapticPattern, number>();
 const capabilityListeners = new Set<(capability: HapticsCapability) => void>();
 let capabilityWatchers: (() => void) | null = null;
 let lastCapability: HapticsCapability | null = null;
+let platformDriver: HapticsDriver | null = null;
 
 let enabled = false;
 
@@ -143,9 +149,16 @@ function findHapticGamepad(): HapticActuator | null {
  * oyuncuya ayarı sonsuza dek kapalı gösterirdi.
  */
 export function getHapticsCapability(): HapticsCapability {
+  if (platformDriver) return { supported: true, backend: 'native' };
   if (hasVibrationApi()) return { supported: true, backend: 'vibration' };
   if (findHapticGamepad()) return { supported: true, backend: 'gamepad' };
   return { supported: false, backend: 'none' };
+}
+
+export function setHapticsDriver(driver: HapticsDriver | null): void {
+  if (platformDriver === driver) return;
+  platformDriver = driver;
+  notifyCapabilityListeners();
 }
 
 /**
@@ -174,33 +187,32 @@ export function observeHapticsCapability(
 
 function ensureCapabilityWatchers(): void {
   if (capabilityWatchers || typeof window === 'undefined') return;
-  const notify = (): void => {
-    const capability = getHapticsCapability();
-    // Aynı durum tekrar bildirilmez: bağlanma olayı birden çok kez gelebilir.
-    if (
-      lastCapability &&
-      lastCapability.supported === capability.supported &&
-      lastCapability.backend === capability.backend
-    ) {
-      return;
-    }
-    lastCapability = capability;
-    for (const listener of capabilityListeners) {
-      try {
-        listener(capability);
-      } catch (error) {
-        console.warn('[haptics] Yetenek dinleyicisi hata verdi:', error);
-      }
-    }
-  };
-
-  window.addEventListener('gamepadconnected', notify);
-  window.addEventListener('gamepaddisconnected', notify);
+  window.addEventListener('gamepadconnected', notifyCapabilityListeners);
+  window.addEventListener('gamepaddisconnected', notifyCapabilityListeners);
   capabilityWatchers = () => {
-    window.removeEventListener('gamepadconnected', notify);
-    window.removeEventListener('gamepaddisconnected', notify);
+    window.removeEventListener('gamepadconnected', notifyCapabilityListeners);
+    window.removeEventListener('gamepaddisconnected', notifyCapabilityListeners);
   };
   lastCapability = getHapticsCapability();
+}
+
+function notifyCapabilityListeners(): void {
+  const capability = getHapticsCapability();
+  if (
+    lastCapability &&
+    lastCapability.supported === capability.supported &&
+    lastCapability.backend === capability.backend
+  ) {
+    return;
+  }
+  lastCapability = capability;
+  for (const listener of capabilityListeners) {
+    try {
+      listener(capability);
+    } catch (error) {
+      console.warn('[haptics] Yetenek dinleyicisi hata verdi:', error);
+    }
+  }
 }
 
 /** Cihaz/tarayıcı titreşimi destekliyor mu (herhangi bir katmanla). */
@@ -225,6 +237,10 @@ export function isHapticsEnabled(): boolean {
 
 /** Süren titreşimi keser — duraklatma/sahne geçişi gibi anlarda. */
 export function cancelHaptics(): void {
+  if (platformDriver) {
+    callDriver(() => platformDriver?.cancel?.());
+    return;
+  }
   if (hasVibrationApi()) {
     try {
       // Vibration API'de 0 "iptal" demektir.
@@ -259,6 +275,11 @@ export function vibrate(pattern: HapticPattern): void {
   if (previous !== undefined && timestamp - previous < MIN_INTERVAL_MS[pattern]) return;
   lastFiredAt.set(pattern, timestamp);
 
+  if (capability.backend === 'native') {
+    callDriver(() => platformDriver?.play(pattern));
+    return;
+  }
+
   if (capability.backend === 'vibration') {
     try {
       navigator.vibrate([...PATTERNS[pattern]]);
@@ -269,6 +290,14 @@ export function vibrate(pattern: HapticPattern): void {
   }
 
   playGamepadPattern(pattern);
+}
+
+function callDriver(call: () => void | Promise<void> | undefined): void {
+  try {
+    void Promise.resolve(call()).catch(() => {});
+  } catch {
+    // Platform titreşimi oyun akışını kesmez.
+  }
 }
 
 /** Deseni oyun kolunun süre+şiddet sözleşmesine çevirir. */

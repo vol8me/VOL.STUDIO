@@ -43,38 +43,7 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 
 ## Adım 2 — parçacık yaşamı
 
-- [ ] **Kuvvet çekirdeği:** tür sayısı ve etkileşim matrisi `config/`
-      verisidir; yakın mesafede her türe ortak itme, orta menzilde matrise bağlı
-      çekme ya da itme, kesme yarıçapı, sürtünme ve hız tavanı; mesafe
-      toroidaldir. Matris simetrik değildir (DESIGN §3: altı türde 36 boyut).
-      Kapanır: kesme, itme ve toroidal kenar birim testleri ve iki parçacıklı
-      senaryolar.
-- [ ] **SoA `ParticleStore`:** sabit boyutlu paralel `Float32Array` /
-      `Uint8Array`, parçacık başına nesne yok. Parçacık silinmez (madde korunur,
-      DESIGN §3); indeks kimliktir. Kuşaklı `Uint32` handle organizma kaydına
-      aittir (Adım 4). CORE `SpatialIndex`i nesne kimliğine bağlı olduğu için
-      kullanılmaz.
-- [ ] **Uzamsal hash:** counting sort, `Map` yok, sıcak yolda tahsis yok.
-- [ ] **Kuvvet birikimi ve entegrasyon ayrı;** entegrasyon tek yerde yapılır.
-- [ ] **Tick sırası:** komutlar → ızgara → kuvvetler → entegrasyon → difüzyon
-      (kendi temposunda); testle kilitlenir.
-- [ ] **Başlangıç yerleşimi:** tür ve konum tohumdan gelir; determinizm testine
-      parçacık dizileri eklenir.
-- [ ] **Dünya paleti:** tür renkleri `config/` verisidir ve `VOL_COLORS`tan
-      ayrıdır (DESIGN §6).
-- [ ] **[P1] Render adaptörü:** simülasyon dizilerini okuyan tek arayüz;
-      parçacık kameraya en yakın kopyasında çizilir (DESIGN §2). Parçacık sayısı
-      sabit olduğundan render üyesi eklenip silinmez; `removeMembers` indeksleri
-      kaydırdığı için kullanılmaz. Kapanır: ilk yol 100 / 1.000 / 5.000
-      parçacıkta kare süresi p50/p95 ile ölçülür ve DESIGN §11'e yazılır; yol
-      değişimi yalnız adaptörü değiştirir.
-- [ ] **Çizim boyutu dünya birimiyle kilitlenir:** ekrandaki boyut dünya birimi
-      çarpı kamera yakınlaştırmasıdır; `SpriteGPULayer` seçilirse
-      `scale = worldUnits / textureSizePx`. DPR 1/2/3'te testle kilitlenir
-      (DESIGN §14, ders 1).
-- [ ] **Ölçekleme bütçesi:** benchmark betiği ve `quality.json` →
-      `scaling.<paket>.$measure`; ölçülen çekirdek uzamsal hash ve kuvvet
-      adımıdır, girdi dört katına çıkınca süre oranı kapılanır.
+Tamamlandı; kanıtlar `Kapatılanlar / 2026-09-13` bölümünde korunur.
 
 ## Adım 3 — matris araması
 
@@ -131,6 +100,40 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
 
 ## Kapatılanlar
 
+### 2026-09-13 — ürün acceptance düzeltmeleri ve Adım 2
+
+- [x] **Bantlı difüzyon aynı kaynak zamanını okuyor.** Kısmi bant ayrı
+      `sourceEpoch` olmadan reddedilir; `LifeWorld` tam turun kaynağını ve
+      snapshot durumunu korur. Tam/bantlı sonuç eşitliği regresyon testidir.
+- [x] **Kamera giriş ve dünya sözleşmesi sertleştirildi.** Wheel
+      pixel/line/page normalize ve olay başına sınırlıdır; zoom yumuşarken
+      cursor anchor sabit kalır. Pinch gesture başlangıcına bağlıdır, pointer
+      değişiminde yeniden kurulur. Kamera seam boyunca sarılmadan ilerler.
+- [x] **Kanonik overview ve alan ağırlığı düzeltildi.** En uzakta tek kare
+      dünya ortalanır ve pan kilitlenir; yakın görünüm gerçek 3×3 alan
+      kopyasıdır. Varsayılan alan luması yaşam katmanını bastırmayacak düzeye
+      indi.
+- [x] **Sheet yerleşimi ölçülebilir sözleşmeye bağlandı.** X, dişli ve tam
+      ekran aynı 40×40 `IconButton` geometrisidir; X dişliyle aynı safe-area
+      kenarındadır. Label/control grid, switch sağ ankrajı ve yatay telefonda
+      gereksiz scroll olmaması Chromium bounding-box E2E testidir.
+- [x] **Native haptics kuruldu.** CORE platform sürücüsü native backend'i
+      fallback'lerden önce seçer; Tauri resmi haptics eklentisi niyetleri
+      impact/selection/notification'a eşler. Android `VIBRATE` ve capability
+      izinleri drift testiyle korunur.
+- [x] **Adım 2 parçacık çekirdeği:** sabit SoA `ParticleStore`, altı tür,
+      ayrı dünya paleti, asimetrik 6×6 matris, counting-sort spatial hash,
+      ortak yakın itme, orta menzil tür kuvveti, sürtünme, hız tavanı ve
+      toroidal mesafe. Kuvvet birikimi entegrasyondan ayrıdır; alan kuvvetleri
+      kapalıdır.
+- [x] **Determinizm ve render:** seed + snapshot/restore parçacık dizilerini
+      bayt düzeyinde korur. Tek sabit Phaser Graphics adaptörü parçacığı en
+      yakın toroidal kopyada ve dünya birimli yarıçapla çizer.
+- [x] **Ölçüm:** sabit yoğunlukta 512→2048 çekirdek oranı 4,94;
+      `quality.json` tavanı 5,5. Chromium WebGL 100/1.000/5.000 p50/p95
+      ölçümleri DESIGN §11'de; 5.000 sonucu mevcut yolu yoğun ölçek için
+      reddettiği için Adım 11 karşılaştırması açık bırakıldı.
+
 ### 2026-09-12 — Adım 1: dünya substratı ve zemin kalanları
 
 - [x] **Saat:** `SimulationClock` `partialStep: 'defer'` ile kurulur;
@@ -157,15 +160,12 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
       komşuluk mesafesi testle kilitli.
 - [x] **[P1] Dünya kamerası:** CORE `WorldCameraController` — sığdırma,
       sürükleme, tekerlek, çift parmak, bir dünya genişliği sınırı, toroidal
-      merkez sarması; resize'da bakılan nokta korunur. 6 birim testi +
-      vol-ui showcase; VOL.LIFE'ta masaüstü sürüklemesi (1280×800 Chromium)
-      ve telefon kaydırması (SM-G990B2) ekran görüntüsüyle doğrulandı.
+      ilk sürüm ve VOL.UI showcase'i kuruldu. Ürün acceptance'ında bulunan
+      giriş/overview kusurları 2026-09-13 bölümünde ayrıca kapatıldı.
 - [x] **Alan görüntüsü — varsayılan:** alanlar çok hafif çizilir, dünya
-      çoğunlukla karanlık kalır; `FieldRenderer` alanları 256² canvas dokusuna
-      rasterler ve toroidal süreklilik için 3×3 döşer. Preview tarayıcısında
-      ve iki cihazda (SM-G990B2, TB350FU) ekran görüntüsüyle doğrulandı;
-      doku yükleme ~0,1 ms ölçüldü ve DESIGN §16'ya yazıldı. Katman
-      görünümünün doğrulaması Adım 7'de açık kaldı.
+      `FieldRenderer` ile 256² canvas dokusuna taşındı. Varsayılan ağırlık,
+      kanonik görünüm ve gerçek 3×3 kopya 2026-09-13 acceptance turunda
+      düzeltildi. Katman görünümünün doğrulaması Adım 7'de açık kaldı.
 - [x] **Determinizm testi başladı:** aynı tohum + aynı tick bayt bayt aynı
       alan dizilerini verir; ara nokta snapshot'tan devam aynı sonuca varır;
       kademeli alan imleci snapshot/restore'da korunur (`LifeWorld.test.ts`).
@@ -200,7 +200,7 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
 
 - [x] **[P1] Seçenekler çekmecesi (kullanıcı isteği).** Dişli düğmesi CORE
       `Sheet`ini açıyor: sağdan, en az yarım genişlik, içerik kendi içinde
-      kayıyor; dikey telefonda tam genişlik (kullanıcı kabul etti). Ölçüldü:
+      kayıyor; dikey telefonda tam genişlik. Ölçüldü:
       masaüstü tarayıcıda 1280 px'in 640'ı, yatay telefonda 832 px'in 420'si.
       Scrim, X, Escape ve Android geri tuşu kapatıyor; telefonda geri tuşu önce
       çekmeceyi kapatıyor, çıkış onayı açılmıyor. Linux masaüstünde Escape
@@ -214,9 +214,8 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
       Telefonda "60 FPS" görüldü ve yeniden açılışta açık kaldı.
 - [x] **[P1] Dokunsal geri bildirim seçeneği (kullanıcı isteği, vol-hell
       deseni).** Satır yalnız titreşim motoru olan cihazda görünür; varsayılan
-      kapalı ve kalıcı; seçenek değişimleri `select` deseniyle titrer. Telefonda
-      görünür ve yeniden açılışta açık kaldı; Linux Tauri'de ve masaüstü
-      Chromium'da gizli (kök TODO'daki yetenek düzeltmesi).
+      kapalı ve kalıcı. İlk tur yalnız görünürlük/kalıcılığı kanıtladı; native
+      titreşimin eksik olduğu 2026-09-13 acceptance turunda saptanıp giderildi.
 - [x] **[P1] Sağ üst düğme kümesi platforma göre kuruluyor.** `LifeScene`
       testi kümeyi üç platformda sınıyor. Tarayıcıda iki düğme (tam ekran ve
       seçenekler); telefonda dikey ve yatayda ve Linux masaüstünde yalnız

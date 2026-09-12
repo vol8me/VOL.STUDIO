@@ -112,9 +112,9 @@
   min-height: 100%;
   max-height: none;
   margin: 0 0 0 auto;
-  padding: calc(var(--vol-safe-top) + var(--vol-space-lg))
-    calc(var(--vol-safe-right) + var(--vol-space-lg))
-    calc(var(--vol-safe-bottom) + var(--vol-space-lg)) var(--vol-space-lg);
+  padding: max(var(--vol-safe-top), var(--vol-space-sm))
+    max(var(--vol-safe-right), var(--vol-space-md)) max(var(--vol-safe-bottom), var(--vol-space-md))
+    var(--vol-space-lg);
   border-radius: var(--vol-radius-md) 0 0 var(--vol-radius-md);
   gap: 0;
   overflow: hidden;
@@ -129,7 +129,7 @@
 
 .vol-sheet__header {
   min-height: 40px;
-  padding: 0 0 var(--vol-space-lg);
+  padding: 0 0 var(--vol-space-md);
   border-bottom: 1px solid var(--vol-ui-border-strong);
   align-items: center;
   justify-content: space-between;

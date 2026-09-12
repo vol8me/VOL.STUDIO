@@ -84,4 +84,13 @@ Takma adın hiçbir tüketicisi yoktu; yeniden adlandırmanın bedeli public API
 
 ### 228 → 229
 
-`WorldCameraController`. Phaser sınıfına bağlanmadan, küçük bir kamera portu üzerinden kare dünyayı sığdırır; tek işaretçiyle kaydırma, işaretçi altında tekerlek yakınlaştırması ve iki parmak yakınlaştırması sağlar. Merkez toroidal sarılır, resize yakınlaştırma ve odağı korur. Böylece oyunlar aynı giriş matematiğini yeniden yazmaz; canlı sözleşme VOL.UI TOUCH sekmesindedir.
+`WorldCameraController`. Phaser sınıfına bağlanmadan kare dünyayı sığdırır;
+delta-mode normalize tekerlek ve mutlak başlangıçlı pinch sağlar. Kamera merkezi
+seam boyunca süreklidir; sarma simülasyon erişimi ve render kopyasına kalır.
+Uzak görünüm tek kanonik dünyaya kilitlenir.
+
+### 229 → 230
+
+`setHapticsDriver`. Native kabuk kendi sürücüsünü CORE'un niyet tablosuna
+kaydeder; mobilde UA/Vibration tahmini yerine doğrulanmış Tauri backend'i
+kullanılır. Web Vibration API ve oyun kolu fallback'leri korunur.

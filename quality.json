@@ -6,6 +6,9 @@
     "ratchet'i ölçülen CORE 92,8/92,8/86,9/92,5 için satır/ifade 89 → 90;",
     "VOL.LIFE 97,1/97,1/92,6/92,9 için fonksiyon 86 → 90; VOL.UI",
     "95,3/95,3/92,4/84,3 için dal 89 → 90 olarak yükseltildi.",
+    "2026-09-13: VOL.LIFE Adım 2 parçacık çekirdeğiyle 96,78/96,78/92,26/93,97",
+    "ölçüldü; satır/ifade/dal eşikleri korunurken fonksiyon ratchet'i 90 → 92",
+    "olarak yükseltildi.",
     "",
     "2026-09-11: tauri-v2 ve vol-life eşikleri ölçülenin ~2 puan altına çekildi",
     "(satır/ifade/dal/fonksiyon). tauri-v2 95,8/95,8/92,8/100 ölçüldü — platform",
@@ -79,7 +82,7 @@
       "lines": 96,
       "statements": 96,
       "branches": 92,
-      "functions": 90
+      "functions": 92
     },
     "@volstudio/vol-hell": {
       "lines": 70,
@@ -148,7 +151,7 @@
     }
   },
   "scaling": {
-    "$comment": "Algoritmik ÖLÇEKLEME tavanı. Mutlak süre kapı OLAMAZ (donanıma bağlı) ama iki ölçüm arasındaki ORAN makineden bağımsızdır: parça sayısı 4 katına çıktığında süre kaç katına çıkıyor? Doğrusal 4.0'dır, ölçülen ~3.0 (sabit maliyet amorti oluyor). Tavan 4.5: gözlenen tepeye (3.20) %40 pay bırakır ve O(n^2) sızmasını (~16.0) rahatça yakalar.",
+    "$comment": "Algoritmik ÖLÇEKLEME tavanı. Mutlak süre donanıma bağlı olduğu için kapı değildir; dört kat girdideki süre oranı doğrusal davranışı karesel sızmadan ayırır. Her paket kendi ölçülen tabanına pay bırakan tavanı taşır.",
     "games/vol-arachnid": {
       "$measure": {
         "script": "scripts/benchmark/locomotion-benchmark.ts",
@@ -158,6 +161,17 @@
         "value": "msPerFrame"
       },
       "fxParts72Over18": 4.5
+    },
+    "games/vol-life": {
+      "$comment": "Sabit yoğunlukta 512→2048 parçacık ölçümü 4,94 oran verdi. 5,5 tavan çalışma gürültüsüne pay bırakır; O(n²) sızmasının yaklaşık 16× oranını reddeder.",
+      "$measure": {
+        "script": "scripts/benchmark-particles.mts",
+        "args": ["--iterations", "120", "--samples", "5", "--json"],
+        "series": "particleKernel",
+        "input": "particles",
+        "value": "msPerTick"
+      },
+      "particleKernel2048Over512": 5.5
     }
   },
   "coverageShape": {

@@ -15,7 +15,7 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 core/                       # shared systems + DOM UI library
 games/vol-hell/             # game (Vite root)
 games/vol-arachnid/         # articulated spider arena vertical slice
-games/vol-life/             # observed artificial world — world substrate (step 1)
+games/vol-life/             # observed artificial world — particle life (step 2)
 devtools/pen.dev/           # Pencil source, export pipeline and sync tool
 devtools/vol-ui/            # live component catalogue for CORE UI
 devtools/vol-asset-studio/  # repository asset workspace

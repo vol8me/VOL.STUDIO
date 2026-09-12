@@ -61,6 +61,10 @@ const ACTIVITY_EDITS: readonly HandEdit[] = [
 
 const MANIFEST_EDITS: readonly HandEdit[] = [
   {
+    decision: 'Native dokunsal geri bildirim için titreşim izni',
+    marker: '<uses-permission android:name="android.permission.VIBRATE" />',
+  },
+  {
     decision: 'Varsayılan yön dikey ve sistem döndürme kilidine uyar (DESIGN.md §9)',
     marker: 'android:screenOrientation="userPortrait"',
   },

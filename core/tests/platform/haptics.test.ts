@@ -3,6 +3,7 @@ import {
   cancelHaptics,
   isHapticsEnabled,
   isHapticsSupported,
+  setHapticsDriver,
   setHapticsEnabled,
   vibrate,
 } from '../../src/platform/haptics';
@@ -31,6 +32,7 @@ function removeVibrate(): void {
 }
 
 afterEach(() => {
+  setHapticsDriver(null);
   setHapticsEnabled(false);
   removeVibrate();
   Reflect.deleteProperty(navigator, 'userAgent');

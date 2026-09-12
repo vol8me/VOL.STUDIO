@@ -32,6 +32,58 @@ test('üretim kabuğu gerçek WebGL ile açılır ve Sheet kullanılabilir', asy
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
+test('Sheet kenar geometrisi ve ayar sütunları landscape telefonda hizalıdır', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 844, height: 390 },
+    isMobile: true,
+    hasTouch: true,
+    userAgent:
+      'Mozilla/5.0 (Linux; Android 16; Mobile) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36',
+  });
+  const page = await context.newPage();
+  await page.goto('/');
+
+  const gear = page.getByRole('button', { name: /^(SEÇENEKLER|OPTIONS)$/i });
+  await gear.click();
+  await page.locator('[data-option="haptics"]').evaluate((element) => {
+    (element as HTMLElement).hidden = false;
+  });
+  const close = page.locator('.vol-sheet__close');
+  const body = page.locator('.vol-sheet__body');
+  const viewport = page.viewportSize()!;
+  await expect
+    .poll(async () => {
+      const gearBox = await gear.boundingBox();
+      const closeBox = await close.boundingBox();
+      return Math.abs(
+        viewport.width -
+          gearBox!.x -
+          gearBox!.width -
+          (viewport.width - closeBox!.x - closeBox!.width),
+      );
+    })
+    .toBeLessThanOrEqual(1);
+  const gearBox = await gear.boundingBox();
+  const closeBox = await close.boundingBox();
+  expect(Math.abs(gearBox!.y - closeBox!.y)).toBeLessThanOrEqual(1);
+
+  const overflow = await body.evaluate((element) => element.scrollHeight - element.clientHeight);
+  expect(overflow).toBeLessThanOrEqual(1);
+
+  const controls = await page.locator('.vol-life-options__row').evaluateAll((rows) =>
+    rows.map((row) => {
+      const control = row.querySelector<HTMLElement>(
+        '.vol-select, .vol-segmented, .vol-checkbox__track',
+      );
+      return control?.getBoundingClientRect().right ?? 0;
+    }),
+  );
+  expect(Math.max(...controls) - Math.min(...controls)).toBeLessThanOrEqual(1);
+  await context.close();
+});
+
 test('DPR 2 tarayıcıda kanvas görüntü alanını doldurur', async ({ browser }) => {
   const context = await browser.newContext({
     deviceScaleFactor: 2,

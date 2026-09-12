@@ -31,10 +31,12 @@ export {
   isHapticsEnabled,
   isHapticsSupported,
   setHapticsEnabled,
+  setHapticsDriver,
   vibrate,
   type HapticPattern,
   type HapticsBackend,
   type HapticsCapability,
+  type HapticsDriver,
 } from './platform';
 
 /*

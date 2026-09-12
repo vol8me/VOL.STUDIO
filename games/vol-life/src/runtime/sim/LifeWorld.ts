@@ -1,5 +1,13 @@
 import type { WorldConfig } from '@/config/world';
+import { particleConfig, type ParticleConfig } from '@/config/particles';
 import { FieldSet, type FieldSnapshot } from '@/runtime/sim/FieldSet';
+import {
+  accumulateParticleForces,
+  initializeParticles,
+  integrateParticles,
+} from '@/runtime/sim/ParticlePhysics';
+import { ParticleSpatialHash } from '@/runtime/sim/ParticleSpatialHash';
+import { ParticleStore, type ParticleSnapshot } from '@/runtime/sim/ParticleStore';
 import { createSimRandom } from '@/runtime/sim/rng';
 import { SimulationTempo } from '@/runtime/sim/SimulationTempo';
 
@@ -15,18 +23,27 @@ export interface LifeWorldSnapshot {
   readonly tick: number;
   readonly rngState: number;
   readonly nextFieldBand: number;
+  readonly nutrientDiffusionSource: Float32Array;
   readonly fields: FieldSnapshot;
+  readonly particles: ParticleSnapshot;
 }
 
 export class LifeWorld {
   readonly fields: FieldSet;
+  readonly particles: ParticleStore;
   private readonly random;
   private readonly tempo = new SimulationTempo(60);
   private readonly sources: LightSource[];
+  private readonly nutrientDiffusionSource: Float32Array;
+  private readonly particleGrid: ParticleSpatialHash;
+  private readonly particlesConfig: ParticleConfig;
   private nextFieldBand = 0;
   private fieldUpdated = false;
 
-  constructor(private readonly config: WorldConfig) {
+  constructor(
+    private readonly config: WorldConfig,
+    particlesConfig: ParticleConfig = particleConfig,
+  ) {
     if (
       !Number.isInteger(config.fieldUpdateBands) ||
       config.fieldUpdateBands < 1 ||
@@ -36,6 +53,7 @@ export class LifeWorld {
     }
     this.fields = new FieldSet(config.fieldResolution);
     this.random = createSimRandom(config.seed);
+    this.particlesConfig = { ...particlesConfig, worldSizeUnits: config.sizeUnits };
     this.sources = Array.from({ length: config.lightSourceCount }, () => ({
       originX: this.random.next() * config.sizeUnits,
       originY: this.random.next() * config.sizeUnits,
@@ -48,6 +66,14 @@ export class LifeWorld {
     for (let i = 0; i < this.fields.length; i++) {
       this.fields.nutrient[i] = this.fields.light[i] * 0.58;
     }
+    this.nutrientDiffusionSource = this.fields.nutrient.slice();
+    this.particles = new ParticleStore(this.particlesConfig.count);
+    initializeParticles(this.particles, this.random, this.particlesConfig);
+    this.particleGrid = new ParticleSpatialHash(
+      config.sizeUnits,
+      this.particlesConfig.cellSizeUnits,
+      this.particles.count,
+    );
     this.tempo.every(config.fieldHz, (tick) => {
       this.stepFields(tick);
       this.fieldUpdated = true;
@@ -60,6 +86,9 @@ export class LifeWorld {
 
   step(): boolean {
     this.fieldUpdated = false;
+    this.particleGrid.rebuild(this.particles);
+    accumulateParticleForces(this.particles, this.particleGrid, this.particlesConfig);
+    integrateParticles(this.particles, this.particlesConfig);
     this.tempo.advance();
     return this.fieldUpdated;
   }
@@ -69,7 +98,9 @@ export class LifeWorld {
       tick: this.tick,
       rngState: this.random.getState(),
       nextFieldBand: this.nextFieldBand,
+      nutrientDiffusionSource: this.nutrientDiffusionSource.slice(),
       fields: this.fields.snapshot(),
+      particles: this.particles.snapshot(),
     };
   }
 
@@ -77,14 +108,26 @@ export class LifeWorld {
     this.tempo.setTick(snapshot.tick);
     this.random.setState(snapshot.rngState);
     this.nextFieldBand = snapshot.nextFieldBand;
+    if (snapshot.nutrientDiffusionSource.length !== this.fields.length) {
+      throw new RangeError(`Difüzyon kaynak zamanı ${this.fields.length} değer taşımalı`);
+    }
+    this.nutrientDiffusionSource.set(snapshot.nutrientDiffusionSource);
     this.fields.restore(snapshot.fields);
+    this.particles.restore(snapshot.particles);
   }
 
   private stepFields(tick: number): void {
     const rowCount = this.fields.resolution / this.config.fieldUpdateBands;
     const startRow = this.nextFieldBand * rowCount;
+    if (this.nextFieldBand === 0) this.nutrientDiffusionSource.set(this.fields.nutrient);
     this.renderLightRows(tick, startRow, rowCount);
-    this.fields.diffuseRows('nutrient', this.config.nutrientDiffusion, startRow, rowCount);
+    this.fields.diffuseRows(
+      'nutrient',
+      this.config.nutrientDiffusion,
+      startRow,
+      rowCount,
+      this.nutrientDiffusionSource,
+    );
     const { nutrient, light } = this.fields;
     const start = startRow * this.fields.resolution;
     const end = start + rowCount * this.fields.resolution;

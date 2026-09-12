@@ -11,6 +11,8 @@ pub fn run() {
     // gelir. Paylaşılan kabuk ortak eklentileri kurar; ekran yönü köprüsü
     // yalnız bu uygulamaya aittir.
     volstudio_tauri_lib::run_with_context_and(tauri::generate_context!(), |builder| {
+        #[cfg(mobile)]
+        let builder = builder.plugin(tauri_plugin_haptics::init());
         builder.plugin(tauri_plugin_vol_orientation::init())
     })
 }

@@ -41,20 +41,58 @@ body {
 
 .vol-life-options {
   display: grid;
-  gap: var(--vol-space-md);
+  gap: 0;
   padding: var(--vol-space-xs);
 }
 
-/* Satır ortalanır: grid öğesi esneseydi segment grubu içeriğinden geniş kalır ve
-   sağında boş bir şerit bırakırdı (cihazda görüldü). */
 .vol-life-options__row {
   display: grid;
-  gap: var(--vol-space-xs);
-  justify-items: center;
+  grid-template-columns: minmax(9rem, 1fr) minmax(12rem, 1.25fr);
+  gap: var(--vol-space-lg);
+  align-items: center;
+  min-height: 56px;
+  padding: var(--vol-space-sm) 0;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
 }
 
-.vol-life-options__row .vol-select {
+.vol-life-options__row:last-child {
+  border-bottom: 0;
+}
+
+.vol-life-options__row > .vol-text {
+  justify-self: start;
+}
+
+.vol-life-options__row > .vol-select,
+.vol-life-options__row > .vol-segmented {
+  grid-column: 2;
   width: 100%;
+}
+
+.vol-life-options__row > .vol-checkbox {
+  grid-column: 1 / -1;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.vol-life-options__row .vol-checkbox__track {
+  order: 2;
+}
+
+.vol-life-options__row .vol-checkbox__label {
+  order: 1;
+}
+
+@media (width <= 620px) {
+  .vol-life-options__row--labeled {
+    grid-template-columns: 1fr;
+    gap: var(--vol-space-xs);
+  }
+
+  .vol-life-options__row--labeled > .vol-select,
+  .vol-life-options__row--labeled > .vol-segmented {
+    grid-column: 1;
+  }
 }
 
 .vol-life-fps-meter {
