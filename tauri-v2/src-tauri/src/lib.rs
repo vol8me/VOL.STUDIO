@@ -116,10 +116,11 @@ where
                 })
                 .build(),
         )
-        // shell ve dialog plugin'leri kaldirildi: frontend yalnizca store ve sql
-        // kullaniyor, ikisi de gereksiz saldiri yuzeyi ve binary sismesiydi.
+        // shell, dialog ve sql plugin'leri kaldirildi: frontend yalnizca store
+        // kullaniyor, kullanilmayan eklenti gereksiz saldiri yuzeyi ve binary
+        // sismesiydi. Ek native eklenti gereken oyun onu `configure` icinde
+        // kendi cagrisinda kaydeder (or. vol-orientation).
         .plugin(tauri_plugin_store::Builder::default().build())
-        .plugin(tauri_plugin_sql::Builder::default().build())
         .setup(|_app| {
             log::info!("VOL.STUDIO Tauri app starting");
             Ok(())

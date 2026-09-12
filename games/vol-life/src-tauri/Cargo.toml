@@ -24,7 +24,6 @@ tauri = { version = "2.11", features = ["protocol-asset", "rustls-tls"] }
 # uygulama crate'inin bağımlılık ağacından toplanır.
 tauri-plugin-log = "2.9"
 tauri-plugin-store = "2.4"
-tauri-plugin-sql = { version = "2.4", features = ["sqlite"] }
 # Kotlin kaynağı taşır: yalnız doğrudan bağımlı uygulamanın APK'sına girer.
 tauri-plugin-vol-orientation = { path = "../../../tauri-v2/plugins/vol-orientation" }
 

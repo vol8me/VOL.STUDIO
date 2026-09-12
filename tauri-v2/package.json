@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",
-    "@tauri-apps/plugin-sql": "^2.0.0",
     "@tauri-apps/plugin-store": "^2.0.0",
     "@volstudio/core": "workspace:*"
   },

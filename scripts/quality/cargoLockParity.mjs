@@ -11,8 +11,8 @@ import { workingTreeFiles } from './gitFiles.mjs';
  * sürümle derletir ve `cargo check --locked` bunu göremez — her kilit kendi
  * içinde tutarlıdır.
  *
- * Ölçüldü: `tauri-plugin-log` ve `tauri-plugin-sql` runtime kilidinde
- * 2.9.0 / 2.4.0, üç oyunda 2.9.1 / 2.4.1 çözülüyordu.
+ * Ölçüldü: `tauri-plugin-log` runtime kilidinde 2.9.0, üç oyunda 2.9.1
+ * çözülüyordu.
  */
 export const WATCHED_CRATES = /^(?:tauri(?:-.+)?|wry|tao)$/;
 

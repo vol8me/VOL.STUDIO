@@ -100,5 +100,9 @@ KDE Plasma 6.7, WebKitGTK 2.52, 1920×1080, boş sahne):
 
 Değişkenleri elle vermek kuralı devre dışı bırakır; ör. boş pencere görülen bir
 sürücüde `WEBKIT_DISABLE_DMABUF_RENDERER=1`. vol-hell AppImage başlatıcısı
-(`linux.AppRun`) bu değişkeni kendi düzeyinde `1` yapar; AppImage bu yüzden
-kabuk kuralına girmeden güvenli yolda kalır.
+(`linux.AppRun`) bu değişkeni dayatmaz; ayrıca linuxdeploy GTK hook'unun
+`GDK_BACKEND=x11` dayatmasını da oturum türüne ve kullanıcı tercihine göre
+Wayland'e çevirir. AppImage bu kurala girer: Wayland oturumunda `GDK_BACKEND`
+görmeden `WEBKIT_DISABLE_DMABUF_RENDERER=0` ve
+`__NV_DISABLE_EXPLICIT_SYNC=1` ile çalışır; `GDK_BACKEND=x11` verilerek
+XWayland yoluna da çizdirilebilir.

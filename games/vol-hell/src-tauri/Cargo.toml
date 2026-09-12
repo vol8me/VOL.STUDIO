@@ -24,7 +24,6 @@ tauri = { version = "2.11", features = ["protocol-asset", "rustls-tls"] }
 # uygulama crate'inin bağımlılık ağacından toplanır.
 tauri-plugin-log = "2.9"
 tauri-plugin-store = "2.4"
-tauri-plugin-sql = { version = "2.4", features = ["sqlite"] }
 
 # `custom-protocol` yalnız bu özellikten açılır. Bağımlılık satırında sabit
 # açıldığında `tauri dev`in `--no-default-features`ı onu kapatamıyor, pencere dev

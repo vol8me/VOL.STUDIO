@@ -10,48 +10,47 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
 ## Açık
 
 - [ ] **[P2] Android 16 geniş ekranda yön kilidini yok saymasın.** Android 16,
-      en dar kenarı 600dp ve üstü ekranlarda `screenOrientation`ı ve
-      `setRequestedOrientation()`ı yok sayar; oyun kategorisi
-      (`android:appCategory="game"`) muaftır. Kod tarafı bitti: üç manifestin
-      `<application>`ında kategori var ve drift testleri kilitliyor. Kalan tek
-      şart geniş ekran ölçümü. Telefonda `wm size` / `wm density` ile büyük ekran
-      taklidi kuralı üretmedi (kategorisiz kontrol uygulaması da döndü), kanıt
-      sayılmadı. `vol-tablet-36` AVD'si (Android 16, pixel_tablet, sw800) bu
-      makinede başsız açılışta sessizce kapanıyor (`swiftshader_indirect`, üç
-      deneme). Kapanır: 600dp ve üstü emülatörde ya da tablette, kategori varken
-      yön isteğinin uygulandığı ve kategori geçici kaldırılınca yok sayıldığı
-      ölçülür.
-- [ ] **[P2] vol-hell AppImage'ı Linux çizim kuralına girmiyor.** `linux.AppRun`
-      `WEBKIT_DISABLE_DMABUF_RENDERER`ı başlatıcı düzeyinde `1` yapıyor; kabuk
-      dışarıdan verilen değişkeni ezmediği için AppImage NVIDIA + yerel Wayland'da
-      da DMA-BUF'suz yolda kalır. Aynı yol `tauri dev`de 18 FPS ölçüldü (kök
-      Kapatılanlar, 2026-09-11); AppImage ayrıca ölçülmedi. Başlatıcının bu
-      satırı kabuğun alt süreçleri kapsamadığı gerekçesiyle eklenmişti; kabuk
-      değişkenleri WebView yaratılmadan önce koyduğu için gerekçe artık
-      geçerli olmayabilir. Kapanır: satır kaldırılıp AppImage derlenir; NVIDIA +
-      Wayland'da 60 FPS ve XWayland'da çizim ölçülür.
-- [ ] **[P3] Paylaşılan Tauri kabuğu `sql` eklentisini her oyuna koşulsuz
-      gömüyor — "en az yetki" yalnız çağrı katmanında doğru.**
-      `tauri-v2/src-tauri/src/lib.rs`deki `run_with_context_and`, `store` ve
-      `log` yanında `tauri_plugin_sql::Builder::default().build()`i HER oyun
-      için koşulsuz kaydediyor; her üç oyunun kendi `Cargo.toml`u da
-      `tauri-plugin-sql`i doğrudan bağımlılık olarak listeliyor. Hiçbir oyunun
-      `src/`i şu an `@tauri-apps/plugin-sql` ya da `GameStateDb`yi (tauri-v2'de
-      hazır ama tüketilmeyen bir sarmalayıcı) İÇE AKTARMIYOR — üçü de SQL
-      kullanmıyor (doğrulandı: `rg` taraması). VOL.LIFE'ın capability
-      dosyalarından `sql:default`/`sql:allow-execute` kalktı (bu TODO'nun
-      önceki bir turda kapatılan "en az yetki" maddesi) ama bu yalnız JS→native
-      ÇAĞRI iznini (ACL) kapatıyor; eklentinin kendisi — komut işleyicileri,
-      SQLite sürücüsü, native durumu — VOL.LIFE'ın gönderilen ikili dosyasına
-      hâlâ gömülü giriyor (vol-hell ve vol-arachnid'in capability dosyalarında
-      `sql:default` hâlâ VAR, onlar da kullanmıyor). Kapanır: eklenti kaydı
-      `vol-orientation`ın izlediği desende (`run_with_context_and`in
-      `configure` parametresi) kullanan oyunun kendi çağrısına taşınır ve
-      Cargo bağımlılığı da yalnız onu isteyen oyunda kalır; hiçbir oyun SQL
-      kullanmıyorsa üçünden de kaldırılır; VOL.LIFE'ın gönderilen ikilisinin
-      SQL sembolleri TAŞIMADIĞI doğrulanır.
+      en dar kenarı 600dp ve üstü ekranlarda `screenOrientation`ı yok sayar;
+      oyun kategorisi (`android:appCategory="game"`) muaftır. Üç manifestte
+      kategori var ve drift testleri kilitliyor. Kapanır: 600dp ve üstü
+      emülatörde ya da tablette, kategori varken yön isteğinin uygulandığı
+      ölçülür. Fiziksel tablet (TB350FU, Android 14, sw588) kriteri
+      karşılamıyor; `vol-tablet-36` emülatörü (API 36, pixel_tablet, sw800)
+      açılıp uygulama başlatılabiliyor ama misafir image'ının DMA mapper'ı
+      (`!rcEnc->featureInfo()->hasReadColorBufferDma`) bozuk: SurfaceFlinger,
+      `screencap` ve `dumpsys` aynı assert ile çöküyor; görsel ölçüm ve yön
+      kanıtı yapılamıyor. Çözüm: farklı Android 16 imajı (`default`/`android-36`)
+      denemek, Cuttlefish kurmak (root gerekir) veya Android 16 büyük ekranlı
+      fiziksel cihaz bulmak.
 
 ## Kapatılanlar
+
+### 2026-09-12 — Tauri SQL/GameStateDb çıkarma ve vol-hell AppImage çizim kuralı
+
+- [x] **[P3] Paylaşılan Tauri kabuğundan SQL eklentisi ve GameStateDb tamamen
+      çıkarıldı.** `tauri-v2/src-tauri/src/lib.rs` artık `tauri_plugin_sql`
+      kaydetmiyor; üç oyunun `Cargo.toml`undan `tauri-plugin-sql`
+      bağımlılığı kalktı; `tauri-v2/package.json`dan `@tauri-apps/plugin-sql`
+      kalktı; `tauri-v2/src/index.ts` ve `tauri-v2/src/storage/` GameStateDb
+      sarmalayıcı/error dosyaları silindi; `capability` dosyalarından
+      `sql:default`/`sql:allow-execute` izinleri kalktı. Kanıt: `cargo tree` ile
+      `tauri-v2` ve üç oyun crate'inde `sqlx`/`sqlite` yok; `VOL.LIFE` release
+      ikilisinde `tauri_plugin_sql` sembolü yok; `just quick` ve `just rust`
+      geçti.
+
+- [x] **[P2] vol-hell AppImage'ı Linux çizim kuralına girdi.**
+      `games/vol-hell/src-tauri/linux.AppRun` artık `WEBKIT_DISABLE_DMABUF_RENDERER`
+      değişkenini dayatmıyor; ayrıca linuxdeploy GTK hook'unun `GDK_BACKEND=x11`
+      dayatmasını, dışarıdan verilmediyse ve oturum Wayland ise Wayland'e
+      çeviriyor (`GDK_BACKEND` tercihini koruyor). `docs/android.md` güncellendi.
+      Yeniden derlenen AppImage (`VOL.HELL_0.1.0_amd64.AppImage`) NVIDIA +
+      yerel Wayland oturumunda çizim yolunu WebKit DMA-BUF ile açtı: WebKit
+      alt sürecinde `WEBKIT_DISABLE_DMABUF_RENDERER=0` ve
+      `__NV_DISABLE_EXPLICIT_SYNC=1` gözüktü, WebKitWebProcess %26 CPU'da
+      çalıştı; XWayland (`GDK_BACKEND=x11`) yolunda da menü çizdi,
+      `WEBKIT_DISABLE_DMABUF_RENDERER=1`, WebKitWebProcess %100 CPU'da.
+      Ekran görüntüleri: `/tmp/appimage-wayland.png`, `/tmp/appimage-x11.png`.
+      `just quick` ve `just rust` geçti.
 
 ### 2026-09-11 — platform yüklemi, Android yönü, görüntü kipi, vol-hell HUD, CORE `Sheet`
 

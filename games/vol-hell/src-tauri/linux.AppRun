@@ -1,16 +1,23 @@
 #!/usr/bin/env bash
 
-# Fedora/Wayland'de WebKitGTK'nin GBM renderer'ı bazı sürücülerde ilk buffer'ı
-# ayıramayıp beyaz pencere bırakır. AppImage alt sürecini de kapsaması için
-# değişken launcher seviyesinde ayarlanır; kullanıcı açıkça değiştirdiyse
-# tercihi korunur.
+# Çizim yolu seçimi kabuğundur (configure_linux_webview): launcher değişken
+# dayatırsa kabuğun sürücüye göre ölçülmüş kuralı devre dışı kalır.
 set -e
 
 this_dir="$(readlink -f "$(dirname "$0")")"
 
+# linuxdeploy GTK hook'u `GDK_BACKEND=x11` ile sabitler; bu AppImage'ı
+# daima XWayland yoluna iter ve paylaşılan kabuğun sürücüye göre seçtiği
+# çizim kuralını devre dışı bırakır. Dışarıdan değer gelmediyse ve oturum
+# yerel Wayland ise arka uç Wayland'e çevrilir; kullanıcı değer verdiyse
+# o değer korunur; saf X11 oturumlarında hook'un x11 dayatması kalır.
+original_gdk_backend="${GDK_BACKEND:-}"
 source "$this_dir/apprun-hooks/linuxdeploy-plugin-gtk.sh"
-
-export WEBKIT_DISABLE_DMABUF_RENDERER="${WEBKIT_DISABLE_DMABUF_RENDERER:-1}"
+if [ -n "$original_gdk_backend" ]; then
+    export GDK_BACKEND="$original_gdk_backend"
+elif [ -n "${WAYLAND_DISPLAY:-}" ]; then
+    export GDK_BACKEND=wayland
+fi
 
 # linuxdeploy AppRun, GStreamer sistem yolunu AppDir'e yönlendirir. Scanner ve
 # registry de aynı izole runtime'a sabitlenmezse host cache'i eski/uyumsuz
