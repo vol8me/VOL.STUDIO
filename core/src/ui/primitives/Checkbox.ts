@@ -1,4 +1,5 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { playHapticFeedback, type HapticFeedback } from './hapticFeedback';
 
 export interface CheckboxOptions {
   checked?: boolean;
@@ -8,6 +9,8 @@ export interface CheckboxOptions {
   onCommit?: (checked: boolean) => void;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
+  /** Kullanıcı değer commitindeki semantik titreşim; varsayılan `select`. */
+  haptic?: HapticFeedback;
 }
 
 export class Checkbox {
@@ -18,12 +21,14 @@ export class Checkbox {
   private onInputHandler?: (checked: boolean) => void;
   private onCommitHandler?: (checked: boolean) => void;
   private readonly scope = new DisposableScope();
+  private readonly haptic: HapticFeedback | undefined;
 
   constructor(options: CheckboxOptions = {}) {
     const { checked = false, label, disabled = false, onInput, onCommit } = options;
     this.checked = checked;
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
+    this.haptic = options.haptic;
 
     this.element = document.createElement('label');
     this.element.className = ['vol-checkbox', options.className].filter(Boolean).join(' ');
@@ -86,6 +91,7 @@ export class Checkbox {
     if (checked === this.checked) return;
     this.checked = checked;
     this.input.checked = checked;
+    playHapticFeedback(this.haptic, 'select');
     this.onInputHandler?.(checked);
     this.onCommitHandler?.(checked);
   }

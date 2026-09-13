@@ -1,4 +1,5 @@
 export { runButtonClick, type ButtonBehaviorHost } from './buttonBehavior';
+export type { HapticFeedback } from './hapticFeedback';
 export {
   Button,
   type ButtonVariant,

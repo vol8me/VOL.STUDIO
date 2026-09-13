@@ -32,56 +32,96 @@ test('üretim kabuğu gerçek WebGL ile açılır ve Sheet kullanılabilir', asy
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
-test('Sheet kenar geometrisi ve ayar sütunları landscape telefonda hizalıdır', async ({
+test('ayar Sheet’i telefon, tablet ve masaüstünde taşmadan kurallı çizilir', async ({
   browser,
 }) => {
-  const context = await browser.newContext({
-    viewport: { width: 844, height: 390 },
-    isMobile: true,
-    hasTouch: true,
-    userAgent:
-      'Mozilla/5.0 (Linux; Android 16; Mobile) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36',
-  });
-  const page = await context.newPage();
-  await page.goto('/');
+  const viewports = [
+    { width: 360, height: 800, mobile: true },
+    { width: 800, height: 360, mobile: true },
+    { width: 800, height: 1280, mobile: true },
+    { width: 1280, height: 800, mobile: false },
+  ];
+  for (const viewport of viewports) {
+    const context = await browser.newContext({
+      viewport,
+      isMobile: viewport.mobile,
+      hasTouch: viewport.mobile,
+      userAgent: viewport.mobile
+        ? 'Mozilla/5.0 (Linux; Android 16; Mobile) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36'
+        : undefined,
+    });
+    const page = await context.newPage();
+    await page.goto('/');
+    const gear = page.getByRole('button', { name: /^(SEÇENEKLER|OPTIONS)$/i });
+    const fullscreen = page.getByRole('button', { name: /TAM EKRAN|FULLSCREEN/i });
+    await gear.click();
+    await page.locator('[data-option="haptics"]').evaluate((element) => {
+      (element as HTMLElement).hidden = false;
+    });
+    const close = page.locator('.vol-sheet__close');
+    const sizes = await Promise.all(
+      [gear, fullscreen, close].map((button) => button.boundingBox()),
+    );
+    expect(new Set(sizes.map((box) => `${box?.width}×${box?.height}`)).size).toBe(1);
 
-  const gear = page.getByRole('button', { name: /^(SEÇENEKLER|OPTIONS)$/i });
-  await gear.click();
-  await page.locator('[data-option="haptics"]').evaluate((element) => {
-    (element as HTMLElement).hidden = false;
-  });
-  const close = page.locator('.vol-sheet__close');
-  const body = page.locator('.vol-sheet__body');
-  const viewport = page.viewportSize()!;
-  await expect
-    .poll(async () => {
-      const gearBox = await gear.boundingBox();
-      const closeBox = await close.boundingBox();
-      return Math.abs(
-        viewport.width -
-          gearBox!.x -
-          gearBox!.width -
-          (viewport.width - closeBox!.x - closeBox!.width),
+    const geometry = await page.evaluate(() => {
+      const dialog = document.querySelector<HTMLElement>('.vol-sheet .vol-modal__content')!;
+      const body = document.querySelector<HTMLElement>('.vol-sheet__body')!;
+      const dialogRect = dialog.getBoundingClientRect();
+      const bodyRect = body.getBoundingClientRect();
+      const controls = [...document.querySelectorAll<HTMLElement>('.vol-settings-row')].map(
+        (row) => {
+          const control = row.querySelector<HTMLElement>('.vol-settings-row__control')!;
+          const rect = control.getBoundingClientRect();
+          return { left: rect.left, right: rect.right };
+        },
       );
-    })
-    .toBeLessThanOrEqual(1);
-  const gearBox = await gear.boundingBox();
-  const closeBox = await close.boundingBox();
-  expect(Math.abs(gearBox!.y - closeBox!.y)).toBeLessThanOrEqual(1);
+      return {
+        documentOverflow:
+          document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        bodyOverflow: body.scrollWidth - body.clientWidth,
+        dialogLeft: dialogRect.left,
+        dialogRight: dialogRect.right,
+        controls,
+        offenders: [...body.querySelectorAll<HTMLElement>('*')]
+          .map((element) => ({
+            className: element.className,
+            left: element.getBoundingClientRect().left,
+            right: element.getBoundingClientRect().right,
+            scrollWidth: element.scrollWidth,
+            clientWidth: element.clientWidth,
+          }))
+          .filter(
+            (item) =>
+              item.left < bodyRect.left - 1 ||
+              item.right > bodyRect.right + 1 ||
+              item.scrollWidth > item.clientWidth + 1,
+          ),
+      };
+    });
+    expect(geometry.documentOverflow).toBeLessThanOrEqual(0);
+    expect(geometry.bodyOverflow, JSON.stringify(geometry.offenders, null, 2)).toBeLessThanOrEqual(
+      0,
+    );
+    expect(
+      geometry.controls.every(
+        (control) =>
+          control.left >= geometry.dialogLeft - 1 && control.right <= geometry.dialogRight + 1,
+      ),
+    ).toBe(true);
 
-  const overflow = await body.evaluate((element) => element.scrollHeight - element.clientHeight);
-  expect(overflow).toBeLessThanOrEqual(1);
-
-  const controls = await page.locator('.vol-life-options__row').evaluateAll((rows) =>
-    rows.map((row) => {
-      const control = row.querySelector<HTMLElement>(
-        '.vol-select, .vol-segmented, .vol-checkbox__track',
-      );
-      return control?.getBoundingClientRect().right ?? 0;
-    }),
-  );
-  expect(Math.max(...controls) - Math.min(...controls)).toBeLessThanOrEqual(1);
-  await context.close();
+    await page.locator('[data-option="fps"] .vol-checkbox').click();
+    const meter = page.locator('.vol-life-fps-meter');
+    await expect(meter).toBeVisible();
+    expect(
+      await meter.evaluate((element) => Number(getComputedStyle(element).zIndex)),
+    ).toBeGreaterThan(
+      Number(
+        await page.locator('.vol-sheet').evaluate((element) => getComputedStyle(element).zIndex),
+      ),
+    );
+    await context.close();
+  }
 });
 
 test('DPR 2 tarayıcıda kanvas görüntü alanını doldurur', async ({ browser }) => {

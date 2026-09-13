@@ -21,24 +21,23 @@ if (options.json) console.log(JSON.stringify(report));
 else {
   for (const entry of particleKernel) {
     console.log(
-      `${entry.particles} parçacık | p50 ${entry.msPerTick.toFixed(3)} ms | p95 ${entry.p95MsPerTick.toFixed(3)} ms`,
+      `${entry.particles} parçacık | p50 ${entry.msPerTick.toFixed(
+        3,
+      )} ms | p95 ${entry.p95MsPerTick.toFixed(3)} ms`,
     );
   }
 }
 
 function measure(candidate: { particles: number; worldSize: number }) {
-  const config = { ...particleConfig, count: candidate.particles, worldSizeUnits: candidate.worldSize };
+  const config = { ...particleConfig, count: candidate.particles };
+  const bounds = { x: 0, y: 0, width: candidate.worldSize, height: candidate.worldSize };
   const particles = new ParticleStore(candidate.particles);
-  initializeParticles(particles, createSimRandom(0x10fe1), config);
-  const grid = new ParticleSpatialHash(
-    candidate.worldSize,
-    config.cellSizeUnits,
-    candidate.particles,
-  );
+  initializeParticles(particles, createSimRandom(0x10fe1), config, bounds);
+  const grid = new ParticleSpatialHash(bounds, config.cellSizeUnits, candidate.particles);
   const step = (): void => {
     grid.rebuild(particles);
     accumulateParticleForces(particles, grid, config);
-    integrateParticles(particles, config);
+    integrateParticles(particles, config, bounds, 1000 / config.referenceHz);
   };
   for (let index = 0; index < 60; index++) step();
   const samples: number[] = [];

@@ -5,6 +5,13 @@ export { Accordion, type AccordionSection, type AccordionOptions } from './Accor
 export { Tree, type TreeNodeDefinition, type TreeOptions } from './Tree';
 export { Wizard, type WizardStep, type WizardOptions } from './Wizard';
 export { UIRoot } from './UIRoot';
+export {
+  SettingsForm,
+  SettingsRow,
+  type SettingsControl,
+  type SettingsFormOptions,
+  type SettingsRowOptions,
+} from './SettingsForm';
 export { VirtualList, type VirtualListOptions } from './VirtualList';
 export {
   SplitPane,

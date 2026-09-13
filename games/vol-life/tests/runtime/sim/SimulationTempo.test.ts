@@ -16,8 +16,19 @@ describe('SimulationTempo', () => {
   });
 
   it('taban frekansını tam bölmeyen ve geçersiz tempoyu reddeder', () => {
+    expect(() => new SimulationTempo(0)).toThrow(RangeError);
+    expect(() => new SimulationTempo(1.5)).toThrow(RangeError);
     const tempo = new SimulationTempo(60);
     expect(() => tempo.every(7, () => {})).toThrow(RangeError);
     expect(() => tempo.every(0, () => {})).toThrow(RangeError);
+  });
+
+  it('tick durumunu okur, günceller ve negatif/ondalıklı değerleri reddeder', () => {
+    const tempo = new SimulationTempo(60);
+    expect(tempo.getTick()).toBe(0);
+    tempo.setTick(12);
+    expect(tempo.getTick()).toBe(12);
+    expect(() => tempo.setTick(-1)).toThrow(RangeError);
+    expect(() => tempo.setTick(2.5)).toThrow(RangeError);
   });
 });

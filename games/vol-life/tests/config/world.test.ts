@@ -3,9 +3,9 @@ import { resolveMaxStepsForSpeed, worldConfig } from '@/config/world';
 import { lifeGraphicsConfig } from '@/config/graphics';
 
 describe('worldConfig', () => {
-  it('toroidal dünya kenarı pozitif ve sonludur', () => {
-    expect(worldConfig.sizeUnits).toBeGreaterThan(0);
-    expect(Number.isFinite(worldConfig.sizeUnits)).toBe(true);
+  it('sonlu dünya sınırı pozitif ve tek kaynaktır', () => {
+    expect(worldConfig.boundsUnits).toEqual({ x: 0, y: 0, width: 1024, height: 1024 });
+    expect(Object.values(worldConfig.boundsUnits).every(Number.isFinite)).toBe(true);
   });
 
   it('sabit adım pozitiftir', () => {

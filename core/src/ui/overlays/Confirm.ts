@@ -82,6 +82,7 @@ export function showConfirm(options: ConfirmOptions): Promise<boolean> {
     const confirmButton = new Button(confirmLabel, {
       variant,
       fullWidth: false,
+      haptic: variant === 'danger' ? 'warning' : 'success',
       onClick: () => finish(true),
     });
 

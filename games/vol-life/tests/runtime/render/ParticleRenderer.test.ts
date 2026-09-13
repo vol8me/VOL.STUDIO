@@ -13,7 +13,7 @@ function harness() {
   };
   graphics.setDepth.mockReturnValue(graphics);
   const scene = { add: { graphics: vi.fn(() => graphics) } };
-  const renderer = new ParticleRenderer(scene as never, 1024, 4.5);
+  const renderer = new ParticleRenderer(scene as never, 4.5);
   return { renderer, scene, graphics };
 }
 
@@ -25,7 +25,7 @@ describe('ParticleRenderer', () => {
     particles.y.set([30, 40]);
     particles.type.set([0, 5]);
 
-    renderer.render(particles);
+    renderer.render(particles, 1);
 
     expect(scene.add.graphics).toHaveBeenCalledOnce();
     expect(graphics.fillStyle.mock.calls).toEqual([
@@ -38,38 +38,26 @@ describe('ParticleRenderer', () => {
     ]);
   });
 
-  it('yakın görünümde parçacığın kameraya en yakın toroidal kopyasını seçer', () => {
+  it('önceki ve güncel fizik durumunu render fazıyla ara değerler', () => {
     const { renderer, graphics } = harness();
     const particles = new ParticleStore(1);
-    particles.x[0] = 5;
-    particles.y[0] = 512;
-    renderer.updateCamera({
-      centerX: 1020,
-      centerY: 512,
-      zoom: 2,
-      minZoom: 0.8,
-      overview: false,
-    });
+    particles.previousX[0] = 5;
+    particles.previousY[0] = 10;
+    particles.x[0] = 15;
+    particles.y[0] = 30;
 
-    renderer.render(particles);
+    renderer.render(particles, 0.5);
 
-    expect(graphics.fillCircle).toHaveBeenCalledWith(1029, 512, 4.5);
+    expect(graphics.fillCircle).toHaveBeenCalledWith(10, 20, 4.5);
   });
 
-  it('overviewda yalnız kanonik koordinatı kullanır ve idempotent kapanır', () => {
+  it('yalnız kanonik koordinatı kullanır ve idempotent kapanır', () => {
     const { renderer, graphics } = harness();
     const particles = new ParticleStore(1);
     particles.x[0] = 5;
     particles.y[0] = 10;
-    renderer.updateCamera({
-      centerX: 500,
-      centerY: 500,
-      zoom: 0.8,
-      minZoom: 0.8,
-      overview: true,
-    });
 
-    renderer.render(particles);
+    renderer.render(particles, 1);
     renderer.destroy();
     renderer.destroy();
 

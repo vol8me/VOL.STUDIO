@@ -1,35 +1,26 @@
-import type { WorldCameraState } from '@volstudio/core';
 import type Phaser from 'phaser';
 import { particlePalette } from '@/config/particles';
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
 
 export class ParticleRenderer {
   private readonly graphics: Phaser.GameObjects.Graphics;
-  private cameraState: WorldCameraState | null = null;
   private destroyed = false;
 
   constructor(
     scene: Phaser.Scene,
-    private readonly worldSize: number,
     private readonly radius: number,
   ) {
     this.graphics = scene.add.graphics().setDepth(-900);
   }
 
-  updateCamera(state: WorldCameraState): void {
-    this.cameraState = state;
-  }
-
-  render(particles: ParticleStore): void {
+  render(particles: ParticleStore, interpolationAlpha: number): void {
     this.graphics.clear();
-    const state = this.cameraState;
+    const alpha = Math.max(0, Math.min(1, interpolationAlpha));
     for (let index = 0; index < particles.count; index++) {
-      let x = particles.x[index];
-      let y = particles.y[index];
-      if (state && !state.overview) {
-        x += Math.round((state.centerX - x) / this.worldSize) * this.worldSize;
-        y += Math.round((state.centerY - y) / this.worldSize) * this.worldSize;
-      }
+      const x =
+        particles.previousX[index] + (particles.x[index] - particles.previousX[index]) * alpha;
+      const y =
+        particles.previousY[index] + (particles.y[index] - particles.previousY[index]) * alpha;
       this.graphics.fillStyle(particlePalette[particles.type[index]], 1);
       this.graphics.fillCircle(x, y, this.radius);
     }

@@ -3,30 +3,29 @@ import {
   DisposableScope,
   SimulationClock,
   WorldCameraController,
-  type WorldCameraState,
   type SimulationClockFrame,
 } from '@volstudio/core';
 import { worldConfig, type WorldConfig } from '@/config/world';
 import { particleConfig } from '@/config/particles';
 import { FieldRenderer } from '@/runtime/render/FieldRenderer';
 import { ParticleRenderer } from '@/runtime/render/ParticleRenderer';
-import { LifeWorld } from '@/runtime/sim/LifeWorld';
+import { LifeWorld, type LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 
 interface RuntimeWorld {
   readonly fields: LifeWorld['fields'];
   readonly particles: LifeWorld['particles'];
   step(): boolean;
+  snapshot(): LifeWorldSnapshot;
+  restore(snapshot: LifeWorldSnapshot): void;
 }
 
 interface RuntimeRenderer {
   render(fields: LifeWorld['fields']): void;
-  updateCamera?(state: WorldCameraState): void;
   destroy(): void;
 }
 
 interface RuntimeParticleRenderer {
-  render(particles: LifeWorld['particles']): void;
-  updateCamera?(state: WorldCameraState): void;
+  render(particles: LifeWorld['particles'], interpolationAlpha: number): void;
   destroy(): void;
 }
 
@@ -42,6 +41,7 @@ export interface LifeRuntimeDependencies {
   readonly renderer?: RuntimeRenderer;
   readonly particleRenderer?: RuntimeParticleRenderer;
   readonly cameraController?: RuntimeCamera;
+  readonly initialSnapshot?: LifeWorldSnapshot | null;
 }
 
 export class LifeRuntime {
@@ -55,19 +55,15 @@ export class LifeRuntime {
   constructor(scene: Phaser.Scene, dependencies: LifeRuntimeDependencies = {}) {
     const config = dependencies.config ?? worldConfig;
     this.world = dependencies.world ?? new LifeWorld(config);
+    if (dependencies.initialSnapshot) this.world.restore(dependencies.initialSnapshot);
     this.renderer =
-      dependencies.renderer ?? new FieldRenderer(scene, this.world.fields, config.sizeUnits);
+      dependencies.renderer ?? new FieldRenderer(scene, this.world.fields, config.boundsUnits);
     this.particleRenderer =
-      dependencies.particleRenderer ??
-      new ParticleRenderer(scene, config.sizeUnits, particleConfig.radiusUnits);
+      dependencies.particleRenderer ?? new ParticleRenderer(scene, particleConfig.radiusUnits);
     this.cameraController =
       dependencies.cameraController ??
       new WorldCameraController(scene.game.canvas, scene.cameras.main, {
-        worldSize: config.sizeUnits,
-        onChange: (state) => {
-          this.renderer.updateCamera?.(state);
-          this.particleRenderer.updateCamera?.(state);
-        },
+        bounds: config.boundsUnits,
       });
     this.clock = new SimulationClock({
       fixedStepMs: config.fixedStepMs,
@@ -76,7 +72,7 @@ export class LifeRuntime {
     });
     this.scope.addDestroyables(this.renderer, this.particleRenderer, this.cameraController);
     this.renderer.render(this.world.fields);
-    this.particleRenderer.render(this.world.particles);
+    this.particleRenderer.render(this.world.particles, 1);
   }
 
   update(deltaMs: number): SimulationClockFrame {
@@ -86,12 +82,16 @@ export class LifeRuntime {
       fieldsChanged = this.world.step() || fieldsChanged;
     });
     if (fieldsChanged) this.renderer.render(this.world.fields);
-    if (frame.fixedSteps > 0) this.particleRenderer.render(this.world.particles);
+    this.particleRenderer.render(this.world.particles, this.clock.getInterpolationAlpha());
     return frame;
   }
 
   refreshViewport(): void {
     this.cameraController.refreshViewport();
+  }
+
+  snapshot(): LifeWorldSnapshot {
+    return this.world.snapshot();
   }
 
   destroy(): void {

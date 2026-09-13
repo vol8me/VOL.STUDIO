@@ -4,13 +4,16 @@ import {
   FullscreenController,
   applyVolViewport,
   i18n,
+  vibrate,
   setHapticsEnabled,
   type SimulationClockFrame,
 } from '@volstudio/core';
 import { getRuntimePlatform, type RuntimePlatform } from '@volstudio/tauri-v2';
 import { DEFAULT_LIFE_PREFERENCES, type LifePreferences } from '@/app/LifePreferences';
 import { OrientationPreference } from '@/app/OrientationPreference';
+import type { LifeWorldAutosave, LifeWorldPersistence } from '@/app/LifeWorldPersistence';
 import { LifeRuntime } from '@/runtime/LifeRuntime';
+import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 import { LifeExitPrompt } from '@/runtime/ui/LifeExitPrompt';
 import { LifeHud } from '@/runtime/ui/LifeHud';
 import { LifeOptionsPanel } from '@/runtime/ui/LifeOptionsPanel';
@@ -19,12 +22,18 @@ export interface LifeSceneServices {
   readonly platform: RuntimePlatform;
   readonly preferences: LifePreferences | null;
   readonly orientation: OrientationPreference;
-  readonly createRuntime: (scene: Phaser.Scene) => LifeSceneRuntime;
+  readonly initialWorldSnapshot: LifeWorldSnapshot | null;
+  readonly worldPersistence: Pick<LifeWorldPersistence, 'attach'> | null;
+  readonly createRuntime: (
+    scene: Phaser.Scene,
+    initialSnapshot: LifeWorldSnapshot | null,
+  ) => LifeSceneRuntime;
 }
 
 export interface LifeSceneRuntime {
   update(deltaMs: number): SimulationClockFrame;
   refreshViewport(): void;
+  snapshot(): LifeWorldSnapshot;
   destroy(): void;
 }
 
@@ -47,7 +56,11 @@ export class LifeScene extends Phaser.Scene {
       platform: services.platform ?? getRuntimePlatform(),
       preferences: services.preferences ?? null,
       orientation: services.orientation ?? new OrientationPreference(null),
-      createRuntime: services.createRuntime ?? ((scene) => new LifeRuntime(scene)),
+      initialWorldSnapshot: services.initialWorldSnapshot ?? null,
+      worldPersistence: services.worldPersistence ?? null,
+      createRuntime:
+        services.createRuntime ??
+        ((scene, initialSnapshot) => new LifeRuntime(scene, { initialSnapshot })),
     };
   }
 
@@ -67,7 +80,9 @@ export class LifeScene extends Phaser.Scene {
       // büyür ama kamera yakınlaşmaz ve dünya küçük çizilir.
       applyVolViewport(this);
 
-      this.worldRuntime = scope.addDestroyable(this.services.createRuntime(this));
+      this.worldRuntime = scope.addDestroyable(
+        this.services.createRuntime(this, this.services.initialWorldSnapshot),
+      );
       if (this.scale) {
         const refreshWorldViewport = (): void => this.worldRuntime?.refreshViewport();
         this.scale.on(Phaser.Scale.Events.RESIZE, refreshWorldViewport);
@@ -113,7 +128,16 @@ export class LifeScene extends Phaser.Scene {
           },
           haptics: {
             value: preferenceState.hapticsEnabled,
-            onSelect: (value) => void preferences?.setHapticsEnabled(value),
+            onSelect: (value) => {
+              if (value) {
+                setHapticsEnabled(true);
+                vibrate('select');
+              } else {
+                vibrate('select');
+                setHapticsEnabled(false);
+              }
+              void preferences?.setHapticsEnabled(value);
+            },
           },
           orientation: {
             value: orientation.current(),
@@ -158,6 +182,13 @@ export class LifeScene extends Phaser.Scene {
             setHapticsEnabled(state.hapticsEnabled);
           }),
         );
+      }
+      if (this.services.worldPersistence) {
+        const autosave: LifeWorldAutosave = this.services.worldPersistence.attach(
+          this.worldRuntime,
+          { onError: () => this.hud?.showWorldSaveError() },
+        );
+        scope.addDestroyable(autosave);
       }
     } catch (error) {
       scope.dispose();

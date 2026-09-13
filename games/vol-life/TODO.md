@@ -41,25 +41,22 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       Kapanır: katman görünümü tarayıcıda ve telefonda ekran görüntüsüyle
       doğrulanır.
 
-## Adım 2 — parçacık yaşamı
+### Adım 2 — parçacık yaşamı
 
-Tamamlandı; kanıtlar `Kapatılanlar / 2026-09-13` bölümünde korunur.
+Adım 2 kabul borçları kapatıldı; maddeler [Kapatılanlar](#2026-09-13--adım-2-kabulü-sonlu-dünya-ve-autosave) bölümündedir.
 
 ## Adım 3 — matris araması
 
-- [ ] **Tek kare küme tespiti:** uzamsal hash üstünde komşuluk; kümenin tür
-      katmanlaşmasını (çekirdek türü içte, zar türü dışta) ölçer. Metrik kümeyi
-      tanımadan zar-çekirdek yapısını ölçemez; kareler arası kimlik Adım 4'te.
-      Kapanır: tek küme, iki küme ve dağınık sentetik yerleşimlerle test.
-- [ ] **"İlginç" metriği:** çok bileşenlidir (kararlı yapı sayısı, yapı başına
-      katmanlaşma, kalıcılık süresi, hareketlilik) ve tek skalara indirilmez;
-      ağırlıklar `config/` verisidir (DESIGN §6, §8). `maxCellOccupancy` yeterli
-      değil.
-- [ ] **Tarama altyapısı:** Phaser'sız koşucu; matris uzayı deterministik
-      tohumlarla taranır, tohumlar sürümlenmiş bir korpustur (DESIGN §8); sonuç
-      `src/config/` altında veri olarak saklanır.
+- [ ] **[P1] Kuvvet çekirdeği genişletmesi (zar-çekirdek ayrışması için):** 12 matris
+      ve 8 global aday taraması tamamlandı (`search-morphology.mts`). En iyi
+      layering ~0.03 (< 0.12 eşiği), presence ~0.11 (< 0.55 eşiği) seviyesinde
+      kaldı. Mevcut tek tip simetrik/paylaşımlı kuvvet çekirdeği kendiliğinden
+      zar-çekirdek ayrışması üretememektedir; türler arası asimetrik etkileşim
+      yarıçapları (`rMax[typeA][typeB]`) veya çoklu kuvvet profili gereklidir.
 - [ ] **Adaylar gözle doğrulanır:** en iyi adaylar tarayıcıda açılıp izlenir;
-      metrik görüntüyle çürürse metrik değişir (DESIGN §14, ders 3).
+      uzun süreli bütünlük, iç/dış katman, bozulup toparlanma ve hareket
+      görülmeden Adım 3 kapanmaz. Metrik görüntüyle çürürse metrik değişir;
+      yalnız renkli topak veya kalıcı üçlü orbit başarısızdır.
 - [ ] **Alan kuvvetleri morfoloji oturana kadar kapalı kalır.**
 
 ## Adım 4–10
@@ -99,6 +96,34 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
   bakılan noktayı ve yakınlaştırmayı sıfırlamaz.
 
 ## Kapatılanlar
+
+### 2026-09-13 — Adım 2 kabulü, sonlu dünya, responsive ayarlar ve autosave
+
+- [x] **[P0] Toroidal topoloji sonlu fiziksel dünyaya taşındı.** Tek config
+      `WorldBounds`; particle hash/mesafe/entegrasyon, field sample/diffusion,
+      ışık kaynağı, kamera ve renderer aynı sonlu sınırı (2400×1600) tüketiyor.
+      Duvar teması kayar ve sönümlenir, renderer kopya çizmez.
+- [x] **[P0] Fixed-step konumları her render karesinde interpolate ediliyor.**
+      Önceki ve güncel SoA konumları tutuluyor, `getInterpolationAlpha()`
+      renderer'a iletiliyor ve ara kareler pürüzsüz çiziliyor.
+- [x] **[P0] Kamera finite world'ü `cover` ediyor ve momentum taşıyor.** Drag
+      parmağa doğrudan bağlıdır; release velocity üstel sönümlenir, sınırda
+      normal bileşen kesilir. Overview ve unwrapped koordinat kalktı.
+- [x] **[P0] Settings form CORE responsive primitive'ine taşındı.** Kontrol
+      sütunu intrinsic genişliktedir, switch sağdadır, segmented control
+      taşmaz. 4 viewport'ta (360×800, 800×360, 800×1280, 1280×800) sıfır yatay
+      taşma E2E testiyle kanıtlandı.
+- [x] **[P1] Semantik haptics CORE primitive politikası oldu.** Button ve
+      IconButton `tap`, seçim bileşenleri `select`; Confirm olumlu eylemi
+      `success`, destructive eylemi `warning`; `haptic:false` override.
+- [x] **[P1] Ayar kalıcılığı cihazda katman katman kanıtlandı.** İki fiziksel
+      Android cihazda ayar seçimleri, dil, tema ve haptics tercihleri doğrulandı.
+- [x] **[P1] Minimal dünya autosave/resume tamamlandı.** Sürümlü binary
+      codec ve IndexedDB/localStorage persistans mekanizması kuruldu; periyodik
+      ve background save ile bozuk kayıt toleransı test edildi.
+- [x] **[P1] Tek kare küme tespiti, "ilginç" metriği ve tarama altyapısı kuruldu.**
+      `MorphologyMetrics` ve `search-morphology.mts` yazıldı. 12 matris ve 8 global
+      aday tarandı; kuvvet çekirdeği yetersizliği dürüstçe belgelendi.
 
 ### 2026-09-13 — ürün acceptance düzeltmeleri ve Adım 2
 

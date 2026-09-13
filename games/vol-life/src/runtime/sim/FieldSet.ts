@@ -19,7 +19,6 @@ export class FieldSet {
   readonly light: Float32Array;
   readonly temperature: Float32Array;
   readonly disturbance: Float32Array;
-  private readonly mask: number;
   private readonly scratch: Float32Array;
 
   constructor(readonly resolution: number) {
@@ -27,7 +26,6 @@ export class FieldSet {
       throw new RangeError(`FieldSet çözünürlüğü ikinin kuvveti olmalı: ${resolution}`);
     }
     this.length = resolution * resolution;
-    this.mask = resolution - 1;
     this.flowX = new Float32Array(this.length);
     this.flowY = new Float32Array(this.length);
     this.nutrient = new Float32Array(this.length);
@@ -46,12 +44,16 @@ export class FieldSet {
   }
 
   index(x: number, y: number): number {
-    return ((y & this.mask) * this.resolution + (x & this.mask)) | 0;
+    const clampedX = Math.max(0, Math.min(this.resolution - 1, x));
+    const clampedY = Math.max(0, Math.min(this.resolution - 1, y));
+    return (clampedY * this.resolution + clampedX) | 0;
   }
 
-  sample(name: FieldName, worldX: number, worldY: number, worldSize: number): number {
-    const gridX = (wrap(worldX, worldSize) / worldSize) * this.resolution - 0.5;
-    const gridY = (wrap(worldY, worldSize) / worldSize) * this.resolution - 0.5;
+  sample(name: FieldName, worldX: number, worldY: number, bounds: Readonly<Rect>): number {
+    const normalizedX = clamp01((worldX - bounds.x) / bounds.width);
+    const normalizedY = clamp01((worldY - bounds.y) / bounds.height);
+    const gridX = normalizedX * this.resolution - 0.5;
+    const gridY = normalizedY * this.resolution - 0.5;
     const x0 = Math.floor(gridX);
     const y0 = Math.floor(gridY);
     const tx = gridX - x0;
@@ -129,10 +131,11 @@ export class FieldSet {
   }
 }
 
-function wrap(value: number, size: number): number {
-  return ((value % size) + size) % size;
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
 }
 
 function mix(a: number, b: number, amount: number): number {
   return a + (b - a) * amount;
 }
+import type { Rect } from '@volstudio/core/math/geometry';

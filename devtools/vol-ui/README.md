@@ -9,17 +9,18 @@ pnpm --filter @volstudio/vol-ui dev     # :5174
 
 ## Sekmeler
 
-| Sekme                | `core/src/ui/`                             |
-| -------------------- | ------------------------------------------ |
-| BUTTONS, TEXT, FORMS | `primitives/`                              |
-| PANELS, YÜKLEME      | `overlays/` (`Sheet` dâhil)                |
-| HUD                  | `feedback/`, `hud/`                        |
-| KARTLAR              | `cards/`                                   |
-| WORKBENCH            | `primitives/`, `layout/`, `quality/`       |
-| PALETTE              | `theme.css`                                |
-| ADVANCED             | `layout/`, `data/`, `hud/`, `overlays/`    |
-| SCROLL               | `layout/`                                  |
-| TOUCH                | `controls/` (dünya kamerası dâhil), `hud/` |
+| Sekme           | `core/src/ui/`                             |
+| --------------- | ------------------------------------------ |
+| BUTTONS, TEXT   | `primitives/`                              |
+| FORMS           | `primitives/`, `layout/` (`SettingsForm`)  |
+| PANELS, YÜKLEME | `overlays/` (`Sheet` dâhil)                |
+| HUD             | `feedback/`, `hud/`                        |
+| KARTLAR         | `cards/`                                   |
+| WORKBENCH       | `primitives/`, `layout/`, `quality/`       |
+| PALETTE         | `theme.css`                                |
+| ADVANCED        | `layout/`, `data/`, `hud/`, `overlays/`    |
+| SCROLL          | `layout/`                                  |
+| TOUCH           | `controls/` (dünya kamerası dâhil), `hud/` |
 
 ## Görsel sözleşme kapısı
 

@@ -11,6 +11,8 @@ import {
   RangeSlider,
   SegmentedControl,
   Select,
+  SettingsForm,
+  SettingsRow,
   Slider,
   Text,
   TextArea,
@@ -19,6 +21,46 @@ import {
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid } from './shared';
+
+function buildSettingsFormDemo(disposables: DisposableScope): HTMLElement {
+  const language = new Select({
+    options: [
+      { value: 'tr', label: i18next.t('volui:forms.turkish') },
+      { value: 'en', label: i18next.t('volui:forms.english') },
+    ],
+    value: 'tr',
+  });
+  const orientation = new SegmentedControl({
+    options: [
+      { value: 'portrait', label: i18next.t('volui:forms.portrait') },
+      { value: 'landscape', label: i18next.t('volui:forms.landscape') },
+    ],
+    value: 'portrait',
+  });
+  const fps = new Checkbox({ label: i18next.t('volui:forms.showFps'), checked: true });
+  const languageRow = new SettingsRow({
+    label: i18next.t('volui:forms.language'),
+    control: language,
+    stackOnNarrow: true,
+  });
+  const orientationRow = new SettingsRow({
+    label: i18next.t('volui:forms.orientation'),
+    control: orientation,
+    stackOnNarrow: true,
+  });
+  const fpsRow = new SettingsRow({ control: fps });
+  const form = new SettingsForm().add(languageRow).add(orientationRow).add(fpsRow);
+  disposables.addDestroyables(
+    language,
+    orientation,
+    fps,
+    languageRow,
+    orientationRow,
+    fpsRow,
+    form,
+  );
+  return form.element;
+}
 
 /**
  * Pasif SegmentedControl: seçim okunur kalır ama değiştirilemez. Platformun
@@ -397,6 +439,7 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:forms.radioGroup'), gameModeRadio.element),
     card(i18next.t('volui:forms.segmentedControl'), qualitySegmented.element),
     card(i18next.t('volui:forms.segmentedControlPassive'), buildPassiveSegmentedDemo(disposables)),
+    card(i18next.t('volui:forms.settingsForm'), buildSettingsFormDemo(disposables), { span: 2 }),
     card(i18next.t('volui:forms.numberStepper'), unitStepper.element, { center: true }),
     card(i18next.t('volui:forms.timerBarVariations'), buildTimerBarVariationsDemo(disposables)),
     card(i18next.t('volui:forms.timerBar'), buildTimerBarDemo(disposables), { span: 2 }),

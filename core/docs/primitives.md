@@ -731,6 +731,9 @@ Workbench bileşenleri oyun kuralı tutmaz:
   alanda toplar; `Popover` açılma/kapanma ve odağı geri verme işini üstlenir.
   Odak yalnız popover'ın içindeyken tetikleyiciye döner: dışarı tıklamayla
   kapanışta kullanıcının odaklandığı alan korunur.
+- `SettingsForm` ve `SettingsRow`, ayar değerini yönetmeden etiket/kontrol
+  yerleşimini ortaklaştırır. Switch kendi etiketini taşıyabilir; geniş kontrol
+  yalnız dar görünümde istiflenir ve yatay taşma üretmez.
 - `KeyedVirtualList`, satır DOM'unu kimliğe göre korur; güncelleme sırasında
   odağı ve esnek satır ölçülerini kaybetmez. Satırlarında bileşen kuran
   tüketiciler `destroyItem` vermelidir — satır görünürden çıktığında ve liste
@@ -753,6 +756,11 @@ tüketiciler `onInput` / `onCommit` kullanmalıdır. `onChange` yalnızca Toolba
 ve Tabs gibi değer değil seçim/aksiyon semantiği taşıyan bileşenlerde kalır.
 Özellikle bildirim gereken programatik geçişlerde
 `setValueAndNotify()` / `setCheckedAndNotify()` kullanılır.
+
+Kesikli kullanıcı etkileşimleri semantik dokunsal geri bildirimi primitive
+katmanında üretir: düğmeler `tap`, değer seçen kontroller `select` niyetini
+kullanır. `haptic: false` özel bileşik akışlarda çift geri bildirimi önler;
+ham süre ya da platform çağrısı UI bileşenine yazılmaz.
 
 DOM olayı, dil aboneliği, observer veya pointer capture alan her workbench
 bileşeni `destroy()` ile bunları bırakır. Bu sözleşme, araç yüzeyi yeniden

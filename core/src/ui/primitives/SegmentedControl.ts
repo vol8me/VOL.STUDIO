@@ -1,4 +1,5 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { playHapticFeedback, type HapticFeedback } from './hapticFeedback';
 
 export interface SegmentedControlOption {
   value: string;
@@ -17,6 +18,8 @@ export interface SegmentedControlOptions {
   ariaLabel?: string;
   onInput?: (value: string) => void;
   onCommit?: (value: string) => void;
+  /** Kullanıcı değer commitindeki semantik titreşim; varsayılan `select`. */
+  haptic?: HapticFeedback;
 }
 
 /**
@@ -39,6 +42,7 @@ export class SegmentedControl {
   private readonly onInputHandler?: (value: string) => void;
   private readonly onCommitHandler?: (value: string) => void;
   private readonly scope = new DisposableScope();
+  private readonly haptic: HapticFeedback | undefined;
   /** Segment dinleyicileri; `setOptions` segmentleri yeniden kurduğunda ayrıca kapatılır. */
   private itemScope = new DisposableScope();
 
@@ -48,6 +52,7 @@ export class SegmentedControl {
     this.disabled = disabled;
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
+    this.haptic = options.haptic;
 
     this.element = document.createElement('div');
     this.element.className = 'vol-segmented';
@@ -229,6 +234,7 @@ export class SegmentedControl {
   private commitUser(value: string): void {
     if (this.value === value || this.buttons.get(value)?.disabled) return;
     this.select(value);
+    playHapticFeedback(this.haptic, 'select');
     this.onInputHandler?.(value);
     this.onCommitHandler?.(value);
   }

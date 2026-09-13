@@ -27,7 +27,8 @@
     "displayMode": "Görüntü",
     "windowed": "Pencere",
     "fullscreen": "Tam ekran",
-    "saveFailed": "Seçenekler kaydedilemedi. Değişiklik bu oturumda geçerli."
+    "saveFailed": "Seçenekler kaydedilemedi. Değişiklik bu oturumda geçerli.",
+    "worldSaveFailed": "Dünya kaydedilemedi. Bu oturum çalışmaya devam ediyor."
   },
   "fatal": {
     "title": "VOL.LIFE başlatılamadı"

@@ -23,6 +23,7 @@ interface Harness {
   worldRuntime: {
     update: ReturnType<typeof vi.fn>;
     refreshViewport: ReturnType<typeof vi.fn>;
+    snapshot: ReturnType<typeof vi.fn>;
     destroy: ReturnType<typeof vi.fn>;
   };
 }
@@ -33,7 +34,12 @@ function mountScene(
   services: Partial<LifeSceneServices>,
   registry?: { get(key: string): unknown },
 ): Harness {
-  const worldRuntime = { update: vi.fn(), refreshViewport: vi.fn(), destroy: vi.fn() };
+  const worldRuntime = {
+    update: vi.fn(),
+    refreshViewport: vi.fn(),
+    snapshot: vi.fn(() => ({}) as never),
+    destroy: vi.fn(),
+  };
   const scene = new LifeScene({
     ...services,
     createRuntime: services.createRuntime ?? (() => worldRuntime),
@@ -67,7 +73,7 @@ function openOptions(): void {
 
 function optionRows(): NodeListOf<Element> {
   openOptions();
-  return document.querySelectorAll('.vol-life-options__row');
+  return document.querySelectorAll('.vol-settings-row');
 }
 
 function rowButtons(key: string): HTMLButtonElement[] {
@@ -154,6 +160,36 @@ describe('LifeScene yaşam döngüsü', () => {
     scene.update(100, 16.67);
 
     expect(worldRuntime.update).toHaveBeenCalledWith(16.67);
+  });
+
+  it('ilk dünya kaydını runtimea verir ve autosave ömrünü sahneye bağlar', () => {
+    const initial = { tick: 9 } as never;
+    const runtime = {
+      update: vi.fn(),
+      refreshViewport: vi.fn(),
+      snapshot: vi.fn(() => initial),
+      destroy: vi.fn(),
+    };
+    const createRuntime = vi.fn(() => runtime);
+    const autosave = { destroy: vi.fn() };
+    const attach = vi.fn(
+      (_runtime: unknown, _options?: { onError?: (error: unknown) => void }) => autosave,
+    );
+    const worldPersistence = { attach };
+    const { scene } = mountScene({
+      platform: 'web',
+      initialWorldSnapshot: initial,
+      worldPersistence: worldPersistence as never,
+      createRuntime,
+    });
+
+    expect(createRuntime).toHaveBeenCalledWith(scene, initial);
+    expect(attach).toHaveBeenCalledOnce();
+    expect(attach.mock.calls[0]?.[0]).toBe(runtime);
+    expect(typeof attach.mock.calls[0]?.[1]?.onError).toBe('function');
+
+    scene.events.emit('shutdown');
+    expect(autosave.destroy).toHaveBeenCalledOnce();
   });
 });
 

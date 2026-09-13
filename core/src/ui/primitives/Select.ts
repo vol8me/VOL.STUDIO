@@ -1,6 +1,7 @@
 import { Popup } from '../overlays/Popup';
 import { i18next } from '../../systems/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { playHapticFeedback, type HapticFeedback } from './hapticFeedback';
 
 export type SelectOptionTone = 'danger' | 'success' | 'warning';
 
@@ -20,6 +21,8 @@ export interface SelectOptions {
   onCommit?: (value: string) => void;
   /** Popup'ın ekleneceği kapsayıcı. Varsayılan document.body. */
   container?: HTMLElement;
+  /** Kullanıcı değer commitindeki semantik titreşim; varsayılan `select`. */
+  haptic?: HapticFeedback;
 }
 
 /**
@@ -39,6 +42,7 @@ export class Select {
   private readonly scope = new DisposableScope();
   private optionScope = new DisposableScope();
   private value: string | undefined;
+  private readonly haptic: HapticFeedback | undefined;
   private boundToggle: () => void;
   private boundTriggerKeydown: (event: KeyboardEvent) => void;
   private readonly onLanguageChanged = (): void => {
@@ -64,6 +68,7 @@ export class Select {
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
     this.value = value;
+    this.haptic = options.haptic;
 
     this.element = document.createElement('button');
     this.element.type = 'button';
@@ -169,6 +174,7 @@ export class Select {
     this.popup.close();
 
     if (!opts.silent) {
+      playHapticFeedback(this.haptic, 'select');
       this.onInputHandler?.(value);
       this.onCommitHandler?.(value);
     }

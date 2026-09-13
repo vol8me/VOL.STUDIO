@@ -27,7 +27,8 @@
     "displayMode": "Display",
     "windowed": "Windowed",
     "fullscreen": "Fullscreen",
-    "saveFailed": "Options could not be saved. The change applies to this session."
+    "saveFailed": "Options could not be saved. The change applies to this session.",
+    "worldSaveFailed": "The world could not be saved. This session is still running."
   },
   "fatal": {
     "title": "VOL.LIFE could not start"

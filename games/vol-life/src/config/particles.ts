@@ -1,5 +1,3 @@
-import { worldConfig } from '@/config/world';
-
 export const PARTICLE_TYPE_COUNT = 6;
 
 export const particlePalette = [
@@ -14,30 +12,36 @@ export const particleInteractionMatrix = new Float32Array([
 
 export interface ParticleConfig {
   readonly count: number;
-  readonly worldSizeUnits: number;
   readonly radiusUnits: number;
   readonly cellSizeUnits: number;
   readonly repulsionRadiusUnits: number;
   readonly interactionRadiusUnits: number;
   readonly repulsionStrength: number;
   readonly interactionStrength: number;
-  readonly friction: number;
-  readonly maxSpeedUnitsPerTick: number;
-  readonly initialSpeedUnitsPerTick: number;
+  readonly referenceHz: number;
+  readonly frictionPerReferenceTick: number;
+  readonly maxSpeedUnitsPerReferenceTick: number;
+  readonly initialSpeedUnitsPerReferenceTick: number;
+  readonly wallImpactThresholdUnitsPerReferenceTick: number;
+  readonly wallRestitution: number;
+  readonly wallTangentRetention: number;
   readonly interactionMatrix: Float32Array;
 }
 
 export const particleConfig: ParticleConfig = {
   count: 100,
-  worldSizeUnits: worldConfig.sizeUnits,
   radiusUnits: 4.5,
   cellSizeUnits: 128,
   repulsionRadiusUnits: 16,
   interactionRadiusUnits: 128,
   repulsionStrength: 0.16,
   interactionStrength: 0.045,
-  friction: 0.94,
-  maxSpeedUnitsPerTick: 2.2,
-  initialSpeedUnitsPerTick: 0.35,
+  referenceHz: 60,
+  frictionPerReferenceTick: 0.94,
+  maxSpeedUnitsPerReferenceTick: 2.2,
+  initialSpeedUnitsPerReferenceTick: 0.35,
+  wallImpactThresholdUnitsPerReferenceTick: 0.8,
+  wallRestitution: 0.45,
+  wallTangentRetention: 0.98,
   interactionMatrix: particleInteractionMatrix,
 };

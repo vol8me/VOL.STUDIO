@@ -10,7 +10,7 @@ function harness() {
     refresh: vi.fn(),
     setFilter: vi.fn(),
   };
-  const images = Array.from({ length: 9 }, () => {
+  const images = Array.from({ length: 1 }, () => {
     const image = {
       x: 0,
       y: 0,
@@ -32,46 +32,38 @@ function harness() {
     return image;
   });
   let imageIndex = 0;
+  const boundary = {
+    setDepth: vi.fn(),
+    lineStyle: vi.fn(),
+    strokeRect: vi.fn(),
+    destroy: vi.fn(),
+  };
+  boundary.setDepth.mockReturnValue(boundary);
   const scene = {
     textures: { createCanvas: vi.fn(() => texture), remove: vi.fn() },
-    add: { image: vi.fn(() => images[imageIndex++]) },
+    add: { image: vi.fn(() => images[imageIndex++]), graphics: vi.fn(() => boundary) },
   };
   const fields = new FieldSet(2);
-  const renderer = new FieldRenderer(scene as never, fields, 1000);
-  return { renderer, fields, scene, texture, images, imageData };
+  const bounds = { x: 20, y: 30, width: 1000, height: 800 };
+  const renderer = new FieldRenderer(scene as never, fields, bounds);
+  return { renderer, fields, scene, texture, images, imageData, boundary };
 }
 
 describe('FieldRenderer', () => {
-  it('kanonik dünya ile en yakın toroidal kopyaları ayrı 3×3 yüzey olarak kurar', () => {
-    const { scene, texture, images } = harness();
+  it('sonlu alanı tek yüzeyde ve fiziksel sınır çizgisiyle kurar', () => {
+    const { scene, texture, images, boundary } = harness();
 
     expect(scene.textures.createCanvas).toHaveBeenCalledWith('vol-life:fields', 2, 2);
-    expect(scene.add.image).toHaveBeenCalledTimes(9);
+    expect(scene.add.image).toHaveBeenCalledOnce();
     expect(scene.add.image).toHaveBeenCalledWith(0, 0, 'vol-life:fields');
     expect(images.every((image) => image.setOrigin.mock.calls[0]?.join() === '0,0')).toBe(true);
-    expect(
-      images.every((image) => image.setDisplaySize.mock.calls[0]?.join() === '1000,1000'),
-    ).toBe(true);
+    expect(images.every((image) => image.setDisplaySize.mock.calls[0]?.join() === '1000,800')).toBe(
+      true,
+    );
     expect(images.every((image) => image.setDepth.mock.calls[0]?.[0] === -1000)).toBe(true);
     expect(texture.setFilter).toHaveBeenCalled();
-  });
-
-  it('overview görünümünde yalnız kanonik dünyayı, yakın planda 3×3 kopyayı gösterir', () => {
-    const { renderer, images } = harness();
-
-    renderer.updateCamera({ centerX: 500, centerY: 500, zoom: 0.8, minZoom: 0.8, overview: true });
-    expect(images.filter((image) => image.setVisible.mock.lastCall?.[0] === true)).toHaveLength(1);
-
-    renderer.updateCamera({
-      centerX: 1200,
-      centerY: -100,
-      zoom: 1.6,
-      minZoom: 0.8,
-      overview: false,
-    });
-    expect(images.every((image) => image.setVisible.mock.lastCall?.[0] === true)).toBe(true);
-    expect(new Set(images.map((image) => image.x))).toEqual(new Set([0, 1000, 2000]));
-    expect(new Set(images.map((image) => image.y))).toEqual(new Set([-2000, -1000, 0]));
+    expect(images[0].setPosition).toHaveBeenCalledWith(20, 30);
+    expect(boundary.strokeRect).toHaveBeenCalledWith(20, 30, 1000, 800);
   });
 
   it('aynı ImageData tamponunu güncelleyip GPU dokusunu bir kez tazeler', () => {
@@ -85,13 +77,14 @@ describe('FieldRenderer', () => {
     expect(texture.refresh).toHaveBeenCalledOnce();
   });
 
-  it('dokuz görüntü nesnesini ve texture manager kaydını idempotent bırakır', () => {
-    const { renderer, scene, images } = harness();
+  it('görüntüyü, sınırı ve texture manager kaydını idempotent bırakır', () => {
+    const { renderer, scene, images, boundary } = harness();
 
     renderer.destroy();
     renderer.destroy();
 
     expect(images.every((image) => image.destroy.mock.calls.length === 1)).toBe(true);
+    expect(boundary.destroy).toHaveBeenCalledOnce();
     expect(scene.textures.remove).toHaveBeenCalledOnce();
   });
 });

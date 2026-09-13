@@ -1,4 +1,4 @@
-﻿.vol-panel {
+.vol-panel {
   justify-content: center;
   align-items: stretch;
   gap: var(--vol-space-md);
@@ -145,4 +145,83 @@
 
 .vol-tabs__panel--hidden {
   display: none !important;
+}
+
+.vol-settings-form {
+  display: grid;
+}
+
+.vol-settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: var(--vol-space-md);
+  align-items: center;
+  min-width: 0;
+  min-height: 56px;
+  padding: var(--vol-space-sm) 0;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+}
+
+.vol-settings-row:last-child {
+  border-bottom: 0;
+}
+
+.vol-settings-row__label {
+  min-width: 0;
+  color: var(--vol-ui-text-secondary);
+  font-size: var(--vol-text-body);
+  overflow-wrap: anywhere;
+}
+
+.vol-settings-row__control {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.vol-settings-row__control > .vol-select {
+  width: clamp(10rem, 32vw, 18rem);
+  max-width: 100%;
+}
+
+.vol-settings-row__control > .vol-segmented {
+  width: max-content;
+  max-width: 100%;
+}
+
+.vol-settings-row--self-labeled {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.vol-settings-row--self-labeled .vol-settings-row__control,
+.vol-settings-row--self-labeled .vol-checkbox {
+  width: 100%;
+}
+
+.vol-settings-row--self-labeled .vol-checkbox {
+  justify-content: space-between;
+}
+
+.vol-settings-row--self-labeled .vol-checkbox__track {
+  order: 2;
+}
+
+.vol-settings-row--self-labeled .vol-checkbox__label {
+  order: 1;
+}
+
+@media (width <= 400px) {
+  .vol-settings-row--stack-narrow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--vol-space-xs);
+  }
+
+  .vol-settings-row--stack-narrow .vol-settings-row__control {
+    justify-content: flex-start;
+  }
+
+  .vol-settings-row--stack-narrow .vol-settings-row__control > .vol-select {
+    width: 100%;
+  }
 }

@@ -19,7 +19,7 @@ import * as Core from '../../src/index';
  * yeterli.
  */
 // Sayının hangi yeteneklerle değiştiğinin kaydı: `core/docs/public-surface.md`.
-const EXPECTED_EXPORT_COUNT = 230;
+const EXPECTED_EXPORT_COUNT = 232;
 
 /** `index.ts`teki `export *` barrel sayısı — kolaylığın bedeli sayılır. */
 const EXPECTED_BARREL_COUNT = 10;
@@ -144,6 +144,8 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'Select',
   'Sheet',
   'SelectionInfoPanel',
+  'SettingsForm',
+  'SettingsRow',
   'ShopPicker',
   'SidechainDucker',
   'SimulationClock',

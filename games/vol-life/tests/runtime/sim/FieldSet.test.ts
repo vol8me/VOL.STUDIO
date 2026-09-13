@@ -20,13 +20,13 @@ describe('FieldSet', () => {
     expect(() => new FieldSet(16)).not.toThrow();
   });
 
-  it('indeksleri iki eksende toroidal sarar', () => {
+  it('indeksleri iki eksende reflective sınıra kelepçeler', () => {
     const fields = new FieldSet(8);
 
-    expect(fields.index(-1, 0)).toBe(7);
-    expect(fields.index(8, 0)).toBe(0);
-    expect(fields.index(0, -1)).toBe(56);
-    expect(fields.index(0, 8)).toBe(0);
+    expect(fields.index(-1, 0)).toBe(0);
+    expect(fields.index(8, 0)).toBe(7);
+    expect(fields.index(0, -1)).toBe(0);
+    expect(fields.index(0, 8)).toBe(56);
   });
 
   it('dünya koordinatını hücre merkezleri arasında çift doğrusal örnekler', () => {
@@ -36,11 +36,12 @@ describe('FieldSet', () => {
     fields.nutrient[fields.index(0, 1)] = 0.5;
     fields.nutrient[fields.index(1, 1)] = 0.25;
 
-    expect(fields.sample('nutrient', 256, 128, 1024)).toBeCloseTo(0.5, 6);
-    expect(fields.sample('nutrient', 256, 256, 1024)).toBeCloseTo(0.4375, 6);
+    const bounds = { x: 0, y: 0, width: 1024, height: 1024 };
+    expect(fields.sample('nutrient', 256, 128, bounds)).toBeCloseTo(0.5, 6);
+    expect(fields.sample('nutrient', 256, 256, bounds)).toBeCloseTo(0.4375, 6);
   });
 
-  it('difüzyon toplam niceliği korur ve karşı kenara ulaşır', () => {
+  it('difüzyon toplam niceliği korur ve karşı kenara ulaşmaz', () => {
     const fields = new FieldSet(8);
     fields.nutrient[fields.index(0, 0)] = 1;
 
@@ -48,8 +49,8 @@ describe('FieldSet', () => {
 
     const sum = fields.nutrient.reduce((total, value) => total + value, 0);
     expect(sum).toBeCloseTo(1, 6);
-    expect(fields.nutrient[fields.index(7, 0)]).toBeCloseTo(0.2, 6);
-    expect(fields.nutrient[fields.index(0, 7)]).toBeCloseTo(0.2, 6);
+    expect(fields.nutrient[fields.index(7, 0)]).toBe(0);
+    expect(fields.nutrient[fields.index(0, 7)]).toBe(0);
   });
 
   it('kademeli difüzyonda bütün bantları aynı kaynak zamanından okur', () => {

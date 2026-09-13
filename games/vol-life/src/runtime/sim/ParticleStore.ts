@@ -9,6 +9,8 @@ export interface ParticleSnapshot {
 export class ParticleStore {
   readonly x: Float32Array;
   readonly y: Float32Array;
+  readonly previousX: Float32Array;
+  readonly previousY: Float32Array;
   readonly vx: Float32Array;
   readonly vy: Float32Array;
   readonly forceX: Float32Array;
@@ -21,6 +23,8 @@ export class ParticleStore {
     }
     this.x = new Float32Array(count);
     this.y = new Float32Array(count);
+    this.previousX = new Float32Array(count);
+    this.previousY = new Float32Array(count);
     this.vx = new Float32Array(count);
     this.vy = new Float32Array(count);
     this.forceX = new Float32Array(count);
@@ -38,6 +42,11 @@ export class ParticleStore {
     };
   }
 
+  capturePrevious(): void {
+    this.previousX.set(this.x);
+    this.previousY.set(this.y);
+  }
+
   restore(snapshot: ParticleSnapshot): void {
     const arrays = [snapshot.x, snapshot.y, snapshot.vx, snapshot.vy, snapshot.type];
     if (arrays.some((array) => array.length !== this.count)) {
@@ -45,6 +54,7 @@ export class ParticleStore {
     }
     this.x.set(snapshot.x);
     this.y.set(snapshot.y);
+    this.capturePrevious();
     this.vx.set(snapshot.vx);
     this.vy.set(snapshot.vy);
     this.type.set(snapshot.type);

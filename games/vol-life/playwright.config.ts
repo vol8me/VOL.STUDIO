@@ -14,7 +14,7 @@ export default defineConfig({
   use: { baseURL: BASE_URL, trace: 'retain-on-failure' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: `pnpm exec vite preview --port ${PORT} --strictPort --host 127.0.0.1`,
+    command: `pnpm exec vite build && pnpm exec vite preview --port ${PORT} --strictPort --host 127.0.0.1`,
     url: BASE_URL,
     name: 'VOL.LIFE preview sunucusu',
     reuseExistingServer: false,

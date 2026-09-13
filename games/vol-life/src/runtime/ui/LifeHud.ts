@@ -127,6 +127,10 @@ export class LifeHud {
     this.toasts.show(i18next.t('life:options.saveFailed'), { variant: 'danger' });
   }
 
+  showWorldSaveError(): void {
+    this.toasts.show(i18next.t('life:options.worldSaveFailed'), { variant: 'danger' });
+  }
+
   destroy(): void {
     this.scope.dispose();
     this.fpsMeter = null;

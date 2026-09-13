@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { particleConfig } from '../src/config/particles';
+import { worldConfig } from '../src/config/world';
 import { ParticleRenderer } from '../src/runtime/render/ParticleRenderer';
 import { initializeParticles } from '../src/runtime/sim/ParticlePhysics';
 import { ParticleStore } from '../src/runtime/sim/ParticleStore';
@@ -30,28 +31,24 @@ class RenderBenchmarkScene extends Phaser.Scene {
 
   create(): void {
     this.particles = new ParticleStore(count);
-    initializeParticles(this.particles, createSimRandom(0x10fe1), { ...particleConfig, count });
-    this.particleRenderer = new ParticleRenderer(
-      this,
-      particleConfig.worldSizeUnits,
-      particleConfig.radiusUnits,
+    initializeParticles(
+      this.particles,
+      createSimRandom(0x10fe1),
+      { ...particleConfig, count },
+      worldConfig.boundsUnits,
     );
-    this.particleRenderer.updateCamera({
-      centerX: particleConfig.worldSizeUnits / 2,
-      centerY: particleConfig.worldSizeUnits / 2,
-      zoom: 1,
-      minZoom: 0.5,
-      overview: false,
-    });
+    this.particles.capturePrevious();
+    this.particleRenderer = new ParticleRenderer(this, particleConfig.radiusUnits);
+    const { boundsUnits } = worldConfig;
     this.cameras.main.centerOn(
-      particleConfig.worldSizeUnits / 2,
-      particleConfig.worldSizeUnits / 2,
+      boundsUnits.x + boundsUnits.width / 2,
+      boundsUnits.y + boundsUnits.height / 2,
     );
   }
 
   update(_time: number, delta: number): void {
     const startedAt = performance.now();
-    this.particleRenderer.render(this.particles);
+    this.particleRenderer.render(this.particles, 1);
     const cpuMs = performance.now() - startedAt;
     if (this.frames >= 60) {
       this.cpuSamples.push(cpuMs);

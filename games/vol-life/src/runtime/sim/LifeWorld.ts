@@ -53,10 +53,11 @@ export class LifeWorld {
     }
     this.fields = new FieldSet(config.fieldResolution);
     this.random = createSimRandom(config.seed);
-    this.particlesConfig = { ...particlesConfig, worldSizeUnits: config.sizeUnits };
+    this.particlesConfig = particlesConfig;
+    const { boundsUnits } = config;
     this.sources = Array.from({ length: config.lightSourceCount }, () => ({
-      originX: this.random.next() * config.sizeUnits,
-      originY: this.random.next() * config.sizeUnits,
+      originX: boundsUnits.x + this.random.next() * boundsUnits.width,
+      originY: boundsUnits.y + this.random.next() * boundsUnits.height,
       phase: this.random.next() * Math.PI * 2,
       angularSpeed: 0.00035 + this.random.next() * 0.00045,
       strength: 0.62 + this.random.next() * 0.38,
@@ -68,9 +69,10 @@ export class LifeWorld {
     }
     this.nutrientDiffusionSource = this.fields.nutrient.slice();
     this.particles = new ParticleStore(this.particlesConfig.count);
-    initializeParticles(this.particles, this.random, this.particlesConfig);
+    initializeParticles(this.particles, this.random, this.particlesConfig, boundsUnits);
+    this.particles.capturePrevious();
     this.particleGrid = new ParticleSpatialHash(
-      config.sizeUnits,
+      boundsUnits,
       this.particlesConfig.cellSizeUnits,
       this.particles.count,
     );
@@ -86,9 +88,15 @@ export class LifeWorld {
 
   step(): boolean {
     this.fieldUpdated = false;
+    this.particles.capturePrevious();
     this.particleGrid.rebuild(this.particles);
     accumulateParticleForces(this.particles, this.particleGrid, this.particlesConfig);
-    integrateParticles(this.particles, this.particlesConfig);
+    integrateParticles(
+      this.particles,
+      this.particlesConfig,
+      this.config.boundsUnits,
+      this.config.fixedStepMs,
+    );
     this.tempo.advance();
     return this.fieldUpdated;
   }
@@ -143,26 +151,30 @@ export class LifeWorld {
 
   private renderLightRows(tick: number, startRow: number, rowCount: number): void {
     const { light, resolution } = this.fields;
-    const cellSize = this.config.sizeUnits / resolution;
+    const { boundsUnits } = this.config;
+    const cellWidth = boundsUnits.width / resolution;
+    const cellHeight = boundsUnits.height / resolution;
     const radiusSquared = this.config.lightSourceRadiusUnits ** 2;
     const endRow = startRow + rowCount;
     light.fill(0, startRow * resolution, endRow * resolution);
     for (const source of this.sources) {
       const angle = source.phase + tick * source.angularSpeed;
-      const sourceX = wrap(
+      const sourceX = clamp(
         source.originX + Math.cos(angle) * this.config.lightSourceDriftUnits,
-        this.config.sizeUnits,
+        boundsUnits.x,
+        boundsUnits.x + boundsUnits.width,
       );
-      const sourceY = wrap(
+      const sourceY = clamp(
         source.originY + Math.sin(angle * 0.83) * this.config.lightSourceDriftUnits,
-        this.config.sizeUnits,
+        boundsUnits.y,
+        boundsUnits.y + boundsUnits.height,
       );
       for (let y = startRow; y < endRow; y++) {
-        const worldY = (y + 0.5) * cellSize;
-        const dy = toroidalDelta(worldY, sourceY, this.config.sizeUnits);
+        const worldY = boundsUnits.y + (y + 0.5) * cellHeight;
+        const dy = worldY - sourceY;
         for (let x = 0; x < resolution; x++) {
-          const worldX = (x + 0.5) * cellSize;
-          const dx = toroidalDelta(worldX, sourceX, this.config.sizeUnits);
+          const worldX = boundsUnits.x + (x + 0.5) * cellWidth;
+          const dx = worldX - sourceX;
           const contribution =
             source.strength * Math.exp(-(dx * dx + dy * dy) / (2 * radiusSquared));
           const index = y * resolution + x;
@@ -173,11 +185,6 @@ export class LifeWorld {
   }
 }
 
-function wrap(value: number, size: number): number {
-  return ((value % size) + size) % size;
-}
-
-function toroidalDelta(left: number, right: number, size: number): number {
-  const direct = left - right;
-  return direct - Math.round(direct / size) * size;
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }

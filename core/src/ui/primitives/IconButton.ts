@@ -1,5 +1,6 @@
 import { runButtonClick, type ButtonClickHandler } from './buttonBehavior';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { playHapticFeedback, type HapticFeedback } from './hapticFeedback';
 
 export type IconButtonVariant = 'default' | 'primary' | 'success' | 'danger';
 export type IconButtonSize = 'sm' | 'md' | 'lg';
@@ -15,6 +16,8 @@ export interface IconButtonOptions {
    */
   onClick?: ButtonClickHandler;
   disabled?: boolean;
+  /** Kullanıcı aktivasyonundaki semantik titreşim; varsayılan `tap`. */
+  haptic?: HapticFeedback;
 }
 
 /**
@@ -51,6 +54,7 @@ export class IconButton {
     // kaldırmak çağıranın referansı saklamasına bağlı kalır ve asenkron
     // sarmalayıcı (loading, hata yakalama) hiç eklenemezdi.
     this.boundHandleClick = () => {
+      playHapticFeedback(options.haptic, 'tap');
       void this.handleClick();
     };
     this.scope.addListener(this.element, 'click', this.boundHandleClick);

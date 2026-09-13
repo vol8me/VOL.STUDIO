@@ -1,5 +1,6 @@
 import { runButtonClick, type ButtonClickHandler } from './buttonBehavior';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { playHapticFeedback, type HapticFeedback } from './hapticFeedback';
 
 export type ButtonVariant = 'default' | 'primary' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -16,6 +17,8 @@ export interface ButtonOptions {
   iconLeft?: string | Node;
   /** Sağdaki ikon (SVG/metin/emoji). */
   iconRight?: string | Node;
+  /** Kullanıcı aktivasyonundaki semantik titreşim; varsayılan `tap`. */
+  haptic?: HapticFeedback;
 }
 
 export class Button {
@@ -59,6 +62,7 @@ export class Button {
     this.spinnerElement.hidden = true;
 
     this.boundHandleClick = () => {
+      playHapticFeedback(options.haptic, 'tap');
       void this.handleClick();
     };
     this.scope.addListener(this.element, 'click', this.boundHandleClick);

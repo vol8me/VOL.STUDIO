@@ -15,6 +15,7 @@
     "benchmark:fields": "tsx scripts/benchmark-fields.mts",
     "benchmark:particles": "tsx scripts/benchmark-particles.mts",
     "benchmark:particle-render": "tsx scripts/benchmark-particle-render.mts",
+    "search:morphology": "tsx scripts/search-morphology.mts",
     "tauri": "tauri",
     "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
     "tauri:build": "tauri build",

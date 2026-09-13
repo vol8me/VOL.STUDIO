@@ -1,12 +1,12 @@
 import {
   Checkbox,
   DisposableScope,
+  SettingsForm,
+  SettingsRow,
   SegmentedControl,
   Select,
-  Text,
   i18next,
   observeHapticsCapability,
-  vibrate,
   type SegmentedControlOption,
 } from '@volstudio/core';
 import type { DisplayMode, ScreenOrientation } from '@volstudio/tauri-v2';
@@ -28,7 +28,7 @@ export interface LifeOptionsPanelOptions {
 export class LifeOptionsPanel {
   readonly element: HTMLDivElement;
   private readonly scope = new DisposableScope();
-  private readonly labels = new Map<'language' | 'orientation' | 'display', Text>();
+  private readonly labels = new Map<'language' | 'orientation' | 'display', SettingsRow>();
   private readonly orientationControl: SegmentedControl;
   private readonly languageControl: Select;
   private readonly fpsControl: Checkbox;
@@ -38,14 +38,14 @@ export class LifeOptionsPanel {
   private readonly onLanguageChanged = (): void => this.refreshLabels();
 
   constructor(options: LifeOptionsPanelOptions) {
-    this.element = document.createElement('div');
-    this.element.className = 'vol-life-options';
+    const form = this.scope.addDestroyable(new SettingsForm({ className: 'vol-life-options' }));
+    this.element = form.element;
 
     this.languageControl = this.scope.addDestroyable(
       new Select({
         options: languageOptions(),
         value: options.language.value,
-        onCommit: (value) => this.commit(() => options.language.onSelect(value)),
+        onCommit: options.language.onSelect,
       }),
     );
     this.appendLabeledRow('language', this.languageControl);
@@ -54,7 +54,7 @@ export class LifeOptionsPanel {
       new Checkbox({
         checked: options.showFps.value,
         label: i18next.t('life:options.showFps'),
-        onCommit: (value) => this.commit(() => options.showFps.onSelect(value)),
+        onCommit: options.showFps.onSelect,
       }),
     );
     this.appendControlRow('fps', this.fpsControl.element);
@@ -63,7 +63,8 @@ export class LifeOptionsPanel {
       new Checkbox({
         checked: options.haptics.value,
         label: i18next.t('life:options.haptics'),
-        onCommit: (value) => this.commit(() => options.haptics.onSelect(value)),
+        haptic: false,
+        onCommit: options.haptics.onSelect,
       }),
     );
     this.hapticsRow = this.appendControlRow('haptics', this.hapticsControl.element);
@@ -82,7 +83,7 @@ export class LifeOptionsPanel {
         ariaLabel: i18next.t('life:options.orientation'),
         onCommit: (value) => {
           if (isScreenOrientation(value)) {
-            this.commit(() => options.orientation.onSelect(value));
+            options.orientation.onSelect(value);
           }
         },
       }),
@@ -97,7 +98,7 @@ export class LifeOptionsPanel {
           value: displayMode.value,
           ariaLabel: i18next.t('life:options.displayMode'),
           onCommit: (value) => {
-            if (isDisplayMode(value)) this.commit(() => displayMode.onSelect(value));
+            if (isDisplayMode(value)) displayMode.onSelect(value);
           },
         }),
       );
@@ -143,28 +144,23 @@ export class LifeOptionsPanel {
     key: 'language' | 'orientation' | 'display',
     control: { element: HTMLElement },
   ): void {
-    const label = this.scope.addDestroyable(new Text(this.labelFor(key), { variant: 'muted' }));
-    this.labels.set(key, label);
-    const row = this.appendControlRow(key, label.element, control.element);
-    row.classList.add('vol-life-options__row--labeled');
+    const row = this.scope.addDestroyable(
+      new SettingsRow({ label: this.labelFor(key), control, stackOnNarrow: true }),
+    );
+    row.element.dataset.option = key;
+    this.labels.set(key, row);
+    this.element.appendChild(row.element);
   }
 
-  private appendControlRow(key: string, ...children: HTMLElement[]): HTMLDivElement {
-    const row = document.createElement('div');
-    row.className = 'vol-life-options__row';
-    row.dataset.option = key;
-    row.append(...children);
-    this.element.appendChild(row);
-    return row;
-  }
-
-  private commit(callback: () => void): void {
-    callback();
-    vibrate('select');
+  private appendControlRow(key: string, control: HTMLElement): HTMLDivElement {
+    const row = this.scope.addDestroyable(new SettingsRow({ control: { element: control } }));
+    row.element.dataset.option = key;
+    this.element.appendChild(row.element);
+    return row.element;
   }
 
   private refreshLabels(): void {
-    for (const [key, label] of this.labels) label.setContent(this.labelFor(key));
+    for (const [key, label] of this.labels) label.setLabel(this.labelFor(key));
     this.languageControl.setOptions(languageOptions());
     this.orientationControl.setAriaLabel(i18next.t('life:options.orientation'));
     this.orientationControl.setOptions(orientationOptions());

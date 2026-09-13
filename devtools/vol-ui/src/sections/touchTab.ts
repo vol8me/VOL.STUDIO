@@ -446,21 +446,19 @@ function buildWorldCameraDemo(disposables: DisposableScope): HTMLElement {
       -camera.scrollX * camera.zoom,
       -camera.scrollY * camera.zoom,
     );
-    for (let y = -400; y <= 800; y += 400) {
-      for (let x = -400; x <= 800; x += 400) {
-        context.fillStyle = '#111827';
-        context.fillRect(x, y, 400, 400);
-        context.fillStyle = '#d6c783';
-        context.fillRect(x + 80, y + 110, 70, 70);
-        context.fillStyle = '#315c59';
-        context.fillRect(x + 245, y + 255, 95, 60);
-        context.strokeStyle = '#365266';
-        context.strokeRect(x, y, 400, 400);
-      }
-    }
+    context.fillStyle = '#111827';
+    context.fillRect(0, 0, 400, 400);
+    context.fillStyle = '#d6c783';
+    context.fillRect(80, 110, 70, 70);
+    context.fillStyle = '#315c59';
+    context.fillRect(245, 255, 95, 60);
+    context.strokeStyle = '#365266';
+    context.strokeRect(0, 0, 400, 400);
   };
 
-  const controller = new WorldCameraController(canvas, camera, { worldSize: 400 });
+  const controller = new WorldCameraController(canvas, camera, {
+    bounds: { x: 0, y: 0, width: 400, height: 400 },
+  });
   disposables.addDestroyables(controller);
   const hint = new Text(i18next.t('volui:touch.worldCameraHint'), { variant: 'muted' });
   disposables.addDestroyables(hint);

@@ -145,22 +145,25 @@ gezdirdiğinde bir bölgede sakin bir ekosistem, başkasında çatışma, başka
 yeni bir koloni bulmalıdır. "Devasa" hissi kaplama alanından değil, bu
 çeşitlilikten gelir.
 
-### Dünya kenarsızdır — fizikte de görüntüde de
+### Dünya sonlu ve fiziksel sınırlıdır
 
-Dünya toroidaldir: sağ kenardan çıkan sol kenardan girer. Bu yalnız mesafe
-hesabının kuralı olamaz; görüntü de aynı kuralı izler. Aksi hâlde kenarın
-üstündeki bir organizma ekranın iki ucunda iki yarım olarak çizilir.
+Dünya tek bir sonlu dikdörtgendir; karşı kenarlar komşu değildir. Parçacık
+sınırı aşamaz: yarıçapı hesaba katılarak içeri alınır, yumuşak temasta duvara
+dik hız söner ve yanal hareket korunur, sert çarpmada normal hız kontrollü
+restitution ile tersine döner. Bu çözüm renderer kelepçesi değil simülasyon
+kuralıdır. Alan difüzyonu sınırda no-flux/reflective davranır; sağ kenardaki
+alan ya da parçacık sol kenarı etkileyemez.
 
-- **Mesafe:** iki nokta arasındaki en kısa toroidal fark kullanılır; x=1 ile
-  x=1023 arası 2 birimdir.
-- **Uzak görünüm:** kare dünya bütünüyle ortalanır, uzun eksendeki dış alan
-  karanlık kalır ve kaydırma kilitlidir. Böylece duvar kâğıdı tekrarları
-  yerine tek kanonik dünya okunur.
-- **Yakın görünüm:** alan dokusunun kameraya komşu 3×3 kopyası çizilir;
-  parçacık kameranın merkezine en yakın toroidal kopyasında görünür. Kamera
-  merkezi sarılmaz, yalnız simülasyon erişimi ve kopya seçimi normalize edilir.
-- **Alan dokusu:** Phaser WebGL1 nedeniyle 2'nin kuvveti çözünürlüktedir;
-  256²/512² adayları bu kısıttan gelir (§11).
+Kamera da aynı config kaynaklı sınırı kullanır. Minimum zoom dünyayı ekrana
+`cover` eder (`max(viewportWidth/worldWidth, viewportHeight/worldHeight)`),
+merkez görünür yarım boyutlarla kelepçelenir ve normal oynanışta dış boşluk
+görülmez. Bütün dünyayı tek karede gösteren overview oynanış kamerasının görevi
+değildir; gerekirse ileride ayrı harita görünümü olur. Mevcut 1024×1024 ölçü
+Adım 3 morfoloji ve yoğunluk ölçülene kadar korunur; dikdörtgene geçiş aynı
+`WorldBounds` sözleşmesiyle veri değişikliğidir.
+
+Alan dokusu Phaser WebGL1 nedeniyle 2'nin kuvveti çözünürlüktedir; 256²/512²
+adayları bu kısıttan gelir (§11).
 
 ## 3. Yaşam modeli
 
@@ -434,9 +437,12 @@ token'larıyla çentikten uzak tutulur. FPS seçeneği açıksa gösterge çekme
 üst katmanında görünür kalır; ölçüm en fazla 250 ms'de bir yazıya çevrilir ve
 simülasyon temposuna bağlanmaz.
 
-Form geniş ekranda ortak label/control sütunları, dar ekranda yığılmış satırlar
-kullanır. Checkbox anahtarları aynı sağ ankraja oturur; dil ve yön kontrolleri
-aynı kontrol sütununu doldurur. X ile dişli aynı üst/sağ safe-area ankrajındadır.
+Form CORE `SettingsForm`/`SettingsRow` düzenidir. Geniş ekranda etiket esner,
+kontrol sütunu intrinsic/makul azami genişlikte kalır; switch sağa yaslanır,
+`SegmentedControl` boşluğu doldurmak için şişmez. Dar ekranda yalnız geniş
+select gerektiğinde alt satıra geçer. X ile dişli aynı üst/sağ safe-area
+ankrajındadır; kabul testi kontrolün panel içinde görünmesini, yatay ve dikey
+taşmayı ayrı ayrı ölçer.
 
 | Platform        | Tam ekran düğmesi          | Görüntü kipi seçeneği | Dikey / yatay               |
 | --------------- | -------------------------- | --------------------- | --------------------------- |
@@ -466,8 +472,10 @@ VOL.LIFE'ın yüzeylerinin karşılığı:
 ve değer gruplarını çizerler, oyun kuralını çağırandan alırlar. VOL.LIFE'ın
 domain'i CORE'a bu yüzden sızmaz.
 
-CORE `WorldCameraController` fare sürükleme, delta-mode normalize tekerlek,
-yumuşatılmış cursor-anchor zoom ve başlangıç anına bağlı pinch'i ortaklaştırır.
+CORE `WorldCameraController` sınırlı dikdörtgen kamera, fare/dokunma sürükleme,
+release momentumu, sönümleme, delta-mode normalize tekerlek, yumuşatılmış
+cursor-anchor zoom ve başlangıç anına bağlı pinch'i ortaklaştırır. Parmağın
+altındaki dünya doğrudan izlenir; inertia yalnız bırakıldıktan sonra devrededir.
 
 ### Gizli kalan kurallar
 
@@ -499,16 +507,12 @@ olarak eklenmedi — toast, kuru kuyruğa göre daha dürüst bir yüzeydir.
 
 Dünya `SaveManager`a KONULMAZ; kendi `WorldSnapshot` sözleşmesini taşır.
 
-**Ama format ilk turda BİNARY'ye kilitlenmez.** Yüz parçacıkta JSON fazlasıyla
-yeterlidir ve okunabilir olması geliştirme sırasında ölçülemeyecek kadar
-değerlidir: bozuk bir dünyayı gözle incelemek, hex dökümü okumaktan başka bir
-iştir. Kilitlenecek olan format değil ARAYÜZDÜR — `WorldSnapshot` bir seri
-hâle getirici arkasında durur; JSON bugünkü uygulamasıdır, binary ölçüm
-gerektirdiğinde ikinci uygulama olur.
-
-Ölçüm sırası nüfusla gelir: 100'de JSON, 5.000/50.000'de ÖLÇ, 100.000'de
-binary'yi tartış. İlk kilometre taşında binary serializer yazmak, henüz var
-olmayan bir problemi çözmektir.
+Format sürümlü bir codec arkasındadır. Parçacık sayısı 100 olsa da altı 256²
+alan ve difüzyon kaynağını typed-array nesneleri olarak JSON'a çevirmek 7,74
+MiB ölçülür; web depolama kotasını ve Android köprü maliyetini aşabilir. Bu
+yüzden metadata JSON, sayısal gövde sıralı little-endian binary ve gzip/base64
+olarak saklanır. Codec boyut/sürüm/config parmak izi doğrular; bozuk veya eski
+kayıt yeni dünyaya güvenli biçimde düşer. Format seçimi arayüzün dışına sızmaz.
 
 Dünya anlık görüntüsü şunları taşır: tohum, tick sayısı, **RNG durumu**, tür
 tanımları, parçacık dizileri (SoA), alan ızgaraları, organizma kayıtları,
@@ -665,7 +669,7 @@ başarımının masaüstünden ~3–5× düşük olduğu. Bu sayı bir tahmindir
 
 ### Ekran yönü oyuncunun seçimidir
 
-Dünya kare ve kenarsızdır (§2); ne dikey ne yatay ona göre daha doğrudur. Yön
+Dünya kamerası iki yönde de sınırları dış boşluk göstermeden örter (§2); yön
 seçenekler panelinden seçilir: **dikey** ya da **yatay**, varsayılan dikey.
 Telefon başlatıcıdan dikey açılır; varsayılan yatay olsaydı ilk açılış ekranı
 döndürürdü.
@@ -961,38 +965,19 @@ dersler:
 
 ## 16. Bugünkü durum
 
-**Adım 2 parçacık yaşamı** kuruldu (ölçüm 2026-09-13):
+**Adım 2 tamamlandı; Adım 3 morfoloji arama altyapısı ve açık durum** (2026-09-13):
 
-- `ParticleStore` 100 sabit kimliği paralel `Float32Array`/`Uint8Array`
-  dizilerinde tutar. Altı renk ve asimetrik 6×6 matris config verisidir.
-- Counting-sort spatial hash; ortak yakın itme, yönlü orta menzil kuvveti,
-  sürtünme, hız tavanı ve toroidal mesafe her tickte Phaser'sız çalışır.
-  Kuvvetler önce birikir, bütün konumlar sonra entegre edilir. Alan kuvveti
-  bilinçli olarak kapalıdır.
-- Seed ve snapshot/restore alanlarla birlikte bütün parçacık dizilerini bayt
-  düzeyinde yeniden üretir. 512→2048 sabit yoğunluk çekirdek oranı 4,94'tür;
-  5,5 ölçekleme tavanı O(n²) sızmasını kapılar.
-- `ParticleRenderer` tek sabit Phaser Graphics üyesidir; dünya birimli
-  yarıçapı ve kameraya en yakın toroidal kopyayı çizer. Chromium WebGL
-  100/1.000/5.000 ölçümleri §11'dedir; mevcut yol yalnız Adım 2 ölçeği içindir.
-- Uzak kamera tek kanonik dünyayı gösterir; yakın görünümde alan 3×3 tekrar
-  eder. Kamera koordinatı süreklidir; wheel birimi, yumuşak cursor anchor,
-  mutlak pinch başlangıcı ve pointer değişimleri birim testleriyle kilitlidir.
-- Native haptics, hizalı Sheet formu ve kanonik alan sunumu ürün kabul
-  turunda düzeltildi. E2E; Sheet edge/control geometrisini, scroll taşmasını,
-  DPR 2'yi ve çevrilmiş fatal yüzeyi gerçek Chromium'da ölçer.
-
-Organizma, küme tespiti, enerji ve katman görünümü henüz yoktur; sıradaki
-karar noktası §13'teki Adım 3 matris aramasıdır.
+- `ParticleStore` 100 sabit kimliği paralel `Float32Array`/`Uint8Array` dizilerinde tutar.
+- Counting-sort spatial hash; sonlu dünya duvarları, sürtünme ve hız tavanı her tickte Phaser'sız çalışır.
+- Sonlu dünya (2400×1600), cover camera clamp ve viewport resize desteği çalışır; toroidal topoloji terk edilmiştir.
+- `ParticleRenderer` tek sabit Phaser Graphics üyesidir; fixed-step interpolasyonu pürüzsüz ara kareler üretir.
+- Responsive SettingsForm/Sheet, semantik haptics ve IndexedDB/localStorage tabanlı snapshot/autosave mekanizması entegredir.
+- **Adım 3 Morfoloji Arama Ölçümü:** 12 matris adayı ve 8 global hiperparametre adayı tarandı. En iyi katmanlaşma ~0.03 (< 0.12 kabul eşiği), yapı varlığı ~0.11 (< 0.55 kabul eşiği) seviyesinde kaldı. Mevcut simetrik ve paylaşımlı kuvvet çekirdeği zar-çekirdek morfolojisini kendiliğinden ayrıştıramamaktadır. Adım 3 başarılı sayılmamış; asimetrik etkileşim yarıçapı veya çoklu kuvvet profili gereksinimi açık iş olarak bırakılmıştır.
 
 ## 17. Ölçülmemiş varsayımlar
 
-Açık işler burada değil TODO'dadır. Burada yalnız ölçülene kadar üzerine plan
-kurulmayacak varsayımlar durur:
+Açık işler TODO'dadır. Burada yalnız ölçülene kadar üzerine plan kurulmayacak varsayımlar durur:
 
 - Android tek çekirdek başarımının masaüstünden ~3–5× düşük olduğu (§9).
-- Gerçek GPU'da kare hızı. Headless Chromium yazılım rasterizer kullanır;
-  oradaki sayı donanım hakkında hiçbir şey söylemez. Ölçülen tek şey boş
-  sahnenin kare aralığıdır (masaüstü 143,88 Hz ekranda 7,07 ms ortalama,
-  5,5–13,9 ms uç değerler).
+- Gerçek GPU'da kare hızı (headless Chromium donanım kare hızını temsil etmez).
 - `SpriteGPULayer`ın her adım CPU'da güncellenen içerikle başarımı (§11).

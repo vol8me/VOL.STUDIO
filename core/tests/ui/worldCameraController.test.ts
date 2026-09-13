@@ -33,7 +33,7 @@ function harness() {
   };
   const changes: unknown[] = [];
   const controller = new WorldCameraController(element, camera, {
-    worldSize: 1000,
+    bounds: { x: 0, y: 0, width: 1000, height: 1000 },
     onChange: (state) => changes.push(state),
   });
   return { element, camera, controller, state, changes };
@@ -45,10 +45,10 @@ afterEach(() => {
 });
 
 describe('WorldCameraController', () => {
-  it('açılışta kare dünyayı görüntü alanına sığdırıp ortalar', () => {
+  it('açılışta dünyayı boşluk bırakmadan görüntü alanına kaplar ve ortalar', () => {
     const { camera, state } = harness();
 
-    expect(camera.zoom).toBe(0.8);
+    expect(camera.zoom).toBe(1.2);
     expect(state).toEqual({ centerX: 500, centerY: 500 });
   });
 
@@ -134,7 +134,7 @@ describe('WorldCameraController', () => {
       new PointerEvent('pointermove', { pointerId: 2, clientX: 1000, clientY: 400 }),
     );
 
-    expect(camera.zoom).toBeCloseTo(1.2, 6);
+    expect(camera.zoom).toBeCloseTo(1.8, 6);
   });
 
   it('pinch hareketini olay sırasından bağımsız başlangıç anına göre hesaplar', () => {
@@ -188,8 +188,8 @@ describe('WorldCameraController', () => {
     expect({ zoom: camera.zoom, ...state }).toEqual(before);
   });
 
-  it('kamera merkezini seam boyunca sarıp sıçratmadan sürekli tutar', () => {
-    const { element, controller } = harness();
+  it('kamera merkezini fiziksel dünya sınırının dışına çıkarmaz', () => {
+    const { element, camera, controller } = harness();
     element.dispatchEvent(new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -300 }));
     controller.update(1000);
     element.dispatchEvent(
@@ -201,11 +201,12 @@ describe('WorldCameraController', () => {
       );
     }
 
-    expect(controller.getState().centerX).toBeLessThan(0);
+    const visibleHalfWidth = camera.width / (2 * camera.zoom);
+    expect(controller.getState().centerX).toBeGreaterThanOrEqual(visibleHalfWidth);
   });
 
-  it('en uzak görünümde tek kanonik dünyayı ortalar ve panı kilitler', () => {
-    const { element, controller, state } = harness();
+  it('en uzak görünümde kaplanan ekseni kilitler, diğer ekseni sınırlar', () => {
+    const { element, state } = harness();
     element.dispatchEvent(
       new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, clientY: 100 }),
     );
@@ -213,8 +214,30 @@ describe('WorldCameraController', () => {
       new PointerEvent('pointermove', { pointerId: 1, clientX: 500, clientY: 500 }),
     );
 
-    expect(state).toEqual({ centerX: 500, centerY: 500 });
-    expect(controller.getState().overview).toBe(true);
+    expect(state.centerX).toBe(500);
+    expect(state.centerY).toBeGreaterThanOrEqual(800 / (2 * 1.2));
+    expect(state.centerY).toBeLessThanOrEqual(1000 - 800 / (2 * 1.2));
+  });
+
+  it('parmak bırakıldığında kısa momentumu sürdürür ve sönümler', () => {
+    const { element, controller } = harness();
+    element.dispatchEvent(new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -300 }));
+    controller.update(1000);
+    element.dispatchEvent(
+      new PointerEvent('pointerdown', { pointerId: 1, clientX: 400, clientY: 400 }),
+    );
+    element.dispatchEvent(
+      new PointerEvent('pointermove', { pointerId: 1, clientX: 430, clientY: 400 }),
+    );
+    const releasedAt = controller.getState().centerX;
+    element.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1 }));
+
+    controller.update(16);
+    const afterRelease = controller.getState().centerX;
+    for (let index = 0; index < 60; index++) controller.update(16);
+
+    expect(afterRelease).toBeLessThan(releasedAt);
+    expect(controller.getState().centerX).toBeLessThanOrEqual(afterRelease);
   });
 
   it('resize sonrası merkezi korur ve yeni sığdırma sınırının altına inmez', () => {
