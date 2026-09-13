@@ -86,48 +86,53 @@ export function integrateParticles(
   const minY = bounds.y + config.radiusUnits;
   const maxY = bounds.y + bounds.height - config.radiusUnits;
   for (let index = 0; index < particles.count; index++) {
-    const wallForce = resolveWallContactForce(
-      particles.x[index],
-      particles.y[index],
-      minX,
-      maxX,
-      minY,
-      maxY,
-      config,
-    );
-    let vx = (particles.vx[index] + (particles.forceX[index] + wallForce.x) * stepScale) * friction;
-    let vy = (particles.vy[index] + (particles.forceY[index] + wallForce.y) * stepScale) * friction;
+    let vx = (particles.vx[index] + particles.forceX[index] * stepScale) * friction;
+    let vy = (particles.vy[index] + particles.forceY[index] * stepScale) * friction;
     const speedSquared = vx * vx + vy * vy;
     if (speedSquared > maxSpeedSquared) {
       const scale = config.maxSpeedUnitsPerReferenceTick / Math.sqrt(speedSquared);
       vx *= scale;
       vy *= scale;
     }
-    let x = particles.x[index] + vx * stepScale;
-    let y = particles.y[index] + vy * stepScale;
+    const startX = particles.x[index];
+    const startY = particles.y[index];
+    let x = startX + vx * stepScale;
+    let y = startY + vy * stepScale;
     if (x < minX) {
-      x = minX;
+      const impactFraction = collisionFraction(startX, x, minX);
       vx = resolveWallVelocity(vx, config);
+      x = minX + vx * stepScale * (1 - impactFraction);
       vy *= config.wallTangentRetention;
     } else if (x > maxX) {
-      x = maxX;
+      const impactFraction = collisionFraction(startX, x, maxX);
       vx = -resolveWallVelocity(-vx, config);
+      x = maxX + vx * stepScale * (1 - impactFraction);
       vy *= config.wallTangentRetention;
     }
     if (y < minY) {
-      y = minY;
+      const impactFraction = collisionFraction(startY, y, minY);
       vy = resolveWallVelocity(vy, config);
+      y = minY + vy * stepScale * (1 - impactFraction);
       vx *= config.wallTangentRetention;
     } else if (y > maxY) {
-      y = maxY;
+      const impactFraction = collisionFraction(startY, y, maxY);
       vy = -resolveWallVelocity(-vy, config);
+      y = maxY + vy * stepScale * (1 - impactFraction);
       vx *= config.wallTangentRetention;
     }
+    x = Math.max(minX, Math.min(maxX, x));
+    y = Math.max(minY, Math.min(maxY, y));
     particles.vx[index] = vx;
     particles.vy[index] = vy;
     particles.x[index] = x;
     particles.y[index] = y;
   }
+}
+
+function collisionFraction(start: number, end: number, plane: number): number {
+  const delta = end - start;
+  if (delta === 0) return 0;
+  return Math.max(0, Math.min(1, (plane - start) / delta));
 }
 
 function resolveWallVelocity(inwardVelocity: number, config: ParticleConfig): number {
@@ -138,29 +143,6 @@ function resolveWallVelocity(inwardVelocity: number, config: ParticleConfig): nu
       ? config.wallHardRestitution
       : config.wallSoftRestitution;
   return impactSpeed * restitution;
-}
-
-function resolveWallContactForce(
-  x: number,
-  y: number,
-  minX: number,
-  maxX: number,
-  minY: number,
-  maxY: number,
-  config: ParticleConfig,
-): { readonly x: number; readonly y: number } {
-  const range = config.wallContactRangeUnits;
-  const strength = config.wallContactStrength;
-  return {
-    x: contactForce(x - minX, range, strength) - contactForce(maxX - x, range, strength),
-    y: contactForce(y - minY, range, strength) - contactForce(maxY - y, range, strength),
-  };
-}
-
-function contactForce(distance: number, range: number, strength: number): number {
-  if (distance >= range) return 0;
-  const penetration = Math.max(0, 1 - Math.max(0, distance) / range);
-  return strength * penetration * penetration;
 }
 
 function interactionMagnitude(

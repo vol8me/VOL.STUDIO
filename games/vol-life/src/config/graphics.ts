@@ -14,6 +14,9 @@ export interface LifeGraphicsConfig {
   readonly renderer: RendererRequest;
   readonly cameraMaxZoomFactor: number;
   readonly boundaryColor: number;
+  readonly boundaryPreferredThicknessUnits: number;
+  readonly boundaryMinScreenPixels: number;
+  readonly boundaryMaxScreenPixels: number;
 }
 
 export const lifeGraphicsConfig: LifeGraphicsConfig = {
@@ -21,4 +24,7 @@ export const lifeGraphicsConfig: LifeGraphicsConfig = {
   renderer: 'webgl',
   cameraMaxZoomFactor: 2.5,
   boundaryColor: 0x495865,
+  boundaryPreferredThicknessUnits: 6,
+  boundaryMinScreenPixels: 3,
+  boundaryMaxScreenPixels: 8,
 };

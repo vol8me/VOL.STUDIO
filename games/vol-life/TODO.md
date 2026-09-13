@@ -32,6 +32,36 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       saf bir fonksiyon eklenir; `audio-synth` paketi bu fonksiyonu ne
       import eder ne de organizma/fenotip tipini bilir.
 
+## Recovery / proof-of-life kapısı
+
+- [x] **Eski production ölümü zaman serisine kilitlendi.**
+      `benchmarks/proof-of-life-v1.json`, 5 seed için 10/30/60/120/300/600/900
+      saniye checkpointlerini taşır. Eski `legacy-spring-v1` production seed'i
+      hareket, stall, wall-support ve movement-persistence nedenleriyle FAIL.
+- [x] **Build seed'i world-instance metadata'ya taşındı.** Yeni dünya seed,
+      kimlik ve oluşturma zamanı üretir; explicit seed test/replay içindir.
+      Snapshot aynı metadata'yı korur; config fingerprint seed'den bağımsızdır.
+- [x] **Wall spring gerçek temas çözümüne dönüştürüldü.** 12 birimlik morphology
+      yayı kaldırıldı; çarpışma anı, position correction, normal restitution ve
+      tangent retention kullanılıyor. 3.600 tick dış kuvvet regresyonu vardır.
+- [x] **Fizik ve sınır sunumu ayrıldı.** Çarpışma inseti fizik config'indedir;
+      renk ve ekran pikseli min/max kalınlığı grafik config'inde ve ayrı
+      renderer'dadır. Görsel kalınlık save fingerprint'ini değiştirmez.
+- [x] **Yoğunluk faz deneyi üretildi.** `benchmarks/density-regimes-v1.json`,
+      100/256/384/512/768 count × 5 seed × 10 dakikayı taşır. Yüksek count
+      hareketi artırırken duvar desteğini de büyüttüğü için körlemesine seçilmedi.
+- [x] **1.024 adaylı broad → refinement → 15 dakikalık finalist araması.** Full
+      36D matrix ile count, yarıçaplar, strength, damping ve hız tavanı birlikte
+      aranır; artifact `benchmarks/morphology-search-v3.json`, runtime kataloğu
+      `public/generated/morphology-candidates-v3.json` oldu.
+- [ ] **Proof-of-life teknik kapısı production configte 4/5 seed geçirir.**
+      Hareket/stall, duvar desteği, collapse, kalıcı orbit, üyelik değişimi ve
+      yapısal çeşitlilik birlikte değerlendirilir; FPS kanıt değildir.
+- [ ] **Human acceptance:** finalistler browser, masaüstü fare, Samsung S21 ve
+      Lenovo tablette 10–15 dakika izlenir. Kullanıcı onayı olmadan kapanmaz.
+- [ ] **Adım 4 kesin blokeli.** Teknik canary, tam-config preview ve kullanıcı
+      auditionı geçmeden organizma kimliği yazılmaz.
+
 ## Adım 1 — dünya substratı
 
 - [ ] **Katman görünümü (Adım 7'ye bağlı):** oyuncu katman görünümünü
@@ -43,16 +73,15 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 
 ### Adım 2 — parçacık yaşamı
 
-Adım 2 kabul borçları kapatıldı; maddeler [Kapatılanlar](#2026-09-13--adım-2-kabulü-sonlu-dünya-ve-autosave) bölümündedir.
+Adım 2'nin mekanizma maddeleri Kapatılanlar'dadır; uzun-vade ürün kabulü
+Recovery / proof-of-life kapısında yeniden açılmıştır.
 
 ## Adım 3 — matris araması
 
-- [ ] **[P1] Zar-çekirdek ayrışması için kuvvet profili araştırması:** düzeltilmiş
-      duvarla 12 matris ve yönlü 3×3 rol-menzili taşıyan 8 global aday tarandı.
-      En iyi global finalistte layering 0,084 ve presence 0,30; kabul eşiği
-      0,12/0,55. Yapının %60'ı duvar destekli ve hiçbir aday kalifiye değil.
-      Sonuç yalnız TEST EDİLEN ALT UZAYI reddeder; sıradaki hipotez near/mid/far
-      çok-lob profildir, fiziksel imkânsızlık iddia edilmez.
+- [ ] **[P1] Zar-çekirdek ayrışması için kuvvet profili araştırması:** önceki
+      12 matris + 8 preset yalnız spike'tır. Güncel v3 hattı 1.024 tam-config
+      adayı tarar; triangular kernel adil arama ve uzun finalist koşularından
+      sonra yetersizse near/mid/far multi-lobe bake-off açılır.
 - [ ] **Adaylar gözle doğrulanır:** en iyi adaylar tarayıcıda açılıp izlenir;
       uzun süreli bütünlük, iç/dış katman, bozulup toparlanma ve hareket
       görülmeden Adım 3 kapanmaz. Metrik görüntüyle çürürse metrik değişir;
@@ -105,9 +134,9 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
 
 - [x] **[P0] Toroidal topoloji sonlu fiziksel dünyaya taşındı.** Tek config
       `WorldBounds`; particle hash/mesafe/entegrasyon, field sample/diffusion,
-      ışık kaynağı, kamera ve renderer aynı 1024×1024 sınırı tüketiyor. Contact
-      zone ve restitution sinek-kâğıdı kilidini engeller; opak duvar bandı ayrı
-      renderer'da parçacığın altında çizilir.
+      ışık kaynağı, kamera ve renderer aynı 1024×1024 sınırı tüketiyor. Recovery
+      turunda broad contact zone kaldırılıp çarpışma anı çözen impulse modeliyle
+      değiştirildi; opak duvar sunumu fizik insetinden ayrıdır.
 - [x] **[P0] Fixed-step konumları her render karesinde interpolate ediliyor.**
       Önceki ve güncel SoA konumları tutuluyor, `getInterpolationAlpha()`
       renderer'a iletiliyor ve ara kareler pürüzsüz çiziliyor.
@@ -127,9 +156,9 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
       `LifeWorldStore` portu ve bugünkü `SaveManager` backend'i kuruldu. CRC32,
       semantik doğrulama, periyodik/background save ve çıkışta beklenen flush
       test edildi.
-- [x] **[P1] Tek kare küme tespiti, "ilginç" metriği ve tarama altyapısı kuruldu.**
-      `MorphologyMetrics` ve `search-morphology.mts` yazıldı. 12 matris ve 8 global
-      aday tarandı; kuvvet çekirdeği yetersizliği dürüstçe belgelendi.
+- [x] **[P1] İlk tek-kare metrik ve tarama spike'ı kuruldu.** 12 matris + 8
+      preset yalnız dar alt uzayı reddetti; geniş ve uzun-vade arama Recovery
+      kapısında yeniden açıldı.
 
 ### 2026-09-13 — ürün acceptance düzeltmeleri ve Adım 2
 
@@ -326,6 +355,14 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
 - [x] **`DESIGN.md`'nin dört eski cümlesi düzeltildi:** ölçekleme kapısı,
       cihaz ölçümü, `src-tauri`, §17.
 - [x] **LifeHud dil testi yeniden yazıldı;** dil aboneliği kaldırılınca düşüyor.
+
+### 2026-09-14 — v3 morfoloji araması ve devir
+
+- [x] **1.024 adaylı broad → refinement → 15 dakikalık finalist araması.**
+      `benchmarks/morphology-search-v3.json` ve
+      `public/generated/morphology-candidates-v3.json` üretildi. 4 finalist
+      belirlendi. Proof-of-life canary 5 seed'de test edildi; Adım 4'e blokaj
+      dürüstçe korundu.
 
 ### 2026-09-09 — cihaz ölçümü (`a38fe22`)
 

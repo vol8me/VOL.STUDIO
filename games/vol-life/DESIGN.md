@@ -151,10 +151,13 @@ yeni bir koloni bulmalıdır. "Devasa" hissi kaplama alanından değil, bu
 ### Dünya sonlu ve fiziksel sınırlıdır
 
 Dünya tek bir sonlu dikdörtgendir; karşı kenarlar komşu değildir. Parçacık
-sınırı aşamaz: yaklaşma bölgesi içeri iter; penetrasyonda yumuşak ya da sert
-restitution normal hızı tersine çevirir ve yanal hareketi korur. Opak duvar
-bandı ayrı renderer'da parçacığın altında çizilir. Alan difüzyonu sınırda
-no-flux/reflective davranır; karşı kenarlar birbirini etkileyemez.
+sınırı aşamaz. Duvar uzun menzilli kuvvet veya yapı desteği değildir: yalnız
+çarpışma anı bulunur, penetrasyon düzeltilir, normal hız restitution ile
+yansıtılır ve teğetsel hız korunur. Fizik düzlemi `particleCollisionInsetUnits`,
+görsel renk/kalınlık ise grafik config'idir; sanat değişikliği fizik alanını ya
+da kayıt fingerprint'ini değiştirmez. Renderer kalınlığı ekran pikseli min/max
+arasında tutar ve iç yüzeyi collision plane ile eşler. Alan difüzyonu sınırda
+no-flux davranır; karşı kenarlar birbirini etkileyemez.
 
 Kamera da aynı config kaynaklı sınırı kullanır. Minimum zoom dünyayı ekrana
 `cover` eder (`max(viewportWidth/worldWidth, viewportHeight/worldHeight)`),
@@ -478,8 +481,10 @@ domain'i CORE'a bu yüzden sızmaz.
 
 CORE `WorldCameraController` sınırlı dikdörtgen kamera, fare/dokunma sürükleme,
 release momentumu, sönümleme, delta-mode normalize tekerlek, yumuşatılmış
-cursor-anchor zoom ve başlangıç anına bağlı pinch'i ortaklaştırır. Parmağın
-altındaki dünya doğrudan izlenir; inertia yalnız bırakıldıktan sonra devrededir.
+cursor-anchor zoom ve başlangıç anına bağlı pinch'i ortaklaştırır. Pointerup'ın
+son örneği velocity penceresine girer; wheel→drag eski hedefi iptal eder;
+analitik momentum sınırın son bölümünde yumuşar. Parmağın altındaki dünya
+doğrudan izlenir; inertia yalnız bırakıldıktan sonra devrededir.
 
 ### Gizli kalan kurallar
 
@@ -526,7 +531,10 @@ olursa uygulama açık kalır. Büyük dünya hedefinde port native binary dosya
 web'de IndexedDB/OPFS benzeri backend kazanmalıdır; migration, last-known-good
 ve uyumsuz kayıt yüzeyi o geçişin parçasıdır.
 
-Dünya anlık görüntüsü şunları taşır: tohum, tick sayısı, **RNG durumu**, tür
+Dünya tohumu build config'i değildir. Yeni dünya cryptographic seed, `worldId`
+ve oluşturma zamanı üretir; explicit seed yalnız test/replay içindir. Bu metadata
+snapshot'ta korunur ve config fingerprint'ine girmez. Dünya anlık görüntüsü
+şunları taşır: metadata, tick sayısı, **RNG durumu**, tür
 tanımları, parçacık dizileri (SoA), alan ızgaraları, organizma kayıtları,
 territory durumu.
 
@@ -565,39 +573,17 @@ Bu projede "fonksiyon X döndürür" testi yetmez. Sistem stokastiktir ve değer
 tam olarak öngörülemeyen davranışındadır; test edilecek şey bu yüzden **değer
 değil sözleşmedir**.
 
-### Dört test sınıfı
+### Dört kanıt sınıfı
 
-**1. Determinizm.** Aynı tohum + aynı komut dizisi + aynı tick sayısı → bit-bit
-aynı SoA dizileri ve alanlar. `snapshot()`/`restore()` ile aradan devam da aynı
-sonucu vermelidir. Bu sınıf kesin eşitlik iddia eder ve etmelidir.
+1. **Birim/matematik:** kuvvet, temas, deterministik state ve kamera formülü.
+2. **Entegrasyon/E2E:** save/load, ayar, renderer ve tam-config preview.
+3. **Long-horizon simülasyon:** çok seed, 10–30 simüle dakika, metastability,
+   duvar bağımlılığı ve equilibrium/collapse zaman serisi.
+4. **Fiziksel cihaz/insan kabulü:** masaüstü fare, Samsung, Lenovo; kamera
+   rahatlığı ve izlenebilir morphology.
 
-**2. Geometrik değişmezler (morfoloji).** Bir organizma oluştuysa: çekirdek
-vardır, zar çekirdeği ÇEVRELER, zar çekirdeğin içinden geçmez. Bölünmeden sonra
-bir organizma yerine iki kararlı organizma vardır. Bunlar sayısal değil yapısal
-iddialardır ve gözle görülen hatayı yakalayan tek test sınıfıdır.
-
-**3. Davranış sözleşmesi.** "Kuzeyde kaynak, güneyde tehlike" kurulduğunda
-organizma kuzeyi tercih etmelidir; tehlike kuzeye taşındığında rota
-değişmelidir. Test yönü değil TERCİHİ ölçer.
-
-**4. İstatistiksel zarf.** "Her zaman savaş çıkar" yanlış bir iddiadır. Doğru
-olan: yüksek düşmanlık + kıt kaynak koşulunda çatışma olasılığı taban koşulun
-ÜSTÜNDE olmalıdır. Aynı şekilde evrim testi "100. nesilde hız tam 1,7423 olur"
-demez; seçilim baskısı altında özellik medyanının beklenen YÖNDE kaydığını
-ölçer.
-
-### Dört seviye ve nerede biterler
-
-| Seviye      | Neyi sınar                     | Örnek                              |
-| ----------- | ------------------------------ | ---------------------------------- |
-| Birim       | Tek algoritma                  | Küme mesafesi hesabı               |
-| Entegrasyon | Sistemlerin birlikte çalışması | Küme → organizma geçişi            |
-| Senaryo     | Tohum + dünya + N tick         | 100 parçacık → organizma → bölünme |
-| Gözlem      | Gerçek tarayıcı/cihaz          | Bölünme EKRANDA görünüyor          |
-
-İlk üçü yeşilken dördüncüsü kırmızı olabilir; iptal edilen denemede tam olarak
-bu oldu. Gözlem seviyesi otomatikleştirilemediği yerde elle yapılır ama
-ATLANMAZ.
+Bir sınıf ötekinin yerine geçmez. Coverage, FPS veya kısa test ürün kabulü
+değildir; otomatikleştirilemeyen gözlem açık bırakılır ama atlanmaz.
 
 ### İstatistik testleri tekrar üretilebilir olmalı
 
@@ -609,8 +595,10 @@ karar hâline gelir.
 
 ### Yasak test biçimi
 
-`different seed → kesinlikle farklı sonuç` yazılmaz. Bu determinizme aykırı
-değil, ondan bağımsız bir iddiadır ve rastgele düşer.
+Her rastgele seed çifti için bütün sonuç farklıdır gibi istatistiksel test
+yazılmaz. Bunun yerine sabit X/Y fixture'ı farklı başlangıcı, aynı X ise
+bit-bit devamı; fresh-world üreticisi de ardışık benzersiz seed sözleşmesini
+ölçer.
 
 ### Ölçüm ikiye ayrılır
 
@@ -623,15 +611,24 @@ ve bileşik ölçüm daima daha pahalıdır.
 
 ### Üçüncü eksen: emergence kalitesi
 
-Doğruluk ve performans ölçülüyor; **ilginçlik ölçülmüyor.** Ölçülebilir
-göstergeler var: organizma sayısı, doğum/ölüm/bölünme oranı, tür çeşitliliği,
-çatışma oranı, göç oranı, kaynak kullanımı, popülasyon entropisi.
+Doğruluk ve performans tek başına emergence kanıtı değildir. Step 3 zaman
+serisi mean/median hız, moving/nearly-stalled, isolated/stalled-isolated,
+neighbor count, cluster/compactness/anisotropy, role-agnostic radial katman,
+type-role yerleşimi, fragmentation/collapse, wall dwell/support, üye churn,
+orbit persistence, trajectory autocorrelation ve structural diversity taşır.
 
 Bunlar "yüksek daha iyi" diye kullanılmaz. Amaç tek bir sıkıcı dengeye
 çökülmediğini görmektir: `organismCount = 0` kötüdür, `organismCount = 100000`
 otomatik olarak iyi değildir. Bu tarz sistemlerin en büyük riski başlangıçtaki
 hareketin bir süre sonra tekdüze bir dengeye oturmasıdır ve bu ancak uzun koşulu
 bir metrikle görülür.
+
+`proof-of-life-v1` production config'i 10/30/60/120/300/600/900 saniyede sabit
+seed korpusuyla ölçer. Broad arama kısa ve geniştir; refinement daha çok seed,
+finalist ise 15 dakika ve perturbation/recovery çalıştırır. Recovery yalnız
+cluster oranı değildir: üyelik, type composition, radial profil, compactness,
+centroid/size ve shape ayrı yazılır. Artifact source/config kimliği, bütçe,
+tam aday config'i ve red nedenlerini taşımadan sayı DESIGN/TODO'ya girmez.
 
 **Metrik seçerken sorulacak soru sabittir:** _bu metrik gerçekten görmek
 istediğim şeyi mi ölçüyor?_ İptal edilen denemede `maxCellOccupancy` yapının
@@ -905,20 +902,20 @@ Sıra bir tercih değil, iptal edilen denemenin doğrudan tersidir: orada üç f
 altyapı kuruldu ve ekranda hâlâ içerik yoktu. Kural şudur — **önce anlam, sonra
 ölçek** ve **her adımın sonunda gerçek tarayıcıda görüntü.**
 
-| #   | Adım                                                                     | Bittiğinde ekranda ne var          |
-| --- | ------------------------------------------------------------------------ | ---------------------------------- |
-| 0   | **Zemin** — paket, kapılar, config, deterministik RNG                    | Boş tuval; kablolar kanıtlı        |
-| 1   | **Dünya substratı** — alanlar, difüzyon, besin yenilenmesi, kamera       | Gezilebilen, yavaşça değişen alan  |
-| 2   | **Parçacık yaşamı** — SoA depo, uzamsal hash, çift yönlü kuvvet          | 100 parçacık, kümelenme            |
-| 3   | **Matris araması** — tek kare küme tespiti, çok bileşenli metrik, tarama | Zar-çekirdek benzeri kararlı yapı  |
-| 4   | **Organizma kimliği** — üye örtüşmesiyle kareler arası eşleştirme        | Takip edilebilen BİR organizma     |
-| 5   | **Yaşam döngüsü** — enerji, tüketim, büyüme, dağılarak ölüm, bölünme     | Doğum, bölünme ve ölüm İZLENEBİLİR |
-| 6   | **Akıl** — algı, ihtiyaç, utility karar, hafıza                          | "Bu niye oraya gitti?" sorusu      |
-| 7   | **Sunum** — seçim paneli, olay bildirimi, gözlem modları                 | Oyuncu keşfedebiliyor              |
-| 8   | **Kalıcılık** — anlık görüntü, olay günlüğü, tekrar ve tekrar hızı       | Deney tekrarlanabiliyor            |
-| 9   | **Toplum ve tehdit** — grup, territory, yırtıcı, çatışma                 | Dünyada hikâye çıkıyor             |
-| 10  | **Evrim** — kalıtım, mutasyon, seçilim                                   | Tür zamanla değişiyor              |
-| 11  | **Ölçek** — render yolu ve Worker kararı, nüfusu §1'in tavanına aç       | Aynı dünya, daha kalabalık         |
+| #   | Adım                                                                 | Bittiğinde ekranda ne var          |
+| --- | -------------------------------------------------------------------- | ---------------------------------- |
+| 0   | **Zemin** — paket, kapılar, config, deterministik RNG                | Boş tuval; kablolar kanıtlı        |
+| 1   | **Dünya substratı** — alanlar, difüzyon, besin yenilenmesi, kamera   | Gezilebilen, yavaşça değişen alan  |
+| 2   | **Parçacık yaşamı** — SoA, hash, lokal kuvvet, uzun-vade canary      | Donmayan, duvara dayanmayan zemin  |
+| 3   | **Tam-config araması** — broad/refinement/finalist, çoklu metrik     | Değişen, toparlanan morphology     |
+| 4   | **Organizma kimliği** — üye örtüşmesiyle kareler arası eşleştirme    | Takip edilebilen BİR organizma     |
+| 5   | **Yaşam döngüsü** — enerji, tüketim, büyüme, dağılarak ölüm, bölünme | Doğum, bölünme ve ölüm İZLENEBİLİR |
+| 6   | **Akıl** — algı, ihtiyaç, utility karar, hafıza                      | "Bu niye oraya gitti?" sorusu      |
+| 7   | **Sunum** — seçim paneli, olay bildirimi, gözlem modları             | Oyuncu keşfedebiliyor              |
+| 8   | **Kalıcılık** — anlık görüntü, olay günlüğü, tekrar ve tekrar hızı   | Deney tekrarlanabiliyor            |
+| 9   | **Toplum ve tehdit** — grup, territory, yırtıcı, çatışma             | Dünyada hikâye çıkıyor             |
+| 10  | **Evrim** — kalıtım, mutasyon, seçilim                               | Tür zamanla değişiyor              |
+| 11  | **Ölçek** — render yolu ve Worker kararı, nüfusu §1'in tavanına aç   | Aynı dünya, daha kalabalık         |
 
 Seçenekler düğmesi, ekran yönü ve görüntü kipi bir adım değil kabuk işidir.
 
@@ -928,9 +925,10 @@ sorusu orada cevaplanmalıdır. Metrik zar-çekirdek yapısını ölçmek için 
 tanımak zorundadır; tek kare küme tespiti bu yüzden Adım 3'tedir, Adım 4 ona
 yalnız kareler arası kimliği ekler.
 
-Rapor bağlı zinciri yapı saymaz; kompaktlık/anisotropy, tekil ve durmuş pay,
-duvar desteği, karşıt yörünge etkinliği ve ardışık üye örtüşmesini ayrı ölçer.
-Bozulma sonrası yalnız küme oranı değil üyelik ve şekil toparlanır.
+Rapor bağlı zinciri yapı saymaz; role-agnostic geometri ile type-role analizi
+ayrıdır. Kompaktlık/anisotropy, tekil/durmuş pay, duvar desteği, karşıt yörünge,
+trajectory ve üye churn zaman serisidir. Bozulma sonrası üyelik, kompozisyon,
+radial profil, centroid/size ve şekil ayrı toparlanır.
 
 Ölçek EN SONA bırakılır. Nüfusu erken açmak, iptal edilen denemede ekranı halıya
 çevirip birey algısını yok etti; ölçek bir sonuçtur (§1).
@@ -981,14 +979,13 @@ dersler:
 
 ## 16. Bugünkü durum
 
-**Adım 2 sertleştirildi; Adım 3 morfoloji hedefi açık** (2026-09-13):
+**Adım 2–3 recovery/proof-of-life devri** (2026-09-14):
 
-- `ParticleStore` 100 sabit kimliği paralel `Float32Array`/`Uint8Array` dizilerinde tutar.
-- Counting-sort spatial hash; sonlu dünya duvarları, sürtünme ve hız tavanı her tickte Phaser'sız çalışır.
-- Sonlu 1024×1024 dünya, fiziksel duvar bandı, cover camera clamp ve viewport resize desteği çalışır.
-- `ParticleRenderer` tek sabit Phaser Graphics üyesidir; fixed-step interpolasyonu pürüzsüz ara kareler üretir.
-- Responsive Sheet, semantik haptics ve bütünlük/semantik kontrollü binary snapshot/autosave entegredir.
-- **Adım 3 ölçümü:** yeni duvarla 12 el profilli matris ve yönlü 3×3 rol menzili içeren 8 global aday tarandı. Test edilen alt uzayda aday çıkmadı; bu fiziksel imkânsızlık kanıtı değildir. Adım 4 başlamaz; tam sonuç sürümlü benchmark artifact'inde tutulur.
+- V3 arama tamamlandı (1.024 broad → 32 refinement → 4 finalist × 5 seed × 15 dk). Adaylar: `morphology-candidates-v3.json`, detay: `morphology-search-v3.json`.
+- Proof-of-life canary: Üretim seed'i geçti ancak 5 tohum geneli tam dayanıklılık sağlanamadı (`qualified: []`).
+- Eşik manipülasyonu yapılmadı; Adım 4 (organizma kimliği) kural gereği dürüstçe blokelidir.
+- `ParticleStore`, counting-sort spatial hash, impulse duvar teması ve ikili snapshot mimarisi yeşildir.
+- Alt kalite kapıları (`contract`, `format-check`, `typecheck`, `lint`, `lint-css`, `test`, `coverage`, `rust`, `build`) eksiksiz geçmektedir.
 
 ## 17. Ölçülmemiş varsayımlar
 

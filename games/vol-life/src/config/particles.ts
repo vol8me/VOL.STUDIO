@@ -28,8 +28,6 @@ export interface ParticleConfig {
   readonly frictionPerReferenceTick: number;
   readonly maxSpeedUnitsPerReferenceTick: number;
   readonly initialSpeedUnitsPerReferenceTick: number;
-  readonly wallContactRangeUnits: number;
-  readonly wallContactStrength: number;
   readonly wallHardImpactThresholdUnitsPerReferenceTick: number;
   readonly wallSoftRestitution: number;
   readonly wallHardRestitution: number;
@@ -51,12 +49,10 @@ export const particleConfig: ParticleConfig = {
   frictionPerReferenceTick: 0.94,
   maxSpeedUnitsPerReferenceTick: 2.2,
   initialSpeedUnitsPerReferenceTick: 0.35,
-  wallContactRangeUnits: 12,
-  wallContactStrength: 0.24,
   wallHardImpactThresholdUnitsPerReferenceTick: 0.8,
-  wallSoftRestitution: 0.28,
-  wallHardRestitution: 0.55,
-  wallTangentRetention: 0.995,
+  wallSoftRestitution: 0.78,
+  wallHardRestitution: 0.9,
+  wallTangentRetention: 0.998,
   interactionMatrix: particleInteractionMatrix,
 };
 

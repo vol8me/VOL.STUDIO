@@ -3,8 +3,9 @@ import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 import type { ParticleSnapshot } from '@/runtime/sim/ParticleStore';
 
 const BINARY_MAGIC = 0x564c4946;
-const BINARY_VERSION = 1;
-const HEADER_BYTES = 32;
+const BINARY_VERSION = 2;
+const HEADER_BYTES = 48;
+const MAX_WORLD_ID_BYTES = 256;
 const FIELD_ARRAY_COUNT = FIELD_NAMES.length + 1;
 const PARTICLE_FLOAT_ARRAY_COUNT = 4;
 const MAX_BINARY_BYTES = 64 * 1024 * 1024;
@@ -61,9 +62,11 @@ export async function decodeLifeWorldSnapshot(
 function encodeBinary(snapshot: LifeWorldSnapshot): Uint8Array {
   const fieldLength = snapshot.nutrientDiffusionSource.length;
   const particleCount = snapshot.particles.x.length;
+  const worldId = new TextEncoder().encode(snapshot.metadata.id);
   validateSnapshotLengths(snapshot, fieldLength, particleCount);
   const byteLength =
     HEADER_BYTES +
+    worldId.byteLength +
     fieldLength * Float32Array.BYTES_PER_ELEMENT * FIELD_ARRAY_COUNT +
     particleCount * Float32Array.BYTES_PER_ELEMENT * PARTICLE_FLOAT_ARRAY_COUNT +
     particleCount;
@@ -77,7 +80,12 @@ function encodeBinary(snapshot: LifeWorldSnapshot): Uint8Array {
   view.setUint32(20, snapshot.nextFieldBand, true);
   view.setUint32(24, fieldLength, true);
   view.setUint32(28, particleCount, true);
+  view.setUint32(32, snapshot.metadata.seed, true);
+  view.setFloat64(36, snapshot.metadata.createdAtMs, true);
+  view.setUint16(44, worldId.byteLength, true);
   let offset = HEADER_BYTES;
+  bytes.set(worldId, offset);
+  offset += worldId.byteLength;
   offset = writeFloatArray(view, offset, snapshot.nutrientDiffusionSource);
   for (const name of FIELD_NAMES) offset = writeFloatArray(view, offset, snapshot.fields[name]);
   for (const array of particleFloatArrays(snapshot.particles)) {
@@ -98,16 +106,32 @@ function decodeBinary(bytes: Uint8Array): LifeWorldSnapshot {
   const nextFieldBand = view.getUint32(20, true);
   const fieldLength = view.getUint32(24, true);
   const particleCount = view.getUint32(28, true);
+  const seed = view.getUint32(32, true);
+  const createdAtMs = view.getFloat64(36, true);
+  const worldIdLength = view.getUint16(44, true);
   if (!Number.isSafeInteger(tick) || tick < 0 || fieldLength < 4 || particleCount < 1) {
     throw new RangeError('Dünya kaydı boyutları geçersiz.');
   }
   const expectedBytes =
     HEADER_BYTES +
+    worldIdLength +
     fieldLength * Float32Array.BYTES_PER_ELEMENT * FIELD_ARRAY_COUNT +
     particleCount * Float32Array.BYTES_PER_ELEMENT * PARTICLE_FLOAT_ARRAY_COUNT +
     particleCount;
   if (bytes.byteLength !== expectedBytes) throw new RangeError('Dünya kaydı uzunluğu uyuşmuyor.');
+  if (
+    worldIdLength < 1 ||
+    worldIdLength > MAX_WORLD_ID_BYTES ||
+    !Number.isSafeInteger(createdAtMs) ||
+    createdAtMs < 0
+  ) {
+    throw new RangeError('Dünya kaydı metadata bilgisi geçersiz.');
+  }
   let offset = HEADER_BYTES;
+  const id = new TextDecoder('utf-8', { fatal: true }).decode(
+    bytes.subarray(offset, offset + worldIdLength),
+  );
+  offset += worldIdLength;
   let array: Float32Array;
   [array, offset] = readFloatArray(view, offset, fieldLength);
   const nutrientDiffusionSource = array;
@@ -123,6 +147,7 @@ function decodeBinary(bytes: Uint8Array): LifeWorldSnapshot {
   }
   const type = bytes.slice(offset, offset + particleCount);
   return {
+    metadata: { id, seed, createdAtMs },
     tick,
     rngState,
     nextFieldBand,
@@ -157,6 +182,13 @@ function validateSnapshotLengths(
     snapshot.particles.type.length === particleCount;
   if (!fieldsValid || !particlesValid) throw new RangeError('Dünya snapshotı dizileri ayrışıyor.');
   const numbersValid =
+    snapshot.metadata.id.length > 0 &&
+    new TextEncoder().encode(snapshot.metadata.id).byteLength <= MAX_WORLD_ID_BYTES &&
+    Number.isInteger(snapshot.metadata.seed) &&
+    snapshot.metadata.seed >= 0 &&
+    snapshot.metadata.seed <= 0xffffffff &&
+    Number.isSafeInteger(snapshot.metadata.createdAtMs) &&
+    snapshot.metadata.createdAtMs >= 0 &&
     Number.isInteger(snapshot.rngState) &&
     snapshot.rngState >= -0x80000000 &&
     snapshot.rngState <= 0x7fffffff &&

@@ -8,10 +8,12 @@ import {
 import { worldConfig, type WorldConfig } from '@/config/world';
 import { lifeGraphicsConfig } from '@/config/graphics';
 import { particleConfig } from '@/config/particles';
+import type { ParticleConfig } from '@/config/particles';
 import { FieldRenderer } from '@/runtime/render/FieldRenderer';
 import { ParticleRenderer } from '@/runtime/render/ParticleRenderer';
 import { WorldBoundaryRenderer } from '@/runtime/render/WorldBoundaryRenderer';
 import { LifeWorld, type LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
+import { createFreshWorldMetadata, type WorldMetadata } from '@/runtime/sim/WorldMetadata';
 
 interface RuntimeWorld {
   readonly fields: LifeWorld['fields'];
@@ -27,6 +29,7 @@ interface RuntimeRenderer {
 }
 
 interface RuntimeDestroyable {
+  update?(): void;
   destroy(): void;
 }
 
@@ -49,6 +52,8 @@ export interface LifeRuntimeDependencies {
   readonly particleRenderer?: RuntimeParticleRenderer;
   readonly cameraController?: RuntimeCamera;
   readonly initialSnapshot?: LifeWorldSnapshot | null;
+  readonly worldMetadata?: WorldMetadata;
+  readonly particlesConfig?: ParticleConfig;
 }
 
 export class LifeRuntime {
@@ -62,23 +67,38 @@ export class LifeRuntime {
 
   constructor(scene: Phaser.Scene, dependencies: LifeRuntimeDependencies = {}) {
     const config = dependencies.config ?? worldConfig;
-    this.world = dependencies.world ?? new LifeWorld(config);
+    const activeParticleConfig = dependencies.particlesConfig ?? particleConfig;
+    const metadata =
+      dependencies.initialSnapshot?.metadata ??
+      dependencies.worldMetadata ??
+      createFreshWorldMetadata();
+    this.world = dependencies.world ?? new LifeWorld(config, metadata, activeParticleConfig);
     if (dependencies.initialSnapshot) this.world.restore(dependencies.initialSnapshot);
     this.renderer =
       dependencies.renderer ?? new FieldRenderer(scene, this.world.fields, config.boundsUnits);
     this.boundaryRenderer =
       dependencies.boundaryRenderer ??
-      new WorldBoundaryRenderer(scene, config.boundsUnits, {
-        thicknessUnits: config.boundaryThicknessUnits,
-        color: lifeGraphicsConfig.boundaryColor,
-      });
+      new WorldBoundaryRenderer(
+        scene,
+        config.boundsUnits,
+        {
+          collisionInsetUnits: config.particleCollisionInsetUnits,
+          preferredThicknessUnits: lifeGraphicsConfig.boundaryPreferredThicknessUnits,
+          minScreenPixels: lifeGraphicsConfig.boundaryMinScreenPixels,
+          maxScreenPixels: lifeGraphicsConfig.boundaryMaxScreenPixels,
+          color: lifeGraphicsConfig.boundaryColor,
+        },
+        scene.cameras.main,
+      );
     this.particleRenderer =
-      dependencies.particleRenderer ?? new ParticleRenderer(scene, particleConfig.radiusUnits);
+      dependencies.particleRenderer ??
+      new ParticleRenderer(scene, activeParticleConfig.radiusUnits);
     this.cameraController =
       dependencies.cameraController ??
       new WorldCameraController(scene.game.canvas, scene.cameras.main, {
         bounds: config.boundsUnits,
         maxZoomFactor: lifeGraphicsConfig.cameraMaxZoomFactor,
+        initialZoomFactor: 1.04,
       });
     this.clock = new SimulationClock({
       fixedStepMs: config.fixedStepMs,
@@ -97,6 +117,7 @@ export class LifeRuntime {
 
   update(deltaMs: number): SimulationClockFrame {
     this.cameraController.update(deltaMs);
+    this.boundaryRenderer.update?.();
     let fieldsChanged = false;
     const frame = this.clock.advance(deltaMs, () => {
       fieldsChanged = this.world.step() || fieldsChanged;

@@ -9,6 +9,11 @@ import {
 } from '@/app/LifeWorldPersistence';
 import { decodeLifeWorldSnapshot, encodeLifeWorldSnapshot } from '@/app/LifeWorldSnapshotCodec';
 import { LifeWorld } from '@/runtime/sim/LifeWorld';
+import { createExplicitWorldMetadata } from '@/runtime/sim/WorldMetadata';
+
+function createWorld(config = worldConfig, seed = 42): LifeWorld {
+  return new LifeWorld(config, createExplicitWorldMetadata(seed));
+}
 
 function memorySaveManager(initial: unknown = null) {
   let value = initial;
@@ -29,7 +34,7 @@ afterEach(() => {
 
 describe('LifeWorldSnapshotCodec', () => {
   it('snapshotı sürümlü küçük-endian ikili yükte kayıpsız döndürür', async () => {
-    const world = new LifeWorld({ ...worldConfig, fieldResolution: 8, seed: 42 });
+    const world = createWorld({ ...worldConfig, fieldResolution: 8 });
     for (let index = 0; index < 20; index++) world.step();
     const snapshot = world.snapshot();
     const envelope = await encodeLifeWorldSnapshot(snapshot, 'fingerprint');
@@ -43,7 +48,7 @@ describe('LifeWorldSnapshotCodec', () => {
 
   it('uzunluğu değişmeyen ikili bozulmayı checksum ile reddeder', async () => {
     vi.stubGlobal('CompressionStream', undefined);
-    const snapshot = new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
+    const snapshot = createWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
     const envelope = await encodeLifeWorldSnapshot(snapshot, 'fingerprint');
     const bytes = Buffer.from(envelope.payload, 'base64');
     bytes[40] ^= 0x01;
@@ -54,7 +59,7 @@ describe('LifeWorldSnapshotCodec', () => {
   });
 
   it('farklı yapılandırma parmak izini ve bozuk yükü dünyaya uygulamaz', async () => {
-    const snapshot = new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
+    const snapshot = createWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
     const envelope = await encodeLifeWorldSnapshot(snapshot, 'current');
 
     expect(await decodeLifeWorldSnapshot(envelope, 'changed')).toBeNull();
@@ -64,7 +69,7 @@ describe('LifeWorldSnapshotCodec', () => {
   });
 
   it('gzip kaydını açacak platform desteği yoksa yeni dünyaya düşer', async () => {
-    const snapshot = new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
+    const snapshot = createWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
     const envelope = await encodeLifeWorldSnapshot(snapshot, 'current');
     expect(envelope.encoding).toBe('gzip-base64');
     vi.stubGlobal('DecompressionStream', undefined);
@@ -74,7 +79,7 @@ describe('LifeWorldSnapshotCodec', () => {
 
   it('payload bildirilen ikili uzunlukla uyuşmazsa reddeder', async () => {
     vi.stubGlobal('CompressionStream', undefined);
-    const snapshot = new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
+    const snapshot = createWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
     const envelope = await encodeLifeWorldSnapshot(snapshot, 'current');
 
     await expect(
@@ -83,7 +88,7 @@ describe('LifeWorldSnapshotCodec', () => {
   });
 
   it('geçersiz snapshot alanlarında RangeError fırlatır', async () => {
-    const valid = new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
+    const valid = createWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
     await expect(encodeLifeWorldSnapshot({ ...valid, tick: -1 }, 'test')).rejects.toThrow(
       RangeError,
     );
@@ -156,7 +161,7 @@ describe('LifeWorldPersistence', () => {
       testWorldConfig,
       particleConfig,
     );
-    const snapshot = new LifeWorld(testWorldConfig).snapshot();
+    const snapshot = createWorld(testWorldConfig).snapshot();
 
     await persistence.save(snapshot);
 
@@ -164,12 +169,13 @@ describe('LifeWorldPersistence', () => {
     expect(memory.manager.save).toHaveBeenCalledWith('vol-life:world', memory.read());
   });
 
-  it('parmak izi fizik ve dünya yapılandırmasının ikisine de bağlıdır', () => {
+  it('parmak izi fizik ve dünya yapılandırmasına bağlı, instance seedinden bağımsızdır', () => {
     const baseline = createWorldConfigFingerprint(worldConfig, particleConfig);
 
-    expect(
-      createWorldConfigFingerprint({ ...worldConfig, seed: worldConfig.seed + 1 }, particleConfig),
-    ).not.toBe(baseline);
+    expect(createWorldConfigFingerprint(worldConfig, particleConfig)).toBe(baseline);
+    expect(createWorld(worldConfig, 1).snapshot().metadata.seed).not.toBe(
+      createWorld(worldConfig, 2).snapshot().metadata.seed,
+    );
     expect(
       createWorldConfigFingerprint(worldConfig, {
         ...particleConfig,
@@ -180,7 +186,7 @@ describe('LifeWorldPersistence', () => {
 
   it('checksumı doğru olsa da sınır dışındaki parçacığı yüklemez', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const snapshot = new LifeWorld(worldConfig).snapshot();
+    const snapshot = createWorld().snapshot();
     const x = snapshot.particles.x.slice();
     x[0] = worldConfig.boundsUnits.x - 1;
     const envelope = await encodeLifeWorldSnapshot(
@@ -199,7 +205,7 @@ describe('LifeWorldPersistence', () => {
   it('yapılandırmayla ayrışan alan, parçacık, hız, tür ve bant verisini kaydetmez', async () => {
     const memory = memorySaveManager();
     const persistence = new LifeWorldPersistence(memory.saveManager, worldConfig, particleConfig);
-    const snapshot = new LifeWorld(worldConfig).snapshot();
+    const snapshot = createWorld().snapshot();
     const shortField = snapshot.fields.light.slice(1);
     const shortX = snapshot.particles.x.slice(1);
     const fastVx = snapshot.particles.vx.slice();
@@ -207,6 +213,7 @@ describe('LifeWorldPersistence', () => {
     const invalidType = snapshot.particles.type.slice();
     invalidType[0] = 247;
     const invalidSnapshots = [
+      { ...snapshot, metadata: { ...snapshot.metadata, seed: -1 } },
       { ...snapshot, fields: { ...snapshot.fields, light: shortField } },
       { ...snapshot, particles: { ...snapshot.particles, x: shortX } },
       { ...snapshot, particles: { ...snapshot.particles, vx: fastVx } },
@@ -228,7 +235,7 @@ describe('LifeWorldAutosave', () => {
     let tick = 0;
     const source = {
       snapshot: () => {
-        const world = new LifeWorld({ ...worldConfig, fieldResolution: 8, seed: ++tick });
+        const world = createWorld({ ...worldConfig, fieldResolution: 8 }, ++tick);
         return world.snapshot();
       },
     };
@@ -263,7 +270,7 @@ describe('LifeWorldAutosave', () => {
       particleConfig,
     );
     const source = {
-      snapshot: () => new LifeWorld(testWorldConfig).snapshot(),
+      snapshot: () => createWorld(testWorldConfig).snapshot(),
     };
     const autosave = persistence.attach(source, { intervalMs: 10_000 });
     expect(autosave).toBeInstanceOf(LifeWorldAutosave);
@@ -273,7 +280,7 @@ describe('LifeWorldAutosave', () => {
   it('geçersiz otomatik kayıt aralığında RangeError fırlatır', () => {
     const save = vi.fn(() => Promise.resolve());
     const source = {
-      snapshot: () => new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot(),
+      snapshot: () => createWorld({ ...worldConfig, fieldResolution: 8 }).snapshot(),
     };
     expect(() => new LifeWorldAutosave({ save }, source, { intervalMs: 0 })).toThrow(RangeError);
     expect(() => new LifeWorldAutosave({ save }, source, { intervalMs: -10 })).toThrow(RangeError);
@@ -282,7 +289,7 @@ describe('LifeWorldAutosave', () => {
   it('destroy sonrasında yeni periyodik kayıt kabul etmez', async () => {
     const save = vi.fn(() => Promise.resolve());
     const source = {
-      snapshot: () => new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot(),
+      snapshot: () => createWorld({ ...worldConfig, fieldResolution: 8 }).snapshot(),
     };
     const autosave = new LifeWorldAutosave({ save }, source, { intervalMs: 10_000 });
 
@@ -300,7 +307,7 @@ describe('LifeWorldAutosave', () => {
     const save = vi.fn(() => Promise.reject(saveError));
     const onError = vi.fn();
     const source = {
-      snapshot: () => new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot(),
+      snapshot: () => createWorld({ ...worldConfig, fieldResolution: 8 }).snapshot(),
     };
     const autosave = new LifeWorldAutosave({ save }, source, { onError, intervalMs: 10_000 });
 
@@ -322,5 +329,41 @@ describe('LifeWorldAutosave', () => {
     );
     const result = await persistence.load();
     expect(result).toBeNull();
+  });
+
+  it('geçersiz intervalMs verildiğinde LifeWorldAutosave RangeError fırlatır', () => {
+    const save = vi.fn(() => Promise.resolve());
+    const source = { snapshot: () => createWorld().snapshot() };
+    expect(() => new LifeWorldAutosave({ save }, source, { intervalMs: 0 })).toThrow(RangeError);
+    expect(() => new LifeWorldAutosave({ save }, source, { intervalMs: -100 })).toThrow(RangeError);
+    expect(() => new LifeWorldAutosave({ save }, source, { intervalMs: Number.NaN })).toThrow(
+      RangeError,
+    );
+  });
+
+  it('onError callbacki hata fırlattığında console.error ile loglar', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const save = vi.fn(() => Promise.reject(new Error('Kayıt başarısız')));
+    const onError = vi.fn(() => {
+      throw new Error('Callback patladı');
+    });
+    const source = {
+      snapshot: () => createWorld({ ...worldConfig, fieldResolution: 8 }).snapshot(),
+    };
+    const autosave = new LifeWorldAutosave({ save }, source, { onError, intervalMs: 10_000 });
+    await expect(autosave.flush()).rejects.toThrow('Kayıt başarısız');
+    expect(errorSpy).toHaveBeenCalled();
+    autosave.destroy();
+  });
+
+  it('nextFieldBand sınır dışı olduğunda kaydetmez ve RangeError fırlatır', async () => {
+    const memory = memorySaveManager();
+    const persistence = new LifeWorldPersistence(memory.saveManager, worldConfig, particleConfig);
+    const snapshot = createWorld().snapshot();
+    await expect(
+      persistence.save({ ...snapshot, nextFieldBand: worldConfig.fieldUpdateBands }),
+    ).rejects.toThrow(RangeError);
+    await expect(persistence.save({ ...snapshot, nextFieldBand: -1 })).rejects.toThrow(RangeError);
   });
 });

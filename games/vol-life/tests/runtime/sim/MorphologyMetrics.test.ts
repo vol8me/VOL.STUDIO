@@ -3,6 +3,7 @@ import { particleConfig } from '@/config/particles';
 import {
   analyzeMorphologyFrame,
   compareClusterMembership,
+  compareClusterStructure,
   detectParticleClusters,
 } from '@/runtime/sim/MorphologyMetrics';
 import { ParticleStore } from '@/runtime/sim/ParticleStore';
@@ -12,6 +13,8 @@ const options = {
   clusterRadiusUnits: 32,
   minimumClusterSize: 3,
   movingSpeedUnitsPerReferenceTick: 0.1,
+  nearlyStalledSpeedUnitsPerReferenceTick: 0.005,
+  wallContactDistanceUnits: 12,
   roleByType: [0, 0, 1, 1, 2, 2],
   wallSupportShare: 0.2,
 };
@@ -76,6 +79,53 @@ describe('morfoloji küme tespiti', () => {
 
     expect(metrics.clusteredFraction).toBe(1);
     expect(metrics.meanLayering).toBeGreaterThan(0.5);
+  });
+
+  it('role-agnostic radial layering tür rolleri değişse de geometriyi korur', () => {
+    const particles = store([
+      [250, 256],
+      [262, 256],
+      [226, 256],
+      [286, 256],
+      [206, 256],
+      [306, 256],
+    ]);
+    const ordered = analyzeMorphologyFrame(particles, bounds, particleConfig, {
+      ...options,
+      clusterRadiusUnits: 64,
+    });
+    particles.type.set([5, 3, 0, 4, 1, 2]);
+    const shuffled = analyzeMorphologyFrame(particles, bounds, particleConfig, {
+      ...options,
+      clusterRadiusUnits: 64,
+    });
+
+    expect(shuffled.meanRadialLayering).toBeCloseTo(ordered.meanRadialLayering, 8);
+    expect(shuffled.meanLayering).not.toBeCloseTo(ordered.meanLayering, 3);
+  });
+
+  it('recovery proxy üyelik, kompozisyon, radial profil, centroid ve şekli ayrı ölçer', () => {
+    const beforeStore = store([
+      [100, 100],
+      [110, 100],
+      [120, 100],
+    ]);
+    const afterStore = store([
+      [102, 100],
+      [112, 100],
+      [122, 100],
+    ]);
+    beforeStore.type.set([0, 1, 2]);
+    afterStore.type.set([0, 1, 5]);
+    const before = detectParticleClusters(beforeStore, bounds, 128, 32, options.roleByType);
+    const after = detectParticleClusters(afterStore, bounds, 128, 32, options.roleByType);
+
+    const recovery = compareClusterStructure(before, after);
+
+    expect(recovery.membership).toBe(1);
+    expect(recovery.typeComposition).toBeLessThan(1);
+    expect(recovery.radialProfile).toBeCloseTo(1, 6);
+    expect(recovery.centroidAndSize).toBeLessThan(1);
   });
 
   it('eş yönlü yörüngeyi ve statik kristali ayrı failure metriclerinde gösterir', () => {

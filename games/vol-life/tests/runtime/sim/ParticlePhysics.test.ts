@@ -87,11 +87,22 @@ describe('parçacık fiziği', () => {
 
     integrateParticles(particles, particleConfig, worldConfig.boundsUnits, worldConfig.fixedStepMs);
 
-    expect(particles.x[0]).toBe(particleConfig.radiusUnits);
+    expect(particles.x[0]).toBeGreaterThan(particleConfig.radiusUnits);
     expect(particles.vx[0]).toBeGreaterThan(0);
     expect(particles.x[1]).toBeGreaterThanOrEqual(particleConfig.radiusUnits);
     expect(particles.vx[1]).toBeGreaterThan(0);
     expect(particles.vy[1]).toBeGreaterThan(0);
+  });
+
+  it('penetrasyon yokken görünmez wall spring uygulamaz', () => {
+    const particles = new ParticleStore(1);
+    particles.x[0] = particleConfig.radiusUnits + 6;
+    particles.y[0] = 200;
+
+    integrateParticles(particles, particleConfig, worldConfig.boundsUnits, worldConfig.fixedStepMs);
+
+    expect(particles.x[0]).toBe(particleConfig.radiusUnits + 6);
+    expect(particles.vx[0]).toBe(0);
   });
 
   it('sürekli dışarı itilen parçacığı sınır düzlemine kilitlemez', () => {
@@ -103,7 +114,7 @@ describe('parçacık fiziği', () => {
     let exactContactTicks = 0;
     let furthestSeparation = 0;
 
-    for (let tick = 0; tick < 360; tick++) {
+    for (let tick = 0; tick < 3_600; tick++) {
       particles.forceX[0] = -0.08;
       integrateParticles(
         particles,
@@ -115,8 +126,8 @@ describe('parçacık fiziği', () => {
       furthestSeparation = Math.max(furthestSeparation, particles.x[0] - minimumX);
     }
 
-    expect(exactContactTicks).toBeLessThan(90);
-    expect(furthestSeparation).toBeGreaterThan(2);
+    expect(exactContactTicks).toBeLessThan(900);
+    expect(furthestSeparation).toBeGreaterThan(0.5);
   });
 
   it('köşede iki normal bileşeni çözer ve teğetsel hareketi korur', () => {
@@ -141,6 +152,46 @@ describe('parçacık fiziği', () => {
 
     expect(grazing.vx[0]).toBeGreaterThan(0);
     expect(grazing.vy[0]).toBeGreaterThan(0.9);
+  });
+
+  it('dünya parçacık çapından küçük olduğunda initializeParticles RangeError fırlatır', () => {
+    const particles = new ParticleStore(10);
+    const smallBounds = { x: 0, y: 0, width: 2, height: 2 };
+    expect(() =>
+      initializeParticles(particles, createSimRandom(42), particleConfig, smallBounds),
+    ).toThrow(RangeError);
+  });
+
+  it('geçersiz stepMs verildiğinde integrateParticles RangeError fırlatır', () => {
+    const particles = new ParticleStore(1);
+    expect(() => integrateParticles(particles, particleConfig, worldConfig.boundsUnits, 0)).toThrow(
+      RangeError,
+    );
+    expect(() =>
+      integrateParticles(particles, particleConfig, worldConfig.boundsUnits, -5),
+    ).toThrow(RangeError);
+    expect(() =>
+      integrateParticles(particles, particleConfig, worldConfig.boundsUnits, Number.NaN),
+    ).toThrow(RangeError);
+  });
+
+  it('sağ ve alt duvarlara çarpan parçacığın hız ve konumu sınır içine döndürülür', () => {
+    const maxX =
+      worldConfig.boundsUnits.x + worldConfig.boundsUnits.width - particleConfig.radiusUnits;
+    const maxY =
+      worldConfig.boundsUnits.y + worldConfig.boundsUnits.height - particleConfig.radiusUnits;
+    const particles = new ParticleStore(2);
+    particles.x.set([maxX - 0.1, 100]);
+    particles.y.set([100, maxY - 0.1]);
+    particles.vx.set([2, 0.5]);
+    particles.vy.set([0.5, 2]);
+
+    integrateParticles(particles, particleConfig, worldConfig.boundsUnits, worldConfig.fixedStepMs);
+
+    expect(particles.x[0]).toBeLessThanOrEqual(maxX);
+    expect(particles.vx[0]).toBeLessThan(0);
+    expect(particles.y[1]).toBeLessThanOrEqual(maxY);
+    expect(particles.vy[1]).toBeLessThan(0);
   });
 
   it('aynı tohumla aynı başlangıç dizilerini üretir', () => {

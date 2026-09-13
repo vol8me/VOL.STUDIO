@@ -234,6 +234,25 @@ describe('WorldCameraController', () => {
     expect(controller.getState().centerX).toBeGreaterThanOrEqual(visibleHalfWidth);
   });
 
+  it('momentumu sınırın son bölümünde sert çarpma yerine kademeli sönümler', () => {
+    const { element, controller } = harness();
+    element.dispatchEvent(new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -600 }));
+    controller.update(1000);
+    element.dispatchEvent(pointer('pointerdown', 1, 500, 400, 0));
+    element.dispatchEvent(pointer('pointermove', 1, 430, 400, 40));
+    element.dispatchEvent(pointer('pointerup', 1, 420, 400, 44));
+
+    const movements: number[] = [];
+    for (let frame = 0; frame < 12; frame++) {
+      const before = controller.getState().centerX;
+      controller.update(16);
+      movements.push(Math.abs(controller.getState().centerX - before));
+    }
+
+    expect(controller.getState().centerX).toBeLessThanOrEqual(1000);
+    expect(movements.at(-1)!).toBeLessThan(movements[0]);
+  });
+
   it('en uzak görünümde kaplanan ekseni kilitler, diğer ekseni sınırlar', () => {
     const { element, state } = harness();
     element.dispatchEvent(
@@ -259,7 +278,7 @@ describe('WorldCameraController', () => {
       new PointerEvent('pointermove', { pointerId: 1, clientX: 430, clientY: 400 }),
     );
     const releasedAt = controller.getState().centerX;
-    element.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1 }));
+    element.dispatchEvent(pointer('pointerup', 1, 430, 400, 32));
 
     controller.update(16);
     const afterRelease = controller.getState().centerX;
@@ -267,6 +286,34 @@ describe('WorldCameraController', () => {
 
     expect(afterRelease).toBeLessThan(releasedAt);
     expect(controller.getState().centerX).toBeLessThanOrEqual(afterRelease);
+  });
+
+  it('pointerup olayındaki son koordinatı pan ve momentum örneğine dahil eder', () => {
+    const { element, controller } = harness();
+    element.dispatchEvent(new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -300 }));
+    controller.update(1000);
+    element.dispatchEvent(pointer('pointerdown', 1, 400, 400, 0));
+    element.dispatchEvent(pointer('pointermove', 1, 430, 400, 20));
+    const beforeRelease = controller.getState().centerX;
+
+    element.dispatchEvent(pointer('pointerup', 1, 470, 400, 40));
+    const released = controller.getState().centerX;
+    controller.update(16);
+
+    expect(released).toBeLessThan(beforeRelease);
+    expect(controller.getState().centerX).toBeLessThan(released);
+  });
+
+  it('wheel easing sürerken pointerdown eski zoom hedefini iptal eder', () => {
+    const { element, camera, controller } = harness();
+    element.dispatchEvent(new WheelEvent('wheel', { clientX: 900, clientY: 300, deltaY: -200 }));
+    controller.update(16);
+    const zoomAtPointerDown = camera.zoom;
+
+    element.dispatchEvent(pointer('pointerdown', 1, 400, 400, 20));
+    controller.update(500);
+
+    expect(camera.zoom).toBe(zoomAtPointerDown);
   });
 
   it('aynı hareketi 8 ms ve 16 ms örnek aralıklarında aynı bırakma hızıyla sürdürür', () => {

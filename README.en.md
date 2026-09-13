@@ -45,6 +45,7 @@ pnpm --filter @volstudio/vol-asset-studio dev  # Asset Studio :5175
 pnpm quick                                     # pre-commit gate
 pnpm high                                      # pre-push gate
 pnpm signoff                                   # release gate
+pnpm proof:life                                # VOL.LIFE Step 4 proof-of-life gate
 ```
 
 Build and Android recipes in [docs/android.md](docs/android.md); what the gates

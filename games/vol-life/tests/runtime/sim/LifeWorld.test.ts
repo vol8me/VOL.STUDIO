@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { worldConfig } from '@/config/world';
 import { LifeWorld } from '@/runtime/sim/LifeWorld';
+import { createExplicitWorldMetadata } from '@/runtime/sim/WorldMetadata';
+
+function createWorld(seed: number, config = worldConfig): LifeWorld {
+  return new LifeWorld(config, createExplicitWorldMetadata(seed));
+}
 
 function bytes(array: Float32Array): Uint8Array {
   return new Uint8Array(array.buffer.slice(0));
@@ -8,8 +13,9 @@ function bytes(array: Float32Array): Uint8Array {
 
 describe('LifeWorld', () => {
   it('aynı tohum ve tick sayısında bütün alanları bayt bayt aynı üretir', () => {
-    const left = new LifeWorld({ ...worldConfig, fieldResolution: 32, seed: 42 });
-    const right = new LifeWorld({ ...worldConfig, fieldResolution: 32, seed: 42 });
+    const config = { ...worldConfig, fieldResolution: 32 };
+    const left = createWorld(42, config);
+    const right = createWorld(42, config);
 
     for (let i = 0; i < 120; i++) {
       left.step();
@@ -26,11 +32,22 @@ describe('LifeWorld', () => {
     expect([...left.particles.type]).toEqual([...right.particles.type]);
   });
 
+  it('farklı world-instance seedleri farklı başlangıç üretir', () => {
+    const config = { ...worldConfig, fieldResolution: 32 };
+    const left = createWorld(42, config);
+    const right = createWorld(43, config);
+
+    expect(bytes(left.particles.x)).not.toEqual(bytes(right.particles.x));
+    expect(left.snapshot().metadata.seed).toBe(42);
+    expect(right.snapshot().metadata.seed).toBe(43);
+  });
+
   it('anlık görüntüden devam eden dünya kesintisiz koşuyla aynı sona varır', () => {
-    const continuous = new LifeWorld({ ...worldConfig, fieldResolution: 32, seed: 7 });
+    const config = { ...worldConfig, fieldResolution: 32 };
+    const continuous = createWorld(7, config);
     for (let i = 0; i < 90; i++) continuous.step();
     const snapshot = continuous.snapshot();
-    const restored = new LifeWorld({ ...worldConfig, fieldResolution: 32, seed: 7 });
+    const restored = createWorld(7, config);
     restored.restore(snapshot);
 
     for (let i = 0; i < 90; i++) {
@@ -46,7 +63,7 @@ describe('LifeWorld', () => {
   });
 
   it('her simülasyon tickinde parçacıkları hareket ettirir ve sabit sayıyı korur', () => {
-    const world = new LifeWorld({ ...worldConfig, fieldResolution: 32, seed: 19 });
+    const world = createWorld(19, { ...worldConfig, fieldResolution: 32 });
     const initialX = world.particles.x.slice();
 
     world.step();
@@ -56,7 +73,7 @@ describe('LifeWorld', () => {
   });
 
   it('ışık kaynakları alanı eşitsiz tohumlar ve zamanla yer değiştirir', () => {
-    const world = new LifeWorld({ ...worldConfig, fieldResolution: 32, seed: 11 });
+    const world = createWorld(11, { ...worldConfig, fieldResolution: 32 });
     const initial = world.fields.light.slice();
 
     for (let i = 0; i < 60; i++) world.step();
@@ -67,14 +84,14 @@ describe('LifeWorld', () => {
   });
 
   it('alan güncellemesinin yalnız gerçekleştiği tickte true döndürür', () => {
-    const world = new LifeWorld({ ...worldConfig, fieldResolution: 32 });
+    const world = createWorld(1, { ...worldConfig, fieldResolution: 32 });
 
     expect(Array.from({ length: 5 }, () => world.step())).toEqual(Array(5).fill(false));
     expect(world.step()).toBe(true);
   });
 
   it('512 yolu gibi kademeli kipte her turda tek satır bandını yeniler', () => {
-    const world = new LifeWorld({
+    const world = createWorld(2, {
       ...worldConfig,
       fieldResolution: 32,
       fieldUpdateBands: 4,
@@ -88,10 +105,10 @@ describe('LifeWorld', () => {
   });
 
   it('kademeli alan imlecini snapshot/restore boyunca korur', () => {
-    const config = { ...worldConfig, fieldResolution: 32, fieldUpdateBands: 4, seed: 91 };
-    const continuous = new LifeWorld(config);
+    const config = { ...worldConfig, fieldResolution: 32, fieldUpdateBands: 4 };
+    const continuous = createWorld(91, config);
     for (let i = 0; i < 18; i++) continuous.step();
-    const restored = new LifeWorld(config);
+    const restored = createWorld(91, config);
     restored.restore(continuous.snapshot());
 
     for (let i = 0; i < 30; i++) {

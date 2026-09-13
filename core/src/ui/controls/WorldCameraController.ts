@@ -30,6 +30,7 @@ export interface WorldCameraControllerOptions {
   readonly wheelSensitivity?: number;
   readonly wheelSmoothingMs?: number;
   readonly panMomentumMs?: number;
+  readonly initialZoomFactor?: number;
   readonly onChange?: (state: WorldCameraState) => void;
 }
 
@@ -57,7 +58,7 @@ const MAX_WHEEL_DELTA_PX = 240;
 const DEFAULT_POINTER_FRAME_MS = 16;
 const POINTER_VELOCITY_WINDOW_MS = 80;
 const MIN_VALID_POINTER_DELTA_MS = 1;
-const MIN_MOMENTUM_UNITS_PER_MS = 0.001;
+const MIN_MOMENTUM_UNITS_PER_MS = 0.000001;
 const MAX_MOMENTUM_UNITS_PER_MS = 3;
 
 export class WorldCameraController {
@@ -69,6 +70,7 @@ export class WorldCameraController {
   private readonly wheelSensitivity: number;
   private readonly wheelSmoothingMs: number;
   private readonly panMomentumMs: number;
+  private readonly initialZoomFactor: number;
   private readonly onChange?: (state: WorldCameraState) => void;
   private centerX: number;
   private centerY: number;
@@ -78,6 +80,8 @@ export class WorldCameraController {
   private minZoom = 1;
   private panVelocityX = 0;
   private panVelocityY = 0;
+  private momentumCenterX = 0;
+  private momentumCenterY = 0;
   private pinch: PinchGesture | null = null;
   private wheelMotion: WheelMotion | null = null;
 
@@ -92,11 +96,19 @@ export class WorldCameraController {
     this.wheelSensitivity = options.wheelSensitivity ?? 0.0015;
     this.wheelSmoothingMs = options.wheelSmoothingMs ?? 90;
     this.panMomentumMs = options.panMomentumMs ?? 140;
+    this.initialZoomFactor = options.initialZoomFactor ?? 1;
+    if (!(this.initialZoomFactor >= 1) || !Number.isFinite(this.initialZoomFactor)) {
+      throw new RangeError(
+        `Başlangıç zoom çarpanı 1 veya daha büyük olmalı: ${this.initialZoomFactor}`,
+      );
+    }
     this.onChange = options.onChange;
     this.centerX = options.bounds.x + options.bounds.width / 2;
     this.centerY = options.bounds.y + options.bounds.height / 2;
     this.targetCenterX = this.centerX;
     this.targetCenterY = this.centerY;
+    this.momentumCenterX = this.centerX;
+    this.momentumCenterY = this.centerY;
     const previousTouchAction = element.style.touchAction;
     element.style.touchAction = 'none';
     this.scope.add({ dispose: () => (element.style.touchAction = previousTouchAction) });
@@ -111,7 +123,11 @@ export class WorldCameraController {
 
   fitWorld(): void {
     this.minZoom = this.resolveMinZoom();
-    this.targetZoom = this.minZoom;
+    this.targetZoom = clamp(
+      this.minZoom * this.initialZoomFactor,
+      this.minZoom,
+      this.minZoom * this.maxZoomFactor,
+    );
     this.targetCenterX = this.bounds.x + this.bounds.width / 2;
     this.targetCenterY = this.bounds.y + this.bounds.height / 2;
     this.stopMomentum();
@@ -192,6 +208,9 @@ export class WorldCameraController {
     this.pointers.set(event.pointerId, position);
     this.pointerHistory.set(event.pointerId, [position]);
     this.wheelMotion = null;
+    this.targetZoom = this.camera.zoom;
+    this.targetCenterX = this.centerX;
+    this.targetCenterY = this.centerY;
     this.stopMomentum();
     this.element.setPointerCapture?.(event.pointerId);
     this.resetPinch();
@@ -207,6 +226,8 @@ export class WorldCameraController {
       this.pinch = null;
       this.panBy(current.x - previous.x, current.y - previous.y);
       this.updatePanVelocity(event.pointerId);
+      this.momentumCenterX = this.centerX;
+      this.momentumCenterY = this.centerY;
       return;
     }
     this.stopMomentum();
@@ -216,6 +237,17 @@ export class WorldCameraController {
 
   private readonly onPointerEnd = (event: PointerEvent): void => {
     const wasSinglePointer = this.pointers.size === 1;
+    const previous = this.pointers.get(event.pointerId);
+    if (wasSinglePointer && previous) {
+      const current = pointerPosition(event);
+      this.recordPointerHistory(event.pointerId, event, current);
+      if (current.x !== previous.x || current.y !== previous.y) {
+        this.panBy(current.x - previous.x, current.y - previous.y);
+      }
+      this.updatePanVelocity(event.pointerId);
+      this.momentumCenterX = this.centerX;
+      this.momentumCenterY = this.centerY;
+    }
     this.pointers.delete(event.pointerId);
     this.pointerHistory.delete(event.pointerId);
     if (this.element.hasPointerCapture?.(event.pointerId)) {
@@ -295,27 +327,29 @@ export class WorldCameraController {
       Math.abs(this.panVelocityX) < MIN_MOMENTUM_UNITS_PER_MS &&
       Math.abs(this.panVelocityY) < MIN_MOMENTUM_UNITS_PER_MS
     ) {
-      this.applyState(
-        this.centerX + this.panVelocityX * this.panMomentumMs,
-        this.centerY + this.panVelocityY * this.panMomentumMs,
+      this.momentumCenterX += this.panVelocityX * this.panMomentumMs;
+      this.momentumCenterY += this.panVelocityY * this.panMomentumMs;
+      const finalCenter = this.softClampMomentumCenter(
+        this.momentumCenterX,
+        this.momentumCenterY,
         this.camera.zoom,
       );
+      this.applyState(finalCenter.x, finalCenter.y, this.camera.zoom);
       this.targetCenterX = this.centerX;
       this.targetCenterY = this.centerY;
       this.stopMomentum();
       return true;
     }
-    const beforeX = this.centerX;
-    const beforeY = this.centerY;
     const decay = Math.exp(-deltaMs / this.panMomentumMs);
     const travelMs = this.panMomentumMs * (1 - decay);
-    this.applyState(
-      beforeX + this.panVelocityX * travelMs,
-      beforeY + this.panVelocityY * travelMs,
+    this.momentumCenterX += this.panVelocityX * travelMs;
+    this.momentumCenterY += this.panVelocityY * travelMs;
+    const softened = this.softClampMomentumCenter(
+      this.momentumCenterX,
+      this.momentumCenterY,
       this.camera.zoom,
     );
-    if (this.centerX === beforeX) this.panVelocityX = 0;
-    if (this.centerY === beforeY) this.panVelocityY = 0;
+    this.applyState(softened.x, softened.y, this.camera.zoom);
     this.panVelocityX *= decay;
     this.panVelocityY *= decay;
     this.targetCenterX = this.centerX;
@@ -323,9 +357,34 @@ export class WorldCameraController {
     return true;
   }
 
+  private softClampMomentumCenter(
+    centerX: number,
+    centerY: number,
+    zoom: number,
+  ): WorldCameraPoint {
+    const halfWidth = this.camera.width / (2 * zoom);
+    const halfHeight = this.camera.height / (2 * zoom);
+    return {
+      x: softClamp(
+        centerX,
+        this.bounds.x + halfWidth,
+        this.bounds.x + this.bounds.width - halfWidth,
+        halfWidth * 2 * 0.08,
+      ),
+      y: softClamp(
+        centerY,
+        this.bounds.y + halfHeight,
+        this.bounds.y + this.bounds.height - halfHeight,
+        halfHeight * 2 * 0.08,
+      ),
+    };
+  }
+
   private stopMomentum(): void {
     this.panVelocityX = 0;
     this.panVelocityY = 0;
+    this.momentumCenterX = this.centerX;
+    this.momentumCenterY = this.centerY;
   }
 
   private resetPinch(): void {
@@ -504,4 +563,18 @@ function mix(left: number, right: number, amount: number): number {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function softClamp(value: number, minimum: number, maximum: number, zone: number): number {
+  if (value <= minimum) return minimum;
+  if (value >= maximum) return maximum;
+  if (value < minimum + zone) {
+    const progress = (value - minimum) / zone;
+    return minimum + zone * progress * progress * (2 - progress);
+  }
+  if (value > maximum - zone) {
+    const progress = (maximum - value) / zone;
+    return maximum - zone * progress * progress * (2 - progress);
+  }
+  return value;
 }

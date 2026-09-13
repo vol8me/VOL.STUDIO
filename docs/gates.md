@@ -9,7 +9,9 @@ release içindir; CI runner yoktur.
 | Push öncesi  | `pnpm high`                  | quick + Rust + CSS lint + coverage ve şekli (audio-synth hariç) + build + bundle + ölçekleme + E2E |
 | Release      | `pnpm signoff`               | high + audio-synth coverage ve şekli + Chromium/Firefox E2E + ses tazeliği                         |
 | Ortam        | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri bağımlılıkları                                               |
+| LIFE Adım 4  | `pnpm proof:life`            | Production fiziği 5 seed × 15 simüle dakika; genel push kapısında değildir                         |
 | Cihaz ölçümü | `pnpm benchmark:device`      | Bağlı Android'de açılış/kare/bellek — **kapı DEĞİL**                                               |
+| LIFE Adım 4  | `pnpm proof:life`            | Production fiziği 5 seed × 15 simüle dakika sınar; `high` içinde değildir                          |
 | Rapor        | `pnpm exec just report high` | Kapıyı koşar, sonucu yapılandırılmış verir (`--json`)                                              |
 
 Hook'lar `pnpm install` sırasında kurulur (`pre-commit` → `quick`,

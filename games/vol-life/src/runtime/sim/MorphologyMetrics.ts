@@ -9,10 +9,13 @@ export interface ParticleCluster {
   readonly centerY: number;
   readonly meanRadius: number;
   readonly layering: number;
+  readonly radialLayering: number;
   readonly orbitCoherence: number;
   readonly orbitActivity: number;
   readonly compactness: number;
   readonly shapeAnisotropy: number;
+  readonly neighborLinks: number;
+  readonly typeComposition: readonly number[];
 }
 
 export interface MorphologyFrameMetrics {
@@ -20,8 +23,12 @@ export interface MorphologyFrameMetrics {
   readonly clusterCount: number;
   readonly largestClusterShare: number;
   readonly meanLayering: number;
+  readonly meanRadialLayering: number;
   readonly meanSpeed: number;
+  readonly medianSpeed: number;
+  readonly averageNeighborCount: number;
   readonly movingFraction: number;
+  readonly nearlyStalledFraction: number;
   readonly staticFraction: number;
   readonly fragmentation: number;
   readonly collapse: number;
@@ -33,6 +40,15 @@ export interface MorphologyFrameMetrics {
   readonly wallSupportedStructureFraction: number;
   readonly meanCompactness: number;
   readonly meanShapeAnisotropy: number;
+}
+
+export interface StructureRecoveryMetrics {
+  readonly membership: number;
+  readonly typeComposition: number;
+  readonly radialProfile: number;
+  readonly compactness: number;
+  readonly centroidAndSize: number;
+  readonly shape: number;
 }
 
 import type { MorphologyAnalysisOptions } from '@/config/morphology';
@@ -108,27 +124,33 @@ export function analyzeMorphologyFrame(
   const largest = structures.reduce((size, cluster) => Math.max(size, cluster.members.length), 0);
   let speedSum = 0;
   let moving = 0;
+  let nearlyStalled = 0;
   let stalledIsolated = 0;
   let wallContacts = 0;
   const isolated = clusters.filter((cluster) => cluster.members.length === 1);
   const isolatedMembers = new Set(isolated.flatMap((cluster) => cluster.members));
   const wallContactByParticle = new Uint8Array(particles.count);
+  const speeds: number[] = [];
   const minX = contactBounds.x + config.radiusUnits;
   const maxX = contactBounds.x + contactBounds.width - config.radiusUnits;
   const minY = contactBounds.y + config.radiusUnits;
   const maxY = contactBounds.y + contactBounds.height - config.radiusUnits;
   for (let index = 0; index < particles.count; index++) {
     const speed = Math.hypot(particles.vx[index], particles.vy[index]);
+    speeds.push(speed);
     speedSum += speed;
     if (speed >= options.movingSpeedUnitsPerReferenceTick) moving++;
-    else if (isolatedMembers.has(index)) stalledIsolated++;
+    if (speed < options.nearlyStalledSpeedUnitsPerReferenceTick) {
+      nearlyStalled++;
+      if (isolatedMembers.has(index)) stalledIsolated++;
+    }
     const wallDistance = Math.min(
       particles.x[index] - minX,
       maxX - particles.x[index],
       particles.y[index] - minY,
       maxY - particles.y[index],
     );
-    if (wallDistance <= config.wallContactRangeUnits) {
+    if (wallDistance <= options.wallContactDistanceUnits) {
       wallContactByParticle[index] = 1;
       wallContacts++;
     }
@@ -150,6 +172,7 @@ export function analyzeMorphologyFrame(
       contacts >= Math.max(2, Math.ceil(cluster.members.length * options.wallSupportShare));
     return sum + (supported ? cluster.members.length : 0);
   }, 0);
+  speeds.sort((left, right) => left - right);
   return {
     clusteredFraction: structuredParticles / particles.count,
     clusterCount: structures.length,
@@ -159,8 +182,19 @@ export function analyzeMorphologyFrame(
         ? 0
         : structures.reduce((sum, cluster) => sum + cluster.layering * cluster.members.length, 0) /
           structuredParticles,
+    meanRadialLayering:
+      structuredParticles === 0
+        ? 0
+        : structures.reduce(
+            (sum, cluster) => sum + cluster.radialLayering * cluster.members.length,
+            0,
+          ) / structuredParticles,
     meanSpeed: speedSum / particles.count,
+    medianSpeed: median(speeds),
+    averageNeighborCount:
+      structures.reduce((sum, cluster) => sum + cluster.neighborLinks, 0) / particles.count,
     movingFraction: moving / particles.count,
+    nearlyStalledFraction: nearlyStalled / particles.count,
     staticFraction: 1 - moving / particles.count,
     fragmentation: Math.min(
       1,
@@ -210,6 +244,92 @@ export function compareClusterMembership(
   );
 }
 
+export function compareClusterStructure(
+  before: readonly ParticleCluster[],
+  after: readonly ParticleCluster[],
+): StructureRecoveryMetrics {
+  const totalMembers = before.reduce((sum, cluster) => sum + cluster.members.length, 0);
+  if (totalMembers === 0) {
+    const score = after.length === 0 ? 1 : 0;
+    return {
+      membership: score,
+      typeComposition: score,
+      radialProfile: score,
+      compactness: score,
+      centroidAndSize: score,
+      shape: score,
+    };
+  }
+  const totals = {
+    membership: 0,
+    typeComposition: 0,
+    radialProfile: 0,
+    compactness: 0,
+    centroidAndSize: 0,
+    shape: 0,
+  };
+  for (const cluster of before) {
+    const match = bestMembershipMatch(cluster, after);
+    const weight = cluster.members.length;
+    if (!match) continue;
+    totals.membership += match.score * weight;
+    totals.typeComposition +=
+      vectorSimilarity(cluster.typeComposition, match.cluster.typeComposition) * weight;
+    totals.radialProfile +=
+      mean([
+        ratioSimilarity(cluster.meanRadius, match.cluster.meanRadius),
+        differenceSimilarity(cluster.radialLayering, match.cluster.radialLayering),
+      ]) * weight;
+    totals.compactness +=
+      differenceSimilarity(cluster.compactness, match.cluster.compactness) * weight;
+    const centroidDistance = Math.hypot(
+      cluster.centerX - match.cluster.centerX,
+      cluster.centerY - match.cluster.centerY,
+    );
+    totals.centroidAndSize +=
+      mean([
+        ratioSimilarity(cluster.members.length, match.cluster.members.length),
+        Math.exp(-centroidDistance / Math.max(1, cluster.meanRadius * 2)),
+      ]) * weight;
+    totals.shape +=
+      differenceSimilarity(cluster.shapeAnisotropy, match.cluster.shapeAnisotropy) * weight;
+  }
+  return Object.fromEntries(
+    Object.entries(totals).map(([key, value]) => [key, value / totalMembers]),
+  ) as unknown as StructureRecoveryMetrics;
+}
+
+function bestMembershipMatch(
+  target: ParticleCluster,
+  candidates: readonly ParticleCluster[],
+): { readonly cluster: ParticleCluster; readonly score: number } | null {
+  let best: { readonly cluster: ParticleCluster; readonly score: number } | null = null;
+  const members = new Set(target.members);
+  for (const cluster of candidates) {
+    let intersection = 0;
+    for (const member of cluster.members) if (members.has(member)) intersection++;
+    const score = intersection / Math.max(1, members.size + cluster.members.length - intersection);
+    if (!best || score > best.score) best = { cluster, score };
+  }
+  return best;
+}
+
+function vectorSimilarity(left: readonly number[], right: readonly number[]): number {
+  let distance = 0;
+  for (let index = 0; index < Math.max(left.length, right.length); index++) {
+    distance += Math.abs((left[index] ?? 0) - (right[index] ?? 0));
+  }
+  return Math.max(0, 1 - distance / 2);
+}
+
+function ratioSimilarity(left: number, right: number): number {
+  return Math.min(left, right) / Math.max(1e-6, left, right);
+}
+
+function differenceSimilarity(left: number, right: number): number {
+  return Math.max(0, 1 - Math.abs(left - right));
+}
+
 function describeCluster(
   particles: ParticleStore,
   members: readonly number[],
@@ -226,6 +346,7 @@ function describeCluster(
   centerY /= members.length;
   const radiusSumByRole = new Float64Array(3);
   const countByRole = new Uint32Array(3);
+  const countByType = new Uint32Array(6);
   let radiusSum = 0;
   let signedTangentSum = 0;
   let absoluteTangentSum = 0;
@@ -243,6 +364,7 @@ function describeCluster(
     covarianceYY += dy * dy;
     covarianceXY += dx * dy;
     const role = roleByType[particles.type[index]];
+    countByType[particles.type[index]]++;
     radiusSumByRole[role] += radius;
     countByRole[role]++;
     const speed = Math.hypot(particles.vx[index], particles.vy[index]);
@@ -292,12 +414,43 @@ function describeCluster(
     centerY,
     meanRadius,
     layering: Math.min(1, radialSeparation),
+    radialLayering: measureRadialLayering(particles, members, centerX, centerY),
     orbitCoherence:
       tangentWeight === 0 ? 0 : Math.min(1, Math.abs(signedTangentSum / tangentWeight)),
     orbitActivity: tangentWeight === 0 ? 0 : Math.min(1, absoluteTangentSum / tangentWeight),
     compactness: Math.sqrt(Math.max(0, (1 - shapeAnisotropy) * neighborDensity)),
     shapeAnisotropy,
+    neighborLinks,
+    typeComposition: Array.from(countByType, (count) => count / members.length),
   };
+}
+
+function measureRadialLayering(
+  particles: ParticleStore,
+  members: readonly number[],
+  centerX: number,
+  centerY: number,
+): number {
+  if (members.length < 6) return 0;
+  const radii = members
+    .map((index) => Math.hypot(particles.x[index] - centerX, particles.y[index] - centerY))
+    .sort((left, right) => left - right);
+  const scale = Math.max(1, median(radii));
+  const gaps = radii
+    .slice(1)
+    .map((radius, index) => radius - radii[index])
+    .sort((left, right) => right - left);
+  return Math.min(1, ((gaps[0] ?? 0) + (gaps[1] ?? 0) * 0.5) / (scale * 0.45));
+}
+
+function median(values: readonly number[]): number {
+  if (values.length === 0) return 0;
+  const middle = Math.floor(values.length / 2);
+  return values.length % 2 === 0 ? (values[middle - 1] + values[middle]) / 2 : values[middle];
+}
+
+function mean(values: readonly number[]): number {
+  return values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
 function validateRoles(roleByType: readonly number[]): void {

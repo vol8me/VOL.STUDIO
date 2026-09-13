@@ -8,6 +8,7 @@ import {
 } from '@/app/LifeWorldSnapshotCodec';
 import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 import { resolveParticleBounds } from '@/runtime/sim/WorldBounds';
+import { validateWorldMetadata } from '@/runtime/sim/WorldMetadata';
 
 const STORAGE_KEY = 'vol-life:world';
 const DEFAULT_AUTOSAVE_INTERVAL_MS = 30_000;
@@ -69,6 +70,7 @@ function validateWorldSnapshot(
   worldConfig: WorldConfig,
   particleConfig: ParticleConfig,
 ): void {
+  validateWorldMetadata(snapshot.metadata);
   const fieldLength = worldConfig.fieldResolution ** 2;
   if (
     snapshot.nutrientDiffusionSource.length !== fieldLength ||
@@ -95,7 +97,10 @@ function validateWorldSnapshot(
   ) {
     throw new RangeError('Dünya kaydının parçacık sayısı yapılandırmayla uyuşmuyor.');
   }
-  const bounds = resolveParticleBounds(worldConfig.boundsUnits, worldConfig.boundaryThicknessUnits);
+  const bounds = resolveParticleBounds(
+    worldConfig.boundsUnits,
+    worldConfig.particleCollisionInsetUnits,
+  );
   const minX = bounds.x + particleConfig.radiusUnits;
   const maxX = bounds.x + bounds.width - particleConfig.radiusUnits;
   const minY = bounds.y + particleConfig.radiusUnits;

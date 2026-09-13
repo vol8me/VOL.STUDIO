@@ -10,7 +10,12 @@ import { ParticleSpatialHash } from '@/runtime/sim/ParticleSpatialHash';
 import { ParticleStore, type ParticleSnapshot } from '@/runtime/sim/ParticleStore';
 import { createSimRandom } from '@/runtime/sim/rng';
 import { SimulationTempo } from '@/runtime/sim/SimulationTempo';
-import { resolveParticleBounds } from '@/runtime/sim/WorldBounds';
+import {
+  createFreshWorldMetadata,
+  type WorldMetadata,
+  validateWorldMetadata,
+} from '@/runtime/sim/WorldMetadata';
+import { resolveParticleBounds, validateWorldGeometry } from '@/runtime/sim/WorldBounds';
 
 interface LightSource {
   readonly originX: number;
@@ -21,6 +26,7 @@ interface LightSource {
 }
 
 export interface LifeWorldSnapshot {
+  readonly metadata: WorldMetadata;
   readonly tick: number;
   readonly rngState: number;
   readonly nextFieldBand: number;
@@ -43,9 +49,16 @@ export class LifeWorld {
 
   constructor(
     private readonly config: WorldConfig,
+    readonly metadata: WorldMetadata = createFreshWorldMetadata(),
     particlesConfig: ParticleConfig = particleConfig,
   ) {
+    validateWorldMetadata(metadata);
     validateParticleConfig(particlesConfig);
+    validateWorldGeometry(
+      config.boundsUnits,
+      config.particleCollisionInsetUnits,
+      particlesConfig.cellSizeUnits,
+    );
     if (
       !Number.isInteger(config.fieldUpdateBands) ||
       config.fieldUpdateBands < 1 ||
@@ -54,7 +67,7 @@ export class LifeWorld {
       throw new RangeError(`Alan bant sayısı çözünürlüğü tam bölmeli: ${config.fieldUpdateBands}`);
     }
     this.fields = new FieldSet(config.fieldResolution);
-    this.random = createSimRandom(config.seed);
+    this.random = createSimRandom(metadata.seed);
     this.particlesConfig = particlesConfig;
     const { boundsUnits } = config;
     this.sources = Array.from({ length: config.lightSourceCount }, () => ({
@@ -71,7 +84,7 @@ export class LifeWorld {
     }
     this.nutrientDiffusionSource = this.fields.nutrient.slice();
     this.particles = new ParticleStore(this.particlesConfig.count);
-    const particleBounds = resolveParticleBounds(boundsUnits, config.boundaryThicknessUnits);
+    const particleBounds = resolveParticleBounds(boundsUnits, config.particleCollisionInsetUnits);
     initializeParticles(this.particles, this.random, this.particlesConfig, particleBounds);
     this.particles.capturePrevious();
     this.particleGrid = new ParticleSpatialHash(
@@ -97,7 +110,7 @@ export class LifeWorld {
     integrateParticles(
       this.particles,
       this.particlesConfig,
-      resolveParticleBounds(this.config.boundsUnits, this.config.boundaryThicknessUnits),
+      resolveParticleBounds(this.config.boundsUnits, this.config.particleCollisionInsetUnits),
       this.config.fixedStepMs,
     );
     this.tempo.advance();
@@ -106,6 +119,7 @@ export class LifeWorld {
 
   snapshot(): LifeWorldSnapshot {
     return {
+      metadata: this.metadata,
       tick: this.tick,
       rngState: this.random.getState(),
       nextFieldBand: this.nextFieldBand,
@@ -116,6 +130,13 @@ export class LifeWorld {
   }
 
   restore(snapshot: LifeWorldSnapshot): void {
+    if (
+      snapshot.metadata.id !== this.metadata.id ||
+      snapshot.metadata.seed !== this.metadata.seed ||
+      snapshot.metadata.createdAtMs !== this.metadata.createdAtMs
+    ) {
+      throw new RangeError('Snapshot başka bir dünya örneğine ait.');
+    }
     this.tempo.setTick(snapshot.tick);
     this.random.setState(snapshot.rngState);
     this.nextFieldBand = snapshot.nextFieldBand;

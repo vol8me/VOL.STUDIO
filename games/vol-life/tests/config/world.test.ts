@@ -6,8 +6,8 @@ describe('worldConfig', () => {
   it('sonlu dünya sınırı pozitif ve tek kaynaktır', () => {
     expect(worldConfig.boundsUnits).toEqual({ x: 0, y: 0, width: 1024, height: 1024 });
     expect(Object.values(worldConfig.boundsUnits).every(Number.isFinite)).toBe(true);
-    expect(worldConfig.boundaryThicknessUnits).toBeGreaterThan(0);
-    expect(worldConfig.boundaryThicknessUnits * 2).toBeLessThan(worldConfig.boundsUnits.width);
+    expect(worldConfig.particleCollisionInsetUnits).toBeGreaterThan(0);
+    expect(worldConfig.particleCollisionInsetUnits * 2).toBeLessThan(worldConfig.boundsUnits.width);
   });
 
   it('sabit adım pozitiftir', () => {
@@ -24,8 +24,8 @@ describe('worldConfig', () => {
     expect(worldConfig.maxStepsPerFrame).toBeLessThanOrEqual(2);
   });
 
-  it('seed tam sayıdır — dünya tekrar üretilebilir', () => {
-    expect(Number.isInteger(worldConfig.seed)).toBe(true);
+  it('world-instance seed build yapılandırmasında tutulmaz', () => {
+    expect(worldConfig).not.toHaveProperty('seed');
   });
 
   it('canlı yapılandırma 256² alanı 10 Hz tam günceller', () => {
@@ -58,5 +58,12 @@ describe('lifeGraphicsConfig', () => {
   it('mevcut parçacık ayrıntısında bilgi taşımayan aşırı yakınlaştırmayı sınırlar', () => {
     expect(lifeGraphicsConfig.cameraMaxZoomFactor).toBeGreaterThan(1);
     expect(lifeGraphicsConfig.cameraMaxZoomFactor).toBeLessThanOrEqual(3);
+  });
+
+  it('görsel sınır kalınlığı fizik insetinden bağımsız sunum verisidir', () => {
+    expect(lifeGraphicsConfig.boundaryPreferredThicknessUnits).toBeGreaterThan(0);
+    expect(lifeGraphicsConfig.boundaryMinScreenPixels).toBeLessThanOrEqual(
+      lifeGraphicsConfig.boundaryMaxScreenPixels,
+    );
   });
 });
