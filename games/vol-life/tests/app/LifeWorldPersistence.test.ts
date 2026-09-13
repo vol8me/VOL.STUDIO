@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SaveManager } from '@volstudio/core';
 import { particleConfig } from '@/config/particles';
 import { worldConfig } from '@/config/world';
@@ -22,6 +22,11 @@ function memorySaveManager(initial: unknown = null) {
   return { manager, saveManager: manager as unknown as SaveManager, read: () => value };
 }
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
 describe('LifeWorldSnapshotCodec', () => {
   it('snapshotı sürümlü küçük-endian ikili yükte kayıpsız döndürür', async () => {
     const world = new LifeWorld({ ...worldConfig, fieldResolution: 8, seed: 42 });
@@ -32,8 +37,20 @@ describe('LifeWorldSnapshotCodec', () => {
     const decoded = await decodeLifeWorldSnapshot(envelope, 'fingerprint');
 
     expect(decoded).toEqual(snapshot);
-    expect(envelope.schemaVersion).toBe(1);
+    expect(envelope.schemaVersion).toBe(2);
     expect(envelope.encoding).toMatch(/base64/);
+  });
+
+  it('uzunluğu değişmeyen ikili bozulmayı checksum ile reddeder', async () => {
+    vi.stubGlobal('CompressionStream', undefined);
+    const snapshot = new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
+    const envelope = await encodeLifeWorldSnapshot(snapshot, 'fingerprint');
+    const bytes = Buffer.from(envelope.payload, 'base64');
+    bytes[40] ^= 0x01;
+
+    await expect(
+      decodeLifeWorldSnapshot({ ...envelope, payload: bytes.toString('base64') }, 'fingerprint'),
+    ).rejects.toThrow(/checksum/i);
   });
 
   it('farklı yapılandırma parmak izini ve bozuk yükü dünyaya uygulamaz', async () => {
@@ -44,6 +61,25 @@ describe('LifeWorldSnapshotCodec', () => {
     await expect(
       decodeLifeWorldSnapshot({ ...envelope, payload: 'bozuk!' }, 'current'),
     ).rejects.toThrow();
+  });
+
+  it('gzip kaydını açacak platform desteği yoksa yeni dünyaya düşer', async () => {
+    const snapshot = new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
+    const envelope = await encodeLifeWorldSnapshot(snapshot, 'current');
+    expect(envelope.encoding).toBe('gzip-base64');
+    vi.stubGlobal('DecompressionStream', undefined);
+
+    await expect(decodeLifeWorldSnapshot(envelope, 'current')).resolves.toBeNull();
+  });
+
+  it('payload bildirilen ikili uzunlukla uyuşmazsa reddeder', async () => {
+    vi.stubGlobal('CompressionStream', undefined);
+    const snapshot = new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
+    const envelope = await encodeLifeWorldSnapshot(snapshot, 'current');
+
+    await expect(
+      decodeLifeWorldSnapshot({ ...envelope, payload: envelope.payload.slice(0, -4) }, 'current'),
+    ).rejects.toThrow(/uzunluğu/i);
   });
 
   it('geçersiz snapshot alanlarında RangeError fırlatır', async () => {
@@ -57,15 +93,20 @@ describe('LifeWorldSnapshotCodec', () => {
         'test',
       ),
     ).rejects.toThrow(RangeError);
+    const nonFinite = valid.fields.light.slice();
+    nonFinite[0] = Number.NaN;
+    await expect(
+      encodeLifeWorldSnapshot({ ...valid, fields: { ...valid.fields, light: nonFinite } }, 'test'),
+    ).rejects.toThrow(RangeError);
   });
 
   it('bozuk veya geçersiz ikili zarfta null döner veya RangeError fırlatır', async () => {
     expect(await decodeLifeWorldSnapshot(null, 'test')).toBeNull();
     expect(await decodeLifeWorldSnapshot('string', 'test')).toBeNull();
-    expect(await decodeLifeWorldSnapshot({ schemaVersion: 2 }, 'test')).toBeNull();
+    expect(await decodeLifeWorldSnapshot({ schemaVersion: 1 }, 'test')).toBeNull();
     expect(
       await decodeLifeWorldSnapshot(
-        { schemaVersion: 1, configFingerprint: 'test', encoding: 'invalid', payload: '' },
+        { schemaVersion: 2, configFingerprint: 'test', encoding: 'invalid', payload: '' },
         'test',
       ),
     ).toBeNull();
@@ -75,7 +116,14 @@ describe('LifeWorldSnapshotCodec', () => {
     const shortPayload = Buffer.from(shortBytes).toString('base64');
     await expect(
       decodeLifeWorldSnapshot(
-        { schemaVersion: 1, configFingerprint: 'test', encoding: 'base64', payload: shortPayload },
+        {
+          schemaVersion: 2,
+          configFingerprint: 'test',
+          encoding: 'base64',
+          byteLength: shortBytes.byteLength,
+          checksum: 'crc32-00000000',
+          payload: shortPayload,
+        },
         'test',
       ),
     ).rejects.toThrow(RangeError);
@@ -86,9 +134,11 @@ describe('LifeWorldSnapshotCodec', () => {
     await expect(
       decodeLifeWorldSnapshot(
         {
-          schemaVersion: 1,
+          schemaVersion: 2,
           configFingerprint: 'test',
           encoding: 'base64',
+          byteLength: invalidMagic.byteLength,
+          checksum: 'crc32-00000000',
           payload: invalidPayload,
         },
         'test',
@@ -100,8 +150,13 @@ describe('LifeWorldSnapshotCodec', () => {
 describe('LifeWorldPersistence', () => {
   it('aynı yapılandırmada kaydeder ve yeniden yükler', async () => {
     const memory = memorySaveManager();
-    const persistence = new LifeWorldPersistence(memory.saveManager, worldConfig, particleConfig);
-    const snapshot = new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot();
+    const testWorldConfig = { ...worldConfig, fieldResolution: 8 };
+    const persistence = new LifeWorldPersistence(
+      memory.saveManager,
+      testWorldConfig,
+      particleConfig,
+    );
+    const snapshot = new LifeWorld(testWorldConfig).snapshot();
 
     await persistence.save(snapshot);
 
@@ -121,6 +176,48 @@ describe('LifeWorldPersistence', () => {
         frictionPerReferenceTick: 0.9,
       }),
     ).not.toBe(baseline);
+  });
+
+  it('checksumı doğru olsa da sınır dışındaki parçacığı yüklemez', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const snapshot = new LifeWorld(worldConfig).snapshot();
+    const x = snapshot.particles.x.slice();
+    x[0] = worldConfig.boundsUnits.x - 1;
+    const envelope = await encodeLifeWorldSnapshot(
+      {
+        ...snapshot,
+        particles: { ...snapshot.particles, x },
+      },
+      createWorldConfigFingerprint(worldConfig, particleConfig),
+    );
+    const memory = memorySaveManager(envelope);
+    const persistence = new LifeWorldPersistence(memory.saveManager, worldConfig, particleConfig);
+
+    await expect(persistence.load()).resolves.toBeNull();
+  });
+
+  it('yapılandırmayla ayrışan alan, parçacık, hız, tür ve bant verisini kaydetmez', async () => {
+    const memory = memorySaveManager();
+    const persistence = new LifeWorldPersistence(memory.saveManager, worldConfig, particleConfig);
+    const snapshot = new LifeWorld(worldConfig).snapshot();
+    const shortField = snapshot.fields.light.slice(1);
+    const shortX = snapshot.particles.x.slice(1);
+    const fastVx = snapshot.particles.vx.slice();
+    fastVx[0] = particleConfig.maxSpeedUnitsPerReferenceTick * 2;
+    const invalidType = snapshot.particles.type.slice();
+    invalidType[0] = 247;
+    const invalidSnapshots = [
+      { ...snapshot, fields: { ...snapshot.fields, light: shortField } },
+      { ...snapshot, particles: { ...snapshot.particles, x: shortX } },
+      { ...snapshot, particles: { ...snapshot.particles, vx: fastVx } },
+      { ...snapshot, particles: { ...snapshot.particles, type: invalidType } },
+      { ...snapshot, nextFieldBand: worldConfig.fieldUpdateBands },
+    ];
+
+    for (const invalid of invalidSnapshots) {
+      await expect(persistence.save(invalid)).rejects.toThrow(RangeError);
+    }
+    expect(memory.manager.save).not.toHaveBeenCalled();
   });
 });
 
@@ -159,9 +256,14 @@ describe('LifeWorldAutosave', () => {
 
   it('attach metodu persistence üzerinden LifeWorldAutosave örneği bağlar', () => {
     const memory = memorySaveManager();
-    const persistence = new LifeWorldPersistence(memory.saveManager, worldConfig, particleConfig);
+    const testWorldConfig = { ...worldConfig, fieldResolution: 8 };
+    const persistence = new LifeWorldPersistence(
+      memory.saveManager,
+      testWorldConfig,
+      particleConfig,
+    );
     const source = {
-      snapshot: () => new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot(),
+      snapshot: () => new LifeWorld(testWorldConfig).snapshot(),
     };
     const autosave = persistence.attach(source, { intervalMs: 10_000 });
     expect(autosave).toBeInstanceOf(LifeWorldAutosave);
@@ -177,7 +279,23 @@ describe('LifeWorldAutosave', () => {
     expect(() => new LifeWorldAutosave({ save }, source, { intervalMs: -10 })).toThrow(RangeError);
   });
 
+  it('destroy sonrasında yeni periyodik kayıt kabul etmez', async () => {
+    const save = vi.fn(() => Promise.resolve());
+    const source = {
+      snapshot: () => new LifeWorld({ ...worldConfig, fieldResolution: 8 }).snapshot(),
+    };
+    const autosave = new LifeWorldAutosave({ save }, source, { intervalMs: 10_000 });
+
+    autosave.destroy();
+    await vi.waitFor(() => expect(save).toHaveBeenCalledOnce());
+    autosave.requestSave();
+    await Promise.resolve();
+
+    expect(save).toHaveBeenCalledOnce();
+  });
+
   it('kayıt hatasında onError callbackini çağırır ve çökmez', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     const saveError = new Error('Disk dolu');
     const save = vi.fn(() => Promise.reject(saveError));
     const onError = vi.fn();
@@ -186,12 +304,13 @@ describe('LifeWorldAutosave', () => {
     };
     const autosave = new LifeWorldAutosave({ save }, source, { onError, intervalMs: 10_000 });
 
-    await autosave.flush();
+    await expect(autosave.flush()).rejects.toBe(saveError);
     expect(onError).toHaveBeenCalledWith(saveError);
     autosave.destroy();
   });
 
   it('load sırasında saveManager hata fırlatırsa null döner', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     const failingManager = {
       load: vi.fn(() => Promise.reject(new Error('Depolama arızası'))),
       save: vi.fn(() => Promise.resolve()),

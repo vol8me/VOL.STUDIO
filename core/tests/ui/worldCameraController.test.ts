@@ -39,6 +39,35 @@ function harness() {
   return { element, camera, controller, state, changes };
 }
 
+function pointer(
+  type: 'pointerdown' | 'pointermove' | 'pointerup',
+  pointerId: number,
+  clientX: number,
+  clientY: number,
+  timeStamp: number,
+): PointerEvent {
+  const event = new PointerEvent(type, { pointerId, clientX, clientY });
+  Object.defineProperty(event, 'timeStamp', { value: timeStamp });
+  return event;
+}
+
+function prepareMomentumGesture(samples: readonly (readonly [number, number])[]) {
+  const target = harness();
+  target.element.dispatchEvent(
+    new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -300 }),
+  );
+  target.controller.update(1000);
+  const [firstX, firstTime] = samples[0];
+  target.element.dispatchEvent(pointer('pointerdown', 1, firstX, 400, firstTime));
+  for (const [x, time] of samples.slice(1)) {
+    target.element.dispatchEvent(pointer('pointermove', 1, x, 400, time));
+  }
+  target.element.dispatchEvent(
+    pointer('pointerup', 1, samples.at(-1)![0], 400, samples.at(-1)![1]),
+  );
+  return target;
+}
+
 afterEach(() => {
   document.body.innerHTML = '';
   vi.restoreAllMocks();
@@ -238,6 +267,66 @@ describe('WorldCameraController', () => {
 
     expect(afterRelease).toBeLessThan(releasedAt);
     expect(controller.getState().centerX).toBeLessThanOrEqual(afterRelease);
+  });
+
+  it('aynı hareketi 8 ms ve 16 ms örnek aralıklarında aynı bırakma hızıyla sürdürür', () => {
+    const fastSamples = Array.from(
+      { length: 9 },
+      (_, index) => [400 + index * 8, index * 8] as const,
+    );
+    const regularSamples = Array.from(
+      { length: 5 },
+      (_, index) => [400 + index * 16, index * 16] as const,
+    );
+    const fast = prepareMomentumGesture(fastSamples);
+    const regular = prepareMomentumGesture(regularSamples);
+
+    const fastBefore = fast.controller.getState().centerX;
+    const regularBefore = regular.controller.getState().centerX;
+    fast.controller.update(16);
+    regular.controller.update(16);
+
+    expect(fastBefore - fast.controller.getState().centerX).toBeCloseTo(
+      regularBefore - regular.controller.getState().centerX,
+      4,
+    );
+  });
+
+  it('bırakmadan önceki mikro titreşimi tek başına momentum hızı saymaz', () => {
+    const { controller } = prepareMomentumGesture([
+      [400, 0],
+      [440, 20],
+      [480, 40],
+      [520, 60],
+      [521, 75],
+    ]);
+    const releasedAt = controller.getState().centerX;
+
+    controller.update(16);
+
+    expect(releasedAt - controller.getState().centerX).toBeGreaterThan(8);
+  });
+
+  it('momentumun toplam seyahatini 30, 60 ve 120 FPS arasında korur', () => {
+    const coastDistance = (fps: number): number => {
+      const { controller } = prepareMomentumGesture([
+        [400, 0],
+        [420, 20],
+        [440, 40],
+        [450, 50],
+      ]);
+      const releasedAt = controller.getState().centerX;
+      const delta = 1000 / fps;
+      for (let frame = 0; frame < fps; frame++) controller.update(delta);
+      return releasedAt - controller.getState().centerX;
+    };
+
+    const at30 = coastDistance(30);
+    const at60 = coastDistance(60);
+    const at120 = coastDistance(120);
+
+    expect(at30).toBeCloseTo(at60, 4);
+    expect(at60).toBeCloseTo(at120, 4);
   });
 
   it('resize sonrası merkezi korur ve yeni sığdırma sınırının altına inmez', () => {

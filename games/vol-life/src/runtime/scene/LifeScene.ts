@@ -95,11 +95,6 @@ export class LifeScene extends Phaser.Scene {
       const preferenceState = preferences?.get() ?? DEFAULT_LIFE_PREFERENCES;
       const uiParent = this.game.canvas.parentElement ?? undefined;
 
-      // Geri hareketi yalnız Android kabuğunda gelir; fareli Android'de de gelir.
-      if (platform === 'android') {
-        scope.addDestroyable(new LifeExitPrompt({ container: uiParent ?? document.body }));
-      }
-
       // Tam ekran düğmesi yalnız web'dedir: Android kabuğu çubukları zaten gizler,
       // masaüstünde kip seçenekler panelinden ve F11'den native pencereye gider.
       const fullscreen =
@@ -183,12 +178,20 @@ export class LifeScene extends Phaser.Scene {
           }),
         );
       }
+      let autosave: LifeWorldAutosave | null = null;
       if (this.services.worldPersistence) {
-        const autosave: LifeWorldAutosave = this.services.worldPersistence.attach(
-          this.worldRuntime,
-          { onError: () => this.hud?.showWorldSaveError() },
-        );
+        autosave = this.services.worldPersistence.attach(this.worldRuntime, {
+          onError: () => this.hud?.showWorldSaveError(),
+        });
         scope.addDestroyable(autosave);
+      }
+      if (platform === 'android') {
+        scope.addDestroyable(
+          new LifeExitPrompt({
+            container: uiParent ?? document.body,
+            ...(autosave ? { beforeClose: () => autosave.flush() } : {}),
+          }),
+        );
       }
     } catch (error) {
       scope.dispose();

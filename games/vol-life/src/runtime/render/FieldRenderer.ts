@@ -9,7 +9,6 @@ export class FieldRenderer {
   private readonly texture: Phaser.Textures.CanvasTexture;
   private readonly imageData: ImageData;
   private readonly image: Phaser.GameObjects.Image;
-  private readonly boundary: Phaser.GameObjects.Graphics;
   private destroyed = false;
 
   constructor(
@@ -32,9 +31,6 @@ export class FieldRenderer {
       .setDisplaySize(bounds.width, bounds.height)
       .setDepth(-1000);
     this.image.setPosition(bounds.x, bounds.y);
-    this.boundary = scene.add.graphics().setDepth(-800);
-    this.boundary.lineStyle(2, 0x9edfff, 0.42);
-    this.boundary.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
   }
 
   render(fields: FieldSet): void {
@@ -47,7 +43,6 @@ export class FieldRenderer {
     if (this.destroyed) return;
     this.destroyed = true;
     this.image.destroy();
-    this.boundary.destroy();
     this.scene.textures.remove(FIELD_TEXTURE_KEY);
   }
 }

@@ -32,26 +32,19 @@ function harness() {
     return image;
   });
   let imageIndex = 0;
-  const boundary = {
-    setDepth: vi.fn(),
-    lineStyle: vi.fn(),
-    strokeRect: vi.fn(),
-    destroy: vi.fn(),
-  };
-  boundary.setDepth.mockReturnValue(boundary);
   const scene = {
     textures: { createCanvas: vi.fn(() => texture), remove: vi.fn() },
-    add: { image: vi.fn(() => images[imageIndex++]), graphics: vi.fn(() => boundary) },
+    add: { image: vi.fn(() => images[imageIndex++]) },
   };
   const fields = new FieldSet(2);
   const bounds = { x: 20, y: 30, width: 1000, height: 800 };
   const renderer = new FieldRenderer(scene as never, fields, bounds);
-  return { renderer, fields, scene, texture, images, imageData, boundary };
+  return { renderer, fields, scene, texture, images, imageData };
 }
 
 describe('FieldRenderer', () => {
-  it('sonlu alanı tek yüzeyde ve fiziksel sınır çizgisiyle kurar', () => {
-    const { scene, texture, images, boundary } = harness();
+  it('sonlu alanı sınır sunumunu sahiplenmeden tek yüzeyde kurar', () => {
+    const { scene, texture, images } = harness();
 
     expect(scene.textures.createCanvas).toHaveBeenCalledWith('vol-life:fields', 2, 2);
     expect(scene.add.image).toHaveBeenCalledOnce();
@@ -63,7 +56,6 @@ describe('FieldRenderer', () => {
     expect(images.every((image) => image.setDepth.mock.calls[0]?.[0] === -1000)).toBe(true);
     expect(texture.setFilter).toHaveBeenCalled();
     expect(images[0].setPosition).toHaveBeenCalledWith(20, 30);
-    expect(boundary.strokeRect).toHaveBeenCalledWith(20, 30, 1000, 800);
   });
 
   it('aynı ImageData tamponunu güncelleyip GPU dokusunu bir kez tazeler', () => {
@@ -77,14 +69,13 @@ describe('FieldRenderer', () => {
     expect(texture.refresh).toHaveBeenCalledOnce();
   });
 
-  it('görüntüyü, sınırı ve texture manager kaydını idempotent bırakır', () => {
-    const { renderer, scene, images, boundary } = harness();
+  it('görüntüyü ve texture manager kaydını idempotent bırakır', () => {
+    const { renderer, scene, images } = harness();
 
     renderer.destroy();
     renderer.destroy();
 
     expect(images.every((image) => image.destroy.mock.calls.length === 1)).toBe(true);
-    expect(boundary.destroy).toHaveBeenCalledOnce();
     expect(scene.textures.remove).toHaveBeenCalledOnce();
   });
 });

@@ -7,6 +7,8 @@ import type { Rect } from '@volstudio/core';
 export interface WorldConfig {
   /** Parçacıkların ve alanların fiziksel dünya sınırı. */
   readonly boundsUnits: Readonly<Rect>;
+  /** Dünya kenarında ayrılan opak fiziksel duvar bandı. */
+  readonly boundaryThicknessUnits: number;
   /** Sabit simülasyon adımı. */
   readonly fixedStepMs: number;
   /**
@@ -35,6 +37,7 @@ export interface WorldConfig {
 
 export const worldConfig: WorldConfig = {
   boundsUnits: { x: 0, y: 0, width: 1024, height: 1024 },
+  boundaryThicknessUnits: 6,
   fixedStepMs: 1000 / 60,
   maxStepsPerFrame: 2,
   seed: 0x10fe1,

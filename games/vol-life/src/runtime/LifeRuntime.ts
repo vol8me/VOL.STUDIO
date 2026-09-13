@@ -6,9 +6,11 @@ import {
   type SimulationClockFrame,
 } from '@volstudio/core';
 import { worldConfig, type WorldConfig } from '@/config/world';
+import { lifeGraphicsConfig } from '@/config/graphics';
 import { particleConfig } from '@/config/particles';
 import { FieldRenderer } from '@/runtime/render/FieldRenderer';
 import { ParticleRenderer } from '@/runtime/render/ParticleRenderer';
+import { WorldBoundaryRenderer } from '@/runtime/render/WorldBoundaryRenderer';
 import { LifeWorld, type LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 
 interface RuntimeWorld {
@@ -21,6 +23,10 @@ interface RuntimeWorld {
 
 interface RuntimeRenderer {
   render(fields: LifeWorld['fields']): void;
+  destroy(): void;
+}
+
+interface RuntimeDestroyable {
   destroy(): void;
 }
 
@@ -39,6 +45,7 @@ export interface LifeRuntimeDependencies {
   readonly config?: WorldConfig;
   readonly world?: RuntimeWorld;
   readonly renderer?: RuntimeRenderer;
+  readonly boundaryRenderer?: RuntimeDestroyable;
   readonly particleRenderer?: RuntimeParticleRenderer;
   readonly cameraController?: RuntimeCamera;
   readonly initialSnapshot?: LifeWorldSnapshot | null;
@@ -49,6 +56,7 @@ export class LifeRuntime {
   private readonly world: RuntimeWorld;
   private readonly renderer: RuntimeRenderer;
   private readonly particleRenderer: RuntimeParticleRenderer;
+  private readonly boundaryRenderer: RuntimeDestroyable;
   private readonly cameraController: RuntimeCamera;
   private readonly clock: SimulationClock;
 
@@ -58,19 +66,31 @@ export class LifeRuntime {
     if (dependencies.initialSnapshot) this.world.restore(dependencies.initialSnapshot);
     this.renderer =
       dependencies.renderer ?? new FieldRenderer(scene, this.world.fields, config.boundsUnits);
+    this.boundaryRenderer =
+      dependencies.boundaryRenderer ??
+      new WorldBoundaryRenderer(scene, config.boundsUnits, {
+        thicknessUnits: config.boundaryThicknessUnits,
+        color: lifeGraphicsConfig.boundaryColor,
+      });
     this.particleRenderer =
       dependencies.particleRenderer ?? new ParticleRenderer(scene, particleConfig.radiusUnits);
     this.cameraController =
       dependencies.cameraController ??
       new WorldCameraController(scene.game.canvas, scene.cameras.main, {
         bounds: config.boundsUnits,
+        maxZoomFactor: lifeGraphicsConfig.cameraMaxZoomFactor,
       });
     this.clock = new SimulationClock({
       fixedStepMs: config.fixedStepMs,
       maxStepsPerFrame: config.maxStepsPerFrame,
       partialStep: 'defer',
     });
-    this.scope.addDestroyables(this.renderer, this.particleRenderer, this.cameraController);
+    this.scope.addDestroyables(
+      this.renderer,
+      this.boundaryRenderer,
+      this.particleRenderer,
+      this.cameraController,
+    );
     this.renderer.render(this.world.fields);
     this.particleRenderer.render(this.world.particles, 1);
   }

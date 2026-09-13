@@ -1,5 +1,5 @@
 import type { Rect } from '@volstudio/core/math/geometry';
-import { PARTICLE_TYPE_COUNT, type ParticleConfig } from '@/config/particles';
+import { PARTICLE_ROLE_COUNT, PARTICLE_TYPE_COUNT, type ParticleConfig } from '@/config/particles';
 import type { ParticleSpatialHash } from '@/runtime/sim/ParticleSpatialHash';
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
 import type { SimRandom } from '@/runtime/sim/rng';
@@ -86,8 +86,17 @@ export function integrateParticles(
   const minY = bounds.y + config.radiusUnits;
   const maxY = bounds.y + bounds.height - config.radiusUnits;
   for (let index = 0; index < particles.count; index++) {
-    let vx = (particles.vx[index] + particles.forceX[index] * stepScale) * friction;
-    let vy = (particles.vy[index] + particles.forceY[index] * stepScale) * friction;
+    const wallForce = resolveWallContactForce(
+      particles.x[index],
+      particles.y[index],
+      minX,
+      maxX,
+      minY,
+      maxY,
+      config,
+    );
+    let vx = (particles.vx[index] + (particles.forceX[index] + wallForce.x) * stepScale) * friction;
+    let vy = (particles.vy[index] + (particles.forceY[index] + wallForce.y) * stepScale) * friction;
     const speedSquared = vx * vx + vy * vy;
     if (speedSquared > maxSpeedSquared) {
       const scale = config.maxSpeedUnitsPerReferenceTick / Math.sqrt(speedSquared);
@@ -123,8 +132,35 @@ export function integrateParticles(
 
 function resolveWallVelocity(inwardVelocity: number, config: ParticleConfig): number {
   if (inwardVelocity >= 0) return inwardVelocity;
-  if (Math.abs(inwardVelocity) < config.wallImpactThresholdUnitsPerReferenceTick) return 0;
-  return -inwardVelocity * config.wallRestitution;
+  const impactSpeed = Math.abs(inwardVelocity);
+  const restitution =
+    impactSpeed >= config.wallHardImpactThresholdUnitsPerReferenceTick
+      ? config.wallHardRestitution
+      : config.wallSoftRestitution;
+  return impactSpeed * restitution;
+}
+
+function resolveWallContactForce(
+  x: number,
+  y: number,
+  minX: number,
+  maxX: number,
+  minY: number,
+  maxY: number,
+  config: ParticleConfig,
+): { readonly x: number; readonly y: number } {
+  const range = config.wallContactRangeUnits;
+  const strength = config.wallContactStrength;
+  return {
+    x: contactForce(x - minX, range, strength) - contactForce(maxX - x, range, strength),
+    y: contactForce(y - minY, range, strength) - contactForce(maxY - y, range, strength),
+  };
+}
+
+function contactForce(distance: number, range: number, strength: number): number {
+  if (distance >= range) return 0;
+  const penetration = Math.max(0, 1 - Math.max(0, distance) / range);
+  return strength * penetration * penetration;
 }
 
 function interactionMagnitude(
@@ -136,7 +172,12 @@ function interactionMagnitude(
   if (distance < config.repulsionRadiusUnits) {
     return -config.repulsionStrength * (1 - distance / config.repulsionRadiusUnits);
   }
-  const span = config.interactionRadiusUnits - config.repulsionRadiusUnits;
+  const ownRole = config.roleByType[ownType];
+  const otherRole = config.roleByType[otherType];
+  const interactionRadius =
+    config.interactionRadiusByRolePair[ownRole * PARTICLE_ROLE_COUNT + otherRole];
+  if (distance >= interactionRadius) return 0;
+  const span = interactionRadius - config.repulsionRadiusUnits;
   const phase = (distance - config.repulsionRadiusUnits) / span;
   const envelope = 1 - Math.abs(phase * 2 - 1);
   return (

@@ -55,11 +55,15 @@ interface WheelMotion {
 const WHEEL_LINE_PX = 16;
 const MAX_WHEEL_DELTA_PX = 240;
 const DEFAULT_POINTER_FRAME_MS = 16;
+const POINTER_VELOCITY_WINDOW_MS = 80;
+const MIN_VALID_POINTER_DELTA_MS = 1;
 const MIN_MOMENTUM_UNITS_PER_MS = 0.001;
+const MAX_MOMENTUM_UNITS_PER_MS = 3;
 
 export class WorldCameraController {
   private readonly scope = new DisposableScope();
   private readonly pointers = new Map<number, TrackedPointer>();
+  private readonly pointerHistory = new Map<number, TrackedPointer[]>();
   private readonly bounds: Readonly<Rect>;
   private readonly maxZoomFactor: number;
   private readonly wheelSensitivity: number;
@@ -177,13 +181,16 @@ export class WorldCameraController {
   destroy(): void {
     this.scope.dispose();
     this.pointers.clear();
+    this.pointerHistory.clear();
     this.pinch = null;
     this.wheelMotion = null;
     this.stopMomentum();
   }
 
   private readonly onPointerDown = (event: PointerEvent): void => {
-    this.pointers.set(event.pointerId, pointerPosition(event));
+    const position = pointerPosition(event);
+    this.pointers.set(event.pointerId, position);
+    this.pointerHistory.set(event.pointerId, [position]);
     this.wheelMotion = null;
     this.stopMomentum();
     this.element.setPointerCapture?.(event.pointerId);
@@ -195,13 +202,11 @@ export class WorldCameraController {
     if (!previous) return;
     const current = pointerPosition(event);
     this.pointers.set(event.pointerId, current);
+    this.recordPointerHistory(event.pointerId, event, current);
     if (this.pointers.size === 1) {
       this.pinch = null;
-      this.panBy(
-        current.x - previous.x,
-        current.y - previous.y,
-        Math.max(DEFAULT_POINTER_FRAME_MS, current.timeMs - previous.timeMs),
-      );
+      this.panBy(current.x - previous.x, current.y - previous.y);
+      this.updatePanVelocity(event.pointerId);
       return;
     }
     this.stopMomentum();
@@ -212,10 +217,14 @@ export class WorldCameraController {
   private readonly onPointerEnd = (event: PointerEvent): void => {
     const wasSinglePointer = this.pointers.size === 1;
     this.pointers.delete(event.pointerId);
+    this.pointerHistory.delete(event.pointerId);
     if (this.element.hasPointerCapture?.(event.pointerId)) {
       this.element.releasePointerCapture(event.pointerId);
     }
-    if (!wasSinglePointer) this.stopMomentum();
+    if (!wasSinglePointer) {
+      this.stopMomentum();
+      for (const [id, position] of this.pointers) this.pointerHistory.set(id, [position]);
+    }
     this.resetPinch();
   };
 
@@ -232,17 +241,52 @@ export class WorldCameraController {
     );
   };
 
-  private panBy(clientDeltaX: number, clientDeltaY: number, deltaMs: number): void {
+  private panBy(clientDeltaX: number, clientDeltaY: number): void {
     const metrics = this.metrics();
     const requestedX = this.centerX - (clientDeltaX * metrics.scaleX) / this.camera.zoom;
     const requestedY = this.centerY - (clientDeltaY * metrics.scaleY) / this.camera.zoom;
     const target = this.clampCenter(requestedX, requestedY, this.camera.zoom);
-    this.panVelocityX = (target.x - this.centerX) / deltaMs;
-    this.panVelocityY = (target.y - this.centerY) / deltaMs;
     this.targetCenterX = target.x;
     this.targetCenterY = target.y;
     this.wheelMotion = null;
     this.applyState(target.x, target.y, this.camera.zoom);
+  }
+
+  private recordPointerHistory(
+    pointerId: number,
+    event: PointerEvent,
+    current: TrackedPointer,
+  ): void {
+    const history = this.pointerHistory.get(pointerId) ?? [];
+    const coalesced = event.getCoalescedEvents?.() ?? [];
+    for (const sample of coalesced) appendDistinctSample(history, pointerPosition(sample));
+    appendDistinctSample(history, current);
+    const cutoff = current.timeMs - POINTER_VELOCITY_WINDOW_MS;
+    while (history.length > 2 && history[1].timeMs < cutoff) history.shift();
+    this.pointerHistory.set(pointerId, history);
+  }
+
+  private updatePanVelocity(pointerId: number): void {
+    const history = this.pointerHistory.get(pointerId);
+    if (!history || history.length < 2) return;
+    const first = history[0];
+    const last = history[history.length - 1];
+    const measuredDeltaMs = last.timeMs - first.timeMs;
+    const deltaMs =
+      measuredDeltaMs >= MIN_VALID_POINTER_DELTA_MS
+        ? measuredDeltaMs
+        : DEFAULT_POINTER_FRAME_MS * (history.length - 1);
+    const metrics = this.metrics();
+    this.panVelocityX = clamp(
+      (-(last.x - first.x) * metrics.scaleX) / this.camera.zoom / deltaMs,
+      -MAX_MOMENTUM_UNITS_PER_MS,
+      MAX_MOMENTUM_UNITS_PER_MS,
+    );
+    this.panVelocityY = clamp(
+      (-(last.y - first.y) * metrics.scaleY) / this.camera.zoom / deltaMs,
+      -MAX_MOMENTUM_UNITS_PER_MS,
+      MAX_MOMENTUM_UNITS_PER_MS,
+    );
   }
 
   private applyMomentum(deltaMs: number): boolean {
@@ -251,19 +295,27 @@ export class WorldCameraController {
       Math.abs(this.panVelocityX) < MIN_MOMENTUM_UNITS_PER_MS &&
       Math.abs(this.panVelocityY) < MIN_MOMENTUM_UNITS_PER_MS
     ) {
+      this.applyState(
+        this.centerX + this.panVelocityX * this.panMomentumMs,
+        this.centerY + this.panVelocityY * this.panMomentumMs,
+        this.camera.zoom,
+      );
+      this.targetCenterX = this.centerX;
+      this.targetCenterY = this.centerY;
       this.stopMomentum();
-      return false;
+      return true;
     }
     const beforeX = this.centerX;
     const beforeY = this.centerY;
+    const decay = Math.exp(-deltaMs / this.panMomentumMs);
+    const travelMs = this.panMomentumMs * (1 - decay);
     this.applyState(
-      beforeX + this.panVelocityX * deltaMs,
-      beforeY + this.panVelocityY * deltaMs,
+      beforeX + this.panVelocityX * travelMs,
+      beforeY + this.panVelocityY * travelMs,
       this.camera.zoom,
     );
     if (this.centerX === beforeX) this.panVelocityX = 0;
     if (this.centerY === beforeY) this.panVelocityY = 0;
-    const decay = Math.exp(-deltaMs / this.panMomentumMs);
     this.panVelocityX *= decay;
     this.panVelocityY *= decay;
     this.targetCenterX = this.centerX;
@@ -413,6 +465,14 @@ function validateBounds(bounds: Readonly<Rect>): void {
 
 function pointerPosition(event: PointerEvent): TrackedPointer {
   return { x: event.clientX, y: event.clientY, timeMs: event.timeStamp };
+}
+
+function appendDistinctSample(history: TrackedPointer[], sample: TrackedPointer): void {
+  const previous = history.at(-1);
+  if (previous?.x === sample.x && previous.y === sample.y && previous.timeMs === sample.timeMs) {
+    return;
+  }
+  history.push(sample);
 }
 
 function firstTwoEntries(

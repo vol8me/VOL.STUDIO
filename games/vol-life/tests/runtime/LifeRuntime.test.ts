@@ -11,6 +11,7 @@ function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = nu
     restore: vi.fn(),
   };
   const renderer = { render: vi.fn(), destroy: vi.fn() };
+  const boundaryRenderer = { destroy: vi.fn() };
   const particleRenderer = {
     render: vi.fn(),
     destroy: vi.fn(),
@@ -22,12 +23,13 @@ function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = nu
       config: { fixedStepMs: 10, maxStepsPerFrame: 2 } as never,
       world: world as never,
       renderer: renderer as never,
+      boundaryRenderer,
       particleRenderer: particleRenderer as never,
       cameraController: camera as never,
       initialSnapshot: initialSnapshot as never,
     },
   );
-  return { runtime, world, renderer, particleRenderer, camera, snapshot };
+  return { runtime, world, renderer, boundaryRenderer, particleRenderer, camera, snapshot };
 }
 
 describe('LifeRuntime', () => {
@@ -95,12 +97,13 @@ describe('LifeRuntime', () => {
   });
 
   it('GPU ve giriş sahiplerini bir kez kapatır', () => {
-    const { runtime, renderer, particleRenderer, camera } = harness();
+    const { runtime, renderer, boundaryRenderer, particleRenderer, camera } = harness();
 
     runtime.destroy();
     runtime.destroy();
 
     expect(renderer.destroy).toHaveBeenCalledOnce();
+    expect(boundaryRenderer.destroy).toHaveBeenCalledOnce();
     expect(particleRenderer.destroy).toHaveBeenCalledOnce();
     expect(camera.destroy).toHaveBeenCalledOnce();
   });
@@ -132,6 +135,7 @@ describe('LifeRuntime', () => {
       setDepth: vi.fn(() => boundary),
       lineStyle: vi.fn(),
       strokeRect: vi.fn(),
+      strokeRoundedRect: vi.fn(),
       clear: vi.fn(),
       fillStyle: vi.fn(),
       fillCircle: vi.fn(),

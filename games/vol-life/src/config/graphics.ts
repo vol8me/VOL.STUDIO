@@ -12,9 +12,13 @@ export interface LifeGraphicsConfig {
    * yavaşlık yerine açık bir hata yeğdir.
    */
   readonly renderer: RendererRequest;
+  readonly cameraMaxZoomFactor: number;
+  readonly boundaryColor: number;
 }
 
 export const lifeGraphicsConfig: LifeGraphicsConfig = {
   renderScale: 1,
   renderer: 'webgl',
+  cameraMaxZoomFactor: 2.5,
+  boundaryColor: 0x495865,
 };

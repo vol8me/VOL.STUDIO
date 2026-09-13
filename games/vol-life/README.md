@@ -11,7 +11,7 @@ Monorepo geneli için [kök README](../../README.md).
 ## Durum
 
 Paket **Adım 2 parçacık yaşamı** düzeyindedir: yavaş çevre alanlarının üstünde
-altı türden 100 parçacık, toroidal dünyada yönlü çekim/itme fiziğiyle hareket
+altı türden 100 parçacık, sonlu dünyada yönlü çekim/itme fiziğiyle hareket
 eder ve geçici kümeler kurar. SoA depo, counting-sort spatial hash, alanlar ve
 snapshot/restore deterministiktir; Phaser yalnız render adaptöründedir. Henüz
 organizma, enerji, yaşam döngüsü ya da AI yoktur.
@@ -31,6 +31,7 @@ pnpm --filter @volstudio/vol-life tauri:dev             # masaüstü kabuğu
 pnpm --filter @volstudio/vol-life tauri:android:build   # Android APK
 pnpm --filter @volstudio/vol-life benchmark:particles  # çekirdek p50/p95
 pnpm --filter @volstudio/vol-life benchmark:particle-render # Chromium WebGL
+pnpm --filter @volstudio/vol-life search:morphology         # sürümlü arama artifact'i
 ```
 
 Önizleme :5182'dedir. 5181 KULLANILMAZ — `devtools/vol-ui` e2e varsayılanıdır ve

@@ -38,6 +38,19 @@ describe('parçacık fiziği', () => {
     expect(particles.forceX[0]).not.toBeCloseTo(-particles.forceX[1], 6);
   });
 
+  it('yönlü rol çifti menzilini gözlemleyenin rolüne göre uygular', () => {
+    const { particles, grid } = pair(100, 164, 0, 2);
+    const config = {
+      ...particleConfig,
+      interactionRadiusByRolePair: new Float32Array([128, 32, 128, 128, 128, 128, 128, 128, 128]),
+    };
+
+    accumulateParticleForces(particles, grid, config);
+
+    expect(particles.forceX[0]).toBe(0);
+    expect(particles.forceX[1]).not.toBe(0);
+  });
+
   it('dünyanın zıt kenarlarındaki parçacıkları komşu saymaz', () => {
     const { particles, grid } = pair(5, 1019);
 
@@ -65,7 +78,7 @@ describe('parçacık fiziği', () => {
     );
   });
 
-  it('sert duvar temasında seker, yumuşak temasta normal hızı söndürür', () => {
+  it('sert duvar temasında seker, yumuşak temasta yüzeyden ayrılır', () => {
     const particles = new ParticleStore(2);
     particles.x.set([5, 4.55]);
     particles.y.set([100, 200]);
@@ -76,9 +89,58 @@ describe('parçacık fiziği', () => {
 
     expect(particles.x[0]).toBe(particleConfig.radiusUnits);
     expect(particles.vx[0]).toBeGreaterThan(0);
-    expect(particles.x[1]).toBe(particleConfig.radiusUnits);
-    expect(particles.vx[1]).toBe(0);
+    expect(particles.x[1]).toBeGreaterThanOrEqual(particleConfig.radiusUnits);
+    expect(particles.vx[1]).toBeGreaterThan(0);
     expect(particles.vy[1]).toBeGreaterThan(0);
+  });
+
+  it('sürekli dışarı itilen parçacığı sınır düzlemine kilitlemez', () => {
+    const particles = new ParticleStore(1);
+    const minimumX = particleConfig.radiusUnits;
+    particles.x[0] = minimumX + 1;
+    particles.y[0] = 200;
+    particles.vx[0] = -0.1;
+    let exactContactTicks = 0;
+    let furthestSeparation = 0;
+
+    for (let tick = 0; tick < 360; tick++) {
+      particles.forceX[0] = -0.08;
+      integrateParticles(
+        particles,
+        particleConfig,
+        worldConfig.boundsUnits,
+        worldConfig.fixedStepMs,
+      );
+      if (particles.x[0] <= minimumX + 1e-5) exactContactTicks++;
+      furthestSeparation = Math.max(furthestSeparation, particles.x[0] - minimumX);
+    }
+
+    expect(exactContactTicks).toBeLessThan(90);
+    expect(furthestSeparation).toBeGreaterThan(2);
+  });
+
+  it('köşede iki normal bileşeni çözer ve teğetsel hareketi korur', () => {
+    const corner = new ParticleStore(1);
+    corner.x[0] = particleConfig.radiusUnits + 0.1;
+    corner.y[0] = particleConfig.radiusUnits + 0.1;
+    corner.vx[0] = -2;
+    corner.vy[0] = -1.5;
+
+    integrateParticles(corner, particleConfig, worldConfig.boundsUnits, worldConfig.fixedStepMs);
+
+    expect(corner.vx[0]).toBeGreaterThan(0);
+    expect(corner.vy[0]).toBeGreaterThan(0);
+
+    const grazing = new ParticleStore(1);
+    grazing.x[0] = particleConfig.radiusUnits + 0.1;
+    grazing.y[0] = 200;
+    grazing.vx[0] = -0.2;
+    grazing.vy[0] = 1;
+
+    integrateParticles(grazing, particleConfig, worldConfig.boundsUnits, worldConfig.fixedStepMs);
+
+    expect(grazing.vx[0]).toBeGreaterThan(0);
+    expect(grazing.vy[0]).toBeGreaterThan(0.9);
   });
 
   it('aynı tohumla aynı başlangıç dizilerini üretir', () => {

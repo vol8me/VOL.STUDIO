@@ -171,7 +171,7 @@ describe('LifeScene yaşam döngüsü', () => {
       destroy: vi.fn(),
     };
     const createRuntime = vi.fn(() => runtime);
-    const autosave = { destroy: vi.fn() };
+    const autosave = { destroy: vi.fn(), flush: vi.fn().mockResolvedValue(undefined) };
     const attach = vi.fn(
       (_runtime: unknown, _options?: { onError?: (error: unknown) => void }) => autosave,
     );

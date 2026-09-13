@@ -4,13 +4,38 @@ import {
   particleConfig,
   particleInteractionMatrix,
   particlePalette,
+  validateParticleConfig,
 } from '@/config/particles';
 
 describe('parçacık yapılandırması', () => {
-  it('altı tür, altı renk ve 6×6 etkileşim matrisi taşır', () => {
+  it('altı tür, altı renk, tür matrisi ve açık rol-menzil modeli taşır', () => {
     expect(PARTICLE_TYPE_COUNT).toBe(6);
     expect(particlePalette).toHaveLength(6);
     expect(particleInteractionMatrix).toHaveLength(36);
+    expect(particleConfig.roleByType).toHaveLength(6);
+    expect(particleConfig.interactionRadiusByRolePair).toHaveLength(9);
+    expect(Math.max(...particleConfig.interactionRadiusByRolePair)).toBeLessThanOrEqual(
+      particleConfig.interactionRadiusUnits,
+    );
+    expect(Math.min(...particleConfig.interactionRadiusByRolePair)).toBeGreaterThan(
+      particleConfig.repulsionRadiusUnits,
+    );
+  });
+
+  it('spatial hash aralığını aşan veya eksik rol menzilini reddeder', () => {
+    expect(() => validateParticleConfig(particleConfig)).not.toThrow();
+    expect(() =>
+      validateParticleConfig({
+        ...particleConfig,
+        interactionRadiusByRolePair: new Float32Array([64]),
+      }),
+    ).toThrow(RangeError);
+    expect(() =>
+      validateParticleConfig({
+        ...particleConfig,
+        interactionRadiusUnits: particleConfig.cellSizeUnits + 1,
+      }),
+    ).toThrow(RangeError);
   });
 
   it('etkileşim matrisi asimetriktir ve yakın/orta mesafe ayrımı geçerlidir', () => {

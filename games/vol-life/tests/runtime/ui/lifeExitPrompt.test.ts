@@ -48,6 +48,44 @@ describe('LifeExitPrompt', () => {
     prompt.destroy();
   });
 
+  it('son kayıt tamamlanmadan pencereyi kapatmaz', async () => {
+    let resolveSave!: () => void;
+    const beforeClose = vi.fn(() => new Promise<void>((resolve) => (resolveSave = resolve)));
+    const close = vi.fn().mockResolvedValue(undefined);
+    const prompt = new LifeExitPrompt({
+      container: document.body,
+      windowAdapter: { close } as never,
+      beforeClose,
+    });
+
+    prompt.request();
+    await vi.waitFor(() => expect(findButton(/Çık|Exit/)).toBeDefined());
+    findButton(/Çık|Exit/)?.click();
+    await vi.waitFor(() => expect(beforeClose).toHaveBeenCalledOnce());
+    expect(close).not.toHaveBeenCalled();
+
+    resolveSave();
+    await vi.waitFor(() => expect(close).toHaveBeenCalledOnce());
+    prompt.destroy();
+  });
+
+  it('son kayıt başarısızsa pencereyi açık tutar', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const close = vi.fn().mockResolvedValue(undefined);
+    const prompt = new LifeExitPrompt({
+      container: document.body,
+      windowAdapter: { close } as never,
+      beforeClose: vi.fn().mockRejectedValue(new Error('disk dolu')),
+    });
+
+    prompt.request();
+    await vi.waitFor(() => expect(findButton(/Çık|Exit/)).toBeDefined());
+    findButton(/Çık|Exit/)?.click();
+    await vi.waitFor(() => expect(console.error).toHaveBeenCalledOnce());
+    expect(close).not.toHaveBeenCalled();
+    prompt.destroy();
+  });
+
   /* Geri tuşuna üst üste basmak modal YIĞMAMALIDIR. */
   it('ikinci geri basışı ikinci bir onay açmaz', async () => {
     const prompt = new LifeExitPrompt({

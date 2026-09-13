@@ -1,5 +1,5 @@
 import type { WorldConfig } from '@/config/world';
-import { particleConfig, type ParticleConfig } from '@/config/particles';
+import { particleConfig, validateParticleConfig, type ParticleConfig } from '@/config/particles';
 import { FieldSet, type FieldSnapshot } from '@/runtime/sim/FieldSet';
 import {
   accumulateParticleForces,
@@ -10,6 +10,7 @@ import { ParticleSpatialHash } from '@/runtime/sim/ParticleSpatialHash';
 import { ParticleStore, type ParticleSnapshot } from '@/runtime/sim/ParticleStore';
 import { createSimRandom } from '@/runtime/sim/rng';
 import { SimulationTempo } from '@/runtime/sim/SimulationTempo';
+import { resolveParticleBounds } from '@/runtime/sim/WorldBounds';
 
 interface LightSource {
   readonly originX: number;
@@ -44,6 +45,7 @@ export class LifeWorld {
     private readonly config: WorldConfig,
     particlesConfig: ParticleConfig = particleConfig,
   ) {
+    validateParticleConfig(particlesConfig);
     if (
       !Number.isInteger(config.fieldUpdateBands) ||
       config.fieldUpdateBands < 1 ||
@@ -69,7 +71,8 @@ export class LifeWorld {
     }
     this.nutrientDiffusionSource = this.fields.nutrient.slice();
     this.particles = new ParticleStore(this.particlesConfig.count);
-    initializeParticles(this.particles, this.random, this.particlesConfig, boundsUnits);
+    const particleBounds = resolveParticleBounds(boundsUnits, config.boundaryThicknessUnits);
+    initializeParticles(this.particles, this.random, this.particlesConfig, particleBounds);
     this.particles.capturePrevious();
     this.particleGrid = new ParticleSpatialHash(
       boundsUnits,
@@ -94,7 +97,7 @@ export class LifeWorld {
     integrateParticles(
       this.particles,
       this.particlesConfig,
-      this.config.boundsUnits,
+      resolveParticleBounds(this.config.boundsUnits, this.config.boundaryThicknessUnits),
       this.config.fixedStepMs,
     );
     this.tempo.advance();

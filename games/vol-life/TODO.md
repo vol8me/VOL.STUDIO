@@ -47,17 +47,21 @@ Adım 2 kabul borçları kapatıldı; maddeler [Kapatılanlar](#2026-09-13--adı
 
 ## Adım 3 — matris araması
 
-- [ ] **[P1] Kuvvet çekirdeği genişletmesi (zar-çekirdek ayrışması için):** 12 matris
-      ve 8 global aday taraması tamamlandı (`search-morphology.mts`). En iyi
-      layering ~0.03 (< 0.12 eşiği), presence ~0.11 (< 0.55 eşiği) seviyesinde
-      kaldı. Mevcut tek tip simetrik/paylaşımlı kuvvet çekirdeği kendiliğinden
-      zar-çekirdek ayrışması üretememektedir; türler arası asimetrik etkileşim
-      yarıçapları (`rMax[typeA][typeB]`) veya çoklu kuvvet profili gereklidir.
+- [ ] **[P1] Zar-çekirdek ayrışması için kuvvet profili araştırması:** düzeltilmiş
+      duvarla 12 matris ve yönlü 3×3 rol-menzili taşıyan 8 global aday tarandı.
+      En iyi global finalistte layering 0,084 ve presence 0,30; kabul eşiği
+      0,12/0,55. Yapının %60'ı duvar destekli ve hiçbir aday kalifiye değil.
+      Sonuç yalnız TEST EDİLEN ALT UZAYI reddeder; sıradaki hipotez near/mid/far
+      çok-lob profildir, fiziksel imkânsızlık iddia edilmez.
 - [ ] **Adaylar gözle doğrulanır:** en iyi adaylar tarayıcıda açılıp izlenir;
       uzun süreli bütünlük, iç/dış katman, bozulup toparlanma ve hareket
       görülmeden Adım 3 kapanmaz. Metrik görüntüyle çürürse metrik değişir;
       yalnız renkli topak veya kalıcı üçlü orbit başarısızdır.
 - [ ] **Alan kuvvetleri morfoloji oturana kadar kapalı kalır.**
+- [ ] **[P2] Büyük dünya depolama backend'i:** bugünkü `LifeWorldStore` portu
+      100 parçacıkta `SaveManager` ile çalışır. Yoğun dünya öncesinde native
+      binary dosya ve web IndexedDB/OPFS backend'i; migration, uyumsuz kayıt
+      bildirimi ve last-known-good politikası ölçülüp uygulanır.
 
 ## Adım 4–10
 
@@ -101,8 +105,9 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
 
 - [x] **[P0] Toroidal topoloji sonlu fiziksel dünyaya taşındı.** Tek config
       `WorldBounds`; particle hash/mesafe/entegrasyon, field sample/diffusion,
-      ışık kaynağı, kamera ve renderer aynı sonlu sınırı (2400×1600) tüketiyor.
-      Duvar teması kayar ve sönümlenir, renderer kopya çizmez.
+      ışık kaynağı, kamera ve renderer aynı 1024×1024 sınırı tüketiyor. Contact
+      zone ve restitution sinek-kâğıdı kilidini engeller; opak duvar bandı ayrı
+      renderer'da parçacığın altında çizilir.
 - [x] **[P0] Fixed-step konumları her render karesinde interpolate ediliyor.**
       Önceki ve güncel SoA konumları tutuluyor, `getInterpolationAlpha()`
       renderer'a iletiliyor ve ara kareler pürüzsüz çiziliyor.
@@ -118,9 +123,10 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
       `success`, destructive eylemi `warning`; `haptic:false` override.
 - [x] **[P1] Ayar kalıcılığı cihazda katman katman kanıtlandı.** İki fiziksel
       Android cihazda ayar seçimleri, dil, tema ve haptics tercihleri doğrulandı.
-- [x] **[P1] Minimal dünya autosave/resume tamamlandı.** Sürümlü binary
-      codec ve IndexedDB/localStorage persistans mekanizması kuruldu; periyodik
-      ve background save ile bozuk kayıt toleransı test edildi.
+- [x] **[P1] Minimal dünya autosave/resume tamamlandı.** Sürümlü binary codec,
+      `LifeWorldStore` portu ve bugünkü `SaveManager` backend'i kuruldu. CRC32,
+      semantik doğrulama, periyodik/background save ve çıkışta beklenen flush
+      test edildi.
 - [x] **[P1] Tek kare küme tespiti, "ilginç" metriği ve tarama altyapısı kuruldu.**
       `MorphologyMetrics` ve `search-morphology.mts` yazıldı. 12 matris ve 8 global
       aday tarandı; kuvvet çekirdeği yetersizliği dürüstçe belgelendi.
@@ -149,11 +155,11 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
 - [x] **Adım 2 parçacık çekirdeği:** sabit SoA `ParticleStore`, altı tür,
       ayrı dünya paleti, asimetrik 6×6 matris, counting-sort spatial hash,
       ortak yakın itme, orta menzil tür kuvveti, sürtünme, hız tavanı ve
-      toroidal mesafe. Kuvvet birikimi entegrasyondan ayrıdır; alan kuvvetleri
+      sonlu mesafe. Kuvvet birikimi entegrasyondan ayrıdır; alan kuvvetleri
       kapalıdır.
 - [x] **Determinizm ve render:** seed + snapshot/restore parçacık dizilerini
-      bayt düzeyinde korur. Tek sabit Phaser Graphics adaptörü parçacığı en
-      yakın toroidal kopyada ve dünya birimli yarıçapla çizer.
+      bayt düzeyinde korur. Tek sabit Phaser Graphics adaptörü parçacığı sonlu
+      dünya koordinatında ve dünya birimli yarıçapla çizer.
 - [x] **Ölçüm:** sabit yoğunlukta 512→2048 çekirdek oranı 4,94;
       `quality.json` tavanı 5,5. Chromium WebGL 100/1.000/5.000 p50/p95
       ölçümleri DESIGN §11'de; 5.000 sonucu mevcut yolu yoğun ölçek için
@@ -180,12 +186,11 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
       yumuşak kaynaktır (`LifeWorld`). Aynı tohum aynı alanları verir;
       kaynakların ürettiği zenginleşme/fakirleşme ekran görüntülerinde görüldü
       (masaüstü sürükleme, SM-G990B2 kaydırma).
-- [x] **Toroidal sarma:** `index` maskeli sarar (negatif koordinat dahil);
-      difüzyon karşı kenara ulaşır (`index(7,0)`/`index(0,7)` komşudur) —
-      komşuluk mesafesi testle kilitli.
+- [x] **Sonlu alan sınırı:** no-flux/reflective örnekleme karşı kenarı komşu
+      saymaz; köşe ve kenar difüzyonu testle kilitli.
 - [x] **[P1] Dünya kamerası:** CORE `WorldCameraController` — sığdırma,
-      sürükleme, tekerlek, çift parmak, bir dünya genişliği sınırı, toroidal
-      ilk sürüm ve VOL.UI showcase'i kuruldu. Ürün acceptance'ında bulunan
+      sürükleme, tekerlek, çift parmak, sonlu sınır ve VOL.UI showcase'i
+      kuruldu. Ürün acceptance'ında bulunan
       giriş/overview kusurları 2026-09-13 bölümünde ayrıca kapatıldı.
 - [x] **Alan görüntüsü — varsayılan:** alanlar çok hafif çizilir, dünya
       `FieldRenderer` ile 256² canvas dokusuna taşındı. Varsayılan ağırlık,
@@ -290,7 +295,7 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
       düzeyine çevrildi; `SpriteGPULayer` başlığı ve `graphics.ts` yorumu
       hipotez diliyle yazıldı; §13'teki "Adım 0 tamamlandı" hükmü kaldırıldı.
 - [x] **Tasarım kararları `DESIGN.md`ye yazıldı:** madde korunur ve enerji
-      organizmanın deposudur (§3); dış girdi `light` ve toroidal görüntü kuralı
+      organizmanın deposudur (§3); dış girdi `light` ve sonlu görüntü kuralı
       (§2); tüketimin sunumu, katman görünümü ve kabuk yerleşimi (§6); ekran
       yönü, varsayılan dikey ve `user*` ailesi (§9).
 

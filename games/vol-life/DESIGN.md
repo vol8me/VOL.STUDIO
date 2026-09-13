@@ -102,6 +102,9 @@ beslemesinden çıkar. Beş temel alan:
 | `disturbance` | Hareket, çatışma ve patlamanın dünyada bıraktığı iz |
 
 `habitability` bu alanlardan TÜRETİLİR, ayrı bir alan olarak tutulmaz.
+`flowX`/`flowY` bugün yalnız veri yüzeyidir: Adım 3 saf morfolojiyi, Adım 4
+kimliği kanıtlayana kadar kuvvet üretmez. Zayıf deterministik advection Adım
+5'te; iz ve deformasyon gibi görsel güçlendirme Adım 7'de açılır.
 
 ### Alan ile kaynak AYNI ŞEY DEĞİLDİR
 
@@ -148,19 +151,19 @@ yeni bir koloni bulmalıdır. "Devasa" hissi kaplama alanından değil, bu
 ### Dünya sonlu ve fiziksel sınırlıdır
 
 Dünya tek bir sonlu dikdörtgendir; karşı kenarlar komşu değildir. Parçacık
-sınırı aşamaz: yarıçapı hesaba katılarak içeri alınır, yumuşak temasta duvara
-dik hız söner ve yanal hareket korunur, sert çarpmada normal hız kontrollü
-restitution ile tersine döner. Bu çözüm renderer kelepçesi değil simülasyon
-kuralıdır. Alan difüzyonu sınırda no-flux/reflective davranır; sağ kenardaki
-alan ya da parçacık sol kenarı etkileyemez.
+sınırı aşamaz: yaklaşma bölgesi içeri iter; penetrasyonda yumuşak ya da sert
+restitution normal hızı tersine çevirir ve yanal hareketi korur. Opak duvar
+bandı ayrı renderer'da parçacığın altında çizilir. Alan difüzyonu sınırda
+no-flux/reflective davranır; karşı kenarlar birbirini etkileyemez.
 
 Kamera da aynı config kaynaklı sınırı kullanır. Minimum zoom dünyayı ekrana
 `cover` eder (`max(viewportWidth/worldWidth, viewportHeight/worldHeight)`),
 merkez görünür yarım boyutlarla kelepçelenir ve normal oynanışta dış boşluk
 görülmez. Bütün dünyayı tek karede gösteren overview oynanış kamerasının görevi
 değildir; gerekirse ileride ayrı harita görünümü olur. Mevcut 1024×1024 ölçü
-Adım 3 morfoloji ve yoğunluk ölçülene kadar korunur; dikdörtgene geçiş aynı
-`WorldBounds` sözleşmesiyle veri değişikliğidir.
+Adım 3 bitene kadar korunur. Dikdörtgene geçiş yalnız iki sayı değildir:
+spatial-hash hücresi ölçüleri tam bölmeli, alan difüzyonu da eşit olmayan x/y
+hücre aralıklarını hesaba katmalıdır.
 
 Alan dokusu Phaser WebGL1 nedeniyle 2'nin kuvveti çözünürlüktedir; 256²/512²
 adayları bu kısıttan gelir (§11).
@@ -214,8 +217,9 @@ ettirme ihtimali yok denecek kadar azdır. Matris bir arama probleminin
 olan saklanır.
 
 Adım 2'deki 6×6 matris yalnız çekirdeğin asimetri, çekim ve itme yollarını
-çalıştıran başlangıç verisidir; morfoloji sonucu diye kabul edilmez. Kalıcı
-aday Adım 3'te ölçülerek aranır.
+çalıştıran başlangıç verisidir; morfoloji sonucu diye kabul edilmez. Üç rolün
+tür eşlemesi ve yönlü 3×3 menzil matrisi config'te açıktır. Kalıcı aday Adım
+3'te nüfus, menzil, sürtünme ve matrisin tamamıyla ölçülür.
 
 Bu, "ilginç matris" için bir metrik gerektirir ve o metriği seçerken sorulacak
 soru bellidir (bkz. §14, ders 3).
@@ -503,16 +507,24 @@ ve `LifeHud` bir danger toast gösterir (`life:options.saveFailed`). Tercih
 yine kaybedilebilir ama oyuncu bunu görür; otomatik yeniden deneme bilinçli
 olarak eklenmedi — toast, kuru kuyruğa göre daha dürüst bir yüzeydir.
 
-### Dünya → VOL.LIFE'ın kendi formatı
+### Dünya → VOL.LIFE'ın kendi formatı ve depolama portu
 
-Dünya `SaveManager`a KONULMAZ; kendi `WorldSnapshot` sözleşmesini taşır.
+Dünya kendi `WorldSnapshot`/codec sözleşmesini ve `LifeWorldStore` portunu
+taşır. Bugünkü küçük dünyada bu port CORE `SaveManager` ile beslenir; backend
+seçimi binary formatı uygulamanın geri kalanına sızdırmaz.
 
 Format sürümlü bir codec arkasındadır. Parçacık sayısı 100 olsa da altı 256²
 alan ve difüzyon kaynağını typed-array nesneleri olarak JSON'a çevirmek 7,74
 MiB ölçülür; web depolama kotasını ve Android köprü maliyetini aşabilir. Bu
 yüzden metadata JSON, sayısal gövde sıralı little-endian binary ve gzip/base64
-olarak saklanır. Codec boyut/sürüm/config parmak izi doğrular; bozuk veya eski
-kayıt yeni dünyaya güvenli biçimde düşer. Format seçimi arayüzün dışına sızmaz.
+olarak saklanır. Codec boyut, sürüm, config parmak izi, CRC32 ve sonlu değerleri;
+persistence alan/parçacık sayısı, sınır, hız, tür ve bant semantiğini doğrular.
+Bozuk/eski kayıt yeni dünyaya güvenli biçimde düşer.
+
+Android'de onaylı çıkış son snapshot yazılana kadar pencereyi kapatmaz; hata
+olursa uygulama açık kalır. Büyük dünya hedefinde port native binary dosya ve
+web'de IndexedDB/OPFS benzeri backend kazanmalıdır; migration, last-known-good
+ve uyumsuz kayıt yüzeyi o geçişin parçasıdır.
 
 Dünya anlık görüntüsü şunları taşır: tohum, tick sayısı, **RNG durumu**, tür
 tanımları, parçacık dizileri (SoA), alan ızgaraları, organizma kayıtları,
@@ -916,6 +928,10 @@ sorusu orada cevaplanmalıdır. Metrik zar-çekirdek yapısını ölçmek için 
 tanımak zorundadır; tek kare küme tespiti bu yüzden Adım 3'tedir, Adım 4 ona
 yalnız kareler arası kimliği ekler.
 
+Rapor bağlı zinciri yapı saymaz; kompaktlık/anisotropy, tekil ve durmuş pay,
+duvar desteği, karşıt yörünge etkinliği ve ardışık üye örtüşmesini ayrı ölçer.
+Bozulma sonrası yalnız küme oranı değil üyelik ve şekil toparlanır.
+
 Ölçek EN SONA bırakılır. Nüfusu erken açmak, iptal edilen denemede ekranı halıya
 çevirip birey algısını yok etti; ölçek bir sonuçtur (§1).
 
@@ -965,14 +981,14 @@ dersler:
 
 ## 16. Bugünkü durum
 
-**Adım 2 tamamlandı; Adım 3 morfoloji arama altyapısı ve açık durum** (2026-09-13):
+**Adım 2 sertleştirildi; Adım 3 morfoloji hedefi açık** (2026-09-13):
 
 - `ParticleStore` 100 sabit kimliği paralel `Float32Array`/`Uint8Array` dizilerinde tutar.
 - Counting-sort spatial hash; sonlu dünya duvarları, sürtünme ve hız tavanı her tickte Phaser'sız çalışır.
-- Sonlu dünya (2400×1600), cover camera clamp ve viewport resize desteği çalışır; toroidal topoloji terk edilmiştir.
+- Sonlu 1024×1024 dünya, fiziksel duvar bandı, cover camera clamp ve viewport resize desteği çalışır.
 - `ParticleRenderer` tek sabit Phaser Graphics üyesidir; fixed-step interpolasyonu pürüzsüz ara kareler üretir.
-- Responsive SettingsForm/Sheet, semantik haptics ve IndexedDB/localStorage tabanlı snapshot/autosave mekanizması entegredir.
-- **Adım 3 Morfoloji Arama Ölçümü:** 12 matris adayı ve 8 global hiperparametre adayı tarandı. En iyi katmanlaşma ~0.03 (< 0.12 kabul eşiği), yapı varlığı ~0.11 (< 0.55 kabul eşiği) seviyesinde kaldı. Mevcut simetrik ve paylaşımlı kuvvet çekirdeği zar-çekirdek morfolojisini kendiliğinden ayrıştıramamaktadır. Adım 3 başarılı sayılmamış; asimetrik etkileşim yarıçapı veya çoklu kuvvet profili gereksinimi açık iş olarak bırakılmıştır.
+- Responsive Sheet, semantik haptics ve bütünlük/semantik kontrollü binary snapshot/autosave entegredir.
+- **Adım 3 ölçümü:** yeni duvarla 12 el profilli matris ve yönlü 3×3 rol menzili içeren 8 global aday tarandı. Test edilen alt uzayda aday çıkmadı; bu fiziksel imkânsızlık kanıtı değildir. Adım 4 başlamaz; tam sonuç sürümlü benchmark artifact'inde tutulur.
 
 ## 17. Ölçülmemiş varsayımlar
 

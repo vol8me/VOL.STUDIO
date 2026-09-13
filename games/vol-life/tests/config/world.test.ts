@@ -6,6 +6,8 @@ describe('worldConfig', () => {
   it('sonlu dünya sınırı pozitif ve tek kaynaktır', () => {
     expect(worldConfig.boundsUnits).toEqual({ x: 0, y: 0, width: 1024, height: 1024 });
     expect(Object.values(worldConfig.boundsUnits).every(Number.isFinite)).toBe(true);
+    expect(worldConfig.boundaryThicknessUnits).toBeGreaterThan(0);
+    expect(worldConfig.boundaryThicknessUnits * 2).toBeLessThan(worldConfig.boundsUnits.width);
   });
 
   it('sabit adım pozitiftir', () => {
@@ -51,5 +53,10 @@ describe('lifeGraphicsConfig', () => {
   it('renderScale 0.25–1 aralığındadır', () => {
     expect(lifeGraphicsConfig.renderScale).toBeGreaterThanOrEqual(0.25);
     expect(lifeGraphicsConfig.renderScale).toBeLessThanOrEqual(1);
+  });
+
+  it('mevcut parçacık ayrıntısında bilgi taşımayan aşırı yakınlaştırmayı sınırlar', () => {
+    expect(lifeGraphicsConfig.cameraMaxZoomFactor).toBeGreaterThan(1);
+    expect(lifeGraphicsConfig.cameraMaxZoomFactor).toBeLessThanOrEqual(3);
   });
 });

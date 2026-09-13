@@ -6,6 +6,8 @@ export interface LifeExitPromptOptions {
   container: HTMLElement;
   /** Testte native pencereyi enjekte etmek için. */
   windowAdapter?: TauriWindowAdapter;
+  /** Native pencere kapanmadan önce son dünya durumunu kalıcılaştırır. */
+  beforeClose?: () => Promise<void>;
 }
 
 /**
@@ -23,6 +25,7 @@ export class LifeExitPrompt {
   private readonly uiRoot: UIRoot;
   private readonly windowAdapter: TauriWindowAdapter;
   private readonly abort = new AbortController();
+  private readonly beforeClose: (() => Promise<void>) | null;
   private open = false;
 
   constructor(options: LifeExitPromptOptions) {
@@ -30,6 +33,7 @@ export class LifeExitPrompt {
     // seçimi/tap-highlight korumasının DIŞINDA kalır.
     this.uiRoot = this.scope.addDestroyable(new UIRoot(options.container));
     this.windowAdapter = options.windowAdapter ?? new TauriWindowAdapter();
+    this.beforeClose = options.beforeClose ?? null;
     this.scope.addSubscription(pushBackHandler(() => this.request()));
     this.scope.add({ dispose: () => this.abort.abort() });
   }
@@ -56,6 +60,12 @@ export class LifeExitPrompt {
         signal: this.abort.signal,
       });
       if (confirmed) {
+        try {
+          await this.beforeClose?.();
+        } catch (error) {
+          console.error('[VOL.LIFE] Son dünya kaydedilemedi; uygulama açık tutuluyor:', error);
+          return;
+        }
         try {
           await this.windowAdapter.close();
         } catch (error) {
