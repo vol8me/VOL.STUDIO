@@ -1,3 +1,5 @@
+import { assertFiniteRange, assertPositiveFinite, assertPositiveInteger } from './validation';
+
 export const PARTICLE_TYPE_COUNT = 6;
 export const PARTICLE_ROLE_COUNT = 3;
 
@@ -56,32 +58,47 @@ export const particleConfig: ParticleConfig = {
   interactionMatrix: particleInteractionMatrix,
 };
 
+export function cloneParticleConfig(config: ParticleConfig): ParticleConfig {
+  return {
+    ...config,
+    roleByType: config.roleByType.slice(),
+    interactionRadiusByRolePair: config.interactionRadiusByRolePair.slice(),
+    interactionMatrix: config.interactionMatrix.slice(),
+  };
+}
+
 export function validateParticleConfig(config: ParticleConfig): void {
-  const positiveFinite = (value: number) => Number.isFinite(value) && value > 0;
-  const unitInterval = (value: number) => Number.isFinite(value) && value >= 0 && value <= 1;
-  const scalarValuesValid =
-    Number.isInteger(config.count) &&
-    config.count > 0 &&
-    positiveFinite(config.radiusUnits) &&
-    positiveFinite(config.cellSizeUnits) &&
-    positiveFinite(config.repulsionRadiusUnits) &&
-    config.repulsionRadiusUnits > config.radiusUnits * 2 &&
-    positiveFinite(config.interactionRadiusUnits) &&
-    positiveFinite(config.repulsionStrength) &&
-    positiveFinite(config.interactionStrength) &&
-    Number.isInteger(config.referenceHz) &&
-    config.referenceHz > 0 &&
-    positiveFinite(config.frictionPerReferenceTick) &&
-    config.frictionPerReferenceTick <= 1 &&
-    positiveFinite(config.maxSpeedUnitsPerReferenceTick) &&
-    Number.isFinite(config.initialSpeedUnitsPerReferenceTick) &&
-    config.initialSpeedUnitsPerReferenceTick >= 0 &&
-    config.initialSpeedUnitsPerReferenceTick <= config.maxSpeedUnitsPerReferenceTick &&
-    Number.isFinite(config.wallHardImpactThresholdUnitsPerReferenceTick) &&
-    config.wallHardImpactThresholdUnitsPerReferenceTick >= 0 &&
-    unitInterval(config.wallSoftRestitution) &&
-    unitInterval(config.wallHardRestitution) &&
-    unitInterval(config.wallTangentRetention);
+  assertPositiveInteger(config.count, 'Parçacık sayısı');
+  assertPositiveFinite(config.radiusUnits, 'Parçacık yarıçapı');
+  assertPositiveFinite(config.cellSizeUnits, 'Spatial-hash hücresi');
+  assertPositiveFinite(config.repulsionRadiusUnits, 'İtme yarıçapı');
+  assertPositiveFinite(config.interactionRadiusUnits, 'Etkileşim yarıçapı');
+  assertPositiveFinite(config.repulsionStrength, 'İtme kuvveti');
+  assertPositiveFinite(config.interactionStrength, 'Etkileşim kuvveti');
+  assertPositiveInteger(config.referenceHz, 'Referans tempo');
+  assertFiniteRange(config.frictionPerReferenceTick, Number.MIN_VALUE, 1, 'Sürtünme');
+  assertPositiveFinite(config.maxSpeedUnitsPerReferenceTick, 'Hız tavanı');
+  assertFiniteRange(
+    config.initialSpeedUnitsPerReferenceTick,
+    0,
+    config.maxSpeedUnitsPerReferenceTick,
+    'Başlangıç hızı',
+  );
+  assertFiniteRange(
+    config.wallHardImpactThresholdUnitsPerReferenceTick,
+    0,
+    Number.MAX_VALUE,
+    'Sert duvar darbesi eşiği',
+  );
+  assertFiniteRange(config.wallSoftRestitution, 0, 1, 'Yumuşak duvar restitüsyonu');
+  assertFiniteRange(config.wallHardRestitution, 0, 1, 'Sert duvar restitüsyonu');
+  assertFiniteRange(config.wallTangentRetention, 0, 1, 'Duvar teğet korunumu');
+  if (config.repulsionRadiusUnits <= config.radiusUnits * 2) {
+    throw new RangeError('İtme yarıçapı parçacık çapından büyük olmalı.');
+  }
+  if (config.interactionRadiusUnits > config.cellSizeUnits) {
+    throw new RangeError('Etkileşim yarıçapı spatial-hash hücresini aşamaz.');
+  }
   const rolesValid =
     config.roleByType.length === PARTICLE_TYPE_COUNT &&
     config.roleByType.every((role) => role < PARTICLE_ROLE_COUNT);
@@ -96,13 +113,7 @@ export function validateParticleConfig(config: ParticleConfig): void {
   const matrixValid =
     config.interactionMatrix.length === PARTICLE_TYPE_COUNT ** 2 &&
     config.interactionMatrix.every(Number.isFinite);
-  if (
-    !rolesValid ||
-    !radiiValid ||
-    !matrixValid ||
-    !scalarValuesValid ||
-    config.interactionRadiusUnits > config.cellSizeUnits
-  ) {
+  if (!rolesValid || !radiiValid || !matrixValid) {
     throw new RangeError('Parçacık rol, menzil ve spatial-hash yapılandırması ayrışıyor.');
   }
 }

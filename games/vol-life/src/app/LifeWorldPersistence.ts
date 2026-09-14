@@ -1,6 +1,10 @@
 import { DisposableScope, observeAppVisibility, type AppVisibilityState } from '@volstudio/core';
-import type { ParticleConfig } from '@/config/particles';
-import type { WorldConfig } from '@/config/world';
+import {
+  cloneParticleConfig,
+  validateParticleConfig,
+  type ParticleConfig,
+} from '@/config/particles';
+import { cloneWorldConfig, validateWorldConfig, type WorldConfig } from '@/config/world';
 import {
   decodeLifeWorldSnapshot,
   encodeLifeWorldSnapshot,
@@ -8,6 +12,7 @@ import {
 } from '@/app/LifeWorldSnapshotCodec';
 import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 import { validateLifeWorldSnapshot } from '@/runtime/sim/LifeWorldSnapshotValidation';
+import { validateWorldGeometry } from '@/runtime/sim/WorldBounds';
 
 const STORAGE_KEY = 'vol-life:world';
 const DEFAULT_AUTOSAVE_INTERVAL_MS = 30_000;
@@ -29,13 +34,17 @@ export interface LifeWorldAutosaveOptions {
 
 export class LifeWorldPersistence {
   readonly configFingerprint: string;
+  private readonly worldConfig: WorldConfig;
+  private readonly particleConfig: ParticleConfig;
 
   constructor(
     private readonly store: LifeWorldStore,
-    private readonly worldConfig: WorldConfig,
-    private readonly particleConfig: ParticleConfig,
+    worldConfig: WorldConfig,
+    particleConfig: ParticleConfig,
   ) {
-    this.configFingerprint = createWorldConfigFingerprint(worldConfig, particleConfig);
+    this.worldConfig = cloneWorldConfig(worldConfig);
+    this.particleConfig = cloneParticleConfig(particleConfig);
+    this.configFingerprint = createWorldConfigFingerprint(this.worldConfig, this.particleConfig);
   }
 
   async load(): Promise<LifeWorldSnapshot | null> {
@@ -79,13 +88,18 @@ export class LifeWorldAutosave {
     if (!(intervalMs > 0) || !Number.isFinite(intervalMs)) {
       throw new RangeError(`Otomatik kayıt aralığı pozitif ve sonlu olmalı: ${intervalMs}`);
     }
-    this.scope.addInterval(() => this.requestSave(), intervalMs);
-    const observe = options.observeVisibility ?? observeAppVisibility;
-    this.scope.addSubscription(
-      observe((state) => {
-        if (state === 'background') this.requestSave();
-      }),
-    );
+    try {
+      this.scope.addInterval(() => this.requestSave(), intervalMs);
+      const observe = options.observeVisibility ?? observeAppVisibility;
+      this.scope.addSubscription(
+        observe((state) => {
+          if (state === 'background') this.requestSave();
+        }),
+      );
+    } catch (error) {
+      this.scope.dispose();
+      throw error;
+    }
   }
 
   requestSave(): void {
@@ -183,6 +197,13 @@ export function createWorldConfigFingerprint(
   worldConfig: WorldConfig,
   particleConfig: ParticleConfig,
 ): string {
+  validateWorldConfig(worldConfig);
+  validateParticleConfig(particleConfig);
+  validateWorldGeometry(
+    worldConfig.boundsUnits,
+    worldConfig.particleCollisionInsetUnits,
+    particleConfig.cellSizeUnits,
+  );
   const serialized = JSON.stringify({
     worldConfig,
     particleConfig: {

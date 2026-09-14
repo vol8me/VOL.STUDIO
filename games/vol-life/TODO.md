@@ -341,12 +341,20 @@ Ama yüksek seviye önerilerin kaybolmaması için bağımlılık ve kabul yüze
       doğrulanır.
 - [x] **Snapshot geri yükleme atomik ve tek doğrulayıcılı oldu.** Disk
       persistence ile doğrudan `LifeWorld.restore` aynı alan/parçacık/zaman/RNG
-      doğrulamasını kullanır; geçersiz son dizi canlı dünyayı kısmen değiştirmez.
+      doğrulamasını kullanır; `FieldSet` ve `ParticleStore` da uzunluk ile
+      sonluluğu yazmadan önce doğrular. Geçersiz son dizi canlı dünyayı kısmen
+      değiştirmez.
+- [x] **Config, fingerprint ve metadata sahipliği yalıtıldı.** Dünya ile
+      persistence kurulumda çağıranın nesne ve TypedArray'lerini kopyalar;
+      sonradan yapılan dış mutasyon çalışan fiziği veya fingerprint
+      sözleşmesini değiştirmez. Fingerprint üretimi geçersiz config'i hash
+      hesaplamadan önce reddeder.
 - [x] **Kurulum ve kapanış yaşam döngüleri sertleştirildi.** Yarım kalan
       `LifeRuntime` o ana kadar aldığı GPU/giriş sahiplerini geri bırakır;
       `LifeScene` yeniden kurulumda Phaser lifecycle listener'larını
-      biriktirmez; autosave snapshot hatası zamanlayıcıdan kaçmaz; yok edilen
-      çıkış onayı bekleyen kayıt bitince pencereyi kapatmaz.
+      biriktirmez; autosave gözlem kurulumu çökerse açtığı zamanlayıcıyı geri
+      alır ve snapshot hatası zamanlayıcıdan kaçmaz; yok edilen çıkış onayı
+      bekleyen kayıt bitince pencereyi kapatmaz.
 - [x] **Fresh-world çakışması ve repo ignore sözleşmesi kapılandı.** Tekrarlanan
       entropy aynı oturumda daha önce üretilmiş seed'i yeniden kullanmaz. Tüm
       oyunların Apple üretim ağacı ve Android build çıktıları ignore edilir;

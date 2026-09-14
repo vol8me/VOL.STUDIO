@@ -1,5 +1,15 @@
-import { resolveSimulationHz, validateWorldConfig, type WorldConfig } from '@/config/world';
-import { particleConfig, validateParticleConfig, type ParticleConfig } from '@/config/particles';
+import {
+  cloneWorldConfig,
+  resolveSimulationHz,
+  validateWorldConfig,
+  type WorldConfig,
+} from '@/config/world';
+import {
+  cloneParticleConfig,
+  particleConfig,
+  validateParticleConfig,
+  type ParticleConfig,
+} from '@/config/particles';
 import { FieldSet, type FieldSnapshot } from '@/runtime/sim/FieldSet';
 import {
   accumulateParticleForces,
@@ -37,8 +47,10 @@ export interface LifeWorldSnapshot {
 }
 
 export class LifeWorld {
+  readonly metadata: WorldMetadata;
   readonly fields: FieldSet;
   readonly particles: ParticleStore;
+  private readonly config: WorldConfig;
   private readonly random;
   private readonly tempo: SimulationTempo;
   private readonly sources: LightSource[];
@@ -49,8 +61,8 @@ export class LifeWorld {
   private fieldUpdated = false;
 
   constructor(
-    private readonly config: WorldConfig,
-    readonly metadata: WorldMetadata = createFreshWorldMetadata(),
+    config: WorldConfig,
+    metadata: WorldMetadata = createFreshWorldMetadata(),
     particlesConfig: ParticleConfig = particleConfig,
   ) {
     validateWorldMetadata(metadata);
@@ -61,12 +73,14 @@ export class LifeWorld {
       config.particleCollisionInsetUnits,
       particlesConfig.cellSizeUnits,
     );
-    this.tempo = new SimulationTempo(resolveSimulationHz(config.fixedStepMs));
-    this.fields = new FieldSet(config.fieldResolution);
-    this.random = createSimRandom(metadata.seed);
-    this.particlesConfig = particlesConfig;
-    const { boundsUnits } = config;
-    this.sources = Array.from({ length: config.lightSourceCount }, () => ({
+    this.config = cloneWorldConfig(config);
+    this.metadata = { ...metadata };
+    this.particlesConfig = cloneParticleConfig(particlesConfig);
+    this.tempo = new SimulationTempo(resolveSimulationHz(this.config.fixedStepMs));
+    this.fields = new FieldSet(this.config.fieldResolution);
+    this.random = createSimRandom(this.metadata.seed);
+    const { boundsUnits } = this.config;
+    this.sources = Array.from({ length: this.config.lightSourceCount }, () => ({
       originX: boundsUnits.x + this.random.next() * boundsUnits.width,
       originY: boundsUnits.y + this.random.next() * boundsUnits.height,
       phase: this.random.next() * Math.PI * 2,
@@ -80,7 +94,10 @@ export class LifeWorld {
     }
     this.nutrientDiffusionSource = this.fields.nutrient.slice();
     this.particles = new ParticleStore(this.particlesConfig.count);
-    const particleBounds = resolveParticleBounds(boundsUnits, config.particleCollisionInsetUnits);
+    const particleBounds = resolveParticleBounds(
+      boundsUnits,
+      this.config.particleCollisionInsetUnits,
+    );
     initializeParticles(this.particles, this.random, this.particlesConfig, particleBounds);
     this.particles.capturePrevious();
     this.particleGrid = new ParticleSpatialHash(
@@ -88,7 +105,7 @@ export class LifeWorld {
       this.particlesConfig.cellSizeUnits,
       this.particles.count,
     );
-    this.tempo.every(config.fieldHz, (tick) => {
+    this.tempo.every(this.config.fieldHz, (tick) => {
       this.stepFields(tick);
       this.fieldUpdated = true;
     });
@@ -115,7 +132,7 @@ export class LifeWorld {
 
   snapshot(): LifeWorldSnapshot {
     return {
-      metadata: this.metadata,
+      metadata: { ...this.metadata },
       tick: this.tick,
       rngState: this.random.getState(),
       nextFieldBand: this.nextFieldBand,

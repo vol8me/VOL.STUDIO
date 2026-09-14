@@ -184,20 +184,56 @@ describe('LifeWorldPersistence', () => {
     ).not.toBe(baseline);
   });
 
+  it('kurulum yapılandırmasını sonradan yapılan dış mutasyondan yalıtır', async () => {
+    const memory = memorySaveManager();
+    const config = {
+      ...worldConfig,
+      boundsUnits: { ...worldConfig.boundsUnits },
+      fieldResolution: 8,
+    };
+    const interactionMatrix = particleConfig.interactionMatrix.slice();
+    const particles = { ...particleConfig, interactionMatrix };
+    const persistence = new LifeWorldPersistence(memory.saveManager, config, particles);
+    const snapshot = createWorld(config).snapshot();
+
+    config.fieldResolution = 16;
+    interactionMatrix.fill(Number.NaN);
+
+    await expect(persistence.save(snapshot)).resolves.toBeUndefined();
+    await expect(persistence.load()).resolves.toEqual(snapshot);
+  });
+
+  it('parmak izi üretmeden önce geçersiz fizik yapılandırmasını reddeder', () => {
+    expect(() =>
+      createWorldConfigFingerprint({ ...worldConfig, fixedStepMs: Number.NaN }, particleConfig),
+    ).toThrow(RangeError);
+    expect(() =>
+      createWorldConfigFingerprint(worldConfig, {
+        ...particleConfig,
+        frictionPerReferenceTick: Number.NaN,
+      }),
+    ).toThrow(RangeError);
+  });
+
   it('checksumı doğru olsa da sınır dışındaki parçacığı yüklemez', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const snapshot = createWorld().snapshot();
+    const testWorldConfig = { ...worldConfig, fieldResolution: 8 };
+    const snapshot = createWorld(testWorldConfig).snapshot();
     const x = snapshot.particles.x.slice();
-    x[0] = worldConfig.boundsUnits.x - 1;
+    x[0] = testWorldConfig.boundsUnits.x - 1;
     const envelope = await encodeLifeWorldSnapshot(
       {
         ...snapshot,
         particles: { ...snapshot.particles, x },
       },
-      createWorldConfigFingerprint(worldConfig, particleConfig),
+      createWorldConfigFingerprint(testWorldConfig, particleConfig),
     );
     const memory = memorySaveManager(envelope);
-    const persistence = new LifeWorldPersistence(memory.saveManager, worldConfig, particleConfig);
+    const persistence = new LifeWorldPersistence(
+      memory.saveManager,
+      testWorldConfig,
+      particleConfig,
+    );
 
     await expect(persistence.load()).resolves.toBeNull();
   });
@@ -284,6 +320,24 @@ describe('LifeWorldAutosave', () => {
     };
     expect(() => new LifeWorldAutosave({ save }, source, { intervalMs: 0 })).toThrow(RangeError);
     expect(() => new LifeWorldAutosave({ save }, source, { intervalMs: -10 })).toThrow(RangeError);
+  });
+
+  it('görünürlük aboneliği kurulamazsa daha önce açılan intervali geri bırakır', () => {
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval');
+    const source = {
+      snapshot: () => createWorld({ ...worldConfig, fieldResolution: 8 }).snapshot(),
+    };
+
+    expect(
+      () =>
+        new LifeWorldAutosave({ save: vi.fn() }, source, {
+          intervalMs: 10_000,
+          observeVisibility: () => {
+            throw new Error('görünürlük kurulamadı');
+          },
+        }),
+    ).toThrow('görünürlük kurulamadı');
+    expect(clearIntervalSpy).toHaveBeenCalledOnce();
   });
 
   it('destroy sonrasında yeni periyodik kayıt kabul etmez', async () => {

@@ -122,12 +122,15 @@ export class FieldSet {
   }
 
   restore(snapshot: FieldSnapshot): void {
-    for (const name of FIELD_NAMES) {
-      if (snapshot[name].length !== this.length) {
-        throw new RangeError(`${name} alanı ${this.length} değer taşımalı`);
-      }
-      this[name].set(snapshot[name]);
+    const invalid = FIELD_NAMES.find((name) => snapshot[name].length !== this.length);
+    if (invalid) {
+      throw new RangeError(`${invalid} alanı ${this.length} değer taşımalı`);
     }
+    const nonFinite = FIELD_NAMES.find((name) => !snapshot[name].every(Number.isFinite));
+    if (nonFinite) {
+      throw new RangeError(`${nonFinite} alanı yalnızca sonlu değer taşımalı`);
+    }
+    for (const name of FIELD_NAMES) this[name].set(snapshot[name]);
   }
 }
 

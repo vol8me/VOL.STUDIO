@@ -629,6 +629,11 @@ sürüm, uzunluk, config fingerprint, CRC32 ve finite-value doğrulaması taşı
 Doğrulama hem disk adaptöründe hem doğrudan dünya geri yüklemesinde aynı
 fonksiyondur ve canlı state'e yazmadan önce bütünüyle tamamlanır. Geçersiz son
 bir dizi tick, RNG, alan veya parçacıkların önceki kısmını yarım uygulayamaz.
+Simülasyon ve persistence, kurulumda world/particle config'inin ve metadata'nın
+kendi kopyasını alır; çağıranın sonradan değiştirdiği nesne veya TypedArray
+fingerprint'i ve çalışan dünyayı değiştiremez. Alt `FieldSet` ve
+`ParticleStore` restore sınırları da uzunluk ile sonluluğu tüm diziler için
+önceden doğrular; atomiklik yalnız üst seviye codec'e bırakılmaz.
 `LifeWorldStore` backend'i format sözleşmesinden ayrıdır. Küçük dünyada mevcut
 SaveManager adaptörü kullanılabilir; ölçüm kota veya köprü maliyetini aşarsa
 native binary dosya ile web IndexedDB/OPFS adayları last-known-good ve migration
@@ -1029,8 +1034,9 @@ sözleşmesi veya gönderilen candidate catalog'u değildir.
 - FieldSet, fixed-step, stateful RNG, world metadata, SoA store, interpolation
   ve counting-sort spatial hash korunacak temeldir.
 - Alan temposu `fixedStepMs`den türetilir; config ve snapshot doğrulaması tek
-  girişte tamamlanır, restore atomiktir. Yarım runtime kurulumu ile sahne,
-  autosave ve çıkış yaşam döngüleri kaynaklarını idempotent toplar.
+  girişte tamamlanır; config/metadata sahipliği kopyayla yalıtılır ve restore
+  her katmanda atomiktir. Yarım runtime kurulumu ile sahne, autosave ve çıkış
+  yaşam döngüleri kaynaklarını idempotent toplar.
 - Mevcut production runtime hâlâ 100 parçacıklı triangular fizik ve
   dikdörtgen impulse sınırı çalıştırır; yalnız geçici negatif baseline'dır.
 - V3 deneyinde 1.024 broad adaydan 4 finalist çıktı, **qualified aday çıkmadı**.

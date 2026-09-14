@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { particleConfig } from '@/config/particles';
 import { worldConfig } from '@/config/world';
 import { LifeWorld } from '@/runtime/sim/LifeWorld';
 import { createExplicitWorldMetadata } from '@/runtime/sim/WorldMetadata';
@@ -40,6 +41,36 @@ describe('LifeWorld', () => {
     expect(bytes(left.particles.x)).not.toEqual(bytes(right.particles.x));
     expect(left.snapshot().metadata.seed).toBe(42);
     expect(right.snapshot().metadata.seed).toBe(43);
+  });
+
+  it('metadata ve fizik yapılandırmasını çağıranın sonradan değiştirmesinden yalıtır', () => {
+    const metadata = createExplicitWorldMetadata(42);
+    const config = {
+      ...worldConfig,
+      boundsUnits: { ...worldConfig.boundsUnits },
+      fieldResolution: 32,
+    };
+    const interactionMatrix = particleConfig.interactionMatrix.slice();
+    const particles = { ...particleConfig, interactionMatrix };
+    const world = new LifeWorld(config, metadata, particles);
+    const control = new LifeWorld(
+      { ...config, boundsUnits: { ...config.boundsUnits } },
+      createExplicitWorldMetadata(42),
+      { ...particles, interactionMatrix: interactionMatrix.slice() },
+    );
+
+    config.nutrientRenewal = 1;
+    interactionMatrix.fill(0);
+    (metadata as { seed: number }).seed = 99;
+    for (let index = 0; index < 12; index++) {
+      world.step();
+      control.step();
+    }
+    const snapshot = world.snapshot();
+    (snapshot.metadata as { id: string }).id = 'dışarıdan-değiştirildi';
+
+    expect(world.metadata).toEqual(createExplicitWorldMetadata(42));
+    expect(world.snapshot()).toEqual(control.snapshot());
   });
 
   it('anlık görüntüden devam eden dünya kesintisiz koşuyla aynı sona varır', () => {

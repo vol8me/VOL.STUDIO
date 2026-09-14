@@ -1,5 +1,10 @@
 {
   "$comment": [
+    "2026-09-14: VOL.LIFE snapshot/config sahipliği, alt restore atomikliği ve",
+    "kurulum rollback doğrulamalarıyla app 52,1 KB ölçüldü; uygulama bütçesi",
+    "52 → 53 KB oldu. Vendor ve CSS değişmedi; artış ürün veri bütünlüğü",
+    "sözleşmesidir, yeni özellik payı değildir.",
+    "",
     "2026-09-12: VOL.LIFE Adım 1 dünya substratıyla app 42,6 KB ölçüldü; 40 KB",
     "kabuk tavanı artık gerçek ürünü taşımadığı için 52 KB'ye çıkarıldı. Bu, ölçülen",
     "değere %22 Adım 2 payıdır; Phaser vendor ve CSS bütçeleri değişmedi. Kapsam",
@@ -135,7 +140,7 @@
   },
   "bundles": {
     "games/vol-life": {
-      "app": 52,
+      "app": 53,
       "vendor": 360,
       "css": 24
     },

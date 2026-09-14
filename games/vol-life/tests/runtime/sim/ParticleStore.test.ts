@@ -41,4 +41,17 @@ describe('ParticleStore', () => {
 
     expect(() => particles.restore(snapshot)).toThrow(RangeError);
   });
+
+  it('sonlu olmayan snapshotı parçacıkları kısmen değiştirmeden reddeder', () => {
+    const particles = new ParticleStore(2);
+    particles.x.set([12, 34]);
+    particles.y.set([56, 78]);
+    const before = particles.snapshot();
+    const invalid = particles.snapshot();
+    invalid.x.set([90, 91]);
+    invalid.vy[1] = Number.POSITIVE_INFINITY;
+
+    expect(() => particles.restore(invalid)).toThrow(RangeError);
+    expect(particles.snapshot()).toEqual(before);
+  });
 });

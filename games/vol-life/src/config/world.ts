@@ -1,4 +1,5 @@
 import type { Rect } from '@volstudio/core';
+import { assertFiniteRange, assertPositiveFinite, assertPositiveInteger } from './validation';
 
 /**
  * Dünyanın ölçüleri. Bir dengeleme değişikliği çalışma zamanı dosyasına
@@ -48,6 +49,10 @@ export const worldConfig: WorldConfig = {
   nutrientRenewal: 0.018,
 };
 
+export function cloneWorldConfig(config: WorldConfig): WorldConfig {
+  return { ...config, boundsUnits: { ...config.boundsUnits } };
+}
+
 export function resolveSimulationHz(fixedStepMs: number): number {
   const hz = 1000 / fixedStepMs;
   const rounded = Math.round(hz);
@@ -65,45 +70,27 @@ export function resolveSimulationHz(fixedStepMs: number): number {
 
 export function validateWorldConfig(config: WorldConfig): void {
   const simulationHz = resolveSimulationHz(config.fixedStepMs);
-  if (!Number.isInteger(config.maxStepsPerFrame) || config.maxStepsPerFrame < 1) {
-    throw new RangeError('Kare başına adım tavanı pozitif bir tam sayı olmalı.');
-  }
-  if (
-    !Number.isInteger(config.fieldResolution) ||
-    config.fieldResolution < 2 ||
-    (config.fieldResolution & (config.fieldResolution - 1)) !== 0
-  ) {
+  assertPositiveInteger(config.maxStepsPerFrame, 'Kare başına adım tavanı');
+  if (!isPowerOfTwo(config.fieldResolution)) {
     throw new RangeError('Alan çözünürlüğü en az iki ve ikinin kuvveti olmalı.');
   }
-  if (
-    !Number.isInteger(config.fieldHz) ||
-    config.fieldHz < 1 ||
-    simulationHz % config.fieldHz !== 0
-  ) {
+  assertPositiveInteger(config.fieldHz, 'Alan temposu');
+  if (simulationHz % config.fieldHz !== 0) {
     throw new RangeError('Alan temposu simülasyon temposunu tam bölmeli.');
   }
-  if (
-    !Number.isInteger(config.fieldUpdateBands) ||
-    config.fieldUpdateBands < 1 ||
-    config.fieldResolution % config.fieldUpdateBands !== 0
-  ) {
+  assertPositiveInteger(config.fieldUpdateBands, 'Alan bant sayısı');
+  if (config.fieldResolution % config.fieldUpdateBands !== 0) {
     throw new RangeError('Alan bant sayısı çözünürlüğü tam bölmeli.');
   }
-  if (!Number.isInteger(config.lightSourceCount) || config.lightSourceCount < 1) {
-    throw new RangeError('Işık kaynağı sayısı pozitif bir tam sayı olmalı.');
-  }
-  if (!(config.lightSourceRadiusUnits > 0) || !Number.isFinite(config.lightSourceRadiusUnits)) {
-    throw new RangeError('Işık yarıçapı pozitif ve sonlu olmalı.');
-  }
-  if (!(config.lightSourceDriftUnits >= 0) || !Number.isFinite(config.lightSourceDriftUnits)) {
-    throw new RangeError('Işık sürüklenmesi negatif olmayan sonlu bir sayı olmalı.');
-  }
-  if (!(config.nutrientDiffusion >= 0 && config.nutrientDiffusion <= 0.25)) {
-    throw new RangeError('Besin difüzyonu 0–0,25 aralığında olmalı.');
-  }
-  if (!(config.nutrientRenewal >= 0 && config.nutrientRenewal <= 1)) {
-    throw new RangeError('Besin yenilenmesi 0–1 aralığında olmalı.');
-  }
+  assertPositiveInteger(config.lightSourceCount, 'Işık kaynağı sayısı');
+  assertPositiveFinite(config.lightSourceRadiusUnits, 'Işık yarıçapı');
+  assertFiniteRange(config.lightSourceDriftUnits, 0, Number.MAX_VALUE, 'Işık sürüklenmesi');
+  assertFiniteRange(config.nutrientDiffusion, 0, 0.25, 'Besin difüzyonu');
+  assertFiniteRange(config.nutrientRenewal, 0, 1, 'Besin yenilenmesi');
+}
+
+function isPowerOfTwo(value: number): boolean {
+  return Number.isInteger(value) && value >= 2 && (value & (value - 1)) === 0;
 }
 
 /**

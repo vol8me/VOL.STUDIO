@@ -52,6 +52,10 @@ export class ParticleStore {
     if (arrays.some((array) => array.length !== this.count)) {
       throw new RangeError(`Parçacık snapshotı ${this.count} değer taşımalı`);
     }
+    const floatArrays = [snapshot.x, snapshot.y, snapshot.vx, snapshot.vy];
+    if (floatArrays.some((array) => !array.every(Number.isFinite))) {
+      throw new RangeError('Parçacık snapshotı yalnızca sonlu konum ve hız değerleri taşımalı');
+    }
     this.x.set(snapshot.x);
     this.y.set(snapshot.y);
     this.capturePrevious();

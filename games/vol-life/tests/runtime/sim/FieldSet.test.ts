@@ -74,4 +74,28 @@ describe('FieldSet', () => {
 
     expect(() => fields.diffuseRows('nutrient', 0.2, 0, 2)).toThrow(/kaynak zamanı/i);
   });
+
+  it('bozuk snapshotı önceki alanları kısmen değiştirmeden reddeder', () => {
+    const fields = new FieldSet(8);
+    fields.flowX.fill(0.25);
+    const before = fields.snapshot();
+    const invalid = fields.snapshot();
+    invalid.flowX.fill(0.75);
+    const malformed = { ...invalid, disturbance: invalid.disturbance.slice(1) };
+
+    expect(() => fields.restore(malformed)).toThrow(RangeError);
+    expect(fields.snapshot()).toEqual(before);
+  });
+
+  it('sonlu olmayan snapshotı alanları kısmen değiştirmeden reddeder', () => {
+    const fields = new FieldSet(8);
+    fields.flowX.fill(0.25);
+    const before = fields.snapshot();
+    const invalid = fields.snapshot();
+    invalid.flowX.fill(0.75);
+    invalid.disturbance[63] = Number.NaN;
+
+    expect(() => fields.restore(invalid)).toThrow(RangeError);
+    expect(fields.snapshot()).toEqual(before);
+  });
 });
