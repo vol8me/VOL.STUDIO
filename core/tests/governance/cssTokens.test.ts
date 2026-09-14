@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -18,16 +18,27 @@ const SKIP_DIRECTORIES = new Set([
   'coverage',
   '.git',
   'target',
+  'gen',
+  'src-tauri',
   'test-results',
   'playwright-report',
 ]);
 
 function collectFiles(directory: string, suffix: string, found: string[] = []): string[] {
-  for (const entry of readdirSync(directory)) {
-    if (SKIP_DIRECTORIES.has(entry)) continue;
-    const path = join(directory, entry);
-    if (statSync(path).isDirectory()) collectFiles(path, suffix, found);
-    else if (entry.endsWith(suffix)) found.push(path);
+  let entries;
+  try {
+    entries = readdirSync(directory, { withFileTypes: true });
+  } catch {
+    return found;
+  }
+  for (const entry of entries) {
+    if (SKIP_DIRECTORIES.has(entry.name)) continue;
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      collectFiles(path, suffix, found);
+    } else if (entry.isFile() && entry.name.endsWith(suffix)) {
+      found.push(path);
+    }
   }
   return found;
 }

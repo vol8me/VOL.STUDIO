@@ -108,6 +108,33 @@ describe('LifeRuntime', () => {
     expect(camera.destroy).toHaveBeenCalledOnce();
   });
 
+  it('kurulum yarıda kesilirse o ana kadar alınan kaynakları geri bırakır', () => {
+    const renderer = { render: vi.fn(), destroy: vi.fn() };
+    const boundaryRenderer = { destroy: vi.fn() };
+    const particleRenderer = { render: vi.fn(), destroy: vi.fn() };
+    const dependencies = {
+      config: { fixedStepMs: 10, maxStepsPerFrame: 2 } as never,
+      world: { fields: {}, particles: {}, restore: vi.fn() } as never,
+      renderer: renderer as never,
+      boundaryRenderer,
+      particleRenderer: particleRenderer as never,
+      get cameraController(): never {
+        throw new Error('kamera kurulamadı');
+      },
+    };
+
+    expect(
+      () =>
+        new LifeRuntime(
+          { game: { canvas: document.createElement('canvas') }, cameras: { main: {} } } as never,
+          dependencies,
+        ),
+    ).toThrow('kamera kurulamadı');
+    expect(renderer.destroy).toHaveBeenCalledOnce();
+    expect(boundaryRenderer.destroy).toHaveBeenCalledOnce();
+    expect(particleRenderer.destroy).toHaveBeenCalledOnce();
+  });
+
   it('bağımlılık verilmediğinde varsayılan adaptörleri kurar ve kapatır', () => {
     const canvas = document.createElement('canvas');
     canvas.getBoundingClientRect = () =>

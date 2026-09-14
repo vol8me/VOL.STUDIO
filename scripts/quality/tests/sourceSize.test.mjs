@@ -87,12 +87,14 @@ test('henüz eklenmemiş dosya da ölçülür, .gitignore’daki ölçülmez', (
   assert.match(problems[0], /src\/fresh\.ts/);
 });
 
-test('sınır betik, stil ve native kaynağı da kapsar; veri dosyasını kapsamaz', (t) => {
+test('sınır yalnız çalıştırılabilir/stil/native kaynağı kapsar; belge ve veriyi kapsamaz', (t) => {
   const root = repo(t, {
     'a/big.mjs': 200,
     'b/big.css': 200,
     'c/lib.rs': 200,
     'd/data.json': 200,
+    'docs/DESIGN.md': 200,
+    'data/catalog.yaml': 200,
   });
 
   const problems = validateSourceSize(root, {}, 100).join('\n');
@@ -101,4 +103,6 @@ test('sınır betik, stil ve native kaynağı da kapsar; veri dosyasını kapsam
   assert.match(problems, /b\/big\.css/);
   assert.match(problems, /c\/lib\.rs/);
   assert.doesNotMatch(problems, /data\.json/);
+  assert.doesNotMatch(problems, /DESIGN\.md/);
+  assert.doesNotMatch(problems, /catalog\.yaml/);
 });

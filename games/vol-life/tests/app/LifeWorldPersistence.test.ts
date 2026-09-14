@@ -316,6 +316,66 @@ describe('LifeWorldAutosave', () => {
     autosave.destroy();
   });
 
+  it('snapshot üretimi çökerse zamanlayıcıdan hata sızdırmaz ve kullanıcıyı bilgilendirir', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const snapshotError = new Error('snapshot bozuk');
+    const onError = vi.fn();
+    const autosave = new LifeWorldAutosave(
+      { save: vi.fn() },
+      {
+        snapshot: () => {
+          throw snapshotError;
+        },
+      },
+      { onError, intervalMs: 10_000 },
+    );
+
+    expect(() => autosave.requestSave()).not.toThrow();
+    expect(onError).toHaveBeenCalledWith(snapshotError);
+    expect(() => autosave.destroy()).not.toThrow();
+  });
+
+  it('flush snapshot hatasını özgün nedeniyle reddeder', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const snapshotError = new Error('snapshot bozuk');
+    const autosave = new LifeWorldAutosave(
+      { save: vi.fn() },
+      {
+        snapshot: () => {
+          throw snapshotError;
+        },
+      },
+      { intervalMs: 10_000 },
+    );
+
+    await expect(autosave.flush()).rejects.toBe(snapshotError);
+    autosave.destroy();
+  });
+
+  it('kapanış snapshotı üretilemese de dinleyiciyi ve zamanlayıcıyı toplar', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const listeners: Array<(state: 'foreground' | 'background') => void> = [];
+    const source = {
+      snapshot: vi.fn(() => {
+        throw new Error('snapshot bozuk');
+      }),
+    };
+    const autosave = new LifeWorldAutosave({ save: vi.fn() }, source, {
+      intervalMs: 10_000,
+      observeVisibility: (listener) => {
+        listeners.push(listener);
+        return () => listeners.splice(listeners.indexOf(listener), 1);
+      },
+    });
+
+    autosave.destroy();
+    const callsAtDestroy = source.snapshot.mock.calls.length;
+    autosave.requestSave();
+
+    expect(listeners).toHaveLength(0);
+    expect(source.snapshot).toHaveBeenCalledTimes(callsAtDestroy);
+  });
+
   it('load sırasında saveManager hata fırlatırsa null döner', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     const failingManager = {

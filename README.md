@@ -45,7 +45,6 @@ pnpm --filter @volstudio/vol-asset-studio dev  # Asset Studio :5175
 pnpm quick                                     # commit öncesi kapı
 pnpm high                                      # push öncesi kapı
 pnpm signoff                                   # release kapısı
-pnpm proof:life                                # VOL.LIFE Adım 4 proof-of-life kapısı
 ```
 
 Build ve Android tarifleri için [docs/android.md](docs/android.md), kapıların

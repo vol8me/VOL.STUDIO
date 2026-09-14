@@ -1,996 +1,1056 @@
 # VOL.LIFE — tasarım notları
 
-Bu belge, [README](README.md)'de yeri olmayan tasarım kararlarını taşır: ürünün
-ne olduğu, dünyanın modeli, ölçeğin nereden geldiği ve hangi mimari sınırların
-ölçülerek bulunduğu. README ne olduğunu ve nasıl çalıştırılacağını anlatır;
-burası NEDEN böyle olduğunu.
+Bu belge [README](README.md)'de yeri olmayan ürün ve mimari kararlarını taşır.
+README paketin ne olduğunu ve nasıl çalıştırılacağını, burası NEDEN böyle
+olduğunu anlatır. Açık uygulama işleri [TODO.md](TODO.md)'dedir.
 
-Belge iki kaynaktan doğdu: bir vizyon turu ve **iptal edilmiş bir ilk deneme**.
-İkincisi commit edilmeden atıldı; ondan kalan tek şey ölçümleri ve hatalarıdır.
-Bu belgedeki her mimari kısıt bu turda kaynağından yeniden doğrulandı — devir
-kaydına güvenilerek yazılmadı.
+Belge 2026-09-14'te **Particle Substrate v2 / Morphology Discovery v2** kararıyla
+yenilendi. Bu bir parametre ayarı değildir: 100 parçacıklı triangular fizik,
+dikdörtgen çarpışma duvarı ve onu arayan v3 hattı negatif deney olarak
+sonuçlanmıştır. Çalışan genel altyapı korunur; başarısız fizik ailesi yeni
+tasarımın sözleşmesi değildir.
+
+Bu belgede üç ayrı statü vardır ve birbirine karıştırılmaz:
+
+- **Kilit karar:** uygulanacak ürün/mimari sözleşmesidir; değişirse belge ve
+  TODO birlikte değişir.
+- **Koşullu araştırma yolu:** ölçülecek alternatiftir; ölçülmeden üretim kararı
+  sayılmaz.
+- **Reddedilen yol:** neden terk edildiği korunur; sonraki tur aynı çıkmazı
+  yeniden icat etmez.
+
+| Konu                                  | Statü                | Sonuç                                                       |
+| ------------------------------------- | -------------------- | ----------------------------------------------------------- |
+| 512 başlangıç aktif maddesi           | Kilit karar          | Adım 2–3 araştırma rejimi; ebedî ölçek hedefi değil         |
+| Organik `HabitatSDF` + Void           | Kilit karar          | Dikdörtgen fizik duvarının yerini alır                      |
+| Multi-band yönlü pair profile         | Kilit karar          | V2'nin ilk üretim kernel ailesidir                          |
+| Alternatif active-particle kernel     | Koşullu araştırma    | Ana aile faz çeşitliliği üretemezse aynı harness'te sınanır |
+| 10–30 dakikadan uzun canary           | Koşullu araştırma    | Ancak ölçülen geç çöküş bunu gerektirirse açılır            |
+| 100 parçacık, triangular wall physics | Reddedilen ürün yolu | Yalnız yeniden üretilebilir negatif kontrol olabilir        |
+| Qualified olmayan catalog preview     | Reddedilen ürün yolu | Development audition açık provenance ister                  |
+| 24 saatlik testi ilk kabul yapmak     | Reddedilen yol       | Ucuz filtre ve insan ön-elemesinden önce CPU tüketir        |
 
 ## 1. Ürün kararı
 
 VOL.LIFE oynanan bir simülasyon oyunu değil, **izlenen bir dünyadır**.
 
-Oyuncunun ana fiili bakmak, yaklaşmak, takip etmek ve merak etmektir; inşa
-menüsü açıp birim yerleştirmek değil. Müdahale vardır ama **tanrı değil bozucu**
-rolündedir: koşul değiştirilir, sonuç sistemden gelir. "Şu canlı oraya gitsin"
-bir komut değildir; "burada kaynak var" bir komuttur ve sonucu garanti edilmez.
+Oyuncunun ana fiili bakmak, yaklaşmak, takip etmek ve merak etmektir. Müdahale
+vardır ama oyuncu tanrı değil bozucudur: koşulu değiştirir, sonucu sistem
+üretir. “Şu canlı oraya gitsin” komut değildir; “burada kaynak var” bir
+müdahaledir ve sonucu garanti edilmez.
 
-Bu karar her alt sistemi bağlar. Bir mekanik "oyuncu bunu ne zaman kullanır?"
-sorusuna cevap veremiyorsa ama "oyuncu bunu görünce ne hisseder?" sorusuna
-veriyorsa, VOL.LIFE'ta yeri vardır.
+Ürün üç ilişkiyi korur:
 
-### Ölçek bir SONUÇTUR, girdi değil
+- **Gözlem:** dünya kendi akar, oyuncu bakar.
+- **Deney:** oyuncu koşulu değiştirir ve sonucu karşılaştırır.
+- **Tekrar:** dünya geçmişi deterministik çekirdekten yeniden oynatılır.
 
-İlk denemenin en pahalı yanlış çıkarımı buydu: **"devasa" çok parçacık demek
-değildir.** 40.000 nokta dünyayı halı gibi kaplar ve birey algısını yok eder;
-referans görüntülerin çoğu SİYAHTIR ve organizmalar adacıklardır. Yoğunluk
-arttıkça "bir şeyler oluyor" hissi düşer, "renkli gürültü" hissi yükselir.
+Bunlar ileride üç ayrı kullanıcı kipine dönüşebilir ama bugünden ayrı UI
+ekranı dayatmaz:
 
-Bu yüzden nüfus bir hedef değil, bir bütçedir. Hedef şudur:
+- `Observe`: sunum aklı ilginç olay önerir; kullanıcı öneriyi reddedebilir.
+- `Follow`: kullanıcı bir organizmayı/koloniyi seçer, kamera onu izler.
+- `Free`: kamera bütünüyle kullanıcıdadır.
 
-> Ekranda ayırt edilebilir, davranışı takip edilebilir, başına bir şey geldiğinde
-> fark edilen varlıklar olmalı.
+Oyuncu hiçbir kipte kameraya zorla kilitlenmez. Kip, fiziği veya simülasyon
+temposunu değiştiremez.
 
-Nüfus bu koşulu bozmayacak en yüksek sayıdır. İlk sürüm **100 parçacık**
-hedefler ve bu bir geçici basamak değil, ürünün ilk gerçek hâlidir.
+Canlı dünya gerçek hızında akar. Durdurma, yavaşlatma ve hızlandırma yalnız
+Tekrar kipindedir. Uzun deneyler canlı dünya hızlandırılarak değil, aynı tohum
+ve komutlarla ekransız çalıştırılıp tekrar olarak izlenerek yapılır.
 
-**Üç ayrı bütçe vardır ve tek sayıya indirilemez:**
+### Başarı ölçütü zincir uzunluğudur
 
-| Bütçe         | Ne sayar               | Maliyeti ne belirler   |
-| ------------- | ---------------------- | ---------------------- |
-| Parçacık      | Fiziksel madde         | Kuvvet ve ızgara       |
-| Organizma     | Kimliği izlenen varlık | Küme eşleştirme, kayıt |
-| Bilişsel ajan | Karar veren organizma  | Algı ve değerlendirme  |
+Özellik sayısı değil, tek olaydan çıkan anlamlı sonuç sayısı ölçülür:
 
-"100.000 parçacık" ile "100.000 organizma" aynı şey değildir; ikincisi bir
-büyüklük mertebesi daha pahalıdır. `100k parçacık / 500 organizma / 50 bilişsel
-ajan` makul bir hedef sınıfıdır, `100k bilişsel ajan` değildir. Ölçek sorusu
-bu üç sayı ayrı ayrı ölçülmeden cevaplanamaz.
+> kaynak patlaması → nüfus akını → rekabet → avcı gelişi → tükenme → göç →
+> sınır çatışması
 
-### Üç ürün kipi
+Birbirine bağlı bu zincir, aynı sayıda bağımsız özellikten daha değerlidir.
+Sistem her saniye kaos üretmez; sessizlik, küçük değişim, göç, çatışma ve
+yeniden sakinlik ritmi hedeflenir.
 
-Ürünün kimliği "oynanış" değil, dünyayla kurulan üç ilişkidir:
+### Başlangıç aktif madde bütçesi 512'dir
 
-- **Gözlem** — dünya kendi akar, oyuncu bakar.
-- **Deney** — oyuncu koşulu değiştirir, sonucu bekler.
-- **Tekrar** — dünyanın geçmişi yeniden oynatılır.
+Eski 100 parçacık rejimi gerçek cihaz ve uzun ufuk deneylerinde lokal
+etkileşimi sürdüremedi; beş sabit tohumun yalnız biri kabul eşiğini geçti.
+Particle Substrate v2 bu nedenle **512 aktif parçacıkla** başlar.
 
-Üçü de aynı deterministik çekirdeğe dayanır (§7) ve bu yüzden üçü de bedavaya
-gelmez ama ucuza gelir. Kipler ilk sürümde ayrı bir arayüz olarak açılmaz;
-belge burada yalnız neyin mümkün kalması gerektiğini kilitler.
+512 sonsuza kadar kutsal bir ürün sayısı veya “ölçek tamamlandı” iddiası
+değildir. Adım 2–3'ün ciddi başlangıç madde bütçesidir. Parçacık, organizma ve
+bilişsel ajan bütçeleri ayrı ölçülür:
 
-### Canlı dünya hızlandırılmaz
+| Bütçe         | Ne sayar                    | Ana maliyet                           |
+| ------------- | --------------------------- | ------------------------------------- |
+| Parçacık      | Fiziksel madde              | Kuvvet, spatial hash ve render        |
+| Organizma     | Kimliği izlenen yapı        | Küme sürekliliği ve kayıt             |
+| Bilişsel ajan | Karar veren olgun organizma | Algı, hafıza ve utility değerlendirme |
 
-Gözlem kipinde zaman gerçek hızında akar: canlı dünyada ileri sarma, 2× / 4×
-gibi hız çarpanları ve yavaşlatma yoktur. İzlemenin değeri anın kendisidir.
-Hızlandırılmış bir dünyada tereddüt, kaçış ve bölünme gibi küçük olaylar gözden
-kaçar; hareketi canlı gösteren tereddüt ve düzeltme (§4) seçilemez hâle gelir;
-sunum aklı kamerayı ilginç olana götürdüğünde olay çoktan bitmiş olur.
+Dünya büyüklüğü ile nüfus bağımsız sayı seçilmez. Etkileşim yarıçapı, yerel
+yoğunluk ve dünya alanı birlikte ölçülür. Dünya yine %70–90 sakin/boş
+kalabilir; 512 madde tüm alana uniform serpilmek yerine yerel başlangıç
+yamalarda yoğunlaşır. Ölçeği 10k–250k aralığına açmak Adım 11'in işidir.
 
-Zaman denetimi **Tekrar** kipinindir. Tekrar deterministik çekirdekten yeniden
-üretildiği için (§7) orada hız serbesttir: yavaşlatılır, hızlandırılır,
-durdurulur. Bir deneyin uzun vadeli sonucu da canlı dünya hızlandırılarak
-görülmez; aynı tohum ve komutlarla ekransız ve gerçek zamandan hızlı koşulur,
-sonra tekrar olarak izlenir. Bu yol Adım 8'de kurulur.
-
-### Başarı ölçütü: zincir uzunluğu
-
-Kaç özellik olduğu değil, **tek bir olaydan kaç anlamlı sonuç çıktığı** ölçülür.
-Kaynak patlaması → nüfus akını → rekabet → avcı gelişi → tükenme → göç → sınır
-çatışması zinciri, aynı sayıda özelliğin birbirinden bağımsız durduğu bir
-sistemden ölçülebilir biçimde daha canlıdır.
+Yaklaşık yerel komşuluk `N × πR² / worldArea` ile izlenir. Dünya kenarı iki
+katına çıkıp alan dört katına çıktığında aynı yoğunluk karakteri yaklaşık dört
+kat madde isteyebilir; bu otomatik ölçekleme kuralı değil, benchmark hipotezidir.
+Başarılı morphology ölçülmeden dünya ölçüsü `4096²` veya `8192²` gibi estetik
+bir sayıya kilitlenmez. Habitat onlarca tipik-organizma uzunluğu taşıyacak
+şekilde sonuçtan türetilir.
 
 ## 2. Dünya modeli
 
-Dünya bir harita değil, **işlenebilen bir maddedir**. Harita terrain verir;
-dünya durum, akış, kaynak, tarih ve ilişki taşır.
+Dünya bir harita değil, **işlenebilen bir ortamdır**. Durum, akış, kaynak,
+tarih ve ilişki taşır.
 
-Dünya sürekli alanlardan (field) oluşur. Gerçek Navier–Stokes akışkan
-simülasyonu ilk sürümde YOKTUR ve gerekmez: akışkan HİSSİ, alanların birbirini
-beslemesinden çıkar. Beş temel alan:
+Temel sürekli alanlar:
 
-| Alan          | Ne taşır                                            |
-| ------------- | --------------------------------------------------- |
-| `flow`        | İki bileşenli sürükleme; dünyanın "sıvı" hissi      |
-| `nutrient`    | Yaşam kaynağı; tüketilir ve yenilenir               |
-| `light`       | Işık benzeri dış girdi; tükenmez, besini yeniler    |
-| `temperature` | Tür tercihlerini ve yaşanabilirliği belirler        |
-| `disturbance` | Hareket, çatışma ve patlamanın dünyada bıraktığı iz |
+| Alan          | Ne taşır                                         |
+| ------------- | ------------------------------------------------ |
+| `flow`        | İki bileşenli çevresel sürükleme                 |
+| `light`       | Tükenmeyen dış girdi; besin yenilenmesini besler |
+| `temperature` | Yaşanabilirlik ve tür tercihleri                 |
+| `disturbance` | Hareket, çatışma ve ölümün geçici izi            |
 
-`habitability` bu alanlardan TÜRETİLİR, ayrı bir alan olarak tutulmaz.
-`flowX`/`flowY` bugün yalnız veri yüzeyidir: Adım 3 saf morfolojiyi, Adım 4
-kimliği kanıtlayana kadar kuvvet üretmez. Zayıf deterministik advection Adım
-5'te; iz ve deformasyon gibi görsel güçlendirme Adım 7'de açılır.
+`nutrient` bir alan gibi ızgarada saklansa da tüketilebilir **kaynaktır**.
+`detritus` da Adım 5'te tüketilebilir/çözünen kaynak olarak eklenir.
+`habitability` bu değerlerden türetilir; ayrı bir alan değildir. Enerji
+dünyada alan değildir, organizmanın iç deposudur.
 
-### Alan ile kaynak AYNI ŞEY DEĞİLDİR
+Void için ayrıca `darkness` field'ı tutulmaz. Karanlık, `WorldDomain` dışında
+olmanın sunumudur; organizmanın ileride algılayacağı değer de global bir alan
+değil SDF'den türeyen yerel kıyı riskidir.
 
-İkisi de ızgarada yaşar ama davranışları farklıdır ve tek kavrama sıkıştırmak
-ileride ikisini de bozar:
+Alan ve kaynak aynı depolama altyapısını paylaşabilir ama aynı kural değildir.
+Sıcaklık tükenmez; nutrient tüketilir. Organizma dünyadan alır ve dünyaya iz,
+atık ve madde bırakır. Tek yönlü “arka plan” bağı ekoloji üretmez.
 
-- **Alan** uzayın sürekli bir özelliğidir. Sıcaklık "tükenmez"; yayılır,
-  dengelenir, taşınır.
-- **Kaynak** tüketilebilir bir niceliktir. Üretilir, azalır, biriktirilebilir
-  ve yeniden doğar.
+`light` sabit bir bitmap değildir. Dünya seed'inden türeyen az sayıdaki yumuşak
+kaynak yavaşça yer değiştirir; nutrient yenilenmesini sürükler ve aynı bölgenin
+sonsuzca zengin kalmasını engeller. Organizma nutrient tüketir, hareketi
+disturbance üretir, ölümü detritus bırakır, koloni uzun kullanımla territory
+etkisi biriktirir. Alanların canlıyı etkileyip canlının alanı hiç değiştirmediği
+tek yönlü model açıkça yasaktır.
 
-`flow`, `light`, `temperature`, `disturbance` alandır. `nutrient` kaynaktır:
-tüketim/yenilenme döngüsü ona aittir ve yenilenmeyi `light` besler. İkisi aynı
-ızgara altyapısında saklanır; ayrım VERİ YAPISINDA değil, üzerlerinde çalışan
-kuralların ayrı olmasında yaşar.
+Taşıma kapasitesi `maxOrganisms` gibi bir üst sınır değildir. Şunların ortak
+sonucudur:
 
-`light` sabit bir harita değildir: tohumdan türeyen birkaç yumuşak kaynak
-yavaşça kayar. Dünyanın bölgeleri bu yüzden zamanla zenginleşir ve fakirleşir;
-§1'deki kaynak patlaması ve tükenme zincirinin dünya tarafındaki sürücüsü budur.
+```
+nutrient üretimi + habitat maddesi + enerji maliyeti
+− avlanma − hastalık − Void kaybı
+```
 
-**"Enerji" dünyada bir alan değildir.** Enerji organizmanın iç deposudur (§3).
-İlk taslakta dış girdi de `energy` adını taşıyordu; aynı ad hem ışık/ısı
-girdisini hem canlının deposunu anlatıyordu ve ısı zaten `temperature`dır. Aynı
-ad iki kavramı taşıdığında kod da konuşma da karışır.
+Bu nedenle 512 aktif madde 512 organizma anlamına gelmez; madde serbest bulut,
+beden, detritus ve dış rezervuar arasında farklı zamanlarda farklı dağılır.
 
-### Çift yönlü bağ zorunludur
+### Dünya dikdörtgen kutu değil, Void içindeki habitattır
 
-Dünya organizmayı etkiler, organizma dünyayı değiştirir. Tek yönlü bir bağ
-(dünya yalnız arka plan) ekolojiyi imkânsız kılar: tüketim olmadan kıtlık,
-kıtlık olmadan rekabet, rekabet olmadan davranış baskısı olmaz.
+Depolama, field grid ve spatial hash için dış kapsayıcı dikdörtgen kalabilir.
+Oyuncunun ve fiziğin yaşanabilir dünyası ise onun içinde bulunan
+`HabitatSDF`dir:
 
-Bir organizma geçtiğinde dünya çok hafif bir **iz** bırakır ve iz zamanla söner.
-İz koku, titreşim, kimyasal veya ısı olarak yorumlanabilir; mekanik olarak
-avcının hedefi görmeden "burada yakın zamanda bir şey geçti" diyebilmesidir.
-Böylece dünya geçmişi kısa süreliğine HATIRLAR.
+- Ana biçim yumuşak bir oval/superellipse'tir.
+- Düşük frekanslı, deterministik gürültü konturu hafifçe düzensizleştirir.
+- Aşırı girinti, küçük cep ve yıldız biçimi yasaktır; bunlar kamera ve
+  morphology'yi kıyıya bağımlı hâle getirir.
+- Biçim dünya seed'inden türetilir ve dünya yaratıldıktan sonra sabit kalır.
+- Görsel “nefes” animasyonu fiziksel SDF'yi hareket ettiremez.
 
-### Dünya çoğunlukla boştur
+SDF işaret sözleşmesi tektir: pozitif habitat içi, sıfır kıyı, negatif Void.
+Mesafe ve normal aynı `WorldDomain` sahibinden gelir; renderer, fizik, kamera
+ve ilerideki algı sistemi ayrı geometri hesaplamaz.
 
-Görsel hedef %70–90 boş/az yoğun, %10–30 anlamlı etkinliktir. Kullanıcı kamerayı
-gezdirdiğinde bir bölgede sakin bir ekosistem, başkasında çatışma, başkasında
-yeni bir koloni bulmalıdır. "Devasa" hissi kaplama alanından değil, bu
-çeşitlilikten gelir.
+Field solver habitat maskesini kullanır. Void hücreleri kaynak üretmez;
+habitat–Void yüzeyinde difüzyon no-flux davranır. Karşı kenarlar komşu değildir
+ve wrap yoktur.
 
-### Dünya sonlu ve fiziksel sınırlıdır
+### Duvar yoktur; üç Void bölgesi vardır
 
-Dünya tek bir sonlu dikdörtgendir; karşı kenarlar komşu değildir. Parçacık
-sınırı aşamaz. Duvar uzun menzilli kuvvet veya yapı desteği değildir: yalnız
-çarpışma anı bulunur, penetrasyon düzeltilir, normal hız restitution ile
-yansıtılır ve teğetsel hız korunur. Fizik düzlemi `particleCollisionInsetUnits`,
-görsel renk/kalınlık ise grafik config'idir; sanat değişikliği fizik alanını ya
-da kayıt fingerprint'ini değiştirmez. Renderer kalınlığı ekran pikseli min/max
-arasında tutar ve iç yüzeyi collision plane ile eşler. Alan difüzyonu sınırda
-no-flux davranır; karşı kenarlar birbirini etkileyemez.
+Dikdörtgen stroke, collision plane, clamp, bounce ve restitution kaldırılır.
+Void bütün dünyayı çeken görünmez bir kuvvet de değildir.
 
-Kamera da aynı config kaynaklı sınırı kullanır. Minimum zoom dünyayı ekrana
-`cover` eder (`max(viewportWidth/worldWidth, viewportHeight/worldHeight)`),
-merkez görünür yarım boyutlarla kelepçelenir ve normal oynanışta dış boşluk
-görülmez. Bütün dünyayı tek karede gösteren overview oynanış kamerasının görevi
-değildir; gerekirse ileride ayrı harita görünümü olur. Mevcut 1024×1024 ölçü
-Adım 3 bitene kadar korunur. Dikdörtgene geçiş yalnız iki sayı değildir:
-spatial-hash hücresi ölçüleri tam bölmeli, alan difüzyonu da eşit olmayan x/y
-hücre aralıklarını hesaba katmalıdır.
+| Bölge        | SDF ilişkisi                      | Fizik                           |
+| ------------ | --------------------------------- | ------------------------------- |
+| Güvenli alan | Kıyıdan fringe genişliğinden uzak | Void kuvveti kesinlikle sıfır   |
+| Tidal fringe | Kıyının dar iç/dış komşuluğu      | Yerel outward/tidal stress      |
+| Void         | Parçacık merkezi SDF'nin dışında  | Geri dönüşsüz aktif dünya ölümü |
 
-Alan dokusu Phaser WebGL1 nedeniyle 2'nin kuvveti çözünürlüktedir; 256²/512²
-adayları bu kısıttan gelir (§11).
+Tidal fringe organizmayı kıyıya taşımak için değil, kıyıya fazla yaklaşmanın
+fiziksel tehlikesini üretmek için vardır. Etkisi dar, sonlu ve config
+verisidir. Merkezdeki morphology üzerinde ölçülebilir etkisi olamaz. Bir
+finalist varlığını fringe'e dayanarak koruyorsa başarısızdır.
 
-## 3. Yaşam modeli
+Parçacık merkezi dışarı geçtiği tick'te:
 
-Zincir tek yönde büyür ve her basamak bir öncekinin ORTAYA ÇIKMIŞ hâlidir:
+1. organizma üyeliğinden çıkar;
+2. aktif simülasyondan düşer;
+3. spatial hash'e girmez ve kuvvet uygulamaz;
+4. enerji/madde muhasebesine bir Void kaybı yazar;
+5. renderer'a salt sunum amaçlı bir ölüm olayı bırakır.
+
+Fizik açısından geri dönüş yoktur. Ekrandaki yarım saniyelik sunum hayaleti
+simülasyona katılmaz.
+
+### Madde iki muhasebe düzeyinde korunur
+
+Habitat artık kapalı kutu değildir:
+
+```
+aktif dünya maddesi → Void kaybı → dış madde rezervuarı
+                                 → ekolojik matter vent → yeni serbest madde
+```
+
+Oyuncu ve organizma açısından Void'a düşen parçacık ölmüştür. Stable particle
+ID'si geri gelmez. Engine düzeyinde madde dış rezervuarda muhasebeleştirilir.
+Adım 5'te rezervuardan dönüş ancak yerel ve görünür bir çevresel süreçle olur;
+“aktif sayı düştü, otomatik tamamla” hilesi yasaktır. Yeni madde yeni kimlik
+alır.
+
+Dünya tamamen tükenebilir. Bu bir hata değil, nadir bir extinction tarihidir;
+ancak her seed'in kaçınılmaz biçimde tükenmesi de kabul edilmez.
+
+### Başlangıç materyali uniform soup değildir
+
+`InitialMatterSeeder`, 512 parçacığı birkaç yoğun origin patch, serbest matter
+cloud ve seyrek bölgeye dağıtır. Bu bir organizma çizmez; yalnız lokal
+etkileşimin başlayabileceği madde koşulunu kurar. Seeder parametreleri morphology
+genomunda bulunabilir, fakat dünya seed'i fizik config'i değildir.
+
+Başlangıç dağılımı fizik yasasından ayrı tutulur ama önemsiz sayılmaz. Aynı
+genom yoğun origin patch, seyrek cloud ve farklı type oranlarında sınanır;
+yalnız tek “şanslı” başlangıç deseninde yaşayan aday robust değildir. Seeder
+hiçbir çekirdek, zar, kuyruk veya avcı şekli çizemez.
+
+## 3. Yaşam ve fizik modeli
+
+Yaşam zinciri:
 
 ```
 parçacık → küme → çekirdek adayı → çekirdek → zar → organizma
          → grup → koloni → faksiyon
 ```
 
-**Küme ile çekirdek arasındaki ara basamak zorunludur.** Her yoğunlaşma bir
-canlı değildir: birkaç adımda oluşup dağılan bir küme yalnızca çarpışmadır. Bu
-basamak olmadan "parçacıklar birbirine değdi" ile "bir canlı doğdu" aynı olaya
-dönüşür ve doğum sayacı gürültü sayar. Çekirdek adayı bir SÜREKLİLİK eşiğidir:
-küme belli bir yoğunluğu belli bir süre korursa çekirdek olur.
+Küme ile çekirdek adayı ayrıdır. Anlık temas doğum değildir; yapı yoğunluk,
+üyelik ve biçim sürekliliğini belli süre koruduğunda aday olur.
 
-Organizma önceden çizilmez; parçacıklardan **oluşur**. Zar görsel bir kabuk
-değil, madde/enerji geçişini yöneten işlevsel bir sınırdır. Çekirdek zamanla
-organizmanın karar merkezine dönüşür.
+### Parçacık aptal kalır
 
-### Parçacık aptal kalır, organizma akıllı olur
+Parçacık ihtiyaç, hedef, korku veya global dünya bilgisi taşımaz. Fiziksel
+parçacık basit nokta/radius ve yerel ilişkilerdir. Akıl tespit edilmiş
+organizmaya aittir.
 
-Bu ayrım ürünün belkemiğidir. Referans görüntülerdeki güzellik AKILLI OLMAYAN
-parçacıklardan gelir: morfoloji basit ve tutarlı fizikten doğar. Parçacığa akıl
-koymak hem o güzelliği bozar hem ölçeği öldürür.
+Korunan `ParticleStore` SoA yaklaşımı v2'de genişler:
 
-> Zarı oluşturan lipit düşünmez; hücre düşünür.
+- `capacity` ile aktif sayı ayrılır;
+- active/inactive maskesi bulunur;
+- stable ID storage slotundan ayrılır;
+- Void ölümü slotu pasifleştirir, diziyi kaydırmaz;
+- yeni madde boş slotu kullanabilir ama yeni stable ID alır;
+- snapshot active maskeyi, ID sayacını ve rezervuarı taşır.
 
-Bu nedenle akıl, tespit edilmiş bir kümeye — organizmaya — aittir. Bunun bedeli
-açıktır ve kabul edilir: **küme kimliği ve kareler arası eşleştirme yazılmadan
-"bölünme, füzyon, doğum, ölüm" gözlemlenebilir olgular hâline gelmez.** İlk
-denemede organizma KAVRAMI hiç yoktu; ekranda kümeler vardı ama hiçbiri bir şey
-değildi.
+Bu ayrım determinism, cache locality, save/load ve Adım 4 kimliği için
+zorunludur.
 
-### Çekirdek emir vermez, öncelik yayar
+### Triangular pair law üretim sözleşmesi değildir
 
-Çekirdek "sağa git" demez. `survival +0.8`, `food +0.7`, `danger north +0.9`
-gibi bir öncelik alanı yayar; alt birimler bunu kendi yerel kurallarıyla
-uygular. Aynı mekanizma ölçek değiştirerek koloni ve faksiyon seviyesinde
-tekrarlanır — merkezî durum, ast birimler.
+Eski fizik tek profile sıkışıyordu:
 
-### Tür matrisi YAZILMAZ, ARANIR
+```
+ortak yakın itme → tek üçgen çekim/itme zarfı → sıfır
+```
 
-İlk denemenin temel hatası tür etkileşim matrisini elle yazmaktı. Zar-çekirdek
-morfolojisi 6 türlü bir sistemde 36 boyutlu uzayda dar bir bölgedir; elle isabet
-ettirme ihtimali yok denecek kadar azdır. Matris bir arama probleminin
-çıktısıdır: deterministik tohumlarla taranır, ortaya çıkan yapı ölçülür, ilginç
-olan saklanır.
+Bu aile 1.024 aday, 4 finalist ve çoklu seed çalıştırmasına rağmen qualified
+aday üretmedi. Yeni `PairForceKernel`, mesafeye bağlı çok bantlı profildir:
 
-Adım 2'deki 6×6 matris yalnız çekirdeğin asimetri, çekim ve itme yollarını
-çalıştıran başlangıç verisidir; morfoloji sonucu diye kabul edilmez. Üç rolün
-tür eşlemesi ve yönlü 3×3 menzil matrisi config'te açıktır. Kalıcı aday Adım
-3'te nüfus, menzil, sürtünme ve matrisin tamamıyla ölçülür.
+```
+çok yakın → sert itme
+yakın      → denge veya zayıf çekim
+orta      → güçlü çekim/itme
+uzak      → zayıf çekim/itme
+cutoff    → sıfır
+```
 
-Bu, "ilginç matris" için bir metrik gerektirir ve o metriği seçerken sorulacak
-soru bellidir (bkz. §14, ders 3).
+Yönlü/asimetrik A→B ve B→A ilişkileri farklı olabilir. Arama uzayını
+kontrolsüz 180 boyuta çıkarmamak için başlangıç genomu:
+
+- 6×6 yönlü strength matrisi;
+- 3×3 yönlü role/range matrisi;
+- az sayıda global lobe radius/shape parametresi;
+- damping, speed envelope ve başlangıç hareketi;
+- yerel yoğunluk ve seeding parametreleri;
+- dar Void fringe parametreleri
+
+taşır. Rol eşlemesi bir morfolojiyi önceden ilan etmez; yalnız arama
+parametrelerini paylaşmanın boyut indirgeme aracıdır. Kalıcı aday yalnız
+matrisi değil **tam PhysicsGenome'u** üretime taşır.
+
+World seed aday genomuna girmez. Aynı genom bütün seed korpusunda aynı fizik
+yasasını kullanır.
 
 ### Madde korunur, enerji akar
 
-İki ayrı nicelik vardır ve biri ötekine dönüşmez:
+Habitat içindeki organizma ölümü ile Void ölümü aynı değildir:
 
-| Nicelik    | Nerede yaşar        | Nasıl değişir                                   |
-| ---------- | ------------------- | ----------------------------------------------- |
-| **Madde**  | Parçacık            | Korunur: yaratılmaz, yok olmaz, el değiştirir   |
-| **Enerji** | Organizmanın deposu | `nutrient`ten alınır; yaşamak ve büyümek harcar |
+| Olay          | Madde                                                | Enerji/kaynak                      |
+| ------------- | ---------------------------------------------------- | ---------------------------------- |
+| Habitat ölümü | Üyelik çözülür, parçacıklar serbest aktif madde olur | Enerji dağılır; stok detritus olur |
+| Void ölümü    | Aktif dünyadan dış rezervuara geçer                  | Habitatta besin bırakmaz           |
 
-- **Parçacık sayısı sabit bir bütçedir** (§1). Büyüme yeni parçacık üretmek
-  değil, serbest parçacığı bünyeye katmaktır. Nüfusun doğal tavanı maddenin
-  kendisidir; ayrıca bir üst sınır yazılmaz.
-- **Parçacığın tek durumu üyeliktir:** serbesttir ya da bir organizmanındır. Bu
-  bir akıl değildir; aptal parçacık ilkesi bozulmaz.
-- **Ölüm bir etiket değil, fiziksel bir geçiştir.** Enerjisi biten organizmanın
-  üyeleri serbest kalır ve yapı dağılır; madde dünyaya döner, başkası onu
-  toplar. Yalnız kimliği silen bir ölüm ekranda hiçbir şey değiştirmezdi; ölüm
-  bu yüzden üyelerin kuvvetine dokunmak ZORUNDADIR.
-- **Enerji üyeler üzerinden alınır.** Üye, bulunduğu yerin besinini pasif bir
-  kuralla emer; alınan besin ızgaradan düşer ve toplam organizmanın deposuna
-  yazılır. Zar bu geçişin sınırıdır.
-- **Bölünme önce kendiliğinden aranır.** Büyüyen yapı kararlılık sınırını aşınca
-  bölünüyorsa kural yazılmaz, tespit edilir. Adım 3'ün matrisleri bölünme
-  üretmiyorsa enerji eşiğine bağlı bir kural eklenir; karar Adım 5'te gözlemle
-  verilir.
-- **Kimlik üye örtüşmesiyle izlenir.** Parçacık hiç silinmediği için kimliği
-  kalıcıdır; iki karedeki organizmalar üye kümelerinin örtüşmesiyle
-  eşleştirilir. Bölünme bir kümenin ikiye, füzyon ikisinin bire örtüşmesidir.
-- **Koparma ve taşıma ayrı mekanik değildir.** Avcının avın gövdesinden parçacık
-  çekip kendine katması fizikten doğan bir koparmadır (Adım 9); organizmanın
-  içindeki madde onunla birlikte zaten taşınır. Envanter ya da taşıma görevi
-  yoktur (§15).
+Enerji doğrudan nutrient'a çevrilmez. Organizmanın depoladığı biyokütle/besin
+detritus olur; detritus yavaşça nutrient'a çözünür. Böylece ölüm yeni hayatı
+besler fakat bedava enerji üretmez.
 
-Büyümenin enerji bedeli, zarın geçişi nasıl sınırladığı ve ölümün kuvvete nasıl
-dokunduğu Adım 5'te ölçülerek seçilir. Tek koşul pazarlıksızdır: canlı
-organizmada Adım 3'ün morfolojisi bozulmaz ve §8'deki geometrik değişmez
-testleri yeşil kalır. Ekolojiye bağlanan bir kuvvetin morfolojiyi
-dağıtabileceği §14'ün altıncı dersidir.
+Büyüme yeni madde yaratmak değil, serbest parçacığı bünyeye katmaktır.
+Bölünme önce fizikten aranır; çıkmazsa enerji eşiğine bağlı sınırlı müdahale
+Adım 5'te ayrıca kanıtlanır.
 
-## 4. Akıl modeli
+Zar görsel kabuk değildir; madde ve nutrient geçişini yöneten işlevsel
+sınırdır. Üyeler bulundukları çevreden yerel kuralla nutrient alır, kaynak
+ızgarası aynı miktarda azalır ve organizma deposu artar. Ölüm yalnız identity
+etiketini silmez: cohesion/üyelik çözülür ve ekranda gerçekten dağılma olur.
+Avcının kopardığı particle için ayrı envanter veya “taşı” sistemi yoktur;
+kopan madde fiziksel olarak yeni yapıya katılırsa zaten taşınmış olur.
 
-Davranış bir script değil, bir sonuçtur:
+## 4. Akıl, algı ve hareket
+
+Davranış zinciri:
 
 ```
-ihtiyaçlar + algı + hafıza + dünya → istenen yön → kuvvet → hız
+ihtiyaçlar + yerel algı + kusurlu hafıza + beden
+→ öncelik/polarizasyon → dağıtık aktüatör kuvvetleri → hareket
 ```
 
-Karar utility tabanlıdır: açlık, korku, merak, üreme, dinlenme gibi eğilimler
-puanlanır ve en yüksek puan kazanır. LLM YOKTUR ve planlanmamaktadır; bu ölçekte
-doğru araç değildir.
+Organizma global world width/height veya bütün kaynak haritasını görmez.
+Görüş yarıçapı, alan örnekleme yarıçapı, iz duyarlılığı ve kıyı tahmin ufku
+bütçelidir. Hafıza kusurludur ve ölümle kaybolur.
 
-**Hareket kusursuz olmamalıdır.** A'dan B'ye düz giden bir canlı yapay görünür;
-tereddüt, aşım, düzeltme, kaçınma ve sürüklenme "akıllı" hissini üretir. Ama
-gürültü tek başına zekâ değildir — hedef yönü, atalet, gürültü ve hafızanın
-birlikte çalışması gerekir.
+### Çekirdek koordinat emri vermez
 
-### Organizma dünyayı GÖRMEZ, çevresini örnekler
+Çekirdek `x=642` hedefi dağıtmaz. `survival`, `food`, `danger`,
+`desiredHeading`, `locomotionIntensity` ve `locomotionPhase` gibi
+öncelik/polarizasyon sinyalleri üretir. Üye parçacıkların yerel rolü bu sinyali
+kuvvete dönüştürür. Beden rigid sprite gibi çevrilmez; hızlanırken uzar,
+kıvrılır ve toparlanır.
 
-Global bilgi zekâyı öldürür. Bir organizma bütün kaynak alanını okuyabiliyorsa
-en iyi noktayı her zaman bulur; kararı hesaplama olur, davranış olmaz. Aynı
-dünyada iki organizmanın FARKLI karar vermesi ancak girdileri farklıysa mümkün.
+Void korkusu Step 2'nin parçacık fiziği değildir. Adım 6'da organizma
+`edgeDistance`, `edgeNormal` ve öngörülen kıyı geçişini yerel algı olarak
+alır. Hunt, food ve survival utility'leriyle yarışır. Fenotip
+`voidAversion`, `riskTolerance` ve `predictionHorizon` değerlerini
+değiştirebilir.
 
-Bu yüzden algı bütçelidir: görüş yarıçapı, iz duyarlılığı, alan örnekleme
-yarıçapı. Organizma dünya durumunu değil YEREL GÖZLEMİNİ alır. Aynı kısıt
-performansı da korur — ama gerekçe performans değil, davranıştır.
+### Algı yerel, hafıza kusurlu ve pahalıdır
 
-### Hafıza kusurludur ve bir KAYNAKTIR
+Organizma bütün nutrient haritasını veya en yakın avın mutlak koordinatını
+okuyamaz. Görüş, alan örnekleme, kimyasal/iz duyarlılığı ve gelecek-konum
+tahmini ayrı bütçelerdir. Bu kısıt yalnız performans için değil, aynı dünyada
+iki organizmanın farklı karar verebilmesi içindir.
 
-Her hatıra doğru olmak zorunda değildir: bir organizma tesadüfen orada bulunan
-bir avcı yüzünden kuzeyi tehlikeli sanabilir. Yanlış öğrenme sistemi daha gerçek
-gösterir.
+Hafıza gerçeğin eksiksiz kopyası değildir. Eski bilgi solar, yanlış çağrışım
+oluşabilir ve hafıza ölümle kaybolur. Tehlikeli kıyıyı bilen soyun tükenmesi,
+aynı hatanın yeni kuşakta tekrarlanabilmesine izin verir. İleride kalıtılan
+özellik ile bireyin yaşarken öğrendiği bilgi aynı veri değildir.
 
-Daha güçlüsü: hafıza ölümle KAYBOLUR. Tehlikeli bölgeyi bilen bütün bireyler
-ölürse tür aynı hatayı tekrar yapar. Böylece bilgi biriktirilebilir ve
-kaybedilebilir bir varlık hâline gelir.
+Yerel sinyal fear, danger ve defense eğilimlerini komşulara taşıyabilir. Bir
+panik dalgası herkesi aynı yöne script etmez: kaçan, merkeze dönen, donan veya
+yırtıcıya yaklaşan davranışlar fenotip ve utility farkından çıkar. Uzun süre
+tehdit görülmeyen bölgede sinyal söner ve keşif yeniden yükselir.
 
-### Korku bulaşır
+### Kuyruk ve burst gerçek bedendir
 
-Bir birey tehlikeyi algıladığında yakınına sinyal yayar ve yerel bir panik
-dalgası oluşur. Aynı mekanizma tersine de çalışır: uzun süre avcı görülmeyen bir
-bölgede korku düşer, keşif artar. Duygu bireyde kalmaz, toplumsal davranış
-üretir.
+Yırtıcı kuyruğu dekoratif sprite değil, üyelik taşıyan locomotor morphology
+olabilir. Tail üyeleri faz kaymalı yanal kuvvetlerle salınır. Burst:
 
-## 5. Toplum, çatışma, evrim
+- kısa süreli yüksek locomotion intensity;
+- yüksek enerji maliyeti;
+- gövde ve zar gerilmesi;
+- ardından recovery/yorgunluk
 
-Sınırlar çizilmez, **etki alanından türer**. İki faksiyonun etki alanı
-kesiştiğinde sert bir poligon değil, dalgalanan bir geçiş bölgesi oluşur. Aynı
-geometrik fikir üç ölçekte tekrarlanır: organizmada zar, kolonide sınır,
-faksiyonda territory.
+üretir. Kuyruk kaybı gerçekten hızı düşürür. Hız tek sabit stat değildir:
 
-Fiziksel sınırdan önce **tanınan sınır** vardır: bir grup bir bölgeyi uzun süre
-kullanıyorsa, ortada çizgi olmasa bile diğerleri orayı onun sayar.
+> morphology × enerji × locomotor anatomi × niyet × flow × hasar
 
-Savaş bir boolean değil, bir durumun sonucudur. Kaynak azlığı + nüfus baskısı +
-düşman yakınlığı öncelikleri değiştirir; saldırı o önceliklerden çıkar. Ve savaş
-dünyada **iz bırakır**: bölge, çatışma bittikten sonra öncesiyle aynı değildir.
+Yüksek hızın hasarlı bedeni parçalayabilmesi meşru bir sonuçtur.
 
-### Tehdit türetilir, yerleştirilmez
+Hareket hiyerarşisi üçe ayrılır: utility neyin önemli olduğunu, steering
+istenen yön/polarizasyonu, locomotion ise bedenin bunu nasıl ürettiğini
+belirler. `AgentController` ortak bir kapasite sözleşmesidir; standart
+organizma nucleus controller, parazit daha küçük tropism controller
+kullanabilir. Aynı interface bütün canlıların aynı anatomiye sahip olmasını
+gerektirmez.
 
-Tehdit tek bir "boss" değil, bir ailedir. Her biri farklı bir sistemi hedefler
-ve bu yüzden dünyada farklı bir zincir açar:
+## 5. Toplum, tehdit ve tarih
 
-| Tehdit              | Hedefi                 | Açtığı zincir                           |
-| ------------------- | ---------------------- | --------------------------------------- |
-| Parçacık avcısı     | Serbest parçacıklar    | Organizma oluşumunu yavaşlatır          |
-| Çekirdek avcısı     | Organizmanın çekirdeği | Tek vuruşta kimlik kaybı; hafıza gider  |
-| Parazit / virüs     | Zar                    | Enerji sızıntısı, konaktan konağa geçiş |
-| Koloni kırıcı       | Territory yapıları     | Yerleşimi dağıtır, göç baskısı üretir   |
-| Olgunlaşmış yırtıcı | Nüfus                  | Popülasyon kontrolü, domino çöküş       |
+Territory sert poligon değildir; uzun süreli kullanım ve yerel sinyallerden
+türeyen, zamanla solan etki alanıdır. Koloni aynı yerde duran liste değil;
+ortak kaynak alanı, tolerans ve sinyal sürekliliği olan gruptur.
 
-Olgunlaşma bir seviye çubuğu DEĞİLDİR: yaş, beslenme, genetik özellik ve
-deneyimden çıkar. Daha büyük çekirdek, kalın zar, farklı hareket ve farklı renk
-bu sürecin görünür sonucudur.
+Tehdit spawn edilen boss değildir. Kıtlık, rekabet, mutasyon, enfeksiyon ve
+seçilimden türeyen beş aile korunur:
 
-**Virüs özellikle görünmez olmalıdır.** Oyuncu önce enerjinin düştüğünü,
-sağlığın gerilediğini görür; sebebi görmez. Katman görünümünü açtığında (§6)
-enfeksiyon izini bulur. Aynı şey yırtıcı için de geçerlidir: oyuncu yırtıcıyı
-görmeden nüfus çöküşünü görür ve "burada ne oldu?" diye sorar. Bu, boss
-dövüşünden ölçülebilir biçimde daha uygun bir gizemdir.
+| Tehdit              | Hedef ve saldırı                                 | Nasıl zarar görür                                  | Görsel dil                     |
+| ------------------- | ------------------------------------------------ | -------------------------------------------------- | ------------------------------ |
+| Parçacık avcısı     | Serbest maddeyi yakalar; yeni oluşumu azaltır    | Açlık, rakip, koloni savunması                     | Küçük ve hızlı                 |
+| Çekirdek avcısı     | Zarı delip çekirdek sürekliliğini bozar          | Zar, savunucu, rakip yırtıcı                       | İnce/probe ön bölüm            |
+| Parazit / virüs     | Zara tutunur, enerji sızdırır ve çoğalır         | Host tepkisi, dökülme, başka parazitler            | Uzakta gizli, yakında kapsid   |
+| Koloni kırıcı       | Territory ve yerleşim düzenini dağıtır           | Kolektif savunma, açlık, rakip                     | Yavaş, ağır, geniş disturbance |
+| Olgunlaşmış yırtıcı | Takip, burst, yakalama ve fiziksel koparma yapar | Savunucu/prey, rakip, virüs, açlık, Void, öz-hasar | Koherent beden ve kuyruk       |
 
-Evrim kalıtım, mutasyon ve seçilimden ibarettir. Renk de evrimleşir: tür rengi
-nesiller boyunca kayabilir, böylece kullanıcı "bu türün rengi değişmiş"
-diyebilir. Düşman TÜRETİLİR, spawn edilmez — kaynak kıtlığı, rekabet ve mutasyon
-avcı morfolojisi üretir. Dünyanın düşman ürettiği bir sistem, düşman
-yerleştirilen bir sistemden ölçülebilir biçimde daha ilginçtir.
+Prey yalnız kaçmak zorunda değildir. Fenotipine göre savunabilir; koloni
+yırtıcıyı kuşatabilir; iki yırtıcı kaynak için çatışabilir. Hiçbir yırtıcı
+ölümsüz veya rigid değildir. Dayanıklılığı yüksek cohesion, kalın zar, güçlü
+repair ve kompakt core'dan gelir; bunların enerji maliyeti vardır.
+
+Her aile farklı geri besleme zinciri açar:
+
+- Parçacık avcısı serbest maddeyi azaltınca yeni organizma doğumu zorlaşır;
+  kendisi çoğalırsa kaynağını tüketip açlığa girer.
+- Çekirdek avcısı zarı yalnız parçalamak için değil nucleus sürekliliğine
+  ulaşmak için deler. Core ölümü kontrolü ve hafızayı bitirir; beden bir süre
+  fiziksel olarak kalıp sonra dağılabilir veya avcıya katılabilir.
+- Virüs uyumlu zara bağlanır, enerji/metabolizma dengesini bozar, çoğalır ve
+  yayılır; bütün virüslerin nucleus taşıması gerekmez.
+- Koloni kırıcı daha büyük bir yırtıcı değildir. Yüksek disturbance ve geniş
+  bedenle yerleşimi dağıtır; nüfusu göçe, yeni territory'ye ve sonraki sınır
+  çatışmalarına iter.
+- Olgun yırtıcı stalking → burst → recovery ekonomisiyle avlanır. Güçlü beden
+  daha yüksek enerji maliyetidir; kuyruk kaybı, enfeksiyon ve açlık onu gerçekten
+  zayıflatır.
+
+Koloni savunması `GuardUnit` spawn'ı değildir. Yerel danger/fear sinyali ve
+fenotip farklılıkları bazı üyeleri kaçırırken bazılarını tehdide yaklaştırır;
+savunucu rolü bu davranıştan doğar. Territory de sahiplik poligonu değil,
+uzun süreli kullanım + tolerans + sinyalden doğan ve terk edilince solan
+influence field'dır.
+
+### Hasar tek HP değildir
+
+Gerçek durum çok boyutludur:
+
+- mechanical: üye parçacık kopması;
+- membrane: açıklık ve geçirgenlik artışı;
+- core: kimlik, hafıza ve kontrol bozulması;
+- metabolic: enerji deposu kaybı;
+- infection: sızıntı ve davranış bozulması;
+- matter loss: beden küçülmesi.
+
+UI gerekirse bunlardan bir sağlık özeti türetebilir; simülasyon gerçeği tek
+sayılık HP değildir.
+
+Virüs normal dünya zoom'unda fark edilmesi zor kalır. Organism/Micro zoom'da
+kendi küçük particle morphology'si seçilir; infection layer izini açık eder.
+Virüsün çekirdeği olmak zorunda değildir. Ortak sözleşme `AgentController`
+olabilir; tam organizma nucleus controller, virüs daha basit tropism
+controller kullanabilir.
+
+### Dünya geçmişi fiziksel iz bırakır
+
+| Olay          | Kalıntı                                |
+| ------------- | -------------------------------------- |
+| Normal geçiş  | Hafif disturbance                      |
+| Büyük göç     | Uzun, ince ve solan iz                 |
+| Habitat ölümü | Detritus + disturbance                 |
+| Savaş         | Yüksek disturbance + tükenmiş nutrient |
+| Salgın        | Infection residue                      |
+| Eski koloni   | Solan territory memory                 |
+| Void kaybı    | Kıyıda kısa ömürlü activity scar       |
+
+Normal görünüm sakin kalır; ayrıntı katman görünümünde açılır.
+
+Bu sistemlerin hedeflediği zincir scripted görev olmadan kurulabilir:
+
+> Merkez nutrient'ı tükenir → koloni Void'e yakın zengin yamaya göçer → avcı
+> sürüyü kıyıya sıkıştırır → riskli burst sırasında kuyruğundan madde kaybeder
+> → savunucular yaklaşır → avcı yavaşlayıp çekilir → kıyı izi ve azalan aktif
+> madde dünyanın tarihinde kalır.
+
+Bu örnek zorunlu senaryo değildir; her okun gerçekleşmesini sağlayacak yerel
+mekanizmaların aynı dünyada birbirine bağlanabildiğini sınayan ürün hedefidir.
 
 ## 6. Sunum
 
-Normal durumda ekranın %90'ı dünyadır. UI olay güdümlüdür: sürekli açık bir
-gösterge paneli sistemi "simulation dashboard"a çevirir. Bir şey olduğunda kısa
-bir bildirim çıkar ve kaybolur; geçmiş ayrı bir panelden incelenir.
-
-Üç görsel katman, alttan üste: çevre (alanlar), territory (sınırlar, etki),
-yaşam (parçacıklar, organizmalar).
-
-### İki ayrı akıl
-
-Bu ayrım ürünün en özgün yanıdır ve korunmalıdır:
-
-- **Dünya aklı** — canlıların ne yaptığı.
-- **Sunum aklı** — oyuncuya neyin gösterileceği.
-
-Sistem eşzamanlı olayları ilginçlik açısından puanlar (yenilik, süre, nüfus
-etkisi, nadirlik, coğrafi yayılım) ve kamerayı ilginç olana götürebilir.
-
-**İlginçlik tek bir skalara indirilmez.** Bileşenler ayrı ölçülür, ağırlıkları
-`config/` altında veri olarak durur. Tek sayıya indirmek, iptal edilen
-denemedeki `maxCellOccupancy` hatasının aynısıdır (§14, ders 3): ölçtüğünü
-sandığın şeyi ölçmeyen bir metrik, yanlış sonucu ikna edici biçimde üretir.
-"İlk kez olan" olaylar (ilk organizma, ilk bölünme, ilk avlanma, ilk koloni)
-ayrıca işaretlenir — nadirlik en güçlü ilginçlik bileşenidir. Üç mod
-yeter: `Observe` (sistem önerir), `Follow` (oyuncu seçer), `Free` (oyuncu
-gezer). Oyuncu kameraya asla zorla kilitlenmez.
-
-### Renk durumu anlatır
-
-Renk paleti UI paletinden AYRIDIR. `VOL_COLORS` bir ürün arayüzü paletidir
-(`uiBg`, `brand`, `accent`, `success`…) ve dünya renklerine karıştırılmaz. Dünya
-rengi dört katmandan çıkar: tür rengi, enerji modülasyonu, durum modülasyonu,
-çevre etkileşimi. Aynı organizmada zar, çekirdek ve iç parçacıklar farklı rol ve
-farklı renk taşır — okunabilirliği bu sağlar.
-
-### Tüketim nasıl görünür
-
-Tüketim bir olay değil, her adımda süren bir süreçtir ve ekranda iki yerde
-okunur:
-
-- **Dünyada:** organizmanın beslendiği yerde besin alanı söner ve zamanla
-  yeniden dolar; geçen canlının izi (`disturbance`, §2) de aynı katmanda söner.
-- **Canlıda:** enerji rengin modülasyon katmanıdır; aç organizma solar, doygun
-  olanın rengi dolgundur.
-
-Canlının üstüne enerji çubuğu, lokma animasyonu ya da tüketim efekti konmaz:
-ekranın %90'ı dünyadır ve durum renkle anlatılır. Enerjinin sayısal değeri
-yalnız seçilen organizmanın künyesinde görünür; onu değiştiren kural görünmez
-(gizli kurallar, aşağıda).
-
-Günlüğe ve bildirime tüketimin kendisi girmez, eşik aşıldığında doğan olaylar
-girer: bölünme, açlıktan ölüm ve bir bölgedeki besinin tükenmesi. Her lokmayı
-olay saymak günlüğü gürültüye çevirir ve ilginçlik puanını anlamsızlaştırır.
-
-### Katman görünümü
-
-Alanlar varsayılan görünümde çok hafif çizilir ve dünya çoğunlukla karanlık
-kalır (§2). Oyuncu katman görünümünü açtığında seçtiği alan (besin, ışık,
-sıcaklık, iz) tam kontrastla görünür; virüs izi gibi gizli sonuçlar orada
-bulunur (§5).
-
-Ad bilinçlidir: ürün kiplerindeki **Gözlem** (§1) ve kamera kiplerindeki
-`Observe` (yukarıda) başka şeylerdir; üçüncü bir "gözlem" kavramı eklenmez.
-
-### Kabuk yerleşimi
-
-Dünya ekranın tamamını alır; kabuk dört köşeye dağılır ve her köşenin sahibi
-sabittir:
-
-| Köşe    | İçerik                                                           |
-| ------- | ---------------------------------------------------------------- |
-| Sol üst | Marka şeridi                                                     |
-| Sağ üst | Düğme kümesi: seçenekler köşede, tam ekran yalnız web'de solunda |
-| Sol alt | Mini harita (Adım 7)                                             |
-| Sağ alt | İsteğe bağlı kare hızı göstergesi                                |
-
-Seçenekler düğmesi her platformda aynı yerde durur; tam ekran düğmesi yoksa
-küme boşluk bırakmaz. İki düğme ve çekmece kapatma düğmesi aynı 40 px
-`IconButton` ölçüsündedir. Seçenekler, `StatsPanel` ile aynı CORE `Sheet`
-kabuğunda sağdan açılır: en az yarım genişlik kaplar ve dünya scrim altında
-görünür kalır; 480 px ve altında (dikey telefon) tam genişliğe çıkar. Ölçüldü:
-masaüstü 1280 px'te 640, yatay telefonda 832 px'in 420'si, dikey telefonda
-tamamı. İçerik kendi içinde kayar. Satırlar: dil (`Select`), kare hızı ve
-dokunsal geri bildirim (`Checkbox`; ikincisi yalnız titreşim motoru olan
-cihazda), ekran yönü, masaüstünde görüntü kipi. Scrim, Escape, Android geri
-hareketi ve X kapatır; odak seçenekler düğmesine döner. Bütün konumlar `--vol-safe-*`
-token'larıyla çentikten uzak tutulur. FPS seçeneği açıksa gösterge çekmecenin
-üst katmanında görünür kalır; ölçüm en fazla 250 ms'de bir yazıya çevrilir ve
-simülasyon temposuna bağlanmaz.
-
-Form CORE `SettingsForm`/`SettingsRow` düzenidir. Geniş ekranda etiket esner,
-kontrol sütunu intrinsic/makul azami genişlikte kalır; switch sağa yaslanır,
-`SegmentedControl` boşluğu doldurmak için şişmez. Dar ekranda yalnız geniş
-select gerektiğinde alt satıra geçer. X ile dişli aynı üst/sağ safe-area
-ankrajındadır; kabul testi kontrolün panel içinde görünmesini, yatay ve dikey
-taşmayı ayrı ayrı ölçer.
-
-| Platform        | Tam ekran düğmesi          | Görüntü kipi seçeneği | Dikey / yatay               |
-| --------------- | -------------------------- | --------------------- | --------------------------- |
-| Web             | Var (DOM tam ekranı)       | Yok                   | Pasif, gerçek yönü gösterir |
-| Windows / Linux | Yok                        | Pencere / tam ekran   | Pasif, gerçek yönü gösterir |
-| Android         | Yok (çubuklar zaten gizli) | Yok                   | Seçilebilir (§9)            |
-
-### CORE UI'dan ne alınır — bileşen eşlemesi
-
-Hiçbir UI bileşeni oyunda sıfırdan yazılmaz; eksik olan CORE'a eklenir.
-VOL.LIFE'ın yüzeylerinin karşılığı:
-
-| İhtiyaç                                                  | CORE bileşeni                                          |
-| -------------------------------------------------------- | ------------------------------------------------------ |
-| Seçilen organizmanın künyesi                             | `ui/hud/SelectionInfoPanel`                            |
-| Dünya/yaşam/çatışma sayaçları                            | `ui/hud/StatsPanel` (grup + girdi, kural taşımaz)      |
-| Dünya haritası, işaretler                                | `ui/hud/MinimapPanel` (world boyutu, marker, viewport) |
-| Olay geçmişi                                             | `ui/data/EventLog`                                     |
-| Tekrar hızı (0.5× / 1× / 2× / 4×), yalnız Tekrar kipinde | `ui/primitives/SegmentedControl`                       |
-| Seçenekler düğmesi ve paneli                             | `ui/primitives/IconButton` + `ui/overlays/Sheet`       |
-| Dikey / yatay, görüntü kipi                              | `ui/primitives/SegmentedControl`                       |
-| Müdahale menüsü                                          | `ui/overlays/CommandPalette`                           |
-| Anlık olay bildirimi                                     | `ui/overlays/Toast`                                    |
-| Panel, sekme, kaydırma                                   | `ui/layout/Panel`, `Tabs`, `ScrollView`                |
-
-`StatsPanel` ve `SelectionInfoPanel` bilinçli olarak generic tutulmuştur: etiket
-ve değer gruplarını çizerler, oyun kuralını çağırandan alırlar. VOL.LIFE'ın
-domain'i CORE'a bu yüzden sızmaz.
-
-CORE `WorldCameraController` sınırlı dikdörtgen kamera, fare/dokunma sürükleme,
-release momentumu, sönümleme, delta-mode normalize tekerlek, yumuşatılmış
-cursor-anchor zoom ve başlangıç anına bağlı pinch'i ortaklaştırır. Pointerup'ın
-son örneği velocity penceresine girer; wheel→drag eski hedefi iptal eder;
-analitik momentum sınırın son bölümünde yumuşar. Parmağın altındaki dünya
-doğrudan izlenir; inertia yalnız bırakıldıktan sonra devrededir.
-
-### Gizli kalan kurallar
-
-Oyuncuya bütün kurallar anlatılmaz. `aggression = 0.73` görünebilir; ama
-"saldırganlık kaynak yoksunluğundan sonra yükselir" gösterilmez. Oyuncu bunu
-gözlemleyerek keşfeder. Ürün bir yapılandırma aracı değil, bir gizem olmalıdır.
-
-## 7. Kalıcılık: kayıt, anlık görüntü, tekrar
-
-Sıfırdan başlanmaz ama tek bir sisteme de yığılmaz. **Kalıcılık iki seviyelidir
-ve bu ayrım pazarlıksızdır.**
-
-### Küçük durum → CORE `SaveManager`
-
-Ayarlar, dil, kalite kademesi, masaüstü görüntü kipi, son kamera konumu,
-tercih edilen görünüm modu. Ekran yönü istisnadır: Android'de native tarafta
-saklanır, çünkü sayfa yüklenmeden uygulanmalıdır (§9).
-`SaveManager` adaptör tabanlıdır (`IStorageAdapter`): web'de
-`LocalStorageAdapter`, masaüstü/Android'de `tauri-v2`nin `TauriStoreAdapter`ı.
-Bu katman için yazılacak yeni kod yoktur.
-
-Yazma başarısızlığı sessiz geçmez: `LifePreferences` bellek durumunu hemen
-günceller, kuyruklanan yazma reddedilirse `onSaveError` dinleyicilerine taşır
-ve `LifeHud` bir danger toast gösterir (`life:options.saveFailed`). Tercih
-yine kaybedilebilir ama oyuncu bunu görür; otomatik yeniden deneme bilinçli
-olarak eklenmedi — toast, kuru kuyruğa göre daha dürüst bir yüzeydir.
-
-### Dünya → VOL.LIFE'ın kendi formatı ve depolama portu
-
-Dünya kendi `WorldSnapshot`/codec sözleşmesini ve `LifeWorldStore` portunu
-taşır. Bugünkü küçük dünyada bu port CORE `SaveManager` ile beslenir; backend
-seçimi binary formatı uygulamanın geri kalanına sızdırmaz.
-
-Format sürümlü bir codec arkasındadır. Parçacık sayısı 100 olsa da altı 256²
-alan ve difüzyon kaynağını typed-array nesneleri olarak JSON'a çevirmek 7,74
-MiB ölçülür; web depolama kotasını ve Android köprü maliyetini aşabilir. Bu
-yüzden metadata JSON, sayısal gövde sıralı little-endian binary ve gzip/base64
-olarak saklanır. Codec boyut, sürüm, config parmak izi, CRC32 ve sonlu değerleri;
-persistence alan/parçacık sayısı, sınır, hız, tür ve bant semantiğini doğrular.
-Bozuk/eski kayıt yeni dünyaya güvenli biçimde düşer.
-
-Android'de onaylı çıkış son snapshot yazılana kadar pencereyi kapatmaz; hata
-olursa uygulama açık kalır. Büyük dünya hedefinde port native binary dosya ve
-web'de IndexedDB/OPFS benzeri backend kazanmalıdır; migration, last-known-good
-ve uyumsuz kayıt yüzeyi o geçişin parçasıdır.
-
-Dünya tohumu build config'i değildir. Yeni dünya cryptographic seed, `worldId`
-ve oluşturma zamanı üretir; explicit seed yalnız test/replay içindir. Bu metadata
-snapshot'ta korunur ve config fingerprint'ine girmez. Dünya anlık görüntüsü
-şunları taşır: metadata, tick sayısı, **RNG durumu**, tür
-tanımları, parçacık dizileri (SoA), alan ızgaraları, organizma kayıtları,
-territory durumu.
-
-RNG durumunun kayda girmesi bir detay değil, bu tasarımın koşuludur: CORE'un
-`createRandom`ı durumu closure'da tutar ve okutmaz. `runtime/sim/rng.ts` tam bu
-yüzden vardır (§11).
-
-### Kayıt ile tekrar AYNI ŞEY DEĞİLDİR
-
-|            | Ne saklar                           | Neye cevap verir                 |
-| ---------- | ----------------------------------- | -------------------------------- |
-| **Kayıt**  | Anlık görüntü                       | "Bu dünyanın ŞU ANKİ hâlini aç." |
-| **Tekrar** | Tohum + komut günlüğü + tick sayısı | "Bu dünya BU HÂLE nasıl geldi?"  |
-
-Tekrarın anlık görüntüye ihtiyacı yoktur; deterministik çekirdek aynı tohum ve
-aynı komut dizisinden aynı dünyayı yeniden üretir. Bu ayrım korunursa
-"deney" kavramı bedavaya gelir: aynı dünya, farklı müdahale, karşılaştırılabilir
-sonuç. Zaman denetimi (yavaşlatma, hızlandırma, durdurma) yalnız tekrarda
-bulunur; canlı dünya hızlandırılmaz (§1).
-
-Ve bu, ürünün en özgün konumlandırmasını mümkün kılar — VOL.LIFE bir simülasyon
-oyunundan çok bir **yapay yaşam laboratuvarıdır**: kullanıcı bir deneyi
-kaydeder, müdahalesini değiştirir, tekrar koşar.
-
-### Tarih ayrı bir yapı değildir
-
-Dünyaya `history` alanı eklenmez. Doğum, ölüm, bölünme, füzyon, göç, çatışma,
-yerleşim, mutasyon, tükeniş gibi olaylar bir günlüğe yazılır. Anlık görüntü +
-olay günlüğü birlikte dünyanın geçmişini verir ve aynı günlük tekrar sisteminin
-girdisidir. Önemli organizmalar için bu günlükten bir **biyografi** ve türler
-için bir **soy ağacı** türetilebilir; her bireyin geçmişini tutmak gerekmez.
-
-## 8. Test doktrini
-
-Bu projede "fonksiyon X döndürür" testi yetmez. Sistem stokastiktir ve değeri
-tam olarak öngörülemeyen davranışındadır; test edilecek şey bu yüzden **değer
-değil sözleşmedir**.
-
-### Dört kanıt sınıfı
-
-1. **Birim/matematik:** kuvvet, temas, deterministik state ve kamera formülü.
-2. **Entegrasyon/E2E:** save/load, ayar, renderer ve tam-config preview.
-3. **Long-horizon simülasyon:** çok seed, 10–30 simüle dakika, metastability,
-   duvar bağımlılığı ve equilibrium/collapse zaman serisi.
-4. **Fiziksel cihaz/insan kabulü:** masaüstü fare, Samsung, Lenovo; kamera
-   rahatlığı ve izlenebilir morphology.
-
-Bir sınıf ötekinin yerine geçmez. Coverage, FPS veya kısa test ürün kabulü
-değildir; otomatikleştirilemeyen gözlem açık bırakılır ama atlanmaz.
-
-### İstatistik testleri tekrar üretilebilir olmalı
-
-"1000 tohumla çatışma oranı" ölçmek doğrudur ama her koşuda 1000 tohum üretmek
-pahalıdır ve sonucu koşudan koşuya oynatır. Tohumlar bir KORPUS olarak saklanır
-(sürümlenmiş bir veri dosyası); test o korpusu okur. Böylece istatistiksel iddia
-hem ucuzlar hem tekrarlanabilir olur, ve korpus büyüdüğünde bu bilinçli bir
-karar hâline gelir.
-
-### Yasak test biçimi
-
-Her rastgele seed çifti için bütün sonuç farklıdır gibi istatistiksel test
-yazılmaz. Bunun yerine sabit X/Y fixture'ı farklı başlangıcı, aynı X ise
-bit-bit devamı; fresh-world üreticisi de ardışık benzersiz seed sözleşmesini
-ölçer.
-
-### Ölçüm ikiye ayrılır
-
-**Kernel benchmark** (izole): parçacık etkileşimi, ızgara, alan difüzyonu.
-**Ürün benchmark** (bileşik): tam `World.step` + render senkronu + kamera + UI.
-
-Bu ayrım iptal edilen denemenin en pahalı dersinden geliyor: izole kernel güzel
-ölçülürken ürün davranışı görülmedi. İkisi arasındaki fark ölçüldüğünde büyüktü
-ve bileşik ölçüm daima daha pahalıdır.
-
-### Üçüncü eksen: emergence kalitesi
-
-Doğruluk ve performans tek başına emergence kanıtı değildir. Step 3 zaman
-serisi mean/median hız, moving/nearly-stalled, isolated/stalled-isolated,
-neighbor count, cluster/compactness/anisotropy, role-agnostic radial katman,
-type-role yerleşimi, fragmentation/collapse, wall dwell/support, üye churn,
-orbit persistence, trajectory autocorrelation ve structural diversity taşır.
-
-Bunlar "yüksek daha iyi" diye kullanılmaz. Amaç tek bir sıkıcı dengeye
-çökülmediğini görmektir: `organismCount = 0` kötüdür, `organismCount = 100000`
-otomatik olarak iyi değildir. Bu tarz sistemlerin en büyük riski başlangıçtaki
-hareketin bir süre sonra tekdüze bir dengeye oturmasıdır ve bu ancak uzun koşulu
-bir metrikle görülür.
-
-`proof-of-life-v1` production config'i 10/30/60/120/300/600/900 saniyede sabit
-seed korpusuyla ölçer. Broad arama kısa ve geniştir; refinement daha çok seed,
-finalist ise 15 dakika ve perturbation/recovery çalıştırır. Recovery yalnız
-cluster oranı değildir: üyelik, type composition, radial profil, compactness,
-centroid/size ve shape ayrı yazılır. Artifact source/config kimliği, bütçe,
-tam aday config'i ve red nedenlerini taşımadan sayı DESIGN/TODO'ya girmez.
-
-**Metrik seçerken sorulacak soru sabittir:** _bu metrik gerçekten görmek
-istediğim şeyi mi ölçüyor?_ İptal edilen denemede `maxCellOccupancy` yapının
-varlığını ölçmüyordu ve ondan çıkarılan morfoloji sonucunu görüntü çürüttü
-(§14, ders 3).
-
-### Ölçekleme kapısı
-
-Mutlak süre kapı olamaz — donanıma bağlıdır. Ama girdi dört katına çıktığında
-sürenin kaç katına çıktığı makineden bağımsızdır ve `O(n²)` sızmasını yakalar.
-Repo bu kapıya sahiptir (`scripts/quality/scalingBudget.mjs`) ve kapı geneldir:
-bütçe yazan paket ölçüm tarifini `quality.json` → `scaling.<paket>.$measure`
-altına yazar. VOL.LIFE 512→2048 parçacıkta sabit yoğunluğu korur; ölçülen
-4,94 oran `quality.json`daki 5,5 tavanla kapılıdır.
-
-## 9. Android
-
-**VOL.LIFE masaüstü-önce geliştirilir, ama Android bir smoke hedefi olarak ilk
-gerçek dilimden itibaren listede kalır.** Cihaz geliştirme sırasında genellikle
-bağlıdır; kabuğa ya da sunuma dokunan her tur cihazda açılıp ekran
-görüntüsüyle doğrulanır.
-
-Bilinen ve doğrulanmış olan: `pnpm benchmark:device`
-(`scripts/device-benchmark.mjs`) bağlı cihazda soğuk açılış, fps, bellek ve
-WebGL geri düşüşünü ölçer. Betiğin kendi sözleşmesi bunu açıkça söylüyor:
-**kapı DEĞİLDİR ve olamaz** — bir kapının koşulu geliştiricinin masasındaki
-donanım olamaz. Çıktısı bir referanstır; bir sonraki ölçüm onunla kıyaslanır.
-Betik uygulama listesini elle tutar; `deviceApps` bekçisi listeyi her oyunun
-`tauri.conf.json` kimliğiyle karşılaştırır ve VOL.LIFE listededir.
-
-`games/vol-arachnid` Tauri Android hattının emsalidir. VOL.LIFE'ın kabuğu da
-kuruludur (`src-tauri`, `com.volstudio.life`) ve Android drift testi taşır.
-
-Dokunsal geri bildirim Tauri'nin resmi mobil eklentisinden gelir. Android
-`VIBRATE` izni ve kullanılan impact/selection/notification izinleri
-manifest/capability drift testinde korunur. Web'de mobil Vibration API ve masaüstü
-oyun kolu CORE fallback'idir; native sürücü varsa UA tahmini yerine o seçilir.
-
-**Kalite düşer, kural düşmez.** Android'de görsel ayrıntı, parçacık LOD'u ve
-efekt yoğunluğu azalabilir; ama dünya kuralları, olaylar ve organizmalar aynı
-kalır. Bu, "kamera fiziği değiştirmemeli" kuralının (§14, ders 2) cihaz
-düzlemindeki karşılığıdır.
-
-Ölçülmemiş ve ölçülene kadar varsayım olarak kalacak olan: Android tek çekirdek
-başarımının masaüstünden ~3–5× düşük olduğu. Bu sayı bir tahmindir ve plan
-üzerine kurulmaz.
-
-### Ekran yönü oyuncunun seçimidir
-
-Dünya kamerası iki yönde de sınırları dış boşluk göstermeden örter (§2); yön
-seçenekler panelinden seçilir: **dikey** ya da **yatay**, varsayılan dikey.
-Telefon başlatıcıdan dikey açılır; varsayılan yatay olsaydı ilk açılış ekranı
-döndürürdü.
-
-- **Yön native tarafta uygulanır.** WebView'ın `screen.orientation.lock()`u
-  cihazda hem normalde hem DOM tam ekranında `NotSupportedError` veriyor
-  (SM-G990B2, Android 16, WebView 152). Uygulama tauri-v2'nin Android
-  köprüsüyle yapılır.
-- **Aile `user*`dır:** `userPortrait` / `userLandscape`. `sensor*` aileleri
-  telefonun sistem döndürme kilidini yok sayar; yatarken izlenen bir dünyada
-  ekranın habersizce ters dönmesi istenmez. vol-hell ve vol-arachnid'in
-  `sensorLandscape` kilidi kendi kararlarıdır.
-- **Tercih native tarafta saklanır** ve Activity açılışında uygulanır; sayfa
-  yüklendikten sonra uygulanan bir yön her açılışta ekranı bir kez döndürürdü.
-- **İstek yok sayılabilir.** Android 16'da en dar kenarı 600dp ve üstü
-  ekranlarda yön istekleri yok sayılır; `android:appCategory="game"` taşıyan
-  uygulamalar muaftır. Uygulanmayan seçim gerçek yöne geri döner.
-- **Yön değişimi dünyayı sıfırlamaz:** manifest `configChanges` içinde
-  `orientation` taşır ve Activity yeniden kurulmaz; kamera bakılan noktayı ve
-  yakınlaştırmayı korur.
-
-### Tam ekran düğmesi yoktur
-
-`MainActivity` sistem çubuklarını zaten gizler. DOM tam ekranı Android'de
-görünür bir şey değiştirmez ve geri tuşundan sonra açık kalır (ölçüldü,
-2026-09-10); düğme bu yüzden yalnız web'de bulunur (§6, kabuk yerleşimi).
-
-## 10. FpsMeter — CORE'a eklendi, tek koşulla
-
-`FpsMeter` CORE'a eklendi, ama `Diagnostics`in içine değil.
-
-`Diagnostics` zaten FPS hesaplıyor (`SAMPLE_WINDOW = 60`) ve yanında kare
-min/max/ortalama, render/update süreleri, sayaçlar ve renderer bilgisini
-taşıyor. İstenen bu değil: ekranda duran, yalnız FPS gösteren, ürünün kendi
-tipografisini kullanan küçük bir HUD göstergesi.
-
-Sözleşme küçüktür ve küçük kalmalıdır:
-
-- Konum dört köşeden biri; **tek instance** varsayımıyla tasarlanır. Dört köşeye
-  dört metre koymak teşvik edilmez.
-- Yalnız FPS yazar. `render: 2.31ms`, `entities: 1200` yazmaz — o `Diagnostics`.
-- `Jura` + tabular rakamlar. Sayı zıplamadan güncellenir.
-- Renk eşiği semantik paletten gelir (normal / uyarı / tehlike), neon değil.
-- Konumlandırma `--vol-safe-*` token'larını kullanır; çentikli ekranda köşeye
-  yapışmaz.
-
-**Tek pazarlıksız koşul:** ölçümü `Diagnostics` ile PAYLAŞMALIDIR. İki ayrı FPS
-algoritması aynı anda 58 ve 60 gösterir ve hangisinin doğru olduğu sorusu
-cevapsız kalır. Çözüm ortak bir kare örnekleyicisidir (`time/FrameRateSampler`,
-yüzeye çıkmaz); `Diagnostics` ona bağlandı ve kendi kayan-pencere kopyasından
-58 satır silindi.
-
-**Ölçülen iki tuzak:**
-
-- Gösterge sağa sabitlidir ve kutusu her okumada yeniden boyutlanırsa karşı
-  kenarı oynar; gözle "gösterge yer değiştirdi" diye okunur. `tabular-nums` tek
-  başına yetmedi — VOL fontları tabular rakam varyantı taşımaz ve aynı basamak
-  sayısındaki iki değer bile farklı genişlik üretiyordu (1214/1211/1208 px).
-  Genişlik `9ch`te sabitlendi: 1'den 999'a kadar her okuma 63 px.
-- Sıfır bir ölçüm DEĞİLDİR. Görsel regresyon koşusu saati dondurur ve bütün
-  kare aralıkları sıfır olur; gösterge orada kırmızı "0 FPS" yazsaydı showcase
-  temeli kalıcı olarak bozuk görünürdü. Ölçüm gelmeden gösterge tire yazar ve
-  nötr kalır.
-
-Bileşen `devtools/vol-ui` HUD sekmesinde canlı ölçümle sergilenir. CORE'un
-public yüzey sayısı 223 → 224 oldu (`FpsMeter`; örnekleyici içeride kaldı).
-
-## 11. Ölçülmüş mimari sınırlar
-
-Bu bölümdeki her satır bu turda kurulu kaynaktan doğrulandı.
-
-### Phaser 4.2.1 — GPU compute YOKTUR
-
-`WebGLRenderer` bağlamı yalnız `canvas.getContext('webgl', …)` ve
-`'experimental-webgl'` ile ister; **`'webgl2'` hiç denenmez.** Instancing
-`ANGLE_instanced_arrays` uzantısından gelir; uzantı yoksa renderer hata
-fırlatır.
-Repo genelinde `webgpu` / `WGSL` / `GPUDevice` / `navigator.gpu` için **sıfır**
-eşleşme vardır.
-
-**Sonuç: simülasyon CPU'da koşar.** WebGPU compute içeren bir plan yazmak, var
-olmayan bir yetenek üzerine bina kurmaktır.
-
-### Yoğun render yolu adayı: `SpriteGPULayer` — ölçülmeden seçilmez
-
-`src/gameobjects/spritegpulayer/` altında yaşar ve tek instanced draw call ile
-çizer. `getDataByteSize()` üye adımını (`instanceBufferLayout.layout.stride`)
-verir; doğrudan tampon yazımı desteklenen bir kullanımdır. Üye başına renk
-(`tint*`) ve saydamlık (`alpha*`) taşır.
-
-**Kendi belgesi VOL.LIFE'ın kullanım biçimine karşı uyarır:** içeriği sık
-değiştirmekten kaçınılmasını ister; üye eklemeyi, düzenlemeyi ve silmeyi tampon
-güncellemesi gerektirdiği için pahalı sayar; üyeyi silmek yerine `scaleX`,
-`scaleY` ve `alpha`yı sıfırlamayı önerir; tamponun küçük bir dilimini
-güncellemenin daha ucuz olduğunu söyler. VOL.LIFE ise konumu ve rengi her adımda
-CPU'da değiştirir. "Tek geçerli yol" bu yüzden bir hipotezdir:
-
-- Adım 2 render yolunu tek bir adaptörün arkasına koyar ve 100 / 1.000 / 5.000
-  parçacıkta kare süresini ölçer; o ölçekte seçilen yol mimariyi kilitlemez.
-- Yoğun ölçekte (10k–250k) `SpriteGPULayer` en az bir alternatifle CPU
-  güncelleme, GPU yükleme ve kare süresi p50/p95 üzerinden karşılaştırılır;
-  karar Adım 11'e girerken buraya yazılır.
-
-Alternatifler (`Blitter`, `ParticleEmitter`, `Mesh`, `Rope`) `BatchHandlerQuad`
-üzerinden batch başına 16384 quad ve kare başına obje başına JS döngüsü
-demektir; bu maliyet de aynı ölçümle sınanır, varsayılmaz.
-
-Ham yazımda kullanılacak ease **kurulumda bir kez** açılmalıdır
-(`setAnimationEnabled('Linear', true)`) — o çağrı shader'ı yeniden derler.
-`EasingEncoding.Linear` **1**'dir, sıfır değil.
-
-Adım 2'nin sabit tek üyeli `Phaser.WebGL.Graphics` adaptörü gerçek Chromium
-WebGL'de ölçüldü (180 kare, 60 ısınma): 100 parçacıkta CPU p50/p95
-0,0/0,1 ms ve kare p50/p95 16,66/16,67 ms; 1.000'de 0,1/0,2 ms ve
-16,67/19,99 ms; 5.000'de 0,5/0,6 ms ve 73,32/91,67 ms. Bu yol 100'lük Adım 2
-için yeterlidir ama yoğun ölçek için reddedilmiştir; Adım 11 karşılaştırması
-açık kalır.
-
-### Repoda paralellik altyapısı YOKTUR
-
-`new Worker`, `OffscreenCanvas`, `SharedArrayBuffer` için repo genelinde sıfır
-eşleşme vardır. İlk denemede Web Worker seçeneği hiç masaya konmadı ve bu bir
-eksikliktir: SoA veri paylaşılabilir bellekte durur, ızgara zaten bölgelere
-ayrıktır, kuvvet hesabı paralelleştirilebilir. **Worker havuzu değerlendirilmemiş
-bir yoldur** ve ölçek sorusu ona bakılmadan kapatılmamalıdır.
-
-### Paralellikten ÖNCE: güncelleme frekansı bütçesi
-
-Her sistemin 60 Hz koşması bir varsayımdır, gereklilik değil. Organizma hareketi
-60 Hz ister; besin difüzyonu istemez, territory hiç istemez, evrim saniyede bir
-bile fazladır.
-
-| Sistem                | Makul tempo |
-| --------------------- | ----------- |
-| Hareket / entegrasyon | 60 Hz       |
-| Kuvvetler             | 30 Hz       |
-| Algı ve karar         | 15 Hz       |
-| Alan difüzyonu        | 10 Hz       |
-| Territory / grup      | 5 Hz        |
-| Evrim                 | 1 Hz        |
-| Tarih                 | olay bazlı  |
-
-**Bu, yasaklanan kamera-LOD'u DEĞİLDİR** (§14, ders 2) ve karıştırılmamalıdır.
-Orada yasak olan şey kuralın bakış açısına göre değişmesiydi: yakındaki ajan
-başka fizik, uzaktaki başka fizik. Burada kural her yerde AYNIDIR; değişen tek
-şey aynı kuralın ne sıklıkla yeniden değerlendirildiğidir ve bu dünyanın her
-noktasında eşittir.
-
-Bu bütçeleme Web Worker'dan önce denenir: tempo ayarlamak paralellik eklemekten
-hem ucuz hem geri alınabilirdir. İptal edilen denemede bütün alanlar aynı
-kademeli döngüye bağlıydı ve bu açık borç olarak kayda geçmişti.
-
-### CORE — ne alınır
-
-`math/interpolation` (`damp` kare hızından bağımsızdır), `math/numeric`,
-`math/geometry`'nin skaler yarısı, `collections/MinHeap`, `grid/FlowField`
-(`Float64Array`/`Int32Array` üzerinde çalışır), `time/SimulationClock`,
-`benchmark/harness`, `quality/GraphicsQuality`, `ui/*`, `systems/SaveManager`,
-`fonts`, `debug/Diagnostics`.
-
-`SimulationClock` kullanılırken `partialStep: 'defer'` AÇIKÇA verilmelidir.
-Varsayılan `'simulate'`tir ve artık dilimi değişken bir adım olarak koşar; bu
-determinizmi kare hızına bağlar.
-
-### CORE — ne alınmaz ve neden
-
-| Primitif       | Neden uyumsuz                                                                |
-| -------------- | ---------------------------------------------------------------------------- |
-| `SpatialIndex` | Doğrudan sayısal handle API'si yoktur; SoA için nesne/getter wrapper gerekir |
-| `random.ts`    | Durum closure'da; `getState`/`setState` yok                                  |
-| `StateMachine` | Hook'lar context almaz → ajan başına closure                                 |
-| `ObjectPool`   | acquire/release başına hash işlemi                                           |
-| `entities/`    | Varlık başına Phaser nesnesi; ECS yok                                        |
-| `collections/` | SoA/TypedArray koleksiyon yok                                                |
-
-Bunlar CORE'un kusuru değildir: hepsi birkaç yüz varlıklı, nesne tabanlı bir
-oyun için doğru tasarlanmıştır. VOL.LIFE'ın veri modeli farklıdır, o kadar.
-
-`random.ts` yerine `runtime/sim/rng.ts` yazıldı: **aynı mulberry32 dizisi**,
-durumu okunabilir bir yüzeyle. Dizinin CORE'unkiyle aynı kaldığı testle
-kilitlenir — ayrışırlarsa aynı tohum iki farklı dünya verirdi.
-
-### CORE export'unda eksik alt yol
-
-`core/package.json` şu alt yolları açar: `./math/interpolation`, `./pool`,
-`./rig/metadata`, `./ui`, `./ui/styles.css`, `./lifecycle`, `./i18n`, `./fonts`,
-`./audio/music`, `./benchmark`, `./random`, `./spatial`, `./quality`, `./stats`.
-
-`./time` bu turda AÇILDI: kök barrel Phaser'a bağlı modülleri yeniden ihraç
-ettiği için, headless bir çekirdeğin `SimulationClock`u oradan alması
-Phaser'sızlık sözleşmesini transitif olarak kırıyordu. `time/index.ts`in Phaser
-taşımadığı `core/tests/governance/toolSubpaths.test.ts` ile kapılıdır.
+Normal durumda ekranın yaklaşık %90'ı dünyadır. UI olay güdümlüdür; sürekli
+açık dashboard yerine kısa bildirim, seçim künyesi ve ayrı olay geçmişi vardır.
+
+### Dünya aklı ile sunum aklı ayrıdır
+
+Dünya aklı olayları üretir; sunum aklı oyuncuya hangisinin bakmaya değer
+olabileceğini önerir. Sunum puanı yenilik, süre, etkilenen nüfus, nadirlik ve
+coğrafi yayılımı ayrı bileşenler olarak taşır; tek skaler “ilginçlik” değeri
+gerçeğin kendisi sayılmaz. İlk organizma, ilk bölünme, ilk avlanma ve ilk
+koloni gibi ilkler ayrıca işaretlenir.
+
+`Observe` kipinde kamera öneri sunabilir veya yumuşakça olaya gidebilir, fakat
+kullanıcının ilk pan/zoom girdisi kontrolü anında geri alır. `Follow` seçilmiş
+kimliği kaybolana ya da kullanıcı bırakana kadar izler. `Free` hiçbir otomatik
+kamera kararı almaz. Sunum sistemi simülasyona kuvvet, hedef veya öncelik
+yazamaz.
+
+### Habitat ve Void görsel sözleşmesi
+
+Kıyı kare stroke ile çizilmez. Habitat içi çok hafif field dokusu ve aktivite,
+kıyıya yaklaşırken organik biçimde kararır; dışı neredeyse mutlak siyah
+Void'dur. Kontur belirgin bir güvenlik bilgisi verecek kadar okunur, dekoratif
+neon çerçeve olacak kadar sert değildir.
+
+Void animasyonu fizik SDF'sini değiştirmez. Düşük frekanslı luminance/akıntı
+hareketi kıyıda içeri doğru akan karanlık hissi verebilir. Particle Void'a
+yaklaşınca dış normal yönünde uzar; geçişten sonra rengi boşalır, küçülür/smear
+olur ve yaklaşık yarım saniyede söner. Çok sayıda kayıpta efekt yoğunluğu LOD
+ile azalır.
+
+Habitat ölümü farklı görünür: core ritmi söner, zar düzeni çözülür, renk solar,
+beden serbest madde bulutuna dağılır ve bölgede hafif detritus/disturbance
+kalır. Oyuncu Void kaybı ile geri dönüşümü açıklama okumadan ayırabilmelidir.
+
+### Particle glyph fizik değildir
+
+Fizik parçacığı nokta/radius kalır. Renderer rol ve duruma göre glyph'i
+değiştirebilir:
+
+| Durum          | Sunum                                      |
+| -------------- | ------------------------------------------ |
+| Serbest madde  | Küçük yuvarlak                             |
+| Zar üyesi      | Zara teğet hafif oval                      |
+| Core üyesi     | Daha yoğun ve kompakt                      |
+| Hızlı üye      | Velocity yönünde sınırlı uzama             |
+| Tail aktüatörü | Salınımı okunur elongated biçim            |
+| Hasarlı üye    | Soluk/dengesiz faz                         |
+| Void fringe    | Void normaline doğru gerilme               |
+| Enfekte üye    | Yakın/layer görünümünde renk-faz anomalisi |
+
+Glyph, collision shape veya kuvvet menzilini değiştiremez.
+
+### Renk enerjiyi anlatır
+
+Dünya paleti UI paletinden ayrıdır. Renk type + energy + state + environment
+katmanlarından çıkar. Enerji barı normal dünyaya konmaz. Düşük enerjide renk,
+tail amplitude ve core pulse zayıflar; sayısal değer yalnız seçilen
+organizmanın künyesinde bulunur.
+
+Tüketim “lokma” efekti veya her canlı üstünde barla gösterilmez. Dünyada
+nutrient yaması yerel olarak söner ve sonra yenilenir; canlıda renk/core pulse
+enerji durumunu anlatır. Olay günlüğüne her emilim değil, besin bölgesi
+tükenmesi, açlıktan ölüm ve bölünme gibi eşik olayları girer. Gizli kuralın
+formülü UI'da açıklanmaz; kullanıcı `aggression = 0.73` gibi fenotip değeri
+görebilir ama kıtlığın onu nasıl etkilediğini gözlemle keşfeder.
+
+### Continuous zoom, semantic LOD
+
+Kamera modu kesikli değildir; render detayı sürekli geçiş yapar:
+
+| Ölçek     | Okunan bilgi                            |
+| --------- | --------------------------------------- |
+| World     | Habitat adası ve activity constellation |
+| Ecosystem | Göç, koloni ve yırtıcı hareketi         |
+| Organism  | Zar, core, beden ve hasar               |
+| Micro     | Particle rolü, salınım ve deformasyon   |
+
+Uzakta fizik değişmez. Tekil particle görünmez hâle geldiğinde aggregate
+luminance/activity signature kullanılabilir; bu yalnız sunumdur.
+
+### Kamera ergonomisi ayrı P0 kabulüdür
+
+Mevcut controller özellikleri olmasına rağmen kullanıcı kabulü başarısızdır.
+Yeni kamera şu hissi sağlamadan kapanmaz:
+
+- aktif drag sırasında dünya parmak/mouse altında gecikmesiz kalır;
+- bırakma hızı son kısa giriş penceresinden güvenilir biçimde çıkar;
+- mouse coast kısa, touch coast kontrollü kinetiktir;
+- trackpad wheel ve klasik mouse wheel ayrı normalize edilebilir;
+- zoom anchor imleç/parmak altında sabit kalır;
+- resize ve yön değişimi bakılan noktayı korur;
+- sert clamp ve elastik bounce yoktur; release momentumu sınırda yumuşak söner.
+
+Kamera navigation domain'i habitat bounding box + kontrollü Void margin'dir.
+Maksimum zoom-out bütün habitatı ve çevresinde anlamlı karanlığı gösterir;
+kullanıcı sonsuz Void'a kayamaz ve habitatı tamamen kaybedemez. Kesin margin,
+momentum penceresi ve zoom limitleri config verisidir; mouse, Samsung ve Lenovo
+insan kabulüyle ölçülmeden belgeye rastgele sayı olarak yazılmaz.
+
+### Kabuk
+
+Sağ üst seçenekler düğmesi CORE `Sheet`ini açar. Web'de tam ekran düğmesi
+solundadır; Android ve masaüstünde yoktur. Dişli, tam ekran ve X aynı 40×40
+`IconButton` geometrisidir. FPS açıksa Sheet'in üst katmanında görünür kalır.
+Dil, FPS, haptics, yön ve masaüstü görüntü kipi mevcut i18n/kalıcılık
+sözleşmelerini korur.
+
+Alan, territory, infection ve tarih normal görünümü kirletmez; kullanıcı
+seçtiği katmanı tam kontrastla açar. Dünya aklı ile sunum aklı ayrıdır:
+organizmalar ne olacağını, sunum sistemi oyuncuya neyin önerileceğini belirler.
+Oyuncu kamera kontrolünü her zaman geri alabilir.
+
+VOL.LIFE yeni UI primitive icat etmez. Planlanan yüzeylerin sahibi baştan
+bellidir:
+
+| İhtiyaç                    | CORE yüzeyi                             |
+| -------------------------- | --------------------------------------- |
+| Organizma künyesi          | `SelectionInfoPanel`                    |
+| Dünya/yaşam sayaçları      | `StatsPanel`                            |
+| Dünya haritası ve viewport | `MinimapPanel`                          |
+| Olay geçmişi               | `EventLog`                              |
+| Tekrar hızı                | `SegmentedControl`                      |
+| Müdahale arama yüzeyi      | `CommandPalette`                        |
+| Kısa olay bildirimi        | `Toast`                                 |
+| Seçenekler                 | `IconButton` + `Sheet` + `SettingsForm` |
+
+Bu bileşenler yalnız durumu çizer ve niyeti callback ile bildirir; organism,
+territory veya threat kuralı CORE'a sızmaz.
+
+## 7. Kalıcılık ve kimlik
+
+Kalıcılık iki seviyedir:
+
+- Küçük tercih durumu CORE `SaveManager` ile saklanır.
+- Dünya, VOL.LIFE'a ait sürümlü binary snapshot ve `LifeWorldStore` portuyla
+  saklanır.
+
+Dünya seed'i build config'i değildir. Yeni dünya cryptographic seed,
+`worldId` ve oluşturma zamanı üretir; explicit seed yalnız test/replay
+içindir. Metadata config fingerprint'ine girmez.
+
+V2 snapshot şunları taşımak zorundadır:
+
+- world metadata, tick ve RNG state;
+- HabitatSDF'yi yeniden üreten sürümlü parametreler/digest;
+- field ve resource dizileri;
+- particle capacity, active mask, stable ID'ler ve next ID;
+- konum, hız, tür ve üyelik dizileri;
+- dış matter reservoir ve Void kayıp sayaçları;
+- organizma/territory state'i ancak ilgili adımlar açıldığında.
+
+Eski snapshot sessizce v2 fiziğinde oynatılmaz. Güvenli migration açıkça
+kanıtlanamıyorsa kullanıcıya i18n'li uyumsuz kayıt sonucu verilir ve yeni dünya
+başlatılır. Görsel config fingerprint'i değiştirmez; fizik ve habitat config'i
+değiştirir.
+
+Metadata JSON olabilir; yoğun sayısal gövde sıralı little-endian binary,
+sürüm, uzunluk, config fingerprint, CRC32 ve finite-value doğrulaması taşır.
+Doğrulama hem disk adaptöründe hem doğrudan dünya geri yüklemesinde aynı
+fonksiyondur ve canlı state'e yazmadan önce bütünüyle tamamlanır. Geçersiz son
+bir dizi tick, RNG, alan veya parçacıkların önceki kısmını yarım uygulayamaz.
+`LifeWorldStore` backend'i format sözleşmesinden ayrıdır. Küçük dünyada mevcut
+SaveManager adaptörü kullanılabilir; ölçüm kota veya köprü maliyetini aşarsa
+native binary dosya ile web IndexedDB/OPFS adayları last-known-good ve migration
+yüzeyiyle birlikte değerlendirilir. Android'de onaylı çıkış son snapshot
+başarılı olmadan pencereyi kapatmaz.
+
+Kayıt anlık hâli, tekrar seed + komut günlüğü + tick sayısını saklar. Aynı
+değildirler. Tarih ayrı dev bir state ağacı değildir; doğum, ölüm, Void kaybı,
+bölünme, füzyon, göç, çatışma, salgın ve tükeniş olay günlüğünden türetilir.
+Önemli organizmaların biyografisi ve tür soy ağacı bu günlükten üretilebilir;
+her birey için sınırsız geçmiş kopyası tutulmaz.
+
+## 8. Test ve araştırma doktrini
+
+Dört kanıt sınıfı birbirinin yerine geçmez:
+
+1. **Birim/matematik:** SDF, normal, force profile, active store, Void sink,
+   determinism ve kamera formülü.
+2. **Entegrasyon/E2E:** save/load, renderer, event→sunum ayrımı, ayarlar ve
+   aday preview.
+3. **Long-horizon simülasyon:** çoklu seed, zaman serisi, perturbation/recovery,
+   Void kaybı ve faz kararlılığı.
+4. **Fiziksel cihaz/insan kabulü:** browser/masaüstü fare, Samsung ve Lenovo;
+   hareketin izlenebilirliği, kamera rahatlığı ve sunum.
+
+Coverage, FPS veya tek final snapshot ürün kabulü değildir.
+
+İstatistik iddiaları sürümlü seed korpusu kullanır. Her koşuda rastgele yeni
+tohum üretip “çoğu geçti” denmez; fresh-world üreticisinin benzersizlik
+sözleşmesi ile sabit X/Y fixture'ının determinism sözleşmesi ayrı test edilir.
+Ölçüm de ikiye ayrılır: kernel benchmark kuvvet/hash/field maliyetini, ürün
+benchmark tam world step + render sync + kamera + UI maliyetini ölçer.
+
+### Adım 2 neyi kanıtlar
+
+- Multi-band kuvvet profili ve asimetri matematiksel olarak doğrudur.
+- Spatial hash aktif particle çiftlerini kaçırmaz, inactive olanı indekslemez.
+- Aynı seed ve genom bit düzeyinde aynı sonucu verir.
+- Güvenli habitatta Void kuvveti kesinlikle sıfırdır.
+- Tidal fringe yalnız belirlenen dar bölgede etkilidir.
+- SDF crossing aynı tick'te geri dönüşsüz deactivation üretir; wrap/bounce yoktur.
+- 512 aktif particle birkaç simüle dakika kilitlenmeden çalışır.
+- Samsung ve Lenovo'da fizik aynı, yalnız sunum kalitesi ölçeklenebilir.
+
+Adım 2'nin zar veya organizma üretme zorunluluğu yoktur. Güvenilir substrate
+üretir.
+
+### Adım 3 tam genom keşfidir
+
+İlk production adayı generalized asymmetric multi-band kernel'dir. Araştırma
+harness'i kernel kimliğini genomda sürümler. Ana aile anlamlı faz sınırı
+üretemezse iki koşullu karşılaştırma açılabilir: daha serbest multi-lobe profil
+ve self-propulsion taşıyan active-particle modeli. Bunlar aynı anda üç production
+çekirdeği taşımak için değil, yanlış fizik ailesine daha fazla CPU yakmayı
+engelleyen falsification yollarıdır. Alternatif, aynı korpus ve metriklerle ana
+adaydan daha iyi kanıt vermeden seçilemez.
+
+Broad aşama önce adayları fazlara ayırır:
+
+- dead/stasis;
+- gas veya yapısız soup;
+- crystal/frozen;
+- tek dev yapıya collapse;
+- Void-loss dominated;
+- orbit dominated;
+- speed-cap chaos;
+- **dynamic structured**.
+
+Yalnız dynamic-structured çevresi refinement'a girer. Kısa otomatik filtre,
+ucuz başarısızları eler; morphology kararı vermez. İnsan gözüyle ilginç
+bulunmayan aday uzun koşuya sokulmaz. İnsan ön-elemesinden geçen az sayıda
+adayda çoklu seed ve 10–30 simüle dakikalık long-horizon kanıtı çalışır.
+
+Başlangıç bütçe hunisi şudur; rakamlar benchmark sonrası config'e kilitlenir:
+
+| Aşama                | Amaç                         | Başlangıç adayı                     |
+| -------------------- | ---------------------------- | ----------------------------------- |
+| Broad                | Faz haritası ve ucuz red     | 30–60 simüle saniye, 4–8 seed       |
+| Refinement           | Dynamic-structured komşuluğu | Birkaç simüle dakika, 16 seed adayı |
+| Development audition | İnsan gözüyle shortlist      | 3–8 tam-genom aday                  |
+| Qualification        | Geç çöküş + recovery         | 10–30 simüle dakika, 32+ seed adayı |
+
+Bu sayılar acceptance değildir; süre ve korpus ölçümle küçülebilir/büyüyebilir.
+Önce 2/6/24 saat koşmak reddedilmiştir. Ancak zaman serisi 30 dakikadan sonra
+başlayan bir çöküş gösterirse daha uzun release canary ayrıca gerekçelendirilir.
+
+Finalist ölçümleri en az şunları zaman serisi olarak ayırır:
+
+- hareket ve nearly-stalled payı;
+- komşuluk ve lokal yoğunluk;
+- cluster/compactness/anisotropy;
+- role-agnostic radial yapı ve type composition;
+- üyelik churn ve structure lifespan;
+- fragmentation/collapse;
+- orbit ve trajectory autocorrelation;
+- perturbation sonrası üyelik, biçim ve kompozisyon recovery;
+- Void dwell/loss ve fringe bağımlılığı;
+- seed robustness.
+
+“Ring çıktı” veya “hareket ediyor” başarı değildir. Kitlesel Void kaybı, kısa
+sürede stasis, tek blob, kalıcı soup, sonsuz orbit, hız tavanında kaos, yapısız
+random motion, değişmeyen frozen morphology ve seed çoğunluğunda ölüm kesin
+başarısızlıktır.
+
+İstenen ilk behavior family'leri core-like yoğunluk, membrane-like çeper,
+koherent hareket, deformasyon sonrası recovery, doğal kırılganlık, asimetriden
+doğan chase ve iki yapının kalıcı symbiosis ilişkisidir. Hepsini aynı genomun
+üretmesi şart değildir; yalnız renkli topak üretmek hiçbir aileyi karşılamaz.
+
+Arama candidate/seed işlerini deterministic work ID ile shard edebilir.
+Paralel sonuç aynı seri referansla bit düzeyinde eşit olmadan worker yolu
+güvenilir sayılmaz. Bütçe ölçülmeden aday sayısı büyütülmez.
+
+Qualification artefaktı clean source revision, config digest, corpus, tam
+PhysicsGenome, bütçe, zaman serisi, red nedenleri ve human-acceptance durumunu
+taşır. Dirty ağaç exploration için kullanılabilir ama production qualification
+üretemez. Qualified olmayan aday runtime URL/env ile production'a enjekte
+edilemez.
+
+Adım 3 ancak **technical gate + long-horizon + kullanıcı visual audition**
+birlikte geçtiğinde kapanır. Bütün genom production'a taşınır; matrix tek
+başına kopyalanmaz.
+
+### Adım 4 gözlemci değişmezliği
+
+Organizma identity tracker fizik çekirdeğinden bağımsız gözlemcidir.
+Tracker OFF ve ON koşuları aynı seed/genomda particle state'i bit düzeyinde
+aynı üretmelidir. Stable organism ID üye örtüşmesiyle sürer; split, merge ve
+geçici fragmentation olaydır. Adım 3 kapanmadan Adım 4 başlamaz.
+
+Anlık cluster doğum değildir. Yoğunluk, iç yapı ve üyelik sürekliliğini bir
+süre koruyan yapı organism candidate olur. Kareler arası eşleme üye örtüşmesi,
+merkez/ölçek yakınlığı ve kısa kayıp toleransını birlikte kullanır. Split'te
+ana süreklilik eski ID'yi taşır, yeni dal yeni ID alır; merge ve geçici
+fragmentation olay günlüğüne yazılır. Save/load identity sayacını ve açık
+eşleme durumunu korur. Tracker'ın çıktısı Adım 5'e kadar hiçbir particle
+kuvvetine geri beslenmez.
+
+## 9. Android ve fiziksel kabul
+
+VOL.LIFE masaüstü-önce geliştirilir; Android ilk gerçek dilimden itibaren smoke
+hedefidir. Kabuğa, kamera veya sunuma dokunan tur Samsung ve Lenovo'da açılır.
+`benchmark:device` referanstır, donanıma bağlı olduğu için local kalite kapısı
+değildir.
+
+Android'de kalite düşebilir, dünya kuralı düşemez. Particle LOD ve Void efekt
+yoğunluğu azalabilir; SDF, kuvvet, ölüm, olay ve organizma aynı kalır.
+
+`benchmark:device` bağlı cihazda cold start, FPS, bellek ve WebGL fallback
+ölçer; geliştiricinin masasındaki donanıma bağlı olduğu için kalite kapısı
+değil karşılaştırma kaydıdır. Android tek çekirdek başarımının masaüstünden
+kaç kat düşük olduğu ölçülmeden plan girdisi yapılamaz.
+
+Haptics resmi Tauri mobil eklentisi üzerinden uygulanır; native sürücü varsa
+UA tahminine göre web fallback seçilmez. `VIBRATE`, capability ve kullanılan
+impact/selection/notification yüzeyleri drift testinde korunur.
+
+Yön seçimi native `userPortrait` / `userLandscape` ailesidir ve varsayılan
+dikeydir. Tercih sayfa yüklenmeden uygulanır; multi-window veya platform
+kısıtı isteği reddederse UI gerçek yöne döner. Yön değişimi dünyayı ve kamera
+durumunu sıfırlamaz. Android'de DOM tam ekran düğmesi yoktur.
+
+## 10. FpsMeter
+
+`FpsMeter` yalnız FPS gösteren CORE HUD bileşenidir. Diagnostics ile aynı
+`FrameRateSampler`ı paylaşır; ikinci ölçüm algoritması açılmaz. En fazla
+250 ms'de bir yazıya çevrilir, simülasyon temposuna bağlanmaz, safe-area
+token'larını kullanır ve seçenek açıksa Sheet üstünde görünür.
+
+FPS yalnız performans ölçümüdür. Yaşam, morphology veya kamera ergonomisi
+kanıtı değildir.
+
+## 11. Mimari sınırlar ve dış araştırma
+
+Phaser 4.2.1 WebGL1 kullanır; repo WebGPU compute yüzeyi taşımaz. Simülasyon
+CPU'dadır. Yoğun render yolu ölçülmeden `SpriteGPULayer`a kilitlenmez; mevcut
+Graphics adaptörü 100 particle için yeterli, 5.000 için yetersiz ölçülmüştür.
+512 v2 kabulünde gerçek Chromium ve iki Android cihaz yeniden ölçülür.
+
+Eski Chromium ölçümü 100/1.000/5.000 particle için render CPU p50/p95'i
+sırasıyla yaklaşık 0,0/0,1; 0,1/0,2; 0,5/0,6 ms, toplam kare p50/p95'i
+16,66/16,67; 16,67/19,99; 73,32/91,67 ms verdi. Bu v2 sonucu değildir;
+yalnız mevcut Graphics yolunun yoğun ölçekte ölçeklenmediğini gösteren tabandır.
+`SpriteGPULayer` tek draw-call avantajı sunsa da her tick konum/renk tamponu
+güncelleyen LIFE yükünde otomatik kazanan değildir. Adım 11 CPU yazımı, GPU
+upload, frame p50/p95 ve görsel pariteyle en az bir alternatifle kıyaslar.
+
+Sistemler farklı sabit tempolarda koşabilir; kamera uzaklığı fizik temposunu
+değiştiremez:
+
+| Sistem              | Başlangıç bütçesi |
+| ------------------- | ----------------- |
+| Hareket/entegrasyon | 60 Hz             |
+| Pair force          | 30–60 Hz ölçülür  |
+| Algı/karar          | 15 Hz adayı       |
+| Field difüzyonu     | 10 Hz             |
+| Territory/grup      | 5 Hz adayı        |
+| Evrim               | 1 Hz adayı        |
+| Tarih               | Olay bazlı        |
+
+Taban tempo sabit bir `60` varsayımı değildir; `fixedStepMs` değerinden tam
+sayı Hz olarak türetilir. Alt sistem temposu tabanı tam bölmelidir. Dünya ve
+parçacık config'i dizi ayırmadan veya GPU kaynağı kurmadan önce sonluluk,
+aralık, tam sayı ve geometri sözleşmelerinden geçer.
+
+Headless `runtime/sim` Phaser import etmez. CORE'dan
+`SimulationClock`, matematik, lifecycle, UI ve save mekanizması alınır;
+oyuna özgü SoA, stateful RNG, SDF ve fizik VOL.LIFE'ta kalır.
+
+`SimulationClock` deterministik çekirdekte `partialStep: 'defer'` kullanır;
+değişken artık adım kare hızını fiziğe sokamaz. CORE'un nesne tabanlı
+`SpatialIndex`, `ObjectPool`, `StateMachine` ve entity katmanı SoA hot path'e
+wrapper/closure/hash maliyeti taşıdığı için zorla kullanılmaz. Benzer biçimde
+closure içinde kalan genel RNG yerine snapshot edilebilir LIFE RNG'si kullanılır
+ve sayı dizisinin CORE mulberry32 referansıyla paritesi testte korunur.
+
+Repoda production Worker/SharedArrayBuffer altyapısı bugün yoktur. Önce sistem
+tempoları ölçülür; yetmezse worker değerlendirilir. Araştırma candidate'larını
+paralel shard etmek ile production fiziğini worker'a taşımak ayrı kararlardır.
+
+Yeni tasarım dış sistemlerin denklemini kopyalamaz; doğrulanmış ilkelerini
+referans alır:
+
+- [Ventrella — Clusters](https://www.ventrella.com/Clusters/intro.html):
+  mesafeye bağlı, yönlü/asimetrik force-field profillerinin zengin yapı
+  üretebilmesi.
+- [Reynolds — Steering Behaviors for Autonomous Characters](https://www.red3d.com/cwr/papers/1999/gdc99steer.pdf):
+  hedef seçimi, steering ve locomotion katmanlarının ayrılması; containment'ın
+  çarpışma sonrası sekmeden farklı olması.
+- [Flow-Lenia](https://arxiv.org/abs/2212.07906): madde korunumu ve yerel
+  parametrelerin aynı dünyada çoklu yapı üretimi için tasarım aracı olması.
+- [Primordial Particle Systems](https://www.nature.com/articles/srep37969):
+  basit yerel kurallar, yoğunluk ve hareketin büyüyen/iyileşen/çoğalan
+  yaşam-benzeri yapıların faz davranışıyla birlikte incelenmesi.
+
+Bu kaynaklar VOL.LIFE'ın Void, çekirdek, koloni veya tehdit kararlarını
+kanıtlamaz; yalnız fizik ve davranış ayrımlarına emsal oluşturur.
 
 ## 12. Klasörleme
 
-Repo konvansiyonu `app` / `config` / `runtime` / `i18n`'dir (bkz. `vol-hell`,
-`vol-arachnid`). VOL.LIFE bunu izler; ayrı bir hiyerarşi icat etmez.
+Repo konvansiyonu korunur; ayrı `life-lab` veya yeni top-level hiyerarşi
+kurulmaz:
 
 ```
 games/vol-life/
 ├── src/
-│   ├── app/          bootstrap
-│   ├── config/       dünya, parçacık ve grafik ölçüleri — VERİ
+│   ├── app/          bootstrap, kalıcılık ve platform bağları
+│   ├── config/       habitat, fizik, grafik ve tempo verisi
 │   ├── i18n/         tr.json + en.json
 │   └── runtime/
-│       ├── sim/      alan + parçacık simülasyonu — Phaser'ı İMPORT ETMEZ
-│       ├── render/   alan ve parçacık Phaser adaptörleri
-│       ├── scene/    LifeScene — yalnız bağlama
-│       └── ui/       kabuk: LifeHud, LifeExitPrompt
-├── src-tauri/        masaüstü ve Android kabuğu (com.volstudio.life)
-└── tests/            src ağacını AYNALAR
+│       ├── sim/      SDF, store, hash, fizik, Void — Phaser YOK
+│       ├── render/   habitat, Void, particle ve ölüm sunumu
+│       ├── scene/    yalnız bağlama
+│       └── ui/       HUD ve çekmece
+├── scripts/          headless araştırma/benchmark
+├── src-tauri/        masaüstü ve Android kabuğu
+└── tests/            src ve script sözleşmelerini aynalar
 ```
 
-Tek kural pazarlıksızdır: **`runtime/sim/` Phaser'ı import etmez.** Mantık
-sahnede biriktiğinde headless ölçüm ve kapsam ikisi birden imkânsız hâle gelir.
-Bu sınır `simBoundary.test.ts` ile kapılıdır.
+Sorumluluklar küçük dosyalara ayrılır. `WorldDomain` SDF'nin, `VoidSink`
+deactivation ve rezervuar yazımının, `PairForceKernel` force profile'ın,
+`InitialMatterSeeder` başlangıç dağılımının sahibidir. Renderer fizik kuralı
+taşımaz.
 
 ## 13. İnşa sırası
 
-Sıra bir tercih değil, iptal edilen denemenin doğrudan tersidir: orada üç faz
-altyapı kuruldu ve ekranda hâlâ içerik yoktu. Kural şudur — **önce anlam, sonra
-ölçek** ve **her adımın sonunda gerçek tarayıcıda görüntü.**
+| #   | Adım                                        | Bittiğinde ekranda ne var        |
+| --- | ------------------------------------------- | -------------------------------- |
+| 0   | Zemin — paket, config, RNG, kabuk           | Kanıtlı boş dünya                |
+| 1   | Dünya substratı — alanlar ve kalıcılık      | Değişen çevre                    |
+| 2   | **Particle Substrate v2**                   | 512 madde, habitat ve Void       |
+| 3   | **Morphology Discovery v2**                 | Hareketli, toparlanan yapı       |
+| 4   | Organizma kimliği                           | Takip edilebilen bir canlı       |
+| 5   | Enerji, nutrient, detritus ve yaşam döngüsü | Doğum/ölüm geri dönüşümü         |
+| 6   | Algı, utility, nucleus ve locomotion        | Anlamlı yönelim ve Void korkusu  |
+| 7   | Sunum, katmanlar ve olay aklı               | Keşfedilebilir dünya             |
+| 8   | Olay günlüğü ve tekrar                      | Karşılaştırılabilir deney        |
+| 9   | Tehdit, koloni, territory ve çatışma        | Ekolojik hikâye                  |
+| 10  | Kalıtım, mutasyon ve seçilim                | Zamanla değişen türler           |
+| 11  | Ölçek ve worker/render yolu                 | Aynı kurallarla daha büyük dünya |
 
-| #   | Adım                                                                 | Bittiğinde ekranda ne var          |
-| --- | -------------------------------------------------------------------- | ---------------------------------- |
-| 0   | **Zemin** — paket, kapılar, config, deterministik RNG                | Boş tuval; kablolar kanıtlı        |
-| 1   | **Dünya substratı** — alanlar, difüzyon, besin yenilenmesi, kamera   | Gezilebilen, yavaşça değişen alan  |
-| 2   | **Parçacık yaşamı** — SoA, hash, lokal kuvvet, uzun-vade canary      | Donmayan, duvara dayanmayan zemin  |
-| 3   | **Tam-config araması** — broad/refinement/finalist, çoklu metrik     | Değişen, toparlanan morphology     |
-| 4   | **Organizma kimliği** — üye örtüşmesiyle kareler arası eşleştirme    | Takip edilebilen BİR organizma     |
-| 5   | **Yaşam döngüsü** — enerji, tüketim, büyüme, dağılarak ölüm, bölünme | Doğum, bölünme ve ölüm İZLENEBİLİR |
-| 6   | **Akıl** — algı, ihtiyaç, utility karar, hafıza                      | "Bu niye oraya gitti?" sorusu      |
-| 7   | **Sunum** — seçim paneli, olay bildirimi, gözlem modları             | Oyuncu keşfedebiliyor              |
-| 8   | **Kalıcılık** — anlık görüntü, olay günlüğü, tekrar ve tekrar hızı   | Deney tekrarlanabiliyor            |
-| 9   | **Toplum ve tehdit** — grup, territory, yırtıcı, çatışma             | Dünyada hikâye çıkıyor             |
-| 10  | **Evrim** — kalıtım, mutasyon, seçilim                               | Tür zamanla değişiyor              |
-| 11  | **Ölçek** — render yolu ve Worker kararı, nüfusu §1'in tavanına aç   | Aynı dünya, daha kalabalık         |
+### Adım 5 — yaşam döngüsü sözleşmesi
 
-Seçenekler düğmesi, ekran yönü ve görüntü kipi bir adım değil kabuk işidir.
+Enerji, nutrient, detritus ve external reservoir ilk kez burada kapalı bir
+ekolojik zincire bağlanır. Zar geçişi, maintenance bedeli, büyüme için serbest
+madde alımı, açlık, habitat içi dağılma ve decomposition ayrı olaylardır.
+Bölünme önce başarılı Adım 3 morphology'sinin doğal kararlılık kırılması olarak
+aranır; çıkmıyorsa enerji/madde eşiğine bağlı en küçük müdahale ayrı deneyle
+kanıtlanır. Eklenen hiçbir kaynak kuvveti Adım 3 morphology korpusunu bozmaz.
 
-**Adım 3 bir karar noktasıdır:** matris araması bir tarama altyapısı, tek kare
-küme tespiti ve "ilginç"in çok bileşenli bir metriği demektir; §8'deki metrik
-sorusu orada cevaplanmalıdır. Metrik zar-çekirdek yapısını ölçmek için kümeyi
-tanımak zorundadır; tek kare küme tespiti bu yüzden Adım 3'tedir, Adım 4 ona
-yalnız kareler arası kimliği ekler.
+Matter vent habitatın yerel, görünür ve sınırlı sürecidir. Reservoir hesabını
+okur ama aktif population hedefi okuyamaz. Vent kapanırsa dünya tükenebilir;
+açıkken de sonsuz ve bedelsiz madde kaynağı olamaz.
 
-Rapor bağlı zinciri yapı saymaz; role-agnostic geometri ile type-role analizi
-ayrıdır. Kompaktlık/anisotropy, tekil/durmuş pay, duvar desteği, karşıt yörünge,
-trajectory ve üye churn zaman serisidir. Bozulma sonrası üyelik, kompozisyon,
-radial profil, centroid/size ve şekil ayrı toparlanır.
+### Adım 6 — akıl ve beden sözleşmesi
 
-Ölçek EN SONA bırakılır. Nüfusu erken açmak, iptal edilen denemede ekranı halıya
-çevirip birey algısını yok etti; ölçek bir sonuçtur (§1).
+İhtiyaçlar `survival`, `food`, `rest`, `reproduction`, `curiosity`, `hunt` gibi
+ayrı utility girdileridir; tek davranış enum'u değildir. Algı yalnız yakındaki
+alan, iz, canlı ve SDF örneklerini verir. Kusurlu hafıza bu örnekleri özetler;
+nucleus öncelik/polarizasyon üretir; dağıtık aktüatörler bedeni hareket ettirir.
 
-## 14. Önceki denemenin dersleri
+Void avoidance, pursuit, evasion, separation/cohesion ve yerel defense aynı
+steering katmanında yarışabilir. Tail wave, burst, fatigue ve hasar gerçek
+particle üyeliğine/enerjiye bağlıdır. Hareket testleri hedefe en kısa yol kadar
+tereddüt, aşım, düzeltme ve akışla sürüklenmenin okunabilirliğini de değerlendirir.
 
-İptal edilen deneme üç faz altyapı kurdu ve ekranda hâlâ içerik yoktu. En pahalı
-dersler:
+### Adım 7 — keşfedilebilir sunum sözleşmesi
 
-1. **Çalışan uygulamaya bakılmadı.** Ölçülebilen her şey cilalandı, yalnız
-   BAKILARAK anlaşılan şey ihmal edildi. Parçacıkların 32 kat büyük çizildiği
-   hata on saniyede görülebilirdi. **Her fazın sonunda gerçek tarayıcıda
-   görüntü.**
-2. **Fizik bakış açısına bağlanmamalı.** "Kameraya yakın ajanlar çift-yönlü
-   kuvvet, uzaktakiler alan gradyanı" tasarımı dünyanın kuralını kameraya
-   bağladı ve ekranda sert bir dikdörtgen olarak göründü. Kamera DETAY
-   SEVİYESİNİ belirleyebilir, FİZİĞİ belirleyemez.
-3. **Metrik gerçekten görmek isteneni ölçmeli.** `maxCellOccupancy` yapının
-   varlığını ölçmüyordu; ondan çıkarılan "kazanç 64+ yapıyı yok eder" sonucunu
-   görüntü çürüttü. Skaler bir metrikten morfoloji sonucu çıkarmak hataydı.
-4. **Tür matrisi elle yazıldı** (bkz. §3).
-5. **Kaynak alanını hiçbir tür yazmıyordu** ama üç tür onu takip ediyordu;
-   nüfusun yarısı sıfır gradyan izliyordu. Kaynak dünyanın VERİSİDİR ve açılışta
-   tohumlanmalıdır.
-6. **Alan kuvvetleri morfolojiyi bozabilir.** Referans morfolojiler saf
-   çift-yönlü kuvvetten gelir; büyük ölçekli sürükleme zar gibi hassas yapıları
-   dağıtır. Ekoloji, morfoloji oturduktan SONRA açılmalıdır.
-7. **Yoğunluk hedefe ters çalıştı** (bkz. §1).
-8. **`maxStepsPerFrame` ölüm sarmalı üretir.** 5'te kare bütçesi aşıldıkça saat
-   daha çok telafi adımı istiyor, o da kareyi uzatıyordu. `config/world.ts`
-   bunu 2'de tutar ve bir test sayıyı kilitler.
-9. **Tema açıkça yüklenir.** Transitif CSS yan etkisine güvenilmez.
-10. **E2E portları ayrıdır.** VOL.LIFE 5182, VOL.UI 5181 kullanır.
+SelectionInfoPanel, olay toast'ları, EventLog, katman görünümü, semantic LOD ve
+Observe/Follow/Free kamera ilişkisi açılır. Normal dünya sessiz ve karanlık
+kalır; nutrient, light, temperature, disturbance, detritus, territory,
+infection ve history aynı anda üst üste bindirilmez. Minimap bütün habitatı
+özetler ama ayrı bir fizik veya gizli global organizma bilgisi üretmez.
 
-## 15. Açıkça kapsam DIŞI
+Sunum aklı olayları önerir, yönetmez. Kullanıcı ilk girdide kamerayı geri alır.
+Habitat ölümü, Void kaybı, beslenme, enfeksiyon ve burst açıklama okumadan
+ayırt edilebilir; erişilebilirlik/reduced-motion aynı olay anlamını korur.
 
-- **Çalışma zamanı müzik/ses sentezi.** `devtools/audio-synth` bir devtool'dur;
-  `node:fs` ve FFmpeg kullanır, WebAudio kullanmaz ve tarayıcıda koşmaz. AGENTS
-  Kural 4 zaten bir oyunun çalışma zamanının devtool import etmesini yasaklar.
-  `core/docs/music-engine.md` kararı açıkça yazar: **"Runtime'da sentez
-  YAPILMAZ."** Motor yalnız önceden üretilmiş stem'leri çalar. Dünyanın kendi
-  müziğini ürettiği bir tasarım bu repoda mümkün değildir ve planlanmaz.
-- **WebGPU / compute shader.** Phaser 4.2.1 WebGL 1 kullanır (§11).
-- **LLM ajanlar.** Bu ölçekte doğru araç değil.
-- **Ekonomi, yönetim, dil, din, teknoloji ağacı.** Toplum katmanı grup,
-  territory, yerleşim ve çatışma seviyesinde tutulur.
-- **Gerçek akışkan dinamiği, hücre kimyası, insan seviyesi medeniyet.**
+### Adım 8 — deney, kayıt ve tarih sözleşmesi
+
+Snapshot “şimdi”, replay “buraya nasıl geldik” sorusuna cevap verir. Canlı
+dünya hızlandırılmaz; pause/0.5×/2×/4× yalnız deterministik replay'de bulunur.
+Kullanıcı aynı seed ve komut dizisini çatallayıp tek müdahaleyi değiştirerek
+deney karşılaştırabilir. Event log ilkler, doğum/ölüm, split/merge, göç,
+çatışma, salgın ve extinction'dan biyografi ile soy ağacı türetebilir.
+
+### Adım 9 — toplum, tehdit ve coğrafya sözleşmesi
+
+Grup yakınlık listesi, koloni ise süreklilik + ortak kaynak + yerel tolerans ve
+sinyaldir. Territory influence zamanla oluşur ve solar. Beş tehdit ailesi aynı
+madde, enerji, hasar, Void ve identity yasalarına tabidir; boss spawn, uzaktan
+soyut HP silme veya görünmez özel koruma yoktur. Avlanma temas, breach, koparma,
+yakalama ve madde katılımıyla görünür olur.
+
+Koloni savunması, rakip yırtıcı, parazit ve koloni kırıcı uzun zincir üretmeli;
+her saniye her yerde çatışma üretmemelidir. Savaş sonrası nutrient depletion,
+detritus, disturbance, infection ve territory memory coğrafyada kalır.
+
+### Adım 10 — evrim sözleşmesi
+
+Genom fizik yasasının kendisini birey başına değiştirmez; kalıtılabilir fenotip
+parametreleri morphology'nin izin verdiği güvenli aralıkta yaşar. Kalıtım,
+mutasyon ve seçilim; enerji maliyeti, çevre, avlanma, hastalık ve Void riskiyle
+birlikte çalışır. Renk, cohesion, membrane, algı, risk toleransı, locomotor
+anatomi ve metabolizma zamanla kayabilir. “Predator” veya “defender” etiketi
+spawn edilmez; gözlenen özelliklerden türetilir.
+
+Evrim ağacı event log ve identity sürekliliğinden çıkar. Mutasyon canlıyı tek
+tick'te başka sınıfa çevirmez; nesiller boyunca okunabilir değişim hedeflenir.
+
+### Adım 11 — ölçek sözleşmesi
+
+Başarılı fizik ve yaşam zinciri değişmeden nüfus açılır. Sabit yoğunluk
+benchmark'ı O(n²) sızıntısını, ürün benchmark'ı render/upload/UI maliyetini,
+cihaz ölçümü termal ve bellek davranışını ayırır. Tempo bütçesi, render backend
+ve worker yolu sırayla değerlendirilir; kamera uzaklığı hiçbirini seçmez.
+
+Her adım tarayıcı görüntüsüyle kapanır. Kamera ayrı P0 kabulüdür ve Adım 2
+sunumuyla birlikte geçmelidir. Adım 3 geçmeden identity, enerji, nucleus,
+predator veya virüs kodlanmaz; gelecekteki kararlar erken script edilmez.
+
+## 14. Negatif deneylerden çıkarılan dersler
+
+1. Görüntüye bakmadan coverage ve FPS ile ürün kabulü yapılamaz.
+2. Fizik kamera/LOD'a bağlanamaz.
+3. Tek skaler metrik morphology'yi temsil edemez.
+4. Elle yazılmış matrix ürün adayı değildir.
+5. Seed robustness ortalamayla gizlenemez.
+6. Kısa hareket uzun ömürlü canlılık değildir.
+7. Dikdörtgen duvar morphology için sistemik attractor/destek üretti.
+8. 100 parçacık lokal etkileşimi seed'ler arasında sürdüremedi.
+9. Triangular tek-lobe kuvvet ailesi tam-config aramada qualified aday üretmedi.
+10. Qualified olmayan Pareto adayı production preview değildir.
+11. Dirty-source artefakt exploration olabilir, qualification olamaz.
+12. Otomatik metrik insanın “uyuz gibi hareket ediyor” kararını geçersiz kılamaz.
+13. Başarısız araştırma aracına daha çok CPU vermek fizik uzayını düzeltmez.
+14. Field/ekoloji kuvvetleri saf morphology kanıtlanmadan açılmaz.
+
+Eski commit ve artefaktlar git geçmişinde negatif kanıttır; güncel runtime
+sözleşmesi veya gönderilen candidate catalog'u değildir.
+
+## 15. Açıkça kapsam dışı
+
+- Runtime müzik/ses sentezi; shipped sesler önceden üretilir.
+- WebGPU/compute shader; mevcut Phaser yüzeyi WebGL1'dir.
+- LLM ajanlar.
+- Kameraya göre değişen fizik.
+- Görünmez global inward/outward border kuvveti.
+- Rigid sprite yırtıcı, boss spawn'ı ve tek sayılık gerçek HP.
+- Otomatik population tamamlama.
+- Gerçek Navier–Stokes, ayrıntılı hücre kimyası ve insan seviyesi medeniyet.
 
 ## 16. Bugünkü durum
 
-**Adım 2–3 recovery/proof-of-life devri** (2026-09-14):
+2026-09-14 itibarıyla:
 
-- V3 arama tamamlandı (1.024 broad → 32 refinement → 4 finalist × 5 seed × 15 dk). Adaylar: `morphology-candidates-v3.json`, detay: `morphology-search-v3.json`.
-- Proof-of-life canary: Üretim seed'i geçti ancak 5 tohum geneli tam dayanıklılık sağlanamadı (`qualified: []`).
-- Eşik manipülasyonu yapılmadı; Adım 4 (organizma kimliği) kural gereği dürüstçe blokelidir.
-- `ParticleStore`, counting-sort spatial hash, impulse duvar teması ve ikili snapshot mimarisi yeşildir.
-- Alt kalite kapıları (`contract`, `format-check`, `typecheck`, `lint`, `lint-css`, `test`, `coverage`, `rust`, `build`) eksiksiz geçmektedir.
+- Paket kabuğu, i18n, Sheet, FPS, haptics, orientation ve persistence çalışır.
+- FieldSet, fixed-step, stateful RNG, world metadata, SoA store, interpolation
+  ve counting-sort spatial hash korunacak temeldir.
+- Alan temposu `fixedStepMs`den türetilir; config ve snapshot doğrulaması tek
+  girişte tamamlanır, restore atomiktir. Yarım runtime kurulumu ile sahne,
+  autosave ve çıkış yaşam döngüleri kaynaklarını idempotent toplar.
+- Mevcut production runtime hâlâ 100 parçacıklı triangular fizik ve
+  dikdörtgen impulse sınırı çalıştırır; yalnız geçici negatif baseline'dır.
+- V3 deneyinde 1.024 broad adaydan 4 finalist çıktı, **qualified aday çıkmadı**.
+- Eski production proof-of-life korpusunda 5 seed'in yalnız biri geçti.
+- Qualified olmayan v3 catalog/runtime enjeksiyonu ve geçersiz proof/search
+  komutları güncel ağaçtan kaldırıldı; ham artefaktlar git geçmişindedir.
+- Particle Substrate v2, organik HabitatSDF, active/inactive store, Void,
+  generalized multi-band kernel ve 512 seeding henüz uygulanmadı.
+- Kamera özellikleri arttı fakat kullanıcı ergonomi kabulü hâlâ FAIL'dir.
+- Adım 3 ve dolayısıyla Adım 4 kesin blokelidir.
 
 ## 17. Ölçülmemiş varsayımlar
 
-Açık işler TODO'dadır. Burada yalnız ölçülene kadar üzerine plan kurulmayacak varsayımlar durur:
+Aşağıdakiler ölçülmeden karar veya tamamlanmış iş sayılmaz:
 
-- Android tek çekirdek başarımının masaüstünden ~3–5× düşük olduğu (§9).
-- Gerçek GPU'da kare hızı (headless Chromium donanım kare hızını temsil etmez).
-- `SpriteGPULayer`ın her adım CPU'da güncellenen içerikle başarımı (§11).
+- 512 particle'ın hedef cihazlardaki gerçek CPU/render bütçesi.
+- Habitat şekli, fringe genişliği ve tidal stress'in morphology'yi bozmayan
+  aralığı.
+- Kamera Void margin'i, zoom limitleri ve modality bazlı momentum değerleri.
+- Multi-band genomun boyutu ile arama bütçesi arasındaki denge.
+- Deterministik worker shard'larının seri referansla maliyet kazancı.
+- Matter reservoir dönüş hızının extinction ve taşıma kapasitesine etkisi.
+- Particle glyph/semantic LOD'un okunabilirlik ve GPU maliyeti.

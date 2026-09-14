@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { resolveMaxStepsForSpeed, worldConfig } from '@/config/world';
+import {
+  resolveMaxStepsForSpeed,
+  resolveSimulationHz,
+  validateWorldConfig,
+  worldConfig,
+} from '@/config/world';
 import { lifeGraphicsConfig } from '@/config/graphics';
 
 describe('worldConfig', () => {
@@ -32,6 +37,30 @@ describe('worldConfig', () => {
     expect(worldConfig.fieldResolution).toBe(256);
     expect(worldConfig.fieldHz).toBe(10);
     expect(worldConfig.fieldUpdateBands).toBe(1);
+  });
+
+  it('sabit adımdan tam sayı simülasyon temposunu türetir', () => {
+    expect(resolveSimulationHz(1000 / 60)).toBe(60);
+    expect(resolveSimulationHz(1000 / 30)).toBe(30);
+    expect(() => resolveSimulationHz(17)).toThrow(RangeError);
+    expect(() => resolveSimulationHz(NaN)).toThrow(RangeError);
+    expect(() => resolveSimulationHz(Number.MIN_VALUE)).toThrow(RangeError);
+    expect(() => resolveSimulationHz(Number.MAX_VALUE)).toThrow(RangeError);
+  });
+
+  it.each([
+    ['fixedStepMs', 0],
+    ['maxStepsPerFrame', 1.5],
+    ['fieldResolution', 30],
+    ['fieldHz', 7],
+    ['fieldUpdateBands', 3],
+    ['lightSourceCount', 0],
+    ['lightSourceRadiusUnits', NaN],
+    ['lightSourceDriftUnits', -1],
+    ['nutrientDiffusion', 0.3],
+    ['nutrientRenewal', 1.1],
+  ] as const)('geçersiz %s değerini dünya kurulmadan reddeder', (key, value) => {
+    expect(() => validateWorldConfig({ ...worldConfig, [key]: value })).toThrow(RangeError);
   });
 
   it('resolveMaxStepsForSpeed hız çarpanına göre tavanı güvenle ölçekler', () => {

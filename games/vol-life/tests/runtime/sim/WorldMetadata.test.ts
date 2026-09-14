@@ -2,15 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { createExplicitWorldMetadata, createFreshWorldMetadata } from '@/runtime/sim/WorldMetadata';
 
 describe('WorldMetadata', () => {
-  it('aynı entropy örneği arka arkaya gelse bile iki yeni dünyaya farklı seed verir', () => {
+  it('aynı entropy örneği tekrarlansa bile her yeni dünyaya farklı seed verir', () => {
     const source = { nextUint32: () => 42, now: () => 1000 };
 
     const first = createFreshWorldMetadata(source);
     const second = createFreshWorldMetadata(source);
+    const third = createFreshWorldMetadata(source);
 
     expect(first.seed).toBe(42);
     expect(second.seed).toBe(43);
+    expect(third.seed).toBe(44);
     expect(second.id).not.toBe(first.id);
+    expect(third.id).not.toBe(second.id);
   });
 
   it('explicit seed ile tekrar üretilebilir metadata kurar', () => {

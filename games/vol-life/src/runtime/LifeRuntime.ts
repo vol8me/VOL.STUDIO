@@ -72,47 +72,50 @@ export class LifeRuntime {
       dependencies.initialSnapshot?.metadata ??
       dependencies.worldMetadata ??
       createFreshWorldMetadata();
-    this.world = dependencies.world ?? new LifeWorld(config, metadata, activeParticleConfig);
-    if (dependencies.initialSnapshot) this.world.restore(dependencies.initialSnapshot);
-    this.renderer =
-      dependencies.renderer ?? new FieldRenderer(scene, this.world.fields, config.boundsUnits);
-    this.boundaryRenderer =
-      dependencies.boundaryRenderer ??
-      new WorldBoundaryRenderer(
-        scene,
-        config.boundsUnits,
-        {
-          collisionInsetUnits: config.particleCollisionInsetUnits,
-          preferredThicknessUnits: lifeGraphicsConfig.boundaryPreferredThicknessUnits,
-          minScreenPixels: lifeGraphicsConfig.boundaryMinScreenPixels,
-          maxScreenPixels: lifeGraphicsConfig.boundaryMaxScreenPixels,
-          color: lifeGraphicsConfig.boundaryColor,
-        },
-        scene.cameras.main,
+    try {
+      this.world = dependencies.world ?? new LifeWorld(config, metadata, activeParticleConfig);
+      if (dependencies.initialSnapshot) this.world.restore(dependencies.initialSnapshot);
+      this.renderer = this.scope.addDestroyable(
+        dependencies.renderer ?? new FieldRenderer(scene, this.world.fields, config.boundsUnits),
       );
-    this.particleRenderer =
-      dependencies.particleRenderer ??
-      new ParticleRenderer(scene, activeParticleConfig.radiusUnits);
-    this.cameraController =
-      dependencies.cameraController ??
-      new WorldCameraController(scene.game.canvas, scene.cameras.main, {
-        bounds: config.boundsUnits,
-        maxZoomFactor: lifeGraphicsConfig.cameraMaxZoomFactor,
-        initialZoomFactor: 1.04,
+      this.boundaryRenderer = this.scope.addDestroyable(
+        dependencies.boundaryRenderer ??
+          new WorldBoundaryRenderer(
+            scene,
+            config.boundsUnits,
+            {
+              collisionInsetUnits: config.particleCollisionInsetUnits,
+              preferredThicknessUnits: lifeGraphicsConfig.boundaryPreferredThicknessUnits,
+              minScreenPixels: lifeGraphicsConfig.boundaryMinScreenPixels,
+              maxScreenPixels: lifeGraphicsConfig.boundaryMaxScreenPixels,
+              color: lifeGraphicsConfig.boundaryColor,
+            },
+            scene.cameras.main,
+          ),
+      );
+      this.particleRenderer = this.scope.addDestroyable(
+        dependencies.particleRenderer ??
+          new ParticleRenderer(scene, activeParticleConfig.radiusUnits),
+      );
+      this.cameraController = this.scope.addDestroyable(
+        dependencies.cameraController ??
+          new WorldCameraController(scene.game.canvas, scene.cameras.main, {
+            bounds: config.boundsUnits,
+            maxZoomFactor: lifeGraphicsConfig.cameraMaxZoomFactor,
+            initialZoomFactor: 1.04,
+          }),
+      );
+      this.clock = new SimulationClock({
+        fixedStepMs: config.fixedStepMs,
+        maxStepsPerFrame: config.maxStepsPerFrame,
+        partialStep: 'defer',
       });
-    this.clock = new SimulationClock({
-      fixedStepMs: config.fixedStepMs,
-      maxStepsPerFrame: config.maxStepsPerFrame,
-      partialStep: 'defer',
-    });
-    this.scope.addDestroyables(
-      this.renderer,
-      this.boundaryRenderer,
-      this.particleRenderer,
-      this.cameraController,
-    );
-    this.renderer.render(this.world.fields);
-    this.particleRenderer.render(this.world.particles, 1);
+      this.renderer.render(this.world.fields);
+      this.particleRenderer.render(this.world.particles, 1);
+    } catch (error) {
+      this.scope.dispose();
+      throw error;
+    }
   }
 
   update(deltaMs: number): SimulationClockFrame {

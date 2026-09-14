@@ -10,11 +10,13 @@ Monorepo geneli için [kök README](../../README.md).
 
 ## Durum
 
-Paket **Adım 2–3 proof-of-life recovery** düzeyindedir. SoA depo,
-counting-sort spatial hash, alanlar, world-instance seed ve snapshot/restore
-deterministiktir; Phaser yalnız render adaptöründedir. Production fizik 15
-dakikalık çok-seed canary ve tam-config morphology aramasıyla yeniden
-kanıtlanmaktadır. Henüz organizma, enerji, yaşam döngüsü ya da AI yoktur.
+Paket **Particle Substrate v2 / Morphology Discovery v2 hazırlığı**
+düzeyindedir. SoA depo, counting-sort spatial hash, alanlar, world-instance
+seed ve snapshot/restore korunur; Phaser yalnız render adaptöründedir. Eski
+100 parçacıklı triangular fizik ve dikdörtgen çarpışma duvarı başarısız negatif
+baseline'dır, ürün kabulü değildir. Yeni 512 aktif madde, organik habitat ve
+Void sözleşmesi henüz uygulanmamıştır. Organizma, enerji, yaşam döngüsü ve akıl
+katmanı yoktur.
 
 Kabukta seçenekler çekmecesi (dil, kare hızı, dokunsal geri bildirim, ekran
 yönü, masaüstünde görüntü kipi), native Android haptics, Android çıkış onayı,
@@ -31,17 +33,7 @@ pnpm --filter @volstudio/vol-life tauri:dev             # masaüstü kabuğu
 pnpm --filter @volstudio/vol-life tauri:android:build   # Android APK
 pnpm --filter @volstudio/vol-life benchmark:particles  # çekirdek p50/p95
 pnpm --filter @volstudio/vol-life benchmark:particle-render # Chromium WebGL
-pnpm --filter @volstudio/vol-life search:morphology         # sürümlü arama artifact'i
-pnpm --filter @volstudio/vol-life proof:life                # 5 seed × 15 dakika canary
-pnpm --filter @volstudio/vol-life compare:density           # yoğunluk faz deneyi
 ```
-
-Arama finalistleri
-`?morphologyCandidate=<id>` ile `public/generated/morphology-candidates-v3.json`
-içindeki aynı tam config üzerinden açılır; production config sessizce değişmez.
-Android audition APK'sı aynı yolu
-`VITE_LIFE_MORPHOLOGY_CANDIDATE=<id> pnpm --filter @volstudio/vol-life tauri:android:build`
-ile bake eder.
 
 Önizleme :5182'dedir. 5181 KULLANILMAZ — `devtools/vol-ui` e2e varsayılanıdır ve
 çakışma `pnpm high`ı düşürür. Tüm tarifler `pnpm exec just --list`.

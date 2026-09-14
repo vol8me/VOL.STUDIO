@@ -82,11 +82,6 @@ bundle:
 scaling:
     node scripts/scaling-report.mjs
 
-# VOL.LIFE Adım 4 blokajı. Genel push kapısında değildir; fizik adayı değişince
-# production config'i 5 seed × 15 simüle dakika sınar.
-life-proof:
-    pnpm --filter @volstudio/vol-life proof:life -- --gate
-
 # Gerçek tarayıcı kritik akışları (Chromium). jsdom testleri font yüklemesini,
 # gerçek yerleşimi ve bundle içeriğini göremez; bu kapı o boşluğu kapatır.
 #

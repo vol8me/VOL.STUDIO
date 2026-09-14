@@ -27,6 +27,7 @@ export class LifeExitPrompt {
   private readonly abort = new AbortController();
   private readonly beforeClose: (() => Promise<void>) | null;
   private open = false;
+  private destroyed = false;
 
   constructor(options: LifeExitPromptOptions) {
     // Confirm doğrudan oyun parent'ına eklenirse `.vol-ui-root`un mobil metin
@@ -40,11 +41,13 @@ export class LifeExitPrompt {
 
   /** Geri hareketini karşılar; olay her zaman TÜKETİLİR (uygulama kapanmaz). */
   request(): boolean {
-    if (!this.open) void this.ask();
+    if (!this.destroyed && !this.open) void this.ask();
     return true;
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     this.scope.dispose();
   }
 
@@ -59,13 +62,14 @@ export class LifeExitPrompt {
         container: this.uiRoot.element,
         signal: this.abort.signal,
       });
-      if (confirmed) {
+      if (confirmed && !this.destroyed) {
         try {
           await this.beforeClose?.();
         } catch (error) {
           console.error('[VOL.LIFE] Son dünya kaydedilemedi; uygulama açık tutuluyor:', error);
           return;
         }
+        if (this.destroyed) return;
         try {
           await this.windowAdapter.close();
         } catch (error) {

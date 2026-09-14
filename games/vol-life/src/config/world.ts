@@ -48,6 +48,64 @@ export const worldConfig: WorldConfig = {
   nutrientRenewal: 0.018,
 };
 
+export function resolveSimulationHz(fixedStepMs: number): number {
+  const hz = 1000 / fixedStepMs;
+  const rounded = Math.round(hz);
+  if (
+    !(fixedStepMs > 0) ||
+    !Number.isFinite(fixedStepMs) ||
+    !Number.isSafeInteger(rounded) ||
+    rounded < 1 ||
+    Math.abs(hz - rounded) > 1e-9
+  ) {
+    throw new RangeError(`Sabit adım tam sayı bir simülasyon temposu üretmeli: ${fixedStepMs}`);
+  }
+  return rounded;
+}
+
+export function validateWorldConfig(config: WorldConfig): void {
+  const simulationHz = resolveSimulationHz(config.fixedStepMs);
+  if (!Number.isInteger(config.maxStepsPerFrame) || config.maxStepsPerFrame < 1) {
+    throw new RangeError('Kare başına adım tavanı pozitif bir tam sayı olmalı.');
+  }
+  if (
+    !Number.isInteger(config.fieldResolution) ||
+    config.fieldResolution < 2 ||
+    (config.fieldResolution & (config.fieldResolution - 1)) !== 0
+  ) {
+    throw new RangeError('Alan çözünürlüğü en az iki ve ikinin kuvveti olmalı.');
+  }
+  if (
+    !Number.isInteger(config.fieldHz) ||
+    config.fieldHz < 1 ||
+    simulationHz % config.fieldHz !== 0
+  ) {
+    throw new RangeError('Alan temposu simülasyon temposunu tam bölmeli.');
+  }
+  if (
+    !Number.isInteger(config.fieldUpdateBands) ||
+    config.fieldUpdateBands < 1 ||
+    config.fieldResolution % config.fieldUpdateBands !== 0
+  ) {
+    throw new RangeError('Alan bant sayısı çözünürlüğü tam bölmeli.');
+  }
+  if (!Number.isInteger(config.lightSourceCount) || config.lightSourceCount < 1) {
+    throw new RangeError('Işık kaynağı sayısı pozitif bir tam sayı olmalı.');
+  }
+  if (!(config.lightSourceRadiusUnits > 0) || !Number.isFinite(config.lightSourceRadiusUnits)) {
+    throw new RangeError('Işık yarıçapı pozitif ve sonlu olmalı.');
+  }
+  if (!(config.lightSourceDriftUnits >= 0) || !Number.isFinite(config.lightSourceDriftUnits)) {
+    throw new RangeError('Işık sürüklenmesi negatif olmayan sonlu bir sayı olmalı.');
+  }
+  if (!(config.nutrientDiffusion >= 0 && config.nutrientDiffusion <= 0.25)) {
+    throw new RangeError('Besin difüzyonu 0–0,25 aralığında olmalı.');
+  }
+  if (!(config.nutrientRenewal >= 0 && config.nutrientRenewal <= 1)) {
+    throw new RangeError('Besin yenilenmesi 0–1 aralığında olmalı.');
+  }
+}
+
 /**
  * Tekrar kipinin hız çarpanına (0.5× - 4×) göre kare başına adım tavanı.
  *

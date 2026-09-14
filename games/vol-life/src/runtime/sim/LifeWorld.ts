@@ -1,4 +1,4 @@
-import type { WorldConfig } from '@/config/world';
+import { resolveSimulationHz, validateWorldConfig, type WorldConfig } from '@/config/world';
 import { particleConfig, validateParticleConfig, type ParticleConfig } from '@/config/particles';
 import { FieldSet, type FieldSnapshot } from '@/runtime/sim/FieldSet';
 import {
@@ -8,6 +8,7 @@ import {
 } from '@/runtime/sim/ParticlePhysics';
 import { ParticleSpatialHash } from '@/runtime/sim/ParticleSpatialHash';
 import { ParticleStore, type ParticleSnapshot } from '@/runtime/sim/ParticleStore';
+import { validateLifeWorldSnapshot } from '@/runtime/sim/LifeWorldSnapshotValidation';
 import { createSimRandom } from '@/runtime/sim/rng';
 import { SimulationTempo } from '@/runtime/sim/SimulationTempo';
 import {
@@ -39,7 +40,7 @@ export class LifeWorld {
   readonly fields: FieldSet;
   readonly particles: ParticleStore;
   private readonly random;
-  private readonly tempo = new SimulationTempo(60);
+  private readonly tempo: SimulationTempo;
   private readonly sources: LightSource[];
   private readonly nutrientDiffusionSource: Float32Array;
   private readonly particleGrid: ParticleSpatialHash;
@@ -53,19 +54,14 @@ export class LifeWorld {
     particlesConfig: ParticleConfig = particleConfig,
   ) {
     validateWorldMetadata(metadata);
+    validateWorldConfig(config);
     validateParticleConfig(particlesConfig);
     validateWorldGeometry(
       config.boundsUnits,
       config.particleCollisionInsetUnits,
       particlesConfig.cellSizeUnits,
     );
-    if (
-      !Number.isInteger(config.fieldUpdateBands) ||
-      config.fieldUpdateBands < 1 ||
-      config.fieldResolution % config.fieldUpdateBands !== 0
-    ) {
-      throw new RangeError(`Alan bant sayısı çözünürlüğü tam bölmeli: ${config.fieldUpdateBands}`);
-    }
+    this.tempo = new SimulationTempo(resolveSimulationHz(config.fixedStepMs));
     this.fields = new FieldSet(config.fieldResolution);
     this.random = createSimRandom(metadata.seed);
     this.particlesConfig = particlesConfig;
@@ -130,6 +126,7 @@ export class LifeWorld {
   }
 
   restore(snapshot: LifeWorldSnapshot): void {
+    validateLifeWorldSnapshot(snapshot, this.config, this.particlesConfig);
     if (
       snapshot.metadata.id !== this.metadata.id ||
       snapshot.metadata.seed !== this.metadata.seed ||

@@ -38,6 +38,27 @@ describe('parçacık yapılandırması', () => {
     ).toThrow(RangeError);
   });
 
+  it.each([
+    ['count', 0],
+    ['count', 1.5],
+    ['radiusUnits', 0],
+    ['cellSizeUnits', NaN],
+    ['repulsionRadiusUnits', 4],
+    ['interactionRadiusUnits', -1],
+    ['repulsionStrength', NaN],
+    ['interactionStrength', -1],
+    ['referenceHz', 0],
+    ['frictionPerReferenceTick', 1.01],
+    ['maxSpeedUnitsPerReferenceTick', 0],
+    ['initialSpeedUnitsPerReferenceTick', -1],
+    ['wallHardImpactThresholdUnitsPerReferenceTick', -1],
+    ['wallSoftRestitution', 1.1],
+    ['wallHardRestitution', -0.1],
+    ['wallTangentRetention', NaN],
+  ] as const)('geçersiz %s değerini çalışma zamanından önce reddeder', (key, value) => {
+    expect(() => validateParticleConfig({ ...particleConfig, [key]: value })).toThrow(RangeError);
+  });
+
   it('etkileşim matrisi asimetriktir ve yakın/orta mesafe ayrımı geçerlidir', () => {
     const asymmetric = Array.from({ length: 6 }, (_, left) =>
       Array.from({ length: 6 }, (_, right) => {

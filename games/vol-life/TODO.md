@@ -10,139 +10,383 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 ## Zemin
 
 - [ ] **[P2] Organizma fenotipi → ses ailesi eşleşmesi VOL.LIFE'ın kendi
-      çözümleyicisinde yaşamalı, `@volstudio/audio-synth`ta değil.**
-      `devtools/audio-synth` paketi Dalga 5'te ("generic SoundFamily
-      üretimi", bkz. `devtools/audio-synth/TODO.md`) domain-agnostik bir
-      `SoundFamilyBank` publish formatı kazanacak — bank yalnız generic
-      semantic variant metadata (id, tags/state, program hash, descriptor
-      özeti) taşır, organizma/fenotip kavramını BİLMEZ. VOL.LIFE'ın
-      simülasyonu (kuvvet çekirdeği/tür matrisi, Adım 2-3) çalışma anında bir
-      organizmanın (tür kimliği, boyut, davranış durumu gibi) hangi bank
-      variant'ına karşılık geldiğine karar vermek zorunda; bu eşleşme mantığı
-      `@volstudio/audio-synth`a SIZDIRILMAZ (paket sınırı, kök `CLAUDE.md`
-      §Kırmızı Çizgiler madde 1) — VOL.LIFE kendi `runtime`/`sim` katmanında
-      (ya da ayrı bir `runtime/audio` alt katmanında) ince bir
-      fenotip→variant çözümleyicisi taşır. Bu madde henüz uygulanabilir
-      değildir: `SoundFamilyBank` formatı yayınlanmadan (Dalga 5 kapanmadan)
-      somut bir çözümleyici yazılamaz; VOL.LIFE'ın kendi ses ihtiyacı da
-      DESIGN'da henüz karara bağlanmadı. Kapanır: `SoundFamilyBank`
-      yayınlandıktan ve VOL.LIFE'ın ses gereksinimi DESIGN'a yazıldıktan
-      sonra, `runtime/sim` sınır testinin (`simBoundary.test.ts`) izin
-      verdiği bir katmanda organizma durumunu bank variant kimliğine çeviren
-      saf bir fonksiyon eklenir; `audio-synth` paketi bu fonksiyonu ne
-      import eder ne de organizma/fenotip tipini bilir.
-
-## Recovery / proof-of-life kapısı
-
-- [x] **Eski production ölümü zaman serisine kilitlendi.**
-      `benchmarks/proof-of-life-v1.json`, 5 seed için 10/30/60/120/300/600/900
-      saniye checkpointlerini taşır. Eski `legacy-spring-v1` production seed'i
-      hareket, stall, wall-support ve movement-persistence nedenleriyle FAIL.
-- [x] **Build seed'i world-instance metadata'ya taşındı.** Yeni dünya seed,
-      kimlik ve oluşturma zamanı üretir; explicit seed test/replay içindir.
-      Snapshot aynı metadata'yı korur; config fingerprint seed'den bağımsızdır.
-- [x] **Wall spring gerçek temas çözümüne dönüştürüldü.** 12 birimlik morphology
-      yayı kaldırıldı; çarpışma anı, position correction, normal restitution ve
-      tangent retention kullanılıyor. 3.600 tick dış kuvvet regresyonu vardır.
-- [x] **Fizik ve sınır sunumu ayrıldı.** Çarpışma inseti fizik config'indedir;
-      renk ve ekran pikseli min/max kalınlığı grafik config'inde ve ayrı
-      renderer'dadır. Görsel kalınlık save fingerprint'ini değiştirmez.
-- [x] **Yoğunluk faz deneyi üretildi.** `benchmarks/density-regimes-v1.json`,
-      100/256/384/512/768 count × 5 seed × 10 dakikayı taşır. Yüksek count
-      hareketi artırırken duvar desteğini de büyüttüğü için körlemesine seçilmedi.
-- [x] **1.024 adaylı broad → refinement → 15 dakikalık finalist araması.** Full
-      36D matrix ile count, yarıçaplar, strength, damping ve hız tavanı birlikte
-      aranır; artifact `benchmarks/morphology-search-v3.json`, runtime kataloğu
-      `public/generated/morphology-candidates-v3.json` oldu.
-- [ ] **Proof-of-life teknik kapısı production configte 4/5 seed geçirir.**
-      Hareket/stall, duvar desteği, collapse, kalıcı orbit, üyelik değişimi ve
-      yapısal çeşitlilik birlikte değerlendirilir; FPS kanıt değildir.
-- [ ] **Human acceptance:** finalistler browser, masaüstü fare, Samsung S21 ve
-      Lenovo tablette 10–15 dakika izlenir. Kullanıcı onayı olmadan kapanmaz.
-- [ ] **Adım 4 kesin blokeli.** Teknik canary, tam-config preview ve kullanıcı
-      auditionı geçmeden organizma kimliği yazılmaz.
+      katmanında yaşamalı.** `SoundFamilyBank` yayımlanmadan ve LIFE ses
+      gereksinimi kararlaştırılmadan kod yazılmaz. `audio-synth` organizma,
+      fenotip veya oyun durumunu bilmez.
+- [ ] **[P2] Büyük dünya depolama backend'i ölçülsün.** `LifeWorldStore`
+      portu korunur; 512 aktif madde + active mask + stable ID + reservoir
+      snapshot boyutu ölçülür. Gerekirse native binary dosya ve web
+      IndexedDB/OPFS; migration, last-known-good ve i18n'li uyumsuz kayıt
+      yüzeyi birlikte uygulanır.
 
 ## Adım 1 — dünya substratı
 
-- [ ] **Katman görünümü (Adım 7'ye bağlı):** oyuncu katman görünümünü
-      açtığında seçili alan (besin, ışık, sıcaklık, iz) tam kontrastla görünür
-      (DESIGN §6). Oyuncuya açan düğme Adım 7'nin sunum işidir; varsayılan
-      görünüm ve doku yükleme ölçümü kapandı (Kapatılanlar, 2026-09-12).
-      Kapanır: katman görünümü tarayıcıda ve telefonda ekran görüntüsüyle
-      doğrulanır.
+- [ ] **Katman görünümü Adım 7'de açılır.** Nutrient, light, temperature,
+      disturbance, ileride detritus/territory/infection katmanları normal
+      görünümü kirletmeden ayrı seçilir. Tarayıcı ve telefonda ekran
+      görüntüsü olmadan kapanmaz.
 
-### Adım 2 — parçacık yaşamı
+## Adım 2 — Particle Substrate v2
 
-Adım 2'nin mekanizma maddeleri Kapatılanlar'dadır; uzun-vade ürün kabulü
-Recovery / proof-of-life kapısında yeniden açılmıştır.
+- [ ] **[P0] Eski production fiziği yalnız negatif baseline olarak izole
+      edilsin.** Yeni substrate aynı anda devreye alınmadan çalışan uygulama
+      sökülmez; fakat triangular kernel, rectangular collision wall ve
+      100-particle config hiçbir yerde kabul edilmiş ürün diye adlandırılmaz.
+      Kapanır: v2 default olur, eski kernel yalnız test/benchmark fixture'ında
+      kalır veya tamamen silinir.
+- [ ] **[P0] `WorldDomain` ve deterministic `HabitatSDF` kurulsun.** Rect
+      storage içinde yumuşak oval/superellipse + düşük frekanslı noise;
+      pozitif inside, sıfır edge, negatif Void sözleşmesi. Aynı seed aynı SDF,
+      farklı seed farklı ama geçerli kontur üretir. Cep, kendini kesme ve aşırı
+      girinti invariant'ları test edilir.
+- [ ] **[P0] Field solver habitat maskesine taşınsın.** Void hücreleri kaynak
+      üretmez; SDF yüzeyinde no-flux uygulanır; karşı kenar komşuluğu ve wrap
+      yoktur. Dikdörtgen dış tampon fiziksel dünya sayılmaz.
+- [ ] **[P0] `ParticleStore` capacity/active/stable-ID sözleşmesi kazansın.**
+      Storage slotu kimlik değildir. Deactivation diziyi kaydırmaz; inactive
+      slot hash, force, morphology ve render yollarına giremez. Slot yeniden
+      kullanılırsa yeni world-scoped ID atanır.
+- [ ] **[P0] `VoidSink` ve `MatterReservoir` ayrı sorumluluk olsun.**
+      Güvenli alanda Void kuvveti sıfır; dar tidal fringe config ile sınırlı;
+      SDF crossing aynı tick'te geri dönüşsüz deactivation ve rezervuar
+      muhasebesi üretir. Bounce, clamp, restitution ve karşı kenardan dönüş
+      regresyon testleriyle yasaklanır.
+- [ ] **[P0] Generalized multi-band `PairForceKernel` yazılsın.** Hard-core,
+      near/mid/far lobe, cutoff ve yönlü asimetri ayrı test edilir. 6×6
+      strength + 3×3 role/range + az sayıda global profile parametresi config
+      verisi olur; runtime içinde denge sayısı saklanmaz.
+- [ ] **[P0] `InitialMatterSeeder` 512 aktif maddeyi lokal yamalara
+      dağıtsın.** Uniform soup ve scripted organism yasaktır. Seed yalnız
+      başlangıç koşulunu belirler; aynı PhysicsGenome bütün seed'lerde aynıdır.
+- [ ] **[P0] Spatial hash ve integrator aktif maddeye taşınsın.** Brute-force
+      oracle ile küçük fixture paritesi; pair kaçırmama, inactive dışlama,
+      speed envelope ve fixed-step determinism test edilir.
+- [ ] **[P0] Habitat/Void sunumu kare borderı tamamen kaldırsın.** Fizik SDF
+      ile render aynı domain'i tüketir. Habitat edge organik fade, Void düşük
+      frekanslı animasyon; fizik konturu görsel animasyonla hareket etmez.
+- [ ] **[P0] Void ölüm sunumu simülasyondan ayrıştırılsın.** Crossing olayı
+      stretch → color drain → shrink/smear → fade üretir; sunum hayaleti hash,
+      force ve snapshot canlı listesine dönemez. Reduced-motion ve yoğun kayıp
+      LOD'u test edilir.
+- [ ] **[P1] Particle glyph role/state morphing kurulsun.** Serbest, membrane,
+      core, velocity, tail, damage, infection ve Void-fringe biçimleri salt
+      render verisidir; collision radius ve kuvveti değiştiremez.
+- [ ] **[P0] Kamera yeni habitat/Controlled-Void domain'ine taşınsın.** Max
+      zoom-out bütün habitatı ve anlamlı Void margin'ini gösterir; sonsuz
+      karanlıkta kaybolma yoktur. Drag doğrudan, release momentum modality
+      bazlı, zoom anchor sabit, resize/orientation state korumalıdır.
+- [ ] **[P1] Kamera aday ölçüleri cihazda karşılaştırılsın.** Max zoom-out için
+      habitat çevresinde %10–20 Void ve habitatın viewport'un yaklaşık
+      %15'inden küçük olmaması yalnız başlangıç hipotezidir; config kararı
+      mouse/touch ekran görüntüsü ve kullanıcı hissiyle verilir.
+- [ ] **[P0] Kamera human acceptance yeniden açılsın.** Masaüstü mouse ve
+      trackpad, Samsung S21 ve Lenovo tablette kullanıcı rahat bulmadan
+      kapanmaz. Birim testleri ve özellik listesi insan kabulünün yerine
+      geçmez.
+- [ ] **[P0] Snapshot v2 domain state'ini taşısın.** Habitat parametre/digest,
+      active mask, stable ID, next ID, reservoir ve Void sayaçları binary
+      codec/fingerprint'e eklenir. Eski snapshot güvenli göçemiyorsa sessiz
+      yorumlanmaz; i18n'li uyumsuzlukla yeni dünya açılır.
+- [ ] **[P1] 512 bütçesi gerçek hedeflerde ölçülsün.** Headless kernel,
+      Chromium WebGL, Samsung ve Lenovo için CPU/render p50/p95, bellek, açılış
+      ve ısınma raporlanır. Ölçüm DESIGN §11'e girer; kalite düşebilir ama
+      fizik değişemez.
+- [ ] **[P0] Adım 2 kabulü.** Birkaç simüle dakikada determinism, güvenli alan
+      sıfır Void etkisi, doğru crossing, bounded fringe, aktif hash ve cihaz
+      akıcılığı geçer. Zar/organizma üretmek bu adımın kabulü değildir.
 
-## Adım 3 — matris araması
+## Adım 3 — Morphology Discovery v2
 
-- [ ] **[P1] Zar-çekirdek ayrışması için kuvvet profili araştırması:** önceki
-      12 matris + 8 preset yalnız spike'tır. Güncel v3 hattı 1.024 tam-config
-      adayı tarar; triangular kernel adil arama ve uzun finalist koşularından
-      sonra yetersizse near/mid/far multi-lobe bake-off açılır.
-- [ ] **Adaylar gözle doğrulanır:** en iyi adaylar tarayıcıda açılıp izlenir;
-      uzun süreli bütünlük, iç/dış katman, bozulup toparlanma ve hareket
-      görülmeden Adım 3 kapanmaz. Metrik görüntüyle çürürse metrik değişir;
-      yalnız renkli topak veya kalıcı üçlü orbit başarısızdır.
-- [ ] **Alan kuvvetleri morfoloji oturana kadar kapalı kalır.**
-- [ ] **[P2] Büyük dünya depolama backend'i:** bugünkü `LifeWorldStore` portu
-      100 parçacıkta `SaveManager` ile çalışır. Yoğun dünya öncesinde native
-      binary dosya ve web IndexedDB/OPFS backend'i; migration, uyumsuz kayıt
-      bildirimi ve last-known-good politikası ölçülüp uygulanır.
+- [ ] **[P0] Sürümlü `PhysicsGenome` şeması kurulsun.** Force profile,
+      directed strength/range, damping, speed envelope, local density,
+      seeding ve fringe parametrelerinin tamamını taşır. World seed genom
+      değildir.
+- [ ] **[P1] Kernel ailesi falsification noktası tanımlansın.** İlk aday
+      generalized asymmetric multi-band'dir. Bu aile faz çeşitliliği
+      üretemezse daha serbest multi-lobe ve active-particle alternatifleri aynı
+      harness/seed/metriklerle denenir; üç production kernel birden taşınmaz.
+- [ ] **[P1] V1 negatif kontrol yeniden üretilebilir küçük fixture olsun.** Ham
+      50k satırlık artefakt runtime'da tutulmaz; triangular baseline'ın config,
+      korpus ve özet sonucu sürümlü benchmark ile yeni adayın aynı ölçümde
+      gerçekten daha iyi olduğunu kanıtlar.
+- [ ] **[P0] Faz sınıflandırıcısı önce kurulsun.** Dead, gas/soup,
+      crystal/frozen, single-collapse, Void-loss dominated, orbit dominated,
+      speed-cap chaos ve dynamic-structured sonuçları ayrı reason code ile
+      sınıflandırılır.
+- [ ] **[P0] Metrikler v2 fiziğine göre yeniden yazılsın.** Eski wall-support
+      metriği kaldırılır; Void dwell/loss/fringe dependency eklenir. Hareket,
+      yoğunluk, cluster, compactness, anisotropy, radial yapı, composition,
+      churn, lifespan, orbit, trajectory ve recovery tek skora ezilmez.
+- [ ] **[P0] Cluster tracker uzun boşluktan sonra ölü yapıyı diriltemesin.**
+      Ardışık örnek sözleşmesi ve maksimum gap test-first tanımlanır.
+- [ ] **[P0] Ucuz broad tarama yalnız faz filtresi olsun.** Candidate bütçesi
+      önce benchmark'la seçilir. Broad sonucu morphology başarısı veya
+      production adayı diye sunulmaz.
+- [ ] **[P1] Arama hunisi ölçülerek kilitlensin.** Başlangıç hipotezi broad
+      30–60 saniye/4–8 seed, refinement birkaç dakika/16 seed, audition 3–8
+      aday, qualification 10–30 dakika/32+ seed'dir. Bunlar ölçülmeden sabit
+      acceptance değildir; ilk filtre olarak 2/6/24 saat koşulmaz.
+- [ ] **[P0] Refinement sonrası az aday development audition'a açılsın.**
+      Audition yüzeyi production bundle'a qualified olmayan catalog gömmez;
+      açık dev/build girdisi ve provenance gösterir. URL/env ile sessiz
+      production override yasaktır.
+- [ ] **[P0] İnsan ön-elemesi long-horizon'dan önce yapılsın.** Core-like,
+      membrane-like, mobile, recovering, fragile, chasing ve symbiotic
+      ailelerinden anlamlı bir alt küme görülür. Renkli topak, jitter veya
+      kalıcı orbit elenir.
+- [ ] **[P0] Çoklu-seed long-horizon ve perturbation çalışsın.** Seed corpus
+      sürümlüdür; kesin seed sayısı ve 10–30 dakika bütçesi benchmark sonrası
+      kilitlenir. Stasis, soup, tek blob, speed-cap chaos, seed çoğunluğunda
+      ölüm ve aşırı Void kaybı kesin FAIL'dir.
+- [ ] **[P1] Zaman serisi geç çöküşü görünür kılsın.** Final snapshot yerine
+      phase, yapı çeşitliliği, lifespan, churn, loss ve recovery eğrileri
+      saklansın. 30 dakika sonrasında başlayan çöküş görülürse daha uzun release
+      canary ayrıca gerekçelendirilsin.
+- [ ] **[P1] Candidate/seed işleri deterministic shard edilsin.** Önce seri
+      referans üretilir; work ID + genome + seed aynı sonucu vermeden worker
+      havuzu açılmaz. Paralellik sonucu veya sıralamayı değiştiremez.
+- [ ] **[P0] Qualification artefaktı clean source zorunluluğu taşısın.**
+      Revision, config/diff digest, corpus, bütçe, tam genom, zaman serisi,
+      reason code ve human-acceptance alanı eksiksizdir. Dirty koşu yalnız
+      exploration'dır.
+- [ ] **[P0] Production promotion bütün genomla yapılır.** Matrix-only kopya
+      yasaktır. Promotion sonrası ayrı production canary aynı genomu
+      perturbation olmadan çoklu seed'de ölçer.
+- [ ] **[P0] Adım 3 kabulü üçlüdür.** Technical gate + long-horizon +
+      browser/masaüstü/Samsung/Lenovo kullanıcı audition'ı birlikte geçer.
+      Kullanıcı onayı olmadan `[x]` olmaz.
+- [ ] **Alan ve ekoloji kuvvetleri morphology kanıtlanana kadar kapalı kalır.**
 
-## Adım 4–10
+## Adım 4 — organizma kimliği
 
-Kalemler önceki adım ekranda doğrulandığında yazılır; kilometre taşları
-[DESIGN.md](DESIGN.md) §13'te. Önceden verilmiş kararlar DESIGN'dadır: madde
-korunur, ölüm dağılmadır, kimlik üye örtüşmesiyle izlenir (§3); tüketimin
-sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman denetimi yalnız tekrardadır (§1, §7).
+- [ ] **Kesin blokaj:** Adım 3 üçlü kabulü geçmeden identity kodu yazılmaz.
+- [ ] **Identity tracker gözlemcidir.** ON/OFF aynı seed ve genomda particle
+      state'i bit düzeyinde aynı üretir.
+- [ ] **Stable organism ID üye örtüşmesiyle izlenir.** Split, merge, geçici
+      fragmentation, save/load ve ID ölümü olay olarak sınanır.
+
+## Adım 5–10 — kararlaştırılmış sonraki sözleşmeler
+
+Bu bölüm hemen uygulanacak iş değildir; Adım 3/4 kapıları geçilmeden kodlanmaz.
+Ama yüksek seviye önerilerin kaybolmaması için bağımlılık ve kabul yüzeyleri
+şimdiden açık tutulur.
+
+### Adım 5 — enerji, madde ve yaşam döngüsü
+
+- [ ] Nutrient alımı üye konumu + zar geçirgenliğiyle yerel çalışsın; alınan
+      miktar resource grid'den eksilip organism energy store'a yazılsın.
+- [ ] Maintenance, büyüme, repair ve locomotion ayrı enerji giderleri olsun;
+      bedava cohesion veya burst bırakılmasın.
+- [ ] Büyüme yeni particle yaratmasın; serbest aktif maddeyi fiziksel olarak
+      bünyeye katma ve üyelik değişimiyle gerçekleşsin.
+- [ ] Habitat içi ölüm identity silmekle kalmasın: cohesion/üyelik çözülüp
+      beden free matter'a dağılsın; stored biomass detritus'a, enerji
+      dissipation'a gitsin.
+- [ ] `detritus → nutrient` decomposition hızı config verisi ve kaynak
+      muhasebesi olsun; ölüm bölgesinde history/disturbance izi bıraksın.
+- [ ] Matter vent reservoir'dan yeni stable-ID'li serbest madde üretsin;
+      population hedefi okuyamasın, yerel/görünür ekolojik süreç olsun.
+- [ ] Dünya extinction'a gidebilsin; bütün seed'lerin kaçınılmaz tükenmesi ve
+      otomatik nüfus tamamlama ayrı regresyon/long-horizon red nedenleri olsun.
+- [ ] Bölünme önce morphology'nin doğal kararlılık kırılması olarak ölçülsün;
+      çıkmıyorsa enerji eşiğine bağlı en küçük müdahale ayrı deneyle seçilsin.
+- [ ] Alan/resource kuvvetleri eklendikten sonra Adım 3 morphology korpusu
+      yeniden koşsun; recovery ve kompozisyon gerilerse Adım 5 kapanmasın.
+
+### Adım 6 — algı, utility, nucleus ve locomotion
+
+- [ ] Algı bütçesi görüş, field örnekleme, trace duyarlılığı, canlı yakınlığı,
+      `edgeDistance`, `edgeNormal` ve predicted crossing kanallarını yerel
+      olarak versin; global harita/koordinat oracle'ı olmasın.
+- [ ] Kusurlu hafıza decay, yanlış çağrışım ve ölümle kayıp taşısın; kalıtılan
+      fenotip ile yaşarken öğrenilen kayıt aynı state olmasın.
+- [ ] Utility girdileri survival, food, rest, reproduction, curiosity ve hunt
+      olarak ayrı kalsın; davranış tek enum/script zincirine dönüşmesin.
+- [ ] Nucleus mutlak koordinat değil priority, desired heading, locomotion
+      intensity ve phase yayarak üye rollerini polarize etsin.
+- [ ] Steering ile locomotion ayrı olsun: pursuit/evasion/avoidance kararı,
+      body actuator kuvvetini doğrudan taklit etmesin.
+- [ ] Kuyruk gerçek member particle'larından oluşsun; phase-offset salınım,
+      kuyruk kaybında hız düşüşü ve beden deformasyonu test edilsin.
+- [ ] Stalking → burst → fatigue/recovery döngüsü enerji, membrane stress ve
+      öz-hasarla bağlı olsun; `predator.speed = sabit` yolu açılmasın.
+- [ ] Hız morphology × enerji × anatomi × niyet × flow × hasar sonucundan
+      türesin; düşük enerjinin renk, core pulse ve tail amplitude karşılığı olsun.
+- [ ] Fear/danger sinyali yerel yayılsın ve sönsün; fenotipe göre kaçış,
+      merkeze dönüş, donma veya savunma farklılaşabilsin.
+- [ ] `AgentController` kapasite sözleşmesi standart nucleus ve coreless virus
+      tropism'ini aynı anatomiye zorlamadan taşısın.
+- [ ] Void korkusu ile hunt utility yarışsın; risk tolerance ve prediction
+      horizon farklılıkları kıyıda gözlenebilir kararlar üretsin.
+
+### Adım 7 — sunum ve keşif
+
+- [ ] World/Ecosystem/Organism/Micro semantic LOD continuous crossfade ile
+      çalışsın; kamera ölçeği fizik veya sim tick seçmesin.
+- [ ] Uzak görünüm activity constellation, yakın görünüm membrane/core/role ve
+      deformasyon okusun; aggregate luminance gerçek entity/hitbox olmasın.
+- [ ] Habitat ölümü core-sönme → zar çözülme → free-matter/detritus; Void ölümü
+      stretch → darken → dissolve diliyle birbirinden ayrılsın.
+- [ ] Nutrient tüketimi resource fade ve enerji rengiyle anlatılsın; her canlı
+      üstünde bar/lokma efekti ve her emilim için event üretilmesin.
+- [ ] Nutrient, light, temperature, disturbance, detritus, territory,
+      infection ve history katmanları tek tek açılabilsin; normal view çöplüğe
+      dönüşmesin.
+- [ ] Sunum aklı yenilik, süre, nüfus etkisi, nadirlik ve coğrafi yayılımı ayrı
+      ölçsün; ilk olayları işaretlesin, simülasyona geri yazamasın.
+- [ ] Observe/Follow/Free kamera ilişkisi kurulsun; kullanıcının ilk girdisi
+      otomatik kamera önerisini anında bıraksın.
+- [ ] `SelectionInfoPanel`, `StatsPanel`, `MinimapPanel`, `EventLog`, `Toast`,
+      `CommandPalette` ve `Sheet` CORE'dan tüketilsin; oyun UI primitive'i
+      icat edilmesin.
+- [ ] Reduced-motion, renk-kontrastı ve yoğun olay LOD'u aynı olay anlamını
+      korusun; tarayıcı + Samsung + Lenovo görsel kanıtı alınsın.
+
+### Adım 8 — kayıt, tekrar ve tarih
+
+- [ ] Snapshot ile replay formatı ayrışsın: snapshot anlık state; replay seed +
+      komut günlüğü + tick sayısı olsun.
+- [ ] Pause ve 0.5×/2×/4× yalnız replay'de açılsın; canlı dünya gerçek hızda
+      kalsın.
+- [ ] Aynı seed/komut dizisi bit düzeyinde tekrar üretilebilsin; tek müdahale
+      çatallanarak deney karşılaştırması yapılabilsin.
+- [ ] Event log doğum, ölüm, Void kaybı, split/merge, göç, çatışma, salgın,
+      mutation ve extinction reason code'ları taşısın.
+- [ ] Önemli organizma biyografisi ve tür soy ağacı event log + identity'den
+      türesin; her birey için sınırsız geçmiş state'i tutulmasın.
+- [ ] Büyük snapshot ölçümünde native binary ve IndexedDB/OPFS adayları;
+      migration, CRC, last-known-good ve i18n'li recovery ile birlikte seçilsin.
+
+### Adım 9 — toplum, tehdit ve coğrafya
+
+- [ ] Grup ile koloni ayrışsın: koloni süreklilik, ortak kaynak, tolerans ve
+      yerel sinyal ister; aynı konumdaki organism listesi yeterli değildir.
+- [ ] Territory sert polygon/çizgi değil, kullanımla oluşan ve terk edilince
+      solan influence field olsun; normal görünümde gizli, layer'da okunur olsun.
+- [ ] Parçacık avcısı serbest maddeyi tüketip yeni oluşumu baskılasın; kendi
+      kaynağını tükettiğinde açlık geri beslemesi yaşasın.
+- [ ] Çekirdek avcısı membrane breach sonrası nucleus continuity'yi hedeflesin;
+      core ölümü kontrol/hafıza kaybı ve gecikmeli beden dağılması üretsin.
+- [ ] Virüs uyumlu zara bağlanıp enerji/metabolizma sızıntısı, çoğalma ve
+      bulaşma üretsin; world zoom'da gizli, micro/layer'da okunur olsun.
+- [ ] Koloni kırıcı “büyük predator” olmasın; disturbance ve fiziksel ayırmayla
+      yerleşimi bozup göç/territory zinciri açsın.
+- [ ] Olgun yırtıcı temas, breach, koparma ve madde katılımıyla avlansın;
+      uzaktan soyut damage veya rigid sprite kullanmasın.
+- [ ] Hasar structural, membrane, core, metabolic, infection ve matter-loss
+      bileşenlerinde yaşasın; UI health gösterebilse de gerçek state tek HP olmasın.
+- [ ] Yırtıcı yüksek cohesion/repair/kalın zarın enerji maliyetini ödesin;
+      savunucu prey, koloni kuşatması, rakip predator, virüs, açlık, Void ve
+      kendi burst'ü tarafından öldürülebilsin.
+- [ ] Colony defense `GuardUnit` spawn'ı değil, utility + local signal +
+      phenotype farkından türesin.
+- [ ] Savaş ve göç nutrient depletion, detritus, disturbance, infection
+      residue, territory ghost ve edge scar bıraksın; izler ayrı decay taşısın.
+- [ ] Ekolojik kabul yalnız olay sayısı olmasın; sessizlik → küçük hareket →
+      göç/çatışma → yeniden sakinlik ritmi ve bağlı olay zinciri ölçülsün.
+
+### Adım 10 — kalıtım, mutasyon ve seçilim
+
+- [ ] Kalıtılabilir fenotip ile global PhysicsGenome ayrışsın; birey mutasyonu
+      dünyanın temel pair yasasını rastgele değiştirmesin.
+- [ ] Renk, cohesion, membrane, metabolizma, algı, risk tolerance, locomotor
+      anatomi ve repair güvenli/morfolojik olarak doğrulanmış aralıklarda evrilsin.
+- [ ] Seçilim nutrient, enerji maliyeti, avlanma, hastalık, territory ve Void
+      baskısıyla aynı dünyada çalışsın; fitness tek gizli sayı olmasın.
+- [ ] Predator, defender ve parazit rolleri spawn etiketiyle değil gözlenen
+      fenotip/davranıştan türetilsin.
+- [ ] Nesiller boyunca değişim soy ağacı, renk kayması ve davranışla okunur
+      olsun; tek tick'te sınıf değiştiren mutation efekti kullanılmasın.
 
 ## Adım 11 — ölçek
 
-- [ ] **[P1] Render yolu yoğun ölçekte benchmark'la seçilsin.** "Tek geçerli
-      yol: `SpriteGPULayer`" hükmü kanıtın önündeydi; Phaser 4.2.1 kaynağı sık
-      tampon güncellemesini pahalı sayıyor (`SpriteGPULayer.js` JSDoc), VOL.LIFE
-      ise konumu ve rengi her adımda CPU'da değiştiriyor. Kapanır: Adım 2'nin
-      adaptörü arkasında, CPU'da güncellenen 10k/50k/100k/250k parçacık için
-      `SpriteGPULayer` (dilim güncellemeli) ve en az bir alternatif; CPU
-      güncelleme, GPU yükleme ve kare süresi p50/p95 ölçülür, karar DESIGN
-      §11'e yazılır.
-- [ ] **Worker havuzu değerlendirilir:** tempo bütçesi yetmezse sıradaki yol
-      budur (DESIGN §11). `SharedArrayBuffer` tarayıcıda çapraz köken yalıtımı
-      (COOP/COEP başlıkları) ister; web yayınında ve Tauri'de bu başlıkların
-      verilebildiği ayrıca doğrulanır. Kapanır: ölçümle verilen karar DESIGN
-      §11'e yazılır.
+- [ ] **Yoğunluk ölçek yasası ölçülsün.** `N × πR² / worldArea` komşuluk
+      tahmini gerçek histogramla karşılaştırılsın; dünya alanı büyürken aynı
+      lokal ekolojiyi koruyacak madde bütçesi sonuçtan türesin.
+- [ ] **Üç bütçe ayrı raporlansın.** Particle, stable organism ve cognitive
+      agent sayıları tek “entity count” altında saklanmasın; CPU, bellek ve
+      kayıt maliyetleri ayrı olsun.
+- [ ] **Sistem tempoları worker'dan önce benchmark edilsin.** Hareket, pair
+      force, perception, field, territory, evolution ve history her yerde aynı
+      sabit tempoyu kullanır; kamera/LOD tempo seçemez.
+- [ ] **[P1] Yoğun render yolu benchmark'la seçilsin.** 10k/50k/100k/250k
+      CPU-güncellemeli particle için `SpriteGPULayer` ve en az bir alternatif;
+      CPU güncelleme, GPU yükleme, frame p50/p95 ve görsel parite ölçülür.
+- [ ] **Worker/runtime paralelliği ölçülsün.** Tempo bütçesi yetmezse
+      SharedArrayBuffer/Worker yolu; web ve Tauri COOP/COEP gereksinimleri,
+      determinism ve kopyalama maliyeti kanıtlanır.
+- [ ] **Ölçek kabulü yaşam zincirini korusun.** Daha kalabalık dünya ekrandaki
+      bireyleri renkli halıya çeviremez; morphology, identity ve ecology aynı
+      korpusta küçük dünya referansıyla davranış paritesi göstermelidir.
 
 ## Her adımda
 
+- Davranış test-first uygulanır; düzeltme regresyon testi bırakır.
 - Adım gerçek tarayıcıda görüntüyle kapanır.
-- Kabuğa ya da sunuma dokunan adım Android cihazda açılıp ekran görüntüsüyle
-  doğrulanır (DESIGN §9).
-- Phaser API'si kaynaktan doğrulanır; `camera.setBounds`un beşinci argümanı
-  (`centerOn`) verilmezse pencereden küçük dünya sol üste yapışır.
-- Mantık Phaser sahnesinde birikmez.
-- Ölçmeden optimize edilmez; ölçüm kaynak yorumuna değil `DESIGN.md`ye yazılır.
-- Kapsam eşiği düşürülerek kapı geçilmez; eşikler `quality.json`da.
-- Kamera Adım 1'de kurulur; sonraki hiçbir adım resize ya da yön değişiminde
-  bakılan noktayı ve yakınlaştırmayı sıfırlamaz.
+- Kabuğa, kamera veya sunuma dokunan adım iki Android cihazda doğrulanır.
+- Mantık Phaser sahnesinde birikmez; `runtime/sim` Phaser import etmez.
+- Ölçüm kaynak yorumuna değil DESIGN/TODO'ya yazılır.
+- Oynanış ölçüleri `src/config/` altında kalır.
+- Kapsam eşiği düşürülerek kapı geçilmez.
+- Resize/yön değişimi dünya veya kamera durumunu sıfırlamaz.
+- Qualified olmayan araştırma adayı production bundle'a girmez.
 
 ## Kapatılanlar
 
-### 2026-09-13 — Adım 2 kabulü, sonlu dünya, responsive ayarlar ve autosave
+### 2026-09-14 — VOL.LIFE sağlamlaştırma ve repo hijyeni
 
-- [x] **[P0] Toroidal topoloji sonlu fiziksel dünyaya taşındı.** Tek config
+- [x] **Simülasyon temposundaki gizli 60 Hz varsayımı kaldırıldı.** Alan
+      zamanlayıcısı `fixedStepMs`den türetilen taban Hz'i kullanır; 30 Hz dünya + 10 Hz alan üç tick'te bir güncellenir. Dünya ve parçacık config'inin
+      sonluluk, aralık, tam sayı ve geometri önkoşulları kurulumdan önce
+      doğrulanır.
+- [x] **Snapshot geri yükleme atomik ve tek doğrulayıcılı oldu.** Disk
+      persistence ile doğrudan `LifeWorld.restore` aynı alan/parçacık/zaman/RNG
+      doğrulamasını kullanır; geçersiz son dizi canlı dünyayı kısmen değiştirmez.
+- [x] **Kurulum ve kapanış yaşam döngüleri sertleştirildi.** Yarım kalan
+      `LifeRuntime` o ana kadar aldığı GPU/giriş sahiplerini geri bırakır;
+      `LifeScene` yeniden kurulumda Phaser lifecycle listener'larını
+      biriktirmez; autosave snapshot hatası zamanlayıcıdan kaçmaz; yok edilen
+      çıkış onayı bekleyen kayıt bitince pencereyi kapatmaz.
+- [x] **Fresh-world çakışması ve repo ignore sözleşmesi kapılandı.** Tekrarlanan
+      entropy aynı oturumda daha önce üretilmiş seed'i yeniden kullanmaz. Tüm
+      oyunların Apple üretim ağacı ve Android build çıktıları ignore edilir;
+      Android kaynak manifesti izlenebilir kalır. 1000 satır kapısı yalnız
+      çalıştırılabilir/stil/native kaynağı ölçer; Markdown, JSON ve diğer veri
+      belgeleri büyüklükten bağımsız olarak kapının dışındadır.
+
+### 2026-09-14 — Particle Substrate v2 tasarım reseti ve kalıntı temizliği
+
+- [x] **DESIGN yeni dünya sözleşmesine geçirildi.** 512 başlangıç aktif
+      maddesi, organik HabitatSDF, dar tidal fringe, geri dönüşsüz Void ölümü,
+      dış matter reservoir, detritus, multi-band PhysicsGenome, dağıtık
+      locomotion, beş tehdit ailesi ve kamera kabulü tek belgede kilitlendi.
+- [x] **Başarısız v3 araştırma hattı ürün yüzeyinden kaldırıldı.** Qualified
+      aday üretmeyen search/proof/density betikleri, metrik/config yüzeyi, ham
+      JSON artefaktları ve generated candidate catalog güncel ağaçtan
+      çıkarıldı; negatif sonuç commit `0ef88c9` geçmişindedir.
+- [x] **Qualified olmayan candidate enjeksiyonu kapatıldı.** Eski
+      `?morphologyCandidate=` / build-env yolu boot zincirinden çıkarıldı;
+      regresyon testi eski query'nin fetch veya fizik override üretmediğini
+      doğrular.
+- [x] **Geçersiz proof gate kalıntıları temizlendi.** Kök script, justfile
+      tarifi ve README/gate tablolarındaki yinelenen/eski Adım 4 satırları
+      kaldırıldı. V2 protokolü yazılmadan yeni gate ilan edilmeyecek.
+
+### 2026-09-13 — v1 sonlu dünya deneyi, responsive ayarlar ve autosave
+
+- [x] **[P0] Toroidal topoloji sonlu fiziksel dünya deneyine taşındı.** Tek config
       `WorldBounds`; particle hash/mesafe/entegrasyon, field sample/diffusion,
       ışık kaynağı, kamera ve renderer aynı 1024×1024 sınırı tüketiyor. Recovery
       turunda broad contact zone kaldırılıp çarpışma anı çözen impulse modeliyle
-      değiştirildi; opak duvar sunumu fizik insetinden ayrıdır.
+      değiştirildi; opak duvar sunumu fizik insetinden ayrıdır. Bu yaklaşım v3
+      sonuçlarından sonra ürün kabulü değil negatif baseline'dır.
 - [x] **[P0] Fixed-step konumları her render karesinde interpolate ediliyor.**
       Önceki ve güncel SoA konumları tutuluyor, `getInterpolationAlpha()`
       renderer'a iletiliyor ve ara kareler pürüzsüz çiziliyor.
-- [x] **[P0] Kamera finite world'ü `cover` ediyor ve momentum taşıyor.** Drag
+- [x] **[P0] V1 kamera finite world'ü `cover` ediyor ve momentum taşıyor.** Drag
       parmağa doğrudan bağlıdır; release velocity üstel sönümlenir, sınırda
-      normal bileşen kesilir. Overview ve unwrapped koordinat kalktı.
+      normal bileşen kesilir. Özellikler korunur; `cover`/sert navigation
+      domain'i v2 kamera kabulünde yeniden açılmıştır.
 - [x] **[P0] Settings form CORE responsive primitive'ine taşındı.** Kontrol
       sütunu intrinsic genişliktedir, switch sağdadır, segmented control
       taşmaz. 4 viewport'ta (360×800, 800×360, 800×1280, 1280×800) sıfır yatay
@@ -160,7 +404,7 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
       preset yalnız dar alt uzayı reddetti; geniş ve uzun-vade arama Recovery
       kapısında yeniden açıldı.
 
-### 2026-09-13 — ürün acceptance düzeltmeleri ve Adım 2
+### 2026-09-13 — v1 acceptance düzeltmeleri ve parçacık çekirdeği
 
 - [x] **Bantlı difüzyon aynı kaynak zamanını okuyor.** Kısmi bant ayrı
       `sourceEpoch` olmadan reddedilir; `LifeWorld` tam turun kaynağını ve
@@ -185,7 +429,8 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
       ayrı dünya paleti, asimetrik 6×6 matris, counting-sort spatial hash,
       ortak yakın itme, orta menzil tür kuvveti, sürtünme, hız tavanı ve
       sonlu mesafe. Kuvvet birikimi entegrasyondan ayrıdır; alan kuvvetleri
-      kapalıdır.
+      kapalıdır. SoA/hash korunur; triangular kuvvet ve rol varsayımı v2 ürün
+      fiziği değildir.
 - [x] **Determinizm ve render:** seed + snapshot/restore parçacık dizilerini
       bayt düzeyinde korur. Tek sabit Phaser Graphics adaptörü parçacığı sonlu
       dünya koordinatında ve dünya birimli yarıçapla çizer.
@@ -355,14 +600,6 @@ sunumu ve katman görünümü (§6). Canlı dünya hızlandırılmaz; zaman dene
 - [x] **`DESIGN.md`'nin dört eski cümlesi düzeltildi:** ölçekleme kapısı,
       cihaz ölçümü, `src-tauri`, §17.
 - [x] **LifeHud dil testi yeniden yazıldı;** dil aboneliği kaldırılınca düşüyor.
-
-### 2026-09-14 — v3 morfoloji araması ve devir
-
-- [x] **1.024 adaylı broad → refinement → 15 dakikalık finalist araması.**
-      `benchmarks/morphology-search-v3.json` ve
-      `public/generated/morphology-candidates-v3.json` üretildi. 4 finalist
-      belirlendi. Proof-of-life canary 5 seed'de test edildi; Adım 4'e blokaj
-      dürüstçe korundu.
 
 ### 2026-09-09 — cihaz ölçümü (`a38fe22`)
 

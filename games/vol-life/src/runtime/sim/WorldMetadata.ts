@@ -9,14 +9,17 @@ export interface WorldMetadataSource {
   now(): number;
 }
 
-let previousGeneratedSeed: number | null = null;
+const generatedSeeds = new Set<number>();
 
 export function createFreshWorldMetadata(
   source: WorldMetadataSource = browserWorldMetadataSource(),
 ): WorldMetadata {
-  const sampledSeed = source.nextUint32() >>> 0;
-  const seed = sampledSeed === previousGeneratedSeed ? (sampledSeed + 1) >>> 0 : sampledSeed;
-  previousGeneratedSeed = seed;
+  if (generatedSeeds.size >= 0x1_0000_0000) {
+    throw new RangeError('Bu oturumdaki uint32 dünya tohumu alanı tükendi.');
+  }
+  let seed = source.nextUint32() >>> 0;
+  while (generatedSeeds.has(seed)) seed = (seed + 1) >>> 0;
+  generatedSeeds.add(seed);
   const createdAtMs = source.now();
   const metadata = {
     id: `world-${createdAtMs.toString(36)}-${seed.toString(16).padStart(8, '0')}`,

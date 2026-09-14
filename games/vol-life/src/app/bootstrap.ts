@@ -16,7 +16,6 @@ import { LifePreferences } from '@/app/LifePreferences';
 import { LifeWorldPersistence } from '@/app/LifeWorldPersistence';
 import { showFatalError } from '@/app/fatalError';
 import { OrientationPreference } from '@/app/OrientationPreference';
-import { loadMorphologyPreview } from '@/app/MorphologyPreview';
 import { createSaveManager } from '@/app/storage';
 import { lifeGraphicsConfig } from '@/config/graphics';
 import { particleConfig } from '@/config/particles';
@@ -60,20 +59,7 @@ try {
   setHapticsDriver(platform === 'android' ? new TauriHapticsDriver() : null);
   const preferences = new LifePreferences(saveManager);
   await preferences.load();
-  const rawCandidate: unknown = (import.meta.env as unknown as Record<string, unknown>)
-    .VITE_LIFE_MORPHOLOGY_CANDIDATE;
-  const buildCandidate = typeof rawCandidate === 'string' ? rawCandidate : '';
-  const previewSearch =
-    window.location.search ||
-    (buildCandidate ? `?morphologyCandidate=${encodeURIComponent(buildCandidate)}` : '');
-  const preview = await loadMorphologyPreview(previewSearch);
-  const activeWorldConfig = preview?.worldConfig ?? worldConfig;
-  const activeParticleConfig = preview?.particleConfig ?? particleConfig;
-  const worldPersistence = new LifeWorldPersistence(
-    saveManager,
-    activeWorldConfig,
-    activeParticleConfig,
-  );
+  const worldPersistence = new LifeWorldPersistence(saveManager, worldConfig, particleConfig);
   const initialWorldSnapshot = await worldPersistence.load();
   setHapticsEnabled(preferences.get().hapticsEnabled);
   const orientation = new OrientationPreference(
@@ -95,8 +81,6 @@ try {
         worldPersistence,
         createRuntime: (scene, initialSnapshot) =>
           new LifeRuntime(scene, {
-            config: activeWorldConfig,
-            particlesConfig: activeParticleConfig,
             initialSnapshot,
           }),
       }),

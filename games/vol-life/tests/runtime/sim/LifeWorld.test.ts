@@ -62,6 +62,35 @@ describe('LifeWorld', () => {
     expect(restored.particles.snapshot()).toEqual(continuous.particles.snapshot());
   });
 
+  it('bozuk snapshotı dünyayı kısmen değiştirmeden atomik olarak reddeder', () => {
+    const config = { ...worldConfig, fieldResolution: 32 };
+    const world = createWorld(7, config);
+    for (let index = 0; index < 12; index++) world.step();
+    const before = world.snapshot();
+    const nutrientDiffusionSource = before.nutrientDiffusionSource.slice();
+    nutrientDiffusionSource[0] = 0.987;
+    const invalid = {
+      ...before,
+      tick: before.tick + 10,
+      nutrientDiffusionSource,
+      particles: { ...before.particles, type: before.particles.type.slice(1) },
+    };
+
+    expect(() => world.restore(invalid)).toThrow(RangeError);
+    expect(world.snapshot()).toEqual(before);
+  });
+
+  it('doğrudan restore yolunda sonlu olmayan alan değerini reddeder', () => {
+    const world = createWorld(7, { ...worldConfig, fieldResolution: 32 });
+    const snapshot = world.snapshot();
+    const light = snapshot.fields.light.slice();
+    light[0] = Number.NaN;
+
+    expect(() => world.restore({ ...snapshot, fields: { ...snapshot.fields, light } })).toThrow(
+      RangeError,
+    );
+  });
+
   it('her simülasyon tickinde parçacıkları hareket ettirir ve sabit sayıyı korur', () => {
     const world = createWorld(19, { ...worldConfig, fieldResolution: 32 });
     const initialX = world.particles.x.slice();
@@ -87,6 +116,19 @@ describe('LifeWorld', () => {
     const world = createWorld(1, { ...worldConfig, fieldResolution: 32 });
 
     expect(Array.from({ length: 5 }, () => world.step())).toEqual(Array(5).fill(false));
+    expect(world.step()).toBe(true);
+  });
+
+  it('alan temposunu sabit 60 Hz varsayımı yerine dünya adımından türetir', () => {
+    const world = createWorld(1, {
+      ...worldConfig,
+      fixedStepMs: 1000 / 30,
+      fieldHz: 10,
+      fieldResolution: 32,
+    });
+
+    expect(world.step()).toBe(false);
+    expect(world.step()).toBe(false);
     expect(world.step()).toBe(true);
   });
 

@@ -50,3 +50,36 @@ test('kalıp dışındaki uzantılar görülmez', (t) => {
 
   assert.deepEqual(workingTreeFiles(root, ['*.css']), ['a.css']);
 });
+
+function isIgnored(path) {
+  try {
+    execFileSync('git', ['check-ignore', '-q', '--no-index', '--', path], {
+      cwd: process.cwd(),
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+test('repo ignore sözleşmesi sırları ve üretilen çıktıları kapsar, kaynakları korur', () => {
+  const ignored = [
+    '.env',
+    'games/vol-life/dist/index.js',
+    'games/vol-life/coverage/lcov.info',
+    'games/vol-life/observer.log',
+    'games/vol-life/src-tauri/gen/apple/project.pbxproj',
+    'games/vol-hell/src-tauri/gen/apple/project.pbxproj',
+    'games/vol-life/src-tauri/gen/android/app/build/output.apk',
+  ];
+  const kept = [
+    'games/vol-life/DESIGN.md',
+    'games/vol-life/src/i18n/tr.json',
+    'games/vol-life/public/assets/example.ogg',
+    'games/vol-life/src-tauri/gen/android/app/src/main/AndroidManifest.xml',
+  ];
+
+  for (const path of ignored) assert.equal(isIgnored(path), true, `${path} ignore edilmeli`);
+  for (const path of kept) assert.equal(isIgnored(path), false, `${path} kaynak olarak kalmalı`);
+});

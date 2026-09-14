@@ -89,6 +89,7 @@ describe('bootstrap', () => {
     platform.value = 'web';
     displayControllers.length = 0;
     document.body.innerHTML = '';
+    window.history.replaceState({}, '', '/');
     vi.restoreAllMocks();
   });
 
@@ -127,6 +128,16 @@ describe('bootstrap', () => {
     expect(displayControllers).toHaveLength(0);
     expect(sceneServices().platform).toBe('web');
     expect(sceneServices().preferences).not.toBeNull();
+  });
+
+  it('başarısız araştırma adayları URL ile production fiziğine enjekte edilemez', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    window.history.replaceState({}, '', '/?morphologyCandidate=obsolete-v3');
+
+    await import('@/app/bootstrap');
+
+    expect(createVolGame).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('masaüstünde görüntü kipi denetleyicisi başlar ve oyun ömrüne bağlanır', async () => {

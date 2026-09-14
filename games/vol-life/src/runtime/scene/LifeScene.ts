@@ -46,6 +46,7 @@ export interface LifeSceneRuntime {
  */
 export class LifeScene extends Phaser.Scene {
   private runtimeScope: DisposableScope | null = null;
+  private lifecycleUnsubscribe: (() => void) | null = null;
   private hud: LifeHud | null = null;
   private worldRuntime: LifeSceneRuntime | null = null;
   private readonly services: LifeSceneServices;
@@ -70,7 +71,7 @@ export class LifeScene extends Phaser.Scene {
      * önceki kapsam sahipsiz kalır: HUD elemanları DOM'da, rAF döngüsü ve dil
      * aboneliği ayakta kalırdı. İkinci kurulum ilkini kendisi toplar.
      */
-    this.runtimeScope?.dispose();
+    this.teardownRuntime();
 
     const scope = new DisposableScope();
     this.runtimeScope = scope;
@@ -194,29 +195,32 @@ export class LifeScene extends Phaser.Scene {
         );
       }
     } catch (error) {
-      scope.dispose();
-      this.runtimeScope = null;
-      this.hud = null;
-      this.worldRuntime = null;
+      this.teardownRuntime();
       throw error;
     }
 
     // SHUTDOWN sahne yeniden başlatıldığında gelir; doğrudan yok edilmede (SceneManager.remove)
     // ise yalnız DESTROY yayılır. İkisi de aynı temizliği idempotent tetikler.
-    const cleanup = (): void => {
-      this.events.off(Phaser.Scenes.Events.SHUTDOWN, cleanup);
-      this.events.off(Phaser.Scenes.Events.DESTROY, cleanup);
-      this.runtimeScope?.dispose();
-      this.runtimeScope = null;
-      this.hud = null;
-      this.worldRuntime = null;
-    };
+    const cleanup = (): void => this.teardownRuntime();
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, cleanup);
     this.events.once(Phaser.Scenes.Events.DESTROY, cleanup);
+    this.lifecycleUnsubscribe = () => {
+      this.events.off(Phaser.Scenes.Events.SHUTDOWN, cleanup);
+      this.events.off(Phaser.Scenes.Events.DESTROY, cleanup);
+    };
   }
 
   update(_time: number, delta: number): void {
     this.worldRuntime?.update(delta);
+  }
+
+  private teardownRuntime(): void {
+    this.lifecycleUnsubscribe?.();
+    this.lifecycleUnsubscribe = null;
+    this.runtimeScope?.dispose();
+    this.runtimeScope = null;
+    this.hud = null;
+    this.worldRuntime = null;
   }
 }

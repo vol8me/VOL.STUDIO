@@ -154,6 +154,18 @@ describe('LifeScene yaşam döngüsü', () => {
     expect(scope()).toBeNull();
   });
 
+  it('SHUTDOWN gelmeden yeniden kurulursa yaşam döngüsü dinleyicilerini biriktirmez', () => {
+    const { scene, worldRuntime } = mountScene({ platform: 'web' });
+
+    expect(scene.events.listenerCount(Phaser.Scenes.Events.SHUTDOWN)).toBe(1);
+    expect(scene.events.listenerCount(Phaser.Scenes.Events.DESTROY)).toBe(1);
+    scene.create();
+
+    expect(worldRuntime.destroy).toHaveBeenCalledOnce();
+    expect(scene.events.listenerCount(Phaser.Scenes.Events.SHUTDOWN)).toBe(1);
+    expect(scene.events.listenerCount(Phaser.Scenes.Events.DESTROY)).toBe(1);
+  });
+
   it('Phaser update deltasını dünya runtimeına iletir', () => {
     const { scene, worldRuntime } = mountScene({ platform: 'web' });
 
