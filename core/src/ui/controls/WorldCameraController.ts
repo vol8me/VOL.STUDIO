@@ -24,8 +24,16 @@ export interface WorldCameraPoint {
   readonly y: number;
 }
 
+/**
+ * `cover` (varsayılan): en uzak zoom sınırı görüntü alanını boşluksuz doldurur,
+ * oranı uymayan eksen kırpılır. `contain`: en uzak zoom sınırın TAMAMINI
+ * gösterir; artan eksen sınır dışını (arka planı) açar ve merkeze kilitlenir.
+ */
+export type WorldCameraFit = 'cover' | 'contain';
+
 export interface WorldCameraControllerOptions {
   readonly bounds: Readonly<Rect>;
+  readonly fit?: WorldCameraFit;
   readonly maxZoomFactor?: number;
   readonly wheelSensitivity?: number;
   readonly wheelSmoothingMs?: number;
@@ -66,6 +74,7 @@ export class WorldCameraController {
   private readonly pointers = new Map<number, TrackedPointer>();
   private readonly pointerHistory = new Map<number, TrackedPointer[]>();
   private readonly bounds: Readonly<Rect>;
+  private readonly fit: WorldCameraFit;
   private readonly maxZoomFactor: number;
   private readonly wheelSensitivity: number;
   private readonly wheelSmoothingMs: number;
@@ -92,6 +101,7 @@ export class WorldCameraController {
   ) {
     validateBounds(options.bounds);
     this.bounds = options.bounds;
+    this.fit = options.fit ?? 'cover';
     this.maxZoomFactor = options.maxZoomFactor ?? 8;
     this.wheelSensitivity = options.wheelSensitivity ?? 0.0015;
     this.wheelSmoothingMs = options.wheelSmoothingMs ?? 90;
@@ -365,18 +375,8 @@ export class WorldCameraController {
     const halfWidth = this.camera.width / (2 * zoom);
     const halfHeight = this.camera.height / (2 * zoom);
     return {
-      x: softClamp(
-        centerX,
-        this.bounds.x + halfWidth,
-        this.bounds.x + this.bounds.width - halfWidth,
-        halfWidth * 2 * 0.08,
-      ),
-      y: softClamp(
-        centerY,
-        this.bounds.y + halfHeight,
-        this.bounds.y + this.bounds.height - halfHeight,
-        halfHeight * 2 * 0.08,
-      ),
+      x: softClampAxis(centerX, this.bounds.x, this.bounds.width, halfWidth),
+      y: softClampAxis(centerY, this.bounds.y, this.bounds.height, halfHeight),
     };
   }
 
@@ -476,17 +476,15 @@ export class WorldCameraController {
     const halfWidth = this.camera.width / (2 * zoom);
     const halfHeight = this.camera.height / (2 * zoom);
     return {
-      x: clamp(centerX, this.bounds.x + halfWidth, this.bounds.x + this.bounds.width - halfWidth),
-      y: clamp(
-        centerY,
-        this.bounds.y + halfHeight,
-        this.bounds.y + this.bounds.height - halfHeight,
-      ),
+      x: clampAxis(centerX, this.bounds.x, this.bounds.width, halfWidth),
+      y: clampAxis(centerY, this.bounds.y, this.bounds.height, halfHeight),
     };
   }
 
   private resolveMinZoom(): number {
-    return Math.max(this.camera.width / this.bounds.width, this.camera.height / this.bounds.height);
+    const zoomX = this.camera.width / this.bounds.width;
+    const zoomY = this.camera.height / this.bounds.height;
+    return this.fit === 'contain' ? Math.min(zoomX, zoomY) : Math.max(zoomX, zoomY);
   }
 
   private metrics(): {
@@ -563,6 +561,17 @@ function mix(left: number, right: number, amount: number): number {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+/** Görüntü alanı sınırdan genişse eksen merkeze kilitlenir; aksi hâlde sınır içinde kalır. */
+function clampAxis(value: number, start: number, size: number, halfExtent: number): number {
+  if (halfExtent * 2 >= size) return start + size / 2;
+  return clamp(value, start + halfExtent, start + size - halfExtent);
+}
+
+function softClampAxis(value: number, start: number, size: number, halfExtent: number): number {
+  if (halfExtent * 2 >= size) return start + size / 2;
+  return softClamp(value, start + halfExtent, start + size - halfExtent, halfExtent * 2 * 0.08);
 }
 
 function softClamp(value: number, minimum: number, maximum: number, zone: number): number {

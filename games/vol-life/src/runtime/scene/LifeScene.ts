@@ -11,7 +11,11 @@ import {
 import { getRuntimePlatform, type RuntimePlatform } from '@volstudio/tauri-v2';
 import { DEFAULT_LIFE_PREFERENCES, type LifePreferences } from '@/app/LifePreferences';
 import { OrientationPreference } from '@/app/OrientationPreference';
-import type { LifeWorldAutosave, LifeWorldPersistence } from '@/app/LifeWorldPersistence';
+import type {
+  LifeWorldAutosave,
+  LifeWorldLoadIssue,
+  LifeWorldPersistence,
+} from '@/app/LifeWorldPersistence';
 import { LifeRuntime } from '@/runtime/LifeRuntime';
 import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 import { LifeExitPrompt } from '@/runtime/ui/LifeExitPrompt';
@@ -23,7 +27,11 @@ export interface LifeSceneServices {
   readonly preferences: LifePreferences | null;
   readonly orientation: OrientationPreference;
   readonly initialWorldSnapshot: LifeWorldSnapshot | null;
+  /** Kayıt yüklenemediyse nedeni; HUD kurulduğunda kullanıcıya bir kez söylenir. */
+  readonly initialWorldLoadIssue: LifeWorldLoadIssue | null;
   readonly worldPersistence: Pick<LifeWorldPersistence, 'attach'> | null;
+  /** Development audition genomu digest'i; üretimde null. */
+  readonly auditionDigest: string | null;
   readonly createRuntime: (
     scene: Phaser.Scene,
     initialSnapshot: LifeWorldSnapshot | null,
@@ -58,7 +66,9 @@ export class LifeScene extends Phaser.Scene {
       preferences: services.preferences ?? null,
       orientation: services.orientation ?? new OrientationPreference(null),
       initialWorldSnapshot: services.initialWorldSnapshot ?? null,
+      initialWorldLoadIssue: services.initialWorldLoadIssue ?? null,
       worldPersistence: services.worldPersistence ?? null,
+      auditionDigest: services.auditionDigest ?? null,
       createRuntime:
         services.createRuntime ??
         ((scene, initialSnapshot) => new LifeRuntime(scene, { initialSnapshot })),
@@ -163,8 +173,12 @@ export class LifeScene extends Phaser.Scene {
             : undefined,
           optionsContent: panel,
           showFps: preferenceState.showFps,
+          ...(this.services.auditionDigest ? { auditionDigest: this.services.auditionDigest } : {}),
         }),
       );
+      if (this.services.initialWorldLoadIssue) {
+        this.hud.showWorldLoadIssue(this.services.initialWorldLoadIssue);
+      }
       if (preferences) {
         scope.addSubscription(
           preferences.subscribeSaveErrors(() => this.hud?.showPreferenceSaveError()),

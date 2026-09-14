@@ -6,7 +6,8 @@
     "ariaLabel": "World indicators",
     "fullscreenEnter": "Enter fullscreen",
     "fullscreenExit": "Exit fullscreen",
-    "options": "Options"
+    "options": "Options",
+    "audition": "Audition genome {{digest}} — not qualified"
   },
   "exit": {
     "title": "Close VOL.LIFE?",
@@ -29,6 +30,10 @@
     "fullscreen": "Fullscreen",
     "saveFailed": "Options could not be saved. The change applies to this session.",
     "worldSaveFailed": "The world could not be saved. This session is still running."
+  },
+  "world": {
+    "incompatibleSave": "The previous world save is incompatible with this version; a new world was started.",
+    "corruptSave": "The world save could not be read; a new world was started."
   },
   "fatal": {
     "title": "VOL.LIFE could not start"

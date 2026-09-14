@@ -1,206 +1,198 @@
 import { describe, expect, it } from 'vitest';
+import { defaultPhysicsGenome, type PhysicsGenome } from '@/config/genome';
 import { particleConfig } from '@/config/particles';
-import { worldConfig } from '@/config/world';
-import {
-  accumulateParticleForces,
-  initializeParticles,
-  integrateParticles,
-} from '@/runtime/sim/ParticlePhysics';
+import { substrateConfig } from '@/config/substrate';
+import { accumulateParticleForces, integrateParticles } from '@/runtime/sim/ParticlePhysics';
+import { createMultiBandKernel } from '@/runtime/sim/PairForceKernel';
 import { ParticleSpatialHash } from '@/runtime/sim/ParticleSpatialHash';
 import { ParticleStore } from '@/runtime/sim/ParticleStore';
-import { createSimRandom } from '@/runtime/sim/rng';
 
-function pair(leftX: number, rightX: number, leftType = 0, rightType = 1) {
+const BOUNDS = substrateConfig.world.boundsUnits;
+const DYNAMICS = defaultPhysicsGenome.dynamics;
+const KERNEL = createMultiBandKernel(defaultPhysicsGenome);
+
+function pair(
+  leftX: number,
+  rightX: number,
+  leftType = 0,
+  rightType = 1,
+  genome: PhysicsGenome = defaultPhysicsGenome,
+) {
   const particles = new ParticleStore(2);
-  particles.x.set([leftX, rightX]);
-  particles.y.set([100, 100]);
-  particles.type.set([leftType, rightType]);
-  const grid = new ParticleSpatialHash(worldConfig.boundsUnits, particleConfig.cellSizeUnits, 2);
+  const centerY = BOUNDS.y + BOUNDS.height / 2;
+  particles.spawn(leftX, centerY, 0, 0, leftType);
+  particles.spawn(rightX, centerY, 0, 0, rightType);
+  const grid = new ParticleSpatialHash(BOUNDS, particleConfig.cellSizeUnits, 2);
   grid.rebuild(particles);
-  return { particles, grid };
+  const kernel = genome === defaultPhysicsGenome ? KERNEL : createMultiBandKernel(genome);
+  return { particles, grid, kernel };
 }
 
-describe('parçacık fiziği', () => {
-  it('çok yakın bütün türleri ortak kuvvetle birbirinden iter', () => {
-    const { particles, grid } = pair(100, 105);
+describe('parçacık kuvvet biriktirimi', () => {
+  it('çok yakın bütün türleri ortak sert çekirdekle birbirinden iter', () => {
+    const { particles, grid, kernel } = pair(100, 105);
 
-    accumulateParticleForces(particles, grid, particleConfig);
+    accumulateParticleForces(particles, grid, kernel, 1);
 
     expect(particles.forceX[0]).toBeLessThan(0);
     expect(particles.forceX[1]).toBeGreaterThan(0);
   });
 
   it('orta mesafede yönlü ve asimetrik tür matrisini uygular', () => {
-    const { particles, grid } = pair(100, 150, 0, 1);
+    const { particles, grid, kernel } = pair(100, 150, 0, 1);
 
-    accumulateParticleForces(particles, grid, particleConfig);
+    accumulateParticleForces(particles, grid, kernel, 1);
 
     expect(particles.forceX[0]).not.toBeCloseTo(-particles.forceX[1], 6);
   });
 
-  it('yönlü rol çifti menzilini gözlemleyenin rolüne göre uygular', () => {
-    const { particles, grid } = pair(100, 164, 0, 2);
-    const config = {
-      ...particleConfig,
-      interactionRadiusByRolePair: new Float32Array([128, 32, 128, 128, 128, 128, 128, 128, 128]),
-    };
+  it('menzil dışındaki parçacıklara kuvvet uygulamaz', () => {
+    const { particles, grid, kernel } = pair(5, 1019);
 
-    accumulateParticleForces(particles, grid, config);
-
-    expect(particles.forceX[0]).toBe(0);
-    expect(particles.forceX[1]).not.toBe(0);
-  });
-
-  it('dünyanın zıt kenarlarındaki parçacıkları komşu saymaz', () => {
-    const { particles, grid } = pair(5, 1019);
-
-    accumulateParticleForces(particles, grid, particleConfig);
+    accumulateParticleForces(particles, grid, kernel, 1);
 
     expect(particles.forceX[0]).toBe(0);
     expect(particles.forceX[1]).toBe(0);
   });
 
-  it('kuvvet biriktirirken konumu değiştirmez; entegrasyonda sürtünme ve hız tavanı uygular', () => {
-    const { particles, grid } = pair(100, 105);
+  it('kuvvet biriktirirken konumu değiştirmez', () => {
+    const { particles, grid, kernel } = pair(100, 105);
     const before = particles.x.slice();
-    accumulateParticleForces(particles, grid, particleConfig);
-    expect(particles.x).toEqual(before);
-    particles.vx.fill(999);
 
-    integrateParticles(particles, particleConfig, worldConfig.boundsUnits, worldConfig.fixedStepMs);
+    accumulateParticleForces(particles, grid, kernel, 1);
+
+    expect(particles.x).toEqual(before);
+  });
+
+  it('aktif olmayan slotlar kuvvet hesabına katılmaz', () => {
+    const particles = new ParticleStore(2);
+    particles.x.set([100, 105]);
+    particles.y.set([200, 200]);
+    particles.type.set([0, 1]);
+    particles.active.set([1, 0]);
+    const grid = new ParticleSpatialHash(BOUNDS, particleConfig.cellSizeUnits, 2);
+    grid.rebuild(particles);
+
+    accumulateParticleForces(particles, grid, KERNEL, 1);
+
+    expect(particles.forceX[0]).toBe(0);
+    expect(particles.forceX[1]).toBe(0);
+  });
+
+  it('geçersiz kuvvet ölçeği RangeError fırlatır', () => {
+    const { particles, grid, kernel } = pair(100, 105);
+
+    expect(() => accumulateParticleForces(particles, grid, kernel, 0)).toThrow(RangeError);
+    expect(() => accumulateParticleForces(particles, grid, kernel, -1)).toThrow(RangeError);
+    expect(() => accumulateParticleForces(particles, grid, kernel, Number.NaN)).toThrow(RangeError);
+  });
+
+  it('kernel menzili hücre boyutunu aşarsa RangeError fırlatır', () => {
+    const { particles, grid } = pair(100, 105);
+    const wideKernel = { cutoffUnits: 999, magnitude: () => 0 };
+
+    expect(() => accumulateParticleForces(particles, grid, wideKernel, 1)).toThrow(RangeError);
+  });
+});
+
+describe('parçacık entegrasyonu', () => {
+  it('sönümleme uygular ve hız tavanını aşmaz', () => {
+    const particles = new ParticleStore(1);
+    particles.spawn(500, 500, 999, 999, 0);
+
+    integrateParticles(
+      particles,
+      DYNAMICS,
+      particleConfig.referenceHz,
+      1000 / particleConfig.referenceHz,
+    );
 
     expect(Math.hypot(particles.vx[0], particles.vy[0])).toBeLessThanOrEqual(
-      particleConfig.maxSpeedUnitsPerReferenceTick + 1e-6,
-    );
-    expect(particles.x[0]).toBeGreaterThanOrEqual(0);
-    expect(particles.x[0]).toBeLessThanOrEqual(
-      worldConfig.boundsUnits.width - particleConfig.radiusUnits,
+      DYNAMICS.maxSpeedUnitsPerReferenceTick + 1e-6,
     );
   });
 
-  it('sert duvar temasında seker, yumuşak temasta yüzeyden ayrılır', () => {
-    const particles = new ParticleStore(2);
-    particles.x.set([5, 4.55]);
-    particles.y.set([100, 200]);
-    particles.vx.set([-2, -0.1]);
-    particles.vy.set([0.5, 0.5]);
+  it('duvar, clamp veya sekme uygulamaz; parçacık sınır dışına çıkabilir', () => {
+    const particles = new ParticleStore(1);
+    particles.spawn(5, 200, -2, 0.5, 0);
 
-    integrateParticles(particles, particleConfig, worldConfig.boundsUnits, worldConfig.fixedStepMs);
+    integrateParticles(
+      particles,
+      DYNAMICS,
+      particleConfig.referenceHz,
+      1000 / particleConfig.referenceHz,
+    );
 
-    expect(particles.x[0]).toBeGreaterThan(particleConfig.radiusUnits);
+    expect(particles.x[0]).toBeLessThan(5);
+    expect(particles.vx[0]).toBeLessThan(0);
+  });
+
+  it('kuvvet hızını ve konumu günceller', () => {
+    const particles = new ParticleStore(1);
+    particles.spawn(500, 500, 0, 0, 0);
+    particles.forceX[0] = 1;
+    particles.forceY[0] = 0;
+
+    integrateParticles(
+      particles,
+      DYNAMICS,
+      particleConfig.referenceHz,
+      1000 / particleConfig.referenceHz,
+    );
+
     expect(particles.vx[0]).toBeGreaterThan(0);
-    expect(particles.x[1]).toBeGreaterThanOrEqual(particleConfig.radiusUnits);
-    expect(particles.vx[1]).toBeGreaterThan(0);
-    expect(particles.vy[1]).toBeGreaterThan(0);
+    expect(particles.x[0]).toBeGreaterThan(500);
   });
 
-  it('penetrasyon yokken görünmez wall spring uygulamaz', () => {
+  it('aktif olmayan slotların konumu değişmez', () => {
     const particles = new ParticleStore(1);
-    particles.x[0] = particleConfig.radiusUnits + 6;
-    particles.y[0] = 200;
+    particles.x[0] = 500;
+    particles.y[0] = 500;
+    particles.vx[0] = 999;
+    particles.vy[0] = 999;
 
-    integrateParticles(particles, particleConfig, worldConfig.boundsUnits, worldConfig.fixedStepMs);
+    integrateParticles(
+      particles,
+      DYNAMICS,
+      particleConfig.referenceHz,
+      1000 / particleConfig.referenceHz,
+    );
 
-    expect(particles.x[0]).toBe(particleConfig.radiusUnits + 6);
-    expect(particles.vx[0]).toBe(0);
+    expect(particles.x[0]).toBe(500);
+    expect(particles.y[0]).toBe(500);
+    expect(particles.vx[0]).toBe(999);
+    expect(particles.vy[0]).toBe(999);
   });
 
-  it('sürekli dışarı itilen parçacığı sınır düzlemine kilitlemez', () => {
+  it('geçersiz stepMs verildiğinde RangeError fırlatır', () => {
     const particles = new ParticleStore(1);
-    const minimumX = particleConfig.radiusUnits;
-    particles.x[0] = minimumX + 1;
-    particles.y[0] = 200;
-    particles.vx[0] = -0.1;
-    let exactContactTicks = 0;
-    let furthestSeparation = 0;
+    particles.spawn(500, 500, 0, 0, 0);
 
-    for (let tick = 0; tick < 3_600; tick++) {
-      particles.forceX[0] = -0.08;
-      integrateParticles(
-        particles,
-        particleConfig,
-        worldConfig.boundsUnits,
-        worldConfig.fixedStepMs,
-      );
-      if (particles.x[0] <= minimumX + 1e-5) exactContactTicks++;
-      furthestSeparation = Math.max(furthestSeparation, particles.x[0] - minimumX);
-    }
-
-    expect(exactContactTicks).toBeLessThan(900);
-    expect(furthestSeparation).toBeGreaterThan(0.5);
-  });
-
-  it('köşede iki normal bileşeni çözer ve teğetsel hareketi korur', () => {
-    const corner = new ParticleStore(1);
-    corner.x[0] = particleConfig.radiusUnits + 0.1;
-    corner.y[0] = particleConfig.radiusUnits + 0.1;
-    corner.vx[0] = -2;
-    corner.vy[0] = -1.5;
-
-    integrateParticles(corner, particleConfig, worldConfig.boundsUnits, worldConfig.fixedStepMs);
-
-    expect(corner.vx[0]).toBeGreaterThan(0);
-    expect(corner.vy[0]).toBeGreaterThan(0);
-
-    const grazing = new ParticleStore(1);
-    grazing.x[0] = particleConfig.radiusUnits + 0.1;
-    grazing.y[0] = 200;
-    grazing.vx[0] = -0.2;
-    grazing.vy[0] = 1;
-
-    integrateParticles(grazing, particleConfig, worldConfig.boundsUnits, worldConfig.fixedStepMs);
-
-    expect(grazing.vx[0]).toBeGreaterThan(0);
-    expect(grazing.vy[0]).toBeGreaterThan(0.9);
-  });
-
-  it('dünya parçacık çapından küçük olduğunda initializeParticles RangeError fırlatır', () => {
-    const particles = new ParticleStore(10);
-    const smallBounds = { x: 0, y: 0, width: 2, height: 2 };
-    expect(() =>
-      initializeParticles(particles, createSimRandom(42), particleConfig, smallBounds),
-    ).toThrow(RangeError);
-  });
-
-  it('geçersiz stepMs verildiğinde integrateParticles RangeError fırlatır', () => {
-    const particles = new ParticleStore(1);
-    expect(() => integrateParticles(particles, particleConfig, worldConfig.boundsUnits, 0)).toThrow(
+    expect(() => integrateParticles(particles, DYNAMICS, particleConfig.referenceHz, 0)).toThrow(
+      RangeError,
+    );
+    expect(() => integrateParticles(particles, DYNAMICS, particleConfig.referenceHz, -5)).toThrow(
       RangeError,
     );
     expect(() =>
-      integrateParticles(particles, particleConfig, worldConfig.boundsUnits, -5),
-    ).toThrow(RangeError);
-    expect(() =>
-      integrateParticles(particles, particleConfig, worldConfig.boundsUnits, Number.NaN),
+      integrateParticles(particles, DYNAMICS, particleConfig.referenceHz, Number.NaN),
     ).toThrow(RangeError);
   });
 
-  it('sağ ve alt duvarlara çarpan parçacığın hız ve konumu sınır içine döndürülür', () => {
-    const maxX =
-      worldConfig.boundsUnits.x + worldConfig.boundsUnits.width - particleConfig.radiusUnits;
-    const maxY =
-      worldConfig.boundsUnits.y + worldConfig.boundsUnits.height - particleConfig.radiusUnits;
-    const particles = new ParticleStore(2);
-    particles.x.set([maxX - 0.1, 100]);
-    particles.y.set([100, maxY - 0.1]);
-    particles.vx.set([2, 0.5]);
-    particles.vy.set([0.5, 2]);
+  it('referenceHz ile stepMs çarpımı adım ölçeğini belirler', () => {
+    const particles = new ParticleStore(1);
+    particles.spawn(500, 500, 1, 0, 0);
 
-    integrateParticles(particles, particleConfig, worldConfig.boundsUnits, worldConfig.fixedStepMs);
+    const stepMs = 1000 / particleConfig.referenceHz;
+    const before = particles.x[0];
+    integrateParticles(particles, DYNAMICS, particleConfig.referenceHz, stepMs);
+    const deltaOne = particles.x[0] - before;
 
-    expect(particles.x[0]).toBeLessThanOrEqual(maxX);
-    expect(particles.vx[0]).toBeLessThan(0);
-    expect(particles.y[1]).toBeLessThanOrEqual(maxY);
-    expect(particles.vy[1]).toBeLessThan(0);
-  });
+    particles.x[0] = 500;
+    particles.vx[0] = 1;
+    integrateParticles(particles, DYNAMICS, particleConfig.referenceHz, stepMs * 2);
+    const deltaTwo = particles.x[0] - 500;
 
-  it('aynı tohumla aynı başlangıç dizilerini üretir', () => {
-    const left = new ParticleStore(100);
-    const right = new ParticleStore(100);
-
-    initializeParticles(left, createSimRandom(42), particleConfig, worldConfig.boundsUnits);
-    initializeParticles(right, createSimRandom(42), particleConfig, worldConfig.boundsUnits);
-
-    expect(left.snapshot()).toEqual(right.snapshot());
+    expect(deltaTwo).toBeGreaterThan(deltaOne);
   });
 });

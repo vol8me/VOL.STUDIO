@@ -39,6 +39,17 @@ body {
   pointer-events: auto;
 }
 
+/* Development audition rozeti: provenance her zaman görünür, üretimde hiç çizilmez. */
+.vol-life-hud__audition {
+  position: absolute;
+  top: calc(max(var(--vol-safe-top), 12px) + 28px);
+  left: max(var(--vol-safe-left), 20px);
+  margin: 0;
+  color: var(--vol-ui-warning-solid);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
 .vol-life-options {
   padding: var(--vol-space-xs);
 }

@@ -5,14 +5,12 @@ import {
   validateWorldConfig,
   worldConfig,
 } from '@/config/world';
-import { lifeGraphicsConfig } from '@/config/graphics';
 
 describe('worldConfig', () => {
-  it('sonlu dünya sınırı pozitif ve tek kaynaktır', () => {
+  it('depolama dikdörtgeni sonlu, pozitif ve duvar taşımaz', () => {
     expect(worldConfig.boundsUnits).toEqual({ x: 0, y: 0, width: 1024, height: 1024 });
     expect(Object.values(worldConfig.boundsUnits).every(Number.isFinite)).toBe(true);
-    expect(worldConfig.particleCollisionInsetUnits).toBeGreaterThan(0);
-    expect(worldConfig.particleCollisionInsetUnits * 2).toBeLessThan(worldConfig.boundsUnits.width);
+    expect(worldConfig).not.toHaveProperty('particleCollisionInsetUnits');
   });
 
   it('sabit adım pozitiftir', () => {
@@ -71,28 +69,5 @@ describe('worldConfig', () => {
     // Güvenlik sınırları: 4x üzerini kelepçeler, bozuk değerde 1x tabanını korur
     expect(resolveMaxStepsForSpeed(10)).toBe(8);
     expect(resolveMaxStepsForSpeed(NaN)).toBe(2);
-  });
-});
-
-describe('lifeGraphicsConfig', () => {
-  it('renderer açıkça webgl ister; sessiz Canvas2D geri düşüşü yoktur', () => {
-    expect(lifeGraphicsConfig.renderer).toBe('webgl');
-  });
-
-  it('renderScale 0.25–1 aralığındadır', () => {
-    expect(lifeGraphicsConfig.renderScale).toBeGreaterThanOrEqual(0.25);
-    expect(lifeGraphicsConfig.renderScale).toBeLessThanOrEqual(1);
-  });
-
-  it('mevcut parçacık ayrıntısında bilgi taşımayan aşırı yakınlaştırmayı sınırlar', () => {
-    expect(lifeGraphicsConfig.cameraMaxZoomFactor).toBeGreaterThan(1);
-    expect(lifeGraphicsConfig.cameraMaxZoomFactor).toBeLessThanOrEqual(3);
-  });
-
-  it('görsel sınır kalınlığı fizik insetinden bağımsız sunum verisidir', () => {
-    expect(lifeGraphicsConfig.boundaryPreferredThicknessUnits).toBeGreaterThan(0);
-    expect(lifeGraphicsConfig.boundaryMinScreenPixels).toBeLessThanOrEqual(
-      lifeGraphicsConfig.boundaryMaxScreenPixels,
-    );
   });
 });

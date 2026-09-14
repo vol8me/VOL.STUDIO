@@ -1,6 +1,7 @@
 import type { Rect } from '@volstudio/core/math/geometry';
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
 
+/** Counting-sort hücre indeksi; yalnız AKTİF parçacıkları indeksler. */
 export class ParticleSpatialHash {
   readonly cellsX: number;
   readonly cellsY: number;
@@ -9,6 +10,7 @@ export class ParticleSpatialHash {
   private readonly offsets: Uint32Array;
   private readonly cursors: Uint32Array;
   private readonly sortedParticles: Uint32Array;
+  private indexed = 0;
 
   constructor(
     readonly bounds: Readonly<Rect>,
@@ -19,8 +21,11 @@ export class ParticleSpatialHash {
     const cellsY = bounds.height / cellSize;
     if (!Number.isInteger(cellsX) || !Number.isInteger(cellsY) || cellsX < 3 || cellsY < 3) {
       throw new RangeError(
-        'Dünya boyutları hücre boyutuna tam bölünmeli ve en az üç hücre olmalı.',
+        'Depolama boyutları hücre boyutuna tam bölünmeli ve en az üç hücre olmalı.',
       );
+    }
+    if (!Number.isInteger(capacity) || capacity < 1) {
+      throw new RangeError(`Spatial hash kapasitesi pozitif tam sayı olmalı: ${capacity}`);
     }
     this.cellsX = cellsX;
     this.cellsY = cellsY;
@@ -31,26 +36,31 @@ export class ParticleSpatialHash {
     this.sortedParticles = new Uint32Array(capacity);
   }
 
+  /** İndekslenen aktif parçacık sayısı; son `rebuild` sonrası geçerli. */
+  get indexedCount(): number {
+    return this.indexed;
+  }
+
   rebuild(particles: ParticleStore): void {
-    if (particles.count > this.sortedParticles.length) {
-      throw new RangeError('Parçacık sayısı spatial hash kapasitesini aşıyor.');
+    if (particles.capacity > this.sortedParticles.length) {
+      throw new RangeError('Parçacık kapasitesi spatial hash kapasitesini aşıyor.');
     }
     this.counts.fill(0);
-    for (let index = 0; index < particles.count; index++) {
-      const cell = this.cellForPosition(particles.x[index], particles.y[index]);
-      if (cell === null) throw new RangeError('Parçacık fiziksel dünya sınırının dışında.');
-      this.counts[cell]++;
+    const { active, x, y, capacity } = particles;
+    for (let slot = 0; slot < capacity; slot++) {
+      if (active[slot] === 0) continue;
+      this.counts[this.requireCell(x[slot], y[slot])]++;
     }
     this.offsets[0] = 0;
     for (let cell = 0; cell < this.cellCount; cell++) {
       this.offsets[cell + 1] = this.offsets[cell] + this.counts[cell];
       this.cursors[cell] = this.offsets[cell];
     }
-    for (let index = 0; index < particles.count; index++) {
-      const cell = this.cellForPosition(particles.x[index], particles.y[index]);
-      if (cell === null) throw new RangeError('Parçacık fiziksel dünya sınırının dışında.');
-      this.sortedParticles[this.cursors[cell]++] = index;
+    for (let slot = 0; slot < capacity; slot++) {
+      if (active[slot] === 0) continue;
+      this.sortedParticles[this.cursors[this.requireCell(x[slot], y[slot])]++] = slot;
     }
+    this.indexed = this.offsets[this.cellCount];
   }
 
   cellForPosition(x: number, y: number): number | null {
@@ -75,5 +85,11 @@ export class ParticleSpatialHash {
 
   particleAt(slot: number): number {
     return this.sortedParticles[slot];
+  }
+
+  private requireCell(x: number, y: number): number {
+    const cell = this.cellForPosition(x, y);
+    if (cell === null) throw new RangeError('Aktif parçacık depolama sınırının dışında.');
+    return cell;
   }
 }

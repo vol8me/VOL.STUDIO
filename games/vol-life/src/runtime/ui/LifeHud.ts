@@ -17,7 +17,11 @@ export interface LifeHudOptions {
   };
   readonly optionsContent: { readonly element: HTMLElement };
   readonly showFps: boolean;
+  /** Development audition genomunun digest'i; üretimde tanımsız kalır. */
+  readonly auditionDigest?: string;
 }
+
+export type WorldLoadIssue = 'incompatible' | 'corrupt';
 
 /** VOL.LIFE'ın marka, seçenek ve isteğe bağlı tanı göstergesi kabuğu. */
 export class LifeHud {
@@ -29,12 +33,15 @@ export class LifeHud {
   private readonly optionsButton: IconButton;
   private readonly optionsSheet: Sheet;
   private readonly toasts: ToastManager;
+  private readonly auditionBadge: Text | null;
+  private readonly auditionDigest: string | null;
   private fpsMeter: FpsMeter | null = null;
   private fullscreenActive: boolean;
   private readonly onLanguageChanged = (): void => this.refreshLabels();
 
   constructor(parent: HTMLElement | undefined, options: LifeHudOptions) {
     this.fullscreenActive = options.fullscreen?.initialActive ?? false;
+    this.auditionDigest = options.auditionDigest ?? null;
     this.uiRoot = this.scope.addDestroyable(new UIRoot(parent));
     this.toasts = this.scope.addDestroyable(new ToastManager(this.uiRoot.element));
 
@@ -50,6 +57,15 @@ export class LifeHud {
     );
     this.titleText.element.classList.add('vol-life-hud__title');
     this.root.appendChild(this.titleText.element);
+
+    this.auditionBadge = this.auditionDigest
+      ? this.scope.addDestroyable(new Text(this.auditionLabel(), { variant: 'muted' }))
+      : null;
+    if (this.auditionBadge) {
+      this.auditionBadge.element.classList.add('vol-life-hud__audition');
+      this.auditionBadge.element.setAttribute('role', 'status');
+      this.root.appendChild(this.auditionBadge.element);
+    }
 
     const actions = document.createElement('div');
     actions.className = 'vol-life-hud__actions';
@@ -131,6 +147,12 @@ export class LifeHud {
     this.toasts.show(i18next.t('life:options.worldSaveFailed'), { variant: 'danger' });
   }
 
+  /** Eski/bozuk kayıt yeni dünyayla değiştirildiğinde kullanıcıya nedenini söyler. */
+  showWorldLoadIssue(issue: WorldLoadIssue): void {
+    const key = issue === 'incompatible' ? 'life:world.incompatibleSave' : 'life:world.corruptSave';
+    this.toasts.show(i18next.t(key), { variant: 'warning' });
+  }
+
   destroy(): void {
     this.scope.dispose();
     this.fpsMeter = null;
@@ -139,6 +161,7 @@ export class LifeHud {
   private refreshLabels(): void {
     this.root.setAttribute('aria-label', i18next.t('life:hud.ariaLabel'));
     this.titleText.setContent(i18next.t('life:app.title'));
+    this.auditionBadge?.setContent(this.auditionLabel());
     this.fullscreenButton?.setLabel(this.fullscreenLabel());
     this.optionsButton.setLabel(i18next.t('life:hud.options'));
     this.optionsSheet.setTitle(i18next.t('life:options.title'));
@@ -149,5 +172,9 @@ export class LifeHud {
     return this.fullscreenActive
       ? i18next.t('life:hud.fullscreenExit')
       : i18next.t('life:hud.fullscreenEnter');
+  }
+
+  private auditionLabel(): string {
+    return i18next.t('life:hud.audition', { digest: this.auditionDigest ?? '' });
   }
 }

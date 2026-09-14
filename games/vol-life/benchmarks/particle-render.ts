@@ -1,9 +1,12 @@
 import Phaser from 'phaser';
+import { defaultPhysicsGenome } from '../src/config/genome';
+import { lifeGraphicsConfig } from '../src/config/graphics';
 import { particleConfig } from '../src/config/particles';
-import { worldConfig } from '../src/config/world';
+import { substrateConfig } from '../src/config/substrate';
 import { ParticleRenderer } from '../src/runtime/render/ParticleRenderer';
-import { initializeParticles } from '../src/runtime/sim/ParticlePhysics';
+import { seedInitialMatter } from '../src/runtime/sim/InitialMatterSeeder';
 import { ParticleStore } from '../src/runtime/sim/ParticleStore';
+import { HabitatSDF } from '../src/runtime/sim/WorldDomain';
 import { createSimRandom } from '../src/runtime/sim/rng';
 
 interface RenderResult {
@@ -30,16 +33,24 @@ class RenderBenchmarkScene extends Phaser.Scene {
   private frames = 0;
 
   create(): void {
+    const { boundsUnits } = substrateConfig.world;
+    const domain = new HabitatSDF(boundsUnits, substrateConfig.habitat, 0x10fe1);
     this.particles = new ParticleStore(count);
-    initializeParticles(
+    seedInitialMatter(
       this.particles,
       createSimRandom(0x10fe1),
-      { ...particleConfig, count },
-      worldConfig.boundsUnits,
+      domain,
+      defaultPhysicsGenome,
+      count,
     );
     this.particles.capturePrevious();
-    this.particleRenderer = new ParticleRenderer(this, particleConfig.radiusUnits);
-    const { boundsUnits } = worldConfig;
+    this.particleRenderer = new ParticleRenderer(this, {
+      radiusUnits: particleConfig.radiusUnits,
+      maxSpeedUnitsPerReferenceTick: defaultPhysicsGenome.dynamics.maxSpeedUnitsPerReferenceTick,
+      velocityStretchMax: lifeGraphicsConfig.particleVelocityStretchMax,
+      fringeWidthUnits: defaultPhysicsGenome.fringe.widthUnits,
+      fringeStretchMax: lifeGraphicsConfig.particleFringeStretchMax,
+    });
     this.cameras.main.centerOn(
       boundsUnits.x + boundsUnits.width / 2,
       boundsUnits.y + boundsUnits.height / 2,

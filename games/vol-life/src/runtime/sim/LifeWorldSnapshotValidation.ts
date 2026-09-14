@@ -1,17 +1,24 @@
-import { PARTICLE_TYPE_COUNT, type ParticleConfig } from '@/config/particles';
-import type { WorldConfig } from '@/config/world';
-import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
+import { PARTICLE_TYPE_COUNT } from '@/config/genome';
+import type { SubstrateConfig } from '@/config/substrate';
 import { FIELD_NAMES } from '@/runtime/sim/FieldSet';
-import { resolveParticleBounds } from '@/runtime/sim/WorldBounds';
+import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
+import { validateMatterReservoirSnapshot } from '@/runtime/sim/MatterReservoir';
+import { validateParticleSnapshot } from '@/runtime/sim/ParticleStore';
+import type { WorldDomain } from '@/runtime/sim/WorldDomain';
 import { validateWorldMetadata } from '@/runtime/sim/WorldMetadata';
 
+/**
+ * Snapshot'ı canlı state'e dokunmadan bütünüyle doğrular. Domain verilirse
+ * habitat digest'i ve aktif parçacıkların kıyının gerisinde olduğu da sınanır.
+ */
 export function validateLifeWorldSnapshot(
   snapshot: LifeWorldSnapshot,
-  worldConfig: WorldConfig,
-  particleConfig: ParticleConfig,
+  config: SubstrateConfig,
+  domain: WorldDomain | null = null,
 ): void {
   validateWorldMetadata(snapshot.metadata);
-  const fieldLength = worldConfig.fieldResolution ** 2;
+  const { world, particles: particleConfig, genome } = config;
+  const fieldLength = world.fieldResolution ** 2;
   const fieldsValid =
     snapshot.nutrientDiffusionSource.length === fieldLength &&
     snapshot.nutrientDiffusionSource.every(Number.isFinite) &&
@@ -31,47 +38,41 @@ export function validateLifeWorldSnapshot(
     snapshot.rngState > 0x7fffffff ||
     !Number.isInteger(snapshot.nextFieldBand) ||
     snapshot.nextFieldBand < 0 ||
-    snapshot.nextFieldBand >= worldConfig.fieldUpdateBands
+    snapshot.nextFieldBand >= world.fieldUpdateBands
   ) {
     throw new RangeError('Dünya kaydının zaman veya rastgelelik bilgisi geçersiz.');
   }
-  const { particles } = snapshot;
-  const particleArraysValid =
-    particles.x.length === particleConfig.count &&
-    particles.y.length === particleConfig.count &&
-    particles.vx.length === particleConfig.count &&
-    particles.vy.length === particleConfig.count &&
-    particles.type.length === particleConfig.count;
-  if (!particleArraysValid) {
-    throw new RangeError('Dünya kaydının parçacık sayısı yapılandırmayla uyuşmuyor.');
+  if (
+    typeof snapshot.habitatDigest !== 'string' ||
+    !/^[0-9a-f]{16}$/.test(snapshot.habitatDigest)
+  ) {
+    throw new RangeError('Dünya kaydının habitat digest’i geçersiz.');
   }
-  const bounds = resolveParticleBounds(
-    worldConfig.boundsUnits,
-    worldConfig.particleCollisionInsetUnits,
-  );
-  const minX = bounds.x + particleConfig.radiusUnits;
-  const maxX = bounds.x + bounds.width - particleConfig.radiusUnits;
-  const minY = bounds.y + particleConfig.radiusUnits;
-  const maxY = bounds.y + bounds.height - particleConfig.radiusUnits;
-  const maxSpeedSquared = (particleConfig.maxSpeedUnitsPerReferenceTick + 1e-5) ** 2;
-  for (let index = 0; index < particles.x.length; index++) {
-    const x = particles.x[index];
-    const y = particles.y[index];
-    const vx = particles.vx[index];
-    const vy = particles.vy[index];
+  if (domain && snapshot.habitatDigest !== domain.digest) {
+    throw new RangeError('Dünya kaydı başka bir habitat konturuna ait.');
+  }
+  validateMatterReservoirSnapshot(snapshot.reservoir);
+  validateParticleSnapshot(snapshot.particles, particleConfig.capacity);
+  const { particles } = snapshot;
+  const maxSpeedSquared = (genome.dynamics.maxSpeedUnitsPerReferenceTick + 1e-5) ** 2;
+  const storage = world.boundsUnits;
+  for (let slot = 0; slot < particleConfig.capacity; slot++) {
+    if (particles.active[slot] === 0) continue;
+    const x = particles.x[slot];
+    const y = particles.y[slot];
+    const insideStorage =
+      x >= storage.x &&
+      x < storage.x + storage.width &&
+      y >= storage.y &&
+      y < storage.y + storage.height;
+    const insideHabitat = domain ? domain.distance(x, y) >= 0 : true;
     if (
-      !Number.isFinite(x) ||
-      !Number.isFinite(y) ||
-      !Number.isFinite(vx) ||
-      !Number.isFinite(vy) ||
-      x < minX ||
-      x > maxX ||
-      y < minY ||
-      y > maxY ||
-      vx * vx + vy * vy > maxSpeedSquared ||
-      particles.type[index] >= PARTICLE_TYPE_COUNT
+      !insideStorage ||
+      !insideHabitat ||
+      particles.vx[slot] ** 2 + particles.vy[slot] ** 2 > maxSpeedSquared ||
+      particles.type[slot] >= PARTICLE_TYPE_COUNT
     ) {
-      throw new RangeError(`Dünya kaydındaki ${index}. parçacık geçersiz.`);
+      throw new RangeError(`Dünya kaydındaki ${slot}. parçacık geçersiz.`);
     }
   }
 }

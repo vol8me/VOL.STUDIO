@@ -12,14 +12,14 @@ import {
   androidScreenOrientation,
   getRuntimePlatform,
 } from '@volstudio/tauri-v2';
+import { loadAuditionGenome } from '@/app/auditionGenome';
 import { LifePreferences } from '@/app/LifePreferences';
 import { LifeWorldPersistence } from '@/app/LifeWorldPersistence';
 import { showFatalError } from '@/app/fatalError';
 import { OrientationPreference } from '@/app/OrientationPreference';
 import { createSaveManager } from '@/app/storage';
 import { lifeGraphicsConfig } from '@/config/graphics';
-import { particleConfig } from '@/config/particles';
-import { worldConfig } from '@/config/world';
+import { substrateConfig } from '@/config/substrate';
 import { LifeRuntime } from '@/runtime/LifeRuntime';
 import { LifeScene } from '@/runtime/scene/LifeScene';
 import lifeTr from '@/i18n/tr.json';
@@ -59,8 +59,12 @@ try {
   setHapticsDriver(platform === 'android' ? new TauriHapticsDriver() : null);
   const preferences = new LifePreferences(saveManager);
   await preferences.load();
-  const worldPersistence = new LifeWorldPersistence(saveManager, worldConfig, particleConfig);
-  const initialWorldSnapshot = await worldPersistence.load();
+  const audition = loadAuditionGenome();
+  const activeSubstrate = audition
+    ? { ...substrateConfig, genome: audition.genome }
+    : substrateConfig;
+  const worldPersistence = new LifeWorldPersistence(saveManager, activeSubstrate);
+  const initialWorld = await worldPersistence.load();
   setHapticsEnabled(preferences.get().hapticsEnabled);
   const orientation = new OrientationPreference(
     platform === 'android' ? androidScreenOrientation : null,
@@ -77,10 +81,13 @@ try {
         platform,
         preferences,
         orientation,
-        initialWorldSnapshot,
+        initialWorldSnapshot: initialWorld.snapshot,
+        initialWorldLoadIssue: initialWorld.issue,
         worldPersistence,
+        auditionDigest: audition?.digest ?? null,
         createRuntime: (scene, initialSnapshot) =>
           new LifeRuntime(scene, {
+            config: activeSubstrate,
             initialSnapshot,
           }),
       }),

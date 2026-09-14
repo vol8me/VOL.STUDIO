@@ -19,6 +19,7 @@ export {
   type WorldCameraPoint,
   type WorldCamera,
   type WorldCameraControllerOptions,
+  type WorldCameraFit,
 } from './WorldCameraController';
 export { FullscreenController, type FullscreenControllerOptions } from './FullscreenController';
 export {

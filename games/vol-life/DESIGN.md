@@ -821,6 +821,21 @@ yalnız mevcut Graphics yolunun yoğun ölçekte ölçeklenmediğini gösteren t
 güncelleyen LIFE yükünde otomatik kazanan değildir. Adım 11 CPU yazımı, GPU
 upload, frame p50/p95 ve görsel pariteyle en az bir alternatifle kıyaslar.
 
+**V2 ölçümleri** (2026-09-14, Particle Substrate v2, 512 kapasite):
+
+| Ölçüm                     | p50       | p95       |
+| ------------------------- | --------- | --------- |
+| 512 parçacık kernel/tick  | ≈ 0,98 ms | ≈ 1,00 ms |
+| 2048 parçacık kernel/tick | ≈ 13,9 ms | ≈ 14,1 ms |
+| 256² field tam tazeleme   | ≈ 5,4 ms  | —         |
+| 512²/4-band field/tick    | ≈ 5,6 ms  | —         |
+| 512²/4-band tam tazeleme  | ≈ 22,4 ms | —         |
+
+512→2048 ölçekleme oranı ≈ 14,2×; 5,5 tavanı bu ölçümlü O(n²) sızmasını reddeder.
+Bu ölçümler production qualification DEĞİLDİR; yalnızca substrate'in hedef
+cihaz bütçesinde çalışabilirliğinin tabanıdır. Android cihaz ölçümleri ayrı
+gerektirir.
+
 Sistemler farklı sabit tempolarda koşabilir; kamera uzaklığı fizik temposunu
 değiştiremez:
 
@@ -1037,16 +1052,33 @@ sözleşmesi veya gönderilen candidate catalog'u değildir.
   girişte tamamlanır; config/metadata sahipliği kopyayla yalıtılır ve restore
   her katmanda atomiktir. Yarım runtime kurulumu ile sahne, autosave ve çıkış
   yaşam döngüleri kaynaklarını idempotent toplar.
-- Mevcut production runtime hâlâ 100 parçacıklı triangular fizik ve
-  dikdörtgen impulse sınırı çalıştırır; yalnız geçici negatif baseline'dır.
-- V3 deneyinde 1.024 broad adaydan 4 finalist çıktı, **qualified aday çıkmadı**.
-- Eski production proof-of-life korpusunda 5 seed'in yalnız biri geçti.
-- Qualified olmayan v3 catalog/runtime enjeksiyonu ve geçersiz proof/search
-  komutları güncel ağaçtan kaldırıldı; ham artefaktlar git geçmişindedir.
-- Particle Substrate v2, organik HabitatSDF, active/inactive store, Void,
-  generalized multi-band kernel ve 512 seeding henüz uygulanmadı.
+- **Particle Substrate v2 uygulanmıştır**: `SubstrateConfig`, `PhysicsGenome`,
+  `DynamicsGenes`, `PairForceKernel` (generalized multi-band directional),
+  capacity-managed `ParticleStore` (512 aktif/kapasite), `ParticleSpatialHash`
+  (yalnız aktif slot), organik `HabitatSDF`/`WorldDomain`, `VoidSink`
+  (geri dönüşsüz deaktivasyon + `MatterReservoir`), `InitialMatterSeeder`
+  (patch+cloud dağılımı), v3 snapshot codec ve persistence, çok bantlı field
+  güncelleme, deterministic RNG, camera-domain handling, Void-death rendering.
+- Eski 100 parçacıklı triangular fizik ve dikdörtgen impulse sınırı artık
+  production'da DEĞİLDİR; yalnız negatif baseline olarak benchmark fixture'ında
+  korunur.
+- **Adım 3 araştırma kütüphanesi uygulanmıştır** (`scripts/morphology/`):
+  `GenomeSampler`, `MorphologyMetrics`, `ClusterTracker`, `PhaseClassifier`
+  (dead/stasis/gas/crystal/blob/void-loss/orbit/speed-chaos/dynamic-structured),
+  `ResearchHarness` (broad→refinement→qualification), `PerturbationSystem`,
+  `Shards` (deterministic work ID), `QualificationArtefact`, `PromotionFlow`,
+  CLI. Headless — Phaser import etmez, `runtime/sim` çekirdeğini kullanır.
+- **Brute-force oracle testi uygulanmıştır**: spatial-hash/kernel yolu doğrudan
+  all-pairs referans implementation ile karşılaştırılır; aktif/pasif slot ve
+  tür çifti davranışını floating-point tolerans içinde doğrular.
+- 384 test geçer; coverage 96,93/93,13/93,51 (statement/branch/function).
+- 512 parçacıkta p50 ≈ 0,98 ms, p95 ≈ 0,998 ms; 2048 parçacıkta p50 ≈ 13,9 ms.
+- 256² field ≈ 5,4 ms/tick; 512²/4-band ≈ 5,6 ms/tick (tam tazeleme ≈ 22,4 ms).
+- Qualified aday henüz çıkmamıştır; araştırma kütüphanesi production'a aday
+  taşımamıştır. Bu beklenen durumdur — Adım 3 ancak technical gate +
+  long-horizon + kullanıcı visual audition birlikte geçtiğinde kapanır.
 - Kamera özellikleri arttı fakat kullanıcı ergonomi kabulü hâlâ FAIL'dir.
-- Adım 3 ve dolayısıyla Adım 4 kesin blokelidir.
+- Adım 4+ (identity, energy, nucleus, predators, viruses) hâlâ blokelidir.
 
 ## 17. Ölçülmemiş varsayımlar
 

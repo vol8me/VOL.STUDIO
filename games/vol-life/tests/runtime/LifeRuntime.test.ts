@@ -3,51 +3,79 @@ import { LifeRuntime } from '@/runtime/LifeRuntime';
 
 function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = null) {
   const snapshot = { tick: 12 } as never;
+  const domain = {
+    bbox: { x: 0, y: 0, width: 1024, height: 1024 },
+    distance: () => 200,
+    normal: () => ({ x: 1, y: 0 }),
+    contour: () => new Float32Array(64),
+    digest: 'abcdef0123456789',
+    storage: { x: 0, y: 0, width: 1024, height: 1024 },
+  };
   const world = {
+    domain,
     fields: {},
     particles: {},
     step: vi.fn(() => fieldUpdates.shift() ?? false),
     snapshot: vi.fn(() => snapshot),
     restore: vi.fn(),
+    drainVoidCrossings: vi.fn(() => []),
   };
-  const renderer = { render: vi.fn(), destroy: vi.fn() };
-  const boundaryRenderer = { destroy: vi.fn() };
+  const fieldRenderer = { render: vi.fn(), destroy: vi.fn() };
+  const habitatRenderer = { update: vi.fn(), destroy: vi.fn() };
+  const deathRenderer = { push: vi.fn(), render: vi.fn(), destroy: vi.fn() };
   const particleRenderer = {
     render: vi.fn(),
     destroy: vi.fn(),
   };
   const camera = { update: vi.fn(), refreshViewport: vi.fn(), destroy: vi.fn() };
+  const backdrop = { setBackgroundColor: vi.fn() };
   const runtime = new LifeRuntime(
     { game: { canvas: document.createElement('canvas') }, cameras: { main: {} } } as never,
     {
-      config: { fixedStepMs: 10, maxStepsPerFrame: 2 } as never,
+      config: {
+        world: { fixedStepMs: 10, maxStepsPerFrame: 2 },
+        particles: { referenceHz: 60 },
+        genome: { dynamics: { maxSpeedUnitsPerReferenceTick: 2 } },
+        habitat: {},
+      } as never,
       world: world as never,
-      renderer: renderer as never,
-      boundaryRenderer,
+      fieldRenderer: fieldRenderer as never,
+      habitatRenderer: habitatRenderer as never,
+      deathRenderer: deathRenderer as never,
       particleRenderer: particleRenderer as never,
       cameraController: camera as never,
+      backdrop: backdrop as never,
       initialSnapshot: initialSnapshot as never,
     },
   );
-  return { runtime, world, renderer, boundaryRenderer, particleRenderer, camera, snapshot };
+  return {
+    runtime,
+    world,
+    fieldRenderer,
+    habitatRenderer,
+    deathRenderer,
+    particleRenderer,
+    camera,
+    snapshot,
+  };
 }
 
 describe('LifeRuntime', () => {
   it('açılışta ilk alan görünümünü üretir', () => {
-    const { renderer, particleRenderer } = harness();
+    const { fieldRenderer, particleRenderer } = harness();
 
-    expect(renderer.render).toHaveBeenCalledOnce();
+    expect(fieldRenderer.render).toHaveBeenCalledOnce();
     expect(particleRenderer.render).toHaveBeenCalledOnce();
   });
 
   it('render deltasını yalnız tam deterministik adımlara dönüştürür', () => {
-    const { runtime, world, renderer, particleRenderer, camera } = harness();
+    const { runtime, world, fieldRenderer, particleRenderer, camera } = harness();
 
     runtime.update(9);
     runtime.update(1);
 
     expect(world.step).toHaveBeenCalledOnce();
-    expect(renderer.render).toHaveBeenCalledTimes(2);
+    expect(fieldRenderer.render).toHaveBeenCalledTimes(2);
     expect(particleRenderer.render).toHaveBeenCalledTimes(3);
     expect(particleRenderer.render).toHaveBeenLastCalledWith(world.particles, 0);
     expect(camera.update).toHaveBeenNthCalledWith(1, 9);
@@ -63,12 +91,12 @@ describe('LifeRuntime', () => {
   });
 
   it('alan değişmeyen simülasyon adımında GPU dokusunu yeniden yüklemez', () => {
-    const { runtime, renderer } = harness([false, true]);
+    const { runtime, fieldRenderer } = harness([false, true]);
 
     runtime.update(10);
     runtime.update(10);
 
-    expect(renderer.render).toHaveBeenCalledTimes(2);
+    expect(fieldRenderer.render).toHaveBeenCalledTimes(2);
   });
 
   it('kare başına adım tavanını uygular ve birikmiş fazlalığı atar', () => {
@@ -97,26 +125,41 @@ describe('LifeRuntime', () => {
   });
 
   it('GPU ve giriş sahiplerini bir kez kapatır', () => {
-    const { runtime, renderer, boundaryRenderer, particleRenderer, camera } = harness();
+    const { runtime, fieldRenderer, habitatRenderer, deathRenderer, particleRenderer, camera } =
+      harness();
 
     runtime.destroy();
     runtime.destroy();
 
-    expect(renderer.destroy).toHaveBeenCalledOnce();
-    expect(boundaryRenderer.destroy).toHaveBeenCalledOnce();
+    expect(fieldRenderer.destroy).toHaveBeenCalledOnce();
+    expect(habitatRenderer.destroy).toHaveBeenCalledOnce();
+    expect(deathRenderer.destroy).toHaveBeenCalledOnce();
     expect(particleRenderer.destroy).toHaveBeenCalledOnce();
     expect(camera.destroy).toHaveBeenCalledOnce();
   });
 
   it('kurulum yarıda kesilirse o ana kadar alınan kaynakları geri bırakır', () => {
-    const renderer = { render: vi.fn(), destroy: vi.fn() };
-    const boundaryRenderer = { destroy: vi.fn() };
+    const fieldRenderer = { render: vi.fn(), destroy: vi.fn() };
+    const habitatRenderer = { update: vi.fn(), destroy: vi.fn() };
+    const deathRenderer = { push: vi.fn(), render: vi.fn(), destroy: vi.fn() };
     const particleRenderer = { render: vi.fn(), destroy: vi.fn() };
     const dependencies = {
-      config: { fixedStepMs: 10, maxStepsPerFrame: 2 } as never,
-      world: { fields: {}, particles: {}, restore: vi.fn() } as never,
-      renderer: renderer as never,
-      boundaryRenderer,
+      config: {
+        world: { fixedStepMs: 10, maxStepsPerFrame: 2 },
+        particles: { referenceHz: 60 },
+        genome: { dynamics: { maxSpeedUnitsPerReferenceTick: 2 } },
+        habitat: {},
+      } as never,
+      world: {
+        domain: {},
+        fields: {},
+        particles: {},
+        restore: vi.fn(),
+        drainVoidCrossings: vi.fn(() => []),
+      } as never,
+      fieldRenderer: fieldRenderer as never,
+      habitatRenderer: habitatRenderer as never,
+      deathRenderer: deathRenderer as never,
       particleRenderer: particleRenderer as never,
       get cameraController(): never {
         throw new Error('kamera kurulamadı');
@@ -130,8 +173,9 @@ describe('LifeRuntime', () => {
           dependencies,
         ),
     ).toThrow('kamera kurulamadı');
-    expect(renderer.destroy).toHaveBeenCalledOnce();
-    expect(boundaryRenderer.destroy).toHaveBeenCalledOnce();
+    expect(fieldRenderer.destroy).toHaveBeenCalledOnce();
+    expect(habitatRenderer.destroy).toHaveBeenCalledOnce();
+    expect(deathRenderer.destroy).toHaveBeenCalledOnce();
     expect(particleRenderer.destroy).toHaveBeenCalledOnce();
   });
 
@@ -147,6 +191,7 @@ describe('LifeRuntime', () => {
       scrollY: 0,
       setZoom: vi.fn(),
       centerOn: vi.fn(),
+      setBackgroundColor: vi.fn(),
     };
     const imageData = { data: new Uint8ClampedArray(262144), width: 256, height: 256 } as ImageData;
     const texture = {
@@ -158,14 +203,21 @@ describe('LifeRuntime', () => {
       destroy: vi.fn(),
     };
     const textures = { createCanvas: vi.fn(() => texture), remove: vi.fn() };
-    const boundary = {
-      setDepth: vi.fn(() => boundary),
+    const graphics = {
+      setDepth: vi.fn(() => graphics),
       lineStyle: vi.fn(),
+      strokePoints: vi.fn(),
       strokeRect: vi.fn(),
       strokeRoundedRect: vi.fn(),
       clear: vi.fn(),
       fillStyle: vi.fn(),
       fillCircle: vi.fn(),
+      fillEllipse: vi.fn(),
+      save: vi.fn(),
+      translateCanvas: vi.fn(),
+      rotateCanvas: vi.fn(),
+      restore: vi.fn(),
+      setAlpha: vi.fn(),
       destroy: vi.fn(),
     };
     const image = {
@@ -177,7 +229,7 @@ describe('LifeRuntime', () => {
       destroy: vi.fn(),
     };
     const add = {
-      graphics: vi.fn(() => boundary),
+      graphics: vi.fn(() => graphics),
       image: vi.fn(() => image),
     };
     const scene = { game: { canvas }, cameras: { main: camera }, add, textures } as never;

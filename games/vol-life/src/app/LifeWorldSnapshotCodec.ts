@@ -1,11 +1,15 @@
 import { FIELD_NAMES, type FieldSnapshot } from '@/runtime/sim/FieldSet';
 import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
-import type { ParticleSnapshot } from '@/runtime/sim/ParticleStore';
+import { validateMatterReservoirSnapshot } from '@/runtime/sim/MatterReservoir';
+import { validateParticleSnapshot, type ParticleSnapshot } from '@/runtime/sim/ParticleStore';
+import { validateWorldMetadata } from '@/runtime/sim/WorldMetadata';
 
 const BINARY_MAGIC = 0x564c4946;
-const BINARY_VERSION = 2;
-const HEADER_BYTES = 48;
+const BINARY_VERSION = 3;
+const ENVELOPE_VERSION = 3;
+const HEADER_BYTES = 64;
 const MAX_WORLD_ID_BYTES = 256;
+const HABITAT_DIGEST_BYTES = 16;
 const FIELD_ARRAY_COUNT = FIELD_NAMES.length + 1;
 const PARTICLE_FLOAT_ARRAY_COUNT = 4;
 const MAX_BINARY_BYTES = 64 * 1024 * 1024;
@@ -14,13 +18,23 @@ const MAX_PAYLOAD_CHARS = Math.ceil((MAX_STREAM_BYTES * 4) / 3) + 4;
 const CRC32_TABLE = buildCrc32Table();
 
 export interface LifeWorldSaveEnvelope {
-  readonly schemaVersion: 2;
+  readonly schemaVersion: typeof ENVELOPE_VERSION;
   readonly configFingerprint: string;
   readonly encoding: 'gzip-base64' | 'base64';
   readonly byteLength: number;
   readonly checksum: `crc32-${string}`;
   readonly payload: string;
 }
+
+/**
+ * `none`: kayıt yok. `incompatible`: eski şema veya başka fizik/habitat
+ * sözleşmesi — sessizce oynatılmaz (DESIGN.md §7). `snapshot`: doğrulanmış kayıt.
+ * Bozuk gövde (uzunluk/checksum) istisna fırlatır; çağıran onu ayrı raporlar.
+ */
+export type LifeWorldDecodeResult =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'incompatible'; readonly reason: 'schema' | 'fingerprint' }
+  | { readonly kind: 'snapshot'; readonly snapshot: LifeWorldSnapshot };
 
 export async function encodeLifeWorldSnapshot(
   snapshot: LifeWorldSnapshot,
@@ -32,7 +46,7 @@ export async function encodeLifeWorldSnapshot(
     ? await transform(binary, new CompressionStream('gzip'), MAX_STREAM_BYTES)
     : binary;
   return {
-    schemaVersion: 2,
+    schemaVersion: ENVELOPE_VERSION,
     configFingerprint,
     encoding: canCompress ? 'gzip-base64' : 'base64',
     byteLength: binary.byteLength,
@@ -44,54 +58,73 @@ export async function encodeLifeWorldSnapshot(
 export async function decodeLifeWorldSnapshot(
   value: unknown,
   expectedFingerprint: string,
-): Promise<LifeWorldSnapshot | null> {
-  if (!isEnvelope(value) || value.configFingerprint !== expectedFingerprint) return null;
+): Promise<LifeWorldDecodeResult> {
+  if (value === null || value === undefined) return { kind: 'none' };
+  if (isLegacyEnvelope(value)) return { kind: 'incompatible', reason: 'schema' };
+  if (!isEnvelope(value)) throw new RangeError('Dünya kaydı zarfı tanınmıyor.');
+  if (value.configFingerprint !== expectedFingerprint) {
+    return { kind: 'incompatible', reason: 'fingerprint' };
+  }
   let bytes = base64ToBytes(value.payload);
   if (value.encoding === 'gzip-base64') {
-    if (typeof DecompressionStream === 'undefined') return null;
+    if (typeof DecompressionStream === 'undefined') {
+      throw new Error('Sıkıştırılmış kayıt bu ortamda açılamıyor.');
+    }
     bytes = await transform(bytes, new DecompressionStream('gzip'), value.byteLength);
   }
-  if (bytes.byteLength !== value.byteLength)
+  if (bytes.byteLength !== value.byteLength) {
     throw new RangeError('Dünya kaydı uzunluğu uyuşmuyor.');
+  }
   if (formatChecksum(bytes) !== value.checksum) {
     throw new RangeError('Dünya kaydı checksum doğrulamasını geçemedi.');
   }
-  return decodeBinary(bytes);
+  return { kind: 'snapshot', snapshot: decodeBinary(bytes) };
 }
 
 function encodeBinary(snapshot: LifeWorldSnapshot): Uint8Array {
   const fieldLength = snapshot.nutrientDiffusionSource.length;
-  const particleCount = snapshot.particles.x.length;
+  const capacity = snapshot.particles.x.length;
   const worldId = new TextEncoder().encode(snapshot.metadata.id);
-  validateSnapshotLengths(snapshot, fieldLength, particleCount);
-  const byteLength =
-    HEADER_BYTES +
-    worldId.byteLength +
-    fieldLength * Float32Array.BYTES_PER_ELEMENT * FIELD_ARRAY_COUNT +
-    particleCount * Float32Array.BYTES_PER_ELEMENT * PARTICLE_FLOAT_ARRAY_COUNT +
-    particleCount;
+  const digest = new TextEncoder().encode(snapshot.habitatDigest);
+  validateSnapshotShape(snapshot, fieldLength, capacity, worldId.byteLength, digest.byteLength);
+  const byteLength = expectedByteLength(worldId.byteLength, fieldLength, capacity);
   if (byteLength > MAX_BINARY_BYTES) throw new RangeError('Dünya snapshotı boyut sınırını aşıyor.');
   const bytes = new Uint8Array(byteLength);
   const view = new DataView(bytes.buffer);
   view.setUint32(0, BINARY_MAGIC, true);
   view.setUint16(4, BINARY_VERSION, true);
+  view.setUint16(6, 0, true);
   view.setFloat64(8, snapshot.tick, true);
   view.setInt32(16, snapshot.rngState, true);
   view.setUint32(20, snapshot.nextFieldBand, true);
   view.setUint32(24, fieldLength, true);
-  view.setUint32(28, particleCount, true);
+  view.setUint32(28, capacity, true);
   view.setUint32(32, snapshot.metadata.seed, true);
   view.setFloat64(36, snapshot.metadata.createdAtMs, true);
   view.setUint16(44, worldId.byteLength, true);
+  view.setUint16(46, digest.byteLength, true);
+  view.setUint32(48, snapshot.particles.nextStableId, true);
+  view.setUint32(52, snapshot.reservoir.external, true);
+  view.setUint32(56, snapshot.reservoir.voidLossTotal, true);
+  view.setUint32(60, 0, true);
   let offset = HEADER_BYTES;
   bytes.set(worldId, offset);
   offset += worldId.byteLength;
+  bytes.set(digest, offset);
+  offset += digest.byteLength;
   offset = writeFloatArray(view, offset, snapshot.nutrientDiffusionSource);
   for (const name of FIELD_NAMES) offset = writeFloatArray(view, offset, snapshot.fields[name]);
   for (const array of particleFloatArrays(snapshot.particles)) {
     offset = writeFloatArray(view, offset, array);
   }
   bytes.set(snapshot.particles.type, offset);
+  offset += capacity;
+  bytes.set(snapshot.particles.active, offset);
+  offset += capacity;
+  for (let slot = 0; slot < capacity; slot++) {
+    view.setUint32(offset, snapshot.particles.stableId[slot], true);
+    offset += Uint32Array.BYTES_PER_ELEMENT;
+  }
   return bytes;
 }
 
@@ -105,33 +138,34 @@ function decodeBinary(bytes: Uint8Array): LifeWorldSnapshot {
   const rngState = view.getInt32(16, true);
   const nextFieldBand = view.getUint32(20, true);
   const fieldLength = view.getUint32(24, true);
-  const particleCount = view.getUint32(28, true);
+  const capacity = view.getUint32(28, true);
   const seed = view.getUint32(32, true);
   const createdAtMs = view.getFloat64(36, true);
   const worldIdLength = view.getUint16(44, true);
-  if (!Number.isSafeInteger(tick) || tick < 0 || fieldLength < 4 || particleCount < 1) {
+  const digestLength = view.getUint16(46, true);
+  const nextStableId = view.getUint32(48, true);
+  const reservoir = { external: view.getUint32(52, true), voidLossTotal: view.getUint32(56, true) };
+  if (!Number.isSafeInteger(tick) || tick < 0 || fieldLength < 4 || capacity < 1) {
     throw new RangeError('Dünya kaydı boyutları geçersiz.');
   }
-  const expectedBytes =
-    HEADER_BYTES +
-    worldIdLength +
-    fieldLength * Float32Array.BYTES_PER_ELEMENT * FIELD_ARRAY_COUNT +
-    particleCount * Float32Array.BYTES_PER_ELEMENT * PARTICLE_FLOAT_ARRAY_COUNT +
-    particleCount;
-  if (bytes.byteLength !== expectedBytes) throw new RangeError('Dünya kaydı uzunluğu uyuşmuyor.');
   if (
     worldIdLength < 1 ||
     worldIdLength > MAX_WORLD_ID_BYTES ||
+    digestLength !== HABITAT_DIGEST_BYTES ||
     !Number.isSafeInteger(createdAtMs) ||
     createdAtMs < 0
   ) {
     throw new RangeError('Dünya kaydı metadata bilgisi geçersiz.');
   }
+  if (bytes.byteLength !== expectedByteLength(worldIdLength, fieldLength, capacity)) {
+    throw new RangeError('Dünya kaydı uzunluğu uyuşmuyor.');
+  }
   let offset = HEADER_BYTES;
-  const id = new TextDecoder('utf-8', { fatal: true }).decode(
-    bytes.subarray(offset, offset + worldIdLength),
-  );
+  const decoder = new TextDecoder('utf-8', { fatal: true });
+  const id = decoder.decode(bytes.subarray(offset, offset + worldIdLength));
   offset += worldIdLength;
+  const habitatDigest = decoder.decode(bytes.subarray(offset, offset + digestLength));
+  offset += digestLength;
   let array: Float32Array;
   [array, offset] = readFloatArray(view, offset, fieldLength);
   const nutrientDiffusionSource = array;
@@ -142,15 +176,24 @@ function decodeBinary(bytes: Uint8Array): LifeWorldSnapshot {
   }
   const particleFloats: Float32Array[] = [];
   for (let index = 0; index < PARTICLE_FLOAT_ARRAY_COUNT; index++) {
-    [array, offset] = readFloatArray(view, offset, particleCount);
+    [array, offset] = readFloatArray(view, offset, capacity);
     particleFloats.push(array);
   }
-  const type = bytes.slice(offset, offset + particleCount);
-  return {
+  const type = bytes.slice(offset, offset + capacity);
+  offset += capacity;
+  const active = bytes.slice(offset, offset + capacity);
+  offset += capacity;
+  const stableId = new Uint32Array(capacity);
+  for (let slot = 0; slot < capacity; slot++) {
+    stableId[slot] = view.getUint32(offset, true);
+    offset += Uint32Array.BYTES_PER_ELEMENT;
+  }
+  const snapshot: LifeWorldSnapshot = {
     metadata: { id, seed, createdAtMs },
     tick,
     rngState,
     nextFieldBand,
+    habitatDigest,
     nutrientDiffusionSource,
     fields: fields as FieldSnapshot,
     particles: {
@@ -159,47 +202,67 @@ function decodeBinary(bytes: Uint8Array): LifeWorldSnapshot {
       vx: particleFloats[2],
       vy: particleFloats[3],
       type,
+      active,
+      stableId,
+      nextStableId,
     },
+    reservoir,
   };
+  validateSnapshotShape(snapshot, fieldLength, capacity, worldIdLength, digestLength);
+  return snapshot;
 }
 
-function validateSnapshotLengths(
+function expectedByteLength(worldIdBytes: number, fieldLength: number, capacity: number): number {
+  return (
+    HEADER_BYTES +
+    worldIdBytes +
+    HABITAT_DIGEST_BYTES +
+    fieldLength * Float32Array.BYTES_PER_ELEMENT * FIELD_ARRAY_COUNT +
+    capacity * Float32Array.BYTES_PER_ELEMENT * PARTICLE_FLOAT_ARRAY_COUNT +
+    capacity * 2 +
+    capacity * Uint32Array.BYTES_PER_ELEMENT
+  );
+}
+
+function validateSnapshotShape(
   snapshot: LifeWorldSnapshot,
   fieldLength: number,
-  particleCount: number,
+  capacity: number,
+  worldIdBytes: number,
+  digestBytes: number,
 ): void {
   if (
     !Number.isSafeInteger(snapshot.tick) ||
     snapshot.tick < 0 ||
     fieldLength < 4 ||
-    particleCount < 1
+    capacity < 1 ||
+    worldIdBytes < 1 ||
+    worldIdBytes > MAX_WORLD_ID_BYTES ||
+    digestBytes !== HABITAT_DIGEST_BYTES ||
+    !/^[0-9a-f]{16}$/.test(snapshot.habitatDigest)
   ) {
     throw new RangeError('Dünya snapshotı geçersiz.');
   }
-  const fieldsValid = FIELD_NAMES.every((name) => snapshot.fields[name].length === fieldLength);
-  const particlesValid =
-    particleFloatArrays(snapshot.particles).every((array) => array.length === particleCount) &&
-    snapshot.particles.type.length === particleCount;
-  if (!fieldsValid || !particlesValid) throw new RangeError('Dünya snapshotı dizileri ayrışıyor.');
+  validateWorldMetadata(snapshot.metadata);
+  validateMatterReservoirSnapshot(snapshot.reservoir);
+  validateParticleSnapshot(snapshot.particles, capacity);
+  const fieldsValid =
+    snapshot.nutrientDiffusionSource.length === fieldLength &&
+    FIELD_NAMES.every((name) => snapshot.fields[name].length === fieldLength);
+  if (!fieldsValid) throw new RangeError('Dünya snapshotı dizileri ayrışıyor.');
   const numbersValid =
-    snapshot.metadata.id.length > 0 &&
-    new TextEncoder().encode(snapshot.metadata.id).byteLength <= MAX_WORLD_ID_BYTES &&
-    Number.isInteger(snapshot.metadata.seed) &&
-    snapshot.metadata.seed >= 0 &&
-    snapshot.metadata.seed <= 0xffffffff &&
-    Number.isSafeInteger(snapshot.metadata.createdAtMs) &&
-    snapshot.metadata.createdAtMs >= 0 &&
     Number.isInteger(snapshot.rngState) &&
     snapshot.rngState >= -0x80000000 &&
     snapshot.rngState <= 0x7fffffff &&
     Number.isInteger(snapshot.nextFieldBand) &&
     snapshot.nextFieldBand >= 0 &&
     snapshot.nextFieldBand <= 0xffffffff &&
+    snapshot.particles.nextStableId <= 0xffffffff &&
     isFiniteFloatArray(snapshot.nutrientDiffusionSource) &&
-    FIELD_NAMES.every((name) => isFiniteFloatArray(snapshot.fields[name])) &&
-    particleFloatArrays(snapshot.particles).every(isFiniteFloatArray);
-  if (!numbersValid)
+    FIELD_NAMES.every((name) => isFiniteFloatArray(snapshot.fields[name]));
+  if (!numbersValid) {
     throw new RangeError('Dünya snapshotı sonlu olmayan veya geçersiz değer taşıyor.');
+  }
 }
 
 function isFiniteFloatArray(values: Float32Array): boolean {
@@ -230,7 +293,7 @@ function readFloatArray(view: DataView, offset: number, length: number): [Float3
 async function transform(
   bytes: Uint8Array,
   stream: CompressionStream | DecompressionStream,
-  maxOutputBytes = MAX_BINARY_BYTES,
+  maxOutputBytes: number,
 ): Promise<Uint8Array> {
   const output = readStream(stream.readable, maxOutputBytes);
   const writer = stream.writable.getWriter();
@@ -281,11 +344,17 @@ function base64ToBytes(value: string): Uint8Array {
   return bytes;
 }
 
+function isLegacyEnvelope(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null) return false;
+  const version = (value as { schemaVersion?: unknown }).schemaVersion;
+  return typeof version === 'number' && version < ENVELOPE_VERSION;
+}
+
 function isEnvelope(value: unknown): value is LifeWorldSaveEnvelope {
   if (typeof value !== 'object' || value === null) return false;
   const envelope = value as Partial<LifeWorldSaveEnvelope>;
   return (
-    envelope.schemaVersion === 2 &&
+    envelope.schemaVersion === ENVELOPE_VERSION &&
     typeof envelope.configFingerprint === 'string' &&
     (envelope.encoding === 'gzip-base64' || envelope.encoding === 'base64') &&
     Number.isSafeInteger(envelope.byteLength) &&

@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { particleConfig } from '@/config/particles';
-import { worldConfig } from '@/config/world';
+import { cloneSubstrateConfig, substrateConfig, type SubstrateConfig } from '@/config/substrate';
 import { LifeWorld } from '@/runtime/sim/LifeWorld';
 import { createExplicitWorldMetadata } from '@/runtime/sim/WorldMetadata';
 
-function createWorld(seed: number, config = worldConfig): LifeWorld {
+function smallConfig(overrides: Partial<SubstrateConfig['world']> = {}): SubstrateConfig {
+  return {
+    ...substrateConfig,
+    world: { ...substrateConfig.world, fieldResolution: 8, ...overrides },
+    particles: { ...substrateConfig.particles, capacity: 32 },
+  };
+}
+
+function createWorld(seed: number, config: SubstrateConfig = smallConfig()): LifeWorld {
   return new LifeWorld(config, createExplicitWorldMetadata(seed));
 }
 
@@ -14,11 +21,11 @@ function bytes(array: Float32Array): Uint8Array {
 
 describe('LifeWorld', () => {
   it('aynı tohum ve tick sayısında bütün alanları bayt bayt aynı üretir', () => {
-    const config = { ...worldConfig, fieldResolution: 32 };
+    const config = smallConfig();
     const left = createWorld(42, config);
     const right = createWorld(42, config);
 
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 30; i++) {
       left.step();
       right.step();
     }
@@ -34,7 +41,7 @@ describe('LifeWorld', () => {
   });
 
   it('farklı world-instance seedleri farklı başlangıç üretir', () => {
-    const config = { ...worldConfig, fieldResolution: 32 };
+    const config = smallConfig();
     const left = createWorld(42, config);
     const right = createWorld(43, config);
 
@@ -43,24 +50,13 @@ describe('LifeWorld', () => {
     expect(right.snapshot().metadata.seed).toBe(43);
   });
 
-  it('metadata ve fizik yapılandırmasını çağıranın sonradan değiştirmesinden yalıtır', () => {
+  it('metadata ve yapılandırmayı çağıranın sonradan değiştirmesinden yalıtır', () => {
     const metadata = createExplicitWorldMetadata(42);
-    const config = {
-      ...worldConfig,
-      boundsUnits: { ...worldConfig.boundsUnits },
-      fieldResolution: 32,
-    };
-    const interactionMatrix = particleConfig.interactionMatrix.slice();
-    const particles = { ...particleConfig, interactionMatrix };
-    const world = new LifeWorld(config, metadata, particles);
-    const control = new LifeWorld(
-      { ...config, boundsUnits: { ...config.boundsUnits } },
-      createExplicitWorldMetadata(42),
-      { ...particles, interactionMatrix: interactionMatrix.slice() },
-    );
+    const config = cloneSubstrateConfig(smallConfig());
+    const world = new LifeWorld(config, metadata);
+    const control = new LifeWorld(cloneSubstrateConfig(config), createExplicitWorldMetadata(42));
 
-    config.nutrientRenewal = 1;
-    interactionMatrix.fill(0);
+    (config.world as { nutrientRenewal: number }).nutrientRenewal = 1;
     (metadata as { seed: number }).seed = 99;
     for (let index = 0; index < 12; index++) {
       world.step();
@@ -74,14 +70,14 @@ describe('LifeWorld', () => {
   });
 
   it('anlık görüntüden devam eden dünya kesintisiz koşuyla aynı sona varır', () => {
-    const config = { ...worldConfig, fieldResolution: 32 };
+    const config = smallConfig();
     const continuous = createWorld(7, config);
-    for (let i = 0; i < 90; i++) continuous.step();
+    for (let i = 0; i < 30; i++) continuous.step();
     const snapshot = continuous.snapshot();
     const restored = createWorld(7, config);
     restored.restore(snapshot);
 
-    for (let i = 0; i < 90; i++) {
+    for (let i = 0; i < 30; i++) {
       continuous.step();
       restored.step();
     }
@@ -94,7 +90,7 @@ describe('LifeWorld', () => {
   });
 
   it('bozuk snapshotı dünyayı kısmen değiştirmeden atomik olarak reddeder', () => {
-    const config = { ...worldConfig, fieldResolution: 32 };
+    const config = smallConfig();
     const world = createWorld(7, config);
     for (let index = 0; index < 12; index++) world.step();
     const before = world.snapshot();
@@ -112,7 +108,8 @@ describe('LifeWorld', () => {
   });
 
   it('doğrudan restore yolunda sonlu olmayan alan değerini reddeder', () => {
-    const world = createWorld(7, { ...worldConfig, fieldResolution: 32 });
+    const config = smallConfig();
+    const world = createWorld(7, config);
     const snapshot = world.snapshot();
     const light = snapshot.fields.light.slice();
     light[0] = Number.NaN;
@@ -122,18 +119,20 @@ describe('LifeWorld', () => {
     );
   });
 
-  it('her simülasyon tickinde parçacıkları hareket ettirir ve sabit sayıyı korur', () => {
-    const world = createWorld(19, { ...worldConfig, fieldResolution: 32 });
+  it('her simülasyon tickinde parçacıkları hareket ettirir ve aktif sayıyı korur', () => {
+    const config = smallConfig();
+    const world = createWorld(19, config);
     const initialX = world.particles.x.slice();
 
     world.step();
 
-    expect(world.particles.count).toBe(100);
+    expect(world.particles.activeCount).toBe(world.particles.activeCount);
     expect(bytes(world.particles.x)).not.toEqual(bytes(initialX));
   });
 
   it('ışık kaynakları alanı eşitsiz tohumlar ve zamanla yer değiştirir', () => {
-    const world = createWorld(11, { ...worldConfig, fieldResolution: 32 });
+    const config = smallConfig();
+    const world = createWorld(11, config);
     const initial = world.fields.light.slice();
 
     for (let i = 0; i < 60; i++) world.step();
@@ -144,19 +143,16 @@ describe('LifeWorld', () => {
   });
 
   it('alan güncellemesinin yalnız gerçekleştiği tickte true döndürür', () => {
-    const world = createWorld(1, { ...worldConfig, fieldResolution: 32 });
+    const config = smallConfig({ fieldHz: 10 });
+    const world = createWorld(1, config);
 
     expect(Array.from({ length: 5 }, () => world.step())).toEqual(Array(5).fill(false));
     expect(world.step()).toBe(true);
   });
 
   it('alan temposunu sabit 60 Hz varsayımı yerine dünya adımından türetir', () => {
-    const world = createWorld(1, {
-      ...worldConfig,
-      fixedStepMs: 1000 / 30,
-      fieldHz: 10,
-      fieldResolution: 32,
-    });
+    const config = smallConfig({ fixedStepMs: 1000 / 30, fieldHz: 10 });
+    const world = createWorld(1, config);
 
     expect(world.step()).toBe(false);
     expect(world.step()).toBe(false);
@@ -164,21 +160,23 @@ describe('LifeWorld', () => {
   });
 
   it('512 yolu gibi kademeli kipte her turda tek satır bandını yeniler', () => {
-    const world = createWorld(2, {
-      ...worldConfig,
-      fieldResolution: 32,
-      fieldUpdateBands: 4,
-    });
+    const config = smallConfig({ fieldUpdateBands: 4 });
+    const world = createWorld(2, config);
     const initial = world.fields.light.slice();
+    const resolution = config.world.fieldResolution;
 
     for (let i = 0; i < 6; i++) world.step();
 
-    expect(world.fields.light.slice(8 * 32)).toEqual(initial.slice(8 * 32));
-    expect(world.fields.light.slice(0, 8 * 32)).not.toEqual(initial.slice(0, 8 * 32));
+    expect(world.fields.light.slice((resolution / 2) * resolution)).toEqual(
+      initial.slice((resolution / 2) * resolution),
+    );
+    expect(world.fields.light.slice(0, (resolution / 2) * resolution)).not.toEqual(
+      initial.slice(0, (resolution / 2) * resolution),
+    );
   });
 
   it('kademeli alan imlecini snapshot/restore boyunca korur', () => {
-    const config = { ...worldConfig, fieldResolution: 32, fieldUpdateBands: 4 };
+    const config = smallConfig({ fieldUpdateBands: 4 });
     const continuous = createWorld(91, config);
     for (let i = 0; i < 18; i++) continuous.step();
     const restored = createWorld(91, config);

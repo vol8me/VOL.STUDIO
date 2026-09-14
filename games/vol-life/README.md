@@ -10,13 +10,28 @@ Monorepo geneli için [kök README](../../README.md).
 
 ## Durum
 
-Paket **Particle Substrate v2 / Morphology Discovery v2 hazırlığı**
-düzeyindedir. SoA depo, counting-sort spatial hash, alanlar, world-instance
-seed ve snapshot/restore korunur; Phaser yalnız render adaptöründedir. Eski
-100 parçacıklı triangular fizik ve dikdörtgen çarpışma duvarı başarısız negatif
-baseline'dır, ürün kabulü değildir. Yeni 512 aktif madde, organik habitat ve
-Void sözleşmesi henüz uygulanmamıştır. Organizma, enerji, yaşam döngüsü ve akıl
-katmanı yoktur.
+Paket **Particle Substrate v2** ve **Adım 3 araştırma kütüphanesi** düzeyindedir.
+SoA depo, counting-sort spatial hash, alanlar, world-instance seed ve
+snapshot/restore korunur; Phaser yalnız render adaptöründedir.
+
+**Uygulanmış substrate**: `SubstrateConfig`, `PhysicsGenome`, `PairForceKernel`
+(generalized multi-band directional), 512 kapasiteli `ParticleStore` (aktif/pasif
+slot), `ParticleSpatialHash` (yalnız aktif), organik `HabitatSDF`/`WorldDomain`,
+`VoidSink` (geri dönüşsüz deaktivasyon), `MatterReservoir`, `InitialMatterSeeder`
+(patch+cloud), v3 snapshot codec, çok bantlı field güncelleme, deterministic RNG,
+camera-domain handling, Void-death rendering.
+
+**Adım 3 araştırma kütüphanesi** (`scripts/morphology/`): `GenomeSampler`,
+`MorphologyMetrics`, `ClusterTracker`, `PhaseClassifier`, `ResearchHarness`
+(broad→refinement→qualification), `PerturbationSystem`, `Shards`,
+`QualificationArtefact`, `PromotionFlow`, CLI. Headless — Phaser import etmez.
+Brute-force oracle testi spatial-hash/kernel yolunu all-pairs referansla
+karşılaştırır.
+
+Eski 100 parçacıklı triangular fizik ve dikdörtgen çarpışma duvarı negatif
+baseline olarak korunur, ürün kabulü değildir. Qualified aday henüz çıkmamıştır;
+araştırma kütüphanesi production'a aday taşımamıştır. Organizma, enerji, yaşam
+döngüsü ve akıl katmanı yoktur (Adım 4+ blokeli).
 
 Kabukta seçenekler çekmecesi (dil, kare hızı, dokunsal geri bildirim, ekran
 yönü, masaüstünde görüntü kipi), native Android haptics, Android çıkış onayı,

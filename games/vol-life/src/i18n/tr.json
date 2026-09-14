@@ -6,7 +6,8 @@
     "ariaLabel": "Dünya göstergeleri",
     "fullscreenEnter": "Tam ekrana geç",
     "fullscreenExit": "Tam ekrandan çık",
-    "options": "Seçenekler"
+    "options": "Seçenekler",
+    "audition": "Audition genomu {{digest}} — kalifiye değil"
   },
   "exit": {
     "title": "VOL.LIFE kapatılsın mı?",
@@ -29,6 +30,10 @@
     "fullscreen": "Tam ekran",
     "saveFailed": "Seçenekler kaydedilemedi. Değişiklik bu oturumda geçerli.",
     "worldSaveFailed": "Dünya kaydedilemedi. Bu oturum çalışmaya devam ediyor."
+  },
+  "world": {
+    "incompatibleSave": "Eski dünya kaydı bu sürümle uyumsuz; yeni bir dünya başlatıldı.",
+    "corruptSave": "Dünya kaydı okunamadı; yeni bir dünya başlatıldı."
   },
   "fatal": {
     "title": "VOL.LIFE başlatılamadı"

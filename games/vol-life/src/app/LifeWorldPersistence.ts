@@ -1,10 +1,9 @@
 import { DisposableScope, observeAppVisibility, type AppVisibilityState } from '@volstudio/core';
 import {
-  cloneParticleConfig,
-  validateParticleConfig,
-  type ParticleConfig,
-} from '@/config/particles';
-import { cloneWorldConfig, validateWorldConfig, type WorldConfig } from '@/config/world';
+  cloneSubstrateConfig,
+  fingerprintSubstrateConfig,
+  type SubstrateConfig,
+} from '@/config/substrate';
 import {
   decodeLifeWorldSnapshot,
   encodeLifeWorldSnapshot,
@@ -12,13 +11,20 @@ import {
 } from '@/app/LifeWorldSnapshotCodec';
 import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 import { validateLifeWorldSnapshot } from '@/runtime/sim/LifeWorldSnapshotValidation';
-import { validateWorldGeometry } from '@/runtime/sim/WorldBounds';
 
 const STORAGE_KEY = 'vol-life:world';
 const DEFAULT_AUTOSAVE_INTERVAL_MS = 30_000;
 
 export interface LifeWorldSnapshotSource {
   snapshot(): LifeWorldSnapshot;
+}
+
+/** Kayıt yokken ya da güvenle yüklenemediğinde neden; kullanıcıya i18n ile söylenir. */
+export type LifeWorldLoadIssue = 'incompatible' | 'corrupt';
+
+export interface LifeWorldLoadResult {
+  readonly snapshot: LifeWorldSnapshot | null;
+  readonly issue: LifeWorldLoadIssue | null;
 }
 
 export interface LifeWorldStore {
@@ -34,33 +40,36 @@ export interface LifeWorldAutosaveOptions {
 
 export class LifeWorldPersistence {
   readonly configFingerprint: string;
-  private readonly worldConfig: WorldConfig;
-  private readonly particleConfig: ParticleConfig;
+  private readonly config: SubstrateConfig;
 
   constructor(
     private readonly store: LifeWorldStore,
-    worldConfig: WorldConfig,
-    particleConfig: ParticleConfig,
+    config: SubstrateConfig,
   ) {
-    this.worldConfig = cloneWorldConfig(worldConfig);
-    this.particleConfig = cloneParticleConfig(particleConfig);
-    this.configFingerprint = createWorldConfigFingerprint(this.worldConfig, this.particleConfig);
+    this.config = cloneSubstrateConfig(config);
+    this.configFingerprint = fingerprintSubstrateConfig(this.config);
   }
 
-  async load(): Promise<LifeWorldSnapshot | null> {
+  /** Okunamayan kayıt yeni dünyayı ENGELLEMEZ; nedeni sonuçta taşınır. */
+  async load(): Promise<LifeWorldLoadResult> {
     try {
       const value = await this.store.load<LifeWorldSaveEnvelope | null>(STORAGE_KEY, null);
-      const snapshot = await decodeLifeWorldSnapshot(value, this.configFingerprint);
-      if (snapshot) validateLifeWorldSnapshot(snapshot, this.worldConfig, this.particleConfig);
-      return snapshot;
+      const result = await decodeLifeWorldSnapshot(value, this.configFingerprint);
+      if (result.kind === 'none') return { snapshot: null, issue: null };
+      if (result.kind === 'incompatible') {
+        console.warn(`[VOL.LIFE] Dünya kaydı uyumsuz (${result.reason}); yeni dünya başlatılıyor.`);
+        return { snapshot: null, issue: 'incompatible' };
+      }
+      validateLifeWorldSnapshot(result.snapshot, this.config);
+      return { snapshot: result.snapshot, issue: null };
     } catch (error) {
       console.warn('[VOL.LIFE] Dünya kaydı okunamadı; yeni dünya başlatılıyor:', error);
-      return null;
+      return { snapshot: null, issue: 'corrupt' };
     }
   }
 
   async save(snapshot: LifeWorldSnapshot): Promise<void> {
-    validateLifeWorldSnapshot(snapshot, this.worldConfig, this.particleConfig);
+    validateLifeWorldSnapshot(snapshot, this.config);
     const envelope = await encodeLifeWorldSnapshot(snapshot, this.configFingerprint);
     await this.store.save(STORAGE_KEY, envelope);
   }
@@ -191,32 +200,4 @@ interface PendingSave {
 interface SaveWaiter {
   readonly resolve: () => void;
   readonly reject: (error: unknown) => void;
-}
-
-export function createWorldConfigFingerprint(
-  worldConfig: WorldConfig,
-  particleConfig: ParticleConfig,
-): string {
-  validateWorldConfig(worldConfig);
-  validateParticleConfig(particleConfig);
-  validateWorldGeometry(
-    worldConfig.boundsUnits,
-    worldConfig.particleCollisionInsetUnits,
-    particleConfig.cellSizeUnits,
-  );
-  const serialized = JSON.stringify({
-    worldConfig,
-    particleConfig: {
-      ...particleConfig,
-      interactionMatrix: Array.from(particleConfig.interactionMatrix),
-      roleByType: Array.from(particleConfig.roleByType),
-      interactionRadiusByRolePair: Array.from(particleConfig.interactionRadiusByRolePair),
-    },
-  });
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < serialized.length; index++) {
-    hash ^= serialized.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return `life-world-v1-${(hash >>> 0).toString(16).padStart(8, '0')}`;
 }

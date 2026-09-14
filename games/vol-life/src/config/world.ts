@@ -6,10 +6,11 @@ import { assertFiniteRange, assertPositiveFinite, assertPositiveInteger } from '
  * dokunmamalıdır (AGENTS Kural 5).
  */
 export interface WorldConfig {
-  /** Parçacıkların ve alanların fiziksel dünya sınırı. */
+  /**
+   * Alan ızgarası ve spatial hash için DEPOLAMA dikdörtgeni. Fiziksel dünya
+   * bunun içindeki `HabitatSDF`dir (DESIGN.md §2); bu kutu duvar değildir.
+   */
   readonly boundsUnits: Readonly<Rect>;
-  /** Parçacık çarpışma düzleminin dünya dış sınırından uzaklığı. */
-  readonly particleCollisionInsetUnits: number;
   /** Sabit simülasyon adımı. */
   readonly fixedStepMs: number;
   /**
@@ -36,7 +37,6 @@ export interface WorldConfig {
 
 export const worldConfig: WorldConfig = {
   boundsUnits: { x: 0, y: 0, width: 1024, height: 1024 },
-  particleCollisionInsetUnits: 6,
   fixedStepMs: 1000 / 60,
   maxStepsPerFrame: 2,
   fieldResolution: 256,

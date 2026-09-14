@@ -1,12 +1,15 @@
 import { performance } from 'node:perf_hooks';
+import { defaultPhysicsGenome } from '../src/config/genome';
 import { particleConfig } from '../src/config/particles';
-import {
-  accumulateParticleForces,
-  initializeParticles,
-  integrateParticles,
-} from '../src/runtime/sim/ParticlePhysics';
+import { substrateConfig } from '../src/config/substrate';
+import { accumulateParticleForces, integrateParticles } from '../src/runtime/sim/ParticlePhysics';
+import { createMultiBandKernel } from '../src/runtime/sim/PairForceKernel';
 import { ParticleSpatialHash } from '../src/runtime/sim/ParticleSpatialHash';
 import { ParticleStore } from '../src/runtime/sim/ParticleStore';
+import { seedInitialMatter } from '../src/runtime/sim/InitialMatterSeeder';
+import { HabitatSDF } from '../src/runtime/sim/WorldDomain';
+import { VoidSink, type VoidCrossing } from '../src/runtime/sim/VoidSink';
+import { MatterReservoir } from '../src/runtime/sim/MatterReservoir';
 import { createSimRandom } from '../src/runtime/sim/rng';
 
 const options = parseArgs(process.argv.slice(2));
@@ -29,15 +32,32 @@ else {
 }
 
 function measure(candidate: { particles: number; worldSize: number }) {
-  const config = { ...particleConfig, count: candidate.particles };
   const bounds = { x: 0, y: 0, width: candidate.worldSize, height: candidate.worldSize };
+  const domain = new HabitatSDF(bounds, substrateConfig.habitat, 0x10fe1);
   const particles = new ParticleStore(candidate.particles);
-  initializeParticles(particles, createSimRandom(0x10fe1), config, bounds);
-  const grid = new ParticleSpatialHash(bounds, config.cellSizeUnits, candidate.particles);
+  seedInitialMatter(
+    particles,
+    createSimRandom(0x10fe1),
+    domain,
+    defaultPhysicsGenome,
+    candidate.particles,
+  );
+  const grid = new ParticleSpatialHash(bounds, particleConfig.cellSizeUnits, candidate.particles);
+  const kernel = createMultiBandKernel(defaultPhysicsGenome);
+  const sink = new VoidSink(domain, defaultPhysicsGenome.fringe);
+  const reservoir = new MatterReservoir();
+  const crossings: VoidCrossing[] = [];
   const step = (): void => {
     grid.rebuild(particles);
-    accumulateParticleForces(particles, grid, config);
-    integrateParticles(particles, config, bounds, 1000 / config.referenceHz);
+    accumulateParticleForces(particles, grid, kernel, 1);
+    sink.applyFringeStress(particles);
+    integrateParticles(
+      particles,
+      defaultPhysicsGenome.dynamics,
+      particleConfig.referenceHz,
+      1000 / particleConfig.referenceHz,
+    );
+    sink.collectCrossings(particles, reservoir, crossings);
   };
   for (let index = 0; index < 60; index++) step();
   const samples: number[] = [];

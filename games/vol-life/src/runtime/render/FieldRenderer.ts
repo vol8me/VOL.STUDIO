@@ -15,7 +15,11 @@ export class FieldRenderer {
     private readonly scene: Phaser.Scene,
     fields: FieldSet,
     bounds: Readonly<Rect>,
+    private readonly shade: Float32Array | null = null,
   ) {
+    if (shade && shade.length !== fields.length) {
+      throw new RangeError(`Gölge tamponu ${fields.length} değer taşımalı: ${shade.length}`);
+    }
     const texture = scene.textures.createCanvas(
       FIELD_TEXTURE_KEY,
       fields.resolution,
@@ -34,7 +38,7 @@ export class FieldRenderer {
   }
 
   render(fields: FieldSet): void {
-    rasterizeFields(fields, this.imageData.data);
+    rasterizeFields(fields, this.imageData.data, this.shade);
     this.texture.putData(this.imageData, 0, 0);
     this.texture.refresh();
   }

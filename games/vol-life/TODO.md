@@ -28,76 +28,50 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 
 ## Adım 2 — Particle Substrate v2
 
-- [ ] **[P0] Eski production fiziği yalnız negatif baseline olarak izole
-      edilsin.** Yeni substrate aynı anda devreye alınmadan çalışan uygulama
-      sökülmez; fakat triangular kernel, rectangular collision wall ve
-      100-particle config hiçbir yerde kabul edilmiş ürün diye adlandırılmaz.
-      Kapanır: v2 default olur, eski kernel yalnız test/benchmark fixture'ında
-      kalır veya tamamen silinir.
-- [ ] **[P0] `WorldDomain` ve deterministic `HabitatSDF` kurulsun.** Rect
-      storage içinde yumuşak oval/superellipse + düşük frekanslı noise;
-      pozitif inside, sıfır edge, negatif Void sözleşmesi. Aynı seed aynı SDF,
-      farklı seed farklı ama geçerli kontur üretir. Cep, kendini kesme ve aşırı
-      girinti invariant'ları test edilir.
-- [ ] **[P0] Field solver habitat maskesine taşınsın.** Void hücreleri kaynak
-      üretmez; SDF yüzeyinde no-flux uygulanır; karşı kenar komşuluğu ve wrap
-      yoktur. Dikdörtgen dış tampon fiziksel dünya sayılmaz.
-- [ ] **[P0] `ParticleStore` capacity/active/stable-ID sözleşmesi kazansın.**
-      Storage slotu kimlik değildir. Deactivation diziyi kaydırmaz; inactive
-      slot hash, force, morphology ve render yollarına giremez. Slot yeniden
-      kullanılırsa yeni world-scoped ID atanır.
-- [ ] **[P0] `VoidSink` ve `MatterReservoir` ayrı sorumluluk olsun.**
-      Güvenli alanda Void kuvveti sıfır; dar tidal fringe config ile sınırlı;
-      SDF crossing aynı tick'te geri dönüşsüz deactivation ve rezervuar
-      muhasebesi üretir. Bounce, clamp, restitution ve karşı kenardan dönüş
-      regresyon testleriyle yasaklanır.
-- [ ] **[P0] Generalized multi-band `PairForceKernel` yazılsın.** Hard-core,
-      near/mid/far lobe, cutoff ve yönlü asimetri ayrı test edilir. 6×6
-      strength + 3×3 role/range + az sayıda global profile parametresi config
-      verisi olur; runtime içinde denge sayısı saklanmaz.
-- [ ] **[P0] `InitialMatterSeeder` 512 aktif maddeyi lokal yamalara
-      dağıtsın.** Uniform soup ve scripted organism yasaktır. Seed yalnız
-      başlangıç koşulunu belirler; aynı PhysicsGenome bütün seed'lerde aynıdır.
-- [ ] **[P0] Spatial hash ve integrator aktif maddeye taşınsın.** Brute-force
-      oracle ile küçük fixture paritesi; pair kaçırmama, inactive dışlama,
-      speed envelope ve fixed-step determinism test edilir.
-- [ ] **[P0] Habitat/Void sunumu kare borderı tamamen kaldırsın.** Fizik SDF
-      ile render aynı domain'i tüketir. Habitat edge organik fade, Void düşük
-      frekanslı animasyon; fizik konturu görsel animasyonla hareket etmez.
-- [ ] **[P0] Void ölüm sunumu simülasyondan ayrıştırılsın.** Crossing olayı
-      stretch → color drain → shrink/smear → fade üretir; sunum hayaleti hash,
-      force ve snapshot canlı listesine dönemez. Reduced-motion ve yoğun kayıp
-      LOD'u test edilir.
+- [x] **[P0] Eski production fiziği yalnız negatif baseline olarak izole
+      edilsin.** V2 default oldu; triangular kernel yalnız benchmark fixture'ında.
+- [x] **[P0] `WorldDomain` ve deterministic `HabitatSDF` kurulsun.** Organik
+      SDF, pozitif inside, sıfır edge, negatif Void; invariant test edilir.
+- [x] **[P0] Field solver habitat maskesine taşınsın.** Void hücreleri kaynak
+      üretmez; SDF yüzeyinde no-flux; karşı kenar komşuluğu ve wrap yok.
+- [x] **[P0] `ParticleStore` capacity/active/stable-ID sözleşmesi kazansın.**
+      512 kapasite; deactivation diziyi kaydırmaz; inactive slot hash/force/
+      morphology/render yollarına giremez; slot yeniden kullanılırsa yeni ID.
+- [x] **[P0] `VoidSink` ve `MatterReservoir` ayrı sorumluluk olsun.**
+      Güvenli alanda Void kuvveti sıfır; dar tidal fringe; SDF crossing
+      geri dönüşsüz deactivation + rezervuar muhasebesi. Bounce/clamp yasak.
+- [x] **[P0] Generalized multi-band `PairForceKernel` yazılsın.** Hard-core,
+      near/mid/far lobe, cutoff, yönlü asimetri; 6×6 strength + 3×3 role/range.
+- [x] **[P0] `InitialMatterSeeder` 512 aktif maddeyi lokal yamalara
+      dağıtsın.** Patch+cloud dağılımı; uniform soup yasak; genom seed'den bağımsız.
+- [x] **[P0] Spatial hash ve integrator aktif maddeye taşınsın.** Brute-force
+      oracle ile parite; pair kaçırmama, inactive dışlama, determinism test edilir.
+- [x] **[P0] Habitat/Void sunumu kare borderı tamamen kaldırsın.** Fizik SDF
+      ile render aynı domain'i tüketir; organik fade, düşük frekanslı animasyon.
+- [x] **[P0] Void ölüm sunumu simülasyondan ayrıştırılsın.** Stretch → color
+      drain → shrink/smear → fade; sunum hayaleti canlı listeye dönemez.
 - [ ] **[P1] Particle glyph role/state morphing kurulsun.** Serbest, membrane,
       core, velocity, tail, damage, infection ve Void-fringe biçimleri salt
       render verisidir; collision radius ve kuvveti değiştiremez.
-- [ ] **[P0] Kamera yeni habitat/Controlled-Void domain'ine taşınsın.** Max
-      zoom-out bütün habitatı ve anlamlı Void margin'ini gösterir; sonsuz
-      karanlıkta kaybolma yoktur. Drag doğrudan, release momentum modality
-      bazlı, zoom anchor sabit, resize/orientation state korumalıdır.
-- [ ] **[P1] Kamera aday ölçüleri cihazda karşılaştırılsın.** Max zoom-out için
-      habitat çevresinde %10–20 Void ve habitatın viewport'un yaklaşık
-      %15'inden küçük olmaması yalnız başlangıç hipotezidir; config kararı
+- [x] **[P0] Kamera yeni habitat/Controlled-Void domain'ine taşınsın.** Max
+      zoom-out bütün habitatı ve anlamlı Void margin'ini gösterir.
+- [ ] **[P1] Kamera aday ölçüleri cihazda karşılaştırılsın.** Config kararı
       mouse/touch ekran görüntüsü ve kullanıcı hissiyle verilir.
 - [ ] **[P0] Kamera human acceptance yeniden açılsın.** Masaüstü mouse ve
       trackpad, Samsung S21 ve Lenovo tablette kullanıcı rahat bulmadan
       kapanmaz. Birim testleri ve özellik listesi insan kabulünün yerine
       geçmez.
-- [ ] **[P0] Snapshot v2 domain state'ini taşısın.** Habitat parametre/digest,
-      active mask, stable ID, next ID, reservoir ve Void sayaçları binary
-      codec/fingerprint'e eklenir. Eski snapshot güvenli göçemiyorsa sessiz
-      yorumlanmaz; i18n'li uyumsuzlukla yeni dünya açılır.
-- [ ] **[P1] 512 bütçesi gerçek hedeflerde ölçülsün.** Headless kernel,
-      Chromium WebGL, Samsung ve Lenovo için CPU/render p50/p95, bellek, açılış
-      ve ısınma raporlanır. Ölçüm DESIGN §11'e girer; kalite düşebilir ama
-      fizik değişemez.
-- [ ] **[P0] Adım 2 kabulü.** Birkaç simüle dakikada determinism, güvenli alan
-      sıfır Void etkisi, doğru crossing, bounded fringe, aktif hash ve cihaz
-      akıcılığı geçer. Zar/organizma üretmek bu adımın kabulü değildir.
+- [x] **[P0] Snapshot v2 domain state'ini taşısın.** V3 codec; habitat digest,
+      active mask, stable ID, next ID, reservoir ve Void sayaçları; i18n'li
+      uyumsuzluk yüzeyi.
+- [ ] **[P1] 512 bütçesi gerçek hedeflerde ölçülsün.** Headless kernel p50/p95
+      ölçüldü (§11); Chromium WebGL ve Android cihaz ölçümleri hâlâ gerekli.
+- [ ] **[P0] Adım 2 kabulü.** Determinism, güvenli alan, crossing, fringe,
+      aktif hash kanıtlandı; cihaz akıcılığı hâlâ gerekli.
 
 ## Adım 3 — Morphology Discovery v2
 
-- [ ] **[P0] Sürümlü `PhysicsGenome` şeması kurulsun.** Force profile,
+- [x] **[P0] Sürümlü `PhysicsGenome` şeması kurulsun.** Force profile,
       directed strength/range, damping, speed envelope, local density,
       seeding ve fringe parametrelerinin tamamını taşır. World seed genom
       değildir.
@@ -109,19 +83,19 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       50k satırlık artefakt runtime'da tutulmaz; triangular baseline'ın config,
       korpus ve özet sonucu sürümlü benchmark ile yeni adayın aynı ölçümde
       gerçekten daha iyi olduğunu kanıtlar.
-- [ ] **[P0] Faz sınıflandırıcısı önce kurulsun.** Dead, gas/soup,
+- [x] **[P0] Faz sınıflandırıcısı önce kurulsun.** Dead, stasis, gas/soup,
       crystal/frozen, single-collapse, Void-loss dominated, orbit dominated,
       speed-cap chaos ve dynamic-structured sonuçları ayrı reason code ile
       sınıflandırılır.
-- [ ] **[P0] Metrikler v2 fiziğine göre yeniden yazılsın.** Eski wall-support
-      metriği kaldırılır; Void dwell/loss/fringe dependency eklenir. Hareket,
-      yoğunluk, cluster, compactness, anisotropy, radial yapı, composition,
-      churn, lifespan, orbit, trajectory ve recovery tek skora ezilmez.
-- [ ] **[P0] Cluster tracker uzun boşluktan sonra ölü yapıyı diriltemesin.**
-      Ardışık örnek sözleşmesi ve maksimum gap test-first tanımlanır.
-- [ ] **[P0] Ucuz broad tarama yalnız faz filtresi olsun.** Candidate bütçesi
-      önce benchmark'la seçilir. Broad sonucu morphology başarısı veya
-      production adayı diye sunulmaz.
+- [x] **[P0] Metrikler v2 fiziğine göre yeniden yazılsın.** Void dwell/loss/
+      fringe dependency eklendi. Hareket, yoğunluk, cluster, compactness,
+      anisotropy, radial yapı, composition, churn, lifespan, orbit, trajectory
+      ve recovery tek skora ezilmez.
+- [x] **[P0] Cluster tracker uzun boşluktan sonra ölü yapıyı diriltemesin.**
+      Ardışık örnek sözleşmesi ve maksimum gap tanımlandı.
+- [x] **[P0] Ucuz broad tarama yalnız faz filtresi olsun.** Candidate bütçesi
+      benchmark'la seçilir. Broad sonucu morphology başarısı veya production
+      adayı diye sunulmaz.
 - [ ] **[P1] Arama hunisi ölçülerek kilitlensin.** Başlangıç hipotezi broad
       30–60 saniye/4–8 seed, refinement birkaç dakika/16 seed, audition 3–8
       aday, qualification 10–30 dakika/32+ seed'dir. Bunlar ölçülmeden sabit
@@ -142,14 +116,14 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       phase, yapı çeşitliliği, lifespan, churn, loss ve recovery eğrileri
       saklansın. 30 dakika sonrasında başlayan çöküş görülürse daha uzun release
       canary ayrıca gerekçelendirilsin.
-- [ ] **[P1] Candidate/seed işleri deterministic shard edilsin.** Önce seri
-      referans üretilir; work ID + genome + seed aynı sonucu vermeden worker
-      havuzu açılmaz. Paralellik sonucu veya sıralamayı değiştiremez.
-- [ ] **[P0] Qualification artefaktı clean source zorunluluğu taşısın.**
+- [x] **[P1] Candidate/seed işleri deterministic shard edilsin.** Work ID +
+      genome + seed aynı sonucu verir; paralel shard'lar seri referansla
+      bit düzeyinde eşittir.
+- [x] **[P0] Qualification artefaktı clean source zorunluluğu taşısın.**
       Revision, config/diff digest, corpus, bütçe, tam genom, zaman serisi,
       reason code ve human-acceptance alanı eksiksizdir. Dirty koşu yalnız
       exploration'dır.
-- [ ] **[P0] Production promotion bütün genomla yapılır.** Matrix-only kopya
+- [x] **[P0] Production promotion bütün genomla yapılır.** Matrix-only kopya
       yasaktır. Promotion sonrası ayrı production canary aynı genomu
       perturbation olmadan çoklu seed'de ölçer.
 - [ ] **[P0] Adım 3 kabulü üçlüdür.** Technical gate + long-horizon +
@@ -332,6 +306,29 @@ Ama yüksek seviye önerilerin kaybolmaması için bağımlılık ve kabul yüze
 - Qualified olmayan araştırma adayı production bundle'a girmez.
 
 ## Kapatılanlar
+
+### 2026-09-14 — Particle Substrate v2 ve Adım 3 araştırma kütüphanesi
+
+- [x] **Particle Substrate v2 uygulanmıştır.** `SubstrateConfig`, `PhysicsGenome`,
+      `DynamicsGenes`, `PairForceKernel` (generalized multi-band directional),
+      512 kapasiteli `ParticleStore` (aktif/pasif slot), `ParticleSpatialHash`
+      (yalnız aktif), organik `HabitatSDF`/`WorldDomain`, `VoidSink` (geri
+      dönüşsüz deaktivasyon), `MatterReservoir`, `InitialMatterSeeder`
+      (patch+cloud), v3 snapshot codec, çok bantlı field güncelleme,
+      deterministic RNG, camera-domain handling, Void-death rendering.
+- [x] **Adım 3 araştırma kütüphanesi uygulanmıştır** (`scripts/morphology/`):
+      `GenomeSampler`, `MorphologyMetrics`, `ClusterTracker`, `PhaseClassifier`,
+      `ResearchHarness` (broad→refinement→qualification), `PerturbationSystem`,
+      `Shards` (deterministic work ID), `QualificationArtefact`, `PromotionFlow`,
+      CLI. Headless — Phaser import etmez.
+- [x] **Brute-force oracle testi uygulanmıştır.** Spatial-hash/kernel yolu
+      doğrudan all-pairs referans implementation ile karşılaştırılır; aktif/pasif
+      slot ve tür çifti davranışını floating-point tolerans içinde doğrular.
+- [x] **V3 snapshot codec uygulanmıştır.** Habitat digest, active mask, stable
+      ID, next ID, reservoir ve Void sayaçları; i18n'li uyumsuzluk yüzeyi.
+- [x] **384 test geçer.** Coverage 96,93/93,13/93,51 (statement/branch/function).
+- [x] **512 parçacık benchmark:** p50 ≈ 0,98 ms, p95 ≈ 1,00 ms. 2048 parçacık:
+      p50 ≈ 13,9 ms. 256² field ≈ 5,4 ms/tick. 512²/4-band ≈ 5,6 ms/tick.
 
 ### 2026-09-14 — VOL.LIFE sağlamlaştırma ve repo hijyeni
 

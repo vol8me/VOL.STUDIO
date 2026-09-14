@@ -5,31 +5,46 @@ import {
   WorldCameraController,
   type SimulationClockFrame,
 } from '@volstudio/core';
-import { worldConfig, type WorldConfig } from '@/config/world';
-import { lifeGraphicsConfig } from '@/config/graphics';
-import { particleConfig } from '@/config/particles';
-import type { ParticleConfig } from '@/config/particles';
+import type { PhysicsGenome } from '@/config/genome';
+import {
+  lifeGraphicsConfig,
+  validateLifeGraphicsConfig,
+  type LifeGraphicsConfig,
+} from '@/config/graphics';
+import { substrateConfig, type SubstrateConfig } from '@/config/substrate';
+import { resolveCameraDomain } from '@/runtime/render/cameraDomain';
 import { FieldRenderer } from '@/runtime/render/FieldRenderer';
+import { HabitatRenderer } from '@/runtime/render/HabitatRenderer';
 import { ParticleRenderer } from '@/runtime/render/ParticleRenderer';
-import { WorldBoundaryRenderer } from '@/runtime/render/WorldBoundaryRenderer';
+import { VoidDeathRenderer } from '@/runtime/render/VoidDeathRenderer';
 import { LifeWorld, type LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
+import type { VoidCrossing } from '@/runtime/sim/VoidSink';
+import { rasterizeHabitatShade, type WorldDomain } from '@/runtime/sim/WorldDomain';
 import { createFreshWorldMetadata, type WorldMetadata } from '@/runtime/sim/WorldMetadata';
 
 interface RuntimeWorld {
+  readonly domain: WorldDomain;
   readonly fields: LifeWorld['fields'];
   readonly particles: LifeWorld['particles'];
   step(): boolean;
   snapshot(): LifeWorldSnapshot;
   restore(snapshot: LifeWorldSnapshot): void;
+  drainVoidCrossings(): VoidCrossing[];
 }
 
-interface RuntimeRenderer {
+interface RuntimeFieldRenderer {
   render(fields: LifeWorld['fields']): void;
   destroy(): void;
 }
 
-interface RuntimeDestroyable {
-  update?(): void;
+interface RuntimeAnimated {
+  update(nowMs: number): void;
+  destroy(): void;
+}
+
+interface RuntimeDeathRenderer {
+  push(crossings: readonly VoidCrossing[], nowMs: number): void;
+  render(nowMs: number): void;
   destroy(): void;
 }
 
@@ -44,73 +59,120 @@ interface RuntimeCamera {
   destroy(): void;
 }
 
+interface RuntimeBackdrop {
+  setBackgroundColor(color: number): unknown;
+}
+
 export interface LifeRuntimeDependencies {
-  readonly config?: WorldConfig;
+  readonly config?: SubstrateConfig;
+  readonly graphics?: LifeGraphicsConfig;
+  /** Geliştirme audition genomu; üretimde hiçbir yol bunu doldurmaz. */
+  readonly genome?: PhysicsGenome;
   readonly world?: RuntimeWorld;
-  readonly renderer?: RuntimeRenderer;
-  readonly boundaryRenderer?: RuntimeDestroyable;
+  readonly fieldRenderer?: RuntimeFieldRenderer;
+  readonly habitatRenderer?: RuntimeAnimated;
+  readonly deathRenderer?: RuntimeDeathRenderer;
   readonly particleRenderer?: RuntimeParticleRenderer;
   readonly cameraController?: RuntimeCamera;
+  /** Void arka planını alan yüzey; varsayılan ana kameradır. */
+  readonly backdrop?: RuntimeBackdrop;
   readonly initialSnapshot?: LifeWorldSnapshot | null;
   readonly worldMetadata?: WorldMetadata;
-  readonly particlesConfig?: ParticleConfig;
 }
 
 export class LifeRuntime {
   private readonly scope = new DisposableScope();
   private readonly world: RuntimeWorld;
-  private readonly renderer: RuntimeRenderer;
+  private readonly fieldRenderer: RuntimeFieldRenderer;
+  private readonly habitatRenderer: RuntimeAnimated;
+  private readonly deathRenderer: RuntimeDeathRenderer;
   private readonly particleRenderer: RuntimeParticleRenderer;
-  private readonly boundaryRenderer: RuntimeDestroyable;
   private readonly cameraController: RuntimeCamera;
   private readonly clock: SimulationClock;
+  private elapsedMs = 0;
 
   constructor(scene: Phaser.Scene, dependencies: LifeRuntimeDependencies = {}) {
-    const config = dependencies.config ?? worldConfig;
-    const activeParticleConfig = dependencies.particlesConfig ?? particleConfig;
+    const baseConfig = dependencies.config ?? substrateConfig;
+    const config = dependencies.genome
+      ? { ...baseConfig, genome: dependencies.genome }
+      : baseConfig;
+    const graphics = dependencies.graphics ?? lifeGraphicsConfig;
+    validateLifeGraphicsConfig(graphics);
     const metadata =
       dependencies.initialSnapshot?.metadata ??
       dependencies.worldMetadata ??
       createFreshWorldMetadata();
     try {
-      this.world = dependencies.world ?? new LifeWorld(config, metadata, activeParticleConfig);
+      this.world = dependencies.world ?? new LifeWorld(config, metadata);
       if (dependencies.initialSnapshot) this.world.restore(dependencies.initialSnapshot);
-      this.renderer = this.scope.addDestroyable(
-        dependencies.renderer ?? new FieldRenderer(scene, this.world.fields, config.boundsUnits),
-      );
-      this.boundaryRenderer = this.scope.addDestroyable(
-        dependencies.boundaryRenderer ??
-          new WorldBoundaryRenderer(
+      const { domain } = this.world;
+      this.fieldRenderer = this.scope.addDestroyable(
+        dependencies.fieldRenderer ??
+          new FieldRenderer(
             scene,
-            config.boundsUnits,
-            {
-              collisionInsetUnits: config.particleCollisionInsetUnits,
-              preferredThicknessUnits: lifeGraphicsConfig.boundaryPreferredThicknessUnits,
-              minScreenPixels: lifeGraphicsConfig.boundaryMinScreenPixels,
-              maxScreenPixels: lifeGraphicsConfig.boundaryMaxScreenPixels,
-              color: lifeGraphicsConfig.boundaryColor,
-            },
-            scene.cameras.main,
+            this.world.fields,
+            config.world.boundsUnits,
+            rasterizeHabitatShade(
+              domain,
+              config.world.fieldResolution,
+              graphics.habitatEdgeFadeUnits,
+            ),
           ),
+      );
+      this.habitatRenderer = this.scope.addDestroyable(
+        dependencies.habitatRenderer ??
+          new HabitatRenderer(scene, domain, {
+            contourSegments: graphics.habitatContourSegments,
+            voidColor: graphics.voidColor,
+            glowRingCount: graphics.voidGlowRingCount,
+            glowRingSpacingUnits: graphics.voidGlowRingSpacingUnits,
+            pulsePeriodMs: graphics.voidPulsePeriodMs,
+            pulseAlphaMin: graphics.voidPulseAlphaMin,
+            pulseAlphaMax: graphics.voidPulseAlphaMax,
+          }),
       );
       this.particleRenderer = this.scope.addDestroyable(
         dependencies.particleRenderer ??
-          new ParticleRenderer(scene, activeParticleConfig.radiusUnits),
+          new ParticleRenderer(
+            scene,
+            {
+              radiusUnits: config.particles.radiusUnits,
+              maxSpeedUnitsPerReferenceTick: config.genome.dynamics.maxSpeedUnitsPerReferenceTick,
+              velocityStretchMax: graphics.particleVelocityStretchMax,
+              fringeWidthUnits: config.genome.fringe.widthUnits,
+              fringeStretchMax: graphics.particleFringeStretchMax,
+            },
+            domain,
+          ),
+      );
+      this.deathRenderer = this.scope.addDestroyable(
+        dependencies.deathRenderer ??
+          new VoidDeathRenderer(scene, {
+            durationMs: graphics.voidDeathDurationMs,
+            maxGhosts: graphics.voidDeathMaxGhosts,
+            stretchMax: graphics.voidDeathStretchMax,
+            radiusUnits: config.particles.radiusUnits,
+            drainColor: graphics.voidColor,
+          }),
       );
       this.cameraController = this.scope.addDestroyable(
         dependencies.cameraController ??
           new WorldCameraController(scene.game.canvas, scene.cameras.main, {
-            bounds: config.boundsUnits,
-            maxZoomFactor: lifeGraphicsConfig.cameraMaxZoomFactor,
-            initialZoomFactor: 1.04,
+            bounds: resolveCameraDomain(domain.bbox, config.habitat.cameraVoidMarginRatio),
+            fit: 'contain',
+            maxZoomFactor: graphics.cameraMaxZoomFactor,
+            initialZoomFactor: graphics.cameraInitialZoomFactor,
           }),
       );
+      (dependencies.backdrop ?? scene.cameras.main).setBackgroundColor(
+        graphics.voidBackgroundColor,
+      );
       this.clock = new SimulationClock({
-        fixedStepMs: config.fixedStepMs,
-        maxStepsPerFrame: config.maxStepsPerFrame,
+        fixedStepMs: config.world.fixedStepMs,
+        maxStepsPerFrame: config.world.maxStepsPerFrame,
         partialStep: 'defer',
       });
-      this.renderer.render(this.world.fields);
+      this.fieldRenderer.render(this.world.fields);
       this.particleRenderer.render(this.world.particles, 1);
     } catch (error) {
       this.scope.dispose();
@@ -119,14 +181,18 @@ export class LifeRuntime {
   }
 
   update(deltaMs: number): SimulationClockFrame {
+    if (Number.isFinite(deltaMs) && deltaMs > 0) this.elapsedMs += deltaMs;
     this.cameraController.update(deltaMs);
-    this.boundaryRenderer.update?.();
+    this.habitatRenderer.update(this.elapsedMs);
     let fieldsChanged = false;
     const frame = this.clock.advance(deltaMs, () => {
       fieldsChanged = this.world.step() || fieldsChanged;
     });
-    if (fieldsChanged) this.renderer.render(this.world.fields);
+    if (fieldsChanged) this.fieldRenderer.render(this.world.fields);
+    const crossings = this.world.drainVoidCrossings();
+    if (crossings.length > 0) this.deathRenderer.push(crossings, this.elapsedMs);
     this.particleRenderer.render(this.world.particles, this.clock.getInterpolationAlpha());
+    this.deathRenderer.render(this.elapsedMs);
     return frame;
   }
 

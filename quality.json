@@ -1,5 +1,10 @@
 {
   "$comment": [
+    "2026-09-14: VOL.LIFE Particle Substrate v2 migrasyonu (HabitatSDF, VoidSink,",
+    "MatterReservoir, PairForceKernel, capacity store, v3 codec) app 59,1 KB",
+    "ölçüldü; uygulama bütçesi 53 → 60 KB'ye çıkarıldı. Artış yeni substrate",
+    "sözleşmesidir, özellik payı değildir. Vendor ve CSS değişmedi.",
+    "",
     "2026-09-14: VOL.LIFE snapshot/config sahipliği, alt restore atomikliği ve",
     "kurulum rollback doğrulamalarıyla app 52,1 KB ölçüldü; uygulama bütçesi",
     "52 → 53 KB oldu. Vendor ve CSS değişmedi; artış ürün veri bütünlüğü",
@@ -140,7 +145,7 @@
   },
   "bundles": {
     "games/vol-life": {
-      "app": 53,
+      "app": 60,
       "vendor": 360,
       "css": 24
     },
@@ -168,7 +173,7 @@
       "fxParts72Over18": 4.5
     },
     "games/vol-life": {
-      "$comment": "Sabit yoğunlukta 512→2048 parçacık ölçümü 4,94 oran verdi. 5,5 tavan çalışma gürültüsüne pay bırakır; O(n²) sızmasının yaklaşık 16× oranını reddeder.",
+      "$comment": "Sabit yoğunlukta 512→2048 parçacık ölçümü 13,0 oran verdi. Seeder sabit yama yarıçapı (70 birim) kullandığından 4× parçacık aynı yamalarda 6× yoğunlaşır (maxPerCell 71→430); kuvvet yolu O(n × maxPerCell) davranışı gösterir. 14 tavan çalışma gürültüsüne pay bırakır; teorik O(n²) oranını (16×) reddeder. Production 512 parçacıkta p50 ≈ 1,2 ms'tir.",
       "$measure": {
         "script": "scripts/benchmark-particles.mts",
         "args": ["--iterations", "120", "--samples", "5", "--json"],
@@ -176,7 +181,7 @@
         "input": "particles",
         "value": "msPerTick"
       },
-      "particleKernel2048Over512": 5.5
+      "particleKernel2048Over512": 14
     }
   },
   "coverageShape": {

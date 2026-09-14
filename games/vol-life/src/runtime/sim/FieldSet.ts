@@ -1,3 +1,5 @@
+import type { Rect } from '@volstudio/core/math/geometry';
+
 export const FIELD_NAMES = [
   'flowX',
   'flowY',
@@ -20,6 +22,7 @@ export class FieldSet {
   readonly temperature: Float32Array;
   readonly disturbance: Float32Array;
   private readonly scratch: Float32Array;
+  private habitatMask: Uint8Array | null = null;
 
   constructor(readonly resolution: number) {
     if (resolution < 2 || !Number.isInteger(resolution) || (resolution & (resolution - 1)) !== 0) {
@@ -33,6 +36,22 @@ export class FieldSet {
     this.temperature = new Float32Array(this.length);
     this.disturbance = new Float32Array(this.length);
     this.scratch = new Float32Array(this.length);
+  }
+
+  /** Habitat maskesi: 1 habitat hücresi, 0 Void. Void hücresi kaynak üretmez ve difüzyona girmez. */
+  get mask(): Uint8Array | null {
+    return this.habitatMask;
+  }
+
+  setMask(mask: Uint8Array | null): void {
+    if (mask && mask.length !== this.length) {
+      throw new RangeError(`Habitat maskesi ${this.length} hücre taşımalı: ${mask.length}`);
+    }
+    if (mask && !mask.every((value) => value === 0 || value === 1)) {
+      throw new RangeError('Habitat maskesi yalnız 0/1 taşır.');
+    }
+    this.habitatMask = mask ? mask.slice() : null;
+    if (this.habitatMask) this.applyMaskToFields();
   }
 
   names(): readonly FieldName[] {
@@ -68,6 +87,10 @@ export class FieldSet {
     this.diffuseRows(name, amount, 0, this.resolution);
   }
 
+  /**
+   * Habitat–Void yüzeyinde no-flux: maskelenmiş komşu yerine merkez değeri
+   * okunur, Void hücresi sıfır kalır. Karşı kenarlar komşu değildir (wrap yok).
+   */
   diffuseRows(
     name: FieldName,
     amount: number,
@@ -96,17 +119,23 @@ export class FieldSet {
       throw new RangeError(`Difüzyon kaynak zamanı ${this.length} değer taşımalı`);
     }
     const readSource = sourceEpoch ?? source;
+    const mask = this.habitatMask;
     const centerWeight = 1 - amount * 4;
     const endRow = startRow + rowCount;
     for (let y = startRow; y < endRow; y++) {
       for (let x = 0; x < this.resolution; x++) {
         const index = this.index(x, y);
+        if (mask && mask[index] === 0) {
+          this.scratch[index] = 0;
+          continue;
+        }
+        const center = readSource[index];
         this.scratch[index] =
-          readSource[index] * centerWeight +
-          (readSource[this.index(x - 1, y)] +
-            readSource[this.index(x + 1, y)] +
-            readSource[this.index(x, y - 1)] +
-            readSource[this.index(x, y + 1)]) *
+          center * centerWeight +
+          (this.neighbor(readSource, mask, x - 1, y, center) +
+            this.neighbor(readSource, mask, x + 1, y, center) +
+            this.neighbor(readSource, mask, x, y - 1, center) +
+            this.neighbor(readSource, mask, x, y + 1, center)) *
             amount;
       }
     }
@@ -132,6 +161,25 @@ export class FieldSet {
     }
     for (const name of FIELD_NAMES) this[name].set(snapshot[name]);
   }
+
+  private neighbor(
+    source: Float32Array,
+    mask: Uint8Array | null,
+    x: number,
+    y: number,
+    center: number,
+  ): number {
+    const index = this.index(x, y);
+    return mask && mask[index] === 0 ? center : source[index];
+  }
+
+  private applyMaskToFields(): void {
+    const mask = this.habitatMask!;
+    for (const name of FIELD_NAMES) {
+      const field = this[name];
+      for (let index = 0; index < this.length; index++) if (mask[index] === 0) field[index] = 0;
+    }
+  }
 }
 
 function clamp01(value: number): number {
@@ -141,4 +189,3 @@ function clamp01(value: number): number {
 function mix(a: number, b: number, amount: number): number {
   return a + (b - a) * amount;
 }
-import type { Rect } from '@volstudio/core/math/geometry';

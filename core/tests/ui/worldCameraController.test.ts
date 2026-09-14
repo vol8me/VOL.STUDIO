@@ -2,9 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   WorldCameraController,
   type WorldCamera,
+  type WorldCameraControllerOptions,
 } from '../../src/ui/controls/WorldCameraController';
 
-function harness() {
+function harness(options: Partial<WorldCameraControllerOptions> = {}) {
   const element = document.createElement('canvas');
   element.width = 1200;
   element.height = 800;
@@ -35,6 +36,7 @@ function harness() {
   const controller = new WorldCameraController(element, camera, {
     bounds: { x: 0, y: 0, width: 1000, height: 1000 },
     onChange: (state) => changes.push(state),
+    ...options,
   });
   return { element, camera, controller, state, changes };
 }
@@ -404,5 +406,61 @@ describe('WorldCameraController', () => {
     element.dispatchEvent(new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -300 }));
 
     expect(camera.zoom).toBe(zoom);
+  });
+
+  describe('contain kipi', () => {
+    it('en uzak zoomda sınırın TAMAMINI gösterir ve dar ekseni merkeze kilitler', () => {
+      const { camera, state, controller } = harness({ fit: 'contain' });
+
+      expect(camera.zoom).toBe(0.8);
+      expect(state).toEqual({ centerX: 500, centerY: 500 });
+      expect(controller.getState().minZoom).toBe(0.8);
+    });
+
+    it('sınırdan geniş eksende sürükleme merkezi oynatamaz, dar eksende oynatır', () => {
+      const { element, controller, state } = harness({ fit: 'contain' });
+      element.dispatchEvent(
+        new PointerEvent('pointerdown', { pointerId: 1, clientX: 600, clientY: 400 }),
+      );
+      element.dispatchEvent(
+        new PointerEvent('pointermove', { pointerId: 1, clientX: 900, clientY: 700 }),
+      );
+      controller.update(16);
+
+      expect(state.centerX).toBe(500);
+      expect(state.centerY).toBe(500);
+    });
+
+    it('yakınlaşınca klasik sınır kırpması geri gelir', () => {
+      const { element, controller, state, camera } = harness({ fit: 'contain' });
+      for (let step = 0; step < 3; step++) {
+        element.dispatchEvent(
+          new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -240 }),
+        );
+      }
+      controller.update(5000);
+      element.dispatchEvent(
+        new PointerEvent('pointerdown', { pointerId: 1, clientX: 600, clientY: 400 }),
+      );
+      element.dispatchEvent(
+        new PointerEvent('pointermove', { pointerId: 1, clientX: 1200, clientY: 800 }),
+      );
+
+      expect(camera.zoom).toBeGreaterThan(1.6);
+      expect(state.centerX).toBeGreaterThanOrEqual(camera.width / (2 * camera.zoom));
+      expect(state.centerY).toBeGreaterThanOrEqual(camera.height / (2 * camera.zoom));
+    });
+
+    it('momentum yumuşak kenarı da geniş eksende merkeze sabitlenir', () => {
+      const target = harness({ fit: 'contain' });
+      target.element.dispatchEvent(pointer('pointerdown', 1, 600, 400, 0));
+      target.element.dispatchEvent(pointer('pointermove', 1, 400, 380, 16));
+      target.element.dispatchEvent(pointer('pointermove', 1, 200, 360, 32));
+      target.element.dispatchEvent(pointer('pointerup', 1, 200, 360, 40));
+      for (let frame = 0; frame < 30; frame++) target.controller.update(16);
+
+      expect(target.state.centerX).toBe(500);
+      expect(target.state.centerY).toBe(500);
+    });
   });
 });
