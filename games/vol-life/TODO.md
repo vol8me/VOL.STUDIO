@@ -68,6 +68,45 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       ölçüldü (§11); Chromium WebGL ve Android cihaz ölçümleri hâlâ gerekli.
 - [ ] **[P0] Adım 2 kabulü.** Determinism, güvenli alan, crossing, fringe,
       aktif hash kanıtlandı; cihaz akıcılığı hâlâ gerekli.
+- [ ] **[P0] HabitatRenderer contour polyline yerine SDF distance
+      rasterizasyonuna geçsin.** Mevcut kontur: contour noktalarını local SDF
+      normal yönünde offset → `strokePoints(closed=true)`. Yüksek curvature'da
+      crossing/folding oluşabilir; tek kötü sample sonraki noktaya uzaklaşır,
+      Graphics düz çizgi bağlar — Lenovo'da Void'den dünyanın içine geçen çizgi
+      bug'ı bu mekanizmadan kaynaklanıyor. Çözüm: edge/glow'u doğrudan SDF
+      distance'dan rasterize et (distance ≈ 0 → glow, dışarı → decay, içeri →
+      hafif transition). Kendiliğinden kapalı, chord üretemez, fizik ile aynı
+      distance source'u kullanır.
+- [ ] **[P0] HabitatRenderer için regresyon testi yazılsın.** WorldDomain
+      geometry testleri var ama renderer'ın contour'u ekranda nasıl stroke
+      ettiğinin regresyonu yok — "sim math doğru, presentation yanlış" sınıfı.
+- [ ] **[P0] Masked field conservation testleri eklensin.** Mevcut testlerde
+      unmasked conservation var; masked conservation, habitat→Void leakage
+      yokluğu ve edge nutrient conservation testleri eksik.
+- [ ] **[P1] `FieldSet.sample()` bilinear sampling habitat mask'ini hesaba
+      katsın.** Edge yakınındaki sample habitat value + Void cell=0 karışımı
+      alıyor — kaynak yapay şekilde düşer. Tasarım kararı verilmesi gerekiyor.
+- [ ] **[P0] Named deterministic RNG streams kurulsun.** Mevcut: LifeWorld ana
+      RNG akışını önce LightSources sonra InitialMatterSeeder için kullanıyor
+      — lightSourceCount 5→6 değiştirince particle başlangıç dünyası tamamen
+      değişebilir. Çözüm: `worldSeed → habitat, fields, matter-seeding,
+lifecycle, behavior, evolution` stable derivation. Işık algoritmasını
+      değiştirmek particle başlangıcını değiştirmez.
+- [ ] **[P0] Camera v2.1: Aktif input event jitter'ı render cadence'den
+      ayrılsın.** Mevcut drag: pointermove event → camera position değiştir →
+      apply state — event cadence'ine bağlı. Mouse eventleri düzensiz gelirse
+      60 FPS olsa bile kamera mikro sıçramalar gösterir. Çözüm: eventlerde
+      delta accumulator'a yaz, camera render/update frame'inde accumulated
+      target'a geç. Ağır easing yapma — amaç input lag eklemek değil, event
+      jitter'ını render cadence'den ayırmak. Mouse/touch/trackpad momentum
+      ayrı normalize edilsin. Active drag world navigation limitinde soft
+      resistance. Debug input trace recorder eklensin.
+- [ ] **[P0] Camera açılış ölçeği ECOSYSTEM olsun.** Mevcut: runtime başlangıçta
+      `contain` ile bütün dünyayı gösterme eğiliminde — world ekranın ortasında
+      küçük yaşam adası, etrafında dev siyah Void. Üç observation scale:
+      WORLD (overview) → ECOSYSTEM (açılış) → ORGANISM → MICRO. Fiziksel dünya
+      boyutu şimdi değiştirilmez — kamera algısını düzelt, fiziksel boyutu
+      Step 3 sonucu üzerinden seç.
 
 ## Adım 3 — Morphology Discovery v2
 
@@ -131,6 +170,123 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       Kullanıcı onayı olmadan `[x]` olmaz.
 - [ ] **Alan ve ekoloji kuvvetleri morphology kanıtlanana kadar kapalı kalır.**
 
+### Adım 3 — araştırma sistemi düzeltmeleri
+
+- [ ] **[P0] Startup survival resmi morphology kriteri olsun.** Sadece
+      compactness, motion, clustering değil — `matterRetention(5s)`,
+      `matterRetention(10s)`, `matterRetention(30s)`, `startupVoidLoss`,
+      `earlyBurstPeak`, `timeToStructuralRegime` ölçülmeli. İlk 10 saniyede
+      dünyanın %30-50 maddesini Void'a fırlatan profile'ın qualification'a
+      girmesine izin verilmemeli. Bağımsız reproduksiyon: 8 seed ortalaması
+      10sn'de %27.5, 30sn'de %49.3, 60sn'de %61.2 kayıp; bazı seed'lerde 512→71.
+- [ ] **[P0] Seeding rejimi yeniden araştırılsın.** Mevcut 4×70-particle dense
+      random patch fazla agresif: patch yarıçapı 70 iken interaction menzili 96
+      — başlangıçta yoğun interaction alanlarına spawn. Araştırılacak
+      parametreler: patch count, patch radius, patch occupancy, safe-edge
+      margin, cloud fraction, initial speed, type distribution. Launch
+      envelope: matter survival, velocity explosion, catastrophic Void loss
+      kontrol eder. Seed'lerin büyük kısmı bunu geçemiyorsa reroll etmeyiz —
+      physics/seeding FAIL deriz.
+- [ ] **[P0] `trajectoryAutocorrelation()` bug'ı düzeltilsin.** İsim
+      autocorrelation ama implementasyon gerçekte displacement metriği
+      (current position − past position → dx²+dy² ortalıyor). Gerçek periodic
+      orbit bir süre sonra aynı pozisyona yakın geri döner — displacement
+      küçülebilir. Mevcut sözde autocorrelation tam orbit olduğunda düşük değer
+      üretebilir — kavramsal olarak ters çalışabilir.
+- [ ] **[P0] `autocorrelationLag` semantiği düzeltilsin.** Config
+      `autocorrelationLag=60` ama history her simulation tick'inde değil, her
+      metric sample'da kaydediliyor. 60 history entry broad'ta ~30 saniye,
+      qualification'da ~60 saniye — aynı lag=60 farklı gerçek süre.
+- [ ] **[P0] Lokal micro-orbit detector yazılsın.** Mevcut metrikler global
+      — 3 particle sonsuza kadar dönüyor, 300 particle var, global mean o üç
+      particle'ın patolojik orbitini yutuyor. Yeni metrikler:
+      `persistentMicroOrbitFraction`, `microOrbitLifetime`,
+      `angularCoherence`, `trajectoryRecurrence`,
+      `membershipExchangeRate`. Küçük cluster için: lokal centroid hesapla,
+      particle'ın centroid etrafındaki açısını izle, angular velocity
+      sign/persistence izle, radius değişiyor mu, membership değişiyor mu, kaç
+      tur tamamlıyor. 3 particle 15 dakika aynı geometrik cycle → kesin red.
+      Ama bütün rotasyonu yasaklama — gelecekte organism dönebilir veya
+      membrane internal circulation gösterebilir. Kötü orbit: 3 particle,
+      closed trajectory, same distance, same membership, no exchange. İyi
+      rotation: 50-particle organism, body deforms, members exchange, moves
+      through world.
+- [ ] **[P0] Per-cluster morphology metrics yazılsın.** Mevcut
+      MorphologyMetrics "cluster stats" adı taşıyor ama bütün aktif world
+      particle'larını tek global yapı gibi değerlendiriyor — global centroid,
+      global compactness, global anisotropy. Ekranda Organism A + Organism B + free particles olsa bile metric tek dünya bulutu gibi bakıyor.
+- [ ] **[P0] ClusterTracker → MorphologyMetrics gerçek entegrasyonu
+      sağlansın.** ResearchHarness `tracker.update()` çağırıyor ama
+      tracker'dan çıkan cluster yapıları MorphologyMetrics'in gerçek
+      cluster-level hesaplarına beslenmiyor. Cluster tracker yazılmış ama
+      morphology değerlendirmesi esasen global kalmış.
+- [ ] **[P0] ClusterTracker split/merge/fragmentation semantiği
+      tamamlansın.** Event type birth/death/split/merge/fragmentation
+      tanımlanmış ama üretilenler esasen birth/death. Temporary gap/grace gerçek
+      kimlik continuity'si sağlamıyor. Tracker membership'te stable particle ID
+      yerine slot/index mantığına dayanıyor — slot reuse geldiğinde yanlış
+      continuity üretebilir.
+- [ ] **[P0] Intrinsic morphology vs Void-stress qualification ayrılsın.**
+      15 dakika hareket eden güzel yapı Void'a drift edebilir, Step 6 geldiğinde
+      nucleus edge danger algılayıp kaçacak. Step 3 "15 dakikada Void'a gitti,
+      FAIL" derse iyi morphology'yi reddetmiş oluruz. Çözüm: (1) Intrinsic
+      morphology — güvenli interior'da, kendi kendini koruyor mu,
+      hareket/deform/recovery var mı; (2) Void stress — fringe yakınında, Void
+      yapısal destek veriyor mu, tidal deformation doğru mu, crossing düzgün
+      mü. AI gelmeden "kenardan akıllıca uzak dur" beklenmez.
+- [ ] **[P0] VoidProfile Step 2'de sabitlensin — Step 3 intrinsic morphology
+      bunu optimize etmez.** GenomeSampler fringe parametrelerini değiştiriyor
+      — riskli. Search yanlışlıkla "en güzel yapı Void fringe tarafından
+      desteklenince oluyor" çözümünü bulabilir. Void ayrıca stress-test
+      senaryosunda değerlendirilir.
+- [ ] **[P1] PhysicsGenome parçalansın.** Mevcut: aynı objede fizik yasası,
+      seeding, Void fringe. Öneri: `SubstratePhysicsProfile` (pair force law,
+      strength, ranges, damping, speed envelope), `SeedingProfile` (patches,
+      cloud, density, type distribution), `VoidProfile` (fringe width, tidal
+      stress), `ExperimentScenario` (domain seed, matter seed, perturbation,
+      duration). Bugün dünya fiziğine PhysicsGenome demek ileride terminolojik
+      borç yaratır — Step 10'da OrganismGenome gelecek.
+- [ ] **[P1] ResearchHarness düzeltmeleri.** Qualification seed'lerin
+      time-series'ını tek düz array'e flatten ediyor — seed sınırları kayboluyor.
+      Artifact budget saniyeleri default 0. Source revision default unknown.
+      Human acceptance pending. Checkpoint/resume yok. ETA yok. Worker/shard
+      yardımcıları var ama gerçek harness execution hâlâ serial. Package
+      scripts'te research CLI expose edilmemiş.
+- [ ] **[P1] Research funnel yeniden kilitlensin.** candidate generation →
+      çok ucuz 10-30s sim → dead/soup/collapse/orbit ele → insan shortlist →
+      birkaç finalist → dakikalar → qualification. CLI başlamadan önce:
+      Candidates, Seeds, Ticks, Estimated wall clock, Workers göstermeli. Uzun
+      qualification: explicit ayrı komut. Checkpoint: zorunlu.
+- [ ] **[P1] Qualification artifact DTO temizliği.**
+      `serializePhysicsGenome(genome) as unknown as PhysicsGenome` — gerçekte
+      string olan şeyi type system'e object diye yutturuyor. Temiz çözüm:
+      `serializedGenome: string` veya DTO.
+- [ ] **[P0] Benchmark scaling kapısı düzeltilsin.** Mevcut scaling threshold
+      ~14× — 4× input için 16× tam O(n²) ideal kötü uç. 14 quadratic'e
+      tehlikeli derecede yakın. Eski 5.5 gate çok daha anlamlıydı.
+      DESIGN/TODO/quality arasında eski 4.94/5.5 ve yeni ~14 tutarsızlık
+      gösteriyor.
+- [ ] **[P1] Algorithmic vs product benchmark ayrılsın.** Algorithmic:
+      controlled uniform/stratified distribution, local density gerçekten sabit
+      — hash+force complexity. Product: gerçek production seeder — actual
+      workload. Mevcut benchmark 512/1024 ve 2048/2048'de aynı patchCount=4,
+      patchRadius=70 kullanıyor — 2048'de aynı dört patch içine ~4× fazla
+      particle gömülüyor, local occupancy sabit değil. Rapor: max cell
+      occupancy, candidate pairs, p50/p95, active count.
+- [ ] **[P0] Tautological LifeWorld test düzeltilsin.**
+      `expect(world.particles.activeCount).toBe(world.particles.activeCount)`
+      — her zaman doğru, X=X, hiçbir şeyi test etmiyor. Üstelik Void
+      dünyasında active count her tick korunması geçerli invariant değil.
+- [ ] **[P0] Gerçek 3-particle orbit geometrik fixture testi yazılsın.**
+      PhaseClassifier.test.ts sentetik scalar metric objeleri veriyor — gerçek
+      3-particle orbit oluşturup classifier'ın patolojik sayıp saymadığı testi
+      yok.
+- [ ] **[P1] Long-run current default test eklensin.** Mevcut testlerde
+      long-run current default yetersiz — 30 dakika koşu yok.
+- [ ] **[P1] DESIGN "384 test" cümlesi evidence provenance taşısin.** "Bu
+      committe geliştirici ortamında 384 test bildirildi" gibi — test count
+      ürün acceptance gibi okunmamalı.
+
 ## Adım 4 — organizma kimliği
 
 - [ ] **Kesin blokaj:** Adım 3 üçlü kabulü geçmeden identity kodu yazılmaz.
@@ -138,6 +294,21 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       state'i bit düzeyinde aynı üretir.
 - [ ] **Stable organism ID üye örtüşmesiyle izlenir.** Split, merge, geçici
       fragmentation, save/load ve ID ölümü olay olarak sınanır.
+- [ ] **Tracker stable particle ID kullanmalı — slot index değil.** Slot
+      reuse geldiğinde yanlış continuity üretebilir.
+- [ ] **Step 4 kabul testleri:** movement, deformation, partial member
+      exchange, two organisms crossing, temporary fragmentation, merge, split,
+      disappearance, reappearance window, save/reload, deterministic tie-break.
+- [ ] **Geometric continuity ≠ biological lifecycle ayrımı future-ready
+      kurulsun.** Core predator nucleus'u öldürdüğünde body particle'larının
+      %80'i hâlâ orada — membership tracker aynı cluster der ama organism öldü.
+      Future lifecycle: geometric entity continuity ≠ living organism
+      continuity.
+- [ ] **Bölünme: accidental fragmentation vs genuine reproduction ayrılsın.**
+      Accidental: #42 → büyük parça #42, küçük parça transient/new. Genuine:
+      Parent #42 → Child #57, Child #58. Biological fission'da parent ID
+      daughter'a taşınmaz — soy ağacı temiz olur. Bu karar Step 4'ten önce
+      DESIGN'a yazıldı (§18).
 
 ## Adım 5–10 — kararlaştırılmış sonraki sözleşmeler
 
@@ -292,6 +463,183 @@ Ama yüksek seviye önerilerin kaybolmaması için bağımlılık ve kabul yüze
 - [ ] **Ölçek kabulü yaşam zincirini korusun.** Daha kalabalık dünya ekrandaki
       bireyleri renkli halıya çeviremez; morphology, identity ve ecology aynı
       korpusta küçük dünya referansıyla davranış paritesi göstermelidir.
+
+## Screen Loop — Product Shell (Lane B)
+
+> Simulation semantics'ini kirletmez; Life Research (Lane A) ile paralel
+> ilerler. DESIGN §18'i izler.
+
+### CORE genişletmeleri
+
+- [ ] **[P0] CORE generic `MainMenu` component oluşturulsun.** Slot-based
+      full-screen surface: underlay slot (optional), scrim, brand slot, content
+      slot, footer slot (optional). CORE yalnız tam ekran geometrisini,
+      safe-area'yı, inert/show/hide, focus girişini, scrim katmanını,
+      responsive layout'u yönetir. Scene değiştirmez, save bilmez, audio bilmez,
+      kamera bilmez. `core/src/ui/layout/MainMenu.ts`.
+- [ ] **[P0] CORE `Modal` dismiss request/interception kavramı eklensin.**
+      Programmatic `modal.close()` her zaman kapatır. User dismiss girişleri
+      (Escape, Android Back, Scrim) önce `onDismissRequest(reason)` callback'e
+      gider — consumer close/consume kararı verir. Reason: back, escape, scrim.
+- [ ] **[P0] CORE `Sheet` header accessory slot eklensin.** `header → title +
+end (accessory slot + close button)`. API: `headerAccessory?: Component`.
+      LIFE accessory'ye CORE Toolbar koyar. X Sheet'in kendi close button'ı
+      olarak kalır.
+- [ ] **[P0] CORE `Sheet` scrim policy passthrough eklensin.**
+      `SheetOptions: closeOnScrimClick` pass-through almalı. LIFE Pause: `false`
+      — scrim tap kapatmaz.
+- [ ] **[P0] CORE `Sheet` initial focus explicit olsun.** Açılır açılmaz keyboard
+      focus Settings'e gitmesin — Pause açıldığında default focus X/Resume.
+- [ ] **[P0] CORE `LoadingScreen` transparent background eklensin.**
+      `LoadingBackgroundType`'a `transparent` eklensin — altındaki canlı canvas
+      görünmeye devam etsin. Indicator opsiyonel olabilmeli.
+- [ ] **[P0] CORE `WorldCameraController` safe programmatic `setState()` API
+      eklensin.** Mevcut: `fitWorld()` ve `getState()` var ama dışarıdan
+      `setState()` yok. `animateTo()` koyma — controller'ı şişirme. LIFE-specific
+      `LifeCameraTransition` animasyonu yönetsin.
+- [ ] **[P1] CORE `Toolbar`/`ToolButton` opsiyonel semantic haptic eklensin.**
+      `ToolButtonOptions.haptic` — pause header action'ları sistemin geri
+      kalanıyla aynı dokunsal dile sahip olur.
+
+### VOL.LIFE — screen loop ve session lifecycle
+
+- [ ] **[P0] `LifeAppFlowController` oluşturulsun — explicit screen
+      state-machine.** BOOTING, MENU, ENTERING_FRESH_WORLD,
+      ENTERING_SAVED_WORLD, PLAYING, PAUSED, RETURNING_TO_MENU. Scattered
+      boolean değil. Simulation fiziği bilmez — `ParticleStore` import edilirse
+      reddedilir.
+- [ ] **[P0] `LifeScreenStack` oluşturulsun — tek lifecycle owner.** MainMenu,
+      LoadingScreen, LifeHud, PauseSheet, Toast/etc kurar, destroy'da güvenli
+      temizler. State kararları FlowController'da.
+- [ ] **[P0] `LifeRuntime` simulation/presentation clock ayrılsın.**
+      `advanceSimulation(delta)` + `updatePresentation(delta)`. Presentation
+      her render frame çalışabilir, simulation yalnız flow izin verirse. Death
+      animation: world time. Camera transition, menu scrim, habitat decorative
+      pulse: real time.
+- [ ] **[P0] `LifePauseController` — reason/token modeli.** `user`,
+      `background`, `transition`, `system`. Simulation ancak bütün reason'lar
+      kalktığında devam eder. Resume: pause süresini catch-up etmez.
+- [ ] **[P0] Creation Phase — `FROZEN`, `CREATION`, `LIVE` semantics.** Fresh
+      LIFE entry'de substrate ilerler ama Step 5'te energy/ageing/metabolism
+      başlamaz. Yalnız `paused: boolean` ile çözülmez.
+- [ ] **[P0] `WorldEntryCoordinator` — gerçek loading task registry.** Fake
+      progress yok. Task gerçek progress bilmiyorsa percentage gösterme, yalnız
+      phase text. Prod: WORLD FORMING, LIFE AWAKENING, READY. Loading sırasında
+      main thread kilitlemek yasaktır — task'lar async/chunked/workerized.
+- [ ] **[P0] `LifeCameraTransition` — cinematic state interpolation.** Zoom
+      log-space: `zoom(t) = exp(lerp(log(startZoom), log(endZoom), easedT))`.
+      Easing: smootherstep / ease-in-out-quint. Süre adaptif: yakın ~700-800ms,
+      overview→ecosystem ~900-1100ms, maksimum ~1200ms. Reduced motion:
+      100-150ms fade/cut.
+- [ ] **[P0] `LifeMainMenu` — LIFE-specific composition.** VOL.LIFE logo,
+      organic radial scrim (CORE generic default değil — game CSS'inde),
+      LIFE/YAŞAM button (CORE Button, LIFE-specific class border/background
+      sıfırlar). Başka visible action yok. LIFE butonu viewport center'a değil
+      habitat'ın projected visual centroid'ine bağlı. Touch target ~56-64dp.
+- [ ] **[P0] Main Menu'de dünya tamamen DURUR.** Saved world: son snapshot
+      frozen. Fresh world: Habitat oluşturulmuş, particle'lar yerleştirilmiş,
+      simulation tick başlamamış. Sadece presentation-only (habitat glow)
+      yaşayabilir.
+- [ ] **[P0] Menu camera vs gameplay camera ayrımı.** MENU CAMERA:
+      whole-world overview. GAMEPLAY CAMERA: ecosystem/remembered. Menu
+      overview gameplay camera state'ini overwrite etmez — (x, y, zoom) ayrı
+      saklanır.
+- [ ] **[P0] Main Menu real world session — world destroy edilmez.** Aynı
+      LifeRuntime, world RAM'de, simulation frozen, renderer alive. LIFE'a
+      tekrar basınca seamless resume.
+- [ ] **[P0] LIFE transition — üç aşamalı animasyon.** (1) Activation
+      ~120-180ms: letter spacing sıkışır, haptic, input kilitlenir,
+      AudioContext resume(). (2) Awakening ~300-450ms: scrim çözülür, LIFE
+      pulse'a dönüşür, world kontrastına gelir. (3) Entry ~700-1100ms: camera
+      overview → ecosystem dalış. Reduced motion: kısa fade + cut.
+- [ ] **[P0] Fresh entry hedef 2.5-4 saniye, hard upper ~8 saniye.** Sabit 10
+      saniye yok. Physics'i yavaşça açmak için artificial force ramp eklenmez
+      — simulation tick 0'dan gerçek physics. Patlama kabul edilemezse
+      InitialMatterSeeder/profile düzeltilsin.
+- [ ] **[P0] Saved world'de pre-roll KESİNLİKLE yok.** Saved Main Menu: exact
+      snapshot frozen. LIFE: restore/validate → audio warmup → render warmup →
+      camera transition → resume exact tick. Gizlice AI çalıştırmayız.
+- [ ] **[P0] Fresh world "pat pat" loading sırasında görülebilir.** Menu:
+      parçacıklar frozen, LIFE, scrim kalkıyor, partiküller harekete başlıyor.
+      LoadingScreen transparent — world canvas alttan görünür.
+- [ ] **[P0] İki farklı loading anlamı ayrılsın.** Boot preparation: Main
+      Menu'nün var olması için minimum (locale, preferences, orientation,
+      snapshot, world preview, renderer). World Entry Loading: LIFE'a basınca
+      (audio unlock, creation protocol, camera target, session activation).
+- [ ] **[P0] Bootstrap refactor.** Mevcut `bootstrap.ts` oyun yaratılmadan
+      önce `worldPersistence.load()` yapıyor — save yüklenene kadar Phaser/game
+      UI yok. Yeni: servisleri kurar → app shell'i kurar → boot/session
+      coordinator world preview hazırlar.
+- [ ] **[P0] `LifePauseSheet` — tek Sheet, iç view routing.** Header:
+      `VOL.LIFE [⚙][X]`, ileride `[Codex][World][God][Settings][X]`. Body: MAIN
+      MENU, QUIT GAME. Resume butonu yok — X = resume. Settings'e girince:
+      `AYARLAR [⚙ selected][X]` + `<LifeOptionsPanel>`. Android Back:
+      Settings → PauseHome, PauseHome → Resume. Scrim tap: resume ETMEZ.
+- [ ] **[P0] `LifeHud` küçültlsün.** Settings Sheet ownership'ını kaybeder,
+      Pause button kazanır. Hud: branding, fullscreen? (web only), pause, FPS.
+- [ ] **[P0] `LifeQuitPrompt` — explicit exit confirmation.** Current
+      `LifeExitPrompt` global back handler kaydoluyor — yeni sistemde Back
+      anlamları değişiyor. Back navigation tek `LifeAppFlowController` sahibine.
+- [ ] **[P0] Loading sırasında Android Back abort.** Android Back/Escape:
+      entry'i abort edip Main Menu'ye dönebilir. `WorldEntryLoader` AbortSignal
+      desteklemeli.
+- [ ] **[P0] `LifeCameraTransition` — entry camera target.** Fresh world'de
+      last camera yok. `EntryCameraResolver`: active-matter centroid, en yüksek
+      local density, habitat safe interior üzerinden deterministik focus.
+      Saved world: last gameplay camera.
+- [ ] **[P0] Gameplay camera state saklama.** Main Menu'ye çıkarken centerX,
+      centerY, zoom saklanmalı. Ayrı `LifeViewState` — world physics
+      fingerprint'ine dahil olmaz.
+- [ ] **[P0] Audio lifecycle.** Main Menu: sakin menu cue. LIFE'a basınca:
+      WebAudio unlock, SoundBank decode/warm, gameplay stems preload, menu cue
+      → gameplay ambience crossfade. İlk cold boot'ta menu sessiz olabilir.
+      Pause: world SFX 100-200ms fade, music pause mix'e crossfade.
+- [ ] **[P0] Reset World — autosave race fix.** `saveManager.delete() +
+location.reload()` yasaktır. Flow: Confirm Reset → block autosave →
+      cancel/drain pending writes → delete world snapshot → create fresh
+      metadata + new seed → Loading/incubation → LifeScene. Preferences
+      silinmez. Şimdilik Settings altında, World paneli geldiğinde oraya
+      taşınacak.
+- [ ] **[P0] Orientation — mevcut native store kullanılsın.** Android manifest
+      `userPortrait`, `OrientationStore.applySaved` SharedPreferences'a
+      kaydediyor. Agent bunu tekrar LifePreferences içine eklememeli.
+- [ ] **[P1] Scrim organic.** Menu scrim uniform siyah opacity olmamalı —
+      habitat merkezini biraz daha açık bırakan hafif radial/organic scrim.
+- [ ] **[P1] HUD giriş sırası.** LIFE → world wakes → camera arrives → HUD
+      arrives. Pause button 150-250ms fade. Main Menu'ye dönüş tersine.
+
+### Screen Loop test sözleşmesi
+
+- [ ] **[P0] İlk Android boot: portrait.**
+- [ ] **[P0] Saved orientation: çizimden önce uygulanır.**
+- [ ] **[P0] Menu 10 dk açık: world tick/RNG değişmez.**
+- [ ] **[P0] Fresh preview: particles stationary.**
+- [ ] **[P0] Saved preview: snapshot exact frozen.**
+- [ ] **[P0] LIFE fresh: creation mode çalışır.**
+- [ ] **[P0] LIFE saved: hidden pre-roll yok.**
+- [ ] **[P0] Camera entry: endpoint exact, frame-rate independent.**
+- [ ] **[P0] Reduced motion: zoom uçuşu atlanır.**
+- [ ] **[P0] User Pause: sim tick değişmez.**
+- [ ] **[P0] Pause 20 dk: energy/AI/RNG değişmez.**
+- [ ] **[P0] User Pause + background: foreground resume etmez.**
+- [ ] **[P0] Settings Back: PauseHome.**
+- [ ] **[P0] Settings X: gameplay resume.**
+- [ ] **[P0] PauseHome Back: gameplay resume.**
+- [ ] **[P0] Scrim tap: resume ETMEZ.**
+- [ ] **[P0] MainMenu Back: Quit confirm.**
+- [ ] **[P0] MainMenu return: world reload olmaz.**
+- [ ] **[P0] Quit: save flush → close.**
+- [ ] **[P0] Loading slow task: animation frame pacing bozulmaz.**
+- [ ] **[P0] Orientation transition: camera target yeniden çözülür, jump yok.**
+- [ ] **[P0] Samsung + Lenovo insan acceptance ayrı kapı.**
+
+### Uygulama sırası
+
+CORE dismiss semantics → CORE Sheet header accessory → CORE transparent Loading
+→ CORE generic MainMenu → camera setState → LifeScreenStack →
+LifeAppFlowController → Life MainMenu → WorldEntryCoordinator → real Pause →
+Settings migration → Reset/quit/main-menu flows → device acceptance.
+Physics research lane (Lane A) bundan bağımsız paralel devam eder.
 
 ## Her adımda
 

@@ -569,11 +569,18 @@ insan kabulüyle ölçülmeden belgeye rastgele sayı olarak yazılmaz.
 
 ### Kabuk
 
-Sağ üst seçenekler düğmesi CORE `Sheet`ini açar. Web'de tam ekran düğmesi
-solundadır; Android ve masaüstünde yoktur. Dişli, tam ekran ve X aynı 40×40
-`IconButton` geometrisidir. FPS açıksa Sheet'in üst katmanında görünür kalır.
-Dil, FPS, haptics, yön ve masaüstü görüntü kipi mevcut i18n/kalıcılık
+Gameplay HUD sağ üst köşesinde yalnız `Pause` düğmesi vardır; ayarlar düğmesi
+HUD'da değil, Pause Sheet header'ındaki bir aksiyondur. Web'de tam ekran
+düğmesi Pause'un solundadır; Android ve masaüstünde yoktur. Pause ve X aynı
+40×40 `IconButton` geometrisidir. FPS açıksa Sheet'in üst katmanında görünür
+kalır. Dil, FPS, haptics, yön ve masaüstü görüntü kipi mevcut i18n/kalıcılık
 sözleşmelerini korur.
+
+Pause Sheet tek bir CORE `Sheet`'tir; içinde ayrı panel açılmaz, body route'u
+değişir. Header'da `Settings` (ve ileride `Codex`, `World`, `God`) aksiyonları
+için `Toolbar` accessory slot bulunur. X her görünümde Sheet'i kapatır ve
+oyuna döner; Android Back bir seviye geri döner (Settings → PauseHome,
+PauseHome → Resume). Scrim tıklayınca Sheet kapanmaz.
 
 Alan, territory, infection ve tarih normal görünümü kirletmez; kullanıcı
 seçtiği katmanı tam kontrastla açar. Dünya aklı ile sunum aklı ayrıdır:
@@ -970,7 +977,10 @@ ayırt edilebilir; erişilebilirlik/reduced-motion aynı olay anlamını korur.
 ### Adım 8 — deney, kayıt ve tarih sözleşmesi
 
 Snapshot “şimdi”, replay “buraya nasıl geldik” sorusuna cevap verir. Canlı
-dünya hızlandırılmaz; pause/0.5×/2×/4× yalnız deterministik replay'de bulunur.
+dünya hızlandırılmaz. Canlı dünyada kullanıcı arayüzü pause'u gerçek bir 0×
+dondurmadır — simülasyon tick, fizik, alan, enerji, AI, RNG ve Void olayları
+tamamen durur; resume pause süresini catch-up etmez. 0.5×/2×/4× zaman
+ölçeklemesi yalnız deterministik replay'de bulunur.
 Kullanıcı aynı seed ve komut dizisini çatallayıp tek müdahaleyi değiştirerek
 deney karşılaştırabilir. Event log ilkler, doğum/ölüm, split/merge, göç,
 çatışma, salgın ve extinction'dan biyografi ile soy ağacı türetebilir.
@@ -1032,7 +1042,8 @@ sözleşmesi veya gönderilen candidate catalog'u değildir.
 
 ## 15. Açıkça kapsam dışı
 
-- Runtime müzik/ses sentezi; shipped sesler önceden üretilir.
+- Runtime müzik/ses sentezi; shipped sesler önceden üretilir. Runtime ses
+  oynatımı ve spatial audio (§18) kapsam dışı değildir.
 - WebGPU/compute shader; mevcut Phaser yüzeyi WebGL1'dir.
 - LLM ajanlar.
 - Kameraya göre değişen fizik.
@@ -1092,3 +1103,144 @@ Aşağıdakiler ölçülmeden karar veya tamamlanmış iş sayılmaz:
 - Deterministik worker shard'larının seri referansla maliyet kazancı.
 - Matter reservoir dönüş hızının extinction ve taşıma kapasitesine etkisi.
 - Particle glyph/semantic LOD'un okunabilirlik ve GPU maliyeti.
+
+## 18. Screen loop ve oturum yaşam döngüsü
+
+VOL.LIFE bir simülasyon test harness değil, bir üründür. Uygulama açılışı
+kaotik bir dünyaya doğrudan dalmak yerine, donmuş bir dünya gözlemi ile başlar.
+
+### Main Menu donmuş dünyanın en uzak gözlem ölçeğidir
+
+Main Menu oyundan önceki ayrı bir ekran değildir; aynı yaşayan dünyanın
+frozen presentation state'idir. Dünya RAM'de kalır, simulation frozen'dır,
+renderer alive'dır. LIFE'a tekrar basınca reload, parser veya reconstruction
+yoktur — seamless resume.
+
+Main Menu'de dünya tamamen durur: particle hareket etmez, fields ilerlemez,
+AI ilerlemez, energy azalmaz, organism ölmez, RNG ilerlemez, Void olayları
+oluşmaz. Yalnız presentation-only dekoratif efektler (habitat glow/breathing)
+yaşayabilir.
+
+Görünür tek aksiyon `LIFE` / `YAŞAM` düğmesidir. Settings, Continue, New
+World, Quit görünürde yoktur. Kayıt varsa LIFE = devam et, kayıt yoksa LIFE =
+yeni hayatı başlat. New World / Reset World Pause → Settings/World içinden
+yapılır. Android Back: Quit Confirm açar.
+
+Main Menu kamerası bütün habitat overview'ındadır (`contain`). Gameplay
+kamerası ecosystem ölçeğindedir. Menu overview gameplay camera state'ini
+overwrite etmez — oyuncunun son gameplay camera (x, y, zoom) ayrı saklanır.
+
+### LIFE düğmesi menüden çıkış değil, dünyayı uyandırma eylemidir
+
+LIFE tıklandığında üç aşamalı transition: (1) Activation ~120-180ms — letter
+spacing hafif sıkışır, haptic, input kilitlenir, AudioContext resume(). (2)
+Awakening ~300-450ms — scrim çözülür, LIFE yazısı küçük loading/life pulse'a
+dönüşür, world kontrastına gelir. (3) Entry ~700-1100ms — camera WORLD
+overview → ECOSYSTEM dalış, fresh world: simulation ilk hareketleri başlar,
+saved world: restore tamamlanana kadar hareket başlamaz. Reduced motion:
+kısa fade + cut to target camera.
+
+### Entry loading sahte progress taşımaz
+
+`WorldEntryCoordinator` gerçek task registry kullanır. Sistemler task kaydeder
+(snapshot validation, world/session activation, renderer preparation, audio
+context/banks/music stems, creation pre-roll, camera target; ileride organism
+registry, lifecycle, AI, colony systems). LoadingScreen gerçekten tamamlanan
+task'ları progress'e dönüştürür — fake 0→100 timer yok. Task gerçek progress
+bilmiyorsa percentage gösterme, yalnız phase text (WORLD FORMING, LIFE
+AWAKENING, READY). Yükleme 1.2 saniyeyi geçerse küçük phase text çıkar.
+
+Loading sırasında main thread kilitlemek yasaktır. WorldEntry task'ları
+async, gerekiyorsa chunked, büyük işlemlerde workerized. Transition sırasında
+hiçbir synchronous task frame spike üretmemeli.
+
+### Creation Phase gameplay history değildir
+
+Fresh world creation: habitat → matter seed → substrate physics pre-roll →
+initial structure detection → future organism identity bootstrap → future
+energy initialize → future controller initialize → WORLD BORN → simulation
+tick 0. Creation Phase world history değildir — organism "8 saniyedir aç"
+diye başlamaz, world age gameplay başında 0.
+
+Fresh entry hedef 2.5-4 saniye, hard upper ~8 saniye. Sabit 10 saniye
+bekletme yok — ilk kaba transient 3-4 saniye içinde yatışmıyorsa
+seeding/physics başarısız. Loading'i uzatarak kurtarmayız. Physics'i yavaşça
+açmak için artificial force ramp eklenmez — simulation tick 0'dan gerçek
+physics. Patlama kabul edilemezse InitialMatterSeeder/profile düzeltilsin.
+
+Saved world'de pre-roll kesinlikle yok. Saved Main Menu: exact snapshot
+frozen. LIFE: snapshot restore/validate → audio warmup → render warmup →
+camera transition → resume exact tick. Saved world'ü loading sırasında
+gizlice AI çalıştırmayız — oyuncu menu'de gördüğü organism LIFE'a basınca
+ölmüş bulabilir.
+
+### Pause gerçek simülasyon dondurmasıdır
+
+`LifePauseController` reason/token modeli kullanır: `user`, `background`,
+`transition`, `system`. Simulation ancak bütün reason'lar kalktığında devam
+eder. Android lifecycle için kritik: kullanıcı pause etti, app background'a
+gitti, foreground oldu — background handler yanlışlıkla resume etmez.
+
+Pause ne durdurur: particle physics, fields, energy, metabolism, organism
+age, AI, memory timer, colony signal, predator, virus, RNG, Void death,
+world tick. Pause'ta çalışır: UI, menu/sheet animations, camera presentation
+(gerektiğinde), autosave. Resume: pause süresini catch-up etmez.
+
+Creation Phase ayrı bir session modudur — `FROZEN`, `CREATION`, `LIVE`
+semantics. Fresh LIFE entry'de substrate ilerler ama Step 5'te energy/ageing/
+metabolism başlamaz. Yalnız `paused: boolean` ile çözülmez.
+
+### Screen state-machine explicit'tir
+
+`LifeAppFlowController` şu state'leri yönetir: BOOTING, MENU,
+ENTERING_FRESH_WORLD, ENTERING_SAVED_WORLD, PLAYING, PAUSED,
+RETURNING_TO_MENU. Scattered boolean değil. Controller simulation fiziği
+bilmez — `ParticleStore` import edilirse reddedilir.
+
+`LifeScreenStack` tek lifecycle owner'dır: MainMenu, LoadingScreen, LifeHud,
+PauseSheet, Toast/etc kurar, destroy'da güvenli temizler. State kararları
+FlowController'da.
+
+`LifeRuntime` simulation/presentation clock ayrımı taşır:
+`advanceSimulation(delta)` + `updatePresentation(delta)`. Presentation her
+render frame çalışabilir, simulation yalnız flow izin verirse. Death
+animation: world time. Camera transition, menu scrim, habitat decorative
+pulse: real time.
+
+### Back navigation hiyerarşisi
+
+Playing → Pause. Pause Settings → PauseHome. PauseHome → Resume. MainMenu →
+Quit Confirm. Back navigation tek `LifeAppFlowController` sahibine gider;
+`LifeExitPrompt` global back handler kaydetmez.
+
+### Reset World autosave race'den korunur
+
+`saveManager.delete() + location.reload()` yasaktır. Mevcut autosave
+kapanırken son snapshot enqueue edebilir — delete sonrası pending save eski
+world'ü diriltebilir. Flow: Confirm Reset → block autosave → cancel/drain
+pending writes → delete world snapshot → create fresh metadata + new seed →
+Loading/incubation → LifeScene. Preferences silinmez.
+
+### Audio lifecycle
+
+Main Menu: ayrı sakin menu cue, frozen world'den individual organism SFX
+çalma. LIFE'a basınca: WebAudio unlock, SoundBank decode/warm, gameplay
+stems preload, menu cue → gameplay ambience crossfade. İlk cold boot'ta
+WebAudio autoplay güvenilir değil — ilk launch menu sessiz olabilir. Pause:
+world SFX 100-200ms fade duck/pause, music pause mix'e crossfade olabilir.
+
+### Spatial audio tasarım hedefi
+
+Runtime ses sentezi kapsam dışıdır (§15), fakat runtime audio oynatımı
+değildir. Tasarım hedefi: near organism → individual detail, mid distance →
+phenotype signature, far → ecosystem aggregate ambience. Bu sözleşme
+yazılmazsa gelecekte agent "§15 audio out-of-scope" diye tüm playback işini
+erteleyebilir.
+
+### Camera transition matematatiği
+
+Zoom log-space interpolate edilir: `zoom(t) = exp(lerp(log(startZoom),
+log(endZoom), easedT))` — 0.4→0.8 ile 4→8 aynı algısal hızda. Easing:
+smootherstep / ease-in-out-quint (C² smooth). Süre zoom ratio'ya göre
+adaptif: yakın ~700-800ms, overview→ecosystem ~900-1100ms, maksimum ~1200ms.
+Reduced motion: 100-150ms fade/cut.
