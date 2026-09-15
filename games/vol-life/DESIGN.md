@@ -19,16 +19,21 @@ Bu belgede üç ayrı statü vardır ve birbirine karıştırılmaz:
 - **Reddedilen yol:** neden terk edildiği korunur; sonraki tur aynı çıkmazı
   yeniden icat etmez.
 
-| Konu                                  | Statü                | Sonuç                                                       |
-| ------------------------------------- | -------------------- | ----------------------------------------------------------- |
-| 512 başlangıç aktif maddesi           | Kilit karar          | Adım 2–3 araştırma rejimi; ebedî ölçek hedefi değil         |
-| Organik `HabitatSDF` + Void           | Kilit karar          | Dikdörtgen fizik duvarının yerini alır                      |
-| Multi-band yönlü pair profile         | Kilit karar          | V2'nin ilk üretim kernel ailesidir                          |
-| Alternatif active-particle kernel     | Koşullu araştırma    | Ana aile faz çeşitliliği üretemezse aynı harness'te sınanır |
-| 10–30 dakikadan uzun canary           | Koşullu araştırma    | Ancak ölçülen geç çöküş bunu gerektirirse açılır            |
-| 100 parçacık, triangular wall physics | Reddedilen ürün yolu | Yalnız yeniden üretilebilir negatif kontrol olabilir        |
-| Qualified olmayan catalog preview     | Reddedilen ürün yolu | Development audition açık provenance ister                  |
-| 24 saatlik testi ilk kabul yapmak     | Reddedilen yol       | Ucuz filtre ve insan ön-elemesinden önce CPU tüketir        |
+| Konu                                  | Statü                | Sonuç                                                             |
+| ------------------------------------- | -------------------- | ----------------------------------------------------------------- |
+| 512 başlangıç aktif maddesi           | Kilit karar          | Adım 2–3 araştırma rejimi; ebedî ölçek hedefi değil               |
+| Organik `HabitatSDF` + Void           | Kilit karar          | Dikdörtgen fizik duvarının yerini alır                            |
+| Multi-band yönlü pair profile         | Kilit karar          | V2'nin ilk üretim kernel ailesidir                                |
+| `SubstrateCandidate` profil ayrımı    | Kilit karar          | Fizik, seeding, Void ve deney koşulu ayrı profildir; Void aranmaz |
+| Canlı dünyada 0× kullanıcı pause'u    | Kilit karar          | Yavaşlatma ve hızlandırma yalnız replay'dedir                     |
+| Uygulama kapalıyken donmuş dünya      | Kilit karar          | v1'de açılışta wall-clock catch-up yoktur                         |
+| Alternatif active-particle kernel     | Koşullu araştırma    | Ana aile faz çeşitliliği üretemezse aynı harness'te sınanır       |
+| 10–30 dakikadan uzun canary           | Koşullu araştırma    | Ancak ölçülen geç çöküş bunu gerektirirse açılır                  |
+| Offline/kaba dünya simülasyonu        | Koşullu araştırma    | Ayrı ölçülen gelecekteki özellik                                  |
+| 100 parçacık, triangular wall physics | Reddedilen ürün yolu | Yalnız yeniden üretilebilir negatif kontrol olabilir              |
+| Qualified olmayan catalog preview     | Reddedilen ürün yolu | Development audition açık provenance ister                        |
+| 24 saatlik testi ilk kabul yapmak     | Reddedilen yol       | Ucuz filtre ve insan ön-elemesinden önce CPU tüketir              |
+| VOL.HELL ekran akışını kopyalamak     | Reddedilen yol       | VOL.HELL referanstır; bu işte migrate edilmez                     |
 
 ## 1. Ürün kararı
 
@@ -55,9 +60,11 @@ ekranı dayatmaz:
 Oyuncu hiçbir kipte kameraya zorla kilitlenmez. Kip, fiziği veya simülasyon
 temposunu değiştiremez.
 
-Canlı dünya gerçek hızında akar. Durdurma, yavaşlatma ve hızlandırma yalnız
-Tekrar kipindedir. Uzun deneyler canlı dünya hızlandırılarak değil, aynı tohum
-ve komutlarla ekransız çalıştırılıp tekrar olarak izlenerek yapılır.
+Canlı dünya gerçek hızında akar; yavaşlatılmaz ve hızlandırılmaz. Kullanıcının
+pause'u gerçek bir 0× dondurmadır ve resume geçen süreyi telafi etmez (§18).
+0×/0.5×/1×/2×/4× zaman ölçeklemesi yalnız Tekrar kipindedir. Uzun deneyler canlı
+dünya hızlandırılarak değil, aynı tohum ve komutlarla ekransız çalıştırılıp
+tekrar olarak izlenerek yapılır.
 
 ### Başarı ölçütü zincir uzunluğudur
 
@@ -160,6 +167,21 @@ SDF işaret sözleşmesi tektir: pozitif habitat içi, sıfır kıyı, negatif V
 Mesafe ve normal aynı `WorldDomain` sahibinden gelir; renderer, fizik, kamera
 ve ilerideki algı sistemi ayrı geometri hesaplamaz.
 
+İşaret tek başına yetmez; fringe genişliği, `edgeDistance`, render fade ve
+ileride algı mesafenin büyüklüğüne dayanır. Bu yüzden:
+
+- mesafe dünya birimidir; gerçek işaretli mesafe değilse hata sınırı açıkça
+  belirtilmiş ve testle kilitlenmiş bir yaklaşıktır;
+- normal sonludur ve tanımlı olduğu her yerde birim uzunluktadır;
+- mesafe ve normal tek örneklemede birlikte alınır
+  (`sampleDistanceAndNormal(x, y)`);
+- hiçbir tüketici örtük şekil fonksiyonunun ham ölçeğine dayanamaz.
+
+Habitat üreteci topoloji değişmezlerini sağlar ve seed korpusunda testle
+kanıtlar: tek bağlı habitat, iç delik yok, asgari boğaz genişliği, sınırlı
+eğrilik ve asgari güvenli iç bölge. İnce boğaz, kapalı cep veya delik üreten bir
+seed ekolojiyi üretim artefaktına bağımlı hâle getirir.
+
 Field solver habitat maskesini kullanır. Void hücreleri kaynak üretmez;
 habitat–Void yüzeyinde difüzyon no-flux davranır. Karşı kenarlar komşu değildir
 ve wrap yoktur.
@@ -213,13 +235,19 @@ ancak her seed'in kaçınılmaz biçimde tükenmesi de kabul edilmez.
 
 `InitialMatterSeeder`, 512 parçacığı birkaç yoğun origin patch, serbest matter
 cloud ve seyrek bölgeye dağıtır. Bu bir organizma çizmez; yalnız lokal
-etkileşimin başlayabileceği madde koşulunu kurar. Seeder parametreleri morphology
-genomunda bulunabilir, fakat dünya seed'i fizik config'i değildir.
+etkileşimin başlayabileceği madde koşulunu kurar. Seeder parametreleri fizik
+yasasından ayrı `SeedingProfile`dır (§3); dünya seed'i ne fizik ne de seeding
+config'idir.
 
 Başlangıç dağılımı fizik yasasından ayrı tutulur ama önemsiz sayılmaz. Aynı
-genom yoğun origin patch, seyrek cloud ve farklı type oranlarında sınanır;
-yalnız tek “şanslı” başlangıç deseninde yaşayan aday robust değildir. Seeder
-hiçbir çekirdek, zar, kuyruk veya avcı şekli çizemez.
+`SubstratePhysicsProfile` yoğun origin patch, seyrek cloud ve farklı type
+oranlarında sınanır; yalnız tek “şanslı” başlangıç deseninde yaşayan aday robust
+değildir. Seeder hiçbir çekirdek, zar, kuyruk veya avcı şekli çizemez.
+
+Başlangıç bir launch envelope içinde kalır: ilk saniyelerde maddeyi Void'a
+fırlatan, hız tavanında patlayan veya seed çoğunluğunda felaket kayıp üreten
+fizik/seeding çifti başarısızdır. Kötü başlangıç reroll ile ya da seed seçerek
+gizlenmez; ölçüsü başlangıç sağkalımı metrikleridir (§8).
 
 ## 3. Yaşam ve fizik modeli
 
@@ -248,6 +276,14 @@ Korunan `ParticleStore` SoA yaklaşımı v2'de genişler:
 - yeni madde boş slotu kullanabilir ama yeni stable ID alır;
 - snapshot active maskeyi, ID sayacını ve rezervuarı taşır.
 
+Slot yaşam döngüsünün tek kanonik giriş ve çıkışı vardır (`activateSlot` /
+`deactivateSlot`). Etkinleştirme önceki konum, hız, kuvvet, interpolasyon ve
+render geçicilerini sıfırlar; pasifleşen slot kanonik boş temsile iner, böylece
+aynı mantıksal durum aynı snapshot baytlarını üretir. Stable particle ID
+genişliği açıktır (32 bit) ve tükendiğinde sessizce sarmaz, hata verir. Adım 5'in
+matter vent'i slot yeniden kullanımını yoğunlaştıracağı için bu sözleşme ondan
+önce testle kilitlenir.
+
 Bu ayrım determinism, cache locality, save/load ve Adım 4 kimliği için
 zorunludur.
 
@@ -270,22 +306,39 @@ uzak      → zayıf çekim/itme
 cutoff    → sıfır
 ```
 
-Yönlü/asimetrik A→B ve B→A ilişkileri farklı olabilir. Arama uzayını
-kontrolsüz 180 boyuta çıkarmamak için başlangıç genomu:
+Yönlü/asimetrik A→B ve B→A ilişkileri farklı olabilir. Fizik yasası, başlangıç
+maddesi, kıyı fiziği ve deney koşulu tek nesnede yaşamaz; araştırma
+semantikleri ayrıdır:
 
-- 6×6 yönlü strength matrisi;
-- 3×3 yönlü role/range matrisi;
-- az sayıda global lobe radius/shape parametresi;
-- damping, speed envelope ve başlangıç hareketi;
-- yerel yoğunluk ve seeding parametreleri;
-- dar Void fringe parametreleri
+```
+SubstrateCandidate
+├── SubstratePhysicsProfile   pair yasası — aranır
+├── SeedingProfile            başlangıç maddesi — launch envelope içinde aranır
+├── VoidProfile               kıyı fiziği — Adım 2'de sabit, aranmaz
+└── provenance                artefakt, korpus, revision, digest
+```
 
-taşır. Rol eşlemesi bir morfolojiyi önceden ilan etmez; yalnız arama
-parametrelerini paylaşmanın boyut indirgeme aracıdır. Kalıcı aday yalnız
-matrisi değil **tam PhysicsGenome'u** üretime taşır.
+- `SubstratePhysicsProfile`: 6×6 yönlü strength matrisi, 3×3 yönlü role/range
+  matrisi, az sayıda global lobe radius/shape parametresi, damping, speed
+  envelope ve force scale. Arama uzayını kontrolsüz 180 boyuta çıkarmamak için
+  bu kadardır; kernel kimliği bu profilde sürümlenir.
+- `SeedingProfile`: patch sayısı, yarıçapı ve doluluğu, cloud payı, yerel
+  yoğunluk, tür dağılımı ve başlangıç hızı.
+- `VoidProfile`: fringe genişliği ve tidal stres. Adım 2'de sabitlenir;
+  morphology araması onu optimize edemez. Void ayrı stress senaryosunda
+  değerlendirilir; “en güzel yapı fringe desteğiyle oluşuyor” çözümü bu yüzden
+  aranabilir değildir.
+- `ExperimentScenario`: domain/matter seed korpusu, perturbation ve süre.
+  Production config'ine girmez.
 
-World seed aday genomuna girmez. Aynı genom bütün seed korpusunda aynı fizik
-yasasını kullanır.
+Rol eşlemesi bir morfolojiyi önceden ilan etmez; yalnız arama parametrelerini
+paylaşmanın boyut indirgeme aracıdır. Kalıcı aday matris olarak değil **tam
+`SubstrateCandidate` paketi** olarak üretime taşınır; paketteki profillerin
+araştırma semantiği yine ayrı kalır. Adım 10'un kalıtılabilir organizma genomu
+bu paketle aynı şey değildir.
+
+World seed adaya girmez. Aynı aday bütün seed korpusunda aynı fizik yasasını
+kullanır.
 
 ### Madde korunur, enerji akar
 
@@ -299,6 +352,18 @@ Habitat içindeki organizma ölümü ile Void ölümü aynı değildir:
 Enerji doğrudan nutrient'a çevrilmez. Organizmanın depoladığı biyokütle/besin
 detritus olur; detritus yavaşça nutrient'a çözünür. Böylece ölüm yeni hayatı
 besler fakat bedava enerji üretmez.
+
+Bu zincirin defteri Adım 5 kodundan önce kapanır: bugünkü sözleşmede nutrient
+alımı yalnız enerji deposuna yazılır ve “depolanmış biyokütle” ayrı bir state
+olarak tanımlı değildir. Değişmez kilitlidir: ışık kaynaklı yenilenme dışında
+hiçbir yol nutrient, biyokütle veya detritus yaratamaz; enerji harcaması madde
+üretmez. Mekanizma iki adaydan biri olarak seçilir ve korunum testiyle
+kanıtlanır:
+
+- nutrient alımı enerji ile ayrı bir organik rezerve bölünür; ölümde yalnız
+  harcanmamış rezerv detritus olur, enerji dağılır;
+- detritus alınan besinden bağımsız, açıkça tanımlı başka bir fiziksel
+  kaynaktan türetilir.
 
 Büyüme yeni madde yaratmak değil, serbest parçacığı bünyeye katmaktır.
 Bölünme önce fizikten aranır; çıkmazsa enerji eşiğine bağlı sınırlı müdahale
@@ -498,6 +563,21 @@ yaklaşınca dış normal yönünde uzar; geçişten sonra rengi boşalır, kü�
 olur ve yaklaşık yarım saniyede söner. Çok sayıda kayıpta efekt yoğunluğu LOD
 ile azalır.
 
+Kıyı ve ışıması doğrudan SDF mesafesinden rasterize edilir. Kontur noktalarını
+normal yönünde öteleyip çizgiyle bağlamak reddedilmiştir: yüksek eğrilikte
+ötelenen noktalar çaprazlanır ve düz kiriş Void'den habitatın içine geçen çizgi
+olarak görünür. Mesafe rasterı kendiliğinden kapalıdır ve fizikle aynı mesafe
+kaynağını kullanır.
+
+Void ölümü sunuma değişmez bir olay olarak teslim edilir: stable ID, tick,
+konum, hız, görsel tür ve normal kopyasını taşır. Renderer ölüm animasyonu
+boyunca `ParticleStore` slotuna geri bakamaz; aksi hâlde aynı pencerede yeniden
+kullanılan slot yeni parçacığın verisini ölüm efektine sızdırır. Olaylar iki
+ayrı kanaldan akar: `TransientPresentationEvent` (smear, flash gibi yalnız
+sunum) ve `WorldEvent` (“organizma #42 Void'da öldü” gibi dünya tarihi, Adım 8
+olay günlüğü). Sunum olayı tarihe yazılmaz; tarih olayı efekt ömrüne bağlı
+değildir.
+
 Habitat ölümü farklı görünür: core ritmi söner, zar düzeni çözülür, renk solar,
 beden serbest madde bulutuna dağılır ve bölgede hafif detritus/disturbance
 kalır. Oyuncu Void kaybı ile geri dönüşümü açıklama okumadan ayırabilmelidir.
@@ -505,20 +585,23 @@ kalır. Oyuncu Void kaybı ile geri dönüşümü açıklama okumadan ayırabilm
 ### Particle glyph fizik değildir
 
 Fizik parçacığı nokta/radius kalır. Renderer rol ve duruma göre glyph'i
-değiştirebilir:
+değiştirebilir; ama bir glyph ancak temsil ettiği durum simülasyonda gerçekten
+var olduğunda açılır:
 
-| Durum          | Sunum                                      |
-| -------------- | ------------------------------------------ |
-| Serbest madde  | Küçük yuvarlak                             |
-| Zar üyesi      | Zara teğet hafif oval                      |
-| Core üyesi     | Daha yoğun ve kompakt                      |
-| Hızlı üye      | Velocity yönünde sınırlı uzama             |
-| Tail aktüatörü | Salınımı okunur elongated biçim            |
-| Hasarlı üye    | Soluk/dengesiz faz                         |
-| Void fringe    | Void normaline doğru gerilme               |
-| Enfekte üye    | Yakın/layer görünümünde renk-faz anomalisi |
+| Durum          | Sunum                                      | Açıldığı adım              |
+| -------------- | ------------------------------------------ | -------------------------- |
+| Serbest madde  | Küçük yuvarlak                             | 2                          |
+| Hızlı üye      | Velocity yönünde sınırlı uzama             | 2                          |
+| Void fringe    | Void normaline doğru gerilme               | 2                          |
+| Zar üyesi      | Zara teğet hafif oval                      | 4 — yapı kimliğiyle        |
+| Core üyesi     | Daha yoğun ve kompakt                      | 4 — yapı kimliğiyle        |
+| Tail aktüatörü | Salınımı okunur elongated biçim            | 6 — locomotion; sunum 7    |
+| Hasarlı üye    | Soluk/dengesiz faz                         | 9 — hasar state'i; sunum 7 |
+| Enfekte üye    | Yakın/layer görünümünde renk-faz anomalisi | 9 — enfeksiyon; sunum 7    |
 
-Glyph, collision shape veya kuvvet menzilini değiştiremez.
+Glyph, collision shape veya kuvvet menzilini değiştiremez. Adım 2 membrane,
+core, tail, hasar veya enfeksiyon rolü uydurmaz; henüz var olmayan bir durum
+için sahte rol enum'u yazılmaz. Adım 3 audition'ı rol glyph'i olmadan yapılır.
 
 ### Renk enerjiyi anlatır
 
@@ -572,15 +655,29 @@ insan kabulüyle ölçülmeden belgeye rastgele sayı olarak yazılmaz.
 Gameplay HUD sağ üst köşesinde yalnız `Pause` düğmesi vardır; ayarlar düğmesi
 HUD'da değil, Pause Sheet header'ındaki bir aksiyondur. Web'de tam ekran
 düğmesi Pause'un solundadır; Android ve masaüstünde yoktur. Pause ve X aynı
-40×40 `IconButton` geometrisidir. FPS açıksa Sheet'in üst katmanında görünür
-kalır. Dil, FPS, haptics, yön ve masaüstü görüntü kipi mevcut i18n/kalıcılık
-sözleşmelerini korur.
+40×40 `IconButton` geometrisidir; kendi çalışma/durma durumunu tutan
+`PauseResumeButton` kullanılmaz, çünkü pause durumunun tek sahibi akış
+denetleyicisidir. FPS açıksa Sheet'in üst katmanında görünür kalır. Dil, FPS,
+haptics, yön ve masaüstü görüntü kipi mevcut i18n/kalıcılık sözleşmelerini
+korur.
 
 Pause Sheet tek bir CORE `Sheet`'tir; içinde ayrı panel açılmaz, body route'u
 değişir. Header'da `Settings` (ve ileride `Codex`, `World`, `God`) aksiyonları
 için `Toolbar` accessory slot bulunur. X her görünümde Sheet'i kapatır ve
 oyuna döner; Android Back bir seviye geri döner (Settings → PauseHome,
 PauseHome → Resume). Scrim tıklayınca Sheet kapanmaz.
+
+Header beş aksiyona kadar 360 px telefonda da kullanılabilir kalır: başlık
+`min-width: 0` ile daralır, accessory rail yatay ve satır kırmadan gerekirse
+kayar, X `flex-shrink: 0` taşır ve hiçbir genişlikte kaybolmaz. `God` aksiyonu
+normal kullanıcıya her zaman görünmez; yalnız geliştirme, deney veya yaratıcı
+kip yeteneği varken görünür.
+
+Modal kapatma iki ayrı yoldur. Programatik `close()` her zaman kapatır.
+Kullanıcı kaynaklı kapatma girişleri (Escape, Android Back, scrim) önce
+`onDismissRequest(reason)` ile tüketiciye sorulur; kapatmaya ya da girişi
+tüketmeye tüketici karar verir. Pause Sheet'in “scrim resume etmez” ve “Back
+bir seviye geri” kuralları bu yolla kurulur; Sheet'e oyuna özel dal eklenmez.
 
 Alan, territory, infection ve tarih normal görünümü kirletmez; kullanıcı
 seçtiği katmanı tam kontrastla açar. Dünya aklı ile sunum aklı ayrıdır:
@@ -590,19 +687,29 @@ Oyuncu kamera kontrolünü her zaman geri alabilir.
 VOL.LIFE yeni UI primitive icat etmez. Planlanan yüzeylerin sahibi baştan
 bellidir:
 
-| İhtiyaç                    | CORE yüzeyi                             |
-| -------------------------- | --------------------------------------- |
-| Organizma künyesi          | `SelectionInfoPanel`                    |
-| Dünya/yaşam sayaçları      | `StatsPanel`                            |
-| Dünya haritası ve viewport | `MinimapPanel`                          |
-| Olay geçmişi               | `EventLog`                              |
-| Tekrar hızı                | `SegmentedControl`                      |
-| Müdahale arama yüzeyi      | `CommandPalette`                        |
-| Kısa olay bildirimi        | `Toast`                                 |
-| Seçenekler                 | `IconButton` + `Sheet` + `SettingsForm` |
+| İhtiyaç                        | CORE yüzeyi                             |
+| ------------------------------ | --------------------------------------- |
+| Tam ekran uygulama/menü yüzeyi | `MainMenu`                              |
+| Pause araçları                 | `Sheet` + `Toolbar`                     |
+| Dünya girişi geçişi            | `LoadingScreen` (transparent arka plan) |
+| Organizma künyesi              | `SelectionInfoPanel`                    |
+| Dünya/yaşam sayaçları          | `StatsPanel`                            |
+| Dünya haritası ve viewport     | `MinimapPanel`                          |
+| Olay geçmişi                   | `EventLog`                              |
+| Tekrar hızı                    | `SegmentedControl`                      |
+| Müdahale arama yüzeyi          | `CommandPalette`                        |
+| Kısa olay bildirimi            | `ToastManager`                          |
+| Seçenekler                     | `IconButton` + `Sheet` + `SettingsForm` |
 
 Bu bileşenler yalnız durumu çizer ve niyeti callback ile bildirir; organism,
 territory veya threat kuralı CORE'a sızmaz.
+
+CORE `MainMenu` VOL.LIFE ekranı değil, genel bir tam ekran yüzeydir. Slotları
+underlay (isteğe bağlı), scrim, brand, content ve footer'dır (isteğe bağlı).
+Yalnız tam ekran geometrisini, safe-area'yı, inert/show/hide durumunu, focus
+girişini, scrim katmanını ve responsive yerleşimi yönetir; sahne değiştirmez,
+kayıt, ses veya kamera bilmez. LIFE'a özgü organik scrim, logo ve LIFE düğmesi
+oyunun kompozisyonudur (§18).
 
 ## 7. Kalıcılık ve kimlik
 
@@ -648,10 +755,28 @@ yüzeyiyle birlikte değerlendirilir. Android'de onaylı çıkış son snapshot
 başarılı olmadan pencereyi kapatmaz.
 
 Kayıt anlık hâli, tekrar seed + komut günlüğü + tick sayısını saklar. Aynı
-değildirler. Tarih ayrı dev bir state ağacı değildir; doğum, ölüm, Void kaybı,
-bölünme, füzyon, göç, çatışma, salgın ve tükeniş olay günlüğünden türetilir.
-Önemli organizmaların biyografisi ve tür soy ağacı bu günlükten üretilebilir;
-her birey için sınırsız geçmiş kopyası tutulmaz.
+değildirler. Seed ve komutlar tek başına tekrarı tanımlamaz: değişmiş bir
+kernel aynı günlükten başka bir dünya üretir. Replay formatı bu yüzden kuralları
+da sürümler:
+
+- `simulationRulesetVersion`;
+- `SubstratePhysicsProfile` digest'i ve config digest'i;
+- `domainGeneratorVersion` (habitat üreteci);
+- `creationProtocolVersion` ve creation pre-roll tick/config'i (§18).
+
+Uyuşmayan sürümlü tekrar sessizce oynatılmaz; eski snapshot kuralındaki gibi
+i18n'li uyumsuzluk sonucu verir.
+
+Tarih ayrı dev bir state ağacı değildir; doğum, ölüm, Void kaybı, bölünme,
+füzyon, göç, çatışma, salgın ve tükeniş olay günlüğünden türetilir. Önemli
+organizmaların biyografisi ve tür soy ağacı bu günlükten üretilebilir; her birey
+için sınırsız geçmiş kopyası tutulmaz.
+
+Uygulama süreci kapalıyken dünya donar. v1 ürün kuralı: açılışta geçen gerçek
+süre kadar dünya ilerletilmez, wall-clock catch-up yapılmaz; kayıt kapanıştaki
+snapshot olarak açılır. Offline veya kaba simülasyon ileride ayrı ölçülen bir
+özellik olarak değerlendirilir. Bu kural pause'un catch-up yapmamasıyla (§18)
+ve replay determinizmiyle aynı güvenli başlangıçtır.
 
 ## 8. Test ve araştırma doktrini
 
@@ -678,7 +803,7 @@ benchmark tam world step + render sync + kamera + UI maliyetini ölçer.
 
 - Multi-band kuvvet profili ve asimetri matematiksel olarak doğrudur.
 - Spatial hash aktif particle çiftlerini kaçırmaz, inactive olanı indekslemez.
-- Aynı seed ve genom bit düzeyinde aynı sonucu verir.
+- Aynı seed ve substrate config'i bit düzeyinde aynı sonucu verir.
 - Güvenli habitatta Void kuvveti kesinlikle sıfırdır.
 - Tidal fringe yalnız belirlenen dar bölgede etkilidir.
 - SDF crossing aynı tick'te geri dönüşsüz deactivation üretir; wrap/bounce yoktur.
@@ -688,11 +813,12 @@ benchmark tam world step + render sync + kamera + UI maliyetini ölçer.
 Adım 2'nin zar veya organizma üretme zorunluluğu yoktur. Güvenilir substrate
 üretir.
 
-### Adım 3 tam genom keşfidir
+### Adım 3 tam aday keşfidir
 
-İlk production adayı generalized asymmetric multi-band kernel'dir. Araştırma
-harness'i kernel kimliğini genomda sürümler. Ana aile anlamlı faz sınırı
-üretemezse iki koşullu karşılaştırma açılabilir: daha serbest multi-lobe profil
+İlk production kernel ailesi generalized asymmetric multi-band'dir. Araştırma
+harness'i kernel kimliğini `SubstratePhysicsProfile`da sürümler. Ana aile anlamlı
+faz sınırı üretemezse iki koşullu karşılaştırma açılabilir: daha serbest
+multi-lobe profil
 ve self-propulsion taşıyan active-particle modeli. Bunlar aynı anda üç production
 çekirdeği taşımak için değil, yanlış fizik ailesine daha fazla CPU yakmayı
 engelleyen falsification yollarıdır. Alternatif, aynı korpus ve metriklerle ana
@@ -720,7 +846,7 @@ Başlangıç bütçe hunisi şudur; rakamlar benchmark sonrası config'e kilitle
 | -------------------- | ---------------------------- | ----------------------------------- |
 | Broad                | Faz haritası ve ucuz red     | 30–60 simüle saniye, 4–8 seed       |
 | Refinement           | Dynamic-structured komşuluğu | Birkaç simüle dakika, 16 seed adayı |
-| Development audition | İnsan gözüyle shortlist      | 3–8 tam-genom aday                  |
+| Development audition | İnsan gözüyle shortlist      | 3–8 tam aday                        |
 | Qualification        | Geç çöküş + recovery         | 10–30 simüle dakika, 32+ seed adayı |
 
 Bu sayılar acceptance değildir; süre ve korpus ölçümle küçülebilir/büyüyebilir.
@@ -729,16 +855,27 @@ başlayan bir çöküş gösterirse daha uzun release canary ayrıca gerekçelen
 
 Finalist ölçümleri en az şunları zaman serisi olarak ayırır:
 
+- başlangıç sağkalımı: 5/10/30 sn madde koruma, erken Void kaybı, erken
+  patlama tepesi ve yapısal rejime geçiş süresi;
 - hareket ve nearly-stalled payı;
 - komşuluk ve lokal yoğunluk;
-- cluster/compactness/anisotropy;
+- küme başına compactness/anisotropy (global bulut tek yapı sayılmaz);
 - role-agnostic radial yapı ve type composition;
 - üyelik churn ve structure lifespan;
 - fragmentation/collapse;
-- orbit ve trajectory autocorrelation;
+- gerçek trajectory autocorrelation ve lokal micro-orbit: az üyeli, kapalı
+  yörüngeli ve üye değiştirmeyen döngü patolojiktir; deforme olan, üye
+  değiştiren ve yer değiştiren büyük yapının dönüşü değildir;
 - perturbation sonrası üyelik, biçim ve kompozisyon recovery;
 - Void dwell/loss ve fringe bağımlılığı;
 - seed robustness.
+
+Morphology iki senaryoda ayrı ölçülür. Intrinsic senaryo güvenli iç bölgede
+yapının kendini koruyup korumadığını, hareketini, deformasyonunu ve
+recovery'sini ölçer. Void-stress senaryosu fringe yakınında tidal deformasyonu,
+crossing'i ve fringe desteğine bağımlılığı ölçer. Uzun koşuda Void'a sürüklenen
+iyi bir yapı intrinsic kanıtla reddedilmez; kıyıdan kaçınma Adım 6 algısının
+işidir.
 
 “Ring çıktı” veya “hareket ediyor” başarı değildir. Kitlesel Void kaybı, kısa
 sürede stasis, tek blob, kalıcı soup, sonsuz orbit, hız tavanında kaos, yapısız
@@ -747,37 +884,51 @@ başarısızlıktır.
 
 İstenen ilk behavior family'leri core-like yoğunluk, membrane-like çeper,
 koherent hareket, deformasyon sonrası recovery, doğal kırılganlık, asimetriden
-doğan chase ve iki yapının kalıcı symbiosis ilişkisidir. Hepsini aynı genomun
+doğan chase ve iki yapının kalıcı symbiosis ilişkisidir. Hepsini aynı adayın
 üretmesi şart değildir; yalnız renkli topak üretmek hiçbir aileyi karşılamaz.
 
 Arama candidate/seed işlerini deterministic work ID ile shard edebilir.
 Paralel sonuç aynı seri referansla bit düzeyinde eşit olmadan worker yolu
 güvenilir sayılmaz. Bütçe ölçülmeden aday sayısı büyütülmez.
 
-Qualification artefaktı clean source revision, config digest, corpus, tam
-PhysicsGenome, bütçe, zaman serisi, red nedenleri ve human-acceptance durumunu
-taşır. Dirty ağaç exploration için kullanılabilir ama production qualification
-üretemez. Qualified olmayan aday runtime URL/env ile production'a enjekte
-edilemez.
+Qualification artefaktı clean source revision, config digest, korpus, tam
+`SubstrateCandidate`, bütçe, seed sınırları korunmuş zaman serisi, red nedeni
+kodları ve human-acceptance durumunu taşır. Dirty ağaç exploration için
+kullanılabilir ama production qualification üretemez. Qualified olmayan aday
+runtime URL/env ile production'a enjekte edilemez.
 
 Adım 3 ancak **technical gate + long-horizon + kullanıcı visual audition**
-birlikte geçtiğinde kapanır. Bütün genom production'a taşınır; matrix tek
-başına kopyalanmaz.
+birlikte geçtiğinde kapanır. Bütün `SubstrateCandidate` production'a taşınır;
+matris tek başına kopyalanmaz.
 
 ### Adım 4 gözlemci değişmezliği
 
 Organizma identity tracker fizik çekirdeğinden bağımsız gözlemcidir.
-Tracker OFF ve ON koşuları aynı seed/genomda particle state'i bit düzeyinde
+Tracker OFF ve ON koşuları aynı seed/adayda particle state'i bit düzeyinde
 aynı üretmelidir. Stable organism ID üye örtüşmesiyle sürer; split, merge ve
-geçici fragmentation olaydır. Adım 3 kapanmadan Adım 4 başlamaz.
+geçici fragmentation olaydır. Üyelik storage slotuyla değil stable particle ID
+ile izlenir. Adım 3 kapanmadan Adım 4 başlamaz.
 
 Anlık cluster doğum değildir. Yoğunluk, iç yapı ve üyelik sürekliliğini bir
 süre koruyan yapı organism candidate olur. Kareler arası eşleme üye örtüşmesi,
-merkez/ölçek yakınlığı ve kısa kayıp toleransını birlikte kullanır. Split'te
-ana süreklilik eski ID'yi taşır, yeni dal yeni ID alır; merge ve geçici
-fragmentation olay günlüğüne yazılır. Save/load identity sayacını ve açık
+merkez/ölçek yakınlığı ve kısa kayıp toleransını birlikte kullanır. Merge ve
+geçici fragmentation olay günlüğüne yazılır. Save/load identity sayacını ve açık
 eşleme durumunu korur. Tracker'ın çıktısı Adım 5'e kadar hiçbir particle
 kuvvetine geri beslenmez.
+
+Geometrik süreklilik biyolojik yaşam sürekliliği değildir; bölünme iki ayrı
+sözleşme taşır:
+
+- **Geometrik fragmentation (kaza):** en büyük süreklilik eski ID'yi
+  koruyabilir; kopan küçük parça geçici ya da yeni ID alır.
+- **Biyolojik fission (üreme, Adım 5):** ebeveynin yaşam döngüsü biter; bütün
+  yavrular yeni organizma ID'si alır (#42 → #57 + #58) ve lineage olayı
+  ebeveyn→yavru ilişkisini korur. Ebeveyn ID'si yavruya taşınmaz; soy ağacı
+  böyle temiz kalır.
+
+Aynı ayrım ölümde de geçerlidir: çekirdek avcısı nucleus'u öldürdüğünde bedenin
+%80'i yerinde kalsa bile organizma ölmüştür; üyelik izleyicisinin aynı kümeyi
+görmesi yaşamın sürdüğü anlamına gelmez.
 
 ## 9. Android ve fiziksel kabul
 
@@ -838,7 +989,12 @@ upload, frame p50/p95 ve görsel pariteyle en az bir alternatifle kıyaslar.
 | 512²/4-band field/tick    | ≈ 5,6 ms  | —         |
 | 512²/4-band tam tazeleme  | ≈ 22,4 ms | —         |
 
-512→2048 ölçekleme oranı ≈ 14,2×; 5,5 tavanı bu ölçümlü O(n²) sızmasını reddeder.
+512→2048 ölçekleme oranı 2026-09-14'te ≈ 14,2×, 2026-09-15 tekrarında 12,6×
+(p50 1,21 → 15,17 ms) ölçüldü; `quality.json` tavanı bugün 14'tür. Bu ölçüm
+sabit yerel yoğunlukta yapılmadığı için (seeder 4× parçacığı aynı yamalara
+gömer) O(n²) sızmasını ayırt etmez. V1 çekirdeğindeki sabit yoğunluk ölçümü 4,94
+ve tavanı 5,5 idi. Algoritmik ve ürün benchmark'larının ayrılması ve kapının
+algoritmik seriye bağlanması açık iştir (TODO).
 Bu ölçümler production qualification DEĞİLDİR; yalnızca substrate'in hedef
 cihaz bütçesinde çalışabilirliğinin tabanıdır. Android cihaz ölçümleri ayrı
 gerektirir.
@@ -945,6 +1101,9 @@ madde alımı, açlık, habitat içi dağılma ve decomposition ayrı olaylardı
 Bölünme önce başarılı Adım 3 morphology'sinin doğal kararlılık kırılması olarak
 aranır; çıkmıyorsa enerji/madde eşiğine bağlı en küçük müdahale ayrı deneyle
 kanıtlanır. Eklenen hiçbir kaynak kuvveti Adım 3 morphology korpusunu bozmaz.
+Kod yazılmadan önce biyokütle/rezerv defteri §3'teki iki adaydan biriyle kapanır
+ve korunum testiyle kilitlenir. Gerçek üreme §8'deki fission sözleşmesine uyar:
+ebeveyn ID'si yavruya geçmez.
 
 Matter vent habitatın yerel, görünür ve sınırlı sürecidir. Reservoir hesabını
 okur ama aktif population hedefi okuyamaz. Vent kapanırsa dünya tükenebilir;
@@ -977,10 +1136,11 @@ ayırt edilebilir; erişilebilirlik/reduced-motion aynı olay anlamını korur.
 ### Adım 8 — deney, kayıt ve tarih sözleşmesi
 
 Snapshot “şimdi”, replay “buraya nasıl geldik” sorusuna cevap verir. Canlı
-dünya hızlandırılmaz. Canlı dünyada kullanıcı arayüzü pause'u gerçek bir 0×
-dondurmadır — simülasyon tick, fizik, alan, enerji, AI, RNG ve Void olayları
-tamamen durur; resume pause süresini catch-up etmez. 0.5×/2×/4× zaman
-ölçeklemesi yalnız deterministik replay'de bulunur.
+dünya hızlandırılmaz ve yavaşlatılmaz. Canlı dünyada kullanıcı arayüzü pause'u
+gerçek bir 0× dondurmadır — simülasyon tick, fizik, alan, enerji, AI, RNG ve
+Void olayları tamamen durur; resume pause süresini catch-up etmez. Replay
+0×/0.5×/1×/2×/4× zaman ölçeklemesi taşır ve bu hızlar yalnız deterministik
+replay'dedir. Replay kural, domain ve creation sürümlerini taşır (§7).
 Kullanıcı aynı seed ve komut dizisini çatallayıp tek müdahaleyi değiştirerek
 deney karşılaştırabilir. Event log ilkler, doğum/ölüm, split/merge, göç,
 çatışma, salgın ve extinction'dan biyografi ile soy ağacı türetebilir.
@@ -999,8 +1159,9 @@ detritus, disturbance, infection ve territory memory coğrafyada kalır.
 
 ### Adım 10 — evrim sözleşmesi
 
-Genom fizik yasasının kendisini birey başına değiştirmez; kalıtılabilir fenotip
-parametreleri morphology'nin izin verdiği güvenli aralıkta yaşar. Kalıtım,
+Organizma genomu `SubstratePhysicsProfile`ın pair yasasını birey başına
+değiştirmez; kalıtılabilir fenotip parametreleri morphology'nin izin verdiği
+güvenli aralıkta yaşar. Kalıtım,
 mutasyon ve seçilim; enerji maliyeti, çevre, avlanma, hastalık ve Void riskiyle
 birlikte çalışır. Renk, cohesion, membrane, algı, risk toleransı, locomotor
 anatomi ve metabolizma zamanla kayabilir. “Predator” veya “defender” etiketi
@@ -1063,8 +1224,9 @@ sözleşmesi veya gönderilen candidate catalog'u değildir.
   girişte tamamlanır; config/metadata sahipliği kopyayla yalıtılır ve restore
   her katmanda atomiktir. Yarım runtime kurulumu ile sahne, autosave ve çıkış
   yaşam döngüleri kaynaklarını idempotent toplar.
-- **Particle Substrate v2 uygulanmıştır**: `SubstrateConfig`, `PhysicsGenome`,
-  `DynamicsGenes`, `PairForceKernel` (generalized multi-band directional),
+- **Particle Substrate v2 uygulanmıştır**: `SubstrateConfig`, `PhysicsGenome`
+  (fizik, seeding ve fringe bugün tek nesnededir; `SubstrateCandidate` ayrımı
+  açık iştir), `DynamicsGenes`, `PairForceKernel` (generalized multi-band directional),
   capacity-managed `ParticleStore` (512 aktif/kapasite), `ParticleSpatialHash`
   (yalnız aktif slot), organik `HabitatSDF`/`WorldDomain`, `VoidSink`
   (geri dönüşsüz deaktivasyon + `MatterReservoir`), `InitialMatterSeeder`
@@ -1073,16 +1235,23 @@ sözleşmesi veya gönderilen candidate catalog'u değildir.
 - Eski 100 parçacıklı triangular fizik ve dikdörtgen impulse sınırı artık
   production'da DEĞİLDİR; yalnız negatif baseline olarak benchmark fixture'ında
   korunur.
-- **Adım 3 araştırma kütüphanesi uygulanmıştır** (`scripts/morphology/`):
-  `GenomeSampler`, `MorphologyMetrics`, `ClusterTracker`, `PhaseClassifier`
+- **Adım 3 araştırma kütüphanesi iskelet olarak uygulanmıştır**
+  (`scripts/morphology/`): `GenomeSampler`, `MorphologyMetrics`,
+  `ClusterTracker`, `PhaseClassifier`
   (dead/stasis/gas/crystal/blob/void-loss/orbit/speed-chaos/dynamic-structured),
   `ResearchHarness` (broad→refinement→qualification), `PerturbationSystem`,
   `Shards` (deterministic work ID), `QualificationArtefact`, `PromotionFlow`,
   CLI. Headless — Phaser import etmez, `runtime/sim` çekirdeğini kullanır.
+  Kütüphane qualification düzeyinde **değildir**: orbit ölçümü aslında yer
+  değiştirme ölçer, morphology metrikleri global buluta bakar, tracker slot
+  tabanlıdır ve metriklere bağlı değildir; paralel shard, clean-source
+  zorunluluğu ve production canary kodda yoktur. Bu P0 düzeltmeler TODO'dadır.
 - **Brute-force oracle testi uygulanmıştır**: spatial-hash/kernel yolu doğrudan
   all-pairs referans implementation ile karşılaştırılır; aktif/pasif slot ve
   tür çifti davranışını floating-point tolerans içinde doğrular.
-- 384 test geçer; coverage 96,93/93,13/93,51 (statement/branch/function).
+- 2026-09-14 geliştirici koşusunda 384 test geçti ve coverage
+  96,93/93,13/93,51 (statement/branch/function) ölçüldü; 384 test 2026-09-15'te
+  yeniden koşuldu. Test sayısı ve coverage ürün kabulü değildir.
 - 512 parçacıkta p50 ≈ 0,98 ms, p95 ≈ 0,998 ms; 2048 parçacıkta p50 ≈ 13,9 ms.
 - 256² field ≈ 5,4 ms/tick; 512²/4-band ≈ 5,6 ms/tick (tam tazeleme ≈ 22,4 ms).
 - Qualified aday henüz çıkmamıştır; araştırma kütüphanesi production'a aday
@@ -1099,15 +1268,23 @@ Aşağıdakiler ölçülmeden karar veya tamamlanmış iş sayılmaz:
 - Habitat şekli, fringe genişliği ve tidal stress'in morphology'yi bozmayan
   aralığı.
 - Kamera Void margin'i, zoom limitleri ve modality bazlı momentum değerleri.
-- Multi-band genomun boyutu ile arama bütçesi arasındaki denge.
+- Multi-band `SubstratePhysicsProfile` boyutu ile arama bütçesi arasındaki denge.
 - Deterministik worker shard'larının seri referansla maliyet kazancı.
 - Matter reservoir dönüş hızının extinction ve taşıma kapasitesine etkisi.
 - Particle glyph/semantic LOD'un okunabilirlik ve GPU maliyeti.
+- `HabitatSDF` mesafe yaklaşımının dünya birimindeki hata sınırı.
+- Donmuş Main Menu'de render temposunu düşürmenin kazancı.
 
 ## 18. Screen loop ve oturum yaşam döngüsü
 
 VOL.LIFE bir simülasyon test harness değil, bir üründür. Uygulama açılışı
 kaotik bir dünyaya doğrudan dalmak yerine, donmuş bir dünya gözlemi ile başlar.
+
+Bu akış VOL.LIFE için CORE üzerine yeniden kurulur. VOL.HELL'in
+`MainMenuScene`, `PauseScreen`, `LoadingTransition` ve `PauseController` akışı
+yalnız referans ve ders kaynağıdır: kopyalanmaz ve VOL.HELL bu işte migrate
+edilmez. CORE'a eklenen genel API yalnız VOL.LIFE ihtiyacıyla kanıtlanır; diğer
+oyunlara zorunlu refactor getirmez.
 
 ### Main Menu donmuş dünyanın en uzak gözlem ölçeğidir
 
@@ -1130,6 +1307,16 @@ Main Menu kamerası bütün habitat overview'ındadır (`contain`). Gameplay
 kamerası ecosystem ölçeğindedir. Menu overview gameplay camera state'ini
 overwrite etmez — oyuncunun son gameplay camera (x, y, zoom) ayrı saklanır.
 
+Oyundan Main Menu'ye dönüş güvenli bir oturum checkpoint'idir: PAUSED → kayıt
+flush'ı → gameplay kamerası saklanır → kamera overview'a açılır → donmuş menu
+önizlemesi. Dünya yeniden yüklenmez; flush tamamlanmadan menu güvenli sayılmaz.
+
+Main Menu görünür olduğunda ilk klavye odağı LIFE düğmesindedir ve alttaki
+gameplay kontrolleri inert'tir. LIFE görsel olarak borderless olsa da semantik
+bir düğmedir ve klavye odağında görünen focus ring'ini korur. Düğme habitatın
+ekrana izdüşen görsel merkezine bağlıdır ama safe-area içine kıstırılır;
+asimetrik bir habitat onu notch, sistem çubuğu veya ekran kenarına itemez.
+
 ### LIFE düğmesi menüden çıkış değil, dünyayı uyandırma eylemidir
 
 LIFE tıklandığında üç aşamalı transition: (1) Activation ~120-180ms — letter
@@ -1139,6 +1326,15 @@ dönüşür, world kontrastına gelir. (3) Entry ~700-1100ms — camera WORLD
 overview → ECOSYSTEM dalış, fresh world: simulation ilk hareketleri başlar,
 saved world: restore tamamlanana kadar hareket başlamaz. Reduced motion:
 kısa fade + cut to target camera.
+
+### Boot hazırlığı ile dünya girişi ayrı yüklemelerdir
+
+Boot hazırlığı Main Menu'nün var olabilmesi için gereken en azdır: locale,
+tercihler, ekran yönü, snapshot, dünya önizlemesi ve renderer. Bunlar hazır
+olmadan menu gösterilemez. Dünya girişi LIFE'a basınca başlar: ses kilidinin
+açılması, creation protokolü, kamera hedefi ve oturumun etkinleşmesi. Kısa bir
+boot yükleme yüzeyini flash ettirmez; gösterge ancak küçük bir anti-flicker
+gecikmesinden sonra görünür, eşik ölçümle seçilir.
 
 ### Entry loading sahte progress taşımaz
 
@@ -1162,6 +1358,10 @@ energy initialize → future controller initialize → WORLD BORN → simulation
 tick 0. Creation Phase world history değildir — organism "8 saniyedir aç"
 diye başlamaz, world age gameplay başında 0.
 
+Genesis sürümlüdür: `creationProtocolVersion` ve creation pre-roll tick/config'i
+dünya metadata'sına ve replay formatına yazılır (§7). Aynı seed farklı bir
+protokolle sessizce aynı dünya sayılmaz.
+
 Fresh entry hedef 2.5-4 saniye, hard upper ~8 saniye. Sabit 10 saniye
 bekletme yok — ilk kaba transient 3-4 saniye içinde yatışmıyorsa
 seeding/physics başarısız. Loading'i uzatarak kurtarmayız. Physics'i yavaşça
@@ -1184,7 +1384,8 @@ gitti, foreground oldu — background handler yanlışlıkla resume etmez.
 Pause ne durdurur: particle physics, fields, energy, metabolism, organism
 age, AI, memory timer, colony signal, predator, virus, RNG, Void death,
 world tick. Pause'ta çalışır: UI, menu/sheet animations, camera presentation
-(gerektiğinde), autosave. Resume: pause süresini catch-up etmez.
+(gerektiğinde), autosave. Resume: pause süresini catch-up etmez. Uygulama
+tamamen kapalıyken de dünya donar ve açılışta catch-up yapılmaz (§7).
 
 Creation Phase ayrı bir session modudur — `FROZEN`, `CREATION`, `LIVE`
 semantics. Fresh LIFE entry'de substrate ilerler ama Step 5'te energy/ageing/
@@ -1198,7 +1399,7 @@ RETURNING_TO_MENU. Scattered boolean değil. Controller simulation fiziği
 bilmez — `ParticleStore` import edilirse reddedilir.
 
 `LifeScreenStack` tek lifecycle owner'dır: MainMenu, LoadingScreen, LifeHud,
-PauseSheet, Toast/etc kurar, destroy'da güvenli temizler. State kararları
+PauseSheet, `ToastManager` vb. kurar, destroy'da güvenli temizler. State kararları
 FlowController'da.
 
 `LifeRuntime` simulation/presentation clock ayrımı taşır:
@@ -1212,6 +1413,11 @@ pulse: real time.
 Playing → Pause. Pause Settings → PauseHome. PauseHome → Resume. MainMenu →
 Quit Confirm. Back navigation tek `LifeAppFlowController` sahibine gider;
 `LifeExitPrompt` global back handler kaydetmez.
+
+Çıkış platform yeteneğine bağlıdır. Native kabukta QUIT kayıt flush'ından sonra
+uygulamayı gerçekten kapatır. Pencereyi kapatma yeteneği olmayan web'de QUIT'in
+görünürlüğü ve anlamı platform politikasıyla belirlenir; bu politika henüz
+kararlaştırılmamıştır (TODO).
 
 ### Reset World autosave race'den korunur
 

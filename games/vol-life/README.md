@@ -10,7 +10,7 @@ Monorepo geneli için [kök README](../../README.md).
 
 ## Durum
 
-Paket **Particle Substrate v2** ve **Adım 3 araştırma kütüphanesi** düzeyindedir.
+Paket **Particle Substrate v2** ve **Adım 3 araştırma kütüphanesi iskeleti** düzeyindedir.
 SoA depo, counting-sort spatial hash, alanlar, world-instance seed ve
 snapshot/restore korunur; Phaser yalnız render adaptöründedir.
 
@@ -26,7 +26,8 @@ camera-domain handling, Void-death rendering.
 (broad→refinement→qualification), `PerturbationSystem`, `Shards`,
 `QualificationArtefact`, `PromotionFlow`, CLI. Headless — Phaser import etmez.
 Brute-force oracle testi spatial-hash/kernel yolunu all-pairs referansla
-karşılaştırır.
+karşılaştırır. Kütüphane iskelettir, qualification düzeyinde değildir; P0
+düzeltmeleri [TODO.md](TODO.md)'dedir.
 
 Eski 100 parçacıklı triangular fizik ve dikdörtgen çarpışma duvarı negatif
 baseline olarak korunur, ürün kabulü değildir. Qualified aday henüz çıkmamıştır;
