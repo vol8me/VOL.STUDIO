@@ -173,7 +173,7 @@
       "fxParts72Over18": 4.5
     },
     "games/vol-life": {
-      "$comment": "Sabit yoğunlukta 512→2048 parçacık ölçümü 13,0 oran verdi. Seeder sabit yama yarıçapı (70 birim) kullandığından 4× parçacık aynı yamalarda 6× yoğunlaşır (maxPerCell 71→430); kuvvet yolu O(n × maxPerCell) davranışı gösterir. 14 tavan çalışma gürültüsüne pay bırakır; teorik O(n²) oranını (16×) reddeder. Production 512 parçacıkta p50 ≈ 1,2 ms'tir.",
+      "$comment": "2026-09-16: kapı ALGORİTMİK seriye bağlıdır (habitat içinde tabakalı yerleşim, yerel yoğunluk girdiden bağımsız: azami hücre doluluğu 512'de 38, 2048'de 40). Beş ayrı koşuda oranlar 4,654 / 4,731 / 4,752 / 4,757 / 4,827; medyan 4,752 ve tavan = medyan × 1,10 = 5,23 (K7 sınırı 6). Eski 14 tavanı ÜRÜN yerleşimini ölçüyordu: seeder sabit yama yarıçapı kullandığından 4× parçacık aynı yamalara gömülüyor (doluluk 105→416) ve oran medyanı 9,744 çıkıyor — bu gerçek iş yükünü anlatır ama karmaşıklık kapısı olamaz, o yüzden raporlanır, kapılanmaz.",
       "$measure": {
         "script": "scripts/benchmark-particles.mts",
         "args": ["--iterations", "120", "--samples", "5", "--json"],
@@ -181,7 +181,7 @@
         "input": "particles",
         "value": "msPerTick"
       },
-      "particleKernel2048Over512": 14
+      "particleKernel2048Over512": 5.23
     }
   },
   "coverageShape": {
