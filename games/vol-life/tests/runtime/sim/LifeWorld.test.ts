@@ -119,15 +119,53 @@ describe('LifeWorld', () => {
     );
   });
 
-  it('her simülasyon tickinde parçacıkları hareket ettirir ve aktif sayıyı korur', () => {
-    const config = smallConfig();
+  /*
+   * Void dünyasında "aktif sayı korunur" GEÇERLİ BİR DEĞİŞMEZ DEĞİLDİR: kıyıyı
+   * geçen parçacık düşer. Korunan şey muhasebedir — aktif madde + dış rezervuar.
+   * Kapasite üretim değeri olan 512'dedir, çünkü 32 parçacıkla Void kaybı hiç
+   * oluşmayabilir ve muhasebe iddiası boşa düşer.
+   */
+  it('600 tick boyunca aktif bayrak sayısı, activeCount ve madde muhasebesi tutar', () => {
+    const config = {
+      ...smallConfig(),
+      particles: { ...substrateConfig.particles, capacity: 512 },
+    };
     const world = createWorld(19, config);
+    const initial = world.particles.activeCount;
     const initialX = world.particles.x.slice();
+    const initialY = world.particles.y.slice();
+    const flagMismatches: string[] = [];
+    const accountingBreaks: string[] = [];
 
-    world.step();
+    for (let tick = 1; tick <= 600; tick++) {
+      world.step();
+      const { active, capacity, activeCount } = world.particles;
+      let flagged = 0;
+      for (let slot = 0; slot < capacity; slot++) flagged += active[slot];
+      if (flagged !== activeCount) flagMismatches.push(`tick ${tick}: ${flagged} ≠ ${activeCount}`);
+      if (activeCount + world.reservoir.external !== initial) {
+        accountingBreaks.push(`tick ${tick}: ${activeCount} + ${world.reservoir.external}`);
+      }
+    }
 
-    expect(world.particles.activeCount).toBe(world.particles.activeCount);
-    expect(bytes(world.particles.x)).not.toEqual(bytes(initialX));
+    expect(initial).toBe(512);
+    expect(flagMismatches).toEqual([]);
+    expect(accountingBreaks).toEqual([]);
+    // Kayıp hiç oluşmazsa muhasebe iddiası aktif sayının sabitliğine indirgenir.
+    expect(world.reservoir.voidLossTotal).toBeGreaterThan(0);
+    expect(world.particles.activeCount).toBeLessThan(initial);
+
+    let movedActive = 0;
+    for (let slot = 0; slot < world.particles.capacity; slot++) {
+      if (world.particles.active[slot] === 0) continue;
+      if (
+        world.particles.x[slot] !== initialX[slot] ||
+        world.particles.y[slot] !== initialY[slot]
+      ) {
+        movedActive++;
+      }
+    }
+    expect(movedActive).toBeGreaterThan(0);
   });
 
   it('ışık kaynakları alanı eşitsiz tohumlar ve zamanla yer değiştirir', () => {
