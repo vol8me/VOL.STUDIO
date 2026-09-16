@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultPhysicsGenome, type FringeGenes } from '@/config/genome';
+import { defaultSubstrateCandidate, type VoidProfile } from '@/config/candidate';
 import { MatterReservoir } from '@/runtime/sim/MatterReservoir';
 import { ParticleStore } from '@/runtime/sim/ParticleStore';
 import { VoidSink } from '@/runtime/sim/VoidSink';
@@ -15,8 +15,13 @@ function domain(seed = 7): HabitatSDF {
   return createHabitatDomain(STORAGE, habitatConfig, seed);
 }
 
-function fringe(): FringeGenes {
-  return defaultPhysicsGenome.fringe;
+function fringe(): VoidProfile {
+  return defaultSubstrateCandidate.void;
+}
+
+/** Void profili sürümlüdür; testler varsayılandan türetir, elle şema yazmaz. */
+function voidWith(patch: Partial<VoidProfile>): VoidProfile {
+  return { ...defaultSubstrateCandidate.void, ...patch };
 }
 
 function normalAt(sdf: HabitatSDF, x: number, y: number): { x: number; y: number } {
@@ -26,18 +31,24 @@ function normalAt(sdf: HabitatSDF, x: number, y: number): { x: number; y: number
 
 describe('VoidSink', () => {
   it('geçersiz fringe genişliği kurulumda reddeder', () => {
-    expect(() => new VoidSink(domain(), { widthUnits: 0, tidalStrength: 1 })).toThrow(RangeError);
-    expect(() => new VoidSink(domain(), { widthUnits: -1, tidalStrength: 1 })).toThrow(RangeError);
-    expect(() => new VoidSink(domain(), { widthUnits: Number.NaN, tidalStrength: 1 })).toThrow(
+    expect(() => new VoidSink(domain(), voidWith({ widthUnits: 0, tidalStrength: 1 }))).toThrow(
       RangeError,
     );
+    expect(() => new VoidSink(domain(), voidWith({ widthUnits: -1, tidalStrength: 1 }))).toThrow(
+      RangeError,
+    );
+    expect(
+      () => new VoidSink(domain(), voidWith({ widthUnits: Number.NaN, tidalStrength: 1 })),
+    ).toThrow(RangeError);
   });
 
   it('geçersiz tidal stres kurulumda reddeder', () => {
-    expect(() => new VoidSink(domain(), { widthUnits: 24, tidalStrength: -1 })).toThrow(RangeError);
-    expect(() => new VoidSink(domain(), { widthUnits: 24, tidalStrength: Number.NaN })).toThrow(
+    expect(() => new VoidSink(domain(), voidWith({ widthUnits: 24, tidalStrength: -1 }))).toThrow(
       RangeError,
     );
+    expect(
+      () => new VoidSink(domain(), voidWith({ widthUnits: 24, tidalStrength: Number.NaN })),
+    ).toThrow(RangeError);
   });
 
   it('güvenli alandaki parçacığa kuvvet eklemez', () => {
@@ -75,7 +86,7 @@ describe('VoidSink', () => {
 
   it('tidalStrength sıfırsa fringe içinde bile kuvvet eklemez', () => {
     const sdf = domain();
-    const noStress = { widthUnits: 24, tidalStrength: 0 };
+    const noStress = voidWith({ widthUnits: 24, tidalStrength: 0 });
     const sink = new VoidSink(sdf, noStress);
     const particles = new ParticleStore(1);
     const contour = sdf.contour(64);

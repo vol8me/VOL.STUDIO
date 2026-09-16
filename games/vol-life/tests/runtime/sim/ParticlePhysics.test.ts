@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { defaultPhysicsGenome, type PhysicsGenome } from '@/config/genome';
+import type { SubstratePhysicsProfile } from '@/config/genome';
+import { defaultSubstrateCandidate } from '@/config/candidate';
 import { particleConfig } from '@/config/particles';
 import { substrateConfig } from '@/config/substrate';
 import { accumulateParticleForces, integrateParticles } from '@/runtime/sim/ParticlePhysics';
@@ -8,15 +9,15 @@ import { ParticleSpatialHash } from '@/runtime/sim/ParticleSpatialHash';
 import { ParticleStore } from '@/runtime/sim/ParticleStore';
 
 const BOUNDS = substrateConfig.world.boundsUnits;
-const DYNAMICS = defaultPhysicsGenome.dynamics;
-const KERNEL = createMultiBandKernel(defaultPhysicsGenome);
+const DYNAMICS = defaultSubstrateCandidate.physics.dynamics;
+const KERNEL = createMultiBandKernel(defaultSubstrateCandidate.physics);
 
 function pair(
   leftX: number,
   rightX: number,
   leftType = 0,
   rightType = 1,
-  genome: PhysicsGenome = defaultPhysicsGenome,
+  genome: SubstratePhysicsProfile = defaultSubstrateCandidate.physics,
 ) {
   const particles = new ParticleStore(2);
   const centerY = BOUNDS.y + BOUNDS.height / 2;
@@ -24,7 +25,8 @@ function pair(
   particles.activateSlot(rightX, centerY, 0, 0, rightType);
   const grid = new ParticleSpatialHash(BOUNDS, particleConfig.cellSizeUnits, 2);
   grid.rebuild(particles);
-  const kernel = genome === defaultPhysicsGenome ? KERNEL : createMultiBandKernel(genome);
+  const kernel =
+    genome === defaultSubstrateCandidate.physics ? KERNEL : createMultiBandKernel(genome);
   return { particles, grid, kernel };
 }
 

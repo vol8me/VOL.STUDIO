@@ -2,20 +2,20 @@ import { describe, expect, it } from 'vitest';
 import {
   PARTICLE_ROLE_COUNT,
   PARTICLE_TYPE_COUNT,
-  clonePhysicsGenome,
-  defaultPhysicsGenome,
-  type PhysicsGenome,
+  cloneSubstratePhysicsProfile,
+  type SubstratePhysicsProfile,
 } from '@/config/genome';
 import { createMultiBandKernel } from '@/runtime/sim/PairForceKernel';
+import { defaultSubstrateCandidate } from '@/config/candidate';
 import { createTriangularKernel } from '../../../benchmarks/fixtures/triangularKernel';
 
-function pairRange(genome: PhysicsGenome, own: number, other: number): number {
+function pairRange(genome: SubstratePhysicsProfile, own: number, other: number): number {
   const rolePair = genome.roleByType[own] * PARTICLE_ROLE_COUNT + genome.roleByType[other];
   return genome.cutoffUnits * genome.rangeScale[rolePair];
 }
 
 describe('multi-band yönlü PairForceKernel', () => {
-  const genome = defaultPhysicsGenome;
+  const genome = defaultSubstrateCandidate.physics;
   const kernel = createMultiBandKernel(genome);
   const core = genome.profile.hardCoreRadiusUnits;
 
@@ -70,7 +70,7 @@ describe('multi-band yönlü PairForceKernel', () => {
   });
 
   it('rol menzil çarpanı gözlemleyen ile ötekinin rol çiftine göre bandı daraltır', () => {
-    const custom = clonePhysicsGenome(genome);
+    const custom = cloneSubstratePhysicsProfile(genome);
     custom.rangeScale.fill(1);
     custom.rangeScale[0 * PARTICLE_ROLE_COUNT + 2] = 0.5;
     const narrow = createMultiBandKernel(custom);
@@ -80,7 +80,7 @@ describe('multi-band yönlü PairForceKernel', () => {
   });
 
   it('bant çarpanının işareti bandı itmeye çevirebilir', () => {
-    const custom = clonePhysicsGenome(genome);
+    const custom = cloneSubstratePhysicsProfile(genome);
     custom.strength.fill(1);
     (custom.profile.bandScales as unknown as number[])[0] = -0.5;
     (custom.profile.bandScales as unknown as number[])[1] = 1;
@@ -110,7 +110,7 @@ describe('triangular negatif kontrol fixture’ı', () => {
       signs.add(Math.sign(kernel.magnitude(distance, 0, 1)));
     }
     expect(signs).toEqual(new Set([1]));
-    const multi = createMultiBandKernel(defaultPhysicsGenome);
+    const multi = createMultiBandKernel(defaultSubstrateCandidate.physics);
     const multiSigns = new Set<number>();
     for (let distance = 12; distance < 96; distance += 2) {
       const value = multi.magnitude(distance, 0, 2);

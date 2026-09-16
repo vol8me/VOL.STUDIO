@@ -4,7 +4,7 @@ import {
   isQualified,
   type QualificationBudget,
 } from '@/../scripts/morphology/qualification';
-import { defaultPhysicsGenome } from '@/config/genome';
+import { defaultSubstrateCandidate } from '@/config/candidate';
 import { substrateConfig } from '@/config/substrate';
 import type { MorphologySample } from '@/../scripts/morphology/metrics';
 import type { PerturbationResult } from '@/../scripts/morphology/perturbation';
@@ -61,7 +61,7 @@ describe('Qualification', () => {
   it('artefakt oluşturulur ve şema sürümü 1', () => {
     const artefact = createQualificationArtefact(
       substrateConfig,
-      defaultPhysicsGenome,
+      defaultSubstrateCandidate,
       [1, 2, 3],
       { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
       [makeSample()],
@@ -77,7 +77,7 @@ describe('Qualification', () => {
   it('kalifiye değil: insan onayı bekliyor', () => {
     const artefact = createQualificationArtefact(
       substrateConfig,
-      defaultPhysicsGenome,
+      defaultSubstrateCandidate,
       [1],
       { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
       [makeSample()],
@@ -91,7 +91,7 @@ describe('Qualification', () => {
   it('kalifiye değil: yanlış faz', () => {
     const artefact = createQualificationArtefact(
       substrateConfig,
-      defaultPhysicsGenome,
+      defaultSubstrateCandidate,
       [1],
       { phase: 'dead', confidence: 0.9, reasons: ['ölü'] },
       [makeSample()],
@@ -105,7 +105,7 @@ describe('Qualification', () => {
   it('kalifiye değil: red nedenleri var', () => {
     const artefact = createQualificationArtefact(
       substrateConfig,
-      defaultPhysicsGenome,
+      defaultSubstrateCandidate,
       [1],
       { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
       [makeSample()],
@@ -120,7 +120,7 @@ describe('Qualification', () => {
     const accepted = {
       ...createQualificationArtefact(
         substrateConfig,
-        defaultPhysicsGenome,
+        defaultSubstrateCandidate,
         [1],
         { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
         [makeSample()],

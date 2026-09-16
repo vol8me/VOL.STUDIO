@@ -1,4 +1,8 @@
-import { digestPhysicsGenome, serializePhysicsGenome, type PhysicsGenome } from '@/config/genome';
+import {
+  digestSubstrateCandidate,
+  serializeSubstrateCandidate,
+  type SubstrateCandidate,
+} from '@/config/candidate';
 import { fingerprintSubstrateConfig, type SubstrateConfig } from '@/config/substrate';
 import type { MorphologySample } from './metrics';
 import type { PhaseClassification } from './phaseClassifier';
@@ -8,8 +12,8 @@ export interface QualificationArtefact {
   readonly schemaVersion: 1;
   readonly sourceRevision: string;
   readonly configDigest: string;
-  readonly genome: PhysicsGenome;
-  readonly genomeDigest: string;
+  readonly candidate: SubstrateCandidate;
+  readonly candidateDigest: string;
   readonly corpus: readonly number[];
   readonly phase: PhaseClassification;
   readonly timeSeries: readonly MorphologySample[];
@@ -29,7 +33,7 @@ export interface QualificationBudget {
 
 export function createQualificationArtefact(
   config: SubstrateConfig,
-  genome: PhysicsGenome,
+  candidate: SubstrateCandidate,
   corpus: readonly number[],
   phase: PhaseClassification,
   timeSeries: readonly MorphologySample[],
@@ -42,8 +46,8 @@ export function createQualificationArtefact(
     schemaVersion: 1,
     sourceRevision,
     configDigest: fingerprintSubstrateConfig(config),
-    genome: serializePhysicsGenome(genome) as unknown as PhysicsGenome,
-    genomeDigest: digestPhysicsGenome(genome),
+    candidate: serializeSubstrateCandidate(candidate) as unknown as SubstrateCandidate,
+    candidateDigest: digestSubstrateCandidate(candidate),
     corpus,
     phase,
     timeSeries,
@@ -72,10 +76,10 @@ export function isQualified(artefact: QualificationArtefact): boolean {
 export function serializeArtefact(artefact: QualificationArtefact): string {
   return JSON.stringify({
     ...artefact,
-    genome: serializePhysicsGenome(
-      typeof artefact.genome === 'string'
-        ? (JSON.parse(artefact.genome as string) as PhysicsGenome)
-        : artefact.genome,
+    candidate: serializeSubstrateCandidate(
+      typeof artefact.candidate === 'string'
+        ? (JSON.parse(artefact.candidate as string) as SubstrateCandidate)
+        : artefact.candidate,
     ),
   });
 }

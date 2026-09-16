@@ -1,4 +1,8 @@
-import { PARTICLE_ROLE_COUNT, PARTICLE_TYPE_COUNT, type PhysicsGenome } from '@/config/genome';
+import {
+  PARTICLE_ROLE_COUNT,
+  PARTICLE_TYPE_COUNT,
+  type SubstratePhysicsProfile,
+} from '@/config/genome';
 
 /**
  * Çift kuvvet yasası. Pozitif büyüklük ötekine doğru çekim, negatif itmedir;
@@ -12,32 +16,32 @@ export interface PairForceKernel {
 const PAIR_COUNT = PARTICLE_TYPE_COUNT ** 2;
 
 /** Sert çekirdek + yakın/orta/uzak lob; A→B ile B→A ayrı hesaplanır (DESIGN.md §3). */
-export function createMultiBandKernel(genome: PhysicsGenome): PairForceKernel {
-  const { hardCoreRadiusUnits: core, hardCoreStrength } = genome.profile;
+export function createMultiBandKernel(physics: SubstratePhysicsProfile): PairForceKernel {
+  const { hardCoreRadiusUnits: core, hardCoreStrength } = physics.profile;
   const nearEnd = new Float32Array(PAIR_COUNT);
   const midEnd = new Float32Array(PAIR_COUNT);
   const farEnd = new Float32Array(PAIR_COUNT);
   const nearStrength = new Float32Array(PAIR_COUNT);
   const midStrength = new Float32Array(PAIR_COUNT);
   const farStrength = new Float32Array(PAIR_COUNT);
-  const [nearEdge, midEdge] = genome.profile.bandEdges;
-  const [nearScale, midScale, farScale] = genome.profile.bandScales;
+  const [nearEdge, midEdge] = physics.profile.bandEdges;
+  const [nearScale, midScale, farScale] = physics.profile.bandScales;
   for (let own = 0; own < PARTICLE_TYPE_COUNT; own++) {
     for (let other = 0; other < PARTICLE_TYPE_COUNT; other++) {
       const pair = own * PARTICLE_TYPE_COUNT + other;
-      const rolePair = genome.roleByType[own] * PARTICLE_ROLE_COUNT + genome.roleByType[other];
-      const range = genome.cutoffUnits * genome.rangeScale[rolePair];
+      const rolePair = physics.roleByType[own] * PARTICLE_ROLE_COUNT + physics.roleByType[other];
+      const range = physics.cutoffUnits * physics.rangeScale[rolePair];
       nearEnd[pair] = range * nearEdge;
       midEnd[pair] = range * midEdge;
       farEnd[pair] = range;
-      const strength = genome.strength[pair];
+      const strength = physics.strength[pair];
       nearStrength[pair] = strength * nearScale;
       midStrength[pair] = strength * midScale;
       farStrength[pair] = strength * farScale;
     }
   }
   return {
-    cutoffUnits: genome.cutoffUnits,
+    cutoffUnits: physics.cutoffUnits,
     magnitude(distance, ownType, otherType) {
       if (distance < core) return -hardCoreStrength * (1 - distance / core);
       const pair = ownType * PARTICLE_TYPE_COUNT + otherType;

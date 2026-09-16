@@ -254,7 +254,7 @@ describe('LifeWorldPersistence', () => {
     );
     const modified = cloneSubstrateConfig(config);
     (
-      modified.genome as { dynamics: { dampingPerReferenceTick: number } }
+      modified.candidate.physics as { dynamics: { dampingPerReferenceTick: number } }
     ).dynamics.dampingPerReferenceTick = 0.9;
     expect(fingerprintSubstrateConfig(modified)).not.toBe(baseline);
   });
@@ -308,7 +308,7 @@ describe('LifeWorldPersistence', () => {
     const shortField = snapshot.fields.light.slice(1);
     const shortX = snapshot.particles.x.slice(1);
     const fastVx = snapshot.particles.vx.slice();
-    fastVx[0] = config.genome.dynamics.maxSpeedUnitsPerReferenceTick * 2;
+    fastVx[0] = config.candidate.physics.dynamics.maxSpeedUnitsPerReferenceTick * 2;
     const invalidType = snapshot.particles.type.slice();
     invalidType[0] = 247;
     const invalidSnapshots = [

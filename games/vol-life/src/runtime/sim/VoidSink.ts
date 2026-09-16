@@ -1,4 +1,4 @@
-import type { FringeGenes } from '@/config/genome';
+import type { VoidProfile } from '@/config/candidate';
 import type { MatterReservoir } from '@/runtime/sim/MatterReservoir';
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
 import type { VoidDeathEvent } from '@/runtime/sim/WorldEvents';
@@ -14,7 +14,7 @@ export class VoidSink {
 
   constructor(
     private readonly domain: WorldDomain,
-    private readonly fringe: FringeGenes,
+    private readonly fringe: VoidProfile,
   ) {
     if (!(fringe.widthUnits > 0) || !Number.isFinite(fringe.widthUnits)) {
       throw new RangeError(`Fringe genişliği pozitif ve sonlu olmalı: ${fringe.widthUnits}`);

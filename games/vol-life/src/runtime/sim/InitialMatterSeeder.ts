@@ -1,4 +1,5 @@
-import { PARTICLE_TYPE_COUNT, type PhysicsGenome } from '@/config/genome';
+import type { SeedingProfile } from '@/config/candidate';
+import { PARTICLE_TYPE_COUNT } from '@/config/genome';
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
 import type { SimRandom } from '@/runtime/sim/rng';
 import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
@@ -15,21 +16,22 @@ export interface SeedingSummary {
 /**
  * Başlangıç maddesini yoğun origin yamaları, serbest bulut ve seyrek bölgeye
  * dağıtır (DESIGN.md §2). Hiçbir yapı çizmez; yalnız lokal etkileşimin
- * başlayabileceği madde koşulunu kurar. Her parçacık fringe'in gerisinde doğar.
+ * başlayabileceği madde koşulunu kurar. Her parçacık güvenli kenar payının
+ * gerisinde doğar — bu pay seeding profilinin kendi alanıdır, Void fizik
+ * profilinden ödünç alınmaz (E1).
  */
 export function seedInitialMatter(
   particles: ParticleStore,
   random: SimRandom,
   domain: WorldDomain,
-  genome: PhysicsGenome,
+  seeding: SeedingProfile,
   count = particles.capacity,
 ): SeedingSummary {
   if (!Number.isInteger(count) || count < 1 || count > particles.capacity) {
     throw new RangeError(`Başlangıç madde sayısı 1–${particles.capacity} aralığında olmalı`);
   }
   if (particles.activeCount !== 0) throw new RangeError('Seeder yalnız boş depoya ekilir.');
-  const { seeding, fringe, dynamics } = genome;
-  const safeDistance = fringe.widthUnits;
+  const safeDistance = seeding.safeEdgeMarginUnits;
   const centers = Array.from({ length: seeding.patchCount }, () =>
     placeInside(random, domain, seeding.patchRadiusUnits + safeDistance),
   );
@@ -39,7 +41,7 @@ export function seedInitialMatter(
   const cloudRadius = seeding.patchRadiusUnits * seeding.cloudRadiusRatio;
   const spawn = (x: number, y: number): void => {
     const angle = random.next() * Math.PI * 2;
-    const speed = dynamics.initialSpeedUnitsPerReferenceTick * random.next();
+    const speed = seeding.initialSpeedUnitsPerReferenceTick * random.next();
     particles.activateSlot(
       x,
       y,

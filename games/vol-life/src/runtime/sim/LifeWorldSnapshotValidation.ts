@@ -18,7 +18,7 @@ export function validateLifeWorldSnapshot(
   domain: WorldDomain | null = null,
 ): void {
   validateWorldMetadata(snapshot.metadata);
-  const { world, particles: particleConfig, genome } = config;
+  const { world, particles: particleConfig, candidate } = config;
   const fieldLength = world.fieldResolution ** 2;
   const fieldsValid =
     snapshot.nutrientDiffusionSource.length === fieldLength &&
@@ -53,7 +53,7 @@ export function validateLifeWorldSnapshot(
   validateMatterReservoirSnapshot(snapshot.reservoir);
   validateParticleSnapshot(snapshot.particles, particleConfig.capacity);
   const { particles } = snapshot;
-  const maxSpeedSquared = (genome.dynamics.maxSpeedUnitsPerReferenceTick + 1e-5) ** 2;
+  const maxSpeedSquared = (candidate.physics.dynamics.maxSpeedUnitsPerReferenceTick + 1e-5) ** 2;
   const storage = world.boundsUnits;
   const sample: DomainSample = { distance: 0, normalX: 1, normalY: 0 };
   for (let slot = 0; slot < particleConfig.capacity; slot++) {

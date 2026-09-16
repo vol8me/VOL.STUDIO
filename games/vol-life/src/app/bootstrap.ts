@@ -12,7 +12,7 @@ import {
   androidScreenOrientation,
   getRuntimePlatform,
 } from '@volstudio/tauri-v2';
-import { loadAuditionGenome } from '@/app/auditionGenome';
+import { loadAuditionCandidate } from '@/app/auditionGenome';
 import { LifePreferences } from '@/app/LifePreferences';
 import { LifeWorldPersistence } from '@/app/LifeWorldPersistence';
 import { showFatalError } from '@/app/fatalError';
@@ -59,9 +59,9 @@ try {
   setHapticsDriver(platform === 'android' ? new TauriHapticsDriver() : null);
   const preferences = new LifePreferences(saveManager);
   await preferences.load();
-  const audition = loadAuditionGenome();
+  const audition = loadAuditionCandidate();
   const activeSubstrate = audition
-    ? { ...substrateConfig, genome: audition.genome }
+    ? { ...substrateConfig, candidate: audition.candidate }
     : substrateConfig;
   const worldPersistence = new LifeWorldPersistence(saveManager, activeSubstrate);
   const initialWorld = await worldPersistence.load();

@@ -1,8 +1,8 @@
-import { assertFiniteRange, assertPositiveFinite, assertPositiveInteger } from './validation';
+import { assertFiniteRange, assertPositiveFinite } from './validation';
 
 export const PARTICLE_TYPE_COUNT = 6;
 export const PARTICLE_ROLE_COUNT = 3;
-export const GENOME_SCHEMA_VERSION = 1;
+export const PHYSICS_SCHEMA_VERSION = 1;
 export const MULTIBAND_KERNEL_ID = 'multiband-directed-v1';
 
 /** Mesafeye bağlı çok bantlı çift kuvvet profili (DESIGN.md §3). */
@@ -15,29 +15,23 @@ export interface PairForceProfile {
   readonly bandScales: readonly [number, number, number];
 }
 
+/**
+ * Başlangıç hızı burada DEĞİLDİR: o bir doğuş koşuludur, hareket yasası değil,
+ * ve `SeedingProfile`e aittir (DESIGN.md §3, E1).
+ */
 export interface DynamicsGenes {
   readonly dampingPerReferenceTick: number;
   readonly maxSpeedUnitsPerReferenceTick: number;
-  readonly initialSpeedUnitsPerReferenceTick: number;
   readonly forceScale: number;
 }
 
-export interface SeedingGenes {
-  readonly patchCount: number;
-  readonly patchRadiusUnits: number;
-  readonly patchFraction: number;
-  readonly cloudFraction: number;
-  readonly cloudRadiusRatio: number;
-  readonly typeWeights: readonly number[];
-}
-
-export interface FringeGenes {
-  readonly widthUnits: number;
-  readonly tidalStrength: number;
-}
-
-export interface PhysicsGenome {
-  readonly schemaVersion: typeof GENOME_SCHEMA_VERSION;
+/**
+ * Maddenin HAREKET yasası: roller, çift kuvvet matrisi, menzil ve dinamikler.
+ * Nereye ekildiği (`SeedingProfile`) ve kıyının nasıl davrandığı (`VoidProfile`)
+ * ayrı profillerdir; Adım 3 araştırması yalnız bunu ve seeding'i örnekler.
+ */
+export interface SubstratePhysicsProfile {
+  readonly schemaVersion: typeof PHYSICS_SCHEMA_VERSION;
   readonly kernelId: typeof MULTIBAND_KERNEL_ID;
   readonly roleByType: Uint8Array;
   /** Yönlü 6×6 kuvvet matrisi; `[a*6+b]` a'nın b'den aldığı kuvvet. */
@@ -47,13 +41,11 @@ export interface PhysicsGenome {
   readonly cutoffUnits: number;
   readonly profile: PairForceProfile;
   readonly dynamics: DynamicsGenes;
-  readonly seeding: SeedingGenes;
-  readonly fringe: FringeGenes;
 }
 
-/** Adım 2 substrate doğrulamasının başlangıç genomu; Adım 3 kalifiye adayı DEĞİLDİR. */
-export const defaultPhysicsGenome: PhysicsGenome = {
-  schemaVersion: GENOME_SCHEMA_VERSION,
+/** Adım 2 substrate doğrulamasının başlangıç profili; Adım 3 kalifiye adayı DEĞİLDİR. */
+export const defaultPhysicsProfile: SubstratePhysicsProfile = {
+  schemaVersion: PHYSICS_SCHEMA_VERSION,
   kernelId: MULTIBAND_KERNEL_ID,
   roleByType: new Uint8Array([0, 0, 1, 1, 2, 2]),
   strength: new Float32Array([
@@ -72,67 +64,57 @@ export const defaultPhysicsGenome: PhysicsGenome = {
   dynamics: {
     dampingPerReferenceTick: 0.93,
     maxSpeedUnitsPerReferenceTick: 2.4,
-    initialSpeedUnitsPerReferenceTick: 0.25,
     forceScale: 0.05,
-  },
-  seeding: {
-    patchCount: 4,
-    patchRadiusUnits: 70,
-    patchFraction: 0.55,
-    cloudFraction: 0.3,
-    cloudRadiusRatio: 2.4,
-    typeWeights: [1, 1, 1, 1, 1, 1],
-  },
-  fringe: {
-    widthUnits: 24,
-    tidalStrength: 0.03,
   },
 };
 
-export function clonePhysicsGenome(genome: PhysicsGenome): PhysicsGenome {
+export function cloneSubstratePhysicsProfile(
+  physics: SubstratePhysicsProfile,
+): SubstratePhysicsProfile {
   return {
-    ...genome,
-    roleByType: genome.roleByType.slice(),
-    strength: genome.strength.slice(),
-    rangeScale: genome.rangeScale.slice(),
+    ...physics,
+    roleByType: physics.roleByType.slice(),
+    strength: physics.strength.slice(),
+    rangeScale: physics.rangeScale.slice(),
     profile: {
-      ...genome.profile,
-      bandEdges: [...genome.profile.bandEdges],
-      bandScales: [...genome.profile.bandScales],
+      ...physics.profile,
+      bandEdges: [...physics.profile.bandEdges],
+      bandScales: [...physics.profile.bandScales],
     },
-    dynamics: { ...genome.dynamics },
-    seeding: { ...genome.seeding, typeWeights: [...genome.seeding.typeWeights] },
-    fringe: { ...genome.fringe },
+    dynamics: { ...physics.dynamics },
   };
 }
 
-export function validatePhysicsGenome(genome: PhysicsGenome, particleRadiusUnits: number): void {
-  if (genome.schemaVersion !== GENOME_SCHEMA_VERSION || genome.kernelId !== MULTIBAND_KERNEL_ID) {
-    throw new RangeError('Genom şeması veya kernel kimliği bu çalışma zamanına ait değil.');
+export function validateSubstratePhysicsProfile(
+  physics: SubstratePhysicsProfile,
+  particleRadiusUnits: number,
+): void {
+  if (
+    physics.schemaVersion !== PHYSICS_SCHEMA_VERSION ||
+    physics.kernelId !== MULTIBAND_KERNEL_ID
+  ) {
+    throw new RangeError('Fizik profili şeması veya kernel kimliği bu çalışma zamanına ait değil.');
   }
   const rolesValid =
-    genome.roleByType.length === PARTICLE_TYPE_COUNT &&
-    genome.roleByType.every((role) => role < PARTICLE_ROLE_COUNT);
+    physics.roleByType.length === PARTICLE_TYPE_COUNT &&
+    physics.roleByType.every((role) => role < PARTICLE_ROLE_COUNT);
   const strengthValid =
-    genome.strength.length === PARTICLE_TYPE_COUNT ** 2 &&
-    genome.strength.every((value) => Number.isFinite(value) && Math.abs(value) <= 1);
+    physics.strength.length === PARTICLE_TYPE_COUNT ** 2 &&
+    physics.strength.every((value) => Number.isFinite(value) && Math.abs(value) <= 1);
   const rangeValid =
-    genome.rangeScale.length === PARTICLE_ROLE_COUNT ** 2 &&
-    genome.rangeScale.every((value) => Number.isFinite(value) && value > 0 && value <= 1);
+    physics.rangeScale.length === PARTICLE_ROLE_COUNT ** 2 &&
+    physics.rangeScale.every((value) => Number.isFinite(value) && value > 0 && value <= 1);
   if (!rolesValid || !strengthValid || !rangeValid) {
-    throw new RangeError('Genom rol, kuvvet veya menzil matrisi ayrışıyor.');
+    throw new RangeError('Fizik profilinin rol, kuvvet veya menzil matrisi ayrışıyor.');
   }
-  assertPositiveFinite(genome.cutoffUnits, 'Kernel menzili');
-  validateProfile(genome.profile, genome, particleRadiusUnits);
-  validateDynamics(genome.dynamics);
-  validateSeeding(genome.seeding);
-  assertPositiveFinite(genome.fringe.widthUnits, 'Void fringe genişliği');
-  assertFiniteRange(genome.fringe.tidalStrength, 0, 1, 'Tidal stres');
+  assertPositiveFinite(physics.cutoffUnits, 'Kernel menzili');
+  validateProfile(physics.profile, physics, particleRadiusUnits);
+  validateDynamics(physics.dynamics);
 }
 
 function validateProfile(
   profile: PairForceProfile,
-  genome: PhysicsGenome,
+  physics: SubstratePhysicsProfile,
   particleRadiusUnits: number,
 ): void {
   assertPositiveFinite(profile.hardCoreRadiusUnits, 'Sert çekirdek yarıçapı');
@@ -145,7 +127,7 @@ function validateProfile(
     throw new RangeError('Bant bitişleri artan olmalı ve sonuncusu 1 olmalı.');
   }
   for (const scale of profile.bandScales) assertFiniteRange(scale, -1, 1, 'Bant çarpanı');
-  const minRange = genome.cutoffUnits * Math.min(...genome.rangeScale);
+  const minRange = physics.cutoffUnits * Math.min(...physics.rangeScale);
   if (profile.hardCoreRadiusUnits >= minRange * near) {
     throw new RangeError('Sert çekirdek en dar çiftin yakın bandını yutuyor.');
   }
@@ -154,55 +136,50 @@ function validateProfile(
 function validateDynamics(dynamics: DynamicsGenes): void {
   assertFiniteRange(dynamics.dampingPerReferenceTick, Number.MIN_VALUE, 1, 'Sönümleme');
   assertPositiveFinite(dynamics.maxSpeedUnitsPerReferenceTick, 'Hız tavanı');
-  assertFiniteRange(
-    dynamics.initialSpeedUnitsPerReferenceTick,
-    0,
-    dynamics.maxSpeedUnitsPerReferenceTick,
-    'Başlangıç hızı',
-  );
   assertPositiveFinite(dynamics.forceScale, 'Kuvvet ölçeği');
 }
 
-function validateSeeding(seeding: SeedingGenes): void {
-  assertPositiveInteger(seeding.patchCount, 'Origin yaması sayısı');
-  assertPositiveFinite(seeding.patchRadiusUnits, 'Origin yaması yarıçapı');
-  assertFiniteRange(seeding.patchFraction, 0, 1, 'Yama payı');
-  assertFiniteRange(seeding.cloudFraction, 0, 1, 'Bulut payı');
-  if (seeding.patchFraction + seeding.cloudFraction > 1) {
-    throw new RangeError('Yama ve bulut payları toplamı 1’i aşamaz.');
-  }
-  assertFiniteRange(seeding.cloudRadiusRatio, 1, 8, 'Bulut yarıçap oranı');
-  const weightsValid =
-    seeding.typeWeights.length === PARTICLE_TYPE_COUNT &&
-    seeding.typeWeights.every((weight) => Number.isFinite(weight) && weight >= 0) &&
-    seeding.typeWeights.some((weight) => weight > 0);
-  if (!weightsValid) throw new RangeError('Tür ağırlıkları altı negatif olmayan değer taşımalı.');
+export function serializeSubstratePhysicsProfile(physics: SubstratePhysicsProfile): string {
+  return JSON.stringify(canonicalPhysics(physics));
 }
 
-export function serializePhysicsGenome(genome: PhysicsGenome): string {
-  return JSON.stringify({
-    ...genome,
-    roleByType: Array.from(genome.roleByType),
-    strength: Array.from(genome.strength),
-    rangeScale: Array.from(genome.rangeScale),
-  });
+/** Tipli diziler JSON'da sıradan diziye iner; alan SIRASI digest'in parçasıdır. */
+export function canonicalPhysics(physics: SubstratePhysicsProfile): Record<string, unknown> {
+  return {
+    schemaVersion: physics.schemaVersion,
+    kernelId: physics.kernelId,
+    roleByType: Array.from(physics.roleByType),
+    strength: Array.from(physics.strength),
+    rangeScale: Array.from(physics.rangeScale),
+    cutoffUnits: physics.cutoffUnits,
+    profile: {
+      hardCoreRadiusUnits: physics.profile.hardCoreRadiusUnits,
+      hardCoreStrength: physics.profile.hardCoreStrength,
+      bandEdges: [...physics.profile.bandEdges],
+      bandScales: [...physics.profile.bandScales],
+    },
+    dynamics: { ...physics.dynamics },
+  };
 }
 
-export function parsePhysicsGenome(serialized: string, particleRadiusUnits: number): PhysicsGenome {
+export function parseSubstratePhysicsProfile(
+  serialized: string,
+  particleRadiusUnits: number,
+): SubstratePhysicsProfile {
   const raw = JSON.parse(serialized) as Record<string, unknown>;
-  const genome = {
+  const physics = {
     ...raw,
     roleByType: Uint8Array.from(asNumberArray(raw.roleByType, 'roleByType')),
     strength: Float32Array.from(asNumberArray(raw.strength, 'strength')),
     rangeScale: Float32Array.from(asNumberArray(raw.rangeScale, 'rangeScale')),
-  } as unknown as PhysicsGenome;
-  validatePhysicsGenome(genome, particleRadiusUnits);
-  return clonePhysicsGenome(genome);
+  } as unknown as SubstratePhysicsProfile;
+  validateSubstratePhysicsProfile(physics, particleRadiusUnits);
+  return cloneSubstratePhysicsProfile(physics);
 }
 
 function asNumberArray(value: unknown, label: string): number[] {
   if (!Array.isArray(value) || !value.every((entry) => typeof entry === 'number')) {
-    throw new RangeError(`Genom alanı sayı dizisi olmalı: ${label}`);
+    throw new RangeError(`Fizik profili alanı sayı dizisi olmalı: ${label}`);
   }
   return value;
 }
@@ -221,6 +198,6 @@ export function digestString(value: string): string {
     .padStart(8, '0')}`;
 }
 
-export function digestPhysicsGenome(genome: PhysicsGenome): string {
-  return digestString(serializePhysicsGenome(genome));
+export function digestSubstratePhysicsProfile(physics: SubstratePhysicsProfile): string {
+  return digestString(serializeSubstratePhysicsProfile(physics));
 }

@@ -1,11 +1,17 @@
 import {
-  PARTICLE_TYPE_COUNT,
   PARTICLE_ROLE_COUNT,
-  clonePhysicsGenome,
-  defaultPhysicsGenome,
-  validatePhysicsGenome,
-  type PhysicsGenome,
+  PARTICLE_TYPE_COUNT,
+  cloneSubstratePhysicsProfile,
+  defaultPhysicsProfile,
+  validateSubstratePhysicsProfile,
+  type SubstratePhysicsProfile,
 } from '@/config/genome';
+import {
+  cloneSubstrateCandidate,
+  defaultSubstrateCandidate,
+  validateSubstrateCandidate,
+  type SubstrateCandidate,
+} from '@/config/candidate';
 import { particleConfig } from '@/config/particles';
 
 export interface GenomeSamplerOptions {
@@ -17,11 +23,14 @@ export interface GenomeSamplerOptions {
   readonly dampingJitter: number;
   readonly maxSpeedJitter: number;
   readonly forceScaleJitter: number;
-  readonly fringeWidthJitter: number;
-  readonly tidalStrengthJitter: number;
   readonly seed: number;
 }
 
+/**
+ * Void sarsma ayarı YOKTUR ve bu bilinçlidir: Void profili Adım 2'de
+ * sabitlenir, Adım 3 morfoloji araması onu optimize etmez (E2). Sampler
+ * imza düzeyinde yalnız fizik ve seeding üretir.
+ */
 export const defaultSamplerOptions: GenomeSamplerOptions = {
   strengthJitter: 0.25,
   rangeJitter: 0.2,
@@ -31,8 +40,6 @@ export const defaultSamplerOptions: GenomeSamplerOptions = {
   dampingJitter: 0.04,
   maxSpeedJitter: 0.4,
   forceScaleJitter: 0.015,
-  fringeWidthJitter: 4,
-  tidalStrengthJitter: 0.015,
   seed: 0,
 };
 
@@ -43,29 +50,41 @@ export class GenomeSampler {
     this.random = mulberry32(options.seed);
   }
 
-  sample(base: PhysicsGenome = defaultPhysicsGenome): PhysicsGenome {
+  /** Sarsılan yalnız fizik ve doğuş hızıdır; Void profili tabandan aynen taşınır. */
+  sample(base: SubstrateCandidate = defaultSubstrateCandidate): SubstrateCandidate {
     const radius = particleConfig.radiusUnits;
     for (let attempt = 0; attempt < 32; attempt++) {
-      const candidate = this.perturb(base);
+      const physics = this.perturb(base.physics);
+      const candidate: SubstrateCandidate = {
+        schemaVersion: base.schemaVersion,
+        physics,
+        seeding: {
+          ...base.seeding,
+          typeWeights: [...base.seeding.typeWeights],
+          initialSpeedUnitsPerReferenceTick: physics.dynamics.maxSpeedUnitsPerReferenceTick * 0.1,
+        },
+        void: { ...base.void },
+        scenario: base.scenario,
+      };
       try {
-        validatePhysicsGenome(candidate, radius);
+        validateSubstrateCandidate(candidate, radius);
         return candidate;
       } catch {
         continue;
       }
     }
-    return clonePhysicsGenome(base);
+    return cloneSubstrateCandidate(base);
   }
 
-  sampleCorpus(base: PhysicsGenome, count: number): PhysicsGenome[] {
-    const corpus: PhysicsGenome[] = [];
+  sampleCorpus(base: SubstrateCandidate, count: number): SubstrateCandidate[] {
+    const corpus: SubstrateCandidate[] = [];
     for (let index = 0; index < count; index++) {
       corpus.push(this.sample(base));
     }
     return corpus;
   }
 
-  private perturb(base: PhysicsGenome): PhysicsGenome {
+  private perturb(base: SubstratePhysicsProfile): SubstratePhysicsProfile {
     const o = this.options;
     const r = this.random;
     const strength = Float32Array.from(base.strength, (value) =>
@@ -92,17 +111,7 @@ export class GenomeSampler {
         0.5,
         6,
       ),
-      initialSpeedUnitsPerReferenceTick: 0,
       forceScale: clamp(base.dynamics.forceScale + (r() * 2 - 1) * o.forceScaleJitter, 0.005, 0.2),
-    };
-    dynamics.initialSpeedUnitsPerReferenceTick = dynamics.maxSpeedUnitsPerReferenceTick * 0.1;
-    const fringe = {
-      widthUnits: clamp(base.fringe.widthUnits + (r() * 2 - 1) * o.fringeWidthJitter, 8, 48),
-      tidalStrength: clamp(
-        base.fringe.tidalStrength + (r() * 2 - 1) * o.tidalStrengthJitter,
-        0,
-        0.1,
-      ),
     };
     return {
       schemaVersion: base.schemaVersion,
@@ -118,8 +127,6 @@ export class GenomeSampler {
         bandScales,
       },
       dynamics,
-      seeding: { ...base.seeding, typeWeights: [...base.seeding.typeWeights] },
-      fringe,
     };
   }
 }
@@ -162,4 +169,10 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-export { PARTICLE_TYPE_COUNT, PARTICLE_ROLE_COUNT };
+export {
+  PARTICLE_TYPE_COUNT,
+  PARTICLE_ROLE_COUNT,
+  cloneSubstratePhysicsProfile,
+  defaultPhysicsProfile,
+  validateSubstratePhysicsProfile,
+};

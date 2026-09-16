@@ -1,11 +1,11 @@
 import {
-  clonePhysicsGenome,
-  defaultPhysicsGenome,
-  digestString,
-  serializePhysicsGenome,
-  validatePhysicsGenome,
-  type PhysicsGenome,
-} from './genome';
+  cloneSubstrateCandidate,
+  defaultSubstrateCandidate,
+  serializeSubstrateCandidate,
+  validateSubstrateCandidate,
+  type SubstrateCandidate,
+} from './candidate';
+import { digestString } from './genome';
 import {
   cloneHabitatConfig,
   habitatConfig,
@@ -24,14 +24,14 @@ import { cloneWorldConfig, validateWorldConfig, worldConfig, type WorldConfig } 
 export interface SubstrateConfig {
   readonly world: WorldConfig;
   readonly particles: ParticleConfig;
-  readonly genome: PhysicsGenome;
+  readonly candidate: SubstrateCandidate;
   readonly habitat: HabitatConfig;
 }
 
 export const substrateConfig: SubstrateConfig = {
   world: worldConfig,
   particles: particleConfig,
-  genome: defaultPhysicsGenome,
+  candidate: defaultSubstrateCandidate,
   habitat: habitatConfig,
 };
 
@@ -39,7 +39,7 @@ export function cloneSubstrateConfig(config: SubstrateConfig): SubstrateConfig {
   return {
     world: cloneWorldConfig(config.world),
     particles: cloneParticleConfig(config.particles),
-    genome: clonePhysicsGenome(config.genome),
+    candidate: cloneSubstrateCandidate(config.candidate),
     habitat: cloneHabitatConfig(config.habitat),
   };
 }
@@ -47,10 +47,10 @@ export function cloneSubstrateConfig(config: SubstrateConfig): SubstrateConfig {
 export function validateSubstrateConfig(config: SubstrateConfig): void {
   validateWorldConfig(config.world);
   validateParticleConfig(config.particles);
-  validatePhysicsGenome(config.genome, config.particles.radiusUnits);
+  validateSubstrateCandidate(config.candidate, config.particles.radiusUnits);
   validateHabitatConfig(config.habitat);
   validateStorageGeometry(config);
-  if (config.genome.cutoffUnits > config.particles.cellSizeUnits) {
+  if (config.candidate.physics.cutoffUnits > config.particles.cellSizeUnits) {
     throw new RangeError('Kernel menzili spatial-hash hücresini aşamaz.');
   }
   const { width, height } = config.world.boundsUnits;
@@ -61,37 +61,38 @@ export function validateSubstrateConfig(config: SubstrateConfig): void {
     throw new RangeError('Habitat konturu depolama kenar boşluğunu ihlal ediyor.');
   }
   if (
-    config.genome.fringe.widthUnits * 4 >
+    config.candidate.void.widthUnits * 4 >
     minHalfRadius * (1 - config.habitat.noiseAmplitudeRatio)
   ) {
     throw new RangeError('Void fringe habitatın merkezine ulaşacak kadar geniş (DESIGN §2).');
   }
-  if (config.genome.seeding.patchRadiusUnits * 2 > minHalfRadius) {
+  if (config.candidate.seeding.patchRadiusUnits * 2 > minHalfRadius) {
     throw new RangeError('Origin yaması habitatın yarısından büyük olamaz.');
   }
   validateSafeInterior(config);
 }
 
 /**
- * Güvenli iç bölge (d ≥ fringe + yama yarıçapı) habitat alanının en az yarısı
- * olmalı (DESIGN §2, C7). Sınır MUHAFAZAKÂR bir alt sınırdır: iki yarıçap ayrı
- * ayrı `t` kadar küçültülür ve alan oranı (rx − t)(ry − t) / (rx·ry) ile
- * hesaplanır. Gerçek kontur bir superellipse olduğu için gerçek oran bundan
- * yüksektir — ölçüldü: varsayılan adayda analitik 0,561, gerçek maskede 0,592.
- * Bu kapı seeding araması yama yarıçapını büyüttüğünde (90 birimden itibaren)
- * örneği config düzeyinde reddeder.
+ * Güvenli iç bölge (d ≥ güvenli kenar payı + yama yarıçapı) habitat alanının en
+ * az yarısı olmalı (DESIGN §2, C7). Sınır MUHAFAZAKÂR bir alt sınırdır: iki
+ * yarıçap ayrı ayrı `t` kadar küçültülür ve alan oranı (rx − t)(ry − t) /
+ * (rx·ry) ile hesaplanır. Gerçek kontur bir superellipse olduğu için gerçek
+ * oran bundan yüksektir — ölçüldü: varsayılan adayda analitik 0,561, gerçek
+ * maskede 0,592. Bu kapı seeding araması yama yarıçapını büyüttüğünde (90
+ * birimden itibaren) örneği config düzeyinde reddeder.
  */
 function validateSafeInterior(config: SubstrateConfig): void {
   const { width, height } = config.world.boundsUnits;
   const noise = 1 - config.habitat.noiseAmplitudeRatio;
   const radiusX = (width / 2) * config.habitat.radiusRatioX * noise;
   const radiusY = (height / 2) * config.habitat.radiusRatioY * noise;
-  const offset = config.genome.fringe.widthUnits + config.genome.seeding.patchRadiusUnits;
+  const { seeding } = config.candidate;
+  const offset = seeding.safeEdgeMarginUnits + seeding.patchRadiusUnits;
   const innerX = radiusX - offset;
   const innerY = radiusY - offset;
   if (innerX <= 0 || innerY <= 0 || (innerX * innerY) / (radiusX * radiusY) < 0.5) {
     throw new RangeError(
-      'Güvenli iç bölge habitat alanının yarısının altına iner: fringe + yama yarıçapı çok büyük (DESIGN §2).',
+      'Güvenli iç bölge habitat alanının yarısının altına iner: kenar payı + yama yarıçapı çok büyük (DESIGN §2).',
     );
   }
 }
@@ -116,13 +117,18 @@ function validateStorageGeometry(config: SubstrateConfig): void {
   }
 }
 
+/**
+ * Kodek düzeni DEĞİŞMEDİ (K5); değişen yalnız config kimliğidir: genom yerine
+ * aday serileştirildiği için önek v4'e çıktı ve eski kayıtlar `incompatible`
+ * olarak reddedilir.
+ */
 export function fingerprintSubstrateConfig(config: SubstrateConfig): string {
   validateSubstrateConfig(config);
   const serialized = JSON.stringify({
     world: config.world,
     particles: config.particles,
-    genome: serializePhysicsGenome(config.genome),
+    candidate: serializeSubstrateCandidate(config.candidate),
     habitat: config.habitat,
   });
-  return `life-world-v3-${digestString(serialized)}`;
+  return `life-world-v4-${digestString(serialized)}`;
 }

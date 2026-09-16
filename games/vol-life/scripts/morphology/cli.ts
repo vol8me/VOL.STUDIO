@@ -1,5 +1,4 @@
 #!/usr/bin/env tsx
-import { defaultPhysicsGenome, type PhysicsGenome } from '@/config/genome';
 import { substrateConfig } from '@/config/substrate';
 import { ResearchHarness, type ResearchHarnessConfig } from './harness';
 import { isQualified } from './qualification';
@@ -61,7 +60,7 @@ async function main(): Promise<void> {
     console.error('Broad aşaması koşuluyor...');
     const broad = harness.runBroad();
     results.broad = broad.map((c) => ({
-      genomeDigest: c.genomeDigest,
+      candidateDigest: c.candidateDigest,
       phase: c.phase.phase,
       structured: c.structured,
       seedPhases: c.seedResults.map((s) => s.phase.phase),
@@ -75,7 +74,7 @@ async function main(): Promise<void> {
     const broad = harness.runBroad();
     const refinement = harness.runRefinement(broad);
     results.refinement = refinement.map((c) => ({
-      genomeDigest: c.genomeDigest,
+      candidateDigest: c.candidateDigest,
       phase: c.phase.phase,
       structured: c.structured,
     }));
@@ -91,7 +90,7 @@ async function main(): Promise<void> {
     const refinement = harness.runRefinement(broad);
     const artefacts = harness.runQualification(refinement);
     results.qualification = artefacts.map((a) => ({
-      genomeDigest: a.genomeDigest,
+      candidateDigest: a.candidateDigest,
       phase: a.phase.phase,
       qualified: isQualified(a),
       rejectionCount: a.rejectionReasons.length,
@@ -100,10 +99,10 @@ async function main(): Promise<void> {
     for (const artefact of artefacts) {
       const decision = promotion.evaluate(artefact);
       if (decision.promoted) {
-        console.error(`Promoted: ${decision.genomeDigest}`);
+        console.error(`Promoted: ${decision.candidateDigest}`);
       }
     }
-    const promotedDigests = promotion.promotedGenomes.map((r) => r.genomeDigest);
+    const promotedDigests = promotion.promotedCandidates.map((r) => r.candidateDigest);
     results.promoted = promotedDigests;
     console.error(
       `Qualification tamam: ${artefacts.length} artefakt, ${promotedDigests.length} promoted`,

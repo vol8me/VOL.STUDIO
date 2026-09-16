@@ -1,19 +1,22 @@
-import { clonePhysicsGenome, type PhysicsGenome } from '@/config/genome';
-import { digestPhysicsGenome } from '@/config/genome';
+import {
+  cloneSubstrateCandidate,
+  digestSubstrateCandidate,
+  type SubstrateCandidate,
+} from '@/config/candidate';
 import type { QualificationArtefact } from './qualification';
 import { isQualified } from './qualification';
 
 export interface PromotionDecision {
   readonly promoted: boolean;
-  readonly genome: PhysicsGenome;
-  readonly genomeDigest: string;
+  readonly candidate: SubstrateCandidate;
+  readonly candidateDigest: string;
   readonly artefactDigest: string;
   readonly reason: string;
 }
 
 export interface PromotionRecord {
-  readonly genome: PhysicsGenome;
-  readonly genomeDigest: string;
+  readonly candidate: SubstrateCandidate;
+  readonly candidateDigest: string;
   readonly sourceArtefact: QualificationArtefact;
   readonly promotedAtMs: number;
 }
@@ -22,54 +25,54 @@ export class PromotionFlow {
   private readonly promoted: PromotionRecord[] = [];
 
   evaluate(artefact: QualificationArtefact): PromotionDecision {
-    const genome =
-      typeof artefact.genome === 'string'
-        ? (JSON.parse(artefact.genome as string) as PhysicsGenome)
-        : clonePhysicsGenome(artefact.genome);
-    const genomeDigest = digestPhysicsGenome(genome);
+    const candidate =
+      typeof artefact.candidate === 'string'
+        ? (JSON.parse(artefact.candidate as string) as SubstrateCandidate)
+        : cloneSubstrateCandidate(artefact.candidate);
+    const candidateDigest = digestSubstrateCandidate(candidate);
     if (!isQualified(artefact)) {
       return {
         promoted: false,
-        genome,
-        genomeDigest,
+        candidate,
+        candidateDigest,
         artefactDigest: artefact.configDigest,
         reason: 'Aday kalifiye değil: faz, red veya insan onayı eksik.',
       };
     }
-    if (this.promoted.some((r) => r.genomeDigest === genomeDigest)) {
+    if (this.promoted.some((r) => r.candidateDigest === candidateDigest)) {
       return {
         promoted: false,
-        genome,
-        genomeDigest,
+        candidate,
+        candidateDigest,
         artefactDigest: artefact.configDigest,
-        reason: 'Genom zaten promotion listesinde.',
+        reason: 'Aday zaten promotion listesinde.',
       };
     }
     this.promoted.push({
-      genome: clonePhysicsGenome(genome),
-      genomeDigest,
+      candidate: cloneSubstrateCandidate(candidate),
+      candidateDigest,
       sourceArtefact: artefact,
       promotedAtMs: Date.now(),
     });
     return {
       promoted: true,
-      genome,
-      genomeDigest,
+      candidate,
+      candidateDigest,
       artefactDigest: artefact.configDigest,
       reason: "Aday kalifiye ve onaylı; production'a taşındı.",
     };
   }
 
-  get promotedGenomes(): readonly PromotionRecord[] {
+  get promotedCandidates(): readonly PromotionRecord[] {
     return this.promoted;
   }
 
-  hasGenome(genomeDigest: string): boolean {
-    return this.promoted.some((r) => r.genomeDigest === genomeDigest);
+  hasCandidate(candidateDigest: string): boolean {
+    return this.promoted.some((r) => r.candidateDigest === candidateDigest);
   }
 
-  exportPromotedGenome(index: number): PhysicsGenome | null {
+  exportPromotedCandidate(index: number): SubstrateCandidate | null {
     const record = this.promoted[index];
-    return record ? clonePhysicsGenome(record.genome) : null;
+    return record ? cloneSubstrateCandidate(record.candidate) : null;
   }
 }

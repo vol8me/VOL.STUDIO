@@ -4,7 +4,7 @@ import {
   createQualificationArtefact,
   type QualificationBudget,
 } from '@/../scripts/morphology/qualification';
-import { defaultPhysicsGenome } from '@/config/genome';
+import { defaultSubstrateCandidate } from '@/config/candidate';
 import { substrateConfig } from '@/config/substrate';
 import type { MorphologySample } from '@/../scripts/morphology/metrics';
 import type { PerturbationResult } from '@/../scripts/morphology/perturbation';
@@ -62,7 +62,7 @@ describe('PromotionFlow', () => {
     const flow = new PromotionFlow();
     const artefact = createQualificationArtefact(
       substrateConfig,
-      defaultPhysicsGenome,
+      defaultSubstrateCandidate,
       [1],
       { phase: 'dead', confidence: 0.9, reasons: ['ölü'] },
       [makeSample()],
@@ -78,7 +78,7 @@ describe('PromotionFlow', () => {
     const flow = new PromotionFlow();
     const base = createQualificationArtefact(
       substrateConfig,
-      defaultPhysicsGenome,
+      defaultSubstrateCandidate,
       [1],
       { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
       [makeSample()],
@@ -89,14 +89,14 @@ describe('PromotionFlow', () => {
     const accepted = { ...base, humanAcceptance: 'accepted' as const };
     const decision = flow.evaluate(accepted);
     expect(decision.promoted).toBe(true);
-    expect(flow.promotedGenomes).toHaveLength(1);
+    expect(flow.promotedCandidates).toHaveLength(1);
   });
 
   it('aynı genomu ikinci kez taşımaz', () => {
     const flow = new PromotionFlow();
     const base = createQualificationArtefact(
       substrateConfig,
-      defaultPhysicsGenome,
+      defaultSubstrateCandidate,
       [1],
       { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
       [makeSample()],
@@ -115,7 +115,7 @@ describe('PromotionFlow', () => {
     const flow = new PromotionFlow();
     const base = createQualificationArtefact(
       substrateConfig,
-      defaultPhysicsGenome,
+      defaultSubstrateCandidate,
       [1],
       { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
       [makeSample()],
@@ -125,16 +125,16 @@ describe('PromotionFlow', () => {
     );
     const accepted = { ...base, humanAcceptance: 'accepted' as const };
     flow.evaluate(accepted);
-    const digest = flow.promotedGenomes[0].genomeDigest;
-    expect(flow.hasGenome(digest)).toBe(true);
-    expect(flow.hasGenome('unknown')).toBe(false);
+    const digest = flow.promotedCandidates[0].candidateDigest;
+    expect(flow.hasCandidate(digest)).toBe(true);
+    expect(flow.hasCandidate('unknown')).toBe(false);
   });
 
   it('exportPromotedGenome promoted genomu döner', () => {
     const flow = new PromotionFlow();
     const base = createQualificationArtefact(
       substrateConfig,
-      defaultPhysicsGenome,
+      defaultSubstrateCandidate,
       [1],
       { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
       [makeSample()],
@@ -144,9 +144,9 @@ describe('PromotionFlow', () => {
     );
     const accepted = { ...base, humanAcceptance: 'accepted' as const };
     flow.evaluate(accepted);
-    const genome = flow.exportPromotedGenome(0);
+    const genome = flow.exportPromotedCandidate(0);
     expect(genome).not.toBeNull();
-    expect(genome?.schemaVersion).toBe(defaultPhysicsGenome.schemaVersion);
-    expect(flow.exportPromotedGenome(99)).toBeNull();
+    expect(genome?.schemaVersion).toBe(defaultSubstrateCandidate.physics.schemaVersion);
+    expect(flow.exportPromotedCandidate(99)).toBeNull();
   });
 });

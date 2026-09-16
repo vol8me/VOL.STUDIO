@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultPhysicsGenome } from '@/config/genome';
+import { defaultSubstrateCandidate } from '@/config/candidate';
 import { substrateConfig } from '@/config/substrate';
 import { seedInitialMatter } from '@/runtime/sim/InitialMatterSeeder';
 import { ParticleStore } from '@/runtime/sim/ParticleStore';
@@ -21,7 +21,7 @@ describe('seedInitialMatter', () => {
       particles,
       createSimRandom(42),
       sdf,
-      defaultPhysicsGenome,
+      defaultSubstrateCandidate.seeding,
       32,
     );
 
@@ -32,7 +32,7 @@ describe('seedInitialMatter', () => {
   it('varsayılan sayı parçacık kapasitesine eşittir', () => {
     const particles = new ParticleStore(16);
     const sdf = domain();
-    seedInitialMatter(particles, createSimRandom(1), sdf, defaultPhysicsGenome);
+    seedInitialMatter(particles, createSimRandom(1), sdf, defaultSubstrateCandidate.seeding);
     expect(particles.activeCount).toBe(16);
   });
 
@@ -40,34 +40,34 @@ describe('seedInitialMatter', () => {
     const particles = new ParticleStore(8);
     const sdf = domain();
     expect(() =>
-      seedInitialMatter(particles, createSimRandom(1), sdf, defaultPhysicsGenome, 0),
+      seedInitialMatter(particles, createSimRandom(1), sdf, defaultSubstrateCandidate.seeding, 0),
     ).toThrow(RangeError);
     expect(() =>
-      seedInitialMatter(particles, createSimRandom(1), sdf, defaultPhysicsGenome, 9),
+      seedInitialMatter(particles, createSimRandom(1), sdf, defaultSubstrateCandidate.seeding, 9),
     ).toThrow(RangeError);
     expect(() =>
-      seedInitialMatter(particles, createSimRandom(1), sdf, defaultPhysicsGenome, 1.5),
+      seedInitialMatter(particles, createSimRandom(1), sdf, defaultSubstrateCandidate.seeding, 1.5),
     ).toThrow(RangeError);
   });
 
   it('dolu depoya ek yapmayı reddeder', () => {
     const particles = new ParticleStore(4);
     const sdf = domain();
-    seedInitialMatter(particles, createSimRandom(1), sdf, defaultPhysicsGenome, 4);
+    seedInitialMatter(particles, createSimRandom(1), sdf, defaultSubstrateCandidate.seeding, 4);
     expect(() =>
-      seedInitialMatter(particles, createSimRandom(2), sdf, defaultPhysicsGenome, 1),
+      seedInitialMatter(particles, createSimRandom(2), sdf, defaultSubstrateCandidate.seeding, 1),
     ).toThrow(RangeError);
   });
 
   it('tüm parçacıklar habitat içinde ve fringe gerisinde doğar', () => {
     const particles = new ParticleStore(64);
     const sdf = domain();
-    seedInitialMatter(particles, createSimRandom(7), sdf, defaultPhysicsGenome);
+    seedInitialMatter(particles, createSimRandom(7), sdf, defaultSubstrateCandidate.seeding);
 
     for (let slot = 0; slot < particles.capacity; slot++) {
       if (particles.active[slot] === 0) continue;
       const { distance } = sdf.sampleDistanceAndNormal(particles.x[slot], particles.y[slot]);
-      expect(distance).toBeGreaterThanOrEqual(defaultPhysicsGenome.fringe.widthUnits);
+      expect(distance).toBeGreaterThanOrEqual(defaultSubstrateCandidate.void.widthUnits);
     }
   });
 
@@ -75,8 +75,8 @@ describe('seedInitialMatter', () => {
     const left = new ParticleStore(32);
     const right = new ParticleStore(32);
     const sdf = domain();
-    seedInitialMatter(left, createSimRandom(99), sdf, defaultPhysicsGenome);
-    seedInitialMatter(right, createSimRandom(99), sdf, defaultPhysicsGenome);
+    seedInitialMatter(left, createSimRandom(99), sdf, defaultSubstrateCandidate.seeding);
+    seedInitialMatter(right, createSimRandom(99), sdf, defaultSubstrateCandidate.seeding);
     expect(left.snapshot()).toEqual(right.snapshot());
   });
 
@@ -84,15 +84,15 @@ describe('seedInitialMatter', () => {
     const left = new ParticleStore(32);
     const right = new ParticleStore(32);
     const sdf = domain();
-    seedInitialMatter(left, createSimRandom(1), sdf, defaultPhysicsGenome);
-    seedInitialMatter(right, createSimRandom(2), sdf, defaultPhysicsGenome);
+    seedInitialMatter(left, createSimRandom(1), sdf, defaultSubstrateCandidate.seeding);
+    seedInitialMatter(right, createSimRandom(2), sdf, defaultSubstrateCandidate.seeding);
     expect([...left.x]).not.toEqual([...right.x]);
   });
 
   it('parçacık türleri yapılandırılan ağırlık dağılımına uyar', () => {
     const particles = new ParticleStore(128);
     const sdf = domain();
-    seedInitialMatter(particles, createSimRandom(5), sdf, defaultPhysicsGenome);
+    seedInitialMatter(particles, createSimRandom(5), sdf, defaultSubstrateCandidate.seeding);
     const counts = new Array(8).fill(0);
     for (let slot = 0; slot < particles.capacity; slot++) {
       if (particles.active[slot]) counts[particles.type[slot]]++;

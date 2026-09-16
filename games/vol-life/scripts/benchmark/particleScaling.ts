@@ -1,5 +1,6 @@
 import { performance } from 'node:perf_hooks';
-import { PARTICLE_TYPE_COUNT, defaultPhysicsGenome } from '../../src/config/genome';
+import { PARTICLE_TYPE_COUNT } from '../../src/config/genome';
+import { defaultSubstrateCandidate } from '../../src/config/candidate';
 import { particleConfig } from '../../src/config/particles';
 import { substrateConfig } from '../../src/config/substrate';
 import { seedInitialMatter } from '../../src/runtime/sim/InitialMatterSeeder';
@@ -94,8 +95,8 @@ function measure(
   const particles = new ParticleStore(candidate.particles);
   place(particles, createSimRandom(SEED), domain, candidate.particles);
   const grid = new ParticleSpatialHash(bounds, particleConfig.cellSizeUnits, candidate.particles);
-  const kernel = createMultiBandKernel(defaultPhysicsGenome);
-  const sink = new VoidSink(domain, defaultPhysicsGenome.fringe);
+  const kernel = createMultiBandKernel(defaultSubstrateCandidate.physics);
+  const sink = new VoidSink(domain, defaultSubstrateCandidate.void);
   const reservoir = new MatterReservoir();
   const crossings: VoidDeathEvent[] = [];
   let tick = 0;
@@ -107,7 +108,7 @@ function measure(
     sink.applyFringeStress(particles);
     integrateParticles(
       particles,
-      defaultPhysicsGenome.dynamics,
+      defaultSubstrateCandidate.physics.dynamics,
       particleConfig.referenceHz,
       1000 / particleConfig.referenceHz,
     );
@@ -178,7 +179,7 @@ function measureOccupancy(grid: ParticleSpatialHash): {
  */
 const placeStratified: Placement = (particles, random, domain, count) => {
   const { bbox } = domain;
-  const safeDistance = defaultPhysicsGenome.fringe.widthUnits;
+  const safeDistance = defaultSubstrateCandidate.seeding.safeEdgeMarginUnits;
   const sample: DomainSample = { distance: 0, normalX: 1, normalY: 0 };
   const cells = Math.ceil(Math.sqrt(count * STRATIFIED_OVERSAMPLE));
   const stepX = bbox.width / cells;
@@ -197,7 +198,7 @@ const placeStratified: Placement = (particles, random, domain, count) => {
   if (available < count) {
     throw new RangeError(`Tabakalı ızgara ${count} nokta taşıyamadı: ${available}`);
   }
-  const { initialSpeedUnitsPerReferenceTick } = defaultPhysicsGenome.dynamics;
+  const { initialSpeedUnitsPerReferenceTick } = defaultSubstrateCandidate.seeding;
   for (let index = 0; index < count; index++) {
     const pick = Math.floor((index * available) / count);
     const angle = random.next() * Math.PI * 2;
@@ -214,7 +215,7 @@ const placeStratified: Placement = (particles, random, domain, count) => {
 
 /** Tür dağılımı, yama sayısı ve hız profili üretimdeki neyse odur. */
 const placeProduction: Placement = (particles, random, domain, count) => {
-  seedInitialMatter(particles, random, domain, defaultPhysicsGenome, count);
+  seedInitialMatter(particles, random, domain, defaultSubstrateCandidate.seeding, count);
 };
 
 function percentile(values: readonly number[], ratio: number): number {

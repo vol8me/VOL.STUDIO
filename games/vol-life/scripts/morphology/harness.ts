@@ -1,9 +1,9 @@
 import {
-  clonePhysicsGenome,
-  defaultPhysicsGenome,
-  digestPhysicsGenome,
-  type PhysicsGenome,
-} from '@/config/genome';
+  cloneSubstrateCandidate,
+  defaultSubstrateCandidate,
+  digestSubstrateCandidate,
+  type SubstrateCandidate,
+} from '@/config/candidate';
 import { substrateConfig, type SubstrateConfig } from '@/config/substrate';
 import { createExplicitWorldMetadata } from '@/runtime/sim/WorldMetadata';
 import { LifeWorld } from '@/runtime/sim/LifeWorld';
@@ -33,7 +33,7 @@ export interface ResearchStageConfig {
 }
 
 export interface ResearchHarnessConfig {
-  readonly baseGenome: PhysicsGenome;
+  readonly baseCandidate: SubstrateCandidate;
   readonly substrate: SubstrateConfig;
   readonly sampler: GenomeSamplerOptions;
   readonly metrics: MorphologyMetricsConfig;
@@ -48,7 +48,7 @@ export interface ResearchHarnessConfig {
 }
 
 export const defaultHarnessConfig: ResearchHarnessConfig = {
-  baseGenome: defaultPhysicsGenome,
+  baseCandidate: defaultSubstrateCandidate,
   substrate: substrateConfig,
   sampler: defaultSamplerOptions,
   metrics: {
@@ -96,8 +96,8 @@ export const defaultHarnessConfig: ResearchHarnessConfig = {
 };
 
 export interface CandidateResult {
-  readonly genome: PhysicsGenome;
-  readonly genomeDigest: string;
+  readonly candidate: SubstrateCandidate;
+  readonly candidateDigest: string;
   readonly phase: PhaseClassification;
   readonly seedResults: readonly SeedResult[];
   readonly structured: boolean;
@@ -129,12 +129,12 @@ export class ResearchHarness {
 
   runBroad(): CandidateResult[] {
     const candidates = this.sampler.sampleCorpus(
-      this.config.baseGenome,
+      this.config.baseCandidate,
       this.config.candidateCount,
     );
     const results: CandidateResult[] = [];
-    for (const genome of candidates) {
-      const result = this.evaluateCandidate(genome, this.config.broad);
+    for (const candidate of candidates) {
+      const result = this.evaluateCandidate(candidate, this.config.broad);
       results.push(result);
     }
     return results;
@@ -144,7 +144,7 @@ export class ResearchHarness {
     const structured = candidates.filter((c) => c.structured);
     const results: CandidateResult[] = [];
     for (const candidate of structured) {
-      const result = this.evaluateCandidate(candidate.genome, this.config.refinement);
+      const result = this.evaluateCandidate(candidate.candidate, this.config.refinement);
       results.push(result);
     }
     return results;
@@ -154,17 +154,17 @@ export class ResearchHarness {
     const structured = candidates.filter((c) => c.structured);
     const artefacts: QualificationArtefact[] = [];
     for (const candidate of structured) {
-      const artefact = this.runQualificationCandidate(candidate.genome);
+      const artefact = this.runQualificationCandidate(candidate.candidate);
       artefacts.push(artefact);
     }
     return artefacts;
   }
 
-  evaluateCandidate(genome: PhysicsGenome, stage: ResearchStageConfig): CandidateResult {
+  evaluateCandidate(candidate: SubstrateCandidate, stage: ResearchStageConfig): CandidateResult {
     const seeds = generateSeedCorpus(0, stage.seedCount);
     const seedResults: SeedResult[] = [];
     for (const seed of seeds) {
-      const world = this.createWorld(genome, seed);
+      const world = this.createWorld(candidate, seed);
       const initialActive = world.particles.activeCount;
       this.metrics.reset();
       this.cluster.reset();
@@ -180,24 +180,23 @@ export class ResearchHarness {
       seedResults.push({ seed, phase, finalSample });
     }
     const dominantPhase = this.dominantPhase(seedResults);
-    const { digestPhysicsGenome: digest } = { digestPhysicsGenome };
     return {
-      genome: clonePhysicsGenome(genome),
-      genomeDigest: digest(genome),
+      candidate: cloneSubstrateCandidate(candidate),
+      candidateDigest: digestSubstrateCandidate(candidate),
       phase: dominantPhase,
       seedResults,
       structured: dominantPhase.phase === 'dynamic-structured',
     };
   }
 
-  runQualificationCandidate(genome: PhysicsGenome): QualificationArtefact {
+  runQualificationCandidate(candidate: SubstrateCandidate): QualificationArtefact {
     const seeds = generateSeedCorpus(0, this.config.qualification.seedCount);
     const seedResults: SeedResult[] = [];
     const allTimeSeries: import('./metrics').MorphologySample[][] = [];
     const allPerturbationResults: import('./perturbation').PerturbationResult[] = [];
     const rejectionReasons: string[] = [];
     for (const seed of seeds) {
-      const world = this.createWorld(genome, seed);
+      const world = this.createWorld(candidate, seed);
       const initialActive = world.particles.activeCount;
       this.metrics.reset();
       this.cluster.reset();
@@ -235,7 +234,7 @@ export class ResearchHarness {
     };
     return createQualificationArtefact(
       this.config.substrate,
-      genome,
+      candidate,
       seeds,
       dominantPhase,
       flatTimeSeries,
@@ -249,10 +248,10 @@ export class ResearchHarness {
     return this.promotion;
   }
 
-  private createWorld(genome: PhysicsGenome, seed: number): LifeWorld {
+  private createWorld(candidate: SubstrateCandidate, seed: number): LifeWorld {
     const config = {
       ...this.config.substrate,
-      genome: clonePhysicsGenome(genome),
+      candidate: cloneSubstrateCandidate(candidate),
     };
     const metadata = createExplicitWorldMetadata(seed);
     return new LifeWorld(config, metadata);

@@ -5,7 +5,7 @@ import {
   WorldCameraController,
   type SimulationClockFrame,
 } from '@volstudio/core';
-import type { PhysicsGenome } from '@/config/genome';
+import type { SubstrateCandidate } from '@/config/candidate';
 import {
   lifeGraphicsConfig,
   validateLifeGraphicsConfig,
@@ -67,7 +67,7 @@ export interface LifeRuntimeDependencies {
   readonly config?: SubstrateConfig;
   readonly graphics?: LifeGraphicsConfig;
   /** Geliştirme audition genomu; üretimde hiçbir yol bunu doldurmaz. */
-  readonly genome?: PhysicsGenome;
+  readonly candidate?: SubstrateCandidate;
   readonly world?: RuntimeWorld;
   readonly fieldRenderer?: RuntimeFieldRenderer;
   readonly habitatRenderer?: RuntimeAnimated;
@@ -93,8 +93,8 @@ export class LifeRuntime {
 
   constructor(scene: Phaser.Scene, dependencies: LifeRuntimeDependencies = {}) {
     const baseConfig = dependencies.config ?? substrateConfig;
-    const config = dependencies.genome
-      ? { ...baseConfig, genome: dependencies.genome }
+    const config = dependencies.candidate
+      ? { ...baseConfig, candidate: dependencies.candidate }
       : baseConfig;
     const graphics = dependencies.graphics ?? lifeGraphicsConfig;
     validateLifeGraphicsConfig(graphics);
@@ -146,9 +146,10 @@ export class LifeRuntime {
             scene,
             {
               radiusUnits: config.particles.radiusUnits,
-              maxSpeedUnitsPerReferenceTick: config.genome.dynamics.maxSpeedUnitsPerReferenceTick,
+              maxSpeedUnitsPerReferenceTick:
+                config.candidate.physics.dynamics.maxSpeedUnitsPerReferenceTick,
               velocityStretchMax: graphics.particleVelocityStretchMax,
-              fringeWidthUnits: config.genome.fringe.widthUnits,
+              fringeWidthUnits: config.candidate.void.widthUnits,
               fringeStretchMax: graphics.particleFringeStretchMax,
             },
             domain,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultPhysicsGenome } from '@/config/genome';
+import { defaultSubstrateCandidate } from '@/config/candidate';
 import { particleConfig } from '@/config/particles';
 import { substrateConfig } from '@/config/substrate';
 import { createMultiBandKernel, type PairForceKernel } from '@/runtime/sim/PairForceKernel';
@@ -53,11 +53,11 @@ function seededWorld(bound: number, count: number, seed: number): ParticleStore 
 const TOLERANCE = 1e-4;
 const bounds = substrateConfig.world.boundsUnits;
 const cellSize = particleConfig.cellSizeUnits;
-const forceScale = defaultPhysicsGenome.dynamics.forceScale;
+const forceScale = defaultSubstrateCandidate.physics.dynamics.forceScale;
 
 describe('Brute-force oracle: spatial-hash kernel vs all-pairs reference', () => {
   it('az parçacıkta kuvvetler özdeş', () => {
-    const kernel = createMultiBandKernel(defaultPhysicsGenome);
+    const kernel = createMultiBandKernel(defaultSubstrateCandidate.physics);
     const particles = seededWorld(bounds.width, 8, 42);
     const grid = new ParticleSpatialHash(bounds, cellSize, particles.capacity);
     grid.rebuild(particles);
@@ -71,7 +71,7 @@ describe('Brute-force oracle: spatial-hash kernel vs all-pairs reference', () =>
   });
 
   it('çok parçacıkta kuvvetler tolerans içinde', () => {
-    const kernel = createMultiBandKernel(defaultPhysicsGenome);
+    const kernel = createMultiBandKernel(defaultSubstrateCandidate.physics);
     const particles = seededWorld(bounds.width, 64, 123);
     const grid = new ParticleSpatialHash(bounds, cellSize, particles.capacity);
     grid.rebuild(particles);
@@ -87,7 +87,7 @@ describe('Brute-force oracle: spatial-hash kernel vs all-pairs reference', () =>
   });
 
   it('pasif parçacıklar kuvvet hesabına girmez', () => {
-    const kernel = createMultiBandKernel(defaultPhysicsGenome);
+    const kernel = createMultiBandKernel(defaultSubstrateCandidate.physics);
     const particles = seededWorld(bounds.width, 16, 7);
     particles.deactivateSlot(3);
     particles.deactivateSlot(7);
@@ -107,7 +107,7 @@ describe('Brute-force oracle: spatial-hash kernel vs all-pairs reference', () =>
   });
 
   it('farklı tür çiftleri için kuvvetler doğru', () => {
-    const kernel = createMultiBandKernel(defaultPhysicsGenome);
+    const kernel = createMultiBandKernel(defaultSubstrateCandidate.physics);
     const particles = new ParticleStore(12);
     for (let t = 0; t < 6; t++) {
       particles.activateSlot(200 + t * 20, 200, 0, 0, t);
@@ -125,7 +125,7 @@ describe('Brute-force oracle: spatial-hash kernel vs all-pairs reference', () =>
   });
 
   it('deterministik: aynı konumda iki koşu özdeş kuvvet üretir', () => {
-    const kernel = createMultiBandKernel(defaultPhysicsGenome);
+    const kernel = createMultiBandKernel(defaultSubstrateCandidate.physics);
     const particles1 = seededWorld(bounds.width, 32, 999);
     const particles2 = seededWorld(bounds.width, 32, 999);
     const grid1 = new ParticleSpatialHash(bounds, cellSize, particles1.capacity);
@@ -141,7 +141,7 @@ describe('Brute-force oracle: spatial-hash kernel vs all-pairs reference', () =>
   });
 
   it('kenar parçacıkları: sınır yakınında hash ile brute-force uyuşur', () => {
-    const kernel = createMultiBandKernel(defaultPhysicsGenome);
+    const kernel = createMultiBandKernel(defaultSubstrateCandidate.physics);
     const particles = new ParticleStore(8);
     particles.activateSlot(10, 10, 0, 0, 0);
     particles.activateSlot(20, 10, 0, 0, 1);

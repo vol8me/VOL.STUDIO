@@ -1,8 +1,12 @@
-import { digestPhysicsGenome, parsePhysicsGenome, type PhysicsGenome } from '@/config/genome';
+import {
+  digestSubstrateCandidate,
+  parseSubstrateCandidate,
+  type SubstrateCandidate,
+} from '@/config/candidate';
 import { particleConfig } from '@/config/particles';
 
-export interface AuditionGenome {
-  readonly genome: PhysicsGenome;
+export interface AuditionCandidate {
+  readonly candidate: SubstrateCandidate;
   readonly digest: string;
 }
 
@@ -15,15 +19,15 @@ export interface AuditionEnvironment {
  * Development audition girişi (DESIGN.md §8). Yalnız dev sunucusunda ve açık
  * bir build girdisiyle çalışır; üretim bundle'ında `DEV` sabit `false`
  * olduğu için URL/env ile sessiz production override yolu yoktur.
- * Bozuk genom sessizce yutulmaz — açılış hata yüzeyine düşer.
+ * Bozuk aday sessizce yutulmaz — açılış hata yüzeyine düşer.
  */
-export function loadAuditionGenome(
+export function loadAuditionCandidate(
   env: AuditionEnvironment = import.meta.env,
   particleRadiusUnits = particleConfig.radiusUnits,
-): AuditionGenome | null {
+): AuditionCandidate | null {
   if (!env.DEV) return null;
   const serialized = env.VITE_LIFE_AUDITION_GENOME?.trim();
   if (!serialized) return null;
-  const genome = parsePhysicsGenome(serialized, particleRadiusUnits);
-  return { genome, digest: digestPhysicsGenome(genome) };
+  const candidate = parseSubstrateCandidate(serialized, particleRadiusUnits);
+  return { candidate, digest: digestSubstrateCandidate(candidate) };
 }

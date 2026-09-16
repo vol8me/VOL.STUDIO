@@ -1,4 +1,4 @@
-import type { PhysicsGenome } from '@/config/genome';
+import type { SubstrateCandidate } from '@/config/candidate';
 import {
   cloneSubstrateConfig,
   substrateConfig,
@@ -57,7 +57,7 @@ export class LifeWorld {
   readonly fields: FieldSet;
   readonly particles: ParticleStore;
   readonly reservoir = new MatterReservoir();
-  readonly genome: PhysicsGenome;
+  readonly candidate: SubstrateCandidate;
   private readonly config: SubstrateConfig;
   private readonly streams: WorldRandomStreams;
   private readonly tempo: SimulationTempo;
@@ -80,7 +80,7 @@ export class LifeWorld {
     validateWorldMetadata(metadata);
     validateSubstrateConfig(config);
     this.config = cloneSubstrateConfig(config);
-    this.genome = this.config.genome;
+    this.candidate = this.config.candidate;
     this.metadata = { ...metadata };
     const { world, particles, habitat } = this.config;
     this.tempo = new SimulationTempo(resolveSimulationHz(world.fixedStepMs));
@@ -104,7 +104,7 @@ export class LifeWorld {
       this.particles,
       this.streams.stream('matter-seeding'),
       this.domain,
-      this.genome,
+      this.candidate.seeding,
     );
     this.particles.capturePrevious();
     this.particleGrid = new ParticleSpatialHash(
@@ -112,8 +112,8 @@ export class LifeWorld {
       particles.cellSizeUnits,
       particles.capacity,
     );
-    this.kernel = options.kernel ?? createMultiBandKernel(this.genome);
-    this.sink = new VoidSink(this.domain, this.genome.fringe);
+    this.kernel = options.kernel ?? createMultiBandKernel(this.candidate.physics);
+    this.sink = new VoidSink(this.domain, this.candidate.void);
     this.worldEvents = options.worldEvents ?? noopWorldEventSink;
     this.tempo.every(world.fieldHz, (tick) => {
       this.stepFields(tick);
@@ -133,12 +133,12 @@ export class LifeWorld {
       this.particles,
       this.particleGrid,
       this.kernel,
-      this.genome.dynamics.forceScale,
+      this.candidate.physics.dynamics.forceScale,
     );
     this.sink.applyFringeStress(this.particles);
     integrateParticles(
       this.particles,
-      this.genome.dynamics,
+      this.candidate.physics.dynamics,
       this.config.particles.referenceHz,
       this.config.world.fixedStepMs,
     );

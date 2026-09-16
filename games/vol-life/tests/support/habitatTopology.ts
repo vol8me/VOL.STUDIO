@@ -1,4 +1,4 @@
-import { defaultPhysicsGenome } from '@/config/genome';
+import { defaultSubstrateCandidate } from '@/config/candidate';
 import { habitatConfig } from '@/config/habitat';
 import { worldConfig } from '@/config/world';
 import { createHabitatDomain, rasterizeHabitatMask } from '@/runtime/sim/WorldDomain';
@@ -8,11 +8,12 @@ import { createHabitatDomain, rasterizeHabitatMask } from '@/runtime/sim/WorldDo
  * tek bağlı habitat, iç delik yok, eğrilik yarıçapı ≥ 2×fringe + 4, boğaz
  * ≥ 2×kernel cutoff, güvenli iç bölge ≥ habitat alanının %50'si.
  */
-export const MIN_CURVATURE_RADIUS_UNITS = 2 * defaultPhysicsGenome.fringe.widthUnits + 4;
-export const MIN_THROAT_UNITS = 2 * defaultPhysicsGenome.cutoffUnits;
+export const MIN_CURVATURE_RADIUS_UNITS = 2 * defaultSubstrateCandidate.void.widthUnits + 4;
+export const MIN_THROAT_UNITS = 2 * defaultSubstrateCandidate.physics.cutoffUnits;
 export const MIN_SAFE_AREA_RATIO = 0.5;
 export const SAFE_INTERIOR_DISTANCE_UNITS =
-  defaultPhysicsGenome.fringe.widthUnits + defaultPhysicsGenome.seeding.patchRadiusUnits;
+  defaultSubstrateCandidate.seeding.safeEdgeMarginUnits +
+  defaultSubstrateCandidate.seeding.patchRadiusUnits;
 
 /**
  * Boğaz ve eğrilik için 512 segment yeter: ölçüldü, 2048 segmentli tarama ile

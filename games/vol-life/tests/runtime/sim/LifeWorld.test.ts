@@ -118,9 +118,9 @@ describe('LifeWorld', () => {
     const base = smallConfig();
     const extraPatch = {
       ...base,
-      genome: {
-        ...base.genome,
-        seeding: { ...base.genome.seeding, patchCount: base.genome.seeding.patchCount + 1 },
+      candidate: {
+        ...base.candidate,
+        seeding: { ...base.candidate.seeding, patchCount: base.candidate.seeding.patchCount + 1 },
       },
     };
     const left = createWorld(77, base);

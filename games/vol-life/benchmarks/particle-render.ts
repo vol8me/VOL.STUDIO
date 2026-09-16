@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { defaultPhysicsGenome } from '../src/config/genome';
+import { defaultSubstrateCandidate } from '../src/config/candidate';
 import { lifeGraphicsConfig } from '../src/config/graphics';
 import { particleConfig } from '../src/config/particles';
 import { substrateConfig } from '../src/config/substrate';
@@ -40,15 +40,16 @@ class RenderBenchmarkScene extends Phaser.Scene {
       this.particles,
       createSimRandom(0x10fe1),
       domain,
-      defaultPhysicsGenome,
+      defaultSubstrateCandidate.seeding,
       count,
     );
     this.particles.capturePrevious();
     this.particleRenderer = new ParticleRenderer(this, {
       radiusUnits: particleConfig.radiusUnits,
-      maxSpeedUnitsPerReferenceTick: defaultPhysicsGenome.dynamics.maxSpeedUnitsPerReferenceTick,
+      maxSpeedUnitsPerReferenceTick:
+        defaultSubstrateCandidate.physics.dynamics.maxSpeedUnitsPerReferenceTick,
       velocityStretchMax: lifeGraphicsConfig.particleVelocityStretchMax,
-      fringeWidthUnits: defaultPhysicsGenome.fringe.widthUnits,
+      fringeWidthUnits: defaultSubstrateCandidate.void.widthUnits,
       fringeStretchMax: lifeGraphicsConfig.particleFringeStretchMax,
     });
     this.cameras.main.centerOn(
