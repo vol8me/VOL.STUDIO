@@ -1,72 +1,107 @@
-import type Phaser from 'phaser';
-import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
+import type { Rect } from '@volstudio/core/math/geometry';
+import Phaser from 'phaser';
+import {
+  rasterizeHabitatGlowRows,
+  type HabitatGlowStyle,
+} from '@/runtime/render/HabitatGlowRasterizer';
+import type { WorldDomain } from '@/runtime/sim/WorldDomain';
 
-export interface HabitatStyle {
-  readonly contourSegments: number;
-  readonly voidColor: number;
-  readonly glowRingCount: number;
-  readonly glowRingSpacingUnits: number;
+export interface HabitatStyle extends HabitatGlowStyle {
+  /** Işıma dokusunun kenar çözünürlüğü; ölçümle seçilir (DESIGN §6). */
+  readonly resolution: number;
+  /** Kare başına rasterleme bütçesi (ms); doku satır satır dolar. */
+  readonly rasterBudgetMs: number;
+  /** Void'in kıyıda içeri akan nabzı; yalnız ALFAYI oynatır, fizik SDF'sine dokunmaz. */
   readonly pulsePeriodMs: number;
   readonly pulseAlphaMin: number;
   readonly pulseAlphaMax: number;
 }
 
-/** Phaser `strokePoints` yalnız `x`/`y` okur; tip `Vector2` istese de düz nokta yeter. */
-type ContourPoint = Phaser.Math.Vector2;
+const GLOW_TEXTURE_KEY = 'vol-life:habitat-glow';
 
 /**
- * Habitat/Void sunumu (DESIGN.md §6). Kare kontur yoktur: habitat içi alan
- * dokusu SDF gölgesiyle kıyıda kararır (bkz. `rasterizeHabitatShade`), bu
- * sınıf ise Void kıyısında içeri akan düşük frekanslı karanlık nabzı çizer.
- * Nabız yalnız alfa oynatır; fizik SDF'si bu sınıftan etkilenmez.
+ * Habitat/Void sunumu (DESIGN.md §6). Kıyı ve ışıması doğrudan SDF
+ * MESAFESİNDEN rasterize edilir; kontur noktalarını normal yönünde öteleyip
+ * `strokePoints` ile bağlayan yol kaldırıldı — yüksek eğrilikte ötelenen
+ * noktalar çaprazlanıyor ve düz kiriş Void'den habitatın içine geçen bir çizgi
+ * bırakıyordu.
+ *
+ * Raster KURULUMDA koşmaz: 512² tek seferde 723 ms ölçüldü ve DESIGN §18 yükleme
+ * sırasında ana iş parçacığını kilitlemeyi yasaklıyor. Doku kare bütçesiyle
+ * satır satır dolar; tamamlandığında sonuç tek seferlik rasterle bayt bayt
+ * aynıdır. Nabız yalnız alfayı değiştirir.
  */
 export class HabitatRenderer {
-  private readonly glow: Phaser.GameObjects.Graphics;
+  private readonly texture: Phaser.Textures.CanvasTexture;
+  private readonly image: Phaser.GameObjects.Image;
+  private readonly imageData: ImageData;
+  private readonly rect: Rect;
+  private rasterRow = 0;
   private destroyed = false;
 
   constructor(
-    scene: Phaser.Scene,
+    private readonly scene: Phaser.Scene,
     private readonly domain: WorldDomain,
+    rect: Readonly<Rect>,
     private readonly style: HabitatStyle,
   ) {
-    this.glow = scene.add.graphics().setDepth(-990);
-    for (let ring = 0; ring < style.glowRingCount; ring++) {
-      const fade = 1 - ring / style.glowRingCount;
-      this.glow.lineStyle(style.glowRingSpacingUnits, style.voidColor, fade);
-      this.glow.strokePoints(
-        this.contourPoints(ring * style.glowRingSpacingUnits + style.glowRingSpacingUnits / 2),
-        true,
-        true,
-      );
-    }
-    this.glow.setAlpha(style.pulseAlphaMin);
+    this.rect = { ...rect };
+    const texture = scene.textures.createCanvas(
+      GLOW_TEXTURE_KEY,
+      style.resolution,
+      style.resolution,
+    );
+    if (!texture) throw new Error('Habitat ışıma dokusu oluşturulamadı.');
+    this.texture = texture;
+    this.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+    this.imageData = texture.context.createImageData(style.resolution, style.resolution);
+    this.image = scene.add
+      .image(this.rect.x, this.rect.y, GLOW_TEXTURE_KEY)
+      .setOrigin(0, 0)
+      .setDisplaySize(this.rect.width, this.rect.height)
+      .setDepth(-990);
+    this.image.setAlpha(style.pulseAlphaMin);
+  }
+
+  /** Doku tamamen rasterize edildi mi; dolana kadar üst satırlar saydamdır. */
+  get rasterComplete(): boolean {
+    return this.rasterRow >= this.style.resolution;
   }
 
   update(nowMs: number): void {
-    if (this.destroyed || !Number.isFinite(nowMs)) return;
+    if (this.destroyed) return;
+    this.advanceRaster();
+    if (!Number.isFinite(nowMs)) return;
     const phase = 0.5 + 0.5 * Math.sin((nowMs / this.style.pulsePeriodMs) * Math.PI * 2);
     const alpha =
       this.style.pulseAlphaMin + (this.style.pulseAlphaMax - this.style.pulseAlphaMin) * phase;
-    this.glow.setAlpha(alpha);
+    this.image.setAlpha(alpha);
   }
 
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
-    this.glow.destroy();
+    this.image.destroy();
+    this.scene.textures.remove(GLOW_TEXTURE_KEY);
   }
 
-  /** Konturu Void normali boyunca `offsetUnits` dışa taşır; 0 kıyının kendisidir. */
-  private contourPoints(offsetUnits: number): ContourPoint[] {
-    const raw = this.domain.contour(this.style.contourSegments);
-    const points: { x: number; y: number }[] = [];
-    const sample: DomainSample = { distance: 0, normalX: 1, normalY: 0 };
-    for (let index = 0; index < raw.length; index += 2) {
-      const x = raw[index];
-      const y = raw[index + 1];
-      this.domain.sampleDistanceAndNormal(x, y, sample);
-      points.push({ x: x + sample.normalX * offsetUnits, y: y + sample.normalY * offsetUnits });
-    }
-    return points as ContourPoint[];
+  /** Bütçe bir satırın ortasında dolmaz: taşma en fazla bir satırdır. */
+  private advanceRaster(): void {
+    if (this.rasterComplete) return;
+    const deadline = performance.now() + this.style.rasterBudgetMs;
+    do {
+      rasterizeHabitatGlowRows(
+        this.domain,
+        this.rect,
+        this.style.resolution,
+        this.style,
+        this.imageData.data,
+        this.rasterRow,
+        1,
+      );
+      this.rasterRow++;
+    } while (!this.rasterComplete && performance.now() < deadline);
+    this.texture.putData(this.imageData, 0, 0);
+    this.texture.refresh();
   }
 }

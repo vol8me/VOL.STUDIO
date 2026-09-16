@@ -18,18 +18,29 @@ describe('lifeGraphicsConfig', () => {
     expect(Object.keys(lifeGraphicsConfig).some((key) => key.startsWith('boundary'))).toBe(false);
   });
 
+  /* C4: kontur-öteleme yolu silindi; ayarları da geri gelmemeli. */
+  it('kontur segmenti ve Void halka ayarları taşımaz', () => {
+    const removed = ['habitatContourSegments', 'voidGlowRingCount', 'voidGlowRingSpacingUnits'];
+
+    expect(removed.filter((key) => key in lifeGraphicsConfig)).toEqual([]);
+  });
+
   it.each([
     ['renderScale', 0],
     ['cameraMaxZoomFactor', 0.5],
     ['cameraInitialZoomFactor', 9],
     ['habitatEdgeFadeUnits', 0],
-    ['habitatContourSegments', 12],
-    ['habitatContourSegments', 100.5],
+    ['habitatGlowResolution', 0],
+    ['habitatGlowResolution', 100],
+    ['habitatGlowDecayUnits', 0],
+    ['habitatGlowShoreWidthUnits', Number.NaN],
+    ['habitatGlowInteriorFadeUnits', -1],
+    ['habitatGlowVoidAlpha', 2],
+    ['habitatGlowShoreAlpha', -0.5],
+    ['habitatGlowRasterBudgetMs', 0],
     ['voidPulsePeriodMs', -1],
     ['voidPulseAlphaMin', 2],
     ['voidPulseAlphaMax', 0.01],
-    ['voidGlowRingCount', 0],
-    ['voidGlowRingSpacingUnits', Number.NaN],
     ['voidColor', 0x1000000],
     ['voidBackgroundColor', -1],
     ['voidDeathDurationMs', 0],

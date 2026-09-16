@@ -121,15 +121,24 @@ export class LifeRuntime {
       );
       this.habitatRenderer = this.scope.addDestroyable(
         dependencies.habitatRenderer ??
-          new HabitatRenderer(scene, domain, {
-            contourSegments: graphics.habitatContourSegments,
-            voidColor: graphics.voidColor,
-            glowRingCount: graphics.voidGlowRingCount,
-            glowRingSpacingUnits: graphics.voidGlowRingSpacingUnits,
-            pulsePeriodMs: graphics.voidPulsePeriodMs,
-            pulseAlphaMin: graphics.voidPulseAlphaMin,
-            pulseAlphaMax: graphics.voidPulseAlphaMax,
-          }),
+          new HabitatRenderer(
+            scene,
+            domain,
+            resolveCameraDomain(domain.bbox, config.habitat.cameraVoidMarginRatio),
+            {
+              resolution: graphics.habitatGlowResolution,
+              decayUnits: graphics.habitatGlowDecayUnits,
+              shoreWidthUnits: graphics.habitatGlowShoreWidthUnits,
+              interiorFadeUnits: graphics.habitatGlowInteriorFadeUnits,
+              voidAlpha: graphics.habitatGlowVoidAlpha,
+              shoreAlpha: graphics.habitatGlowShoreAlpha,
+              rasterBudgetMs: graphics.habitatGlowRasterBudgetMs,
+              color: graphics.voidColor,
+              pulsePeriodMs: graphics.voidPulsePeriodMs,
+              pulseAlphaMin: graphics.voidPulseAlphaMin,
+              pulseAlphaMax: graphics.voidPulseAlphaMax,
+            },
+          ),
       );
       this.particleRenderer = this.scope.addDestroyable(
         dependencies.particleRenderer ??

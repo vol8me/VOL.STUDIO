@@ -192,9 +192,13 @@ describe('LifeRuntime', () => {
       centerOn: vi.fn(),
       setBackgroundColor: vi.fn(),
     };
-    const imageData = { data: new Uint8ClampedArray(262144), width: 256, height: 256 } as ImageData;
     const texture = {
-      context: { createImageData: vi.fn(() => imageData) },
+      context: {
+        createImageData: vi.fn(
+          (width: number, height: number) =>
+            ({ data: new Uint8ClampedArray(width * height * 4), width, height }) as ImageData,
+        ),
+      },
       putData: vi.fn(),
       refresh: vi.fn(),
       setFilter: vi.fn(),
@@ -225,6 +229,7 @@ describe('LifeRuntime', () => {
       setDepth: vi.fn(() => image),
       setVisible: vi.fn(() => image),
       setPosition: vi.fn(() => image),
+      setAlpha: vi.fn(() => image),
       destroy: vi.fn(),
     };
     const add = {
