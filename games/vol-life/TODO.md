@@ -83,9 +83,6 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 - [ ] **[P0] HabitatRenderer için regresyon testi yazılsın.** WorldDomain
       geometry testleri var ama renderer'ın contour'u ekranda nasıl stroke
       ettiğinin regresyonu yok — "sim math doğru, presentation yanlış" sınıfı.
-- [ ] **[P0] Masked field conservation testleri eklensin.** Mevcut testlerde
-      unmasked conservation var; masked conservation, habitat→Void leakage
-      yokluğu ve edge nutrient conservation testleri eksik.
 - [ ] **[P1] `FieldSet.sample()` bilinear sampling habitat mask'ini hesaba
       katsın.** Edge yakınındaki sample habitat value + Void cell=0 karışımı
       alıyor — kaynak yapay şekilde düşer. Tasarım kararı verilmesi gerekiyor.
@@ -770,6 +767,17 @@ matter-seeding, lifecycle, behavior, evolution`; FNV-1a + SplitMix32
       boşaltması onu tüketmez. Hayalet 250 ms sonra ilk olayın konumundan ve
       renginden çiziliyor; ölen slot kanonik boşalırken olay değişmiyor
       (`WorldEvents.test.ts`, `VoidSink.test.ts`, `VoidDeathRenderer.test.ts`).
+
+- [x] **[P0] Masked field conservation testleri eklendi.** 64² ve 256² gerçek
+      habitat maskesinde 20 tam difüzyon turundan sonra habitat toplamı
+      korunuyor; tolerans float32 yuvarlamasından TÜRETİLDİ (kütle × 2^-24 × 8
+      × tur), deneyerek büyütülmedi. Void hücreleri difüzyon, yenilenme ve ışık
+      çiziminden sonra `LifeWorld` düzeyinde 600 tick boyunca tam 0; kıyı
+      hücresine konan tekil kütle Void'e geçmiyor; depolama kenarına değen
+      habitat hücreleri korunuyor; maskeli 2/4/8/16 bantlı tur tam difüzyonla
+      bayt düzeyinde eşit; yenilenmenin kaynak terimi olduğu ayrıca sınandı
+      (`fieldConservation.test.ts`, 11 test). Kaçak BULUNMADI: düzeltme
+      gerekmedi, sözleşme testle kilitlendi.
 
 ### 2026-09-15 — DESIGN/TODO uzlaştırması
 
