@@ -195,9 +195,27 @@ kanıtlar: tek bağlı habitat, iç delik yok, asgari boğaz genişliği, sını
 eğrilik ve asgari güvenli iç bölge. İnce boğaz, kapalı cep veya delik üreten bir
 seed ekolojiyi üretim artefaktına bağımlı hâle getirir.
 
+Ön-kayıtlı sınırlar ve 1000 seedlik korpusta ölçülen en kötü değerler: habitat
+4-komşulukla tek bileşen, Void 8-komşulukla taranır ve kenara değmeyen bileşen
+(iç delik) bulunmaz; eğrilik yarıçapı ≥ 2 × fringe + 4 birim; boğaz ≥ 2 × kernel
+cutoff, tanımı konturda en az çeyrek çevre ayrık iki nokta arasındaki en küçük
+mesafedir; güvenli iç bölge (d ≥ fringe + yama yarıçapı) habitat alanının en az
+%50'si. Güvenli iç bölge koşulunun config düzeyinde kanıtlanabilen muhafazakâr
+alt sınırı `validateSubstrateConfig`tedir: iki yarıçap ayrı ayrı küçültülür,
+analitik oran varsayılan adayda 0,561 iken gerçek maskede 0,592 ölçülmüştür.
+Seeding araması yama yarıçapını 90 birimin üstüne çıkardığında örnek bu kapıda
+geçersiz sayılır.
+
 Field solver habitat maskesini kullanır. Void hücreleri kaynak üretmez;
 habitat–Void yüzeyinde difüzyon no-flux davranır. Karşı kenarlar komşu değildir
 ve wrap yoktur.
+
+Örnekleme de maske farkındadır: `FieldSet.sample` çift doğrusal ağırlıklardan
+Void hücrelerini düşer ve kalan ağırlıkları yeniden normalize eder. Dört hücre
+de habitatsa sonuç maskesiz bilineer yolla bayt düzeyinde aynıdır; dört hücre de
+Void ise 2×2 şablonu çevreleyen tek hücrelik halkadaki en yakın habitat hücresi
+deterministik sırayla okunur, o da yoksa 0 döner. Aksi hâlde kıyıdaki her örnek
+Void'in sıfırını ağırlığa katar ve kaynak yapay olarak düşerdi.
 
 ### Duvar yoktur; üç Void bölgesi vardır
 
@@ -581,6 +599,14 @@ normal yönünde öteleyip çizgiyle bağlamak reddedilmiştir: yüksek eğrilik
 ötelenen noktalar çaprazlanır ve düz kiriş Void'den habitatın içine geçen çizgi
 olarak görünür. Mesafe rasterı kendiliğinden kapalıdır ve fizikle aynı mesafe
 kaynağını kullanır.
+
+Raster KURULUMDA koşmaz. 512² doku tek seferde 723 ms ölçüldü (2026-09-16) ve
+§18 yükleme sırasında ana iş parçacığını kilitlemeyi yasaklar; doku bu yüzden
+kare bütçesiyle (`habitatGlowRasterBudgetMs`, 6 ms ≈ 4 satır/kare) satır satır
+dolar ve ~128 karede tamamlanır. Bant yazımı bandın dışındaki baytlara dokunmaz:
+bütün bantlar koştuğunda sonuç tek seferlik rasterle bayt bayt aynıdır. Dünya
+kurulumunda kilitlenen toplam süre bu değişiklikle 1535,7 ms'den 138,3 ms'ye
+indi (kalanı: domain 2, 256² maske 19,1, 256² gölge 117,2 ms).
 
 Void ölümü sunuma değişmez bir olay olarak teslim edilir: stable ID, tick,
 konum, hız, görsel tür ve normal kopyasını taşır. Renderer ölüm animasyonu
@@ -1020,12 +1046,25 @@ izdüşümün bedelidir; yaklaşık mesafe bantta 0,9 birime kadar şaşırıyor
 maliyet kaba tarama kurulum tablosuna taşınarak 21,8 µs'den düşürüldü: aynı
 doğrulukla (tam alan hatası 4,3e-5 birim) p50 20,47 ms yerine 3,00 ms.
 
-512→2048 ölçekleme oranı 2026-09-14'te ≈ 14,2×, 2026-09-15 tekrarında 12,6×
-(p50 1,21 → 15,17 ms) ölçüldü; `quality.json` tavanı bugün 14'tür. Bu ölçüm
-sabit yerel yoğunlukta yapılmadığı için (seeder 4× parçacığı aynı yamalara
-gömer) O(n²) sızmasını ayırt etmez. V1 çekirdeğindeki sabit yoğunluk ölçümü 4,94
-ve tavanı 5,5 idi. Algoritmik ve ürün benchmark'larının ayrılması ve kapının
-algoritmik seriye bağlanması açık iştir (TODO).
+Ölçekleme benchmark'ı İKİ seri raporlar ve ikisi farklı soruya cevap verir
+(2026-09-16):
+
+| Seri                  | 512 p50 | 2048 p50 | Oran (5 koşu medyanı) | Azami hücre doluluğu |
+| --------------------- | ------- | -------- | --------------------- | -------------------- |
+| Algoritmik (tabakalı) | 3,01 ms | 14,26 ms | **4,752**             | 38 → 40              |
+| Ürün (gerçek seeder)  | 2,41 ms | 22,87 ms | 9,744                 | 105 → 416            |
+
+Algoritmik seride parçacıklar habitat içinde tabakalı ızgaraya yerleşir; dünya
+kenarı da parçacıkla birlikte iki katına çıktığı için YEREL yoğunluk girdiden
+bağımsızdır. Süre oranı ancak o zaman hash + kuvvet karmaşıklığını ölçer ve
+doğrusal davranışı (4,0) karesel sızmadan (16,0) ayırır. `quality.json` tavanı
+bu seriye bağlıdır: medyan × 1,10 = **5,23**.
+
+Ürün serisi gerçek seeder'ı kullanır; sabit yama yarıçapı yüzünden 4× parçacık
+aynı yamalara gömülür ve hücre doluluğu 105'ten 416'ya çıkar. Buradaki 9,744'lük
+oran gerçek iş yükünü anlatır ama karmaşıklık kapısı olamaz — eski 14 tavanı bu
+seriyi ölçtüğü için O(n²) sızmasına tehlikeli biçimde yakındı. Her iki seri de
+aktif sayı, azami hücre doluluğu, parçacık başına aday çift ve p50/p95 taşır.
 Bu ölçümler production qualification DEĞİLDİR; yalnızca substrate'in hedef
 cihaz bütçesinde çalışabilirliğinin tabanıdır. Android cihaz ölçümleri ayrı
 gerektirir.

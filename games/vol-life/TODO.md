@@ -71,21 +71,19 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       ölçüldü (§11); Chromium WebGL ve Android cihaz ölçümleri hâlâ gerekli.
 - [ ] **[P0] Adım 2 kabulü.** Determinism, güvenli alan, crossing, fringe,
       aktif hash kanıtlandı; cihaz akıcılığı hâlâ gerekli.
-- [ ] **[P0] HabitatRenderer contour polyline yerine SDF distance
-      rasterizasyonuna geçsin.** Mevcut kontur: contour noktalarını local SDF
-      normal yönünde offset → `strokePoints(closed=true)`. Yüksek curvature'da
-      crossing/folding oluşabilir; tek kötü sample sonraki noktaya uzaklaşır,
-      Graphics düz çizgi bağlar — Lenovo'da Void'den dünyanın içine geçen çizgi
-      bug'ı bu mekanizmadan kaynaklanıyor. Çözüm: edge/glow'u doğrudan SDF
-      distance'dan rasterize et (distance ≈ 0 → glow, dışarı → decay, içeri →
-      hafif transition). Kendiliğinden kapalı, chord üretemez, fizik ile aynı
-      distance source'u kullanır.
-- [ ] **[P0] HabitatRenderer için regresyon testi yazılsın.** WorldDomain
-      geometry testleri var ama renderer'ın contour'u ekranda nasıl stroke
-      ettiğinin regresyonu yok — "sim math doğru, presentation yanlış" sınıfı.
-- [ ] **[P1] `FieldSet.sample()` bilinear sampling habitat mask'ini hesaba
-      katsın.** Edge yakınındaki sample habitat value + Void cell=0 karışımı
-      alıyor — kaynak yapay şekilde düşer. Tasarım kararı verilmesi gerekiyor.
+- [ ] **[P1] `FieldRenderer` doku yüklemesi Mali'de EGL image yeniden tahsisi
+      tetikliyor.** Lenovo TB350FU'da ölçüldü (2026-09-16): logcat'te
+      `MALI DEBUG BAD ALLOC from gles_texture_egl_image_get_2d_template`,
+      saniyede ~12,4 kayıt. Oran raster dolum penceresinde 80/10 sn, dolum
+      bittikten sonra 124/10 sn — yani kaynak `HabitatRenderer`in parçalı
+      rasteri DEĞİL, alan tick'i başına koşan `FieldRenderer.render()`
+      (`putData` + `refresh`, 256² doku, `LifeRuntime:200` `fieldsChanged`
+      koşuluna bağlı). Kare bütçesi bugün sağlam (fps 100–106, tepe kare
+      25–33 ms, ANR yok), ama her alan tick'inde doku yeniden tahsis etmek
+      Mali'de gereksiz bir yol. Çözüm yönü: dokuyu yerinde güncelleyen
+      (alt-dikdörtgen/`texSubImage`) yola geçmek ya da alan dokusunu yalnız
+      değişen bölge için yüklemek; kapanmadan önce aynı ölçüm cihazda
+      tekrarlanır.
 - [ ] **[P0] Camera v2.1: Aktif input event jitter'ı render cadence'den
       ayrılsın.** Mevcut drag: pointermove event → camera position değiştir →
       apply state — event cadence'ine bağlı. Mouse eventleri düzensiz gelirse
@@ -101,9 +99,6 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       WORLD (overview) → ECOSYSTEM (açılış) → ORGANISM → MICRO. Fiziksel dünya
       boyutu şimdi değiştirilmez — kamera algısını düzelt, fiziksel boyutu
       Step 3 sonucu üzerinden seç.
-- [ ] **[P1] Habitat topoloji değişmezleri seed korpusunda testle kilitlensin.**
-      Tek bağlı habitat, iç delik yok, asgari boğaz genişliği, sınırlı eğrilik,
-      asgari güvenli iç bölge.
 
 ## Adım 3 — Morphology Discovery v2
 
@@ -188,7 +183,13 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 - [ ] **[P0] Adım 3 kabulü üçlüdür.** Technical gate + long-horizon +
       browser/masaüstü/Samsung/Lenovo kullanıcı audition'ı birlikte geçer.
       Kullanıcı onayı olmadan `[x]` olmaz.
-- [ ] **Alan ve ekoloji kuvvetleri morphology kanıtlanana kadar kapalı kalır.**
+- [x] **Alan ve ekoloji kuvvetleri morphology kanıtlanana kadar kapalı kalır.**
+      Kanıt ölçülebilir hâle geldi: aynı seed'li iki dünyadan birinin bütün
+      alanları her tick'ten önce deterministik olarak bozuluyor (240 tick) ve
+      parçacık konum/hız/tür/aktiflik dizileri ile kuvvet tamponları bayt
+      düzeyinde aynı kalıyor; bozmanın gerçekleştiği alan farkıyla ayrıca
+      gösteriliyor (`fieldForcesClosed.test.ts`). _Adım 5'te bu kapı bilinçli
+      olarak yeniden açılacak ve test o zaman kırmızıya dönecek._
 
 ### Adım 3 — araştırma sistemi düzeltmeleri
 
@@ -287,18 +288,6 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       muhasebesini atlıyor; perturbation'lar koşu bittikten sonra aynı dünyada
       zincirleme uygulanıyor; hedef seçimi bütün spec'lerde aynı tohumu
       kullanıyor; 0,15 mutlak eşik %10 madde kaybını anında recovered sayıyor.
-- [ ] **[P0] Benchmark scaling kapısı düzeltilsin.** Mevcut scaling threshold
-      ~14× — 4× input için 16× tam O(n²) ideal kötü uç. 14 quadratic'e
-      tehlikeli derecede yakın. Eski 5.5 gate çok daha anlamlıydı.
-      DESIGN/TODO/quality arasında eski 4.94/5.5 ve yeni ~14 tutarsızlık
-      gösteriyor.
-- [ ] **[P1] Algorithmic vs product benchmark ayrılsın.** Algorithmic:
-      controlled uniform/stratified distribution, local density gerçekten sabit
-      — hash+force complexity. Product: gerçek production seeder — actual
-      workload. Mevcut benchmark 512/1024 ve 2048/2048'de aynı patchCount=4,
-      patchRadius=70 kullanıyor — 2048'de aynı dört patch içine ~4× fazla
-      particle gömülüyor, local occupancy sabit değil. Rapor: max cell
-      occupancy, candidate pairs, p50/p95, active count.
 - [ ] **[P0] Gerçek 3-particle orbit geometrik fixture testi yazılsın.**
       PhaseClassifier.test.ts sentetik scalar metric objeleri veriyor — gerçek
       3-particle orbit oluşturup classifier'ın patolojik sayıp saymadığı testi
@@ -790,6 +779,65 @@ matter-seeding, lifecycle, behavior, evolution`; FNV-1a + SplitMix32
       "Işın boyunca mesafe azalır" iddiası gerçek SDF'de geçerli olmadığı için
       (referans da 4,0 birim artıyor) testin sözleşmesi "her ışında işaret tam
       bir kez değişir" olarak düzeltildi.
+
+- [x] **[P1] Habitat topoloji değişmezleri seed korpusunda testle kilitlendi.**
+      Ön-kayıtlı sınırlar (tek bağlı habitat 4-komşulukla, iç delik yok 8-
+      komşulukla, eğrilik yarıçapı ≥ 52, boğaz ≥ 192, güvenli iç bölge ≥ %50)
+      1000 seedlik korpusta 256² ve 1024² maskeyle koşuyor
+      (`tests/long/habitatTopology.long.ts`); birim kapısında dört seedlik alt
+      küme var (`habitatTopology.test.ts`). 64 seedlik ön ölçümde en kötü
+      değerler: eğrilik 186,0, boğaz 544,7, güvenli oran %59,18 — ihlal yok,
+      üreteç düzeltmesi gerekmedi. Ölçümün ayırt ettiği, bilerek delik açılmış
+      ve ikiye bölünmüş maskelerle sınandı. Config düzeyinde kanıtlanabilen
+      koşul `validateSubstrateConfig`e girdi: muhafazakâr analitik alt sınır
+      (varsayılan adayda 0,561 vs ölçülen 0,592) yama yarıçapı 90 birimi
+      aştığında örneği reddediyor.
+
+- [x] **[P0] HabitatRenderer kontur polyline yerine SDF mesafe rasterine
+      geçti ve [P0] regresyon testi yazıldı.** Kontur noktalarını normal
+      yönünde öteleyip `strokePoints` ile bağlayan yol TAMAMEN silindi;
+      `rasterizeHabitatGlow` ışımayı doğrudan C6 mesafesinden çiziyor (Void'de
+      üstel sönüm, |d|≈0'da Gauss kıyı vurgusu, içeride `interiorFadeUnits`'te
+      tam sıfıra inen geçiş). Doku statiktir, nabız yalnız alfayı oynatır.
+      Raster kurulumda koşmuyor: 512² tek seferde 723 ms ölçüldü ve DESIGN §18
+      yüklemede ana iş parçacığını kilitlemeyi yasaklıyor, bu yüzden kare
+      bütçesiyle (6 ms) satır satır doluyor; birleşen bantlar tek seferlik
+      rasterle bayt bayt aynı. Kurulumda kilitlenen süre 1535,7 → 138,3 ms.
+      Testler: keskin iç bükey yıldız domaininde geçiş bandı dışında alfa tam
+      sıfır, kıyı vurgusu 720 noktada kesintisiz, Void'de alfa monoton azalıyor,
+      aynı girdi aynı bayt, doku bir kez kurulup destroy'da siliniyor ve spy
+      testi `strokePoints`/`lineStyle`ın hiç çağrılmadığını kanıtlıyor.
+      E2E (Chromium, üç zoom): eşik her görüntüden Otsu ile türüyor (sahne
+      tohumu rastgele olduğu için sabit eşik kayıyordu — ölçüldü), parlak maske
+      kıyı bandı kadar aşındırılıyor ve iddia kirişin imzasına bağlı: ölçülen
+      iç karanlık oran 0,00000, en uzun karanlık köşegen 0,0000. Lenovo
+      TB350FU'da kurulup üç kare doğrudan incelendi: kiriş yok, kenar sürekli,
+      fps 100–111, tepe kare 25–33 ms, ANR yok.
+
+- [x] **[P1] `FieldSet.sample()` habitat maskesini hesaba katıyor.** K4 kuralı
+      uygulandı: Void ağırlıkları düşülür ve kalan ağırlıklar yeniden normalize
+      edilir; dört hücre de habitatsa sonuç maskesiz bilineerle BAYT düzeyinde
+      aynıdır; dört hücre de Void ise 2×2 şablonu çevreleyen halkadaki en yakın
+      habitat hücresi deterministik sırayla okunur, o da yoksa 0 döner; sonlu
+      olmayan koordinat reddedilir. Sabit alanda habitatın her örneği (kıyı
+      hücreleri dahil) tam olarak sabiti veriyor, örnek şablon aralığını
+      aşmıyor, uzak Void noktası 0 dönüyor ve 2000 sorguda NaN üretilmiyor
+      (`fieldMaskedSample.test.ts`, 6 test). Kural DESIGN §2'ye yazıldı.
+
+- [x] **[P0] Benchmark scaling kapısı düzeltildi ve [P1] algoritmik/ürün
+      benchmark'ı ayrıldı.** Eski 14 tavanı karmaşıklığı değil YOĞUNLUĞU
+      ölçüyordu: benchmark üretim seeder'ını kullanıyor, sabit yama yarıçapı
+      yüzünden 4× parçacık aynı yamalara gömülüyor ve azami hücre doluluğu
+      105'ten 416'ya çıkıyordu. `scripts/benchmark/particleScaling.ts` iki seri
+      raporluyor — algoritmik (habitat içinde tabakalı ızgara; doluluk 38 → 40,
+      yani girdiden bağımsız) ve ürün (gerçek seeder) — ve her ikisi de aktif
+      sayı, azami hücre doluluğu, parçacık başına aday çift, p50/p95 taşıyor.
+      Kapı algoritmik seriye bağlandı: beş ayrı koşuda oranlar 4,654–4,827,
+      medyan 4,752, tavan medyan × 1,10 = **5,23** (K7 sınırı 6; doğrusal ideal
+      4,0). Ürün serisinin medyanı 9,744 raporlanıyor ama kapılanmıyor.
+      `pnpm exec just scaling` art arda 5 kez yeşil; rapor şeması ve ayrımın
+      kendisi `tests/benchmark/particleScaling.test.ts`te kilitli. DESIGN §11
+      ve `quality.json` aynı tek sayıya indi.
 
 ### 2026-09-15 — DESIGN/TODO uzlaştırması
 
