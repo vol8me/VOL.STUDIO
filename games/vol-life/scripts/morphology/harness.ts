@@ -59,10 +59,15 @@ export const defaultHarnessConfig: ResearchHarnessConfig = {
     autocorrelationLag: 60,
   },
   cluster: {
-    neighborRadiusUnits: 32,
+    epsUnits: 32,
+    minPts: 3,
     minClusterSize: 4,
     minContinuityTicks: 30,
+    maxGapTicks: 10,
     overlapThreshold: 0.5,
+    centroidGateUnits: 64,
+    sizeRatioGate: 3,
+    sampleIntervalTicks: 10,
   },
   phase: {
     deadActiveThreshold: 0.05,
