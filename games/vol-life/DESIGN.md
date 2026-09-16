@@ -920,6 +920,44 @@ Finalist ölçümleri en az şunları zaman serisi olarak ayırır:
 - Void dwell/loss ve fringe bağımlılığı;
 - seed robustness.
 
+Başlangıç sağkalımı eşikleri §8.4'ün ön-kayıt kuralı gereği burada, herhangi
+bir aday değerlendirmesinden ÖNCE sabitlenir ve
+`scripts/morphology/startupSurvival.ts` içindeki `defaultStartupGate` ile
+birebir aynıdır:
+
+| Kural               | Ön-kayıtlı eşik                                                                               |
+| ------------------- | --------------------------------------------------------------------------------------------- |
+| Başlangıç sağkalımı | 10 sn madde koruma medyanı ≥ 0,95, en kötü ondalık dilim ≥ 0,90; 30 sn medyanı ≥ 0,90         |
+| Erken patlama       | İlk 10 sn'nin hiçbir örneğinde hız tavanındaki parçacık payı > 0,10 değil                     |
+| Transient yatışması | Ortalama hız ≤ 4 sn içinde 20–60 sn medyanının 1,2 katının altına iner; seed'lerin ≥ %90'ında |
+
+Belgenin karşılığını vermediği üç tanım kararı:
+
+- `startupVoidLoss` ilk 10 saniyede Void'e giden maddenin başlangıç maddesine
+  oranıdır.
+- `timeToStructuralRegime` KALICI yatışmadır: banda ilk değmek yetmez, seri
+  sonuna kadar altında kalınmalıdır. Bant serinin kendi kuyruk medyanından
+  türediği için "ilk değme" ölçütü her koşuyu saniyeler içinde yatışmış
+  gösterirdi; kalıcılık şartı satırı sertleştirir, gevşetmez.
+- Seed'ler arası toplama §8.4'ün "Aday toplama" satırıdır: bir sert gerekçe
+  seed'lerin ≥ %50'sinde ise korpus düşer. "En kötü ondalık dilim"
+  nearest-rank yüzdeliktir ve 10'dan az seed'li korpusta anlam taşımaz.
+
+Taban ölçümü (12 seed × 60 simüle saniye, uzun testle aynı ölçüm hattı):
+
+| Yapılandırma                       | 10 sn medyan | En kötü ondalık | 30 sn medyan | Erken patlama        | Sonuç                    |
+| ---------------------------------- | ------------ | --------------- | ------------ | -------------------- | ------------------------ |
+| Bugünkü varsayılan aday            | 0,828        | 0,488           | 0,609        | seed'lerin %100'ünde | DÜŞER (STARTUP_MASSACRE) |
+| Zayıf kuvvet, yüksek sönüm, v₀ = 0 | 1,000        | 1,000           | 0,998        | %0                   | GEÇER                    |
+
+Transient yatışması satırı ölçüldü ve bu substratta AYIRT ETMİYOR: 24 koşumun
+24'ünde ortalama hız t = 0'da zaten bandın altındadır, çünkü tohumlanan
+başlangıç hızı (≈ 0,126) kararlı rejim bandının altındadır ve gerçek transient
+tepesi 2,0–45,9 sn arasında sonradan oluşur. Kural ön-kayıtlı olduğu için
+DEĞİŞTİRİLMEDİ; §8.4'ün "ölçülmüş imkânsızlık" hükmü uyarınca bulgu buraya
+yazıldı ve satırın yeniden tanımlanması insan kararına bırakıldı.
+`speedPeakSeconds` o kararın verisini taşır.
+
 Morphology iki senaryoda ayrı ölçülür. Intrinsic senaryo güvenli iç bölgede
 yapının kendini koruyup korumadığını, hareketini, deformasyonunu ve
 recovery'sini ölçer. Void-stress senaryosu fringe yakınında tidal deformasyonu,

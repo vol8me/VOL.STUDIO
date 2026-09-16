@@ -2,6 +2,7 @@ import type { ParticleStore } from '@/runtime/sim/ParticleStore';
 import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
 import type { ClusterState } from './clusterTracker';
 import { measureClusterShape, memberChurn, type Point } from './clusterShape';
+import { percentile } from './stats';
 import { measureTrajectory, resolveLagTicks, type TrajectoryFrame } from './trajectory';
 
 /** Metrik döngüleri sıcak yoldur; örnekleme tamponu tahsis etmez. */
@@ -460,9 +461,4 @@ export class MorphologyMetrics {
       this.frames.shift();
     }
   }
-}
-
-function percentile(sorted: readonly number[], ratio: number): number {
-  if (sorted.length === 0) return 0;
-  return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * ratio))];
 }
