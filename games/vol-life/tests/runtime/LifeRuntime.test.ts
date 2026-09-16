@@ -5,8 +5,7 @@ function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = nu
   const snapshot = { tick: 12 } as never;
   const domain = {
     bbox: { x: 0, y: 0, width: 1024, height: 1024 },
-    distance: () => 200,
-    normal: () => ({ x: 1, y: 0 }),
+    sampleDistanceAndNormal: () => ({ distance: 200, normalX: 1, normalY: 0 }),
     contour: () => new Float32Array(64),
     digest: 'abcdef0123456789',
     storage: { x: 0, y: 0, width: 1024, height: 1024 },

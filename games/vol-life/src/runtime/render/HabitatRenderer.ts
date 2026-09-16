@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import type { WorldDomain } from '@/runtime/sim/WorldDomain';
+import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
 
 export interface HabitatStyle {
   readonly contourSegments: number;
@@ -60,12 +60,12 @@ export class HabitatRenderer {
   private contourPoints(offsetUnits: number): ContourPoint[] {
     const raw = this.domain.contour(this.style.contourSegments);
     const points: { x: number; y: number }[] = [];
-    const normal = { x: 0, y: 0 };
+    const sample: DomainSample = { distance: 0, normalX: 1, normalY: 0 };
     for (let index = 0; index < raw.length; index += 2) {
       const x = raw[index];
       const y = raw[index + 1];
-      this.domain.normal(x, y, normal);
-      points.push({ x: x + normal.x * offsetUnits, y: y + normal.y * offsetUnits });
+      this.domain.sampleDistanceAndNormal(x, y, sample);
+      points.push({ x: x + sample.normalX * offsetUnits, y: y + sample.normalY * offsetUnits });
     }
     return points as ContourPoint[];
   }

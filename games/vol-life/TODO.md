@@ -101,12 +101,6 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       WORLD (overview) → ECOSYSTEM (açılış) → ORGANISM → MICRO. Fiziksel dünya
       boyutu şimdi değiştirilmez — kamera algısını düzelt, fiziksel boyutu
       Step 3 sonucu üzerinden seç.
-- [ ] **[P0] `WorldDomain` dünya birimi mesafe sözleşmesi kurulsun.**
-      `sampleDistanceAndNormal(x, y)`: mesafe dünya birimidir ya da hata sınırı
-      belirtilmiş yaklaşıktır; normal sonlu ve birim uzunluktadır. Polar
-      yaklaşımın hatası yoğun kontur mesafesine karşı ölçülür ve fringe
-      bandında testle sınırlanır; fringe, `edgeDistance`, render fade ve algı
-      ham örtük fonksiyon ölçeğine dayanmaz (DESIGN §2).
 - [ ] **[P1] Habitat topoloji değişmezleri seed korpusunda testle kilitlensin.**
       Tek bağlı habitat, iç delik yok, asgari boğaz genişliği, sınırlı eğrilik,
       asgari güvenli iç bölge.
@@ -778,6 +772,24 @@ matter-seeding, lifecycle, behavior, evolution`; FNV-1a + SplitMix32
       bayt düzeyinde eşit; yenilenmenin kaynak terimi olduğu ayrıca sınandı
       (`fieldConservation.test.ts`, 11 test). Kaçak BULUNMADI: düzeltme
       gerekmedi, sözleşme testle kilitlendi.
+
+- [x] **[P0] `WorldDomain` dünya birimi mesafe sözleşmesi kuruldu.** Tek API
+      `sampleDistanceAndNormal(x, y, out?)`; `distance` + `normal` çifti
+      kaldırıldı ve bütün tüketiciler (VoidSink, seeder, ParticleRenderer,
+      HabitatRenderer, snapshot doğrulaması, morfoloji metrikleri) taşındı.
+      Mesafe artık yaklaşım değil, kontura Newton izdüşümü. Ön-kayıtlı sınırlar
+      (bantta ≤ 0,5 birim, ‖n‖ = 1 ± 1e-6, açı ≤ 2°) 200 seedlik korpusta
+      tutuyor: 728.040 bant örneğinde maks hata 4,93e-5, ihlal 0; işaret ve bant
+      üyeliği uyuşmazlığı 0; maks açı 0,0499°
+      (`tests/long/habitatDistance.long.ts`, 239,6 sn). Birim kapısında dört
+      seedlik alt küme koşar (`habitatDistanceContract.test.ts`).
+      Kırmızı kanıt: polar yaklaşım bantta maks 0,914 birim şaşırıyordu.
+      Ara sürümde bulunan gerçek hata (merkez çevresinde 63,3 birim) ölçümle
+      saptanıp kapatıldı; başlangıç eşiği ve kaba kontur tablosu ölçümle seçildi.
+      Bedeli DESIGN §11'de: kernel p50 1,21 → 3,00 ms, p95 1,44 → 4,90 ms.
+      "Işın boyunca mesafe azalır" iddiası gerçek SDF'de geçerli olmadığı için
+      (referans da 4,0 birim artıyor) testin sözleşmesi "her ışında işaret tam
+      bir kez değişir" olarak düzeltildi.
 
 ### 2026-09-15 — DESIGN/TODO uzlaştırması
 

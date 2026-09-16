@@ -19,6 +19,11 @@ function fringe(): FringeGenes {
   return defaultPhysicsGenome.fringe;
 }
 
+function normalAt(sdf: HabitatSDF, x: number, y: number): { x: number; y: number } {
+  const sample = sdf.sampleDistanceAndNormal(x, y);
+  return { x: sample.normalX, y: sample.normalY };
+}
+
 describe('VoidSink', () => {
   it('geçersiz fringe genişliği kurulumda reddeder', () => {
     expect(() => new VoidSink(domain(), { widthUnits: 0, tidalStrength: 1 })).toThrow(RangeError);
@@ -57,7 +62,7 @@ describe('VoidSink', () => {
     const contour = sdf.contour(64);
     const cx = contour[0];
     const cy = contour[1];
-    const normal = sdf.normal(cx, cy);
+    const normal = normalAt(sdf, cx, cy);
     const inside = { x: cx - normal.x * 2, y: cy - normal.y * 2 };
     particles.activateSlot(inside.x, inside.y, 0, 0, 0);
 
@@ -76,7 +81,7 @@ describe('VoidSink', () => {
     const contour = sdf.contour(64);
     const cx = contour[0];
     const cy = contour[1];
-    const normal = sdf.normal(cx, cy);
+    const normal = normalAt(sdf, cx, cy);
     const inside = { x: cx - normal.x * 2, y: cy - normal.y * 2 };
     particles.activateSlot(inside.x, inside.y, 0, 0, 0);
 
@@ -95,7 +100,7 @@ describe('VoidSink', () => {
     const contour = sdf.contour(64);
     const cx = contour[0];
     const cy = contour[1];
-    const normal = sdf.normal(cx, cy);
+    const normal = normalAt(sdf, cx, cy);
     const outside = { x: cx + normal.x * 10, y: cy + normal.y * 10 };
     particles.activateSlot(outside.x, outside.y, 0, 0, 3);
     particles.activateSlot(STORAGE.x + STORAGE.width / 2, STORAGE.y + STORAGE.height / 2, 0, 0, 0);
@@ -119,7 +124,7 @@ describe('VoidSink', () => {
     const particles = new ParticleStore(1);
     const reservoir = new MatterReservoir();
     const contour = sdf.contour(64);
-    const normal = sdf.normal(contour[0], contour[1]);
+    const normal = normalAt(sdf, contour[0], contour[1]);
     const outside = { x: contour[0] + normal.x * 10, y: contour[1] + normal.y * 10 };
     particles.activateSlot(outside.x, outside.y, -0.75, 1.25, 2);
     const stableId = particles.stableId[0];

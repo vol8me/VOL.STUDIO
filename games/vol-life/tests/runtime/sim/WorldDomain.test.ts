@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { habitatConfig } from '@/config/habitat';
 import { worldConfig } from '@/config/world';
-import type { HabitatSDF } from '@/runtime/sim/WorldDomain';
+import type { DomainSample, HabitatSDF } from '@/runtime/sim/WorldDomain';
 import {
   createHabitatDomain,
   rasterizeHabitatMask,
@@ -15,36 +15,55 @@ function domain(seed = 7, config = habitatConfig): HabitatSDF {
   return createHabitatDomain(STORAGE, config, seed);
 }
 
+function distanceAt(sdf: HabitatSDF, x: number, y: number): number {
+  return sdf.sampleDistanceAndNormal(x, y).distance;
+}
+
+function normalAt(sdf: HabitatSDF, x: number, y: number): { x: number; y: number } {
+  const sample = sdf.sampleDistanceAndNormal(x, y);
+  return { x: sample.normalX, y: sample.normalY };
+}
+
 describe('HabitatSDF işaret sözleşmesi', () => {
   it('merkez pozitif, kontur sıfıra yakın, depolama köşesi negatiftir', () => {
     const sdf = domain();
     const contour = sdf.contour(64);
 
-    expect(sdf.distance(CENTER.x, CENTER.y)).toBeGreaterThan(100);
-    expect(sdf.distance(CENTER.x, CENTER.y)).toBeLessThanOrEqual(
-      Math.min(sdf.distance(CENTER.x + 1, CENTER.y), sdf.distance(CENTER.x, CENTER.y + 1)) + 1.5,
+    expect(distanceAt(sdf, CENTER.x, CENTER.y)).toBeGreaterThan(100);
+    expect(distanceAt(sdf, CENTER.x, CENTER.y)).toBeLessThanOrEqual(
+      Math.min(distanceAt(sdf, CENTER.x + 1, CENTER.y), distanceAt(sdf, CENTER.x, CENTER.y + 1)) +
+        1.5,
     );
     for (let index = 0; index < contour.length; index += 2) {
-      expect(Math.abs(sdf.distance(contour[index], contour[index + 1]))).toBeLessThan(1e-3);
+      expect(Math.abs(distanceAt(sdf, contour[index], contour[index + 1]))).toBeLessThan(1e-3);
     }
-    expect(sdf.distance(STORAGE.x, STORAGE.y)).toBeLessThan(0);
-    expect(sdf.distance(STORAGE.x + STORAGE.width, STORAGE.y + STORAGE.height)).toBeLessThan(0);
+    expect(distanceAt(sdf, STORAGE.x, STORAGE.y)).toBeLessThan(0);
+    expect(distanceAt(sdf, STORAGE.x + STORAGE.width, STORAGE.y + STORAGE.height)).toBeLessThan(0);
   });
 
-  it('her ışın boyunca mesafe kesin azalır: cep, kendini kesme ve girinti yoktur', () => {
+  /*
+   * Merkezden çıkan her ışında işaret TAM BİR KEZ değişir: cep, delik ve
+   * kendini kesen kontur olsaydı ışın habitattan Void'e birden çok kez geçerdi.
+   *
+   * "Mesafe ışın boyunca hep azalır" İDDİA EDİLMEZ, çünkü gerçek işaretli
+   * mesafede doğru değildir: merkez çevresinde en yakın kontur noktası
+   * değiştikçe mesafe artabilir. Ölçüldü — bağımsız referans (20.000 segmentli
+   * kontur) aynı ışınlarda 4,0 birime kadar artış veriyor. Eski test bu artışı
+   * yakalamıyordu çünkü polar yaklaşım yapısı gereği monotondu; yani ölçtüğü
+   * şey geometri değil, yaklaşımın kendisiydi.
+   */
+  it('her ışında işaret tam bir kez değişir: cep, delik ve kendini kesme yoktur', () => {
     const sdf = domain(3);
     for (let step = 0; step < 72; step++) {
       const theta = (step / 72) * Math.PI * 2;
-      let previous = Number.POSITIVE_INFINITY;
       let signChanges = 0;
       let lastSign = 1;
       for (let rho = 4; rho <= STORAGE.width / 2; rho += 4) {
-        const value = sdf.distance(
+        const value = distanceAt(
+          sdf,
           CENTER.x + Math.cos(theta) * rho,
           CENTER.y + Math.sin(theta) * rho,
         );
-        expect(value).toBeLessThanOrEqual(previous + 1e-6);
-        previous = value;
         const sign = value >= 0 ? 1 : -1;
         if (sign !== lastSign) signChanges++;
         lastSign = sign;
@@ -59,22 +78,36 @@ describe('HabitatSDF işaret sözleşmesi', () => {
     for (let index = 0; index < contour.length; index += 2) {
       const x = contour[index];
       const y = contour[index + 1];
-      const normal = sdf.normal(x, y);
+      const normal = normalAt(sdf, x, y);
       expect(Math.hypot(normal.x, normal.y)).toBeCloseTo(1, 6);
       const outwardDot = normal.x * (x - CENTER.x) + normal.y * (y - CENTER.y);
       expect(outwardDot).toBeGreaterThan(0);
-      expect(sdf.distance(x + normal.x * 2, y + normal.y * 2)).toBeLessThan(0);
-      expect(sdf.distance(x - normal.x * 2, y - normal.y * 2)).toBeGreaterThan(0);
+      expect(distanceAt(sdf, x + normal.x * 2, y + normal.y * 2)).toBeLessThan(0);
+      expect(distanceAt(sdf, x - normal.x * 2, y - normal.y * 2)).toBeGreaterThan(0);
     }
   });
 
   it('merkezde gradyan tanımsızken normal sabit ve sonludur; `out` tamponu yeniden kullanılır', () => {
     const sdf = domain(5, { ...habitatConfig, noiseAmplitudeRatio: 0 });
-    const out = { x: 9, y: 9 };
-    const result = sdf.normal(CENTER.x, CENTER.y, out);
+    const out: DomainSample = { distance: 9, normalX: 9, normalY: 9 };
+    const result = sdf.sampleDistanceAndNormal(CENTER.x, CENTER.y, out);
     expect(result).toBe(out);
-    expect(Number.isFinite(out.x) && Number.isFinite(out.y)).toBe(true);
-    expect(Math.hypot(out.x, out.y)).toBeCloseTo(1, 6);
+    expect(Number.isFinite(out.normalX) && Number.isFinite(out.normalY)).toBe(true);
+    expect(Math.hypot(out.normalX, out.normalY)).toBeCloseTo(1, 6);
+    expect(out.distance).toBeGreaterThan(0);
+  });
+
+  it('sonlu olmayan örnekleme noktasını reddeder', () => {
+    const sdf = domain();
+    expect(() => sdf.sampleDistanceAndNormal(Number.NaN, 0)).toThrow(RangeError);
+    expect(() => sdf.sampleDistanceAndNormal(0, Number.POSITIVE_INFINITY)).toThrow(RangeError);
+  });
+
+  it('aynı girdi aynı örneği verir', () => {
+    const sdf = domain(19);
+    const first = sdf.sampleDistanceAndNormal(CENTER.x + 120, CENTER.y - 40);
+    const second = sdf.sampleDistanceAndNormal(CENTER.x + 120, CENTER.y - 40);
+    expect(second).toEqual(first);
   });
 });
 
@@ -89,7 +122,7 @@ describe('HabitatSDF determinizm ve geometri', () => {
     expect(left.contour(32)).toEqual(right.contour(32));
     expect(other.digest).not.toBe(left.digest);
     expect(other.contour(32)).not.toEqual(left.contour(32));
-    expect(other.distance(CENTER.x, CENTER.y)).toBeGreaterThan(0);
+    expect(distanceAt(other, CENTER.x, CENTER.y)).toBeGreaterThan(0);
   });
 
   it('gürültü kapalıyken kontur saf superellipse’tir ve simetriktir', () => {
@@ -134,9 +167,9 @@ describe('HabitatSDF determinizm ve geometri', () => {
   it('depolama dikdörtgeni çağıranın sonradan değiştirmesinden yalıtılır', () => {
     const storage = { ...STORAGE };
     const sdf = createHabitatDomain(storage, habitatConfig, 4);
-    const before = sdf.distance(CENTER.x, CENTER.y);
+    const before = distanceAt(sdf, CENTER.x, CENTER.y);
     storage.width = 10;
-    expect(sdf.distance(CENTER.x, CENTER.y)).toBe(before);
+    expect(distanceAt(sdf, CENTER.x, CENTER.y)).toBe(before);
     expect(sdf.storage.width).toBe(STORAGE.width);
   });
 });
@@ -152,7 +185,11 @@ describe('habitat rasterleştirme', () => {
     const cell = STORAGE.width / resolution;
     for (let y = 0; y < resolution; y++) {
       for (let x = 0; x < resolution; x++) {
-        const distance = sdf.distance(STORAGE.x + (x + 0.5) * cell, STORAGE.y + (y + 0.5) * cell);
+        const distance = distanceAt(
+          sdf,
+          STORAGE.x + (x + 0.5) * cell,
+          STORAGE.y + (y + 0.5) * cell,
+        );
         expect(mask[y * resolution + x]).toBe(distance >= 0 ? 1 : 0);
       }
     }

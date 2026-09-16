@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { particlePalette } from '@/config/particles';
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
-import type { WorldDomain } from '@/runtime/sim/WorldDomain';
+import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
 
 export interface ParticleGlyphStyle {
   readonly radiusUnits: number;
@@ -20,7 +20,7 @@ const STRETCH_EPSILON = 1e-3;
  */
 export class ParticleRenderer {
   private readonly graphics: Phaser.GameObjects.Graphics;
-  private readonly normal = { x: 0, y: 0 };
+  private readonly sample: DomainSample = { distance: 0, normalX: 1, normalY: 0 };
   private destroyed = false;
 
   constructor(
@@ -56,8 +56,8 @@ export class ParticleRenderer {
       let angle: number;
       let stretch: number;
       if (fringeStretch >= velocityStretch && this.domain) {
-        this.domain.normal(drawX, drawY, this.normal);
-        angle = Math.atan2(this.normal.y, this.normal.x);
+        this.domain.sampleDistanceAndNormal(drawX, drawY, this.sample);
+        angle = Math.atan2(this.sample.normalY, this.sample.normalX);
         stretch = fringeStretch;
       } else {
         angle = Math.atan2(vy[slot], vx[slot]);

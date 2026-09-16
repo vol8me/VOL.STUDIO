@@ -5,7 +5,7 @@ import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 import { validateMatterReservoirSnapshot } from '@/runtime/sim/MatterReservoir';
 import { validateParticleSnapshot } from '@/runtime/sim/ParticleStore';
 import { validateRandomStreamStates } from '@/runtime/sim/RandomStreams';
-import type { WorldDomain } from '@/runtime/sim/WorldDomain';
+import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
 import { validateWorldMetadata } from '@/runtime/sim/WorldMetadata';
 
 /**
@@ -55,6 +55,7 @@ export function validateLifeWorldSnapshot(
   const { particles } = snapshot;
   const maxSpeedSquared = (genome.dynamics.maxSpeedUnitsPerReferenceTick + 1e-5) ** 2;
   const storage = world.boundsUnits;
+  const sample: DomainSample = { distance: 0, normalX: 1, normalY: 0 };
   for (let slot = 0; slot < particleConfig.capacity; slot++) {
     if (particles.active[slot] === 0) continue;
     const x = particles.x[slot];
@@ -64,7 +65,9 @@ export function validateLifeWorldSnapshot(
       x < storage.x + storage.width &&
       y >= storage.y &&
       y < storage.y + storage.height;
-    const insideHabitat = domain ? domain.distance(x, y) >= 0 : true;
+    const insideHabitat = domain
+      ? domain.sampleDistanceAndNormal(x, y, sample).distance >= 0
+      : true;
     if (
       !insideStorage ||
       !insideHabitat ||

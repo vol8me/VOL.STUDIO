@@ -1,7 +1,7 @@
 import { PARTICLE_TYPE_COUNT, type PhysicsGenome } from '@/config/genome';
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
 import type { SimRandom } from '@/runtime/sim/rng';
-import type { WorldDomain } from '@/runtime/sim/WorldDomain';
+import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
 
 const PLACEMENT_ATTEMPTS = 96;
 
@@ -82,7 +82,7 @@ function placeInside(
   for (let attempt = 0; attempt < PLACEMENT_ATTEMPTS; attempt++) {
     const x = bbox.x + random.next() * bbox.width;
     const y = bbox.y + random.next() * bbox.height;
-    if (domain.distance(x, y) >= minDistance) return { x, y };
+    if (distanceAt(domain, x, y) >= minDistance) return { x, y };
   }
   return habitatCenter(domain);
 }
@@ -96,12 +96,19 @@ function placeNear(
 ): { x: number; y: number } {
   for (let attempt = 0; attempt < PLACEMENT_ATTEMPTS; attempt++) {
     const point = propose();
-    if (domain.distance(point.x, point.y) >= minDistance) return point;
+    if (distanceAt(domain, point.x, point.y) >= minDistance) return point;
   }
-  return domain.distance(center.x, center.y) >= minDistance
+  return distanceAt(domain, center.x, center.y) >= minDistance
     ? center
     : placeInside(random, domain, minDistance);
 }
+
+/** Yerleştirme yalnız mesafeyi sorar; normal aynı örneklemede gelir ve atılır. */
+function distanceAt(domain: WorldDomain, x: number, y: number): number {
+  return domain.sampleDistanceAndNormal(x, y, placementSample).distance;
+}
+
+const placementSample: DomainSample = { distance: 0, normalX: 1, normalY: 0 };
 
 function habitatCenter(domain: WorldDomain): { x: number; y: number } {
   return { x: domain.bbox.x + domain.bbox.width / 2, y: domain.bbox.y + domain.bbox.height / 2 };

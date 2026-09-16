@@ -2,7 +2,7 @@ import type { FringeGenes } from '@/config/genome';
 import type { MatterReservoir } from '@/runtime/sim/MatterReservoir';
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
 import type { VoidDeathEvent } from '@/runtime/sim/WorldEvents';
-import type { WorldDomain } from '@/runtime/sim/WorldDomain';
+import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
 
 /**
  * Üç Void bölgesi (DESIGN.md §2): güvenli alanda kuvvet KESİNLİKLE sıfır, dar
@@ -10,7 +10,7 @@ import type { WorldDomain } from '@/runtime/sim/WorldDomain';
  * Bounce, clamp ve restitution yoktur.
  */
 export class VoidSink {
-  private readonly scratch = { x: 0, y: 0 };
+  private readonly scratch: DomainSample = { distance: 0, normalX: 1, normalY: 0 };
 
   constructor(
     private readonly domain: WorldDomain,
@@ -37,13 +37,12 @@ export class VoidSink {
     let affected = 0;
     for (let slot = 0; slot < capacity; slot++) {
       if (active[slot] === 0) continue;
-      const distance = this.domain.distance(x[slot], y[slot]);
-      edgeDistance[slot] = distance;
-      if (strength === 0 || distance < 0 || distance >= width) continue;
-      const stress = strength * (1 - distance / width);
-      const normal = this.domain.normal(x[slot], y[slot], this.scratch);
-      forceX[slot] += normal.x * stress;
-      forceY[slot] += normal.y * stress;
+      const sample = this.domain.sampleDistanceAndNormal(x[slot], y[slot], this.scratch);
+      edgeDistance[slot] = sample.distance;
+      if (strength === 0 || sample.distance < 0 || sample.distance >= width) continue;
+      const stress = strength * (1 - sample.distance / width);
+      forceX[slot] += sample.normalX * stress;
+      forceY[slot] += sample.normalY * stress;
       affected++;
     }
     return affected;
@@ -67,8 +66,8 @@ export class VoidSink {
     let crossed = 0;
     for (let slot = 0; slot < capacity; slot++) {
       if (active[slot] === 0) continue;
-      if (this.domain.distance(x[slot], y[slot]) >= 0) continue;
-      const normal = this.domain.normal(x[slot], y[slot], this.scratch);
+      const sample = this.domain.sampleDistanceAndNormal(x[slot], y[slot], this.scratch);
+      if (sample.distance >= 0) continue;
       out.push(
         Object.freeze({
           kind: 'void-death' as const,
@@ -79,8 +78,8 @@ export class VoidSink {
           vx: vx[slot],
           vy: vy[slot],
           type: type[slot],
-          normalX: normal.x,
-          normalY: normal.y,
+          normalX: sample.normalX,
+          normalY: sample.normalY,
         }),
       );
       particles.deactivateSlot(slot);

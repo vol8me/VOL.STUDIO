@@ -66,7 +66,7 @@ describe('seedInitialMatter', () => {
 
     for (let slot = 0; slot < particles.capacity; slot++) {
       if (particles.active[slot] === 0) continue;
-      const distance = sdf.distance(particles.x[slot], particles.y[slot]);
+      const { distance } = sdf.sampleDistanceAndNormal(particles.x[slot], particles.y[slot]);
       expect(distance).toBeGreaterThanOrEqual(defaultPhysicsGenome.fringe.widthUnits);
     }
   });

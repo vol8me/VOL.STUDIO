@@ -167,6 +167,19 @@ SDF işaret sözleşmesi tektir: pozitif habitat içi, sıfır kıyı, negatif V
 Mesafe ve normal aynı `WorldDomain` sahibinden gelir; renderer, fizik, kamera
 ve ilerideki algı sistemi ayrı geometri hesaplamaz.
 
+Mesafe artık yaklaşık değil, gerçek izdüşüm mesafesidir: `sampleDistanceAndNormal`
+sorgu noktasından kontura Newton izdüşümü yapar. Uzak noktalarda arama,
+kurulumda bir kez hesaplanan 256 noktalı kaba kontur tablosundan başlar — sorgu
+açısından başlayan Newton merkez çevresinde başka bir durağan noktaya kaçıyordu
+(ölçüldü: iç bölgede 63,3 birime kadar hata). Ölçülen sonuç: depolama
+dikdörtgeninin tamamında (6 seed, 24.576 örnek) en büyük hata 4,3e-5 birim,
+1 birimi aşan örnek yok; 200 seedlik korpus `test:long`da koşar.
+
+Gerçek işaretli mesafe ışın boyunca MONOTON DEĞİLDİR: merkez çevresinde en yakın
+kontur noktası değiştikçe mesafe artabilir (bağımsız referansta 4,0 birime kadar).
+Geometri sözleşmesi bu yüzden monotonluk değil, her ışında işaretin tam bir kez
+değişmesidir — cep, delik ve kendini kesen kontur böyle dışlanır.
+
 İşaret tek başına yetmez; fringe genişliği, `edgeDistance`, render fade ve
 ileride algı mesafenin büyüklüğüne dayanır. Bu yüzden:
 
@@ -999,6 +1012,13 @@ upload, frame p50/p95 ve görsel pariteyle en az bir alternatifle kıyaslar.
 | 256² field tam tazeleme   | ≈ 5,4 ms  | —         |
 | 512²/4-band field/tick    | ≈ 5,6 ms  | —         |
 | 512²/4-band tam tazeleme  | ≈ 22,4 ms | —         |
+
+**Mesafe sözleşmesinin bedeli** (2026-09-16, C6): kernel tick maliyeti 512
+parçacıkta p50 1,21 → 3,00 ms, p95 1,44 → 4,90 ms yükseldi. Artış gerçek
+izdüşümün bedelidir; yaklaşık mesafe bantta 0,9 birime kadar şaşırıyordu ve
+`edgeDistance`, fringe stresi ile render fade aynı sayıyı tüketiyor. Çağrı başına
+maliyet kaba tarama kurulum tablosuna taşınarak 21,8 µs'den düşürüldü: aynı
+doğrulukla (tam alan hatası 4,3e-5 birim) p50 20,47 ms yerine 3,00 ms.
 
 512→2048 ölçekleme oranı 2026-09-14'te ≈ 14,2×, 2026-09-15 tekrarında 12,6×
 (p50 1,21 → 15,17 ms) ölçüldü; `quality.json` tavanı bugün 14'tür. Bu ölçüm

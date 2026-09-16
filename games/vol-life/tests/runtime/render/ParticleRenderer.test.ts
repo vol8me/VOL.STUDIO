@@ -124,7 +124,8 @@ describe('ParticleRenderer', () => {
     const contour = sdf.contour(64);
     const cx = contour[0];
     const cy = contour[1];
-    const normal = sdf.normal(cx, cy);
+    const boundary = sdf.sampleDistanceAndNormal(cx, cy);
+    const normal = { x: boundary.normalX, y: boundary.normalY };
     const inside = { x: cx - normal.x * 2, y: cy - normal.y * 2 };
     particles.activateSlot(inside.x, inside.y, 0, 0, 0);
     particles.edgeDistance[0] = 2;

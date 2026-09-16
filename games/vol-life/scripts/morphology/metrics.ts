@@ -1,5 +1,8 @@
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
-import type { WorldDomain } from '@/runtime/sim/WorldDomain';
+import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
+
+/** Metrik döngüleri sıcak yoldur; örnekleme tamponu tahsis etmez. */
+const domainSample: DomainSample = { distance: 0, normalX: 1, normalY: 0 };
 
 export interface MorphologySample {
   readonly tick: number;
@@ -229,7 +232,8 @@ export class MorphologyMetrics {
     let count = 0;
     for (const slot of active) {
       if (
-        domain.distance(particles.x[slot], particles.y[slot]) < this.config.voidDistanceThreshold
+        domain.sampleDistanceAndNormal(particles.x[slot], particles.y[slot], domainSample)
+          .distance < this.config.voidDistanceThreshold
       ) {
         count++;
       }
@@ -241,7 +245,8 @@ export class MorphologyMetrics {
     let count = 0;
     for (const slot of active) {
       if (
-        domain.distance(particles.x[slot], particles.y[slot]) < this.config.fringeDistanceThreshold
+        domain.sampleDistanceAndNormal(particles.x[slot], particles.y[slot], domainSample)
+          .distance < this.config.fringeDistanceThreshold
       ) {
         count++;
       }
