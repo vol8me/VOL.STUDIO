@@ -925,11 +925,11 @@ bir aday değerlendirmesinden ÖNCE sabitlenir ve
 `scripts/morphology/startupSurvival.ts` içindeki `defaultStartupGate` ile
 birebir aynıdır:
 
-| Kural               | Ön-kayıtlı eşik                                                                               |
-| ------------------- | --------------------------------------------------------------------------------------------- |
-| Başlangıç sağkalımı | 10 sn madde koruma medyanı ≥ 0,95, en kötü ondalık dilim ≥ 0,90; 30 sn medyanı ≥ 0,90         |
-| Erken patlama       | İlk 10 sn'nin hiçbir örneğinde hız tavanındaki parçacık payı > 0,10 değil                     |
-| Transient yatışması | Ortalama hız ≤ 4 sn içinde 20–60 sn medyanının 1,2 katının altına iner; seed'lerin ≥ %90'ında |
+| Kural               | Ön-kayıtlı eşik                                                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Başlangıç sağkalımı | 10 sn madde koruma medyanı ≥ 0,95, en kötü ondalık dilim ≥ 0,90; 30 sn medyanı ≥ 0,90                                                                   |
+| Erken patlama       | İlk 10 sn'nin hiçbir örneğinde hız tavanındaki parçacık payı > 0,10 değil                                                                               |
+| Transient yatışması | Ortalama hız 20–60 sn medyanının 1,2 katının altına iner ve orada KALIR; seed'lerin ≥ %90'ında. Ön-kayıtlı "4 sn" sabiti emekli edildi; gerekçe aşağıda |
 
 Belgenin karşılığını vermediği üç tanım kararı:
 
@@ -945,18 +945,36 @@ Belgenin karşılığını vermediği üç tanım kararı:
 
 Taban ölçümü (12 seed × 60 simüle saniye, uzun testle aynı ölçüm hattı):
 
-| Yapılandırma                       | 10 sn medyan | En kötü ondalık | 30 sn medyan | Erken patlama        | Sonuç                    |
-| ---------------------------------- | ------------ | --------------- | ------------ | -------------------- | ------------------------ |
-| Bugünkü varsayılan aday            | 0,828        | 0,488           | 0,609        | seed'lerin %100'ünde | DÜŞER (STARTUP_MASSACRE) |
-| Zayıf kuvvet, yüksek sönüm, v₀ = 0 | 1,000        | 1,000           | 0,998        | %0                   | GEÇER                    |
+| Yapılandırma                       | 10 sn medyan | En kötü ondalık | 30 sn medyan | Erken patlama        | Yatışan seed | Sonuç                |
+| ---------------------------------- | ------------ | --------------- | ------------ | -------------------- | ------------ | -------------------- |
+| Bugünkü varsayılan aday            | 0,828        | 0,488           | 0,609        | seed'lerin %100'ünde | %67          | ÜÇ SATIRDAN DA DÜŞER |
+| Zayıf kuvvet, yüksek sönüm, v₀ = 0 | 1,000        | 1,000           | 0,998        | %0                   | %100         | GEÇER                |
 
-Transient yatışması satırı ölçüldü ve bu substratta AYIRT ETMİYOR: 24 koşumun
-24'ünde ortalama hız t = 0'da zaten bandın altındadır, çünkü tohumlanan
-başlangıç hızı (≈ 0,126) kararlı rejim bandının altındadır ve gerçek transient
-tepesi 2,0–45,9 sn arasında sonradan oluşur. Kural ön-kayıtlı olduğu için
-DEĞİŞTİRİLMEDİ; §8.4'ün "ölçülmüş imkânsızlık" hükmü uyarınca bulgu buraya
-yazıldı ve satırın yeniden tanımlanması insan kararına bırakıldı.
-`speedPeakSeconds` o kararın verisini taşır.
+Ön-kayıtlı "4 saniye" sabiti ÖLÇÜLMÜŞ İMKÂNSIZLIK gerekçesiyle emekli edildi;
+§8.4 bu değişikliğe yalnız bu şartla ve yazılı gerekçeyle izin verir. Sabit,
+hızın yüksek başlayıp söndüğü varsayımıyla yazılmıştı. Ölçülen şekil bunun
+tersidir: hız tohumlanan düşük değerden (≈ 0,126) başlar, tepeye çıkar ve ancak
+saniyeler sonra kararlı banda iner. Ölçülen tepe anları 2,0–45,9 sn, ölçülen
+yatışma süreleri 5,3–52,1 sn. Hiçbir yapılandırma 4 saniyede yatışmaz;
+dolayısıyla o sabit hiçbir şeyi ayırt edemiyordu. Bant (1,2×) ve seed payı
+(≥ %90) ön-kayıtlı hâlleriyle KORUNDU, yalnız süre sabiti gözlem penceresine
+(60 sn) çekildi.
+
+Değişiklik bir adayı GEÇİRMEK için yapılmadı: yeni hâliyle bugünkü varsayılan
+aday bu satırdan da düşüyor (seed'lerin %67'si yatışıyor, eşik %90) ve üç
+satırın üçünden birden kalıyor. Satırın gerçekten ayırt ettiğinin kanıtı budur.
+
+`transientOvershoot` (tepe / kararlı medyan) başlangıç şiddetinin büyüklüğünü
+taşır: varsayılan adayda 1,1–11,3×, karşı uçta 1,1–2,2×. En büyük aşımı yaşayan
+seed'ler, bir dakikanın sonunda hâlâ rejime girmemiş olanlardır.
+
+UYARI — kapıyı geçen karşı uç yapılandırma bir aday ÖNERİSİ DEĞİLDİR. Kararlı
+rejimdeki ortalama hızı 0,020–0,053'tür; §8.4'ün STASIS eşiği hız tavanının
+%2'si, yani 0,048'dir ve 12 seed'in 11'i bunun altındadır. Bu kesin bir STASIS
+hükmü değil güçlü bir işarettir: kuralın ≥ 60 sn süre şartı, 40 sn'lik ölçüm
+penceresiyle doğrulanamaz. O dünya sağkalımı
+hiçbir şey olmadığı için geçer. Başlangıç sağkalımı kapısı tek başına kabul
+sinyali değildir; DEAD/STASIS satırlarıyla birlikte okunur.
 
 Morphology iki senaryoda ayrı ölçülür. Intrinsic senaryo güvenli iç bölgede
 yapının kendini koruyup korumadığını, hareketini, deformasyonunu ve

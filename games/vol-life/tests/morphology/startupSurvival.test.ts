@@ -90,31 +90,41 @@ describe('Başlangıç sağkalımı metrikleri (E9)', () => {
     expect(metrics.timeToStructuralRegime).toBeCloseTo(2, 6);
     expect(metrics.speedPeakSeconds).toBe(0);
     expect(metrics.speedPeak).toBeCloseTo(5, 6);
+    expect(metrics.transientOvershoot).toBeCloseTo(5, 6);
   });
 
   /*
-   * GERÇEK ÖLÇÜMÜN ŞEKLİ (12 seed × 2 yapılandırma, 2026-09-16): hız düşük
-   * başlar, YÜKSELİR ve tepeyi 4 sn'den sonra yapar. §8.4'ün lafzı böyle bir
-   * koşuda sıfır verir; satırın ayırt etmediği burada kayıtlıdır, gizlenmez.
+   * GERÇEK ÖLÇÜMÜN ŞEKLİ (12 seed × 2 yapılandırma): hız DÜŞÜK başlar,
+   * yükselir, tepeyi saniyeler sonra yapar. "Banda ilk değme" ölçütü böyle bir
+   * koşuya sıfır verir ve patlamayı hiç görmez; kalıcı yatışma dünyanın
+   * gerçekten ne zaman rejime girdiğini söyler.
    */
-  it('yükselen transientte kural sıfır verir, tepe gerçek anı gösterir', () => {
+  it('yükselen transientte yatışma tepeden SONRA ölçülür', () => {
     const metrics = measureStartupSurvival(
       makeSeries(1, { meanSpeed: (s) => (s < 30 ? 0.1 + s * 0.05 : 1.2) }),
     );
 
-    expect(metrics.timeToStructuralRegime).toBe(0);
-    expect(metrics.speedPeakSeconds).toBeGreaterThan(defaultStartupGate.settlingSeconds);
+    expect(metrics.timeToStructuralRegime).toBeCloseTo(30, 6);
+    expect(metrics.speedPeakSeconds).toBeCloseTo(29.9, 1);
+    expect(metrics.transientOvershoot).toBeGreaterThan(1.2);
   });
 
-  /* Kural İLK geçişi ölçer: sonradan bandı aşmak sonucu değiştirmez. */
-  it('ilk geçişten sonra bandı aşmak yatışma anını değiştirmez', () => {
+  it('koşu sonunda hâlâ bandın üstündeyse rejime hiç girmemiştir', () => {
+    const metrics = measureStartupSurvival(makeSeries(1, { meanSpeed: (s) => (s < 50 ? 1 : 5) }));
+
+    expect(metrics.timeToStructuralRegime).toBe(Number.POSITIVE_INFINITY);
+    expect(metrics.transientOvershoot).toBeCloseTo(5, 6);
+  });
+
+  /* Kalıcılık şartının çalıştığı yer: geç aşımlar yatışmayı İLERİ iter. */
+  it('geç aşımlar yatışma anını ileri iter', () => {
     const metrics = measureStartupSurvival(
       makeSeries(1, {
         meanSpeed: (s) => (s < 2 ? 5 : s >= 20 && s < 51 && Math.floor(s) % 10 === 0 ? 9 : 1),
       }),
     );
 
-    expect(metrics.timeToStructuralRegime).toBeCloseTo(2, 6);
+    expect(metrics.timeToStructuralRegime).toBeCloseTo(51, 6);
     expect(metrics.speedPeakSeconds).toBeCloseTo(20, 6);
   });
 
@@ -202,7 +212,7 @@ describe('Başlangıç sağkalımı kapısı (E9)', () => {
 
   it('yalnız transient yatışması satırı düşer', () => {
     const verdict = evaluateStartupSurvival(
-      corpus(12, (seed) => (seed <= 3 ? { meanSpeed: (s) => (s < 6 ? 5 : 1) } : {})),
+      corpus(12, (seed) => (seed <= 3 ? { meanSpeed: (s) => (s < 50 ? 1 : 5) } : {})),
     );
 
     expect(verdict.settledSeedFraction).toBeCloseTo(0.75, 6);

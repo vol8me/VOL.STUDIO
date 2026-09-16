@@ -47,13 +47,15 @@ export interface StartupMetrics {
   readonly startupVoidLoss: number;
   readonly earlyBurstPeak: number;
   /**
-   * §8.4'ün LAFZI: ortalama hızın bandın altına ilk indiği an (sn). Bu
-   * substratta ayırt etmediği ÖLÇÜLDÜ; gerekçe ve sayılar DESIGN §8'de.
+   * Ortalama hızın bandın altına inip koşu sonuna kadar ORADA KALDIĞI en erken
+   * an (sn). Kalınmazsa `Infinity`: dünya gözlem penceresi bitmeden yapısal
+   * rejime girmemiştir.
    */
   readonly timeToStructuralRegime: number;
-  /** Ortalama hızın tepe yaptığı an ve değeri; dejenerasyonun kanıtı. */
   readonly speedPeakSeconds: number;
   readonly speedPeak: number;
+  /** Tepe / kararlı medyan. Başlangıç şiddetinin büyüklüğü; kapı satırı değil. */
+  readonly transientOvershoot: number;
 }
 
 export interface StartupGate {
@@ -62,6 +64,10 @@ export interface StartupGate {
   readonly retention30MedianMin: number;
   readonly earlyBurstMaxCappedFraction: number;
   readonly earlyWindowSeconds: number;
+  /**
+   * Ön-kayıtlı "4 sn" EMEKLİ EDİLDİ; gerekçe ve ölçüm DESIGN §8'de. Bant (1,2×)
+   * ve seed payı (%90) ön-kayıtlı hâlleriyle korundu.
+   */
   readonly settlingSeconds: number;
   readonly settlingSeedFractionMin: number;
   /** §8.4 "Aday toplama": bir sert gerekçe seed'lerin ≥ %50'sinde ise FAIL. */
@@ -77,7 +83,7 @@ export const defaultStartupGate: StartupGate = {
   retention30MedianMin: 0.9,
   earlyBurstMaxCappedFraction: 0.1,
   earlyWindowSeconds: 10,
-  settlingSeconds: 4,
+  settlingSeconds: 60,
   settlingSeedFractionMin: 0.9,
   seedFailureFractionForReject: 0.5,
   transientWindowStartSeconds: 20,
@@ -122,8 +128,9 @@ export function measureStartupSurvival(
   }
 
   const early = series.samples.filter((s) => s.seconds <= gate.earlyWindowSeconds);
-  const band = settlingBand(series.samples, gate);
-  const settleIndex = series.samples.findIndex((s) => s.meanSpeed < band);
+  const steady = steadyMeanSpeed(series.samples, gate);
+  const band = steady * gate.transientBandMultiple;
+  const settleIndex = sustainedSettleIndex(series.samples, band);
   const speedPeakSample = series.samples.reduce(
     (best, sample) => (sample.meanSpeed > best.meanSpeed ? sample : best),
     series.samples[0],
@@ -137,18 +144,36 @@ export function measureStartupSurvival(
     startupVoidLoss: sampleAt(series, gate.earlyWindowSeconds).voidLossTotal / series.initialCount,
     earlyBurstPeak: early.reduce((peak, s) => Math.max(peak, s.cappedFraction), 0),
     timeToStructuralRegime:
-      settleIndex >= 0 ? series.samples[settleIndex].seconds : Number.POSITIVE_INFINITY,
+      settleIndex < series.samples.length
+        ? series.samples[settleIndex].seconds
+        : Number.POSITIVE_INFINITY,
     speedPeakSeconds: speedPeakSample.seconds,
     speedPeak: speedPeakSample.meanSpeed,
+    transientOvershoot: steady > 0 ? speedPeakSample.meanSpeed / steady : 0,
   };
 }
 
 /**
- * Yatışma bandı: 20–60 sn ortalama hız medyanının 1,2 katı. Pencere serinin
- * İÇİNDEN gelir; boşsa banda karar verilemez ve hata atılır — sessizce sıfır
- * bant üretmek her koşuyu "yatışmış" gösterirdi.
+ * Yatışma KALICIDIR. Ölçüldü: hız düşük başlar, tepeye çıkar ve ancak
+ * saniyeler-dakikalar sonra kararlı banda iner; "banda ilk değme" ölçütü
+ * dünyanın patlamasını görmeden sıfır verirdi, çünkü başlangıç hızı zaten
+ * bandın altındadır.
  */
-function settlingBand(samples: readonly StartupSample[], gate: StartupGate): number {
+function sustainedSettleIndex(samples: readonly StartupSample[], band: number): number {
+  let index = samples.length;
+  for (let cursor = samples.length - 1; cursor >= 0; cursor--) {
+    if (samples[cursor].meanSpeed >= band) break;
+    index = cursor;
+  }
+  return index;
+}
+
+/**
+ * Kararlı rejim hızı: 20–60 sn ortalama hız medyanı. Pencere serinin İÇİNDEN
+ * gelir; boşsa karar verilemez ve hata atılır — sessizce sıfır döndürmek her
+ * koşuyu "yatışmış" gösterirdi.
+ */
+function steadyMeanSpeed(samples: readonly StartupSample[], gate: StartupGate): number {
   const window = samples.filter(
     (s) =>
       s.seconds >= gate.transientWindowStartSeconds && s.seconds <= gate.transientWindowEndSeconds,
@@ -158,7 +183,7 @@ function settlingBand(samples: readonly StartupSample[], gate: StartupGate): num
       `Yatışma penceresi (${gate.transientWindowStartSeconds}–${gate.transientWindowEndSeconds} sn) örnek içermiyor.`,
     );
   }
-  return medianOf(window.map((s) => s.meanSpeed)) * gate.transientBandMultiple;
+  return medianOf(window.map((s) => s.meanSpeed));
 }
 
 function sampleAt(series: StartupSeries, seconds: number): StartupSample {

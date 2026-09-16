@@ -69,6 +69,8 @@ describe('E9 — başlangıç sağkalımı kapısı gerçek fizikte', () => {
     expect(verdict.startupMassacre).toBe(true);
     expect(verdict.initialSurvival).toBe(false);
     expect(verdict.passed).toBe(false);
+    // Transient satırı da ayırt ediyor: seed'lerin bir kısmı 60 sn'de rejime girmiyor.
+    expect(verdict.transientSettling).toBe(false);
     // Kayıp marjinal değil: 10 sn medyanı eşiğin belirgin altında.
     expect(verdict.retention10Median).toBeLessThan(defaultStartupGate.retention10MedianMin);
     expect(verdict.retention30Median).toBeLessThan(defaultStartupGate.retention30MedianMin);
@@ -81,6 +83,7 @@ describe('E9 — başlangıç sağkalımı kapısı gerçek fizikte', () => {
     expect(verdict.startupMassacre).toBe(false);
     // Ölçüldü: bu yapılandırma üç satırın da altından geçiyor.
     expect(verdict.passed).toBe(true);
+    expect(verdict.transientSettling).toBe(true);
     expect(verdict.retention10Median).toBeGreaterThanOrEqual(
       defaultStartupGate.retention10MedianMin,
     );
