@@ -1,17 +1,8 @@
 import type { FringeGenes } from '@/config/genome';
 import type { MatterReservoir } from '@/runtime/sim/MatterReservoir';
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
+import type { VoidDeathEvent } from '@/runtime/sim/WorldEvents';
 import type { WorldDomain } from '@/runtime/sim/WorldDomain';
-
-/** Sunuma bırakılan salt okunur ölüm olayı; simülasyona geri dönemez. */
-export interface VoidCrossing {
-  readonly stableId: number;
-  readonly x: number;
-  readonly y: number;
-  readonly type: number;
-  readonly normalX: number;
-  readonly normalY: number;
-}
 
 /**
  * Üç Void bölgesi (DESIGN.md §2): güvenli alanda kuvvet KESİNLİKLE sıfır, dar
@@ -58,26 +49,40 @@ export class VoidSink {
     return affected;
   }
 
-  /** Kıyıyı geçen aktif parçacıkları aynı tick içinde düşürür ve rezervuara yazar. */
+  /**
+   * Kıyıyı geçen aktif parçacıkları aynı tick içinde düşürür ve rezervuara yazar.
+   * Üretilen olay DONDURULMUŞ bir kopyadır: slot hemen yeniden kullanılsa bile
+   * sunum ve tarih aynı ölümü anlatmayı sürdürür.
+   */
   collectCrossings(
     particles: ParticleStore,
     reservoir: MatterReservoir,
-    out: VoidCrossing[],
+    tick: number,
+    out: VoidDeathEvent[],
   ): number {
-    const { active, x, y, type, stableId, capacity } = particles;
+    if (!Number.isSafeInteger(tick) || tick < 0) {
+      throw new RangeError(`Olay tick'i negatif olmayan tam sayı olmalı: ${tick}`);
+    }
+    const { active, x, y, vx, vy, type, stableId, capacity } = particles;
     let crossed = 0;
     for (let slot = 0; slot < capacity; slot++) {
       if (active[slot] === 0) continue;
       if (this.domain.distance(x[slot], y[slot]) >= 0) continue;
       const normal = this.domain.normal(x[slot], y[slot], this.scratch);
-      out.push({
-        stableId: stableId[slot],
-        x: x[slot],
-        y: y[slot],
-        type: type[slot],
-        normalX: normal.x,
-        normalY: normal.y,
-      });
+      out.push(
+        Object.freeze({
+          kind: 'void-death' as const,
+          tick,
+          stableId: stableId[slot],
+          x: x[slot],
+          y: y[slot],
+          vx: vx[slot],
+          vy: vy[slot],
+          type: type[slot],
+          normalX: normal.x,
+          normalY: normal.y,
+        }),
+      );
       particles.deactivateSlot(slot);
       crossed++;
     }

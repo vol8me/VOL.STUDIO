@@ -18,7 +18,7 @@ import { HabitatRenderer } from '@/runtime/render/HabitatRenderer';
 import { ParticleRenderer } from '@/runtime/render/ParticleRenderer';
 import { VoidDeathRenderer } from '@/runtime/render/VoidDeathRenderer';
 import { LifeWorld, type LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
-import type { VoidCrossing } from '@/runtime/sim/VoidSink';
+import type { TransientPresentationEvent } from '@/runtime/sim/WorldEvents';
 import { rasterizeHabitatShade, type WorldDomain } from '@/runtime/sim/WorldDomain';
 import { createFreshWorldMetadata, type WorldMetadata } from '@/runtime/sim/WorldMetadata';
 
@@ -29,7 +29,7 @@ interface RuntimeWorld {
   step(): boolean;
   snapshot(): LifeWorldSnapshot;
   restore(snapshot: LifeWorldSnapshot): void;
-  drainVoidCrossings(): VoidCrossing[];
+  drainTransientPresentationEvents(): readonly TransientPresentationEvent[];
 }
 
 interface RuntimeFieldRenderer {
@@ -43,7 +43,7 @@ interface RuntimeAnimated {
 }
 
 interface RuntimeDeathRenderer {
-  push(crossings: readonly VoidCrossing[], nowMs: number): void;
+  push(events: readonly TransientPresentationEvent[], nowMs: number): void;
   render(nowMs: number): void;
   destroy(): void;
 }
@@ -189,8 +189,8 @@ export class LifeRuntime {
       fieldsChanged = this.world.step() || fieldsChanged;
     });
     if (fieldsChanged) this.fieldRenderer.render(this.world.fields);
-    const crossings = this.world.drainVoidCrossings();
-    if (crossings.length > 0) this.deathRenderer.push(crossings, this.elapsedMs);
+    const presentationEvents = this.world.drainTransientPresentationEvents();
+    if (presentationEvents.length > 0) this.deathRenderer.push(presentationEvents, this.elapsedMs);
     this.particleRenderer.render(this.world.particles, this.clock.getInterpolationAlpha());
     this.deathRenderer.render(this.elapsedMs);
     return frame;

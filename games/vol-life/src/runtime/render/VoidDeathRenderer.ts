@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import { particlePalette } from '@/config/particles';
-import type { VoidCrossing } from '@/runtime/sim/VoidSink';
+import type { TransientPresentationEvent } from '@/runtime/sim/WorldEvents';
 
 export interface VoidDeathStyle {
   readonly durationMs: number;
@@ -49,7 +49,7 @@ export class VoidDeathRenderer {
   }
 
   /** Yeni geçişleri alır; tavan aşılırsa EN ESKİ hayaletler düşer (LOD). */
-  push(crossings: readonly VoidCrossing[], nowMs: number): void {
+  push(crossings: readonly TransientPresentationEvent[], nowMs: number): void {
     if (this.destroyed || crossings.length === 0) return;
     for (const crossing of crossings) {
       this.ghosts.push({

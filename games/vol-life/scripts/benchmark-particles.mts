@@ -8,7 +8,8 @@ import { ParticleSpatialHash } from '../src/runtime/sim/ParticleSpatialHash';
 import { ParticleStore } from '../src/runtime/sim/ParticleStore';
 import { seedInitialMatter } from '../src/runtime/sim/InitialMatterSeeder';
 import { createHabitatDomain } from '../src/runtime/sim/WorldDomain';
-import { VoidSink, type VoidCrossing } from '../src/runtime/sim/VoidSink';
+import { VoidSink } from '../src/runtime/sim/VoidSink';
+import type { VoidDeathEvent } from '../src/runtime/sim/WorldEvents';
 import { MatterReservoir } from '../src/runtime/sim/MatterReservoir';
 import { createSimRandom } from '../src/runtime/sim/rng';
 
@@ -46,8 +47,11 @@ function measure(candidate: { particles: number; worldSize: number }) {
   const kernel = createMultiBandKernel(defaultPhysicsGenome);
   const sink = new VoidSink(domain, defaultPhysicsGenome.fringe);
   const reservoir = new MatterReservoir();
-  const crossings: VoidCrossing[] = [];
+  const crossings: VoidDeathEvent[] = [];
+  let tick = 0;
   const step = (): void => {
+    crossings.length = 0;
+    tick++;
     grid.rebuild(particles);
     accumulateParticleForces(particles, grid, kernel, 1);
     sink.applyFringeStress(particles);
@@ -57,7 +61,7 @@ function measure(candidate: { particles: number; worldSize: number }) {
       particleConfig.referenceHz,
       1000 / particleConfig.referenceHz,
     );
-    sink.collectCrossings(particles, reservoir, crossings);
+    sink.collectCrossings(particles, reservoir, tick, crossings);
   };
   for (let index = 0; index < 60; index++) step();
   const samples: number[] = [];

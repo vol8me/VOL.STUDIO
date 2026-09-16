@@ -17,7 +17,13 @@ import { ParticleSpatialHash } from '@/runtime/sim/ParticleSpatialHash';
 import { ParticleStore, type ParticleSnapshot } from '@/runtime/sim/ParticleStore';
 import { WorldRandomStreams } from '@/runtime/sim/RandomStreams';
 import { SimulationTempo } from '@/runtime/sim/SimulationTempo';
-import { VoidSink, type VoidCrossing } from '@/runtime/sim/VoidSink';
+import { VoidSink } from '@/runtime/sim/VoidSink';
+import {
+  noopWorldEventSink,
+  type TransientPresentationEvent,
+  type VoidDeathEvent,
+  type WorldEventSink,
+} from '@/runtime/sim/WorldEvents';
 import { HabitatSDF, rasterizeHabitatMask, type WorldDomain } from '@/runtime/sim/WorldDomain';
 import {
   createFreshWorldMetadata,
@@ -41,6 +47,8 @@ export interface LifeWorldSnapshot {
 export interface LifeWorldOptions {
   /** Test/araştırma için kernel enjeksiyonu; üretim genomdan türetir. */
   readonly kernel?: PairForceKernel;
+  /** Dünya tarihi kanalı; üretimde no-op, testte/araştırmada toplayıcı. */
+  readonly worldEvents?: WorldEventSink;
 }
 
 export class LifeWorld {
@@ -58,7 +66,9 @@ export class LifeWorld {
   private readonly particleGrid: ParticleSpatialHash;
   private readonly kernel: PairForceKernel;
   private readonly sink: VoidSink;
-  private crossings: VoidCrossing[] = [];
+  private readonly worldEvents: WorldEventSink;
+  private readonly crossingScratch: VoidDeathEvent[] = [];
+  private presentationEvents: VoidDeathEvent[] = [];
   private nextFieldBand = 0;
   private fieldUpdated = false;
 
@@ -104,6 +114,7 @@ export class LifeWorld {
     );
     this.kernel = options.kernel ?? createMultiBandKernel(this.genome);
     this.sink = new VoidSink(this.domain, this.genome.fringe);
+    this.worldEvents = options.worldEvents ?? noopWorldEventSink;
     this.tempo.every(world.fieldHz, (tick) => {
       this.stepFields(tick);
       this.fieldUpdated = true;
@@ -131,15 +142,24 @@ export class LifeWorld {
       this.config.particles.referenceHz,
       this.config.world.fixedStepMs,
     );
-    this.sink.collectCrossings(this.particles, this.reservoir, this.crossings);
+    this.crossingScratch.length = 0;
+    this.sink.collectCrossings(this.particles, this.reservoir, this.tick + 1, this.crossingScratch);
+    for (const event of this.crossingScratch) {
+      this.worldEvents.emit(event);
+      this.presentationEvents.push(event);
+    }
     this.tempo.advance();
     return this.fieldUpdated;
   }
 
-  /** Son `drain`den bu yana biriken Void ölümlerini teslim eder ve tamponu boşaltır. */
-  drainVoidCrossings(): VoidCrossing[] {
-    const delivered = this.crossings;
-    this.crossings = [];
+  /**
+   * Sunum kanalını boşaltır. Dünya kanalı BURADAN akmaz: olaylar zaten
+   * `WorldEventSink`e yazıldı, bu çağrı onları tüketmez. Boşaltılmayan tampon
+   * aktif slot başına en fazla bir ölüm taşır, çünkü Void ölümü geri dönüşsüzdür.
+   */
+  drainTransientPresentationEvents(): readonly TransientPresentationEvent[] {
+    const delivered = this.presentationEvents;
+    this.presentationEvents = [];
     return delivered;
   }
 
@@ -173,7 +193,7 @@ export class LifeWorld {
     this.fields.restore(snapshot.fields);
     this.particles.restore(snapshot.particles);
     this.reservoir.restore(snapshot.reservoir);
-    this.crossings = [];
+    this.presentationEvents = [];
   }
 
   private initializeFields(): void {

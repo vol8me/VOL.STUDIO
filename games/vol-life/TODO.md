@@ -113,11 +113,6 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 - [ ] **[P1] Habitat topoloji değişmezleri seed korpusunda testle kilitlensin.**
       Tek bağlı habitat, iç delik yok, asgari boğaz genişliği, sınırlı eğrilik,
       asgari güvenli iç bölge.
-- [ ] **[P1] Void ölümü değişmez olay olarak teslim edilsin.** Olay stable ID,
-      tick, konum, hız, görsel tür ve normal taşır; renderer ölüm animasyonu
-      boyunca store slotunu okumaz — slot aynı pencerede yeniden kullanılınca
-      hayaletin değişmediği regresyon testi. `TransientPresentationEvent` ile
-      `WorldEvent` ayrı kanaldır (DESIGN §6).
 
 ## Adım 3 — Morphology Discovery v2
 
@@ -766,6 +761,15 @@ matter-seeding, lifecycle, behavior, evolution`; FNV-1a + SplitMix32
       fixture'ı (`tests/app/fixtures/lifeWorldEnvelopeV3.json`, `8b385ad`
       kodeğiyle üretildi) i18n'li "uyumsuz kayıt" yoluna düşüyor
       (`LifeWorldPersistence.test.ts`).
+
+- [x] **[P1] Void ölümü değişmez olay olarak teslim edildi.** Olay `kind`, tick,
+      stable ID, konum, HIZ, tür ve normal taşır; `Object.freeze` ile
+      dondurulur ve store'un float32 değerlerini tam taşır. İki kanal ayrıldı:
+      `drainTransientPresentationEvents()` sunumu boşaltır, dünya tarihi
+      enjekte edilen `WorldEventSink`e yazılır (üretimde no-op) ve sunum
+      boşaltması onu tüketmez. Hayalet 250 ms sonra ilk olayın konumundan ve
+      renginden çiziliyor; ölen slot kanonik boşalırken olay değişmiyor
+      (`WorldEvents.test.ts`, `VoidSink.test.ts`, `VoidDeathRenderer.test.ts`).
 
 ### 2026-09-15 — DESIGN/TODO uzlaştırması
 

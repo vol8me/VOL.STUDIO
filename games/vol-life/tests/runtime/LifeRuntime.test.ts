@@ -18,7 +18,7 @@ function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = nu
     step: vi.fn(() => fieldUpdates.shift() ?? false),
     snapshot: vi.fn(() => snapshot),
     restore: vi.fn(),
-    drainVoidCrossings: vi.fn(() => []),
+    drainTransientPresentationEvents: vi.fn(() => []),
   };
   const fieldRenderer = { render: vi.fn(), destroy: vi.fn() };
   const habitatRenderer = { update: vi.fn(), destroy: vi.fn() };
@@ -155,7 +155,7 @@ describe('LifeRuntime', () => {
         fields: {},
         particles: {},
         restore: vi.fn(),
-        drainVoidCrossings: vi.fn(() => []),
+        drainTransientPresentationEvents: vi.fn(() => []),
       } as never,
       fieldRenderer: fieldRenderer as never,
       habitatRenderer: habitatRenderer as never,
