@@ -946,6 +946,22 @@ Finalist ölçümleri en az şunları zaman serisi olarak ayırır:
   yörüngeli ve üye değiştirmeyen döngü patolojiktir; deforme olan, üye
   değiştiren ve yer değiştiren büyük yapının dönüşü değildir;
 - perturbation sonrası üyelik, biçim ve kompozisyon recovery;
+
+Perturbation protokolü dört şartla bağlıdır (E15). Her perturbation ÖN-KAYITLI
+bir anda uygulanır ve aynı yakınsamış snapshot'a geri yüklenmiş bağımsız bir
+koşuda çalışır: spec sırası sonucu değiştiremez. Hedef seçimi ve itme yönleri
+`(seed, spec, tick)` üçlüsünden tohumlanır — sabit bir çekirdek kullanmak farklı
+seed'lerde aynı bozulmayı üretirdi. Madde çıkarma muhasebeli yoldan geçer:
+aktif + dış rezervuar = başlangıç değişmezi perturbation'dan sonra da korunur.
+
+Toparlanma sabit bir eşikle değil, perturbation ÖNCESİ taban penceresinin
+değişkenliğiyle ölçülür: normalize metrikler taban bandına (±2σ) 60 saniye
+içinde dönmelidir (§8.4). Sabit eşik yanıltıcıydı — maddenin %10'unu kaybetmiş
+bir dünya, sayım farkı eşiğin altında kaldığı için ilk kontrolde "toparlandı"
+sayılıyordu. Kusursuz sabit bir taban penceresinde σ sıfıra çökeceği için bant
+ortalamanın %1'iyle tabanlanır; bu sayı §8.4'te yoktur ve kayan noktalı fizikte
+bandın kapanmaması içindir.
+
 - Void dwell/loss ve fringe bağımlılığı;
 - seed robustness.
 

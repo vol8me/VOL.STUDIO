@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ResearchHarness, type ResearchHarnessConfig } from '@/../scripts/morphology/harness';
 import { ARTEFACT_SCHEMA_VERSION } from '@/../scripts/morphology/qualification';
+import { defaultPerturbationConfig } from '@/../scripts/morphology/perturbation';
 import { defaultSubstrateCandidate } from '@/config/candidate';
 import { substrateConfig } from '@/config/substrate';
 
@@ -17,7 +18,13 @@ const smallConfig: Partial<ResearchHarnessConfig> = {
   refinement: { tickCount: 5, seedCount: 1, sampleInterval: 5 },
   qualification: { tickCount: 5, seedCount: 1, sampleInterval: 5 },
   perturbationSpecs: [{ kind: 'velocity-kick', magnitude: 1, targetFraction: 0.2, tick: 0 }],
-  perturbation: { recoveryThreshold: 0.5, maxRecoveryTicks: 3 },
+  // E15: küçük koşuda taban ve toparlanma pencereleri de küçük tutulur.
+  perturbation: {
+    ...defaultPerturbationConfig,
+    baselineSeconds: 0.1,
+    recoverySeconds: 0.1,
+    sampleIntervalTicks: 2,
+  },
 };
 
 describe('ResearchHarness', () => {

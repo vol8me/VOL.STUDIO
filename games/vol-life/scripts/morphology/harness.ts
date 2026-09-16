@@ -19,7 +19,12 @@ import {
   type CandidateAggregation,
   type PhaseClassification,
 } from './phaseClassifier';
-import { PerturbationSystem, type PerturbationConfig, type PerturbationSpec } from './perturbation';
+import {
+  PerturbationSystem,
+  defaultPerturbationConfig,
+  type PerturbationConfig,
+  type PerturbationSpec,
+} from './perturbation';
 import { generateSeedCorpus, type ShardSpec } from './shards';
 import {
   createQualificationArtefact,
@@ -83,10 +88,7 @@ export const defaultHarnessConfig: ResearchHarnessConfig = {
     sampleIntervalTicks: 10,
   },
   phase: defaultPhaseConfig,
-  perturbation: {
-    recoveryThreshold: 0.15,
-    maxRecoveryTicks: 300,
-  },
+  perturbation: defaultPerturbationConfig,
   broad: { tickCount: 1800, seedCount: 4, sampleInterval: 30 },
   refinement: { tickCount: 7200, seedCount: 16, sampleInterval: 60 },
   qualification: { tickCount: 18000, seedCount: 32, sampleInterval: 60 },
@@ -249,13 +251,15 @@ export class ResearchHarness {
       if (phase.primary !== 'DYNAMIC_STRUCTURED') {
         rejectionReasons.push(`seed ${seed}: ${phase.primary} (${phase.details.join('; ')})`);
       }
-      for (const spec of this.config.perturbationSpecs) {
-        const preState = this.perturbation.snapshot(world.particles);
-        this.perturbation.apply(world, world.particles, spec);
-        const result = this.perturbation.measure(world, world.particles, spec, preState);
+      // E15: bütün spec'ler AYNI snapshot'tan bağımsız koşar; sıra sonucu değiştirmez.
+      for (const result of this.perturbation.runAll(world, this.config.perturbationSpecs)) {
         allPerturbationResults.push(result);
         if (!result.recovered) {
-          rejectionReasons.push(`seed ${seed}: perturbation (${spec.kind}) recovery başarısız`);
+          rejectionReasons.push(
+            `seed ${seed}: perturbation (${result.spec.kind}) toparlanmadı [${result.outOfBand.join(
+              '; ',
+            )}]`,
+          );
         }
       }
     }

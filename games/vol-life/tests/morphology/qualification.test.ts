@@ -58,12 +58,11 @@ function makeSample(): MorphologySample {
 function makePerturbationResult(recovered: boolean): PerturbationResult {
   return {
     spec: { kind: 'velocity-kick', magnitude: 2, targetFraction: 0.3, tick: 0 },
-    preState: {
-      activeCount: 512,
-      meanSpeed: 0.5,
-      clusterCompactness: 0.5,
-      centroidX: 0,
-      centroidY: 0,
+    baseline: {
+      activeCount: { mean: 512, sigma: 1 },
+      meanSpeed: { mean: 0.5, sigma: 0.05 },
+      clusterCompactness: { mean: 0.5, sigma: 0.05 },
+      sampleCount: 60,
     },
     postState: {
       activeCount: 512,
@@ -74,6 +73,7 @@ function makePerturbationResult(recovered: boolean): PerturbationResult {
     },
     recoveryTicks: 10,
     recovered,
+    outOfBand: [],
   };
 }
 
