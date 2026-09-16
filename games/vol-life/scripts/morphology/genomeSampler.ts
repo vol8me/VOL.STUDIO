@@ -9,6 +9,7 @@ import {
 import {
   cloneSubstrateCandidate,
   defaultSubstrateCandidate,
+  defaultVoidProfile,
   validateSubstrateCandidate,
   type SubstrateCandidate,
 } from '@/config/candidate';
@@ -50,7 +51,12 @@ export class GenomeSampler {
     this.random = mulberry32(options.seed);
   }
 
-  /** Sarsılan yalnız fizik ve doğuş hızıdır; Void profili tabandan aynen taşınır. */
+  /**
+   * Sarsılan yalnız fizik ve doğuş hızıdır. Void profili TABANDAN DA ALINMAZ:
+   * doğrudan Adım 2'nin sabit profilidir (E2). Tabandan kopyalansaydı,
+   * kurcalanmış bir taban Adım 3 aramasına başka bir kıyı fiziği sızdırabilirdi;
+   * böylece örneklenen her aday aynı Void digest'ini taşır.
+   */
   sample(base: SubstrateCandidate = defaultSubstrateCandidate): SubstrateCandidate {
     const radius = particleConfig.radiusUnits;
     for (let attempt = 0; attempt < 32; attempt++) {
@@ -63,7 +69,7 @@ export class GenomeSampler {
           typeWeights: [...base.seeding.typeWeights],
           initialSpeedUnitsPerReferenceTick: physics.dynamics.maxSpeedUnitsPerReferenceTick * 0.1,
         },
-        void: { ...base.void },
+        void: defaultVoidProfile,
         scenario: base.scenario,
       };
       try {
