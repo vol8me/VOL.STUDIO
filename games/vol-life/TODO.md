@@ -63,9 +63,10 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       trackpad, Samsung S21 ve Lenovo tablette kullanıcı rahat bulmadan
       kapanmaz. Birim testleri ve özellik listesi insan kabulünün yerine
       geçmez.
-- [x] **[P0] Snapshot v2 domain state'ini taşısın.** V3 codec; habitat digest,
-      active mask, stable ID, next ID, reservoir ve Void sayaçları; i18n'li
-      uyumsuzluk yüzeyi.
+- [x] **[P0] Snapshot v2 domain state'ini taşısın.** V4 codec; habitat digest,
+      active mask, stable ID, next ID, reservoir, Void sayaçları, adlandırılmış
+      RNG akış tablosu ve kanonik pasif slot doğrulaması; i18n'li uyumsuzluk
+      yüzeyi.
 - [ ] **[P1] 512 bütçesi gerçek hedeflerde ölçülsün.** Headless kernel p50/p95
       ölçüldü (§11); Chromium WebGL ve Android cihaz ölçümleri hâlâ gerekli.
 - [ ] **[P0] Adım 2 kabulü.** Determinism, güvenli alan, crossing, fringe,
@@ -88,12 +89,6 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 - [ ] **[P1] `FieldSet.sample()` bilinear sampling habitat mask'ini hesaba
       katsın.** Edge yakınındaki sample habitat value + Void cell=0 karışımı
       alıyor — kaynak yapay şekilde düşer. Tasarım kararı verilmesi gerekiyor.
-- [ ] **[P0] Named deterministic RNG streams kurulsun.** Mevcut: LifeWorld ana
-      RNG akışını önce LightSources sonra InitialMatterSeeder için kullanıyor
-      — lightSourceCount 5→6 değiştirince particle başlangıç dünyası tamamen
-      değişebilir. Çözüm: `worldSeed → habitat, fields, matter-seeding,
-lifecycle, behavior, evolution` stable derivation. Işık algoritmasını
-      değiştirmek particle başlangıcını değiştirmez.
 - [ ] **[P0] Camera v2.1: Aktif input event jitter'ı render cadence'den
       ayrılsın.** Mevcut drag: pointermove event → camera position değiştir →
       apply state — event cadence'ine bağlı. Mouse eventleri düzensiz gelirse
@@ -118,12 +113,6 @@ lifecycle, behavior, evolution` stable derivation. Işık algoritmasını
 - [ ] **[P1] Habitat topoloji değişmezleri seed korpusunda testle kilitlensin.**
       Tek bağlı habitat, iç delik yok, asgari boğaz genişliği, sınırlı eğrilik,
       asgari güvenli iç bölge.
-- [ ] **[P1] Parçacık slot yaşam döngüsü kanonik olsun.** Tek
-      `activateSlot`/`deactivateSlot` yolu; etkinleştirme previous, velocity,
-      force, interpolation ve render geçicilerini sıfırlar; pasif slot kanonik
-      boş temsile iner (aynı mantıksal durum aynı snapshot baytı); stable ID
-      32 bit ve tükenmede sessiz wrap yok. Adım 5 matter vent'inden önce testle
-      kilitlenir (DESIGN §3).
 - [ ] **[P1] Void ölümü değişmez olay olarak teslim edilsin.** Olay stable ID,
       tick, konum, hız, görsel tür ve normal taşır; renderer ölüm animasyonu
       boyunca store slotunu okumaz — slot aynı pencerede yeniden kullanılınca
@@ -324,10 +313,6 @@ lifecycle, behavior, evolution` stable derivation. Işık algoritmasını
       patchRadius=70 kullanıyor — 2048'de aynı dört patch içine ~4× fazla
       particle gömülüyor, local occupancy sabit değil. Rapor: max cell
       occupancy, candidate pairs, p50/p95, active count.
-- [ ] **[P0] Tautological LifeWorld test düzeltilsin.**
-      `expect(world.particles.activeCount).toBe(world.particles.activeCount)`
-      — her zaman doğru, X=X, hiçbir şeyi test etmiyor. Üstelik Void
-      dünyasında active count her tick korunması geçerli invariant değil.
 - [ ] **[P0] Gerçek 3-particle orbit geometrik fixture testi yazılsın.**
       PhaseClassifier.test.ts sentetik scalar metric objeleri veriyor — gerçek
       3-particle orbit oluşturup classifier'ın patolojik sayıp saymadığı testi
@@ -756,6 +741,31 @@ Physics research lane (Lane A) bundan bağımsız paralel devam eder.
 - Qualified olmayan araştırma adayı production bundle'a girmez.
 
 ## Kapatılanlar
+
+### 2026-09-16 — Zemin + Adım 1–3 kapanış turu
+
+- [x] **[P0] Tautological LifeWorld test düzeltildi.** `LifeWorld.test.ts` →
+      "600 tick boyunca aktif bayrak sayısı, activeCount ve madde muhasebesi
+      tutar": her tick aktif bayrak sayısı `activeCount`a eşit, aktif madde +
+      dış rezervuar = başlangıç; Void kaybının gerçekten oluştuğu ve en az bir
+      aktif parçacığın yer değiştirdiği ayrıca sınanıyor (`62cdd5a`).
+- [x] **[P0] Named deterministic RNG streams kuruldu.**
+      `src/runtime/sim/RandomStreams.ts`: `worldSeed → habitat, fields,
+matter-seeding, lifecycle, behavior, evolution`; FNV-1a + SplitMix32
+      türetmesi altın tabloyla kilitli (`RandomStreams.test.ts`).
+      `lightSourceCount` 5→6 parçacık başlangıcını, seeding parametresi ışık
+      alanını ve habitat digest'ini değiştirmiyor (`LifeWorld.test.ts`).
+- [x] **[P1] Parçacık slot yaşam döngüsü kanonik oldu.** Tek `activateSlot` /
+      `deactivateSlot` yolu; pasif slot kanonik boşa iner, snapshot doğrulaması
+      kanonik olmayan pasif slotu reddeder, farklı geçmişten aynı mantıksal
+      duruma gelen iki depo aynı baytları üretir, 32 bit ID tükenmesi hata
+      verir; yeniden kullanılan slot eski konumdan çizilmiyor
+      (`ParticleStore.test.ts`, `ParticleRenderer.test.ts`).
+- [x] **[K5] Snapshot kodeği v4'e çıktı.** Tek RNG durumu yerine akış tablosu,
+      verilmiş ID sayacı ve kanonik pasif slot doğrulaması; gerçek v3 zarfı
+      fixture'ı (`tests/app/fixtures/lifeWorldEnvelopeV3.json`, `8b385ad`
+      kodeğiyle üretildi) i18n'li "uyumsuz kayıt" yoluna düşüyor
+      (`LifeWorldPersistence.test.ts`).
 
 ### 2026-09-15 — DESIGN/TODO uzlaştırması
 

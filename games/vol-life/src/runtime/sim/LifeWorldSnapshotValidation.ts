@@ -4,6 +4,7 @@ import { FIELD_NAMES } from '@/runtime/sim/FieldSet';
 import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 import { validateMatterReservoirSnapshot } from '@/runtime/sim/MatterReservoir';
 import { validateParticleSnapshot } from '@/runtime/sim/ParticleStore';
+import { validateRandomStreamStates } from '@/runtime/sim/RandomStreams';
 import type { WorldDomain } from '@/runtime/sim/WorldDomain';
 import { validateWorldMetadata } from '@/runtime/sim/WorldMetadata';
 
@@ -33,15 +34,13 @@ export function validateLifeWorldSnapshot(
   if (
     !Number.isSafeInteger(snapshot.tick) ||
     snapshot.tick < 0 ||
-    !Number.isInteger(snapshot.rngState) ||
-    snapshot.rngState < -0x80000000 ||
-    snapshot.rngState > 0x7fffffff ||
     !Number.isInteger(snapshot.nextFieldBand) ||
     snapshot.nextFieldBand < 0 ||
     snapshot.nextFieldBand >= world.fieldUpdateBands
   ) {
-    throw new RangeError('Dünya kaydının zaman veya rastgelelik bilgisi geçersiz.');
+    throw new RangeError('Dünya kaydının zaman bilgisi geçersiz.');
   }
+  validateRandomStreamStates(snapshot.randomStreamStates);
   if (
     typeof snapshot.habitatDigest !== 'string' ||
     !/^[0-9a-f]{16}$/.test(snapshot.habitatDigest)

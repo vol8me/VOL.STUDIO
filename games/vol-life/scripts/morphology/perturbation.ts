@@ -176,7 +176,7 @@ export class PerturbationSystem {
 
   private applyMatterRemoval(particles: ParticleStore, targets: number[]): void {
     for (const slot of targets) {
-      particles.deactivate(slot);
+      particles.deactivateSlot(slot);
     }
   }
 

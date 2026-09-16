@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SaveManager } from '@volstudio/core';
+import { MAX_STABLE_ID } from '@/runtime/sim/ParticleStore';
 import {
   cloneSubstrateConfig,
   fingerprintSubstrateConfig,
@@ -50,8 +53,53 @@ describe('LifeWorldSnapshotCodec', () => {
     const decoded = await decodeLifeWorldSnapshot(envelope, fingerprint);
 
     expect(decoded).toEqual({ kind: 'snapshot', snapshot });
-    expect(envelope.schemaVersion).toBe(3);
+    expect(envelope.schemaVersion).toBe(4);
     expect(envelope.encoding).toMatch(/base64/);
+  });
+
+  it('adlandırılmış akış tablosunu ve tükenmiş ID sayacını gidiş dönüşte korur', async () => {
+    const config = smallConfig();
+    const world = createWorld(config);
+    for (let index = 0; index < 5; index++) world.step();
+    const snapshot = world.snapshot();
+    const exhausted = {
+      ...snapshot,
+      randomStreamStates: Int32Array.from(snapshot.randomStreamStates, (state, index) =>
+        index === 3 ? state + 1 : state,
+      ),
+      particles: { ...snapshot.particles, nextStableId: MAX_STABLE_ID + 1 },
+    };
+    const fingerprint = fingerprintSubstrateConfig(config);
+
+    const envelope = await encodeLifeWorldSnapshot(exhausted, fingerprint);
+    const decoded = await decodeLifeWorldSnapshot(envelope, fingerprint);
+
+    expect(decoded).toEqual({ kind: 'snapshot', snapshot: exhausted });
+  });
+
+  /*
+   * Zarf gerçek v3 kodeğiyle (`8b385ad`) üretildi ve fixture olarak saklanıyor:
+   * "eski kayıt sessizce v4 fiziğinde oynatılmaz" iddiası ancak GERÇEK bir eski
+   * zarfla sınanabilir, elle kurgulanmış bir nesneyle değil.
+   */
+  it('gerçek v3 zarfı sessizce oynatılmaz, uyumsuz şema verir', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const envelope = JSON.parse(
+      readFileSync(join(import.meta.dirname, 'fixtures/lifeWorldEnvelopeV3.json'), 'utf8'),
+    ) as { schemaVersion: number; configFingerprint: string };
+    expect(envelope.schemaVersion).toBe(3);
+
+    expect(await decodeLifeWorldSnapshot(envelope, envelope.configFingerprint)).toEqual({
+      kind: 'incompatible',
+      reason: 'schema',
+    });
+
+    const memory = memorySaveManager(envelope);
+    const persistence = new LifeWorldPersistence(memory.saveManager, smallConfig());
+    const result = await persistence.load();
+
+    expect(result.snapshot).toBeNull();
+    expect(result.issue).toBe('incompatible');
   });
 
   it('uzunluğu değişmeyen ikili bozulmayı checksum ile reddeder', async () => {
@@ -137,6 +185,12 @@ describe('LifeWorldSnapshotCodec', () => {
         'test',
       ),
     ).toEqual({ kind: 'incompatible', reason: 'schema' });
+    expect(
+      await decodeLifeWorldSnapshot(
+        { schemaVersion: 3, configFingerprint: 'test', encoding: 'base64', payload: '' },
+        'test',
+      ),
+    ).toEqual({ kind: 'incompatible', reason: 'schema' });
     await expect(decodeLifeWorldSnapshot('string', 'test')).rejects.toThrow(RangeError);
 
     // Kısa başlık (HEADER_BYTES < 64)
@@ -145,7 +199,7 @@ describe('LifeWorldSnapshotCodec', () => {
     await expect(
       decodeLifeWorldSnapshot(
         {
-          schemaVersion: 3,
+          schemaVersion: 4,
           configFingerprint: 'test',
           encoding: 'base64',
           byteLength: shortBytes.byteLength,
@@ -162,7 +216,7 @@ describe('LifeWorldSnapshotCodec', () => {
     await expect(
       decodeLifeWorldSnapshot(
         {
-          schemaVersion: 3,
+          schemaVersion: 4,
           configFingerprint: 'test',
           encoding: 'base64',
           byteLength: invalidMagic.byteLength,

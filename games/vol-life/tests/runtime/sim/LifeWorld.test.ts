@@ -87,6 +87,49 @@ describe('LifeWorld', () => {
       expect(bytes(restored.fields.get(name))).toEqual(bytes(continuous.fields.get(name)));
     }
     expect(restored.particles.snapshot()).toEqual(continuous.particles.snapshot());
+    expect([...restored.snapshot().randomStreamStates]).toEqual([
+      ...continuous.snapshot().randomStreamStates,
+    ]);
+  });
+
+  /*
+   * Akış yalıtımı (DESIGN.md §7): bir alt sistemin parametresi değişince BAŞKA
+   * bir alt sistemin dizisi kaymaz. Tek akışlı kurulumda ışık kaynağı sayısını
+   * bir artırmak bütün parçacık başlangıcını değiştiriyordu.
+   */
+  it('ışık kaynağı sayısı değişse de parçacık başlangıcı bayt düzeyinde aynı kalır', () => {
+    const base = smallConfig();
+    const extraLight = {
+      ...base,
+      world: { ...base.world, lightSourceCount: base.world.lightSourceCount + 1 },
+    };
+    const left = createWorld(77, base);
+    const right = createWorld(77, extraLight);
+
+    expect(bytes(right.particles.x)).toEqual(bytes(left.particles.x));
+    expect(bytes(right.particles.y)).toEqual(bytes(left.particles.y));
+    expect(bytes(right.particles.vx)).toEqual(bytes(left.particles.vx));
+    expect(bytes(right.particles.vy)).toEqual(bytes(left.particles.vy));
+    expect([...right.particles.type]).toEqual([...left.particles.type]);
+    expect(bytes(right.fields.light)).not.toEqual(bytes(left.fields.light));
+  });
+
+  it('seeding parametresi değişse de ışık alanı ve habitat bayt düzeyinde aynı kalır', () => {
+    const base = smallConfig();
+    const extraPatch = {
+      ...base,
+      genome: {
+        ...base.genome,
+        seeding: { ...base.genome.seeding, patchCount: base.genome.seeding.patchCount + 1 },
+      },
+    };
+    const left = createWorld(77, base);
+    const right = createWorld(77, extraPatch);
+
+    expect(bytes(right.fields.light)).toEqual(bytes(left.fields.light));
+    expect(bytes(right.fields.nutrient)).toEqual(bytes(left.fields.nutrient));
+    expect(right.domain.digest).toBe(left.domain.digest);
+    expect(bytes(right.particles.x)).not.toEqual(bytes(left.particles.x));
   });
 
   it('bozuk snapshotı dünyayı kısmen değiştirmeden atomik olarak reddeder', () => {
@@ -122,13 +165,15 @@ describe('LifeWorld', () => {
   /*
    * Void dünyasında "aktif sayı korunur" GEÇERLİ BİR DEĞİŞMEZ DEĞİLDİR: kıyıyı
    * geçen parçacık düşer. Korunan şey muhasebedir — aktif madde + dış rezervuar.
-   * Kapasite üretim değeri olan 512'dedir, çünkü 32 parçacıkla Void kaybı hiç
-   * oluşmayabilir ve muhasebe iddiası boşa düşer.
+   * Kapasite 32 değil 128: ölçüldü, 600 tickte 64'te bir seed hiç kaybetmiyor,
+   * 128'de sınanan her seed kaybediyor — daha küçüğünde iddia boşa düşerdi.
+   * Üretim kapasiteli (512) sürüm `tests/long/matterAccounting.long.ts`tedir;
+   * kapsam altında birim kapısının süresini aşıyordu.
    */
   it('600 tick boyunca aktif bayrak sayısı, activeCount ve madde muhasebesi tutar', () => {
     const config = {
       ...smallConfig(),
-      particles: { ...substrateConfig.particles, capacity: 512 },
+      particles: { ...substrateConfig.particles, capacity: 128 },
     };
     const world = createWorld(19, config);
     const initial = world.particles.activeCount;
@@ -148,12 +193,12 @@ describe('LifeWorld', () => {
       }
     }
 
-    expect(initial).toBe(512);
+    expect(initial).toBe(128);
     expect(flagMismatches).toEqual([]);
     expect(accountingBreaks).toEqual([]);
     // Kayıp hiç oluşmazsa muhasebe iddiası aktif sayının sabitliğine indirgenir.
     expect(world.reservoir.voidLossTotal).toBeGreaterThan(0);
-    expect(world.particles.activeCount).toBeLessThan(initial);
+    expect(world.particles.activeCount).toBe(initial - world.reservoir.voidLossTotal);
 
     let movedActive = 0;
     for (let slot = 0; slot < world.particles.capacity; slot++) {

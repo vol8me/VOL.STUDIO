@@ -6,7 +6,7 @@ import { substrateConfig } from '../src/config/substrate';
 import { ParticleRenderer } from '../src/runtime/render/ParticleRenderer';
 import { seedInitialMatter } from '../src/runtime/sim/InitialMatterSeeder';
 import { ParticleStore } from '../src/runtime/sim/ParticleStore';
-import { HabitatSDF } from '../src/runtime/sim/WorldDomain';
+import { createHabitatDomain } from '../src/runtime/sim/WorldDomain';
 import { createSimRandom } from '../src/runtime/sim/rng';
 
 interface RenderResult {
@@ -34,7 +34,7 @@ class RenderBenchmarkScene extends Phaser.Scene {
 
   create(): void {
     const { boundsUnits } = substrateConfig.world;
-    const domain = new HabitatSDF(boundsUnits, substrateConfig.habitat, 0x10fe1);
+    const domain = createHabitatDomain(boundsUnits, substrateConfig.habitat, 0x10fe1);
     this.particles = new ParticleStore(count);
     seedInitialMatter(
       this.particles,

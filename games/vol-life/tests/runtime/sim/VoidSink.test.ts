@@ -3,14 +3,15 @@ import { defaultPhysicsGenome, type FringeGenes } from '@/config/genome';
 import { MatterReservoir } from '@/runtime/sim/MatterReservoir';
 import { ParticleStore } from '@/runtime/sim/ParticleStore';
 import { VoidSink, type VoidCrossing } from '@/runtime/sim/VoidSink';
-import { HabitatSDF } from '@/runtime/sim/WorldDomain';
+import type { HabitatSDF } from '@/runtime/sim/WorldDomain';
+import { createHabitatDomain } from '@/runtime/sim/WorldDomain';
 import { habitatConfig } from '@/config/habitat';
 import { worldConfig } from '@/config/world';
 
 const STORAGE = worldConfig.boundsUnits;
 
 function domain(seed = 7): HabitatSDF {
-  return new HabitatSDF(STORAGE, habitatConfig, seed);
+  return createHabitatDomain(STORAGE, habitatConfig, seed);
 }
 
 function fringe(): FringeGenes {
@@ -38,7 +39,7 @@ describe('VoidSink', () => {
     const sink = new VoidSink(sdf, fringe());
     const particles = new ParticleStore(1);
     const center = { x: STORAGE.x + STORAGE.width / 2, y: STORAGE.y + STORAGE.height / 2 };
-    particles.spawn(center.x, center.y, 0, 0, 0);
+    particles.activateSlot(center.x, center.y, 0, 0, 0);
 
     const affected = sink.applyFringeStress(particles);
 
@@ -57,7 +58,7 @@ describe('VoidSink', () => {
     const cy = contour[1];
     const normal = sdf.normal(cx, cy);
     const inside = { x: cx - normal.x * 2, y: cy - normal.y * 2 };
-    particles.spawn(inside.x, inside.y, 0, 0, 0);
+    particles.activateSlot(inside.x, inside.y, 0, 0, 0);
 
     const affected = sink.applyFringeStress(particles);
 
@@ -76,7 +77,7 @@ describe('VoidSink', () => {
     const cy = contour[1];
     const normal = sdf.normal(cx, cy);
     const inside = { x: cx - normal.x * 2, y: cy - normal.y * 2 };
-    particles.spawn(inside.x, inside.y, 0, 0, 0);
+    particles.activateSlot(inside.x, inside.y, 0, 0, 0);
 
     const affected = sink.applyFringeStress(particles);
 
@@ -95,8 +96,8 @@ describe('VoidSink', () => {
     const cy = contour[1];
     const normal = sdf.normal(cx, cy);
     const outside = { x: cx + normal.x * 10, y: cy + normal.y * 10 };
-    particles.spawn(outside.x, outside.y, 0, 0, 3);
-    particles.spawn(STORAGE.x + STORAGE.width / 2, STORAGE.y + STORAGE.height / 2, 0, 0, 0);
+    particles.activateSlot(outside.x, outside.y, 0, 0, 3);
+    particles.activateSlot(STORAGE.x + STORAGE.width / 2, STORAGE.y + STORAGE.height / 2, 0, 0, 0);
     const crossings: VoidCrossing[] = [];
 
     const crossed = sink.collectCrossings(particles, reservoir, crossings);
@@ -116,7 +117,7 @@ describe('VoidSink', () => {
     const sink = new VoidSink(sdf, fringe());
     const particles = new ParticleStore(1);
     const center = { x: STORAGE.x + STORAGE.width / 2, y: STORAGE.y + STORAGE.height / 2 };
-    particles.spawn(center.x, center.y, 0, 0, 0);
+    particles.activateSlot(center.x, center.y, 0, 0, 0);
     const reservoir = new MatterReservoir();
     const crossings: VoidCrossing[] = [];
 

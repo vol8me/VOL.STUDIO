@@ -18,8 +18,8 @@ snapshot/restore korunur; Phaser yalnız render adaptöründedir.
 (generalized multi-band directional), 512 kapasiteli `ParticleStore` (aktif/pasif
 slot), `ParticleSpatialHash` (yalnız aktif), organik `HabitatSDF`/`WorldDomain`,
 `VoidSink` (geri dönüşsüz deaktivasyon), `MatterReservoir`, `InitialMatterSeeder`
-(patch+cloud), v3 snapshot codec, çok bantlı field güncelleme, deterministic RNG,
-camera-domain handling, Void-death rendering.
+(patch+cloud), v4 snapshot codec, çok bantlı field güncelleme, alt sistem başına
+adlandırılmış RNG akışları, camera-domain handling, Void-death rendering.
 
 **Adım 3 araştırma kütüphanesi** (`scripts/morphology/`): `GenomeSampler`,
 `MorphologyMetrics`, `ClusterTracker`, `PhaseClassifier`, `ResearchHarness`

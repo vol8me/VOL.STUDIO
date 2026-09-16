@@ -20,8 +20,8 @@ function pair(
 ) {
   const particles = new ParticleStore(2);
   const centerY = BOUNDS.y + BOUNDS.height / 2;
-  particles.spawn(leftX, centerY, 0, 0, leftType);
-  particles.spawn(rightX, centerY, 0, 0, rightType);
+  particles.activateSlot(leftX, centerY, 0, 0, leftType);
+  particles.activateSlot(rightX, centerY, 0, 0, rightType);
   const grid = new ParticleSpatialHash(BOUNDS, particleConfig.cellSizeUnits, 2);
   grid.rebuild(particles);
   const kernel = genome === defaultPhysicsGenome ? KERNEL : createMultiBandKernel(genome);
@@ -98,7 +98,7 @@ describe('parçacık kuvvet biriktirimi', () => {
 describe('parçacık entegrasyonu', () => {
   it('sönümleme uygular ve hız tavanını aşmaz', () => {
     const particles = new ParticleStore(1);
-    particles.spawn(500, 500, 999, 999, 0);
+    particles.activateSlot(500, 500, 999, 999, 0);
 
     integrateParticles(
       particles,
@@ -114,7 +114,7 @@ describe('parçacık entegrasyonu', () => {
 
   it('duvar, clamp veya sekme uygulamaz; parçacık sınır dışına çıkabilir', () => {
     const particles = new ParticleStore(1);
-    particles.spawn(5, 200, -2, 0.5, 0);
+    particles.activateSlot(5, 200, -2, 0.5, 0);
 
     integrateParticles(
       particles,
@@ -129,7 +129,7 @@ describe('parçacık entegrasyonu', () => {
 
   it('kuvvet hızını ve konumu günceller', () => {
     const particles = new ParticleStore(1);
-    particles.spawn(500, 500, 0, 0, 0);
+    particles.activateSlot(500, 500, 0, 0, 0);
     particles.forceX[0] = 1;
     particles.forceY[0] = 0;
 
@@ -166,7 +166,7 @@ describe('parçacık entegrasyonu', () => {
 
   it('geçersiz stepMs verildiğinde RangeError fırlatır', () => {
     const particles = new ParticleStore(1);
-    particles.spawn(500, 500, 0, 0, 0);
+    particles.activateSlot(500, 500, 0, 0, 0);
 
     expect(() => integrateParticles(particles, DYNAMICS, particleConfig.referenceHz, 0)).toThrow(
       RangeError,
@@ -181,7 +181,7 @@ describe('parçacık entegrasyonu', () => {
 
   it('referenceHz ile stepMs çarpımı adım ölçeğini belirler', () => {
     const particles = new ParticleStore(1);
-    particles.spawn(500, 500, 1, 0, 0);
+    particles.activateSlot(500, 500, 1, 0, 0);
 
     const stepMs = 1000 / particleConfig.referenceHz;
     const before = particles.x[0];

@@ -78,7 +78,7 @@ export class VoidSink {
         normalX: normal.x,
         normalY: normal.y,
       });
-      particles.deactivate(slot);
+      particles.deactivateSlot(slot);
       crossed++;
     }
     if (crossed > 0) reservoir.recordVoidLoss(crossed);

@@ -3,13 +3,14 @@ import { defaultPhysicsGenome } from '@/config/genome';
 import { substrateConfig } from '@/config/substrate';
 import { seedInitialMatter } from '@/runtime/sim/InitialMatterSeeder';
 import { ParticleStore } from '@/runtime/sim/ParticleStore';
-import { HabitatSDF } from '@/runtime/sim/WorldDomain';
+import type { HabitatSDF } from '@/runtime/sim/WorldDomain';
+import { createHabitatDomain } from '@/runtime/sim/WorldDomain';
 import { createSimRandom } from '@/runtime/sim/rng';
 
 const STORAGE = substrateConfig.world.boundsUnits;
 
 function domain(seed = 11): HabitatSDF {
-  return new HabitatSDF(STORAGE, substrateConfig.habitat, seed);
+  return createHabitatDomain(STORAGE, substrateConfig.habitat, seed);
 }
 
 describe('seedInitialMatter', () => {

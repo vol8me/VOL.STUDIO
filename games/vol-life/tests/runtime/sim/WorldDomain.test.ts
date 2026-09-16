@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { habitatConfig } from '@/config/habitat';
 import { worldConfig } from '@/config/world';
-import { HabitatSDF, rasterizeHabitatMask, rasterizeHabitatShade } from '@/runtime/sim/WorldDomain';
+import type { HabitatSDF } from '@/runtime/sim/WorldDomain';
+import {
+  createHabitatDomain,
+  rasterizeHabitatMask,
+  rasterizeHabitatShade,
+} from '@/runtime/sim/WorldDomain';
 
 const STORAGE = worldConfig.boundsUnits;
 const CENTER = { x: STORAGE.x + STORAGE.width / 2, y: STORAGE.y + STORAGE.height / 2 };
 
 function domain(seed = 7, config = habitatConfig): HabitatSDF {
-  return new HabitatSDF(STORAGE, config, seed);
+  return createHabitatDomain(STORAGE, config, seed);
 }
 
 describe('HabitatSDF işaret sözleşmesi', () => {
@@ -110,25 +115,25 @@ describe('HabitatSDF determinizm ve geometri', () => {
   });
 
   it('depolama kenar boşluğunu ihlal eden yapılandırmayı kurulumda reddeder', () => {
-    expect(
-      () =>
-        new HabitatSDF(STORAGE, { ...habitatConfig, radiusRatioX: 0.97, radiusRatioY: 0.97 }, 1),
+    expect(() =>
+      createHabitatDomain(STORAGE, { ...habitatConfig, radiusRatioX: 0.97, radiusRatioY: 0.97 }, 1),
     ).toThrow(/kenar boşluğunu/);
-    expect(() => new HabitatSDF(STORAGE, { ...habitatConfig, storageMarginUnits: 200 }, 1)).toThrow(
-      RangeError,
-    );
+    expect(() =>
+      createHabitatDomain(STORAGE, { ...habitatConfig, storageMarginUnits: 200 }, 1),
+    ).toThrow(RangeError);
   });
 
-  it('tohum uint32 olmalı ve kontur en az üç segment ister', () => {
-    expect(() => new HabitatSDF(STORAGE, habitatConfig, -1)).toThrow(RangeError);
-    expect(() => new HabitatSDF(STORAGE, habitatConfig, 1.5)).toThrow(RangeError);
+  it('dünya tohumu uint32 olmalı ve kontur en az üç segment ister', () => {
+    expect(() => createHabitatDomain(STORAGE, habitatConfig, -1)).toThrow(RangeError);
+    expect(() => createHabitatDomain(STORAGE, habitatConfig, 1.5)).toThrow(RangeError);
+    expect(() => createHabitatDomain(STORAGE, habitatConfig, 0x1_0000_0000)).toThrow(RangeError);
     expect(() => domain().contour(2)).toThrow(RangeError);
     expect(() => domain().contour(3.5)).toThrow(RangeError);
   });
 
   it('depolama dikdörtgeni çağıranın sonradan değiştirmesinden yalıtılır', () => {
     const storage = { ...STORAGE };
-    const sdf = new HabitatSDF(storage, habitatConfig, 4);
+    const sdf = createHabitatDomain(storage, habitatConfig, 4);
     const before = sdf.distance(CENTER.x, CENTER.y);
     storage.width = 10;
     expect(sdf.distance(CENTER.x, CENTER.y)).toBe(before);

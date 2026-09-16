@@ -17,10 +17,10 @@ describe('ClusterTracker', () => {
       minClusterSize: 3,
     });
     const particles = new ParticleStore(8);
-    particles.spawn(500, 500, 0, 0, 0);
-    particles.spawn(510, 500, 0, 0, 0);
-    particles.spawn(520, 500, 0, 0, 0);
-    particles.spawn(800, 800, 0, 0, 0);
+    particles.activateSlot(500, 500, 0, 0, 0);
+    particles.activateSlot(510, 500, 0, 0, 0);
+    particles.activateSlot(520, 500, 0, 0, 0);
+    particles.activateSlot(800, 800, 0, 0, 0);
     tracker.update(particles, 0);
     expect(tracker.activeClusters.length).toBeGreaterThanOrEqual(1);
   });
@@ -32,10 +32,10 @@ describe('ClusterTracker', () => {
       minClusterSize: 2,
     });
     const particles = new ParticleStore(8);
-    particles.spawn(500, 500, 0, 0, 0);
-    particles.spawn(505, 500, 0, 0, 0);
-    particles.spawn(800, 800, 0, 0, 0);
-    particles.spawn(805, 800, 0, 0, 0);
+    particles.activateSlot(500, 500, 0, 0, 0);
+    particles.activateSlot(505, 500, 0, 0, 0);
+    particles.activateSlot(800, 800, 0, 0, 0);
+    particles.activateSlot(805, 800, 0, 0, 0);
     tracker.update(particles, 0);
     expect(tracker.activeClusters).toHaveLength(2);
   });
@@ -48,9 +48,9 @@ describe('ClusterTracker', () => {
       minContinuityTicks: 1,
     });
     const particles = new ParticleStore(8);
-    particles.spawn(500, 500, 0, 0, 0);
-    particles.spawn(510, 500, 0, 0, 0);
-    particles.spawn(520, 500, 0, 0, 0);
+    particles.activateSlot(500, 500, 0, 0, 0);
+    particles.activateSlot(510, 500, 0, 0, 0);
+    particles.activateSlot(520, 500, 0, 0, 0);
     tracker.update(particles, 0);
     expect(tracker.eventLog.some((e) => e.kind === 'birth')).toBe(true);
   });
@@ -58,9 +58,9 @@ describe('ClusterTracker', () => {
   it('reset temizler', () => {
     const tracker = new ClusterTracker(defaultClusterConfig);
     const particles = new ParticleStore(8);
-    particles.spawn(500, 500, 0, 0, 0);
-    particles.spawn(510, 500, 0, 0, 0);
-    particles.spawn(520, 500, 0, 0, 0);
+    particles.activateSlot(500, 500, 0, 0, 0);
+    particles.activateSlot(510, 500, 0, 0, 0);
+    particles.activateSlot(520, 500, 0, 0, 0);
     tracker.update(particles, 0);
     tracker.reset();
     expect(tracker.activeClusters).toHaveLength(0);

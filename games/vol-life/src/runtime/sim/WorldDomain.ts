@@ -1,7 +1,8 @@
 import type { Rect } from '@volstudio/core/math/geometry';
 import { digestString } from '@/config/genome';
 import { validateHabitatConfig, type HabitatConfig } from '@/config/habitat';
-import { createSimRandom } from '@/runtime/sim/rng';
+import { deriveStreamSeed } from '@/runtime/sim/RandomStreams';
+import { createSimRandom, type SimRandom } from '@/runtime/sim/rng';
 
 export interface DomainVector {
   x: number;
@@ -29,7 +30,6 @@ interface Harmonic {
   readonly phase: number;
 }
 
-const HABITAT_SEED_SALT = 0x48414249;
 const BBOX_SAMPLES = 720;
 const GRADIENT_STEP = 0.5;
 
@@ -45,18 +45,16 @@ export class HabitatSDF implements WorldDomain {
   private readonly harmonics: readonly Harmonic[];
   private minRadius = Number.POSITIVE_INFINITY;
 
-  constructor(storage: Readonly<Rect>, config: HabitatConfig, seed: number) {
+  /** Kontur YALNIZ `habitat` akışından türer; ışık ya da seeding akışı onu kaydıramaz. */
+  constructor(storage: Readonly<Rect>, config: HabitatConfig, random: SimRandom) {
     validateHabitatConfig(config);
-    if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
-      throw new RangeError(`Habitat tohumu uint32 olmalı: ${seed}`);
-    }
     this.storage = { ...storage };
     this.centerX = storage.x + storage.width / 2;
     this.centerY = storage.y + storage.height / 2;
     this.radiusX = (storage.width / 2) * config.radiusRatioX;
     this.radiusY = (storage.height / 2) * config.radiusRatioY;
     this.exponent = config.superellipseExponent;
-    this.harmonics = buildHarmonics(config, (seed ^ HABITAT_SEED_SALT) >>> 0);
+    this.harmonics = buildHarmonics(config, random);
     this.bbox = this.measureBbox();
     const margin = config.storageMarginUnits;
     if (
@@ -160,9 +158,17 @@ export class HabitatSDF implements WorldDomain {
   }
 }
 
-function buildHarmonics(config: HabitatConfig, seed: number): Harmonic[] {
+/** Dünya tohumundan habitat akışını türeten tek giriş; doğrudan tohum kullanılmaz. */
+export function createHabitatDomain(
+  storage: Readonly<Rect>,
+  config: HabitatConfig,
+  worldSeed: number,
+): HabitatSDF {
+  return new HabitatSDF(storage, config, createSimRandom(deriveStreamSeed(worldSeed, 'habitat')));
+}
+
+function buildHarmonics(config: HabitatConfig, random: SimRandom): Harmonic[] {
   if (config.noiseAmplitudeRatio === 0) return [];
-  const random = createSimRandom(seed);
   const orders: number[] = [];
   for (let order = config.noiseHarmonicMin; order <= config.noiseHarmonicMax; order++) {
     orders.push(order);

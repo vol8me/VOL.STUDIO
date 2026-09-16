@@ -15,7 +15,7 @@ import { createMultiBandKernel, type PairForceKernel } from '@/runtime/sim/PairF
 import { accumulateParticleForces, integrateParticles } from '@/runtime/sim/ParticlePhysics';
 import { ParticleSpatialHash } from '@/runtime/sim/ParticleSpatialHash';
 import { ParticleStore, type ParticleSnapshot } from '@/runtime/sim/ParticleStore';
-import { createSimRandom } from '@/runtime/sim/rng';
+import { WorldRandomStreams } from '@/runtime/sim/RandomStreams';
 import { SimulationTempo } from '@/runtime/sim/SimulationTempo';
 import { VoidSink, type VoidCrossing } from '@/runtime/sim/VoidSink';
 import { HabitatSDF, rasterizeHabitatMask, type WorldDomain } from '@/runtime/sim/WorldDomain';
@@ -28,7 +28,8 @@ import {
 export interface LifeWorldSnapshot {
   readonly metadata: WorldMetadata;
   readonly tick: number;
-  readonly rngState: number;
+  /** `RANDOM_STREAM_IDS` sırasında akış durumları; kurulumdan sonra ilerleyen akışlar burada sürer. */
+  readonly randomStreamStates: Int32Array;
   readonly nextFieldBand: number;
   readonly habitatDigest: string;
   readonly nutrientDiffusionSource: Float32Array;
@@ -50,7 +51,7 @@ export class LifeWorld {
   readonly reservoir = new MatterReservoir();
   readonly genome: PhysicsGenome;
   private readonly config: SubstrateConfig;
-  private readonly random;
+  private readonly streams: WorldRandomStreams;
   private readonly tempo: SimulationTempo;
   private readonly light: LightSources;
   private readonly nutrientDiffusionSource: Float32Array;
@@ -73,8 +74,8 @@ export class LifeWorld {
     this.metadata = { ...metadata };
     const { world, particles, habitat } = this.config;
     this.tempo = new SimulationTempo(resolveSimulationHz(world.fixedStepMs));
-    this.random = createSimRandom(this.metadata.seed);
-    this.domain = new HabitatSDF(world.boundsUnits, habitat, this.metadata.seed);
+    this.streams = new WorldRandomStreams(this.metadata.seed);
+    this.domain = new HabitatSDF(world.boundsUnits, habitat, this.streams.stream('habitat'));
     this.fields = new FieldSet(world.fieldResolution);
     this.fields.setMask(rasterizeHabitatMask(this.domain, world.fieldResolution));
     this.light = new LightSources(
@@ -84,12 +85,17 @@ export class LifeWorld {
         radiusUnits: world.lightSourceRadiusUnits,
         driftUnits: world.lightSourceDriftUnits,
       },
-      this.random,
+      this.streams.stream('fields'),
     );
     this.initializeFields();
     this.nutrientDiffusionSource = this.fields.nutrient.slice();
     this.particles = new ParticleStore(particles.capacity);
-    seedInitialMatter(this.particles, this.random, this.domain, this.genome);
+    seedInitialMatter(
+      this.particles,
+      this.streams.stream('matter-seeding'),
+      this.domain,
+      this.genome,
+    );
     this.particles.capturePrevious();
     this.particleGrid = new ParticleSpatialHash(
       world.boundsUnits,
@@ -141,7 +147,7 @@ export class LifeWorld {
     return {
       metadata: { ...this.metadata },
       tick: this.tick,
-      rngState: this.random.getState(),
+      randomStreamStates: this.streams.snapshot(),
       nextFieldBand: this.nextFieldBand,
       habitatDigest: this.domain.digest,
       nutrientDiffusionSource: this.nutrientDiffusionSource.slice(),
@@ -161,7 +167,7 @@ export class LifeWorld {
       throw new RangeError('Snapshot başka bir dünya örneğine ait.');
     }
     this.tempo.setTick(snapshot.tick);
-    this.random.setState(snapshot.rngState);
+    this.streams.restore(snapshot.randomStreamStates);
     this.nextFieldBand = snapshot.nextFieldBand;
     this.nutrientDiffusionSource.set(snapshot.nutrientDiffusionSource);
     this.fields.restore(snapshot.fields);

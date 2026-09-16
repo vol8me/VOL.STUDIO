@@ -10,11 +10,14 @@ export interface ParticleSnapshot {
 }
 
 export const NO_SLOT = -1;
+/** 32 bitlik stable ID alanının son değeri; tükendiğinde sessiz sarma YOKTUR. */
+export const MAX_STABLE_ID = 0xffffffff;
 
 /**
  * SoA parçacık deposu. Depolama slotu kimlik DEĞİLDİR: pasifleşen slot dizi
  * kaydırmaz, yeniden kullanılan slot yeni `stableId` alır (DESIGN.md §3).
- * Pasif slotun konum/hız içeriği tanımsızdır ve hiçbir tüketici okumaz.
+ * Pasif slot KANONİK boş temsile iner — sayısal alanlar 0, stable ID 0, kıyı
+ * mesafesi +∞ — böylece aynı mantıksal durum aynı snapshot baytlarını üretir.
  */
 export class ParticleStore {
   readonly x: Float32Array;
@@ -59,8 +62,13 @@ export class ParticleStore {
     return this.nextId;
   }
 
-  /** Boş slot yoksa `NO_SLOT`; kapasite dolu olduğunda yeni madde bekletilir. */
-  spawn(x: number, y: number, vx: number, vy: number, type: number): number {
+  /**
+   * Slot yaşam döngüsünün tek girişi. Boş slot yoksa `NO_SLOT` döner; kapasite
+   * dolu olduğunda yeni madde bekletilir. Önceki konum, kuvvet, interpolasyon
+   * ve kıyı mesafesi geçicileri sıfırlanır: yeniden kullanılan slot aynı karede
+   * eski parçacığın konumundan çizilemez.
+   */
+  activateSlot(x: number, y: number, vx: number, vy: number, type: number): number {
     if (!Number.isInteger(type) || type < 0 || type > 255) {
       throw new RangeError(`Parçacık türü bayt aralığında olmalı: ${type}`);
     }
@@ -69,7 +77,7 @@ export class ParticleStore {
     }
     const slot = this.active.indexOf(0);
     if (slot === NO_SLOT) return NO_SLOT;
-    if (this.nextId > 0xffffffff) throw new RangeError('Stable ID alanı tükendi.');
+    if (this.nextId > MAX_STABLE_ID) throw new RangeError('Stable ID alanı tükendi.');
     this.x[slot] = x;
     this.y[slot] = y;
     this.previousX[slot] = x;
@@ -86,14 +94,15 @@ export class ParticleStore {
     return slot;
   }
 
-  /** Geri dönüşsüz: slot pasifleşir, ID bir daha kullanılmaz; ikinci çağrı sessizdir. */
-  deactivate(slot: number): void {
+  /** Geri dönüşsüz: slot kanonik boşa iner, ID bir daha kullanılmaz; ikinci çağrı sessizdir. */
+  deactivateSlot(slot: number): void {
     if (!Number.isInteger(slot) || slot < 0 || slot >= this.capacity) {
       throw new RangeError(`Slot kapasite dışında: ${slot}`);
     }
     if (this.active[slot] === 0) return;
     this.active[slot] = 0;
     this.activeTotal--;
+    this.clearSlot(slot);
   }
 
   snapshot(): ParticleSnapshot {
@@ -132,9 +141,27 @@ export class ParticleStore {
     for (let slot = 0; slot < this.capacity; slot++) total += snapshot.active[slot];
     this.activeTotal = total;
   }
+
+  private clearSlot(slot: number): void {
+    this.x[slot] = 0;
+    this.y[slot] = 0;
+    this.previousX[slot] = 0;
+    this.previousY[slot] = 0;
+    this.vx[slot] = 0;
+    this.vy[slot] = 0;
+    this.forceX[slot] = 0;
+    this.forceY[slot] = 0;
+    this.type[slot] = 0;
+    this.stableId[slot] = 0;
+    this.edgeDistance[slot] = Number.POSITIVE_INFINITY;
+  }
 }
 
-/** Uzunluk, sonluluk, aktif bayrak, ID tekilliği ve sayaç tutarlılığı; canlı state'e dokunmaz. */
+/**
+ * Uzunluk, sonluluk, aktif bayrak, ID tekilliği, sayaç tutarlılığı ve PASİF
+ * slotun kanonikliği; canlı state'e dokunmaz. Kanonik olmayan pasif slot
+ * reddedilir: aksi hâlde aynı mantıksal dünya iki farklı bayt dizisi üretirdi.
+ */
 export function validateParticleSnapshot(snapshot: ParticleSnapshot, capacity: number): void {
   const arrays = [
     snapshot.x,
@@ -148,14 +175,28 @@ export function validateParticleSnapshot(snapshot: ParticleSnapshot, capacity: n
   if (arrays.some((array) => array.length !== capacity)) {
     throw new RangeError(`Parçacık snapshotı ${capacity} değer taşımalı`);
   }
-  if (!Number.isInteger(snapshot.nextStableId) || snapshot.nextStableId < 1) {
-    throw new RangeError('Sonraki stable ID pozitif tam sayı olmalı.');
+  if (
+    !Number.isInteger(snapshot.nextStableId) ||
+    snapshot.nextStableId < 1 ||
+    snapshot.nextStableId > MAX_STABLE_ID + 1
+  ) {
+    throw new RangeError('Sonraki stable ID 1 ile 2^32 arasında bir tam sayı olmalı.');
   }
   const seen = new Set<number>();
   for (let slot = 0; slot < capacity; slot++) {
     const flag = snapshot.active[slot];
     if (flag !== 0 && flag !== 1) throw new RangeError(`Aktif bayrağı 0/1 olmalı: slot ${slot}`);
-    if (flag === 0) continue;
+    if (flag === 0) {
+      const canonical =
+        snapshot.x[slot] === 0 &&
+        snapshot.y[slot] === 0 &&
+        snapshot.vx[slot] === 0 &&
+        snapshot.vy[slot] === 0 &&
+        snapshot.type[slot] === 0 &&
+        snapshot.stableId[slot] === 0;
+      if (!canonical) throw new RangeError(`Pasif slot kanonik boş olmalı: slot ${slot}`);
+      continue;
+    }
     if (
       !Number.isFinite(snapshot.x[slot]) ||
       !Number.isFinite(snapshot.y[slot]) ||

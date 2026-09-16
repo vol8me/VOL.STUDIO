@@ -17,8 +17,8 @@ describe('PerturbationSystem', () => {
   it('velocity-kick hızı değiştirir', () => {
     const system = new PerturbationSystem(defaultPerturbationConfig);
     const particles = new ParticleStore(4);
-    particles.spawn(500, 500, 0, 0, 0);
-    particles.spawn(520, 500, 0, 0, 0);
+    particles.activateSlot(500, 500, 0, 0, 0);
+    particles.activateSlot(520, 500, 0, 0, 0);
     const before = Math.hypot(particles.vx[0], particles.vy[0]);
     system.apply(null as never, particles, {
       kind: 'velocity-kick',
@@ -33,7 +33,7 @@ describe('PerturbationSystem', () => {
   it('position-shift konumu değiştirir', () => {
     const system = new PerturbationSystem(defaultPerturbationConfig);
     const particles = new ParticleStore(4);
-    particles.spawn(500, 500, 0, 0, 0);
+    particles.activateSlot(500, 500, 0, 0, 0);
     const before = particles.x[0];
     system.apply(null as never, particles, {
       kind: 'position-shift',
@@ -47,8 +47,8 @@ describe('PerturbationSystem', () => {
   it('matter-removal parçacığı pasifleştirir', () => {
     const system = new PerturbationSystem(defaultPerturbationConfig);
     const particles = new ParticleStore(4);
-    particles.spawn(500, 500, 0, 0, 0);
-    particles.spawn(520, 500, 0, 0, 0);
+    particles.activateSlot(500, 500, 0, 0, 0);
+    particles.activateSlot(520, 500, 0, 0, 0);
     expect(particles.activeCount).toBe(2);
     system.apply(null as never, particles, {
       kind: 'matter-removal',
@@ -62,8 +62,8 @@ describe('PerturbationSystem', () => {
   it('force-pulse merkezden dışarı kuvvet uygular', () => {
     const system = new PerturbationSystem(defaultPerturbationConfig);
     const particles = new ParticleStore(4);
-    particles.spawn(500, 500, 0, 0, 0);
-    particles.spawn(510, 500, 0, 0, 0);
+    particles.activateSlot(500, 500, 0, 0, 0);
+    particles.activateSlot(510, 500, 0, 0, 0);
     const before = Math.hypot(particles.vx[0], particles.vy[0]);
     system.apply(null as never, particles, {
       kind: 'force-pulse',
@@ -78,8 +78,8 @@ describe('PerturbationSystem', () => {
   it('snapshot aktif parçacık metriklerini ölçer', () => {
     const system = new PerturbationSystem(defaultPerturbationConfig);
     const particles = new ParticleStore(4);
-    particles.spawn(500, 500, 1, 0, 0);
-    particles.spawn(520, 500, 0, 1, 0);
+    particles.activateSlot(500, 500, 1, 0, 0);
+    particles.activateSlot(520, 500, 0, 1, 0);
     const snap = system.snapshot(particles);
     expect(snap.activeCount).toBe(2);
     expect(snap.meanSpeed).toBeCloseTo(1, 5);

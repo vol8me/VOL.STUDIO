@@ -3,7 +3,8 @@ import { particlePalette } from '@/config/particles';
 import { substrateConfig } from '@/config/substrate';
 import { ParticleRenderer } from '@/runtime/render/ParticleRenderer';
 import { ParticleStore } from '@/runtime/sim/ParticleStore';
-import { HabitatSDF } from '@/runtime/sim/WorldDomain';
+import type { HabitatSDF } from '@/runtime/sim/WorldDomain';
+import { createHabitatDomain } from '@/runtime/sim/WorldDomain';
 
 function harness(domain?: HabitatSDF) {
   const graphics = {
@@ -38,8 +39,8 @@ describe('ParticleRenderer', () => {
   it('tek sabit Phaser üyesiyle tür paletini dünya biriminde çizer', () => {
     const { renderer, scene, graphics } = harness();
     const particles = new ParticleStore(2);
-    particles.spawn(10, 30, 0, 0, 0);
-    particles.spawn(20, 40, 0, 0, 5);
+    particles.activateSlot(10, 30, 0, 0, 0);
+    particles.activateSlot(20, 40, 0, 0, 5);
 
     renderer.render(particles, 1);
 
@@ -57,7 +58,7 @@ describe('ParticleRenderer', () => {
   it('önceki ve güncel fizik durumunu render fazıyla ara değerler', () => {
     const { renderer, graphics } = harness();
     const particles = new ParticleStore(1);
-    particles.spawn(15, 30, 0, 0, 0);
+    particles.activateSlot(15, 30, 0, 0, 0);
     particles.previousX[0] = 5;
     particles.previousY[0] = 10;
 
@@ -69,7 +70,7 @@ describe('ParticleRenderer', () => {
   it('yalnız kanonik koordinatı kullanır ve idempotent kapanır', () => {
     const { renderer, graphics } = harness();
     const particles = new ParticleStore(1);
-    particles.spawn(5, 10, 0, 0, 0);
+    particles.activateSlot(5, 10, 0, 0, 0);
 
     renderer.render(particles, 1);
     renderer.destroy();
@@ -106,7 +107,7 @@ describe('ParticleRenderer', () => {
   it('hızlı parçacığı hız yönünde uzatır', () => {
     const { renderer, graphics } = harness();
     const particles = new ParticleStore(1);
-    particles.spawn(500, 500, 10, 0, 0);
+    particles.activateSlot(500, 500, 10, 0, 0);
 
     renderer.render(particles, 1);
 
@@ -117,7 +118,7 @@ describe('ParticleRenderer', () => {
   });
 
   it('domain verildiğinde fringe içindeki parçacığı normale göre uzatır', () => {
-    const sdf = new HabitatSDF(substrateConfig.world.boundsUnits, substrateConfig.habitat, 7);
+    const sdf = createHabitatDomain(substrateConfig.world.boundsUnits, substrateConfig.habitat, 7);
     const { renderer, graphics } = harness(sdf);
     const particles = new ParticleStore(1);
     const contour = sdf.contour(64);
@@ -125,7 +126,7 @@ describe('ParticleRenderer', () => {
     const cy = contour[1];
     const normal = sdf.normal(cx, cy);
     const inside = { x: cx - normal.x * 2, y: cy - normal.y * 2 };
-    particles.spawn(inside.x, inside.y, 0, 0, 0);
+    particles.activateSlot(inside.x, inside.y, 0, 0, 0);
     particles.edgeDistance[0] = 2;
 
     renderer.render(particles, 1);
@@ -136,7 +137,7 @@ describe('ParticleRenderer', () => {
   it('domain olmadan fringe distance yoksayılır ve hız esastır', () => {
     const { renderer, graphics } = harness();
     const particles = new ParticleStore(1);
-    particles.spawn(500, 500, 5, 0, 0);
+    particles.activateSlot(500, 500, 5, 0, 0);
     particles.edgeDistance[0] = 2;
 
     renderer.render(particles, 1);
@@ -147,7 +148,7 @@ describe('ParticleRenderer', () => {
   it('interpolationAlpha 0–1 dışını kenetler', () => {
     const { renderer, graphics } = harness();
     const particles = new ParticleStore(1);
-    particles.spawn(100, 200, 0, 0, 0);
+    particles.activateSlot(100, 200, 0, 0, 0);
     particles.previousX[0] = 100;
     particles.previousY[0] = 200;
 
@@ -158,11 +159,24 @@ describe('ParticleRenderer', () => {
     expect(graphics.fillCircle).toHaveBeenLastCalledWith(100, 200, 4.5);
   });
 
+  /* Kanonik slot sözleşmesinin görünür karşılığı: hayalet eski konumdan çizilemez. */
+  it('yeniden kullanılan slot aynı karede eski parçacığın konumundan çizilmez', () => {
+    const { renderer, graphics } = harness();
+    const particles = new ParticleStore(1);
+    particles.activateSlot(100, 200, 0, 0, 0);
+    particles.deactivateSlot(0);
+    particles.activateSlot(500, 600, 0, 0, 1);
+
+    renderer.render(particles, 0.5);
+
+    expect(graphics.fillCircle).toHaveBeenCalledExactlyOnceWith(500, 600, 4.5);
+  });
+
   it('aktif olmayan slotları çizmez', () => {
     const { renderer, graphics } = harness();
     const particles = new ParticleStore(2);
-    particles.spawn(10, 30, 0, 0, 0);
-    particles.deactivate(0);
+    particles.activateSlot(10, 30, 0, 0, 0);
+    particles.deactivateSlot(0);
 
     renderer.render(particles, 1);
 

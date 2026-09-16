@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { MorphologyMetrics, defaultMetricsConfig } from '@/../scripts/morphology/metrics';
 import { ParticleStore } from '@/runtime/sim/ParticleStore';
-import { HabitatSDF } from '@/runtime/sim/WorldDomain';
+import type { HabitatSDF } from '@/runtime/sim/WorldDomain';
+import { createHabitatDomain } from '@/runtime/sim/WorldDomain';
 import { substrateConfig } from '@/config/substrate';
 
 function createDomain(): HabitatSDF {
-  return new HabitatSDF(substrateConfig.world.boundsUnits, substrateConfig.habitat, 7);
+  return createHabitatDomain(substrateConfig.world.boundsUnits, substrateConfig.habitat, 7);
 }
 
 describe('MorphologyMetrics', () => {
@@ -22,8 +23,8 @@ describe('MorphologyMetrics', () => {
   it('aktif parçacık sayısı ve hız metrikleri doğru ölçer', () => {
     const metrics = new MorphologyMetrics(defaultMetricsConfig);
     const particles = new ParticleStore(4);
-    particles.spawn(500, 500, 1, 0, 0);
-    particles.spawn(520, 500, 0, 1, 1);
+    particles.activateSlot(500, 500, 1, 0, 0);
+    particles.activateSlot(520, 500, 0, 1, 1);
     const domain = createDomain();
     const sample = metrics.sample(particles, domain, 0, 0);
     expect(sample.activeCount).toBe(2);
@@ -34,9 +35,9 @@ describe('MorphologyMetrics', () => {
   it('tür kompozisyonu doğru hesaplar', () => {
     const metrics = new MorphologyMetrics(defaultMetricsConfig);
     const particles = new ParticleStore(4);
-    particles.spawn(500, 500, 0, 0, 0);
-    particles.spawn(520, 500, 0, 0, 0);
-    particles.spawn(540, 500, 0, 0, 1);
+    particles.activateSlot(500, 500, 0, 0, 0);
+    particles.activateSlot(520, 500, 0, 0, 0);
+    particles.activateSlot(540, 500, 0, 0, 1);
     const domain = createDomain();
     const sample = metrics.sample(particles, domain, 0, 0);
     expect(sample.typeComposition[0]).toBeCloseTo(2 / 3, 5);
@@ -46,7 +47,7 @@ describe('MorphologyMetrics', () => {
   it('zaman serisi birikir', () => {
     const metrics = new MorphologyMetrics(defaultMetricsConfig);
     const particles = new ParticleStore(2);
-    particles.spawn(500, 500, 1, 0, 0);
+    particles.activateSlot(500, 500, 1, 0, 0);
     const domain = createDomain();
     metrics.sample(particles, domain, 0, 0);
     metrics.sample(particles, domain, 30, 0);
@@ -59,7 +60,7 @@ describe('MorphologyMetrics', () => {
   it('reset zaman serisini temizler', () => {
     const metrics = new MorphologyMetrics(defaultMetricsConfig);
     const particles = new ParticleStore(2);
-    particles.spawn(500, 500, 1, 0, 0);
+    particles.activateSlot(500, 500, 1, 0, 0);
     const domain = createDomain();
     metrics.sample(particles, domain, 0, 0);
     metrics.reset();

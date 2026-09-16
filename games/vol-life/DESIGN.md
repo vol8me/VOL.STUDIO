@@ -723,9 +723,20 @@ Dünya seed'i build config'i değildir. Yeni dünya cryptographic seed,
 `worldId` ve oluşturma zamanı üretir; explicit seed yalnız test/replay
 içindir. Metadata config fingerprint'ine girmez.
 
+Rastgelelik tek bir akış değildir. Dünya tohumundan alt sistem başına ayrı
+akışlar türetilir ve liste dondurulmuştur: `habitat`, `fields`,
+`matter-seeding`, `lifecycle`, `behavior`, `evolution`. Türetme akış adının
+FNV-1a'sını SplitMix32 ile karıştırır; SplitMix32 uint32 üzerinde birebir
+olduğu için aynı dünyada iki akış aynı tohumu alamaz ve türetme altın değer
+testiyle kilitlidir. Her alt sistem YALNIZ kendi akışını görür: ışık kaynağı
+sayısını değiştirmek parçacık başlangıcını, seeding parametresini değiştirmek
+ışık alanını ve habitat konturunu kaydıramaz. Akış tablosunun tamamı
+snapshot'a girer, çünkü kurulumdan sonra ilerleyen bir akışın durumu
+kaydedilmezse kayıttan devam eden dünya başka bir diziye geçer.
+
 V2 snapshot şunları taşımak zorundadır:
 
-- world metadata, tick ve RNG state;
+- world metadata, tick ve adlandırılmış RNG akışlarının durumu;
 - HabitatSDF'yi yeniden üreten sürümlü parametreler/digest;
 - field ve resource dizileri;
 - particle capacity, active mask, stable ID'ler ve next ID;
@@ -1230,8 +1241,9 @@ sözleşmesi veya gönderilen candidate catalog'u değildir.
   capacity-managed `ParticleStore` (512 aktif/kapasite), `ParticleSpatialHash`
   (yalnız aktif slot), organik `HabitatSDF`/`WorldDomain`, `VoidSink`
   (geri dönüşsüz deaktivasyon + `MatterReservoir`), `InitialMatterSeeder`
-  (patch+cloud dağılımı), v3 snapshot codec ve persistence, çok bantlı field
-  güncelleme, deterministic RNG, camera-domain handling, Void-death rendering.
+  (patch+cloud dağılımı), v4 snapshot codec ve persistence (adlandırılmış RNG
+  akış tablosu + kanonik pasif slot doğrulaması), çok bantlı field güncelleme,
+  alt sistem başına ayrı RNG akışı, camera-domain handling, Void-death rendering.
 - Eski 100 parçacıklı triangular fizik ve dikdörtgen impulse sınırı artık
   production'da DEĞİLDİR; yalnız negatif baseline olarak benchmark fixture'ında
   korunur.

@@ -45,7 +45,7 @@ function seededWorld(bound: number, count: number, seed: number): ParticleStore 
     const vx = (next() - 0.5) * 2;
     const vy = (next() - 0.5) * 2;
     const type = Math.floor(next() * 6);
-    particles.spawn(x, y, vx, vy, type);
+    particles.activateSlot(x, y, vx, vy, type);
   }
   return particles;
 }
@@ -89,8 +89,8 @@ describe('Brute-force oracle: spatial-hash kernel vs all-pairs reference', () =>
   it('pasif parçacıklar kuvvet hesabına girmez', () => {
     const kernel = createMultiBandKernel(defaultPhysicsGenome);
     const particles = seededWorld(bounds.width, 16, 7);
-    particles.deactivate(3);
-    particles.deactivate(7);
+    particles.deactivateSlot(3);
+    particles.deactivateSlot(7);
     const grid = new ParticleSpatialHash(bounds, cellSize, particles.capacity);
     grid.rebuild(particles);
     accumulateParticleForces(particles, grid, kernel, forceScale);
@@ -110,8 +110,8 @@ describe('Brute-force oracle: spatial-hash kernel vs all-pairs reference', () =>
     const kernel = createMultiBandKernel(defaultPhysicsGenome);
     const particles = new ParticleStore(12);
     for (let t = 0; t < 6; t++) {
-      particles.spawn(200 + t * 20, 200, 0, 0, t);
-      particles.spawn(200 + t * 20, 220, 0, 0, t);
+      particles.activateSlot(200 + t * 20, 200, 0, 0, t);
+      particles.activateSlot(200 + t * 20, 220, 0, 0, t);
     }
     const grid = new ParticleSpatialHash(bounds, cellSize, particles.capacity);
     grid.rebuild(particles);
@@ -143,10 +143,10 @@ describe('Brute-force oracle: spatial-hash kernel vs all-pairs reference', () =>
   it('kenar parçacıkları: sınır yakınında hash ile brute-force uyuşur', () => {
     const kernel = createMultiBandKernel(defaultPhysicsGenome);
     const particles = new ParticleStore(8);
-    particles.spawn(10, 10, 0, 0, 0);
-    particles.spawn(20, 10, 0, 0, 1);
-    particles.spawn(bounds.width - 10, bounds.height - 10, 0, 0, 2);
-    particles.spawn(bounds.width - 20, bounds.height - 10, 0, 0, 3);
+    particles.activateSlot(10, 10, 0, 0, 0);
+    particles.activateSlot(20, 10, 0, 0, 1);
+    particles.activateSlot(bounds.width - 10, bounds.height - 10, 0, 0, 2);
+    particles.activateSlot(bounds.width - 20, bounds.height - 10, 0, 0, 3);
     const grid = new ParticleSpatialHash(bounds, cellSize, particles.capacity);
     grid.rebuild(particles);
     accumulateParticleForces(particles, grid, kernel, forceScale);

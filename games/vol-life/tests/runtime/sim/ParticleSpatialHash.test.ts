@@ -15,13 +15,13 @@ function sortedSlots(grid: ParticleSpatialHash, cell: number): number[] {
 describe('ParticleSpatialHash', () => {
   it('yalnız aktif parçacıkları counting-sort dizisine birer kez yazar', () => {
     const particles = new ParticleStore(5);
-    particles.spawn(10, 10, 0, 0, 0);
-    particles.spawn(20, 20, 0, 0, 0);
-    particles.spawn(200, 200, 0, 0, 0);
-    particles.spawn(300, 10, 0, 0, 0);
-    particles.spawn(350, 350, 0, 0, 0);
-    particles.deactivate(1);
-    particles.deactivate(4);
+    particles.activateSlot(10, 10, 0, 0, 0);
+    particles.activateSlot(20, 20, 0, 0, 0);
+    particles.activateSlot(200, 200, 0, 0, 0);
+    particles.activateSlot(300, 10, 0, 0, 0);
+    particles.activateSlot(350, 350, 0, 0, 0);
+    particles.deactivateSlot(1);
+    particles.deactivateSlot(4);
     const grid = new ParticleSpatialHash(BOUNDS, 128, 5);
 
     grid.rebuild(particles);
@@ -38,9 +38,9 @@ describe('ParticleSpatialHash', () => {
 
   it('pasif slotun içeriği depolama dışında olsa da indekslemeyi bozmaz', () => {
     const particles = new ParticleStore(2);
-    particles.spawn(10, 10, 0, 0, 0);
-    particles.spawn(10, 10, 0, 0, 0);
-    particles.deactivate(1);
+    particles.activateSlot(10, 10, 0, 0, 0);
+    particles.activateSlot(10, 10, 0, 0, 0);
+    particles.deactivateSlot(1);
     particles.x[1] = -9999;
     const grid = new ParticleSpatialHash(BOUNDS, 128, 2);
 
@@ -50,7 +50,7 @@ describe('ParticleSpatialHash', () => {
 
   it('aktif parçacık depolama dışına çıkarsa sessizce yutmaz, RangeError fırlatır', () => {
     const particles = new ParticleStore(1);
-    particles.spawn(-1, 10, 0, 0, 0);
+    particles.activateSlot(-1, 10, 0, 0, 0);
     const grid = new ParticleSpatialHash(BOUNDS, 128, 1);
     expect(() => grid.rebuild(particles)).toThrow(/depolama sınırının dışında/);
   });

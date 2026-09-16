@@ -1,17 +1,24 @@
 import { FIELD_NAMES, type FieldSnapshot } from '@/runtime/sim/FieldSet';
 import type { LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 import { validateMatterReservoirSnapshot } from '@/runtime/sim/MatterReservoir';
-import { validateParticleSnapshot, type ParticleSnapshot } from '@/runtime/sim/ParticleStore';
+import {
+  MAX_STABLE_ID,
+  validateParticleSnapshot,
+  type ParticleSnapshot,
+} from '@/runtime/sim/ParticleStore';
+import { RANDOM_STREAM_IDS, validateRandomStreamStates } from '@/runtime/sim/RandomStreams';
 import { validateWorldMetadata } from '@/runtime/sim/WorldMetadata';
 
 const BINARY_MAGIC = 0x564c4946;
-const BINARY_VERSION = 3;
-const ENVELOPE_VERSION = 3;
+/** v4: tek RNG durumu yerine adlandırılmış akış tablosu ve kanonik pasif slot doğrulaması. */
+const BINARY_VERSION = 4;
+const ENVELOPE_VERSION = 4;
 const HEADER_BYTES = 64;
 const MAX_WORLD_ID_BYTES = 256;
 const HABITAT_DIGEST_BYTES = 16;
 const FIELD_ARRAY_COUNT = FIELD_NAMES.length + 1;
 const PARTICLE_FLOAT_ARRAY_COUNT = 4;
+const STREAM_COUNT = RANDOM_STREAM_IDS.length;
 const MAX_BINARY_BYTES = 64 * 1024 * 1024;
 const MAX_STREAM_BYTES = MAX_BINARY_BYTES + 1024 * 1024;
 const MAX_PAYLOAD_CHARS = Math.ceil((MAX_STREAM_BYTES * 4) / 3) + 4;
@@ -93,25 +100,30 @@ function encodeBinary(snapshot: LifeWorldSnapshot): Uint8Array {
   const view = new DataView(bytes.buffer);
   view.setUint32(0, BINARY_MAGIC, true);
   view.setUint16(4, BINARY_VERSION, true);
-  view.setUint16(6, 0, true);
+  view.setUint16(6, STREAM_COUNT, true);
   view.setFloat64(8, snapshot.tick, true);
-  view.setInt32(16, snapshot.rngState, true);
-  view.setUint32(20, snapshot.nextFieldBand, true);
-  view.setUint32(24, fieldLength, true);
-  view.setUint32(28, capacity, true);
-  view.setUint32(32, snapshot.metadata.seed, true);
-  view.setFloat64(36, snapshot.metadata.createdAtMs, true);
-  view.setUint16(44, worldId.byteLength, true);
-  view.setUint16(46, digest.byteLength, true);
-  view.setUint32(48, snapshot.particles.nextStableId, true);
-  view.setUint32(52, snapshot.reservoir.external, true);
-  view.setUint32(56, snapshot.reservoir.voidLossTotal, true);
+  view.setUint32(16, snapshot.nextFieldBand, true);
+  view.setUint32(20, fieldLength, true);
+  view.setUint32(24, capacity, true);
+  view.setUint32(28, snapshot.metadata.seed, true);
+  view.setFloat64(32, snapshot.metadata.createdAtMs, true);
+  view.setUint16(40, worldId.byteLength, true);
+  view.setUint16(42, digest.byteLength, true);
+  // Sayaç değil VERİLMİŞ ID sayısı yazılır: tükenmiş alanda `nextStableId` 2^32'dir ve uint32'ye sığmaz.
+  view.setUint32(44, snapshot.particles.nextStableId - 1, true);
+  view.setUint32(48, snapshot.reservoir.external, true);
+  view.setUint32(52, snapshot.reservoir.voidLossTotal, true);
+  view.setUint32(56, 0, true);
   view.setUint32(60, 0, true);
   let offset = HEADER_BYTES;
   bytes.set(worldId, offset);
   offset += worldId.byteLength;
   bytes.set(digest, offset);
   offset += digest.byteLength;
+  for (let index = 0; index < STREAM_COUNT; index++) {
+    view.setInt32(offset, snapshot.randomStreamStates[index], true);
+    offset += Int32Array.BYTES_PER_ELEMENT;
+  }
   offset = writeFloatArray(view, offset, snapshot.nutrientDiffusionSource);
   for (const name of FIELD_NAMES) offset = writeFloatArray(view, offset, snapshot.fields[name]);
   for (const array of particleFloatArrays(snapshot.particles)) {
@@ -134,17 +146,19 @@ function decodeBinary(bytes: Uint8Array): LifeWorldSnapshot {
   if (view.getUint32(0, true) !== BINARY_MAGIC || view.getUint16(4, true) !== BINARY_VERSION) {
     throw new RangeError('Dünya kaydı biçimi tanınmıyor.');
   }
+  if (view.getUint16(6, true) !== STREAM_COUNT) {
+    throw new RangeError('Dünya kaydı farklı sayıda rastgelelik akışı taşıyor.');
+  }
   const tick = view.getFloat64(8, true);
-  const rngState = view.getInt32(16, true);
-  const nextFieldBand = view.getUint32(20, true);
-  const fieldLength = view.getUint32(24, true);
-  const capacity = view.getUint32(28, true);
-  const seed = view.getUint32(32, true);
-  const createdAtMs = view.getFloat64(36, true);
-  const worldIdLength = view.getUint16(44, true);
-  const digestLength = view.getUint16(46, true);
-  const nextStableId = view.getUint32(48, true);
-  const reservoir = { external: view.getUint32(52, true), voidLossTotal: view.getUint32(56, true) };
+  const nextFieldBand = view.getUint32(16, true);
+  const fieldLength = view.getUint32(20, true);
+  const capacity = view.getUint32(24, true);
+  const seed = view.getUint32(28, true);
+  const createdAtMs = view.getFloat64(32, true);
+  const worldIdLength = view.getUint16(40, true);
+  const digestLength = view.getUint16(42, true);
+  const nextStableId = view.getUint32(44, true) + 1;
+  const reservoir = { external: view.getUint32(48, true), voidLossTotal: view.getUint32(52, true) };
   if (!Number.isSafeInteger(tick) || tick < 0 || fieldLength < 4 || capacity < 1) {
     throw new RangeError('Dünya kaydı boyutları geçersiz.');
   }
@@ -166,6 +180,11 @@ function decodeBinary(bytes: Uint8Array): LifeWorldSnapshot {
   offset += worldIdLength;
   const habitatDigest = decoder.decode(bytes.subarray(offset, offset + digestLength));
   offset += digestLength;
+  const randomStreamStates = new Int32Array(STREAM_COUNT);
+  for (let index = 0; index < STREAM_COUNT; index++) {
+    randomStreamStates[index] = view.getInt32(offset, true);
+    offset += Int32Array.BYTES_PER_ELEMENT;
+  }
   let array: Float32Array;
   [array, offset] = readFloatArray(view, offset, fieldLength);
   const nutrientDiffusionSource = array;
@@ -191,7 +210,7 @@ function decodeBinary(bytes: Uint8Array): LifeWorldSnapshot {
   const snapshot: LifeWorldSnapshot = {
     metadata: { id, seed, createdAtMs },
     tick,
-    rngState,
+    randomStreamStates,
     nextFieldBand,
     habitatDigest,
     nutrientDiffusionSource,
@@ -217,6 +236,7 @@ function expectedByteLength(worldIdBytes: number, fieldLength: number, capacity:
     HEADER_BYTES +
     worldIdBytes +
     HABITAT_DIGEST_BYTES +
+    STREAM_COUNT * Int32Array.BYTES_PER_ELEMENT +
     fieldLength * Float32Array.BYTES_PER_ELEMENT * FIELD_ARRAY_COUNT +
     capacity * Float32Array.BYTES_PER_ELEMENT * PARTICLE_FLOAT_ARRAY_COUNT +
     capacity * 2 +
@@ -246,18 +266,16 @@ function validateSnapshotShape(
   validateWorldMetadata(snapshot.metadata);
   validateMatterReservoirSnapshot(snapshot.reservoir);
   validateParticleSnapshot(snapshot.particles, capacity);
+  validateRandomStreamStates(snapshot.randomStreamStates);
   const fieldsValid =
     snapshot.nutrientDiffusionSource.length === fieldLength &&
     FIELD_NAMES.every((name) => snapshot.fields[name].length === fieldLength);
   if (!fieldsValid) throw new RangeError('Dünya snapshotı dizileri ayrışıyor.');
   const numbersValid =
-    Number.isInteger(snapshot.rngState) &&
-    snapshot.rngState >= -0x80000000 &&
-    snapshot.rngState <= 0x7fffffff &&
     Number.isInteger(snapshot.nextFieldBand) &&
     snapshot.nextFieldBand >= 0 &&
     snapshot.nextFieldBand <= 0xffffffff &&
-    snapshot.particles.nextStableId <= 0xffffffff &&
+    snapshot.particles.nextStableId <= MAX_STABLE_ID + 1 &&
     isFiniteFloatArray(snapshot.nutrientDiffusionSource) &&
     FIELD_NAMES.every((name) => isFiniteFloatArray(snapshot.fields[name]));
   if (!numbersValid) {

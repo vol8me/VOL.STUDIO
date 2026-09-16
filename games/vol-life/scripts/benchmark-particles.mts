@@ -7,7 +7,7 @@ import { createMultiBandKernel } from '../src/runtime/sim/PairForceKernel';
 import { ParticleSpatialHash } from '../src/runtime/sim/ParticleSpatialHash';
 import { ParticleStore } from '../src/runtime/sim/ParticleStore';
 import { seedInitialMatter } from '../src/runtime/sim/InitialMatterSeeder';
-import { HabitatSDF } from '../src/runtime/sim/WorldDomain';
+import { createHabitatDomain } from '../src/runtime/sim/WorldDomain';
 import { VoidSink, type VoidCrossing } from '../src/runtime/sim/VoidSink';
 import { MatterReservoir } from '../src/runtime/sim/MatterReservoir';
 import { createSimRandom } from '../src/runtime/sim/rng';
@@ -33,7 +33,7 @@ else {
 
 function measure(candidate: { particles: number; worldSize: number }) {
   const bounds = { x: 0, y: 0, width: candidate.worldSize, height: candidate.worldSize };
-  const domain = new HabitatSDF(bounds, substrateConfig.habitat, 0x10fe1);
+  const domain = createHabitatDomain(bounds, substrateConfig.habitat, 0x10fe1);
   const particles = new ParticleStore(candidate.particles);
   seedInitialMatter(
     particles,

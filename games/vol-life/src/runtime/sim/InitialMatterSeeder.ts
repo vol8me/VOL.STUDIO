@@ -40,7 +40,7 @@ export function seedInitialMatter(
   const spawn = (x: number, y: number): void => {
     const angle = random.next() * Math.PI * 2;
     const speed = dynamics.initialSpeedUnitsPerReferenceTick * random.next();
-    particles.spawn(
+    particles.activateSlot(
       x,
       y,
       Math.cos(angle) * speed,
