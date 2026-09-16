@@ -58,6 +58,13 @@ export interface MorphologySample {
   readonly recurrenceFraction: number;
   readonly voidDwellFraction: number;
   readonly fringeFraction: number;
+  /** Kapsam dışında kalan aktif madde; morfolojiye girmez, AYRI sayılır (E10). */
+  readonly scopedOutCount: number;
+  /**
+   * Yapılı maddenin FİZİKSEL fringe bandındaki payı (E10). Kapsamdan bağımsız
+   * hesaplanır: ölçtüğü şey tam da kapsam dışındaki yapıdır.
+   */
+  readonly fringeStructuredFraction: number;
   /** Kümelere ait maddenin toplam aktif maddeye oranı. */
   readonly clusteredFraction: number;
   readonly clusterCount: number;
@@ -78,6 +85,14 @@ export interface MorphologyMetricsConfig {
   readonly fixedStepMs: number;
   /** Ölçüm aralığı; lag buna tam bölünmeli. */
   readonly sampleIntervalTicks: number;
+  /**
+   * Morfoloji kapsamı (E10): kıyı mesafesi bunun altındaki madde DIŞLANIR.
+   * Senaryodan `resolveMorphologyScope` ile çözülür. Varsayılan sınırsızdır ki
+   * senaryo belirtmeyen ölçümlerin sayıları sessizce kaymasın.
+   */
+  readonly minEdgeDistanceUnits: number;
+  /** Fiziksel fringe genişliği; `VoidSink`in tidal bandıyla aynı olmalıdır. */
+  readonly fringeWidthUnits: number;
   /** Yinelemede "başlangıç komşuluğu" yarıçapı, dünya birimi. */
   readonly recurrenceRadiusUnits: number;
   /** Boyuta göre kaç küme ayrı ayrı kaydedilir. */
@@ -89,6 +104,8 @@ export const defaultMetricsConfig: MorphologyMetricsConfig = {
   neighborRadiusUnits: 48,
   fringeDistanceThreshold: 32,
   voidDistanceThreshold: 0,
+  minEdgeDistanceUnits: Number.NEGATIVE_INFINITY,
+  fringeWidthUnits: 24,
   trajectoryLagSeconds: 1,
   fixedStepMs: 1000 / 60,
   sampleIntervalTicks: 10,
@@ -121,7 +138,8 @@ export class MorphologyMetrics {
     voidLossCount: number,
     clusters: readonly ClusterState[] = [],
   ): MorphologySample {
-    const active = this.collectActive(particles);
+    const scoped = this.collectActive(particles, domain);
+    const active = scoped.active;
     const count = active.length;
     const meanSpeed = count > 0 ? this.meanSpeed(particles, active) : 0;
     const stalledFraction = count > 0 ? this.stalledFraction(particles, active) : 0;
@@ -132,7 +150,7 @@ export class MorphologyMetrics {
     const voidDwell = this.voidDwellFraction(particles, active, domain);
     const fringe = this.fringeFraction(particles, active, domain);
     const trajectory = this.trajectoryMeasures(particles, tick);
-    const clusterLayer = this.clusterLayer(particles, clusters, tick);
+    const clusterLayer = this.clusterLayer(particles, clusters, tick, scoped.inScope, count);
     const sample: MorphologySample = {
       tick,
       activeCount: count,
@@ -150,6 +168,8 @@ export class MorphologyMetrics {
       recurrenceFraction: trajectory.recurrenceFraction,
       voidDwellFraction: voidDwell,
       fringeFraction: fringe,
+      scopedOutCount: scoped.scopedOut,
+      fringeStructuredFraction: this.fringeStructuredFraction(particles, clusters, domain),
       ...clusterLayer,
     };
     this.history.push(sample);
@@ -176,6 +196,8 @@ export class MorphologyMetrics {
     particles: ParticleStore,
     clusters: readonly ClusterState[],
     tick: number,
+    inScope: Set<number>,
+    scopedActiveCount: number,
   ): {
     clusteredFraction: number;
     clusterCount: number;
@@ -192,7 +214,18 @@ export class MorphologyMetrics {
       (a, b) => b.memberIds.length - a.memberIds.length || a.id - b.id,
     );
     const sizes = ordered.map((cluster) => cluster.memberIds.length).sort((a, b) => a - b);
-    const clustered = sizes.reduce((sum, size) => sum + size, 0);
+    /*
+     * Yapılı madde payı KAPSAMLIDIR (E10): intrinsic senaryoda fringe'deki küme
+     * üyeleri yapı sayılmaz. Küme BOYUTLARI tracker'ın bildirdiği gibi kalır —
+     * kümenin tek bir tanımı vardır (E5) ve metrikler yeniden kümelemez.
+     */
+    let clusteredInScope = 0;
+    for (const cluster of clusters) {
+      for (const id of cluster.memberIds) {
+        const slot = slotById.get(id);
+        if (slot !== undefined && inScope.has(slot)) clusteredInScope++;
+      }
+    }
     const records: ClusterRecord[] = [];
     const seen = new Set<number>();
     for (const cluster of ordered.slice(0, this.config.topClusterCount)) {
@@ -224,9 +257,8 @@ export class MorphologyMetrics {
     }
     this.previousMembers.clear();
     for (const cluster of clusters) this.previousMembers.set(cluster.id, [...cluster.memberIds]);
-    const active = particles.activeCount;
     return {
-      clusteredFraction: active > 0 ? clustered / active : 0,
+      clusteredFraction: scopedActiveCount > 0 ? clusteredInScope / scopedActiveCount : 0,
       clusterCount: clusters.length,
       clusterSizeP50: percentile(sizes, 0.5),
       clusterSizeP90: percentile(sizes, 0.9),
@@ -254,12 +286,61 @@ export class MorphologyMetrics {
     return median > 0 ? p90 / median : 0;
   }
 
-  private collectActive(particles: ParticleStore): number[] {
+  /**
+   * Kapsam burada UYGULANIR (E10). Dışlanan madde yok sayılmaz, `scopedOut`
+   * olarak ayrı döner: intrinsic senaryoda kayıplar morfolojiye karışmaz ama
+   * görünmez de olmaz.
+   */
+  private collectActive(
+    particles: ParticleStore,
+    domain: WorldDomain,
+  ): { active: number[]; scopedOut: number; inScope: Set<number> } {
     const active: number[] = [];
+    const inScope = new Set<number>();
+    const limit = this.config.minEdgeDistanceUnits;
+    let scopedOut = 0;
     for (let slot = 0; slot < particles.capacity; slot++) {
-      if (particles.active[slot]) active.push(slot);
+      if (!particles.active[slot]) continue;
+      if (
+        limit > Number.NEGATIVE_INFINITY &&
+        domain.sampleDistanceAndNormal(particles.x[slot], particles.y[slot], domainSample)
+          .distance < limit
+      ) {
+        scopedOut++;
+        continue;
+      }
+      active.push(slot);
+      inScope.add(slot);
     }
-    return active;
+    return { active, scopedOut, inScope };
+  }
+
+  /** Yapılı maddenin fiziksel fringe bandındaki payı; FRINGE_DEPENDENT bunu okur. */
+  private fringeStructuredFraction(
+    particles: ParticleStore,
+    clusters: readonly ClusterState[],
+    domain: WorldDomain,
+  ): number {
+    const slotById = new Map<number, number>();
+    for (let slot = 0; slot < particles.capacity; slot++) {
+      if (particles.active[slot] === 1) slotById.set(particles.stableId[slot], slot);
+    }
+    let structured = 0;
+    let inFringe = 0;
+    for (const cluster of clusters) {
+      for (const id of cluster.memberIds) {
+        const slot = slotById.get(id);
+        if (slot === undefined) continue;
+        structured++;
+        const distance = domain.sampleDistanceAndNormal(
+          particles.x[slot],
+          particles.y[slot],
+          domainSample,
+        ).distance;
+        if (distance < this.config.fringeWidthUnits) inFringe++;
+      }
+    }
+    return structured > 0 ? inFringe / structured : 0;
   }
 
   private meanSpeed(particles: ParticleStore, active: number[]): number {

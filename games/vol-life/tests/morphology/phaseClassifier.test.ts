@@ -24,6 +24,8 @@ function makeSample(partial: Partial<MorphologySample>): MorphologySample {
     recurrenceFraction: 0.1,
     voidDwellFraction: 0,
     fringeFraction: 0.05,
+    scopedOutCount: 0,
+    fringeStructuredFraction: 0,
     clusteredFraction: 0.8,
     clusterCount: 2,
     clusterSizeP50: 120,

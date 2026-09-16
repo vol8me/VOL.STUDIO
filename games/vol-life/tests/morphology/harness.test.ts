@@ -31,6 +31,41 @@ describe('ResearchHarness', () => {
     }
   });
 
+  /*
+   * E10 ENTEGRASYON: iki senaryo harness koşusunda KARIŞMAZ. Aynı aday, aynı
+   * seed, tek fark senaryo. Intrinsic koşu kapsam dışı maddeyi ayrı sayar,
+   * void-stress koşu hiçbir şeyi dışlamaz.
+   *
+   * Void profili geniş seçildi ki 5 tick'lik koşuda kapsam gerçekten madde
+   * dışlasın; dar varsayılan bantta ayrım ölçülemez hâle gelirdi. 80 birim,
+   * `validateSubstrateConfig`in izin verdiği üst sınırın (≈ 83) altındadır.
+   */
+  it('intrinsic ve void-stress senaryoları aynı koşuda karışmaz', () => {
+    const wideVoid = { ...defaultSubstrateCandidate.void, widthUnits: 80 };
+    const harness = new ResearchHarness(smallConfig);
+    const stage = { tickCount: 5, seedCount: 1, sampleInterval: 5 };
+
+    const intrinsic = harness.evaluateCandidate(
+      { ...defaultSubstrateCandidate, void: wideVoid, scenario: { kind: 'intrinsic' } },
+      stage,
+    );
+    const voidStress = harness.evaluateCandidate(
+      {
+        ...defaultSubstrateCandidate,
+        void: wideVoid,
+        scenario: { kind: 'void-stress', tidalControl: false },
+      },
+      stage,
+    );
+
+    const intrinsicSample = intrinsic.seedResults[0].finalSample;
+    const voidStressSample = voidStress.seedResults[0].finalSample;
+
+    expect(intrinsicSample.scopedOutCount).toBeGreaterThan(0);
+    expect(voidStressSample.scopedOutCount).toBe(0);
+    expect(intrinsicSample.activeCount).toBeLessThan(voidStressSample.activeCount);
+  });
+
   it('refinement sadece yapısal adayları işler', () => {
     const harness = new ResearchHarness(smallConfig);
     const broad = harness.runBroad();

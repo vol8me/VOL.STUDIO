@@ -983,6 +983,27 @@ crossing'i ve fringe desteğine bağımlılığı ölçer. Uzun koşuda Void'a s
 iyi bir yapı intrinsic kanıtla reddedilmez; kıyıdan kaçınma Adım 6 algısının
 işidir.
 
+Kapsamın sınırı uydurulmaz. Intrinsic senaryoda morfoloji yalnız GÜVENLİ
+ALANDAKİ maddeyle ölçülür ve güvenli alanın tanımı §2'nin fiziğidir: kıyı
+mesafesi fringe genişliğinden büyük olan yerde tidal kuvvet KESİNLİKLE sıfırdır.
+Kapsam dışında kalan madde yok sayılmaz, ayrı sayılır (`scopedOutCount`);
+kayıplar morfolojiye karışmaz ama görünmez de olmaz. Yapılı madde payı da
+kapsamlıdır: fringe'deki bir küme intrinsic ölçümde yapı sayılmaz. Küme
+BOYUTLARI tracker'ın bildirdiği gibi kalır — kümenin tek bir tanımı vardır.
+
+Void-stress senaryosunda kapsam daraltılmaz ve yapı kıyıya KATI olarak taşınır:
+taşıma vektörü merkezin normalinden çıkar ve bütün üyelere aynı uygulanır, aksi
+hâlde yapıyı ölçümden önce biz deforme eder, sonra "tidal deforme etti" diye
+okurduk. Sabit Void profili ile `tidalStrength = 0` kontrolü arasında üç fark
+ölçülür: deformasyon (en büyük kümenin solidity ortalaması), crossing (kıyıyı
+geçen madde) ve yapı sürekliliği (yapılı madde payı ortalaması).
+
+`FRINGE_DEPENDENT` iki kapıdan geçer. Yapılı maddenin > %50'si örneklerin
+çoğunda fiziksel fringe bandındaysa, ya da `tidalStrength = 0` kontrolünde yapı
+kayboluyorsa aday fringe'e bağımlıdır. "Yapı kayboluyor" için ayrı bir sayı
+uydurulmadı: §8.4'ün GAS satırı kümedeki madde payı < %20'yi zaten yapısızlık
+sayar.
+
 “Ring çıktı” veya “hareket ediyor” başarı değildir. Kitlesel Void kaybı, kısa
 sürede stasis, tek blob, kalıcı soup, sonsuz orbit, hız tavanında kaos, yapısız
 random motion, değişmeyen frozen morphology ve seed çoğunluğunda ölüm kesin

@@ -23,6 +23,7 @@ import {
   type QualificationBudget,
 } from './qualification';
 import { PromotionFlow } from './promotion';
+import { resolveMorphologyScope } from './scenario';
 
 export type ResearchStage = 'broad' | 'refinement' | 'qualification';
 
@@ -56,6 +57,8 @@ export const defaultHarnessConfig: ResearchHarnessConfig = {
     neighborRadiusUnits: 48,
     fringeDistanceThreshold: 32,
     voidDistanceThreshold: 0,
+    minEdgeDistanceUnits: defaultSubstrateCandidate.void.widthUnits,
+    fringeWidthUnits: defaultSubstrateCandidate.void.widthUnits,
     trajectoryLagSeconds: 1,
     fixedStepMs: 1000 / 60,
     sampleIntervalTicks: 10,
@@ -122,7 +125,7 @@ interface SeedResult {
 export class ResearchHarness {
   private readonly config: ResearchHarnessConfig;
   private readonly sampler: GenomeSampler;
-  private readonly metrics: MorphologyMetrics;
+  private metrics: MorphologyMetrics;
   private readonly cluster: ClusterTracker;
   private readonly classifier: PhaseClassifier;
   private readonly perturbation: PerturbationSystem;
@@ -135,6 +138,20 @@ export class ResearchHarness {
     this.cluster = new ClusterTracker(this.config.cluster);
     this.classifier = new PhaseClassifier(this.config.phase);
     this.perturbation = new PerturbationSystem(this.config.perturbation);
+  }
+
+  /**
+   * Senaryo ADAY BAŞINA değişir, kapsam da öyle. Ölçüm nesnesi bu yüzden her
+   * aday koşusunun başında yeniden kurulur: senaryo körü tek bir metrik
+   * nesnesi intrinsic koşuyu fringe maddesiyle kirletirdi (E10).
+   */
+  private scopeMetricsFor(candidate: SubstrateCandidate): void {
+    const scope = resolveMorphologyScope(candidate.scenario, candidate.void);
+    this.metrics = new MorphologyMetrics({
+      ...this.config.metrics,
+      minEdgeDistanceUnits: scope.minEdgeDistanceUnits,
+      fringeWidthUnits: candidate.void.widthUnits,
+    });
   }
 
   runBroad(): CandidateResult[] {
@@ -171,6 +188,7 @@ export class ResearchHarness {
   }
 
   evaluateCandidate(candidate: SubstrateCandidate, stage: ResearchStageConfig): CandidateResult {
+    this.scopeMetricsFor(candidate);
     const seeds = generateSeedCorpus(0, stage.seedCount);
     const seedResults: SeedResult[] = [];
     for (const seed of seeds) {
@@ -207,6 +225,7 @@ export class ResearchHarness {
   }
 
   runQualificationCandidate(candidate: SubstrateCandidate): QualificationArtefact {
+    this.scopeMetricsFor(candidate);
     const seeds = generateSeedCorpus(0, this.config.qualification.seedCount);
     const seedResults: SeedResult[] = [];
     const allTimeSeries: import('./metrics').MorphologySample[][] = [];
