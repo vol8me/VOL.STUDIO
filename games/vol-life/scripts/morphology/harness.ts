@@ -57,6 +57,7 @@ export const defaultHarnessConfig: ResearchHarnessConfig = {
     fringeDistanceThreshold: 32,
     voidDistanceThreshold: 0,
     autocorrelationLag: 60,
+    topClusterCount: 5,
   },
   cluster: {
     epsUnits: 32,
@@ -176,8 +177,15 @@ export class ResearchHarness {
       for (let tick = 0; tick < stage.tickCount; tick++) {
         world.step();
         if (tick % stage.sampleInterval === 0) {
-          this.metrics.sample(world.particles, world.domain, tick, world.reservoir.voidLossTotal);
+          // Tracker ÖNCE güncellenir; metrikler onun üyeliğinden beslenir (E5).
           this.cluster.update(world.particles, tick);
+          this.metrics.sample(
+            world.particles,
+            world.domain,
+            tick,
+            world.reservoir.voidLossTotal,
+            this.cluster.activeClusters,
+          );
         }
       }
       const phase = this.classifier.classify(this.metrics.timeSeries, initialActive);
@@ -208,8 +216,15 @@ export class ResearchHarness {
       for (let tick = 0; tick < this.config.qualification.tickCount; tick++) {
         world.step();
         if (tick % this.config.qualification.sampleInterval === 0) {
-          this.metrics.sample(world.particles, world.domain, tick, world.reservoir.voidLossTotal);
+          // Tracker ÖNCE güncellenir; metrikler onun üyeliğinden beslenir (E5).
           this.cluster.update(world.particles, tick);
+          this.metrics.sample(
+            world.particles,
+            world.domain,
+            tick,
+            world.reservoir.voidLossTotal,
+            this.cluster.activeClusters,
+          );
         }
       }
       const phase = this.classifier.classify(this.metrics.timeSeries, initialActive);

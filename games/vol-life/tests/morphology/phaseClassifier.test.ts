@@ -22,6 +22,12 @@ function makeSample(partial: Partial<MorphologySample>): MorphologySample {
     trajectoryAutocorrelation: 0.3,
     voidDwellFraction: 0,
     fringeFraction: 0.05,
+    clusteredFraction: 0.8,
+    clusterCount: 2,
+    clusterSizeP50: 120,
+    clusterSizeP90: 200,
+    clusterSizeMax: 240,
+    clusters: [],
     ...partial,
   };
 }

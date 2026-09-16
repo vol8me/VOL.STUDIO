@@ -1,9 +1,41 @@
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
 import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
+import type { ClusterState } from './clusterTracker';
+import { measureClusterShape, memberChurn, type Point } from './clusterShape';
 
 /** Metrik döngüleri sıcak yoldur; örnekleme tamponu tahsis etmez. */
 const domainSample: DomainSample = { distance: 0, normalX: 1, normalY: 0 };
 
+/**
+ * Bir kümenin kendi kaydı (E5). Biçim ölçüleri `clusterShape`ten gelir ve
+ * tanımları ön-kayıtlıdır: kompaktlık SOLIDITY'dir, halka ayrıca delik
+ * oranıyla ölçülür ve ikisi karıştırılmaz.
+ */
+export interface ClusterRecord {
+  readonly id: number;
+  readonly size: number;
+  readonly centroidX: number;
+  readonly centroidY: number;
+  readonly normalizedGyration: number;
+  readonly solidity: number;
+  readonly holeRatio: number;
+  readonly anisotropy: number;
+  readonly radialProfile: number;
+  readonly typeComposition: number[];
+  /** Önceki örneğe göre değişen üye payı; tracker ÜYELİĞİNDEN hesaplanır. */
+  readonly churn: number;
+  /** Kümenin tick cinsinden yaşı (ilk görüldüğünden bu yana). */
+  readonly ageTicks: number;
+}
+
+/**
+ * v2 İKİ KATMANLIDIR (E5): global özet + boyuta göre ilk K kümenin kaydı.
+ *
+ * `clusterCompactness` global katmanda ESKİ tanımıyla kalır (dağılım
+ * düzgünlüğü), çünkü faz sınıflandırıcı onu altı, `isQualified` bir eşikte
+ * kullanıyor; tanımı burada değiştirmek yedi eşiğin anlamını sessizce
+ * kaydırırdı. Ön-kayıtlı solidity PER-CLUSTER katmandadır.
+ */
 export interface MorphologySample {
   readonly tick: number;
   readonly activeCount: number;
@@ -19,6 +51,13 @@ export interface MorphologySample {
   readonly trajectoryAutocorrelation: number;
   readonly voidDwellFraction: number;
   readonly fringeFraction: number;
+  /** Kümelere ait maddenin toplam aktif maddeye oranı. */
+  readonly clusteredFraction: number;
+  readonly clusterCount: number;
+  readonly clusterSizeP50: number;
+  readonly clusterSizeP90: number;
+  readonly clusterSizeMax: number;
+  readonly clusters: readonly ClusterRecord[];
 }
 
 export interface MorphologyMetricsConfig {
@@ -27,6 +66,8 @@ export interface MorphologyMetricsConfig {
   readonly fringeDistanceThreshold: number;
   readonly voidDistanceThreshold: number;
   readonly autocorrelationLag: number;
+  /** Boyuta göre kaç küme ayrı ayrı kaydedilir. */
+  readonly topClusterCount: number;
 }
 
 export const defaultMetricsConfig: MorphologyMetricsConfig = {
@@ -35,11 +76,14 @@ export const defaultMetricsConfig: MorphologyMetricsConfig = {
   fringeDistanceThreshold: 32,
   voidDistanceThreshold: 0,
   autocorrelationLag: 60,
+  topClusterCount: 5,
 };
 
 export class MorphologyMetrics {
   private readonly history: MorphologySample[] = [];
   private readonly positionHistory: Float32Array[] = [];
+  /** Küme başına bir önceki kadro; churn bundan hesaplanır. */
+  private readonly previousMembers = new Map<number, number[]>();
   private readonly config: MorphologyMetricsConfig;
 
   constructor(config: MorphologyMetricsConfig = defaultMetricsConfig) {
@@ -51,6 +95,7 @@ export class MorphologyMetrics {
     domain: WorldDomain,
     tick: number,
     voidLossCount: number,
+    clusters: readonly ClusterState[] = [],
   ): MorphologySample {
     const active = this.collectActive(particles);
     const count = active.length;
@@ -63,6 +108,7 @@ export class MorphologyMetrics {
     const voidDwell = this.voidDwellFraction(particles, active, domain);
     const fringe = this.fringeFraction(particles, active, domain);
     const autocorrelation = this.trajectoryAutocorrelation(particles, active, tick);
+    const clusterLayer = this.clusterLayer(particles, clusters, tick);
     const sample: MorphologySample = {
       tick,
       activeCount: count,
@@ -78,6 +124,7 @@ export class MorphologyMetrics {
       trajectoryAutocorrelation: autocorrelation,
       voidDwellFraction: voidDwell,
       fringeFraction: fringe,
+      ...clusterLayer,
     };
     this.history.push(sample);
     this.recordPositions(particles, active, tick);
@@ -91,6 +138,94 @@ export class MorphologyMetrics {
   reset(): void {
     this.history.length = 0;
     this.positionHistory.length = 0;
+    this.previousMembers.clear();
+  }
+
+  /**
+   * Küme katmanı tracker ÜYELİĞİNDEN kurulur; metrikler kendi başına yeniden
+   * kümelemez. Churn, aynı kümenin bir önceki örnekteki kadrosuyla
+   * karşılaştırılarak çıkar (E5).
+   */
+  private clusterLayer(
+    particles: ParticleStore,
+    clusters: readonly ClusterState[],
+    tick: number,
+  ): {
+    clusteredFraction: number;
+    clusterCount: number;
+    clusterSizeP50: number;
+    clusterSizeP90: number;
+    clusterSizeMax: number;
+    clusters: ClusterRecord[];
+  } {
+    const slotById = new Map<number, number>();
+    for (let slot = 0; slot < particles.capacity; slot++) {
+      if (particles.active[slot] === 1) slotById.set(particles.stableId[slot], slot);
+    }
+    const ordered = [...clusters].sort(
+      (a, b) => b.memberIds.length - a.memberIds.length || a.id - b.id,
+    );
+    const sizes = ordered.map((cluster) => cluster.memberIds.length).sort((a, b) => a - b);
+    const clustered = sizes.reduce((sum, size) => sum + size, 0);
+    const records: ClusterRecord[] = [];
+    const seen = new Set<number>();
+    for (const cluster of ordered.slice(0, this.config.topClusterCount)) {
+      const points: Point[] = [];
+      const typeCounts = new Array<number>(6).fill(0);
+      for (const id of cluster.memberIds) {
+        const slot = slotById.get(id);
+        if (slot === undefined) continue;
+        points.push({ x: particles.x[slot], y: particles.y[slot] });
+        typeCounts[particles.type[slot]]++;
+      }
+      const shape = measureClusterShape(points);
+      const previous = this.previousMembers.get(cluster.id) ?? cluster.memberIds;
+      records.push({
+        id: cluster.id,
+        size: cluster.memberIds.length,
+        centroidX: shape.centroidX,
+        centroidY: shape.centroidY,
+        normalizedGyration: shape.normalizedGyration,
+        solidity: shape.solidity,
+        holeRatio: shape.holeRatio,
+        anisotropy: shape.anisotropy,
+        radialProfile: this.radialProfile(points),
+        typeComposition: points.length > 0 ? typeCounts.map((c) => c / points.length) : typeCounts,
+        churn: memberChurn(previous, cluster.memberIds),
+        ageTicks: Math.max(0, tick - cluster.firstSeenTick),
+      });
+      seen.add(cluster.id);
+    }
+    this.previousMembers.clear();
+    for (const cluster of clusters) this.previousMembers.set(cluster.id, [...cluster.memberIds]);
+    const active = particles.activeCount;
+    return {
+      clusteredFraction: active > 0 ? clustered / active : 0,
+      clusterCount: clusters.length,
+      clusterSizeP50: percentile(sizes, 0.5),
+      clusterSizeP90: percentile(sizes, 0.9),
+      clusterSizeMax: sizes.length > 0 ? sizes[sizes.length - 1] : 0,
+      clusters: records,
+    };
+  }
+
+  /** Merkeze uzaklıkların p90/medyan oranı; halkada 1'e yaklaşır, diskte üstündedir. */
+  private radialProfile(points: readonly Point[]): number {
+    if (points.length < 2) return 0;
+    let cx = 0;
+    let cy = 0;
+    for (const point of points) {
+      cx += point.x;
+      cy += point.y;
+    }
+    cx /= points.length;
+    cy /= points.length;
+    const distances = points
+      .map((point) => Math.hypot(point.x - cx, point.y - cy))
+      .sort((a, b) => a - b);
+    const median = distances[Math.floor(distances.length / 2)];
+    const p90 = distances[Math.floor(distances.length * 0.9)];
+    return median > 0 ? p90 / median : 0;
   }
 
   private collectActive(particles: ParticleStore): number[] {
@@ -291,4 +426,9 @@ export class MorphologyMetrics {
       this.positionHistory.shift();
     }
   }
+}
+
+function percentile(sorted: readonly number[], ratio: number): number {
+  if (sorted.length === 0) return 0;
+  return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * ratio))];
 }
