@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MorphologyMetrics, defaultMetricsConfig } from '@/../scripts/morphology/metrics';
+import { resolveLagTicks } from '@/../scripts/morphology/trajectory';
 import { ClusterTracker, defaultClusterConfig } from '@/../scripts/morphology/clusterTracker';
 import { ParticleStore } from '@/runtime/sim/ParticleStore';
 import type { HabitatSDF } from '@/runtime/sim/WorldDomain';
@@ -176,5 +177,75 @@ describe('MorphologyMetrics — per-cluster katman (E5)', () => {
     const churned = metrics.sample(particles, createDomain(), 2, 0, tracker.activeClusters);
 
     expect(churned.clusters[0].churn).toBeGreaterThan(0);
+  });
+});
+
+/*
+ * E6: lag SANİYE ile tanımlanır, tempoyla tick'e çevrilir. Aynı fiziksel süre
+ * farklı örnek aralıklarında aynı VACF/MSD'yi vermelidir; aksi hâlde eşikler
+ * örnekleme sıklığına göre sessizce kayar.
+ */
+describe('MorphologyMetrics — yörünge (E6)', () => {
+  function orbitingWorld(): ParticleStore {
+    const particles = new ParticleStore(16);
+    for (let index = 0; index < 8; index++) particles.activateSlot(500, 500, 0, 0, 0);
+    return particles;
+  }
+
+  /** Parçacıkları verilen tick için dairesel yörüngeye oturtur. */
+  function place(particles: ParticleStore, tick: number, period: number, radius: number): void {
+    for (let slot = 0; slot < particles.capacity; slot++) {
+      if (particles.active[slot] === 0) continue;
+      const phase = (tick / period) * Math.PI * 2 + slot;
+      particles.x[slot] = 500 + Math.cos(phase) * radius;
+      particles.y[slot] = 500 + Math.sin(phase) * radius;
+      particles.vx[slot] = -Math.sin(phase) * radius;
+      particles.vy[slot] = Math.cos(phase) * radius;
+    }
+  }
+
+  function runWithInterval(intervalTicks: number): {
+    velocityAutocorrelation: number;
+    meanSquaredDisplacement: number;
+  } {
+    const metrics = new MorphologyMetrics({
+      ...defaultMetricsConfig,
+      trajectoryLagSeconds: 1,
+      sampleIntervalTicks: intervalTicks,
+      recurrenceRadiusUnits: 8,
+    });
+    const particles = orbitingWorld();
+    const domain = createDomain();
+    const lag = resolveLagTicks(1, defaultMetricsConfig.fixedStepMs, intervalTicks);
+    let last = { velocityAutocorrelation: 0, meanSquaredDisplacement: 0 };
+    for (let tick = 0; tick <= lag; tick += intervalTicks) {
+      place(particles, tick, lag, 40);
+      const sample = metrics.sample(particles, domain, tick, 0);
+      last = {
+        velocityAutocorrelation: sample.velocityAutocorrelation,
+        meanSquaredDisplacement: sample.meanSquaredDisplacement,
+      };
+    }
+    return last;
+  }
+
+  it('1, 2 ve 4 tick örneklemede aynı değerleri verir', () => {
+    const one = runWithInterval(1);
+    const two = runWithInterval(2);
+    const four = runWithInterval(4);
+
+    expect(two.velocityAutocorrelation).toBeCloseTo(one.velocityAutocorrelation, 4);
+    expect(four.velocityAutocorrelation).toBeCloseTo(one.velocityAutocorrelation, 4);
+    expect(two.meanSquaredDisplacement).toBeCloseTo(one.meanSquaredDisplacement, 3);
+    expect(four.meanSquaredDisplacement).toBeCloseTo(one.meanSquaredDisplacement, 3);
+  });
+
+  it('geçersiz lag kurulumda reddedilir, ölçüm sırasında sessizce sıfırlanmaz', () => {
+    expect(
+      () => new MorphologyMetrics({ ...defaultMetricsConfig, sampleIntervalTicks: 7 }),
+    ).toThrow(RangeError);
+    expect(
+      () => new MorphologyMetrics({ ...defaultMetricsConfig, trajectoryLagSeconds: 0 }),
+    ).toThrow(RangeError);
   });
 });

@@ -19,7 +19,9 @@ function makeSample(partial: Partial<MorphologySample>): MorphologySample {
     clusterAnisotropy: 0.3,
     typeComposition: [0.2, 0.2, 0.2, 0.2, 0.1, 0.1],
     radialStructure: 2,
-    trajectoryAutocorrelation: 0.3,
+    velocityAutocorrelation: 0.3,
+    meanSquaredDisplacement: 25,
+    recurrenceFraction: 0.1,
     voidDwellFraction: 0,
     fringeFraction: 0.05,
     clusteredFraction: 0.8,
@@ -82,5 +84,41 @@ describe('PhaseClassifier', () => {
     const classifier = new PhaseClassifier(defaultPhaseConfig);
     const result = classifier.classify([], 512);
     expect(result.phase).toBe('dead');
+  });
+});
+
+/*
+ * E6: eski birimsiz 0,8 eşiği kalktı. Orbit artık İKİ koşul ister — hız yönü
+ * korunmuş (VACF yüksek) VE parçacık başlangıç komşuluğuna dönmüş (yineleme
+ * yüksek). Tek başına VACF doğrusal hareketi de yakalardı: doğrusalda VACF 1,
+ * yineleme 0'dır (ölçüldü).
+ */
+describe('PhaseClassifier — orbit dalı (E6)', () => {
+  it('yüksek VACF ve yüksek yineleme orbit sınıflar', () => {
+    const classifier = new PhaseClassifier(defaultPhaseConfig);
+    const series = [
+      makeSample({
+        velocityAutocorrelation: 0.95,
+        recurrenceFraction: 0.9,
+        meanSpeed: 0.5,
+        clusterCompactness: 0.5,
+      }),
+    ];
+
+    expect(classifier.classify(series, 512).phase).toBe('orbit');
+  });
+
+  it('yüksek VACF ama yinelemesiz doğrusal hareket orbit DEĞİLDİR', () => {
+    const classifier = new PhaseClassifier(defaultPhaseConfig);
+    const series = [
+      makeSample({
+        velocityAutocorrelation: 1,
+        recurrenceFraction: 0,
+        meanSpeed: 0.5,
+        clusterCompactness: 0.5,
+      }),
+    ];
+
+    expect(classifier.classify(series, 512).phase).not.toBe('orbit');
   });
 });

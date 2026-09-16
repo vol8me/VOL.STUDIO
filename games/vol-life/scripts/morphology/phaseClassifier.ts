@@ -26,7 +26,14 @@ export interface PhaseClassifierConfig {
   readonly blobCompactnessThreshold: number;
   readonly blobMinFraction: number;
   readonly voidLossDominantFraction: number;
-  readonly orbitAutocorrelationThreshold: number;
+  /**
+   * Birim tutarlı VACF eşiği (E6). Eski `orbitAutocorrelationThreshold: 0.8`
+   * birimsizdi: karşılaştırdığı değer otokorelasyon değil, normalize edilmemiş
+   * ortalama kare yer değiştirmeydi — birim bile tutmuyordu.
+   */
+  readonly orbitVelocityAutocorrelationMin: number;
+  /** Yörüngenin kapalılığı: lag sonunda başlangıç komşuluğuna dönen pay. */
+  readonly orbitRecurrenceMin: number;
   readonly orbitMinSpeed: number;
   readonly speedChaosMinSpeed: number;
   readonly speedChaosCompactnessThreshold: number;
@@ -43,7 +50,8 @@ export const defaultPhaseConfig: PhaseClassifierConfig = {
   blobCompactnessThreshold: 0.9,
   blobMinFraction: 0.7,
   voidLossDominantFraction: 0.5,
-  orbitAutocorrelationThreshold: 0.8,
+  orbitVelocityAutocorrelationMin: 0.6,
+  orbitRecurrenceMin: 0.5,
   orbitMinSpeed: 0.3,
   speedChaosMinSpeed: 1.5,
   speedChaosCompactnessThreshold: 0.2,
@@ -118,14 +126,21 @@ export class PhaseClassifier {
       );
       return { phase: 'void-loss', confidence: 0.8, reasons };
     }
+    /*
+     * Orbit iki koşul ister: hız yönü lag sonunda korunmuş (VACF yüksek) VE
+     * parçacık başlangıç komşuluğuna dönmüş (recurrence yüksek). Tek başına
+     * VACF doğrusal hareketi de yakalar — doğrusalda VACF 1'dir ama yineleme
+     * sıfırdır (ölçüldü).
+     */
     if (
-      last.trajectoryAutocorrelation > this.config.orbitAutocorrelationThreshold &&
+      last.velocityAutocorrelation > this.config.orbitVelocityAutocorrelationMin &&
+      last.recurrenceFraction > this.config.orbitRecurrenceMin &&
       last.meanSpeed > this.config.orbitMinSpeed
     ) {
       reasons.push(
-        `orbit: otokorelasyon ${last.trajectoryAutocorrelation.toFixed(
+        `orbit: VACF ${last.velocityAutocorrelation.toFixed(
           2,
-        )}, hız ${last.meanSpeed.toFixed(2)}`,
+        )}, yineleme ${last.recurrenceFraction.toFixed(2)}, hız ${last.meanSpeed.toFixed(2)}`,
       );
       return { phase: 'orbit', confidence: 0.75, reasons };
     }

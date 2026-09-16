@@ -2,6 +2,7 @@ import type { ParticleStore } from '@/runtime/sim/ParticleStore';
 import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
 import type { ClusterState } from './clusterTracker';
 import { measureClusterShape, memberChurn, type Point } from './clusterShape';
+import { measureTrajectory, resolveLagTicks, type TrajectoryFrame } from './trajectory';
 
 /** Metrik döngüleri sıcak yoldur; örnekleme tamponu tahsis etmez. */
 const domainSample: DomainSample = { distance: 0, normalX: 1, normalY: 0 };
@@ -48,7 +49,12 @@ export interface MorphologySample {
   readonly clusterAnisotropy: number;
   readonly typeComposition: number[];
   readonly radialStructure: number;
-  readonly trajectoryAutocorrelation: number;
+  /** Normalize hız otokorelasyonu, [-1, 1]; eski birimsiz alanın yerini aldı (E6). */
+  readonly velocityAutocorrelation: number;
+  /** Ortalama kare yer değiştirme, dünya birimi karesi. */
+  readonly meanSquaredDisplacement: number;
+  /** Lag sonunda başlangıç komşuluğuna dönen parçacık payı, [0, 1]. */
+  readonly recurrenceFraction: number;
   readonly voidDwellFraction: number;
   readonly fringeFraction: number;
   /** Kümelere ait maddenin toplam aktif maddeye oranı. */
@@ -65,7 +71,14 @@ export interface MorphologyMetricsConfig {
   readonly neighborRadiusUnits: number;
   readonly fringeDistanceThreshold: number;
   readonly voidDistanceThreshold: number;
-  readonly autocorrelationLag: number;
+  /** Yörünge lag'i SANİYE cinsindendir; tick'e `fixedStepMs` ile çevrilir (E6). */
+  readonly trajectoryLagSeconds: number;
+  /** Lag çevrimi ve örnek aralığı doğrulaması için dünya temposu. */
+  readonly fixedStepMs: number;
+  /** Ölçüm aralığı; lag buna tam bölünmeli. */
+  readonly sampleIntervalTicks: number;
+  /** Yinelemede "başlangıç komşuluğu" yarıçapı, dünya birimi. */
+  readonly recurrenceRadiusUnits: number;
   /** Boyuta göre kaç küme ayrı ayrı kaydedilir. */
   readonly topClusterCount: number;
 }
@@ -75,19 +88,29 @@ export const defaultMetricsConfig: MorphologyMetricsConfig = {
   neighborRadiusUnits: 48,
   fringeDistanceThreshold: 32,
   voidDistanceThreshold: 0,
-  autocorrelationLag: 60,
+  trajectoryLagSeconds: 1,
+  fixedStepMs: 1000 / 60,
+  sampleIntervalTicks: 10,
+  recurrenceRadiusUnits: 8,
   topClusterCount: 5,
 };
 
 export class MorphologyMetrics {
   private readonly history: MorphologySample[] = [];
-  private readonly positionHistory: Float32Array[] = [];
   /** Küme başına bir önceki kadro; churn bundan hesaplanır. */
   private readonly previousMembers = new Map<number, number[]>();
+  private readonly frames: TrajectoryFrame[] = [];
+  private readonly lagTicks: number;
   private readonly config: MorphologyMetricsConfig;
 
   constructor(config: MorphologyMetricsConfig = defaultMetricsConfig) {
     this.config = config;
+    // Geçersiz lag KURULUMDA düşer; ölçüm sırasında sessizce sıfıra dönmez.
+    this.lagTicks = resolveLagTicks(
+      config.trajectoryLagSeconds,
+      config.fixedStepMs,
+      config.sampleIntervalTicks,
+    );
   }
 
   sample(
@@ -107,7 +130,7 @@ export class MorphologyMetrics {
     const radial = this.radialStructure(particles, active, domain);
     const voidDwell = this.voidDwellFraction(particles, active, domain);
     const fringe = this.fringeFraction(particles, active, domain);
-    const autocorrelation = this.trajectoryAutocorrelation(particles, active, tick);
+    const trajectory = this.trajectoryMeasures(particles, tick);
     const clusterLayer = this.clusterLayer(particles, clusters, tick);
     const sample: MorphologySample = {
       tick,
@@ -121,13 +144,15 @@ export class MorphologyMetrics {
       clusterAnisotropy: cluster.anisotropy,
       typeComposition: typeComp,
       radialStructure: radial,
-      trajectoryAutocorrelation: autocorrelation,
+      velocityAutocorrelation: trajectory.velocityAutocorrelation,
+      meanSquaredDisplacement: trajectory.meanSquaredDisplacement,
+      recurrenceFraction: trajectory.recurrenceFraction,
       voidDwellFraction: voidDwell,
       fringeFraction: fringe,
       ...clusterLayer,
     };
     this.history.push(sample);
-    this.recordPositions(particles, active, tick);
+    this.recordFrame(particles, tick);
     return sample;
   }
 
@@ -137,7 +162,7 @@ export class MorphologyMetrics {
 
   reset(): void {
     this.history.length = 0;
-    this.positionHistory.length = 0;
+    this.frames.length = 0;
     this.previousMembers.clear();
   }
 
@@ -389,41 +414,50 @@ export class MorphologyMetrics {
     return active.length > 0 ? count / active.length : 0;
   }
 
-  private trajectoryAutocorrelation(
+  /**
+   * Üç büyüklük `trajectory.ts`ten gelir ve birimleri bellidir. Geçmişte
+   * yeterli kare yoksa ölçüm YAPILMAZ: sıfır döndürmek "hareket yok" ile
+   * "henüz bilmiyoruz"u aynı sayıya indirirdi.
+   */
+  private trajectoryMeasures(
     particles: ParticleStore,
-    active: number[],
     tick: number,
-  ): number {
-    const lag = this.config.autocorrelationLag;
-    if (tick < lag || this.positionHistory.length < lag + 1) return 0;
-    const current = this.positionHistory[this.positionHistory.length - 1];
-    const past = this.positionHistory[this.positionHistory.length - 1 - lag];
-    if (!current || !past) return 0;
-    let sum = 0;
-    let count = 0;
-    for (const slot of active) {
-      const curX = current[slot * 2];
-      const curY = current[slot * 2 + 1];
-      const pastX = past[slot * 2];
-      const pastY = past[slot * 2 + 1];
-      if (!Number.isFinite(curX) || !Number.isFinite(pastX)) continue;
-      const dx = curX - pastX;
-      const dy = curY - pastY;
-      sum += dx * dx + dy * dy;
-      count++;
+  ): {
+    velocityAutocorrelation: number;
+    meanSquaredDisplacement: number;
+    recurrenceFraction: number;
+  } {
+    const past = this.frames.find((frame) => frame.tick === tick - this.lagTicks);
+    if (!past) {
+      return { velocityAutocorrelation: 0, meanSquaredDisplacement: 0, recurrenceFraction: 0 };
     }
-    return count > 0 ? sum / count : 0;
+    const current = this.captureFrame(particles, tick);
+    const measures = measureTrajectory(past, current, this.config.recurrenceRadiusUnits);
+    return {
+      velocityAutocorrelation: measures.velocityAutocorrelation,
+      meanSquaredDisplacement: measures.meanSquaredDisplacement,
+      recurrenceFraction: measures.recurrenceFraction,
+    };
   }
 
-  private recordPositions(particles: ParticleStore, active: number[], tick: number): void {
-    const positions = new Float32Array(particles.capacity * 2);
-    for (const slot of active) {
+  /** Pasif slot NaN taşır: ölçüm onu atlar, sıfır konumla karıştırmaz. */
+  private captureFrame(particles: ParticleStore, tick: number): TrajectoryFrame {
+    const positions = new Float32Array(particles.capacity * 2).fill(Number.NaN);
+    const velocities = new Float32Array(particles.capacity * 2).fill(Number.NaN);
+    for (let slot = 0; slot < particles.capacity; slot++) {
+      if (particles.active[slot] === 0) continue;
       positions[slot * 2] = particles.x[slot];
       positions[slot * 2 + 1] = particles.y[slot];
+      velocities[slot * 2] = particles.vx[slot];
+      velocities[slot * 2 + 1] = particles.vy[slot];
     }
-    this.positionHistory.push(positions);
-    if (this.positionHistory.length > this.config.autocorrelationLag * 2 + 1) {
-      this.positionHistory.shift();
+    return { tick, positions, velocities };
+  }
+
+  private recordFrame(particles: ParticleStore, tick: number): void {
+    this.frames.push(this.captureFrame(particles, tick));
+    while (this.frames.length > 0 && this.frames[0].tick < tick - this.lagTicks) {
+      this.frames.shift();
     }
   }
 }
