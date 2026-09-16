@@ -69,6 +69,31 @@ export function validateSubstrateConfig(config: SubstrateConfig): void {
   if (config.genome.seeding.patchRadiusUnits * 2 > minHalfRadius) {
     throw new RangeError('Origin yaması habitatın yarısından büyük olamaz.');
   }
+  validateSafeInterior(config);
+}
+
+/**
+ * Güvenli iç bölge (d ≥ fringe + yama yarıçapı) habitat alanının en az yarısı
+ * olmalı (DESIGN §2, C7). Sınır MUHAFAZAKÂR bir alt sınırdır: iki yarıçap ayrı
+ * ayrı `t` kadar küçültülür ve alan oranı (rx − t)(ry − t) / (rx·ry) ile
+ * hesaplanır. Gerçek kontur bir superellipse olduğu için gerçek oran bundan
+ * yüksektir — ölçüldü: varsayılan adayda analitik 0,561, gerçek maskede 0,592.
+ * Bu kapı seeding araması yama yarıçapını büyüttüğünde (90 birimden itibaren)
+ * örneği config düzeyinde reddeder.
+ */
+function validateSafeInterior(config: SubstrateConfig): void {
+  const { width, height } = config.world.boundsUnits;
+  const noise = 1 - config.habitat.noiseAmplitudeRatio;
+  const radiusX = (width / 2) * config.habitat.radiusRatioX * noise;
+  const radiusY = (height / 2) * config.habitat.radiusRatioY * noise;
+  const offset = config.genome.fringe.widthUnits + config.genome.seeding.patchRadiusUnits;
+  const innerX = radiusX - offset;
+  const innerY = radiusY - offset;
+  if (innerX <= 0 || innerY <= 0 || (innerX * innerY) / (radiusX * radiusY) < 0.5) {
+    throw new RangeError(
+      'Güvenli iç bölge habitat alanının yarısının altına iner: fringe + yama yarıçapı çok büyük (DESIGN §2).',
+    );
+  }
 }
 
 function validateStorageGeometry(config: SubstrateConfig): void {

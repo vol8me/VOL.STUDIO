@@ -54,6 +54,23 @@ describe('substrateConfig', () => {
     expect(() => validateSubstrateConfig(nan)).toThrow(/sonlu/);
   });
 
+  /*
+   * C7'nin config düzeyinde KANITLANABİLEN koşulu: güvenli iç bölge habitat
+   * alanının en az yarısı olmalı. Seeding araması yama yarıçapını büyütünce
+   * örnek burada reddedilir; gerçek oran ayrıca 1000 seedlik korpusta ölçülür.
+   */
+  it('güvenli iç bölge yarıdan küçülünce config reddedilir', () => {
+    expect(() => validateSubstrateConfig(substrateConfig)).not.toThrow();
+
+    const wideFringe = cloneSubstrateConfig(substrateConfig);
+    (wideFringe.genome.seeding as { patchRadiusUnits: number }).patchRadiusUnits = 110;
+    expect(() => validateSubstrateConfig(wideFringe)).toThrow(/Güvenli iç bölge/);
+
+    const stillSafe = cloneSubstrateConfig(substrateConfig);
+    (stillSafe.genome.seeding as { patchRadiusUnits: number }).patchRadiusUnits = 80;
+    expect(() => validateSubstrateConfig(stillSafe)).not.toThrow();
+  });
+
   it('habitat konturu depolama kenar boşluğunu, fringe ve yama boyutu habitatı ihlal edemez', () => {
     const margin = {
       ...substrateConfig,

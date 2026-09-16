@@ -210,4 +210,65 @@ describe('habitat rasterleştirme', () => {
     expect(() => rasterizeHabitatShade(sdf, 32, 0)).toThrow(RangeError);
     expect(() => rasterizeHabitatShade(sdf, 32, Number.NaN)).toThrow(RangeError);
   });
+
+  /* Void hücrelerinde mesafe hesaplanmıyor; kısayol SONUCU değil maliyeti değiştirmeli. */
+  it('gölge rasteri Void kısayoluna rağmen tam örneklemeyle bayt bayt aynıdır', () => {
+    const sdf = domain(12);
+    const resolution = 64;
+    const fadeUnits = 64;
+    const cell = STORAGE.width / resolution;
+    const reference = new Float32Array(resolution * resolution);
+    for (let y = 0; y < resolution; y++) {
+      for (let x = 0; x < resolution; x++) {
+        const distance = distanceAt(
+          sdf,
+          STORAGE.x + (x + 0.5) * cell,
+          STORAGE.y + (y + 0.5) * cell,
+        );
+        reference[y * resolution + x] = Math.max(0, Math.min(1, distance / fadeUnits));
+      }
+    }
+
+    expect(rasterizeHabitatShade(sdf, resolution, fadeUnits)).toEqual(reference);
+  });
+});
+
+describe('habitat işaret sorgusu', () => {
+  /*
+   * `contains` mesafenin İKİNCİ bir kaynağı değildir: ızgarada ve konturun iki
+   * yanında mikron mesafede işaretler birebir aynı olmalı. Ayrışsalardı maske
+   * rasteri fizikten sessizce kayar, alan kütlesi yanlış hücrelerde tutulurdu.
+   */
+  it('işareti mesafe örneklemesiyle her noktada aynı verir', () => {
+    for (const seed of [3, 11, 29]) {
+      const sdf = domain(seed);
+      const resolution = 96;
+      const cell = STORAGE.width / resolution;
+      for (let y = 0; y < resolution; y++) {
+        for (let x = 0; x < resolution; x++) {
+          const px = STORAGE.x + (x + 0.5) * cell;
+          const py = STORAGE.y + (y + 0.5) * cell;
+          expect(sdf.contains(px, py)).toBe(distanceAt(sdf, px, py) >= 0);
+        }
+      }
+
+      const contour = sdf.contour(360);
+      for (let index = 0; index < contour.length; index += 2) {
+        const cx = contour[index];
+        const cy = contour[index + 1];
+        const towardCenter = Math.hypot(CENTER.x - cx, CENTER.y - cy);
+        for (const offset of [-1, -0.01, 0.01, 1]) {
+          const px = cx + ((CENTER.x - cx) / towardCenter) * offset;
+          const py = cy + ((CENTER.y - cy) / towardCenter) * offset;
+          expect(sdf.contains(px, py)).toBe(distanceAt(sdf, px, py) >= 0);
+        }
+      }
+    }
+  });
+
+  it('sonlu olmayan noktayı reddeder', () => {
+    const sdf = domain();
+    expect(() => sdf.contains(Number.NaN, 0)).toThrow(RangeError);
+    expect(() => sdf.contains(0, Number.POSITIVE_INFINITY)).toThrow(RangeError);
+  });
 });
