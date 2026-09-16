@@ -68,7 +68,18 @@ export class FieldSet {
     return (clampedY * this.resolution + clampedX) | 0;
   }
 
+  /**
+   * MASKE FARKINDA çift doğrusal örnekleme (DESIGN.md §2). Void hücresi kaynak
+   * taşımaz; ağırlığa katılırsa kıyıdaki her örnek yapay olarak düşer. Kural:
+   * Void ağırlıkları düşülür ve kalan ağırlıklar yeniden normalize edilir; dört
+   * hücre de habitatsa sonuç maskesiz bilineer yolla BAYT DÜZEYİNDE aynıdır;
+   * dört hücre de Void ise 2×2 şablonu çevreleyen tek hücrelik halkadaki en
+   * yakın habitat hücresi deterministik sırayla okunur, o da yoksa 0 döner.
+   */
   sample(name: FieldName, worldX: number, worldY: number, bounds: Readonly<Rect>): number {
+    if (!Number.isFinite(worldX) || !Number.isFinite(worldY)) {
+      throw new RangeError(`Alan örneklemesi sonlu koordinat ister: (${worldX}, ${worldY})`);
+    }
     const normalizedX = clamp01((worldX - bounds.x) / bounds.width);
     const normalizedY = clamp01((worldY - bounds.y) / bounds.height);
     const gridX = normalizedX * this.resolution - 0.5;
@@ -78,9 +89,87 @@ export class FieldSet {
     const tx = gridX - x0;
     const ty = gridY - y0;
     const field = this[name];
-    const top = mix(field[this.index(x0, y0)], field[this.index(x0 + 1, y0)], tx);
-    const bottom = mix(field[this.index(x0, y0 + 1)], field[this.index(x0 + 1, y0 + 1)], tx);
-    return mix(top, bottom, ty);
+    const mask = this.habitatMask;
+    const index00 = this.index(x0, y0);
+    const index10 = this.index(x0 + 1, y0);
+    const index01 = this.index(x0, y0 + 1);
+    const index11 = this.index(x0 + 1, y0 + 1);
+    if (
+      !mask ||
+      (mask[index00] === 1 && mask[index10] === 1 && mask[index01] === 1 && mask[index11] === 1)
+    ) {
+      const top = mix(field[index00], field[index10], tx);
+      const bottom = mix(field[index01], field[index11], tx);
+      return mix(top, bottom, ty);
+    }
+    return this.maskedSample(field, mask, index00, index10, index01, index11, tx, ty, x0, y0);
+  }
+
+  private maskedSample(
+    field: Float32Array,
+    mask: Uint8Array,
+    index00: number,
+    index10: number,
+    index01: number,
+    index11: number,
+    tx: number,
+    ty: number,
+    x0: number,
+    y0: number,
+  ): number {
+    let weightSum = 0;
+    let base = 0;
+    let hasBase = false;
+    let minimum = Number.POSITIVE_INFINITY;
+    let maximum = Number.NEGATIVE_INFINITY;
+    const indices = [index00, index10, index01, index11];
+    const weights = [(1 - tx) * (1 - ty), tx * (1 - ty), (1 - tx) * ty, tx * ty];
+    for (let corner = 0; corner < 4; corner++) {
+      if (mask[indices[corner]] === 0) continue;
+      const value = field[indices[corner]];
+      if (!hasBase) {
+        base = value;
+        hasBase = true;
+      }
+      if (value < minimum) minimum = value;
+      if (value > maximum) maximum = value;
+      weightSum += weights[corner];
+    }
+    if (!hasBase) return this.nearestRingValue(field, mask, x0, y0);
+    if (weightSum <= 0) return base;
+    /*
+     * Fark toplamı taban değerin ÜSTÜNE eklenir: sabit bir alanda bütün farklar
+     * sıfırdır ve sonuç tam olarak o sabittir. Doğrudan ağırlıklı ortalama
+     * float64'te son biti kaydırabilirdi.
+     */
+    let delta = 0;
+    for (let corner = 0; corner < 4; corner++) {
+      if (mask[indices[corner]] === 0) continue;
+      delta += weights[corner] * (field[indices[corner]] - base);
+    }
+    const value = base + delta / weightSum;
+    return value < minimum ? minimum : value > maximum ? maximum : value;
+  }
+
+  /** 2×2 şablonu çevreleyen halka; en yakın habitat hücresi, eşitlikte satır-sütun sırası. */
+  private nearestRingValue(field: Float32Array, mask: Uint8Array, x0: number, y0: number): number {
+    let bestValue = 0;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    for (let y = y0 - 1; y <= y0 + 2; y++) {
+      for (let x = x0 - 1; x <= x0 + 2; x++) {
+        const insideTemplate = (x === x0 || x === x0 + 1) && (y === y0 || y === y0 + 1);
+        if (insideTemplate) continue;
+        if (x < 0 || y < 0 || x >= this.resolution || y >= this.resolution) continue;
+        const index = y * this.resolution + x;
+        if (mask[index] === 0) continue;
+        const distance = (x - (x0 + 0.5)) ** 2 + (y - (y0 + 0.5)) ** 2;
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestValue = field[index];
+        }
+      }
+    }
+    return bestValue;
   }
 
   diffuse(name: FieldName, amount: number): void {
