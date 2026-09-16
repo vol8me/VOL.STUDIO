@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { CandidateAggregation } from '@/../scripts/morphology/phaseClassifier';
 import { PromotionFlow } from '@/../scripts/morphology/promotion';
 import {
   createQualificationArtefact,
@@ -34,6 +35,7 @@ function makeSample(): MorphologySample {
     recurrenceFraction: 0.1,
     voidDwellFraction: 0,
     fringeFraction: 0.05,
+    cappedFraction: 0,
     scopedOutCount: 0,
     fringeStructuredFraction: 0,
     clusteredFraction: 0.8,
@@ -67,6 +69,27 @@ function makePerturbationResult(recovered = true): PerturbationResult {
   };
 }
 
+/** E11: artefakt artık tek seed'in fazını değil aday TOPLAMASINI taşır. */
+function structuredAggregation(): CandidateAggregation {
+  return {
+    majorityReason: 'DYNAMIC_STRUCTURED',
+    reasonCounts: { DYNAMIC_STRUCTURED: 4 },
+    seedCount: 4,
+    failed: false,
+    structured: true,
+  };
+}
+
+function deadAggregation(): CandidateAggregation {
+  return {
+    majorityReason: 'DEAD',
+    reasonCounts: { DEAD: 4 },
+    seedCount: 4,
+    failed: true,
+    structured: false,
+  };
+}
+
 describe('PromotionFlow', () => {
   it('kalifiye olmayan adayı reddeder', () => {
     const flow = new PromotionFlow();
@@ -74,7 +97,7 @@ describe('PromotionFlow', () => {
       substrateConfig,
       defaultSubstrateCandidate,
       [1],
-      { phase: 'dead', confidence: 0.9, reasons: ['ölü'] },
+      deadAggregation(),
       [makeSample()],
       [makePerturbationResult()],
       [],
@@ -90,7 +113,7 @@ describe('PromotionFlow', () => {
       substrateConfig,
       defaultSubstrateCandidate,
       [1],
-      { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
+      structuredAggregation(),
       [makeSample()],
       [makePerturbationResult()],
       [],
@@ -108,7 +131,7 @@ describe('PromotionFlow', () => {
       substrateConfig,
       defaultSubstrateCandidate,
       [1],
-      { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
+      structuredAggregation(),
       [makeSample()],
       [makePerturbationResult()],
       [],
@@ -127,7 +150,7 @@ describe('PromotionFlow', () => {
       substrateConfig,
       defaultSubstrateCandidate,
       [1],
-      { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
+      structuredAggregation(),
       [makeSample()],
       [makePerturbationResult()],
       [],
@@ -146,7 +169,7 @@ describe('PromotionFlow', () => {
       substrateConfig,
       defaultSubstrateCandidate,
       [1],
-      { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
+      structuredAggregation(),
       [makeSample()],
       [makePerturbationResult()],
       [],

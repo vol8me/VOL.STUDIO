@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ResearchHarness, type ResearchHarnessConfig } from '@/../scripts/morphology/harness';
+import { ARTEFACT_SCHEMA_VERSION } from '@/../scripts/morphology/qualification';
 import { defaultSubstrateCandidate } from '@/config/candidate';
 import { substrateConfig } from '@/config/substrate';
 
@@ -79,7 +80,7 @@ describe('ResearchHarness', () => {
     const refinement = harness.runRefinement(broad);
     const artefacts = harness.runQualification(refinement);
     for (const artefact of artefacts) {
-      expect(artefact.schemaVersion).toBe(2);
+      expect(artefact.schemaVersion).toBe(ARTEFACT_SCHEMA_VERSION);
       expect(artefact.candidateDigest).toMatch(/^[0-9a-f]{16}$/);
       expect(artefact.timeSeries.length).toBeGreaterThan(0);
       expect(artefact.perturbationResults.length).toBeGreaterThan(0);

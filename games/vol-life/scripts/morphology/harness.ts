@@ -13,6 +13,10 @@ import { ClusterTracker, type ClusterTrackerConfig } from './clusterTracker';
 import {
   PhaseClassifier,
   type PhaseClassifierConfig,
+  aggregateSeedVerdicts,
+  defaultPhaseConfig,
+  isStructured,
+  type CandidateAggregation,
   type PhaseClassification,
 } from './phaseClassifier';
 import { PerturbationSystem, type PerturbationConfig, type PerturbationSpec } from './perturbation';
@@ -59,6 +63,8 @@ export const defaultHarnessConfig: ResearchHarnessConfig = {
     voidDistanceThreshold: 0,
     minEdgeDistanceUnits: defaultSubstrateCandidate.void.widthUnits,
     fringeWidthUnits: defaultSubstrateCandidate.void.widthUnits,
+    maxSpeedUnitsPerReferenceTick:
+      defaultSubstrateCandidate.physics.dynamics.maxSpeedUnitsPerReferenceTick,
     trajectoryLagSeconds: 1,
     fixedStepMs: 1000 / 60,
     sampleIntervalTicks: 10,
@@ -76,23 +82,7 @@ export const defaultHarnessConfig: ResearchHarnessConfig = {
     sizeRatioGate: 3,
     sampleIntervalTicks: 10,
   },
-  phase: {
-    deadActiveThreshold: 0.05,
-    stasisSpeedThreshold: 0.02,
-    stasisDurationTicks: 60,
-    crystalCompactnessThreshold: 0.85,
-    crystalSpeedThreshold: 0.01,
-    blobCompactnessThreshold: 0.9,
-    blobMinFraction: 0.7,
-    voidLossDominantFraction: 0.5,
-    orbitVelocityAutocorrelationMin: 0.6,
-    orbitRecurrenceMin: 0.5,
-    orbitMinSpeed: 0.3,
-    speedChaosMinSpeed: 1.5,
-    speedChaosCompactnessThreshold: 0.2,
-    structuredCompactnessMin: 0.3,
-    structuredSpeedMin: 0.05,
-  },
+  phase: defaultPhaseConfig,
   perturbation: {
     recoveryThreshold: 0.15,
     maxRecoveryTicks: 300,
@@ -111,7 +101,8 @@ export const defaultHarnessConfig: ResearchHarnessConfig = {
 export interface CandidateResult {
   readonly candidate: SubstrateCandidate;
   readonly candidateDigest: string;
-  readonly phase: PhaseClassification;
+  /** Aday kararı ÇOĞUNLUKLA verilir; tek bir seed'in fazı değildir (E11). */
+  readonly aggregation: CandidateAggregation;
   readonly seedResults: readonly SeedResult[];
   readonly structured: boolean;
 }
@@ -151,6 +142,7 @@ export class ResearchHarness {
       ...this.config.metrics,
       minEdgeDistanceUnits: scope.minEdgeDistanceUnits,
       fringeWidthUnits: candidate.void.widthUnits,
+      maxSpeedUnitsPerReferenceTick: candidate.physics.dynamics.maxSpeedUnitsPerReferenceTick,
     });
   }
 
@@ -214,13 +206,13 @@ export class ResearchHarness {
       const finalSample = this.metrics.timeSeries[this.metrics.timeSeries.length - 1];
       seedResults.push({ seed, phase, finalSample });
     }
-    const dominantPhase = this.dominantPhase(seedResults);
+    const aggregation = aggregateSeedVerdicts(seedResults.map((result) => result.phase));
     return {
       candidate: cloneSubstrateCandidate(candidate),
       candidateDigest: digestSubstrateCandidate(candidate),
-      phase: dominantPhase,
+      aggregation,
       seedResults,
-      structured: dominantPhase.phase === 'dynamic-structured',
+      structured: isStructured(aggregation),
     };
   }
 
@@ -254,8 +246,8 @@ export class ResearchHarness {
       const finalSample = this.metrics.timeSeries[this.metrics.timeSeries.length - 1];
       seedResults.push({ seed, phase, finalSample });
       allTimeSeries.push([...this.metrics.timeSeries]);
-      if (phase.phase !== 'dynamic-structured') {
-        rejectionReasons.push(`seed ${seed}: faz ${phase.phase} (${phase.reasons.join('; ')})`);
+      if (phase.primary !== 'DYNAMIC_STRUCTURED') {
+        rejectionReasons.push(`seed ${seed}: ${phase.primary} (${phase.details.join('; ')})`);
       }
       for (const spec of this.config.perturbationSpecs) {
         const preState = this.perturbation.snapshot(world.particles);
@@ -267,7 +259,7 @@ export class ResearchHarness {
         }
       }
     }
-    const dominantPhase = this.dominantPhase(seedResults);
+    const aggregation = aggregateSeedVerdicts(seedResults.map((result) => result.phase));
     const flatTimeSeries = allTimeSeries.flat();
     const budget: QualificationBudget = {
       broadSeconds: 0,
@@ -279,7 +271,7 @@ export class ResearchHarness {
       this.config.substrate,
       candidate,
       seeds,
-      dominantPhase,
+      aggregation,
       flatTimeSeries,
       allPerturbationResults,
       rejectionReasons,
@@ -298,23 +290,5 @@ export class ResearchHarness {
     };
     const metadata = createExplicitWorldMetadata(seed);
     return new LifeWorld(config, metadata);
-  }
-
-  private dominantPhase(seedResults: SeedResult[]): PhaseClassification {
-    const counts = new Map<string, number>();
-    for (const result of seedResults) {
-      const key = result.phase.phase;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    let bestPhase = 'dead';
-    let bestCount = 0;
-    for (const [phase, count] of counts) {
-      if (count > bestCount) {
-        bestCount = count;
-        bestPhase = phase;
-      }
-    }
-    const best = seedResults.find((r) => r.phase.phase === bestPhase);
-    return best?.phase ?? { phase: 'dead', confidence: 0, reasons: ['dominant faz bulunamadı'] };
   }
 }

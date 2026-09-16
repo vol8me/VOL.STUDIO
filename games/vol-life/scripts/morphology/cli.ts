@@ -61,9 +61,9 @@ async function main(): Promise<void> {
     const broad = harness.runBroad();
     results.broad = broad.map((c) => ({
       candidateDigest: c.candidateDigest,
-      phase: c.phase.phase,
+      phase: c.aggregation.majorityReason ?? 'ÇOĞUNLUK_YOK',
       structured: c.structured,
-      seedPhases: c.seedResults.map((s) => s.phase.phase),
+      seedPhases: c.seedResults.map((s) => s.phase.primary),
     }));
     console.error(
       `Broad tamam: ${broad.length} aday, ${broad.filter((c) => c.structured).length} yapısal`,
@@ -75,7 +75,7 @@ async function main(): Promise<void> {
     const refinement = harness.runRefinement(broad);
     results.refinement = refinement.map((c) => ({
       candidateDigest: c.candidateDigest,
-      phase: c.phase.phase,
+      phase: c.aggregation.majorityReason ?? 'ÇOĞUNLUK_YOK',
       structured: c.structured,
     }));
     console.error(
@@ -91,7 +91,7 @@ async function main(): Promise<void> {
     const artefacts = harness.runQualification(refinement);
     results.qualification = artefacts.map((a) => ({
       candidateDigest: a.candidateDigest,
-      phase: a.phase.phase,
+      phase: a.phase.majorityReason ?? 'ÇOĞUNLUK_YOK',
       qualified: isQualified(a),
       rejectionCount: a.rejectionReasons.length,
       humanAcceptance: a.humanAcceptance,

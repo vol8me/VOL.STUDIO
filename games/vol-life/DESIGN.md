@@ -885,6 +885,35 @@ Broad aşama önce adayları fazlara ayırır:
 - speed-cap chaos;
 - **dynamic structured**.
 
+Bu ayrım SABİT GEREKÇE KODLARIYLA yapılır (E11) ve liste dondurulmuştur:
+`DEAD`, `STARTUP_MASSACRE`, `VOID_LOSS_DOMINATED`, `SPEED_CAP_CHAOS`, `STASIS`,
+`CRYSTAL_FROZEN`, `SINGLE_COLLAPSE`, `GAS`, `MICRO_ORBIT_PERSISTENT`,
+`FRINGE_DEPENDENT`, `DYNAMIC_STRUCTURED`. Bir seed birden fazla gerekçe
+taşıyabilir; birincil olan, yukarıdaki sırayla en temel olandır — ölü ya da
+doğumda katledilmiş bir dünyanın yapısı tartışılmaz.
+
+Süre kuralları SANİYE ile tanımlıdır ve örnek sayısına tempoyla çevrilir. Seri
+pencereden kısaysa kural ATEŞLEMEZ: gözlemlenmemiş bir süre iddia edilmez.
+Eski kod tick sayısını örnek sayısıyla karşılaştırıyordu ve örnek aralığı kadar
+yanılıyordu.
+
+İki eşik §8.4'e geri çekildi. `STASIS` mutlak bir hız değil TAVANIN %2'sidir
+(2,4 × 0,02 = 0,048); eski mutlak 0,02 belgeden sapıyordu. `SPEED_CAP_CHAOS`
+ortalama hızı değil TAVANDAKİ PARÇACIK PAYINI ölçer; ortalama hızla ölçmek
+tavana kimsenin değmediği hızlı bir dünyayı da kaos sayardı.
+
+Aday kararı ÇOĞUNLUKLA verilir, plurality ile değil: bir gerekçe seed'lerin
+≥ %50'sinde görülmedikçe aday o gerekçeyle damgalanmaz ve `DYNAMIC_STRUCTURED`
+için seed'lerin ≥ %75'i gerekir. Eski `dominantPhase` en çok görülen fazı
+seçiyordu; seed'lerin %42'sinde GAS, %33'ünde STASIS, %25'inde yapı varsa aday
+"GAS" ilan ediliyordu, oysa hiçbir gerekçe çoğunlukta değil.
+
+Ölçülen bir kısıt: bu substratta 5 dakika boyunca maddeyi KORUYAN bir gaz
+zorunlu olarak yavaştır, yani aynı zamanda `STASIS`tir. Habitatta duvar yoktur;
+hareket eden parçacık er geç kıyıya varır. Bağlı hareket denendi ve olmadı —
+çekim varsa parçacıklar kümeleniyor, zayıf çekimde maddenin %60'ı kıyıyı
+geçiyor. `GAS` gerçek fizikte üretilebiliyor ama tek başına değil.
+
 Yalnız dynamic-structured çevresi refinement'a girer. Kısa otomatik filtre,
 ucuz başarısızları eler; morphology kararı vermez. İnsan gözüyle ilginç
 bulunmayan aday uzun koşuya sokulmaz. İnsan ön-elemesinden geçen az sayıda

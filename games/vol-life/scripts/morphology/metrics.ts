@@ -3,6 +3,7 @@ import type { DomainSample, WorldDomain } from '@/runtime/sim/WorldDomain';
 import type { ClusterState } from './clusterTracker';
 import { measureClusterShape, memberChurn, type Point } from './clusterShape';
 import { percentile } from './stats';
+import { isAtSpeedCap } from './startupSurvival';
 import { measureTrajectory, resolveLagTicks, type TrajectoryFrame } from './trajectory';
 
 /** Metrik döngüleri sıcak yoldur; örnekleme tamponu tahsis etmez. */
@@ -58,6 +59,11 @@ export interface MorphologySample {
   readonly recurrenceFraction: number;
   readonly voidDwellFraction: number;
   readonly fringeFraction: number;
+  /**
+   * Hız tavanındaki parçacıkların payı (E11). §8.4'ün SPEED_CAP_CHAOS satırı
+   * ORTALAMA HIZI değil bunu ister; tavan tanımı `isAtSpeedCap` ile tektir.
+   */
+  readonly cappedFraction: number;
   /** Kapsam dışında kalan aktif madde; morfolojiye girmez, AYRI sayılır (E10). */
   readonly scopedOutCount: number;
   /**
@@ -93,6 +99,8 @@ export interface MorphologyMetricsConfig {
   readonly minEdgeDistanceUnits: number;
   /** Fiziksel fringe genişliği; `VoidSink`in tidal bandıyla aynı olmalıdır. */
   readonly fringeWidthUnits: number;
+  /** Adayın hız tavanı; tavandaki pay ve STASIS eşiği buna göre ölçülür. */
+  readonly maxSpeedUnitsPerReferenceTick: number;
   /** Yinelemede "başlangıç komşuluğu" yarıçapı, dünya birimi. */
   readonly recurrenceRadiusUnits: number;
   /** Boyuta göre kaç küme ayrı ayrı kaydedilir. */
@@ -106,6 +114,7 @@ export const defaultMetricsConfig: MorphologyMetricsConfig = {
   voidDistanceThreshold: 0,
   minEdgeDistanceUnits: Number.NEGATIVE_INFINITY,
   fringeWidthUnits: 24,
+  maxSpeedUnitsPerReferenceTick: 2.4,
   trajectoryLagSeconds: 1,
   fixedStepMs: 1000 / 60,
   sampleIntervalTicks: 10,
@@ -147,6 +156,7 @@ export class MorphologyMetrics {
     const cluster = this.clusterStats(particles, active);
     const typeComp = this.typeComposition(particles, active);
     const radial = this.radialStructure(particles, active, domain);
+    const capped = this.cappedFraction(particles, active);
     const voidDwell = this.voidDwellFraction(particles, active, domain);
     const fringe = this.fringeFraction(particles, active, domain);
     const trajectory = this.trajectoryMeasures(particles, tick);
@@ -168,6 +178,7 @@ export class MorphologyMetrics {
       recurrenceFraction: trajectory.recurrenceFraction,
       voidDwellFraction: voidDwell,
       fringeFraction: fringe,
+      cappedFraction: capped,
       scopedOutCount: scoped.scopedOut,
       fringeStructuredFraction: this.fringeStructuredFraction(particles, clusters, domain),
       ...clusterLayer,
@@ -313,6 +324,17 @@ export class MorphologyMetrics {
       inScope.add(slot);
     }
     return { active, scopedOut, inScope };
+  }
+
+  /** Hız tavanındaki parçacıkların payı; SPEED_CAP_CHAOS bunu okur (E11). */
+  private cappedFraction(particles: ParticleStore, active: number[]): number {
+    if (active.length === 0) return 0;
+    let capped = 0;
+    for (const slot of active) {
+      const speed = Math.hypot(particles.vx[slot], particles.vy[slot]);
+      if (isAtSpeedCap(speed, this.config.maxSpeedUnitsPerReferenceTick)) capped++;
+    }
+    return capped / active.length;
   }
 
   /** Yapılı maddenin fiziksel fringe bandındaki payı; FRINGE_DEPENDENT bunu okur. */

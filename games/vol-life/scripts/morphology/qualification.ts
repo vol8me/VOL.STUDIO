@@ -7,10 +7,15 @@ import {
 import { particleConfig } from '@/config/particles';
 import { fingerprintSubstrateConfig, type SubstrateConfig } from '@/config/substrate';
 import type { MorphologySample } from './metrics';
-import type { PhaseClassification } from './phaseClassifier';
+import type { CandidateAggregation } from './phaseClassifier';
 import type { PerturbationResult } from './perturbation';
 
-export const ARTEFACT_SCHEMA_VERSION = 2;
+/**
+ * v3 (E11): artefakt tek bir seed'in fazını değil ADAY TOPLAMASINI taşır.
+ * Karar çoğunlukla verilir; v2'nin `phase` alanı plurality ile seçilmiş bir
+ * seed'in sınıflandırmasıydı ve aday hakkında yanlış bir şey söylüyordu.
+ */
+export const ARTEFACT_SCHEMA_VERSION = 3;
 
 /**
  * Artefakt JSON'a YAZILMAK için vardır, o yüzden aday burada nesne değil
@@ -27,7 +32,7 @@ export interface QualificationArtefact {
   readonly candidate: string;
   readonly candidateDigest: string;
   readonly corpus: readonly number[];
-  readonly phase: PhaseClassification;
+  readonly phase: CandidateAggregation;
   readonly timeSeries: readonly MorphologySample[];
   readonly perturbationResults: readonly PerturbationResult[];
   readonly rejectionReasons: readonly string[];
@@ -47,7 +52,7 @@ export function createQualificationArtefact(
   config: SubstrateConfig,
   candidate: SubstrateCandidate,
   corpus: readonly number[],
-  phase: PhaseClassification,
+  phase: CandidateAggregation,
   timeSeries: readonly MorphologySample[],
   perturbationResults: readonly PerturbationResult[],
   rejectionReasons: readonly string[],
@@ -72,7 +77,7 @@ export function createQualificationArtefact(
 }
 
 export function isQualified(artefact: QualificationArtefact): boolean {
-  if (artefact.phase.phase !== 'dynamic-structured') return false;
+  if (!artefact.phase.structured || artefact.phase.failed) return false;
   if (artefact.rejectionReasons.length > 0) return false;
   if (artefact.humanAcceptance !== 'accepted') return false;
   const last = artefact.timeSeries[artefact.timeSeries.length - 1];
