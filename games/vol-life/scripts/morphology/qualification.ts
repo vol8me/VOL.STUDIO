@@ -1,18 +1,30 @@
 import {
   digestSubstrateCandidate,
+  parseSubstrateCandidate,
   serializeSubstrateCandidate,
   type SubstrateCandidate,
 } from '@/config/candidate';
+import { particleConfig } from '@/config/particles';
 import { fingerprintSubstrateConfig, type SubstrateConfig } from '@/config/substrate';
 import type { MorphologySample } from './metrics';
 import type { PhaseClassification } from './phaseClassifier';
 import type { PerturbationResult } from './perturbation';
 
+export const ARTEFACT_SCHEMA_VERSION = 2;
+
+/**
+ * Artefakt JSON'a YAZILMAK için vardır, o yüzden aday burada nesne değil
+ * KANONİK METİNDİR. v1 şeması alanı `SubstrateCandidate` diye tiplendirip
+ * içine string koyuyordu (`as unknown as`); bu yalan, tüketicilerde
+ * `typeof === 'string'` ikili dallarını ve doğrulamasız `JSON.parse` yolunu
+ * doğuruyordu. Aday artefakttan yalnız `parseQualificationArtefact` ile,
+ * doğrulanarak çıkar.
+ */
 export interface QualificationArtefact {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: typeof ARTEFACT_SCHEMA_VERSION;
   readonly sourceRevision: string;
   readonly configDigest: string;
-  readonly candidate: SubstrateCandidate;
+  readonly candidate: string;
   readonly candidateDigest: string;
   readonly corpus: readonly number[];
   readonly phase: PhaseClassification;
@@ -43,10 +55,10 @@ export function createQualificationArtefact(
   sourceRevision = 'unknown',
 ): QualificationArtefact {
   return {
-    schemaVersion: 1,
+    schemaVersion: ARTEFACT_SCHEMA_VERSION,
     sourceRevision,
     configDigest: fingerprintSubstrateConfig(config),
-    candidate: serializeSubstrateCandidate(candidate) as unknown as SubstrateCandidate,
+    candidate: serializeSubstrateCandidate(candidate),
     candidateDigest: digestSubstrateCandidate(candidate),
     corpus,
     phase,
@@ -74,12 +86,43 @@ export function isQualified(artefact: QualificationArtefact): boolean {
 }
 
 export function serializeArtefact(artefact: QualificationArtefact): string {
-  return JSON.stringify({
-    ...artefact,
-    candidate: serializeSubstrateCandidate(
-      typeof artefact.candidate === 'string'
-        ? (JSON.parse(artefact.candidate as string) as SubstrateCandidate)
-        : artefact.candidate,
-    ),
-  });
+  return JSON.stringify(artefact);
+}
+
+/** Artefakttan adayı çıkarmanın TEK yolu; gömülü metin doğrulanarak çözülür. */
+export function readArtefactCandidate(
+  artefact: QualificationArtefact,
+  particleRadiusUnits = particleConfig.radiusUnits,
+): SubstrateCandidate {
+  return parseSubstrateCandidate(artefact.candidate, particleRadiusUnits);
+}
+
+/**
+ * JSON'dan artefakt okumanın tek girişi. Eski şema (v1) AÇIKÇA reddedilir:
+ * v1'de aday alanı nesne olabiliyordu ve doğrulanmadan promotion'a geçiyordu.
+ */
+export function parseQualificationArtefact(
+  serialized: string,
+  particleRadiusUnits = particleConfig.radiusUnits,
+): QualificationArtefact {
+  const raw = JSON.parse(serialized) as Record<string, unknown>;
+  if (raw.schemaVersion !== ARTEFACT_SCHEMA_VERSION) {
+    throw new RangeError(
+      `Artefakt şeması bu çalışma zamanına ait değil: ${String(raw.schemaVersion)}`,
+    );
+  }
+  if (typeof raw.candidate !== 'string') {
+    throw new RangeError('Artefakt adayı kanonik METİN taşımalı.');
+  }
+  if (typeof raw.candidateDigest !== 'string' || typeof raw.configDigest !== 'string') {
+    throw new RangeError('Artefakt digest alanları metin olmalı.');
+  }
+  if (!Array.isArray(raw.corpus) || !Array.isArray(raw.timeSeries)) {
+    throw new RangeError('Artefakt korpus ve zaman serisi taşımalı.');
+  }
+  const candidate = parseSubstrateCandidate(raw.candidate, particleRadiusUnits);
+  if (digestSubstrateCandidate(candidate) !== raw.candidateDigest) {
+    throw new RangeError('Artefakt digest’i gömülü adayla uyuşmuyor.');
+  }
+  return raw as unknown as QualificationArtefact;
 }

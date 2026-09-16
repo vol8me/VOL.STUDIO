@@ -4,7 +4,7 @@ import {
   type SubstrateCandidate,
 } from '@/config/candidate';
 import type { QualificationArtefact } from './qualification';
-import { isQualified } from './qualification';
+import { isQualified, readArtefactCandidate } from './qualification';
 
 export interface PromotionDecision {
   readonly promoted: boolean;
@@ -25,10 +25,8 @@ export class PromotionFlow {
   private readonly promoted: PromotionRecord[] = [];
 
   evaluate(artefact: QualificationArtefact): PromotionDecision {
-    const candidate =
-      typeof artefact.candidate === 'string'
-        ? (JSON.parse(artefact.candidate as string) as SubstrateCandidate)
-        : cloneSubstrateCandidate(artefact.candidate);
+    // Aday artefakttan DOĞRULANARAK çıkar; string/nesne ikili dalı kalmadı (E3).
+    const candidate = readArtefactCandidate(artefact);
     const candidateDigest = digestSubstrateCandidate(candidate);
     if (!isQualified(artefact)) {
       return {

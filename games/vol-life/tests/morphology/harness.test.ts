@@ -25,7 +25,7 @@ describe('ResearchHarness', () => {
     const results = harness.runBroad();
     expect(results).toHaveLength(1);
     for (const result of results) {
-      expect(result.candidate.schemaVersion).toBe(defaultSubstrateCandidate.physics.schemaVersion);
+      expect(result.candidate.schemaVersion).toBe(defaultSubstrateCandidate.schemaVersion);
       expect(result.candidateDigest).toMatch(/^[0-9a-f]{16}$/);
       expect(result.seedResults).toHaveLength(1);
     }
@@ -44,7 +44,7 @@ describe('ResearchHarness', () => {
     const refinement = harness.runRefinement(broad);
     const artefacts = harness.runQualification(refinement);
     for (const artefact of artefacts) {
-      expect(artefact.schemaVersion).toBe(1);
+      expect(artefact.schemaVersion).toBe(2);
       expect(artefact.candidateDigest).toMatch(/^[0-9a-f]{16}$/);
       expect(artefact.timeSeries.length).toBeGreaterThan(0);
       expect(artefact.perturbationResults.length).toBeGreaterThan(0);

@@ -1,10 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ARTEFACT_SCHEMA_VERSION,
   createQualificationArtefact,
   isQualified,
+  parseQualificationArtefact,
+  readArtefactCandidate,
+  serializeArtefact,
   type QualificationBudget,
 } from '@/../scripts/morphology/qualification';
-import { defaultSubstrateCandidate } from '@/config/candidate';
+import {
+  defaultSubstrateCandidate,
+  digestSubstrateCandidate,
+  serializeSubstrateCandidate,
+} from '@/config/candidate';
 import { substrateConfig } from '@/config/substrate';
 import type { MorphologySample } from '@/../scripts/morphology/metrics';
 import type { PerturbationResult } from '@/../scripts/morphology/perturbation';
@@ -58,7 +66,7 @@ function makePerturbationResult(recovered: boolean): PerturbationResult {
 }
 
 describe('Qualification', () => {
-  it('artefakt oluşturulur ve şema sürümü 1', () => {
+  it('artefakt oluşturulur ve şema sürümü v2’dir', () => {
     const artefact = createQualificationArtefact(
       substrateConfig,
       defaultSubstrateCandidate,
@@ -69,7 +77,7 @@ describe('Qualification', () => {
       [],
       budget,
     );
-    expect(artefact.schemaVersion).toBe(1);
+    expect(artefact.schemaVersion).toBe(ARTEFACT_SCHEMA_VERSION);
     expect(artefact.phase.phase).toBe('dynamic-structured');
     expect(artefact.humanAcceptance).toBe('pending');
   });
@@ -131,5 +139,70 @@ describe('Qualification', () => {
       humanAcceptance: 'accepted' as const,
     };
     expect(isQualified(accepted)).toBe(false);
+  });
+});
+
+/*
+ * E3: artefakt JSON'a yazılmak için vardır, o yüzden aday NESNE değil kanonik
+ * METİNDİR. v1 şeması alanı nesne diye tiplendirip içine string koyuyordu
+ * (`as unknown as`); tüketiciler bu yüzden `typeof === 'string'` ikili dalı ve
+ * doğrulamasız `JSON.parse` taşıyordu — bozuk bir aday sessizce promotion'a
+ * geçebilirdi.
+ */
+describe('Qualification artefakt DTO v2 (E3)', () => {
+  function artefact() {
+    return createQualificationArtefact(
+      substrateConfig,
+      defaultSubstrateCandidate,
+      [1, 2],
+      { phase: 'dynamic-structured', confidence: 0.7, reasons: [] },
+      [makeSample()],
+      [makePerturbationResult(true)],
+      [],
+      budget,
+    );
+  }
+
+  it('aday alanı kanonik metindir ve digest’i onunla uyuşur', () => {
+    const created = artefact();
+
+    expect(typeof created.candidate).toBe('string');
+    expect(created.candidate).toBe(serializeSubstrateCandidate(defaultSubstrateCandidate));
+    expect(created.candidateDigest).toBe(digestSubstrateCandidate(defaultSubstrateCandidate));
+  });
+
+  it('gidiş-dönüş: serialize → parse aynı artefaktı ve aynı adayı verir', () => {
+    const created = artefact();
+    const restored = parseQualificationArtefact(serializeArtefact(created));
+
+    expect(restored.schemaVersion).toBe(ARTEFACT_SCHEMA_VERSION);
+    expect(restored.candidateDigest).toBe(created.candidateDigest);
+    expect(digestSubstrateCandidate(readArtefactCandidate(restored))).toBe(created.candidateDigest);
+  });
+
+  it('eski şema (v1) açıkça reddedilir', () => {
+    const legacy = JSON.stringify({
+      ...artefact(),
+      schemaVersion: 1,
+      candidate: defaultSubstrateCandidate,
+    });
+
+    expect(() => parseQualificationArtefact(legacy)).toThrow(RangeError);
+  });
+
+  it('bozuk DTO reddedilir', () => {
+    const created = artefact();
+    const withObjectCandidate = JSON.stringify({
+      ...created,
+      candidate: defaultSubstrateCandidate,
+    });
+    const withBadDigest = JSON.stringify({ ...created, candidateDigest: '0'.repeat(16) });
+    const withoutCorpus = JSON.stringify({ ...created, corpus: 'hepsi' });
+    const withBrokenCandidate = JSON.stringify({ ...created, candidate: '{"physics":{}}' });
+
+    expect(() => parseQualificationArtefact(withObjectCandidate)).toThrow(RangeError);
+    expect(() => parseQualificationArtefact(withBadDigest)).toThrow(RangeError);
+    expect(() => parseQualificationArtefact(withoutCorpus)).toThrow(RangeError);
+    expect(() => parseQualificationArtefact(withBrokenCandidate)).toThrow(RangeError);
   });
 });

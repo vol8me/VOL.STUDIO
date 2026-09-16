@@ -130,7 +130,7 @@ describe('PromotionFlow', () => {
     expect(flow.hasCandidate('unknown')).toBe(false);
   });
 
-  it('exportPromotedGenome promoted genomu döner', () => {
+  it('exportPromotedCandidate promoted adayı döner', () => {
     const flow = new PromotionFlow();
     const base = createQualificationArtefact(
       substrateConfig,
@@ -144,9 +144,10 @@ describe('PromotionFlow', () => {
     );
     const accepted = { ...base, humanAcceptance: 'accepted' as const };
     flow.evaluate(accepted);
-    const genome = flow.exportPromotedCandidate(0);
-    expect(genome).not.toBeNull();
-    expect(genome?.schemaVersion).toBe(defaultSubstrateCandidate.physics.schemaVersion);
+    const promoted = flow.exportPromotedCandidate(0);
+    expect(promoted).not.toBeNull();
+    expect(promoted?.schemaVersion).toBe(defaultSubstrateCandidate.schemaVersion);
+    expect(promoted?.void).toEqual(defaultSubstrateCandidate.void);
     expect(flow.exportPromotedCandidate(99)).toBeNull();
   });
 });
