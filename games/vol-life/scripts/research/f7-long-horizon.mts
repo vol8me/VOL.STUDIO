@@ -94,7 +94,11 @@ function unitInput(candidate: SubstrateCandidate, seed: number): SeedUnitInput {
     seed,
     tickCount: totalTicks,
     sampleInterval: SAMPLE_TICKS,
-    metrics: { ...defaultMetricsConfig, sampleIntervalTicks: SAMPLE_TICKS },
+    metrics: {
+      ...defaultMetricsConfig,
+      sampleIntervalTicks: SAMPLE_TICKS,
+      trajectoryLagSeconds: SAMPLE_TICKS / HZ,
+    },
     cluster: {
       ...defaultClusterConfig,
       sampleIntervalTicks: SAMPLE_TICKS,
