@@ -29,6 +29,7 @@ function particleBytes(world: LifeWorld): Uint8Array[] {
 }
 
 describe('alan kuvvetleri kapalı', () => {
+  // 2x128 parçacıklı 240 adım simülasyon ve alan bozma v8 kapsam enstrümantasyonu altında açık süre gerektirir.
   it('alanlar her tick bozulsa da parçacık dizileri bayt düzeyinde aynı kalır', () => {
     const config = smallConfig();
     const control = new LifeWorld(config, createExplicitWorldMetadata(31));
@@ -56,7 +57,7 @@ describe('alan kuvvetleri kapalı', () => {
     }
     expect(corrupted.particles.activeCount).toBe(control.particles.activeCount);
     expect(corrupted.reservoir.voidLossTotal).toBe(control.reservoir.voidLossTotal);
-  });
+  }, 20_000);
 
   it('bozulmuş alanlar kuvvet ve hız zarfını da etkilemez', () => {
     const config = smallConfig();

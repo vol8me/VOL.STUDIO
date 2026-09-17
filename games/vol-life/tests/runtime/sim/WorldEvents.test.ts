@@ -86,7 +86,7 @@ describe('Void ölümü — sunum ve dünya kanalları', () => {
     expect(events.length).toBe(world.reservoir.voidLossTotal);
     expect(events.length).toBeLessThanOrEqual(world.particles.capacity);
     expect(world.drainTransientPresentationEvents()).toHaveLength(0);
-  });
+  }, 20_000);
 
   it('restore sunum tamponunu temizler', () => {
     const world = createWorld();
@@ -97,7 +97,7 @@ describe('Void ölümü — sunum ve dünya kanalları', () => {
     world.restore(snapshot);
 
     expect(world.drainTransientPresentationEvents()).toHaveLength(0);
-  });
+  }, 20_000);
 
   it('sink verilmese de sunum kanalı çalışır', () => {
     const world = createWorld();

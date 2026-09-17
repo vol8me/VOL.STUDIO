@@ -211,7 +211,7 @@ describe('LifeWorld', () => {
       }
     }
     expect(movedActive).toBeGreaterThan(0);
-  });
+  }, 20_000);
 
   it('ışık kaynakları alanı eşitsiz tohumlar ve zamanla yer değiştirir', () => {
     const config = smallConfig();

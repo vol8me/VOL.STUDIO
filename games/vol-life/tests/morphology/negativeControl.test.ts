@@ -24,13 +24,14 @@ function smokeRun(seed: number): { active: number; fingerprint: number } {
 }
 
 describe('F2 — V1 negatif kontrolü', () => {
+  // v8 kapsam enstrümantasyonu ve 512 parçacıklı 240 adım simülasyon yükü için açık süre.
   it('aynı seed aynı sonucu verir', () => {
     expect(smokeRun(7)).toEqual(smokeRun(7));
-  });
+  }, 20_000);
 
   it('farklı seed farklı sonuç verir', () => {
     expect(smokeRun(7).fingerprint).not.toBe(smokeRun(8).fingerprint);
-  });
+  }, 20_000);
 
   it('reddedilen kernel gerçekten farklı bir fizik üretir', () => {
     const control = smokeRun(7);
@@ -43,7 +44,7 @@ describe('F2 — V1 negatif kontrolü', () => {
     }
 
     expect(control.fingerprint).not.toBe(fingerprint);
-  });
+  }, 20_000);
 
   it('özet şeması doğrulanır', () => {
     const seed = (value: number): Record<string, unknown> => ({
