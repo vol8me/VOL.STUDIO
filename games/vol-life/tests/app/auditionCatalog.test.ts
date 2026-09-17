@@ -47,6 +47,22 @@ describe('loadAuditionSelection', () => {
    * Aralık dışı istek KIRPILMAZ. "aday 9" isteyip 1 numarayı izlemek,
    * ön-eleme notunu yanlış adaya yazmak demektir.
    */
+  /*
+   * Sorgu ENJEKTE EDİLMEDİĞİNDE adres çubuğu okunur. Bu yol canlı tarayıcıda
+   * kırıktı: varsayılan boş dizeydi ve seçim hiç uygulanmıyordu.
+   */
+  it('sorgu verilmezse adres çubuğundan okunur', async () => {
+    const original = window.location.search;
+    window.history.replaceState({}, '', '/?audition=3&seed=2');
+    try {
+      const selection = await loadAuditionSelection({ env: { DEV: true }, readCatalog });
+      expect(selection?.entryIndex).toBe(2);
+      expect(selection?.seedIndex).toBe(1);
+    } finally {
+      window.history.replaceState({}, '', `/${original}`);
+    }
+  });
+
   it('aralık dışı ya da sayı olmayan seçim reddedilir', async () => {
     for (const search of ['?audition=0', '?audition=4', '?seed=4', '?audition=abc']) {
       await expect(

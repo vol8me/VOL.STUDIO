@@ -38,5 +38,10 @@
   },
   "fatal": {
     "title": "VOL.LIFE başlatılamadı"
+  },
+  "research": {
+    "camera": "Kamera adayı",
+    "audition": "Audition adayı",
+    "seed": "Tohum"
   }
 }

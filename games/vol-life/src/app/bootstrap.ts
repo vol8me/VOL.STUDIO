@@ -14,7 +14,8 @@ import {
 } from '@volstudio/tauri-v2';
 import { loadAuditionSelection, describeSelection } from '@/app/auditionCatalog';
 import { resolveCameraCandidate } from '@/app/cameraCandidate';
-import { defaultCameraCandidateId } from '@/config/cameraCandidates';
+import { cameraCandidates, defaultCameraCandidateId } from '@/config/cameraCandidates';
+import { LifeResearchPanel } from '@/runtime/ui/LifeResearchPanel';
 import { loadAuditionCandidate } from '@/app/auditionGenome';
 import { LifePreferences } from '@/app/LifePreferences';
 import { LifeWorldPersistence } from '@/app/LifeWorldPersistence';
@@ -88,6 +89,33 @@ try {
   const auditionMetadata = selection ? createExplicitWorldMetadata(selection.seed) : undefined;
   // Kamera aday ölçüleri (D5): üretimde her zaman `dengeli`.
   const cameraCandidate = resolveCameraCandidate();
+  /*
+   * Kabul oturumu paneli yalnız geliştirmede kurulur; koşul sabit olduğu için
+   * üretim derlemesinde panel ve bağımlılıkları bundle'a hiç girmez.
+   */
+  const researchPanel = import.meta.env.DEV
+    ? new LifeResearchPanel({
+        cameraCandidateIds: cameraCandidates.map((candidate) => candidate.id),
+        activeCameraId: cameraCandidate.id,
+        audition: selection
+          ? {
+              entryIndex: selection.entryIndex,
+              entryCount: selection.entryCount,
+              seedIndex: selection.seedIndex,
+              seedCount: selection.seedCount,
+              digest: selection.entry.digest,
+            }
+          : null,
+        labels: {
+          camera: i18next.t('life:research.camera'),
+          audition: i18next.t('life:research.audition'),
+          seed: i18next.t('life:research.seed'),
+        },
+        navigate: (query) => {
+          window.location.search = query.toString();
+        },
+      })
+    : null;
   setHapticsEnabled(preferences.get().hapticsEnabled);
   const orientation = new OrientationPreference(
     platform === 'android' ? androidScreenOrientation : null,
@@ -110,6 +138,7 @@ try {
         auditionDigest: selection ? describeSelection(selection) : audition?.digest ?? null,
         cameraCandidateId:
           cameraCandidate.id === defaultCameraCandidateId ? null : cameraCandidate.id,
+        researchContent: researchPanel,
         createRuntime: (scene, initialSnapshot) =>
           new LifeRuntime(scene, {
             config: activeSubstrate,
@@ -125,6 +154,7 @@ try {
   game.events.once('destroy', () => {
     i18next.off('languageChanged', syncDocumentLocale);
     setHapticsDriver(null);
+    researchPanel?.destroy();
   });
 
   // Pencere kipi uygulama ömrüne bağlıdır: sahne yeniden kurulsa da F11

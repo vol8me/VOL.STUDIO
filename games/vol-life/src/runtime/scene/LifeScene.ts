@@ -34,6 +34,8 @@ export interface LifeSceneServices {
   readonly auditionDigest: string | null;
   /** Varsayılan dışında bir kamera adayı koşuyorsa kimliği (D5). */
   readonly cameraCandidateId: string | null;
+  /** Kabul oturumu paneli; YALNIZ geliştirme derlemesinde dolu gelir (P1/P2). */
+  readonly researchContent: { readonly element: HTMLElement } | null;
   readonly createRuntime: (
     scene: Phaser.Scene,
     initialSnapshot: LifeWorldSnapshot | null,
@@ -72,6 +74,7 @@ export class LifeScene extends Phaser.Scene {
       worldPersistence: services.worldPersistence ?? null,
       auditionDigest: services.auditionDigest ?? null,
       cameraCandidateId: services.cameraCandidateId ?? null,
+      researchContent: services.researchContent ?? null,
       createRuntime:
         services.createRuntime ??
         ((scene, initialSnapshot) => new LifeRuntime(scene, { initialSnapshot })),
@@ -174,7 +177,7 @@ export class LifeScene extends Phaser.Scene {
           fullscreen: fullscreen
             ? { initialActive: fullscreen.isFullscreen(), onToggle: () => void fullscreen.toggle() }
             : undefined,
-          optionsContent: panel,
+          optionsContent: this.optionsContent(panel),
           showFps: preferenceState.showFps,
           ...(this.services.auditionDigest ? { auditionDigest: this.services.auditionDigest } : {}),
           ...(this.services.cameraCandidateId
@@ -242,5 +245,23 @@ export class LifeScene extends Phaser.Scene {
     this.runtimeScope = null;
     this.hud = null;
     this.worldRuntime = null;
+  }
+
+  /*
+   * Kabul oturumu paneli seçenek çekmecesinin ALTINA eklenir: cihazda adres
+   * çubuğu olmadığı için aday geçişinin tek yolu burasıdır. Üretimde
+   * `researchContent` her zaman null gelir ve kap hiç kurulmaz.
+   */
+  private optionsContent(panel: { element: HTMLElement }): { element: HTMLElement } {
+    const research = this.services.researchContent;
+    if (!research) return panel;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'vol-life-options-stack';
+    // Stil satır içi: kap yalnız geliştirmede kurulur, üretim CSS'ine girmez.
+    wrapper.style.display = 'flex';
+    wrapper.style.flexDirection = 'column';
+    wrapper.style.gap = '12px';
+    wrapper.append(panel.element, research.element);
+    return { element: wrapper };
   }
 }

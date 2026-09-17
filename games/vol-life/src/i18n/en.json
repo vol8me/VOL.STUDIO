@@ -38,5 +38,10 @@
   },
   "fatal": {
     "title": "VOL.LIFE could not start"
+  },
+  "research": {
+    "camera": "Camera candidate",
+    "audition": "Audition candidate",
+    "seed": "Seed"
   }
 }

@@ -47,7 +47,14 @@ export async function loadAuditionSelection(
   if (serialized === null) return null;
   const radius = options.particleRadiusUnits ?? particleConfig.radiusUnits;
   const catalog = parseAuditionCatalog(serialized, radius);
-  const params = new URLSearchParams(options.search ?? '');
+  /*
+   * Varsayılan ADRES ÇUBUĞUDUR. Burada boş dizeye düşmek, seçim sorgusunu
+   * uygulamada hiç okumamak demekti: tarayıcıda her zaman ilk aday ve ilk
+   * tohum açılıyordu ve testler `search`i enjekte ettiği için bunu görmedi.
+   */
+  const params = new URLSearchParams(
+    options.search ?? (typeof window === 'undefined' ? '' : window.location.search),
+  );
   const entryIndex = readIndex(params, 'audition', catalog.entries.length);
   const seedIndex = readIndex(params, 'seed', catalog.seeds.length);
   return {

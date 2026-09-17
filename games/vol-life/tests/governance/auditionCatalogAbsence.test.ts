@@ -88,6 +88,13 @@ describe('audition kataloğu üretim derlemesinde yok', () => {
     expect(filesContaining(PRODUCTION_DIR, 'VITE_LIFE_AUDITION_GENOME')).toEqual([]);
   });
 
+  /* Kabul oturumu paneli de araştırma yüzeyidir: üretimde kurulmaz. */
+  it('kabul oturumu paneli üretim derlemesinde yok', () => {
+    expect(filesContaining(PRODUCTION_DIR, 'vol-life-research__nav')).toEqual([]);
+    expect(filesContaining(PRODUCTION_DIR, 'life:research.camera')).toEqual([]);
+    expect(filesContaining(DEV_FLAGGED_DIR, 'vol-life-research__nav').length).toBeGreaterThan(0);
+  });
+
   it('katalog dosyası çıktı ağacına kopyalanmıyor', () => {
     expect(existsSync(join(PACKAGE_ROOT, PRODUCTION_DIR, AUDITION_CATALOG_PATH))).toBe(false);
   });
