@@ -143,7 +143,9 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       (`scripts/morphology/falsification.ts`, 7 test): (a) geçen aday payı < %1,
       (b) refinement'ta hayatta kalan yok, (c) kullanıcı kısa listeyi tümüyle
       reddetti. Ölçülmemiş koşul "geçti" sayılmıyor; aile sırası ön-kayıtlı
-      (DESIGN §8)._
+      (DESIGN §8). F3 launch envelope ölçümüyle (103 yapısal aday × 4 seed, 12,4 dk):
+      geçen 13 aday = broad'un %0,63'ü (< %1); kural (a) tetiklendi,
+      **generalized-asymmetric-multi-band AİLESİ ÇÜRÜDÜ** (`benchmarks/results/f3-launch-envelope.json`)._
 - [x] **[P1] V1 negatif kontrol yeniden üretilebilir küçük fixture olsun.** Ham
       50k satırlık artefakt runtime'da tutulmaz; triangular baseline'ın config,
       korpus ve özet sonucu sürümlü benchmark ile yeni adayın aynı ölçümde
@@ -178,17 +180,26 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
 - [x] **[P0] Ucuz broad tarama yalnız faz filtresi olsun.** Candidate bütçesi
       benchmark'la seçilir. Broad sonucu morphology başarısı veya production
       adayı diye sunulmaz.
-- [ ] **[P1] Broad gerçekten geniş örneklesin; aday bütçesi ölçümle seçilsin.**
+- [x] **[P1] Broad gerçekten geniş örneklesin; aday bütçesi ölçümle seçilsin.**
       `GenomeSampler` yalnız varsayılan genomun ±jitter komşuluğunu tarıyor;
       `candidateCount` sabit 30.
-- [ ] **[P1] Arama hunisi ölçülerek kilitlensin.** Başlangıç hipotezi broad
+      _Kapatıldı 2026-09-17 (F3): 2048 aday × 4 seed (123,1 dk, geçersiz 0) koştu;
+      N↔2N yakınsama GEÇTİ (fark 0,39 puan, eşik 2); 103 yapısal aday belirlendi
+      (`benchmarks/results/f3-candidates.jsonl`, `benchmarks/results/f3-broad.json`)._
+- [x] **[P1] Arama hunisi ölçülerek kilitlensin.** Başlangıç hipotezi broad
       30–60 saniye/4–8 seed, refinement birkaç dakika/16 seed, audition 3–8
       aday, qualification 10–30 dakika/32+ seed'dir. Bunlar ölçülmeden sabit
       acceptance değildir; ilk filtre olarak 2/6/24 saat koşulmaz.
-- [ ] **[P0] Refinement sonrası az aday development audition'a açılsın.**
+      _Kapatıldı 2026-09-17 (F3/F5/F7): kalibrasyondan ölçülen ms/tick ile süre
+      bütçesi otomatik kilitleniyor; broad 2048 aday × 4 seed (30 sn), F7 K15 kısa listesi
+      (8 aday) × 2 senaryo × 32 tohum ile bütçeye göre kilitli._
+- [x] **[P0] Refinement sonrası az aday development audition'a açılsın.**
       Audition yüzeyi production bundle'a qualified olmayan catalog gömmez;
       açık dev/build girdisi ve provenance gösterir. URL/env ile sessiz
       production override yasaktır.
+      _Kapatıldı 2026-09-17 (F5, K10): 8 adaylık audition kataloğu (`research-out/audition-catalog.json`),
+      dev sunucusu configureServer middleware'iyle servis edilir; üretim derlemesinde
+      yokluğu çift build testiyle kanıtlandı (`tests/governance/auditionCatalogAbsence.test.ts`)._
 - [ ] **[P0] İnsan ön-elemesi long-horizon'dan önce yapılsın.** Core-like,
       membrane-like, mobile, recovering, fragile, chasing ve symbiotic
       ailelerinden anlamlı bir alt küme görülür. Renkli topak, jitter veya

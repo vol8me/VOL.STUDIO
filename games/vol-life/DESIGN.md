@@ -1172,6 +1172,22 @@ gelmez — o kernel yapı üretmiyor, yalnız maddeyi kaybetmiyor — ama F1'le 
 şeyi söyler: **bugünkü varsayılan aday teknik kapıyı geçmiyor** ve Adım 3'ün
 arayacağı aday varsayılanın komşuluğunda değildir.
 
+**F3 (broad tarama ve launch envelope, 2026-09-17).** 2048 aday × 4 seed
+(123,1 dk, geçersiz örnek 0) koştu. Faz dağılımı: VOID_LOSS_DOMINATED %60,84,
+DEAD %30,81, DYNAMIC_STRUCTURED %6,64, çoğunluk yok %1,71. N↔2N yakınsama GEÇTİ
+(en büyük fark 0,39 puan, eşik 2). 103 yapısal aday belirlendi (`f3-candidates.jsonl`).
+
+103 yapısal aday launch envelope testine alındı (`scripts/research/f3-launch-envelope.mts`,
+4 seed × 30 sn, 12,4 dk, 8 worker). Sonuç:
+
+- Seed'lerin ≥ %75'inde hem launch envelope'u geçen hem yapısal olan aday sayısı: **13**.
+- Bu oran 2048 broad adayın **%0,63'üdür** (13/2048).
+- §8.4 ön-kayıtlı çürütme kuralı (a): oran < %1 ise aile çürür.
+- Karar: **`generalized-asymmetric-multi-band` AİLESİ ÇÜRÜDÜ** (`benchmarks/results/f3-launch-envelope.json`).
+  Sıradaki ön-kayıtlı alternatif aile `multi-lobe`dur. Aile çürümüş olsa da F5
+  kısa listesi ve F7 uzun ufuk koşusu bu 103 yapısal aday arasından seçilen en
+  iyi adaylarla K15 protokolü gereği işletilmeye devam eder.
+
 ### Audition kataloğu ve tohum korpusu (F5, F7)
 
 Kısa liste 3–8 adaydır ve yalnız en yüksek skorlardan seçilmez: önce her fazın
