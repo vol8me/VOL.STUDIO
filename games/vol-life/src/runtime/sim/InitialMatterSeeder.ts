@@ -123,7 +123,7 @@ function gaussianPair(random: SimRandom): [number, number] {
   return [magnitude * Math.cos(Math.PI * 2 * u2), magnitude * Math.sin(Math.PI * 2 * u2)];
 }
 
-function pickType(random: SimRandom, weights: readonly number[]): number {
+export function pickType(random: SimRandom, weights: readonly number[]): number {
   let total = 0;
   for (const weight of weights) total += weight;
   let roll = random.next() * total;

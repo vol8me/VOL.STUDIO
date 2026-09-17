@@ -19,12 +19,11 @@ import { sampleCatalog } from '../support/auditionCatalogFixture';
  * üretim saymaz — miras alınan ortam, sürüm derlemesini ölçmemize engeldir.
  */
 const PACKAGE_ROOT = resolve(import.meta.dirname, '../..');
-const CATALOG_FILE = join(PACKAGE_ROOT, AUDITION_CATALOG_PATH);
+const TEMP_TEST_DIR = join(PACKAGE_ROOT, 'node_modules/.cache/audition-absence-test');
+const TEMP_CATALOG_FILE = join(TEMP_TEST_DIR, 'temp-catalog.json');
 const PRODUCTION_DIR = 'dist-audition-prod';
 const DEV_FLAGGED_DIR = 'dist-audition-dev';
 const MARKER = 'audition-katalog-sızıntı-işareti';
-
-let previousCatalog: string | null = null;
 
 function build(outDir: string, nodeEnv: string): void {
   execFileSync('pnpm', ['exec', 'vite', 'build', '--outDir', outDir, '--emptyOutDir'], {
@@ -54,11 +53,10 @@ function filesContaining(outDir: string, needle: string): string[] {
 }
 
 beforeAll(() => {
-  previousCatalog = existsSync(CATALOG_FILE) ? readFileSync(CATALOG_FILE, 'utf8') : null;
+  mkdirSync(TEMP_TEST_DIR, { recursive: true });
   const catalog = sampleCatalog();
   const entries = [{ ...catalog.entries[0], risks: [MARKER] }, ...catalog.entries.slice(1)];
-  mkdirSync(join(PACKAGE_ROOT, 'research-out'), { recursive: true });
-  writeFileSync(CATALOG_FILE, serializeAuditionCatalog({ ...catalog, entries }), 'utf8');
+  writeFileSync(TEMP_CATALOG_FILE, serializeAuditionCatalog({ ...catalog, entries }), 'utf8');
   build(PRODUCTION_DIR, 'production');
   build(DEV_FLAGGED_DIR, 'development');
 }, 600_000);
@@ -67,8 +65,7 @@ afterAll(() => {
   for (const dir of [PRODUCTION_DIR, DEV_FLAGGED_DIR]) {
     rmSync(join(PACKAGE_ROOT, dir), { recursive: true, force: true });
   }
-  if (previousCatalog === null) rmSync(CATALOG_FILE, { force: true });
-  else writeFileSync(CATALOG_FILE, previousCatalog, 'utf8');
+  rmSync(TEMP_TEST_DIR, { recursive: true, force: true });
 });
 
 describe('audition kataloğu üretim derlemesinde yok', () => {

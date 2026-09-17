@@ -28,6 +28,12 @@ export class MatterReservoir {
     this.lossTotal += count;
   }
 
+  reseed(count: number): number {
+    const actual = Math.min(this.externalMatter, Math.max(0, Math.floor(count)));
+    this.externalMatter -= actual;
+    return actual;
+  }
+
   snapshot(): MatterReservoirSnapshot {
     return { external: this.externalMatter, voidLossTotal: this.lossTotal };
   }

@@ -7,7 +7,7 @@ import {
 } from '@/config/substrate';
 import { resolveSimulationHz } from '@/config/world';
 import { FieldSet, type FieldSnapshot } from '@/runtime/sim/FieldSet';
-import { seedInitialMatter } from '@/runtime/sim/InitialMatterSeeder';
+import { pickType, seedInitialMatter } from '@/runtime/sim/InitialMatterSeeder';
 import { LightSources } from '@/runtime/sim/LightSources';
 import { validateLifeWorldSnapshot } from '@/runtime/sim/LifeWorldSnapshotValidation';
 import { MatterReservoir, type MatterReservoirSnapshot } from '@/runtime/sim/MatterReservoir';
@@ -68,6 +68,7 @@ export class LifeWorld {
   private readonly sink: VoidSink;
   private readonly worldEvents: WorldEventSink;
   private readonly crossingScratch: VoidDeathEvent[] = [];
+  private readonly scratchSample = { distance: 0, normalX: 1, normalY: 0 };
   private presentationEvents: VoidDeathEvent[] = [];
   private nextFieldBand = 0;
   private fieldUpdated = false;
@@ -147,6 +148,12 @@ export class LifeWorld {
     for (const event of this.crossingScratch) {
       this.worldEvents.emit(event);
       this.presentationEvents.push(event);
+    }
+    const reseedIntervalTicks = Math.round(
+      this.config.particles.reseedIntervalSeconds * this.config.particles.referenceHz,
+    );
+    if (this.tick > 0 && this.tick % reseedIntervalTicks === 0 && this.reservoir.external > 0) {
+      this.reseedFromReservoir();
     }
     this.tempo.advance();
     return this.fieldUpdated;
@@ -233,5 +240,43 @@ export class LifeWorld {
       nutrient[index] += (light[index] - nutrient[index]) * world.nutrientRenewal;
     }
     this.nextFieldBand = (this.nextFieldBand + 1) % world.fieldUpdateBands;
+  }
+
+  private reseedFromReservoir(): void {
+    const freeSlots = this.particles.capacity - this.particles.activeCount;
+    if (freeSlots <= 0 || this.reservoir.external <= 0) return;
+    const toReseed = Math.min(
+      freeSlots,
+      Math.max(1, Math.floor(this.reservoir.external * this.config.particles.reseedFraction)),
+    );
+    const count = this.reservoir.reseed(toReseed);
+    if (count <= 0) return;
+    const random = this.streams.stream('lifecycle');
+    const safeDistance = this.candidate.seeding.safeEdgeMarginUnits;
+    const { bbox } = this.domain;
+    const seeding = this.candidate.seeding;
+
+    for (let index = 0; index < count; index++) {
+      let posX = bbox.x + bbox.width / 2;
+      let posY = bbox.y + bbox.height / 2;
+      for (let attempt = 0; attempt < 32; attempt++) {
+        const candidateX = bbox.x + random.next() * bbox.width;
+        const candidateY = bbox.y + random.next() * bbox.height;
+        if (
+          this.domain.sampleDistanceAndNormal(candidateX, candidateY, this.scratchSample)
+            .distance >= safeDistance
+        ) {
+          posX = candidateX;
+          posY = candidateY;
+          break;
+        }
+      }
+      const angle = random.next() * Math.PI * 2;
+      const speed = seeding.initialSpeedUnitsPerReferenceTick * random.next();
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      const particleType = pickType(random, seeding.typeWeights);
+      this.particles.activateSlot(posX, posY, vx, vy, particleType);
+    }
   }
 }

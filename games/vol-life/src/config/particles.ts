@@ -1,5 +1,5 @@
 import type { PARTICLE_TYPE_COUNT } from './genome';
-import { assertPositiveFinite, assertPositiveInteger } from './validation';
+import { assertFiniteRange, assertPositiveFinite, assertPositiveInteger } from './validation';
 
 export const particlePalette = [
   0x56d6ff, 0xff5e8a, 0x79e66d, 0xffc857, 0xb78cff, 0xff8a4c,
@@ -11,6 +11,10 @@ export interface ParticleConfig {
   readonly radiusUnits: number;
   readonly cellSizeUnits: number;
   readonly referenceHz: number;
+  /** Rezervuardan iç bölgeye yeniden ekim periyodu (saniye). */
+  readonly reseedIntervalSeconds: number;
+  /** Her periyotta rezervuardaki maddenin ne kadarının güvenli bölgeye ekileceği (0..1). */
+  readonly reseedFraction: number;
 }
 
 export const particleConfig: ParticleConfig = {
@@ -18,6 +22,8 @@ export const particleConfig: ParticleConfig = {
   radiusUnits: 4.5,
   cellSizeUnits: 128,
   referenceHz: 60,
+  reseedIntervalSeconds: 60,
+  reseedFraction: 0.5,
 };
 
 export function cloneParticleConfig(config: ParticleConfig): ParticleConfig {
@@ -29,4 +35,6 @@ export function validateParticleConfig(config: ParticleConfig): void {
   assertPositiveFinite(config.radiusUnits, 'Parçacık yarıçapı');
   assertPositiveFinite(config.cellSizeUnits, 'Spatial-hash hücresi');
   assertPositiveInteger(config.referenceHz, 'Referans tempo');
+  assertPositiveFinite(config.reseedIntervalSeconds, 'Yeniden ekim periyodu');
+  assertFiniteRange(config.reseedFraction, 0, 1, 'Yeniden ekim fraksiyonu');
 }

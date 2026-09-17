@@ -43,7 +43,10 @@ export function createMultiBandKernel(physics: SubstratePhysicsProfile): PairFor
   return {
     cutoffUnits: physics.cutoffUnits,
     magnitude(distance, ownType, otherType) {
-      if (distance < core) return -hardCoreStrength * (1 - distance / core);
+      if (distance < core) {
+        const d = Math.max(distance, core * 0.05);
+        return -hardCoreStrength * ((core / d) ** 2 - 1);
+      }
       const pair = ownType * PARTICLE_TYPE_COUNT + otherType;
       if (distance < nearEnd[pair]) return nearStrength[pair] * bump(distance, core, nearEnd[pair]);
       if (distance < midEnd[pair]) {

@@ -68,7 +68,7 @@ describe('VoidSink', () => {
 
   it('fringe içindeki parçacığa dışa doğru stres uygular', () => {
     const sdf = domain();
-    const sink = new VoidSink(sdf, fringe());
+    const sink = new VoidSink(sdf, voidWith({ tidalStrength: 0.03 }));
     const particles = new ParticleStore(1);
     const contour = sdf.contour(64);
     const cx = contour[0];

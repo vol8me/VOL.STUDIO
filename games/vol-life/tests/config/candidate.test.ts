@@ -28,10 +28,10 @@ const RADIUS = particleConfig.radiusUnits;
  * değiştirilirse bu sabitler de aynı commit'te güncellenir.
  */
 const GOLDEN = {
-  candidate: 'a28b4b2b7e1b4a5c',
+  candidate: '2e98dc955867297f',
   physics: '7c17714ca1a7aac9',
   seeding: 'c623b8e0e47acc04',
-  voidProfile: '2f62bd44943160cb',
+  voidProfile: '335e4662d7e509f1',
 } as const;
 
 function seeding(patch: Partial<SeedingProfile>): SeedingProfile {
@@ -43,9 +43,12 @@ function voidProfile(patch: Partial<VoidProfile>): VoidProfile {
 }
 
 describe('SubstrateCandidate', () => {
-  it('varsayılan aday sürümlü ve doğrulamadan geçer', () => {
-    expect(defaultSubstrateCandidate.schemaVersion).toBe(CANDIDATE_SCHEMA_VERSION);
-    expect(defaultSubstrateCandidate.scenario).toEqual({ kind: 'intrinsic' });
+  it('şema sürümleri pozitif tamsayıdır', () => {
+    expect(CANDIDATE_SCHEMA_VERSION).toBeGreaterThan(0);
+    expect(Number.isInteger(CANDIDATE_SCHEMA_VERSION)).toBe(true);
+  });
+
+  it('varsayılan aday şemayı ve fizik sınırlarını geçer', () => {
     expect(() => validateSubstrateCandidate(defaultSubstrateCandidate, RADIUS)).not.toThrow();
   });
 

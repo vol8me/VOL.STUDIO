@@ -19,7 +19,7 @@ describe('multi-band yönlü PairForceKernel', () => {
   const kernel = createMultiBandKernel(genome);
   const core = genome.profile.hardCoreRadiusUnits;
 
-  it('sert çekirdekte her tür çifti için itme uygular ve sıfıra doğrusal iner', () => {
+  it('sert çekirdekte her tür çifti için ıraksak itme uygular ve sınıra yaklaştıkça sıfıra iner', () => {
     for (let own = 0; own < PARTICLE_TYPE_COUNT; own++) {
       for (let other = 0; other < PARTICLE_TYPE_COUNT; other++) {
         expect(kernel.magnitude(core * 0.25, own, other)).toBeLessThan(0);
@@ -28,7 +28,11 @@ describe('multi-band yönlü PairForceKernel', () => {
         );
       }
     }
-    expect(kernel.magnitude(1e-6, 0, 0)).toBeCloseTo(-genome.profile.hardCoreStrength, 4);
+    const maxMultiplier = (1 / 0.05) ** 2 - 1;
+    expect(kernel.magnitude(1e-6, 0, 0)).toBeCloseTo(
+      -genome.profile.hardCoreStrength * maxMultiplier,
+      2,
+    );
   });
 
   it('bant sınırlarında süreklidir: sert çekirdek çıkışı, yakın/orta/uzak geçişleri ve cutoff sıfırdır', () => {

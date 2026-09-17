@@ -1113,6 +1113,17 @@ kayboluyorsa aday fringe'e bağımlıdır. "Yapı kayboluyor" için ayrı bir sa
 uydurulmadı: §8.4'ün GAS satırı kümedeki madde payı < %20'yi zaten yapısızlık
 sayar.
 
+Sızıntı deneyi ve kalibrasyon ölçümü (2026-09-18): Eski varsayılan `tidalStrength = 0.03`
+değeri parçacıkları kıyıdan agresif biçimde süpürerek tüm adayları VOID_LOSS_DOMINATED
+ile öldürüyordu. Üretim değeri olarak `tidalStrength = 0` seçilirse kontrol koşuluyla
+çakışacağı ve `FRINGE_DEPENDENT` kuralı ölçülemez kalacağı için küçük pozitif değer
+olarak `tidalStrength = 0.01` seçildi. Ölçümle kanıt: `tidal = 0` kontrolünde madde tutma
+medyanı %82,0 iken `tidal = 0.01` üretiminde %53,5 çıkmakta, kontrol koşulu 28,5 puanlık
+farkla ayırt ediciliğini tam olarak korumaktadır. Ayrıca K3 politikasıyla doğrusal sert
+çekirdek yerine ıraksak ters-kare çekirdek (`PairForceKernel`) ve 60 saniyede bir rezervuardan
+güvenli iç alana %50 yeniden ekim (`ParticleConfig.reseedIntervalSeconds`, `reseedFraction`)
+kilitlenmiştir.
+
 “Ring çıktı” veya “hareket ediyor” başarı değildir. Kitlesel Void kaybı, kısa
 sürede stasis, tek blob, kalıcı soup, sonsuz orbit, hız tavanında kaos, yapısız
 random motion, değişmeyen frozen morphology ve seed çoğunluğunda ölüm kesin

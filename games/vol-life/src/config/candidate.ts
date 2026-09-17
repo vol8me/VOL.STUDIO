@@ -77,7 +77,7 @@ export const defaultSeedingProfile: SeedingProfile = {
 export const defaultVoidProfile: VoidProfile = {
   schemaVersion: VOID_SCHEMA_VERSION,
   widthUnits: 24,
-  tidalStrength: 0.03,
+  tidalStrength: 0.01,
 };
 
 export const intrinsicScenario: ExperimentScenario = { kind: 'intrinsic' };

@@ -8,8 +8,10 @@ import {
 } from '@/config/particles';
 
 describe('parçacık yapılandırması', () => {
-  it('512 kapasiteyle başlar ve palet tür sayısını birebir kapsar', () => {
+  it('512 kapasiteyle başlar, yeniden ekim değerleri kilitlidir ve palet tür sayısını kapsar', () => {
     expect(particleConfig.capacity).toBe(512);
+    expect(particleConfig.reseedIntervalSeconds).toBe(60);
+    expect(particleConfig.reseedFraction).toBe(0.5);
     expect(particlePalette).toHaveLength(PARTICLE_TYPE_COUNT);
     expect(() => validateParticleConfig(particleConfig)).not.toThrow();
   });
@@ -28,6 +30,12 @@ describe('parçacık yapılandırması', () => {
     ['radiusUnits', Number.NaN],
     ['cellSizeUnits', -1],
     ['referenceHz', 0],
+    ['reseedIntervalSeconds', 0],
+    ['reseedIntervalSeconds', -10],
+    ['reseedIntervalSeconds', Number.NaN],
+    ['reseedFraction', -0.1],
+    ['reseedFraction', 1.1],
+    ['reseedFraction', Number.NaN],
   ] as const)('geçersiz %s=%s değerini çalışma zamanından önce reddeder', (key, value) => {
     expect(() => validateParticleConfig({ ...particleConfig, [key]: value })).toThrow(RangeError);
   });

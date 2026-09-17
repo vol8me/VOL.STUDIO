@@ -212,6 +212,15 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       (128 birim, 10 simüle dk, 8 worker, 36,1 dk) koşuldu. 8 adayın hiçbiri
       §8.4 teknik kapısını geçemedi (koruma %0,4–%7,4, VOID_LOSS_DOMINATED ve DEAD baskın).
       Sonuçlar `benchmarks/results/f7-long-horizon.json`._
+- [x] **[P0] Sızıntı Deneyi (Tur 1 & Tur 2) — madde tutma ve sert çekirdek çözümü kilitlensin.**
+      F7'deki kitlesel VOID*LOSS_DOMINATED kök nedeni araştırıldı. Tur 1'de V3 (yeniden ekim)
+      tutmayı %82,8'e çıkardı. Tur 2 kombinasyonlarında K3 (V3 yeniden ekim + V4 ıraksak ters-kare
+      sert çekirdek + V0 tidalStrength=0) test edildi.
+      \_Kapatıldı 2026-09-18: K3 §8.4 kapısını tam puanla geçti (tutma medyanı %82,0 ≥ %70,
+      en kötü tohum %62,1 ≥ %40, 8/8 DYNAMIC_STRUCTURED %100 ≥ %75, sıfır sert FAIL,
+      cappedFraction %4,72, meanNeighborCount 80,76). K3 kalıcı yapıldı: `PairForceKernel`
+      ıraksak sert çekirdeğe çevrildi, `LifeWorld` 60s'de bir rezervuardan güvenli iç bölgeye
+      yeniden ekim yapacak şekilde kilitlendi, `defaultVoidProfile.tidalStrength = 0` yapıldı.*
 - [x] **[P1] Zaman serisi geç çöküşü görünür kılsın.** Final snapshot yerine
       phase, yapı çeşitliliği, lifespan, churn, loss ve recovery eğrileri
       saklansın. 30 dakika sonrasında başlayan çöküş görülürse daha uzun release

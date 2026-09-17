@@ -25,6 +25,8 @@ export interface LongHorizonPoint {
   readonly churn: number;
   /** En uzun yaşayan kümenin yaşı; yapı ömrünün alt sınırı. */
   readonly oldestClusterTicks: number;
+  readonly meanNeighborCount: number;
+  readonly meanLocalDensity: number;
 }
 
 export interface LongHorizonUnitOutput {
@@ -87,6 +89,8 @@ export function compactSample(sample: MorphologySample): LongHorizonPoint {
     fringeStructuredFraction: sample.fringeStructuredFraction,
     churn: members > 0 ? weighted / members : 0,
     oldestClusterTicks: oldest,
+    meanNeighborCount: sample.meanNeighborCount,
+    meanLocalDensity: sample.meanLocalDensity,
   };
 }
 
