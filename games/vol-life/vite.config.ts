@@ -60,6 +60,17 @@ export default defineConfig({
     assetsDir: 'assets',
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
+      /*
+       * Ölçüm sayfası YALNIZ `VOL_LIFE_BENCH=1` ile derlenir; üretim
+       * bundle'ında ne sayfa ne de ölçüm kancası bulunur (D4).
+       */
+      input:
+        process.env.VOL_LIFE_BENCH === '1'
+          ? {
+              index: resolve(import.meta.dirname, 'index.html'),
+              frameBudget: resolve(import.meta.dirname, 'benchmark/frameBudget.html'),
+            }
+          : undefined,
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/phaser')) {

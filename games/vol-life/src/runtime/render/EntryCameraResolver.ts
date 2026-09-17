@@ -19,10 +19,16 @@ export interface EntryCameraOptions {
  * Açılış odağı (D2). SAF ve DETERMİNİSTİK: aynı parçacık durumu her zaman aynı
  * noktayı verir.
  *
- * Odak, yoğunluk ağırlıklı aktif madde merkezidir — basit ortalama, birbirinden
- * uzak iki kümenin ARASINDAKİ boşluğu gösterirdi. En yoğun hücre seçilir ve
- * merkez o hücrenin üyelerinden çıkar. Eşitlikte sıra deterministiktir (önce
- * hücre y, sonra x), yoksa aynı dünya farklı açılışlar üretirdi.
+ * Odak YOĞUNLUK AĞIRLIKLI aktif madde merkezidir: her parçacık kendi
+ * hücresindeki komşu sayısıyla ağırlıklandırılır ve bütün madde toplama girer.
+ *
+ * "En yoğun hücrenin merkezi" DEĞİLDİR. O uygulama ölçüldüğünde kamera tek bir
+ * tohum yamasına çakılıyordu: 1280×720'de merkez (408, 139), maddenin merkezi
+ * ise (510, 491); görünür madde payı %8,2'ye düşüyordu. Ağırlıklı merkez dört
+ * yamayı da hesaba katar, yoğun bölgeye yaklaşır ama tek yamaya kilitlenmez.
+ *
+ * Basit ortalama da kullanılmaz: ağırlıksız merkez, birbirinden uzak iki kümenin
+ * ARASINDAKİ boşluğu gösterirdi.
  */
 export function resolveEntryCamera(
   particles: ParticleStore,
@@ -30,46 +36,44 @@ export function resolveEntryCamera(
   options: EntryCameraOptions,
 ): EntryCameraTarget {
   if (!(options.cellUnits > 0)) throw new RangeError('Hücre boyu pozitif olmalı.');
-  const counts = new Map<
-    string,
-    { count: number; sumX: number; sumY: number; cellX: number; cellY: number }
-  >();
+  const cellCounts = new Map<string, number>();
+  const slots: number[] = [];
   for (let slot = 0; slot < particles.capacity; slot++) {
     if (particles.active[slot] === 0) continue;
-    const cellX = Math.floor(particles.x[slot] / options.cellUnits);
-    const cellY = Math.floor(particles.y[slot] / options.cellUnits);
-    const key = `${cellX}:${cellY}`;
-    const bucket = counts.get(key) ?? { count: 0, sumX: 0, sumY: 0, cellX, cellY };
-    bucket.count++;
-    bucket.sumX += particles.x[slot];
-    bucket.sumY += particles.y[slot];
-    counts.set(key, bucket);
+    slots.push(slot);
+    const key = cellKey(particles.x[slot], particles.y[slot], options.cellUnits);
+    cellCounts.set(key, (cellCounts.get(key) ?? 0) + 1);
   }
 
-  if (counts.size === 0) {
+  if (slots.length === 0) {
     const center = domainCenter(domain);
     return { x: center.x, y: center.y, sampleCount: 0 };
   }
 
-  let best = [...counts.values()][0];
-  for (const bucket of counts.values()) {
-    if (bucket.count > best.count) {
-      best = bucket;
-      continue;
-    }
-    // Eşitlikte deterministik sıra: önce küçük hücre y, sonra küçük hücre x.
-    if (bucket.count === best.count) {
-      if (bucket.cellY < best.cellY || (bucket.cellY === best.cellY && bucket.cellX < best.cellX)) {
-        best = bucket;
-      }
-    }
+  /*
+   * Ağırlık hücre sayımıdır ve toplama SLOT SIRASINDA yapılır: kayan noktalı
+   * toplam sıraya duyarlıdır, sabit sıra determinizmi garanti eder.
+   */
+  let weightSum = 0;
+  let weightedX = 0;
+  let weightedY = 0;
+  for (const slot of slots) {
+    const weight =
+      cellCounts.get(cellKey(particles.x[slot], particles.y[slot], options.cellUnits)) ?? 1;
+    weightSum += weight;
+    weightedX += particles.x[slot] * weight;
+    weightedY += particles.y[slot] * weight;
   }
 
-  const focus = { x: best.sumX / best.count, y: best.sumY / best.count };
+  const focus = { x: weightedX / weightSum, y: weightedY / weightSum };
   return {
     ...clampToSafeInterior(focus, domain, options.safeMarginUnits),
-    sampleCount: best.count,
+    sampleCount: slots.length,
   };
+}
+
+function cellKey(x: number, y: number, cellUnits: number): string {
+  return `${Math.floor(x / cellUnits)}:${Math.floor(y / cellUnits)}`;
 }
 
 function domainCenter(domain: WorldDomain): { x: number; y: number } {

@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "test:long": "vitest run --config vitest.long.config.ts",
     "test:e2e": "playwright test --project=chromium",
+    "bench:chromium": "playwright test --config playwright.bench.config.ts",
     "research:calibrate": "tsx scripts/morphology/cli.ts calibrate",
     "research:seeding": "tsx scripts/morphology/cli.ts seeding",
     "research:broad": "tsx scripts/morphology/cli.ts broad",

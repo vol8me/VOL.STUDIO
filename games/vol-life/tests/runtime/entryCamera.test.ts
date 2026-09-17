@@ -70,17 +70,26 @@ describe('D2 — EntryCameraResolver', () => {
     expect(target.y).toBeCloseTo(habitat.bbox.y + habitat.bbox.height / 2, 6);
   });
 
-  /* Basit ortalama iki kümenin ARASINI gösterirdi; odak yoğun kümede olmalı. */
-  it('yoğun kümeyi seçer, iki kümenin ortasını değil', () => {
+  /*
+   * Odak YOĞUNLUK AĞIRLIKLI merkezdir: yoğun kümeye yaklaşır ama ona
+   * kilitlenmez. "En yoğun hücreyi seç" uygulaması gerçek dünyada kamerayı tek
+   * bir tohum yamasına çakıyordu (ölçüldü: 1280×720'de görünür madde payı
+   * %8,2). Basit ortalama ise iki kümenin ARASINDAKİ boşluğu gösterirdi.
+   */
+  it('yoğunluk ağırlıklı merkez yoğun kümeye yaklaşır ama ortada kalmaz', () => {
     const particles = new ParticleStore(64);
     blob(particles, 300, 300, 4);
     blob(particles, 700, 700, 20);
 
     const target = resolveEntryCamera(particles, domain(), OPTIONS);
 
-    expect(target.sampleCount).toBe(20);
-    expect(target.x).toBeGreaterThan(600);
-    expect(target.y).toBeGreaterThan(600);
+    // Bütün madde toplama girer.
+    expect(target.sampleCount).toBe(24);
+    // Ağırlıksız ortalama 633 verirdi; ağırlıklı merkez yoğun kümeye daha yakın.
+    expect(target.x).toBeGreaterThan(633);
+    expect(target.y).toBeGreaterThan(633);
+    // Ama yoğun kümenin tam merkezine de çakılmaz.
+    expect(target.x).toBeLessThan(700);
   });
 
   it('aynı girdi her zaman aynı odağı verir', () => {
@@ -93,17 +102,22 @@ describe('D2 — EntryCameraResolver', () => {
     expect(second).toEqual(first);
   });
 
-  /* Eşitlikte sıra deterministik: önce küçük hücre y, sonra küçük hücre x. */
-  it('eşit yoğunlukta deterministik sıra uygular', () => {
+  /*
+   * Eşit yoğunlukta seçim YAPILMAZ: ağırlıklı merkez iki kümenin tam ortasında
+   * durur. Determinizm seçim kuralından değil, sabit toplama sırasından gelir —
+   * kayan noktalı toplam sıraya duyarlıdır, slot sırası sabittir.
+   */
+  it('eşit yoğunlukta merkez tam ortada ve tekrarlanabilir', () => {
     const particles = new ParticleStore(64);
     blob(particles, 600, 300, 8);
     blob(particles, 300, 600, 8);
 
-    const target = resolveEntryCamera(particles, domain(), OPTIONS);
+    const first = resolveEntryCamera(particles, domain(), OPTIONS);
+    const second = resolveEntryCamera(particles, domain(), OPTIONS);
 
-    // Küçük hücre y kazanır: (600, 300) hücresi.
-    expect(target.y).toBeLessThan(450);
-    expect(target.x).toBeGreaterThan(450);
+    expect(first.x).toBeCloseTo(450, 0);
+    expect(first.y).toBeCloseTo(450, 0);
+    expect(second).toEqual(first);
   });
 
   it('kıyıya yapışmış odak güvenli iç bölgeye çekilir', () => {

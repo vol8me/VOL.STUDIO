@@ -782,6 +782,21 @@ Kalıcılık iki seviyedir:
 - Dünya, VOL.LIFE'a ait sürümlü binary snapshot ve `LifeWorldStore` portuyla
   saklanır.
 
+**Depolama bütçesi ÖLÇÜLDÜ (Z2, 2026-09-17).** Daha önce "hesaplandı,
+ölçülmedi" notuyla ~1,85 MB yazıyordu; gerçek ölçüm:
+
+| Ölçü                        | Değer                       |
+| --------------------------- | --------------------------- |
+| Ham binary snapshot         | 1.846.401 bayt (1,761 MB)   |
+| Taşınan yük (gzip + base64) | 500.868 karakter (0,478 MB) |
+| Kodlama süresi (Node 22)    | 113,5 ms                    |
+
+Boyutun baskın terimi ALANLARDIR, parçacıklar değil: 256² × 7 alan dizisi,
+512 parçacığın tuttuğu yerin on katından fazlasını kaplar. Çözünürlük iki
+katına çıkarsa boyut dört katına yaklaşır; bütçe parçacık sayısıyla değil alan
+çözünürlüğüyle büyür. Bu ilişki `tests/app/snapshotSize.test.ts` ile kodek
+düzeninden kilitlidir — sabitler kodekten türetilir, ikinci bir kopya tutulmaz.
+
 Dünya seed'i build config'i değildir. Yeni dünya cryptographic seed,
 `worldId` ve oluşturma zamanı üretir; explicit seed yalnız test/replay
 içindir. Metadata config fingerprint'ine girmez.
@@ -1156,6 +1171,28 @@ değildir.
 
 Android'de kalite düşebilir, dünya kuralı düşemez. Particle LOD ve Void efekt
 yoğunluğu azalabilir; SDF, kuvvet, ölüm, olay ve organizma aynı kalır.
+
+**512 bütçesi ölçüldü (D4, 2026-09-17).**
+
+| Hedef                                          | Derleme            | Süre  | Kare                              | Kare süresi                                   | Bellek                    | Renderer               |
+| ---------------------------------------------- | ------------------ | ----- | --------------------------------- | --------------------------------------------- | ------------------------- | ---------------------- |
+| Lenovo Tab M11 (TB350FU, Android 14)           | debug APK, aarch64 | 60 sn | 5244 kare (~87,4 fps), jank %2,56 | p50 6 ms, p90 11 ms, p99 20 ms, kaçan vsync 3 | PSS 196 MB (grafik 83 MB) | webgl (geri düşüş yok) |
+| Chromium masaüstü viewport (SwiftShader)       | üretim derlemesi   | 62 sn | 1279 kare                         | p50 4,70 ms, p95 16,40 ms                     | —                         | YAZILIM WebGL          |
+| Chromium mobil viewport (Pixel 5, SwiftShader) | üretim derlemesi   | 62 sn | 636 kare                          | p50 7,50 ms, p95 17,80 ms                     | —                         | YAZILIM WebGL          |
+
+Soğuk açılış (Lenovo, üç koşu): 702 / 667 / 651 ms.
+
+Simülasyonun kare içindeki payı ölçüldü: masaüstü viewport'ta tick maliyeti
+3,248 ms ve p50 4,70 ms, yani karenin ~%69'u SİMÜLASYON. Mobil viewport'ta
+3,283 ms / 7,50 ms ile ~%44. Render değil, fizik baskın terim.
+
+Chromium satırı GPU ÖLÇÜMÜ DEĞİLDİR: bu ortamda headless tarayıcı yazılım
+rasterleme (SwiftShader) kullanıyor ve ölçülen kare hızı ürünün değil ortamın
+hızıdır. Gerçek GPU rakamları cihaz satırından okunur. Ölçüm sayfası yalnız
+`VOL_LIFE_BENCH=1` ile derlenir; üretim bundle'ı ölçüm kancası taşımaz.
+
+Samsung SM-G990B2 (Android 16) tur başında bağlıydı ve doğrulandı (arm64-v8a,
+38 GB boş) ama APK kurulumundan önce bağlantısı koptu; o cihazın ölçümü AÇIK.
 
 `benchmark:device` bağlı cihazda cold start, FPS, bellek ve WebGL fallback
 ölçer; geliştiricinin masasındaki donanıma bağlı olduğu için kalite kapısı

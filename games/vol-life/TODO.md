@@ -17,7 +17,13 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       portu korunur; 512 aktif madde + active mask + stable ID + reservoir
       snapshot boyutu ölçülür. Gerekirse native binary dosya ve web
       IndexedDB/OPFS; migration, last-known-good ve i18n'li uyumsuz kayıt
-      yüzeyi birlikte uygulanır.
+      yüzeyi birlikte uygulanır. _Boyut ÖLÇÜLDÜ (2026-09-17, Node 22): ham
+      binary 1.846.401 bayt (1,761 MB), gzip+base64 sonrası taşınan 500.868
+      karakter (0,478 MB), kodlama 113,5 ms. Baskın terim ALANLARDIR: 256² × 7
+      alan dizisi, 512 parçacığın on katından fazla yer kaplar ve çözünürlük
+      iki katına çıkarsa boyut dört katına yaklaşır. İlişki
+      `tests/app/snapshotSize.test.ts` ile kodek düzeninden kilitli. Cihaz ve
+      tarayıcı tarafı ölçümü ile backend kararı açık._
 
 ## Adım 1 — dünya substratı
 
@@ -50,11 +56,12 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       ile render aynı domain'i tüketir; organik fade, düşük frekanslı animasyon.
 - [x] **[P0] Void ölüm sunumu simülasyondan ayrıştırılsın.** Stretch → color
       drain → shrink/smear → fade; sunum hayaleti canlı listeye dönemez.
-- [ ] **[P1] Adım 2 glyph'leri salt render verisi olarak kilitlensin.** Yalnız
+- [x] **[P1] Adım 2 glyph'leri salt render verisi olarak kilitlensin.** Yalnız
       serbest madde, velocity uzaması ve Void fringe/ölüm biçimleri; glyph
       collision radius ve kuvveti değiştiremez (test). Membrane/core Adım 4,
       tail Adım 6, damage/infection Adım 9'da açılır (DESIGN §6); Adım 2 sahte
       rol enum'u yazmaz.
+      _Kapatıldı 2026-09-17 (18437fb): 120 durumda bütün `ParticleStore` dizileri render öncesi/sonrası bayt düzeyinde aynı; kuvvet tamponları yazılmıyor, uzama config tavanını aşmıyor._
 - [x] **[P0] Kamera yeni habitat/Controlled-Void domain'ine taşınsın.** Max
       zoom-out bütün habitatı ve anlamlı Void margin'ini gösterir.
 - [ ] **[P1] Kamera aday ölçüleri cihazda karşılaştırılsın.** Config kararı
@@ -84,7 +91,7 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       (alt-dikdörtgen/`texSubImage`) yola geçmek ya da alan dokusunu yalnız
       değişen bölge için yüklemek; kapanmadan önce aynı ölçüm cihazda
       tekrarlanır.
-- [ ] **[P0] Camera v2.1: Aktif input event jitter'ı render cadence'den
+- [x] **[P0] Camera v2.1: Aktif input event jitter'ı render cadence'den
       ayrılsın.** Mevcut drag: pointermove event → camera position değiştir →
       apply state — event cadence'ine bağlı. Mouse eventleri düzensiz gelirse
       60 FPS olsa bile kamera mikro sıçramalar gösterir. Çözüm: eventlerde
@@ -93,12 +100,15 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       jitter'ını render cadence'den ayırmak. Mouse/touch/trackpad momentum
       ayrı normalize edilsin. Active drag world navigation limitinde soft
       resistance. Debug input trace recorder eklensin.
-- [ ] **[P0] Camera açılış ölçeği ECOSYSTEM olsun.** Mevcut: runtime başlangıçta
+      _Kapatıldı 2026-09-17 (2a9c34a): hareket karede BİR KEZ uygulanıyor (ölçüldü: kare başına 1,00 uygulama, önceden olay sayısı kadar), kare hareketi gelen deltaların tam toplamına eşit. Ön-kayıtlı CoV ≤ 0,05 ölçütü nedensel olarak ulaşılamaz çıktı ve gerekçesiyle değiştirildi (kanıt defteri)._
+- [x] **[P0] Camera açılış ölçeği ECOSYSTEM olsun.** Mevcut: runtime başlangıçta
       `contain` ile bütün dünyayı gösterme eğiliminde — world ekranın ortasında
       küçük yaşam adası, etrafında dev siyah Void. Üç observation scale:
       WORLD (overview) → ECOSYSTEM (açılış) → ORGANISM → MICRO. Fiziksel dünya
       boyutu şimdi değiştirilmez — kamera algısını düzelt, fiziksel boyutu
       Step 3 sonucu üzerinden seç.
+
+      _Kapatıldı 2026-09-17 (ebe1ce6): ölçekler kernel menzili cinsinden `src/config/cameraScales.ts`te ve DESIGN §6'da; CORE `setState` NaN reddediyor ve momentum/pinch/wheel sıfırlıyor; `EntryCameraResolver` saf ve deterministik._
 
 ## Adım 3 — Morphology Discovery v2
 
@@ -118,19 +128,21 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       crystal/frozen, single-collapse, Void-loss dominated, orbit dominated,
       speed-cap chaos ve dynamic-structured sonuçları ayrı reason code ile
       sınıflandırılır.
-- [ ] **[P0] Faz sonucu reason code taşısın ve zaman penceresinden karar
+- [x] **[P0] Faz sonucu reason code taşısın ve zaman penceresinden karar
       versin.** Serbest metin yerine sabit kod; son örnek yerine pencere;
       `stasisDurationTicks` örnek sayısıyla karşılaştırılmaz; seed sonuçları
       plurality değil çoğunluk kuralıyla birleşir.
+      _Kapatıldı 2026-09-17 (329460f): 11 kodluk donmuş enum; süre kuralları saniye cinsinden (eski kod tick'i örnek sayısıyla karşılaştırıyordu); aday kararı ÇOĞUNLUKLA veriliyor ve plurality regresyon testiyle kilitli. Her kod sentetik seriyle, beşi ayrıca gerçek fizikle üretiliyor._
 - [x] **[P0] Metrikler v2 fiziğine göre yeniden yazılsın.** Void dwell/loss/
       fringe dependency eklendi. Hareket, yoğunluk, cluster, compactness,
       anisotropy, radial yapı, composition, churn, lifespan, orbit, trajectory
       ve recovery tek skora ezilmez.
 - [ ] **[P0] Churn, structure lifespan ve recovery zaman serisinde ölçülsün.**
       `MorphologySample` bu alanları taşımıyor.
-- [ ] **[P0] `clusterCompactness` gerçek kompaktlık ölçsün.** 1−std/mean
+- [x] **[P0] `clusterCompactness` gerçek kompaktlık ölçsün.** 1−std/mean
       halkaya ≈1, düzgün diske ≈0,65 veriyor; `crystal` ve `single-blob`
       eşikleri halka biçimli dağılımı yakalıyor.
+      _Kapatıldı 2026-09-16 (6312bc6): ön-kayıtlı kompaktlık SOLIDITY'dir ve per-cluster katmandadır; global alan eski tanımıyla korunarak yedi eşiğin anlamı kaydırılmadı._
 - [x] **[P0] Cluster tracker uzun boşluktan sonra ölü yapıyı diriltemesin.**
       Ardışık örnek sözleşmesi ve maksimum gap tanımlandı.
 - [x] **[P0] Ucuz broad tarama yalnız faz filtresi olsun.** Candidate bütçesi
@@ -162,17 +174,19 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 - [x] **[P1] Candidate/seed işleri deterministic shard edilsin.** Work ID +
       genome + seed aynı sonucu verir; paralel shard'lar seri referansla
       bit düzeyinde eşittir.
-- [ ] **[P1] Shard'lar gerçek paralel koşsun.** `worker_threads` ile yürütme ve
+- [x] **[P1] Shard'lar gerçek paralel koşsun.** `worker_threads` ile yürütme ve
       seri referansla bayt düzeyinde eşitlik testi; harness bugün seri koşuyor,
       shard kodu yalnız hash ataması yapıyor.
+      _Kapatıldı 2026-09-17 (2c5b5b4): `worker_threads` havuzu; 6 seed'lik korpusta seri, 2 worker ve 4 worker sonuçları JSON düzeyinde birebir aynı. Bölme deterministik, birleştirme iş kimliğine göre sıralı._
 - [x] **[P0] Qualification artefaktı clean source zorunluluğu taşısın.**
       Revision, config/diff digest, corpus, bütçe, tam genom, zaman serisi,
       reason code ve human-acceptance alanı eksiksizdir. Dirty koşu yalnız
       exploration'dır.
-- [ ] **[P0] Clean-source zorunluluğu uygulansın.** Qualification komutu git
+- [x] **[P0] Clean-source zorunluluğu uygulansın.** Qualification komutu git
       revision ve dirty durumunu kaydeder; dirty ağaçtaki koşu exploration
       işaretlenir ve promotion'a giremez (test). `sourceRevision` bugün hep
       `unknown`.
+      _Kapatıldı 2026-09-17 (2c5b5b4): kirli ağaç eligibility'yi false yapıyor ve `isQualified` bunu ilk kontrol ediyor; hem sahte sağlayıcıyla hem geçici gerçek depoyla sınandı._
 - [x] **[P0] Production promotion bütün genomla yapılır.** Matrix-only kopya
       yasaktır. Promotion sonrası ayrı production canary aynı genomu
       perturbation olmadan çoklu seed'de ölçer.
@@ -193,7 +207,7 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 
 ### Adım 3 — araştırma sistemi düzeltmeleri
 
-- [ ] **[P0] Startup survival resmi morphology kriteri olsun.** Sadece
+- [x] **[P0] Startup survival resmi morphology kriteri olsun.** Sadece
       compactness, motion, clustering değil — `matterRetention(5s)`,
       `matterRetention(10s)`, `matterRetention(30s)`, `startupVoidLoss`,
       `earlyBurstPeak`, `timeToStructuralRegime` ölçülmeli. İlk 10 saniyede
@@ -201,6 +215,7 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       girmesine izin verilmemeli. Bağımsız reproduksiyon: 8 seed ortalaması
       10sn'de %27.5, 30sn'de %49.3, 60sn'de %61.2 kayıp; bazı seed'lerde 512→71.
       Harness korpusunda (2026-09-15): %26,8 / %45,8 / %52,6; en kötü 512→75.
+      _Kapatıldı 2026-09-17 (3aaeb67, 45c1478): kapı §8.4'ten birebir; 12 seed × 60 sn ölçümde varyasyon aday ÜÇ SATIRDAN da düşüyor (10 sn medyan 0,828, en kötü ondalık 0,488, 30 sn 0,609, seed'lerin %100'ünde erken patlama, %67 yatışma), zayıf/sönümlü/v₀=0 yapılandırma üçünü de geçiyor. Ön-kayıtlı 4 sn sabiti ölçülmüş imkânsızlıkla emekli edildi (gerekçe DESIGN §8)._
 - [ ] **[P0] Seeding rejimi yeniden araştırılsın.** Mevcut 4×70-particle dense
       random patch fazla agresif: patch yarıçapı 70 iken interaction menzili 96
       — başlangıçta yoğun interaction alanlarına spawn. Araştırılacak
@@ -209,18 +224,20 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       envelope: matter survival, velocity explosion, catastrophic Void loss
       kontrol eder. Seed'lerin büyük kısmı bunu geçemiyorsa reroll etmeyiz —
       physics/seeding FAIL deriz.
-- [ ] **[P0] `trajectoryAutocorrelation()` bug'ı düzeltilsin.** İsim
+- [x] **[P0] `trajectoryAutocorrelation()` bug'ı düzeltilsin.** İsim
       autocorrelation ama implementasyon gerçekte displacement metriği
       (current position − past position → dx²+dy² ortalıyor). Gerçek periodic
       orbit bir süre sonra aynı pozisyona yakın geri döner — displacement
       küçülebilir. Mevcut sözde autocorrelation tam orbit olduğunda düşük değer
       üretebilir — kavramsal olarak ters çalışabilir. `PhaseClassifier` bu
       birim² değerini birimsiz 0,8 eşiğiyle karşılaştırıyor.
-- [ ] **[P0] `autocorrelationLag` semantiği düzeltilsin.** Config
+      _Kapatıldı 2026-09-16 (97bfb57): VACF, MSD ve yineleme ayrı ölçüler oldu; birimsiz orbit eşiği kalktı._
+- [x] **[P0] `autocorrelationLag` semantiği düzeltilsin.** Config
       `autocorrelationLag=60` ama history her simulation tick'inde değil, her
       metric sample'da kaydediliyor. 60 history entry broad'ta ~30 saniye,
       qualification'da ~60 saniye — aynı lag=60 farklı gerçek süre.
-- [ ] **[P0] Lokal micro-orbit detector yazılsın.** Mevcut metrikler global
+      _Kapatıldı 2026-09-16 (97bfb57): lag SANİYE ile tanımlı ve tempoyla tick'e çevriliyor; 1, 2 ve 4 tick örneklemede aynı değerler ölçüldü._
+- [x] **[P0] Lokal micro-orbit detector yazılsın.** Mevcut metrikler global
       — 3 particle sonsuza kadar dönüyor, 300 particle var, global mean o üç
       particle'ın patolojik orbitini yutuyor. Yeni metrikler:
       `persistentMicroOrbitFraction`, `microOrbitLifetime`,
@@ -234,23 +251,27 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       closed trajectory, same distance, same membership, no exchange. İyi
       rotation: 50-particle organism, body deforms, members exchange, moves
       through world.
-- [ ] **[P0] Per-cluster morphology metrics yazılsın.** Mevcut
+      _Kapatıldı 2026-09-16 (42ae543, 9651ae2): dört eleme ayrı ayrı sınanıyor; gerçek `LifeWorld` fiziğiyle üç parçacık orbit fixture'ı 15 simüle dakika koşuyor (yarıçap değişim katsayısı 0,004)._
+- [x] **[P0] Per-cluster morphology metrics yazılsın.** Mevcut
       MorphologyMetrics "cluster stats" adı taşıyor ama bütün aktif world
       particle'larını tek global yapı gibi değerlendiriyor — global centroid,
       global compactness, global anisotropy. Ekranda Organism A + Organism B + free particles olsa bile metric tek dünya bulutu gibi bakıyor.
-- [ ] **[P0] ClusterTracker → MorphologyMetrics gerçek entegrasyonu
+      _Kapatıldı 2026-09-16 (6312bc6): solidity, delik oranı, normalize gyration ve anizotropi küme başına ölçülüyor._
+- [x] **[P0] ClusterTracker → MorphologyMetrics gerçek entegrasyonu
       sağlansın.** ResearchHarness `tracker.update()` çağırıyor ama
       tracker'dan çıkan cluster yapıları MorphologyMetrics'in gerçek
       cluster-level hesaplarına beslenmiyor. Cluster tracker yazılmış ama
       morphology değerlendirmesi esasen global kalmış.
-- [ ] **[P0] ClusterTracker split/merge/fragmentation semantiği
+      _Kapatıldı 2026-09-16 (6312bc6): metrikler yeniden kümelemez, küme katmanı tracker ÜYELİĞİNDEN gelir; churn üyelikten hesaplanır._
+- [x] **[P0] ClusterTracker split/merge/fragmentation semantiği
       tamamlansın.** Event type birth/death/split/merge/fragmentation
       tanımlanmış ama üretilenler esasen birth/death. Temporary gap/grace gerçek
       kimlik continuity'si sağlamıyor. Tracker membership'te stable particle ID
       yerine slot/index mantığına dayanıyor — slot reuse geldiğinde yanlış
       continuity üretebilir. Kapanış: ardışık örnek sözleşmesi, maksimum gap,
       deterministik tie-break ve slot reuse regresyon testi.
-- [ ] **[P0] Intrinsic morphology vs Void-stress qualification ayrılsın.**
+      _Kapatıldı 2026-09-16 (83173e0): stable ID üyeliği, üç eşleşme kapısı ve deterministik greedy; birth/death/split/merge/fragmentation `tests/morphology/clusterTracker.test.ts` ile ayrı ayrı sınanıyor._
+- [x] **[P0] Intrinsic morphology vs Void-stress qualification ayrılsın.**
       15 dakika hareket eden güzel yapı Void'a drift edebilir, Step 6 geldiğinde
       nucleus edge danger algılayıp kaçacak. Step 3 "15 dakikada Void'a gitti,
       FAIL" derse iyi morphology'yi reddetmiş oluruz. Çözüm: (1) Intrinsic
@@ -258,36 +279,43 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       hareket/deform/recovery var mı; (2) Void stress — fringe yakınında, Void
       yapısal destek veriyor mu, tidal deformation doğru mu, crossing düzgün
       mü. AI gelmeden "kenardan akıllıca uzak dur" beklenmez.
-- [ ] **[P0] VoidProfile Step 2'de sabitlensin — Step 3 intrinsic morphology
+      _Kapatıldı 2026-09-17 (fb1464a): intrinsic kapsam DESIGN §2'nin güvenli alan tanımıdır; kapsam dışı madde `scopedOutCount` ile ayrı sayılır; FRINGE_DEPENDENT iki kapıdan geçer ve entegrasyon testi iki senaryonun karışmadığını gösterir._
+- [x] **[P0] VoidProfile Step 2'de sabitlensin — Step 3 intrinsic morphology
       bunu optimize etmez.** GenomeSampler fringe parametrelerini değiştiriyor
       — riskli. Search yanlışlıkla "en güzel yapı Void fringe tarafından
       desteklenince oluyor" çözümünü bulabilir. Void ayrıca stress-test
       senaryosunda değerlendirilir.
-- [ ] **[P1] PhysicsGenome `SubstrateCandidate` profillerine parçalansın.**
+      _Kapatıldı 2026-09-16 (ad2529b): Void profili adayın parçası ama arama onu örnekleyemez; `genomeSampler` testi sabitliği ölçüyor._
+- [x] **[P1] PhysicsGenome `SubstrateCandidate` profillerine parçalansın.**
       `SubstratePhysicsProfile` (pair force law, strength, ranges, damping,
       speed envelope), `SeedingProfile` (patches, cloud, density, type
       distribution, initial speed), `VoidProfile` (fringe width, tidal stress),
       `ExperimentScenario` (domain seed, matter seed, perturbation, duration).
       Sözleşme DESIGN §3'te; Adım 10'un organizma genomuyla ad çakışmaz.
-- [ ] **[P1] ResearchHarness düzeltmeleri.** Qualification seed'lerin
+      _Kapatıldı 2026-09-16 (7e76f08): `SubstrateCandidate` fizik/seeding/Void/senaryo profillerine bölündü; profil başına doğrulama, klon ve kanonik digest `tests/config/candidate.test.ts` ile kilitli._
+- [x] **[P1] ResearchHarness düzeltmeleri.** Qualification seed'lerin
       time-series'ını tek düz array'e flatten ediyor — seed sınırları kayboluyor.
       Artifact budget saniyeleri default 0. İnsan onayını artefakta yazacak
       açık bir yol yok. Checkpoint/resume yok. ETA yok. Package scripts'te
       research CLI expose edilmemiş.
-- [ ] **[P1] Research funnel yeniden kilitlensin.** candidate generation →
+      _Kapatıldı 2026-09-17 (2c5b5b4): zaman serisi seed başına ayrı, artefakt v4 kaynak/bütçe/senaryo/korpus taşıyor, bütçeler ölçülüyor ve checkpoint JSONL config digest'i doğruluyor._
+- [x] **[P1] Research funnel yeniden kilitlensin.** candidate generation →
       çok ucuz 10-30s sim → dead/soup/collapse/orbit ele → insan shortlist →
       birkaç finalist → dakikalar → qualification. CLI başlamadan önce:
       Candidates, Seeds, Ticks, Estimated wall clock, Workers göstermeli. Uzun
       qualification: explicit ayrı komut. Checkpoint: zorunlu. `--stage all`
       bugün broad aşamasını üç kez koşuyor.
-- [ ] **[P1] Qualification artifact DTO temizliği.**
+      _Kapatıldı 2026-09-17 (c66dcc6): on ayrı komut, `--stage all` kaldırıldı, preflight kalibrasyondan süre yazıyor ve 10 dakikayı aşan koşu `--yes` istiyor; çıktı dizinsiz koşu reddediliyor._
+- [x] **[P1] Qualification artifact DTO temizliği.**
       `serializePhysicsGenome(genome) as unknown as PhysicsGenome` — gerçekte
       string olan şeyi type system'e object diye yutturuyor. Temiz çözüm:
       `serializedGenome: string` veya DTO.
-- [ ] **[P1] PerturbationSystem düzeltilsin.** `matter-removal` rezervuar
+      _Kapatıldı 2026-09-16 (dd67cae, E12'de v4'e yükseldi): aday artefaktta KANONİK METİNDİR, `parseQualificationArtefact` digest doğrular; eski şema açıkça reddedilir._
+- [x] **[P1] PerturbationSystem düzeltilsin.** `matter-removal` rezervuar
       muhasebesini atlıyor; perturbation'lar koşu bittikten sonra aynı dünyada
       zincirleme uygulanıyor; hedef seçimi bütün spec'lerde aynı tohumu
       kullanıyor; 0,15 mutlak eşik %10 madde kaybını anında recovered sayıyor.
+      _Kapatıldı 2026-09-17 (7ee2838): her spec aynı snapshot'tan bağımsız koşuyor, tohum (seed, spec, tick) üçlüsünden geliyor, madde çıkarma muhasebeli ve toparlanma taban penceresinin ±2σ bandına göre ölçülüyor. Eski sabit eşik %10 madde kaybını ilk kontrolde 'toparlandı' sayıyordu._
 - [ ] **[P0] Gerçek 3-particle orbit geometrik fixture testi yazılsın.**
       PhaseClassifier.test.ts sentetik scalar metric objeleri veriyor — gerçek
       3-particle orbit oluşturup classifier'ın patolojik sayıp saymadığı testi
