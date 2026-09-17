@@ -1430,6 +1430,25 @@ sözleşmesi veya gönderilen candidate catalog'u değildir.
 
 2026-09-14 itibarıyla:
 
+**Uzun ufuk taban ölçümü (E17, 2026-09-17).** Promotion ÖNCESİ varsayılan aday,
+4 seed × 30 simüle dakika, `tests/long/defaultLongRun.long.ts`:
+
+| seed | 30 dk madde koruma | birincil gerekçe    | parçacık başına maliyet sapması |
+| ---- | ------------------ | ------------------- | ------------------------------- |
+| 1    | 0,123              | VOID_LOSS_DOMINATED | 0,057                           |
+| 2    | 0,309              | VOID_LOSS_DOMINATED | 0,062                           |
+| 3    | 0,264              | VOID_LOSS_DOMINATED | 0,140                           |
+| 4    | 0,172              | VOID_LOSS_DOMINATED | 0,095                           |
+
+Bugünkü varsayılan 30 dakikada maddesinin %70-88'ini kaybediyor ve dört seed'in
+dördünde de Void kaybı baskın. Muhasebe değişmezi her örnekte korundu, bütün
+değerler sonlu kaldı ve 10. dakikada alınan snapshot'tan restore edilen kopya 30. dakikada kesintisiz koşuyla BAYT DÜZEYİNDE aynı parmak izini verdi.
+
+Maliyet sapması PARÇACIK BAŞINA ölçülür. Ham tick maliyeti sapması 0,34-0,53
+çıktı ama bu nüfus düşüşüdür: madde yarıya inince tick doğal olarak ucuzluyor.
+Çalışma zamanı bozulmasını ölçen sayı parçacık başına olandır ve %20 sınırının
+altında kaldı.
+
 - Paket kabuğu, i18n, Sheet, FPS, haptics, orientation ve persistence çalışır.
 - FieldSet, fixed-step, stateful RNG, world metadata, SoA store, interpolation
   ve counting-sort spatial hash korunacak temeldir.
