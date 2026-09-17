@@ -27,10 +27,8 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
 
 ## Adım 1 — dünya substratı
 
-- [ ] **Katman görünümü Adım 7'de açılır.** Nutrient, light, temperature,
-      disturbance, ileride detritus/territory/infection katmanları normal
-      görünümü kirletmeden ayrı seçilir. Tarayıcı ve telefonda ekran
-      görüntüsü olmadan kapanmaz.
+Açık madde yok. Katman görünümü maddesi 2026-09-17'de Adım 7'deki katman
+maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümünde.
 
 ## Adım 2 — Particle Substrate v2
 
@@ -424,7 +422,9 @@ Ama yüksek seviye önerilerin kaybolmaması için bağımlılık ve kabul yüze
       üstünde bar/lokma efekti ve her emilim için event üretilmesin.
 - [ ] Nutrient, light, temperature, disturbance, detritus, territory,
       infection ve history katmanları tek tek açılabilsin; normal view çöplüğe
-      dönüşmesin.
+      dönüşmesin. Katman görünümü Adım 1'de değil BURADA açılır (madde
+      2026-09-17'de Adım 1'den buraya taşındı): tarayıcı, Samsung ve Lenovo'da
+      ekran görüntüsü olmadan kapanmaz.
 - [ ] Sunum aklı yenilik, süre, nüfus etkisi, nadirlik ve coğrafi yayılımı ayrı
       ölçsün; ilk olayları işaretlesin, simülasyona geri yazamasın.
 - [ ] Observe/Follow/Free kamera ilişkisi kurulsun; kullanıcının ilk girdisi

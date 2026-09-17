@@ -14,6 +14,7 @@
     "test:long": "vitest run --config vitest.long.config.ts",
     "test:e2e": "playwright test --project=chromium",
     "bench:chromium": "playwright test --config playwright.bench.config.ts",
+    "research:long": "tsx scripts/research/f7-long-horizon.mts",
     "research:corpus": "tsx scripts/research/corpus-v1.mts",
     "research:calibrate": "tsx scripts/morphology/cli.ts calibrate",
     "research:seeding": "tsx scripts/morphology/cli.ts seeding",

@@ -60,15 +60,22 @@ export interface CollapseReport {
   readonly canaryReasons: readonly string[];
 }
 
+/**
+ * Dedektör örnekten YALNIZ tick ve yapılı madde payını okur. İmza bu iki alana
+ * daraltıldı ki uzun ufuk koşusunun (F7) indirgenmiş eğrisi de aynı dedektöre
+ * girebilsin; ikinci bir çöküş ölçütü yazmak iki farklı "çöküş" tanımı üretirdi.
+ */
+export type CollapseSeriesPoint = Pick<MorphologySample, 'tick' | 'clusteredFraction'>;
+
 export function detectSeedCollapse(
   seed: number,
-  series: readonly MorphologySample[],
+  series: readonly CollapseSeriesPoint[],
   config: CollapseConfig = defaultCollapseConfig,
 ): SeedCollapse {
   if (series.length === 0) {
     throw new RangeError('Çöküş ölçümü boş seriyle yapılamaz.');
   }
-  const minutesOf = (sample: MorphologySample): number =>
+  const minutesOf = (sample: CollapseSeriesPoint): number =>
     (sample.tick * config.fixedStepMs) / 60000;
   const reference = series.filter((sample) => {
     const minutes = minutesOf(sample);
