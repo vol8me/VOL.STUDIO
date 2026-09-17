@@ -39,11 +39,24 @@ body {
   pointer-events: auto;
 }
 
-/* Development audition rozeti: provenance her zaman görünür, üretimde hiç çizilmez. */
-.vol-life-hud__audition {
+/*
+ * Geliştirme rozetleri ALT ALTA dizilir. Rozetler tek tek konumlandırıldığında
+ * ikinci rozet (kamera adayı) birincisinin (audition genomu) üstüne biniyordu:
+ * ikisi de aynı mutlak konumu alıyordu ve metin okunmaz hâle geliyordu.
+ */
+.vol-life-hud__badges {
   position: absolute;
   top: calc(max(var(--vol-safe-top), 12px) + 28px);
   left: max(var(--vol-safe-left), 20px);
+  right: max(var(--vol-safe-right), 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+/* Development rozeti: provenance her zaman görünür, üretimde hiç çizilmez. */
+.vol-life-hud__audition {
   margin: 0;
   color: var(--vol-ui-warning-solid);
   font-size: 12px;

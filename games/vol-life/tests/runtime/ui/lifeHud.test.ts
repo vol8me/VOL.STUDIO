@@ -166,10 +166,24 @@ describe('LifeHud', () => {
     expect(document.querySelectorAll('.vol-life-hud__audition')).toHaveLength(0);
   });
 
-  it('audition ve kamera rozetleri birlikte görünebilir', () => {
+  /*
+   * İki rozet ÜST ÜSTE binmez: ikisi de aynı mutlak konumu alıyordu ve canlı
+   * ekran görüntüsünde metinler iç içe geçmişti. Rozetler tek kapta dizilir.
+   */
+  it('audition ve kamera rozetleri tek kapta alt alta dizilir', () => {
     mount({ auditionDigest: 'abcdef0123456789', cameraCandidateId: 'cevik' });
-    const badges = [...document.querySelectorAll('.vol-life-hud__audition')];
+    const container = document.querySelectorAll('.vol-life-hud__badges');
+    expect(container).toHaveLength(1);
+    const badges = [...container[0].querySelectorAll('.vol-life-hud__audition')];
     expect(badges).toHaveLength(2);
     expect(badges.map((badge) => badge.textContent).join(' ')).toContain('cevik');
+    for (const badge of badges) {
+      expect(badge.parentElement).toBe(container[0]);
+    }
+  });
+
+  it('rozet yoksa kap da kurulmaz', () => {
+    mount();
+    expect(document.querySelectorAll('.vol-life-hud__badges')).toHaveLength(0);
   });
 });

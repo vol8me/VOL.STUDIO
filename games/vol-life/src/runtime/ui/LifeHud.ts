@@ -63,13 +63,17 @@ export class LifeHud {
     this.titleText.element.classList.add('vol-life-hud__title');
     this.root.appendChild(this.titleText.element);
 
+    /* Rozetler tek kaba girer; iki rozet aynı mutlak konumda üst üste binerdi. */
+    const badges = document.createElement('div');
+    badges.className = 'vol-life-hud__badges';
+
     this.auditionBadge = this.auditionDigest
       ? this.scope.addDestroyable(new Text(this.auditionLabel(), { variant: 'muted' }))
       : null;
     if (this.auditionBadge) {
       this.auditionBadge.element.classList.add('vol-life-hud__audition');
       this.auditionBadge.element.setAttribute('role', 'status');
-      this.root.appendChild(this.auditionBadge.element);
+      badges.appendChild(this.auditionBadge.element);
     }
 
     /*
@@ -82,8 +86,9 @@ export class LifeHud {
     if (this.cameraBadge) {
       this.cameraBadge.element.classList.add('vol-life-hud__audition');
       this.cameraBadge.element.setAttribute('role', 'status');
-      this.root.appendChild(this.cameraBadge.element);
+      badges.appendChild(this.cameraBadge.element);
     }
+    if (badges.childElementCount > 0) this.root.appendChild(badges);
 
     const actions = document.createElement('div');
     actions.className = 'vol-life-hud__actions';
