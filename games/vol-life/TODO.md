@@ -203,6 +203,17 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       ve production canary'yi koşsun.** Canary aynı adayı perturbation olmadan
       çoklu seed'de ölçer; insan onayı artefakta açık komutla girer.
       `PromotionFlow` bugün yalnız bellekteki listeye ekliyor.
+      _Kısmen kapandı 2026-09-17 (K9/E14 kod kısmı): `research:promote` kalifiye
+      adayı `src/config/substrateCandidate.ts`e provenance'ıyla (artefakt
+      digest'i, kaynak revizyonu, korpus, kabul eden, tarih) VERİ olarak yazıyor;
+      dosya deterministik üretiliyor, prettier'dan geçiyor ve yazılmadan önce
+      `validateSubstrateConfig` ile doğrulanıyor. Önkoşullar tek tek reddediliyor
+      (kirli kaynak, P2 ön-elemesi yok, P3 kabulü yok, §8.4 kalifikasyonu yok) ve
+      üretilen modülün aynı aday digest'ine geri döndüğü gerçekten import edilerek
+      sınanıyor. `research:canary` promote edilmiş adayı aynı korpusta,
+      perturbation olmadan, aynı sert FAIL kurallarıyla koşuyor. GERÇEK promotion
+      ve canary koşusu kullanıcı kabulünden sonraki ikinci koşunun işidir (K15),
+      bu yüzden madde `[ ]` kalıyor._
 - [ ] **[P0] Adım 3 kabulü üçlüdür.** Technical gate + long-horizon +
       browser/masaüstü/Samsung/Lenovo kullanıcı audition'ı birlikte geçer.
       Kullanıcı onayı olmadan `[x]` olmaz.
