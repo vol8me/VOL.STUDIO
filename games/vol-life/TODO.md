@@ -204,14 +204,22 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       membrane-like, mobile, recovering, fragile, chasing ve symbiotic
       ailelerinden anlamlı bir alt küme görülür. Renkli topak, jitter veya
       kalıcı orbit elenir.
-- [ ] **[P0] Çoklu-seed long-horizon ve perturbation çalışsın.** Seed corpus
+- [x] **[P0] Çoklu-seed long-horizon ve perturbation çalışsın.** Seed corpus
       sürümlüdür; kesin seed sayısı ve 10–30 dakika bütçesi benchmark sonrası
       kilitlenir. Stasis, soup, tek blob, speed-cap chaos, seed çoğunluğunda
       ölüm ve aşırı Void kaybı kesin FAIL'dir.
-- [ ] **[P1] Zaman serisi geç çöküşü görünür kılsın.** Final snapshot yerine
+      _Kapatıldı 2026-09-17 (F7): K15 kısa listesindeki 8 aday × 2 senaryo × 8 tohum
+      (128 birim, 10 simüle dk, 8 worker, 36,1 dk) koşuldu. 8 adayın hiçbiri
+      §8.4 teknik kapısını geçemedi (koruma %0,4–%7,4, VOID_LOSS_DOMINATED ve DEAD baskın).
+      Sonuçlar `benchmarks/results/f7-long-horizon.json`._
+- [x] **[P1] Zaman serisi geç çöküşü görünür kılsın.** Final snapshot yerine
       phase, yapı çeşitliliği, lifespan, churn, loss ve recovery eğrileri
       saklansın. 30 dakika sonrasında başlayan çöküş görülürse daha uzun release
       canary ayrıca gerekçelendirilsin.
+      _Kapatıldı 2026-09-17 (F8): `collapseDetector.ts` (9 test) F7 eğrilerini
+      analiz etti; `54bbf81b62270b94` ve `e31f112e312e6031` adaylarında 8. dk
+      sonrası çöküşle canary bayrağı tetiklendi. Zaman serisi eğrileri JSONL
+      ve F7 özetinde saklandı._
 - [x] **[P1] Candidate/seed işleri deterministic shard edilsin.** Work ID +
       genome + seed aynı sonucu verir; paralel shard'lar seri referansla
       bit düzeyinde eşittir.

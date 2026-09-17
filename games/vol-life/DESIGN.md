@@ -789,6 +789,19 @@ ms, medyan 159,7 ms — bu koşu MAKİNE YÜKLÜYKEN alındı (F3 sekiz çekirde
 dolduruyordu), yani üst sınır. Ölçüm kodu üretim derlemesinde YOKTUR; yokluk
 build testiyle kanıtlanır.
 
+**Mobil cihaz ölçümleri (canlı Android cihazlar, dev kancası `window.__volLifeStorage.measure()`).**
+Dev sunucusuna `adb reverse` ile bağlı canlı cihazlarda Chrome DevTools Protocol üzerinden ölçüldü:
+
+| Platform / Cihaz               | Ham bayt  | Taşınan yük (gzip+base64) | Kodlama süresi    |
+| ------------------------------ | --------- | ------------------------- | ----------------- |
+| Node 22                        | 1.846.401 | 500.868 kar. (~0,478 MB)  | 113,5 ms          |
+| Chromium (masaüstü dev)        | 1.846.401 | ~509.470 kar. (~0,486 MB) | 159,7 ms (medyan) |
+| Lenovo TB350FU (Android 14)    | 1.846.401 | 498.148 kar. (~0,475 MB)  | 158,0 ms          |
+| Samsung SM-G990B2 (Android 16) | 1.846.401 | 496.308 kar. (~0,473 MB)  | 234,7 ms          |
+
+Ham boyut (1.846.401 bayt) tüm platformlarda ve cihazlarda bayt düzeyinde
+birebir aynıdır.
+
 `localStorage` tipik kotası kaynak başına ~5 MB'tır: 0,49 MB'lık tek kayıt
 kotanın onda birini kullanır, yani web tarafında bugünkü backend yeterlidir.
 Native tarafta `TauriStoreAdapter` dosyaya yazar ve kota sorunu yoktur.
@@ -1224,6 +1237,25 @@ promotion'a giremez.
 Adım 3 ancak **technical gate + long-horizon + kullanıcı visual audition**
 birlikte geçtiğinde kapanır. Bütün `SubstrateCandidate` production'a taşınır;
 matris tek başına kopyalanmaz.
+
+### Uzun ufuk koşusu ve geç çöküş analizi (F7, F8, 2026-09-17)
+
+K15 kısa listesindeki 8 aday için kullanıcı kararıyla 8 tohum × 10 simüle
+dakika (36.000 tick/birim, 128 birim, 8 worker) uzun ufuk ve perturbation
+koşusu yapıldı (`benchmarks/results/f7-long-horizon.json`).
+
+Sonuçlar:
+
+- 8 adayın **hiçbiri** §8.4 teknik kapısını geçemedi (0/8).
+- 10 dakikalık koruma medyanları %0,4 ile %7,4 arasında kaldı (eşik ≥ %70).
+- Tüm adaylarda `VOID_LOSS_DOMINATED` ve `DEAD` fazları baskın çıktı.
+- Geç çöküş (F8): `54bbf81b62270b94` (%38 tohumda 8. dk sonrası çöküş) ve
+  `e31f112e312e6031` (%25 tohumda 8. dk sonrası çöküş) için canary bayrağı
+  tetiklendi. Ancak hiçbir aday teknik sağkalım eşiğini geçemediği için
+  mevcut aday ailesi (`generalized-asymmetric-multi-band`) uzun ufukta da
+  kalifiye olamamıştır.
+- P2 ve P3 kabul paketleri bu ölçüm verileriyle üretildi (`research-out/P2-insan-onelemesi.md`,
+  `research-out/P3-final-audition.md`).
 
 ### Adım 4 gözlemci değişmezliği
 
