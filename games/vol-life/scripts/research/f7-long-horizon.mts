@@ -43,6 +43,10 @@ const SAMPLE_TICKS = 300;
 const PERTURBATION_MINUTES = [5, 15, 25];
 
 const corpus = readSeedCorpus(CORPUS);
+const targetSeeds = corpus.seeds.slice(
+  0,
+  Number(process.env.VOL_LIFE_F7_SEEDS ?? corpus.seeds.length),
+);
 const source = readSourceState(createGitProvider(process.cwd()));
 const build = buildFromRecords(parseCandidateRecords(readFileSync(RECORDS, 'utf8')), {
   corpusId: corpus.id,
@@ -57,7 +61,7 @@ const build = buildFromRecords(parseCandidateRecords(readFileSync(RECORDS, 'utf8
  * gerekçe raporlanır; eşik gevşetilmez, koşu sessizce kısalmaz.
  */
 const calibration = measureCalibration(substrateConfig);
-const unitCount = build.catalog.entries.length * 2 * corpus.seeds.length;
+const unitCount = build.catalog.entries.length * 2 * targetSeeds.length;
 const feasibility = resolveFeasibleMinutes({
   unitCount,
   msPerTick: calibration.msPerTick,
@@ -133,14 +137,14 @@ for (const entry of build.catalog.entries) {
   const base = JSON.parse(entry.genome) as SubstrateCandidate;
   for (const variant of scenarioVariants(base)) {
     const scenario = variant.scenario.kind;
-    const units = corpus.seeds
+    const units = targetSeeds
       .map((seed) => ({
         workId: `f7:${entry.digest}:${scenario}:${String(seed).padStart(10, '0')}`,
         input: unitInput(variant, seed),
       }))
       .filter((unit) => !store.has(unit.workId));
 
-    const cached = corpus.seeds
+    const cached = targetSeeds
       .map((seed) => store.get(`f7:${entry.digest}:${scenario}:${String(seed).padStart(10, '0')}`))
       .filter((value): value is LongHorizonUnitOutput => value !== undefined);
 
@@ -174,7 +178,7 @@ const summary = {
   revision: source.revision,
   temizKaynak: !source.dirty,
   korpus: corpus.id,
-  seedSayısı: corpus.seeds.length,
+  seedSayısı: targetSeeds.length,
   dakika: MINUTES,
   istenenDakika: REQUESTED_MINUTES,
   kısaltıldı: feasibility.shortened,
