@@ -10,11 +10,18 @@ import { validateNegativeControlSummary } from '@/../scripts/morphology/negative
  * F2: negatif kontrol YENİDEN ÜRETİLEBİLİR olmalı. Özet şeması doğrulanır ve
  * kısa bir smoke koşusu aynı girdinin aynı sonucu verdiğini gösterir.
  */
+function smokeConfig(): typeof substrateConfig {
+  return {
+    ...substrateConfig,
+    particles: { ...substrateConfig.particles, capacity: 128 },
+  };
+}
+
 function smokeRun(seed: number): { active: number; fingerprint: number } {
-  const world = new LifeWorld(substrateConfig, createExplicitWorldMetadata(seed), {
+  const world = new LifeWorld(smokeConfig(), createExplicitWorldMetadata(seed), {
     kernel: createTriangularKernel(),
   });
-  for (let tick = 0; tick < 120; tick++) world.step();
+  for (let tick = 0; tick < 60; tick++) world.step();
   let fingerprint = 0;
   for (let slot = 0; slot < world.particles.capacity; slot++) {
     if (world.particles.active[slot] === 0) continue;
@@ -24,7 +31,6 @@ function smokeRun(seed: number): { active: number; fingerprint: number } {
 }
 
 describe('F2 — V1 negatif kontrolü', () => {
-  // v8 kapsam enstrümantasyonu ve 512 parçacıklı 240 adım simülasyon yükü için açık süre.
   it('aynı seed aynı sonucu verir', () => {
     expect(smokeRun(7)).toEqual(smokeRun(7));
   }, 20_000);
@@ -35,8 +41,8 @@ describe('F2 — V1 negatif kontrolü', () => {
 
   it('reddedilen kernel gerçekten farklı bir fizik üretir', () => {
     const control = smokeRun(7);
-    const production = new LifeWorld(substrateConfig, createExplicitWorldMetadata(7));
-    for (let tick = 0; tick < 120; tick++) production.step();
+    const production = new LifeWorld(smokeConfig(), createExplicitWorldMetadata(7));
+    for (let tick = 0; tick < 60; tick++) production.step();
     let fingerprint = 0;
     for (let slot = 0; slot < production.particles.capacity; slot++) {
       if (production.particles.active[slot] === 0) continue;

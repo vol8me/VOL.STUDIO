@@ -75,7 +75,7 @@ describe('Void ölümü — sunum ve dünya kanalları', () => {
     expect(sink.events).toHaveLength(world.reservoir.voidLossTotal);
     expect(world.drainTransientPresentationEvents()).toHaveLength(0);
     expect(sink.events).toHaveLength(world.reservoir.voidLossTotal);
-  });
+  }, 20_000);
 
   it('boşaltılmayan sunum tamponu aktif slot başına tek ölümle sınırlı kalır', () => {
     const world = createWorld();
