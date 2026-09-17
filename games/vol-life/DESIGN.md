@@ -791,6 +791,18 @@ Kalıcılık iki seviyedir:
 | Taşınan yük (gzip + base64) | 500.868 karakter (0,478 MB) |
 | Kodlama süresi (Node 22)    | 113,5 ms                    |
 
+**Tarayıcı ölçümü (Chromium, dev sunucusu, uygulama içi `performance.mark`).**
+Ham boyut Node hesabıyla BİREBİR aynı çıktı (1.846.401 bayt) — kodek düzeni
+platformdan bağımsız. Taşınan yük 509.456–509.532 karakter (≈0,486 MB; Node'un
+`zlib` gzip'i birkaç yüz bayt daha iyi sıkıştırıyor). Kodlama süresi 96,2–221,9
+ms, medyan 159,7 ms — bu koşu MAKİNE YÜKLÜYKEN alındı (F3 sekiz çekirdeği
+dolduruyordu), yani üst sınır. Ölçüm kodu üretim derlemesinde YOKTUR; yokluk
+build testiyle kanıtlanır.
+
+`localStorage` tipik kotası kaynak başına ~5 MB'tır: 0,49 MB'lık tek kayıt
+kotanın onda birini kullanır, yani web tarafında bugünkü backend yeterlidir.
+Native tarafta `TauriStoreAdapter` dosyaya yazar ve kota sorunu yoktur.
+
 Boyutun baskın terimi ALANLARDIR, parçacıklar değil: 256² × 7 alan dizisi,
 512 parçacığın tuttuğu yerin on katından fazlasını kaplar. Çözünürlük iki
 katına çıkarsa boyut dört katına yaklaşır; bütçe parçacık sayısıyla değil alan
