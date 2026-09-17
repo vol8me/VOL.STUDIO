@@ -1059,6 +1059,16 @@ koherent hareket, deformasyon sonrası recovery, doğal kırılganlık, asimetri
 doğan chase ve iki yapının kalıcı symbiosis ilişkisidir. Hepsini aynı adayın
 üretmesi şart değildir; yalnız renkli topak üretmek hiçbir aileyi karşılamaz.
 
+Huni AYRI komutlardır (E13): `calibrate`, `seeding`, `broad`, `refine`,
+`audition`, `shortlist`, `qualify`, `accept`, `promote`, `canary`. Hiçbir komut
+önceki aşamayı örtük olarak koşmaz ve `--stage all` yoktur; tek komutla saatler
+süren bir zincir, hangi sonucun hangi girdiden çıktığını takip edilemez hâle
+getiriyordu. Her komut koşmadan önce aday, seed, tick, worker ve KALİBRASYONDAN
+hesaplanmış tahmini süreyi yazar; kalibrasyon yoksa süre uydurulmaz, "ölçülmedi"
+yazar. Tahmini süresi 10 dakikayı aşan koşu `--yes` ister, çıktı dizini olmayan
+koşu reddedilir (checkpoint zorunlu), ve `accept` açık bir karar olmadan
+koşmaz — insan kararı asla uydurulmaz.
+
 Arama candidate/seed işlerini deterministic work ID ile shard edebilir.
 Paralel sonuç aynı seri referansla bit düzeyinde eşit olmadan worker yolu
 güvenilir sayılmaz. Bütçe ölçülmeden aday sayısı büyütülmez.

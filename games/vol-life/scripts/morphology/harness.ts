@@ -66,9 +66,13 @@ export interface ResearchHarnessConfig {
   readonly cluster: ClusterTrackerConfig;
   readonly phase: PhaseClassifierConfig;
   readonly perturbation: PerturbationConfig;
+  /** R1 seeding araştırması; broad'dan ayrı ve daha kısa. */
+  readonly seeding: ResearchStageConfig;
   readonly broad: ResearchStageConfig;
   readonly refinement: ResearchStageConfig;
   readonly qualification: ResearchStageConfig;
+  /** Geç çöküş kanaryası; yalnız açıkça istendiğinde koşar. */
+  readonly canary: ResearchStageConfig;
   readonly candidateCount: number;
   /** Enjekte edilebilir; testler sahte sağlayıcıyla ve gerçek depoyla koşar. */
   readonly gitProvider?: GitProvider;
@@ -111,9 +115,11 @@ export const defaultHarnessConfig: ResearchHarnessConfig = {
   },
   phase: defaultPhaseConfig,
   perturbation: defaultPerturbationConfig,
+  seeding: { tickCount: 1800, seedCount: 4, sampleInterval: 10 },
   broad: { tickCount: 1800, seedCount: 4, sampleInterval: 30 },
   refinement: { tickCount: 7200, seedCount: 16, sampleInterval: 60 },
   qualification: { tickCount: 18000, seedCount: 32, sampleInterval: 60 },
+  canary: { tickCount: 216000, seedCount: 4, sampleInterval: 60 },
   candidateCount: 30,
   workerCount: 1,
   perturbationSpecs: [
