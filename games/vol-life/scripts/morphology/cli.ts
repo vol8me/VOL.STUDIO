@@ -88,7 +88,7 @@ async function main(): Promise<void> {
     console.error('Qualification aşaması koşuluyor...');
     const broad = harness.runBroad();
     const refinement = harness.runRefinement(broad);
-    const artefacts = harness.runQualification(refinement);
+    const artefacts = await harness.runQualification(refinement);
     results.qualification = artefacts.map((a) => ({
       candidateDigest: a.candidateDigest,
       phase: a.phase.majorityReason ?? 'ÇOĞUNLUK_YOK',

@@ -81,15 +81,21 @@ describe('ResearchHarness', () => {
     expect(refinement.length).toBeLessThanOrEqual(broad.filter((c) => c.structured).length);
   });
 
-  it('qualification artefakt üretir', () => {
+  it('qualification artefakt üretir', async () => {
     const harness = new ResearchHarness(smallConfig);
     const broad = harness.runBroad();
     const refinement = harness.runRefinement(broad);
-    const artefacts = harness.runQualification(refinement);
+    const artefacts = await harness.runQualification(refinement);
     for (const artefact of artefacts) {
       expect(artefact.schemaVersion).toBe(ARTEFACT_SCHEMA_VERSION);
       expect(artefact.candidateDigest).toMatch(/^[0-9a-f]{16}$/);
-      expect(artefact.timeSeries.length).toBeGreaterThan(0);
+      expect(artefact.seedTimeSeries.length).toBeGreaterThan(0);
+      expect(artefact.seedTimeSeries[0].samples.length).toBeGreaterThan(0);
+      // E12: bütçe ÖLÇÜLÜR; sıfır kalmaz.
+      expect(artefact.budgets.length).toBeGreaterThan(0);
+      expect(artefact.budgets.some((b) => b.ticks > 0)).toBe(true);
+      expect(artefact.humanPreselection).toBe('pending');
+      expect(artefact.humanAcceptance).toBe('pending');
       expect(artefact.perturbationResults.length).toBeGreaterThan(0);
     }
   });

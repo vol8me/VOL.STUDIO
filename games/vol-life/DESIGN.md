@@ -1065,7 +1065,18 @@ güvenilir sayılmaz. Bütçe ölçülmeden aday sayısı büyütülmez.
 
 Qualification artefaktı clean source revision, config digest, korpus, tam
 `SubstrateCandidate`, bütçe, seed sınırları korunmuş zaman serisi, red nedeni
-kodları ve human-acceptance durumunu taşır. Dirty ağaç exploration için
+kodları ve human-acceptance durumunu taşır. Bunların hepsi v4 şemasında
+ALANDIR (E12): kaynak revizyonu, dirty bayrağı, eligibility, senaryo, korpus
+kimliği, seed başına AYRI zaman serisi ve aşama/iş birimi başına ÖLÇÜLMÜŞ
+bütçe (duvar saati, tick, tick başı maliyet). Bütçe alanları sıfır kalmaz;
+sıfır bırakmak maliyeti bilmiyoruz demenin süslü hâli olurdu.
+
+Paralel koşu ile seri koşu AYNI `runSeedUnit` fonksiyonunu çağırır; eşitlik
+kurulumdan gelir, umuda bırakılmaz. Bölme deterministiktir (iş kimliğinin
+hash'i) ve birleştirme iş kimliğine göre sıralıdır, yani worker'ların bitiş
+sırası sonucu etkileyemez. Checkpoint her iş birimini JSONL'e yazar ve config
+digest'i satır başına taşır: farklı bir yapılandırmadan kalan kayıt sessizce
+kullanılamaz. Dirty ağaç exploration için
 kullanılabilir ama production qualification üretemez. Qualified olmayan aday
 runtime URL/env ile production'a enjekte edilemez.
 

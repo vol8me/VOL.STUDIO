@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import type { SourceState } from '@/../scripts/morphology/sourceState';
+import type { StageBudget } from '@/../scripts/morphology/qualification';
 import type { CandidateAggregation } from '@/../scripts/morphology/phaseClassifier';
 import {
   ARTEFACT_SCHEMA_VERSION,
@@ -7,7 +9,6 @@ import {
   parseQualificationArtefact,
   readArtefactCandidate,
   serializeArtefact,
-  type QualificationBudget,
 } from '@/../scripts/morphology/qualification';
 import {
   defaultSubstrateCandidate,
@@ -17,13 +18,6 @@ import {
 import { substrateConfig } from '@/config/substrate';
 import type { MorphologySample } from '@/../scripts/morphology/metrics';
 import type { PerturbationResult } from '@/../scripts/morphology/perturbation';
-
-const budget: QualificationBudget = {
-  broadSeconds: 30,
-  refinementSeconds: 120,
-  qualificationSeconds: 600,
-  totalSeedCount: 4,
-};
 
 function makeSample(): MorphologySample {
   return {
@@ -98,77 +92,97 @@ function deadAggregation(): CandidateAggregation {
   };
 }
 
+/** E12: artefakt kaynak durumunu taşır; testler temiz ağaç varsayar. */
+function cleanSource(): SourceState {
+  return { revision: 'a'.repeat(40), dirty: false, dirtyPaths: [], eligibleForPromotion: true };
+}
+
+const budgets: StageBudget[] = [
+  {
+    stage: 'qualification',
+    wallClockMs: 12,
+    ticks: 600,
+    msPerTick: 0.02,
+    workUnits: [{ workId: 'qualification:x:1', wallClockMs: 12, ticks: 600, msPerTick: 0.02 }],
+  },
+];
+
 describe('Qualification', () => {
   it('artefakt oluşturulur ve şema sürümü v3’tür', () => {
-    const artefact = createQualificationArtefact(
-      substrateConfig,
-      defaultSubstrateCandidate,
-      [1, 2, 3],
-      structuredAggregation(),
-      [makeSample()],
-      [makePerturbationResult(true)],
-      [],
-      budget,
-    );
+    const artefact = createQualificationArtefact({
+      config: substrateConfig,
+      candidate: defaultSubstrateCandidate,
+      corpus: [1, 2, 3],
+      phase: structuredAggregation(),
+      seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+      perturbationResults: [makePerturbationResult(true)],
+      rejectionReasons: [],
+      budgets: budgets,
+      source: cleanSource(),
+    });
     expect(artefact.schemaVersion).toBe(ARTEFACT_SCHEMA_VERSION);
     expect(artefact.phase.structured).toBe(true);
     expect(artefact.humanAcceptance).toBe('pending');
   });
 
   it('kalifiye değil: insan onayı bekliyor', () => {
-    const artefact = createQualificationArtefact(
-      substrateConfig,
-      defaultSubstrateCandidate,
-      [1],
-      structuredAggregation(),
-      [makeSample()],
-      [makePerturbationResult(true)],
-      [],
-      budget,
-    );
+    const artefact = createQualificationArtefact({
+      config: substrateConfig,
+      candidate: defaultSubstrateCandidate,
+      corpus: [1],
+      phase: structuredAggregation(),
+      seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+      perturbationResults: [makePerturbationResult(true)],
+      rejectionReasons: [],
+      budgets: budgets,
+      source: cleanSource(),
+    });
     expect(isQualified(artefact)).toBe(false);
   });
 
   it('kalifiye değil: yanlış faz', () => {
-    const artefact = createQualificationArtefact(
-      substrateConfig,
-      defaultSubstrateCandidate,
-      [1],
-      deadAggregation(),
-      [makeSample()],
-      [makePerturbationResult(true)],
-      [],
-      budget,
-    );
+    const artefact = createQualificationArtefact({
+      config: substrateConfig,
+      candidate: defaultSubstrateCandidate,
+      corpus: [1],
+      phase: deadAggregation(),
+      seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+      perturbationResults: [makePerturbationResult(true)],
+      rejectionReasons: [],
+      budgets: budgets,
+      source: cleanSource(),
+    });
     expect(isQualified(artefact)).toBe(false);
   });
 
   it('kalifiye değil: red nedenleri var', () => {
-    const artefact = createQualificationArtefact(
-      substrateConfig,
-      defaultSubstrateCandidate,
-      [1],
-      structuredAggregation(),
-      [makeSample()],
-      [makePerturbationResult(true)],
-      ['seed 1: çöküş'],
-      budget,
-    );
+    const artefact = createQualificationArtefact({
+      config: substrateConfig,
+      candidate: defaultSubstrateCandidate,
+      corpus: [1],
+      phase: structuredAggregation(),
+      seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+      perturbationResults: [makePerturbationResult(true)],
+      rejectionReasons: ['seed 1: çöküş'],
+      budgets: budgets,
+      source: cleanSource(),
+    });
     expect(isQualified(artefact)).toBe(false);
   });
 
   it('kalifiye değil: perturbation recovery başarısız', () => {
     const accepted = {
-      ...createQualificationArtefact(
-        substrateConfig,
-        defaultSubstrateCandidate,
-        [1],
-        structuredAggregation(),
-        [makeSample()],
-        [makePerturbationResult(false)],
-        [],
-        budget,
-      ),
+      ...createQualificationArtefact({
+        config: substrateConfig,
+        candidate: defaultSubstrateCandidate,
+        corpus: [1],
+        phase: structuredAggregation(),
+        seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+        perturbationResults: [makePerturbationResult(false)],
+        rejectionReasons: [],
+        budgets: budgets,
+        source: cleanSource(),
+      }),
       humanAcceptance: 'accepted' as const,
     };
     expect(isQualified(accepted)).toBe(false);
@@ -184,16 +198,17 @@ describe('Qualification', () => {
  */
 describe('Qualification artefakt DTO v2 (E3)', () => {
   function artefact() {
-    return createQualificationArtefact(
-      substrateConfig,
-      defaultSubstrateCandidate,
-      [1, 2],
-      structuredAggregation(),
-      [makeSample()],
-      [makePerturbationResult(true)],
-      [],
-      budget,
-    );
+    return createQualificationArtefact({
+      config: substrateConfig,
+      candidate: defaultSubstrateCandidate,
+      corpus: [1, 2],
+      phase: structuredAggregation(),
+      seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+      perturbationResults: [makePerturbationResult(true)],
+      rejectionReasons: [],
+      budgets: budgets,
+      source: cleanSource(),
+    });
   }
 
   it('aday alanı kanonik metindir ve digest’i onunla uyuşur', () => {

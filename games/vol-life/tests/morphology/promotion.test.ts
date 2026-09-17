@@ -1,21 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import type { SourceState } from '@/../scripts/morphology/sourceState';
+import type { StageBudget } from '@/../scripts/morphology/qualification';
 import type { CandidateAggregation } from '@/../scripts/morphology/phaseClassifier';
 import { PromotionFlow } from '@/../scripts/morphology/promotion';
-import {
-  createQualificationArtefact,
-  type QualificationBudget,
-} from '@/../scripts/morphology/qualification';
+import { createQualificationArtefact } from '@/../scripts/morphology/qualification';
 import { defaultSubstrateCandidate } from '@/config/candidate';
 import { substrateConfig } from '@/config/substrate';
 import type { MorphologySample } from '@/../scripts/morphology/metrics';
 import type { PerturbationResult } from '@/../scripts/morphology/perturbation';
-
-const budget: QualificationBudget = {
-  broadSeconds: 30,
-  refinementSeconds: 120,
-  qualificationSeconds: 600,
-  totalSeedCount: 4,
-};
 
 function makeSample(): MorphologySample {
   return {
@@ -90,35 +82,76 @@ function deadAggregation(): CandidateAggregation {
   };
 }
 
+/** E12: artefakt kaynak durumunu taşır; testler temiz ağaç varsayar. */
+function cleanSource(): SourceState {
+  return { revision: 'a'.repeat(40), dirty: false, dirtyPaths: [], eligibleForPromotion: true };
+}
+
+const budgets: StageBudget[] = [
+  {
+    stage: 'qualification',
+    wallClockMs: 12,
+    ticks: 600,
+    msPerTick: 0.02,
+    workUnits: [{ workId: 'qualification:x:1', wallClockMs: 12, ticks: 600, msPerTick: 0.02 }],
+  },
+];
+
 describe('PromotionFlow', () => {
+  /* E12: kirli ağaçta koşulan araştırma promotion üretemez. */
+  it('kirli kaynaktan çıkan artefakt promotion alamaz', () => {
+    const flow = new PromotionFlow();
+    const artefact = createQualificationArtefact({
+      config: substrateConfig,
+      candidate: defaultSubstrateCandidate,
+      corpus: [1],
+      phase: structuredAggregation(),
+      seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+      perturbationResults: [makePerturbationResult()],
+      rejectionReasons: [],
+      budgets: budgets,
+      source: {
+        revision: 'c'.repeat(40),
+        dirty: true,
+        dirtyPaths: ['src/x.ts'],
+        eligibleForPromotion: false,
+      },
+    });
+    const accepted = { ...artefact, humanAcceptance: 'accepted' as const };
+
+    expect(flow.evaluate(accepted).promoted).toBe(false);
+  });
+
   it('kalifiye olmayan adayı reddeder', () => {
     const flow = new PromotionFlow();
-    const artefact = createQualificationArtefact(
-      substrateConfig,
-      defaultSubstrateCandidate,
-      [1],
-      deadAggregation(),
-      [makeSample()],
-      [makePerturbationResult()],
-      [],
-      budget,
-    );
+    const artefact = createQualificationArtefact({
+      config: substrateConfig,
+      candidate: defaultSubstrateCandidate,
+      corpus: [1],
+      phase: deadAggregation(),
+      seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+      perturbationResults: [makePerturbationResult()],
+      rejectionReasons: [],
+      budgets: budgets,
+      source: cleanSource(),
+    });
     const decision = flow.evaluate(artefact);
     expect(decision.promoted).toBe(false);
   });
 
   it('kalifiye ve onaylı adayı taşır', () => {
     const flow = new PromotionFlow();
-    const base = createQualificationArtefact(
-      substrateConfig,
-      defaultSubstrateCandidate,
-      [1],
-      structuredAggregation(),
-      [makeSample()],
-      [makePerturbationResult()],
-      [],
-      budget,
-    );
+    const base = createQualificationArtefact({
+      config: substrateConfig,
+      candidate: defaultSubstrateCandidate,
+      corpus: [1],
+      phase: structuredAggregation(),
+      seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+      perturbationResults: [makePerturbationResult()],
+      rejectionReasons: [],
+      budgets: budgets,
+      source: cleanSource(),
+    });
     const accepted = { ...base, humanAcceptance: 'accepted' as const };
     const decision = flow.evaluate(accepted);
     expect(decision.promoted).toBe(true);
@@ -127,16 +160,17 @@ describe('PromotionFlow', () => {
 
   it('aynı genomu ikinci kez taşımaz', () => {
     const flow = new PromotionFlow();
-    const base = createQualificationArtefact(
-      substrateConfig,
-      defaultSubstrateCandidate,
-      [1],
-      structuredAggregation(),
-      [makeSample()],
-      [makePerturbationResult()],
-      [],
-      budget,
-    );
+    const base = createQualificationArtefact({
+      config: substrateConfig,
+      candidate: defaultSubstrateCandidate,
+      corpus: [1],
+      phase: structuredAggregation(),
+      seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+      perturbationResults: [makePerturbationResult()],
+      rejectionReasons: [],
+      budgets: budgets,
+      source: cleanSource(),
+    });
     const accepted = { ...base, humanAcceptance: 'accepted' as const };
     flow.evaluate(accepted);
     const decision = flow.evaluate(accepted);
@@ -146,16 +180,17 @@ describe('PromotionFlow', () => {
 
   it('hasGenome promoted listesini sorgular', () => {
     const flow = new PromotionFlow();
-    const base = createQualificationArtefact(
-      substrateConfig,
-      defaultSubstrateCandidate,
-      [1],
-      structuredAggregation(),
-      [makeSample()],
-      [makePerturbationResult()],
-      [],
-      budget,
-    );
+    const base = createQualificationArtefact({
+      config: substrateConfig,
+      candidate: defaultSubstrateCandidate,
+      corpus: [1],
+      phase: structuredAggregation(),
+      seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+      perturbationResults: [makePerturbationResult()],
+      rejectionReasons: [],
+      budgets: budgets,
+      source: cleanSource(),
+    });
     const accepted = { ...base, humanAcceptance: 'accepted' as const };
     flow.evaluate(accepted);
     const digest = flow.promotedCandidates[0].candidateDigest;
@@ -165,16 +200,17 @@ describe('PromotionFlow', () => {
 
   it('exportPromotedCandidate promoted adayı döner', () => {
     const flow = new PromotionFlow();
-    const base = createQualificationArtefact(
-      substrateConfig,
-      defaultSubstrateCandidate,
-      [1],
-      structuredAggregation(),
-      [makeSample()],
-      [makePerturbationResult()],
-      [],
-      budget,
-    );
+    const base = createQualificationArtefact({
+      config: substrateConfig,
+      candidate: defaultSubstrateCandidate,
+      corpus: [1],
+      phase: structuredAggregation(),
+      seedTimeSeries: [{ seed: 1, samples: [makeSample()] }],
+      perturbationResults: [makePerturbationResult()],
+      rejectionReasons: [],
+      budgets: budgets,
+      source: cleanSource(),
+    });
     const accepted = { ...base, humanAcceptance: 'accepted' as const };
     flow.evaluate(accepted);
     const promoted = flow.exportPromotedCandidate(0);
