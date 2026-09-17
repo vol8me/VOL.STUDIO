@@ -1,5 +1,9 @@
 {
   "$comment": [
+    "2026-09-17: VOL.LIFE Adım 3 kabul oturumu arayüzü ve substrate adayı",
+    "yapılandırmasıyla app 62,2 KB ölçüldü; uygulama bütçesi 60 → 65 KB'ye çıkarıldı.",
+    "Vendor ve CSS değişmedi.",
+    "",
     "2026-09-14: VOL.LIFE Particle Substrate v2 migrasyonu (HabitatSDF, VoidSink,",
     "MatterReservoir, PairForceKernel, capacity store, v3 codec) app 59,1 KB",
     "ölçüldü; uygulama bütçesi 53 → 60 KB'ye çıkarıldı. Artış yeni substrate",
@@ -145,7 +149,7 @@
   },
   "bundles": {
     "games/vol-life": {
-      "app": 60,
+      "app": 65,
       "vendor": 360,
       "css": 24
     },
