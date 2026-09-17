@@ -1,0 +1,48 @@
+{
+  "madde": "F3",
+  "tarih": "2026-09-17",
+  "adaySayısı": 2048,
+  "seedSayısı": 4,
+  "tickCount": 1800,
+  "süreDk": 123.1,
+  "geçersizAday": 0,
+  "geçersizOran": 0,
+  "yapısalAday": 103,
+  "fazPayları": {
+    "DYNAMIC_STRUCTURED": 0.06640625,
+    "DEAD": 0.30810546875,
+    "VOID_LOSS_DOMINATED": 0.6083984375,
+    "ÇOĞUNLUK_YOK": 0.01708984375
+  },
+  "yakınsama": {
+    "N": 1024,
+    "ikiN": 2048,
+    "tablo": [
+      {
+        "gerekçe": "DYNAMIC_STRUCTURED",
+        "N": 6.25,
+        "2N": 6.64,
+        "fark": 0.39
+      },
+      {
+        "gerekçe": "DEAD",
+        "N": 30.76,
+        "2N": 30.81,
+        "fark": 0.05
+      },
+      {
+        "gerekçe": "VOID_LOSS_DOMINATED",
+        "N": 60.94,
+        "2N": 60.84,
+        "fark": 0.1
+      },
+      {
+        "gerekçe": "ÇOĞUNLUK_YOK",
+        "N": 2.05,
+        "2N": 1.71,
+        "fark": 0.34
+      }
+    ],
+    "yakınsadı": true
+  }
+}

@@ -1260,13 +1260,21 @@ yoğunluğu azalabilir; SDF, kuvvet, ölüm, olay ve organizma aynı kalır.
 
 **512 bütçesi ölçüldü (D4, 2026-09-17).**
 
-| Hedef                                          | Derleme            | Süre  | Kare                              | Kare süresi                                   | Bellek                    | Renderer               |
-| ---------------------------------------------- | ------------------ | ----- | --------------------------------- | --------------------------------------------- | ------------------------- | ---------------------- |
-| Lenovo Tab M11 (TB350FU, Android 14)           | debug APK, aarch64 | 60 sn | 5244 kare (~87,4 fps), jank %2,56 | p50 6 ms, p90 11 ms, p99 20 ms, kaçan vsync 3 | PSS 196 MB (grafik 83 MB) | webgl (geri düşüş yok) |
-| Chromium masaüstü viewport (SwiftShader)       | üretim derlemesi   | 62 sn | 1279 kare                         | p50 4,70 ms, p95 16,40 ms                     | —                         | YAZILIM WebGL          |
-| Chromium mobil viewport (Pixel 5, SwiftShader) | üretim derlemesi   | 62 sn | 636 kare                          | p50 7,50 ms, p95 17,80 ms                     | —                         | YAZILIM WebGL          |
+| Hedef                                          | Derleme            | Süre  | Kare                              | Kare süresi                                   | Bellek                      | Renderer               |
+| ---------------------------------------------- | ------------------ | ----- | --------------------------------- | --------------------------------------------- | --------------------------- | ---------------------- |
+| Lenovo Tab M11 (TB350FU, Android 14)           | debug APK, aarch64 | 60 sn | 5244 kare (~87,4 fps), jank %2,56 | p50 6 ms, p90 11 ms, p99 20 ms, kaçan vsync 3 | PSS 196 MB (grafik 83 MB)   | webgl (geri düşüş yok) |
+| Samsung SM-G990B2 (Android 16)                 | debug APK, aarch64 | 60 sn | 2965 kare, jank %0,24             | p50 7 ms, p90 9 ms, p99 11 ms, kaçan vsync 0  | PSS 198 MB (grafik 41,9 MB) | webgl (GPU p99 3 ms)   |
+| Chromium masaüstü viewport (SwiftShader)       | üretim derlemesi   | 62 sn | 1279 kare                         | p50 4,70 ms, p95 16,40 ms                     | —                           | YAZILIM WebGL          |
+| Chromium mobil viewport (Pixel 5, SwiftShader) | üretim derlemesi   | 62 sn | 636 kare                          | p50 7,50 ms, p95 17,80 ms                     | —                           | YAZILIM WebGL          |
 
 Soğuk açılış (Lenovo, üç koşu): 702 / 667 / 651 ms.
+
+İki cihaz aynı APK'yı koşuyor ve ikisi de kare bütçesini rahat tutuyor. Lenovo
+120 Hz panelde daha çok kare üretiyor ama jank'ı yüksek (%2,56) ve p99'u uzun
+(20 ms); Samsung 60 Hz'de daha az kare üretiyor, jank'ı %0,24 ve p99'u 11 ms.
+Darboğaz GPU değil: Samsung'da GPU p99 3 ms. Lenovo'nun jank'ı `FieldRenderer`
+doku yüklemesinin Mali'de EGL image yeniden tahsisi tetiklemesiyle uyumlu
+(TODO'da ayrı madde).
 
 Simülasyonun kare içindeki payı ölçüldü: masaüstü viewport'ta tick maliyeti
 3,248 ms ve p50 4,70 ms, yani karenin ~%69'u SİMÜLASYON. Mobil viewport'ta

@@ -72,8 +72,17 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       active mask, stable ID, next ID, reservoir, Void sayaçları, adlandırılmış
       RNG akış tablosu ve kanonik pasif slot doğrulaması; i18n'li uyumsuzluk
       yüzeyi.
-- [ ] **[P1] 512 bütçesi gerçek hedeflerde ölçülsün.** Headless kernel p50/p95
+- [x] **[P1] 512 bütçesi gerçek hedeflerde ölçülsün.** Headless kernel p50/p95
       ölçüldü (§11); Chromium WebGL ve Android cihaz ölçümleri hâlâ gerekli.
+      _Kapatıldı 2026-09-17 (D4): üç hedefte de ölçüldü. Chromium üretim
+      derlemesi 62 sn — masaüstü viewport p50 4,70 ms / p95 16,40 ms, mobil
+      viewport p50 7,50 ms / p95 17,80 ms (bu ortamda yazılım rasterleme; GPU
+      ölçümü DEĞİL, öyle etiketlendi). Lenovo TB350FU (Android 14, debug APK,
+      60 sn): 5244 kare, jank %2,56, p50 6 ms / p99 20 ms, kaçan vsync 3, PSS
+      196 MB. Samsung SM-G990B2 (Android 16, aynı APK, 60 sn): 2965 kare, jank
+      %0,24, p50 7 ms / p90 9 ms / p99 11 ms, kaçan vsync 0, GPU p99 3 ms, PSS
+      198 MB (grafik 41,9 MB), çökme yok. Simülasyon payı da ölçüldü: masaüstü
+      viewport'ta karenin ~%69'u fizik._
 - [ ] **[P0] Adım 2 kabulü.** Determinism, güvenli alan, crossing, fringe,
       aktif hash kanıtlandı; cihaz akıcılığı hâlâ gerekli.
 - [ ] **[P1] `FieldRenderer` doku yüklemesi Mali'de EGL image yeniden tahsisi
