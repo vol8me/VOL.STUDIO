@@ -13,6 +13,11 @@ import {
 } from '@/config/graphics';
 import { substrateConfig, type SubstrateConfig } from '@/config/substrate';
 import { cameraScales, entryCameraScale, zoomForScale } from '@/config/cameraScales';
+import {
+  cameraCandidateById,
+  defaultCameraCandidateId,
+  type CameraCandidate,
+} from '@/config/cameraCandidates';
 import { resolveCameraDomain } from '@/runtime/render/cameraDomain';
 import { resolveEntryCamera } from '@/runtime/render/EntryCameraResolver';
 import { FieldRenderer } from '@/runtime/render/FieldRenderer';
@@ -82,6 +87,8 @@ export interface LifeRuntimeDependencies {
   readonly backdrop?: RuntimeBackdrop;
   readonly initialSnapshot?: LifeWorldSnapshot | null;
   readonly worldMetadata?: WorldMetadata;
+  /** Kamera aday ölçüleri (D5); verilmezse `dengeli`. */
+  readonly cameraCandidate?: CameraCandidate;
 }
 
 export class LifeRuntime {
@@ -123,6 +130,8 @@ export class LifeRuntime {
       ? { ...baseConfig, candidate: dependencies.candidate }
       : baseConfig;
     const graphics = dependencies.graphics ?? lifeGraphicsConfig;
+    const cameraCandidate =
+      dependencies.cameraCandidate ?? cameraCandidateById(defaultCameraCandidateId);
     validateLifeGraphicsConfig(graphics);
     const metadata =
       dependencies.initialSnapshot?.metadata ??
@@ -198,6 +207,9 @@ export class LifeRuntime {
             fit: 'contain',
             maxZoomFactor: graphics.cameraMaxZoomFactor,
             initialZoomFactor: graphics.cameraInitialZoomFactor,
+            pointerProfiles: cameraCandidate.profiles,
+            wheelSensitivity: cameraCandidate.wheelSensitivity,
+            wheelSmoothingMs: cameraCandidate.wheelSmoothingMs,
           }),
       );
       // D2: açılış ECOSYSTEM ölçeğinde ve maddenin yoğun olduğu odakta.

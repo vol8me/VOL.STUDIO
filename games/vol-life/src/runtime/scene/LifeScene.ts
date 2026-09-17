@@ -32,6 +32,8 @@ export interface LifeSceneServices {
   readonly worldPersistence: Pick<LifeWorldPersistence, 'attach'> | null;
   /** Development audition genomu digest'i; üretimde null. */
   readonly auditionDigest: string | null;
+  /** Varsayılan dışında bir kamera adayı koşuyorsa kimliği (D5). */
+  readonly cameraCandidateId: string | null;
   readonly createRuntime: (
     scene: Phaser.Scene,
     initialSnapshot: LifeWorldSnapshot | null,
@@ -69,6 +71,7 @@ export class LifeScene extends Phaser.Scene {
       initialWorldLoadIssue: services.initialWorldLoadIssue ?? null,
       worldPersistence: services.worldPersistence ?? null,
       auditionDigest: services.auditionDigest ?? null,
+      cameraCandidateId: services.cameraCandidateId ?? null,
       createRuntime:
         services.createRuntime ??
         ((scene, initialSnapshot) => new LifeRuntime(scene, { initialSnapshot })),
@@ -174,6 +177,9 @@ export class LifeScene extends Phaser.Scene {
           optionsContent: panel,
           showFps: preferenceState.showFps,
           ...(this.services.auditionDigest ? { auditionDigest: this.services.auditionDigest } : {}),
+          ...(this.services.cameraCandidateId
+            ? { cameraCandidateId: this.services.cameraCandidateId }
+            : {}),
         }),
       );
       if (this.services.initialWorldLoadIssue) {

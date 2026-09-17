@@ -13,6 +13,8 @@ import {
   getRuntimePlatform,
 } from '@volstudio/tauri-v2';
 import { loadAuditionSelection, describeSelection } from '@/app/auditionCatalog';
+import { resolveCameraCandidate } from '@/app/cameraCandidate';
+import { defaultCameraCandidateId } from '@/config/cameraCandidates';
 import { loadAuditionCandidate } from '@/app/auditionGenome';
 import { LifePreferences } from '@/app/LifePreferences';
 import { LifeWorldPersistence } from '@/app/LifeWorldPersistence';
@@ -84,6 +86,8 @@ try {
     : { snapshot: null, issue: null };
   // Katalog adayı KENDİ tohumuyla gösterilir; aynı üç tohum bütün adaylarda aynıdır.
   const auditionMetadata = selection ? createExplicitWorldMetadata(selection.seed) : undefined;
+  // Kamera aday ölçüleri (D5): üretimde her zaman `dengeli`.
+  const cameraCandidate = resolveCameraCandidate();
   setHapticsEnabled(preferences.get().hapticsEnabled);
   const orientation = new OrientationPreference(
     platform === 'android' ? androidScreenOrientation : null,
@@ -104,9 +108,12 @@ try {
         initialWorldLoadIssue: initialWorld.issue,
         worldPersistence,
         auditionDigest: selection ? describeSelection(selection) : audition?.digest ?? null,
+        cameraCandidateId:
+          cameraCandidate.id === defaultCameraCandidateId ? null : cameraCandidate.id,
         createRuntime: (scene, initialSnapshot) =>
           new LifeRuntime(scene, {
             config: activeSubstrate,
+            cameraCandidate,
             initialSnapshot,
             ...(auditionMetadata ? { worldMetadata: auditionMetadata } : {}),
           }),

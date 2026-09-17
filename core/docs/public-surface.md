@@ -117,3 +117,11 @@ trackpad kaydırması ve fare tekerleği ayrı ölçeklenir.
 
 Aktif sürüklemede sınıra yaklaşınca asimptotik direnç başlar: sert sınır
 aşılmaz ve değer sınırın ötesine hiç geçmediği için bırakınca geri sekme olmaz.
+
+## 235 — kamera modalite profilleri dışa açıldı (2026-09-17)
+
+`classifyPointer`, `classifyWheel` ve `defaultPointerProfiles` public yüzeye
+girdi (232 → 235). Gerekçe: oyun tarafı kamera ADAY ÖLÇÜLERİNİ karşılaştırıyor
+(VOL.LIFE D5/D6 kabul paketi) ve profil tiplerini içeri sızmadan kullanabilmesi
+gerekiyor. Yeni bileşen yok; var olan `WorldCameraController`ın ayarlanabilir
+yüzeyi adlandırıldı.

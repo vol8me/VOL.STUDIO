@@ -144,4 +144,32 @@ describe('LifeHud', () => {
     const toast = document.querySelector('.vol-toast--danger');
     expect(toast?.textContent).toBe(tr.options.saveFailed);
   });
+
+  /*
+   * Kabul oturumunda hangi kamera adayının koştuğu EKRANDA görünür; kullanıcı
+   * adres çubuğuna bakmak zorunda kalmaz. Varsayılan adayda rozet yoktur.
+   */
+  it('kamera adayı rozeti yalnız aday verildiğinde çıkar', async () => {
+    mount({ cameraCandidateId: 'agir' });
+    const badges = document.querySelectorAll('.vol-life-hud__audition');
+    expect(badges).toHaveLength(1);
+    expect(badges[0].textContent).toContain('agir');
+
+    await i18n.changeLanguage('en');
+    expect(document.querySelector('.vol-life-hud__audition')?.textContent).toContain(
+      'Camera candidate',
+    );
+  });
+
+  it('aday verilmezse kamera rozeti hiç kurulmaz', () => {
+    mount();
+    expect(document.querySelectorAll('.vol-life-hud__audition')).toHaveLength(0);
+  });
+
+  it('audition ve kamera rozetleri birlikte görünebilir', () => {
+    mount({ auditionDigest: 'abcdef0123456789', cameraCandidateId: 'cevik' });
+    const badges = [...document.querySelectorAll('.vol-life-hud__audition')];
+    expect(badges).toHaveLength(2);
+    expect(badges.map((badge) => badge.textContent).join(' ')).toContain('cevik');
+  });
 });

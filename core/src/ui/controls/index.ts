@@ -21,6 +21,18 @@ export {
   type WorldCameraControllerOptions,
   type WorldCameraFit,
 } from './WorldCameraController';
+/*
+ * Modalite profilleri kamera denetleyicisinin AYARLANABİLİR yüzeyidir; oyunun
+ * aday ölçüleri karşılaştırabilmesi için tip ve varsayılanlar dışa açılır.
+ */
+export {
+  classifyPointer,
+  classifyWheel,
+  defaultPointerProfiles,
+  type PointerModality,
+  type PointerMomentumProfile,
+  type WheelIntent,
+} from './camera/pointerProfiles';
 export { FullscreenController, type FullscreenControllerOptions } from './FullscreenController';
 export {
   CanvasViewportController,

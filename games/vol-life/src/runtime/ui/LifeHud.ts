@@ -19,6 +19,8 @@ export interface LifeHudOptions {
   readonly showFps: boolean;
   /** Development audition genomunun digest'i; üretimde tanımsız kalır. */
   readonly auditionDigest?: string;
+  /** Varsayılan DIŞINDA bir kamera adayı koşuyorsa kimliği (D5 kabul oturumu). */
+  readonly cameraCandidateId?: string;
 }
 
 export type WorldLoadIssue = 'incompatible' | 'corrupt';
@@ -35,6 +37,8 @@ export class LifeHud {
   private readonly toasts: ToastManager;
   private readonly auditionBadge: Text | null;
   private readonly auditionDigest: string | null;
+  private readonly cameraBadge: Text | null;
+  private readonly cameraCandidateId: string | null;
   private fpsMeter: FpsMeter | null = null;
   private fullscreenActive: boolean;
   private readonly onLanguageChanged = (): void => this.refreshLabels();
@@ -42,6 +46,7 @@ export class LifeHud {
   constructor(parent: HTMLElement | undefined, options: LifeHudOptions) {
     this.fullscreenActive = options.fullscreen?.initialActive ?? false;
     this.auditionDigest = options.auditionDigest ?? null;
+    this.cameraCandidateId = options.cameraCandidateId ?? null;
     this.uiRoot = this.scope.addDestroyable(new UIRoot(parent));
     this.toasts = this.scope.addDestroyable(new ToastManager(this.uiRoot.element));
 
@@ -65,6 +70,19 @@ export class LifeHud {
       this.auditionBadge.element.classList.add('vol-life-hud__audition');
       this.auditionBadge.element.setAttribute('role', 'status');
       this.root.appendChild(this.auditionBadge.element);
+    }
+
+    /*
+     * Kabul oturumunda hangi ölçülerin denendiği EKRANDA görünür; kullanıcı
+     * "hangi adaydı bu?" sorusunu adres çubuğundan cevaplamak zorunda kalmaz.
+     */
+    this.cameraBadge = this.cameraCandidateId
+      ? this.scope.addDestroyable(new Text(this.cameraLabel(), { variant: 'muted' }))
+      : null;
+    if (this.cameraBadge) {
+      this.cameraBadge.element.classList.add('vol-life-hud__audition');
+      this.cameraBadge.element.setAttribute('role', 'status');
+      this.root.appendChild(this.cameraBadge.element);
     }
 
     const actions = document.createElement('div');
@@ -162,6 +180,7 @@ export class LifeHud {
     this.root.setAttribute('aria-label', i18next.t('life:hud.ariaLabel'));
     this.titleText.setContent(i18next.t('life:app.title'));
     this.auditionBadge?.setContent(this.auditionLabel());
+    this.cameraBadge?.setContent(this.cameraLabel());
     this.fullscreenButton?.setLabel(this.fullscreenLabel());
     this.optionsButton.setLabel(i18next.t('life:hud.options'));
     this.optionsSheet.setTitle(i18next.t('life:options.title'));
@@ -176,5 +195,9 @@ export class LifeHud {
 
   private auditionLabel(): string {
     return i18next.t('life:hud.audition', { digest: this.auditionDigest ?? '' });
+  }
+
+  private cameraLabel(): string {
+    return i18next.t('life:hud.cameraCandidate', { id: this.cameraCandidateId ?? '' });
   }
 }
