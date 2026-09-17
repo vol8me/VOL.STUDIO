@@ -114,10 +114,15 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       directed strength/range, damping, speed envelope, local density,
       seeding ve fringe parametrelerinin tamamını taşır. World seed genom
       değildir.
-- [ ] **[P1] Kernel ailesi falsification noktası tanımlansın.** İlk aday
+- [x] **[P1] Kernel ailesi falsification noktası tanımlansın.** İlk aday
       generalized asymmetric multi-band'dir. Bu aile faz çeşitliliği
       üretemezse daha serbest multi-lobe ve active-particle alternatifleri aynı
       harness/seed/metriklerle denenir; üç production kernel birden taşınmaz.
+      _Kapatıldı 2026-09-17: çürütme noktası SAYIYA döküldü ve testli
+      (`scripts/morphology/falsification.ts`, 7 test): (a) geçen aday payı < %1,
+      (b) refinement'ta hayatta kalan yok, (c) kullanıcı kısa listeyi tümüyle
+      reddetti. Ölçülmemiş koşul "geçti" sayılmıyor; aile sırası ön-kayıtlı
+      (DESIGN §8)._
 - [x] **[P1] V1 negatif kontrol yeniden üretilebilir küçük fixture olsun.** Ham
       50k satırlık artefakt runtime'da tutulmaz; triangular baseline'ın config,
       korpus ve özet sonucu sürümlü benchmark ile yeni adayın aynı ölçümde
@@ -136,8 +141,13 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       fringe dependency eklendi. Hareket, yoğunluk, cluster, compactness,
       anisotropy, radial yapı, composition, churn, lifespan, orbit, trajectory
       ve recovery tek skora ezilmez.
-- [ ] **[P0] Churn, structure lifespan ve recovery zaman serisinde ölçülsün.**
+- [x] **[P0] Churn, structure lifespan ve recovery zaman serisinde ölçülsün.**
       `MorphologySample` bu alanları taşımıyor.
+      _Kapatıldı 2026-09-17: churn küme başına ölçülüyor (`ClusterRecord.churn`,
+      tracker ÜYELİĞİNDEN), yapı ömrü `ClusterRecord.ageTicks`, toparlanma
+      `PerturbationResult.recovered`/`recoveryTicks` (E15). Uzun ufuk eğrisi
+      (F7) her örnekte madde-ağırlıklı churn ve en yaşlı küme yaşını saklıyor;
+      `compactSample` testli._
 - [x] **[P0] `clusterCompactness` gerçek kompaktlık ölçsün.** 1−std/mean
       halkaya ≈1, düzgün diske ≈0,65 veriyor; `crystal` ve `single-blob`
       eşikleri halka biçimli dağılımı yakalıyor.
@@ -316,12 +326,20 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       zincirleme uygulanıyor; hedef seçimi bütün spec'lerde aynı tohumu
       kullanıyor; 0,15 mutlak eşik %10 madde kaybını anında recovered sayıyor.
       _Kapatıldı 2026-09-17 (7ee2838): her spec aynı snapshot'tan bağımsız koşuyor, tohum (seed, spec, tick) üçlüsünden geliyor, madde çıkarma muhasebeli ve toparlanma taban penceresinin ±2σ bandına göre ölçülüyor. Eski sabit eşik %10 madde kaybını ilk kontrolde 'toparlandı' sayıyordu._
-- [ ] **[P0] Gerçek 3-particle orbit geometrik fixture testi yazılsın.**
+- [x] **[P0] Gerçek 3-particle orbit geometrik fixture testi yazılsın.**
       PhaseClassifier.test.ts sentetik scalar metric objeleri veriyor — gerçek
       3-particle orbit oluşturup classifier'ın patolojik sayıp saymadığı testi
       yok.
-- [ ] **[P1] Long-run current default test eklensin.** Mevcut testlerde
+      _Kapatıldı 2026-09-16 (9651ae2): gerçek `LifeWorld` fiziğiyle üç parçacık
+      15 simüle dakika koşuyor; yarıçap değişim katsayısı 0,004 ve dedektör
+      kalıcı micro-orbit olarak işaretliyor._
+- [x] **[P1] Long-run current default test eklensin.** Mevcut testlerde
       long-run current default yetersiz — 30 dakika koşu yok.
+      _Kapatıldı 2026-09-17 (E17): `tests/long/defaultLongRun.long.ts` 4 seed ×
+      30 simüle dakika koşuyor (403 sn); madde muhasebesi her örnekte tutuyor,
+      snapshot/restore bayt düzeyinde aynı parmak izini veriyor, tick maliyeti
+      parçacık başına normalize ölçülüyor. Ölçülen koruma 0,123–0,309 ve
+      dördü de VOID_LOSS_DOMINATED — sonuç gizlenmedi._
 
 ## Adım 4 — organizma kimliği
 

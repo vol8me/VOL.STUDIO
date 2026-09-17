@@ -913,6 +913,16 @@ ve self-propulsion taşıyan active-particle modeli. Bunlar aynı anda üç prod
 engelleyen falsification yollarıdır. Alternatif, aynı korpus ve metriklerle ana
 adaydan daha iyi kanıt vermeden seçilemez.
 
+**Çürütme noktası SAYIDIR** (`scripts/morphology/falsification.ts`, ön-kayıtlı):
+bir aile şu üçünden biri doğruysa çürütülmüş sayılır — (a) broad adayların
+%1'inden azı hem launch envelope'u seed'lerin ≥ %75'inde geçiyor hem
+DYNAMIC_STRUCTURED oluyor; (b) refinement'ta bütün sert kuralları geçen aday
+yok; (c) kullanıcı ön-elemede kısa listenin tamamını reddediyor. Ölçülmemiş bir
+koşul "geçti" sayılmaz, eksik dayanak olarak ayrı listelenir. Sıra ön-kayıtlıdır:
+`generalized-asymmetric-multi-band` → `multi-lobe` → `active-particle`. Üç aile
+de çürürse araştırma durur; rapor "Adım 4'e başlanamaz" der ve bütün kanıtı
+taşır.
+
 Broad aşama önce adayları fazlara ayırır:
 
 - dead/stasis;
