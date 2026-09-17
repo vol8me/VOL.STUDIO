@@ -87,6 +87,8 @@ tauri-v2/src-tauri/chromium.log
 
 # Araştırma çıktısı: üretilebilir, üretim derlemesine girmez (F5).
 research-out/
+# Araştırma ara durum / checkpoint dosyaları (ara önbellek, repoya girmez)
+**/*-checkpoint.jsonl
 # F5 yokluk testinin geçici derleme dizinleri.
 dist-audition-prod/
 dist-audition-dev/

@@ -164,7 +164,27 @@ for (const entry of build.catalog.entries) {
 const results = Object.entries(perCandidate).map(([key, outputs]) => {
   const [digest, scenario] = key.split(':');
   const verdict = evaluateLongHorizon(outputs);
-  const collapseConfig = { ...defaultCollapseConfig, sampleIntervalTicks: SAMPLE_TICKS };
+  const scaleMinutes = MINUTES / 30;
+  const collapseConfig = {
+    ...defaultCollapseConfig,
+    sampleIntervalTicks: SAMPLE_TICKS,
+    referenceStartMinutes: Math.max(
+      1,
+      Math.round(defaultCollapseConfig.referenceStartMinutes * scaleMinutes),
+    ),
+    referenceEndMinutes: Math.max(
+      2,
+      Math.round(defaultCollapseConfig.referenceEndMinutes * scaleMinutes),
+    ),
+    lateCollapseMinutes: Math.max(
+      3,
+      Math.round(defaultCollapseConfig.lateCollapseMinutes * scaleMinutes),
+    ),
+    slopeWindowMinutes: Math.max(
+      1,
+      Math.round(defaultCollapseConfig.slopeWindowMinutes * scaleMinutes),
+    ),
+  };
   const collapse = buildCollapseReport(
     outputs.map((output) => detectSeedCollapse(output.seed, output.curve, collapseConfig)),
     collapseConfig,
