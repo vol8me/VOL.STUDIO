@@ -1,13 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { LifeResearchPanel, type ResearchPanelOptions } from '@/runtime/ui/LifeResearchPanel';
 
-const labels = { camera: 'Kamera adayı', audition: 'Audition adayı', seed: 'Tohum' };
+const labels = { audition: 'Audition adayı', seed: 'Tohum' };
 
 function mount(overrides: Partial<ResearchPanelOptions> = {}) {
   const applied: string[] = [];
   const panel = new LifeResearchPanel({
-    cameraCandidateIds: ['dengeli', 'cevik', 'agir'],
-    activeCameraId: 'dengeli',
     audition: { entryIndex: 1, entryCount: 4, seedIndex: 0, seedCount: 3, digest: 'a'.repeat(16) },
     labels,
     search: '?audition=2&seed=1',
@@ -24,33 +22,18 @@ function rowButtons(key: string): HTMLButtonElement[] {
 }
 
 describe('LifeResearchPanel (P1/P2 kabul oturumu)', () => {
-  it('kamera adayı ve audition gezinme satırlarını kurar', () => {
+  it('audition ve tohum gezinme satırlarını kurar', () => {
     const { panel } = mount();
-    expect(document.querySelector('[data-research="camera"]')).not.toBeNull();
     expect(document.querySelector('[data-research="audition"]')).not.toBeNull();
     expect(document.querySelector('[data-research="seed"]')).not.toBeNull();
     expect(document.querySelector('.vol-life-research__position')?.textContent).toBe('2/4');
     panel.destroy();
   });
 
-  it('katalog yoksa yalnız kamera satırı kurulur', () => {
+  it('katalog yoksa gezinme satırı kurulmaz', () => {
     const { panel } = mount({ audition: null });
-    expect(document.querySelector('[data-research="camera"]')).not.toBeNull();
     expect(document.querySelector('[data-research="audition"]')).toBeNull();
-    panel.destroy();
-  });
-
-  /* Var olan sorgu KORUNUR: kamera değişince audition seçimi düşmez. */
-  it('kamera seçimi audition sorgusunu korur', () => {
-    const { panel, applied } = mount();
-    const options = [...document.querySelectorAll('button')].filter(
-      (button) => button.textContent === 'agir',
-    );
-    options[0].click();
-    expect(applied).toHaveLength(1);
-    expect(applied[0]).toContain('camera=agir');
-    expect(applied[0]).toContain('audition=2');
-    expect(applied[0]).toContain('seed=1');
+    expect(document.querySelector('[data-research="seed"]')).toBeNull();
     panel.destroy();
   });
 
@@ -88,6 +71,6 @@ describe('LifeResearchPanel (P1/P2 kabul oturumu)', () => {
     const { panel } = mount();
     panel.element.remove();
     panel.destroy();
-    expect(document.querySelector('[data-research="camera"]')).toBeNull();
+    expect(document.querySelector('[data-research="audition"]')).toBeNull();
   });
 });

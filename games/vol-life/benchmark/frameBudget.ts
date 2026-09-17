@@ -4,7 +4,6 @@ import { lifeGraphicsConfig } from '@/config/graphics';
 import { substrateConfig } from '@/config/substrate';
 import { LifeRuntime } from '@/runtime/LifeRuntime';
 import { resolveCameraDomain } from '@/runtime/render/cameraDomain';
-import { resolveEntryCamera } from '@/runtime/render/EntryCameraResolver';
 import { LifeWorld } from '@/runtime/sim/LifeWorld';
 import { createExplicitWorldMetadata } from '@/runtime/sim/WorldMetadata';
 
@@ -61,12 +60,7 @@ class BenchScene extends Phaser.Scene {
     this.runtime = new LifeRuntime(this, {});
     this.scale.on('resize', () => this.runtime.refreshViewport());
     this.lastFrameMs = performance.now();
-    // Açılış örneği İLK karede alınır: D2 açılış odağını iddia eder.
-    const target = resolveEntryCamera(this.runtime.world.particles, this.runtime.world.domain, {
-      cellUnits: substrateConfig.candidate.physics.cutoffUnits,
-      safeMarginUnits: substrateConfig.candidate.void.widthUnits,
-    });
-    bench.entryTarget = { x: target.x, y: target.y };
+    bench.entryTarget = null;
     bench.cameraSize = { width: this.cameras.main.width, height: this.cameras.main.height };
     /*
      * Beklenen merkez, odağın KAMERA SINIRINA kıstırılmış hâlidir. Görünür
@@ -77,7 +71,6 @@ class BenchScene extends Phaser.Scene {
       this.runtime.world.domain.bbox,
       substrateConfig.habitat.cameraVoidMarginRatio,
     );
-    bench.expectedCenter = { x: target.x, y: target.y, ...{} };
     this.pendingBounds = bounds;
     bench.ready = true;
   }
@@ -89,15 +82,6 @@ class BenchScene extends Phaser.Scene {
      * `update` anında `worldView` sıfırdır ve ölçülen pay her zaman %0 çıkardı.
      */
     if (!this.openingSampled && this.cameras.main.worldView.width > 0) {
-      const view = this.cameras.main.worldView;
-      const bounds = this.pendingBounds;
-      const focus = bench.entryTarget;
-      if (bounds && focus) {
-        bench.expectedCenter = {
-          x: clampCenterAxis(focus.x, bounds.x, bounds.width, view.width / 2),
-          y: clampCenterAxis(focus.y, bounds.y, bounds.height, view.height / 2),
-        };
-      }
       this.sampleWorld();
       bench.openingMatterShare = bench.visibleMatterShare;
       this.openingSampled = true;
@@ -110,7 +94,7 @@ class BenchScene extends Phaser.Scene {
     if (bench.frames.length % 60 === 0) this.sampleWorld();
   }
 
-  /** Görünür alandaki aktif madde payı; D2'nin açılış odağı iddiası budur. */
+  /** Görünür alandaki aktif madde payı. */
   private sampleWorld(): void {
     const camera = this.cameras.main;
     const world = this.runtime.world;

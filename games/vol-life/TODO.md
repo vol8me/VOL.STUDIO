@@ -64,6 +64,10 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       zoom-out bütün habitatı ve anlamlı Void margin'ini gösterir.
 - [ ] **[P1] Kamera aday ölçüleri cihazda karşılaştırılsın.** Config kararı
       mouse/touch ekran görüntüsü ve kullanıcı hissiyle verilir.
+      _2026-09-17: üç aday ölçüsü (`dengeli`/`cevik`/`agir`) ve DEV seçici
+      yazıldı (ae8a59b), aynı gün kamera işinin tamamı kullanıcı kararıyla geri
+      alındığı için KALDIRILDI. Madde açık: kamera yeniden ele alındığında aday
+      ölçüleri de yeniden tanımlanacak._
 - [ ] **[P0] Kamera human acceptance yeniden açılsın.** Masaüstü mouse ve
       trackpad, Samsung S21 ve Lenovo tablette kullanıcı rahat bulmadan
       kapanmaz. Birim testleri ve özellik listesi insan kabulünün yerine
@@ -98,7 +102,7 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       (alt-dikdörtgen/`texSubImage`) yola geçmek ya da alan dokusunu yalnız
       değişen bölge için yüklemek; kapanmadan önce aynı ölçüm cihazda
       tekrarlanır.
-- [x] **[P0] Camera v2.1: Aktif input event jitter'ı render cadence'den
+- [ ] **[P0] Camera v2.1: Aktif input event jitter'ı render cadence'den
       ayrılsın.** Mevcut drag: pointermove event → camera position değiştir →
       apply state — event cadence'ine bağlı. Mouse eventleri düzensiz gelirse
       60 FPS olsa bile kamera mikro sıçramalar gösterir. Çözüm: eventlerde
@@ -107,15 +111,23 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       jitter'ını render cadence'den ayırmak. Mouse/touch/trackpad momentum
       ayrı normalize edilsin. Active drag world navigation limitinde soft
       resistance. Debug input trace recorder eklensin.
-      _Kapatıldı 2026-09-17 (2a9c34a): hareket karede BİR KEZ uygulanıyor (ölçüldü: kare başına 1,00 uygulama, önceden olay sayısı kadar), kare hareketi gelen deltaların tam toplamına eşit. Ön-kayıtlı CoV ≤ 0,05 ölçütü nedensel olarak ulaşılamaz çıktı ve gerekçesiyle değiştirildi (kanıt defteri)._
-- [x] **[P0] Camera açılış ölçeği ECOSYSTEM olsun.** Mevcut: runtime başlangıçta
+      _2026-09-17'de uygulandı (2a9c34a) ve AYNI GÜN KULLANICI KARARIYLA GERİ
+      ALINDI: cihazda kamera kötü hissettirdi. Ölçüm doğruydu (kare başına 1,00
+      uygulama) ama insan kabulü gelmedi; ölçüm insan kabulünün yerine geçmez.
+      Kod 8b385ad davranışına döndü. Yeniden ele alınırsa önce kullanıcının
+      elinde denenmeli, sonra ölçülmeli._
+- [ ] **[P0] Camera açılış ölçeği ECOSYSTEM olsun.** Mevcut: runtime başlangıçta
       `contain` ile bütün dünyayı gösterme eğiliminde — world ekranın ortasında
       küçük yaşam adası, etrafında dev siyah Void. Üç observation scale:
       WORLD (overview) → ECOSYSTEM (açılış) → ORGANISM → MICRO. Fiziksel dünya
       boyutu şimdi değiştirilmez — kamera algısını düzelt, fiziksel boyutu
       Step 3 sonucu üzerinden seç.
 
-      _Kapatıldı 2026-09-17 (ebe1ce6): ölçekler kernel menzili cinsinden `src/config/cameraScales.ts`te ve DESIGN §6'da; CORE `setState` NaN reddediyor ve momentum/pinch/wheel sıfırlıyor; `EntryCameraResolver` saf ve deterministik._
+      _2026-09-17'de uygulandı (ebe1ce6, afa3e72) ve AYNI GÜN KULLANICI
+      KARARIYLA GERİ ALINDI: "bu ilk yakın zoom vs bunları da iptal ediyoruz".
+      Açılış yine `fit:'contain'` ve zoom 1. Ölçek tablosu, `cameraScales.ts` ve
+      `EntryCameraResolver` kaldırıldı; CORE'daki `setState` de (tek tüketicisi
+      buydu) geri alındı._
 
 ## Adım 3 — Morphology Discovery v2
 

@@ -7,8 +7,7 @@
     "fullscreenEnter": "Enter fullscreen",
     "fullscreenExit": "Exit fullscreen",
     "options": "Options",
-    "audition": "Audition genome {{digest}} — not qualified",
-    "cameraCandidate": "Camera candidate {{id}} — acceptance session"
+    "audition": "Audition genome {{digest}} — not qualified"
   },
   "exit": {
     "title": "Close VOL.LIFE?",
@@ -40,7 +39,6 @@
     "title": "VOL.LIFE could not start"
   },
   "research": {
-    "camera": "Camera candidate",
     "audition": "Audition candidate",
     "seed": "Seed"
   }

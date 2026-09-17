@@ -13,8 +13,6 @@ import {
   getRuntimePlatform,
 } from '@volstudio/tauri-v2';
 import { loadAuditionSelection, describeSelection } from '@/app/auditionCatalog';
-import { resolveCameraCandidate } from '@/app/cameraCandidate';
-import { cameraCandidates, defaultCameraCandidateId } from '@/config/cameraCandidates';
 import { LifeResearchPanel } from '@/runtime/ui/LifeResearchPanel';
 import { loadAuditionCandidate } from '@/app/auditionGenome';
 import { LifePreferences } from '@/app/LifePreferences';
@@ -87,16 +85,12 @@ try {
     : { snapshot: null, issue: null };
   // Katalog adayı KENDİ tohumuyla gösterilir; aynı üç tohum bütün adaylarda aynıdır.
   const auditionMetadata = selection ? createExplicitWorldMetadata(selection.seed) : undefined;
-  // Kamera aday ölçüleri (D5): üretimde her zaman `dengeli`.
-  const cameraCandidate = resolveCameraCandidate();
   /*
    * Kabul oturumu paneli yalnız geliştirmede kurulur; koşul sabit olduğu için
    * üretim derlemesinde panel ve bağımlılıkları bundle'a hiç girmez.
    */
   const researchPanel = import.meta.env.DEV
     ? new LifeResearchPanel({
-        cameraCandidateIds: cameraCandidates.map((candidate) => candidate.id),
-        activeCameraId: cameraCandidate.id,
         audition: selection
           ? {
               entryIndex: selection.entryIndex,
@@ -107,7 +101,6 @@ try {
             }
           : null,
         labels: {
-          camera: i18next.t('life:research.camera'),
           audition: i18next.t('life:research.audition'),
           seed: i18next.t('life:research.seed'),
         },
@@ -136,13 +129,10 @@ try {
         initialWorldLoadIssue: initialWorld.issue,
         worldPersistence,
         auditionDigest: selection ? describeSelection(selection) : audition?.digest ?? null,
-        cameraCandidateId:
-          cameraCandidate.id === defaultCameraCandidateId ? null : cameraCandidate.id,
         researchContent: researchPanel,
         createRuntime: (scene, initialSnapshot) =>
           new LifeRuntime(scene, {
             config: activeSubstrate,
-            cameraCandidate,
             initialSnapshot,
             ...(auditionMetadata ? { worldMetadata: auditionMetadata } : {}),
           }),

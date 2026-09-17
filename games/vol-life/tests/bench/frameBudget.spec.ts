@@ -15,8 +15,6 @@ interface BenchState {
   simMsPerFrame: number;
   ready: boolean;
   camera: { centerX: number; centerY: number; zoom: number } | null;
-  entryTarget: { x: number; y: number } | null;
-  expectedCenter: { x: number; y: number } | null;
   openingMatterShare: number;
   visibleMatterShare: number;
   activeCount: number;
@@ -75,15 +73,11 @@ test('kare bütçesi ve görünür madde payı ölçülür', async ({ page }, te
    */
   expect(bench.activeCount).toBeGreaterThan(0);
   expect(bench.openingMatterShare).toBeGreaterThan(0);
-  expect(bench.entryTarget).not.toBeNull();
   /*
    * Kamera, odağın SINIRA KISTIRILMIŞ hâline oturur. Dar ve uzun ekranlarda
    * görünür pencere dünyadan büyük olabilir ve kamera odağa oturamaz; ölçüldü:
    * mobil dikeyde y ekseni 9 birim kıstırılıyor. İddia kıstırmayı içerir.
    */
-  expect(bench.expectedCenter).not.toBeNull();
-  expect(Math.abs((bench.camera?.centerX ?? 0) - (bench.expectedCenter?.x ?? 0))).toBeLessThan(1);
-  expect(Math.abs((bench.camera?.centerY ?? 0) - (bench.expectedCenter?.y ?? 0))).toBeLessThan(1);
   // Ölçülen değerler sonlu ve anlamlı.
   expect(Number.isFinite(p50)).toBe(true);
   expect(p95).toBeGreaterThanOrEqual(p50);

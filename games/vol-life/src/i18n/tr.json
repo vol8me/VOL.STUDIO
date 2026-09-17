@@ -7,8 +7,7 @@
     "fullscreenEnter": "Tam ekrana geç",
     "fullscreenExit": "Tam ekrandan çık",
     "options": "Seçenekler",
-    "audition": "Audition genomu {{digest}} — kalifiye değil",
-    "cameraCandidate": "Kamera adayı {{id}} — kabul oturumu"
+    "audition": "Audition genomu {{digest}} — kalifiye değil"
   },
   "exit": {
     "title": "VOL.LIFE kapatılsın mı?",
@@ -40,7 +39,6 @@
     "title": "VOL.LIFE başlatılamadı"
   },
   "research": {
-    "camera": "Kamera adayı",
     "audition": "Audition adayı",
     "seed": "Tohum"
   }

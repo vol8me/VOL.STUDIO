@@ -33,8 +33,6 @@ export interface LifeSceneServices {
   readonly worldPersistence: Pick<LifeWorldPersistence, 'attach'> | null;
   /** Development audition genomu digest'i; üretimde null. */
   readonly auditionDigest: string | null;
-  /** Varsayılan dışında bir kamera adayı koşuyorsa kimliği (D5). */
-  readonly cameraCandidateId: string | null;
   /** Kabul oturumu paneli; YALNIZ geliştirme derlemesinde dolu gelir (P1/P2). */
   readonly researchContent: { readonly element: HTMLElement } | null;
   readonly createRuntime: (
@@ -74,7 +72,6 @@ export class LifeScene extends Phaser.Scene {
       initialWorldLoadIssue: services.initialWorldLoadIssue ?? null,
       worldPersistence: services.worldPersistence ?? null,
       auditionDigest: services.auditionDigest ?? null,
-      cameraCandidateId: services.cameraCandidateId ?? null,
       researchContent: services.researchContent ?? null,
       createRuntime:
         services.createRuntime ??
@@ -189,9 +186,6 @@ export class LifeScene extends Phaser.Scene {
           optionsContent: this.optionsContent(panel),
           showFps: preferenceState.showFps,
           ...(this.services.auditionDigest ? { auditionDigest: this.services.auditionDigest } : {}),
-          ...(this.services.cameraCandidateId
-            ? { cameraCandidateId: this.services.cameraCandidateId }
-            : {}),
         }),
       );
       if (this.services.initialWorldLoadIssue) {

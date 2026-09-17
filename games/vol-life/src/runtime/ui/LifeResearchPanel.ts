@@ -1,21 +1,14 @@
-import {
-  Button,
-  DisposableScope,
-  SettingsForm,
-  SettingsRow,
-  SegmentedControl,
-} from '@volstudio/core';
+import { Button, DisposableScope, SettingsForm, SettingsRow } from '@volstudio/core';
 
 /**
  * Kabul oturumu paneli (P1/P2). YALNIZ geliştirme derlemesinde kurulur.
  *
- * Tablette adres çubuğu yoktur: kamera adayını ve audition adayını sorgu
- * yazarak değiştirmek cihazda İMKÂNSIZDIR. Kabul paketleri tam olarak bunu
- * istediği için seçim buraya, kullanıcının elinin altına taşındı.
+ * Tablette adres çubuğu yoktur: audition adayını sorgu yazarak değiştirmek
+ * cihazda İMKÂNSIZDIR. Kabul paketi (P2) tam olarak bunu istediği için seçim
+ * buraya, kullanıcının elinin altına taşındı.
  *
- * Seçim sorguyu değiştirip sayfayı yeniden yükler: kamera profili ve dünya
- * tohumu açılışta kurulur, sıcak değiştirilemez. Yeniden yükleme bu yüzden
- * gizlenmez, kabul edilen davranıştır.
+ * Seçim sorguyu değiştirip sayfayı yeniden yükler: dünya tohumu açılışta
+ * kurulur, sıcak değiştirilemez. Yeniden yükleme bu yüzden gizlenmez.
  */
 export interface ResearchPanelAudition {
   readonly entryIndex: number;
@@ -26,14 +19,11 @@ export interface ResearchPanelAudition {
 }
 
 export interface ResearchPanelLabels {
-  readonly camera: string;
   readonly audition: string;
   readonly seed: string;
 }
 
 export interface ResearchPanelOptions {
-  readonly cameraCandidateIds: readonly string[];
-  readonly activeCameraId: string;
   /** Katalog yüklüyse aday/tohum gezinmesi; yoksa satırlar kurulmaz. */
   readonly audition: ResearchPanelAudition | null;
   readonly labels: ResearchPanelLabels;
@@ -49,16 +39,6 @@ export class LifeResearchPanel {
   constructor(private readonly options: ResearchPanelOptions) {
     const form = this.scope.addDestroyable(new SettingsForm({ className: 'vol-life-research' }));
     this.element = form.element;
-
-    const camera = this.scope.addDestroyable(
-      new SegmentedControl({
-        options: options.cameraCandidateIds.map((id) => ({ value: id, label: id })),
-        value: options.activeCameraId,
-        ariaLabel: options.labels.camera,
-        onCommit: (value) => this.apply({ camera: value }),
-      }),
-    );
-    this.appendRow(options.labels.camera, camera, 'camera');
 
     const audition = options.audition;
     if (!audition) return;

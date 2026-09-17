@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest';
-import { cameraScales, zoomForScale } from '@/config/cameraScales';
 import { LifeRuntime } from '@/runtime/LifeRuntime';
 
 function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = null) {
@@ -27,11 +26,9 @@ function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = nu
     render: vi.fn(),
     destroy: vi.fn(),
   };
-  // D2: açılış kamerası `setState` çağırır.
   const camera = {
     update: vi.fn(),
     refreshViewport: vi.fn(),
-    setState: vi.fn(),
     destroy: vi.fn(),
   };
   const backdrop = { setBackgroundColor: vi.fn() };
@@ -71,24 +68,6 @@ function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = nu
 }
 
 describe('LifeRuntime', () => {
-  /*
-   * D2: açılış ECOSYSTEM ölçeğinde ve maddenin yoğun olduğu odakta. Eski açılış
-   * bütün dünyayı gösteriyordu; ekranda küçük bir ada ve dev bir Void kalıyordu.
-   */
-  it('açılışta kamerayı ECOSYSTEM ölçeğine ve madde odağına kurar', () => {
-    const { camera } = harness();
-
-    expect(camera.setState).toHaveBeenCalledTimes(1);
-    const call = camera.setState.mock.calls[0][0] as {
-      centerX: number;
-      centerY: number;
-      zoom: number;
-    };
-    expect(call.zoom).toBeCloseTo(zoomForScale(cameraScales.ecosystem, 1200, 96), 9);
-    expect(Number.isFinite(call.centerX)).toBe(true);
-    expect(Number.isFinite(call.centerY)).toBe(true);
-  });
-
   it('açılışta ilk alan görünümünü üretir', () => {
     const { fieldRenderer, particleRenderer } = harness();
 

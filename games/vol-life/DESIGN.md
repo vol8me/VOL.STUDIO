@@ -564,32 +564,22 @@ mekanizmaların aynı dünyada birbirine bağlanabildiğini sınayan ürün hede
 
 ## 6. Sunum
 
-### Kamera ölçekleri ve açılış odağı (D2)
+### Kamera ölçekleri ve açılış odağı — GERİ ALINDI (2026-09-17)
 
-Ölçekler PİKSEL ya da zoom sayısıyla değil, görünür dünya genişliğinin KERNEL
-MENZİLİ (cutoff) cinsinden karşılığıyla tanımlanır: ölçek "kaç etkileşim menzili
-görüyorum" sorusunun cevabıdır. Piksel ekrana, zoom dünya boyutuna göre değişir;
-menzil fiziğin kendi birimidir.
+Bu turda D1 (girdi/kadans ayrımı, modalite profilleri, asimptotik sınır
+direnci) ve D2 (ECOSYSTEM açılış ölçeği + yoğunluk ağırlıklı açılış odağı)
+uygulanmış, sonra **kullanıcı kararıyla tamamı geri alınmıştır**: cihazda
+denendiğinde kamera kötü hissettirmiş ve yakın açılış zoom'u istenmemiştir.
 
-| Ölçek     | Görünür genişlik (menzil) | Ne için                            |
-| --------- | ------------------------- | ---------------------------------- |
-| WORLD     | 12                        | Bütün habitat ve çevresi; yönelme  |
-| ECOSYSTEM | 6                         | Birkaç yapı ve aralarındaki boşluk |
-| ORGANISM  | 2,5                       | Tek yapının biçimi ve çeperi       |
-| MICRO     | 1                         | Parçacık düzeyi: komşuluk ve bağ   |
+Kod 8b385ad öncesindeki davranışa döndü: `WorldCameraController` olayları
+doğrudan uygular, modalite profili ve `setState` yoktur; açılış `fit:'contain'`
+ve zoom 1 ile bütün habitatı gösterir. Ölçek tablosu, açılış odağı çözücüsü ve
+kamera aday ölçüleri (D5) kaldırıldı.
 
-Açılış ECOSYSTEM ölçeğindedir. Fiziksel dünya boyutu bu ölçeklerden etkilenmez;
-yalnız kameranın ne kadarını gösterdiği değişir.
-
-Açılış odağı saf ve deterministik bir çözücüden gelir: yoğunluk ağırlıklı aktif
-madde merkezi. Basit ortalama kullanılmaz — birbirinden uzak iki kümenin
-ARASINDAKİ boşluğu gösterirdi. En yoğun hücre seçilir, eşitlikte sıra
-deterministiktir (önce küçük hücre y, sonra x) ve odak güvenli iç bölgeye
-çekilir. Boş dünyada habitatın kendi kutusunun merkezi kullanılır. Geçiş
-animasyonu kurulmaz; kayıtlı dünyada son kamera ve geçiş Lane B'nin işidir.
-
-Normal durumda ekranın yaklaşık %90'ı dünyadır. UI olay güdümlüdür; sürekli
-açık dashboard yerine kısa bildirim, seçim künyesi ve ayrı olay geçmişi vardır.
+Kamera yeniden ele alınacaksa ölçüyle değil, ÖNCE kullanıcının elinde denenerek
+tasarlanmalıdır: bu turda ölçülen "kare başına tek uygulama" ve "sınırda geri
+sekme yok" iddiaları doğruydu ama kullanıcı kabulünü vermedi. Kamera maddeleri
+TODO'da yeniden açık.
 
 ### Dünya aklı ile sunum aklı ayrıdır
 
