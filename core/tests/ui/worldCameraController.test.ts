@@ -93,6 +93,8 @@ describe('WorldCameraController', () => {
     element.dispatchEvent(
       new PointerEvent('pointermove', { pointerId: 1, clientX: 180, clientY: 140 }),
     );
+    // D1: hareket olay anında değil KARE zamanında uygulanır; iddia aynı kaldı.
+    controller.update(16);
 
     expect(state.centerX).toBeCloseTo(500 - 80 / camera.zoom, 6);
     expect(state.centerY).toBeCloseTo(500 - 40 / camera.zoom, 6);
@@ -388,6 +390,8 @@ describe('WorldCameraController', () => {
     element.dispatchEvent(
       new PointerEvent('pointermove', { pointerId: 1, clientX: 608, clientY: 192 }),
     );
+    // D1: sürükleme karede uygulanır.
+    controller.update(16);
     camera.width = 600;
     camera.height = 600;
 

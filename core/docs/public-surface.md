@@ -100,3 +100,20 @@ kullanılır. Web Vibration API ve oyun kolu fallback'leri korunur.
 `SettingsForm`, `SettingsRow`. Ayar ekranlarının etiket/kontrol hizasını,
 intrinsic kontrol genişliğini, sağdaki switch düzenini ve dar görünümde seçici
 istiflemeyi ortaklaştırır. Değer ve kalıcılık kuralları tüketicide kalır.
+
+### 232 → 233
+
+`WorldCameraController` girdi ve kare zamanını ayırır (D1). Olay deltaları
+biriktirilir ve `update(deltaMs)` içinde KAREDE BİR KEZ uygulanır; ölçüldü:
+yoğun olay akışında kare başına uygulama sayısı 1,00 (önceden olay sayısı
+kadar). Kare başı hareket, o kareden önce gelen deltaların tam toplamıdır;
+kontrolcü girdinin dayattığının üstüne kendi sarsıntısını eklemez.
+
+Yeni yüzey: `pointerProfiles` seçeneği (modaliteye göre momentum ve sınır
+direnci bandı) ve `trace` (DEV halka tamponu; kapalıyken yazmaz, JSON dışa
+aktarır). `pointerType` artık okunur ve fare/dokunma/kalem ayrı profiller
+kullanır. Wheel niyeti `ctrlKey`, `deltaMode` ve büyüklükle sınıflanır: pinch,
+trackpad kaydırması ve fare tekerleği ayrı ölçeklenir.
+
+Aktif sürüklemede sınıra yaklaşınca asimptotik direnç başlar: sert sınır
+aşılmaz ve değer sınırın ötesine hiç geçmediği için bırakınca geri sekme olmaz.

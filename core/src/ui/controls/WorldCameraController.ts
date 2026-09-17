@@ -1,4 +1,14 @@
 import type { Rect } from '../../math/geometry';
+import { PointerPath } from './camera/pointerPath';
+import { CameraTrace } from './camera/cameraTrace';
+import {
+  classifyPointer,
+  classifyWheel,
+  defaultPointerProfiles,
+  resistTowardBound,
+  type PointerModality,
+  type PointerMomentumProfile,
+} from './camera/pointerProfiles';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export interface WorldCamera {
@@ -40,6 +50,8 @@ export interface WorldCameraControllerOptions {
   readonly panMomentumMs?: number;
   readonly initialZoomFactor?: number;
   readonly onChange?: (state: WorldCameraState) => void;
+  /** Modaliteye göre momentum ve sınır direnci; verilmezse varsayılan profiller. */
+  readonly pointerProfiles?: Readonly<Record<PointerModality, PointerMomentumProfile>>;
 }
 
 interface TrackedPointer {
@@ -70,6 +82,13 @@ const MIN_MOMENTUM_UNITS_PER_MS = 0.000001;
 const MAX_MOMENTUM_UNITS_PER_MS = 3;
 
 export class WorldCameraController {
+  /** D1: hareket olay anında değil KARE zamanında uygulanır. */
+  private readonly pointerPath = new PointerPath();
+  private frameTimeMs = 0;
+  private activeModality: PointerModality = 'mouse';
+  private readonly profiles: Readonly<Record<PointerModality, PointerMomentumProfile>>;
+  /** DEV iz kaydedici; kapalıyken yazmaz. */
+  readonly trace = new CameraTrace();
   private readonly scope = new DisposableScope();
   private readonly pointers = new Map<number, TrackedPointer>();
   private readonly pointerHistory = new Map<number, TrackedPointer[]>();
@@ -105,7 +124,9 @@ export class WorldCameraController {
     this.maxZoomFactor = options.maxZoomFactor ?? 8;
     this.wheelSensitivity = options.wheelSensitivity ?? 0.0015;
     this.wheelSmoothingMs = options.wheelSmoothingMs ?? 90;
-    this.panMomentumMs = options.panMomentumMs ?? 140;
+    this.profiles = options.pointerProfiles ?? defaultPointerProfiles;
+    // Açık değer verilmezse momentum MODALİTEDEN gelir; tek sabit değildir.
+    this.panMomentumMs = options.panMomentumMs ?? 0;
     this.initialZoomFactor = options.initialZoomFactor ?? 1;
     if (!(this.initialZoomFactor >= 1) || !Number.isFinite(this.initialZoomFactor)) {
       throw new RangeError(
@@ -164,6 +185,7 @@ export class WorldCameraController {
 
   update(deltaMs: number): void {
     if (!(deltaMs > 0) || !Number.isFinite(deltaMs)) return;
+    if (this.consumePointerPath(deltaMs)) return;
     if (this.applyMomentum(deltaMs)) return;
     if (
       this.camera.zoom === this.targetZoom &&
@@ -189,6 +211,31 @@ export class WorldCameraController {
         };
     this.applyState(center.x, center.y, zoom);
     if (alpha === 1) this.wheelMotion = null;
+  }
+
+  /**
+   * Karede bir kez: işaretçi yolunun bu kareye düşen parçası uygulanır.
+   * Sürükleme sürerken momentum ve wheel yumuşatması çalışmaz; hareket
+   * doğrudan parmağın yoludur.
+   */
+  private consumePointerPath(deltaMs: number): boolean {
+    if (this.pointers.size !== 1 || !this.pointerPath.hasPath) return false;
+    this.frameTimeMs += deltaMs;
+    const delta = this.pointerPath.consumeUntil(this.frameTimeMs);
+    if (delta.dx !== 0 || delta.dy !== 0) {
+      this.panBy(delta.dx, delta.dy, true);
+      this.momentumCenterX = this.centerX;
+      this.momentumCenterY = this.centerY;
+    }
+    this.trace.record({
+      kind: 'frame',
+      timeMs: this.frameTimeMs,
+      label: 'frame',
+      x: this.centerX,
+      y: this.centerY,
+      zoom: this.camera.zoom,
+    });
+    return true;
   }
 
   getState(): WorldCameraState {
@@ -222,6 +269,17 @@ export class WorldCameraController {
     this.targetCenterX = this.centerX;
     this.targetCenterY = this.centerY;
     this.stopMomentum();
+    this.activeModality = classifyPointer(event.pointerType);
+    this.pointerPath.reset({ timeMs: event.timeStamp, x: position.x, y: position.y });
+    this.trace.record({
+      kind: 'event',
+      timeMs: event.timeStamp,
+      label: `down:${this.activeModality}`,
+      x: position.x,
+      y: position.y,
+      zoom: this.camera.zoom,
+    });
+    this.frameTimeMs = event.timeStamp;
     this.element.setPointerCapture?.(event.pointerId);
     this.resetPinch();
   };
@@ -234,10 +292,17 @@ export class WorldCameraController {
     this.recordPointerHistory(event.pointerId, event, current);
     if (this.pointers.size === 1) {
       this.pinch = null;
-      this.panBy(current.x - previous.x, current.y - previous.y);
+      // Delta BİRİKTİRİLİR; karede bir kez uygulanır (D1).
+      this.pointerPath.append({ timeMs: event.timeStamp, x: current.x, y: current.y });
+      this.trace.record({
+        kind: 'event',
+        timeMs: event.timeStamp,
+        label: 'move',
+        x: current.x,
+        y: current.y,
+        zoom: this.camera.zoom,
+      });
       this.updatePanVelocity(event.pointerId);
-      this.momentumCenterX = this.centerX;
-      this.momentumCenterY = this.centerY;
       return;
     }
     this.stopMomentum();
@@ -251,8 +316,11 @@ export class WorldCameraController {
     if (wasSinglePointer && previous) {
       const current = pointerPosition(event);
       this.recordPointerHistory(event.pointerId, event, current);
-      if (current.x !== previous.x || current.y !== previous.y) {
-        this.panBy(current.x - previous.x, current.y - previous.y);
+      // Bırakmadan önce yolun tüketilmemiş kalanı uygulanır; hareket kaybolmaz.
+      this.pointerPath.append({ timeMs: event.timeStamp, x: current.x, y: current.y });
+      const remainder = this.pointerPath.consumeUntil(Number.POSITIVE_INFINITY);
+      if (remainder.dx !== 0 || remainder.dy !== 0) {
+        this.panBy(remainder.dx, remainder.dy);
       }
       this.updatePanVelocity(event.pointerId);
       this.momentumCenterX = this.centerX;
@@ -274,7 +342,10 @@ export class WorldCameraController {
     event.preventDefault();
     this.stopMomentum();
     const metrics = this.metrics();
-    const deltaPx = normalizeWheelDelta(event, metrics.height);
+    // Niyet sınıflanır: pinch, trackpad kaydırması ve fare tekerleği ayrı ayrı.
+    const intent = classifyWheel(event);
+    const intentScale = intent === 'pinch' ? 1.4 : intent === 'trackpad-pan' ? 0.6 : 1;
+    const deltaPx = normalizeWheelDelta(event, metrics.height) * intentScale;
     const boundedDelta = clamp(deltaPx, -MAX_WHEEL_DELTA_PX, MAX_WHEEL_DELTA_PX);
     this.setZoomTargetAt(
       event.clientX,
@@ -283,11 +354,13 @@ export class WorldCameraController {
     );
   };
 
-  private panBy(clientDeltaX: number, clientDeltaY: number): void {
+  private panBy(clientDeltaX: number, clientDeltaY: number, activeDrag = false): void {
     const metrics = this.metrics();
     const requestedX = this.centerX - (clientDeltaX * metrics.scaleX) / this.camera.zoom;
     const requestedY = this.centerY - (clientDeltaY * metrics.scaleY) / this.camera.zoom;
-    const target = this.clampCenter(requestedX, requestedY, this.camera.zoom);
+    const target = activeDrag
+      ? this.resistCenter(requestedX, requestedY)
+      : this.clampCenter(requestedX, requestedY, this.camera.zoom);
     this.targetCenterX = target.x;
     this.targetCenterY = target.y;
     this.wheelMotion = null;
@@ -337,8 +410,8 @@ export class WorldCameraController {
       Math.abs(this.panVelocityX) < MIN_MOMENTUM_UNITS_PER_MS &&
       Math.abs(this.panVelocityY) < MIN_MOMENTUM_UNITS_PER_MS
     ) {
-      this.momentumCenterX += this.panVelocityX * this.panMomentumMs;
-      this.momentumCenterY += this.panVelocityY * this.panMomentumMs;
+      this.momentumCenterX += this.panVelocityX * this.momentumMs();
+      this.momentumCenterY += this.panVelocityY * this.momentumMs();
       const finalCenter = this.softClampMomentumCenter(
         this.momentumCenterX,
         this.momentumCenterY,
@@ -350,8 +423,8 @@ export class WorldCameraController {
       this.stopMomentum();
       return true;
     }
-    const decay = Math.exp(-deltaMs / this.panMomentumMs);
-    const travelMs = this.panMomentumMs * (1 - decay);
+    const decay = Math.exp(-deltaMs / this.momentumMs());
+    const travelMs = this.momentumMs() * (1 - decay);
     this.momentumCenterX += this.panVelocityX * travelMs;
     this.momentumCenterY += this.panVelocityY * travelMs;
     const softened = this.softClampMomentumCenter(
@@ -470,6 +543,39 @@ export class WorldCameraController {
     this.camera.setZoom(zoom);
     this.camera.centerOn(center.x, center.y);
     this.onChange?.(this.getState());
+  }
+
+  /**
+   * Aktif sürüklemede sınıra yaklaşınca ASİMPTOTİK direnç (D1). Sert sınır
+   * aşılmaz; değer sınırın ötesine hiç geçmediği için bırakınca geri sekme de
+   * olmaz.
+   */
+  private resistCenter(centerX: number, centerY: number): WorldCameraPoint {
+    const zoom = this.camera.zoom;
+    const halfWidth = this.camera.width / (2 * zoom);
+    const halfHeight = this.camera.height / (2 * zoom);
+    const band = this.profiles[this.activeModality].resistanceBandRatio;
+    return {
+      x: resistTowardBound(
+        centerX,
+        this.bounds.x + halfWidth,
+        this.bounds.x + this.bounds.width - halfWidth,
+        halfWidth * 2 * band,
+      ),
+      y: resistTowardBound(
+        centerY,
+        this.bounds.y + halfHeight,
+        this.bounds.y + this.bounds.height - halfHeight,
+        halfHeight * 2 * band,
+      ),
+    };
+  }
+
+  /** Momentum süresi: açık seçenek varsa o, yoksa modalitenin profili. */
+  private momentumMs(): number {
+    return this.panMomentumMs > 0
+      ? this.panMomentumMs
+      : this.profiles[this.activeModality].momentumMs;
   }
 
   private clampCenter(centerX: number, centerY: number, zoom: number): WorldCameraPoint {
