@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   compactSample,
+  resolveFeasibleMinutes,
   defaultLongHorizonGate,
   evaluateLongHorizon,
   scenarioOf,
@@ -135,5 +136,50 @@ describe('uzun ufuk eğrisi', () => {
       ),
     ).toBe('void-stress');
     expect(() => scenarioOf('{}')).toThrow(RangeError);
+  });
+});
+
+describe('F7 — süre fizibilitesi (§8.4)', () => {
+  const base = {
+    unitCount: 512,
+    msPerTick: 5,
+    workerCount: 8,
+    simulationHz: 60,
+    requestedMinutes: 30,
+    minimumMinutes: 10,
+  };
+
+  it('bütçe yetiyorsa istenen süre KISALTILMAZ', () => {
+    const verdict = resolveFeasibleMinutes({ ...base, budgetMs: 40 * 3600 * 1000 });
+    expect(verdict.minutes).toBe(30);
+    expect(verdict.shortened).toBe(false);
+    expect(verdict.infeasible).toBe(false);
+  });
+
+  /* Kısaltma ölçüden çıkar: bütçeye sığan en uzun TAM dakika, aşağı yuvarlanmış. */
+  it('bütçe yetmezse 10–30 aralığında en uzun süreye iner', () => {
+    const verdict = resolveFeasibleMinutes({ ...base, budgetMs: 4 * 3600 * 1000 });
+    expect(verdict.shortened).toBe(true);
+    expect(verdict.minutes).toBeGreaterThanOrEqual(10);
+    expect(verdict.minutes).toBeLessThan(30);
+    expect(verdict.estimatedMs).toBeLessThanOrEqual(4 * 3600 * 1000);
+  });
+
+  it('en kısa süre bile sığmıyorsa bu GİZLENMEZ', () => {
+    const verdict = resolveFeasibleMinutes({ ...base, budgetMs: 10 * 60 * 1000 });
+    expect(verdict.infeasible).toBe(true);
+    expect(verdict.minutes).toBe(10);
+  });
+
+  it('ölçülmemiş maliyetle karar verilmez', () => {
+    expect(() => resolveFeasibleMinutes({ ...base, msPerTick: 0, budgetMs: 1000 })).toThrow(
+      RangeError,
+    );
+    expect(() => resolveFeasibleMinutes({ ...base, unitCount: 0, budgetMs: 1000 })).toThrow(
+      RangeError,
+    );
+    expect(() => resolveFeasibleMinutes({ ...base, minimumMinutes: 40, budgetMs: 1000 })).toThrow(
+      RangeError,
+    );
   });
 });

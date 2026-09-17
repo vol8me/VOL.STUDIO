@@ -193,3 +193,63 @@ function failShares(outputs: readonly LongHorizonUnitOutput[]): Record<string, n
   for (const [reason, count] of Object.entries(counts)) shares[reason] = count / outputs.length;
   return shares;
 }
+
+/**
+ * §8.4: 30 simüle dakika ölçülmüş olarak imkânsızsa, 10–30 dakika aralığında
+ * UYGULANABİLİR EN UZUN süre kullanılır. Karar burada ölçüden çıkar: tahmini
+ * süre kalibre edilmiş tick maliyetinden hesaplanır, tahminden değil.
+ */
+export interface FeasibilityInput {
+  readonly unitCount: number;
+  readonly msPerTick: number;
+  readonly workerCount: number;
+  readonly simulationHz: number;
+  /** Koşuya ayrılan duvar saati bütçesi (ms). */
+  readonly budgetMs: number;
+  readonly requestedMinutes: number;
+  readonly minimumMinutes: number;
+}
+
+export interface FeasibilityVerdict {
+  readonly minutes: number;
+  readonly estimatedMs: number;
+  readonly requestedEstimatedMs: number;
+  readonly shortened: boolean;
+  /** Bütçe en kısa süreyi bile karşılamıyorsa true; koşu kısaltılarak kurtarılamaz. */
+  readonly infeasible: boolean;
+}
+
+export function resolveFeasibleMinutes(input: FeasibilityInput): FeasibilityVerdict {
+  if (input.unitCount <= 0 || input.msPerTick <= 0 || input.workerCount <= 0) {
+    throw new RangeError('Fizibilite ölçülmüş birim, maliyet ve worker ister.');
+  }
+  if (input.minimumMinutes > input.requestedMinutes) {
+    throw new RangeError('En kısa süre istenen süreden büyük olamaz.');
+  }
+  const costOf = (minutes: number): number =>
+    (input.unitCount * minutes * 60 * input.simulationHz * input.msPerTick) / input.workerCount;
+
+  const requestedEstimatedMs = costOf(input.requestedMinutes);
+  if (requestedEstimatedMs <= input.budgetMs) {
+    return {
+      minutes: input.requestedMinutes,
+      estimatedMs: requestedEstimatedMs,
+      requestedEstimatedMs,
+      shortened: false,
+      infeasible: false,
+    };
+  }
+  // Bütçeye sığan en uzun TAM dakika; aşağı yuvarlanır, eşik zorlanmaz.
+  const affordable = Math.floor(
+    input.budgetMs /
+      ((input.unitCount * 60 * input.simulationHz * input.msPerTick) / input.workerCount),
+  );
+  const minutes = Math.max(input.minimumMinutes, Math.min(input.requestedMinutes, affordable));
+  return {
+    minutes,
+    estimatedMs: costOf(minutes),
+    requestedEstimatedMs,
+    shortened: true,
+    infeasible: affordable < input.minimumMinutes,
+  };
+}

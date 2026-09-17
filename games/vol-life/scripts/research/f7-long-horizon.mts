@@ -14,9 +14,11 @@ import {
 } from '../morphology/collapseDetector';
 import {
   evaluateLongHorizon,
+  resolveFeasibleMinutes,
   runLongHorizonUnit,
   type LongHorizonUnitOutput,
 } from '../morphology/longHorizon';
+import { measureCalibration } from '../morphology/calibration';
 import { buildFromRecords, parseCandidateRecords } from '../morphology/auditionCommand';
 import { readSeedCorpus } from '../morphology/seedCorpus';
 import { createGitProvider, readSourceState } from '../morphology/sourceState';
@@ -29,7 +31,10 @@ import type { SeedUnitInput } from '../morphology/seedRunner';
  * senaryoları BİRLİKTE koşar. Worker ve checkpoint zorunludur; yarıda kesilen
  * koşu kaldığı yerden devam eder.
  */
-const MINUTES = Number(process.argv[2] ?? 30);
+const REQUESTED_MINUTES = Number(process.argv[2] ?? 30);
+const MINIMUM_MINUTES = 10;
+/* Koşu bütçesi: §8.4 "uygulanabilir en uzun süre" kararı buna göre ölçülür. */
+const BUDGET_HOURS = Number(process.env.VOL_LIFE_F7_BUDGET_HOURS ?? 5);
 const WORKERS = Number(process.argv[3] ?? 8);
 const RECORDS = process.argv[4] ?? 'benchmarks/results/f3-candidates.jsonl';
 const CORPUS = 'benchmarks/fixtures/corpus-v1.json';
@@ -45,6 +50,32 @@ const build = buildFromRecords(parseCandidateRecords(readFileSync(RECORDS, 'utf8
   sourceRevision: source.revision,
   sourceDirty: source.dirty,
 });
+
+/*
+ * Süre ÖLÇÜLEREK seçilir. 30 simüle dakika kalibrasyona göre bütçeye sığmazsa
+ * §8.4 gereği 10–30 dakika aralığında uygulanabilir en uzun süreye inilir ve
+ * gerekçe raporlanır; eşik gevşetilmez, koşu sessizce kısalmaz.
+ */
+const calibration = measureCalibration(substrateConfig);
+const unitCount = build.catalog.entries.length * 2 * corpus.seeds.length;
+const feasibility = resolveFeasibleMinutes({
+  unitCount,
+  msPerTick: calibration.msPerTick,
+  workerCount: WORKERS,
+  simulationHz: HZ,
+  budgetMs: BUDGET_HOURS * 3600 * 1000,
+  requestedMinutes: REQUESTED_MINUTES,
+  minimumMinutes: MINIMUM_MINUTES,
+});
+const MINUTES = feasibility.minutes;
+console.log(
+  `F7 fizibilite: ${unitCount} birim, ölçülen ${calibration.msPerTick.toFixed(4)} ms/tick, ` +
+    `${WORKERS} worker → istenen ${REQUESTED_MINUTES} dk ≈ ` +
+    `${(feasibility.requestedEstimatedMs / 3600000).toFixed(1)} sa, bütçe ${BUDGET_HOURS} sa. ` +
+    `Koşulacak süre ${MINUTES} dk ≈ ${(feasibility.estimatedMs / 3600000).toFixed(1)} sa` +
+    (feasibility.shortened ? ' (KISALTILDI, §8.4)' : '') +
+    (feasibility.infeasible ? ' — en kısa süre bile bütçeye SIĞMIYOR' : ''),
+);
 
 const totalTicks = MINUTES * 60 * HZ;
 /* Perturbation ANLARI ön-kayıtlıdır; koşu kısaldıysa sığmayanlar atılır ve raporlanır. */
@@ -92,7 +123,7 @@ const store = new CheckpointStore<LongHorizonUnitOutput>(
 const started = Date.now();
 const perCandidate: Record<string, LongHorizonUnitOutput[]> = {};
 let completed = 0;
-const totalUnits = build.catalog.entries.length * 2 * corpus.seeds.length;
+const totalUnits = unitCount;
 
 for (const entry of build.catalog.entries) {
   const base = JSON.parse(entry.genome) as SubstrateCandidate;
@@ -141,6 +172,10 @@ const summary = {
   korpus: corpus.id,
   seedSayısı: corpus.seeds.length,
   dakika: MINUTES,
+  istenenDakika: REQUESTED_MINUTES,
+  kısaltıldı: feasibility.shortened,
+  ölçülenMsPerTick: +calibration.msPerTick.toFixed(4),
+  tahminSaat: +(feasibility.estimatedMs / 3600000).toFixed(2),
   örnekAralığıTick: SAMPLE_TICKS,
   perturbationDakikaları: appliedMinutes,
   adaySayısı: build.catalog.entries.length,
