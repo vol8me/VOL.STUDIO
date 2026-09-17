@@ -1,5 +1,6 @@
 import { coreAliases } from '../../scripts/vite/coreAliases.mjs';
-import { defineConfig, normalizePath } from 'vite';
+import { defineConfig, normalizePath, type Plugin } from 'vite';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
@@ -10,10 +11,38 @@ const host = process.env.TAURI_DEV_HOST;
 // Fontlar CORE'daki tek kaynaktan hem dev sunucusuna hem build'e taşınır.
 const coreFontsDir = normalizePath(resolve(import.meta.dirname, '../../core/public/assets/fonts'));
 
+/*
+ * Audition kataloğunu YALNIZ dev sunucusu servis eder (K10). Statik dosya
+ * yerine açık bir middleware: uç noktanın geliştirmeye ait olduğu kodda
+ * görünür, katalog üretim çıktısına hiçbir yoldan kopyalanmaz ve dosya
+ * yokluğu 404'tür — açılışı kırmaz.
+ */
+function auditionCatalogPlugin(): Plugin {
+  const catalogPath = resolve(import.meta.dirname, 'research-out/audition-catalog.json');
+  return {
+    name: 'vol-life-audition-catalog',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/research-out/audition-catalog.json', (_request, response) => {
+        if (!existsSync(catalogPath)) {
+          response.statusCode = 404;
+          response.end('audition kataloğu yok');
+          return;
+        }
+        response.setHeader('Content-Type', 'application/json; charset=utf-8');
+        // Katalog koşu sırasında yeniden yazılır; önbellek eski adayı gösterirdi.
+        response.setHeader('Cache-Control', 'no-store');
+        response.end(readFileSync(catalogPath, 'utf8'));
+      });
+    },
+  };
+}
+
 export default defineConfig({
   base: './',
   clearScreen: false,
   plugins: [
+    auditionCatalogPlugin(),
     viteStaticCopy({
       targets: [{ src: `${coreFontsDir}/*`, dest: 'assets/fonts', rename: { stripBase: true } }],
     }),

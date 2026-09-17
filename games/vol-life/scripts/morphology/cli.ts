@@ -20,6 +20,7 @@ import { AUDITION_SEED_COUNT, serializeAuditionCatalog } from '@/config/audition
 import { readSeedCorpus } from './seedCorpus';
 import { createGitProvider, readSourceState } from './sourceState';
 import { parseQualificationArtefact, serializeArtefact } from './qualification';
+import { writePromotedCandidate } from './promotionWriter';
 
 /*
  * Huni komutları (E13). Her komut YALNIZ kendi aşamasını koşar; `--stage all`
@@ -32,10 +33,15 @@ interface CliArgs extends FunnelOptions {
   /** shortlist/audition girdisi: broad koşusunun aday kayıtları. */
   readonly fromPath: string;
   readonly corpusPath: string;
+  /** promote hedefi (K9). */
+  readonly targetPath: string;
+  /** Kabulü veren kişi; provenance alanı UYDURULMAZ. */
+  readonly acceptedBy?: string;
 }
 
 const DEFAULT_RECORDS = 'benchmarks/results/f3-candidates.jsonl';
 const DEFAULT_CORPUS = 'benchmarks/fixtures/corpus-v1.json';
+const DEFAULT_PROMOTION_TARGET = 'src/config/substrateCandidate.ts';
 
 function parseArgs(argv: readonly string[]): CliArgs {
   const args = argv.slice(2);
@@ -53,6 +59,8 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let artefactPath: string | undefined;
   let fromPath = DEFAULT_RECORDS;
   let corpusPath = DEFAULT_CORPUS;
+  let targetPath = DEFAULT_PROMOTION_TARGET;
+  let acceptedBy: string | undefined;
   for (let index = 1; index < args.length; index++) {
     const arg = args[index];
     const next = args[index + 1];
@@ -63,6 +71,8 @@ function parseArgs(argv: readonly string[]): CliArgs {
     else if (arg === '--decision' && (next === 'accepted' || next === 'rejected')) decision = next;
     else if (arg === '--yes') yes = true;
     else if (arg === '--from' && next) fromPath = next;
+    else if (arg === '--target' && next) targetPath = next;
+    else if (arg === '--accepted-by' && next) acceptedBy = next;
     else if (arg === '--corpus' && next) corpusPath = next;
     else if (arg === '--json') json = true;
   }
@@ -77,6 +87,8 @@ function parseArgs(argv: readonly string[]): CliArgs {
     artefactPath,
     fromPath,
     corpusPath,
+    targetPath,
+    acceptedBy,
   };
 }
 
@@ -98,6 +110,8 @@ Seçenekler:
   --artefact <yol>     accept/promote için artefakt dosyası
   --from <yol>         shortlist/audition için aday kayıtları (jsonl)
   --corpus <yol>       tohum korpusu (varsayılan corpus-v1)
+  --target <yol>       promote hedefi (varsayılan src/config/substrateCandidate.ts)
+  --accepted-by <ad>   promote için kabulü veren kişi
   --decision <karar>   accept için: accepted | rejected
   --json               JSON çıktı
 
@@ -223,6 +237,31 @@ async function main(): Promise<void> {
       const updated = { ...artefact, humanAcceptance: args.decision as 'accepted' | 'rejected' };
       writeFileSync(args.artefactPath, serializeArtefact(updated), 'utf8');
       console.log(`karar yazıldı: ${args.decision}`);
+      return;
+    }
+    case 'promote': {
+      if (!args.artefactPath || !args.acceptedBy) {
+        console.error('REDDEDİLDİ: `promote` --artefact ve --accepted-by ister.');
+        process.exit(2);
+      }
+      const artefact = parseQualificationArtefact(readFileSync(args.artefactPath, 'utf8'));
+      /*
+       * Önkoşullar `writePromotedCandidate` içinde tek tek sınanır; burada
+       * yalnız gerekçe yüzeye çıkar. Kabul eden ve tarih UYDURULMAZ.
+       */
+      try {
+        const digest = await writePromotedCandidate(args.targetPath, artefact, {
+          artefactDigest: artefact.configDigest,
+          sourceRevision: artefact.sourceRevision,
+          corpusId: artefact.corpusId,
+          acceptedBy: args.acceptedBy,
+          acceptedAt: new Date().toISOString().slice(0, 10),
+        });
+        console.log(`promote edildi: ${digest} → ${args.targetPath}`);
+      } catch (error) {
+        console.error(`REDDEDİLDİ: ${(error as Error).message}`);
+        process.exit(2);
+      }
       return;
     }
     default:
