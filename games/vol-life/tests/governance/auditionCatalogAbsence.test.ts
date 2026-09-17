@@ -95,6 +95,13 @@ describe('audition kataloğu üretim derlemesinde yok', () => {
     expect(filesContaining(DEV_FLAGGED_DIR, 'vol-life-research__nav').length).toBeGreaterThan(0);
   });
 
+  /* Z2 ölçüm kancası da geliştirme aracıdır (görev: "ölçüm kodu üretim bundle'ına girmez"). */
+  it('kayıt ölçüm kancası üretim derlemesinde yok', () => {
+    expect(filesContaining(PRODUCTION_DIR, '__volLifeStorage')).toEqual([]);
+    expect(filesContaining(PRODUCTION_DIR, 'vol-life:snapshot-encode')).toEqual([]);
+    expect(filesContaining(DEV_FLAGGED_DIR, '__volLifeStorage').length).toBeGreaterThan(0);
+  });
+
   it('katalog dosyası çıktı ağacına kopyalanmıyor', () => {
     expect(existsSync(join(PACKAGE_ROOT, PRODUCTION_DIR, AUDITION_CATALOG_PATH))).toBe(false);
   });

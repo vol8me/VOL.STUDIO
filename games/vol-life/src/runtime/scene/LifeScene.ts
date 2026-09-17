@@ -11,6 +11,7 @@ import {
 import { getRuntimePlatform, type RuntimePlatform } from '@volstudio/tauri-v2';
 import { DEFAULT_LIFE_PREFERENCES, type LifePreferences } from '@/app/LifePreferences';
 import { OrientationPreference } from '@/app/OrientationPreference';
+import { installSnapshotProbe } from '@/app/snapshotProbe';
 import type {
   LifeWorldAutosave,
   LifeWorldLoadIssue,
@@ -101,6 +102,14 @@ export class LifeScene extends Phaser.Scene {
         this.services.createRuntime(this, this.services.initialWorldSnapshot),
       );
       if (this.scale) {
+        /*
+         * Z2 ölçüm kancası yalnız geliştirmede kurulur; koşul sabit olduğu
+         * için üretim derlemesinde kanca da kodek çağrısı da bulunmaz.
+         */
+        if (import.meta.env.DEV) {
+          const runtime = this.worldRuntime;
+          scope.add({ dispose: installSnapshotProbe(runtime, 'ölçüm') });
+        }
         const refreshWorldViewport = (): void => this.worldRuntime?.refreshViewport();
         this.scale.on(Phaser.Scale.Events.RESIZE, refreshWorldViewport);
         scope.addSubscription(() =>
