@@ -12,7 +12,9 @@ import {
   type LifeGraphicsConfig,
 } from '@/config/graphics';
 import { substrateConfig, type SubstrateConfig } from '@/config/substrate';
+import { cameraScales, entryCameraScale, zoomForScale } from '@/config/cameraScales';
 import { resolveCameraDomain } from '@/runtime/render/cameraDomain';
+import { resolveEntryCamera } from '@/runtime/render/EntryCameraResolver';
 import { FieldRenderer } from '@/runtime/render/FieldRenderer';
 import { HabitatRenderer } from '@/runtime/render/HabitatRenderer';
 import { ParticleRenderer } from '@/runtime/render/ParticleRenderer';
@@ -56,6 +58,8 @@ interface RuntimeParticleRenderer {
 interface RuntimeCamera {
   update(deltaMs: number): void;
   refreshViewport(): void;
+  /** D2: açılış odağı anlık uygulanır; geçiş animasyonu kurulmaz. */
+  setState(next: { centerX?: number; centerY?: number; zoom?: number }): void;
   destroy(): void;
 }
 
@@ -88,6 +92,28 @@ export class LifeRuntime {
   private readonly deathRenderer: RuntimeDeathRenderer;
   private readonly particleRenderer: RuntimeParticleRenderer;
   private readonly cameraController: RuntimeCamera;
+  /**
+   * Açılış kamerası (D2). Eski açılış `fit: 'contain'` ve zoom 1 ile bütün
+   * dünyayı gösteriyordu: ekranda küçük bir ada ve dev bir Void kalıyordu.
+   * Artık ECOSYSTEM ölçeğinde, maddenin yoğun olduğu odağa gelinir.
+   */
+  private applyEntryCamera(scene: Phaser.Scene, config: SubstrateConfig): void {
+    const target = resolveEntryCamera(this.world.particles, this.world.domain, {
+      cellUnits: config.candidate.physics.cutoffUnits,
+      safeMarginUnits: config.candidate.void.widthUnits,
+    });
+    const viewportWidth = scene.cameras.main.width;
+    this.cameraController.setState({
+      centerX: target.x,
+      centerY: target.y,
+      zoom: zoomForScale(
+        cameraScales[entryCameraScale],
+        viewportWidth,
+        config.candidate.physics.cutoffUnits,
+      ),
+    });
+  }
+
   private readonly clock: SimulationClock;
   private elapsedMs = 0;
 
@@ -174,6 +200,8 @@ export class LifeRuntime {
             initialZoomFactor: graphics.cameraInitialZoomFactor,
           }),
       );
+      // D2: açılış ECOSYSTEM ölçeğinde ve maddenin yoğun olduğu odakta.
+      this.applyEntryCamera(scene, config);
       (dependencies.backdrop ?? scene.cameras.main).setBackgroundColor(
         graphics.voidBackgroundColor,
       );

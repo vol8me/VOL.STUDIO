@@ -1,6 +1,7 @@
 import { Worker } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { existsSync } from 'node:fs';
 import { shardForWork } from './shards';
 import { runSeedUnit, type SeedUnitInput, type SeedUnitOutput } from './seedRunner';
 
@@ -23,14 +24,20 @@ export interface PoolResult {
 }
 
 /**
- * Yol TEMBEL çözülür: vitest gibi ortamlarda `import.meta.url` dosya şeması
- * taşımaz ve modül yüklenirken `fileURLToPath` patlar. O durumda paket kökünden
- * çözülür.
+ * Yol TEMBEL çözülür ve VAR OLDUĞU doğrulanır: vitest gibi ortamlarda
+ * `import.meta.url` dosya şeması taşımaz ya da paket köküne göre farklı çözülür.
+ * Varsayılan bir yolu doğrulamadan Worker'a vermek, "modül bulunamadı" hatasını
+ * koşunun ortasında üretiyordu.
  */
 function workerPath(file: string): string {
+  const candidates: string[] = [];
   const url = new URL(`./${file}`, import.meta.url);
-  if (url.protocol === 'file:') return fileURLToPath(url);
-  return resolve(process.cwd(), `scripts/morphology/${file}`);
+  if (url.protocol === 'file:') candidates.push(fileURLToPath(url));
+  candidates.push(resolve(process.cwd(), 'scripts/morphology', file));
+  candidates.push(resolve(process.cwd(), 'games/vol-life/scripts/morphology', file));
+  const found = candidates.find((candidate) => existsSync(candidate));
+  if (!found) throw new Error(`Worker dosyası bulunamadı: ${candidates.join(', ')}`);
+  return found;
 }
 
 export async function runSeedUnits(

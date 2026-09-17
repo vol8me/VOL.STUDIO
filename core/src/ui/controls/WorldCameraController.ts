@@ -238,6 +238,32 @@ export class WorldCameraController {
     return true;
   }
 
+  /**
+   * Kamerayı doğrudan konumlandırır (D2). Açılış odağı gibi ANLIK geçişler
+   * içindir: momentum, pinch ve wheel yumuşatması SIFIRLANIR, yoksa yarım
+   * kalmış bir jest yeni durumu hemen bozardı.
+   *
+   * NaN sessizce geçmez; zoom ve merkez sınırlanır.
+   */
+  setState(next: { centerX?: number; centerY?: number; zoom?: number }): void {
+    const centerX = next.centerX ?? this.centerX;
+    const centerY = next.centerY ?? this.centerY;
+    const zoom = next.zoom ?? this.camera.zoom;
+    if (!Number.isFinite(centerX) || !Number.isFinite(centerY) || !Number.isFinite(zoom)) {
+      throw new RangeError('Kamera durumu sonlu sayı ister.');
+    }
+    this.stopMomentum();
+    this.pinch = null;
+    this.wheelMotion = null;
+    this.pointerPath.reset({ timeMs: this.frameTimeMs, x: 0, y: 0 });
+    const boundedZoom = clamp(zoom, this.minZoom, this.minZoom * this.maxZoomFactor);
+    const target = this.clampCenter(centerX, centerY, boundedZoom);
+    this.targetZoom = boundedZoom;
+    this.targetCenterX = target.x;
+    this.targetCenterY = target.y;
+    this.applyState(target.x, target.y, boundedZoom);
+  }
+
   getState(): WorldCameraState {
     return {
       centerX: this.centerX,
