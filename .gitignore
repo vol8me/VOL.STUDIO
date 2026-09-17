@@ -84,3 +84,9 @@ desktop.ini
 tauri-v2/src-tauri/android-*.log
 tauri-v2/src-tauri/android-*.png
 tauri-v2/src-tauri/chromium.log
+
+# Araştırma çıktısı: üretilebilir, üretim derlemesine girmez (F5).
+research-out/
+# F5 yokluk testinin geçici derleme dizinleri.
+dist-audition-prod/
+dist-audition-dev/

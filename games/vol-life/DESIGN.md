@@ -1129,6 +1129,70 @@ kullanılamaz. Dirty ağaç exploration için
 kullanılabilir ama production qualification üretemez. Qualified olmayan aday
 runtime URL/env ile production'a enjekte edilemez.
 
+### F1 ve F2 ölçümleri: varsayılan fizik/seeding FAIL
+
+**F1 (seeding taraması, 2026-09-17).** Ön-kayıtlı aralıklarda 512 seeding
+profili scrambled Sobol ile örneklendi; her profil 8 seed × 30 saniye koştu
+(76,9 dk, geçersiz örnek 0). §8.4 launch envelope'unu seed'lerin ≥ %90'ında
+geçen profil sayısı **sıfırdır**. En iyi profil (#202: 11 yama, yama yarıçapı
+28,9 birim, yama payı 0,30, bulut payı 0,22) 10 saniyede medyan %99,4 madde
+tutuyor ama kapıyı yalnız seed'lerin **%25'inde** geçiyor. Varsayılan seeding
+E9 taban ölçümünde 10 saniyede medyan 0,828 ile zaten düşüyordu.
+
+Sonuç: **varsayılan fizik/seeding FAIL.** Seeding'i tek başına değiştirmek
+launch envelope'unu kurtarmıyor; fizik ve seeding BİRLİKTE aranmak zorunda
+(F3'ün tanımı budur). Bu, huniyi kısaltma gerekçesi değildir: aralıklar
+gevşetilmedi, eşik düşürülmedi, seed seçilmedi.
+
+**F2 (V1 negatif kontrolü, 2026-09-17).** Reddedilen triangular kernel ile
+üretim multi-band kerneli AYNI aday, AYNI 8 tohum ve aynı ölçüm hattından
+geçirildi (7200 tick). Ölçülen:
+
+| Kol                        | Medyan koruma | Medyan kümeli madde | Faz dağılımı                                       |
+| -------------------------- | ------------- | ------------------- | -------------------------------------------------- |
+| triangular-v1 (REDDEDİLEN) | 0,725         | 0,968               | 3 GAS, 3 VOID_LOSS, 1 DYNAMIC_STRUCTURED, 1 STASIS |
+| multi-band (üretim)        | 0,398         | 0,913               | 8 VOID_LOSS_DOMINATED                              |
+
+Negatif kontrol beklenen yönde ÇIKMADI: reddedilen kernel maddeyi üretim
+kernelinden daha iyi tutuyor ve üretim kerneli bütün tohumlarda Void kaybına
+teslim oluyor. Bu, triangular kernel'in geri alınması gerektiği anlamına
+gelmez — o kernel yapı üretmiyor, yalnız maddeyi kaybetmiyor — ama F1'le aynı
+şeyi söyler: **bugünkü varsayılan aday teknik kapıyı geçmiyor** ve Adım 3'ün
+arayacağı aday varsayılanın komşuluğunda değildir.
+
+### Audition kataloğu ve tohum korpusu (F5, F7)
+
+Kısa liste 3–8 adaydır ve yalnız en yüksek skorlardan seçilmez: önce her fazın
+en iyisi alınır, kalan yerler metrik uzayında birbirine EN UZAK adaylarla
+doldurulur. En yüksek skorlu sekiz aday birbirinin kopyası olabilir ve insan
+ön-elemesi o listeden hiçbir şey öğrenemez.
+
+Katalog `research-out/audition-catalog.json`dur; `research:audition` yazar,
+dev sunucusu çalışma anında okur ve üretim derlemesine GİRMEZ. Yokluk build
+testiyle kanıtlanır: test katalogu gerçekten yazar, üretim ve dev bayraklı iki
+derleme koşar, katalog yolunun dev derlemesinde görünüp üretimde görünmediğini
+ölçer. Her girişin digest'i genomundan yeniden hesaplanır; elle düzenlenmiş bir
+katalog başka bir adayı o adayın kimliğiyle gösteremez. Her aday AYNI üç
+tohumla gösterilir (`?audition=<n>&seed=<n>`); aralık dışı istek kırpılmaz,
+reddedilir. Audition koşusu kayıt tutmaz: kalifiye olmamış bir genomla açılan
+dünya oyuncunun kaydını ezemez.
+
+Davranış ailesi yalnız ÖLÇÜLEN metriklerden çıkar (`core-like`,
+`membrane-like`, `mobile`, `fragile`). `chasing`, `symbiotic` ve `recovering`
+bu koşunun ölçmediği şeyleri ister ve otomatik ATANMAZ; karşılığı olmayan aday
+`unclassified` kalır.
+
+Tohum korpusu `corpus-v1` 32 benzersiz uint32 tohumdur, bir kez üretilir ve
+veri olarak commit'lenir (`benchmarks/fixtures/corpus-v1.json`). Dosya
+üreticisiyle testte birebir karşılaştırılır: koşu sonrasında tohum listesini
+değiştirmek (seed reroll) böylece kırmızı test olur. Audition'ın üç tohumu bu
+korpusun ilk üçüdür, yani ön-eleme ile uzun koşu aynı dünyalarda konuşur.
+
+Kullanıcı yokken (K15) uzun koşuya yalnız otomatik teknik ön-elemeyi geçen ve
+faz/metrik çeşitliliğine göre seçilen en fazla 8 aday girer; bu artefaktlar
+`humanPreselection: pending` taşır ve kullanıcı ön-elemesi gelene kadar
+promotion'a giremez.
+
 Adım 3 ancak **technical gate + long-horizon + kullanıcı visual audition**
 birlikte geçtiğinde kapanır. Bütün `SubstrateCandidate` production'a taşınır;
 matris tek başına kopyalanmaz.

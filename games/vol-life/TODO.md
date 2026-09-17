@@ -120,10 +120,11 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       generalized asymmetric multi-band'dir. Bu aile faz çeşitliliği
       üretemezse daha serbest multi-lobe ve active-particle alternatifleri aynı
       harness/seed/metriklerle denenir; üç production kernel birden taşınmaz.
-- [ ] **[P1] V1 negatif kontrol yeniden üretilebilir küçük fixture olsun.** Ham
+- [x] **[P1] V1 negatif kontrol yeniden üretilebilir küçük fixture olsun.** Ham
       50k satırlık artefakt runtime'da tutulmaz; triangular baseline'ın config,
       korpus ve özet sonucu sürümlü benchmark ile yeni adayın aynı ölçümde
       gerçekten daha iyi olduğunu kanıtlar.
+      _Kapatıldı 2026-09-17 (F2): özet şeması v2 İKİ KOL taşıyor ve kolların aynı tohumlarda koşması doğrulanıyor; 8 seed × 7200 tick ölçümde reddedilen kernel medyan koruma 0,725 (3 GAS, 3 VOID_LOSS, 1 DYNAMIC_STRUCTURED, 1 STASIS), üretim kerneli 0,398 ve 8/8 VOID_LOSS_DOMINATED. Sonuç beklenen yönde çıkmadı ve DESIGN §8'e böyle yazıldı (`benchmarks/results/v1-negative-control.json`)._
 - [x] **[P0] Faz sınıflandırıcısı önce kurulsun.** Dead, stasis, gas/soup,
       crystal/frozen, single-collapse, Void-loss dominated, orbit dominated,
       speed-cap chaos ve dynamic-structured sonuçları ayrı reason code ile
@@ -216,7 +217,7 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       10sn'de %27.5, 30sn'de %49.3, 60sn'de %61.2 kayıp; bazı seed'lerde 512→71.
       Harness korpusunda (2026-09-15): %26,8 / %45,8 / %52,6; en kötü 512→75.
       _Kapatıldı 2026-09-17 (3aaeb67, 45c1478): kapı §8.4'ten birebir; 12 seed × 60 sn ölçümde varyasyon aday ÜÇ SATIRDAN da düşüyor (10 sn medyan 0,828, en kötü ondalık 0,488, 30 sn 0,609, seed'lerin %100'ünde erken patlama, %67 yatışma), zayıf/sönümlü/v₀=0 yapılandırma üçünü de geçiyor. Ön-kayıtlı 4 sn sabiti ölçülmüş imkânsızlıkla emekli edildi (gerekçe DESIGN §8)._
-- [ ] **[P0] Seeding rejimi yeniden araştırılsın.** Mevcut 4×70-particle dense
+- [x] **[P0] Seeding rejimi yeniden araştırılsın.** Mevcut 4×70-particle dense
       random patch fazla agresif: patch yarıçapı 70 iken interaction menzili 96
       — başlangıçta yoğun interaction alanlarına spawn. Araştırılacak
       parametreler: patch count, patch radius, patch occupancy, safe-edge
@@ -224,6 +225,7 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       envelope: matter survival, velocity explosion, catastrophic Void loss
       kontrol eder. Seed'lerin büyük kısmı bunu geçemiyorsa reroll etmeyiz —
       physics/seeding FAIL deriz.
+      _Kapatıldı 2026-09-17 (F1): ön-kayıtlı aralıklarda 512 profil × 8 seed × 30 sn (76,9 dk, geçersiz 0) koştu; launch envelope'u seed'lerin ≥ %90'ında geçen profil SIFIR, en iyi profil (#202) %25. Reroll yok, eşik düşürülmedi: karar **varsayılan fizik/seeding FAIL** ve arama F3'te fizik+seeding birlikte yapılıyor (DESIGN §8, `benchmarks/results/f1-seeding.json`)._
 - [x] **[P0] `trajectoryAutocorrelation()` bug'ı düzeltilsin.** İsim
       autocorrelation ama implementasyon gerçekte displacement metriği
       (current position − past position → dx²+dy² ortalıyor). Gerçek periodic

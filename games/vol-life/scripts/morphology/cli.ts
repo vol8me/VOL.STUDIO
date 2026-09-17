@@ -15,6 +15,10 @@ import {
   type FunnelStages,
 } from './funnel';
 import { measureCalibration } from './calibration';
+import { buildFromRecords, formatShortlistReport, parseCandidateRecords } from './auditionCommand';
+import { AUDITION_SEED_COUNT, serializeAuditionCatalog } from '@/config/auditionCatalog';
+import { readSeedCorpus } from './seedCorpus';
+import { createGitProvider, readSourceState } from './sourceState';
 import { parseQualificationArtefact, serializeArtefact } from './qualification';
 
 /*
@@ -25,7 +29,13 @@ import { parseQualificationArtefact, serializeArtefact } from './qualification';
 interface CliArgs extends FunnelOptions {
   readonly json: boolean;
   readonly artefactPath?: string;
+  /** shortlist/audition girdisi: broad koşusunun aday kayıtları. */
+  readonly fromPath: string;
+  readonly corpusPath: string;
 }
+
+const DEFAULT_RECORDS = 'benchmarks/results/f3-candidates.jsonl';
+const DEFAULT_CORPUS = 'benchmarks/fixtures/corpus-v1.json';
 
 function parseArgs(argv: readonly string[]): CliArgs {
   const args = argv.slice(2);
@@ -41,6 +51,8 @@ function parseArgs(argv: readonly string[]): CliArgs {
   let json = false;
   let decision: 'accepted' | 'rejected' | undefined;
   let artefactPath: string | undefined;
+  let fromPath = DEFAULT_RECORDS;
+  let corpusPath = DEFAULT_CORPUS;
   for (let index = 1; index < args.length; index++) {
     const arg = args[index];
     const next = args[index + 1];
@@ -50,9 +62,22 @@ function parseArgs(argv: readonly string[]): CliArgs {
     else if (arg === '--artefact' && next) artefactPath = next;
     else if (arg === '--decision' && (next === 'accepted' || next === 'rejected')) decision = next;
     else if (arg === '--yes') yes = true;
+    else if (arg === '--from' && next) fromPath = next;
+    else if (arg === '--corpus' && next) corpusPath = next;
     else if (arg === '--json') json = true;
   }
-  return { command, candidateCount, workerCount, outputDir, yes, json, decision, artefactPath };
+  return {
+    command,
+    candidateCount,
+    workerCount,
+    outputDir,
+    yes,
+    json,
+    decision,
+    artefactPath,
+    fromPath,
+    corpusPath,
+  };
 }
 
 function printUsage(): void {
@@ -71,6 +96,8 @@ Seçenekler:
   --workers <n>        Worker sayısı (varsayılan 1)
   --yes                Tahmini süresi 10 dakikayı aşan koşuyu onayla
   --artefact <yol>     accept/promote için artefakt dosyası
+  --from <yol>         shortlist/audition için aday kayıtları (jsonl)
+  --corpus <yol>       tohum korpusu (varsayılan corpus-v1)
   --decision <karar>   accept için: accepted | rejected
   --json               JSON çıktı
 
@@ -161,6 +188,29 @@ async function main(): Promise<void> {
         );
       }
       console.log(`${artefacts.length} artefakt yazıldı: ${outputDir}`);
+      return;
+    }
+    case 'shortlist':
+    case 'audition': {
+      if (!existsSync(args.fromPath)) {
+        console.error(`REDDEDİLDİ: aday kaydı yok: ${args.fromPath} (önce broad koşusu).`);
+        process.exit(2);
+      }
+      const records = parseCandidateRecords(readFileSync(args.fromPath, 'utf8'));
+      const corpus = readSeedCorpus(args.corpusPath);
+      const source = readSourceState(createGitProvider(process.cwd()));
+      const build = buildFromRecords(records, {
+        corpusId: corpus.id,
+        // Audition tohumları korpusun İLK üçüdür; adaya göre seçilmez.
+        seeds: corpus.seeds.slice(0, AUDITION_SEED_COUNT),
+        sourceRevision: source.revision,
+        sourceDirty: source.dirty,
+      });
+      console.log(formatShortlistReport(build));
+      if (args.command === 'shortlist') return;
+      const catalogPath = join(outputDir, 'audition-catalog.json');
+      writeFileSync(catalogPath, serializeAuditionCatalog(build.catalog), 'utf8');
+      console.log(`katalog yazıldı: ${catalogPath}`);
       return;
     }
     case 'accept': {

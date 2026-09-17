@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 2,
+  "madde": "F2",
+  "tarih": "2026-09-17",
+  "candidateDigest": "a28b4b2b7e1b4a5c",
+  "tickCount": 7200,
+  "sampleInterval": 60,
+  "seedCount": 8,
+  "süreMs": 358984,
+  "kontrol": {
+    "kernel": "triangular-v1 (REDDEDİLEN)",
+    "seedler": [
+      {
+        "seed": 1013904223,
+        "retention": 0.8047,
+        "clusteredFraction": 0.9684,
+        "meanSpeed": 0.0706,
+        "primaryReason": "DYNAMIC_STRUCTURED"
+      },
+      {
+        "seed": 1196435762,
+        "retention": 0.3848,
+        "clusteredFraction": 0.9848,
+        "meanSpeed": 0.0282,
+        "primaryReason": "VOID_LOSS_DOMINATED"
+      },
+      {
+        "seed": 3519870697,
+        "retention": 0.7715,
+        "clusteredFraction": 0.9722,
+        "meanSpeed": 0.026,
+        "primaryReason": "GAS"
+      },
+      {
+        "seed": 2868466484,
+        "retention": 0.7734,
+        "clusteredFraction": 0.9343,
+        "meanSpeed": 0.0314,
+        "primaryReason": "STASIS"
+      },
+      {
+        "seed": 1649599747,
+        "retention": 0.4961,
+        "clusteredFraction": 0.9213,
+        "meanSpeed": 0.0486,
+        "primaryReason": "VOID_LOSS_DOMINATED"
+      },
+      {
+        "seed": 2670642822,
+        "retention": 0.7246,
+        "clusteredFraction": 0.9677,
+        "meanSpeed": 0.0357,
+        "primaryReason": "GAS"
+      },
+      {
+        "seed": 1476291629,
+        "retention": 0.5859,
+        "clusteredFraction": 0.9333,
+        "meanSpeed": 0.0337,
+        "primaryReason": "GAS"
+      },
+      {
+        "seed": 2748932008,
+        "retention": 0.332,
+        "clusteredFraction": 0.8588,
+        "meanSpeed": 0.0309,
+        "primaryReason": "VOID_LOSS_DOMINATED"
+      }
+    ],
+    "medyanKoruma": 0.7246,
+    "medyanKümeliMadde": 0.9677,
+    "gerekçeDağılımı": {
+      "DYNAMIC_STRUCTURED": 1,
+      "VOID_LOSS_DOMINATED": 3,
+      "GAS": 3,
+      "STASIS": 1
+    }
+  },
+  "referans": {
+    "kernel": "multi-band (üretim)",
+    "seedler": [
+      {
+        "seed": 1013904223,
+        "retention": 0.3145,
+        "clusteredFraction": 0.913,
+        "meanSpeed": 0.0497,
+        "primaryReason": "VOID_LOSS_DOMINATED"
+      },
+      {
+        "seed": 1196435762,
+        "retention": 0.1543,
+        "clusteredFraction": 0.8734,
+        "meanSpeed": 0.0153,
+        "primaryReason": "VOID_LOSS_DOMINATED"
+      },
+      {
+        "seed": 3519870697,
+        "retention": 0.4316,
+        "clusteredFraction": 0.9321,
+        "meanSpeed": 0.5211,
+        "primaryReason": "VOID_LOSS_DOMINATED"
+      },
+      {
+        "seed": 2868466484,
+        "retention": 0.4473,
+        "clusteredFraction": 0.9476,
+        "meanSpeed": 1.035,
+        "primaryReason": "VOID_LOSS_DOMINATED"
+      },
+      {
+        "seed": 1649599747,
+        "retention": 0.3945,
+        "clusteredFraction": 0.9059,
+        "meanSpeed": 0.0576,
+        "primaryReason": "VOID_LOSS_DOMINATED"
+      },
+      {
+        "seed": 2670642822,
+        "retention": 0.3984,
+        "clusteredFraction": 0.9118,
+        "meanSpeed": 0.0329,
+        "primaryReason": "VOID_LOSS_DOMINATED"
+      },
+      {
+        "seed": 1476291629,
+        "retention": 0.3164,
+        "clusteredFraction": 0.9074,
+        "meanSpeed": 0.3914,
+        "primaryReason": "VOID_LOSS_DOMINATED"
+      },
+      {
+        "seed": 2748932008,
+        "retention": 0.4688,
+        "clusteredFraction": 0.9458,
+        "meanSpeed": 1.1355,
+        "primaryReason": "VOID_LOSS_DOMINATED"
+      }
+    ],
+    "medyanKoruma": 0.3984,
+    "medyanKümeliMadde": 0.913,
+    "gerekçeDağılımı": {
+      "VOID_LOSS_DOMINATED": 8
+    }
+  }
+}

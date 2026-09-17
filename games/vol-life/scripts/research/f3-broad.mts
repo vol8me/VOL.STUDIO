@@ -17,6 +17,8 @@ import {
 import { physicsProfileAt } from '../morphology/physicsSampler';
 import { initialSpeedFor, seedingProfileAt } from '../morphology/seedingSampler';
 import { runSeedUnit, type SeedUnitOutput } from '../morphology/seedRunner';
+import { medianOf } from '../morphology/stats';
+import type { CatalogMetrics } from '../morphology/auditionCatalog';
 import { generateSeedCorpus } from '../morphology/shards';
 import { runUnits } from '../morphology/workerPool';
 
@@ -53,6 +55,48 @@ interface CandidateOutcome {
   readonly index: number;
   readonly primary: ReasonCode | null;
   readonly structured: boolean;
+  /** Kısa listenin (F5) girdisi; aday başına ölçülen, uydurulmayan özet. */
+  readonly record: CandidateRecord;
+}
+
+interface CandidateRecord {
+  readonly index: number;
+  readonly genome: string;
+  readonly primary: ReasonCode | null;
+  readonly structured: boolean;
+  readonly phaseDistribution: Record<string, number>;
+  readonly metrics: CatalogMetrics;
+}
+
+/** Seed'ler arası ORTANCA alınır: tek bir şanslı seed adayı temsil etmez. */
+function summarize(outputs: readonly SeedUnitOutput[], maxSpeed: number): CatalogMetrics {
+  const finals = outputs.map((output) => output.samples[output.samples.length - 1]);
+  const initials = outputs.map((output) => output.samples[0]);
+  const at = (pick: (sample: (typeof finals)[number]) => number): number =>
+    medianOf(finals.map(pick));
+  return {
+    clusteredFraction: at((sample) => sample.clusteredFraction),
+    clusterCount: at((sample) => sample.clusterCount),
+    clusterCompactness: at((sample) => sample.clusterCompactness),
+    clusterAnisotropy: at((sample) => sample.clusterAnisotropy),
+    meanSpeed: at((sample) => sample.meanSpeed),
+    maxSpeed,
+    retention: medianOf(
+      finals.map((sample, index) =>
+        initials[index].activeCount > 0 ? sample.activeCount / initials[index].activeCount : 0,
+      ),
+    ),
+    radialStructure: at((sample) => sample.radialStructure),
+  };
+}
+
+function distributionOf(outputs: readonly SeedUnitOutput[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const output of outputs) {
+    const key = output.classification.primary;
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts;
 }
 
 async function runBatch(from: number, to: number): Promise<CandidateOutcome[]> {
@@ -103,7 +147,21 @@ async function runBatch(from: number, to: number): Promise<CandidateOutcome[]> {
   }
   return [...bySeedGroup.entries()].map(([index, outputs]) => {
     const aggregation = aggregateSeedVerdicts(outputs.map((output) => output.classification));
-    return { index, primary: aggregation.majorityReason, structured: aggregation.structured };
+    const candidate = candidateAt(index);
+    const metrics = summarize(outputs, candidate.physics.dynamics.maxSpeedUnitsPerReferenceTick);
+    return {
+      index,
+      primary: aggregation.majorityReason,
+      structured: aggregation.structured,
+      record: {
+        index,
+        genome: serializeSubstrateCandidate(candidate),
+        primary: aggregation.majorityReason,
+        structured: aggregation.structured,
+        phaseDistribution: distributionOf(outputs),
+        metrics,
+      },
+    };
   });
 }
 
@@ -153,6 +211,19 @@ const summary = {
 
 mkdirSync('benchmarks/results', { recursive: true });
 writeFileSync('benchmarks/results/f3-broad.json', JSON.stringify(summary, null, 2), 'utf8');
+/*
+ * Aday kayıtları YALNIZ yapısal adaylar için yazılır: kısa listeye yalnız
+ * onlar girebilir ve 2048 genomun tamamını saklamak sonucu okunmaz kılar.
+ */
+const records = all.filter((outcome) => outcome.structured).map((outcome) => outcome.record);
+writeFileSync(
+  'benchmarks/results/f3-candidates.jsonl',
+  records.map((record) => JSON.stringify(record)).join('\n') + (records.length > 0 ? '\n' : ''),
+  'utf8',
+);
+console.log(
+  `F3: ${records.length} yapısal aday kaydı yazıldı (benchmarks/results/f3-candidates.jsonl)`,
+);
 console.log(
   `F3: ${CANDIDATE_COUNT} aday × ${seeds.length} seed — yapısal ${summary.yapısalAday}, ` +
     `geçersiz ${invalidCount}, yakınsadı=${converged}, süre ${summary.süreDk} dk`,

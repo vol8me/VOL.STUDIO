@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { digestSubstrateCandidate } from '@/config/candidate';
 import { substrateConfig } from '@/config/substrate';
 import { LifeWorld } from '@/runtime/sim/LifeWorld';
+import type { PairForceKernel } from '@/runtime/sim/PairForceKernel';
 import { createExplicitWorldMetadata } from '@/runtime/sim/WorldMetadata';
 import { createTriangularKernel } from '../../benchmarks/fixtures/triangularKernel';
 import { ClusterTracker, defaultClusterConfig } from '../morphology/clusterTracker';
@@ -10,12 +11,16 @@ import { PhaseClassifier, defaultPhaseConfig } from '../morphology/phaseClassifi
 import { defaultHarnessConfig } from '../morphology/harness';
 import { generateSeedCorpus } from '../morphology/shards';
 import { resolveMorphologyScope } from '../morphology/scenario';
-import { validateNegativeControlSummary } from '../morphology/negativeControlSummary';
+import {
+  validateNegativeControlSummary,
+  type NegativeControlArm,
+  type NegativeControlSeed,
+} from '../morphology/negativeControlSummary';
 
 /*
- * F2 — V1 negatif kontrolü. REDDEDİLEN triangular kernel, final adayla AYNI
- * harness, korpus, metrik ve sınıflandırıcıdan geçirilir; tek fark kernel
- * enjeksiyonudur. Karşılaştırma ancak aynı ölçüm hattından geçerse anlamlıdır.
+ * F2 — V1 negatif kontrolü. REDDEDİLEN triangular kernel ve ÜRETİM kerneli
+ * aynı aday, aynı tohumlar, aynı metrik ve sınıflandırıcıdan geçer; tek fark
+ * kernel enjeksiyonudur. Karşılaştırma ancak aynı ölçüm hattında anlamlıdır.
  */
 const SEED_COUNT = Number(process.argv[2] ?? 4);
 const stage = defaultHarnessConfig.refinement;
@@ -26,11 +31,12 @@ const scope = resolveMorphologyScope(
   substrateConfig.candidate.void,
 );
 
-const started = Date.now();
-const seedSummaries = seeds.map((seed) => {
-  const world = new LifeWorld(substrateConfig, createExplicitWorldMetadata(seed), {
-    kernel: createTriangularKernel(),
-  });
+function runSeed(seed: number, kernel?: PairForceKernel): NegativeControlSeed {
+  const world = new LifeWorld(
+    substrateConfig,
+    createExplicitWorldMetadata(seed),
+    kernel ? { kernel } : {},
+  );
   const initialActive = world.particles.activeCount;
   const metrics = new MorphologyMetrics({
     ...defaultMetricsConfig,
@@ -42,19 +48,21 @@ const seedSummaries = seeds.map((seed) => {
   const cluster = new ClusterTracker({
     ...defaultClusterConfig,
     sampleIntervalTicks: stage.sampleInterval,
+    // Boşluk ve süreklilik ÖRNEK ARALIĞINA tam bölünmeli (tracker şartı).
+    maxGapTicks: stage.sampleInterval * 2,
+    minContinuityTicks: stage.sampleInterval * 2,
   });
   for (let tick = 0; tick < stage.tickCount; tick++) {
     world.step();
-    if (tick % stage.sampleInterval === 0) {
-      cluster.update(world.particles, tick);
-      metrics.sample(
-        world.particles,
-        world.domain,
-        tick,
-        world.reservoir.voidLossTotal,
-        cluster.activeClusters,
-      );
-    }
+    if (tick % stage.sampleInterval !== 0) continue;
+    cluster.update(world.particles, tick);
+    metrics.sample(
+      world.particles,
+      world.domain,
+      tick,
+      world.reservoir.voidLossTotal,
+      cluster.activeClusters,
+    );
   }
   const verdict = new PhaseClassifier({
     ...defaultPhaseConfig,
@@ -69,23 +77,18 @@ const seedSummaries = seeds.map((seed) => {
     meanSpeed: +last.meanSpeed.toFixed(4),
     primaryReason: verdict.primary,
   };
-});
+}
 
-const summary = {
-  schemaVersion: 1,
-  madde: 'F2',
-  tarih: new Date().toISOString().slice(0, 10),
-  kernel: 'triangular-v1 (REDDEDİLEN)',
-  candidateDigest: digestSubstrateCandidate(substrateConfig.candidate),
-  tickCount: stage.tickCount,
-  sampleInterval: stage.sampleInterval,
-  seedCount: SEED_COUNT,
-  süreMs: Date.now() - started,
-  seedler: seedSummaries,
-  medyanKoruma: median(seedSummaries.map((entry) => entry.retention)),
-  medyanKümeliMadde: median(seedSummaries.map((entry) => entry.clusteredFraction)),
-  gerekçeDağılımı: countBy(seedSummaries.map((entry) => entry.primaryReason)),
-};
+function arm(kernelLabel: string, kernel?: PairForceKernel): NegativeControlArm {
+  const seedler = seeds.map((seed) => runSeed(seed, kernel));
+  return {
+    kernel: kernelLabel,
+    seedler,
+    medyanKoruma: median(seedler.map((entry) => entry.retention)),
+    medyanKümeliMadde: median(seedler.map((entry) => entry.clusteredFraction)),
+    gerekçeDağılımı: countBy(seedler.map((entry) => entry.primaryReason)),
+  };
+}
 
 function median(values: readonly number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
@@ -98,6 +101,23 @@ function countBy(values: readonly string[]): Record<string, number> {
   return counts;
 }
 
+const started = Date.now();
+const kontrol = arm('triangular-v1 (REDDEDİLEN)', createTriangularKernel());
+const referans = arm('multi-band (üretim)');
+
+const summary = {
+  schemaVersion: 2,
+  madde: 'F2',
+  tarih: new Date().toISOString().slice(0, 10),
+  candidateDigest: digestSubstrateCandidate(substrateConfig.candidate),
+  tickCount: stage.tickCount,
+  sampleInterval: stage.sampleInterval,
+  seedCount: SEED_COUNT,
+  süreMs: Date.now() - started,
+  kontrol,
+  referans,
+};
+
 // Şema betikte de DOĞRULANIR: geçersiz bir özet diske yazılmaz.
 validateNegativeControlSummary(summary);
 mkdirSync('benchmarks/results', { recursive: true });
@@ -107,6 +127,9 @@ writeFileSync(
   'utf8',
 );
 console.log(
-  `F2: ${SEED_COUNT} seed × ${stage.tickCount} tick — medyan koruma ` +
-    `${summary.medyanKoruma}, gerekçeler ${JSON.stringify(summary.gerekçeDağılımı)}`,
+  `F2: ${SEED_COUNT} seed × ${stage.tickCount} tick\n` +
+    `  kontrol  (${kontrol.kernel}): koruma ${kontrol.medyanKoruma}, ` +
+    `kümeli ${kontrol.medyanKümeliMadde}, ${JSON.stringify(kontrol.gerekçeDağılımı)}\n` +
+    `  referans (${referans.kernel}): koruma ${referans.medyanKoruma}, ` +
+    `kümeli ${referans.medyanKümeliMadde}, ${JSON.stringify(referans.gerekçeDağılımı)}`,
 );

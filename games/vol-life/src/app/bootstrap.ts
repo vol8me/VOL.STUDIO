@@ -12,6 +12,7 @@ import {
   androidScreenOrientation,
   getRuntimePlatform,
 } from '@volstudio/tauri-v2';
+import { loadAuditionSelection, describeSelection } from '@/app/auditionCatalog';
 import { loadAuditionCandidate } from '@/app/auditionGenome';
 import { LifePreferences } from '@/app/LifePreferences';
 import { LifeWorldPersistence } from '@/app/LifeWorldPersistence';
@@ -22,6 +23,7 @@ import { lifeGraphicsConfig } from '@/config/graphics';
 import { substrateConfig } from '@/config/substrate';
 import { LifeRuntime } from '@/runtime/LifeRuntime';
 import { LifeScene } from '@/runtime/scene/LifeScene';
+import { createExplicitWorldMetadata } from '@/runtime/sim/WorldMetadata';
 import lifeTr from '@/i18n/tr.json';
 import lifeEn from '@/i18n/en.json';
 import '@/i18next-augment';
@@ -59,12 +61,29 @@ try {
   setHapticsDriver(platform === 'android' ? new TauriHapticsDriver() : null);
   const preferences = new LifePreferences(saveManager);
   await preferences.load();
-  const audition = loadAuditionCandidate();
-  const activeSubstrate = audition
-    ? { ...substrateConfig, candidate: audition.candidate }
+  /*
+   * Audition iki yoldan girer: katalog (F5, kısa listenin tamamı) ya da tek
+   * genom (`VITE_LIFE_AUDITION_GENOME`). Katalog varsa o kazanır.
+   */
+  const selection = import.meta.env.DEV ? await loadAuditionSelection() : null;
+  const audition = import.meta.env.DEV && !selection ? loadAuditionCandidate() : null;
+  const auditionCandidate = selection?.entry.candidate ?? audition?.candidate ?? null;
+  const activeSubstrate = auditionCandidate
+    ? { ...substrateConfig, candidate: auditionCandidate }
     : substrateConfig;
-  const worldPersistence = new LifeWorldPersistence(saveManager, activeSubstrate);
-  const initialWorld = await worldPersistence.load();
+  /*
+   * Audition koşusu KAYIT TUTMAZ. Kalifiye olmamış bir genomla açılan dünya
+   * otomatik kaydedilseydi, oyuncunun kaydı bir ön-eleme oturumunda sessizce
+   * araştırma dünyasıyla değiştirilirdi.
+   */
+  const worldPersistence = auditionCandidate
+    ? null
+    : new LifeWorldPersistence(saveManager, activeSubstrate);
+  const initialWorld = worldPersistence
+    ? await worldPersistence.load()
+    : { snapshot: null, issue: null };
+  // Katalog adayı KENDİ tohumuyla gösterilir; aynı üç tohum bütün adaylarda aynıdır.
+  const auditionMetadata = selection ? createExplicitWorldMetadata(selection.seed) : undefined;
   setHapticsEnabled(preferences.get().hapticsEnabled);
   const orientation = new OrientationPreference(
     platform === 'android' ? androidScreenOrientation : null,
@@ -84,11 +103,12 @@ try {
         initialWorldSnapshot: initialWorld.snapshot,
         initialWorldLoadIssue: initialWorld.issue,
         worldPersistence,
-        auditionDigest: audition?.digest ?? null,
+        auditionDigest: selection ? describeSelection(selection) : audition?.digest ?? null,
         createRuntime: (scene, initialSnapshot) =>
           new LifeRuntime(scene, {
             config: activeSubstrate,
             initialSnapshot,
+            ...(auditionMetadata ? { worldMetadata: auditionMetadata } : {}),
           }),
       }),
     ],

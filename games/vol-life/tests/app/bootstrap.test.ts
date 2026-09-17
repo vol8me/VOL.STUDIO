@@ -58,9 +58,15 @@ vi.mock('@/runtime/scene/LifeScene', () => ({
   },
 }));
 
-function sceneServices(): { platform: Platform; preferences: unknown } {
+function sceneServices(): {
+  platform: Platform;
+  preferences: unknown;
+  auditionDigest: string | null;
+} {
   const config = createVolGame.mock.calls[0]?.[0] as {
-    scenes: Array<{ services: { platform: Platform; preferences: unknown } }>;
+    scenes: Array<{
+      services: { platform: Platform; preferences: unknown; auditionDigest: string | null };
+    }>;
   };
   return config.scenes[0].services;
 }
@@ -130,14 +136,28 @@ describe('bootstrap', () => {
     expect(sceneServices().preferences).not.toBeNull();
   });
 
+  /*
+   * URL'den genom enjekte edilemez. Dev audition kataloğu (F5) SABİT bir
+   * araştırma dosyası okur; istek adresi sorgudan türetilmez ve katalog
+   * yokken sahneye hiçbir aday geçmez. Üretim derlemesinde bu okuma zaten
+   * yoktur (`tests/governance/auditionCatalogAbsence.test.ts`).
+   */
   it('başarısız araştırma adayları URL ile production fiziğine enjekte edilemez', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch');
-    window.history.replaceState({}, '', '/?morphologyCandidate=obsolete-v3');
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('', { status: 404 }));
+    window.history.replaceState({}, '', '/?morphologyCandidate=obsolete-v3&audition=1');
 
     await import('@/app/bootstrap');
 
     expect(createVolGame).toHaveBeenCalledTimes(1);
-    expect(fetchSpy).not.toHaveBeenCalled();
+    for (const [request] of fetchSpy.mock.calls) {
+      const url = String(request instanceof Request ? request.url : request);
+      expect(url).toContain('research-out/audition-catalog.json');
+      expect(url).not.toContain('morphologyCandidate');
+      expect(url).not.toContain('obsolete-v3');
+    }
+    expect(sceneServices().auditionDigest).toBeNull();
   });
 
   it('masaüstünde görüntü kipi denetleyicisi başlar ve oyun ömrüne bağlanır', async () => {
