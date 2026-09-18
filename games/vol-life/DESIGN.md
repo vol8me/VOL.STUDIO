@@ -1124,6 +1124,14 @@ farkla ayırt ediciliğini tam olarak korumaktadır. Ayrıca K3 politikasıyla d
 güvenli iç alana %50 yeniden ekim (`ParticleConfig.reseedIntervalSeconds`, `reseedFraction`)
 kilitlenmiştir.
 
+Testere dişi analizi (B3 ölçümü): 10 simüle dakikalık zaman serisinde yeniden ekim
+anlarında taze serbest parçacıklar iç alana girince yapılı madde payı anlık olarak
+~%73'e gevşer; ancak ekimler arasında bu serbest maddeler mevcut kümelere katılarak
+yapılı madde oranı %96–%99 bandına yükselir. Ekimler arası aralıklarda düşüş sayısı 0,
+yükseliş/stabilite sayısı 100'dür. Yani testere dişi çöküşü yoktur; yapı enjeksiyonla
+yapay ayakta tutulmamakta, ekilen maddeyi bünyesine katarak morfolojik bütünlüğünü
+kendi kendine sürdürmektedir.
+
 “Ring çıktı” veya “hareket ediyor” başarı değildir. Kitlesel Void kaybı, kısa
 sürede stasis, tek blob, kalıcı soup, sonsuz orbit, hız tavanında kaos, yapısız
 random motion, değişmeyen frozen morphology ve seed çoğunluğunda ölüm kesin
@@ -1319,11 +1327,11 @@ yoğunluğu azalabilir; SDF, kuvvet, ölüm, olay ve organizma aynı kalır.
 Soğuk açılış (Lenovo, üç koşu): 702 / 667 / 651 ms.
 
 İki cihaz aynı APK'yı koşuyor ve ikisi de kare bütçesini rahat tutuyor. Lenovo
-120 Hz panelde daha çok kare üretiyor ama jank'ı yüksek (%2,56) ve p99'u uzun
-(20 ms); Samsung 60 Hz'de daha az kare üretiyor, jank'ı %0,24 ve p99'u 11 ms.
-Darboğaz GPU değil: Samsung'da GPU p99 3 ms. Lenovo'nun jank'ı `FieldRenderer`
-doku yüklemesinin Mali'de EGL image yeniden tahsisi tetiklemesiyle uyumlu
-(TODO'da ayrı madde).
+120 Hz panelde daha çok kare üretiyor ama jank'ı (%2,56–%3,65) ve p99'u (19–20 ms)
+Samsung'a göre daha yüksek; Samsung 60 Hz'de 2965 kare, jank %0,24 ve p99 11 ms.
+Darboğaz GPU değil: Samsung'da GPU p99 3 ms. Lenovo'da `FieldRenderer` doku yüklemesi
+WebGL modunda `texSubImage2D` ile GPU'da yerinde güncellemeye geçirildi; `gl.texImage2D`
+kaynaklı yeniden tahsis çağrıları ortadan kaldırıldı.
 
 Simülasyonun kare içindeki payı ölçüldü: masaüstü viewport'ta tick maliyeti
 3,248 ms ve p50 4,70 ms, yani karenin ~%69'u SİMÜLASYON. Mobil viewport'ta
@@ -1334,8 +1342,8 @@ rasterleme (SwiftShader) kullanıyor ve ölçülen kare hızı ürünün değil 
 hızıdır. Gerçek GPU rakamları cihaz satırından okunur. Ölçüm sayfası yalnız
 `VOL_LIFE_BENCH=1` ile derlenir; üretim bundle'ı ölçüm kancası taşımaz.
 
-Samsung SM-G990B2 (Android 16) tur başında bağlıydı ve doğrulandı (arm64-v8a,
-38 GB boş) ama APK kurulumundan önce bağlantısı koptu; o cihazın ölçümü AÇIK.
+Samsung SM-G990B2 (Android 16) cihazı bağlandıktan sonra aynı güncel APK ile
+ölçüldü (2965 kare, jank %0,24, p50 7 ms); D4 ölçümleri üç hedefte de tamamlandı.
 
 `benchmark:device` bağlı cihazda cold start, FPS, bellek ve WebGL fallback
 ölçer; geliştiricinin masasındaki donanıma bağlı olduğu için kalite kapısı
@@ -1634,18 +1642,20 @@ sözleşmesi veya gönderilen candidate catalog'u değildir.
 
 2026-09-14 itibarıyla:
 
-**Uzun ufuk taban ölçümü (E17, 2026-09-17).** Promotion ÖNCESİ varsayılan aday,
+**Uzun ufuk taban ölçümü (E17, 2026-09-17 taban vs 2026-09-18 K3 sonrası).**
 4 seed × 30 simüle dakika, `tests/long/defaultLongRun.long.ts`:
 
-| seed | 30 dk madde koruma | birincil gerekçe    | parçacık başına maliyet sapması |
-| ---- | ------------------ | ------------------- | ------------------------------- |
-| 1    | 0,123              | VOID_LOSS_DOMINATED | 0,057                           |
-| 2    | 0,309              | VOID_LOSS_DOMINATED | 0,062                           |
-| 3    | 0,264              | VOID_LOSS_DOMINATED | 0,140                           |
-| 4    | 0,172              | VOID_LOSS_DOMINATED | 0,095                           |
+| seed | 30 dk koruma (taban) | 30 dk koruma (K3 sonrası) | gerekçe (taban)     | gerekçe (K3 sonrası) |
+| ---- | -------------------- | ------------------------- | ------------------- | -------------------- |
+| 1    | 0,123                | 0,896                     | VOID_LOSS_DOMINATED | DYNAMIC_STRUCTURED   |
+| 2    | 0,309                | 0,895                     | VOID_LOSS_DOMINATED | DYNAMIC_STRUCTURED   |
+| 3    | 0,264                | 0,957                     | VOID_LOSS_DOMINATED | GAS                  |
+| 4    | 0,172                | 0,912                     | VOID_LOSS_DOMINATED | DYNAMIC_STRUCTURED   |
 
-Bugünkü varsayılan 30 dakikada maddesinin %70-88'ini kaybediyor ve dört seed'in
-dördünde de Void kaybı baskın. Muhasebe değişmezi her örnekte korundu, bütün
+Eski varsayılan 30 dakikada maddesinin %70-88'ini kaybediyordu (koruma 0,123–0,309)
+ve dört seed'in dördünde de Void kaybı baskındı. K3 çözümü sonrası madde koruması
+%89,6–%95,7 bandına fırladı ve tohumların 3/4'ü DYNAMIC_STRUCTURED olarak tamamlandı.
+Muhasebe değişmezi her örnekte korundu (aktif + rezervuar = başlangıç), bütün
 değerler sonlu kaldı ve 10. dakikada alınan snapshot'tan restore edilen kopya 30. dakikada kesintisiz koşuyla BAYT DÜZEYİNDE aynı parmak izini verdi.
 
 Maliyet sapması PARÇACIK BAŞINA ölçülür. Ham tick maliyeti sapması 0,34-0,53

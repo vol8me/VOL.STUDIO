@@ -1,108 +1,106 @@
 {
   "madde": "F7",
   "tarih": "2026-09-17",
-  "revision": "4c2e83e7067860e644c91ef61e1f8dd73ae54165",
-  "temizKaynak": true,
+  "revision": "29d933c5cb78a05ac5cc15a01a553bb80cf894a2",
+  "temizKaynak": false,
   "korpus": "corpus-v1",
   "seedSayısı": 8,
   "dakika": 10,
   "istenenDakika": 10,
   "kısaltıldı": false,
-  "ölçülenMsPerTick": 4.0472,
-  "tahminSaat": 0.65,
+  "ölçülenMsPerTick": 4.1093,
+  "tahminSaat": 0.66,
   "örnekAralığıTick": 300,
   "perturbationDakikaları": [
     5
   ],
   "adaySayısı": 8,
-  "süreDk": 0,
+  "süreDk": 97.6,
   "sonuçlar": [
     {
       "digest": "54bbf81b62270b94",
       "scenario": "intrinsic",
       "verdict": {
         "seedCount": 8,
-        "retentionMedian": 0.0625,
-        "retentionMin": 0.0078125,
+        "retentionMedian": 0.44140625,
+        "retentionMin": 0.318359375,
         "structuredShare": 0,
-        "recoveredShare": 0.75,
+        "recoveredShare": 1,
         "hardFailShares": {
-          "VOID_LOSS_DOMINATED": 0.625,
-          "DEAD": 0.375
+          "GAS": 0.25,
+          "VOID_LOSS_DOMINATED": 0.75
         },
         "failures": [
-          "30 dk koruma medyanı 0.063 < 0.7",
-          "en kötü seed koruması 0.008 < 0.4",
+          "30 dk koruma medyanı 0.441 < 0.7",
+          "en kötü seed koruması 0.318 < 0.4",
           "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "VOID_LOSS_DOMINATED seed'lerin 63%'inde"
+          "VOID_LOSS_DOMINATED seed'lerin 75%'inde"
         ],
         "passed": false
       },
       "collapse": {
         "seeds": [
           {
-            "seed": 2666778439,
+            "seed": 1210592025,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 1,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.9047619047619048,
-            "tailSlopePerMinute": -6.5536136741438e-31
+            "referenceMedian": 0.962457337883959,
+            "tailSlopePerMinute": 0.012218608054297997
           },
           {
             "seed": 1261206709,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.9965753424657534,
-            "tailSlopePerMinute": 1.31072273482876e-30
+            "referenceMedian": 0.9642857142857143,
+            "tailSlopePerMinute": 0.04897382293062794
           },
           {
-            "seed": 2821603855,
+            "seed": 2456237356,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.8888888888888888,
-            "tailSlopePerMinute": -9.611966722077573e-31
+            "referenceMedian": 0.9621621621621622,
+            "tailSlopePerMinute": 0.02999121981406201
           },
           {
             "seed": 2521906097,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.96875,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9688385269121813,
+            "tailSlopePerMinute": 0.010794046060185797
           },
           {
-            "seed": 4089020015,
+            "seed": 2666778439,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.9640718562874252,
-            "tailSlopePerMinute": -6.5536136741438e-31
+            "referenceMedian": 0.9701492537313433,
+            "tailSlopePerMinute": 0.01996447283033259
           },
           {
             "seed": 2805714991,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.9565217391304348,
-            "tailSlopePerMinute": -0.05112426035502965
+            "referenceMedian": 0.9516129032258065,
+            "tailSlopePerMinute": 0.06744698335031839
           },
           {
-            "seed": 1210592025,
+            "seed": 2821603855,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9560439560439561,
+            "tailSlopePerMinute": 0.028525543593916926
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.952191235059761,
+            "tailSlopePerMinute": -0.004060090523192442
           }
         ],
         "collapsedSeedFraction": 0,
         "lateCollapseSeedFraction": 0,
-        "canaryRequired": true,
-        "canaryReasons": [
-          "son 2 dakikanın eğimi 1 seed'de anlamlı düşüşte"
-        ]
+        "canaryRequired": false,
+        "canaryReasons": []
       }
     },
     {
@@ -110,18 +108,18 @@
       "scenario": "void-stress",
       "verdict": {
         "seedCount": 8,
-        "retentionMedian": 0.0625,
-        "retentionMin": 0.0078125,
-        "structuredShare": 0,
-        "recoveredShare": 0.75,
+        "retentionMedian": 0.462890625,
+        "retentionMin": 0.3515625,
+        "structuredShare": 0.125,
+        "recoveredShare": 1,
         "hardFailShares": {
-          "VOID_LOSS_DOMINATED": 0.625,
-          "DEAD": 0.375
+          "GAS": 0.25,
+          "VOID_LOSS_DOMINATED": 0.625
         },
         "failures": [
-          "30 dk koruma medyanı 0.063 < 0.7",
-          "en kötü seed koruması 0.008 < 0.4",
-          "DYNAMIC_STRUCTURED payı 0% < 75%",
+          "30 dk koruma medyanı 0.463 < 0.7",
+          "en kötü seed koruması 0.352 < 0.4",
+          "DYNAMIC_STRUCTURED payı 13% < 75%",
           "VOID_LOSS_DOMINATED seed'lerin 63%'inde"
         ],
         "passed": false
@@ -129,586 +127,665 @@
       "collapse": {
         "seeds": [
           {
-            "seed": 2666778439,
+            "seed": 1210592025,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 1,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.9047619047619048,
-            "tailSlopePerMinute": -6.5536136741438e-31
+            "referenceMedian": 0.9644444444444444,
+            "tailSlopePerMinute": 0.012738739507536477
           },
           {
             "seed": 1261206709,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.9965753424657534,
-            "tailSlopePerMinute": 1.31072273482876e-30
+            "referenceMedian": 0.9651741293532339,
+            "tailSlopePerMinute": 0.04641943257109434
+          },
+          {
+            "seed": 2456237356,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9574468085106383,
+            "tailSlopePerMinute": 0.027760196037013383
+          },
+          {
+            "seed": 2521906097,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.968503937007874,
+            "tailSlopePerMinute": 0.009469612826153537
+          },
+          {
+            "seed": 2666778439,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9709302325581395,
+            "tailSlopePerMinute": 0.017582050449964567
+          },
+          {
+            "seed": 2805714991,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.951417004048583,
+            "tailSlopePerMinute": 0.06384621416927791
           },
           {
             "seed": 2821603855,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9555555555555556,
+            "tailSlopePerMinute": 0.029970577635046576
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.952076677316294,
+            "tailSlopePerMinute": -0.004395724951053826
+          }
+        ],
+        "collapsedSeedFraction": 0,
+        "lateCollapseSeedFraction": 0,
+        "canaryRequired": false,
+        "canaryReasons": []
+      }
+    },
+    {
+      "digest": "e31f112e312e6031",
+      "scenario": "intrinsic",
+      "verdict": {
+        "seedCount": 8,
+        "retentionMedian": 0.505859375,
+        "retentionMin": 0.01953125,
+        "structuredShare": 0,
+        "recoveredShare": 1,
+        "hardFailShares": {
+          "GAS": 0.25,
+          "DEAD": 0.375,
+          "SPEED_CAP_CHAOS": 0.25,
+          "VOID_LOSS_DOMINATED": 0.125
+        },
+        "failures": [
+          "30 dk koruma medyanı 0.506 < 0.7",
+          "en kötü seed koruması 0.020 < 0.4",
+          "DYNAMIC_STRUCTURED payı 0% < 75%"
+        ],
+        "passed": false
+      },
+      "collapse": {
+        "seeds": [
+          {
+            "seed": 1210592025,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9539473684210527,
+            "tailSlopePerMinute": 0.030461528287289694
+          },
+          {
+            "seed": 1261206709,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9698795180722891,
+            "tailSlopePerMinute": -0.11647384879918754
+          },
+          {
+            "seed": 2456237356,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9593023255813954,
+            "tailSlopePerMinute": 0.02302543504494354
+          },
+          {
+            "seed": 2521906097,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9530332681017613,
+            "tailSlopePerMinute": -0.00020133706629951585
+          },
+          {
+            "seed": 2666778439,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9748743718592965,
+            "tailSlopePerMinute": -0.1513766842691839
+          },
+          {
+            "seed": 2805714991,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9730392156862745,
+            "tailSlopePerMinute": 0.011494589969011934
+          },
+          {
+            "seed": 2821603855,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9694189602446484,
+            "tailSlopePerMinute": 0.014517955144104906
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9644670050761421,
+            "tailSlopePerMinute": 0.014959212964466497
+          }
+        ],
+        "collapsedSeedFraction": 0,
+        "lateCollapseSeedFraction": 0,
+        "canaryRequired": true,
+        "canaryReasons": [
+          "son 2 dakikanın eğimi 2 seed'de anlamlı düşüşte"
+        ]
+      }
+    },
+    {
+      "digest": "e31f112e312e6031",
+      "scenario": "void-stress",
+      "verdict": {
+        "seedCount": 8,
+        "retentionMedian": 0.505859375,
+        "retentionMin": 0.01953125,
+        "structuredShare": 0,
+        "recoveredShare": 1,
+        "hardFailShares": {
+          "GAS": 0.25,
+          "DEAD": 0.375,
+          "SPEED_CAP_CHAOS": 0.25,
+          "VOID_LOSS_DOMINATED": 0.125
+        },
+        "failures": [
+          "30 dk koruma medyanı 0.506 < 0.7",
+          "en kötü seed koruması 0.020 < 0.4",
+          "DYNAMIC_STRUCTURED payı 0% < 75%"
+        ],
+        "passed": false
+      },
+      "collapse": {
+        "seeds": [
+          {
+            "seed": 1210592025,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9573170731707317,
+            "tailSlopePerMinute": 0.030806459254398927
+          },
+          {
+            "seed": 1261206709,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9698795180722891,
+            "tailSlopePerMinute": -0.11552246776962236
+          },
+          {
+            "seed": 2456237356,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9619565217391305,
+            "tailSlopePerMinute": 0.019155863196613533
+          },
+          {
+            "seed": 2521906097,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9530332681017613,
+            "tailSlopePerMinute": -0.00017744927316778815
+          },
+          {
+            "seed": 2666778439,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9782608695652174,
+            "tailSlopePerMinute": -0.1490231282774993
+          },
+          {
+            "seed": 2805714991,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9722222222222222,
+            "tailSlopePerMinute": 0.011530607669121005
+          },
+          {
+            "seed": 2821603855,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9694189602446484,
+            "tailSlopePerMinute": 0.01451424552536411
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.963963963963964,
+            "tailSlopePerMinute": 0.022322767115881468
+          }
+        ],
+        "collapsedSeedFraction": 0,
+        "lateCollapseSeedFraction": 0,
+        "canaryRequired": true,
+        "canaryReasons": [
+          "son 2 dakikanın eğimi 2 seed'de anlamlı düşüşte"
+        ]
+      }
+    },
+    {
+      "digest": "37b8c8d8e8a51b97",
+      "scenario": "intrinsic",
+      "verdict": {
+        "seedCount": 8,
+        "retentionMedian": 0.939453125,
+        "retentionMin": 0.697265625,
+        "structuredShare": 0.25,
+        "recoveredShare": 1,
+        "hardFailShares": {
+          "SPEED_CAP_CHAOS": 0.5,
+          "GAS": 0.25
+        },
+        "failures": [
+          "DYNAMIC_STRUCTURED payı 25% < 75%",
+          "SPEED_CAP_CHAOS seed'lerin 50%'inde"
+        ],
+        "passed": false
+      },
+      "collapse": {
+        "seeds": [
+          {
+            "seed": 1210592025,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9622222222222222,
+            "tailSlopePerMinute": 0.0015339300527688615
+          },
+          {
+            "seed": 1261206709,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9521640091116174,
+            "tailSlopePerMinute": 0.0016581859460634294
+          },
+          {
+            "seed": 2456237356,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9711934156378601,
+            "tailSlopePerMinute": 0.011317307027000248
+          },
+          {
+            "seed": 2521906097,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9397590361445783,
+            "tailSlopePerMinute": 0.010840998659426978
+          },
+          {
+            "seed": 2666778439,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9443155452436195,
+            "tailSlopePerMinute": 0.009815873478757349
+          },
+          {
+            "seed": 2805714991,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.941544885177453,
+            "tailSlopePerMinute": -0.002976376008800455
+          },
+          {
+            "seed": 2821603855,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9403973509933775,
+            "tailSlopePerMinute": -0.001319241353041851
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9561586638830898,
+            "tailSlopePerMinute": 0.014212790091462871
+          }
+        ],
+        "collapsedSeedFraction": 0,
+        "lateCollapseSeedFraction": 0,
+        "canaryRequired": false,
+        "canaryReasons": []
+      }
+    },
+    {
+      "digest": "37b8c8d8e8a51b97",
+      "scenario": "void-stress",
+      "verdict": {
+        "seedCount": 8,
+        "retentionMedian": 0.943359375,
+        "retentionMin": 0.697265625,
+        "structuredShare": 0.25,
+        "recoveredShare": 1,
+        "hardFailShares": {
+          "SPEED_CAP_CHAOS": 0.5,
+          "GAS": 0.25
+        },
+        "failures": [
+          "DYNAMIC_STRUCTURED payı 25% < 75%",
+          "SPEED_CAP_CHAOS seed'lerin 50%'inde"
+        ],
+        "passed": false
+      },
+      "collapse": {
+        "seeds": [
+          {
+            "seed": 1210592025,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9622222222222222,
+            "tailSlopePerMinute": 0.001696113711016085
+          },
+          {
+            "seed": 1261206709,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9522727272727273,
+            "tailSlopePerMinute": 0.001767620080393835
+          },
+          {
+            "seed": 2456237356,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9711934156378601,
+            "tailSlopePerMinute": 0.01108502205759705
+          },
+          {
+            "seed": 2521906097,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9397590361445783,
+            "tailSlopePerMinute": 0.010565635518438843
+          },
+          {
+            "seed": 2666778439,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9443155452436195,
+            "tailSlopePerMinute": 0.009895737930654566
+          },
+          {
+            "seed": 2805714991,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9416498993963782,
+            "tailSlopePerMinute": -0.00202945192567018
+          },
+          {
+            "seed": 2821603855,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9411764705882353,
+            "tailSlopePerMinute": -0.001485412504800262
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9561586638830898,
+            "tailSlopePerMinute": 0.014277040196621557
+          }
+        ],
+        "collapsedSeedFraction": 0,
+        "lateCollapseSeedFraction": 0,
+        "canaryRequired": false,
+        "canaryReasons": []
+      }
+    },
+    {
+      "digest": "5a7ecb17be5ec762",
+      "scenario": "intrinsic",
+      "verdict": {
+        "seedCount": 8,
+        "retentionMedian": 0.33203125,
+        "retentionMin": 0.123046875,
+        "structuredShare": 0,
+        "recoveredShare": 1,
+        "hardFailShares": {
+          "VOID_LOSS_DOMINATED": 1
+        },
+        "failures": [
+          "30 dk koruma medyanı 0.332 < 0.7",
+          "en kötü seed koruması 0.123 < 0.4",
+          "DYNAMIC_STRUCTURED payı 0% < 75%",
+          "VOID_LOSS_DOMINATED seed'lerin 100%'inde"
+        ],
+        "passed": false
+      },
+      "collapse": {
+        "seeds": [
+          {
+            "seed": 1210592025,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8516129032258064,
+            "tailSlopePerMinute": 0.0667001122443775
+          },
+          {
+            "seed": 1261206709,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8666666666666667,
+            "tailSlopePerMinute": 0.0550082641585104
+          },
+          {
+            "seed": 2456237356,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8275862068965517,
+            "tailSlopePerMinute": -0.0807987620028369
+          },
+          {
+            "seed": 2521906097,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8465116279069768,
+            "tailSlopePerMinute": 0.028457805406662935
+          },
+          {
+            "seed": 2666778439,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.7963636363636364,
+            "tailSlopePerMinute": 0.017432154032579552
+          },
+          {
+            "seed": 2805714991,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8193979933110368,
+            "tailSlopePerMinute": 0.006165444471025917
+          },
+          {
+            "seed": 2821603855,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8350877192982457,
+            "tailSlopePerMinute": 0.054128388774135026
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8411552346570397,
+            "tailSlopePerMinute": 0.11877442519442451
+          }
+        ],
+        "collapsedSeedFraction": 0,
+        "lateCollapseSeedFraction": 0,
+        "canaryRequired": true,
+        "canaryReasons": [
+          "son 2 dakikanın eğimi 1 seed'de anlamlı düşüşte"
+        ]
+      }
+    },
+    {
+      "digest": "5a7ecb17be5ec762",
+      "scenario": "void-stress",
+      "verdict": {
+        "seedCount": 8,
+        "retentionMedian": 0.3515625,
+        "retentionMin": 0.21484375,
+        "structuredShare": 0,
+        "recoveredShare": 1,
+        "hardFailShares": {
+          "VOID_LOSS_DOMINATED": 1
+        },
+        "failures": [
+          "30 dk koruma medyanı 0.352 < 0.7",
+          "en kötü seed koruması 0.215 < 0.4",
+          "DYNAMIC_STRUCTURED payı 0% < 75%",
+          "VOID_LOSS_DOMINATED seed'lerin 100%'inde"
+        ],
+        "passed": false
+      },
+      "collapse": {
+        "seeds": [
+          {
+            "seed": 1210592025,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8547486033519553,
+            "tailSlopePerMinute": 0.06194403857648413
+          },
+          {
+            "seed": 1261206709,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8674242424242424,
+            "tailSlopePerMinute": 0.04986970571998281
+          },
+          {
+            "seed": 2456237356,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8333333333333334,
+            "tailSlopePerMinute": -0.07628836320706583
+          },
+          {
+            "seed": 2521906097,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8454545454545455,
+            "tailSlopePerMinute": 0.025973192331231163
+          },
+          {
+            "seed": 2666778439,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8061674008810573,
+            "tailSlopePerMinute": 0.019063551087390235
+          },
+          {
+            "seed": 2805714991,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8260869565217391,
+            "tailSlopePerMinute": 0.007165492142132167
+          },
+          {
+            "seed": 2821603855,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8385416666666666,
+            "tailSlopePerMinute": 0.06387674607452543
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.8407079646017699,
+            "tailSlopePerMinute": 0.11182871721636088
+          }
+        ],
+        "collapsedSeedFraction": 0,
+        "lateCollapseSeedFraction": 0,
+        "canaryRequired": true,
+        "canaryReasons": [
+          "son 2 dakikanın eğimi 1 seed'de anlamlı düşüşte"
+        ]
+      }
+    },
+    {
+      "digest": "1d811cc0d34eda26",
+      "scenario": "intrinsic",
+      "verdict": {
+        "seedCount": 8,
+        "retentionMedian": 0.3125,
+        "retentionMin": 0.205078125,
+        "structuredShare": 0,
+        "recoveredShare": 1,
+        "hardFailShares": {
+          "VOID_LOSS_DOMINATED": 1
+        },
+        "failures": [
+          "30 dk koruma medyanı 0.313 < 0.7",
+          "en kötü seed koruması 0.205 < 0.4",
+          "DYNAMIC_STRUCTURED payı 0% < 75%",
+          "VOID_LOSS_DOMINATED seed'lerin 100%'inde"
+        ],
+        "passed": false
+      },
+      "collapse": {
+        "seeds": [
+          {
+            "seed": 1210592025,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9111111111111111,
+            "tailSlopePerMinute": 0.07036169797941924
+          },
+          {
+            "seed": 1261206709,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9127906976744186,
+            "tailSlopePerMinute": 0.07773813279963808
+          },
+          {
+            "seed": 2456237356,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9057239057239057,
+            "tailSlopePerMinute": 0.022341799998227274
+          },
+          {
+            "seed": 2521906097,
             "collapsed": false,
             "collapseStartMinutes": null,
             "referenceMedian": 0.8888888888888888,
-            "tailSlopePerMinute": -9.611966722077573e-31
+            "tailSlopePerMinute": 0.05237004582882301
           },
           {
-            "seed": 2521906097,
+            "seed": 2666778439,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.96875,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 4089020015,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.9640718562874252,
-            "tailSlopePerMinute": -6.5536136741438e-31
+            "referenceMedian": 0.8990228013029316,
+            "tailSlopePerMinute": 0.03167139475943693
           },
           {
             "seed": 2805714991,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.9565217391304348,
-            "tailSlopePerMinute": -0.05112426035502965
-          },
-          {
-            "seed": 1210592025,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          }
-        ],
-        "collapsedSeedFraction": 0,
-        "lateCollapseSeedFraction": 0,
-        "canaryRequired": true,
-        "canaryReasons": [
-          "son 2 dakikanın eğimi 1 seed'de anlamlı düşüşte"
-        ]
-      }
-    },
-    {
-      "digest": "e31f112e312e6031",
-      "scenario": "intrinsic",
-      "verdict": {
-        "seedCount": 8,
-        "retentionMedian": 0.009765625,
-        "retentionMin": 0.001953125,
-        "structuredShare": 0,
-        "recoveredShare": 0.625,
-        "hardFailShares": {
-          "DEAD": 1
-        },
-        "failures": [
-          "30 dk koruma medyanı 0.010 < 0.7",
-          "en kötü seed koruması 0.002 < 0.4",
-          "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "toparlanan seed payı 63% < 75%",
-          "DEAD seed'lerin 100%'inde"
-        ],
-        "passed": false
-      },
-      "collapse": {
-        "seeds": [
-          {
-            "seed": 2666778439,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 1261206709,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.3684210526315789,
-            "tailSlopePerMinute": 4.805983361038787e-31
+            "referenceMedian": 0.9337016574585635,
+            "tailSlopePerMinute": 0.06669961390856417
           },
           {
             "seed": 2821603855,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.625,
-            "tailSlopePerMinute": -0.13218835512313779
-          },
-          {
-            "seed": 2521906097,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.3333333333333333,
-            "tailSlopePerMinute": 3.2768068370719e-31
+            "referenceMedian": 0.9004524886877828,
+            "tailSlopePerMinute": 0.03994580729351427
           },
           {
             "seed": 4089020015,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2805714991,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 1,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 1210592025,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          }
-        ],
-        "collapsedSeedFraction": 0,
-        "lateCollapseSeedFraction": 0,
-        "canaryRequired": true,
-        "canaryReasons": [
-          "son 2 dakikanın eğimi 1 seed'de anlamlı düşüşte"
-        ]
-      }
-    },
-    {
-      "digest": "e31f112e312e6031",
-      "scenario": "void-stress",
-      "verdict": {
-        "seedCount": 8,
-        "retentionMedian": 0.009765625,
-        "retentionMin": 0.001953125,
-        "structuredShare": 0,
-        "recoveredShare": 0.625,
-        "hardFailShares": {
-          "DEAD": 1
-        },
-        "failures": [
-          "30 dk koruma medyanı 0.010 < 0.7",
-          "en kötü seed koruması 0.002 < 0.4",
-          "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "toparlanan seed payı 63% < 75%",
-          "DEAD seed'lerin 100%'inde"
-        ],
-        "passed": false
-      },
-      "collapse": {
-        "seeds": [
-          {
-            "seed": 2666778439,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 1261206709,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.3684210526315789,
-            "tailSlopePerMinute": 4.805983361038787e-31
-          },
-          {
-            "seed": 2821603855,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.625,
-            "tailSlopePerMinute": -0.13326923076923083
-          },
-          {
-            "seed": 2521906097,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.3333333333333333,
-            "tailSlopePerMinute": 3.2768068370719e-31
-          },
-          {
-            "seed": 4089020015,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2805714991,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 1,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 1210592025,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          }
-        ],
-        "collapsedSeedFraction": 0,
-        "lateCollapseSeedFraction": 0,
-        "canaryRequired": true,
-        "canaryReasons": [
-          "son 2 dakikanın eğimi 1 seed'de anlamlı düşüşte"
-        ]
-      }
-    },
-    {
-      "digest": "37b8c8d8e8a51b97",
-      "scenario": "intrinsic",
-      "verdict": {
-        "seedCount": 8,
-        "retentionMedian": 0.07421875,
-        "retentionMin": 0,
-        "structuredShare": 0,
-        "recoveredShare": 0.5,
-        "hardFailShares": {
-          "DEAD": 0.5,
-          "VOID_LOSS_DOMINATED": 0.5
-        },
-        "failures": [
-          "30 dk koruma medyanı 0.074 < 0.7",
-          "en kötü seed koruması 0.000 < 0.4",
-          "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "toparlanan seed payı 50% < 75%",
-          "DEAD seed'lerin 50%'inde",
-          "VOID_LOSS_DOMINATED seed'lerin 50%'inde"
-        ],
-        "passed": false
-      },
-      "collapse": {
-        "seeds": [
-          {
-            "seed": 2666778439,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.8461538461538461,
-            "tailSlopePerMinute": -6.5536136741438e-31
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 1261206709,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.9560439560439561,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2821603855,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.9766081871345029,
-            "tailSlopePerMinute": -0.00010750636132315466
-          },
-          {
-            "seed": 2521906097,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 1,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 4089020015,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2805714991,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 1,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 1210592025,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.868421052631579,
-            "tailSlopePerMinute": 3.2768068370719e-31
-          }
-        ],
-        "collapsedSeedFraction": 0,
-        "lateCollapseSeedFraction": 0,
-        "canaryRequired": false,
-        "canaryReasons": []
-      }
-    },
-    {
-      "digest": "37b8c8d8e8a51b97",
-      "scenario": "void-stress",
-      "verdict": {
-        "seedCount": 8,
-        "retentionMedian": 0.07421875,
-        "retentionMin": 0,
-        "structuredShare": 0,
-        "recoveredShare": 0.5,
-        "hardFailShares": {
-          "DEAD": 0.5,
-          "VOID_LOSS_DOMINATED": 0.5
-        },
-        "failures": [
-          "30 dk koruma medyanı 0.074 < 0.7",
-          "en kötü seed koruması 0.000 < 0.4",
-          "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "toparlanan seed payı 50% < 75%",
-          "DEAD seed'lerin 50%'inde",
-          "VOID_LOSS_DOMINATED seed'lerin 50%'inde"
-        ],
-        "passed": false
-      },
-      "collapse": {
-        "seeds": [
-          {
-            "seed": 2666778439,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.8461538461538461,
-            "tailSlopePerMinute": -6.5536136741438e-31
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 1261206709,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.9560439560439561,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2821603855,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.98,
-            "tailSlopePerMinute": -0.0000826415790444783
-          },
-          {
-            "seed": 2521906097,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 1,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 4089020015,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2805714991,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 1,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 1210592025,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.868421052631579,
-            "tailSlopePerMinute": 3.2768068370719e-31
-          }
-        ],
-        "collapsedSeedFraction": 0,
-        "lateCollapseSeedFraction": 0,
-        "canaryRequired": false,
-        "canaryReasons": []
-      }
-    },
-    {
-      "digest": "5a7ecb17be5ec762",
-      "scenario": "intrinsic",
-      "verdict": {
-        "seedCount": 8,
-        "retentionMedian": 0.068359375,
-        "retentionMin": 0.03515625,
-        "structuredShare": 0,
-        "recoveredShare": 0.875,
-        "hardFailShares": {
-          "VOID_LOSS_DOMINATED": 0.75,
-          "DEAD": 0.25
-        },
-        "failures": [
-          "30 dk koruma medyanı 0.068 < 0.7",
-          "en kötü seed koruması 0.035 < 0.4",
-          "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "VOID_LOSS_DOMINATED seed'lerin 75%'inde"
-        ],
-        "passed": false
-      },
-      "collapse": {
-        "seeds": [
-          {
-            "seed": 2666778439,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.7666666666666667,
-            "tailSlopePerMinute": 9.611966722077573e-31
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.7692307692307693,
-            "tailSlopePerMinute": -0.007595512935992174
-          },
-          {
-            "seed": 1261206709,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.6,
-            "tailSlopePerMinute": -1.31072273482876e-30
-          },
-          {
-            "seed": 2821603855,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.5660377358490566,
-            "tailSlopePerMinute": -0.013742047426257963
-          },
-          {
-            "seed": 2521906097,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.5789473684210527,
-            "tailSlopePerMinute": -9.611966722077573e-31
-          },
-          {
-            "seed": 4089020015,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.5,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2805714991,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.8974358974358975,
-            "tailSlopePerMinute": 0.012698948648605386
-          },
-          {
-            "seed": 1210592025,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.9090909090909091,
-            "tailSlopePerMinute": -0.012374943816807682
-          }
-        ],
-        "collapsedSeedFraction": 0,
-        "lateCollapseSeedFraction": 0,
-        "canaryRequired": false,
-        "canaryReasons": []
-      }
-    },
-    {
-      "digest": "5a7ecb17be5ec762",
-      "scenario": "void-stress",
-      "verdict": {
-        "seedCount": 8,
-        "retentionMedian": 0.068359375,
-        "retentionMin": 0.03515625,
-        "structuredShare": 0,
-        "recoveredShare": 0.875,
-        "hardFailShares": {
-          "VOID_LOSS_DOMINATED": 0.75,
-          "DEAD": 0.25
-        },
-        "failures": [
-          "30 dk koruma medyanı 0.068 < 0.7",
-          "en kötü seed koruması 0.035 < 0.4",
-          "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "VOID_LOSS_DOMINATED seed'lerin 75%'inde"
-        ],
-        "passed": false
-      },
-      "collapse": {
-        "seeds": [
-          {
-            "seed": 2666778439,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.7666666666666667,
-            "tailSlopePerMinute": 9.611966722077573e-31
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.7692307692307693,
-            "tailSlopePerMinute": -0.007168614802599733
-          },
-          {
-            "seed": 1261206709,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.6046511627906976,
-            "tailSlopePerMinute": -1.31072273482876e-30
-          },
-          {
-            "seed": 2821603855,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.5849056603773585,
-            "tailSlopePerMinute": -0.019534991324464998
-          },
-          {
-            "seed": 2521906097,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.5789473684210527,
-            "tailSlopePerMinute": -9.611966722077573e-31
-          },
-          {
-            "seed": 4089020015,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.5,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2805714991,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.8974358974358975,
-            "tailSlopePerMinute": 0.016923076923076916
-          },
-          {
-            "seed": 1210592025,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.9090909090909091,
-            "tailSlopePerMinute": -0.01413943915616158
+            "referenceMedian": 0.9081632653061225,
+            "tailSlopePerMinute": 0.020729421921911316
           }
         ],
         "collapsedSeedFraction": 0,
@@ -719,173 +796,84 @@
     },
     {
       "digest": "1d811cc0d34eda26",
-      "scenario": "intrinsic",
-      "verdict": {
-        "seedCount": 8,
-        "retentionMedian": 0.072265625,
-        "retentionMin": 0.0234375,
-        "structuredShare": 0,
-        "recoveredShare": 0.625,
-        "hardFailShares": {
-          "DEAD": 0.375,
-          "VOID_LOSS_DOMINATED": 0.625
-        },
-        "failures": [
-          "30 dk koruma medyanı 0.072 < 0.7",
-          "en kötü seed koruması 0.023 < 0.4",
-          "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "toparlanan seed payı 63% < 75%",
-          "VOID_LOSS_DOMINATED seed'lerin 63%'inde"
-        ],
-        "passed": false
-      },
-      "collapse": {
-        "seeds": [
-          {
-            "seed": 2666778439,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.8064516129032258,
-            "tailSlopePerMinute": -6.5536136741438e-31
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.6938775510204082,
-            "tailSlopePerMinute": 3.2768068370719e-31
-          },
-          {
-            "seed": 1261206709,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.5918367346938775,
-            "tailSlopePerMinute": 6.5536136741438e-31
-          },
-          {
-            "seed": 2821603855,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.47368421052631576,
-            "tailSlopePerMinute": 0.00803589014115334
-          },
-          {
-            "seed": 2521906097,
-            "collapsed": true,
-            "collapseStartMinutes": 5.416666666666667,
-            "referenceMedian": 0.6,
-            "tailSlopePerMinute": -0.023550501672240834
-          },
-          {
-            "seed": 4089020015,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.4166666666666667,
-            "tailSlopePerMinute": 1.63840341853595e-31
-          },
-          {
-            "seed": 2805714991,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.8333333333333334,
-            "tailSlopePerMinute": -0.0366655557154556
-          },
-          {
-            "seed": 1210592025,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.5869565217391305,
-            "tailSlopePerMinute": 0.02167224080267559
-          }
-        ],
-        "collapsedSeedFraction": 0.125,
-        "lateCollapseSeedFraction": 0,
-        "canaryRequired": false,
-        "canaryReasons": []
-      }
-    },
-    {
-      "digest": "1d811cc0d34eda26",
       "scenario": "void-stress",
       "verdict": {
         "seedCount": 8,
-        "retentionMedian": 0.072265625,
-        "retentionMin": 0.0234375,
+        "retentionMedian": 0.330078125,
+        "retentionMin": 0.23046875,
         "structuredShare": 0,
-        "recoveredShare": 0.625,
+        "recoveredShare": 1,
         "hardFailShares": {
-          "DEAD": 0.375,
-          "VOID_LOSS_DOMINATED": 0.625
+          "VOID_LOSS_DOMINATED": 1
         },
         "failures": [
-          "30 dk koruma medyanı 0.072 < 0.7",
-          "en kötü seed koruması 0.023 < 0.4",
+          "30 dk koruma medyanı 0.330 < 0.7",
+          "en kötü seed koruması 0.230 < 0.4",
           "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "toparlanan seed payı 63% < 75%",
-          "VOID_LOSS_DOMINATED seed'lerin 63%'inde"
+          "VOID_LOSS_DOMINATED seed'lerin 100%'inde"
         ],
         "passed": false
       },
       "collapse": {
         "seeds": [
           {
-            "seed": 2666778439,
+            "seed": 1210592025,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.8064516129032258,
-            "tailSlopePerMinute": -6.5536136741438e-31
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0.6938775510204082,
-            "tailSlopePerMinute": 3.2768068370719e-31
+            "referenceMedian": 0.9086021505376344,
+            "tailSlopePerMinute": 0.07052535569132713
           },
           {
             "seed": 1261206709,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.5918367346938775,
-            "tailSlopePerMinute": 6.5536136741438e-31
+            "referenceMedian": 0.9030303030303031,
+            "tailSlopePerMinute": 0.07088296770613801
           },
           {
-            "seed": 2821603855,
+            "seed": 2456237356,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.47368421052631576,
-            "tailSlopePerMinute": 0.007445015866068534
+            "referenceMedian": 0.9077669902912622,
+            "tailSlopePerMinute": 0.022252363436370645
           },
           {
             "seed": 2521906097,
-            "collapsed": true,
-            "collapseStartMinutes": 5.5,
-            "referenceMedian": 0.6,
-            "tailSlopePerMinute": -0.018830769230769262
-          },
-          {
-            "seed": 4089020015,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.4166666666666667,
-            "tailSlopePerMinute": 1.63840341853595e-31
+            "referenceMedian": 0.8932584269662921,
+            "tailSlopePerMinute": 0.05190980061751064
+          },
+          {
+            "seed": 2666778439,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.900990099009901,
+            "tailSlopePerMinute": 0.026986287853933335
           },
           {
             "seed": 2805714991,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.8333333333333334,
-            "tailSlopePerMinute": -0.03626416199262505
+            "referenceMedian": 0.9285714285714286,
+            "tailSlopePerMinute": 0.06390995992313055
           },
           {
-            "seed": 1210592025,
+            "seed": 2821603855,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.5869565217391305,
-            "tailSlopePerMinute": 0.02167224080267559
+            "referenceMedian": 0.9002932551319648,
+            "tailSlopePerMinute": 0.03839663026788198
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9025270758122743,
+            "tailSlopePerMinute": 0.015552580041923269
           }
         ],
-        "collapsedSeedFraction": 0.125,
+        "collapsedSeedFraction": 0,
         "lateCollapseSeedFraction": 0,
         "canaryRequired": false,
         "canaryReasons": []
@@ -896,82 +884,79 @@
       "scenario": "intrinsic",
       "verdict": {
         "seedCount": 8,
-        "retentionMedian": 0.029296875,
-        "retentionMin": 0,
+        "retentionMedian": 0.9765625,
+        "retentionMin": 0.9140625,
         "structuredShare": 0,
-        "recoveredShare": 0.875,
+        "recoveredShare": 1,
         "hardFailShares": {
-          "DEAD": 0.875,
-          "VOID_LOSS_DOMINATED": 0.125
+          "SPEED_CAP_CHAOS": 1
         },
         "failures": [
-          "30 dk koruma medyanı 0.029 < 0.7",
-          "en kötü seed koruması 0.000 < 0.4",
           "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "DEAD seed'lerin 88%'inde"
+          "SPEED_CAP_CHAOS seed'lerin 100%'inde"
         ],
         "passed": false
       },
       "collapse": {
         "seeds": [
           {
-            "seed": 2666778439,
+            "seed": 1210592025,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 1,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": true,
-            "collapseStartMinutes": 6.333333333333333,
-            "referenceMedian": 0.9714285714285714,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9700214132762313,
+            "tailSlopePerMinute": 0.0014823393745238918
           },
           {
             "seed": 1261206709,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 1,
+            "referenceMedian": 0.9686274509803922,
             "tailSlopePerMinute": 0
           },
           {
-            "seed": 2821603855,
+            "seed": 2456237356,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9742489270386266,
+            "tailSlopePerMinute": 0.008197688471900829
           },
           {
             "seed": 2521906097,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9724409448818898,
+            "tailSlopePerMinute": 0.0015887395665981048
           },
           {
-            "seed": 4089020015,
+            "seed": 2666778439,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.9565217391304348,
-            "tailSlopePerMinute": 6.5536136741438e-31
+            "referenceMedian": 0.9769585253456221,
+            "tailSlopePerMinute": 0.022849892481871942
           },
           {
             "seed": 2805714991,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.926829268292683,
-            "tailSlopePerMinute": -6.5536136741438e-31
+            "referenceMedian": 0.9713024282560706,
+            "tailSlopePerMinute": 0.010332475576435591
           },
           {
-            "seed": 1210592025,
+            "seed": 2821603855,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.8064516129032258,
-            "tailSlopePerMinute": -0.01276732200801676
+            "referenceMedian": 0.972,
+            "tailSlopePerMinute": 0.003723580569798522
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9735234215885947,
+            "tailSlopePerMinute": -0.0034038789371250494
           }
         ],
-        "collapsedSeedFraction": 0.125,
+        "collapsedSeedFraction": 0,
         "lateCollapseSeedFraction": 0,
         "canaryRequired": false,
         "canaryReasons": []
@@ -982,82 +967,79 @@
       "scenario": "void-stress",
       "verdict": {
         "seedCount": 8,
-        "retentionMedian": 0.029296875,
-        "retentionMin": 0,
+        "retentionMedian": 0.9765625,
+        "retentionMin": 0.9140625,
         "structuredShare": 0,
-        "recoveredShare": 0.875,
+        "recoveredShare": 1,
         "hardFailShares": {
-          "DEAD": 0.875,
-          "VOID_LOSS_DOMINATED": 0.125
+          "SPEED_CAP_CHAOS": 1
         },
         "failures": [
-          "30 dk koruma medyanı 0.029 < 0.7",
-          "en kötü seed koruması 0.000 < 0.4",
           "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "DEAD seed'lerin 88%'inde"
+          "SPEED_CAP_CHAOS seed'lerin 100%'inde"
         ],
         "passed": false
       },
       "collapse": {
         "seeds": [
           {
-            "seed": 2666778439,
+            "seed": 1210592025,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 1,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": true,
-            "collapseStartMinutes": 6.333333333333333,
-            "referenceMedian": 0.9714285714285714,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9700214132762313,
+            "tailSlopePerMinute": 0.0014823393745238918
           },
           {
             "seed": 1261206709,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 1,
+            "referenceMedian": 0.9686274509803922,
             "tailSlopePerMinute": 0
           },
           {
-            "seed": 2821603855,
+            "seed": 2456237356,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9749478079331941,
+            "tailSlopePerMinute": 0.008050922537575816
           },
           {
             "seed": 2521906097,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9724409448818898,
+            "tailSlopePerMinute": 0.001632348030043559
           },
           {
-            "seed": 4089020015,
+            "seed": 2666778439,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.9565217391304348,
-            "tailSlopePerMinute": 6.5536136741438e-31
+            "referenceMedian": 0.9777777777777777,
+            "tailSlopePerMinute": 0.022856261044273535
           },
           {
             "seed": 2805714991,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.926829268292683,
-            "tailSlopePerMinute": -6.5536136741438e-31
+            "referenceMedian": 0.9713024282560706,
+            "tailSlopePerMinute": 0.010325573298786684
           },
           {
-            "seed": 1210592025,
+            "seed": 2821603855,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.8064516129032258,
-            "tailSlopePerMinute": -0.008497804924603912
+            "referenceMedian": 0.972,
+            "tailSlopePerMinute": 0.0037577307674269865
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9735234215885947,
+            "tailSlopePerMinute": -0.0034749099591900256
           }
         ],
-        "collapsedSeedFraction": 0.125,
+        "collapsedSeedFraction": 0,
         "lateCollapseSeedFraction": 0,
         "canaryRequired": false,
         "canaryReasons": []
@@ -1068,79 +1050,78 @@
       "scenario": "intrinsic",
       "verdict": {
         "seedCount": 8,
-        "retentionMedian": 0.00390625,
-        "retentionMin": 0,
+        "retentionMedian": 0.150390625,
+        "retentionMin": 0.091796875,
         "structuredShare": 0,
-        "recoveredShare": 0.375,
+        "recoveredShare": 1,
         "hardFailShares": {
-          "DEAD": 1
+          "VOID_LOSS_DOMINATED": 1
         },
         "failures": [
-          "30 dk koruma medyanı 0.004 < 0.7",
-          "en kötü seed koruması 0.000 < 0.4",
+          "30 dk koruma medyanı 0.150 < 0.7",
+          "en kötü seed koruması 0.092 < 0.4",
           "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "toparlanan seed payı 38% < 75%",
-          "DEAD seed'lerin 100%'inde"
+          "VOID_LOSS_DOMINATED seed'lerin 100%'inde"
         ],
         "passed": false
       },
       "collapse": {
         "seeds": [
           {
-            "seed": 2666778439,
+            "seed": 1210592025,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.83984375,
+            "tailSlopePerMinute": 0.03765994319663774
           },
           {
             "seed": 1261206709,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.836,
+            "tailSlopePerMinute": 0.06814305626482871
           },
           {
-            "seed": 2821603855,
+            "seed": 2456237356,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.8229665071770335,
+            "tailSlopePerMinute": 0.052198769153895035
           },
           {
             "seed": 2521906097,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.8239700374531835,
+            "tailSlopePerMinute": -0.02981223234949424
           },
           {
-            "seed": 4089020015,
+            "seed": 2666778439,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.8636363636363636,
+            "tailSlopePerMinute": 0.03800933897286291
           },
           {
             "seed": 2805714991,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.8229166666666666,
+            "tailSlopePerMinute": 0.03259961979611808
           },
           {
-            "seed": 1210592025,
+            "seed": 2821603855,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.8461538461538461,
+            "tailSlopePerMinute": 0.027241245705636876
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.7945205479452054,
+            "tailSlopePerMinute": 0.063549664032559
           }
         ],
         "collapsedSeedFraction": 0,
@@ -1154,79 +1135,78 @@
       "scenario": "void-stress",
       "verdict": {
         "seedCount": 8,
-        "retentionMedian": 0.00390625,
-        "retentionMin": 0,
+        "retentionMedian": 0.166015625,
+        "retentionMin": 0.091796875,
         "structuredShare": 0,
-        "recoveredShare": 0.375,
+        "recoveredShare": 1,
         "hardFailShares": {
-          "DEAD": 1
+          "VOID_LOSS_DOMINATED": 1
         },
         "failures": [
-          "30 dk koruma medyanı 0.004 < 0.7",
-          "en kötü seed koruması 0.000 < 0.4",
+          "30 dk koruma medyanı 0.166 < 0.7",
+          "en kötü seed koruması 0.092 < 0.4",
           "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "toparlanan seed payı 38% < 75%",
-          "DEAD seed'lerin 100%'inde"
+          "VOID_LOSS_DOMINATED seed'lerin 100%'inde"
         ],
         "passed": false
       },
       "collapse": {
         "seeds": [
           {
-            "seed": 2666778439,
+            "seed": 1210592025,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2456237356,
-            "collapsed": false,
-            "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.8313253012048193,
+            "tailSlopePerMinute": 0.03585642979228686
           },
           {
             "seed": 1261206709,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.8412698412698413,
+            "tailSlopePerMinute": 0.06850480470066263
           },
           {
-            "seed": 2821603855,
+            "seed": 2456237356,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.8170731707317073,
+            "tailSlopePerMinute": 0.04713731670983787
           },
           {
             "seed": 2521906097,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.817351598173516,
+            "tailSlopePerMinute": -0.021571491152189145
           },
           {
-            "seed": 4089020015,
+            "seed": 2666778439,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.8525641025641025,
+            "tailSlopePerMinute": 0.04224561957536402
           },
           {
             "seed": 2805714991,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.8214285714285714,
+            "tailSlopePerMinute": 0.03281016160058902
           },
           {
-            "seed": 1210592025,
+            "seed": 2821603855,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.8461538461538461,
+            "tailSlopePerMinute": 0.0263157883418125
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.7952755905511811,
+            "tailSlopePerMinute": 0.05704707924007922
           }
         ],
         "collapsedSeedFraction": 0,
@@ -1240,82 +1220,81 @@
       "scenario": "intrinsic",
       "verdict": {
         "seedCount": 8,
-        "retentionMedian": 0.072265625,
-        "retentionMin": 0.029296875,
-        "structuredShare": 0,
-        "recoveredShare": 0.75,
+        "retentionMedian": 0.521484375,
+        "retentionMin": 0.451171875,
+        "structuredShare": 0.25,
+        "recoveredShare": 1,
         "hardFailShares": {
-          "DEAD": 0.25,
-          "VOID_LOSS_DOMINATED": 0.75
+          "VOID_LOSS_DOMINATED": 0.5,
+          "GAS": 0.25
         },
         "failures": [
-          "30 dk koruma medyanı 0.072 < 0.7",
-          "en kötü seed koruması 0.029 < 0.4",
-          "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "VOID_LOSS_DOMINATED seed'lerin 75%'inde"
+          "30 dk koruma medyanı 0.521 < 0.7",
+          "DYNAMIC_STRUCTURED payı 25% < 75%",
+          "VOID_LOSS_DOMINATED seed'lerin 50%'inde"
         ],
         "passed": false
       },
       "collapse": {
         "seeds": [
           {
-            "seed": 2666778439,
-            "collapsed": true,
-            "collapseStartMinutes": 5.333333333333333,
-            "referenceMedian": 0.6764705882352942,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2456237356,
+            "seed": 1210592025,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.4909090909090909,
-            "tailSlopePerMinute": 3.2768068370719e-31
+            "referenceMedian": 0.8959731543624161,
+            "tailSlopePerMinute": 0.04872571544583823
           },
           {
             "seed": 1261206709,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.5555555555555556,
-            "tailSlopePerMinute": 0.059076923076923124
+            "referenceMedian": 0.9195402298850575,
+            "tailSlopePerMinute": 0.02911817303041658
           },
           {
-            "seed": 2821603855,
+            "seed": 2456237356,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.3448275862068966,
-            "tailSlopePerMinute": 2.4029916805193934e-31
+            "referenceMedian": 0.9025069637883009,
+            "tailSlopePerMinute": 0.05920316787470329
           },
           {
             "seed": 2521906097,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.2777777777777778,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9129287598944591,
+            "tailSlopePerMinute": 0.025470604075286153
           },
           {
-            "seed": 4089020015,
+            "seed": 2666778439,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.475,
-            "tailSlopePerMinute": 3.2768068370719e-31
+            "referenceMedian": 0.8817567567567568,
+            "tailSlopePerMinute": 0.004835015283792985
           },
           {
             "seed": 2805714991,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.5945945945945946,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9022801302931596,
+            "tailSlopePerMinute": 0.023897829264603897
           },
           {
-            "seed": 1210592025,
+            "seed": 2821603855,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.8181818181818182,
-            "tailSlopePerMinute": 6.5536136741438e-31
+            "referenceMedian": 0.9018264840182648,
+            "tailSlopePerMinute": -0.002896195831365122
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9035532994923858,
+            "tailSlopePerMinute": 0.02896628075027965
           }
         ],
-        "collapsedSeedFraction": 0.125,
+        "collapsedSeedFraction": 0,
         "lateCollapseSeedFraction": 0,
         "canaryRequired": false,
         "canaryReasons": []
@@ -1326,82 +1305,81 @@
       "scenario": "void-stress",
       "verdict": {
         "seedCount": 8,
-        "retentionMedian": 0.072265625,
-        "retentionMin": 0.029296875,
-        "structuredShare": 0,
-        "recoveredShare": 0.75,
+        "retentionMedian": 0.54296875,
+        "retentionMin": 0.466796875,
+        "structuredShare": 0.25,
+        "recoveredShare": 1,
         "hardFailShares": {
-          "DEAD": 0.25,
-          "VOID_LOSS_DOMINATED": 0.75
+          "GAS": 0.5,
+          "VOID_LOSS_DOMINATED": 0.25
         },
         "failures": [
-          "30 dk koruma medyanı 0.072 < 0.7",
-          "en kötü seed koruması 0.029 < 0.4",
-          "DYNAMIC_STRUCTURED payı 0% < 75%",
-          "VOID_LOSS_DOMINATED seed'lerin 75%'inde"
+          "30 dk koruma medyanı 0.543 < 0.7",
+          "DYNAMIC_STRUCTURED payı 25% < 75%",
+          "GAS seed'lerin 50%'inde"
         ],
         "passed": false
       },
       "collapse": {
         "seeds": [
           {
-            "seed": 2666778439,
-            "collapsed": true,
-            "collapseStartMinutes": 5.333333333333333,
-            "referenceMedian": 0.6764705882352942,
-            "tailSlopePerMinute": 0
-          },
-          {
-            "seed": 2456237356,
+            "seed": 1210592025,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.4909090909090909,
-            "tailSlopePerMinute": 3.2768068370719e-31
+            "referenceMedian": 0.8973509933774835,
+            "tailSlopePerMinute": 0.049986298323257385
           },
           {
             "seed": 1261206709,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.5555555555555556,
-            "tailSlopePerMinute": 0.059076923076923124
+            "referenceMedian": 0.9173553719008265,
+            "tailSlopePerMinute": 0.02701929188007588
           },
           {
-            "seed": 2821603855,
+            "seed": 2456237356,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.3448275862068966,
-            "tailSlopePerMinute": 2.4029916805193934e-31
+            "referenceMedian": 0.9052924791086351,
+            "tailSlopePerMinute": 0.06006839936319047
           },
           {
             "seed": 2521906097,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.2777777777777778,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9124423963133641,
+            "tailSlopePerMinute": 0.02574621295295357
           },
           {
-            "seed": 4089020015,
+            "seed": 2666778439,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.475,
-            "tailSlopePerMinute": 3.2768068370719e-31
+            "referenceMedian": 0.8817567567567568,
+            "tailSlopePerMinute": 0.006152629258318876
           },
           {
             "seed": 2805714991,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.5945945945945946,
-            "tailSlopePerMinute": 0
+            "referenceMedian": 0.9076923076923077,
+            "tailSlopePerMinute": 0.022581226004321667
           },
           {
-            "seed": 1210592025,
+            "seed": 2821603855,
             "collapsed": false,
             "collapseStartMinutes": null,
-            "referenceMedian": 0.8181818181818182,
-            "tailSlopePerMinute": 6.5536136741438e-31
+            "referenceMedian": 0.9101654846335697,
+            "tailSlopePerMinute": -0.004396826168976122
+          },
+          {
+            "seed": 4089020015,
+            "collapsed": false,
+            "collapseStartMinutes": null,
+            "referenceMedian": 0.9081632653061225,
+            "tailSlopePerMinute": 0.027165819306161996
           }
         ],
-        "collapsedSeedFraction": 0.125,
+        "collapsedSeedFraction": 0,
         "lateCollapseSeedFraction": 0,
         "canaryRequired": false,
         "canaryReasons": []

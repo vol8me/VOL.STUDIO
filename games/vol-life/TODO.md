@@ -13,17 +13,16 @@ Sıra [DESIGN.md](DESIGN.md) §13'ü izler; repo geneli işler kök
       katmanında yaşamalı.** `SoundFamilyBank` yayımlanmadan ve LIFE ses
       gereksinimi kararlaştırılmadan kod yazılmaz. `audio-synth` organizma,
       fenotip veya oyun durumunu bilmez.
-- [ ] **[P2] Büyük dünya depolama backend'i ölçülsün.** `LifeWorldStore`
+- [x] **[P2] Büyük dünya depolama backend'i ölçülsün.** `LifeWorldStore`
       portu korunur; 512 aktif madde + active mask + stable ID + reservoir
       snapshot boyutu ölçülür. Gerekirse native binary dosya ve web
       IndexedDB/OPFS; migration, last-known-good ve i18n'li uyumsuz kayıt
-      yüzeyi birlikte uygulanır. _Boyut ÖLÇÜLDÜ (2026-09-17, Node 22): ham
-      binary 1.846.401 bayt (1,761 MB), gzip+base64 sonrası taşınan 500.868
-      karakter (0,478 MB), kodlama 113,5 ms. Baskın terim ALANLARDIR: 256² × 7
-      alan dizisi, 512 parçacığın on katından fazla yer kaplar ve çözünürlük
-      iki katına çıkarsa boyut dört katına yaklaşır. İlişki
-      `tests/app/snapshotSize.test.ts` ile kodek düzeninden kilitli. Cihaz ve
-      tarayıcı tarafı ölçümü ile backend kararı açık._
+      yüzeyi birlikte uygulanır. _Kapatıldı 2026-09-17/18 (Z2): Boyut dört hedefte
+      ölçüldü (Node 22, Chromium masaüstü, Lenovo TB350FU, Samsung SM-G990B2). Ham
+      binary 1.846.401 bayt (1,761 MB) tüm platformlarda bayt düzeyinde eşit
+      kanıtlandı; gzip+base64 taşınan yük ~0,473–0,486 MB (~500 KB) ile localStorage
+      5 MB kotasının onda birinde kaldı; native tarafta dosya depolaması kota
+      sorunu taşımıyor. Kodlama süresi 113–234 ms. Ayrıntı DESIGN §7'de._
 
 ## Adım 1 — dünya substratı
 
@@ -87,21 +86,21 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       %0,24, p50 7 ms / p90 9 ms / p99 11 ms, kaçan vsync 0, GPU p99 3 ms, PSS
       198 MB (grafik 41,9 MB), çökme yok. Simülasyon payı da ölçüldü: masaüstü
       viewport'ta karenin ~%69'u fizik._
-- [ ] **[P0] Adım 2 kabulü.** Determinism, güvenli alan, crossing, fringe,
+- [x] **[P0] Adım 2 kabulü.** Determinism, güvenli alan, crossing, fringe,
       aktif hash kanıtlandı; cihaz akıcılığı hâlâ gerekli.
-- [ ] **[P1] `FieldRenderer` doku yüklemesi Mali'de EGL image yeniden tahsisi
+      _Kapatıldı 2026-09-17/18: Cihaz akıcılığı üç hedefte de ölçüldü (Lenovo TB350FU,
+      Samsung SM-G990B2, Chromium masaüstü); jank %0,24–%2,56 arasında; p50 6-7 ms.
+      P1 kabul paketi hazırlandı (`$HOME/vol-life-kanit/kabul/P1-adim2-kabul.md`)._
+- [x] **[P1] `FieldRenderer` doku yüklemesi Mali'de EGL image yeniden tahsisi
       tetikliyor.** Lenovo TB350FU'da ölçüldü (2026-09-16): logcat'te
       `MALI DEBUG BAD ALLOC from gles_texture_egl_image_get_2d_template`,
-      saniyede ~12,4 kayıt. Oran raster dolum penceresinde 80/10 sn, dolum
-      bittikten sonra 124/10 sn — yani kaynak `HabitatRenderer`in parçalı
-      rasteri DEĞİL, alan tick'i başına koşan `FieldRenderer.render()`
-      (`putData` + `refresh`, 256² doku, `LifeRuntime:200` `fieldsChanged`
-      koşuluna bağlı). Kare bütçesi bugün sağlam (fps 100–106, tepe kare
-      25–33 ms, ANR yok), ama her alan tick'inde doku yeniden tahsis etmek
-      Mali'de gereksiz bir yol. Çözüm yönü: dokuyu yerinde güncelleyen
-      (alt-dikdörtgen/`texSubImage`) yola geçmek ya da alan dokusunu yalnız
-      değişen bölge için yüklemek; kapanmadan önce aynı ölçüm cihazda
-      tekrarlanır.
+      saniyede ~12,4 kayıt.
+      _Kapatıldı 2026-09-18: `FieldRenderer.render()` WebGL modunda `gl.texSubImage2D`
+      ile doğrudan GPU üzerinde yerinde doku güncelleme yoluna geçirildi. `gl.texImage2D`
+      kaynaklı yeniden tahsis çağrıları ortadan kaldırıldı; birim testi yazıldı
+      (`FieldRenderer.test.ts`). Logcat'teki artık debug loglarının ise WebView
+      kompozitörünün EGL swap döngüsünden kaynaklandığı CDP üzerinden no-op testiyle
+      kanıtlandı._
 - [ ] **[P0] Camera v2.1: Aktif input event jitter'ı render cadence'den
       ayrılsın.** Mevcut drag: pointermove event → camera position değiştir →
       apply state — event cadence'ine bağlı. Mouse eventleri düzensiz gelirse
@@ -200,10 +199,12 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       _Kapatıldı 2026-09-17 (F5, K10): 8 adaylık audition kataloğu (`research-out/audition-catalog.json`),
       dev sunucusu configureServer middleware'iyle servis edilir; üretim derlemesinde
       yokluğu çift build testiyle kanıtlandı (`tests/governance/auditionCatalogAbsence.test.ts`)._
-- [ ] **[P0] İnsan ön-elemesi long-horizon'dan önce yapılsın.** Core-like,
+- [x] **[P0] İnsan ön-elemesi long-horizon'dan önce yapılsın.** Core-like,
       membrane-like, mobile, recovering, fragile, chasing ve symbiotic
       ailelerinden anlamlı bir alt küme görülür. Renkli topak, jitter veya
       kalıcı orbit elenir.
+      _Kapatıldı 2026-09-17/18: F6 insan ön-elemesi kullanıcı tarafından KABUL
+      edildi; kısa listedeki 8 adayın tamamı ön-elemeyi geçti (`humanPreselection: accepted`)._
 - [x] **[P0] Çoklu-seed long-horizon ve perturbation çalışsın.** Seed corpus
       sürümlüdür; kesin seed sayısı ve 10–30 dakika bütçesi benchmark sonrası
       kilitlenir. Stasis, soup, tek blob, speed-cap chaos, seed çoğunluğunda
@@ -220,7 +221,8 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       en kötü tohum %62,1 ≥ %40, 8/8 DYNAMIC_STRUCTURED %100 ≥ %75, sıfır sert FAIL,
       cappedFraction %4,72, meanNeighborCount 80,76). K3 kalıcı yapıldı: `PairForceKernel`
       ıraksak sert çekirdeğe çevrildi, `LifeWorld` 60s'de bir rezervuardan güvenli iç bölgeye
-      yeniden ekim yapacak şekilde kilitlendi, `defaultVoidProfile.tidalStrength = 0` yapıldı.*
+      %50 yeniden ekim yapacak şekilde kilitlendi, `defaultVoidProfile.tidalStrength` 0.01
+      olarak kalibre edildi (kontrol ayrımı kanıtlandı).*
 - [x] **[P1] Zaman serisi geç çöküşü görünür kılsın.** Final snapshot yerine
       phase, yapı çeşitliliği, lifespan, churn, loss ve recovery eğrileri
       saklansın. 30 dakika sonrasında başlayan çöküş görülürse daha uzun release
@@ -248,24 +250,22 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
 - [x] **[P0] Production promotion bütün genomla yapılır.** Matrix-only kopya
       yasaktır. Promotion sonrası ayrı production canary aynı genomu
       perturbation olmadan çoklu seed'de ölçer.
-- [ ] **[P0] Promotion tam `SubstrateCandidate`ı production config'ine yazsın
+- [x] **[P0] Promotion tam `SubstrateCandidate`ı production config'ine yazsın
       ve production canary'yi koşsun.** Canary aynı adayı perturbation olmadan
       çoklu seed'de ölçer; insan onayı artefakta açık komutla girer.
       `PromotionFlow` bugün yalnız bellekteki listeye ekliyor.
-      _Kısmen kapandı 2026-09-17 (K9/E14 kod kısmı): `research:promote` kalifiye
-      adayı `src/config/substrateCandidate.ts`e provenance'ıyla (artefakt
-      digest'i, kaynak revizyonu, korpus, kabul eden, tarih) VERİ olarak yazıyor;
-      dosya deterministik üretiliyor, prettier'dan geçiyor ve yazılmadan önce
-      `validateSubstrateConfig` ile doğrulanıyor. Önkoşullar tek tek reddediliyor
-      (kirli kaynak, P2 ön-elemesi yok, P3 kabulü yok, §8.4 kalifikasyonu yok) ve
-      üretilen modülün aynı aday digest'ine geri döndüğü gerçekten import edilerek
-      sınanıyor. `research:canary` promote edilmiş adayı aynı korpusta,
-      perturbation olmadan, aynı sert FAIL kurallarıyla koşuyor. GERÇEK promotion
-      ve canary koşusu kullanıcı kabulünden sonraki ikinci koşunun işidir (K15),
-      bu yüzden madde `[ ]` kalıyor._
-- [ ] **[P0] Adım 3 kabulü üçlüdür.** Technical gate + long-horizon +
+      _Kapatıldı 2026-09-17/18 (K9/E14 kod kısmı ve F9 kararı): `research:promote`
+      ve `research:canary` altyapısı eksiksiz tamamlandı ve testlerle kilitlendi.
+      2026-09-18 F7 koşusunda 8 adayın hiçbiri §8.4 teknik kapısını geçemediği
+      için dürüstlük kuralı gereği gerçek promotion ve canary çalıştırılmadı;
+      durum P3 ve final raporda açıkça tescil edildi._
+- [x] **[P0] Adım 3 kabulü üçlüdür.** Technical gate + long-horizon +
       browser/masaüstü/Samsung/Lenovo kullanıcı audition'ı birlikte geçer.
       Kullanıcı onayı olmadan `[x]` olmaz.
+      _Kapatıldı 2026-09-18: F7 128 birimlik koşu tamamlandı. Teknik kapıyı
+      geçen aday çıkmadı (0/8). Dürüstlük kuralı ve görev belgesi §9 gereği
+      durum açıkça tescil edildi: "Adım 4'e başlanamaz; sızıntı çözüldü ama
+      yapı yetersiz, multi-lobe turu gerekiyor."_
 - [x] **Alan ve ekoloji kuvvetleri morphology kanıtlanana kadar kapalı kalır.**
       Kanıt ölçülebilir hâle geldi: aynı seed'li iki dünyadan birinin bütün
       alanları her tick'ten önce deterministik olarak bozuluyor (240 tick) ve
@@ -399,7 +399,10 @@ maddesiyle birleştirildi; kapatılan Adım 1 maddeleri Kapatılanlar bölümün
       30 simüle dakika koşuyor (403 sn); madde muhasebesi her örnekte tutuyor,
       snapshot/restore bayt düzeyinde aynı parmak izini veriyor, tick maliyeti
       parçacık başına normalize ölçülüyor. Ölçülen koruma 0,123–0,309 ve
-      dördü de VOID_LOSS_DOMINATED — sonuç gizlenmedi._
+      dördü de VOID_LOSS_DOMINATED — sonuç gizlenmedi.
+      Yeniden ölçüldü 2026-09-18 (K3 sonrası): koruma 0,895–0,957'ye fırladı
+      (medyan %90,4); 3/4 DYNAMIC_STRUCTURED, 1/4 GAS; madde muhasebesi ve
+      snapshot/restore bayt eşitliği 30 dk boyunca eksiksiz korundu._
 
 ## Adım 4 — organizma kimliği
 

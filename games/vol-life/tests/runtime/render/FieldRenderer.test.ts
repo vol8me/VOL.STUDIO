@@ -78,4 +78,65 @@ describe('FieldRenderer', () => {
     expect(images.every((image) => image.destroy.mock.calls.length === 1)).toBe(true);
     expect(scene.textures.remove).toHaveBeenCalledOnce();
   });
+
+  it('WebGL renderer devredeyken dokuyu texSubImage2D ile yerinde günceller', () => {
+    const imageData = { data: new Uint8ClampedArray(16), width: 2, height: 2 } as ImageData;
+    const glTexture = { webGLTexture: {} };
+    const texture = {
+      context: { createImageData: vi.fn(() => imageData) },
+      putData: vi.fn(),
+      refresh: vi.fn(),
+      setFilter: vi.fn(),
+      source: [{ glTexture }],
+    };
+    const gl = {
+      bindTexture: vi.fn(),
+      texSubImage2D: vi.fn(),
+      TEXTURE_2D: 3553,
+      RGBA: 6408,
+      UNSIGNED_BYTE: 5121,
+    };
+    const glTextureUnits = {
+      bind: vi.fn(),
+    };
+    const scene = {
+      textures: { createCanvas: vi.fn(() => texture), remove: vi.fn() },
+      add: {
+        image: vi.fn(() => ({
+          setOrigin: vi.fn().mockReturnThis(),
+          setDisplaySize: vi.fn().mockReturnThis(),
+          setDepth: vi.fn().mockReturnThis(),
+          setPosition: vi.fn().mockReturnThis(),
+        })),
+      },
+      game: {
+        renderer: {
+          gl,
+          glTextureUnits,
+        },
+      },
+    };
+
+    const fields = new FieldSet(2);
+    fields.light[0] = 1;
+    const bounds = { x: 0, y: 0, width: 100, height: 100 };
+    const renderer = new FieldRenderer(scene as never, fields, bounds);
+
+    renderer.render(fields);
+
+    expect(glTextureUnits.bind).toHaveBeenCalledWith(glTexture, 0);
+    expect(gl.texSubImage2D).toHaveBeenCalledWith(
+      gl.TEXTURE_2D,
+      0,
+      0,
+      0,
+      2,
+      2,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      expect.any(Uint8Array),
+    );
+    expect(texture.putData).not.toHaveBeenCalled();
+    expect(texture.refresh).not.toHaveBeenCalled();
+  });
 });
