@@ -104,6 +104,18 @@ describe('parçacık kuvvet biriktirimi', () => {
 
     expect(() => accumulateParticleForces(particles, grid, wideKernel, 1)).toThrow(RangeError);
   });
+
+  it('hacim dışlama gradyanı çok yakın parçacıklarda ek itme sağlar ve kitle çökmesini önler', () => {
+    const { particles, grid, kernel } = pair(100, 113, 0, 0);
+    accumulateParticleForces(particles, grid, kernel, 1, 16, 0.5);
+    const withExclusion = particles.forceX[0];
+
+    const { particles: pNoEx, grid: gNoEx, kernel: kNoEx } = pair(100, 113, 0, 0);
+    accumulateParticleForces(pNoEx, gNoEx, kNoEx, 1, 16, 0);
+    const withoutExclusion = pNoEx.forceX[0];
+
+    expect(withExclusion).toBeLessThan(withoutExclusion);
+  });
 });
 
 describe('parçacık entegrasyonu', () => {

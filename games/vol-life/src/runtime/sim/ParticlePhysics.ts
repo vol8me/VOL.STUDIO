@@ -3,12 +3,17 @@ import type { PairForceKernel } from '@/runtime/sim/PairForceKernel';
 import type { ParticleSpatialHash } from '@/runtime/sim/ParticleSpatialHash';
 import type { ParticleStore } from '@/runtime/sim/ParticleStore';
 
-/** Aktif çiftlerin kuvvetini toplar; hash yalnız aktif slot taşıdığı için pasif çift oluşmaz. */
+/**
+ * Aktif çiftlerin kuvvetini toplar; hash yalnız aktif slot taşıdığı için pasif çift oluşmaz.
+ * Çoklu parçacık sıkışmasında hacim dışlama gradyanı eklenerek kitle çökmesi engellenir.
+ */
 export function accumulateParticleForces(
   particles: ParticleStore,
   grid: ParticleSpatialHash,
   kernel: PairForceKernel,
   forceScale: number,
+  exclusionRadiusUnits = 0,
+  exclusionStrength = 0,
 ): void {
   if (!(forceScale > 0) || !Number.isFinite(forceScale)) {
     throw new RangeError(`Kuvvet ölçeği pozitif ve sonlu olmalı: ${forceScale}`);
@@ -49,7 +54,11 @@ export function accumulateParticleForces(
             distSq = 1e-8;
           }
           const distance = Math.sqrt(distSq);
-          const magnitude = kernel.magnitude(distance, ownType, type[other]) * forceScale;
+          let magnitude = kernel.magnitude(distance, ownType, type[other]) * forceScale;
+          if (exclusionStrength > 0 && distance < exclusionRadiusUnits) {
+            const overlap = (exclusionRadiusUnits - distance) / exclusionRadiusUnits;
+            magnitude -= exclusionStrength * (overlap * overlap) * forceScale;
+          }
           sumX += (diffX / distance) * magnitude;
           sumY += (diffY / distance) * magnitude;
         }

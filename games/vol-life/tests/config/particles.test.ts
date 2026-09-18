@@ -36,6 +36,12 @@ describe('parçacık yapılandırması', () => {
     ['reseedFraction', -0.1],
     ['reseedFraction', 1.1],
     ['reseedFraction', Number.NaN],
+    ['exclusionRadiusUnits', 0],
+    ['exclusionRadiusUnits', -5],
+    ['exclusionRadiusUnits', Number.NaN],
+    ['exclusionStrength', -0.1],
+    ['exclusionStrength', 2.5],
+    ['exclusionStrength', Number.NaN],
   ] as const)('geçersiz %s=%s değerini çalışma zamanından önce reddeder', (key, value) => {
     expect(() => validateParticleConfig({ ...particleConfig, [key]: value })).toThrow(RangeError);
   });

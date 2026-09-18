@@ -135,6 +135,8 @@ export class LifeWorld {
       this.particleGrid,
       this.kernel,
       this.candidate.physics.dynamics.forceScale,
+      this.config.particles.exclusionRadiusUnits,
+      this.config.particles.exclusionStrength,
     );
     this.sink.applyFringeStress(this.particles);
     integrateParticles(

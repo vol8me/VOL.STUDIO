@@ -15,6 +15,10 @@ export interface ParticleConfig {
   readonly reseedIntervalSeconds: number;
   /** Her periyotta rezervuardaki maddenin ne kadarının güvenli bölgeye ekileceği (0..1). */
   readonly reseedFraction: number;
+  /** Küme çökmesini ve yapışmayı önleyen yerel hacim dışlama mesafesi (dünya birimi). */
+  readonly exclusionRadiusUnits: number;
+  /** Hacim dışlama kuvvet şiddeti (0..2). */
+  readonly exclusionStrength: number;
 }
 
 export const particleConfig: ParticleConfig = {
@@ -24,6 +28,8 @@ export const particleConfig: ParticleConfig = {
   referenceHz: 60,
   reseedIntervalSeconds: 60,
   reseedFraction: 0.5,
+  exclusionRadiusUnits: 16,
+  exclusionStrength: 0.35,
 };
 
 export function cloneParticleConfig(config: ParticleConfig): ParticleConfig {
@@ -37,4 +43,6 @@ export function validateParticleConfig(config: ParticleConfig): void {
   assertPositiveInteger(config.referenceHz, 'Referans tempo');
   assertPositiveFinite(config.reseedIntervalSeconds, 'Yeniden ekim periyodu');
   assertFiniteRange(config.reseedFraction, 0, 1, 'Yeniden ekim fraksiyonu');
+  assertPositiveFinite(config.exclusionRadiusUnits, 'Hacim dışlama yarıçapı');
+  assertFiniteRange(config.exclusionStrength, 0, 2, 'Hacim dışlama şiddeti');
 }
