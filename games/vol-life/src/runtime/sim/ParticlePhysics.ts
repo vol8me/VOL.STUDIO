@@ -14,6 +14,8 @@ export function accumulateParticleForces(
   forceScale: number,
   exclusionRadiusUnits = 0,
   exclusionStrength = 0,
+  contactRadiusUnits = 0,
+  contactStrength = 0,
 ): void {
   if (!(forceScale > 0) || !Number.isFinite(forceScale)) {
     throw new RangeError(`Kuvvet ölçeği pozitif ve sonlu olmalı: ${forceScale}`);
@@ -58,6 +60,11 @@ export function accumulateParticleForces(
           if (exclusionStrength > 0 && distance < exclusionRadiusUnits) {
             const overlap = (exclusionRadiusUnits - distance) / exclusionRadiusUnits;
             magnitude -= exclusionStrength * (overlap * overlap) * forceScale;
+          }
+          if (contactStrength > 0 && distance < contactRadiusUnits) {
+            const d = Math.max(distance, contactRadiusUnits * 0.1);
+            const contactOverlap = (contactRadiusUnits / d) ** 2 - 1;
+            magnitude -= contactStrength * contactOverlap * forceScale;
           }
           sumX += (diffX / distance) * magnitude;
           sumY += (diffY / distance) * magnitude;

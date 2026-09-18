@@ -17,8 +17,18 @@ export interface ParticleConfig {
   readonly reseedFraction: number;
   /** Küme çökmesini ve yapışmayı önleyen yerel hacim dışlama mesafesi (dünya birimi). */
   readonly exclusionRadiusUnits: number;
-  /** Hacim dışlama kuvvet şiddeti (0..2). */
+  /** Hacim dışlama kuvvet şiddeti (0..4). */
   readonly exclusionStrength: number;
+  /** Geometrik iç içe geçmeyi (penetrasyon) engelleyen sert temas bariyeri şiddeti (0..8). */
+  readonly contactStrength: number;
+  /** Ekolojik vent içinde parçacıkların tek tek doğuş aralığı (tick, 60 Hz'de 90 ≈ 1.5 sn). */
+  readonly ventCadenceTicks: number;
+  /** Tek bir vent grubunda doğacak asgari parçacık sayısı. */
+  readonly ventBurstMin: number;
+  /** Tek bir vent grubunda doğacak azami parçacık sayısı. */
+  readonly ventBurstMax: number;
+  /** Vent grubu tamamlandıktan sonraki ekolojik dinlenme süresi (tick, 1500 ≈ 25 sn). */
+  readonly ventCooldownTicks: number;
 }
 
 export const particleConfig: ParticleConfig = {
@@ -28,8 +38,13 @@ export const particleConfig: ParticleConfig = {
   referenceHz: 60,
   reseedIntervalSeconds: 60,
   reseedFraction: 0.5,
-  exclusionRadiusUnits: 16,
-  exclusionStrength: 0.35,
+  exclusionRadiusUnits: 18,
+  exclusionStrength: 2.4,
+  contactStrength: 4.0,
+  ventCadenceTicks: 90,
+  ventBurstMin: 2,
+  ventBurstMax: 4,
+  ventCooldownTicks: 1500,
 };
 
 export function cloneParticleConfig(config: ParticleConfig): ParticleConfig {
@@ -44,5 +59,13 @@ export function validateParticleConfig(config: ParticleConfig): void {
   assertPositiveFinite(config.reseedIntervalSeconds, 'Yeniden ekim periyodu');
   assertFiniteRange(config.reseedFraction, 0, 1, 'Yeniden ekim fraksiyonu');
   assertPositiveFinite(config.exclusionRadiusUnits, 'Hacim dışlama yarıçapı');
-  assertFiniteRange(config.exclusionStrength, 0, 2, 'Hacim dışlama şiddeti');
+  assertFiniteRange(config.exclusionStrength, 0, 4, 'Hacim dışlama şiddeti');
+  assertFiniteRange(config.contactStrength, 0, 8, 'Temas bariyeri şiddeti');
+  assertPositiveInteger(config.ventCadenceTicks, 'Vent kadans tick');
+  assertPositiveInteger(config.ventBurstMin, 'Vent asgari parçacık');
+  assertPositiveInteger(config.ventBurstMax, 'Vent azami parçacık');
+  if (config.ventBurstMin > config.ventBurstMax) {
+    throw new RangeError('Vent asgari parçacık sayısı azamiden büyük olamaz.');
+  }
+  assertPositiveInteger(config.ventCooldownTicks, 'Vent dinlenme tick');
 }

@@ -71,7 +71,7 @@ export const lifeGraphicsConfig: LifeGraphicsConfig = {
   voidDeathDurationMs: 520,
   voidDeathMaxGhosts: 48,
   voidDeathStretchMax: 2.6,
-  particleVelocityStretchMax: 1.6,
+  particleVelocityStretchMax: 1.25,
   particleFringeStretchMax: 1.9,
 };
 

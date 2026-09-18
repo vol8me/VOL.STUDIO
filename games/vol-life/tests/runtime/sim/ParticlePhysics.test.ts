@@ -116,6 +116,20 @@ describe('parçacık kuvvet biriktirimi', () => {
 
     expect(withExclusion).toBeLessThan(withoutExclusion);
   });
+
+  it('sert temas bariyeri d < 2r mesafesinde ıraksak itme ile penetrasyonu engeller', () => {
+    const { particles, grid, kernel } = pair(100, 107, 0, 0);
+    accumulateParticleForces(particles, grid, kernel, 1, 18, 2.4, 9.0, 4.0);
+    const withContact = particles.forceX[0];
+
+    const { particles: pNoCt, grid: gNoCt, kernel: kNoCt } = pair(100, 107, 0, 0);
+    accumulateParticleForces(pNoCt, gNoCt, kNoCt, 1, 18, 2.4, 9.0, 0);
+    const withoutContact = pNoCt.forceX[0];
+
+    expect(withContact).toBeLessThan(withoutContact);
+    expect(particles.forceX[0]).toBeLessThan(-1.0);
+    expect(particles.forceX[1]).toBeGreaterThan(1.0);
+  });
 });
 
 describe('parçacık entegrasyonu', () => {

@@ -40,9 +40,29 @@ describe('parçacık yapılandırması', () => {
     ['exclusionRadiusUnits', -5],
     ['exclusionRadiusUnits', Number.NaN],
     ['exclusionStrength', -0.1],
-    ['exclusionStrength', 2.5],
+    ['exclusionStrength', 4.5],
     ['exclusionStrength', Number.NaN],
+    ['contactStrength', -0.1],
+    ['contactStrength', 8.5],
+    ['contactStrength', Number.NaN],
+    ['ventCadenceTicks', 0],
+    ['ventCadenceTicks', -1],
+    ['ventCadenceTicks', 1.5],
+    ['ventCadenceTicks', Number.NaN],
+    ['ventBurstMin', 0],
+    ['ventBurstMin', 1.5],
+    ['ventBurstMax', 0],
+    ['ventBurstMax', 1.5],
+    ['ventCooldownTicks', 0],
+    ['ventCooldownTicks', -5],
+    ['ventCooldownTicks', Number.NaN],
   ] as const)('geçersiz %s=%s değerini çalışma zamanından önce reddeder', (key, value) => {
     expect(() => validateParticleConfig({ ...particleConfig, [key]: value })).toThrow(RangeError);
+  });
+
+  it('ventBurstMin > ventBurstMax olduğunda RangeError fırlatır', () => {
+    expect(() =>
+      validateParticleConfig({ ...particleConfig, ventBurstMin: 5, ventBurstMax: 3 }),
+    ).toThrow(RangeError);
   });
 });
