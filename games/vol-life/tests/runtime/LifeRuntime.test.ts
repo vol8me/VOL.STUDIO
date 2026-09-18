@@ -22,6 +22,7 @@ function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = nu
   const fieldRenderer = { render: vi.fn(), destroy: vi.fn() };
   const habitatRenderer = { update: vi.fn(), destroy: vi.fn() };
   const deathRenderer = { push: vi.fn(), render: vi.fn(), destroy: vi.fn() };
+  const spawnRenderer = { push: vi.fn(), render: vi.fn(), destroy: vi.fn() };
   const particleRenderer = {
     render: vi.fn(),
     destroy: vi.fn(),
@@ -32,10 +33,12 @@ function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = nu
     destroy: vi.fn(),
   };
   const backdrop = { setBackgroundColor: vi.fn() };
+  const graphics = { setDepth: vi.fn(() => graphics), destroy: vi.fn() };
   const runtime = new LifeRuntime(
     {
       game: { canvas: document.createElement('canvas') },
       cameras: { main: { width: 1200, height: 800 } },
+      add: { graphics: vi.fn(() => graphics) },
     } as never,
     {
       config: {
@@ -49,6 +52,7 @@ function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = nu
       fieldRenderer: fieldRenderer as never,
       habitatRenderer: habitatRenderer as never,
       deathRenderer: deathRenderer as never,
+      spawnRenderer: spawnRenderer as never,
       particleRenderer: particleRenderer as never,
       cameraController: camera as never,
       backdrop: backdrop as never,
@@ -61,6 +65,7 @@ function harness(fieldUpdates: boolean[] = [true], initialSnapshot: unknown = nu
     fieldRenderer,
     habitatRenderer,
     deathRenderer,
+    spawnRenderer,
     particleRenderer,
     camera,
     snapshot,
@@ -149,6 +154,7 @@ describe('LifeRuntime', () => {
     const fieldRenderer = { render: vi.fn(), destroy: vi.fn() };
     const habitatRenderer = { update: vi.fn(), destroy: vi.fn() };
     const deathRenderer = { push: vi.fn(), render: vi.fn(), destroy: vi.fn() };
+    const spawnRenderer = { push: vi.fn(), render: vi.fn(), destroy: vi.fn() };
     const particleRenderer = { render: vi.fn(), destroy: vi.fn() };
     const dependencies = {
       config: {
@@ -167,6 +173,7 @@ describe('LifeRuntime', () => {
       fieldRenderer: fieldRenderer as never,
       habitatRenderer: habitatRenderer as never,
       deathRenderer: deathRenderer as never,
+      spawnRenderer: spawnRenderer as never,
       particleRenderer: particleRenderer as never,
       get cameraController(): never {
         throw new Error('kamera kurulamadı');
@@ -183,6 +190,7 @@ describe('LifeRuntime', () => {
     expect(fieldRenderer.destroy).toHaveBeenCalledOnce();
     expect(habitatRenderer.destroy).toHaveBeenCalledOnce();
     expect(deathRenderer.destroy).toHaveBeenCalledOnce();
+    expect(spawnRenderer.destroy).toHaveBeenCalledOnce();
     expect(particleRenderer.destroy).toHaveBeenCalledOnce();
   });
 

@@ -103,4 +103,29 @@ describe('Void ölümü — sunum ve dünya kanalları', () => {
     const world = createWorld();
     expect(stepUntilDeath(world).length).toBeGreaterThan(0);
   }, 20_000);
+
+  it('reseed tetiklendiğinde sunum kanalına particle-spawn olayları bırakır', () => {
+    const world = createWorld();
+    world.particles.deactivateSlot(0);
+    world.reservoir.recordVoidLoss(1);
+    expect(world.reservoir.external).toBe(1);
+
+    // reseedIntervalSeconds periyodunda step
+    const intervalTicks = Math.round(
+      world['config'].particles.reseedIntervalSeconds * world['config'].particles.referenceHz,
+    );
+    for (let tick = 0; tick <= intervalTicks; tick++) {
+      world.step();
+    }
+
+    const events = world.drainTransientPresentationEvents();
+    const spawnEvents = events.filter((e) => e.kind === 'particle-spawn');
+    expect(spawnEvents.length).toBeGreaterThan(0);
+    for (const spawn of spawnEvents) {
+      expect(spawn.kind).toBe('particle-spawn');
+      expect(spawn.stableId).toBeGreaterThan(0);
+      expect(Number.isFinite(spawn.x) && Number.isFinite(spawn.y)).toBe(true);
+      expect(Number.isFinite(spawn.vx) && Number.isFinite(spawn.vy)).toBe(true);
+    }
+  }, 20_000);
 });

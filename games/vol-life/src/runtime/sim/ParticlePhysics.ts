@@ -39,11 +39,19 @@ export function accumulateParticleForces(
           const dx = x[other] - ownX;
           const dy = y[other] - ownY;
           const distanceSquared = dx * dx + dy * dy;
-          if (distanceSquared <= 0 || distanceSquared >= rangeSquared) continue;
-          const distance = Math.sqrt(distanceSquared);
+          if (distanceSquared >= rangeSquared) continue;
+          let diffX = dx;
+          let diffY = dy;
+          let distSq = distanceSquared;
+          if (distSq === 0) {
+            diffX = index > other ? 1e-4 : -1e-4;
+            diffY = 0;
+            distSq = 1e-8;
+          }
+          const distance = Math.sqrt(distSq);
           const magnitude = kernel.magnitude(distance, ownType, type[other]) * forceScale;
-          sumX += (dx / distance) * magnitude;
-          sumY += (dy / distance) * magnitude;
+          sumX += (diffX / distance) * magnitude;
+          sumY += (diffY / distance) * magnitude;
         }
       }
     }

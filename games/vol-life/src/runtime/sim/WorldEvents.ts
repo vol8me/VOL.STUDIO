@@ -20,11 +20,23 @@ export interface VoidDeathEvent {
   readonly normalY: number;
 }
 
+/** Parçacık yeniden ekildiğinde (reseed/spawn) sunuma aktarılan doğuş olayı. */
+export interface ParticleSpawnEvent {
+  readonly kind: 'particle-spawn';
+  readonly tick: number;
+  readonly stableId: number;
+  readonly x: number;
+  readonly y: number;
+  readonly vx: number;
+  readonly vy: number;
+  readonly type: number;
+}
+
 /** Bugün tek dünya olayı Void ölümüdür; olay günlüğü (Adım 8) burada kurulmaz. */
 export type WorldEvent = VoidDeathEvent;
 
 /** Sunuma teslim edilen geçici olay; renderer store slotuna geri bakamaz. */
-export type TransientPresentationEvent = VoidDeathEvent;
+export type TransientPresentationEvent = VoidDeathEvent | ParticleSpawnEvent;
 
 export interface WorldEventSink {
   emit(event: WorldEvent): void;

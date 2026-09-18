@@ -52,6 +52,7 @@ export class VoidDeathRenderer {
   push(crossings: readonly TransientPresentationEvent[], nowMs: number): void {
     if (this.destroyed || crossings.length === 0) return;
     for (const crossing of crossings) {
+      if (crossing.kind !== 'void-death') continue;
       this.ghosts.push({
         x: crossing.x,
         y: crossing.y,

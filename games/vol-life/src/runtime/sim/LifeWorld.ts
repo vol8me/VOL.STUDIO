@@ -14,7 +14,7 @@ import { MatterReservoir, type MatterReservoirSnapshot } from '@/runtime/sim/Mat
 import { createMultiBandKernel, type PairForceKernel } from '@/runtime/sim/PairForceKernel';
 import { accumulateParticleForces, integrateParticles } from '@/runtime/sim/ParticlePhysics';
 import { ParticleSpatialHash } from '@/runtime/sim/ParticleSpatialHash';
-import { ParticleStore, type ParticleSnapshot } from '@/runtime/sim/ParticleStore';
+import { NO_SLOT, ParticleStore, type ParticleSnapshot } from '@/runtime/sim/ParticleStore';
 import { WorldRandomStreams } from '@/runtime/sim/RandomStreams';
 import { SimulationTempo } from '@/runtime/sim/SimulationTempo';
 import { VoidSink } from '@/runtime/sim/VoidSink';
@@ -69,7 +69,7 @@ export class LifeWorld {
   private readonly worldEvents: WorldEventSink;
   private readonly crossingScratch: VoidDeathEvent[] = [];
   private readonly scratchSample = { distance: 0, normalX: 1, normalY: 0 };
-  private presentationEvents: VoidDeathEvent[] = [];
+  private presentationEvents: TransientPresentationEvent[] = [];
   private nextFieldBand = 0;
   private fieldUpdated = false;
 
@@ -276,7 +276,19 @@ export class LifeWorld {
       const vx = Math.cos(angle) * speed;
       const vy = Math.sin(angle) * speed;
       const particleType = pickType(random, seeding.typeWeights);
-      this.particles.activateSlot(posX, posY, vx, vy, particleType);
+      const slot = this.particles.activateSlot(posX, posY, vx, vy, particleType);
+      if (slot !== NO_SLOT) {
+        this.presentationEvents.push({
+          kind: 'particle-spawn',
+          tick: this.tick,
+          stableId: this.particles.stableId[slot],
+          x: posX,
+          y: posY,
+          vx,
+          vy,
+          type: particleType,
+        });
+      }
     }
   }
 }

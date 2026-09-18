@@ -16,6 +16,7 @@ import { resolveCameraDomain } from '@/runtime/render/cameraDomain';
 import { FieldRenderer } from '@/runtime/render/FieldRenderer';
 import { HabitatRenderer } from '@/runtime/render/HabitatRenderer';
 import { ParticleRenderer } from '@/runtime/render/ParticleRenderer';
+import { ParticleSpawnRenderer } from '@/runtime/render/ParticleSpawnRenderer';
 import { VoidDeathRenderer } from '@/runtime/render/VoidDeathRenderer';
 import { LifeWorld, type LifeWorldSnapshot } from '@/runtime/sim/LifeWorld';
 import type { TransientPresentationEvent } from '@/runtime/sim/WorldEvents';
@@ -48,6 +49,12 @@ interface RuntimeDeathRenderer {
   destroy(): void;
 }
 
+interface RuntimeSpawnRenderer {
+  push(events: readonly TransientPresentationEvent[], nowMs: number): void;
+  render(nowMs: number): void;
+  destroy(): void;
+}
+
 interface RuntimeParticleRenderer {
   render(particles: LifeWorld['particles'], interpolationAlpha: number): void;
   destroy(): void;
@@ -72,6 +79,7 @@ export interface LifeRuntimeDependencies {
   readonly fieldRenderer?: RuntimeFieldRenderer;
   readonly habitatRenderer?: RuntimeAnimated;
   readonly deathRenderer?: RuntimeDeathRenderer;
+  readonly spawnRenderer?: RuntimeSpawnRenderer;
   readonly particleRenderer?: RuntimeParticleRenderer;
   readonly cameraController?: RuntimeCamera;
   /** Void arka planını alan yüzey; varsayılan ana kameradır. */
@@ -86,6 +94,7 @@ export class LifeRuntime {
   private readonly fieldRenderer: RuntimeFieldRenderer;
   private readonly habitatRenderer: RuntimeAnimated;
   private readonly deathRenderer: RuntimeDeathRenderer;
+  private readonly spawnRenderer: RuntimeSpawnRenderer;
   private readonly particleRenderer: RuntimeParticleRenderer;
   private readonly cameraController: RuntimeCamera;
   private readonly clock: SimulationClock;
@@ -165,6 +174,15 @@ export class LifeRuntime {
             drainColor: graphics.voidColor,
           }),
       );
+      this.spawnRenderer = this.scope.addDestroyable(
+        dependencies.spawnRenderer ??
+          new ParticleSpawnRenderer(scene, {
+            durationMs: 450,
+            maxSpawns: 128,
+            radiusUnits: config.particles.radiusUnits,
+            ringExpansionRatio: 3.2,
+          }),
+      );
       this.cameraController = this.scope.addDestroyable(
         dependencies.cameraController ??
           new WorldCameraController(scene.game.canvas, scene.cameras.main, {
@@ -200,9 +218,13 @@ export class LifeRuntime {
     });
     if (fieldsChanged) this.fieldRenderer.render(this.world.fields);
     const presentationEvents = this.world.drainTransientPresentationEvents();
-    if (presentationEvents.length > 0) this.deathRenderer.push(presentationEvents, this.elapsedMs);
+    if (presentationEvents.length > 0) {
+      this.deathRenderer.push(presentationEvents, this.elapsedMs);
+      this.spawnRenderer.push(presentationEvents, this.elapsedMs);
+    }
     this.particleRenderer.render(this.world.particles, this.clock.getInterpolationAlpha());
     this.deathRenderer.render(this.elapsedMs);
+    this.spawnRenderer.render(this.elapsedMs);
     return frame;
   }
 

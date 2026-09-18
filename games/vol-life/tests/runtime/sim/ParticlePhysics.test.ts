@@ -66,6 +66,15 @@ describe('parçacık kuvvet biriktirimi', () => {
     expect(particles.x).toEqual(before);
   });
 
+  it('tam üst üste binen parçacıklarda (singularity) deterministik itiş kuvveti üretir', () => {
+    const { particles, grid, kernel } = pair(100, 100);
+    accumulateParticleForces(particles, grid, kernel, 1);
+
+    expect(particles.forceX[0]).toBeGreaterThan(0);
+    expect(particles.forceX[1]).toBeLessThan(0);
+    expect(particles.forceX[0] + particles.forceX[1]).toBeCloseTo(0);
+  });
+
   it('aktif olmayan slotlar kuvvet hesabına katılmaz', () => {
     const particles = new ParticleStore(2);
     particles.x.set([100, 105]);
