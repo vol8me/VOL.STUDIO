@@ -828,6 +828,23 @@ Physics research lane (Lane A) bundan bağımsız paralel devam eder.
 
 ## Kapatılanlar
 
+### 2026-09-18 — Viskoelastik Yumuşak Temas ve Homeostatik Ekolojik Vent Motoru
+
+- [x] **[P0] Küme içi yapışma, kütle donması (lattice lock-in) ve sapan etkisi çözüldü.**
+      `exclusionRadiusUnits = 9.0` (tam parçacık çapı, $2 \times radiusUnits$) ve
+      `exclusionStrength = 1.2` ile parçacıklar birbirinin içine geçmeden viskoelastik
+      sıvı gibi akar hale getirildi; genomdaki av-avcı/organizma kuralı $d > 9.0$
+      aralığında %100 serbest bırakıldı. Aşırı sert ters-kare bariyeri (`contactStrength = 0`)
+      kaldırılarak parçacıkların habitattan dışarı fırlaması (slingshot) önlendi.
+- [x] **[P0] Ekolojik Vent Motoru ve Ritmik Tekil Doğuş ("Pıt... Pıt... Pıt...") kuruldu.**
+      60 saniyede bir 50 parçacığın aynı anda ekrana boca edildiği ("patt") reseed
+      mantığı kaldırıldı. Yerine rezervuardaki maddeyi her 1.0 saniyede bir (`ventCadenceTicks = 60`)
+      tek tek doğuran, her doğumda `ParticleSpawnRenderer` (450 ms ripple) görsel
+      dalgasıyla ekosisteme katan, 8-12 parçacıklık mikro-dalgalar ve 5 sn dinlenme
+      (`ventCooldownTicks = 300`) ile çalışan homeostatik vent direktörü entegre edildi. 7. dakikadaki aktif canlı parçacık sayısı 33'ten 501'e yükseltildi ve ekolojik
+      nüfus çöküşü (extinction) ortadan kaldırıldı. Samsung S21 FE ve Lenovo Tab M11'de
+      cihaz üzerinde doğrulandı.
+
 ### 2026-09-16 — Zemin + Adım 1–3 kapanış turu
 
 - [x] **[P0] Tautological LifeWorld test düzeltildi.** `LifeWorld.test.ts` →

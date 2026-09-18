@@ -407,6 +407,38 @@ etiketini silmez: cohesion/üyelik çözülür ve ekranda gerçekten dağılma o
 Avcının kopardığı particle için ayrı envanter veya “taşı” sistemi yoktur;
 kopan madde fiziksel olarak yeni yapıya katılırsa zaten taşınmış olur.
 
+### Viskoelastik temas ve homeostatik vent direktörü
+
+2026-09-18'de küme içi yapışma, kristal donması ve nüfus çöküşü analiz edilerek
+şu fizik ve ekoloji sözleşmesi kilitlenmiştir:
+
+1. **Viskoelastik Temas Hacmi (`exclusionRadiusUnits = 9.0`, `exclusionStrength = 1.2`):**
+
+   - Dışlama yarıçapı parçacığın geometrik çapına ($2 \times radiusUnits = 9.0$) eşittir.
+   - $d > 9.0$ mesafesinde yapay dışlama kesinlikle sıfırdır; genomdaki çekim ve
+     kovalama dinamikleri (amip, protozoa, hücre uzuvları) %100 serbest çalışır.
+     Yarıçapın çapı aşması ($d = 18$ gibi) çekimi bastırarak inorganik tuz kristali
+     donmasına (lattice freezing) yol açtığı için yasaklanmıştır.
+   - $d < 9.0$ mesafesinde kuadratik yumuşak yay gradyanı devreye girer. Parçacıklar
+     birbirinin içine %50'den fazla nüfuz edemez (çamurlaşma biter), fakat sert bilardo
+     topu gibi çarpışmak yerine viskoelastik bir sıvı gibi birbirinin üzerinden kayar.
+     Tekillikli ve sapan etkisi (slingshot) üreten ters-kare ($1/d^2$) temas bariyeri
+     kaldırılmıştır.
+   - Hız uzama tavanı (`particleVelocityStretchMax = 1.25`) ile parçacıklar yön hissi
+     verirken komşu hücrelerin üstüne taşmaz.
+
+2. **Homeostatik Ekolojik Vent Direktörü (`LifeWorld.ts`):**
+   - 60 saniyede bir 50 parçacığı tek karede boca eden ("patt") toplu reseed kaldırılmıştır.
+   - Rezervuardaki madde, güvenli iç bölgede seçilen bir gayzer/baca noktasından
+     tam 1.0 saniye (`ventCadenceTicks = 60`) aralıkla tek tek ("pıt... pıt... pıt...")
+     ekosisteme doğar.
+   - Her doğum `ParticleSpawnRenderer` ile 450 ms'lik genişleyen bir su dalgası (ripple ring)
+     ve merkez ışıltısıyla görselleştirilir; bir sonraki parçacık ilki açılana kadar beklemede kalır.
+   - Mikro-grup (8-12 parçacık) tamamlandığında 5 saniyelik (`ventCooldownTicks = 300`)
+     ekolojik dinlenme başlar. Bu sayede doğum debisi doğal Void kaybını (~50-70/dk)
+     dengeler; dünya nüfusu çölleşmez (7. dakikada 500+ aktif madde) ve ekoloji dinamik
+     homeostaziste kalır.
+
 ## 4. Akıl, algı ve hareket
 
 Davranış zinciri:
