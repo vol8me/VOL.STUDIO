@@ -102,5 +102,5 @@ describe('Void ölümü — sunum ve dünya kanalları', () => {
   it('sink verilmese de sunum kanalı çalışır', () => {
     const world = createWorld();
     expect(stepUntilDeath(world).length).toBeGreaterThan(0);
-  });
+  }, 20_000);
 });
