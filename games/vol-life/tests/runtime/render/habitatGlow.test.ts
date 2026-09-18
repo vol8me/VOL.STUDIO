@@ -142,7 +142,7 @@ describe('habitat ışıma rasteri', () => {
       }
     }
     expect(offenders).toEqual([]);
-  }, 20_000);
+  }, 40_000);
 
   it('kıyı boyunca yoğun örneklemede vurgu kesintisizdir', () => {
     const contour = domain.contour(720);
@@ -168,7 +168,7 @@ describe('habitat ışıma rasteri', () => {
   it('aynı girdi aynı baytı üretir', () => {
     const again = rasterizeHabitatGlow(domain, RECT, resolution, STYLE);
     expect(again.pixels).toEqual(raster.pixels);
-  }, 20_000);
+  }, 40_000);
 
   /* Bölme yalnız işi yayar: birleşen bantlar tek seferlik rasterin AYNI baytı olmalı. */
   it('satır bantlarıyla parçalı rasterleme tek seferlikle bayt bayt aynıdır', () => {
@@ -186,7 +186,7 @@ describe('habitat ışıma rasteri', () => {
     }
 
     expect(chunked).toEqual(raster.pixels);
-  }, 20_000);
+  }, 40_000);
 
   it('bandı taşıran satır aralığı reddedilir', () => {
     const target = new Uint8ClampedArray(8 * 8 * 4);

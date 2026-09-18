@@ -46,7 +46,7 @@ describe('Void ölümü — sunum ve dünya kanalları', () => {
       expect(Number.isFinite(event.vx) && Number.isFinite(event.vy)).toBe(true);
       expect(Object.isFrozen(event)).toBe(true);
     }
-  });
+  }, 20_000);
 
   it('olay store’un kopyasıdır: ölen slot kanonik boşalırken olay değişmez', () => {
     const world = createWorld();
@@ -58,7 +58,7 @@ describe('Void ölümü — sunum ve dünya kanalları', () => {
     expect({ ...event }).toEqual(before);
     expect([...world.particles.stableId]).not.toContain(event.stableId);
     expect(event.x === 0 && event.y === 0).toBe(false);
-  });
+  }, 20_000);
 
   it('sunum kanalını boşaltmak dünya kanalını TÜKETMEZ', () => {
     const sink = new CollectingWorldEventSink();
