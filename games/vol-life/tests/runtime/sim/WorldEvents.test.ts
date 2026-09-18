@@ -105,14 +105,21 @@ describe('Void ölümü — sunum ve dünya kanalları', () => {
   }, 20_000);
 
   it('reseed tetiklendiğinde sunum kanalına particle-spawn olayları bırakır', () => {
-    const world = createWorld();
+    const config: SubstrateConfig = {
+      ...lossyConfig(),
+      particles: {
+        ...lossyConfig().particles,
+        reseedIntervalSeconds: 0.05,
+      },
+    };
+    const world = new LifeWorld(config, createExplicitWorldMetadata(19));
     world.particles.deactivateSlot(0);
     world.reservoir.recordVoidLoss(1);
     expect(world.reservoir.external).toBe(1);
 
-    // reseedIntervalSeconds periyodunda step
+    // Kısa reseedIntervalSeconds periyodunda step
     const intervalTicks = Math.round(
-      world['config'].particles.reseedIntervalSeconds * world['config'].particles.referenceHz,
+      config.particles.reseedIntervalSeconds * config.particles.referenceHz,
     );
     for (let tick = 0; tick <= intervalTicks; tick++) {
       world.step();
