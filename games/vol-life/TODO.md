@@ -640,6 +640,18 @@ Ama yüksek seviye önerilerin kaybolmaması için bağımlılık ve kabul yüze
       eklensin.** Mevcut: `fitWorld()` ve `getState()` var ama dışarıdan
       `setState()` yok. `animateTo()` koyma — controller'ı şişirme. LIFE-specific
       `LifeCameraTransition` animasyonu yönetsin.
+- [ ] **[P0] CORE generic `BottomSheet` / `Drawer` component oluşturulsun.**
+      Alttan yukarı açılan (`anchor: 'bottom'`), snap point (0.0 kapalı, ~0.48
+      yarı açık, 1.0 tam ekran) destekli, scrimli/scrimsiz, focus trap ve
+      klavye/gamepad gezinmesi olan generic overlay primitifi. Drag jesti
+      (ivmeli fırlatma >1.5 px/ms velocity snapping) ve tek dokunuş
+      alternatifi içerir. Oyun kelimesi bilmez; `core/src/ui/overlays/BottomSheet.ts`.
+      Eklenince `devtools/vol-ui` showcase'ine sekme olarak eklenir.
+- [ ] **[P0] CORE generic `ChevronAffordance` component oluşturulsun.**
+      Hafif, yarı saydam, çerçevesiz dikey chevron (`˄`) butonu. Horizontal bar
+      değildir; semantik buton (`role="button"`), mobilde yukarı sürükleme / tap,
+      masaüstünde click, controller'da focus/select destekler.
+      `core/src/ui/primitives/ChevronAffordance.ts`. Showcase'e eklenir.
 - [ ] **[P1] CORE `Toolbar`/`ToolButton` opsiyonel semantic haptic eklensin.**
       `ToolButtonOptions.haptic` — pause header action'ları sistemin geri
       kalanıyla aynı dokunsal dile sahip olur.
@@ -685,6 +697,34 @@ Ama yüksek seviye önerilerin kaybolmaması için bağımlılık ve kabul yüze
       Menu açılınca ilk klavye odağı LIFE'tadır ve gameplay kontrolleri
       inert'tir; borderless görünse de semantik `<button>`dır ve klavye focus
       ring'i korunur.
+- [ ] **[P0] Main Menu alt ok (`˄`) affordance'ı.** Ekranın en alt ortasında
+      çok hafif, yarı saydam, çerçevesiz dikey `˄` butonu (CORE
+      `ChevronAffordance`). Klasik yatay mobil drag handle çizgisi değildir.
+      Mobilde yukarı sürükleme / tek dokunma, masaüstünde tıklama,
+      controller'da D-pad Down ile focus ve A ile açılma destekler.
+- [ ] **[P0] `GenesisDrawer` — alttan açılan dünya parametreleri çekmecesi.**
+      CORE `BottomSheet` primitifini tüketir. Ekranın alt %45–50'sini kaplayan
+      yarı saydam yüzey. İçerik: World Scale (yalnızca doğrulanmış ve kanıtlanmış
+      ölçek: Standard World 512 aktif madde; genişletilebilir preset tipi),
+      Seed seçimi (Random / Explicit Seed), Live/Seed Preview (deterministik
+      başlangıç yoğunluğu özeti), Launch aksiyonu.
+- [ ] **[P0] Genesis Drawer açılışında dünya reframe animasyonu.** Drawer
+      açıldığında arkadaki donmuş dünya kamerası yumuşak bir dikey ofsetle
+      yukarı ötelenir (reframe); böylece drawer habitatı ve canlıları örtmez,
+      görünür kalır. Drawer kapatıldığında kamera tekrar yumuşakça merkeze döner.
+- [ ] **[P0] Main Menu & Genesis Drawer controller ve Steam Deck navigasyonu.**
+      D-pad Down `LIFE`'tan alt oka iner; A tuşu Drawer'ı açar; Drawer açıkken
+      odak içeri hapsedilir (Focus Trap); D-pad Up/Down ile Scale/Seed/Launch
+      arasında gezilir, Left/Right ile presetler değiştirilir; B veya Back/Escape
+      Drawer'ı kapatıp dünyayı merkeze reframe eder ve odağı alt oka iade eder.
+      D-pad/stick gezintisinde 250ms başlangıç, 100ms repeat throttle uygulanır.
+- [ ] **[P1] Steam Deck Verified uyumluluğu ve kontrolleri.** Kontrolcü
+      bağlıyken arayüzde dinamik glif gösterimi (`[A]`, `[B]`, `[X]`, `[Y]`,
+      `[D-Pad]`) ve klavye/fare tuşlarının ("Click", "Enter") gizlenmesi. Explicit
+      Seed için Steamworks sanal klavye açılışı (`ShowFloatingGamepadTextInput`).
+      1280×800 çözünürlükte hiçbir metin 9 pikselin altına düşemez (otomatik
+      yönetişim testiyle kilitlenir). Suspend/resume sonrası `audioContext.resume()`
+      ve WebGL bağlam doğrulaması.
 - [ ] **[P0] Main Menu'de dünya tamamen DURUR.** Saved world: son snapshot
       frozen. Fresh world: Habitat oluşturulmuş, particle'lar yerleştirilmiş,
       simulation tick başlamamış. Sadece presentation-only (habitat glow)

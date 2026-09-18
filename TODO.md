@@ -22,6 +22,20 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
       kanıtı yapılamıyor. Çözüm: farklı Android 16 imajı (`default`/`android-36`)
       denemek, Cuttlefish kurmak (root gerekir) veya Android 16 büyük ekranlı
       fiziksel cihaz bulmak.
+- [ ] **[P1] Steam Deck Verified — monorepo geneli uyumluluk ve hazırlık.**
+      Valve Steam Deck Verified (Yeşil Onay Rozeti) standartları monorepo
+      paketlerinde (`core`, `tauri-v2`, `vol-hell`, `vol-arachnid`, `vol-life`)
+      karşılanır:
+      _ **Girdi:** HTML5 Gamepad API üzerinden tam XInput kontrolcü desteği;
+      gamepad bağlıyken arayüzde asla klavye/fare glifi göstermeme (`core/src/ui/primitives/Glyph`);
+      metin kutuları için sanal klavye köprüsü (`ShowFloatingGamepadTextInput`).
+      _ **Ekran & Tipografi:** 1280×800 (16:10) yerel çözünürlük desteği;
+      1280×800'de hiçbir metin 9 pikselin altına düşemez (repo geneli CSS/yönetişim testi).
+      _ **Linux & Gamescope:** `games/vol-hell/src-tauri/linux.AppRun` içindeki
+      DMA-BUF ve Wayland/X11 oturum yönetim kuralı diğer oyunların Linux
+      AppImage dağıtımlarına da genişletilir.
+      _ **Güç & Suspend:** Konsol uykuya alınıp uyandırıldığında (suspend/resume)
+      `audioContext.resume()` ve WebGL context restore mekanizmasının garanti edilmesi.
 
 ## Kapatılanlar
 

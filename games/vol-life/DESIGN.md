@@ -1777,10 +1777,47 @@ AI ilerlemez, energy azalmaz, organism ölmez, RNG ilerlemez, Void olayları
 oluşmaz. Yalnız presentation-only dekoratif efektler (habitat glow/breathing)
 yaşayabilir.
 
-Görünür tek aksiyon `LIFE` / `YAŞAM` düğmesidir. Settings, Continue, New
-World, Quit görünürde yoktur. Kayıt varsa LIFE = devam et, kayıt yoksa LIFE =
-yeni hayatı başlat. New World / Reset World Pause → Settings/World içinden
-yapılır. Android Back: Quit Confirm açar.
+Görünür ana aksiyon `LIFE` / `YAŞAM` düğmesidir. Settings, Continue, New
+World, Quit gibi klasik menü butonları görünürde yoktur. Kayıt varsa LIFE =
+devam et, kayıt yoksa LIFE = yeni hayatı başlat. Android Back: Quit Confirm
+açar.
+
+Bunun dışında ekranın en alt ortasında çok hafif, yarı saydam, çerçevesiz bir
+yukarı ok/chevron affordance'ı yer alır:
+
+    ˄
+
+Bu klasik bir mobil yatay "drag handle" çizgisi değildir:
+
+- Horizontal bir bar değil, dikey yukarı ok `˄` semantiğindedir.
+- Mobilde yukarı sürükleme (swipe up) veya tek dokunma (tap).
+- Masaüstünde fare ile tıklama (click).
+- Controller ve klavyede odaklanılabilir (focusable) semantik buton.
+
+Bu affordance tetiklendiğinde:
+
+- Ekranın alt %45–50'sini kaplayan yarı saydam bir **Genesis Drawer** açılır.
+- Arkadaki donmuş (frozen) dünya hafifçe yukarı **reframe** edilir (kamera
+  merkezi yukarı ötelenir, böylece drawer arkasındaki dünya gizlenmez ve
+  okunabilir kalır). Kapatıldığında dünya yumuşakça merkez konumuna geri döner.
+- Drawer içinde yalnızca doğrulanmış ve kanıtlanmış parametreler yer alır:
+  - **World Scale (Dünya Ölçeği):** Yalnızca doğrulanmış ölçekler sunulur
+    (şu an üretimde kanıtlanmış tek ölçek: Standard World 512 aktif madde;
+    gelecekte Vast / Micro ölçekleri için genişletilebilir preset sözleşmesi).
+  - **Seed (Tohum Seçimi):** Random Seed (varsayılan) veya Explicit Seed girişi.
+  - **Live / Seed Preview:** Seçilen tohum ve ölçeğin deterministik önizleme
+    özeti (başlangıç yoğunluğu, habitat formu).
+  - **Launch (Başlat):** Seçilen tohum ve ölçek parametreleriyle dünyayı başlatır.
+
+**Controller Ergonomisi (Steam Deck & Gamepad):**
+
+- Main Menu açıldığında varsayılan klavye/gamepad odağı `LIFE` düğmesindedir.
+- D-pad Down ile `˄` affordance'ına inilir.
+- A tuşu Genesis Drawer'ı açar (drawer 0.0 → ~0.48 yüksekliğe kayar, kamera yukarı reframe olur).
+- Drawer açılınca odak otomatik olarak Drawer'ın ilk etkileşimli elemanına geçer (Focus Trap).
+- D-pad Up/Down ile drawer elemanları arasında dolaşılır; Left/Right ile preset/seçenekler değiştirilir.
+- B tuşu veya Back/Escape Drawer'ı kapatır, dünyayı tekrar merkezler ve odağı alt ok affordance'ına iade eder.
+- Start veya Launch üzerindeyken A tuşu dünyayı başlatır.
 
 Main Menu kamerası bütün habitat overview'ındadır (`contain`). Gameplay
 kamerası ecosystem ölçeğindedir. Menu overview gameplay camera state'ini
@@ -1929,3 +1966,58 @@ log(endZoom), easedT))` — 0.4→0.8 ile 4→8 aynı algısal hızda. Easing:
 smootherstep / ease-in-out-quint (C² smooth). Süre zoom ratio'ya göre
 adaptif: yakın ~700-800ms, overview→ecosystem ~900-1100ms, maksimum ~1200ms.
 Reduced motion: 100-150ms fade/cut.
+
+## 19. Steam Deck ve taşınabilir konsol sözleşmesi
+
+Steam Deck (LCD ve OLED) doğrudan hedeflenen birincil donanım profilidir.
+Valve'in "Steam Deck Verified" (Yeşil Onay Rozeti) standartları ürün ve mimari
+sözleşmesine dahildir.
+
+### Dört temel sütun
+
+1. **Girdi (Input):**
+   - Oyun tam kontrolcü desteğine sahip olmalıdır; harici klavye/fare
+     gerektiremez.
+   - Kontrolcü bağlıyken arayüzde asla klavye/fare glifleri ("Click", "Press
+     Enter") görünemez; standart gamepad ikonları (`[A]`, `[B]`, `[X]`, `[Y]`,
+     `[D-Pad]`) gösterilir.
+   - Metin girişi gereken alanlarda (Explicit Seed, adlandırma vb.) sistem
+     ekran klavyesi (Steamworks `ShowFloatingGamepadTextInput` veya native
+     protokol köprüsü) otomatik açılmalıdır.
+2. **Ekran (Display):**
+   - 1280×800 (16:10) yerel çözünürlük letterbox'sız desteklenir; 1280×720 (16:9)
+     uyumludur.
+   - 1280×800 çözünürlükte hiçbir metin **9 pikselin** altına düşemez (Valve
+     sert eşiği). Gövde metinleri 12–14 piksel bandında tutulur.
+   - Varsayılan grafik ayarları Steam Deck donanımında doğrudan 60 FPS verecek
+     şekilde yapılandırılır.
+3. **Sorunsuzluk (Seamlessness):**
+   - Oyun harici veya ara bir başlatıcı (launcher) olmadan doğrudan başlar.
+   - Açılışta veya çalışma sırasında uyarı/hata diyaloğu çıkarmaz.
+4. **Sistem (System Support):**
+   - SteamOS / Linux Runtime (Sniper) altında yerel ya da Proton üzerinden
+     çökmesiz, sızıntısız çalışır.
+
+### WebKitGTK ve Gamescope uyumluluğu
+
+- WebKitGTK, SteamOS Gamescope altında DMA-BUF donanım ivmesi veya Wayland
+  compositing kusurları yaşayabilir. `linux.AppRun` şablonu ortam değişkenlerini
+  oturum türüne göre yönetir (`WEBKIT_DISABLE_DMABUF_RENDERER` fallback'i ve
+  `GDK_BACKEND=x11` çevirisi).
+- HTML5 Gamepad API Linux sandboxing'inde `/run/udev` izinleri gerektirir; AppImage
+  ve yerel ikililerde bu doğrudan sağlanır. `getGamepads()` poll döngüsü 60 Hz
+  `requestAnimationFrame` ile senkronize çalışır.
+- VSync ve Frame Pacing: Gamescope Wayland kompozitörü VSync'i zorunlu kılar.
+  Oyun içi yapay frame limiter eklenmez; VSync motorun doğal rAF temposuna
+  bırakılır.
+
+### Güç profili ve askıya alma (Suspend / Resume)
+
+- **TDP Bütçesi:** VOL.LIFE 2D WebGL mimarisiyle 4W–6W TDP profilinde 60 FPS
+  vererek 6–8+ saat pil ömrünü hedefler.
+- **Suspend / Resume:** Konsol uykuya alınıp uyandırıldığında WebAudio
+  `AudioContext` genellikle `suspended` durumuna geçer. `visibilitychange` ve
+  ilk kullanıcı girdisiyle kontrollü `audioContext.resume()` çağrısı
+  yapılarak ses motorunun çökmesi veya sessiz kalması önlenir. WebGL dokuları
+  bağlam kaybı (`webglcontextlost` / `webglcontextrestored`) durumunda
+  yeniden oluşturulur.
