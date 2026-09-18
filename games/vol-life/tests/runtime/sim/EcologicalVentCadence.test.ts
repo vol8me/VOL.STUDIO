@@ -9,11 +9,11 @@ describe('EcologicalVentCadence: ekolojik vent zamanlaması ve ritmik kadans', (
       ...substrateConfig,
       particles: {
         ...substrateConfig.particles,
-        reseedIntervalSeconds: 0.1,
-        ventCadenceTicks: 10,
+        reseedIntervalSeconds: 0.05,
+        ventCadenceTicks: 4,
         ventBurstMin: 3,
         ventBurstMax: 3,
-        ventCooldownTicks: 40,
+        ventCooldownTicks: 15,
       },
     };
 
@@ -27,8 +27,8 @@ describe('EcologicalVentCadence: ekolojik vent zamanlaması ve ritmik kadans', (
 
     const spawnTicks: number[] = [];
 
-    // 100 tick simüle et
-    for (let t = 0; t < 100; t++) {
+    // 40 tick simüle et (3 parçacık * 4 tick = 12 tick + dinlenme)
+    for (let t = 0; t < 40; t++) {
       world.step();
       const events = world.drainTransientPresentationEvents();
       const spawns = events.filter((e) => e.kind === 'particle-spawn');

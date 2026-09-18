@@ -38,13 +38,13 @@ export const particleConfig: ParticleConfig = {
   referenceHz: 60,
   reseedIntervalSeconds: 60,
   reseedFraction: 0.5,
-  exclusionRadiusUnits: 18,
-  exclusionStrength: 2.4,
-  contactStrength: 4.0,
-  ventCadenceTicks: 90,
-  ventBurstMin: 2,
-  ventBurstMax: 4,
-  ventCooldownTicks: 1500,
+  exclusionRadiusUnits: 9.0,
+  exclusionStrength: 1.2,
+  contactStrength: 0,
+  ventCadenceTicks: 60,
+  ventBurstMin: 8,
+  ventBurstMax: 12,
+  ventCooldownTicks: 300,
 };
 
 export function cloneParticleConfig(config: ParticleConfig): ParticleConfig {
