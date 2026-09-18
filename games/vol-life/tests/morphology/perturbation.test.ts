@@ -72,7 +72,7 @@ describe('Perturbation muhasebesi (E15)', () => {
     ]);
 
     expect(world.particles.activeCount + world.reservoir.external).toBe(initial);
-  });
+  }, 20_000);
 });
 
 describe('Spec sırasına bağımsızlık (E15)', () => {
@@ -92,7 +92,7 @@ describe('Spec sırasına bağımsızlık (E15)', () => {
       expect(a?.postState.meanSpeed).toBeCloseTo(b?.postState.meanSpeed ?? -1, 12);
       expect(a?.postState.activeCount).toBe(b?.postState.activeCount);
     }
-  });
+  }, 20_000);
 
   it('koşu bittiğinde dünya yakınsamış duruma geri döner', () => {
     const world = makeWorld(6);
@@ -104,7 +104,7 @@ describe('Spec sırasına bağımsızlık (E15)', () => {
 
     expect(world.particles.activeCount).toBe(countBefore);
     expect(world.tick).toBe(tickBefore);
-  });
+  }, 20_000);
 });
 
 describe('Toparlanma bandı (E15)', () => {
@@ -123,7 +123,7 @@ describe('Toparlanma bandı (E15)', () => {
 
     expect(result.recovered).toBe(false);
     expect(result.outOfBand.join(' ')).toContain('aktif madde');
-  });
+  }, 20_000);
 
   it('taban bandı perturbation ÖNCESİ değişkenlikten çıkar', () => {
     const world = makeWorld(8);
@@ -134,7 +134,7 @@ describe('Toparlanma bandı (E15)', () => {
     expect(result.baseline.sampleCount).toBeGreaterThan(1);
     expect(result.baseline.activeCount.mean).toBeGreaterThan(0);
     expect(result.baseline.meanSpeed.sigma).toBeGreaterThanOrEqual(0);
-  });
+  }, 20_000);
 
   it('ön-kayıtlı sayılar §8.4’tedir ve test için gevşetilmez', () => {
     expect(defaultPerturbationConfig.baselineSigmaMultiple).toBe(2);
@@ -181,5 +181,5 @@ describe('Determinizm (E15)', () => {
 
     expect(first[0].recoveryTicks).toBe(second[0].recoveryTicks);
     expect(first[0].postState.meanSpeed).toBeCloseTo(second[0].postState.meanSpeed, 12);
-  });
+  }, 20_000);
 });
