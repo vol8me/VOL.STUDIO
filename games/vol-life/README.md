@@ -10,9 +10,10 @@ Monorepo geneli için [kök README](../../README.md).
 
 ## Durum
 
-Paket **Particle Substrate v2** ve **Adım 3 araştırma kütüphanesi iskeleti** düzeyindedir.
-SoA depo, counting-sort spatial hash, alanlar, world-instance seed ve
-snapshot/restore korunur; Phaser yalnız render adaptöründedir.
+Paket **Particle Substrate v2** ve **Adım 3 araştırma kütüphanesi** düzeyindedir;
+kütüphane iskelet değil uçtan uca koşan hunidir ama henüz production'a aday
+taşımamıştır. SoA depo, counting-sort spatial hash, alanlar, world-instance
+seed ve snapshot/restore korunur; Phaser yalnız render adaptöründedir.
 
 **Uygulanmış substrate**: `SubstrateConfig`, `PhysicsGenome`, `PairForceKernel`
 (generalized multi-band directional), 512 kapasiteli `ParticleStore` (aktif/pasif
@@ -37,8 +38,11 @@ eşitlik kurulumdan gelir.
 
 Eski 100 parçacıklı triangular fizik ve dikdörtgen çarpışma duvarı negatif
 baseline olarak korunur, ürün kabulü değildir. Qualified aday henüz çıkmamıştır;
-araştırma kütüphanesi production'a aday taşımamıştır. Organizma, enerji, yaşam
-döngüsü ve akıl katmanı yoktur (Adım 4+ blokeli).
+araştırma kütüphanesi production'a aday taşımamıştır. Üretimdeki varsayılan
+çekirdek **çürütülmüş bir aileye** aittir (`generalized-asymmetric-multi-band`:
+F3 broad + F7 uzun ufuk, 8 adaydan 0'ı teknik kapıyı geçti) ve "en son ölçülen"
+statüsündedir; Adım 3 AÇIKTIR ve sıradaki ön-kayıtlı aile `multi-lobe`dur.
+Organizma, enerji, yaşam döngüsü ve akıl katmanı yoktur (Adım 4+ blokeli).
 
 Kabukta seçenekler çekmecesi (dil, kare hızı, dokunsal geri bildirim, ekran
 yönü, masaüstünde görüntü kipi), native Android haptics, Android çıkış onayı,

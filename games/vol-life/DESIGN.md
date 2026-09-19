@@ -19,21 +19,27 @@ Bu belgede üç ayrı statü vardır ve birbirine karıştırılmaz:
 - **Reddedilen yol:** neden terk edildiği korunur; sonraki tur aynı çıkmazı
   yeniden icat etmez.
 
-| Konu                                  | Statü                | Sonuç                                                             |
-| ------------------------------------- | -------------------- | ----------------------------------------------------------------- |
-| 512 başlangıç aktif maddesi           | Kilit karar          | Adım 2–3 araştırma rejimi; ebedî ölçek hedefi değil               |
-| Organik `HabitatSDF` + Void           | Kilit karar          | Dikdörtgen fizik duvarının yerini alır                            |
-| Multi-band yönlü pair profile         | Kilit karar          | V2'nin ilk üretim kernel ailesidir                                |
-| `SubstrateCandidate` profil ayrımı    | Kilit karar          | Fizik, seeding, Void ve deney koşulu ayrı profildir; Void aranmaz |
-| Canlı dünyada 0× kullanıcı pause'u    | Kilit karar          | Yavaşlatma ve hızlandırma yalnız replay'dedir                     |
-| Uygulama kapalıyken donmuş dünya      | Kilit karar          | v1'de açılışta wall-clock catch-up yoktur                         |
-| Alternatif active-particle kernel     | Koşullu araştırma    | Ana aile faz çeşitliliği üretemezse aynı harness'te sınanır       |
-| 10–30 dakikadan uzun canary           | Koşullu araştırma    | Ancak ölçülen geç çöküş bunu gerektirirse açılır                  |
-| Offline/kaba dünya simülasyonu        | Koşullu araştırma    | Ayrı ölçülen gelecekteki özellik                                  |
-| 100 parçacık, triangular wall physics | Reddedilen ürün yolu | Yalnız yeniden üretilebilir negatif kontrol olabilir              |
-| Qualified olmayan catalog preview     | Reddedilen ürün yolu | Development audition açık provenance ister                        |
-| 24 saatlik testi ilk kabul yapmak     | Reddedilen yol       | Ucuz filtre ve insan ön-elemesinden önce CPU tüketir              |
-| VOL.HELL ekran akışını kopyalamak     | Reddedilen yol       | VOL.HELL referanstır; bu işte migrate edilmez                     |
+| Konu                                        | Statü                     | Sonuç                                                                                                          |
+| ------------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 512 başlangıç aktif maddesi                 | Adım 2 baseline'ı         | Tamamlandı; Adım 3 kanonik rejimi 1024'tür — 512 yalnız ucuz katastrofik ön-filtre ve regresyon referansı (§8) |
+| 1024 madde + 1536² kanonik araştırma rejimi | Kilit karar (2026-09-19)  | Adım 3'ün yeni tabanı; 512'nin yerini alır, Adım 11 değildir (§8)                                              |
+| Organik `HabitatSDF` + Void                 | Kilit karar               | Dikdörtgen fizik duvarının yerini alır; morfoloji için feda edilmez                                            |
+| Multi-band yönlü pair profile               | Çürütülmüş aile           | F3 kural (a) ile çürüdü; qualified halef gelene dek geçici runtime baseline'ı                                  |
+| `SubstrateCandidate` profil ayrımı          | Kilit karar               | Fizik, seeding, Void ve deney koşulu ayrı profildir; Void aranmaz                                              |
+| Kernel ailesi kaydı / ifade edilebilirlik   | Kilit karar (2026-09-19)  | `kernelId` tek aileye kilitli; aile kaydı + sürümlü profil ayrımı gerekir (§8)                                 |
+| Fiziksel yarıçap ≠ glyph yarıçapı           | Kilit karar (2026-09-19)  | `physicalRadiusUnits` simülasyon, `particleGlyphRadiusUnits` sunum sözleşmesi                                  |
+| Kalıcı `VentSite` coğrafyası                | Kilit karar (2026-09-19)  | Burst başına random origin kalkar; world-seeded sitelar, aktivite geçici (§3)                                  |
+| Tip-korunumlu rezervuar                     | Kilit karar (2026-09-19)  | `external` tip başına ayrılır; Void dönüşü tipi korur, transmutation ayrı yasa                                 |
+| Canlı dünyada 0× kullanıcı pause'u          | Kilit karar               | Yavaşlatma ve hızlandırma yalnız replay'dedir                                                                  |
+| Uygulama kapalıyken donmuş dünya            | Kilit karar               | v1'de açılışta wall-clock catch-up yoktur                                                                      |
+| Fizik ailesi sırası                         | Ön-kayıtlı araştırma yolu | `multi-lobe-v1` → `active-particle-v1` → `oriented-torque-v1` (§8)                                             |
+| 10–30 dakikadan uzun canary                 | Koşullu araştırma         | Ancak ölçülen geç çöküş bunu gerektirirse açılır                                                               |
+| Offline/kaba dünya simülasyonu              | Koşullu araştırma         | Ayrı ölçülen gelecekteki özellik                                                                               |
+| 100 parçacık, triangular wall physics       | Reddedilen ürün yolu      | Yalnız yeniden üretilebilir negatif kontrol olabilir                                                           |
+| Qualified olmayan catalog preview           | Reddedilen ürün yolu      | Development audition açık provenance ister                                                                     |
+| 24 saatlik testi ilk kabul yapmak           | Reddedilen yol            | Ucuz filtre ve insan ön-elemesinden önce CPU tüketir                                                           |
+| VOL.HELL ekran akışını kopyalamak           | Reddedilen yol            | VOL.HELL referanstır; bu işte migrate edilmez                                                                  |
+| Flow-Lenia/sürekli substrate pivot'u        | Reddedilen yol (şimdilik) | Üç parçacık ailesi de çürümeden değerlendirilmez (§8)                                                          |
 
 ## 1. Ürün kararı
 
@@ -77,14 +83,17 @@ Birbirine bağlı bu zincir, aynı sayıda bağımsız özellikten daha değerli
 Sistem her saniye kaos üretmez; sessizlik, küçük değişim, göç, çatışma ve
 yeniden sakinlik ritmi hedeflenir.
 
-### Başlangıç aktif madde bütçesi 512'dir
+### Madde bütçesi: Adım 2 baseline'ı 512, Adım 3 kanonik rejimi 1024
 
 Eski 100 parçacık rejimi gerçek cihaz ve uzun ufuk deneylerinde lokal
 etkileşimi sürdüremedi; beş sabit tohumun yalnız biri kabul eşiğini geçti.
-Particle Substrate v2 bu nedenle **512 aktif parçacıkla** başlar.
+Particle Substrate v2 bu nedenle **512 aktif parçacıkla** başladı — bu artık
+Adım 2'nin tamamlanmış baseline'ıdır, Adım 3'ün kanonik tabanı değildir (v2
+revizyonu aşağıda).
 
 512 sonsuza kadar kutsal bir ürün sayısı veya “ölçek tamamlandı” iddiası
-değildir. Adım 2–3'ün ciddi başlangıç madde bütçesidir. Parçacık, organizma ve
+hiç olmadı; Adım 3'ün kanonik araştırma rejimi 1024'tür ve ürün varsayılan
+ölçeği henüz cihazda doğrulanmadı. Parçacık, organizma ve
 bilişsel ajan bütçeleri ayrı ölçülür:
 
 | Bütçe         | Ne sayar                    | Ana maliyet                           |
@@ -95,8 +104,9 @@ bilişsel ajan bütçeleri ayrı ölçülür:
 
 Dünya büyüklüğü ile nüfus bağımsız sayı seçilmez. Etkileşim yarıçapı, yerel
 yoğunluk ve dünya alanı birlikte ölçülür. Dünya yine %70–90 sakin/boş
-kalabilir; 512 madde tüm alana uniform serpilmek yerine yerel başlangıç
-yamalarda yoğunlaşır. Ölçeği 10k–250k aralığına açmak Adım 11'in işidir.
+kalabilir; başlangıç maddesi tüm alana uniform serpilmek yerine yerel
+başlangıç yamalarda yoğunlaşır. Ölçeği 10k–250k aralığına açmak Adım 11'in
+işidir.
 
 Yaklaşık yerel komşuluk `N × πR² / worldArea` ile izlenir. Dünya kenarı iki
 katına çıkıp alan dört katına çıktığında aynı yoğunluk karakteri yaklaşık dört
@@ -104,6 +114,16 @@ kat madde isteyebilir; bu otomatik ölçekleme kuralı değil, benchmark hipotez
 Başarılı morphology ölçülmeden dünya ölçüsü `4096²` veya `8192²` gibi estetik
 bir sayıya kilitlenmez. Habitat onlarca tipik-organizma uzunluğu taşıyacak
 şekilde sonuçtan türetilir.
+
+**2026-09-19 revizyonu — kanonik araştırma rejimi v2.** 512 madde / 1024²
+depolama rejimi Adım 3'ün nihai tabanı değildir: K3 koşusunda yapılar temas
+mesafesinde jammed paket çıktı (`meanNeighborCount = 80,76`, çap 9 birim) ve
+dört başlangıç yaması tek dev konfeti topa erken çökmeyi kolaylaştırıyor. Yeni
+kanonik taban **1024 aktif madde + 1536×1536 depolama + 8 origin yaması**dır;
+ayrıntı ve hesap §8'de. 512 rejimi hızlı broad-search ve regression ölçeği
+olarak korunur; bu değişiklik Adım 11 ölçek işi değil, morphology'nin düşük
+yapısal çözünürlük tarafından sınırlanmasını önleyen araştırma tabanı
+kararıdır.
 
 ## 2. Dünya modeli
 
@@ -147,8 +167,9 @@ nutrient üretimi + habitat maddesi + enerji maliyeti
 − avlanma − hastalık − Void kaybı
 ```
 
-Bu nedenle 512 aktif madde 512 organizma anlamına gelmez; madde serbest bulut,
-beden, detritus ve dış rezervuar arasında farklı zamanlarda farklı dağılır.
+Bu nedenle aktif madde bütçesi eşit sayıda organizma anlamına gelmez; madde
+serbest bulut, beden, detritus ve dış rezervuar arasında farklı zamanlarda
+farklı dağılır.
 
 ### Dünya dikdörtgen kutu değil, Void içindeki habitattır
 
@@ -264,11 +285,11 @@ ancak her seed'in kaçınılmaz biçimde tükenmesi de kabul edilmez.
 
 ### Başlangıç materyali uniform soup değildir
 
-`InitialMatterSeeder`, 512 parçacığı birkaç yoğun origin patch, serbest matter
-cloud ve seyrek bölgeye dağıtır. Bu bir organizma çizmez; yalnız lokal
-etkileşimin başlayabileceği madde koşulunu kurar. Seeder parametreleri fizik
-yasasından ayrı `SeedingProfile`dır (§3); dünya seed'i ne fizik ne de seeding
-config'idir.
+`InitialMatterSeeder`, yapılandırılmış aktif madde bütçesini birkaç yoğun
+origin patch, serbest matter cloud ve seyrek bölgeye dağıtır. Bu bir
+organizma çizmez; yalnız lokal etkileşimin başlayabileceği madde koşulunu
+kurar. Seeder parametreleri fizik yasasından ayrı `SeedingProfile`dır (§3);
+dünya seed'i ne fizik ne de seeding config'idir.
 
 Başlangıç dağılımı fizik yasasından ayrı tutulur ama önemsiz sayılmaz. Aynı
 `SubstratePhysicsProfile` yoğun origin patch, seyrek cloud ve farklı type
@@ -279,6 +300,49 @@ Başlangıç bir launch envelope içinde kalır: ilk saniyelerde maddeyi Void'a
 fırlatan, hız tavanında patlayan veya seed çoğunluğunda felaket kayıp üreten
 fizik/seeding çifti başarısızdır. Kötü başlangıç reroll ile ya da seed seçerek
 gizlenmez; ölçüsü başlangıç sağkalımı metrikleridir (§8).
+
+### v2 seeding revizyonları (2026-09-19 devam analizi)
+
+Başlangıç ekimi ile devam eden ekolojik dönüş **iki ayrı sistemdir**:
+`InitialMatterSeeder` dünya doğumunun parçasıdır ve Step 3'te çalışır;
+`ecologicalVent` yolu ürün ekolojisidir ve intrinsic ölçümde kapalıdır.
+Seeder iskeleti korunur (patch + cloud + sparse uniform soup'u reddeder ve
+morfolojinin başlayabileceği birkaç reaksiyon bölgesi kurar) ama v2 rejiminde
+üç kusuru kapanır:
+
+- **Origin'ler bağımsız rastgele değil, ayrık olur.** Bugün `patchCount` kadar
+  merkez birbirinden bağımsız `placeInside` ile seçiliyor — iki merkez
+  neredeyse üst üste doğabilir; 4 yamada mümkün olan bu risk 8 yamada
+  büyür. v2'de origin merkezleri minimum ayrım mesafesiyle seçilir
+  (blue-noise / Poisson-disc mantığı): rastgele görünür ama iki başlangıç
+  bölgesi birbirinin üstüne doğmaz. Yapay ızgara da istenmez.
+- **Parçacık doğumları üst üste gelemez.** `placeNear`/`placeInside` yalnız
+  "habitat içinde miyim?" sorusunu sorar; iki parçacık aynı noktada doğabilir
+  ve ilk saniyeleri sert kuvvetlerle ayrışmaya harcar. v2'de doğum konumu
+  geometrik olarak mevcut parçacıkların içine düşmez — mükemmel dizilim
+  değil, yalnız penetrasyonsuz başlangıç. Bu, §8'in non-penetrating packing
+  kararının doğum anına uzatılmasıdır.
+- **Her origin temel tip çeşitliliğine sahip olur.** Bugün altı tip parçacık
+  başına `typeWeights` ile global-random seçiliyor; bir yama gerekli tip
+  kombinasyonunu şans eseri alamayabilir ve aday başarısızlığı "fizik mi,
+  şans mı?" sorusunu cevapsız bırakır. v2'de her origin altı tipin hepsini
+  temsil eder, kalan parçacıklar random dağıtılır — steril %100 eşitlik
+  değil, adil deney koşulu. Bu bir organizma çizmek değildir.
+- **Kontrollü geçiş:** patch/cloud/sparse oranı (0,55/0,30/0,15), yama
+  yarıçapı ve başlangıç hızı ilk turda DEĞİŞMEZ. Aynı anda her şeyi
+  değiştirmek v2 sonucunun nedenini okunamaz kılar.
+
+Seeding'in deterministik başarısızlık sözleşmesi (2026-09-19 consistency
+pass): yerleştirme **bounded attempt** kullanır — origin ayrımı ya da
+penetrasyonsuz doğum için config geometrik olarak mümkün değilse
+**deterministik validation FAIL** olur; minimum ayrım sessizce
+gevşetilmez ve world seed reroll edilmez (kötü başlangıç reroll ile
+gizlenemez — §8'in aynı kuralı). Minimum doğum mesafesi glyph yarıçapına
+değil FİZİKSEL çapa (9 birim) bağlanır — penetrasyon fizik olayıdır,
+sunumdan bağımsızdır. Seeding RNG'leri named akışlara ayrılır:
+`seeding.origins`, `seeding.positions`, `seeding.types`, `seeding.velocity` —
+tip çeşitliliği kuralı değiştiğinde origin geometrisi kımıldamaz (mevcut
+named-RNG felsefesinin devamı).
 
 ## 3. Yaşam ve fizik modeli
 
@@ -297,6 +361,15 @@ Küme ile çekirdek adayı ayrıdır. Anlık temas doğum değildir; yapı yoğu
 Parçacık ihtiyaç, hedef, korku veya global dünya bilgisi taşımaz. Fiziksel
 parçacık basit nokta/radius ve yerel ilişkilerdir. Akıl tespit edilmiş
 organizmaya aittir.
+
+"Aptal" **özelliksiz nokta** demek değildir (2026-09-19 analizi). Parçacığın
+açı, açısal hız, yönlü etkileşim portu veya tork gibi FİZİKSEL serbestlik
+dereceleri taşıması bu kuralı bozmaz; koloni, besin veya düşman hakkında semantik
+karar vermesi bozar. İzotropik nokta varsayımı morphology araştırmasının
+kendisini sınırlıyor (§8): yalnız mesafeye tepki veren bir parçacık kol, zincir
+veya yönlü bağ üretemez; simetri kırılması tamamen noise'a kalır. "Dumb
+particles, smart organism" sözleşmesi korunur — yeni fizik aileleri parçacığa
+biliş değil, mekanik ekler.
 
 Korunan `ParticleStore` SoA yaklaşımı v2'de genişler:
 
@@ -371,6 +444,44 @@ bu paketle aynı şey değildir.
 World seed adaya girmez. Aynı aday bütün seed korpusunda aynı fizik yasasını
 kullanır.
 
+### Çürütülen ailenin yapısal tavanı ve `SubstrateInteractionModel`
+
+2026-09-19 analizinin kök bulgusu: `generalized-asymmetric-multi-band`'in
+başarısızlığı parametre değil İFADE GÜCÜ sorunudur. Üç mekanik sınır
+belgededir:
+
+1. **Loblar aynı çift fikrini paylaşır.** `bandScales = [0,35, 1, 0,45]` global
+   ölçeklerdir; üç lobe aynı pair strength'in işaretini üç mesafede
+   şiddetlendirir. Aile "10 birimde it, 25'te çek, 50'de it, 75'te çek" gibi
+   çift başına bağımsız işaretli loblar ifade edemez; çoklu denge mesafesi
+   (shell/nested ring/satellite) üretemez.
+2. **Parçacık durumu tamamen izotropiktir.** `x, y, vx, vy, type` vardır; açı,
+   açısal hız, oryantasyon, bağ portu veya heading yoktur. Doğal çıktılar
+   topak, halka, kristal, bulut, kovalayan çift ve orbit'tir — kol, zincir ve
+   yönlü bağ bu durum uzayında ifade edilemez.
+3. **`PairForceKernel` arayüzünün kendisi skaler/radyaldir.**
+   `magnitude(distance, ownType, otherType)` imzası tork, hizalanma ve aktif
+   ilerleme taşıyamaz; aktif/yönlü etkileşim araştırması arayüzün kendisini
+   aşar.
+
+Araştırma tarafı bu yüzden kernel yerine daha geniş bir soyutlama üzerinde
+çalışır: **Substrate Interaction Model** — `ParticleStore` (temel SoA: konum,
+hız, tür, stable ID, aktif maskesi korunur) üstünde aile başına seçilebilir
+etkileşim modeli ve gerekiyorsa aileye özgü ek SoA sütunları (`angle[]`,
+`angularVelocity[]` gibi — yalnız o aile kullanır, bütün parçacıklara
+zorlanmaz). Production yine TEK model taşır; araştırma üç modeli aynı
+gameplay'de koşturmak zorunda kalmaz. Aile seçimi `if kernelId === ...`
+zincirine değil, sürümlü ve ayrıştırılabilir profil ayrımına (discriminated
+profile) dayanır; `SubstratePhysicsProfile.kernelId`'nin tek aileye kilitli
+tipi bu değişimin ilk adımıdır (TODO Adım 3).
+
+Dış mekanik emsaller (§11): Atomic Clusters merkez-dışı yük noktalarıyla tork
+ve moleküler geometri üretir; PPS basit self-propelled parçacıklarla biliş
+olmadan protocell-benzeri yapıya ulaşır; Ventrella karmaşıklığın binlerce
+parçacıkta belirgin zenginleştiğini gösterir. Ders: directionality'nin bir
+kısmı Adım 6'nın AI'ını beklemeden fiziğin kendisinden çıkabilir — kuyruk/
+aktüatör davranışı böyle bir substrate üzerinde çok daha doğal kurulur.
+
 ### Madde korunur, enerji akar
 
 Habitat içindeki organizma ölümü ile Void ölümü aynı değildir:
@@ -422,8 +533,12 @@ kopan madde fiziksel olarak yeni yapıya katılırsa zaten taşınmış olur.
    - $d < 9.0$ mesafesinde kuadratik yumuşak yay gradyanı devreye girer. Parçacıklar
      birbirinin içine %50'den fazla nüfuz edemez (çamurlaşma biter), fakat sert bilardo
      topu gibi çarpışmak yerine viskoelastik bir sıvı gibi birbirinin üzerinden kayar.
-     Tekillikli ve sapan etkisi (slingshot) üreten ters-kare ($1/d^2$) temas bariyeri
-     kaldırılmıştır.
+     Eski doğrusal temas bariyeri `contactStrength = 0`'a indirilmiştir (alan config'te
+     durur ama etkisizdir). Tekillikli/sapan bariyer rolünü K3'te kernel'in ıraksak sert
+     çekirdeği devraldı: `hardCoreRadiusUnits = 11`, `hardCoreStrength = 0,42`,
+     $-s \cdot ((r/d)^2 - 1)$ — $d \to 0$'da ıraksayan bir terimdir ve genom
+     doğrulaması yarıçapın çaptan BÜYÜK olmasını şart koşar. İki temas katmanı
+     (yumuşak dışlama $d<9$, kernel sert çekirdeği $d<11$) bugün birlikte aktiftir.
    - Hız uzama tavanı (`particleVelocityStretchMax = 1.25`) ile parçacıklar yön hissi
      verirken komşu hücrelerin üstüne taşmaz.
 
@@ -435,9 +550,115 @@ kopan madde fiziksel olarak yeni yapıya katılırsa zaten taşınmış olur.
    - Her doğum `ParticleSpawnRenderer` ile 450 ms'lik genişleyen bir su dalgası (ripple ring)
      ve merkez ışıltısıyla görselleştirilir; bir sonraki parçacık ilki açılana kadar beklemede kalır.
    - Mikro-grup (8-12 parçacık) tamamlandığında 5 saniyelik (`ventCooldownTicks = 300`)
-     ekolojik dinlenme başlar. Bu sayede doğum debisi doğal Void kaybını (~50-70/dk)
-     dengeler; dünya nüfusu çölleşmez (7. dakikada 500+ aktif madde) ve ekoloji dinamik
-     homeostaziste kalır.
+     ekolojik dinlenme başlar. Ölçülen debi ~10 parçacık/~14 sn ≈ 40–45/dk'dır —
+     "~50–70/dk kaybı dengeler" iddiasının biraz altındadır ve bu hata değildir:
+     bütün dış madde geri dönmek zorunda değildir, dünya zamanla biraz küçülebilir
+     ve bu ekoloji için doğaldır. Nüfus yine de çölleşmez (7. dakikada 500+ aktif
+     madde) ve ekoloji dinamik homeostaziste kalır.
+   - **Vent state'i snapshot dışındadır (2026-09-18 tescilli açık).**
+     `ventRemainingInBurst`, `ventCooldownRemaining`, `ventNextSpawnTick` ve vent
+     orijini `LifeWorldSnapshot`'a girmez. Aynı örnek üzerinde restore (long-run ve
+     perturbation yolları ikisi de böyle çalışır) açığı MASKELER: vent sayaçları
+     snapshot anındaki değerlerine dönmez, koşu sonundaki değerleriyle kalır; rezervuar
+     boşaldıktan sonra vent üretim yapmadığı için bayt eşitliği yine de tutar.
+     Persistence yüklemesi ise yeni `LifeWorld` örneğine restore eder — vent takvimi
+     60 saniyelik başlangıç cooldown'una sıfırlanır ve yarım kalan burst kaybolur.
+     Bu bir determinizm açığıdır: ya snapshot'a vent state'i girer (codec v5) ya da
+     "yüklenen dünya vent takvimini sıfırlar" açık ürün kuralı olur ve replay
+     determinizmi iddiası buna göre daraltılır. Karar ve iş TODO'dadır.
+   - **Vent ekolojik nüfus bakımıdır, morfoloji kanıtı değildir.** Rezervuarı güvenli
+     iç bölgeye geri basmak kaybolan maddeyi telafi eder ama yapı kurmaz; vent'in
+     eklediği taze serbest madde ölçümü dalgalandırır (B3 testere-dişi analizi, §8).
+     Bu yüzden vent'li koşularda "koruma" ekolojik sağkalımı ölçer, intrinsic
+     morfolojiyi değil — ayrım §8 ölçüm katmanı açıklarında detaylıdır.
+   - **Vent takılabilir bir madde-iade politikasıdır (MatterReturnPolicy).**
+     Araştırma senaryosu `none` (saf substrate: dünya kendiliğinden
+     tükenebilmeli), ürün senaryosu `ecologicalVent` koşar; gizli if/else yerine
+     açık subsystem policy seçilir. Bu sayede intrinsic morphology ölçümü vent
+     kontaminasyonu olmadan koşulur ve vent'li ürün kanaryası ayrı senaryo olarak
+     kalır.
+   - **`LifeWorld` orkestratördür, sahip değil.** Vent yaşam döngüsü ve spawn
+     takvimi `MatterVentDirector` benzeri ayrı bir alt sisteme taşınır; `LifeWorld`
+     alan, parçacık fiziği, Void, rezervuar ve vent'i sırayla çağırır ama vent'in
+     iç durumunu kendi private alanlarına gömmez. Bu hem snapshot açığının hem
+     Adım 5'te eklenecek energy/nutrient/detritus büyümesinin ön temizliğidir.
+   - **Vent hiçbir zaman nüfus hedefi okuyamaz.** "aktif < N → spawn" kuralı
+     yasaktır (Adım 5 sözleşmesi de aynısını söyler); vent rezervuar ve kadans
+     okur, sayaç okumaz. Dünya extinction'a gidebilir — bu hata değil nadir bir
+     tarihtir.
+   - **Bugünkü `updateEcologicalVent` prototip madde-iade direktörüdür, final
+     ekoloji değildir (2026-09-19 devam analizi).** Korunan kararlar:
+     rezervuar üzerinden geri dönüş, nüfus hedefi okumama, tek karede toplu
+     reseed yapmama, parçacıkları zaman içinde tek tek çıkarma, spawn'ın ayrı
+     sunum olayı olması, `lifecycle` için ayrı deterministik RNG akışı ve yeni
+     parçacığa yeni stable ID vermesi. Dört kusur ayrı maddelerdedir.
+   - **Kusur — burst başında toplu rezervasyon madde kaybıdır.**
+     `reseed(toReseed)` burst'ün tamamını rezervuardan hemen düşer;
+     parçacıklar saniyelerce "bekleyen kuyrukta" kalır — ne aktif dünyada ne
+     rezervuarda. `ventRemainingInBurst` snapshot dışında olduğu için burst
+     ortasında alınan kayıt yüklendiğinde bekleyen madde TAMAMEN kaybolur: bu
+     yalnız determinizm açığı değil, **madde muhasebesi açığıdır**. Final
+     modelde rezervuardan madde burst başında değil her gerçek emisyon
+     anında 1 adet çekilir — hayalet madde kalmaz, save/load trivial kalır.
+   - **Kusur — her burst yeni random origin seçer; coğrafya yoktur.** Bugünkü
+     sistem "görünmez director teleport noktası"dır; organizmalar
+     öğrenebilecekleri bir coğrafyaya sahip olamaz ve koloni/territory/
+     av-bekleme emergence'ı üretilemez. Final modelde vent **kalıcı
+     `VentSite` coğrafyasıdır**: dünya yaratılırken world seed'den birkaç
+     sabit site kurulur; yerler dünyaya aittir, save/load'da aynı kalır.
+     Site'lar sürekli aktif olmaz — Yellowstone gayzeri gibi yer kalıcı,
+     aktivite geçicidir; site başına aktivite/dormancy ritmi dünyanın
+     "coğrafi karakteri" olur. Site konumu nüfus okumaz (sol tarafta canlı
+     az → oraya vent koymak gizli director'dür, yasaktır); site'lar
+     birbirinden ve kıyıdan ayrılır — yalnız merkez değil emisyon diski +
+     Void fringe + güvenlik payı hesaba katılır. Site sayısı şimdiden
+     kilitlenmez: 1536² dünya çıktıktan sonra ölçülür; "her yerde vent var"
+     hissi değil ekolojik hotspot hedeflenir. Site'ların versioning
+     sözleşmesi: world-seeded türetme placement algoritması değiştiğinde aynı
+     seed'in farklı coğrafya üretmesine izin verir — bu yüzden site
+     koordinatları dünya yaratımında kalıcı world state'e YAZILIR VE
+     `ventSiteGeneratorVersion` ruleset provenance'ında tutulur (ikisi
+     birden). Her site'ın RNG ritmi site kimliğinden türetilen bağımsız
+     substream'dir: yeni site eklemek diğer ventlerin emisyon takvimini
+     kaydıramaz.
+   - **Kusur — doğum konumu fringe içine düşebilir.** Origin 28 birimde
+     (`safeEdgeMargin + 4`) doğrulanır ama parçacık 0–12 birim drift ile
+     doğar: outward yönde 16 birime iner ve tidal fringe (24) içinde
+     doğabilir — "doğar doğmaz Void stresi". Final modelde doğrulanan şey
+     origin değil GERÇEK doğum konumudur; her parçacık spawn pozisyonunda
+     güvenli iç bölgede olmalıdır.
+   - **Kusur — rezervuar tip-korunumsuzdur.** `external` tek sayaçtır; cyan
+     Void'a girip orange çıkabilir — madde sayısı korunur ama kimyasal
+     kompozisyon korunmaz ve doğal seçilim/kıtlık sinyalini engine sessizce
+     geri düzeltir. Karar: **tip global madde kimliğinin parçasıdır ve Void
+     dönüşünde varsayılan olarak korunur** — `external` tip başına ayrılır,
+     vent'ten giren tip çıkar. İleride "Void maddeyi dönüştürür" istenirse bu
+     sessiz random retyping değil açık bir ekoloji mekaniğidir. Test
+     sözleşmesine işlenen invariant: açık bir transmutation mekaniği
+     gelene kadar her tip için `activeMatter[t] + externalReservoir[t] =
+initialMatter[t]`; Void crossing, vent emisyonu, snapshot/load ve
+     slot reuse olmak üzere dört durumda sınanır. Tip-başına rezervuar
+     snapshot şemasını değiştirir — codec/migration işi TODO'dadır.
+   - **Vent ritmi mekanik değil nefeslidir.** Bugünkü tam 1,000 sn kadans + sabit
+     5 sn cooldown "sistem çalışıyor" hissi verir. Final modelde deterministik
+     jitter'lı kadans (aynı ortalama debi, metronom değil) ve site başına
+     aktivite/dormancy ritmi kullanılır; RNG deterministik olduğu için
+     replay/save etkilenmez. Ritim hiçbir zaman nüfus sayısına bağlanmaz.
+     Bugünkü `ventCadenceTicks = 60`, burst 8–12, cooldown 300 parametreleri
+     (≈40–45 parçacık/dk) **legacy kalibre edilmiş baseline**dır — 512/1024²/
+     K3 dünyasına aittir; yeni 1024/1536² rejimde Void kayıp hızı değişir ve
+     debi VentSite'a geçişte yeniden ölçülür — eski dünyanın nüfus bakım
+     debisi yeni ekolojinin doğal yasası sanılmaz.
+   - **Organizma vent'in üstüne oturabilir — bu emergence'dır.** Site'lar dünya
+     doğumunda kurulur; sonradan organizma kaynak bölgesini kolonize edebilir
+     ve engine bunu engellemez. Yasak olan tersidir: engine'in yaşayan
+     organizmanın İÇİNE sonradan vent teleport etmesi director müdahalesidir.
+   - **Vent'in morfolojiye müdahalesi kontrol altındadır.** Random-origin vent
+     mevcut yapının içine doğabilir ve yapıyı suni besler — "kendini güzel
+     sürdürüyor" etiketi sahte kanıt olur. Bu, intrinsic ölçümde vent'in
+     kapalı kalma kararını bir kez daha doğrular; spawn'ın dört ayarı
+     (nerede, ne yoğunlukta, hangi tip, hangi hız/yön, ne sıklıkta) morfolojiyi
+     doğrudan değiştirir ve cognition öncesi en güçlü dış kuvvettir.
 
 ## 4. Akıl, algı ve hareket
 
@@ -667,6 +888,27 @@ Habitat ölümü farklı görünür: core ritmi söner, zar düzeni çözülür,
 beden serbest madde bulutuna dağılır ve bölgede hafif detritus/disturbance
 kalır. Oyuncu Void kaybı ile geri dönüşümü açıklama okumadan ayırabilmelidir.
 
+### Vent sunumu kaynağı gösterir, doğumu bağırmaz (2026-09-19)
+
+Bugünkü `ParticleSpawnRenderer` (450 ms genişleyen halka + beyaz merkez, tip
+rengi) gerçek bir simülasyon olayını görünür kıldığı için doğru yöndedir —
+parçacık hiçbir yerden sessizce "pop" olmaz ve vent'in baca/pore hissi ürün
+kimliğine katkıdır. Ama parçacık başına tekrarlanan halka kısa sürede
+"loot düştü" / arcade sistem efekti okur; prototype olarak kalır.
+
+Final sunum yönü: **görünen şey parçacık doğuşu değil vent kaynağının
+aktifliğidir.** Burst boyunca site'da hafif lokal distorsiyon/glow ("dünya
+burada nefes alıyor"); her parçacık için dev halka gerekmez, doğumda en fazla
+çok küçük flash. Vent ekran ikonu veya glowing RPG kaynak düğümü OLMAZ —
+habitat glow'unun lokal bozulması, küçük field ripple ve hafif particulate
+emission gibi dünyaya ait dil kullanılır; oyuncu vent'i birkaç saat içinde
+kendi gözüyle öğrenir, UI bağırmaz. Fresh world açılışında 1024 parçacığa
+spawn efekti KESİNLİKLE yoktur (bugünkü kod zaten initial seeding'de
+`particle-spawn` olayı üretmiyor — bu karar korunur); ilk madde Creation
+Phase'in parçası olarak sessizce mevcuttur. Sunum önceliği: okunabilir
+parçacıklar → morfoloji → vent sunum cilası; vent efektini cilalayıp hâlâ
+büyük üst üste binen glyph çizmek görüntüyü düzeltmez.
+
 ### Particle glyph fizik değildir
 
 Fizik parçacığı nokta/radius kalır. Renderer rol ve duruma göre glyph'i
@@ -687,6 +929,39 @@ var olduğunda açılır:
 Glyph, collision shape veya kuvvet menzilini değiştiremez. Adım 2 membrane,
 core, tail, hasar veya enfeksiyon rolü uydurmaz; henüz var olmayan bir durum
 için sahte rol enum'u yazılmaz. Adım 3 audition'ı rol glyph'i olmadan yapılır.
+
+### Fiziksel yarıçap ile glyph yarıçapı ayrı sözleşmedir (2026-09-19)
+
+Bugün renderer fiziksel yarıçapı (`radiusUnits = 4,5`, çap 9 birim) birebir
+opak dolu daire olarak çizer; `alpha = 1`. Sonuç: merkezleri 7 birime kadar
+yaklaşabilen iki parçacık ekranda gerçekten üst üste biner; hız/fringe uzaması
+(`particleVelocityStretchMax = 1,25`, `particleFringeStretchMax = 1,9`) görsel
+ayak izini fizik çapının da üstüne çıkarabilir. Üst üste binme, büyük opak
+glyph ve altı doygun rengin uzaysal karışması birlikte "konfeti hamuru"
+üretir — katman, merkez, boşluk ve yön okunamaz.
+
+Ayrım kararı: `ParticleConfig.physicalRadiusUnits` simülasyon sözleşmesi,
+`LifeGraphicsConfig.particleGlyphRadiusUnits` (eklenecek) sunum sözleşmesidir.
+Aynı parçacık konumlarıyla daha küçük glyph, gözün parçacıklar arasındaki
+negatif boşluğu görmesini sağlar ve okunabilirliği fizik değişmeden büyütür;
+aday aralığı cihazda A/B ile seçilir (analiz önerisi 2,5–3,5, karar cihazda
+verilir). Bu ayrım "render fiziği değiştiremez" kuralının doğal uzantısıdır:
+renderer fizik yarıçapını doğrudan kullanmak zorunda değildir; fiziksel
+parçacığı nasıl temsil edeceğinin sahibidir.
+
+Reddedilen sunum kestirmeleri:
+
+- **Ana çözüm olarak alfa düşürme:** renkler çamurlaşır ve fiziksel
+  penetrasyonu gizler — kozmetik değil ölçüm kaybı olur.
+- **Renderer'da sahte zar/katman/boşluk çizmek:** fizikte olmayan anatomiyi
+  sunum uyduramaz; fake ile abstract ayrımı §8'de.
+- **Binlerce parçacık için outline:** yakın zoom'da tekil parçacığı ayırabilir
+  ama çizim maliyeti iki katına çıkar ve referansın temiz point-cloud
+  estetiği için gerekli değildir; ileride çok ince (≤1 px) olarak
+  değerlendirilebilir.
+- **İzin verilen sunum zenginliği:** hız izleri ve birkaç karelik düşük-alfa
+  kalıntı gerçek hareketi gösterdiği için meşrudur; anatomi uydurmadığı
+  sürece Adım 7'de değerlendirilebilir.
 
 ### Renk enerjiyi anlatır
 
@@ -734,6 +1009,57 @@ Maksimum zoom-out bütün habitatı ve çevresinde anlamlı karanlığı göster
 kullanıcı sonsuz Void'a kayamaz ve habitatı tamamen kaybedemez. Kesin margin,
 momentum penceresi ve zoom limitleri config verisidir; mouse, Samsung ve Lenovo
 insan kabulüyle ölçülmeden belgeye rastgele sayı olarak yazılmaz.
+
+### 1536² rejiminin kamera sonuçları (2026-09-19 analizi)
+
+Dünya 1024² → 1536² büyüyünce ekran kompozisyonu **değişmez**: açılış
+`fit: 'contain'` olduğu için kamera bütün habitatı yine sığdırır; habitatın
+ekranda kapladığı oran yaklaşık aynı kalır. `cameraVoidMarginRatio = 0,15`
+sabit piksel değil habitat oranıdır — Void payı habitatla birlikte büyür ve
+contain tekrar sığdırır; portrait'teki uzun üst/alt siyah bantlar margin'den
+değil kare dünyanın uzun ekrana sığmasından gelir (geometri, ayar değil).
+Büyümenin kazancı ekranda değil simülasyonun içindedir: parçacıklar
+overview'da ~%33 daha küçük görünür ve dünya daha ince taneli dokuya geçer.
+
+Bir GERÇEK gerileme vardır: `cameraMaxZoomFactor = 3` dünya fit'ine
+bağlıdır (maksimum yakın zoom = minZoom × 3). Dünya büyüyünce minZoom düşer
+ve aynı 3× çarpan eski close-up kapasitesinin ~%33 altında kalır. Kural:
+maksimum uzak zoom dünyaya bağlıdır (contain), maksimum yakın zoom dünya
+boyutuna bağlı olamaz — görsel inceleme ölçeğine (birim/ekran-pikseli veya
+semantic zoom seviyesi) bağlanır. Geçici karşılık 1536 için yaklaşık 4,5×'tir;
+sihirli sayı yerine inceleme ölçeği sözleşmesi tercih edilir.
+
+Modalite ayrımları (hepsi cihaz insan kabulüyle ölçülür):
+
+- **Aktif drag sınırında yumuşak direnç:** sert clamp yerine parmak
+  ilerledikçe azalan dünya yer değiştirmesi (10 px → 6 px → 2 px); iOS
+  elastik bounce kesinlikle yok. Release momentumunun sınırda yumuşaması
+  zaten var — aynı his aktif sürüklemeye de taşınır.
+- **Modalite başına momentum:** touch kontrollü kinetik, mouse neredeyse
+  sıfır coast, trackpad kendi doğal davranışına yakın. Bugünkü tek
+  `panMomentumMs = 140` hepsine aynı uygulanıyor.
+- **Trackpad/wheel ayrımı:** laptop'ta iki parmak scroll çoğu zaman wheel
+  event'i olarak gelir ve bugün zoom'a çevrilir — kullanıcı "kaydırıyorum"
+  sanarken kamera zoom yapar. Hedef: wheel → zoom, trackpad scroll → pan,
+  trackpad pinch (çoğu zaman `ctrlKey + wheel` sinyali) → zoom; cihaz ayrımı
+  heuristikle çözülür ve Samsung + Lenovo + masaüstü el testi şarttır.
+- **Jitter ikinci denemesi:** ilk çözüm (event'leri biriktirip render
+  karesinde uygulama) kullanıcı tarafından geri alındı. İkinci yaklaşım:
+  aktif sürükleme yine neredeyse birebir kalır; `getCoalescedEvents()`
+  verisi bugün yalnız release hızını besliyor — sürükleme konumu için de
+  kullanılır; filtreleme ağırlıklı olarak release velocity üstünde yapılır.
+- **Orientation görsel ölçeği:** bugünkü geçiş `zoom / minZoom` oranını
+  korur; hedef ekrandaki FİZİKSEL büyüklüğü korumaktır — yön değişiminde
+  bakılan organizma aynı görsel ölçekte kalmalı, yalnız viewport imkânsız
+  kılıyorsa clamp edilmelidir.
+- **Tap-vs-pan tahkimi:** Adım 4/7'de organizma seçimi geldiğinde tek parmak
+  sürükleme ile dokunma çatışır; küçük hareket tap, eşiği aşan hareket pan
+  sayılır. Kamera mimarisi bugünden jest tahkimine izin vermelidir; eşik
+  cihazda ayarlanır.
+- **Void margin A/B:** `cameraVoidMarginRatio` için 0,15 / 0,12 / 0,10
+  görüntüleri karşılaştırılır ve kullanıcı seçer; başlangıç zoom'unu
+  zorlamak (`initialZoomFactor > 1`) önceki geri alınan karar nedeniyle
+  araç değildir.
 
 ### Kabuk
 
@@ -965,10 +1291,96 @@ bir aile şu üçünden biri doğruysa çürütülmüş sayılır — (a) broad 
 %1'inden azı hem launch envelope'u seed'lerin ≥ %75'inde geçiyor hem
 DYNAMIC_STRUCTURED oluyor; (b) refinement'ta bütün sert kuralları geçen aday
 yok; (c) kullanıcı ön-elemede kısa listenin tamamını reddediyor. Ölçülmemiş bir
-koşul "geçti" sayılmaz, eksik dayanak olarak ayrı listelenir. Sıra ön-kayıtlıdır:
-`generalized-asymmetric-multi-band` → `multi-lobe` → `active-particle`. Üç aile
-de çürürse araştırma durur; rapor "Adım 4'e başlanamaz" der ve bütün kanıtı
-taşır.
+koşul "geçti" sayılmaz, eksik dayanak olarak ayrı listelenir. Sıra ön-kayıtlıdır
+(2026-09-19 analiziyle genişletildi):
+
+1. `generalized-asymmetric-multi-band` — F3/F7 ile ÇÜRÜTÜLDÜ;
+2. `multi-lobe-v1` ("Multi-Lobe") — çift başına bağımsız işaretli loblar;
+   §3'teki `bandScales` tavanını aşan ilk ifade gücü adımı;
+3. `active-particle-v1` ("Active Particle") — self-propulsion; izotropi
+   tavanını aşan adım;
+4. `oriented-torque-v1` ("Oriented / Torque") — yönlü etkileşim, hizalanma
+   veya tork; `PairForceKernel` arayüzünün skaler/radyal tavanını aşar ve bu
+   yüzden en pahalı parçacık-ailesi adımıdır — ancak multi-lobe ve
+   active-particle görsel olarak da yetersiz kalırsa açılır.
+
+Aile adlandırması standardı: her ailenin bir insan adı ve bir kanonik makine
+kimliği vardır (`display: "Oriented / Torque"`, `familyId: oriented-torque-v1`).
+Belgelerde ve artefaktlarda `familyId` kullanılır; `oriented/torque`,
+`oriented-anisotropic` gibi eşanlamlı yazımlar kullanılmaz — aynı aileye
+işaret eden üç yazım provenance'i böler.
+
+Her aile aynı korpus, aynı metrikler ve aynı insan kalite vektörüyle sınanır;
+aynı anda iki yeni fizik mekanizması tek deneyde BİRLEŞTİRİLMEZ (hangi
+mekanizmanın ne ürettiği ayrışamaz). Dört aile de çürürse rapor "parçacık
+substrate'ı bu ifade uzayında tükendi" der; ancak o noktada daha büyük
+substrate pivotu (sürekli kütle-korunumlu alan, hibrit parçacık/alan, yapay
+kimya) masaya konur — pivot, parçacık aileleri tükenmeden gündeme gelmez.
+Tüm aileler çürürse araştırma durur; rapor "Adım 4'e başlanamaz" der ve bütün
+kanıtı taşır.
+
+### Kanonik araştırma rejimi v2 (2026-09-19)
+
+Adım 3'ün yeni tabanı `512 / 1024²` değil **`1024 aktif madde / 1536×1536
+depolama / 8 origin yaması`**dır. Kararın üç kanıtı:
+
+- **Jammed paket kanıtı:** K3 koşusunda `meanNeighborCount = 80,76` (48 birim
+  komşuluk yarıçapında); ortalama komşu uzaklığı ≈ 9,5 birim, yani parçacık
+  çapına (9) inmiş — yapılar gözenekli değil temas mesafesinde sıkışmış. Aynı
+  parçacık sayısıyla daha geniş dünya, yapısal çözünürlük için madde başına
+  daha çok alan açar.
+- **Tek dev konfeti topa erken çöküş:** 4 yama × 70 birim × %55 pay, toplam
+  512 maddenin çoğunu dar bir başlangıç hacminde yoğunlaştırıyor; yamalar
+  birbirine yakın doğarsa tek merkezli kütle kaybı başlıyor. 8 ayrık yama
+  (yarıçap ilk turda 70 kalır — yamalar daha küçük değil, daha ÇOK ve daha
+  AYRIK), başlangıç kompozisyonunu parçalar ve çoklu-bağımsız-yapı kanıtı
+  üretir (tek topologu değil dağılımı ölçeriz).
+- **Dış emsal dersi:** Ventrella çizgisinde yapısal zenginlik ancak binlerce
+  parçacıkta belirginleşiyor. 512 → 1024 iki kat yapısal çözünürlük demektir;
+  bu, "ölçek tamamlandı" iddiası değil araştırma tabanıdır ve Adım 11'in
+  işi olan 10k–250k ölçeğiyle karışmaz.
+
+Spec'in parçaları:
+
+| Alan                    | v1 (mevcut)        | v2 (kanonik araştırma)                                                                 |
+| ----------------------- | ------------------ | -------------------------------------------------------------------------------------- |
+| Aktif madde             | 512                | 1024                                                                                   |
+| Depolama                | 1024 × 1024        | 1536 × 1536                                                                            |
+| Origin yaması           | 4 × r=70, pay 0,55 | 8 yama — ilk tur r=70, pay 0,55 sabit; final değerler sonraki benchmark'tan kilitlenir |
+| Parçacık yarıçapı       | 4,5 (çap 9)        | 4,5 (çap 9) — değişmez                                                                 |
+| Habitat oranı           | 0,82 × 0,74        | değişmez (oran dünya ölçüsüne uyar)                                                    |
+| `cameraVoidMarginRatio` | 0,15               | değişmez (oran, piksel değil)                                                          |
+| Field çözünürlüğü       | 256                | benchmark'tan kilitlenir                                                               |
+
+Kararın matematiği: nüfus ×2, dünya alanı ×2,25 → global nominal yoğunluk
+yalnız ~%11 azalır (dünya uçurum gibi seyrekleşmez, yalnız nefes alır). Yama
+başına başlangıç yükü neredeyse aynı kalır: eski `512 × 0,55 / 4 ≈ 70,4`
+parçacık/yama, yeni `1024 × 0,55 / 8 ≈ 70,4` parçacık/yama — 8 origin
+seçimi yamaya iki kat madde basmak değil, aynı lokal reaksiyon yoğunluğunu
+koruyup bağımsız başlangıç bölgesi sayısını ikiye katlamaktır.
+
+Nedensellik sınırı: v2'de madde, alan ve yama sayısı AYNI ANDA değişir —
+sonuç yalnızca "v2 rejim paketi v1'den iyi/kötü" diye okunur; "iyileşmeyi
+dünya büyümesi yaptı" ya da "8 yama blob'u çözdü" iddiası paket deneyinden
+çıkarılamaz. Neden öğrenilmek istenirse ucuz ablation (v1 / yalnız nüfus↑ /
+yalnız alan↑ / tam v2) ayrı koşudur; ana pipeline için şart değildir.
+
+- **512/1024² rejimi çöpe atılmaz ama rolü daralır:** 512 yalnız
+  katastrofik ucuz ön-filtredir — NaN, patlama, speed-cap, anında Void
+  katliamı, ağır stasis, performans regresyonu ve determinism smoke için
+  mükemmeldir; "bu aday morfoloji üretmiyor" kararının tek kaynağı
+  OLAMAZ — 1024 çözünürlüğünde okunabilir yapı kurabilecek bir aile 512'de
+  yanlış negatifle elenip kanonik rejime hiç ulaşamaz. Morfoloji broad'u,
+  refinement, audition ve qualification 1024 rejiminde koşar (aşağıdaki huni
+  tablosu). İki rejim aynı ailede koşulup metrikler karşılaştırılır. "Daha
+  büyük rejim daha iyi" varsayımı değil, ölçülen ayrımdır.
+- **Her koşu rejimini etiketler:** artefakt `regimeId` taşır (`v1-512-1024`
+  / `v2-1024-1536`); karşılaştırma yalnız aynı rejim içinde yapılır. Eski
+  sonuçlar v1 etiketiyle arşivde kalır, karıştırılmaz.
+- **Kamera sonucu ayrı konudur:** 1536²'nin kamera/okunabilirlik etkileri
+  §6'da; buradaki karar simülasyon tabanıdır, sunum parametreleri onu izler.
+- **Void/habitat mimarisi ve sabit adım değişmez:** yalnız depolama ölçüsü,
+  madde bütçesi ve başlangıç yama geometrisi revize edilir.
 
 Broad aşama önce adayları fazlara ayırır:
 
@@ -987,6 +1399,30 @@ Bu ayrım SABİT GEREKÇE KODLARIYLA yapılır (E11) ve liste dondurulmuştur:
 `FRINGE_DEPENDENT`, `DYNAMIC_STRUCTURED`. Bir seed birden fazla gerekçe
 taşıyabilir; birincil olan, yukarıdaki sırayla en temel olandır — ölü ya da
 doğumda katledilmiş bir dünyanın yapısı tartışılmaz.
+
+Kabul üç ayrı taksonomi katmanıdır; faz taksonomisi donmuş kalır ve yeni
+morfoloji başarısızlıkları ona EKLENMEZ (2026-09-19 consistency pass):
+
+- **`PhaseClassification`** (donmuş 11 kod, yukarıda): "bu dünya dinamik
+  olarak yaşayabilir mi?" sorusunun kaba dinamik fazıdır. `DYNAMIC_STRUCTURED`
+  burada ESKİ kaba anlamını korur — "madde korunuyor, kompakt ve hareketli";
+  packing/morfoloji kanıtı anlamına GELMEZ. Eski artefaktlardaki
+  `DYNAMIC_STRUCTURED` etiketiyle yeni artefaktlardaki aynı etiket aynı deney
+  sonucunu anlatmaya devam eder; sessiz semantik kayması yasaktır.
+- **`MorphologyGateFailure`** (yeni taksonomi): packing collapse, düşük
+  topolojik çeşitlilik, aşırı oklüzyon gibi "dinamik ama okunabilir yapı
+  değil" başarısızlıkları bu katmanın kodudur — `PhaseReasonCode`'a
+  eklenmezler çünkü dinamik faz değil morfoloji yeterlilik başarısızlığıdır.
+- **`HumanAcceptance`** (insan katmanı): `acceptedTraits`/`rejectedTraits`/
+  `failureReason` kayıtları; teknik katmanların ikisini de geçen adayı
+  reddedebilir.
+
+Akış böylece şudur: faz sınıflandırması (`DYNAMIC_STRUCTURED`?) → packing
+kapısı → yapısal morfoloji kapısı (`clusterQualified` + dünya seviyesi
+`worldMorphologyQualified`) → insan audition'ı → `QUALIFIED_MORPHOLOGY`.
+`DYNAMIC_STRUCTURED` bu zincirin giriş biletidir, çıkış kararı değildir;
+provenance için alternatif `phaseClassifierVersion` idi ama anlam
+değiştirmek yerine ayrı kapı katmanı seçildi.
 
 Süre kuralları SANİYE ile tanımlıdır ve örnek sayısına tempoyla çevrilir. Seri
 pencereden kısaysa kural ATEŞLEMEZ: gözlemlenmemiş bir süre iddia edilmez.
@@ -1015,14 +1451,22 @@ ucuz başarısızları eler; morphology kararı vermez. İnsan gözüyle ilginç
 bulunmayan aday uzun koşuya sokulmaz. İnsan ön-elemesinden geçen az sayıda
 adayda çoklu seed ve 10–30 simüle dakikalık long-horizon kanıtı çalışır.
 
-Başlangıç bütçe hunisi şudur; rakamlar benchmark sonrası config'e kilitlenir:
+Başlangıç bütçe hunisi şudur; rakamlar benchmark sonrası config'e kilitlenir.
+Her aşama hangi rejimde koştuğunu da taşır — morfoloji içeren kararlar 512'de
+verilmez:
 
-| Aşama                | Amaç                         | Başlangıç adayı                     |
-| -------------------- | ---------------------------- | ----------------------------------- |
-| Broad                | Faz haritası ve ucuz red     | 30–60 simüle saniye, 4–8 seed       |
-| Refinement           | Dynamic-structured komşuluğu | Birkaç simüle dakika, 16 seed adayı |
-| Development audition | İnsan gözüyle shortlist      | 3–8 tam aday                        |
-| Qualification        | Geç çöküş + recovery         | 10–30 simüle dakika, 32+ seed adayı |
+| Aşama                  | Rejim | Amaç                                                             | Başlangıç adayı                     |
+| ---------------------- | ----- | ---------------------------------------------------------------- | ----------------------------------- |
+| Catastrophic prefilter | 512   | NaN/patlama/speed-cap/Void katliamı/ağır stasis/perf/determinism | 10–30 simüle saniye, 4–8 seed       |
+| Broad                  | 1024  | Faz haritası + morfoloji genişliği                               | 30–60 simüle saniye, 4–8 seed       |
+| Refinement             | 1024  | Dynamic-structured komşuluğu                                     | Birkaç simüle dakika, 16 seed adayı |
+| Development audition   | 1024  | İnsan gözüyle shortlist                                          | 3–8 tam aday                        |
+| Qualification          | 1024  | Geç çöküş + recovery                                             | 10–30 simüle dakika, 32+ seed adayı |
+
+1024 broad'un maliyeti 512'den yüksektir; istenirse daha az seed veya daha
+kısa ufukla dengelenir ama "morfoloji üretmiyor" elemesi 512 rejiminde
+yapılmaz — yapısal çözünürlüğü kanıtlayan aileyi düşük çözünürlükte elemek
+huninin kendi kararını sabote eder.
 
 Bu sayılar acceptance değildir; süre ve korpus ölçümle küçülebilir/büyüyebilir.
 Önce 2/6/24 saat koşmak reddedilmiştir. Ancak zaman serisi 30 dakikadan sonra
@@ -1152,9 +1596,11 @@ ile öldürüyordu. Üretim değeri olarak `tidalStrength = 0` seçilirse kontro
 olarak `tidalStrength = 0.01` seçildi. Ölçümle kanıt: `tidal = 0` kontrolünde madde tutma
 medyanı %82,0 iken `tidal = 0.01` üretiminde %53,5 çıkmakta, kontrol koşulu 28,5 puanlık
 farkla ayırt ediciliğini tam olarak korumaktadır. Ayrıca K3 politikasıyla doğrusal sert
-çekirdek yerine ıraksak ters-kare çekirdek (`PairForceKernel`) ve 60 saniyede bir rezervuardan
-güvenli iç alana %50 yeniden ekim (`ParticleConfig.reseedIntervalSeconds`, `reseedFraction`)
-kilitlenmiştir.
+çekirdek yerine ıraksak ters-kare çekirdek (`PairForceKernel` `hardCore*`) ve homeostatik
+vent direktörü kilitlenmiştir (§3): rezervuar maddesi 1 saniyelik kadansla tekil doğar,
+8-12'lik mikro-grup sonrası 5 saniye dinlenir. `ParticleConfig.reseedIntervalSeconds`
+yalnız başlangıç cooldown'udur; `reseedFraction` artık hiçbir kod yolunda okunmuyor —
+ölü config olarak temizlik listesindedir (TODO Adım 3).
 
 Testere dişi analizi (B3 ölçümü): 10 simüle dakikalık zaman serisinde yeniden ekim
 anlarında taze serbest parçacıklar iç alana girince yapılı madde payı anlık olarak
@@ -1173,6 +1619,145 @@ başarısızlıktır.
 koherent hareket, deformasyon sonrası recovery, doğal kırılganlık, asimetriden
 doğan chase ve iki yapının kalıcı symbiosis ilişkisidir. Hepsini aynı adayın
 üretmesi şart değildir; yalnız renkli topak üretmek hiçbir aileyi karşılamaz.
+
+### Pozitif morfoloji tanımı ve görsel kalite vektörü (2026-09-19)
+
+Adım 3'ün kabulü bugüne kadar yalnız negatif denetimlerden (çökme yok, stasis
+yok, Void kaybı yok) ve nötr metriklerden oluşuyordu — paketlenmiş bir topak
+bunların hiçbirini tetiklemeden geçer. Kabul artık **iki katmandır** ve bu
+ayrım huninin her aşamasında geçerlidir:
+
+- **Katman A — teknik ön-kapı:** mevcut negatif denetimler + aşağıdaki
+  packing/morfoloji metriklerinin sayısal eşikleri. Bu katman amaç değil
+  FİLTREDİR; pahalı ve gürültülü insan değerlendirmesini yalnızca kapıyı
+  geçen adaylar alır.
+- **Katman B — insan görsel kabul:** nihai hakem insan gözüdür; morphology
+  biyolojik doğruluk değil GÖRSEL ANLAŞILIRLIK ürünüdür. Teknik kapıyı geçen
+  ama göze "renkli topak" görünen aday REDDEDİLİR. Kısa katılımcı turları
+  (~2 dk/aday) yapılandırılmış notla yürür; toplu canlı oturum gerekmez,
+  snapshot üstünden açıklamalı not meşrudur; sonuç artefakta
+  `humanAcceptance` altında boyut bazında işlenir — tek "güzel mi" skoruna
+  indirgenmez. İnsan bias'ını azaltan guardrails: aday kimliği/aile adı
+  mümkünse gizli kalır (Candidate A / Candidate B), gösterim sırası
+  randomize edilir, aynı standart kamera görünümleri kullanılır ve
+  karşılaştırma aynı kısa seed alt-kümesi üzerinden yapılır — değerlendirici
+  "bu oriented model, kesin daha iyi olmalı" bilgisiyle bakmaz. Değerlendirme
+  yalnız screenshot değildir: overview klip + close-up klip +
+  perturbation/recovery segmenti içerir — morfoloji zaman davranışıdır,
+  tek kareyle karar verilmez.
+
+İnsan kabulünün okuduğu **görsel kalite vektörü** (her boyut ayrı sorulur;
+"kompakt ve hareketli" tek başına geçemez):
+
+- **Bireysel parçacık okunabilirliği:** hareket hâlindeyken de tekil
+  parçacıklar ve aralarındaki negatif boşluk seçilebiliyor mu, yoksa birleşik
+  renk hamuru mu?
+- **Küme içi organizasyon:** merkez-çevre yoğunluk gradyanı, loblar, kollar,
+  kuyruklar, halka/kabuk, içe kapalı stabil boşluklar, iç/dış roller,
+  katmanlanma görülüyor mu — yoksa homojen dolu topak mı?
+- **Topoloji/konfigürasyon çeşitliliği:** aynı aday farklı koşullarda farklı
+  ama tanınabilir morfolojiler üretebiliyor mu; tek topologu (küre) bütün
+  varyasyonu kapsıyor mu?
+- **Çeşitlilik ≠ kaos:** konfeti kompozisyonu — 4–6 doygun rengin küçük
+  mesafelerde iç içe karışması — katmanlık değil uzaysal karışmadır; "çok tür
+  var" ile "okunabilir yapı var" ayrı şeylerdir.
+- **Hareketin anlamı:** sallanma/locomotion/dönme ile jitter/tremor
+  ayrışıyor mu; jitter ayakta kalan ama yaşamayan görünüm üretir.
+- **Deformasyon ve iyileşme:** yapı darbe alınca bükülüp kendine dönebiliyor
+  mu, yoksa ilk rastgele koşuda dağılıyor mu?
+- **Şekil + hareket + stres birlikte:** tek kare değil zaman içinde
+  okunabilirlik; "küme var ve hareket ediyor" tek başına yetersiz — soru
+  "AI/steering OLMADAN koherent yönlü hareket okunuyor mu?"dur. Adım 3
+  niyeti GÖRMEK ister, niyet KODLAMAZ — bu cümle gizli steering eklemeye
+  yetki değildir.
+- **Maddesellik:** kaplanmış dolu yüzey gibi duran yapı, aynı türde
+  parçacıkların simetrik lattice'inden daha "yaşayan" okunur.
+
+Ayrı konu — **oklüzyon okunabilirliği:** parçacıklar üst üste bittiğinde
+renkler karışır ve küme içindeki öndeki/arkadaki parçacık seçilemez. Yoğunluk
+yüksek kaldıkça renk çeşitliliği tek başına organizasyon üretmez.
+
+**Teknik kapıya eklenen packing/morfoloji metrikleri** (hepsi zaman serisi,
+global değil per-cluster):
+
+- `overlapFraction` / `severeOverlapFraction`: merkez uzaklığı çapın altına
+  inen parçacık çiftlerinin payı; normalize en-yakın-komşu uzaklığıyla birlikte
+  okunur (`r/çap < 0,7` ağır penetrasyon, `0,7–1,0` temas/overlap bandı).
+- Lokal sıkışma dağılımı ve **`physicalPackingFraction`**: FİZİKSEL yarıçap
+  üzerinden parçacık projeksiyon alanının küme sınırı içindeki payı —
+  jammed paket ile gözenekli gövdeyi ayıran ana metrik. Simülasyon kapısı
+  sunum ayarından etkilenmez: glyph yarıçapı (2,5–3,5 adayı) değiştiğinde
+  teknik morfoloji skoru kımıldamaz. Renderer/glyph üzerinden okunan
+  `visualOcclusion`/okunabilirlik ayrı bir kavramdır ve insan audition
+  tarafına aittir — teknik kapıyı değiştirmez.
+- `holeRatio` ve porosity sınıflandırması: içe kapalı stabil boşlukların
+  varlığı POZİTİF kanıt eksenidir, evrensel zorunluluk değildir — filament,
+  chain, asimetrik amoeboid mover veya two-lobed body `holeRatio ≈ 0` ile de
+  mükemmel morfoloji üretebilir. `holeRatio > X` bütün adayların geçmesi
+  gereken kapı yapılmaz; ring/shell ailesi adayı hole ile puan kazanır,
+  filament/lobe/deformability adayı kendi eksenleriyle kanıt verir — tek
+  morfoloji estetiği bütün aramaya zorlanmaz. Tamamen dolu topak negatif
+  kanıttır.
+- **İki seviyeli yapı kararı — `clusterQualified` ve
+  `worldMorphologyQualified`:** per-cluster kayıtlar (solidity, holeRatio,
+  normalizedGyration, churn, yaş) önce her küme için ayrı yapı kanıtı üretir
+  (`clusterQualified`); dünya kararı tek güzel adanın bütün çorabı
+  kurtaramayacağı prensibiyle DÜNYA seviyesinde verilir — yapılı madde payı,
+  qualified küme sayısı ve süreklilik penceresi gibi dünya-özet koşulları
+  (`worldMorphologyQualified`). Sayılar şimdiden kilitlenmez; prensip kilitli:
+  "1 şahane ring + 900 parçacık soup" PASS olamaz. Faz katmanındaki
+  `DYNAMIC_STRUCTURED` kaba anlamını korur (yukarıdaki taksonomi); bu iki
+  seviye MorphologyQualification kapısının parçasıdır, faz değildir.
+- **`PACKING_COLLAPSE` `MorphologyGateFailure` taksonomisindedir** (donmuş
+  `PhaseReasonCode`'a EKLENMEZ — dinamik faz değil, morfoloji yeterlilik
+  başarısızlığıdır): madde korunmuş, kompakt ve hareketli olsa bile
+  normalize en-yakın-komşu uzaklığı kalıcı olarak temas bandının
+  altındaysa koşu "structured" değil "jammed" sayılır. Aynı taksonominin
+  diğer kodları `LOW_TOPOLOGICAL_DIVERSITY`, `EXCESSIVE_OCCLUSION` gibi
+  morfoloji başarısızlıklarıdır.
+- **Morfoloji ailesi etiketleri:** audition kayıtları `shell`, `ring`,
+  `lobe`, `chain`, `satellite`, `appendage-like`, `nested`, `porous`,
+  `type-segregated` gibi pozitif sınıflar ve `amorphous-blobs`,
+  `low-topological-diversity`, `confetti-composition` gibi negatif sınıflar
+  taşır. Araştırma etiketi morfolojiyi TANIMLAR, biyolojik rol ATAMAZ —
+  `tail` Adım 6'nın locomotor aktüatörüdür; Step 3 henüz "kuyruk" bilemez,
+  bu yüzden `appendage-like`/`filament-appendage` yazılır; aynı şekilde
+  `core-like` yerine `core-like-density`. İnsan notları makine-okunur
+  alanlara işlenir: `acceptedTraits`, `rejectedTraits`, `failureReason` —
+  provenance zincirinin (family label, kernel kimliği/sürümü, korpus,
+  seed'ler, config digest) parçasıdır.
+- **Multi-seed kararlılığı:** aynı aday seed'ler arasında TEKRARLAYAN
+  morfoloji grameri/aile özellikleri göstermelidir — "her seed aynı sınıfı
+  (ring) üretmeli" değil. Aday bir seed'de ring, başkasında nested shell,
+  üçüncüsünde lobe üretebilir; hepsinde layering + negatif boşluk +
+  deformability gibi aynı fiziksel gramer okunabilmelidir. Tek şanslı seed
+  kanıt değildir; aynı şekilde tek-topologu zorlaması da çeşitliliği
+  öldürür.
+
+**Yasaklı kısayollar** (her biri ayrı kayıt altında):
+
+- Ölçüm katmanındaki açıklar (yukarıdaki §8 alt bölümü) kapanmadan pahalı yeni
+  aile araması başlamaz — aksi hâlde yeni aile aynı kör metriklerle ölçülür.
+- Çürütülmüş multi-band matrisini ince ayarlamak ana plan değildir; aile
+  değişimi önce ifade gücünü genişletir.
+- Yeni bir fizik mekanizmasını aynı deneyde başka bir yenilikle birleştirmek
+  yasaktır (nedensellik okunamaz).
+- Creation pre-roll yalnız doğal transient'i gizleyebilir; başlangıç
+  patlamasını veya sonraki çöküşü örtmek için kullanılamaz (§18'in loading
+  sözleşmesi).
+- Işık/besin/sıcaklık/akış alanları intrinsic morfoloji kanıtı üretmede
+  KAPALI kalır — dış alan yapıyı suni olarak bir arada tutabilir ve "kendi
+  kendine örgütlenme" iddiasını çürütür; alanlı koşular ayrı senaryodur.
+- Vent'li koşu intrinsic morfoloji kanıtı sayılmaz; ayrım aşağıdadır.
+
+**İntrinsic/ekolojik senaryo ayrımı — vent kolu:** intrinsic morfoloji ölçümü
+`MatterReturnPolicy: none` (vent KAPALI) kolunda koşar; vent'li kol
+("ekolojik nüfus bakımı senaryosu") ayrı koşudur ve ikisinin artefakt'ları
+karıştırılmaz. Bugün intrinsic senaryo vent AÇIK koşuyor (§3) — bu bir
+ölçüm kararıdır ve yeni aile turundan önce kapatılır: vent'in geri bastığı
+madde retention metriğini "ekolojik sağkalım" yönünde şişirir ve intrinsic
+yapı iddiasını kontamine eder. Vent'li ürün kanaryası ayrıca korunur; ürün
+davranışı değişmez, yalnız ölçümün okuduğu şey değişir.
 
 Huni AYRI komutlardır (E13): `calibrate`, `seeding`, `broad`, `refine`,
 `audition`, `shortlist`, `qualify`, `accept`, `promote`, `canary`. Hiçbir komut
@@ -1307,6 +1892,53 @@ Sonuçlar:
   kalifiye olamamıştır.
 - P2 ve P3 kabul paketleri bu ölçüm verileriyle üretildi (`research-out/P2-insan-onelemesi.md`,
   `research-out/P3-final-audition.md`).
+
+### Ölçüm katmanı açıkları (2026-09-18 kaynak doğrulaması)
+
+K3 sonrası "%90 koruma, 3/4 DYNAMIC_STRUCTURED" tablosu (§16) ancak aşağıdaki
+açıklarla birlikte okunur; hiçbiri K3'ü geçersiz kılmaz ama etiketi morfoloji
+kanıtından ayırır:
+
+1. **Üç gerekçe kodu hunide hiç ateşlenemez.** `PhaseClassifier.classify`'in
+   `ClassificationContext`'i (startup-massacre bayrağı, micro-orbit serisi,
+   fringe-dependent kontrolü) hiçbir üretim çağrısında bağlı değil:
+   `seedRunner`, `harness` ve `longRun` hep boş context ile sınıflandırır.
+   `STARTUP_MASSACRE`, `FRINGE_DEPENDENT` ve `MICRO_ORBIT_PERSISTENT` yalnız
+   birim testlerinde görülür — dondurulmuş enum'da var ama ölçüm hattında ölü.
+2. **Vent Void kaybını ölçümden gizler.** `voidLossRate` aktif sayım farkından
+   hesaplanır; vent rezervuardan geri bastığı için net sayım sabit kalır ve
+   VOID_LOSS_DOMINATED vent'li koşularda yapısal olarak tetiklenemez. Gerçek
+   kayıp `reservoir.voidLossTotal`'da durur ve her örnekte kaydedilir ama
+   sınıflandırıcı onu okumaz.
+3. **`DYNAMIC_STRUCTURED` zayıf bir son-örnek kapısıdır.** Koşul yalnız son
+   örnekte global `clusterCompactness > 0,3` ve `meanSpeed > 0,05`. Global
+   compactness halka dağılıma ≈1 veren dağılım-eşitliği ölçüsüdür; per-cluster
+   kayıtlar (solidity, holeRatio, normalizedGyration, radialProfile, churn,
+   yaş) hesaplanır ama karara girmez. Temas mesafesinde sıkışmış topaklar da
+   bu kapıyı geçer — K3 uzun koşusunda `meanNeighborCount = 80,76` ölçüldü:
+   48 birim komşuluk yarıçapında bu, ortalama komşu uzaklığının parçacık
+   çapına (9 birim) indiği, yani yapıların JAMMED paket olduğu anlamına gelir.
+   "Structured" etiketi bu hâliyle okunabilir morfoloji kanıtı değildir.
+4. **Broad ufku fazların çoğunu gözlemleyemez.** Süre-şartlı kurallar seri
+   pencereden kısaysa ateşlemez (üstteki sözleşme). 30 saniyelik broad'da
+   STASIS (60 sn), SPEED_CAP_CHAOS (60 sn), GAS, SINGLE_COLLAPSE ve
+   MICRO_ORBIT_PERSISTENT (300 sn) hiçbir koşulda üretilemez; broad dağılımı
+   fiilen DEAD / VOID_LOSS_DOMINATED / CRYSTAL_FROZEN / DYNAMIC_STRUCTURED'a
+   indirgenir. Bu, F3 dağılımının okuma kılavuzudur.
+5. **`kernelId` tek aileye kilitlidir.** `SubstratePhysicsProfile.kernelId`
+   tip seviyesinde `MULTIBAND_KERNEL_ID`'ye sabitlidir; çürütülen aile
+   dışında bir aday `SubstrateCandidate` ile ifade bile edilemez. Multi-lobe
+   turu için önce kernel kimlik/profil sözleşmesi gerekir. "Üç production
+   kernel taşınmaz" kuralı korunur: deneme ailesi qualified olmadan ürün
+   çekirdeği olmaz.
+6. **Vent intrinsic morfolojinin yerine geçmez.** Homeostaz nüfusu korur ama
+   yapıyı kurmaz; vent'in güvenli iç bölgeye eklediği taze serbest madde
+   ölçümü dalgalandırır (B3 analizi: ekim anında yapılı madde payı ~%73'e
+   gevşer, ekimler arasında %96–%99'a yükselir). İntrinsic senaryo bugün vent
+   AÇIK koşar; vent'siz kontrol kolu ayrı karar ister.
+
+Bu açıklar kapanmadan yeni aile koşulsa bile çıkan etiketler aynı zafiyetleri
+taşır; karşılık gelen işler TODO Adım 3 altındadır.
 
 ### Adım 4 gözlemci değişmezliği
 
@@ -1494,15 +2126,35 @@ referans alır:
 
 - [Ventrella — Clusters](https://www.ventrella.com/Clusters/intro.html):
   mesafeye bağlı, yönlü/asimetrik force-field profillerinin zengin yapı
-  üretebilmesi.
+  üretebilmesi. 2026-09-19 analizinin buradan aldığı iki ölçülü ders: yapısal
+  zenginlik ancak binlerce parçacıkta belirginleşiyor (v2 rejiminin 1024
+  kararıyla uyumlu taban) ve görsel okunabilirlik parçacık sayısından değil
+  aralarındaki negatif boşluğun korunmasından gelir.
 - [Reynolds — Steering Behaviors for Autonomous Characters](https://www.red3d.com/cwr/papers/1999/gdc99steer.pdf):
   hedef seçimi, steering ve locomotion katmanlarının ayrılması; containment'ın
   çarpışma sonrası sekmeden farklı olması.
 - [Flow-Lenia](https://arxiv.org/abs/2212.07906): madde korunumu ve yerel
   parametrelerin aynı dünyada çoklu yapı üretimi için tasarım aracı olması.
+  Ders: korunumlu alan yaklaşımı bir PİVOT YEDEGİDİR — dört parçacık ailesi de
+  çürürse masaya gelir, önce gelmez.
 - [Primordial Particle Systems](https://www.nature.com/articles/srep37969):
   basit yerel kurallar, yoğunluk ve hareketin büyüyen/iyileşen/çoğalan
-  yaşam-benzeri yapıların faz davranışıyla birlikte incelenmesi.
+  yaşam-benzeri yapıların faz davranışıyla birlikte incelenmesi. Analizin
+  buradan aldığı ders: PPS protocell-benzeri yapıya self-propelled
+  parçacıklarla ulaşır — yani "yaşam görünümü" için BİLİŞ gerekmez, aktif
+  mekanik yeterlidir; bu `active-particle` ailesinin neden `multi-lobe`'dan
+  sonraki basamak olduğunun emsalidir.
+- Atomic Clusters (mechanics emsali, kaynak gözlemi): merkez-dışı yük
+  noktaları taşıyan parçacıklar tork ve moleküler geometri üretir —
+  `oriented-torque-v1` ailesinin ifade hedefi budur. Ders: directionality'nin
+  bir kısmı Adım 6'nın AI'ını beklemeden fiziğin kendisinden çıkabilir;
+  kuyruk/aktüatör davranışı (§4) böyle bir substrate üzerinde doğal kurulur.
+
+Ortak ders (2026-09-19): bu emsallerin hiçbirinde "okunabilir morfoloji" AI,
+koloni, tehdit veya besin döngüsünün ürünü değildir — hepsi düşük seviyeli
+etkileşim modelinin kendi çıktısıdır. Bu, "ecology/AI blob'u organizmaya
+çevirir" beklentisini reddeder: Adım 5–7 o substrate üstüne kurulur, onun
+yerine geçmez. Yine de emsal denklemler kopyalanmaz; yalnız ilkeler alınır.
 
 Bu kaynaklar VOL.LIFE'ın Void, çekirdek, koloni veya tehdit kararlarını
 kanıtlamaz; yalnız fizik ve davranış ayrımlarına emsal oluşturur.
@@ -1672,7 +2324,8 @@ sözleşmesi veya gönderilen candidate catalog'u değildir.
 
 ## 16. Bugünkü durum
 
-2026-09-14 itibarıyla:
+Implementation snapshot 2026-09-18; tasarım kararları 2026-09-19'a kadar
+günceldir — bölüm iki zamanı anlatır: kod state'i eski, tasarım state'i yeni.
 
 **Uzun ufuk taban ölçümü (E17, 2026-09-17 taban vs 2026-09-18 K3 sonrası).**
 4 seed × 30 simüle dakika, `tests/long/defaultLongRun.long.ts`:
@@ -1690,6 +2343,14 @@ ve dört seed'in dördünde de Void kaybı baskındı. K3 çözümü sonrası ma
 Muhasebe değişmezi her örnekte korundu (aktif + rezervuar = başlangıç), bütün
 değerler sonlu kaldı ve 10. dakikada alınan snapshot'tan restore edilen kopya 30. dakikada kesintisiz koşuyla BAYT DÜZEYİNDE aynı parmak izini verdi.
 
+Bu tablonun üç gölgesi vardır (§8 "Ölçüm katmanı açıkları"): koruma sayısı
+vent'in rezervuardan geri bastığı maddeyi içerir, yani ekolojik sağkalımdır,
+intrinsic morfoloji kanıtı değildir; `DYNAMIC_STRUCTURED` etiketi zayıf
+son-örnek kapısından gelir ve K3'te `meanNeighborCount = 80,76` ölçülmüştür —
+yapılar temas mesafesinde sıkışmış paketlerdir; snapshot/restore bayt eşitliği
+AYNI örnek üzerinde ölçüldüğü için vent state'inin snapshot dışında kalması
+burada gözlenmez (persistence yüklemesi maskeyi kaldırır, §3).
+
 Maliyet sapması PARÇACIK BAŞINA ölçülür. Ham tick maliyeti sapması 0,34-0,53
 çıktı ama bu nüfus düşüşüdür: madde yarıya inince tick doğal olarak ucuzluyor.
 Çalışma zamanı bozulmasını ölçen sayı parçacık başına olandır ve %20 sınırının
@@ -1703,8 +2364,9 @@ altında kaldı.
   her katmanda atomiktir. Yarım runtime kurulumu ile sahne, autosave ve çıkış
   yaşam döngüleri kaynaklarını idempotent toplar.
 - **Particle Substrate v2 uygulanmıştır**: `SubstrateConfig`, `PhysicsGenome`
-  (fizik, seeding ve fringe bugün tek nesnededir; `SubstrateCandidate` ayrımı
-  açık iştir), `DynamicsGenes`, `PairForceKernel` (generalized multi-band directional),
+  (üretim config'i fizik+seeding+fringe'i tek nesnede taşır; araştırma tarafı
+  `SubstrateCandidate` profillerine ayrılmıştır), `DynamicsGenes`,
+  `PairForceKernel` (generalized multi-band directional),
   capacity-managed `ParticleStore` (512 aktif/kapasite), `ParticleSpatialHash`
   (yalnız aktif slot), organik `HabitatSDF`/`WorldDomain`, `VoidSink`
   (geri dönüşsüz deaktivasyon + `MatterReservoir`), `InitialMatterSeeder`
@@ -1714,17 +2376,18 @@ altında kaldı.
 - Eski 100 parçacıklı triangular fizik ve dikdörtgen impulse sınırı artık
   production'da DEĞİLDİR; yalnız negatif baseline olarak benchmark fixture'ında
   korunur.
-- **Adım 3 araştırma kütüphanesi iskelet olarak uygulanmıştır**
-  (`scripts/morphology/`): `GenomeSampler`, `MorphologyMetrics`,
-  `ClusterTracker`, `PhaseClassifier`
-  (dead/stasis/gas/crystal/blob/void-loss/orbit/speed-chaos/dynamic-structured),
-  `ResearchHarness` (broad→refinement→qualification), `PerturbationSystem`,
-  `Shards` (deterministic work ID), `QualificationArtefact`, `PromotionFlow`,
-  CLI. Headless — Phaser import etmez, `runtime/sim` çekirdeğini kullanır.
-  Kütüphane qualification düzeyinde **değildir**: orbit ölçümü aslında yer
-  değiştirme ölçer, morphology metrikleri global buluta bakar, tracker slot
-  tabanlıdır ve metriklere bağlı değildir; paralel shard, clean-source
-  zorunluluğu ve production canary kodda yoktur. Bu P0 düzeltmeler TODO'dadır.
+- **Adım 3 araştırma kütüphanesi uygulanmıştır** (`scripts/morphology/`):
+  `GenomeSampler`/`physicsSampler` (Sobol), `MorphologyMetrics` (VACF, MSD,
+  yineleme, per-cluster kayıtlar), stable-ID'li `ClusterTracker`
+  (split/merge/gap sözleşmesi), 11 kodlu `PhaseClassifier`, `ResearchHarness`
+  (broad→refinement→qualification), `PerturbationSystem`, `worker_threads`
+  havuzu (seri referansla bayt-eşit), checkpoint JSONL, v4
+  `QualificationArtefact` (seed sınırları, ölçülmüş bütçe, dirty-eligibility),
+  `PromotionFlow`/`canary`, `falsification` ve `collapseDetector`. Headless —
+  Phaser import etmez, `runtime/sim` çekirdeğini kullanır. İskelet tamam ama
+  ölçüm katmanında altı açık vardır (§8 "Ölçüm katmanı açıkları"): üç gerekçe
+  kodu huniye bağlı değil, `voidLossRate` vent altında kaybı göstermez ve
+  `DYNAMIC_STRUCTURED` per-cluster kanıt tüketmez.
 - **Brute-force oracle testi uygulanmıştır**: spatial-hash/kernel yolu doğrudan
   all-pairs referans implementation ile karşılaştırılır; aktif/pasif slot ve
   tür çifti davranışını floating-point tolerans içinde doğrular.
@@ -1735,24 +2398,77 @@ altında kaldı.
 - 256² field ≈ 5,4 ms/tick; 512²/4-band ≈ 5,6 ms/tick (tam tazeleme ≈ 22,4 ms).
 - Qualified aday henüz çıkmamıştır; araştırma kütüphanesi production'a aday
   taşımamıştır. Bu beklenen durumdur — Adım 3 ancak technical gate +
-  long-horizon + kullanıcı visual audition birlikte geçtiğinde kapanır.
+  long-horizon + kullanıcı visual audition birlikte geçtiğinde kapanır ve
+  bugün AÇIKTIR (F7'de 0/8; §8 ölçüm katmanı açıkları kapanmadan yeni aile
+  koşusu anlamlı etiket üretmez).
+- Üretimdeki varsayılan çekirdek **çürütülmüş bir aileye** aittir
+  (`generalized-asymmetric-multi-band`, F3 kural a). Yeni aile qualified olana
+  dek varsayılan "en iyi bilinen" değil "en son ölçülen"dir; negatif baseline
+  (triangular-v1) bile F2'de ondan daha iyi madde tuttu (0,725 vs 0,398).
+  Sıradaki ön-kayıtlı aile `multi-lobe`dur ve ifade edilebilmesi için önce
+  `kernelId` kilidinin açılması gerekir.
+- **2026-09-19 analizi belgelendi:** Adım 3'ün kabul tanımı genişledi — teknik
+  ön-kapı + insan görsel kabulü iki katmandır (§8 "Pozitif morfoloji");
+  kanonik araştırma rejimi `1024 / 1536² / 8 yama` olarak yazıldı (§1, §8);
+  intrinsic senaryonun vent-KAPALI koşması kararı alındı (§8); kernel
+  soyutlaması `SubstrateInteractionModel` olarak yeniden tanımlandı (§3);
+  glyph/fiziksel yarıçap ayrımı ve 1536² kamera sonuçları §6'da. Bunların
+  hiçbiri uygulanmadı — tümü TODO Adım 3 işidir.
+- **2026-09-19 devam analizi (spawn/vent) belgelendi:** v2 seeding'e üç
+  revizyon kararı (origin min ayrımı, doğum overlap yasağı, origin başına tip
+  kapsama; oran/yarıçap/hız ilk turda sabit — §2); vent mimarisi kararları
+  (kalıcı `VentSite` coğrafyası, tip-korunumlu rezervuar, emisyon başına
+  tüketim, jitter/dormancy — §3) ve iki tescilli kusur: burst rezervasyonu
+  snapshot-dışı bekleyen maddeyle **madde kaybı** üretir, doğum konumu
+  fringe içine düşebilir (§3); vent sunum yönü §6'da.
+- **2026-09-19 consistency pass belgelendi:** çapraz denetimin bulduğu
+  semantik çelişkiler kapatıldı — 512 statüsü Adım 2 baseline'ına çekildi
+  (§1, §18); zorunlu ECOSYSTEM açılışı kaldırıldı (§18); kabul üç
+  taksonomiye ayrıldı (`PhaseClassification` donmuş /
+  `MorphologyGateFailure` / `HumanAcceptance`) ve `DYNAMIC_STRUCTURED`
+  kaba anlamını korudu (§8); 512 katastrofik ön-filtreye indirildi,
+  morfoloji kararları 1024'e taşındı (§8); vent muhasebesi düzeltmesi
+  Step 5'i beklemeden P0'a çekildi (TODO). Aile adlandırması `familyId`
+  standardına bağlandı (§8); seeding deterministik başarısızlık
+  sözleşmesi ve RNG akışları §2'de; VentSite versioning ve tip-başına
+  korunum invariantı §3'te.
 - Kamera özellikleri arttı fakat kullanıcı ergonomi kabulü hâlâ FAIL'dir.
 - Adım 4+ (identity, energy, nucleus, predators, viruses) hâlâ blokelidir.
 
 ## 17. Ölçülmemiş varsayımlar
 
-Aşağıdakiler ölçülmeden karar veya tamamlanmış iş sayılmaz:
+Aşağıdakiler ölçülmeden karar veya tamamlanmış iş sayılmaz. (2026-09-19
+consistency pass: 512 cihaz bütçesi, `HabitatSDF` hata sınırı — 4,3e-5
+birimde ölçüldü — ve "512 rejiminde okunabilir morfoloji mümkün mü" sorusu
+bu listeden çıkarıldı; ilki ölçüldü, sonuncusu 1024/1536² kararıyla
+superseded oldu — ölçülenler §11 ve ölçüm geçmişinde kalır.)
 
-- 512 particle'ın hedef cihazlardaki gerçek CPU/render bütçesi.
+- **1024/1536² kanonik rejimin hedef cihaz bütçesi:** yeni default world için
+  simulation p50/p95, frame p50/p95/p99, jank, GPU, PSS, başlangıç maliyeti
+  ve snapshot boyutu Samsung/Lenovo/Chromium'da yeniden ölçülür — 512'nin
+  kapanmış bütçesi yeni rejime taşınamaz.
 - Habitat şekli, fringe genişliği ve tidal stress'in morphology'yi bozmayan
   aralığı.
 - Kamera Void margin'i, zoom limitleri ve modality bazlı momentum değerleri.
-- Multi-band `SubstratePhysicsProfile` boyutu ile arama bütçesi arasındaki denge.
+- Aktif aile profili arama uzayının boyutluğu ile arama bütçesi arasındaki
+  denge — ilk ölçülecek aday `multi-lobe-v1` profilidir (çürütülmüş
+  multi-band'e değil).
 - Deterministik worker shard'larının seri referansla maliyet kazancı.
 - Matter reservoir dönüş hızının extinction ve taşıma kapasitesine etkisi.
 - Particle glyph/semantic LOD'un okunabilirlik ve GPU maliyeti.
-- `HabitatSDF` mesafe yaklaşımının dünya birimindeki hata sınırı.
 - Donmuş Main Menu'de render temposunu düşürmenin kazancı.
+- `1024 / 1536² / 8-yama` kanonik rejiminde okunabilir (gözenekli, sınırlı,
+  iç organizasyonlu) morfolojinin fiziksel olarak mümkün olup olmadığı —
+  soru eski 512 rejiminden yeni kanonik tabana taşındı.
+- İntrinsic/ekolojik senaryo ayrımının ölçülen etkisi: §8 kararı intrinsic
+  kolu `MatterReturnPolicy: none` ile koşturur; vent'siz kontrol kolunun
+  intrinsic kanıt üzerindeki ölçülen farkı ve vent'li kolun ürün kanaryası
+  olarak kapsamı ilk koşuda ölçülecek.
+- Glyph/fiziksel yarıçap ayrımının okunabilirlik kazancı (aday aralık
+  2,5–3,5 birim) cihazda insan kabulüyle ölçülmeden kilitlenmez.
+- `1024 / 1536² / 8-yama` kanonik rejiminin v1'e göre metrik ayrımı — iki
+  rejim aynı ailede koşulup karşılaştırılmadan "daha büyük daha iyi" varsayımı
+  kanıtlanmış sayılmaz.
 
 ## 18. Screen loop ve oturum yaşam döngüsü
 
@@ -1801,9 +2517,13 @@ Bu affordance tetiklendiğinde:
   merkezi yukarı ötelenir, böylece drawer arkasındaki dünya gizlenmez ve
   okunabilir kalır). Kapatıldığında dünya yumuşakça merkez konumuna geri döner.
 - Drawer içinde yalnızca doğrulanmış ve kanıtlanmış parametreler yer alır:
-  - **World Scale (Dünya Ölçeği):** Yalnızca doğrulanmış ölçekler sunulur
-    (şu an üretimde kanıtlanmış tek ölçek: Standard World 512 aktif madde;
-    gelecekte Vast / Micro ölçekleri için genişletilebilir preset sözleşmesi).
+  - **World Scale (Dünya Ölçeği):** Yalnızca doğrulanmış ölçekler sunulur.
+    Ölçek seçici yalnız EN AZ İKİ qualified world scale olduğunda görünür —
+    tek ölçek varken "Standard" diye seçim yaptırmak anlamsızdır, v1'de
+    seçici hiç gösterilmez; Standard / Vast / Micro preset'leri gerçekten
+    ölçülüp qualified oldukça açılır. (512'nin "üretimde kanıtlanmış tek
+    ölçek" statüsü Adım 2 baseline'ına aittir; 1024/1536² kanonik rejimi
+    henüz uygulanıp cihazda doğrulanmadı — §8.)
   - **Seed (Tohum Seçimi):** Random Seed (varsayılan) veya Explicit Seed girişi.
   - **Live / Seed Preview:** Seçilen tohum ve ölçeğin deterministik önizleme
     özeti (başlangıç yoğunluğu, habitat formu).
@@ -1819,9 +2539,12 @@ Bu affordance tetiklendiğinde:
 - B tuşu veya Back/Escape Drawer'ı kapatır, dünyayı tekrar merkezler ve odağı alt ok affordance'ına iade eder.
 - Start veya Launch üzerindeyken A tuşu dünyayı başlatır.
 
-Main Menu kamerası bütün habitat overview'ındadır (`contain`). Gameplay
-kamerası ecosystem ölçeğindedir. Menu overview gameplay camera state'ini
-overwrite etmez — oyuncunun son gameplay camera (x, y, zoom) ayrı saklanır.
+Main Menu kamerası bütün habitat overview'ındadır (`contain`). Gameplay'e
+dönüşte kayıtlı dünyada oyuncunun hatırlanan kamerası (x, y, zoom), taze
+dünyada `contain` overview açılır — zorunlu ECOSYSTEM açılış zoom'u yoktur
+(uygulandı, kullanıcı cihazda beğenmedi ve geri alındı; açılış
+`fit:'contain'` + zoom 1). Menu overview gameplay camera state'ini
+overwrite etmez — oyuncunun son gameplay camera ayrı saklanır.
 
 Oyundan Main Menu'ye dönüş güvenli bir oturum checkpoint'idir: PAUSED → kayıt
 flush'ı → gameplay kamerası saklanır → kamera overview'a açılır → donmuş menu
@@ -1838,10 +2561,13 @@ asimetrik bir habitat onu notch, sistem çubuğu veya ekran kenarına itemez.
 LIFE tıklandığında üç aşamalı transition: (1) Activation ~120-180ms — letter
 spacing hafif sıkışır, haptic, input kilitlenir, AudioContext resume(). (2)
 Awakening ~300-450ms — scrim çözülür, LIFE yazısı küçük loading/life pulse'a
-dönüşür, world kontrastına gelir. (3) Entry ~700-1100ms — camera WORLD
-overview → ECOSYSTEM dalış, fresh world: simulation ilk hareketleri başlar,
-saved world: restore tamamlanana kadar hareket başlamaz. Reduced motion:
-kısa fade + cut to target camera.
+dönüşür, world kontrastına gelir. (3) Entry ~700-1100ms — camera hedef
+kameraya geçer (saved world: hatırlanan gameplay kamerası; fresh world:
+`contain` overview) ve fresh world'de simulation ilk hareketleri başlar,
+saved world'de restore tamamlanana kadar hareket başlamaz. Otomatik
+ECOSYSTEM dalışı kullanıcı kararıyla geri alınmıştır; ileride güzel bir
+transition bulunursa ayrı human-acceptance deneyi olarak döner, bugün
+gereksinim değildir. Reduced motion: kısa fade + cut to target camera.
 
 ### Boot hazırlığı ile dünya girişi ayrı yüklemelerdir
 
@@ -1964,7 +2690,7 @@ erteleyebilir.
 Zoom log-space interpolate edilir: `zoom(t) = exp(lerp(log(startZoom),
 log(endZoom), easedT))` — 0.4→0.8 ile 4→8 aynı algısal hızda. Easing:
 smootherstep / ease-in-out-quint (C² smooth). Süre zoom ratio'ya göre
-adaptif: yakın ~700-800ms, overview→ecosystem ~900-1100ms, maksimum ~1200ms.
+adaptif: yakın ~700-800ms, uzak→yakın ölçek geçişi ~900-1100ms, maksimum ~1200ms.
 Reduced motion: 100-150ms fade/cut.
 
 ## 19. Steam Deck ve taşınabilir konsol sözleşmesi
