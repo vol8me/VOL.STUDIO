@@ -47,9 +47,11 @@ function pointer(
   clientX: number,
   clientY: number,
   timeStamp: number,
+  pointerType = 'touch',
 ): PointerEvent {
-  const event = new PointerEvent(type, { pointerId, clientX, clientY });
+  const event = new PointerEvent(type, { pointerId, clientX, clientY, pointerType });
   Object.defineProperty(event, 'timeStamp', { value: timeStamp });
+  Object.defineProperty(event, 'pointerType', { value: pointerType });
   return event;
 }
 
@@ -406,6 +408,95 @@ describe('WorldCameraController', () => {
     element.dispatchEvent(new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -300 }));
 
     expect(camera.zoom).toBe(zoom);
+  });
+
+  it('mutlak inspection zoom sınırı dünya boyundan bağımsızdır', () => {
+    const zooms = [1536, 3072].map((size) => {
+      const target = harness({
+        fit: 'contain',
+        bounds: { x: 0, y: 0, width: size, height: size },
+        maxZoom: 1 / 0.75,
+      });
+      for (let index = 0; index < 10; index++) {
+        target.element.dispatchEvent(
+          new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -10_000 }),
+        );
+      }
+      target.controller.update(10_000);
+      return target.camera.zoom;
+    });
+    expect(zooms[0]).toBeCloseTo(1 / 0.75, 6);
+    expect(zooms[1]).toBeCloseTo(zooms[0], 6);
+  });
+
+  it('yatay trackpad scroll pan yapar; ctrl-wheel pinch sinyali zoom yapar', () => {
+    const pan = harness();
+    pan.element.dispatchEvent(
+      new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -240 }),
+    );
+    pan.controller.update(1000);
+    const initialCenter = pan.state.centerX;
+    const initialZoom = pan.camera.zoom;
+    pan.element.dispatchEvent(
+      new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaX: 40, deltaY: 5 }),
+    );
+    expect(pan.state.centerX).not.toBe(initialCenter);
+    expect(pan.camera.zoom).toBe(initialZoom);
+
+    const pinch = harness();
+    pinch.element.dispatchEvent(
+      new WheelEvent('wheel', {
+        clientX: 600,
+        clientY: 400,
+        deltaX: 40,
+        deltaY: -20,
+        ctrlKey: true,
+      }),
+    );
+    pinch.controller.update(1000);
+    expect(pinch.camera.zoom).toBeGreaterThan(1.2);
+  });
+
+  it('mouse bırakınca coast yapmaz, touch momentumunu korur', () => {
+    const mouse = harness({ mousePanMomentumMs: 0, touchPanMomentumMs: 140 });
+    mouse.element.dispatchEvent(
+      new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -300 }),
+    );
+    mouse.controller.update(1000);
+    mouse.element.dispatchEvent(pointer('pointerdown', 1, 600, 400, 0, 'mouse'));
+    mouse.element.dispatchEvent(pointer('pointermove', 1, 400, 400, 16, 'mouse'));
+    mouse.element.dispatchEvent(pointer('pointerup', 1, 400, 400, 16, 'mouse'));
+    const released = mouse.state.centerX;
+    mouse.controller.update(100);
+    expect(mouse.state.centerX).toBe(released);
+
+    const touch = prepareMomentumGesture([
+      [600, 0],
+      [500, 16],
+      [400, 32],
+    ]);
+    const touchReleased = touch.state.centerX;
+    touch.controller.update(16);
+    expect(touch.state.centerX).not.toBe(touchReleased);
+  });
+
+  it('coalesced örnekleri yalnız hız için değil aktif konum için de sırayla işler', () => {
+    const target = harness();
+    target.element.dispatchEvent(
+      new WheelEvent('wheel', { clientX: 600, clientY: 400, deltaY: -300 }),
+    );
+    target.controller.update(1000);
+    target.element.dispatchEvent(pointer('pointerdown', 1, 600, 400, 0));
+    const move = pointer('pointermove', 1, 300, 400, 24);
+    Object.defineProperty(move, 'getCoalescedEvents', {
+      value: () => [
+        pointer('pointermove', 1, 500, 390, 8),
+        pointer('pointermove', 1, 400, 410, 16),
+      ],
+    });
+    const callsBefore = vi.mocked(target.camera.centerOn).mock.calls.length;
+    target.element.dispatchEvent(move);
+    expect(vi.mocked(target.camera.centerOn).mock.calls.length - callsBefore).toBe(3);
   });
 
   describe('contain kipi', () => {

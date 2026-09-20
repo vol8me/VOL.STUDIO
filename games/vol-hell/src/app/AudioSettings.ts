@@ -1,6 +1,6 @@
-import type { SaveManager } from '@volstudio/core';
+import { PersistedObservableState, type SaveManager } from '@volstudio/core';
 import { reportPersistenceFailure } from '@/app/settingsPersistence';
-import { DisposableScope, type CancellableDisposable } from '@volstudio/core/lifecycle';
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { audioConfig } from '@/config/audio';
 
 /** Persist edilen ses ayarları. */
@@ -58,143 +58,116 @@ function mergeWithDefaults(stored: unknown): AudioSettingsData {
  * Ayar değişince GameAudio'ya anında uygulanır.
  */
 export class AudioSettings {
-  private data: AudioSettingsData = mergeWithDefaults(undefined);
+  private readonly persisted: PersistedObservableState<AudioSettingsData>;
   private readonly listeners = new Set<(data: AudioSettingsData) => void>();
   private readonly lifecycle = new DisposableScope();
-  private persistTimer: CancellableDisposable | null = null;
-  private pendingPersist: Promise<void> | null = null;
-  private pendingResolve: ((value: void | PromiseLike<void>) => void) | null = null;
-  /** Yazıları sıraya alır; flush sırasında iki ayar kaydı yarışmaz. */
-  private persistQueue: Promise<void> = Promise.resolve();
   private disposed = false;
-  private loadGeneration = 0;
   private readonly boundFlush = (): void => void this.flush();
 
-  constructor(private readonly saveManager: SaveManager) {
+  constructor(saveManager: SaveManager) {
+    this.persisted = new PersistedObservableState<AudioSettingsData>({
+      store: saveManager,
+      key: STORAGE_KEY,
+      initial: mergeWithDefaults(undefined),
+      parse: mergeWithDefaults,
+      clone: (data) => ({ ...data }),
+      equals: (left, right) =>
+        left.masterVolume === right.masterVolume &&
+        left.sfxVolume === right.sfxVolume &&
+        left.musicVolume === right.musicVolume &&
+        left.ambientVolume === right.ambientVolume &&
+        left.muted === right.muted &&
+        left.screenShakeEnabled === right.screenShakeEnabled &&
+        left.hapticsEnabled === right.hapticsEnabled &&
+        left.screenShakeIntensity === right.screenShakeIntensity,
+      debounceMs: PERSIST_DEBOUNCE_MS,
+      onError: (error, operation) => {
+        if (operation === 'save') reportPersistenceFailure(STORAGE_KEY, error);
+      },
+    });
+    this.persisted.subscribe((data) => this.notify(data));
     if (typeof window !== 'undefined') {
       this.lifecycle.addListener(window, 'beforeunload', this.boundFlush);
     }
   }
 
   async load(): Promise<void> {
-    const generation = ++this.loadGeneration;
-    const stored = await this.saveManager.load<unknown>(STORAGE_KEY, {});
-    if (this.disposed || generation !== this.loadGeneration) return;
-    this.data = mergeWithDefaults(stored);
-    // GameAudio, açılıştan önce veya sonra yüklenmiş olabilir. Kayıtlı
-    // snapshot'ı setter'lar gibi yayınlamazsak ses varsayılan gain'de kalır ve
-    // kullanıcı slider'a dokunana kadar kapalı müzik yeniden açılır.
-    this.notify();
-  }
-
-  /**
-   * Yazımı geciktirip birleştirir. Slider `input` olayını dinlediği için tek bir
-   * sürükleme onlarca set*() çağrısı üretiyor; her biri ayrı bir localStorage
-   * yazması (senkron) veya Tauri store disk yazması olurdu.
-   *
-   * Dönen promise gerçek yazma tamamlanınca çözülür — çağıranın hata görme
-   * sözleşmesi korunur.
-   */
-  private persist(): Promise<void> {
-    if (this.disposed) return Promise.resolve();
-    this.pendingPersist ??= new Promise<void>((resolve) => {
-      this.pendingResolve = resolve;
-      this.persistTimer = this.lifecycle.addTimeout(() => {
-        this.persistTimer = null;
-        this.commitPendingPersist();
-      }, PERSIST_DEBOUNCE_MS);
-    });
-
-    return this.pendingPersist;
+    await this.persisted.load();
   }
 
   /** Bekleyen yazmayı hemen diske indirir (kapanış, sahne geçişi). */
   async flush(): Promise<void> {
-    if (this.persistTimer !== null) {
-      this.persistTimer.cancel();
-      this.persistTimer = null;
-      this.commitPendingPersist();
-    }
-
-    // Timer daha önce çalıştıysa yazma hâlâ kuyrukta olabilir. Sadece timer'ı
-    // kontrol etmek, beforeunload/scene geçişinde son kaydı yarıda bırakırdı.
-    await this.persistQueue;
+    await this.persisted.flush();
   }
 
   getMasterVolume(): number {
-    return this.data.masterVolume;
+    return this.getData().masterVolume;
   }
 
   getSfxVolume(): number {
-    return this.data.sfxVolume;
+    return this.getData().sfxVolume;
   }
 
   getMusicVolume(): number {
-    return this.data.musicVolume;
+    return this.getData().musicVolume;
   }
 
   getAmbientVolume(): number {
-    return this.data.ambientVolume;
+    return this.getData().ambientVolume;
   }
 
   isMuted(): boolean {
-    return this.data.muted;
+    return this.getData().muted;
   }
 
   isScreenShakeEnabled(): boolean {
-    return this.data.screenShakeEnabled;
+    return this.getData().screenShakeEnabled;
   }
 
   getScreenShakeIntensity(): number {
-    return this.data.screenShakeIntensity;
+    return this.getData().screenShakeIntensity;
   }
 
   isHapticsEnabled(): boolean {
-    return this.data.hapticsEnabled;
+    return this.getData().hapticsEnabled;
   }
 
   getData(): AudioSettingsData {
-    return { ...this.data };
+    return this.persisted.get();
   }
 
   async setMasterVolume(volume: number): Promise<void> {
-    this.data.masterVolume = safeVolume(volume, this.data.masterVolume);
-    await this.persistAndNotify();
+    await this.update({ masterVolume: safeVolume(volume, this.getMasterVolume()) });
   }
 
   async setSfxVolume(volume: number): Promise<void> {
-    this.data.sfxVolume = safeVolume(volume, this.data.sfxVolume);
-    await this.persistAndNotify();
+    await this.update({ sfxVolume: safeVolume(volume, this.getSfxVolume()) });
   }
 
   async setMusicVolume(volume: number): Promise<void> {
-    this.data.musicVolume = safeVolume(volume, this.data.musicVolume);
-    await this.persistAndNotify();
+    await this.update({ musicVolume: safeVolume(volume, this.getMusicVolume()) });
   }
 
   async setAmbientVolume(volume: number): Promise<void> {
-    this.data.ambientVolume = safeVolume(volume, this.data.ambientVolume);
-    await this.persistAndNotify();
+    await this.update({ ambientVolume: safeVolume(volume, this.getAmbientVolume()) });
   }
 
   async setMuted(muted: boolean): Promise<void> {
-    this.data.muted = safeFlag(muted, this.data.muted);
-    await this.persistAndNotify();
+    await this.update({ muted: safeFlag(muted, this.isMuted()) });
   }
 
   async setScreenShakeEnabled(enabled: boolean): Promise<void> {
-    this.data.screenShakeEnabled = safeFlag(enabled, this.data.screenShakeEnabled);
-    await this.persistAndNotify();
+    await this.update({ screenShakeEnabled: safeFlag(enabled, this.isScreenShakeEnabled()) });
   }
 
   async setHapticsEnabled(enabled: boolean): Promise<void> {
-    this.data.hapticsEnabled = safeFlag(enabled, this.data.hapticsEnabled);
-    await this.persistAndNotify();
+    await this.update({ hapticsEnabled: safeFlag(enabled, this.isHapticsEnabled()) });
   }
 
   async setScreenShakeIntensity(intensity: number): Promise<void> {
-    this.data.screenShakeIntensity = safeVolume(intensity, this.data.screenShakeIntensity);
-    await this.persistAndNotify();
+    await this.update({
+      screenShakeIntensity: safeVolume(intensity, this.getScreenShakeIntensity()),
+    });
   }
 
   onChange(listener: (data: AudioSettingsData) => void): () => void {
@@ -208,61 +181,31 @@ export class AudioSettings {
    * setter promise'lerini açıkta bırakmaz.
    */
   dispose(): void {
-    this.loadGeneration++;
-    if (this.persistTimer !== null) {
-      this.persistTimer.cancel();
-      this.persistTimer = null;
-      // Bekleyen setter promise'leri asılı kalmasın; kapanışta son snapshot
-      // yine sıraya alınır. `dispose()` artık sessizce yazmayı düşürmez.
-      this.commitPendingPersist();
-    }
     this.disposed = true;
     this.listeners.clear();
+    this.persisted.dispose();
     this.lifecycle.dispose();
   }
 
-  private async persistAndNotify(): Promise<void> {
+  private async update(patch: Partial<AudioSettingsData>): Promise<void> {
     if (this.disposed) return;
-    this.notify();
     try {
-      await this.persist();
+      await this.persisted.set((current) => ({ ...current, ...patch }));
     } catch (err) {
       console.warn('[AudioSettings] Ayarlar kaydedilemedi:', err);
     }
   }
 
-  /** Dinleyicilere KOPYA verilir — getData() ile aynı sözleşme; canlı referans
-   *  bir dinleyicinin ayarları farkında olmadan mutasyona ugratmasina izin verirdi. */
-  private notify(): void {
-    const snapshot = this.getData();
+  /** Dinleyicilere kopya verilir; canlı referans ayarları dışarıdan mutasyona açardı. */
+  private notify(snapshot: AudioSettingsData): void {
     for (const listener of this.listeners) {
       try {
-        listener(snapshot);
+        listener({ ...snapshot });
       } catch (error) {
         // Bir UI dinleyicisinin hatası diğer dinleyicileri ve persist'i
         // engellememeli; ayar değişikliği yine de kalıcı olmalıdır.
         console.warn('[AudioSettings] Ayar dinleyicisi hata verdi:', error);
       }
     }
-  }
-
-  /** Debounce beklemesini bitirip güncel snapshot'ı yazma kuyruğuna alır. */
-  private commitPendingPersist(): void {
-    this.persistTimer = null;
-    if (this.pendingPersist === null) return;
-
-    const resolve = this.pendingResolve;
-    this.pendingResolve = null;
-    this.pendingPersist = null;
-
-    // Canlı `this.data` referansı yerine snapshot al: timer açıldıktan sonra
-    // gelen yeni bir ayar, önceki yazının içeriğini geriye dönük değiştirmesin.
-    const snapshot = { ...this.data };
-    const write = this.persistQueue.then(() => this.saveManager.save(STORAGE_KEY, snapshot));
-    // Hata YUTULMAZ: tek kapıdan konsola, teşhis akışına ve abonelere taşınır.
-    this.persistQueue = write.catch((error: unknown) => {
-      reportPersistenceFailure(STORAGE_KEY, error);
-    });
-    resolve?.(write);
   }
 }

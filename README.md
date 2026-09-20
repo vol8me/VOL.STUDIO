@@ -15,11 +15,8 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 core/                       # paylaşılan sistemler + DOM UI kütüphanesi
 games/vol-hell/             # oyun (Vite kökü)
 games/vol-arachnid/         # eklemli örümcek arena dikey kesiti
-games/vol-life/             # izlenen yapay dünya — parçacık yaşamı (Adım 2)
 devtools/pen.dev/           # Pencil kaynağı, export hattı ve gönderim aracı
 devtools/vol-ui/            # CORE UI canlı bileşen kataloğu
-devtools/vol-asset-studio/  # repo varlık çalışma ortamı
-devtools/visual-synth/      # deterministik görsel asset compiler'ı
 devtools/audio-synth/       # deterministik ses asset compiler'ı
 tauri-v2/                   # PAYLAŞILAN native kabuk (uygulama değil); her oyun kendi src-tauri'sini taşır
 ```
@@ -35,12 +32,10 @@ Android Studio (SDK + NDK) · Windows'ta Visual Studio C++ Build Tools
 
 ```bash
 pnpm install
-pnpm dev                                       # vol-hell + vol-arachnid + vol-life + iki geliştirici aracı
+pnpm dev                                       # iki oyun + UI bileşen kataloğu
 pnpm --filter @volstudio/vol-hell dev          # :5173
 pnpm --filter @volstudio/vol-arachnid dev      # :5178
-pnpm --filter @volstudio/vol-life dev          # :5180
 pnpm --filter @volstudio/vol-ui dev            # UI showcase  :5174
-pnpm --filter @volstudio/vol-asset-studio dev  # Asset Studio :5175
 
 pnpm quick                                     # commit öncesi kapı
 pnpm high                                      # push öncesi kapı

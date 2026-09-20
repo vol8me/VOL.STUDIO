@@ -6,7 +6,7 @@ import { join, relative, resolve, sep } from 'node:path';
  * ÜRÜN İKONU — her oyun kendi görünen kimliğini taşır.
  *
  * Kimlik, yapılandırma ve Tauri bağlamı oyunlara taşındıktan sonra ikon
- * paylaşılan runtime'da kalmıştı ve Tauri'nin VARSAYILAN logosuydu: üç oyunun
+ * paylaşılan runtime'da kalmıştı ve Tauri'nin VARSAYILAN logosuydu: oyunların
  * masaüstü paketi ve Android başlatıcısı bayt bayt aynıydı. `tauri android
  * init` şablonu yeniden ürettiğinde varsayılan ikon sessizce geri gelir.
  */

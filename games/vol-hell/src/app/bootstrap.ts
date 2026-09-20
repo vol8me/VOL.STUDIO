@@ -1,4 +1,4 @@
-import { createVolGame, VOL_COLORS, i18n } from '@volstudio/core';
+import { createVolGame, showFatalStartupError, VOL_COLORS, i18n } from '@volstudio/core';
 import { TauriWindowAdapter } from '@volstudio/tauri-v2';
 import { hasNativeWindow } from '@/app/platform';
 import {
@@ -43,15 +43,8 @@ function detectLocale(): 'tr' | 'en' {
 
 function showFatalError(error: unknown): void {
   console.error('[bootstrap] Oyun başlatılamadı:', error);
-  const message = error instanceof Error ? error.message : String(error);
   const locale = detectLocale();
-  const title = FATAL_STRINGS[locale].title;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'vol-fatal-error';
-  overlay.setAttribute('role', 'alert');
-  overlay.textContent = `${title}: ${message}`;
-  document.body.appendChild(overlay);
+  showFatalStartupError({ title: FATAL_STRINGS[locale].title, error });
 }
 
 // Tüm açılış zinciri tek bir korumada: servis kurulumu, i18n, depo okuması ve

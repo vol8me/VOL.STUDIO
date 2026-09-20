@@ -79,6 +79,10 @@
       "import": "./src/quality/index.ts",
       "types": "./src/quality/index.ts"
     },
+    "./persistence": {
+      "import": "./src/persistence/index.ts",
+      "types": "./src/persistence/index.ts"
+    },
     "./stats": {
       "import": "./src/stats/StatBlock.ts",
       "types": "./src/stats/StatBlock.ts"

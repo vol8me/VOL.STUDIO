@@ -4,7 +4,7 @@ import { extname, join } from 'node:path';
 
 const CORE_ROOT = join(import.meta.dirname, '../../');
 
-const FORBIDDEN_PACKAGES = ['@volstudio/visual-synth', '@volstudio/audio-synth'] as const;
+const FORBIDDEN_PACKAGES = ['@volstudio/audio-synth'] as const;
 const SKIP_DIRS = new Set(['node_modules', 'dist', '.cache', 'test-results', 'coverage']);
 const SCANNED_EXTENSIONS = new Set(['.ts', '.js', '.json', '.md']);
 const SKIP_FILES = new Set(['tests/governance/noSynthDependency.test.ts']);
@@ -25,8 +25,8 @@ function walk(dir: string, visit: (relPath: string, code: string) => void): void
   }
 }
 
-describe('CORE devtools synth paketlerine bağımlı değil', () => {
-  it('core içinde visual-synth/audio-synth package adı yok', () => {
+describe('CORE geliştirme zamanı sentez paketlerine bağımlı değil', () => {
+  it('core içinde audio-synth package adı yok', () => {
     const violations: string[] = [];
     walk(CORE_ROOT, (relPath, code) => {
       for (const pkg of FORBIDDEN_PACKAGES) {

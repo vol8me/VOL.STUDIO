@@ -804,21 +804,6 @@
   right: calc(var(--vol-safe-right) + var(--vol-space-md) + 44px + var(--vol-space-sm));
 }
 
-.vol-fatal-error {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  justify-content: center;
-  align-items: center;
-  display: flex;
-  padding: calc(var(--vol-space-lg) * 2);
-  background: var(--vol-ui-bg);
-  color: var(--vol-ui-danger-solid);
-  font-family: monospace;
-  font-size: 14px;
-  text-align: center;
-}
-
 /*
  * Ayarlar kapatma düğmesi panelden BAĞIMSIZDIR. Dar/kısa ekranda panel
  * kaydırılırken veya genişliği değişirken içerikle çakışmaz; oyun içi

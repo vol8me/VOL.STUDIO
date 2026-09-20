@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SEED, createRandom, seedFromString } from '../../src/random/random';
+import {
+  DEFAULT_SEED,
+  createRandom,
+  createStatefulRandom,
+  seedFromString,
+} from '../../src/random/random';
 
 function take(random: { next(): number }, count: number): number[] {
   return Array.from({ length: count }, () => random.next());
@@ -60,8 +65,44 @@ describe('createRandom', () => {
 
 describe('seedFromString', () => {
   it('aynı metin aynı 32-bit tohumu, farklı metin farklı tohumu verir', () => {
-    expect(seedFromString('vol-life')).toBe(seedFromString('vol-life'));
-    expect(Number.isInteger(seedFromString('vol-life'))).toBe(true);
+    expect(seedFromString('vol-studio')).toBe(seedFromString('vol-studio'));
+    expect(Number.isInteger(seedFromString('vol-studio'))).toBe(true);
     expect(seedFromString('a')).not.toBe(seedFromString('b'));
+  });
+});
+
+describe('createStatefulRandom', () => {
+  it('durum geri yüklenince dizi aynı noktadan sürer', () => {
+    const random = createStatefulRandom(42);
+    take(random, 10);
+    const state = random.getState();
+    const expected = take(random, 16);
+
+    random.setState(state);
+
+    expect(take(random, 16)).toEqual(expected);
+  });
+
+  it('durum başka örneğe taşınabilir ve sıfır geçerli durumdur', () => {
+    const source = createStatefulRandom(-0x6d2b79f5);
+    source.next();
+    expect(source.getState()).toBe(0);
+
+    const target = createStatefulRandom(12345);
+    target.setState(source.getState());
+
+    expect(take(target, 16)).toEqual(take(source, 16));
+  });
+
+  it('createRandom dizisiyle pariteyi korur', () => {
+    for (const seed of [2026, 0, -1, 0x5eed, 0x7fffffff]) {
+      expect(take(createStatefulRandom(seed), 24)).toEqual(take(createRandom(seed), 24));
+    }
+  });
+
+  it('gecersiz geri yüklemeyi durumu bozmadan reddeder', () => {
+    const random = createStatefulRandom(3);
+    expect(() => random.setState(Number.POSITIVE_INFINITY)).toThrow(RangeError);
+    expect(random.getState()).toBe(3);
   });
 });

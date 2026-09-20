@@ -113,8 +113,8 @@ const MOBILE_USER_AGENT = /Android|iPhone|iPad|iPod/i;
 /**
  * Titreşim motoru olan cihazın Vibration API'si. Masaüstü Chromium ve WebView2
  * `navigator.vibrate`i TANIMLAR ama çağrı hiçbir şey yapmaz; yalnız API'ye bakmak
- * masaüstünde işe yaramayan bir ayar gösteriyordu (VOL.LIFE seçeneklerinde
- * görüldü). Mobil ipucu (UA-CH) yoksa kullanıcı ajanına bakılır.
+ * masaüstünde işe yaramayan bir ayar gösteriyordu. Mobil ipucu (UA-CH) yoksa
+ * kullanıcı ajanına bakılır.
  */
 function hasVibrationApi(): boolean {
   if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return false;

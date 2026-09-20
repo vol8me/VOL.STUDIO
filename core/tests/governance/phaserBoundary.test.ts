@@ -40,6 +40,7 @@ const STANCES: Readonly<Record<string, ModuleStance>> = {
   rig: { posture: 'gap' },
   platform: { posture: 'gap' },
   lifecycle: { posture: 'gap' },
+  persistence: { posture: 'gap' },
   debug: { posture: 'gap' },
   benchmark: { posture: 'gap' },
   quality: { posture: 'gap' },
@@ -123,7 +124,10 @@ const EXPECTED_REPLACES = 6;
 function coreModules(): string[] {
   return [
     ...new Set(
-      execFileSync('git', ['ls-files', 'src'], { cwd: ROOT, encoding: 'utf8' })
+      execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '--', 'src'], {
+        cwd: ROOT,
+        encoding: 'utf8',
+      })
         .split('\n')
         .filter((path) => path.endsWith('.ts'))
         .map((path) => path.split('/')[1])
@@ -135,7 +139,11 @@ function coreModules(): string[] {
 }
 
 function importsPhaser(module: string): boolean {
-  const files = execFileSync('git', ['ls-files', `src/${module}`], { cwd: ROOT, encoding: 'utf8' })
+  const files = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '--', `src/${module}`],
+    { cwd: ROOT, encoding: 'utf8' },
+  )
     .split('\n')
     .filter((path) => path.endsWith('.ts'));
   return files.some((file) =>

@@ -13,7 +13,7 @@ pnpm --filter @volstudio/vol-ui dev     # :5174
 | --------------- | ------------------------------------------ |
 | BUTTONS, TEXT   | `primitives/`                              |
 | FORMS           | `primitives/`, `layout/` (`SettingsForm`)  |
-| PANELS, YÜKLEME | `overlays/` (`Sheet` dâhil)                |
+| PANELS, YÜKLEME | `overlays/` (`Sheet`, açılış hata yüzeyi)  |
 | HUD             | `feedback/`, `hud/`                        |
 | KARTLAR         | `cards/`                                   |
 | WORKBENCH       | `primitives/`, `layout/`, `quality/`       |

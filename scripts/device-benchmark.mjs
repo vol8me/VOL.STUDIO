@@ -10,40 +10,44 @@
  * koşulu geliştiricinin masasındaki donanım olamaz. Çıktısı bir REFERANStır —
  * bir sonraki ölçüm bununla kıyaslanır.
  *
- *   node scripts/device-benchmark.mjs [saniye]
+ *   node scripts/device-benchmark.mjs [--serial SERIAL] [saniye]
  */
 import { execFileSync } from 'node:child_process';
+import { parseDeviceBenchmarkArgs, selectDevice } from './device-benchmark-contract.mjs';
 
 const ADB = process.env.ADB ?? 'adb';
-const SECONDS = Number(process.argv[2] ?? 12);
+const cli = parseDeviceBenchmarkArgs(process.argv.slice(2), process.env.ANDROID_SERIAL);
+const SECONDS = cli.seconds;
+let serial;
 
 /** Ölçülecek uygulamalar — paket kimliği, Tauri yapılandırmasındakiyle aynı. */
 const APPS = [
   { name: 'vol-arachnid', pkg: 'com.volstudio.arachnid' },
   { name: 'vol-hell', pkg: 'com.volstudio.game' },
-  { name: 'vol-life', pkg: 'com.volstudio.life' },
 ];
 
 function adb(args) {
-  return execFileSync(ADB, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  const scoped = serial ? ['-s', serial, ...args] : args;
+  return execFileSync(ADB, scoped, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
 }
 
 function requireDevice() {
   let output;
   try {
-    output = adb(['devices']);
+    output = execFileSync(ADB, ['devices', '-l'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
   } catch {
     throw new Error(`'${ADB}' çalıştırılamadı. Android platform-tools PATH'te mi?`);
   }
   const devices = output
     .split('\n')
     .slice(1)
-    .filter((line) => line.trim().endsWith('device'));
-  if (devices.length === 0) {
-    // Cihaz yoksa SESSİZCE geçmek yanlış olur: ölçüm yapılmadıysa sonuç yoktur.
-    throw new Error('Bağlı cihaz yok. USB hata ayıklama açık mı?');
-  }
-  return devices[0].split(/\s+/)[0];
+    .map((line) => line.trim().split(/\s+/))
+    .filter((parts) => parts[0])
+    .map(([deviceSerial, state]) => ({ serial: deviceSerial, state }));
+  return selectDevice(devices, cli.serial);
 }
 
 function pick(text, pattern) {
@@ -104,7 +108,7 @@ function runtimeProfile(pkg) {
   };
 }
 
-const serial = requireDevice();
+serial = requireDevice();
 const model = adb(['shell', 'getprop', 'ro.product.model']).trim();
 const sdk = adb(['shell', 'getprop', 'ro.build.version.sdk']).trim();
 console.log(`[device] ${model} (SDK ${sdk}, ${serial}) — ${SECONDS} sn ölçüm\n`);

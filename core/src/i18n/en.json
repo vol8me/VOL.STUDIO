@@ -106,7 +106,6 @@
     "listening": "Press a key…",
     "rebind": "Rebind {{action}}",
     "reset": "Reset",
-    "resetAction": "Reset {{action}} to default",
-    "conflict": "Conflicts with {{action}}"
+    "resetAction": "Reset {{action}} to default"
   }
 }

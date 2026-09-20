@@ -5,13 +5,12 @@
 > çıkan bir kapanış yeni bir `[ ]` maddeyle yeniden açılır.
 
 Repo geneli işler; paket işleri paketin kendi `TODO.md`sinde.
-Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
 
 ## Açık
 
 - [ ] **[P2] Android 16 geniş ekranda yön kilidini yok saymasın.** Android 16,
       en dar kenarı 600dp ve üstü ekranlarda `screenOrientation`ı yok sayar;
-      oyun kategorisi (`android:appCategory="game"`) muaftır. Üç manifestte
+      oyun kategorisi (`android:appCategory="game"`) muaftır. İki manifestte
       kategori var ve drift testleri kilitliyor. Kapanır: 600dp ve üstü
       emülatörde ya da tablette, kategori varken yön isteğinin uygulandığı
       ölçülür. Fiziksel tablet (TB350FU, Android 14, sw588) kriteri
@@ -24,7 +23,7 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
       fiziksel cihaz bulmak.
 - [ ] **[P1] Steam Deck Verified — monorepo geneli uyumluluk ve hazırlık.**
       Valve Steam Deck Verified (Yeşil Onay Rozeti) standartları monorepo
-      paketlerinde (`core`, `tauri-v2`, `vol-hell`, `vol-arachnid`, `vol-life`)
+      paketlerinde (`core`, `tauri-v2`, `vol-hell`, `vol-arachnid`)
       karşılanır:
       _ **Girdi:** HTML5 Gamepad API üzerinden tam XInput kontrolcü desteği;
       gamepad bağlıyken arayüzde asla klavye/fare glifi göstermeme (`core/src/ui/primitives/Glyph`);
@@ -39,18 +38,37 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
 
 ## Kapatılanlar
 
+### 2026-09-20 — deneysel paketleri emekliye ayırma ve CORE kazanımları
+
+- [x] **Kanıtlanmamış ürün/araç yüzeyleri framework'e fosilleştirilmeden
+      kaldırıldı.** Yapay yaşam deneyi, görsel sentez prototipi ve varlık
+      çalışma ortamı workspace, kalite kapıları, Android/cihaz ölçümü, komutlar,
+      lockfile ve belgelerden birlikte çıkarıldı. Gönderilen oyunların build
+      grafiği bu paketlerden bağımsız kaldı.
+- [x] **Kanıtlanmış ortak mekanizmalar CORE'a taşındı.** Durumu alınabilir
+      deterministik RNG, seri son-değer-kazanır otomatik kayıt, doğrulama
+      politikasını tüketicide bırakan gözlemlenebilir kalıcı state ve i18n
+      başlamadan çalışabilen fatal açılış yüzeyi generic sözleşme ve regresyon
+      testleriyle eklendi. VOL.HELL'in görüntü, ses ve tuş ayarları ortak
+      kalıcılık mekanizmasının gerçek tüketicileri oldu; fatal yüzey vol-ui'de
+      sergilendi.
+- [x] **Mevcut CORE kazanımları korundu.** `CommandHistory`, `Sheet`,
+      `SimulationClock`, haptics platform seam'i ve geliştirilmiş
+      `WorldCameraController` gerçek kalan tüketici/sözleşmeleriyle yaşamaya
+      devam ediyor; ürün alanına bağlı simülasyon, SDF, alan ve codec kodu
+      CORE'a taşınmadı.
+
 ### 2026-09-12 — Tauri SQL/GameStateDb çıkarma ve vol-hell AppImage çizim kuralı
 
 - [x] **[P3] Paylaşılan Tauri kabuğundan SQL eklentisi ve GameStateDb tamamen
       çıkarıldı.** `tauri-v2/src-tauri/src/lib.rs` artık `tauri_plugin_sql`
-      kaydetmiyor; üç oyunun `Cargo.toml`undan `tauri-plugin-sql`
+      kaydetmiyor; dönemin oyun `Cargo.toml`larından `tauri-plugin-sql`
       bağımlılığı kalktı; `tauri-v2/package.json`dan `@tauri-apps/plugin-sql`
       kalktı; `tauri-v2/src/index.ts` ve `tauri-v2/src/storage/` GameStateDb
       sarmalayıcı/error dosyaları silindi; `capability` dosyalarından
       `sql:default`/`sql:allow-execute` izinleri kalktı. Kanıt: `cargo tree` ile
-      `tauri-v2` ve üç oyun crate'inde `sqlx`/`sqlite` yok; `VOL.LIFE` release
-      ikilisinde `tauri_plugin_sql` sembolü yok; `just quick` ve `just rust`
-      geçti.
+      `tauri-v2` ve oyun crate'lerinde `sqlx`/`sqlite` yok; release ikililerinde
+      `tauri_plugin_sql` sembolü yok; `just quick` ve `just rust` geçti.
 
 - [x] **[P2] vol-hell AppImage'ı Linux çizim kuralına girdi.**
       `games/vol-hell/src-tauri/linux.AppRun` artık `WEBKIT_DISABLE_DMABUF_RENDERER`
@@ -71,7 +89,8 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
 - [x] **[P1] Oyunlar Android'i tek yüklemle tanıyor.** `@volstudio/tauri-v2`
       `getRuntimePlatform()` (`web` / `desktop` / `android`) testle yazıldı;
       vol-arachnid tam ekran düğmesini ve çıkış onayını, vol-hell native pencere
-      ve görüntü ayarlarını, VOL.LIFE düğme kümesini ve çıkış onayını ona bağladı.
+      ve görüntü ayarlarını, diğer oyun düğme kümelerini ve çıkış onaylarını ona
+      bağladı.
       Ekran üstü kontroller işaretçi türüne bağlı kaldı. Telefonda (SM-G990B2):
       vol-arachnid'de tam ekran düğmesi yok, geri tuşu onayı açıyor, ikinci geri
       onayı kapatıyor. Madde metnindeki "vol-hell oyun içi geri işleyicisini
@@ -83,13 +102,13 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
       kayıtlı yönü uygulayan `OrientationStore.applySaved`. İzin `mobile.json`da
       ve üretilen şemada; masaüstünde komutlar hata döner. Telefonda yatay seçimi
       `ROTATION_90`, sistem tersini isterken kilit tutuyor, yeniden açılışta
-      tercih geliyor; açılış dönüşü VOL.LIFE odak almadan bitiyor (541 ms /
+      tercih geliyor; açılış dönüşü deneysel kabukta odak almadan bitiyor (541 ms /
       728 ms, odaklıyken 66 örneğin hiçbiri dikey değil).
 - [x] **[P1] Görüntü kipi uygulayıcısı `@volstudio/tauri-v2`de.**
       `DisplayModeController` native pencereyi ya da DOM tam ekranını uygular,
       F11'i yönlendirir, dış değişimi tercihe yazar ve yalnız en son isteği
-      uygular (11 test); vol-hell `VideoSettingsController`ı ve VOL.LIFE
-      masaüstü onu kullanıyor. Linux'ta pencere yöneticisinin değişimi
+      uygular (11 test); oyunların masaüstü görüntü denetleyicileri onu
+      kullanıyor. Linux'ta pencere yöneticisinin değişimi
       görünmüyordu: tao 0.35 `is_fullscreen()` yalnız uygulamanın kendi
       isteğini hatırlıyor. Paylaşılan kabuğa GDK durumunu okuyan
       `window_fullscreen_state` komutu girdi, `TauriWindowAdapter` onu okuyor.
@@ -98,18 +117,18 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
       (düzeltmeden önce üçünde de `fullscreen` kalıyordu); tercih tam ekranken
       uygulama tam ekran açıldı. Çekmeceden seçim ve F11 kullanıcı tarafından
       elle doğrulandı.
-- [x] **[P2] `tauri dev` üç oyunda dev sunucusu yerine son derlemeyi
+- [x] **[P2] `tauri dev` oyunlarda dev sunucusu yerine son derlemeyi
       gösteriyordu.** Oyun crate'leri paylaşılan kabuğu
       `features = ["custom-protocol"]` ile bağlıyordu; `tauri dev`in
       `--no-default-features`ı bağımlılığın özelliğini kapatamadığı için pencere
       son `vite build` çıktısını yüklüyordu (ölçüldü: yeni komut `dist`te yoktu
       ve hiç çağrılmıyordu).
       Özellik artık oyunun `custom-protocol`una bağlı. Üretim yolu değişmedi:
-      üç APK yeniden derlenip telefonda `http://tauri.localhost/` üzerinden
-      tuvaliyle açıldı. Aynı turda VOL.LIFE ve vol-arachnid vite ayarı
+      dönemin APK'ları yeniden derlenip telefonda `http://tauri.localhost/`
+      üzerinden tuvaliyle açıldı. Aynı turda oyunların vite ayarı
       `src-tauri`yi izleme dışı bıraktı (Android derlemesi açık dev penceresini
-      defalarca yeniden yüklüyordu) ve VOL.LIFE'ın dev sunucusu izin listesine
-      tükettiği `tauri-v2` girdi.
+      defalarca yeniden yüklüyordu) ve dev sunucusu izin listelerine tüketilen
+      workspace paketleri girdi.
 - [x] **[P1] Linux masaüstünde kare hızı NVIDIA + Wayland'da 18'e kilitliydi
       (kullanıcı bildirdi).** Paylaşılan kabuk WebKit'in DMA-BUF çizicisini
       koşulsuz kapatıyordu; o yolda her kare CPU üzerinden kopyalanıyor. Ölçüldü
@@ -150,8 +169,8 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
       sekmesi, layout e2e'si ve `core/docs/public-surface.md` (227 → 228; kayda
       geçmemiş 223 → 227 girdisi de eklendi) güncellendi.
 - [x] **[P2] Dokunsal yetenek masaüstü Chromium'da yanlış pozitifti.**
-      `navigator.vibrate` tanımlı ama motorsuz; VOL.LIFE seçeneklerinde işe
-      yaramayan bir anahtar olarak görüldü. Titreşim katmanı artık yalnız mobil
+      `navigator.vibrate` tanımlı ama motorsuz; seçeneklerde işe yaramayan bir
+      anahtar olarak görüldü. Titreşim katmanı artık yalnız mobil
       cihazda sayılıyor (UA-CH `mobile`, yoksa kullanıcı ajanı); telefonda satır
       görünür kaldı.
 
@@ -176,8 +195,8 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
       `collections` açıldı; saf Node'da Phaser ve `window` olmadan yükleniyor.
 - [x] **`ViewportManager` serbest kamera koruması:** `preserveCameraState`
       seçeneği ve kamera `data` bayrağı; resize dünya kamerasını sıfırlamıyor.
-- [x] **VOL.LIFE çalışma zamanı bulguları:** ayrıntı ve yeniden açılan maddeler
-      [games/vol-life/TODO.md](games/vol-life/TODO.md)'de.
+- [x] **Deneysel oyun çalışma zamanı bulguları** paket içi iş listesinde
+      kapatıldı; paket emekliye ayrılırken belge de onunla birlikte kaldırıldı.
 
 ### 2026-09-10 — kalite ve altyapı (`064de4e`)
 
@@ -197,7 +216,7 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
 - [x] **Satır sınırı `.mjs`, `.js`, `.css`, `.rs` ve `.kt`'yi kapsıyor;** 1000
       satırı aşan beş CSS dosyası bölündü.
 - [x] **`docs/gates.md` yeni kapıları anlatıyor.**
-- [x] **`pnpm dev` vol-life'ı da açıyor.**
+- [x] **`pnpm dev` dönemin tüm canlı workspace yüzeylerini açıyor.**
 - [x] **Cargo kilitlerinde Tauri sürüm eşitliği kapılı;** tauri-v2 kilidi
       hizalandı.
 - [x] **vol-hell drift testi açıklamasındaki yol düzeltildi.**
@@ -216,8 +235,8 @@ Aktif iş: VOL.LIFE — [games/vol-life/TODO.md](games/vol-life/TODO.md).
 - [x] **Phaser sahnelerinin düşük kapsamı kapsam şekli kapısına bağlandı.**
 - [x] **20 dalgalık elle smoke testi headless dalga zarfı testiyle değişti.**
 - [x] **Bazı CORE primitiflerinin ikinci tüketicisi yok** — karar: iş değil.
-- [x] **Bellek tahmini modeli sapıyor** — karar: iş değil (visual-synth test
-      ortamı).
+- [x] **Bellek tahmini modeli sapıyor** — kaldırılan sentez prototipi için
+      karar: iş değil.
 - [x] **Bulut CI** — karar: kapılar yerelde kalır.
 - [x] **`ShopPicker` reroll çıkış animasyonu** — karar: flaş bilinçli,
       gerekçe kodda.

@@ -44,6 +44,43 @@ Sınır ölçülüdür: `core/tests/time/SimulationClock.test.ts` aynı toplam s
 60 ve 120 FPS temposunda `'defer'` ile AYNI, `'simulate'` ile FARKLI çizelge
 ürettiğini kilitler.
 
+## Deterministik rastgelelik
+
+### `createStatefulRandom`
+
+`createRandom` ile aynı bit dizisini üretir; ek olarak 32-bit iç durumu
+`getState()` ile verir ve `setState()` ile geri yükler. Böylece kayıt, tekrar
+oynatma ve uzun bir üretim işini sürdürme, rastgele sayı dizisini baştan
+tüketmeye bağlı kalmaz. Durum `0` dâhil bütün 32-bit değerleri kabul eder;
+`NaN` ve sonsuz değerler sınırda reddedilir.
+
+Durumun NE ZAMAN yakalanacağı tüketicinin işlem sınırıdır. CORE isimli rastgele
+akışlar veya oyun alanı kimlikleri üretmez.
+
+## Kalıcılık koordinasyonu
+
+### `AutosaveCoordinator`
+
+Periyodik ve uygulama arka plana geçerken alınan anlık görüntüleri tek yazım
+kuyruğunda toplar. Bir yazım sürerken gelen ara değerler diske sırayla
+yığılmaz; bekleyenlerin en günceli yazılır ve bütün çağıranlar o yazımın
+sonucunu alır. `stop()` yeni tetikleri kapatır. Uygulama kapanmadan son değerin
+gerçekten yazıldığını bilmesi gerekiyorsa `flushAndDispose()` beklenir.
+
+`capture` ve `save` tüketici bağımlılıklarıdır; CORE dosya biçimini, storage
+backend'ini veya kayıt sıklığının ürün politikasını bilmez.
+
+### `PersistedObservableState`
+
+Kopyalanabilir bir state için yükleme, abonelik, isteğe bağlı debounce ve seri
+son-değer-kazanır yazım sağlar. `parse`, `clone`, varsayılan değer ve eşitlik
+politikası zorunlu olarak tüketicide kalır; bu sınıf bozuk verinin nasıl
+onarılacağına veya bir ayarın ne anlama geldiğine karar vermez.
+
+`set()` bellekteki durumu ve dinleyicileri eşzamanlı günceller, dönen Promise
+ilgili kalıcılık işini izler. `flush()` bekleyen debounce'u hemen kuyruğa alır;
+`flushAndDispose()` yazım tamamlanmadan yaşam döngüsünü bitirmez.
+
 ## Phaser sınırı
 
 CORE bir katmandır, motor değil: renderer'ı Phaser yazar. Bu sınırın nasıl

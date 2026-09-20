@@ -19,7 +19,7 @@ import * as Core from '../../src/index';
  * yeterli.
  */
 // Sayının hangi yeteneklerle değiştiğinin kaydı: `core/docs/public-surface.md`.
-const EXPECTED_EXPORT_COUNT = 232;
+const EXPECTED_EXPORT_COUNT = 236;
 
 /** `index.ts`teki `export *` barrel sayısı — kolaylığın bedeli sayılır. */
 const EXPECTED_BARREL_COUNT = 10;
@@ -39,6 +39,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'Accordion',
   'ActionBar',
   'AnimatedLabel',
+  'AutosaveCoordinator',
   'Bar',
   'BaseSprite',
   'BuildMenu',
@@ -120,6 +121,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'Panel',
   'PathFinder',
   'PauseResumeButton',
+  'PersistedObservableState',
   'PinchZoomController',
   'Popover',
   'Popup',
@@ -216,6 +218,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'createIdleActions',
   'createIdleSnapshot',
   'createRandom',
+  'createStatefulRandom',
   'createSingleProviderSnapshot',
   'createVolGame',
   'damp',
@@ -264,13 +267,14 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'setHapticsDriver',
   'shouldUseTouchControls',
   'showConfirm',
+  'showFatalStartupError',
   'solveTwoBoneIk',
   'validateRigMetadata',
   'vibrate',
   'wrap',
 ];
 
-// Asset compiler'lar (görsel/ses sentezi) bu yüzeye GİRMEZ: runtime yalnızca
+// Asset compiler'lar bu yüzeye GİRMEZ: runtime yalnızca
 // üretilmiş asset'leri çalar, üreteni taşımaz.
 
 describe('CORE public API yüzeyi', () => {

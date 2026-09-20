@@ -9,7 +9,7 @@ Hepsi **sürüm kontrolünde tutulur** ve yeniden üretilebilir değildir: yön
 kilidi, çentik yerleşimi, geri hareketi ve sürükleyici tam ekran Tauri
 yapılandırmasından ayarlanamadığı için `AndroidManifest.xml`, tema ve
 `MainActivity.kt` elle düzenlendi. Ayrı paket kimlikleri
-(`com.volstudio.game`, `com.volstudio.arachnid`, `com.volstudio.life`) üçünün
+(`com.volstudio.game`, `com.volstudio.arachnid`) ikisinin
 aynı cihazda birlikte kurulmasını sağlar.
 
 ## Build
@@ -28,8 +28,6 @@ adb install -r games/vol-hell/src-tauri/gen/android/app/build/outputs/apk/univer
 pnpm --filter @volstudio/vol-arachnid exec tauri android build --debug --target aarch64
 adb install -r games/vol-arachnid/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 
-pnpm --filter @volstudio/vol-life exec tauri android build --debug --target aarch64
-adb install -r games/vol-life/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 ```
 
 Drift testleri manifest, yön, oyun kategorisi, `VIBRATE` izni, geri çağrısı,
@@ -50,15 +48,12 @@ yerleşimine uygulanır. İki ayrı soru iki ayrı yüklemle cevaplanır:
   tarayıcısı `web`dir: orada DOM tam ekranı tarayıcı çubuklarını gerçekten
   kaldırır.
 
-VOL.HELL ve VOL.ARACHNID yatay yöne KİLİTLİDİR (`sensorLandscape`). VOL.LIFE'ta
-yön oyuncunun seçimidir; varsayılan `userPortrait`tır. WebView'ın
-`screen.orientation.lock()`u Android'de desteklenmediği için seçim
-`vol-orientation` eklentisiyle (`tauri-v2/plugins/vol-orientation`) uygulanır,
-native tarafta saklanır ve `MainActivity` açılışında sayfa yüklenmeden geri
-yüklenir. Yön değişimi Activity'yi yeniden yaratmaz (`configChanges`), yani
-dünya sıfırlanmaz.
+VOL.HELL ve VOL.ARACHNID yatay yöne KİLİTLİDİR (`sensorLandscape`). WebView'ın
+`screen.orientation.lock()`u Android'de desteklenmediği için yön uygulama
+sözleşmesi `vol-orientation` eklentisinde (`tauri-v2/plugins/vol-orientation`)
+yaşar. Yön değişimi Activity'yi yeniden yaratmaz (`configChanges`).
 
-Üç manifest de `android:appCategory="game"` taşır: Android 16, en dar kenarı
+İki manifest de `android:appCategory="game"` taşır: Android 16, en dar kenarı
 600dp ve üstü ekranlarda yön kilidini ve yön isteklerini yok sayar; oyun
 kategorisi bundan muaftır.
 

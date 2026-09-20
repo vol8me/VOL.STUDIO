@@ -8,6 +8,7 @@ import {
   Sheet,
   Text,
   ToastManager,
+  showFatalStartupError,
   showConfirm,
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
@@ -123,6 +124,18 @@ function buildStaticMenuDemo(disposables: DisposableScope): HTMLElement {
   wrap.appendChild(hint.element);
 
   return wrap;
+}
+
+function buildFatalStartupDemo(): HTMLElement {
+  const stage = document.createElement('div');
+  stage.className = 'vol-showcase-panel-stage vol-showcase-fatal-stage';
+  const surface = showFatalStartupError({
+    title: i18next.t('volui:panels.fatalStartupTitle'),
+    error: i18next.t('volui:panels.fatalStartupDetail'),
+    parent: stage,
+  });
+  surface.classList.add('vol-showcase-fatal-preview');
+  return stage;
 }
 
 function buildModalDemo(uiRootElement: HTMLElement, disposables: DisposableScope): HTMLElement {
@@ -468,6 +481,7 @@ export function buildPanelsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:panels.fade'), buildFadeDemo(disposables)),
     card(i18next.t('volui:panels.dynamicContent'), buildDynamicContentDemo(disposables)),
     card(i18next.t('volui:panels.staticMenu'), buildStaticMenuDemo(disposables)),
+    card(i18next.t('volui:panels.fatalStartup'), buildFatalStartupDemo()),
     card(i18next.t('volui:panels.contextMenu'), buildContextMenuDemo(disposables, uiRootElement)),
     card(i18next.t('volui:panels.popup'), buildPopupDemo(disposables, uiRootElement)),
     card(i18next.t('volui:panels.modal'), buildModalDemo(uiRootElement, disposables)),

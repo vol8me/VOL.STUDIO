@@ -86,18 +86,12 @@ scaling:
 # gerçek yerleşimi ve bundle içeriğini göremez; bu kapı o boşluğu kapatır.
 #
 # vol-ui CORE'un GÖRSEL sözleşmesini taşır: geometri iddiaları (taşma, dokunma
-# hedefi) artı sekme başına piksel temeli. `build`den SONRA koşar — üçü de
-# production host/preview ile derlenmiş çıktıyı sınar.
+# hedefi) artı sekme başına piksel temeli. `build`den SONRA koşar; kalan ürün
+# ve katalog yüzeylerini production host/preview ile derlenmiş çıktıda sınar.
 e2e:
-    pnpm --filter @volstudio/vol-asset-studio test:e2e
     pnpm --filter @volstudio/vol-arachnid test:e2e
     pnpm --filter @volstudio/vol-hell test:e2e
-    pnpm --filter @volstudio/vol-life test:e2e
     pnpm --filter @volstudio/vol-ui test:e2e
-
-# Chromium + Firefox tam matris — yalnız signoff'ta koşar.
-e2e-full:
-    pnpm --filter @volstudio/vol-asset-studio test:e2e:full
 
 build-game:
     pnpm build:game
@@ -125,8 +119,8 @@ fast: quick test
 # `audio-synth` coverage `signoff`'ta; kapsam eşikleri burada product paketleri
 # ve araçlar için koşulur.
 #
-# Rust push kapısındadır: paylaşılan native runtime ve üç oyun kabuğu ürünün
-# parçasıdır; dört crate'in check + fmt + clippy'si sıcak önbellekle ~12 sn.
+# Rust push kapısındadır: paylaşılan native runtime ve iki oyun kabuğu ürünün
+# parçasıdır; üç crate'in check + fmt + clippy'si sıcak önbellekle ~12 sn.
 # Push öncesi kapısı: quick + Rust + css lint + kapsam eşikleri + build + Chromium smoke
 high: quick rust lint-css coverage coverage-shape build bundle scaling e2e
 
@@ -148,8 +142,8 @@ audio-verify:
     pnpm --filter @volstudio/vol-hell generate:audio
     git diff --exit-code -- 'games/*/public/assets/audio/**'
 
-# Release/milestone kapısı: high + ağır ses kapsamı + iki motorlu E2E + ses tazeliği
-signoff: high coverage-audio e2e-full audio-verify
+# Release/milestone kapısı: high + ağır ses kapsamı + ses tazeliği
+signoff: high coverage-audio audio-verify
 
 # Kapıyı koşar ve sonucu MAKİNE-OKUNUR raporlar (agent döngüleri için).
 # Kapıları yeniden tanımlamaz, yukarıdaki tarifleri çağırır; aşama haritasının
@@ -161,7 +155,7 @@ report gate='high' *flags:
 # === TAURİ ===
 
 # Tauri prod build: uzun, ağır, manuel. Oyun ADIYLA seçilir — `tauri-v2` bir
-# uygulama değil, üç oyunun paylaştığı native runtime'dır.
+# uygulama değil, iki oyunun paylaştığı native runtime'dır.
 tauri-build game='hell':
     pnpm build:{{ game }}
     pnpm tauri:{{ game }}:build
@@ -191,9 +185,6 @@ dev:
 
 dev-ui:
     pnpm --filter @volstudio/vol-ui dev
-
-dev-asset-studio:
-    pnpm --filter @volstudio/vol-asset-studio dev
 
 fix:
     pnpm format
@@ -226,12 +217,6 @@ generate-audio:
 
 audio-qa:
     pnpm audio:qa
-
-visual-synth-asset *args:
-    pnpm --filter @volstudio/visual-synth asset {{args}}
-
-visual-synth-qa *args:
-    pnpm --filter @volstudio/visual-synth qa {{args}}
 
 benchmark-core:
     pnpm benchmark:core

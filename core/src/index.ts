@@ -1,7 +1,14 @@
 export { Vector2 } from './math/Vector2';
 
 // Deterministik PRNG. Ses, oyun ve asset compiler'lar aynı uygulamayı kullanır.
-export { createRandom, seedFromString, DEFAULT_SEED, type Random } from './random/random';
+export {
+  createRandom,
+  createStatefulRandom,
+  seedFromString,
+  DEFAULT_SEED,
+  type Random,
+  type StatefulRandom,
+} from './random/random';
 export { describePCBinding, findBindingConflicts, isSameBinding } from './input/bindingLabels';
 
 export {
@@ -16,6 +23,15 @@ export {
   type AppVisibilityOptions,
   type AppVisibilityState,
 } from './lifecycle/appVisibility';
+export {
+  AutosaveCoordinator,
+  PersistedObservableState,
+  type AutosaveCoordinatorOptions,
+  type PersistedObservableStateOptions,
+  type PersistedStateUpdater,
+  type PersistenceOperation,
+  type PersistenceStore,
+} from './persistence';
 
 /*
  * Cihaz yetenekleri — ekran üstü kontrol kurup kurmama kararı gibi ÖNCÜL

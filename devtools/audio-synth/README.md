@@ -4,7 +4,6 @@ VOL.STUDIO deterministik ses asset compiler'ı.
 
 Bu paket prosedürel ses sentezi, efekt zinciri, WAV/OGG yazma ve ses QA altyapısını taşır. Çıktı WAV/OGG'dir; tarayıcı veya oyun yalnızca üretilmiş asset'i tüketir.
 
-Kardeş paket: `@volstudio/visual-synth`.
 Runtime tüketici: `games/vol-hell` (`public/assets/audio`), `core/src/audio/music/` (stem çalar).
 
 ## Yapı

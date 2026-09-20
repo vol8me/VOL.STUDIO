@@ -525,11 +525,9 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
 - [ ] **[P2] Family bankası runtime/game kavramlarından bağımsız kalsın.**
       `audio-synth` phenotype, organism, enemy, weapon state machine veya
       belirli oyun sınıflarını bilmez; yalnız generic semantic variant
-      metadata üretir. Bu paket/oyun sınırı doğrultusunda VOL.LIFE'ın
-      phenotype → variant resolver'ı `audio-synth`ta DEĞİL, kendi paketinde
-      yaşar (bkz. `games/vol-life/TODO.md`). Kapanır: package kodunda
-      `VOL.LIFE`, organism phenotype veya başka oyun domain tipi import
-      edilmeden SoundFamilyBank üretilebilir.
+      metadata üretir. Domain nesnesini varyanta bağlayan resolver tüketici
+      paketinde yaşar. Kapanır: package kodunda organism phenotype veya başka
+      oyun domain tipi import edilmeden SoundFamilyBank üretilebilir.
 
 ### Dalga 6 — müzik authoring temeli ve adaptive production sözleşmesi
 

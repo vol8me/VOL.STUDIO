@@ -1,5 +1,9 @@
-import type { SaveManager } from '@volstudio/core';
-import { findBindingConflicts, type PCActionBinding } from '@volstudio/core';
+import {
+  PersistedObservableState,
+  findBindingConflicts,
+  type PCActionBinding,
+  type SaveManager,
+} from '@volstudio/core';
 import { reportPersistenceFailure } from '@/app/settingsPersistence';
 import { HELL_ACTIONS, HELL_PC_BINDINGS, type HellAction } from '@/config/input';
 
@@ -60,19 +64,30 @@ function mergeWithDefaults(stored: unknown): HellBindings {
  * yeniden atama tek ve ayrık bir olaydır, sürükleme değildir.
  */
 export class KeyBindings {
-  private data: HellBindings = mergeWithDefaults(undefined);
+  private readonly persisted: PersistedObservableState<HellBindings>;
   private readonly listeners = new Set<(data: HellBindings) => void>();
 
-  constructor(private readonly saveManager: SaveManager) {}
+  constructor(saveManager: SaveManager) {
+    this.persisted = new PersistedObservableState<HellBindings>({
+      store: saveManager,
+      key: STORAGE_KEY,
+      initial: mergeWithDefaults(undefined),
+      parse: mergeWithDefaults,
+      clone: (data) => ({ ...data }),
+      equals: (left, right) => HELL_ACTIONS.every((action) => left[action] === right[action]),
+      onError: (error, operation) => {
+        if (operation === 'save') reportPersistenceFailure('keyBindings', error);
+      },
+    });
+    this.persisted.subscribe((data) => this.notify(data));
+  }
 
   async load(): Promise<void> {
-    const stored = await this.saveManager.load<unknown>(STORAGE_KEY, {});
-    this.data = mergeWithDefaults(stored);
-    this.notify();
+    await this.persisted.load();
   }
 
   getAll(): HellBindings {
-    return this.data;
+    return this.persisted.get();
   }
 
   /**
@@ -81,14 +96,13 @@ export class KeyBindings {
    * @returns Takas edilen eylemler; boşsa çakışma yoktu.
    */
   async rebind(action: HellAction, binding: PCActionBinding): Promise<HellAction[]> {
-    const conflicts = findBindingConflicts(this.data, action, binding);
-    const previous = this.data[action];
-    const next = { ...this.data, [action]: binding } as Record<HellAction, PCActionBinding>;
+    const current = this.persisted.get();
+    const conflicts = findBindingConflicts(current, action, binding);
+    const previous = current[action];
+    const next = { ...current, [action]: binding } as Record<HellAction, PCActionBinding>;
     for (const other of conflicts) next[other] = previous;
 
-    this.data = next;
-    this.notify();
-    await this.persist();
+    await this.persist(next);
     return conflicts;
   }
 
@@ -98,9 +112,7 @@ export class KeyBindings {
   }
 
   async resetAll(): Promise<void> {
-    this.data = mergeWithDefaults(undefined);
-    this.notify();
-    await this.persist();
+    await this.persist(mergeWithDefaults(undefined));
   }
 
   subscribe(listener: (data: HellBindings) => void): () => void {
@@ -108,16 +120,15 @@ export class KeyBindings {
     return () => this.listeners.delete(listener);
   }
 
-  private notify(): void {
-    for (const listener of this.listeners) listener(this.data);
+  private notify(data: HellBindings): void {
+    for (const listener of this.listeners) listener({ ...data });
   }
 
-  private async persist(): Promise<void> {
+  private async persist(data: HellBindings): Promise<void> {
     try {
-      await this.saveManager.save(STORAGE_KEY, this.data);
-    } catch (error) {
-      // Kalıcılık hatası oyunu durdurmaz; ayar oturum boyunca geçerli kalır.
-      reportPersistenceFailure('keyBindings', error);
+      await this.persisted.set(data);
+    } catch {
+      // Hata `PersistedObservableState.onError` ile raporlandı; oturum state'i korunur.
     }
   }
 }

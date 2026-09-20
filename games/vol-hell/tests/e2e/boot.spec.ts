@@ -26,8 +26,8 @@ test('oyun gerçek tarayıcıda açılır ve ana menü çizilir', async ({ page 
   await expect(page.getByRole('button', { name: /AYARLAR|SETTINGS/i })).toBeVisible();
 
   /*
-   * Tema token'ları CSS'ten gelir ve bir dönem tamamen tanımsız kalabiliyordu
-   * (bkz. VOL.LIFE'ın aynı hatası): fontlar yüklenir ama hiçbir renk uygulanmaz.
+   * Tema token'ları CSS'ten gelir ve tamamen tanımsız kalırsa fontlar yüklenir
+   * ama hiçbir renk uygulanmaz.
    * Token okunabiliyorsa zincir baştan sona kurulmuştur.
    */
   const bg = await page.evaluate(() =>

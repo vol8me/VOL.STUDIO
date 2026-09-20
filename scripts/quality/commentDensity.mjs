@@ -40,9 +40,6 @@ export const ACKNOWLEDGED = {
   'games/vol-hell/src/config/cards/types.ts': 'Tip bildirimi — kart alanları.',
   'devtools/audio-synth/src/types.ts':
     'Sentez parametrelerinin tip bildirimi; her alan birimini ve varsayılanını taşır.',
-  'devtools/visual-synth/src/field/domain.ts':
-    'Alan-uzayı işlemleri: her biri TERS eşlemedir ve tersinin ne olduğu ' +
-    'imzadan çıkarılamaz — koddan okunamayan matematik burada yazılır.',
   'devtools/vol-ui/playwright.config.ts':
     'Görsel kapının KENDİ sözleşmesi: sıfır toleransın neden ölçüme dayandığı ' +
     've temellerin neden makine ailesine bağlı olduğu yazılı olmazsa ilk ' +

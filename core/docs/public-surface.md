@@ -80,14 +80,21 @@ Takma adın hiçbir tüketicisi yoktu; yeniden adlandırmanın bedeli public API
 
 ### 227 → 228
 
-`Sheet`. Sağdan açılan, başlıklı ve kendi içinde kayan çekmece. Scrim, odak, Escape ve Android geri sözleşmesi `Modal`dan gelir. İkinci tüketici gelince ortak kabuk oldu: `StatsPanel` kendi başlık, kapatma, kaydırma ve kayma CSS'ini bırakıp bunun üstüne kuruldu; VOL.LIFE seçenekleri de aynı kabuğu kullanıyor. Aynı turda açık `Modal`, Escape'teki gibi Android geri hareketini de tüketip kapanır hâle geldi; bu bir davranış değişikliğidir, yeni ad değildir.
+`Sheet`. Sağdan açılan, başlıklı ve kendi içinde kayan çekmece. Scrim, odak,
+Escape ve Android geri sözleşmesi `Modal`dan gelir. `StatsPanel` kendi başlık,
+kapatma, kaydırma ve kayma CSS'ini bırakıp bunun üstüne kuruldu. Aynı turda açık
+`Modal`, Escape'teki gibi Android geri hareketini de tüketip kapanır hâle geldi;
+bu bir davranış değişikliğidir, yeni ad değildir.
 
 ### 228 → 229
 
 `WorldCameraController`. Phaser sınıfına bağlanmadan dikdörtgen fiziksel dünyayı
-görüntü alanına boşluk bırakmadan kaplar; delta-mode normalize tekerlek, mutlak
-başlangıçlı pinch ve kısa bırakma momentumu sağlar. Kamera merkezi görünür alanı
-dünya sınırından çıkarmayacak biçimde kelepçelenir.
+görüntü alanına boşluk bırakmadan kaplar; delta-mode normalize tekerlek,
+trackpad pan, coalesced pointer örnekleri ve mutlak başlangıçlı pinch sağlar.
+Mutlak `maxZoom` dünya boyu değişse de inspection ölçeğini korur; yoksa önceki
+`maxZoomFactor` davranışı sürer. Dokunma ve fare momentumu ayrı ayarlanır (fare
+varsayılanı sıfırdır), aktif sürükleme sınıra yaklaşırken dirençlenir ve kamera
+merkezi görünür alanı dünya sınırından çıkarmayacak biçimde kelepçelenir.
 
 ### 229 → 230
 
@@ -100,3 +107,14 @@ kullanılır. Web Vibration API ve oyun kolu fallback'leri korunur.
 `SettingsForm`, `SettingsRow`. Ayar ekranlarının etiket/kontrol hizasını,
 intrinsic kontrol genişliğini, sağdaki switch düzenini ve dar görünümde seçici
 istiflemeyi ortaklaştırır. Değer ve kalıcılık kuralları tüketicide kalır.
+
+### 232 → 236
+
+Dört çalışma zamanı yeteneği eklendi. `createStatefulRandom`, mevcut
+`createRandom` dizisini değiştirmeden durum yakalama/geri yükleme açar.
+`AutosaveCoordinator`, interval ve arka plan sinyallerini seri, son-değer-kazanır
+bir kuyruğa toplar; kapanışta `flushAndDispose()` ile son yazımı bekletir.
+`PersistedObservableState`, yükleme/doğrulama/clone politikasını tüketicide
+bırakırken abonelik, debounce ve seri yazımı ortaklaştırır.
+`showFatalStartupError`, i18n kurulumu da başarısız olabildiği açılış sınırında
+metni tüketiciden alıp erişilebilir bir hata yüzeyi kurar.

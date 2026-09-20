@@ -3,8 +3,8 @@
  * `core/src/ui/base.css` — `.vol-ui-root *`), ama o kural yalnızca `UIRoot`
  * (oyun tarafı) mount ettiği `.vol-ui-root` kapsamında çalışır. Showcase
  * kendi kökünü (`.vol-showcase-root`) kullanır ve bu kurala hiç girmez —
- * `devtools/vol-asset-studio` aynı sorunu kendi `* { box-sizing: border-box }`
- * ile çözmüştü, vol-ui'de bu satır hiç yazılmamıştı. Sonuç: `width:100%` +
+ * Bağımsız web yüzeyleri bunu kendi kökünde kurar; vol-ui'de bu satır hiç
+ * yazılmamıştı. Sonuç: `width:100%` +
  * `padding` taşıyan her primitif (TextArea, Input, PropertyField içindeki
  * kontroller, Checkbox track'i) content-box'ta gerçek genişliğin üstüne
  * padding/border EKLİYOR, konteyneri taşıp sağa kayıyor ya da (Checkbox'ta)
@@ -830,4 +830,16 @@ body {
 .vol-showcase-fps-meter {
   position: static;
   align-self: flex-start;
+}
+
+.vol-showcase-fatal-stage {
+  position: relative;
+  width: 100%;
+  min-height: 180px;
+  overflow: hidden;
+}
+
+.vol-showcase-fatal-preview {
+  position: absolute;
+  z-index: 0;
 }

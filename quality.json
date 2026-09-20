@@ -1,35 +1,5 @@
 {
   "$comment": [
-    "2026-09-17: VOL.LIFE Adım 3 kabul oturumu arayüzü ve substrate adayı",
-    "yapılandırmasıyla app 62,2 KB ölçüldü; uygulama bütçesi 60 → 65 KB'ye çıkarıldı.",
-    "Vendor ve CSS değişmedi.",
-    "",
-    "2026-09-14: VOL.LIFE Particle Substrate v2 migrasyonu (HabitatSDF, VoidSink,",
-    "MatterReservoir, PairForceKernel, capacity store, v3 codec) app 59,1 KB",
-    "ölçüldü; uygulama bütçesi 53 → 60 KB'ye çıkarıldı. Artış yeni substrate",
-    "sözleşmesidir, özellik payı değildir. Vendor ve CSS değişmedi.",
-    "",
-    "2026-09-14: VOL.LIFE snapshot/config sahipliği, alt restore atomikliği ve",
-    "kurulum rollback doğrulamalarıyla app 52,1 KB ölçüldü; uygulama bütçesi",
-    "52 → 53 KB oldu. Vendor ve CSS değişmedi; artış ürün veri bütünlüğü",
-    "sözleşmesidir, yeni özellik payı değildir.",
-    "",
-    "2026-09-12: VOL.LIFE Adım 1 dünya substratıyla app 42,6 KB ölçüldü; 40 KB",
-    "kabuk tavanı artık gerçek ürünü taşımadığı için 52 KB'ye çıkarıldı. Bu, ölçülen",
-    "değere %22 Adım 2 payıdır; Phaser vendor ve CSS bütçeleri değişmedi. Kapsam",
-    "ratchet'i ölçülen CORE 92,8/92,8/86,9/92,5 için satır/ifade 89 → 90;",
-    "VOL.LIFE 97,1/97,1/92,6/92,9 için fonksiyon 86 → 90; VOL.UI",
-    "95,3/95,3/92,4/84,3 için dal 89 → 90 olarak yükseltildi.",
-    "2026-09-13: VOL.LIFE Adım 2 parçacık çekirdeğiyle 96,78/96,78/92,26/93,97",
-    "ölçüldü; satır/ifade/dal eşikleri korunurken fonksiyon ratchet'i 90 → 92",
-    "olarak yükseltildi.",
-    "",
-    "2026-09-11: tauri-v2 ve vol-life eşikleri ölçülenin ~2 puan altına çekildi",
-    "(satır/ifade/dal/fonksiyon). tauri-v2 95,8/95,8/92,8/100 ölçüldü — platform",
-    "yüklemi, görüntü kipi uygulayıcısı ve yön köprüsü testleriyle — ve",
-    "93/93/90/100'e; vol-life 98,6/98,6/94,6/88,9 ölçüldü — seçenekler, tercih",
-    "deposu ve açılış hata sınırı testleriyle — ve 96/96/92/86'ya kilitlendi.",
-    "",
     "2026-09-05: gönderilen bundle bütçeleri eklendi. Ölçü gzip'lenmiş bayttır —",
     "kullanıcının beklediği süre telden geçen boyutla orantılıdır, diskteki dist",
     "toplamıyla değil. Bütçe `app` ve `vendor` olarak AYRILIR: ölçüldüğünde",
@@ -71,12 +41,7 @@
     "kapsam 98/86/97'ye çıktı — kapı hiçbir şey ölçmüyordu. Eşikler ölçülenin",
     "~2 puan altına çekildi. CORE'un fonksiyon kapsamı 92'ye çıktığı için o",
     "eşik de 88'den 89'a yükseltildi; branch eşiği ratchet gereği düşürülmedi.",
-    "",
-    "2026-08-30: audio-synth ve visual-synth eşikleri tabanda (50/50/50/40)",
-    "bırakılmıştı ama gerçek kapsam çok daha yüksekti (89 ve 97). Taban eşik,",
-    "kapsam yarıya düşse bile kapıyı YEŞİL tutuyordu — yani bu iki paket için",
-    "kapı hiçbir şey ölçmüyordu. Eşikler ölçülen değerin birkaç puan altına",
-    "çekildi: normal refactor kapıyı düşürmez, gerçek gerileme düşürür."
+    ""
   ],
   "floor": {
     "lines": 50,
@@ -91,12 +56,6 @@
       "statements": 90,
       "branches": 84,
       "functions": 91
-    },
-    "@volstudio/vol-life": {
-      "lines": 96,
-      "statements": 96,
-      "branches": 92,
-      "functions": 92
     },
     "@volstudio/vol-hell": {
       "lines": 70,
@@ -115,18 +74,6 @@
       "statements": 94,
       "branches": 90,
       "functions": 83
-    },
-    "@volstudio/vol-asset-studio": {
-      "lines": 87,
-      "statements": 87,
-      "branches": 78,
-      "functions": 90
-    },
-    "@volstudio/visual-synth": {
-      "lines": 95,
-      "statements": 95,
-      "branches": 89,
-      "functions": 95
     },
     "@volstudio/audio-synth": {
       "lines": 86,
@@ -148,11 +95,6 @@
     }
   },
   "bundles": {
-    "games/vol-life": {
-      "app": 65,
-      "vendor": 360,
-      "css": 24
-    },
     "games/vol-hell": {
       "app": 125,
       "vendor": 360,
@@ -175,17 +117,6 @@
         "value": "msPerFrame"
       },
       "fxParts72Over18": 4.5
-    },
-    "games/vol-life": {
-      "$comment": "2026-09-16: kapı ALGORİTMİK seriye bağlıdır (habitat içinde tabakalı yerleşim, yerel yoğunluk girdiden bağımsız: azami hücre doluluğu 512'de 38, 2048'de 40). Beş ayrı koşuda oranlar 4,654 / 4,731 / 4,752 / 4,757 / 4,827; medyan 4,752 ve tavan = medyan × 1,10 = 5,23 (K7 sınırı 6). Eski 14 tavanı ÜRÜN yerleşimini ölçüyordu: seeder sabit yama yarıçapı kullandığından 4× parçacık aynı yamalara gömülüyor (doluluk 105→416) ve oran medyanı 9,744 çıkıyor — bu gerçek iş yükünü anlatır ama karmaşıklık kapısı olamaz, o yüzden raporlanır, kapılanmaz.",
-      "$measure": {
-        "script": "scripts/benchmark-particles.mts",
-        "args": ["--iterations", "120", "--samples", "5", "--json"],
-        "series": "particleKernel",
-        "input": "particles",
-        "value": "msPerTick"
-      },
-      "particleKernel2048Over512": 5.23
     }
   },
   "coverageShape": {

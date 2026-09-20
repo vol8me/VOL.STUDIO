@@ -7,7 +7,7 @@ release içindir; CI runner yoktur.
 | ------------ | ---------------------------- | -------------------------------------------------------------------------------------------------- |
 | Pre-commit   | `pnpm quick`                 | sözleşme, format, typecheck, lint (~45 sn)                                                         |
 | Push öncesi  | `pnpm high`                  | quick + Rust + CSS lint + coverage ve şekli (audio-synth hariç) + build + bundle + ölçekleme + E2E |
-| Release      | `pnpm signoff`               | high + audio-synth coverage ve şekli + Chromium/Firefox E2E + ses tazeliği                         |
+| Release      | `pnpm signoff`               | high + audio-synth coverage ve şekli + ses tazeliği                                                |
 | Ortam        | `pnpm run doctor:env`        | Node, pnpm, Rust, just, FFmpeg, Tauri bağımlılıkları                                               |
 | Cihaz ölçümü | `pnpm benchmark:device`      | Bağlı Android'de açılış/kare/bellek — **kapı DEĞİL**                                               |
 | Rapor        | `pnpm exec just report high` | Kapıyı koşar, sonucu yapılandırılmış verir (`--json`)                                              |
@@ -15,6 +15,10 @@ release içindir; CI runner yoktur.
 Hook'lar `pnpm install` sırasında kurulur (`pre-commit` → `quick`,
 `pre-push` → `high`); atlamak için `SKIP_SIMPLE_GIT_HOOKS=1`. Test yükü
 bilerek push'a bırakıldı; testi de içeren hızlı kapı `pnpm fast`.
+
+Birden fazla Android cihaz bağlıysa ölçüm sessizce ilkini seçmez:
+`pnpm benchmark:device -- --serial <adb-seri> [saniye]` kullanılır. Aynı seçim
+`ANDROID_SERIAL` ile de verilebilir; açık CLI değeri ortam değerine üstün gelir.
 
 Tekil tarifler için `pnpm exec just --list`. `just` ikilisi `node_modules/.bin`
 altındadır, global `PATH`e girmez — çıplak `just fast` değil `pnpm exec just fast`.
@@ -63,7 +67,7 @@ sunucuyu kendisi başlatır.
 
 **Rust push kapısındadır.** `scripts/quality/rust.mjs` Git'in gördüğü her
 `Cargo.toml` için `check --locked`, `fmt --check` ve `clippy -D warnings` koşar.
-Paylaşılan native runtime ve üç oyun kabuğu ürünün parçasıdır; dört crate sıcak
+Paylaşılan native runtime ve iki oyun kabuğu ürünün parçasıdır; üç crate sıcak
 önbellekle ~12 sn sürer.
 
 **Kapsamın şekli kapılıdır.** Paket ortalaması yükün nerede olduğunu söylemez:
@@ -126,13 +130,13 @@ Sözleşmenin doğruladığı diğer şeyler:
 
 ## Belge de kapılanır
 
-Yanlış belge derlenmez, test edilmez, kimse fark etmez. Üç kapı bunu kırar:
+Yanlış belge derlenmez, test edilmez, kimse fark etmez. CORE belge kapısı bunu
+kırar:
 
-| Kapı                                                | Bağladığı şey                                   |
-| --------------------------------------------------- | ----------------------------------------------- |
-| `core/tests/governance/docSymbols.test.ts`          | `core/docs/*.md` sembolleri → CORE yüzeyi       |
-| aynı dosya                                          | `music-engine.md` API tablosu → sınıf metotları |
-| `devtools/visual-synth/.../designInventory.test.ts` | `DESIGN.md` §4 envanteri → şema kaydı           |
+| Kapı                                       | Bağladığı şey                                   |
+| ------------------------------------------ | ----------------------------------------------- |
+| `core/tests/governance/docSymbols.test.ts` | `core/docs/*.md` sembolleri → CORE yüzeyi       |
+| aynı dosya                                 | `music-engine.md` API tablosu → sınıf metotları |
 
 Her birinin ters yönü de kapılıdır: ölü bir muafiyet ya da belgede olmayan bir
 `kind` de kapıyı kırar.

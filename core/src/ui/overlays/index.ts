@@ -35,3 +35,4 @@ export { CommandPalette, type CommandItem, type CommandPaletteOptions } from './
 export { showConfirm, type ConfirmOptions } from './Confirm';
 export { ToastManager, type ToastVariant, type ToastOptions } from './Toast';
 export { Popover, type PopoverOptions } from './Popover';
+export { showFatalStartupError, type FatalStartupErrorOptions } from './FatalStartupError';

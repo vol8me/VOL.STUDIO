@@ -111,7 +111,7 @@ describe('dokunsal geri bildirim', () => {
 
   it('masaüstü tarayıcı API’yi tanımlasa da motor yoktur — titremez, ayar sunulmaz', () => {
     // Masaüstü Chromium ve WebView2 `navigator.vibrate`i tanımlar ama çağrı boşa
-    // gider; VOL.LIFE seçeneklerinde işe yaramayan bir anahtar olarak görüldü.
+    // gider; yetenek denetimi olmayan arayüzde işlevsiz bir ayar gösterilirdi.
     const spy = mockVibrate();
     Reflect.deleteProperty(navigator, 'userAgent');
     setHapticsEnabled(true);

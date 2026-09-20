@@ -34,10 +34,14 @@ export type WorldCameraFit = 'cover' | 'contain';
 export interface WorldCameraControllerOptions {
   readonly bounds: Readonly<Rect>;
   readonly fit?: WorldCameraFit;
+  /** Dünya boyundan bağımsız mutlak inspection zoom sınırı. */
+  readonly maxZoom?: number;
   readonly maxZoomFactor?: number;
   readonly wheelSensitivity?: number;
   readonly wheelSmoothingMs?: number;
   readonly panMomentumMs?: number;
+  readonly touchPanMomentumMs?: number;
+  readonly mousePanMomentumMs?: number;
   readonly initialZoomFactor?: number;
   readonly onChange?: (state: WorldCameraState) => void;
 }
@@ -76,9 +80,12 @@ export class WorldCameraController {
   private readonly bounds: Readonly<Rect>;
   private readonly fit: WorldCameraFit;
   private readonly maxZoomFactor: number;
+  private readonly absoluteMaxZoom?: number;
   private readonly wheelSensitivity: number;
   private readonly wheelSmoothingMs: number;
-  private readonly panMomentumMs: number;
+  private panMomentumMs: number;
+  private readonly touchPanMomentumMs: number;
+  private readonly mousePanMomentumMs: number;
   private readonly initialZoomFactor: number;
   private readonly onChange?: (state: WorldCameraState) => void;
   private centerX: number;
@@ -103,10 +110,31 @@ export class WorldCameraController {
     this.bounds = options.bounds;
     this.fit = options.fit ?? 'cover';
     this.maxZoomFactor = options.maxZoomFactor ?? 8;
+    this.absoluteMaxZoom = options.maxZoom;
     this.wheelSensitivity = options.wheelSensitivity ?? 0.0015;
     this.wheelSmoothingMs = options.wheelSmoothingMs ?? 90;
-    this.panMomentumMs = options.panMomentumMs ?? 140;
+    this.touchPanMomentumMs = options.touchPanMomentumMs ?? options.panMomentumMs ?? 140;
+    this.mousePanMomentumMs = options.mousePanMomentumMs ?? 0;
+    this.panMomentumMs = this.touchPanMomentumMs;
     this.initialZoomFactor = options.initialZoomFactor ?? 1;
+    if (
+      (this.absoluteMaxZoom !== undefined &&
+        (!(this.absoluteMaxZoom > 0) || !Number.isFinite(this.absoluteMaxZoom))) ||
+      !(this.maxZoomFactor > 0) ||
+      !Number.isFinite(this.maxZoomFactor)
+    ) {
+      throw new RangeError('Azami zoom sınırı pozitif ve sonlu olmalı.');
+    }
+    if (
+      !(this.touchPanMomentumMs > 0) ||
+      !Number.isFinite(this.touchPanMomentumMs) ||
+      this.mousePanMomentumMs < 0 ||
+      !Number.isFinite(this.mousePanMomentumMs)
+    ) {
+      throw new RangeError(
+        'Touch momentum pozitif, mouse momentumu negatif olmayan sonlu süre olmalı.',
+      );
+    }
     if (!(this.initialZoomFactor >= 1) || !Number.isFinite(this.initialZoomFactor)) {
       throw new RangeError(
         `Başlangıç zoom çarpanı 1 veya daha büyük olmalı: ${this.initialZoomFactor}`,
@@ -136,7 +164,7 @@ export class WorldCameraController {
     this.targetZoom = clamp(
       this.minZoom * this.initialZoomFactor,
       this.minZoom,
-      this.minZoom * this.maxZoomFactor,
+      this.resolveMaxZoom(),
     );
     this.targetCenterX = this.bounds.x + this.bounds.width / 2;
     this.targetCenterY = this.bounds.y + this.bounds.height / 2;
@@ -145,14 +173,8 @@ export class WorldCameraController {
   }
 
   refreshViewport(): void {
-    const previousMinZoom = this.minZoom;
-    const zoomFactor = previousMinZoom > 0 ? this.targetZoom / previousMinZoom : 1;
     this.minZoom = this.resolveMinZoom();
-    this.targetZoom = clamp(
-      this.minZoom * zoomFactor,
-      this.minZoom,
-      this.minZoom * this.maxZoomFactor,
-    );
+    this.targetZoom = clamp(this.targetZoom, this.minZoom, this.resolveMaxZoom());
     const target = this.clampCenter(this.targetCenterX, this.targetCenterY, this.targetZoom);
     this.targetCenterX = target.x;
     this.targetCenterY = target.y;
@@ -222,6 +244,8 @@ export class WorldCameraController {
     this.targetCenterX = this.centerX;
     this.targetCenterY = this.centerY;
     this.stopMomentum();
+    this.panMomentumMs =
+      event.pointerType === 'mouse' ? this.mousePanMomentumMs : this.touchPanMomentumMs;
     this.element.setPointerCapture?.(event.pointerId);
     this.resetPinch();
   };
@@ -230,16 +254,23 @@ export class WorldCameraController {
     const previous = this.pointers.get(event.pointerId);
     if (!previous) return;
     const current = pointerPosition(event);
-    this.pointers.set(event.pointerId, current);
-    this.recordPointerHistory(event.pointerId, event, current);
+    const samples = [...(event.getCoalescedEvents?.() ?? []).map(pointerPosition), current];
+    this.recordPointerHistory(event.pointerId, samples);
     if (this.pointers.size === 1) {
       this.pinch = null;
-      this.panBy(current.x - previous.x, current.y - previous.y);
+      let last = previous;
+      for (const sample of samples) {
+        if (sample.x === last.x && sample.y === last.y) continue;
+        this.panBy(sample.x - last.x, sample.y - last.y);
+        last = sample;
+      }
+      this.pointers.set(event.pointerId, current);
       this.updatePanVelocity(event.pointerId);
       this.momentumCenterX = this.centerX;
       this.momentumCenterY = this.centerY;
       return;
     }
+    this.pointers.set(event.pointerId, current);
     this.stopMomentum();
     if (!this.pinch || !this.pinch.ids.includes(event.pointerId)) return;
     this.applyPinch(this.pinch);
@@ -250,7 +281,7 @@ export class WorldCameraController {
     const previous = this.pointers.get(event.pointerId);
     if (wasSinglePointer && previous) {
       const current = pointerPosition(event);
-      this.recordPointerHistory(event.pointerId, event, current);
+      this.recordPointerHistory(event.pointerId, [current]);
       if (current.x !== previous.x || current.y !== previous.y) {
         this.panBy(current.x - previous.x, current.y - previous.y);
       }
@@ -274,6 +305,12 @@ export class WorldCameraController {
     event.preventDefault();
     this.stopMomentum();
     const metrics = this.metrics();
+    const trackpadPan =
+      !event.ctrlKey && event.deltaMode === WheelEvent.DOM_DELTA_PIXEL && event.deltaX !== 0;
+    if (trackpadPan) {
+      this.panBy(-event.deltaX, -event.deltaY);
+      return;
+    }
     const deltaPx = normalizeWheelDelta(event, metrics.height);
     const boundedDelta = clamp(deltaPx, -MAX_WHEEL_DELTA_PX, MAX_WHEEL_DELTA_PX);
     this.setZoomTargetAt(
@@ -287,22 +324,18 @@ export class WorldCameraController {
     const metrics = this.metrics();
     const requestedX = this.centerX - (clientDeltaX * metrics.scaleX) / this.camera.zoom;
     const requestedY = this.centerY - (clientDeltaY * metrics.scaleY) / this.camera.zoom;
-    const target = this.clampCenter(requestedX, requestedY, this.camera.zoom);
+    const target = this.resistActivePan(requestedX, requestedY, this.camera.zoom);
     this.targetCenterX = target.x;
     this.targetCenterY = target.y;
     this.wheelMotion = null;
     this.applyState(target.x, target.y, this.camera.zoom);
   }
 
-  private recordPointerHistory(
-    pointerId: number,
-    event: PointerEvent,
-    current: TrackedPointer,
-  ): void {
+  private recordPointerHistory(pointerId: number, samples: readonly TrackedPointer[]): void {
     const history = this.pointerHistory.get(pointerId) ?? [];
-    const coalesced = event.getCoalescedEvents?.() ?? [];
-    for (const sample of coalesced) appendDistinctSample(history, pointerPosition(sample));
-    appendDistinctSample(history, current);
+    for (const sample of samples) appendDistinctSample(history, sample);
+    const current = samples.at(-1);
+    if (!current) return;
     const cutoff = current.timeMs - POINTER_VELOCITY_WINDOW_MS;
     while (history.length > 2 && history[1].timeMs < cutoff) history.shift();
     this.pointerHistory.set(pointerId, history);
@@ -333,6 +366,13 @@ export class WorldCameraController {
 
   private applyMomentum(deltaMs: number): boolean {
     if (this.pointers.size > 0 || this.wheelMotion) return false;
+    if (this.panMomentumMs === 0) {
+      this.targetCenterX = this.centerX;
+      this.targetCenterY = this.centerY;
+      this.targetZoom = this.camera.zoom;
+      this.stopMomentum();
+      return true;
+    }
     if (
       Math.abs(this.panVelocityX) < MIN_MOMENTUM_UNITS_PER_MS &&
       Math.abs(this.panVelocityY) < MIN_MOMENTUM_UNITS_PER_MS
@@ -411,7 +451,7 @@ export class WorldCameraController {
     const zoom = clamp(
       gesture.zoom * (distance(left, right) / gesture.distance),
       this.minZoom,
-      this.minZoom * this.maxZoomFactor,
+      this.resolveMaxZoom(),
     );
     const requested = this.centerForAnchor(center.x, center.y, gesture.worldAnchor, zoom);
     const target = this.clampCenter(requested.x, requested.y, zoom);
@@ -429,7 +469,7 @@ export class WorldCameraController {
       ? this.wheelMotion!.worldAnchor
       : this.screenToWorld(clientX, clientY);
     this.wheelMotion = { clientX, clientY, worldAnchor: anchor };
-    this.targetZoom = clamp(requestedZoom, this.minZoom, this.minZoom * this.maxZoomFactor);
+    this.targetZoom = clamp(requestedZoom, this.minZoom, this.resolveMaxZoom());
     const requested = this.centerForAnchor(clientX, clientY, anchor, this.targetZoom);
     const target = this.clampCenter(requested.x, requested.y, this.targetZoom);
     this.targetCenterX = target.x;
@@ -479,6 +519,20 @@ export class WorldCameraController {
       x: clampAxis(centerX, this.bounds.x, this.bounds.width, halfWidth),
       y: clampAxis(centerY, this.bounds.y, this.bounds.height, halfHeight),
     };
+  }
+
+  private resistActivePan(centerX: number, centerY: number, zoom: number): WorldCameraPoint {
+    const halfWidth = this.camera.width / (2 * zoom);
+    const halfHeight = this.camera.height / (2 * zoom);
+    return {
+      x: resistAxis(centerX, this.centerX, this.bounds.x, this.bounds.width, halfWidth),
+      y: resistAxis(centerY, this.centerY, this.bounds.y, this.bounds.height, halfHeight),
+    };
+  }
+
+  private resolveMaxZoom(): number {
+    const candidate = this.absoluteMaxZoom ?? this.minZoom * this.maxZoomFactor;
+    return Math.max(this.minZoom, candidate);
   }
 
   private resolveMinZoom(): number {
@@ -586,4 +640,25 @@ function softClamp(value: number, minimum: number, maximum: number, zone: number
     return maximum - zone * progress * progress * (2 - progress);
   }
   return value;
+}
+
+function resistAxis(
+  requested: number,
+  current: number,
+  start: number,
+  size: number,
+  halfExtent: number,
+): number {
+  if (halfExtent * 2 >= size) return start + size / 2;
+  const minimum = start + halfExtent;
+  const maximum = start + size - halfExtent;
+  const clamped = clamp(requested, minimum, maximum);
+  const zone = Math.min(size * 0.06, halfExtent * 0.3);
+  if (zone <= 0) return clamped;
+  const movingTowardMinimum = requested < current && current < minimum + zone;
+  const movingTowardMaximum = requested > current && current > maximum - zone;
+  if (!movingTowardMinimum && !movingTowardMaximum) return clamped;
+  const edgeDistance = movingTowardMinimum ? current - minimum : maximum - current;
+  const resistance = 0.25 + 0.75 * clamp(edgeDistance / zone, 0, 1);
+  return clamp(current + (requested - current) * resistance, minimum, maximum);
 }

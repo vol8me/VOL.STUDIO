@@ -1,4 +1,4 @@
-import type { SaveManager } from '@volstudio/core';
+import { PersistedObservableState, type SaveManager } from '@volstudio/core';
 import { reportPersistenceFailure } from '@/app/settingsPersistence';
 import { GraphicsQuality } from '@volstudio/core';
 import {
@@ -74,20 +74,40 @@ export class VideoSettings {
    * sağlar. Kalıcılık bu sınıfın, kademe mekanizması CORE'un işidir.
    */
   private readonly quality: GraphicsQuality<GraphicsQualityLevel, GraphicsQualityProfile>;
-  private data: VideoSettingsData = mergeWithDefaults(undefined);
+  private readonly persisted: PersistedObservableState<VideoSettingsData>;
   private readonly listeners = new Set<(data: VideoSettingsData) => void>();
-  private persistQueue: Promise<void> = Promise.resolve();
-  private loadGeneration = 0;
   private disposed = false;
 
-  constructor(private readonly saveManager: SaveManager) {
+  constructor(saveManager: SaveManager) {
+    const initial = mergeWithDefaults(undefined);
     this.quality = new GraphicsQuality<GraphicsQualityLevel, GraphicsQualityProfile>({
       levels: videoConfig.quality,
-      initial: this.data.graphicsQuality,
+      initial: initial.graphicsQuality,
       reflect:
         typeof document === 'undefined'
           ? undefined
           : { element: document.documentElement, attribute: GRAPHICS_QUALITY_ATTRIBUTE },
+    });
+    this.persisted = new PersistedObservableState<VideoSettingsData>({
+      store: saveManager,
+      key: STORAGE_KEY,
+      initial,
+      parse: mergeWithDefaults,
+      clone: (data) => ({ ...data }),
+      equals: (left, right) =>
+        left.displayMode === right.displayMode &&
+        left.resolution === right.resolution &&
+        left.graphicsQuality === right.graphicsQuality,
+      onError: (error, operation) => {
+        if (operation === 'save') reportPersistenceFailure(STORAGE_KEY, error);
+      },
+      onListenerError: (error) => {
+        console.warn('[VideoSettings] Ayar dinleyicisi hata verdi:', error);
+      },
+    });
+    this.persisted.subscribe((data) => {
+      this.quality.setLevel(data.graphicsQuality);
+      this.notify(data);
     });
   }
 
@@ -102,29 +122,24 @@ export class VideoSettings {
   }
 
   async load(): Promise<void> {
-    const generation = ++this.loadGeneration;
-    const stored = await this.saveManager.load<unknown>(STORAGE_KEY, {});
-    if (this.disposed || generation !== this.loadGeneration) return;
-    this.data = mergeWithDefaults(stored);
-    this.quality.setLevel(this.data.graphicsQuality);
-    this.notify();
+    await this.persisted.load();
   }
 
   getData(): VideoSettingsData {
-    return { ...this.data };
+    return this.persisted.get();
   }
 
   getDisplayMode(): DisplayMode {
-    return this.data.displayMode;
+    return this.getData().displayMode;
   }
 
   getResolutionId(): string {
-    return this.data.resolution;
+    return this.getData().resolution;
   }
 
   getResolution(): ResolutionPreset {
     return (
-      getResolutionPreset(this.data.resolution) ??
+      getResolutionPreset(this.getData().resolution) ??
       // Config sözleşmesi bozulursa bile runtime'da undefined pencere boyutu
       // taşımamak için varsayılanın ilk preset yedeği vardır.
       getResolutionPreset(videoConfig.defaultResolution) ??
@@ -133,7 +148,7 @@ export class VideoSettings {
   }
 
   getGraphicsQuality(): GraphicsQualityLevel {
-    return this.data.graphicsQuality;
+    return this.getData().graphicsQuality;
   }
 
   getMaxDpr(): number {
@@ -185,48 +200,26 @@ export class VideoSettings {
   }
 
   async flush(): Promise<void> {
-    await this.persistQueue;
+    await this.persisted.flush();
   }
 
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    this.loadGeneration++;
     this.listeners.clear();
+    this.persisted.dispose();
     this.quality.destroy();
   }
 
   private update(patch: Partial<VideoSettingsData>): Promise<void> {
     if (this.disposed) return Promise.resolve();
-    const next = { ...this.data, ...patch };
-    if (
-      next.displayMode === this.data.displayMode &&
-      next.resolution === this.data.resolution &&
-      next.graphicsQuality === this.data.graphicsQuality
-    ) {
-      return Promise.resolve();
-    }
-
-    this.data = next;
-    // Kademe kaydı ÖNCE güncellenir: dinleyiciler bildirim aldıklarında
-    // `getGraphicsProfile()` yeni profili döndürmeli.
-    this.quality.setLevel(next.graphicsQuality);
-    this.notify();
-    const snapshot = this.getData();
-    const write = this.persistQueue
-      .then(() => this.saveManager.save(STORAGE_KEY, snapshot))
-      .catch((error: unknown) => {
-        reportPersistenceFailure(STORAGE_KEY, error);
-      });
-    this.persistQueue = write;
-    return write;
+    return this.persisted.set((current) => ({ ...current, ...patch })).catch(() => undefined);
   }
 
-  private notify(): void {
-    const snapshot = this.getData();
+  private notify(snapshot: VideoSettingsData): void {
     for (const listener of this.listeners) {
       try {
-        listener(snapshot);
+        listener({ ...snapshot });
       } catch (error) {
         console.warn('[VideoSettings] Ayar dinleyicisi hata verdi:', error);
       }

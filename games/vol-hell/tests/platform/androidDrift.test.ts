@@ -129,11 +129,10 @@ describe('Android üretilmiş ağaç drifti', () => {
   it('paket kimliği diğer oyunlarla paylaşılmaz', () => {
     /*
      * İki oyun bir dönem aynı native projeyi ve paket kimliğini paylaşıyordu;
-     * biri diğerinin üzerine kuruluyordu. Kimlik ayrımı üç ayrı ağacın var olma
+     * biri diğerinin üzerine kuruluyordu. Kimlik ayrımı bağımsız ağaçların var olma
      * sebebidir.
      */
     const activity = read('app/src/main/java/com/volstudio/game/MainActivity.kt');
     expect(activity).not.toContain('com.volstudio.arachnid');
-    expect(activity).not.toContain('com.volstudio.life');
   });
 });

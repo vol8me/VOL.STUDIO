@@ -35,7 +35,7 @@ const GATES = {
   quick: ['contract', 'format-check', 'typecheck', 'lint'],
   fast: ['quick', 'test'],
   high: ['quick', 'rust', 'lint-css', 'coverage', 'coverage-shape', 'build', 'bundle', 'scaling', 'e2e'],
-  signoff: ['high', 'coverage-audio', 'e2e-full', 'audio-verify'],
+  signoff: ['high', 'coverage-audio', 'audio-verify'],
 };
 
 /**

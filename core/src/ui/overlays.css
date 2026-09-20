@@ -857,3 +857,30 @@
 .vol-rich-tooltip__stat-value--danger {
   color: var(--vol-ui-danger-border);
 }
+
+.vol-fatal-startup {
+  position: fixed;
+  inset: 0;
+  z-index: var(--vol-z-dialog);
+  display: grid;
+  place-content: center;
+  gap: var(--vol-space-sm);
+  padding: var(--vol-space-lg);
+  background: var(--vol-ui-bg);
+  color: var(--vol-ui-text);
+  text-align: center;
+}
+
+.vol-fatal-startup__title {
+  margin: 0;
+  color: var(--vol-ui-danger-solid);
+  font-size: var(--vol-text-title);
+}
+
+.vol-fatal-startup__detail {
+  margin: 0;
+  color: var(--vol-ui-text-secondary);
+  font-family: monospace;
+  font-size: var(--vol-text-body);
+  overflow-wrap: anywhere;
+}

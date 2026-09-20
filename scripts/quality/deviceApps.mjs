@@ -6,8 +6,8 @@ import { join } from 'node:path';
  *
  * `scripts/device-benchmark.mjs` ölçtüğü uygulamaları ELLE tutulan bir listede
  * taşır. Android kabuğu olan bir paket o listeye eklenmezse ölçüm onu sessizce
- * atlar: çıktı hatasız görünür, yalnız bir satır eksiktir. Bu gerçekten oldu —
- * VOL.LIFE kabuğu cihaza kurulduktan sonra üç tur boyunca ölçüm dışında kaldı.
+ * atlar: çıktı hatasız görünür, yalnız bir satır eksiktir. Paket listesi bu
+ * nedenle dosya sisteminden türetilen kabuk listesine karşı kapılanır.
  *
  * Gerçek kaynak paketlerin `src-tauri/tauri.conf.json` dosyalarıdır; kimlik
  * orada yaşar. Bekçi listeyi ona karşı doğrular.

@@ -66,18 +66,18 @@ function isIgnored(path) {
 test('repo ignore sözleşmesi sırları ve üretilen çıktıları kapsar, kaynakları korur', () => {
   const ignored = [
     '.env',
-    'games/vol-life/dist/index.js',
-    'games/vol-life/coverage/lcov.info',
-    'games/vol-life/observer.log',
-    'games/vol-life/src-tauri/gen/apple/project.pbxproj',
+    'games/vol-arachnid/dist/index.js',
+    'games/vol-arachnid/coverage/lcov.info',
+    'games/vol-arachnid/observer.log',
+    'games/vol-arachnid/src-tauri/gen/apple/project.pbxproj',
     'games/vol-hell/src-tauri/gen/apple/project.pbxproj',
-    'games/vol-life/src-tauri/gen/android/app/build/output.apk',
+    'games/vol-arachnid/src-tauri/gen/android/app/build/output.apk',
   ];
   const kept = [
-    'games/vol-life/DESIGN.md',
-    'games/vol-life/src/i18n/tr.json',
-    'games/vol-life/public/assets/example.ogg',
-    'games/vol-life/src-tauri/gen/android/app/src/main/AndroidManifest.xml',
+    'games/vol-arachnid/DESIGN.md',
+    'games/vol-arachnid/src/i18n/tr.json',
+    'games/vol-arachnid/public/assets/example.ogg',
+    'games/vol-arachnid/src-tauri/gen/android/app/src/main/AndroidManifest.xml',
   ];
 
   for (const path of ignored) assert.equal(isIgnored(path), true, `${path} ignore edilmeli`);

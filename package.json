@@ -11,10 +11,9 @@
     "high": "just high",
     "signoff": "just signoff",
     "doctor:env": "just doctor",
-    "dev": "pnpm --parallel -r --filter @volstudio/vol-hell --filter @volstudio/vol-arachnid --filter @volstudio/vol-life --filter @volstudio/vol-ui --filter @volstudio/vol-asset-studio run dev",
+    "dev": "pnpm --parallel -r --filter @volstudio/vol-hell --filter @volstudio/vol-arachnid --filter @volstudio/vol-ui run dev",
     "build:game": "pnpm --filter @volstudio/vol-hell build",
     "build:arachnid": "pnpm --filter @volstudio/vol-arachnid build",
-    "build:life": "pnpm --filter @volstudio/vol-life build",
     "build:linux-appimage": "node scripts/build-linux-appimage.mjs",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r --if-present test",
@@ -40,11 +39,7 @@
     "tauri:arachnid:dev": "pnpm --filter @volstudio/vol-arachnid tauri:dev",
     "tauri:arachnid:build": "pnpm --filter @volstudio/vol-arachnid tauri:build",
     "tauri:arachnid:android:dev": "pnpm --filter @volstudio/vol-arachnid tauri:android:dev",
-    "tauri:arachnid:android:build": "pnpm --filter @volstudio/vol-arachnid tauri:android:build",
-    "tauri:life:dev": "pnpm --filter @volstudio/vol-life tauri:dev",
-    "tauri:life:build": "pnpm --filter @volstudio/vol-life tauri:build",
-    "tauri:life:android:dev": "pnpm --filter @volstudio/vol-life tauri:android:dev",
-    "tauri:life:android:build": "pnpm --filter @volstudio/vol-life tauri:android:build"
+    "tauri:arachnid:android:build": "pnpm --filter @volstudio/vol-arachnid tauri:android:build"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "3.2.6",

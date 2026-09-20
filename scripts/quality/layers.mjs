@@ -4,11 +4,7 @@ import ts from 'typescript';
 import { sourceImports } from './sourceImports.mjs';
 
 /** Yazarlık formatının sahibi üreticidir; çalışma zamanı CORE'a taşınmaz. */
-const DEVTOOL_EDGES = {
-  '@volstudio/vol-asset-studio': {
-    '@volstudio/visual-synth': 'Asset Studio, VisualSynth belgelerini salt okunur inceler.',
-  },
-};
+const DEVTOOL_EDGES = {};
 const SKIP_DIRS = new Set([
   'node_modules',
   'dist',

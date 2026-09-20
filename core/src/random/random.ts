@@ -20,16 +20,29 @@ export interface Random {
   bipolar(): number;
 }
 
+export interface StatefulRandom extends Random {
+  /** Anlık 32-bit durum; kayıt/tekrar oynatma için saklanabilir. */
+  getState(): number;
+  /** Sonraki değeri verilen durumdan üretmeye devam eder. */
+  setState(state: number): void;
+}
+
 /**
  * mulberry32: hızlı, kriptografik olmayan 32-bit PRNG. Her 32-bit tohum ayrı bir
  * dizidir, 0 dahil; varsayılan yalnız tohum verilmediğinde uygulanır. Sonlu
  * olmayan tohum `RangeError` fırlatır.
  */
 export function createRandom(seed: number = DEFAULT_SEED): Random {
-  if (!Number.isFinite(seed)) {
-    throw new RangeError(`createRandom: tohum sonlu bir sayı olmalı, gelen: ${String(seed)}`);
-  }
-  let state = seed | 0;
+  normalizeState(seed, 'tohum', 'createRandom');
+  return createStatefulRandom(seed);
+}
+
+/**
+ * `createRandom` ile bit düzeyinde aynı diziyi üretir; yalnızca durumun güvenli
+ * biçimde okunup geri yüklenmesini de açar.
+ */
+export function createStatefulRandom(seed: number = DEFAULT_SEED): StatefulRandom {
+  let state = normalizeState(seed, 'tohum', 'createStatefulRandom');
 
   const next = (): number => {
     state = (state + 0x6d2b79f5) | 0;
@@ -41,7 +54,18 @@ export function createRandom(seed: number = DEFAULT_SEED): Random {
   return {
     next,
     bipolar: () => next() * 2 - 1,
+    getState: () => state,
+    setState: (value: number) => {
+      state = normalizeState(value, 'durum', 'createStatefulRandom');
+    },
   };
+}
+
+function normalizeState(value: number, label: string, owner: string): number {
+  if (!Number.isFinite(value)) {
+    throw new RangeError(`${owner}: ${label} sonlu bir sayı olmalı, gelen: ${String(value)}`);
+  }
+  return value | 0;
 }
 
 /**
