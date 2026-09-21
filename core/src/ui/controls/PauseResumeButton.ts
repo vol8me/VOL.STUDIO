@@ -1,4 +1,4 @@
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 
 export interface PauseResumeButtonOptions {
   /** Duraklat durumundayken (oyun çalışırken) gösterilecek erişilebilirlik etiketi. Varsayılan 'Duraklat'. */

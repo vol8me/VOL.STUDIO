@@ -1,4 +1,4 @@
-import type coreTr from '../i18n/tr.json';
+import type coreTr from './tr.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {

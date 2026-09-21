@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import type Phaser from 'phaser';
 import { Vector2 } from '../../src/math/Vector2';
-import { InputManager } from '../../src/input/InputManager';
+import { InputManager } from '../../src/phaser/input/InputManager';
 import type { InputProvider } from '../../src/input/InputProvider';
 import type { InputState } from '../../src/input/InputState';
 import type { PCActionBinding } from '../../src/input/PCInputState';

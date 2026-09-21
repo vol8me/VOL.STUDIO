@@ -1,6 +1,6 @@
 import { ResourceCounter, type ResourceCounterOptions } from './ResourceCounter';
 import type { CounterSetValueOptions } from './Counter';
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 
 export interface ResourceBarEntry extends ResourceCounterOptions {
   /** Bu kaynağı setResource()/getResource() ile bulmak için anahtar (örn. 'gold'). */

@@ -16,7 +16,7 @@ export interface JoystickOptions {
 }
 
 /**
- * DOM tabanlı sanal analog çubuk. `core/src/input/TouchController.ts`
+ * DOM tabanlı sanal analog çubuk. `core/src/phaser/input/TouchController.ts`
  * (Phaser canvas'ta çizilen gerçek oyun input'u) ile karıştırılmamalı — bu
  * component menü önizlemesi veya DOM tabanlı bir HUD için kullanılır.
  * `onMove` vektörü -1..1 aralığında normalize edilmiş x/y döndürür.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import Phaser from 'phaser';
-import { DEFAULT_MOVE_KEYS } from '../../src/input/PCController';
+import { DEFAULT_MOVE_KEYS } from '../../src/phaser/input/PCController';
 
 /**
  * `DEFAULT_MOVE_KEYS` bilinçli olarak HAM SAYI taşır, `Phaser.Input.Keyboard.KeyCodes`

@@ -1,5 +1,5 @@
 import { Popup } from '../overlays/Popup';
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { playHapticFeedback, type HapticFeedback } from './hapticFeedback';
 

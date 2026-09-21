@@ -1,79 +1,71 @@
-# Katman mı, motor mu?
+# CORE ↔ Phaser sınırı
 
-CORE bir **katmandır**. Sınır tektir ve kolay ölçülür: **renderer'ı kim yazıyor?**
-Phaser yazıyor. CORE onu boot eder, sahnesini, sahne grafiğini, kamerasını,
-girdi yüzeyini ve çizim nesnelerini kullanır.
+CORE generic mekanizma ve sunum yetenekleri sağlar; renderer ve sahne grafiği
+Phaser'a aittir. Bu bağımlılık kaynak ağacında tek bir fiziksel sınıra
+toplanır:
 
-Ama bu sınır tek bir kararla değil, **birikerek** kayar. Her yeni primitif masum
-görünür; Phaser'ın zaten verdiği bir şeyi yeniden yazdığında bunu söyleyen kimse
-olmaz. Bu belge o kaymayı görünür tutar.
+```text
+core/src/phaser/**
+```
 
-## Bugünkü durum (ölçüldü)
+Doğrudan `phaser` importu bu dizinin dışında yasaktır. Public export adları
+değişmez; dizin paket içi sahipliği gösterir.
 
-| Ölçü                                         | Değer                      |
-| -------------------------------------------- | -------------------------- |
-| CORE kaynak dosyası                          | 191                        |
-| Phaser'ı **import eden** dosya               | 5 (`Game.ts` + 4 modül)    |
-| CORE'un en büyük modülü                      | `ui/` — 17.824 satır (%61) |
-| `ui/`nin Phaser importu                      | **0**                      |
-| Phaser alt sistemini **yeniden yazan** modül | 6                          |
+## Bridge envanteri
 
-Phaser'ın **hiç vermediği** alan CORE'un ezici çoğunluğudur: DOM UI toolkit
-(Kanban, SplitPane, DataTable, CommandPalette, Wizard…), yol bulma, uzamsal
-indeks, ters kinematik ve yürüyüş döngüsü, dokunsal geri bildirim, teşhis.
-Phaser bunların hiçbirini sunmaz — burada onunla yarışılmıyor, boşluğu
-dolduruluyor.
+Exact envanter `scripts/quality/phaserBoundary.mjs` içindeki
+`PHASER_BRIDGES` kaydıdır. Her bridge gerçekten Phaser import etmek, her
+doğrudan Phaser importu da bu kayıtta bulunmak zorundadır. Böylece hem gizli
+bağımlılık hem bayat kayıt kapıyı düşürür.
 
-## Dört duruş
+Bridge rolleri:
 
-Her CORE modülü Phaser karşısındaki duruşunu **beyan eder**
-(`core/tests/governance/phaserBoundary.test.ts`):
+- `createVolGame.ts`: oyun boot ve renderer seçimi
+- `ViewportManager.ts`: Phaser Scale/kamera adaptasyonu
+- `entities/`: Phaser GameObject tabanlı entity adaptörleri
+- `input/`: Phaser keyboard/pointer sağlayıcıları
+- `rig/assembleRig.ts`: saf rig tanımını Phaser container/image ağacına kurma
 
-| Duruş        | Anlamı                                                                                                                                               |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gap`        | Phaser bunu HİÇ vermez. Doldurmak katmanın işidir.                                                                                                   |
-| `delegates`  | Phaser verir, CORE import eder ve KULLANIR.                                                                                                          |
-| `structural` | Phaser nesnesiyle beslenir ama ona BAĞLANMAZ; ihtiyacı olan yüzeyi kendi yapısal arayüzüyle bildirir, böylece render motoru olmadan test edilebilir. |
-| `replaces`   | Phaser verir, CORE KENDİ uygulamasını taşır. **Motor sınırı burada.**                                                                                |
+Rig layout hesabı `core/src/rig/partLayout.ts` içinde saf TypeScript'tir.
+Derece-radyan dönüşümü ve ebeveyn-yerel koordinat hesabı Phaser.Math
+kullanmaz. Yalnızca scene, texture ve GameObject montajı bridge tarafındadır.
 
-## Yerine geçilen altı alt sistem
+## AST tabanlı kapı
 
-Bunlar bilinçli seçimlerdir ve her birinin gerekçesi kapıda yazılıdır:
+Workspace contract, repo tarafından zaten kullanılan TypeScript parser'ıyla
+şu biçimlerin tamamını tarar:
 
-| Modül    | Phaser'daki karşılığı        | Neden yetmedi                                                          |
-| -------- | ---------------------------- | ---------------------------------------------------------------------- |
-| `audio`  | `Phaser.Sound`               | Adaptive stem mix, sidechain ducking, tek `AudioContext` yaşam döngüsü |
-| `time`   | `Phaser.Time.Clock`          | Sahne döngüsünden bağımsız, Phaser'sız test edilebilir sabit adım      |
-| `math`   | `Phaser.Math`                | Headless test + sonlu sayı sözleşmesi                                  |
-| `events` | `Phaser.Events.EventEmitter` | Tipli olay adı/yükü, abone hata izolasyonu                             |
-| `pool`   | `GameObjects.Group`          | Phaser nesnesi OLMAYAN değerler için jenerik havuz                     |
-| `random` | `Phaser.Math.RND`            | Determinizm testleri için tohumlanabilir, Phaser'sız üreteç            |
+- normal ve type-only `import`
+- `export ... from`
+- sabit `import()`
+- `require()`
 
-## Kapı ne yapar
+Tarama tracked dosyaların yanında henüz `git add` yapılmamış, ignore
+edilmeyen yeni TypeScript dosyalarını da görür. Root kaynak dosyası, yasak
+klasör importu, ledger dışı yeni bridge, bayat bridge ve geçerli bridge
+fixture testleriyle ayrı ayrı sınanır.
 
-Beş koruma, hepsi mutasyonla sınanmış:
+## Bilinçli replacement yetenekleri
 
-1. Yeni bir CORE modülü **beyansız** eklenemez.
-2. Silinen modülün beyanı da silinir (ölü kayıt birikmez).
-3. `delegates` diyen modül Phaser'ı **gerçekten** import etmelidir — son
-   importunu kaybeden modül sessizce `replaces` olmuştur.
-4. `structural` diyen modüle Phaser importu **giremez** — girerse yapısal
-   bağımsızlık, yani tek değeri kaybolur.
-5. **`replaces` sayısı sabittir.** Büyütmek yasak değildir; sessiz olamaz.
+Bazı CORE mekanizmaları Phaser'da benzer bir yüzey olmasına rağmen kendi
+uygulamasını taşır. Bunlar bridge değildir ve Phaser import etmez. Exact
+gerekçe kaydı `PHASER_REPLACEMENTS` içindedir:
 
-Beşincisi asıl alarmdır. Sayı büyüdüğünde sorulacak soru şudur: _Phaser'ın
-gerçekten veremediği bir şey mi var, yoksa motor mu yazıyoruz?_
+| Alan   | Gerekçe                                                     |
+| ------ | ----------------------------------------------------------- |
+| audio  | Adaptive stem, sidechain ve tek AudioContext yaşam döngüsü  |
+| events | Tipli olay/yük sözleşmesi ve abone hata izolasyonu          |
+| math   | Phaser kurulmadan headless çalışma ve sonlu sayı sözleşmesi |
+| pool   | GameObject olmayan değerler için generic havuz              |
+| random | Tohumlanabilir, state aktarılabilir deterministik akış      |
+| time   | Sahne döngüsünden bağımsız sabit adım ve catch-up sınırı    |
+
+Yeni replacement eklemek public bir mimari karardır; gizli bir Phaser importu
+eklemek değildir.
 
 ## Renderer
 
-`type` **açıkça** seçilir (`createVolGame({ renderer })`), varsayılan `'auto'`.
-`auto` bilinçlidir: WebGL kurulamayan bir cihazda hiç açılmamaktansa yavaş
-açılmak yeğdir. Bedeli geri düşüşün sessiz olmasıdır — bu yüzden yutulmaz:
-
-- teşhis anlık görüntüsünde `renderer.kind` ve `renderer.fellBack`
-- overlay'de `gpu: canvas ⚠ GERİ DÜŞTÜ`
-- konsolda uyarı, `pnpm benchmark:device` çıktısında `renderer` satırı
-
-Geri düşüş ölçülemezse belirti "oyun bu cihazda yavaş" olur ve sebebi hiç
-görünmez. `renderer: 'webgl'` verildiğinde geri düşüş yoktur: oyun açılmaz ve
-hata açıkça çıkar — sürüm ve ölçüm koşuları içindir.
+`createVolGame({ renderer })` renderer isteğini açıkça Phaser config'ine
+yazar. Varsayılan `auto`, WebGL kurulamadığında Canvas'a düşebilir; bu durum
+diagnostics snapshot, overlay, konsol ve device benchmark tarafında
+`fellBack` olarak görünür. `webgl` isteği fallback kabul etmez.

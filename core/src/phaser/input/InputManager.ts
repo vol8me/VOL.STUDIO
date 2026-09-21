@@ -1,13 +1,13 @@
 import type Phaser from 'phaser';
-import { DisposableScope } from '../lifecycle/DisposableScope';
-import { Vector2 } from '../math/Vector2';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { Vector2 } from '../../math/Vector2';
 import { PCController, type MoveKeyBindings } from './PCController';
-import type { PCActionBinding } from './PCInputState';
-import type { InputProvider } from './InputProvider';
-import { createIdleActions, type InputState } from './InputState';
-import { createIdleSnapshot, type InputSnapshot } from './InputSnapshot';
+import type { PCActionBinding } from '../../input/PCInputState';
+import type { InputProvider } from '../../input/InputProvider';
+import { createIdleActions, type InputState } from '../../input/InputState';
+import { createIdleSnapshot, type InputSnapshot } from '../../input/InputSnapshot';
 import { TouchController, type TouchControllerOptions } from './TouchController';
-import type { VirtualActionSource } from './VirtualActionSource';
+import type { VirtualActionSource } from '../../input/VirtualActionSource';
 
 export interface InputManagerOptions<TAction extends string> {
   /**

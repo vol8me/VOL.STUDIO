@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Phaser from 'phaser';
-import { TouchController, type TouchControllerOptions } from '../../src/input/TouchController';
+import {
+  TouchController,
+  type TouchControllerOptions,
+} from '../../src/phaser/input/TouchController';
 import { screenToCameraLayer } from '../../src/input/InputUtils';
 import { Vector2 } from '../../src/math/Vector2';
 import { UI_DEPTH } from '../../src/constants';

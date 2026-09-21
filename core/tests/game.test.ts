@@ -51,7 +51,7 @@ describe(
     });
 
     it('onBeforeSceneInit, Phaser.Game oluşturulmadan ÖNCE await edilir', async () => {
-      const { createVolGame } = await import('../src/Game');
+      const { createVolGame } = await import('../src/phaser/createVolGame');
       const order: string[] = [];
 
       await createVolGame({
@@ -72,7 +72,7 @@ describe(
     });
 
     it('onBeforeSceneInit tamamlanmadan Phaser.Game kurulmaz (sıra garantisi)', async () => {
-      const { createVolGame } = await import('../src/Game');
+      const { createVolGame } = await import('../src/phaser/createVolGame');
       const order: string[] = [];
 
       let resolveHook: () => void = () => {};
@@ -113,7 +113,7 @@ describe(
     });
 
     it('onBeforeSceneInit verilmezse Phaser.Game yine de kurulur (opsiyonel hook)', async () => {
-      const { createVolGame } = await import('../src/Game');
+      const { createVolGame } = await import('../src/phaser/createVolGame');
 
       await createVolGame({ width: 800, height: 600, scenes: [], fonts: [] });
 
@@ -121,7 +121,7 @@ describe(
     });
 
     it('oyunun açık renderer kalite ayarlarını Phaser configine taşır', async () => {
-      const { createVolGame } = await import('../src/Game');
+      const { createVolGame } = await import('../src/phaser/createVolGame');
       const render = {
         antialias: true,
         antialiasGL: true,
@@ -136,7 +136,7 @@ describe(
     });
 
     it('onBeforeSceneInit reddedilirse (throw) oyun başlatılmaz', async () => {
-      const { createVolGame } = await import('../src/Game');
+      const { createVolGame } = await import('../src/phaser/createVolGame');
 
       await expect(
         createVolGame({
@@ -154,7 +154,7 @@ describe(
     });
 
     it('geçersiz font ailesi verilirse Phaser.Game hiç kurulmadan hata fırlatılır', async () => {
-      const { createVolGame } = await import('../src/Game');
+      const { createVolGame } = await import('../src/phaser/createVolGame');
 
       await expect(
         createVolGame({

@@ -1,4 +1,4 @@
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 
 export interface RoundCounterOptions {
   /** Toplam dalga sayısı biliniyorsa (örn. "3 / 10"); bilinmiyorsa (sonsuz mod) undefined bırakılır. */

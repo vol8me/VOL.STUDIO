@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FpsMeter } from '../../src/ui/hud/FpsMeter';
-import { i18next } from '../../src/systems/I18n';
+import { i18next } from '../../src/i18n/I18n';
 
 /** rAF'ı elle sürer: gerçek zamana bağlı bir test kararsız olur. */
 function driveFrames(count: number, stepMs: number, startMs = 0): void {

@@ -20,6 +20,13 @@ import { validateModuleCycles } from './quality/moduleCycles.mjs';
 import { validateDeviceApps } from './quality/deviceApps.mjs';
 import { validateCargoLockParity } from './quality/cargoLockParity.mjs';
 import { validateProductIcons } from './quality/productIcons.mjs';
+import { validatePhaserBoundary } from './quality/phaserBoundary.mjs';
+import { validateCoreTypeSurface } from './quality/publicTypeSurface.mjs';
+import {
+  activeWorkspaceNames,
+  loadWorkspaceLifecycle,
+  validateWorkspaceLifecycle,
+} from './quality/workspaceLifecycle.mjs';
 
 /** Her paketin sahip olması gereken script'ler ve hangi kapının kullandığı. */
 const REQUIRED_SCRIPTS = {
@@ -32,6 +39,7 @@ const root = process.cwd();
 const problems = [];
 
 const quality = loadQualityConfig(join(root, 'quality.json'));
+const lifecycle = loadWorkspaceLifecycle(join(root, 'workspace-lifecycle.json'));
 const THRESHOLD_FLOOR = quality.floor;
 /** Kapsam eşiği aranmayan paketler — gerekçesi `quality.json`da yazılı olmalı. */
 const THRESHOLD_EXEMPT = new Map(Object.entries(quality.exempt ?? {}));
@@ -57,6 +65,8 @@ function readThresholds(name) {
 }
 
 const packages = listWorkspacePackages();
+const activeNames = new Set(activeWorkspaceNames(lifecycle));
+const activePackages = packages.filter((pkg) => activeNames.has(pkg.name));
 
 if (packages.length === 0) {
   problems.push('Hiç workspace paketi bulunamadı — pnpm-workspace.yaml bozuk olabilir.');
@@ -65,9 +75,10 @@ if (packages.length === 0) {
 problems.push(
   ...validateQualityWorkspaceParity(
     quality,
-    packages.map((pkg) => pkg.name),
+    activePackages.map((pkg) => pkg.name),
   ),
 );
+problems.push(...validateWorkspaceLifecycle(root, lifecycle, packages));
 
 // Katman sınırları: oyun/devtool/core bağımlılık yönü.
 problems.push(...validateLayerBoundaries(root));
@@ -81,8 +92,10 @@ problems.push(...validateCommentDensity(root));
 problems.push(...validateDeviceApps(root));
 problems.push(...validateCargoLockParity(root));
 problems.push(...validateProductIcons(root));
+problems.push(...validatePhaserBoundary(root));
+problems.push(...validateCoreTypeSurface(root));
 
-for (const pkg of packages) {
+for (const pkg of activePackages) {
   const manifest = readJson(join(root, pkg.dir, 'package.json'));
   const scripts = manifest.scripts ?? {};
 
@@ -141,6 +154,6 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `[workspace-contract] ${packages.length} paket, kapı kapsamı tam, ` +
+  `[workspace-contract] ${activePackages.length} aktif / ${packages.length} toplam paket, kapı kapsamı tam, ` +
     `katman sınırları temiz, dosya boyutları ve kaynak girdileri geçerli.`,
 );

@@ -1,7 +1,7 @@
 import { Button } from '../primitives/Button';
 import { Modal } from './Modal';
 import { Text } from '../primitives/Text';
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 
 export interface ConfirmOptions {
   title: string;

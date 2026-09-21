@@ -4,7 +4,7 @@ import {
   DEFAULT_MOVE_KEYS,
   PCController,
   type PCControllerOptions,
-} from '../../src/input/PCController';
+} from '../../src/phaser/input/PCController';
 import { Vector2 } from '../../src/math/Vector2';
 
 type Action = 'fire' | 'dash' | 'shield';

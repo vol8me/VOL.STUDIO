@@ -1,6 +1,6 @@
 import { animateValue } from '../animation';
 import { UI_RATIO, UI_TIMING } from '../../constants';
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 
 /**
  * Görsel varyant — `vol-bar--<variant>` CSS sınıfına çevrilir.

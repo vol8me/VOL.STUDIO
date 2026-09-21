@@ -1,5 +1,5 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 
 export interface ActionBarSlot {
   id: string;

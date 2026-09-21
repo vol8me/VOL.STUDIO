@@ -1,22 +1,22 @@
 import Phaser from 'phaser';
-import type { Vector2 } from '../math/Vector2';
-import { VOL_COLORS } from '../ui/colors';
+import type { Vector2 } from '../../math/Vector2';
+import { VOL_COLORS } from '../../ui/colors';
 import {
   isPointInNormalizedRegion,
   resolveNormalizedInputRegion,
   screenToCameraLayer,
   type NormalizedInputRegion,
-} from './InputUtils';
-import { TouchStickState, type TouchStickOptions } from './TouchStickState';
-import type { InputProvider } from './InputProvider';
-import type { InputState } from './InputState';
+} from '../../input/InputUtils';
+import { TouchStickState, type TouchStickOptions } from '../../input/TouchStickState';
+import type { InputProvider } from '../../input/InputProvider';
+import type { InputState } from '../../input/InputState';
 import {
   createSingleProviderSnapshot,
   type InputSnapshot,
   type TouchInputSnapshot,
   type TouchStickSnapshot,
-} from './InputSnapshot';
-import { UI_DEPTH, UI_RATIO, UI_ALPHA, UI_SIZE } from '../constants';
+} from '../../input/InputSnapshot';
+import { UI_DEPTH, UI_RATIO, UI_ALPHA, UI_SIZE } from '../../constants';
 
 // Graphics.fillStyle sayısal 0xRRGGBB bekler, VOL_COLORS '#rrggbb' string'leri taşır.
 function hexColorToNumber(hex: string): number {

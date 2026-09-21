@@ -1,5 +1,5 @@
 import { FrameRateSampler } from '../../time/FrameRateSampler';
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 
 export type FpsMeterPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { LocalStorageAdapter, SaveManager, StorageError } from '../../src/systems/SaveManager';
+import { LocalStorageAdapter, SaveManager, StorageError } from '../../src/persistence/SaveManager';
 
 describe('LocalStorageAdapter', () => {
   beforeEach(() => {

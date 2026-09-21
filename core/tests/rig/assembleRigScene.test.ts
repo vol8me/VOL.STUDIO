@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { assembleRig, preloadRigTextures } from '../../src/rig/assembleRig';
+import { assembleRig, preloadRigTextures } from '../../src/phaser/rig/assembleRig';
 import type { RigDefinition } from '../../src/rig/types';
 
 /**

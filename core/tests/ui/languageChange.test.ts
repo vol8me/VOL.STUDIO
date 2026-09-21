@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { i18next } from '../../src/systems/I18n';
+import { i18next } from '../../src/i18n/I18n';
 import { NumberStepper } from '../../src/ui/primitives/NumberStepper';
 import { Select } from '../../src/ui/primitives/Select';
 import { Bar } from '../../src/ui/feedback/Bar';

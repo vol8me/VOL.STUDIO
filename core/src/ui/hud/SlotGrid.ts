@@ -1,6 +1,6 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_THRESHOLD } from '../../constants';
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 
 export interface SlotSpan {
   /** Kaç sütun kaplar. Varsayılan 1. */

@@ -1,5 +1,5 @@
 import { describePCBinding } from '../../input/bindingLabels';
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 import type { PCActionBinding } from '../../input/PCInputState';
 
 export interface KeyBindingRow {

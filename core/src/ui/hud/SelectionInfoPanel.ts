@@ -1,6 +1,6 @@
 import { Bar, type BarOptions } from '../feedback/Bar';
 import { IconButton, type IconButtonOptions } from '../primitives/IconButton';
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 
 export interface SelectionInfoStat {
   label: string;

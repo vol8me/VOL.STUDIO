@@ -164,17 +164,8 @@ export {
 } from './stats/StatBlock';
 
 export type { BaseEntity } from './entities/BaseEntity';
-export { BaseSprite } from './entities/BaseSprite';
-export { MovableController, type MovableGameObject } from './entities/MovableController';
-/**
- * @deprecated `MovableController` kullan — bu ad CORE'da olmayan bir oyuncu
- * rolü ima eder.
- *
- * Repoda TÜKETİCİSİ YOK ve CORE yayınlanmıyor (`private`, 0.1.0), yani
- * "bir sonraki büyük sürüm" diye beklenecek bir eşik de yok: silmenin tek
- * maliyeti `EXPECTED_EXPORT_COUNT`u düşürmektir. Kaldırma kararı repo
- * sahibinindir; o karar verilene kadar burada duruyor.
- */
+export { BaseSprite } from './phaser/entities/BaseSprite';
+export { MovableController, type MovableGameObject } from './phaser/entities/MovableController';
 
 // Uzuv SÖZLÜĞÜ bilinçli olarak burada yok. `LegGait` yalnız gövde-yerel ev
 // konumu ve adım grubu alır; hangi rig'in kaç bacağı olduğunu tüketici bilir.
@@ -260,17 +251,17 @@ export { MusicPlaylist } from './audio/music/playlist';
 export type { MusicPlaylistOptions } from './audio/music/playlist';
 export { SidechainDucker } from './audio/sidechain';
 export type { DuckingProfile } from './audio/sidechain';
-export { SaveManager, LocalStorageAdapter } from './systems/SaveManager';
-export type { IStorageAdapter } from './systems/SaveManager';
-export { I18n, i18n, i18next, type I18nOptions } from './systems/I18n';
-import './systems/i18next-augment';
+export { SaveManager, LocalStorageAdapter } from './persistence/SaveManager';
+export type { IStorageAdapter } from './persistence/SaveManager';
+export { I18n, i18n, i18next, type I18nOptions } from './i18n/I18n';
+import './i18n/i18next-augment';
 
 export {
   FontManager,
   type FontFaceSpec,
   type LoadedFont,
   type FontManagerOptions,
-} from './systems/FontManager';
+} from './fonts/FontManager';
 export {
   GraphicsQuality,
   type GraphicsQualityListener,
@@ -283,15 +274,15 @@ export {
   type ViewportConfig,
   type ViewportResult,
   type ScaleStrategy,
-} from './systems/ViewportManager';
-export { VOL_FONTS, type VolFontFamily } from './systems/DefaultFonts';
+} from './phaser/ViewportManager';
+export { VOL_FONTS, type VolFontFamily } from './fonts/DefaultFonts';
 export {
   applyVolViewport,
   createVolGame,
   VIEWPORT_REGISTRY_KEY,
   type VolGameConfig,
   type RendererRequest,
-} from './Game';
+} from './phaser/createVolGame';
 
 export * from './ui/primitives';
 export * from './ui/layout';

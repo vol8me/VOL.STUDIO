@@ -1,14 +1,10 @@
 import Phaser from 'phaser';
-import { FontManager, type FontFaceSpec } from './systems/FontManager';
-import {
-  ViewportManager,
-  type ScaleStrategy,
-  type ViewportScaleSetting,
-} from './systems/ViewportManager';
-import { VOL_FONTS, type VolFontFamily } from './systems/DefaultFonts';
-import { TECH } from './constants';
-import type { Diagnostics } from './debug/Diagnostics';
-import type { RendererInfo, RendererKind } from './debug/types';
+import { FontManager, type FontFaceSpec } from '../fonts/FontManager';
+import { ViewportManager, type ScaleStrategy, type ViewportScaleSetting } from './ViewportManager';
+import { VOL_FONTS, type VolFontFamily } from '../fonts/DefaultFonts';
+import { TECH } from '../constants';
+import type { Diagnostics } from '../debug/Diagnostics';
+import type { RendererInfo, RendererKind } from '../debug/types';
 
 export interface VolGameConfig {
   /** Yalnızca strategy: 'resize' iken opsiyoneldir — bkz. ViewportConfig.width. */

@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
-import type { BaseEntity } from './BaseEntity';
-import { Vector2 } from '../math/Vector2';
-import { TECH } from '../constants';
+import type { BaseEntity } from '../../entities/BaseEntity';
+import { Vector2 } from '../../math/Vector2';
+import { TECH } from '../../constants';
 
 /** `Sprite`'a kilitlenmez; texture'suz placeholder geometri de kullanılabilsin. */
 export type MovableGameObject = Phaser.GameObjects.GameObject &

@@ -1,7 +1,7 @@
 import i18next from 'i18next';
-import coreTr from '../i18n/tr.json';
-import coreEn from '../i18n/en.json';
-import type { SaveManager } from './SaveManager';
+import coreTr from './tr.json';
+import coreEn from './en.json';
+import type { SaveManager } from '../persistence/SaveManager';
 
 export { i18next };
 

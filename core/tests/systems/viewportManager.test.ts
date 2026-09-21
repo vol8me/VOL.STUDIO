@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { ViewportManager } from '../../src/systems/ViewportManager';
+import { ViewportManager } from '../../src/phaser/ViewportManager';
 
 /**
  * getConfig() ve attachResize() aynı DPR'yi görmek zorunda.

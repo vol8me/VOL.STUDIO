@@ -20,10 +20,5 @@ export type { RigMotionSignals } from './types';
  * doğrulayıcı CLI, render yığınını yüklemeden aynı sözleşmeyi okuyabilmelidir.
  */
 export * from './metadata';
-export {
-  computePartLayout,
-  preloadRigTextures,
-  assembleRig,
-  type PartLayout,
-  type AssembledRig,
-} from './assembleRig';
+export { computePartLayout, type PartLayout } from './partLayout';
+export { preloadRigTextures, assembleRig, type AssembledRig } from '../phaser/rig/assembleRig';

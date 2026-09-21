@@ -1,4 +1,4 @@
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 import { Sheet } from '../overlays/Sheet';
 
 /** İstatistik satırının sunum verisi — oyun kuralları CORE'a girmez. */

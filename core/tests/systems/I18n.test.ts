@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { i18n, i18next, I18n } from '../../src/systems/I18n';
-import type { SaveManager } from '../../src/systems/SaveManager';
+import { i18n, i18next, I18n } from '../../src/i18n/I18n';
+import type { SaveManager } from '../../src/persistence/SaveManager';
 
 function makeSaveManager(stored: string | undefined = undefined): SaveManager {
   const store = new Map<string, unknown>();

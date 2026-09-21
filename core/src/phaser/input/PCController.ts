@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import { Vector2 } from '../math/Vector2';
+import { Vector2 } from '../../math/Vector2';
 import {
   computePCInputState,
   isPCInputActive,
@@ -7,14 +7,14 @@ import {
   type PCActionBinding,
   type PointerLikeState,
   type MoveDownState,
-} from './PCInputState';
-import type { InputProvider } from './InputProvider';
-import type { InputState } from './InputState';
+} from '../../input/PCInputState';
+import type { InputProvider } from '../../input/InputProvider';
+import type { InputState } from '../../input/InputState';
 import {
   createSingleProviderSnapshot,
   type InputSnapshot,
   type PcInputSnapshot,
-} from './InputSnapshot';
+} from '../../input/InputSnapshot';
 
 interface MoveKeys {
   up: Phaser.Input.Keyboard.Key;

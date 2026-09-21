@@ -8,10 +8,14 @@ export type {
 } from './PCInputState';
 export { resolvePCActions, computePCInputState, isPCInputActive } from './PCInputState';
 export type { TouchStickOptions } from './TouchStickState';
-export type { TouchControllerOptions } from './TouchController';
+export type { TouchControllerOptions } from '../phaser/input/TouchController';
 export type { NormalizedInputRegion } from './InputUtils';
-export type { InputManagerOptions } from './InputManager';
-export { DEFAULT_MOVE_KEYS, type MoveKeyBindings, type PCControllerOptions } from './PCController';
+export type { InputManagerOptions } from '../phaser/input/InputManager';
+export {
+  DEFAULT_MOVE_KEYS,
+  type MoveKeyBindings,
+  type PCControllerOptions,
+} from '../phaser/input/PCController';
 export {
   NO_ACTIVE_PROVIDER,
   createSingleProviderSnapshot,
@@ -22,8 +26,8 @@ export {
   type TouchInputSnapshot,
   type TouchStickSnapshot,
 } from './InputSnapshot';
-export { InputManager } from './InputManager';
+export { InputManager } from '../phaser/input/InputManager';
 export { VirtualActionSource } from './VirtualActionSource';
 export * as InputUtils from './InputUtils';
-export { PCController } from './PCController';
-export { TouchController } from './TouchController';
+export { PCController } from '../phaser/input/PCController';
+export { TouchController } from '../phaser/input/TouchController';

@@ -1,9 +1,9 @@
-# CORE public API yüzeyi — sayı günlüğü
+# CORE public API yüzeyi — tarihçe
 
-`core/tests/governance/publicSurface.test.ts` CORE'un dışa açık isim SAYISINI
-kilitler. Sayının neden kilitlendiği ve test düştüğünde ne yapılacağı o
-dosyanın kendi sözleşme yorumundadır; burası yalnızca sayının hangi
-yeteneklerle değiştiğinin kaydıdır.
+`core/tests/governance/publicSurface.test.ts` runtime isimlerini exact listeyle,
+`scripts/quality/publicTypeSurface.mjs` ise type-only export'lar dahil TypeScript yüzeyini
+kilitler. Bu belge yalnızca bilinçli genişlemelerin tarihçesidir; güncel sayıyı
+ayrı bir sözleşme gibi tekrar etmez.
 
 Her giriş bir kapı kırılmasının cevabıdır: yüzey büyüdüğünde "bu dışarıya
 açılmalı mı?" sorusuna verilen gerekçe.

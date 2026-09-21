@@ -1,5 +1,5 @@
 import { vi, beforeAll } from 'vitest';
-import { i18n, i18next } from '../src/systems/I18n';
+import { i18n, i18next } from '../src/i18n/I18n';
 
 // jsdom, HTMLCanvasElement.getContext'i implemente etmez ('canvas' npm
 // paketi kurulu değilse). Phaser modülü import edilir edilmez (sınıf
@@ -89,7 +89,7 @@ if (typeof globalThis.matchMedia === 'undefined') {
 }
 
 // jsdom, CSS Font Loading API'sini (FontFace, document.fonts) implemente
-// etmez. FontManager (bkz. src/systems/FontManager.ts) `new FontFace(...)`
+// etmez. FontManager (bkz. src/fonts/FontManager.ts) `new FontFace(...)`
 // ve `document.fonts.add/delete` kullanır — bu stub olmadan FontManager'a
 // dokunan HERHANGİ bir test import/çalışma aşamasında çöker.
 if (typeof globalThis.FontFace === 'undefined') {

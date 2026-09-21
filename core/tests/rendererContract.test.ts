@@ -62,7 +62,7 @@ describe('renderer sözleşmesi', { timeout: PHASER_TRANSFORM_TIMEOUT_MS }, () =
 
   it('renderer tipi Phaser config`ine AÇIKÇA yazılır', async () => {
     const Phaser = (await import('phaser')).default;
-    const { createVolGame } = await import('../src/Game');
+    const { createVolGame } = await import('../src/phaser/createVolGame');
 
     await createVolGame({ width: 320, height: 200, scenes: [] });
     expect(gameConfigs[0]?.type, 'varsayılan AUTO olmalı ve YAZILMIŞ olmalı').toBe(Phaser.AUTO);
@@ -73,7 +73,7 @@ describe('renderer sözleşmesi', { timeout: PHASER_TRANSFORM_TIMEOUT_MS }, () =
 
   it('AUTO iken canvas`a düşülürse teşhis bunu GERİ DÜŞÜŞ olarak işaretler', async () => {
     const Phaser = (await import('phaser')).default;
-    const { createVolGame } = await import('../src/Game');
+    const { createVolGame } = await import('../src/phaser/createVolGame');
     const { createDiagnostics } = await import('../src/debug/Diagnostics');
 
     fakeRendererType = Phaser.CANVAS;
@@ -101,7 +101,7 @@ describe('renderer sözleşmesi', { timeout: PHASER_TRANSFORM_TIMEOUT_MS }, () =
 
   it('WebGL kurulduğunda geri düşüş İDDİA EDİLMEZ', async () => {
     const Phaser = (await import('phaser')).default;
-    const { createVolGame } = await import('../src/Game');
+    const { createVolGame } = await import('../src/phaser/createVolGame');
     const { createDiagnostics } = await import('../src/debug/Diagnostics');
 
     fakeRendererType = Phaser.WEBGL;
@@ -124,7 +124,7 @@ describe('renderer sözleşmesi', { timeout: PHASER_TRANSFORM_TIMEOUT_MS }, () =
   });
 
   it('ölçülemediğinde `unknown` kalır — canvas ile KARIŞTIRILMAZ', async () => {
-    const { createVolGame } = await import('../src/Game');
+    const { createVolGame } = await import('../src/phaser/createVolGame');
     const { createDiagnostics } = await import('../src/debug/Diagnostics');
 
     fakeRendererType = undefined; // Phaser taklidi / boot öncesi
