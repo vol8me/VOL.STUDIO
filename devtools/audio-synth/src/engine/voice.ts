@@ -1,9 +1,10 @@
-import type { FmParams, HarmonicParams, Waveform } from '../types';
+import type { Waveform } from '../types';
+import type { ResolvedFm, ResolvedHarmonic } from '../guard/synthesis';
 import { Envelope } from '../synthesis/envelope';
 import { createNoiseSource, type NoiseSource } from '../synthesis/noise';
 
 export type FmState = {
-  params: FmParams;
+  params: ResolvedFm;
   envelope?: Envelope;
   lastModSample: number;
   /** Modülatörün birikmiş fazı (0-1). */
@@ -29,24 +30,24 @@ export type Voice =
     }
   | {
       type: 'additive';
-      harmonics: HarmonicParams[];
+      harmonics: readonly ResolvedHarmonic[];
       detuneCents: number;
       /** Harmonik başına birikmiş faz (0-1). */
       phases: Float64Array;
     };
 
-export function createFmState(fm: FmParams | undefined, duration: number): FmState | undefined {
-  if (!fm || (fm.index ?? 0) <= 0) return undefined;
+export function createFmState(fm: ResolvedFm | undefined, duration: number): FmState | undefined {
+  if (!fm || fm.index <= 0) return undefined;
   const envelope = fm.modulatorEnvelope ? new Envelope(fm.modulatorEnvelope, duration) : undefined;
   return { params: fm, envelope, lastModSample: 0, modPhase: 0 };
 }
 
 export function createVoices(
-  wave: Waveform | Waveform[] | undefined,
-  detune: number | undefined,
-  fm: FmParams | undefined,
+  waves: readonly Waveform[],
+  detune: number,
+  fm: ResolvedFm | undefined,
   duration: number,
-  harmonics: HarmonicParams[] | undefined,
+  harmonics: readonly ResolvedHarmonic[] | undefined,
   seed: number,
 ): Voice[] {
   const voices: Voice[] = [];
@@ -59,19 +60,16 @@ export function createVoices(
       detuneCents: 0,
       phases: new Float64Array(harmonics.length),
     });
-    const detuneCents = detune ?? 0;
-    if (detuneCents !== 0) {
+    if (detune !== 0) {
       voices.push({
         type: 'additive',
         harmonics,
-        detuneCents,
+        detuneCents: detune,
         phases: new Float64Array(harmonics.length),
       });
     }
     return voices;
   }
-
-  const waves = Array.isArray(wave) ? wave : [wave ?? 'sine'];
 
   // Her gürültü sesi kendi seed'ini alır; aynı preset içinde iki gürültü
   // katmanı birebir aynı diziyi üretip birbirini iki katına çıkarmasın.
@@ -96,8 +94,7 @@ export function createVoices(
   }
 
   // Detune varsa ton seslerinin kopyasını ekle
-  const detuneCents = detune ?? 0;
-  if (detuneCents !== 0) {
+  if (detune !== 0) {
     const originalLength = voices.length;
     for (let i = 0; i < originalLength; i++) {
       const v = voices[i];
@@ -105,7 +102,7 @@ export function createVoices(
         voices.push({
           type: 'tone',
           wave: v.wave,
-          detuneCents,
+          detuneCents: detune,
           phase: 0,
           fm: createFmState(fm, duration),
         });

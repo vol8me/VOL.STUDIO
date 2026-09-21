@@ -1,4 +1,6 @@
 import type { DelayParams } from '../types';
+import { resolveDelayParams } from '../guard/effects';
+import { checkSampleRate } from '../guard/read';
 
 /** Bir geri beslemeli hattın -60 dB'ye düşmesi için gereken süre (saniye). */
 export function feedbackTailSeconds(delaySeconds: number, feedback: number): number {
@@ -11,8 +13,12 @@ export function feedbackTailSeconds(delaySeconds: number, feedback: number): num
 
 /** DelayParams'tan kuyruk süresini kestirir. */
 export function estimateDelayTail(params: DelayParams): number {
-  return feedbackTailSeconds(Math.max(0.001, params.time), params.feedback ?? 0.3);
+  const resolved = resolveDelayParams(params, 'delay');
+  return feedbackTailSeconds(resolved.time, Math.min(DELAY_FEEDBACK_CEILING, resolved.feedback));
 }
+
+/** Kararlılık tavanı: 1 geri besleme sönmeyen bir hat demektir. */
+const DELAY_FEEDBACK_CEILING = 0.99;
 
 export class DelayLine {
   private readonly buffer: Float32Array;
@@ -22,12 +28,13 @@ export class DelayLine {
   private readonly mix: number;
 
   constructor(params: DelayParams, sampleRate: number) {
-    const maxTime = Math.max(0.001, params.time);
-    this.delaySamples = Math.round(sampleRate * maxTime);
+    const resolved = resolveDelayParams(params, 'delay');
+    const rate = checkSampleRate(sampleRate, 'sampleRate');
+    this.delaySamples = Math.max(1, Math.round(rate * resolved.time));
     // Dairesel buffer gecikme süresi + 1 örnek kadar olmalı.
-    this.buffer = new Float32Array(Math.max(1, this.delaySamples) + 1);
-    this.feedback = Math.max(0, Math.min(0.99, params.feedback ?? 0.3));
-    this.mix = Math.max(0, Math.min(1, params.mix ?? 0.3));
+    this.buffer = new Float32Array(this.delaySamples + 1);
+    this.feedback = Math.min(DELAY_FEEDBACK_CEILING, resolved.feedback);
+    this.mix = resolved.mix;
   }
 
   process(input: number): number {

@@ -26,7 +26,7 @@ export function softWind(frequency = 400, duration = 3): SynthParams {
     lowpass: { cutoff: 900, resonance: 0.05, poles: 2, type: 'lowpass' },
     highpass: { cutoff: 180, resonance: 0, poles: 2, type: 'highpass' },
     lfos: [{ target: 'filter', rate: 0.12, depth: 280, wave: 'sine' }],
-    reverb: { amount: 0.35, decay: 3.5, roomSize: 0.8, damp: 0.55, preDelay: 0.03 },
+    reverb: { amount: 0.35, decay: 0.75, roomSize: 0.8, damp: 0.55, preDelay: 0.03 },
   };
 }
 
@@ -59,7 +59,7 @@ export function warmPad(frequency = 220, duration = 2.5): SynthParams {
       { target: 'amplitude', rate: 0.05, depth: 0.06, wave: 'sine' },
     ],
     chorus: { depth: 1.8, rate: 0.15, mix: 0.35 },
-    reverb: { amount: 0.3, decay: 2.5, roomSize: 0.75, damp: 0.5, preDelay: 0.03 },
+    reverb: { amount: 0.3, decay: 0.73, roomSize: 0.75, damp: 0.5, preDelay: 0.03 },
   };
 }
 
@@ -85,7 +85,7 @@ export function machineHum(frequency = 110, duration = 2.5): SynthParams {
       { target: 'filter', rate: 0.04, depth: 60, wave: 'sine' },
       { target: 'amplitude', rate: 0.03, depth: 0.12, wave: 'sine' },
     ],
-    reverb: { amount: 0.22, decay: 2.2, roomSize: 0.7, damp: 0.6, preDelay: 0.02 },
+    reverb: { amount: 0.22, decay: 0.7, roomSize: 0.7, damp: 0.6, preDelay: 0.02 },
   };
 }
 
@@ -108,7 +108,7 @@ export function staticField(frequency = 2200, duration = 3): SynthParams {
     lowpass: { cutoff: frequency * 1.6, resonance: 0.04, poles: 2, type: 'lowpass' },
     highpass: { cutoff: frequency * 0.4, resonance: 0, poles: 2, type: 'highpass' },
     lfos: [{ target: 'amplitude', rate: 0.07, depth: 0.3, wave: 'sine' }],
-    reverb: { amount: 0.28, decay: 2.8, roomSize: 0.85, damp: 0.5, preDelay: 0.04 },
+    reverb: { amount: 0.28, decay: 0.77, roomSize: 0.85, damp: 0.5, preDelay: 0.04 },
   };
 }
 
@@ -133,7 +133,7 @@ export function malletPluck(frequency = 660, duration = 0.35): SynthParams {
       curve: 'exponential',
     },
     lowpass: { cutoff: 3200, resonance: 0.06, poles: 2, type: 'lowpass' },
-    reverb: { amount: 0.15, decay: 1.0, roomSize: 0.5, damp: 0.6, preDelay: 0.01 },
+    reverb: { amount: 0.15, decay: 0.61, roomSize: 0.5, damp: 0.6, preDelay: 0.01 },
   };
 }
 
@@ -168,6 +168,6 @@ export function distantChime(frequency = 880, duration = 2): SynthParams {
       },
     },
     lowpass: { cutoff: 5000, resonance: 0.05, poles: 2, type: 'lowpass' },
-    reverb: { amount: 0.45, decay: 3.5, roomSize: 0.9, damp: 0.4, preDelay: 0.03 },
+    reverb: { amount: 0.45, decay: 0.8, roomSize: 0.9, damp: 0.4, preDelay: 0.03 },
   };
 }

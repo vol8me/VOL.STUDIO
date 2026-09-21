@@ -1,4 +1,6 @@
 import type { ReverbParams } from '../types';
+import { resolveReverbParams } from '../guard/effects';
+import { checkSampleRate } from '../guard/read';
 
 class CombFilter {
   private readonly buffer: Float32Array;
@@ -28,6 +30,12 @@ class CombFilter {
   }
 }
 
+/**
+ * Schroeder allpass, kafes biçimi: w = x + g·w[n−N], y = −g·w + w[n−N] →
+ * H = (z^−N − g) / (1 − g·z^−N), |H| = 1. Freeverb'ün `y = w[n−N] − g·x`
+ * varyantı allpass DEĞİLDİR (g = 0.5'te kademe başına ~+2 dB enerji ve
+ * ±3.5 dB renklenme); difüzör sesi renklendirmemeli.
+ */
 class AllpassFilter {
   private readonly buffer: Float32Array;
   private index = 0;
@@ -39,11 +47,11 @@ class AllpassFilter {
   }
 
   process(input: number): number {
-    const bufOut = this.buffer[this.index];
-    this.buffer[this.index] = input + bufOut * this.feedback;
-    const output = bufOut - input * this.feedback;
+    const delayed = this.buffer[this.index];
+    const w = input + delayed * this.feedback;
+    this.buffer[this.index] = w;
     this.index = (this.index + 1) % this.buffer.length;
-    return output;
+    return delayed - w * this.feedback;
   }
 
   reset(): void {
@@ -52,6 +60,28 @@ class AllpassFilter {
   }
 }
 
+/**
+ * Alçak geçiren geri beslemeli comb'un beyaz gürültü enerji kazancı.
+ *
+ * Döngü `z^-N / (1 − g·H(z)·z^-N)`; N büyükken her ω'da `ωN` fazı hızla
+ * döner ve Poisson çekirdeğinin ortalaması `1 / (1 − g²|H(ω)|²)` kalır. H
+ * birim DC kazançlı tek kutuplu alçak geçirendir:
+ * |H|² = (1−d)² / (1 − 2d·cos ω + d²). İntegral orta nokta kuralıyla alınır.
+ */
+function combEnergyGain(g: number, damp: number): number {
+  const steps = 256;
+  let sum = 0;
+  for (let k = 0; k < steps; k++) {
+    const w = (Math.PI * (k + 0.5)) / steps;
+    const h2 = ((1 - damp) * (1 - damp)) / (1 - 2 * damp * Math.cos(w) + damp * damp);
+    sum += 1 / (1 - g * g * h2);
+  }
+  return sum / steps;
+}
+
+/** Wet yolun DC engelleyicisinin kesimi (Hz) — tarihî master kuralıyla aynı. */
+const DC_BLOCK_HZ = 20;
+
 /** Tek kanal reverb çekirdeği — comb + allpass zinciri. */
 class ReverbCore {
   private readonly combFilters: CombFilter[];
@@ -59,27 +89,39 @@ class ReverbCore {
   private readonly preDelayBuffer: Float32Array;
   private preDelayIndex = 0;
   private readonly preDelaySamples: number;
+  private readonly wetScale: number;
+  private readonly dcPole: number;
+  private dcIn = 0;
+  private dcOut = 0;
 
   constructor(
-    combTimes: readonly number[],
-    allpassTimes: readonly number[],
+    combSizes: readonly number[],
+    allpassSizes: readonly number[],
     sampleRate: number,
-    feedback: number,
+    rt60: number,
     damp: number,
-    preDelay: number,
+    preDelaySamples: number,
   ) {
-    this.combFilters = combTimes.map((time) => {
-      const size = Math.max(1, Math.floor(time * (sampleRate / 44100)));
-      return new CombFilter(size, feedback, damp);
-    });
-
-    this.allpassFilters = allpassTimes.map((time) => {
-      const size = Math.max(1, Math.floor(time * (sampleRate / 44100)));
-      return new AllpassFilter(size, 0.5);
-    });
-
-    this.preDelaySamples = Math.floor(preDelay * sampleRate);
-    this.preDelayBuffer = new Float32Array(Math.max(1, this.preDelaySamples));
+    // Schroeder: her tur `g` ile çarpılan bir hat T60 sonunda 10^-3'e iner,
+    // yani g = 10^(−3·D/T60). Kazanç her comb'un KENDİ gecikmesinden
+    // hesaplanır; ortak bir kazanç uzun comb'ları kısa olanlardan yavaş
+    // söndürürdü. Damping filtresinin DC kazancı 1 olduğu için T60 alçak
+    // frekanslarda tam tutar; `damp` yalnız tizlerin sönümünü hızlandırır.
+    const gains = combSizes.map((size) => Math.pow(10, (-3 * size) / (sampleRate * rt60)));
+    this.combFilters = combSizes.map((size, i) => new CombFilter(size, gains[i], damp));
+    this.allpassFilters = allpassSizes.map((size) => new AllpassFilter(size, 0.5));
+    // `amount` bir karışım oranıdır: wet yol, geniş bant enerji kazancı 1
+    // olacak biçimde ölçeklenir. Yoksa uzun RT60'ta biriken enerji wet'i
+    // ~10 dB yükseltir ve `decay` süreyle birlikte seviyeyi de değiştirirdi.
+    // Comb'lar ilintisizdir; ortalamanın enerjisi Σ E_i / n²'dir.
+    const n = combSizes.length;
+    const energy = gains.reduce((sum, g) => sum + combEnergyGain(g, damp), 0) / (n * n);
+    this.wetScale = 1 / Math.sqrt(energy);
+    // Comb'ların DC kazancı 1/(1−g)'dir ve RT60 uzadıkça ~10× olur; bir oda
+    // DC basınç taşımaz, o yüzden wet çıkış tek kutuplu DC engelleyiciden geçer.
+    this.dcPole = Math.exp((-2 * Math.PI * DC_BLOCK_HZ) / sampleRate);
+    this.preDelaySamples = preDelaySamples;
+    this.preDelayBuffer = new Float32Array(Math.max(1, preDelaySamples));
   }
 
   process(input: number): number {
@@ -103,7 +145,10 @@ class ReverbCore {
       reverb = allpass.process(reverb);
     }
 
-    return reverb;
+    const wet = reverb * this.wetScale;
+    this.dcOut = wet - this.dcIn + this.dcPole * this.dcOut;
+    this.dcIn = wet;
+    return this.dcOut;
   }
 
   reset(): void {
@@ -111,11 +156,24 @@ class ReverbCore {
     this.allpassFilters.forEach((a) => a.reset());
     this.preDelayBuffer.fill(0);
     this.preDelayIndex = 0;
+    this.dcIn = 0;
+    this.dcOut = 0;
   }
 }
 
+/** Freeverb gecikmeleri 44.1 kHz örnek cinsinden tanımlıdır; diğer oranlara ölçeklenir. */
+const REFERENCE_RATE = 44100;
+
+function scaledSizes(times: readonly number[], scale: number): number[] {
+  return times.map((time) => Math.max(1, Math.floor(time * scale)));
+}
+
 /** Stereo reverb — L ve R için bağımsız çekirdekler, farklı delay süreleri.
- *  Freeverb stereo yaklaşımı: R kanalı ~3% uzun delay → geniş stereo imaj. */
+ *  Freeverb stereo yaklaşımı: R kanalı ~3% uzun delay → geniş stereo imaj.
+ *
+ *  `decay` RT60'tır (saniye): alçak frekans kuyruğunun 60 dB düşme süresi.
+ *  `roomSize` yalnız comb gecikmelerini (yankı yoğunluğu, modal aralık)
+ *  ölçekler; sönüm süresini DEĞİŞTİRMEZ. */
 export class Reverb {
   private readonly left: ReverbCore;
   private readonly right: ReverbCore;
@@ -126,54 +184,47 @@ export class Reverb {
   private static readonly COMB_TIMES_R = [1601, 1665, 1537, 1463, 1313, 1393, 1223, 1151] as const;
   private static readonly ALLPASS_TIMES = [225, 556, 441, 341] as const;
 
-  /** Bu reverb'ün comb gecikmelerine uygulanan oda ölçeği. */
-  private readonly roomScale: number;
-  private readonly feedback: number;
+  /**
+   * Kuyruğun -60 dB'ye düşmesi için gereken süre (saniye): ön gecikme + en
+   * uzun comb'un ilk yankısı + allpass zincirinin taşıma gecikmesi + RT60.
+   * Bir tamponun kuyruğu kesmeden taşıması gereken ek süre budur.
+   */
+  readonly tailSeconds: number;
 
   constructor(params: ReverbParams, sampleRate: number) {
-    this.amount = Math.max(0, Math.min(1, params.amount ?? 0.3));
+    const resolved = resolveReverbParams(params, 'reverb');
+    const rate = checkSampleRate(sampleRate, 'sampleRate');
+    this.amount = resolved.amount;
 
-    const roomSize = Math.max(0, Math.min(1, params.roomSize ?? 0.5));
-    const decay = Math.max(0, Math.min(1, params.decay ?? 0.5 + roomSize * 0.5));
-    const damp = Math.max(0, Math.min(1, params.damp ?? 0.5));
-    const preDelay = Math.max(0, params.preDelay ?? 0);
-
-    // roomSize comb gecikmelerini ölçekler (fiziksel oda boyutu).
-    this.roomScale = 0.6 + roomSize * 0.8;
-    this.feedback = Math.min(0.82, decay * 0.55 + 0.15);
-
-    const scaleTimes = (times: readonly number[]): number[] => times.map((t) => t * this.roomScale);
+    const rateScale = rate / REFERENCE_RATE;
+    const roomScale = 0.6 + resolved.roomSize * 0.8;
+    const combL = scaledSizes(Reverb.COMB_TIMES_L, rateScale * roomScale);
+    const combR = scaledSizes(Reverb.COMB_TIMES_R, rateScale * roomScale);
+    const allpass = scaledSizes(Reverb.ALLPASS_TIMES, rateScale);
+    const preDelaySamples = Math.round(resolved.preDelay * rate);
 
     this.left = new ReverbCore(
-      scaleTimes(Reverb.COMB_TIMES_L),
-      Reverb.ALLPASS_TIMES,
-      sampleRate,
-      this.feedback,
-      damp,
-      preDelay,
+      combL,
+      allpass,
+      rate,
+      resolved.decay,
+      resolved.damp,
+      preDelaySamples,
     );
     this.right = new ReverbCore(
-      scaleTimes(Reverb.COMB_TIMES_R),
-      Reverb.ALLPASS_TIMES,
-      sampleRate,
-      this.feedback,
-      damp,
-      preDelay,
+      combR,
+      allpass,
+      rate,
+      resolved.decay,
+      resolved.damp,
+      preDelaySamples,
     );
 
-    // Kuyruk süresi: comb gecikmesinin -60 dB'ye düşmesi için gereken süre.
-    const avgCombSamples =
-      (Reverb.COMB_TIMES_L.reduce((a, b) => a + b, 0) / Reverb.COMB_TIMES_L.length) *
-      this.roomScale;
-    const combSeconds = avgCombSamples / sampleRate;
+    const longestComb = Math.max(...combL, ...combR);
+    const allpassChain = allpass.reduce((sum, size) => sum + size, 0);
     this.tailSeconds =
-      this.feedback > 0 && this.feedback < 1
-        ? (combSeconds * Math.log(0.001)) / Math.log(this.feedback)
-        : combSeconds;
+      preDelaySamples / rate + (longestComb + allpassChain) / rate + resolved.decay;
   }
-
-  /** Reverb kuyruğunun -60 dB'ye düşme süresi (saniye). */
-  readonly tailSeconds: number;
 
   /** Mono işlem — geriye dönük uyum. L+R ortalaması. */
   process(input: number): number {

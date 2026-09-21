@@ -1,4 +1,13 @@
 import type { FilterParams, FilterType } from '../types';
+import { checkChoice, checkNumber } from '../guard/read';
+import { resolveFilter, type ResolvedFilter } from '../guard/synthesis';
+
+const FILTER_TYPES: readonly FilterType[] = ['lowpass', 'highpass', 'bandpass', 'notch'];
+
+/** Düşük seviye filtre kurucularının ortak sınırı; per-sample `cutoff` kelepçesi ayrıdır. */
+function checkFilterRate(sampleRate: number, owner: string): number {
+  return checkNumber(sampleRate, `${owner}.sampleRate`, { above: 0 });
+}
 
 /**
  * 4. derece Butterworth'ün iki biquad kaskadı için Q değerleri.
@@ -34,10 +43,11 @@ export class BiquadFilter implements Filter {
   private na1 = 0;
   private na2 = 0;
 
+  /** `q` 0.1'in altındaysa 0.1'e yükseltilir: daha düşük Q sayısal olarak anlamsız ölçüde geniş bir eğridir. */
   constructor(sampleRate: number, type: FilterType, q = 0.707) {
-    this.sampleRate = sampleRate;
-    this.type = type;
-    this.q = Math.max(0.1, q);
+    this.sampleRate = checkFilterRate(sampleRate, 'BiquadFilter');
+    this.type = checkChoice(type, 'BiquadFilter.type', FILTER_TYPES);
+    this.q = Math.max(0.1, checkNumber(q, 'BiquadFilter.q', { above: 0 }));
   }
 
   /** Cutoff için katsayıları hesapla (cache'li). */
@@ -167,7 +177,7 @@ export class LowpassFilter implements Filter {
   private readonly sampleRate: number;
 
   constructor(sampleRate: number) {
-    this.sampleRate = sampleRate;
+    this.sampleRate = checkFilterRate(sampleRate, 'LowpassFilter');
   }
 
   process(sample: number, cutoff: number): number {
@@ -191,7 +201,7 @@ export class HighpassFilter implements Filter {
   private readonly sampleRate: number;
 
   constructor(sampleRate: number) {
-    this.sampleRate = sampleRate;
+    this.sampleRate = checkFilterRate(sampleRate, 'HighpassFilter');
   }
 
   process(sample: number, cutoff: number): number {
@@ -226,9 +236,14 @@ export function getCutoffAtTime(
 /**
  * FilterParams'tan uygun filtre örneği oluşturur.
  *
- * - `poles: 1` → tek kutuplu RC (6 dB/oct), rezonans yok
+ * - `poles: 1` → tek kutuplu RC (6 dB/oct), rezonans yok; yalnız
+ *   lowpass/highpass. Bant geçiren/çentik istenirse `AudioParamError`.
  * - `poles: 2` → biquad (12 dB/oct)
  * - `poles: 4` → iki biquad kaskadı (24 dB/oct)
+ *
+ * Tip `type ?? kind`tır — kutup sayısından bağımsız: `lowpass` yuvasına
+ * `type: 'highpass'` verilirse 1 kutupta da 2 kutupta da yüksek geçiren
+ * kurulur.
  *
  * `resonance` 0-1 NORMALİZE bir değerdir, doğrudan Q değil: 0 → Q 0.707
  * (Butterworth), 1 → Q 20 (güçlü rezonans). Q değeri doğrudan gerekiyorsa
@@ -240,19 +255,18 @@ export function createFilter(
   kind: 'lowpass' | 'highpass',
 ): Filter | undefined {
   if (!params) return undefined;
+  return buildFilter(resolveFilter(params, kind, kind), sampleRate);
+}
 
-  const resonance = Math.max(0, Math.min(1, params.resonance ?? 0));
-  const poles = params.poles ?? (resonance > 0 ? 2 : 1);
-  const filterType: FilterType = params.type ?? kind;
-  const q = resonance > 0 ? 0.707 + resonance * 19.293 : 0.707;
-
-  if (poles === 4) {
-    return new Cascade4Filter(sampleRate, filterType, q);
+/** Sınırdan geçmiş (çözümlenmiş) parametreden filtre kurar. */
+export function buildFilter(resolved: ResolvedFilter, sampleRate: number): Filter {
+  if (resolved.poles === 4) {
+    return new Cascade4Filter(sampleRate, resolved.type, resolved.q);
   }
-  if (poles === 2) {
-    return new BiquadFilter(sampleRate, filterType, q);
+  if (resolved.poles === 2) {
+    return new BiquadFilter(sampleRate, resolved.type, resolved.q);
   }
-
-  // 1-kutuplu eski filtre (geriye dönük uyum)
-  return kind === 'lowpass' ? new LowpassFilter(sampleRate) : new HighpassFilter(sampleRate);
+  return resolved.type === 'lowpass'
+    ? new LowpassFilter(sampleRate)
+    : new HighpassFilter(sampleRate);
 }

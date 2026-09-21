@@ -113,7 +113,7 @@ export function additivePad(frequency = 220, duration = 2.5): SynthParams {
       { target: 'filter', rate: 0.05, depth: 180, wave: 'sine' },
     ],
     chorus: { depth: 2.2, rate: 0.1, mix: 0.35 },
-    reverb: { amount: 0.3, decay: 2.8, roomSize: 0.75, damp: 0.5 },
+    reverb: { amount: 0.3, decay: 0.73, roomSize: 0.75, damp: 0.5 },
     gain: 0.45,
   };
 }
@@ -136,7 +136,7 @@ export function detunedPad(frequency = 220, duration = 2.5): SynthParams {
     lowpass: { cutoff: 1200, resonance: 0.08, poles: 2, type: 'lowpass' },
     lfos: [{ target: 'filter', rate: 0.07, depth: 120, wave: 'sine' }],
     chorus: { depth: 2.5, rate: 0.12, mix: 0.4 },
-    reverb: { amount: 0.35, decay: 2.6, roomSize: 0.8, damp: 0.45 },
+    reverb: { amount: 0.35, decay: 0.75, roomSize: 0.8, damp: 0.45 },
     gain: 0.4,
   };
 }
@@ -280,7 +280,7 @@ export function warmKeys(frequency = 440, duration = 0.6): SynthParams {
     },
     lowpass: { cutoff: 2200, resonance: 0.05, poles: 2, type: 'lowpass', slide: -600 },
     chorus: { depth: 1.5, rate: 0.08, mix: 0.25 },
-    reverb: { amount: 0.15, decay: 1.2, roomSize: 0.5, damp: 0.6 },
+    reverb: { amount: 0.15, decay: 0.61, roomSize: 0.5, damp: 0.6 },
     gain: 0.55,
   };
 }
@@ -350,7 +350,7 @@ export function crystalBell(frequency = 880, duration = 1.2): SynthParams {
       },
     },
     lowpass: { cutoff: 6000, resonance: 0.08, poles: 2, type: 'lowpass' },
-    reverb: { amount: 0.4, decay: 2.5, roomSize: 0.85, damp: 0.4 },
+    reverb: { amount: 0.4, decay: 0.77, roomSize: 0.85, damp: 0.4 },
     gain: 0.5,
   };
 }

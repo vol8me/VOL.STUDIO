@@ -13,6 +13,7 @@
 import { createRandom, DEFAULT_SEED } from '@volstudio/core/random';
 import { clamp } from '@volstudio/core/math/interpolation';
 import type { SynthesisResult } from '../../types';
+import { resolveModelBase, type ModelRules } from '../../guard/models';
 
 export interface BowedStringParams {
   /** Temel frekans (Hz). */
@@ -88,10 +89,34 @@ function amplitudeEnvelope(t: number, attack: number, release: number, duration:
   return 1;
 }
 
+const BOWED_RULES: ModelRules = {
+  keys: [
+    'frequency',
+    'duration',
+    'sampleRate',
+    'vibratoDepth',
+    'vibratoRate',
+    'partials',
+    'inharmonicity',
+    'unisonDetune',
+    'bowNoise',
+    'bowNoiseCutoff',
+    'attack',
+    'release',
+    'gain',
+    'seed',
+  ],
+  minFrequency: 20,
+  buffersPerFrame: 2,
+  unitsPerFrame: (o) => 6 * clamp(typeof o.partials === 'number' ? o.partials : 16, 1, 64) + 4,
+};
+
 export function bowedString(params: BowedStringParams): SynthesisResult {
-  const sampleRate = clamp(params.sampleRate ?? 44100, 1000, 384000);
-  const f0 = clamp(params.frequency, 20, sampleRate / 2);
-  const duration = clamp(params.duration, 0.05, 600);
+  const {
+    sampleRate,
+    frequency: f0,
+    duration,
+  } = resolveModelBase(params, 'bowedString', BOWED_RULES);
   const totalSamples = Math.floor(sampleRate * duration);
 
   const maxVibrato = f0 * 0.25;
@@ -152,9 +177,13 @@ export function bowedString(params: BowedStringParams): SynthesisResult {
       const fn = inharmonicFrequency(n, f0, inharmonicity);
       if (fn > partialCeiling) break;
 
+      // `gain` burada YOK: yalnız çıkış seviyesidir ve sondaki tepe
+      // normalizasyonunda uygulanır. Osilatörlere girerse yay gürültüsü
+      // (kazançsız) normalizasyondan sonra orantısız büyür; `gain` bir
+      // ton/gürültü karışım düğmesine dönüşürdü.
       oscillators.push({
         fn,
-        gain: sawtoothGain(n) * gain,
+        gain: sawtoothGain(n),
         detuneL,
         detuneR,
         phaseL: (phaseL0 + n * 0.31) % 1,

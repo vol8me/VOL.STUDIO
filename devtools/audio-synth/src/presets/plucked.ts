@@ -38,7 +38,7 @@ function pluckedBody(
       poles: 2,
       type: 'lowpass',
     },
-    reverb: { amount: 0.25, decay: 1.4, roomSize: 0.5, damp: 0.5 },
+    reverb: { amount: 0.25, decay: 0.61, roomSize: 0.5, damp: 0.5 },
     stereoWidth: 0.35,
     gain: 0.5,
     ...extras,
@@ -106,7 +106,7 @@ export function bassGuitar(frequency = 82.4, duration = 1.2): SynthParams {
     {
       gain: 0.55,
       stereoWidth: 0.2,
-      reverb: { amount: 0.16, decay: 1.1, roomSize: 0.45, damp: 0.6 },
+      reverb: { amount: 0.16, decay: 0.58, roomSize: 0.45, damp: 0.6 },
     },
   );
 }
@@ -143,7 +143,7 @@ export function harp(frequency = 523.25, duration = 2.5): SynthParams {
     {
       gain: 0.45,
       stereoWidth: 0.5,
-      reverb: { amount: 0.42, decay: 2.5, roomSize: 0.65, damp: 0.4 },
+      reverb: { amount: 0.42, decay: 0.68, roomSize: 0.65, damp: 0.4 },
     },
   );
 }

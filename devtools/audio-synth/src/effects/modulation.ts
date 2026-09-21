@@ -1,4 +1,6 @@
 import type { ChorusParams, FlangerParams, PhaserParams } from '../types';
+import { resolveChorusParams, resolveFlangerParams, resolvePhaserParams } from '../guard/effects';
+import { checkSampleRate } from '../guard/read';
 
 // -----------------------------------------------------------------------------
 // Chorus
@@ -13,16 +15,17 @@ export class Chorus {
   private readonly mix: number;
 
   constructor(params: ChorusParams, sampleRate: number) {
+    const resolved = resolveChorusParams(params, 'chorus');
+    const rate = checkSampleRate(sampleRate, 'sampleRate');
     const baseMs = 15;
-    const depthMs = Math.max(0, params.depth ?? 2);
-    this.baseSamples = Math.floor(sampleRate * (baseMs / 1000));
-    // Negatif gecikme ve sarmal sınırında karışıklığı önlemek için derinlik tabanı aşmasın
+    this.baseSamples = Math.floor(rate * (baseMs / 1000));
+    // Sarmal sınırında karışıklığı önlemek için derinlik tabanın bir örnek altında kalır.
     this.depthSamples = Math.min(
-      Math.floor(sampleRate * (depthMs / 1000)),
+      Math.floor(rate * (resolved.depth / 1000)),
       Math.max(1, this.baseSamples - 1),
     );
-    this.rate = params.rate ?? 0.5;
-    this.mix = Math.max(0, Math.min(1, params.mix ?? 0.3));
+    this.rate = resolved.rate;
+    this.mix = resolved.mix;
     const maxDelay = this.baseSamples + this.depthSamples + 2;
     this.buffer = new Float32Array(maxDelay);
   }
@@ -63,14 +66,14 @@ export class Flanger {
   private readonly mix: number;
 
   constructor(params: FlangerParams, sampleRate: number) {
-    const baseMs = Math.max(0.1, params.time ?? 1);
-    const depthMs = Math.max(0, params.depth ?? 0.5);
-    this.baseSamples = sampleRate * (baseMs / 1000);
-    // Negatif gecikme ve tam sarmal noktada karışıklığı önlemek için derinlik tabanı aşmasın
-    this.depthSamples = Math.min(sampleRate * (depthMs / 1000), Math.max(0, this.baseSamples - 1));
-    this.rate = params.rate ?? 0.5;
-    this.feedback = Math.max(-0.95, Math.min(0.95, params.feedback ?? 0));
-    this.mix = Math.max(0, Math.min(1, params.mix ?? 0.5));
+    const resolved = resolveFlangerParams(params, 'flanger');
+    const rate = checkSampleRate(sampleRate, 'sampleRate');
+    this.baseSamples = rate * (resolved.time / 1000);
+    // depth ≤ time sınırda garanti; bir örneklik pay tam sarmal noktayı önler.
+    this.depthSamples = Math.min(rate * (resolved.depth / 1000), Math.max(0, this.baseSamples - 1));
+    this.rate = resolved.rate;
+    this.feedback = resolved.feedback;
+    this.mix = resolved.mix;
     const maxDelay = this.baseSamples + this.depthSamples + 2;
     this.buffer = new Float32Array(Math.ceil(maxDelay));
   }
@@ -151,16 +154,18 @@ export class PhaserEffect {
   private lastOutput = 0;
 
   constructor(params: PhaserParams, sampleRate: number) {
-    const stages = Math.max(1, Math.floor(params.stages ?? 4));
-    this.filters = Array.from({ length: stages }, () => new FirstOrderAllpass(sampleRate));
+    const resolved = resolvePhaserParams(params, 'phaser');
+    const rate = checkSampleRate(sampleRate, 'sampleRate');
+    this.filters = Array.from({ length: resolved.stages }, () => new FirstOrderAllpass(rate));
     // Kademe başına yarım oktav yayılım (2^0, 2^0.5, 2^1, ...).
-    this.stageSpread = Array.from({ length: stages }, (_, i) => Math.pow(2, i * 0.5));
-    this.minFreq = Math.max(20, params.minFreq ?? 300);
-    this.maxFreq = Math.max(this.minFreq + 10, Math.min(sampleRate * 0.49, params.maxFreq ?? 3000));
-    this.rate = params.rate ?? 0.5;
-    this.wave = params.wave ?? 'sine';
-    this.feedback = Math.max(-0.95, Math.min(0.95, params.feedback ?? 0));
-    this.mix = Math.max(0, Math.min(1, params.mix ?? 0.5));
+    this.stageSpread = Array.from({ length: resolved.stages }, (_, i) => Math.pow(2, i * 0.5));
+    this.minFreq = resolved.minFreq;
+    // Nyquist tavanı örnek oranına bağlı: belgelenmiş kelepçe.
+    this.maxFreq = Math.max(this.minFreq + 10, Math.min(rate * 0.49, resolved.maxFreq));
+    this.rate = resolved.rate;
+    this.wave = resolved.wave;
+    this.feedback = resolved.feedback;
+    this.mix = resolved.mix;
   }
 
   private lfo(t: number): number {

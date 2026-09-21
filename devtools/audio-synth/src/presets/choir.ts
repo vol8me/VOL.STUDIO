@@ -79,7 +79,7 @@ function choirBody(frequency: number, duration: number, params: ChoirBodyParams)
     // kanal-0 tepe oranı tüm koro presetlerinde en kötü 0,948 kalıyor
     // (sözleşme eşiği 0,88). Daha büyük oda parametreleri sol kanal
     // dekorrelasyonunu eşiğin altına indirir.
-    reverb: { amount: 0.15, decay: 1.5, roomSize: 0.5, damp: 0.55 },
+    reverb: { amount: 0.15, decay: 0.61, roomSize: 0.5, damp: 0.55 },
     vibratoDepth: params.vibratoDepth,
     vibratoRate: params.vibratoRate,
     stereoWidth: params.stereoWidth,

@@ -11,6 +11,7 @@
 import { DEFAULT_SEED } from '@volstudio/core/random';
 import { clamp } from '@volstudio/core/math/interpolation';
 import type { SynthesisResult } from '../../types';
+import { resolveModelBase, type ModelRules } from '../../guard/models';
 import { BiquadFilter } from '../../synthesis/filter';
 import { WhiteNoise, PinkNoise } from '../../synthesis/noise';
 import { Envelope } from '../../synthesis/envelope';
@@ -46,8 +47,6 @@ export interface AirColumnParams {
   seed?: number;
 }
 
-const DEFAULT_SAMPLE_RATE = 44100;
-
 function createNoise(color: 'white' | 'pink', seed: number) {
   return color === 'pink' ? new PinkNoise(seed) : new WhiteNoise(seed);
 }
@@ -60,10 +59,34 @@ function modeBaseGain(q: number, partialIndex: number, rolloff: number): number 
   return (6 * (0.5 + Math.sqrt(q))) / (Math.pow(partialIndex, rolloff) + 0.5);
 }
 
+const AIR_COLUMN_RULES: ModelRules = {
+  keys: [
+    'frequency',
+    'duration',
+    'sampleRate',
+    'attack',
+    'sustain',
+    'release',
+    'sustainLevel',
+    'resonatorCutoff',
+    'resonance',
+    'turbulence',
+    'register',
+    'noiseColor',
+    'gain',
+    'seed',
+  ],
+  minFrequency: 20,
+  buffersPerFrame: 3,
+  unitsPerFrame: () => 24,
+};
+
 export function airColumn(params: AirColumnParams): SynthesisResult {
-  const sampleRate = clamp(params.sampleRate ?? DEFAULT_SAMPLE_RATE, 1000, 384000);
-  const frequency = clamp(params.frequency, 20, sampleRate / 2);
-  const duration = clamp(params.duration, 0.05, 600);
+  const { sampleRate, frequency, duration } = resolveModelBase(
+    params,
+    'airColumn',
+    AIR_COLUMN_RULES,
+  );
   const totalSamples = Math.floor(sampleRate * duration);
 
   const attack = clamp(params.attack ?? 0.12, 0, duration);

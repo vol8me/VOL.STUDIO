@@ -113,22 +113,30 @@ describe('airColumn fiziksel modeli', () => {
     expect(closedHigh).toBeLessThan(openHigh);
   });
 
-  it('geçersiz parametreler çökme veya sonsuz değer üretmez', () => {
-    const cases = [
-      { frequency: NaN },
-      { frequency: Infinity },
-      { frequency: -100 },
-      { duration: NaN },
-      { duration: -1 },
-      { sampleRate: 0 },
-      { sampleRate: NaN },
-      { resonatorCutoff: -500 },
-      { resonance: 5 },
-      { turbulence: -2 },
-      { gain: 2 },
+  it('sonlu olmayan değer ve geçersiz temel nicelik adıyla reddedilir', () => {
+    // NaN'ı aralığın tabanına sabitlemek bozuk girdiyi geçerli bir sese
+    // çevirirdi; süre/frekans/örnek oranı da sessizce kaydırılmaz.
+    const cases: [Record<string, number>, string, string][] = [
+      [{ frequency: NaN }, 'airColumn.frequency', 'non-finite'],
+      [{ frequency: Infinity }, 'airColumn.frequency', 'non-finite'],
+      [{ frequency: -100 }, 'airColumn.frequency', 'range'],
+      [{ duration: NaN }, 'airColumn.duration', 'non-finite'],
+      [{ duration: -1 }, 'airColumn.duration', 'range'],
+      [{ sampleRate: 0 }, 'airColumn.sampleRate', 'range'],
+      [{ sampleRate: NaN }, 'airColumn.sampleRate', 'non-finite'],
+      [{ turbulence: NaN }, 'airColumn.turbulence', 'non-finite'],
     ];
-    for (const override of cases) {
-      const result = airColumn({ frequency: 220, duration: 0.3, ...override });
+    for (const [overrides, path, issue] of cases) {
+      expect(() => airColumn({ frequency: 220, duration: 0.3, ...overrides })).toThrow(
+        expect.objectContaining({ name: 'AudioParamError', path, issue }),
+      );
+    }
+  });
+
+  it('sonlu şekillendirme değerleri modelin fiziksel aralığına kelepçelenir', () => {
+    const cases = [{ resonatorCutoff: -500 }, { resonance: 5 }, { turbulence: -2 }, { gain: 2 }];
+    for (const overrides of cases) {
+      const result = airColumn({ frequency: 220, duration: 0.3, ...overrides });
       expect(result.channels[0].length).toBeGreaterThan(0);
       expect(allFinite(result.channels)).toBe(true);
     }

@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import { execSync, spawnSync } from 'node:child_process';
 import type { SynthesisResult } from './types';
 import { createRandom } from '@volstudio/core/random';
+import { assertRenderBudget } from './guard/budget';
 
 /** Dither gürültüsü için sabit seed — üretim tekrarlanabilir kalmalı. */
 const DITHER_SEED = 0x0d17;
@@ -60,6 +61,14 @@ function validateAudioInput(
   if (sampleRate * numChannels * BYTES_PER_SAMPLE > 0xffff_ffff) {
     throw new Error('WAV byte rate alanı taşacak kadar büyük');
   }
+  // Yazıcının kendi tamponu (OGG için interleaved f32, WAV için 16-bit)
+  // çıkışın bir katı kadardır; render'ı geçmiş bir sonuç için sığar ama elle
+  // birleştirilmiş dev bir sonuç ayırmadan önce burada durur.
+  const writerBytes = sampleCount * numChannels * (quality === undefined ? BYTES_PER_SAMPLE : 4);
+  assertRenderBudget(
+    { peakBytes: writerBytes, workUnits: 0 },
+    quality === undefined ? 'writeWav' : 'writeOgg',
+  );
   return { numChannels, sampleCount, sampleRate };
 }
 

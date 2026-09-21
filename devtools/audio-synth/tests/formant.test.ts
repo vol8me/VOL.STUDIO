@@ -100,21 +100,31 @@ describe('formant (formant / koro fiziksel modeli)', () => {
     expect(peak(quiet.channels)).toBeLessThan(peak(loud.channels));
   });
 
-  it('geçersiz parametreler çökme veya sonsuz değer üretmez', () => {
-    const cases = [
-      { frequency: NaN },
-      { frequency: Infinity },
-      { frequency: -100 },
-      { duration: NaN },
-      { duration: -1 },
-      { sampleRate: 0 },
-      { sampleRate: NaN },
-      { vibratoDepth: 1000 },
-      { voices: -3 },
-      { gain: 2 },
+  it('sonlu olmayan değer ve geçersiz temel nicelik adıyla reddedilir', () => {
+    // NaN'ı aralığın tabanına sabitlemek bozuk girdiyi geçerli bir sese
+    // çevirirdi; süre/frekans/örnek oranı da sessizce kaydırılmaz.
+    const cases: [Record<string, number>, string, string][] = [
+      [{ frequency: NaN }, 'formant.frequency', 'non-finite'],
+      [{ frequency: Infinity }, 'formant.frequency', 'non-finite'],
+      [{ frequency: -100 }, 'formant.frequency', 'range'],
+      [{ duration: NaN }, 'formant.duration', 'non-finite'],
+      [{ duration: -1 }, 'formant.duration', 'range'],
+      [{ sampleRate: 0 }, 'formant.sampleRate', 'range'],
+      [{ sampleRate: NaN }, 'formant.sampleRate', 'non-finite'],
+      [{ frequency: 40 }, 'formant.frequency', 'range'],
+      [{ voices: NaN }, 'formant.voices', 'non-finite'],
     ];
-    for (const override of cases) {
-      const result = formant({ frequency: 220, duration: 0.3, ...override });
+    for (const [overrides, path, issue] of cases) {
+      expect(() => formant({ frequency: 220, duration: 0.3, ...overrides })).toThrow(
+        expect.objectContaining({ name: 'AudioParamError', path, issue }),
+      );
+    }
+  });
+
+  it('sonlu şekillendirme değerleri modelin fiziksel aralığına kelepçelenir', () => {
+    const cases = [{ vibratoDepth: 1000 }, { voices: -3 }, { gain: 2 }];
+    for (const overrides of cases) {
+      const result = formant({ frequency: 220, duration: 0.3, ...overrides });
       expect(result.channels[0].length).toBeGreaterThan(0);
       expect(allFinite(result.channels)).toBe(true);
       expect(peak(result.channels)).toBeLessThanOrEqual(1.0);

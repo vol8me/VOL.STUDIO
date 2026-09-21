@@ -13,6 +13,8 @@ export const INSTRUMENTS = Object.entries(Presets.PRESET_CATALOG)
 
 export interface Measurement {
   peak: number;
+  /** Bütün kanalların en büyük mutlak örneği. */
+  channelPeak: number;
   dc: number;
   nonFinite: number;
   first: number;
@@ -33,8 +35,13 @@ export function measure(result: SynthesisResult): Measurement {
     peak = Math.max(peak, Math.abs(value));
     sum += value;
   }
+  let channelPeak = 0;
+  for (const channel of result.channels) {
+    for (const value of channel) channelPeak = Math.max(channelPeak, Math.abs(value));
+  }
   return {
     peak,
+    channelPeak,
     dc: Math.abs(sum / samples.length),
     nonFinite,
     first: Math.abs(samples[0]),

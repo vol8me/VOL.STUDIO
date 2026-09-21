@@ -15,6 +15,9 @@
 
 export type * from './types';
 
+export { AudioParamError, RenderBudgetError } from './guard';
+export type { AudioParamIssue, RenderCost, RenderBudget } from './guard';
+
 export * from './synthesis';
 export {
   Chorus,

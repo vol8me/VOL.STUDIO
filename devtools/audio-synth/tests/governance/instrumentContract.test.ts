@@ -35,8 +35,10 @@ describe('enstrüman kataloğu sözleşmesi', () => {
        * seviyesini GERÇEKTEN öngörüyor mu? Öngörmüyorsa iki sesi toplarken
        * beklenen dengeyi kuramaz.
        */
+      // Normalizasyon TÜM kanalların tepesini hedefler; stereo reverb'lü bir
+      // presette tek kanalın tepesi diğerinden düşük olabilir.
       const declaredGain = Presets.getPreset(name, frequency, meta.typicalDuration).gain ?? 1;
-      const levelRatio = m.peak / (0.95 * declaredGain);
+      const levelRatio = m.channelPeak / (0.95 * declaredGain);
       expect(levelRatio, `${at} seviyesi \`gain\`den öngörülemiyor`).toBeGreaterThan(0.88);
       expect(levelRatio, `${at} beyan ettiğinden yüksek çalıyor`).toBeLessThan(1.02);
 

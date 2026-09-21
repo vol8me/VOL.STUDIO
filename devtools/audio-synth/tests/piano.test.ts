@@ -43,17 +43,29 @@ describe('piano (modal physical modeling)', () => {
     expect(allFinite(result.channels)).toBe(true);
   });
 
-  it('geçersiz frequency/duration/sampleRate çökme veya boş çıktı üretmez', () => {
+  it('sonlu olmayan değer ve geçersiz temel nicelik adıyla reddedilir', () => {
+    // NaN'ı aralığın tabanına sabitlemek bozuk girdiyi geçerli bir sese
+    // çevirirdi; süre/frekans/örnek oranı da sessizce kaydırılmaz.
+    const cases: [Record<string, number>, string, string][] = [
+      [{ frequency: NaN }, 'piano.frequency', 'non-finite'],
+      [{ frequency: Infinity }, 'piano.frequency', 'non-finite'],
+      [{ frequency: -100 }, 'piano.frequency', 'range'],
+      [{ duration: NaN }, 'piano.duration', 'non-finite'],
+      [{ duration: -1 }, 'piano.duration', 'range'],
+      [{ sampleRate: 0 }, 'piano.sampleRate', 'range'],
+      [{ sampleRate: NaN }, 'piano.sampleRate', 'non-finite'],
+      [{ frequency: 30000 }, 'piano.frequency', 'range'],
+      [{ hammerHardness: NaN }, 'piano.hammerHardness', 'non-finite'],
+    ];
+    for (const [overrides, path, issue] of cases) {
+      expect(() => piano({ frequency: 220, duration: 0.2, ...overrides })).toThrow(
+        expect.objectContaining({ name: 'AudioParamError', path, issue }),
+      );
+    }
+  });
+
+  it('sonlu şekillendirme değerleri modelin fiziksel aralığına kelepçelenir', () => {
     const cases = [
-      { frequency: NaN },
-      { frequency: Infinity },
-      { frequency: -100 },
-      { frequency: 0 },
-      { duration: NaN },
-      { duration: Infinity },
-      { duration: -1 },
-      { sampleRate: 0 },
-      { sampleRate: NaN },
       { inharmonicity: -0.5 },
       { inharmonicity: 0.1 },
       { partials: -5 },
@@ -126,5 +138,32 @@ describe('piano (modal physical modeling)', () => {
       440 * Math.sqrt(1 + 0.002 * 4),
     );
     expect(atInharm).toBeGreaterThan(at2x * 1.2);
+  });
+});
+
+describe('piano gövde rezonansı stereodur', () => {
+  it('gövde modu iki kanala AYNI dalga olarak yazılmaz', () => {
+    // Gövde bileşeni, gövdeli ve gövdesiz render'ın farkıdır (kısmi tonlar ve
+    // çekiç aynı tohumla birebir aynı üretilir).
+    for (const seed of [1, 2, 3]) {
+      const params = { frequency: 196, duration: 0.8, bodyAmount: 0.6, gain: 1, seed } as const;
+      const withBody = piano({ ...params, bodyResonance: 140 });
+      const without = piano({ ...params, bodyResonance: 0 });
+      const body = [0, 1].map((ch) =>
+        withBody.channels[ch].map((v, i) => v - without.channels[ch][i]),
+      );
+      const energyL = body[0].reduce((a, v) => a + v * v, 0);
+      const energyR = body[1].reduce((a, v) => a + v * v, 0);
+      let diff = 0;
+      let peakBody = 0;
+      for (let i = 0; i < body[0].length; i++) {
+        diff = Math.max(diff, Math.abs(body[0][i] - body[1][i]));
+        peakBody = Math.max(peakBody, Math.abs(body[0][i]));
+      }
+      // Aynı mod, aynı genlik: enerji iki kanalda eşit; faz ise kanal başına.
+      expect(energyL / energyR).toBeGreaterThan(0.9);
+      expect(energyL / energyR).toBeLessThan(1.1);
+      expect(diff, `seed ${seed}`).toBeGreaterThan(peakBody * 0.01);
+    }
   });
 });

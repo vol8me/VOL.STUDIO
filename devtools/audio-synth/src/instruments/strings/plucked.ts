@@ -13,6 +13,7 @@
 
 import { createRandom, DEFAULT_SEED } from '@volstudio/core/random';
 import type { SynthesisResult } from '../../types';
+import { resolveModelBase, type ModelRules } from '../../guard/models';
 import { clamp } from '@volstudio/core/math/interpolation';
 
 export interface PluckParams {
@@ -125,10 +126,27 @@ function generateExcitation(
  *  4. Stereo: iki hafif farklı delay line (+-0.5 cent) ile yayılım
  *
  *  Sonuç: karanlık, tok, ataklı telli enstrüman tonu. */
+const PLUCK_RULES: ModelRules = {
+  keys: [
+    'frequency',
+    'duration',
+    'sampleRate',
+    'decay',
+    'excitationMix',
+    'excitationHarmonics',
+    'stereoWidth',
+    'gain',
+    'bodyResonance',
+    'bodyAmount',
+    'seed',
+  ],
+  minFrequency: 20,
+  buffersPerFrame: 2,
+  unitsPerFrame: () => 16,
+};
+
 export function pluck(params: PluckParams): SynthesisResult {
-  const sampleRate = clamp(params.sampleRate ?? 44100, 1000, 384000);
-  const freq = clamp(params.frequency, 20, sampleRate / 2);
-  const duration = clamp(params.duration, 0.05, 600);
+  const { sampleRate, frequency: freq, duration } = resolveModelBase(params, 'pluck', PLUCK_RULES);
   const totalSamples = Math.floor(sampleRate * duration);
   // `decay` >= 1 KS geri besleme döngüsünü kararsızlaştırır: her örnekte
   // `feedback = filtered * decay` ile enerji sönmek yerine katlanarak büyür

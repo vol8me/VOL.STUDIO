@@ -1,4 +1,5 @@
 import type { DistortionParams } from '../types';
+import { resolveDistortionParams } from '../guard/effects';
 
 // -----------------------------------------------------------------------------
 // Distortion
@@ -21,9 +22,10 @@ export class Distortion {
   private readonly mix: number;
 
   constructor(params: DistortionParams) {
-    this.amount = Math.max(0, Math.min(1, params.amount));
-    this.type = params.type ?? 'soft';
-    this.mix = Math.max(0, Math.min(1, params.mix ?? 1));
+    const resolved = resolveDistortionParams(params, 'distortion');
+    this.amount = resolved.amount;
+    this.type = resolved.type;
+    this.mix = resolved.mix;
   }
 
   process(input: number): number {

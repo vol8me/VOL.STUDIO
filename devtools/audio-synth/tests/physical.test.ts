@@ -27,10 +27,16 @@ describe('pluck (Karplus-Strong physical modeling)', () => {
   it('decay >= 1 geri besleme döngüsünü patlatmaz (Inf/NaN üretmez)', () => {
     // KS feedback: her örnekte `feedback = filtered * decay`. decay >= 1 ise
     // enerji sönmek yerine katlanarak büyür; birkaç bin örnek içinde Float32
-    // taşmasıyla Inf/NaN'a gider. Üst sınır artık 0.999'da kelepçelenir.
-    for (const decay of [1, 1.5, 10, Infinity, NaN]) {
+    // taşmasıyla Inf/NaN'a gider. Sonlu üst değer 0.999'da kelepçelenir;
+    // sonlu olmayan değer ise sınırda reddedilir.
+    for (const decay of [1, 1.5, 10]) {
       const result = pluck({ frequency: 220, duration: 1.5, decay });
       expect(allFinite(result.channels)).toBe(true);
+    }
+    for (const decay of [Infinity, NaN]) {
+      expect(() => pluck({ frequency: 220, duration: 1.5, decay })).toThrow(
+        expect.objectContaining({ path: 'pluck.decay', issue: 'non-finite' }),
+      );
     }
   });
 
@@ -42,20 +48,30 @@ describe('pluck (Karplus-Strong physical modeling)', () => {
     expect(tail).toBeLessThan(head);
   });
 
-  it('geçersiz frequency/duration/sampleRate çökme veya boş çıktı üretmez', () => {
-    const cases = [
-      { frequency: NaN },
-      { frequency: Infinity },
-      { frequency: -100 },
-      { frequency: 0 },
-      { duration: NaN },
-      { duration: Infinity },
-      { duration: -1 },
-      { sampleRate: 0 },
-      { sampleRate: NaN },
-      { sampleRate: -44100 },
-      { seed: NaN },
+  it('sonlu olmayan değer ve geçersiz temel nicelik adıyla reddedilir', () => {
+    // NaN'ı aralığın tabanına sabitlemek bozuk girdiyi geçerli bir sese
+    // çevirirdi; süre/frekans/örnek oranı da sessizce kaydırılmaz.
+    const cases: [Record<string, number>, string, string][] = [
+      [{ frequency: NaN }, 'pluck.frequency', 'non-finite'],
+      [{ frequency: Infinity }, 'pluck.frequency', 'non-finite'],
+      [{ frequency: -100 }, 'pluck.frequency', 'range'],
+      [{ duration: NaN }, 'pluck.duration', 'non-finite'],
+      [{ duration: -1 }, 'pluck.duration', 'range'],
+      [{ sampleRate: 0 }, 'pluck.sampleRate', 'range'],
+      [{ sampleRate: NaN }, 'pluck.sampleRate', 'non-finite'],
+      [{ frequency: 0 }, 'pluck.frequency', 'range'],
+      [{ sampleRate: -44100 }, 'pluck.sampleRate', 'range'],
+      [{ seed: NaN }, 'pluck.seed', 'non-finite'],
     ];
+    for (const [overrides, path, issue] of cases) {
+      expect(() => pluck({ frequency: 220, duration: 0.2, ...overrides })).toThrow(
+        expect.objectContaining({ name: 'AudioParamError', path, issue }),
+      );
+    }
+  });
+
+  it('sonlu şekillendirme değerleri modelin fiziksel aralığına kelepçelenir', () => {
+    const cases = [{ decay: 5 }, { excitationHarmonics: 40 }, { stereoWidth: -1 }];
     for (const overrides of cases) {
       const result = pluck({ frequency: 220, duration: 0.2, ...overrides });
       expect(result.channels[0].length).toBeGreaterThan(0);

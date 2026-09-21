@@ -20,14 +20,11 @@ export function getFmSample(
   const fm = voice.fm;
   if (!fm) return 0;
 
-  const modWave = fm.params.modulatorWave ?? 'sine';
-  const ratio = fm.params.ratio ?? 1;
+  const { modulatorWave: modWave, ratio, modulatorLevel: modLevel, feedback } = fm.params;
   const modFreq = carrierFreq * ratio;
-  const modLevel = fm.params.modulatorLevel ?? 1;
-  const feedback = Math.max(-0.99, Math.min(0.99, fm.params.feedback ?? 0));
 
   const env = fm.envelope?.value(t) ?? 1;
-  let index = (fm.params.index ?? 0) * env * modLevel;
+  let index = fm.params.index * env * modLevel;
 
   // Aliasing guard: sideband'ler nyquist altında kalmalı (Bessel: ~index+2 sideband)
   const nyquist = sampleRate * 0.45;

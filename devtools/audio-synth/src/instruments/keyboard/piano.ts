@@ -11,6 +11,7 @@
 import { createRandom, DEFAULT_SEED } from '@volstudio/core/random';
 import { clamp } from '@volstudio/core/math/interpolation';
 import type { SynthesisResult } from '../../types';
+import { resolveModelBase, type ModelRules } from '../../guard/models';
 
 export interface PianoParams {
   /** Temel frekans (Hz). */
@@ -71,10 +72,30 @@ function partialDecay(n: number, baseDecay: number, highDamping: number): number
   return baseDecay / (1 + highDamping * (n - 1));
 }
 
+const PIANO_RULES: ModelRules = {
+  keys: [
+    'frequency',
+    'duration',
+    'sampleRate',
+    'inharmonicity',
+    'partials',
+    'hammerHardness',
+    'decay',
+    'highDamping',
+    'unisonDetune',
+    'bodyResonance',
+    'bodyAmount',
+    'gain',
+    'seed',
+  ],
+  minFrequency: 20,
+  buffersPerFrame: 2,
+  // Kısmi ton × en çok üç tel × iki kanal, artı gövde modu.
+  unitsPerFrame: (o) => 6 * clamp(typeof o.partials === 'number' ? o.partials : 16, 1, 64) + 2,
+};
+
 export function piano(params: PianoParams): SynthesisResult {
-  const sampleRate = clamp(params.sampleRate ?? 44100, 1000, 384000);
-  const f0 = clamp(params.frequency, 20, sampleRate / 2);
-  const duration = clamp(params.duration, 0.05, 600);
+  const { sampleRate, frequency: f0, duration } = resolveModelBase(params, 'piano', PIANO_RULES);
   const totalSamples = Math.floor(sampleRate * duration);
 
   const b = clamp(params.inharmonicity ?? 0.0004, 0, 0.01);
@@ -154,7 +175,9 @@ export function piano(params: PianoParams): SynthesisResult {
     }
   }
 
-  // Gövde rezonansı — ayrı alçak frekans modu.
+  // Gövde rezonansı — ayrı alçak frekans modu. Kısmi tonlardaki gibi her
+  // kanal kendi fazıyla başlar; tek fazı iki kanala yazmak gövdeyi mono'ya
+  // indirip kısmi tonların taşıdığı stereo genişliği orada siliyordu.
   if (bodyResonance > 0) {
     const bodyStep = (2 * Math.PI * bodyResonance) / sampleRate;
     const bodyTau = baseDecay * 2;
@@ -165,9 +188,8 @@ export function piano(params: PianoParams): SynthesisResult {
     for (let i = 0; i < totalSamples; i++) {
       const t = i / sampleRate;
       const env = Math.exp(-t * bodyRelease);
-      const s = Math.sin(2 * Math.PI * phaseL) * bodyAmp * env;
-      left[i] += s;
-      right[i] += s;
+      left[i] += Math.sin(2 * Math.PI * phaseL) * bodyAmp * env;
+      right[i] += Math.sin(2 * Math.PI * phaseR) * bodyAmp * env;
       phaseL += bodyStep / (2 * Math.PI);
       phaseL -= Math.floor(phaseL);
       phaseR += bodyStep / (2 * Math.PI);

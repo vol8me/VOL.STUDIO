@@ -14,6 +14,7 @@
 import { createRandom, DEFAULT_SEED } from '@volstudio/core/random';
 import { clamp } from '@volstudio/core/math/interpolation';
 import type { SynthesisResult } from '../../types';
+import { resolveModelBase, type ModelRules } from '../../guard/models';
 import { Envelope } from '../../synthesis/envelope';
 import { Cascade4Filter } from '../../synthesis/filter';
 
@@ -51,10 +52,30 @@ function stereoSeed(seed: number): number {
   return (seed + 0x9e3779b9) | 0;
 }
 
+const BRASS_RULES: ModelRules = {
+  keys: [
+    'frequency',
+    'duration',
+    'sampleRate',
+    'lowpassCutoff',
+    'attack',
+    'decay',
+    'sustainLevel',
+    'release',
+    'lipNoise',
+    'lipNoiseDecay',
+    'brightness',
+    'gain',
+    'seed',
+  ],
+  minFrequency: 20,
+  buffersPerFrame: 2,
+  // En çok 100 kısmi ton × iki kanal, artı dudak gürültüsü ve filtre.
+  unitsPerFrame: () => 208,
+};
+
 export function brass(params: BrassParams): SynthesisResult {
-  const sampleRate = clamp(params.sampleRate ?? 44100, 1000, 384000);
-  const f0 = clamp(params.frequency, 20, sampleRate / 2);
-  const duration = clamp(params.duration, 0.05, 600);
+  const { sampleRate, frequency: f0, duration } = resolveModelBase(params, 'brass', BRASS_RULES);
   const totalSamples = Math.floor(sampleRate * duration);
 
   const lowpassCutoff = clamp(params.lowpassCutoff ?? 6000, 50, sampleRate / 2);

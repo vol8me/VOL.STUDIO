@@ -57,10 +57,13 @@ describe('Chorus', () => {
   it('derinlik tabanı aşamaz — negatif gecikme sarmalı bozmaz', () => {
     /*
      * `depth` taban gecikmeden (15 ms) büyük verilirse LFO'nun negatif yarısında
-     * gecikme sıfırın altına iner; kırpma olmasa okuma indeksi sarmalın yanlış
-     * tarafına düşer ve efekt sessizce GELECEKTEKİ örneği okur.
+     * gecikme sıfırın altına iner ve efekt GELECEKTEKİ örneği okur. Belgelenmiş
+     * aralığın dışı sınırda reddedilir; sınırın kendisi kararlı çalışır.
      */
-    const output = drive(new Chorus({ mix: 1, depth: 500, rate: 40 }, SR), noise(4096));
+    expect(() => new Chorus({ mix: 1, depth: 500, rate: 40 }, SR)).toThrow(
+      expect.objectContaining({ name: 'AudioParamError', path: 'chorus.depth', issue: 'range' }),
+    );
+    const output = drive(new Chorus({ mix: 1, depth: 14, rate: 40 }, SR), noise(4096));
 
     for (const sample of output) {
       expect(Number.isFinite(sample)).toBe(true);
@@ -86,9 +89,12 @@ describe('Flanger', () => {
     for (let i = 0; i < input.length; i++) expect(output[i]).toBeCloseTo(input[i], 12);
   });
 
-  it('feedback ±0,95 aralığına kırpılır — hat ıraksamaz', () => {
-    /* Kırpma olmasa 5 kazançlı geri besleme hattı üstel büyütür ve çıktı Inf olur. */
-    const output = drive(new Flanger({ mix: 1, feedback: 5 }, SR), noise(8192));
+  it('feedback ±0,95 dışı reddedilir — sınırda hat ıraksamaz', () => {
+    /* 5 kazançlı geri besleme hattı üstel büyür; sessiz kırpma yerine sınır reddeder. */
+    expect(() => new Flanger({ mix: 1, feedback: 5 }, SR)).toThrow(
+      expect.objectContaining({ path: 'flanger.feedback', issue: 'range' }),
+    );
+    const output = drive(new Flanger({ mix: 1, feedback: 0.95 }, SR), noise(8192));
 
     for (const sample of output) expect(Number.isFinite(sample)).toBe(true);
     expect(Math.max(...output.map(Math.abs))).toBeLessThan(50);
@@ -148,8 +154,11 @@ describe('PhaserEffect', () => {
     expect(rms(sine.map((v, i) => v - triangle[i]))).toBeGreaterThan(0.01);
   });
 
-  it('feedback kırpması ıraksamayı önler', () => {
-    const output = drive(new PhaserEffect({ mix: 1, feedback: 12, stages: 6 }, SR), noise(8192));
+  it('aralık dışı feedback reddedilir, sınır değer ıraksamaz', () => {
+    expect(() => new PhaserEffect({ mix: 1, feedback: 12, stages: 6 }, SR)).toThrow(
+      expect.objectContaining({ path: 'phaser.feedback', issue: 'range' }),
+    );
+    const output = drive(new PhaserEffect({ mix: 1, feedback: -0.95, stages: 6 }, SR), noise(8192));
 
     for (const sample of output) expect(Number.isFinite(sample)).toBe(true);
   });

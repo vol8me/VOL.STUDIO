@@ -72,7 +72,7 @@ export function drawbarOrgan(frequency = 220, duration = 1.6): SynthParams {
       { target: 'pitch', rate: 6.2, depth: 3.5, wave: 'sine' },
     ],
     lowpass: { cutoff: reach(frequency, 9, 5200), resonance: 0.05, poles: 2, type: 'lowpass' },
-    reverb: { amount: 0.22, decay: 1.6, roomSize: 0.6, damp: 0.5 },
+    reverb: { amount: 0.22, decay: 0.65, roomSize: 0.6, damp: 0.5 },
     gain: 0.42,
   };
 }
@@ -119,7 +119,7 @@ export function harpsichord(frequency = 330, duration = 1.1): SynthParams {
       type: 'highpass',
     },
     lowpass: { cutoff: reach(frequency, 11, 7200), resonance: 0.1, poles: 2, type: 'lowpass' },
-    reverb: { amount: 0.26, decay: 1.4, roomSize: 0.55, damp: 0.45 },
+    reverb: { amount: 0.26, decay: 0.63, roomSize: 0.55, damp: 0.45 },
     gain: 0.4,
   };
 }
@@ -154,7 +154,7 @@ export function marimba(frequency = 262, duration = 0.9): SynthParams {
       sustainLevel: 0.06,
     },
     lowpass: { cutoff: reach(frequency, 12, 3400), resonance: 0.06, poles: 2, type: 'lowpass' },
-    reverb: { amount: 0.2, decay: 1.1, roomSize: 0.5, damp: 0.6 },
+    reverb: { amount: 0.2, decay: 0.61, roomSize: 0.5, damp: 0.6 },
     gain: 0.46,
   };
 }
@@ -191,7 +191,7 @@ export function vibraphone(frequency = 349, duration = 2.4): SynthParams {
     // enstrümanın imzası olacak kadar belirgin değildi.
     lfos: [{ target: 'amplitude', rate: 5.5, depth: 0.6, wave: 'sine' }],
     lowpass: { cutoff: reach(frequency, 12, 6200), resonance: 0.05, poles: 2, type: 'lowpass' },
-    reverb: { amount: 0.34, decay: 2.2, roomSize: 0.7, damp: 0.4 },
+    reverb: { amount: 0.34, decay: 0.7, roomSize: 0.7, damp: 0.4 },
     gain: 0.42,
   };
 }
@@ -230,7 +230,7 @@ export function glockenspiel(frequency = 1047, duration = 1.5): SynthParams {
       poles: 2,
       type: 'highpass',
     },
-    reverb: { amount: 0.36, decay: 2.0, roomSize: 0.75, damp: 0.35 },
+    reverb: { amount: 0.36, decay: 0.73, roomSize: 0.75, damp: 0.35 },
     gain: 0.34,
   };
 }
@@ -291,7 +291,7 @@ export function heavyDrum(frequency = 78, duration = 1.1): SynthParams {
     // katmanlar toplandığında birikir. Kesim temelin en pes hâlinin
     // (`frequency * 0.58`) altında kalır, gövdeye dokunmaz.
     highpass: { cutoff: Math.min(30, frequency * 0.35), resonance: 0, poles: 1, type: 'highpass' },
-    reverb: { amount: 0.24, decay: 1.8, roomSize: 0.8, damp: 0.65 },
+    reverb: { amount: 0.24, decay: 0.75, roomSize: 0.8, damp: 0.65 },
     gain: 0.8,
   };
 }
@@ -330,7 +330,7 @@ export function mellowKeys(frequency = 262, duration = 2.2): SynthParams {
       sustainLevel: 0.42,
     },
     lowpass: { cutoff: reach(frequency, 5, 2800), resonance: 0.04, poles: 2, type: 'lowpass' },
-    reverb: { amount: 0.42, decay: 3.4, roomSize: 0.9, damp: 0.55 },
+    reverb: { amount: 0.42, decay: 0.8, roomSize: 0.9, damp: 0.55 },
     gain: 0.44,
   };
 }

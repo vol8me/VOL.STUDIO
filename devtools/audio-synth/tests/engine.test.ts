@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { synthesize, synth, normalize, mix, Presets } from '@volstudio/audio-synth';
+import type { SynthParams } from '@volstudio/audio-synth';
+import type { AudioParamIssue } from '../src/guard/errors';
 import { DelayLine, Reverb } from '../src/effects';
 
 describe('Synth engine', () => {
@@ -224,33 +226,35 @@ describe('Synth engine', () => {
     }
   });
 
-  it('SynthParams: NaN/Infinity/0/negatif değerler çökme veya sessiz-boş çıktı üretmez', () => {
-    const cases = [
-      { duration: NaN },
-      { duration: Infinity },
-      { duration: -5 },
-      { frequency: NaN },
-      { frequency: Infinity },
-      { frequency: -100 },
-      { sampleRate: 0 },
-      { sampleRate: NaN },
-      { sampleRate: -44100 },
-      { repeat: NaN },
-      { repeat: -5 },
-      { repeat: Infinity },
-      { repeatTime: NaN },
-      { seed: NaN },
-      { gain: NaN },
-      { pulseWidth: NaN },
-      { slide: NaN },
-      { slide: Infinity },
+  it('SynthParams: bozuk üst düzey değer SESSİZCE kelepçelenmez, alanın adıyla reddedilir', () => {
+    // NaN'ı aralığın alt sınırına sabitlemek bozuk girdiyi GEÇERLİ bir sese
+    // çevirirdi; hangi alanın bozuk olduğu da kaybolurdu.
+    const cases: [Partial<SynthParams>, string, AudioParamIssue][] = [
+      [{ duration: NaN }, 'duration', 'non-finite'],
+      [{ duration: Infinity }, 'duration', 'non-finite'],
+      [{ duration: -5 }, 'duration', 'range'],
+      [{ duration: 1e-9 }, 'duration', 'range'],
+      [{ frequency: NaN }, 'frequency', 'non-finite'],
+      [{ frequency: -100 }, 'frequency', 'range'],
+      [{ frequency: 30000 }, 'frequency', 'range'],
+      [{ sampleRate: 0 }, 'sampleRate', 'range'],
+      [{ sampleRate: NaN }, 'sampleRate', 'non-finite'],
+      [{ sampleRate: 44100.5 }, 'sampleRate', 'type'],
+      [{ repeat: NaN }, 'repeat', 'non-finite'],
+      [{ repeat: 2.5 }, 'repeat', 'type'],
+      [{ repeat: 0 }, 'repeat', 'range'],
+      [{ repeatTime: -1 }, 'repeatTime', 'range'],
+      [{ seed: NaN }, 'seed', 'non-finite'],
+      [{ gain: 1.5 }, 'gain', 'range'],
+      [{ pulseWidth: NaN }, 'pulseWidth', 'non-finite'],
+      [{ slide: Infinity }, 'slide', 'non-finite'],
+      [{ wave: 'saw' as never }, 'wave', 'type'],
+      [{ wave: [] }, 'wave', 'range'],
     ];
-    for (const overrides of cases) {
-      const result = synthesize({ wave: 'sine', frequency: 440, duration: 0.05, ...overrides });
-      expect(result.channels[0].length).toBeGreaterThan(0);
-      for (const s of result.channels[0]) {
-        expect(Number.isFinite(s)).toBe(true);
-      }
+    for (const [overrides, path, issue] of cases) {
+      expect(() =>
+        synthesize({ wave: 'sine', frequency: 440, duration: 0.05, ...overrides }),
+      ).toThrow(expect.objectContaining({ name: 'AudioParamError', path, issue }));
     }
   });
 

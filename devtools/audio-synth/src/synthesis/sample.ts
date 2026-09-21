@@ -1,4 +1,6 @@
 import type { EnvelopeParams, SampleParams } from '../types';
+import { resolveSample } from '../guard/synthesis';
+import { checkNumber, checkSampleRate } from '../guard/read';
 import { Envelope } from './envelope';
 
 /** Ham WAV dosyasından mono Float32Array ve orijinal örnek oranını döner. */
@@ -194,7 +196,10 @@ export function trimSamples(
   trim: { start?: number; end?: number },
   sampleRate: number,
 ): Float32Array {
-  const startSample = Math.max(0, Math.floor((trim.start ?? 0) * sampleRate));
+  checkNumber(sampleRate, 'trim.sampleRate', { above: 0 });
+  checkNumber(trim.start ?? 0, 'trim.start', { min: 0 });
+  if (trim.end !== undefined) checkNumber(trim.end, 'trim.end');
+  const startSample = Math.floor((trim.start ?? 0) * sampleRate);
   let endSample = samples.length;
 
   if (trim.end !== undefined) {
@@ -261,6 +266,7 @@ export function applyEnvelopeToSample(
   duration: number,
   sampleRate: number,
 ): Float32Array {
+  checkNumber(sampleRate, 'sampleRate', { above: 0 });
   const env = new Envelope(envelope, duration);
   const out = new Float32Array(samples.length);
   for (let i = 0; i < samples.length; i++) {
@@ -276,37 +282,36 @@ export function processSample(
   targetSampleRate: number,
   targetLength: number,
 ): Float32Array {
-  const gain = Math.max(0, Math.min(1, sample.gain ?? 1));
+  const resolved = resolveSample(sample, 'sample');
+  checkSampleRate(targetSampleRate, 'targetSampleRate');
+  checkNumber(targetLength, 'targetLength', { min: 0, integer: true });
+  const { gain } = resolved;
 
   let sourceSamples: Float32Array;
   let sourceRate: number;
 
-  if (sample.data instanceof Float32Array) {
-    sourceSamples = sample.data;
-    sourceRate = sample.sampleRate ?? targetSampleRate;
-  } else if (sample.data instanceof Uint8Array) {
-    const decoded = decodeWav(sample.data);
-    sourceSamples = decoded.samples;
-    sourceRate = decoded.sampleRate;
+  if (resolved.data instanceof Float32Array) {
+    sourceSamples = resolved.data;
+    sourceRate = resolved.sampleRate ?? targetSampleRate;
   } else {
-    const decoded = decodeWav(sample.data);
+    const decoded = decodeWav(resolved.data);
     sourceSamples = decoded.samples;
     sourceRate = decoded.sampleRate;
   }
 
   // Kırpma
-  if (sample.trim) {
-    sourceSamples = trimSamples(sourceSamples, sample.trim, sourceRate);
+  if (resolved.trim) {
+    sourceSamples = trimSamples(sourceSamples, resolved.trim, sourceRate);
   }
 
   // Pitch shift + sample rate uyumu
-  const pitchFactor = Math.pow(2, (sample.pitchShift ?? 0) / 12);
+  const pitchFactor = Math.pow(2, resolved.pitchShift / 12);
   const rateFactor = sourceRate / targetSampleRate;
   const resampleFactor = rateFactor * pitchFactor;
   let processed = resampleLinear(sourceSamples, resampleFactor);
 
   // Loop veya trim
-  processed = loopSamples(processed, targetLength, sample.loop, sample.loopCrossfade);
+  processed = loopSamples(processed, targetLength, resolved.loop, resolved.loopCrossfade);
   if (processed.length > targetLength) {
     processed = processed.slice(0, targetLength);
   } else if (processed.length < targetLength) {
@@ -316,9 +321,9 @@ export function processSample(
   }
 
   // Envelope
-  if (sample.envelope) {
+  if (resolved.envelope) {
     const duration = targetLength / targetSampleRate;
-    processed = applyEnvelopeToSample(processed, sample.envelope, duration, targetSampleRate);
+    processed = applyEnvelopeToSample(processed, resolved.envelope, duration, targetSampleRate);
   }
 
   // Gain

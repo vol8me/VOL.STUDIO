@@ -184,6 +184,128 @@ Belge yalnız tipten okunamayacak şeyi taşır: hangi parametrenin neden var
 olduğunu ve hangi bileşimin kötü ses ürettiğini (bkz. "Cızırtı ve ucuz sesten
 kaçınma").
 
+### Sınır politikası (`src/guard/`)
+
+Her render girişi (`synthesize`, efekt ve filtre kurucuları, zarf, sample
+işleme, fiziksel modeller) parametreyi TEK bir çözümleme katmanından geçirir.
+Bozuk veri DSP'ye girmez ve tampon ayrılmadan `AudioParamError` ile
+reddedilir; hata alanın tam yolunu taşır (`reverb.decay`, `lfos[1].rate`,
+`lowpass.envelope.release`, `sample.data[3]`, `piano.frequency`) ve türünü
+(`issue`) ayrı bir alanda verir.
+
+| Girdi                                              | Davranış                                   |
+| -------------------------------------------------- | ------------------------------------------ |
+| NaN / ±Infinity                                    | `non-finite` — her yerde reddedilir        |
+| Yanlış tip, bilinmeyen seçenek, tamsayı olmayan    | `type`                                     |
+| Bilinmeyen alan (`decy`, `cuttoff`)                | `unknown-key` — yazım hatası sessiz kalmaz |
+| Eksik zorunlu alan (`delay.time`, `filter.cutoff`) | `required`                                 |
+| Belgelenmiş aralığın dışı (sonlu)                  | `range`                                    |
+| Tek başına geçerli, birlikte anlamsız alanlar      | `combination` (ör. 1 kutup + `bandpass`)   |
+
+NaN aralığın tabanına SABİTLENMEZ: bu, bozuk girdiyi geçerli bir sese
+çevirir ve hangi alanın bozuk olduğunu siler. Kelepçe yalnız belgelenmiş
+dört durumda kalır: örnek oranına bağlı Nyquist tavanları (anlık frekans,
+filtre kesimi, phaser `maxFreq` — modülasyon onları oraya itebilir),
+kararlılık tavanları (delay feedback 0.99, `pulseWidth` [0.01, 0.99]),
+`BiquadFilter` Q tabanı 0.1 ve fiziksel modellerin şekillendirme alanları.
+Aralıklar `src/types.ts` JSDoc'larında yazılıdır.
+
+**Fiziksel modeller.** Temel nicelikler `synthesize` ile aynı kurala
+tabidir — örnek oranı [8000, 384000] tamsayı, süre ≥ 50 ms, temel frekans
+modelin tabanı ile Nyquist arası; dışı reddedilir, sessizce uzatılmaz ya da
+kaydırılmaz. Şekillendirme alanlarında (sertlik, sönüm, gürültü…) sonlu
+olmayan değer reddedilir, sonlu değer modelin fiziksel aralığına kelepçelenir.
+
+**Süre sınırı yoktur, bütçe vardır.** Eski 600 sn kelepçesi `repeat`
+toplamını da sessizce kesiyordu; artık tampon tam `duration + (repeat − 1) ×
+repeatTime` sürer ve aşırı istek kaynak bütçesinde reddedilir (aşağıda).
+
+### Reverb: `decay` RT60'tır
+
+`decay` saniye cinsinden RT60'tır: alçak frekans kuyruğunun 60 dB düşme
+süresi. Her comb kendi gecikmesinden Schroeder bağıntısıyla kazanç alır:
+`g = 10^(−3·D/T60)` (Schroeder 1962, Denk. 15; J.O. Smith, _Physical Audio
+Signal Processing_, "Achieving Desired Reverberation Times"). Damping
+filtresinin DC kazancı 1 olduğu için RT60 alçak frekansta tam tutar; `damp`
+yalnız tizleri hızlı söndürür. `roomSize` yalnız yankı yoğunluğunu (comb
+gecikmelerini) ölçekler, süreyi değiştirmez.
+
+Üç ek düzeltme aynı turda ölçümle geldi:
+
+- **Difüzörler gerçek allpass.** Freeverb'ün `y = w[n−N] − g·x` biçimi
+  allpass değildir (g = 0.5'te kademe başına ~+2 dB enerji; dört kademe
+  ölçülen +7.95 dB). Kafes biçimi `|H| = 1` verir.
+- **Wet enerji normalize.** Comb'un beyaz gürültü enerji kazancı
+  `⟨1/(1 − g²|H(ω)|²)⟩` analitik hesaplanır; wet yol ona göre ölçeklenir.
+  Ölçülen: 0.8…3.5 sn ve damp 0…0.45 aralığında gürültü wet kazancı
+  0.00 ± 0.07 dB. `amount` böylece bir karışım oranıdır, `decay` seviyeyi
+  değil süreyi değiştirir.
+- **Wet yol DC taşımaz.** Comb'un DC kazancı `1/(1 − g)` uzun RT60'ta ~10×
+  olur (ölçülen: crystalBell DC 0.0005 → 0.0144); wet çıkış 20 Hz tek kutuplu
+  DC engelleyiciden geçer.
+
+**Ölçüm** (`tests/reverbDecay.test.ts`): impuls yanıtının Schroeder
+geri entegrasyonu (EDC), ISO 3382-1 T30 (−5…−35 dB regresyonu, −60 dB'ye
+uzatma). damp = 0'da istenen 0.8 / 1.4 / 2.2 / 3.5 sn → ölçülen 0.799 /
+1.399 / 2.201 / 3.515 sn; roomSize 0.2 ile 0.8 arasında fark < %0.5.
+`tailSeconds` (ön gecikme + en uzun comb + allpass zinciri + RT60)
+noktasında kalan enerji ≤ −60.1 dB.
+
+**Bilinen sınır.** Paralel comb topolojisi tonal, sürekli girdide tek tek
+comb rezonanslarını uyarır: saf sinüste wet seviyesi frekansa bağlı ±4 dB
+oynar ve uzun RT60'ta L/R dengesi tonal bir pad'de ~2–3 dB ayrışabilir.
+Geniş bant enerji normalizedir; bu renklenme topolojinin kendisidir.
+
+**Preset göçü.** Eski kod `decay`i [0,1]'e kelepçeleyip normalize bir
+geri beslemeye çeviriyordu: paket presetlerinin yazdığı 1.7 / 1.8 / 1.9 /
+2.0 sn'lik yaylı reverb'lerinin HEPSİ gerçekte aynı 0.629 sn'yi çalıyordu.
+Presetler duyulmuş ve test edilmiş kimlikleriyle korunmak üzere, eski
+uygulamanın GERÇEKTE ürettiği RT60'a mekanik olarak taşındı (0.46–0.80 sn).
+Daha uzun bir salon isteyen preset değişikliği dinleme (audition) ister.
+
+## Kaynak bütçesi
+
+`synthesize`, fiziksel modeller ve writer, tampon ayırmadan önce maliyeti
+tahmin eder ve `RenderBudgetError` ile reddeder (`src/guard/budget.ts`).
+İki eksen ayrı sayılır:
+
+- **Bellek** — aynı anda canlı kalabilen tamponların üst sınırı: 2×
+  oversample iç tampon, decimate edilmiş çıkış, efekt zincirinin kopyası
+  (stereoda +1 kanal), sample katmanı ve efekt durum tamponları. GC'nin ara
+  tamponu erken bırakacağı varsayılmaz.
+- **İş** — deterministik birim sayısı: iç örnek başına sabit yük + osilatör
+  / filtre / LFO sayısı, çıkış örneği başına bus efektleri. Birim referans
+  makinede ≈ 10 ns'ye kalibre edilmiştir; kapı saati değil sayımı sınar.
+
+Varsayılan bütçe: **1.5 GiB** bellek tahmini, **6e9** iş birimi.
+
+Referans ölçüm — `pnpm --filter @volstudio/audio-synth exec tsx
+scripts/render-budget-bench.ts` (her senaryo ayrı süreç, tepe RSS
+`/usr/bin/time -f %M`; AMD Ryzen 5 7235HS, Node 22.23.1, Linux 7.2):
+
+| Senaryo                                  | Tahmin (MiB) | Tepe RSS (MiB) | İş birimi | Süre (sn) |
+| ---------------------------------------- | -----------: | -------------: | --------: | --------: |
+| sine 10 sn, 44.1 kHz, mono               |          6.7 |             95 |    1.32e7 |      0.13 |
+| 16 harmonik + detune, 60 sn, 48 kHz, rvb |         55.1 |            135 |    5.62e8 |      4.63 |
+| 600 sn, 48 kHz, stereo + reverb          |        549.5 |            629 |    1.15e9 |      10.6 |
+| aynısı + sample katmanı                  |        880.9 |            743 |    1.21e9 |      11.1 |
+| aynısı + `writeOgg`                      |        549.5 |            629 |    1.15e9 |  10.6+8.5 |
+
+Tepe RSS ~90 MiB'lık Node tabanını içerir; tahmin gerçek tampon tepesini
+izler, sample katmanında (üç tamponun hepsi aynı anda canlı kalmadığı için)
+üstten sınırlar. 1.5 GiB tavanı, desteklenen en büyük senaryoyu taşıyıp
+16 GiB'lık referans makinede dört eşzamanlı render'a yer bırakır; 600 sn'lik
+192 kHz stereo (≈ 2.3 GiB tahmin) reddedilir. 6e9 birim referans makinede
+~60 sn'dir — aynı senaryonun beş katı; bin tekrarlı üst üste binen uzun bir
+`repeat` ise ayırmadan önce düşer.
+
+**`writeOgg` tek parça PCM tamponu tutar, akış gerekmez.** Yazıcının
+ek tamponu çıkışın 1 katıdır (interleaved f32); render'ın kendi tepesi ise
+2× oversample iç tampon yüzünden daha yüksektir ve iç tampon yazıcıdan önce
+serbest kalır. Ölçülen: 600 sn / 48 kHz stereo render + `writeOgg` tepe
+RSS'i render'ın tek başına tepesiyle aynı (629 MiB). Yazıcı yine de kendi
+tamponunu aynı bütçeyle ayırmadan önce denetler.
+
 ## Arp / Sequence
 
 `compose()` ile melodik diziler üretilir:

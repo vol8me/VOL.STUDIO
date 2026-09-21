@@ -9,12 +9,90 @@ import {
   StereoWidener,
 } from '../effects';
 import { NORMALIZE_TARGET_PEAK } from './constants';
+import { resolveBusParams, type ResolvedBusEffects } from '../guard/synth';
+import { checkNumber } from '../guard/read';
 
 /**
- * Mono kuru buffer'a master efektleri, pan, stereo reverb ve normalize uygular.
- * Zincir: delay → flanger → phaser → chorus → pan → stereo reverb →
- * stereo width → normalize → kuyruk de-click fade. Pan reverb öncesi —
- * her kanal kendi reverb kuyruğuna girer, geniş imaj.
+ * Mono kuru tampona bus efekt zincirini uygular ve kanalları döner:
+ * delay → flanger → phaser → chorus → pan → stereo reverb → stereo width.
+ * Pan reverb öncesi — her kanal kendi reverb kuyruğuna girer, geniş imaj.
+ * Seviye/normalize burada YOKTUR; o karar çağıranın mastering adımındadır.
+ *
+ * `dryBuffer` değiştirilmez; zincir kendi kopyasında çalışır.
+ */
+export function applyBusEffects(
+  dryBuffer: Float32Array,
+  bus: ResolvedBusEffects,
+  sampleRate: number,
+): Float32Array[] {
+  const effected = dryBuffer.slice();
+
+  if (bus.delay) {
+    const delay = new DelayLine(bus.delay, sampleRate);
+    for (let i = 0; i < effected.length; i++) {
+      effected[i] = delay.process(effected[i]);
+    }
+  }
+
+  if (bus.flanger) {
+    const flanger = new Flanger(bus.flanger, sampleRate);
+    for (let i = 0; i < effected.length; i++) {
+      effected[i] = flanger.process(effected[i], i / sampleRate);
+    }
+  }
+
+  if (bus.phaser) {
+    const phaser = new PhaserEffect(bus.phaser, sampleRate);
+    for (let i = 0; i < effected.length; i++) {
+      effected[i] = phaser.process(effected[i], i / sampleRate);
+    }
+  }
+
+  if (bus.chorus) {
+    const chorus = new Chorus(bus.chorus, sampleRate);
+    for (let i = 0; i < effected.length; i++) {
+      effected[i] = chorus.process(effected[i], i / sampleRate);
+    }
+  }
+
+  const needsStereo =
+    bus.pan !== undefined || bus.stereoWidth !== undefined || bus.reverb !== undefined;
+  if (!needsStereo) return [effected];
+
+  // Sol kanal `effected`in kendisidir: ikinci bir tam boy kopya gerekmez.
+  const left = effected;
+  const right = new Float32Array(effected.length);
+  if (bus.pan !== undefined) {
+    const [leftGain, rightGain] = getPanGains(bus.pan);
+    for (let i = 0; i < effected.length; i++) {
+      right[i] = effected[i] * rightGain;
+      left[i] = effected[i] * leftGain;
+    }
+  } else {
+    right.set(effected);
+  }
+
+  // Stereo reverb — pan sonrası, her kanal bağımsız reverb kuyruğu
+  if (bus.reverb) {
+    const reverb = new Reverb(bus.reverb, sampleRate);
+    for (let i = 0; i < left.length; i++) {
+      [left[i], right[i]] = reverb.processStereo(left[i], right[i]);
+    }
+  }
+
+  if (bus.stereoWidth !== undefined) {
+    const widener = new StereoWidener(bus.stereoWidth);
+    for (let i = 0; i < left.length; i++) {
+      [left[i], right[i]] = widener.process(left[i], right[i]);
+    }
+  }
+
+  return [left, right];
+}
+
+/**
+ * Tek bir sesin çıkış hazırlığı: bus zinciri, tepe normalizasyonu (ya da düz
+ * kazanç) ve kuyruk de-click'i.
  *
  * `dryBuffer` değiştirilmez; fonksiyon kendi kopyasında çalışır.
  */
@@ -25,89 +103,15 @@ export function applyGlobalEffects(
   totalDuration: number,
   gain: number,
 ): SynthesisResult {
-  const effected = dryBuffer.slice();
-
-  if (params.delay) {
-    const delay = new DelayLine(params.delay, sampleRate);
-    for (let i = 0; i < effected.length; i++) {
-      effected[i] = delay.process(effected[i]);
-    }
-  }
-
-  if (params.flanger) {
-    const flanger = new Flanger(params.flanger, sampleRate);
-    for (let i = 0; i < effected.length; i++) {
-      effected[i] = flanger.process(effected[i], i / sampleRate);
-    }
-  }
-
-  if (params.phaser) {
-    const phaser = new PhaserEffect(params.phaser, sampleRate);
-    for (let i = 0; i < effected.length; i++) {
-      effected[i] = phaser.process(effected[i], i / sampleRate);
-    }
-  }
-
-  if (params.chorus) {
-    const chorus = new Chorus(params.chorus, sampleRate);
-    for (let i = 0; i < effected.length; i++) {
-      effected[i] = chorus.process(effected[i], i / sampleRate);
-    }
-  }
-
-  // Pan reverb öncesi — stereo'ya böl, sonra reverb her kanalı bağımsız işler
-  const needsStereo =
-    params.pan !== undefined || params.stereoWidth !== undefined || params.reverb !== undefined;
-  let left: Float32Array;
-  let right: Float32Array;
-
-  if (needsStereo) {
-    left = new Float32Array(effected.length);
-    right = new Float32Array(effected.length);
-
-    if (params.pan !== undefined) {
-      const [leftGain, rightGain] = getPanGains(params.pan);
-      for (let i = 0; i < effected.length; i++) {
-        left[i] = effected[i] * leftGain;
-        right[i] = effected[i] * rightGain;
-      }
-    } else {
-      for (let i = 0; i < effected.length; i++) {
-        left[i] = effected[i]!;
-        right[i] = effected[i]!;
-      }
-    }
-  } else {
-    left = effected;
-    right = effected;
-  }
-
-  // Stereo reverb — pan sonrası, her kanal bağımsız reverb kuyruğu
-  if (params.reverb) {
-    const reverb = new Reverb(params.reverb, sampleRate);
-    for (let i = 0; i < left.length; i++) {
-      [left[i], right[i]] = reverb.processStereo(left[i], right[i]);
-    }
-  }
-
-  // Stereo width — reverb sonrası
-  if (params.stereoWidth !== undefined && needsStereo) {
-    const widthParam =
-      typeof params.stereoWidth === 'number' ? { width: params.stereoWidth } : params.stereoWidth;
-    const widener = new StereoWidener(widthParam);
-    for (let i = 0; i < left.length; i++) {
-      [left[i], right[i]] = widener.process(left[i], right[i]);
-    }
-  }
-
-  // Kanal listesi — stereo ise iki kanal, değilse mono
-  const channels: Float32Array[] = needsStereo ? [left, right] : [effected];
+  const bus = resolveBusParams(params);
+  const level = checkNumber(gain, 'gain', { min: 0, max: 1 });
+  const channels = applyBusEffects(dryBuffer, bus, sampleRate);
 
   // Tepe normalizasyonu opsiyoneldir. Varsayılan `true` — mevcut tüm preset'ler
   // ve üretilmiş asset'ler bu davranışa göre ayarlanmış durumda. Ama her sesi
   // 0.95'e çekmek doğal seviye farklarını yok eder: bir UI blip'i ile bir
-  // patlama aynı tepeye çıkar. Mix dinamiği önemli olan yerlerde (bkz.
-  // sequencer'da nota bazlı sentez) `normalize: false` geçilmelidir.
+  // patlama aynı tepeye çıkar. Mix dinamiği önemli olan yerlerde
+  // `normalize: false` geçilmelidir.
   let peak = 0;
   for (const ch of channels) {
     for (const s of ch) {
@@ -117,17 +121,17 @@ export function applyGlobalEffects(
 
   if (params.normalize !== false) {
     if (peak > 0) {
-      const scale = (NORMALIZE_TARGET_PEAK * gain) / peak;
+      const scale = (NORMALIZE_TARGET_PEAK * level) / peak;
       for (const ch of channels) {
         for (let i = 0; i < ch.length; i++) {
           ch[i] *= scale;
         }
       }
     }
-  } else if (gain !== 1) {
+  } else if (level !== 1) {
     for (const ch of channels) {
       for (let i = 0; i < ch.length; i++) {
-        ch[i] *= gain;
+        ch[i] *= level;
       }
     }
   }
@@ -158,6 +162,7 @@ export function applyGlobalEffects(
 
 /** Tek kanallı mono örneklerden zirveye göre normalize eder. */
 export function normalize(buffer: Float32Array, target = 0.95): Float32Array {
+  checkNumber(target, 'target', { above: 0, max: 1 });
   let peak = 0;
   for (const s of buffer) peak = Math.max(peak, Math.abs(s));
   if (peak === 0) return buffer;
@@ -174,6 +179,8 @@ export function normalize(buffer: Float32Array, target = 0.95): Float32Array {
  * `y = x - (x - T + W/2)² / (2W)`, üstünde `y = T`.
  */
 export function limitBuffer(buffer: Float32Array, threshold = 0.95, knee = 0.1): Float32Array {
+  checkNumber(threshold, 'threshold', { above: 0, max: 1 });
+  checkNumber(knee, 'knee', { min: 0 });
   const out = new Float32Array(buffer.length);
   const w = Math.max(1e-6, knee);
   const kneeStart = threshold - w / 2;

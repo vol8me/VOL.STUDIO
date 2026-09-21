@@ -67,17 +67,30 @@ describe('brass (lip-reed fiziksel modeli)', () => {
     expect(differing).toBeGreaterThan(0);
   });
 
-  it('geçersiz frequency/duration/sampleRate çökme veya boş çıktı üretmez', () => {
+  it('sonlu olmayan değer ve geçersiz temel nicelik adıyla reddedilir', () => {
+    // NaN'ı aralığın tabanına sabitlemek bozuk girdiyi geçerli bir sese
+    // çevirirdi; süre/frekans/örnek oranı da sessizce kaydırılmaz.
+    const cases: [Record<string, number>, string, string][] = [
+      [{ frequency: NaN }, 'brass.frequency', 'non-finite'],
+      [{ frequency: Infinity }, 'brass.frequency', 'non-finite'],
+      [{ frequency: -100 }, 'brass.frequency', 'range'],
+      [{ duration: NaN }, 'brass.duration', 'non-finite'],
+      [{ duration: -1 }, 'brass.duration', 'range'],
+      [{ sampleRate: 0 }, 'brass.sampleRate', 'range'],
+      [{ sampleRate: NaN }, 'brass.sampleRate', 'non-finite'],
+      [{ frequency: 0 }, 'brass.frequency', 'range'],
+      [{ duration: Infinity }, 'brass.duration', 'non-finite'],
+      [{ lipNoise: NaN }, 'brass.lipNoise', 'non-finite'],
+    ];
+    for (const [overrides, path, issue] of cases) {
+      expect(() => brass({ frequency: 220, duration: 0.2, ...overrides })).toThrow(
+        expect.objectContaining({ name: 'AudioParamError', path, issue }),
+      );
+    }
+  });
+
+  it('sonlu şekillendirme değerleri modelin fiziksel aralığına kelepçelenir', () => {
     const cases = [
-      { frequency: NaN },
-      { frequency: Infinity },
-      { frequency: -100 },
-      { frequency: 0 },
-      { duration: NaN },
-      { duration: Infinity },
-      { duration: -1 },
-      { sampleRate: 0 },
-      { sampleRate: NaN },
       { lowpassCutoff: -500 },
       { lowpassCutoff: 30000 },
       { attack: 100 },

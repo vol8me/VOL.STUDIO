@@ -1,4 +1,6 @@
 import type { Curve, EnvelopeParams } from '../types';
+import { checkNumber } from '../guard/read';
+import { resolveEnvelope } from '../guard/synthesis';
 
 /** `1 - 10^-3` — eğrinin normalize edilmemiş halinin t=1'deki değeri. */
 const SATURATING_SPAN = 1 - Math.pow(10, -3);
@@ -41,11 +43,9 @@ export class Envelope {
   private readonly loop: boolean;
 
   constructor(params: EnvelopeParams, duration: number) {
-    let attack = params.attack ?? 0;
-    let hold = params.hold ?? 0;
-    let decay = params.decay ?? 0;
-    let sustain = params.sustain ?? 0;
-    let release = params.release ?? 0;
+    const resolved = resolveEnvelope(params, 'envelope');
+    checkNumber(duration, 'envelope.duration', { min: 0 });
+    let { attack, hold, decay, sustain, release } = resolved;
 
     const total = attack + hold + decay + sustain + release;
     if (total > duration && total > 0) {
@@ -72,9 +72,9 @@ export class Envelope {
     this.decay = decay;
     this.sustain = sustain;
     this.release = release;
-    this.sustainLevel = params.sustainLevel ?? 0.5;
-    this.curve = params.curve ?? 'exponential';
-    this.loop = params.loop ?? false;
+    this.sustainLevel = resolved.sustainLevel;
+    this.curve = resolved.curve;
+    this.loop = resolved.loop;
 
     this.total = this.attack + this.hold + this.decay + this.sustain + this.release;
   }

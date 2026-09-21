@@ -125,7 +125,7 @@ export function violin(frequency = 440, duration = 2.0): SynthParams {
     release: 0.3,
     sustainLevel: 0.9,
     reverbAmount: 0.18,
-    reverbDecay: 1.8,
+    reverbDecay: 0.63,
     stereoWidth: 0.35,
     gain: 0.18,
   });
@@ -147,7 +147,7 @@ export function viola(frequency = 220, duration = 2.0): SynthParams {
     release: 0.35,
     sustainLevel: 0.88,
     reverbAmount: 0.2,
-    reverbDecay: 1.9,
+    reverbDecay: 0.63,
     stereoWidth: 0.32,
     gain: 0.18,
   });
@@ -169,7 +169,7 @@ export function cello(frequency = 130.8, duration = 2.2): SynthParams {
     release: 0.4,
     sustainLevel: 0.85,
     reverbAmount: 0.22,
-    reverbDecay: 2.0,
+    reverbDecay: 0.63,
     stereoWidth: 0.28,
     gain: 0.2,
   });
@@ -191,7 +191,7 @@ export function doubleBass(frequency = 82.4, duration = 2.0): SynthParams {
     release: 0.45,
     sustainLevel: 0.82,
     reverbAmount: 0.18,
-    reverbDecay: 1.7,
+    reverbDecay: 0.63,
     stereoWidth: 0.22,
     gain: 0.22,
   });

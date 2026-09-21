@@ -9,6 +9,8 @@
 import { createRandom, DEFAULT_SEED } from '@volstudio/core/random';
 import { clamp } from '@volstudio/core/math/interpolation';
 import type { SynthesisResult } from '../../types';
+import { resolveModelBase, type ModelRules } from '../../guard/models';
+import { checkArray, checkObject, requireNumber } from '../../guard/read';
 import { BiquadFilter } from '../../synthesis/filter';
 import { Envelope } from '../../synthesis/envelope';
 import { getPanGains } from '../../effects';
@@ -59,10 +61,45 @@ function createFormantFilter(sampleRate: number, formant: Formant): BiquadFilter
   return new BiquadFilter(sampleRate, 'bandpass', Math.max(0.5, q));
 }
 
+function resolveFormants(value: unknown): Formant[] {
+  return checkArray(value, 'formant.formants').map((item, index) => {
+    const at = `formant.formants[${index}]`;
+    const o = checkObject(item, at, ['frequency', 'gain', 'bandwidth']);
+    return {
+      frequency: requireNumber(o, 'frequency', at, { above: 0 }),
+      gain: requireNumber(o, 'gain', at, { min: 0, max: 1 }),
+      bandwidth: requireNumber(o, 'bandwidth', at, { above: 0 }),
+    };
+  });
+}
+
+const FORMANT_RULES: ModelRules = {
+  keys: [
+    'frequency',
+    'duration',
+    'sampleRate',
+    'formants',
+    'vibratoDepth',
+    'vibratoRate',
+    'voices',
+    'unisonDetune',
+    'attack',
+    'release',
+    'gain',
+    'seed',
+  ],
+  minFrequency: 65,
+  buffersPerFrame: 2,
+  // Ses başına en çok 50 kısmi ton × iki kanal, artı formant filtreleri.
+  unitsPerFrame: (o) => 100 * clamp(typeof o.voices === 'number' ? o.voices : 4, 1, 8) + 32,
+};
+
 export function formant(params: FormantParams): SynthesisResult {
-  const sampleRate = clamp(params.sampleRate ?? 44100, 1000, 384000);
-  const f0 = clamp(params.frequency, 65, sampleRate / 2);
-  const duration = clamp(params.duration, 0.05, 600);
+  const {
+    sampleRate,
+    frequency: f0,
+    duration,
+  } = resolveModelBase(params, 'formant', FORMANT_RULES);
   const totalSamples = Math.floor(sampleRate * duration);
 
   const defaultFormants: Formant[] = [
@@ -70,7 +107,8 @@ export function formant(params: FormantParams): SynthesisResult {
     { frequency: 1220, gain: 0.63, bandwidth: 140 },
     { frequency: 2600, gain: 0.4, bandwidth: 220 },
   ];
-  const formants = params.formants ?? defaultFormants;
+  const formants =
+    params.formants === undefined ? defaultFormants : resolveFormants(params.formants);
   const vibratoDepth = clamp(params.vibratoDepth ?? 2.5, 0, f0 * 0.1);
   const vibratoRate = clamp(params.vibratoRate ?? 5.0, 0, 20);
   const voices = Math.floor(clamp(params.voices ?? 4, 1, 8));

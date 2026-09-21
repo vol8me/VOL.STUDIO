@@ -2,10 +2,10 @@ import type { Envelope } from '../synthesis/envelope';
 import { getWaveSampleWithPhase } from '../synthesis/waveforms';
 import { BiquadFilter, BUTTERWORTH_Q4, getCutoffAtTime, type Filter } from '../synthesis/filter';
 import type { Distortion } from '../effects';
+import type { ResolvedFilter } from '../guard/synthesis';
 import type { Voice } from './voice';
 import { frequencyAtTime, getFmSample } from './frequency';
 import { OVERSAMPLE_FACTOR } from './constants';
-import { clamp01 } from '@volstudio/core/math/interpolation';
 
 export function renderDrySample(
   t: number,
@@ -24,8 +24,8 @@ export function renderDrySample(
   envelope: Envelope,
   lowpass: Filter | undefined,
   highpass: Filter | undefined,
-  lowpassParams: { cutoff: number; slide?: number; envAmount?: number } | undefined,
-  highpassParams: { cutoff: number; slide?: number; envAmount?: number } | undefined,
+  lowpassParams: ResolvedFilter | undefined,
+  highpassParams: ResolvedFilter | undefined,
   lowpassEnv: Envelope | undefined,
   highpassEnv: Envelope | undefined,
   distortion: Distortion | undefined,
@@ -75,8 +75,7 @@ export function renderDrySample(
           // başına kasıtlı azalan kazanç tanımlar; burada uygulanmazsa tüm
           // harmonikler eşit sesle çalar ve tasarlanan timbre kaybolur.
           sum +=
-            clamp01(h.gain) *
-            getWaveSampleWithPhase('sine', voice.phases[hi] + (h.phase ?? 0), pulseWidth, inc);
+            h.gain * getWaveSampleWithPhase('sine', voice.phases[hi] + h.phase, pulseWidth, inc);
         }
         voice.phases[hi] = (voice.phases[hi] + inc) % 1;
       }
@@ -98,7 +97,7 @@ export function renderDrySample(
     let cutoff = getCutoffAtTime(lowpassParams, t, duration);
     if (lowpassEnv) {
       const envValue = lowpassEnv.value(t);
-      const envAmount = lowpassParams.envAmount ?? 0;
+      const envAmount = lowpassParams.envAmount;
       cutoff *= 1 - envAmount + envAmount * envValue;
     }
     cutoff += lfoValues.filter;
@@ -108,7 +107,7 @@ export function renderDrySample(
     let cutoff = getCutoffAtTime(highpassParams, t, duration);
     if (highpassEnv) {
       const envValue = highpassEnv.value(t);
-      const envAmount = highpassParams.envAmount ?? 0;
+      const envAmount = highpassParams.envAmount;
       cutoff *= 1 - envAmount + envAmount * envValue;
     }
     cutoff += lfoValues.filter;
@@ -143,6 +142,10 @@ export function renderDrySample(
  *
  * Filtre 4. derece Butterworth: iki biquad kaskadı, Q değerleri 0.5412 ve
  * 1.3066 (Butterworth kutup açılarından).
+ *
+ * IIR durumu her örnekte ilerlemek ZORUNDA, ama yalnız decimation'da kalan
+ * örnek saklanır: ara bir tam boy "filtrelenmiş" tampon gerekmez. Çıktı,
+ * önce filtreleyip sonra seçen yolla bit düzeyinde aynıdır.
  */
 export function downsample2x(
   buffer: Float32Array,
@@ -152,16 +155,12 @@ export function downsample2x(
   const cutoff = targetRate * 0.45;
   const f1 = new BiquadFilter(internalRate, 'lowpass', BUTTERWORTH_Q4[0]);
   const f2 = new BiquadFilter(internalRate, 'lowpass', BUTTERWORTH_Q4[1]);
-  const filtered = new Float32Array(buffer.length);
-  for (let i = 0; i < buffer.length; i++) {
-    const s = buffer[i];
-    filtered[i] = f2.process(f1.process(s, cutoff), cutoff);
-  }
-  // Decimate by 2
   const outLen = Math.floor(buffer.length / OVERSAMPLE_FACTOR);
   const out = new Float32Array(outLen);
-  for (let i = 0; i < outLen; i++) {
-    out[i] = filtered[i * OVERSAMPLE_FACTOR]!;
+  for (let i = 0; i < buffer.length; i++) {
+    const y = f2.process(f1.process(buffer[i], cutoff), cutoff);
+    if (i % OVERSAMPLE_FACTOR === 0 && i < outLen * OVERSAMPLE_FACTOR)
+      out[i / OVERSAMPLE_FACTOR] = y;
   }
   return out;
 }

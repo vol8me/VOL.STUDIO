@@ -93,7 +93,7 @@ export function trumpet(frequency = 440, duration = 1.2): SynthParams {
     },
     gain: 0.45,
     reverbAmount: 0.12,
-    reverbDecay: 0.9,
+    reverbDecay: 0.47,
   });
 }
 
@@ -111,7 +111,7 @@ export function trombone(frequency = 220, duration = 1.5): SynthParams {
     },
     gain: 0.45,
     reverbAmount: 0.12,
-    reverbDecay: 0.9,
+    reverbDecay: 0.47,
   });
 }
 
@@ -129,7 +129,7 @@ export function frenchHorn(frequency = 220, duration = 1.8): SynthParams {
     },
     gain: 0.45,
     reverbAmount: 0.15,
-    reverbDecay: 1.1,
+    reverbDecay: 0.58,
   });
 }
 
@@ -147,6 +147,6 @@ export function tuba(frequency = 98, duration = 2.0): SynthParams {
     },
     gain: 0.45,
     reverbAmount: 0.15,
-    reverbDecay: 1.1,
+    reverbDecay: 0.58,
   });
 }

@@ -1,4 +1,5 @@
 import type { StereoWidthParams } from '../types';
+import { resolveStereoWidth } from '../guard/effects';
 
 // -----------------------------------------------------------------------------
 // Stereo Width
@@ -8,8 +9,7 @@ export class StereoWidener {
   private readonly width: number;
 
   constructor(params: StereoWidthParams | number) {
-    const w = typeof params === 'number' ? params : params.width;
-    this.width = Math.max(0, Math.min(2, w));
+    this.width = resolveStereoWidth(params, 'stereoWidth');
   }
 
   /**

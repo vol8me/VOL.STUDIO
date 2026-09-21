@@ -53,7 +53,7 @@ function woodwindBody(
       poles: 2,
       type: 'lowpass',
     },
-    reverb: { amount: 0.15, decay: 1.2, roomSize: 0.5, damp: 0.55 },
+    reverb: { amount: 0.15, decay: 0.61, roomSize: 0.5, damp: 0.55 },
     stereoWidth: 0.35,
     vibratoDepth: params.vibratoDepth ?? 0,
     vibratoRate: params.vibratoRate ?? 0,
