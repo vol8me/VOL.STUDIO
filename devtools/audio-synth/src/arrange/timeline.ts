@@ -1,6 +1,8 @@
 import { synthesize } from '../engine';
+import { checkNumber, checkSampleRate } from '../guard/read';
 import type { SynthParams, SynthesisResult } from '../types';
-import { matchLoudness, type LoudnessOptions } from './loudness';
+import type { LoudnessOptions } from './loudness';
+import { addVoice, createMix, masterMix, stableJitter } from './mix';
 import { noteToHz } from './pitch';
 
 /**
@@ -62,29 +64,32 @@ export interface RenderOptions extends LoudnessOptions {
    *
    * `tailSeconds` payı en uzun notanın bitişine göre verilir, ama motor her
    * notanın reverb kuyruğunu kendi süresinde keser — pay çoğu zaman tümüyle
-   * boş kalır (ölçüldü: bir parçada sonda 4 saniye tam sessizlik).
+   * boş kalır (ölçüldü: bir parçada sonda 4 saniye tam sessizlik). Kırpılan
+   * aralık yükseklik ölçümüne GİRMEZ.
    */
   trimSilence?: boolean;
+  /**
+   * Dikişsiz loop: tampon tam `loopBars` ölçü sürer, sonu aşan kuyruklar
+   * başa sarılır; sessizlik kırpılmaz ve son sönüm uygulanmaz.
+   */
+  loopBars?: number;
 }
 
-/** Deterministik doğrusal eşleşmeli üreteç. */
-function createRandom(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
-}
+/** Kırpma eşiği: mix tepesinin −56 dB altı (eski mutlak 0.0015 ≈ 0.95 tavanda). */
+const AUDIBLE_FLOOR_RELATIVE = Math.pow(10, -56 / 20);
 
-/** Kırpma yapılırken duyulur sayılan en küçük genlik. */
-const AUDIBLE_FLOOR = 0.0015;
+/** Son duyulur örnekten sonra bırakılan pay (saniye). */
+const TRIM_MARGIN_SECONDS = 0.35;
+
+/** Mix'in DC'si son adımda temizlenir (tarihî master kuralı). */
+const MASTER_DC_BLOCK_HZ = 20;
 
 /** Tampon sonundaki tıkı önleyen sönüş. */
 const END_FADE_SECONDS = 0.04;
 
 export class Timeline {
   private readonly events: NoteEvent[] = [];
-  private readonly random: () => number;
+  private readonly humanizeSeed: number;
   readonly bpm: number;
   readonly beatsPerBar: number;
   readonly sampleRate: number;
@@ -100,10 +105,13 @@ export class Timeline {
     }
     this.bpm = options.bpm;
     this.beatsPerBar = options.beatsPerBar;
-    this.sampleRate = options.sampleRate ?? 44100;
-    this.random = createRandom(options.humanizeSeed ?? 1);
-    this.timingJitter = options.timingJitter ?? 0.012;
-    this.velocityJitter = options.velocityJitter ?? 0.1;
+    this.sampleRate = checkSampleRate(options.sampleRate ?? 44100, 'sampleRate');
+    this.humanizeSeed = checkNumber(options.humanizeSeed ?? 1, 'humanizeSeed');
+    this.timingJitter = checkNumber(options.timingJitter ?? 0.012, 'timingJitter', { min: 0 });
+    this.velocityJitter = checkNumber(options.velocityJitter ?? 0.1, 'velocityJitter', {
+      min: 0,
+      max: 1,
+    });
   }
 
   /** Vuruş → saniye. */
@@ -126,6 +134,10 @@ export class Timeline {
     }
     if (!Number.isFinite(event.bar) || !Number.isFinite(event.beat ?? 0)) {
       throw new TypeError(`bar/beat sonlu olmalı (${event.note})`);
+    }
+    const gain = event.gain ?? 1;
+    if (!Number.isFinite(gain) || gain < 0 || gain > 1) {
+      throw new TypeError(`gain [0, 1] aralığında olmalı (${event.note})`);
     }
     // Nota adı burada doğrulanır: render sırasında patlarsa hangi olayın
     // bozuk olduğunu bulmak yüzlerce nota arasında aramak demektir.
@@ -157,22 +169,33 @@ export class Timeline {
   /**
    * Düzenlemeyi stereo bir tampona indirger.
    *
-   * Notalar TOPLANIR; her nota kendi `synthesize` çağrısıyla üretilir ve
-   * mutlak örnek ofsetine eklenir. Toplama kırpabilir, o yüzden sonunda
-   * yükseklik eşitleme ve sınırlayıcı çalışır (bkz. `loudness.ts`).
+   * Notalar kanonik mix veriyolunda TOPLANIR (`arrange/mix.ts`); her nota
+   * kendi `synthesize` çağrısıyla üretilir. Seviye en sonda bir kez verilir:
+   * önce tutulacak aralık bulunur, yükseklik YALNIZ onun üstünde ölçülür,
+   * sonra sınırlayıcı ve tavan (`engine/master.ts`).
+   *
+   * İnsanlaştırma durumsuzdur: aynı nesnede ardışık `render()` çağrıları
+   * birebir aynı örnekleri verir.
    */
   render(options: RenderOptions = {}): SynthesisResult {
     if (this.events.length === 0) {
       throw new TypeError('Boş zaman çizelgesi render edilemez');
     }
     const sampleRate = this.sampleRate;
-    const tail = options.tailSeconds ?? 3;
+    const tail = checkNumber(options.tailSeconds ?? 3, 'tailSeconds', { min: 0 });
+    const loopBars =
+      options.loopBars === undefined
+        ? undefined
+        : checkNumber(options.loopBars, 'loopBars', { min: 1, integer: true });
 
     let end = 0;
-    const placed = this.events.map((event) => {
-      const jitter = (this.random() - 0.5) * this.timingJitter;
+    const placed = this.events.map((event, index) => {
+      const jitter = (stableJitter(this.humanizeSeed, index, 0) - 0.5) * this.timingJitter;
       const velocity =
-        (event.gain ?? 1) * (1 - this.velocityJitter / 2 + this.random() * this.velocityJitter);
+        (event.gain ?? 1) *
+        (1 -
+          this.velocityJitter / 2 +
+          stableJitter(this.humanizeSeed, index, 1) * this.velocityJitter);
       const at = Math.max(
         0,
         this.positionToSeconds(event.bar, event.beat ?? 0) + this.beatsToSeconds(jitter),
@@ -182,53 +205,55 @@ export class Timeline {
       return { event, at, duration, velocity: Math.min(1, Math.max(0, velocity)) };
     });
 
-    const total = Math.ceil((end + tail) * sampleRate);
-    const left = new Float32Array(total);
-    const right = new Float32Array(total);
-
+    const length = loopBars === undefined ? end + tail : this.positionToSeconds(loopBars, 0);
+    const mix = createMix(length, sampleRate);
     for (const { event, at, duration, velocity } of placed) {
       const params: SynthParams = {
         ...event.instrument(noteToHz(event.note), duration),
         sampleRate,
       };
       if (event.pan !== undefined) params.pan = event.pan;
-
-      const rendered = synthesize(params);
-      const sourceLeft = rendered.channels[0];
-      if (!sourceLeft) continue;
-      const sourceRight = rendered.channels[1] ?? sourceLeft;
-      const offset = Math.floor(at * sampleRate);
-      const count = Math.min(sourceLeft.length, total - offset);
-      for (let i = 0; i < count; i++) {
-        left[offset + i] += sourceLeft[i] * velocity;
-        right[offset + i] += sourceRight[i] * velocity;
-      }
+      addVoice(mix, synthesize(params), at, {
+        gain: velocity,
+        wrap: loopBars !== undefined,
+      });
     }
 
-    matchLoudness([left, right], options);
-
+    const total = mix.channels[0].length;
     let kept = total;
-    if (options.trimSilence !== false) {
+    if (loopBars === undefined && options.trimSilence !== false) {
+      const floor = mixPeak(mix.channels) * AUDIBLE_FLOOR_RELATIVE;
       let last = total - 1;
       while (
         last > 0 &&
-        Math.abs(left[last]) < AUDIBLE_FLOOR &&
-        Math.abs(right[last]) < AUDIBLE_FLOOR
+        Math.abs(mix.channels[0][last]) < floor &&
+        Math.abs(mix.channels[1][last]) < floor
       ) {
         last--;
       }
-      kept = Math.min(total, last + Math.floor(0.35 * sampleRate));
+      kept = Math.min(total, last + Math.floor(TRIM_MARGIN_SECONDS * sampleRate));
     }
 
-    const outLeft = left.subarray(0, kept);
-    const outRight = right.subarray(0, kept);
-    const fade = Math.min(kept, Math.floor(END_FADE_SECONDS * sampleRate));
-    for (let i = 0; i < fade; i++) {
-      const scale = i / fade;
-      outLeft[kept - 1 - i] *= scale;
-      outRight[kept - 1 - i] *= scale;
-    }
-
-    return { channels: [outLeft, outRight], sampleRate, duration: kept / sampleRate };
+    const out = { channels: mix.channels.map((ch) => ch.subarray(0, kept)), sampleRate };
+    masterMix(out, {
+      level: {
+        mode: 'rms',
+        target: options.targetRms ?? 0.1,
+        maxGain: options.maxGain ?? 6,
+      },
+      limiter: { threshold: options.threshold ?? 0.7, knee: 0.28 },
+      ceiling: options.ceiling ?? 0.95,
+      dcBlockHz: MASTER_DC_BLOCK_HZ,
+      fadeOutSeconds: loopBars === undefined ? END_FADE_SECONDS : 0,
+    });
+    return { channels: out.channels, sampleRate, duration: kept / sampleRate };
   }
+}
+
+function mixPeak(channels: readonly Float32Array[]): number {
+  let peak = 0;
+  for (const channel of channels) {
+    for (const value of channel) peak = Math.max(peak, Math.abs(value));
+  }
+  return peak;
 }

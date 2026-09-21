@@ -264,3 +264,110 @@ describe('zaman çizelgesi', () => {
     expect(trimmed.duration).toBeGreaterThan(0.3);
   });
 });
+
+describe('kanonik düzenleme yolu', () => {
+  const build = (seed = 7) =>
+    new Timeline({ bpm: 120, beatsPerBar: 4, humanizeSeed: seed, sampleRate: 22050 });
+
+  it('aynı çizelgede ardışık render birebir aynıdır (insanlaştırma durumsuz)', () => {
+    const t = build();
+    for (let bar = 0; bar < 2; bar++) {
+      t.note({ instrument: Presets.marimba, note: 'D4', bar, beats: 1, gain: 0.6 });
+      t.note({ instrument: Presets.glockenspiel, note: 'A5', bar, beat: 2, beats: 1, gain: 0.4 });
+    }
+    const first = t.render({ tailSeconds: 0.5 }).channels[0];
+    const second = t.render({ tailSeconds: 0.5 }).channels[0];
+    expect(second.length).toBe(first.length);
+    expect(Array.from(second)).toEqual(Array.from(first));
+  });
+
+  it('kırpılan sessiz kuyruk yükseklik ölçümüne girmez', () => {
+    // Pay ne kadar uzun olursa olsun ölü hava kırpılır; kazanç yalnız tutulan
+    // aralıktan ölçülmeli. Eski sırada 8 sn'lik pay RMS'i düşürüp kazancı
+    // şişiriyordu (10 sn içerikte 4 sn sessizlik ≈ %18 fazla kazanç).
+    const render = (tailSeconds: number) => {
+      const t = build();
+      t.note({ instrument: Presets.drawbarOrgan, note: 'C4', bar: 0, beats: 2, gain: 0.5 });
+      return t.render({ tailSeconds, targetRms: 0.05 });
+    };
+    const short = render(0.5);
+    const long = render(8);
+    expect(long.duration).toBeCloseTo(short.duration, 2);
+    expect(measureRms(long.channels)).toBeCloseTo(measureRms(short.channels), 4);
+  });
+
+  it('loop render tam ölçü sürer, taşan kuyruk başa sarılır ve dikişte sıçrama yoktur', () => {
+    const t = build();
+    // Tek nota son vuruşta başlar ve ölçüyü bir buçuk vuruş aşar.
+    t.note({
+      instrument: Presets.drawbarOrgan,
+      note: 'A3',
+      bar: 0,
+      beat: 3,
+      beats: 1.5,
+      gain: 0.5,
+    });
+    const out = t.render({ loopBars: 1, targetRms: 0 });
+    const beat = 22050 * 0.5;
+    expect(out.channels[0].length).toBe(4 * beat);
+    // Notadan önceki ilk yarım vuruş: yalnız sarılan kuyruk olabilir.
+    const head = out.channels[0].subarray(0, beat / 4);
+    expect(measureRms([head])).toBeGreaterThan(1e-3);
+    // Dikiş: son örnekten ilk örneğe geçiş sinyalin kendi adımlarından büyük değil.
+    const ch = out.channels[0];
+    let maxStep = 0;
+    for (let i = 1; i < ch.length; i++) maxStep = Math.max(maxStep, Math.abs(ch[i] - ch[i - 1]));
+    expect(Math.abs(ch[0] - ch[ch.length - 1])).toBeLessThanOrEqual(maxStep);
+  });
+
+  it('normalize edilmiş mono seste pan verilmemesi ile pan 0 aynı seviyeyi verir', () => {
+    const render = (pan?: number) => {
+      const t = build();
+      // Stereo efekti olmayan enstrüman: ses mono render edilir ve pan yasası
+      // yalnız mix veriyolunda uygulanır.
+      const mono = (frequency = 330, duration = 0.5) => ({
+        wave: 'sine' as const,
+        frequency,
+        duration,
+      });
+      t.note({ instrument: mono, note: 'E4', bar: 0, beats: 1, gain: 0.5, pan });
+      return t.render({ tailSeconds: 0.2, targetRms: 0, trimSilence: false });
+    };
+    const centred = render(0).channels;
+    const unset = render().channels;
+    for (let ch = 0; ch < 2; ch++) {
+      let worst = 0;
+      for (let i = 0; i < centred[ch].length; i++) {
+        worst = Math.max(worst, Math.abs(centred[ch][i] - unset[ch][i]));
+      }
+      expect(worst).toBeLessThan(1e-6);
+    }
+  });
+
+  it('stableJitter durumsuz ve düzgündür', () => {
+    const { stableJitter } = Arrange;
+    expect(stableJitter(7, 3, 1)).toBe(stableJitter(7, 3, 1));
+    expect(stableJitter(7, 3, 0)).not.toBe(stableJitter(7, 3, 1));
+    let sum = 0;
+    for (let i = 0; i < 20000; i++) sum += stableJitter(11, i);
+    expect(sum / 20000).toBeGreaterThan(0.48);
+    expect(sum / 20000).toBeLessThan(0.52);
+  });
+
+  it('mix veriyolu sesleri normalize etmez ve oran uyumsuzluğunu reddeder', () => {
+    const { createMix, addVoice } = Arrange;
+    const mix = createMix(0.1, 22050);
+    const voice = { channels: [new Float32Array(100).fill(0.25)], sampleRate: 22050, duration: 0 };
+    addVoice(mix, voice, 0, { gain: 2 });
+    // Pan'sız mono: çift-mono, kanal başına birim kazanç; seviye yalnız gain.
+    expect(mix.channels[0][10]).toBeCloseTo(0.5, 6);
+    expect(mix.channels[1][10]).toBeCloseTo(0.5, 6);
+    // Açık pan: eşit güç yasası (merkezde √½).
+    const panned = createMix(0.1, 22050);
+    addVoice(panned, voice, 0, { gain: 2, pan: 0 });
+    expect(panned.channels[0][10]).toBeCloseTo(0.5 * Math.SQRT1_2, 6);
+    expect(() => addVoice(mix, { ...voice, sampleRate: 44100 }, 0)).toThrow(
+      expect.objectContaining({ path: 'voice.sampleRate' }),
+    );
+  });
+});

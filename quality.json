@@ -1,5 +1,9 @@
 {
   "$comment": [
+    "2026-09-22: audio-synth Dalga 0 temeli (guard/, analysis/, kanonik mix/master) ölçülen",
+    "kapsamı satır 95.33 / ifade 94.30 / dal 86.96 / fonksiyon 95.76'ya çıkardı; eşikler",
+    "86/86/75/85 → 93/92/85/93 (ölçülenin ~2 puan altı) ratchet'lendi.",
+    "",
     "2026-09-21: Vitest 4.1.11 yükseltmesi v8 coverage sağlayıcısında `ast-v8-to-istanbul`",
     "remapper'ına geçti. AST tabanlı dal tespiti (implicit else, default parametreler,",
     "mantıksal kısa devreler) ve fonksiyon sayımları gerçek AST ayrıştırmasıyla",
@@ -82,10 +86,10 @@
       "functions": 83
     },
     "@volstudio/audio-synth": {
-      "lines": 86,
-      "statements": 86,
-      "branches": 75,
-      "functions": 85
+      "lines": 93,
+      "statements": 92,
+      "branches": 85,
+      "functions": 93
     },
     "@volstudio/pen.dev": {
       "lines": 97,

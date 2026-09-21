@@ -330,7 +330,7 @@ games/vol-hell/scripts/audio/
   generate-ambience.ts — ambiyans giriş noktası
 ```
 
-`devtools/audio-synth/scripts/audio-qa.ts` üretilen asset'leri ölçer (click, clip, bant profili) — paylaşılan CLI, `pnpm --filter @volstudio/vol-hell audio:qa` ile çağrılır.
+`devtools/audio-synth/scripts/audio-qa.ts` gönderilen asset'leri kodek sonrası ölçer (BS.1770 LUFS, true peak, kanal bazlı kırpma, tık, bant profili; `--policy` ile sınıf politikası) — paylaşılan CLI, `devtools/audio-synth` içinde `pnpm qa <dizin>` ile çağrılır. Frozen VOL.HELL'in `audio:qa` betiği aynı aracı tarihsel olarak çağırır.
 
 Mevcut müzik track'leri:
 

@@ -11,6 +11,7 @@ import {
 import { NORMALIZE_TARGET_PEAK } from './constants';
 import { resolveBusParams, type ResolvedBusEffects } from '../guard/synth';
 import { checkNumber } from '../guard/read';
+import { masterChannels } from './master';
 
 /**
  * Mono kuru tampona bus efekt zincirini uygular ve kanalları döner:
@@ -91,8 +92,8 @@ export function applyBusEffects(
 }
 
 /**
- * Tek bir sesin çıkış hazırlığı: bus zinciri, tepe normalizasyonu (ya da düz
- * kazanç) ve kuyruk de-click'i.
+ * Tek bir sesin çıkış hazırlığı: bus zinciri, sonra `masterChannels` ile
+ * tepe normalizasyonu (ya da düz kazanç) ve kuyruk de-click'i.
  *
  * `dryBuffer` değiştirilmez; fonksiyon kendi kopyasında çalışır.
  */
@@ -107,51 +108,22 @@ export function applyGlobalEffects(
   const level = checkNumber(gain, 'gain', { min: 0, max: 1 });
   const channels = applyBusEffects(dryBuffer, bus, sampleRate);
 
-  // Tepe normalizasyonu opsiyoneldir. Varsayılan `true` — mevcut tüm preset'ler
-  // ve üretilmiş asset'ler bu davranışa göre ayarlanmış durumda. Ama her sesi
-  // 0.95'e çekmek doğal seviye farklarını yok eder: bir UI blip'i ile bir
-  // patlama aynı tepeye çıkar. Mix dinamiği önemli olan yerlerde
-  // `normalize: false` geçilmelidir.
-  let peak = 0;
-  for (const ch of channels) {
-    for (const s of ch) {
-      peak = Math.max(peak, Math.abs(s));
-    }
-  }
-
-  if (params.normalize !== false) {
-    if (peak > 0) {
-      const scale = (NORMALIZE_TARGET_PEAK * level) / peak;
-      for (const ch of channels) {
-        for (let i = 0; i < ch.length; i++) {
-          ch[i] *= scale;
-        }
-      }
-    }
-  } else if (level !== 1) {
-    for (const ch of channels) {
-      for (let i = 0; i < ch.length; i++) {
-        ch[i] *= level;
-      }
-    }
-  }
-
-  // Kuyruk de-click'i: tampon, kuyruğun (reverb, filtre ringing'i) bittiği
-  // yerde değil `duration`'ın bittiği yerde kesilir; kesimde kalan seviye,
-  // ard arda dizilen tamponlarda tek örnekte duyulur sıçrama demektir.
-  // Son ~10 ms yükselen-kosinüsle sıfıra iner — zaten sönen nota
-  // değişmez, kesilen kuyruk yumuşak yere iner. Çok kısa tamponlarda
-  // oransal küçülür; kasıtlı tık (ör. UI tick) karakteri korunur.
-  const fadeSamples = Math.min(Math.floor(sampleRate * 0.01), Math.floor(channels[0].length / 4));
-  if (fadeSamples > 1) {
-    const start = channels[0].length - fadeSamples;
-    for (const ch of channels) {
-      for (let i = 0; i < fadeSamples; i++) {
-        const r = i / fadeSamples;
-        ch[start + i] *= 0.5 + 0.5 * Math.cos(Math.PI * r);
-      }
-    }
-  }
+  // Tepe normalizasyonu opsiyoneldir (varsayılan `true`): mevcut presetler ve
+  // asset'ler buna göre ayarlı. Mix dinamiği önemliyse `normalize: false`
+  // geçilir ve seviye tek kez mix'in sonunda verilir.
+  //
+  // Kuyruk de-click'i: tampon kuyruğun değil `duration`'ın bittiği yerde
+  // kesilir; son ~10 ms yükselen-kosinüsle iner. Kısa tamponda tamponun
+  // dörtte birine küçülür — kasıtlı tık (UI tick) karakteri korunur.
+  masterChannels(channels, sampleRate, {
+    level:
+      params.normalize !== false
+        ? { mode: 'peak', target: NORMALIZE_TARGET_PEAK * level }
+        : { mode: 'none', gain: level },
+    fadeOutSeconds: 0.01,
+    fadeOutCurve: 'cosine',
+    maxFadeFraction: 0.25,
+  });
 
   return {
     channels,

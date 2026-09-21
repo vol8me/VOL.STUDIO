@@ -274,7 +274,7 @@ describe('Synth engine', () => {
     expect(output[delaySamples]).toBeCloseTo(1, 5);
   });
 
-  it('Reverb impuls sonrası sönümlenir ve feedback 0.82yi aşmaz', () => {
+  it("Reverb uzun decay'de de sınırlı kalır ve sönümlenir", () => {
     const reverb = new Reverb({ amount: 1, decay: 10, roomSize: 1, damp: 0.5 }, 44100);
     let energy = 0;
     let peak = 0;

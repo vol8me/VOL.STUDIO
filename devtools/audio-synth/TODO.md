@@ -9,273 +9,6 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
 
 ## Açık
 
-- [ ] **[P1] `Reverb` `decay`i saniye gibi belgeliyor ama 0-1'e kelepçeliyor
-      — VOL.HELL'in gönderilen parçalarının çoğu bundan etkileniyor.**
-      `ReverbParams.decay`nin tip belgesi `/** Süre boyunca sönüm (saniye). */`
-      der (`src/types.ts:178`), ama `Reverb`in kurucusu
-      `const decay = Math.max(0, Math.min(1, params.decay ?? …))`
-      (`src/effects/reverb.ts:137`) ile onu SESSİZCE [0,1]'e kelepçeliyor ve
-      doğrudan `feedback = min(0.82, decay*0.55+0.15)` formülüne besliyor —
-      gerçek bir RT60 hesabı YOK. VOL.HELL'in palet dosyaları `decay`i saniye
-      niyetiyle veriyor: `ambience.ts:35,60,98` (3.4 / 2.8 / 3.8), `fx.ts:49`
-      (1.6), `pads.ts:33,62,91` (2.2 / 1.8 / 1.6), `keys.ts:105` (1.1) —
-      dokuz reverb bloğunun SEKİZİ 1'in üstünde. Hepsi aynı `decay=1`
-      değerine, dolayısıyla aynı `feedback=0.70`'e kelepçeleniyor; palet
-      yazarının amaçladığı 1.1 sn'lik kısa oda ile 3.8 sn'lik geniş salon
-      arasındaki fark ÜRETİMDE kayboluyor (yalnız `keys.ts:43`teki 0.9 gerçek
-      aralıkta). Bu, `Reverb.tailSeconds` üzerinden `compose()`nin ve
-      VOL.HELL'in kendi `lib/mix.ts`inin arabellek boyutu hesabını da
-      etkiliyor — `synth()` yolu (`lib/mix.ts` → `applyGlobalEffects` →
-      `new Reverb`) VOL.HELL'in ASIL kullandığı yol. Kapanır: `decay` gerçek
-      RT60 saniyeye çevrilir (comb feedback'leri asıl delay sürelerinden
-      hesaplanır, `Math.min(1, …)` kelepçesi kalkar); `tailSeconds` pre-delay + en uzun decay'i temsil eder; 0.8/1.4/2.2/3.5 saniyelik regresyon
-      impulse testleri eklenir; VOL.HELL'in dokuz reverb parçası yeniden
-      üretilip `just audio-verify` ile doğrulanır.
-- [ ] **[P1] İç içe efekt parametreleri NaN-güvenli `clamp()`i atlıyor —
-      üretimin geçtiği kod yolunda.** ~~[P2]~~ → **P1**: agent-üretimli
-      programlar geldiğinde (bkz. Dalga 1) bu artık savunmacı programlama
-      değil, güven sınırıdır. `synthesize()`nin kendi yorumu NEDENİ açıkça
-      yazıyor: `Math.max`/`Math.min` NaN karşısında NaN döner, `clamp()` NaN'ı
-      alt sınıra sabitler (`src/engine/synthesize.ts:17-20`). Bu ilke yalnız
-      `synthesize()`nin KENDİ üst düzey alanlarına uygulanıyor. `src/effects/`
-      teki HİÇBİR dosya (`reverb.ts`, `delay.ts`, `distortion.ts`,
-      `modulation.ts`, `stereo.ts`) ya da `src/synthesis/`teki `envelope.ts`,
-      `filter.ts`, `sample.ts` `clamp()`i import ETMİYOR; hepsi kendi ham
-      `Math.max(0, Math.min(1, …))` desenini kullanıyor (doğrulandı: `clamp(`
-      için 0 eşleşme, `Math.max(0, Math.min` için 8 dosya). Bozuk bir iç içe
-      değer (`reverb.decay: NaN`, `flanger.rate: Infinity`) bu yüzden NAMED bir
-      hatayla SINIRDA değil, `writer.ts`nin `validateAudioInput`ı örnekleri tek
-      tek tarayıp "sonlu değil" diyene kadar DSP zincirinin içinde sessizce
-      yayılır — hangi parametrenin bozuk olduğu son hatadan anlaşılmaz. Bu,
-      VOL.HELL'in her render'ının geçtiği AYNI kod yoludur (`synth()` →
-      `applyGlobalEffects`); bugün hiçbir palet NaN vermiyor, ama bekçi yok.
-      Kapanır: nested `SynthParams` için merkezi bir doğrulama/çözümleme
-      katmanı kurulur (`clamp()` her iç içe efekt parametresine de uygulanır);
-      NaN/Infinity/negatif değerler render başlamadan İSİMLİ bir hatayla
-      reddedilir; her efekt sınıfı için en az bir NaN-girdi regresyon testi
-      eklenir.
-- [ ] **[P2] `downsample2x` her render'da fazladan tam boy tampon ayırıyor;
-      `repeat` döngüsü arabellek dışına düşen tekrarları hesaplamaya devam
-      ediyor.** `downsample2x` (`src/engine/render.ts:147-167`) filtrelenmiş
-      sinyali AYRI bir `filtered = new Float32Array(buffer.length)` tamponuna
-      yazıp SONRA `out`a decimate ediyor; biquad zinciri örnek başına sıralı
-      IIR olduğu için bu YERİNDE (in-place) yapılabilir — bugünkü hâliyle her
-      `synthesize()` çağrısı 2× oversample'lı tamponun TAMAMINI bir kez daha
-      kopyalıyor. Ayrıca `synthesize()`nin `repeat` döngüsü
-      (`src/engine/synthesize.ts:97-181`) her tekrar için tam maliyetli
-      kurulum (ses/zarf/filtre yeniden inşası, 1 ms pre-warm, `durationSamples`
-      uzunluğunda tam iç örnek döngüsü) yapıyor ve sonunda
-      `dryBufferInternal[startOffset + i] += sample` ile yazıyor; `startOffset`
-      `internalSampleCount`u aştığında bu yazma SESSİZCE hiçbir şeye
-      dokunmuyor (Float32Array sınır dışı yazması no-op'tur) ama döngü yine de
-      TAM çalışıyor — `totalDuration` 600 sn'de kelepçelenirken `repeat`
-      1000'e kadar izin veriyor, ikisi arasında bağ yok. İlki HER VOL.HELL
-      render'ında aktif (bellek/süre), ikincisi bugün VOL.HELL paletinde
-      `repeat` kullanılmadığı için tetiklenmiyor ama paylaşılan motorun genel
-      API'sinde açık bir risk. Kapanır: `downsample2x` biquad zincirini
-      `buffer`e yerinde uygular, ayrı `filtered` tamponu kalkar; `repeat`
-      döngüsü `startOffset >= internalSampleCount` olduğunda `break` eder;
-      uzun/yüksek-rate render'da ayırma sayısı ve süre ölçülüp DESIGN'a
-      yazılır.
-- [ ] **[P3] Piyano gövde rezonansı stereo değil — `phaseR` hesaplanıp
-      kullanılmıyor.** `piano()`nin kısmi ton döngüsü
-      (`src/instruments/keyboard/piano.ts:136-153`) `phaseL`/`phaseR`i doğru
-      şekilde AYRI kanallara yazıyor; hemen altındaki gövde rezonansı bloğu
-      (`piano.ts:158-176`) aynı deseni taklit ederek `phaseR`i kurup her
-      örnekte ilerletiyor (satır 164, 173-174) ama
-      `const s = Math.sin(2*Math.PI*phaseL) * bodyAmp * env` yalnız `phaseL`
-      kullanıyor ve `left[i] += s; right[i] += s;` AYNI değeri iki kanala da
-      yazıyor (satır 168-170) — `phaseR` ölü koddur. Sonuç: `bodyResonance`
-      açıkken gövde modu iki kanalda BİREBİR aynı, kısmi tonların taşıdığı
-      stereo genişlik gövdede kayboluyor. Bugün VOL.HELL paleti `piano`
-      preset'ini hiç kullanmıyor (doğrulandı, `rg` taraması boş) — yalnızca
-      paketin kendi preset kataloğu ve olası gelecekteki tüketiciler etkilenir.
-      Kapanır: gövde bloğu `phaseR`i `sampleR` hesabında kullanır (kısmi ton
-      döngüsündeki desenle aynı); `bodyResonance` açıkken L/R'nin AYNI
-      olmadığını sınayan bir regresyon testi eklenir.
-- [ ] **[P3] Yaylı model kazancı (`gain`) tını/gürültü oranını da
-      değiştiriyor, yalnızca sesi değil.** `bowedString()`de her osilatörün
-      kazancı kurulumda `gain: sawtoothGain(n) * gain` ile `gain` parametresini
-      İÇİNE alıyor (`src/instruments/strings/bowed.ts:157`), ama yay gürültüsü
-      `noiseAmp = bowNoise * 0.2 * env` HİÇ `gain` almıyor (`bowed.ts:195`).
-      Tampon sonunda TEPEYE göre `target = 0.95 * gain` ölçeğine normalize
-      ediliyor (`bowed.ts:213-220`) — final ses seviyesi doğru kalıyor, ama
-      normalizasyon öncesi ton/gürültü ORANI `gain`e bağlı: `gain`
-      düşürüldükçe osilatörlerin ham genliği küçülürken gürültü taban SABİT
-      kalıyor, tampon yeniden aynı tepeye normalize edildiğinde yay gürültüsü
-      orantısız BÜYÜR. `gain` böylece fiziksel karşılığı olmayan bir
-      "gürültü/ton karışımı" düğmesine dönüşüyor. Bugün VOL.HELL paleti
-      `bowedString` preset'ini kullanmıyor (doğrulandı) — yalnızca paketin
-      API'si etkilenir. Kapanır: `noiseAmp` da `gain`e bağlanır (ya da
-      gürültü kazancı ayrı, `gain`den bağımsız bir parametre olarak
-      belgelenir); farklı `gain` değerlerinde ton/gürültü oranının sabit
-      kaldığını sınayan bir test eklenir.
-- [ ] **[P3] `compose()` `flanger`/`phaser`i hem nota başına hem final mix'te
-      iki kez uyguluyor — bugün hiçbir çağıranı yok.** `GLOBAL_PARAM_KEYS`
-      (`src/sequencer.ts:9-17`) `delay`/`chorus`/`reverb`i nota
-      parametrelerinden ayıklıyor ama `flanger`/`phaser`i LİSTEDE UNUTUYOR;
-      bu yüzden `stripGlobalParams` onları `noteBase`de bırakıyor
-      (`sequencer.ts:65,78-89`). Her nota `synth()` → `synthesize()` çağırıyor
-      ve `synthesize()` KENDİ `applyGlobalEffects`ini çağırıp
-      `params.flanger`/`params.phaser`i uyguluyor
-      (`src/engine/synthesize.ts:199`, `src/engine/effects-chain.ts:37-49`);
-      `compose()` SONRA aynı `baseParams`la `applyGlobalEffects`i final mix
-      üzerinde TEKRAR çağırıyor (`sequencer.ts:116`) — flanger/phaser iki kez
-      işleniyor, delay/chorus/reverb işlenmiyor (doğru davranış). `compose()`
-      repo genelinde başka HİÇBİR yerden çağrılmıyor (doğrulandı: yalnız
-      kendi testinde) — VOL.HELL kendi `lib/mix.ts`ini kullanıyor, bu yüzden
-      bugün hiçbir gönderilen ses etkilenmiyor. Bilinçli priority kararı: bu
-      madde aşağıdaki "üç düzenleme/mastering yolu" P1'i kapanınca `compose()`
-      ya ortak `arrange` katmanına göçer ya da kaldırılır — bu bug'ı tek
-      başına önce büyütüp sonra kodu silmek istemiyoruz, priority AYNI
-      kalıyor. Kapanır: `flanger`/`phaser` `GLOBAL_PARAM_KEYS`e eklenir; nota
-      parametrelerinden efekt sızmadığını sınayan bir regresyon testi
-      eklenir.
-- [ ] **[P3] `Timeline.render()` sessiz kuyruk payını RMS'e katıyor —
-      bugün hiçbir çağıranı yok.** `matchLoudness`
-      (`src/arrange/timeline.ts:208`) `total = ceil((end+tail)*sampleRate)`
-      uzunluğundaki TAM tampon üzerinde çalışıyor; `trimSilence` bu çağrıdan
-      SONRA kuyruğu kesiyor (`timeline.ts:210-221`). `tailSeconds`
-      varsayılanı 3 sn (`timeline.ts:169`) ve `trimSilence`in kendi yorumu
-      "pay çoğu zaman tümüyle boş kalır (ölçüldü: bir parçada sonda 4 saniye
-      tam sessizlik)" diyor (`timeline.ts:63-65`) — yani `measureRms`
-      (`arrange/loudness.ts:11-22`) genellikle SANİYELERCE sıfır örneği
-      paydaya katıyor, ölçülen RMS'i gerçek içerikten daha düşük gösteriyor
-      ve `gain = targetRms/rms` (`loudness.ts:88`) gereğinden FAZLA yükseltme
-      uyguluyor — büyüklük kuyruk/içerik oranına bağlı (10 sn içerikte 4 sn
-      sessiz kuyruk ≈ %18 fazla kazanç). `Timeline` repo genelinde yalnız
-      `scripts/music-demo.ts` ve kendi testinde kullanılıyor (doğrulandı) —
-      VOL.HELL müziği bunu KULLANMIYOR. Bilinçli priority kararı: aşağıdaki
-      "üç düzenleme/mastering yolu" P1'i kapanınca `Timeline` ortak `arrange`
-      katmanına göçer ya da kaldırılır; priority AYNI kalıyor. Kapanır:
-      `matchLoudness` `trimSilence`den SONRA, yalnız tutulan aralık üzerinde
-      çağrılır (ya da RMS penceresi kesilecek kuyruğu dışlar); bir kayda
-      değer sessiz kuyruklu örnekle regresyon testi eklenir.
-- [ ] **[P3] Aynı `Timeline` örneğinde ikinci `render()` çağrısı birinciyle
-      aynı sonucu vermiyor — bugün hiçbir çağıranı yok.** `this.random`
-      (`src/arrange/timeline.ts:87,104`) kurucuda BİR KEZ oluşturulan durumlu
-      bir kapanıştır; `render()` onu zamanlama/şiddet insanlaştırması için
-      tüketir (`timeline.ts:173-175`) ve kapanışın durumunu KALICI olarak
-      ilerletir. Aynı `Timeline` nesnesinde `render()` iki kez çağrılırsa
-      ikinci çağrı PRNG akışının kaldığı yerden devam eder — humanize
-      sapmaları ilk çağrıdakiyle AYNI olmaz, yani "aynı düzenleme her koşuda
-      aynı örnekleri verir" sözü (`timeline.ts:47-48`) yalnız İLK render için
-      doğrudur. `Timeline` bugün yalnız demo script'inde ve kendi testinde
-      kullanılıyor (doğrulandı). Kapanır: `render()` ya PRNG'yi kendi başına
-      sıfırlar (her çağrı bağımsız ve deterministik) ya da API bunun tek
-      seferlik olduğunu açıkça belgeler ve ikinci çağrıyı reddeder; iki
-      ardışık `render()` çağrısının davranışını sınayan bir test eklenir.
-- [ ] **[P3] WAV okuyucu `WAVE_FORMAT_EXTENSIBLE`in alt alanlarını
-      atlıyor — yalnız harici karmaşık girdilerde.** `decodeWav`
-      (`src/synthesis/sample.ts:71-79`) `0xfffe` alt biçim GUID'inin yalnız
-      İLK 2 baytını (gerçek format etiketi) okuyor; standart
-      `WAVEFORMATEXTENSIBLE` yerleşimindeki `wValidBitsPerSample`
-      (konteynerden daha dar gerçek çözünürlük, ör. 24-bit konteynerde
-      20-bit veri) ve `dwChannelMask`i (kanal sırası/düzeni) HİÇ okumuyor;
-      tüm kanalları sabit soldan-sağa toplayıp mono'ya indiriyor
-      (`sample.ts:110-144`). Standart olmayan bir kanal düzeninde ya da
-      dar-geçerli-bit derinlikli dışarıdan gelen bir WAV bu yüzden sessizce
-      yanlış yorumlanabilir. Bugün hiçbir oyun `sample:` parametresiyle WAV
-      dosyası tüketmiyor (doğrulandı) — yalnızca gelecekteki harici örnek
-      girdisi etkilenir. Kapanır: `wValidBitsPerSample` okunup düşük geçersiz
-      bitler maskelenir; `dwChannelMask` ya en azından okunup standart-dışı
-      düzende açık bir hata fırlatır ya da uygulanır; gerçekçi bir extensible
-      WAV fixture'ıyla test eklenir.
-- [ ] **[P3] Loop crossfade doğrusal kazançla karışıyor, equal-power
-      değil.** `loopSamples` (`src/synthesis/sample.ts:238-251`) HER iç loop
-      sınırında crossfade uyguluyor (kod yorumu bunun daha önceki "yalnız ilk
-      sınırda" hatasının düzeltmesi olduğunu belgeliyor, `sample.ts:240-243`)
-      — yani "her tekrarda tık" bulgusu bugünkü kodda ZATEN kapalı. Kalan
-      gerçek fark: geçiş `ratio`/`1-ratio` DOĞRUSAL kazançla karışıyor
-      (`sample.ts:249`); ilintisiz döngü içeriğinde doğrusal crossfade geçiş
-      noktasında algısal bir ses DÜŞÜŞÜ üretebilir (equal-power/sabit-güç
-      eğrisi bunu önler). Kapanır: crossfade eğrisi equal-power'a (ör.
-      `sin`/`cos` çeyrek periyot) çevrilir; geçiş noktasındaki RMS'in düz
-      kaldığını ölçen bir test eklenir.
-- [ ] **[P3] QA script'inin `clip` sayacı kanal-toplu, kanal başına değil.**
-      `analyze()` (`scripts/audio-qa.ts:198-217`)
-      `monoAbs = Math.max(Math.abs(l), Math.abs(r))` hesaplayıp TEK bir
-      `clip` sayacını `monoAbs >= 0.999` olduğunda artırıyor — aynı örnekte
-      HEM sol HEM sağ kırparsa bu bir olay, ayrı örneklerde yalnız sağ
-      kırparsa da bir olay sayılıyor; hangi kanalın kırptığı ve kaç kanal
-      örneğinin toplam kırptığı rapordan ANLAŞILMIYOR. Yalnız QA özet
-      çıktısını etkiliyor, gönderilen ses dosyasını değiştirmiyor. Kapanır:
-      `leftClip`/`rightClip` ayrı sayılır (ya da toplam kanal-örneği kırpma
-      sayısı raporlanır); özet çıktısı ikisini de gösterir.
-- [ ] **[P1] Üç ayrı düzenleme/mastering yolu paralel yaşıyor — hiçbiri
-      diğerinin düzeltmesini miras almıyor.** ~~[P3]~~ → **P1**: MusicProgram/
-      StemBundle, ortak bus/send ve profesyonel mastering (Dalga 6, Dalga 10)
-      bunun ÜZERİNE kurulacak; bu artık "ileride cleanup" değil, üstüne
-      inşa edilecek her şeyin foundation blocker'ı. `devtools/audio-synth`
-      içinde `compose()` (`src/sequencer.ts`, kullanılmıyor) ve `Timeline`
-      (`src/arrange/timeline.ts`, yalnız demo script'inde) iki AYRI
-      orkestrasyon/yükseklik-eşitleme uygulaması taşıyor; VOL.HELL'in gerçek
-      gönderilen müziği ise `games/vol-hell/scripts/audio/lib/mix.ts`teki
-      ÜÇÜNCÜ, bağımsız `createMix`/`addVoice`/`masterize`/`edgeGuard`
-      uyguluyor (voice'lar normalize edilmez, yalnız final mix'te BİR KEZ
-      normalize edilir; loop kuyruğu sarılır; transient insanlaştırma —
-      `lib/mix.ts:1-17`). Üçü de aynı sorunu (birden çok sesi zamanlarda
-      birleştirip yükseklik eşitlemek) farklı ve BİRBİRİNDEN BAĞIMSIZ
-      çözüyor; `lib/mix.ts`teki üç kural (yukarıdaki) `compose()`de ve
-      `Timeline`de YOK. Kapanır: `lib/mix.ts`teki kanıtlanmış kurallar
-      `devtools/audio-synth`in paylaşılan `arrange` katmanına taşınır;
-      VOL.HELL kendi kopyasını o katmana yönlendirir; `compose()` kullanımdan
-      kaldırılır ya da `Timeline`e birleştirilir — tek bir düzenleme/mastering
-      yolu kalır.
-- [ ] **[P2] `resampleLinear` aşağı örneklemede yalnız kayan ortalama
-      ön-filtre kullanıyor, gerçek FIR/windowed-sinc değil.**
-      `src/synthesis/sample.ts:152-158` bunu kendi yorumunda zaten belgeliyor:
-      "biquad kadar keskin değil ama hiç filtrelememekten çok daha iyi".
-      Kapanır: downsample yolu gerçek anti-alias FIR/windowed-sinc'e (ya da
-      ölçülmüş eşdeğer bir yönteme) çıkarılır; Nyquist üstü test tonlarının
-      alias enerjisi bugünkü yönteme göre ölçülüp DESIGN'a kaydedilmiş bir
-      eşiğin altında kaldığı doğrulanır.
-- [ ] **[P1] Render sınırı yalnız süreye (`duration ≤ 600s`) bakıyor,
-      bellek/iş bütçesine bakmıyor.** ~~[P2]~~ → **P1**: candidate search,
-      family generation, stem/granular/IR ve paralel render (Dalga 4-13)
-      öncesinde bu olmadan kontrollü bir ölçek mimarisi kurulamaz.
-      `sampleRate × OVERSAMPLE_FACTOR × duration × kanal/ara-tampon` maliyeti
-      `synthesize()`de (`src/engine/synthesize.ts`) allocation'dan ÖNCE
-      tahmin edilmiyor; yukarıdaki `downsample2x`/`repeat` maddesiyle
-      birleşince yüksek `sampleRate` + uzun `duration` kombinasyonu GB
-      mertebesinde tampon ayırabilir. `writer.ts`nin `writeOgg`ı da tek dev
-      interleaved PCM `Buffer`ını (`toInterleavedPcm`, `writer.ts:172-187`)
-      bir kerede belleğe alıyor, stream/chunk'lamıyor. Kapanır: aşırı istek
-      allocation öncesi İSİMLİ bir hatayla reddedilir; tanımlı maksimum
-      senaryoda peak RSS ölçülüp bir bütçe olarak kayda geçer; `writeOgg`nin
-      tek-tampon yaklaşımı uzun asset'lerde stream/chunk yoluyla
-      karşılaştırılır.
-- [ ] **[P1] QA'ya asset sınıfına göre true-peak/loudness kapıları
-      eklensin.** ~~[P2]~~ → **P1**: production publish gate'in (Dalga 1)
-      gönderilen encoded asset hakkında karar verebilmesi için bu artık temel
-      bir analysis metric'i. `scripts/audio-qa.ts`nin `analyze()`i bugün
-      tepe/RMS/click/clip/korelasyon ölçüyor ama sabit bir hedefe zorlamıyor;
-      müzik/ambience/SFX/UI aynı yükseklik sınırına tabi değildir ve şu an
-      hiçbiri açıkça denetlenmiyor. Kapanır: gönderilen OGG DECODE
-      edildikten SONRA (kodek sonrası gerçek çıktı) ölçülen dBTP/LUFS, asset
-      sınıfına göre tanımlı bir sınırla karşılaştırılır; VOL.HELL'in mevcut
-      kataloğu baseline edilir; rapor `audio-verify` çıktısında görünür.
-- [ ] **[P2] Filtre API'si geçersiz `poles`/`type` birleşimini sessizce
-      başka filtreye çeviriyor.** ~~[P3]~~ → **P2**: agent program üretecekse
-      (Dalga 1) sessiz semantik fallback kabul edilemez; ama `Reverb` kadar
-      foundation-blocking değil. `createFilter`
-      (`src/synthesis/filter.ts:237-260`) `poles === 1` (varsayılan,
-      `resonance` 0 iken) olduğunda `filterType`i (`'bandpass'`/`'notch'`
-      dahil — `FilterType`, `src/types.ts:36`) HİÇ OKUMADAN doğrudan
-      `kind === 'lowpass' ? new LowpassFilter(...) : new HighpassFilter(...)`
-      döner — yani `{ type: 'bandpass', poles: 1 }` istenirse çağıranın hiç
-      haberi olmadan düz low/high-pass render edilir. Kapanır: `poles: 1` ile
-      `bandpass`/`notch` birleşimi ya TİP seviyesinde imkânsız hale getirilir
-      ya da `createFilter` runtime'da İSİMLİ bir hata fırlatır; böyle bir
-      parametrenin sessizce low/high-pass'e düşmediğini sınayan bir test
-      eklenir.
-- [ ] **[P3] FM için spektral alias regresyon paketi yok.** Özellikle
-      saw/square/pulse modülatör, yüksek modülasyon indeksi ve feedback
-      birleşimleri frekans taramasıyla ölçülmüyor; 2× oversampling'in (bkz.
-      `OVERSAMPLE_FACTOR`, `src/engine/constants.ts`) yetersiz kaldığı
-      bölgeler dokümante değil. Kapanır: bilinen güvenli/riskli FM parametre
-      bölgesini machine-readable bir limit ya da uyarı olarak üreten bir
-      regresyon suite'i eklenir.
 - [ ] **[P1] OGG üretiminin araç zinciri manifest'e alınmıyor.** ~~[P3]~~ →
       **P1**: aşağıdaki Dalga 1'deki `AudioAssetManifestV1` maddesinin
       toolchain/PCM-hash alanları bunu ZATEN kapsıyor; iki madde ÇAKIŞMASIN
@@ -289,13 +22,27 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
       ayırt edilemiyor. Kapanır: PCM hash'i canonical bir kimlik olur;
       FFmpeg/libvorbis sürümü build manifest'inde saklanır ya da release
       araç zinciri pinlenir.
+      _Dalga 0 notu (2026-09-22): bilinçli olarak açık bırakıldı — sahibi
+      Dalga 1 `AudioAssetManifestV1`. QA raporu (`audio-qa --json`) bugün
+      FFmpeg sürüm satırını yazıyor; bu bir ölçüm yardımcısıdır, provenance
+      sözleşmesi değildir._
+- [ ] **[P3] Kenarlı osilatörlerin (PolyBLEP) kendi alias'ı ölçüldü; üst
+      notalarda duyulabilir bölgede.** Dalga 0 FM karakterizasyonu sırasında
+      FM'siz testere/kare de kafes yöntemiyle ölçüldü (halfband decimator
+      sonrası, 44.1 kHz): 233 Hz ≈ −69 dB, 917 Hz −54 dB, 3.6 kHz −47 dB
+      alias/sinyal. Decimator artık iç Nyquist altını katlamıyor; kalan pay
+      2 örneklik PolyBLEP düzeltmesinin iç örnek oranında bıraktığı
+      katlanmadır. Kapanır: kenarlı dalgalarda daha yüksek dereceli bant
+      sınırlama (ör. minBLEP/BLAMP ya da osilatör düzeyinde yerel aşırı
+      örnekleme) ölçülerek seçilir; 3.6 kHz testere alias'ı −70 dB altına
+      iner ve `scripts/fm-alias-report.ts` benzeri bir ızgarayla kilitlenir.
 
 ## Yol haritası — agent-first genel amaçlı audio-authoring platformu
 
 > **Dalga 0**, yukarıdaki `## Açık` bölümündeki mevcut motor doğruluğu ve
-> üretim borçlarıdır. Yeni authoring katmanları; yanlış DSP semantiği (ör.
-> bugünkü `Reverb.decay`), birden fazla mastering yolu veya doğrulanmamış
-> resource davranışı üzerine kurulmaz.
+> üretim borçlarıdır (kapananlar `## Kapatılanlar`da). Yeni authoring
+> katmanları; yanlış DSP semantiği (ör. eski `Reverb.decay` kelepçesi), birden
+> fazla mastering yolu veya doğrulanmamış resource davranışı üzerine kurulmaz.
 >
 > Nihai hedef yalnız organik ses üretmek değildir. `@volstudio/audio-synth`;
 > SFX, organik/fiziksel ses, ambience ve müzik için farklı agent'ların aynı
@@ -534,7 +281,7 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
 > Bu dalga tamamlandığında `## Sonraki aşamalar` girişindeki "MusicProgram/
 > ThemeBook, stem/adaptive music kuruldu" varsayımı gerçek olur — bugün
 > yalnız bir varsayımdır. Bu dalganın "tek düzenleme/mastering yolu"
-> prerequisite'i yukarıdaki `## Açık` bölümünde `[P1]` olarak ZATEN açık;
+> prerequisite'i Dalga 0'da `[P1]` olarak kapandı (`## Kapatılanlar`);
 > burada İKİNCİ bir kapanış maddesi olarak — çelişkili source-of-truth
 > yaratmamak için — tekrarlanmıyor.
 
@@ -1021,3 +768,75 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
       değildir.
 
 ## Kapatılanlar
+
+- [x] **[P1] `Reverb.decay` RT60 saniyesi oldu.** Comb kazancı g = 10^(−3·D/T60)
+      (her comb kendi gecikmesinden); gerçek allpass difüzörler, wet enerji
+      normalizasyonu, 20 Hz DC engelleyici; `tailSeconds` = ön gecikme +
+      taşıma gecikmesi + RT60. Ölçülen T30: istenen 0.8/1.4/2.2/3.5 sn →
+      0.800/1.400/2.200/3.500 sn (eski kod 0.467/0.687/0.687/0.687 sn).
+      Uzlaştırma: frozen VOL.HELL'in dokuz reverb parçası yeniden üretilmedi
+      (ağaç değiştirilemez); VOL.HELL'in reverb setleri salt-okur kanarya
+      olarak `tests/reverbDecay.test.ts`te ölçülüyor. Paket presetleri eski
+      uygulamanın gerçekte ürettiği RT60'a taşındı. (dd44c07)
+- [x] **[P1] İç içe parametreler tek sınırdan geçiyor (`src/guard/`).**
+      NaN/Infinity, yanlış tip, bilinmeyen alan, eksik zorunlu alan ve
+      belgelenmiş aralık dışı değer tampon ayrılmadan `AudioParamError` ile
+      tam yoluyla reddedilir (`reverb.decay`, `lfos[1].rate`,
+      `lowpass.envelope.release`); NaN aralık tabanına sabitlenmez. Kelepçe
+      yalnız belgelenmiş Nyquist/kararlılık tavanlarında ve model
+      şekillendirme alanlarında kalır. Her efekt sınıfı NaN testli. (dd44c07)
+- [x] **[P2] `downsample2x` ara tamponu kalktı; `repeat` görünmez iş yapmıyor.**
+      Decimator yalnız çıkış tamponu ayırır (sonra halfband FIR'a geçti);
+      tampon tam `duration + (repeat − 1)·repeatTime` sürer (600 sn kelepçesi
+      kalktı), aşırı istek bütçede düşer. Ölçülen: 600 sn / 48 kHz stereo
+      tepe RSS 740 → 632 MiB. (dd44c07, 4d12cb1)
+- [x] **[P3] Piyano gövde rezonansı stereo.** Sağ kanal `phaseR` kullanır;
+      gövde bileşeni L/R'de eşit enerjili ama farklı. (dd44c07)
+- [x] **[P3] Yaylı `gain` yalnız çıkış seviyesi.** Osilatörlerden çıkarıldı;
+      out(g) = g·out(1) değişmezi 6e-9 hassasiyetle tutar (eski 1.8e-2). (dd44c07)
+- [x] **[P3] `compose()` flanger/phaser'ı bir kez uygular.** `compose` kanonik
+      mix veriyolu üzerinde ince adaptör; bus anahtarları tek listeden
+      (`BUS_EFFECT_KEYS`) ayıklanır, nota başına bus efekti reddedilir. Test:
+      5 ms'lik saf gecikme flanger çıktıyı 5 ms kaydırır (eski 10 ms).
+- [x] **[P3] `Timeline` yüksekliği yalnız tutulan aralıkta ölçer.** Kırpma
+      ölçümden önce; `tailSeconds` 0.5 ile 8 aynı RMS'i verir.
+- [x] **[P3] Aynı `Timeline`'da ardışık `render()` birebir aynı.**
+      İnsanlaştırma durumsuz (`stableJitter(tohum, olay)`).
+- [x] **[P3] WAV `WAVE_FORMAT_EXTENSIBLE` alt alanları okunuyor.** cbSize, tam
+      SubFormat GUID, `wValidBitsPerSample` maskesi, `dwChannelMask`; belirsiz
+      düzen (5.1, LFE'li çift, konumsuz 2+ kanal) reddedilir. (4d12cb1)
+- [x] **[P3] Loop crossfade güç tamamlayıcı ve sürekli.** İlintiye uyarlı
+      eğri (Fink/Holters/Zölzer); sınırdan sonra `samples[F]`. Geçiş ortası
+      −2.82 → −0.07 dB; tur sıçraması 0.996 → yok. (4d12cb1)
+- [x] **[P3] QA kırpması kanal örneği cinsinden.** Kanal başına sayı, toplam
+      kanal örneği ve etkilenen çerçeve ayrı raporlanır.
+- [x] **[P1] Tek aktif düzenleme/mastering yolu.** `arrange/mix.ts` (veriyolu:
+      normalize etmez, loop kuyruğu sarar, durumsuz insanlaştırma) +
+      `engine/master.ts` (tek seviye çekirdeği: DC → kazanç → sınırlayıcı →
+      tavan → sönüm); `synthesize` çıkışı, `compose` ve `Timeline` onu
+      kullanır. Uzlaştırma: frozen VOL.HELL `lib/mix.ts` tarihsel kopyadır,
+      aktif paralel yol değildir; yönlendirilmedi (ağaç değiştirilemez).
+- [x] **[P2] `resampleLinear` → `resample` (Kaiser sinc, A = 96 dB).** 2× aşağı
+      örneklemede alias −3.3…−16.7 dB → ≤ −101 dB; yukarı görüntü −18 → −115
+      dB; bütçe −90 dB. (4d12cb1)
+- [x] **[P1] Render kaynak bütçesi.** Bellek (canlı tampon üst sınırı) + iş
+      (≈10 ns'ye kalibre birim) ayırmadan önce denetlenir; `synthesize`,
+      modeller, mix, `processSample` ve writer. Varsayılan 1.5 GiB / 6e9;
+      `bench:budget` referans ölçümü DESIGN'da. `writeOgg` tek tampon tepeyi
+      yükseltmiyor (ölçülen), akış gerekmedi. (dd44c07, 4d12cb1)
+- [x] **[P1] Kodek sonrası sınıf bazlı true-peak/loudness QA.** BS.1770-5
+      LUFS (integrated / en yüksek momentary), 4× true peak, makine-okunur
+      `ASSET_CLASS_POLICIES` (ui/sfx/ambience/music, −1 dBTP). EBU Tech 3341
+      testleri geçer; FFmpeg ebur128 ile fark ≤ 0.052 LU / 0.049 dB.
+      `just audio-verify` referans denetimini ve aktif ses ağaçlarının
+      politikasını raporlar. Uzlaştırma: VOL.HELL kataloğu salt-okur taban
+      çizgisi (43/46 geçer; 3 müzik parçası −1 dBTP üstü) DESIGN'da; frozen
+      ağaca politika uygulanmaz.
+- [x] **[P2] Filtre `poles`/`type` birleşimi sessizce değişmiyor.** 1 kutup +
+      bandpass/notch `combination` hatası; 1 kutupta `type` yuvayı ezer.
+      (dd44c07)
+- [x] **[P3] FM spektral alias regresyon paketi.** Kafes yöntemli ölçüm, 1200
+      noktalı ızgaradan makine-okunur `FM_ALIAS_LIMITS` ve
+      `Analysis.assessFmAlias`; paket "yanlış güvenli yok" sözleşmesini her
+      koşuda ölçer. Ölçülmüş motor iyileştirmesi: halfband decimator (sinüs
+      modülatör + feedback 0 tüm ızgarada ≤ −82 dB). (4d12cb1)

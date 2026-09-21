@@ -8,7 +8,7 @@
  *   instruments/  Bir enstrüman ailesi NASIL DAVRANIR? (fiziksel model)
  *   presets/      Bu sesin ADI ne? (parametre kümesi, yeni DSP taşımaz)
  *   arrange/      Bu sesler ZAMANDA nasıl dizilir? (perde, çizelge, yükseklik)
- *   analysis/     Çıkan ses NE ÖLÇÜYOR? (spektrum, FM alias riski)
+ *   analysis/     Çıkan ses NE ÖLÇÜYOR? (LUFS, true peak, spektrum, FM riski)
  *
  * Node ve tarayıcıda çalışır; dosya yazma `@volstudio/audio-synth/writer`
  * alt yolundadır (Node-only).
@@ -32,7 +32,7 @@ export {
 } from './effects';
 export { applyGlobalEffects, synthesize, synth, normalize, limitBuffer, mix } from './engine';
 export * from './instruments';
-export { compose } from './sequencer';
+export { compose } from './arrange/compose';
 
 export * as Presets from './presets';
 export * as Arrange from './arrange';

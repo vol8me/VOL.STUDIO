@@ -14,5 +14,8 @@ export { CONCERT_A, noteToHz, transposeNote, SCALES, scaleDegree, scaleChord } f
 export type { ScaleName } from './pitch';
 export { measureRms, measurePeak, softLimit, matchLoudness } from './loudness';
 export type { LoudnessOptions } from './loudness';
+export { createMix, addVoice, masterMix, stableJitter } from './mix';
+export type { Mix, AddVoiceOptions } from './mix';
+export type { MasterOptions, MasterLevel } from '../engine/master';
 export { Timeline } from './timeline';
 export type { InstrumentFn, NoteEvent, TimelineOptions, RenderOptions } from './timeline';

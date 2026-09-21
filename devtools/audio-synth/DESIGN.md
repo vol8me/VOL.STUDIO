@@ -10,26 +10,29 @@
   Aynı script her zaman aynı sesi verir; bu yüzden üretilen dosyalar repoda
   tutulmaz (asset akışı için bkz. `music-engine.md`).
 - **`normalize` opsiyoneldir** (varsayılan `true`). `true` iken sonuç tepe
-  değerine göre 0.95'e ölçeklenir. Bir mix içinde birden çok ses üretiliyorsa
-  (`compose()` gibi) her birini ayrı ayrı normalize etmek aralarındaki dinamik
-  farkı yok eder — o durumda `normalize: false` geçilip normalize yalnızca final
-  mix'e uygulanmalıdır. `compose()` bunu kendisi yapar.
+  değerine göre `0.95 × gain`e ölçeklenir. Bir mix içinde birden çok ses
+  üretiliyorsa her birini ayrı ayrı normalize etmek aralarındaki dinamik farkı
+  yok eder — o durumda `normalize: false` geçilip seviye yalnız final mix'e
+  bir kez verilir. `compose()` bunu kendisi yapar (bkz. "Düzenleme katmanı").
 - **`writeWav()` ek kazanç uygulamaz** (varsayılan `targetGain: 1`). Headroom
   kararı tek yerde, normalize adımındadır.
 - **16-bit dönüşümde TPDF dither** uygulanır; dither de deterministiktir.
 
-## Mimari — dört katman, dört ayrı soru
+## Mimari — katmanlar ve soruları
 
-| Katman         | Soru                                 | İçinde ne var                                      |
-| -------------- | ------------------------------------ | -------------------------------------------------- |
-| `synthesis/`   | Örnek NASIL üretilir?                | osilatör, gürültü, zarf, filtre, örnek kaynağı     |
-| `engine/`      | Parametreler nasıl BİRLEŞTİRİLİR?    | `SynthParams` → örnek; subtractive + FM + additive |
-| `instruments/` | Bir enstrüman ailesi NASIL DAVRANIR? | fiziksel modeller                                  |
-| `presets/`     | Bu sesin ADI ne?                     | parametre kümeleri + katalog                       |
+| Katman         | Soru                                 | İçinde ne var                                            |
+| -------------- | ------------------------------------ | -------------------------------------------------------- |
+| `guard/`       | Bu istek RENDER EDİLEBİLİR mi?       | parametre doğrulama/çözümleme, kaynak bütçesi, hatalar   |
+| `synthesis/`   | Örnek NASIL üretilir?                | osilatör, gürültü, zarf, filtre, örnek kaynağı, resample |
+| `engine/`      | Parametreler nasıl BİRLEŞTİRİLİR?    | `SynthParams` → örnek; decimator; tek master çekirdeği   |
+| `instruments/` | Bir enstrüman ailesi NASIL DAVRANIR? | fiziksel modeller                                        |
+| `presets/`     | Bu sesin ADI ne?                     | parametre kümeleri + katalog                             |
+| `arrange/`     | Sesler ZAMANDA nasıl dizilir?        | perde, mix veriyolu, `Timeline`, `compose`               |
+| `analysis/`    | Çıkan ses NE ÖLÇÜYOR?                | BS.1770 yükseklik, true peak, spektrum, FM alias riski   |
 
-Ayrıca `effects/` (master zinciri), `sequencer.ts` (arp/BPM), `types.ts` ve
-Node-only `writer.ts` (WAV + OGG; OGG için FFmpeg). Dosya dökümü `src/`
-ağacının kendisidir; burada tekrarlanmaz.
+Ayrıca `effects/` (bus zinciri), `types.ts` ve Node-only `writer.ts` (WAV +
+OGG; OGG için FFmpeg). `guard/` yapraktır: her katman onu kullanır, o hiçbirini
+kullanmaz. Dosya dökümü `src/` ağacının kendisidir; burada tekrarlanmaz.
 
 ### `instrument ≠ preset`
 
@@ -96,29 +99,48 @@ mutasyonlar.
 
 **Kapı:** `tests/governance/publicSurface.test.ts` kök yüzeydeki isimleri
 kilitler. Yeni bir enstrüman `Presets` altında bir kalem olarak gelir ve
-yüzeyi BÜYÜTMEZ; yüzey ancak yeni bir sentez tekniği ya da yeni bir MODEL
-girdiğinde büyür. Kilit olmadan bu ayrım bir niyettir; kilitle bir kapıdır.
+yüzeyi BÜYÜTMEZ; yüzey ancak yeni bir sentez tekniği, yeni bir MODEL ya da
+render sınırının hata sözleşmesi (`AudioParamError`, `RenderBudgetError`)
+girdiğinde büyür; ölçüm çekirdeği tek ad (`Analysis`) altındadır. Kilit
+olmadan bu ayrım bir niyettir; kilitle bir kapıdır.
 
-### Düzenleme katmanı
+### Düzenleme katmanı — tek aktif yol
 
-`compose` tek seslidir: notaları art arda dizer, tek preset kullanır ve mono
-döner. Akor kurmak, iki enstrümanı üst üste çalmak ya da bir sesi diğerinin
-ortasında başlatmak orada mümkün değildir — müzik üreten her betik kendi
-karıştırıcısını yeniden yazıyordu. `arrange/` bunu kapatır:
+Birden çok sesi zamanda birleştirip seviye veren TEK bir uygulama vardır:
 
-- **`Timeline`** — ölçü/vuruş zamanlı, çok sesli, çok enstrümanlı, stereo.
-  Bozuk olayı EKLENİRKEN reddeder (render sırasında değil: yüzlerce nota
-  arasında bozuğunu aramak istenmez). Tohumlu insanlaştırma taşır, yani
-  mekanik duyulmaz ama deterministik kalır.
+- **Mix veriyolu** (`arrange/mix.ts`: `createMix`, `addVoice`, `masterMix`,
+  `stableJitter`). Ölçümle kanıtlanmış üç kural burada yaşar: veriyolu
+  sesleri normalize etmez (seviye mix'in sonunda bir kez verilir); loop
+  mix'inde sonu aşan kuyruk başa sarılır (`wrap`); insanlaştırma durumsuzdur
+  — sapma `(tohum, olay)` karmasından gelir, üreteç akışından değil. Pan'sız
+  mono ses çift-mono yerleşir (normalize edilmiş bir sesin `pan: 0` render'ı
+  da kanal başına birim seviyededir); açık pan eşit güç yasasıyla.
+- **Master çekirdeği** (`engine/master.ts: masterChannels`). Sıra sabittir:
+  DC → ölçüm → kazanç (tepe | RMS | yok) → yumuşak sınırlayıcı → tavan → kenar
+  sönümü. Ölçüm yalnız TUTULACAK aralıkta yapılır. Tek sesin çıkışı
+  (`applyGlobalEffects`), `compose` ve `Timeline` seviyelerini buradan alır.
+- **`Timeline`** — ölçü/vuruş zamanlı, çok sesli, stereo ön yüz. Bozuk olayı
+  EKLENİRKEN reddeder. `render()` önce tutulacak aralığı bulur (sessiz kuyruk
+  kırpılır), yüksekliği yalnız onun üstünde ölçer, 20 Hz DC temizliği ve RMS
+  eşitleme + sınırlayıcı + tavan uygular. Aynı nesnede ardışık `render()`
+  birebir aynı örnekleri verir. `loopBars` ile dikişsiz loop üretir.
+- **`compose`** — art arda notalar için ince uyumluluk adaptörü: notalar
+  `normalize: false` ile render edilip mono veriyoluna toplanır; bus
+  efektleri, kazanç ve normalizasyon diziye BİR KEZ uygulanır. Bus efekt
+  anahtarları tek listeden (`BUS_EFFECT_KEYS`) ayıklanır; nota başına bus
+  efekti sessizce silinmez, adıyla reddedilir.
 - **Perde sözlüğü** — `noteToHz`, `transposeNote`, `SCALES`, `scaleDegree`,
-  `scaleChord`. Akor dizinin RENGİNİ alır: majör dizinin ikinci derecesinde
-  kurulan üçlü doğal olarak minördür.
-- **`matchLoudness`** — tepe değil RMS eşitler. Tepeye göre normalize etmek
-  parçaları eşit YÜKSEKLİKTE yapmaz: vurmalı ve sürekli dokular aynı tepede
-  10 dB farkla çalar (ölçüldü). `targetRms: 0` "dokunma" demektir, "sustur"
-  değil — bu ayrım bir kez yanlış tasarlandı ve testler yakaladı.
+  `scaleChord`. Akor dizinin RENGİNİ alır.
+- **`matchLoudness`** — master çekirdeğinin RMS modu. Tepeye göre normalize
+  etmek parçaları eşit YÜKSEKLİKTE yapmaz (vurmalı ve sürekli doku aynı tepede
+  10 dB farkla çalar, ölçüldü). `targetRms: 0` "dokunma" demektir.
 
-Kök yüzeye tek isimle girer (`Arrange`); içindekiler yüzey sayısını büyütmez.
+Kök yüzeye `Arrange` ve `compose` olarak girer.
+
+**Tarihî not.** Frozen VOL.HELL kendi `scripts/audio/lib/mix.ts` kopyasıyla
+üretildi; bu kopya freeze etiketinde değişmez bir tarihsel kayıttır, aktif
+paralel bir yol DEĞİLDİR. Yukarıdaki üç kural oradan kanıtlanmış olarak
+taşındı; oyun kavramı taşınmadı.
 
 ### Zaman sınırı
 
@@ -418,6 +440,10 @@ interface SequenceParams {
 ```
 
 Sınırlar: swing, MIDI, real-time scheduling yok; polifoni yok, notalar üst üste binebilir.
+Bus efektleri (`delay`, `flanger`, `phaser`, `chorus`, `pan`, `reverb`,
+`stereoWidth`), `sampleRate` ve `sample` diziye aittir: `baseParams` ile
+verilir, nota `params` içinde reddedilir. Nota `params.gain` o notanın
+kazancıdır.
 
 ## Hazır presetler
 
@@ -673,18 +699,26 @@ Kısa seslerde attack ve release'te `cosine` eğrisi, başlangıç ve bitişteki
 
 ## Sınırlar
 
-**Motor müzik için yetersiz DEĞİLDİR.** Bu belge bir dönem öyle yazıyordu ve
-tersini repo kendi kapısında kanıtlıyor: VOL.HELL'in gönderilen müzik
-parçalarının HEPSİ bu motorla üretiliyor ve `just audio-verify` (signoff'un
-parçası) onları yeniden üretip bayt-birebir olduklarını doğruluyor. İddia
-motorun tek osilatör + ADSR döneminden kalmıştı; additive, FM, filtre, LFO,
-efekt zinciri ve Karplus-Strong eklendikten sonra geçerliliğini yitirdi.
+**Motor müzik için yetersiz DEĞİLDİR.** Tarihî kanıt: frozen VOL.HELL'in
+gönderilen müzik ve SFX'inin hepsi bu motorla üretildi ve freeze anında
+(`vol-hell/final-2026-09-20`) reçete ↔ asset bayt-birebir doğrulandı. Bu
+kanıt freeze etiketinde yaşar: motor o tarihten sonra bilinçli DSP
+düzeltmeleri aldı (RT60 reverb, halfband decimator, …), yani bugünkü motor o
+dosyaları bayt-birebir yeniden üretmez ve üretmesi beklenmez. Rutin kapı
+frozen ağaçta üretim tetiklemez.
 
 Gerçek sınır **motorda değil KATALOGDA**. Primitifler güçlü; altı fiziksel
 model (`pluck`, `piano`, `bowedString`, `airColumn`, `brass`, `formant`)
-yirmi beş enstrüman presetini taşıyor. Akustik aileler artık ayrı modellerde
-yaşıyor; yeni bir enstrüman presetlerle büyür, model gerekiyorsa model
-dosyasına eklenir.
+yirmi beş enstrüman presetini taşıyor.
+
+Ölçülmüş, bilinen sınırlar:
+
+- Kenarlı osilatörlerin (PolyBLEP) kendi katlanması: 917 Hz testere −54 dB,
+  3.6 kHz −47 dB alias/sinyal.
+- Paralel comb reverb tonal girdide renklenir (saf sinüste wet ±4 dB).
+- Master tavanları örnek tepesidir; kodek sonrası true peak onu aşabilir
+  (demo parçalarının 2/12'si −1 dBTP üstü). True-peak limiter Dalga 10'dadır;
+  o zamana kadar varlık QA'sı aşımı raporlar.
 
 Kapsam DIŞINDA olanlar (bunlar bilinçli):
 
@@ -695,17 +729,67 @@ Kapsam DIŞINDA olanlar (bunlar bilinçli):
 - **Real-time MIDI, ritmik grid, beatmatching, DAW/VST entegrasyonu.**
 - **Gerçekçi foley ve insan sesi.** İkincisi formant modeli ister.
 
+## Varlık QA'sı
+
+Gönderilen ses KODEK SONRASI ölçülür (`scripts/audio-qa.ts`: OGG FFmpeg ile
+çözülür, ölçüm `Analysis` çekirdeğindedir):
+
+- **Yükseklik** — ITU-R BS.1770-5: K-ağırlıklama (48 kHz katsayıları Tablo
+  1/2; diğer oranlar libebur128/FFmpeg'in analog prototipinden, 48 kHz'te
+  tabloyu 1e-12'de tutar), 400 ms blok, %75 örtüşme, −70 LUFS mutlak ve
+  −10 LU göreli kapı. Uzun varlık integrated, kısa olay (EBU Tech 3341)
+  en yüksek momentary ile ölçülür; 400 ms'den kısa sinyalde integrated
+  tanımsızdır ve sayı uydurulmaz. RMS ve LUFS ayrı adlardır.
+- **True peak** — BS.1770 Ek 2: fs < 96 kHz'te 4× aşırı örnekleme (Kaiser
+  sinc, çok fazlı; kesin üst sınırla budanır). Örnek tepesi ayrı raporlanır.
+- **Kırpma** kanal örneği cinsindendir: kanal başına sayı, toplam kanal
+  örneği ve etkilenen çerçeve ayrı.
+
+Doğrulama: EBU Tech 3341 #1/#2/#3/#5 (integrated), #12 (momentary),
+#15–#19 (true peak) `tests/loudness.test.ts`te yayımlanmış beklenenlerle
+geçer. Referans çapraz denetim (`pnpm --filter @volstudio/audio-synth
+audio:reference-check`, `just audio-verify`in parçası): fixture'lar
+`writeOgg` ile encode edilip çözülür, FFmpeg `ebur128` ile karşılaştırılır —
+tolerans integrated ±0.2 LU, true peak ±0.3 dB; ölçülen en büyük fark 0.052
+LU / 0.044 dB. Frozen VOL.HELL kataloğunun 46 dosyasında (salt-okur) fark
+integrated ≤ 0.051 LU, true peak ≤ 0.049 dB.
+
+**Sınıf politikası** (`ASSET_CLASS_POLICIES`, makine-okunur): true peak tavanı
+her sınıfta −1 dBTP (EBU R128, Sony ASWG-R001, AES TD1008); kırpma sıfır.
+Yükseklik aralıkları yayın standardı DEĞİLDİR; frozen VOL.HELL kataloğunun
+kodek sonrası ölçümünden ~4–6 LU payla kalibre edildi:
+
+| Sınıf    | Ölçü        | Katalogda gözlenen | Politika (LUFS) |
+| -------- | ----------- | ------------------ | --------------- |
+| ui       | en yüksek M | −22.8 … −16.0      | [−28, −14]      |
+| sfx      | en yüksek M | −24.0 … −10.0      | [−30, −8]       |
+| ambience | integrated  | −20.2 … −19.9      | [−26, −16]      |
+| music    | integrated  | −17.0 … −14.4      | [−20, −12]      |
+
+Sınıf yol kuralıyla (`music/`, `ambience/`, `ui/` klasörleri; gerisi `sfx`)
+ya da `--class` ile belirlenir. **Taban çizgisi:** frozen katalogda 46 dosyanın
+43'ü politikayı geçer; 3 müzik parçası true peak tavanını aşar
+(`sovereign` −0.84, `surge-protocol` −0.73, `hollow-signal` −0.92 dBTP). Frozen
+ağaç değiştirilemediği için bu tarihsel kayıttır; `just audio-verify`
+politikayı yalnız AKTİF paketlerin `public/assets/audio` ağaçlarına uygular.
+
 ## Doğrulama
 
-Her ses değişikliği sonrası:
+Paketin kendi kapıları:
 
 ```bash
-pnpm -r typecheck
-pnpm --filter @volstudio/<game> generate:sounds
-pnpm --filter @volstudio/<game> audio:qa
-pnpm --filter @volstudio/<game> build
-pnpm --filter @volstudio/<game> test
+pnpm --filter @volstudio/audio-synth typecheck
+pnpm --filter @volstudio/audio-synth test
+pnpm --filter @volstudio/audio-synth test:coverage    # signoff'ta coverage-audio
+pnpm --filter @volstudio/audio-synth audio:reference-check
+pnpm --filter @volstudio/audio-synth bench:budget     # kaynak bütçesi referans ölçümü
+pnpm --filter @volstudio/audio-synth exec tsx scripts/fm-alias-report.ts
 ```
+
+Ses üreten AKTİF bir paket: reçetesini (`generate:audio`) koşar, çıktıyı
+`pnpm --filter @volstudio/audio-synth qa <dizin> --policy` ile kodek sonrası
+ölçer; `just audio-verify` (signoff) reçete tazeliğini, ölçüm çekirdeğinin
+referans denetimini ve aktif ses ağaçlarının politikasını birlikte sınar.
 
 ## Dikkat
 

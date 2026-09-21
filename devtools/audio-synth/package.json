@@ -22,6 +22,7 @@
     "test:coverage": "vitest run --coverage",
     "qa": "tsx scripts/audio-qa.ts",
     "bench:budget": "tsx scripts/render-budget-bench.ts",
+    "audio:reference-check": "tsx scripts/audio-reference-check.ts",
     "demo:music": "tsx scripts/music-demo.ts",
     "convert:ios": "tsx scripts/convert-audio.ts"
   },

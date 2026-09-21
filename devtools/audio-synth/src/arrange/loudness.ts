@@ -1,3 +1,5 @@
+import { masterChannels } from '../engine/master';
+
 /**
  * Yükseklik eşitleme ve tavan.
  *
@@ -8,45 +10,7 @@
  * düğmesine uzanmak demektir.
  */
 
-/** Kare ortalamanın karekökü — algılanan yüksekliğin ucuz ve kararlı ölçüsü. */
-export function measureRms(channels: readonly Float32Array[]): number {
-  let energy = 0;
-  let count = 0;
-  for (const channel of channels) {
-    for (const value of channel) {
-      if (!Number.isFinite(value)) continue;
-      energy += value * value;
-      count++;
-    }
-  }
-  return count === 0 ? 0 : Math.sqrt(energy / count);
-}
-
-/** Tepe genlik. */
-export function measurePeak(channels: readonly Float32Array[]): number {
-  let peak = 0;
-  for (const channel of channels) {
-    for (const value of channel) {
-      if (Number.isFinite(value)) peak = Math.max(peak, Math.abs(value));
-    }
-  }
-  return peak;
-}
-
-/**
- * Diz bölgeli yumuşak sınırlayıcı.
- *
- * `threshold` altında sinyale DOKUNMAZ; üstünde sıkıştırır ve hiçbir zaman
- * `threshold + knee` değerini aşmaz. Sert kırpma yerine bu seçilir: kırpma
- * tek örnekte süreksizlik üretir ve tüm harmoniklere yayılan bir cızırtı
- * bırakır.
- */
-export function softLimit(value: number, threshold = 0.7, knee = 0.28): number {
-  const magnitude = Math.abs(value);
-  if (magnitude <= threshold) return value;
-  const over = magnitude - threshold;
-  return Math.sign(value) * (threshold + over / (1 + over / knee));
-}
+export { measurePeak, measureRms, softLimit } from '../engine/master';
 
 export interface LoudnessOptions {
   /**
@@ -81,28 +45,10 @@ export function matchLoudness(
   channels: readonly Float32Array[],
   options: LoudnessOptions = {},
 ): void {
-  const targetRms = options.targetRms ?? 0.1;
-  const threshold = options.threshold ?? 0.7;
-  const ceiling = options.ceiling ?? 0.95;
-  const maxGain = options.maxGain ?? 6;
-
-  const rms = measureRms(channels);
-  if (targetRms > 0 && rms > 0) {
-    const gain = Math.min(maxGain, targetRms / rms);
-    for (const channel of channels) {
-      for (let i = 0; i < channel.length; i++) channel[i] *= gain;
-    }
-  }
-
-  for (const channel of channels) {
-    for (let i = 0; i < channel.length; i++) channel[i] = softLimit(channel[i], threshold);
-  }
-
-  const peak = measurePeak(channels);
-  if (peak > ceiling) {
-    const scale = ceiling / peak;
-    for (const channel of channels) {
-      for (let i = 0; i < channel.length; i++) channel[i] *= scale;
-    }
-  }
+  // Örnek oranı yalnız DC/sönüm süreleri içindir; burada ikisi de yok.
+  masterChannels(channels, 1, {
+    level: { mode: 'rms', target: options.targetRms ?? 0.1, maxGain: options.maxGain ?? 6 },
+    limiter: { threshold: options.threshold ?? 0.7, knee: 0.28 },
+    ceiling: options.ceiling ?? 0.95,
+  });
 }
