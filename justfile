@@ -145,9 +145,7 @@ high: quick rust lint-css coverage coverage-shape build bundle scaling e2e
 # push'a bu maliyeti yüklemek kapıyı atlanır hâle getirirdi. Sürüm anı ise
 # gönderilenin kaynağıyla eşleştiğini bilmek için doğru an.
 audio-verify:
-    pnpm --filter @volstudio/vol-arachnid audio:generate
-    pnpm --filter @volstudio/vol-hell generate:audio
-    git diff --exit-code -- 'games/*/public/assets/audio/**'
+    node scripts/quality/audioVerify.mjs
 
 # Release/milestone kapısı: high + ağır ses kapsamı + ses tazeliği
 signoff: high coverage-audio audio-verify security-js security-rust

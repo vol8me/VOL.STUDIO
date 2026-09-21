@@ -24,12 +24,20 @@
     {
       "packageName": "@volstudio/vol-arachnid",
       "path": "games/vol-arachnid",
-      "status": "active"
+      "status": "frozen",
+      "freezeTag": "vol-arachnid/final-2026-09-20",
+      "freezeCommit": "6f36163d959753edd641a4af27838f869a71688f",
+      "decisionDate": "2026-09-20",
+      "reason": "Reference product delivered and locked; active engine development continues without modifying frozen game trees."
     },
     {
       "packageName": "@volstudio/vol-hell",
       "path": "games/vol-hell",
-      "status": "active"
+      "status": "frozen",
+      "freezeTag": "vol-hell/final-2026-09-20",
+      "freezeCommit": "6f36163d959753edd641a4af27838f869a71688f",
+      "decisionDate": "2026-09-20",
+      "reason": "Reference product delivered and locked; active engine development continues without modifying frozen game trees."
     },
     {
       "packageName": "@volstudio/tauri-v2",

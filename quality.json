@@ -67,18 +67,6 @@
       "branches": 84,
       "functions": 91
     },
-    "@volstudio/vol-hell": {
-      "lines": 70,
-      "statements": 70,
-      "branches": 74,
-      "functions": 78
-    },
-    "@volstudio/vol-arachnid": {
-      "lines": 96,
-      "statements": 96,
-      "branches": 84,
-      "functions": 93
-    },
     "@volstudio/vol-ui": {
       "lines": 94,
       "statements": 94,
