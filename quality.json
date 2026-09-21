@@ -1,5 +1,15 @@
 {
   "$comment": [
+    "2026-09-21: Vitest 4.1.11 yükseltmesi v8 coverage sağlayıcısında `ast-v8-to-istanbul`",
+    "remapper'ına geçti. AST tabanlı dal tespiti (implicit else, default parametreler,",
+    "mantıksal kısa devreler) ve fonksiyon sayımları gerçek AST ayrıştırmasıyla",
+    "ölçülmeye başlandı. Ölçülen yeni tabana göre eşikler güncellendi (~1-2 puan pay ile):",
+    "vol-ui dal 90 → 58 (ölçülen 59.60, satır 95.05, ifade 94.48, fonk 85.04);",
+    "vol-arachnid dal 87 → 84, fonk 96 → 93 (ölçülen dal 85.92, fonk 94.00, satır 97.57, ifade 96.02);",
+    "vol-hell dal 79 → 74, fonk 85 → 78 (ölçülen dal 75.54, fonk 79.44, satır 84.45, ifade 82.21).",
+    "Ayrıca refactor sonrası MainMenuScene.ts yürütülebilir satır sayısı 100'ün altına (93) indiği",
+    "için ölü acknowledged gerekçesi kaldırıldı.",
+    "",
     "2026-09-05: gönderilen bundle bütçeleri eklendi. Ölçü gzip'lenmiş bayttır —",
     "kullanıcının beklediği süre telden geçen boyutla orantılıdır, diskteki dist",
     "toplamıyla değil. Bütçe `app` ve `vendor` olarak AYRILIR: ölçüldüğünde",
@@ -60,19 +70,19 @@
     "@volstudio/vol-hell": {
       "lines": 70,
       "statements": 70,
-      "branches": 79,
-      "functions": 85
+      "branches": 74,
+      "functions": 78
     },
     "@volstudio/vol-arachnid": {
       "lines": 96,
       "statements": 96,
-      "branches": 87,
-      "functions": 96
+      "branches": 84,
+      "functions": 93
     },
     "@volstudio/vol-ui": {
       "lines": 94,
       "statements": 94,
-      "branches": 90,
+      "branches": 58,
       "functions": 83
     },
     "@volstudio/audio-synth": {
@@ -126,10 +136,6 @@
       "games/vol-hell/src/runtime/scene/GameScene.ts": {
         "reason": "Phaser sahnesi WebGL, ses ve DOM arayüzünü birlikte kurar; jsdom'da kurulamaz. Koşu gerçek tarayıcıda BAŞLA'dan duraklatıp sürdürmeye kadar sınanır.",
         "evidence": ["games/vol-hell/tests/e2e/gameplay.spec.ts"]
-      },
-      "games/vol-hell/src/runtime/scene/MainMenuScene.ts": {
-        "reason": "Phaser sahnesi; menünün çizilmesi ve ayarlar gidiş-dönüşü gerçek tarayıcıda sınanır.",
-        "evidence": ["games/vol-hell/tests/e2e/boot.spec.ts"]
       }
     }
   },

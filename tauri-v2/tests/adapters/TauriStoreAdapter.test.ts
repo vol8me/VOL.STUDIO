@@ -18,15 +18,14 @@ describe('TauriStoreAdapter', () => {
     mockSet.mockResolvedValue(undefined);
     mockDelete.mockResolvedValue(true);
     mockSave.mockResolvedValue(undefined);
-    vi.mocked(LazyStore).mockImplementation(
-      () =>
-        ({
-          get: mockGet,
-          set: mockSet,
-          delete: mockDelete,
-          save: mockSave,
-        }) as unknown as LazyStore,
-    );
+    vi.mocked(LazyStore).mockImplementation(function () {
+      return {
+        get: mockGet,
+        set: mockSet,
+        delete: mockDelete,
+        save: mockSave,
+      } as unknown as LazyStore;
+    });
   });
 
   it('deger getirir', async () => {

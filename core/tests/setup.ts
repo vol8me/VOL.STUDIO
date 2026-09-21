@@ -56,6 +56,16 @@ if (typeof globalThis.PointerEvent === 'undefined') {
   } as unknown as typeof PointerEvent;
 }
 
+if (typeof globalThis.AnimationEvent === 'undefined') {
+  globalThis.AnimationEvent = class AnimationEvent extends Event {
+    public readonly animationName: string;
+    constructor(type: string, eventInitDict?: { animationName?: string } & EventInit) {
+      super(type, eventInitDict);
+      this.animationName = eventInitDict?.animationName ?? '';
+    }
+  } as unknown as typeof AnimationEvent;
+}
+
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = class ResizeObserver {
     observe() {}

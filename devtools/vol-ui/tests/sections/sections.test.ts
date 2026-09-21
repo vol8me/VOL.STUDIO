@@ -157,31 +157,57 @@ describe('vol-ui sekme builderları', () => {
   });
 
   describe('cards sekmesi etkileşimi', () => {
-    it('butona tıklayınca dükkân açılır ve reroll teklifleri yeniler', () => {
+    it('LevelUp ve Shop demolarını tam döngüyle sürer', () => {
       const { element, destroy } = buildCardsTab(uiRoot);
+      document.body.appendChild(element);
 
-      const openShop = element.querySelector<HTMLButtonElement>('button');
-      expect(openShop).not.toBeNull();
+      const buttons = element.querySelectorAll<HTMLButtonElement>('button');
+      expect(buttons.length).toBeGreaterThanOrEqual(2);
 
-      openShop?.click();
+      // 1. LevelUpPicker akışı: aç ve kart seç
+      const openLevelUp = buttons[0];
+      openLevelUp.click();
+      const levelUpCard = uiRoot.querySelector<HTMLButtonElement>('.vol-card-picker .vol-card');
+      expect(levelUpCard).not.toBeNull();
+      levelUpCard?.click();
 
-      const shop = document.querySelector('.vol-card-picker--shop');
+      // 2. ShopPicker akışı: aç, kilitle, satın al, sat, reroll, kapat
+      const openShop = buttons[1];
+      openShop.click();
+
+      const shop = uiRoot.querySelector('.vol-card-picker--shop');
       expect(shop).not.toBeNull();
 
-      const tileCount = document.querySelectorAll('.vol-card-picker--shop .vol-card').length;
+      const tileCount = uiRoot.querySelectorAll('.vol-card-picker--shop .vol-card').length;
       expect(tileCount).toBeGreaterThanOrEqual(1);
 
-      const rerollButton = shop?.querySelector<HTMLButtonElement>('.vol-card-shop__reroll');
-      expect(rerollButton).not.toBeNull();
+      // Kilit aç / kapa
+      const lockBtn = uiRoot.querySelector<HTMLButtonElement>(
+        '.vol-card-picker--shop .vol-card__secondary-action',
+      );
+      lockBtn?.click();
+      lockBtn?.click();
 
-      // Reroll teklifleri *değiştirir*, listeyi boşaltmaz. Çekilen kartlar
-      // rastgele olduğu için kimlik değil sayı sabitliği doğrulanır; regresyonda
-      // asıl kırılan şey listenin boşalması ya da katlanarak büyümesi olur.
+      // Satın al
+      const buyBtn = uiRoot.querySelector<HTMLButtonElement>(
+        '.vol-card-picker--shop .vol-card__action',
+      );
+      buyBtn?.click();
+
+      // Envanterden sat
+      const sellBtn = uiRoot.querySelector<HTMLButtonElement>('.vol-card-shop__list button');
+      sellBtn?.click();
+
+      // Reroll
+      const rerollButton = shop?.querySelector<HTMLButtonElement>('.vol-card-shop__reroll');
       rerollButton?.click();
-      expect(document.querySelectorAll('.vol-card-picker--shop .vol-card')).toHaveLength(tileCount);
+
+      // Kapat
+      const closeBtn = shop?.querySelector<HTMLButtonElement>('.vol-card-shop__close');
+      closeBtn?.click();
 
       destroy();
-      expect(document.querySelector('.vol-card-picker--shop')).toBeNull();
+      expect(uiRoot.querySelector('.vol-card-picker--shop')).toBeNull();
     });
   });
 

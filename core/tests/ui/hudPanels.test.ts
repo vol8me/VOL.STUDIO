@@ -112,7 +112,7 @@ describe('BuildMenu', () => {
     expect(button.classList.contains('vol-build-menu__item--selected')).toBe(false);
   });
 
-  it('yeni bir öğe seçilince öncekinin seçimi otomatik kalkar', () => {
+  it('yeni bir öğe seçilince önceki seçim otomatik kalkar', () => {
     const items: BuildMenuItem[] = [
       { id: 'a', icon: 'A', label: 'A', onSelect: vi.fn() },
       { id: 'b', icon: 'B', label: 'B', onSelect: vi.fn() },
@@ -449,6 +449,117 @@ describe('SkillTree', () => {
     // MAX_ZOOM=2'yi aşmamalı — dolaylı olarak transform üzerinden kontrol edilir.
     const canvas = tree.element.querySelector<HTMLDivElement>('.vol-skill-tree__canvas')!;
     expect(canvas.style.transform).toContain('scale(2)');
+  });
+
+  it('zoomable:true iken pointer etkileşimi pan başlatır, taşır ve sonlandırır', () => {
+    const tree = track(new SkillTree({ nodes: makeNodes(), zoomable: true }));
+    const viewport = tree.element.querySelector<HTMLDivElement>('.vol-skill-tree__viewport')!;
+    const canvas = tree.element.querySelector<HTMLDivElement>('.vol-skill-tree__canvas')!;
+
+    // Buton üzerine tıklandığında pan başlamaz
+    const button = tree.element.querySelector<HTMLButtonElement>('.vol-skill-tree__node')!;
+    button.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10, pointerId: 1 }),
+    );
+    expect(viewport.classList.contains('vol-skill-tree__viewport--panning')).toBe(false);
+
+    // Boş viewport alanında pan başlar
+    viewport.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, clientX: 100, clientY: 100, pointerId: 1 }),
+    );
+    expect(viewport.classList.contains('vol-skill-tree__viewport--panning')).toBe(true);
+
+    viewport.dispatchEvent(
+      new PointerEvent('pointermove', { bubbles: true, clientX: 150, clientY: 180, pointerId: 1 }),
+    );
+    expect(canvas.style.transform).toContain('translate(50px, 80px)');
+
+    viewport.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
+    expect(viewport.classList.contains('vol-skill-tree__viewport--panning')).toBe(false);
+
+    // pointercancel ile pan sonlanır
+    viewport.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, clientX: 100, clientY: 100, pointerId: 1 }),
+    );
+    viewport.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerId: 1 }));
+    expect(viewport.classList.contains('vol-skill-tree__viewport--panning')).toBe(false);
+  });
+
+  it('resetView pan ve zoom durumunu yumuşak animasyonla sıfırlar', () => {
+    vi.useFakeTimers();
+    const tree = track(new SkillTree({ nodes: makeNodes(), zoomable: true }));
+    const viewport = tree.element.querySelector<HTMLDivElement>('.vol-skill-tree__viewport')!;
+    const canvas = tree.element.querySelector<HTMLDivElement>('.vol-skill-tree__canvas')!;
+
+    viewport.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, clientX: 100, clientY: 100, pointerId: 1 }),
+    );
+    viewport.dispatchEvent(
+      new PointerEvent('pointermove', { bubbles: true, clientX: 200, clientY: 250, pointerId: 1 }),
+    );
+    viewport.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
+
+    tree.resetView();
+    expect(canvas.classList.contains('vol-skill-tree__canvas--resetting')).toBe(true);
+    expect(canvas.style.transform).toContain('translate(0px, 0px) scale(1)');
+
+    vi.advanceTimersByTime(500);
+    expect(canvas.classList.contains('vol-skill-tree__canvas--resetting')).toBe(false);
+  });
+
+  it('node branch ve cost tanımları stil ve bağlantı sınıflarına yansır', () => {
+    const nodes: SkillNodeDefinition[] = [
+      {
+        id: 'fire1',
+        label: 'Ateş Topu',
+        x: 0,
+        y: 0,
+        branch: 'primary',
+        cost: [{ label: 'Mana', amount: 50 }],
+      },
+      {
+        id: 'fire2',
+        label: 'Alev Dalgası',
+        x: 0,
+        y: 1,
+        branch: 'primary',
+        requires: ['fire1'],
+      },
+    ];
+    const tree = track(new SkillTree({ nodes, showTooltips: true }));
+    const button = tree.element.querySelector<HTMLButtonElement>('.vol-skill-tree__node')!;
+    expect(button.classList.contains('vol-skill-tree__node--branch-primary')).toBe(true);
+
+    const line = tree.element.querySelector<SVGLineElement>('.vol-skill-tree__connection')!;
+    expect(line.classList.contains('vol-skill-tree__connection--branch-primary')).toBe(true);
+  });
+
+  it('düğüm açıldığında pulse ve become-available animasyonları tetiklenir ve animationend ile temizlenir', () => {
+    vi.useFakeTimers();
+    const nodes: SkillNodeDefinition[] = [
+      { id: 'n1', label: 'Birinci', x: 0, y: 0 },
+      { id: 'n2', label: 'İkinci', x: 0, y: 1, requires: ['n1'] },
+    ];
+    const tree = track(new SkillTree({ nodes }));
+    tree.setStates({ n1: 'unlocked', n2: 'available' });
+
+    // n2'nin kilidini açınca hem pulse hem dolum animasyonu devreye girer
+    tree.setStates({ n1: 'unlocked', n2: 'unlocked' });
+    const n2Btn = tree.element.querySelectorAll<HTMLButtonElement>('.vol-skill-tree__node')[1];
+    expect(n2Btn.classList.contains('vol-skill-tree__node--unlock-pulse')).toBe(true);
+
+    n2Btn.dispatchEvent(
+      new AnimationEvent('animationend', { animationName: 'vol-skill-tree-unlock-pulse' }),
+    );
+    expect(n2Btn.classList.contains('vol-skill-tree__node--unlock-pulse')).toBe(false);
+
+    n2Btn.classList.add('vol-skill-tree__node--become-available');
+    n2Btn.dispatchEvent(
+      new AnimationEvent('animationend', { animationName: 'vol-skill-tree-become-available' }),
+    );
+    expect(n2Btn.classList.contains('vol-skill-tree__node--become-available')).toBe(false);
+
+    vi.advanceTimersByTime(600);
   });
 
   it("destroy tüm cleanup ve tooltip'leri temizler", () => {
