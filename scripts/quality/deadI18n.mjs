@@ -16,6 +16,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { workingTreeFiles } from './gitFiles.mjs';
+import { excludingFrozenPaths, loadRepoLifecycle } from './workspaceLifecycle.mjs';
 
 /**
  * Çalışma zamanında kurulan anahtarlar — TAM liste, önek değil.
@@ -54,10 +55,13 @@ function flatten(value, path = []) {
  * @param dynamic Çalışma zamanında kurulan anahtarlar; testler kendi listesini verir.
  * @returns Sorun listesi; boşsa yüzey temizdir.
  */
-export function validateI18nKeys(root, dynamic = DYNAMIC_KEYS) {
+export function validateI18nKeys(root, dynamic = DYNAMIC_KEYS, lifecycle = loadRepoLifecycle(root)) {
   const problems = [];
 
-  const codeFiles = gitFiles(root, '*.ts').concat(gitFiles(root, '*.html'));
+  const codeFiles = excludingFrozenPaths(
+    gitFiles(root, '*.ts').concat(gitFiles(root, '*.html')),
+    lifecycle,
+  );
   const code = codeFiles
     .filter((file) => !file.includes('node_modules'))
     .map((file) => {
@@ -80,7 +84,7 @@ export function validateI18nKeys(root, dynamic = DYNAMIC_KEYS) {
     }
   }
 
-  for (const file of gitFiles(root, '*/i18n/tr.json')) {
+  for (const file of excludingFrozenPaths(gitFiles(root, '*/i18n/tr.json'), lifecycle)) {
     const keys = flatten(JSON.parse(readFileSync(join(root, file), 'utf8')));
     const dead = keys.filter((key) => {
       if (code.includes(key)) return false;

@@ -70,17 +70,20 @@ problems.push(
 problems.push(...validateWorkspaceLifecycle(root, lifecycle, packages));
 
 // Katman sınırları: oyun/devtool/core bağımlılık yönü.
-problems.push(...validateLayerBoundaries(root));
+// Lifecycle'ı DIŞARI veren bekçiler ürün kalitesidir ve frozen ağaçları
+// taramaz; almayanlar (lifecycle, blob, tracked imports, phaser, type yüzeyi)
+// repo/freeze bütünlüğüdür ve ağacın tamamını görür.
+problems.push(...validateLayerBoundaries(root, lifecycle));
 problems.push(...validateBlobSizes(root));
 problems.push(...validateTrackedImports(root));
-problems.push(...validateI18nKeys(root));
-problems.push(...validateSourceSize(root));
-problems.push(...validateDevPorts(root));
-problems.push(...validateModuleCycles(root));
-problems.push(...validateCommentDensity(root));
-problems.push(...validateDeviceApps(root));
-problems.push(...validateCargoLockParity(root));
-problems.push(...validateProductIcons(root));
+problems.push(...validateI18nKeys(root, undefined, lifecycle));
+problems.push(...validateSourceSize(root, undefined, undefined, lifecycle));
+problems.push(...validateDevPorts(root, lifecycle));
+problems.push(...validateModuleCycles(root, lifecycle));
+problems.push(...validateCommentDensity(root, undefined, undefined, lifecycle));
+problems.push(...validateDeviceApps(root, lifecycle));
+problems.push(...validateCargoLockParity(root, undefined, lifecycle));
+problems.push(...validateProductIcons(root, undefined, lifecycle));
 problems.push(...validatePhaserBoundary(root));
 problems.push(...validateCoreTypeSurface(root));
 

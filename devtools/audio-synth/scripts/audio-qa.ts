@@ -271,7 +271,7 @@ ensureFfmpeg();
 
 const files = collectOggs(root);
 if (files.length === 0) {
-  console.log(`${root} altında .ogg yok. Önce: pnpm --filter @volstudio/vol-hell generate:audio`);
+  console.log(`${root} altında .ogg yok — önce paketin ses üretim reçetesini koş.`);
   process.exit(0);
 }
 

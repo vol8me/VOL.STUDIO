@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
+import { frozenWorkspacePaths, loadRepoLifecycle } from './workspaceLifecycle.mjs';
 
 /**
  * ÜRÜN İKONU — her oyun kendi görünen kimliğini taşır.
@@ -55,15 +56,21 @@ function launcherIcons(shell) {
  * @param templateHashes Reddedilen şablon ikon özetleri; testler kendi kümesini verir.
  * @returns Sorun listesi; boşsa her oyun kendi ikonunu taşır.
  */
-export function validateProductIcons(root, templateHashes = TEMPLATE_ICON_HASHES) {
+export function validateProductIcons(
+  root,
+  templateHashes = TEMPLATE_ICON_HASHES,
+  lifecycle = loadRepoLifecycle(root),
+) {
   const problems = [];
   const owners = new Map();
   const gamesDir = join(root, 'games');
   if (!existsSync(gamesDir)) return problems;
 
+  const frozen = new Set(lifecycle ? frozenWorkspacePaths(lifecycle) : []);
   const games = readdirSync(gamesDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
+    .filter((name) => !frozen.has(`games/${name}`))
     .sort();
 
   for (const game of games) {

@@ -30,6 +30,9 @@ kırar ya da — daha kötüsü — testlerinizin sessizce hiç koşmamasına yo
 4. **Frozen İmmutability:** Dondurulan oyun paketleri mevcut `HEAD` üzerinde
    kesinlikle değiştirilemez (immutable); doğrulamaları annotated Git etiketi
    (`freezeTag`) ve commit hash'i (`freezeCommit`) üzerinden kilitlenir.
+   Dondururken `.prettierignore` ve `.stylelintignore`a `<path>/**` girdisi
+   eklenir — ESLint ignores'u `workspace-lifecycle.json`dan kendiliğinden
+   türer, `frozenToolSelection.test.mjs` üç yüzeyi birlikte kilitler.
 5. **Yeniden Aktifleştirme Prosedürü:** Dondurulmuş bir oyunda yeniden aktif
    çalışma yürütülecekse:
    - `workspace-lifecycle.json` dosyasında `status` "active"e çekilir.
@@ -45,6 +48,9 @@ kırar ya da — daha kötüsü — testlerinizin sessizce hiç koşmamasına yo
   aktif paketler için dinamik keşfedilir; `justfile` içinde elle liste tutulmaz.
 - Rust kapısı `src-tauri/Cargo.toml` taşıyan her aktif paketi tarar; yeni oyun
   eklendiğinde `check`/`fmt`/`clippy` kendiliğinden kapsar.
+- Cihaz ölçüm adaylığı da otomatiktir: `active` + `src-tauri/tauri.conf.json`
+  taşıyan paket `device-benchmark` keşfine (`deviceBenchmarkCandidates`)
+  kendiliğinden girer; frozen'a çekilince çıkar.
 
 **Otomatik DEĞİLDİR:**
 

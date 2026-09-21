@@ -2,6 +2,10 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { sourceImports } from './sourceImports.mjs';
+import {
+  frozenWorkspacePaths,
+  loadRepoLifecycle,
+} from './workspaceLifecycle.mjs';
 
 /** Yazarlık formatının sahibi üreticidir; çalışma zamanı CORE'a taşınmaz. */
 const DEVTOOL_EDGES = {};
@@ -66,9 +70,13 @@ function walk(dir, visit) {
  * gelir. Yorumlar kenar değildir; ts/js ve sabit dinamik importlar kenardır.
  * Değişkenle kurulan import hedefleri statik olarak çözülemez.
  */
-export function validateLayerBoundaries(root) {
+export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root)) {
   const problems = [];
   const packages = packagesAt(root);
+  // Frozen paketler grafikte HEDEF olarak kalır (aktif → frozen kenar hâlâ
+  // yakalanır) ama SAHİP olarak taranmaz: manifestleri ve kaynakları
+  // değiştirilemez, bulunan bir ihlal düzeltilemez.
+  const frozenDirs = new Set(lifecycle ? frozenWorkspacePaths(lifecycle) : []);
   const byName = new Map(packages.map((pkg) => [pkg.name, pkg]));
   const graph = new Map(packages.map((pkg) => [pkg.name, new Set()]));
   const configCache = new Map();
@@ -119,6 +127,7 @@ export function validateLayerBoundaries(root) {
     }
   };
   for (const owner of packages) {
+    if (frozenDirs.has(owner.dir)) continue;
     for (const field of [
       'dependencies',
       'optionalDependencies',

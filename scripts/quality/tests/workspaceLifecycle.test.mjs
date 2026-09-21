@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, posix, win32 } from 'node:path';
 import { test } from 'node:test';
 import {
+  excludingFrozenPaths,
   normalizeWorkspacePath,
   validWorkspacePath,
   validateWorkspaceLifecycle,
@@ -169,4 +170,36 @@ test('validWorkspacePath POSIX ve Windows yollarında güvenlik ve sınırları 
   assert.equal(validWorkspacePath('C:\\repo', '../escape', win32), false);
   assert.equal(validWorkspacePath('C:\\repo', '', win32), false);
   assert.equal(validWorkspacePath('C:\\repo', 'C:\\absolute', win32), false);
+});
+
+test('excludingFrozenPaths frozen ağaçları düşürür, active ve kök dosyaları tutar', () => {
+  const lifecycle = {
+    workspaces: [
+      { packageName: '@vol/active', path: 'games/active', status: 'active' },
+      { packageName: '@vol/frozen', path: 'games/frozen', status: 'frozen' },
+    ],
+  };
+  const files = [
+    'games/active/src/a.ts',
+    'games/frozen/src/b.ts',
+    'games/frozen/package.json',
+    'core/src/c.ts',
+    'package.json',
+    'games/frozen-but-prefix/x.ts',
+  ];
+  assert.deepEqual(excludingFrozenPaths(files, lifecycle), [
+    'games/active/src/a.ts',
+    'core/src/c.ts',
+    'package.json',
+    'games/frozen-but-prefix/x.ts',
+  ]);
+});
+
+test('excludingFrozenPaths lifecycle yokken ya da frozen yokken seçimi daraltmaz', () => {
+  const files = ['games/frozen/a.ts'];
+  assert.deepEqual(excludingFrozenPaths(files, null), files);
+  assert.deepEqual(
+    excludingFrozenPaths(files, { workspaces: [{ path: 'x', status: 'active' }] }),
+    files,
+  );
 });

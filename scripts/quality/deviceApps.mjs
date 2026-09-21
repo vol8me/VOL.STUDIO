@@ -1,79 +1,102 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { activeWorkspaceNames, loadRepoLifecycle } from './workspaceLifecycle.mjs';
 
 /**
  * CİHAZ ÖLÇÜMÜNÜN KAPSAMI.
  *
- * `scripts/device-benchmark.mjs` ölçtüğü uygulamaları ELLE tutulan bir listede
- * taşır. Android kabuğu olan bir paket o listeye eklenmezse ölçüm onu sessizce
- * atlar: çıktı hatasız görünür, yalnız bir satır eksiktir. Paket listesi bu
- * nedenle dosya sisteminden türetilen kabuk listesine karşı kapılanır.
+ * Ölçülecek uygulamalar elle tutulan bir listeden değil, yaşam döngüsünden
+ * türetilir: `status: "active"` + `src-tauri/tauri.conf.json` taşıyan her
+ * workspace bir cihaz ölçüm adayıdır. Frozen ürünlerin kabukları ağaçta
+ * durur ama rutin ölçümün adayı değildir — frozen ağaç değiştirilemez,
+ * ölçümü rutin geliştirmeye maliyet bindirir.
  *
- * Gerçek kaynak paketlerin `src-tauri/tauri.conf.json` dosyalarıdır; kimlik
- * orada yaşar. Bekçi listeyi ona karşı doğrular.
+ * Bekçi iki şeyi kilitler: benchmark betiğinin bu keşfi KULLANDIĞINI (yerel
+ * bir liste geri gelirse frozen oyunlar sessizce ölçüm adayı olurdu) ve
+ * keşfin gerçek repoda aktif kabuklarla birebir örtüştüğünü.
  */
-const SKIP_DIRS = new Set(['node_modules', 'dist', 'coverage', 'target', 'gen']);
 
-/** Android kabuğu olan paketler: `src-tauri/tauri.conf.json` yazan her oyun. */
-function shellIdentifiers(root) {
-  const found = new Map();
-  const base = join(root, 'games');
-  if (!existsSync(base)) return found;
-  for (const entry of readdirSync(base, { withFileTypes: true })) {
-    if (!entry.isDirectory() || SKIP_DIRS.has(entry.name)) continue;
-    const config = join(base, entry.name, 'src-tauri', 'tauri.conf.json');
-    if (!existsSync(config)) continue;
-    const identifier = JSON.parse(readFileSync(config, 'utf8')).identifier;
-    if (identifier) found.set(entry.name, identifier);
-  }
-  return found;
+/** Bir workspace kaydının desteklenen Tauri uygulama kabuğu var mı? */
+function shellIdentifier(root, workspacePath) {
+  const config = join(root, workspacePath, 'src-tauri', 'tauri.conf.json');
+  if (!existsSync(config)) return null;
+  return JSON.parse(readFileSync(config, 'utf8')).identifier ?? null;
 }
 
-/** `{ name: 'x', pkg: 'com.y.z' }` girdilerini betikten okur. */
-function declaredApps(source) {
-  const block = /const APPS = \[(.*?)\];/s.exec(source);
-  if (!block) return null;
-  const apps = new Map();
-  for (const match of block[1].matchAll(/name:\s*'([^']+)'[^}]*pkg:\s*'([^']+)'/g)) {
-    apps.set(match[1], match[2]);
-  }
-  return apps;
+/**
+ * Cihaz ölçüm adayları: aktif workspace + Tauri kabuğu + paket kimliği.
+ * `device-benchmark.mjs` bunu çağırır; aday yoksa doğrulanmış no-op'tur.
+ */
+export function deviceBenchmarkCandidates(root, lifecycle) {
+  const active = new Set(activeWorkspaceNames(lifecycle));
+  return lifecycle.workspaces
+    .filter((workspace) => active.has(workspace.packageName))
+    .map((workspace) => ({ workspace, identifier: shellIdentifier(root, workspace.path) }))
+    .filter(({ identifier }) => identifier !== null)
+    .map(({ workspace, identifier }) => ({ name: workspace.packageName, pkg: identifier }));
 }
 
 /**
  * @param root Repo kökü.
- * @returns Sorun listesi; boşsa ölçüm her Android kabuğunu kapsıyor demektir.
+ * @param lifecycle Ayrıştırılmış workspace-lifecycle.json (yoksa kökten okunur).
+ * @returns Sorun listesi; boşsa ölçüm kapsamı lifecycle ile tutarlı.
  */
-export function validateDeviceApps(root) {
+export function validateDeviceApps(root, lifecycle = loadRepoLifecycle(root)) {
   const script = join(root, 'scripts', 'device-benchmark.mjs');
   if (!existsSync(script)) return [];
-
-  const declared = declaredApps(readFileSync(script, 'utf8'));
-  if (!declared) return ['scripts/device-benchmark.mjs içinde `const APPS = [...]` bulunamadı.'];
+  if (!lifecycle) {
+    return ['workspace-lifecycle.json yok; cihaz ölçüm kapsamı doğrulanamaz.'];
+  }
 
   const problems = [];
-  const shells = shellIdentifiers(root);
+  const source = readFileSync(script, 'utf8');
 
-  for (const [name, identifier] of shells) {
-    const listed = declared.get(name);
+  if (!source.includes('deviceBenchmarkCandidates')) {
+    problems.push(
+      'scripts/device-benchmark.mjs `deviceBenchmarkCandidates` keşfini kullanmıyor; ' +
+        'ölçüm kapsamı lifecycle yerine yerel bir listeden besleniyor olabilir.',
+    );
+  }
+  if (/const\s+\w+\s*=\s*\[[^\]]*\bpkg\s*:/s.test(source)) {
+    problems.push(
+      'scripts/device-benchmark.mjs sabit bir uygulama listesi taşıyor; ' +
+        'adaylar lifecycle + tauri.conf.json üzerinden türetilmeli.',
+    );
+  }
+
+  // Beklenen küme burada BAĞIMSIZ hesaplanır — keşif fonksiyonunun çıktısı
+  // kendi kendinin kanıtı olamaz.
+  const expected = new Map();
+  for (const workspace of lifecycle.workspaces) {
+    if (workspace.status !== 'active') continue;
+    const identifier = shellIdentifier(root, workspace.path);
+    if (identifier !== null) expected.set(workspace.packageName, identifier);
+  }
+  const actual = new Map(
+    deviceBenchmarkCandidates(root, lifecycle).map((app) => [app.name, app.pkg]),
+  );
+
+  for (const [name, identifier] of expected) {
+    const listed = actual.get(name);
     if (listed === undefined) {
       problems.push(
-        `games/${name} Android kabuğu var (${identifier}) ama device-benchmark APPS ` +
-          'listesinde yok; cihaz ölçümü onu sessizce atlar.',
+        `${name} aktif ve Android kabuğu taşıyor (${identifier}) ama ölçüm adayı değil.`,
       );
     } else if (listed !== identifier) {
-      problems.push(
-        `games/${name} kimliği ${identifier}, device-benchmark ${listed} diyor. ` +
-          'Ölçüm kurulu olmayan bir paketi arar ve "KURULU DEĞİL" yazıp geçer.',
-      );
+      problems.push(`${name} kimliği ${identifier}, ölçüm ${listed} diyor.`);
     }
   }
 
-  for (const name of declared.keys()) {
-    if (!shells.has(name)) {
+  const frozen = new Set(
+    lifecycle.workspaces
+      .filter((workspace) => workspace.status === 'frozen')
+      .map((workspace) => workspace.packageName),
+  );
+  for (const name of actual.keys()) {
+    if (!expected.has(name)) {
       problems.push(
-        `device-benchmark ${name} ölçüyor ama o pakette src-tauri/tauri.conf.json yok; ` +
-          'liste kaldırılmış bir kabuğu taşıyor.',
+        `${name} ölçüm adayı ama aktif bir Tauri kabuğu değil` +
+          (frozen.has(name) ? ' — frozen ürün rutin ölçüme girmez.' : '.'),
       );
     }
   }

@@ -22,8 +22,15 @@ Monorepo'da paket varlığı ile rutin kalite kapısı hedefi birbirinden ayrıl
 - **Dondurulmuş (`frozen`) Paketler:** Yaşam döngüsünü tamamlamış, bilinen-iyi
   (known-good) ve doğrulanmış nihai snapshot'ı alınmış paketlerdir (`vol-hell`,
   `vol-arachnid`). Bu paketler:
-  - Rutin test, kapsam ve derleme koşularından çıkarılır; böylece rutin kapı
-    süreleri hafif ve kararlı kalır.
+  - Rutin test, kapsam, derleme ve E2E koşularının yanı sıra format
+    (`.prettierignore`), lint (`eslint.config.mjs`), stil (`.stylelintignore`)
+    ve kaynak-kalitesi tarayıcılarının (satır, yorum, i18n, döngü, katman,
+    port, ikon, kilit paritesi) seçiminden de çıkarılır — frozen ağaçtaki bir
+    ihlal düzeltilemez, kapıyı kalıcı kilitlerdi.
+  - Buna karşılık repo/bütünlük bekçileri (ağaç drift'i, tag↔commit,
+    bağımlılık yönü, blob boyutu, tracked-import, git dosya temizliği) frozen
+    ağacı görmeye devam eder — onların konusu ürün kalitesi değil,
+    değişmezlik ve klon bütünlüğüdür.
   - Mevcut `HEAD` üzerinde kesinlikle **değiştirilemez (immutable)** kabul edilir.
   - `scripts/quality/workspaceLifecycle.mjs` bekçisi tarafından git düzeyinde
     denetlenir: Her frozen paket için `freezeTag` (annotated Git etiketi),
@@ -44,7 +51,9 @@ Monorepo'da paket varlığı ile rutin kalite kapısı hedefi birbirinden ayrıl
 
 ## Otomatik olan ve OLMAYAN
 
-İki kapı `justfile` içinde paketleri elle saymaz, `pnpm -r` ile bulur:
+Bu kapılar `justfile` içinde paketleri elle saymaz: `runActive.mjs`
+workspace'i `pnpm list` ile bulur ve `workspace-lifecycle.json`'da `active`
+olanlara filtreler — workspace üyeliği ≠ rutin kalite hedefidir.
 
 | Kapı        | Nasıl bulur                     | Yeni paket için gereken                                |
 | ----------- | ------------------------------- | ------------------------------------------------------ |
@@ -100,10 +109,12 @@ kaydeder; kapı kaydı olmayan, yarım kalan ya da koşudan eski bir lcov'u
 değerlendirmez. `high` audio-synth'i ölçmediği için onun şekline de karar
 vermez; o paket `coverage-audio` ile `signoff`ta değerlendirilir.
 
-**Cihaz ölçümünün kapsamı kapılıdır.** `scripts/quality/deviceApps.mjs`
-`scripts/device-benchmark.mjs` içindeki aktif uygulama listesini her
-uygulamanın `tauri.conf.json` kimliğiyle karşılaştırır: kabuğu olup listede olmayan
-uygulama cihaz ölçümünden sessizce düşerdi.
+**Cihaz ölçümünün kapsamı kapılıdır.** Ölçülecek uygulamalar elle tutulan bir
+listeden değil, `deviceApps.mjs` içindeki `deviceBenchmarkCandidates` keşfinden
+türer: `active` workspace + `src-tauri/tauri.conf.json` = aday. Bekçi
+benchmark betiğinin bu keşfi kullandığını ve keşfin gerçek ağaçla birebir
+örtüştüğünü kilitler — frozen kabuklar aday olamaz; aktif kabuk yoksa ölçüm
+doğrulanmış no-op'tur ve `adb`'ye hiç dokunulmaz.
 
 ## Sözleşme neyi kilitler
 
@@ -170,17 +181,20 @@ kaynak kodda import edilemez (örneğin yerel bir debug yardımcısı).
 dosyanın boyutunu denetler; 2 MiB üstündeki ikili dosyalar depoya giremez.
 İstisnalar `quality.json` \u2192 `blobSize.acknowledged` alanına yazılır.
 
-**Cargo.lock paritesi kapılıdır.** Monorepo'da her oyun kendi `src-tauri`
+**Cargo.lock paritesi kapılıdır.** Monorepo'da her uygulama kendi `src-tauri`
 ağacına sahiptir; `tauri-v2` bağımsız bir native kütüphanedir ve her aktif
-oyun onu kendi `Cargo.lock`uyla derler. `scripts/quality/cargoLockParity.mjs`
-`tauri*`, `wry` ve `tao` crate'lerinin bütün kilitlerde aynı sürümde olduğunu
-doğrular; ölçüldü, iki eklenti runtime kilidinde bir yama geride kalmıştı.
+uygulama onu kendi `Cargo.lock`uyla derler. `scripts/quality/cargoLockParity.mjs`
+`tauri*`, `wry` ve `tao` crate'lerinin aktif paketlerin kilitlerinde aynı
+sürümde olduğunu doğrular; ölçüldü, iki eklenti runtime kilidinde bir yama
+geride kalmıştı. Frozen kabukların kilitleri değiştirilemez olduğundan parite
+kapısına girmezler — ağaçları freeze bekçisiyle kilitlidir.
 
 **Ürün ikonu kapılıdır.** Her aktif oyun ikonunu kendi `src-tauri/icons` ve Android
 `mipmap-*` ağacında taşır; kaynağı `src-tauri/app-icon*.svg` ve
 `app-icon.json`dur (`pnpm exec tauri icon src-tauri/app-icon.json`).
-`scripts/quality/productIcons.mjs` oyun dışına işaret eden, iki oyunda aynı
-olan ya da Tauri şablonuna geri dönen ikonu reddeder.
+`scripts/quality/productIcons.mjs` oyun dışına işaret eden, iki üründe aynı
+olan ya da Tauri şablonuna geri dönen ikonu reddeder; yalnız aktif workspace
+köklerini tarar.
 
 Yeni paket eklerken izlenecek liste:
 [games/docs/new-game.md](../games/docs/new-game.md).

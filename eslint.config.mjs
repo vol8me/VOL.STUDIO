@@ -1,5 +1,13 @@
+import { readFileSync } from 'node:fs';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier/build/index.js';
+
+// Frozen workspace ağaçları immutable'dır; rutin lint onları taramaz.
+// Liste `workspace-lifecycle.json`dan türetilir — yeni bir frozen kayıt
+// buraya elle yazılmayı beklemez.
+const frozenIgnores = JSON.parse(
+  readFileSync(new URL('./workspace-lifecycle.json', import.meta.url), 'utf8'),
+).workspaces.filter((w) => w.status === 'frozen').map((w) => `${w.path}/**`);
 
 export default tseslint.config(
   // Global ignore — node_modules, dist, target, build çıktıları
@@ -13,6 +21,7 @@ export default tseslint.config(
       '**/coverage/**',
       '**/*.config.{js,ts}',
       '**/vite-env.d.ts',
+      ...frozenIgnores,
     ],
   },
 

@@ -246,6 +246,11 @@ await music.crossfadeTo('combat', 2, {
 
 Motor runtime'da sentez YAPMAZ; yalnızca hazır dosya çalar.
 
+> **Freeze notu:** `vol-hell` frozen'dır (`workspace-lifecycle.json`). Bu
+> bölümdeki `generate:*`/`audio:qa` komutları ürünün tarihsel reçetidir —
+> rutin kapılar frozen ağaçta üretim tetiklemez ve elle koşmak freeze
+> bekçisini (drift) kırar. Üretim kanıtı `vol-hell/final-*` etiketindedir.
+
 ### Asset akışı — tek format, tek kopya
 
 ```
@@ -261,7 +266,8 @@ games/vol-hell/dist/assets/audio/**.ogg    BUILD ÇIKTISI (gitignore)
 Oyun kodları bu dosyaları `public/assets/audio/` altında bekler. Ses tasarımı
 değiştiğinde `pnpm --filter @volstudio/vol-hell generate:audio` çalıştırılarak
 OGG'ler yenilenir. Ara formatlar (WAV, MP3) repoda tutulmaz; iOS hedefi için
-`pnpm convert:ios` ile üretilen MP3'ler build çıktısına (`dist`) gider.
+audio-synth'in `convert:ios` script'i (`tsx scripts/convert-audio.ts <dizin>`)
+ile üretilen MP3'ler build çıktısına (`dist`) gider.
 
 Üretim deterministiktir: aynı seed + aynı script aynı OGG'yi verir.
 Kayıpsız WAV kopyası saklanmaz, gerektiğinde yeniden üretilir. iOS hedefi

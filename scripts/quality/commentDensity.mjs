@@ -12,6 +12,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { workingTreeFiles } from './gitFiles.mjs';
+import { excludingFrozenPaths, loadRepoLifecycle } from './workspaceLifecycle.mjs';
 
 /** Duraksama oranı: bunun üstünde dosya kodundan çok anlatı taşıyordur. */
 export const DENSITY_THRESHOLD = 0.4;
@@ -36,17 +37,12 @@ export const ACKNOWLEDGED = {
   'core/src/rig/types.ts': 'Tip bildirimi; poz sinyallerinin anlamı alan başına yazılır.',
   'core/src/debug/types.ts': 'Tip bildirimi — snapshot alanlarının anlamı.',
   'core/src/ui/cards/ShopPickerTypes.ts': 'Tip bildirimi — seçenek sözleşmesi.',
-  'games/vol-hell/src/config/enemies/types.ts': 'Tip bildirimi — arketip alanları.',
-  'games/vol-hell/src/config/cards/types.ts': 'Tip bildirimi — kart alanları.',
   'devtools/audio-synth/src/types.ts':
     'Sentez parametrelerinin tip bildirimi; her alan birimini ve varsayılanını taşır.',
   'devtools/vol-ui/playwright.config.ts':
     'Görsel kapının KENDİ sözleşmesi: sıfır toleransın neden ölçüme dayandığı ' +
     've temellerin neden makine ailesine bağlı olduğu yazılı olmazsa ilk ' +
     'kırılmada tolerans açılır ve kapı ölür.',
-  'games/vol-arachnid/src/config/gait.ts':
-    'Yürüyüş ayarı: her alan bir duruş sözleşmesi taşır (neden uzuv başına, ' +
-    'hangi sınır neyi engelliyor) ve sayıdan çıkarılamaz.',
 };
 
 /**
@@ -59,8 +55,9 @@ export function validateCommentDensity(
   root,
   acknowledged = ACKNOWLEDGED,
   threshold = DENSITY_THRESHOLD,
+  lifecycle = loadRepoLifecycle(root),
 ) {
-  const files = workingTreeFiles(root, ['*.ts', '*.mjs'])
+  const files = excludingFrozenPaths(workingTreeFiles(root, ['*.ts', '*.mjs']), lifecycle)
     .filter((file) => !file.endsWith('.d.ts'))
     .filter((file) => !/\.test\.|\.spec\.|(^|\/)tests?\//.test(file));
 

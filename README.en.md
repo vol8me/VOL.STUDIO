@@ -13,8 +13,8 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 
 ```
 core/                       # shared systems + DOM UI library
-games/vol-hell/             # game (Vite root)
-games/vol-arachnid/         # articulated spider arena vertical slice
+games/vol-hell/             # game — FROZEN (immutable, see freeze tag)
+games/vol-arachnid/         # articulated spider arena vertical slice — FROZEN
 devtools/pen.dev/           # Pencil source, export pipeline and sync tool
 devtools/vol-ui/            # live component catalogue for CORE UI
 devtools/audio-synth/       # deterministic audio asset compiler
@@ -32,9 +32,7 @@ Android Studio (SDK + NDK) · Visual Studio C++ Build Tools on Windows
 
 ```bash
 pnpm install
-pnpm dev                                       # both games + UI component catalogue
-pnpm --filter @volstudio/vol-hell dev          # :5173
-pnpm --filter @volstudio/vol-arachnid dev      # :5178
+pnpm dev                                       # active dev targets (UI catalogue today)
 pnpm --filter @volstudio/vol-ui dev            # UI showcase  :5174
 
 pnpm quick                                     # pre-commit gate

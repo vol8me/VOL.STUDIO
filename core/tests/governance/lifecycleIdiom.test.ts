@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import {
+  activeWorkspacePaths,
+  loadRepoLifecycle,
+} from '../../../scripts/quality/workspaceLifecycle.mjs';
 
 /**
  * CORE'da TEK bir yaşam döngüsü idiomu olsun.
@@ -17,12 +21,17 @@ import { join, relative } from 'node:path';
  * Kapsam CORE ile sınırlı DEĞİL: `DisposableScope` CORE'un public API'sinde ve
  * oyunlar da onu tüketir. Kural yalnızca CORE'da uygulansaydı aynı sızıntı
  * oyun tarafında serbest kalırdı (gerçekten de `AbilityLoadout` öyle kalmıştı).
+ *
+ * Taranan kökler lifecycle'dan türer: yalnız `active` workspace'lerin `src`
+ * ağacı rutin idiom kapısındadır. Frozen ürünlerin kaynağı değiştirilemez —
+ * orada bir ihlal bulunsa düzeltilemez, kapıyı kalıcı kilitlerdi.
  */
-const SCANNED_ROOTS = [
-  join(import.meta.dirname, '../../src'),
-  join(import.meta.dirname, '../../../games/vol-hell/src'),
-  join(import.meta.dirname, '../../../devtools/vol-ui/src'),
-];
+const REPO_ROOT = join(import.meta.dirname, '../../..');
+const LIFECYCLE = loadRepoLifecycle(REPO_ROOT);
+if (!LIFECYCLE) throw new Error('workspace-lifecycle.json yok — tarama kapsamı belirlenemez.');
+const SCANNED_ROOTS = activeWorkspacePaths(LIFECYCLE)
+  .map((path) => join(REPO_ROOT, path, 'src'))
+  .filter((dir) => existsSync(dir));
 
 /** Elle yönetilen temizlik dizisi kalıpları. */
 const AD_HOC_PATTERNS: ReadonlyArray<{ pattern: RegExp; what: string }> = [

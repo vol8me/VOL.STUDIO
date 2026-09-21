@@ -6,7 +6,8 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
-  renameSync,
+  readdirSync,
+  readFileSync,
   rmSync,
 } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
@@ -17,16 +18,56 @@ import {
   OPTIONAL_GSTREAMER_ELEMENTS,
   REQUIRED_GSTREAMER_ELEMENTS,
 } from './linux-appimage-media.mjs';
+import { loadRepoLifecycle } from './quality/workspaceLifecycle.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-const bundleDir = join(root, 'games/vol-hell/src-tauri/target/release/bundle/appimage');
-const appDir = join(bundleDir, 'VOL.HELL.AppDir');
-const binary = join(root, 'games/vol-hell/src-tauri/target/release/VOL.HELL');
+
+/**
+ * Kullanım: node scripts/build-linux-appimage.mjs <workspace-yolu>
+ * Örn:      node scripts/build-linux-appimage.mjs games/vol-life
+ *
+ * Manuel teslim aracıdır, kapı değildir: Tauri'nin AppDir'ini alıp WebKit
+ * medya çalışma zamanını bağlayıp yeniden paketler. Hedef workspace
+ * `tauri.conf.json`dan `productName`/`version` türetilir — ürün adı hiçbir
+ * yerde hard-code edilmez.
+ */
+const workspace = process.argv[2];
+if (!workspace) {
+  console.error('Kullanım: node scripts/build-linux-appimage.mjs <workspace-yolu>');
+  process.exit(2);
+}
+
+const manifestPath = join(root, workspace, 'src-tauri', 'tauri.conf.json');
+if (!existsSync(manifestPath)) {
+  console.error(`${workspace}: src-tauri/tauri.conf.json yok — bu workspace bir Tauri uygulaması değil.`);
+  process.exit(2);
+}
+const { productName, version } = JSON.parse(readFileSync(manifestPath, 'utf8'));
+if (!productName || !version) {
+  console.error(`${workspace}: tauri.conf.json içinde productName/version eksik.`);
+  process.exit(2);
+}
+
+// Frozen ürünün ağacı değiştirilemez — tarihsel kanıt freezeTag'dedir.
+// Yeniden paketleme gerekiyorsa etiketten worktree açılır, HEAD'de değil.
+const record = loadRepoLifecycle(root)?.workspaces.find((w) => w.path === workspace);
+if (record?.status === 'frozen') {
+  console.error(
+    `${workspace} frozen (${record.freezeTag}). Frozen ürün HEAD'de paketlenmez; ` +
+      'yeniden paketleme freezeTag worktree\'sindedir.',
+  );
+  process.exit(2);
+}
+
+const shell = join(root, workspace, 'src-tauri');
+const bundleDir = join(shell, 'target/release/bundle/appimage');
+const appDir = join(bundleDir, `${productName}.AppDir`);
+const binary = join(shell, 'target/release', productName);
 const deploy =
   process.env.LINUXDEPLOY ?? join(homedir(), '.cache/tauri/linuxdeploy-x86_64.AppImage');
-const canonical = join(bundleDir, 'VOL.HELL_0.1.0_amd64.AppImage');
-const legacyGenerated = join(bundleDir, 'VOL.HELL-x86_64.AppImage');
-const launcher = join(root, 'games/vol-hell/src-tauri/linux.AppRun');
+const canonical = join(bundleDir, `${productName}_${version}_amd64.AppImage`);
+const legacyGenerated = join(bundleDir, `${productName}-x86_64.AppImage`);
+const launcher = join(shell, 'linux.AppRun');
 
 function run(command, args, options = {}) {
   execFileSync(command, args, { stdio: 'inherit', ...options });
@@ -107,6 +148,21 @@ function bundleGStreamerRuntime() {
   return { pluginDir, scannerTarget };
 }
 
+/** Decode zincirini sınamak için paketin asset'lerinden herhangi bir OGG yeter. */
+function findProbeAudio(dir) {
+  if (!existsSync(dir)) return null;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      const found = findProbeAudio(path);
+      if (found) return found;
+    } else if (entry.name.endsWith('.ogg')) {
+      return path;
+    }
+  }
+  return null;
+}
+
 function verifyGStreamerRuntime({ pluginDir, scannerTarget }) {
   const registryDir = mkdtempSync(join(tmpdir(), 'vol-gstreamer-registry-'));
   const libraryPath = [join(appDir, 'usr/lib'), join(appDir, 'usr/lib64')].join(':');
@@ -125,41 +181,42 @@ function verifyGStreamerRuntime({ pluginDir, scannerTarget }) {
       execFileSync('gst-inspect-1.0', [element], { env, stdio: 'ignore' });
     }
 
-    const stereoProbeAudio = join(
-      root,
-      'games/vol-hell/public/assets/audio/music/main-menu/hollow-signal.ogg',
-    );
-    run(
-      'gst-launch-1.0',
-      [
-        '-q',
-        'filesrc',
-        `location=${stereoProbeAudio}`,
-        '!',
-        // WebKit de açık demux/decoder zinciri değil decodebin kullanır. Bu
-        // yol typefindfunctions eksikse üretim sırasında kesin olarak düşer.
-        'decodebin',
-        '!',
-        'audioconvert',
-        '!',
-        // WebKit AudioFileReader ile aynı stereo kanal ayrıştırma yolunu
-        // zorlarız; yalnız decodebin smoke testi interleave eklentisini
-        // kullanmadığı için gerçek uygulamadaki sessizliği kaçırabilir.
-        'deinterleave',
-        'name=channels',
-        'channels.src_0',
-        '!',
-        'queue',
-        '!',
-        'fakesink',
-        'channels.src_1',
-        '!',
-        'queue',
-        '!',
-        'fakesink',
-      ],
-      { env, timeout: 15_000 },
-    );
+    const probeAudio = findProbeAudio(join(root, workspace, 'public/assets/audio'));
+    if (probeAudio === null) {
+      console.warn('Pakette OGG asset\'i yok; decode zinciri sondası atlandı.');
+    } else {
+      run(
+        'gst-launch-1.0',
+        [
+          '-q',
+          'filesrc',
+          `location=${probeAudio}`,
+          '!',
+          // WebKit de açık demux/decoder zinciri değil decodebin kullanır. Bu
+          // yol typefindfunctions eksikse üretim sırasında kesin olarak düşer.
+          'decodebin',
+          '!',
+          'audioconvert',
+          '!',
+          // WebKit AudioFileReader ile aynı stereo kanal ayrıştırma yolunu
+          // zorlarız; yalnız decodebin smoke testi interleave eklentisini
+          // kullanmadığı için gerçek uygulamadaki sessizliği kaçırabilir.
+          'deinterleave',
+          'name=channels',
+          'channels.src_0',
+          '!',
+          'queue',
+          '!',
+          'fakesink',
+          'channels.src_1',
+          '!',
+          'queue',
+          '!',
+          'fakesink',
+        ],
+        { env, timeout: 15_000 },
+      );
+    }
   } finally {
     rmSync(registryDir, { recursive: true, force: true });
   }
@@ -177,8 +234,8 @@ accessSync(launcher);
 // Tauri'nin AppImage bundling adımı linuxdeploy sonlandırmasında düşerse
 // AppDir kalır. Yeniden çalıştırmada eski binary'nin sessizce paketlenmemesi
 // için güncel release binary'si her zaman açıkça kopyalanır.
-copyFileSync(binary, join(appDir, 'usr/bin/VOL.HELL'));
-chmodSync(join(appDir, 'usr/bin/VOL.HELL'), 0o755);
+copyFileSync(binary, join(appDir, `usr/bin/${productName}`));
+chmodSync(join(appDir, `usr/bin/${productName}`), 0o755);
 
 // Tauri'nin media framework kopyalama adımı Fedora'nın `/usr/lib64` düzeninde
 // pluginleri AppDir'e taşımıyor. Boş plugin yolu WebKitGTK sesini tamamen

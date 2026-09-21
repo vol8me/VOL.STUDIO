@@ -1,5 +1,11 @@
 # Android
 
+> **Freeze notu:** Bu belgenin konusu olan iki oyun kabuğu da `frozen`'dır
+> (`workspace-lifecycle.json`). Derleme komutları tarihsel reçetidir; ağaçlar
+> `vol-hell/final-*` ve `vol-arachnid/final-*` etiketleriyle kilitlidir ve
+> rutin kapılar onlara üretim/test koşmaz. Yeni bir `active` kabuk aynı
+> düzeni kendi paketinde kurar.
+
 Her oyunun native projesi AYRIDIR ve KENDİ paketinin altındadır:
 `games/<oyun>/src-tauri/gen/android`. Ortak Rust kabuğu
 `tauri-v2/src-tauri`dedir ve bir uygulama değildir — kendi `tauri.conf.json`u,
@@ -30,9 +36,12 @@ adb install -r games/vol-arachnid/src-tauri/gen/android/app/build/outputs/apk/un
 
 ```
 
-Drift testleri manifest, yön, oyun kategorisi, `VIBRATE` izni, geri çağrısı,
-tam ekran, kayıtlı yönün açılışta uygulanması ve paket kimliklerini kaynak
-yapılandırmayla karşılaştırır — üretilmiş proje ile kaynak sessizce ayrışamaz.
+Drift testleri (`games/*/tests/platform/androidDrift.test.ts`) manifest, yön,
+oyun kategorisi, `VIBRATE` izni, geri çağrısı, tam ekran, kayıtlı yönün
+açılışta uygulanması ve paket kimliklerini kaynak yapılandırmayla
+karşılaştırmıştır — üretilmiş proje ile kaynak sessizce ayrışamazdı. Bu
+testler frozen ağaçların içindedir ve artık rutin kapıda koşmaz; onların
+yerine aynı ağaçların tamamı freeze bekçisiyle diff'siz kalmaya zorlanır.
 
 ## Çalışma zamanı davranışı
 
@@ -68,13 +77,20 @@ olmayan uygulama açılışta eklenti sınıfını bulamazdı. Eklenti crate'i k
 
 ## Fedora / Linux release
 
+Tauri'nin AppImage sonlandırması `linuxdeploy`/ELF strip adımında kırılırsa
+(`NO_STRIP=1` yalnız harici strip'i kapatır, `.relr.dyn` kusuru kalır)
+AppDir elle yeniden paketlenir:
+
 ```bash
-pnpm exec just tauri-build-linux
+node scripts/build-linux-appimage.mjs <workspace-yolu>
 ```
 
-Tauri'nin AppImage sonlandırması `linuxdeploy`/ELF strip adımında kırılırsa
-tarif önce AppDir'i üretir, ardından `build:linux-appimage` ile `NO_STRIP=1` ve
-WebKit launcher kullanarak AppImage'i yeniden paketler.
+Betik hedefin `tauri.conf.json`undan `productName`/`version` türetir, WebKit
+medya çalışma zamanını (GStreamer elementleri + plugin scanner) AppDir'e
+bağlar ve zinciri gerçek bir OGG asset'iyle sınar. **Frozen workspace'i
+reddeder** — yeniden paketleme gerekiyorsa `freezeTag` worktree'sinde yapılır,
+HEAD'de değil. Rutin bir kapıya bağlı değildir; aktif bir Tauri uygulaması
+doğduğunda aynı komut onun için çalışır.
 
 ### WebView çizim yolu
 

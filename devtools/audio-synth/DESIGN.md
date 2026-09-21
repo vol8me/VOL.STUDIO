@@ -164,7 +164,7 @@ writeOgg('public/assets/audio/sfx/combat/laser.ogg', sound);
 ### 3. Çalıştırma
 
 ```bash
-pnpm --filter @volstudio/vol-hell generate:sounds
+pnpm --filter @volstudio/<game> generate:sounds
 ```
 
 ### 4. Oyun içinde çalma
@@ -230,6 +230,11 @@ Presets.getPreset('laser', 880, 0.15);
 Kategoriler: `combat`, `ui`, `rewards`, `movement`, `sequence`.
 
 ## VOL.HELL SFX'leri
+
+> VOL.HELL `frozen`'dır (`workspace-lifecycle.json`): aşağıdaki adımlar ürünün
+> **tarihsel reçetidir** — frozen ağaçta yeniden üretim koşulmaz, seslerin
+> üretim kanıtı `vol-hell/final-*` etiketindedir. Yeni bir ürün aynı akışı
+> kendi paket ağacında kurar.
 
 VOL.HELL'in sesleri bu dosyadaki genel preset kütüphanesini DEĞİL,
 `games/vol-hell/scripts/audio/palette/*.ts` altındaki "Dark Synthetic / Void"
@@ -491,10 +496,10 @@ Her ses değişikliği sonrası:
 
 ```bash
 pnpm -r typecheck
-pnpm --filter @volstudio/vol-hell generate:sounds
-pnpm --filter @volstudio/vol-hell audio:qa
-pnpm --filter @volstudio/vol-hell build
-pnpm --filter @volstudio/vol-hell test
+pnpm --filter @volstudio/<game> generate:sounds
+pnpm --filter @volstudio/<game> audio:qa
+pnpm --filter @volstudio/<game> build
+pnpm --filter @volstudio/<game> test
 ```
 
 ## Dikkat

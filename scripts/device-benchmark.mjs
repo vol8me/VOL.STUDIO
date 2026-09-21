@@ -13,18 +13,31 @@
  *   node scripts/device-benchmark.mjs [--serial SERIAL] [saniye]
  */
 import { execFileSync } from 'node:child_process';
+import { join, resolve } from 'node:path';
 import { parseDeviceBenchmarkArgs, selectDevice } from './device-benchmark-contract.mjs';
+import { deviceBenchmarkCandidates } from './quality/deviceApps.mjs';
+import { loadWorkspaceLifecycle } from './quality/workspaceLifecycle.mjs';
 
+const ROOT = resolve(import.meta.dirname, '..');
 const ADB = process.env.ADB ?? 'adb';
 const cli = parseDeviceBenchmarkArgs(process.argv.slice(2), process.env.ANDROID_SERIAL);
 const SECONDS = cli.seconds;
 let serial;
 
-/** Ölçülecek uygulamalar — paket kimliği, Tauri yapılandırmasındakiyle aynı. */
-const APPS = [
-  { name: 'vol-arachnid', pkg: 'com.volstudio.arachnid' },
-  { name: 'vol-hell', pkg: 'com.volstudio.game' },
-];
+// Adaylar elle yazılmaz: active workspace + tauri.conf.json = ölçüm adayı.
+// Frozen kabuklar rutin ölçüme girmez (deviceApps.mjs bekçisi bunu kilitler).
+const APPS = deviceBenchmarkCandidates(
+  ROOT,
+  loadWorkspaceLifecycle(join(ROOT, 'workspace-lifecycle.json')),
+);
+
+if (APPS.length === 0) {
+  console.log(
+    '[device-benchmark] Aktif Tauri uygulama kabuğu yok — ölçülecek aday kalmadı. ' +
+      'Bir workspace `active` olup tauri.conf.json taşıdığında kendiliğinden aday olur.',
+  );
+  process.exit(0);
+}
 
 function adb(args) {
   const scoped = serial ? ['-s', serial, ...args] : args;

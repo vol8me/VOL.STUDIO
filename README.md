@@ -13,8 +13,8 @@ Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
 
 ```
 core/                       # paylaşılan sistemler + DOM UI kütüphanesi
-games/vol-hell/             # oyun (Vite kökü)
-games/vol-arachnid/         # eklemli örümcek arena dikey kesiti
+games/vol-hell/             # oyun — FROZEN (değiştirilemez, freeze tag'inde)
+games/vol-arachnid/         # eklemli örümcek arena dikey kesiti — FROZEN
 devtools/pen.dev/           # Pencil kaynağı, export hattı ve gönderim aracı
 devtools/vol-ui/            # CORE UI canlı bileşen kataloğu
 devtools/audio-synth/       # deterministik ses asset compiler'ı
@@ -32,9 +32,7 @@ Android Studio (SDK + NDK) · Windows'ta Visual Studio C++ Build Tools
 
 ```bash
 pnpm install
-pnpm dev                                       # iki oyun + UI bileşen kataloğu
-pnpm --filter @volstudio/vol-hell dev          # :5173
-pnpm --filter @volstudio/vol-arachnid dev      # :5178
+pnpm dev                                       # aktif dev hedefleri (şu an UI kataloğu)
 pnpm --filter @volstudio/vol-ui dev            # UI showcase  :5174
 
 pnpm quick                                     # commit öncesi kapı

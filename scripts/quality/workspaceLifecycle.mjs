@@ -74,6 +74,34 @@ export function frozenWorkspacePaths(lifecycle) {
     .map((workspace) => workspace.path);
 }
 
+/**
+ * Repo kökündeki `workspace-lifecycle.json`u okur; dosya yoksa `null` döner.
+ *
+ * Bekçiler lifecycle dosyası olmayan fixture köklerinde de çağrılır: yokluk
+ * "frozen yok" demektir. Var ama bozuksa fırlatılır — bozuk lifecycle'ı
+ * "frozen yok" diye yutmak taramayı sessizce genişletirdi.
+ */
+export function loadRepoLifecycle(root) {
+  try {
+    return loadWorkspaceLifecycle(join(root, 'workspace-lifecycle.json'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') return null;
+    throw error;
+  }
+}
+
+/**
+ * Rutin ürün-kalitesi taramasından frozen ağaçları düşer. Frozen ağaç
+ * değiştirilemez; oradaki bir ihlal düzeltilemez, kapıyı kalıcı kilitler.
+ * Bütünlük bekçileri (drift, tag/commit, blob, import takibi) bunu KULLANMAZ.
+ */
+export function excludingFrozenPaths(files, lifecycle) {
+  if (!lifecycle) return files;
+  const prefixes = frozenWorkspacePaths(lifecycle).map((path) => `${path}/`);
+  if (prefixes.length === 0) return files;
+  return files.filter((file) => !prefixes.some((prefix) => file.startsWith(prefix)));
+}
+
 export function normalizeWorkspacePath(root, packagePath, pathModule = path) {
   const resolvedRoot = pathModule.resolve(root);
   const resolvedPkg = pathModule.resolve(packagePath);

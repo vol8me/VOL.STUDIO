@@ -91,9 +91,6 @@ scaling:
 e2e:
     node scripts/quality/runActive.mjs test:e2e --if-present
 
-build-game:
-    pnpm build:game
-
 build-ui:
     pnpm --filter @volstudio/vol-ui build
 
@@ -126,24 +123,27 @@ fast: quick test
 # `audio-synth` coverage `signoff`'ta; kapsam eşikleri burada product paketleri
 # ve araçlar için koşulur.
 #
-# Rust push kapısındadır: paylaşılan native runtime ve iki oyun kabuğu ürünün
-# parçasıdır; üç crate'in check + fmt + clippy'si sıcak önbellekle ~12 sn.
+# Rust push kapısındadır: paylaşılan native runtime ve aktif eklenti crate'i
+# ürünün parçasıdır (frozen oyun kabukları kapıya girmez — kilitleri
+# değiştirilemez); aktif crate'lerin check + fmt + clippy'si sıcak önbellekle
+# saniyeler sürer.
 # Push öncesi kapısı: quick + Rust + css lint + kapsam eşikleri + build + Chromium smoke
 high: quick rust lint-css coverage coverage-shape build bundle scaling e2e
 
-# Gönderilen sesin reçetesiyle AYNI olduğunu kanıtlar.
+# AKTİF ses üreticisinde reçete↔asset tazeliğini, BÜTÜN ağaçlarda asset
+# bütünlüğünü doğrular.
 #
 # Ses üretimi deterministiktir (ölçüldü: ardışık iki koşu birebir aynı bayt,
-# `-bitexact` sayesinde). Bu yüzden "yeniden üret ve farka bak" geçerli bir
+# `-bitexact` sayesinde). Aktif pakette "yeniden üret ve farka bak" geçerli bir
 # doğrulamadır: fark varsa ya reçete değişip dosya yenilenmemiştir ya da dosya
-# elle düzenlenmiştir. İkisi de sessizce olmamalı.
+# elle düzenlenmiştir. Frozen ağaçta üretim tetiklenmez — o sesin üretim kanıtı
+# freezeTag'indedir; burada yalnız asset'lerin diff'siz kaldığı doğrulanır.
 #
 # Gerçek bir bayatlama bu şekilde bulundu: `first-light.ogg` eski bir reçeteyle
 # üretilmişti ve kimse fark etmemişti.
 #
-# `high`da DEĞİL, `signoff`ta: 73 saniye sürüyor ve ffmpeg gerektiriyor — her
-# push'a bu maliyeti yüklemek kapıyı atlanır hâle getirirdi. Sürüm anı ise
-# gönderilenin kaynağıyla eşleştiğini bilmek için doğru an.
+# `high`da DEĞİL, `signoff`ta: üretim maliyeti yüksektir ve ffmpeg gerektirir
+# — her push'a bu maliyeti yüklemek kapıyı atlanır hâle getirirdi.
 audio-verify:
     node scripts/quality/audioVerify.mjs
 
@@ -156,32 +156,6 @@ signoff: high coverage-audio audio-verify security-js security-rust
 # Örn: just report high | just report quick --json
 report gate='high' *flags:
     node scripts/quality/report.mjs {{ gate }} {{ flags }}
-
-# === TAURİ ===
-
-# Tauri prod build: uzun, ağır, manuel. Oyun ADIYLA seçilir — `tauri-v2` bir
-# uygulama değil, iki oyunun paylaştığı native runtime'dır.
-tauri-build game='hell':
-    pnpm build:{{ game }}
-    pnpm tauri:{{ game }}:build
-
-# Fedora/Linux teslimi — AppImage bundler'ı Fedora'nın güncel `.relr.dyn`
-# ELF bölümleriyle uyumlu değildir; NO_STRIP=1 yalnızca harici strip adımını
-# kapatır. Tauri AppDir'i hazırladıktan sonra `build:linux-appimage` AppDir'i
-# VOL launcher'ı ile yeniden paketler; böylece Tauri CLI'nin Fedora multilib/
-# AppImage sonlandırma kusuru teslim paketini geçersiz sayamaz.
-# `bundleMediaFramework` ses/video bağımlılıklarını taşır.
-tauri-build-linux:
-    pnpm build:game
-    pnpm --filter @volstudio/vol-hell exec tauri build --bundles deb,rpm --ci
-    NO_STRIP=1 APPIMAGE_EXTRACT_AND_RUN=1 pnpm --filter @volstudio/vol-hell exec tauri build --bundles appimage --ci || test -d games/vol-hell/src-tauri/target/release/bundle/appimage/VOL.HELL.AppDir
-    pnpm build:linux-appimage
-
-tauri-dev game='hell':
-    pnpm tauri:{{ game }}:dev
-
-tauri-android game='hell':
-    pnpm tauri:{{ game }}:android:dev
 
 # === GELİŞTİRME ===
 
@@ -217,23 +191,8 @@ clean-all: clean
 download-fonts:
     pnpm --filter @volstudio/core download-fonts
 
-generate-audio:
-    pnpm --filter @volstudio/vol-hell generate:audio
-
-audio-qa:
-    pnpm audio:qa
-
 benchmark-core:
     pnpm benchmark:core
-
-benchmark-vol-hell:
-    pnpm benchmark:vol-hell
-
-benchmark-vol-arachnid:
-    pnpm benchmark:vol-arachnid
-
-convert-ios:
-    pnpm convert:ios
 
 # === ORTAM KONTROLÜ ===
 

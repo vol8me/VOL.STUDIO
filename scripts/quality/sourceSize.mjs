@@ -13,6 +13,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { workingTreeFiles } from './gitFiles.mjs';
+import { excludingFrozenPaths, loadRepoLifecycle } from './workspaceLifecycle.mjs';
 
 /** Satır sınırının uygulandığı kaynak türleri. */
 export const SOURCE_PATTERNS = ['*.ts', '*.mjs', '*.js', '*.css', '*.rs', '*.kt'];
@@ -34,8 +35,13 @@ export const ACKNOWLEDGED = {};
  * @param threshold Satır eşiği.
  * @returns Sorun listesi; boşsa her aşım gerekçeli.
  */
-export function validateSourceSize(root, acknowledged = ACKNOWLEDGED, threshold = LINE_THRESHOLD) {
-  const files = workingTreeFiles(root, SOURCE_PATTERNS);
+export function validateSourceSize(
+  root,
+  acknowledged = ACKNOWLEDGED,
+  threshold = LINE_THRESHOLD,
+  lifecycle = loadRepoLifecycle(root),
+) {
+  const files = excludingFrozenPaths(workingTreeFiles(root, SOURCE_PATTERNS), lifecycle);
 
   const problems = [];
   const oversized = new Set();

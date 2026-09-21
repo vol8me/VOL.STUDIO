@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { workingTreeFiles } from './gitFiles.mjs';
+import { excludingFrozenPaths, loadRepoLifecycle } from './workspaceLifecycle.mjs';
 
 /**
  * TAURİ SÜRÜM EŞİTLİĞİ.
@@ -33,9 +34,17 @@ export function parseLockPackages(text) {
  * @param locks Karşılaştırılacak kilitler; verilmezse çalışma ağacındaki hepsi.
  * @returns Sorun listesi; boşsa izlenen her crate her kilitte aynı sürümdedir.
  */
-export function validateCargoLockParity(root, locks = workingTreeFiles(root, ['*Cargo.lock'])) {
+export function validateCargoLockParity(
+  root,
+  locks = workingTreeFiles(root, ['*Cargo.lock']),
+  lifecycle = loadRepoLifecycle(root),
+) {
+  // Frozen kilitler değiştirilemez: pariteye dahil edilirse aktif taraftaki
+  // bir Tauri yükseltmesi düzeltilemeyen bir ihlale dönüşür. Parite ancak
+  // derlenen (aktif) kilitler arasında anlamlıdır.
+  const activeLocks = excludingFrozenPaths(locks, lifecycle);
   const byCrate = new Map();
-  for (const lock of locks) {
+  for (const lock of activeLocks) {
     for (const [name, versions] of parseLockPackages(readFileSync(join(root, lock), 'utf8'))) {
       if (!WATCHED_CRATES.test(name)) continue;
       const seen = byCrate.get(name) ?? new Map();

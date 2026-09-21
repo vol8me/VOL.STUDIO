@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { excludingFrozenPaths, loadRepoLifecycle } from './workspaceLifecycle.mjs';
 
 /**
  * GELİŞTİRME PORTLARININ TEKİLLİĞİ.
@@ -38,10 +39,10 @@ function packageDirs(root) {
  * @param root Repo kökü.
  * @returns Sorun listesi; boşsa her port tek bir sahibe aittir.
  */
-export function validateDevPorts(root) {
+export function validateDevPorts(root, lifecycle = loadRepoLifecycle(root)) {
   const owners = new Map();
 
-  for (const dir of packageDirs(root)) {
+  for (const dir of excludingFrozenPaths(packageDirs(root), lifecycle)) {
     for (const file of ['vite.config.ts', 'playwright.config.ts']) {
       const path = join(root, dir, file);
       if (!existsSync(path)) continue;

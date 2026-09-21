@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
+import { excludingFrozenPaths, loadRepoLifecycle } from './workspaceLifecycle.mjs';
 
 /**
  * MODÜL düzeyinde dairesel bağımlılık.
@@ -201,10 +202,10 @@ function findCycles(graph) {
  * @param root Repo kökü.
  * @returns Sorun listesi; boşsa hiçbir pakette modül döngüsü yok.
  */
-export function validateModuleCycles(root) {
+export function validateModuleCycles(root, lifecycle = loadRepoLifecycle(root)) {
   const problems = [];
 
-  for (const dir of packageDirs(root)) {
+  for (const dir of excludingFrozenPaths(packageDirs(root), lifecycle)) {
     const packageRoot = join(root, dir);
     const aliases = packageAliases(packageRoot);
     const graph = new Map();

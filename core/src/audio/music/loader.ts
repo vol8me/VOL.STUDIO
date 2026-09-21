@@ -27,9 +27,10 @@ export class StemLoader {
    * URL'den AudioBuffer yükle. Zaman aşımı ve iptal desteklenir.
    *
    * `.ogg` başarısız olursa `.mp3`'e düşer — iOS WKWebView Ogg Vorbis decode
-   * etmez (`generate:sounds`/`generate:music` + `convert:ios` her ikisini de
-   * üretir). Kaynak zaten `.ogg` değilse (ör. `.wav`) fallback denenmez,
-   * orijinal hata fırlatılır. Kaynak `options.signal` çağıran tarafından abort
+   * etmez (audio-synth üretim hattı `generate:*` + `convert:ios` ile her
+   * ikisini de üretir). Kaynak zaten `.ogg` değilse (ör. `.wav`) fallback
+   * denenmez, orijinal hata fırlatılır. Kaynak `options.signal` çağıran
+   * tarafından abort
    * edildiyse fallback denenmez — iptal isteği, sırf ilk denemenin türü
    * yüzünden yok sayılmaz.
    *
