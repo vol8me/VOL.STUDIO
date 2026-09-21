@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { i18n, i18next } from '@volstudio/core';
 import { arenaConfig } from '@/config/arena';
 import tr from '@/i18n/tr.json';
@@ -9,7 +9,7 @@ import { ArachnidHud } from '@/runtime/ui/ArachnidHud';
 describe('ArachnidHud', () => {
   let parent: HTMLDivElement;
   let hud: ArachnidHud | null;
-  let onToggleFullscreen: ReturnType<typeof vi.fn>;
+  let onToggleFullscreen: Mock<() => void>;
 
   beforeAll(async () => {
     i18n.addResources('tr', 'arachnid', tr);

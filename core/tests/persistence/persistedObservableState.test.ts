@@ -33,7 +33,7 @@ describe('PersistedObservableState', () => {
 
     expect(state.get()).toEqual({ value: 4 });
     expect(listener).toHaveBeenCalledWith({ value: 4 });
-    await state.set((current) => ({ value: current.value + 1 }));
+    await state.update((current) => ({ value: current.value + 1 }));
     expect(store.save).toHaveBeenCalledWith('settings', { value: 5 });
     state.dispose();
   });
@@ -99,6 +99,66 @@ describe('PersistedObservableState', () => {
     vi.useRealTimers();
   });
 
+  it('dispose bekleyen debounce yazımını kaybetmez ve önceki promisei sonuçlandırır', async () => {
+    vi.useFakeTimers();
+    const store = {
+      load: vi.fn(() => Promise.resolve(undefined)),
+      save: vi.fn(() => Promise.resolve()),
+    };
+    const state = new PersistedObservableState({
+      store,
+      key: 'settings',
+      initial: { value: 0 },
+      parse,
+      clone,
+      debounceMs: 100,
+    });
+
+    const pending = state.set({ value: 8 });
+    state.dispose();
+    await pending;
+
+    expect(store.save).toHaveBeenCalledOnce();
+    expect(store.save).toHaveBeenCalledWith('settings', { value: 8 });
+    state.dispose();
+    vi.useRealTimers();
+  });
+
+  it('flushAndDispose writer tamamen bitmeden dönmez', async () => {
+    vi.useFakeTimers();
+    let finish!: () => void;
+    let closed = false;
+    const store = {
+      load: vi.fn(() => Promise.resolve(undefined)),
+      save: vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            finish = resolve;
+          }),
+      ),
+    };
+    const state = new PersistedObservableState({
+      store,
+      key: 'settings',
+      initial: { value: 0 },
+      parse,
+      clone,
+      debounceMs: 100,
+    });
+
+    void state.set({ value: 9 });
+    const closing = state.flushAndDispose().then(() => {
+      closed = true;
+    });
+    await Promise.resolve();
+    expect(store.save).toHaveBeenCalledWith('settings', { value: 9 });
+    expect(closed).toBe(false);
+    finish();
+    await closing;
+    expect(closed).toBe(true);
+    vi.useRealTimers();
+  });
+
   it('yazıları seri tutar ve bekleyen son statei kaydeder', async () => {
     let finishFirst!: () => void;
     const writes: number[] = [];
@@ -159,6 +219,72 @@ describe('PersistedObservableState', () => {
     expect(onError).toHaveBeenNthCalledWith(2, expect.any(Error), 'save');
     expect(onListenerError).toHaveBeenCalledOnce();
     state.dispose();
+  });
+
+  it('dinleyici hata işleyicisi hata atsa da sonraki dinleyiciyi çalıştırır', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const second = vi.fn();
+    const state = new PersistedObservableState({
+      store: { load: vi.fn(), save: vi.fn(() => Promise.resolve()) },
+      key: 'settings',
+      initial: { value: 0 },
+      parse,
+      clone,
+      onListenerError: () => {
+        throw new Error('handler');
+      },
+    });
+    state.subscribe(() => {
+      throw new Error('listener');
+    });
+    state.subscribe(second);
+
+    await state.set({ value: 1 });
+
+    expect(second).toHaveBeenCalledWith({ value: 1 });
+    expect(consoleError).toHaveBeenCalledOnce();
+    state.dispose();
+    consoleError.mockRestore();
+  });
+
+  it('fonksiyon değerini updater sanmadan saklar', async () => {
+    const initial = vi.fn(() => 1);
+    const next = vi.fn(() => 2);
+    const save = vi.fn(() => Promise.resolve());
+    const state = new PersistedObservableState<() => number>({
+      store: { load: vi.fn(), save },
+      key: 'function-state',
+      initial,
+      parse: (value) => value as () => number,
+      clone: (value) => value,
+    });
+
+    await state.set(next);
+
+    expect(initial).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+    expect(state.get()).toBe(next);
+    expect(save).toHaveBeenCalledWith('function-state', next);
+    state.dispose();
+  });
+
+  it('dispose sonrası final snapshot okunur, diğer operasyonlar reddedilir', async () => {
+    const state = new PersistedObservableState({
+      store: { load: vi.fn(), save: vi.fn(() => Promise.resolve()) },
+      key: 'settings',
+      initial: { value: 2 },
+      parse,
+      clone,
+    });
+    state.dispose();
+
+    expect(state.get()).toEqual({ value: 2 });
+    await expect(state.set({ value: 3 })).rejects.toThrow(/Kapatılmış/);
+    await expect(state.update((current) => current)).rejects.toThrow(/Kapatılmış/);
+    await expect(state.load()).rejects.toThrow(/Kapatılmış/);
+    expect(() => state.subscribe(() => undefined)).toThrow(/Kapatılmış/);
+    await expect(state.flush()).rejects.toThrow(/Kapatılmış/);
+    await expect(state.flushAndDispose()).rejects.toThrow(/Kapatılmış/);
   });
 
   it('boş anahtarı ve geçersiz debounce değerini reddeder', () => {

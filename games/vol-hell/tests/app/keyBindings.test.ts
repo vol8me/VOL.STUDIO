@@ -63,6 +63,25 @@ describe('KeyBindings', () => {
     expect(manager.save).toHaveBeenCalledWith('vol-hell:key-bindings', bindings.getAll());
   });
 
+  it('dönen ve yayınlanan nested bağlar iç statei değiştiremez', async () => {
+    const bindings = new KeyBindings(fakeSaveManager() as never);
+    let published: ReturnType<KeyBindings['getAll']> | undefined;
+    bindings.subscribe((value) => {
+      published = value;
+    });
+    await bindings.load();
+
+    const snapshot = bindings.getAll() as Record<string, { source: string; keyCode?: number }>;
+    snapshot.dash.keyCode = 999;
+    const listenerSnapshot = published as unknown as Record<
+      string,
+      { source: string; keyCode?: number }
+    >;
+    listenerSnapshot.dash.keyCode = 998;
+
+    expect(bindings.getAll().dash).toEqual(HELL_PC_BINDINGS.dash);
+  });
+
   /*
    * TAKAS: bir tuşu başka eyleme vermek, o tuşu tutan eylemi BAĞSIZ bırakmaz.
    * Aksi halde oyuncu bir eylemi kazara erişilemez kılabilirdi.

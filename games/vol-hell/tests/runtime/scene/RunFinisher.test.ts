@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { MockInstance } from 'vitest';
 import { isScenePresent, RunFinisher, type RunFinisherDeps } from '@/runtime/scene/RunFinisher';
 import type { RunResult } from '@/app/GameStats';
 
@@ -160,7 +161,7 @@ describe('RunFinisher', () => {
   });
 
   describe('beklenmedik hata', () => {
-    let errorSpy: ReturnType<typeof vi.spyOn>;
+    let errorSpy: MockInstance<typeof console.error>;
 
     beforeEach(() => {
       errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

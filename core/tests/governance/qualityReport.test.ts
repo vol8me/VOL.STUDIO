@@ -92,6 +92,11 @@ describe('kalite raporu sınıflandırması', () => {
     expect(result.reason).toContain('E0425');
   });
 
+  it('JS ve Rust advisory kapıları güvenlik aşaması olarak sınıflandırılır', () => {
+    expect(classify('security-js', '3 vulnerabilities found').kind).toBe('security-js');
+    expect(classify('security-rust', 'Crate: vulnerable 0.1.0').kind).toBe('security-rust');
+  });
+
   it('prettier uyumsuzluğu format olarak sınıflandırılır', () => {
     const result = classify('format-check', 'Code style issues found in 3 files. Run Prettier.');
     expect(result.kind).toBe('format');

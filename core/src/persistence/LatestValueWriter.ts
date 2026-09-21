@@ -1,11 +1,12 @@
-interface WriteWaiter {
+interface WriteDeferred {
+  readonly promise: Promise<void>;
   readonly resolve: () => void;
   readonly reject: (error: unknown) => void;
 }
 
 interface PendingWrite<T> {
   value: T;
-  readonly waiters: WriteWaiter[];
+  readonly deferred: WriteDeferred;
 }
 
 /** Seri yazım sürerken bekleyen ara değerleri en güncel değerle birleştirir. */
@@ -20,16 +21,15 @@ export class LatestValueWriter<T> {
   ) {}
 
   enqueue(value: T): Promise<void> {
-    const promise = new Promise<void>((resolve, reject) => {
-      if (this.pending) {
-        this.pending.value = value;
-        this.pending.waiters.push({ resolve, reject });
-      } else {
-        this.pending = { value, waiters: [{ resolve, reject }] };
-      }
-    });
+    if (this.pending) {
+      this.pending.value = value;
+      return this.pending.deferred.promise;
+    }
+
+    const deferred = this.createDeferred();
+    this.pending = { value, deferred };
     this.startDrain();
-    return promise;
+    return deferred.promise;
   }
 
   whenIdle(): Promise<void> {
@@ -52,10 +52,10 @@ export class LatestValueWriter<T> {
       this.pending = null;
       try {
         await this.write(batch.value);
-        for (const waiter of batch.waiters) waiter.resolve();
+        batch.deferred.resolve();
       } catch (error) {
         this.reportError(error);
-        for (const waiter of batch.waiters) waiter.reject(error);
+        batch.deferred.reject(error);
       }
     }
   }
@@ -71,5 +71,15 @@ export class LatestValueWriter<T> {
   private resolveIdle(): void {
     for (const resolve of this.idleWaiters) resolve();
     this.idleWaiters.clear();
+  }
+
+  private createDeferred(): WriteDeferred {
+    let resolve!: () => void;
+    let reject!: (error: unknown) => void;
+    const promise = new Promise<void>((ok, fail) => {
+      resolve = ok;
+      reject = fail;
+    });
+    return { promise, resolve, reject };
   }
 }

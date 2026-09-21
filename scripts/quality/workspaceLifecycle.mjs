@@ -1,0 +1,227 @@
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { isAbsolute, join, normalize, relative, sep } from 'node:path';
+
+const RECORD_KEYS = new Set([
+  'packageName',
+  'path',
+  'status',
+  'freezeTag',
+  'freezeCommit',
+  'decisionDate',
+  'reason',
+]);
+const FROZEN_KEYS = ['freezeTag', 'freezeCommit', 'decisionDate', 'reason'];
+const DEPENDENCY_FIELDS = [
+  'dependencies',
+  'devDependencies',
+  'peerDependencies',
+  'optionalDependencies',
+];
+
+function isObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function git(root, args) {
+  return execFileSync('git', args, {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
+}
+
+function validWorkspacePath(root, path) {
+  if (typeof path !== 'string' || path.length === 0 || isAbsolute(path)) return false;
+  const resolved = normalize(join(root, path));
+  const rel = relative(root, resolved);
+  return rel !== '..' && !rel.startsWith(`..${sep}`) && rel === normalize(path);
+}
+
+export function loadWorkspaceLifecycle(path) {
+  return JSON.parse(readFileSync(path, 'utf8'));
+}
+
+export function activeWorkspaceNames(lifecycle) {
+  return lifecycle.workspaces
+    .filter((workspace) => workspace.status === 'active')
+    .map((workspace) => workspace.packageName);
+}
+
+export function activeWorkspacePaths(lifecycle) {
+  return lifecycle.workspaces
+    .filter((workspace) => workspace.status === 'active')
+    .map((workspace) => workspace.path);
+}
+
+export function frozenWorkspacePaths(lifecycle) {
+  return lifecycle.workspaces
+    .filter((workspace) => workspace.status === 'frozen')
+    .map((workspace) => workspace.path);
+}
+
+export function validateWorkspaceLifecycle(root, lifecycle, packages) {
+  const problems = [];
+  if (!isObject(lifecycle)) return ['workspace-lifecycle.json: kök nesne olmalı.'];
+  if (lifecycle.schemaVersion !== 1) {
+    problems.push('workspace-lifecycle.json: schemaVersion tam olarak 1 olmalı.');
+  }
+  if (!Array.isArray(lifecycle.workspaces)) {
+    return [...problems, 'workspace-lifecycle.json: workspaces dizi olmalı.'];
+  }
+
+  const byName = new Map();
+  const byPath = new Map();
+  for (const [index, record] of lifecycle.workspaces.entries()) {
+    const where = `workspaces[${index}]`;
+    if (!isObject(record)) {
+      problems.push(`${where}: nesne olmalı.`);
+      continue;
+    }
+    for (const key of Object.keys(record)) {
+      if (!RECORD_KEYS.has(key)) problems.push(`${where}.${key}: tanınmayan alan.`);
+    }
+    for (const key of ['packageName', 'path', 'status']) {
+      if (typeof record[key] !== 'string' || record[key].trim() === '') {
+        problems.push(`${where}.${key}: boş olmayan metin olmalı.`);
+      }
+    }
+    if (typeof record.packageName === 'string') {
+      if (byName.has(record.packageName)) {
+        problems.push(`${record.packageName}: lifecycle paket adı yinelenmiş.`);
+      }
+      byName.set(record.packageName, record);
+    }
+    if (typeof record.path === 'string') {
+      if (byPath.has(record.path)) problems.push(`${record.path}: lifecycle yolu yinelenmiş.`);
+      byPath.set(record.path, record);
+      if (!validWorkspacePath(root, record.path)) {
+        problems.push(`${where}.path: repo içinde normalize göreli yol olmalı.`);
+      }
+    }
+    if (record.status !== 'active' && record.status !== 'frozen') {
+      problems.push(`${where}.status: "active" ya da "frozen" olmalı.`);
+    }
+    if (record.status === 'active') {
+      for (const key of FROZEN_KEYS) {
+        if (record[key] !== undefined) problems.push(`${where}.${key}: active kayıtta bulunamaz.`);
+      }
+    }
+    if (record.status === 'frozen') {
+      for (const key of FROZEN_KEYS) {
+        if (typeof record[key] !== 'string' || record[key].trim() === '') {
+          problems.push(`${where}.${key}: frozen kayıtta zorunlu metin alanı.`);
+        }
+      }
+      if (
+        typeof record.decisionDate === 'string' &&
+        !/^\d{4}-\d{2}-\d{2}$/.test(record.decisionDate)
+      ) {
+        problems.push(`${where}.decisionDate: YYYY-MM-DD biçiminde olmalı.`);
+      }
+    }
+  }
+
+  const packageByName = new Map(packages.map((pkg) => [pkg.name, pkg]));
+  for (const pkg of packages) {
+    const record = byName.get(pkg.name);
+    if (!record) {
+      problems.push(`${pkg.name}: workspace paketi lifecycle kaydı taşımıyor.`);
+    } else if (record.path !== pkg.dir) {
+      problems.push(`${pkg.name}: lifecycle yolu ${record.path}, gerçek yol ${pkg.dir}.`);
+    }
+  }
+  for (const record of lifecycle.workspaces) {
+    if (
+      isObject(record) &&
+      typeof record.packageName === 'string' &&
+      !packageByName.has(record.packageName)
+    ) {
+      problems.push(`${record.packageName}: lifecycle kaydı bayat; workspace paketi bulunamadı.`);
+    }
+  }
+
+  const frozenNames = new Set(
+    lifecycle.workspaces
+      .filter((record) => isObject(record) && record.status === 'frozen')
+      .map((record) => record.packageName),
+  );
+  for (const record of lifecycle.workspaces) {
+    if (!isObject(record) || record.status !== 'active' || !packageByName.has(record.packageName)) {
+      continue;
+    }
+    const manifest = JSON.parse(readFileSync(join(root, record.path, 'package.json'), 'utf8'));
+    for (const field of DEPENDENCY_FIELDS) {
+      for (const dependency of Object.keys(manifest[field] ?? {})) {
+        if (frozenNames.has(dependency)) {
+          problems.push(
+            `${record.packageName}: ${field} üzerinden frozen ${dependency} paketine bağlı.`,
+          );
+        }
+      }
+    }
+  }
+
+  for (const record of lifecycle.workspaces) {
+    if (!isObject(record) || record.status !== 'frozen') continue;
+    if (
+      typeof record.freezeTag !== 'string' ||
+      typeof record.freezeCommit !== 'string' ||
+      typeof record.path !== 'string'
+    ) {
+      continue;
+    }
+    if (!/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(record.freezeTag)) {
+      problems.push(`${record.packageName}: freezeTag güvenli bir git ref adı değil.`);
+      continue;
+    }
+    if (!/^[0-9a-f]{40,64}$/.test(record.freezeCommit)) {
+      problems.push(`${record.packageName}: freezeCommit tam hex commit kimliği olmalı.`);
+      continue;
+    }
+    try {
+      const tagObjectType = git(root, ['cat-file', '-t', record.freezeTag]);
+      if (tagObjectType !== 'tag') {
+        problems.push(`${record.packageName}: freezeTag annotated Git etiketi olmalı.`);
+      }
+      const commit = git(root, ['rev-parse', '--verify', `${record.freezeCommit}^{commit}`]);
+      const tagCommit = git(root, ['rev-parse', '--verify', `${record.freezeTag}^{commit}`]);
+      if (commit !== record.freezeCommit) {
+        problems.push(
+          `${record.packageName}: freezeCommit kısaltılmış ya da farklı commit çözümlüyor.`,
+        );
+      }
+      if (tagCommit !== record.freezeCommit) {
+        problems.push(
+          `${record.packageName}: ${record.freezeTag} etiketi freezeCommit'e işaret etmiyor.`,
+        );
+      }
+      const drift = git(root, ['diff', '--name-only', record.freezeCommit, '--', record.path]);
+      if (drift) {
+        problems.push(
+          `${record.packageName}: frozen ağaç freeze commit'ten sapmış: ${drift
+            .split('\n')
+            .join(', ')}`,
+        );
+      }
+      const untracked = git(root, [
+        'ls-files',
+        '--others',
+        '--exclude-standard',
+        '--',
+        record.path,
+      ]);
+      if (untracked) {
+        problems.push(
+          `${record.packageName}: frozen ağaçta izlenmeyen dosya var: ${untracked
+            .split('\n')
+            .join(', ')}`,
+        );
+      }
+    } catch (error) {
+      problems.push(`${record.packageName}: freeze git kanıtı doğrulanamadı: ${error.message}`);
+    }
+  }
+
+  return problems;
+}

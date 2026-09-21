@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { StatBlock, createRandom, i18n, i18next } from '@volstudio/core';
 import { CardScreens } from '@/runtime/ui/CardScreens';
 import { CardInventoryManager } from '@/runtime/systems/CardInventoryManager';
@@ -48,9 +48,9 @@ describe('CardScreens — dalga arası akış', () => {
   let screens: CardScreens;
   let economy: RunEconomy;
   let cards: CardInventoryManager;
-  let onOpen: ReturnType<typeof vi.fn>;
-  let onClose: ReturnType<typeof vi.fn>;
-  let onShopVisibilityChange: ReturnType<typeof vi.fn>;
+  let onOpen: Mock<() => void>;
+  let onClose: Mock<() => void>;
+  let onShopVisibilityChange: Mock<(visible: boolean) => void>;
 
   function levelUpButtons(): HTMLButtonElement[] {
     return [

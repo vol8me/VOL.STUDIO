@@ -159,19 +159,18 @@ Kaydırma yalnız görüntü için açılır; `layout.spec.ts` gerçek kaydırı
 ölçmeye devam eder, yani taşma ve dokunma hedefi iddiaları ürünün gerçek
 yerleşiminden gelir.
 
-## Yamalı bağımlılık
+## Vitest ve kapsam motoru
 
-`vitest@3.2.6` YAMALIDIR (`patches/vitest@3.2.6.patch`,
-`pnpm-workspace.yaml` → `patchedDependencies`). Yama tek satırdır: worker
-tarafındaki birpc zaman aşımını 300 sn'ye çıkarır. Ağır v8 coverage altında
-`onTaskUpdate` çağrısı varsayılan süreye takılıp koşuyu düşürüyordu; testlerin
-KENDİ `testTimeout`u 5 sn'de bırakıldı, yani yama bir testin son tarihini
-gevşetmez, yalnız ölçüm kanalının kopmasını engeller.
+Vitest ile `@vitest/coverage-v8` aynı exact `4.1.11` sürümündedir. Vitest 3
+dönemindeki worker RPC zaman aşımı yaması kaldırılmıştır; paket kaynaklarına
+yerel yama uygulanmaz. Audio-synth tek worker'lı `forks` havuzunu Vitest 4'ün
+`maxWorkers` sözleşmesiyle kurar.
 
-Vitest yükseltildiğinde yama sürüm eşleşmediği için uygulanmaz ve `pnpm
-install` düşer. Bu bilinçlidir: sessizce düşen bir yama, geri gelen bir
-zaman aşımından iyidir. Yükseltirken önce yamanın hâlâ gerekli olup olmadığı
-ölçülür.
+Vitest 4'ün V8 kapsamı AST tabanlı yeniden eşleme kullanır. Bu yüzden sürüm
+geçişinde yalnız yüzdeler değil LCOV pay ve paydaları da karşılaştırılır;
+eşikler motor değişti gerekçesiyle düşürülmez. Ağır audio-synth kapsam koşusu
+signoff'ta ayrı kalır ve RPC kanalının yamasız tamamlanması release kanıtının
+parçasıdır.
 
 ## Benchmark neyi ölçer, neyi ölçmez
 

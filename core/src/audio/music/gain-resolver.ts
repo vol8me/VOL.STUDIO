@@ -35,9 +35,6 @@ function resolveGainMap(map: StemGainMap, state: MusicState, key: string): numbe
   if (typeof entry === 'object') {
     const exact = entry[String(value)];
     if (exact !== undefined) return exact;
-    if (typeof value === 'number' && entry[String(value)] !== undefined) {
-      return entry[String(value)];
-    }
     if (typeof value === 'string' && !Number.isNaN(Number(value))) {
       const numeric = entry[String(Number(value))];
       if (numeric !== undefined) return numeric;

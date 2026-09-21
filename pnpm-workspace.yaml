@@ -5,9 +5,9 @@ packages:
   - 'tauri-v2'
 publicHoistPattern:
   - '@tauri-apps/*'
+overrides:
+  colord: 2.10.0
+  js-yaml: 5.4.2
 allowBuilds:
   esbuild: true
-  just-install: true
   simple-git-hooks: true
-patchedDependencies:
-  vitest@3.2.6: patches/vitest@3.2.6.patch

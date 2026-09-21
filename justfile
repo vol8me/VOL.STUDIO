@@ -2,7 +2,7 @@
 # Fedora / pnpm / Tauri v2
 # Kullanım: just fast | just high | just signoff | just --list
 #
-# `just` ikilisi `just-install` devDependency'siyle `node_modules/.bin` altına
+# `just` ikilisi exact pinli `rust-just` devDependency'siyle `node_modules/.bin` altına
 # kurulur. Global PATH'te `just` yoksa kapılar `pnpm fast` / `pnpm high` /
 # `pnpm signoff` ya da `pnpm exec just <tarif>` ile çağrılır.
 
@@ -18,7 +18,7 @@ default:
 # ayrı tarifler hâlinde durur.
 
 typecheck:
-    pnpm -r typecheck
+    node scripts/quality/runActive.mjs typecheck
 
 lint:
     pnpm lint
@@ -31,7 +31,7 @@ format-check:
 
 # Tüm paketlerde test (kapsam eşiği UYGULANMAZ).
 test:
-    pnpm -r --if-present test
+    node scripts/quality/runActive.mjs test --if-present
 
 # Tek paket testi. Örn: just test-pkg core | just test-pkg vol-ui
 test-pkg pkg:
@@ -68,7 +68,7 @@ contract:
 
 # build script'i olan HER paketi build eder — yeni paket elle eklenmeyi beklemez.
 build:
-    pnpm build:all
+    node scripts/quality/runActive.mjs build --if-present
 
 # Gönderilen bundle bütçesi. `build`den SONRA koşmak ZORUNDA: ölçtüğü şey
 # diskteki `dist`tir, kaynak değil. Ölçü gzip'lenmiş bayttır ve `app`/`vendor`
@@ -89,9 +89,7 @@ scaling:
 # hedefi) artı sekme başına piksel temeli. `build`den SONRA koşar; kalan ürün
 # ve katalog yüzeylerini production host/preview ile derlenmiş çıktıda sınar.
 e2e:
-    pnpm --filter @volstudio/vol-arachnid test:e2e
-    pnpm --filter @volstudio/vol-hell test:e2e
-    pnpm --filter @volstudio/vol-ui test:e2e
+    node scripts/quality/runActive.mjs test:e2e --if-present
 
 build-game:
     pnpm build:game
@@ -102,6 +100,15 @@ build-ui:
 # Git görünürlüğündeki bütün Cargo manifestleri: check + fmt + clippy.
 rust:
     node scripts/quality/rust.mjs
+
+# Bütün JS lockfile'ı için advisory kapısıdır. Frozen importer otomatik
+# muaf tutulmaz; install/lockfile yüzeyinde kaldığı sürece aynı audit'e tabidir.
+security-js:
+    pnpm audit --audit-level moderate
+
+# Aktif workspace'lerin Cargo.lock dosyalarını cargo-audit ile doğrular.
+security-rust:
+    node scripts/quality/rustAudit.mjs
 
 # === BİRLEŞİK KAPILAR ===
 
@@ -143,7 +150,7 @@ audio-verify:
     git diff --exit-code -- 'games/*/public/assets/audio/**'
 
 # Release/milestone kapısı: high + ağır ses kapsamı + ses tazeliği
-signoff: high coverage-audio audio-verify
+signoff: high coverage-audio audio-verify security-js security-rust
 
 # Kapıyı koşar ve sonucu MAKİNE-OKUNUR raporlar (agent döngüleri için).
 # Kapıları yeniden tanımlamaz, yukarıdaki tarifleri çağırır; aşama haritasının
@@ -233,12 +240,4 @@ convert-ios:
 # === ORTAM KONTROLÜ ===
 
 doctor:
-    echo "Node:   $(node -v)"
-    echo "pnpm:   $(pnpm -v)"
-    echo "Rust:   $(rustc --version 2>/dev/null || echo 'rustc yok')"
-    echo "Cargo:  $(cargo -V 2>/dev/null || echo 'cargo yok')"
-    echo "just:   $(just --version 2>/dev/null || echo 'PATH içinde yok')"
-    echo "FFmpeg: $(ffmpeg -version 2>/dev/null | head -n1 || echo 'FFmpeg yok — ses hattı çalışmaz')"
-    if command -v just >/dev/null 2>&1; then echo "just PATH: global ($(command -v just))"; else echo "just PATH: global değil — kapıları 'pnpm fast/high/signoff' ile çağır."; fi
-    # Fedora paket adları; Debian/Ubuntu'da libgtk-3-dev / libwebkit2gtk-4.1-dev.
-    if pkg-config --exists gtk+-3.0 webkit2gtk-4.1; then echo "Tauri sistem deps: OK"; else echo "UYARI: gtk3-devel / webkit2gtk4.1-devel eksik olabilir (Fedora)."; fi
+    node scripts/doctor.mjs

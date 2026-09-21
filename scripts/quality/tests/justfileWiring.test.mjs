@@ -51,42 +51,13 @@ test('kapı aşamaları var olan tariflere işaret eder', () => {
   assert.deepEqual(broken, []);
 });
 
-test('test:e2e tanımlayan her paket e2e kapısında çağrılır', () => {
-  /*
-   * TERS yön. Yukarıdaki testler "justfile'ın çağırdığı şey var mı?" diye
-   * sorar; bu test "var olan şey çağrılıyor mu?" diye sorar.
-   *
-   * `e2e` tarifi paket listesini ELLE tutuyor. Rust kapısı manifestleri
-   * tarayarak keşfeder, e2e etmez: yeni bir oyun `test:e2e` tanımlayıp
-   * justfile'a eklenmezse tarayıcı testleri `high` ve `signoff` dahil HİÇBİR
-   * kapıda koşmaz ve bunu hiçbir şey bildirmez. Paket kendi testlerini
-   * yazdığı için yeşil görünür.
-   */
-  const packages = JSON.parse(
-    execFileSync('pnpm', ['list', '-r', '--depth', '-1', '--json'], {
-      cwd: ROOT,
-      encoding: 'utf8',
-      maxBuffer: 32 * 1024 * 1024,
-    }),
-  ).filter((pkg) => pkg.path !== ROOT);
-
-  const withE2e = packages.filter((pkg) => {
-    const manifest = resolve(pkg.path, 'package.json');
-    if (!existsSync(manifest)) return false;
-    return Boolean(JSON.parse(readFileSync(manifest, 'utf8')).scripts?.['test:e2e']);
-  });
-
-  assert.ok(withE2e.length > 0, 'test:e2e tanımlayan paket bulunamadı — tarama bozulmuş');
-
+test('e2e kapısı lifecycle-active workspace keşfini kullanır', () => {
   const e2eRecipe = /^e2e:\n((?:[ \t]+[^\n]*\n)+)/m.exec(justfile);
   assert.ok(e2eRecipe !== null, 'justfile’da `e2e` tarifi bulunamadı');
-
-  const uncalled = withE2e.map((pkg) => pkg.name).filter((name) => !e2eRecipe[1].includes(name));
-
-  assert.deepEqual(
-    uncalled,
-    [],
-    `test:e2e tanımlı ama e2e kapısında çağrılmıyor: ${uncalled.join(', ')}`,
+  assert.match(
+    e2eRecipe[1],
+    /node scripts\/quality\/runActive\.mjs test:e2e --if-present/,
+    'e2e tarifi lifecycle seçimini atlıyor',
   );
 });
 
@@ -95,7 +66,7 @@ test('just kapı aşamalarını gerçekten çözebiliyor', () => {
    * Son söz `just`ın kendisinde: ayrıştırıcısı tarifi çözemiyorsa kapı yoktur.
    *
    * `pnpm exec` ile çağrılır çünkü `just` global bir kurulum değil,
-   * `just-install` devDependency'sinden gelir — repo'nun kapıları da onu
+   * exact pinli `rust-just` devDependency'sinden gelir — repo'nun kapıları da onu
    * böyle çözer. Doğrudan `just` çağırmak, testi geliştiricinin global
    * kurulumuna bağlardı.
    */

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Diagnostics, createDiagnostics } from '../../src/debug/Diagnostics';
+import { Diagnostics, createDiagnostics, isDiagnosticsEnabled } from '../../src/debug/Diagnostics';
 import {
   LocalServerTransport,
   NoopTransport,
@@ -124,6 +124,58 @@ describe('Diagnostics', () => {
     expect(last.update.avg).toBeGreaterThan(0);
 
     diag.destroy();
+  });
+
+  it('overlay, stage/count/input/renderer verisini onuncu karede görünür kılar', () => {
+    const transport = recordingTransport();
+    const diag = createDiagnostics({ gameId: 'overlay', sampleEvery: 10, transport });
+    diag.setScene('Arena');
+    diag.setInput({ activeProvider: 'keyboard' });
+    diag.setRenderer({ kind: 'canvas', requested: 'webgl', fellBack: true });
+    diag.setCount('enemy', 3);
+    diag.endStage('başlamadı');
+
+    let now = 100;
+    vi.spyOn(performance, 'now').mockImplementation(() => now++);
+    for (let frame = 0; frame < 10; frame++) {
+      diag.beginFrame();
+      diag.startStage('update');
+      diag.endStage('update');
+      diag.endFrame();
+    }
+
+    const panel = document.querySelector<HTMLDivElement>('.vol-diagnostics-panel');
+    expect(panel?.textContent).toContain('gpu: canvas ⚠ GERİ DÜŞTÜ');
+    expect(panel?.textContent).toContain('update:');
+    expect(panel?.textContent).toContain('enemy: 3');
+    expect(transport.sent).toHaveLength(1);
+    expect(transport.sent[0].scene).toBe('Arena');
+    expect(transport.sent[0].input.activeProvider).toBe('keyboard');
+    expect(transport.sent[0].screen.width).toBe(window.innerWidth);
+    diag.destroy();
+    expect(panel?.isConnected).toBe(false);
+  });
+
+  it('visible dönüşü resume baseline işaretler; overlay:false panel üretmez', () => {
+    const diag = createDiagnostics({ gameId: 'hidden', overlay: false, sampleEvery: 0 });
+    const resume = vi.spyOn(diag, 'markResume');
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(resume).not.toHaveBeenCalled();
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(resume).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('.vol-diagnostics-panel')).toBeNull();
+    diag.destroy();
+  });
+
+  it('URL debug/perf bayraklarını ayırır', () => {
+    window.history.replaceState({}, '', '/?debug');
+    expect(isDiagnosticsEnabled()).toBe(true);
+    window.history.replaceState({}, '', '/?perf');
+    expect(isDiagnosticsEnabled()).toBe(true);
+    window.history.replaceState({}, '', '/?other');
+    expect(isDiagnosticsEnabled()).toBe(false);
   });
 });
 

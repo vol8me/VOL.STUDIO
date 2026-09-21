@@ -238,7 +238,9 @@ describe('MusicEngine', () => {
 
     vi.stubGlobal('AudioContext', undefined);
 
-    const FakeWebkitAudioContext = vi.fn(() => fakeContext) as unknown as typeof AudioContext;
+    const FakeWebkitAudioContext = vi.fn(function FakeWebkitAudioContext() {
+      return fakeContext;
+    }) as unknown as typeof AudioContext;
     vi.stubGlobal('webkitAudioContext', FakeWebkitAudioContext);
 
     const engine = new MusicEngine();
@@ -442,6 +444,47 @@ describe('resolveStemGain', () => {
     const stem = { id: 'x', gain: 0.7 };
     const gain = resolveStemGain(stem, {});
     expect(gain).toBeCloseTo(0.7, 5);
+  });
+
+  it('numeric map sınırları, boş map ve sayıya çevrilemeyen state için deterministiktir', () => {
+    const points = [
+      { threshold: 10, gain: 1 },
+      { threshold: 0, gain: 0.2 },
+      { threshold: 5, gain: 0.6 },
+    ];
+    const stem = { id: 'x', gainMap: { energy: points } };
+
+    expect(resolveStemGain(stem, { energy: -1 })).toBe(0.2);
+    expect(resolveStemGain(stem, { energy: 20 })).toBe(1);
+    expect(resolveStemGain(stem, { energy: '5' })).toBe(0.6);
+    expect(resolveStemGain(stem, { energy: 'geçersiz' })).toBe(0.2);
+    expect(resolveStemGain({ id: 'x', gainMap: { intensity: [] } }, { intensity: 1 })).toBe(0);
+  });
+
+  it('categorical map exact ve normalize numeric-string anahtarlarını çözer', () => {
+    const stem = {
+      id: 'x',
+      gain: 0.5,
+      gainMap: {
+        biome: { forest: 0.4 },
+        level: { '1': 0.5 },
+        missing: { yes: 1 },
+      },
+    };
+
+    expect(resolveStemGain(stem, { biome: 'forest', level: '01' })).toBeCloseTo(0.1);
+    expect(resolveStemGain(stem, { biome: 'desert', level: 1 })).toBeCloseTo(0.25);
+    expect(resolveStemGain(stem, {})).toBe(0.5);
+  });
+
+  it('base gain ve birleşik factor çıkışını 0..1 aralığına sınırlar', () => {
+    expect(
+      resolveStemGain({ id: 'x', gain: 2, gainMap: { mode: { loud: 2 } } }, { mode: 'loud' }),
+    ).toBe(1);
+    expect(
+      resolveStemGain({ id: 'x', gain: -1, gainMap: { mode: { quiet: 1 } } }, { mode: 'quiet' }),
+    ).toBe(0);
+    expect(resolveStemGain({ id: 'x' }, {})).toBe(1);
   });
 });
 

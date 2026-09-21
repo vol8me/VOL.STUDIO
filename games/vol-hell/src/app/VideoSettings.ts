@@ -213,7 +213,7 @@ export class VideoSettings {
 
   private update(patch: Partial<VideoSettingsData>): Promise<void> {
     if (this.disposed) return Promise.resolve();
-    return this.persisted.set((current) => ({ ...current, ...patch })).catch(() => undefined);
+    return this.persisted.update((current) => ({ ...current, ...patch })).catch(() => undefined);
   }
 
   private notify(snapshot: VideoSettingsData): void {

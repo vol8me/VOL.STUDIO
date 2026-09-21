@@ -21,6 +21,6 @@
     "@tauri-apps/cli": "^2.11.4",
     "jsdom": "25.0.1",
     "typescript": "^6.0.3",
-    "vitest": "3.2.6"
+    "vitest": "4.1.11"
   }
 }

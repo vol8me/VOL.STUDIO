@@ -34,7 +34,7 @@ test('gerçek just rust tarifi bütün uygulama crate’lerini çalıştırır',
   }
 });
 
-test('Rust kapısı yeni oyun dahil bütün manifestleri check/fmt/clippy ile sınar', () => {
+test('Rust kapısı aktif manifestleri check/fmt/clippy ile sınar', () => {
   const root = mkdtempSync(join(tmpdir(), 'vol-rust-'));
   try {
     execFileSync('git', ['init', '-q', root]);
@@ -44,10 +44,18 @@ test('Rust kapısı yeni oyun dahil bütün manifestleri check/fmt/clippy ile s�
       mkdirSync(join(root, path), { recursive: true });
       writeFileSync(join(root, path, 'Cargo.toml'), '[package]\n');
     }
-    assert.deepEqual(rustManifests(root), projects.map((p) => `${p}/Cargo.toml`).sort());
+    const lifecycle = {
+      workspaces: projects.map((path) => ({ path: path.split('/src-tauri')[0], status: 'active' })),
+    };
+    assert.deepEqual(
+      rustManifests(root, lifecycle),
+      projects.map((p) => `${p}/Cargo.toml`).sort(),
+    );
     const calls = [];
-    checkRust(root, (command, args, options) =>
-      calls.push([command, args, relative(root, options.cwd)]),
+    checkRust(
+      root,
+      (command, args, options) => calls.push([command, args, relative(root, options.cwd)]),
+      lifecycle,
     );
     assert.equal(calls.length, 6);
     for (const project of projects) {
@@ -62,9 +70,13 @@ test('Rust kapısı yeni oyun dahil bütün manifestleri check/fmt/clippy ile s�
     }
     assert.throws(
       () =>
-        checkRust(root, () => {
-          throw new Error('cargo kırmızı');
-        }),
+        checkRust(
+          root,
+          () => {
+            throw new Error('cargo kırmızı');
+          },
+          lifecycle,
+        ),
       /cargo kırmızı/,
     );
   } finally {

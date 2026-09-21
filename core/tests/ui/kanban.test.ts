@@ -124,6 +124,101 @@ function pointerUp(clientX: number, clientY: number): void {
 }
 
 describe('Kanban', () => {
+  it('zengin kart metadata, WIP meta ve arama filtresini birlikte çizer', () => {
+    const dragContainer = document.createElement('div');
+    const kanban = new Kanban({
+      searchable: true,
+      dragContainer,
+      columns: [
+        {
+          id: 'rich',
+          title: 'Zengin',
+          wipLimit: 3,
+          cards: [
+            {
+              id: 'full',
+              title: 'Tam Kart',
+              description: 'Açıklama',
+              priority: 'high',
+              tags: ['acil', 'frontend'],
+              assignee: 'Ada Lovelace',
+            },
+            { id: 'single', title: 'Tek İsim', assignee: 'X' },
+            { id: 'blank', title: 'Boş İsim', assignee: '   ', tags: [] },
+          ],
+        },
+      ],
+    });
+    const column = kanban.element.querySelector('[data-column-id="rich"]')!;
+    expect(column.querySelector('.vol-kanban__column-count')?.textContent).toBe('3 / 3');
+    expect(column.classList.contains('vol-kanban__column--full')).toBe(true);
+    expect(column.querySelector('.vol-kanban__card-description')?.textContent).toBe('Açıklama');
+    expect(column.querySelectorAll('.vol-kanban__card-tag')).toHaveLength(2);
+    expect(
+      [...column.querySelectorAll('.vol-kanban__card-avatar')].map((avatar) => avatar.textContent),
+    ).toEqual(['AL', 'X', '']);
+
+    const search = kanban.element.querySelector<HTMLInputElement>('.vol-kanban__search-input')!;
+    search.value = 'frontend';
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(column.querySelectorAll('.vol-kanban__card')).toHaveLength(1);
+    search.value = '  ';
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(column.querySelectorAll('.vol-kanban__card')).toHaveLength(3);
+    kanban.destroy();
+  });
+
+  it('virtualized scroll aynı frame içindeki tekrarları birleştirir ve default overscan kullanır', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] });
+    const kanban = new Kanban({
+      columns: [{ id: 'q', title: 'Kuyruk', cards: makeCards('q', 100) }],
+      virtualizeCards: { cardHeight: 20, bodyHeight: 100 },
+    });
+    const body = kanban.element.querySelector<HTMLDivElement>('.vol-kanban__column-body')!;
+    body.scrollTop = 400;
+    body.dispatchEvent(new Event('scroll'));
+    body.dispatchEvent(new Event('scroll'));
+    vi.advanceTimersToNextFrame();
+    const viewport = kanban.element.querySelector<HTMLDivElement>('.vol-kanban__column-viewport')!;
+    expect(viewport.style.transform).toBe('translateY(340px)');
+
+    body.dispatchEvent(new Event('scroll'));
+    const cancel = vi.spyOn(window, 'cancelAnimationFrame');
+    kanban.destroy();
+    expect(cancel).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('klavye taşıma sınırları ve dolu sütun reddi duyurulur, Space ile bırakılır', () => {
+    const onMove = vi.fn();
+    const onWip = vi.fn();
+    const kanban = new Kanban({
+      columns: [
+        { id: 'left', title: 'Sol', cards: makeCards('l', 2) },
+        { id: 'right', title: 'Sağ', cards: makeCards('r', 1), wipLimit: 1 },
+      ],
+      onCardMove: onMove,
+      onWipLimitExceeded: onWip,
+    });
+    const key = (cardId: string, value: string) =>
+      kanban.element
+        .querySelector<HTMLDivElement>(`[data-card-id="${cardId}"]`)!
+        .dispatchEvent(new KeyboardEvent('keydown', { key: value, bubbles: true }));
+
+    key('l-0', 'Tab');
+    key('l-0', ' ');
+    key('l-1', 'ArrowRight');
+    key('l-0', 'ArrowUp');
+    key('l-0', 'ArrowLeft');
+    key('l-0', 'ArrowRight');
+    expect(onMove).not.toHaveBeenCalled();
+    expect(onWip).toHaveBeenCalledWith('right', 'l-0');
+    expect(kanban.element.querySelector('[role="status"]')?.textContent).toContain('Sağ');
+    key('l-0', ' ');
+    expect(kanban.element.querySelector('.vol-kanban__card--keyboard-grabbed')).toBeNull();
+    kanban.destroy();
+  });
+
   it('kartlar klavye ile kavranıp sütunlar arası taşınabilir', () => {
     const onCardMove = vi.fn();
     const kanban = new Kanban({

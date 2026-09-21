@@ -30,7 +30,12 @@ export default defineConfig({
         }
       : undefined,
     fs: {
-      allow: [resolve(import.meta.dirname, '../..')],
+      allow: [
+        import.meta.dirname,
+        resolve(import.meta.dirname, '../../core'),
+        resolve(import.meta.dirname, '../../tauri-v2'),
+        resolve(import.meta.dirname, '../../node_modules'),
+      ],
     },
     watch: {
       ignored: ['**/src-tauri/**'],
@@ -60,10 +65,6 @@ export default defineConfig({
       // CORE alias'ları `core/package.json` exports haritasından TÜRETİLİR;
       // liste burada elle tutulmaz (sözleşme: `scripts/vite/coreAliases.mjs`).
       ...coreAliases(),
-      {
-        find: '@volstudio/audio-synth',
-        replacement: resolve(import.meta.dirname, '../../devtools/audio-synth/src'),
-      },
       {
         find: '@volstudio/tauri-v2',
         replacement: resolve(import.meta.dirname, '../../tauri-v2/src'),

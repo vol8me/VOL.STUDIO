@@ -190,7 +190,7 @@ export class AudioSettings {
   private async update(patch: Partial<AudioSettingsData>): Promise<void> {
     if (this.disposed) return;
     try {
-      await this.persisted.set((current) => ({ ...current, ...patch }));
+      await this.persisted.update((current) => ({ ...current, ...patch }));
     } catch (err) {
       console.warn('[AudioSettings] Ayarlar kaydedilemedi:', err);
     }

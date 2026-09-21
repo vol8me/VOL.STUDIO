@@ -12,6 +12,8 @@ export interface AutosaveCoordinatorOptions<T> {
   readonly observeVisibility?: (listener: (state: AppVisibilityState) => void) => () => void;
 }
 
+type CaptureResult<T> = { readonly ok: true; readonly value: T } | { readonly ok: false };
+
 /** Periyodik ve arka-plan kayıtlarını tek, son-değer-kazanır kuyruğunda toplar. */
 export class AutosaveCoordinator<T> {
   private readonly scope = new DisposableScope();
@@ -41,18 +43,18 @@ export class AutosaveCoordinator<T> {
 
   requestSave(): void {
     if (this.stopped) return;
-    const value = this.capture();
-    if (value === null) return;
-    void this.writer.enqueue(value).catch(() => undefined);
+    const result = this.capture();
+    if (!result.ok) return;
+    void this.writer.enqueue(result.value).catch(() => undefined);
   }
 
   flush(): Promise<void> {
     if (this.stopped) {
       return Promise.reject(new Error('Durdurulmuş otomatik kayıt kuyruğu flush edilemez.'));
     }
-    const value = this.capture();
-    if (value === null) return Promise.reject(new Error('Kayıt anlık görüntüsü alınamadı.'));
-    return this.writer.enqueue(value);
+    const result = this.capture();
+    if (!result.ok) return Promise.reject(new Error('Kayıt anlık görüntüsü alınamadı.'));
+    return this.writer.enqueue(result.value);
   }
 
   stop(): void {
@@ -61,31 +63,27 @@ export class AutosaveCoordinator<T> {
     this.scope.dispose();
   }
 
-  destroy(): void {
-    this.stop();
-  }
-
   async flushAndDispose(): Promise<void> {
     if (this.stopped) {
       throw new Error('Durdurulmuş otomatik kayıt kuyruğu flush edilemez.');
     }
     this.stopped = true;
     this.scope.dispose();
-    const value = this.capture();
-    if (value === null) {
+    const result = this.capture();
+    if (!result.ok) {
       await this.writer.whenIdle();
       throw new Error('Kayıt anlık görüntüsü alınamadı.');
     }
-    await this.writer.enqueue(value);
+    await this.writer.enqueue(result.value);
     await this.writer.whenIdle();
   }
 
-  private capture(): T | null {
+  private capture(): CaptureResult<T> {
     try {
-      return this.options.capture();
+      return { ok: true, value: this.options.capture() };
     } catch (error) {
       this.reportError(error);
-      return null;
+      return { ok: false };
     }
   }
 

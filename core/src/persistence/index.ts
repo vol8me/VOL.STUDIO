@@ -2,7 +2,6 @@ export { AutosaveCoordinator, type AutosaveCoordinatorOptions } from './Autosave
 export {
   PersistedObservableState,
   type PersistedObservableStateOptions,
-  type PersistedStateUpdater,
   type PersistenceOperation,
   type PersistenceStore,
 } from './PersistedObservableState';

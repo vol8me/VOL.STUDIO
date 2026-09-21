@@ -49,6 +49,25 @@ function mergeWithDefaults(stored: unknown): HellBindings {
   return merged;
 }
 
+function cloneBinding(binding: PCActionBinding): PCActionBinding {
+  return binding.source === 'key'
+    ? { source: 'key', keyCode: binding.keyCode }
+    : { source: 'pointerButton', button: binding.button };
+}
+
+function cloneBindings(data: HellBindings): HellBindings {
+  const clone = {} as Record<HellAction, PCActionBinding>;
+  for (const action of HELL_ACTIONS) clone[action] = cloneBinding(data[action]);
+  return clone;
+}
+
+function sameBinding(left: PCActionBinding, right: PCActionBinding): boolean {
+  if (left.source !== right.source) return false;
+  return left.source === 'key'
+    ? left.keyCode === (right as Extract<PCActionBinding, { source: 'key' }>).keyCode
+    : left.button === (right as Extract<PCActionBinding, { source: 'pointerButton' }>).button;
+}
+
 /**
  * Tuş eşlemesini kalıcı hâle getirir ve çakışmayı TAKAS ile çözer.
  *
@@ -73,8 +92,9 @@ export class KeyBindings {
       key: STORAGE_KEY,
       initial: mergeWithDefaults(undefined),
       parse: mergeWithDefaults,
-      clone: (data) => ({ ...data }),
-      equals: (left, right) => HELL_ACTIONS.every((action) => left[action] === right[action]),
+      clone: cloneBindings,
+      equals: (left, right) =>
+        HELL_ACTIONS.every((action) => sameBinding(left[action], right[action])),
       onError: (error, operation) => {
         if (operation === 'save') reportPersistenceFailure('keyBindings', error);
       },
@@ -121,7 +141,7 @@ export class KeyBindings {
   }
 
   private notify(data: HellBindings): void {
-    for (const listener of this.listeners) listener({ ...data });
+    for (const listener of this.listeners) listener(cloneBindings(data));
   }
 
   private async persist(data: HellBindings): Promise<void> {

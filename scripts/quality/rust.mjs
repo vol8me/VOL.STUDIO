@@ -1,10 +1,14 @@
 import { execFileSync } from 'node:child_process';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { loadWorkspaceLifecycle } from './workspaceLifecycle.mjs';
 
-/** Git'in gördüğü her Cargo paketi kapıya girer; yeni oyun elle eklenmez. */
-export function rustManifests(root) {
-  return execFileSync(
+/** Git'in gördüğü her aktif Cargo paketi kapıya girer; lifecycle tek kaynaktır. */
+export function rustManifests(
+  root,
+  lifecycle = loadWorkspaceLifecycle(join(root, 'workspace-lifecycle.json')),
+) {
+  const manifests = execFileSync(
     'git',
     ['ls-files', '-z', '--cached', '--others', '--exclude-standard', '**/Cargo.toml', 'Cargo.toml'],
     {
@@ -13,12 +17,21 @@ export function rustManifests(root) {
     },
   )
     .split('\0')
-    .filter(Boolean)
+    .filter(Boolean);
+  const prefixes = lifecycle.workspaces
+    .filter((workspace) => workspace.status === 'active')
+    .map((workspace) => `${workspace.path}/`);
+  return manifests
+    .filter((manifest) => prefixes.some((prefix) => manifest.startsWith(prefix)))
     .sort();
 }
 
-export function checkRust(root, run = execFileSync) {
-  const manifests = rustManifests(root);
+export function checkRust(
+  root,
+  run = execFileSync,
+  lifecycle = loadWorkspaceLifecycle(join(root, 'workspace-lifecycle.json')),
+) {
+  const manifests = rustManifests(root, lifecycle);
   if (manifests.length === 0) throw new Error('Rust kapısı: Cargo.toml bulunamadı');
   for (const manifest of manifests) {
     console.log(`[rust] ${manifest}`);

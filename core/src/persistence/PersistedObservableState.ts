@@ -20,8 +20,6 @@ export interface PersistedObservableStateOptions<T> {
   readonly onListenerError?: (error: unknown) => void;
 }
 
-export type PersistedStateUpdater<T> = T | ((current: T) => T);
-
 /** Doğrulama politikasını tüketicide bırakan, seri yazımlı gözlemlenebilir state. */
 export class PersistedObservableState<T> {
   private readonly scope = new DisposableScope();
@@ -68,12 +66,20 @@ export class PersistedObservableState<T> {
     return this.options.clone(this.state);
   }
 
-  set(updater: PersistedStateUpdater<T>): Promise<void> {
-    if (this.disposed) return Promise.resolve();
+  set(value: T): Promise<void> {
+    if (this.disposed) return Promise.reject(this.disposedError());
     this.generation++;
-    const candidate =
-      typeof updater === 'function' ? (updater as (current: T) => T)(this.get()) : updater;
-    const next = this.options.clone(candidate);
+    return this.replace(value);
+  }
+
+  update(updater: (current: T) => T): Promise<void> {
+    if (this.disposed) return Promise.reject(this.disposedError());
+    this.generation++;
+    return this.replace(updater(this.get()));
+  }
+
+  private replace(value: T): Promise<void> {
+    const next = this.options.clone(value);
     const equals = this.options.equals ?? Object.is;
     if (equals(this.state, next)) return this.pendingPersist ?? Promise.resolve();
     this.state = next;
@@ -82,7 +88,7 @@ export class PersistedObservableState<T> {
   }
 
   subscribe(listener: (state: T) => void): () => void {
-    if (this.disposed) return () => undefined;
+    this.assertActive();
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
@@ -107,13 +113,23 @@ export class PersistedObservableState<T> {
   async flushAndDispose(): Promise<void> {
     this.assertActive();
     const pending = this.pendingPersist;
-    this.commitPendingPersist();
     this.disposed = true;
     this.generation++;
+    this.commitPendingPersist();
     this.scope.dispose();
     this.listeners.clear();
-    if (pending) await pending;
+    let failure: unknown;
+    try {
+      if (pending) await pending;
+    } catch (error) {
+      failure = error;
+    }
     await this.writer.whenIdle();
+    if (failure !== undefined) {
+      throw failure instanceof Error
+        ? failure
+        : new Error('Persistence writer rejected with a non-Error value.', { cause: failure });
+    }
   }
 
   private schedulePersist(): Promise<void> {
@@ -151,7 +167,7 @@ export class PersistedObservableState<T> {
       try {
         listener(this.options.clone(snapshot));
       } catch (error) {
-        this.options.onListenerError?.(error);
+        this.reportListenerError(error);
       }
     }
   }
@@ -165,6 +181,21 @@ export class PersistedObservableState<T> {
   }
 
   private assertActive(): void {
-    if (this.disposed) throw new Error('Kapatılmış kalıcı state kullanılamaz.');
+    if (this.disposed) throw this.disposedError();
+  }
+
+  private disposedError(): Error {
+    return new Error('Kapatılmış kalıcı state kullanılamaz.');
+  }
+
+  private reportListenerError(error: unknown): void {
+    try {
+      this.options.onListenerError?.(error);
+    } catch (callbackError) {
+      console.error(
+        '[PersistedObservableState] Dinleyici hata işleyicisi başarısız oldu:',
+        callbackError,
+      );
+    }
   }
 }

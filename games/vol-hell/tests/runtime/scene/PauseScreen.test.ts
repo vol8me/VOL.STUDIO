@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { i18n, i18next } from '@volstudio/core';
 import { PauseScreen } from '@/runtime/scene/PauseScreen';
 import { AudioSettings } from '@/app/AudioSettings';
@@ -35,9 +35,9 @@ describe('PauseScreen', () => {
   let parent: HTMLDivElement;
   let screen: PauseScreen;
   let cb: {
-    onResume: ReturnType<typeof vi.fn>;
-    onRestart: ReturnType<typeof vi.fn>;
-    onMainMenu: ReturnType<typeof vi.fn>;
+    onResume: Mock<() => void>;
+    onRestart: Mock<() => void>;
+    onMainMenu: Mock<() => void>;
   };
 
   beforeEach(async () => {

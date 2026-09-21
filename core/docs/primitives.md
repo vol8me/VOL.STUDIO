@@ -69,6 +69,8 @@ gerçekten yazıldığını bilmesi gerekiyorsa `flushAndDispose()` beklenir.
 
 `capture` ve `save` tüketici bağımlılıklarıdır; CORE dosya biçimini, storage
 backend'ini veya kayıt sıklığının ürün politikasını bilmez.
+`capture()` sonucunun `null` olması başarısızlık değil geçerli bir generic
+değerdir; capture hatası yalnızca exception ile bildirilir.
 
 ### `PersistedObservableState`
 
@@ -77,9 +79,16 @@ son-değer-kazanır yazım sağlar. `parse`, `clone`, varsayılan değer ve eşi
 politikası zorunlu olarak tüketicide kalır; bu sınıf bozuk verinin nasıl
 onarılacağına veya bir ayarın ne anlama geldiğine karar vermez.
 
-`set()` bellekteki durumu ve dinleyicileri eşzamanlı günceller, dönen Promise
-ilgili kalıcılık işini izler. `flush()` bekleyen debounce'u hemen kuyruğa alır;
-`flushAndDispose()` yazım tamamlanmadan yaşam döngüsünü bitirmez.
+`set(value)` doğrudan değeri, `update(fn)` mevcut snapshot'tan üretilen değeri
+belleğe ve dinleyicilere eşzamanlı uygular. Ayrı metotlar, fonksiyonun da
+geçerli bir `T` olabildiği generic durumda değer/updater belirsizliğini önler.
+Dönen Promise ilgili kalıcılık işini izler.
+
+`dispose()` senkrondur ve idempotenttir: yeni işlemleri kapatır, bekleyen
+debounce değerini writer'a teslim eder ve daha önce verilmiş Promise'leri açıkta
+bırakmaz; fakat diskte dayanıklılık garantisi vermez. `get()` final snapshot'ı
+okumaya devam eder. Terminal dayanıklılık bariyeri `flushAndDispose()`dur;
+pending değeri kuyruğa alır ve writer tamamen idle olana kadar bekler.
 
 ## Phaser sınırı
 

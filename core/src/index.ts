@@ -28,7 +28,6 @@ export {
   PersistedObservableState,
   type AutosaveCoordinatorOptions,
   type PersistedObservableStateOptions,
-  type PersistedStateUpdater,
   type PersistenceOperation,
   type PersistenceStore,
 } from './persistence';

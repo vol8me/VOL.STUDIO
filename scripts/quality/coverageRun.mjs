@@ -15,6 +15,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { loadQualityConfig } from './config.mjs';
+import { activeWorkspaceNames, loadWorkspaceLifecycle } from './workspaceLifecycle.mjs';
 
 /** Kayıt `node_modules` altında durur: repoya girmez, temiz klonda yoktur. */
 export function stampPath(root, run) {
@@ -38,6 +39,9 @@ export function selectRunPackages(packages, spec) {
 }
 
 function coveragePackages(root) {
+  const active = new Set(
+    activeWorkspaceNames(loadWorkspaceLifecycle(join(root, 'workspace-lifecycle.json'))),
+  );
   const listed = JSON.parse(
     execFileSync('pnpm', ['list', '-r', '--depth', '-1', '--json'], {
       cwd: root,
@@ -48,6 +52,7 @@ function coveragePackages(root) {
   return listed
     .filter((pkg) => resolve(pkg.path) !== resolve(root))
     .map((pkg) => ({ name: pkg.name, dir: relative(root, pkg.path).split(sep).join('/') }))
+    .filter((pkg) => active.has(pkg.name))
     .filter((pkg) => {
       const manifest = JSON.parse(readFileSync(join(root, pkg.dir, 'package.json'), 'utf8'));
       return Boolean(manifest.scripts?.['test:coverage']);

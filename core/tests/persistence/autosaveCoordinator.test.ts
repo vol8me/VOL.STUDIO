@@ -118,6 +118,20 @@ describe('AutosaveCoordinator', () => {
     brokenSave.stop();
   });
 
+  it('null generic statei geçerli snapshot olarak kaydeder', async () => {
+    const save = vi.fn(() => Promise.resolve());
+    const coordinator = new AutosaveCoordinator<null>({
+      capture: () => null,
+      save,
+      observeVisibility: () => () => undefined,
+    });
+
+    await coordinator.flush();
+
+    expect(save).toHaveBeenCalledWith(null);
+    coordinator.stop();
+  });
+
   it('geçersiz interval ve observer kurulum hatasında yarım kaynak bırakmaz', () => {
     expect(
       () =>

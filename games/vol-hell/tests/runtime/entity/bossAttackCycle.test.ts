@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { StatBlock, createRandom } from '@volstudio/core';
 
 const { playSfx } = vi.hoisted(() => ({
@@ -24,7 +24,7 @@ import type { TelegraphManager } from '@/runtime/systems/TelegraphManager';
 interface Pending {
   options: { shape: string; radius?: number; width?: number; angle?: number; spread?: number };
   complete: (completed: boolean) => void;
-  cancel: ReturnType<typeof vi.fn>;
+  cancel: Mock<() => void>;
 }
 
 const CONTACT_DAMAGE = 10;

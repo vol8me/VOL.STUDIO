@@ -1,13 +1,5 @@
 {
   "bundle": {
     "active": true
-  },
-  "app": {
-    "security": {
-      "assetProtocol": {
-        "enable": true,
-        "scope": ["$RESOURCE/**", "$APPDATA/**"]
-      }
-    }
   }
 }

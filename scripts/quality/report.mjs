@@ -35,7 +35,7 @@ const GATES = {
   quick: ['contract', 'format-check', 'typecheck', 'lint'],
   fast: ['quick', 'test'],
   high: ['quick', 'rust', 'lint-css', 'coverage', 'coverage-shape', 'build', 'bundle', 'scaling', 'e2e'],
-  signoff: ['high', 'coverage-audio', 'audio-verify'],
+  signoff: ['high', 'coverage-audio', 'audio-verify', 'security-js', 'security-rust'],
 };
 
 /**
@@ -113,6 +113,12 @@ export function classify(stage, output) {
       reason: cargo ? `cargo ${cargo[1] ?? ''} ${cargo[2]}`.trim() : 'cargo hatası',
       kind: 'rust',
     };
+  }
+  if (stage === 'security-js') {
+    return { package: null, reason: 'pnpm audit advisory buldu', kind: 'security-js' };
+  }
+  if (stage === 'security-rust') {
+    return { package: null, reason: 'cargo audit advisory buldu', kind: 'security-rust' };
   }
   if (/Code style issues found/.test(output)) {
     return { package: null, reason: 'biçim (prettier) uyumsuz', kind: 'format' };

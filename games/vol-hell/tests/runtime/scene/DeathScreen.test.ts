@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { i18n, i18next } from '@volstudio/core';
 import { DeathScreen, type DeathStats } from '@/runtime/scene/DeathScreen';
 import trResources from '@/i18n/tr.json';
@@ -20,8 +20,8 @@ const BASE_STATS: DeathStats = {
 describe('DeathScreen', () => {
   let parent: HTMLDivElement;
   let screen: DeathScreen;
-  let onRestart: ReturnType<typeof vi.fn>;
-  let onMainMenu: ReturnType<typeof vi.fn>;
+  let onRestart: Mock<() => void>;
+  let onMainMenu: Mock<() => void>;
 
   beforeEach(async () => {
     i18n.addResources('tr', 'volhell', trResources);

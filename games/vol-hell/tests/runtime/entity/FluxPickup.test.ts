@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { createRandom, Vector2 } from '@volstudio/core';
 import { FluxPickupManager } from '@/runtime/entity/FluxPickupManager';
 import { economyConfig } from '@/config/economy';
@@ -71,7 +71,7 @@ describe('FluxPickupManager', () => {
   let scene: never;
   let circles: FakeCircle[];
   let effects: EffectManager;
-  let onCollected: ReturnType<typeof vi.fn>;
+  let onCollected: Mock<(amount: number) => void>;
 
   beforeEach(() => {
     const made = makeScene();
@@ -254,7 +254,7 @@ describe('FluxPickupManager', () => {
     for (let i = 0; i < 5; i++) {
       manager.update(16, new Vector2(400, 300));
     }
-    const total = onCollected.mock.calls.reduce((sum, [value]) => sum + (value as number), 0);
+    const total = onCollected.mock.calls.reduce((sum, [value]) => sum + value, 0);
     expect(total).toBe(amount);
     expect(manager.getActiveCount()).toBe(0);
   });
@@ -278,7 +278,7 @@ describe('FluxPickupManager', () => {
     for (let i = 0; i < 5; i++) {
       manager.update(16, new Vector2(100, 100));
     }
-    const total = onCollected.mock.calls.reduce((sum, [value]) => sum + (value as number), 0);
+    const total = onCollected.mock.calls.reduce((sum, [value]) => sum + value, 0);
     expect(total).toBe(dropped);
   });
 

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "workspaces": [
+    {
+      "packageName": "@volstudio/core",
+      "path": "core",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/audio-synth",
+      "path": "devtools/audio-synth",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/pen.dev",
+      "path": "devtools/pen.dev",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/vol-ui",
+      "path": "devtools/vol-ui",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/vol-arachnid",
+      "path": "games/vol-arachnid",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/vol-hell",
+      "path": "games/vol-hell",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/tauri-v2",
+      "path": "tauri-v2",
+      "status": "active"
+    }
+  ]
+}
