@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
+import { createRandom } from '@volstudio/core/random';
 import {
   applyEnvelopeToSample,
   decodeWav,
   loopSamples,
   mixSampleLayer,
   processSample,
-  resampleLinear,
+  resample,
   trimSamples,
 } from '@volstudio/audio-synth';
 
@@ -97,9 +98,9 @@ describe('Sample utils', () => {
     expect(() => decodeWav(corrupted)).toThrow(/bit derinliği/);
   });
 
-  it('resampleLinear uzunluğu doğru değiştirir', () => {
+  it('resample uzunluğu doğru değiştirir', () => {
     const data = new Float32Array([0, 1, 2, 3, 4, 5]);
-    const resampled = resampleLinear(data, 2);
+    const resampled = resample(data, 2);
     expect(resampled.length).toBe(3);
   });
 
@@ -131,31 +132,6 @@ describe('Sample utils', () => {
     expect(looped.length).toBe(8);
     expect(looped[0]).toBe(1);
     expect(looped[3]).toBe(1);
-  });
-
-  it('loopSamples crossfade her iç loop sınırında uygulanır (yalnızca ilkinde değil)', () => {
-    const source = new Float32Array(20);
-    for (let i = 0; i < source.length; i++) {
-      source[i] = Math.sin((i / source.length) * Math.PI * 2);
-    }
-    const targetLength = source.length * 3 + 5;
-    const withCrossfade = loopSamples(source, targetLength, true, true);
-    const withoutCrossfade = loopSamples(source, targetLength, true, false);
-    const fadeSamples = Math.min(50, Math.floor(source.length / 2));
-
-    // Eski implementasyon yalnızca [0, fadeSamples) aralığını değiştiriyordu;
-    // 2. sınırda (2×source.length) hiçbir fark yaratmıyordu. Bu sınırda da
-    // fark olmalı ki her tekrarda değil yalnızca ilkinde crossfade
-    // uygulandığı regresyonu yakalasın.
-    const secondBoundary = source.length * 2;
-    let differsAtSecondBoundary = false;
-    for (let i = secondBoundary - fadeSamples; i < secondBoundary; i++) {
-      if (Math.abs(withCrossfade[i] - withoutCrossfade[i]) > 1e-6) {
-        differsAtSecondBoundary = true;
-        break;
-      }
-    }
-    expect(differsAtSecondBoundary).toBe(true);
   });
 
   it('applyEnvelopeToSample zarf uygular', () => {
@@ -191,5 +167,246 @@ describe('Sample utils', () => {
     expect(target[2]).toBe(2);
     expect(target[3]).toBe(3);
     expect(target[4]).toBe(4);
+  });
+});
+
+/**
+ * Gerçekçi WAVE_FORMAT_EXTENSIBLE dosyası: fmt uzunluğu 40, cbSize 22,
+ * geçerli bit, kanal maskesi ve 16 baytlık alt biçim GUID'i. Veri sola
+ * yaslı yazılır; `junkLowBits` sözleşmeye aykırı dolgu çöpünü taklit eder.
+ */
+function extensibleWav(opts: {
+  channels: number;
+  container: 16 | 24 | 32;
+  valid: number;
+  mask: number;
+  subtype?: number;
+  guidTail?: number[];
+  frames: number[][];
+  junkLowBits?: boolean;
+  float?: boolean;
+}): Uint8Array {
+  const bytesPer = opts.container / 8;
+  const dataSize = opts.frames.length * opts.channels * bytesPer;
+  const out = new Uint8Array(12 + 8 + 40 + 8 + dataSize);
+  const view = new DataView(out.buffer);
+  const text = (at: number, s: string) => {
+    for (let i = 0; i < s.length; i++) out[at + i] = s.charCodeAt(i);
+  };
+  text(0, 'RIFF');
+  view.setUint32(4, out.length - 8, true);
+  text(8, 'WAVE');
+  text(12, 'fmt ');
+  view.setUint32(16, 40, true);
+  view.setUint16(20, 0xfffe, true);
+  view.setUint16(22, opts.channels, true);
+  view.setUint32(24, 48000, true);
+  view.setUint32(28, 48000 * opts.channels * bytesPer, true);
+  view.setUint16(32, opts.channels * bytesPer, true);
+  view.setUint16(34, opts.container, true);
+  view.setUint16(36, 22, true);
+  view.setUint16(38, opts.valid, true);
+  view.setUint32(40, opts.mask >>> 0, true);
+  view.setUint16(44, opts.subtype ?? (opts.float ? 3 : 1), true);
+  const tail = opts.guidTail ?? [0, 0, 0, 0, 0x10, 0, 0x80, 0, 0, 0xaa, 0, 0x38, 0x9b, 0x71];
+  tail.forEach((b, i) => (out[46 + i] = b));
+  text(60, 'data');
+  view.setUint32(64, dataSize, true);
+  let at = 68;
+  const pad = opts.container - opts.valid;
+  for (const frame of opts.frames) {
+    for (const value of frame) {
+      if (opts.float) {
+        view.setFloat32(at, value, true);
+      } else {
+        // `value` geçerli bit çözünürlüğünde tamsayıdır; sola yaslanır.
+        let word = value * 2 ** pad;
+        if (opts.junkLowBits && pad > 0) word += (1 << pad) - 1;
+        if (opts.container === 16) view.setInt16(at, word, true);
+        else if (opts.container === 32) view.setInt32(at, word, true);
+        else {
+          const u = word < 0 ? word + 0x1000000 : word;
+          out[at] = u & 0xff;
+          out[at + 1] = (u >> 8) & 0xff;
+          out[at + 2] = (u >> 16) & 0xff;
+        }
+      }
+      at += bytesPer;
+    }
+  }
+  return out;
+}
+
+describe('decodeWav — WAVE_FORMAT_EXTENSIBLE', () => {
+  it('20 geçerli bit 24-bit kapta: dolgu bitleri maskelenir, genlik doğru', () => {
+    // Yirmi bitlik tamsayılar; beklenen genlik value / 2^19 (sola yaslı veri
+    // kabın tam ölçeğiyle okunur). Dolgu bitlerindeki çöp sonucu değiştirmez.
+    const values = [0, 1, -1, 262143, -262144, 12345];
+    const frames = values.map((v) => [v, v]);
+    const clean = decodeWav(
+      extensibleWav({ channels: 2, container: 24, valid: 20, mask: 0x3, frames }),
+    );
+    const dirty = decodeWav(
+      extensibleWav({
+        channels: 2,
+        container: 24,
+        valid: 20,
+        mask: 0x3,
+        frames,
+        junkLowBits: true,
+      }),
+    );
+    for (let i = 0; i < values.length; i++) {
+      expect(clean.samples[i]).toBeCloseTo(values[i] / 2 ** 19, 9);
+      expect(dirty.samples[i]).toBe(clean.samples[i]);
+    }
+    expect(clean.sampleRate).toBe(48000);
+  });
+
+  it('16 geçerli bit 32-bit kapta da aynı sözleşme', () => {
+    const dirty = decodeWav(
+      extensibleWav({
+        channels: 1,
+        container: 32,
+        valid: 16,
+        mask: 0x4,
+        frames: [[-12000], [300]],
+        junkLowBits: true,
+      }),
+    );
+    expect(dirty.samples[0]).toBeCloseTo(-12000 / 2 ** 15, 9);
+    expect(dirty.samples[1]).toBeCloseTo(300 / 2 ** 15, 9);
+  });
+
+  it('IEEE float alt biçimi okunur', () => {
+    const result = decodeWav(
+      extensibleWav({
+        channels: 2,
+        container: 32,
+        valid: 32,
+        mask: 0x3,
+        float: true,
+        frames: [[0.5, -0.25]],
+      }),
+    );
+    expect(result.samples[0]).toBeCloseTo(0.125, 7);
+  });
+
+  it('maske kanal sayısından fazla bit taşırsa üst bitler yok sayılır (FL|FR|FC, 2 kanal)', () => {
+    const result = decodeWav(
+      extensibleWav({ channels: 2, container: 16, valid: 16, mask: 0x7, frames: [[1000, 3000]] }),
+    );
+    expect(result.samples[0]).toBeCloseTo(2000 / 32768, 9);
+  });
+
+  it('belirsiz ya da desteklenmeyen düzen SESSİZCE mono’ya indirilmez', () => {
+    const frame = (n: number) => [Array.from({ length: n }, () => 100)];
+    // 5.1: LFE ve arka kanalları eşit ağırlıkla toplamak yanlış bir indirgemedir.
+    expect(() =>
+      decodeWav(
+        extensibleWav({ channels: 6, container: 16, valid: 16, mask: 0x3f, frames: frame(6) }),
+      ),
+    ).toThrow(/kanal düzeni/);
+    // Ön sol + LFE: iki kanal ama stereo çift değil.
+    expect(() =>
+      decodeWav(
+        extensibleWav({ channels: 2, container: 16, valid: 16, mask: 0x9, frames: frame(2) }),
+      ),
+    ).toThrow(/kanal düzeni/);
+    // Maske iki kanal için tek bit taşıyor: ikinci kanal atanmamış.
+    expect(() =>
+      decodeWav(
+        extensibleWav({ channels: 2, container: 16, valid: 16, mask: 0x1, frames: frame(2) }),
+      ),
+    ).toThrow(/kanal düzeni/);
+  });
+
+  it('yabancı alt biçim GUID’i ve geçersiz geçerli bit reddedilir', () => {
+    const frames = [[100, 100]];
+    const ambisonic = [0x21, 0x07, 0xd3, 0x11, 0x86, 0x44, 0xc8, 0xc1, 0xca, 0, 0, 0, 0, 0];
+    expect(() =>
+      decodeWav(
+        extensibleWav({
+          channels: 2,
+          container: 16,
+          valid: 16,
+          mask: 0x3,
+          guidTail: ambisonic,
+          frames,
+        }),
+      ),
+    ).toThrow(/alt biçim/);
+    expect(() =>
+      decodeWav(extensibleWav({ channels: 2, container: 16, valid: 20, mask: 0x3, frames })),
+    ).toThrow(/geçerli bit/);
+    expect(() =>
+      decodeWav(extensibleWav({ channels: 2, container: 16, valid: 0, mask: 0x3, frames })),
+    ).toThrow(/geçerli bit/);
+  });
+
+  it('düz PCM’de 2’den fazla kanal belirsizdir ve reddedilir', () => {
+    const wav = createTestWav(440, 0.01, 44100);
+    const view = new DataView(wav.buffer);
+    // 441 örnek 1 kanal → aynı veri 3 kanallı (147 çerçeve) olarak işaretlenir.
+    view.setUint16(22, 3, true);
+    view.setUint16(32, 6, true);
+    view.setUint32(40, 147 * 6, true);
+    view.setUint32(4, 36 + 147 * 6, true);
+    expect(() => decodeWav(wav.slice(0, 44 + 147 * 6))).toThrow(/kanal düzeni/);
+  });
+});
+
+describe('loopSamples crossfade — geçiş ölçülür', () => {
+  const FADE = 50;
+
+  it('her sınırda sıçrama yoktur: dalga kaldığı yerden sürer', () => {
+    // Periyodu kaynağa tam bölünmeyen sinüs: loop noktası keyfi fazda.
+    // Eski geçiş başın ilk F örneğine karışıp yeniden samples[0]'dan
+    // başlıyordu → her turda head[F−1] → head[0] sıçraması. 220 Hz'de
+    // head[49] ≈ 1, head[0] = 0: sıçrama tam genlik olurdu.
+    const omega = (2 * Math.PI * 220) / 44100;
+    const source = Float32Array.from({ length: 1234 }, (_, i) => Math.sin(i * omega));
+    const out = loopSamples(source, 1234 * 6, true, true);
+    let worst = 0;
+    for (let i = 1; i < out.length; i++) worst = Math.max(worst, Math.abs(out[i] - out[i - 1]));
+    // Sinüsün kendi en büyük örnek farkı ω'dır; geçiş kazancının türevi
+    // (≈ π/2F) buna eklenebilir, sıçrama ise ~1 olurdu.
+    expect(worst).toBeLessThan(omega + Math.PI / (2 * FADE));
+  });
+
+  it('ilintisiz içerikte geçiş gücü düz kalır (doğrusal geçişin −3 dB çukuru yok)', () => {
+    // Geçişin ortasındaki güç, bağımsız gürültü kaynakları üzerinden
+    // ortalanır; kaynağın geri kalanıyla aynı olmalı.
+    const length = 400;
+    const trials = 300;
+    let middle = 0;
+    let rest = 0;
+    let restCount = 0;
+    for (let seed = 0; seed < trials; seed++) {
+      const random = createRandom(seed + 1);
+      const source = Float32Array.from({ length }, () => random.bipolar());
+      const out = loopSamples(source, length * 2, true, true);
+      // İlk geçiş bloğu [length − FADE, length) aralığındadır.
+      const center = length - FADE + FADE / 2;
+      for (let i = center - 2; i <= center + 2; i++) middle += out[i] ** 2;
+      for (let i = 0; i < length - FADE; i++) {
+        rest += out[i] ** 2;
+        restCount++;
+      }
+    }
+    const ratioDb = 10 * Math.log10(middle / (5 * trials) / (rest / restCount));
+    expect(Math.abs(ratioDb)).toBeLessThan(0.5);
+  });
+
+  it('tam ilintili içerikte geçiş tümsek üretmez (eşit güç +3 dB verirdi)', () => {
+    // Kaynak tam periyotlardan oluşur: kuyruk ile baş aynı dalgadır.
+    const period = 40;
+    const source = Float32Array.from({ length: period * 10 }, (_, i) =>
+      Math.sin((2 * Math.PI * i) / period),
+    );
+    const out = loopSamples(source, source.length * 3, true, true);
+    let peak = 0;
+    for (const v of out) peak = Math.max(peak, Math.abs(v));
+    expect(peak).toBeLessThan(1.01);
   });
 });

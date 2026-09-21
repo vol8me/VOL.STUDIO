@@ -1,6 +1,6 @@
 import type { Envelope } from '../synthesis/envelope';
 import { getWaveSampleWithPhase } from '../synthesis/waveforms';
-import { BiquadFilter, BUTTERWORTH_Q4, getCutoffAtTime, type Filter } from '../synthesis/filter';
+import { getCutoffAtTime, type Filter } from '../synthesis/filter';
 import type { Distortion } from '../effects';
 import type { ResolvedFilter } from '../guard/synthesis';
 import type { Voice } from './voice';
@@ -138,29 +138,76 @@ export function renderDrySample(
 }
 
 /**
- * 2x oversampling ile anti-aliasing lowpass + decimation.
+ * 2× decimation filtresi: sıfır fazlı, Kaiser pencereli halfband FIR.
  *
- * Filtre 4. derece Butterworth: iki biquad kaskadı, Q değerleri 0.5412 ve
- * 1.3066 (Butterworth kutup açılarından).
+ * Geçiş bandı çıkış oranının %45.35'ine (44.1 kHz'de 20 kHz) kadar düzdür;
+ * durdurma bandı `fs − 0.4535·fs`'te başlar — orada katlanan içerik tam
+ * geçiş bandı kenarına düşer, yani işitilir banda hiçbir şey ≥ 96 dB
+ * zayıflamadan katlanmaz. Eski 4. derece Butterworth 24–40 kHz'i yalnız
+ * 7–24 dB söndürüyordu ve iç Nyquist'e kadar izin verilen FM yan bantları
+ * oradan işitilir banda katlanıyordu (ölçüm: DESIGN "FM alias").
  *
- * IIR durumu her örnekte ilerlemek ZORUNDA, ama yalnız decimation'da kalan
- * örnek saklanır: ara bir tam boy "filtrelenmiş" tampon gerekmez. Çıktı,
- * önce filtreleyip sonra seçen yolla bit düzeyinde aynıdır.
+ * Halfband: çift indisli katsayılar (merkez hariç) sıfırdır ve çekirdek
+ * simetriktir; çıkış başına ~M/2 çarpım yeter. Merkezli (nedensel olmayan)
+ * çekirdek offline'dır ve zaman kaydırmaz.
+ */
+const DECIMATOR_PASSBAND = 0.4535;
+const DECIMATOR_STOPBAND_DB = 96;
+
+function designHalfband(): Float64Array {
+  // Normalize geçiş genişliği, iç oranın döngüsü cinsinden.
+  const transition = (0.5 - DECIMATOR_PASSBAND) / OVERSAMPLE_FACTOR;
+  const order = (DECIMATOR_STOPBAND_DB - 7.95) / (2.285 * 2 * Math.PI * transition);
+  let half = Math.ceil(order / 2);
+  if (half % 2 === 0) half++;
+  const beta = 0.1102 * (DECIMATOR_STOPBAND_DB - 8.7);
+  const i0 = (x: number): number => {
+    let sum = 1;
+    let term = 1;
+    for (let k = 1; k < 64; k++) {
+      term *= (x * x) / 4 / (k * k);
+      sum += term;
+      if (term < sum * 1e-16) break;
+    }
+    return sum;
+  };
+  // taps[j] = h[2j + 1]; h[0] = 0.5 ayrı tutulur, çift indisler sıfırdır.
+  const taps = new Float64Array((half + 1) / 2);
+  const norm = i0(beta);
+  for (let j = 0; j < taps.length; j++) {
+    const n = 2 * j + 1;
+    const u = n / (half + 1);
+    const sinc = Math.sin((Math.PI * n) / 2) / ((Math.PI * n) / 2);
+    taps[j] = 0.5 * sinc * (i0(beta * Math.sqrt(1 - u * u)) / norm);
+  }
+  return taps;
+}
+
+const HALFBAND_TAPS = designHalfband();
+
+/**
+ * 2× oversample tamponu hedef orana indirir. Yalnız çıkış tamponu ayrılır;
+ * kaynak sınırların dışında sıfır sayılır.
  */
 export function downsample2x(
   buffer: Float32Array,
-  internalRate: number,
-  targetRate: number,
+  _internalRate: number,
+  _targetRate: number,
 ): Float32Array {
-  const cutoff = targetRate * 0.45;
-  const f1 = new BiquadFilter(internalRate, 'lowpass', BUTTERWORTH_Q4[0]);
-  const f2 = new BiquadFilter(internalRate, 'lowpass', BUTTERWORTH_Q4[1]);
   const outLen = Math.floor(buffer.length / OVERSAMPLE_FACTOR);
   const out = new Float32Array(outLen);
-  for (let i = 0; i < buffer.length; i++) {
-    const y = f2.process(f1.process(buffer[i], cutoff), cutoff);
-    if (i % OVERSAMPLE_FACTOR === 0 && i < outLen * OVERSAMPLE_FACTOR)
-      out[i / OVERSAMPLE_FACTOR] = y;
+  const last = buffer.length - 1;
+  const taps = HALFBAND_TAPS;
+  for (let i = 0; i < outLen; i++) {
+    const center = i * OVERSAMPLE_FACTOR;
+    let acc = 0.5 * buffer[center];
+    for (let j = 0; j < taps.length; j++) {
+      const offset = 2 * j + 1;
+      const ahead = center + offset;
+      const behind = center - offset;
+      acc += taps[j] * ((ahead <= last ? buffer[ahead] : 0) + (behind >= 0 ? buffer[behind] : 0));
+    }
+    out[i] = acc;
   }
   return out;
 }

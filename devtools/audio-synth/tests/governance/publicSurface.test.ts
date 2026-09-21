@@ -10,12 +10,13 @@ import { PRESET_CATALOG } from '../../src/presets';
  * değil: yeni bir enstrüman `Presets` altında bir kalem olarak gelir, kök
  * yüzeye yeni bir ad EKLEMEZ. Kök yüzey ancak yeni bir sentez tekniği, yeni
  * bir enstrüman MODELİ ya da render sınırının hata sözleşmesi
- * (`AudioParamError`, `RenderBudgetError`) girdiğinde büyür — hepsi bilinçli
- * karardır.
+ * (`AudioParamError`, `RenderBudgetError`) girdiğinde büyür; ölçüm çekirdeği
+ * tek ad (`Analysis`) altında yaşar — hepsi bilinçli karardır.
  *
  * Kilit olmadan bu ayrım bir niyettir; kilitle birlikte bir kapıdır.
  */
 const EXPECTED_SURFACE = [
+  'Analysis',
   'Arrange',
   'AudioParamError',
   'BiquadFilter',
@@ -58,7 +59,7 @@ const EXPECTED_SURFACE = [
   'piano',
   'pluck',
   'processSample',
-  'resampleLinear',
+  'resample',
   'synth',
   'synthesize',
   'trimSamples',

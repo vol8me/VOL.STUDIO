@@ -20,7 +20,7 @@ export {
 } from './filter';
 export {
   decodeWav,
-  resampleLinear,
+  resample,
   trimSamples,
   loopSamples,
   applyEnvelopeToSample,

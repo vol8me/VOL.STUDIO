@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { RenderBudgetError, piano, synthesize } from '../src/index';
 import { downsample2x } from '../src/engine/render';
-import { BiquadFilter } from '../src/synthesis/filter';
-import { BUTTERWORTH_Q4 } from '../src/synthesis/filter';
 import { assertRenderBudget, estimateSynthCost } from '../src/guard/budget';
 import { resolveSynthParams } from '../src/guard/synth';
 import type { SynthParams } from '../src/types';
@@ -81,7 +79,11 @@ describe('render kaynak bütçesi', () => {
     expect(cost({ sampleRate: 96000 }).peakBytes).toBeGreaterThan(base.peakBytes * 1.9);
     expect(cost({ duration: 20 }).peakBytes).toBeGreaterThan(base.peakBytes * 1.9);
     expect(cost({ pan: 0 }).peakBytes).toBeGreaterThan(base.peakBytes);
-    expect(cost({ repeat: 4 }).workUnits).toBeGreaterThan(base.workUnits * 3.5);
+    // Üst üste binen tekrar yalnız iç render işini çoğaltır: iş tekrar
+    // sayısında doğrusaldır, tampon uzunluğu (çıkış işi) sabit kalır.
+    const perRepeat = cost({ repeat: 2 }).workUnits - base.workUnits;
+    expect(perRepeat).toBeGreaterThan(0);
+    expect(cost({ repeat: 4 }).workUnits - base.workUnits).toBeCloseTo(3 * perRepeat, 0);
     expect(cost({ detune: 5 }).workUnits).toBeGreaterThan(base.workUnits);
   });
 });
@@ -125,26 +127,48 @@ describe('repeat — eksik tekrar yok, görünmez iş yok', () => {
   });
 });
 
-describe('downsample2x — ara tampon olmadan aynı çıktı', () => {
-  it('tek geçiş, iki geçişli tanımla (filtrele → seç) bit düzeyinde aynı', () => {
-    const internal = 88200;
-    const input = Float32Array.from(
-      { length: 8193 },
-      (_, i) => Math.sin(i * 0.37) * 0.6 + Math.sin(i * 1.9) * 0.3,
-    );
-    const f1 = new BiquadFilter(internal, 'lowpass', BUTTERWORTH_Q4[0]);
-    const f2 = new BiquadFilter(internal, 'lowpass', BUTTERWORTH_Q4[1]);
-    const filtered = new Float32Array(input.length);
-    for (let i = 0; i < input.length; i++) {
-      filtered[i] = f2.process(f1.process(input[i], 44100 * 0.45), 44100 * 0.45);
-    }
-    const expected = Float32Array.from(
-      { length: Math.floor(input.length / 2) },
-      (_, i) => filtered[i * 2],
-    );
+describe('downsample2x — halfband FIR decimator', () => {
+  const internal = 88200;
+  const out = 44100;
 
-    const actual = downsample2x(input, internal, 44100);
-    expect(actual.length).toBe(expected.length);
-    expect(Array.from(actual)).toEqual(Array.from(expected));
+  function toneThrough(frequency: number): Float32Array {
+    const input = Float32Array.from(
+      { length: internal },
+      (_, i) => Math.sin((2 * Math.PI * frequency * i) / internal) * 0.5,
+    );
+    return downsample2x(input, internal, out);
+  }
+
+  function rmsDb(y: Float32Array): number {
+    let sum = 0;
+    for (let i = 1000; i < y.length - 1000; i++) sum += y[i] * y[i];
+    return 20 * Math.log10(Math.sqrt(sum / (y.length - 2000)) / (0.5 / Math.SQRT2));
+  }
+
+  it.each([1000, 10000, 19900])('%s Hz geçiş bandında düzdür (±0.01 dB)', (frequency) => {
+    // Eski 4. derece Butterworth 19.9 kHz'te −3 dB'ydi.
+    expect(Math.abs(rmsDb(toneThrough(frequency)))).toBeLessThan(0.01);
+  });
+
+  it.each([24500, 30000, 40000])(
+    '%s Hz (işitilir banda katlanan) −90 dB altına iner',
+    (frequency) => {
+      // Eski Butterworth 30 kHz'i yalnız ~−14.5 dB söndürüyordu → 14.1 kHz'e katlanırdı.
+      expect(rmsDb(toneThrough(frequency))).toBeLessThan(-90);
+    },
+  );
+
+  it('sıfır fazlıdır: darbe aynı zamanda, simetrik çıkar', () => {
+    const input = new Float32Array(4000);
+    input[2000] = 1;
+    const y = downsample2x(input, internal, out);
+    let peakAt = 0;
+    for (let i = 0; i < y.length; i++) if (Math.abs(y[i]) > Math.abs(y[peakAt])) peakAt = i;
+    expect(peakAt).toBe(1000);
+    for (let k = 1; k < 40; k++) expect(y[1000 + k]).toBeCloseTo(y[1000 - k], 12);
+  });
+
+  it('yalnız çıkış tamponu ayrılır: uzunluk girişin yarısıdır', () => {
+    expect(downsample2x(new Float32Array(8193), internal, out).length).toBe(4096);
   });
 });

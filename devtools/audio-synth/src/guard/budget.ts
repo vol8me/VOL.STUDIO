@@ -27,7 +27,7 @@ export interface RenderBudget {
  * Bellek: 1.5 GiB tahmin tavanı. 600 sn / 48 kHz stereo reverb'lü render
  * 550 MiB (ölçülen tepe RSS 628 MiB), sample katmanıyla 881 MiB tahmin
  * eder; 16 GiB'lık referans makinede dört eşzamanlı render'a yer kalır.
- * İş: 6e9 birim ≈ referans makinede 60 sn; aynı senaryo 1.15e9 birimdir.
+ * İş: 6e9 birim ≈ referans makinede 60 sn; aynı senaryo 1.41e9 birimdir.
  */
 export const DEFAULT_RENDER_BUDGET: RenderBudget = {
   maxPeakBytes: 1.5 * 1024 ** 3,
@@ -127,8 +127,8 @@ export function estimateSynthCost(p: ResolvedSynthParams): RenderCost {
     sampleSourceBytes(p);
 
   // Kalibrasyon (render-budget-bench): iç örnek başına sabit yük (zarf,
-  // anlık frekans, decimator) ~120 ns, osilatör başına ~24 ns; stereo reverb
-  // çıkış örneği başına ~80 ns.
+  // anlık frekans) ~120 ns, osilatör başına ~24 ns; çıkış örneği başına
+  // halfband decimator ~90 ns, stereo reverb ~80 ns.
   const perInternal =
     12 +
     2.5 * voiceUnits(p) +
@@ -136,7 +136,7 @@ export function estimateSynthCost(p: ResolvedSynthParams): RenderCost {
     filterUnits(p.highpass?.poles) +
     p.lfos.length;
   const perFrame =
-    1 +
+    10 +
     (bus.delay ? 1 : 0) +
     (bus.flanger ? 1 : 0) +
     (bus.phaser ? bus.phaser.stages : 0) +

@@ -279,25 +279,32 @@ tahmin eder ve `RenderBudgetError` ile reddeder (`src/guard/budget.ts`).
 
 Varsayılan bütçe: **1.5 GiB** bellek tahmini, **6e9** iş birimi.
 
-Referans ölçüm — `pnpm --filter @volstudio/audio-synth exec tsx
-scripts/render-budget-bench.ts` (her senaryo ayrı süreç, tepe RSS
-`/usr/bin/time -f %M`; AMD Ryzen 5 7235HS, Node 22.23.1, Linux 7.2):
+Referans ölçüm — `pnpm --filter @volstudio/audio-synth bench:budget` (her
+senaryo ayrı süreç, tepe RSS `/usr/bin/time -f %M`; AMD Ryzen 5 7235HS,
+Node 22.23.1, Linux 7.2):
 
 | Senaryo                                  | Tahmin (MiB) | Tepe RSS (MiB) | İş birimi | Süre (sn) |
 | ---------------------------------------- | -----------: | -------------: | --------: | --------: |
-| sine 10 sn, 44.1 kHz, mono               |          6.7 |             95 |    1.32e7 |      0.13 |
-| 16 harmonik + detune, 60 sn, 48 kHz, rvb |         55.1 |            135 |    5.62e8 |      4.63 |
-| 600 sn, 48 kHz, stereo + reverb          |        549.5 |            629 |    1.15e9 |      10.6 |
-| aynısı + sample katmanı                  |        880.9 |            743 |    1.21e9 |      11.1 |
-| aynısı + `writeOgg`                      |        549.5 |            629 |    1.15e9 |  10.6+8.5 |
+| sine 10 sn, 44.1 kHz, mono               |          6.7 |             96 |    1.72e7 |      0.17 |
+| 16 harmonik + detune, 60 sn, 48 kHz, rvb |         55.1 |            137 |    5.88e8 |      4.93 |
+| 600 sn, 48 kHz, stereo + reverb          |        549.5 |            632 |    1.41e9 |      13.3 |
+| aynısı + sample katmanı                  |        880.9 |            743 |    1.47e9 |      13.8 |
+| aynısı + `writeOgg`                      |        549.5 |            631 |    1.41e9 |  13.4+8.5 |
+
+Karşılaştırma: aynı 600 sn senaryosu başlangıç commit'inde (600 sn
+kelepçesi ve iki geçişli decimation ile) 740 MiB tepe RSS ölçüyordu; ara
+"filtrelenmiş" tam boy tampon ve stereo ayrımındaki fazladan kopya
+kalkınca 632 MiB (−%15).
 
 Tepe RSS ~90 MiB'lık Node tabanını içerir; tahmin gerçek tampon tepesini
 izler, sample katmanında (üç tamponun hepsi aynı anda canlı kalmadığı için)
 üstten sınırlar. 1.5 GiB tavanı, desteklenen en büyük senaryoyu taşıyıp
 16 GiB'lık referans makinede dört eşzamanlı render'a yer bırakır; 600 sn'lik
 192 kHz stereo (≈ 2.3 GiB tahmin) reddedilir. 6e9 birim referans makinede
-~60 sn'dir — aynı senaryonun beş katı; bin tekrarlı üst üste binen uzun bir
-`repeat` ise ayırmadan önce düşer.
+~60 sn'dir — aynı senaryonun dört katı; bin tekrarlı üst üste binen uzun bir
+`repeat` ise ayırmadan önce düşer. `processSample`, kaynak çözüldükten
+sonra yeniden örnekleme çekirdeğinin gerçek uzunluğuyla (tap ≈ 3.6 ns
+ölçüldü) kendi denetimini yapar.
 
 **`writeOgg` tek parça PCM tamponu tutar, akış gerekmez.** Yazıcının
 ek tamponu çıkışın 1 katıdır (interleaved f32); render'ın kendi tepesi ise
@@ -305,6 +312,81 @@ ek tamponu çıkışın 1 katıdır (interleaved f32); render'ın kendi tepesi i
 serbest kalır. Ölçülen: 600 sn / 48 kHz stereo render + `writeOgg` tepe
 RSS'i render'ın tek başına tepesiyle aynı (629 MiB). Yazıcı yine de kendi
 tamponunu aynı bütçeyle ayırmadan önce denetler.
+
+## Örnekleme ve alias
+
+**2× decimator.** İç oran 2× oversample'dır; çıkışa sıfır fazlı, Kaiser
+pencereli halfband FIR ile inilir (`engine/render.ts`): geçiş bandı çıkış
+oranının %45.35'ine (44.1 kHz'te 20 kHz) kadar ±0.01 dB içinde düz,
+durdurma bandı katlanması tam 20 kHz'e düşen 24.1 kHz'te başlar ve ≥ 96 dB
+söndürür. Önceki 4. derece Butterworth 19.9 kHz'te −3 dB'ydi ve 30 kHz'i
+yalnız ~14.5 dB söndürüyordu; FM index koruması yan bantlara iç Nyquist'e
+(39.7 kHz) kadar izin verdiği için o bant işitilir banda katlanıyordu.
+
+**Yeniden örnekleme (`resample`).** Sample katmanı Kaiser pencereli sinc ile
+yeniden örneklenir (J.O. Smith, _Digital Audio Resampling_): kesim kaynak ve
+çıkış Nyquist'inin küçüğüne göre ölçeklenir, geçiş bandı etkin Nyquist'in
+%90–100'ü, durdurma bandı 96 dB (β = 0.1102(A − 8.7), mertebe
+(A − 7.95)/(2.285·Δω)). Ölçülen (`tests/resample.test.ts`):
+
+| Durum                                   | Eski (kayan ortalama + doğrusal) | Yeni      |
+| --------------------------------------- | -------------------------------- | --------- |
+| 2× aşağı, 11.5 / 13 / 16 / 20 kHz alias | −3.3 / −4.4 / −7.6 / −16.7 dB    | ≤ −101 dB |
+| 2× aşağı, 9.9 kHz geçiş bandı           | −2.4 dB                          | 0.0 dB    |
+| 48 → 44.1 kHz, 23 kHz alias             | −28.4 dB                         | −101 dB   |
+| 2× yukarı, 17.05 kHz görüntü            | −18.3 dB                         | −115 dB   |
+
+Bütçe: alias ≤ −90 dB. Çıkış `maxLength` ile hedef uzunlukta kesilir;
+atılacak örnek hesaplanmaz.
+
+**WAV girişi.** `WAVE_FORMAT_EXTENSIBLE` Microsoft sözleşmesiyle okunur:
+cbSize ≥ 22, tam 16 baytlık alt biçim GUID'i (`…-0000-0010-8000-00aa00389b71`,
+yalnız PCM ve IEEE float), `wValidBitsPerSample` (kabın en anlamlı bitleri;
+dolgu bitleri maskelenir, ölçek kabın tam ölçeğidir) ve `dwChannelMask`.
+Çözücü mono'ya indirdiği için yalnız indirgemesi belirsiz olmayan düzenler
+kabul edilir: tek kanal ya da ön sol + ön sağ. Maske fazla bit taşıyorsa üst
+bitler yok sayılır (sözleşme); eksik bit, çok kanallı düzen (ör. 5.1, LFE'li
+çiftler) ve konumsuz 2+ kanallı düz PCM reddedilir.
+
+**Loop crossfade.** Geçiş ağırlıkları kuyruk–baş ilintisine göre güç
+tamamlayıcıdır (Fink, Holters, Zölzer, "Signal-matched power-complementary
+cross-fading", DAFx-16): ilintisizde eşit güç, tam ilintilide eşit kazanç.
+Sınırdan sonra çıktı `samples[F]`ten sürer (dönem L − F). Ölçülen: eski
+doğrusal geçişte ilintisiz içerikte geçiş ortası −2.82 dB çukur ve her
+turda `head[F−1] → head[0]` sıçraması (220 Hz'te 0.996); yeni −0.07 dB ve
+en büyük örnek farkı 0.043.
+
+### FM alias
+
+Ölçü kafes yöntemidir (`analysis/fmAlias.ts`): periyodik modülatörlü faz
+modülasyonu yalnız `fc + k·fm` çizgilerinde enerji taşır; işitilir bantta
+kafes dışında kalan güç / kafes gücü = alias (ölçülmüş alt sınır). Izgara
+(`pnpm --filter @volstudio/audio-synth exec tsx scripts/fm-alias-report.ts`,
+1200 nokta, taşıyıcı sinüs, 44.1 kHz) risk sınıflarını ve eşiklerini
+`FM_ALIAS_LIMITS`e (makine-okunur) yazar; `Analysis.assessFmAlias()` bir
+ayarı render etmeden değerlendirir. Seviye: güvenli ≤ −60 dB, dikkat ≤ −30 dB
+alias/sinyal.
+
+| Modülatör                   | Güvenli Δf (= I·fm) < | Dikkat Δf < | Izgaradaki en kötü |
+| --------------------------- | --------------------: | ----------: | -----------------: |
+| sinüs, feedback 0           |              sınırsız |    sınırsız |           −82.2 dB |
+| sinüs, 0 < feedback ≤ 0.1   |              10000 Hz |    24690 Hz |           −11.4 dB |
+| sinüs, feedback > 0.1       |               27.5 Hz |      275 Hz |            −1.9 dB |
+| üçgen                       |               1250 Hz |    24690 Hz |           −19.2 dB |
+| üçgen + feedback            |               27.5 Hz |      440 Hz |            −3.4 dB |
+| testere / kare / pulse      |                110 Hz |      550 Hz |            −4.7 dB |
+| testere / kare / pulse + fb |               27.5 Hz |     27.5 Hz |            +3.4 dB |
+
+Motorun index koruması yan bantları (Carson) iç Nyquist'in altında tutar;
+yeni decimator'la sinüs modülatör + feedback 0 bütün ızgarada −82 dB'nin
+altındadır (eski decimator'da fc 917 Hz / I 25 → −20.8 dB, fc 3572 Hz / I 8 →
+−22.4 dB). Risk sinüs olmayan modülatörde (sonsuz harmonik; koruma yalnız
+temeli sayar) ve feedback'te (modülatör harmonik kazanır; ≳ 0.3 döngüde
+periyodikliği kaybeder, kafes dışı enerji kaosu da içerir) kalır.
+Oversampling'i körlemesine artırmak bu iki kaynağı çözmez; kural onları
+görünür ve deterministik yapar. `tests/fmAlias.test.ts` her koşuda sınıf
+sınırlarını ölçer ve tahminin ölçümden iyimser olmadığını doğrular
+(tam ızgarada yanlış "güvenli" 0, iyimser "dikkat" 0).
 
 ## Arp / Sequence
 
@@ -526,9 +608,10 @@ envelope: { attack: 0.002, hold: 0.02, decay: 0.03, sustain: 0, release: 0.1, su
 
 Karanlık, profesyonel UI / SFX için `sine` tek başına en temiz ve en kontrollü
 seçenektir. `sawtooth`, `square` ve `pulse` PolyBLEP ile bant sınırlıdır ve tüm
-sentez 2x oversampling + 4. derece Butterworth alçak geçiren ile decimate edilir;
-yine de çok yüksek temel frekanslarda üst harmonikler katlanabilir, gerektiğinde
-`lowpass` ile kesilmelidir.
+sentez 2x oversampling + halfband FIR ile decimate edilir (bkz. "Örnekleme ve
+alias"); yine de PolyBLEP'in kendi katlanması kalır — ölçülen: 917 Hz testere
+−54 dB, 3.6 kHz −47 dB (alias/sinyal). Parlak yüksek notalarda `lowpass` ile
+kesilmelidir.
 
 ```typescript
 // Koyu, yumuşak UI blip
