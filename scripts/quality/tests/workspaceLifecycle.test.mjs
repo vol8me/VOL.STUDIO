@@ -4,7 +4,11 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, posix, win32 } from 'node:path';
 import { test } from 'node:test';
-import { normalizeWorkspacePath, validateWorkspaceLifecycle } from '../workspaceLifecycle.mjs';
+import {
+  normalizeWorkspacePath,
+  validWorkspacePath,
+  validateWorkspaceLifecycle,
+} from '../workspaceLifecycle.mjs';
 
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'vol-lifecycle-'));
@@ -58,35 +62,44 @@ test('duplicate, stale, eksik ve geçersiz lifecycle kayıtlarını birlikte bil
     path: 'frozen',
     status: 'retired',
   });
-  value.lifecycle.workspaces.push({ packageName: '@vol/stale', path: 'stale', status: 'active' });
-  value.lifecycle.workspaces = value.lifecycle.workspaces.filter(
-    (record, index) => record.packageName !== '@vol/active' || index > 10,
-  );
-  const text = validateWorkspaceLifecycle(value.root, value.lifecycle, value.packages).join('\n');
+  value.lifecycle.workspaces.push({
+    packageName: '',
+    path: '../escape',
+    status: 'active',
+    extra: true,
+  });
+  const problems = validateWorkspaceLifecycle(value.root, value.lifecycle, [
+    { name: '@vol/unregistered', dir: 'unregistered' },
+  ]);
+  const text = problems.join('\n');
   assert.match(text, /schemaVersion/);
-  assert.match(text, /paket adı yinelenmiş/);
-  assert.match(text, /yolu yinelenmiş/);
-  assert.match(text, /status: "active" ya da "frozen"/);
-  assert.match(text, /@vol\/active: workspace paketi lifecycle kaydı taşımıyor/);
-  assert.match(text, /@vol\/stale: lifecycle kaydı bayat/);
+  assert.match(text, /yinelenmiş/);
+  assert.match(text, /"active" ya da "frozen" olmalı/);
+  assert.match(text, /boş olmayan metin/);
+  assert.match(text, /geçerli bir göreli repo yolu/);
+  assert.match(text, /bilinmeyen alan/);
+  assert.match(text, /@vol\/unregistered: workspace paketi lifecycle kaydı taşımıyor/);
+  assert.match(text, /@vol\/active: lifecycle kaydı bayat/);
 });
 
 test('active paketin frozen pakete bağımlılığını reddeder', (t) => {
   const value = fixture(t);
   value.write(
     'active/package.json',
-    JSON.stringify({ name: '@vol/active', dependencies: { '@vol/frozen': 'workspace:*' } }),
+    JSON.stringify({
+      name: '@vol/active',
+      dependencies: { '@vol/frozen': 'workspace:*' },
+    }),
   );
-  assert.match(
-    validateWorkspaceLifecycle(value.root, value.lifecycle, value.packages).join('\n'),
-    /active.*frozen.*bağlı/,
-  );
+  const problems = validateWorkspaceLifecycle(value.root, value.lifecycle, value.packages);
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /dependencies üzerinden frozen @vol\/frozen paketine bağlı/);
 });
 
-test('tag/commit uyuşmazlığını ve frozen tracked driftini reddeder', (t) => {
+test('frozen ağaçtaki tracked drifti ve commit uyuşmazlığını bildirir', (t) => {
   const value = fixture(t);
   value.write('frozen/source.ts', 'export const frozen = false;\n');
-  value.lifecycle.workspaces[1].freezeCommit = '0'.repeat(40);
+  value.lifecycle.workspaces[1].freezeCommit = '1111111111111111111111111111111111111111';
   const text = validateWorkspaceLifecycle(value.root, value.lifecycle, value.packages).join('\n');
   assert.match(text, /freeze git kanıtı doğrulanamadı/);
 
@@ -120,6 +133,11 @@ test('normalizeWorkspacePath POSIX yollarını doğru normalize eder', () => {
   assert.equal(normalizeWorkspacePath('/repo', '/repo/core', posix), 'core');
   assert.equal(normalizeWorkspacePath('/repo', '/repo/games/vol-hell', posix), 'games/vol-hell');
   assert.equal(normalizeWorkspacePath('/repo', '/repo/devtools/vol-ui', posix), 'devtools/vol-ui');
+  assert.equal(normalizeWorkspacePath('/repo', '/repo', posix), '');
+  assert.equal(
+    normalizeWorkspacePath('/repo', '/repo/devtools/nested/tool', posix),
+    'devtools/nested/tool',
+  );
 });
 
 test('normalizeWorkspacePath Windows sürücü harfi, backslash ve mixed separator yollarını doğru normalize eder', () => {
@@ -129,4 +147,26 @@ test('normalizeWorkspacePath Windows sürücü harfi, backslash ve mixed separat
   assert.equal(normalizeWorkspacePath('C:/repo', 'C:\\repo\\games\\vol-arachnid', win32), 'games/vol-arachnid');
   assert.equal(normalizeWorkspacePath('C:\\repo', 'C:/repo/devtools/audio-synth', win32), 'devtools/audio-synth');
   assert.equal(normalizeWorkspacePath('c:\\repo', 'C:\\repo\\core', win32), 'core');
+  assert.equal(normalizeWorkspacePath('C:\\repo', 'C:\\repo', win32), '');
+  assert.equal(normalizeWorkspacePath('C:\\repo', 'C:\\repo\\core\\', win32), 'core');
+  assert.equal(
+    normalizeWorkspacePath('C:\\repo', 'C:\\repo\\nested\\deep\\subtool', win32),
+    'nested/deep/subtool',
+  );
+});
+
+test('validWorkspacePath POSIX ve Windows yollarında güvenlik ve sınırları doğrular', () => {
+  assert.equal(validWorkspacePath('/repo', 'core', posix), true);
+  assert.equal(validWorkspacePath('/repo', 'games/vol-hell', posix), true);
+  assert.equal(validWorkspacePath('/repo', '../escape', posix), false);
+  assert.equal(validWorkspacePath('/repo', '', posix), false);
+  assert.equal(validWorkspacePath('/repo', '/absolute', posix), false);
+
+  assert.equal(validWorkspacePath('C:\\repo', 'core', win32), true);
+  assert.equal(validWorkspacePath('C:\\repo', 'games/vol-hell', win32), true);
+  assert.equal(validWorkspacePath('C:\\repo', 'games\\vol-hell', win32), true);
+  assert.equal(validWorkspacePath('C:\\repo', '..\\escape', win32), false);
+  assert.equal(validWorkspacePath('C:\\repo', '../escape', win32), false);
+  assert.equal(validWorkspacePath('C:\\repo', '', win32), false);
+  assert.equal(validWorkspacePath('C:\\repo', 'C:\\absolute', win32), false);
 });

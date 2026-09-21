@@ -13,6 +13,36 @@ function command(label, executable, args, guidance) {
   console.log(`${label}: ${firstLine}`);
 }
 
+function checkJust() {
+  const direct = spawnSync('just', ['--version'], { encoding: 'utf8' });
+  if (direct.status === 0) {
+    console.log(`just: ${direct.stdout.trim().split('\n')[0]}`);
+    return;
+  }
+  const local = spawnSync('./node_modules/.bin/just', ['--version'], { encoding: 'utf8' });
+  if (local.status === 0) {
+    console.log(`just: ${local.stdout.trim().split('\n')[0]} (local devDependency)`);
+    return;
+  }
+  failures.push('just: bulunamadı. pnpm install ile exact rust-just paketini kur.');
+  console.error('just: YOK');
+}
+
+function checkCargoAudit() {
+  const direct = spawnSync('cargo-audit', ['--version'], { encoding: 'utf8' });
+  if (direct.status === 0) {
+    console.log(`cargo-audit: ${direct.stdout.trim().split('\n')[0]}`);
+    return;
+  }
+  const cargoSub = spawnSync('cargo', ['audit', '--version'], { encoding: 'utf8' });
+  if (cargoSub.status === 0) {
+    console.log(`cargo-audit: ${cargoSub.stdout.trim().split('\n')[0]}`);
+    return;
+  }
+  failures.push('cargo-audit: bulunamadı. `cargo install cargo-audit --locked` komutunu çalıştır.');
+  console.error('cargo-audit: YOK');
+}
+
 command('Node', 'node', ['--version'], 'Node 20.19+ veya 22.12+ kur.');
 command(
   'pnpm',
@@ -22,14 +52,9 @@ command(
 );
 command('Rust', 'rustc', ['--version'], 'https://rustup.rs üzerinden Rust kur.');
 command('Cargo', 'cargo', ['--version'], 'https://rustup.rs üzerinden Cargo kur.');
-command('just', 'just', ['--version'], 'pnpm install ile exact rust-just paketini kur.');
+checkJust();
 command('FFmpeg', 'ffmpeg', ['-version'], 'Dağıtım paket yöneticisinden ffmpeg kur.');
-command(
-  'cargo-audit',
-  'cargo-audit',
-  ['--version'],
-  '`cargo install cargo-audit --locked` komutunu çalıştır.',
-);
+checkCargoAudit();
 
 const tauri = spawnSync('pkg-config', ['--exists', 'gtk+-3.0', 'webkit2gtk-4.1']);
 if (tauri.status === 0) {

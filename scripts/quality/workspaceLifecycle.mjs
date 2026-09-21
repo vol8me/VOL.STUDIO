@@ -31,11 +31,25 @@ function git(root, args) {
   }).trim();
 }
 
-function validWorkspacePath(root, path) {
-  if (typeof path !== 'string' || path.length === 0 || isAbsolute(path)) return false;
-  const resolved = normalize(join(root, path));
-  const rel = relative(root, resolved);
-  return rel !== '..' && !rel.startsWith(`..${sep}`) && rel === normalize(path);
+export function validWorkspacePath(root, pkgPath, pathModule = path) {
+  if (typeof pkgPath !== 'string' || pkgPath.length === 0 || pathModule.isAbsolute(pkgPath)) {
+    return false;
+  }
+  const resolvedRoot = pathModule.resolve(root);
+  const resolved = pathModule.resolve(resolvedRoot, pkgPath);
+  const rel = pathModule.relative(resolvedRoot, resolved);
+  if (
+    rel === '' ||
+    rel === '..' ||
+    rel.startsWith(`..${pathModule.sep}`) ||
+    rel.startsWith('../') ||
+    rel.startsWith('..\\')
+  ) {
+    return false;
+  }
+  const normalizedRel = rel.split(/[\\/]/).filter(Boolean).join('/');
+  const normalizedPkg = pkgPath.split(/[\\/]/).filter(Boolean).join('/');
+  return normalizedRel === normalizedPkg;
 }
 
 export function loadWorkspaceLifecycle(path) {
@@ -92,7 +106,7 @@ export function listWorkspacePackages(root = process.cwd(), pathModule = path) {
     });
 }
 
-export function validateWorkspaceLifecycle(root, lifecycle, packages) {
+export function validateWorkspaceLifecycle(root, lifecycle, packages, pathModule = path) {
   const problems = [];
   if (!isObject(lifecycle)) return ['workspace-lifecycle.json: kök nesne olmalı.'];
   if (lifecycle.schemaVersion !== 1) {
@@ -122,7 +136,7 @@ export function validateWorkspaceLifecycle(root, lifecycle, packages) {
     } else {
       byName.set(record.packageName, record);
     }
-    if (typeof record.path !== 'string' || !validWorkspacePath(root, record.path)) {
+    if (typeof record.path !== 'string' || !validWorkspacePath(root, record.path, pathModule)) {
       problems.push(`${where}.path: geçerli bir göreli repo yolu olmalı.`);
     } else if (byPath.has(record.path)) {
       problems.push(`${where}.path: ${record.path} yolu yinelenmiş.`);
