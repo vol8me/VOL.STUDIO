@@ -44,6 +44,23 @@ describe('vol-ui sekme builderları', () => {
     });
   }
 
+  it('panels sekmesi Popover sözleşmesini gerçek tetikleyiciyle sürer', () => {
+    const { element, destroy } = buildPanelsTab(uiRoot);
+    uiRoot.appendChild(element);
+    const trigger = element.querySelector<HTMLButtonElement>('[aria-controls^="vol-popover-"]');
+
+    expect(trigger).not.toBeNull();
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+    trigger?.click();
+    expect(trigger?.getAttribute('aria-expanded')).toBe('true');
+    const controlled = trigger?.getAttribute('aria-controls');
+    expect(controlled ? document.getElementById(controlled)?.hidden : true).toBe(false);
+
+    trigger?.click();
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+    destroy();
+  });
+
   describe('HUD demo etkileşimleri', () => {
     /**
      * Kart üretimi iki dosyaya bölününce (`hudFeedbackCards`, `hudPanelCards`)

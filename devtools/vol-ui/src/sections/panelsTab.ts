@@ -4,6 +4,7 @@ import {
   ContextMenu,
   Modal,
   Panel,
+  Popover,
   Popup,
   Sheet,
   Text,
@@ -469,6 +470,30 @@ function buildPopupDemo(disposables: DisposableScope, uiRootElement: HTMLElement
   return wrap;
 }
 
+function buildPopoverDemo(disposables: DisposableScope, uiRootElement: HTMLElement): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const trigger = new Button(i18next.t('volui:panels.openPopover'), { fullWidth: false });
+  const popover = new Popover(trigger.element, {
+    placement: 'bottom-start',
+    container: uiRootElement,
+    ariaLabel: i18next.t('volui:panels.popover'),
+  });
+  const content = new Text(i18next.t('volui:panels.popoverDesc'), { variant: 'body' });
+  const close = new Button(i18next.t('volui:panels.close'), {
+    variant: 'primary',
+    fullWidth: false,
+    onClick: () => popover.close(),
+  });
+  popover.add(content).add(close);
+  disposables.addDestroyables(trigger, content, close, popover);
+  disposables.addListener(trigger.element, 'click', () => popover.toggle());
+
+  wrap.appendChild(trigger.element);
+  return wrap;
+}
+
 export function buildPanelsTab(uiRootElement: HTMLElement): {
   element: HTMLElement;
   destroy: () => void;
@@ -484,6 +509,7 @@ export function buildPanelsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:panels.fatalStartup'), buildFatalStartupDemo()),
     card(i18next.t('volui:panels.contextMenu'), buildContextMenuDemo(disposables, uiRootElement)),
     card(i18next.t('volui:panels.popup'), buildPopupDemo(disposables, uiRootElement)),
+    card(i18next.t('volui:panels.popover'), buildPopoverDemo(disposables, uiRootElement)),
     card(i18next.t('volui:panels.modal'), buildModalDemo(uiRootElement, disposables)),
     card(i18next.t('volui:panels.sheet'), buildSheetDemo(uiRootElement, disposables), {
       span: 4,
