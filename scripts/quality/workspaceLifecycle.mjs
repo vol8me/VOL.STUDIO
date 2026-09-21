@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { isAbsolute, join, normalize, relative, sep } from 'node:path';
+import path, { isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
 
 const RECORD_KEYS = new Set([
   'packageName',
@@ -60,6 +60,38 @@ export function frozenWorkspacePaths(lifecycle) {
     .map((workspace) => workspace.path);
 }
 
+export function normalizeWorkspacePath(root, packagePath, pathModule = path) {
+  const resolvedRoot = pathModule.resolve(root);
+  const resolvedPkg = pathModule.resolve(packagePath);
+  const rel = pathModule.relative(resolvedRoot, resolvedPkg);
+  return rel.split(/[\\/]/).filter(Boolean).join('/');
+}
+
+export function listWorkspacePackages(root = process.cwd(), pathModule = path) {
+  const raw = execFileSync('pnpm', ['list', '-r', '--depth', '-1', '--json'], {
+    cwd: root,
+    encoding: 'utf8',
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  const resolvedRoot = pathModule.resolve(root);
+  return JSON.parse(raw)
+    .filter((pkg) => pathModule.resolve(pkg.path) !== resolvedRoot)
+    .map((pkg) => {
+      let scripts = {};
+      try {
+        scripts = JSON.parse(readFileSync(join(pkg.path, 'package.json'), 'utf8')).scripts ?? {};
+      } catch {
+        // scripts optional
+      }
+      return {
+        name: pkg.name,
+        path: pkg.path,
+        dir: normalizeWorkspacePath(root, pkg.path, pathModule),
+        scripts,
+      };
+    });
+}
+
 export function validateWorkspaceLifecycle(root, lifecycle, packages) {
   const problems = [];
   if (!isObject(lifecycle)) return ['workspace-lifecycle.json: kök nesne olmalı.'];
@@ -79,32 +111,32 @@ export function validateWorkspaceLifecycle(root, lifecycle, packages) {
       continue;
     }
     for (const key of Object.keys(record)) {
-      if (!RECORD_KEYS.has(key)) problems.push(`${where}.${key}: tanınmayan alan.`);
-    }
-    for (const key of ['packageName', 'path', 'status']) {
-      if (typeof record[key] !== 'string' || record[key].trim() === '') {
-        problems.push(`${where}.${key}: boş olmayan metin olmalı.`);
+      if (!RECORD_KEYS.has(key)) {
+        problems.push(`${where}.${key}: bilinmeyen alan.`);
       }
     }
-    if (typeof record.packageName === 'string') {
-      if (byName.has(record.packageName)) {
-        problems.push(`${record.packageName}: lifecycle paket adı yinelenmiş.`);
-      }
+    if (typeof record.packageName !== 'string' || record.packageName.trim() === '') {
+      problems.push(`${where}.packageName: boş olmayan metin olmalı.`);
+    } else if (byName.has(record.packageName)) {
+      problems.push(`${where}.packageName: ${record.packageName} paket adı yinelenmiş.`);
+    } else {
       byName.set(record.packageName, record);
     }
-    if (typeof record.path === 'string') {
-      if (byPath.has(record.path)) problems.push(`${record.path}: lifecycle yolu yinelenmiş.`);
+    if (typeof record.path !== 'string' || !validWorkspacePath(root, record.path)) {
+      problems.push(`${where}.path: geçerli bir göreli repo yolu olmalı.`);
+    } else if (byPath.has(record.path)) {
+      problems.push(`${where}.path: ${record.path} yolu yinelenmiş.`);
+    } else {
       byPath.set(record.path, record);
-      if (!validWorkspacePath(root, record.path)) {
-        problems.push(`${where}.path: repo içinde normalize göreli yol olmalı.`);
-      }
     }
     if (record.status !== 'active' && record.status !== 'frozen') {
       problems.push(`${where}.status: "active" ya da "frozen" olmalı.`);
     }
     if (record.status === 'active') {
       for (const key of FROZEN_KEYS) {
-        if (record[key] !== undefined) problems.push(`${where}.${key}: active kayıtta bulunamaz.`);
+        if (key in record) {
+          problems.push(`${where}.${key}: active kayıtta bulunamaz.`);
+        }
       }
     }
     if (record.status === 'frozen') {

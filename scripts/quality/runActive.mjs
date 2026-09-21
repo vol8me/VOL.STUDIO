@@ -1,31 +1,17 @@
 #!/usr/bin/env node
 
-import { execFileSync, spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
-import { join, relative, resolve, sep } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { activeWorkspaceNames, loadWorkspaceLifecycle } from './workspaceLifecycle.mjs';
+import {
+  activeWorkspaceNames,
+  listWorkspacePackages,
+  loadWorkspaceLifecycle,
+} from './workspaceLifecycle.mjs';
 
 export function selectActivePackages(lifecycle, packages) {
   const active = new Set(activeWorkspaceNames(lifecycle));
   return packages.filter((pkg) => active.has(pkg.name));
-}
-
-function listWorkspacePackages(root) {
-  const listed = JSON.parse(
-    execFileSync('pnpm', ['list', '-r', '--depth', '-1', '--json'], {
-      cwd: root,
-      encoding: 'utf8',
-      maxBuffer: 32 * 1024 * 1024,
-    }),
-  );
-  return listed
-    .filter((pkg) => resolve(pkg.path) !== resolve(root))
-    .map((pkg) => ({
-      name: pkg.name,
-      dir: relative(root, pkg.path).split(sep).join('/'),
-      scripts: JSON.parse(readFileSync(join(pkg.path, 'package.json'), 'utf8')).scripts ?? {},
-    }));
 }
 
 export function buildActiveScriptCommand(lifecycle, packages, script, options = {}) {

@@ -4,7 +4,6 @@
  * girdileri birlikte doğrulanır. Bir ihlal diğerinin teşhisini gizlemez.
  */
 
-import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadQualityConfig, validateQualityWorkspaceParity } from './quality/config.mjs';
@@ -24,6 +23,7 @@ import { validatePhaserBoundary } from './quality/phaserBoundary.mjs';
 import { validateCoreTypeSurface } from './quality/publicTypeSurface.mjs';
 import {
   activeWorkspaceNames,
+  listWorkspacePackages,
   loadWorkspaceLifecycle,
   validateWorkspaceLifecycle,
 } from './quality/workspaceLifecycle.mjs';
@@ -44,17 +44,6 @@ const THRESHOLD_FLOOR = quality.floor;
 /** Kapsam eşiği aranmayan paketler — gerekçesi `quality.json`da yazılı olmalı. */
 const THRESHOLD_EXEMPT = new Map(Object.entries(quality.exempt ?? {}));
 
-function listWorkspacePackages() {
-  const raw = execFileSync('pnpm', ['list', '-r', '--depth', '-1', '--json'], {
-    cwd: root,
-    encoding: 'utf8',
-    maxBuffer: 32 * 1024 * 1024,
-  });
-  return JSON.parse(raw)
-    .filter((p) => p.path !== root)
-    .map((p) => ({ name: p.name, dir: p.path.replace(`${root}/`, '') }));
-}
-
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
@@ -64,7 +53,7 @@ function readThresholds(name) {
   return quality.packages?.[name] ?? null;
 }
 
-const packages = listWorkspacePackages();
+const packages = listWorkspacePackages(root);
 const activeNames = new Set(activeWorkspaceNames(lifecycle));
 const activePackages = packages.filter((pkg) => activeNames.has(pkg.name));
 
