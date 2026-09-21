@@ -16,7 +16,7 @@ crate-type = ["rlib"]
 # bir uygulama olmadığı için kendi config'ini taşımaz.
 
 [dependencies]
-tauri = { version = "2.11", features = ["protocol-asset", "rustls-tls"] }
+tauri = { version = "2.11", features = ["rustls-tls"] }
 tauri-plugin-log = "2.9"
 tauri-plugin-store = "2.4"
 serde = { version = "1.0", features = ["derive"] }

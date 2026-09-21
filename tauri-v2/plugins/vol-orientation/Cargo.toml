@@ -16,5 +16,5 @@ crate-type = ["rlib"]
 tauri-plugin = { version = "2.6", features = ["build"] }
 
 [dependencies]
-tauri = { version = "2.11", features = ["protocol-asset", "rustls-tls"] }
+tauri = { version = "2.11", features = ["rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
