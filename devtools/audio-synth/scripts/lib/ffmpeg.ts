@@ -1,57 +1,12 @@
 /**
- * FFmpeg ile çözme ve sürüm okuma — QA betiklerinin ortak yardımcısı.
- *
- * Ölçüm gönderilen biçimin KENDİSİ üzerinde yapılır: Vorbis kayıplıdır ve
- * kaynak mix'te olmayan artefaktlar (kırpma, örnekler arası tepe) encode
- * sırasında oluşabilir; encode öncesini ölçmek bunları kaçırır.
+ * QA betiklerinin FFmpeg yardımcıları. Çözme ve sürüm okuma publish
+ * kapısıyla AYNI implementasyondur (`src/protocol/toolchain`); burada yalnız
+ * referans ölçüm (`ebur128`) yaşar.
  */
 import { spawnSync } from 'node:child_process';
 
-export interface DecodedAudio {
-  readonly channels: Float32Array[];
-  readonly sampleRate: number;
-}
-
-export function decodeWithFfmpeg(path: string): DecodedAudio {
-  const probe = spawnSync(
-    'ffprobe',
-    [
-      '-v',
-      'error',
-      '-select_streams',
-      'a:0',
-      '-show_entries',
-      'stream=sample_rate,channels',
-      '-of',
-      'default=noprint_wrappers=1:nokey=1',
-      path,
-    ],
-    { encoding: 'utf8' },
-  );
-  if (probe.status !== 0) throw new Error(`ffprobe okuyamadı: ${path}`);
-  const [sampleRateRaw, channelsRaw] = probe.stdout.trim().split(/\s+/);
-  const sampleRate = Number(sampleRateRaw);
-  const numChannels = Number(channelsRaw);
-  const res = spawnSync('ffmpeg', ['-v', 'error', '-i', path, '-f', 'f32le', '-'], {
-    maxBuffer: 1024 * 1024 * 1024,
-  });
-  if (res.status !== 0) throw new Error(`ffmpeg çözme hatası: ${path}`);
-  const raw = res.stdout;
-  const frames = Math.floor(raw.length / 4 / numChannels);
-  const channels = Array.from({ length: numChannels }, () => new Float32Array(frames));
-  for (let i = 0; i < frames; i++) {
-    for (let ch = 0; ch < numChannels; ch++) {
-      channels[ch][i] = raw.readFloatLE((i * numChannels + ch) * 4);
-    }
-  }
-  return { channels, sampleRate };
-}
-
-/** `ffmpeg -version` ilk satırı — rapora araç sürümü olarak yazılır. */
-export function ffmpegVersion(): string {
-  const res = spawnSync('ffmpeg', ['-hide_banner', '-version'], { encoding: 'utf8' });
-  return res.status === 0 ? (res.stdout.split('\n')[0] ?? '').trim() : 'bilinmiyor';
-}
+export { decodeWithFfmpeg, ffmpegVersion } from '../../src/protocol/toolchain';
+export type { DecodedAudio } from '../../src/protocol/toolchain';
 
 /**
  * Referans ölçüm: FFmpeg `ebur128` (BS.1770 kapılı integrated, 4× true peak).

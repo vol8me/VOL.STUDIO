@@ -12,6 +12,11 @@
  *    sonrası ölçülür ve sınıf politikasına tabi tutulur. Frozen ağaçta
  *    politika uygulanmaz — değiştirilemeyen bir varlığın ihlali kapıyı kalıcı
  *    kilitlerdi; tarihî ölçümü DESIGN'da taban çizgisi olarak durur.
+ * 4. Production provenance: `audio:production-check` tanımlayan aktif
+ *    paketlerde her `AudioAssetManifestV1` yalnız kendisinden doğrulanır —
+ *    gömülü program yeniden render edilir (PCM kimliği), dosya çözülüp
+ *    politikaya tabi tutulur, güncel araç zinciriyle yeniden kodlanıp fark
+ *    sınıflanır (yalnız kodlayıcı değişikliği ses değişikliğinden ayrılır).
  *
  * Bütün workspace'lerin (frozen dahil) izlenen ses dosyalarının diff'siz
  * olduğu ayrıca doğrulanır — bu ASSET BÜTÜNLÜĞÜDÜR, üretim kanıtı değildir.
@@ -60,6 +65,17 @@ for (const pkg of active) {
   referenceChecked++;
 }
 
+let productionChecked = 0;
+for (const pkg of active) {
+  if (!manifestOf(pkg)?.scripts?.['audio:production-check']) continue;
+  console.log(`[audio-verify] ${pkg.packageName}: production manifest'leri doğrulanıyor...`);
+  execFileSync('pnpm', ['--filter', pkg.packageName, 'audio:production-check'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+  productionChecked++;
+}
+
 const activeAudioDirs = active
   .map((pkg) => join(root, pkg.path, 'public/assets/audio'))
   .filter((dir) => existsSync(dir));
@@ -87,7 +103,8 @@ if (audioDirs.length > 0) {
 
 console.log(
   `[audio-verify] reçete tazeliği: ${regenerated} aktif paket; ölçüm çekirdeği referans ` +
-    `denetimi: ${referenceChecked} paket; kodek sonrası politika: ${activeAudioDirs.length} ` +
+    `denetimi: ${referenceChecked} paket; production manifest doğrulaması: ${productionChecked} ` +
+    `paket; kodek sonrası politika: ${activeAudioDirs.length} ` +
     `aktif ses ağacı; bütünlük: ${audioDirs.length} ağaç diff'siz. ` +
     "Frozen sesin üretim kanıtı freezeTag'dedir.",
 );

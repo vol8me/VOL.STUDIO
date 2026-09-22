@@ -16,6 +16,7 @@ import { PRESET_CATALOG } from '../../src/presets';
  * Kilit olmadan bu ayrım bir niyettir; kilitle birlikte bir kapıdır.
  */
 const EXPECTED_SURFACE = [
+  'Acoustic',
   'Analysis',
   'Arrange',
   'AudioParamError',

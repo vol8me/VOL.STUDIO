@@ -13,6 +13,10 @@
     "./writer": {
       "import": "./src/writer.ts",
       "types": "./src/writer.ts"
+    },
+    "./protocol": {
+      "import": "./src/protocol/index.ts",
+      "types": "./src/protocol/index.ts"
     }
   },
   "scripts": {
@@ -23,6 +27,8 @@
     "qa": "tsx scripts/audio-qa.ts",
     "bench:budget": "tsx scripts/render-budget-bench.ts",
     "audio:reference-check": "tsx scripts/audio-reference-check.ts",
+    "audio:job": "tsx scripts/audio-job.ts",
+    "audio:production-check": "tsx scripts/audio-job.ts verify --all",
     "demo:music": "tsx scripts/music-demo.ts",
     "convert:ios": "tsx scripts/convert-audio.ts"
   },

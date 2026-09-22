@@ -1,0 +1,23 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "dry",
+    "percussive",
+    "short-tail"
+  ],
+  "durationSeconds": {
+    "max": 1.5,
+    "min": 0.5
+  },
+  "id": "platform-reference-knock",
+  "intent": "Publish kapısını gerçek kodek QA'sıyla uçtan uca çalıştıran kısa, kuru bir tahta vuruşu. Hiçbir oyun tarafından çalınmaz; yalnız audio-synth'in üretim-referans fixture'ıdır.",
+  "kind": "acoustic",
+  "provenance": {
+    "author": "agent",
+    "by": "audio-synth Dalga 1 referans işi"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Platform referans vuruşu"
+}

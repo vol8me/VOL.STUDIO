@@ -9,23 +9,6 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
 
 ## Açık
 
-- [ ] **[P1] OGG üretiminin araç zinciri manifest'e alınmıyor.** ~~[P3]~~ →
-      **P1**: aşağıdaki Dalga 1'deki `AudioAssetManifestV1` maddesinin
-      toolchain/PCM-hash alanları bunu ZATEN kapsıyor; iki madde ÇAKIŞMASIN
-      diye bu madde KAPATILMAZ, `AudioAssetManifestV1` implementasyonu onu
-      absorbe edebilir (o zaman bu satır tek cümleyle kapanıp Kapatılanlar'a
-      geçer). `writeOgg` (`src/writer.ts:189-261`) `-bitexact` ile PCM'den
-      türeyen baytları SABİT tutuyor (kendi yorumu bunu açıkça belgeliyor)
-      ama hangi FFmpeg/libvorbis sürümüyle üretildiği hiçbir yerde
-      saklanmıyor; "PCM değişmedi, container baytı araç sürümü yüzünden
-      değişti" durumu ile gerçek bir ses değişikliği bu yüzden otomatik
-      ayırt edilemiyor. Kapanır: PCM hash'i canonical bir kimlik olur;
-      FFmpeg/libvorbis sürümü build manifest'inde saklanır ya da release
-      araç zinciri pinlenir.
-      _Dalga 0 notu (2026-09-22): bilinçli olarak açık bırakıldı — sahibi
-      Dalga 1 `AudioAssetManifestV1`. QA raporu (`audio-qa --json`) bugün
-      FFmpeg sürüm satırını yazıyor; bu bir ölçüm yardımcısıdır, provenance
-      sözleşmesi değildir._
 - [ ] **[P3] Kenarlı osilatörlerin (PolyBLEP) kendi alias'ı ölçüldü; üst
       notalarda duyulabilir bölgede.** Dalga 0 FM karakterizasyonu sırasında
       FM'siz testere/kare de kafes yöntemiyle ölçüldü (halfband decimator
@@ -70,88 +53,9 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
 
 ### Dalga 1 — agent protokolü, program sözleşmesi ve production izi
 
-- [ ] **[P1] Sürümlü `AudioJob` çalışma protokolü kurulsun.** Bir audio işi
-      yalnız chat bağlamında yaşamaz; `jobId`, hedef oyun/paket, `kind`,
-      protocol sürümü, aktif aşama, brief/program/analysis/selection/manifest
-      yolları ve production durumu machine-readable bir job state'te yaşar.
-      Agent değişse bile işin durumu kaybolmaz. Kapanır: process/agent A işi
-      yarıda bırakır; bağımsız process/agent B önceki chat'i görmeden yalnız
-      `audio:job status` ve repo dosyalarıyla doğru sonraki aşamayı
-      belirleyebilir.
-- [ ] **[P1] `AudioBriefV1` ortak brief zarfı ve discriminated-union sözleşmesi
-      olsun.** Ortak kimlik/intent/provenance alanlarını taşır; ses tasarımı
-      tarafında `AcousticBriefV1` (`sfx | organic | ambience`) Dalga 1'de
-      tanımlanır, müzik kolu ise Dalga 6'nın `MusicBriefV1` sözleşmesine
-      referans verir. `AudioBriefV1` müziğe özgü ikinci bir alan kümesi
-      TANIMLAMAZ — role/BPM/meter/tonal dil gibi müzik alanları yalnız
-      `MusicBriefV1`de yaşar. Serbest doğal dil açıklama korunur fakat
-      programın tek machine-readable kaynağı değildir. Kapanır:
-      `AudioBriefV1 = AcousticBriefV1 | MusicBriefV1` benzeri tek
-      discriminated union vardır; aynı müzik isteğinin iki farklı geçerli
-      brief şeması oluşamaz; unknown kind ve subtype alanı render başlamadan
-      named validation error verir; brief sürümü production manifest'e
-      yazılır.
-- [ ] **[P1] `AcousticProgramV1` non-music ses tasarımının kanonik program
-      formatı olsun.** Program JSON-serializable ve deterministic olur;
-      source / exciter / resonator / gesture / effect / semantic control
-      referanslarını registry kimlikleriyle taşır. Agent doğrudan rastgele
-      TypeScript `SynthParams` script'i yazmak zorunda kalmaz. Kapanır: aynı
-      program + seed + engine sürümü aynı PCM'i verir; unknown
-      primitive/control program validation sırasında reddedilir.
-- [ ] **[P1] Primitive/archetype/control registry agent-facing metadata'nın
-      tek kaynağı olsun.** Her kayıt stable id, sürüm, açıklama, geçerli
-      parametre aralıkları, birimler, causal/semantic etkiler,
-      determinism/resource metadata'sı ve capability tag'leri taşır. Kapanır:
-      registry'deki metadata eksikse governance testi kırılır; README/agent
-      dosyasındaki elle tutulmuş ikinci primitive kataloğu kanonik kaynak
-      sayılmaz.
-- [ ] **[P1] `audio:job context --json` gerçek registry ve hedef runtime
-      capability'lerinden üretilsin.** Agent desteklenen primitive,
-      archetype/control, known limitation, production policy ve hedef
-      oyunun runtime audio kabiliyetlerini tek komuttan öğrenir. Kapanır:
-      yeni registry primitive'i eklendiğinde context çıktısında otomatik
-      görünür; agent adapter dosyası ayrıca güncellenmek zorunda kalmaz.
-- [ ] **[P1] Job state; brief, program, render, analysis ve selection
-      artifact'lerini birbirine hash ile bağlasın.** Eski programdan kalmış
-      analysis veya başka candidate'a ait selection sessizce production'a
-      taşınamaz. Kapanır: program değiştirildikten sonra eski
-      analysis/selection `stale` kabul edilir ve `audio:job status` bunu
-      açıkça raporlar.
-- [ ] **[P1] `AudioAnalysisReportV1` ve reusable `analyzeAudio()` yüzeyi
-      oluşturulsun.** QA ölçümleri yalnız `scripts/audio-qa.ts` CLI
-      implementasyonu içinde yaşamaz; PCM ve final encoded/decoded asset
-      üzerinde çalışan kanonik library API en az duration, channel/sample
-      peak, true peak, RMS/LUFS, DC, clip/click, crest, stereo
-      correlation/width ve temel spectral/temporal descriptor'ları
-      machine-readable ve sürümlü bir rapora dönüştürür. CLI,
-      candidate-search, `SoundFamily` QA, audition, reference regression ve
-      production publish AYNI analiz çekirdeğini tüketir. Kapanır: library
-      API ile `audio-verify` aynı fixture için ortak alanlarda birebir aynı
-      sonucu verir; final production raporunun encoded dosyadan mı yoksa
-      source PCM'den mi ölçüldüğü metadata'da açıktır; analyzer schema
-      sürümü `AudioAssetManifestV1`e yazılır.
-- [ ] **[P1] `AudioAssetManifestV1` production provenance'ın kanonik
-      sözleşmesi olsun.** En az asset id, job/brief/program sürüm ve
-      hash'leri, seed, engine sürümü/commit, canonical PCM hash,
-      encoder/toolchain bilgisi (bkz. yukarıdaki OGG araç zinciri maddesi —
-      bu madde onu absorbe edebilir), `AudioAnalysisReportV1` sonucu, encoded
-      asset hash'i ve integration/playback metadata'sını taşır. Kapanır:
-      yalnız repo manifest'inden bir asset'in hangi program ve toolchain ile
-      üretildiği belirlenebilir; PCM değişikliği ile yalnız container/encoder
-      değişikliği birbirinden ayrılır.
-- [ ] **[P1] Production publish tek kanonik kapıdan geçsin.** Production
-      asset yalnız `writeOgg()` çağrısıyla oluşturulmuş sahipsiz bir dosya
-      olamaz; publish brief/program/seed/PCM hash/`AudioAnalysisReportV1`/
-      toolchain ve integration metadata'sını `AudioAssetManifestV1` üzerinden
-      doğrular. Oyun script'lerinde yeni paralel publish yolu governance
-      testinde reddedilir. Kapanır: en az bir mevcut production asset yeni
-      yol üzerinden yeniden üretilip decoded çıktı açısından doğrulanır.
-- [ ] **[P2] Agent/vendor talimatları ince adapter olarak kalsın.**
-      `AGENTS.md`, skill veya başka modele özel dosya bütün DSP bilgisini
-      tekrar etmez; yalnız kanonik `context`→`brief`→`program`→
-      `render/search`→`analyze`→`select`→`publish` protokolüne yönlendirir.
-      Kapanır: registry/schema değiştiğinde model-adapter metninin parametre
-      tablosu güncellenmez; gerçek davranış executable context'ten gelir.
+Dalga 1'in on maddesi kapandı; kısa kanıtları `## Kapatılanlar`da. Kanonik
+yüzey `src/program/` + `src/protocol/` + `audio:job` CLI'ıdır; gerekçe
+DESIGN "Authoring protokolü".
 
 ### Dalga 2 — organiklik çekirdeği
 
@@ -768,6 +672,73 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
       değildir.
 
 ## Kapatılanlar
+
+- [x] **[P1] OGG üretiminin araç zinciri manifest'e alınıyor** (Dalga 1
+      `AudioAssetManifestV1` absorbe etti). Kanonik kimlik PCM özetidir
+      (kodlayıcıya giden kelepçeli float32 + biçim başlığı); manifest FFmpeg
+      sürüm satırını, libavcodec/libavformat/libavutil sürümlerini,
+      kodlayıcı argümanlarını ve bunların parmak izini taşır. `verify`
+      `identical`/`encoder-only`/`encoder-nondeterministic`/`pcm-changed`
+      ayırır; kalite 5 ile üretilmiş bir kayıt gerçek yeniden kodlamayla
+      `encoder-only` sınıflanır (PCM aynı). libvorbis sürümü FFmpeg
+      tarafından raporlanmaz — manifest'te `unreported` olarak yazılı. (Dalga 1)
+- [x] **[P1] Sürümlü `AudioJob` protokolü.** `AudioJobV1` ve durum
+      komutu (`audio:job status`): etkin aşama ve `next.action` yalnız dosyalardan hesaplanır;
+      atomik yazım, pid'li tek yazıcı kilidi, `modified`/`corrupt`/`stale`
+      durumları. Kanıt: `tests/protocol/cli.test.ts` — süreç A işi render'da
+      bırakır, AYRI süreç B `status --json` ile `analyze` adımını bulur ve işi
+      bitirir. (Dalga 1)
+- [x] **[P1] `AudioBriefV1` discriminated union.** `kind: 'acoustic'`
+      (`sfx | organic | ambience`) tanımlı; `kind: 'music'` Dalga 6
+      `MusicBriefV1`e ayrılmış uzatma noktasıdır ve `unsupported` ile
+      reddedilir — müzik alanı akustik brief'e `unknown-key` ile sızamaz.
+      Bilinmeyen kind/subtype render'dan önce adlı hata verir; brief şeması,
+      özeti ve belgesi manifest'e yazılır. (Dalga 1)
+- [x] **[P1] `AcousticProgramV1` kanonik program.** Registry kimliği +
+      sürümüyle anılan düğümler, sınırlı topoloji, gesture bağları;
+      bilinmeyen alan/kimlik/sürüm/tür render'dan önce reddedilir. Aynı
+      program + tohum + render sürümü aynı PCM (test + referans fixture'ın
+      her `audio-verify` koşusunda yeniden render'ı). (Dalga 1)
+- [x] **[P1] Registry tek kaynak.** Kayıt: birim/aralık/varsayılan,
+      parametre başına yön ilişkisi, determinizm, maliyet modeli, yetenek
+      etiketi. `tests/governance/registry.test.ts` eksik metadata'yı VE
+      değiştirildiğinde PCM'i değiştirmeyen (implementasyona bağlı olmayan)
+      parametreyi düşürür. (Dalga 1)
+- [x] **[P1] `audio:job context --json`.** Registry izdüşümü, şemalar,
+      politika, bütçe, bilinen sınırlamalar ve publish hedefleri çalışan
+      koddan; zaman damgasız ve sıralı. Registry kaydı eklenince context'te
+      otomatik görünür (test eşitliği). Aktif oyun hedefi olmadığını açıkça
+      söyler; oyun hedefi `AudioTargetV1` beyanıyla açılır. (Dalga 1)
+- [x] **[P1] Özet zinciri.** brief → program → render → analiz → seçim →
+      yayın kenarları kanonik JSON SHA-256'sıyla bağlı. Program değişince
+      eski analiz/seçim `stale`, publish `stale` ile reddedilir; başka
+      render'ın analizine işaret eden seçim de reddedilir. (Dalga 1)
+- [x] **[P1] `AudioAnalysisReportV1` + `analyzeAudio()`.** Süre, kanal/örnek
+      tepe, true peak, RMS/LUFS, DC, kırpma, tık adayı, crest, stereo
+      ilinti/genişlik, spektral (ağırlık merkezi, rolloff, düzlük, tepe, bant
+      seviyeleri) ve zamansal tanımlayıcılar; `measuredFrom` kaynağı söyler.
+      `audio-qa` artık aynı çekirdeği tüketir; CLI ile kütüphane aynı
+      kodlanmış fixture'da BİREBİR aynı raporu verir
+      (`tests/analysis/qaParity.test.ts`); analizör sürümü manifest'te. (Dalga 1)
+- [x] **[P1] `AudioAssetManifestV1`.** Gömülü brief/program, tohum,
+      renderId, PCM özeti, kodlanmış bayt özeti, araç zinciri, kodek sonrası
+      analiz, politika ve entegrasyon; job dizini silinse bile asset
+      yalnız manifest'ten yeniden üretilip doğrulanır. (Dalga 1)
+- [x] **[P1] Tek kanonik publish kapısı.** `publishJob`: özet zinciri →
+      hedef/yol/sınıf → yeniden render + PCM kimliği → staging kodlama →
+      kodek sonrası politika → manifest → atomik rename. Politika düşerse
+      hiçbir dosya yazılmaz; manifest'siz/başka işe ait dosyanın üzerine
+      yazılmaz; frozen hedef reddedilir. `publishPath.test.ts` aktif
+      ağaçlarda yeni yazıcı yolunu düşürür. Kapanış sapması (dürüst): aktif
+      bir oyunun production asset'i YOK ve frozen asset'ler değiştirilemez;
+      kapı audio-synth'in kendi üretim-referans işiyle
+      (`audio-jobs/platform-reference`) uçtan uca çalıştırıldı ve
+      `just audio-verify` onu her koşuda manifest'inden yeniden üretip
+      kodek sonrası doğrular. (Dalga 1)
+- [x] **[P2] Agent/vendor adapter ince.** README "Agent protokolü" bölümü
+      yalnız `audio:job context --json`a yönlendirir; governance testi
+      adapter metninde herhangi bir registry kimliği geçmesini reddeder.
+      (Dalga 1)
 
 - [x] **[P1] `Reverb.decay` RT60 saniyesi oldu.** Comb kazancı g = 10^(−3·D/T60)
       (her comb kendi gecikmesinden); gerçek allpass difüzörler, wet enerji

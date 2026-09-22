@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-1ac52f262344696c": {
+        "hash": "sha256:892c9badcb135ef33a8f7dc38d669b2c55bfd654bec33d07663a2ef431ac2ea2",
+        "path": "analyses/r-1ac52f262344696c.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:f430e344a22e132911b1dc4238e11120d3d301ad8e29754da43dcc4bd814bf76",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:f430e344a22e132911b1dc4238e11120d3d301ad8e29754da43dcc4bd814bf76",
+      "hash": "sha256:43973f331952af2c5564dfc388a6bc5b87322a12f14e6a85e36c7381c6edd7d8",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:02fdd898e4ff7d80518170c06240607012e7213c6bb543f8a1a73bab55603fb7",
+      "path": "devtools/audio-synth/reference/production/manifests/sfx/platform-reference-knock.json"
+    },
+    "renders": {
+      "r-1ac52f262344696c": {
+        "hash": "sha256:cc017d4f8a378fad6935abd903817ae3c167bbc22257ebbdc22a842ab1997334",
+        "path": "renders/r-1ac52f262344696c.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:e4ed3b9f1937ea350a6f5ad48fd966b22f295971ee743be2085f3fdebbd07a40",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "platform-reference",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/sfx/platform-reference-knock.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "channels": 1,
+  "description": "Gürültü darbesi üç paralel bant geçiren rezonansı uyarır; altta perdesi düşen kısa bir sinüs gövdesi.",
+  "durationSeconds": 0.9,
+  "gestures": {
+    "thumpPitch": {
+      "curve": "curve.linear",
+      "points": [
+        [
+          0,
+          150
+        ],
+        [
+          0.12,
+          72
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.001,
+          "curve": "exponential",
+          "decay": 0.16,
+          "release": 0.05,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 16,
+      "name": "body",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 430,
+            "mode": "bandpass",
+            "q": 22
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1180,
+            "mode": "bandpass",
+            "q": 26
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 2470,
+            "mode": "bandpass",
+            "q": 30
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "routing": "parallel",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.12,
+          "release": 0.04,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -2,
+      "name": "thump",
+      "source": {
+        "params": {
+          "frequency": {
+            "gesture": "thumpPitch"
+          },
+          "waveform": "sine"
+        },
+        "primitive": "source.oscillator",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "fadeOutSeconds": 0.02,
+    "normalize": "peak",
+    "peakDbfs": -4
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 20260922
+}

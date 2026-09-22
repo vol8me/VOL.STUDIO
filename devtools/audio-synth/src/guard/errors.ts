@@ -3,7 +3,9 @@
  * `non-finite` NaN/Infinity, `type` yanlış JS tipi ya da bilinmeyen seçenek,
  * `range` belgelenmiş aralığın dışı, `combination` tek başına geçerli ama
  * birlikte anlamsız alanlar, `unknown-key` yazım hatası kuşkulu alan,
- * `required` eksik zorunlu alan.
+ * `required` eksik zorunlu alan, `unknown-id` registry'de olmayan kimlik,
+ * `version` registry'dekinden farklı sürüm, `unsupported` şemada yeri olan
+ * ama bu sürümde tanımlanmamış kol (ör. müzik brief'i).
  */
 export type AudioParamIssue =
   | 'non-finite'
@@ -11,7 +13,10 @@ export type AudioParamIssue =
   | 'range'
   | 'combination'
   | 'unknown-key'
-  | 'required';
+  | 'required'
+  | 'unknown-id'
+  | 'version'
+  | 'unsupported';
 
 function describeValue(value: unknown): string {
   if (typeof value === 'number' || typeof value === 'boolean' || value == null) {

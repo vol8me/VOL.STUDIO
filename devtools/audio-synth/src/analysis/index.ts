@@ -27,3 +27,16 @@ export {
   measureAsset,
 } from './assetQa';
 export type { AssetClass, AssetClassPolicy, AssetMeasurement, PolicyVerdict } from './assetQa';
+export {
+  ANALYZER_VERSION,
+  AUDIO_ANALYSIS_SCHEMA,
+  analyzeAudio,
+  countClicks,
+  measurementOf,
+} from './report';
+export type {
+  AudioAnalysisReportV1,
+  ClickDetection,
+  MeasurementSource,
+  SpectralBand,
+} from './report';

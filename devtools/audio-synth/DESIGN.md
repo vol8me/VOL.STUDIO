@@ -29,9 +29,13 @@
 | `presets/`     | Bu sesin ADI ne?                     | parametre kümeleri + katalog                             |
 | `arrange/`     | Sesler ZAMANDA nasıl dizilir?        | perde, mix veriyolu, `Timeline`, `compose`               |
 | `analysis/`    | Çıkan ses NE ÖLÇÜYOR?                | BS.1770 yükseklik, true peak, spektrum, FM alias riski   |
+| `program/`     | Agent'ın yazdığı KANONİK program ne? | `AudioBriefV1`, `AcousticProgramV1`, registry, render    |
+| `protocol/`    | İş nerede, üretim nasıl KANITLANIR?  | `AudioJobV1`, özet zinciri, manifest, TEK publish kapısı |
 
 Ayrıca `effects/` (bus zinciri), `types.ts` ve Node-only `writer.ts` (WAV +
-OGG; OGG için FFmpeg). `guard/` yapraktır: her katman onu kullanır, o hiçbirini
+OGG; OGG için FFmpeg). `program/` saftır (dosya/süreç/kripto yok) ve kök
+yüzeye tek ad (`Acoustic`) ile girer; `protocol/` Node-only'dır ve
+`@volstudio/audio-synth/protocol` alt yolundadır. `guard/` yapraktır: her katman onu kullanır, o hiçbirini
 kullanmaz. Dosya dökümü `src/` ağacının kendisidir; burada tekrarlanmaz.
 
 ### `instrument ≠ preset`
@@ -163,6 +167,113 @@ MusicEngine'in içine değil, ayrı bir çalışma zamanı katmanına gider.
 5. Normalize ile çıkış hazırlanır; son ~10 ms yükselen-kosinüs de-click
    sönümü uygulanır. Tampon `duration` sınırında kesilir — efekt kuyruğu
    uzatılmaz ama kesim yumuşak iner, dikişsiz dizi için zorunludur.
+
+## Authoring protokolü
+
+Bir ses işi sohbet bağlamında değil repo dosyalarında yaşar. Kanonik gerçek
+TypeScript şemaları, registry, validator'lar, `audio:job` CLI'ı ve publish
+kapısıdır; bu bölüm onların GEREKÇESİNİ anlatır, kataloğunu değil — katalog
+`audio:job context --json` çıktısıdır.
+
+### Program ve registry
+
+`AcousticProgramV1` sınırlı, JSON'a dökülebilir bir topolojidir: katmanlar
+(kaynak/exciter → rezonatör dizisi, seri ya da paralel → artikülasyon →
+kazanç/pan/başlangıç), bus efektleri ve master. Her yapı taşı registry
+kimliği + sürümüyle anılır (`{ primitive, version, params }`). Bilinmeyen
+alan, kimlik, sürüm ya da tür render'dan ÖNCE `AudioParamError` verir; yeni
+yetenek yeni bir registry kaydıdır, şema değişikliği değildir. Program bir
+`SynthParams` kabı DEĞİLDİR: agent monolitik bir sentez nesnesi yazmaz,
+adlandırılmış yapı taşlarını birleştirir.
+
+Registry kaydı; birim/aralık/varsayılan/otomasyon izni, parametre başına yön
+ilişkisi (`causal`), determinizm (alt akış etiketleri), maliyet modeli ve
+yetenek etiketleri taşır. `tests/governance/registry.test.ts` eksik
+metadata'yı ve implementasyona BAĞLI OLMAYAN parametreyi (değiştirince PCM'i
+değiştirmeyen) düşürür.
+
+**Determinizm sözleşmesi.** Aynı program + tohum + `PROGRAM_RENDERER_VERSION`
+
+- düğüm sürümleri aynı PCM özetini verir. Stokastik düğüm kök tohumdan
+  `deriveSeed(tohum, "layer:<ad>/<düğüm>/<etiket>")` ile türeyen bağımsız alt
+  akış kullanır: etiket bir ADDIR, sıra değil — katman eklemek ya da yeniden
+  sıralamak mevcut akışları kaydırmaz. V8'in `Math` fonksiyonları fdlibm
+  portudur; farklı bir Node ana sürümünde bit eşitliği ölçülmeden varsayılmaz,
+  manifest runtime sürümünü kaydeder.
+
+**Kaynak bütçesi.** `estimateProgramCost` her düğümün `workPerFrame`/
+`stateBytes` modelinden ve otomasyon tamponlarından toplar; tahmin Dalga 0'ın
+ortak `assertRenderBudget` kapısından ayırmadan ÖNCE geçer. `program` komutu
+aynı kapıyı kayıt anında da uygular — bütçeyi aşan program job'a giremez.
+
+### Job, özet zinciri ve bayatlık
+
+`AudioJobV1` aşamaları: `created → briefed → programmed → rendered → analyzed
+→ selected → published`. Kayıtlı aşama bilgi amaçlıdır; `audio:job status`
+etkin aşamayı ve `next.action`ı YALNIZ dosyalardan hesaplar. Özetler kanonik
+JSON'un SHA-256'sıdır (sıralı anahtar, `-0 → 0`, NaN/undefined/typed array
+reddedilir); zaman damgası hiçbir belgeye girmez.
+
+| Kenar                 | Taşıyan                                         | Bozulunca                         |
+| --------------------- | ----------------------------------------------- | --------------------------------- |
+| brief → program       | job kaydı (`program.brief`)                     | program `stale`                   |
+| program → render      | render kaydı `programHash`                      | render `stale`                    |
+| render → analiz       | analiz kaydı `renderHash`                       | analiz `stale`                    |
+| render/analiz → seçim | seçim kaydı (iki özet)                          | seçim `stale`, publish reddedilir |
+| seçim/program → yayın | manifest (program özeti, renderId, asset baytı) | yayın `stale`                     |
+
+Protokol dışında düzenlenen dosya `modified`, okunamayan/yarım yazılmış
+dosya `corrupt` görünür; geçerli sayılmaz. Yazımlar atomiktir (aynı dizinde
+`wx` geçici dosya + fsync + rename); tek yazıcı kilidi pid taşır, ölü
+sürecin kilidi devralınır.
+
+**Yol güvenliği.** Belgelerdeki her yol repo-göreli, `/` ayraçlı ve
+normalizedir; mutlak yol, sürücü harfi, `..` ve sembolik bağ reddedilir.
+Publish yalnız `surveyTargets`in verdiği köklere yazar: audio-synth'in kendi
+referans kökü ve `AudioTargetV1` (`audio-target.json`) ile çalışma zamanı
+kabiliyetini beyan eden AKTİF oyunlar. Frozen workspace hedef olamaz.
+
+### Analiz raporu ve manifest
+
+`analyzeAudio()` kanonik ölçüm çekirdeğidir; `audio-qa`, publish kapısı,
+`audio:job verify` ve testler aynı fonksiyonu çağırır. Yükseklik/tepe/kırpma
+alanları `measureAsset`in kendi sonucudur (tek çekirdek). Rapor ölçümün
+kaynağını söyler: `source-pcm` (job analizi) ya da `decoded-encoded`
+(publish/verify — gönderilen dosyanın FFmpeg ile çözülmüş hâli). Tık sayacı
+bir ADAY dedektörüdür: ikinci fark yerel RMS'in 8 katını ve −60 dBFS'i aşıp
+±10 ms içinde eşdeğer bir tepeyle eşlik etmiyorsa sayılır (periyodik
+kenarlar elenir); frozen VOL.HELL kataloğunda 46 dosyada toplam 9 aday.
+
+`AudioAssetManifestV1` provenance'ın kanonik sözleşmesidir ve KENDİ BAŞINA
+yeterlidir: brief ve program belgeleri gömülüdür; tohum, renderId, render
+sürümü, kanonik PCM özeti (kodlayıcıya giden kelepçeli float32), kodlanmış
+bayt özeti, araç zinciri (FFmpeg sürüm satırı, libav\* sürümleri, kodlayıcı
+argümanları, parmak izi), analizör sürümü + kodek sonrası rapor, sınıf
+politikası sürümü ve entegrasyon bilgisi taşır. `verify` farkı sınıflar:
+`identical`, `encoder-only` (PCM aynı, araç zinciri farklı — ses değişmedi),
+`encoder-nondeterministic` (PCM ve parmak izi aynı, bayt farklı — hata;
+libvorbis sürümü FFmpeg tarafından raporlanmaz ve bu körlük manifest'te
+`unreported` olarak yazılıdır), `pcm-changed` (ses değişti).
+
+### Publish kapısı
+
+`publishJob` TEK kanonik yoldur: özet zinciri → belgeler → hedef/yol/sınıf →
+yeniden render + PCM kimliği → aynı dizinde staging kodlama → çözme +
+kodek sonrası analiz + sınıf politikası → manifest doğrulaması → iki atomik
+rename → job kaydı. Politika düşerse hiçbir dosya yazılmaz; true-peak
+sınırlayıcı yoktur ve kapı ihlali DÜZELTMEZ. Manifest'siz ya da başka işe ait
+bir dosyanın üzerine yazılmaz. `tests/governance/publishPath.test.ts` aktif
+ağaçlarda yazıcıyı çağıran her dosyayı gerekçesiyle listeler; yeni bir
+sahipsiz publish yolu testi düşürür.
+
+**Üretim-referans fixture'ı.** Aktif bir oyun yok; kapıyı gerçek kodek
+QA'sıyla uçtan uca çalıştırmak için audio-synth'in KENDİ işi
+`audio-jobs/platform-reference` vardır (hiçbir oyun onu çalmaz).
+`just audio-verify` her koşuda `audio:production-check` ile manifest'i
+yalnız kendisinden doğrular: gömülü program yeniden render edilir, dosya
+çözülüp politikaya tabi tutulur, güncel araç zinciriyle yeniden kodlanıp fark
+sınıflanır. Bu fixture aynı zamanda program render yolunun regresyon
+kilididir: render çıktısını değiştiren bir değişiklik `pcm-changed` verir.
 
 ## Hızlı Başlangıç
 
@@ -732,7 +843,7 @@ Kapsam DIŞINDA olanlar (bunlar bilinçli):
 ## Varlık QA'sı
 
 Gönderilen ses KODEK SONRASI ölçülür (`scripts/audio-qa.ts`: OGG FFmpeg ile
-çözülür, ölçüm `Analysis` çekirdeğindedir):
+çözülür, ölçüm `Analysis.analyzeAudio` çekirdeğindedir):
 
 - **Yükseklik** — ITU-R BS.1770-5: K-ağırlıklama (48 kHz katsayıları Tablo
   1/2; diğer oranlar libebur128/FFmpeg'in analog prototipinden, 48 kHz'te
@@ -782,6 +893,8 @@ pnpm --filter @volstudio/audio-synth typecheck
 pnpm --filter @volstudio/audio-synth test
 pnpm --filter @volstudio/audio-synth test:coverage    # signoff'ta coverage-audio
 pnpm --filter @volstudio/audio-synth audio:reference-check
+pnpm --filter @volstudio/audio-synth audio:production-check  # manifest'leri yalnız kendilerinden doğrular
+pnpm --filter @volstudio/audio-synth audio:job context --json
 pnpm --filter @volstudio/audio-synth bench:budget     # kaynak bütçesi referans ölçümü
 pnpm --filter @volstudio/audio-synth exec tsx scripts/fm-alias-report.ts
 ```
@@ -789,7 +902,8 @@ pnpm --filter @volstudio/audio-synth exec tsx scripts/fm-alias-report.ts
 Ses üreten AKTİF bir paket: reçetesini (`generate:audio`) koşar, çıktıyı
 `pnpm --filter @volstudio/audio-synth qa <dizin> --policy` ile kodek sonrası
 ölçer; `just audio-verify` (signoff) reçete tazeliğini, ölçüm çekirdeğinin
-referans denetimini ve aktif ses ağaçlarının politikasını birlikte sınar.
+referans denetimini, production manifest'lerini ve aktif ses ağaçlarının
+politikasını birlikte sınar.
 
 ## Dikkat
 
