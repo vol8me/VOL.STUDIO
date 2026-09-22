@@ -4,6 +4,9 @@ build/
 coverage/
 target/
 **/lcov-report/
+# Git-dışı yerel üretim çıktısı (.gitignore: devtools/*/export/); temiz klonda
+# yoktur ve kapı sonucu yerel duruma bağlı olmamalı.
+devtools/*/export/
 
 # Frozen ürün ağaçları (workspace-lifecycle.json): rutin stil kapısı dışında.
 games/vol-hell/**
