@@ -9,6 +9,14 @@ import { SUBSTREAM_SCHEME } from '../program/random';
 import { PROGRAM_RENDERER_VERSION } from '../program/render';
 import { ACOUSTIC_PROGRAM_SCHEMA, PROGRAM_LIMITS } from '../program/schema';
 import { hashCanonical } from './canonical';
+import {
+  CANARIES_ROOT,
+  CANARY_AUDITION_ROOT,
+  CANARY_REVIEWS_SCHEMA,
+  CANARY_SCHEMA,
+  canaryReviews,
+} from './canary';
+import { searchContext } from './contextSearch';
 import { DEFAULT_JOBS_ROOT } from './location';
 import { ASSET_MANIFEST_SCHEMA } from './manifest';
 import { AUDIO_JOB_SCHEMA, JOB_STAGES, PROTOCOL_VERSION } from './records';
@@ -35,6 +43,7 @@ export function buildContext(repoRoot: string) {
       jobSchema: AUDIO_JOB_SCHEMA,
       stages: JOB_STAGES,
       workflow: ['context', 'brief', 'program', 'render', 'analyze', 'select', 'publish'],
+      searchWorkflow: 'program adımı yerine: search run → search decide → promote (bkz. search)',
       jobsRoot: DEFAULT_JOBS_ROOT,
       commands: {
         context: `${CLI} context --json`,
@@ -86,6 +95,24 @@ export function buildContext(repoRoot: string) {
       analysis: { id: AUDIO_ANALYSIS_SCHEMA, analyzerVersion: ANALYZER_VERSION },
       manifest: { id: ASSET_MANIFEST_SCHEMA },
       target: { id: AUDIO_TARGET_SCHEMA },
+    },
+    search: searchContext(CLI),
+    canaries: {
+      schema: CANARY_SCHEMA,
+      reviewsSchema: CANARY_REVIEWS_SCHEMA,
+      root: CANARIES_ROOT,
+      auditionRoot: CANARY_AUDITION_ROOT,
+      entries: canaryReviews(repoRoot).map((r) => ({
+        id: r.id,
+        version: r.version,
+        review: r.status,
+      })),
+      commands: {
+        list: `${CLI} canary list`,
+        run: `${CLI} canary run [--audition] [--json]`,
+        review: `${CLI} canary review <id> --status pending-human|heard-acceptable|heard-problem --note <metin> --by human`,
+      },
+      rule: 'Mekanik beklentiler motor gerilemesini yakalar, "organik" kanıtı değildir; dinleme durumu yalnız insan beyanıyla değişir.',
     },
     registry: { hash: hashCanonical(registry), entries: registry },
     policy: { assetClasses: ASSET_CLASS_POLICIES, renderBudget: DEFAULT_RENDER_BUDGET },

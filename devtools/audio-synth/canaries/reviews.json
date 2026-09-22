@@ -1,0 +1,45 @@
+{
+  "reviews": {
+    "alien-fluid-call": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "breath": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "bubble": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "cat-like-gesture": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "droplet": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "insect-like-chirp": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "membrane-pulse": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "wet-squish": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    }
+  },
+  "schema": "CanaryReviewsV1"
+}

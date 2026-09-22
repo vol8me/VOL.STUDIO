@@ -16,7 +16,8 @@ const ALLOWED: Readonly<Record<string, string>> = {
   'devtools/audio-synth/src/writer.ts': 'yazıcının kendisi',
   'devtools/audio-synth/src/protocol/publish.ts':
     'TEK kanonik publish kapısı (staging + doğrulama)',
-  'devtools/audio-synth/src/protocol/job.ts': 'dinleme kopyası; yalnız git-dışı export/ altına',
+  'devtools/audio-synth/src/protocol/audition.ts':
+    'TEK dinleme kopyası yazıcısı (job/arama/canary); yalnız git-dışı export/ altına',
   'devtools/audio-synth/scripts/audio-reference-check.ts': 'geçici dizinde ölçüm fixture’ı',
   'devtools/audio-synth/scripts/render-budget-bench.ts': 'geçici dizinde kıyas ölçümü',
   'devtools/audio-synth/scripts/music-demo.ts': 'git-dışı export/ demo çıktısı',

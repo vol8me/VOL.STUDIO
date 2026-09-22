@@ -177,6 +177,14 @@ export function publishJob(loc: JobLocation): PublishOutcome {
         jobLabel(loc),
       );
     }
+    const origin = status.artifacts.origin;
+    if (origin.state === 'stale' || origin.state === 'corrupt') {
+      throw new ProtocolError(
+        'stale',
+        `publish reddedildi: origin ${origin.state} (${origin.reason ?? ''})`,
+        jobLabel(loc),
+      );
+    }
     const job = loadJob(loc);
     const read = (rel: string) => readJsonFile(artifactFile(loc, rel), rel);
     const brief = asProtocol('brief.json', () => validateBrief(read('brief.json')));

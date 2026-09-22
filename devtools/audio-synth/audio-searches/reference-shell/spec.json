@@ -1,0 +1,105 @@
+{
+  "base": {
+    "kind": "archetype",
+    "request": {
+      "archetype": "archetype.resonant-shell",
+      "params": {
+        "durationSeconds": 1.2
+      },
+      "schema": "ArchetypeRequestV1",
+      "variation": 0,
+      "version": 1
+    }
+  },
+  "candidates": 16,
+  "constraints": [
+    {
+      "kind": "exclude",
+      "reason": "yazarın bilinçli dışlaması: çok yumuşak tokmak (hardness ≤ 0.1) bu aramanın konusu değil; aday render edilmez",
+      "when": [
+        {
+          "dimension": "hardness",
+          "max": 0.1
+        }
+      ]
+    }
+  ],
+  "description": "audio-synth referans araması: ResonantShell archetype'ında boyut, tokmak sertliği, sönüm ve modal yerleşim. Yalnız motorun arama/terfi yolunu uçtan uca sınamak içindir; hiçbir oyun tüketmez.",
+  "dimensions": [
+    {
+      "name": "damping",
+      "range": {
+        "max": 0.9,
+        "min": 0.1,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "target": {
+        "kind": "archetype-param",
+        "param": "damping"
+      }
+    },
+    {
+      "name": "hardness",
+      "range": {
+        "max": 0.95,
+        "min": 0.05,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "target": {
+        "kind": "archetype-param",
+        "param": "hardness"
+      }
+    },
+    {
+      "name": "layout",
+      "options": [
+        "bar",
+        "membrane"
+      ],
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "strike",
+        "param": "layout",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "size",
+      "range": {
+        "max": 0.9,
+        "min": 0.1,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "target": {
+        "kind": "archetype-param",
+        "param": "size"
+      }
+    }
+  ],
+  "filters": [
+    {
+      "kind": "clipping"
+    },
+    {
+      "assetClass": "sfx",
+      "kind": "asset-policy"
+    },
+    {
+      "descriptor": "activeSeconds",
+      "kind": "descriptor",
+      "min": 0.6
+    }
+  ],
+  "schema": "AcousticSearchSpecV1",
+  "searchId": "reference-shell",
+  "seed": 20260922,
+  "strategy": {
+    "id": "scrambled-halton",
+    "version": 1
+  }
+}

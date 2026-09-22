@@ -1,0 +1,1211 @@
+{
+  "base": {
+    "hash": "sha256:3e89dae4432c04c5535ff0b547db66585a7c796703c8a23518c83a023a3aa208",
+    "kind": "archetype"
+  },
+  "candidates": [
+    {
+      "candidateId": "c-39fdbf608dfeb239",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -22.174575420669836,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 1.19,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 1.19,
+        "attackSeconds": 0,
+        "centroidHz": 739.3836765364058,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 23.329099744149094,
+        "decay40Seconds": 0.87,
+        "durationSeconds": 1.2,
+        "flatness": 1.4389774067135463e-8,
+        "integratedLufs": -27.157538707012808,
+        "maxMomentaryLufs": -22.174575420669836,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9944071949374174,
+        "pitchHz": 739.7944057457507,
+        "rolloff85Hz": 750,
+        "spectralPeakHz": 750,
+        "truePeakDbtp": -2.997281873489171
+      },
+      "ordinal": 0,
+      "point": [
+        0.24570655822753906,
+        0.5020538498158779,
+        0.38165504,
+        0.014168051941428679
+      ],
+      "programHash": "sha256:d345b88a64e1a1a78039bd5f4ea34e465627fb54a6a6a7257c293254e9bee19f",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:c3ec1f45851be97b38acba2c4f7b2f1b2d3aa713951f742721d1b861ea601c32",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.296565,
+        "hardness": 0.501848,
+        "layout": "bar",
+        "size": 0.111334
+      }
+    },
+    {
+      "candidateId": "c-10f88d758efe1bdb",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -19.50936124451475,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 0.78,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 0.78,
+        "attackSeconds": 0,
+        "centroidHz": 492.414724109391,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 20.62379312847722,
+        "decay40Seconds": 0.52,
+        "durationSeconds": 1.2,
+        "flatness": 1.7523296712971644e-9,
+        "integratedLufs": -23.581997926547807,
+        "maxMomentaryLufs": -19.50936124451475,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9908821240758764,
+        "pitchHz": 459.7338464535761,
+        "rolloff85Hz": 468.75,
+        "spectralPeakHz": 468.75,
+        "truePeakDbtp": -3.0000002493010487
+      },
+      "ordinal": 1,
+      "point": [
+        0.7457065582275391,
+        0.8353871831492111,
+        0.7816550400000002,
+        0.4427394805128572
+      ],
+      "programHash": "sha256:30f2a80ca898d5fc10132ccc1c4ff4f4f93261f760744ed9eae6f5a196fea996",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:6bba6304ad792a985607e4a74e9bf92b3083c1782f3ad879c750a7cf076137f6",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.696565,
+        "hardness": 0.801848,
+        "layout": "membrane",
+        "size": 0.454192
+      }
+    },
+    {
+      "candidateId": "c-6788900dde288cae",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -30.09647782707852,
+          "pass": false,
+          "reason": "kaynak PCM sfx: maxMomentary -30.1 LUFS, aralık [-30, -8] LUFS"
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 0.73,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 0.73,
+        "attackSeconds": 0,
+        "centroidHz": 586.3980579167943,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 30.30220081385389,
+        "decay40Seconds": 0.4,
+        "durationSeconds": 1.2,
+        "flatness": 6.411869523903262e-7,
+        "integratedLufs": -32.930281427499295,
+        "maxMomentaryLufs": -30.09647782707852,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.8934450497059807,
+        "pitchHz": 631.7227065751733,
+        "rolloff85Hz": 632.8125,
+        "spectralPeakHz": 632.8125,
+        "truePeakDbtp": -3.0000002493010487
+      },
+      "ordinal": 2,
+      "point": [
+        0.49570655822753906,
+        0.2798316275936557,
+        0.9816550400000001,
+        0.15702519479857155
+      ],
+      "programHash": "sha256:bf0a05e7cb18666dcd130add648d63052469115ea63e6bc56a6ae92aa82922f8",
+      "rejection": {
+        "code": "asset-policy",
+        "message": "kaynak PCM sfx: maxMomentary -30.1 LUFS, aralık [-30, -8] LUFS",
+        "path": "filters[1]",
+        "stage": "filter"
+      },
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:df7c16abc25ce6c6e509eac2362932962b72d5964223048619a0448cf4b48531",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "filtered",
+      "values": {
+        "damping": 0.496565,
+        "hardness": 0.301848,
+        "layout": "membrane",
+        "size": 0.22562
+      }
+    },
+    {
+      "candidateId": "c-5019267aedae887b",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -16.30495624202386,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 0.63,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 0.63,
+        "attackSeconds": 0,
+        "centroidHz": 286.21238159134583,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 17.264166704344046,
+        "decay40Seconds": 0.44,
+        "durationSeconds": 1.2,
+        "flatness": 1.6001592002238723e-10,
+        "integratedLufs": -18.78864223098118,
+        "maxMomentaryLufs": -16.30495624202386,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9983660017832264,
+        "pitchHz": 285.8663193419445,
+        "rolloff85Hz": 304.6875,
+        "spectralPeakHz": 281.25,
+        "truePeakDbtp": -2.9997578174910027
+      },
+      "ordinal": 3,
+      "point": [
+        0.9957065582275391,
+        0.613164960926989,
+        0.01365504,
+        0.8713109090842857
+      ],
+      "programHash": "sha256:d97547a5c5c3eb775fdb5979512267a0c3262de8f171fab737ab6cb946069ab8",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:cb43871b75ae0a1b226e74099b4da97efff7abbc9f1c8ede7cac683dba63b8fc",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.896565,
+        "hardness": 0.601848,
+        "layout": "bar",
+        "size": 0.797049
+      }
+    },
+    {
+      "candidateId": "c-bd3781771b0aaa34",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -11.807191623143567,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 1.2,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 1.2,
+        "attackSeconds": 0,
+        "centroidHz": 399.64491119050234,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 12.222249326632625,
+        "decay40Seconds": null,
+        "durationSeconds": 1.2,
+        "flatness": 1.4981659215666325e-10,
+        "integratedLufs": -16.85643570184361,
+        "maxMomentaryLufs": -11.807191623143567,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9992214189219701,
+        "pitchHz": 392.3969327672923,
+        "rolloff85Hz": 398.4375,
+        "spectralPeakHz": 398.4375,
+        "truePeakDbtp": -2.998783455952937
+      },
+      "ordinal": 4,
+      "point": [
+        0.0074253082275390625,
+        0.9464982942603223,
+        0.41365504000000003,
+        0.58559662337
+      ],
+      "programHash": "sha256:eddd844b9aab035c2024d05cfdadd8e5f4e9aec11e6ebf0b02d011c9f5086c57",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:2b47b426241809458a28ea05d6212df218dd7dcef75f85207deaf2452fcc7e8a",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.10594,
+        "hardness": 0.901848,
+        "layout": "bar",
+        "size": 0.568477
+      }
+    },
+    {
+      "candidateId": "c-b855b30c75a6801c",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -29.045161283494924,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 0.84,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 0.84,
+        "attackSeconds": 0,
+        "centroidHz": 516.9677520583323,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 29.33445267401638,
+        "decay40Seconds": 0.49,
+        "durationSeconds": 1.2,
+        "flatness": 9.931031645938148e-8,
+        "integratedLufs": -33.235468925320035,
+        "maxMomentaryLufs": -29.045161283494924,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9429902268598712,
+        "pitchHz": 538.7170622330704,
+        "rolloff85Hz": 539.0625,
+        "spectralPeakHz": 539.0625,
+        "truePeakDbtp": -2.994314087796966
+      },
+      "ordinal": 5,
+      "point": [
+        0.5074253082275391,
+        0.09464644240847055,
+        0.21365504000000002,
+        0.29988233765571437
+      ],
+      "programHash": "sha256:1163bba9d578d52df8cff1ad2d54b272658552e768e324b5ec2c34fb38680ef5",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:53bd50f247c933dab057a78dc232cf624af69ff64761b6fc954da06d8528abe9",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.50594,
+        "hardness": 0.135182,
+        "layout": "bar",
+        "size": 0.339906
+      }
+    },
+    {
+      "candidateId": "c-5ccfefdd4cf0eb78",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -15.473883290773541,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 1.2,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 1.2,
+        "attackSeconds": 0,
+        "centroidHz": 341.0036247702615,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 16.18230993631067,
+        "decay40Seconds": 1.19,
+        "durationSeconds": 1.2,
+        "flatness": 2.3196024347562661e-10,
+        "integratedLufs": -20.259647746342594,
+        "maxMomentaryLufs": -15.473883290773541,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9917002628083983,
+        "pitchHz": 334.7763580207458,
+        "rolloff85Hz": 351.5625,
+        "spectralPeakHz": 328.125,
+        "truePeakDbtp": -2.9985894179212194
+      },
+      "ordinal": 6,
+      "point": [
+        0.25742530822753906,
+        0.42797977574180385,
+        0.6136550400000002,
+        0.7284537662271428
+      ],
+      "programHash": "sha256:a892ce09fc0044d8cfa1943964308b507e5ac8f7421c32f8d6e4afdc2f3f45dd",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:579d15f5185f097d5a26df2b946e3acb59329e8a1ad2f80754044b8a68c8e97b",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.30594,
+        "hardness": 0.435182,
+        "layout": "membrane",
+        "size": 0.682763
+      }
+    },
+    {
+      "candidateId": "c-eb7f507c554efba9",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -21.467693359327274,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 0.53,
+          "pass": false,
+          "reason": "activeSeconds 0.53 ∉ [0.6, ∞]"
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 0.53,
+        "attackSeconds": 0,
+        "centroidHz": 696.2961269308587,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 22.71391919978795,
+        "decay40Seconds": 0.35,
+        "durationSeconds": 1.2,
+        "flatness": 1.4066727874582949e-8,
+        "integratedLufs": -24.23147122724117,
+        "maxMomentaryLufs": -21.467693359327274,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9847476992144011,
+        "pitchHz": 691.5339147259922,
+        "rolloff85Hz": 703.125,
+        "spectralPeakHz": 679.6875,
+        "truePeakDbtp": -2.987150530229009
+      },
+      "ordinal": 7,
+      "point": [
+        0.7574253082275391,
+        0.7613131090751372,
+        0.8136550400000001,
+        0.07539254173734705
+      ],
+      "programHash": "sha256:cf093eee7e8e7352e984d287d2f0a9bf686e46a50489773d39b15bfe2f4c5bd7",
+      "rejection": {
+        "code": "descriptor",
+        "message": "activeSeconds 0.53 ∉ [0.6, ∞]",
+        "path": "filters[2]",
+        "stage": "filter"
+      },
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:c0920603f4f2dab6bde638cf7c3a888191b1f2e1ee2692dc00a6a827a1237d58",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "filtered",
+      "values": {
+        "damping": 0.70594,
+        "hardness": 0.735182,
+        "layout": "membrane",
+        "size": 0.160314
+      }
+    },
+    {
+      "candidateId": "c-51165d6e6236e202",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -15.110402649492906,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 1.2,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 1.2,
+        "attackSeconds": 0,
+        "centroidHz": 429.3303663198152,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 15.818372174984368,
+        "decay40Seconds": 1.19,
+        "durationSeconds": 1.2,
+        "flatness": 5.123571236145673e-10,
+        "integratedLufs": -19.747157481434083,
+        "maxMomentaryLufs": -15.110402649492906,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9990732940381679,
+        "pitchHz": 429.63584623030243,
+        "rolloff85Hz": 445.3125,
+        "spectralPeakHz": 421.875,
+        "truePeakDbtp": -3.0000002493010487
+      },
+      "ordinal": 8,
+      "point": [
+        0.13242530822753906,
+        0.20575755351958167,
+        0.09365503999999998,
+        0.5039639703087755
+      ],
+      "programHash": "sha256:f5a5e559cf3b8a592163849e34f43784c7df7a2ced7c933cd3f7c48b389f3b71",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:55f816fbf84f4e30ed04e969cb8b82701a44e6ba033a53aed5211a6ffb22d8e8",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.20594,
+        "hardness": 0.235182,
+        "layout": "bar",
+        "size": 0.503171
+      }
+    },
+    {
+      "candidateId": "c-89b29d40e69565d7",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -17.844253441122,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 0.83,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 0.83,
+        "attackSeconds": 0,
+        "centroidHz": 589.4594399639516,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 18.997969791412533,
+        "decay40Seconds": 0.55,
+        "durationSeconds": 1.2,
+        "flatness": 1.9721186602477276e-9,
+        "integratedLufs": -21.84729200201631,
+        "maxMomentaryLufs": -17.844253441122,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9991613213445306,
+        "pitchHz": 590.0622661710925,
+        "rolloff85Hz": 609.375,
+        "spectralPeakHz": 585.9375,
+        "truePeakDbtp": -3.0000002493010487
+      },
+      "ordinal": 9,
+      "point": [
+        0.6324253082275391,
+        0.5390908868529148,
+        0.49365504000000004,
+        0.21824968459448993
+      ],
+      "programHash": "sha256:5b2fad03b6f209c48457c5232dda25c4835ec04e3af4e68453edf575f3a12912",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:08701960d9f90d66ac0a27a42a5d5c6c105e01c5c08904ba8cc9f9643f29aa47",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.60594,
+        "hardness": 0.535182,
+        "layout": "bar",
+        "size": 0.2746
+      }
+    },
+    {
+      "candidateId": "c-d067e2f394829a88",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -13.548065310566187,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 1.2,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 1.2,
+        "attackSeconds": 0,
+        "centroidHz": 273.84424757685684,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 14.299391055705772,
+        "decay40Seconds": 1.18,
+        "durationSeconds": 1.2,
+        "flatness": 8.488513439786826e-11,
+        "integratedLufs": -18.790996678830492,
+        "maxMomentaryLufs": -13.548065310566187,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9997927523973783,
+        "pitchHz": 267.0486780994495,
+        "rolloff85Hz": 281.25,
+        "spectralPeakHz": 257.8125,
+        "truePeakDbtp": -2.997196068695434
+      },
+      "ordinal": 10,
+      "point": [
+        0.38242530822753906,
+        0.8724242201862481,
+        0.29365504000000003,
+        0.932535398880204
+      ],
+      "programHash": "sha256:1e88b05a0e6b3a6d770027bf00606a1f2cf38d3077fe0eec7444cd9c4e175909",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:cf5bc40c5e8daac50ebade441a776abbda9ab6744aa77a33e8ffdada63ad2260",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.40594,
+        "hardness": 0.835182,
+        "layout": "bar",
+        "size": 0.846028
+      }
+    },
+    {
+      "candidateId": "c-e324a40601d9e6fd",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -20.123869708534173,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 0.71,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 0.71,
+        "attackSeconds": 0,
+        "centroidHz": 367.60622615658633,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 21.0819485276253,
+        "decay40Seconds": 0.48,
+        "durationSeconds": 1.2,
+        "flatness": 1.182935706993106e-9,
+        "integratedLufs": -24.083181696874206,
+        "maxMomentaryLufs": -20.123869708534173,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.995582716339564,
+        "pitchHz": 366.5283604473259,
+        "rolloff85Hz": 375,
+        "spectralPeakHz": 375,
+        "truePeakDbtp": -2.998498173025749
+      },
+      "ordinal": 11,
+      "point": [
+        0.8824253082275391,
+        0.31686866463069274,
+        0.6936550400000001,
+        0.6468211131659183
+      ],
+      "programHash": "sha256:d489596fdb3f49e356850425196b585619b93a1d1a4f719b78e6fa724ba76dcd",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:94f31798f9864543e223abf6b45e8d352c7a2f0de03841b19c80df8ce5103141",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.80594,
+        "hardness": 0.335182,
+        "layout": "membrane",
+        "size": 0.617457
+      }
+    },
+    {
+      "candidateId": "c-2315d4fbc22ea481",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -15.386535940710067,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 1.2,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 1.2,
+        "attackSeconds": 0,
+        "centroidHz": 510.9322927289764,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 16.1235189133346,
+        "decay40Seconds": 1.19,
+        "durationSeconds": 1.2,
+        "flatness": 9.167315127121444e-10,
+        "integratedLufs": -20.56816942073105,
+        "maxMomentaryLufs": -15.386535940710067,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9916938013522032,
+        "pitchHz": 503.2433994833559,
+        "rolloff85Hz": 515.625,
+        "spectralPeakHz": 492.1875,
+        "truePeakDbtp": -3.0000002493010487
+      },
+      "ordinal": 12,
+      "point": [
+        0.06992530822753906,
+        0.650201997964026,
+        0.8936550400000001,
+        0.36110682745163275
+      ],
+      "programHash": "sha256:14060143e2db26c765aba1968100efb3b60e3ceeeb21584260977870c59faf08",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:aab5b05b27da84fe1c2fe50d4da37b0b84f8f20a2ca5f352ebe819c93e20c426",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.15594,
+        "hardness": 0.635182,
+        "layout": "membrane",
+        "size": 0.388885
+      }
+    },
+    {
+      "candidateId": "c-039f39f6d2ff75fd",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -14.536730482286119,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 1.19,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 1.19,
+        "attackSeconds": 0,
+        "centroidHz": 322.49598719702897,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 15.506064525802518,
+        "decay40Seconds": 0.82,
+        "durationSeconds": 1.2,
+        "flatness": 2.9290714400956426e-10,
+        "integratedLufs": -18.92540996279363,
+        "maxMomentaryLufs": -14.536730482286119,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9996506323048785,
+        "pitchHz": 312.9188054408586,
+        "rolloff85Hz": 328.125,
+        "spectralPeakHz": 304.6875,
+        "truePeakDbtp": -2.9956924368029147
+      },
+      "ordinal": 13,
+      "point": [
+        0.5699253082275391,
+        0.9835353312973593,
+        0.05365504,
+        0.7896782560230611
+      ],
+      "programHash": "sha256:9fc2bf91d63d3543cf570c01a25f400629124615e593d0fa8c3bb2819c9c5051",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:4c9280b0f0febeecec530a0b86fa949d206a74b7db44836710b14cda40a1a030",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.55594,
+        "hardness": 0.935182,
+        "layout": "bar",
+        "size": 0.731743
+      }
+    },
+    {
+      "candidateId": null,
+      "checks": null,
+      "cost": null,
+      "descriptors": null,
+      "ordinal": 14,
+      "point": [
+        0.31992530822753906,
+        0.03291804734674215,
+        0.45365504,
+        0.0345762152067348
+      ],
+      "programHash": null,
+      "rejection": {
+        "code": "exclude",
+        "message": "yazarın bilinçli dışlaması: çok yumuşak tokmak (hardness ≤ 0.1) bu aramanın konusu değil; aday render edilmez",
+        "path": "constraints[0]",
+        "stage": "constraint"
+      },
+      "render": null,
+      "risks": [],
+      "state": "invalid",
+      "values": {
+        "damping": 0.35594,
+        "hardness": 0.0796262,
+        "layout": "bar",
+        "size": 0.127661
+      }
+    },
+    {
+      "candidateId": "c-98f6d5656f5c323f",
+      "checks": [
+        {
+          "filter": 0,
+          "kind": "clipping",
+          "measured": 0,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 1,
+          "kind": "asset-policy",
+          "measured": -17.892815217809105,
+          "pass": true,
+          "reason": null
+        },
+        {
+          "filter": 2,
+          "kind": "descriptor",
+          "measured": 0.7,
+          "pass": true,
+          "reason": null
+        }
+      ],
+      "cost": {
+        "analysisWorkUnits": 3168000,
+        "peakBytes": 1152544,
+        "renderWorkUnits": 4723200,
+        "samples": 57600
+      },
+      "descriptors": {
+        "activeSeconds": 0.7,
+        "attackSeconds": 0,
+        "centroidHz": 449.1605384607382,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 18.952649894525013,
+        "decay40Seconds": 0.47,
+        "durationSeconds": 1.2,
+        "flatness": 9.68059640517693e-10,
+        "integratedLufs": -22.041913519123735,
+        "maxMomentaryLufs": -17.892815217809105,
+        "onsetsPerSecond": 0.8333333333333334,
+        "pitchConfidence": 0.9965945059697074,
+        "pitchHz": 449.5243636335191,
+        "rolloff85Hz": 468.75,
+        "spectralPeakHz": 445.3125,
+        "truePeakDbtp": -2.9973544030846613
+      },
+      "ordinal": 15,
+      "point": [
+        0.8199253082275391,
+        0.36625138068007546,
+        0.25365504,
+        0.46314764377816336
+      ],
+      "programHash": "sha256:50043e232f492763fc36b5541c4aa0884ec895d322873bae668a31c41068e62b",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 57600,
+        "pcmHash": "sha256:f691ea8de659c9e9da8b9cdd0e6b33c7a1df6a5299d55df4d9ef99fe0bcbdcb0",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "damping": 0.75594,
+        "hardness": 0.379626,
+        "layout": "bar",
+        "size": 0.470518
+      }
+    }
+  ],
+  "dimensions": [
+    "damping",
+    "hardness",
+    "layout",
+    "size"
+  ],
+  "engine": {
+    "analyzerVersion": 1,
+    "checksVersion": 1,
+    "descriptorMethods": {
+      "onsets": "energy-jump-v1",
+      "pitch": "yin-v1"
+    },
+    "registryHash": "sha256:9c42f6a2904548abbd724c29bd80573b04644ef296381e335aa9f7feff7969fd",
+    "rendererVersion": 1,
+    "substreamScheme": "substream-v1"
+  },
+  "preflight": {
+    "budget": {
+      "maxEstimatedSeconds": 300,
+      "maxItemPeakBytes": 1610612736,
+      "maxItems": 64,
+      "maxTotalWorkUnits": 30000000000
+    },
+    "estimate": {
+      "estimatedSeconds": 1.18368,
+      "items": 15,
+      "maxItemPeakBytes": 1152544,
+      "totalWorkUnits": 118368000
+    },
+    "invalid": 1,
+    "requested": 16,
+    "valid": 15,
+    "verdict": {
+      "estimate": null,
+      "limit": null,
+      "resource": null,
+      "withinBudget": true
+    }
+  },
+  "schema": "AcousticSearchReportV1",
+  "searchId": "reference-shell",
+  "seed": 20260922,
+  "specHash": "sha256:6512b085ce6a52155b4d9e90417ea34a9148a250e9bb2e737cd1e76daa683591",
+  "strategy": {
+    "id": "scrambled-halton",
+    "version": 1
+  },
+  "summary": {
+    "error": 0,
+    "filtered": 2,
+    "invalid": 1,
+    "passed": 13
+  }
+}

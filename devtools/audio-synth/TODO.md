@@ -74,32 +74,17 @@ DESIGN "Biyolojik yapı taşları".
 
 ### Dalga 4 — agent search laboratuvarı ve kalite
 
-- [ ] **[P1] Deterministik candidate-search motoru `AcousticProgram`
-      search-space'ini tarayabilsin.** Agent tek bir "mükemmel" sayı tahmin
-      etmek yerine semantic/DSP kontroller için geçerli aralıklar ve
-      gerektiğinde discrete seçenekler verebilir. Search bounded ve
-      seed'lidir; combinatorial grid'i körlemesine patlatmak yerine
-      deterministic sampling strategy kullanır. Candidate kimliği program +
-      search seed + strategy + engine sürümünden türetilir. Kapanır: iki
-      bağımsız koşu aynı candidate program sırasını ve PCM hash'lerini
-      üretir; candidate/time/RAM budget aşıldığında render başlamadan named
-      error verir; search raporu hangi adayların neden QA/filter aşamasında
-      elendiğini saklar.
-- [ ] **[P2] `SoundFamily` kalite ölçüsü eklensin.** Tek asset QA'sına ek
-      olarak bir varyasyon ailesinde exact duplicate, duration/pitch/centroid
-      aşırı sapması ve "hiç varyasyon yok" durumları ölçülür. Kapanır: family
-      coherence/diversity için sayısal rapor çıkar; aynı PCM iki kez gelirse
-      gate kırılır.
-- [ ] **[P2] Organik canary benchmark paketi oluşturulsun.** Breath, bubble,
-      droplet, membrane pulse, wet squish, insect-like chirp, cat-like gesture
-      ve alien-fluid-call gibi küçük görevler sürümlenir. Kapanır: her görev
-      deterministic/mekanik test + kayıtlı audition notu taşır; otomatik skor
-      "organik" diye tek başına karar vermez.
-- [ ] **[P2] Candidate audition aracı kurulsun.** Search sonucundan yerel
-      HTML/benzeri rapor üretilir; play, seed, macro değerleri, descriptor'lar
-      ve approve/reject/etiketleme vardır. Kapanır: seçim makine-okunur
-      `selection.json`/manifest'e geri yazılır ve sonraki üretim seçimi yeniden
-      oluşturabilir.
+Dalga 4'ün dört mühendislik maddesi kapandı; kısa kanıtları
+`## Kapatılanlar`da, gerekçe DESIGN "Arama laboratuvarı". Algısal doğrulama
+ayrı ve açıktır:
+
+- [ ] **[P3] Organik canary'lerin insan dinlemesi.** Sekiz canary'nin
+      mekanik beklentileri geçiyor ama hiçbiri dinlenmedi;
+      `canaries/reviews.json`da hepsi `pending-human`. Kapanır: bir insan her
+      canary'yi dinleme rehberine göre dinler ve
+      `audio:job canary review <id> --status … --note … --by human` ile
+      beyanını yazar; `heard-problem` çıkan canary için ayrı bir motor maddesi
+      açılır.
 
 ### Dalga 5 — generic SoundFamily üretimi
 
@@ -624,6 +609,42 @@ DESIGN "Biyolojik yapı taşları".
 
 ## Kapatılanlar
 
+- [x] **[P1] Deterministik candidate-search motoru.** `AcousticSearchSpecV1`
+      (archetype/program tabanı, adlı `archetype-param`/`control`/`node-param`
+      boyutları, aralık/seçenek, `exclude` kuralı, mekanik filtre, toplu
+      bütçe), `scrambled-halton` v1 (önek kararlı, tabakalı), iki aşama:
+      render'sız plan/ön-denetim → seri yürütme; aday kimliği program özeti +
+      tohum + strateji + render sürümünden. Kanıt:
+      `tests/search/crossProcess.test.ts` iki taze süreçte (biri anahtarları ve
+      boyut sırasını ters) aynı sıra/kimlik/program/PCM ve bayt bayt aynı
+      rapor; bütçe aşımı `BatchBudgetError` + sıfır dosya
+      (`tests/protocol/search.test.ts`); render öncesi geçersizler ve
+      filtrelenen adaylar gerekçesiyle raporda (`tests/search/plan.test.ts`).
+      Referans: `audio-searches/reference-shell` (4 boyut, 16 aday; 13 passed,
+      2 filtered, 1 invalid), `audio:production-check` her koşuda yeniden
+      üretir. Terfi (`promote`) onaylı adayın TAM programını `origin.json` ile
+      job'a yazar; publish yalnız kanonik akıştan. (Dalga 4)
+- [x] **[P2] `SoundFamily` kalite ölçüsü.** `assessFamily` →
+      `SoundFamilyQualityReportV1`: exact duplicate PCM sert hata, çift uzaklığı
+      dağılımı + yakın-özdeş çift + aile çökmesi (çeşitlilik), sağlam z-skoru
+      aykırıları + beyanlı oran sınırları (tutarlılık); perde yalnız YIN
+      güvenilirse; tek skor yok. Kanıt: `tests/analysis/family.test.ts` —
+      kopya FAIL, yakın-özdeş çeşitlilik sorunu, çökmüş aile, aşırı aykırı
+      raporlanır, sağlıklı 8 üyeli aile geçer. Üretim akışına bağlanması
+      Dalga 5'in aile kapısıdır. (Dalga 4)
+- [x] **[P2] Organik canary benchmark paketi (mühendislik).** Sekiz sürümlü
+      görev (`canaries/*.json`): deterministik kaynak + mekanik beklenti +
+      dinleme rehberi; `audio:job canary run`. Kanıt:
+      `tests/canary/canaries.test.ts` — sekizi geçer, deterministik, beklenti
+      mutasyonla düşer; incelemelerin hepsi `pending-human` (uydurulmadı).
+      İnsan dinlemesi ayrı açık madde. (Dalga 4)
+- [x] **[P2] Candidate audition aracı.** `search audition <id> [--serve]`:
+      git-dışı WAV + bağımlılıksız sayfa; 127.0.0.1 sunucusu yalnız
+      `selection.json` (`SearchSelectionV1`) yazar. Kanıt:
+      `tests/protocol/auditionServer.test.ts` — loopback, Host/Origin/JSON/
+      gövde sınırı, gezinme 404, `</script>` kaçışı, karar taze süreçte
+      yeniden kurulur; terfi aynı kararı okur. Gerçek bir insan seçimi henüz
+      yapılmadı. (Dalga 4)
 - [x] **[P2] Deterministik micro-event engine.** Zaman-yeniden-ölçekleme
       ile örnek-doğru, zamanla değişen oranlı zamanlama; `regularity`
       (Poisson ↔ periyodik) ve `clustering` sürekli eksenler; zamanlama ve

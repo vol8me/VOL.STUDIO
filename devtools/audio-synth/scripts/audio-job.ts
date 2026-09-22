@@ -6,9 +6,9 @@
  * `audio:job context --json` çıktısındaki `protocol.commands` alanındadır
  * (bu yorum onu tekrar etmez).
  */
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { AudioParamError, RenderBudgetError } from '../src/guard';
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { AudioParamError, BatchBudgetError, RenderBudgetError } from '../src/guard';
 import {
   analyzeCandidate,
   buildContext,
@@ -17,6 +17,9 @@ import {
   initJob,
   jobStatus,
   listJobs,
+  listSearches,
+  DEFAULT_SEARCHES_ROOT,
+  verifySearch,
   ProtocolError,
   publishJob,
   registerBrief,
@@ -27,70 +30,9 @@ import {
   verifyManifest,
   type JobLocation,
 } from '../src/protocol';
-
-interface Parsed {
-  readonly command: string;
-  readonly positional: readonly string[];
-  readonly flags: ReadonlyMap<string, string | true>;
-}
-
-const BOOLEAN_FLAGS = new Set(['json', 'loop', 'audition', 'all']);
-
-function parse(argv: readonly string[]): Parsed {
-  const [command = 'help', ...rest] = argv;
-  const positional: string[] = [];
-  const flags = new Map<string, string | true>();
-  for (let i = 0; i < rest.length; i++) {
-    const arg = rest[i];
-    if (!arg.startsWith('--')) {
-      positional.push(arg);
-      continue;
-    }
-    const name = arg.slice(2);
-    if (BOOLEAN_FLAGS.has(name)) {
-      flags.set(name, true);
-    } else {
-      const value = rest[++i];
-      if (value === undefined) throw new ProtocolError('invalid', `--${name} bir değer ister`);
-      flags.set(name, value);
-    }
-  }
-  return { command, positional, flags };
-}
-
-function findRepoRoot(start: string): string {
-  let dir = resolve(start);
-  for (;;) {
-    if (
-      existsSync(join(dir, 'workspace-lifecycle.json')) &&
-      existsSync(join(dir, 'pnpm-workspace.yaml'))
-    )
-      return dir;
-    const parent = dirname(dir);
-    if (parent === dir)
-      throw new ProtocolError('not-found', 'repo kökü bulunamadı (workspace-lifecycle.json)');
-    dir = parent;
-  }
-}
-
-function text(flags: Parsed['flags'], name: string): string | undefined {
-  const value = flags.get(name);
-  return typeof value === 'string' ? value : undefined;
-}
-
-function required(flags: Parsed['flags'], name: string): string {
-  const value = text(flags, name);
-  if (value === undefined) throw new ProtocolError('invalid', `--${name} zorunlu`);
-  return value;
-}
-
-function readInput(path: string): unknown {
-  try {
-    return JSON.parse(readFileSync(path, 'utf8'));
-  } catch (error) {
-    throw new ProtocolError('invalid', `girdi okunamadı: ${(error as Error).message}`, path);
-  }
-}
+import { findRepoRoot, parse, print, readInput, required, text, type Parsed } from './lib/args';
+import { runCanaryCommand } from './lib/canaryCommands';
+import { runPromoteCommand, runSearchCommand } from './lib/searchCommands';
 
 function manifestsUnder(repoRoot: string): string[] {
   const out: string[] = [];
@@ -108,10 +50,6 @@ function manifestsUnder(repoRoot: string): string[] {
     walk(root);
   }
   return out.sort();
-}
-
-function print(value: unknown): void {
-  process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
 }
 
 function printStatusText(status: ReturnType<typeof jobStatus>): void {
@@ -199,11 +137,17 @@ function run(parsed: Parsed): number {
       return 0;
     }
     case 'verify': {
-      const targets = parsed.flags.has('all')
+      const all = parsed.flags.has('all');
+      const targets = all
         ? manifestsUnder(repoRoot)
         : [checkRepoRelative(parsed.positional[0], 'manifest')];
       const reports = targets.map((manifest) => verifyManifest(repoRoot, manifest));
-      if (json) print(reports);
+      const searches = all
+        ? listSearches(repoRoot, DEFAULT_SEARCHES_ROOT).map((searchId) =>
+            verifySearch({ repoRoot, searchesRoot: DEFAULT_SEARCHES_ROOT, searchId }),
+          )
+        : [];
+      if (json) print([...reports, ...searches]);
       else {
         for (const r of reports) {
           console.log(
@@ -215,10 +159,25 @@ function run(parsed: Parsed): number {
           for (const check of r.checks.filter((c) => !c.ok))
             console.log(`    ✗ ${check.name}: ${check.detail}`);
         }
+        for (const r of searches) {
+          console.log(
+            `${r.ok ? '✓' : '✗'} ${r.search}  ${r.checks.map((c) => c.detail).join(' · ')}`,
+          );
+        }
         console.log(`${reports.filter((r) => r.ok).length}/${reports.length} manifest doğrulandı.`);
+        if (all)
+          console.log(
+            `${searches.filter((r) => r.ok).length}/${searches.length} arama doğrulandı.`,
+          );
       }
-      return reports.every((r) => r.ok) ? 0 : 1;
+      return reports.every((r) => r.ok) && searches.every((r) => r.ok) ? 0 : 1;
     }
+    case 'search':
+      return runSearchCommand(parsed, repoRoot);
+    case 'promote':
+      return runPromoteCommand(parsed, loc(), repoRoot);
+    case 'canary':
+      return runCanaryCommand(parsed, repoRoot);
     default:
       console.log('Komutlar ve sözdizimi: audio:job context --json → protocol.commands');
       return parsed.command === 'help' ? 0 : 1;
@@ -231,7 +190,8 @@ try {
   if (
     error instanceof ProtocolError ||
     error instanceof AudioParamError ||
-    error instanceof RenderBudgetError
+    error instanceof RenderBudgetError ||
+    error instanceof BatchBudgetError
   ) {
     const detail =
       error instanceof ProtocolError

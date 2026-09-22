@@ -8,6 +8,7 @@ import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside } from './fs';
 import { artifactFile, jobLabel, loadJob, type JobLocation } from './location';
 import { validateManifest } from './manifest';
+import { originState, type OriginState } from './origin';
 import {
   JOB_STAGES,
   validateAnalysisRecord,
@@ -56,6 +57,8 @@ export interface JobStatusV1 {
     readonly analyses: readonly CandidateState[];
     readonly selection: ArtifactState;
     readonly publication: ArtifactState;
+    /** Programın kökeni (`origin.json`); kökensiz program `none`dur ve geçerlidir. */
+    readonly origin: OriginState;
   };
   /** Protokol dışı dosyalar, yarım yazımdan kalan geçici dosyalar, kilit. */
   readonly problems: readonly string[];
@@ -137,12 +140,14 @@ function lockOwner(file: string): string {
 }
 
 function knownFile(job: AudioJobV1, rel: string): boolean {
-  if (['job.json', 'brief.json', 'program.json', 'selection.json'].includes(rel)) return true;
+  if (['job.json', 'brief.json', 'program.json', 'selection.json', 'origin.json'].includes(rel)) {
+    return true;
+  }
   const refs = [...Object.values(job.artifacts.renders), ...Object.values(job.artifacts.analyses)];
   return refs.some((ref) => ref.path === rel);
 }
 
-function stageOf(s: JobStatusV1['artifacts']): JobStage {
+function stageOf(s: Omit<JobStatusV1['artifacts'], 'origin'>): JobStage {
   const reached: boolean[] = [
     true,
     s.brief.state === 'valid',
@@ -162,6 +167,8 @@ function nextOf(s: JobStatusV1['artifacts']): JobStatusV1['next'] {
   if (s.brief.state !== 'valid') return { action: 'brief', reason: `brief ${describe(s.brief)}` };
   if (s.program.state !== 'valid')
     return { action: 'program', reason: `program ${describe(s.program)}` };
+  if (s.origin.state === 'stale' || s.origin.state === 'corrupt')
+    return { action: 'program', reason: `origin ${s.origin.state}: ${s.origin.reason ?? ''}` };
   if (!s.renders.some((r) => r.state === 'valid'))
     return { action: 'render', reason: 'geçerli render yok' };
   if (!s.analyses.some((a) => a.state === 'valid'))
@@ -267,7 +274,8 @@ export function jobStatus(loc: JobLocation): JobStatusV1 {
   );
 
   const publication = publicationState(loc, job, selection, programHash, chosen?.renderId ?? null);
-  const artifacts = { brief, program, renders, analyses, selection, publication };
+  const origin = originState(loc, programHash);
+  const artifacts = { brief, program, renders, analyses, selection, publication, origin };
   return {
     schema: JOB_STATUS_SCHEMA,
     jobId: job.jobId,

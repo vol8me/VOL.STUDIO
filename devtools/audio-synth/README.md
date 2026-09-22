@@ -14,8 +14,11 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 - `src/program/` — kanonik `AudioBriefV1`/`AcousticProgramV1`, registry, program render'ı,
   organik yapı taşları ve archetype genişletmesi
 - `src/protocol/` — `AudioJobV1`, manifest ve TEK publish kapısı (Node-only)
+- `src/search/` — deterministik aday arama laboratuvarı (spec, strateji, plan, rapor, arama seçimi)
 - `src/writer.ts` — WAV/OGG yazma (Node-only, FFmpeg gerekir)
 - `audio-jobs/` — job durumları; `platform-reference` üretim-referans işidir
+- `audio-searches/` — arama kayıtları; `reference-shell` referans aramasıdır
+- `canaries/` — organik canary görevleri ve insan dinleme durumu
 - `reference/production/` — referans fixture'ın yayımlanan asset'i ve manifest'i
 - `tests/` — motor, writer ve preset testleri
 - `scripts/` — QA (`audio-qa`, `audio-reference-check`), karakterizasyon
@@ -49,3 +52,8 @@ her adımın sözdizimi context çıktısındaki `protocol.commands` alanında, 
 bulunduğu yer ve sonraki geçerli adım `audio:job status <jobId> --json`
 çıktısındaki `next` alanındadır. Yayımlanmış bir asset
 `audio:job verify <manifest>` ile yalnız manifest'inden doğrulanır.
+
+Tek bir değer tahmin etmek yerine aralık aramak için `search` alt komutları
+vardır (spec → plan → run → audition/decide → promote); onaylı aday job
+programına terfi eder ve aynı akıştan yayımlanır. Sözdizimi context
+çıktısındaki `search.commands` alanındadır.

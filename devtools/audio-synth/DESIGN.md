@@ -225,6 +225,7 @@ reddedilir); zaman damgası hiçbir belgeye girmez.
 | render → analiz       | analiz kaydı `renderHash`                       | analiz `stale`                    |
 | render/analiz → seçim | seçim kaydı (iki özet)                          | seçim `stale`, publish reddedilir |
 | seçim/program → yayın | manifest (program özeti, renderId, asset baytı) | yayın `stale`                     |
+| program → köken       | `origin.json` `programHash`                     | köken `stale`, publish reddedilir |
 
 Protokol dışında düzenlenen dosya `modified`, okunamayan/yarım yazılmış
 dosya `corrupt` görünür; geçerli sayılmaz. Yazımlar atomiktir (aynı dizinde
@@ -459,6 +460,201 @@ glottal pürüz kaynakları sıfırlanır ve kontur sabitlenir — perde YOLU
 Dinleme paketi: `pnpm --filter @volstudio/audio-synth audio:audition` →
 git-dışı `export/audition/` (48 archetype varyasyonu + 3 vokal aile, ölçüm
 tablosu `audition.json`; öznel yargı içermez).
+
+## Arama laboratuvarı
+
+Agent tek bir "doğru" sayı tahmin etmek yerine bir programın anlamsal
+ayarları için sınırlı aralıklar ve seçenekler verir; motor bu uzayı
+deterministik olarak tarar, adayları render edip ölçer ve mekanik
+filtrelerden geçirir. Seçim bir insan (ya da açıkça beyan eden agent)
+kararıdır. Arama ikinci bir üretim hattı DEĞİLDİR: hiçbir aday doğrudan
+yayımlanmaz; onaylı aday bir job'un programına terfi eder ve oradan kanonik
+akıştan geçer.
+
+### Arama yapıtları ve provenance
+
+| Yapıt                    | Yer                                  | İçerik                                                                         |
+| ------------------------ | ------------------------------------ | ------------------------------------------------------------------------------ |
+| `AcousticSearchSpecV1`   | `audio-searches/<id>/spec.json`      | taban, tohum, strateji+sürüm, aday sayısı, boyutlar, dışlama, filtre, bütçe    |
+| aday programı            | `audio-searches/<id>/candidates/c-…` | adayın kendi `AcousticProgramV1` belgesi (production kaydı değil)              |
+| `AcousticSearchReportV1` | `audio-searches/<id>/report.json`    | ön-denetim özeti, sıra, kimlik, değerler, maliyet, risk, PCM, betimleyici, red |
+| `SearchSelectionV1`      | `audio-searches/<id>/selection.json` | aday başına karar (`pending/approved/rejected`), beyan eden, etiket, not       |
+| `ProgramOriginV1`        | `audio-jobs/<job>/origin.json`       | terfi eden adayın arama kimliği, spec/rapor özeti, sıra, strateji, PCM özeti   |
+
+Spec normalize yazılır (boyutlar ADA göre sıralı): JSON anahtar sırası ve
+boyut dizisi sırası spec özetini, planı ve raporu değiştirmez. Rapor
+kanoniktir; zaman damgası, süre ölçümü ya da mutlak yol taşımaz — iki taze
+süreçte bayt bayt aynıdır (`tests/search/crossProcess.test.ts`). Aday
+kimliği `c-<16 hex>` = SHA-256(program özeti, arama tohumu, strateji
+kimliği/sürümü, `PROGRAM_RENDERER_VERSION`, arama şeması); düğüm sürümleri
+program özetinin içindedir. Registry açıklama özeti raporda BİLGİ olarak
+durur: yalnız açıklama metni değişince kimlik ve PCM değişmez.
+
+Aday durumu mekaniktir ve karar ondan ayrıdır:
+
+| Durum      | Anlamı                                                           | Kanıt raporda                |
+| ---------- | ---------------------------------------------------------------- | ---------------------------- |
+| `invalid`  | render ÖNCESİ elendi: dışlama, materyalize, render bütçesi, ikiz | aşama + kod + yol + gerekçe  |
+| `filtered` | render edildi, bir mekanik filtreyi geçmedi                      | PCM, betimleyici, denetimler |
+| `error`    | render ya da analiz hata verdi                                   | aşama + hata adı + mesaj     |
+| `passed`   | bütün filtreleri geçti; karar verilebilir                        | PCM, betimleyici, denetimler |
+
+`report.json` en son yazılır; raporu olmayan dizin yarım koşudur ve aynı
+spec ile yeniden koşulur (çıktı deterministik). Tamamlanmış aramanın üzerine
+yazılmaz — kararlar o rapora bağlıdır; yeni tanım yeni `searchId` ister.
+`audio:production-check` (`verify --all`) kayıtlı aramaları spec'ten bellekte
+yeniden üretir ve sıra/kimlik/program/durum/PCM eşitliğini sınar.
+
+### Boyut sözlüğü
+
+Boyut bir programın ANLAMSAL ayarını adresler; keyfi JSON yolu, yama ya da
+ifade dili yoktur (`src/program/dimensions.ts`, arama ve aile ortak):
+
+- `archetype-param`: archetype makrosu (genişletmeden önce).
+- `control`: `control.*` değeri; archetype'ın sahip olduğu makro burada
+  aranamaz (archetype-param ile aranır), hedefi olmayan makro spec
+  aşamasında reddedilir.
+- `node-param`: `{ layer, slot, index?, primitive, param }`; primitive
+  kimliği adreste yazılır ve eşleşmezse reddedilir; gesture/modülasyona bağlı
+  değer aranamaz (eğriyi silerdi).
+
+Aralık registry sınırları içinde olmalı, `unit` registry birimiyle aynı
+olmalı; seçenekler registry'nin kabul ettiği değerlerdir. Uygulama sırası
+sabittir: genişletme → makrolar → düğüm parametreleri. Dışlama kuralı
+(`exclude`) bir bağlaçtır (`when` koşullarının hepsi), ifade dili değil.
+
+### Strateji ve determinizm
+
+`scrambled-halton` v1. Seçim gerekçesi: Latin hypercube N'ye bağlıdır — aday
+sayısı değişince bütün noktalar değişir; Sobol yön sayısı tablosu ister ve
+küçük N'de ilk boyutları eşler. Halton öneki kararlıdır (k. aday N'den
+bağımsız, `tests/search/strategy.test.ts`), tablo istemez ve ≤ 8 boyutta
+düşük uyumsuzluk verir. Yüksek tabanlardaki boyutlar-arası ilinti taban
+başına tohum + boyut ADINDAN türeyen basamak permütasyonuyla (0 sabit) kırılır;
+tohum ayrıca rastgele bir başlangıç indeksi seçer, böylece permütasyonu
+olmayan taban 2 de tohuma bağlıdır. Ardışık her p^k indeks bütün kalıntıları
+kapsadığından ilk p^k nokta her 1/p^k aralığına tek düşer (test kilitli).
+İlk sürümde 0'ı da permüte eden karıştırma denendi; noktalar yarı açık
+aralığın öbür ucuna kaydığı için tabakalama bozuldu ve bırakıldı. Strateji
+sonucu okumaz: optimizasyon, Bayesçi arama, genetik algoritma ya da estetik
+puan yoktur. Sürekli değer 6 anlamlı basamağa, tamsayı parametre tama
+yuvarlanır; seçenek `floor(u·k)` ile seçilir.
+
+### Ön-denetim bütçesi
+
+Aşama 1 (plan) hiçbir adayı render etmez: noktalar üretilir, programlar
+materyalize edilip doğrulanır, geçersizler sınıflanır, her geçerli adayın
+render maliyeti Dalga 0 modeliyle (`estimateProgramCost`) ve kanonik analiz
+maliyeti kanal-örneği başına 55 birimle (ölçülen 364–524 ns/örnek, en kötü
+durum beyaz gürültü) tahmin edilir. `BatchBudget` (öğe, tek öğe tepe belleği,
+toplam iş, tahmini süre = iş × 1e-8 sn) bütün plan üzerinden BİR kez sınanır;
+aşım `BatchBudgetError` (`items|memory|work|time`) ile adıyla reddedilir ve
+arama dizini, dinleme kökü dahil hiçbir dosya açılmaz. Duvar saati hiçbir
+kararı etkilemez; CLI yalnız kanıt olarak raporlar. Yürütme seridir
+(paralellik Dalga 13'ündür). Tek adayın render bütçesi aşımı o adayı
+`render-budget` ile geçersiz kılar, plan yine bütçe içinde kalabilir.
+
+Referans arama (`audio-searches/reference-shell`, ResonantShell; boyut,
+sertlik, sönüm, modal yerleşim — 3 sürekli + 1 seçenek, 16 aday) ölçümü:
+ön-denetim ≈ 14 ms, tahmin 1.26e8 birim ≈ 1.26 sn, gerçek yürütme ≈ 0.6 sn
+(tahmin küçümsemiyor), 13 passed / 2 filtered / 1 invalid, rapor 33 KB, git'e
+giren ağaç 57 KB, git-dışı dinleme kopyaları 1.7 MB. Aynı spec'e
+`maxTotalWorkUnits: 1e7` verilince `BatchBudgetError(work)` ve sıfır dosya.
+
+### Arama ↔ production sınırı: terfi
+
+`promote <jobId> --search <id> --candidate <c-…>` tek giriştir. Sıra:
+aday `passed` ve seçimde `approved` olmalı → aday program dosyası raporla
+aynı → spec aynı strateji ile YENİDEN planlanır ve aynı sıradaki aday aynı
+program özetini ve kimliği vermeli (motor/registry değişmişse `stale`) →
+program yeniden render edilip PCM özeti rapordakiyle aynı olmalı → program
+kanonik `storeProgram` yolundan (brief uyumu + render bütçesi) job'a yazılır
+ve AYNI kilit altında `origin.json` yazılır. Job'un eski render/analiz/seçimi
+özet zinciriyle bayatlar; sonraki adım normal `render → analyze → select →
+publish`tir. Adaylar render kaydı gibi görünemez (`c-` ≠ `r-`), job ya da
+manifest ağacına yazmaz; ikinci bir manifest yazıcısı yoktur.
+
+`AudioJobV1`, `AudioSelectionV1`, `AudioAssetManifestV1` ve
+`AcousticProgramV1` şemaları DEĞİŞMEDİ. Köken ayrı, sürümlü `ProgramOriginV1`
+belgesidir; `status.artifacts.origin` onu job programıyla karşılaştırır.
+Elle program kaydı kökeni siler (elle yazılmış program aramadan gelmiş gibi
+görünemez); programla uyuşmayan köken `stale` olur, `next.action = program`
+der ve publish reddeder. Böylece manifest'teki program özeti → job
+`origin.json` → arama raporundaki aday zinciri özetlerle izlenir.
+
+### Arama seçimi ≠ production seçimi
+
+`SearchSelectionV1` bir aramanın adayları hakkındaki beyanlardır (onay/ret/
+etiket/not, `by: human|agent`) ve hangi rapora ait olduğunu rapor özetiyle
+bağlar; rapor değişirse seçim `stale` olur ve uygulanmaz. Yalnız `passed`
+adaya karar yazılır — filtrelenmiş adayı onaylamak spec filtresini sessizce
+delmek olurdu. `AudioSelectionV1` ise job içinde hangi RENDER'ın
+yayımlanacağını seçer. İkisi ayrı belgedir ve biri ötekinin yerine geçmez.
+`by` beyandır, kimlik doğrulaması değildir; agent insan dinlemesi uyduramaz.
+
+### Mekanik betimleyiciler ve denetimler
+
+`src/analysis/descriptors.ts` rapor şemasına GİRMEZ (analizör sürümü ve
+yayımlanmış manifest'ler değişmez): perde `yin-v1` (de Cheveigné & Kawahara
+2002, ~16 kHz, en çok 40 pencere; mutlak eşik 0.15, eşik altı dip yoksa
+global minimuma 0.1 yakın en küçük gecikmeli yerel dip — oktav hatası önlemi;
+üçten az aktif pencere ya da aktiflerin yarısından azı sesliyse `null`),
+başlangıç `energy-jump-v1` (10 ms pencere, 2.5 ms adım, son 10 ms minimumunun
+4 katı, 10 ms refrakter — ilk sürümdeki 2 ms pencere alçak perdeli sürekli
+tonda periyot içi dalgalanmayı başlangıç sayıyordu, test kilitli) ve darbe
+hızı `envelope-autocorrelation-v1`. Spektral tepe perde DEĞİLDİR; kabarcıkta
+rezonans frekansı olarak açıkça öyle adlandırılır. `MechanicalCheckV1`
+(`asset-policy`, `clipping`, `clicks`, `descriptor`, `onset-rate`,
+`pulse-rate`, `pitch`, `pitch-contour`, `aperiodic`, `band-dominance`) arama
+filtreleri ve canary beklentileri için tek bildirimsel dildir; ölçülen değeri
+ve eşiği raporlar, birleşik kalite puanı üretmez.
+
+### Aile kalite ölçüsü
+
+`assessFamily` → `SoundFamilyQualityReportV1`. Çeşitlilik ve tutarlılık AYRI
+raporlanır, tek bir skor yoktur:
+
+- Çeşitlilik: exact duplicate PCM her zaman sert hata; `family-descriptors-v1`
+  uzayında (log-frekans oktav, log-süre, seviye/6 dB, düzlük×4, başlangıç
+  yoğunluğu) çift uzaklığı dağılımı; yakın-özdeş çift (< 0.02) ve çökmüş aile
+  (medyan < 0.05). Kalibrasyon: aynı kabukta `size` 0.500 → 0.502 ≈ 0.017,
+  0.51 ≈ 0.07; sağlıklı 8 üyeli ailede en yakın çift 0.08, medyan 0.28.
+- Tutarlılık: aktif süre, centroid, maks. momentary LUFS ve (yalnız YIN
+  güveni ≥ 0.5 ise) perde üzerinde medyan + MAD sağlam z-skoru (|z| > 4) ve
+  politikada beyan edilmişse oran/yayılım sınırları.
+
+Politika (`FamilyQualityPolicyV1`) sürümlü veridir; yakın-özdeş ve aykırı
+bulguları `fail` ya da `report` olarak ailenin kendisi seçer. Uzaklık bir
+ölçüm sözleşmesidir, algısal benzerlik iddiası değildir.
+
+### Organik canary derlemi
+
+`canaries/<id>.json` (`OrganicCanaryV1`): `breath`, `bubble`, `droplet`,
+`membrane-pulse`, `wet-squish`, `insect-like-chirp`, `cat-like-gesture`,
+`alien-fluid-call`. Her biri sürümlü kimlik, deterministik kaynak (program ya
+da archetype isteği + tohum), ucuz mekanik beklentiler ve dinleme rehberi
+taşır; mevcut yapı taşlarından kurulur, asset kütüphanesi değildir. Mekanik
+beklentilerin dişi mutasyonla sınanır (nabız hızı, düz perde eğrisi, nefese
+eklenen ton beklentiyi düşürür). İnsan dinleme durumu `canaries/reviews.json`
+(`CanaryReviewsV1`) içindedir, sekizi de `pending-human`dır ve yalnız
+`canary review … --by human` ile değişir; canary sürümü artınca inceleme
+bayatlar. Mekanik geçiş sesin "organik" olduğunu kanıtlamaz.
+
+### Dinleme aracı
+
+`search audition <id>` adayları programlarından yeniden render eder (PCM
+özeti raporla aynı olmalı) ve git-dışı `export/audio-searches/<id>/` altına
+WAV + salt okunur statik sayfa yazar; `--serve` yerel sunucuyu açar.
+Bağımlılıksız HTML/CSS/JS; veri DOM'a yalnız `textContent`/`setAttribute` ile
+girer, gömülü durumda `<` kaçışlanır. Sunucu sınırı: yalnız loopback
+(`127.0.0.1`/`::1`), `Host` başlığı kendi adı:portu (DNS rebinding), sıkı CSP,
+tek yazma ucu `POST /api/decision` (yalnız JSON, `Origin` varsa kendisi,
+16 KiB gövde, bilinmeyen alan reddi), ses yalnız raporda render edilmiş aday
+kimliğiyle sabit export kökünden; yazılan tek dosya aramanın
+`selection.json`ıdır. Kimlik doğrulama yoktur (yerel kullanıcıya güvenilir).
+Karar taze bir süreçte `search status` ile dosyalardan yeniden kurulur.
+Dinleme kopyası yazan TEK yol `src/protocol/audition.ts`dir ve yalnız
+`export/` altına yazar (job render'ı, arama, canary).
 
 ## Hızlı Başlangıç
 
@@ -1078,7 +1274,8 @@ pnpm --filter @volstudio/audio-synth typecheck
 pnpm --filter @volstudio/audio-synth test
 pnpm --filter @volstudio/audio-synth test:coverage    # signoff'ta coverage-audio
 pnpm --filter @volstudio/audio-synth audio:reference-check
-pnpm --filter @volstudio/audio-synth audio:production-check  # manifest'leri yalnız kendilerinden doğrular
+pnpm --filter @volstudio/audio-synth audio:production-check  # manifest'ler + kayıtlı aramalar yalnız kendilerinden
+pnpm --filter @volstudio/audio-synth audio:job canary run  # organik canary mekanik beklentileri
 pnpm --filter @volstudio/audio-synth audio:job context --json
 pnpm --filter @volstudio/audio-synth bench:budget     # kaynak bütçesi referans ölçümü
 pnpm --filter @volstudio/audio-synth bench:resonators # tüp ↔ modal maliyet kıyası

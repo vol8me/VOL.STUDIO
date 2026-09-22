@@ -1,0 +1,61 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "droplet",
+  "version": 1,
+  "title": "Damlalar",
+  "purpose": "Mikro-olay motoru, droplet olayı, saniyede ~5 yarı düzenli olay.",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 1.2,
+      "seed": 13,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.02
+      },
+      "layers": [
+        {
+          "name": "drops",
+          "source": {
+            "primitive": "source.micro-events",
+            "version": 1,
+            "params": {
+              "event": "droplet",
+              "rate": 5,
+              "regularity": 0.7,
+              "sizeSpread": 0.3,
+              "levelSpread": 4
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "onset-rate",
+      "min": 3,
+      "max": 12
+    },
+    {
+      "kind": "aperiodic",
+      "maxConfidence": 0.3
+    },
+    {
+      "kind": "band-dominance",
+      "dominant": "mid",
+      "over": "low"
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Aralıklı, birbirinden hafifçe farklı su damlaları beklenir.",
+    "Hata belirtileri: makineli tüfek gibi özdeş tekrar, metalik çınlama, olayların üst üste yığılması."
+  ]
+}

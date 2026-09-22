@@ -1,0 +1,104 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "cat-like-gesture",
+  "version": 1,
+  "title": "Kedimsi jest",
+  "purpose": "Glottal kaynak + formant; perde eğrisi yükselip düşer (420 → 720 → 380 Hz).",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 1,
+      "seed": 17,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.02
+      },
+      "gestures": {
+        "pitch": {
+          "curve": "curve.spline",
+          "version": 1,
+          "points": [
+            [0, 420],
+            [0.45, 720],
+            [1, 380]
+          ]
+        },
+        "env": {
+          "curve": "curve.cosine",
+          "version": 1,
+          "points": [
+            [0, -40],
+            [0.08, 0],
+            [0.8, -3],
+            [1, -40]
+          ]
+        }
+      },
+      "layers": [
+        {
+          "name": "voice",
+          "source": {
+            "primitive": "source.glottal",
+            "version": 1,
+            "params": {
+              "frequency": {
+                "gesture": "pitch"
+              },
+              "tension": 0.6,
+              "jitter": 0.008,
+              "shimmer": 0.4,
+              "breath": 0.12
+            }
+          },
+          "resonators": [
+            {
+              "primitive": "resonator.formant",
+              "version": 1,
+              "params": {
+                "f1": 800,
+                "f2": 1700,
+                "f3": 2900,
+                "f4": 3900,
+                "bandwidth": 1.2
+              }
+            }
+          ],
+          "articulation": {
+            "primitive": "articulation.amplitude",
+            "version": 1,
+            "params": {
+              "level": {
+                "gesture": "env"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "pitch-contour",
+      "shape": "rise-fall",
+      "minRatio": 1.15
+    },
+    {
+      "kind": "pitch",
+      "min": 400,
+      "max": 800,
+      "minConfidence": 0.5
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Yükselip düşen, sesli (perdeli) kısa bir “miyav benzeri” jest beklenir.",
+    "Hata belirtileri: düz perde, robotik vızıltı, kesik başlangıç, perdede sıçrama.",
+    "Ad çağrışımdır; gerçekçilik iddiası yoktur."
+  ]
+}

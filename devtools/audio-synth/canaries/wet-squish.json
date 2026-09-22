@@ -1,0 +1,101 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "wet-squish",
+  "version": 1,
+  "title": "Islak ezilme",
+  "purpose": "Gurgle (kabarcık nabızları) + alçak geçiren kahverengi gürültü: yoğun, ıslak doku.",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 0.8,
+      "seed": 15,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.02
+      },
+      "gestures": {
+        "env": {
+          "curve": "curve.cosine",
+          "version": 1,
+          "points": [
+            [0, -30],
+            [0.1, 0],
+            [0.8, -40]
+          ]
+        }
+      },
+      "layers": [
+        {
+          "name": "gurgle",
+          "source": {
+            "primitive": "source.gurgle",
+            "version": 1,
+            "params": {
+              "pulseRate": 7,
+              "bubblesPerPulse": 10,
+              "radius": 1.2,
+              "damping": 2
+            }
+          }
+        },
+        {
+          "name": "slosh",
+          "source": {
+            "primitive": "source.noise",
+            "version": 1,
+            "params": {
+              "color": "brown"
+            }
+          },
+          "resonators": [
+            {
+              "primitive": "resonator.biquad",
+              "version": 1,
+              "params": {
+                "mode": "lowpass",
+                "frequency": 700,
+                "q": 1.5
+              }
+            }
+          ],
+          "articulation": {
+            "primitive": "articulation.amplitude",
+            "version": 1,
+            "params": {
+              "level": {
+                "gesture": "env"
+              }
+            }
+          },
+          "gainDb": -10
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "onset-rate",
+      "min": 10
+    },
+    {
+      "kind": "aperiodic",
+      "maxConfidence": 0.3
+    },
+    {
+      "kind": "band-dominance",
+      "dominant": "mid",
+      "over": "sub"
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Kısa, yoğun, ıslak bir “şlap/vıcık” dokusu beklenir.",
+    "Hata belirtileri: ayrık bip’ler, kuru hışırtı, sürekli uğultu, sert kesilme."
+  ]
+}

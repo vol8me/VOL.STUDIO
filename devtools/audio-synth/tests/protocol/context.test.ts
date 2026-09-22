@@ -22,6 +22,42 @@ describe('audio:job context', () => {
     expect(context.schemas.brief.kinds.music.status).toBe('unsupported');
   });
 
+  it('arama sözleşmesi çalışan koddan: şemalar, strateji, aranabilir boyutlar, bütçe, komutlar', () => {
+    const { search, canaries } = buildContext(REPO);
+    expect(search.schemas).toEqual({
+      spec: 'AcousticSearchSpecV1',
+      report: 'AcousticSearchReportV1',
+      selection: 'SearchSelectionV1',
+      status: 'AcousticSearchStatusV1',
+      origin: 'ProgramOriginV1',
+    });
+    expect(search.strategies.map((s) => [s.id, s.version])).toEqual([['scrambled-halton', 1]]);
+    const shell = search.dimensions.targets['archetype-param'].searchable.find(
+      (a) => a.id === 'archetype.resonant-shell',
+    );
+    expect(Object.keys(shell?.params ?? {}).sort()).toEqual([
+      'damping',
+      'durationSeconds',
+      'hardness',
+      'roughness',
+      'size',
+    ]);
+    expect(search.dimensions.targets.control.controls).toContain('control.body-size');
+    expect(search.filters.kinds).toContain('aperiodic');
+    expect(Object.keys(search.commands).sort()).toEqual([
+      'audition',
+      'decide',
+      'list',
+      'plan',
+      'promote',
+      'run',
+      'status',
+      'verify',
+    ]);
+    expect(search.budget.default.maxItems).toBeGreaterThan(0);
+    expect(canaries.entries.map((c) => c.review)).toEqual(Array(8).fill('pending-human'));
+  });
+
   it('aynı repo durumu aynı baytları verir (zaman damgası yok, sıra kararlı)', () => {
     expect(canonicalJson(buildContext(REPO))).toBe(canonicalJson(buildContext(REPO)));
     expect(JSON.stringify(buildContext(REPO))).not.toMatch(/\d{4}-\d{2}-\d{2}T/);

@@ -1,0 +1,104 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "breath",
+  "version": 1,
+  "title": "Nefes",
+  "purpose": "Türbülans exciter + formant süzgeci + basınç gesture’ı: perdesiz, orta bantta yoğun, yükselip sönen hava akışı.",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 0.9,
+      "seed": 11,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.02
+      },
+      "gestures": {
+        "press": {
+          "curve": "curve.cosine",
+          "version": 1,
+          "points": [
+            [0, 0.15],
+            [0.35, 0.8],
+            [0.9, 0.1]
+          ]
+        },
+        "env": {
+          "curve": "curve.cosine",
+          "version": 1,
+          "points": [
+            [0, -40],
+            [0.3, 0],
+            [0.9, -40]
+          ]
+        }
+      },
+      "layers": [
+        {
+          "name": "air",
+          "source": {
+            "primitive": "exciter.turbulence",
+            "version": 1,
+            "params": {
+              "pressure": {
+                "gesture": "press"
+              },
+              "brightness": 0.75,
+              "color": "white"
+            }
+          },
+          "resonators": [
+            {
+              "primitive": "resonator.formant",
+              "version": 1,
+              "params": {
+                "f1": 600,
+                "f2": 1400,
+                "f3": 2600,
+                "f4": 3600,
+                "bandwidth": 2.5
+              }
+            }
+          ],
+          "articulation": {
+            "primitive": "articulation.amplitude",
+            "version": 1,
+            "params": {
+              "level": {
+                "gesture": "env"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "aperiodic",
+      "maxConfidence": 0.3
+    },
+    {
+      "kind": "band-dominance",
+      "dominant": "mid",
+      "over": "sub"
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "activeSeconds",
+      "min": 0.5,
+      "max": 0.9
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Tek bir nefes alıp verme gibi yükselip sönen, perdesiz hava sesi beklenir.",
+    "Hata belirtileri: ıslık/ton (rezonans çok dar), sert başlangıç tıkı, kesik kuyruk, sürekli gürültü duvarı."
+  ]
+}

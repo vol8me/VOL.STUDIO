@@ -1,14 +1,14 @@
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { analyzeAudio } from '../analysis/report';
 import { assertRenderBudget } from '../guard/budget';
 import { validateBrief, type AudioBriefV1 } from '../program/brief';
 import { estimateProgramCost, PROGRAM_RENDERER_VERSION, renderProgram } from '../program/render';
 import { resolveProgram } from '../program/schema';
-import { writeWav } from '../writer';
+import { writeAuditionCopy } from './audition';
 import { hashCanonical, hashPcm, type Sha256 } from './canonical';
 import { ProtocolError } from './errors';
-import { readJsonFile, resolveInside, toRepoRelative, withLock } from './fs';
+import { readJsonFile, resolveInside, withLock } from './fs';
 import {
   advance,
   artifactFile,
@@ -36,6 +36,7 @@ import {
   type RenderRecordV1,
   type SelectionV1,
 } from './records';
+import type { ProgramOriginV1 } from './origin';
 import { jobStatus, type JobStatusV1 } from './status';
 import { resolveDestination, surveyTargets } from './targets';
 
@@ -122,8 +123,17 @@ function checkProgramAgainstBrief(
   }
 }
 
-/** Programı doğrular (şema, registry, brief uyumu, bütçe) ve kaydeder; render ETMEZ. */
-export function registerProgram(loc: JobLocation, document: unknown): Sha256 {
+/**
+ * Programı doğrular (şema, registry, brief uyumu, bütçe) ve kaydeder; render
+ * ETMEZ. Köken verilirse (`promote`) program ile AYNI kilit altında yazılır;
+ * verilmezse eski köken silinir — elle kaydedilen program aramadan gelmiş
+ * gibi görünemez.
+ */
+export function storeProgram(
+  loc: JobLocation,
+  document: unknown,
+  origin: (programHash: Sha256) => ProgramOriginV1 | null,
+): Sha256 {
   return withLock(jobDir(loc), jobLabel(loc), () => {
     const status = requireState(loc, 'program', (s) =>
       s.artifacts.brief.state === 'valid' ? null : `brief ${s.artifacts.brief.state}`,
@@ -134,6 +144,9 @@ export function registerProgram(loc: JobLocation, document: unknown): Sha256 {
     checkProgramAgainstBrief(brief, resolved);
     assertRenderBudget(estimateProgramCost(resolved), 'program');
     const hash = writeArtifact(loc, 'program.json', document);
+    const provenance = origin(hash);
+    if (provenance) writeArtifact(loc, 'origin.json', provenance);
+    else rmSync(artifactFile(loc, 'origin.json'), { force: true });
     saveJob(
       loc,
       advance(job, 'programmed', {
@@ -142,6 +155,10 @@ export function registerProgram(loc: JobLocation, document: unknown): Sha256 {
     );
     return hash;
   });
+}
+
+export function registerProgram(loc: JobLocation, document: unknown): Sha256 {
+  return storeProgram(loc, document, () => null);
 }
 
 export function renderIdOf(programHash: Sha256, seed: number): string {
@@ -191,13 +208,11 @@ export function renderCandidate(loc: JobLocation, options: RenderOptions = {}): 
     const hash = writeArtifact(loc, renderPath(renderId), record);
     let audition: string | null = null;
     if (options.audition) {
-      const file = resolveInside(
+      audition = writeAuditionCopy(
         loc.repoRoot,
         `${AUDITION_ROOT}/${loc.jobId}/${renderId}.wav`,
-        'audition',
+        rendered,
       );
-      writeWav(file, rendered);
-      audition = toRepoRelative(loc.repoRoot, file);
     }
     saveJob(
       loc,
