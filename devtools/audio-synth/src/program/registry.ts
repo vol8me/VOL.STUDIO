@@ -114,13 +114,39 @@ export interface ControlEntry extends EntryBase {
   readonly modulationDepth?: { readonly span: number };
 }
 
+/** Archetype'ın bir katmanındaki yapı taşı zinciri — yapısal sözleşme. */
+export interface ArchetypeLayer {
+  readonly layer: string;
+  readonly chain: readonly string[];
+}
+
+/**
+ * Preset'in ÜSTÜNDE bir aile tanımı: topoloji (katman → yapı taşı zinciri),
+ * makro uzayı ve deterministik varyasyon politikası. `expand` yalnız
+ * program BELGESİ üretir; doğrulama ve render kanonik program yolundadır.
+ */
+export interface ArchetypeEntry extends EntryBase {
+  readonly kind: 'archetype';
+  readonly topology: readonly ArchetypeLayer[];
+  readonly macros: readonly string[];
+  readonly variation: { readonly policy: string; readonly guaranteed: number };
+  /** Parametre birleşimi yapısal olarak geçersizse açıklama, değilse `null`. */
+  readonly constraint: (params: Readonly<Record<string, number>>) => string | null;
+  readonly expand: (
+    params: Readonly<Record<string, number>>,
+    random: Random,
+    sampleRate: number,
+  ) => Record<string, unknown>;
+}
+
 export type ProgramEntry =
   | SourceEntry
   | ProcessorEntry
   | EffectEntry
   | CurveEntry
   | ModulatorEntry
-  | ControlEntry;
+  | ControlEntry
+  | ArchetypeEntry;
 
 const ENTRY_ID =
   /^(source|exciter|resonator|articulation|effect|curve|modulator|control|archetype)\.[a-z][a-z0-9-]*$/;

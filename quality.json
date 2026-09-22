@@ -1,5 +1,9 @@
 {
   "$comment": [
+    "2026-09-22: audio-synth Dalga 1–3 (authoring protokolü, organik çekirdek, biyolojik",
+    "yapı taşları) ölçülen kapsamı satır 96.77 / ifade 95.85 / dal 88.84 / fonksiyon 97.35'e",
+    "çıkardı; eşikler 93/92/85/93 → 95/94/87/95 (ölçülenin ~2 puan altı) ratchet'lendi.",
+    "",
     "2026-09-22: audio-synth Dalga 0 temeli (guard/, analysis/, kanonik mix/master) ölçülen",
     "kapsamı satır 95.33 / ifade 94.30 / dal 86.96 / fonksiyon 95.76'ya çıkardı; eşikler",
     "86/86/75/85 → 93/92/85/93 (ölçülenin ~2 puan altı) ratchet'lendi.",
@@ -86,10 +90,10 @@
       "functions": 83
     },
     "@volstudio/audio-synth": {
-      "lines": 93,
-      "statements": 92,
-      "branches": 85,
-      "functions": 93
+      "lines": 95,
+      "statements": 94,
+      "branches": 87,
+      "functions": 95
     },
     "@volstudio/pen.dev": {
       "lines": 97,

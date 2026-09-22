@@ -11,14 +11,16 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 ## Yapı
 
 - `src/` — sentez motoru
-- `src/program/` — kanonik `AudioBriefV1`/`AcousticProgramV1`, registry, program render'ı
+- `src/program/` — kanonik `AudioBriefV1`/`AcousticProgramV1`, registry, program render'ı,
+  organik yapı taşları ve archetype genişletmesi
 - `src/protocol/` — `AudioJobV1`, manifest ve TEK publish kapısı (Node-only)
 - `src/writer.ts` — WAV/OGG yazma (Node-only, FFmpeg gerekir)
 - `audio-jobs/` — job durumları; `platform-reference` üretim-referans işidir
 - `reference/production/` — referans fixture'ın yayımlanan asset'i ve manifest'i
 - `tests/` — motor, writer ve preset testleri
 - `scripts/` — QA (`audio-qa`, `audio-reference-check`), karakterizasyon
-  (`fm-alias-report`, `render-budget-bench`), demo ve dönüştürücü CLI'ları
+  (`fm-alias-report`, `render-budget-bench`, `resonator-bench`), dinleme paketi
+  (`archetype-audition`), demo ve dönüştürücü CLI'ları
 - `export/` — yerel üretim çıktısı (izlenmez).
 
 ## Doktrin

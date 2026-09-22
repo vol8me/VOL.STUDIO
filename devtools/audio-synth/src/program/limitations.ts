@@ -51,4 +51,41 @@ export const KNOWN_LIMITATIONS: readonly KnownLimitation[] = [
       'PCM farklı araç zinciriyle farklı baytlar verebilir ve bu "yalnız kodlayıcı" değişikliği ' +
       'olarak sınıflanır.',
   },
+  {
+    id: 'bubble-model-domain',
+    affects: ['source.bubble', 'source.bubbles', 'source.gurgle'],
+    description:
+      'Minnaert rezonansı yüzey gerilimi ve ısıl etkileri ihmal eder (0.1–20 mm aralığında ' +
+      'geçerli); sönüm/yükselme van den Doel (2005) uydurmasıdır. Kabarcık genliği ∝ √R ' +
+      'fiziksel değil, nüfus karışımı için seçilmiş sezgisel ölçektir.',
+  },
+  {
+    id: 'glottal-not-lf',
+    affects: ['source.glottal'],
+    description:
+      'Kaynak LF/Rosenberg glottal akış modeli DEĞİLDİR: BLIT darbe dizisi + tek kutuplu ' +
+      'eğimdir. Açık faz oranı ve kapanma keskinliği ayrı parametre değildir.',
+  },
+  {
+    id: 'waveguide-simplified',
+    affects: ['resonator.tube'],
+    description:
+      'Tek döngülü tüp: uç düzeltmesi, ışınım empedansı, tüp kesit değişimi ve ikinci ' +
+      'boyut modları yoktur; kesirli gecikme doğrusal ara değerle okunur (yüksek frekans ' +
+      'kaybı ve küçük akort hatası kısa tüpte artar).',
+  },
+  {
+    id: 'no-listening-validation',
+    affects: ['archetype.*', 'source.glottal'],
+    description:
+      'Archetype ve vokal program aileleri yalnız ölçülen fiziksel/spektral özelliklerle ' +
+      'doğrulandı; insan dinlemesi yapılmadı. "Gerçekçi/doğal/ikna edici" iddiası yoktur.',
+  },
+  {
+    id: 'event-cap',
+    affects: ['source.micro-events', 'source.bubbles'],
+    description:
+      'Katman başına en çok 20000 olay (MAX_EVENTS); sınırı aşan olaylar deterministik ' +
+      'olarak kesilir. Olay maliyeti render öncesi bütçeden geçer.',
+  },
 ];

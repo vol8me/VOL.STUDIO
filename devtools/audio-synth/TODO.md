@@ -20,9 +20,10 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
       örnekleme) ölçülerek seçilir; 3.6 kHz testere alias'ı −70 dB altına
       iner ve `scripts/fm-alias-report.ts` benzeri bir ızgarayla kilitlenir.
       _Dalga 2/3 bağımlılık denetimi (2026-09-22): yeni ilkeller kenarlı
-      osilatöre dayanmıyor; kabul testleri riskli bölgeyi kullanmadığı için
-      madde bilinçli olarak açık. Sınır agent'a `audio:job context`
-      içindeki `polyblep-alias` sınırlamasıyla açık._
+      osilatöre dayanmıyor — perdeli organik kaynak `source.glottal` BLIT'tir
+      (1234.5 Hz'te harmonik dışı taban < −60 dB ölçüldü). Kabul testleri
+      riskli bölgeyi kullanmadığı için madde bilinçli olarak açık; sınır
+      agent'a `audio:job context` içindeki `polyblep-alias` ile açık._
 
 ## Yol haritası — agent-first genel amaçlı audio-authoring platformu
 
@@ -68,35 +69,8 @@ DESIGN "Organiklik çekirdeği".
 
 ### Dalga 3 — biyolojik yapı taşları
 
-- [ ] **[P2] Deterministik micro-event engine eklensin.** Bubble/click/
-      droplet/surface-pop gibi olaylar rate + distribution + seed ile
-      zamanlanır; yüzlerce mikro olay tek bir ses programına katılabilir.
-      Kapanır: event schedule aynı seed'de birebir; rate arttıkça ölçülen
-      event yoğunluğu beklenen aralıkta monoton artar.
-- [ ] **[P2] Fluid/bubble sentez ailesi eklensin.** Tek bubble + bubble
-      population + fluid pulse/gurgle yapı taşları; bubble boyutu,
-      damping/viscosity-benzeri kontroller ve mikro olay dağılımı içerir.
-      Kapanır: bubble size büyüdükçe temel rezonansın beklenen yönde düştüğü
-      spektral testle, viscosity/damping arttıkça kuyruğun kısaldığı impulse
-      testiyle kilitlenir.
-- [ ] **[P2] Organik vokal kaynağı geliştirilsin.** Formant rezonatörü ayrı
-      kalsın; voiced/glottal-benzeri exciter, pitch gesture, dynamic formants,
-      breath/turbulence, jitter/shimmer ve kontrollü subharmonic/irregularity
-      eklenir. Kapanır: aynı kaynakla en az cat-like, bark-like ve yabancı
-      air-sac gesture'ı yalnız program değiştirerek üretilebilir; otomatik
-      test fiziksel/spektral özellikleri sınar, "gerçek kedi gibi" iddiası
-      insan/audio-capable audition olmadan yapılmaz.
-- [ ] **[P2] Genel cavity/tube waveguide araştırılıp primitive olarak
-      eklensin.** Mevcut `airColumn`ı kopyalamak yerine reusable
-      delay-line/reflection yüzeyi oluşturulur. Kapanır: açık/kapalı tüp mod
-      ilişkileri ve length↑ → resonance↓ davranışı testte ölçülür; performans
-      mevcut modal yaklaşım ile karşılaştırılır.
-- [ ] **[P2] Preset'in üstüne AcousticArchetype katmanı gelsin.**
-      `FluidCreature`, `MembraneCreature`, `AirSacCreature`, `ChitinClicker`,
-      `ResonantShell`, `VocalTube` gibi archetype'lar ham preset değil;
-      exciter/resonator/gesture/topology + macro control space tanımlar.
-      Kapanır: bir archetype'tan en az sekiz farklı ama aynı ailede kalan
-      deterministic varyasyon üretilebilir.
+Dalga 3'ün beş maddesi kapandı; kısa kanıtları `## Kapatılanlar`da, gerekçe
+DESIGN "Biyolojik yapı taşları".
 
 ### Dalga 4 — agent search laboratuvarı ve kalite
 
@@ -650,6 +624,46 @@ DESIGN "Organiklik çekirdeği".
 
 ## Kapatılanlar
 
+- [x] **[P2] Deterministik micro-event engine.** Zaman-yeniden-ölçekleme
+      ile örnek-doğru, zamanla değişen oranlı zamanlama; `regularity`
+      (Poisson ↔ periyodik) ve `clustering` sürekli eksenler; zamanlama ve
+      varyasyon ayrı alt akışlar; katman başına 20000 olay tavanı + render
+      öncesi bütçe. Kanıt: `tests/program/events.test.ts` — aynı tohumda
+      çizelge birebir; 24 tohumluk korpusta sayım ortalaması λ = oran·süre
+      etrafında ve oranla kesin monoton; Poisson varyans/ortalama ≈ 1,
+      periyodik ≈ 0; sıfır oran/kısa süre/yüksek oran/sınır kenarları. (Dalga 3)
+- [x] **[P2] Fluid/bubble sentez ailesi.** `source.bubble`, `source.bubbles`,
+      `source.gurgle`: Minnaert rezonansı + van den Doel (2005) sönüm/
+      yükselme; yaklaşım ve geçerlik alanı (0.1–20 mm, yüzey gerilimi yok)
+      registry'de ve DESIGN'da. Kanıt: yarıçap 1→8 mm'de ölçülen tepe
+      Minnaert'in ±%5'inde ve kesin azalan; sönüm çarpanı 0.5→4'te −40 dB
+      süresi kesin kısalır; büyük nüfus bütçede reddedilir. (Dalga 3)
+- [x] **[P2] Organik vokal kaynağı.** `source.glottal`: BLIT darbe dizisi
+      (alias yok), gerilim eğimi, döngü eşzamanlı jitter/shimmer,
+      alt-harmonik, açılma fazına kilitli nefes; formant ayrı düğüm. Aynı
+      kaynakla cat-like / bark-like / alien air-sac aileleri YALNIZ program
+      değiştirerek (`tests/fixtures/vocalFamilies.ts`); testler perde
+      konturunu, formant hareketini, atak süresini, alt-harmonik oranını,
+      spektral düzlüğü ve kese rezonansını ölçer. "Gerçek kedi gibi" iddiası
+      yok — dinleme yapılmadı; dinleme dosyaları `audio:audition` ile
+      git-dışı `export/audition/`e yazılır. (Dalga 3)
+- [x] **[P2] Genel cavity/tube waveguide.** `resonator.tube`: gidiş-dönüş
+      gecikme hattı + uç yansıma işareti + uç kaybı; `airColumn` kopyası
+      değil. Kanıt: açık/kapalı (2n−1)·c/4L ve açık/açık n·c/2L modları
+      ±%2'de, çift harmonik konumları > 20 dB zayıf; uzunluk↑ → temel↓;
+      uzunluk taraması kararlı ve tıksız. Maliyet kıyası
+      (`bench:resonators`): tüp ~218 harmoniği 3.3 ms/sn, modal 32 mod
+      3.8 ms/sn, aynı 218 harmonik modal ile ≈ 26 ms/sn. (Dalga 3)
+- [x] **[P2] AcousticArchetype katmanı.** Altı aile (fluid-creature,
+      membrane-creature, air-sac-creature, chitin-clicker, resonant-shell,
+      vocal-tube): topoloji + makro uzayı + varyasyon politikası registry'de;
+      `Acoustic.expandArchetype` saf ve deterministik program belgesi üretir.
+      Kanıt: `tests/program/archetypes.test.ts` — her aile için 8 varyasyon
+      geçerli, deterministik, topolojisi sözleşmeyle aynı, PCM'leri ikişer
+      ikişer farklı; aile değişmezleri sekizinde de tutar; 27 archetype yön
+      iddiasının hepsi ölçümle kesin monoton; aralık dışı/bilinmeyen/yapısal
+      olarak geçersiz istek render'dan önce reddedilir. (Dalga 3)
+
 - [x] **[P1] Genel Gesture/automation sistemi.** `curve.linear`,
       `curve.cosine` (C1), `curve.exponential` (geometrik), `curve.spline`
       (PCHIP; aşımsız C1 — gerekçesi aralık denetiminin noktalarda yeterli
@@ -659,32 +673,32 @@ DESIGN "Organiklik çekirdeği".
       basınç + rezonans üç ayrı gesture ile sürülür, ölçülen perde/seviye/
       ağırlık merkezi kesin monoton, tık adayı sıfır, render deterministik;
       basamak 48 kHz'te tam 24000. örnekte; 64 rastgele kümede spline aşımı yok.
-      (Dalga 2)
+      (7641e22)
 - [x] **[P1] Korelasyonlu stokastik modülasyon.** `modulator.drift`, `walk`
       (Ornstein–Uhlenbeck), `sample-glide`, `jitter`, `shimmer`; her biri
       `modulator:<ad>/<etiket>` alt akışında. Kanıt: alfabetik olarak önce
       gelen bir bubble akışı + katman eklendiğinde perde katmanı bit-eşit;
       32 tohumluk korpusta sınırlılık, sıfır ortalama, OU sapması ve
-      korelasyon süresi, drift eğim sınırı, jitter döngü sayımı. (Dalga 2)
+      korelasyon süresi, drift eğim sınırı, jitter döngü sayımı. (7641e22)
 - [x] **[P1] Exciter → Resonator → Articulator.** `exciter.impact`,
       `exciter.membrane` (burkulan zar/tık dizisi), `exciter.turbulence`;
       `resonator.modal`, `resonator.cavity`, `resonator.formant`;
       `articulation.amplitude`. Dokuz exciter×rezonatör birleşimi aynı
       program yüzeyinde, rezonans tepesi beklenenin ±%8'inde. Eski enstrüman
       modelleri yeniden yazılmadı (program yüzeyi onları sarmaz; ikisi yan
-      yana yaşar). (Dalga 2)
+      yana yaşar). (7641e22)
 - [x] **[P2] Zamanla değişen modal banka.** Karmaşık faz döndürücü modlar:
       frekans/T60 örnek başına değişir, durum büyüklüğü korunur, r < 1.
       Kanıt: body-size gesture'ı ile mod frekansı 220 → 440 Hz monoton
       yükselir; gürültü uyarımında linear/cosine/spline taramalarında tık
-      adayı 0; 20 Hz↔11 kHz / T60 5 ms↔30 sn taraması sonlu ve sınırlı. (Dalga 2)
+      adayı 0; 20 Hz↔11 kHz / T60 5 ms↔30 sn taraması sonlu ve sınırlı. (7641e22)
 - [x] **[P2] Makro akustik kontroller.** `body-size`, `tension`, `pressure`,
       `wetness`, `viscosity`, `roughness`, `cavity-size`, `airiness`,
       `instability` — registry'de hedef (`primitive.param`, yasa, açıklık),
       aralık/birim ve yön; `context` hedefleri açar. Kanıt:
       `tests/program/macros.test.ts` — dokuz makronun yazılı yönü beş
       konumda kesin monoton; 0.5 nötr (bit-eşit); etkisiz/tekrarlanan/
-      otomasyonsuz hedefe gesture'lı makro reddedilir. (Dalga 2)
+      otomasyonsuz hedefe gesture'lı makro reddedilir. (7641e22)
 
 - [x] **[P1] OGG üretiminin araç zinciri manifest'e alınıyor** (Dalga 1
       `AudioAssetManifestV1` absorbe etti). Kanonik kimlik PCM özetidir

@@ -360,9 +360,9 @@ function checkUsage(scope: ResolveScope): void {
     }
   }
   for (const control of scope.controls) {
-    const effective = control.entry.modulationDepth
-      ? scope.used.modulators.size > 0
-      : scope.used.controls.has(control.entry.id);
+    const effective =
+      scope.used.controls.has(control.entry.id) ||
+      (control.entry.modulationDepth !== undefined && scope.used.modulators.size > 0);
     if (!effective) {
       const detail = 'bu programda hedefi yok (etkisiz makro)';
       throw new AudioParamError(`${control.path}.control`, 'combination', detail, control.entry.id);

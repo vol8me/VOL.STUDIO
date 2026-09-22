@@ -29,6 +29,8 @@
     "audio:reference-check": "tsx scripts/audio-reference-check.ts",
     "audio:job": "tsx scripts/audio-job.ts",
     "audio:production-check": "tsx scripts/audio-job.ts verify --all",
+    "audio:audition": "tsx scripts/archetype-audition.ts",
+    "bench:resonators": "tsx scripts/resonator-bench.ts",
     "demo:music": "tsx scripts/music-demo.ts",
     "convert:ios": "tsx scripts/convert-audio.ts"
   },

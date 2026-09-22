@@ -205,6 +205,10 @@ değiştirmeyen) düşürür.
 `stateBytes` modelinden ve otomasyon tamponlarından toplar; tahmin Dalga 0'ın
 ortak `assertRenderBudget` kapısından ayırmadan ÖNCE geçer. `program` komutu
 aynı kapıyı kayıt anında da uygular — bütçeyi aşan program job'a giremez.
+Ölçüm (referans makine, üç koşunun en iyisi): referans iş, altı archetype
+(6 sn) ve üç vokal aile 0.7–9.2 ns/birim çıktı — hepsi ~10 ns kalibrasyonunun
+ALTINDA, yani program tahmini gerçek maliyeti küçümsemez (en muhafazakâr:
+tık olaylı `chitin-clicker`, 0.7 ns/birim).
 
 ### Job, özet zinciri ve bayatlık
 
@@ -363,6 +367,98 @@ gürültü/türbülans, zar tık dizisi; Dalga 3'ün ses kaynağı bant sınırl
 darbe dizisidir). Kabul testleri PolyBLEP'in riskli bölgesini kullanmadığı
 için P3 maddesi açık kalır; sınır `audio:job context` içinde
 `polyblep-alias` sınırlaması olarak agent'a açıktır.
+
+## Biyolojik yapı taşları
+
+Dalga 3 ilkelleri de Dalga 1 program sözleşmesinin içindedir; her biri
+registry kaydıdır ve governance testi her parametresinin PCM'i gerçekten
+değiştirdiğini sınar. Hiçbiri "gerçek bir hayvan gibi" iddiası taşımaz:
+doğrulama ölçülen fiziksel/spektral özelliklerledir, insan dinlemesi
+yapılmadı (`audio:job context` → `no-listening-validation`).
+
+### Mikro-olay motoru
+
+`scheduleEvents` zaman-yeniden-ölçekleme kullanır: birikimli oran
+Λ(t) = ∫ rate dt her örnekte toplanır, Λ bir sonraki eşiği geçince olay
+doğar; eşik aralığı r + (1 − r)·Exp(1)'dir. Böylece zamanla değişen oranlı
+süreç örnek-doğru ve O(kare) üretilir; `regularity` Poisson (0) ile tam
+periyodik (1) arasında SÜREKLİ bir eksendir, `clustering` olay başına ortalama
+8·c küme olayı ekler (4–24 ms arayla). İlk tasarımdaki "dağılım seçeneği +
+yalnız bir seçenekte etkili parametre" governance testinde düştü (seçeneğe
+bağlı parametre süs metadata'dır) ve sürekli eksenlerle değiştirildi.
+Zamanlama ve varyasyon ayrı alt akışlardır. Kenarlar: sıfır oran olay
+üretmez, tampon dışına düşen olay yazılmaz, katman başına en çok 20000 olay
+(deterministik kesme). Kanıt: 24 tohumluk korpusta sayım ortalaması λ =
+oran·süre etrafında ve oranla kesin monoton; Poisson'da varyans/ortalama ≈ 1,
+periyodikte ≈ 0.
+
+### Akışkan/kabarcık ailesi
+
+Minnaert rezonansı f₀ = (1/2πR)·√(3γp₀/ρ) (hava/su, deniz seviyesi →
+f₀·R ≈ 3.29 m/sn; R = 1 mm ≈ 3.3 kHz). Yüzey gerilimi ve ısıl etkiler ihmal
+edilir — geçerlik 0.1–20 mm. Sönüm ve yükselen perde van den Doel (2005,
+"Physically based models for liquid sounds"): d = 0.13·f₀ + 0.0072·f₀^1.5,
+f(t) = f₀(1 + ξ·d·t). `damping` d'yi ölçekler (viskozite benzeri). Genlik
+∝ √R sezgiseldir (fiziksel iddia değil). Yapı taşları: `source.bubble` (tek),
+`source.bubbles` (mikro-olay motoruyla nüfus, yarıçap 2^(±1.5·spread)),
+`source.gurgle` (düzenliye yakın nabız + büyük "glug" + küçük küme). Kanıt:
+R = 1/2/4/8 mm'de ölçülen tepe Minnaert'in ±%5'inde ve kesin azalan; sönüm
+0.5→4 kat büyüdükçe −40 dB süresi kesin kısalır.
+
+### Organik vokal kaynağı
+
+`source.glottal`: BLIT darbe dizisi (Stilson & Smith 1996) — M = 2⌊P/2⌋+1
+harmonikli Dirichlet çekirdeği, en yüksek harmonik Nyquist altında; saf
+testere gibi katlanmaz (1234.5 Hz'te harmonik dışı taban < −60 dB ölçüldü).
+Tek kutuplu eğim `tension` ile, döngü eşzamanlı jitter (periyot) ve
+shimmer/alt-harmonik (yarım periyotta, darbeler arasında), açılma fazına
+kilitli nefes gürültüsü. Formant AYRI düğümdür (`resonator.formant`). Bu bir
+LF/Rosenberg modeli değildir (`glottal-not-lf`). Aynı kaynakla üç aile yalnız
+program değiştirerek kurulur (`tests/fixtures/vocalFamilies.ts`): cat-like
+(perde yükselip iner, formant bölgesi düşer), bark-like (≤ 30 ms atak,
+alt-harmonik oranı cat-like'ın 5 katından fazla, daha düz spektrum), alien
+air-sac (f₀ < 130 Hz, şişen kese boşluk rezonansını düşürür).
+
+### Tüp dalga kılavuzu
+
+`resonator.tube` tek döngülü dijital waveguide'dır (`airColumn`ın kopyası
+değil, yeniden kullanılabilir rezonatör ilkeli): gidiş-dönüş gecikmesi
+D = 2L·fs/c, uç yansıma çarpımı s (açık −1, kapalı +1), uç kaybı tek sıfırlı
+alçak geçiren; kayıp süzgecinin DC grup gecikmesi D'den düşülür, kesirli
+gecikme doğrusal ara değerle okunur (uzunluk örnek başına değişebilir, tık
+yok). Açık/kapalı yalnız tek harmonikler ((2n−1)·c/4L), açık/açık bütün
+harmonikler (n·c/2L) — ölçülen modlar ±%2'de, açık/kapalıda çift harmonik
+konumları 20 dB'den fazla zayıf; uzunluk arttıkça temel kesin düşer.
+
+**Modal yaklaşımla maliyet** (`pnpm --filter @volstudio/audio-synth
+bench:resonators`, 110 Hz, 48 kHz, referans makine): tüp Nyquist'e kadar ~218
+harmoniği 3.3 ms/sn ses maliyetiyle taşır; modal banka 8 modda 1.1, 32 modda
+(registry tavanı) 3.8 ms/sn'dir — aynı 218 harmoniği modal banka ile taşımak
+doğrusal ölçekle ≈ 26 ms/sn olurdu. Tüp yoğun harmonik rezonansta ~8× ucuzdur;
+modal banka ise mod başına oran/sönüm/genlik ve harmonik olmayan yerleşim
+(zar, çubuk) verir — ikisi rakip değil, farklı sorulara cevaptır.
+
+### AcousticArchetype katmanı
+
+`archetype.fluid-creature`, `membrane-creature`, `air-sac-creature`,
+`chitin-clicker`, `resonant-shell`, `vocal-tube`. Archetype ham preset
+değildir: topoloji (katman → yapı taşı zinciri), makro uzayı (normalize
+parametreler → `control.*` ve düğüm parametreleri) ve varyasyon politikası
+taşır. `Acoustic.expandArchetype(ArchetypeRequestV1)` saf ve deterministik
+bir PROGRAM BELGESİ üretir; doğrulama ve render kanonik program yolundadır.
+k. varyasyon `archetype:<id>/variation:<k>` alt akışından türeyen sınırlı
+sapmalardır (perde konturu, oranlar, formant hedefleri, program tohumu);
+topoloji ve makro kümesi değişmez. Parametre aralığı, yapısal kısıt (ör.
+FluidCreature'da süre en düşük nabız hızında 1.5 nabız taşımalı) ve üretilen
+program render'dan önce doğrulanır. Kanıt: her archetype için 8 varyasyon
+geçerli, deterministik, topolojisi registry'deki sözleşmeyle aynı ve PCM
+özetleri ikişer ikişer farklı; aile değişmezleri sekizinde de tutar; registry'deki
+her archetype yön iddiası (27 iddia) ölçümle kesin monoton. Perde ölçülürken
+glottal pürüz kaynakları sıfırlanır ve kontur sabitlenir — perde YOLU
+(gesture + makro) değişmez, yalnız ölçümü bozan düzensizlik çıkar.
+Dinleme paketi: `pnpm --filter @volstudio/audio-synth audio:audition` →
+git-dışı `export/audition/` (48 archetype varyasyonu + 3 vokal aile, ölçüm
+tablosu `audition.json`; öznel yargı içermez).
 
 ## Hızlı Başlangıç
 
@@ -985,6 +1081,8 @@ pnpm --filter @volstudio/audio-synth audio:reference-check
 pnpm --filter @volstudio/audio-synth audio:production-check  # manifest'leri yalnız kendilerinden doğrular
 pnpm --filter @volstudio/audio-synth audio:job context --json
 pnpm --filter @volstudio/audio-synth bench:budget     # kaynak bütçesi referans ölçümü
+pnpm --filter @volstudio/audio-synth bench:resonators # tüp ↔ modal maliyet kıyası
+pnpm --filter @volstudio/audio-synth audio:audition   # git-dışı dinleme paketi
 pnpm --filter @volstudio/audio-synth exec tsx scripts/fm-alias-report.ts
 ```
 

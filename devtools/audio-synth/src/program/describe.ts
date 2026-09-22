@@ -1,6 +1,6 @@
 import { PROGRAM_REGISTRY } from './catalog';
 import type { ParamSpec } from './params';
-import type { ControlTarget, ProgramEntry } from './registry';
+import type { ArchetypeEntry, ControlTarget, ProgramEntry } from './registry';
 
 /**
  * Registry'nin JSON izdüşümü — `audio:job context` ve registry özeti bunu
@@ -24,6 +24,10 @@ export interface RegistryEntryDescription {
   /** Yalnız makrolarda: sürdüğü DSP parametreleri ve yasası (uyumlu yapı taşları). */
   readonly targets?: readonly ControlTarget[];
   readonly modulationDepth?: { readonly span: number };
+  /** Yalnız archetype'larda: yapısal sözleşme, makro uzayı ve varyasyon politikası. */
+  readonly topology?: ArchetypeEntry['topology'];
+  readonly macros?: ArchetypeEntry['macros'];
+  readonly variation?: ArchetypeEntry['variation'];
 }
 
 function defaults(entry: ProgramEntry): Record<string, number | string> {
@@ -59,6 +63,9 @@ export function describeEntry(entry: ProgramEntry): RegistryEntryDescription {
           targets: entry.targets,
           ...(entry.modulationDepth ? { modulationDepth: entry.modulationDepth } : {}),
         }
+      : {}),
+    ...(entry.kind === 'archetype'
+      ? { topology: entry.topology, macros: entry.macros, variation: entry.variation }
       : {}),
   };
 }

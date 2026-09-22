@@ -4,6 +4,8 @@
  * DSP'dir (dosya sistemi, süreç, kripto yok). Protokol/publish katmanı
  * `@volstudio/audio-synth/protocol` alt yolundadır.
  */
+export { ARCHETYPE_REQUEST_SCHEMA, expandArchetype } from './archetype';
+export type { ArchetypeRequestV1 } from './archetype';
 export { AUDIO_BRIEF_SCHEMA, validateBrief } from './brief';
 export type {
   AcousticBriefV1,
@@ -30,7 +32,14 @@ export type {
   ResolvedParams,
 } from './params';
 export { deriveSeed, substream, SUBSTREAM_SCHEME } from './random';
-export type { ControlTarget, NodeContext, ProgramEntry, RegistryKind } from './registry';
+export type {
+  ArchetypeEntry,
+  ArchetypeLayer,
+  ControlTarget,
+  NodeContext,
+  ProgramEntry,
+  RegistryKind,
+} from './registry';
 export {
   estimateProgramCost,
   PROGRAM_RENDERER_VERSION,

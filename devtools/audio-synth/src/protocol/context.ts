@@ -1,6 +1,7 @@
 import { ASSET_CLASS_POLICIES } from '../analysis/assetQa';
 import { ANALYZER_VERSION, AUDIO_ANALYSIS_SCHEMA } from '../analysis/report';
 import { DEFAULT_RENDER_BUDGET } from '../guard/budget';
+import { ARCHETYPE_REQUEST_SCHEMA } from '../program/archetype';
 import { AUDIO_BRIEF_SCHEMA } from '../program/brief';
 import { describeRegistry } from '../program/describe';
 import { KNOWN_LIMITATIONS } from '../program/limitations';
@@ -77,6 +78,10 @@ export function buildContext(repoRoot: string) {
         timeBase: 'gesture ve makro gesture’ı katman başlangıcına, modülatörler programa göre',
         macros:
           'controls: [{ control, version, value }] — value ∈ [0, 1], 0.5 nötr; hedefler registry’de',
+      },
+      archetypeRequest: {
+        id: ARCHETYPE_REQUEST_SCHEMA,
+        use: 'Acoustic.expandArchetype(istek) → AcousticProgramV1 belgesi; program adımıyla kaydedilir',
       },
       analysis: { id: AUDIO_ANALYSIS_SCHEMA, analyzerVersion: ANALYZER_VERSION },
       manifest: { id: ASSET_MANIFEST_SCHEMA },

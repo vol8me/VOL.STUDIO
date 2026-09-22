@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { expandArchetype } from '../../src/program/archetype';
 import { PROGRAM_REGISTRY } from '../../src/program/catalog';
 import { describeRegistry } from '../../src/program/describe';
 import type { NumberParamSpec } from '../../src/program/params';
@@ -53,6 +54,15 @@ function layerFor(id: string, params: Record<string, unknown>, name: string) {
  * makro ise hedeflerinin her birini taşıyan birer katmanı sürer.
  */
 function programWith(entry: ProgramEntry, params: Record<string, unknown>): unknown {
+  if (entry.kind === 'archetype') {
+    return expandArchetype({
+      schema: 'ArchetypeRequestV1',
+      archetype: entry.id,
+      version: entry.version,
+      variation: 0,
+      params,
+    });
+  }
   if (entry.kind === 'effect') {
     return {
       ...PROBE_BASE,
@@ -160,6 +170,16 @@ describe('registry governance', () => {
         expect(primitive?.params[target.param]?.type, `${entry.id} → ${target.param}`).toBe(
           'number',
         );
+      }
+    }
+  });
+
+  it('archetype topolojisi yalnız registry’deki yapı taşlarına ve makrolara işaret eder', () => {
+    for (const entry of entries) {
+      if (entry.kind !== 'archetype') continue;
+      expect(entry.variation.guaranteed, entry.id).toBeGreaterThanOrEqual(8);
+      for (const id of [...entry.topology.flatMap((l) => l.chain), ...entry.macros]) {
+        expect(PROGRAM_REGISTRY.has(id), `${entry.id} → ${id}`).toBe(true);
       }
     }
   });

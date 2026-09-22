@@ -6,6 +6,7 @@ import { describeEntry } from '../../src/program/describe';
 import type { ControlEntry } from '../../src/program/registry';
 import { renderProgram } from '../../src/program/render';
 import { resolveProgram } from '../../src/program/schema';
+import { blackmanHarris, powerSpectrum } from '../../src/analysis/spectrum';
 import { autocorrelationPitch, isStrictlyMonotone, peakFrequency } from '../support/measure';
 
 const RATE = 48000;
@@ -50,6 +51,27 @@ const irregularity: Measure = (x) => {
   return Math.sqrt(f.reduce((a, v) => a + (v - mean) ** 2, 0) / f.length);
 };
 
+/** Olay başlangıcı sayısı: 2 ms enerji zarfında, tepeden −40 dB üstünde 4× sıçrama. */
+const onsets: Measure = (x) => {
+  const hop = 96;
+  const energy: number[] = [];
+  for (let i = 0; i + hop <= x.length; i += hop) {
+    let e = 0;
+    for (let k = i; k < i + hop; k++) e += x[k] * x[k];
+    energy.push(e);
+  }
+  const floor = Math.max(...energy) * 1e-4;
+  return energy.filter((e, i) => i > 0 && e > floor && e > 4 * energy[i - 1]).length;
+};
+/** f₀/2 bandındaki gücün f₀ bandına oranı (200 Hz glottal kaynak için). */
+const subharmonicRatio: Measure = (x) => bandPower(x, 100) / Math.max(1e-30, bandPower(x, 200));
+function bandPower(x: Float32Array, f: number): number {
+  const size = 32768;
+  const power = powerSpectrum(x, 4800, size, blackmanHarris(size));
+  const k = Math.round((f * size) / RATE);
+  return power[k - 1] + power[k] + power[k + 1];
+}
+
 const wobble = {
   modulators: { wobble: { modulator: 'modulator.walk', version: 1, params: { reversion: 6 } } },
 };
@@ -58,34 +80,49 @@ const tone = node('source.oscillator', {
 });
 
 /** Her makro için: sonda programı, ölçülen boyut ve registry'de YAZILI yön. */
+const bodyProbe = { layers: [{ name: 'b', source: impact, resonators: [modal()] }] };
+const glottal = node('source.glottal', {
+  frequency: 200,
+  jitter: 0,
+  shimmer: 0,
+  breath: 0,
+  subharmonic: 0.3,
+});
+
+/**
+ * Her makronun HER yön ilişkisi (`id:boyut`) için: sonda programı ve ölçüm.
+ * Registry'ye yeni bir yön yazılırsa sondasız kalamaz (ilk test).
+ */
 const PROBES: Record<string, { layers: unknown[]; measure: Measure; extra?: object }> = {
-  'control.body-size': {
-    layers: [{ name: 'b', source: impact, resonators: [modal()] }],
-    measure: pitch,
-  },
-  'control.tension': {
-    layers: [{ name: 'b', source: impact, resonators: [modal()] }],
-    measure: pitch,
-  },
-  'control.pressure': {
+  'control.body-size:pitch': { ...bodyProbe, measure: pitch },
+  'control.tension:pitch': { ...bodyProbe, measure: pitch },
+  'control.pressure:loudness': {
     layers: [{ name: 'b', source: turbulence, articulation: node('articulation.amplitude') }],
     measure: loudness,
   },
-  'control.wetness': {
+  'control.wetness:brightness': {
     layers: [{ name: 'b', source: impact, resonators: [modal({ modes: 16, brightness: 0.9 })] }],
     measure: brightness,
   },
-  'control.viscosity': {
-    layers: [{ name: 'b', source: impact, resonators: [modal()] }],
-    measure: decay,
+  'control.wetness:density': {
+    layers: [{ name: 'b', source: node('source.bubbles', { sizeSpread: 0, levelSpread: 0 }) }],
+    measure: onsets,
   },
-  'control.roughness': { layers: [{ name: 'b', source: turbulence }], measure: noisiness },
-  'control.cavity-size': {
+  'control.viscosity:decay': { ...bodyProbe, measure: decay },
+  'control.roughness:noisiness': {
+    layers: [{ name: 'b', source: turbulence }],
+    measure: noisiness,
+  },
+  'control.roughness:roughness': {
+    layers: [{ name: 'b', source: glottal }],
+    measure: subharmonicRatio,
+  },
+  'control.cavity-size:pitch': {
     layers: [{ name: 'b', source: turbulence, resonators: [node('resonator.cavity', { q: 30 })] }],
     measure: pitch,
   },
-  'control.airiness': { layers: [{ name: 'b', source: turbulence }], measure: noisiness },
-  'control.instability': {
+  'control.airiness:noisiness': { layers: [{ name: 'b', source: turbulence }], measure: noisiness },
+  'control.instability:irregularity': {
     layers: [{ name: 'b', source: tone }],
     measure: irregularity,
     extra: wobble,
@@ -95,24 +132,27 @@ const PROBES: Record<string, { layers: unknown[]; measure: Measure; extra?: obje
 const controls = PROGRAM_REGISTRY.entries().filter((e): e is ControlEntry => e.kind === 'control');
 
 describe('makro akustik kontroller — yön ilişkileri registry’deki gibi', () => {
-  it('her makronun bir sondası var (yeni makro sondasız kalamaz)', () => {
-    expect(Object.keys(PROBES).sort()).toEqual(controls.map((c) => c.id));
+  const relations = controls.flatMap((c) =>
+    c.causal.map((effect) => [`${c.id}:${effect.dimension}`, c, effect.direction] as const),
+  );
+
+  it('her makronun her yön ilişkisinin bir sondası var (yeni yön sondasız kalamaz)', () => {
+    expect(Object.keys(PROBES).sort()).toEqual(relations.map(([key]) => key).sort());
   });
 
-  it.each(controls.map((c) => [c.id, c] as const))('%s', (_id, entry) => {
-    const probe = PROBES[entry.id];
-    const [{ direction }] = entry.causal;
+  it.each(relations)('%s', (key, entry, direction) => {
+    const probe = PROBES[key];
     const values = POSITIONS.map((c) =>
       probe.measure(renderProgram(program(entry.id, c, probe.layers, probe.extra)).channels[0]),
     );
     expect(
       isStrictlyMonotone(values, direction),
-      `${entry.id}: ${values.map((v) => v.toFixed(3)).join(' → ')}`,
+      `${key}: ${values.map((v) => v.toFixed(3)).join(' → ')}`,
     ).toBe(true);
   });
 
   it('0.5 nötrdür: makrolu ve makrosuz program aynı PCM’i verir', () => {
-    const layers = PROBES['control.body-size'].layers;
+    const layers = bodyProbe.layers;
     const withMacro = renderProgram(program('control.body-size', 0.5, layers)).channels[0];
     const { controls: _unused, ...plain } = program('control.body-size', 0.5, layers);
     const without = renderProgram(plain).channels[0];
@@ -153,7 +193,7 @@ describe('makro doğrulaması (render öncesi)', () => {
     }
     throw new Error('reddedilmedi');
   };
-  const layers = PROBES['control.body-size'].layers;
+  const layers = bodyProbe.layers;
 
   it.each<[string, unknown, string, AudioParamIssue]>([
     [
