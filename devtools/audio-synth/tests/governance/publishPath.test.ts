@@ -20,7 +20,6 @@ const ALLOWED: Readonly<Record<string, string>> = {
     'TEK dinleme kopyası yazıcısı (job/arama/canary); yalnız git-dışı export/ altına',
   'devtools/audio-synth/scripts/audio-reference-check.ts': 'geçici dizinde ölçüm fixture’ı',
   'devtools/audio-synth/scripts/render-budget-bench.ts': 'geçici dizinde kıyas ölçümü',
-  'devtools/audio-synth/scripts/music-demo.ts': 'git-dışı export/ demo çıktısı',
   'devtools/audio-synth/scripts/archetype-audition.ts': 'git-dışı export/ dinleme paketi',
 };
 

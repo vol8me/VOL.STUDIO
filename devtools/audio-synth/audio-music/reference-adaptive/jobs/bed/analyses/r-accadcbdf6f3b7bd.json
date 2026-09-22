@@ -1,0 +1,67 @@
+{
+  "pcmHash": "sha256:167b71e980b7c8f92f2890558d3fdffaa538ce80f628f172a31c58882b866ff1",
+  "renderHash": "sha256:1d2117663bceb0390591a709c291cfe3081dddfaf8c006ca7f7e25272cec177a",
+  "renderId": "r-accadcbdf6f3b7bd",
+  "report": {
+    "analyzerVersion": 1,
+    "dc": {
+      "channelOffset": [-1.5232697975884852e-9, 5.716808535696474e-10]
+    },
+    "defects": {
+      "clicks": {
+        "count": 0,
+        "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+      },
+      "clips": {
+        "channelSamples": 0,
+        "frames": 0,
+        "perChannel": [0, 0]
+      }
+    },
+    "format": {
+      "channels": 2,
+      "durationSeconds": 8.571428571428571,
+      "frames": 378000,
+      "sampleRate": 44100
+    },
+    "level": {
+      "channelPeakDbfs": [-4.848908113991609, -5.761052385955781],
+      "channelRmsDbfs": [-19.916978074391498, -20.40261088231407],
+      "crestFactorDb": 15.304101899427696,
+      "integratedLufs": -16.020179277781075,
+      "maxMomentaryLufs": -13.070329897959008,
+      "rmsDbfs": -20.153010013419305,
+      "samplePeakDbfs": -4.848908113991609,
+      "truePeakDbtp": -4.839558894977759
+    },
+    "measuredFrom": "source-pcm",
+    "schema": "AudioAnalysisReportV1",
+    "spectral": {
+      "bandsDb": {
+        "air": -153.29372321522703,
+        "high": -122.0779223010255,
+        "low": -22.092406804244945,
+        "mid": -26.291760844689335,
+        "sub": -62.29043087915854
+      },
+      "centroidHz": 453.52743678924475,
+      "flatness": 3.784970146013628e-12,
+      "peakHz": 258.3984375,
+      "rolloff85Hz": 796.728515625
+    },
+    "stereo": {
+      "correlation": 0.7659664590937341,
+      "width": 0.3650912674598814
+    },
+    "temporal": {
+      "activeSeconds": 8.29,
+      "attackSeconds": 0.66,
+      "decay40Seconds": 1.52,
+      "leadingSilenceSeconds": 0,
+      "peakTimeSeconds": 6.68,
+      "temporalCentroidSeconds": 3.568204733312685,
+      "trailingSilenceSeconds": 0.22142857142857153
+    }
+  },
+  "schema": "AudioAnalysisRecordV1"
+}

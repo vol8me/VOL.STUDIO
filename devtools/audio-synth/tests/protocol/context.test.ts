@@ -19,7 +19,10 @@ describe('audio:job context', () => {
     expect(context.targets.publishable[0].runtime).toBeNull();
     expect(context.targets.frozen).toEqual(['@volstudio/vol-arachnid', '@volstudio/vol-hell']);
     expect(context.targets.note).toMatch(/oyun hedefi YOK/);
-    expect(context.schemas.brief.kinds.music.status).toBe('unsupported');
+    expect(context.schemas.brief.kinds.music.status).toBe('supported');
+    expect(context.music.schemas.program).toBe('MusicProgramV1');
+    expect(context.music.runtime.capabilities.stingers).toBe(false);
+    expect(Object.keys(context.music.commands)).toContain('publish');
   });
 
   it('arama sözleşmesi çalışan koddan: şemalar, strateji, aranabilir boyutlar, bütçe, komutlar', () => {

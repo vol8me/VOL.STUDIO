@@ -38,12 +38,16 @@ describe('AudioBriefV1 zarfı', () => {
     expect(validateBrief(brief)).toEqual(brief);
   });
 
-  it("müzik kolu şemada YER TUTAR ama bu sürümde 'unsupported'", () => {
-    expect(issueOf((b) => (b.kind = 'music'))).toEqual({ path: 'kind', issue: 'unsupported' });
+  it('müzik kolu kendi alan kümesini ister (akustik alanlar taşınmaz)', () => {
+    expect(issueOf((b) => (b.kind = 'music'))).toEqual({ path: 'subtype', issue: 'unknown-key' });
   });
 
   it('müzik alanı akustik brief’e sızamaz (ikinci müzik şeması oluşamaz)', () => {
     expect(issueOf((b) => (b.bpm = 120))).toEqual({ path: 'bpm', issue: 'unknown-key' });
+    expect(issueOf((b) => (b.playback = 'loop'))).toEqual({
+      path: 'playback',
+      issue: 'unknown-key',
+    });
   });
 
   it.each<[string, (b: Record<string, unknown>) => void, string, AudioParamIssue]>([

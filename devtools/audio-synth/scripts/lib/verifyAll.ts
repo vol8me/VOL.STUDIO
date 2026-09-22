@@ -9,12 +9,15 @@ import { join } from 'node:path';
 import {
   checkRepoRelative,
   DEFAULT_FAMILIES_ROOT,
+  DEFAULT_MUSIC_ROOT,
   DEFAULT_SEARCHES_ROOT,
   listFamilies,
+  listMusic,
   listSearches,
   surveyTargets,
   verifyFamily,
   verifyManifest,
+  verifyMusic,
   verifySearch,
 } from '../../src/protocol';
 import { print, type Parsed } from './args';
@@ -51,7 +54,12 @@ export function runVerifyCommand(parsed: Parsed, repoRoot: string): number {
         verifyFamily({ repoRoot, familiesRoot: DEFAULT_FAMILIES_ROOT, familyId }),
       )
     : [];
-  if (parsed.flags.has('json')) print([...manifests, ...searches, ...families]);
+  const music = all
+    ? listMusic(repoRoot, DEFAULT_MUSIC_ROOT).map((musicId) =>
+        verifyMusic({ repoRoot, musicRoot: DEFAULT_MUSIC_ROOT, musicId }),
+      )
+    : [];
+  if (parsed.flags.has('json')) print([...manifests, ...searches, ...families, ...music]);
   else {
     for (const r of manifests) {
       console.log(
@@ -69,17 +77,27 @@ export function runVerifyCommand(parsed: Parsed, repoRoot: string): number {
       console.log(
         `${r.complete ? '✓' : '✗'} ${r.bank}  ${r.checks.map((c) => c.detail).join(' · ')}`,
       );
+    for (const r of music)
+      console.log(
+        `${r.complete ? '✓' : '✗'} ${r.bundle}  ${r.checks
+          .map((c) => `${c.name}: ${c.detail}`)
+          .join(' · ')}`,
+      );
     console.log(`${manifests.filter((r) => r.ok).length}/${manifests.length} manifest doğrulandı.`);
     if (all) {
       console.log(`${searches.filter((r) => r.ok).length}/${searches.length} arama doğrulandı.`);
       console.log(
         `${families.filter((r) => r.complete).length}/${families.length} aile bank'ı tamam.`,
       );
+      console.log(
+        `${music.filter((r) => r.complete).length}/${music.length} müzik bundle'ı tamam.`,
+      );
     }
   }
   return manifests.every((r) => r.ok) &&
     searches.every((r) => r.ok) &&
-    families.every((r) => r.complete)
+    families.every((r) => r.complete) &&
+    music.every((r) => r.complete)
     ? 0
     : 1;
 }

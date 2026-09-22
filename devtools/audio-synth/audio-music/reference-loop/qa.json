@@ -1,0 +1,26 @@
+{
+  "musicId": "reference-loop",
+  "parity": {
+    "ok": true,
+    "residualDbfs": -200
+  },
+  "schema": "MusicAdaptiveQaV1",
+  "states": [
+    {
+      "gains": {
+        "main": 1
+      },
+      "integratedLufs": -16.259,
+      "intensity": 1,
+      "ok": true,
+      "problems": [],
+      "samplePeak": 0.797505,
+      "state": "fixed",
+      "truePeakDbtp": -1.96
+    }
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

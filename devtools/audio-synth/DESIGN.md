@@ -766,6 +766,196 @@ yalnız paketin `src/` ağacını, `node:` yerleşiklerini ve
 rol sözlüğü kapalıdır ve alan ekseni (`enemyType`) şemada adıyla reddedilir;
 bank şeması bilinmeyen alanı reddeder.
 
+## Müzik authoring
+
+Müzik tek seferlik bir ses değil, ZAMANDA yayılan ve çalışma zamanıyla
+sözleşmesi olan bir varlıktır. Bu yüzden müzik yolu akustik yolun kopyası
+değil, aynı kapıya bağlanan ikinci bir üretim zinciridir: brief → ThemeBook →
+program → score → analiz → render → mastering → stem paketi → yayın.
+
+### İstek ve kitap
+
+`AudioBriefV1`in `kind: 'music'` dalı (`music/brief.ts`) müzik isteğini
+taşır: kullanım, çalma modeli, duygulanım, tempo/ölçü, tonal sistem, melodik
+öne çıkma, ritmik yoğunluk, form, uzunluk, kanal, SFX'e bırakılacak spektral
+bant ve adaptive state'ler. **Çalma modeli, kullanım, form, tempo, ölçü ve
+uzunluk ZORUNLU KARARDIR ve varsayılanı yoktur**; eksikse `MusicDecisionError`
+hangi alanın beklendiğini ve seçeneklerini makine-okunur biçimde söyler.
+Varsayılanla doldurmak "seamless menü loop'u" isteğini sessizce "tek seferlik
+cue"ya çevirirdi.
+
+`MusicThemeBookV1` proje başına tonal/ritmik dili, imza aralık ve motiflerini,
+paleti, register ve spektral kimliği, bilinçli kaçınmaları taşır. Kaçınmalar
+KAPALI bir kural sözlüğüdür (`forbid-interval`, `forbid-system`,
+`forbid-instrument`, `forbid-role`, `max-density`, `max-polyphony`,
+`register-limit`); palet ve register bantları da aynı kural listesine
+katılır, böylece analizörün tek bir kural yüzeyi olur. `notes` alanı
+bilerek DENETLENMEZ ve raporda "denetlenmedi" diye sayılır — "klişe olmasın"
+cümlesini makine sınayamaz. Bir kuralı çiğnemek isteyen program
+`themeOverrides` ile kuralın KİMLİĞİNE ve gerekçesine başvurur; override'sız
+ihlal kapıyı düşürür.
+
+### Program, score ve tek genişletme
+
+`MusicProgramV1` (`music/program.ts`) sembolik kaynaktır: tempo, ölçü, tonal
+sistem, şeritler (enstrüman `preset:<ad>` kimliğiyle), stem'ler, bölümler
+(bar aralığı, rol, hedef enerji, aktif şeritler, armoni planı), motifler,
+groove profilleri, otomasyon, işaretler, geçişler ve teslim beyanı. Program
+JSON'dur; `Timeline`ın `InstrumentFn` fonksiyonu JSON'a yazılamaz, bu yüzden
+enstrüman kayıttan ADIYLA çözülür.
+
+`expandProgram` programı `MusicScoreV1`e açar: her nota mutlak vuruşta, kalıcı
+bir olay kimliğiyle (`<bölüm>/<şerit>/<n>`) ve provenance'ıyla (akor sesi |
+motif + dönüşüm zinciri | açık nota) durur. Sembolik analiz de render de
+YALNIZ score okur; "ses üretmeden analiz edilebilir" sözü böylece yapıyla
+garanti edilir. İnsanlaştırma genişletmede uygulanır ve rastgelelik olayın
+KİMLİĞİNE bağlıdır (`music:<id>/groove/<eventId>`), dizi sırasına değil —
+dizine bağlı bir jitter stem'ler ayrı render edilince her stem'de başka bir
+sapma üretir ve stem toplamı referans mix'ten ayrılırdı.
+
+Tek tempo, tek ölçü: hem düzenleme ızgarası hem çalışma zamanı zamanlayıcısı
+tek ızgara varsayar (`music-single-tempo`).
+
+### Armoni, motif, groove
+
+Armoni derece + nitelik (triad/seventh/sus2/sus4/fifth) ve voicing
+(ses sayısı, yayılım, register, en büyük hareket) taşır; kromatik ses `alter`
+ile AÇIKÇA istenir. Yerleşim register'a sığmıyorsa ya da hareket sınırı
+aşılıyorsa akorun indeksiyle hata verilir — sessizce transpoze edilmiş bir
+akor duyulana kadar fark edilmezdi. Motif dönüşümleri kapalı bir kümedir
+(transpose, register-shift, rotate, fragment, sequence, augment, diminish,
+invert) ve her örnek `variationId` ile kaynağına izlenir. Groove profili
+swing, zamanlama/hız sapması ve vurgu tablosudur; sıfır sapmada çıktı tam
+ızgaradır.
+
+### Sembolik analiz
+
+`MusicSymbolicReportV1` şunları ölçer: nota/ölçü yoğunluğu, ANLIK polifoni
+(uzun bir akor sesi art arda gelen kısa notalarla "aynı anda çalıyor"
+sayılmaz), şerit register'ları, perde sınıfı dağılımı ve sistem dışı oran,
+motif tekrarı, bölüm enerjisi ile hedef enerjinin SIRA uyumu, armonik ritim,
+kural ihlalleri ve brief uyumu. Eşikler veri dosyasındadır
+(`music/policy.ts`): "sparse" 0–4, "moderate" 3–10, "dense" 8+ nota/ölçü;
+melodik öne çıkma toleransı 0.35; bölüm kontrastı için sıra uyumu ≥ 0.75.
+Ezgisel şerit ölçüsü bindirme SÜRESİNE bakar (≤ %15), sayıya değil: swing'le
+birkaç milisaniye taşan bir sekizlik ezgiyi akor yapmaz.
+
+### Render ve mastering yolları
+
+Render `arrange/render.ts`teki TEK ham yolu kullanır (`renderVoices`);
+`Timeline` de aynı yolu çağırır, ikinci bir toplama gerçeği yoktur. Mastering
+kararı çalma modelinden türetilir ve müzik için `masterMix`i çağıran tek yer
+`music/mastering.ts`tir:
+
+| Çalma modeli      | Yol                | Ne yapar                                                             |
+| ----------------- | ------------------ | -------------------------------------------------------------------- |
+| `loop`            | `loop-cyclic`      | kuyruk başa sarılır, sönüm ve kırpma yok, yükseklik DÖNGÜSEL ölçülür |
+| `playlistOneShot` | `one-shot-limited` | kuyruk payı, sessizlik kırpma, kenar sönümü, sınırlayıcı             |
+| `adaptiveLoop`    | `stem-linear`      | yalnız ORTAK doğrusal kazanç; sınırlayıcı ve tavan YOK               |
+
+Döngüsel ölçüm tamponu iki kez arka arkaya koyup ikinci turu ölçer:
+K-ağırlık filtresi ilk yüz milisaniyede ısınır ve tek turda loop'un başı
+sistematik olarak kısık görünür. Stem yolunda sınırlayıcı yoktur çünkü
+sınırlayıcı doğrusal değildir; stem başına uygulanınca "stem'lerin toplamı =
+referans mix" garantisi ölür. Tepe payı orada kazancı DÜŞÜREREK açılır.
+Sınırlayıcılı yollarda pay ölçülerek bulunur (`refineForTruePeak`): kaynağın
+tepe değerine göre peşinen kısmak sınırlayıcının açtığı payı geri verirdi
+(ölçüldü: referans cue −18.9 LUFS'e kadar iniyordu). Ölçüm: libvorbis dönüşü
+true peak'i ~0.2 dB yükseltiyor (kaynakta −1.086 dBTP olan cue kodek sonrası
+−0.88 çıktı ve kapı onu reddetti); hedef pay 2 dB, bağlayıcı olan kodek
+sonrası −1 dBTP politikasıdır. True-peak sınırlayıcı EKLENMEDİ.
+
+### Stem paketi ve adaptive QA
+
+Stem'ler aynı score'dan, aynı ızgarada ve aynı kare sayısıyla render edilir.
+İki ölçüm bağlayıcıdır:
+
+1. **Parite**: stem toplamı referans mix'ten en çok −90 dBFS sapabilir
+   (ölçülen: referans adaptive'de −148.6 dBFS, yalnız kayan nokta gürültüsü).
+2. **Kombinasyon QA'sı**: beyan edilen state'ler VE gain haritası eşiklerinin
+   köşeleri tek tek karıştırılıp ölçülür. Gain'ler runtime'ın kullandığı
+   `resolveStemGain` ile hesaplanır — ikinci bir gain gerçeği yazılmaz. Her
+   kombinasyon için tepe, true peak ve yükseklik sınanır; en kısık state
+   duyulur kalmalı, en yüksek state politika aralığında olmalıdır.
+
+Stem'in KENDİ yükseklik aralığı mix'inkinden farklıdır (`music-stem` sınıfı,
+[−45, −8] LUFS): yalnız ezgi katmanı doğal olarak kısıktır ve mix aralığına
+zorlanırsa toplamları tavanı aşar.
+
+### Çalışma zamanı sözleşmesi
+
+`MusicAssetSpecV1` core'dadır (`core/src/audio/music/spec.ts`) çünkü hem
+üretim aracı hem çalışma zamanı ondan türetir. `barsToFrames` TEK
+dönüşümdür: bpm × örnek oranı tam bölünmediğinde üretimin ve runtime'ın
+farklı yuvarlaması loop dikişinde duyulur bir tık bırakır. `toMusicTrack`
+spec'i motorun çaldığı `MusicTrack`e çevirir (loop noktaları SANİYE olarak).
+Spec kompresörsüz ölçülür; `assertEngineCompatible` motor kompresörü açıkken
+kurulmuşsa hata verir — core'un varsayılan kompresörü (−24 dB eşik, 12 oran)
+−14 LUFS'e getirilmiş bir parçayı ezer ve offline ölçüm duyulanı temsil etmez.
+
+Geçiş sözleşmesi `MUSIC_RUNTIME_CAPABILITIES` listesine bakar: bar hizalı
+crossfade, sönümlü durdurma ve playlist boşluğu VARDIR; stinger, parça içi
+bölüm atlama ve farklı tempolar arası bar hizası YOKTUR ve
+`unsupported-by-runtime` ile reddedilir. Tonal ilişki beyan edilebilir ama
+motor ton bilmez; rapor bunu "motor uygulamıyor" diye işaretler.
+
+### Yayın ve doğrulama
+
+`music publish`: sembolik kapı → kombinasyon QA kapısı → müzik kilidi →
+yayımlanmış bundle'ın programı değiştiyse `version` artmış olmalı → rapor ve
+QA belgeleri → her asset için `audio-music/<id>/jobs/<stem>` işinde brief →
+program → render → analyze → select → publish (AYNI `publishJob`; müziğe özel
+bir yazıcı yok) → kodlanmış hiza denetimi → en son bundle.
+
+Job türü (`AudioJobV1.kind`) `acoustic | music`tir; render/doğrulama
+dağıtıcısı `protocol/kinds.ts`tedir. Müzik işinin programı
+`MusicStemProgramV1`dir: bir stem (ya da referans mix), mastering kararı ve
+müziğin tamamı. Mastering kazancı belgede yazılıdır — her stem için bütün
+parçayı yeniden ölçmek yayın maliyetini stem sayısıyla çarpardı; kararın
+doğruluğu ön denetimde bir kez ölçülür, kodek sonrası sınıf politikası zaten
+her asset'te ayrıca sınanır. Belgede beyan edilen mastering yolu çalma
+modeliyle uyuşmazsa program şema düzeyinde reddedilir.
+
+Kodlanmış hiza: her asset çözülüp kaynak PCM ile çapraz korelasyona sokulur;
+gecikme 0 ve kare farkı 0 olmalıdır (`cross-correlation-v1`). Bir örneklik
+kayma kulakta faz olarak duyulur ve hiçbir yükseklik ölçüsü onu yakalamaz.
+
+`music verify` / `verify --all`: program, brief, rapor ve QA özetleri,
+yeniden genişletmede aynı rapor özeti, spec'in ölçü→kare sözleşmesi, her
+asset'in manifest ve bayt özeti, hiza kaydı.
+
+### Hiyerarşik arama
+
+`MusicSearchSpecV1` beyan edilmiş bir varyasyon uzayı tanımlar (şerit
+kazancı, groove swing/hız sapması, register kaydırma, voicing yayılımı,
+yoğunluk inceltme, motif ötelemesi). Bütün adaylar SEMBOLİK açılır, süzülür
+ve hedeflere uzaklığa göre sıralanır; yalnız finalistler render edilir.
+Strateji akustik aramayla aynıdır (scrambled-halton v1) ve aynı tohum aynı
+sırayı verir. Terfi, aday programını `music.json`a sürüm artırarak ve
+`provenance` (searchId, candidateId, rapor özeti) ile yazar.
+
+**Arama beste YAPMAZ**: beyan edilmiş bir uzayı tarar. Müzikal fikir temel
+programdan ve ThemeBook'tan gelir.
+
+### Referans fixture'lar (ölçüldü)
+
+| Fixture              | Çalma           | Kare             | Kazanç   | LUFS   | dBTP  | Asset                |
+| -------------------- | --------------- | ---------------- | -------- | ------ | ----- | -------------------- |
+| `reference-loop`     | loop            | 441000 (10 sn)   | −3.25 dB | −16.26 | −1.96 | 68 KB                |
+| `reference-cue`      | playlistOneShot | 355512 (8.06 sn) | +0.78 dB | −18.08 | −1.91 | 53 KB                |
+| `reference-adaptive` | adaptiveLoop    | 378000 (8.57 sn) | +0.71 dB | −16.02 | −4.19 | 3 stem + mix, 141 KB |
+
+Referans arama (`reference-loop/search.json`): 24 aday sembolik açıldı, 12'si
+süzgeci geçti, 3'ü render edildi.
+
+### Bilinen sınırlar
+
+Perküsyon rolü enstrüman kaydında yalnız 3 preset taşır; ritim bölümü
+melodik enstrümanlarla kurulur (parametrik davul ailesi Dalga 11). Müzik yolu
+yalnız ÖLÇÜLEN değerlerle doğrulandı — sembolik uygunluk, yükseklik, true
+peak, stem paritesi, kodlanmış hiza; insan dinlemesi yapılmadı ve "iyi müzik"
+iddiası yoktur (`music-no-listening-validation`).
+
 ## Hızlı Başlangıç
 
 ### 1. Generate scripti

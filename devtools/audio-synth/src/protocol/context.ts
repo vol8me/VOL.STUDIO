@@ -17,6 +17,7 @@ import {
   canaryReviews,
 } from './canary';
 import { familyContext } from './contextFamily';
+import { musicContext } from './contextMusic';
 import { searchContext } from './contextSearch';
 import { DEFAULT_JOBS_ROOT } from './location';
 import { ASSET_MANIFEST_SCHEMA } from './manifest';
@@ -73,7 +74,14 @@ export function buildContext(repoRoot: string) {
             subtypes: ['ambience', 'organic', 'sfx'],
             assetClasses: ['ambience', 'sfx', 'ui'],
           },
-          music: { status: 'unsupported', owner: 'Dalga 6 MusicBriefV1' },
+          music: {
+            status: 'supported',
+            fields:
+              'usage, playback, affect, tempo, meter, tonal, melodicSalience, rhythmicDensity, ' +
+              'form, length, channels, spectralPriority, adaptive, themeBook, avoid',
+            decisions:
+              'playback, usage, form, tempo, meter, length eksikse karar isteği (MusicDecisionError)',
+          },
         },
       },
       program: {
@@ -99,6 +107,7 @@ export function buildContext(repoRoot: string) {
     },
     search: searchContext(CLI),
     family: familyContext(CLI),
+    music: musicContext(CLI),
     canaries: {
       schema: CANARY_SCHEMA,
       reviewsSchema: CANARY_REVIEWS_SCHEMA,

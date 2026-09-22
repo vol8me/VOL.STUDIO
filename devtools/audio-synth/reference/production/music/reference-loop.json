@@ -1,0 +1,101 @@
+{
+  "brief": {
+    "hash": "sha256:aa14feb1df7dc2eadaf5c2f62cde18b756e6941881e3a6dfb6f7784edd63ec58",
+    "path": "devtools/audio-synth/audio-music/reference-loop/brief.json"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "instrumentRegistryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "rendererVersion": 1
+  },
+  "music": {
+    "hash": "sha256:856643a6e01c4815166b9caab341105b0f6d0c7105fc64fbe4b39c9ddcc1af79",
+    "musicId": "reference-loop",
+    "path": "devtools/audio-synth/audio-music/reference-loop/music.json",
+    "playback": "loop",
+    "seed": 20260922,
+    "version": 1
+  },
+  "package": "@volstudio/audio-synth",
+  "qa": {
+    "hash": "sha256:90d75593243784116b927938f77b79b99f65d711e6a211ec15fdd785b2ffa48d",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/reference-loop/qa.json"
+  },
+  "report": {
+    "hash": "sha256:ae51f6da3a7484d128f5cae34663c6c72a101b6fc1bd0d26dcca771fa88ef7ad",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/reference-loop/report.json"
+  },
+  "schema": "MusicBundleV1",
+  "spec": {
+    "bars": 4,
+    "bpm": 96,
+    "engine": {
+      "compressor": false
+    },
+    "frames": 441000,
+    "loop": {
+      "endBar": 4,
+      "startBar": 0
+    },
+    "mastering": {
+      "gainDb": -3.249,
+      "integratedLufs": -16.259,
+      "path": "loop-cyclic",
+      "truePeakDbtp": -1.96
+    },
+    "meter": [
+      4,
+      4
+    ],
+    "musicId": "reference-loop",
+    "playback": "loop",
+    "runtimeGain": 1,
+    "sampleRate": 44100,
+    "schema": "MusicAssetSpecV1",
+    "stems": [
+      {
+        "file": "reference/production/assets/music/reference-loop/mix.ogg",
+        "frames": 441000,
+        "id": "main"
+      }
+    ],
+    "transitions": []
+  },
+  "stems": [
+    {
+      "asset": {
+        "bytes": 68047,
+        "encodedHash": "sha256:ab9579636cc1f64f67afcdb0b3f93faa96c759996d575c73767135d6d98ef124",
+        "path": "reference/production/assets/music/reference-loop/mix.ogg"
+      },
+      "frames": 441000,
+      "id": "mix",
+      "integratedLufs": -16.261697069675396,
+      "manifest": {
+        "hash": "sha256:88bb9258619d74a2858c3f9bd8d8e2390f83f2bbfb9caba2c840c426d5ebd234",
+        "path": "reference/production/manifests/music/reference-loop/mix.json"
+      },
+      "pcmHash": "sha256:baa932bcac899429836ae380fb1298c3051ff2277bcc67001e4841881c5d1843",
+      "truePeakDbtp": -2.067996193244295
+    }
+  ],
+  "sync": {
+    "checks": [
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "mix",
+        "lagSamples": 0,
+        "ok": true
+      }
+    ],
+    "method": "cross-correlation-v1",
+    "ok": true
+  },
+  "themeBook": {
+    "hash": "sha256:19c615b8d4becfd91ad10126a9043b54bd9441895372ff336f348937f5e04ca3",
+    "id": "reference-theme"
+  }
+}

@@ -3,7 +3,15 @@ import { join } from 'node:path';
 import { analyzeAudio } from '../analysis/report';
 import { assertRenderBudget } from '../guard/budget';
 import { validateBrief, type AudioBriefV1 } from '../program/brief';
-import { estimateProgramCost, PROGRAM_RENDERER_VERSION, renderProgram } from '../program/render';
+import {
+  assertBriefKind,
+  estimateForKind,
+  renderForKind,
+  RENDERER_VERSIONS,
+  validateForKind,
+  type JobKind,
+} from './kinds';
+import { validateMusicStemProgram } from '../music/stem';
 import { resolveProgram } from '../program/schema';
 import { writeAuditionCopy } from './audition';
 import { hashCanonical, hashPcm, type Sha256 } from './canonical';
@@ -60,6 +68,8 @@ function requireState(
 
 export interface InitOptions {
   readonly target: JobTargetV1;
+  /** Varsayılan `acoustic`; müzik stem'leri `music` ile açılır. */
+  readonly kind?: JobKind;
 }
 
 /** Yeni job açar. Aynı kimlikte job varsa DOKUNMAZ (`overwrite`); hedef burada doğrulanır. */
@@ -74,7 +84,7 @@ export function initJob(loc: JobLocation, options: InitOptions): AudioJobV1 {
       schema: AUDIO_JOB_SCHEMA,
       protocolVersion: PROTOCOL_VERSION,
       jobId: loc.jobId,
-      kind: 'acoustic',
+      kind: options.kind ?? 'acoustic',
       target: options.target,
       stage: 'created',
       revision: 0,
@@ -89,7 +99,10 @@ export function registerBrief(loc: JobLocation, document: unknown): Sha256 {
   return withLock(jobDir(loc), jobLabel(loc), () => {
     const job = loadJob(loc);
     const brief = asProtocol('brief', () => validateBrief(document));
-    if (brief.loop === true && !job.target.integration.loop) {
+    assertBriefKind(job.kind, brief, 'brief.kind');
+    const wantsLoop =
+      brief.kind === 'music' ? brief.playback !== 'playlistOneShot' : brief.loop === true;
+    if (wantsLoop && !job.target.integration.loop) {
       throw new ProtocolError(
         'invalid',
         'brief loop istiyor ama job hedefi loop değil',
@@ -102,10 +115,9 @@ export function registerBrief(loc: JobLocation, document: unknown): Sha256 {
   });
 }
 
-function checkProgramAgainstBrief(
-  brief: AudioBriefV1,
-  program: ReturnType<typeof resolveProgram>,
-): void {
+function checkAcousticAgainstBrief(brief: AudioBriefV1, document: unknown): void {
+  if (brief.kind !== 'acoustic') return;
+  const program = resolveProgram(document);
   if (program.channels !== brief.channels) {
     throw new ProtocolError(
       'invalid',
@@ -119,6 +131,36 @@ function checkProgramAgainstBrief(
       'invalid',
       `süre ${program.durationSeconds} sn brief aralığı [${min}, ${max}] dışında`,
       'program.durationSeconds',
+    );
+  }
+}
+
+/** Müzik stem'i brief'in tempo/ölçü/uzunluk/sistem sözleşmesine uymalı. */
+function checkMusicAgainstBrief(brief: AudioBriefV1, document: unknown): void {
+  if (brief.kind !== 'music') return;
+  const music = validateMusicStemProgram(document).music;
+  const problems: string[] = [];
+  if (music.playback !== brief.playback)
+    problems.push(`playback ${music.playback} ≠ ${brief.playback}`);
+  if (music.meter[0] !== brief.meter[0] || music.meter[1] !== brief.meter[1]) {
+    problems.push(`ölçü ${music.meter.join('/')} ≠ ${brief.meter.join('/')}`);
+  }
+  if (music.tempo.bpm < brief.tempo.bpm.min || music.tempo.bpm > brief.tempo.bpm.max) {
+    problems.push(`bpm ${music.tempo.bpm} ∉ [${brief.tempo.bpm.min}, ${brief.tempo.bpm.max}]`);
+  }
+  if (music.bars < brief.length.bars.min || music.bars > brief.length.bars.max) {
+    problems.push(
+      `ölçü sayısı ${music.bars} ∉ [${brief.length.bars.min}, ${brief.length.bars.max}]`,
+    );
+  }
+  if (!brief.tonal.systems.includes(music.tonal.system)) {
+    problems.push(`sistem ${music.tonal.system} brief listesinde yok`);
+  }
+  if (problems.length > 0) {
+    throw new ProtocolError(
+      'invalid',
+      `program brief'e uymuyor: ${problems.join('; ')}`,
+      'program',
     );
   }
 }
@@ -139,10 +181,13 @@ export function storeProgram(
       s.artifacts.brief.state === 'valid' ? null : `brief ${s.artifacts.brief.state}`,
     );
     const job = loadJob(loc);
-    const resolved = asProtocol('program', () => resolveProgram(document));
+    asProtocol('program', () => validateForKind(job.kind, document));
     const brief = validateBrief(readJsonFile(artifactFile(loc, 'brief.json'), 'brief.json'));
-    checkProgramAgainstBrief(brief, resolved);
-    assertRenderBudget(estimateProgramCost(resolved), 'program');
+    asProtocol('program', () => {
+      checkAcousticAgainstBrief(brief, document);
+      checkMusicAgainstBrief(brief, document);
+    });
+    assertRenderBudget(estimateForKind(job.kind, document), 'program');
     const hash = writeArtifact(loc, 'program.json', document);
     const provenance = origin(hash);
     if (provenance) writeArtifact(loc, 'origin.json', provenance);
@@ -161,8 +206,8 @@ export function registerProgram(loc: JobLocation, document: unknown): Sha256 {
   return storeProgram(loc, document, () => null);
 }
 
-export function renderIdOf(programHash: Sha256, seed: number): string {
-  const identity = hashCanonical({ programHash, seed, rendererVersion: PROGRAM_RENDERER_VERSION });
+export function renderIdOf(programHash: Sha256, seed: number, kind: JobKind = 'acoustic'): string {
+  const identity = hashCanonical({ programHash, seed, rendererVersion: RENDERER_VERSIONS[kind] });
   return `r-${identity.slice('sha256:'.length, 'sha256:'.length + 16)}`;
 }
 
@@ -189,14 +234,14 @@ export function renderCandidate(loc: JobLocation, options: RenderOptions = {}): 
     );
     const job = loadJob(loc);
     const program = currentProgram(loc);
-    const rendered = renderProgram(program.document, { seed: options.seed });
-    const renderId = renderIdOf(program.hash, rendered.seed);
+    const rendered = renderForKind(job.kind, program.document, { seed: options.seed });
+    const renderId = renderIdOf(program.hash, rendered.seed, job.kind);
     const record: RenderRecordV1 = {
       schema: RENDER_RECORD_SCHEMA,
       renderId,
       programHash: program.hash,
       seed: rendered.seed,
-      rendererVersion: PROGRAM_RENDERER_VERSION,
+      rendererVersion: RENDERER_VERSIONS[job.kind],
       pcm: {
         hash: hashPcm(rendered.channels, rendered.sampleRate),
         sampleRate: rendered.sampleRate,
@@ -254,7 +299,7 @@ export function analyzeCandidate(loc: JobLocation, renderId?: string): AnalysisR
       artifactFile(loc, renderPath(id)),
       renderPath(id),
     ) as RenderRecordV1;
-    const rendered = renderProgram(currentProgram(loc).document, { seed: record.seed });
+    const rendered = renderForKind(job.kind, currentProgram(loc).document, { seed: record.seed });
     const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
     if (pcmHash !== record.pcm.hash) {
       throw new ProtocolError(

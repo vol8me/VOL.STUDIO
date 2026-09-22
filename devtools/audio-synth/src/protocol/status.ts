@@ -1,8 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { ANALYZER_VERSION } from '../analysis/report';
 import { validateBrief } from '../program/brief';
-import { PROGRAM_RENDERER_VERSION } from '../program/render';
-import { resolveProgram } from '../program/schema';
+import { RENDERER_VERSIONS, validateForKind } from './kinds';
 import { hashCanonical, sha256Bytes, type Sha256 } from './canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside } from './fs';
@@ -193,11 +192,8 @@ export function jobStatus(loc: JobLocation): JobStatusV1 {
   const briefResult = inspect(file('brief.json'), 'brief.json', a.brief?.hash, validateBrief);
   const brief = briefResult.state;
 
-  const programResult = inspect(
-    file('program.json'),
-    'program.json',
-    a.program?.hash,
-    resolveProgram,
+  const programResult = inspect(file('program.json'), 'program.json', a.program?.hash, (value) =>
+    validateForKind(job.kind, value),
   );
   const program = staleIf(
     programResult.state,
@@ -221,8 +217,8 @@ export function jobStatus(loc: JobLocation): JobStatusV1 {
           ? `program ${program.state}`
           : record && record.programHash !== programHash
           ? 'program değişti'
-          : record && record.rendererVersion !== PROGRAM_RENDERER_VERSION
-          ? `render motoru sürümü ${record.rendererVersion} → ${PROGRAM_RENDERER_VERSION}`
+          : record && record.rendererVersion !== RENDERER_VERSIONS[job.kind]
+          ? `render motoru sürümü ${record.rendererVersion} → ${RENDERER_VERSIONS[job.kind]}`
           : program.state === 'modified'
           ? 'program protokol dışında değişti'
           : null;

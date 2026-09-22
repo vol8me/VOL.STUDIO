@@ -1,0 +1,171 @@
+{
+  "schema": "MusicProgramV1",
+  "musicId": "reference-adaptive",
+  "version": 1,
+  "title": "Referans adaptive loop",
+  "description": "Üç stem'li dikey katmanlama: zemin her zaman çalar, nabız orta yoğunlukta girer, ezgi yalnız tepe yoğunlukta duyulur. Stem hizası, toplam pariteli ve state QA'sının kanıtı.",
+  "seed": 4242,
+  "playback": "adaptiveLoop",
+  "tempo": { "bpm": 112 },
+  "meter": [4, 4],
+  "tonal": { "system": "minor", "root": "A2" },
+  "bars": 4,
+  "sampleRate": 44100,
+  "themeBook": {
+    "id": "reference-theme",
+    "hash": "sha256:19c615b8d4becfd91ad10126a9043b54bd9441895372ff336f348937f5e04ca3"
+  },
+  "delivery": {
+    "package": "@volstudio/audio-synth",
+    "assetDir": "reference/production/assets/music/reference-adaptive"
+  },
+  "grooves": [
+    {
+      "id": "drive",
+      "swing": 0,
+      "timingJitter": 0.005,
+      "velocityJitter": 0.15,
+      "accents": [1, 0.75, 0.9, 0.75]
+    }
+  ],
+  "motifs": [
+    {
+      "id": "hook",
+      "notes": [
+        { "degree": 4, "beat": 0, "beats": 0.5 },
+        { "degree": 2, "beat": 0.5, "beats": 0.5 },
+        { "degree": 0, "beat": 1, "beats": 1 }
+      ]
+    }
+  ],
+  "stems": [
+    { "id": "bed", "title": "Zemin" },
+    { "id": "pulse", "title": "Nabız" },
+    { "id": "lead", "title": "Ezgi" }
+  ],
+  "lanes": [
+    { "id": "pad", "instrument": "preset:additivePad", "stem": "bed", "gain": 0.55 },
+    {
+      "id": "pluck",
+      "instrument": "preset:metalPluck",
+      "stem": "pulse",
+      "pan": -0.2,
+      "gain": 0.5,
+      "groove": "drive"
+    },
+    {
+      "id": "melody",
+      "instrument": "preset:softLead",
+      "stem": "lead",
+      "pan": 0.18,
+      "gain": 0.5,
+      "octave": 1,
+      "groove": "drive"
+    }
+  ],
+  "sections": [
+    {
+      "id": "body",
+      "role": "body",
+      "bars": [0, 4],
+      "targetEnergy": 0.7,
+      "lanes": ["pad", "pluck", "melody"],
+      "harmony": {
+        "voicing": { "voices": 3, "spread": "close", "register": [48, 74], "maxMovement": 7 },
+        "chords": [
+          { "bar": 0, "beat": 0, "beats": 4, "degree": 1, "quality": "triad" },
+          { "bar": 1, "beat": 0, "beats": 4, "degree": 6, "quality": "triad" },
+          { "bar": 2, "beat": 0, "beats": 4, "degree": 4, "quality": "triad" },
+          { "bar": 3, "beat": 0, "beats": 4, "degree": 5, "quality": "triad" }
+        ]
+      },
+      "parts": [
+        {
+          "lane": "pad",
+          "source": "chord",
+          "rhythm": [
+            { "bar": 0, "beat": 0, "beats": 4 },
+            { "bar": 1, "beat": 0, "beats": 4 },
+            { "bar": 2, "beat": 0, "beats": 4 },
+            { "bar": 3, "beat": 0, "beats": 4 }
+          ]
+        },
+        {
+          "lane": "pluck",
+          "source": "notes",
+          "notes": [
+            { "bar": 0, "beat": 0, "beats": 0.5, "note": "A3" },
+            { "bar": 0, "beat": 1.5, "beats": 0.5, "note": "E4" },
+            { "bar": 0, "beat": 3, "beats": 0.5, "note": "C4" },
+            { "bar": 1, "beat": 0, "beats": 0.5, "note": "F4" },
+            { "bar": 1, "beat": 1.5, "beats": 0.5, "note": "C4" },
+            { "bar": 1, "beat": 3, "beats": 0.5, "note": "A3" },
+            { "bar": 2, "beat": 0, "beats": 0.5, "note": "D4" },
+            { "bar": 2, "beat": 1.5, "beats": 0.5, "note": "A3" },
+            { "bar": 2, "beat": 3, "beats": 0.5, "note": "F4" },
+            { "bar": 3, "beat": 0, "beats": 0.5, "note": "E4" },
+            { "bar": 3, "beat": 1.5, "beats": 0.5, "note": "B3" },
+            { "bar": 3, "beat": 3, "beats": 0.5, "note": "G3" }
+          ]
+        },
+        {
+          "lane": "melody",
+          "source": "motif",
+          "motif": "hook",
+          "transforms": [{ "op": "transpose", "degrees": 0 }],
+          "beats": 1,
+          "placements": [
+            { "bar": 0, "beat": 2 },
+            { "bar": 2, "beat": 2, "octave": -1 }
+          ]
+        }
+      ]
+    }
+  ],
+  "adaptive": {
+    "states": [
+      { "id": "calm", "intensity": 0 },
+      { "id": "active", "intensity": 0.5 },
+      { "id": "peak", "intensity": 1 }
+    ],
+    "stems": [
+      {
+        "stem": "bed",
+        "gainMap": {
+          "intensity": [
+            { "threshold": 0, "gain": 0.85 },
+            { "threshold": 0.5, "gain": 0.95 },
+            { "threshold": 1, "gain": 1 }
+          ]
+        }
+      },
+      {
+        "stem": "pulse",
+        "gainMap": {
+          "intensity": [
+            { "threshold": 0, "gain": 0 },
+            { "threshold": 0.35, "gain": 0 },
+            { "threshold": 0.55, "gain": 0.85 },
+            { "threshold": 1, "gain": 1 }
+          ]
+        }
+      },
+      {
+        "stem": "lead",
+        "gainMap": {
+          "intensity": [
+            { "threshold": 0, "gain": 0 },
+            { "threshold": 0.6, "gain": 0 },
+            { "threshold": 0.8, "gain": 0.75 },
+            { "threshold": 1, "gain": 1 }
+          ]
+        }
+      }
+    ]
+  },
+  "markers": [
+    { "bar": 0, "kind": "loop-start" },
+    { "bar": 4, "kind": "loop-end" }
+  ],
+  "mastering": { "integratedLufs": -16 }
+}

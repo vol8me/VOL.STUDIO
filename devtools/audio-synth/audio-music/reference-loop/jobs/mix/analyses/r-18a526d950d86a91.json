@@ -1,0 +1,67 @@
+{
+  "pcmHash": "sha256:baa932bcac899429836ae380fb1298c3051ff2277bcc67001e4841881c5d1843",
+  "renderHash": "sha256:830b8e34fb04bec7e87a56bb0b8fbd5389e23aaf05f977494ced478287ba15f2",
+  "renderId": "r-18a526d950d86a91",
+  "report": {
+    "analyzerVersion": 1,
+    "dc": {
+      "channelOffset": [7.558276147934659e-7, 2.5500127433978717e-7]
+    },
+    "defects": {
+      "clicks": {
+        "count": 1,
+        "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+      },
+      "clips": {
+        "channelSamples": 0,
+        "frames": 0,
+        "perChannel": [0, 0]
+      }
+    },
+    "format": {
+      "channels": 2,
+      "durationSeconds": 10,
+      "frames": 441000,
+      "sampleRate": 44100
+    },
+    "level": {
+      "channelPeakDbfs": [-1.9653288821475958, -2.2745544791532133],
+      "channelRmsDbfs": [-19.6930102027436, -20.200987345318346],
+      "crestFactorDb": 17.97424711115751,
+      "integratedLufs": -16.258797788945024,
+      "maxMomentaryLufs": -12.62992500531125,
+      "rmsDbfs": -19.939575993305105,
+      "samplePeakDbfs": -1.9653288821475958,
+      "truePeakDbtp": -1.9603270276802678
+    },
+    "measuredFrom": "source-pcm",
+    "schema": "AudioAnalysisReportV1",
+    "spectral": {
+      "bandsDb": {
+        "air": -83.46923345300155,
+        "high": -47.02814752541087,
+        "low": -22.68153151406271,
+        "mid": -28.38754569860025,
+        "sub": -25.058950168336285
+      },
+      "centroidHz": 306.66859164534657,
+      "flatness": 0.0000018581065999759145,
+      "peakHz": 86.1328125,
+      "rolloff85Hz": 452.197265625
+    },
+    "stereo": {
+      "correlation": 0.9775211223750943,
+      "width": 0.11055161708288878
+    },
+    "temporal": {
+      "activeSeconds": 7.2,
+      "attackSeconds": 0.02,
+      "decay40Seconds": 1.18,
+      "leadingSilenceSeconds": 0,
+      "peakTimeSeconds": 5.02,
+      "temporalCentroidSeconds": 4.905111445817305,
+      "trailingSilenceSeconds": 0.41000000000000014
+    }
+  },
+  "schema": "AudioAnalysisRecordV1"
+}

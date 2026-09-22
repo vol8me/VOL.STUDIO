@@ -1,0 +1,636 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          0.000010995456951057997,
+          0.00001248747690379625
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0,
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 2,
+        "durationSeconds": 8.571428571428571,
+        "frames": 378000,
+        "sampleRate": 44100
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -12.854031129218308,
+          -11.132449416208146
+        ],
+        "channelRmsDbfs": [
+          -26.92290639866659,
+          -25.349080446933577
+        ],
+        "crestFactorDb": 14.93263899977427,
+        "integratedLufs": -18.619066917578454,
+        "maxMomentaryLufs": -15.50269008160071,
+        "rmsDbfs": -26.065088415982416,
+        "samplePeakDbfs": -11.132449416208146,
+        "truePeakDbtp": -11.116174326248963
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -113.72204253250462,
+          "high": -70.22947346168569,
+          "low": -26.88216342733633,
+          "mid": -44.416945932969,
+          "sub": -34.23762639763605
+        },
+        "centroidHz": 202.32201656138184,
+        "flatness": 1.4442153527939e-9,
+        "peakHz": 129.19921875,
+        "rolloff85Hz": 279.931640625
+      },
+      "stereo": {
+        "correlation": 0.9998982752218266,
+        "width": 0.09063068369832451
+      },
+      "temporal": {
+        "activeSeconds": 2.01,
+        "attackSeconds": 4.3,
+        "decay40Seconds": 0.24,
+        "leadingSilenceSeconds": 1.07,
+        "peakTimeSeconds": 5.63,
+        "temporalCentroidSeconds": 3.9434378762751003,
+        "trailingSilenceSeconds": 2.251428571428571
+      }
+    },
+    "sourceRecordHash": "sha256:10391df4bd996b686438317da291cd85da735be8254a25a4e416f42ab34c51bf"
+  },
+  "asset": {
+    "bytes": 20121,
+    "encodedHash": "sha256:1a2d2be21f4d046b8a48e4e77fcccf296518fe0ebc5347c183cd972d28a9ffff",
+    "format": "ogg-vorbis",
+    "path": "devtools/audio-synth/reference/production/assets/music/reference-adaptive/lead.ogg"
+  },
+  "assetId": "reference-adaptive-lead",
+  "brief": {
+    "document": {
+      "adaptive": {
+        "states": [
+          {
+            "id": "calm",
+            "intensity": 0
+          },
+          {
+            "id": "active",
+            "intensity": 0.5
+          },
+          {
+            "id": "peak",
+            "intensity": 1
+          }
+        ]
+      },
+      "affect": {
+        "arousal": 0.6,
+        "tags": [
+          "katmanlı",
+          "yoğunluk",
+          "loop"
+        ],
+        "valence": -0.1
+      },
+      "assetClass": "music",
+      "channels": 2,
+      "form": {
+        "sections": [
+          "body"
+        ]
+      },
+      "id": "reference-adaptive",
+      "intent": "Yoğunluğa tepki veren bir yatak: sakin durumda yalnız zemin duyulmalı, yoğunluk arttıkça nabız ve ezgi katmanları girmeli. Katman girişleri parçayı yeniden başlatmadan, yalnız seviye değişimiyle olmalı.",
+      "kind": "music",
+      "length": {
+        "bars": {
+          "max": 8,
+          "min": 4
+        }
+      },
+      "melodicSalience": 0.47,
+      "meter": [
+        4,
+        4
+      ],
+      "playback": "adaptiveLoop",
+      "provenance": {
+        "author": "agent",
+        "by": "wave-6-reference"
+      },
+      "rhythmicDensity": "moderate",
+      "schema": "AudioBriefV1",
+      "tempo": {
+        "bpm": {
+          "max": 124,
+          "min": 100
+        }
+      },
+      "themeBook": {
+        "id": "reference-theme"
+      },
+      "title": "Referans adaptive loop",
+      "tonal": {
+        "roots": [
+          "A2"
+        ],
+        "systems": [
+          "minor"
+        ]
+      },
+      "usage": "interactive"
+    },
+    "hash": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+    "kind": "music",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "4",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:88fd7a2ee7fa953241bd18f901647268901215fb58debd913cb9dfd26ef43998",
+    "libraries": {
+      "libavcodec": "62.28.102",
+      "libavformat": "62.12.102",
+      "libavutil": "60.26.102"
+    },
+    "quality": 4,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "packageVersion": "0.1.0",
+    "registryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "rendererVersion": 1,
+    "runtime": {
+      "node": "v22.23.1"
+    },
+    "sourceCommit": "19f0f194b32d956475082aa10fc821ff468f1080",
+    "sourceTreeDirty": true
+  },
+  "integration": {
+    "loop": true,
+    "package": "@volstudio/audio-synth",
+    "runtimeDeclaration": null,
+    "runtimeKey": "reference-adaptive/lead",
+    "targetKind": "reference"
+  },
+  "job": {
+    "jobId": "lead",
+    "path": "devtools/audio-synth/audio-music/reference-adaptive/jobs/lead",
+    "protocolVersion": 1
+  },
+  "policy": {
+    "assetClass": "music-stem",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "mastering": {
+        "ceiling": null,
+        "fadeOutSeconds": 0,
+        "gainDb": 0.71,
+        "limiter": null,
+        "path": "stem-linear",
+        "schema": "MusicMasteringPlanV1",
+        "targetLufs": -16,
+        "trimSilence": false
+      },
+      "music": {
+        "adaptive": {
+          "states": [
+            {
+              "id": "calm",
+              "intensity": 0
+            },
+            {
+              "id": "active",
+              "intensity": 0.5
+            },
+            {
+              "id": "peak",
+              "intensity": 1
+            }
+          ],
+          "stems": [
+            {
+              "gainMap": {
+                "intensity": [
+                  {
+                    "gain": 0.85,
+                    "threshold": 0
+                  },
+                  {
+                    "gain": 0.95,
+                    "threshold": 0.5
+                  },
+                  {
+                    "gain": 1,
+                    "threshold": 1
+                  }
+                ]
+              },
+              "stem": "bed"
+            },
+            {
+              "gainMap": {
+                "intensity": [
+                  {
+                    "gain": 0,
+                    "threshold": 0
+                  },
+                  {
+                    "gain": 0,
+                    "threshold": 0.35
+                  },
+                  {
+                    "gain": 0.85,
+                    "threshold": 0.55
+                  },
+                  {
+                    "gain": 1,
+                    "threshold": 1
+                  }
+                ]
+              },
+              "stem": "pulse"
+            },
+            {
+              "gainMap": {
+                "intensity": [
+                  {
+                    "gain": 0,
+                    "threshold": 0
+                  },
+                  {
+                    "gain": 0,
+                    "threshold": 0.6
+                  },
+                  {
+                    "gain": 0.75,
+                    "threshold": 0.8
+                  },
+                  {
+                    "gain": 1,
+                    "threshold": 1
+                  }
+                ]
+              },
+              "stem": "lead"
+            }
+          ]
+        },
+        "bars": 4,
+        "delivery": {
+          "assetDir": "reference/production/assets/music/reference-adaptive",
+          "package": "@volstudio/audio-synth"
+        },
+        "description": "Üç stem'li dikey katmanlama: zemin her zaman çalar, nabız orta yoğunlukta girer, ezgi yalnız tepe yoğunlukta duyulur. Stem hizası, toplam pariteli ve state QA'sının kanıtı.",
+        "grooves": [
+          {
+            "accents": [
+              1,
+              0.75,
+              0.9,
+              0.75
+            ],
+            "id": "drive",
+            "swing": 0,
+            "timingJitter": 0.005,
+            "velocityJitter": 0.15
+          }
+        ],
+        "lanes": [
+          {
+            "gain": 0.55,
+            "id": "pad",
+            "instrument": "preset:additivePad",
+            "stem": "bed"
+          },
+          {
+            "gain": 0.5,
+            "groove": "drive",
+            "id": "pluck",
+            "instrument": "preset:metalPluck",
+            "pan": -0.2,
+            "stem": "pulse"
+          },
+          {
+            "gain": 0.5,
+            "groove": "drive",
+            "id": "melody",
+            "instrument": "preset:softLead",
+            "octave": 1,
+            "pan": 0.18,
+            "stem": "lead"
+          }
+        ],
+        "markers": [
+          {
+            "bar": 0,
+            "kind": "loop-start"
+          },
+          {
+            "bar": 4,
+            "kind": "loop-end"
+          }
+        ],
+        "mastering": {
+          "integratedLufs": -16
+        },
+        "meter": [
+          4,
+          4
+        ],
+        "motifs": [
+          {
+            "id": "hook",
+            "notes": [
+              {
+                "beat": 0,
+                "beats": 0.5,
+                "degree": 4
+              },
+              {
+                "beat": 0.5,
+                "beats": 0.5,
+                "degree": 2
+              },
+              {
+                "beat": 1,
+                "beats": 1,
+                "degree": 0
+              }
+            ]
+          }
+        ],
+        "musicId": "reference-adaptive",
+        "playback": "adaptiveLoop",
+        "sampleRate": 44100,
+        "schema": "MusicProgramV1",
+        "sections": [
+          {
+            "bars": [
+              0,
+              4
+            ],
+            "harmony": {
+              "chords": [
+                {
+                  "bar": 0,
+                  "beat": 0,
+                  "beats": 4,
+                  "degree": 1,
+                  "quality": "triad"
+                },
+                {
+                  "bar": 1,
+                  "beat": 0,
+                  "beats": 4,
+                  "degree": 6,
+                  "quality": "triad"
+                },
+                {
+                  "bar": 2,
+                  "beat": 0,
+                  "beats": 4,
+                  "degree": 4,
+                  "quality": "triad"
+                },
+                {
+                  "bar": 3,
+                  "beat": 0,
+                  "beats": 4,
+                  "degree": 5,
+                  "quality": "triad"
+                }
+              ],
+              "voicing": {
+                "maxMovement": 7,
+                "register": [
+                  48,
+                  74
+                ],
+                "spread": "close",
+                "voices": 3
+              }
+            },
+            "id": "body",
+            "lanes": [
+              "pad",
+              "pluck",
+              "melody"
+            ],
+            "parts": [
+              {
+                "lane": "pad",
+                "rhythm": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 4
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "beats": 4
+                  },
+                  {
+                    "bar": 2,
+                    "beat": 0,
+                    "beats": 4
+                  },
+                  {
+                    "bar": 3,
+                    "beat": 0,
+                    "beats": 4
+                  }
+                ],
+                "source": "chord"
+              },
+              {
+                "lane": "pluck",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 0.5,
+                    "note": "A3"
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 1.5,
+                    "beats": 0.5,
+                    "note": "E4"
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 3,
+                    "beats": 0.5,
+                    "note": "C4"
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "beats": 0.5,
+                    "note": "F4"
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 1.5,
+                    "beats": 0.5,
+                    "note": "C4"
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 3,
+                    "beats": 0.5,
+                    "note": "A3"
+                  },
+                  {
+                    "bar": 2,
+                    "beat": 0,
+                    "beats": 0.5,
+                    "note": "D4"
+                  },
+                  {
+                    "bar": 2,
+                    "beat": 1.5,
+                    "beats": 0.5,
+                    "note": "A3"
+                  },
+                  {
+                    "bar": 2,
+                    "beat": 3,
+                    "beats": 0.5,
+                    "note": "F4"
+                  },
+                  {
+                    "bar": 3,
+                    "beat": 0,
+                    "beats": 0.5,
+                    "note": "E4"
+                  },
+                  {
+                    "bar": 3,
+                    "beat": 1.5,
+                    "beats": 0.5,
+                    "note": "B3"
+                  },
+                  {
+                    "bar": 3,
+                    "beat": 3,
+                    "beats": 0.5,
+                    "note": "G3"
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "beats": 1,
+                "lane": "melody",
+                "motif": "hook",
+                "placements": [
+                  {
+                    "bar": 0,
+                    "beat": 2
+                  },
+                  {
+                    "bar": 2,
+                    "beat": 2,
+                    "octave": -1
+                  }
+                ],
+                "source": "motif",
+                "transforms": [
+                  {
+                    "degrees": 0,
+                    "op": "transpose"
+                  }
+                ]
+              }
+            ],
+            "role": "body",
+            "targetEnergy": 0.7
+          }
+        ],
+        "seed": 4242,
+        "stems": [
+          {
+            "id": "bed",
+            "title": "Zemin"
+          },
+          {
+            "id": "pulse",
+            "title": "Nabız"
+          },
+          {
+            "id": "lead",
+            "title": "Ezgi"
+          }
+        ],
+        "tempo": {
+          "bpm": 112
+        },
+        "themeBook": {
+          "hash": "sha256:19c615b8d4becfd91ad10126a9043b54bd9441895372ff336f348937f5e04ca3",
+          "id": "reference-theme"
+        },
+        "title": "Referans adaptive loop",
+        "tonal": {
+          "root": "A2",
+          "system": "minor"
+        },
+        "version": 1
+      },
+      "schema": "MusicStemProgramV1",
+      "stem": "lead"
+    },
+    "hash": "sha256:80dfdf380bbdf61f7e5803509c67f22cd90e91d086281774529d4ed8e42bd6dd",
+    "schema": "MusicStemProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 2,
+      "format": "f32le-interleaved-clamped",
+      "frames": 378000,
+      "hash": "sha256:f5862d9c19e74691b73147fccce12c4b6d7d9c09b83be4ba59c3bf981b2b243f",
+      "sampleRate": 44100
+    },
+    "renderId": "r-0c6aa1f93ed6b2ee",
+    "rendererVersion": 1,
+    "seed": 4242
+  },
+  "schema": "AudioAssetManifestV1"
+}

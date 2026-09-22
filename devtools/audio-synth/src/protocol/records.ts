@@ -2,6 +2,7 @@ import { AUDIO_ANALYSIS_SCHEMA, type AudioAnalysisReportV1 } from '../analysis/r
 import { AudioParamError } from '../guard/errors';
 import { checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
 import { HASH_PATTERN, type Sha256 } from './canonical';
+import { JOB_KINDS, type JobKind } from './kinds';
 import { ProtocolError } from './errors';
 import { checkRepoRelative } from './fs';
 
@@ -43,7 +44,7 @@ export interface AudioJobV1 {
   readonly schema: typeof AUDIO_JOB_SCHEMA;
   readonly protocolVersion: typeof PROTOCOL_VERSION;
   readonly jobId: string;
-  readonly kind: 'acoustic';
+  readonly kind: JobKind;
   readonly target: JobTargetV1;
   /** Son BAŞARILI komutun aşaması; etkin aşama dosyalardan yeniden hesaplanır. */
   readonly stage: JobStage;
@@ -169,7 +170,7 @@ export function validateJob(value: unknown): AudioJobV1 {
     );
   }
   checkId(o.jobId, 'jobId', JOB_ID);
-  checkChoice(o.kind, 'kind', ['acoustic'] as const);
+  checkChoice(o.kind, 'kind', JOB_KINDS);
   const target = checkObject(o.target, 'target', ['package', 'asset', 'integration']);
   if (typeof target.package !== 'string' || !/^@[a-z0-9-]+\/[a-z0-9.-]+$/.test(target.package)) {
     throw new AudioParamError('target.package', 'type', 'paket adı olmalı', target.package);

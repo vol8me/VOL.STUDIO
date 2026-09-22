@@ -1,16 +1,15 @@
 import type { AssetClass } from '../analysis/assetQa';
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
+import { checkMusicBrief, MUSIC_BRIEF_KEYS, type MusicBriefV1 } from '../music/brief';
 
 export const AUDIO_BRIEF_SCHEMA = 'AudioBriefV1';
 
 /**
  * Brief zarfı: ortak kimlik/niyet/provenance + tek discriminated union.
- * `kind: 'acoustic'` bu sürümde tanımlıdır. `kind: 'music'` şemada YER
- * TUTAR ama alan kümesi TANIMLAMAZ — müzik alanları (rol, BPM, ölçü, tonal
- * dil) yalnız Dalga 6'nın `MusicBriefV1` sözleşmesinde yaşar; o gelene dek
- * müzik brief'i `unsupported` ile reddedilir. Böylece aynı müzik isteğinin
- * iki geçerli şeması oluşamaz.
+ * `kind: 'acoustic'` akustik tek-olay isteğini, `kind: 'music'` müzik
+ * isteğini (`music/brief.ts`) taşır. Alan kümeleri ayrıdır ve iki dal asla
+ * birbirinin alanını okumaz; müzik isteğinin ikinci bir geçerli şeması yoktur.
  */
 export type AcousticSubtype = 'sfx' | 'organic' | 'ambience';
 
@@ -40,8 +39,8 @@ export interface AcousticBriefV1 extends BriefEnvelopeV1 {
   readonly loop?: boolean;
 }
 
-export type AudioBriefV1 = AcousticBriefV1;
-export type AudioBriefKind = 'acoustic' | 'music';
+export type AudioBriefV1 = AcousticBriefV1 | MusicBriefV1;
+export type AudioBriefKind = AudioBriefV1['kind'];
 
 const ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
@@ -108,15 +107,10 @@ export function validateBrief(value: unknown): AudioBriefV1 {
     throw new AudioParamError('schema', 'type', `"${AUDIO_BRIEF_SCHEMA}" olmalı`, raw.schema);
   }
   const kind = checkChoice(raw.kind, 'kind', ['acoustic', 'music'] as const);
-  if (kind === 'music') {
-    throw new AudioParamError(
-      'kind',
-      'unsupported',
-      "müzik brief'i Dalga 6 `MusicBriefV1` sözleşmesine aittir; bu sürümde tanımlı değil",
-      kind,
-    );
-  }
-  const o = checkObject(value, '', [...ENVELOPE_KEYS, ...ACOUSTIC_KEYS]);
+  const o = checkObject(value, '', [
+    ...ENVELOPE_KEYS,
+    ...(kind === 'music' ? MUSIC_BRIEF_KEYS : ACOUSTIC_KEYS),
+  ]);
   if (typeof o.id !== 'string' || !ID.test(o.id)) {
     throw new AudioParamError('id', 'type', `${ID.source} kalıbına uymalı`, o.id);
   }
@@ -127,5 +121,5 @@ export function validateBrief(value: unknown): AudioBriefV1 {
     intent: checkText(o.intent, 'intent', 4000),
     provenance: checkProvenance(o.provenance),
   };
-  return checkAcoustic(o, envelope);
+  return kind === 'music' ? checkMusicBrief(o, envelope) : checkAcoustic(o, envelope);
 }

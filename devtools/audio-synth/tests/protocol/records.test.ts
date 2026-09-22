@@ -72,11 +72,16 @@ describe('protokol kayıt doğrulayıcıları', () => {
     expect(validateSelection(selection)).toBe(selection);
   });
 
+  it('job: müzik türü geçerlidir (stem işleri aynı kapıdan geçer)', () => {
+    const music = edited(job, [['kind'], 'music']);
+    expect(validateJob(music)).toBe(music);
+  });
+
   it.each<[string, Edit]>([
     ['şema', [['schema'], 'AudioJobV2']],
     ['protokol sürümü', [['protocolVersion'], 2]],
     ['job kimliği', [['jobId'], 'Knock!']],
-    ['kind', [['kind'], 'music']],
+    ['kind', [['kind'], 'video']],
     ['paket adı', [['target', 'package'], 'audio-synth']],
     ['mutlak asset', [['target', 'asset'], '/etc/passwd']],
     ['runtime anahtarı', [['target', 'integration', 'runtimeKey'], 'A B']],

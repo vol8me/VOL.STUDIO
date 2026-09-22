@@ -1,0 +1,153 @@
+{
+  "schema": "MusicProgramV1",
+  "musicId": "reference-loop",
+  "version": 1,
+  "title": "Referans dikişsiz loop",
+  "description": "Dört ölçülük dikişsiz loop: bas, akor yatağı ve motifli arp. Loop yolunun (dikiş, döngüsel yükseklik, tek asset) uçtan uca kanıtı.",
+  "seed": 20260922,
+  "playback": "loop",
+  "tempo": { "bpm": 96 },
+  "meter": [4, 4],
+  "tonal": { "system": "minor", "root": "A2" },
+  "bars": 4,
+  "sampleRate": 44100,
+  "themeBook": {
+    "id": "reference-theme",
+    "hash": "sha256:19c615b8d4becfd91ad10126a9043b54bd9441895372ff336f348937f5e04ca3"
+  },
+  "delivery": {
+    "package": "@volstudio/audio-synth",
+    "assetDir": "reference/production/assets/music/reference-loop"
+  },
+  "grooves": [
+    {
+      "id": "gentle",
+      "swing": 0.12,
+      "timingJitter": 0.008,
+      "velocityJitter": 0.18,
+      "accents": [1, 0.82, 0.92, 0.78]
+    }
+  ],
+  "motifs": [
+    {
+      "id": "call",
+      "notes": [
+        { "degree": 0, "beat": 0, "beats": 0.5 },
+        { "degree": 2, "beat": 0.5, "beats": 0.5 },
+        { "degree": 4, "beat": 1, "beats": 1 },
+        { "degree": 2, "beat": 2, "beats": 1 }
+      ]
+    }
+  ],
+  "stems": [{ "id": "main", "title": "Tam mix" }],
+  "lanes": [
+    { "id": "bass", "instrument": "preset:subBass", "stem": "main", "gain": 0.85 },
+    {
+      "id": "keys",
+      "instrument": "preset:warmKeys",
+      "stem": "main",
+      "pan": -0.18,
+      "gain": 0.5
+    },
+    {
+      "id": "lead",
+      "instrument": "preset:harp",
+      "stem": "main",
+      "pan": 0.22,
+      "gain": 0.42,
+      "octave": 2,
+      "groove": "gentle"
+    }
+  ],
+  "sections": [
+    {
+      "id": "intro",
+      "role": "intro",
+      "bars": [0, 2],
+      "targetEnergy": 0.35,
+      "lanes": ["bass", "keys"],
+      "harmony": {
+        "voicing": { "voices": 3, "spread": "close", "register": [52, 76], "maxMovement": 7 },
+        "chords": [
+          { "bar": 0, "beat": 0, "beats": 4, "degree": 1, "quality": "triad" },
+          { "bar": 1, "beat": 0, "beats": 4, "degree": 6, "quality": "triad" }
+        ]
+      },
+      "parts": [
+        {
+          "lane": "keys",
+          "source": "chord",
+          "rhythm": [
+            { "bar": 0, "beat": 0, "beats": 3.5, "gain": 0.9 },
+            { "bar": 1, "beat": 0, "beats": 3.5, "gain": 0.9 }
+          ]
+        },
+        {
+          "lane": "bass",
+          "source": "notes",
+          "notes": [
+            { "bar": 0, "beat": 0, "beats": 1.5, "note": "A2" },
+            { "bar": 0, "beat": 2, "beats": 1, "note": "A2" },
+            { "bar": 1, "beat": 0, "beats": 1.5, "note": "F2" },
+            { "bar": 1, "beat": 2, "beats": 1, "note": "F2" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "body",
+      "role": "body",
+      "bars": [2, 4],
+      "targetEnergy": 0.85,
+      "lanes": ["bass", "keys", "lead"],
+      "harmony": {
+        "voicing": { "voices": 3, "spread": "open", "register": [50, 84], "maxMovement": 9 },
+        "chords": [
+          { "bar": 0, "beat": 0, "beats": 2, "degree": 1, "quality": "triad" },
+          { "bar": 0, "beat": 2, "beats": 2, "degree": 4, "quality": "triad" },
+          { "bar": 1, "beat": 0, "beats": 2, "degree": 6, "quality": "triad" },
+          { "bar": 1, "beat": 2, "beats": 2, "degree": 5, "quality": "triad" }
+        ]
+      },
+      "parts": [
+        {
+          "lane": "keys",
+          "source": "chord",
+          "rhythm": [
+            { "bar": 0, "beat": 0, "beats": 1.75 },
+            { "bar": 0, "beat": 2, "beats": 1.75 },
+            { "bar": 1, "beat": 0, "beats": 1.75 },
+            { "bar": 1, "beat": 2, "beats": 1.75 }
+          ]
+        },
+        {
+          "lane": "bass",
+          "source": "notes",
+          "notes": [
+            { "bar": 0, "beat": 0, "beats": 1, "note": "A2" },
+            { "bar": 0, "beat": 1.5, "beats": 0.5, "note": "A2" },
+            { "bar": 0, "beat": 2, "beats": 1, "note": "D2" },
+            { "bar": 1, "beat": 0, "beats": 1, "note": "F2" },
+            { "bar": 1, "beat": 2, "beats": 1.5, "note": "E2" }
+          ]
+        },
+        {
+          "lane": "lead",
+          "source": "motif",
+          "motif": "call",
+          "transforms": [{ "op": "transpose", "degrees": 2 }],
+          "beats": 1,
+          "placements": [
+            { "bar": 0, "beat": 0 },
+            { "bar": 1, "beat": 0, "octave": -1 }
+          ]
+        }
+      ]
+    }
+  ],
+  "markers": [
+    { "bar": 0, "kind": "loop-start" },
+    { "bar": 4, "kind": "loop-end" }
+  ],
+  "mastering": { "integratedLufs": -16 }
+}

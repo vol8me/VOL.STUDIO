@@ -1,9 +1,9 @@
-import { synthesize } from '../engine';
 import { checkNumber, checkSampleRate } from '../guard/read';
 import type { SynthParams, SynthesisResult } from '../types';
 import type { LoudnessOptions } from './loudness';
-import { addVoice, createMix, masterMix, stableJitter } from './mix';
+import { masterMix, stableJitter } from './mix';
 import { noteToHz } from './pitch';
+import { renderVoices, trimmedLength } from './render';
 
 /**
  * Çok sesli, çok enstrümanlı, MUTLAK ZAMANLI düzenleme yüzeyi.
@@ -74,12 +74,6 @@ export interface RenderOptions extends LoudnessOptions {
    */
   loopBars?: number;
 }
-
-/** Kırpma eşiği: mix tepesinin −56 dB altı (eski mutlak 0.0015 ≈ 0.95 tavanda). */
-const AUDIBLE_FLOOR_RELATIVE = Math.pow(10, -56 / 20);
-
-/** Son duyulur örnekten sonra bırakılan pay (saniye). */
-const TRIM_MARGIN_SECONDS = 0.35;
 
 /** Mix'in DC'si son adımda temizlenir (tarihî master kuralı). */
 const MASTER_DC_BLOCK_HZ = 20;
@@ -206,33 +200,21 @@ export class Timeline {
     });
 
     const length = loopBars === undefined ? end + tail : this.positionToSeconds(loopBars, 0);
-    const mix = createMix(length, sampleRate);
-    for (const { event, at, duration, velocity } of placed) {
-      const params: SynthParams = {
-        ...event.instrument(noteToHz(event.note), duration),
-        sampleRate,
-      };
-      if (event.pan !== undefined) params.pan = event.pan;
-      addVoice(mix, synthesize(params), at, {
+    const mix = renderVoices(
+      placed.map(({ event, at, duration, velocity }) => ({
+        params: event.instrument(noteToHz(event.note), duration),
+        atSeconds: at,
         gain: velocity,
-        wrap: loopBars !== undefined,
-      });
-    }
+        ...(event.pan === undefined ? {} : { pan: event.pan }),
+      })),
+      { durationSeconds: length, sampleRate, wrap: loopBars !== undefined },
+    );
 
     const total = mix.channels[0].length;
-    let kept = total;
-    if (loopBars === undefined && options.trimSilence !== false) {
-      const floor = mixPeak(mix.channels) * AUDIBLE_FLOOR_RELATIVE;
-      let last = total - 1;
-      while (
-        last > 0 &&
-        Math.abs(mix.channels[0][last]) < floor &&
-        Math.abs(mix.channels[1][last]) < floor
-      ) {
-        last--;
-      }
-      kept = Math.min(total, last + Math.floor(TRIM_MARGIN_SECONDS * sampleRate));
-    }
+    const kept =
+      loopBars === undefined && options.trimSilence !== false
+        ? trimmedLength(mix.channels, sampleRate)
+        : total;
 
     const out = { channels: mix.channels.map((ch) => ch.subarray(0, kept)), sampleRate };
     masterMix(out, {
@@ -248,12 +230,4 @@ export class Timeline {
     });
     return { channels: out.channels, sampleRate, duration: kept / sampleRate };
   }
-}
-
-function mixPeak(channels: readonly Float32Array[]): number {
-  let peak = 0;
-  for (const channel of channels) {
-    for (const value of channel) peak = Math.max(peak, Math.abs(value));
-  }
-  return peak;
 }

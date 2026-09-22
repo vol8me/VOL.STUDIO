@@ -1,0 +1,45 @@
+{
+  "schema": "MusicThemeBookV1",
+  "themeBookId": "reference-theme",
+  "version": 1,
+  "title": "Referans müzik kitabı",
+  "description": "audio-synth'in kendi üretim referansı için tonal ve ritmik dil. Hiçbir oyun bunu çalmaz; müzik yolunu uçtan uca sınamak için vardır.",
+  "tonal": {
+    "systems": ["minor", "dorian"],
+    "roots": ["A2", "D2"]
+  },
+  "rhythm": {
+    "meters": [[4, 4]],
+    "bpm": { "min": 80, "max": 140 }
+  },
+  "signature": {
+    "intervals": [7, 5],
+    "motifs": [
+      {
+        "id": "call",
+        "notes": [
+          { "degree": 0, "beat": 0, "beats": 0.5 },
+          { "degree": 2, "beat": 0.5, "beats": 0.5 },
+          { "degree": 4, "beat": 1, "beats": 1 }
+        ]
+      }
+    ]
+  },
+  "palette": {
+    "prefer": ["preset:subBass", "preset:warmKeys", "preset:harp"],
+    "forbid": ["preset:honkyTonkPiano"]
+  },
+  "register": [
+    { "role": "bass", "lowMidi": 24, "highMidi": 60 },
+    { "role": "keys", "lowMidi": 48, "highMidi": 90 },
+    { "role": "pluck", "lowMidi": 55, "highMidi": 96 }
+  ],
+  "spectral": [{ "role": "bass", "centroidHz": { "min": 20, "max": 2000 } }],
+  "avoid": [
+    { "kind": "max-polyphony", "voices": 8 },
+    { "kind": "max-density", "notesPerBar": 24, "scope": "program" }
+  ],
+  "notes": [
+    "Klişe kaçınması: kapanışta beklenen V-i yürüyüşü tek başına bırakılmaz. Bu not makineyle DENETLENMEZ."
+  ]
+}

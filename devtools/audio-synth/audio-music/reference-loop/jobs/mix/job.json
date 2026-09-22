@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-18a526d950d86a91": {
+        "hash": "sha256:f27a644a983fdd289da300357b65b5234126e7d2e707a5565fb41304d410aa15",
+        "path": "analyses/r-18a526d950d86a91.json"
+      },
+      "r-5c5194533ec711c1": {
+        "hash": "sha256:a82a16698b58300e069e937cbfe3a2f5f112df2f2354defac6dbf635d9733752",
+        "path": "analyses/r-5c5194533ec711c1.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:aa14feb1df7dc2eadaf5c2f62cde18b756e6941881e3a6dfb6f7784edd63ec58",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:aa14feb1df7dc2eadaf5c2f62cde18b756e6941881e3a6dfb6f7784edd63ec58",
+      "hash": "sha256:a91aff93bff261760c8d4c32324d0fe78c9369cbc98c51747d71eb3862a76d94",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:88bb9258619d74a2858c3f9bd8d8e2390f83f2bbfb9caba2c840c426d5ebd234",
+      "path": "devtools/audio-synth/reference/production/manifests/music/reference-loop/mix.json"
+    },
+    "renders": {
+      "r-18a526d950d86a91": {
+        "hash": "sha256:830b8e34fb04bec7e87a56bb0b8fbd5389e23aaf05f977494ced478287ba15f2",
+        "path": "renders/r-18a526d950d86a91.json"
+      },
+      "r-5c5194533ec711c1": {
+        "hash": "sha256:c7703ab4125db4fb39b3d8234582285a6de8439144032f3932421c4ac2e30d81",
+        "path": "renders/r-5c5194533ec711c1.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:133efd56b988ccf9bdddfd4a6ad168b2019547d07dd9b1b868e26854cafa3403",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "mix",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 11,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/music/reference-loop/mix.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "reference-loop/mix"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

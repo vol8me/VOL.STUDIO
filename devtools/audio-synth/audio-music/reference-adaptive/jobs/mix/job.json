@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-9c2405246211186b": {
+        "hash": "sha256:e8ddc31b2ed61110ddc369bb9c3894a23ab8b0e448df24c75728d9a91c6c4203",
+        "path": "analyses/r-9c2405246211186b.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+      "hash": "sha256:4eb34f1d3df35888ae58aad536c978e2154db9c1f19993a9642179c021027949",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:ada78db2c74ff9059003f3f33472d25ed8a71ab4f71d1ad4d2181abd955cbac0",
+      "path": "devtools/audio-synth/reference/production/manifests/music/reference-adaptive/mix.json"
+    },
+    "renders": {
+      "r-9c2405246211186b": {
+        "hash": "sha256:1587eeb3994796fa85e83affb7ada16cc3ae71a4567d2e7a07662ebf395f4b02",
+        "path": "renders/r-9c2405246211186b.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:85cceb67a2d09ccf904b36ae3298afb1ad6d7e5edf16561a0c5e7770ed95bcdb",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "mix",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/music/reference-adaptive/mix.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "reference-adaptive/mix"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

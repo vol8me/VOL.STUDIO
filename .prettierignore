@@ -37,3 +37,13 @@ devtools/audio-synth/audio-searches/
 devtools/audio-synth/canaries/reviews.json
 devtools/audio-synth/reference/production/banks/
 devtools/audio-synth/reference/production/manifests/
+
+# Kanonik JSON yazıcısı (`prettyCanonicalJson`) üretir: alanlar sıralı ve
+# diziler her zaman açık yazılır, çünkü özet bu biçimden değil içerikten
+# türer. Prettier kısa sayısal dizileri toplar ve iki yazıcı her yayında
+# birbirinin üstüne yazardı; üretilmiş kanonik belgeler biçim kapısının
+# dışındadır (elle yazılan `music.json`/`brief.json`/`search.json` kapıda kalır).
+devtools/audio-synth/reference/production/music/
+devtools/audio-synth/audio-music/*/report.json
+devtools/audio-synth/audio-music/*/qa.json
+devtools/audio-synth/audio-music/*/search-report.json

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-0c6aa1f93ed6b2ee": {
+        "hash": "sha256:10391df4bd996b686438317da291cd85da735be8254a25a4e416f42ab34c51bf",
+        "path": "analyses/r-0c6aa1f93ed6b2ee.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+      "hash": "sha256:80dfdf380bbdf61f7e5803509c67f22cd90e91d086281774529d4ed8e42bd6dd",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:067c3ba41afbd9e3d0680e0502dc8088af525b68793a0c19b661042ee8474d86",
+      "path": "devtools/audio-synth/reference/production/manifests/music/reference-adaptive/lead.json"
+    },
+    "renders": {
+      "r-0c6aa1f93ed6b2ee": {
+        "hash": "sha256:c3443b923ec5d91a7d5971b73aa6add850c71074ead8739a4b9d78110336f142",
+        "path": "renders/r-0c6aa1f93ed6b2ee.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:655932f728ade7df58debd68346aca10612ed828ffabb3af93b90000d30855a7",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "lead",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/music/reference-adaptive/lead.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "reference-adaptive/lead"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

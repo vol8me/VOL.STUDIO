@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-a3b0b6af90efd26a": {
+        "hash": "sha256:842b1eb6df3d136e81005ab75db9e4ea38989e4216c63e7dd5855554d9404bd6",
+        "path": "analyses/r-a3b0b6af90efd26a.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+      "hash": "sha256:2572740767d048bddb1cbaad7c5c6bda156521423313c806520a5106f402541f",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:60799636eba26653b78fd7f261c84e1d6b6346dc41013bf908bff5271e765a80",
+      "path": "devtools/audio-synth/reference/production/manifests/music/reference-adaptive/pulse.json"
+    },
+    "renders": {
+      "r-a3b0b6af90efd26a": {
+        "hash": "sha256:771ac9c003e72c850dabeb7f0bb853c22c0d68c0199582c28165f734a2a64aaf",
+        "path": "renders/r-a3b0b6af90efd26a.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:16d377e623ddc0fe5aabfc84c62edcef629b8d81169d6fde91accd693b0b61ee",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "pulse",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/music/reference-adaptive/pulse.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "reference-adaptive/pulse"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

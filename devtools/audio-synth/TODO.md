@@ -93,124 +93,10 @@ DESIGN "SoundFamily üretimi".
 
 ### Dalga 6 — müzik authoring temeli ve adaptive production sözleşmesi
 
-> Bu dalga tamamlandığında `## Sonraki aşamalar` girişindeki "MusicProgram/
-> ThemeBook, stem/adaptive music kuruldu" varsayımı gerçek olur — bugün
-> yalnız bir varsayımdır. Bu dalganın "tek düzenleme/mastering yolu"
-> prerequisite'i Dalga 0'da `[P1]` olarak kapandı (`## Kapatılanlar`);
-> burada İKİNCİ bir kapanış maddesi olarak — çelişkili source-of-truth
-> yaratmamak için — tekrarlanmıyor.
-
-- [ ] **[P1] `MusicBriefV1` müzik isteğinin machine-readable sözleşmesi
-      olsun.** Role/context, narrative/affect, kaçınılacak estetikler,
-      playback modeli, BPM/meter alanı, tonal dil, melodic salience, rhythmic
-      density, form, tahmini süre/bars, SFX için spectral-space önceliği ve
-      adaptive ihtiyacı tanımlanabilir. Kapanır: "seamless arcade menu loop"
-      ile "tek seferlik cinematic cue" aynı belirsiz brief'e düşmez;
-      playback/form gibi zorunlu karar eksikse validator explicit hata veya
-      karar isteği üretir.
-- [ ] **[P1] Oyun/proje başına makine-okunur `ThemeBook`/music bible
-      desteklensin.** Tonal/rhythmic language, signature intervals/motifs,
-      instrument/palette tercihleri, register/spektral kimlik, ortak stil
-      özellikleri ve bilinçli kaçınılacak klişeler tanımlanabilir. Kapanır:
-      farklı agent'ların iki ayrı MusicProgram'ı aynı ThemeBook'u
-      programatik tüketebilir; override edilmek istenen kural explicit ve
-      provenance'lıdır.
-- [ ] **[P1] `MusicProgramV1` sembolik score/arrangement'ın kanonik,
-      JSON-serializable kaynağı olsun.** Tempo, meter, tonal system, sections,
-      harmony, motifs, patterns/events, instrument assignments, lanes/stems,
-      automation ve transition marker'ları programda yaşar; beste yalnız
-      ad-hoc TypeScript döngülerinde kaybolmaz. Kapanır: program audio render
-      edilmeden validate/analyze edilebilir ve sabit engine sürümünde
-      deterministic render edilir.
-- [ ] **[P1] `Section`/form birinci sınıf müzik kavramı olsun.** Intro/build/
-      climax/release veya A/B/C/D yalnız comment değildir; bar range, narrative
-      role, target energy, aktif lanes/stems, harmony/motif planı ve transition
-      davranışı taşır. Kapanır: symbolic analyzer section bazında yoğunluk,
-      register ve başka ölçümleri raporlayabilir.
-- [ ] **[P2] Harmony/voicing toolkit MusicProgram'ın ortak primitive'i
-      olsun.** Scale/mode/degree/chord function yanında inversion, spread,
-      register, voice count ve max movement gibi kontrollü voicing seçenekleri
-      taşır. Chromatic/borrowed nota yasaklanmaz. Kapanır: aynı progression
-      farklı voicing/register ile deterministic üretilebilir; range veya
-      voice-count ihlali sessizce bozuk score üretmez.
-- [ ] **[P2] Motif birinci sınıf veri ve provenance taşıyan transform
-      kaynağı olsun.** Relative pitch/degree + rhythm ile motif; transpose,
-      register shift, rotate, fragment, sequence, augment/diminish ve uygun
-      inversion dönüşümlerinden geçebilir. Kapanır: aynı motifin en az üç
-      farklı arrangement varyasyonu ortak source id'sine geri izlenebilir.
-- [ ] **[P2] Rhythm/Groove/Humanization profilleri instrument/role bağımlı
-      olsun.** Bütün notalara aynı random timing yüzdesi uygulanmaz; kick,
-      percussion, bass, pad ve lead için ayrı timing/velocity/accent davranışı
-      tanımlanabilir. Kapanır: humanize=0 tam grid parity verir; aynı profile +
-      seed aynı event zamanlarını üretir.
-- [ ] **[P2] Instrument/palette metadata bestecilik için genişlesin.**
-      Preferred register, pitch range, role, transient/sustain karakteri,
-      polyphony, spektral occupancy ve articulation suitability agent
-      context'e çıkar. Kapanır: MusicProgram range dışı veya desteklenmeyen
-      kullanımda explicit validation/uyarı üretir.
-- [ ] **[P1] `MusicAssetSpec` playback ve üretim metadata'sının tek kaynağı
-      olsun.** `id`, path/output identity, BPM, meter, bars/beats, playback
-      mode, loop bilgisi, runtime gain, mastering target, stem seti ve
-      transition metadata'sı generator ile runtime arasında tekrar edilmez.
-      Kapanır: generator ve runtime aynı saf spec'ten türetilir ve drift
-      testi ikinci elle yazılmış gerçeği yakalar.
-- [ ] **[P1] `loop`, `playlistOneShot` ve `adaptiveLoop` semantiği
-      mastering stratejisini de belirlesin.** One-shot doğal outro/reverb
-      tail bırakabilir; seamless loop tail wrapping/seam QA ister; adaptive
-      loop bütün stemlerde ortak boundary ister. Kapanır: üç playback tipi
-      ayrı regression fixture'a sahiptir ve yanlış mastering yolu publish'te
-      reddedilir.
-- [ ] **[P1] Müzik mastering hedefi yalnız `MusicAssetSpec`/ortak
-      production renderer tarafından uygulansın.** Track builder'ın içinde
-      ikinci `masterize(... rmsTargetDb ...)` gerçeği kalmaz. Kapanır:
-      mastering target spec'te değiştirilince final render ölçümü değişir;
-      builder literal'i ile metadata drift'i mümkün değildir.
-- [ ] **[P1] `StemBundle` renderer MusicProgram'dan sample-grid hizalı
-      stemler ve reference mix üretebilsin.** Foundation/bass/rhythm/harmony/
-      motif/texture gibi roller programda tanımlanabilir; bütün stemler aynı
-      MusicAssetSpec zaman/loop sözleşmesini paylaşır. Kapanır: en az üç
-      stemli bir adaptive fixture runtime'da track restart etmeden vertical
-      gain/intensity değişimiyle çalışır.
-- [ ] **[P1] Stem-safe mastering bağımsız stem normalizasyonunu
-      yasaklasın.** Her stem kendi başına target peak/RMS'e vurulmaz;
-      reference/full mix üzerinden belirlenen balance ve ortak scaling
-      ilişkisi export'ta korunur. Kapanır: export edilen stemlerin offline
-      toplamı reference mix ile tolerans içinde eşleşir ve maksimum
-      kombinasyonda clipping oluşmaz.
-- [ ] **[P1] Adaptive-state mix kombinasyonları publish öncesi offline
-      QA'dan geçsin.** Runtime'ın representative intensity/state noktaları
-      stem formülüyle yeniden mixlenir; true peak, loudness, stereo ve stem
-      contribution raporlanır. Kapanır: tanımlı minimum/orta/maksimum state
-      kombinasyonları policy sınırlarını aşarsa publish başarısız olur.
-- [ ] **[P2] Stem synchronization encoded/decoded çıktı üzerinde
-      doğrulansın.** Source buffer uzunluğunun eşit olması yeterli değildir;
-      final decoded sample rate, süre ve loop boundaries tolerans içinde aynı
-      olmalıdır. Kapanır: kasıtlı stem duration/boundary drift fixture'ı
-      `audio-verify`i kırar.
-- [ ] **[P2] Music transition contract runtime kapasitesini aşan varsayımı
-      engellesin.** Track çifti için BPM/meter ilişkisi, crossfade/bar
-      alignment, tonal ilişki ve gerekiyorsa stinger/transition asset'i açık
-      veridir. Runtime realtime beatmatching veya reharmonization yapmıyorsa
-      MusicProgram bunu varsayamaz. Kapanır: unsupported transition
-      validator/context tarafından görünür şekilde reddedilir veya explicit
-      offline transition çözümü ister.
-- [ ] **[P2] Symbolic music analyzer full audio render'dan önce
-      çalışsın.** Note/onset density, polyphony, melodic range, register
-      occupancy, pitch-class dağılımı, motif recurrence, section contrast ve
-      harmonic rhythm gibi mekanik descriptor'lar çıkar. Bu skor "iyi müzik"
-      hakemi değildir. Kapanır: brief'te `sparse` denilen kasıtlı aşırı
-      yoğun fixture deterministic bir mismatch raporu üretir.
-- [ ] **[P2] `MusicProgram` candidate-search'i tam-track brute force yerine
-      hiyerarşik çalışsın.** Agent form/harmony/motif/groove gibi kontrollü
-      alanlar için birden fazla sembolik aday üretebilir; symbolic analyzer
-      düşük maliyetli eleme/raporlama yapar, yalnız finalistler orchestration
-      ve full audio render aşamasına geçer. `AcousticProgram` candidate-search
-      ile aynı job/seed/provenance sözleşmesini paylaşır fakat onlarca uzun
-      parçayı körlemesine render etmez. Kapanır: örnek bir `MusicBriefV1` için
-      en az birkaç deterministic sembolik aday full audio üretmeden
-      karşılaştırılabilir; finalist seçimi ve elenme nedenleri job
-      manifest'inde izlenir; aynı search seed'i aynı sembolik aday sırasını
-      verir.
+Dalga 6'nın on sekiz maddesi kapandı; kısa kanıtları `## Kapatılanlar`da,
+gerekçe DESIGN "Müzik authoring". `## Sonraki aşamalar` girişindeki
+"MusicProgram/ThemeBook, stem/adaptive music kuruldu" varsayımı artık
+gerçektir.
 
 ## Sonraki aşamalar — genel amaçlı audio-authoring platformu
 
@@ -583,6 +469,103 @@ DESIGN "SoundFamily üretimi".
       değildir.
 
 ## Kapatılanlar
+
+- [x] **[P1] `MusicBriefV1` müzik isteğinin machine-readable sözleşmesi.**
+      Kullanım, çalma modeli, duygulanım, tempo/ölçü, tonal dil, melodik öne
+      çıkma, ritmik yoğunluk, form, uzunluk, SFX spektral önceliği ve adaptive
+      state'ler; çalma modeli/kullanım/form/tempo/ölçü/uzunluk ZORUNLU karar.
+      Kanıt: `tests/music/contracts.test.ts` — "seamless loop" ile "tek
+      seferlik cue" aynı brief'e düşmüyor, eksik karar `MusicDecisionError` ile
+      alan listesi veriyor, adaptive state yalnız `adaptiveLoop`ta. (Dalga 6)
+- [x] **[P1] Proje başına makine-okunur `MusicThemeBookV1`.** Tonal/ritmik
+      dil, imza aralık ve motifleri, palet, register ve spektral kimlik,
+      kapalı kaçınma sözlüğü; override kuralın KİMLİĞİNE ve gerekçeye bağlı.
+      Kanıt: üç referans program (`reference-loop`, `reference-cue`,
+      `reference-adaptive`) aynı `reference-theme` kitabını programatik
+      tüketiyor; ihlal kapıyı düşürüyor, `themeOverrides` ile geçiyor ve
+      provenance raporda; serbest `notes` "denetlenmedi" diye sayılıyor
+      (`tests/music/analysis.test.ts`). (Dalga 6)
+- [x] **[P1] `MusicProgramV1` sembolik score'un kanonik JSON kaynağı.**
+      Tempo, ölçü, tonal sistem, bölümler, armoni, motifler, şeritler/stem'ler,
+      otomasyon, işaretler ve geçişler programda; enstrüman `preset:<ad>`
+      kimliğiyle çözülür. Kanıt: `music analyze` ses RENDER ETMEDEN rapor
+      üretir; `expandProgram` aynı programdan aynı score özetini verir
+      (`tests/music/composition.test.ts`). (Dalga 6)
+- [x] **[P1] `Section`/form birinci sınıf.** Bar aralığı, narrative rol, hedef
+      enerji, aktif şeritler, armoni planı ve geçiş davranışı; bölümler
+      boşluksuz ve tam kapsamalı. Kanıt: analizör bölüm başına yoğunluk,
+      register, armonik ritim ve ÖLÇÜLEN enerji verir; hedef sırayla uyum
+      referans cue'da 1.0 (`tests/music/analysis.test.ts`). (Dalga 6)
+- [x] **[P2] Harmony/voicing toolkit.** Derece + nitelik, inversion, yayılım,
+      register, ses sayısı, en büyük hareket; kromatik ses `alter` ile açık.
+      Kanıt: aynı progresyon farklı yayılımla deterministik; register'a
+      sığmayan ses ve hareket sınırı ihlali akorun yeriyle reddediliyor
+      (`tests/music/composition.test.ts`). (Dalga 6)
+- [x] **[P2] Motif birinci sınıf ve provenance taşıyor.** Sekiz dönüşüm
+      (transpose, register-shift, rotate, fragment, sequence, augment,
+      diminish, invert), her örnek `variationId` ve zinciriyle kaynağına
+      izlenir. Kanıt: üç varyasyon ayrı kimlik, aynı motif kökü; analizör
+      motif tekrarını kök başına sayıyor. (Dalga 6)
+- [x] **[P2] Groove/insanlaştırma profilleri.** Swing, zamanlama/hız sapması,
+      vurgu tablosu; şerit başına profil. Kanıt: sıfır sapmada score tam
+      ızgara (`beat === gridBeat`); aynı profil + tohum + olay kimliği aynı
+      sonucu veriyor; rastgelelik olay KİMLİĞİNE bağlı olduğu için stem'lere
+      bölmek zamanlamayı değiştirmiyor. (Dalga 6)
+- [x] **[P2] Bestecilik için enstrüman metadata'sı.** 47 enstrüman preseti
+      kayıtta; aralık ve rol beyandan, zarf sınıfı ve spektral doluluk
+      ÖLÇÜLEREK. Kanıt: aralık dışı nota ve desteklenmeyen artikülasyon adıyla
+      reddediliyor; eşzamanlılık rol önerisini aşamıyor; kayıt özeti ölçüm
+      içermediği için manifest'te kararlı. (Dalga 6)
+- [x] **[P1] `MusicAssetSpecV1` playback ve üretim metadata'sının tek
+      kaynağı.** Core'da yaşar; `barsToFrames` ölçü→kare dönüşümünün TEK yeri,
+      `toMusicTrack` runtime parçasını üretir. Kanıt:
+      `core/tests/audio/music/spec.test.ts` — loop kare sayısı ölçüden birebir,
+      cue kuyruk taşıyabilir, loop taşıyamaz; üretilen asset'in kare sayısı
+      spec ile aynı (`tests/music/publication.test.ts`). (Dalga 6)
+- [x] **[P1] Üç çalma semantiği mastering yolunu belirliyor.** `loop` →
+      `loop-cyclic`, `playlistOneShot` → `one-shot-limited`, `adaptiveLoop` →
+      `stem-linear`. Kanıt: üç referans fixture yayımlandı; belgede yanlış yol
+      beyan eden program şema düzeyinde reddediliyor
+      (`tests/music/production.test.ts`). (Dalga 6)
+- [x] **[P1] Müzik mastering hedefi tek yoldan.** Müzik için `masterMix`i
+      çağıran tek yer `music/mastering.ts`; ikinci bir masterize yok.
+      `scripts/music-demo.ts` ve `demo:music` kaldırıldı, yerini referans
+      fixture'lar ve `audio:job music render` aldı. Kanıt:
+      `tests/governance/publishPath.test.ts` yazıcı listesi demo olmadan
+      geçiyor. (Dalga 6)
+- [x] **[P1] `StemBundle` renderer: hizalı stem'ler + referans mix.** Kanıt:
+      referans adaptive üç stem + mix yayımladı, dördü de aynı kare sayısında;
+      core motoru mock AudioContext'te yoğunluk değişince stem'leri YENİDEN
+      BAŞLATMIYOR (aynı `source` ve `startTime`, yalnız gain değişiyor —
+      `core/tests/audio/music/spec.test.ts`). (Dalga 6)
+- [x] **[P1] Stem-safe mastering.** Stem başına normalizasyon ve sınırlayıcı
+      yok; ortak doğrusal kazanç. Kanıt: stem toplamı ile referans mix farkı
+      −148.6 dBFS (eşik −90); tepe payı kazancı düşürerek açılıyor
+      (`tests/music/production.test.ts`). (Dalga 6)
+- [x] **[P1] Adaptive-state kombinasyonları publish öncesi ölçülüyor.**
+      Beyan edilen state'ler + gain haritası eşik köşeleri; gain'ler runtime'ın
+      `resolveStemGain`i ile. Kanıt: referans adaptive'de 7 kombinasyon
+      ölçüldü, en kısık state −17.4 LUFS (duyulur), en yüksek −16.0 LUFS ve
+      −4.06 dBTP; QA düşerse hiçbir şey yayımlanmıyor. (Dalga 6)
+- [x] **[P2] Stem hizası kodlanmış çıktıda doğrulanıyor.** Çözülen her stem
+      kaynak PCM ile çapraz korelasyona sokulur; gecikme ve kare farkı 0
+      olmalı. Kanıt: bir örneklik kayma ve kare farkı testte yakalanıyor;
+      bundle hiza kaydını taşıyor ve `verify --all` onu okuyor. (Dalga 6)
+- [x] **[P2] Geçiş sözleşmesi runtime kapasitesine bağlı.** Desteklenen:
+      bar hizalı crossfade, sönümlü durdurma, playlist boşluğu; stinger,
+      bölüm atlama ve farklı tempoda bar hizası `unsupported-by-runtime` ile
+      reddediliyor. Tonal ilişki beyanı "motor uygulamıyor" diye işaretleniyor.
+      Kabiliyet listesi core'da tek yerde. (Dalga 6)
+- [x] **[P2] Sembolik analizör render'dan ÖNCE.** Yoğunluk, anlık polifoni,
+      register, perde sınıfı, motif tekrarı, bölüm kontrastı, armonik ritim,
+      kural ve brief uyumu. Kanıt: "sparse" brief + yoğun score uyumsuzluğu
+      bulgu üretiyor ve kapıyı düşürüyor; eşikler `music/policy.ts` verisinde.
+      (Dalga 6)
+- [x] **[P2] Hiyerarşik `MusicProgram` araması.** Adaylar sembolik açılıp
+      süzülüyor, yalnız finalistler render ediliyor; strateji ve aday kimliği
+      akustik aramayla aynı sözleşmede. Kanıt: referans aramada 24 aday
+      açıldı, 12'si süzgeci geçti, 3'ü render edildi; aynı tohum aynı sırayı
+      veriyor; terfi sürüm artırıp `provenance` yazıyor. (Dalga 6)
 
 - [x] **[P1] `SoundFamilyProgramV1` ilişkili varyant üretir.** Ortak taban
       (archetype/program), arama ile ortak boyut sözlüğü, kapalı genel rol

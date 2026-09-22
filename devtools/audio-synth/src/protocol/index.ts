@@ -66,6 +66,46 @@ export type {
   FamilyVerificationV1,
 } from './family';
 export {
+  checkMusic,
+  DEFAULT_MUSIC_ROOT,
+  DEFAULT_THEMEBOOKS_ROOT,
+  listMusic,
+  loadMusicDocuments,
+  MUSIC_ANALYSIS_PASSES,
+  MUSIC_BUNDLE_SCHEMA,
+  MUSIC_RENDER_PASSES,
+  MUSIC_STATUS_SCHEMA,
+  musicLabel,
+  musicStatus,
+  previewMusic,
+  publishedStems,
+  publishMusic,
+  stemJob,
+  verifyMusic,
+} from './music';
+export type {
+  MusicBundleV1,
+  MusicCheckV1,
+  MusicDocumentsV1,
+  MusicLocation,
+  MusicPreviewV1,
+  MusicPublishOutcomeV1,
+  MusicStatusV1,
+  MusicStemEntryV1,
+  MusicVerificationV1,
+  RenderedAssetV1,
+} from './music';
+export {
+  loadMusicSearchSpec,
+  MUSIC_SEARCH_FILE,
+  MUSIC_SEARCH_REPORT_FILE,
+  promoteMusicCandidate,
+  runMusicSearch,
+} from './musicSearch';
+export type { MusicFinalistV1, MusicPromotionV1, MusicSearchReportV1 } from './musicSearch';
+export { JOB_KINDS, PROGRAM_SCHEMAS, RENDERER_VERSIONS } from './kinds';
+export type { JobKind } from './kinds';
+export {
   analyzeCandidate,
   initJob,
   listJobs,

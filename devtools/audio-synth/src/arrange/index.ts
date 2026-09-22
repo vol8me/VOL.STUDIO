@@ -17,5 +17,7 @@ export type { LoudnessOptions } from './loudness';
 export { createMix, addVoice, masterMix, stableJitter } from './mix';
 export type { Mix, AddVoiceOptions } from './mix';
 export type { MasterOptions, MasterLevel } from '../engine/master';
+export { renderVoices } from './render';
+export type { PlacedVoiceV1, RenderVoicesOptions } from './render';
 export { Timeline } from './timeline';
 export type { InstrumentFn, NoteEvent, TimelineOptions, RenderOptions } from './timeline';

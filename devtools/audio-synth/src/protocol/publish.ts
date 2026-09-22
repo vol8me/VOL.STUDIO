@@ -2,7 +2,12 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { ASSET_CLASS_POLICIES, classifyAssetPath, evaluateAssetPolicy } from '../analysis/assetQa';
+import {
+  ASSET_CLASS_POLICIES,
+  classifyAssetPath,
+  evaluateAssetPolicy,
+  type AssetClass,
+} from '../analysis/assetQa';
 import {
   analyzeAudio,
   ANALYZER_VERSION,
@@ -11,7 +16,16 @@ import {
 } from '../analysis/report';
 import { validateBrief, type AudioBriefV1 } from '../program/brief';
 import { describeRegistry } from '../program/describe';
-import { PROGRAM_RENDERER_VERSION, renderProgram, type ProgramRender } from '../program/render';
+import { instrumentRegistryHash } from '../music/instruments';
+import { REFERENCE_MIX_ID, validateMusicStemProgram } from '../music/stem';
+import {
+  kindOfProgramSchema,
+  PROGRAM_SCHEMAS,
+  renderForKind,
+  RENDERER_VERSIONS,
+  type JobKind,
+  type KindRender,
+} from './kinds';
 import { writeOgg } from '../writer';
 import {
   canonicalJson,
@@ -83,6 +97,29 @@ export function registryHash(): Sha256 {
   return hashCanonical(describeRegistry());
 }
 
+/**
+ * Asset kimliği. Müzik bir brief'ten BİRDEN ÇOK asset üretir (stem'ler ve
+ * referans mix); kimlik brief'in kimliğine stem'i ekler, yoksa iki stem aynı
+ * asset sayılır ve üzerine yazma koruması yanlış çalışır.
+ */
+/**
+ * Politika sınıfı yol sınıfından AYRILABİLİR: bir müzik stem'i yola göre
+ * `music`tir ama tek başına çalınmaz, bu yüzden mix'in yükseklik aralığına
+ * tabi değildir (bkz. `music-stem` politikası).
+ */
+function policyClassOf(kind: JobKind, programDocument: unknown, pathClass: AssetClass): AssetClass {
+  if (kind !== 'music') return pathClass;
+  return validateMusicStemProgram(programDocument).stem === REFERENCE_MIX_ID
+    ? pathClass
+    : 'music-stem';
+}
+
+function assetIdOf(kind: JobKind, brief: AudioBriefV1, programDocument: unknown): string {
+  if (kind !== 'music') return brief.id;
+  const stem = validateMusicStemProgram(programDocument).stem;
+  return stem === REFERENCE_MIX_ID ? `${brief.id}-mix` : `${brief.id}-${stem}`;
+}
+
 interface EncodedCandidate {
   readonly file: string;
   readonly bytes: Buffer;
@@ -91,7 +128,7 @@ interface EncodedCandidate {
 }
 
 /** Kodla → baytları özetle → FFmpeg ile ÇÖZ → kodek sonrası ölç. Dosya çağıranındır. */
-function encodeAndMeasure(file: string, rendered: ProgramRender): EncodedCandidate {
+function encodeAndMeasure(file: string, rendered: KindRender): EncodedCandidate {
   writeOgg(file, rendered, { quality: OGG_ENCODER_SETTINGS.quality });
   const bytes = readFileSync(file);
   const decoded = decodeWithFfmpeg(file, 'staging');
@@ -106,7 +143,7 @@ function encodeAndMeasure(file: string, rendered: ProgramRender): EncodedCandida
 function checkRuntime(
   destination: ResolvedDestination,
   brief: AudioBriefV1,
-  rendered: ProgramRender,
+  rendered: KindRender,
   loop: boolean,
 ): void {
   const runtime = destination.target.runtime;
@@ -210,15 +247,16 @@ export function publishJob(loc: JobLocation): PublishOutcome {
       job.target.package,
       job.target.asset,
     );
-    const assetClass = classifyAssetPath(destination.withinRoot);
-    if (assetClass !== brief.assetClass) {
+    const pathClass = classifyAssetPath(destination.withinRoot);
+    if (pathClass !== brief.assetClass) {
       throw new ProtocolError(
         'destination',
-        `yol sınıfı ${assetClass}, brief ${brief.assetClass} diyor`,
+        `yol sınıfı ${pathClass}, brief ${brief.assetClass} diyor`,
         destination.assetPath,
       );
     }
-    const rendered = renderProgram(programDocument, { seed: record.seed });
+    const assetClass = policyClassOf(job.kind, programDocument, pathClass);
+    const rendered = renderForKind(job.kind, programDocument, { seed: record.seed });
     const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
     if (pcmHash !== record.pcm.hash) {
       throw new ProtocolError(
@@ -231,7 +269,8 @@ export function publishJob(loc: JobLocation): PublishOutcome {
 
     const assetFile = resolveInside(loc.repoRoot, destination.assetPath, 'asset');
     const manifestFile = resolveInside(loc.repoRoot, destination.manifestPath, 'manifest');
-    guardOverwrite(assetFile, manifestFile, brief.id, job.jobId, destination.assetPath);
+    const assetId = assetIdOf(job.kind, brief, programDocument);
+    guardOverwrite(assetFile, manifestFile, assetId, job.jobId, destination.assetPath);
 
     const toolchain = readEncoderToolchain();
     const revision = sourceRevision(loc.repoRoot);
@@ -249,7 +288,7 @@ export function publishJob(loc: JobLocation): PublishOutcome {
       }
       const manifest: AudioAssetManifestV1 = {
         schema: ASSET_MANIFEST_SCHEMA,
-        assetId: brief.id,
+        assetId,
         asset: {
           path: destination.assetPath,
           format: 'ogg-vorbis',
@@ -259,11 +298,15 @@ export function publishJob(loc: JobLocation): PublishOutcome {
         job: { jobId: job.jobId, protocolVersion: PROTOCOL_VERSION, path: jobLabel(loc) },
         brief: {
           schema: 'AudioBriefV1',
-          kind: 'acoustic',
+          kind: brief.kind,
           hash: hashCanonical(brief),
           document: brief,
         },
-        program: { schema: 'AcousticProgramV1', hash: programHash, document: programDocument },
+        program: {
+          schema: PROGRAM_SCHEMAS[job.kind] as 'AcousticProgramV1' | 'MusicStemProgramV1',
+          hash: programHash,
+          document: programDocument,
+        },
         render: {
           renderId: record.renderId,
           seed: record.seed,
@@ -279,8 +322,8 @@ export function publishJob(loc: JobLocation): PublishOutcome {
         engine: {
           package: PACKAGE_NAME,
           packageVersion: packageVersion(),
-          rendererVersion: PROGRAM_RENDERER_VERSION,
-          registryHash: registryHash(),
+          rendererVersion: RENDERER_VERSIONS[job.kind],
+          registryHash: job.kind === 'music' ? instrumentRegistryHash() : registryHash(),
           sourceCommit: revision.commit,
           sourceTreeDirty: revision.dirty,
           runtime: { node: process.version },
@@ -378,7 +421,8 @@ export function verifyManifest(
     detail: assetHash ?? 'dosya yok',
   });
 
-  const rendered = renderProgram(manifest.program.document, { seed: manifest.render.seed });
+  const kind = kindOfProgramSchema(manifest.program.schema, manifestPath);
+  const rendered = renderForKind(kind, manifest.program.document, { seed: manifest.render.seed });
   const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
   checks.push({ name: 'pcm-identity', ok: pcmHash === manifest.render.pcm.hash, detail: pcmHash });
 

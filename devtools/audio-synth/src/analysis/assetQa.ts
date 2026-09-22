@@ -7,7 +7,7 @@ import {
   type ClipCount,
 } from './loudness';
 
-export type AssetClass = 'ui' | 'sfx' | 'ambience' | 'music';
+export type AssetClass = 'ui' | 'sfx' | 'ambience' | 'music' | 'music-stem';
 
 export interface AssetClassPolicy {
   /** Uzun, sürekli varlık integrated; kısa olay en yüksek momentary ile ölçülür. */
@@ -36,6 +36,13 @@ export const ASSET_CLASS_POLICIES = {
     sfx: { loudness: 'maxMomentary', loudnessRange: [-30, -8], truePeakMax: -1 },
     ambience: { loudness: 'integrated', loudnessRange: [-26, -16], truePeakMax: -1 },
     music: { loudness: 'integrated', loudnessRange: [-20, -12], truePeakMax: -1 },
+    /*
+     * Stem TEK BAŞINA çalınmak için değildir: yalnız ezgi katmanı doğal
+     * olarak kısıktır ve mix aralığına zorlanırsa toplamları tavanı aşar.
+     * Aralık kaba seviye hatasını yine yakalar; asıl yükseklik kararı
+     * kombinasyon QA'sında (`MusicAdaptiveQaV1`) ölçülür.
+     */
+    'music-stem': { loudness: 'integrated', loudnessRange: [-45, -8], truePeakMax: -1 },
   } satisfies Record<AssetClass, AssetClassPolicy>,
 } as const;
 

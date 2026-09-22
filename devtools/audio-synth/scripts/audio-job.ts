@@ -26,6 +26,7 @@ import {
 import { findRepoRoot, parse, print, readInput, required, text, type Parsed } from './lib/args';
 import { runCanaryCommand } from './lib/canaryCommands';
 import { runFamilyCommand } from './lib/familyCommands';
+import { runMusicCommand } from './lib/musicCommands';
 import { runPromoteCommand, runSearchCommand } from './lib/searchCommands';
 import { runVerifyCommand } from './lib/verifyAll';
 
@@ -124,6 +125,8 @@ function run(parsed: Parsed): number {
       return runCanaryCommand(parsed, repoRoot);
     case 'family':
       return runFamilyCommand(parsed, repoRoot);
+    case 'music':
+      return runMusicCommand(parsed, repoRoot);
     default:
       console.log('Komutlar ve sözdizimi: audio:job context --json → protocol.commands');
       return parsed.command === 'help' ? 0 : 1;

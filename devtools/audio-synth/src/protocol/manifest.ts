@@ -26,12 +26,12 @@ export interface AudioAssetManifestV1 {
   readonly job: { readonly jobId: string; readonly protocolVersion: number; readonly path: string };
   readonly brief: {
     readonly schema: 'AudioBriefV1';
-    readonly kind: 'acoustic';
+    readonly kind: 'acoustic' | 'music';
     readonly hash: Sha256;
     readonly document: unknown;
   };
   readonly program: {
-    readonly schema: 'AcousticProgramV1';
+    readonly schema: 'AcousticProgramV1' | 'MusicStemProgramV1';
     readonly hash: Sha256;
     readonly document: unknown;
   };

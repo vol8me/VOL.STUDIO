@@ -30,12 +30,36 @@ export const KNOWN_LIMITATIONS: readonly KnownLimitation[] = [
       'reddeder, düzeltmez.',
   },
   {
-    id: 'music-brief-undefined',
-    affects: ['AudioBriefV1'],
+    id: 'music-single-tempo',
+    affects: ['MusicProgramV1'],
     description:
-      "`kind: 'music'` Dalga 6 `MusicBriefV1` sözleşmesine ayrılmıştır ve bu sürümde " +
-      '`unsupported` ile reddedilir; müzik bugün `Arrange.Timeline` ile yazılır, publish ' +
-      'kapısından geçmez.',
+      'Program başına TEK tempo ve TEK ölçü vardır: hem düzenleme ızgarası hem çalışma ' +
+      'zamanı zamanlayıcısı tek ızgara varsayar. Tempo/ölçü değişimi sessizce yanlış ' +
+      'hizalanmaktansa şema düzeyinde reddedilir.',
+  },
+  {
+    id: 'music-runtime-transitions',
+    affects: ['MusicAssetSpecV1'],
+    description:
+      'Çalışma zamanı yalnız bar hizalı crossfade, sönümlü durdurma ve playlist boşluğu ' +
+      'yapar. Stinger, parça içi bölüm atlama ve farklı tempolar arası vuruş hizası YOKTUR; ' +
+      'bunları isteyen geçiş `unsupported-by-runtime` ile reddedilir. Tonal ilişki beyanı ' +
+      'belgelenir ama motor onu uygulamaz.',
+  },
+  {
+    id: 'music-percussion-thin',
+    affects: ['MusicProgramV1', 'preset:*'],
+    description:
+      'Enstrüman kaydında perküsyon rolü yalnız 3 preset taşır (ölçüldü); ritim bölümü ' +
+      'melodik enstrümanlarla kurulur. Parametrik davul ailesi Dalga 11 kapsamındadır.',
+  },
+  {
+    id: 'music-no-listening-validation',
+    affects: ['MusicProgramV1', 'MusicBundleV1'],
+    description:
+      'Müzik yolu yalnız ölçülen değerlerle doğrulandı: sembolik uygunluk, yükseklik, ' +
+      'true peak, stem paritesi ve kodlanmış hiza. İnsan dinlemesi yapılmadı; "iyi müzik" ' +
+      'iddiası yoktur.',
   },
   {
     id: 'determinism-scope',

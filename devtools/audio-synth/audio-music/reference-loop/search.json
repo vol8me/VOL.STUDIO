@@ -1,0 +1,35 @@
+{
+  "schema": "MusicSearchSpecV1",
+  "searchId": "loop-balance",
+  "musicId": "reference-loop",
+  "seed": 991,
+  "strategy": "scrambled-halton",
+  "candidates": 24,
+  "finalists": 3,
+  "dimensions": [
+    {
+      "name": "lead-gain",
+      "target": { "kind": "lane-gain", "lane": "lead" },
+      "range": [0.25, 0.6]
+    },
+    {
+      "name": "swing",
+      "target": { "kind": "groove-swing", "groove": "gentle" },
+      "range": [0, 0.3]
+    },
+    {
+      "name": "keys-thin",
+      "target": { "kind": "density-thinning", "lane": "keys" },
+      "range": [0, 0.5]
+    },
+    {
+      "name": "lead-shift",
+      "target": { "kind": "register-shift", "lane": "lead" },
+      "range": [1, 2]
+    }
+  ],
+  "objectives": [
+    { "metric": "notesPerBar", "target": 7 },
+    { "metric": "melodicSalience", "target": 0.3, "weight": 4 }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-accadcbdf6f3b7bd": {
+        "hash": "sha256:78982c2c3c87a8dc9b4d5c9aaa1ba543e3bfd903251799d6ddf38aae86a21b1f",
+        "path": "analyses/r-accadcbdf6f3b7bd.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+      "hash": "sha256:b7dda0818ed7ecd25149cd1391a8ee0abd454b45a372094a86bf1b385c1739b0",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:9c7916d636d654f2325acd57aee60fa70bb64bb0340b0544b04ec3f67dd181f1",
+      "path": "devtools/audio-synth/reference/production/manifests/music/reference-adaptive/bed.json"
+    },
+    "renders": {
+      "r-accadcbdf6f3b7bd": {
+        "hash": "sha256:1d2117663bceb0390591a709c291cfe3081dddfaf8c006ca7f7e25272cec177a",
+        "path": "renders/r-accadcbdf6f3b7bd.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:95ef9b26c0d493cc4c78a37ff5386242944f65adafeecb6272df90d4c920b119",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "bed",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/music/reference-adaptive/bed.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "reference-adaptive/bed"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}
