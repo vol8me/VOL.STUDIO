@@ -656,6 +656,116 @@ Karar taze bir süreçte `search status` ile dosyalardan yeniden kurulur.
 Dinleme kopyası yazan TEK yol `src/protocol/audition.ts`dir ve yalnız
 `export/` altına yazar (job render'ı, arama, canary).
 
+## SoundFamily üretimi
+
+Bir ses ailesi tek bir preset'in rastgele kopyaları değildir: ortak akustik
+kimlikten (archetype isteği ya da program) türeyen, adı ve rolü olan
+varyantlardır. Aile yalnız varyantları sıraya koyar; her varyant kanonik job
+akışından geçer ve aile kendi yazıcısını taşımaz.
+
+### SoundFamilyProgramV1
+
+Alanlar: `familyId`, `version`, `title`, `description`, `base` (arama ile
+aynı taban), `seed`, `variation.policy` (`role-subrange-v1`), `dimensions`
+(arama boyut sözlüğü + `scope: all | role`), `roles`, `variants` (`key`,
+`roles`, `tags`), `quality` (`FamilyQualityPolicyV1`), `budget`, `delivery`
+(paket, paket-göreli asset dizini, alt tür, sınıf, süre aralığı) ve isteğe
+bağlı `provenance` (aile bir arama adayından türediyse arama kimliği). Aramanın
+spec'i ile ailenin programı ayrı belgelerdir; paylaşılan yalnız boyut
+sözlüğüdür (`src/program/dimensions.ts`).
+
+Roller KAPALI ve genel bir sözlükten gelir: `intensity`
+(soft/medium/hard), `weight` (light/medium/heavy), `length` (short/long),
+`speed` (slow/medium/fast), `wetness` (dry/wet), `rarity`
+(common/alternate/rare), `onset` (soft/sharp). Bir rol değeri boyutların
+alt aralığını ya da seçenek alt kümesini seçer; varyant rollerinin
+kısıtları kesişir, boş kesişim render'dan önce adıyla reddedilir. Beyan
+edilip hiçbir varyantın kullanmadığı rol değeri geçersiz rol kapsamıdır.
+
+### Aile alt akışları ve varyant kimliği
+
+Varyant `k` için boyut `d`nin değeri, `k`'nin rolleriyle daraltılmış aralıkta
+`family:<familyId>/variant:<key>/<d>` alt akışının İLK çekilişidir (Dalga 1'in
+`substream` şeması). Paylaşılan ardışık bir RNG yoktur; dizi sırası
+rastgeleliği belirlemez. Sonuç (`tests/family/program.test.ts`): varyant
+dizisini ters çevirmek, yeni bir varyant, yeni bir rol ve yalnız o rolle
+kapsanan (`scope: role`) yeni bir boyut eklemek eski sekiz varyantın program
+özetini, kimliğini ve PCM'ini DEĞİŞTİRMEZ; aile tohumu değişince değerler
+değişir. Varyasyon tohum/perde/kazanç ezmesi değildir: bütün varyantlar aynı
+program tohumunu ve master ayarını taşır, ayrım anlamsal boyutlardadır
+(sertlik, boyut, sönüm, modal yerleşim; damla ailesinde olay hızı,
+düzenlilik, perde çarpanı).
+
+Üç kimlik ayrıdır: `key` yazarın kararlı adıdır (varyant işinin ve asset'in
+adı); `variantId` = `v-<16 hex>` SHA-256(aile kimliği, anahtar, roller,
+varyasyon politikası, aile tohumu, program özeti) içerik kimliğidir;
+`pcmHash` ses kimliğidir. Manifest program ve PCM özetini, job `origin.json`
+(`family-variant`) aile özetini, anahtarı ve `variantId`yi taşır.
+
+### Aile kalite kapısı
+
+Yayından ÖNCE bütün varyantlar bellekte render edilir, ölçülür ve Dalga 4
+`assessFamily` ailenin beyan ettiği politikayla değerlendirilir: duplicate
+PCM ve çökmüş aile her zaman düşer; yakın-özdeş ve aykırı bulgular
+politikaya göre `fail` ya da `report` olur; beyan edilen oran/yayılım
+sınırları sert kapıdır. Kapı düşerse hiçbir job, asset, manifest ya da bank
+yazılmaz (`tests/family/publish.test.ts`). Referans ailede (`reference-shell-hits`)
+yoğunluk rolü kaynak seviyesini doğal olarak yayar: `soft-light` −24.6 LUFS
+ile sağlam z −4.6 aykırı olarak RAPORLANIR; aile bunu
+`outliers: report` + `maxLoudnessSpreadDb: 12` (ölçülen 11.3 dB),
+`maxCentroidRatio: 3`, `maxActiveRatio: 1.5` ile açıkça beyan eder. İlk
+taslakta yumuşak sertlik aralığı (0.2–0.4) −29.7 LUFS'lik, sfx alt sınırına
+dayanan bir varyant üretti ve kapı onu düşürdü; aralık 0.3–0.45'e taşındı.
+
+### Yayın ve kurtarma garantileri
+
+`family publish`: ön-denetim (genişletme, hedef ve sınıf, tek varyant render
+bütçesi, toplu bütçe = 4 render + 3 analiz geçişi; FFmpeg kodlaması
+modellenmez) → kalite kapısı → aile kilidi → kayıtlı aile içerikçe değiştiyse
+`version` artmış olmalı → değişen ailenin eski bank'ı silinir → `family.json`
+ve `quality.json` → her varyant için `audio-families/<id>/jobs/<key>` işinde
+brief → program + `origin.json` → render → analyze → select → publish (aynı
+`publishJob`; `writeOgg` çağıran yeni bir yol yok, `publishPath.test.ts`
+değişmedi) → en son bank.
+
+Çok varlıklı hata semantiği: bank YALNIZ bütün varyant manifest'leri okunup
+aile genişletmesiyle (program ve PCM özeti) ve asset baytlarıyla
+eşleştikten sonra yazılır. Yarıda kalan yayın bank'sızdır; `family status`
+bunu `complete: false` ve varyant başına aşama ile gösterir. Aynı komut
+tekrarlanınca yayımlanmış varyantlar `unchanged` geçer, kalanlar sürer;
+tam yayının tekrarı idempotenttir (bank baytları aynı). Bank'ın TAMAM
+sayılması (`family verify`, `verify --all`): şema, aile ve kalite özetleri,
+yeniden genişletmede aynı anahtar/kimlik/program, her varyantın manifest ve
+asset özetleri; PCM kimliği manifest doğrulamasında yeniden render ile ayrıca
+sınanır. Aileden çıkarılan varyantın işi ve asset'i kendiliğinden silinmez
+(yazar kararıdır); bank onu listelemez.
+
+### Bank çalışma zamanı sözleşmesi
+
+`SoundFamilyBankV1` hedefin `bankRoot`una yazılır (referans:
+`reference/production/banks/<familyId>.json`; oyun: `audio-banks/`). Taşıdığı:
+aile kimliği/sürüm/özet/tohum/politika, kalite raporu yolu ve özeti, motor
+sürümleri, `ordering: key`, `choice: fnv1a32-mod-v1`, kullanılan rol
+eksenleri ve varyant başına anahtar, `variantId`, roller, etiketler,
+paket-göreli asset yolu/bayt/özet, manifest yolu/özeti, program ve PCM özeti,
+süre, kodek sonrası seviye ve küçük bir betimleyici alt kümesi. Arama
+sözleşmesi `sound-family-lookup-v1`: tam anahtar; rol + etiket süzmesi
+(anahtara göre sıralı); deterministik seçim = FNV-1a 32(token UTF-8) mod n.
+`tests/family/bankLookup.test.ts` audio-synth'in hiçbir modülünü import
+etmeden yalnız bank ve asset baytlarıyla bu üç işlemi yapar. Referans aile:
+8 varyant, ön-denetim ≈ 23 ms, tahmin 1.7e8 birim, yayın ≈ 4.4 sn, tekrar
+≈ 0.2 sn; bank 11 KB, 8 OGG 47 KB, manifest'ler 56 KB, job kayıtları 64 KB.
+
+### Alan bağımsızlığı
+
+audio-synth düşman, organizma fenotipi, silah durum makinesi, boss evresi ya
+da oyuncu sınıfı bilmez; domain nesnesini varyanta bağlayan çözücü tüketici
+pakette yaşar. Kanıt yasak kelime listesi değildir: aile/arama/bank kodu
+yalnız paketin `src/` ağacını, `node:` yerleşiklerini ve
+`@volstudio/core/random`u import eder (`tests/governance/familyDomain.test.ts`);
+rol sözlüğü kapalıdır ve alan ekseni (`enemyType`) şemada adıyla reddedilir;
+bank şeması bilinmeyen alanı reddeder.
+
 ## Hızlı Başlangıç
 
 ### 1. Generate scripti
@@ -1274,7 +1384,7 @@ pnpm --filter @volstudio/audio-synth typecheck
 pnpm --filter @volstudio/audio-synth test
 pnpm --filter @volstudio/audio-synth test:coverage    # signoff'ta coverage-audio
 pnpm --filter @volstudio/audio-synth audio:reference-check
-pnpm --filter @volstudio/audio-synth audio:production-check  # manifest'ler + kayıtlı aramalar yalnız kendilerinden
+pnpm --filter @volstudio/audio-synth audio:production-check  # manifest'ler + aramalar + aile bank'ları yalnız kendilerinden
 pnpm --filter @volstudio/audio-synth audio:job canary run  # organik canary mekanik beklentileri
 pnpm --filter @volstudio/audio-synth audio:job context --json
 pnpm --filter @volstudio/audio-synth bench:budget     # kaynak bütçesi referans ölçümü

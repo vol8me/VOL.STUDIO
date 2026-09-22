@@ -1,0 +1,24 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "intensity:hard",
+    "rarity:common",
+    "weight:light",
+    "strike"
+  ],
+  "durationSeconds": {
+    "max": 1.5,
+    "min": 0.5
+  },
+  "id": "reference-shell-hits-hard-light",
+  "intent": "audio-synth referans ailesi: ResonantShell kimliğinden yoğunluk ve ağırlık rolleriyle sekiz vuruş varyantı. Yalnız aile üretim ve bank yolunu uçtan uca sınamak içindir; hiçbir oyun tüketmez. Varyant hard-light (intensity:hard, rarity:common, weight:light).",
+  "kind": "acoustic",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Referans kabuk vuruşları — hard-light"
+}

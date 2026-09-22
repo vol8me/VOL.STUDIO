@@ -31,6 +31,8 @@ export interface PublishTarget {
   readonly kind: 'reference' | 'game';
   readonly assetRoot: string;
   readonly manifestRoot: string;
+  /** Ses ailesi bank'ları (`SoundFamilyBankV1`); asset ve manifest köklerinden ayrı. */
+  readonly bankRoot: string;
   readonly runtime: TargetRuntime | null;
 }
 
@@ -113,6 +115,7 @@ export function surveyTargets(repoRoot: string): TargetSurvey {
         kind: 'reference',
         assetRoot: 'reference/production/assets',
         manifestRoot: 'reference/production/manifests',
+        bankRoot: 'reference/production/banks',
         runtime: null,
       });
     } else if (packagePath.startsWith('games/')) {
@@ -124,6 +127,7 @@ export function surveyTargets(repoRoot: string): TargetSurvey {
           kind: 'game',
           assetRoot: 'public/assets/audio',
           manifestRoot: 'audio-manifests',
+          bankRoot: 'audio-banks',
           runtime,
         });
       } else {

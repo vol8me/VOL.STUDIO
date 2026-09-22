@@ -16,6 +16,7 @@ import {
   CANARY_SCHEMA,
   canaryReviews,
 } from './canary';
+import { familyContext } from './contextFamily';
 import { searchContext } from './contextSearch';
 import { DEFAULT_JOBS_ROOT } from './location';
 import { ASSET_MANIFEST_SCHEMA } from './manifest';
@@ -97,6 +98,7 @@ export function buildContext(repoRoot: string) {
       target: { id: AUDIO_TARGET_SCHEMA },
     },
     search: searchContext(CLI),
+    family: familyContext(CLI),
     canaries: {
       schema: CANARY_SCHEMA,
       reviewsSchema: CANARY_REVIEWS_SCHEMA,

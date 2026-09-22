@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:d1355430a5ee5adb3729ed2dba223fb6397b03fa4653182ab36c351523c0b9a7",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/audio-families",
+    "familyHash": "sha256:6fe51b9f108c6018a7272857e6d144e8e456cb42ff71960ed2adcba3b1d6fa18",
+    "familyId": "reference-shell-hits",
+    "kind": "family-variant",
+    "variantId": "v-1901e1170db570cb",
+    "variantKey": "hard-heavy"
+  }
+}

@@ -6,8 +6,6 @@
  * `audio:job context --json` çıktısındaki `protocol.commands` alanındadır
  * (bu yorum onu tekrar etmez).
  */
-import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
 import { AudioParamError, BatchBudgetError, RenderBudgetError } from '../src/guard';
 import {
   analyzeCandidate,
@@ -17,40 +15,19 @@ import {
   initJob,
   jobStatus,
   listJobs,
-  listSearches,
-  DEFAULT_SEARCHES_ROOT,
-  verifySearch,
   ProtocolError,
   publishJob,
   registerBrief,
   registerProgram,
   renderCandidate,
   selectCandidate,
-  surveyTargets,
-  verifyManifest,
   type JobLocation,
 } from '../src/protocol';
 import { findRepoRoot, parse, print, readInput, required, text, type Parsed } from './lib/args';
 import { runCanaryCommand } from './lib/canaryCommands';
+import { runFamilyCommand } from './lib/familyCommands';
 import { runPromoteCommand, runSearchCommand } from './lib/searchCommands';
-
-function manifestsUnder(repoRoot: string): string[] {
-  const out: string[] = [];
-  for (const target of surveyTargets(repoRoot).publishable) {
-    const root = `${target.packagePath}/${target.manifestRoot}`;
-    const walk = (rel: string) => {
-      const abs = join(repoRoot, rel);
-      if (!existsSync(abs)) return;
-      for (const entry of readdirSync(abs, { withFileTypes: true })) {
-        const child = `${rel}/${entry.name}`;
-        if (entry.isDirectory()) walk(child);
-        else if (entry.name.endsWith('.json') && !entry.name.startsWith('.')) out.push(child);
-      }
-    };
-    walk(root);
-  }
-  return out.sort();
-}
+import { runVerifyCommand } from './lib/verifyAll';
 
 function printStatusText(status: ReturnType<typeof jobStatus>): void {
   const a = status.artifacts;
@@ -65,6 +42,7 @@ function printStatusText(status: ReturnType<typeof jobStatus>): void {
   for (const x of a.analyses) line(`analiz ${x.renderId}`, x);
   line('selection', a.selection);
   line('publication', a.publication);
+  line('origin', a.origin);
   for (const problem of status.problems) console.log(`  ! ${problem}`);
   console.log(`sonraki: ${status.next.action} — ${status.next.reason}`);
 }
@@ -136,48 +114,16 @@ function run(parsed: Parsed): number {
       });
       return 0;
     }
-    case 'verify': {
-      const all = parsed.flags.has('all');
-      const targets = all
-        ? manifestsUnder(repoRoot)
-        : [checkRepoRelative(parsed.positional[0], 'manifest')];
-      const reports = targets.map((manifest) => verifyManifest(repoRoot, manifest));
-      const searches = all
-        ? listSearches(repoRoot, DEFAULT_SEARCHES_ROOT).map((searchId) =>
-            verifySearch({ repoRoot, searchesRoot: DEFAULT_SEARCHES_ROOT, searchId }),
-          )
-        : [];
-      if (json) print([...reports, ...searches]);
-      else {
-        for (const r of reports) {
-          console.log(
-            `${r.ok ? '✓' : '✗'} ${r.manifest}  değişim: ${r.change}  pcm ${r.current.pcmHash.slice(
-              7,
-              19,
-            )}`,
-          );
-          for (const check of r.checks.filter((c) => !c.ok))
-            console.log(`    ✗ ${check.name}: ${check.detail}`);
-        }
-        for (const r of searches) {
-          console.log(
-            `${r.ok ? '✓' : '✗'} ${r.search}  ${r.checks.map((c) => c.detail).join(' · ')}`,
-          );
-        }
-        console.log(`${reports.filter((r) => r.ok).length}/${reports.length} manifest doğrulandı.`);
-        if (all)
-          console.log(
-            `${searches.filter((r) => r.ok).length}/${searches.length} arama doğrulandı.`,
-          );
-      }
-      return reports.every((r) => r.ok) && searches.every((r) => r.ok) ? 0 : 1;
-    }
+    case 'verify':
+      return runVerifyCommand(parsed, repoRoot);
     case 'search':
       return runSearchCommand(parsed, repoRoot);
     case 'promote':
       return runPromoteCommand(parsed, loc(), repoRoot);
     case 'canary':
       return runCanaryCommand(parsed, repoRoot);
+    case 'family':
+      return runFamilyCommand(parsed, repoRoot);
     default:
       console.log('Komutlar ve sözdizimi: audio:job context --json → protocol.commands');
       return parsed.command === 'help' ? 0 : 1;

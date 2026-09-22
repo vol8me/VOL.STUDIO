@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-23e32817a1b9317d": {
+        "hash": "sha256:36bbdf009b6a6e59f0f14d241b567f5597daba5834657da9453cd3e57fd61664",
+        "path": "analyses/r-23e32817a1b9317d.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:e97a12d859e28d85ead70835413fa2ec891d5fbae2cc4434aafb27331371b7af",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:e97a12d859e28d85ead70835413fa2ec891d5fbae2cc4434aafb27331371b7af",
+      "hash": "sha256:b3080a6c85950e11b8fd241973fb09e75fd2f6e8a6538f59f7d74719f730d57f",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:6676c91e68ed56b58198cc2d8c0b19b3966d39ddec47a7df289b27d33d67c94b",
+      "path": "devtools/audio-synth/reference/production/manifests/sfx/families/reference-shell-hits/hard-light.json"
+    },
+    "renders": {
+      "r-23e32817a1b9317d": {
+        "hash": "sha256:e527b05f087adba71f8550d12d0eb9205139c02ee6b071d6532181fc2b94a7a1",
+        "path": "renders/r-23e32817a1b9317d.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:26666c605812f767a7f216ad3ecdc6e1f2edc10d09f33a11f39abf88ca309962",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "hard-light",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/sfx/families/reference-shell-hits/hard-light.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "reference-shell-hits/hard-light"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

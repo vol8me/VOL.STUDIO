@@ -1,0 +1,252 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          0.000004016182898519542
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.8973333333333333,
+        "frames": 43072,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -2.775299331419129
+        ],
+        "channelRmsDbfs": [
+          -24.61754376987837
+        ],
+        "crestFactorDb": 21.84224443845924,
+        "integratedLufs": -25.728177353136054,
+        "maxMomentaryLufs": -21.81369504741022,
+        "rmsDbfs": -24.61754376987837,
+        "samplePeakDbfs": -2.775299331419129,
+        "truePeakDbtp": -2.7652264431193263
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -147.5928176296441,
+          "high": -100.42991718578907,
+          "low": -26.22014459025666,
+          "mid": -32.81737325848545,
+          "sub": -61.45445418719022
+        },
+        "centroidHz": 395.3295845533562,
+        "flatness": 1.469549165184539e-11,
+        "peakHz": 304.6875,
+        "rolloff85Hz": 515.625
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.89,
+        "attackSeconds": 0,
+        "decay40Seconds": 0.6,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0,
+        "temporalCentroidSeconds": 0.05864402422322355,
+        "trailingSilenceSeconds": 0.18733333333333335
+      }
+    },
+    "sourceRecordHash": "sha256:95b35e789da1eaca40b47a98442df02e745dc9f1d1857b59100d7b9ce26517dd"
+  },
+  "asset": {
+    "bytes": 6223,
+    "encodedHash": "sha256:9f2fbbb347eb1e77d3c9d7b5129e0392ad9b15c044d6e83333e039e3b7f5284c",
+    "format": "ogg-vorbis",
+    "path": "devtools/audio-synth/reference/production/assets/sfx/families/reference-shell-hits/hard-heavy-alt.ogg"
+  },
+  "assetId": "reference-shell-hits-hard-heavy-alt",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "descriptors": [
+        "intensity:hard",
+        "rarity:alternate",
+        "weight:heavy",
+        "strike"
+      ],
+      "durationSeconds": {
+        "max": 1.5,
+        "min": 0.5
+      },
+      "id": "reference-shell-hits-hard-heavy-alt",
+      "intent": "audio-synth referans ailesi: ResonantShell kimliğinden yoğunluk ve ağırlık rolleriyle sekiz vuruş varyantı. Yalnız aile üretim ve bank yolunu uçtan uca sınamak içindir; hiçbir oyun tüketmez. Varyant hard-heavy-alt (intensity:hard, rarity:alternate, weight:heavy).",
+      "kind": "acoustic",
+      "provenance": {
+        "author": "agent",
+        "by": "sound-family"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "Referans kabuk vuruşları — hard-heavy-alt"
+    },
+    "hash": "sha256:1473c8e67f26e51052bdb8f21e59f9ad8074305ca6a7a4dd0c9967731849cf2a",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "4",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:88fd7a2ee7fa953241bd18f901647268901215fb58debd913cb9dfd26ef43998",
+    "libraries": {
+      "libavcodec": "62.28.102",
+      "libavformat": "62.12.102",
+      "libavutil": "60.26.102"
+    },
+    "quality": 4,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "packageVersion": "0.1.0",
+    "registryHash": "sha256:9c42f6a2904548abbd724c29bd80573b04644ef296381e335aa9f7feff7969fd",
+    "rendererVersion": 1,
+    "runtime": {
+      "node": "v22.23.1"
+    },
+    "sourceCommit": "4cfa27c24cfba9252804673c0cf75dc4ba1e5cdc",
+    "sourceTreeDirty": true
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/audio-synth",
+    "runtimeDeclaration": null,
+    "runtimeKey": "reference-shell-hits/hard-heavy-alt",
+    "targetKind": "reference"
+  },
+  "job": {
+    "jobId": "hard-heavy-alt",
+    "path": "devtools/audio-synth/audio-families/reference-shell-hits/jobs/hard-heavy-alt",
+    "protocolVersion": 1
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "controls": [
+        {
+          "control": "control.body-size",
+          "value": 0.723876,
+          "version": 1
+        },
+        {
+          "control": "control.viscosity",
+          "value": 0.674547,
+          "version": 1
+        },
+        {
+          "control": "control.roughness",
+          "value": 0.677131,
+          "version": 1
+        }
+      ],
+      "durationSeconds": 0.9,
+      "effects": [
+        {
+          "params": {
+            "amount": 0.12,
+            "decay": 0.5552899744093627
+          },
+          "primitive": "effect.reverb",
+          "version": 1
+        }
+      ],
+      "layers": [
+        {
+          "name": "strike",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.4,
+                "decay": 1.2,
+                "frequency": 431.3968715544069,
+                "layout": "membrane",
+                "modes": 12
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "q": 20,
+                "volume": 0.29096513109674393
+              },
+              "primitive": "resonator.cavity",
+              "version": 1
+            }
+          ],
+          "routing": "parallel",
+          "source": {
+            "params": {
+              "contactTime": 0.0007376010000000001,
+              "roughness": 0.2
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 3730083200
+    },
+    "hash": "sha256:4cb5ef8015d9426326f7bd1a962ba1b21dde828764b06f45f55e9838678c22e8",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 43200,
+      "hash": "sha256:ba4e83348596cc0230ee2ef2a68d5ea8f87f7db8354103cdc164f234296dc2a6",
+      "sampleRate": 48000
+    },
+    "renderId": "r-3ab2a05747e59eaa",
+    "rendererVersion": 1,
+    "seed": 3730083200
+  },
+  "schema": "AudioAssetManifestV1"
+}

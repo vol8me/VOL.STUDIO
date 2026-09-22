@@ -88,33 +88,8 @@ ayrı ve açıktır:
 
 ### Dalga 5 — generic SoundFamily üretimi
 
-- [ ] **[P1] `SoundFamilyProgram`/eşdeğer family tanımı aynı akustik
-      kimlikten ilişkili asset varyantları üretebilsin.** Family tek bir
-      preset'in random kopyaları değildir; ortak AcousticProgram/archetype
-      kimliğini, izin verilen varyasyon boyutlarını, family seed'ini ve her
-      varyantın semantik rolünü tanımlar. Kapanır: aynı family en az sekiz
-      deterministic varyant üretir; exact duplicate oluşmaz ve her
-      varyantın program/seed/provenance'ı manifest'te izlenebilir.
-- [ ] **[P1] Offline `SoundFamilyBank` publish formatı oluşturulsun.**
-      Family render sonucunda asset dosyalarıyla birlikte stable variant id,
-      semantic tags/state, program hash, duration/loudness/descriptor özeti ve
-      seçim metadata'sı taşıyan machine-readable bank manifest'i üretir.
-      Runtime'ın `audio-synth` kodunu çalıştırmasına gerek kalmaz. Kapanır:
-      tamamen offline üretilmiş bir bank yalnız manifest kullanılarak
-      deterministic variant lookup yapabilecek yeterli metadata taşır.
-- [ ] **[P2] Family varyasyon alanı kontrollü ve yeniden üretilebilir olsun.**
-      Varyasyonlar pitch/gain randomizasyonuna indirgenmez; AcousticProgram'ın
-      izin verdiği gesture, timbre, micro-event, timing ve başka semantic
-      boyutlardan türetilir. Family'nin "aynı kimlik ama aynı dosya değil"
-      davranışı `SoundFamily` coherence/diversity analiziyle birlikte
-      doğrulanır. Kapanır: family generation seed'i değişmeden yeni bağımsız
-      random subsystem eklenmesi stable substream sözleşmesini bozmaz.
-- [ ] **[P2] Family bankası runtime/game kavramlarından bağımsız kalsın.**
-      `audio-synth` phenotype, organism, enemy, weapon state machine veya
-      belirli oyun sınıflarını bilmez; yalnız generic semantic variant
-      metadata üretir. Domain nesnesini varyanta bağlayan resolver tüketici
-      paketinde yaşar. Kapanır: package kodunda organism phenotype veya başka
-      oyun domain tipi import edilmeden SoundFamilyBank üretilebilir.
+Dalga 5'in dört maddesi kapandı; kısa kanıtları `## Kapatılanlar`da, gerekçe
+DESIGN "SoundFamily üretimi".
 
 ### Dalga 6 — müzik authoring temeli ve adaptive production sözleşmesi
 
@@ -609,6 +584,36 @@ ayrı ve açıktır:
 
 ## Kapatılanlar
 
+- [x] **[P1] `SoundFamilyProgramV1` ilişkili varyant üretir.** Ortak taban
+      (archetype/program), arama ile ortak boyut sözlüğü, kapalı genel rol
+      sözlüğü (intensity/weight/length/speed/wetness/rarity/onset), rol →
+      alt aralık, `role-subrange-v1` politikası, aile tohumu, teslim bloğu.
+      Kanıt: `tests/family/program.test.ts` — iki mekanik olarak farklı aile
+      (archetype kabuk, program damla) sekizer deterministik varyant, tekil
+      program ve PCM; referans `reference-shell-hits` 8 varyant yayımlandı,
+      duplicate yok; her varyantın programı/tohumu/kökeni job `origin.json` +
+      manifest'te. (Dalga 5)
+- [x] **[P1] Offline `SoundFamilyBankV1` publish formatı.** Varyant başına
+      kanonik job akışı (aynı `publishJob`), kalite kapısı ve bütçe yazımdan
+      önce, bank en son; yarım yayın bank'sız ve `incomplete`, aynı komutla
+      sürer. Kanıt: `tests/family/publish.test.ts` (idempotent tekrar, engelli
+      varyantla yarım yayın → sürdürme, eksik/bozuk varyant bank'ı tamam
+      saydırmaz, sürüm artmadan içerik değişmez);
+      `tests/family/bankLookup.test.ts` audio-synth import etmeden tam
+      anahtar, rol/etiket süzme ve FNV-1a seçimini yalnız bank ile yapar;
+      `audio:production-check` bank'ı da doğrular. (Dalga 5)
+- [x] **[P2] Family varyasyon alanı kontrollü ve yeniden üretilebilir.**
+      Değerler `family:<id>/variant:<key>/<boyut>` adlı alt akışlarından;
+      varyasyon sertlik/boyut/sönüm/yerleşim ve olay hızı/düzenlilik/perde
+      çarpanı gibi anlamsal boyutlardan, tohum/perde/kazanç ezmesinden değil.
+      Kanıt: varyant sırası, yeni rol + yalnız o rolle kapsanan yeni boyut +
+      yeni varyant eski varyantların program/kimlik/PCM'ini değiştirmez; aile
+      kalitesi `assessFamily` ile kapıda. (Dalga 5)
+- [x] **[P2] Family bankası runtime/game kavramlarından bağımsız.** Kanıt:
+      `tests/governance/familyDomain.test.ts` — aile/arama/bank kodu yalnız
+      paket `src/`, `node:` ve `@volstudio/core/random` import eder; rol
+      sözlüğü kapalı, alan ekseni (`enemyType`) adıyla reddedilir; bank şeması
+      bilinmeyen alanı reddeder. (Dalga 5)
 - [x] **[P1] Deterministik candidate-search motoru.** `AcousticSearchSpecV1`
       (archetype/program tabanı, adlı `archetype-param`/`control`/`node-param`
       boyutları, aralık/seçenek, `exclude` kuralı, mekanik filtre, toplu

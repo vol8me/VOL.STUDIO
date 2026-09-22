@@ -1,0 +1,264 @@
+{
+  "base": {
+    "kind": "archetype",
+    "request": {
+      "archetype": "archetype.resonant-shell",
+      "params": {
+        "durationSeconds": 0.9
+      },
+      "schema": "ArchetypeRequestV1",
+      "variation": 0,
+      "version": 1
+    }
+  },
+  "delivery": {
+    "assetClass": "sfx",
+    "assetDir": "reference/production/assets/sfx/families/reference-shell-hits",
+    "durationSeconds": {
+      "max": 1.5,
+      "min": 0.5
+    },
+    "package": "@volstudio/audio-synth",
+    "subtype": "sfx"
+  },
+  "description": "audio-synth referans ailesi: ResonantShell kimliğinden yoğunluk ve ağırlık rolleriyle sekiz vuruş varyantı. Yalnız aile üretim ve bank yolunu uçtan uca sınamak içindir; hiçbir oyun tüketmez.",
+  "dimensions": [
+    {
+      "name": "damping",
+      "range": {
+        "max": 0.7,
+        "min": 0.2,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "archetype-param",
+        "param": "damping"
+      }
+    },
+    {
+      "name": "hardness",
+      "range": {
+        "max": 0.95,
+        "min": 0.3,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "archetype-param",
+        "param": "hardness"
+      }
+    },
+    {
+      "name": "layout",
+      "options": [
+        "bar",
+        "membrane"
+      ],
+      "scope": "role",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "strike",
+        "param": "layout",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "roughness",
+      "range": {
+        "max": 0.9,
+        "min": 0.1,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "archetype-param",
+        "param": "roughness"
+      }
+    },
+    {
+      "name": "size",
+      "range": {
+        "max": 0.85,
+        "min": 0.15,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "archetype-param",
+        "param": "size"
+      }
+    }
+  ],
+  "familyId": "reference-shell-hits",
+  "quality": {
+    "coherence": {
+      "maxActiveRatio": 1.5,
+      "maxCentroidRatio": 3,
+      "maxLoudnessSpreadDb": 12,
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "minMembers": 8
+  },
+  "roles": {
+    "intensity": {
+      "hard": {
+        "hardness": {
+          "max": 0.95,
+          "min": 0.75
+        }
+      },
+      "medium": {
+        "hardness": {
+          "max": 0.7,
+          "min": 0.5
+        }
+      },
+      "soft": {
+        "hardness": {
+          "max": 0.45,
+          "min": 0.3
+        }
+      }
+    },
+    "rarity": {
+      "alternate": {
+        "layout": {
+          "options": [
+            "membrane"
+          ]
+        }
+      },
+      "common": {
+        "layout": {
+          "options": [
+            "bar"
+          ]
+        }
+      }
+    },
+    "weight": {
+      "heavy": {
+        "size": {
+          "max": 0.85,
+          "min": 0.6
+        }
+      },
+      "light": {
+        "size": {
+          "max": 0.4,
+          "min": 0.15
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 20260923,
+  "title": "Referans kabuk vuruşları",
+  "variants": [
+    {
+      "key": "hard-heavy",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "common",
+        "weight": "heavy"
+      },
+      "tags": [
+        "strike"
+      ]
+    },
+    {
+      "key": "hard-heavy-alt",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "alternate",
+        "weight": "heavy"
+      },
+      "tags": [
+        "strike"
+      ]
+    },
+    {
+      "key": "hard-light",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "common",
+        "weight": "light"
+      },
+      "tags": [
+        "strike"
+      ]
+    },
+    {
+      "key": "medium-heavy",
+      "roles": {
+        "intensity": "medium",
+        "rarity": "common",
+        "weight": "heavy"
+      },
+      "tags": [
+        "knock"
+      ]
+    },
+    {
+      "key": "medium-light",
+      "roles": {
+        "intensity": "medium",
+        "rarity": "common",
+        "weight": "light"
+      },
+      "tags": [
+        "knock"
+      ]
+    },
+    {
+      "key": "medium-light-alt",
+      "roles": {
+        "intensity": "medium",
+        "rarity": "alternate",
+        "weight": "light"
+      },
+      "tags": [
+        "knock"
+      ]
+    },
+    {
+      "key": "soft-heavy",
+      "roles": {
+        "intensity": "soft",
+        "rarity": "common",
+        "weight": "heavy"
+      },
+      "tags": [
+        "tap"
+      ]
+    },
+    {
+      "key": "soft-light",
+      "roles": {
+        "intensity": "soft",
+        "rarity": "common",
+        "weight": "light"
+      },
+      "tags": [
+        "tap"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

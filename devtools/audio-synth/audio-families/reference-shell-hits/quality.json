@@ -1,0 +1,139 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.9,
+        "measured": 8,
+        "median": 0.9,
+        "min": 0.89,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 612.842,
+        "measured": 8,
+        "median": 463.72,
+        "min": 283.339,
+        "scale": 0.584533
+      },
+      "maxMomentaryLufs": {
+        "max": -13.3294,
+        "measured": 8,
+        "median": -14.8292,
+        "min": -24.5989,
+        "scale": 2.10723
+      },
+      "pitchHz": {
+        "max": 613.028,
+        "measured": 8,
+        "median": 427.729,
+        "min": 273.542,
+        "scale": 0.666216
+      }
+    },
+    "outliers": [
+      {
+        "descriptor": "maxMomentaryLufs",
+        "key": "soft-light",
+        "robustZ": -4.63627,
+        "value": -24.5989
+      }
+    ],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.991823,
+    "medianDistance": 0.514325,
+    "minDistance": 0.0549785,
+    "nearIdentical": [],
+    "pairs": 28
+  },
+  "duplicates": [],
+  "members": [
+    {
+      "key": "hard-heavy",
+      "nearest": {
+        "distance": 0.169964,
+        "key": "soft-heavy"
+      },
+      "pcmHash": "sha256:fe9806b9c5a529d95d808de66ac1c2b09ceee1cdbc82f27de7c80944d3b12eb2"
+    },
+    {
+      "key": "hard-heavy-alt",
+      "nearest": {
+        "distance": 0.304535,
+        "key": "soft-light"
+      },
+      "pcmHash": "sha256:ba4e83348596cc0230ee2ef2a68d5ea8f87f7db8354103cdc164f234296dc2a6"
+    },
+    {
+      "key": "hard-light",
+      "nearest": {
+        "distance": 0.12396,
+        "key": "medium-light"
+      },
+      "pcmHash": "sha256:7f7a5ff3a75549274a619a8fcee8117d5f39048b5b5a1179960310a8e1b56f5e"
+    },
+    {
+      "key": "medium-heavy",
+      "nearest": {
+        "distance": 0.0549785,
+        "key": "soft-heavy"
+      },
+      "pcmHash": "sha256:1723aa13950e3dde3cde569a439618b43dbaa89a7fa651dfd6a2144b350ac867"
+    },
+    {
+      "key": "medium-light",
+      "nearest": {
+        "distance": 0.12396,
+        "key": "hard-light"
+      },
+      "pcmHash": "sha256:cecea4e00ef96ff7e334fa0fc17eb3ac7a024f3717dac50f68f6924df305f065"
+    },
+    {
+      "key": "medium-light-alt",
+      "nearest": {
+        "distance": 0.270357,
+        "key": "medium-light"
+      },
+      "pcmHash": "sha256:2d882099d5ce3cb34af05f3470dd0f0b1efd48ab518b53b2b60c218ca03b0089"
+    },
+    {
+      "key": "soft-heavy",
+      "nearest": {
+        "distance": 0.0549785,
+        "key": "medium-heavy"
+      },
+      "pcmHash": "sha256:955368fa9765fabd5106004a2dba6f872bb308ebb353956bd431c0afda40296a"
+    },
+    {
+      "key": "soft-light",
+      "nearest": {
+        "distance": 0.304535,
+        "key": "hard-heavy-alt"
+      },
+      "pcmHash": "sha256:57a19f2d5d4ad885c73678a6c5e90b224c2db9166eec08b66abeb67f3ed04ea1"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxActiveRatio": 1.5,
+      "maxCentroidRatio": 3,
+      "maxLoudnessSpreadDb": 12,
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "minMembers": 8
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

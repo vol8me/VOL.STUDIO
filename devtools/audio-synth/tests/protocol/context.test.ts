@@ -58,6 +58,30 @@ describe('audio:job context', () => {
     expect(canaries.entries.map((c) => c.review)).toEqual(Array(8).fill('pending-human'));
   });
 
+  it('aile sözleşmesi: şemalar, genel rol sözlüğü, bank arama sözleşmesi, komutlar', () => {
+    const { family, targets } = buildContext(REPO);
+    expect(family.schemas).toEqual({
+      family: 'SoundFamilyProgramV1',
+      quality: 'SoundFamilyQualityReportV1',
+      bank: 'SoundFamilyBankV1',
+      status: 'SoundFamilyStatusV1',
+    });
+    expect(Object.keys(family.roleAxes)).toContain('intensity');
+    expect(family.bank).toMatchObject({
+      lookupContract: 'sound-family-lookup-v1',
+      choice: 'fnv1a32-mod-v1',
+    });
+    expect(Object.keys(family.commands).sort()).toEqual([
+      'check',
+      'list',
+      'plan',
+      'publish',
+      'status',
+      'verify',
+    ]);
+    expect(targets.publishable[0].bankRoot).toBe('reference/production/banks');
+  });
+
   it('aynı repo durumu aynı baytları verir (zaman damgası yok, sıra kararlı)', () => {
     expect(canonicalJson(buildContext(REPO))).toBe(canonicalJson(buildContext(REPO)));
     expect(JSON.stringify(buildContext(REPO))).not.toMatch(/\d{4}-\d{2}-\d{2}T/);

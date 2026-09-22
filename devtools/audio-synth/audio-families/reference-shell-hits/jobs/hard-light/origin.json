@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:b3080a6c85950e11b8fd241973fb09e75fd2f6e8a6538f59f7d74719f730d57f",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/audio-families",
+    "familyHash": "sha256:6fe51b9f108c6018a7272857e6d144e8e456cb42ff71960ed2adcba3b1d6fa18",
+    "familyId": "reference-shell-hits",
+    "kind": "family-variant",
+    "variantId": "v-3ccc243e3d87c297",
+    "variantKey": "hard-light"
+  }
+}

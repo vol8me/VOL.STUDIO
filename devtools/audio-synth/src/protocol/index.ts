@@ -42,7 +42,29 @@ export type {
 export { buildContext, CONTEXT_SCHEMA } from './context';
 export { ProtocolError } from './errors';
 export type { ProtocolErrorCode } from './errors';
-export { checkRepoRelative } from './fs';
+export { checkRepoRelative, readJsonFile, resolveInside } from './fs';
+export {
+  checkFamily,
+  DEFAULT_FAMILIES_ROOT,
+  FAMILY_STATUS_SCHEMA,
+  familyLabel,
+  familyStatus,
+  listFamilies,
+  previewFamily,
+  publishFamily,
+  PUBLICATION_ANALYSIS_PASSES,
+  PUBLICATION_RENDER_PASSES,
+  variantJob,
+  verifyFamily,
+} from './family';
+export type {
+  FamilyCheck,
+  FamilyLocation,
+  FamilyPreview,
+  FamilyPublishOutcome,
+  FamilyStatusV1,
+  FamilyVerificationV1,
+} from './family';
 export {
   analyzeCandidate,
   initJob,
