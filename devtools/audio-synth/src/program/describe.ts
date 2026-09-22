@@ -1,6 +1,6 @@
 import { PROGRAM_REGISTRY } from './catalog';
 import type { ParamSpec } from './params';
-import type { ProgramEntry } from './registry';
+import type { ControlTarget, ProgramEntry } from './registry';
 
 /**
  * Registry'nin JSON izdüşümü — `audio:job context` ve registry özeti bunu
@@ -21,6 +21,9 @@ export interface RegistryEntryDescription {
     readonly workPerFrameAtDefaults: number;
     readonly stateBytesAtDefaults48k: number;
   };
+  /** Yalnız makrolarda: sürdüğü DSP parametreleri ve yasası (uyumlu yapı taşları). */
+  readonly targets?: readonly ControlTarget[];
+  readonly modulationDepth?: { readonly span: number };
 }
 
 function defaults(entry: ProgramEntry): Record<string, number | string> {
@@ -51,6 +54,12 @@ export function describeEntry(entry: ProgramEntry): RegistryEntryDescription {
       workPerFrameAtDefaults: entry.resource.workPerFrame(params, new Set()),
       stateBytesAtDefaults48k: Math.round(entry.resource.stateBytes(params, 48000)),
     },
+    ...(entry.kind === 'control'
+      ? {
+          targets: entry.targets,
+          ...(entry.modulationDepth ? { modulationDepth: entry.modulationDepth } : {}),
+        }
+      : {}),
   };
 }
 

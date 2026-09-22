@@ -23,24 +23,74 @@ function alternative(spec: NumberParamSpec): number {
   return spec.integer ? Math.round(bounded) || spec.default + 1 : bounded;
 }
 
-/** Düğümü en küçük programa koyar; kaynak dışı düğümler gürültüyle beslenir. */
+const PROBE_BASE = {
+  schema: 'AcousticProgramV1',
+  sampleRate: RATE,
+  channels: 1,
+  durationSeconds: 2,
+  seed: 3,
+  master: { normalize: 'none', fadeOutSeconds: 0 },
+};
+const noise = { primitive: 'source.noise', version: 1 };
+const impact = { primitive: 'exciter.impact', version: 1 };
+
+function node(id: string, params: Record<string, unknown> = {}) {
+  const entry = PROGRAM_REGISTRY.entries().find((e) => e.id === id) as ProgramEntry;
+  return { primitive: id, version: entry.version, params };
+}
+
+/** Yapı taşını kendi türünün yuvasına koyan tek katman. */
+function layerFor(id: string, params: Record<string, unknown>, name: string) {
+  const kind = id.split('.')[0];
+  if (kind === 'source' || kind === 'exciter') return { name, source: node(id, params) };
+  if (kind === 'resonator') return { name, source: impact, resonators: [node(id, params)] };
+  if (kind === 'articulation') return { name, source: noise, articulation: node(id, params) };
+  return { name, source: noise };
+}
+
+/**
+ * Düğümü en küçük programa koyar. Modülatör bir osilatörün frekansını,
+ * makro ise hedeflerinin her birini taşıyan birer katmanı sürer.
+ */
 function programWith(entry: ProgramEntry, params: Record<string, unknown>): unknown {
-  const node = { primitive: entry.id, version: entry.version, params };
-  const noise = { primitive: 'source.noise', version: 1 };
-  const layer: Record<string, unknown> = { name: 'probe', source: noise };
-  if (entry.kind === 'source' || entry.kind === 'exciter') layer.source = node;
-  if (entry.kind === 'resonator') layer.resonators = [node];
-  if (entry.kind === 'articulation') layer.articulation = node;
-  return {
-    schema: 'AcousticProgramV1',
-    sampleRate: RATE,
-    channels: 1,
-    durationSeconds: 2,
-    seed: 3,
-    layers: [layer],
-    effects: entry.kind === 'effect' ? [node] : undefined,
-    master: { normalize: 'none', fadeOutSeconds: 0 },
-  };
+  if (entry.kind === 'effect') {
+    return {
+      ...PROBE_BASE,
+      layers: [{ name: 'probe', source: noise }],
+      effects: [node(entry.id, params)],
+    };
+  }
+  if (entry.kind === 'modulator') {
+    const tone = node('source.oscillator', {
+      frequency: { value: 440, modulate: [{ by: 'm', depth: 0.05 }] },
+    });
+    return {
+      ...PROBE_BASE,
+      modulators: { m: { modulator: entry.id, version: entry.version, params } },
+      layers: [{ name: 'probe', source: tone }],
+    };
+  }
+  if (entry.kind === 'control') {
+    const control = { control: entry.id, version: entry.version, value: params.value ?? 0.5 };
+    if (entry.modulationDepth) {
+      const tone = node('source.oscillator', {
+        frequency: { value: 440, modulate: [{ by: 'm', depth: 0.05 }] },
+      });
+      return {
+        ...PROBE_BASE,
+        controls: [control],
+        modulators: { m: { modulator: 'modulator.walk', version: 1 } },
+        layers: [{ name: 'probe', source: tone }],
+      };
+    }
+    const ids = [...new Set(entry.targets.map((t) => t.primitive))];
+    return {
+      ...PROBE_BASE,
+      controls: [control],
+      layers: ids.map((id, i) => layerFor(id, {}, `t${i}`)),
+    };
+  }
+  return { ...PROBE_BASE, layers: [layerFor(entry.id, params, 'probe')] };
 }
 
 const fingerprint = (program: unknown) => {
@@ -99,6 +149,20 @@ describe('registry governance', () => {
       }
     },
   );
+
+  it('makro hedefleri gerçek, sayısal registry parametrelerine işaret eder', () => {
+    for (const entry of entries) {
+      if (entry.kind !== 'control') continue;
+      expect(entry.targets.length > 0 || entry.modulationDepth !== undefined, entry.id).toBe(true);
+      for (const target of entry.targets) {
+        const primitive = entries.find((e) => e.id === target.primitive);
+        expect(primitive, `${entry.id} → ${target.primitive}`).toBeDefined();
+        expect(primitive?.params[target.param]?.type, `${entry.id} → ${target.param}`).toBe(
+          'number',
+        );
+      }
+    }
+  });
 
   it('context çıktısı registry’nin KENDİSİNDEN üretilir: her kayıt otomatik görünür', () => {
     const repo = createTestRepo();

@@ -13,7 +13,7 @@ export type {
   BriefProvenanceV1,
 } from './brief';
 export { PROGRAM_REGISTRY } from './catalog';
-export { renderGesture } from './curves';
+export { CURVES, renderGesture } from './curves';
 export type { GesturePoint } from './curves';
 export { describeEntry, describeRegistry } from './describe';
 export type { RegistryEntryDescription } from './describe';
@@ -30,14 +30,23 @@ export type {
   ResolvedParams,
 } from './params';
 export { deriveSeed, substream, SUBSTREAM_SCHEME } from './random';
-export type { NodeContext, ProgramEntry, RegistryKind } from './registry';
-export { estimateProgramCost, PROGRAM_RENDERER_VERSION, renderProgram } from './render';
+export type { ControlTarget, NodeContext, ProgramEntry, RegistryKind } from './registry';
+export {
+  estimateProgramCost,
+  PROGRAM_RENDERER_VERSION,
+  renderProgram,
+  renderProgramLayers,
+} from './render';
 export type { ProgramRender, ProgramRenderOptions } from './render';
 export { ACOUSTIC_PROGRAM_SCHEMA, PROGRAM_LIMITS, resolveProgram } from './schema';
 export type {
   AcousticProgramV1,
+  ControlV1,
   GestureV1,
+  ModulationV1,
+  ModulatorV1,
   ParamValueV1,
+  SignalBindingV1,
   ProgramLayerV1,
   ProgramMasterV1,
   ProgramNodeV1,

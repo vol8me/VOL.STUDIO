@@ -14,7 +14,10 @@ export type ParamUnit =
   | 'Q'
   | 'per-second'
   | 'mm'
+  | 'cm'
+  | 'cm2'
   | 'm'
+  | 'L'
   | 'cents'
   | 'octaves';
 

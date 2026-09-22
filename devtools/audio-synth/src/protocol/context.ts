@@ -71,7 +71,12 @@ export function buildContext(repoRoot: string) {
         limits: PROGRAM_LIMITS,
         substreamScheme: SUBSTREAM_SCHEME,
         unknownFields: 'reject',
-        paramValue: 'sayı | seçenek | { "gesture": "<ad>" } (yalnız automatable)',
+        paramValue:
+          'sayı | seçenek | { gesture } | { value?, gesture?, modulate: [{ by, depth }] } — ' +
+          'gesture/modulate yalnız automatable alanda; depth dB alanda dB, diğerlerinde göreli oran',
+        timeBase: 'gesture ve makro gesture’ı katman başlangıcına, modülatörler programa göre',
+        macros:
+          'controls: [{ control, version, value }] — value ∈ [0, 1], 0.5 nötr; hedefler registry’de',
       },
       analysis: { id: AUDIO_ANALYSIS_SCHEMA, analyzerVersion: ANALYZER_VERSION },
       manifest: { id: ASSET_MANIFEST_SCHEMA },

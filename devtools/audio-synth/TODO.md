@@ -19,6 +19,10 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
       sınırlama (ör. minBLEP/BLAMP ya da osilatör düzeyinde yerel aşırı
       örnekleme) ölçülerek seçilir; 3.6 kHz testere alias'ı −70 dB altına
       iner ve `scripts/fm-alias-report.ts` benzeri bir ızgarayla kilitlenir.
+      _Dalga 2/3 bağımlılık denetimi (2026-09-22): yeni ilkeller kenarlı
+      osilatöre dayanmıyor; kabul testleri riskli bölgeyi kullanmadığı için
+      madde bilinçli olarak açık. Sınır agent'a `audio:job context`
+      içindeki `polyblep-alias` sınırlamasıyla açık._
 
 ## Yol haritası — agent-first genel amaçlı audio-authoring platformu
 
@@ -59,35 +63,8 @@ DESIGN "Authoring protokolü".
 
 ### Dalga 2 — organiklik çekirdeği
 
-- [ ] **[P1] Genel Gesture/automation sistemi kurulsun.** Pitch/gain ile
-      sınırlı olmayan, JSON-serializable zaman eğrileri (linear, cosine/smooth,
-      exponential ve gerekirse spline) fiziksel/makro kontrollere bağlanır;
-      sample-accurate ve deterministiktir. Kapanır: aynı oscillator üzerinde
-      pitch+pressure+resonance üç ayrı gesture ile sürülebilir; boundary ve
-      tekrar determinism testleri vardır.
-- [ ] **[P1] Korelasyonlu stochastic modulation primitive'leri gelsin.**
-      Smooth drift, bounded random walk/mean-reverting drift, sample-and-glide,
-      jitter ve shimmer eklenir. Her subsystem isimden türeyen bağımsız PRNG
-      substream kullanır; yeni bir stochastic modül eklemek eski modüllerin
-      random dizisini kaydırmaz. Kapanır: pitch stream'ine dokunmadan bubble
-      stream'i eklenince pitch örnekleri birebir aynı kalır.
-- [ ] **[P1] Sentez mimarisine genel Exciter → Resonator → Articulator
-      programı eklensin.** Mevcut instrument modelleri mümkün olduğu yerde bu
-      primitive'leri tüketir; agent yeni organik ses için ayrı monolitik synth
-      yazmak zorunda kalmaz. Kapanır: en az impact/membrane/noise exciter ve
-      modal/cavity/formant resonator aynı program yüzeyinde yeniden
-      kombine edilebilir.
-- [ ] **[P2] Zamanla değişebilen genel modal-resonator bankası gelsin.** Mod
-      frekansı, gain'i ve decay/Q'su Gesture tarafından güvenli şekilde
-      değişebilir; katsayı/state geçişleri artefakt üretmeyecek biçimde
-      yumuşatılır. Kapanır: "body size küçülüyor" senaryosunda modların
-      ölçülen frekansı beklenen yönde sürekli hareket eder, click/NaN oluşmaz.
-- [ ] **[P2] Agent-facing makro akustik kontroller eklensin.** `bodySize`,
-      `tension`, `pressure`, `wetness`, `viscosity`, `roughness`, `cavitySize`,
-      `airiness`, `instability` gibi kontrollere causal mapping yazılır;
-      yalnız isim değişikliği yapılmaz. Kapanır: her control registry'de
-      etkilediği DSP boyutlarını ve geçerli aralığını açıklar; kritik yön
-      ilişkileri property testlerle kilitlenir.
+Dalga 2'nin beş maddesi kapandı; kısa kanıtları `## Kapatılanlar`da, gerekçe
+DESIGN "Organiklik çekirdeği".
 
 ### Dalga 3 — biyolojik yapı taşları
 
@@ -673,6 +650,42 @@ DESIGN "Authoring protokolü".
 
 ## Kapatılanlar
 
+- [x] **[P1] Genel Gesture/automation sistemi.** `curve.linear`,
+      `curve.cosine` (C1), `curve.exponential` (geometrik), `curve.spline`
+      (PCHIP; aşımsız C1 — gerekçesi aralık denetiminin noktalarda yeterli
+      olması). Bağlama dilbilgisi `{ value?, gesture?, modulate }`, makro
+      çarpanları ve aralık kırpma tek sırayla. Kanıt:
+      `tests/program/gestures.test.ts` — aynı testere kaynağında perde +
+      basınç + rezonans üç ayrı gesture ile sürülür, ölçülen perde/seviye/
+      ağırlık merkezi kesin monoton, tık adayı sıfır, render deterministik;
+      basamak 48 kHz'te tam 24000. örnekte; 64 rastgele kümede spline aşımı yok.
+      (Dalga 2)
+- [x] **[P1] Korelasyonlu stokastik modülasyon.** `modulator.drift`, `walk`
+      (Ornstein–Uhlenbeck), `sample-glide`, `jitter`, `shimmer`; her biri
+      `modulator:<ad>/<etiket>` alt akışında. Kanıt: alfabetik olarak önce
+      gelen bir bubble akışı + katman eklendiğinde perde katmanı bit-eşit;
+      32 tohumluk korpusta sınırlılık, sıfır ortalama, OU sapması ve
+      korelasyon süresi, drift eğim sınırı, jitter döngü sayımı. (Dalga 2)
+- [x] **[P1] Exciter → Resonator → Articulator.** `exciter.impact`,
+      `exciter.membrane` (burkulan zar/tık dizisi), `exciter.turbulence`;
+      `resonator.modal`, `resonator.cavity`, `resonator.formant`;
+      `articulation.amplitude`. Dokuz exciter×rezonatör birleşimi aynı
+      program yüzeyinde, rezonans tepesi beklenenin ±%8'inde. Eski enstrüman
+      modelleri yeniden yazılmadı (program yüzeyi onları sarmaz; ikisi yan
+      yana yaşar). (Dalga 2)
+- [x] **[P2] Zamanla değişen modal banka.** Karmaşık faz döndürücü modlar:
+      frekans/T60 örnek başına değişir, durum büyüklüğü korunur, r < 1.
+      Kanıt: body-size gesture'ı ile mod frekansı 220 → 440 Hz monoton
+      yükselir; gürültü uyarımında linear/cosine/spline taramalarında tık
+      adayı 0; 20 Hz↔11 kHz / T60 5 ms↔30 sn taraması sonlu ve sınırlı. (Dalga 2)
+- [x] **[P2] Makro akustik kontroller.** `body-size`, `tension`, `pressure`,
+      `wetness`, `viscosity`, `roughness`, `cavity-size`, `airiness`,
+      `instability` — registry'de hedef (`primitive.param`, yasa, açıklık),
+      aralık/birim ve yön; `context` hedefleri açar. Kanıt:
+      `tests/program/macros.test.ts` — dokuz makronun yazılı yönü beş
+      konumda kesin monoton; 0.5 nötr (bit-eşit); etkisiz/tekrarlanan/
+      otomasyonsuz hedefe gesture'lı makro reddedilir. (Dalga 2)
+
 - [x] **[P1] OGG üretiminin araç zinciri manifest'e alınıyor** (Dalga 1
       `AudioAssetManifestV1` absorbe etti). Kanonik kimlik PCM özetidir
       (kodlayıcıya giden kelepçeli float32 + biçim başlığı); manifest FFmpeg
@@ -681,49 +694,49 @@ DESIGN "Authoring protokolü".
       `identical`/`encoder-only`/`encoder-nondeterministic`/`pcm-changed`
       ayırır; kalite 5 ile üretilmiş bir kayıt gerçek yeniden kodlamayla
       `encoder-only` sınıflanır (PCM aynı). libvorbis sürümü FFmpeg
-      tarafından raporlanmaz — manifest'te `unreported` olarak yazılı. (Dalga 1)
+      tarafından raporlanmaz — manifest'te `unreported` olarak yazılı. (b471e1d)
 - [x] **[P1] Sürümlü `AudioJob` protokolü.** `AudioJobV1` ve durum
       komutu (`audio:job status`): etkin aşama ve `next.action` yalnız dosyalardan hesaplanır;
       atomik yazım, pid'li tek yazıcı kilidi, `modified`/`corrupt`/`stale`
       durumları. Kanıt: `tests/protocol/cli.test.ts` — süreç A işi render'da
       bırakır, AYRI süreç B `status --json` ile `analyze` adımını bulur ve işi
-      bitirir. (Dalga 1)
+      bitirir. (b471e1d)
 - [x] **[P1] `AudioBriefV1` discriminated union.** `kind: 'acoustic'`
       (`sfx | organic | ambience`) tanımlı; `kind: 'music'` Dalga 6
       `MusicBriefV1`e ayrılmış uzatma noktasıdır ve `unsupported` ile
       reddedilir — müzik alanı akustik brief'e `unknown-key` ile sızamaz.
       Bilinmeyen kind/subtype render'dan önce adlı hata verir; brief şeması,
-      özeti ve belgesi manifest'e yazılır. (Dalga 1)
+      özeti ve belgesi manifest'e yazılır. (b471e1d)
 - [x] **[P1] `AcousticProgramV1` kanonik program.** Registry kimliği +
       sürümüyle anılan düğümler, sınırlı topoloji, gesture bağları;
       bilinmeyen alan/kimlik/sürüm/tür render'dan önce reddedilir. Aynı
       program + tohum + render sürümü aynı PCM (test + referans fixture'ın
-      her `audio-verify` koşusunda yeniden render'ı). (Dalga 1)
+      her `audio-verify` koşusunda yeniden render'ı). (b471e1d)
 - [x] **[P1] Registry tek kaynak.** Kayıt: birim/aralık/varsayılan,
       parametre başına yön ilişkisi, determinizm, maliyet modeli, yetenek
       etiketi. `tests/governance/registry.test.ts` eksik metadata'yı VE
       değiştirildiğinde PCM'i değiştirmeyen (implementasyona bağlı olmayan)
-      parametreyi düşürür. (Dalga 1)
+      parametreyi düşürür. (b471e1d)
 - [x] **[P1] `audio:job context --json`.** Registry izdüşümü, şemalar,
       politika, bütçe, bilinen sınırlamalar ve publish hedefleri çalışan
       koddan; zaman damgasız ve sıralı. Registry kaydı eklenince context'te
       otomatik görünür (test eşitliği). Aktif oyun hedefi olmadığını açıkça
-      söyler; oyun hedefi `AudioTargetV1` beyanıyla açılır. (Dalga 1)
+      söyler; oyun hedefi `AudioTargetV1` beyanıyla açılır. (b471e1d)
 - [x] **[P1] Özet zinciri.** brief → program → render → analiz → seçim →
       yayın kenarları kanonik JSON SHA-256'sıyla bağlı. Program değişince
       eski analiz/seçim `stale`, publish `stale` ile reddedilir; başka
-      render'ın analizine işaret eden seçim de reddedilir. (Dalga 1)
+      render'ın analizine işaret eden seçim de reddedilir. (b471e1d)
 - [x] **[P1] `AudioAnalysisReportV1` + `analyzeAudio()`.** Süre, kanal/örnek
       tepe, true peak, RMS/LUFS, DC, kırpma, tık adayı, crest, stereo
       ilinti/genişlik, spektral (ağırlık merkezi, rolloff, düzlük, tepe, bant
       seviyeleri) ve zamansal tanımlayıcılar; `measuredFrom` kaynağı söyler.
       `audio-qa` artık aynı çekirdeği tüketir; CLI ile kütüphane aynı
       kodlanmış fixture'da BİREBİR aynı raporu verir
-      (`tests/analysis/qaParity.test.ts`); analizör sürümü manifest'te. (Dalga 1)
+      (`tests/analysis/qaParity.test.ts`); analizör sürümü manifest'te. (b471e1d)
 - [x] **[P1] `AudioAssetManifestV1`.** Gömülü brief/program, tohum,
       renderId, PCM özeti, kodlanmış bayt özeti, araç zinciri, kodek sonrası
       analiz, politika ve entegrasyon; job dizini silinse bile asset
-      yalnız manifest'ten yeniden üretilip doğrulanır. (Dalga 1)
+      yalnız manifest'ten yeniden üretilip doğrulanır. (b471e1d)
 - [x] **[P1] Tek kanonik publish kapısı.** `publishJob`: özet zinciri →
       hedef/yol/sınıf → yeniden render + PCM kimliği → staging kodlama →
       kodek sonrası politika → manifest → atomik rename. Politika düşerse
@@ -734,11 +747,11 @@ DESIGN "Authoring protokolü".
       kapı audio-synth'in kendi üretim-referans işiyle
       (`audio-jobs/platform-reference`) uçtan uca çalıştırıldı ve
       `just audio-verify` onu her koşuda manifest'inden yeniden üretip
-      kodek sonrası doğrular. (Dalga 1)
+      kodek sonrası doğrular. (b471e1d)
 - [x] **[P2] Agent/vendor adapter ince.** README "Agent protokolü" bölümü
       yalnız `audio:job context --json`a yönlendirir; governance testi
       adapter metninde herhangi bir registry kimliği geçmesini reddeder.
-      (Dalga 1)
+      (b471e1d)
 
 - [x] **[P1] `Reverb.decay` RT60 saniyesi oldu.** Comb kazancı g = 10^(−3·D/T60)
       (her comb kendi gecikmesinden); gerçek allpass difüzörler, wet enerji

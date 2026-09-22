@@ -275,6 +275,95 @@ yalnız kendisinden doğrular: gömülü program yeniden render edilir, dosya
 sınıflanır. Bu fixture aynı zamanda program render yolunun regresyon
 kilididir: render çıktısını değiştiren bir değişiklik `pcm-changed` verir.
 
+## Organiklik çekirdeği
+
+Dalga 2 yapı taşları Dalga 1 program sözleşmesinin İÇİNDE yaşar: yeni
+yetenek yeni registry kaydıdır. `AcousticProgramV1`e eklenen alanlar
+(`modulators`, `controls`, parametre bağında `value`/`modulate`) isteğe
+bağlıdır ve mevcut programların PCM'ini değiştirmez — üretim-referans
+fixture'ı bu dalga boyunca `identical` doğrulandı. V1 bu dal merge
+edilene dek yayımlanmamış kabul edilir; merge sonrası alan ekleme V2 ister.
+
+### Gesture ve bağlama dilbilgisi
+
+Eğriler: `curve.linear` (C0), `curve.cosine` (noktalarda eğimsiz, C1),
+`curve.exponential` (geometrik; frekansta oktav/sn doğrusal, iki uç aynı
+işaretli ve sıfırdan farklı olmalı) ve `curve.spline` (PCHIP —
+Fritsch–Carlson/Butland teğetli monoton kübik Hermite). Spline'ın gerekçesi
+ölçülebilir: üç ve daha çok noktadan C1 geçer ve AŞIM YAPMAZ, bu yüzden
+parametre aralığı denetimi noktalarda yeterlidir (Catmull-Rom aralığı
+delebilirdi). Örnekleme `i / oran` ile yapılır (birikimli toplam yok),
+ilk noktadan önce/son noktadan sonra değer tutulur, eşit zamanlı iki nokta
+basamaktır; eğri örnek başına ayırma yapmaz.
+
+Bir sayısal parametre `sayı`, `{ gesture }` ya da
+`{ value?, gesture?, modulate: [{ by, depth }] }` alır; gesture/modülasyon
+yalnız `automatable` alanda. Çözüm sırası sabittir: taban → makro çarpanları
+→ modülasyon → aralık kırpma (Nyquist altı alanlarda 0.49·fs). Modülasyon
+dB alanında EKLENEN dB, diğer alanlarda göreli orandır (p·(1 + d·m)).
+Gesture zamanı katman başlangıcına, modülatör zamanı programa göredir.
+
+### Stokastik modülasyon
+
+`modulator.drift` (smoothstep düğüm gürültüsü, C1), `modulator.walk`
+(Ornstein–Uhlenbeck, Euler–Maruyama; tanh ile sınırlı), `modulator.sample-glide`
+(rastgele hedef + üstel yaklaşma), `modulator.jitter` / `modulator.shimmer`
+(döngü eşzamanlı N(0,1)/3 sapması; `cycleRate` perde gesture'ına
+bağlanabilir). Hepsi [−1, 1] normalize çıkar. Her modülatör programda ADIYLA
+tanımlanır ve `modulator:<ad>/<etiket>` alt akışını kullanır: yeni bir
+modülatör ya da stokastik katman eklemek mevcut akışları kaydırmaz
+(`tests/program/stochastic.test.ts`: perde katmanı, alfabetik olarak ÖNCE
+gelen bir bubble akışı eklendiğinde bit-eşit). Aynı modülatöre bağlanan
+parametreler aynı sinyali görür — korelasyon bilinçlidir.
+
+### Exciter → Rezonatör → Artikülatör
+
+Exciter enerjiyi, rezonatör rengi verir: `exciter.impact` (yükselen-kosinüs
+temas darbesi + pürüz), `exciter.membrane` (burkulan zar tık dizisi —
+timbal benzeri), `exciter.turbulence` (basınç^1.5 ölçekli akış gürültüsü);
+`resonator.modal`, `resonator.cavity` (Helmholtz), `resonator.formant`
+(dört paralel formant, `tract` ölçekli); `articulation.amplitude`
+(gesture/shimmer ile sürülen dB). Dokuz exciter×rezonatör birleşiminin her
+biri aynı program yüzeyinde render edilir ve rezonans tepesi beklenen
+frekansın ±%8'indedir. Eski enstrüman modelleri yeniden yazılmadı.
+
+**Zamanla değişen modal banka.** Her mod karmaşık tek kutuplu faz
+döndürücüdür: s ← r·e^{iω}·s + g·x, çıkış Im(s). Direkt-form biquad'da
+katsayı değişimi durum değişkenlerinin anlamını değiştirir ve otomasyonda
+enerji sıçraması (tık) verir; faz döndürücüde durum vektörünün BÜYÜKLÜĞÜ
+korunur, frekans ve T60 örnek başına değişebilir, r = 10^(−3/(T60·fs)) < 1
+olduğu için kararlıdır. Nyquist'e yaklaşan mod 0.40–0.46·fs arasında
+kosinüsle susar (tarama sınırı geçerken tık yok). Modal banka darbe-normalize
+(g = 1: vuruşun genliği sönümden bağımsız), boşluk/formant bant geçiren
+normalize (tepe kazancı ≈ 1). Kanıt: gövde küçülürken (body-size gesture)
+ölçülen mod frekansı 220 → 440 Hz monoton yükselir; gürültü uyarımında üç
+eğriyle de tık adayı sıfırdır; 20 Hz↔11 kHz ve T60 5 ms↔30 sn sıçrayan
+tarama sonlu ve sınırlı kalır. Zar yerleşimi ilk 32 Bessel sıfırını (sayısal
+olarak doğrulandı), çubuk yerleşimi Euler–Bernoulli β_n·L değerlerini kullanır.
+Helmholtz: f = (c/2π)·√(A/(V·L_eff)), L_eff = L + 1.7·a — tek mod
+yaklaşımıdır, boşluğun duran-dalga modları modellenmez.
+
+### Makro kontroller
+
+`control.body-size`, `tension`, `pressure`, `wetness`, `viscosity`,
+`roughness`, `cavity-size`, `airiness`, `instability`: değer c ∈ [0, 1],
+0.5 nötr (makrosuz programla bit-eşit). Her makro registry'de hedeflerini
+(`primitive.param`, `octaves`|`linear` yasası, açıklık) ve yön ilişkisini
+taşır; `context` bunları açar. Hiçbir hedefi programda olmayan makro,
+tekrarlanan makro ve gesture ile otomasyonsuz hedefe uygulanan makro
+render'dan önce reddedilir. Yön ilişkileri beş konumda KESİN monoton
+property testleriyle kilitlidir (perde: spektral tepe; parlaklık: ağırlık
+merkezi; sönüm: −40 dB süresi; gürültülülük: spektral düzlük; kararsızlık:
+perde sapması).
+
+### PolyBLEP bağımlılık denetimi
+
+Dalga 2/3 ilkelleri kenarlı osilatöre dayanmaz (faz döndürücü rezonatörler,
+gürültü/türbülans, zar tık dizisi; Dalga 3'ün ses kaynağı bant sınırlı
+darbe dizisidir). Kabul testleri PolyBLEP'in riskli bölgesini kullanmadığı
+için P3 maddesi açık kalır; sınır `audio:job context` içinde
+`polyblep-alias` sınırlaması olarak agent'a açıktır.
+
 ## Hızlı Başlangıç
 
 ### 1. Generate scripti

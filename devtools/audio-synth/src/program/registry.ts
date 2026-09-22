@@ -81,13 +81,46 @@ export interface EffectEntry extends EntryBase {
 
 export interface CurveEntry extends EntryBase {
   readonly kind: 'curve';
-  /** `u ∈ [0, 1]` için `a → b` ara değeri. */
-  readonly interpolate: (a: number, b: number, u: number) => number;
+  /** Noktalardan segment değerlendiricisi kurar (spline teğetleri burada bir kez hesaplanır). */
+  readonly prepare: (
+    points: readonly (readonly [number, number])[],
+  ) => (segment: number, u: number) => number;
   /** Segment bu eğriyle tanımsızsa açıklama, değilse `null`. */
   readonly segmentIssue: (a: number, b: number) => string | null;
 }
 
-export type ProgramEntry = SourceEntry | ProcessorEntry | EffectEntry | CurveEntry;
+export interface ModulatorEntry extends EntryBase {
+  readonly kind: 'modulator';
+  /** `out`a [−1, 1] aralığında normalize modülasyon yazar (program zaman ekseni). */
+  readonly render: (out: Float32Array, params: ResolvedParams, ctx: NodeContext) => void;
+}
+
+/**
+ * Makro hedefi: kontrol değeri c ∈ [0, 1] (0.5 nötr) için `octaves` yasası
+ * parametreyi 2^(span·(2c−1)) ile çarpar, `linear` yasası span·(2c−1)
+ * ekler. `modulation-depth` hedefi programdaki bütün modülasyon
+ * derinliklerini aynı yasayla ölçekler.
+ */
+export interface ControlTarget {
+  readonly primitive: string;
+  readonly param: string;
+  readonly law: 'octaves' | 'linear';
+  readonly span: number;
+}
+
+export interface ControlEntry extends EntryBase {
+  readonly kind: 'control';
+  readonly targets: readonly ControlTarget[];
+  readonly modulationDepth?: { readonly span: number };
+}
+
+export type ProgramEntry =
+  | SourceEntry
+  | ProcessorEntry
+  | EffectEntry
+  | CurveEntry
+  | ModulatorEntry
+  | ControlEntry;
 
 const ENTRY_ID =
   /^(source|exciter|resonator|articulation|effect|curve|modulator|control|archetype)\.[a-z][a-z0-9-]*$/;
