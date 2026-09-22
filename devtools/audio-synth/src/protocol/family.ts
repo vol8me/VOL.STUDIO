@@ -262,19 +262,12 @@ function publishVariant(
   );
 }
 
+/** Bank yolu, varyantlarla AYNI hedef çözümünden (frozen/beyansız hedef burada da reddedilir). */
 function bankPath(
   repoRoot: string,
   family: SoundFamilyProgramV1,
 ): { repoPath: string; packagePath: string } {
-  const target = surveyTargets(repoRoot).publishable.find(
-    (t) => t.packageName === family.delivery.package,
-  );
-  if (!target)
-    throw new ProtocolError(
-      'destination',
-      `${family.delivery.package} yayın hedefi değil`,
-      'delivery.package',
-    );
+  const { target } = destinationOf(repoRoot, family, family.variants[0].key);
   return {
     repoPath: `${target.packagePath}/${target.bankRoot}/${family.familyId}.json`,
     packagePath: target.packagePath,
@@ -349,7 +342,10 @@ function buildBank(
     };
   });
   const roleAxes = Object.fromEntries(
-    Object.entries(family.roles).map(([axis, values]) => [axis, Object.keys(values ?? {}).sort()]),
+    Object.entries(family.roles).map(([axis, values]) => [
+      axis,
+      Object.keys(values as object).sort(),
+    ]),
   );
   return {
     schema: SOUND_FAMILY_BANK_SCHEMA,

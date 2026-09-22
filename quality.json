@@ -1,5 +1,9 @@
 {
   "$comment": [
+    "2026-09-22: audio-synth Dalga 4–5 (arama laboratuvarı, SoundFamily/bank) ölçülen kapsamı",
+    "satır 97.13 / ifade 96.39 / dal 90.59 / fonksiyon 97.00; dal eşiği 87 → 88 ratchet'lendi",
+    "(ölçülenin ~2 puan altı), diğerleri zaten o bantta (95/94/95).",
+    "",
     "2026-09-22: audio-synth Dalga 1–3 (authoring protokolü, organik çekirdek, biyolojik",
     "yapı taşları) ölçülen kapsamı satır 96.77 / ifade 95.85 / dal 88.84 / fonksiyon 97.35'e",
     "çıkardı; eşikler 93/92/85/93 → 95/94/87/95 (ölçülenin ~2 puan altı) ratchet'lendi.",
@@ -92,7 +96,7 @@
     "@volstudio/audio-synth": {
       "lines": 95,
       "statements": 94,
-      "branches": 87,
+      "branches": 88,
       "functions": 95
     },
     "@volstudio/pen.dev": {

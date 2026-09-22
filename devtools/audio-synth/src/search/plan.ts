@@ -66,12 +66,19 @@ export interface PlannedCandidate {
   readonly invalid: CandidateRejectionV1 | null;
 }
 
-export interface BudgetVerdictV1 {
-  readonly withinBudget: boolean;
-  readonly resource: BatchResource | null;
-  readonly estimate: number | null;
-  readonly limit: number | null;
-}
+export type BudgetVerdictV1 =
+  | {
+      readonly withinBudget: true;
+      readonly resource: null;
+      readonly estimate: null;
+      readonly limit: null;
+    }
+  | {
+      readonly withinBudget: false;
+      readonly resource: BatchResource;
+      readonly estimate: number;
+      readonly limit: number;
+    };
 
 export interface SearchPlan {
   readonly spec: AcousticSearchSpecV1;
@@ -104,17 +111,13 @@ export function candidateIdOf(
   return `c-${identity.slice('sha256:'.length, 'sha256:'.length + 16)}`;
 }
 
-function rejection(stage: RejectionStage, error: unknown): CandidateRejectionV1 {
-  if (error instanceof AudioParamError)
-    return { stage, code: error.issue, path: error.path, message: error.message };
-  if (error instanceof RenderBudgetError)
-    return { stage, code: error.resource, path: null, message: error.message };
-  return {
-    stage,
-    code: error instanceof Error ? error.name : 'error',
-    path: null,
-    message: String((error as Error)?.message ?? error),
-  };
+function rejection(
+  stage: RejectionStage,
+  error: AudioParamError | RenderBudgetError,
+): CandidateRejectionV1 {
+  return error instanceof AudioParamError
+    ? { stage, code: error.issue, path: error.path, message: error.message }
+    : { stage, code: error.resource, path: null, message: error.message };
 }
 
 export function planSearch(spec: AcousticSearchSpecV1): SearchPlan {
@@ -138,7 +141,7 @@ export function planSearch(spec: AcousticSearchSpecV1): SearchPlan {
       };
       const rule = excludedBy(spec, values);
       if (rule !== null) {
-        const reason = spec.constraints?.[rule].reason ?? '';
+        const reason = (spec.constraints ?? [])[rule].reason;
         return {
           ...empty,
           invalid: {
@@ -195,11 +198,11 @@ export function planSearch(spec: AcousticSearchSpecV1): SearchPlan {
       return { ...planned, candidateId, invalid: null };
     },
   );
-  const valid = candidates.filter((c) => c.invalid === null && c.cost !== null);
+  const costs = candidates.flatMap((c) => (c.invalid === null && c.cost ? [c.cost] : []));
   const estimate = estimateBatch(
-    valid.map((c) => ({
-      cost: { workUnits: c.cost?.renderWorkUnits ?? 0, peakBytes: c.cost?.peakBytes ?? 0 },
-      samples: c.cost?.samples ?? 0,
+    costs.map((c) => ({
+      cost: { workUnits: c.renderWorkUnits, peakBytes: c.peakBytes },
+      samples: c.samples,
     })),
   );
   const budget = effectiveBudget(spec);
@@ -234,12 +237,7 @@ export function planSearch(spec: AcousticSearchSpecV1): SearchPlan {
 /** Yürütme kapısı: bütçe dışı plan HİÇBİR aday render edilmeden adıyla reddedilir. */
 export function assertPlanWithinBudget(plan: SearchPlan): void {
   const v = plan.verdict;
-  if (!v.withinBudget && v.resource !== null) {
-    throw new BatchBudgetError(
-      `arama ${plan.spec.searchId}`,
-      v.resource,
-      v.estimate ?? 0,
-      v.limit ?? 0,
-    );
+  if (!v.withinBudget) {
+    throw new BatchBudgetError(`arama ${plan.spec.searchId}`, v.resource, v.estimate, v.limit);
   }
 }

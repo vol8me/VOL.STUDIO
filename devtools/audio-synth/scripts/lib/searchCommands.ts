@@ -13,6 +13,7 @@ import {
   listSearches,
   previewSearch,
   promoteCandidate,
+  ProtocolError,
   recordDecision,
   runSearch,
   searchStatus,
@@ -125,11 +126,14 @@ export function runSearchCommand(parsed: Parsed, repoRoot: string): number {
     }
     case 'audition': {
       const location = loc();
+      const port = Number(text(parsed.flags, 'port') ?? '0');
+      if (!Number.isInteger(port) || port < 0 || port > 65535) {
+        throw new ProtocolError('invalid', '--port 0…65535 tamsayı olmalı', String(port));
+      }
       const wavs = exportSearchAudition(location);
       const page = exportAuditionPage(location);
       print({ page, wavs: wavs.length });
       if (!parsed.flags.has('serve')) return 0;
-      const port = Number(text(parsed.flags, 'port') ?? '0');
       void startAuditionServer(location, { port }).then((server) => {
         console.log(`dinleme sunucusu: ${server.url} (yalnız bu makine; Ctrl+C ile kapatın)`);
       });

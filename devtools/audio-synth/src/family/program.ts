@@ -8,6 +8,7 @@ import {
   isIntegerDimension,
   materialize,
   valueAt,
+  type DimensionRangeV1,
   type DimensionV1,
   type DimensionValue,
   type ProgramBaseV1,
@@ -129,8 +130,7 @@ function checkRoleConstraint(
     return { options: options as DimensionValue[] };
   }
   checkObject(value, path, ['min', 'max']);
-  const range = dim.range;
-  if (!range) throw new AudioParamError(path, 'combination', 'aralıksız boyut', dim.name);
+  const range = dim.range as DimensionRangeV1;
   const min = checkNumber(o.min, `${path}.min`, { min: range.min, max: range.max });
   return { min, max: checkNumber(o.max, `${path}.max`, { above: min, max: range.max }) };
 }
@@ -187,7 +187,7 @@ function checkVariants(value: unknown, roles: SoundFamilyProgramV1['roles']): Fa
       variantRoles[axis] = checkChoice(
         assigned[axis],
         `${at}.roles.${axis}`,
-        Object.keys(roles[axis] ?? {}),
+        Object.keys(roles[axis] as object),
       );
     }
     const tags = o.tags === undefined ? [] : checkArray(o.tags, `${at}.tags`);
@@ -198,7 +198,7 @@ function checkVariants(value: unknown, roles: SoundFamilyProgramV1['roles']): Fa
     return { key: o.key, roles: variantRoles, tags: [...(tags as string[])].sort() };
   });
   for (const axis of Object.keys(roles) as RoleAxis[]) {
-    for (const role of Object.keys(roles[axis] ?? {})) {
+    for (const role of Object.keys(roles[axis] as object)) {
       if (!variants.some((v) => v.roles[axis] === role)) {
         throw new AudioParamError(
           `roles.${axis}.${role}`,
@@ -270,7 +270,7 @@ function checkFamilyDimensions(value: unknown, base: ProgramBaseV1): FamilyDimen
   });
   return checkDimensions(plain, 'dimensions', base).map((d) => ({
     ...d,
-    scope: scopes.get(d.name) ?? 'all',
+    scope: scopes.get(d.name) as 'all' | 'role',
   }));
 }
 
@@ -385,7 +385,7 @@ function narrowed(
   }
   return options
     ? { name: dim.name, target: dim.target, options }
-    : { name: dim.name, target: dim.target, range: range ?? undefined };
+    : { name: dim.name, target: dim.target, range: range as DimensionRangeV1 };
 }
 
 /** Kararlı varyant kimliği: aile kimliği + anahtar + roller + politika + tohum + program özeti. */
