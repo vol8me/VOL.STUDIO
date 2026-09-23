@@ -1,0 +1,92 @@
+{
+  "channels": 2,
+  "format": "wav-pcm16",
+  "frames": 48000,
+  "hash": "sha256:2bc9a6ebb52b68b51586b95f14538dc2ca4595c9c508abf227608cae80b654ed",
+  "id": "room-ir",
+  "notes": "İlintisiz iki kanal üstel sönümlü süzülmüş gürültü; gerçek oda ölçümü DEĞİL.",
+  "origin": {
+    "kind": "synthetic-fixture",
+    "program": {
+      "channels": 2,
+      "durationSeconds": 1,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "exponential",
+              "decay": 0.9,
+              "release": 0.05,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "name": "left",
+          "pan": -1,
+          "resonators": [
+            {
+              "params": {
+                "frequency": 7000,
+                "mode": "lowpass"
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "source": {
+            "params": {
+              "color": "pink"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "exponential",
+              "decay": 0.9,
+              "release": 0.05,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "name": "right",
+          "pan": 1,
+          "resonators": [
+            {
+              "params": {
+                "frequency": 7000,
+                "mode": "lowpass"
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "source": {
+            "params": {
+              "color": "pink"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -1
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 17
+    }
+  },
+  "sampleRate": 48000,
+  "schema": "SampleAssetV1",
+  "title": "Sentetik stereo oda IR’ı"
+}

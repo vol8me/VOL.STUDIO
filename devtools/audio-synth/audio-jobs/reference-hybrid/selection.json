@@ -1,0 +1,8 @@
+{
+  "analysisHash": "sha256:7e1b40ce3e6124d901cda32f9b693149db3c31fba0ced2fecba8776ed0ba4303",
+  "pcmHash": "sha256:145e9da41a2adc2f7e2d48a808ff73cc30ddf2d76cfd000af434cd67bab0fe7d",
+  "reason": "metal-hit fixture'ı source.contact pürüz düzeltmesiyle yeniden sabitlendi; hybrid referans yeni özetle yeniden yayımlanır",
+  "renderHash": "sha256:4fdf5959f52b015dba695dca90bb08588cfc95dd8a79bd926c7723fbabdf1fd5",
+  "renderId": "r-2c35b43cbdfdc07e",
+  "schema": "AudioSelectionV1"
+}

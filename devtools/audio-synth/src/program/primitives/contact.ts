@@ -23,7 +23,9 @@ import { runModes } from './resonance';
  *   F = (4/3)·E*·√R·δ^(3/2) (N). Kuvvet darbesi sin(πt/t_c)^1.5.
  *
  * Kuvvet gövdenin ve vurucunun materyal modlarını uyarır; pürüz temas
- * penceresine gürültü katar; `debris` temasın ardından küçük parçacık
+ * penceresine gürültü katar — temasın kendisi gibi ≈ 4/t_c'de alçak
+ * geçirilir (yumuşak, uzun temas pürüzü de yumuşatır; ölçüldü: süzgeçsiz
+ * gürültüde kauçuk vurucu metalden PARLAK çıkıyordu); `debris` temasın ardından küçük parçacık
  * olaylarını (aynı olay motoru) ekler. `stylize` bilinçli sapmadır: temas
  * süresini 0.3 ms'e doğru kısaltır ve hız bağımlılığını sıkıştırır (abartılı
  * "snap"); 0'da tamamen fiziksel.
@@ -156,9 +158,14 @@ export const CONTACT: SourceEntry = {
     const pulse = new Float32Array(out.length);
     const noise = createNoiseSource('noise', ctx.seed('contact'));
     const rough = 0.5 * (striker.contactNoise + body.contactNoise);
+    const smooth = Math.exp(
+      (-2 * Math.PI * Math.min(0.45 * ctx.sampleRate, 4 / tc)) / ctx.sampleRate,
+    );
+    let grit = 0;
     for (let i = 0; i < Math.min(length, pulse.length); i++) {
       const shape = Math.pow(Math.sin((Math.PI * i) / length), 1.5);
-      pulse[i] = force * shape * (1 - rough + rough * noise.next());
+      grit = smooth * grit + (1 - smooth) * noise.next();
+      pulse[i] = force * shape * (1 - rough + 2 * rough * grit);
     }
     const size = numberOf(params, 'size');
     const bodyF1 = fundamentalHz(body, size, 0.05);

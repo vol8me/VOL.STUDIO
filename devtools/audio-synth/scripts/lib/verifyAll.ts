@@ -18,6 +18,7 @@ import {
   verifyFamily,
   verifyManifest,
   verifyMusic,
+  verifySampleLibrary,
   verifySearch,
 } from '../../src/protocol';
 import { print, type Parsed } from './args';
@@ -59,7 +60,15 @@ export function runVerifyCommand(parsed: Parsed, repoRoot: string): number {
         verifyMusic({ repoRoot, musicRoot: DEFAULT_MUSIC_ROOT, musicId }),
       )
     : [];
-  if (parsed.flags.has('json')) print([...manifests, ...searches, ...families, ...music]);
+  const samples = all ? verifySampleLibrary(repoRoot) : [];
+  if (parsed.flags.has('json'))
+    print([
+      ...manifests,
+      ...searches,
+      ...families,
+      ...music,
+      ...samples.map((r) => ({ schema: 'SampleVerificationV1', ...r })),
+    ]);
   else {
     for (const r of manifests) {
       console.log(
@@ -92,12 +101,18 @@ export function runVerifyCommand(parsed: Parsed, repoRoot: string): number {
       console.log(
         `${music.filter((r) => r.complete).length}/${music.length} müzik bundle'ı tamam.`,
       );
+      for (const r of samples)
+        console.log(`${r.ok ? '✓' : '✗'} sample ${r.id} (${r.origin})  ${r.detail}`);
+      console.log(
+        `${samples.filter((r) => r.ok).length}/${samples.length} sample kaydı doğrulandı.`,
+      );
     }
   }
   return manifests.every((r) => r.ok) &&
     searches.every((r) => r.ok) &&
     families.every((r) => r.complete) &&
-    music.every((r) => r.complete)
+    music.every((r) => r.complete) &&
+    samples.every((r) => r.ok)
     ? 0
     : 1;
 }

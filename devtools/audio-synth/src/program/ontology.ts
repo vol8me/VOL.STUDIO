@@ -25,6 +25,8 @@ export interface MechanismRecipeV1 {
   readonly busEffect?: string;
   /** Kaynağa verilen başlangıç parametreleri (registry sınırları içinde). */
   readonly params?: Readonly<Record<string, number | string>>;
+  /** Rezonatör başına başlangıç parametreleri (`resonators` ile aynı sıra). */
+  readonly resonatorParams?: readonly Readonly<Record<string, number | string>>[];
 }
 
 export interface MechanismV1 {
@@ -131,6 +133,7 @@ export const MECHANISMS: readonly MechanismV1[] = [
       source: 'exciter.turbulence',
       resonators: ['resonator.biquad'],
       params: { brightness: 0.9 },
+      resonatorParams: [{ mode: 'bandpass', frequency: 6500, q: 4 }],
     },
   ),
   m('whistle', 'tonal', 'Kenar tonu/ıslık: Strouhal frekansında dar bant.', ['source.airflow'], {

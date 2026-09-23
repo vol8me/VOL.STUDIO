@@ -2,6 +2,9 @@ import type { AssetClass } from '../analysis/assetQa';
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
 import { checkMusicBrief, MUSIC_BRIEF_KEYS, type MusicBriefV1 } from '../music/brief';
+import { materialById } from './materials';
+import { mechanismById } from './ontology';
+import { STYLE_PROFILES } from './styles';
 
 export const AUDIO_BRIEF_SCHEMA = 'AudioBriefV1';
 
@@ -37,6 +40,12 @@ export interface AcousticBriefV1 extends BriefEnvelopeV1 {
   /** Serbest betimleyici etiketler (ör. `wet`, `short-tail`); DSP'ye çevrilmez. */
   readonly descriptors?: readonly string[];
   readonly loop?: boolean;
+  /** Ontoloji mekanizmaları (kapalı sözlük); planlayıcı bunları beyan olarak okur. */
+  readonly mechanisms?: readonly string[];
+  /** Hazır stil profili kimliği (planlayıcı iskelete yazar). */
+  readonly style?: string;
+  /** Materyal profili kimliği (materyal alan tariflere geçer). */
+  readonly material?: string;
 }
 
 export type AudioBriefV1 = AcousticBriefV1 | MusicBriefV1;
@@ -75,6 +84,21 @@ function checkAcoustic(o: ParamObject, envelope: BriefEnvelopeV1): AcousticBrief
   if (o.loop !== undefined && typeof o.loop !== 'boolean') {
     throw new AudioParamError('loop', 'type', 'boolean olmalı', o.loop);
   }
+  const mechanisms =
+    o.mechanisms === undefined
+      ? undefined
+      : checkArray(o.mechanisms, 'mechanisms').map((m, i) => {
+          if (typeof m !== 'string' || !mechanismById(m)) {
+            throw new AudioParamError(`mechanisms[${i}]`, 'unknown-id', 'ontolojide yok', m);
+          }
+          return m;
+        });
+  if (o.style !== undefined && !STYLE_PROFILES.some((p) => p.id === o.style)) {
+    throw new AudioParamError('style', 'unknown-id', 'stil profili yok', o.style);
+  }
+  if (o.material !== undefined && (typeof o.material !== 'string' || !materialById(o.material))) {
+    throw new AudioParamError('material', 'unknown-id', 'materyal profili yok', o.material);
+  }
   return {
     ...envelope,
     kind: 'acoustic',
@@ -84,6 +108,9 @@ function checkAcoustic(o: ParamObject, envelope: BriefEnvelopeV1): AcousticBrief
     channels: o.channels,
     ...(descriptors ? { descriptors } : {}),
     ...(o.loop === undefined ? {} : { loop: o.loop }),
+    ...(mechanisms ? { mechanisms } : {}),
+    ...(o.style === undefined ? {} : { style: o.style as string }),
+    ...(o.material === undefined ? {} : { material: o.material }),
   };
 }
 
@@ -95,6 +122,9 @@ const ACOUSTIC_KEYS = [
   'channels',
   'descriptors',
   'loop',
+  'mechanisms',
+  'style',
+  'material',
 ];
 
 /** Brief'i doğrular; bilinmeyen `kind`/alan render'dan ÖNCE adlı hata verir. */

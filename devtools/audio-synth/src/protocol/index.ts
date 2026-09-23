@@ -40,6 +40,7 @@ export type {
   OrganicCanaryV1,
 } from './canary';
 export { buildContext, CONTEXT_SCHEMA } from './context';
+export type { ContextOptions } from './context';
 export { ProtocolError } from './errors';
 export type { ProtocolErrorCode } from './errors';
 export { checkRepoRelative, readJsonFile, resolveInside } from './fs';
@@ -151,6 +152,23 @@ export type {
   SearchStatusV1,
   SearchVerificationV1,
 } from './search';
+export {
+  decodeSample,
+  DEFAULT_SAMPLES_ROOT,
+  loadSampleLibrary,
+  repoSampleResolver,
+  SAMPLE_ASSET_SCHEMA,
+  SAMPLE_CACHE_ROOT,
+  sampleBytes,
+  sampleDeclOf,
+  synthesizeFixture,
+  validateSampleAsset,
+  verifySampleLibrary,
+} from './samples';
+export type { SampleAssetV1, SampleOriginV1, SampleVerificationV1 } from './samples';
+export { sameSources, sourcesOf, validateSources } from './sources';
+export type { ManifestSampleV1, ManifestSelectionV1, ManifestSourcesV1 } from './sources';
+export { soundDesignContext } from './contextSound';
 export { resolveDestination, surveyTargets } from './targets';
 export type { PublishTarget, TargetRuntime, TargetSurvey } from './targets';
 export { readEncoderToolchain, OGG_ENCODER_SETTINGS } from './toolchain';

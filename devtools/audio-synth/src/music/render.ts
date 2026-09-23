@@ -42,11 +42,11 @@ export function loopFrames(score: MusicScoreV1): number {
   return barsToFrames(score.bars, score.bpm, score.beatsPerBar, score.sampleRate);
 }
 
-function eventsFor(score: MusicScoreV1, stem?: string): ScoreEventV1[] {
+export function eventsFor(score: MusicScoreV1, stem?: string): ScoreEventV1[] {
   return stem === undefined ? [...score.events] : eventsOfStem(score, stem);
 }
 
-function voicesOf(score: MusicScoreV1, events: readonly ScoreEventV1[]): PlacedVoiceV1[] {
+export function voicesOf(score: MusicScoreV1, events: readonly ScoreEventV1[]): PlacedVoiceV1[] {
   const beat = beatSeconds(score);
   return events.map((event) => ({
     params: getPreset(presetOf(event.instrument), midiToHz(event.midi), event.beats * beat),

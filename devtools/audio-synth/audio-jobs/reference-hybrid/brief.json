@@ -1,0 +1,25 @@
+{
+  "assetClass": "sfx",
+  "channels": 2,
+  "durationSeconds": {
+    "max": 4,
+    "min": 0.5
+  },
+  "id": "reference-hybrid",
+  "intent": "Kayıttan metal transient, prosedürel basınç ve materyal gövdesi, oda IR konvolüsyonu kuyruğu.",
+  "kind": "acoustic",
+  "material": "metal",
+  "mechanisms": [
+    "sampled",
+    "impact",
+    "pressure",
+    "space"
+  ],
+  "provenance": {
+    "author": "agent",
+    "by": "claude-code"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Referans hybrid darbe"
+}

@@ -1,0 +1,148 @@
+{
+  "banks": {
+    "keys": {
+      "schema": "SampleBankV1",
+      "zones": [
+        {
+          "keyHigh": 64,
+          "keyLow": 55,
+          "rootKey": 60,
+          "sample": "soft",
+          "velocityHigh": 0.6
+        },
+        {
+          "keyHigh": 64,
+          "keyLow": 55,
+          "rootKey": 60,
+          "sample": "hard",
+          "velocityLow": 0.6
+        },
+        {
+          "keyHigh": 64,
+          "keyLow": 55,
+          "rootKey": 60,
+          "sample": "hardRr",
+          "velocityLow": 0.6
+        },
+        {
+          "keyHigh": 72,
+          "keyLow": 65,
+          "loop": {
+            "crossfadeSeconds": 0.04,
+            "endSeconds": 0.95,
+            "startSeconds": 0.35
+          },
+          "rootKey": 67,
+          "sample": "high"
+        }
+      ]
+    }
+  },
+  "channels": 1,
+  "description": "Tamamen sample: SampleBankV1 velocity katmanı + round-robin + anahtar bölgesi + loop.",
+  "durationSeconds": 2.2,
+  "layers": [
+    {
+      "mechanism": "sampled",
+      "name": "soft-c4",
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bank": "keys",
+          "note": 60,
+          "velocity": 0.45
+        },
+        "primitive": "source.sampler",
+        "version": 1
+      }
+    },
+    {
+      "mechanism": "sampled",
+      "name": "hard-e4",
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bank": "keys",
+          "note": 64,
+          "velocity": 0.8
+        },
+        "primitive": "source.sampler",
+        "version": 1
+      },
+      "startSeconds": 0.3
+    },
+    {
+      "mechanism": "sampled",
+      "name": "hard-c4-rr",
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bank": "keys",
+          "event": 1,
+          "note": 60,
+          "velocity": 0.9
+        },
+        "primitive": "source.sampler",
+        "version": 1
+      },
+      "startSeconds": 0.6
+    },
+    {
+      "durationSeconds": 1.3,
+      "mechanism": "sampled",
+      "name": "held-g4",
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bank": "keys",
+          "note": 67,
+          "velocity": 0.7
+        },
+        "primitive": "source.sampler",
+        "version": 1
+      },
+      "startSeconds": 0.9
+    }
+  ],
+  "master": {
+    "fadeOutSeconds": 0.05,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 48000,
+  "samples": {
+    "hard": {
+      "channels": 1,
+      "frames": 57600,
+      "hash": "sha256:50108ff9753f9bb4c84c509165828360eb80c5ebe1cc43c5a6131eb2e268e2b4",
+      "id": "tone-c4-hard",
+      "sampleRate": 48000
+    },
+    "hardRr": {
+      "channels": 1,
+      "frames": 57600,
+      "hash": "sha256:787742aafeffdbbd6c7ce7ea1111a38d571b59c07d904ef4660cc58eb26a701d",
+      "id": "tone-c4-hard-rr",
+      "sampleRate": 48000
+    },
+    "high": {
+      "channels": 1,
+      "frames": 57600,
+      "hash": "sha256:c23fb1d485318539b086fab35212fe02a86a020c2ef3d4f51fc7a4f606e258e4",
+      "id": "tone-g4-hard",
+      "sampleRate": 48000
+    },
+    "soft": {
+      "channels": 1,
+      "frames": 57600,
+      "hash": "sha256:e2a60077e1022821ff665b0757f210842733bdedf63570e4141208612862a739",
+      "id": "tone-c4-soft",
+      "sampleRate": 48000
+    }
+  },
+  "schema": "AcousticProgramV1",
+  "seed": 7
+}

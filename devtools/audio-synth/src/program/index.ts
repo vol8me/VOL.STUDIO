@@ -61,3 +61,22 @@ export type {
   ProgramNodeV1,
   ResolvedProgram,
 } from './schema';
+export { graphOf, SOUND_GRAPH_SCHEMA, soundGraph, topologyOf } from './soundGraph';
+export type { SoundGraphEdgeV1, SoundGraphNodeV1, SoundGraphV1 } from './soundGraph';
+export { planBrief, PROGRAM_PLAN_SCHEMA, tokenize } from './planner';
+export type { PlannedLayerV1, PlannedMechanismV1, ProgramPlanV1 } from './planner';
+export { capabilityMatrix, MECHANISMS, mechanismById, ONTOLOGY_VERSION } from './ontology';
+export type { MechanismV1 } from './ontology';
+export { describeMaterials, MATERIALS, materialById } from './materials';
+export type { MaterialProfileV1 } from './materials';
+export { NEUTRAL_STYLE, STYLE_PROFILES } from './styles';
+export type { StyleControlsV1, StyleProfileV1 } from './styles';
+export type { StyleRefV1 } from './style';
+export { LAYER_ROLES } from './roles';
+export type { LayerRole } from './roles';
+export { MASTER_BUS, ROUTING_LIMITS } from './routing';
+export type { BusV1, EffectNodeV1, SendV1 } from './routing';
+export { SAMPLE_BANK_SCHEMA, selectZone } from './sampleBank';
+export type { SampleBankV1, SampleZoneV1 } from './sampleBank';
+export type { SampleData, SampleDeclV1, SampleResolver } from './samples';
+export { outputSeconds } from './schema';

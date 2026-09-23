@@ -2,7 +2,8 @@ import { ASSET_CLASS_POLICIES } from '../analysis/assetQa';
 import { ANALYZER_VERSION, AUDIO_ANALYSIS_SCHEMA } from '../analysis/report';
 import { DEFAULT_RENDER_BUDGET } from '../guard/budget';
 import { ARCHETYPE_REQUEST_SCHEMA } from '../program/archetype';
-import { AUDIO_BRIEF_SCHEMA } from '../program/brief';
+import { AUDIO_BRIEF_SCHEMA, validateBrief } from '../program/brief';
+import { planBrief } from '../program/planner';
 import { describeRegistry } from '../program/describe';
 import { KNOWN_LIMITATIONS } from '../program/limitations';
 import { SUBSTREAM_SCHEME } from '../program/random';
@@ -17,6 +18,7 @@ import {
   canaryReviews,
 } from './canary';
 import { familyContext } from './contextFamily';
+import { soundDesignContext } from './contextSound';
 import { musicContext } from './contextMusic';
 import { searchContext } from './contextSearch';
 import { DEFAULT_JOBS_ROOT } from './location';
@@ -34,8 +36,14 @@ const CLI = 'pnpm --filter @volstudio/audio-synth audio:job';
  * koddan türetilir; zaman damgası yoktur, sıra kararlıdır — aynı repo
  * durumu aynı baytları verir.
  */
-export function buildContext(repoRoot: string) {
+export interface ContextOptions {
+  /** Verilirse context o brief'in `ProgramPlanV1` planını da taşır (yalnız akustik brief). */
+  readonly brief?: unknown;
+}
+
+export function buildContext(repoRoot: string, options: ContextOptions = {}) {
   const registry = describeRegistry();
+  const brief = options.brief === undefined ? null : validateBrief(options.brief);
   const survey = surveyTargets(repoRoot);
   const games = survey.publishable.filter((t) => t.kind === 'game');
   return {
@@ -73,6 +81,7 @@ export function buildContext(repoRoot: string) {
           acoustic: {
             subtypes: ['ambience', 'organic', 'sfx'],
             assetClasses: ['ambience', 'sfx', 'ui'],
+            planning: 'mechanisms?, style?, material? — soundDesign.planner',
           },
           music: {
             status: 'supported',
@@ -105,6 +114,15 @@ export function buildContext(repoRoot: string) {
       manifest: { id: ASSET_MANIFEST_SCHEMA },
       target: { id: AUDIO_TARGET_SCHEMA },
     },
+    soundDesign: soundDesignContext(CLI),
+    ...(brief
+      ? {
+          briefPlan:
+            brief.kind === 'acoustic'
+              ? planBrief(brief)
+              : { kind: 'music', rule: 'müzik brief’i music plan ile planlanır' },
+        }
+      : {}),
     search: searchContext(CLI),
     family: familyContext(CLI),
     music: musicContext(CLI),

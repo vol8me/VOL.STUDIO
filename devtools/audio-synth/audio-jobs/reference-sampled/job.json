@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-ed6fe211b33d9ca8": {
+        "hash": "sha256:953d101d93316ec7a4123e599b205d5f7a758679d3362813d58241451c3119c4",
+        "path": "analyses/r-ed6fe211b33d9ca8.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:a9af1b6b9f71dcf0d17fea0a2ad1a716f4efd46aacf175eb445304a2c3f93020",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:a9af1b6b9f71dcf0d17fea0a2ad1a716f4efd46aacf175eb445304a2c3f93020",
+      "hash": "sha256:6e7071c42fd7758efaab177326f29536afc4b6eb77bce7582a35443ad12c003e",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:e0ae5feb5a3f58b906e06e8de60856a3e94eae65ee3242e0a8a4fd55370b65d0",
+      "path": "devtools/audio-synth/reference/production/manifests/sfx/reference-sampled.json"
+    },
+    "renders": {
+      "r-ed6fe211b33d9ca8": {
+        "hash": "sha256:2a7d8144e3efda39ab5af90bbf1230f2b79653972fcc09c663bcdde482a2125d",
+        "path": "renders/r-ed6fe211b33d9ca8.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:9f5a28720d0bbd1f32abbe225e1af722a276d8084fd0ad443bc5d0109b8889e9",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "reference-sampled",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/sfx/reference-sampled.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

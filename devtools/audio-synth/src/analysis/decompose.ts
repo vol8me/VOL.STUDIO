@@ -7,10 +7,15 @@ import { fft } from './spectrum';
  * süzülünce kısa-geniş bant (transient) bileşen öne çıkar; Wiener tipi yumuşak
  * maskeler (p = 2) toplamı koruyarak iki sinyale böler.
  *
- * Araç SESSİZCE kötü sonuç vermez: başlangıç yoksa, bileşenlerden biri
- * enerjinin %2'sinden azsa ya da yeniden kurulum hatası −30 dB'den kötüyse
- * `status: 'failed'` ve adlı gerekçe döner; çağıran (ör. `source.sample`
- * `component`) bunu hata olarak iletir.
+ * Araç SESSİZCE kötü sonuç vermez: başlangıç yoksa, transient bileşeninin
+ * tepesi orijinal tepenin %20'sinden azsa (ayrılan atak yok), transient
+ * zamanda yayılmışsa (10 ms RMS tepe/medyan < 12 dB — durağan gürültüde HPSS
+ * iki gürültü üretir, ölçüldü), gövde enerjinin
+ * %2'sinden azsa (değiştirilecek gövde yok) ya da yeniden kurulum hatası
+ * −30 dB'den kötüyse `status: 'failed'` ve adlı gerekçe döner. Atak için
+ * enerji payı değil TEPE oranı sorulur: çınlayan bir darbede enerjinin çoğu
+ * gövdededir, 1 ms'lik tam genlikli atak enerji payında görünmez (ölçüldü:
+ * metal–metal temasta %0.06).
  */
 export const DECOMPOSE_METHOD = 'hpss-median-v1';
 
@@ -26,6 +31,10 @@ export interface DecompositionV1 {
     readonly reconstructionErrorDb: number;
     /** Transient bileşenin tepe örneği (−1: yok). */
     readonly transientPeakFrame: number;
+    /** Transient tepesi / orijinal tepe. */
+    readonly transientPeakRatio: number;
+    /** Transient bileşeninin 10 ms RMS tepe / medyan oranı (dB): atak zamanda toplanmış mı. */
+    readonly transientConcentrationDb: number;
   };
 }
 
@@ -57,6 +66,26 @@ function firstOnset(x: Float32Array, sampleRate: number): number {
     previous = e;
   }
   return -1;
+}
+
+/**
+ * 10 ms RMS pencerelerinin en büyüğü / BÜTÜN pencerelerin medyanı (dB):
+ * atak sinyal süresine göre zamanda toplanmış mı. Medyan yalnız etkin
+ * pencerelerden alınırsa sessizlikteki izole tık "yayılmış" görünür (ölçüldü).
+ */
+function concentrationDb(x: Float32Array, sampleRate: number): number {
+  const win = Math.max(8, Math.round(0.01 * sampleRate));
+  const values: number[] = [];
+  for (let at = 0; at + win <= x.length; at += win) {
+    let e = 0;
+    for (let i = at; i < at + win; i++) e += x[i] * x[i];
+    values.push(Math.sqrt(e / win));
+  }
+  const peak = Math.max(...values, 0);
+  const sorted = [...values].sort((a, b) => a - b);
+  const median = sorted[sorted.length >> 1] ?? 0;
+  if (peak <= 0) return 0;
+  return median > peak * 1e-6 ? 20 * Math.log10(peak / median) : 120;
 }
 
 export function decomposeTransient(x: Float32Array, sampleRate: number): DecompositionV1 {
@@ -139,7 +168,11 @@ export function decomposeTransient(x: Float32Array, sampleRate: number): Decompo
       peakFrame = i;
     }
   }
+  let sourcePeak = 0;
+  for (const v of x) sourcePeak = Math.max(sourcePeak, Math.abs(v));
   const metrics = {
+    transientConcentrationDb: concentrationDb(t, sampleRate),
+    transientPeakRatio: sourcePeak > 0 ? peak / sourcePeak : 0,
     transientEnergyRatio: energy(t) / total,
     bodyEnergyRatio: energy(b) / total,
     reconstructionErrorDb: 10 * Math.log10(error / total + 1e-30),
@@ -148,8 +181,10 @@ export function decomposeTransient(x: Float32Array, sampleRate: number): Decompo
   const reason =
     firstOnset(x, sampleRate) < 0
       ? 'başlangıç (transient) bulunamadı'
-      : metrics.transientEnergyRatio < 0.02
-      ? 'transient bileşeni enerjinin %2’sinden az'
+      : metrics.transientPeakRatio < 0.2
+      ? 'transient bileşeninin tepesi orijinalin %20’sinden az (ayrılan atak yok)'
+      : metrics.transientConcentrationDb < 12
+      ? 'transient bileşeni zamanda yayılmış (durağan içerik; belirgin atak yok)'
       : metrics.bodyEnergyRatio < 0.02
       ? 'gövde bileşeni enerjinin %2’sinden az'
       : metrics.reconstructionErrorDb > -30

@@ -1,0 +1,49 @@
+{
+  "channels": 1,
+  "format": "wav-pcm16",
+  "frames": 24000,
+  "hash": "sha256:3847a4d9f8e35e75c8a9e7fe0edf86b3de4972b97c8822eee88be0147dfc13b5",
+  "id": "body-ir",
+  "notes": "Materyal gövdesi IR’ı (exciter.impact → resonator.material wood).",
+  "origin": {
+    "kind": "synthetic-fixture",
+    "program": {
+      "channels": 1,
+      "durationSeconds": 0.5,
+      "layers": [
+        {
+          "name": "body",
+          "resonators": [
+            {
+              "params": {
+                "material": "wood",
+                "size": 0.4
+              },
+              "primitive": "resonator.material",
+              "version": 1
+            }
+          ],
+          "source": {
+            "params": {
+              "contactTime": 0.0002,
+              "roughness": 0
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -1
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 17
+    }
+  },
+  "sampleRate": 48000,
+  "schema": "SampleAssetV1",
+  "title": "Ahşap gövde tepkisi"
+}

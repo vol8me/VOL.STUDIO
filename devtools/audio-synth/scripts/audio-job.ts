@@ -28,6 +28,7 @@ import { runCanaryCommand } from './lib/canaryCommands';
 import { runFamilyCommand } from './lib/familyCommands';
 import { runMusicCommand } from './lib/musicCommands';
 import { runPromoteCommand, runSearchCommand } from './lib/searchCommands';
+import { runPlanCommand, runGraphCommand, runSamplesCommand } from './lib/soundCommands';
 import { runVerifyCommand } from './lib/verifyAll';
 
 function printStatusText(status: ReturnType<typeof jobStatus>): void {
@@ -58,9 +59,17 @@ function run(parsed: Parsed): number {
   };
   const json = parsed.flags.has('json');
   switch (parsed.command) {
-    case 'context':
-      print(buildContext(repoRoot));
+    case 'context': {
+      const brief = text(parsed.flags, 'brief');
+      print(buildContext(repoRoot, brief ? { brief: readInput(brief) } : {}));
       return 0;
+    }
+    case 'plan':
+      return runPlanCommand(parsed, repoRoot, loc);
+    case 'graph':
+      return runGraphCommand(parsed);
+    case 'samples':
+      return runSamplesCommand(parsed, repoRoot);
     case 'list':
       print(listJobs(repoRoot, jobsRoot));
       return 0;

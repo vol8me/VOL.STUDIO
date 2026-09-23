@@ -1,0 +1,63 @@
+{
+  "channels": 1,
+  "format": "wav-pcm16",
+  "frames": 72000,
+  "hash": "sha256:a344f05c25a0e2d9616e0686267584ade43b7fa695d8f128478603f75c0d7895",
+  "id": "texture-breath",
+  "notes": "Granular kaynak fixture’ı (source.airflow, basınç salınımı).",
+  "origin": {
+    "kind": "synthetic-fixture",
+    "program": {
+      "channels": 1,
+      "durationSeconds": 1.5,
+      "gestures": {
+        "breath": {
+          "curve": "curve.cosine",
+          "points": [
+            [
+              0,
+              0.1
+            ],
+            [
+              0.6,
+              0.8
+            ],
+            [
+              1.5,
+              0.15
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "name": "air",
+          "source": {
+            "params": {
+              "aperture": 14,
+              "cavityMix": 0.4,
+              "pressure": {
+                "gesture": "breath"
+              },
+              "sibilance": 0.2
+            },
+            "primitive": "source.airflow",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -1
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 17
+    }
+  },
+  "sampleRate": 48000,
+  "schema": "SampleAssetV1",
+  "title": "Nefes dokusu"
+}

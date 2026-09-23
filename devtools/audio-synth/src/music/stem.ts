@@ -8,6 +8,7 @@ import {
   validateMasteringPlan,
   type MusicMasteringPlanV1,
 } from './mastering';
+import { estimateMixCost, renderScoreMixed, resolveMusicMix, type ResolvedMusicMix } from './mix';
 import { validateMusicProgram, type MusicProgramV1 } from './program';
 import { estimateScoreCost, renderScoreRaw, MUSIC_RENDERER_VERSION } from './render';
 import { expandProgram } from './score';
@@ -87,21 +88,46 @@ export function renderMusicStem(
       ? document.music
       : { ...document.music, seed: options.seed };
   const score = expandProgram(program);
-  const render = renderScoreRaw(score, { playback: program.playback, stem: stemFilter(document) });
+  const scoreOptions = { playback: program.playback, stem: stemFilter(document) };
+  const mix = mixOf(program);
+  const render = mix
+    ? renderScoreMixed(score, mix, { ...scoreOptions, seed: program.seed })
+    : renderScoreRaw(score, scoreOptions);
   applyMastering(render.channels, render.sampleRate, document.mastering);
   return {
     channels: render.channels,
     sampleRate: render.sampleRate,
     duration: render.durationSeconds,
     seed: program.seed,
-    cost: estimateScoreCost(score, { playback: program.playback, stem: stemFilter(document) }),
+    cost: costOf(score, program, scoreOptions),
+  };
+}
+
+function mixOf(program: MusicProgramV1): ResolvedMusicMix | null {
+  return program.mix
+    ? resolveMusicMix(program.mix, 'mix', program.lanes, program.playback, program.sampleRate)
+    : null;
+}
+
+function costOf(
+  score: ReturnType<typeof expandProgram>,
+  program: MusicProgramV1,
+  options: { readonly playback: MusicProgramV1['playback']; readonly stem?: string },
+): RenderCost {
+  const base = estimateScoreCost(score, options);
+  const mix = mixOf(program);
+  if (!mix) return base;
+  const extra = estimateMixCost(score, mix, program.playback);
+  return {
+    peakBytes: base.peakBytes + extra.peakBytes,
+    workUnits: base.workUnits + extra.workUnits,
   };
 }
 
 export function estimateMusicStemCost(value: unknown): RenderCost {
   const document = validateMusicStemProgram(value);
   const score = expandProgram(document.music);
-  return estimateScoreCost(score, {
+  return costOf(score, document.music, {
     playback: document.music.playback,
     stem: stemFilter(document),
   });

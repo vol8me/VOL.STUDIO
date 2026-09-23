@@ -9,6 +9,7 @@ import {
 } from '../guard/read';
 import { hashCanonical, type Sha256 } from '../protocol/canonical';
 import { validateGroove, type GrooveProfileV1 } from './groove';
+import { resolveMusicMix, type MusicMixV1 } from './mix';
 import { validateChord, validateVoicing, type ChordV1, type VoicingV1 } from './harmony';
 import { INSTRUMENT_PREFIX, instrumentProfile, presetOf } from './instruments';
 import { validateMotif, validateTransform, type MotifTransformV1, type MotifV1 } from './motif';
@@ -170,6 +171,8 @@ export interface MusicProgramV1 {
     readonly stems: readonly AdaptiveStemV1[];
   };
   readonly mastering?: { readonly integratedLufs: number };
+  /** Şerit → bus → send/return grafiği (akustik SoundGraph ile aynı çözücü; stem paritesi kurallı). */
+  readonly mix?: MusicMixV1;
   /** Program bir arama adayından türediyse onun kimliği (bilgi; program bağlayıcıdır). */
   readonly provenance?: {
     readonly searchId: string;
@@ -205,7 +208,19 @@ const KEYS = [
   'adaptive',
   'mastering',
   'provenance',
+  'mix',
 ];
+
+function checkMix(
+  value: unknown,
+  lanes: readonly LaneV1[],
+  playback: MusicPlayback,
+  rate: unknown,
+) {
+  const sampleRate = rate === undefined ? 44100 : checkSampleRate(rate, 'sampleRate');
+  resolveMusicMix(value, 'mix', lanes, playback, sampleRate);
+  return value as MusicMixV1;
+}
 
 function uniqueIds(ids: readonly string[], path: string): void {
   const seen = new Set<string>();
@@ -697,6 +712,7 @@ export function validateMusicProgram(value: unknown): MusicProgramV1 {
     ...(o.adaptive === undefined
       ? {}
       : { adaptive: checkAdaptive(o.adaptive, 'adaptive', stemIds) }),
+    ...(o.mix === undefined ? {} : { mix: checkMix(o.mix, lanes, playback, o.sampleRate) }),
     ...(o.provenance === undefined
       ? {}
       : {

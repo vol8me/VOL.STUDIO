@@ -28,11 +28,12 @@ coverage/
 # betiğin yazdığı biçim kanıtın kendisidir (F1–F3, F7).
 
 # audio-synth protokolünün YAZDIĞI kanonik belgeler (job/arama kayıtları, canary
-# inceleme durumu, manifest).
+# inceleme durumu, manifest, sample kütüphanesi kayıtları).
 # Biçimi `prettyCanonicalJson` belirler ve her yazımda aynı baytları verir;
 # elle biçimlendirmek özeti değiştirmez ama bir sonraki yazımda boş diff üretir.
 devtools/audio-synth/audio-families/
 devtools/audio-synth/audio-jobs/
+devtools/audio-synth/audio-samples/
 devtools/audio-synth/audio-searches/
 devtools/audio-synth/canaries/reviews.json
 devtools/audio-synth/reference/production/banks/
