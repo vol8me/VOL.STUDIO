@@ -200,6 +200,34 @@ function truePeakPhases(factor: number): Phase[] {
 }
 
 /**
+ * Örnek başına örnekler-arası tepe: `out[k]` = [k, k+1) aralığındaki en büyük
+ * |ara değer| (4× çok fazlı süzgeç, `truePeakDb` ile aynı çekirdek). True-peak
+ * sınırlayıcı kazanç ihtiyacını buradan okur.
+ */
+export function interSamplePeaks(channel: Float32Array, sampleRate: number): Float32Array {
+  const factor = truePeakFactor(sampleRate);
+  const n = channel.length;
+  const out = new Float32Array(n);
+  for (let k = 0; k < n; k++) out[k] = Math.abs(channel[k]);
+  if (factor === 1) return out;
+  const phases = truePeakPhases(factor);
+  for (let k = 0; k < n; k++) {
+    const base = k - TP_HALF_WIDTH + 1;
+    const from = Math.max(0, -base);
+    const to = Math.min(2 * TP_HALF_WIDTH, n - base);
+    let best = out[k];
+    for (const phase of phases) {
+      let acc = 0;
+      for (let j = from; j < to; j++) acc += channel[base + j] * phase.taps[j];
+      const magnitude = Math.abs(acc);
+      if (magnitude > best) best = magnitude;
+    }
+    out[k] = best;
+  }
+  return out;
+}
+
+/**
  * True peak (dBTP): örnekler arası tepe, 4× (fs < 96 kHz) aşırı örneklenmiş
  * dalgada. Kesin budama: bir noktanın ara değeri |y| ≤ max|x|·Σ|h| ile
  * sınırlıdır; bu sınır mevcut en iyi tepenin altındaysa nokta hesaplanmaz —

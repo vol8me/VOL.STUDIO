@@ -18,6 +18,7 @@ import { SEARCH_ID, validateSearchSpec, type AcousticSearchSpecV1 } from '../sea
 import { writeAuditionCopy, EXPORT_ROOT } from './audition';
 import { hashCanonical, hashPcm, prettyCanonicalJson, type Sha256 } from './canonical';
 import { ProtocolError } from './errors';
+import { repoSampleResolver } from './samples';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 import { storeProgram } from './job';
 import type { JobLocation } from './location';
@@ -102,6 +103,7 @@ export function runSearch(
     }
     const auditions: string[] = [];
     const candidates = executeSearch(plan, {
+      samples: repoSampleResolver(loc.repoRoot),
       onRender: options.audition
         ? (id, render) =>
             auditions.push(writeAuditionCopy(repoRoot, auditionPath(loc.searchId, id), render))
@@ -324,7 +326,7 @@ export function promoteCandidate(
       label,
     );
   }
-  const rendered = renderProgram(file.program);
+  const rendered = renderProgram(file.program, { samples: repoSampleResolver(search.repoRoot) });
   if (hashPcm(rendered.channels, rendered.sampleRate) !== entry.render.pcmHash) {
     throw new ProtocolError(
       'stale',
@@ -369,7 +371,7 @@ export function exportSearchAudition(loc: SearchLocation): string[] {
         'aday programı raporla uyuşmuyor',
         candidateFile(c.candidateId),
       );
-    const rendered = renderProgram(file.program);
+    const rendered = renderProgram(file.program, { samples: repoSampleResolver(loc.repoRoot) });
     if (hashPcm(rendered.channels, rendered.sampleRate) !== c.render.pcmHash) {
       throw new ProtocolError(
         'stale',
@@ -414,7 +416,10 @@ export function verifySearch(loc: SearchLocation): SearchVerificationV1 {
   const { spec, report } = loadSearch(loc);
   const status = searchStatus(loc);
   const plan = planSearch(spec);
-  const replay = buildSearchReport(plan, executeSearch(plan));
+  const replay = buildSearchReport(
+    plan,
+    executeSearch(plan, { samples: repoSampleResolver(loc.repoRoot) }),
+  );
   const key = (c: SearchCandidateV1) =>
     [
       c.ordinal,

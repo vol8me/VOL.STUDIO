@@ -10,6 +10,8 @@ import { hashCanonical, hashPcm, prettyCanonicalJson, type Sha256 } from './cano
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 import { asProtocol } from './records';
+import { repoSampleResolver } from './samples';
+import type { SampleResolver } from '../program/samples';
 
 /**
  * Organik canary derlemi — motorun organik yapı taşları için küçük, sürümlü
@@ -127,12 +129,15 @@ export interface CanaryResultV1 {
   }[];
 }
 
-export function runCanary(canary: OrganicCanaryV1): {
+export function runCanary(
+  canary: OrganicCanaryV1,
+  samples?: SampleResolver,
+): {
   result: CanaryResultV1;
   render: ProgramRender;
 } {
   const program = materialize(canary.source, [], {});
-  const render = renderProgram(program);
+  const render = renderProgram(program, { samples });
   const report = analyzeAudio(render.channels, render.sampleRate, 'source-pcm');
   const checks = evaluateChecks(canary.expectations, render, report).map((r) => ({
     kind: r.check.kind,
@@ -158,8 +163,9 @@ export function runCanaries(
   repoRoot: string,
   options: { audition?: boolean } = {},
 ): CanaryResultV1[] {
+  const samples = repoSampleResolver(repoRoot);
   return loadCanaries(repoRoot).map((canary) => {
-    const { result, render } = runCanary(canary);
+    const { result, render } = runCanary(canary, samples);
     if (options.audition)
       writeAuditionCopy(repoRoot, `${CANARY_AUDITION_ROOT}/${canary.id}.wav`, render);
     return result;

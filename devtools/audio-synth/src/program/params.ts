@@ -19,7 +19,12 @@ export type ParamUnit =
   | 'm'
   | 'L'
   | 'cents'
-  | 'octaves';
+  | 'octaves'
+  | 'bits'
+  | 'kg'
+  | 'm/s'
+  | 'rpm'
+  | 'semitones';
 
 export interface NumberParamSpec {
   readonly type: 'number';
@@ -42,7 +47,19 @@ export interface ChoiceParamSpec {
   readonly description: string;
 }
 
-export type ParamSpec = NumberParamSpec | ChoiceParamSpec;
+/**
+ * Programın `samples` bildirimindeki bir ada başvuru (sample/IR). Varsayılanı
+ * yoktur: bildirilmiş bir ad yazılmalıdır; değer render'da `ctx.sample(ad)`
+ * ile çözülür.
+ */
+export interface SampleParamSpec {
+  readonly type: 'sample';
+  /** Başvurunun hedefi: `samples` bildirimi (varsayılan) ya da `banks` sampler bankası. */
+  readonly of?: 'sample' | 'bank';
+  readonly description: string;
+}
+
+export type ParamSpec = NumberParamSpec | ChoiceParamSpec | SampleParamSpec;
 
 /**
  * Bir parametre ARTARKEN hangi algısal/akustik boyutun hangi yöne gittiği.
@@ -63,7 +80,11 @@ export type AcousticDimension =
   | 'wetness'
   | 'width'
   | 'irregularity'
-  | 'duration';
+  | 'duration'
+  | 'dynamic-range'
+  | 'transient'
+  | 'distortion'
+  | 'low-end';
 
 export interface CausalEffect {
   readonly param: string;

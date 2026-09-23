@@ -118,6 +118,89 @@ function readWavFormat(
   return { effectiveFormat, numChannels, wavSampleRate, bitsPerSample, validBits };
 }
 
+/**
+ * Kanalları KORUYARAK çözer (mono ya da ön sol + ön sağ stereo); sample
+ * kütüphanesi ve konvolüsyon IR'ları için. Kanal düzeni kuralları ve biçim
+ * denetimi `decodeWav` ile aynıdır; tek fark mono'ya indirmemesidir.
+ */
+export function decodeWavChannels(buffer: ArrayBuffer | Uint8Array): {
+  channels: Float32Array[];
+  sampleRate: number;
+} {
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const chunks = locateChunks(bytes, view);
+  const format = readWavFormat(view, bytes, chunks.fmtOffset, chunks.fmtSize);
+  const bytesPerSample = format.bitsPerSample / 8;
+  const frameSize = format.numChannels * bytesPerSample;
+  if (chunks.dataSize % frameSize !== 0) {
+    throw new Error('WAV data chunk tam örnek frame içermiyor (bozuk dosya)');
+  }
+  const frames = chunks.dataSize / frameSize;
+  const channels = Array.from({ length: format.numChannels }, () => new Float32Array(frames));
+  const padMask = ~((1 << (format.bitsPerSample - format.validBits)) - 1);
+  let at = chunks.dataOffset;
+  for (let i = 0; i < frames; i++) {
+    for (let ch = 0; ch < format.numChannels; ch++) {
+      const value = readSampleValue(view, bytes, at, format, padMask);
+      if (!Number.isFinite(value)) throw new Error('WAV örnek verisi sonlu değil');
+      channels[ch][i] = value;
+      at += bytesPerSample;
+    }
+  }
+  return { channels, sampleRate: format.wavSampleRate };
+}
+
+function readSampleValue(
+  view: DataView,
+  bytes: Uint8Array,
+  at: number,
+  format: WavFormat,
+  padMask: number,
+): number {
+  if (format.effectiveFormat === 3) {
+    return format.bitsPerSample === 32 ? view.getFloat32(at, true) : view.getFloat64(at, true);
+  }
+  switch (format.bitsPerSample) {
+    case 16:
+      return (view.getInt16(at, true) & padMask) / 32768;
+    case 24: {
+      const raw = (bytes[at + 2] << 16) | (bytes[at + 1] << 8) | bytes[at];
+      const signed = raw & 0x800000 ? raw - 0x1000000 : raw;
+      return (signed & padMask) / 8388608;
+    }
+    case 32:
+      return (view.getInt32(at, true) & padMask) / 2147483648;
+    default:
+      return ((bytes[at] & padMask) - 128) / 128;
+  }
+}
+
+function locateChunks(bytes: Uint8Array, view: DataView) {
+  const text = (offset: number, length: number) =>
+    String.fromCharCode(...bytes.subarray(offset, offset + length));
+  if (bytes.byteLength < 12 || text(0, 4) !== 'RIFF' || text(8, 4) !== 'WAVE') {
+    throw new Error('Geçersiz WAV dosyası');
+  }
+  const end = Math.min(bytes.byteLength, view.getUint32(4, true) + 8);
+  let fmtOffset = -1;
+  let fmtSize = 0;
+  let dataOffset = -1;
+  let dataSize = 0;
+  for (let offset = 12; offset + 8 <= end; ) {
+    const id = text(offset, 4);
+    const size = view.getUint32(offset + 4, true);
+    if (offset + 8 + size > end) throw new Error(`WAV ${id} chunk boyutu dosya sınırını aşıyor`);
+    if (id === 'fmt ') [fmtOffset, fmtSize] = [offset + 8, size];
+    if (id === 'data') [dataOffset, dataSize] = [offset + 8, size];
+    offset += 8 + size + (size % 2);
+  }
+  if (fmtOffset < 0 || dataOffset < 0 || fmtSize < 16) {
+    throw new Error('WAV fmt veya data chunk bulunamadı');
+  }
+  return { fmtOffset, fmtSize, dataOffset, dataSize };
+}
+
 /** Ham WAV dosyasından mono Float32Array ve orijinal örnek oranını döner. */
 export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
   samples: Float32Array;
@@ -410,6 +493,7 @@ export function loopSamples(
   targetLength: number,
   loop = true,
   crossfade = false,
+  crossfadeSamples = LOOP_CROSSFADE_SAMPLES,
 ): Float32Array {
   if (!Number.isInteger(targetLength) || targetLength < 0) {
     throw new Error(`loopSamples hedef uzunluğu negatif/tamsayı değil: ${targetLength}`);
@@ -423,7 +507,7 @@ export function loopSamples(
     return out;
   }
 
-  const fade = crossfade ? Math.min(LOOP_CROSSFADE_SAMPLES, Math.floor(samples.length / 2)) : 0;
+  const fade = crossfade ? Math.min(crossfadeSamples, Math.floor(samples.length / 2)) : 0;
   if (fade === 0) {
     for (let i = 0; i < targetLength; i++) out[i] = samples[i % samples.length];
     return out;

@@ -33,7 +33,9 @@ export function searchContext(cli: string) {
           name,
           spec.type === 'number'
             ? { unit: spec.unit, min: spec.min, max: spec.max }
-            : { choices: spec.choices },
+            : spec.type === 'choice'
+            ? { choices: spec.choices }
+            : { sample: true },
         ]),
       ),
       ownedMacros: e.kind === 'archetype' ? e.macros : [],

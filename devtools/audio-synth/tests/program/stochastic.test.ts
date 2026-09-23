@@ -111,7 +111,7 @@ describe('modülatör istatistikleri (32 tohumluk korpus)', () => {
     '%s: sınırlı, deterministik, korpus ortalaması ~0',
     (_id, entry) => {
       const defaults = Object.fromEntries(
-        Object.entries(entry.params).map(([k, s]) => [k, s.default]),
+        Object.entries(entry.params).map(([k, s]) => [k, s.type === 'sample' ? '' : s.default]),
       ) as ResolvedParams;
       const means: number[] = [];
       for (const seed of SEEDS) {

@@ -1,6 +1,8 @@
 import type { Random } from '@volstudio/core/random';
 import { AudioParamError } from '../guard/errors';
 import type { CausalEffect, ParamSpec, ResolvedParams } from './params';
+import type { ResolvedZone } from './sampleBank';
+import type { SampleData, SampleDeclV1 } from './samples';
 
 /**
  * Registry: agent'a açılan her yapı taşının TEK kaynağı. Program
@@ -26,6 +28,19 @@ export interface NodeContext {
   readonly random: (label: string) => Random;
   /** Aynı alt akışın 32-bit tohumu (tohum alan mevcut üreteçler için). */
   readonly seed: (label: string) => number;
+  /** Yalnız sidechain alan efektlerde: detektörün dinlediği kanallar (bus/katman çıkışı). */
+  readonly sidechain?: readonly Float32Array[];
+  /** Programın `samples` bildirimindeki ada göre çözülmüş veri (yalnız sample kullanan programda). */
+  readonly sample?: (name: string) => SampleData;
+  /** Programın sampler bankası (ada göre çözülmüş bölgeler). */
+  readonly bank?: (name: string) => readonly ResolvedZone[];
+}
+
+/** Kaynak kancalarının gördüğü çözüm bağlamı (veri yüklemeden). */
+export interface SourceCheckContext {
+  readonly channels: 1 | 2;
+  readonly samples: ReadonlyMap<string, SampleDeclV1>;
+  readonly banks: ReadonlyMap<string, readonly ResolvedZone[]>;
 }
 
 /** Maliyet tahmini için statik görünüm: otomasyonlu alan eğrisinin EN BÜYÜK değeriyle görünür. */
@@ -38,6 +53,8 @@ export interface ResourceModel {
   readonly workPerFrame: (params: CostParams, automated: ReadonlySet<string>) => number;
   /** Düğümün render boyunca tuttuğu durum (bayt). */
   readonly stateBytes: (params: CostParams, sampleRate: number) => number;
+  /** Tampon uzunluğuyla büyüyen ara bellek (kare başına bayt; kanal başına). */
+  readonly bytesPerFrame?: (params: CostParams) => number;
 }
 
 export interface Determinism {
@@ -55,12 +72,44 @@ interface EntryBase {
   readonly causal: readonly CausalEffect[];
   readonly determinism: Determinism;
   readonly resource: ResourceModel;
+  /**
+   * Varsayılanları KİMLİK olan (etkisiz: 0 dB bell) yapı taşlarının governance
+   * yoklama noktası: "her parametre PCM'i değiştirir" denetimi varsayılanlar
+   * yerine bu noktada yapılır; `channels: 2` ilintisiz stereo yoklama ister.
+   */
+  readonly probe?: {
+    readonly params?: Readonly<Record<string, number | string>>;
+    readonly channels?: 1 | 2;
+    /** Efekt yoklama sinyali: durağan gürültü (varsayılan) ya da sönümlü darbe (atak + kuyruk). */
+    readonly signal?: 'noise' | 'impulsive';
+  };
 }
 
 export interface SourceEntry extends EntryBase {
   readonly kind: 'source' | 'exciter';
   /** `out` sıfırlanmış gelir; kaynak onu yazar. */
   readonly render: (out: Float32Array, params: ResolvedParams, ctx: NodeContext) => void;
+  /**
+   * Stereo programda iki kanal yazan kaynak (tanecik yerleşimi, stereo sample).
+   * Tanımlıysa katman stereo olur: rezonatör/artikülasyon her kanalı ayrı
+   * işler ve katman `pan` almaz. Mono programda `render` kullanılır.
+   */
+  readonly renderStereo?: (
+    left: Float32Array,
+    right: Float32Array,
+    params: ResolvedParams,
+    ctx: NodeContext,
+  ) => void;
+  /** `renderStereo` olan kaynakta katmanın gerçekten stereo olup olmadığı (verilmezse: her zaman). */
+  readonly stereoFor?: (
+    params: Readonly<Record<string, unknown>>,
+    context: SourceCheckContext,
+  ) => boolean;
+  /** Çözüm anı yapısal denetimi (veri yüklemeden): sorun varsa açıklama, yoksa `null`. */
+  readonly check?: (
+    params: Readonly<Record<string, unknown>>,
+    context: SourceCheckContext,
+  ) => string | null;
 }
 
 export interface ProcessorEntry extends EntryBase {
@@ -71,6 +120,12 @@ export interface ProcessorEntry extends EntryBase {
 
 export interface EffectEntry extends EntryBase {
   readonly kind: 'effect';
+  /** Zamana yayılan efekt (reverb, delay, konvolüsyon): katman insert'ine giremez, bus/send ister. */
+  readonly timeBased: boolean;
+  /** Doğrusal ve zamanla değişmez mi: stem paritesi yalnız doğrusal efektlerle korunur. */
+  readonly linear: boolean;
+  /** Detektörü başka bir bus/katmanı dinleyebilir mi (`sidechain` alanı). */
+  readonly sidechain?: boolean;
   /** Program kanallarını yerinde işler (1 ya da 2 kanal). */
   readonly process: (
     channels: readonly Float32Array[],
@@ -136,7 +191,16 @@ export interface ArchetypeEntry extends EntryBase {
     params: Readonly<Record<string, number>>,
     random: Random,
     sampleRate: number,
+    profiles: ArchetypeProfiles,
   ) => Record<string, unknown>;
+  /** İstekte kabul edilen profil türleri (stil/materyal); verilmeyen tür istekte reddedilir. */
+  readonly profiles?: readonly ('style' | 'material')[];
+}
+
+/** Archetype isteğinin profil seçimleri: stil başvurusu ve gövde materyali. */
+export interface ArchetypeProfiles {
+  readonly style?: unknown;
+  readonly material?: string;
 }
 
 export type ProgramEntry =

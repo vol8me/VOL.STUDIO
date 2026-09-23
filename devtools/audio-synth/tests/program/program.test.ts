@@ -38,7 +38,7 @@ describe('AcousticProgramV1 doğrulaması (render öncesi)', () => {
     ['şema adı', [[['schema'], 'SynthParams']], 'schema', 'type'],
     [
       'bilinmeyen ilkel',
-      [[['layers', 0, 'source', 'primitive'], 'source.granular']],
+      [[['layers', 0, 'source', 'primitive'], 'source.teleporter']],
       'layers[0].source.primitive',
       'unknown-id',
     ],

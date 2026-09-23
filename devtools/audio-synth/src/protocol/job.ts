@@ -12,7 +12,7 @@ import {
   type JobKind,
 } from './kinds';
 import { validateMusicStemProgram } from '../music/stem';
-import { resolveProgram } from '../program/schema';
+import { outputSeconds, resolveProgram } from '../program/schema';
 import { writeAuditionCopy } from './audition';
 import { hashCanonical, hashPcm, type Sha256 } from './canonical';
 import { ProtocolError } from './errors';
@@ -45,6 +45,7 @@ import {
   type SelectionV1,
 } from './records';
 import type { ProgramOriginV1 } from './origin';
+import { repoSampleResolver } from './samples';
 import { jobStatus, type JobStatusV1 } from './status';
 import { resolveDestination, surveyTargets } from './targets';
 
@@ -118,6 +119,7 @@ export function registerBrief(loc: JobLocation, document: unknown): Sha256 {
 function checkAcousticAgainstBrief(brief: AudioBriefV1, document: unknown): void {
   if (brief.kind !== 'acoustic') return;
   const program = resolveProgram(document);
+  const seconds = outputSeconds(program);
   if (program.channels !== brief.channels) {
     throw new ProtocolError(
       'invalid',
@@ -126,12 +128,16 @@ function checkAcousticAgainstBrief(brief: AudioBriefV1, document: unknown): void
     );
   }
   const { min, max } = brief.durationSeconds;
-  if (program.durationSeconds < min || program.durationSeconds > max) {
+  if (seconds < min || seconds > max) {
     throw new ProtocolError(
       'invalid',
-      `süre ${program.durationSeconds} sn brief aralığı [${min}, ${max}] dışında`,
+      `süre ${seconds} sn brief aralığı [${min}, ${max}] dışında`,
       'program.durationSeconds',
     );
+  }
+  if (brief.loop === true && !program.master.loop) {
+    const detail = 'loop brief’i dikişsiz katlama ister (master.loop.crossfadeSeconds)';
+    throw new ProtocolError('invalid', detail, 'program.master.loop');
   }
 }
 
@@ -234,7 +240,10 @@ export function renderCandidate(loc: JobLocation, options: RenderOptions = {}): 
     );
     const job = loadJob(loc);
     const program = currentProgram(loc);
-    const rendered = renderForKind(job.kind, program.document, { seed: options.seed });
+    const rendered = renderForKind(job.kind, program.document, {
+      seed: options.seed,
+      samples: repoSampleResolver(loc.repoRoot),
+    });
     const renderId = renderIdOf(program.hash, rendered.seed, job.kind);
     const record: RenderRecordV1 = {
       schema: RENDER_RECORD_SCHEMA,
@@ -299,7 +308,10 @@ export function analyzeCandidate(loc: JobLocation, renderId?: string): AnalysisR
       artifactFile(loc, renderPath(id)),
       renderPath(id),
     ) as RenderRecordV1;
-    const rendered = renderForKind(job.kind, currentProgram(loc).document, { seed: record.seed });
+    const rendered = renderForKind(job.kind, currentProgram(loc).document, {
+      seed: record.seed,
+      samples: repoSampleResolver(loc.repoRoot),
+    });
     const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
     if (pcmHash !== record.pcm.hash) {
       throw new ProtocolError(

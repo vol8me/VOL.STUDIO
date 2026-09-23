@@ -169,7 +169,14 @@ function locateNode(
 }
 
 /** Boyutun bağlandığı registry parametre tanımı (base'e göre). */
-function specOf(target: DimensionTarget, base: ProgramBaseV1, probe: Doc, path: string): ParamSpec {
+type SearchableSpec = Exclude<ParamSpec, { type: 'sample' }>;
+
+function specOf(
+  target: DimensionTarget,
+  base: ProgramBaseV1,
+  probe: Doc,
+  path: string,
+): SearchableSpec {
   if (target.kind === 'archetype-param') {
     const entry = baseArchetype(base);
     if (!entry)
@@ -180,7 +187,7 @@ function specOf(target: DimensionTarget, base: ProgramBaseV1, probe: Doc, path: 
         target.param,
       );
     const spec = entry.params[target.param];
-    if (!spec)
+    if (!spec || spec.type === 'sample')
       throw new AudioParamError(
         `${path}.target.param`,
         'unknown-id',
@@ -209,7 +216,7 @@ function specOf(target: DimensionTarget, base: ProgramBaseV1, probe: Doc, path: 
         entry.id,
       );
     }
-    return entry.params.value;
+    return entry.params.value as SearchableSpec;
   }
   const node = locateNode(probe, target);
   if (typeof node === 'string')
@@ -228,6 +235,10 @@ function specOf(target: DimensionTarget, base: ProgramBaseV1, probe: Doc, path: 
       `${entry.id} parametresi değil`,
       target.param,
     );
+  if (spec.type === 'sample') {
+    const detail = 'sample başvurusu aranamaz (içerik özetiyle sabittir)';
+    throw new AudioParamError(`${path}.target.param`, 'combination', detail, target.param);
+  }
   const current = (node.params as Doc | undefined)?.[target.param];
   if (typeof current === 'object' && current !== null) {
     throw new AudioParamError(
@@ -247,7 +258,7 @@ function controlEntry(id: string, path: string): ControlEntry {
   return entry;
 }
 
-function checkOption(value: unknown, spec: ParamSpec, path: string): DimensionValue {
+function checkOption(value: unknown, spec: SearchableSpec, path: string): DimensionValue {
   if (spec.type === 'choice') return checkChoice(value, path, spec.choices);
   return checkNumber(value, path, { min: spec.min, max: spec.max, integer: spec.integer });
 }

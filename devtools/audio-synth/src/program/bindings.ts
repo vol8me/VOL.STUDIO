@@ -9,10 +9,13 @@ import {
   type ParamObject,
 } from '../guard/read';
 import { PROGRAM_REGISTRY } from './catalog';
+import { checkName } from './names';
 import type { GesturePoint } from './curves';
 import type { NumberParamSpec } from './params';
 import { applyLaw } from './primitives/controls';
 import type { ControlEntry, CurveEntry, ModulatorEntry, ProgramEntry } from './registry';
+import type { ResolvedZone } from './sampleBank';
+import type { SampleDeclV1 } from './samples';
 
 /**
  * Parametre bağlama dilbilgisi — bir sayısal parametre dört biçimden birini alır:
@@ -78,21 +81,26 @@ export interface ResolveScope {
   readonly gestures: ReadonlyMap<string, ResolvedGesture>;
   readonly modulators: ReadonlySet<string>;
   readonly controls: readonly ActiveControl[];
+  /** Makro dışı ek çarpanlar (stilin perde dili); yalnız katman düğümlerinde verilir. */
+  readonly extraFactors?: (
+    entry: ProgramEntry,
+    key: string,
+    spec: NumberParamSpec,
+  ) => ControlFactor[];
   readonly used: {
     readonly gestures: Set<string>;
     readonly modulators: Set<string>;
     readonly controls: Set<string>;
+    readonly samples?: Set<string>;
+    readonly banks?: Set<string>;
   };
+  /** Programın `samples` bildirimi (ad → bildirim); `sample` türü parametre bunlara başvurur. */
+  readonly samples?: ReadonlyMap<string, SampleDeclV1>;
+  /** Programın sampler bankaları (ad → bölgeler); `of: 'bank'` parametreleri bunlara başvurur. */
+  readonly banks?: ReadonlyMap<string, readonly ResolvedZone[]>;
 }
 
-const NAME = /^[A-Za-z][A-Za-z0-9_-]{0,47}$/;
-
-export function checkName(value: unknown, path: string): string {
-  if (typeof value !== 'string' || !NAME.test(value)) {
-    throw new AudioParamError(path, 'type', `ad ${NAME.source} kalıbına uymalı`, value);
-  }
-  return value;
-}
+export { checkName };
 
 function checkRecord(value: unknown, path: string, limit: number): ParamObject {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -291,7 +299,10 @@ function resolveNumber(
   } else {
     base = checkValue(value, spec, path, scope.sampleRate);
   }
-  const controls = controlsFor(entry, key, spec, path, scope);
+  const controls = [
+    ...controlsFor(entry, key, spec, path, scope),
+    ...(scope.extraFactors?.(entry, key, spec) ?? []),
+  ];
   if (
     typeof base === 'number' &&
     modulations.length === 0 &&
@@ -317,6 +328,10 @@ export function resolveParams(
   for (const [key, spec] of Object.entries(entry.params)) {
     const value = values[key];
     const at = joinPath(path, key);
+    if (spec.type === 'sample') {
+      params[key] = spec.of === 'bank' ? bankRef(value, at, scope) : sampleRef(value, at, scope);
+      continue;
+    }
     params[key] =
       spec.type === 'choice'
         ? value === undefined
@@ -333,6 +348,35 @@ export function resolveParams(
           );
   }
   return params;
+}
+
+function sampleRef(value: unknown, path: string, scope: ResolveScope): string {
+  if (value === undefined) {
+    throw new AudioParamError(path, 'required', 'bildirilmiş bir sample adı zorunlu', value);
+  }
+  const name = checkName(value, path);
+  if (!scope.samples?.has(name)) {
+    throw new AudioParamError(path, 'unknown-id', 'programın `samples` bildiriminde yok', name);
+  }
+  scope.used.samples?.add(name);
+  return name;
+}
+
+function bankRef(value: unknown, path: string, scope: ResolveScope): string {
+  if (value === undefined) {
+    throw new AudioParamError(
+      path,
+      'required',
+      'programın `banks` bildirimindeki bir ad zorunlu',
+      value,
+    );
+  }
+  const name = checkName(value, path);
+  if (!scope.banks?.has(name)) {
+    throw new AudioParamError(path, 'unknown-id', 'programın `banks` bildiriminde yok', name);
+  }
+  scope.used.banks?.add(name);
+  return name;
 }
 
 /** Modülatörler: parametreleri sayı ya da gesture olabilir; modülatör modüle edilemez. */

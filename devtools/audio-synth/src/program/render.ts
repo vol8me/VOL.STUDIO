@@ -1,13 +1,17 @@
-import { addVoice, createMix } from '../arrange/mix';
 import { masterChannels } from '../engine/master';
+import { limitTruePeak } from '../effects/limiter';
 import { assertRenderBudget, type RenderBudget, type RenderCost } from '../guard/budget';
 import { checkNumber } from '../guard/read';
 import { clampToSpec, type ResolvedGesture, type ResolvedSignal } from './bindings';
 import { renderGesture } from './curves';
 import type { ParamSignal, ResolvedParams } from './params';
 import { applyLaw } from './primitives/controls';
+import { mixdown } from './mixdown';
 import { deriveSeed, substream } from './random';
-import type { CostParams, NodeContext, ProgramEntry } from './registry';
+import type { CostParams, NodeContext, ProgramEntry, SourceEntry } from './registry';
+import type { ResolvedZone } from './sampleBank';
+import { sampleAccess, type SampleAccess, type SampleResolver } from './samples';
+import { applyStyleChain } from './style';
 import {
   resolveProgram,
   type ResolvedLayer,
@@ -38,11 +42,42 @@ export interface ProgramRenderOptions {
   /** Programın tohumunu ezer (aday araması); verilmezse `program.seed`. */
   readonly seed?: number;
   readonly budget?: RenderBudget;
+  /** Programın `samples` bildirimlerini veriye çeviren çözücü (protokol ya da test). */
+  readonly samples?: SampleResolver;
 }
 
 const isSignal = (value: ResolvedValue): value is ResolvedSignal => typeof value === 'object';
 
-function costView(node: ResolvedNode<ProgramEntry>): {
+/**
+ * Sample başvurusu olan düğümde (`<ad>.frames` / `<ad>.channels`) bildirimden
+ * program oranına göre boyut eklenir; maliyet veri yüklenmeden hesaplanır.
+ */
+function sampleSizes(
+  node: ResolvedNode<ProgramEntry>,
+  key: string,
+  value: string,
+  program: ResolvedProgram,
+): Record<string, number> {
+  const spec = node.entry.params[key];
+  if (spec?.type !== 'sample') return {};
+  const decls =
+    spec.of === 'bank'
+      ? (program.banks.get(value) ?? []).map((z) => program.samples.get(z.sample))
+      : [program.samples.get(value)];
+  let frames = 0;
+  let channels = 1;
+  for (const decl of decls) {
+    if (!decl) continue;
+    frames = Math.max(frames, Math.ceil((decl.frames * program.sampleRate) / decl.sampleRate));
+    channels = Math.max(channels, decl.channels);
+  }
+  return { [`${key}.frames`]: frames, [`${key}.channels`]: channels };
+}
+
+function costView(
+  node: ResolvedNode<ProgramEntry>,
+  program: ResolvedProgram,
+): {
   params: CostParams;
   automated: Set<string>;
 } {
@@ -54,13 +89,19 @@ function costView(node: ResolvedNode<ProgramEntry>): {
       params[key] = value.spec.max;
     } else {
       params[key] = value;
+      if (typeof value === 'string') Object.assign(params, sampleSizes(node, key, value, program));
     }
   }
   return { params, automated };
 }
 
-function nodeCost(node: ResolvedNode<ProgramEntry>, frames: number, sampleRate: number) {
-  const { params, automated } = costView(node);
+function nodeCost(
+  node: ResolvedNode<ProgramEntry>,
+  frames: number,
+  sampleRate: number,
+  program: ResolvedProgram,
+) {
+  const { params, automated } = costView(node, program);
   let buffers = 0;
   let perFrame = node.entry.resource.workPerFrame(params, automated);
   for (const value of Object.values(node.params)) {
@@ -68,15 +109,30 @@ function nodeCost(node: ResolvedNode<ProgramEntry>, frames: number, sampleRate: 
     buffers += 1 + value.controls.filter((c) => typeof c.value !== 'number').length;
     perFrame += 1 + value.controls.length + 2 * value.modulations.length;
   }
+  const scratch = node.entry.resource.bytesPerFrame?.(params) ?? 0;
   return {
     work: frames * perFrame,
-    bytes: node.entry.resource.stateBytes(params, sampleRate) + buffers * frames * FLOAT32_BYTES,
+    bytes:
+      node.entry.resource.stateBytes(params, sampleRate) +
+      buffers * frames * FLOAT32_BYTES +
+      scratch * frames,
   };
 }
 
 function layerNodes(layer: ResolvedLayer): ResolvedNode<ProgramEntry>[] {
-  return [layer.source, ...layer.resonators, ...(layer.articulation ? [layer.articulation] : [])];
+  return [
+    layer.source,
+    ...layer.resonators,
+    ...(layer.articulation ? [layer.articulation] : []),
+    ...layer.inserts,
+  ];
 }
+
+/** Stil zincirinin kanal-örneği başına iş birimi: kesimler, transient, 4× doygunluk, dinamik, indirgeme. */
+const STYLE_WORK_PER_FRAME = 140;
+/** Master true-peak sınırlayıcısı: 4× ara değer + ölçüm turları. */
+const LIMITER_WORK_PER_FRAME = 60;
+const LIMITER_BYTES_PER_FRAME = 32;
 
 /**
  * Ayırmadan ÖNCE maliyet: mix tamponu + modülatör tamponları + en ağır
@@ -88,30 +144,49 @@ export function estimateProgramCost(program: ResolvedProgram): RenderCost {
   let work = frames * (MASTER_WORK_PER_FRAME + 1) * channels;
   let modulatorBytes = 0;
   for (const modulator of program.modulators) {
-    const cost = nodeCost(modulator, frames, sampleRate);
+    const cost = nodeCost(modulator, frames, sampleRate, program);
     work += cost.work;
     modulatorBytes += cost.bytes + frames * FLOAT32_BYTES;
   }
   let heaviestLayer = 0;
   for (const layer of program.layers) {
+    const width = layerChannels(layer, channels);
     const parallel = layer.routing === 'parallel' && layer.resonators.length > 0 ? 2 : 0;
-    let bytes = (1 + parallel) * layer.frames * FLOAT32_BYTES;
+    let bytes = (1 + parallel) * width * layer.frames * FLOAT32_BYTES;
     for (const node of layerNodes(layer)) {
-      const cost = nodeCost(node, layer.frames, sampleRate);
-      work += cost.work;
-      bytes += cost.bytes;
+      const cost = nodeCost(node, layer.frames, sampleRate, program);
+      work += cost.work * width;
+      bytes += cost.bytes * width;
     }
-    work += layer.frames * channels;
+    work += layer.frames * channels * (1 + layer.sends.length);
     heaviestLayer = Math.max(heaviestLayer, bytes);
   }
   let effectBytes = 0;
-  for (const effect of program.effects) {
-    const cost = nodeCost(effect, frames, sampleRate);
+  const effects = [...program.effects, ...program.buses.flatMap((bus) => bus.effects)];
+  for (const effect of effects) {
+    const cost = nodeCost(effect, frames, sampleRate, program);
     work += cost.work * channels;
-    effectBytes = Math.max(effectBytes, cost.bytes);
+    effectBytes = Math.max(effectBytes, cost.bytes * channels);
   }
+  const keyed = effects.filter((e) => e.sidechain?.kind === 'layer').length;
+  const graphBuffers = program.buses.length + keyed;
+  work += frames * channels * program.buses.reduce((sum, bus) => sum + 2 + bus.sends.length, 0);
+  if (program.style) work += frames * channels * STYLE_WORK_PER_FRAME;
+  let limiterBytes = 0;
+  if (program.master.limiter) {
+    work += frames * channels * LIMITER_WORK_PER_FRAME;
+    limiterBytes = frames * channels * LIMITER_BYTES_PER_FRAME;
+  }
+  let sampleBytes = 0;
+  for (const decl of program.samples.values())
+    sampleBytes += decl.frames * decl.channels * FLOAT32_BYTES;
   return {
-    peakBytes: channels * frames * FLOAT32_BYTES + modulatorBytes + heaviestLayer + effectBytes,
+    peakBytes:
+      (1 + graphBuffers) * channels * frames * FLOAT32_BYTES +
+      modulatorBytes +
+      heaviestLayer +
+      Math.max(effectBytes, limiterBytes) +
+      sampleBytes,
     workUnits: work,
   };
 }
@@ -121,6 +196,8 @@ interface SharedSignals {
   readonly modulators: ReadonlyMap<string, Float32Array>;
   /** `control.instability`: modülasyon derinliği çarpanı (program zamanı). */
   readonly depthFactor: Float32Array | number;
+  readonly samples?: SampleAccess;
+  readonly banks?: ReadonlyMap<string, readonly ResolvedZone[]>;
 }
 
 interface SignalContext extends SharedSignals {
@@ -181,29 +258,37 @@ function contextFor(
   streamPath: string,
   sampleRate: number,
   frames: number,
+  shared?: SharedSignals,
+  sidechain?: readonly Float32Array[],
 ): NodeContext {
+  const banks = shared?.banks;
   return {
     sampleRate,
     frames,
     random: (label) => substream(seed, `${streamPath}/${label}`),
     seed: (label) => deriveSeed(seed, `${streamPath}/${label}`),
+    ...(shared?.samples ? { sample: shared.samples } : {}),
+    ...(banks ? { bank: (name: string) => banks.get(name) ?? [] } : {}),
+    ...(sidechain ? { sidechain } : {}),
   };
 }
 
-function renderLayer(layer: ResolvedLayer, seed: number, shared: SharedSignals): Float32Array {
-  const { sampleRate } = shared;
-  const signals: SignalContext = { ...shared, frames: layer.frames, offset: layer.startFrame };
-  const run = <E extends ProgramEntry>(node: ResolvedNode<E>) => ({
-    params: materialize(node, signals),
-    ctx: contextFor(seed, node.streamPath, sampleRate, layer.frames),
-  });
-  const buffer = new Float32Array(layer.frames);
-  const source = run(layer.source);
-  layer.source.entry.render(buffer, source.params, source.ctx);
+/** Katman kanal sayısı çözümde belirlenir (stereo kaynak + stereo program). */
+function layerChannels(layer: ResolvedLayer, _programChannels: 1 | 2): 1 | 2 {
+  return layer.channels;
+}
+
+function processChain(
+  buffer: Float32Array,
+  layer: ResolvedLayer,
+  run: <E extends ProgramEntry>(
+    node: ResolvedNode<E>,
+  ) => { params: ResolvedParams; ctx: NodeContext },
+): void {
   if (layer.routing === 'parallel' && layer.resonators.length > 0) {
     const dry = buffer.slice();
     buffer.fill(0);
-    const scratch = new Float32Array(layer.frames);
+    const scratch = new Float32Array(buffer.length);
     for (const node of layer.resonators) {
       scratch.set(dry);
       const { params, ctx } = run(node);
@@ -220,7 +305,35 @@ function renderLayer(layer: ResolvedLayer, seed: number, shared: SharedSignals):
     const { params, ctx } = run(layer.articulation);
     layer.articulation.entry.process(buffer, params, ctx);
   }
-  return buffer;
+}
+
+function renderLayer(
+  layer: ResolvedLayer,
+  seed: number,
+  shared: SharedSignals,
+  programChannels: 1 | 2,
+): Float32Array[] {
+  const { sampleRate } = shared;
+  const signals: SignalContext = { ...shared, frames: layer.frames, offset: layer.startFrame };
+  const run = <E extends ProgramEntry>(node: ResolvedNode<E>) => ({
+    params: materialize(node, signals),
+    ctx: contextFor(seed, node.streamPath, sampleRate, layer.frames, shared),
+  });
+  const width = layerChannels(layer, programChannels);
+  const buffers = Array.from({ length: width }, () => new Float32Array(layer.frames));
+  const source = run(layer.source);
+  if (width === 2) {
+    const stereo = layer.source.entry.renderStereo as NonNullable<SourceEntry['renderStereo']>;
+    stereo(buffers[0], buffers[1], source.params, source.ctx);
+  } else {
+    layer.source.entry.render(buffers[0], source.params, source.ctx);
+  }
+  for (const buffer of buffers) processChain(buffer, layer, run);
+  for (const insert of layer.inserts) {
+    const { params, ctx } = run(insert);
+    insert.entry.process(buffers, params, ctx);
+  }
+  return buffers;
 }
 
 function assertFinite(channels: readonly Float32Array[], label: string): void {
@@ -270,7 +383,20 @@ function prepare(value: unknown, options: ProgramRenderOptions): Prepared {
         ? scale(control.value)
         : gestureBuffer(control.value, frames, sampleRate).map(scale);
   }
-  return { program, seed, cost, shared: { sampleRate, modulators, depthFactor } };
+  const samples = sampleAccess(program.samples, options.samples);
+  const banks = program.banks.size > 0 ? program.banks : undefined;
+  return {
+    program,
+    seed,
+    cost,
+    shared: {
+      sampleRate,
+      modulators,
+      depthFactor,
+      ...(samples ? { samples } : {}),
+      ...(banks ? { banks } : {}),
+    },
+  };
 }
 
 /**
@@ -278,38 +404,91 @@ function prepare(value: unknown, options: ProgramRenderOptions): Prepared {
  * Katmanlar kanonik mix veriyolunda toplanır, seviye tek master
  * çekirdeğinde verilir.
  */
-export function renderProgram(value: unknown, options: ProgramRenderOptions = {}): ProgramRender {
-  const { program, seed, cost, shared } = prepare(value, options);
-  const { sampleRate, frames } = program;
-  const mix = createMix(program.durationSeconds, sampleRate, program.channels);
-  for (const layer of program.layers) {
-    const buffer = renderLayer(layer, seed, shared);
-    addVoice(
-      mix,
-      { channels: [buffer], sampleRate, duration: layer.frames / sampleRate },
-      layer.startSeconds,
-      { gain: layer.gain, pan: layer.pan },
-    );
-  }
-  const effectSignals: SignalContext = { ...shared, frames, offset: 0 };
-  for (const effect of program.effects) {
-    const params = materialize(effect, effectSignals);
-    const ctx = contextFor(seed, effect.streamPath, sampleRate, frames);
-    effect.entry.process(mix.channels, params, ctx);
-  }
-  assertFinite(mix.channels, 'renderProgram');
-  const { master } = program;
-  masterChannels(mix.channels, sampleRate, {
-    level:
-      master.normalize === 'peak'
-        ? { mode: 'peak', target: Math.pow(10, master.peakDbfs / 20) }
-        : { mode: 'none', gain: Math.pow(10, master.gainDb / 20) },
-    dcBlockHz: master.dcBlockHz,
+function applyMaster(program: ResolvedProgram, channels: readonly Float32Array[]): void {
+  const { master, sampleRate } = program;
+  const level =
+    master.normalize === 'peak'
+      ? ({ mode: 'peak', target: Math.pow(10, master.peakDbfs / 20) } as const)
+      : ({ mode: 'none', gain: Math.pow(10, master.gainDb / 20) } as const);
+  const fades = {
     fadeInSeconds: master.fadeInSeconds,
     fadeOutSeconds: master.fadeOutSeconds,
     fadeOutCurve: 'cosine',
+  } as const;
+  if (!master.limiter) {
+    masterChannels(channels, sampleRate, { level, dcBlockHz: master.dcBlockHz, ...fades });
+    return;
+  }
+  masterChannels(channels, sampleRate, { level, dcBlockHz: master.dcBlockHz });
+  limitTruePeak(channels, sampleRate, {
+    ceilingDb: master.limiter.ceilingDbtp,
+    lookaheadSeconds: master.limiter.lookaheadSeconds,
+    releaseSeconds: master.limiter.releaseSeconds,
   });
-  return { channels: [...mix.channels], sampleRate, duration: program.durationSeconds, seed, cost };
+  masterChannels(channels, sampleRate, { level: { mode: 'none' }, ...fades });
+}
+
+/**
+ * Loop katlaması: çıktı [0, L), L = kare − X. İlk X örnek, kuyruk devamı
+ * x[L+i] ile baş x[i] arasında ilintiye uyarlı güç tamamlayıcı geçiştir
+ * (Fink–Holters–Zölzer; `loopSamples` ile aynı yasa): son örnekten başa
+ * dönüş x[L−1] → ≈x[L] devamıdır, süreksizlik yoktur.
+ */
+function foldLoop(
+  channels: readonly Float32Array[],
+  sampleRate: number,
+  seconds: number,
+): Float32Array[] {
+  const fade = Math.round(seconds * sampleRate);
+  const length = channels[0].length - fade;
+  return channels.map((x) => {
+    let cross = 0;
+    let tail = 0;
+    let head = 0;
+    for (let i = 0; i < fade; i++) {
+      cross += x[length + i] * x[i];
+      tail += x[length + i] ** 2;
+      head += x[i] ** 2;
+    }
+    const denom = Math.sqrt(tail * head);
+    const r = denom > 0 ? Math.min(1, Math.max(0, cross / denom)) : 0;
+    const out = x.slice(0, length);
+    for (let i = 0; i < fade; i++) {
+      const angle = (Math.PI / 2) * ((i + 0.5) / fade);
+      const sin = Math.sin(angle);
+      const cos = Math.cos(angle);
+      out[i] = (x[length + i] * cos + x[i] * sin) / Math.sqrt(1 + 2 * r * sin * cos);
+    }
+    return out;
+  });
+}
+
+export function renderProgram(value: unknown, options: ProgramRenderOptions = {}): ProgramRender {
+  const { program, seed, cost, shared } = prepare(value, options);
+  const { sampleRate, frames } = program;
+  const effectSignals: SignalContext = { ...shared, frames, offset: 0 };
+  const mix = mixdown(program, {
+    renderLayer: (layer) => renderLayer(layer, seed, shared, program.channels),
+    prepare: (node, sidechain) => ({
+      params: materialize(node, effectSignals),
+      ctx: contextFor(seed, node.streamPath, sampleRate, frames, shared, sidechain),
+    }),
+  });
+  assertFinite(mix.channels, 'renderProgram');
+  if (program.style) applyStyleChain(mix.channels, sampleRate, program.style.controls);
+  applyMaster(program, mix.channels);
+  const loop = program.master.loop;
+  if (!loop) {
+    return {
+      channels: [...mix.channels],
+      sampleRate,
+      duration: program.durationSeconds,
+      seed,
+      cost,
+    };
+  }
+  const channels = foldLoop(mix.channels, sampleRate, loop.crossfadeSeconds);
+  return { channels, sampleRate, duration: channels[0].length / sampleRate, seed, cost };
 }
 
 /**
@@ -324,9 +503,9 @@ export function renderProgramLayers(
   const { program, seed, shared } = prepare(value, options);
   const out = new Map<string, Float32Array>();
   for (const layer of program.layers) {
-    const buffer = renderLayer(layer, seed, shared);
-    assertFinite([buffer], `katman ${layer.name}`);
-    out.set(layer.name, buffer);
+    const buffers = renderLayer(layer, seed, shared, program.channels);
+    assertFinite(buffers, `katman ${layer.name}`);
+    out.set(layer.name, buffers[0]);
   }
   return out;
 }

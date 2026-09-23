@@ -4,6 +4,8 @@ import { AudioParamError } from '../guard/errors';
 import { checkChoice, checkNumber, checkObject } from '../guard/read';
 import { hashCanonical, type Sha256 } from './canonical';
 import { checkHash } from './records';
+import type { LoopSeamV1 } from '../analysis/seam';
+import { validateSources, type ManifestSourcesV1 } from './sources';
 import type { EncoderToolchain } from './toolchain';
 
 export const ASSET_MANIFEST_SCHEMA = 'AudioAssetManifestV1';
@@ -76,6 +78,10 @@ export interface AudioAssetManifestV1 {
     /** Çalışma zamanı beyanının yeri; referans hedefte `null` (hiçbir oyun çalmaz). */
     readonly runtimeDeclaration: string | null;
   };
+  /** Yalnız sample/IR kullanan programda: kayıt provenance'ı ve sampler seçim gerekçesi. */
+  readonly sources?: ManifestSourcesV1;
+  /** Yalnız loop brief'inde: kodek sonrası dikiş ölçümü (`loop-seam-v1`). */
+  readonly seam?: LoopSeamV1;
 }
 
 const TOP_KEYS = [
@@ -91,6 +97,8 @@ const TOP_KEYS = [
   'analysis',
   'policy',
   'integration',
+  'sources',
+  'seam',
 ];
 
 /**
@@ -198,6 +206,25 @@ export function validateManifest(value: unknown): AudioAssetManifestV1 {
     'sourceTreeDirty',
     'runtime',
   ]);
+  if (o.sources !== undefined) validateSources(o.sources);
+  if (o.seam !== undefined) {
+    const seam = checkObject(o.seam, 'seam', [
+      'method',
+      'jumpRatio',
+      'levelStepDb',
+      'spectralStepDb',
+      'pass',
+      'reasons',
+    ]);
+    if (seam.pass !== true) {
+      throw new AudioParamError(
+        'seam',
+        'combination',
+        'manifest yalnız geçen dikişle yazılır',
+        seam.pass,
+      );
+    }
+  }
   checkObject(o.integration, 'integration', [
     'package',
     'targetKind',

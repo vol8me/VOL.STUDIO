@@ -2,7 +2,10 @@ import { AudioParamError } from '../guard/errors';
 import { checkNumber, checkObject, checkSampleRate } from '../guard/read';
 import { PROGRAM_REGISTRY } from './catalog';
 import { substream } from './random';
+import { materialById } from './materials';
+import type { ArchetypeProfiles } from './registry';
 import { resolveProgram, type AcousticProgramV1 } from './schema';
+import type { StyleRefV1 } from './style';
 
 export const ARCHETYPE_REQUEST_SCHEMA = 'ArchetypeRequestV1';
 
@@ -20,6 +23,8 @@ export interface ArchetypeRequestV1 {
   readonly seed?: number;
   readonly sampleRate?: number;
   readonly params?: Readonly<Record<string, number>>;
+  /** Yalnız profil kabul eden archetype'larda: stil başvurusu ve gövde materyali. */
+  readonly profiles?: { readonly style?: StyleRefV1; readonly material?: string };
 }
 
 const DEFAULT_ROOT = 0x5eed;
@@ -31,7 +36,31 @@ const REQUEST_KEYS = [
   'seed',
   'sampleRate',
   'params',
+  'profiles',
 ];
+
+function checkProfiles(value: unknown, accepted: readonly string[]): ArchetypeProfiles {
+  if (value === undefined) return {};
+  const o = checkObject(value, 'profiles', ['style', 'material']);
+  for (const key of Object.keys(o)) {
+    if (!accepted.includes(key)) {
+      const detail = `bu archetype ${key} profili almaz`;
+      throw new AudioParamError(`profiles.${key}`, 'combination', detail, key);
+    }
+  }
+  if (o.material !== undefined && (typeof o.material !== 'string' || !materialById(o.material))) {
+    throw new AudioParamError(
+      'profiles.material',
+      'unknown-id',
+      'materyal profili yok',
+      o.material,
+    );
+  }
+  return {
+    ...(o.style === undefined ? {} : { style: o.style }),
+    ...(o.material === undefined ? {} : { material: o.material }),
+  };
+}
 
 export function expandArchetype(value: unknown): AcousticProgramV1 {
   const o = checkObject(value, '', REQUEST_KEYS);
@@ -62,8 +91,9 @@ export function expandArchetype(value: unknown): AcousticProgramV1 {
   }
   const issue = entry.constraint(params);
   if (issue) throw new AudioParamError('params', 'combination', issue, params);
+  const profiles = checkProfiles(o.profiles, entry.profiles ?? []);
   const random = substream(root, `archetype:${entry.id}/variation:${variation}`);
-  const program = entry.expand(params, random, sampleRate);
+  const program = entry.expand(params, random, sampleRate, profiles);
   resolveProgram(program);
   return program as unknown as AcousticProgramV1;
 }

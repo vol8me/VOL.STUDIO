@@ -28,10 +28,25 @@ export interface RegistryEntryDescription {
   readonly topology?: ArchetypeEntry['topology'];
   readonly macros?: ArchetypeEntry['macros'];
   readonly variation?: ArchetypeEntry['variation'];
+  readonly profiles?: ArchetypeEntry['profiles'];
+  /** Yalnız efektlerde: zamana yayılma (insert yasağı), doğrusallık (stem paritesi), sidechain. */
+  readonly routing?: {
+    readonly timeBased: boolean;
+    readonly linear: boolean;
+    readonly sidechain: boolean;
+  };
+  /** Stereo programda iki kanal yazan kaynak. */
+  readonly stereo?: true;
+  readonly probe?: ProgramEntry['probe'];
 }
 
 function defaults(entry: ProgramEntry): Record<string, number | string> {
-  return Object.fromEntries(Object.entries(entry.params).map(([key, spec]) => [key, spec.default]));
+  return Object.fromEntries(
+    Object.entries(entry.params).map(([key, spec]) => [
+      key,
+      spec.type === 'sample' ? '' : spec.default,
+    ]),
+  );
 }
 
 function sortedRecord<T>(record: Readonly<Record<string, T>>): Record<string, T> {
@@ -65,8 +80,26 @@ export function describeEntry(entry: ProgramEntry): RegistryEntryDescription {
         }
       : {}),
     ...(entry.kind === 'archetype'
-      ? { topology: entry.topology, macros: entry.macros, variation: entry.variation }
+      ? {
+          topology: entry.topology,
+          macros: entry.macros,
+          variation: entry.variation,
+          ...(entry.profiles ? { profiles: entry.profiles } : {}),
+        }
       : {}),
+    ...(entry.kind === 'effect'
+      ? {
+          routing: {
+            timeBased: entry.timeBased,
+            linear: entry.linear,
+            sidechain: entry.sidechain === true,
+          },
+        }
+      : {}),
+    ...((entry.kind === 'source' || entry.kind === 'exciter') && entry.renderStereo
+      ? { stereo: true as const }
+      : {}),
+    ...(entry.probe ? { probe: entry.probe } : {}),
   };
 }
 

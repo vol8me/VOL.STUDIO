@@ -219,6 +219,8 @@ export const REVERB: EffectEntry = {
   id: 'effect.reverb',
   kind: 'effect',
   version: 1,
+  timeBased: true,
+  linear: true,
   description:
     'Schroeder/Freeverb tabanlı RT60 reverb: kafes allpass, enerji-normalize wet, wet DC ' +
     'engelleyici. Kuyruk program süresine sığmalı; sığmayan kuyruk kesilir.',

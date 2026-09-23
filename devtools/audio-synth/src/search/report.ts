@@ -9,6 +9,7 @@ import { describeRegistry } from '../program/describe';
 import type { DimensionValue } from '../program/dimensions';
 import { SUBSTREAM_SCHEME } from '../program/random';
 import { PROGRAM_RENDERER_VERSION, renderProgram, type ProgramRender } from '../program/render';
+import type { SampleResolver } from '../program/samples';
 import { hashCanonical, hashPcm, HASH_PATTERN, type Sha256 } from '../protocol/canonical';
 import {
   CANDIDATE_ID,
@@ -109,6 +110,8 @@ function failure(stage: 'render' | 'analysis', error: unknown): CandidateRejecti
 export interface ExecuteHooks {
   /** Render başarılı olduğunda (ör. git-dışı dinleme kopyası yazmak için). */
   readonly onRender?: (candidateId: string, render: ProgramRender) => void;
+  /** Sample kullanan tabanlar için kayıt çözücüsü (protokol repo kütüphanesini verir). */
+  readonly samples?: SampleResolver;
 }
 
 /** Planın geçerli adaylarını sırayla render eder, ölçer ve filtreler. */
@@ -122,7 +125,7 @@ export function executeSearch(plan: SearchPlan, hooks: ExecuteHooks = {}): Searc
     }
     let rendered: ProgramRender;
     try {
-      rendered = renderProgram(candidate.program);
+      rendered = renderProgram(candidate.program, { samples: hooks.samples });
     } catch (error) {
       return { ...head, ...none, state: 'error', rejection: failure('render', error) };
     }

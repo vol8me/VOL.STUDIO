@@ -62,6 +62,9 @@ import {
   validateRenderRecord,
   validateSelection,
 } from './records';
+import { measureLoopSeam, type LoopSeamV1 } from '../analysis/seam';
+import { repoSampleResolver } from './samples';
+import { sameSources, sourcesOf } from './sources';
 import { jobStatus } from './status';
 import {
   decodeWithFfmpeg,
@@ -125,6 +128,7 @@ interface EncodedCandidate {
   readonly bytes: Buffer;
   readonly hash: Sha256;
   readonly report: AudioAnalysisReportV1;
+  readonly decoded: { readonly channels: Float32Array[]; readonly sampleRate: number };
 }
 
 /** Kodla → baytları özetle → FFmpeg ile ÇÖZ → kodek sonrası ölç. Dosya çağıranındır. */
@@ -137,7 +141,14 @@ function encodeAndMeasure(file: string, rendered: KindRender): EncodedCandidate 
     bytes,
     hash: sha256Bytes(bytes),
     report: analyzeAudio(decoded.channels, decoded.sampleRate, 'decoded-encoded'),
+    decoded,
   };
+}
+
+/** Akustik loop asset'i kodek SONRASI dikiş QA'sından geçmeli; diğerlerinde ölçüm yok. */
+function loopSeamOf(brief: AudioBriefV1, decoded: EncodedCandidate['decoded']): LoopSeamV1 | null {
+  if (brief.kind !== 'acoustic' || brief.loop !== true) return null;
+  return measureLoopSeam(decoded.channels, decoded.sampleRate);
 }
 
 function checkRuntime(
@@ -256,7 +267,10 @@ export function publishJob(loc: JobLocation): PublishOutcome {
       );
     }
     const assetClass = policyClassOf(job.kind, programDocument, pathClass);
-    const rendered = renderForKind(job.kind, programDocument, { seed: record.seed });
+    const rendered = renderForKind(job.kind, programDocument, {
+      seed: record.seed,
+      samples: repoSampleResolver(loc.repoRoot),
+    });
     const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
     if (pcmHash !== record.pcm.hash) {
       throw new ProtocolError(
@@ -286,6 +300,15 @@ export function publishJob(loc: JobLocation): PublishOutcome {
           destination.assetPath,
         );
       }
+      const seam = loopSeamOf(brief, encoded.decoded);
+      if (seam && !seam.pass) {
+        throw new ProtocolError(
+          'policy',
+          `loop dikişi: ${seam.reasons.join('; ')}`,
+          destination.assetPath,
+        );
+      }
+      const sources = sourcesOf(job.kind, programDocument, loc.repoRoot);
       const manifest: AudioAssetManifestV1 = {
         schema: ASSET_MANIFEST_SCHEMA,
         assetId,
@@ -347,6 +370,8 @@ export function publishJob(loc: JobLocation): PublishOutcome {
           loop: job.target.integration.loop,
           runtimeDeclaration: destination.target.runtime?.declaredIn ?? null,
         },
+        ...(sources ? { sources } : {}),
+        ...(seam ? { seam } : {}),
       };
       asProtocol('manifest', () => validateManifest(JSON.parse(canonicalJson(manifest))));
       renameSync(staging, assetFile);
@@ -422,7 +447,10 @@ export function verifyManifest(
   });
 
   const kind = kindOfProgramSchema(manifest.program.schema, manifestPath);
-  const rendered = renderForKind(kind, manifest.program.document, { seed: manifest.render.seed });
+  const rendered = renderForKind(kind, manifest.program.document, {
+    seed: manifest.render.seed,
+    samples: repoSampleResolver(repoRoot),
+  });
   const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
   checks.push({ name: 'pcm-identity', ok: pcmHash === manifest.render.pcm.hash, detail: pcmHash });
 
@@ -443,6 +471,25 @@ export function verifyManifest(
       ok: true,
       detail: same ? 'kayıtla aynı' : 'çözücü çıktısı kayıttan farklı (bilgi)',
     });
+    if (manifest.seam) {
+      const seam = measureLoopSeam(decoded.channels, decoded.sampleRate);
+      checks.push({
+        name: 'loop-seam',
+        ok: seam.pass,
+        detail: seam.reasons.join('; ') || 'dikişsiz',
+      });
+    }
+  }
+  if (manifest.sources || kind === 'acoustic') {
+    const current = sourcesOf(kind, manifest.program.document, repoRoot);
+    if (manifest.sources || current) {
+      const ok = sameSources(manifest.sources, current);
+      checks.push({
+        name: 'sources',
+        ok,
+        detail: ok ? 'kayıt provenance’ı aynı' : 'kaynak bloğu kütüphaneyle uyuşmuyor',
+      });
+    }
   }
 
   const dir = mkdtempSync(join(tmpdir(), 'audio-verify-'));

@@ -3,6 +3,7 @@ import { estimateMusicStemCost, renderMusicStem, validateMusicStemProgram } from
 import { MUSIC_RENDERER_VERSION } from '../music/render';
 import type { AudioBriefV1 } from '../program/brief';
 import { estimateProgramCost, PROGRAM_RENDERER_VERSION, renderProgram } from '../program/render';
+import type { SampleResolver } from '../program/samples';
 import { resolveProgram } from '../program/schema';
 import { ProtocolError } from './errors';
 
@@ -36,10 +37,10 @@ export interface KindRender {
 export function renderForKind(
   kind: JobKind,
   document: unknown,
-  options: { readonly seed?: number } = {},
+  options: { readonly seed?: number; readonly samples?: SampleResolver } = {},
 ): KindRender {
   if (kind === 'music') {
-    const rendered = renderMusicStem(document, options);
+    const rendered = renderMusicStem(document, { seed: options.seed });
     return {
       channels: rendered.channels,
       sampleRate: rendered.sampleRate,
@@ -48,7 +49,7 @@ export function renderForKind(
       cost: rendered.cost,
     };
   }
-  const rendered = renderProgram(document, options);
+  const rendered = renderProgram(document, { seed: options.seed, samples: options.samples });
   return {
     channels: rendered.channels,
     sampleRate: rendered.sampleRate,

@@ -78,6 +78,13 @@ function validateAudioInput(
  * `targetGain` varsayılanı 1.0'dır; headroom kararı tek yerde (normalize) kalır.
  */
 export function writeWav(filePath: string, result: SynthesisResult, targetGain = 1): void {
+  const buffer = encodeWav(result, targetGain);
+  mkdirSync(dirname(filePath), { recursive: true });
+  writeFileSync(filePath, buffer);
+}
+
+/** `writeWav` ile AYNI baytları bellekte üretir (sample kütüphanesi özeti için). */
+export function encodeWav(result: SynthesisResult, targetGain = 1): Buffer {
   const { numChannels, sampleCount, sampleRate } = validateAudioInput(result, targetGain);
 
   const dataSize = sampleCount * numChannels * BYTES_PER_SAMPLE;
@@ -120,9 +127,7 @@ export function writeWav(filePath: string, result: SynthesisResult, targetGain =
       buffer.writeInt16LE(intVal, offset);
     }
   }
-
-  mkdirSync(dirname(filePath), { recursive: true });
-  writeFileSync(filePath, buffer);
+  return buffer;
 }
 
 export interface OggOptions {

@@ -49,6 +49,7 @@ import { loadJob, type JobLocation } from './location';
 import { validateManifest, type AudioAssetManifestV1 } from './manifest';
 import { PROGRAM_ORIGIN_SCHEMA } from './origin';
 import { publishJob, registryHash } from './publish';
+import { repoSampleResolver } from './samples';
 import { asProtocol, JOB_ID } from './records';
 import { jobStatus } from './status';
 import { resolveDestination, surveyTargets, type ResolvedDestination } from './targets';
@@ -162,7 +163,7 @@ export interface FamilyCheck extends FamilyPreview {
 export function checkFamily(repoRoot: string, document: unknown): FamilyCheck {
   const preview = previewFamily(repoRoot, document);
   const members = preview.variants.map((v) => {
-    const r = renderProgram(v.program);
+    const r = renderProgram(v.program, { samples: repoSampleResolver(repoRoot) });
     const report = analyzeAudio(r.channels, r.sampleRate, 'source-pcm');
     return {
       key: v.key,
