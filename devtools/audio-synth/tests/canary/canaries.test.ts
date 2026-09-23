@@ -14,6 +14,7 @@ import { AudioParamError } from '../../src/guard/errors';
 import { repoSampleResolver } from '../../src/protocol/samples';
 import { edited, getAt } from '../support/json';
 import { createTestRepo, type TestRepo } from '../protocol/repo';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 
 /**
  * Organik canary derlemi. Mekanik beklentiler motorun ölçülebilir
@@ -56,12 +57,6 @@ describe('organik canary derlemi (gerçek depo)', () => {
     }
   });
 
-  /*
-   * 19 canary × 2 render: 3 saniyelik sesi GERÇEK render eder; kapsam
-   * ölçümü (v8) sentezi birkaç kat yavaşlatır ve 5 saniyelik varsayılan
-   * dolar (ölçülen: en ağır canary 10 sn). Süre sınırı bu yüzden verilir —
-   * ölçülen bir kısıt, keyfi bir sayı değil.
-   */
   it.each(IDS)(
     '%s: mekanik beklentiler geçer ve iki render aynı PCM’i verir',
     (id) => {
@@ -71,7 +66,7 @@ describe('organik canary derlemi (gerçek depo)', () => {
       expect(first.checks.filter((c) => !c.pass)).toEqual([]);
       expect(runCanary(canary, samples).result.pcmHash).toBe(first.pcmHash);
     },
-    60_000,
+    RENDER_TIMEOUT,
   );
 
   it('insan dinlemesi uydurulmaz: bütün incelemeler pending-human', () => {

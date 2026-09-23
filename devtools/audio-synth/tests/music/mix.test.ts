@@ -6,6 +6,7 @@ import { renderMusicStem, REFERENCE_MIX_ID } from '../../src/music/stem';
 import { AudioParamError } from '../../src/guard/errors';
 import { hashCanonical } from '../../src/protocol/canonical';
 import { clone, unitAdaptiveProgram, unitProgram } from './fixtures';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 /**
  * Müzik bus/send grafiği (Dalga 10): drum/music stem'leri ayrı bus'lara
@@ -54,15 +55,7 @@ const rejects = (fn: () => unknown, issue: string, fragment: string) => {
   throw new Error('reddedilmedi');
 };
 
-/*
- * Stem render'ları GERÇEK ses render eder; kapsam ölçümü (v8) sentezi birkaç
- * kat yavaşlatır ve 5 saniyelik varsayılan dolar (ölçülen: en ağır test
- * 15 sn). Süre sınırı bu yüzden blok başına verilir — ölçülen bir kısıt,
- * keyfi bir sayı değil.
- */
-const HEAVY = { timeout: 60_000 };
-
-describe('müzik bus grafiği', HEAVY, () => {
+describe('müzik bus grafiği', RENDER_BLOCK, () => {
   it('drum/music stemleri ayrı bus’lara yönlenir; stem toplamı mix’e eşit (≤ −90 dBFS)', () => {
     const music = unitAdaptiveProgram({ mix: ADAPTIVE_MIX });
     const mix = renderMusicStem(stemDocument(music, REFERENCE_MIX_ID));

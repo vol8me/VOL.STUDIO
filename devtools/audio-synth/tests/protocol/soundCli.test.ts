@@ -9,6 +9,7 @@ import { DEFAULT_SAMPLES_ROOT, SAMPLE_ASSET_SCHEMA } from '../../src/protocol/sa
 import { encodeWav } from '../../src/writer';
 import { snakeHiss } from '../program/graphFixtures';
 import { createTestRepo, testBrief, type TestRepo } from './repo';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 
 /**
  * `audio:job plan | graph | samples | context --brief` — ses tasarımı
@@ -68,59 +69,75 @@ beforeAll(() => {
 afterAll(() => repo.cleanup());
 
 describe('audio:job plan / graph', () => {
-  it('plan --brief iskelet yazar; jobId yolu işin brief’ini okur', () => {
-    const run = cli('plan', '--brief', 'snake.json', '--skeleton', 'skeleton.json');
-    expect(run.status).toBe(0);
-    expect(run.json<{ layers: { name: string }[] }>().layers.map((l) => l.name)).toEqual([
-      'airflow',
-      'hiss',
-      'sibilant-resonance',
-    ]);
-    const skeleton = JSON.parse(readFileSync(join(repo.root, 'skeleton.json'), 'utf8')) as {
-      schema: string;
-    };
-    expect(skeleton.schema).toBe('AcousticProgramV1');
-    const asset = 'reference/production/assets/sfx/snake.ogg';
-    expect(
-      cli('init', 'snake', '--package', '@volstudio/audio-synth', '--asset', asset).status,
-    ).toBe(0);
-    expect(cli('brief', 'snake', '--file', 'snake.json').status).toBe(0);
-    expect(cli('plan', 'snake').json<{ brief: { id: string } }>().brief.id).toBe('snake');
-  }, 60_000);
+  it(
+    'plan --brief iskelet yazar; jobId yolu işin brief’ini okur',
+    () => {
+      const run = cli('plan', '--brief', 'snake.json', '--skeleton', 'skeleton.json');
+      expect(run.status).toBe(0);
+      expect(run.json<{ layers: { name: string }[] }>().layers.map((l) => l.name)).toEqual([
+        'airflow',
+        'hiss',
+        'sibilant-resonance',
+      ]);
+      const skeleton = JSON.parse(readFileSync(join(repo.root, 'skeleton.json'), 'utf8')) as {
+        schema: string;
+      };
+      expect(skeleton.schema).toBe('AcousticProgramV1');
+      const asset = 'reference/production/assets/sfx/snake.ogg';
+      expect(
+        cli('init', 'snake', '--package', '@volstudio/audio-synth', '--asset', asset).status,
+      ).toBe(0);
+      expect(cli('brief', 'snake', '--file', 'snake.json').status).toBe(0);
+      expect(cli('plan', 'snake').json<{ brief: { id: string } }>().brief.id).toBe('snake');
+    },
+    RENDER_TIMEOUT,
+  );
 
-  it('desteklenmeyen mekanizma iskelet istenince adlı hatayla durur', () => {
-    const run = cli('plan', '--brief', 'speech.json', '--skeleton', 'x.json');
-    expect(run.status).not.toBe(0);
-    expect(run.error?.code).toBe('invalid');
-  }, 60_000);
+  it(
+    'desteklenmeyen mekanizma iskelet istenince adlı hatayla durur',
+    () => {
+      const run = cli('plan', '--brief', 'speech.json', '--skeleton', 'x.json');
+      expect(run.status).not.toBe(0);
+      expect(run.error?.code).toBe('invalid');
+    },
+    RENDER_TIMEOUT,
+  );
 
-  it('graph topoloji özetini ve iki ayrı özeti verir; context --brief planı taşır', () => {
-    const graph = cli('graph', '--file', 'graph.json').json<{
-      graph: { schema: string };
-      topologyHash: string;
-      graphHash: string;
-    }>();
-    expect(graph.graph.schema).toBe('SoundGraphV1');
-    expect(graph.topologyHash).not.toBe(graph.graphHash);
-    const context = cli('context', '--brief', 'snake.json').json<{
-      briefPlan: { schema: string };
-    }>();
-    expect(context.briefPlan.schema).toBe('ProgramPlanV1');
-  }, 60_000);
+  it(
+    'graph topoloji özetini ve iki ayrı özeti verir; context --brief planı taşır',
+    () => {
+      const graph = cli('graph', '--file', 'graph.json').json<{
+        graph: { schema: string };
+        topologyHash: string;
+        graphHash: string;
+      }>();
+      expect(graph.graph.schema).toBe('SoundGraphV1');
+      expect(graph.topologyHash).not.toBe(graph.graphHash);
+      const context = cli('context', '--brief', 'snake.json').json<{
+        briefPlan: { schema: string };
+      }>();
+      expect(context.briefPlan.schema).toBe('ProgramPlanV1');
+    },
+    RENDER_TIMEOUT,
+  );
 });
 
 describe('audio:job samples', () => {
-  it('list, decl ve verify; bilinmeyen kimlik ve alt komut adlı hata', () => {
-    const [entry] = cli('samples', 'list').json<
-      { id: string; origin: string; seconds: number }[]
-    >();
-    expect(entry).toMatchObject({ id: 'tone', origin: 'synthetic-fixture', seconds: 0.1 });
-    expect(cli('samples', 'decl', 'tone').json<{ frames: number }>().frames).toBe(4800);
-    expect(cli('samples', 'verify').status).toBe(0);
-    expect(cli('samples', 'decl', 'none').error?.code).toBe('not-found');
-    expect(cli('samples', 'drop').error?.code).toBe('invalid');
-    const doc = JSON.parse(readFileSync(tonePath(), 'utf8')) as Record<string, unknown>;
-    writeFileSync(tonePath(), JSON.stringify({ ...doc, hash: `sha256:${'0'.repeat(64)}` }));
-    expect(cli('samples', 'verify').status).toBe(1);
-  }, 60_000);
+  it(
+    'list, decl ve verify; bilinmeyen kimlik ve alt komut adlı hata',
+    () => {
+      const [entry] = cli('samples', 'list').json<
+        { id: string; origin: string; seconds: number }[]
+      >();
+      expect(entry).toMatchObject({ id: 'tone', origin: 'synthetic-fixture', seconds: 0.1 });
+      expect(cli('samples', 'decl', 'tone').json<{ frames: number }>().frames).toBe(4800);
+      expect(cli('samples', 'verify').status).toBe(0);
+      expect(cli('samples', 'decl', 'none').error?.code).toBe('not-found');
+      expect(cli('samples', 'drop').error?.code).toBe('invalid');
+      const doc = JSON.parse(readFileSync(tonePath(), 'utf8')) as Record<string, unknown>;
+      writeFileSync(tonePath(), JSON.stringify({ ...doc, hash: `sha256:${'0'.repeat(64)}` }));
+      expect(cli('samples', 'verify').status).toBe(1);
+    },
+    RENDER_TIMEOUT,
+  );
 });

@@ -15,12 +15,13 @@ import {
   type AudioAnalysisReportV1,
 } from '../analysis/report';
 import { validateBrief, type AudioBriefV1 } from '../program/brief';
-import { describeRegistry } from '../program/describe';
-import { instrumentRegistryHash } from '../music/instruments';
+import { instrumentRegistryHash, instrumentSurface } from '../music/instruments';
+import { compareSurface, registryRenderHash } from '../program/surface';
 import { REFERENCE_MIX_ID, validateMusicStemProgram } from '../music/stem';
 import {
   kindOfProgramSchema,
   PROGRAM_SCHEMAS,
+  surfaceForKind,
   renderForKind,
   RENDERER_VERSIONS,
   type JobKind,
@@ -96,8 +97,12 @@ function sourceRevision(repoRoot: string): { commit: string | null; dirty: boole
   };
 }
 
+/**
+ * Motor yüzeyinin sürüm etiketi: registry'nin RENDER izdüşümünün özeti.
+ * Açıklama ve yoklama metni girmez; programa özgü kanıt `renderSurface`tır.
+ */
 export function registryHash(): Sha256 {
-  return hashCanonical(describeRegistry());
+  return registryRenderHash();
 }
 
 /**
@@ -347,6 +352,7 @@ export function publishJob(loc: JobLocation): PublishOutcome {
           packageVersion: packageVersion(),
           rendererVersion: RENDERER_VERSIONS[job.kind],
           registryHash: job.kind === 'music' ? instrumentRegistryHash() : registryHash(),
+          renderSurface: surfaceForKind(job.kind, programDocument),
           sourceCommit: revision.commit,
           sourceTreeDirty: revision.dirty,
           runtime: { node: process.version },
@@ -387,6 +393,42 @@ export function publishJob(loc: JobLocation): PublishOutcome {
       rmSync(staging, { force: true });
     }
   });
+}
+
+/**
+ * Kayıtlı render yüzeyini bugünkü registry ile düğüm düğüm karşılaştırır.
+ * Bağlayıcı kanıt PCM kimliğidir; bu denetim onu AÇIKLAR: PCM değiştiyse
+ * hangi düğümün sözleşmesinin kaydığını adıyla söyler, değişmediyse
+ * kaymanın bu programa dokunmadığını belgeler.
+ */
+function surfaceCheck(manifest: AudioAssetManifestV1, pcmSame: boolean): VerificationCheck {
+  const recorded = manifest.engine.renderSurface;
+  if (!recorded) {
+    return {
+      name: 'render-surface',
+      ok: true,
+      detail: 'kayıt yok (bu alandan önce yayımlanmış manifest)',
+    };
+  }
+  const instruments = (recorded.instruments ?? []).flatMap((instrument) => {
+    try {
+      return [instrumentSurface(instrument.id)];
+    } catch {
+      return [];
+    }
+  });
+  const changes = compareSurface(recorded, instruments);
+  if (changes.length === 0) {
+    return { name: 'render-surface', ok: true, detail: `${recorded.nodes.length} düğüm aynı` };
+  }
+  const listed = changes.map((c) => `${c.id} (${c.detail})`).join('; ');
+  return {
+    name: 'render-surface',
+    ok: true,
+    detail: pcmSame
+      ? `yüzey kaydı ama bu programın PCM'i aynı (bilgi): ${listed}`
+      : `PCM farkını açıklayabilecek düğümler: ${listed}`,
+  };
 }
 
 function decodeOrNull(file: string, label: string) {
@@ -453,6 +495,7 @@ export function verifyManifest(
   });
   const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
   checks.push({ name: 'pcm-identity', ok: pcmHash === manifest.render.pcm.hash, detail: pcmHash });
+  checks.push(surfaceCheck(manifest, pcmHash === manifest.render.pcm.hash));
 
   const decoded = bytes ? decodeOrNull(assetFile, manifest.asset.path) : null;
   if (!decoded) {

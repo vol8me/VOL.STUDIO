@@ -37,7 +37,6 @@ export interface RegistryEntryDescription {
   };
   /** Stereo programda iki kanal yazan kaynak. */
   readonly stereo?: true;
-  readonly probe?: ProgramEntry['probe'];
 }
 
 function defaults(entry: ProgramEntry): Record<string, number | string> {
@@ -99,7 +98,6 @@ export function describeEntry(entry: ProgramEntry): RegistryEntryDescription {
     ...((entry.kind === 'source' || entry.kind === 'exciter') && entry.renderStereo
       ? { stereo: true as const }
       : {}),
-    ...(entry.probe ? { probe: entry.probe } : {}),
   };
 }
 

@@ -18,16 +18,9 @@ import {
 } from '../../src/music/themeBook';
 import { validateBrief } from '../../src/program/brief';
 import { edited, musicBrief, referenceBrief, referenceThemeBook } from './fixtures';
+import { RENDER_BLOCK } from '../support/timeouts';
 
-/*
- * Müzik testleri GERÇEK ses render eder; kapsam ölçümü (v8 + AST yeniden
- * eşleme) sentezi birkaç kat yavaşlatır ve 5 saniyelik varsayılan süre
- * dolar. Süre sınırı bu yüzden blok başına açıkça verilir — ölçülen bir
- * kısıt, keyfi bir sayı değil.
- */
-const HEAVY = { timeout: 120_000 };
-
-describe('MusicBriefV1', HEAVY, () => {
+describe('MusicBriefV1', RENDER_BLOCK, () => {
   it('müzik isteğini doğrular ve alanları korur', () => {
     const brief = validateBrief(musicBrief());
     expect(brief.kind).toBe('music');
@@ -140,7 +133,7 @@ describe('MusicBriefV1', HEAVY, () => {
   });
 });
 
-describe('ThemeBookV1', HEAVY, () => {
+describe('ThemeBookV1', RENDER_BLOCK, () => {
   it('depo kitabını doğrular ve özetler', () => {
     const book = validateThemeBook(referenceThemeBook());
     expect(book.themeBookId).toBe('reference-theme');
@@ -204,7 +197,7 @@ describe('ThemeBookV1', HEAVY, () => {
   });
 });
 
-describe('enstrüman kaydı', HEAVY, () => {
+describe('enstrüman kaydı', RENDER_BLOCK, () => {
   it('yalnız aralık ve rol beyan eden enstrümanları listeler', () => {
     const ids = instrumentIds();
     expect(ids.length).toBeGreaterThan(20);

@@ -31,6 +31,7 @@ import {
 import { jobStatus } from '../../src/protocol/status';
 import { shellSpec } from '../search/fixtures';
 import { createTestRepo, REFERENCE_TARGET, testBrief, type TestRepo } from './repo';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 
 const ROOT = 'devtools/audio-synth/audio-searches';
 const PACKAGE = fileURLToPath(new URL('../..', import.meta.url));
@@ -144,29 +145,33 @@ describe('arama kararları (SearchSelectionV1)', () => {
     expect(codeOf(() => recordDecision(search, '../../etc', decision('approved')))).toBe('invalid');
   });
 
-  it('karar taze bir SÜREÇTE dosyalardan yeniden kurulur', () => {
-    runSearch(repo.root, ROOT, shellSpec());
-    const id = passedId();
-    recordDecision(search, id, {
-      state: 'approved',
-      by: 'human',
-      labels: ['warm', 'short'],
-      note: 'kısa ve sıcak',
-    });
-    const res = spawnSync(TSX, [CLI, 'search', 'status', 'shell-test', '--json'], {
-      cwd: repo.root,
-      encoding: 'utf8',
-    });
-    const status = JSON.parse(res.stdout) as ReturnType<typeof searchStatus>;
-    expect(status.candidates.find((c) => c.candidateId === id)).toMatchObject({
-      decision: 'approved',
-      by: 'human',
-      labels: ['short', 'warm'],
-      note: 'kısa ve sıcak',
-    });
-    expect(status.summary.approved).toBe(1);
-    expect(status.selection.state).toBe('valid');
-  }, 60_000);
+  it(
+    'karar taze bir SÜREÇTE dosyalardan yeniden kurulur',
+    () => {
+      runSearch(repo.root, ROOT, shellSpec());
+      const id = passedId();
+      recordDecision(search, id, {
+        state: 'approved',
+        by: 'human',
+        labels: ['warm', 'short'],
+        note: 'kısa ve sıcak',
+      });
+      const res = spawnSync(TSX, [CLI, 'search', 'status', 'shell-test', '--json'], {
+        cwd: repo.root,
+        encoding: 'utf8',
+      });
+      const status = JSON.parse(res.stdout) as ReturnType<typeof searchStatus>;
+      expect(status.candidates.find((c) => c.candidateId === id)).toMatchObject({
+        decision: 'approved',
+        by: 'human',
+        labels: ['short', 'warm'],
+        note: 'kısa ve sıcak',
+      });
+      expect(status.summary.approved).toBe(1);
+      expect(status.selection.state).toBe('valid');
+    },
+    RENDER_TIMEOUT,
+  );
 });
 
 describe('terfi (promote) — kanonik akışa tek giriş', () => {
@@ -212,28 +217,32 @@ describe('terfi (promote) — kanonik akışa tek giriş', () => {
     ]);
   });
 
-  it('terfi edilen program normal render → analyze → select → publish ile yayımlanır; manifest kökenle aynı programı taşır', () => {
-    runSearch(repo.root, ROOT, shellSpec());
-    const id = passedId();
-    recordDecision(search, id, decision('approved'));
-    const job = briefedJob();
-    const { programHash } = promoteCandidate(job, search, id);
-    const render = renderCandidate(job).record;
-    expect(render.renderId.startsWith('r-')).toBe(true);
-    analyzeCandidate(job);
-    selectCandidate(job, undefined, 'aramadan terfi');
-    const { manifest } = publishJob(job);
-    expect(manifest.program.hash).toBe(programHash);
-    expect(manifest.render.pcm.hash).toBe(
-      loadSearch(search).report.candidates.find((c) => c.candidateId === id)?.render?.pcmHash,
-    );
-    expect(readdirSync(dir()).sort()).toEqual([
-      'candidates',
-      'report.json',
-      'selection.json',
-      'spec.json',
-    ]);
-  }, 60_000);
+  it(
+    'terfi edilen program normal render → analyze → select → publish ile yayımlanır; manifest kökenle aynı programı taşır',
+    () => {
+      runSearch(repo.root, ROOT, shellSpec());
+      const id = passedId();
+      recordDecision(search, id, decision('approved'));
+      const job = briefedJob();
+      const { programHash } = promoteCandidate(job, search, id);
+      const render = renderCandidate(job).record;
+      expect(render.renderId.startsWith('r-')).toBe(true);
+      analyzeCandidate(job);
+      selectCandidate(job, undefined, 'aramadan terfi');
+      const { manifest } = publishJob(job);
+      expect(manifest.program.hash).toBe(programHash);
+      expect(manifest.render.pcm.hash).toBe(
+        loadSearch(search).report.candidates.find((c) => c.candidateId === id)?.render?.pcmHash,
+      );
+      expect(readdirSync(dir()).sort()).toEqual([
+        'candidates',
+        'report.json',
+        'selection.json',
+        'spec.json',
+      ]);
+    },
+    RENDER_TIMEOUT,
+  );
 
   it('bayat arama reddedilir: program dosyası değişirse identity, spec artık adayı üretmezse stale', () => {
     runSearch(repo.root, ROOT, shellSpec());
@@ -266,30 +275,34 @@ describe('terfi (promote) — kanonik akışa tek giriş', () => {
     expect(existsSync(join(repo.root, job.jobsRoot, 'shell/program.json'))).toBe(false);
   });
 
-  it('elle program kaydı kökeni siler; programla uyuşmayan köken publish’i durdurur', () => {
-    runSearch(repo.root, ROOT, shellSpec());
-    const id = passedId();
-    recordDecision(search, id, decision('approved'));
-    const job = briefedJob();
-    promoteCandidate(job, search, id);
-    const originFile = join(repo.root, job.jobsRoot, 'shell/origin.json');
-    const origin = readFileSync(originFile, 'utf8');
-    const program = JSON.parse(
-      readFileSync(join(dir(), 'candidates', `${id}.json`), 'utf8'),
-    ) as Record<string, unknown>;
-    registerProgram(job, { ...program, seed: (program.seed as number) + 1 });
-    expect(existsSync(originFile)).toBe(false);
-    expect(jobStatus(job).artifacts.origin.state).toBe('none');
+  it(
+    'elle program kaydı kökeni siler; programla uyuşmayan köken publish’i durdurur',
+    () => {
+      runSearch(repo.root, ROOT, shellSpec());
+      const id = passedId();
+      recordDecision(search, id, decision('approved'));
+      const job = briefedJob();
+      promoteCandidate(job, search, id);
+      const originFile = join(repo.root, job.jobsRoot, 'shell/origin.json');
+      const origin = readFileSync(originFile, 'utf8');
+      const program = JSON.parse(
+        readFileSync(join(dir(), 'candidates', `${id}.json`), 'utf8'),
+      ) as Record<string, unknown>;
+      registerProgram(job, { ...program, seed: (program.seed as number) + 1 });
+      expect(existsSync(originFile)).toBe(false);
+      expect(jobStatus(job).artifacts.origin.state).toBe('none');
 
-    renderCandidate(job);
-    analyzeCandidate(job);
-    selectCandidate(job, undefined, 'elle');
-    writeFileSync(originFile, origin);
-    const status = jobStatus(job);
-    expect(status.artifacts.origin.state).toBe('stale');
-    expect(status.next.action).toBe('program');
-    expect(codeOf(() => publishJob(job))).toBe('stale');
-  }, 60_000);
+      renderCandidate(job);
+      analyzeCandidate(job);
+      selectCandidate(job, undefined, 'elle');
+      writeFileSync(originFile, origin);
+      const status = jobStatus(job);
+      expect(status.artifacts.origin.state).toBe('stale');
+      expect(status.next.action).toBe('program');
+      expect(codeOf(() => publishJob(job))).toBe('stale');
+    },
+    RENDER_TIMEOUT,
+  );
 });
 
 describe('dinleme kopyaları', () => {

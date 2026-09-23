@@ -238,6 +238,13 @@ export class Registry<
     return this.byId.has(id);
   }
 
+  /** Var olduğu bilinen kimliğin girdisi; yoksa hata (çağıran `has` ile sormuş olmalı). */
+  get(id: string): E {
+    const entry = this.byId.get(id);
+    if (!entry) throw new Error(`registry: bilinmeyen kimlik ${id}`);
+    return entry;
+  }
+
   /**
    * Programdaki bir başvuruyu çözer. Kimlik yoksa `unknown-id`, sürüm
    * farklıysa `version`, tür beklenmiyorsa `type` — hepsi render'dan önce.

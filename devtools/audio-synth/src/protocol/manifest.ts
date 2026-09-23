@@ -1,7 +1,8 @@
 import type { AssetClass } from '../analysis/assetQa';
 import { AUDIO_ANALYSIS_SCHEMA, type AudioAnalysisReportV1 } from '../analysis/report';
 import { AudioParamError } from '../guard/errors';
-import { checkChoice, checkNumber, checkObject } from '../guard/read';
+import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read';
+import { RENDER_SURFACE_SCHEME, type RenderSurfaceV1 } from '../program/surface';
 import { hashCanonical, type Sha256 } from './canonical';
 import { checkHash } from './records';
 import type { LoopSeamV1 } from '../analysis/seam';
@@ -54,6 +55,8 @@ export interface AudioAssetManifestV1 {
     readonly packageVersion: string;
     readonly rendererVersion: number;
     readonly registryHash: Sha256;
+    /** Programın kullandığı düğümlerin render yüzeyi; eski manifest'lerde yoktur. */
+    readonly renderSurface?: RenderSurfaceV1;
     readonly sourceCommit: string | null;
     readonly sourceTreeDirty: boolean | null;
     readonly runtime: { readonly node: string };
@@ -197,15 +200,17 @@ export function validateManifest(value: unknown): AudioAssetManifestV1 {
     );
   }
   checkObject(o.job, 'job', ['jobId', 'protocolVersion', 'path']);
-  checkObject(o.engine, 'engine', [
+  const engine = checkObject(o.engine, 'engine', [
     'package',
     'packageVersion',
     'rendererVersion',
     'registryHash',
+    'renderSurface',
     'sourceCommit',
     'sourceTreeDirty',
     'runtime',
   ]);
+  if (engine.renderSurface !== undefined) validateRenderSurface(engine.renderSurface);
   if (o.sources !== undefined) validateSources(o.sources);
   if (o.seam !== undefined) {
     const seam = checkObject(o.seam, 'seam', [
@@ -233,6 +238,43 @@ export function validateManifest(value: unknown): AudioAssetManifestV1 {
     'runtimeDeclaration',
   ]);
   return value as AudioAssetManifestV1;
+}
+
+function validateRenderSurface(value: unknown): void {
+  const o = checkObject(value, 'engine.renderSurface', ['scheme', 'hash', 'nodes', 'instruments']);
+  if (o.scheme !== RENDER_SURFACE_SCHEME) {
+    throw new AudioParamError(
+      'engine.renderSurface.scheme',
+      'type',
+      RENDER_SURFACE_SCHEME,
+      o.scheme,
+    );
+  }
+  const nodes = checkArray(o.nodes, 'engine.renderSurface.nodes').map((raw, i) => {
+    const n = checkObject(raw, `engine.renderSurface.nodes[${i}]`, ['id', 'version', 'hash']);
+    if (typeof n.id !== 'string' || n.id.length === 0) {
+      throw new AudioParamError(`engine.renderSurface.nodes[${i}].id`, 'type', 'kimlik', n.id);
+    }
+    checkNumber(n.version, `engine.renderSurface.nodes[${i}].version`, { min: 1, integer: true });
+    checkHash(n.hash, `engine.renderSurface.nodes[${i}].hash`);
+    return raw;
+  });
+  const instruments =
+    o.instruments === undefined
+      ? []
+      : checkArray(o.instruments, 'engine.renderSurface.instruments').map((raw, i) => {
+          const n = checkObject(raw, `engine.renderSurface.instruments[${i}]`, ['id', 'hash']);
+          checkHash(n.hash, `engine.renderSurface.instruments[${i}].hash`);
+          return raw;
+        });
+  if (hashCanonical({ nodes, instruments }) !== checkHash(o.hash, 'engine.renderSurface.hash')) {
+    throw new AudioParamError(
+      'engine.renderSurface.hash',
+      'combination',
+      'düğüm ve enstrüman kayıtlarının özeti değil',
+      o.hash,
+    );
+  }
 }
 
 /**

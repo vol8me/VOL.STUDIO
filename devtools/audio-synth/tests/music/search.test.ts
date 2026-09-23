@@ -20,14 +20,7 @@ import {
 import type { MusicLocation } from '../../src/protocol/music';
 import { createTestRepo, type TestRepo } from '../protocol/repo';
 import { musicBrief, unitProgram } from './fixtures';
-
-/*
- * Müzik testleri GERÇEK ses render eder; kapsam ölçümü (v8 + AST yeniden
- * eşleme) sentezi birkaç kat yavaşlatır ve 5 saniyelik varsayılan süre
- * dolar. Süre sınırı bu yüzden blok başına açıkça verilir — ölçülen bir
- * kısıt, keyfi bir sayı değil.
- */
-const HEAVY = { timeout: 120_000 };
+import { PIPELINE_BLOCK } from '../support/timeouts';
 
 const MUSIC_ROOT = 'devtools/audio-synth/audio-music';
 
@@ -53,7 +46,7 @@ function spec(overrides: Record<string, unknown> = {}): Record<string, unknown> 
   };
 }
 
-describe('MusicSearchSpecV1', HEAVY, () => {
+describe('MusicSearchSpecV1', PIPELINE_BLOCK, () => {
   it('geçerli spec’i doğrular', () => {
     const parsed = validateMusicSearchSpec(spec());
     expect(parsed.dimensions).toHaveLength(3);
@@ -91,7 +84,7 @@ describe('MusicSearchSpecV1', HEAVY, () => {
   });
 });
 
-describe('boyut uygulaması', HEAVY, () => {
+describe('boyut uygulaması', PIPELINE_BLOCK, () => {
   const base = () => validateMusicProgram(unitProgram());
 
   it('kazanç, groove, register, voicing, yoğunluk ve motif hedefleri uygulanır', () => {
@@ -134,7 +127,7 @@ describe('boyut uygulaması', HEAVY, () => {
   });
 });
 
-describe('sembolik arama', HEAVY, () => {
+describe('sembolik arama', PIPELINE_BLOCK, () => {
   const parsed = () => validateMusicSearchSpec(spec());
   const base = () => validateMusicProgram(unitProgram());
 
@@ -200,7 +193,7 @@ describe('sembolik arama', HEAVY, () => {
   });
 });
 
-describe('arama protokolü', HEAVY, () => {
+describe('arama protokolü', PIPELINE_BLOCK, () => {
   let repo: TestRepo;
   let loc: MusicLocation;
   beforeEach(() => {

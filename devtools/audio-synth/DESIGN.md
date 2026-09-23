@@ -260,13 +260,31 @@ politikası sürümü ve entegrasyon bilgisi taşır. `verify` farkı sınıflar
 libvorbis sürümü FFmpeg tarafından raporlanmaz ve bu körlük manifest'te
 `unreported` olarak yazılıdır), `pcm-changed` (ses değişti).
 
+**Render yüzeyi.** Manifest programın KULLANDIĞI düğümlerin render
+sözleşmesini (`engine.renderSurface`, `render-surface-v1`) kaydeder: kimlik,
+sürüm, parametre alanı ve varsayılanı, efekt yönlendirmesi, archetype
+genişletme verisi; müzikte ayrıca şeritlerin enstrüman beyanları. Açıklama
+metni ve test yoklama noktası girmez, kullanılmayan bir düğümün eklenmesi
+kaydı oynatmaz. `verify` kaydı düğüm düğüm karşılaştırır: PCM değiştiyse
+hangi düğümün sözleşmesinin kaydığını adıyla söyler. Bağlayıcı kanıt yine PCM
+kimliğidir. `engine.registryHash` bütün registry'nin render izdüşümünün
+özetidir — motor yüzeyinin sürüm etiketi, programa özgü kanıt değil.
+
+**Aynı sürümde sözleşme değişmez.** `render-surface.lock.json` her düğümün
+sürümünü ve izdüşüm özetini tutar; `tests/governance/renderSurface.test.ts`
+kilidin bugünkü registry ile birebir eşleşmesini ister. Kilidi
+`pnpm audio:surface-lock` yazar ve sürümü artmadan değişen bir sözleşmeyi
+yazmayı REDDEDER: parametre alanı ya da varsayılanı değişen düğüm sürümünü
+artırır, eski programlar eski sürümü adıyla ister.
+
 ### Publish kapısı
 
 `publishJob` TEK kanonik yoldur: özet zinciri → belgeler → hedef/yol/sınıf →
 yeniden render + PCM kimliği → aynı dizinde staging kodlama → çözme +
 kodek sonrası analiz + sınıf politikası → manifest doğrulaması → iki atomik
-rename → job kaydı. Politika düşerse hiçbir dosya yazılmaz; true-peak
-sınırlayıcı yoktur ve kapı ihlali DÜZELTMEZ. Manifest'siz ya da başka işe ait
+rename → job kaydı. Politika düşerse hiçbir dosya yazılmaz; kapı ihlali
+DÜZELTMEZ. True-peak sınırlama programın kendi kararıdır (`master.limiter`,
+isteğe bağlı): kapı onu ne açar ne de onun yerine sinyali ezer. Manifest'siz ya da başka işe ait
 bir dosyanın üzerine yazılmaz. `tests/governance/publishPath.test.ts` aktif
 ağaçlarda yazıcıyı çağıran her dosyayı gerekçesiyle listeler; yeni bir
 sahipsiz publish yolu testi düşürür.
@@ -867,7 +885,10 @@ tepe değerine göre peşinen kısmak sınırlayıcının açtığı payı geri 
 (ölçüldü: referans cue −18.9 LUFS'e kadar iniyordu). Ölçüm: libvorbis dönüşü
 true peak'i ~0.2 dB yükseltiyor (kaynakta −1.086 dBTP olan cue kodek sonrası
 −0.88 çıktı ve kapı onu reddetti); hedef pay 2 dB, bağlayıcı olan kodek
-sonrası −1 dBTP politikasıdır. True-peak sınırlayıcı EKLENMEDİ.
+sonrası −1 dBTP politikasıdır. Akustik programların isteğe bağlı 4× true-peak
+sınırlayıcısı (`master.limiter`) müzik yolunda KULLANILMAZ: stem yolunda
+doğrusal olmadığı için stem paritesini bozar, tek asset'li yollarda ise pay
+ölçülerek bulunduğu için gerekmez.
 
 ### Stem paketi ve adaptive QA
 
@@ -993,7 +1014,7 @@ etmek | yangın) ve `et` (et | etmek) haritalanmaz; çok sözcüklü terimler
 brief'ten mekanizma/stil/materyal önerir, seçim gerekçesini planda taşır
 (`term:` kaynaklı ya da `declared`); sağlayıcısız mekanizma (konuşma,
 Doppler) `unsupported` raporlanır, başka yapı taşıyla TAKLİT EDİLMEZ ve
-iskelet üretilmez. Kabiliyet matrisi registry'den türeir: `impact`
+iskelet üretilmez. Kabiliyet matrisi registry'den türetilir: `impact`
 supported, `musical` pipeline, `speech` unsupported.
 
 ### StyleProfile ve MaterialProfile
@@ -1019,7 +1040,7 @@ uyarımda −40 dB sönüm sırası ve mod aralığı materyal verisinin
 
 - **Contact/Impact**: hız arttıkça uyarım enerjisi ve atak parlaklığı
   monoton artar (temas süresi t_c ∝ v^(−1/5)); temas pürüzü temas süresiyle
-  süzülür — ölçülen düzeltme: kauçuk temasi metalden parlak çıkıyordu.
+  süzülür — ölçülen düzeltme: kauçuk teması metalden parlak çıkıyordu.
   Metal-metal, taş-taş, yumuşak-sert çiftleri aynı motor ölçülebilir
   biçimde ayrışır; `contact-metal`/`contact-rubber` canary'leri taşır,
   mutasyon (metal→lastik) beklentiyi düşürür.
@@ -1098,36 +1119,29 @@ baytlarının özetidir (`SampleAssetV1`); kütüphanedeki kayıtlar motorla
   AYRI ayrı kontrol edilir (ölçülen düzeltme: tek zarf bırakması iki
   davranışı birbirine bağlıyordu).
 
-## Hızlı Başlangıç
+## Hızlı Başlangıç — yeni bir oyun için ses
 
-### 1. Generate scripti
+Gönderilen ses TEK kapıdan geçer (`publishJob`); oyun betiğinde `writeOgg`
+çağırmak bu kapıyı atlar ve `tests/governance/publishPath.test.ts` onu
+reddeder. Yeni bir oyun şu yoldan ses alır:
 
-```typescript
-import { Presets, synth } from '@volstudio/audio-synth';
-import { writeOgg } from '@volstudio/audio-synth/writer';
+1. **Hedef beyanı.** Oyun paketinin köküne `audio-target.json`
+   (`AudioTargetV1`: biçim, örnek oranları, kanal sayıları, loop desteği)
+   yazılır; beyansız aktif oyun publish hedefi olamaz.
+2. **İş.** `audio:job init <jobId> --package <paket> --asset
+public/assets/audio/<sınıf>/<ad>.ogg [--runtime-key <anahtar>]` — sınıf
+   klasörü (`sfx`, `ui`, `ambience`, `music`) kodek sonrası politikayı seçer.
+3. **Brief → program.** `brief` ile istek kaydedilir; program elle,
+   `plan` iskeletinden ya da `search` → `promote` ile gelir.
+4. **Render → analiz → seçim → publish.** `status <jobId> --json` her an
+   sonraki geçerli adımı söyler; publish kodek SONRASI sınıf politikasından
+   geçmeyen asset'i yazmaz.
+5. **Oyun tarafı.** Oyun gönderilen OGG'yi kendi `public/assets/audio`
+   ağacından çalar (runtime anahtarı manifest'tedir); audio-synth'i
+   import etmez.
 
-const result = Presets.laser(880, 0.15);
-const sound = synth(result.duration, result);
-writeOgg('public/assets/audio/sfx/combat/laser.ogg', sound);
-```
-
-### 2. Paket scripti
-
-```json
-"generate:audio": "pnpm run generate:sounds && pnpm run generate:music"
-```
-
-### 3. Çalıştırma
-
-```bash
-pnpm --filter @volstudio/<game> generate:sounds
-```
-
-### 4. Oyun içinde çalma
-
-```typescript
-gameAudio.playSfx('fire', { volume: 0.3 });
-```
+İlişkili varyant setleri `family`, müzik `music` alt komutlarıyla aynı kapıdan
+geçer. Bütün sözdizimi `audio:job context --json` çıktısındadır.
 
 ## Parametre yüzeyi
 
@@ -1408,36 +1422,8 @@ konsol (chiptune) karakteri veriyor ve additive/FM ile üretilen müzikle
 tutarsız bir kimlik oluşturuyordu. Aynı FM/bandpass/gürültü yaklaşımı iki
 tarafta da kullanılınca ateş sesi ile ambiyans aynı dünyaya ait duyuluyor.
 
-### Yeni Ses Ekleme
-
-1. `games/vol-hell/scripts/audio/sfx/specs.ts`'teki `specs` dizisine ekle:
-
-```typescript
-{
-  name: 'my-sound-0',
-  category: 'combat',
-  peak: 0.55,          // olay önemine göre seviye hiyerarşisi
-  drive: 1.12,
-  render: () => {
-    const mix = shot(0.35);
-    addVoice(mix, metalClank(A3, 0.45, 0, 1301), 0);
-    addVoice(mix, deepImpact(A2 * 0.8, 0.2, 0, 1302), at(0.002));
-    return mix;
-  },
-}
-```
-
-2. `games/vol-hell/src/config/sounds.ts`'te `soundAssets` güncelle.
-3. `pnpm --filter @volstudio/vol-hell generate:sounds` çalıştır.
-4. Oyun kodunda `gameAudio.playSfx('mySound', { volume: 0.3 })` ile çal.
-5. Doğrula:
-
-```bash
-pnpm --filter @volstudio/vol-hell audio:qa  # click 0, clip 0 olmalı
-pnpm -r typecheck
-pnpm --filter @volstudio/<game> build
-pnpm --filter @volstudio/<game> test
-```
+Frozen ağaçta ses eklenmez ve yeniden üretilmez; yeni bir ürün sesini
+"Hızlı Başlangıç"taki kanonik yoldan alır.
 
 ### Seviye kuralı
 
@@ -1643,17 +1629,19 @@ frozen ağaçta üretim tetiklemez.
 
 Gerçek sınır **motorda değil KATALOGDA**. Primitifler güçlü; altı fiziksel
 model (`pluck`, `piano`, `bowedString`, `airColumn`, `brass`, `formant`)
-yirmi beş enstrüman presetini taşıyor.
+katalogdaki akustik enstrümanların çoğunu taşır. Güncel enstrüman sayısı
+elle yazılmaz, çalışan koddan okunur (`audio:job context --json` →
+`music.instruments.count`).
 
 Ölçülmüş, bilinen sınırlar:
 
 - Kenarlı osilatörlerin (PolyBLEP) kendi katlanması: 917 Hz testere −54 dB,
   3.6 kHz −47 dB alias/sinyal.
 - Paralel comb reverb tonal girdide renklenir (saf sinüste wet ±4 dB).
-- Master tavanları örnek tepesidir; kodek sonrası true peak onu aşabilir
-  (demo parçalarının 2/12'si −1 dBTP üstü). 4× true-peak sınırlayıcı
-  `master.limiter` ile OPT-İNDİR; varsayılan zincir bit-eşit kalmaya devam
-  eder ve varlık QA'sı aşımı raporlar.
+- Master tavanları örnek tepesidir; kodek sonrası true peak onu aşabilir.
+  4× true-peak sınırlayıcı `master.limiter` ile OPT-İNDİR; varsayılan zincir
+  bit-eşit kalmaya devam eder ve kodek sonrası sınıf politikası aşımı
+  reddeder.
 
 Kapsam DIŞINDA olanlar (bunlar bilinçli):
 
@@ -1661,7 +1649,9 @@ Kapsam DIŞINDA olanlar (bunlar bilinçli):
   kod → offline render → OGG → MusicEngine. Motor hazır tampon çalar; canlı
   sentez istenirse onun içine gömülmez, ayrı bir çalışma zamanı katmanı
   açılır.
-- **Real-time MIDI, ritmik grid, beatmatching, DAW/VST entegrasyonu.**
+- **Gerçek zamanlı MIDI, çalma zamanında ritmik grid/beatmatching, DAW/VST
+  entegrasyonu.** Offline adım deseni (tracker) yazımı bundan ayrıdır ve
+  kapsamdadır: desen render'dan önce score'a açılır.
 - **Gerçekçi foley ve insan sesi.** İkincisi formant modeli ister.
 
 ## Varlık QA'sı
@@ -1717,7 +1707,8 @@ pnpm --filter @volstudio/audio-synth typecheck
 pnpm --filter @volstudio/audio-synth test
 pnpm --filter @volstudio/audio-synth test:coverage    # signoff'ta coverage-audio
 pnpm --filter @volstudio/audio-synth audio:reference-check
-pnpm --filter @volstudio/audio-synth audio:production-check  # manifest'ler + aramalar + aile bank'ları yalnız kendilerinden
+pnpm --filter @volstudio/audio-synth audio:production-check  # manifest'ler, aramalar, aile bank'ları, müzik bundle'ları ve sample kayıtları yalnız kendilerinden
+pnpm --filter @volstudio/audio-synth audio:surface-lock      # registry render yüzeyi kilidi (aynı sürümde değişeni reddeder)
 pnpm --filter @volstudio/audio-synth audio:job canary run  # organik canary mekanik beklentileri
 pnpm --filter @volstudio/audio-synth audio:job context --json
 pnpm --filter @volstudio/audio-synth bench:budget     # kaynak bütçesi referans ölçümü
@@ -1726,11 +1717,12 @@ pnpm --filter @volstudio/audio-synth audio:audition   # git-dışı dinleme pake
 pnpm --filter @volstudio/audio-synth exec tsx scripts/fm-alias-report.ts
 ```
 
-Ses üreten AKTİF bir paket: reçetesini (`generate:audio`) koşar, çıktıyı
-`pnpm --filter @volstudio/audio-synth qa <dizin> --policy` ile kodek sonrası
-ölçer; `just audio-verify` (signoff) reçete tazeliğini, ölçüm çekirdeğinin
-referans denetimini, production manifest'lerini ve aktif ses ağaçlarının
-politikasını birlikte sınar.
+`just audio-verify` (signoff) dört işi birlikte sınar: `generate:audio`
+reçetesi tanımlayan aktif paketlerde reçete tazeliği, ölçüm çekirdeğinin
+referans araçla (FFmpeg ebur128) denetimi, production manifest'leri
+(`audio:production-check`) ve aktif ses ağaçlarının kodek sonrası politikası.
+Kanonik yoldan yayımlanan asset'in tazelik kanıtı reçete değil manifest'tir;
+`generate:audio` yalnız eski usul reçete taşıyan paketler içindir.
 
 ## Dikkat
 

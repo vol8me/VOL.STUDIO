@@ -152,24 +152,34 @@ export function instrumentProfile(id: string): InstrumentProfileV1 {
   return profile;
 }
 
+function declarationOf(id: string): Record<string, unknown> {
+  const meta = PRESET_CATALOG[presetOf(id)];
+  return {
+    id,
+    role: meta.role,
+    genre: meta.genre ?? null,
+    range: meta.range,
+    typicalFrequency: meta.typicalFrequency,
+    typicalDuration: meta.typicalDuration,
+  };
+}
+
 /** Ölçüm İÇERMEYEN beyan yüzeyi: registry özeti bunun üstünden alınır. */
 export function instrumentDeclaration(): unknown {
-  return instrumentIds().map((id) => {
-    const preset = presetOf(id);
-    const meta = PRESET_CATALOG[preset];
-    return {
-      id,
-      role: meta.role,
-      genre: meta.genre ?? null,
-      range: meta.range,
-      typicalFrequency: meta.typicalFrequency,
-      typicalDuration: meta.typicalDuration,
-    };
-  });
+  return instrumentIds().map(declarationOf);
 }
 
 export function instrumentRegistryHash(): Sha256 {
   return hashCanonical(instrumentDeclaration());
+}
+
+/**
+ * Tek enstrümanın render yüzeyi kaydı. Preset'lerin sürümü yoktur: bu özet
+ * beyanı (rol, aralık, tipik değerler) izler; preset DSP'sindeki bir
+ * değişikliği yalnız PCM kimliği yakalar.
+ */
+export function instrumentSurface(id: string): { id: string; hash: Sha256 } {
+  return { id, hash: hashCanonical(declarationOf(id)) };
 }
 
 export function assertInRange(profile: InstrumentProfileV1, midi: number, path: string): number {

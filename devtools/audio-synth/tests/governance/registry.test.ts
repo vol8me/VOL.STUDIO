@@ -8,6 +8,7 @@ import { renderProgram } from '../../src/program/render';
 import { buildContext } from '../../src/protocol/context';
 import { createTestRepo } from '../protocol/repo';
 import { probeResolver, probeSample } from '../support/samples';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 
 /**
  * Registry metadata'sı agent'ın TEK kaynağıdır: eksik birim/aralık/açıklama,
@@ -69,11 +70,7 @@ const PROBE_BANKS: Record<string, { zones: Record<string, unknown>[]; samples: s
 };
 
 /** Yoklamaya sample/banka parametresi olan kayıtta bildirim eklenir (kullanılmayan bildirim reddedilir). */
-function withSamples(
-  entry: ProgramEntry,
-  program: Record<string, unknown>,
-  params: Record<string, unknown>,
-) {
+function withSamples(entry: ProgramEntry, program: object, params: Record<string, unknown>) {
   const refs = Object.entries(entry.params).filter(([, spec]) => spec.type === 'sample');
   if (refs.length === 0) return program;
   const samples = new Set<string>();
@@ -131,18 +128,16 @@ function programWith(entry: ProgramEntry, raw: Record<string, unknown>): unknown
 function probeProgram(
   entry: ProgramEntry,
   params: Record<string, unknown>,
-  PROBE_BASE: Record<string, unknown>,
-): Record<string, unknown> {
+  base: Record<string, unknown>,
+): object {
   if (entry.kind === 'archetype') {
-    return {
-      ...expandArchetype({
-        schema: 'ArchetypeRequestV1',
-        archetype: entry.id,
-        version: entry.version,
-        variation: 0,
-        params,
-      }),
-    };
+    return expandArchetype({
+      schema: 'ArchetypeRequestV1',
+      archetype: entry.id,
+      version: entry.version,
+      variation: 0,
+      params,
+    });
   }
   if (entry.kind === 'effect') {
     if (entry.probe?.signal === 'impulsive') {
@@ -151,23 +146,23 @@ function probeProgram(
         resonators: [{ primitive: 'resonator.modal', version: 1, params: { decay: 0.6 } }],
       };
       const layers = [0, 0.7, 1.4].map((at, i) => ({ name: `hit${i}`, startSeconds: at, ...hit }));
-      return { ...PROBE_BASE, layers, effects: [node(entry.id, params)] };
+      return { ...base, layers, effects: [node(entry.id, params)] };
     }
     const layers =
-      PROBE_BASE.channels === 2
+      base.channels === 2
         ? [
             { name: 'left', source: noise, pan: -1 },
             { name: 'right', source: noise, pan: 0.6, gainDb: -4 },
           ]
         : [{ name: 'probe', source: noise }];
-    return { ...PROBE_BASE, layers, effects: [node(entry.id, params)] };
+    return { ...base, layers, effects: [node(entry.id, params)] };
   }
   if (entry.kind === 'modulator') {
     const tone = node('source.oscillator', {
       frequency: { value: 440, modulate: [{ by: 'm', depth: 0.05 }] },
     });
     return {
-      ...PROBE_BASE,
+      ...base,
       modulators: { m: { modulator: entry.id, version: entry.version, params } },
       layers: [{ name: 'probe', source: tone }],
     };
@@ -179,7 +174,7 @@ function probeProgram(
         frequency: { value: 440, modulate: [{ by: 'm', depth: 0.05 }] },
       });
       return {
-        ...PROBE_BASE,
+        ...base,
         controls: [control],
         modulators: { m: { modulator: 'modulator.walk', version: 1 } },
         layers: [{ name: 'probe', source: tone }],
@@ -187,12 +182,12 @@ function probeProgram(
     }
     const ids = [...new Set(entry.targets.map((t) => t.primitive))];
     return {
-      ...PROBE_BASE,
+      ...base,
       controls: [control],
       layers: ids.map((id, i) => layerFor(id, {}, `t${i}`)),
     };
   }
-  return { ...PROBE_BASE, layers: [layerFor(entry.id, params, 'probe')] };
+  return { ...base, layers: [layerFor(entry.id, params, 'probe')] };
 }
 
 const fingerprint = (program: unknown) => {
@@ -235,12 +230,6 @@ describe('registry governance', () => {
     for (const effect of entry.causal) expect(Object.keys(entry.params)).toContain(effect.param);
   });
 
-  /*
-   * Bütün düğümlerin parametre probe'ları gerçek render çalıştırır;
-   * kapsam ölçümü (v8) sentezi birkaç kat yavaşlatır ve 5 saniyelik
-   * varsayılan dolar (ölçülen: limiter 5.5 sn, saturation 8.3 sn). Süre
-   * sınırı bu yüzden verilir — ölçülen bir kısıt, keyfi bir sayı değil.
-   */
   it.each(nodes.map((e) => [e.id, e] as const))(
     '%s: her parametre GERÇEK implementasyona bağlı',
     (_id, entry) => {
@@ -262,7 +251,7 @@ describe('registry governance', () => {
         }
       }
     },
-    60_000,
+    RENDER_TIMEOUT,
   );
 
   it('makro hedefleri gerçek, sayısal registry parametrelerine işaret eder', () => {

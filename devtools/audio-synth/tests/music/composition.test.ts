@@ -23,16 +23,9 @@ import {
   scaleSteps,
 } from '../../src/music/tonal';
 import { edited, referenceProgram, unitAdaptiveProgram, unitProgram } from './fixtures';
+import { RENDER_BLOCK } from '../support/timeouts';
 
-/*
- * Müzik testleri GERÇEK ses render eder; kapsam ölçümü (v8 + AST yeniden
- * eşleme) sentezi birkaç kat yavaşlatır ve 5 saniyelik varsayılan süre
- * dolar. Süre sınırı bu yüzden blok başına açıkça verilir — ölçülen bir
- * kısıt, keyfi bir sayı değil.
- */
-const HEAVY = { timeout: 120_000 };
-
-describe('perde aritmetiği', HEAVY, () => {
+describe('perde aritmetiği', RENDER_BLOCK, () => {
   it('nota adı ↔ MIDI ↔ Hz', () => {
     expect(noteToMidi('C4')).toBe(60);
     expect(noteToMidi('A4')).toBe(69);
@@ -68,7 +61,7 @@ describe('perde aritmetiği', HEAVY, () => {
   });
 });
 
-describe('armoni ve voicing', HEAVY, () => {
+describe('armoni ve voicing', RENDER_BLOCK, () => {
   const tonal = { rootMidi: 57, scale: scaleSteps('minor') };
   const voicing = validateVoicing(
     { voices: 3, spread: 'close', register: [52, 76], maxMovement: 7 },
@@ -168,7 +161,7 @@ describe('armoni ve voicing', HEAVY, () => {
   });
 });
 
-describe('motif dönüşümleri', HEAVY, () => {
+describe('motif dönüşümleri', RENDER_BLOCK, () => {
   const motif = validateMotif(
     {
       id: 'call',
@@ -261,7 +254,7 @@ describe('motif dönüşümleri', HEAVY, () => {
   });
 });
 
-describe('groove ve insanlaştırma', HEAVY, () => {
+describe('groove ve insanlaştırma', RENDER_BLOCK, () => {
   it('düz profil ızgarayı bozmaz', () => {
     const result = applyGroove(STRAIGHT_GROOVE, {
       seed: 1,
@@ -315,7 +308,7 @@ describe('groove ve insanlaştırma', HEAVY, () => {
   });
 });
 
-describe('MusicProgramV1 ve genişletme', HEAVY, () => {
+describe('MusicProgramV1 ve genişletme', RENDER_BLOCK, () => {
   it('birim program geçerlidir ve özet kararlıdır', () => {
     const program = validateMusicProgram(unitProgram());
     expect(musicProgramHash(program)).toBe(musicProgramHash(validateMusicProgram(unitProgram())));

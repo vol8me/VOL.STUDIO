@@ -10,6 +10,7 @@ import { resolveProgram } from '../../src/program/schema';
 import { shiftAndStretch } from '../../src/synthesis/stretch';
 import { hashPcm } from '../../src/protocol/canonical';
 import { probeResolver, probeSample, probeStereoSample, registerSample } from '../support/samples';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 /**
  * Dalga 9 kapanış kanıtları: bağımsız perde/süre, sampler bölgeleri, granular
@@ -61,13 +62,7 @@ const program = (
   ...extra,
 });
 
-/*
- * WSOLA/faz vokoderi 1 saniyelik sesi gerçekten işler; kapsam ölçümü
- * (v8) sentezi birkaç kat yavaşlatır ve 5 saniyelik varsayılan dolar
- * (ölçülen: en ağır test 12.5 sn). Süre sınırı bu yüzden blok başına
- * verilir — ölçülen bir kısıt, keyfi bir sayı değil.
- */
-describe('bağımsız perde kaydırma ve zaman germe', { timeout: 60_000 }, () => {
+describe('bağımsız perde kaydırma ve zaman germe', RENDER_BLOCK, () => {
   const source = tone(220, 1);
 
   it.each(['phase-vocoder', 'wsola'] as const)(

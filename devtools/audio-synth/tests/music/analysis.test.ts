@@ -19,14 +19,7 @@ import {
   referenceThemeBook,
   unitProgram,
 } from './fixtures';
-
-/*
- * Müzik testleri GERÇEK ses render eder; kapsam ölçümü (v8 + AST yeniden
- * eşleme) sentezi birkaç kat yavaşlatır ve 5 saniyelik varsayılan süre
- * dolar. Süre sınırı bu yüzden blok başına açıkça verilir — ölçülen bir
- * kısıt, keyfi bir sayı değil.
- */
-const HEAVY = { timeout: 120_000 };
+import { RENDER_BLOCK } from '../support/timeouts';
 
 function analyze(
   document: Record<string, unknown>,
@@ -42,7 +35,7 @@ function analyze(
   });
 }
 
-describe('sembolik analiz', HEAVY, () => {
+describe('sembolik analiz', RENDER_BLOCK, () => {
   it('ses render ETMEDEN ölçer', () => {
     const report = analyze(unitProgram());
     expect(report.totals.events).toBeGreaterThan(0);
@@ -203,7 +196,7 @@ describe('sembolik analiz', HEAVY, () => {
   });
 });
 
-describe('geçiş sözleşmesi', HEAVY, () => {
+describe('geçiş sözleşmesi', RENDER_BLOCK, () => {
   it('motorun yaptığı geçişler kabul edilir', () => {
     const transition = validateTransition(
       { id: 'to-next', kind: 'crossfade', seconds: 2, bars: 1, to: 'reference-loop' },

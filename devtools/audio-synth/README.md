@@ -10,29 +10,42 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 
 ## Yapı
 
-- `src/` — sentez motoru
-- `src/program/` — kanonik `AudioBriefV1`/`AcousticProgramV1`, registry, program render'ı,
-  organik yapı taşları ve archetype genişletmesi
-- `src/protocol/` — `AudioJobV1`, manifest ve TEK publish kapısı (Node-only)
-- `src/search/` — deterministik aday arama laboratuvarı (spec, strateji, plan, rapor, arama seçimi)
+- `src/synthesis/`, `src/engine/`, `src/instruments/`, `src/presets/` —
+  sentez çekirdeği, fiziksel modeller ve preset kataloğu
+- `src/effects/` — efekt ve işleme çekirdekleri: reverb/delay/modülasyon,
+  RBJ EQ, kompresör, 4× true-peak sınırlayıcı, doygunluk, konvolüsyon
+- `src/program/` — kanonik `AudioBriefV1`/`AcousticProgramV1`, yapı taşı
+  registry'si ve render'ı; SoundGraph yönlendirmesi (bus/send/sidechain),
+  stil ve materyal profilleri, ses ontolojisi ve planlayıcı, sample
+  bildirimleri, render yüzeyi kaydı
+- `src/analysis/` — kanonik ölçüm çekirdeği (BS.1770, true peak, betimleyiciler,
+  dikiş, transient/gövde ayrıştırması, stem hizası)
+- `src/protocol/` — `AudioJobV1`, manifest, TEK publish kapısı, arama/aile/
+  müzik/sample protokolleri (Node-only)
+- `src/search/` — deterministik aday arama laboratuvarı
 - `src/family/` — genel ses ailesi programı, rol sözlüğü ve bank sözleşmesi
 - `src/music/` — müzik sözleşmesi: `MusicBriefV1`, `MusicThemeBookV1`,
-  `MusicProgramV1` → `MusicScoreV1`, armoni/motif/groove, sembolik analiz,
-  mastering yolları, stem paketi ve hiyerarşik arama
+  `MusicProgramV1` → `MusicScoreV1`, armoni/motif/groove, bus'lar, sembolik
+  analiz, mastering yolları, stem paketi ve hiyerarşik arama
 - `src/writer.ts` — WAV/OGG yazma (Node-only, FFmpeg gerekir)
-- `audio-jobs/` — job durumları; `platform-reference` üretim-referans işidir
-- `audio-searches/` — arama kayıtları; `reference-shell` referans aramasıdır
-- `audio-families/` — ses ailesi kayıtları ve varyant işleri; `reference-shell-hits` referans ailesidir
-- `audio-music/` — müzik kayıtları (brief, program, rapor, QA, stem işleri);
-  `reference-loop`, `reference-cue` ve `reference-adaptive` referans parçalardır
-- `audio-themebooks/` — proje başına müzik kitapları; `reference-theme` referans kitaptır
-- `canaries/` — organik canary görevleri ve insan dinleme durumu
-- `reference/production/` — referans fixture'ların yayımlanan asset'leri, manifest'leri, aile bank'ı ve müzik bundle'ları
-- `tests/` — motor, writer ve preset testleri
-- `scripts/` — QA (`audio-qa`, `audio-reference-check`), karakterizasyon
-  (`fm-alias-report`, `render-budget-bench`, `resonator-bench`), dinleme paketi
-  (`archetype-audition`) ve dönüştürücü CLI'ları
-- `export/` — yerel üretim çıktısı (izlenmez).
+- `audio-jobs/` — job durumları ve referans işler
+- `audio-searches/`, `audio-families/`, `audio-music/`, `audio-themebooks/` —
+  arama, aile, müzik ve müzik kitabı kayıtları; her birinde bir referans
+  fixture yaşar
+- `audio-samples/` — `SampleAssetV1` kayıtları (sentetik fixture'lar; WAV
+  git-dışı üretilir, JSON repodadır)
+- `canaries/` — sürümlü canary görevleri ve insan dinleme durumu
+- `reference/production/` — referans fixture'ların yayımlanan asset'leri,
+  manifest'leri, aile bank'ı ve müzik bundle'ları
+- `render-surface.lock.json` — registry render yüzeyi kilidi
+  (`pnpm audio:surface-lock`; aynı sürümde değişen sözleşmeyi reddeder)
+- `tests/` — birim, özellik, yönetişim (`tests/governance/`) ve protokol
+  testleri
+- `scripts/` — `audio-job` CLI'ı ve alt komutları (`scripts/lib/`), QA
+  (`audio-qa`, `audio-reference-check`), karakterizasyon (`fm-alias-report`,
+  `render-budget-bench`, `resonator-bench`), sample fixture üreticisi,
+  render yüzeyi kilidi, dinleme paketi ve dönüştürücü
+- `export/` — yerel üretim ve dinleme çıktısı (izlenmez)
 
 ## Doktrin
 
@@ -77,3 +90,11 @@ publish | status | verify | list | search`): sembolik analiz ses render
 etmeden koşar, stem'ler aynı publish kapısından geçer ve en son çalışma
 zamanı sözleşmesini taşıyan `MusicBundleV1` yazılır. Sözdizimi
 `music.commands` alanındadır.
+
+Ses tasarımı brief'ten başlayabilir: `plan` brief'in betimleyici
+sözcüklerinden mekanizma/stil/materyal planı ve render edilebilir bir
+iskelet üretir (sağlayıcısı olmayan mekanizmayı `unsupported` raporlar,
+taklit etmez), `graph` programın render etmeden okunan topolojisini verir,
+`samples` sample kütüphanesini listeler ve doğrular. Sözdizimi
+`soundDesign.planner.commands` ve `soundDesign.samples.commands`
+alanlarındadır.

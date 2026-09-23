@@ -8,6 +8,8 @@ import {
   validateMasteringPlan,
   type MusicMasteringPlanV1,
 } from './mastering';
+import { surfaceOf, type RenderSurfaceV1 } from '../program/surface';
+import { instrumentSurface } from './instruments';
 import { estimateMixCost, renderScoreMixed, resolveMusicMix, type ResolvedMusicMix } from './mix';
 import { validateMusicProgram, type MusicProgramV1 } from './program';
 import { estimateScoreCost, renderScoreRaw, MUSIC_RENDERER_VERSION } from './render';
@@ -101,6 +103,20 @@ export function renderMusicStem(
     seed: program.seed,
     cost: costOf(score, program, scoreOptions),
   };
+}
+
+/**
+ * Stem belgesinin render yüzeyi: mix bus'larında kullanılan düğümler ve
+ * bütün şeritlerin enstrüman beyanları (paylaşılan program her stem'de aynı).
+ */
+export function musicStemSurface(value: unknown): RenderSurfaceV1 {
+  const document = validateMusicStemProgram(value);
+  const mix = mixOf(document.music);
+  const ids = mix ? mix.buses.flatMap((bus) => bus.effects.map((effect) => effect.entry.id)) : [];
+  const instruments = [...new Set(document.music.lanes.map((lane) => lane.instrument))].map(
+    instrumentSurface,
+  );
+  return surfaceOf(ids, instruments);
 }
 
 function mixOf(program: MusicProgramV1): ResolvedMusicMix | null {

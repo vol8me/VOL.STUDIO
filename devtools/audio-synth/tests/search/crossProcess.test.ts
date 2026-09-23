@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { AcousticSearchReportV1 } from '../../src/search/report';
 import { createTestRepo, type TestRepo } from '../protocol/repo';
 import { reverseKeys, shellSpec } from './fixtures';
+import { PIPELINE_TIMEOUT } from '../support/timeouts';
 
 /**
  * İki BAĞIMSIZ süreç, iki ayrı depo: A spec'i olduğu gibi, B anahtarları ve
@@ -46,25 +47,29 @@ const reportOf = (repo: TestRepo) =>
   );
 
 describe('arama — süreçler arası determinizm', () => {
-  it('iki taze süreç aynı sırayı, kimlikleri, program ve PCM özetlerini üretir', () => {
-    const planA = cli(a, 'search', 'plan', '--file', 'spec.json');
-    const planB = cli(b, 'search', 'plan', '--file', 'spec.json');
-    expect({ ...planB, timings: null }).toEqual({ ...planA, timings: null });
+  it(
+    'iki taze süreç aynı sırayı, kimlikleri, program ve PCM özetlerini üretir',
+    () => {
+      const planA = cli(a, 'search', 'plan', '--file', 'spec.json');
+      const planB = cli(b, 'search', 'plan', '--file', 'spec.json');
+      expect({ ...planB, timings: null }).toEqual({ ...planA, timings: null });
 
-    cli(a, 'search', 'run', '--file', 'spec.json');
-    cli(b, 'search', 'run', '--file', 'spec.json');
-    const ra = JSON.parse(reportOf(a)) as AcousticSearchReportV1;
-    const rb = JSON.parse(reportOf(b)) as AcousticSearchReportV1;
-    const identity = (r: AcousticSearchReportV1) =>
-      r.candidates.map((c) => [
-        c.ordinal,
-        c.candidateId,
-        c.programHash,
-        c.render?.pcmHash ?? null,
-        c.state,
-      ]);
-    expect(identity(rb)).toEqual(identity(ra));
-    expect(identity(ra).filter((row) => row[3] !== null)).toHaveLength(ra.candidates.length);
-    expect(reportOf(b)).toBe(reportOf(a));
-  }, 120_000);
+      cli(a, 'search', 'run', '--file', 'spec.json');
+      cli(b, 'search', 'run', '--file', 'spec.json');
+      const ra = JSON.parse(reportOf(a)) as AcousticSearchReportV1;
+      const rb = JSON.parse(reportOf(b)) as AcousticSearchReportV1;
+      const identity = (r: AcousticSearchReportV1) =>
+        r.candidates.map((c) => [
+          c.ordinal,
+          c.candidateId,
+          c.programHash,
+          c.render?.pcmHash ?? null,
+          c.state,
+        ]);
+      expect(identity(rb)).toEqual(identity(ra));
+      expect(identity(ra).filter((row) => row[3] !== null)).toHaveLength(ra.candidates.length);
+      expect(reportOf(b)).toBe(reportOf(a));
+    },
+    PIPELINE_TIMEOUT,
+  );
 });

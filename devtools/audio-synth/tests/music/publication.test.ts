@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { hashCanonical } from '../../src/protocol/canonical';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { ProtocolError } from '../../src/protocol/errors';
 import {
   checkMusic,
@@ -19,16 +18,9 @@ import { validateManifest } from '../../src/protocol/manifest';
 import { verifyManifest } from '../../src/protocol/publish';
 import { jobStatus } from '../../src/protocol/status';
 import { themeBookHash, validateThemeBook } from '../../src/music/themeBook';
-import { createTestRepo, type TestRepo } from '../protocol/repo';
+import { cloneTestRepo, createTestRepo, type TestRepo } from '../protocol/repo';
 import { musicBrief, referenceThemeBook, unitAdaptiveProgram, unitProgram } from './fixtures';
-
-/*
- * Müzik testleri GERÇEK ses render eder; kapsam ölçümü (v8 + AST yeniden
- * eşleme) sentezi birkaç kat yavaşlatır ve 5 saniyelik varsayılan süre
- * dolar. Süre sınırı bu yüzden blok başına açıkça verilir — ölçülen bir
- * kısıt, keyfi bir sayı değil.
- */
-const HEAVY = { timeout: 120_000 };
+import { PIPELINE_BLOCK, PIPELINE_TIMEOUT } from '../support/timeouts';
 
 const MUSIC_ROOT = 'devtools/audio-synth/audio-music';
 const THEMEBOOKS_ROOT = 'devtools/audio-synth/audio-themebooks';
@@ -88,7 +80,7 @@ const codeOf = (fn: () => unknown): string | null => {
   }
 };
 
-describe('müzik belgeleri', HEAVY, () => {
+describe('müzik belgeleri', PIPELINE_BLOCK, () => {
   it('brief ve program okunur, kimlik dizinle eşleşmeli', () => {
     const loc = loopSetup();
     const documents = loadMusicDocuments(loc);
@@ -138,7 +130,7 @@ describe('müzik belgeleri', HEAVY, () => {
   });
 });
 
-describe('ön denetim ve kontrol', HEAVY, () => {
+describe('ön denetim ve kontrol', PIPELINE_BLOCK, () => {
   it('plan render etmeden rapor ve bütçe verir', () => {
     const loc = loopSetup();
     const preview = previewMusic(repo.root, loadMusicDocuments(loc));
@@ -177,64 +169,108 @@ describe('ön denetim ve kontrol', HEAVY, () => {
   });
 });
 
-describe('yayın', HEAVY, () => {
-  it(
-    'tek asset’li loop yayımlanır, bundle en son yazılır ve doğrulanır',
-    { timeout: 60_000 },
-    () => {
-      const loc = loopSetup();
-      const outcome = publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loc));
-      expect(outcome.stems).toEqual([{ id: 'mix', result: 'published' }]);
-      expect(existsSync(at(outcome.bundle))).toBe(true);
+/**
+ * Yayın pahalıdır (render + kodlama + çözme); aynı programı her testte
+ * sıfırdan yayımlamak yerine her fixture BİR KEZ yayımlanır. Salt okuyan
+ * testler bu altın depoya bakar, onu değiştirecek testler kopyasında çalışır.
+ */
+function published(setup: (target: TestRepo) => MusicLocation) {
+  const golden = createTestRepo();
+  const loc = setup(golden);
+  const outcome = publishMusic(golden.root, MUSIC_ROOT, loadMusicDocuments(loc));
+  return { golden, loc, outcome };
+}
 
-      const bundle = JSON.parse(readFileSync(at(outcome.bundle), 'utf8')) as Record<
-        string,
-        unknown
-      >;
-      expect(bundle.schema).toBe('MusicBundleV1');
-      expect((bundle.sync as { ok: boolean }).ok).toBe(true);
-      expect((bundle.stems as unknown[]).length).toBe(1);
+describe('yayın', PIPELINE_BLOCK, () => {
+  let loop: ReturnType<typeof published>;
+  let adaptive: ReturnType<typeof published>;
+  const clones: TestRepo[] = [];
+  const clone = (source: TestRepo) => {
+    const copy = cloneTestRepo(source);
+    clones.push(copy);
+    return copy;
+  };
+  /** Testin kendi deposunu (beforeEach) kopyayla değiştirir; afterEach kopyayı siler. */
+  const adopt = (copy: TestRepo) => {
+    repo.cleanup();
+    repo = copy;
+  };
+  const inRepo = (target: TestRepo, musicId: string): MusicLocation => ({
+    repoRoot: target.root,
+    musicRoot: MUSIC_ROOT,
+    musicId,
+  });
 
-      const verification = verifyMusic(loc);
-      expect(verification.complete).toBe(true);
-      expect(verification.checks.map((c) => c.name)).toEqual([
-        'program-hash',
-        'brief-hash',
-        'expansion',
-        'qa-hash',
-        'spec',
-        'links',
-        'sync',
-      ]);
-    },
-  );
+  beforeAll(() => {
+    loop = published((target) => {
+      repo = target;
+      return loopSetup();
+    });
+    adaptive = published((target) => {
+      repo = target;
+      return adaptiveSetup();
+    });
+  }, 2 * PIPELINE_TIMEOUT);
+
+  afterAll(() => {
+    for (const copy of clones) copy.cleanup();
+    loop.golden.cleanup();
+    adaptive.golden.cleanup();
+  });
+
+  const inGolden = (target: TestRepo, relative: string) => join(target.root, relative);
+
+  it('tek asset’li loop yayımlanır, bundle en son yazılır ve doğrulanır', () => {
+    expect(loop.outcome.stems).toEqual([{ id: 'mix', result: 'published' }]);
+    const bundle = JSON.parse(
+      readFileSync(inGolden(loop.golden, loop.outcome.bundle), 'utf8'),
+    ) as Record<string, unknown>;
+    expect(bundle.schema).toBe('MusicBundleV1');
+    expect((bundle.sync as { ok: boolean }).ok).toBe(true);
+    expect((bundle.stems as unknown[]).length).toBe(1);
+    const verification = verifyMusic(loop.loc);
+    expect(verification.complete).toBe(true);
+    expect(verification.checks.map((c) => c.name)).toEqual([
+      'program-hash',
+      'brief-hash',
+      'expansion',
+      'qa-hash',
+      'spec',
+      'links',
+      'sync',
+    ]);
+  });
 
   it('yayımlanmış asset manifest’inden yeniden üretilebilir', () => {
-    const loc = loopSetup();
-    publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loc));
     const manifestPath =
       'devtools/audio-synth/reference/production/manifests/music/unit-loop/mix.json';
-    const manifest = validateManifest(JSON.parse(readFileSync(at(manifestPath), 'utf8')));
+    const manifest = validateManifest(
+      JSON.parse(readFileSync(inGolden(loop.golden, manifestPath), 'utf8')),
+    );
     expect(manifest.brief.kind).toBe('music');
     expect(manifest.program.schema).toBe('MusicStemProgramV1');
     expect(manifest.policy.assetClass).toBe('music');
-    const verification = verifyManifest(repo.root, manifestPath);
+    expect(manifest.engine.renderSurface?.instruments?.length).toBeGreaterThan(0);
+    const verification = verifyManifest(loop.golden.root, manifestPath);
     expect(verification.ok).toBe(true);
     expect(verification.change).toBe('identical');
   });
 
   it('ikinci koşu değişmemiş stemi atlar', () => {
-    const loc = loopSetup();
-    publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loc));
-    const second = publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loc));
+    const copy = clone(loop.golden);
+    const second = publishMusic(
+      copy.root,
+      MUSIC_ROOT,
+      loadMusicDocuments(inRepo(copy, 'unit-loop')),
+    );
     expect(second.stems).toEqual([{ id: 'mix', result: 'unchanged' }]);
   });
 
   it('adaptive yayın stemleri ve referans mixi hizalı üretir', () => {
-    const loc = adaptiveSetup();
-    const outcome = publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loc));
-    expect(outcome.stems.map((s) => s.id)).toEqual(['bed', 'pulse', 'lead', 'mix']);
-    const bundle = JSON.parse(readFileSync(at(outcome.bundle), 'utf8')) as {
+    expect(adaptive.outcome.stems.map((s) => s.id)).toEqual(['bed', 'pulse', 'lead', 'mix']);
+    const bundle = JSON.parse(
+      readFileSync(inGolden(adaptive.golden, adaptive.outcome.bundle), 'utf8'),
+    ) as {
       sync: { checks: { id: string; lagSamples: number; frameDelta: number }[] };
       spec: { stems: { id: string; frames: number }[]; playback: string };
       stems: { id: string; pcmHash: string }[];
@@ -244,15 +280,17 @@ describe('yayın', HEAVY, () => {
     expect(bundle.spec.playback).toBe('adaptiveLoop');
     expect(new Set(bundle.spec.stems.map((s) => s.frames)).size).toBe(1);
     expect(new Set(bundle.stems.map((s) => s.pcmHash)).size).toBe(4);
-    expect(verifyMusic(loc).complete).toBe(true);
+    expect(verifyMusic(adaptive.loc).complete).toBe(true);
   });
 
   it('stem manifesti mix’ten farklı politika sınıfı taşır', () => {
-    const loc = adaptiveSetup();
-    publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loc));
     const base = 'devtools/audio-synth/reference/production/manifests/music/unit-adaptive';
-    const stem = validateManifest(JSON.parse(readFileSync(at(`${base}/lead.json`), 'utf8')));
-    const mix = validateManifest(JSON.parse(readFileSync(at(`${base}/mix.json`), 'utf8')));
+    const read = (name: string) =>
+      validateManifest(
+        JSON.parse(readFileSync(inGolden(adaptive.golden, `${base}/${name}.json`), 'utf8')),
+      );
+    const stem = read('lead');
+    const mix = read('mix');
     expect(stem.policy.assetClass).toBe('music-stem');
     expect(mix.policy.assetClass).toBe('music');
     expect(stem.assetId).toBe('unit-adaptive-lead');
@@ -260,18 +298,28 @@ describe('yayın', HEAVY, () => {
   });
 
   it('sembolik kapı düşerse hiçbir şey yayımlanmaz', () => {
-    const loc = seed('unit-loop', unitProgram(), musicBrief({ rhythmicDensity: 'sparse' }));
+    adopt(cloneTestRepo(loop.golden));
+    const loc = seed(
+      'other-loop',
+      unitProgram({
+        musicId: 'other-loop',
+        delivery: {
+          package: '@volstudio/audio-synth',
+          assetDir: 'reference/production/assets/music/other-loop',
+        },
+      }),
+      musicBrief({ id: 'other-loop', rhythmicDensity: 'sparse' }),
+    );
     expect(codeOf(() => publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loc)))).toBe(
       'policy',
     );
-    expect(existsSync(at('devtools/audio-synth/reference/production/assets/music/unit-loop'))).toBe(
-      false,
-    );
+    expect(
+      existsSync(at('devtools/audio-synth/reference/production/assets/music/other-loop')),
+    ).toBe(false);
   });
 
   it('içerik değişince sürüm artmalıdır', () => {
-    const loc = loopSetup();
-    publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loc));
+    adopt(cloneTestRepo(loop.golden));
     const changed = loopSetup({ seed: 99 });
     expect(codeOf(() => publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(changed)))).toBe(
       'overwrite',
@@ -283,26 +331,24 @@ describe('yayın', HEAVY, () => {
   });
 
   it('durum yalnız dosyalardan hesaplanır', () => {
-    const loc = loopSetup();
-    const before = musicStatus(loc);
-    expect(before.verification.complete).toBe(false);
-    expect(before.stems).toEqual([]);
-    publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loc));
-    const after = musicStatus(loc);
+    const fresh = musicStatus(loopSetup());
+    expect(fresh.verification.complete).toBe(false);
+    expect(fresh.stems).toEqual([]);
+    const after = musicStatus(loop.loc);
     expect(after.verification.complete).toBe(true);
     expect(after.stems).toEqual([{ id: 'mix', stage: 'published', next: 'done' }]);
-    expect(jobStatus(stemJob(loc, 'mix')).effectiveStage).toBe('published');
+    expect(jobStatus(stemJob(loop.loc, 'mix')).effectiveStage).toBe('published');
   });
 
   it('bozuk asset bundle doğrulamasını düşürür', () => {
-    const loc = loopSetup();
-    const outcome = publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loc));
-    const asset = at('devtools/audio-synth/reference/production/assets/music/unit-loop/mix.ogg');
-    writeFileSync(asset, 'bozuk');
-    const verification = verifyMusic(loc);
+    const copy = clone(loop.golden);
+    writeFileSync(
+      join(copy.root, 'devtools/audio-synth/reference/production/assets/music/unit-loop/mix.ogg'),
+      'bozuk',
+    );
+    const verification = verifyMusic(inRepo(copy, 'unit-loop'));
     expect(verification.complete).toBe(false);
     expect(verification.checks.find((c) => c.name === 'links')?.ok).toBe(false);
-    expect(outcome.bundle).toContain('unit-loop.json');
   });
 
   it('bundle yoksa yayın tamamlanmamıştır', () => {
@@ -313,15 +359,13 @@ describe('yayın', HEAVY, () => {
   });
 
   it('stem işi başka bir hedefe bağlanamaz', () => {
-    const loc = loopSetup();
-    publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loc));
+    adopt(cloneTestRepo(loop.golden));
     const jobFile = at(`${MUSIC_ROOT}/unit-loop/jobs/mix/job.json`);
     const job = JSON.parse(readFileSync(jobFile, 'utf8')) as Record<string, unknown>;
     const target = job.target as Record<string, unknown>;
     target.asset = 'reference/production/assets/music/unit-loop/other.ogg';
     job.revision = (job.revision as number) + 1;
     writeFileSync(jobFile, JSON.stringify(job, null, 2));
-    expect(hashCanonical(target)).not.toBe('');
     expect(
       codeOf(() =>
         publishMusic(repo.root, MUSIC_ROOT, loadMusicDocuments(loopSetup({ version: 2 }))),

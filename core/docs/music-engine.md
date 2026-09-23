@@ -366,25 +366,47 @@ Bu kurallar ölçümle konuldu; bozulduğunda sonuç duyulur şekilde kötüleş
 - **Loop'lanan parçada uzun fade YOK.** Yalnızca milisaniyelik `applyEdgeGuard`;
   uzun fade her turda duyulur bir boşluk bırakır.
 
+## Müzik asset sözleşmesi
+
+Yeni müzik `devtools/audio-synth` müzik hattında üretilir ve çalma
+sözleşmesini `MusicAssetSpecV1` olarak taşır. Spec bu paketin
+`src/audio/music/spec.ts` dosyasındadır, çünkü üretim aracı da çalışma
+zamanı da ondan TÜRETİR: ölçü → örnek dönüşümü tek yerdedir ve iki taraf
+ayrışamaz (ayrışma loop dikişinde duyulur, hiçbir test yakalamaz).
+
+| Ad (`Music.` altında)                              | Ne yapar                                                                                  |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `barsToFrames(bars, bpm, beatsPerBar, sampleRate)` | Ölçü → örnek; yuvarlamanın TEK yeri                                                       |
+| `validateMusicAssetSpec(value)`                    | Runtime'ın okuyabileceği kadar doğrular (şema, çalma modeli, kare sayısı, mastering yolu) |
+| `toMusicTrack(spec, { resolve })`                  | Spec'i motorun çaldığı `MusicTrack`e çevirir; loop noktaları SANİYE                       |
+| `assertEngineCompatible(spec, options)`            | Spec kompresörsüz ölçüldüyse motor kompresörü açıkken hata verir                          |
+| `MASTERING_PATHS`                                  | Çalma modeli → zorunlu mastering yolu                                                     |
+| `MUSIC_RUNTIME_CAPABILITIES`                       | Motorun GERÇEKTEN yaptığı geçişler ve sınırları (üretim bu listeye bakar)                 |
+
+**Kompresör uyumu.** Master kompresörü (−24 dB eşik, 12 oran) varsayılan
+olarak açıktır ve −14 LUFS'e getirilmiş bir parçayı ezer; offline ölçüm
+duyulanı temsil etmez. Spec'in `engine.compressor` beyanı motorun kurulumuyla
+eşleşmelidir.
+
 ## Yeni Müzik Ekleme
 
-1. `games/vol-hell/scripts/audio/music/` altına track için render script'i ekle
-   (mevcut `menu-hollow-signal.ts` gibi).
-2. `games/vol-hell/src/config/music.ts`'te track/stem tanımını güncelle — `bpm` ve
-   `loopEnd` script'teki değerlerle BİREBİR eşleşmeli.
-3. `games/vol-hell/scripts/audio/generate-music.ts` içinde yeni track'i export et.
-4. `games/vol-hell/src/config/music.ts`'te gerekirse state mantığını (ör. menu,
-   combat, boss) güncelle.
-5. `GameAudioDirector` veya sahne kodunda `loadMusic`/`playMusic` ile çalma anını bağla.
-6. Doğrula:
+1. audio-synth'te müzik isteğini (`brief.json`, `AudioBriefV1` `kind: 'music'`)
+   ve programı (`music.json`, `MusicProgramV1`) yaz;
+   `pnpm --filter @volstudio/audio-synth audio:job music analyze <id>` ses
+   render etmeden sembolik uyumu raporlar.
+2. `audio:job music publish <id>`: her stem kanonik publish kapısından geçer,
+   en son `MusicBundleV1` (içinde `MusicAssetSpecV1`) hedef paketin müzik
+   köküne yazılır. Oyun hedefi çalışma zamanı beyanı (`audio-target.json`)
+   ister.
+3. Oyun paketi bundle'ı kendi ağacından okur ve
+   `Music.toMusicTrack(bundle.spec, { resolve })` ile track'e çevirir; motoru
+   `compressor: bundle.spec.engine.compressor` ile kurar.
+4. Doğrula: `audio:job music verify <id>` (ya da `verify --all`) ve oyunun
+   kendi kapıları.
 
-```bash
-pnpm --filter @volstudio/vol-hell generate:music
-pnpm --filter @volstudio/vol-hell audio:qa  # click 0, clip 0 olmalı
-pnpm -r typecheck
-pnpm --filter @volstudio/vol-hell build
-pnpm test
-```
+Frozen VOL.HELL'in müziği bu hattan ÖNCE, oyun içi betiklerle üretildi
+(yukarıdaki "VOL.HELL Kullanımı"); o yol tarihsel kayıttır ve yeni müzik için
+kullanılmaz.
 
 ## Scheduler
 

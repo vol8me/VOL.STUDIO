@@ -34,19 +34,12 @@ import { hashPcm } from '../../src/protocol/canonical';
 import { Timeline } from '../../src/arrange';
 import { getPreset } from '../../src/presets';
 import { unitAdaptiveProgram, unitProgram } from './fixtures';
-
-/*
- * Müzik testleri GERÇEK ses render eder; kapsam ölçümü (v8 + AST yeniden
- * eşleme) sentezi birkaç kat yavaşlatır ve 5 saniyelik varsayılan süre
- * dolar. Süre sınırı bu yüzden blok başına açıkça verilir — ölçülen bir
- * kısıt, keyfi bir sayı değil.
- */
-const HEAVY = { timeout: 120_000 };
+import { RENDER_BLOCK } from '../support/timeouts';
 
 const program = () => validateMusicProgram(unitProgram());
 const adaptive = () => validateMusicProgram(unitAdaptiveProgram());
 
-describe('score render', HEAVY, () => {
+describe('score render', RENDER_BLOCK, () => {
   it('loop uzunluğu ölçüden TEK dönüşümle gelir', () => {
     const score = expandProgram(program());
     const rendered = renderScoreRaw(score, { playback: 'loop' });
@@ -113,7 +106,7 @@ describe('score render', HEAVY, () => {
   });
 });
 
-describe('mastering yolları', HEAVY, () => {
+describe('mastering yolları', RENDER_BLOCK, () => {
   it('çalma modeli yolu belirler', () => {
     expect(masteringPathOf('loop')).toBe('loop-cyclic');
     expect(masteringPathOf('playlistOneShot')).toBe('one-shot-limited');
@@ -192,7 +185,7 @@ describe('mastering yolları', HEAVY, () => {
   });
 });
 
-describe('stem paketi ve QA', HEAVY, () => {
+describe('stem paketi ve QA', RENDER_BLOCK, () => {
   it('tek asset yolunda kazanç politika aralığına çeker', () => {
     const music = program();
     const { plan } = renderAndPlan(music, expandProgram(music), DEFAULT_MUSIC_LUFS);
@@ -318,7 +311,7 @@ describe('stem paketi ve QA', HEAVY, () => {
   });
 });
 
-describe('stem programı', HEAVY, () => {
+describe('stem programı', RENDER_BLOCK, () => {
   const plan = planMastering({ playback: 'loop', targetLufs: -16, measuredLufs: -20 });
 
   it('belge doğrulanır ve deterministik render eder', () => {
@@ -377,7 +370,7 @@ describe('stem programı', HEAVY, () => {
   });
 });
 
-describe('kodlanmış hiza', HEAVY, () => {
+describe('kodlanmış hiza', RENDER_BLOCK, () => {
   const reference = Float32Array.from({ length: 2000 }, (_, i) =>
     Math.sin((2 * Math.PI * 5 * i) / 2000),
   );

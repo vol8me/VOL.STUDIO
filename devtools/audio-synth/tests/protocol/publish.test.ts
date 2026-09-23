@@ -2,7 +2,12 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderProgram } from '../../src/program/render';
-import { hashCanonical, prettyCanonicalJson, sha256Bytes } from '../../src/protocol/canonical';
+import {
+  canonicalJson,
+  hashCanonical,
+  prettyCanonicalJson,
+  sha256Bytes,
+} from '../../src/protocol/canonical';
 import { ProtocolError } from '../../src/protocol/errors';
 import {
   analyzeCandidate,
@@ -198,6 +203,52 @@ describe('manifest doğrulaması ve fark sınıfı', () => {
     expect(report.change).toBe('identical');
     expect(report.ok).toBe(true);
     expect(jobStatus(repo.loc()).artifacts.publication.state).toBe('valid');
+  });
+
+  it('manifest programın kullandığı düğümlerin render yüzeyini taşır', () => {
+    publishJob(prepare());
+    const manifest = readManifest();
+    const surface = manifest.engine.renderSurface;
+    expect(surface?.scheme).toBe('render-surface-v1');
+    expect(surface?.nodes.length).toBeGreaterThan(0);
+    const report = verifyManifest(repo.root, referenceManifest);
+    expect(report.checks.find((c) => c.name === 'render-surface')?.detail).toMatch(/düğüm aynı/);
+  });
+
+  it('kayıtlı yüzey kaydıysa teşhis PCM farkını düğümün adıyla açıklar', () => {
+    publishJob(prepare());
+    const manifest = readManifest();
+    const surface = manifest.engine.renderSurface;
+    if (!surface) throw new Error('yüzey kaydı bekleniyordu');
+    const nodes = surface.nodes.map((node, i) =>
+      i === 0 ? { ...node, hash: `sha256:${'0'.repeat(64)}` as const } : node,
+    );
+    const forged = {
+      ...manifest,
+      render: { ...manifest.render, pcm: { ...manifest.render.pcm, hash: sha256Bytes('x') } },
+      engine: {
+        ...manifest.engine,
+        renderSurface: { ...surface, nodes, hash: hashCanonical({ nodes, instruments: [] }) },
+      },
+    };
+    writeFileSync(join(repo.root, referenceManifest), prettyCanonicalJson(forged));
+    const detail = verifyManifest(repo.root, referenceManifest).checks.find(
+      (c) => c.name === 'render-surface',
+    )?.detail;
+    expect(detail).toContain('PCM farkını açıklayabilecek düğümler');
+    expect(detail).toContain(nodes[0].id);
+  });
+
+  it('bozuk render yüzeyi kaydı manifest doğrulamasında reddedilir', () => {
+    publishJob(prepare());
+    const manifest = readManifest();
+    const surface = manifest.engine.renderSurface;
+    if (!surface) throw new Error('yüzey kaydı bekleniyordu');
+    const forged = {
+      ...manifest,
+      engine: { ...manifest.engine, renderSurface: { ...surface, hash: sha256Bytes('x') } },
+    };
+    expect(() => validateManifest(JSON.parse(canonicalJson(forged)))).toThrow(/özeti değil/);
   });
 
   it('asset baytı kurcalanırsa doğrulama ve job durumu düşer', () => {

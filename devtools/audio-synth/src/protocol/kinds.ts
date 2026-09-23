@@ -1,5 +1,11 @@
 import type { RenderCost } from '../guard/budget';
-import { estimateMusicStemCost, renderMusicStem, validateMusicStemProgram } from '../music/stem';
+import {
+  estimateMusicStemCost,
+  musicStemSurface,
+  renderMusicStem,
+  validateMusicStemProgram,
+} from '../music/stem';
+import { programNodeIds, surfaceOf, type RenderSurfaceV1 } from '../program/surface';
 import { MUSIC_RENDERER_VERSION } from '../music/render';
 import type { AudioBriefV1 } from '../program/brief';
 import { estimateProgramCost, PROGRAM_RENDERER_VERSION, renderProgram } from '../program/render';
@@ -69,6 +75,12 @@ export function estimateForKind(kind: JobKind, document: unknown): RenderCost {
 export function validateForKind(kind: JobKind, document: unknown): void {
   if (kind === 'music') validateMusicStemProgram(document);
   else resolveProgram(document);
+}
+
+/** Programın kullandığı düğümlerin render yüzeyi (manifest kaydı ve teşhis için). */
+export function surfaceForKind(kind: JobKind, document: unknown): RenderSurfaceV1 {
+  if (kind === 'music') return musicStemSurface(document);
+  return surfaceOf(programNodeIds(resolveProgram(document), document));
 }
 
 /** Manifest'teki gömülü program şemasından türü okur (doğrulama kapısı için). */

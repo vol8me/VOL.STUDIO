@@ -19,6 +19,7 @@ import {
 } from '../../src/protocol/search';
 import { shellSpec } from '../search/fixtures';
 import { createTestRepo, type TestRepo } from './repo';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 
 const ROOT = 'devtools/audio-synth/audio-searches';
 const PACKAGE = fileURLToPath(new URL('../..', import.meta.url));
@@ -45,7 +46,7 @@ beforeAll(async () => {
   filtered = report.candidates.find((c) => c.state === 'filtered')?.candidateId as string;
   server = await startAuditionServer(loc);
   port = Number(new URL(server.url).port);
-}, 60_000);
+}, RENDER_TIMEOUT);
 afterAll(async () => {
   await server.close();
   repo.cleanup();
@@ -198,20 +199,24 @@ describe('dinleme sunucusu — güvenlik sınırı', () => {
     expect(searchFiles().sort()).toEqual([...before, 'selection.json'].sort());
   });
 
-  it('sunucudan yazılan karar taze bir süreçte yeniden kurulur (by: human)', () => {
-    const res = spawnSync(TSX, [CLI, 'search', 'status', 'shell-test', '--json'], {
-      cwd: repo.root,
-      encoding: 'utf8',
-    });
-    const status = JSON.parse(res.stdout) as {
-      candidates: { candidateId: string; decision: string; by: string; note: string }[];
-    };
-    expect(status.candidates.find((c) => c.candidateId === passed)).toMatchObject({
-      decision: 'approved',
-      by: 'human',
-      note: '<b>ilk</b>',
-    });
-  }, 60_000);
+  it(
+    'sunucudan yazılan karar taze bir süreçte yeniden kurulur (by: human)',
+    () => {
+      const res = spawnSync(TSX, [CLI, 'search', 'status', 'shell-test', '--json'], {
+        cwd: repo.root,
+        encoding: 'utf8',
+      });
+      const status = JSON.parse(res.stdout) as {
+        candidates: { candidateId: string; decision: string; by: string; note: string }[];
+      };
+      expect(status.candidates.find((c) => c.candidateId === passed)).toMatchObject({
+        decision: 'approved',
+        by: 'human',
+        note: '<b>ilk</b>',
+      });
+    },
+    RENDER_TIMEOUT,
+  );
 
   it('statik kopya veriyi HTML olarak gömmez: </script> kaçışı yapılır', () => {
     recordDecision(loc, passed, {

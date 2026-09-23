@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { JobLocation } from '../../src/protocol/location';
@@ -114,4 +114,19 @@ export function loudProgram(): Record<string, unknown> {
     ],
     master: { normalize: 'peak', peakDbfs: 0 },
   });
+}
+
+/**
+ * Yayımlanmış bir test deposunun bağımsız kopyası. Yayın pahalıdır (render +
+ * kodlama + çözme); bir fixture bir kez yayımlanır, onu DEĞİŞTİRECEK testler
+ * kopyasında çalışır ve altın depo salt okunur kalır.
+ */
+export function cloneTestRepo(source: TestRepo): TestRepo {
+  const root = mkdtempSync(join(tmpdir(), 'audio-job-clone-'));
+  cpSync(source.root, root, { recursive: true });
+  return {
+    root,
+    cleanup: () => rmSync(root, { recursive: true, force: true }),
+    loc: (jobId = 'knock') => ({ repoRoot: root, jobsRoot: JOBS_ROOT, jobId }),
+  };
 }

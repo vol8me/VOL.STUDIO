@@ -5,12 +5,12 @@ import { analyzeAudio, ANALYZER_VERSION, type AudioAnalysisReportV1 } from '../a
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read';
 import type { BatchBudget, BatchEstimate } from '../guard/batch';
-import { describeRegistry } from '../program/describe';
+import { registryRenderHash } from '../program/surface';
 import type { DimensionValue } from '../program/dimensions';
 import { SUBSTREAM_SCHEME } from '../program/random';
 import { PROGRAM_RENDERER_VERSION, renderProgram, type ProgramRender } from '../program/render';
 import type { SampleResolver } from '../program/samples';
-import { hashCanonical, hashPcm, HASH_PATTERN, type Sha256 } from '../protocol/canonical';
+import { hashPcm, HASH_PATTERN, type Sha256 } from '../protocol/canonical';
 import {
   CANDIDATE_ID,
   type BudgetVerdictV1,
@@ -189,7 +189,7 @@ export function buildSearchReport(
       rendererVersion: PROGRAM_RENDERER_VERSION,
       analyzerVersion: ANALYZER_VERSION,
       checksVersion: CHECKS_VERSION,
-      registryHash: hashCanonical(describeRegistry()),
+      registryHash: registryRenderHash(),
       substreamScheme: SUBSTREAM_SCHEME,
       descriptorMethods: { pitch: PITCH_METHOD, onsets: ONSET_METHOD },
     },

@@ -1,0 +1,277 @@
+{
+  "schema": "RenderSurfaceLockV1",
+  "nodes": {
+    "archetype.air-sac-creature": {
+      "version": 1,
+      "hash": "sha256:d5a9fe537daa301507fcc787f9cc095e93bbd6b345f480c6efff8567a07a0174"
+    },
+    "archetype.chitin-clicker": {
+      "version": 1,
+      "hash": "sha256:ef44d7795b91c2d242901ecc383fb171bebb05b8f98fefeb502b53ee7fd9f87d"
+    },
+    "archetype.fluid-creature": {
+      "version": 1,
+      "hash": "sha256:fd3de8489af668e966036738074f2fe47164851d4eca53060ca15ec5aacc655b"
+    },
+    "archetype.launcher": {
+      "version": 1,
+      "hash": "sha256:f5baf9e3184419d677f0545902489e1f23c73dd1c317ed553f057226da3617d2"
+    },
+    "archetype.membrane-creature": {
+      "version": 1,
+      "hash": "sha256:6a26b37a7cd1f5109be9d0a9bb51866eaa84139e95ef7508119e8e6579ebd184"
+    },
+    "archetype.pressure-event": {
+      "version": 1,
+      "hash": "sha256:695bdfbe17ef03141cdb8d1f3d134144421229d965ef638194811ffd28c4230c"
+    },
+    "archetype.resonant-shell": {
+      "version": 1,
+      "hash": "sha256:c115ce16d73416a0476d6687da73509a1ce47559294e481d7f2f31f39fd3d012"
+    },
+    "archetype.vocal-tube": {
+      "version": 1,
+      "hash": "sha256:a84b7b1e498c9f7bab39b15029fe4f88eded2a07ccf09f5a6ce253972242ca31"
+    },
+    "articulation.amplitude": {
+      "version": 1,
+      "hash": "sha256:f0afde4a936a776490e1567d572c5572f503de6b3f3502238c85bf5f8a9a8a2c"
+    },
+    "articulation.envelope": {
+      "version": 1,
+      "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0"
+    },
+    "control.airiness": {
+      "version": 1,
+      "hash": "sha256:bdb6cda6377918a0906b615f6de1f7d76e022fe177bc27c54a2f392d8430b5e1"
+    },
+    "control.body-size": {
+      "version": 1,
+      "hash": "sha256:a4e744aa41285d06324f8898045f2250df8684764f90dc8e2ebed939917a0146"
+    },
+    "control.cavity-size": {
+      "version": 1,
+      "hash": "sha256:2e874db2feb62c643fbb1c25a2af742cd55de618ba56b27bab50715fb6835dc0"
+    },
+    "control.instability": {
+      "version": 1,
+      "hash": "sha256:a279edb35f7160e92937b4a3344c855353a5c0c290d42029dd897381b72e22cb"
+    },
+    "control.pressure": {
+      "version": 1,
+      "hash": "sha256:0a6a29ee2359730f52d1282c0611f0a2653f8d38ec1cd7a145f2abbb66bca9d6"
+    },
+    "control.roughness": {
+      "version": 1,
+      "hash": "sha256:35228f057d6a249c1a6195198d4a66709609bcad326ed9e6b75fe061b53878bb"
+    },
+    "control.tension": {
+      "version": 1,
+      "hash": "sha256:4e8073a231e4114bcf36f241e53a0221fc520fe747c9da7a947221c78eeb9408"
+    },
+    "control.viscosity": {
+      "version": 1,
+      "hash": "sha256:08c072b664bf7c4f4e72f91a3ed0a352ec7b797433cd8563f37d5a1a20aa1078"
+    },
+    "control.wetness": {
+      "version": 1,
+      "hash": "sha256:b1c906a24962d28b3470599b3f1e79dc1386e9a5508643be6ffab10e51a600ae"
+    },
+    "curve.cosine": {
+      "version": 1,
+      "hash": "sha256:fbe9ba5a249bacbbcc7b85b59e3e0881da67dc59d45be5c3febac26a0d019dbf"
+    },
+    "curve.exponential": {
+      "version": 1,
+      "hash": "sha256:f36b21f14eec13ea1167da809d0e1469d32aaf013b6c015fd717cf3ffeadcca4"
+    },
+    "curve.linear": {
+      "version": 1,
+      "hash": "sha256:8d1876dc032a48775a51e8c9041ebac3db555368c0688c1af9505c5a1ea2db73"
+    },
+    "curve.spline": {
+      "version": 1,
+      "hash": "sha256:b83100e5fa1f18861391b43418fca446831ade306071d160a6bb0de7a8839bdd"
+    },
+    "effect.bitcrush": {
+      "version": 1,
+      "hash": "sha256:f64d3660d61c426bee62e18ccbb14697c5abf74d480bc4538117bc48f0f481b5"
+    },
+    "effect.compressor": {
+      "version": 1,
+      "hash": "sha256:b215e9dc2aee21a070909ad3b24f97ba5a7c6c500500c7cc9ced765073ee9fd8"
+    },
+    "effect.convolution": {
+      "version": 1,
+      "hash": "sha256:7230bd1c6133ea2a8f1ee5cca2426b166d90cd7f7d437ab73335ba8255e52432"
+    },
+    "effect.delay": {
+      "version": 1,
+      "hash": "sha256:4cf3b87e6736d02620b786ee7ba025e3e9f85e2879e55c81d56a441603ba92cb"
+    },
+    "effect.eq-bell": {
+      "version": 1,
+      "hash": "sha256:73c932af5fb3389065aa8cf48494308d8bd2e21e5df0e7dda63201f24c11c42b"
+    },
+    "effect.eq-pass": {
+      "version": 1,
+      "hash": "sha256:a8c80efe417630e7e3195525fd6fdefdca9ad4d0edb3981c35e8092715f7f722"
+    },
+    "effect.eq-shelf": {
+      "version": 1,
+      "hash": "sha256:7cda5a83fd27a1f1c041ff57e691885d70fa5a84dfdf29d555c60cf3d5e212be"
+    },
+    "effect.limiter": {
+      "version": 1,
+      "hash": "sha256:3e805bcc4839d64157e4d3050e510cbdeda1b8e2a638430ade83f92b6e42efcd"
+    },
+    "effect.reverb": {
+      "version": 1,
+      "hash": "sha256:7e3ae986781771d633de1f73e9d814b4e9f542fdb2e0ce6eed209e20dd989fe0"
+    },
+    "effect.saturation": {
+      "version": 1,
+      "hash": "sha256:f1618b5458b7b327a4415cc22bede9a5976a0e37c57273b6dd7b2712acd16e07"
+    },
+    "effect.transient-shaper": {
+      "version": 1,
+      "hash": "sha256:833a0646377dd6e64bb5b83910f1f854d0aa583f5e821f8232d38543c1190e0e"
+    },
+    "exciter.impact": {
+      "version": 1,
+      "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c"
+    },
+    "exciter.membrane": {
+      "version": 1,
+      "hash": "sha256:b9f7f769ee1231cdeb3308f02c54b955be69705286885e0805f92f23f9d56d96"
+    },
+    "exciter.turbulence": {
+      "version": 1,
+      "hash": "sha256:b27bfabd8961a6ac46213d56f1d5fa54642e4e5ef93da40c32f308960ae16011"
+    },
+    "modulator.drift": {
+      "version": 1,
+      "hash": "sha256:5e3891f9dd80bdf9a6783bab1c059b6e988334784e0cec08ed2d0e311f5d7931"
+    },
+    "modulator.jitter": {
+      "version": 1,
+      "hash": "sha256:70a8d0a9a254ab1b5a8b16296ed6ccd169076e187148c7ec783204ab32f378cb"
+    },
+    "modulator.sample-glide": {
+      "version": 1,
+      "hash": "sha256:061c11567bdc481e7624d3d1fae6dab3ced4c2aa14d858cba6ec97167801dc6f"
+    },
+    "modulator.shimmer": {
+      "version": 1,
+      "hash": "sha256:693a074a85edace5ffc87d8bbc276a727a3b517456c49ad47f01a7bf71e654a7"
+    },
+    "modulator.walk": {
+      "version": 1,
+      "hash": "sha256:3b4b61e44871542c65459a5dd225da4137bc972110b3bd628bba653f7ea1e059"
+    },
+    "resonator.biquad": {
+      "version": 1,
+      "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c"
+    },
+    "resonator.cavity": {
+      "version": 1,
+      "hash": "sha256:ade86fbd3a23e7fcdf99f84204e2ebdb0948dbdce66cf54334a11ad1f05489c1"
+    },
+    "resonator.formant": {
+      "version": 1,
+      "hash": "sha256:c5f56aa5da519a9a5ad4bf6eb3f2f7e88a89095fa0c2d4a983af8c36f4a58394"
+    },
+    "resonator.material": {
+      "version": 1,
+      "hash": "sha256:120526b0267fdae5963c04e9a06513ae45c6a2f96215f243c43f4d5f6b0dfdd4"
+    },
+    "resonator.modal": {
+      "version": 1,
+      "hash": "sha256:f24fa5c87c6aecf74eab9406650b96dcbc6c29891df1676fc98b15871c4d251c"
+    },
+    "resonator.tube": {
+      "version": 1,
+      "hash": "sha256:d36dedd359b98303b735361ef2b297f3a7404eb9621dcec0f5721b7b82ee9de6"
+    },
+    "source.airflow": {
+      "version": 1,
+      "hash": "sha256:855365ccd9dbee4b07804e871b5bcc31ad44318daf519e32418d8bf6c338d567"
+    },
+    "source.blast": {
+      "version": 1,
+      "hash": "sha256:c6024f3c97f874355c28191b70112a85a7e6828c80eb34ed9c26d93ae29a94d5"
+    },
+    "source.bubble": {
+      "version": 1,
+      "hash": "sha256:cae56a4c84b9fd2485849032345166cbd165d453a1e1c46ceb57024ffe7c18c5"
+    },
+    "source.bubbles": {
+      "version": 1,
+      "hash": "sha256:7088c7db2247ae6a56332df99b7ab9929921dae2d33e2503edb06872b05a3243"
+    },
+    "source.contact": {
+      "version": 1,
+      "hash": "sha256:409d5e0697cf0e2444ca3ba4939b5fcb01c58f4fabbf07c1294b73b02ce9a52d"
+    },
+    "source.electrical": {
+      "version": 1,
+      "hash": "sha256:65aabc71b9f6a460f0abf189dbf93fdbabbce25fa8f91606f71b95585888acf9"
+    },
+    "source.fire": {
+      "version": 1,
+      "hash": "sha256:51d75c3c15e111addb0de26fd81e67d8a5353f430874f4b75e7aea8e9fbc1b00"
+    },
+    "source.friction": {
+      "version": 1,
+      "hash": "sha256:91c81ff2366eae583d7cc0306b88d54c298fe4340b666cdf32ab6099a7037011"
+    },
+    "source.glottal": {
+      "version": 1,
+      "hash": "sha256:1a0b8f9f9433e507a095fa045f871bf7c51388ce166c6182bf9581e6a4c7bd25"
+    },
+    "source.granular": {
+      "version": 1,
+      "hash": "sha256:b7fffbf57d19567c1feebfd847eb665d8b894fbf35b9e540e5ff4c3c7fe84b87"
+    },
+    "source.gurgle": {
+      "version": 1,
+      "hash": "sha256:f353e9b1d5eea041f06f576722f541756612a70188f3681ec4da924d9b3f3da9"
+    },
+    "source.machine": {
+      "version": 1,
+      "hash": "sha256:378e408dfec3d4bb8f618707b3f2427556203baa54b5a4100742edf14a2c0995"
+    },
+    "source.micro-events": {
+      "version": 1,
+      "hash": "sha256:bd51f0a9ca601e1d39bf7681f7a02416ad316404a11fbe95d51cc5715f4e56f4"
+    },
+    "source.noise": {
+      "version": 1,
+      "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6"
+    },
+    "source.oscillator": {
+      "version": 1,
+      "hash": "sha256:d096d002f9a53f2dcfb7d7cfcc252b523fa03362b2f72af4c80f250a1efe4b03"
+    },
+    "source.pressure-wave": {
+      "version": 1,
+      "hash": "sha256:2356f7e48539c60b39edfbd3ca1287f94e8902e6d4bbda072d5476c6ca7e02a3"
+    },
+    "source.rain": {
+      "version": 1,
+      "hash": "sha256:dda56b4814e695e00dd50f7ad7c22c3eef3dfb444a133e603beb005f9d3309ee"
+    },
+    "source.sample": {
+      "version": 1,
+      "hash": "sha256:3e3fcb5f8802be7e509fca11d28bbc49b9f13173de30f9c307454b197bf9934f"
+    },
+    "source.sampler": {
+      "version": 1,
+      "hash": "sha256:a2c1d4bbb8c3e5f2293b9cb58cfbf3e91e49c068b12c9620636a460022169f3a"
+    },
+    "source.wind": {
+      "version": 1,
+      "hash": "sha256:53d347128be7b5d796265ec0e401624161c30a97a195eb98fd149b362a6e8ca5"
+    }
+  }
+}

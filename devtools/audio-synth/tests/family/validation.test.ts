@@ -20,6 +20,7 @@ import { initJob } from '../../src/protocol/job';
 import { edited } from '../support/json';
 import { createTestRepo, type TestRepo } from '../protocol/repo';
 import { dropletFamily, shellFamily } from './fixtures';
+import { PIPELINE_TIMEOUT } from '../support/timeouts';
 
 function issue(fn: () => unknown): string {
   try {
@@ -122,48 +123,62 @@ describe('aile protokolü — kenar dalları (geçici depo)', () => {
     expect(check.quality.verdict.pass).toBe(true);
   });
 
-  it('aile belgesi yoksa, bank bozuksa ya da kalite belgesi yoksa doğrulama TAMAM demez', () => {
-    expect(verifyFamily(loc)).toMatchObject({ complete: false, bank: '—' });
-    expect(familyStatus(loc).variants).toEqual([]);
-    publishFamily(repo.root, ROOT, dropletFamily());
-    expect(verifyFamily(loc).complete).toBe(true);
-    const bank = join(repo.root, 'devtools/audio-synth/reference/production/banks/droplets.json');
-    const original = readFileSync(bank, 'utf8');
-    writeFileSync(bank, '{}');
-    expect(verifyFamily(loc).checks.map((c) => c.name)).toEqual(['bank-schema']);
-    writeFileSync(bank, original);
-    rmSync(join(repo.root, ROOT, 'droplets/quality.json'));
-    expect(verifyFamily(loc).checks.find((c) => c.name === 'quality-hash')).toMatchObject({
-      ok: false,
-      detail: 'quality.json yok',
-    });
-    expect(
-      validateBank(JSON.parse(original)).variants.every(
-        (v) => v.descriptors.pitchHz === null || v.descriptors.pitchHz > 0,
-      ),
-    ).toBe(true);
-  }, 120_000);
+  it(
+    'aile belgesi yoksa, bank bozuksa ya da kalite belgesi yoksa doğrulama TAMAM demez',
+    () => {
+      expect(verifyFamily(loc)).toMatchObject({ complete: false, bank: '—' });
+      expect(familyStatus(loc).variants).toEqual([]);
+      publishFamily(repo.root, ROOT, dropletFamily());
+      expect(verifyFamily(loc).complete).toBe(true);
+      const bank = join(repo.root, 'devtools/audio-synth/reference/production/banks/droplets.json');
+      const original = readFileSync(bank, 'utf8');
+      writeFileSync(bank, '{}');
+      expect(verifyFamily(loc).checks.map((c) => c.name)).toEqual(['bank-schema']);
+      writeFileSync(bank, original);
+      rmSync(join(repo.root, ROOT, 'droplets/quality.json'));
+      expect(verifyFamily(loc).checks.find((c) => c.name === 'quality-hash')).toMatchObject({
+        ok: false,
+        detail: 'quality.json yok',
+      });
+      expect(
+        validateBank(JSON.parse(original)).variants.every(
+          (v) => v.descriptors.pitchHz === null || v.descriptors.pitchHz > 0,
+        ),
+      ).toBe(true);
+    },
+    PIPELINE_TIMEOUT,
+  );
 
-  it('aile genişletmesi bank’tan saparsa (farklı tohumla elle yazılmış aile) doğrulama sapmayı adlandırır', () => {
-    publishFamily(repo.root, ROOT, dropletFamily());
-    const file = join(repo.root, ROOT, 'droplets/family.json');
-    writeFileSync(
-      file,
-      JSON.stringify({ ...(JSON.parse(readFileSync(file, 'utf8')) as object), seed: 99 }),
-    );
-    const report = verifyFamily(loc);
-    expect(report.complete).toBe(false);
-    expect(report.checks.find((c) => c.name === 'expansion')?.detail).toMatch(/uyuşmayan/);
-  }, 120_000);
+  it(
+    'aile genişletmesi bank’tan saparsa (farklı tohumla elle yazılmış aile) doğrulama sapmayı adlandırır',
+    () => {
+      publishFamily(repo.root, ROOT, dropletFamily());
+      const file = join(repo.root, ROOT, 'droplets/family.json');
+      writeFileSync(
+        file,
+        JSON.stringify({ ...(JSON.parse(readFileSync(file, 'utf8')) as object), seed: 99 }),
+      );
+      const report = verifyFamily(loc);
+      expect(report.complete).toBe(false);
+      expect(report.checks.find((c) => c.name === 'expansion')?.detail).toMatch(/uyuşmayan/);
+    },
+    PIPELINE_TIMEOUT,
+  );
 
-  it('varyant işi başka bir hedefe aitse yayın kimlik hatasıyla durur', () => {
-    initJob(variantJob(loc, 'fast-heavy'), {
-      target: {
-        package: '@volstudio/audio-synth',
-        asset: 'reference/production/assets/sfx/families/droplets/other.ogg',
-        integration: { runtimeKey: null, loop: false },
-      },
-    });
-    expect(issue(() => publishFamily(repo.root, ROOT, dropletFamily()))).toBe('protocol:identity');
-  }, 120_000);
+  it(
+    'varyant işi başka bir hedefe aitse yayın kimlik hatasıyla durur',
+    () => {
+      initJob(variantJob(loc, 'fast-heavy'), {
+        target: {
+          package: '@volstudio/audio-synth',
+          asset: 'reference/production/assets/sfx/families/droplets/other.ogg',
+          integration: { runtimeKey: null, loop: false },
+        },
+      });
+      expect(issue(() => publishFamily(repo.root, ROOT, dropletFamily()))).toBe(
+        'protocol:identity',
+      );
+    },
+    PIPELINE_TIMEOUT,
+  );
 });
