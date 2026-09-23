@@ -629,14 +629,18 @@ bulguları `fail` ya da `report` olarak ailenin kendisi seçer. Uzaklık bir
 
 ### Organik canary derlemi
 
-`canaries/<id>.json` (`OrganicCanaryV1`): `breath`, `bubble`, `droplet`,
-`membrane-pulse`, `wet-squish`, `insect-like-chirp`, `cat-like-gesture`,
-`alien-fluid-call`. Her biri sürümlü kimlik, deterministik kaynak (program ya
+`canaries/<id>.json` (`OrganicCanaryV1`): 19 sürümlü görev — `breath`,
+`bubble`, `droplet`, `membrane-pulse`, `wet-squish`, `insect-like-chirp`,
+`cat-like-gesture`, `alien-fluid-call`, `campfire`, `contact-metal`,
+`contact-rubber`, `friction-rolling`, `friction-scrape`, `granular-breath`,
+`pressure-blast`, `rain`, `shifted-note`, `stretched-note`, `wind-gusts`.
+Her biri sürümlü kimlik, deterministik kaynak (program ya
 da archetype isteği + tohum), ucuz mekanik beklentiler ve dinleme rehberi
 taşır; mevcut yapı taşlarından kurulur, asset kütüphanesi değildir. Mekanik
 beklentilerin dişi mutasyonla sınanır (nabız hızı, düz perde eğrisi, nefese
-eklenen ton beklentiyi düşürür). İnsan dinleme durumu `canaries/reviews.json`
-(`CanaryReviewsV1`) içindedir, sekizi de `pending-human`dır ve yalnız
+eklenen ton beklentiyi düşürür; metal teması lastiğe dönünce, bağlı germe
+resample'a dönünce beklenti düşer). İnsan dinleme durumu `canaries/reviews.json`
+(`CanaryReviewsV1`) içindedir, 19'u da `pending-human`dır ve yalnız
 `canary review … --by human` ile değişir; canary sürümü artınca inceleme
 bayatlar. Mekanik geçiş sesin "organik" olduğunu kanıtlamaz.
 
@@ -955,6 +959,144 @@ melodik enstrümanlarla kurulur (parametrik davul ailesi Dalga 11). Müzik yolu
 yalnız ÖLÇÜLEN değerlerle doğrulandı — sembolik uygunluk, yükseklik, true
 peak, stem paritesi, kodlanmış hiza; insan dinlemesi yapılmadı ve "iyi müzik"
 iddiası yoktur (`music-no-listening-validation`).
+
+## Genel ses tasarımı ve üretim grafiği
+
+Dalga 7–10: SFX üretimi tek bir `AcousticProgramV1` şemasında birleşir.
+Önceki dalgaların fiziksel model/arama/publish kapıları AYNEN kalır; yeni
+yüzey onların yerine ikinci bir sistem kurmaz.
+
+### SoundGraph ve tek toplama yolu
+
+`SoundGraphV1` (`src/program/soundGraph.ts`) programın render ETMEDEN
+okunan topolojisidir: düğümler katmanlar (yapı taşı zinciri + rol +
+mekanizma), bus'lar ve master; kenarlar `route`, `send` ve `sidechain`.
+Parametre DEĞERLERİ topolojiye girmez — aynı topolojide farklı ayar ya da
+stil aynı düğüm/kenar kümesini verir; kanonik özet protokol katmanındadır.
+Tank ateşi (impact + pressure body + mechanical layer + ortam kuyruğu
+bus'ta) ve yılan tıslaması (airflow + articulation + resonator) aynı graph
+altyapısıyla, farklı topolojiyle geçer.
+
+Toplama tek yerdedir (`src/program/mixdown.ts`): katmanlar kendi bus'ına
+kanonik `addVoice` ile yerleşir, bus'lar topolojik sırayla işlenir, en son
+master zinciri koşar. Bus'sız program yalnız master'a yerleşir ve eski yolu
+izler — mevcut programların PCM'i bit-eşit değişmez (dördüncü bir mixer
+açılmaz).
+
+### Ontoloji, planner ve kabiliyet matrisi
+
+Ontoloji (`src/program/ontology.ts`) brief'in betimleyici
+sözcüklerinden mekanizmaya giden DETERMİNİSTİK sözlüktür (Türkçe +
+İngilizce). Anlamı belirsiz sözcükler bilerek eşlenmez: `fire` (ateş
+etmek | yangın) ve `et` (et | etmek) haritalanmaz; çok sözcüklü terimler
+(`tank fire`) sözcük dizisi olarak eşleşir. Planner (`src/program/planner.ts`)
+brief'ten mekanizma/stil/materyal önerir, seçim gerekçesini planda taşır
+(`term:` kaynaklı ya da `declared`); sağlayıcısız mekanizma (konuşma,
+Doppler) `unsupported` raporlanır, başka yapı taşıyla TAKLİT EDİLMEZ ve
+iskelet üretilmez. Kabiliyet matrisi registry'den türeir: `impact`
+supported, `musical` pipeline, `speech` unsupported.
+
+### StyleProfile ve MaterialProfile
+
+Stil adı ham preset adına indirgenmez: `StyleProfileV1` (`src/program/styles.ts`)
+transient sertliği, bant genişliği, doygunluk, perde dili, dinamik aralık,
+stereo genişlik gibi KONTROL ALANLARINA çözülür; ad oyun/sanatçı referansı
+ise kalıcı profile kopyalanmadan ayırt edici niteliklerine çözülür.
+Ölçülen ayrışma: aynı tank topolojisi üç profilde korunur (düğüm/kenar
+aynı), karakter farklı — `arcade-industrial` doygunluk basamağı > 0.5,
+`realistic-heavy` < 0.2; nötr stil bit-eşittir.
+
+Materyal EQ preset'i DEĞİLDİR (`src/program/materials.ts`): kayıp faktörü
+η, Young modülü E, yoğunluk ρ ve yerleşim (çubuk/levha/kabuk/zar) mod
+frekanslarını, mod başına ayrı çınlama süresini (T60 = 2.2/(η·f·oran^üs)),
+temas süresini (Hertz) ve yüzey pürüzünü türetir. Ölçülen ayrışma: aynı
+uyarımda −40 dB sönüm sırası ve mod aralığı materyal verisinin
+öngördüğü yönde. Modeller sonlu eleman çözümü değildir
+(`material-modal-approximation`): oranlar yerleşimden, sönüm sabit kayıp
+çarpanından türetilir; kompozit/anizotropi/sınır koşulu modellenmez.
+
+### SFX mekanizma aileleri
+
+- **Contact/Impact**: hız arttıkça uyarım enerjisi ve atak parlaklığı
+  monoton artar (temas süresi t_c ∝ v^(−1/5)); temas pürüzü temas süresiyle
+  süzülür — ölçülen düzeltme: kauçuk temasi metalden parlak çıkıyordu.
+  Metal-metal, taş-taş, yumuşak-sert çiftleri aynı motor ölçülebilir
+  biçimde ayrışır; `contact-metal`/`contact-rubber` canary'leri taşır,
+  mutasyon (metal→lastik) beklentiyi düşürür.
+- **Pressure** (`archetype.pressure-event`): şok, low-end gövde, türbülans,
+  döküntü, mekanizma ve ortam kuyruğu bağımsız katmanlardır — transient ile
+  low-end ayrı ayrı ölçülür; tank/havan atışı, büyük patlama ve enerji
+  deşarjı aynı aileden farklı programlardır; kısa süreye ölçekli iş render
+  öncesi reddedilir.
+- **Weapon** (`archetype.launcher`): tank topu, arcade taret ve bilimkurgu
+  fırlatıcı aynı archetype'tan farklı stil/materyalle; oyun başına DSP yok.
+- **Airflow**: Strouhal ölçülür — ağız çapı yarıya inince jet bandı oktav
+  yukarı, basınç U³ ile yükselir; tıslama/buhar/pnömatik/ıslık/nefes aynı
+  yapı taşı ailesinden belirgin ama ilişkili davranış verir.
+- **Friction**: yuvarlanma dönme darbesi v/(2πr) ile izlenir (hız ×2 →
+  periyodik oran ×2); kayma hızlandıkça bant merkezi yükselir. Ölçülen
+  düzeltme: yuvarlanma akışı AYRI bir kaynaktır, dönüş periyodu eski
+  birleşik modelde ölçülemiyordu; olaylar gürültünün ÜSTÜNE alınır.
+- **Machine**: RPM iki katına çıkınca baskın döngüsel bileşenler ölçümde
+  kayar; ivmelenme gesture'ı bileşeni zamanla yükseltir.
+- **Electrical**: hum şebeke harmoniği taşır, kararsız ark olay yoğun ve
+  gürültülüdür, şarj perdesi yükselirken enerji atışı düşer (YIN).
+- **Environment** (wind/rain/fire): uzun render'lar deterministiktir;
+  tekrar ölçüsü DİŞLİDİR — 2 sn'lik döngüyle tekrarlanan doku yakalanır;
+  loop sürümleri `master.loop` dikiş QA'sından geçer. `wind-gusts`, `rain`,
+  `campfire` canary'leri taşır.
+
+### Örneklemeli yol: sample, germe, granular, konvolüsyon
+
+Kayıttan kaynaklar prosedürel kaynaklarla AYNI katman/graph/publish
+sözleşmesindedir; oyun tarafı kaynağın türünü bilmez. Sample kimliği WAV
+baytlarının özetidir (`SampleAssetV1`); kütüphanedeki kayıtlar motorla
+üretilmiş SENTETİK fixture'dır — JSON repoda, WAV git-dışı üretilir
+(`synthetic-sample-fixtures`).
+
+- **Sampler** (`SampleBankV1`): velocity katmanı, round-robin, anahtar
+  bölgesi, start-offset ve loop bölgesi; hangi kaydın neden seçildiği
+  manifest'te gerekçelidir.
+- **Germe/perde kaydırma** birbirinden bağımsızdır (offline): WSOLA
+  dalga biçimini kopyaladığı için transient'i korur, faz vokoderi tonal
+  gövdede temizdir; yöntem yazarın seçimidir ve ölçümlü karşılaştırma
+  `stretch-method-choice` kaydındadır. `resample` klasik bağlı
+  değişimdir ve adıyla beyan edilir.
+- **Granular**: donmuş, hareketli ve yoğun bulut tekrarlanabilir ve
+  ayrışıktır; yoğunluk tavanı kaçak bellek ayırmasına izin vermez.
+- **Konvolüsyon**: IR'lar sample kütüphanesinden içerik özetiyle gelir;
+  bölümlü FFT (UPOLS, blok 2048) doğrudan konvolüsyona eşittir. Zamana
+  yayıldığı için katman insert'ine giremez, bus/return'de kullanılır; IR
+  uzunluğu maliyete girer ve render bütçesine tabidir.
+- **HPSS ayrıştırması**: STFT büyüklüğünde zaman/frekans medyanı +
+  Wiener maskeleri toplamı koruyarak böler. Araç sessizce kötü sonuç
+  vermez: atak için enerji payı değil TEPE oranı sorulur (ölçüldü: çınlayan
+  metal darbesinde atak enerjisi %0.06), ayrışma koşulları tutmazsa
+  `failed` ve adlı gerekçe döner. `reference-hybrid` bu yolla sample
+  transient + prosedürel gövde + IR konvolüsyonunu aynı publish kapısından
+  geçirir.
+
+### Bus, sidechain ve işleme
+
+- **Müzik bus'ları** (`MusicProgramV1.mix`): drum/music stemleri ayrı
+  bus'lara yönlenir; stem toplamı mix'e en çok −90 dBFS sapabilir (ölçülen
+  daha iyi). Doğrusal OLMAYAN bus tek stem'den beslenir; adaptive pakette
+  stem'ler arası sidechain reddedilir (`music-sidechain-lane-only`) —
+  aksi hâlde parite garantisi ölür.
+- **Sidechain**: sessiz sidechain çıktıyı bit-eşit bırakır; aktif sidechain
+  ölçülen bir ducking zarfı üretir.
+- **EQ**: RBJ "Audio EQ Cookbook" biquad'ları, float64 transpoze direkt
+  form II; işleme EQ'su sentez filtresinden AYRI çekirdektir (sentez
+  örnek başına otomasyon ister, işleme 0.01 dB mertebesinde doğru olmalı).
+- **Kompresör**: statik eğri eşik altı 1:1, üstü 1:ratio; atak/bırakma
+  zaman sabitleri basamakta ölçülür; bağlı mod iki kanala aynı zarfı verir.
+- **True-peak sınırlayıcı OPT-İNDİR**: 4× aşırı örnekli, `master.limiter`
+  ile açılır; varsayılan davranış (tepe normalize) eski programların
+  bit-eşitliği için değişmez. Kodek sonrası −1 dBTP politikası yine publish
+  kapısında denetlenir; kapı ihlali reddeder, düzeltmez.
+- **Transient şekillendirici**: atak ve gövde kazançlarının bırakması
+  AYRI ayrı kontrol edilir (ölçülen düzeltme: tek zarf bırakması iki
+  davranışı birbirine bağlıyordu).
 
 ## Hızlı Başlangıç
 
@@ -1509,8 +1651,9 @@ yirmi beş enstrüman presetini taşıyor.
   3.6 kHz −47 dB alias/sinyal.
 - Paralel comb reverb tonal girdide renklenir (saf sinüste wet ±4 dB).
 - Master tavanları örnek tepesidir; kodek sonrası true peak onu aşabilir
-  (demo parçalarının 2/12'si −1 dBTP üstü). True-peak limiter Dalga 10'dadır;
-  o zamana kadar varlık QA'sı aşımı raporlar.
+  (demo parçalarının 2/12'si −1 dBTP üstü). 4× true-peak sınırlayıcı
+  `master.limiter` ile OPT-İNDİR; varsayılan zincir bit-eşit kalmaya devam
+  eder ve varlık QA'sı aşımı raporlar.
 
 Kapsam DIŞINDA olanlar (bunlar bilinçli):
 

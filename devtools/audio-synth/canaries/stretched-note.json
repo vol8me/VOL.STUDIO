@@ -1,0 +1,74 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "stretched-note",
+  "version": 1,
+  "title": "Gerilmiş nota (WSOLA 2×)",
+  "purpose": "source.sample stretch 2 / wsola: perde korunur, süre iki katına çıkar, atak bulaşmaz (tone-c4-hard fixture’ı).",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 2.6,
+      "seed": 7,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.03
+      },
+      "samples": {
+        "hard": {
+          "id": "tone-c4-hard",
+          "hash": "sha256:50108ff9753f9bb4c84c509165828360eb80c5ebe1cc43c5a6131eb2e268e2b4",
+          "sampleRate": 48000,
+          "channels": 1,
+          "frames": 57600
+        }
+      },
+      "layers": [
+        {
+          "name": "note",
+          "source": {
+            "primitive": "source.sample",
+            "version": 1,
+            "params": {
+              "sample": "hard",
+              "stretch": 2,
+              "method": "wsola"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "pitch",
+      "min": 255,
+      "max": 268,
+      "minConfidence": 0.9
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "activeSeconds",
+      "min": 2.1
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "attackSeconds",
+      "max": 0.01
+    },
+    {
+      "kind": "clicks",
+      "max": 0
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Aynı C4 notası, iki kat uzun sönümle: atak orijinal kadar keskin kalmalı.",
+    "Hata belirtileri: titreşen/kekeleyen gövde (çerçeve pürüzü), yumuşamış ya da iki kez duyulan atak, perde kayması."
+  ]
+}

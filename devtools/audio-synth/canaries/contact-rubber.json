@@ -1,0 +1,62 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "contact-rubber",
+  "version": 1,
+  "title": "Lastik–metal temas",
+  "purpose": "source.contact: yumuşak cisim uzun temas süresi verir; aynı metal gövdenin tizi süzülür (contact-metal ile karşılaştır).",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 1.2,
+      "seed": 7,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.03
+      },
+      "layers": [
+        {
+          "name": "hit",
+          "source": {
+            "primitive": "source.contact",
+            "version": 1,
+            "params": {
+              "velocity": 3,
+              "mass": 0.3,
+              "materialA": "rubber",
+              "materialB": "metal",
+              "debris": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "descriptor",
+      "descriptor": "centroidHz",
+      "max": 1200
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "crestFactorDb",
+      "min": 20
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "attackSeconds",
+      "max": 0.005
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "contact-metal ile arka arkaya dinle: aynı metal gövde, ama tok ve kısık bir vuruş beklenir.",
+    "Hata belirtileri: metal–metal kadar parlak atak, gövdenin hiç duyulmaması, çift vuruş."
+  ]
+}

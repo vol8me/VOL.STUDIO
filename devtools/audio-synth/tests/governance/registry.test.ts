@@ -235,6 +235,12 @@ describe('registry governance', () => {
     for (const effect of entry.causal) expect(Object.keys(entry.params)).toContain(effect.param);
   });
 
+  /*
+   * Bütün düğümlerin parametre probe'ları gerçek render çalıştırır;
+   * kapsam ölçümü (v8) sentezi birkaç kat yavaşlatır ve 5 saniyelik
+   * varsayılan dolar (ölçülen: limiter 5.5 sn, saturation 8.3 sn). Süre
+   * sınırı bu yüzden verilir — ölçülen bir kısıt, keyfi bir sayı değil.
+   */
   it.each(nodes.map((e) => [e.id, e] as const))(
     '%s: her parametre GERÇEK implementasyona bağlı',
     (_id, entry) => {
@@ -256,6 +262,7 @@ describe('registry governance', () => {
         }
       }
     },
+    60_000,
   );
 
   it('makro hedefleri gerçek, sayısal registry parametrelerine işaret eder', () => {

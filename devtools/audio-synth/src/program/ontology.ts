@@ -11,8 +11,9 @@ import type { LayerRole } from './roles';
  *
  * `terms` bir brief'in betimleyici/niyet sözcüklerinden mekanizmaya giden
  * DETERMİNİSTİK sözlüktür (Türkçe + İngilizce, küçük harf). Anlamı belirsiz
- * sözcükler (ör. `fire`: ateş etmek | yangın, `ateş`) bilerek eşlenmez;
- * çok sözcüklü terimler (`tank fire`) sözcük dizisi olarak eşleşir.
+ * sözcükler (ör. `fire`: ateş etmek | yangın, `ateş`; `et`: et | etmek)
+ * bilerek eşlenmez; çok sözcüklü terimler (`tank fire`) sözcük dizisi olarak
+ * eşleşir.
  */
 export const ONTOLOGY_VERSION = 1;
 
@@ -389,7 +390,6 @@ export const MATERIAL_TERMS: readonly (readonly [string, string])[] = [
   ['cloth', 'cloth'],
   ['kumaş', 'cloth'],
   ['flesh', 'flesh'],
-  ['et', 'flesh'],
 ];
 
 export function mechanismById(id: string): MechanismV1 | undefined {

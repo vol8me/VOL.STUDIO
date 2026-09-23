@@ -61,7 +61,13 @@ const program = (
   ...extra,
 });
 
-describe('bağımsız perde kaydırma ve zaman germe', () => {
+/*
+ * WSOLA/faz vokoderi 1 saniyelik sesi gerçekten işler; kapsam ölçümü
+ * (v8) sentezi birkaç kat yavaşlatır ve 5 saniyelik varsayılan dolar
+ * (ölçülen: en ağır test 12.5 sn). Süre sınırı bu yüzden blok başına
+ * verilir — ölçülen bir kısıt, keyfi bir sayı değil.
+ */
+describe('bağımsız perde kaydırma ve zaman germe', { timeout: 60_000 }, () => {
   const source = tone(220, 1);
 
   it.each(['phase-vocoder', 'wsola'] as const)(

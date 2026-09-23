@@ -78,7 +78,7 @@ Dalga 4'ün dört mühendislik maddesi kapandı; kısa kanıtları
 `## Kapatılanlar`da, gerekçe DESIGN "Arama laboratuvarı". Algısal doğrulama
 ayrı ve açıktır:
 
-- [ ] **[P3] Organik canary'lerin insan dinlemesi.** Sekiz canary'nin
+- [ ] **[P3] Organik canary'lerin insan dinlemesi.** 19 canary'nin
       mekanik beklentileri geçiyor ama hiçbiri dinlenmedi;
       `canaries/reviews.json`da hepsi `pending-human`. Kapanır: bir insan her
       canary'yi dinleme rehberine göre dinler ve
@@ -125,193 +125,25 @@ gerçektir.
 
 ### Dalga 7 — Genel ses dili ve üretim grafiği
 
-> **Prerequisite:** `AcousticProgramV1`, registry/context, candidate-search
-> ve production publish (Dalga 1, Dalga 4) hazırdır.
-
-- [ ] **[P1] Tek bir sesi `transient → body → detail → tail → space`
-      katmanlarına ayırabilen genel `SoundGraph` oluşturulsun.** Mevcut
-      Exciter/Resonator/Articulator organik/fiziksel modele hizmet etmeye
-      devam eder fakat bütün SFX'lerin yalnız bu topolojiye zorlanması
-      gerekmez. `SoundGraph` birden fazla procedural/sample/hybrid source'u,
-      zaman yerleşimini, layer gain'ini, bus/send ilişkisini ve final output'u
-      ifade eder. Kapanır: tank ateşi gibi bir asset transient + pressure
-      body + mechanical layer + environmental tail olarak; yılan tıslaması
-      ise turbulence source + articulation + resonator olarak AYNI graph
-      altyapısıyla fakat farklı topology ile ifade edilebilir.
-- [ ] **[P1] Genel bir `SoundOntology` ve capability matrix oluşturulsun.**
-      Agent her yeni istekte yüzlerce DSP primitive'ini baştan keşfetmez;
-      motor `impact`, `pressure`, `explosion`, `airflow`, `hiss`, `friction`,
-      `scrape`, `rolling`, `mechanical`, `motor`, `electrical`, `fluid`,
-      `vocal`, `tonal`, `noise`, `UI`, `retro`, `musical` gibi mekanizma
-      ailelerinin hangi primitive/backend'lerle üretilebildiğini bildirir.
-      Kapanır: `audio:job context` "snake hiss" benzeri bir brief'te
-      airflow / turbulence / sibilant-resonance kabiliyetlerini; "tank fire"
-      brief'inde impact / pressure / mechanism / tail kabiliyetlerini
-      machine-readable biçimde gösterebilir.
-- [ ] **[P1] Agent için açıklanabilir `ProgramPlanner`/capability recommender
-      katmanı kurulsun.** Planner yaratıcı kararı LLM'den almak zorunda
-      değildir fakat brief'in hangi ses mekanizmalarına ayrılabileceğini
-      registry'den önerir; seçim gerekçesi programda saklanır. Kapanır: aynı
-      `AcousticBriefV1` için önerilen topology deterministic/stable registry
-      verisinden gelir; desteklenmeyen mekanizma uydurulmaz ve
-      `unsupported capability` açıkça raporlanır.
-- [ ] **[P2] Genel `StyleProfile` katmanı eklenir.** "arcade", "industrial",
-      "minimal", "clean sci-fi", "lo-fi", "cinematic", "organic", "toy-like",
-      "brutal", "soft", "retro-digital" gibi estetikler ham preset adına
-      indirgenmez; transient sertliği, bandwidth, saturation, pitch language,
-      dynamic range, stereo ve processing eğilimleri gibi kontrol alanlarına
-      dönüşür. Named oyun/sanatçı referansı verilirse kalıcı profile isim
-      olarak kopyalanmak yerine ayırt edici genel niteliklere çözülür.
-      Kapanır: aynı tank-fire `SoundProgram` `realistic-heavy`,
-      `arcade-industrial` ve `minimal-synthetic` `StyleProfile` ile
-      topology'yi koruyup ölçülebilir farklı karakterler üretebilir.
-- [ ] **[P2] `MaterialProfile` reusable fiziksel/algısal kavram olsun.**
-      Metal, wood, glass, stone, ceramic, hard-plastic, soft-plastic, cloth,
-      rubber, flesh/soft-tissue, fluid vb. materyaller impact dışında
-      damping, modal distribution, brightness, contact-noise ve tail
-      davranışını etkileyen machine-readable parametreler taşır. Kapanır:
-      aynı impact excitation farklı material profile'larda ölçülebilir ayrı
-      modal/damping davranışı gösterir; material adı yalnız EQ preset'ine
-      dönüşmez.
+Dalga 7'nin beş maddesi kapandı; kısa kanıtları `## Kapatılanlar`da, gerekçe
+DESIGN "Genel ses tasarımı ve üretim grafiği".
 
 ### Dalga 8 — Genel SFX mekanizmaları
 
-- [ ] **[P1] Physically-informed `Impact/Contact` sentez ailesi eklensin.**
-      Impact velocity/force, mass, hardness, contact duration, material pair,
-      resonant body ve debris/micro-impact katmanlarını ayırır. Stilize
-      seslerde fiziksel parametrelerden bilinçli sapmaya izin verir. Kapanır:
-      metal-metal, stone-stone ve soft-hard fixture'ları aynı motor üzerinden
-      üretilir; velocity arttıkça excitation energy/transient ölçüsü beklenen
-      yönde değişir.
-- [ ] **[P1] `Pressure/Explosion/Discharge` ailesi kurulsun.** Tek broadband
-      noise burst "patlama motoru" sayılmaz; shock/transient, low-frequency
-      pressure body, turbulent blast, debris/detail, mechanical action ve
-      environment tail ayrı katmanlardır. Kapanır: stilize tank/mortar shot,
-      büyük explosion ve kısa energy-discharge aynı reusable aileyi farklı
-      programlarla kullanabilir; low-end body ve transient kontrolleri
-      bağımsızdır.
-- [ ] **[P1] `Weapon/Launcher` üst-seviye archetype'ı genel katmanları
-      birleştirsin.** Weapon sesi firearm taklidiyle sınırlı değildir; charge /
-      trigger / muzzle-discharge / resonant body / bolt-mechanism /
-      shell-debris / tail katmanlarını isteğe bağlı graph olarak kurar.
-      Kapanır: tank cannon, arcade turret ve sci-fi launcher için üç ayrı
-      program aynı archetype'tan farklı StyleProfile/MaterialProfile ile
-      üretilebilir; hiçbirine game-specific DSP yazılmaz.
-- [ ] **[P1] `Airflow/Turbulence/Hiss` sentez ailesi eklensin.**
-      White-noise + lowpass yaklaşımından ileri gidilerek pressure, aperture,
-      flow speed, turbulence scale, spectral tilt, sibilance, cavity/resonance
-      ve Gesture kontrollü hava/gaz akışı modellenir. Kapanır: snake-like
-      hiss, steam leak, pneumatic release, wind whistle ve breath texture
-      aynı primitive ailesi üzerinden belirgin ama ilişkili davranışlarla
-      üretilebilir.
-- [ ] **[P2] `Friction/Scrape/Rolling` contact synthesis ailesi eklensin.**
-      Relative speed, roughness, pressure, surface granularity ve material
-      pair continuous noise yanında stochastic micro-contact event'lerini
-      kontrol eder. Kapanır: metal scrape, stone drag ve rolling debris
-      yalnız sample loop'u tekrarlamadan hareket hızına göre doğal
-      zaman/spektrum değişimi gösterir.
-- [ ] **[P2] `Machine/Motor/Rotor` procedural ailesi eklensin.**
-      RPM/fundamental, cylinder/blade/tooth count, harmonic structure, load,
-      mechanical noise, imbalance, bearing/friction ve
-      acceleration/deceleration Gesture parametreleri taşıyabilir. Kapanır:
-      motor, fan/rotor ve gear mechanism aynı cyclic-mechanical temelden
-      üretilir; RPM iki katına çıktığında beklenen dominant cyclic
-      bileşenler ölçümde kayar.
-- [ ] **[P2] `Electrical/Energy` ailesi eklensin.** Hum, buzz, pulse train,
-      arc/crackle event'leri, charge/discharge envelope, instability,
-      ring/FM-like components ve noise birlikte reusable şekilde ifade
-      edilir. Kapanır: electric hum, charge-up, arcade energy shot ve
-      unstable arc aynı sistemden farklı programlarla üretilebilir; yalnız
-      "distorted sine" preset'i değildir.
-- [ ] **[P2] Çevresel procedural texture ailesi genişletilsin.** Wind, rain,
-      fire/combustion, distant machinery, debris-bed ve benzeri sürekli
-      ambience'lar event population + stochastic texture + spectral motion
-      kullanabilir. Kapanır: en az wind/rain/fire uzun render'larda belirgin
-      kısa-loop tekrar izi göstermeden deterministic üretilebilir ve loop
-      versiyonları seam QA'dan geçer.
+Dalga 8'in sekiz maddesi kapandı; kısa kanıtları `## Kapatılanlar`da, gerekçe
+DESIGN "Genel ses tasarımı ve üretim grafiği".
 
 ### Dalga 9 — Hybrid/sample/resynthesis altyapısı
 
-> **Prerequisite:** sample resampler kalitesi (`## Açık`) ve render resource
-> budget (`## Açık`) kapanmıştır.
-
-- [ ] **[P1] Procedure/sample/hybrid source aynı `SoundGraph` altında
-      birinci sınıf olsun.** Gerçekçi ses gerektiğinde sample kullanmak
-      mimari başarısızlık sayılmaz; agent sample transient'i procedural body
-      ile veya procedural source'u gerçek IR/material response ile
-      birleştirebilir. Kapanır: tamamen procedural, tamamen sample ve hybrid
-      üç asset aynı publish/QA/provenance yolundan geçer ve oyun tarafı
-      kaynak türünü bilmek zorunda kalmaz.
-- [ ] **[P1] Sample engine production seviyesinde articulation ve bölge
-      desteği kazansın.** Tek WAV'ı pitch etmek dışında velocity layer,
-      round-robin, key/range mapping, start-offset, loop region ve
-      deterministic variation desteklenir. Kapanır: gerçek enstrüman veya
-      mekanik sample bankası agent tarafından kod içi özel loader yazmadan
-      kullanılabilir; hangi sample'ın neden seçildiği manifest'e girer.
-- [ ] **[P2] Pitch-shift ve time-stretch birbirinden bağımsız yüksek
-      kaliteli offline işlemler olsun.** Resample ile pitch+duration'ın
-      birlikte değişmesi tek yöntem değildir; transient ağırlıklı ve tonal
-      materyal için uygun algorithm/profile seçilebilir. Kapanır: tonal
-      fixture ±12 semitone shift'te süreyi; stretch fixture 0.5×/2×'de
-      pitch'i tolerans içinde korur ve artefakt ölçümü/işitsel canary ile
-      kıyaslanır.
-- [ ] **[P2] Granular/sample-cloud motoru eklensin.** Grain position,
-      duration, density, pitch distribution, envelope ve stereo placement
-      deterministik kontrol edilir; ambience, texture ve hybrid
-      creature/mechanical seslerde kullanılabilir. Kapanır: aynı source'tan
-      static freeze, moving texture ve dense cloud üç farklı use-case'te
-      repeatable render edilir; click ve runaway allocation yoktur.
-- [ ] **[P2] Offline convolution/IR desteği eklensin.** Room IR yanında
-      material body/resonance ve özel sound-design IR'ları kullanılabilir;
-      tail/resource hesabı explicit olur. Kapanır: mono/stereo IR doğru
-      channel routing ve deterministic output verir; uzun IR resource
-      budget'a tabidir ve publish manifest IR provenance/hash'ini taşır.
-- [ ] **[P2] Transient/body decomposition aracı hybrid sound-design için
-      değerlendirilsin.** Sample transient'ini koruyup tonal/noise body'yi
-      procedural değiştirmek gibi iş akışlarını destekler. Kapanır: kontrollü
-      fixture'da transient timing/peak korunurken body spektrumu ayrı
-      değiştirilebilir; başarısız ayrıştırmada araç sessizce kötü sonuç
-      vermez.
-- [ ] **[P3] Genel spectral/STFT işlem katmanı araştırılıp yalnız gerçek
-      ihtiyaçla eklensin.** Spectral freeze, morph, envelope transfer veya
-      resynthesis gibi işlemler granular/procedural çözümlerin
-      karşılayamadığı use-case'te ölçülür. Kapanır: en az iki somut
-      production görevi mevcut motorla belirgin yetersiz kalmadan yalnız
-      "profesyonel DAW'larda var" gerekçesiyle eklenmez.
+Dalga 9'un yedi maddesi kapandı; kısa kanıtları `## Kapatılanlar`da, gerekçe
+DESIGN "Genel ses tasarımı ve üretim grafiği". Spectral/STFT katmanı bilinçli
+kararla eklenmedi (`no-spectral-layer`).
 
 ### Dalga 10 — Mix, processing ve mastering kapasitesi
 
-> **Prerequisite:** ortak arrangement/mastering yolu (`## Açık`, P1) kapanmıştır
-> — yeni bus/send graph DÖRDÜNCÜ paralel mixer oluşturmaz.
-
-- [ ] **[P1] Genel audio bus/send graph üretim sisteminin parçası olsun.**
-      Voice/layer → group bus → send/return → master ilişkisi SFX ve
-      müzikte aynı altyapıyı kullanır; time-based FX nota/layer içine
-      rastgele gömülmez. Kapanır: tank ateşinin mechanism/body katmanları
-      ortak room send'ine; müziğin drum/music stemleri ayrı bus'lara
-      yönlenebilir ve graph deterministic serialize edilir.
-- [ ] **[P1] Production-grade parametric EQ ve shelf filtreleri eklensin.**
-      Sound design ve mastering yalnız mevcut synth filter'larıyla
-      yapılmaz; bell/low-shelf/high-shelf/high-pass/low-pass processing EQ
-      güvenli gain/Q/frequency kontrolleriyle gelir. Kapanır: standard
-      frequency-response fixture'larında beklenen gain ve center/cutoff
-      davranışı ölçülür.
-- [ ] **[P1] Compressor/limiter/transient-shaper ailesi eklensin.**
-      Threshold, ratio, attack, release, knee/makeup ve gerekiyorsa
-      lookahead limiter ayrı ve açık semantik taşır; dynamics effect ile
-      mastering safety limiter birbirine karıştırılmaz. Kapanır: compressor
-      static/dynamic curve testleri vardır; limiter defined ceiling/true-peak
-      policy'ye uygun fixture üzerinde doğrulanır.
-- [ ] **[P2] Sidechain/ducking offline arrangement primitive'i olsun.**
-      Müzikte kick/bass veya SFX-preview mix'te music ducking gibi üretim
-      ihtiyaçları oyun script'ine özel DSP yazmadan ifade edilir. Kapanır:
-      sidechain source aktifken target gain-reduction envelope ölçülür;
-      sıfır sidechain'de output parity korunur.
-- [ ] **[P2] Multiband processing yalnız ölçülmüş ihtiyaçla eklensin.**
-      Multiband compressor/exciter vb. varsayılan mastering zinciri
-      değildir; tek-band EQ/dynamics ile çözülemeyen production canary
-      kaydedildiğinde crossover phase/latency maliyetiyle birlikte
-      değerlendirilir.
+Dalga 10'un beş maddesi kapandı; kısa kanıtları `## Kapatılanlar`da, gerekçe
+DESIGN "Genel ses tasarımı ve üretim grafiği". Multiband bilinçli kararla
+eklenmedi (`no-multiband`).
 
 ### Dalga 11 — Profesyonel müzik üretim kapsamı
 
@@ -470,6 +302,163 @@ gerçektir.
 
 ## Kapatılanlar
 
+- [x] **[P1] `SoundGraph` tek bir sesi katmanlarına ayırır.** `SoundGraphV1`
+      transient→body→detail→tail→space katmanlarını, bus/send/sidechain
+      ilişkisini ve zaman yerleşimini taşır; parametre değerleri topolojiye
+      girmez. Kanıt: `tests/program/graph.test.ts` — tank ateşi (impact +
+      pressure + mechanical + kuyruk bus'ı) ve yılan tıslaması (airflow +
+      articulation + resonator) aynı render yolundan FARKLI topolojiyle
+      geçer; izdüşüm deterministik. (Dalga 7)
+- [x] **[P1] `SoundOntology` ve capability matrix.** Brief'in
+      betimleyicisinden mekanizmaya giden deterministik sözlük (TR+EN);
+      belirsiz sözcük (`fire`, `et`) bilerek eşlenmez. Kanıt:
+      `tests/program/planner.test.ts` — her mekanizma/tarif/materyal/stil
+      kimliği registry'de; capabilityMatrix `speech`/`doppler-motion`u
+      `unsupported`, `musical`i `pipeline` raporlar; `audio:job context`
+      soundDesign bölümü bunları makine-okunur verir. (Dalga 7)
+- [x] **[P1] `ProgramPlanner`/capability recommender.** Brief'ten
+      mekanizma/stil/materyal önerisi registry verisinden deterministik;
+      gerekçe planda (`term:`/`declared`). Kanıt:
+      `tests/program/planner.test.ts` — desteklenmeyen mekanizma iskelet
+      üretmez (`unsupported` açıkça raporlanır), plan deterministik, iskelet
+      `AcousticProgramV1` olarak render edilebilir. (Dalga 7)
+- [x] **[P2] `StyleProfile` kontrol alanlarına çözer.** Transient sertliği,
+      bant, doygunluk, perde dili, dinamik, stereo; oyun/sanatçı adı kalıcı
+      profile kopyalanmaz. Kanıt: `tests/program/styleMaterial.test.ts` —
+      realistic-heavy / arcade-industrial / minimal-synthetic tank
+      topolojisini korur (düğüm/kenar aynı) ve ölçülebilir farklı karakter
+      verir (doygunluk basamağı > 0.5 ↔ < 0.2); nötr stil bit-eşit; mono
+      programda genişlik uygulanmaz ve raporlanır. (Dalga 7)
+- [x] **[P2] `MaterialProfile` fiziksel türetim taşır.** η, E, ρ ve
+      yerleşim mod frekansı, mod başına T60, temas süresi ve pürüzü
+      belirler; materyal adı EQ preset'i değildir. Kanıt:
+      `tests/program/styleMaterial.test.ts` — aynı uyarımda ölçülen −40 dB
+      sönüm sırası ve mod ARALIĞI materyal verisinin öngördüğü yönde;
+      kayıp çarpanı çınlamayı kısaltır; tablo fiziksel türetmeleri taşır ve
+      kimlikler tekildir. (Dalga 7)
+- [x] **[P1] `Impact/Contact` sentez ailesi.** Hız/mass/sertlik/temas
+      süresi/materyal çifti ayrı katman; stilize sapma açık. Kanıt:
+      `tests/program/sfx.test.ts` — hız arttıkça uyarım enerjisi ve atak
+      parlaklığı monoton artar (t_c ∝ v^(−1/5)); metal-metal, taş-taş,
+      yumuşak-sert aynı motordan ayrışır (sönüm ve renk); temas pürüzü temas
+      süresiyle süzülür (ölçülen düzeltme: kauçuk metalden parlak
+      çıkıyordu); `contact-metal`/`contact-rubber` canary'leri, mutasyon
+      (metal→lastik) beklentiyi düşürür. (Dalga 8)
+- [x] **[P1] `Pressure/Explosion/Discharge` ailesi.** Şok/low-end
+      gövde/türbülans/döküntü/mekanizma/kuyruk bağımsız katmanlar; tek
+      broadband burst motor sayılmaz. Kanıt: `tests/program/sfx.test.ts` —
+      tank/havan atışı, büyük patlama, enerji deşarjı aynı
+      `archetype.pressure-event` ailesinden farklı programlardır; transient
+      ile low-end bağımsız ölçülür; ölçekli kısa süre render'dan önce
+      reddedilir; `pressure-blast` canary. (Dalga 8)
+- [x] **[P1] `Weapon/Launcher` archetype'ı.** charge/trigger/discharge/gövde/
+      mekanizma/döküntü/kuyruk isteğe bağlı graph. Kanıt:
+      `tests/program/sfx.test.ts` — tank topu, arcade taret ve bilimkurgu
+      fırlatıcı aynı `archetype.launcher` + farklı stil/materyal;
+      profil kabul etmeyen archetype'a materyal verilemez. (Dalga 8)
+- [x] **[P1] `Airflow/Turbulence/Hiss` ailesi.** Pressure/aperture/akış
+      hızı/türbülans ölçeği/spectral tilt/sibilance/kavite. Kanıt:
+      `tests/program/sfx.test.ts` — tıslama, buhar, pnömatik, ıslık, nefes
+      aynı yapı taşından belirgin ama ilişkili davranış verir; Strouhal:
+      ağız çapı yarıya inince jet bandı oktav yukarı, basınç U³ ile
+      yükselir. (Dalga 8)
+- [x] **[P2] `Friction/Scrape/Rolling` ailesi.** Bağıl hız/pürüz/basınç/
+      yüzey taneliliği + stokastik mikro temas olayları. Kanıt:
+      `tests/program/sfx.test.ts` — yuvarlanma darbesi v/(2πr) ile izlenir
+      (hız ×2 → periyodik oran ×2), kayma hızlandıkça bant merkezi yükselir;
+      metal kazıma, taş sürükleme, yuvarlanan döküntü aynı aileden ayrışır;
+      `friction-rolling`/`friction-scrape` canary'leri. (Dalga 8)
+- [x] **[P2] `Machine/Motor/Rotor` ailesi.** RPM/kanat sayısı/harmonik
+      yapı/yük/ivme gesture'ı. Kanıt: `tests/program/sfx.test.ts` — RPM iki
+      katına çıkınca baskın döngüsel bileşenler ölçümde kayar; ivmelenme
+      gesture'ı baskın bileşeni zamanla yükseltir. (Dalga 8)
+- [x] **[P2] `Electrical/Energy` ailesi.** Hum/buzz/arc olayları/şarj
+      zarfı/kararsızlık. Kanıt: `tests/program/sfx.test.ts` — hum şebeke
+      harmoniği taşır, kararsız ark gürültülü ve olay yoğundur, şarj perdesi
+      yükselirken enerji atışı düşer (YIN); yalnız "distorted sine"
+      preset'i değildir. (Dalga 8)
+- [x] **[P2] Çevresel procedural texture ailesi.** Wind/rain/fire event
+      population + stokastik doku + spectral motion. Kanıt:
+      `tests/program/sfx.test.ts` — wind/rain/fire uzun render'larda
+      deterministik; tekrar ölçüsü DİŞLİDİR (2 sn'lik döngüyle tekrarlanan
+      doku yakalanır); loop sürümleri `master.loop` dikiş QA'sından geçer
+      (`tests/program/graph.test.ts`); `wind-gusts`/`rain`/`campfire`
+      canary'leri. (Dalga 8)
+- [x] **[P1] Prosedürel/sample/hybrid aynı `SoundGraph` altında.** Kanıt:
+      `reference-sampled` (velocity katmanı, round-robin, anahtar bölgesi,
+      loop) ve `reference-hybrid` (HPSS transient + prosedürel gövde + IR)
+      aynı publish/QA/provenance kapısından geçer; oyun tarafı kaynak
+      türünü bilmez (`tests/program/sampling.test.ts`). (Dalga 9)
+- [x] **[P1] Sample engine articulation ve bölge desteği.** Velocity layer,
+      round-robin, key/range mapping, start-offset, loop region,
+      deterministik variation. Kanıt: `tests/program/sampling.test.ts` —
+      velocity/round-robin/anahtar bölgesi seçimi gerekçeli ve
+      deterministik, bölge perdesi kök notadan kayar, bölgesiz nota
+      render'dan önce reddedilir, loop bölgesi kaydı aşan notayı tıksız
+      sürdürür; hangi sample'ın neden seçildiği manifest'e girer. (Dalga 9)
+- [x] **[P2] Bağımsız perde kaydırma ve zaman germe.** Resample bağlı
+      değişimden ayrı olarak WSOLA ve faz vokoderi offline işlemlerdir. Kanıt:
+      `tests/program/sampling.test.ts` — ±12 semitone shift süreyi korur,
+      0.5×/2× germe perdeyi korur; artefakt ölçümü tonalde faz vokoderi
+      uyumlu, 2× germede WSOLA atağı daha iyi (ölçümlü karşılaştırma
+      `stretch-method-choice` kaydında); `shifted-note`/`stretched-note`
+      canary'leri (bağlı germe resample'a dönünce beklenti düşürür).
+      (Dalga 9)
+- [x] **[P2] Granular/sample-cloud motoru.** Grain position/duration/
+      density/pitch/envelope/stereo deterministik. Kanıt:
+      `tests/program/sampling.test.ts` — donmuş, hareketli ve yoğun bulut
+      tekrarlanabilir, ayrışık, tıksız; stereo yerleşim iki kanalı ayırır,
+      aşırı yoğunluk tanecik tavanında durur (kaçak ayırma yok);
+      `granular-breath` canary. (Dalga 9)
+- [x] **[P2] Offline konvolüsyon/IR.** Room/materyal/özel IR'lar sample
+      kütüphanesinden; tail/resource hesabı explicit. Kanıt:
+      `tests/program/sampling.test.ts` — birim IR girişi korur, UPOLS
+      doğrudan konvolüsyona eşit, stereo IR kanal kanal yönlendirir; IR
+      uzunluğu maliyete girer, zamana yayılan efekt insert olamaz;
+      manifest IR provenance/hash'ini taşır. (Dalga 9)
+- [x] **[P2] Transient/gövde ayrıştırması (HPSS).** Sample transient'i
+      koruyup gövdeyi prosedürel değiştirir. Kanıt:
+      `tests/program/sampling.test.ts` — kontrollü fixture'da transient
+      zamanı ±2 ms ve tepesi korunur, toplam yeniden kurulur; araç sessizce
+      kötü sonuç vermez (başarısız ayrışmada `failed` + adlı gerekçe; atak
+      için enerji payı değil TEPE oranı — ölçüldü: metal temasta %0.06).
+      (Dalga 9)
+- [x] **[P3] Spectral/STFT katmanı yalnız gerçek ihtiyaçla.** Bilinçli
+      karar: eklenmedi; STFT yalnız germe ve HPSS'in içinde kullanılır.
+      Kanıt: `KNOWN_LIMITATIONS` `no-spectral-layer` — iki somut production
+      görevi mevcut motorla belirgin yetersiz kalmadan "profesyonel
+      DAW'larda var" gerekçesiyle eklenmez. (Dalga 9)
+- [x] **[P1] Bus/send graph SFX ve müzikte aynı altyapı.** Kanıt:
+      `tests/music/mix.test.ts` — drum/music stemleri ayrı bus'lara
+      yönlenir, stem toplamı mix'e eşit (≤ −90 dBFS), doğrusal olmayan bus
+      tek stem'den beslenemez, adaptive'de stem'ler arası sidechain
+      reddedilir; `tests/program/graph.test.ts` — send/return kuyruğu
+      taşır, insert'ler katman üzerinde, graph deterministic serialize
+      edilir; time-based FX nota/layer içine rastgele gömülmez. (Dalga 10)
+- [x] **[P1] Parametrik EQ ve shelf filtreleri.** Kanıt:
+      `tests/effects/processing.test.ts` — RBJ biquad'ları: bell uzak bantta
+      etkisiz, shelf karşı uçta etkisiz; pass kaskadı aşama başına
+      12 dB/oktav, Q son aşamada rezonans; standard frequency-response
+      fixture'larında beklenen gain ve cutoff davranışı ölçülür. (Dalga 10)
+- [x] **[P1] Compressor/limiter/transient-shaper ailesi.** Ayrı ve açık
+      semantik; dynamics effect ile mastering limiter karışmaz. Kanıt:
+      `tests/effects/processing.test.ts` — statik eğri (eşik altı 1:1,
+      üstü 1:ratio; yumuşak diz sürekli), kararlı durum kazancı ±0.3 dB,
+      atak/bırakma τ ±%15; true-peak sınırlayıcı örnekler arası tepeyi
+      tavan altına çeker, tavan altındaki sinyale dokunmaz; `master.limiter`
+      OPT-İNDİR ve varsayılan zincir bit-eşit kalır
+      (`true-peak-limiter-opt-in`); transient şekillendiricide atak/gövde
+      bırakması AYRI (ölçülen düzeltme). (Dalga 10)
+- [x] **[P2] Sidechain/ducking offline primitive.** Kanıt:
+      `tests/effects/processing.test.ts` — sessiz sidechain çıktıyı bit-eşit
+      bırakır, aktif sidechain ölçülen bir ducking zarfı üretir, bağlı mod
+      iki kanala aynı zarfı verir; `tests/music/mix.test.ts` — müzikte
+      sidechain kaynağı yalnız şerittir (bus değil,
+      `music-sidechain-lane-only`). (Dalga 10)
+- [x] **[P2] Multiband processing yalnız ölçülmüş ihtiyaçla.** Bilinçli
+      karar: eklenmedi. Kanıt: `KNOWN_LIMITATIONS` `no-multiband` —
+      tek-band EQ/dynamics ile çözülemeyen production canary kaydedilince
+      crossover faz/gecikme maliyetiyle değerlendirilir. (Dalga 10)
 - [x] **[P1] `MusicBriefV1` müzik isteğinin machine-readable sözleşmesi.**
       Kullanım, çalma modeli, duygulanım, tempo/ölçü, tonal dil, melodik öne
       çıkma, ritmik yoğunluk, form, uzunluk, SFX spektral önceliği ve adaptive

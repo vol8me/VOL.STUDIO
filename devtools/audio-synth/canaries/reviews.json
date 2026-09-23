@@ -15,12 +15,42 @@
       "status": "pending-human",
       "version": 1
     },
+    "campfire": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
     "cat-like-gesture": {
       "note": null,
       "status": "pending-human",
       "version": 1
     },
+    "contact-metal": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "contact-rubber": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
     "droplet": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "friction-rolling": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "friction-scrape": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "granular-breath": {
       "note": null,
       "status": "pending-human",
       "version": 1
@@ -35,7 +65,32 @@
       "status": "pending-human",
       "version": 1
     },
+    "pressure-blast": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "rain": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "shifted-note": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "stretched-note": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
     "wet-squish": {
+      "note": null,
+      "status": "pending-human",
+      "version": 1
+    },
+    "wind-gusts": {
       "note": null,
       "status": "pending-human",
       "version": 1

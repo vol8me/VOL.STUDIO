@@ -1,0 +1,49 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "pressure-blast",
+  "version": 1,
+  "title": "Basınç patlaması",
+  "purpose": "archetype.pressure-event varsayılanı: şok + Friedlander gövde + blast + döküntü + kuyruk bus’ı.",
+  "source": {
+    "kind": "archetype",
+    "request": {
+      "schema": "ArchetypeRequestV1",
+      "archetype": "archetype.pressure-event",
+      "version": 1,
+      "variation": 0,
+      "seed": 5,
+      "params": {
+        "durationSeconds": 2.5
+      }
+    }
+  },
+  "expectations": [
+    {
+      "kind": "band-dominance",
+      "dominant": "sub",
+      "over": "mid"
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "attackSeconds",
+      "max": 0.01
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "decay40Seconds",
+      "max": 1.5
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "centroidHz",
+      "max": 300
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Kulaklık ya da sub’lı hoparlörle dinle: enerjinin çoğu sub bantta (ölçüldü: orta/tiz ~30 dB aşağıda); küçük hoparlörde yalnız atak duyulabilir.",
+    "Ani, göğüste hissedilen bir itki ve kısa kuyruk beklenir. Hata belirtileri: yalnız \"pat\" (gövde yok), kuyruğun kesik bitmesi, dağılmış çıtırtı."
+  ]
+}

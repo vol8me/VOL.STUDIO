@@ -11,6 +11,7 @@ import {
   validateCanary,
 } from '../../src/protocol/canary';
 import { AudioParamError } from '../../src/guard/errors';
+import { repoSampleResolver } from '../../src/protocol/samples';
 import { edited, getAt } from '../support/json';
 import { createTestRepo, type TestRepo } from '../protocol/repo';
 
@@ -24,17 +25,29 @@ const IDS = [
   'alien-fluid-call',
   'breath',
   'bubble',
+  'campfire',
   'cat-like-gesture',
+  'contact-metal',
+  'contact-rubber',
   'droplet',
+  'friction-rolling',
+  'friction-scrape',
+  'granular-breath',
   'insect-like-chirp',
   'membrane-pulse',
+  'pressure-blast',
+  'rain',
+  'shifted-note',
+  'stretched-note',
   'wet-squish',
+  'wind-gusts',
 ];
 
 describe('organik canary derlemi (gerçek depo)', () => {
   const canaries = loadCanaries(REPO);
+  const samples = repoSampleResolver(REPO);
 
-  it('sekiz görev sürümlü, dinleme rehberli ve deterministik kaynaklıdır', () => {
+  it('her görev sürümlü, dinleme rehberli ve deterministik kaynaklıdır', () => {
     expect(canaries.map((c) => c.id)).toEqual(IDS);
     for (const c of canaries) {
       expect(c.version).toBeGreaterThanOrEqual(1);
@@ -43,13 +56,23 @@ describe('organik canary derlemi (gerçek depo)', () => {
     }
   });
 
-  it.each(IDS)('%s: mekanik beklentiler geçer ve iki render aynı PCM’i verir', (id) => {
-    const canary = canaries.find((c) => c.id === id);
-    if (!canary) throw new Error(id);
-    const first = runCanary(canary).result;
-    expect(first.checks.filter((c) => !c.pass)).toEqual([]);
-    expect(runCanary(canary).result.pcmHash).toBe(first.pcmHash);
-  });
+  /*
+   * 19 canary × 2 render: 3 saniyelik sesi GERÇEK render eder; kapsam
+   * ölçümü (v8) sentezi birkaç kat yavaşlatır ve 5 saniyelik varsayılan
+   * dolar (ölçülen: en ağır canary 10 sn). Süre sınırı bu yüzden verilir —
+   * ölçülen bir kısıt, keyfi bir sayı değil.
+   */
+  it.each(IDS)(
+    '%s: mekanik beklentiler geçer ve iki render aynı PCM’i verir',
+    (id) => {
+      const canary = canaries.find((c) => c.id === id);
+      if (!canary) throw new Error(id);
+      const first = runCanary(canary, samples).result;
+      expect(first.checks.filter((c) => !c.pass)).toEqual([]);
+      expect(runCanary(canary, samples).result.pcmHash).toBe(first.pcmHash);
+    },
+    60_000,
+  );
 
   it('insan dinlemesi uydurulmaz: bütün incelemeler pending-human', () => {
     expect(canaryReviews(REPO).map((r) => [r.id, r.status, r.note])).toEqual(
@@ -111,6 +134,24 @@ describe('canary beklentilerinin dişi var (mutasyon)', () => {
       ]),
     );
     expect(runCanary(mutated).result.checks.find((c) => c.kind === 'aperiodic')?.pass).toBe(false);
+  });
+
+  const failing = (id: string, edit: [readonly (string | number)[], unknown]) => {
+    const doc = JSON.parse(
+      readFileSync(join(REPO, CANARIES_ROOT, `${id}.json`), 'utf8'),
+    ) as unknown;
+    const result = runCanary(validateCanary(edited(doc, edit)), repoSampleResolver(REPO)).result;
+    return result.checks.filter((c) => !c.pass).map((c) => c.kind);
+  };
+
+  it('metal temas lastiğe dönünce parlaklık ve perde beklentileri düşer', () => {
+    const path = ['source', 'program', 'layers', 0, 'source', 'params', 'materialA'];
+    expect(failing('contact-metal', [path, 'rubber'])).toContain('descriptor');
+  });
+
+  it('germe bağlı yöntemle yapılınca perde beklentisi düşer (resample oktav indirir)', () => {
+    const path = ['source', 'program', 'layers', 0, 'source', 'params', 'method'];
+    expect(failing('stretched-note', [path, 'resample'])).toContain('pitch');
   });
 });
 

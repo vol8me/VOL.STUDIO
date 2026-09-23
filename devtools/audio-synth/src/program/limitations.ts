@@ -22,12 +22,12 @@ export const KNOWN_LIMITATIONS: readonly KnownLimitation[] = [
       'perdeli içerikte 1 kHz üstünde sinüs/üçgen ya da bant sınırlı bir kaynak tercih edilir.',
   },
   {
-    id: 'no-true-peak-limiter',
+    id: 'true-peak-limiter-opt-in',
     affects: ['master'],
     description:
-      'Master tepe normalize eder, true-peak sınırlayıcı YOKTUR. Kodek sonrası −1 dBTP ' +
-      'politikası kaynak seviyesiyle (ör. peakDbfs ≤ −3) karşılanır; publish kapısı ihlali ' +
-      'reddeder, düzeltmez.',
+      'Master varsayılanı tepe normalize eder; 4× true-peak sınırlayıcı yalnız `master.limiter` ' +
+      'ile açılır (eski programlar bit-eşit kalsın diye). Açılmayan programda kodek sonrası ' +
+      '−1 dBTP politikası kaynak seviyesiyle karşılanır; publish kapısı ihlali reddeder, düzeltmez.',
   },
   {
     id: 'music-single-tempo',
@@ -102,10 +102,80 @@ export const KNOWN_LIMITATIONS: readonly KnownLimitation[] = [
   },
   {
     id: 'no-listening-validation',
-    affects: ['archetype.*', 'source.glottal'],
+    affects: [
+      'archetype.*',
+      'source.glottal',
+      'source.contact',
+      'source.friction',
+      'source.airflow',
+      'source.machine',
+      'source.electrical',
+      'source.wind',
+      'source.rain',
+      'source.fire',
+      'source.granular',
+      'StyleProfileV1',
+    ],
     description:
-      'Archetype ve vokal program aileleri yalnız ölçülen fiziksel/spektral özelliklerle ' +
-      'doğrulandı; insan dinlemesi yapılmadı. "Gerçekçi/doğal/ikna edici" iddiası yoktur.',
+      'Archetype, vokal, SFX mekanizma aileleri, çevresel dokular, stil profilleri ve ' +
+      'granular/stretch yolu yalnız ölçülen fiziksel/spektral özelliklerle doğrulandı; insan ' +
+      'dinlemesi yapılmadı (canary incelemeleri pending-human). "Gerçekçi/doğal/ikna edici" ' +
+      'iddiası yoktur.',
+  },
+  {
+    id: 'synthetic-sample-fixtures',
+    affects: ['SampleAssetV1', 'source.sample', 'source.sampler', 'source.granular'],
+    description:
+      'Kütüphanedeki kayıtların hepsi motorla üretilmiş SENTETİK fixture’dır (IR’lar dahil; ' +
+      'gerçek oda/gövde ölçümü değil). Sampler, granular ve konvolüsyon yolu bunlarla; ' +
+      '`recorded` yolu yalnız geçici depodaki test kaydıyla sınandı.',
+  },
+  {
+    id: 'stretch-method-choice',
+    affects: ['source.sample'],
+    description:
+      'Germe yöntemi yazarın seçimidir, otomatik seçilmez. Ölçüldü (atak keskinliği, ' +
+      'orijinal 7.49 dB): 2× germede WSOLA 7.19, faz vokoderi 3.88 dB; 0.5× ve 1.5×’te de ' +
+      'WSOLA önde; 0.75×’te faz vokoderi 8.59, WSOLA 5.74 dB (istisna). Tonal gövdede ' +
+      'faz vokoderi harmonikliği daha iyi korur.',
+  },
+  {
+    id: 'unsupported-mechanisms',
+    affects: ['ProgramPlanV1'],
+    description:
+      'Anlaşılır konuşma (fonem/artikülasyon) ve Doppler/konum yolu sağlayıcısızdır; ' +
+      'planlayıcı bunları `unsupported` raporlar, başka yapı taşıyla taklit etmez.',
+  },
+  {
+    id: 'no-spectral-layer',
+    affects: ['AcousticProgramV1'],
+    description:
+      'Genel spectral/STFT işlem katmanı (freeze, morph, zarf aktarımı) yoktur; STFT yalnız ' +
+      'germe ve transient/gövde ayrıştırmasının içinde kullanılır. İki somut production ' +
+      'görevi mevcut motorla belirgin yetersiz kalmadan eklenmez.',
+  },
+  {
+    id: 'no-multiband',
+    affects: ['effect.compressor', 'effect.eq-bell', 'effect.eq-shelf'],
+    description:
+      'Multiband dinamik/exciter yoktur. Tek bant EQ/dinamikle çözülemeyen bir production ' +
+      'canary kaydedilince crossover faz/gecikme maliyetiyle birlikte değerlendirilir.',
+  },
+  {
+    id: 'music-sidechain-lane-only',
+    affects: ['MusicProgramV1'],
+    description:
+      'Müzik mix’inde sidechain kaynağı yalnız bir şerittir (bus değil); adaptive pakette ' +
+      'stem’ler arası sidechain ve birden çok stem’den beslenen doğrusal olmayan bus reddedilir ' +
+      '— stem toplamı mix’e eşit kalmalı (ölçülen fark ≤ −90 dBFS).',
+  },
+  {
+    id: 'material-modal-approximation',
+    affects: ['resonator.material', 'source.contact', 'source.friction'],
+    description:
+      'Materyal gövdesi sonlu eleman çözümü DEĞİLDİR: mod oranları levha/çubuk/kabuk ' +
+      'yerleşiminden, sönüm sabit kayıp çarpanından (T60 = 2.2/(η·f)) türetilir; kompozit, ' +
+      'anizotropi ve sınır koşulu farkları modellenmez.',
   },
   {
     id: 'event-cap',

@@ -54,7 +54,15 @@ const rejects = (fn: () => unknown, issue: string, fragment: string) => {
   throw new Error('reddedilmedi');
 };
 
-describe('müzik bus grafiği', () => {
+/*
+ * Stem render'ları GERÇEK ses render eder; kapsam ölçümü (v8) sentezi birkaç
+ * kat yavaşlatır ve 5 saniyelik varsayılan dolar (ölçülen: en ağır test
+ * 15 sn). Süre sınırı bu yüzden blok başına verilir — ölçülen bir kısıt,
+ * keyfi bir sayı değil.
+ */
+const HEAVY = { timeout: 60_000 };
+
+describe('müzik bus grafiği', HEAVY, () => {
   it('drum/music stemleri ayrı bus’lara yönlenir; stem toplamı mix’e eşit (≤ −90 dBFS)', () => {
     const music = unitAdaptiveProgram({ mix: ADAPTIVE_MIX });
     const mix = renderMusicStem(stemDocument(music, REFERENCE_MIX_ID));

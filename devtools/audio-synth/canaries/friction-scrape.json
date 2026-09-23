@@ -1,0 +1,64 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "friction-scrape",
+  "version": 1,
+  "title": "Ahşap kazıma",
+  "purpose": "source.friction: pürüzlü yüzeyde sürekli temas gürültüsü + mikro takılmalar (ahşap).",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 1.5,
+      "seed": 7,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.03
+      },
+      "layers": [
+        {
+          "name": "scrape",
+          "source": {
+            "primitive": "source.friction",
+            "version": 1,
+            "params": {
+              "speed": 0.6,
+              "roughness": 0.8,
+              "granularity": 5,
+              "material": "wood"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "aperiodic",
+      "maxConfidence": 0.3
+    },
+    {
+      "kind": "band-dominance",
+      "dominant": "high",
+      "over": "low"
+    },
+    {
+      "kind": "onset-rate",
+      "min": 2,
+      "max": 15
+    },
+    {
+      "kind": "clicks",
+      "max": 2
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Pürüzlü bir yüzeyde sürtünen ahşap: hışırtı ve düzensiz takılmalar beklenir.",
+    "Hata belirtileri: düz beyaz gürültü (takılma yok), metalik çınlama, dijital tık dizisi."
+  ]
+}

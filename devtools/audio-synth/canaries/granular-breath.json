@@ -1,0 +1,70 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "granular-breath",
+  "version": 1,
+  "title": "Granular nefes bulutu",
+  "purpose": "source.granular: texture-breath fixture’ından tanecik bulutu (konum, yayılım, yoğunluk varsayılan).",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 2,
+      "seed": 7,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.03
+      },
+      "samples": {
+        "breath": {
+          "id": "texture-breath",
+          "hash": "sha256:a344f05c25a0e2d9616e0686267584ade43b7fa695d8f128478603f75c0d7895",
+          "sampleRate": 48000,
+          "channels": 1,
+          "frames": 72000
+        }
+      },
+      "layers": [
+        {
+          "name": "cloud",
+          "source": {
+            "primitive": "source.granular",
+            "version": 1,
+            "params": {
+              "sample": "breath"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "aperiodic",
+      "maxConfidence": 0.3
+    },
+    {
+      "kind": "band-dominance",
+      "dominant": "mid",
+      "over": "sub"
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "activeSeconds",
+      "min": 1.8
+    },
+    {
+      "kind": "clicks",
+      "max": 0
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Kaynağın nefes dokusunu koruyan, sürekli ve canlı bir bulut beklenir.",
+    "Hata belirtileri: tanecik başına tık ya da vızıltı, makineli tekrar, kaynağın tanınmaz metalik bir sese dönmesi."
+  ]
+}

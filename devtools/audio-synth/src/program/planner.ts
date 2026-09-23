@@ -23,7 +23,7 @@ import { resolveProgram } from './schema';
  */
 export const PROGRAM_PLAN_SCHEMA = 'ProgramPlanV1';
 
-const STYLE_TERMS: readonly (readonly [string, string])[] = [
+export const STYLE_TERMS: readonly (readonly [string, string])[] = [
   ['arcade', 'arcade'],
   ['industrial', 'industrial'],
   ['endüstriyel', 'industrial'],

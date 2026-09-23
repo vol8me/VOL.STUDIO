@@ -1,0 +1,58 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "campfire",
+  "version": 1,
+  "title": "Kamp ateşi",
+  "purpose": "source.fire: çatırtı olayları + alçak uğultu + tıslama katmanları.",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 3,
+      "seed": 7,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.03
+      },
+      "layers": [
+        {
+          "name": "fire",
+          "source": {
+            "primitive": "source.fire",
+            "version": 1,
+            "params": {}
+          }
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "aperiodic",
+      "maxConfidence": 0.3
+    },
+    {
+      "kind": "onset-rate",
+      "min": 8
+    },
+    {
+      "kind": "band-dominance",
+      "dominant": "mid",
+      "over": "air"
+    },
+    {
+      "kind": "clicks",
+      "max": 2
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Düzensiz çatırtılar, alttan gelen boğuk uğultu ve hafif tıslama beklenir.",
+    "Hata belirtileri: yağmura benzeyen düzenli pıtırtı, dijital tık, uğultunun motor gibi tonal olması."
+  ]
+}

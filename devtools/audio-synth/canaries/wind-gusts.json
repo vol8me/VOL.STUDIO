@@ -1,0 +1,60 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "wind-gusts",
+  "version": 1,
+  "title": "Rüzgar esintisi",
+  "purpose": "source.wind: çok ölçekli esinti zarfı + hızla ölçeklenen spektral hareket.",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 4,
+      "seed": 7,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.03
+      },
+      "layers": [
+        {
+          "name": "wind",
+          "source": {
+            "primitive": "source.wind",
+            "version": 1,
+            "params": {}
+          }
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "aperiodic",
+      "maxConfidence": 0.3
+    },
+    {
+      "kind": "band-dominance",
+      "dominant": "low",
+      "over": "air"
+    },
+    {
+      "kind": "onset-rate",
+      "max": 2
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "activeSeconds",
+      "min": 3.5
+    },
+    {
+      "kind": "clicks",
+      "max": 0
+    }
+  ],
+  "listeningGuide": [
+    "Yükselip alçalan, bir yerden sonra tekrar ettiği fark edilmeyen esinti beklenir.",
+    "Hata belirtileri: sabit fön makinesi sesi, düzenli pompalama, tiz ıslığın sürekli kalması."
+  ]
+}

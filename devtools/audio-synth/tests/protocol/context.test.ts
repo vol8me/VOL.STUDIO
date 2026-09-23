@@ -6,7 +6,9 @@ import { canonicalJson } from '../../src/protocol/canonical';
 import { buildContext } from '../../src/protocol/context';
 import { ProtocolError } from '../../src/protocol/errors';
 import { resolveDestination, surveyTargets } from '../../src/protocol/targets';
-import { createTestRepo } from './repo';
+import { AudioParamError } from '../../src/guard/errors';
+import { musicBrief } from '../music/fixtures';
+import { createTestRepo, testBrief } from './repo';
 
 const REPO = fileURLToPath(new URL('../../../..', import.meta.url));
 
@@ -58,7 +60,7 @@ describe('audio:job context', () => {
       'verify',
     ]);
     expect(search.budget.default.maxItems).toBeGreaterThan(0);
-    expect(canaries.entries.map((c) => c.review)).toEqual(Array(8).fill('pending-human'));
+    expect(canaries.entries.map((c) => c.review)).toEqual(Array(19).fill('pending-human'));
   });
 
   it('aile sözleşmesi: şemalar, genel rol sözlüğü, bank arama sözleşmesi, komutlar', () => {
@@ -83,6 +85,41 @@ describe('audio:job context', () => {
       'verify',
     ]);
     expect(targets.publishable[0].bankRoot).toBe('reference/production/banks');
+  });
+
+  it('ses tasarımı sözleşmesi çalışan koddan; brief verilirse planı da taşır', () => {
+    const { soundDesign, briefPlan } = buildContext(REPO) as ReturnType<typeof buildContext> & {
+      briefPlan?: unknown;
+    };
+    expect(briefPlan).toBeUndefined();
+    expect(soundDesign.graph.schema).toBe('SoundGraphV1');
+    expect(soundDesign.graph.roles).toContain('transient');
+    const status = (id: string) => soundDesign.ontology.mechanisms.find((m) => m.id === id)?.status;
+    expect([status('impact'), status('speech'), status('musical')]).toEqual([
+      'supported',
+      'unsupported',
+      'pipeline',
+    ]);
+    expect(soundDesign.styles.profiles.map((p) => p.id)).toContain('arcade-industrial');
+    const metal = soundDesign.materials.find((m) => m.id === 'metal');
+    expect(metal?.example.fundamentalHz).toBeGreaterThan(0);
+    expect(soundDesign.samples).toMatchObject({
+      schema: 'SampleAssetV1',
+      bankSchema: 'SampleBankV1',
+      root: 'devtools/audio-synth/audio-samples',
+    });
+    expect(Object.keys(soundDesign.planner.commands).sort()).toEqual(['context', 'graph', 'plan']);
+
+    const acoustic = buildContext(REPO, {
+      brief: { ...testBrief(), title: 'Yılan', intent: 'Yılan tıslaması.' },
+    }) as { briefPlan?: { schema: string; layers: unknown[] } };
+    expect(acoustic.briefPlan?.schema).toBe('ProgramPlanV1');
+    expect(acoustic.briefPlan?.layers.length).toBeGreaterThan(0);
+    const music = buildContext(REPO, { brief: musicBrief() }) as { briefPlan?: unknown };
+    expect(music.briefPlan).toMatchObject({ kind: 'music' });
+    expect(() => buildContext(REPO, { brief: { schema: 'AudioBriefV1' } })).toThrow(
+      AudioParamError,
+    );
   });
 
   it('aynı repo durumu aynı baytları verir (zaman damgası yok, sıra kararlı)', () => {
