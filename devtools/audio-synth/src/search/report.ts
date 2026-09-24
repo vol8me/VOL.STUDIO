@@ -114,61 +114,72 @@ export interface ExecuteHooks {
   readonly samples?: SampleResolver;
 }
 
+/**
+ * Tek adayı render eder, ölçer ve filtreler. Saf bir işlevdir: sonucu yalnız
+ * aday, filtreler ve sample çözücü belirler; seri ve paralel yürütme aynı
+ * sonucu bu yüzden verir.
+ */
+export function evaluateCandidate(
+  candidate: SearchPlan['candidates'][number],
+  filters: readonly MechanicalCheckV1[],
+  hooks: ExecuteHooks = {},
+): SearchCandidateV1 {
+  const head = base(candidate);
+  const none = { render: null, descriptors: null, checks: null };
+  if (candidate.invalid || !candidate.program || !candidate.candidateId) {
+    return { ...head, ...none, state: 'invalid', rejection: candidate.invalid };
+  }
+  let rendered: ProgramRender;
+  try {
+    rendered = renderProgram(candidate.program, { samples: hooks.samples });
+  } catch (error) {
+    return { ...head, ...none, state: 'error', rejection: failure('render', error) };
+  }
+  const render = {
+    pcmHash: hashPcm(rendered.channels, rendered.sampleRate),
+    sampleRate: rendered.sampleRate,
+    channels: rendered.channels.length,
+    frames: rendered.channels[0].length,
+  };
+  hooks.onRender?.(candidate.candidateId, rendered);
+  let report: AudioAnalysisReportV1;
+  let descriptors: DescriptorSummaryV1;
+  try {
+    report = analyzeAudio(rendered.channels, rendered.sampleRate, 'source-pcm');
+    descriptors = summarizeAudio(rendered.channels, rendered.sampleRate, report);
+  } catch (error) {
+    return { ...head, ...none, render, state: 'error', rejection: failure('analysis', error) };
+  }
+  const results = evaluateChecks(filters, rendered, report);
+  const checks = results.map((r, i) => ({
+    filter: i,
+    kind: r.check.kind,
+    pass: r.pass,
+    measured: r.measured,
+    reason: r.reason,
+  }));
+  const failed = checks.find((c) => !c.pass);
+  return {
+    ...head,
+    render,
+    descriptors,
+    checks,
+    state: failed ? 'filtered' : 'passed',
+    rejection: failed
+      ? {
+          stage: 'filter',
+          code: failed.kind,
+          path: `filters[${failed.filter}]`,
+          message: failed.reason ?? failed.kind,
+        }
+      : null,
+  };
+}
+
 /** Planın geçerli adaylarını sırayla render eder, ölçer ve filtreler. */
 export function executeSearch(plan: SearchPlan, hooks: ExecuteHooks = {}): SearchCandidateV1[] {
   const filters = plan.spec.filters ?? [];
-  return plan.candidates.map((candidate): SearchCandidateV1 => {
-    const head = base(candidate);
-    const none = { render: null, descriptors: null, checks: null };
-    if (candidate.invalid || !candidate.program || !candidate.candidateId) {
-      return { ...head, ...none, state: 'invalid', rejection: candidate.invalid };
-    }
-    let rendered: ProgramRender;
-    try {
-      rendered = renderProgram(candidate.program, { samples: hooks.samples });
-    } catch (error) {
-      return { ...head, ...none, state: 'error', rejection: failure('render', error) };
-    }
-    const render = {
-      pcmHash: hashPcm(rendered.channels, rendered.sampleRate),
-      sampleRate: rendered.sampleRate,
-      channels: rendered.channels.length,
-      frames: rendered.channels[0].length,
-    };
-    hooks.onRender?.(candidate.candidateId, rendered);
-    let report: AudioAnalysisReportV1;
-    let descriptors: DescriptorSummaryV1;
-    try {
-      report = analyzeAudio(rendered.channels, rendered.sampleRate, 'source-pcm');
-      descriptors = summarizeAudio(rendered.channels, rendered.sampleRate, report);
-    } catch (error) {
-      return { ...head, ...none, render, state: 'error', rejection: failure('analysis', error) };
-    }
-    const results = evaluateChecks(filters, rendered, report);
-    const checks = results.map((r, i) => ({
-      filter: i,
-      kind: r.check.kind,
-      pass: r.pass,
-      measured: r.measured,
-      reason: r.reason,
-    }));
-    const failed = checks.find((c) => !c.pass);
-    return {
-      ...head,
-      render,
-      descriptors,
-      checks,
-      state: failed ? 'filtered' : 'passed',
-      rejection: failed
-        ? {
-            stage: 'filter',
-            code: failed.kind,
-            path: `filters[${failed.filter}]`,
-            message: failed.reason ?? failed.kind,
-          }
-        : null,
-    };
-  });
+  return plan.candidates.map((candidate) => evaluateCandidate(candidate, filters, hooks));
 }
 
 export function buildSearchReport(

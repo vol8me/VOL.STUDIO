@@ -5,8 +5,8 @@ import {
   DEFAULT_FAMILY_QUALITY_POLICY,
   type SoundFamilyQualityReportV1,
 } from '../analysis/family';
-import { analyzeAudio, ANALYZER_VERSION } from '../analysis/report';
-import { summarizeAudio, type DescriptorSummaryV1 } from '../analysis/summary';
+import { ANALYZER_VERSION } from '../analysis/report';
+import type { DescriptorSummaryV1 } from '../analysis/summary';
 import {
   ANALYSIS_WORK_PER_SAMPLE,
   assertBatchBudget,
@@ -15,6 +15,7 @@ import {
   type BatchEstimate,
 } from '../guard/batch';
 import { assertRenderBudget } from '../guard/budget';
+import { batchWorkers } from '../guard/parallel';
 import {
   BANK_CHOICE_METHOD,
   BANK_LOOKUP_CONTRACT,
@@ -32,9 +33,9 @@ import {
   type SoundFamilyProgramV1,
 } from '../family/program';
 import type { AudioBriefV1 } from '../program/brief';
-import { estimateProgramCost, PROGRAM_RENDERER_VERSION, renderProgram } from '../program/render';
+import { estimateProgramCost, PROGRAM_RENDERER_VERSION } from '../program/render';
 import { resolveProgram } from '../program/schema';
-import { hashCanonical, hashPcm, prettyCanonicalJson, sha256Bytes, type Sha256 } from './canonical';
+import { hashCanonical, prettyCanonicalJson, sha256Bytes, type Sha256 } from './canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 import {
@@ -48,8 +49,9 @@ import {
 import { loadJob, type JobLocation } from './location';
 import { validateManifest, type AudioAssetManifestV1 } from './manifest';
 import { PROGRAM_ORIGIN_SCHEMA } from './origin';
+import { runTasks } from './parallel';
+import type { FamilyMemberOutput } from './parallelTasks';
 import { publishJob, registryHash } from './publish';
-import { repoSampleResolver } from './samples';
 import { asProtocol, JOB_ID } from './records';
 import { jobStatus } from './status';
 import { resolveDestination, surveyTargets, type ResolvedDestination } from './targets';
@@ -159,18 +161,24 @@ export interface FamilyCheck extends FamilyPreview {
   readonly quality: SoundFamilyQualityReportV1;
 }
 
+export interface FamilyCheckOptions {
+  /** Worker sayısı; verilmezse toplu tahminden (`batchWorkers`). Sonuç aynıdır. */
+  readonly workers?: number;
+}
+
 /** Bütün varyantları bellekte render edip ölçer ve aile kalite raporunu kurar; yazmaz. */
-export function checkFamily(repoRoot: string, document: unknown): FamilyCheck {
+export function checkFamily(
+  repoRoot: string,
+  document: unknown,
+  options: FamilyCheckOptions = {},
+): FamilyCheck {
   const preview = previewFamily(repoRoot, document);
-  const members = preview.variants.map((v) => {
-    const r = renderProgram(v.program, { samples: repoSampleResolver(repoRoot) });
-    const report = analyzeAudio(r.channels, r.sampleRate, 'source-pcm');
-    return {
-      key: v.key,
-      pcmHash: hashPcm(r.channels, r.sampleRate),
-      descriptors: summarizeAudio(r.channels, r.sampleRate, report),
-    };
-  });
+  const members = runTasks<FamilyMemberOutput>(
+    repoRoot,
+    'family-member',
+    preview.variants.map((v) => ({ key: v.key, program: v.program })),
+    batchWorkers(preview.estimate, options.workers),
+  );
   return {
     ...preview,
     members,

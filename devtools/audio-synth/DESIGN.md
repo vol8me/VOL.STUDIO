@@ -568,8 +568,9 @@ durum beyaz gürültü) tahmin edilir. `BatchBudget` (öğe, tek öğe tepe bell
 toplam iş, tahmini süre = iş × 1e-8 sn) bütün plan üzerinden BİR kez sınanır;
 aşım `BatchBudgetError` (`items|memory|work|time`) ile adıyla reddedilir ve
 arama dizini, dinleme kökü dahil hiçbir dosya açılmaz. Duvar saati hiçbir
-kararı etkilemez; CLI yalnız kanıt olarak raporlar. Yürütme seridir
-(paralellik Dalga 13'ündür). Tek adayın render bütçesi aşımı o adayı
+kararı etkilemez; CLI yalnız kanıt olarak raporlar. Yürütme tahmine göre
+seri ya da worker'larda paralel koşar; rapor ve sıra ikisinde aynıdır (bkz.
+"Paralel toplu render"). Tek adayın render bütçesi aşımı o adayı
 `render-budget` ile geçersiz kılar, plan yine bütçe içinde kalabilir.
 
 Referans arama (`audio-searches/reference-shell`, ResonantShell; boyut,
@@ -1282,6 +1283,177 @@ ek tamponu çıkışın 1 katıdır (interleaved f32); render'ın kendi tepesi i
 serbest kalır. Ölçülen: 600 sn / 48 kHz stereo render + `writeOgg` tepe
 RSS'i render'ın tek başına tepesiyle aynı (629 MiB). Yazıcı yine de kendi
 tamponunu aynı bütçeyle ayırmadan önce denetler.
+
+## Render kalitesi, artımlı render ve paralel toplu iş
+
+Agent aynı programı onlarca kez yineler. Bu bölümün üç mekanizması o
+yinelemeyi ucuzlatır ve hiçbiri yayımlanan PCM'i değiştirmez:
+
+- **Taslak kalite:** Aynı program daha düşük iç aşırı örneklemeyle işlenir.
+- **Artımlı render:** Değişmeyen aşama ve sesler önbellekten gelir.
+- **Paralel toplu iş:** Aday, varyant ve stem'ler worker'larda koşar.
+
+### Render oturumu ve kalite profili
+
+Kalite ve önbellek, derindeki çekirdeklere imza değiştirmeden bir **render
+oturumuyla** ulaşır (`src/engine/session.ts`). Genel render API'leri
+(`renderProgram`, `renderMusicStem`, protokol girişleri) `quality` ve `cache`
+seçeneklerini alır ve oturumu yalnız kendi çağrı süreleri boyunca kurar.
+Oturum dışında render nihai kalitededir ve önbelleksizdir; davranış bu
+mekanizmalardan önceki davranışla aynıdır.
+
+| Katsayı                                     | `final` | `draft` | Nerede                                           |
+| ------------------------------------------- | ------: | ------: | ------------------------------------------------ |
+| Ses sentezi iç oranı                        |      2× |      1× | `engine/synthesize.ts` (1×'te decimator atlanır) |
+| Doygunluk şekillendiricisi                  |      4× |      1× | `effects/saturation.ts` (düğüm ve stil zinciri)  |
+| True-peak ara değeri (sınırlayıcı ve ölçüm) |      4× |      1× | `analysis/loudness.ts` `truePeakFactor`          |
+
+Program, düğümler, tohumlar ve alt akışlar iki kalitede de aynıdır. Uzunluk da
+aynıdır: nihai yolda `floor(floor(2·fs·T)/2) = floor(fs·T)`. Kaliteye bağlı
+düğüm taşımayan bir programda taslak ve nihai PCM özdeştir (test kilitli).
+Maliyet tahmini nihai kaliteyi varsayar ve bu bilinçli olarak muhafazakârdır.
+
+**Kalite ve yayın:**
+
+- Taslak render kaydı `quality: "draft"` taşır ve kimliğe kaliteyi katan ayrı
+  bir `renderId` alır. Nihai kayıt alanı hiç yazmaz; mevcut `renderId`'ler ve
+  kayıt özetleri değişmez.
+- Analiz, kaydın kalitesiyle yeniden render eder. PCM kimliği taslakta da
+  doğrulanır.
+- `publishJob` taslak seçimi `policy` hatasıyla reddeder ve hiçbir dosya
+  yazmaz. Kendi render'ını dıştaki oturumdan bağımsız olarak açıkça
+  `final` kalitede yapar.
+
+**Komutlar:**
+
+- `audio:job render --draft`
+- `music check|render --draft`
+- `family check --draft` (çıktıda `renderQuality` alanı)
+
+Arama koşusu ve yayın kalıcı karar kaydı yazdığı için taslağa açılmaz.
+
+### Artımlı render
+
+**Anahtar.** Önbellek içerik adreslidir: anahtar, çıktıyı belirleyen her şeyin
+kanonik özetidir (`src/program/renderKeys.ts`).
+
+- **Taban anahtar:** renderer sürümü, kalite, tohum, örnek oranı, program
+  uzunluğu, derinlik kontrolü, sample bildirimleri (WAV özetiyle) ve bank'lar.
+- **Katman aşamaları:** kaynak → her seri rezonatör (paralel blok tek aşama)
+  → artikülasyon → her insert.
+- **Aşama anahtarı (Merkle):** bir önceki aşamanın anahtarı + düğümün kimliği
+  (sürüm, alt akış yolu, parametre değerleri; eğriler `id@sürüm` ile) +
+  dinlediği modülatörlerin anahtarları.
+- **Modülatörler:** kendi anahtarlarıyla ayrı önbelleğe girer.
+- **Kök anahtar:** program belgesinin tamamı + tohum + kalite + renderer
+  sürümü. Mix, bus, stil, master ve loop bütün katmanların torunudur;
+  kökten hesaplanır.
+
+Bir yaprak parametresi değişince yalnız o aşamanın ve ardıllarının anahtarı
+değişir. Katman, önbellekte bulunan en derin aşamadan devam eder.
+
+**Aşama sırası.** Zincir bugün aşama öncelikli işlenir (her aşama bütün
+kanallara). Bu, kanal öncelikli eski sırayla aynı PCM'i verir, çünkü her düğüm
+çağrısı taze parametre ve taze alt akış alır ve kanallar arasında değişken
+durum paylaşılmaz. Önbelleksiz yolda da yayımlanmış 17 manifest `identical`
+kaldı.
+
+**Kopya kuralı.** Okuma ve yazma kopya üzerinden yapılır. Zincir düğümleri
+tamponu yerinde değiştirir; önbellekteki örnek hiçbir çağırana ödünç verilmez.
+
+**Sample doğrulaması.** Önbellek varken bildirilen her sample, önbelleğe
+bakmadan ÖNCE yüklenip doğrulanır. Kütüphanede sürüm değişmişse ya da dosya
+kaybolmuşsa hata önbelleksiz render'la aynı çıkar; eski bir PCM sessizce
+dönmez.
+
+**Ses önbelleği (müzik).** `synthesize` doğrulanmış VE ham parametrelerle
+(global efektler ham parametreyi okur) artı iç oranla anahtarlanır. Kanonik
+JSON'a çevrilemeyen parametre önbelleğe girmez; sample verisi taşıyan ses
+her seferinde render edilir. Kazanç ve konum karıştırma anında uygulandığı
+için şerit kazancı değişince hiçbir ses yeniden sentezlenmez.
+
+**Katmanlar ve güvenlik** (`src/protocol/renderCacheStore.ts`):
+
+| Katman | Yer                                                  | Sınır                       | Tahliye                                 |
+| ------ | ---------------------------------------------------- | --------------------------- | --------------------------------------- |
+| Bellek | süreç geneli, depolar arasında paylaşılır            | 512 MiB, girdi başı 128 MiB | en az yakın zamanda kullanılan          |
+| Disk   | `node_modules/.cache/audio-synth/render/<parmakizi>` | 2 GiB, girdi başı 256 MiB   | en eski erişilen, bütçenin %80'ine iner |
+
+- **Parmak izi** audio-synth `src/` ve CORE `src/` ağacının özetidir. Kod
+  değişince eski girdiler hiç okunmaz ve dizinleri temizlenir. Aynı sürümde
+  DSP'si değişmiş bir düğüm bu yüzden bayat PCM döndüremez.
+- **Yarım ya da bozuk girdi** (başlık, boyut) ıska sayılır ve silinir.
+- **Nerede açık:** `audio:job` süreci önbellekli bir oturumda koşar;
+  `AUDIO_SYNTH_RENDER_CACHE=off` kapatır. Kütüphane olarak çağrılan protokol
+  işlevleri ve testler varsayılan olarak önbelleksizdir.
+- **Doğrulama önbelleği hiç kullanmaz:** `verifyManifest`, `verifySearch` ve
+  sentetik sample fixture'ı açıkça `cache: null` ile gerçek hesap yapar. Bir
+  sürüm kapısının kanıtı ödünç alınmış bir sonuç olamaz. Test, kök anahtara
+  bilerek yanlış PCM yazar; normal render onu döndürür, `verifyManifest`
+  döndürmez.
+
+### Paralel toplu render
+
+**Görevler.** Toplu işler aynı saf görev işlevlerini seri yolda ana iş
+parçacığında, paralel yolda worker'da koşar (`src/protocol/parallelTasks.ts`):
+
+- `family-member`: aile kontrolü
+- `search-candidate`: arama koşusu ve arama doğrulaması
+- `music-raw`: müzik kontrolünde referans mix ve stem'ler
+
+Sonuç girdi sırasına yerleşir; tamamlanma sırası içeriği ve sırayı
+etkilemez. Dinleme kopyaları da aday sırasıyla yazılır.
+
+**Senkron bekleme.** Protokol API'si senkrondur (kilitler, CLI, testler); bu
+yüzden ana iş parçacığı `Atomics.wait` ile bekler ve yanıtı
+`receiveMessageOnPort` ile senkron alır (`src/protocol/parallel.ts`).
+
+- PCM tamponları kopyasız aktarılır.
+- Worker tsx'i açılışta yükler ve bunu bir el sıkışmasıyla bildirir. Bloklu
+  bekleyen ana iş parçacığı worker'ın asenkron `error` olayını göremeyeceği
+  için yükleme hatası da el sıkışmasıyla döner.
+- Görev hatası `ParallelTaskError` olarak adıyla gelir.
+- Worker ana oturumun kalite ve önbellek kararını izler: önbellek varsa
+  deponun disk katmanını paylaşır.
+
+**Politika** (`src/guard/parallel.ts`, `batchWorkers`):
+
+- Eşzamanlı tepe bellek tavanı 4 × render bütçesidir. Bu, "Kaynak bütçesi"ndeki
+  dört eşzamanlı render ölçümüdür.
+- Worker başına en az 2 sn tahmini iş düşer; toplamı bunun altındaki toplu iş
+  seri koşar.
+- En çok çekirdek − 1 worker açılır.
+- Karar deterministik iş birimi tahminine dayanır. `AUDIO_SYNTH_WORKERS=N`
+  sayıyı sabitler.
+- Politika `BatchBudget`'a katılmaz: arama raporu etkin bütçeyi kaydeder ve
+  şemayı değiştirmek yayımlanmış raporların yeniden türetilmesini bozardı.
+
+### Ölçümler
+
+Ölçüm makinesi yukarıdaki bütçe tablosuyla aynıdır (8 iş parçacığı).
+Külliyat: 19 canary, 3 referans job, 3 referans müzik (`checkMusic`).
+
+| Senaryo                                             | Süre                  | Kazanç              |
+| --------------------------------------------------- | --------------------- | ------------------- |
+| Müzik kontrolü, nihai, önbelleksiz                  | 9,35 sn               | —                   |
+| Müzik kontrolü, taslak                              | 4,79 sn               | 1,95×               |
+| Müzik kontrolü, önbellek soğuk (tek tur içi tekrar) | 4,78 sn               | 1,96×               |
+| Müzik kontrolü, önbellek sıcak                      | 1,67 sn               | 5,6×                |
+| Akustik külliyat, nihai → taslak                    | 923 → 873 ms          | akustik zaten ucuz  |
+| 57 öğelik toplu iş, seri → 3 / 6 worker             | 3,56 → 1,79 / 1,94 sn | 1,99× / 1,84×       |
+| 8 varyantlık aile, seri → 3 worker                  | 332 → 1109 ms         | eşik bu yüzden var  |
+| Adaptive müzik, seri → 3 worker                     | 4,23 → 3,78 sn        | referans mix baskın |
+
+- **Önbelleğin payı:** Önbellek açık/kapalı PCM kimliği bütün külliyatta soğuk
+  ve sıcak 0 uyuşmazlık verdi.
+- **Aşama sayıları:** Karma bir programda (3 katman, modülatör, paralel blok,
+  insert) ilk render 12 aşama yazdı. Tek rezonatör değişince 3, modülatör
+  değişince 6 aşama yazıldı; bunlar tam olarak torunlardır.
+- **Taslağın payı:** Müzik süresinin yarısından fazlası 2× iç oranlı ses
+  sentezindeydi.
+- **Önbelleğin payı:** Adaptive parçada referans mix stem'lerin seslerini
+  yeniden sentezliyordu; benzersiz ses oranı %35'tir.
+- **Worker açılışı:** ~0,8 sn'dir. Küçük toplu iş bu yüzden seri kalır.
 
 ## Örnekleme ve alias
 

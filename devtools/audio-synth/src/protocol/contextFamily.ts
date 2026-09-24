@@ -51,7 +51,7 @@ export function familyContext(cli: string) {
     },
     commands: {
       plan: `${cli} family plan --file <family.json>`,
-      check: `${cli} family check --file <family.json> [--json]`,
+      check: `${cli} family check --file <family.json> [--json] [--draft]`,
       publish: `${cli} family publish --file <family.json> | <familyId>`,
       status: `${cli} family status <familyId>`,
       verify: `${cli} family verify <familyId>  (verify --all bütün bank'ları da doğrular)`,

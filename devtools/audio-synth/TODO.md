@@ -235,18 +235,6 @@ eklenmedi (`no-multiband`).
 > sistemi (Dalga 1) vardır — aksi hâlde graph-cache anahtarları güvenilir
 > değildir.
 
-- [ ] **[P1] Draft ve final render quality modları ayrı olsun.** Agent
-      onlarca iterasyonda pahalı final oversampling/IR/mastering çalıştırmak
-      zorunda değildir; draft hızlı ama semantik olarak aynı graph'ı işler,
-      final production-quality path'tir. Kapanır: draft/final program aynı
-      kalır; yalnız render quality profile değişir ve publish draft
-      çıktısını kabul etmez.
-- [ ] **[P1] Graph-hash tabanlı incremental render/cache eklensin.** Agent
-      yalnız snare veya tank mekanizma katmanını değiştirince bütün uzun
-      müzik/asset yeniden hesaplanmaz; değişmeyen deterministic node
-      çıktıları cache'den gelir. Kapanır: tek leaf parametresi değiştiğinde
-      yalnız dependency descendants yeniden render edilir; cache on/off
-      final PCM birebir aynıdır.
 - [ ] **[P1] Genel audio benchmark/canary korpusu genişletilsin.** En az:
       stylized tank fire, heavy realistic-ish impact, snake-like hiss,
       steam, metal scrape, motor acceleration, electrical charge,
@@ -255,12 +243,6 @@ eklenmedi (`no-multiband`).
       sürümlü görevler olur. Kapanır: her görev mekanik/QA kriterleri ve
       gerekiyorsa audition kaydı taşır; yeni motor sürümü bütün canary'lerin
       durumunu tek raporda gösterir.
-- [ ] **[P2] Batch render paralelleşmesi determinism'i bozmadan
-      eklensin.** Candidate search, `SoundFamily` ve stem render işleri
-      worker/process paralelliği kullanabilir; sonuç sırası scheduler'a
-      bağlı değildir. Kapanır: serial ve parallel koşu candidate/program/PCM
-      hash sırasını birebir verir; peak RAM için concurrency limiti resource
-      budget'a bağlıdır.
 - [ ] **[P2] `audio:capabilities` kalite matrisi oluşsun.** Motor yalnız
       "primitive mevcut" demez; sürümlü benchmark görevlerinde hangi ses
       ailelerinin production-ready/canary/research seviyesinde olduğunu
@@ -301,6 +283,27 @@ eklenmedi (`no-multiband`).
       değildir.
 
 ## Kapatılanlar
+
+- [x] **[P1] Draft ve final render kalite modları.** Program, düğüm ve
+      tohum iki kalitede aynı; yalnız iç aşırı örnekleme (ses sentezi 2×→1×,
+      doygunluk ve true-peak 4×→1×) değişir. Taslak kayıt `quality: "draft"`
+      ve ayrı `renderId` taşır; publish onu `policy` ile reddeder. Kanıt:
+      `tests/protocol/quality.test.ts`, `tests/engine/renderCache.test.ts`;
+      müzik kontrolü 9,35 → 4,79 sn (DESIGN.md "Render kalitesi…"). (Dalga 13)
+- [x] **[P1] Graf özeti tabanlı artımlı render ve önbellek.** Katman
+      aşamaları, modülatörler ve program kökü Merkle anahtarlarıyla; müzikte
+      ses düzeyinde. Disk katmanı kod parmak izine bağlı; doğrulama önbelleği
+      kullanmaz. Kanıt: `tests/program/incremental.test.ts` (yaprak değişince
+      3, modülatör değişince 6 aşama; önbellek açık/kapalı PCM bütün
+      külliyatta aynı), `tests/music/incremental.test.ts` (şerit kazancı 0
+      ses, enstrüman yalnız o şeridin sesleri),
+      `tests/protocol/renderCacheStore.test.ts`. (Dalga 13)
+- [x] **[P2] Deterministik paralel toplu render.** Arama adayları, aile
+      üyeleri ve müzik stem'leri aynı görev işleviyle worker'larda; sonuç
+      girdi sırasında. Worker sayısı render bütçesinden türeyen eşzamanlı
+      bellek tavanına ve tahmini işe bağlı. Kanıt:
+      `tests/protocol/parallel.test.ts` — seri ve paralel arama raporu ve
+      dinleme kopyaları, aile ve müzik kontrolü birebir aynı. (Dalga 13)
 
 - [x] **[P1] `SoundGraph` tek bir sesi katmanlarına ayırır.** `SoundGraphV1`
       transient→body→detail→tail→space katmanlarını, bus/send/sidechain

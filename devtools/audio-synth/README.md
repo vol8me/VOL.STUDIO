@@ -76,6 +76,15 @@ bulunduğu yer ve sonraki geçerli adım `audio:job status <jobId> --json`
 çıktısındaki `next` alanındadır. Yayımlanmış bir asset
 `audio:job verify <manifest>` ile yalnız manifest'inden doğrulanır.
 
+Yineleme hızı için `render --draft` (ve `music check|render`, `family check`
+için aynı bayrak) aynı programı daha düşük iç aşırı örneklemeyle işler;
+publish yalnız nihai render kabul eder. `audio:job` değişmeyen aşama ve
+sesleri deponun render önbelleğinden alır, toplu işleri tahmine göre
+worker'larda koşar; PCM ve sonuç sırası değişmez, doğrulama önbellek
+kullanmaz. Kurallar context çıktısındaki `protocol.rendering` alanında,
+tasarım ve ölçümler DESIGN.md "Render kalitesi, artımlı render ve paralel
+toplu iş" bölümündedir.
+
 Tek bir değer tahmin etmek yerine aralık aramak için `search` alt komutları
 vardır (spec → plan → run → audition/decide → promote); onaylı aday job
 programına terfi eder ve aynı akıştan yayımlanır. Sözdizimi context

@@ -1,11 +1,12 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RenderOutcome } from '../../src/protocol/job';
 import type { AudioAssetManifestV1 } from '../../src/protocol/manifest';
 import type { AssetVerificationV1 } from '../../src/protocol/publish';
+import { RENDER_CACHE_ROOT } from '../../src/protocol/renderCacheStore';
 import type { JobStatusV1 } from '../../src/protocol/status';
 import { createTestRepo, loudProgram, testBrief, testProgram, type TestRepo } from './repo';
 import { RENDER_TIMEOUT } from '../support/timeouts';
@@ -130,6 +131,33 @@ describe('audio:job — süreçler arası kabul', () => {
       expect(a.text).toBe(cli('context', '--json').text);
       expect(cli('bogus').status).toBe(1);
       expect(cli('init', '../x', '--package', 'p', '--asset', 'a').error?.code).toBe('path');
+    },
+    RENDER_TIMEOUT,
+  );
+});
+
+describe('audio:job — taslak kalite ve render önbelleği', () => {
+  it(
+    'render --draft taslak kaydı yazar, publish onu reddeder; CLI deponun önbelleğini kullanır',
+    () => {
+      const limited = testProgram({
+        master: { normalize: 'peak', peakDbfs: -1, limiter: { ceilingDbtp: -3 } },
+      });
+      writeFileSync(join(repo.root, 'limited.json'), JSON.stringify(limited));
+      const asset = 'reference/production/assets/sfx/draft.ogg';
+      expect(
+        cli('init', 'draft', '--package', '@volstudio/audio-synth', '--asset', asset).status,
+      ).toBe(0);
+      expect(cli('brief', 'draft', '--file', 'brief.json').status).toBe(0);
+      expect(cli('program', 'draft', '--file', 'limited.json').status).toBe(0);
+      const draft = cli('render', 'draft', '--draft').json<RenderOutcome>().record;
+      expect(draft.quality).toBe('draft');
+      expect(existsSync(join(repo.root, RENDER_CACHE_ROOT))).toBe(true);
+      expect(cli('analyze', 'draft').status).toBe(0);
+      expect(cli('select', 'draft', '--reason', 'taslak').status).toBe(0);
+      const publish = cli('publish', 'draft');
+      expect(publish.status).toBe(2);
+      expect(publish.error?.code).toBe('policy');
     },
     RENDER_TIMEOUT,
   );

@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { analyzeAudio } from '../analysis/report';
+import { withRenderSession, type RenderQuality } from '../engine/session';
 import { assertRenderBudget } from '../guard/budget';
 import { validateBrief, type AudioBriefV1 } from '../program/brief';
 import {
@@ -35,6 +36,7 @@ import {
   AUDIO_JOB_SCHEMA,
   JOB_ID,
   PROTOCOL_VERSION,
+  recordQuality,
   RENDER_RECORD_SCHEMA,
   renderPath,
   SELECTION_SCHEMA,
@@ -212,8 +214,19 @@ export function registerProgram(loc: JobLocation, document: unknown): Sha256 {
   return storeProgram(loc, document, () => null);
 }
 
-export function renderIdOf(programHash: Sha256, seed: number, kind: JobKind = 'acoustic'): string {
-  const identity = hashCanonical({ programHash, seed, rendererVersion: RENDERER_VERSIONS[kind] });
+/** Nihai render'ın kimliği kalite alanı taşımaz; taslak ayrı bir kimlik alır. */
+export function renderIdOf(
+  programHash: Sha256,
+  seed: number,
+  kind: JobKind = 'acoustic',
+  quality: RenderQuality = 'final',
+): string {
+  const rendererVersion = RENDERER_VERSIONS[kind];
+  const identity = hashCanonical(
+    quality === 'final'
+      ? { programHash, seed, rendererVersion }
+      : { programHash, seed, rendererVersion, quality },
+  );
   return `r-${identity.slice('sha256:'.length, 'sha256:'.length + 16)}`;
 }
 
@@ -226,6 +239,8 @@ export interface RenderOptions {
   readonly seed?: number;
   /** Dinleme kopyası (16-bit WAV) `AUDITION_ROOT` altına yazılsın mı. */
   readonly audition?: boolean;
+  /** Taslak render hızlıdır ama yayımlanamaz; varsayılan `final`. */
+  readonly quality?: RenderQuality;
 }
 
 export interface RenderOutcome {
@@ -240,11 +255,13 @@ export function renderCandidate(loc: JobLocation, options: RenderOptions = {}): 
     );
     const job = loadJob(loc);
     const program = currentProgram(loc);
+    const quality = options.quality ?? 'final';
     const rendered = renderForKind(job.kind, program.document, {
       seed: options.seed,
       samples: repoSampleResolver(loc.repoRoot),
+      quality,
     });
-    const renderId = renderIdOf(program.hash, rendered.seed, job.kind);
+    const renderId = renderIdOf(program.hash, rendered.seed, job.kind, quality);
     const record: RenderRecordV1 = {
       schema: RENDER_RECORD_SCHEMA,
       renderId,
@@ -258,6 +275,7 @@ export function renderCandidate(loc: JobLocation, options: RenderOptions = {}): 
         frames: rendered.channels[0].length,
       },
       cost: { peakBytes: rendered.cost.peakBytes, workUnits: rendered.cost.workUnits },
+      ...(quality === 'draft' ? { quality } : {}),
     };
     const hash = writeArtifact(loc, renderPath(renderId), record);
     let audition: string | null = null;
@@ -308,9 +326,11 @@ export function analyzeCandidate(loc: JobLocation, renderId?: string): AnalysisR
       artifactFile(loc, renderPath(id)),
       renderPath(id),
     ) as RenderRecordV1;
+    const quality = recordQuality(record);
     const rendered = renderForKind(job.kind, currentProgram(loc).document, {
       seed: record.seed,
       samples: repoSampleResolver(loc.repoRoot),
+      quality,
     });
     const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
     if (pcmHash !== record.pcm.hash) {
@@ -325,7 +345,9 @@ export function analyzeCandidate(loc: JobLocation, renderId?: string): AnalysisR
       renderId: id,
       renderHash: job.artifacts.renders[id].hash,
       pcmHash,
-      report: analyzeAudio(rendered.channels, rendered.sampleRate, 'source-pcm'),
+      report: withRenderSession({ quality }, () =>
+        analyzeAudio(rendered.channels, rendered.sampleRate, 'source-pcm'),
+      ),
     };
     const hash = writeArtifact(loc, analysisPath(id), analysis);
     saveJob(

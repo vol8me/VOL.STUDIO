@@ -1,7 +1,8 @@
 /**
  * Deterministik aday arama laboratuvarı (Dalga 4): sürümlü spec, uzay
- * doldurma stratejisi, plan/ön-denetim, seri yürütme, rapor ve arama seçimi.
- * Kalıcılık, terfi ve dinleme sunucusu `src/protocol/` altındadır.
+ * doldurma stratejisi, plan/ön-denetim, aday değerlendirmesi, seri yürütme,
+ * rapor ve arama seçimi. Kalıcılık, terfi, paralel yürütme ve dinleme
+ * sunucusu `src/protocol/` altındadır.
  */
 export { CANDIDATE_ID, candidateIdOf, planSearch, assertPlanWithinBudget } from './plan';
 export type {
@@ -14,6 +15,7 @@ export type {
 } from './plan';
 export {
   buildSearchReport,
+  evaluateCandidate,
   executeSearch,
   SEARCH_REPORT_SCHEMA,
   validateSearchReport,

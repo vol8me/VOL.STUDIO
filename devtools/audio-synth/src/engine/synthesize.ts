@@ -11,9 +11,27 @@ import { createVoices } from './voice';
 import { renderDrySample, downsample2x } from './render';
 import { applyGlobalEffects } from './effects-chain';
 import { OVERSAMPLE_FACTOR } from './constants';
+import { cacheKey } from './renderCache';
+import { qualityProfile, renderSession } from './session';
+import type { Sha256 } from '../protocol/canonical';
+
+/**
+ * Önbellek anahtarı: doğrulanmış VE ham parametreler (global efektler ham
+ * parametreyi okur) artı iç oran. Kanonik JSON'a çevrilemeyen parametre
+ * (sample verisi, fonksiyon) önbelleğe girmez; o ses her seferinde render edilir.
+ */
+function voiceKey(p: unknown, params: SynthParams, oversample: number): Sha256 | null {
+  if (params.sample) return null;
+  try {
+    return cacheKey({ domain: 'synthesize', oversample, resolved: p, raw: params });
+  } catch {
+    return null;
+  }
+}
 
 /** Bir ses parametre setinden Float32Array kanalları üretir.
- *  2x oversampling ile aliasing azaltılmış, bandlimited dalga şekilleri.
+ *  Nihai kalitede 2x oversampling ile aliasing azaltılmış, bandlimited dalga
+ *  şekilleri; taslak kalitede iç oran örnek oranıdır.
  *
  *  Parametreler önce `resolveSynthParams` sınırından, sonra kaynak
  *  bütçesinden geçer; bozuk ya da aşırı istek tek bir tampon ayrılmadan
@@ -21,9 +39,25 @@ import { OVERSAMPLE_FACTOR } from './constants';
 export function synthesize(params: SynthParams): SynthesisResult {
   const p = resolveSynthParams(params);
   assertRenderBudget(estimateSynthCost(p), 'synthesize');
+  const { cache } = renderSession();
+  const oversample = qualityProfile().voiceOversample;
+  const key = cache ? voiceKey(p, params, oversample) : null;
+  if (cache && key) {
+    const hit = cache.read(key);
+    if (hit) return { channels: hit, sampleRate: p.sampleRate, duration: p.totalDuration };
+  }
+  const result = synthesizeAt(params, p, oversample);
+  if (cache && key) cache.write(key, result.channels);
+  return result;
+}
 
+function synthesizeAt(
+  params: SynthParams,
+  p: ReturnType<typeof resolveSynthParams>,
+  oversample: number,
+): SynthesisResult {
   const { sampleRate, duration, totalDuration } = p;
-  const internalRate = sampleRate * OVERSAMPLE_FACTOR;
+  const internalRate = sampleRate * oversample;
   const internalSampleCount = Math.floor(internalRate * totalDuration);
   const seed = p.seed ?? DEFAULT_SEED;
 
@@ -125,8 +159,10 @@ export function synthesize(params: SynthParams): SynthesisResult {
     }
   }
 
-  // Oversampling → downsample to target rate
-  const dryBuffer = downsample2x(dryBufferInternal, internalRate, sampleRate);
+  const dryBuffer =
+    oversample === OVERSAMPLE_FACTOR
+      ? downsample2x(dryBufferInternal, internalRate, sampleRate)
+      : dryBufferInternal;
 
   // Sample layer
   if (params.sample) {

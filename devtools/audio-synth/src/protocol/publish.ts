@@ -58,6 +58,7 @@ import {
   analysisPath,
   asProtocol,
   PROTOCOL_VERSION,
+  recordQuality,
   renderPath,
   validateAnalysisRecord,
   validateRenderRecord,
@@ -245,6 +246,14 @@ export function publishJob(loc: JobLocation): PublishOutcome {
     const programHash = hashCanonical(programDocument);
     const selection = validateSelection(read('selection.json'));
     const record = validateRenderRecord(read(renderPath(selection.renderId)));
+    if (recordQuality(record) !== 'final') {
+      throw new ProtocolError(
+        'policy',
+        `publish reddedildi: seçilen render ${selection.renderId} taslak kalitede; ` +
+          'yayın yalnız nihai render kabul eder (render --draft olmadan yeniden render edin)',
+        jobLabel(loc),
+      );
+    }
     const analysis = validateAnalysisRecord(read(analysisPath(selection.renderId)));
     if (
       record.programHash !== programHash ||
@@ -275,6 +284,7 @@ export function publishJob(loc: JobLocation): PublishOutcome {
     const rendered = renderForKind(job.kind, programDocument, {
       seed: record.seed,
       samples: repoSampleResolver(loc.repoRoot),
+      quality: 'final',
     });
     const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
     if (pcmHash !== record.pcm.hash) {
@@ -492,6 +502,8 @@ export function verifyManifest(
   const rendered = renderForKind(kind, manifest.program.document, {
     seed: manifest.render.seed,
     samples: repoSampleResolver(repoRoot),
+    quality: 'final',
+    cache: null,
   });
   const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
   checks.push({ name: 'pcm-identity', ok: pcmHash === manifest.render.pcm.hash, detail: pcmHash });

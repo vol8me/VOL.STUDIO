@@ -1,3 +1,4 @@
+import { qualityProfile } from '../engine/session';
 import { resample } from '../synthesis/sample';
 
 /**
@@ -7,7 +8,7 @@ import { resample } from '../synthesis/sample';
  * Aşırı örnekleme Kaiser sinc yeniden örnekleyicisiyle yapılır (sıfır fazlı,
  * gecikmesiz) — şekillendiricinin ürettiği harmonikler 4× iç Nyquist'e kadar
  * taşınır ve inişte süzülür; program oranında şekillendirmek onları işitilir
- * banda katlardı.
+ * banda katlardı. Taslak kalitede aşırı örnekleme yapılmaz (bilinçli alias).
  */
 export type SaturationCharacter = 'tanh' | 'asymmetric' | 'hard';
 
@@ -18,7 +19,6 @@ export interface SaturationSettings {
   readonly outputDb: number;
 }
 
-const OVERSAMPLE = 4;
 /** Asimetrik eğrinin ofseti: çift harmonik üretir, DC `tanh(b)` çıkarılarak sıfırlanır. */
 const BIAS = 0.3;
 
@@ -38,10 +38,11 @@ export function saturate(channels: readonly Float32Array[], s: SaturationSetting
   const shape = shaper(s.character);
   const norm = shape(drive);
   const output = Math.pow(10, s.outputDb / 20);
+  const oversample = qualityProfile().saturationOversample;
   for (const channel of channels) {
-    const up = resample(channel, 1 / OVERSAMPLE);
+    const up = oversample === 1 ? channel.slice() : resample(channel, 1 / oversample);
     for (let i = 0; i < up.length; i++) up[i] = shape(drive * up[i]) / norm;
-    const down = resample(up, OVERSAMPLE, channel.length);
+    const down = oversample === 1 ? up : resample(up, oversample, channel.length);
     for (let i = 0; i < channel.length; i++) {
       channel[i] = output * (channel[i] * (1 - s.mix) + (down[i] ?? 0) * s.mix);
     }

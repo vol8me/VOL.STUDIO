@@ -1,4 +1,5 @@
 import { AUDIO_ANALYSIS_SCHEMA, type AudioAnalysisReportV1 } from '../analysis/report';
+import { RENDER_QUALITIES, type RenderQuality } from '../engine/session';
 import { AudioParamError } from '../guard/errors';
 import { checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
 import { HASH_PATTERN, type Sha256 } from './canonical';
@@ -72,6 +73,13 @@ export interface RenderRecordV1 {
     readonly frames: number;
   };
   readonly cost: { readonly peakBytes: number; readonly workUnits: number };
+  /** Yalnız taslak render'da yazılır; alanın yokluğu nihai kalite demektir. */
+  readonly quality?: RenderQuality;
+}
+
+/** Kaydın render kalitesi; eski ve nihai kayıtlar alanı taşımaz. */
+export function recordQuality(record: RenderRecordV1): RenderQuality {
+  return record.quality ?? 'final';
 }
 
 export interface AnalysisRecordV1 {
@@ -244,6 +252,7 @@ export function validateRenderRecord(value: unknown): RenderRecordV1 {
     'rendererVersion',
     'pcm',
     'cost',
+    'quality',
   ]);
   if (o.schema !== RENDER_RECORD_SCHEMA)
     throw new AudioParamError('schema', 'type', RENDER_RECORD_SCHEMA, o.schema);
@@ -259,6 +268,7 @@ export function validateRenderRecord(value: unknown): RenderRecordV1 {
   const cost = checkObject(o.cost, 'cost', ['peakBytes', 'workUnits']);
   checkNumber(cost.peakBytes, 'cost.peakBytes', { min: 0 });
   checkNumber(cost.workUnits, 'cost.workUnits', { min: 0 });
+  if (o.quality !== undefined) checkChoice(o.quality, 'quality', RENDER_QUALITIES);
   return value as RenderRecordV1;
 }
 

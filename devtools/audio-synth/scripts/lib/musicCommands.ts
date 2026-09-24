@@ -3,6 +3,7 @@
  * `src/music/` + `src/protocol/music.ts`tedir. Süreler yalnız bu çıktıda
  * kanıt olarak görünür.
  */
+import { withRenderSession } from '../../src/engine/session';
 import {
   checkMusic,
   DEFAULT_MUSIC_ROOT,
@@ -17,7 +18,7 @@ import {
 import { EXPORT_ROOT, writeAuditionCopy } from '../../src/protocol/audition';
 import { checkRepoRelative } from '../../src/protocol/fs';
 import { runMusicSearchCommand } from './musicSearchCommands';
-import { positional, print, text, type Parsed } from './args';
+import { positional, print, qualityOf, text, type Parsed } from './args';
 
 const ms = (started: number) => Number((performance.now() - started).toFixed(1));
 
@@ -59,9 +60,13 @@ export function runMusicCommand(parsed: Parsed, repoRoot: string): number {
     }
     case 'check': {
       const started = performance.now();
-      const check = checkMusic(repoRoot, loadMusicDocuments(loc()));
+      const quality = qualityOf(parsed);
+      const check = withRenderSession({ quality }, () =>
+        checkMusic(repoRoot, loadMusicDocuments(loc())),
+      );
       print({
         musicId: check.program.musicId,
+        renderQuality: quality,
         symbolic: check.report.verdict,
         mastering: check.mastering,
         qa: parsed.flags.has('json') ? check.qa : check.qa.verdict,
@@ -72,7 +77,10 @@ export function runMusicCommand(parsed: Parsed, repoRoot: string): number {
     }
     case 'render': {
       const started = performance.now();
-      const check = checkMusic(repoRoot, loadMusicDocuments(loc()));
+      const quality = qualityOf(parsed);
+      const check = withRenderSession({ quality }, () =>
+        checkMusic(repoRoot, loadMusicDocuments(loc())),
+      );
       const written = check.rendered.map((asset) =>
         writeAuditionCopy(repoRoot, `${AUDITION_DIR}/${check.program.musicId}/${asset.stem}.wav`, {
           channels: asset.channels,
@@ -82,7 +90,12 @@ export function runMusicCommand(parsed: Parsed, repoRoot: string): number {
           cost: { peakBytes: 0, workUnits: 0 },
         }),
       );
-      print({ musicId: check.program.musicId, files: written, evidence: { wallMs: ms(started) } });
+      print({
+        musicId: check.program.musicId,
+        renderQuality: quality,
+        files: written,
+        evidence: { wallMs: ms(started) },
+      });
       return 0;
     }
     case 'publish': {

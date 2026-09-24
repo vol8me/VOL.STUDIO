@@ -1,3 +1,6 @@
+import { QUALITY_PROFILES } from '../engine/session';
+import { DEFAULT_PARALLEL_POLICY, WORKERS_ENV } from '../guard/parallel';
+import { RENDER_CACHE_ENV, RENDER_CACHE_ROOT } from './renderCacheStore';
 import { ASSET_CLASS_POLICIES } from '../analysis/assetQa';
 import { ANALYZER_VERSION, AUDIO_ANALYSIS_SCHEMA } from '../analysis/report';
 import { DEFAULT_RENDER_BUDGET } from '../guard/budget';
@@ -61,7 +64,7 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
         status: `${CLI} status <jobId> --json`,
         brief: `${CLI} brief <jobId> --file <brief.json>`,
         program: `${CLI} program <jobId> --file <program.json>`,
-        render: `${CLI} render <jobId> [--seed <n>] [--audition]`,
+        render: `${CLI} render <jobId> [--seed <n>] [--audition] [--draft]`,
         analyze: `${CLI} analyze <jobId> [--render <renderId>]`,
         select: `${CLI} select <jobId> [--render <renderId>] --reason <metin>`,
         publish: `${CLI} publish <jobId>`,
@@ -72,7 +75,21 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
         'Belgeler kanonik JSON ile özetlenir; bir üst belge değişince alttakiler `stale` olur.',
         'Publish yalnız geçerli bir seçimle, kodek SONRASI sınıf politikasından geçerse yazılır.',
         'Yollar repo-göreli ve `/` ayraçlıdır; mutlak yol, `..` ve sembolik bağ reddedilir.',
+        'Taslak render (`--draft`) aynı programı daha düşük iç aşırı örneklemeyle işler; kaydı `quality: "draft"` taşır ve publish taslak seçimi reddeder.',
+        'Değişmeyen aşama ve sesler render önbelleğinden gelir; PCM önbellekli ve önbelleksiz aynıdır. Doğrulama (verify) önbelleği kullanmaz.',
+        'Toplu işler (search run, family check, music check) tahmine göre worker iş parçacıklarında koşar; sonuç ve sıra seri koşuyla aynıdır.',
       ],
+      rendering: {
+        qualities: QUALITY_PROFILES,
+        defaultQuality: 'final',
+        publishAccepts: 'final',
+        cache: { root: RENDER_CACHE_ROOT, disable: `${RENDER_CACHE_ENV}=off` },
+        parallel: {
+          workers: `${WORKERS_ENV}=<n> (1 = seri)`,
+          minSecondsPerWorker: DEFAULT_PARALLEL_POLICY.minParallelSeconds,
+          maxConcurrentPeakBytes: DEFAULT_PARALLEL_POLICY.maxConcurrentPeakBytes,
+        },
+      },
     },
     schemas: {
       brief: {

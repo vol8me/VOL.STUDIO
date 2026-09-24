@@ -4,6 +4,7 @@
  * kanıt olarak görünür.
  */
 import { statSync } from 'node:fs';
+import { withRenderSession } from '../../src/engine/session';
 import {
   checkFamily,
   checkRepoRelative,
@@ -17,7 +18,7 @@ import {
   verifyFamily,
   type FamilyLocation,
 } from '../../src/protocol';
-import { positional, print, readInput, required, text, type Parsed } from './args';
+import { positional, print, qualityOf, readInput, required, text, type Parsed } from './args';
 
 const ms = (started: number) => Number((performance.now() - started).toFixed(1));
 
@@ -59,9 +60,13 @@ export function runFamilyCommand(parsed: Parsed, repoRoot: string): number {
     }
     case 'check': {
       const started = performance.now();
-      const c = checkFamily(repoRoot, readInput(required(parsed.flags, 'file')));
+      const quality = qualityOf(parsed);
+      const c = withRenderSession({ quality }, () =>
+        checkFamily(repoRoot, readInput(required(parsed.flags, 'file'))),
+      );
       print({
         familyId: c.family.familyId,
+        renderQuality: quality,
         quality: parsed.flags.has('json') ? c.quality : c.quality.verdict,
         members: c.members.map((m) => ({ key: m.key, pcmHash: m.pcmHash })),
         evidence: { renderAndAnalysisMs: ms(started), estimate: c.estimate },

@@ -1,9 +1,10 @@
 import { existsSync, readdirSync } from 'node:fs';
+import { withRenderSession } from '../engine/session';
+import { batchWorkers } from '../guard/parallel';
 import { renderProgram } from '../program/render';
 import { assertPlanWithinBudget, CANDIDATE_ID, planSearch, type SearchPlan } from '../search/plan';
 import {
   buildSearchReport,
-  executeSearch,
   validateSearchReport,
   type AcousticSearchReportV1,
   type SearchCandidateV1,
@@ -18,6 +19,8 @@ import { SEARCH_ID, validateSearchSpec, type AcousticSearchSpecV1 } from '../sea
 import { writeAuditionCopy, EXPORT_ROOT } from './audition';
 import { hashCanonical, hashPcm, prettyCanonicalJson, type Sha256 } from './canonical';
 import { ProtocolError } from './errors';
+import { runTasks } from './parallel';
+import type { SearchCandidateOutput } from './parallelTasks';
 import { repoSampleResolver } from './samples';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 import { storeProgram } from './job';
@@ -76,12 +79,30 @@ export interface SearchRunOutcome {
 
 export interface SearchRunOptions {
   readonly audition?: boolean;
+  /** Worker sayısı; verilmezse toplu tahminden (`batchWorkers`). Sonuç aynıdır. */
+  readonly workers?: number;
+}
+
+function evaluatePlan(
+  repoRoot: string,
+  plan: SearchPlan,
+  withPcm: boolean,
+  workers: number | undefined,
+): SearchCandidateOutput[] {
+  const filters = plan.spec.filters ?? [];
+  return runTasks<SearchCandidateOutput>(
+    repoRoot,
+    'search-candidate',
+    plan.candidates.map((candidate) => ({ candidate, filters, withPcm })),
+    batchWorkers(plan.estimate, workers),
+  );
 }
 
 /**
- * Plan → bütçe kapısı → seri yürütme → kalıcı yazım. Bütçe aşımı dizin
- * AÇILMADAN `BatchBudgetError` verir. Tamamlanmış bir arama üzerine
- * yazılmaz (kararlar ona bağlıdır); yeni tanım yeni `searchId` ister.
+ * Plan → bütçe kapısı → yürütme (seri ya da paralel; sonuç aynı) → kalıcı
+ * yazım. Bütçe aşımı dizin AÇILMADAN `BatchBudgetError` verir. Tamamlanmış
+ * bir arama üzerine yazılmaz (kararlar ona bağlıdır); yeni tanım yeni
+ * `searchId` ister.
  */
 export function runSearch(
   repoRoot: string,
@@ -101,14 +122,13 @@ export function runSearch(
         searchLabel(loc),
       );
     }
-    const auditions: string[] = [];
-    const candidates = executeSearch(plan, {
-      samples: repoSampleResolver(loc.repoRoot),
-      onRender: options.audition
-        ? (id, render) =>
-            auditions.push(writeAuditionCopy(repoRoot, auditionPath(loc.searchId, id), render))
-        : undefined,
-    });
+    const outputs = evaluatePlan(repoRoot, plan, options.audition === true, options.workers);
+    const candidates = outputs.map((output) => output.result);
+    const auditions = outputs.flatMap(({ result, render }) =>
+      render && result.candidateId
+        ? [writeAuditionCopy(repoRoot, auditionPath(loc.searchId, result.candidateId), render)]
+        : [],
+    );
     writeFileAtomic(searchFile(loc, 'spec.json'), prettyCanonicalJson(plan.spec));
     for (const candidate of plan.candidates) {
       if (candidate.candidateId && candidate.program) {
@@ -418,7 +438,9 @@ export function verifySearch(loc: SearchLocation): SearchVerificationV1 {
   const plan = planSearch(spec);
   const replay = buildSearchReport(
     plan,
-    executeSearch(plan, { samples: repoSampleResolver(loc.repoRoot) }),
+    withRenderSession({ quality: 'final', cache: null }, () =>
+      evaluatePlan(loc.repoRoot, plan, false, undefined),
+    ).map((output) => output.result),
   );
   const key = (c: SearchCandidateV1) =>
     [

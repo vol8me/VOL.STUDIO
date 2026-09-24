@@ -1,3 +1,5 @@
+import type { RenderCache } from '../engine/renderCache';
+import type { RenderQuality } from '../engine/session';
 import type { RenderCost } from '../guard/budget';
 import {
   estimateMusicStemCost,
@@ -43,10 +45,20 @@ export interface KindRender {
 export function renderForKind(
   kind: JobKind,
   document: unknown,
-  options: { readonly seed?: number; readonly samples?: SampleResolver } = {},
+  options: {
+    readonly seed?: number;
+    readonly samples?: SampleResolver;
+    readonly quality?: RenderQuality;
+    /** `null` dıştaki oturumun önbelleğini kapatır (doğrulama gerçek hesap yapar). */
+    readonly cache?: RenderCache | null;
+  } = {},
 ): KindRender {
   if (kind === 'music') {
-    const rendered = renderMusicStem(document, { seed: options.seed });
+    const rendered = renderMusicStem(document, {
+      seed: options.seed,
+      quality: options.quality,
+      cache: options.cache,
+    });
     return {
       channels: rendered.channels,
       sampleRate: rendered.sampleRate,
@@ -55,7 +67,12 @@ export function renderForKind(
       cost: rendered.cost,
     };
   }
-  const rendered = renderProgram(document, { seed: options.seed, samples: options.samples });
+  const rendered = renderProgram(document, {
+    seed: options.seed,
+    samples: options.samples,
+    quality: options.quality,
+    cache: options.cache,
+  });
   return {
     channels: rendered.channels,
     sampleRate: rendered.sampleRate,

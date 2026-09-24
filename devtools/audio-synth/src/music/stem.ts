@@ -1,3 +1,5 @@
+import type { RenderCache } from '../engine/renderCache';
+import { withRenderSession, type RenderQuality } from '../engine/session';
 import { AudioParamError } from '../guard/errors';
 import { checkObject } from '../guard/read';
 import type { RenderCost } from '../guard/budget';
@@ -80,10 +82,28 @@ function stemFilter(document: MusicStemProgramV1): string | undefined {
 }
 
 /** Belgeyi deterministik olarak PCM'e çevirir: aynı belge + sürüm = aynı örnekler. */
+export interface MusicStemRenderOptions {
+  readonly seed?: number;
+  /** Verilmezse dıştaki render oturumunun kalitesi; o da yoksa `final`. */
+  readonly quality?: RenderQuality;
+  /** Ses önbelleği; `null` dıştaki oturumun önbelleğini kapatır. */
+  readonly cache?: RenderCache | null;
+}
+
 export function renderMusicStem(
   value: unknown,
-  options: { readonly seed?: number } = {},
+  options: MusicStemRenderOptions = {},
 ): MusicStemRenderV1 {
+  return withRenderSession(
+    {
+      ...(options.quality ? { quality: options.quality } : {}),
+      ...(options.cache !== undefined ? { cache: options.cache } : {}),
+    },
+    () => renderStemInSession(value, options),
+  );
+}
+
+function renderStemInSession(value: unknown, options: MusicStemRenderOptions): MusicStemRenderV1 {
   const document = validateMusicStemProgram(value);
   const program =
     options.seed === undefined || options.seed === document.music.seed

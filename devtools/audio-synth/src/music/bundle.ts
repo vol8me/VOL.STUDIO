@@ -235,15 +235,20 @@ export interface PlannedRenderV1 {
  * denetimi hem arama finalistleri bunu çağırır: mastering kararının iki ayrı
  * gerçeği olamaz.
  */
+/** Ham render sağlayıcısı: `undefined` referans mix'tir. Protokol paralel önceden render eder. */
+export type RawRenderer = (stem: string | undefined) => MusicRenderV1;
+
 export function renderAndPlan(
   program: MusicProgramV1,
   score: MusicScoreV1,
   targetLufs: number,
+  raw: RawRenderer = (stem) =>
+    renderScoreRaw(score, { playback: program.playback, ...(stem ? { stem } : {}) }),
 ): PlannedRenderV1 {
-  const reference = renderScoreRaw(score, { playback: program.playback });
+  const reference = raw(undefined);
   const stems: RenderedStemV1[] = program.stems.map((stem) => ({
     id: stem.id,
-    channels: renderScoreRaw(score, { playback: program.playback, stem: stem.id }).channels,
+    channels: raw(stem.id).channels,
   }));
   const plan = program.adaptive
     ? planAdaptive({

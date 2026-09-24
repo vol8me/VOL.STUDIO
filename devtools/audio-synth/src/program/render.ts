@@ -1,4 +1,11 @@
 import { masterChannels } from '../engine/master';
+import type { RenderCache } from '../engine/renderCache';
+import {
+  renderSession,
+  withRenderSession,
+  type RenderQuality,
+  type RenderSession,
+} from '../engine/session';
 import { limitTruePeak } from '../effects/limiter';
 import { assertRenderBudget, type RenderBudget, type RenderCost } from '../guard/budget';
 import { checkNumber } from '../guard/read';
@@ -8,9 +15,23 @@ import type { ParamSignal, ResolvedParams } from './params';
 import { applyLaw } from './primitives/controls';
 import { mixdown } from './mixdown';
 import { deriveSeed, substream } from './random';
-import type { CostParams, NodeContext, ProgramEntry, SourceEntry } from './registry';
+import type {
+  CostParams,
+  NodeContext,
+  ProcessorEntry,
+  ProgramEntry,
+  SourceEntry,
+} from './registry';
 import type { ResolvedZone } from './sampleBank';
 import { sampleAccess, type SampleAccess, type SampleResolver } from './samples';
+import {
+  layerStageKeys,
+  layerStages,
+  programKeys,
+  programRootKey,
+  type LayerStage,
+  type ProgramKeys,
+} from './renderKeys';
 import { applyStyleChain } from './style';
 import {
   resolveProgram,
@@ -44,6 +65,10 @@ export interface ProgramRenderOptions {
   readonly budget?: RenderBudget;
   /** Programın `samples` bildirimlerini veriye çeviren çözücü (protokol ya da test). */
   readonly samples?: SampleResolver;
+  /** Verilmezse dıştaki render oturumunun kalitesi; o da yoksa `final`. */
+  readonly quality?: RenderQuality;
+  /** Aşama ve program önbelleği; `null` dıştaki oturumun önbelleğini kapatır. */
+  readonly cache?: RenderCache | null;
 }
 
 const isSignal = (value: ResolvedValue): value is ResolvedSignal => typeof value === 'object';
@@ -278,60 +303,90 @@ function layerChannels(layer: ResolvedLayer, _programChannels: 1 | 2): 1 | 2 {
   return layer.channels;
 }
 
-function processChain(
+type NodeRunner = <E extends ProgramEntry>(
+  node: ResolvedNode<E>,
+) => { params: ResolvedParams; ctx: NodeContext };
+
+function parallelBlock(
   buffer: Float32Array,
-  layer: ResolvedLayer,
-  run: <E extends ProgramEntry>(
-    node: ResolvedNode<E>,
-  ) => { params: ResolvedParams; ctx: NodeContext },
+  nodes: readonly ResolvedNode<ProcessorEntry>[],
+  run: NodeRunner,
 ): void {
-  if (layer.routing === 'parallel' && layer.resonators.length > 0) {
-    const dry = buffer.slice();
-    buffer.fill(0);
-    const scratch = new Float32Array(buffer.length);
-    for (const node of layer.resonators) {
-      scratch.set(dry);
-      const { params, ctx } = run(node);
-      node.entry.process(scratch, params, ctx);
-      for (let i = 0; i < buffer.length; i++) buffer[i] += scratch[i];
-    }
-  } else {
-    for (const node of layer.resonators) {
-      const { params, ctx } = run(node);
-      node.entry.process(buffer, params, ctx);
-    }
-  }
-  if (layer.articulation) {
-    const { params, ctx } = run(layer.articulation);
-    layer.articulation.entry.process(buffer, params, ctx);
+  const dry = buffer.slice();
+  buffer.fill(0);
+  const scratch = new Float32Array(buffer.length);
+  for (const node of nodes) {
+    scratch.set(dry);
+    const { params, ctx } = run(node);
+    node.entry.process(scratch, params, ctx);
+    for (let i = 0; i < buffer.length; i++) buffer[i] += scratch[i];
   }
 }
 
+/**
+ * Bir aşamayı bütün kanallara uygular. Kanal başına zincir düğümü her
+ * çağrıda taze parametre ve alt akış alır; kanallar birbirinden bağımsız
+ * olduğu için aşama sırasıyla işlemek kanal sırasıyla işlemekle aynı PCM'i verir.
+ */
+function applyStage(stage: LayerStage, buffers: Float32Array[], run: NodeRunner): void {
+  switch (stage.kind) {
+    case 'source': {
+      const source = run(stage.node);
+      if (buffers.length === 2) {
+        const stereo = stage.node.entry.renderStereo as NonNullable<SourceEntry['renderStereo']>;
+        stereo(buffers[0], buffers[1], source.params, source.ctx);
+      } else {
+        stage.node.entry.render(buffers[0], source.params, source.ctx);
+      }
+      return;
+    }
+    case 'parallel':
+      for (const buffer of buffers) parallelBlock(buffer, stage.nodes, run);
+      return;
+    case 'insert': {
+      const { params, ctx } = run(stage.node);
+      stage.node.entry.process(buffers, params, ctx);
+      return;
+    }
+    default:
+      for (const buffer of buffers) {
+        const { params, ctx } = run(stage.node);
+        stage.node.entry.process(buffer, params, ctx);
+      }
+  }
+}
+
+/**
+ * Katmanı render eder. Önbellek varsa önbellekte bulunan EN DERİN aşamadan
+ * devam eder; yalnız o aşamadan sonrakiler hesaplanır ve yazılır.
+ */
 function renderLayer(
   layer: ResolvedLayer,
   seed: number,
   shared: SharedSignals,
-  programChannels: 1 | 2,
+  keys: ProgramKeys | null,
 ): Float32Array[] {
   const { sampleRate } = shared;
   const signals: SignalContext = { ...shared, frames: layer.frames, offset: layer.startFrame };
-  const run = <E extends ProgramEntry>(node: ResolvedNode<E>) => ({
+  const run: NodeRunner = (node) => ({
     params: materialize(node, signals),
     ctx: contextFor(seed, node.streamPath, sampleRate, layer.frames, shared),
   });
-  const width = layerChannels(layer, programChannels);
-  const buffers = Array.from({ length: width }, () => new Float32Array(layer.frames));
-  const source = run(layer.source);
-  if (width === 2) {
-    const stereo = layer.source.entry.renderStereo as NonNullable<SourceEntry['renderStereo']>;
-    stereo(buffers[0], buffers[1], source.params, source.ctx);
-  } else {
-    layer.source.entry.render(buffers[0], source.params, source.ctx);
+  const stages = layerStages(layer);
+  const cache = renderSession().cache;
+  const stageKeys = cache && keys ? layerStageKeys(layer, keys) : null;
+  let buffers: Float32Array[] | undefined;
+  let next = 0;
+  if (cache && stageKeys) {
+    for (let i = stageKeys.length - 1; i >= 0 && !buffers; i--) {
+      buffers = cache.read(stageKeys[i]);
+      if (buffers) next = i + 1;
+    }
   }
-  for (const buffer of buffers) processChain(buffer, layer, run);
-  for (const insert of layer.inserts) {
-    const { params, ctx } = run(insert);
-    insert.entry.process(buffers, params, ctx);
+  buffers ??= Array.from({ length: layer.channels }, () => new Float32Array(layer.frames));
+  for (let i = next; i < stages.length; i++) {
+    applyStage(stages[i], buffers, run);
+    if (cache && stageKeys) cache.write(stageKeys[i], buffers);
   }
   return buffers;
 }
@@ -346,15 +401,14 @@ function assertFinite(channels: readonly Float32Array[], label: string): void {
   });
 }
 
-interface Prepared {
+interface Resolved {
   readonly program: ResolvedProgram;
   readonly seed: number;
   readonly cost: RenderCost;
-  readonly shared: SharedSignals;
 }
 
-/** Doğrula → bütçe → modülatör tamponları. Katman render'ı bunun üstüne kurulur. */
-function prepare(value: unknown, options: ProgramRenderOptions): Prepared {
+/** Doğrula → bütçe. Hiçbir tampon ayrılmaz ve önbelleğe bakılmaz. */
+function resolveForRender(value: unknown, options: ProgramRenderOptions): Resolved {
   const program = resolveProgram(value);
   const seed =
     options.seed === undefined
@@ -362,17 +416,35 @@ function prepare(value: unknown, options: ProgramRenderOptions): Prepared {
       : checkNumber(options.seed, 'seed', { min: 0, max: 0xffff_ffff, integer: true });
   const cost = estimateProgramCost(program);
   assertRenderBudget(cost, 'renderProgram', options.budget);
+  return { program, seed, cost };
+}
+
+/** Modülatör tamponları (önbellekten ya da render'la), derinlik çarpanı ve sample erişimi. */
+function sharedSignals(
+  { program, seed }: Resolved,
+  samples: SampleAccess | undefined,
+  keys: ProgramKeys | null,
+): SharedSignals {
   const { sampleRate, frames } = program;
+  const cache = renderSession().cache;
   const modulators = new Map<string, Float32Array>();
   const plain: SignalContext = { sampleRate, frames, offset: 0, modulators, depthFactor: 1 };
   for (const node of program.modulators) {
+    const name = node.streamPath.slice('modulator:'.length);
+    const key = keys?.modulators.get(name);
+    const cached = cache && key ? cache.read(key) : undefined;
+    if (cached) {
+      modulators.set(name, cached[0]);
+      continue;
+    }
     const out = new Float32Array(frames);
     node.entry.render(
       out,
       materialize(node, plain),
       contextFor(seed, node.streamPath, sampleRate, frames),
     );
-    modulators.set(node.streamPath.slice('modulator:'.length), out);
+    if (cache && key) cache.write(key, [out]);
+    modulators.set(name, out);
   }
   const control = program.depthControl;
   let depthFactor: Float32Array | number = 1;
@@ -383,27 +455,37 @@ function prepare(value: unknown, options: ProgramRenderOptions): Prepared {
         ? scale(control.value)
         : gestureBuffer(control.value, frames, sampleRate).map(scale);
   }
-  const samples = sampleAccess(program.samples, options.samples);
   const banks = program.banks.size > 0 ? program.banks : undefined;
   return {
-    program,
-    seed,
-    cost,
-    shared: {
-      sampleRate,
-      modulators,
-      depthFactor,
-      ...(samples ? { samples } : {}),
-      ...(banks ? { banks } : {}),
-    },
+    sampleRate,
+    modulators,
+    depthFactor,
+    ...(samples ? { samples } : {}),
+    ...(banks ? { banks } : {}),
   };
 }
 
 /**
- * Programı doğrular, maliyetini bütçeye karşı sınar ve ÖYLE render eder.
- * Katmanlar kanonik mix veriyolunda toplanır, seviye tek master
- * çekirdeğinde verilir.
+ * Önbellek varken bildirilen her sample önbelleğe bakmadan ÖNCE yüklenir:
+ * kütüphanedeki sürüm değişmiş ya da dosya kaybolmuşsa hata, önbelleksiz
+ * render'la aynı biçimde çıkar ve eski bir PCM sessizce dönmez.
  */
+function samplesFor(
+  program: ResolvedProgram,
+  options: ProgramRenderOptions,
+): SampleAccess | undefined {
+  const samples = sampleAccess(program.samples, options.samples);
+  if (samples && renderSession().cache) for (const name of program.samples.keys()) samples(name);
+  return samples;
+}
+
+function sessionOf(options: ProgramRenderOptions): Partial<RenderSession> {
+  return {
+    ...(options.quality ? { quality: options.quality } : {}),
+    ...(options.cache !== undefined ? { cache: options.cache } : {}),
+  };
+}
+
 function applyMaster(program: ResolvedProgram, channels: readonly Float32Array[]): void {
   const { master, sampleRate } = program;
   const level =
@@ -463,12 +545,32 @@ function foldLoop(
   });
 }
 
-export function renderProgram(value: unknown, options: ProgramRenderOptions = {}): ProgramRender {
-  const { program, seed, cost, shared } = prepare(value, options);
+function finish(
+  program: ResolvedProgram,
+  seed: number,
+  cost: RenderCost,
+  channels: Float32Array[],
+): ProgramRender {
+  const duration = program.master.loop
+    ? channels[0].length / program.sampleRate
+    : program.durationSeconds;
+  return { channels, sampleRate: program.sampleRate, duration, seed, cost };
+}
+
+function renderInSession(value: unknown, options: ProgramRenderOptions): ProgramRender {
+  const resolved = resolveForRender(value, options);
+  const { program, seed, cost } = resolved;
   const { sampleRate, frames } = program;
+  const { quality, cache } = renderSession();
+  const samples = samplesFor(program, options);
+  const rootKey = cache ? programRootKey(value, seed, quality, PROGRAM_RENDERER_VERSION) : null;
+  const cached = cache && rootKey ? cache.read(rootKey) : undefined;
+  if (cached) return finish(program, seed, cost, cached);
+  const keys = cache ? programKeys(program, seed, quality, PROGRAM_RENDERER_VERSION) : null;
+  const shared = sharedSignals(resolved, samples, keys);
   const effectSignals: SignalContext = { ...shared, frames, offset: 0 };
   const mix = mixdown(program, {
-    renderLayer: (layer) => renderLayer(layer, seed, shared, program.channels),
+    renderLayer: (layer) => renderLayer(layer, seed, shared, keys),
     prepare: (node, sidechain) => ({
       params: materialize(node, effectSignals),
       ctx: contextFor(seed, node.streamPath, sampleRate, frames, shared, sidechain),
@@ -478,17 +580,21 @@ export function renderProgram(value: unknown, options: ProgramRenderOptions = {}
   if (program.style) applyStyleChain(mix.channels, sampleRate, program.style.controls);
   applyMaster(program, mix.channels);
   const loop = program.master.loop;
-  if (!loop) {
-    return {
-      channels: [...mix.channels],
-      sampleRate,
-      duration: program.durationSeconds,
-      seed,
-      cost,
-    };
-  }
-  const channels = foldLoop(mix.channels, sampleRate, loop.crossfadeSeconds);
-  return { channels, sampleRate, duration: channels[0].length / sampleRate, seed, cost };
+  const channels = loop
+    ? foldLoop(mix.channels, sampleRate, loop.crossfadeSeconds)
+    : [...mix.channels];
+  if (cache && rootKey) cache.write(rootKey, channels);
+  return finish(program, seed, cost, channels);
+}
+
+/**
+ * Programı doğrular, maliyetini bütçeye karşı sınar ve ÖYLE render eder.
+ * Katmanlar kanonik mix veriyolunda toplanır, seviye tek master
+ * çekirdeğinde verilir. Önbellek varsa değişmeyen aşamalar ondan gelir;
+ * PCM önbellekli ve önbelleksiz render'da birebir aynıdır.
+ */
+export function renderProgram(value: unknown, options: ProgramRenderOptions = {}): ProgramRender {
+  return withRenderSession(sessionOf(options), () => renderInSession(value, options));
 }
 
 /**
@@ -500,12 +606,18 @@ export function renderProgramLayers(
   value: unknown,
   options: ProgramRenderOptions = {},
 ): Map<string, Float32Array> {
-  const { program, seed, shared } = prepare(value, options);
-  const out = new Map<string, Float32Array>();
-  for (const layer of program.layers) {
-    const buffers = renderLayer(layer, seed, shared, program.channels);
-    assertFinite(buffers, `katman ${layer.name}`);
-    out.set(layer.name, buffers[0]);
-  }
-  return out;
+  return withRenderSession(sessionOf(options), () => {
+    const resolved = resolveForRender(value, options);
+    const { program, seed } = resolved;
+    const { quality, cache } = renderSession();
+    const keys = cache ? programKeys(program, seed, quality, PROGRAM_RENDERER_VERSION) : null;
+    const shared = sharedSignals(resolved, samplesFor(program, options), keys);
+    const out = new Map<string, Float32Array>();
+    for (const layer of program.layers) {
+      const buffers = renderLayer(layer, seed, shared, keys);
+      assertFinite(buffers, `katman ${layer.name}`);
+      out.set(layer.name, buffers[0]);
+    }
+    return out;
+  });
 }

@@ -18,3 +18,13 @@ export { frequencyAtTime, getFmSample } from './frequency';
 export { renderDrySample, downsample2x } from './render';
 export { synthesize, synth } from './synthesize';
 export { applyGlobalEffects, normalize, limitBuffer, mix } from './effects-chain';
+export {
+  QUALITY_PROFILES,
+  RENDER_QUALITIES,
+  qualityProfile,
+  renderSession,
+  withRenderSession,
+} from './session';
+export type { QualityProfileV1, RenderQuality, RenderSession } from './session';
+export { cacheKey, MemoryRenderCache } from './renderCache';
+export type { RenderCache, RenderCacheStats } from './renderCache';

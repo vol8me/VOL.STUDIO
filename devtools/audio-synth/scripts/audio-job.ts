@@ -6,6 +6,7 @@
  * `audio:job context --json` çıktısındaki `protocol.commands` alanındadır
  * (bu yorum onu tekrar etmez).
  */
+import { withRenderSession } from '../src/engine/session';
 import { AudioParamError, BatchBudgetError, RenderBudgetError } from '../src/guard';
 import {
   analyzeCandidate,
@@ -20,10 +21,20 @@ import {
   registerBrief,
   registerProgram,
   renderCandidate,
+  repoRenderCache,
   selectCandidate,
   type JobLocation,
 } from '../src/protocol';
-import { findRepoRoot, parse, print, readInput, required, text, type Parsed } from './lib/args';
+import {
+  findRepoRoot,
+  parse,
+  print,
+  qualityOf,
+  readInput,
+  required,
+  text,
+  type Parsed,
+} from './lib/args';
 import { runCanaryCommand } from './lib/canaryCommands';
 import { runFamilyCommand } from './lib/familyCommands';
 import { runMusicCommand } from './lib/musicCommands';
@@ -49,8 +60,18 @@ function printStatusText(status: ReturnType<typeof jobStatus>): void {
   console.log(`sonraki: ${status.next.action} — ${status.next.reason}`);
 }
 
+/**
+ * Komutlar deponun render önbelleğiyle koşar: değişmeyen aşama ve sesler
+ * yeniden hesaplanmaz. Doğrulama komutları önbelleği kendi içinde kapatır.
+ */
 function run(parsed: Parsed): number {
   const repoRoot = findRepoRoot(process.cwd());
+  return withRenderSession({ cache: repoRenderCache(repoRoot) }, () =>
+    runCommand(parsed, repoRoot),
+  );
+}
+
+function runCommand(parsed: Parsed, repoRoot: string): number {
   const jobsRoot = checkRepoRelative(text(parsed.flags, 'jobs') ?? DEFAULT_JOBS_ROOT, '--jobs');
   const loc = (): JobLocation => {
     const jobId = parsed.positional[0];
@@ -105,6 +126,7 @@ function run(parsed: Parsed): number {
         renderCandidate(loc(), {
           seed: seed === undefined ? undefined : Number(seed),
           audition: parsed.flags.has('audition'),
+          quality: qualityOf(parsed),
         }),
       );
       return 0;

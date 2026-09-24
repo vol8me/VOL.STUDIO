@@ -79,8 +79,8 @@ export function musicContext(cli: string) {
     commands: {
       plan: `${cli} music plan <musicId>`,
       analyze: `${cli} music analyze <musicId> [--json]  (render yok)`,
-      check: `${cli} music check <musicId> [--json]`,
-      render: `${cli} music render <musicId>  (dinleme kopyası export/music altına)`,
+      check: `${cli} music check <musicId> [--json] [--draft]`,
+      render: `${cli} music render <musicId> [--draft]  (dinleme kopyası export/music altına)`,
       publish: `${cli} music publish <musicId>`,
       status: `${cli} music status <musicId>`,
       verify: `${cli} music verify <musicId>  (verify --all bütün bundle'ları da doğrular)`,

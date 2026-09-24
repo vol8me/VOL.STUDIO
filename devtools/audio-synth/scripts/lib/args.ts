@@ -4,6 +4,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import type { RenderQuality } from '../../src/engine/session';
 import { ProtocolError } from '../../src/protocol';
 
 export interface Parsed {
@@ -12,7 +13,7 @@ export interface Parsed {
   readonly flags: ReadonlyMap<string, string | true>;
 }
 
-const BOOLEAN_FLAGS = new Set(['json', 'loop', 'audition', 'all', 'serve']);
+const BOOLEAN_FLAGS = new Set(['json', 'loop', 'audition', 'all', 'serve', 'draft']);
 
 export function parse(argv: readonly string[]): Parsed {
   const [command = 'help', ...rest] = argv;
@@ -78,4 +79,9 @@ export function readInput(path: string): unknown {
 
 export function print(value: unknown): void {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
+}
+
+/** `--draft` bayrağı: hızlı yineleme kalitesi; yayın yalnız nihai kaliteyi kabul eder. */
+export function qualityOf(parsed: Parsed): RenderQuality {
+  return parsed.flags.has('draft') ? 'draft' : 'final';
 }

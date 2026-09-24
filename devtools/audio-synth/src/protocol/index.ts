@@ -166,6 +166,14 @@ export {
   verifySampleLibrary,
 } from './samples';
 export type { SampleAssetV1, SampleOriginV1, SampleVerificationV1 } from './samples';
+export {
+  codeFingerprint,
+  DiskRenderCache,
+  LayeredRenderCache,
+  RENDER_CACHE_ENV,
+  RENDER_CACHE_ROOT,
+  repoRenderCache,
+} from './renderCacheStore';
 export { sameSources, sourcesOf, validateSources } from './sources';
 export type { ManifestSampleV1, ManifestSelectionV1, ManifestSourcesV1 } from './sources';
 export { soundDesignContext } from './contextSound';

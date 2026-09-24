@@ -149,7 +149,7 @@ export function synthesizeFixture(asset: SampleAssetV1): Buffer {
   if (asset.origin.kind !== 'synthetic-fixture') {
     throw new ProtocolError('invalid', 'yalnız sentetik fixture üretilir', asset.id);
   }
-  return encodeWav(renderProgram(asset.origin.program));
+  return encodeWav(renderProgram(asset.origin.program, { quality: 'final', cache: null }));
 }
 
 /** Kaydın baytlarını getirir ve özetini doğrular (kayıt: dosya; fixture: önbellek ya da üretim). */

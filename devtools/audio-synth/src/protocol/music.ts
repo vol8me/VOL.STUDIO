@@ -11,6 +11,7 @@ import {
   type BatchEstimate,
 } from '../guard/batch';
 import { assertRenderBudget } from '../guard/budget';
+import { batchWorkers } from '../guard/parallel';
 import { analyzeScore, reportHash, type MusicSymbolicReportV1 } from '../music/analyze';
 import type { MusicBriefV1 } from '../music/brief';
 import {
@@ -19,6 +20,7 @@ import {
   renderAndPlan,
   specFrames,
   type MusicAdaptiveQaV1,
+  type RawRenderer,
 } from '../music/bundle';
 import {
   applyMastering,
@@ -28,7 +30,7 @@ import {
 } from '../music/mastering';
 import { instrumentRegistryHash } from '../music/instruments';
 import { musicProgramHash, validateMusicProgram, type MusicProgramV1 } from '../music/program';
-import { estimateScoreCost, MUSIC_RENDERER_VERSION } from '../music/render';
+import { estimateScoreCost, MUSIC_RENDERER_VERSION, type MusicRenderV1 } from '../music/render';
 import { expandProgram, scoreHash, type MusicScoreV1 } from '../music/score';
 import { MUSIC_ID } from '../music/terms';
 import { themeBookHash, validateThemeBook, type ThemeBookV1 } from '../music/themeBook';
@@ -51,6 +53,7 @@ import {
 } from './job';
 import { loadJob, type JobLocation } from './location';
 import { validateManifest, type AudioAssetManifestV1 } from './manifest';
+import { runTasks } from './parallel';
 import { publishJob } from './publish';
 import { asProtocol, JOB_ID } from './records';
 import { jobStatus } from './status';
@@ -235,13 +238,41 @@ export interface MusicCheckV1 extends MusicPreviewV1 {
  * seçer, state kombinasyonlarını ölçer ve çalışma zamanı sözleşmesini kurar.
  * Hiçbir şey YAZILMAZ.
  */
-export function checkMusic(repoRoot: string, documents: MusicDocumentsV1): MusicCheckV1 {
+export interface MusicCheckOptions {
+  /** Worker sayısı; verilmezse toplu tahminden (`batchWorkers`). Sonuç aynıdır. */
+  readonly workers?: number;
+}
+
+/** Referans mix ve stem'lerin ham render'ı; girdi sırasıyla, seri ya da paralel. */
+function rawRenders(
+  repoRoot: string,
+  preview: MusicPreviewV1,
+  workers: number | undefined,
+): RawRenderer {
+  const { program } = preview;
+  const ids = [null, ...program.stems.map((stem) => stem.id)];
+  const renders = runTasks<MusicRenderV1>(
+    repoRoot,
+    'music-raw',
+    ids.map((stem) => ({ program, stem })),
+    batchWorkers(preview.estimate, workers),
+  );
+  const byStem = new Map(ids.map((id, i) => [id, renders[i]]));
+  return (stem) => byStem.get(stem ?? null) as MusicRenderV1;
+}
+
+export function checkMusic(
+  repoRoot: string,
+  documents: MusicDocumentsV1,
+  options: MusicCheckOptions = {},
+): MusicCheckV1 {
   const preview = previewMusic(repoRoot, documents);
   const { program, score } = preview;
   const { reference, stems, plan } = renderAndPlan(
     program,
     score,
     program.mastering?.integratedLufs ?? DEFAULT_MUSIC_LUFS,
+    rawRenders(repoRoot, preview, options.workers),
   );
   const rendered: RenderedAssetV1[] = [];
   for (const stem of preview.assets) {

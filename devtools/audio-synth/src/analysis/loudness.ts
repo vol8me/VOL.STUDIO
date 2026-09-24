@@ -6,6 +6,8 @@
  * de standardın tanımıyla hesaplar; RMS/örnek tepe ayrı adlarla kalır.
  */
 
+import { qualityProfile } from '../engine/session';
+
 export interface Biquad {
   readonly b: readonly [number, number, number];
   readonly a: readonly [number, number];
@@ -151,8 +153,12 @@ export function samplePeakDb(channels: readonly Float32Array[]): number {
   return peak > 0 ? 20 * Math.log10(peak) : Number.NEGATIVE_INFINITY;
 }
 
-/** True-peak yeniden örnekleme: fs < 96 kHz'te 4×, < 192 kHz'te 2× (BS.1770 Ek 2). */
+/**
+ * True-peak yeniden örnekleme: fs < 96 kHz'te 4×, < 192 kHz'te 2× (BS.1770
+ * Ek 2). Taslak kalitede örnek tepesi ölçülür.
+ */
 function truePeakFactor(sampleRate: number): number {
+  if (qualityProfile().truePeakOversample === 1) return 1;
   if (sampleRate < 96000) return 4;
   return sampleRate < 192000 ? 2 : 1;
 }
