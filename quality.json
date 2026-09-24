@@ -1,5 +1,10 @@
 {
   "$comment": [
+    "2026-09-24: audio-synth Dalga 6–10 (müzik hattı, SoundGraph, planner, sample kütüphanesi,",
+    "canary korpusu) ve render yüzeyi kaydı sonrası ölçülen kapsam satır 96.89 / ifade 96.14 /",
+    "dal 89.03 / fonksiyon 97.33 (85 dosya, 1831 test, 944 sn). Eşikler 95/94/88/95 zaten",
+    "ölçülenin ~2 puan altındaki bantta; değişmedi.",
+    "",
     "2026-09-22: audio-synth Dalga 4–5 (arama laboratuvarı, SoundFamily/bank) ölçülen kapsamı",
     "satır 97.13 / ifade 96.39 / dal 90.59 / fonksiyon 97.00; dal eşiği 87 → 88 ratchet'lendi",
     "(ölçülenin ~2 puan altı), diğerleri zaten o bantta (95/94/95).",
