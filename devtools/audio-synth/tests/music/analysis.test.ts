@@ -206,11 +206,24 @@ describe('geçiş sözleşmesi', RENDER_BLOCK, () => {
     expect(isSupportedKind('crossfade')).toBe(true);
   });
 
-  it.each([['stinger'], ['section-jump']])('%s unsupported-by-runtime ile reddedilir', (kind) => {
-    expect(() => validateTransition({ id: 'x', kind, seconds: 1 }, 't')).toThrow(
+  it('bölüm atlama unsupported-by-runtime ile reddedilir', () => {
+    expect(() => validateTransition({ id: 'x', kind: 'section-jump', seconds: 1 }, 't')).toThrow(
       /unsupported-by-runtime/,
     );
-    expect(isSupportedKind(kind as 'stinger')).toBe(false);
+    expect(isSupportedKind('section-jump')).toBe(false);
+  });
+
+  it('stinger geçişi motorda vardır ve bir cue ister', () => {
+    expect(isSupportedKind('stinger')).toBe(true);
+    expect(
+      validateTransition({ id: 'x', kind: 'stinger', seconds: 0.1, cue: 'hit' }, 't').cue,
+    ).toBe('hit');
+    expect(() => validateTransition({ id: 'x', kind: 'stinger', seconds: 0.1 }, 't')).toThrow(
+      /cue yalnız stinger/,
+    );
+    expect(() =>
+      validateTransition({ id: 'x', kind: 'fade-stop', seconds: 0.1, cue: 'hit' }, 't'),
+    ).toThrow(/cue yalnız stinger/);
   });
 
   it('bar hizası yalnız crossfade içindir ve farklı tempoda yoktur', () => {

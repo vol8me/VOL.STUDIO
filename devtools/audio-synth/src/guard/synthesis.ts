@@ -189,6 +189,19 @@ export function resolvePitchJump(params: unknown, path: string): ResolvedPitchJu
   };
 }
 
+export interface ResolvedGlide {
+  readonly semitones: number;
+  readonly seconds: number;
+}
+
+export function resolveGlide(params: unknown, path: string): ResolvedGlide {
+  const o = checkObject(params, path, ['semitones', 'seconds']);
+  return {
+    semitones: requireNumber(o, 'semitones', path, { min: -48, max: 48 }),
+    seconds: requireNumber(o, 'seconds', path, { above: 0, max: 10 }),
+  };
+}
+
 export interface ResolvedLfo {
   readonly target: LfoTarget;
   readonly rate: number;

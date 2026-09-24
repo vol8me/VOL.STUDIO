@@ -48,3 +48,4 @@ devtools/audio-synth/reference/production/music/
 devtools/audio-synth/audio-music/*/report.json
 devtools/audio-synth/audio-music/*/qa.json
 devtools/audio-synth/audio-music/*/search-report.json
+devtools/audio-synth/audio-music/*/jobs/

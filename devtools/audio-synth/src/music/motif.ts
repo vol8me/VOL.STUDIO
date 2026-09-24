@@ -1,7 +1,8 @@
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read';
 import { hashCanonical } from '../protocol/canonical';
-import { checkPattern, MUSIC_KEY } from './terms';
+import { checkExpression } from './articulation';
+import { checkPattern, MUSIC_KEY, type Articulation } from './terms';
 
 /**
  * Motif birinci sınıf malzemedir: dönüşümleri veri olarak yazılır ve her
@@ -28,6 +29,8 @@ export interface MotifNoteV1 {
   readonly beat: number;
   readonly beats: number;
   readonly gain?: number;
+  readonly velocity?: number;
+  readonly articulations?: readonly Articulation[];
 }
 
 export interface MotifV1 {
@@ -58,7 +61,14 @@ export function validateMotif(value: unknown, path: string): MotifV1 {
   return {
     id: checkPattern(o.id, `${path}.id`, MUSIC_KEY),
     notes: notes.map((raw, i) => {
-      const n = checkObject(raw, `${path}.notes[${i}]`, ['degree', 'beat', 'beats', 'gain']);
+      const n = checkObject(raw, `${path}.notes[${i}]`, [
+        'degree',
+        'beat',
+        'beats',
+        'gain',
+        'velocity',
+        'articulations',
+      ]);
       return {
         degree: checkNumber(n.degree, `${path}.notes[${i}].degree`, {
           min: -MAX_DEGREE,
@@ -70,6 +80,7 @@ export function validateMotif(value: unknown, path: string): MotifV1 {
         ...(n.gain === undefined
           ? {}
           : { gain: checkNumber(n.gain, `${path}.notes[${i}].gain`, { above: 0, max: 4 }) }),
+        ...checkExpression(n, `${path}.notes[${i}]`),
       };
     }),
   };

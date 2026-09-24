@@ -22,7 +22,15 @@ import {
   scaleNames,
   scaleSteps,
 } from '../../src/music/tonal';
-import { edited, referenceProgram, unitAdaptiveProgram, unitProgram } from './fixtures';
+import { listMusic } from '../../src/protocol/music';
+import {
+  edited,
+  MUSIC_ROOT,
+  referenceProgram,
+  REPO_ROOT,
+  unitAdaptiveProgram,
+  unitProgram,
+} from './fixtures';
 import { RENDER_BLOCK } from '../support/timeouts';
 
 describe('perde aritmetiği', RENDER_BLOCK, () => {
@@ -316,7 +324,7 @@ describe('MusicProgramV1 ve genişletme', RENDER_BLOCK, () => {
   });
 
   it('depo programları geçerlidir', () => {
-    for (const id of ['reference-loop', 'reference-cue', 'reference-adaptive']) {
+    for (const id of listMusic(REPO_ROOT, MUSIC_ROOT)) {
       expect(validateMusicProgram(referenceProgram(id)).musicId).toBe(id);
     }
   });

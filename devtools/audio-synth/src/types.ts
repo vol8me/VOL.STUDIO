@@ -210,6 +210,14 @@ export interface PitchJumpParams {
   duration?: number;
 }
 
+/** Portamento: nota `semitones` uzakta başlar ve `seconds` içinde hedef perdeye üstel iner. */
+export interface GlideParams {
+  /** Başlangıç perdesinin hedefe uzaklığı (yarım ton, [-48, 48]). */
+  semitones: number;
+  /** Kayma süresi (saniye, (0, 10]). */
+  seconds: number;
+}
+
 /** Sentez parametreleri. */
 export interface SynthParams {
   /** Örnek oranı (tamsayı, [8000, 384000]). Varsayılan 44100. */
@@ -253,6 +261,8 @@ export interface SynthParams {
   sample?: SampleParams;
   /** Frekans zıplaması. */
   pitchJump?: PitchJumpParams;
+  /** Portamento (önceki notadan kayma). */
+  glide?: GlideParams;
   /** Zarf. */
   envelope?: EnvelopeParams;
   /** Lowpass filtre. */

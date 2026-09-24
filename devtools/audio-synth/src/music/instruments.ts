@@ -54,11 +54,45 @@ const ROLE_POLYPHONY: Readonly<Record<MusicRole, number>> = {
   percussion: 4,
 };
 
-/** Ölçüm süresi: uzun kuyruk profil için gerekmez, ilk saniye karakteri taşır. */
+/** Spektral ölçüm süresi: uzun kuyruk profil için gerekmez, ilk saniye karakteri taşır. */
 const PROBE_SECONDS = 1;
+/**
+ * "Nota tutulabiliyor mu" sorusu presetin TİPİK nota süresinde (en çok 4 sn)
+ * sorulur: notanın başındaki ve ortasındaki seviye karşılaştırılır. Sönüm
+ * süresine bakmak yanıltıyordu — yavaş ataklı pad'in tepesi geç gelir,
+ * süreye ölçeklenen piyano zarfı ise yoklamanın sonuna kadar uzanır.
+ */
+const MAX_ENVELOPE_PROBE_SECONDS = 4;
+/** Başlangıç ile orta arasında bundan fazla düşen ses notayı tutamaz (vurgusal). */
+const TRANSIENT_DROP_DB = 6;
 const PROBE_POINTS = [0.25, 0.5, 0.75];
-/** Sönüm tipik sürenin bu oranından kısaysa enstrüman vurgusal sayılır. */
-const TRANSIENT_DECAY_RATIO = 0.6;
+
+/**
+ * Ölçülen zarftan türeyen artikülasyon desteği. Vurgusal bir enstrüman
+ * (marimba, piyano) notayı TUTAMAZ: `sustain` ve `legato` onda yalan olurdu;
+ * `let-ring` ise doğal sönümüne bırakır. Kısa sönümlü telli ve bas presetleri
+ * `mute` (avuç içi) çalabilir: kısa kapı + kararmış süzgeç.
+ */
+function builtinArticulations(kind: 'transient' | 'sustained', role: MusicRole): Articulation[] {
+  if (kind === 'sustained') {
+    return ['sustain', 'staccato', 'legato', 'tie', 'accent', 'ghost', 'slide'];
+  }
+  const base: Articulation[] = ['staccato', 'let-ring', 'accent', 'ghost'];
+  return role === 'pluck' || role === 'bass' ? [...base, 'mute'] : base;
+}
+
+/** Notanın [%15, %25] ile [%45, %55] dilimleri arasındaki seviye düşüşü (dB). */
+function holdDropDb(x: Float32Array): number {
+  const level = (from: number, to: number) => {
+    const a = Math.round(from * x.length);
+    const b = Math.round(to * x.length);
+    let energy = 0;
+    for (let i = a; i < b; i++) energy += x[i] * x[i];
+    return Math.sqrt(energy / Math.max(1, b - a));
+  };
+  const middle = level(0.45, 0.55);
+  return middle > 0 ? 20 * Math.log10(level(0.15, 0.25) / middle) : Number.POSITIVE_INFINITY;
+}
 
 function hzToMidi(hz: number): number {
   return Math.round(69 + 12 * Math.log2(hz / 440));
@@ -110,22 +144,20 @@ function build(id: string): InstrumentProfileV1 {
   const spectral = PROBE_POINTS.map((t) =>
     measure(preset, Math.round(lowMidi + (highMidi - lowMidi) * t)),
   );
-  const probe = { ...getPreset(preset, meta.typicalFrequency, PROBE_SECONDS), sampleRate: 44100 };
+  const probeSeconds = Math.min(MAX_ENVELOPE_PROBE_SECONDS, meta.typicalDuration);
+  const probe = { ...getPreset(preset, meta.typicalFrequency, probeSeconds), sampleRate: 44100 };
   const rendered = synthesize(probe);
   const report = analyzeAudio(rendered.channels, rendered.sampleRate, 'source-pcm');
   const attack = report.temporal.attackSeconds;
   const decay = report.temporal.decay40Seconds;
-  const kind =
-    decay !== null && decay < meta.typicalDuration * TRANSIENT_DECAY_RATIO
-      ? 'transient'
-      : 'sustained';
+  const kind = holdDropDb(rendered.channels[0]) > TRANSIENT_DROP_DB ? 'transient' : 'sustained';
   return {
     id,
     preset,
     role,
     range: { lowMidi, highMidi, lowHz, highHz },
     typical: { midi: hzToMidi(meta.typicalFrequency), durationSeconds: meta.typicalDuration },
-    articulations: kind === 'transient' ? ['short'] : ['sustain', 'short'],
+    articulations: builtinArticulations(kind, role),
     polyphony: { recommendedMax: ROLE_POLYPHONY[role] },
     envelope: {
       attackMs: attack === null ? null : Number((attack * 1000).toFixed(3)),

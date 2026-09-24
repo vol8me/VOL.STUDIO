@@ -30,6 +30,7 @@ export function renderDrySample(
   highpassEnv: Envelope | undefined,
   distortion: Distortion | undefined,
   lfoValues: { pitch: number; filter: number; amplitude: number },
+  glide?: { readonly semitones: number; readonly seconds: number },
 ): number {
   let sample = 0;
   const lfoFreq = frequency + lfoValues.pitch;
@@ -46,6 +47,7 @@ export function renderDrySample(
     t,
     duration,
     nyquistLimit,
+    glide,
   );
 
   for (const voice of voices) {

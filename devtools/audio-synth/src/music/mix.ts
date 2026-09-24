@@ -1,3 +1,4 @@
+import type { SampleAccess } from '../program/samples';
 import { addVoice, createMix, type Mix } from '../arrange/mix';
 import { renderVoices, trimmedLength } from '../arrange/render';
 import { AudioParamError } from '../guard/errors';
@@ -20,7 +21,7 @@ import type { NodeContext, ProgramEntry } from '../program/registry';
 import type { ResolvedNode } from '../program/schema';
 import type { MusicPlayback } from './terms';
 import type { MusicRenderV1 } from './render';
-import { beatSeconds, eventsFor, loopFrames, ONE_SHOT_TAIL_SECONDS, voicesOf } from './render';
+import { eventsFor, loopFrames, oneShotFrames, voicesOf } from './render';
 import type { MusicScoreV1 } from './score';
 
 /**
@@ -180,9 +181,7 @@ function prepareNode(
 
 function framesOf(score: MusicScoreV1, playback: MusicPlayback): number {
   if (playback !== 'playlistOneShot') return loopFrames(score);
-  const beat = beatSeconds(score);
-  const end = score.events.reduce((m, e) => Math.max(m, e.beat + e.beats), 0);
-  return Math.ceil((end * beat + ONE_SHOT_TAIL_SECONDS) * score.sampleRate);
+  return oneShotFrames(score, score.events);
 }
 
 /**
@@ -194,7 +193,12 @@ function framesOf(score: MusicScoreV1, playback: MusicPlayback): number {
 export function renderScoreMixed(
   score: MusicScoreV1,
   mix: ResolvedMusicMix,
-  options: { readonly playback: MusicPlayback; readonly stem?: string; readonly seed: number },
+  options: {
+    readonly playback: MusicPlayback;
+    readonly stem?: string;
+    readonly seed: number;
+    readonly samples?: SampleAccess;
+  },
 ): MusicRenderV1 {
   const oneShot = options.playback === 'playlistOneShot';
   const frames = framesOf(score, options.playback);
@@ -209,6 +213,7 @@ export function renderScoreMixed(
       voicesOf(
         score,
         events.filter((e) => e.lane === lane),
+        { samples: options.samples },
       ),
       {
         durationSeconds: seconds,

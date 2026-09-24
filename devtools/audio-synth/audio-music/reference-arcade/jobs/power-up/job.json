@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-3db20e766384817e": {
+        "hash": "sha256:cbe2479df4e89d8eb5063e3bf4e00ea215a4c26a4e8c7ac5eb988fac0f31f5da",
+        "path": "analyses/r-3db20e766384817e.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:e65531690e2e66e7b692aac45f4556eeace7cfe53bed27d602e595c3583dfa2b",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:e65531690e2e66e7b692aac45f4556eeace7cfe53bed27d602e595c3583dfa2b",
+      "hash": "sha256:57fbca39d56042ea28299ee5335de208ba7ff4ed9e355d9696426bc13c8c3d7e",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:374f084f2c7c1ed4bb3d2a4ca120da3b314a2a63e94c75e1a6980ea9a5096a6e",
+      "path": "devtools/audio-synth/reference/production/manifests/music/reference-arcade/power-up.json"
+    },
+    "renders": {
+      "r-3db20e766384817e": {
+        "hash": "sha256:5e8aed3ff3f559dbae17c6c455ffe3a1804af7e045a87dab403e38565adedbbe",
+        "path": "renders/r-3db20e766384817e.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:f2487de24833523ac9a3eedd89ee19f1357dea18b58bb07e1df34f28431a8e27",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "power-up",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/music/reference-arcade/power-up.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "reference-arcade/power-up"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

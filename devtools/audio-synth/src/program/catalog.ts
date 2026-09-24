@@ -17,6 +17,7 @@ import { AMPLITUDE, EXCITERS } from './primitives/exciters';
 import { FLUIDS } from './primitives/fluid';
 import { MATERIAL_BODY } from './primitives/material';
 import { MODULATORS } from './primitives/modulators';
+import { CHIP_AND_DRUM } from './primitives/percussion';
 import { PROCESSORS } from './primitives/processing';
 import { RESONATORS } from './primitives/resonance';
 import { GLOTTAL } from './primitives/voice';
@@ -51,6 +52,7 @@ export const PROGRAM_REGISTRY = new Registry<ProgramEntry>([
   ELECTRICAL,
   ...ENVIRONMENT,
   ...SAMPLING,
+  ...CHIP_AND_DRUM,
   CONVOLUTION,
   ...ARCHETYPES,
   ...SFX_ARCHETYPES,

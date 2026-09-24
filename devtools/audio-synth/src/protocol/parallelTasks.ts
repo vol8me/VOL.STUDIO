@@ -3,7 +3,8 @@ import { analyzeAudio } from '../analysis/report';
 import { summarizeAudio, type DescriptorSummaryV1 } from '../analysis/summary';
 import type { MechanicalCheckV1 } from '../analysis/checks';
 import { withRenderSession, type RenderQuality } from '../engine/session';
-import { renderScoreRaw, type MusicRenderV1 } from '../music/render';
+import type { MusicRenderV1 } from '../music/render';
+import { renderMusicRaw } from '../music/stem';
 import type { MusicProgramV1 } from '../music/program';
 import { expandProgram } from '../music/score';
 import { renderProgram, type ProgramRender } from '../program/render';
@@ -87,12 +88,14 @@ function searchCandidate(input: SearchCandidateInput, ctx: TaskContext): TaskRes
   return { output, transfer: kept ? buffersOf(kept.channels) : [] };
 }
 
-function musicRaw(input: MusicRawInput): TaskResult {
+function musicRaw(input: MusicRawInput, ctx: TaskContext): TaskResult {
   const score = expandProgram(input.program);
-  const output: MusicRenderV1 = renderScoreRaw(score, {
-    playback: input.program.playback,
-    ...(input.stem === null ? {} : { stem: input.stem }),
-  });
+  const output: MusicRenderV1 = renderMusicRaw(
+    input.program,
+    score,
+    input.stem ?? undefined,
+    repoSampleResolver(ctx.repoRoot),
+  );
   return { output, transfer: buffersOf(output.channels) };
 }
 
@@ -103,7 +106,7 @@ function dispatch(name: TaskName, input: unknown, ctx: TaskContext): TaskResult 
     case 'search-candidate':
       return searchCandidate(input as SearchCandidateInput, ctx);
     case 'music-raw':
-      return musicRaw(input as MusicRawInput);
+      return musicRaw(input as MusicRawInput, ctx);
   }
 }
 

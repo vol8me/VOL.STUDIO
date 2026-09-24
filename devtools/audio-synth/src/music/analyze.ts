@@ -1,9 +1,11 @@
 import { hashCanonical, type Sha256 } from '../protocol/canonical';
 import type { MusicBriefV1 } from './brief';
 import { densityBand, MUSIC_ANALYSIS_POLICY } from './policy';
+import { ROLE_BANDS, type OrchestrationRole } from './orchestration';
 import { musicProgramHash, type MusicProgramV1 } from './program';
 import { scoreHash, type MusicScoreV1, type ScoreEventV1 } from './score';
-import { isScaleName, midiToHz, pitchClass, scaleSteps } from './tonal';
+import { isScaleName, pitchClass, scaleSteps } from './tonal';
+import { frequencyOf } from './tuning';
 import { describeRule, ruleId, type MusicRuleV1 } from './terms';
 import { describeTransitions, type TransitionFindingV1 } from './transitions';
 import { themeBookRules, type ThemeBookV1 } from './themeBook';
@@ -37,6 +39,8 @@ export interface LaneStatV1 {
   readonly id: string;
   readonly instrument: string;
   readonly role: string;
+  /** Perdesiz şerit (davul kiti): register alanları `null`, perde analizine girmez. */
+  readonly unpitched?: true;
   readonly events: number;
   readonly notesPerBar: number;
   readonly lowMidi: number | null;
@@ -55,6 +59,21 @@ export interface SectionStatV1 {
   readonly notesPerBar: number;
   readonly activeLanes: number;
   readonly harmonicChangesPerBar: number;
+}
+
+/**
+ * Orkestrasyon görevinin ölçüsü (yönlendirici; kapıyı düşürmez): nota/ölçü
+ * ve seslenen perdelerin görev register bandına düşen payı.
+ */
+export interface RoleStatV1 {
+  readonly role: OrchestrationRole;
+  readonly lanes: readonly string[];
+  readonly notesPerBar: number;
+  readonly density: { readonly band: readonly [number, number]; readonly ok: boolean };
+  readonly register: {
+    readonly band: readonly [number, number] | null;
+    readonly inBandRatio: number | null;
+  };
 }
 
 export interface MotifStatV1 {
@@ -87,6 +106,8 @@ export interface MusicSymbolicReportV1 {
   readonly rules: readonly RuleFindingV1[];
   readonly brief: readonly MusicCheckV1[];
   readonly transitions: readonly TransitionFindingV1[];
+  /** Yalnız görev yazılmış programda; politika `ROLE_BANDS` (sürüm `ORCHESTRATION_POLICY_VERSION`). */
+  readonly roles?: readonly RoleStatV1[];
   readonly unchecked: readonly string[];
   readonly verdict: { readonly pass: boolean; readonly failures: readonly string[] };
 }
@@ -122,14 +143,31 @@ function round(value: number, digits = 4): number {
   return Number(value.toFixed(digits));
 }
 
+/**
+ * Perde analizinin gördüğü score: perdesiz şeritlerin (davul kiti) tuşları
+ * perde değil parça seçimidir ve perde sınıfı, dizi dışı oran, aralık
+ * kuralları, register ve spektral koruma ölçülerine KARIŞMAZ. Perdesiz şerit
+ * yoksa score olduğu gibi döner.
+ */
+function pitchedOnly(score: MusicScoreV1): MusicScoreV1 {
+  const unpitched = new Set(score.lanes.filter((l) => l.pitched === false).map((l) => l.id));
+  if (unpitched.size === 0) return score;
+  return {
+    ...score,
+    lanes: score.lanes.filter((l) => !unpitched.has(l.id)),
+    events: score.events.filter((e) => !unpitched.has(e.lane)),
+  };
+}
+
 function laneStats(score: MusicScoreV1): LaneStatV1[] {
   return score.lanes.map((lane) => {
     const events = score.events.filter((e) => e.lane === lane.id);
-    const midis = events.map((e) => e.midi);
+    const midis = lane.pitched === false ? [] : events.map((e) => e.midi);
     return {
       id: lane.id,
       instrument: lane.instrument,
       role: lane.role,
+      ...(lane.pitched === false ? { unpitched: true as const } : {}),
       events: events.length,
       notesPerBar: round(events.length / score.bars),
       lowMidi: midis.length ? Math.min(...midis) : null,
@@ -170,6 +208,38 @@ function sectionStats(program: MusicProgramV1, score: MusicScoreV1): SectionStat
     activeLanes: r.lanes,
     harmonicChangesPerBar: r.harmonicChangesPerBar,
   }));
+}
+
+function roleStats(score: MusicScoreV1): RoleStatV1[] {
+  const roles = [
+    ...new Set(score.lanes.flatMap((l) => (l.orchestration ? [l.orchestration] : []))),
+  ];
+  return roles.sort().map((role) => {
+    const lanes = score.lanes.filter((l) => l.orchestration === role);
+    const ids = new Set(lanes.map((l) => l.id));
+    const events = score.events.filter((e) => ids.has(e.lane));
+    const pitched = new Set(lanes.filter((l) => l.pitched !== false).map((l) => l.id));
+    const midis = events.filter((e) => pitched.has(e.lane)).map((e) => e.midi);
+    const band = ROLE_BANDS[role];
+    const notesPerBar = round(events.length / score.bars);
+    const register = band.register;
+    return {
+      role,
+      lanes: lanes.map((l) => l.id),
+      notesPerBar,
+      density: {
+        band: band.density,
+        ok: notesPerBar >= band.density[0] && notesPerBar <= band.density[1],
+      },
+      register: {
+        band: register,
+        inBandRatio:
+          register && midis.length
+            ? round(midis.filter((m) => m >= register[0] && m <= register[1]).length / midis.length)
+            : null,
+      },
+    };
+  });
 }
 
 function motifStats(score: MusicScoreV1): MotifStatV1[] {
@@ -264,10 +334,11 @@ function evaluateRule(
       };
     }
     case 'forbid-interval': {
+      const pitched = pitchedOnly(score);
       const hits =
         rule.scope === 'harmonic'
-          ? harmonicHits(score, rule.semitones)
-          : melodicHits(score, rule.semitones);
+          ? harmonicHits(pitched, rule.semitones)
+          : melodicHits(pitched, rule.semitones);
       return { ok: hits === 0, detail: `${hits} kez` };
     }
     case 'max-density': {
@@ -291,7 +362,7 @@ function evaluateRule(
       return { ok: value <= rule.voices, detail: `${value} eşzamanlı` };
     }
     case 'register-limit': {
-      const lanes = score.lanes.filter((lane) => lane.role === rule.role);
+      const lanes = pitchedOnly(score).lanes.filter((lane) => lane.role === rule.role);
       const outside = lanes.flatMap((lane) =>
         score.events.filter(
           (e) => e.lane === lane.id && (e.midi < rule.lowMidi || e.midi > rule.highMidi),
@@ -395,7 +466,7 @@ function briefChecks(
     }]`,
     round(notesPerBar, 2),
   );
-  const salience = melodicSalience(score);
+  const salience = melodicSalience(pitchedOnly(score));
   add(
     'melodic-salience',
     Math.abs(salience - brief.melodicSalience) <= MUSIC_ANALYSIS_POLICY.melodicSalienceTolerance,
@@ -410,7 +481,7 @@ function briefChecks(
     contrast,
   );
   if (brief.spectralPriority) {
-    const protectedRatio = spectralProtectionRatio(score, brief);
+    const protectedRatio = spectralProtectionRatio(pitchedOnly(score), brief);
     add(
       'spectral-priority',
       protectedRatio <= MUSIC_ANALYSIS_POLICY.spectralProtectionMaxRatio,
@@ -433,7 +504,7 @@ function briefChecks(
 function spectralProtectionRatio(score: MusicScoreV1, brief: MusicBriefV1): number {
   if (!brief.spectralPriority || score.events.length === 0) return 0;
   const inside = score.events.filter((event) => {
-    const hz = midiToHz(event.midi);
+    const hz = frequencyOf(event.midi, event.cents, score.tuning);
     return brief.spectralPriority!.protect.some((band) => hz >= band.fromHz && hz <= band.toHz);
   }).length;
   return round(inside / score.events.length);
@@ -470,9 +541,10 @@ export function analyzeScore(input: AnalyzeInput): MusicSymbolicReportV1 {
   );
   const brief = input.brief ? briefChecks(input.brief, program, score, sections) : [];
   const motifs = motifStats(score);
+  const pitched = pitchedOnly(score);
   const pitchClasses = Array.from(
     { length: 12 },
-    (_, pc) => score.events.filter((e) => pitchClass(e.midi) === pc).length,
+    (_, pc) => pitched.events.filter((e) => pitchClass(e.midi) === pc).length,
   );
   const unchecked = [
     ...(input.brief?.avoidNotes ?? []).map((note) => `brief.avoidNotes: ${note}`),
@@ -493,8 +565,8 @@ export function analyzeScore(input: AnalyzeInput): MusicSymbolicReportV1 {
       bars: score.bars,
       notesPerBar: round(score.events.length / score.bars, 3),
       maxPolyphony: maxPolyphony(score.events),
-      outOfSystemRatio: outOfSystemRatio(score, scale),
-      melodicSalience: melodicSalience(score),
+      outOfSystemRatio: outOfSystemRatio(pitched, scale),
+      melodicSalience: melodicSalience(pitched),
       motifInstances: score.events.filter((e) => e.provenance.kind === 'motif').length,
       uniqueVariations: motifs.length,
     },
@@ -505,6 +577,7 @@ export function analyzeScore(input: AnalyzeInput): MusicSymbolicReportV1 {
     rules,
     brief,
     transitions: describeTransitions(program.transitions ?? []),
+    ...(score.lanes.some((l) => l.orchestration) ? { roles: roleStats(score) } : {}),
     unchecked,
     verdict: { pass: failures.length === 0, failures },
   };

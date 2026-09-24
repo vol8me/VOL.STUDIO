@@ -2,13 +2,17 @@ import type {
   ActiveStem,
   LoopTimingMismatch,
   CrossfadeOptions,
+  MusicCue,
   MusicEngineOptions,
   MusicState,
   MusicTrack,
   PlayOptions,
   Stem,
+  StingerOptions,
   StopOptions,
+  TransitionOptions,
 } from './types';
+import { MusicCuePlayer } from './cues';
 import { MusicMixer } from './mixer';
 import { MusicScheduler } from './scheduler';
 import { StemLoader } from './loader';
@@ -23,12 +27,19 @@ import { resolveStemGain } from './gain-resolver';
  */
 const LOOP_DURATION_TOLERANCE = 0.05;
 
+/**
+ * Bitiş ve geçiş cue'su ölçü sınırında başlarken loop'un söndüğü süre.
+ * Kısa tutulur: sınırdan sonrası bir sonraki ölçünün notalarıdır.
+ */
+const CUE_HANDOFF_FADE = 0.03;
+
 /** Web Audio API tabanlı müzik motoru.
  *  Önceden üretilmiş OGG/MP3 stem'leri senkron çalar, adaptive gain ve crossfade destekler. */
 export class MusicEngine {
   readonly context: AudioContext;
   readonly mixer: MusicMixer;
   readonly loader: StemLoader;
+  readonly cues: MusicCuePlayer;
 
   private readonly tracks = new Map<string, MusicTrack>();
   private readonly buffers = new Map<string, AudioBuffer>();
@@ -78,6 +89,7 @@ export class MusicEngine {
     this.mixer = new MusicMixer(this.context, { compressor: options.compressor });
     this.mixer.output.connect(options.destination ?? this.context.destination);
     this.loader = new StemLoader(this.context);
+    this.cues = new MusicCuePlayer(this.context, this.mixer, this.loader);
     this.lookahead = Math.max(0.01, options.lookaheadSeconds ?? 0.1);
     this.onTimingMismatch = options.onTimingMismatch;
     this.masterVolume = Math.max(0, Math.min(1, options.masterVolume ?? 1));
@@ -142,6 +154,7 @@ export class MusicEngine {
       }
     });
     await Promise.all(tasks);
+    await Promise.all(trackCues(track).map((cue) => this.cues.load(track.id, cue)));
     return loadedAny;
   }
 
@@ -202,9 +215,10 @@ export class MusicEngine {
     this.scheduler = new MusicScheduler(track.bpm, track.timeSignature ?? [4, 4]);
     this.state = { ...track.defaultState, ...options.state };
     this.trackStartTime = this.context.currentTime + this.lookahead;
+    const loopStart = this.startIntro(track, this.trackStartTime);
 
     for (const { stem, buffer } of playable) {
-      this.startStem(stem, buffer, this.trackStartTime);
+      this.startStem(stem, buffer, loopStart);
     }
 
     this.isPlaying = true;
@@ -226,6 +240,7 @@ export class MusicEngine {
     const fadeOut = options.fadeOut ?? 0.5;
     const now = this.context.currentTime;
     const stopTime = now + fadeOut;
+    this.cues.stopAll(now, fadeOut);
 
     for (const active of this.activeStems.values()) {
       active.stoppedByEngine = true;
@@ -302,13 +317,124 @@ export class MusicEngine {
     this.scheduler = new MusicScheduler(track.bpm, track.timeSignature ?? [4, 4]);
     this.state = { ...track.defaultState, ...options.state };
     this.trackStartTime = transitionTime;
+    const loopStart = this.startIntro(track, transitionTime);
 
     for (const { stem, buffer } of playable) {
-      this.startStem(stem, buffer, transitionTime);
+      this.startStem(stem, buffer, loopStart);
     }
 
     this.isPlaying = true;
     this.updateGains(duration, transitionTime);
+  }
+
+  /**
+   * Parçanın girişi varsa `when` anında başlatır ve loop'un başlayacağı anı
+   * döner: giriş tam ölçüdür, ölçü ızgarası girişin başından sayılır.
+   * Girişin kuyruğu loop'un ilk ölçüsünün üstünde doğal olarak söner.
+   */
+  private startIntro(track: MusicTrack, when: number): number {
+    const intro = track.intro;
+    if (!intro || !this.scheduler || !this.cues.has(track.id, intro)) return when;
+    this.cues.start(track.id, intro, when, intro.gain ?? 1);
+    return when + this.scheduler.barsToSeconds(intro.bars);
+  }
+
+  /** Hizaya göre en erken başlama anı (bakış payı dahil). */
+  private alignedTime(align: 'bar' | 'beat' | 'now'): number {
+    const earliest = this.context.currentTime + this.lookahead;
+    if (align === 'now' || !this.scheduler) return earliest;
+    return align === 'beat'
+      ? this.scheduler.getNextBeatTime(earliest, this.trackStartTime)
+      : this.scheduler.getNextBarTime(earliest, this.trackStartTime);
+  }
+
+  private playingCue(find: (track: MusicTrack) => MusicCue | undefined, label: string): MusicCue {
+    const track = this.currentTrack;
+    if (!this.isPlaying || !track) throw new Error(`${label}: çalan parça yok`);
+    const cue = find(track);
+    if (!cue) throw new Error(`${label}: "${track.id}" parçasında cue yok`);
+    if (!this.cues.has(track.id, cue)) throw new Error(`${label}: cue yüklenmemiş (${cue.id})`);
+    return cue;
+  }
+
+  /**
+   * Loop'un üstüne bir vurgu (stinger) çalar: sonraki ölçü ya da vuruş
+   * sınırında, loop kesilmeden. Başlama anını döner.
+   */
+  playStinger(cueId: string, options: StingerOptions = {}): number {
+    const cue = this.playingCue((track) => track.cues?.find((c) => c.id === cueId), 'playStinger');
+    const when = this.alignedTime(options.align ?? cue.align ?? 'bar');
+    this.cues.start(
+      this.currentTrackId as string,
+      cue,
+      when,
+      (cue.gain ?? 1) * (options.gain ?? 1),
+    );
+    return when;
+  }
+
+  /** Loop'u sonraki ölçü sınırında bırakıp bitişi çalar; bitiş sönünce parça biter. */
+  playOutro(): number {
+    const cue = this.playingCue((track) => track.outro, 'playOutro');
+    const trackId = this.currentTrackId as string;
+    const when = this.alignedTime('bar');
+    this.releaseStems(when);
+    const token = this.playToken;
+    this.cues.start(trackId, cue, when, cue.gain ?? 1, () => {
+      if (token === this.playToken && this.currentTrackId === trackId) this.announceEnd(trackId);
+    });
+    return when;
+  }
+
+  /**
+   * Çalan parçanın geçiş cue'su üzerinden başka parçaya geçer: cue ölçü
+   * sınırında başlar, hedef cue'nun `bars` kadar sonrasında ölçü başında
+   * girer. Hedefin çalınabilirliği ÖNCE doğrulanır (bkz. `crossfadeTo`).
+   */
+  async transitionTo(trackId: string, options: TransitionOptions): Promise<number> {
+    const track = this.tracks.get(trackId);
+    if (!track) throw new Error(`Track bulunamadı: ${trackId}`);
+    const cue = this.playingCue(
+      (current) => current.cues?.find((c) => c.id === options.cue),
+      'transitionTo',
+    );
+    const fromId = this.currentTrackId as string;
+    const token = ++this.playToken;
+    await this.loadTrack(track);
+    if (token !== this.playToken) return this.trackStartTime;
+    const playable = this.resolvePlayableStems(track);
+    if (playable.length === 0) {
+      throw new Error(`Track'e geçilemedi, hiçbir stem yüklenemedi: ${trackId}`);
+    }
+    const when = this.alignedTime(cue.align ?? 'bar');
+    const start = when + (this.scheduler as MusicScheduler).barsToSeconds(cue.bars);
+    this.releaseStems(when);
+    this.cues.start(fromId, cue, when, cue.gain ?? 1);
+    this.currentTrackId = trackId;
+    this.currentTrack = track;
+    this.scheduler = new MusicScheduler(track.bpm, track.timeSignature ?? [4, 4]);
+    this.state = { ...track.defaultState, ...options.state };
+    this.trackStartTime = start;
+    const loopStart = this.startIntro(track, start);
+    for (const { stem, buffer } of playable) this.startStem(stem, buffer, loopStart);
+    this.isPlaying = true;
+    this.updateGains(0, start);
+    return start;
+  }
+
+  /** Çalan stem'leri `when` anında kısa bir sönümle bırakır (cue devralır). */
+  private releaseStems(when: number): void {
+    for (const active of this.activeStems.values()) {
+      if (active.fadingOut) continue;
+      active.fadingOut = true;
+      active.stoppedByEngine = true;
+      this.mixer.setChannelGain(active.channelId, 0, CUE_HANDOFF_FADE, when);
+      try {
+        active.source?.stop(when + CUE_HANDOFF_FADE);
+      } catch {
+        // Zaten durdurulmuşsa görmezden gel
+      }
+    }
   }
 
   /** State günceller ve stem gain'lerini yeniden hesaplar. */
@@ -367,6 +493,7 @@ export class MusicEngine {
       }
       this.mixer.removeChannel(active.channelId);
     }
+    this.cues.dispose();
     this.mixer.clear();
     this.mixer.output.disconnect();
 
@@ -480,6 +607,11 @@ export class MusicEngine {
     for (const active of this.activeStems.values()) {
       if (active.trackId === trackId && !active.stoppedByEngine) return;
     }
+    this.announceEnd(trackId);
+  }
+
+  /** Parçanın bittiğini duyurur ve çalma durumunu sıfırlar. */
+  private announceEnd(trackId: string): void {
     this.isPlaying = false;
     this.currentTrackId = undefined;
     this.currentTrack = undefined;
@@ -504,4 +636,10 @@ export class MusicEngine {
       this.mixer.setChannelGain(active.channelId, targetGain, fadeTime, now);
     }
   }
+}
+
+function trackCues(track: MusicTrack): MusicCue[] {
+  return [track.intro, track.outro, ...(track.cues ?? [])].filter(
+    (cue): cue is MusicCue => cue !== undefined,
+  );
 }

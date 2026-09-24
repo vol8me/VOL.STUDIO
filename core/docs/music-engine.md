@@ -16,7 +16,8 @@ SFX motorundan (build-time ses sentez aracından) ayrıdır; müzik uzun loop'la
 ```
 core/src/audio/music/
   types.ts             — MusicTrack, Stem, MusicState, MusicContext, gain map tipleri
-  engine.ts            — MusicEngine: yükleme, çalma, durdurma, crossfade
+  engine.ts            — MusicEngine: yükleme, çalma, durdurma, crossfade, cue zamanlaması
+  cues.ts              — MusicCuePlayer: giriş/bitiş/stinger/geçiş cue'larını yükler ve bir kez çalar
   mixer.ts             — MusicMixer: her stem için ayrı GainNode + master kompresör
   scheduler.ts         — MusicScheduler: BPM/ölçü bazlı zaman/bar/beat dönüşümleri
   loader.ts            — StemLoader: stem yükle ve decode et; OGG başarısızsa MP3 fallback
@@ -224,6 +225,9 @@ gainMap: {
 | `play(trackId, options?)`                   | Track çalmaya başlar                                                      |
 | `stop(options?)`                            | Çalmayı fade out ile durdurur                                             |
 | `crossfadeTo(trackId, duration?, options?)` | Diğer track'e geçer (bkz. aşağıda)                                        |
+| `playStinger(cueId, options?)`              | Loop'u kesmeden sonraki ölçü/vuruşta vurgu çalar; başlama anını döner     |
+| `playOutro()`                               | Sonraki ölçü sınırında loop'u bırakıp bitişi çalar; bitince parça biter   |
+| `transitionTo(trackId, options)`            | Geçiş cue'suyla başka parçaya geçer; hedef cue'nun ölçüsü kadar sonra     |
 | `setState(state, fadeTime?)`                | State günceller                                                           |
 | `setIntensity(value, fadeTime?)`            | Yoğunluk (0-1) ayarlar                                                    |
 | `setMasterVolume(value, fadeTime?)`         | Master seviye ayarlar                                                     |
@@ -241,6 +245,30 @@ await music.crossfadeTo('combat', 2, {
 ```
 
 `bars` verilmezse geçiş HEMEN başlar (`duration` geçişin kendi süresidir, öncesinde bekleme yoktur).
+
+## Cue'lar: giriş, bitiş, stinger, geçiş
+
+Cue, loop'a karışmayan tek seferlik bir sestir (`MusicCue`: `id`, `src`
+ya da `buffer`, müzikal uzunluk `bars`, `gain`, `align`). Track `intro`,
+`outro` ve `cues` (stinger ve geçişler) taşıyabilir; `loadTrack` cue'ları
+da yükler, yüklenemeyen cue parçayı düşürmez.
+
+- **Giriş.** `play()` girişi başlatır; loop stem'leri girişin `bars` kadar
+  sonrasında örnek-doğru başlar. Ölçü ızgarası girişin başından sayılır;
+  girişin kuyruğu loop'un ilk ölçüsünün üstünde doğal olarak söner.
+- **Stinger.** `playStinger(id, { align })` loop'u kesmeden sonraki ölçü
+  (varsayılan) ya da vuruş sınırında çalar; `align: 'now'` bakış payı kadar
+  sonra.
+- **Bitiş.** `playOutro()` sonraki ölçü sınırında loop'u 30 ms'de bırakır ve
+  bitişi çalar; bitiş kendiliğinden sönünce `onTrackEnd` bildirilir. Bu
+  sırada `stop()` gelirse bildirim yapılmaz.
+- **Geçiş.** `transitionTo(trackId, { cue })` önce hedefin çalınabilirliğini
+  doğrular, sonra cue'yu ölçü sınırında başlatır; hedef parça cue'nun
+  `bars` kadar sonrasında ölçü başında girer.
+
+Spec tarafında cue'lar `MusicAssetSpecV1.cues` listesidir (`MusicCueSpecV1`:
+`id`, `kind`, `file`, `frames`, `bars`, `align`, `to`); `toMusicTrack` girişi
+ve bitişi ayrı alanlara, stinger ve geçişleri `cues` listesine koyar.
 
 ## Ses üretimi (build-time)
 
@@ -381,7 +409,7 @@ ayrışamaz (ayrışma loop dikişinde duyulur, hiçbir test yakalamaz).
 | `toMusicTrack(spec, { resolve })`                  | Spec'i motorun çaldığı `MusicTrack`e çevirir; loop noktaları SANİYE                       |
 | `assertEngineCompatible(spec, options)`            | Spec kompresörsüz ölçüldüyse motor kompresörü açıkken hata verir                          |
 | `MASTERING_PATHS`                                  | Çalma modeli → zorunlu mastering yolu                                                     |
-| `MUSIC_RUNTIME_CAPABILITIES`                       | Motorun GERÇEKTEN yaptığı geçişler ve sınırları (üretim bu listeye bakar)                 |
+| `MUSIC_RUNTIME_CAPABILITIES`                       | Motorun GERÇEKTEN yaptığı geçişler, cue türleri ve sınırları (üretim bu listeye bakar)    |
 
 **Kompresör uyumu.** Master kompresörü (−24 dB eşik, 12 oran) varsayılan
 olarak açıktır ve −14 LUFS'e getirilmiş bir parçayı ezer; offline ölçüm
@@ -391,9 +419,11 @@ eşleşmelidir.
 ## Yeni Müzik Ekleme
 
 1. audio-synth'te müzik isteğini (`brief.json`, `AudioBriefV1` `kind: 'music'`)
-   ve programı (`music.json`, `MusicProgramV1`) yaz;
-   `pnpm --filter @volstudio/audio-synth audio:job music analyze <id>` ses
-   render etmeden sembolik uyumu raporlar.
+   ve programı (`music.json`, `MusicProgramV1`) yaz; `devtools/audio-synth`
+   içinde `pnpm audio:job music analyze <id>` ses render etmeden sembolik
+   uyumu raporlar. Giriş, bitiş ve stinger isteyen parça programda
+   `segments` bildirir; her cue ayrı asset olarak yayımlanır ve spec'in
+   `cues` listesine girer.
 2. `audio:job music publish <id>`: her stem kanonik publish kapısından geçer,
    en son `MusicBundleV1` (içinde `MusicAssetSpecV1`) hedef paketin müzik
    köküne yazılır. Oyun hedefi çalışma zamanı beyanı (`audio-target.json`)
@@ -417,8 +447,12 @@ const scheduler = new MusicScheduler(110, [4, 4]);
 const nextBarTime = scheduler.getNextBarTime(ctx.currentTime, trackStartTime);
 ```
 
-- `beatDuration = 60 / bpm`
+- `beatDuration = (60 / bpm) * (4 / timeSignature[1])` — `bpm` dörtlük başınadır
 - `barDuration = beatDuration * timeSignature[0]`
+
+Spec'in `bpm`'i ise ölçü BİRİMİ başına vuruştur (6/8'de sekizlik);
+`toMusicTrack` dönüşümü `bpm × 4 / birim` ile tek yerde yapar. Önceden bpm
+olduğu gibi geçiyor ve 6/8 parçada bar hizalı geçişler yarım ölçü kayıyordu.
 
 ## Sınırlar
 
@@ -428,6 +462,7 @@ const nextBarTime = scheduler.getNextBarTime(ctx.currentTime, trackStartTime);
 - Layered müzik temaları
 - Adaptive gain'li stem mix'ler
 - Bar sınırında crossfade
+- Giriş + dikişsiz loop + bitiş; ölçü/vuruş hizalı stinger; cue'lu geçiş
 
 Yetersiz kalır:
 

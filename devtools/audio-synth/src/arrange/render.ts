@@ -1,4 +1,6 @@
 import { synthesize } from '../engine';
+import { renderSession } from '../engine/session';
+import type { Sha256 } from '../protocol/canonical';
 import type { SynthParams } from '../types';
 import { addVoice, createMix, type Mix } from './mix';
 
@@ -10,12 +12,38 @@ import { addVoice, createMix, type Mix } from './mix';
  * Burada mastering YOKTUR: seviye/sınırlayıcı kararı çağıranındır, çünkü
  * stem'ler ortak bir kazanç alır ve tek tek sınırlanamaz.
  */
-export interface PlacedVoiceV1 {
-  /** Enstrümanın ürettiği parametreler; `sampleRate` burada yazılır. */
-  readonly params: SynthParams;
+interface Placement {
   readonly atSeconds: number;
   readonly gain: number;
   readonly pan?: number;
+}
+
+/**
+ * `SynthParams` ile ifade edilemeyen ses (davul, retro, sampler bölgesi):
+ * kaynak kendi tamponunu üretir. Anahtar, çıktıyı belirleyen her şeyin
+ * özetidir; `null` ise ses önbelleğe girmez.
+ */
+export interface ModelVoiceV1 {
+  readonly key: Sha256 | null;
+  readonly render: () => Float32Array[];
+}
+
+export type PlacedVoiceV1 =
+  | (Placement & {
+      /** Enstrümanın ürettiği parametreler; `sampleRate` burada yazılır. */
+      readonly params: SynthParams;
+    })
+  | (Placement & { readonly model: ModelVoiceV1 });
+
+function renderModel(model: ModelVoiceV1): Float32Array[] {
+  const { cache } = renderSession();
+  if (cache && model.key) {
+    const hit = cache.read(model.key);
+    if (hit) return hit;
+  }
+  const channels = model.render();
+  if (cache && model.key) cache.write(model.key, channels);
+  return channels;
 }
 
 export interface RenderVoicesOptions {
@@ -28,13 +56,26 @@ export interface RenderVoicesOptions {
 
 export function renderVoices(voices: readonly PlacedVoiceV1[], options: RenderVoicesOptions): Mix {
   const mix = createMix(options.durationSeconds, options.sampleRate, options.channelCount ?? 2);
+  const wrap = options.wrap === true;
   for (const voice of voices) {
+    if ('model' in voice) {
+      const channels = renderModel(voice.model);
+      const panned = voice.pan !== undefined && channels.length === 1 && mix.channels.length === 2;
+      addVoice(
+        mix,
+        {
+          channels,
+          sampleRate: options.sampleRate,
+          duration: channels[0].length / options.sampleRate,
+        },
+        voice.atSeconds,
+        { gain: voice.gain, wrap, ...(panned ? { pan: voice.pan } : {}) },
+      );
+      continue;
+    }
     const params: SynthParams = { ...voice.params, sampleRate: options.sampleRate };
     if (voice.pan !== undefined) params.pan = voice.pan;
-    addVoice(mix, synthesize(params), voice.atSeconds, {
-      gain: voice.gain,
-      wrap: options.wrap === true,
-    });
+    addVoice(mix, synthesize(params), voice.atSeconds, { gain: voice.gain, wrap });
   }
   return mix;
 }

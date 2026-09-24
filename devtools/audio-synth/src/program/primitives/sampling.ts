@@ -1,6 +1,7 @@
 import { decomposeTransient } from '../../analysis/decompose';
 import { AudioParamError } from '../../guard/errors';
-import { loopSamples, resample } from '../../synthesis/sample';
+import { resample } from '../../synthesis/sample';
+import { renderZone } from '../../synthesis/zone';
 import { shiftAndStretch, type StretchMethod } from '../../synthesis/stretch';
 import { choiceOf, numberOf, sampleAt, signalOf } from '../params';
 import type { NodeContext, SourceEntry } from '../registry';
@@ -21,7 +22,7 @@ function dataOf(ctx: NodeContext, name: string): SampleData {
 }
 
 /** Programın kanal düzenine göre: mono istenirse kanalların ortalaması. */
-function monoOf(data: SampleData): Float32Array {
+export function monoOf(data: SampleData): Float32Array {
   if (data.channels.length === 1) return data.channels[0];
   const [l, r] = data.channels;
   return Float32Array.from(l, (v, i) => 0.5 * (v + r[i]));
@@ -160,31 +161,15 @@ function playZone(
   velocity: number,
   ctx: NodeContext,
 ) {
-  const source = monoOf(data);
   const ratio = Math.pow(2, (note - zone.rootKey) / 12 + zone.tuneCents / 1200);
-  const factor = (data.sampleRate / ctx.sampleRate) * ratio;
-  const toOut = (seconds: number) => Math.round((seconds * data.sampleRate) / factor);
-  const start = Math.round(zone.startSeconds * data.sampleRate);
-  const body = resample(source.subarray(start), factor);
-  let rendered: Float32Array;
-  if (zone.loop && body.length < out.length) {
-    const loopStart = toOut(zone.loop.startSeconds - zone.startSeconds);
-    const loopEnd = toOut(zone.loop.endSeconds - zone.startSeconds);
-    const head = body.subarray(0, loopStart);
-    const fade = toOut(zone.loop.crossfadeSeconds);
-    const cycle = loopSamples(
-      body.slice(loopStart, loopEnd),
-      out.length - head.length,
-      true,
-      fade > 0,
-      fade,
-    );
-    rendered = new Float32Array(out.length);
-    rendered.set(head);
-    rendered.set(cycle, head.length);
-  } else {
-    rendered = body;
-  }
+  const rendered = renderZone(
+    zone,
+    monoOf(data),
+    data.sampleRate,
+    ratio,
+    ctx.sampleRate,
+    out.length,
+  );
   const gain = Math.pow(10, zone.gainDb / 20) * (0.3 + 0.7 * velocity);
   const length = Math.min(out.length, rendered.length);
   const release = Math.min(length, Math.round(RELEASE_SECONDS * ctx.sampleRate));

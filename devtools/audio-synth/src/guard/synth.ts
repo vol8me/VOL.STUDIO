@@ -35,6 +35,8 @@ import {
   resolveHarmonics,
   resolveLfos,
   resolvePitchJump,
+  resolveGlide,
+  type ResolvedGlide,
   resolveSample,
   type ResolvedEnvelope,
   type ResolvedFilter,
@@ -108,6 +110,7 @@ export interface ResolvedSynthParams {
   readonly harmonics?: readonly ResolvedHarmonic[];
   readonly sample?: ResolvedSample;
   readonly pitchJump?: ResolvedPitchJump;
+  readonly glide?: ResolvedGlide;
   readonly envelope?: ResolvedEnvelope;
   readonly lowpass?: ResolvedFilter;
   readonly highpass?: ResolvedFilter;
@@ -135,6 +138,7 @@ const SYNTH_KEYS = [
   'harmonics',
   'sample',
   'pitchJump',
+  'glide',
   'envelope',
   'lowpass',
   'highpass',
@@ -213,6 +217,7 @@ export function resolveSynthParams(params: unknown): ResolvedSynthParams {
     harmonics: o.harmonics === undefined ? undefined : resolveHarmonics(o.harmonics, 'harmonics'),
     sample: o.sample === undefined ? undefined : resolveSample(o.sample, 'sample'),
     pitchJump: o.pitchJump === undefined ? undefined : resolvePitchJump(o.pitchJump, 'pitchJump'),
+    ...(o.glide === undefined ? {} : { glide: resolveGlide(o.glide, 'glide') }),
     envelope: o.envelope === undefined ? undefined : resolveEnvelope(o.envelope, 'envelope'),
     lowpass: o.lowpass === undefined ? undefined : resolveFilter(o.lowpass, 'lowpass', 'lowpass'),
     highpass:

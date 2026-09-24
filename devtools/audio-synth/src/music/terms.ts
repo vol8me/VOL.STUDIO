@@ -51,8 +51,21 @@ export const MUSIC_ROLES = [
 ] as const;
 export type MusicRole = (typeof MUSIC_ROLES)[number];
 
-/** Program bir notayı ancak enstrümanın desteklediği artikülasyonla isteyebilir. */
-export const ARTICULATIONS = ['sustain', 'short'] as const;
+/**
+ * Program bir notayı ancak enstrümanın desteklediği artikülasyonla isteyebilir.
+ * Üç küme vardır ve nota her kümeden en çok birini taşır (bkz. `articulation.ts`).
+ */
+export const ARTICULATIONS = [
+  'sustain',
+  'staccato',
+  'legato',
+  'tie',
+  'let-ring',
+  'accent',
+  'ghost',
+  'mute',
+  'slide',
+] as const;
 export type Articulation = (typeof ARTICULATIONS)[number];
 
 export const MUSIC_RULE_KINDS = [

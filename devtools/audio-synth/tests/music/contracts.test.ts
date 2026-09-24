@@ -17,7 +17,15 @@ import {
   validateThemeBook,
 } from '../../src/music/themeBook';
 import { validateBrief } from '../../src/program/brief';
-import { edited, musicBrief, referenceBrief, referenceThemeBook } from './fixtures';
+import { listMusic } from '../../src/protocol/music';
+import {
+  edited,
+  MUSIC_ROOT,
+  musicBrief,
+  referenceBrief,
+  referenceThemeBook,
+  REPO_ROOT,
+} from './fixtures';
 import { RENDER_BLOCK } from '../support/timeouts';
 
 describe('MusicBriefV1', RENDER_BLOCK, () => {
@@ -31,7 +39,7 @@ describe('MusicBriefV1', RENDER_BLOCK, () => {
   });
 
   it('depo fixture brief’leri geçerlidir', () => {
-    for (const id of ['reference-loop', 'reference-cue', 'reference-adaptive']) {
+    for (const id of listMusic(REPO_ROOT, MUSIC_ROOT)) {
       expect(validateBrief(referenceBrief(id)).kind).toBe('music');
     }
   });

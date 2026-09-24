@@ -1,0 +1,64 @@
+{
+  "musicId": "reference-arcade",
+  "parity": {
+    "ok": true,
+    "residualDbfs": -200
+  },
+  "schema": "MusicAdaptiveQaV1",
+  "segments": [
+    {
+      "id": "intro",
+      "integratedLufs": -26.853,
+      "kind": "intro",
+      "ok": true,
+      "overlay": {
+        "positions": 1,
+        "worstTruePeakDbtp": -3.782
+      },
+      "problems": [],
+      "samplePeak": 0.363987,
+      "truePeakDbtp": -8.724
+    },
+    {
+      "id": "ending",
+      "integratedLufs": -15.81,
+      "kind": "outro",
+      "ok": true,
+      "overlay": null,
+      "problems": [],
+      "samplePeak": 0.60663,
+      "truePeakDbtp": -4.215
+    },
+    {
+      "id": "power-up",
+      "integratedLufs": -24.344,
+      "kind": "stinger",
+      "ok": true,
+      "overlay": {
+        "positions": 32,
+        "worstTruePeakDbtp": -1.517
+      },
+      "problems": [],
+      "samplePeak": 0.212513,
+      "truePeakDbtp": -13.452
+    }
+  ],
+  "states": [
+    {
+      "gains": {
+        "main": 1
+      },
+      "integratedLufs": -15.069,
+      "intensity": 1,
+      "ok": true,
+      "problems": [],
+      "samplePeak": 0.633942,
+      "state": "fixed",
+      "truePeakDbtp": -3.782
+    }
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

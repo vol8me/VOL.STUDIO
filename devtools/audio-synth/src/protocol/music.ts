@@ -1,8 +1,18 @@
 import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
-import { validateMusicAssetSpec, type MusicAssetSpecV1 } from '@volstudio/core/audio/music';
+import {
+  barsToFrames,
+  validateMusicAssetSpec,
+  type MusicAssetSpecV1,
+} from '@volstudio/core/audio/music';
 import { classifyAssetPath } from '../analysis/assetQa';
 import { ANALYZER_VERSION } from '../analysis/report';
-import { checkStemSync, SYNC_METHOD, type StemSyncCheckV1 } from '../analysis/sync';
+import {
+  checkLoopSeam,
+  checkStemSync,
+  SYNC_METHOD,
+  type LoopSeamCheckV1,
+  type StemSyncCheckV1,
+} from '../analysis/sync';
 import {
   ANALYSIS_WORK_PER_SAMPLE,
   assertBatchBudget,
@@ -32,6 +42,13 @@ import { instrumentRegistryHash } from '../music/instruments';
 import { musicProgramHash, validateMusicProgram, type MusicProgramV1 } from '../music/program';
 import { estimateScoreCost, MUSIC_RENDERER_VERSION, type MusicRenderV1 } from '../music/render';
 import { expandProgram, scoreHash, type MusicScoreV1 } from '../music/score';
+import {
+  cueSegments,
+  musicView,
+  segmentMastering,
+  segmentQa,
+  type SegmentQaV1,
+} from '../music/segments';
 import { MUSIC_ID } from '../music/terms';
 import { themeBookHash, validateThemeBook, type ThemeBookV1 } from '../music/themeBook';
 import {
@@ -153,11 +170,16 @@ function loadThemeBook(
   return book;
 }
 
-/** Yayımlanacak asset'ler: adaptive'de her stem + referans mix, diğerlerinde tek mix. */
+/**
+ * Yayımlanacak asset'ler: adaptive'de her stem + referans mix, diğerlerinde
+ * tek mix; segmentli programda ayrıca her cue (giriş, bitiş, stinger, geçiş).
+ */
 export function publishedStems(program: MusicProgramV1): string[] {
-  return program.playback === 'adaptiveLoop'
-    ? [...program.stems.map((s) => s.id), REFERENCE_MIX_ID]
-    : [REFERENCE_MIX_ID];
+  const loop =
+    program.playback === 'adaptiveLoop'
+      ? [...program.stems.map((s) => s.id), REFERENCE_MIX_ID]
+      : [REFERENCE_MIX_ID];
+  return [...loop, ...cueSegments(program).map((s) => s.id)];
 }
 
 function destinationOf(
@@ -199,9 +221,10 @@ export function previewMusic(repoRoot: string, documents: MusicDocumentsV1): Mus
   let work = 0;
   let peak = 0;
   for (const stem of assets) {
-    const cost = estimateScoreCost(score, {
-      playback: program.playback,
-      ...(stem === REFERENCE_MIX_ID ? {} : { stem }),
+    const view = musicView(program, score, stem === REFERENCE_MIX_ID ? undefined : stem);
+    const cost = estimateScoreCost(view.score, {
+      playback: view.playback,
+      ...(view.stem ? { stem: view.stem } : {}),
     });
     assertRenderBudget(cost, `stem ${stem}`);
     work += MUSIC_RENDER_PASSES * cost.workUnits;
@@ -250,7 +273,11 @@ function rawRenders(
   workers: number | undefined,
 ): RawRenderer {
   const { program } = preview;
-  const ids = [null, ...program.stems.map((stem) => stem.id)];
+  const ids = [
+    null,
+    ...program.stems.map((stem) => stem.id),
+    ...cueSegments(program).map((s) => s.id),
+  ];
   const renders = runTasks<MusicRenderV1>(
     repoRoot,
     'music-raw',
@@ -268,14 +295,16 @@ export function checkMusic(
 ): MusicCheckV1 {
   const preview = previewMusic(repoRoot, documents);
   const { program, score } = preview;
+  const raw = rawRenders(repoRoot, preview, options.workers);
   const { reference, stems, plan } = renderAndPlan(
     program,
     score,
     program.mastering?.integratedLufs ?? DEFAULT_MUSIC_LUFS,
-    rawRenders(repoRoot, preview, options.workers),
+    raw,
   );
   const rendered: RenderedAssetV1[] = [];
-  for (const stem of preview.assets) {
+  const cueIds = new Set(cueSegments(program).map((s) => s.id));
+  for (const stem of preview.assets.filter((id) => !cueIds.has(id))) {
     const raw =
       stem === REFERENCE_MIX_ID
         ? reference.channels.map((channel) => Float32Array.from(channel))
@@ -291,6 +320,21 @@ export function checkMusic(
     });
   }
   const mix = rendered.find((r) => r.stem === REFERENCE_MIX_ID) as RenderedAssetV1;
+  const cues = renderCues(program, raw, plan.mastering, mix.channels);
+  rendered.push(...cues.rendered);
+  const qa = cues.qa.length
+    ? {
+        ...plan.qa,
+        segments: cues.qa,
+        verdict: {
+          pass: plan.qa.verdict.pass && cues.qa.every((q) => q.ok),
+          failures: [
+            ...plan.qa.verdict.failures,
+            ...cues.qa.flatMap((q) => q.problems.map((p) => `${q.id}: ${p}`)),
+          ],
+        },
+      }
+    : plan.qa;
   const measured = measureMix(mix.channels, reference.sampleRate, plan.mastering.path);
   const files = Object.fromEntries(
     program.stems.map((stem) => [
@@ -324,9 +368,52 @@ export function checkMusic(
           },
         }
       : {}),
+    cues: cueSegments(program).map((segment) => ({
+      segment,
+      file: assetFileOf(repoRoot, program, segment.id),
+      frames: (rendered.find((r) => r.stem === segment.id) as RenderedAssetV1).frames,
+    })),
   });
   validateMusicAssetSpec(spec);
-  return { ...preview, mastering: plan.mastering, qa: plan.qa, spec, rendered };
+  return { ...preview, mastering: plan.mastering, qa, spec, rendered };
+}
+
+/**
+ * Cue segmentlerini loop'un ortak kazancıyla (+ kendi farkı) master'lar ve
+ * ölçer: tek başına ve loop ile birlikte (bkz. `segmentQa`).
+ */
+function renderCues(
+  program: MusicProgramV1,
+  raw: RawRenderer,
+  mastering: MusicMasteringPlanV1,
+  loop: readonly Float32Array[],
+): { rendered: RenderedAssetV1[]; qa: SegmentQaV1[] } {
+  const segments = cueSegments(program);
+  if (segments.length === 0) return { rendered: [], qa: [] };
+  const { bpm } = program.tempo;
+  const beatsPerBar = program.meter[0];
+  const rate = program.sampleRate;
+  const rendered = segments.map((segment) => {
+    const channels = raw(segment.id).channels.map((channel) => Float32Array.from(channel));
+    applyMastering(channels, rate, segmentMastering(mastering, segment));
+    return { segment, channels };
+  });
+  return {
+    rendered: rendered.map(({ segment, channels }) => ({
+      stem: segment.id,
+      channels,
+      frames: channels[0].length,
+      pcmHash: hashPcm(channels, rate),
+    })),
+    qa: segmentQa({
+      loop,
+      sampleRate: rate,
+      beatFrames: Math.round((60 / bpm) * rate),
+      barFrames: barsToFrames(1, bpm, beatsPerBar, rate),
+      introFrames: (s) => barsToFrames(s.bars[1] - s.bars[0], bpm, beatsPerBar, rate),
+      segments: rendered,
+    }),
+  };
 }
 
 /** Paket köküne göreli asset yolu — spec'teki `file` alanı bunu taşır. */
@@ -343,15 +430,26 @@ function stemProgram(
   return { schema: MUSIC_STEM_PROGRAM_SCHEMA, stem, mastering, music: program };
 }
 
+/**
+ * Cue asset'inin işi tek seferliktir: brief'i bundle brief'inden
+ * DETERMİNİSTİK türer (çalma modeli ve kullanım değişir, niyet ve kararlar
+ * aynı kalır). Bundle kaydı ana brief'in özetini taşır.
+ */
+function assetBrief(brief: MusicBriefV1, cue: boolean): MusicBriefV1 {
+  return cue ? { ...brief, playback: 'playlistOneShot', usage: 'cue' } : brief;
+}
+
 /** Tek stem'i kanonik job akışından yayımlar; yayımlanmışsa dokunmaz. */
 function publishStem(
   loc: MusicLocation,
   check: MusicCheckV1,
-  brief: MusicBriefV1,
+  bundleBrief: MusicBriefV1,
   stem: string,
 ): 'published' | 'unchanged' {
   const job = stemJob(loc, stem);
   const { program } = check;
+  const cue = cueSegments(program).find((s) => s.id === stem);
+  const brief = assetBrief(bundleBrief, cue !== undefined);
   const target = {
     package: program.delivery.package,
     asset: `${program.delivery.assetDir}/${stem}.ogg`,
@@ -359,7 +457,7 @@ function publishStem(
       runtimeKey: program.delivery.runtimeKey
         ? `${program.delivery.runtimeKey}/${stem}`
         : `${program.musicId}/${stem}`,
-      loop: program.playback !== 'playlistOneShot',
+      loop: program.playback !== 'playlistOneShot' && !cue,
     },
   };
   if (!existsSync(resolveInside(loc.repoRoot, `${job.jobsRoot}/${job.jobId}/job.json`, 'job'))) {
@@ -372,7 +470,11 @@ function publishStem(
     );
   }
   if (jobStatus(job).artifacts.brief.hash !== hashCanonical(brief)) registerBrief(job, brief);
-  const document = stemProgram(program, stem, check.mastering);
+  const document = stemProgram(
+    program,
+    stem,
+    cue ? segmentMastering(check.mastering, cue) : check.mastering,
+  );
   const before = jobStatus(job);
   if (
     before.artifacts.program.state !== 'valid' ||
@@ -429,6 +531,8 @@ export interface MusicBundleV1 {
   readonly sync: {
     readonly method: typeof SYNC_METHOD;
     readonly checks: readonly StemSyncCheckV1[];
+    /** Döngüye giren asset'lerin (mix, stem, loop gövdesi) kodlanmış dikişi. */
+    readonly seams?: readonly LoopSeamCheckV1[];
     readonly ok: boolean;
   };
   readonly engine: {
@@ -461,6 +565,9 @@ function buildBundle(
   const { program } = check;
   const { packagePath } = bundlePath(loc.repoRoot, program);
   const syncChecks: StemSyncCheckV1[] = [];
+  const seams: LoopSeamCheckV1[] = [];
+  const cueIds = new Set(cueSegments(program).map((s) => s.id));
+  const loops = (id: string) => program.playback !== 'playlistOneShot' && !cueIds.has(id);
   const stems = check.rendered.map((asset): MusicStemEntryV1 => {
     const destination = destinationOf(loc.repoRoot, program, asset.stem);
     const manifestDoc = readJsonFile(
@@ -490,6 +597,7 @@ function buildBundle(
     syncChecks.push(
       checkStemSync(asset.stem, asset.channels[0], decoded.channels[0], asset.frames),
     );
+    if (loops(asset.stem)) seams.push(checkLoopSeam(asset.stem, decoded.channels));
     return {
       id: asset.stem,
       asset: {
@@ -507,7 +615,7 @@ function buildBundle(
       truePeakDbtp: manifest.analysis.encoded.level.truePeakDbtp,
     };
   });
-  const failed = syncChecks.filter((c) => !c.ok);
+  const failed = [...syncChecks, ...seams].filter((c) => !c.ok);
   if (failed.length > 0) {
     throw new ProtocolError(
       'identity',
@@ -542,7 +650,12 @@ function buildBundle(
     },
     spec: check.spec,
     stems,
-    sync: { method: SYNC_METHOD, checks: syncChecks, ok: true },
+    sync: {
+      method: SYNC_METHOD,
+      checks: syncChecks,
+      ...(seams.length ? { seams } : {}),
+      ok: true,
+    },
     engine: {
       rendererVersion: MUSIC_RENDERER_VERSION,
       analyzerVersion: ANALYZER_VERSION,

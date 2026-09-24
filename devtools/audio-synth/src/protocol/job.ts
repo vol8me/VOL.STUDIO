@@ -12,7 +12,7 @@ import {
   validateForKind,
   type JobKind,
 } from './kinds';
-import { validateMusicStemProgram } from '../music/stem';
+import { documentPlayback, validateMusicStemProgram } from '../music/stem';
 import { outputSeconds, resolveProgram } from '../program/schema';
 import { writeAuditionCopy } from './audition';
 import { hashCanonical, hashPcm, type Sha256 } from './canonical';
@@ -146,10 +146,11 @@ function checkAcousticAgainstBrief(brief: AudioBriefV1, document: unknown): void
 /** Müzik stem'i brief'in tempo/ölçü/uzunluk/sistem sözleşmesine uymalı. */
 function checkMusicAgainstBrief(brief: AudioBriefV1, document: unknown): void {
   if (brief.kind !== 'music') return;
-  const music = validateMusicStemProgram(document).music;
+  const stemDocument = validateMusicStemProgram(document);
+  const music = stemDocument.music;
+  const playback = documentPlayback(stemDocument);
   const problems: string[] = [];
-  if (music.playback !== brief.playback)
-    problems.push(`playback ${music.playback} ≠ ${brief.playback}`);
+  if (playback !== brief.playback) problems.push(`playback ${playback} ≠ ${brief.playback}`);
   if (music.meter[0] !== brief.meter[0] || music.meter[1] !== brief.meter[1]) {
     problems.push(`ölçü ${music.meter.join('/')} ≠ ${brief.meter.join('/')}`);
   }

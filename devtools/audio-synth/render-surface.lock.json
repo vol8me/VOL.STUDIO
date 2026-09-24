@@ -213,6 +213,10 @@
       "version": 1,
       "hash": "sha256:409d5e0697cf0e2444ca3ba4939b5fcb01c58f4fabbf07c1294b73b02ce9a52d"
     },
+    "source.drum": {
+      "version": 1,
+      "hash": "sha256:cb8196f5af407316bcb04f06d308157e1c7da9a972b844021e197a160eb743bc"
+    },
     "source.electrical": {
       "version": 1,
       "hash": "sha256:65aabc71b9f6a460f0abf189dbf93fdbabbce25fa8f91606f71b95585888acf9"
@@ -260,6 +264,10 @@
     "source.rain": {
       "version": 1,
       "hash": "sha256:dda56b4814e695e00dd50f7ad7c22c3eef3dfb444a133e603beb005f9d3309ee"
+    },
+    "source.retro": {
+      "version": 1,
+      "hash": "sha256:5f834353a0e3e2b38cc22d67e2d59602059e74dd8fde11e4688c78b9cfb62aa4"
     },
     "source.sample": {
       "version": 1,

@@ -2,7 +2,9 @@ import {
   barsToFrames,
   resolveStemGain,
   type MusicAssetSpecV1,
+  type MusicCueSpecV1,
   type MusicStemSpecV1,
+  type MusicTransitionSpecV1,
   type Stem,
   type StemGainMap,
 } from '@volstudio/core/audio/music';
@@ -15,8 +17,10 @@ import {
   type MusicMasteringPlanV1,
 } from './mastering';
 import type { MusicProgramV1 } from './program';
-import { loopFrames, renderScoreRaw, type MusicRenderV1 } from './render';
+import { loopFrames, type MusicRenderV1 } from './render';
+import { renderMusicRaw } from './stem';
 import type { MusicScoreV1 } from './score';
+import { loopSegment, type SegmentQaV1, type SegmentV1 } from './segments';
 
 /**
  * Stem paketi: hizalı stem'ler, referans mix ve çalışma zamanı sözleşmesi.
@@ -61,6 +65,8 @@ export interface MusicAdaptiveQaV1 {
   readonly musicId: string;
   readonly parity: { readonly residualDbfs: number; readonly ok: boolean };
   readonly states: readonly StateQaV1[];
+  /** Yalnız segmentli programda: cue'ların tek başına ve loop ile birlikte ölçüsü. */
+  readonly segments?: readonly SegmentQaV1[];
   readonly verdict: { readonly pass: boolean; readonly failures: readonly string[] };
 }
 
@@ -242,8 +248,7 @@ export function renderAndPlan(
   program: MusicProgramV1,
   score: MusicScoreV1,
   targetLufs: number,
-  raw: RawRenderer = (stem) =>
-    renderScoreRaw(score, { playback: program.playback, ...(stem ? { stem } : {}) }),
+  raw: RawRenderer = (stem) => renderMusicRaw(program, score, stem, undefined),
 ): PlannedRenderV1 {
   const reference = raw(undefined);
   const stems: RenderedStemV1[] = program.stems.map((stem) => ({
@@ -374,6 +379,12 @@ export interface SpecInput {
   readonly files: Readonly<Record<string, string>>;
   readonly stemFrames: Readonly<Record<string, number>>;
   readonly referenceMix?: { readonly file: string; readonly frames: number };
+  /** Cue segmentlerinin asset dosyası ve kare sayısı. */
+  readonly cues?: readonly {
+    readonly segment: SegmentV1;
+    readonly file: string;
+    readonly frames: number;
+  }[];
 }
 
 /** Çalışma zamanı sözleşmesini kurar; ölçüler ve yollar dışarıdan gelir. */
@@ -388,18 +399,19 @@ export function buildMusicAssetSpec(input: SpecInput): MusicAssetSpecV1 {
       ...(gainMap ? { gainMap } : {}),
     };
   });
+  const bars = program.segments ? segmentBars(loopSegment(program.segments)) : program.bars;
   return {
     schema: 'MusicAssetSpecV1',
     musicId: program.musicId,
     bpm: program.tempo.bpm,
     meter: program.meter,
-    bars: program.bars,
+    bars,
     sampleRate: program.sampleRate,
     frames: input.frames,
     playback: program.playback,
     ...(program.playback === 'playlistOneShot'
       ? {}
-      : { loop: { startBar: loopStartBar(program), endBar: program.bars } }),
+      : { loop: { startBar: program.segments ? 0 : loopStartBar(program), endBar: bars } }),
     runtimeGain: 1,
     mastering: {
       path: input.mastering.path,
@@ -411,14 +423,32 @@ export function buildMusicAssetSpec(input: SpecInput): MusicAssetSpecV1 {
     ...(input.referenceMix ? { referenceMix: input.referenceMix } : {}),
     transitions: (program.transitions ?? []).map((transition) => ({
       id: transition.id,
-      kind: transition.kind as 'crossfade' | 'fade-stop' | 'playlist-gap',
+      kind: transition.kind as MusicTransitionSpecV1['kind'],
       seconds: transition.seconds,
       ...(transition.bars === undefined ? {} : { bars: transition.bars }),
       ...(transition.to === undefined ? {} : { to: transition.to }),
+      ...(transition.cue === undefined ? {} : { cue: transition.cue }),
     })),
     engine: { compressor: false },
     ...(program.adaptive ? { states: program.adaptive.states } : {}),
+    ...(input.cues?.length
+      ? {
+          cues: input.cues.map(({ segment, file, frames }) => ({
+            id: segment.id,
+            kind: segment.kind as MusicCueSpecV1['kind'],
+            file,
+            frames,
+            bars: segmentBars(segment),
+            ...(segment.align ? { align: segment.align } : {}),
+            ...(segment.to ? { to: segment.to } : {}),
+          })),
+        }
+      : {}),
   };
+}
+
+function segmentBars(segment: SegmentV1): number {
+  return segment.bars[1] - segment.bars[0];
 }
 
 function loopStartBar(program: MusicProgramV1): number {
@@ -427,9 +457,10 @@ function loopStartBar(program: MusicProgramV1): number {
 
 /** Loop uzunluğu core'un tek dönüşümünden; tek seferlik cue render'dan gelir. */
 export function specFrames(program: MusicProgramV1, rendered: number): number {
+  const bars = program.segments ? segmentBars(loopSegment(program.segments)) : program.bars;
   return program.playback === 'playlistOneShot'
     ? rendered
-    : barsToFrames(program.bars, program.tempo.bpm, program.meter[0], program.sampleRate);
+    : barsToFrames(bars, program.tempo.bpm, program.meter[0], program.sampleRate);
 }
 
 export function stemPcmHash(stem: RenderedStemV1, sampleRate: number): Sha256 {

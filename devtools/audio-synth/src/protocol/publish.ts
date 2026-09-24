@@ -15,7 +15,8 @@ import {
   type AudioAnalysisReportV1,
 } from '../analysis/report';
 import { validateBrief, type AudioBriefV1 } from '../program/brief';
-import { instrumentRegistryHash, instrumentSurface } from '../music/instruments';
+import { recordedInstrumentSurface } from '../music/instrumentResolve';
+import { instrumentRegistryHash } from '../music/instruments';
 import { compareSurface, registryRenderHash } from '../program/surface';
 import { REFERENCE_MIX_ID, validateMusicStemProgram } from '../music/stem';
 import {
@@ -422,7 +423,7 @@ function surfaceCheck(manifest: AudioAssetManifestV1, pcmSame: boolean): Verific
   }
   const instruments = (recorded.instruments ?? []).flatMap((instrument) => {
     try {
-      return [instrumentSurface(instrument.id)];
+      return [recordedInstrumentSurface(instrument.id)];
     } catch {
       return [];
     }

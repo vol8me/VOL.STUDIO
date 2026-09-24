@@ -154,6 +154,7 @@ function synthesizeAt(
         highpassEnv,
         distortion,
         { pitch: lfoPitch, filter: lfoFilter, amplitude: lfoAmplitude },
+        p.glide,
       );
       dryBufferInternal[startOffset + i] += sample;
     }

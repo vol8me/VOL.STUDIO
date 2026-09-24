@@ -8,8 +8,11 @@ import {
   type ParamObject,
 } from '../guard/read';
 import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { resolveBanks } from '../program/sampleBank';
+import { resolveSampleDecls } from '../program/samples';
 import { validateGroove } from './groove';
-import { instrumentProfile } from './instruments';
+import { MAX_INSTRUMENTS, validateInstrumentDefinition } from './instrumentDefinition';
+import { programInstruments } from './instrumentResolve';
 import { validateMotif } from './motif';
 import {
   checkAdaptive,
@@ -18,7 +21,11 @@ import {
   checkMarkers,
   checkMix,
 } from './programExtras';
-import { checkLane, checkMeter, checkSection, uniqueIds } from './programParts';
+import { laneInstrument, validatePalettes, type PaletteV1 } from './orchestration';
+import { MAX_PATTERNS, validatePattern } from './pattern';
+import { validateSegments } from './segments';
+import { validateTuning } from './tuning';
+import { checkInstrumentId, checkLane, checkMeter, checkSection, uniqueIds } from './programParts';
 import {
   MAX_BARS,
   MAX_LANES,
@@ -64,7 +71,73 @@ const KEYS = [
   'mastering',
   'provenance',
   'mix',
+  'instruments',
+  'samples',
+  'banks',
+  'palettes',
+  'orchestration',
+  'patterns',
+  'tuning',
+  'segments',
 ];
+
+/**
+ * Sampler bildirimleri akustik programla aynı biçimdedir; kullanılmayan
+ * banka ya da kayıt reddedilir (bildirim render yüzeyinin parçasıdır).
+ */
+function checkSampling(o: ParamObject) {
+  const samples = resolveSampleDecls(o.samples);
+  const used = new Set<string>();
+  const banks = resolveBanks(o.banks, samples, used);
+  const instruments =
+    o.instruments === undefined
+      ? []
+      : checkArray(o.instruments, 'instruments').map((raw, i) =>
+          validateInstrumentDefinition(raw, `instruments[${i}]`),
+        );
+  if (instruments.length > MAX_INSTRUMENTS) {
+    throw new AudioParamError(
+      'instruments',
+      'range',
+      `en çok ${MAX_INSTRUMENTS} enstrüman`,
+      instruments.length,
+    );
+  }
+  uniqueIds(
+    instruments.map((d) => d.id),
+    'instruments',
+  );
+  const banked = new Set(
+    instruments.flatMap((d) =>
+      d.source.kind === 'sampler'
+        ? [d.source.bank]
+        : d.source.kind === 'layer'
+        ? d.source.layers.flatMap((l) => (l.source.kind === 'sampler' ? [l.source.bank] : []))
+        : [],
+    ),
+  );
+  for (const name of banks.keys()) {
+    if (!banked.has(name)) {
+      throw new AudioParamError(
+        `banks.${name}`,
+        'combination',
+        'hiçbir sampler enstrümanı kullanmıyor',
+        name,
+      );
+    }
+  }
+  for (const name of samples.keys()) {
+    if (!used.has(name)) {
+      throw new AudioParamError(
+        `samples.${name}`,
+        'combination',
+        'hiçbir bankada kullanılmıyor',
+        name,
+      );
+    }
+  }
+  return { instruments, samples, banks };
+}
 
 /** Şemayı, kimlik bütünlüğünü ve enstrüman sözleşmesini doğrular; render ETMEZ. */
 export function validateMusicProgram(value: unknown): MusicProgramV1 {
@@ -115,12 +188,20 @@ export function validateMusicProgram(value: unknown): MusicProgramV1 {
     'stems',
   );
   const stemIds = stems.map((s) => s.id);
+  const sampling = checkSampling(o);
+  const localIds = sampling.instruments.map((d) => d.id);
+  const palettes =
+    o.palettes === undefined
+      ? undefined
+      : validatePalettes(o.palettes, (id, path) => checkInstrumentId(id, path, localIds));
+  const orchestration = checkActivePalette(o.orchestration, palettes);
   const lanes = checkArray(o.lanes, 'lanes').map((l, i) =>
     checkLane(
       l,
       `lanes[${i}]`,
       stemIds,
       grooves.map((g) => g.id),
+      localIds,
     ),
   );
   if (lanes.length === 0 || lanes.length > MAX_LANES) {
@@ -131,8 +212,26 @@ export function validateMusicProgram(value: unknown): MusicProgramV1 {
     'lanes',
   );
   const laneIds = lanes.map((l) => l.id);
+  const patterns =
+    o.patterns === undefined
+      ? undefined
+      : checkArray(o.patterns, 'patterns').map((p, i) => validatePattern(p, `patterns[${i}]`));
+  if (patterns && (patterns.length === 0 || patterns.length > MAX_PATTERNS)) {
+    throw new AudioParamError('patterns', 'range', `1–${MAX_PATTERNS} desen`, patterns.length);
+  }
+  if (patterns) {
+    uniqueIds(
+      patterns.map((p) => p.id),
+      'patterns',
+    );
+  }
   const sections = checkArray(o.sections, 'sections').map((s, i) =>
-    checkSection(s, `sections[${i}]`, { lanes: laneIds, motifs: motifs.map((m) => m.id), bars }),
+    checkSection(s, `sections[${i}]`, {
+      lanes: laneIds,
+      motifs: motifs.map((m) => m.id),
+      bars,
+      ...(patterns ? { patterns } : {}),
+    }),
   );
   if (sections.length === 0 || sections.length > MAX_SECTIONS) {
     throw new AudioParamError('sections', 'range', `1–${MAX_SECTIONS} bölüm`, sections.length);
@@ -159,6 +258,7 @@ export function validateMusicProgram(value: unknown): MusicProgramV1 {
     },
     meter: checkMeter(o.meter, 'meter'),
     tonal: { system, root },
+    ...(o.tuning === undefined ? {} : { tuning: validateTuning(o.tuning) }),
     bars,
     sampleRate: o.sampleRate === undefined ? 44100 : checkSampleRate(o.sampleRate, 'sampleRate'),
     ...(o.themeBook === undefined
@@ -178,14 +278,32 @@ export function validateMusicProgram(value: unknown): MusicProgramV1 {
       : { themeOverrides: validateOverrides(o.themeOverrides, 'themeOverrides') }),
     grooves,
     motifs,
+    ...(patterns === undefined ? {} : { patterns }),
     lanes,
     stems,
     sections,
     delivery: checkDelivery(o.delivery, 'delivery'),
+    ...(sampling.instruments.length > 0 ? { instruments: sampling.instruments } : {}),
+    ...(palettes === undefined ? {} : { palettes }),
+    ...(orchestration === undefined ? {} : { orchestration }),
+    ...(o.samples === undefined ? {} : { samples: o.samples as MusicProgramV1['samples'] }),
+    ...(o.banks === undefined ? {} : { banks: o.banks as MusicProgramV1['banks'] }),
     ...(o.automation === undefined
       ? {}
       : { automation: checkAutomation(o.automation, 'automation', laneIds, bars) }),
     ...(o.markers === undefined ? {} : { markers: checkMarkers(o.markers, 'markers', bars) }),
+    ...(o.segments === undefined
+      ? {}
+      : {
+          segments: validateSegments(o.segments, {
+            bars,
+            playback,
+            stems: stemIds,
+            ...(o.markers === undefined
+              ? {}
+              : { markers: checkMarkers(o.markers, 'markers', bars) }),
+          }),
+        }),
     ...(o.transitions === undefined
       ? {}
       : {
@@ -226,6 +344,7 @@ export function validateMusicProgram(value: unknown): MusicProgramV1 {
         }),
   };
   assertPlaybackShape(program);
+  assertTransitionCues(program);
   assertLaneContracts(program);
   return program;
 }
@@ -292,19 +411,56 @@ function assertPlaybackShape(program: MusicProgramV1): void {
   }
 }
 
-/** Şeridin enstrümanı istenen artikülasyonu ve register'ı gerçekten taşıyor mu. */
+/** `stinger` geçişinin cue'su programın stinger ya da geçiş segmentidir. */
+function assertTransitionCues(program: MusicProgramV1): void {
+  for (const [i, transition] of (program.transitions ?? []).entries()) {
+    if (transition.cue === undefined) continue;
+    const segment = program.segments?.find((s) => s.id === transition.cue);
+    if (!segment || (segment.kind !== 'stinger' && segment.kind !== 'transition')) {
+      throw new AudioParamError(
+        `transitions[${i}].cue`,
+        'unknown-id',
+        'stinger ya da geçiş segmenti olmalı',
+        transition.cue,
+      );
+    }
+  }
+}
+
+function checkActivePalette(
+  value: unknown,
+  palettes: readonly PaletteV1[] | undefined,
+): { palette: string } | undefined {
+  if (value === undefined) return undefined;
+  const palette = checkPattern(
+    checkObject(value, 'orchestration', ['palette']).palette,
+    'orchestration.palette',
+    MUSIC_KEY,
+  );
+  if (!palettes?.some((p) => p.id === palette)) {
+    throw new AudioParamError(
+      'orchestration.palette',
+      'unknown-id',
+      'tanımlı bir palet olmalı',
+      palette,
+    );
+  }
+  return { palette };
+}
+
+/** Her şerit bir enstrümana çözülür ve istenen varsayılan artikülasyonu gerçekten taşır. */
 function assertLaneContracts(program: MusicProgramV1): void {
+  const table = programInstruments(program);
   for (const lane of program.lanes) {
-    const profile = instrumentProfile(lane.instrument);
-    if (lane.articulation) {
-      if (!profile.articulations.includes(lane.articulation)) {
-        throw new AudioParamError(
-          `lanes.${lane.id}.articulation`,
-          'unsupported',
-          `${lane.instrument} yalnız ${profile.articulations.join(', ')} taşır`,
-          lane.articulation,
-        );
-      }
+    const id = laneInstrument(program, lane);
+    const instrument = table.get(id, `lanes.${lane.id}.instrument`);
+    if (lane.articulation && !instrument.articulations.includes(lane.articulation)) {
+      throw new AudioParamError(
+        `lanes.${lane.id}.articulation`,
+        'unsupported',
+        `${id} yalnız ${instrument.articulations.join(', ')} taşır`,
+        lane.articulation,
+      );
     }
   }
 }

@@ -11,7 +11,8 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 ## Yapı
 
 - `src/synthesis/`, `src/engine/`, `src/instruments/`, `src/presets/` —
-  sentez çekirdeği, fiziksel modeller ve preset kataloğu
+  sentez çekirdeği (retro araç seti dahil), fiziksel modeller, parametrik
+  davul modelleri ve preset kataloğu
 - `src/effects/` — efekt ve işleme çekirdekleri: reverb/delay/modülasyon,
   RBJ EQ, kompresör, 4× true-peak sınırlayıcı, doygunluk, konvolüsyon
 - `src/program/` — kanonik `AudioBriefV1`/`AcousticProgramV1`, yapı taşı
@@ -25,8 +26,11 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 - `src/search/` — deterministik aday arama laboratuvarı
 - `src/family/` — genel ses ailesi programı, rol sözlüğü ve bank sözleşmesi
 - `src/music/` — müzik sözleşmesi: `MusicBriefV1`, `MusicThemeBookV1`,
-  `MusicProgramV1` → `MusicScoreV1`, armoni/motif/groove, bus'lar, sembolik
-  analiz, mastering yolları, stem paketi ve hiyerarşik arama
+  `MusicProgramV1` → `MusicScoreV1`, `InstrumentDefinitionV1` (preset,
+  sampler, davul kiti, retro, katman), artikülasyon ve velocity, orkestrasyon
+  paletleri, tracker desenleri, ayar, armoni/motif/groove, bus'lar, sembolik
+  analiz, mastering yolları, stem paketi, bundle segmentleri (giriş, loop,
+  bitiş, stinger, geçiş) ve hiyerarşik arama
 - `src/writer.ts` — WAV/OGG yazma (Node-only, FFmpeg gerekir)
 - `audio-jobs/` — job durumları ve referans işler
 - `audio-searches/`, `audio-families/`, `audio-music/`, `audio-themebooks/` —
@@ -96,9 +100,12 @@ bir bank yazılır. Sözdizimi `family.commands` alanındadır.
 
 Müzik `music` alt komutlarıyla üretilir (`plan | analyze | check | render |
 publish | status | verify | list | search`): sembolik analiz ses render
-etmeden koşar, stem'ler aynı publish kapısından geçer ve en son çalışma
-zamanı sözleşmesini taşıyan `MusicBundleV1` yazılır. Sözdizimi
-`music.commands` alanındadır.
+etmeden koşar, stem'ler ve cue'lar aynı publish kapısından geçer ve en son
+çalışma zamanı sözleşmesini taşıyan `MusicBundleV1` yazılır. Enstrüman
+kaynakları, artikülasyon kümeleri, görev bantları, desen dizgisi, segment ve
+ayar kuralları `music` bağlamındadır; sözdizimi `music.commands`
+alanındadır. `reference-arcade` fixture'ı giriş + dikişsiz loop + bitiş +
+stinger bundle'ının uçtan uca örneğidir.
 
 Ses tasarımı brief'ten başlayabilir: `plan` brief'in betimleyici
 sözcüklerinden mekanizma/stil/materyal planı ve render edilebilir bir

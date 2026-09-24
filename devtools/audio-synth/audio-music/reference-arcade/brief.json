@@ -1,0 +1,21 @@
+{
+  "schema": "AudioBriefV1",
+  "kind": "music",
+  "id": "reference-arcade",
+  "title": "Referans arcade teması",
+  "intent": "Kısa bir arcade jeneriği: iki ölçülük giriş, sonsuz dönebilen enerjik bir loop, oyun bitince çalan iki ölçülük bitiş ve bir güçlenme vurgusu. Retro darbe/üçgen sesler ve parametrik davul kiti; aynı araç setinden.",
+  "provenance": { "author": "agent", "by": "wave-11-reference" },
+  "assetClass": "music",
+  "usage": "bed",
+  "playback": "loop",
+  "affect": { "valence": 0.35, "arousal": 0.8, "tags": ["arcade", "retro", "enerjik"] },
+  "tempo": { "bpm": { "min": 140, "max": 160 } },
+  "meter": [4, 4],
+  "tonal": { "systems": ["minor"], "roots": ["A2"] },
+  "melodicSalience": 0.35,
+  "rhythmicDensity": "dense",
+  "form": { "sections": ["intro", "body", "outro", "peak"] },
+  "length": { "bars": { "min": 8, "max": 16 } },
+  "channels": 2,
+  "avoidNotes": ["Konsol öykünmesi iddia edilmez; karakter retro araç setinden gelir."]
+}

@@ -70,7 +70,22 @@ export function runMusicCommand(parsed: Parsed, repoRoot: string): number {
         symbolic: check.report.verdict,
         mastering: check.mastering,
         qa: parsed.flags.has('json') ? check.qa : check.qa.verdict,
-        spec: { frames: check.spec.frames, stems: check.spec.stems.map((s) => s.id) },
+        spec: {
+          frames: check.spec.frames,
+          stems: check.spec.stems.map((s) => s.id),
+          ...(check.spec.cues ? { cues: check.spec.cues.map((c) => `${c.kind}:${c.id}`) } : {}),
+        },
+        ...(check.qa.segments
+          ? {
+              segments: check.qa.segments.map((q) => ({
+                id: q.id,
+                truePeakDbtp: q.truePeakDbtp,
+                integratedLufs: q.integratedLufs,
+                ...(q.overlay ? { withLoopDbtp: q.overlay.worstTruePeakDbtp } : {}),
+                ok: q.ok,
+              })),
+            }
+          : {}),
         evidence: { renderAndMeasureMs: ms(started) },
       });
       return check.report.verdict.pass && check.qa.verdict.pass ? 0 : 1;

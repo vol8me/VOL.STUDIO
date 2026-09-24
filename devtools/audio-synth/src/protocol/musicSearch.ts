@@ -6,6 +6,8 @@ import { renderAndPlan } from '../music/bundle';
 import { applyMastering, DEFAULT_MUSIC_LUFS } from '../music/mastering';
 import { estimateScoreCost } from '../music/render';
 import { expandProgram } from '../music/score';
+import { renderMusicRaw } from '../music/stem';
+import type { SampleResolver } from '../program/samples';
 import {
   MUSIC_SEARCH_REPORT_SCHEMA,
   searchSymbolic,
@@ -18,6 +20,7 @@ import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 import { loadMusicDocuments, musicLabel, type MusicLocation } from './music';
 import { asProtocol } from './records';
+import { repoSampleResolver } from './samples';
 
 /**
  * Hiyerarşik müzik araması: bütün adaylar sembolik süzgeçten geçer, yalnız
@@ -78,7 +81,11 @@ export function loadMusicSearchSpec(loc: MusicLocation): MusicSearchSpecV1 {
  * verilmez: ortak kazanç bütün stem'lere bakarak `checkMusic` aşamasında
  * seçilir; arama yalnız adayın ölçülebilir ses davranışını raporlar.
  */
-function measureFinalist(program: MusicProgramV1, candidate: MusicCandidateV1): MusicFinalistV1 {
+function measureFinalist(
+  program: MusicProgramV1,
+  candidate: MusicCandidateV1,
+  samples: SampleResolver,
+): MusicFinalistV1 {
   const score = expandProgram(program);
   const cost = estimateScoreCost(score, { playback: program.playback });
   assertRenderBudget(cost, `finalist ${candidate.candidateId}`);
@@ -86,6 +93,7 @@ function measureFinalist(program: MusicProgramV1, candidate: MusicCandidateV1): 
     program,
     score,
     program.mastering?.integratedLufs ?? DEFAULT_MUSIC_LUFS,
+    (stem) => renderMusicRaw(program, score, stem, samples),
   );
   const mastered = reference.channels.map((channel) => Float32Array.from(channel));
   applyMastering(mastered, reference.sampleRate, plan.mastering);
@@ -126,7 +134,7 @@ export function runMusicSearch(loc: MusicLocation): MusicSearchReportV1 {
     if (!program || !candidate) {
       throw new ProtocolError('invalid', `finalist ${candidateId} bulunamadı`, musicLabel(loc));
     }
-    return measureFinalist(program, candidate);
+    return measureFinalist(program, candidate, repoSampleResolver(loc.repoRoot));
   });
   const report: MusicSearchReportV1 = {
     schema: MUSIC_SEARCH_REPORT_SCHEMA,

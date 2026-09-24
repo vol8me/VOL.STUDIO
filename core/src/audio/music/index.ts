@@ -8,6 +8,7 @@
 export type * from './types';
 
 export { MusicEngine } from './engine';
+export { MusicCuePlayer } from './cues';
 export { MusicPlaylist } from './playlist';
 export type { MusicPlaylistOptions } from './playlist';
 export { MusicMixer } from './mixer';
@@ -27,6 +28,8 @@ export {
 } from './spec';
 export type {
   MusicAssetSpecV1,
+  MusicCueKind,
+  MusicCueSpecV1,
   MusicPlaybackMode,
   MusicStemSpecV1,
   MusicTrackOptions,

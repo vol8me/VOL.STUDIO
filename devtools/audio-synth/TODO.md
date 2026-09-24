@@ -24,6 +24,10 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
       (1234.5 Hz'te harmonik dışı taban < −60 dB ölçüldü). Kabul testleri
       riskli bölgeyi kullanmadığı için madde bilinçli olarak açık; sınır
       agent'a `audio:job context` içindeki `polyblep-alias` ile açık._
+      _Dalga 11: retro çekirdek (`synthesis/retro.ts`) aynı iki örneklik
+      PolyBLEP sınıfındadır (testere birebir aynı ölçüldü); daha yüksek
+      dereceli çekirdek ona da uygulanır ve `tests/retro.test.ts` kilitleri
+      yeniden ölçülür._
 
 ## Yol haritası — agent-first genel amaçlı audio-authoring platformu
 
@@ -84,7 +88,8 @@ ayrı ve açıktır:
       canary'yi dinleme rehberine göre dinler ve
       `audio:job canary review <id> --status … --note … --by human` ile
       beyanını yazar; `heard-problem` çıkan canary için ayrı bir motor maddesi
-      açılır.
+      açılır. Dalga 11'in davul, retro ve `reference-arcade` sesleri de bu
+      dinlemeye girer; yön iddiaları ölçüldü, beğeni ölçülmedi.
 
 ### Dalga 5 — generic SoundFamily üretimi
 
@@ -147,56 +152,9 @@ eklenmedi (`no-multiband`).
 
 ### Dalga 11 — Profesyonel müzik üretim kapsamı
 
-> **Prerequisite:** `MusicProgramV1`, `MusicAssetSpec`,
-> `InstrumentDefinition`e bağlanabilecek instrument registry ve temel
-> MusicProgram renderer (Dalga 6) hazırdır.
-
-- [ ] **[P1] Percussion/drum synthesis genel instrument ailesi olsun.**
-      Kick, tom, snare, clap, hat/cymbal/noise-percussion temel modelleri
-      pitch/noise/transient/body bileşenleriyle parametrik olarak
-      üretilebilir. Kapanır: en az kick/snare/hat family'leri velocity ve
-      timbral macro'larla varyasyon üretir; müzik agentı oyun başına özel
-      drum synth yazmaz.
-- [ ] **[P1] `InstrumentDefinition` standardı synth ve sample instrument'ları
-      aynı bestecilik yüzeyine bağlasın.** Range, preferred register,
-      articulation, velocity response, polyphony, release behavior,
-      transposition ve spectral role ortak contract'tır. Kapanır: procedural
-      piano ve sampled/hybrid instrument aynı `MusicProgram` Note/Event
-      verisini tüketebilir; composer backend farkını bilmek zorunda değildir.
-- [ ] **[P1] Retro/arcade synthesis ailesi eklensin.** Pulse duty, triangle,
-      saw, noise/LFSR, simple wavetable, hard sync/bit-depth/sample-rate
-      karakterleri agent-facing primitive olur; yalnız generic square preset
-      değildir. Kapanır: 8/16-bit esintili lead, bass, percussion/noise ve
-      UI voice'ları aynı retro toolkit'ten üretilebilir; exact console
-      emulation iddiası yapılacaksa ayrıca donanım doğrulaması gerekir.
-- [ ] **[P1] Müzik asset'i yalnız tek `.ogg` değil `MusicBundle`
-      üretebilsin.** Bundle isteğe göre intro, loop body, outro, stinger,
-      transition ve stemleri tek program/provenance altında üretir. Kapanır:
-      arcade theme için `intro + seamless loop`; boss müziği için
-      `loop + transition stinger`; adaptive müzik için `stem bundle` aynı
-      publish sistemini kullanır.
-- [ ] **[P2] Note/event ifade modeli velocity dışında articulation
-      taşısın.** Accent, staccato, legato/tie, sustain/release, mute, ghost,
-      slide/glide ve instrument'ın desteklediği articulation'lar açık
-      veridir. Kapanır: unsupported articulation sessizce yok sayılmaz;
-      `InstrumentDefinition` destek listesinden validation/uyarı çıkar.
-- [ ] **[P2] Tracker/step-pattern authoring yüzeyi arcade ve ritmik oyun
-      müziği için eklensin.** Pattern rows/steps, repeat, variation, fill,
-      probability ve pattern chaining `MusicProgram`ın section/form yapısına
-      bağlanır. Kapanır: kısa arcade jenerik intro → seamless loop →
-      optional ending pattern olarak üretilebilir; loop bar/sample sınırı
-      encoded QA'dan geçer.
-- [ ] **[P2] Orchestration/role katmanı `MusicProgram`a eklensin.** Bass,
-      foundation, rhythm, harmony, counterline, lead, texture, accent/stinger
-      rolleri instrument seçimi, register ve density kararlarında
-      kullanılabilir; instrument adı doğrudan rol değildir. Kapanır: aynı
-      score iki farklı palette/orchestration ile `MusicProgram`ın
-      nota/harmoni kimliği değişmeden render edilebilir.
-- [ ] **[P3] Tuning sistemi 12-TET'e gömülü kalmasın.** Standart kullanım
-      kolay kalırken custom tuning/microtonal scale gerektiğinde pitch
-      resolver'ın temelden yeniden yazılması gerekmez. Kapanır: 12-TET
-      mevcut output'u değiştirmez; en az bir custom cents/ratio scale
-      deterministic note→frequency dönüşümüyle test edilir.
+Dalga 11'in sekiz maddesi kapandı; kısa kanıtları `## Kapatılanlar`da,
+gerekçe DESIGN "Enstrüman sözleşmesi ve üretim kapsamı (Dalga 11)". Uçtan uca
+yayın kanıtı `audio-music/reference-arcade`.
 
 ### Dalga 12 — Oyun için teslim biçimleri
 
@@ -283,6 +241,49 @@ eklenmedi (`no-multiband`).
       değildir.
 
 ## Kapatılanlar
+
+- [x] **[P1] Percussion/drum synthesis genel instrument ailesi.** Yedi
+      parametrik model (kick, tom, snare, clap, hat, cymbal, perc); gövde,
+      gürültü, tık ve metalik bileşenler; velocity tınıyı açar. Müzikte
+      `drum-kit`, akustik programda `source.drum`. Kanıt:
+      `tests/percussion.test.ts` (yön iddiaları yedi modelde ölçülür),
+      `tests/program/chip.test.ts` (kick/snare/hat aileleri aile kalite
+      kapısını geçer). (Dalga 11)
+- [x] **[P1] `InstrumentDefinition` standardı.** Aralık, tercih edilen
+      register, transpozisyon, polifoni, velocity tepkisi, bırakma,
+      artikülasyon ve rol ortak sözleşme; kaynak preset, sampler, kit, retro
+      ya da katman. Kanıt: `tests/music/instrumentDefinition.test.ts` —
+      prosedürel piyano ve sampler aynı olayları tüketir, ikisi de çalar;
+      eski programlar bit-eşit (production-check). (Dalga 11)
+- [x] **[P1] Retro/arcade synthesis ailesi.** Darbe (duty/süpürme), düz ve
+      4-bit üçgen, testere, uzun/kısa LFSR, wavetable, hard sync, arpej,
+      bit/tutma; her süreksizlik PolyBLEP'li. Kanıt: `tests/retro.test.ts`
+      (perde, duty harmonikleri, LFSR 93 adım, alias ölçülerek kilitli),
+      `tests/program/chip.test.ts` (UI arpeji, arcade gürültüsü, bas aynı
+      araç setinden). Konsol öykünmesi iddiası yok. (Dalga 11)
+- [x] **[P1] `MusicBundle`.** Segmentler: loop + giriş, bitiş, stinger,
+      geçiş; ortak mastering kazancı, cue asset'leri, stinger/giriş bindirme
+      QA'sı, kodlanmış loop dikişi. Core motoru cue'ları örnek-doğru zamanlar
+      (`playStinger`, `playOutro`, `transitionTo`). Kanıt:
+      `tests/music/segments.test.ts`, `core/tests/audio/music/cues.test.ts`,
+      yayımlanmış `reference-arcade` bundle'ı (hiza 0/0, dikiş sürekli).
+      (Dalga 11)
+- [x] **[P2] Note/event ifade modeli artikülasyon taşır.** Uzunluk, dinamik
+      ve teknik kümeleri; desteklenmeyen artikülasyon adıyla reddedilir.
+      Kanıt: `tests/music/articulation.test.ts` (staccato, legato, tie,
+      let-ring, mute, accent, ghost, slide/glide ölçülerek). (Dalga 11)
+- [x] **[P2] Tracker/step-pattern yüzeyi.** Satır dizgisi, melodik adımlar,
+      zincir, tekrar, varyasyon, dolgu, olay kimliğine bağlı olasılık. Kanıt:
+      `tests/music/pattern.test.ts`; `reference-arcade` giriş → loop → bitiş
+      desen zincirleriyle yayımlandı. (Dalga 11)
+- [x] **[P2] Orchestration/role katmanı.** Görev → enstrüman paletleri,
+      `auto` register kararı, yönlendirici görev bantları. Kanıt:
+      `tests/music/orchestration.test.ts` — iki palette yazılı nota/armoni
+      kimliği aynı, PCM farklı. (Dalga 11)
+- [x] **[P3] Tuning sistemi 12-TET'e gömülü değil.** `equal`, `cents`,
+      `ratios` ve nota başına cent sapması. Kanıt:
+      `tests/music/tuning.test.ts` — ayarsız yol `midiToHz` ile birebir, saf
+      ses oranları ve ortalama ses cent tablosu deterministik. (Dalga 11)
 
 - [x] **[P1] Draft ve final render kalite modları.** Program, düğüm ve
       tohum iki kalitede aynı; yalnız iç aşırı örnekleme (ses sentezi 2×→1×,

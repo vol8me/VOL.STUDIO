@@ -4,10 +4,10 @@ import { checkChoice, checkNumber, checkObject } from '../guard/read';
 import { checkPattern, MUSIC_ID, MUSIC_KEY } from './terms';
 
 /**
- * Geçiş sözleşmesi çalışma zamanının GERÇEK kabiliyetine bakar. Motor bugün
- * yalnız bar hizalı crossfade, sönümlü durdurma ve playlist boşluğu yapar;
- * stinger ve bölüm atlama YOKTUR. Bunları "sonra bakarız" diye şemada
- * tutmak, çalmayan bir geçişi yayımlamak demektir — istek adıyla reddedilir.
+ * Geçiş sözleşmesi çalışma zamanının GERÇEK kabiliyetine bakar: bar hizalı
+ * crossfade, sönümlü durdurma, playlist boşluğu ve cue'lu (stinger) geçiş
+ * VARDIR; bölüm atlama YOKTUR. Motorun yapmadığı bir geçişi şemada tutmak,
+ * çalmayan bir geçişi yayımlamak demektir — istek adıyla reddedilir.
  */
 export const TRANSITION_KINDS = [
   'crossfade',
@@ -28,6 +28,8 @@ export interface MusicTransitionV1 {
   /** `crossfade` için kaç bar sonra başlayacağı; 0 = hemen. */
   readonly bars?: number;
   readonly to?: string;
+  /** `stinger` geçişinin çaldığı segment (`segments[].id`, stinger ya da geçiş). */
+  readonly cue?: string;
   readonly tempoRelation?: (typeof TEMPO_RELATIONS)[number];
   readonly tonalRelation?: (typeof TONAL_RELATIONS)[number];
 }
@@ -45,6 +47,7 @@ export function validateTransition(value: unknown, path: string): MusicTransitio
     'seconds',
     'bars',
     'to',
+    'cue',
     'tempoRelation',
     'tonalRelation',
   ]);
@@ -65,6 +68,7 @@ export function validateTransition(value: unknown, path: string): MusicTransitio
       ? {}
       : { bars: checkNumber(o.bars, `${path}.bars`, { min: 0, max: 64, integer: true }) }),
     ...(o.to === undefined ? {} : { to: checkPattern(o.to, `${path}.to`, MUSIC_ID) }),
+    ...(o.cue === undefined ? {} : { cue: checkPattern(o.cue, `${path}.cue`, MUSIC_KEY) }),
     ...(o.tempoRelation === undefined
       ? {}
       : { tempoRelation: checkChoice(o.tempoRelation, `${path}.tempoRelation`, TEMPO_RELATIONS) }),
@@ -92,6 +96,14 @@ function assertRuntimeShape(transition: MusicTransitionV1, path: string): void {
   }
   if (transition.kind === 'crossfade' && transition.to === undefined) {
     throw new AudioParamError(`${path}.to`, 'required', 'crossfade hedef parça ister', undefined);
+  }
+  if ((transition.kind === 'stinger') !== (transition.cue !== undefined)) {
+    throw new AudioParamError(
+      `${path}.cue`,
+      transition.kind === 'stinger' ? 'required' : 'combination',
+      'cue yalnız stinger geçişindedir ve orada zorunludur',
+      transition.cue,
+    );
   }
   if (transition.tempoRelation === 'different' && (transition.bars ?? 0) > 0) {
     throw new AudioParamError(

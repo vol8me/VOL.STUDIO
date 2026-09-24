@@ -1,0 +1,307 @@
+{
+  "brief": [
+    {
+      "detail": "loop",
+      "name": "playback",
+      "ok": true
+    },
+    {
+      "detail": "4/4",
+      "name": "meter",
+      "ok": true
+    },
+    {
+      "detail": "150 bpm ∈ [140, 160]",
+      "name": "tempo",
+      "ok": true,
+      "value": 150
+    },
+    {
+      "detail": "13 ölçü ∈ [8, 16]",
+      "name": "length",
+      "ok": true,
+      "value": 13
+    },
+    {
+      "detail": "minor ∈ minor",
+      "name": "tonal-system",
+      "ok": true
+    },
+    {
+      "detail": "intro → body → outro → peak",
+      "name": "form",
+      "ok": true
+    },
+    {
+      "detail": "26 nota/ölçü, \"dense\" bandı [8, 64]",
+      "name": "rhythmic-density",
+      "ok": true,
+      "value": 26
+    },
+    {
+      "detail": "ölçülen 0.2825, beyan 0.35",
+      "name": "melodic-salience",
+      "ok": true,
+      "value": 0.2825
+    },
+    {
+      "detail": "hedef sırayla uyum 1",
+      "name": "section-contrast",
+      "ok": true,
+      "value": 1
+    }
+  ],
+  "lanes": [
+    {
+      "events": 50,
+      "highMidi": 96,
+      "id": "lead",
+      "instrument": "inst:chip-lead",
+      "lowMidi": 72,
+      "maxPolyphony": 2,
+      "meanMidi": 78.48,
+      "notesPerBar": 3.8462,
+      "role": "lead"
+    },
+    {
+      "events": 67,
+      "highMidi": 57,
+      "id": "bass",
+      "instrument": "inst:chip-bass",
+      "lowMidi": 45,
+      "maxPolyphony": 1,
+      "meanMidi": 51.75,
+      "notesPerBar": 5.1538,
+      "role": "bass"
+    },
+    {
+      "events": 60,
+      "highMidi": 76,
+      "id": "arp",
+      "instrument": "inst:chip-arp",
+      "lowMidi": 57,
+      "maxPolyphony": 3,
+      "meanMidi": 67.3,
+      "notesPerBar": 4.6154,
+      "role": "keys"
+    },
+    {
+      "events": 161,
+      "highMidi": null,
+      "id": "drums",
+      "instrument": "inst:kit",
+      "lowMidi": null,
+      "maxPolyphony": 3,
+      "meanMidi": null,
+      "notesPerBar": 12.3846,
+      "role": "percussion",
+      "unpitched": true
+    }
+  ],
+  "motifs": [
+    {
+      "chain": "kaynak",
+      "instances": 20,
+      "motif": "theme",
+      "variationId": "m-5af632f04a55"
+    },
+    {
+      "chain": "transpose",
+      "instances": 20,
+      "motif": "theme",
+      "variationId": "m-5b23f6bd84f6"
+    },
+    {
+      "chain": "fragment",
+      "instances": 5,
+      "motif": "theme",
+      "variationId": "m-7c193498f44e"
+    }
+  ],
+  "musicId": "reference-arcade",
+  "pitchClasses": [
+    31,
+    0,
+    16,
+    0,
+    33,
+    27,
+    0,
+    27,
+    0,
+    34,
+    0,
+    9
+  ],
+  "policyVersion": 1,
+  "programHash": "sha256:943f2916d8a87882bf10fc51de8407230eb5a027f660f47a4371f1720b5ffae8",
+  "roles": [
+    {
+      "density": {
+        "band": [
+          0.5,
+          8
+        ],
+        "ok": true
+      },
+      "lanes": [
+        "bass"
+      ],
+      "notesPerBar": 5.1538,
+      "register": {
+        "band": [
+          28,
+          55
+        ],
+        "inBandRatio": 0.8657
+      },
+      "role": "bass"
+    },
+    {
+      "density": {
+        "band": [
+          0.5,
+          12
+        ],
+        "ok": true
+      },
+      "lanes": [
+        "arp"
+      ],
+      "notesPerBar": 4.6154,
+      "register": {
+        "band": [
+          48,
+          76
+        ],
+        "inBandRatio": 1
+      },
+      "role": "harmony"
+    },
+    {
+      "density": {
+        "band": [
+          1,
+          16
+        ],
+        "ok": true
+      },
+      "lanes": [
+        "lead"
+      ],
+      "notesPerBar": 3.8462,
+      "register": {
+        "band": [
+          60,
+          91
+        ],
+        "inBandRatio": 0.96
+      },
+      "role": "lead"
+    },
+    {
+      "density": {
+        "band": [
+          2,
+          32
+        ],
+        "ok": true
+      },
+      "lanes": [
+        "drums"
+      ],
+      "notesPerBar": 12.3846,
+      "register": {
+        "band": null,
+        "inBandRatio": null
+      },
+      "role": "rhythm"
+    }
+  ],
+  "rules": [],
+  "schema": "MusicSymbolicReportV1",
+  "scoreHash": "sha256:caa02b69f28f20e485d23719e1a716dc015faf04915ea277c833e936453f83cd",
+  "sections": [
+    {
+      "activeLanes": 2,
+      "bars": [
+        0,
+        2
+      ],
+      "events": 24,
+      "harmonicChangesPerBar": 1,
+      "id": "intro",
+      "measuredEnergy": 0,
+      "notesPerBar": 12,
+      "role": "intro",
+      "targetEnergy": 0.3
+    },
+    {
+      "activeLanes": 4,
+      "bars": [
+        2,
+        10
+      ],
+      "events": 266,
+      "harmonicChangesPerBar": 1,
+      "id": "body",
+      "measuredEnergy": 1,
+      "notesPerBar": 33.25,
+      "role": "body",
+      "targetEnergy": 0.9
+    },
+    {
+      "activeLanes": 4,
+      "bars": [
+        10,
+        12
+      ],
+      "events": 30,
+      "harmonicChangesPerBar": 1,
+      "id": "outro",
+      "measuredEnergy": 0.3268,
+      "notesPerBar": 15,
+      "role": "outro",
+      "targetEnergy": 0.55
+    },
+    {
+      "activeLanes": 2,
+      "bars": [
+        12,
+        13
+      ],
+      "events": 18,
+      "harmonicChangesPerBar": 0,
+      "id": "power",
+      "measuredEnergy": 0.122,
+      "notesPerBar": 18,
+      "role": "peak",
+      "targetEnergy": 0.45
+    }
+  ],
+  "totals": {
+    "bars": 13,
+    "events": 338,
+    "maxPolyphony": 9,
+    "melodicSalience": 0.2825,
+    "motifInstances": 45,
+    "notesPerBar": 26,
+    "outOfSystemRatio": 0,
+    "uniqueVariations": 3
+  },
+  "transitions": [
+    {
+      "detail": "stinger: 0.05 sn",
+      "enforcedByRuntime": true,
+      "id": "to-power",
+      "kind": "stinger"
+    }
+  ],
+  "unchecked": [
+    "brief.avoidNotes: Konsol öykünmesi iddia edilmez; karakter retro araç setinden gelir."
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

@@ -1,4 +1,4 @@
-import type { MusicState, MusicTrack, Stem, StemGainMap } from './types';
+import type { MusicCue, MusicState, MusicTrack, Stem, StemGainMap } from './types';
 
 /**
  * Müzik asset'inin TEK kaynağı: üretim aracı da çalışma zamanı da bu saf
@@ -19,21 +19,43 @@ export const MASTERING_PATHS: Readonly<Record<MusicPlaybackMode, string>> = {
 
 /**
  * Çalışma zamanının GERÇEKTEN yapabildikleri. Geçiş sözleşmesi bu listeye
- * bakar; motor bir gün stinger kazanırsa değişecek tek yer burasıdır.
+ * bakar; motor yeni bir kabiliyet kazanınca değişecek tek yer burasıdır.
  */
 export const MUSIC_RUNTIME_CAPABILITIES = {
-  transitions: ['crossfade', 'fade-stop', 'playlist-gap'] as const,
+  transitions: ['crossfade', 'fade-stop', 'playlist-gap', 'stinger'] as const,
+  /** Tek seferlik cue türleri: giriş, bitiş, loop üstü vurgu, parçadan parçaya geçiş. */
+  cues: ['intro', 'outro', 'stinger', 'transition'] as const,
   /** Dikey katmanlama state'e bağlıdır; bar/beat'e duyarlı gain yoktur. */
   verticalLayering: 'state-only',
   /** Loop noktaları PARÇA düzeyindedir: bütün stem'ler aynı loop aralığını paylaşır. */
   loop: 'track-level',
   /** Bar hizalaması yalnız ÇALAN parçanın ızgarasında hesaplanır. */
   barAlignment: 'source-grid',
-  stingers: false,
+  /** Stinger ve geçiş cue'su sonraki ölçü ya da vuruş sınırında başlar. */
+  stingers: 'bar-or-beat',
+  /** Giriş bitince loop tam ölçü sınırında, örnek-doğru zamanlamayla başlar. */
+  intro: 'sample-accurate',
+  /** Bitiş sonraki ölçü sınırında loop'un yerini alır. */
+  outro: 'bar-aligned',
   sectionJump: false,
   keyAwareTransitions: false,
   tempoChange: false,
 } as const;
+
+export type MusicCueKind = (typeof MUSIC_RUNTIME_CAPABILITIES.cues)[number];
+
+/** Asset'in yanında yayımlanan tek seferlik cue. */
+export interface MusicCueSpecV1 {
+  readonly id: string;
+  readonly kind: MusicCueKind;
+  readonly file: string;
+  readonly frames: number;
+  /** Müzikal uzunluk (ölçü); dosyadaki kuyruk bunu aşabilir. */
+  readonly bars: number;
+  readonly align?: 'bar' | 'beat';
+  /** Geçiş cue'sunun hedef parçası (bilgi; motor hedefi çağırandan alır). */
+  readonly to?: string;
+}
 
 export interface MusicStemSpecV1 {
   readonly id: string;
@@ -45,11 +67,13 @@ export interface MusicStemSpecV1 {
 
 export interface MusicTransitionSpecV1 {
   readonly id: string;
-  readonly kind: 'crossfade' | 'fade-stop' | 'playlist-gap';
+  readonly kind: 'crossfade' | 'fade-stop' | 'playlist-gap' | 'stinger';
   readonly seconds: number;
   /** `crossfade` için bar hizası; 0 = hemen. */
   readonly bars?: number;
   readonly to?: string;
+  /** `stinger` geçişinin çaldığı cue (`cues[].id`). */
+  readonly cue?: string;
 }
 
 export interface MusicAssetSpecV1 {
@@ -75,6 +99,8 @@ export interface MusicAssetSpecV1 {
   /** Offline QA kompresörsüz ölçer; runtime kompresörü açıksa duyulan başka bir şeydir. */
   readonly engine: { readonly compressor: boolean };
   readonly states?: readonly { readonly id: string; readonly intensity: number }[];
+  /** Giriş, bitiş, stinger ve geçiş cue'ları (yalnız loop çalma modellerinde). */
+  readonly cues?: readonly MusicCueSpecV1[];
 }
 
 export function beatDurationSeconds(bpm: number): number {
@@ -165,12 +191,42 @@ export function validateMusicAssetSpec(value: unknown): MusicAssetSpecV1 {
   if (!mastering || mastering.path !== MASTERING_PATHS[playback]) {
     fail('spec.mastering.path', MASTERING_PATHS[playback], mastering?.path);
   }
+  if (o.cues !== undefined) checkCues(o.cues, playback);
   const grid = barsToFrames(bars, bpm, beatsPerBar, sampleRate);
   // Loop örnek-tam olmalı; tek seferlik cue sonda kuyruk taşıyabilir.
   if (playback === 'playlistOneShot' ? frames < grid : frames !== grid) {
     fail('spec.frames', `${bars} ölçü ${grid} örnek eder`, frames);
   }
   return value as MusicAssetSpecV1;
+}
+
+function checkCues(value: unknown, playback: MusicPlaybackMode): void {
+  if (!Array.isArray(value)) fail('spec.cues', 'dizi olmalı', value);
+  if (playback === 'playlistOneShot')
+    fail('spec.cues', 'cue yalnız loop çalma modelindedir', playback);
+  const ids = new Set<string>();
+  const once = new Set<string>();
+  for (const [i, raw] of value.entries()) {
+    const cue = raw as Record<string, unknown>;
+    const id = requireText(cue.id, `spec.cues[${i}].id`);
+    if (ids.has(id)) fail(`spec.cues[${i}].id`, 'tekrar etti', id);
+    ids.add(id);
+    const kind = cue.kind as string;
+    if (!(MUSIC_RUNTIME_CAPABILITIES.cues as readonly string[]).includes(kind)) {
+      fail(`spec.cues[${i}].kind`, MUSIC_RUNTIME_CAPABILITIES.cues.join(' | '), kind);
+    }
+    if (kind === 'intro' || kind === 'outro') {
+      if (once.has(kind)) fail(`spec.cues[${i}].kind`, `en çok bir ${kind}`, kind);
+      once.add(kind);
+    }
+    requireText(cue.file, `spec.cues[${i}].file`);
+    requireNumber(cue.frames, `spec.cues[${i}].frames`, 1, Number.MAX_SAFE_INTEGER);
+    const bars = requireNumber(cue.bars, `spec.cues[${i}].bars`, 1, 64);
+    if (!Number.isInteger(bars)) fail(`spec.cues[${i}].bars`, 'tam ölçü olmalı', bars);
+    if (cue.align !== undefined && cue.align !== 'bar' && cue.align !== 'beat') {
+      fail(`spec.cues[${i}].align`, 'bar | beat', cue.align);
+    }
+  }
 }
 
 export interface MusicTrackOptions {
@@ -185,6 +241,16 @@ export interface MusicTrackOptions {
  */
 export function toMusicTrack(spec: MusicAssetSpecV1, options: MusicTrackOptions): MusicTrack {
   const beatsPerBar = spec.meter[0];
+  const cue = (entry: MusicCueSpecV1): MusicCue => ({
+    id: entry.id,
+    src: options.resolve(entry.file),
+    bars: entry.bars,
+    ...(entry.align ? { align: entry.align } : {}),
+  });
+  const cues = spec.cues ?? [];
+  const intro = cues.find((c) => c.kind === 'intro');
+  const outro = cues.find((c) => c.kind === 'outro');
+  const others = cues.filter((c) => c.kind === 'stinger' || c.kind === 'transition');
   const stems: Stem[] = spec.stems.map((stem) => ({
     id: stem.id,
     src: options.resolve(stem.file),
@@ -197,7 +263,7 @@ export function toMusicTrack(spec: MusicAssetSpecV1, options: MusicTrackOptions)
     (spec.states && spec.states.length > 0 ? { intensity: spec.states[0].intensity } : undefined);
   return {
     id: spec.musicId,
-    bpm: spec.bpm,
+    bpm: quarterBpm(spec),
     timeSignature: [spec.meter[0], spec.meter[1]],
     ...(spec.loop
       ? {
@@ -206,8 +272,20 @@ export function toMusicTrack(spec: MusicAssetSpecV1, options: MusicTrackOptions)
         }
       : {}),
     stems,
+    ...(intro ? { intro: cue(intro) } : {}),
+    ...(outro ? { outro: cue(outro) } : {}),
+    ...(others.length ? { cues: others.map(cue) } : {}),
     ...(defaultState ? { defaultState } : {}),
   };
+}
+
+/**
+ * Spec'in `bpm`'i ölçü BİRİMİ başına vuruştur (6/8'de sekizlik); motorun
+ * zamanlayıcısı dörtlük başına sayar ve birimi paydadan ölçekler. İki
+ * anlam burada eşlenir: aksi hâlde 6/8'de bar sınırı yarım ölçü kayardı.
+ */
+function quarterBpm(spec: MusicAssetSpecV1): number {
+  return (spec.bpm * 4) / spec.meter[1];
 }
 
 /**

@@ -1,0 +1,207 @@
+{
+  "brief": {
+    "hash": "sha256:f7fdffa29c18db46f58dc1519daf1e7497a5aed6e5947f7f30699e9b79e60070",
+    "path": "devtools/audio-synth/audio-music/reference-arcade/brief.json"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "instrumentRegistryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "rendererVersion": 1
+  },
+  "music": {
+    "hash": "sha256:943f2916d8a87882bf10fc51de8407230eb5a027f660f47a4371f1720b5ffae8",
+    "musicId": "reference-arcade",
+    "path": "devtools/audio-synth/audio-music/reference-arcade/music.json",
+    "playback": "loop",
+    "seed": 20260924,
+    "version": 1
+  },
+  "package": "@volstudio/audio-synth",
+  "qa": {
+    "hash": "sha256:7fb0b2af89e2f064abd1af976638c60424deac18fa528c7faeb962b8eb92275a",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/reference-arcade/qa.json"
+  },
+  "report": {
+    "hash": "sha256:e01d72f9377b8b93c71ae26475740e473b0975c723e837a2685f072a8ca5eaf5",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/reference-arcade/report.json"
+  },
+  "schema": "MusicBundleV1",
+  "spec": {
+    "bars": 8,
+    "bpm": 150,
+    "cues": [
+      {
+        "bars": 2,
+        "file": "reference/production/assets/music/reference-arcade/intro.ogg",
+        "frames": 155451,
+        "id": "intro",
+        "kind": "intro"
+      },
+      {
+        "bars": 2,
+        "file": "reference/production/assets/music/reference-arcade/ending.ogg",
+        "frames": 228580,
+        "id": "ending",
+        "kind": "outro"
+      },
+      {
+        "align": "beat",
+        "bars": 1,
+        "file": "reference/production/assets/music/reference-arcade/power-up.ogg",
+        "frames": 175554,
+        "id": "power-up",
+        "kind": "stinger"
+      }
+    ],
+    "engine": {
+      "compressor": false
+    },
+    "frames": 564480,
+    "loop": {
+      "endBar": 8,
+      "startBar": 0
+    },
+    "mastering": {
+      "gainDb": -11.008,
+      "integratedLufs": -15.069,
+      "path": "loop-cyclic",
+      "truePeakDbtp": -3.782
+    },
+    "meter": [
+      4,
+      4
+    ],
+    "musicId": "reference-arcade",
+    "playback": "loop",
+    "runtimeGain": 1,
+    "sampleRate": 44100,
+    "schema": "MusicAssetSpecV1",
+    "stems": [
+      {
+        "file": "reference/production/assets/music/reference-arcade/mix.ogg",
+        "frames": 564480,
+        "id": "main"
+      }
+    ],
+    "transitions": [
+      {
+        "cue": "power-up",
+        "id": "to-power",
+        "kind": "stinger",
+        "seconds": 0.05
+      }
+    ]
+  },
+  "stems": [
+    {
+      "asset": {
+        "bytes": 196560,
+        "encodedHash": "sha256:a3c3d928480e733a1b6d2bccdea7ecacf70bc788c28005b1c742fad337047e2c",
+        "path": "reference/production/assets/music/reference-arcade/mix.ogg"
+      },
+      "frames": 564480,
+      "id": "mix",
+      "integratedLufs": -15.063486236500609,
+      "manifest": {
+        "hash": "sha256:bbede703b72cb74bb7bdd3b0ae17095cf556fdeb227f141d1a961faa33fc2cea",
+        "path": "reference/production/manifests/music/reference-arcade/mix.json"
+      },
+      "pcmHash": "sha256:0e0134283dbba25419f3be599971fbd61ecd6ad43e7159feea829698faab402c",
+      "truePeakDbtp": -3.980889281044615
+    },
+    {
+      "asset": {
+        "bytes": 53358,
+        "encodedHash": "sha256:f7180ec6ce41ecd3acc850dbad70de37cdc0acc9059f01716ff7a14103c3db5d",
+        "path": "reference/production/assets/music/reference-arcade/intro.ogg"
+      },
+      "frames": 155451,
+      "id": "intro",
+      "integratedLufs": -26.970919854498707,
+      "manifest": {
+        "hash": "sha256:8b65d5a5c00b0a47372a34cab1295e4943d304a21eb18f0fef49c5e35c50e01a",
+        "path": "reference/production/manifests/music/reference-arcade/intro.json"
+      },
+      "pcmHash": "sha256:651486dcea16cf7b1d48de637a17996c355fd80410d4027767ac984cbd8ca002",
+      "truePeakDbtp": -8.78117817986396
+    },
+    {
+      "asset": {
+        "bytes": 74877,
+        "encodedHash": "sha256:7ced0dda16950b65ae2cc848f7603cc72d3356b1f112078503cd2199f732c1ae",
+        "path": "reference/production/assets/music/reference-arcade/ending.ogg"
+      },
+      "frames": 228580,
+      "id": "ending",
+      "integratedLufs": -15.807336402157022,
+      "manifest": {
+        "hash": "sha256:bea92866e9dc4ed573ceb71088c420d33a1a2ad46211b93fbe591d1f335eafa1",
+        "path": "reference/production/manifests/music/reference-arcade/ending.json"
+      },
+      "pcmHash": "sha256:e0f59d5b2678bfab1d7c48fc61e1f35dbde2a5b385f70549ec4f089c2ab22b3d",
+      "truePeakDbtp": -3.953229300000988
+    },
+    {
+      "asset": {
+        "bytes": 48511,
+        "encodedHash": "sha256:5bcc5b3f529b3f56db9a8a29b5bb0529776b1225164ae99418957ae112fd0626",
+        "path": "reference/production/assets/music/reference-arcade/power-up.ogg"
+      },
+      "frames": 175554,
+      "id": "power-up",
+      "integratedLufs": -24.465182845900923,
+      "manifest": {
+        "hash": "sha256:374f084f2c7c1ed4bb3d2a4ca120da3b314a2a63e94c75e1a6980ea9a5096a6e",
+        "path": "reference/production/manifests/music/reference-arcade/power-up.json"
+      },
+      "pcmHash": "sha256:609a79c2a3f07fdae7ec1f17a64b54d63c867cf3ac3bc044e2de244e65b2b280",
+      "truePeakDbtp": -13.58154182845787
+    }
+  ],
+  "sync": {
+    "checks": [
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "mix",
+        "lagSamples": 0,
+        "ok": true
+      },
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "intro",
+        "lagSamples": 0,
+        "ok": true
+      },
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "ending",
+        "lagSamples": 0,
+        "ok": true
+      },
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "power-up",
+        "lagSamples": 0,
+        "ok": true
+      }
+    ],
+    "method": "cross-correlation-v1",
+    "ok": true,
+    "seams": [
+      {
+        "detail": "dikiş sürekli (adım 0.0694 ≤ 2×0.1279)",
+        "id": "mix",
+        "jump": 0.069412,
+        "ok": true,
+        "typicalStep": 0.12787
+      }
+    ]
+  },
+  "themeBook": null
+}

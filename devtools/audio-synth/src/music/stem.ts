@@ -1,5 +1,5 @@
 import type { RenderCache } from '../engine/renderCache';
-import { withRenderSession, type RenderQuality } from '../engine/session';
+import { renderSession, withRenderSession, type RenderQuality } from '../engine/session';
 import { AudioParamError } from '../guard/errors';
 import { checkObject } from '../guard/read';
 import type { RenderCost } from '../guard/budget';
@@ -11,11 +11,23 @@ import {
   type MusicMasteringPlanV1,
 } from './mastering';
 import { surfaceOf, type RenderSurfaceV1 } from '../program/surface';
-import { instrumentSurface } from './instruments';
+import { programInstrumentSurfaces } from './instrumentResolve';
 import { estimateMixCost, renderScoreMixed, resolveMusicMix, type ResolvedMusicMix } from './mix';
 import { validateMusicProgram, type MusicProgramV1 } from './program';
-import { estimateScoreCost, renderScoreRaw, MUSIC_RENDERER_VERSION } from './render';
-import { expandProgram } from './score';
+import {
+  estimateScoreCost,
+  renderScoreRaw,
+  MUSIC_RENDERER_VERSION,
+  type MusicRenderV1,
+} from './render';
+import { expandProgram, type MusicScoreV1 } from './score';
+import {
+  resolveSampleDecls,
+  sampleAccess,
+  type SampleAccess,
+  type SampleResolver,
+} from '../program/samples';
+import { cueSegments, musicView, type MusicViewV1 } from './segments';
 import { checkPattern, MUSIC_KEY } from './terms';
 
 /**
@@ -56,16 +68,17 @@ export function validateMusicStemProgram(value: unknown): MusicStemProgramV1 {
   }
   const music = validateMusicProgram(o.music);
   const stem = checkPattern(o.stem, 'stem', MUSIC_KEY);
-  if (stem !== REFERENCE_MIX_ID && !music.stems.some((s) => s.id === stem)) {
+  const cue = cueSegments(music).find((s) => s.id === stem);
+  if (stem !== REFERENCE_MIX_ID && !cue && !music.stems.some((s) => s.id === stem)) {
     throw new AudioParamError(
       'stem',
       'unknown-id',
-      `tanımlı stem ya da "${REFERENCE_MIX_ID}"`,
+      `tanımlı stem, cue segmenti ya da "${REFERENCE_MIX_ID}"`,
       stem,
     );
   }
   const mastering = validateMasteringPlan(o.mastering, 'mastering');
-  const expected = masteringPathOf(music.playback);
+  const expected = cue ? 'one-shot-limited' : masteringPathOf(music.playback);
   if (mastering.path !== expected) {
     throw new AudioParamError(
       'mastering.path',
@@ -77,6 +90,13 @@ export function validateMusicStemProgram(value: unknown): MusicStemProgramV1 {
   return { schema: MUSIC_STEM_PROGRAM_SCHEMA, stem, mastering, music };
 }
 
+/** Belgenin ETKİN çalma modeli: cue segmenti tek seferlik, diğerleri programın modeli. */
+export function documentPlayback(document: MusicStemProgramV1): MusicProgramV1['playback'] {
+  return cueSegments(document.music).some((s) => s.id === document.stem)
+    ? 'playlistOneShot'
+    : document.music.playback;
+}
+
 function stemFilter(document: MusicStemProgramV1): string | undefined {
   return document.stem === REFERENCE_MIX_ID ? undefined : document.stem;
 }
@@ -84,6 +104,8 @@ function stemFilter(document: MusicStemProgramV1): string | undefined {
 /** Belgeyi deterministik olarak PCM'e çevirir: aynı belge + sürüm = aynı örnekler. */
 export interface MusicStemRenderOptions {
   readonly seed?: number;
+  /** Sampler enstrümanlarının kayıtlarını getirir (protokol diskten, testler bellekten). */
+  readonly samples?: SampleResolver;
   /** Verilmezse dıştaki render oturumunun kalitesi; o da yoksa `final`. */
   readonly quality?: RenderQuality;
   /** Ses önbelleği; `null` dıştaki oturumun önbelleğini kapatır. */
@@ -110,19 +132,54 @@ function renderStemInSession(value: unknown, options: MusicStemRenderOptions): M
       ? document.music
       : { ...document.music, seed: options.seed };
   const score = expandProgram(program);
-  const scoreOptions = { playback: program.playback, stem: stemFilter(document) };
-  const mix = mixOf(program);
-  const render = mix
-    ? renderScoreMixed(score, mix, { ...scoreOptions, seed: program.seed })
-    : renderScoreRaw(score, scoreOptions);
+  const render = renderMusicRaw(program, score, stemFilter(document), options.samples);
   applyMastering(render.channels, render.sampleRate, document.mastering);
   return {
     channels: render.channels,
     sampleRate: render.sampleRate,
     duration: render.durationSeconds,
     seed: program.seed,
-    cost: costOf(score, program, scoreOptions),
+    cost: costOf(musicView(program, score, stemFilter(document)), program),
   };
+}
+
+/**
+ * Programın mastering ÖNCESİ render'ı: bus grafiği varsa grafikten, yoksa
+ * doğrudan. Yayın ön denetimi, arama finalisti ve iş render'ı bu TEK işlevi
+ * çağırır; ön denetimin gördüğü ses iş render'ının duyduğu sestir.
+ */
+export function renderMusicRaw(
+  program: MusicProgramV1,
+  score: MusicScoreV1,
+  stem: string | undefined,
+  resolver: SampleResolver | undefined,
+): MusicRenderV1 {
+  const samples = musicSamples(program, resolver);
+  const view = musicView(program, score, stem);
+  const options = {
+    playback: view.playback,
+    ...(view.stem ? { stem: view.stem } : {}),
+    ...(samples ? { samples } : {}),
+  };
+  const mix = mixOf(program);
+  return mix
+    ? renderScoreMixed(view.score, mix, { ...options, seed: program.seed })
+    : renderScoreRaw(view.score, options);
+}
+
+/**
+ * Programın sampler kayıtlarına erişim. Önbellekli oturumda bütün kayıtlar
+ * render'dan ÖNCE çözülür: önbellek isabeti bir kaydın diskte değiştiğini
+ * gizleyemez (çözücü özeti doğrular).
+ */
+function musicSamples(
+  program: MusicProgramV1,
+  resolver: SampleResolver | undefined,
+): SampleAccess | undefined {
+  const decls = resolveSampleDecls(program.samples);
+  const access = sampleAccess(decls, resolver);
+  if (access && renderSession().cache) for (const name of decls.keys()) access(name);
+  return access;
 }
 
 /**
@@ -133,10 +190,7 @@ export function musicStemSurface(value: unknown): RenderSurfaceV1 {
   const document = validateMusicStemProgram(value);
   const mix = mixOf(document.music);
   const ids = mix ? mix.buses.flatMap((bus) => bus.effects.map((effect) => effect.entry.id)) : [];
-  const instruments = [...new Set(document.music.lanes.map((lane) => lane.instrument))].map(
-    instrumentSurface,
-  );
-  return surfaceOf(ids, instruments);
+  return surfaceOf(ids, programInstrumentSurfaces(document.music));
 }
 
 function mixOf(program: MusicProgramV1): ResolvedMusicMix | null {
@@ -145,15 +199,12 @@ function mixOf(program: MusicProgramV1): ResolvedMusicMix | null {
     : null;
 }
 
-function costOf(
-  score: ReturnType<typeof expandProgram>,
-  program: MusicProgramV1,
-  options: { readonly playback: MusicProgramV1['playback']; readonly stem?: string },
-): RenderCost {
-  const base = estimateScoreCost(score, options);
+function costOf(view: MusicViewV1, program: MusicProgramV1): RenderCost {
+  const options = { playback: view.playback, ...(view.stem ? { stem: view.stem } : {}) };
+  const base = estimateScoreCost(view.score, options);
   const mix = mixOf(program);
   if (!mix) return base;
-  const extra = estimateMixCost(score, mix, program.playback);
+  const extra = estimateMixCost(view.score, mix, view.playback);
   return {
     peakBytes: base.peakBytes + extra.peakBytes,
     workUnits: base.workUnits + extra.workUnits,
@@ -163,10 +214,7 @@ function costOf(
 export function estimateMusicStemCost(value: unknown): RenderCost {
   const document = validateMusicStemProgram(value);
   const score = expandProgram(document.music);
-  return costOf(score, document.music, {
-    playback: document.music.playback,
-    stem: stemFilter(document),
-  });
+  return costOf(musicView(document.music, score, stemFilter(document)), document.music);
 }
 
 export function musicStemProgramHash(document: MusicStemProgramV1): Sha256 {

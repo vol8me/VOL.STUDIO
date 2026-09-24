@@ -23,7 +23,7 @@
 | Katman         | Soru                                 | İçinde ne var                                            |
 | -------------- | ------------------------------------ | -------------------------------------------------------- |
 | `guard/`       | Bu istek RENDER EDİLEBİLİR mi?       | parametre doğrulama/çözümleme, kaynak bütçesi, hatalar   |
-| `synthesis/`   | Örnek NASIL üretilir?                | osilatör, gürültü, zarf, filtre, örnek kaynağı, resample |
+| `synthesis/`   | Örnek NASIL üretilir?                | osilatör, gürültü, zarf, filtre, örnek, retro çekirdeği  |
 | `engine/`      | Parametreler nasıl BİRLEŞTİRİLİR?    | `SynthParams` → örnek; decimator; tek master çekirdeği   |
 | `instruments/` | Bir enstrüman ailesi NASIL DAVRANIR? | fiziksel modeller                                        |
 | `presets/`     | Bu sesin ADI ne?                     | parametre kümeleri + katalog                             |
@@ -46,9 +46,10 @@ Bu ayrım bu paketin büyüme biçimidir ve bulanıklaşırsa katalog motoru yut
   gecikme hattı, rezonatör, uyarım, inharmonik kısmi ton bankası, modal
   rezonatör, yay-sürtünme gürültüsü, hava-sütunu rezonatörü, dudak-reed
   uyarımı, formant bandpass filtresi. Çıktısı doğrudan `SynthesisResult`tır.
-  Bugün altı model var: `pluck` (Karplus-Strong), `piano` (modal sentez),
-  `bowedString` (yaylı tel), `airColumn` (açık/kapalı boru), `brass`
-  (lip-reed), `formant` (vokal formant).
+  Bugün yedi model ailesi var: `pluck` (Karplus-Strong), `piano` (modal
+  sentez), `bowedString` (yaylı tel), `airColumn` (açık/kapalı boru), `brass`
+  (lip-reed), `formant` (vokal formant) ve `instruments/percussion/` altındaki
+  yedi parametrik davul modeli (kick, tom, snare, clap, hat, cymbal, perc).
 - **Preset** (`presets/`), ad verilmiş bir parametre kümesidir ve **yeni DSP
   taşımaz**. Ya `engine`e ya bir modele biner.
 
@@ -821,11 +822,13 @@ ihlal kapıyı düşürür.
 ### Program, score ve tek genişletme
 
 `MusicProgramV1` (`music/program.ts`) sembolik kaynaktır: tempo, ölçü, tonal
-sistem, şeritler (enstrüman `preset:<ad>` kimliğiyle), stem'ler, bölümler
-(bar aralığı, rol, hedef enerji, aktif şeritler, armoni planı), motifler,
-groove profilleri, otomasyon, işaretler, geçişler ve teslim beyanı. Program
-JSON'dur; `Timeline`ın `InstrumentFn` fonksiyonu JSON'a yazılamaz, bu yüzden
-enstrüman kayıttan ADIYLA çözülür.
+sistem ve isteğe bağlı ayar, şeritler (enstrüman `preset:<ad>` ya da
+programın kendi tanımı `inst:<kimlik>`, ya da paletteki görev), stem'ler,
+bölümler (bar aralığı, rol, hedef enerji, aktif şeritler, armoni planı),
+motifler, tracker desenleri, groove profilleri, otomasyon, işaretler,
+geçişler, bundle segmentleri ve teslim beyanı. Program JSON'dur;
+`Timeline`ın `InstrumentFn` fonksiyonu JSON'a yazılamaz, bu yüzden enstrüman
+kayıttan ya da programın `instruments` listesinden ADIYLA çözülür.
 
 `expandProgram` programı `MusicScoreV1`e açar: her nota mutlak vuruşta, kalıcı
 bir olay kimliğiyle (`<bölüm>/<şerit>/<n>`) ve provenance'ıyla (akor sesi |
@@ -850,6 +853,109 @@ akor duyulana kadar fark edilmezdi. Motif dönüşümleri kapalı bir kümedir
 invert) ve her örnek `variationId` ile kaynağına izlenir. Groove profili
 swing, zamanlama/hız sapması ve vurgu tablosudur; sıfır sapmada çıktı tam
 ızgaradır.
+
+### Enstrüman sözleşmesi ve üretim kapsamı (Dalga 11)
+
+**`InstrumentDefinitionV1`** (`music/instrumentDefinition.ts`) bestecinin
+gördüğü sözleşmedir: rol, SESLENEN aralık, tercih edilen register,
+transpozisyon (yazılan + transpozisyon = seslenen), polifoni, velocity tepkisi
+(`rangeDb`, preset kaynağında `brightness`), bırakma (sampler) ve desteklenen
+artikülasyonlar. Kaynak sözleşmenin ARKASINDADIR: `preset`, `sampler`
+(programın `samples` + `banks` bildirimi, akustik programla aynı biçim),
+`drum-kit`, `retro` ya da bunların `layer`ı (velocity aralıklı katmanlar).
+Yerleşik `preset:<ad>` enstrümanı da aynı çözülmüş biçime iner
+(`ResolvedInstrumentV1`); score, analiz ve ses planı yalnız onu okur ve aynı
+nota verisi hangi kaynağa giderse gitsin aynı anlamı taşır. Kaynağın
+çalamadığı artikülasyon tanımda, enstrümanın desteklemediği artikülasyon
+score'da adıyla reddedilir. Programa özgü enstrümanlar render yüzeyine
+`backend:<tür>` (kaynak sürümü) olarak kaydedilir; tanımın kendisi program
+özetindedir.
+
+**Ses planı** (`music/voices.ts`) velocity, artikülasyon ve kapı süresini TEK
+yerde yorumlar; kaynak yalnız "şu perdede, şu sürede, şu şiddette" isteğini
+alır. Velocity yazılmazsa seviye çarpanı hiç uygulanmaz — eski programlar
+bit-eşit kalır (production-check ile doğrulandı); yazılırsa
+`rangeDb × (v − 0.8)` dB. Kapı: `staccato` yazılı sürenin yarısı (en az
+30 ms), `legato` bir sonraki notaya +30 ms, `let-ring` kaynağın doğal süresi,
+`mute` kapının %35'i ve süzgeç yarıya; `accent` velocity +0.2, `ghost` ×0.45;
+`slide` önceki notanın perdesinden en çok 80 ms'lik portamento (preset'te
+`SynthParams.glide`, retro'da perde süpürmesi); `tie` bitişik aynı perdeli
+notayla tek notaya birleşir. Komşu bilgisi (legato, slide, hat boğması)
+score'un TAMAMINDAN okunur: stem ya da segment ayrı render edildiğinde her
+olay aynı sesi verir.
+
+Yerleşik enstrümanın "notayı tutabilir mi" sınıflaması presetin tipik nota
+süresinde ölçülür: notanın %15–25'i ile %45–55'i arasında 6 dB'den fazla
+düşen ses vurgusaldır (`staccato`, `let-ring`; telli/baslarda `mute`),
+diğerleri süreklidir (`sustain`, `legato`, `tie`, `slide`). Önceki ölçü 1 sn'lik
+yoklamanın −40 dB sönümünü tipik süreyle kıyaslıyordu ve yaylıları, koroyu,
+tubayı "vurgusal" sayıyordu.
+
+**Perküsyon** (`instruments/percussion/`): yedi model dört bileşenden kurulur
+— perde zarflı gövde (kip başına sönüm), süzülmüş gürültü, vuruş tıkı ve
+metalik kare kümesi (hat/zil). Makrolar her modelde aynı anlamdadır
+(`tune`, `decay`, `tone`, `attack`, `noise` çarpanı, `drive`, `open`);
+velocity SEVİYEYİ değil tınıyı değiştirir (seviye enstrümanın velocity
+tepkisidir) ve çıktının tepesi `level`dir. Yön iddiaları yedi modelde ölçülür
+(`tests/percussion.test.ts`): velocity ve ton → spektral merkez, decay →
+−40 dB süresi, noise → spektral düzlük, attack → ilk 50 ms'nin tepe/RMS oranı,
+drive → tepe/RMS düşüşü. Ölçülen örnekler: kick tabanı 45–56 Hz, trampet
+merkezi velocity 0.3→1'de 1.16→2.15 kHz, kapalı hat −40 dB'ye 70 ms, açık hat
+doğal uzunluğu 1.48 sn; uzun sönüm 4 sn tavanda 20 ms'lik kuyrukla kesilir,
+boğma (choke) kapıdan sonra 5 ms. Müzikte `drum-kit` tuşu parçaya eşler
+(perdesizdir; perde analizine girmez, olay başına gürültü tohumu olay
+kimliğinden türer); akustik programda aynı çekirdek `source.drum` düğümüdür.
+kick/snare/hat SoundFamily'leri velocity ve tını makrolarıyla aile kalite
+kapısını geçer (`tests/program/chip.test.ts`).
+
+**Retro araç seti** (`synthesis/retro.ts`): darbe (duty ve süpürme), düz ya da
+4-bit üçgen, testere, uzun/kısa LFSR (kısa kip 93 adımlık dizi; saat =
+perde × 93), 4-bit wavetable'lar ve özel tablo, hard sync, arpej, perde
+süpürmesi, gecikmeli vibrato, 16 basamaklı ses zarfı. Her süreksizlik (kenar,
+sarma, tablo basamağı, LFSR saati, sync sıfırlaması) iki örneklik PolyBLEP'le
+düzeltilir; bilinçli alias yalnız `bits`/`holdHz` aşamasından ve çıkış
+oranında gelir. Ölçülen alias (kafes yöntemi, 2× iç oran): darbe %25 233 Hz
+−64.3 dB, 3.6 kHz −53.5 dB; testere 917 Hz −56.3 dB (motorun PolyBLEP'iyle
+birebir aynı), 3.6 kHz −51.1 dB; 4-bit üçgen 917 Hz −83.2 dB; org tablosu
+3.6 kHz −59.3 dB; sync'li testere 917 Hz −51.7 dB. Sınırlar ölçülenin 2 dB
+üstünde kilitlidir (`tests/retro.test.ts`); daha yüksek dereceli bant
+sınırlama TODO'daki PolyBLEP maddesinin işidir. Müzikte `retro` kaynağı,
+akustik programda `source.retro` düğümüdür (UI, arcade SFX, gürültü).
+
+**Orkestrasyon** (`music/orchestration.ts`): şeridin görevi (`bass`,
+`foundation`, `rhythm`, `harmony`, `counterline`, `lead`, `texture`,
+`accent`) enstrüman adından ayrıdır. Palet görevi enstrümana bağlar
+(`transposition: "auto"` yazılanı enstrümanın tercih ettiği register'a
+oturtan oktavı seçer, `gainDb` görevin paletteki seviyesi); aynı score başka
+bir paletle çalındığında yazılan notalar, armoni ve olay kimlikleri değişmez.
+Görev bantları (register ve nota/ölçü) yönlendiricidir: rapor `roles`
+bölümünde ölçülür, kapıyı düşürmez.
+
+**Tracker** (`music/pattern.ts`): desen satırları dizgiyle (`x` vuruş, `X`
+accent, `o` ghost, `.` sus, `_` uzatma), melodik adımlar listeyle yazılır.
+Parça desenleri zincirler (`repeat`, `variation`, `loop`, her N'inci örnekte
+`fill`); döngüsüz zincirin bölüm sonunu aşması hatadır. Olasılık olay
+kimliğine bağlı alt akıştan çekilir ve düşen vuruş kimlik sayacını ilerletir:
+bir adımın olasılığını değiştirmek diğer olayların insanlaştırmasını kaydırmaz.
+
+**Ayar** (`music/tuning.ts`): `equal` (başka referans), `cents` ve `ratios`
+(kökten 12 kromatik basamak; kök 12-TET frekansında sabit) ve nota adına cent
+sapması (`A3+50c`). Ayar yazılmazsa `frequencyOf` `midiToHz` ile birebir
+aynıdır; harmoni ve analiz tuşlarla çalışmaya devam eder.
+
+**Bundle segmentleri** (`music/segments.ts`): segment programın ölçü
+zamanında bir aralıktır — tam bir `loop` (döngüsel, kuyruk başa sarılır),
+loop'un başladığı ölçüde biten isteğe bağlı `intro`, `outro`, `stinger` ve
+`transition` (tek seferlik, kuyruk doğal söner). Mix ve stem'ler loop
+aralığından, her cue kendi aralığından render edilir ve kendi asset'i olur;
+cue işinin brief'i bundle brief'inden deterministik türer (çalma modeli tek
+seferlik). Bütün segmentler loop'un mastering kazancını paylaşır (giriş ile
+loop arasında seviye sıçraması olmaz); stinger/geçiş kendi `gainDb` farkını
+taşır. Segment QA'sı her cue'yu tek başına ve BİRLİKTE ölçer: stinger loop'un
+her hizalı noktasında (ölçü ya da vuruş) loop ile toplanır, giriş loop'a
+devrederken kuyruğuyla toplanır; motorun veriyolunda sınırlayıcı yoktur,
+bindirme −1 dBTP'yi aşarsa QA düşer. Cue asset'leri `music-stem` politika
+sınıfındadır (tek başına bir mix değil, bundle'ın parçasıdır).
 
 ### Sembolik analiz
 
@@ -920,10 +1026,25 @@ kurulmuşsa hata verir — core'un varsayılan kompresörü (−24 dB eşik, 12 
 −14 LUFS'e getirilmiş bir parçayı ezer ve offline ölçüm duyulanı temsil etmez.
 
 Geçiş sözleşmesi `MUSIC_RUNTIME_CAPABILITIES` listesine bakar: bar hizalı
-crossfade, sönümlü durdurma ve playlist boşluğu VARDIR; stinger, parça içi
-bölüm atlama ve farklı tempolar arası bar hizası YOKTUR ve
+crossfade, sönümlü durdurma, playlist boşluğu ve cue'lu geçiş (`stinger`)
+VARDIR; parça içi bölüm atlama ve farklı tempolar arası bar hizası YOKTUR ve
 `unsupported-by-runtime` ile reddedilir. Tonal ilişki beyan edilebilir ama
 motor ton bilmez; rapor bunu "motor uygulamıyor" diye işaretler.
+
+Motor cue'ları (`MusicCuePlayer`) örnek-doğru zamanlar: parça girişi (intro)
+çalarken loop stem'leri girişin ölçü sayısı kadar sonra başlar ve girişin
+kuyruğu loop'un ilk ölçüsünün üstünde söner; `playStinger` loop'u kesmeden
+sonraki ölçü ya da vuruş sınırında çalar; `playOutro` loop'u sonraki ölçü
+sınırında 30 ms'de bırakıp bitişi çalar ve bitiş sönünce parça biter;
+`transitionTo` geçiş cue'sunu ölçü sınırında başlatır, hedef parça cue'nun
+ölçü sayısı kadar sonra girer.
+
+**6/8 düzeltmesi.** Spec'in `bpm`'i ölçü BİRİMİ başına vuruştur (6/8'de
+sekizlik), motorun zamanlayıcısı dörtlük başına sayar ve birimi paydadan
+ölçekler. `toMusicTrack` önceden bpm'i olduğu gibi veriyordu: 6/8 bir
+parçada motorun ölçüsü spec'inkinin yarısı çıkıyor ve bar hizalı her geçiş
+yarım ölçü kayıyordu (4/4'te fark yoktu, bu yüzden hiçbir test yakalamadı).
+Dönüşüm artık `toMusicTrack`'te tek yerdedir: `bpm × 4 / birim`.
 
 ### Yayın ve doğrulama
 
@@ -945,6 +1066,16 @@ modeliyle uyuşmazsa program şema düzeyinde reddedilir.
 Kodlanmış hiza: her asset çözülüp kaynak PCM ile çapraz korelasyona sokulur;
 gecikme 0 ve kare farkı 0 olmalıdır (`cross-correlation-v1`). Bir örneklik
 kayma kulakta faz olarak duyulur ve hiçbir yükseklik ölçüsü onu yakalamaz.
+Döngüye giren asset'lerde (mix, stem, loop gövdesi) çözülmüş DİKİŞ de
+ölçülür: son örnekten ilk örneğe adım, sinyalin kendi komşu-örnek adımlarının
+%99.9 yüzdeliğinin iki katını aşamaz (`checkLoopSeam`); kodek kenarındaki bir
+süreksizlik her turda tık olur ve hiza denetimi onu görmez.
+
+Önceki bir kusur: `music check` ön denetimi programın bus grafiğini (`mix`)
+yok sayıp ham render alıyordu, iş render'ı ise grafikle render ediyordu. Bus
+grafikli bir müzik yayımlanmaya kalksa ön denetimin PCM özeti ve mastering
+kararı iş render'ıyla tutmaz ve yayın düşerdi. Artık bütün yollar tek
+`renderMusicRaw` işlevini çağırır.
 
 `music verify` / `verify --all`: program, brief, rapor ve QA özetleri,
 yeniden genişletmede aynı rapor özeti, spec'in ölçü→kare sözleşmesi, her
@@ -970,17 +1101,26 @@ programdan ve ThemeBook'tan gelir.
 | `reference-loop`     | loop            | 441000 (10 sn)   | −3.25 dB | −16.26 | −1.96 | 68 KB                |
 | `reference-cue`      | playlistOneShot | 355512 (8.06 sn) | +0.78 dB | −18.08 | −1.91 | 53 KB                |
 | `reference-adaptive` | adaptiveLoop    | 378000 (8.57 sn) | +0.71 dB | −16.02 | −4.19 | 3 stem + mix, 141 KB |
+| `reference-arcade`   | loop + cue      | 564480 (12.8 sn) | −11.0 dB | −15.06 | −3.98 | loop + 3 cue, 365 KB |
+
+`reference-arcade` (150 bpm, A minör) Dalga 11'in uçtan uca kanıtıdır: retro
+ezgi/bas/arp, davul kiti, tracker desenleri, palet görevleri; giriş (2 ölçü,
+−26.97 LUFS), 8 ölçülük dikişsiz loop, bitiş (2 ölçü, −15.81 LUFS) ve
+güçlenme stinger'ı (1 ölçü, −4 dB fark). Stinger loop'un 32 vuruşunun her
+birinde loop ile birlikte en kötü −1.52 dBTP, giriş loop'a devrederken
+−3.78 dBTP; dört asset'in kodlanmış hizası 0/0, loop dikişi sürekli.
 
 Referans arama (`reference-loop/search.json`): 24 aday sembolik açıldı, 12'si
 süzgeci geçti, 3'ü render edildi.
 
 ### Bilinen sınırlar
 
-Perküsyon rolü enstrüman kaydında yalnız 3 preset taşır; ritim bölümü
-melodik enstrümanlarla kurulur (parametrik davul ailesi Dalga 11). Müzik yolu
-yalnız ÖLÇÜLEN değerlerle doğrulandı — sembolik uygunluk, yükseklik, true
-peak, stem paritesi, kodlanmış hiza; insan dinlemesi yapılmadı ve "iyi müzik"
-iddiası yoktur (`music-no-listening-validation`).
+Müzik yolu yalnız ÖLÇÜLEN değerlerle doğrulandı — sembolik uygunluk,
+yükseklik, true peak, stem paritesi, kodlanmış hiza ve dikiş; insan dinlemesi
+yapılmadı ve "iyi müzik" iddiası yoktur (`music-no-listening-validation`).
+Davul ve retro seslerin yön iddiaları ölçüldü; tınılarının beğenisi
+dinleyicinindir. Retro çekirdek konsol öykünmesi DEĞİLDİR; öykünme iddiası
+ayrı bir donanım doğrulaması ister.
 
 ## Genel ses tasarımı ve üretim grafiği
 

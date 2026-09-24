@@ -87,6 +87,7 @@ export function frequencyAtTime(
   t: number,
   duration: number,
   maxFreq: number,
+  glide?: { readonly semitones: number; readonly seconds: number },
 ): number {
   let baseFreq = frequency;
   const endFreq = frequency + slide;
@@ -103,6 +104,10 @@ export function frequencyAtTime(
     case 'cosine':
       baseFreq = lerp(frequency, endFreq, (1 - Math.cos(ratio * Math.PI)) / 2);
       break;
+  }
+
+  if (glide && t < glide.seconds) {
+    baseFreq *= Math.pow(2, (glide.semitones * (1 - t / glide.seconds)) / 12);
   }
 
   if (pitchJump && duration > 0) {

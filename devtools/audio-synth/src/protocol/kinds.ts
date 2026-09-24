@@ -56,6 +56,7 @@ export function renderForKind(
   if (kind === 'music') {
     const rendered = renderMusicStem(document, {
       seed: options.seed,
+      samples: options.samples,
       quality: options.quality,
       cache: options.cache,
     });

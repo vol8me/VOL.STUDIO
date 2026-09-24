@@ -23,7 +23,9 @@ describe('audio:job context', () => {
     expect(context.targets.note).toMatch(/oyun hedefi YOK/);
     expect(context.schemas.brief.kinds.music.status).toBe('supported');
     expect(context.music.schemas.program).toBe('MusicProgramV1');
-    expect(context.music.runtime.capabilities.stingers).toBe(false);
+    expect(context.music.runtime.capabilities.stingers).toBe('bar-or-beat');
+    expect(context.music.runtime.capabilities.sectionJump).toBe(false);
+    expect(context.music.segments.kinds).toContain('stinger');
     expect(Object.keys(context.music.commands)).toContain('publish');
   });
 

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-d593df15cee2ec32": {
+        "hash": "sha256:36d02a41e0a563e6b04e997c9b2f2941a32ec02f8424f3b1f97d9bb7b673c171",
+        "path": "analyses/r-d593df15cee2ec32.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:e65531690e2e66e7b692aac45f4556eeace7cfe53bed27d602e595c3583dfa2b",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:e65531690e2e66e7b692aac45f4556eeace7cfe53bed27d602e595c3583dfa2b",
+      "hash": "sha256:d60895ba352d13c746b5a0ff5eea3ecc4b421165110643c9011ef16daf467b00",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:8b65d5a5c00b0a47372a34cab1295e4943d304a21eb18f0fef49c5e35c50e01a",
+      "path": "devtools/audio-synth/reference/production/manifests/music/reference-arcade/intro.json"
+    },
+    "renders": {
+      "r-d593df15cee2ec32": {
+        "hash": "sha256:2d84b454d88048ff7d8f61c7f7d8c351e0f3a1298e8ca2ce872597f2b5a94a9c",
+        "path": "renders/r-d593df15cee2ec32.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:1624a27ab2c581acca24569ab1945157dcf4406fd4923a6d9b1b17bb6aebd47c",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "intro",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/music/reference-arcade/intro.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "reference-arcade/intro"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

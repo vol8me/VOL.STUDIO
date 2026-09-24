@@ -1,0 +1,1214 @@
+{
+  "schema": "MusicProgramV1",
+  "musicId": "reference-arcade",
+  "version": 1,
+  "title": "Referans arcade teması",
+  "description": "Giriş + dikişsiz loop + bitiş + güçlenme stinger'ı: retro darbe ezgisi, 4-bit üçgen bas, oktav titreşimli arp ve parametrik davul kiti; tracker desenleri ve palet görevleriyle. Dalga 11'in uçtan uca yayın kanıtı.",
+  "seed": 20260924,
+  "playback": "loop",
+  "tempo": {
+    "bpm": 150
+  },
+  "meter": [4, 4],
+  "tonal": {
+    "system": "minor",
+    "root": "A2"
+  },
+  "bars": 13,
+  "sampleRate": 44100,
+  "delivery": {
+    "package": "@volstudio/audio-synth",
+    "assetDir": "reference/production/assets/music/reference-arcade"
+  },
+  "instruments": [
+    {
+      "id": "chip-lead",
+      "description": "Ezgi: %25 darbe, gecikmeli vibrato, 16 basamaklı ses zarfı.",
+      "role": "lead",
+      "range": ["C3", "C7"],
+      "preferred": ["A4", "A6"],
+      "polyphony": 2,
+      "velocity": {
+        "rangeDb": 9
+      },
+      "articulations": ["sustain", "staccato", "legato", "slide", "accent"],
+      "source": {
+        "kind": "retro",
+        "patch": {
+          "waveform": "pulse",
+          "duty": 0.25,
+          "envelope": {
+            "attack": 0.003,
+            "decay": 0.12,
+            "sustain": 0.6,
+            "release": 0.06,
+            "steps": 16
+          },
+          "vibrato": {
+            "depthCents": 18,
+            "rateHz": 6,
+            "delaySeconds": 0.18
+          },
+          "gain": 0.45
+        }
+      }
+    },
+    {
+      "id": "chip-bass",
+      "description": "Bas: 4-bit basamaklı üçgen.",
+      "role": "bass",
+      "range": ["E1", "E4"],
+      "polyphony": 1,
+      "velocity": {
+        "rangeDb": 6
+      },
+      "articulations": ["sustain", "staccato", "accent"],
+      "source": {
+        "kind": "retro",
+        "patch": {
+          "waveform": "triangle-4bit",
+          "envelope": {
+            "attack": 0.002,
+            "decay": 0.05,
+            "sustain": 0.9,
+            "release": 0.03
+          },
+          "gain": 0.7
+        }
+      }
+    },
+    {
+      "id": "chip-arp",
+      "description": "Akor: %12.5 darbe, 25 Hz oktav titreşimi.",
+      "role": "keys",
+      "range": ["C3", "C7"],
+      "polyphony": 4,
+      "articulations": ["sustain", "staccato"],
+      "source": {
+        "kind": "retro",
+        "patch": {
+          "waveform": "pulse",
+          "duty": 0.125,
+          "arpeggio": {
+            "semitones": [0, 12],
+            "rateHz": 25
+          },
+          "envelope": {
+            "attack": 0.004,
+            "decay": 0.2,
+            "sustain": 0.5,
+            "release": 0.08,
+            "steps": 16
+          },
+          "gain": 0.22
+        }
+      }
+    },
+    {
+      "id": "kit",
+      "description": "Parametrik davul kiti: kick, trampet, kapalı/açık hat (boğmalı), zil.",
+      "role": "percussion",
+      "polyphony": 8,
+      "velocity": {
+        "rangeDb": 10
+      },
+      "articulations": ["accent", "ghost", "mute", "let-ring"],
+      "source": {
+        "kind": "drum-kit",
+        "pieces": [
+          {
+            "note": "C2",
+            "model": "kick",
+            "macros": {
+              "tune": 2,
+              "decay": 0.35,
+              "attack": 0.7,
+              "drive": 0.15
+            }
+          },
+          {
+            "note": "D2",
+            "model": "snare",
+            "macros": {
+              "tone": 0.55,
+              "decay": 0.35
+            }
+          },
+          {
+            "note": "F#2",
+            "model": "hat",
+            "macros": {
+              "decay": 0.3,
+              "tone": 0.5
+            },
+            "choke": "hat",
+            "gainDb": -6
+          },
+          {
+            "note": "A#2",
+            "model": "hat",
+            "macros": {
+              "open": 0.8,
+              "decay": 0.4
+            },
+            "choke": "hat",
+            "gainDb": -7
+          },
+          {
+            "note": "C#3",
+            "model": "cymbal",
+            "macros": {
+              "decay": 0.55,
+              "tone": 0.6
+            },
+            "gainDb": -5
+          }
+        ]
+      }
+    }
+  ],
+  "palettes": [
+    {
+      "id": "chip",
+      "description": "Retro araç seti.",
+      "roles": {
+        "lead": {
+          "instrument": "inst:chip-lead",
+          "transposition": "auto"
+        },
+        "bass": {
+          "instrument": "inst:chip-bass",
+          "transposition": "auto"
+        },
+        "harmony": {
+          "instrument": "inst:chip-arp",
+          "gainDb": -2
+        },
+        "rhythm": {
+          "instrument": "inst:kit"
+        }
+      }
+    }
+  ],
+  "orchestration": {
+    "palette": "chip"
+  },
+  "grooves": [
+    {
+      "id": "tight",
+      "swing": 0,
+      "timingJitter": 0.004,
+      "velocityJitter": 0.1,
+      "accents": [1, 0.85, 0.95, 0.85]
+    }
+  ],
+  "motifs": [
+    {
+      "id": "theme",
+      "notes": [
+        {
+          "degree": 4,
+          "beat": 0,
+          "beats": 0.5
+        },
+        {
+          "degree": 4,
+          "beat": 0.5,
+          "beats": 0.5,
+          "articulations": ["staccato"]
+        },
+        {
+          "degree": 6,
+          "beat": 1,
+          "beats": 0.5
+        },
+        {
+          "degree": 7,
+          "beat": 1.5,
+          "beats": 1,
+          "articulations": ["accent"]
+        },
+        {
+          "degree": 6,
+          "beat": 2.5,
+          "beats": 0.5
+        },
+        {
+          "degree": 4,
+          "beat": 3,
+          "beats": 1,
+          "articulations": ["slide"]
+        },
+        {
+          "degree": 2,
+          "beat": 4,
+          "beats": 1
+        },
+        {
+          "degree": 4,
+          "beat": 5,
+          "beats": 0.5
+        },
+        {
+          "degree": 3,
+          "beat": 5.5,
+          "beats": 0.5
+        },
+        {
+          "degree": 2,
+          "beat": 6,
+          "beats": 2
+        }
+      ]
+    }
+  ],
+  "patterns": [
+    {
+      "id": "intro-beat",
+      "steps": 16,
+      "stepBeats": 0.25,
+      "rows": [
+        {
+          "note": "C2",
+          "steps": "x... .... .... ...."
+        },
+        {
+          "note": "F#2",
+          "steps": "x.x. x.x. x.x. x.x."
+        }
+      ]
+    },
+    {
+      "id": "beat",
+      "steps": 16,
+      "stepBeats": 0.25,
+      "rows": [
+        {
+          "note": "C2",
+          "steps": "x... .... x.x. ...."
+        },
+        {
+          "note": "D2",
+          "steps": ".... X... .... X..o"
+        },
+        {
+          "note": "F#2",
+          "steps": "x.x. x.x. x.x. x..."
+        },
+        {
+          "note": "A#2",
+          "steps": ".... .... .... ..x."
+        }
+      ],
+      "variations": [
+        {
+          "id": "push",
+          "rows": [
+            {
+              "row": 0,
+              "steps": "x... ..x. x.x. ..x."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fill",
+      "steps": 16,
+      "stepBeats": 0.25,
+      "rows": [
+        {
+          "note": "C2",
+          "steps": "x... .... .... ...."
+        },
+        {
+          "note": "D2",
+          "steps": ".... x.x. xxxx XXXX"
+        },
+        {
+          "note": "F#2",
+          "steps": "x.x. .... .... ...."
+        }
+      ]
+    },
+    {
+      "id": "ending",
+      "steps": 16,
+      "stepBeats": 0.25,
+      "rows": [
+        {
+          "note": "C2",
+          "steps": "x... .... .... ...."
+        },
+        {
+          "note": "C#3",
+          "steps": "X... .... .... ...."
+        }
+      ]
+    },
+    {
+      "id": "roll",
+      "steps": 16,
+      "stepBeats": 0.25,
+      "rows": [
+        {
+          "note": "D2",
+          "steps": "o.o. x.x. xxxx XXXX"
+        },
+        {
+          "note": "C#3",
+          "steps": "X... .... .... ...."
+        }
+      ]
+    },
+    {
+      "id": "powerup",
+      "steps": 16,
+      "stepBeats": 0.25,
+      "events": [
+        {
+          "step": 0,
+          "degree": 7,
+          "articulations": ["staccato"]
+        },
+        {
+          "step": 2,
+          "degree": 9,
+          "articulations": ["staccato"]
+        },
+        {
+          "step": 4,
+          "degree": 11,
+          "articulations": ["staccato"]
+        },
+        {
+          "step": 6,
+          "degree": 14,
+          "articulations": ["staccato"]
+        },
+        {
+          "step": 8,
+          "degree": 16,
+          "length": 8,
+          "articulations": ["accent"]
+        }
+      ]
+    }
+  ],
+  "stems": [
+    {
+      "id": "main",
+      "title": "Tam mix"
+    }
+  ],
+  "lanes": [
+    {
+      "id": "lead",
+      "role": "lead",
+      "stem": "main",
+      "pan": 0.1,
+      "gain": 0.9,
+      "groove": "tight"
+    },
+    {
+      "id": "bass",
+      "role": "bass",
+      "stem": "main",
+      "gain": 1
+    },
+    {
+      "id": "arp",
+      "role": "harmony",
+      "stem": "main",
+      "pan": -0.15,
+      "gain": 0.8
+    },
+    {
+      "id": "drums",
+      "role": "rhythm",
+      "stem": "main",
+      "gain": 0.9,
+      "groove": "tight"
+    }
+  ],
+  "sections": [
+    {
+      "id": "intro",
+      "role": "intro",
+      "bars": [0, 2],
+      "targetEnergy": 0.3,
+      "lanes": ["arp", "drums"],
+      "harmony": {
+        "voicing": {
+          "voices": 3,
+          "spread": "close",
+          "register": [57, 81],
+          "maxMovement": 12
+        },
+        "chords": [
+          {
+            "bar": 0,
+            "beat": 0,
+            "beats": 4,
+            "degree": 1,
+            "quality": "triad"
+          },
+          {
+            "bar": 1,
+            "beat": 0,
+            "beats": 4,
+            "degree": 7,
+            "quality": "triad"
+          }
+        ]
+      },
+      "parts": [
+        {
+          "lane": "arp",
+          "source": "chord",
+          "rhythm": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "beats": 3.75
+            },
+            {
+              "bar": 1,
+              "beat": 0,
+              "beats": 3.75
+            }
+          ]
+        },
+        {
+          "lane": "drums",
+          "source": "pattern",
+          "chain": [
+            {
+              "pattern": "intro-beat",
+              "repeat": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "body",
+      "role": "body",
+      "bars": [2, 10],
+      "targetEnergy": 0.9,
+      "lanes": ["lead", "bass", "arp", "drums"],
+      "harmony": {
+        "voicing": {
+          "voices": 3,
+          "spread": "close",
+          "register": [57, 81],
+          "maxMovement": 12
+        },
+        "chords": [
+          {
+            "bar": 0,
+            "beat": 0,
+            "beats": 4,
+            "degree": 1,
+            "quality": "triad"
+          },
+          {
+            "bar": 1,
+            "beat": 0,
+            "beats": 4,
+            "degree": 6,
+            "quality": "triad"
+          },
+          {
+            "bar": 2,
+            "beat": 0,
+            "beats": 4,
+            "degree": 3,
+            "quality": "triad"
+          },
+          {
+            "bar": 3,
+            "beat": 0,
+            "beats": 4,
+            "degree": 7,
+            "quality": "triad"
+          },
+          {
+            "bar": 4,
+            "beat": 0,
+            "beats": 4,
+            "degree": 1,
+            "quality": "triad"
+          },
+          {
+            "bar": 5,
+            "beat": 0,
+            "beats": 4,
+            "degree": 6,
+            "quality": "triad"
+          },
+          {
+            "bar": 6,
+            "beat": 0,
+            "beats": 4,
+            "degree": 4,
+            "quality": "triad"
+          },
+          {
+            "bar": 7,
+            "beat": 0,
+            "beats": 4,
+            "degree": 5,
+            "quality": "triad"
+          }
+        ]
+      },
+      "parts": [
+        {
+          "lane": "arp",
+          "source": "chord",
+          "rhythm": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "beats": 1.9
+            },
+            {
+              "bar": 0,
+              "beat": 2,
+              "beats": 1.9
+            },
+            {
+              "bar": 1,
+              "beat": 0,
+              "beats": 1.9
+            },
+            {
+              "bar": 1,
+              "beat": 2,
+              "beats": 1.9
+            },
+            {
+              "bar": 2,
+              "beat": 0,
+              "beats": 1.9
+            },
+            {
+              "bar": 2,
+              "beat": 2,
+              "beats": 1.9
+            },
+            {
+              "bar": 3,
+              "beat": 0,
+              "beats": 1.9
+            },
+            {
+              "bar": 3,
+              "beat": 2,
+              "beats": 1.9
+            },
+            {
+              "bar": 4,
+              "beat": 0,
+              "beats": 1.9
+            },
+            {
+              "bar": 4,
+              "beat": 2,
+              "beats": 1.9
+            },
+            {
+              "bar": 5,
+              "beat": 0,
+              "beats": 1.9
+            },
+            {
+              "bar": 5,
+              "beat": 2,
+              "beats": 1.9
+            },
+            {
+              "bar": 6,
+              "beat": 0,
+              "beats": 1.9
+            },
+            {
+              "bar": 6,
+              "beat": 2,
+              "beats": 1.9
+            },
+            {
+              "bar": 7,
+              "beat": 0,
+              "beats": 1.9
+            },
+            {
+              "bar": 7,
+              "beat": 2,
+              "beats": 1.9
+            }
+          ]
+        },
+        {
+          "lane": "bass",
+          "source": "chord",
+          "voices": [0],
+          "rhythm": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "beats": 0.45,
+              "articulations": ["accent"]
+            },
+            {
+              "bar": 0,
+              "beat": 0.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 0,
+              "beat": 1,
+              "beats": 0.45
+            },
+            {
+              "bar": 0,
+              "beat": 1.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 0,
+              "beat": 2,
+              "beats": 0.45
+            },
+            {
+              "bar": 0,
+              "beat": 2.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 0,
+              "beat": 3,
+              "beats": 0.45
+            },
+            {
+              "bar": 0,
+              "beat": 3.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 1,
+              "beat": 0,
+              "beats": 0.45,
+              "articulations": ["accent"]
+            },
+            {
+              "bar": 1,
+              "beat": 0.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 1,
+              "beat": 1,
+              "beats": 0.45
+            },
+            {
+              "bar": 1,
+              "beat": 1.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 1,
+              "beat": 2,
+              "beats": 0.45
+            },
+            {
+              "bar": 1,
+              "beat": 2.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 1,
+              "beat": 3,
+              "beats": 0.45
+            },
+            {
+              "bar": 1,
+              "beat": 3.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 2,
+              "beat": 0,
+              "beats": 0.45,
+              "articulations": ["accent"]
+            },
+            {
+              "bar": 2,
+              "beat": 0.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 2,
+              "beat": 1,
+              "beats": 0.45
+            },
+            {
+              "bar": 2,
+              "beat": 1.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 2,
+              "beat": 2,
+              "beats": 0.45
+            },
+            {
+              "bar": 2,
+              "beat": 2.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 2,
+              "beat": 3,
+              "beats": 0.45
+            },
+            {
+              "bar": 2,
+              "beat": 3.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 3,
+              "beat": 0,
+              "beats": 0.45,
+              "articulations": ["accent"]
+            },
+            {
+              "bar": 3,
+              "beat": 0.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 3,
+              "beat": 1,
+              "beats": 0.45
+            },
+            {
+              "bar": 3,
+              "beat": 1.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 3,
+              "beat": 2,
+              "beats": 0.45
+            },
+            {
+              "bar": 3,
+              "beat": 2.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 3,
+              "beat": 3,
+              "beats": 0.45
+            },
+            {
+              "bar": 3,
+              "beat": 3.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 4,
+              "beat": 0,
+              "beats": 0.45,
+              "articulations": ["accent"]
+            },
+            {
+              "bar": 4,
+              "beat": 0.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 4,
+              "beat": 1,
+              "beats": 0.45
+            },
+            {
+              "bar": 4,
+              "beat": 1.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 4,
+              "beat": 2,
+              "beats": 0.45
+            },
+            {
+              "bar": 4,
+              "beat": 2.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 4,
+              "beat": 3,
+              "beats": 0.45
+            },
+            {
+              "bar": 4,
+              "beat": 3.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 5,
+              "beat": 0,
+              "beats": 0.45,
+              "articulations": ["accent"]
+            },
+            {
+              "bar": 5,
+              "beat": 0.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 5,
+              "beat": 1,
+              "beats": 0.45
+            },
+            {
+              "bar": 5,
+              "beat": 1.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 5,
+              "beat": 2,
+              "beats": 0.45
+            },
+            {
+              "bar": 5,
+              "beat": 2.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 5,
+              "beat": 3,
+              "beats": 0.45
+            },
+            {
+              "bar": 5,
+              "beat": 3.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 6,
+              "beat": 0,
+              "beats": 0.45,
+              "articulations": ["accent"]
+            },
+            {
+              "bar": 6,
+              "beat": 0.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 6,
+              "beat": 1,
+              "beats": 0.45
+            },
+            {
+              "bar": 6,
+              "beat": 1.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 6,
+              "beat": 2,
+              "beats": 0.45
+            },
+            {
+              "bar": 6,
+              "beat": 2.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 6,
+              "beat": 3,
+              "beats": 0.45
+            },
+            {
+              "bar": 6,
+              "beat": 3.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 7,
+              "beat": 0,
+              "beats": 0.45,
+              "articulations": ["accent"]
+            },
+            {
+              "bar": 7,
+              "beat": 0.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 7,
+              "beat": 1,
+              "beats": 0.45
+            },
+            {
+              "bar": 7,
+              "beat": 1.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 7,
+              "beat": 2,
+              "beats": 0.45
+            },
+            {
+              "bar": 7,
+              "beat": 2.5,
+              "beats": 0.45
+            },
+            {
+              "bar": 7,
+              "beat": 3,
+              "beats": 0.45
+            },
+            {
+              "bar": 7,
+              "beat": 3.5,
+              "beats": 0.45
+            }
+          ]
+        },
+        {
+          "lane": "lead",
+          "source": "motif",
+          "motif": "theme",
+          "transforms": [],
+          "beats": 1,
+          "placements": [
+            {
+              "bar": 0,
+              "beat": 0
+            },
+            {
+              "bar": 4,
+              "beat": 0
+            }
+          ]
+        },
+        {
+          "lane": "lead",
+          "source": "motif",
+          "motif": "theme",
+          "transforms": [
+            {
+              "op": "transpose",
+              "degrees": 2
+            }
+          ],
+          "beats": 1,
+          "placements": [
+            {
+              "bar": 2,
+              "beat": 0
+            },
+            {
+              "bar": 6,
+              "beat": 0
+            }
+          ]
+        },
+        {
+          "lane": "drums",
+          "source": "pattern",
+          "chain": [
+            {
+              "pattern": "beat",
+              "repeat": 2
+            },
+            {
+              "pattern": "beat",
+              "variation": "push"
+            }
+          ],
+          "loop": true,
+          "fill": {
+            "pattern": "fill",
+            "every": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "outro",
+      "role": "outro",
+      "bars": [10, 12],
+      "targetEnergy": 0.55,
+      "lanes": ["lead", "bass", "arp", "drums"],
+      "harmony": {
+        "voicing": {
+          "voices": 3,
+          "spread": "close",
+          "register": [57, 81],
+          "maxMovement": 12
+        },
+        "chords": [
+          {
+            "bar": 0,
+            "beat": 0,
+            "beats": 4,
+            "degree": 6,
+            "quality": "triad"
+          },
+          {
+            "bar": 1,
+            "beat": 0,
+            "beats": 4,
+            "degree": 1,
+            "quality": "triad"
+          }
+        ]
+      },
+      "parts": [
+        {
+          "lane": "arp",
+          "source": "chord",
+          "rhythm": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "beats": 3.75
+            },
+            {
+              "bar": 1,
+              "beat": 0,
+              "beats": 3.9
+            }
+          ]
+        },
+        {
+          "lane": "bass",
+          "source": "chord",
+          "voices": [0],
+          "rhythm": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "beats": 1.5
+            },
+            {
+              "bar": 0,
+              "beat": 2,
+              "beats": 1.5
+            },
+            {
+              "bar": 1,
+              "beat": 0,
+              "beats": 3.5,
+              "articulations": ["accent"]
+            }
+          ]
+        },
+        {
+          "lane": "lead",
+          "source": "motif",
+          "motif": "theme",
+          "transforms": [
+            {
+              "op": "fragment",
+              "from": 5,
+              "count": 5
+            }
+          ],
+          "beats": 1,
+          "placements": [
+            {
+              "bar": 0,
+              "beat": 0
+            }
+          ]
+        },
+        {
+          "lane": "drums",
+          "source": "pattern",
+          "chain": [
+            {
+              "pattern": "beat"
+            },
+            {
+              "pattern": "ending"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "power",
+      "role": "peak",
+      "bars": [12, 13],
+      "targetEnergy": 0.45,
+      "lanes": ["lead", "drums"],
+      "parts": [
+        {
+          "lane": "lead",
+          "source": "pattern",
+          "chain": [
+            {
+              "pattern": "powerup"
+            }
+          ]
+        },
+        {
+          "lane": "drums",
+          "source": "pattern",
+          "chain": [
+            {
+              "pattern": "roll"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "id": "intro",
+      "kind": "intro",
+      "bars": [0, 2]
+    },
+    {
+      "id": "body",
+      "kind": "loop",
+      "bars": [2, 10]
+    },
+    {
+      "id": "ending",
+      "kind": "outro",
+      "bars": [10, 12]
+    },
+    {
+      "id": "power-up",
+      "kind": "stinger",
+      "bars": [12, 13],
+      "align": "beat",
+      "gainDb": -4
+    }
+  ],
+  "transitions": [
+    {
+      "id": "to-power",
+      "kind": "stinger",
+      "seconds": 0.05,
+      "cue": "power-up"
+    }
+  ],
+  "mastering": {
+    "integratedLufs": -15
+  }
+}

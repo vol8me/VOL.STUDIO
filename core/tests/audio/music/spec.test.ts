@@ -182,9 +182,12 @@ describe('MusicAssetSpecV1', () => {
       'crossfade',
       'fade-stop',
       'playlist-gap',
+      'stinger',
     ]);
-    expect(MUSIC_RUNTIME_CAPABILITIES.stingers).toBe(false);
+    expect(MUSIC_RUNTIME_CAPABILITIES.cues).toEqual(['intro', 'outro', 'stinger', 'transition']);
+    expect(MUSIC_RUNTIME_CAPABILITIES.stingers).toBe('bar-or-beat');
     expect(MUSIC_RUNTIME_CAPABILITIES.sectionJump).toBe(false);
+    expect(MUSIC_RUNTIME_CAPABILITIES.tempoChange).toBe(false);
   });
 });
 

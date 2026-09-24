@@ -79,3 +79,50 @@ export function checkStemSync(
       : `gecikme ${lag} örnek, kare farkı ${frameDelta}`,
   };
 }
+
+/**
+ * Loop dikişi: çözülmüş asset döngüye girerken son örnekten ilk örneğe
+ * geçiş, sinyalin kendi komşu-örnek adımlarından BÜYÜK olmamalı. Kodek
+ * kenarında bir süreksizlik her turda tık olarak duyulur; hiza denetimi
+ * (gecikme, kare sayısı) onu yakalamaz.
+ */
+export interface LoopSeamCheckV1 {
+  readonly id: string;
+  /** Dikişteki en büyük adım (kanallar arası). */
+  readonly jump: number;
+  /** Sinyalin komşu-örnek adımlarının %99.9 yüzdeliği. */
+  readonly typicalStep: number;
+  readonly ok: boolean;
+  readonly detail: string;
+}
+
+/** Dikiş adımı tipik adımın bu katını aşarsa süreksizlik sayılır. */
+export const SEAM_STEP_FACTOR = 2;
+const SEAM_FLOOR = 1e-4;
+
+function stepPercentile(channel: Float32Array, fraction: number): number {
+  const steps = new Float32Array(Math.max(0, channel.length - 1));
+  for (let i = 1; i < channel.length; i++) steps[i - 1] = Math.abs(channel[i] - channel[i - 1]);
+  steps.sort();
+  return steps.length ? steps[Math.min(steps.length - 1, Math.floor(fraction * steps.length))] : 0;
+}
+
+export function checkLoopSeam(id: string, decoded: readonly Float32Array[]): LoopSeamCheckV1 {
+  let jump = 0;
+  let typical = 0;
+  for (const channel of decoded) {
+    if (channel.length < 2) continue;
+    jump = Math.max(jump, Math.abs(channel[0] - channel[channel.length - 1]));
+    typical = Math.max(typical, stepPercentile(channel, 0.999));
+  }
+  const ok = jump <= Math.max(typical * SEAM_STEP_FACTOR, SEAM_FLOOR);
+  return {
+    id,
+    jump: Number(jump.toFixed(6)),
+    typicalStep: Number(typical.toFixed(6)),
+    ok,
+    detail: ok
+      ? `dikiş sürekli (adım ${jump.toFixed(4)} ≤ ${SEAM_STEP_FACTOR}×${typical.toFixed(4)})`
+      : `dikişte süreksizlik: adım ${jump.toFixed(4)}, tipik ${typical.toFixed(4)}`,
+  };
+}

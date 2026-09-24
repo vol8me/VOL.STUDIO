@@ -1,7 +1,11 @@
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read';
 import { validateChord, validateVoicing } from './harmony';
+import { checkExpression } from './articulation';
+import { LOCAL_INSTRUMENT_PREFIX } from './instrumentDefinition';
 import { presetOf } from './instruments';
+import { checkRole } from './orchestration';
+import { validatePatternPart, type PatternV1 } from './pattern';
 import { validateTransform } from './motif';
 import {
   MAX_BARS,
@@ -11,7 +15,7 @@ import {
   type RhythmStepV1,
   type SectionV1,
 } from './programTypes';
-import { noteToMidi } from './tonal';
+import { parseNote } from './tuning';
 import {
   ARTICULATIONS,
   METER_UNITS,
@@ -45,15 +49,35 @@ export function checkMeter(value: unknown, path: string): [number, number] {
   return [checkNumber(meter[0], `${path}[0]`, { min: 1, max: 32, integer: true }), unit];
 }
 
+/** Şerit enstrümanı: yerleşik `preset:<ad>` ya da programın `inst:<kimlik>` tanımı. */
+export function checkInstrumentId(value: unknown, path: string, local: readonly string[]): string {
+  const instrument = checkText(value, path, 80);
+  if (instrument.startsWith(LOCAL_INSTRUMENT_PREFIX)) {
+    if (!local.includes(instrument.slice(LOCAL_INSTRUMENT_PREFIX.length))) {
+      throw new AudioParamError(
+        path,
+        'unknown-id',
+        'programın `instruments` listesinde yok',
+        instrument,
+      );
+    }
+    return instrument;
+  }
+  presetOf(instrument, path);
+  return instrument;
+}
+
 export function checkLane(
   value: unknown,
   path: string,
   stems: readonly string[],
   grooves: readonly string[],
+  instruments: readonly string[] = [],
 ): LaneV1 {
   const o = checkObject(value, path, [
     'id',
     'instrument',
+    'role',
     'stem',
     'pan',
     'gain',
@@ -61,8 +85,11 @@ export function checkLane(
     'articulation',
     'octave',
   ]);
-  const instrument = checkText(o.instrument, `${path}.instrument`, 80);
-  presetOf(instrument, `${path}.instrument`);
+  const instrument =
+    o.instrument === undefined
+      ? undefined
+      : checkInstrumentId(o.instrument, `${path}.instrument`, instruments);
+  const role = o.role === undefined ? undefined : checkRole(o.role, `${path}.role`);
   const stem = checkPattern(o.stem, `${path}.stem`, MUSIC_KEY);
   if (!stems.includes(stem)) {
     throw new AudioParamError(`${path}.stem`, 'unknown-id', 'tanımlı bir stem olmalı', stem);
@@ -78,7 +105,8 @@ export function checkLane(
       : checkChoice(o.articulation, `${path}.articulation`, ARTICULATIONS);
   return {
     id: checkPattern(o.id, `${path}.id`, MUSIC_KEY),
-    instrument,
+    ...(instrument === undefined ? {} : { instrument }),
+    ...(role === undefined ? {} : { role }),
     stem,
     ...(o.pan === undefined ? {} : { pan: checkNumber(o.pan, `${path}.pan`, { min: -1, max: 1 }) }),
     ...(o.gain === undefined
@@ -98,7 +126,14 @@ function checkRhythm(value: unknown, path: string): RhythmStepV1[] {
     throw new AudioParamError(path, 'range', `1–${MAX_EVENTS_PER_PART} adım`, steps.length);
   }
   return steps.map((raw, i) => {
-    const s = checkObject(raw, `${path}[${i}]`, ['bar', 'beat', 'beats', 'gain']);
+    const s = checkObject(raw, `${path}[${i}]`, [
+      'bar',
+      'beat',
+      'beats',
+      'gain',
+      'velocity',
+      'articulations',
+    ]);
     return {
       bar: checkNumber(s.bar, `${path}[${i}].bar`, { min: 0, max: MAX_BARS, integer: true }),
       beat: checkNumber(s.beat, `${path}[${i}].beat`, { min: 0, max: 64 }),
@@ -106,6 +141,7 @@ function checkRhythm(value: unknown, path: string): RhythmStepV1[] {
       ...(s.gain === undefined
         ? {}
         : { gain: checkNumber(s.gain, `${path}[${i}].gain`, { above: 0, max: 4 }) }),
+      ...checkExpression(s, `${path}[${i}]`),
     };
   });
 }
@@ -115,6 +151,7 @@ function checkPart(
   path: string,
   lanes: readonly string[],
   motifs: readonly string[],
+  patterns: readonly PatternV1[],
 ): PartV1 {
   const head = checkObject(value, path, [
     'lane',
@@ -126,12 +163,25 @@ function checkPart(
     'placements',
     'beats',
     'notes',
+    'chain',
+    'loop',
+    'fill',
+    'bar',
   ]);
   const lane = checkPattern(head.lane, `${path}.lane`, MUSIC_KEY);
   if (!lanes.includes(lane)) {
     throw new AudioParamError(`${path}.lane`, 'unknown-id', 'tanımlı bir şerit olmalı', lane);
   }
-  const source = checkChoice(head.source, `${path}.source`, ['chord', 'motif', 'notes'] as const);
+  const source = checkChoice(head.source, `${path}.source`, [
+    'chord',
+    'motif',
+    'notes',
+    'pattern',
+  ] as const);
+  if (source === 'pattern') {
+    const o = checkObject(value, path, ['lane', 'source', 'chain', 'loop', 'fill', 'bar']);
+    return { lane, source, ...validatePatternPart(o, path, patterns) };
+  }
   if (source === 'chord') {
     const o = checkObject(value, path, ['lane', 'source', 'rhythm', 'voices']);
     return {
@@ -208,9 +258,17 @@ function checkPart(
     lane,
     source,
     notes: notes.map((raw, i) => {
-      const n = checkObject(raw, `${path}.notes[${i}]`, ['bar', 'beat', 'beats', 'note', 'gain']);
-      const note = checkText(n.note, `${path}.notes[${i}].note`, 8);
-      noteToMidi(note, `${path}.notes[${i}].note`);
+      const n = checkObject(raw, `${path}.notes[${i}]`, [
+        'bar',
+        'beat',
+        'beats',
+        'note',
+        'gain',
+        'velocity',
+        'articulations',
+      ]);
+      const note = checkText(n.note, `${path}.notes[${i}].note`, 16);
+      parseNote(note, `${path}.notes[${i}].note`);
       return {
         bar: checkNumber(n.bar, `${path}.notes[${i}].bar`, {
           min: 0,
@@ -223,6 +281,7 @@ function checkPart(
         ...(n.gain === undefined
           ? {}
           : { gain: checkNumber(n.gain, `${path}.notes[${i}].gain`, { above: 0, max: 4 }) }),
+        ...checkExpression(n, `${path}.notes[${i}]`),
       };
     }),
   };
@@ -231,7 +290,12 @@ function checkPart(
 export function checkSection(
   value: unknown,
   path: string,
-  context: { lanes: readonly string[]; motifs: readonly string[]; bars: number },
+  context: {
+    lanes: readonly string[];
+    motifs: readonly string[];
+    bars: number;
+    patterns?: readonly PatternV1[];
+  },
 ): SectionV1 {
   const o = checkObject(value, path, [
     'id',
@@ -270,7 +334,7 @@ export function checkSection(
   if (lanes.length === 0)
     throw new AudioParamError(`${path}.lanes`, 'range', 'en az bir aktif şerit', 0);
   const parts = checkArray(o.parts, `${path}.parts`).map((p, i) =>
-    checkPart(p, `${path}.parts[${i}]`, lanes, context.motifs),
+    checkPart(p, `${path}.parts[${i}]`, lanes, context.motifs, context.patterns ?? []),
   );
   const harmony =
     o.harmony === undefined

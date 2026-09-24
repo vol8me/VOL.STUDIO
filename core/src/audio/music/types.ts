@@ -69,6 +69,26 @@ export interface Stem {
   gainMap?: StemGainMap;
 }
 
+/**
+ * Parçaya bağlı tek seferlik ses: giriş (intro), bitiş (outro), vurgu
+ * (stinger) ya da geçiş. Loop'a karışmaz; kendi kaynağından bir kez çalar
+ * ve kuyruğu doğal olarak söner.
+ */
+export interface MusicCue {
+  id: string;
+  src?: string;
+  buffer?: AudioBuffer;
+  /**
+   * Müzikal uzunluk (ölçü). Giriş bitince loop, geçiş bitince hedef parça bu
+   * kadar ölçü sonra başlar; dosyadaki kuyruk bu sınırı aşabilir.
+   */
+  bars: number;
+  /** Temel gain (0-1). Varsayılan 1. */
+  gain?: number;
+  /** Stinger/geçiş hizası: sonraki ölçü (varsayılan) ya da sonraki vuruş. */
+  align?: 'bar' | 'beat';
+}
+
 /** Müzik parçası tanımı. */
 export interface MusicTrack {
   id: string;
@@ -82,6 +102,12 @@ export interface MusicTrack {
   loopEnd?: number;
   /** Parçanın stem'leri. */
   stems: Stem[];
+  /** Loop'tan önce bir kez çalan giriş; stem'ler onun `bars` kadar sonrasında başlar. */
+  intro?: MusicCue;
+  /** `playOutro()` ile ölçü sınırında loop'un yerine çalan bitiş. */
+  outro?: MusicCue;
+  /** Loop üstüne çalınan vurgular ve parçadan parçaya geçiş cue'ları. */
+  cues?: MusicCue[];
   /** Track başladığında kullanılacak varsayılan state. */
   defaultState?: MusicState;
 }
@@ -134,6 +160,21 @@ export interface PlayOptions {
 export interface StopOptions {
   /** Durdurmadan önceki fade out (saniye). */
   fadeOut?: number;
+}
+
+/** `playStinger()` çağrısı seçenekleri. */
+export interface StingerOptions {
+  /** Hizalama: cue'nun kendi hizası (varsayılan), `now` hemen. */
+  align?: 'bar' | 'beat' | 'now';
+  /** Cue gain'inin çarpanı (0-1). Varsayılan 1. */
+  gain?: number;
+}
+
+/** `transitionTo()` çağrısı seçenekleri. */
+export interface TransitionOptions {
+  /** Çalan parçanın geçiş cue'su; hedef onun `bars` kadar sonrasında başlar. */
+  cue: string;
+  state?: MusicState;
 }
 
 /** `crossfadeTo()` çağrısı seçenekleri. */
