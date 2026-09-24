@@ -6,15 +6,15 @@ kırar ya da — daha kötüsü — testlerinizin sessizce hiç koşmamasına yo
 
 ## Zorunlu
 
-| Ne                                                           | Neden / hangi kapı                                                                   |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `workspace-lifecycle.json` \u2192 `active` kaydı             | Paket repo varlığı ile rutin kalite kapı kapsamını bağlar (`workspaceLifecycle.mjs`) |
-| `package.json` \u2192 `typecheck`, `test`, `test:coverage`   | `scripts/workspace-contract.mjs` üçünü de arar (`REQUIRED_SCRIPTS`)                  |
-| `vitest.config.ts`                                           | `test:coverage` varsa workspace-contract config dosyasını da ister                   |
-| `quality.json` \u2192 paket adı altında kapsam eşikleri      | Eşikler `floor`un altına inemez; muafiyetin gerekçesi yazılı olmalı                  |
-| `tsconfig.json`, `vite.config.ts`, `index.html`              | Build ve typecheck kapıları                                                          |
-| `vite.config.ts` + `vitest.config.ts` \u2192 `coreAliases()` | CORE alt yolları elle yazılmaz; alias sızıntı testi bunu sınar                       |
-| `src/i18n/tr.json` + `en.json` ve bir `keyParity` testi      | Kullanıcıya görünen metin hard-code edilmez                                          |
+| Ne                                                      | Neden / hangi kapı                                                                   |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `workspace-lifecycle.json` → `active` kaydı             | Paket repo varlığı ile rutin kalite kapı kapsamını bağlar (`workspaceLifecycle.mjs`) |
+| `package.json` → `typecheck`, `test`, `test:coverage`   | `scripts/workspace-contract.mjs` üçünü de arar (`REQUIRED_SCRIPTS`)                  |
+| `vitest.config.ts`                                      | `test:coverage` varsa workspace-contract config dosyasını da ister                   |
+| `quality.json` → paket adı altında kapsam eşikleri      | Eşikler `floor`un altına inemez; muafiyetin gerekçesi yazılı olmalı                  |
+| `tsconfig.json`, `vite.config.ts`, `index.html`         | Build ve typecheck kapıları                                                          |
+| `vite.config.ts` + `vitest.config.ts` → `coreAliases()` | CORE alt yolları elle yazılmaz; alias sızıntı testi bunu sınar                       |
+| `src/i18n/tr.json` + `en.json` ve bir `keyParity` testi | Kullanıcıya görünen metin hard-code edilmez                                          |
 
 ## Sınırlar ve Yaşam Döngüsü
 
@@ -54,12 +54,12 @@ kırar ya da — daha kötüsü — testlerinizin sessizce hiç koşmamasına yo
 
 **Otomatik DEĞİLDİR:**
 
-- `quality.json` \u2192 `bundles` altına paket girdisi eklenmezse bundle boyutu
+- `quality.json` → `bundles` altına paket girdisi eklenmezse bundle boyutu
   ölçülmez.
-- `quality.json` \u2192 `scaling.<paket>.$measure` benchmark betiğini, argümanlarını
+- `quality.json` → `scaling.<paket>.$measure` benchmark betiğini, argümanlarını
   ve rapordaki seri/alan adlarını taşır; tarif olmadan bütçe "ölçülemedi" sayılır.
   Oran anahtarı girdilerini kendi adında taşır: `fxParts72Over18` = 72 girdideki
-  süre \u00f7 18 girdideki süre.
+  süre ÷ 18 girdideki süre.
 
 **Geliştirme portu seçerken çakışmayı kapı sınar** (`scripts/quality/devPorts.mjs`):
 iki AYRI paket aynı portu bildiremez. Kendi preview portunuzla kendi e2e portunuz

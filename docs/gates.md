@@ -4,12 +4,12 @@ Tüm monorepo `pnpm quick` (pre-commit), `pnpm high` (pre-push) ve `pnpm signoff
 (sürüm/milestone) olmak üzere üç kademeli kapıyla korunur. Kapılar `justfile`
 içinde tanımlıdır; `just` yüklü değilse `pnpm exec just <tarif>` çalışır.
 
-| Kapı      | Süre   | Ne zaman çalışır | Kapsamı                                                                      |
-| --------- | ------ | ---------------- | ---------------------------------------------------------------------------- |
-| `quick`   | ~45 sn | Pre-commit hook  | `contract` + `format-check` + `typecheck` + `lint`                           |
-| `fast`    | ~1 dk  | Yerel geliştirme | `quick` + `test`                                                             |
-| `high`    | ~2 dk  | Pre-push hook    | `quick` + `rust` + `lint-css` + `coverage` + `build` + `bundle` + `e2e`      |
-| `signoff` | ~5 dk  | Sürüm öncesi     | `high` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust` |
+| Kapı      | Süre   | Ne zaman çalışır | Kapsamı                                                                                                |
+| --------- | ------ | ---------------- | ------------------------------------------------------------------------------------------------------ |
+| `quick`   | ~45 sn | Pre-commit hook  | `contract` + `format-check` + `typecheck` + `lint`                                                     |
+| `fast`    | ~1 dk  | Yerel geliştirme | `quick` + `test`                                                                                       |
+| `high`    | ~2 dk  | Pre-push hook    | `quick` + `rust` + `lint-css` + `coverage` + `coverage-shape` + `build` + `bundle` + `scaling` + `e2e` |
+| `signoff` | 20 dk+ | Sürüm öncesi     | `high` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`                           |
 
 ## Workspace yaşam döngüsü (Lifecycle Governance)
 
@@ -55,30 +55,30 @@ Bu kapılar `justfile` içinde paketleri elle saymaz: `runActive.mjs`
 workspace'i `pnpm list` ile bulur ve `workspace-lifecycle.json`'da `active`
 olanlara filtreler — workspace üyeliği ≠ rutin kalite hedefidir.
 
-| Kapı        | Nasıl bulur                     | Yeni paket için gereken                                |
-| ----------- | ------------------------------- | ------------------------------------------------------ |
-| `typecheck` | `scripts/quality/runActive.mjs` | `package.json` \u2192 `scripts.typecheck`              |
-| `build`     | `scripts/quality/runActive.mjs` | `package.json` \u2192 `scripts.build` (`--if-present`) |
-| `test`      | `scripts/quality/runActive.mjs` | `package.json` \u2192 `scripts.test` (`--if-present`)  |
-| `e2e`       | `scripts/quality/runActive.mjs` | `package.json` \u2192 `scripts['test:e2e']`            |
+| Kapı        | Nasıl bulur                     | Yeni paket için gereken                           |
+| ----------- | ------------------------------- | ------------------------------------------------- |
+| `typecheck` | `scripts/quality/runActive.mjs` | `package.json` → `scripts.typecheck`              |
+| `build`     | `scripts/quality/runActive.mjs` | `package.json` → `scripts.build` (`--if-present`) |
+| `test`      | `scripts/quality/runActive.mjs` | `package.json` → `scripts.test` (`--if-present`)  |
+| `e2e`       | `scripts/quality/runActive.mjs` | `package.json` → `scripts['test:e2e']`            |
 
 Şunlar **otomatik DEĞİLDİR**, yeni paket eklenince kök yapılandırmaya elle
 yazılır:
 
-| Kapı      | Nereye yazılır                  | Yazılmazsa ne olur     |
-| --------- | ------------------------------- | ---------------------- |
-| `bundle`  | `quality.json` \u2192 `bundles` | Bundle boyutu ölçülmez |
-| `scaling` | `quality.json` \u2192 `scaling` | Ölçekleme bütçelenemez |
+| Kapı      | Nereye yazılır             | Yazılmazsa ne olur     |
+| --------- | -------------------------- | ---------------------- |
+| `bundle`  | `quality.json` → `bundles` | Bundle boyutu ölçülmez |
+| `scaling` | `quality.json` → `scaling` | Ölçekleme bütçelenemez |
 
 `scaling` geneldir: bütçe yazan paket ölçüm tarifini de yazar
-(`quality.json` \u2192 `scaling.<paket>.$measure`). Ölçülemeyen bütçe geçerli
+(`quality.json` → `scaling.<paket>.$measure`). Ölçülemeyen bütçe geçerli
 sayılmaz.
 
 **Modül döngüsü kapılıdır.** `scripts/quality/moduleCycles.mjs` her paketin
 İÇİNDEKİ dosya grafiğini kurar ve döngüyü reddeder. `layers.mjs` de döngü arar
 ama grafiğini PAKET adlarından kurar; bir paketin içindeki dosya döngüsü ona
 görünmezdi ve ölçüldü — `vol-hell` içinde
-`AudioSettings \u2192 settingsPersistence \u2192 services \u2192 AudioSettings` döngüsü repoya
+`AudioSettings → settingsPersistence → services → AudioSettings` döngüsü repoya
 girdi, yaşadı ve hiçbir kapı ses çıkarmadı.
 
 Yalnız ÇALIŞMA ZAMANINDA kalan import'lar sayılır: `import type` ve tümü `type`
@@ -99,19 +99,19 @@ Paylaşılan native runtime ve aktif uygulama kabukları ürünün parçasıdır
 **Kapsamın şekli kapılıdır.** Paket ortalaması yükün nerede olduğunu söylemez:
 `vol-hell` %84 raporlarken `GameScene.ts` %0'daydı. `coverage-shape`, 100
 satırın üstünde ve %50'nin altında kalan dosyadan ya test ya da kanıtlı gerekçe
-ister (`quality.json` \u2192 `coverageShape.acknowledged`). Kanıt bir test
+ister (`quality.json` → `coverageShape.acknowledged`). Kanıt bir test
 dosyasıdır; bekçi var olduğunu ve modülü adıyla andığını doğrular. Serbest
 metin gerekçelerin üçü bir dönem koda karşı yanlış çıkmıştı.
 
 Şekil yalnız TAZE veriyi okur. `scripts/quality/coverageRun.mjs` ölçülecek
-paketleri `quality.json` \u2192 `coverageRuns`tan alır ve neyi ne zaman ölçtüğünü
+paketleri `quality.json` → `coverageRuns`tan alır ve neyi ne zaman ölçtüğünü
 kaydeder; kapı kaydı olmayan, yarım kalan ya da koşudan eski bir lcov'u
 değerlendirmez. `high` audio-synth'i ölçmediği için onun şekline de karar
 vermez; o paket `coverage-audio` ile `signoff`ta değerlendirilir.
 
 **Cihaz ölçümünün kapsamı kapılıdır.** Ölçülecek uygulamalar elle tutulan bir
 listeden değil, `deviceApps.mjs` içindeki `deviceBenchmarkCandidates` keşfinden
-türer: `active` workspace + `src-tauri/tauri.conf.json` = aday. Bekçi
+türer: `active` workspace + `<paket>/src-tauri/tauri.conf.json` = aday. Bekçi
 benchmark betiğinin bu keşfi kullandığını ve keşfin gerçek ağaçla birebir
 örtüştüğünü kilitler — frozen kabuklar aday olamaz; aktif kabuk yoksa ölçüm
 doğrulanmış no-op'tur ve `adb`'ye hiç dokunulmaz.
@@ -179,7 +179,7 @@ kaynak kodda import edilemez (örneğin yerel bir debug yardımcısı).
 
 **Blob boyutu kapılıdır.** `scripts/quality/blobSize.mjs` Git ağacındaki her
 dosyanın boyutunu denetler; 2 MiB üstündeki ikili dosyalar depoya giremez.
-İstisnalar `quality.json` \u2192 `blobSize.acknowledged` alanına yazılır.
+İstisnalar `quality.json` → `blobSize.acknowledged` alanına yazılır.
 
 **Cargo.lock paritesi kapılıdır.** Monorepo'da her uygulama kendi `src-tauri`
 ağacına sahiptir; `tauri-v2` bağımsız bir native kütüphanedir ve her aktif
@@ -227,20 +227,22 @@ Sözleşmenin doğruladığı diğer şeyler:
 
 ## Belge de kapılanır
 
-Yanlış belge derlenmez, test edilmez, kimse fark etmez. CORE belge kapısı bunu
+Yanlış belge derlenmez, test edilmez, kimse fark etmez. Belge kapıları bunu
 kırar:
 
-| Kapı                                       | Bağladığı şey                                        |
-| ------------------------------------------ | ---------------------------------------------------- |
-| `core/tests/governance/docSymbols.test.ts` | `core/docs/*.md` sembolleri \u2192 CORE yüzeyi       |
-| aynı dosya                                 | `music-engine.md` API tablosu \u2192 sınıf metotları |
+| Kapı                                                          | Bağladığı şey                                                                                                                                     |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/tests/governance/docSymbols.test.ts`                    | `core/docs/*.md` sembolleri → CORE yüzeyi                                                                                                         |
+| aynı dosya                                                    | `music-engine.md` API tablosu → sınıf metotları                                                                                                   |
+| `devtools/audio-synth/tests/governance/docReferences.test.ts` | audio-synth README, DESIGN ve TODO'daki yollar ve betik adları → gerçek ağaç                                                                      |
+| `scripts/quality/tests/agentDocs.test.mjs`                    | `AGENTS.md`, `CLAUDE.md`, `devtools/pen.dev/AGENTS.md` ve bu belgedeki yollar, komutlar ve birleşik kapı bileşimleri → izlenen ağaç ve `justfile` |
 
 Her birinin ters yönü de kapılıdır: ölü bir muafiyet ya da belgede olmayan bir
 `kind` de kapıyı kırar.
 
 ## Piksel temeli TAM paneli çeker
 
-Sekme paneli kendi kaydırıcısıdır (`.vol-tabs__panels` \u2192 `overflow: auto`) ve
+Sekme paneli kendi kaydırıcısıdır (`.vol-tabs__panels` → `overflow: auto`) ve
 Playwright iç içe bir kaydırıcının görünmeyen kısmını çekemez; kalanı siyah
 dolgu yapar. Ölçüldü: temellerin içeriği her sekmede ~715. satırda bitiyordu,
 `advanced` sekmesinin %79'u boştu ve `hud` sekmesinin on yedi kartından yalnız

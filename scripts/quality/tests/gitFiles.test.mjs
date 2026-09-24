@@ -72,12 +72,17 @@ test('repo ignore sözleşmesi sırları ve üretilen çıktıları kapsar, kayn
     'games/vol-arachnid/src-tauri/gen/apple/project.pbxproj',
     'games/vol-hell/src-tauri/gen/apple/project.pbxproj',
     'games/vol-arachnid/src-tauri/gen/android/app/build/output.apk',
+    '.claude/arastirma/rapor.jsonl',
+    'graphify-out/graph.json',
   ];
   const kept = [
     'games/vol-arachnid/DESIGN.md',
     'games/vol-arachnid/src/i18n/tr.json',
     'games/vol-arachnid/public/assets/example.ogg',
     'games/vol-arachnid/src-tauri/gen/android/app/src/main/AndroidManifest.xml',
+    'AGENTS.md',
+    'CLAUDE.md',
+    'devtools/pen.dev/AGENTS.md',
   ];
 
   for (const path of ignored) assert.equal(isIgnored(path), true, `${path} ignore edilmeli`);

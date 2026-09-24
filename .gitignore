@@ -1,14 +1,5 @@
-# Local-only files
-#
-# `AGENTS.md` agent yönergesidir; BİLİNÇLİ olarak gönderilmez.
-AGENTS.md
-**/AGENTS.md
-
-# `CLAUDE.md` Claude Code'a özgü oturum belleğidir; AGENTS.md'nin damıtılmışı
-# + Claude'a özel ek pratikler. Aynı gerekçeyle BİLİNÇLİ olarak gönderilmez.
-CLAUDE.md
-**/CLAUDE.md
-
+# Claude Code'un yerel çalışma dizini: oturum ayarları ve yerel araştırma
+# çıktısı. `AGENTS.md` ve `CLAUDE.md` ise depo sözleşmesidir ve izlenir.
 .claude/
 
 # Secrets / credentials — asla commit edilmez
