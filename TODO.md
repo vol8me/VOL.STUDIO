@@ -25,23 +25,126 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sinde.
       kanıtı yapılamıyor. Çözüm: farklı Android 16 imajı (`default`/`android-36`)
       denemek, Cuttlefish kurmak (root gerekir) veya Android 16 büyük ekranlı
       fiziksel cihaz bulmak.
-- [ ] **[P1] Steam Deck Verified — platform altyapısı ve uyumluluk hazırlığı.**
-      Valve Steam Deck Verified (Yeşil Onay Rozeti) standartları aktif platform
-      çalışmalarında (`core`, `tauri-v2`, jenerik cihaz/deployment araçları, `vol-ui`
-      yeterlilik vitrini ve gelecekteki aktif oyunlar) karşılanır:
-      _ **Girdi:** HTML5 Gamepad API üzerinden tam XInput kontrolcü desteği;
-      gamepad bağlıyken arayüzde asla klavye/fare glifi göstermeme (`core/src/ui/primitives/Glyph`);
-      metin kutuları için sanal klavye köprüsü (`ShowFloatingGamepadTextInput`).
-      _ **Ekran & Tipografi:** 1280×800 (16:10) yerel çözünürlük desteği;
-      1280×800'de hiçbir metin 9 pikselin altına düşemez (repo geneli CSS/yönetişim testi).
-      _ **Linux & Gamescope:** Jenerik Linux AppImage dağıtım hattında DMA-BUF ve
-      Wayland/X11 Gamescope oturum yönetim kurallarının genel platform standardı hâline getirilmesi.
-      _ **Güç & Suspend:** Konsol uykuya alınıp uyandırıldığında (suspend/resume)
-      `audioContext.resume()` ve WebGL context restore mekanizmasının generic platformda garanti edilmesi.
-      \_ **Frozen Ürün Sözleşmesi:** Frozen `vol-hell` ve `vol-arachnid` oyunları
-      mevcut HEAD'de kaynak değişikliğine tabi tutulmaz; yalnızca freeze tag'i üzerinden
-      referans/smoke doğrulaması olarak kalır. Kaynak düzeyinde Steam Deck adaptasyonu
-      ancak explicit lifecycle reactivation ile mümkündür.
+
+### Steam Deck ve Valve donanım ailesi
+
+Ölçümler, kök nedenler ve kararlar: [docs/steam-deck.md](docs/steam-deck.md).
+Sıra D0 → D8'dir ve audio-synth kapanışından sonra başlar. Frozen oyun
+ağaçları ancak lifecycle yeniden aktifleştirmesiyle değişir (D7).
+
+- [ ] **[P1] D0 — Deck'te insan eliyle açık ölçümler.** Gamepad API eşlemesi
+      ve sanal kol yuvası ↔ Gamepad sırası, arka tuşlar, trackpad ve
+      dokunmatik olay türleri, Steam ve Quick Access düğmesinin odak
+      olayları, uyku-uyanma (rAF, AudioContext, saat), Steam "Oyundan çık"
+      sinyal sırası ve süresi, kap içinden evdev titreşimi, 60 ve 30 FPS'te
+      pil gücü. Kapanır: her sonuç tarih ve cihazla `docs/steam-deck.md`nin
+      ölçülmüş bölümlerine taşınır; "Açık ölçümler"de yalnız eldeki cihazla
+      ölçülemeyenler kalır.
+- [ ] **[P1] D1 — Linux derlemesi steamrt4 SDK kabında.** Rust ikilisi ve
+      paketleme sürümü sabitlenmiş steamrt4 SDK imajında (podman), ön yüz
+      host'ta derlenir; çıktı FUSE'süz çalışan AppDir'dir. Grafik sürücü
+      kütüphaneleri pakete girmez; GStreamer medya zinciri kap çıktısında
+      gerçek bir OGG ile sınanır; `linux.AppRun` ürün adını yapılandırmadan
+      türetir. `build-linux-appimage.mjs`nin host derlemesi bu hatta geçer.
+      Kapanır: paketteki hiçbir ELF `GLIBC_2.41` üstü sürüm istemez ve bunu
+      bir bekçi testi zorlar; AppDir SteamOS host'unda ve Steam Linux Runtime
+      4.0'da açılıp OGG çalar.
+- [ ] **[P1] D1 — `deck:*` otomasyonu ve kalıcı ölçüm sondası.** mDNS keşfi
+      (sabit IP yok); devkit sözleşmesiyle yükleme ve Steam kaydı (oyun
+      kimliği deseni, `argv[0]` kuralı, ortam için başlatıcı betik);
+      başlatma; `gamescopectl` ekran görüntüsü; LAN üzerinden Diagnostics ile
+      kare süresi, CPU ve pil ölçümü; `steamos-delete` ile temizlik. Adaylar
+      lifecycle'dan keşfedilir, frozen reddedilir. Ölçüm sondası (WebGL
+      fazları, Gamepad, ses, yaşam döngüsü) repoda devtool olur ve ortamı
+      izin listesiyle okur. Kapı değil, referans ölçümdür. Kapanır: tek komut
+      derler, yükler, başlatır, ölçer ve ekran görüntüsü alır; ölçüm sürümlü
+      kayda yazılır; komut sözleşmeleri testlidir.
+- [ ] **[P1] D2 — `tauri-v2` Linux WebView kuralı gamescope'u bilir.**
+      Gamescope oturumunda `WEBKIT_FORCE_VBLANK_TIMER=1` verilir ve DMA-BUF
+      çizicisi açık kalır; NVIDIA kuralı korunur; dışarıdan verilen değişken
+      ezilmez; kabuk gamescope oturumunu JS'e yetenek olarak bildirir.
+      Kapanır: kural tablosu birim testlidir; aktif oyun Deck'te 1280×800'de
+      ≥ 59 FPS ve p95 ≤ 18 ms ölçülür; NVIDIA masaüstü ölçümü gerilemez;
+      `docs/android.md` ve `docs/steam-deck.md` tabloları günceldir.
+- [ ] **[P1] D2 — Atomik kayıt ve kapanışta boşaltma.** `tauri-v2` atomik
+      yazıcı: geçici dosya → `fsync` → `rename` → dizin `fsync`, önceki nesil
+      yedek, bozuk kayıtta yedeğe dönüş ve rapor; `TauriStoreAdapter` onu
+      kullanır. SIGTERM/SIGINT/SIGHUP ve logind `PrepareForSleep` gecikme
+      kilidi bir boşaltma olayı üretir; `core` bekleyen yazıları süre sınırı
+      içinde boşaltıp onaylar. Kapanır: yazmanın ortasında SIGKILL enjekte
+      eden test kaydı bozamaz; SIGTERM ve uyku yollarında son değer diske
+      ulaşır ve bu Deck'te ölçülür.
+- [ ] **[P1] D2 — `core` kalıcılığında `synced` / `device` kapsamı.** İlerleme
+      ile cihaz ayarları (grafik, pencere, cihaz sesi) ayrı dosyalarda; Steam
+      Cloud yalnız `synced` dizinini eşitler; veri dizini oyuna özgü
+      kimlikten türer. Kapanır: kapsamsız anahtar derlenmez; tek dosyalı eski
+      kayıttan iki kapsama kayıpsız ve yedekli geçiş testlidir.
+- [ ] **[P2] D2 — Uykudan dönüşte zaman güvenliği.** Uyanışta `Date.now()`
+      sıçraması ve uzun kare aralığı simülasyonu, bekleme sürelerini ve
+      otomatik kaydı bozmaz; oyun uyanınca duraklatılmış döner. Kapanır: saat
+      sıçraması birim testlidir; Deck'te uyku-uyanma turu ölçülür.
+- [ ] **[P1] D3 — `core` gamepad sağlayıcısı ve girdi kipi politikası.**
+      Standart eşleme, ölü bölge, analog hareket ve nişan; eylem → düğme bağı
+      veridir. Son anlamlı girdi histerezisle kazanır; fare ve çubuk nişanı
+      birikir, biri ötekini kilitlemez; Deck'te ilk kareden kol kipi.
+      `InputManager`'ın "dokunmatik önce" kuralı bu politikaya taşınır.
+      Kapanır: sağlayıcı ve politika birim testlidir; vol-ui'de canlı
+      gösterilir; hiçbir ayar değiştirilmeden kolla oyun başlar.
+- [ ] **[P1] D3 — Kolla arayüz gezinmesi.** D-pad ve çubukla uzamsal odak,
+      A etkinleştirir; Android geri, Escape ve kolun B'si tek geri yığınını
+      paylaşır; Menu duraklatır; L1/R1 sekme değiştirir; odak halkası yalnız
+      kol ve klavye kipinde görünür; modal ve sheet odak tuzaklarıyla
+      uyumludur. Kapanır: vol-ui vitrinindeki her etkileşimli bileşen sanal
+      Gamepad'li E2E'de yalnız kolla kullanılır.
+- [ ] **[P1] D4 — Glif sistemi.** `core` `Glyph` bileşeni ve aile
+      çözümleyici: Steamworks → `SteamVirtualGamepadInfo` köprüsü →
+      `Gamepad.id` → `SteamDeck=1` → Xbox. Aileler: Xbox, PlayStation,
+      Nintendo, Valve (Deck ve Steam Controller; L1/R1 adlandırması), klavye,
+      fare. Varlıklar CC0 kaynaklıdır ve kaynak kaydı tutulur; logo ve Valve
+      partner çizimi depoya girmez. Kapanır: glif etkin girdiyle eşleşir ve
+      girdi değişince değişir, kol kipinde klavye/fare glifi görünmez (E2E);
+      vol-ui vitrini ve README sekme tablosu günceldir.
+- [ ] **[P2] D4 — Linux'ta titreşimin native yolu.** `tauri-v2` haptik
+      sürücüsü: Steamworks varsa Steam Input titreşimi, yoksa sanal kola
+      evdev force-feedback; WebKit ≥ 2.54 paketlenince tarayıcı yolu
+      kendiliğinden öne geçer. Kapanır: `core` haptik desenleri Deck'te
+      hissedilir ve ölçülür; titreşim ayarı Deck'te sunulur.
+- [ ] **[P1] D5 — Okunabilirlik ve ölçek kapısı.** Playwright WebKit
+      projesinde 1280×800 ve 1280×720'de görünen her metin ≥ 12 px;
+      1920×1080 ve 3840×2160'ta oturma mesafesine göre UI ölçeği; kapsam
+      `core` bileşenleri ve aktif oyunlar. Kapanır: kapı `high`da koşar ve
+      ihlali dosya ve seçiciyle bildirir; mevcut ihlaller giderilmiştir.
+- [ ] **[P2] D5 — Kolla metin girişi.** `core` metin girişi isteği sözleşmesi;
+      Steamworks varsa kayan klavye, yoksa `core`'un yalnız kolla kullanılan,
+      Türkçe karakterli ekran klavyesi. Kapanır: `Input` ve `TextArea` kol
+      kipinde odaklanınca klavye kendiliğinden açılır; vol-ui vitrinindedir.
+- [ ] **[P2] D5 — Gamescope altında görüntü ayarları.** Pencere kipi ve
+      çözünürlük seçenekleri gamescope oturumunda sunulmaz; Deck'in
+      varsayılan grafik kalitesi `device` kapsamında tutulur. Kapanır: Deck'te
+      ayar ekranında etkisiz seçenek yoktur; ilk açılışta hiçbir ayarı
+      değiştirmek gerekmez.
+- [ ] **[P2] D6 — İsteğe bağlı Steamworks katmanı.** `tauri-v2` eklentisi
+      (`steamworks` crate): Steam Input aksiyon seti ve aksiyon manifesti,
+      glif yolu, Deck algılama, kayan klavye, overlay açılınca duraklatma,
+      uyanma bildirimi, Steam Cloud. Oyun başına açılır; SDK ikilisi depoya
+      girmez; geliştirme App ID'si 480'dir. Kapanır: eklentili ve eklentisiz
+      iki yapılandırma testlidir; eklentisiz oyun Deck kriterlerini yine
+      karşılar; gerçek App ID ile Deck'te Steam Input glifleri ve kayan
+      klavye görülür.
+- [ ] **[P1] D7 — VOL.HELL Deck referansı: yeniden aktifleştir, kabul et,
+      yeniden dondur.** Lifecycle prosedürüyle aktifleşir; oyuna özgü kimlik
+      ve kayıt geçişi; kayıt kapsamları; duraklatma Menu'de, nişan sağ
+      çubukta, bütün ekranlar kolla gezilir. Kapanır: Steam Linux Runtime
+      4.0'da hiçbir ayar değiştirilmeden baştan sona kolla oynanır; 60 FPS
+      hedefi ölçüm kaydıyla karşılanır; Verified kriterleri madde madde
+      işaretlenir; kullanıcı onayıyla yeni annotated freeze etiketi atılır.
+- [ ] **[P2] D8 — Yeni oyun rehberi Deck listesini taşır.**
+      `games/docs/new-game.md`: oyuna özgü kimlik, kayıt kapsamları, kol
+      eylem bağları, glif, `deck:*` adaylığı, okunabilirlik kapısı. Kapanır:
+      rehberdeki her Deck maddesi onu zorlayan kapıya bağlıdır.
+- [ ] **[P3] OLED Deck ve Steam Machine'de kare zamanlaması.** 90 Hz panelde
+      ve TV çıkışında vblank zamanlayıcısı kuralı ölçülür. Kapanır: cihaz
+      bulunduğunda ölçüm `docs/steam-deck.md`ye girer.
 
 ## Kapatılanlar
 

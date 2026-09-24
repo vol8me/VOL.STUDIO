@@ -92,6 +92,11 @@ reddeder** — yeniden paketleme gerekiyorsa `freezeTag` worktree'sinde yapılı
 HEAD'de değil. Rutin bir kapıya bağlı değildir; aktif bir Tauri uygulaması
 doğduğunda aynı komut onun için çalışır.
 
+Host'ta üretilen paket host'un glibc'sine bağlanır. Fedora 44'te (glibc 2.43)
+üretilen AppImage, SteamOS'ta (glibc 2.41) açılmaz. Steam Deck ve Steam
+dağıtımı için derleme steamrt4 SDK kabında yapılır; ayrıntı
+[steam-deck.md](steam-deck.md#dağıtım-yolu).
+
 ### WebView çizim yolu
 
 Paylaşılan kabuk (`configure_linux_webview`) WebView yaratılmadan önce çizim
@@ -117,3 +122,8 @@ Wayland'e çevirir. AppImage bu kurala girer: Wayland oturumunda `GDK_BACKEND`
 görmeden `WEBKIT_DISABLE_DMABUF_RENDERER=0` ve
 `__NV_DISABLE_EXPLICIT_SYNC=1` ile çalışır; `GDK_BACKEND=x11` verilerek
 XWayland yoluna da çizdirilebilir.
+
+Gamescope oturumu (Steam Deck) bu tablonun dışındadır. Kural orada çiziciyi
+kapatır; Deck'te bu yol aynı kare hızında yaklaşık 2,5 kat CPU harcadı. Kare
+temposunu belirleyen de çizici değil, WebKit'in vblank izleyicisiydi. Gamescope
+ölçümü ve kuralı: [steam-deck.md](steam-deck.md#çizim-ve-kare-zamanlaması).

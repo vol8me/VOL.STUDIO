@@ -3,7 +3,7 @@
 Tauri v2 + Phaser 4 oyun runtime'ı ile web tabanlı geliştirici araçlarını aynı
 çalışma alanında buluşturan çapraz platform monorepo.
 
-[English](README.en.md) · [Kalite kapıları](docs/gates.md) · [Android](docs/android.md)
+[English](README.en.md) · [Kalite kapıları](docs/gates.md) · [Android](docs/android.md) · [Steam Deck](docs/steam-deck.md)
 
 ## Yığın
 
@@ -51,6 +51,7 @@ ne yaptığı için [docs/gates.md](docs/gates.md). Tüm tarifler:
 | CORE primitifleri, i18n, ses      | [core/docs](core/docs)                                       |
 | Phaser sınırı: katman mı motor mu | [core/docs/phaser-boundary.md](core/docs/phaser-boundary.md) |
 | Yeni oyun paketi eklemek          | [games/docs/new-game.md](games/docs/new-game.md)             |
+| Steam Deck: ölçüm ve kararlar     | [docs/steam-deck.md](docs/steam-deck.md)                     |
 | İş listesi (açık ve kapatılan)    | [TODO.md](TODO.md)                                           |
 
 ## Lisans

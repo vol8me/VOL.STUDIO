@@ -3,7 +3,7 @@
 Cross-platform monorepo bringing a Tauri v2 + Phaser 4 game runtime and
 web-based developer tools into one workspace.
 
-[Türkçe](README.md) · [Quality gates](docs/gates.md) · [Android](docs/android.md)
+[Türkçe](README.md) · [Quality gates](docs/gates.md) · [Android](docs/android.md) · [Steam Deck](docs/steam-deck.md)
 
 ## Stack
 
@@ -45,12 +45,13 @@ do in [docs/gates.md](docs/gates.md). Every recipe: `pnpm exec just --list`.
 
 ## Where to look
 
-| Topic                            | Location                                                     |
-| -------------------------------- | ------------------------------------------------------------ |
-| CORE primitives, i18n, audio     | [core/docs](core/docs)                                       |
-| Phaser boundary: layer or engine | [core/docs/phaser-boundary.md](core/docs/phaser-boundary.md) |
-| Adding a new game package        | [games/docs/new-game.md](games/docs/new-game.md)             |
-| Work list (open and closed)      | [TODO.md](TODO.md)                                           |
+| Topic                               | Location                                                     |
+| ----------------------------------- | ------------------------------------------------------------ |
+| CORE primitives, i18n, audio        | [core/docs](core/docs)                                       |
+| Phaser boundary: layer or engine    | [core/docs/phaser-boundary.md](core/docs/phaser-boundary.md) |
+| Adding a new game package           | [games/docs/new-game.md](games/docs/new-game.md)             |
+| Steam Deck: measurements, decisions | [docs/steam-deck.md](docs/steam-deck.md)                     |
+| Work list (open and closed)         | [TODO.md](TODO.md)                                           |
 
 ## License
 
