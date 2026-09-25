@@ -27,6 +27,7 @@ import {
   CANARY_SCHEMA,
   canaryReviews,
 } from './canary';
+import { QUALITY_MATRIX_SCHEMA } from './capabilities';
 import { deliveryContext } from './contextDelivery';
 import { familyContext } from './contextFamily';
 import { soundDesignContext } from './contextSound';
@@ -186,6 +187,12 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
         review: `${CLI} benchmark review <id> --status pending-human|heard-acceptable|heard-problem --note <metin> --by human`,
       },
       rule: 'Görev kriterleri gerçek davranışı ayırt eder (diğer görevlerin render’ını reddeder); dinleme durumu yalnız insan beyanıyla değişir.',
+    },
+    capabilities: {
+      schema: QUALITY_MATRIX_SCHEMA,
+      command: `${CLI} capabilities [--json] [--from-report <rapor.json>]`,
+      levels: ['production-ready', 'canary', 'regressed', 'research', 'pipeline', 'unsupported'],
+      rule: 'Seviye görev/canary kaydından türetilir; registry’de sağlayıcı bulunması kanıt değildir. "production-ready" mekanik düzeydir, insan dinleme onayı ayrı sütundadır.',
     },
     registry: { hash: hashCanonical(registry), entries: registry },
     policy: { assetClasses: ASSET_CLASS_POLICIES, renderBudget: DEFAULT_RENDER_BUDGET },

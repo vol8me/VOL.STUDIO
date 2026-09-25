@@ -48,6 +48,10 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 - `benchmarks/` — 14 yetenek görevi (canary'nin kardeş şeması; parça,
   kategori, kodek/QA kriterleri ve dinleme rehberi): `audio:job benchmark
 list|run [--audition] [--json]|review` — 19 canary + görevler tek raporda
+- `audio:capabilities` — ontoloji mekanizmalarının kanıtlanmış kalite
+  matrisi (`QualityMatrixV1`): seviye görev/canary kaydından türetilir,
+  "primitive mevcut" sayılmaz; `production-ready` mekanik düzeydir, insan
+  dinleme onayı ayrı sütundadır
 - `reference/production/` — referans fixture'ların yayımlanan asset'leri,
   manifest'leri, aile bank'ı ve müzik bundle'ları
 - `render-surface.lock.json` — registry render yüzeyi kilidi

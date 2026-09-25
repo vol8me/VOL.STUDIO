@@ -5,10 +5,15 @@
  */
 import {
   benchmarkReviews,
+  BENCHMARK_REPORT_SCHEMA,
   loadBenchmarkTasks,
   ProtocolError,
+  qualityMatrix,
+  readJsonFile,
   recordBenchmarkReview,
+  resolveInside,
   runBenchmarks,
+  type BenchmarkReportV1,
   type BenchmarkReviewStatus,
 } from '../../src/protocol';
 import { positional, print, required, text, type Parsed } from './args';
@@ -86,4 +91,56 @@ export function runBenchmarkCommand(parsed: Parsed, repoRoot: string): number {
       console.log('benchmark alt komutları: list | run | review (bkz. context --json)');
       return 1;
   }
+}
+
+/**
+ * `audio:job capabilities` — kalite matrisi. Varsayılan olarak taze
+ * `runBenchmarks` koşusu yapar; `--from-report <dosya>` kayıtlı bir
+ * BenchmarkReportV1'i yeniden render etmeden okur. `regressed` satırı
+ * varsa çıkış kodu 1'dir (kanıtlı mekanizma şu an düşüyor demektir).
+ */
+export function runCapabilitiesCommand(parsed: Parsed, repoRoot: string): number {
+  const from = text(parsed.flags, 'from-report');
+  let report: BenchmarkReportV1;
+  if (from !== undefined) {
+    const raw = readJsonFile(resolveInside(repoRoot, from, '--from-report'), '--from-report') as {
+      schema?: unknown;
+    };
+    if (raw.schema !== BENCHMARK_REPORT_SCHEMA) {
+      throw new ProtocolError('invalid', `--from-report ${BENCHMARK_REPORT_SCHEMA} bekler`, from);
+    }
+    report = raw as unknown as BenchmarkReportV1;
+  } else {
+    report = runBenchmarks(repoRoot, {});
+  }
+  const matrix = qualityMatrix(repoRoot, report);
+  if (parsed.flags.has('json')) {
+    print(matrix);
+  } else {
+    const order = [
+      'production-ready',
+      'canary',
+      'regressed',
+      'research',
+      'pipeline',
+      'unsupported',
+    ] as const;
+    for (const level of order) {
+      const rows = matrix.rows.filter((r) => r.level === level);
+      if (rows.length === 0) continue;
+      console.log(`${level} (${rows.length})`);
+      for (const r of rows) {
+        const evidence = r.evidence
+          .map(
+            (e) => `${e.pass ? '✓' : '✗'} ${e.kind === 'benchmark' ? 'görev' : 'canary'}:${e.id}`,
+          )
+          .join('  ');
+        console.log(`  ${r.mechanism.padEnd(18)} dinleme: ${r.listening.padEnd(16)} ${evidence}`);
+      }
+    }
+    console.log(
+      `Seviyeler mekanik kanıttan türetilir; "production-ready" estetik onay demek değildir (dinleme sütununa bakın).`,
+    );
+  }
+  return matrix.rows.some((r) => r.level === 'regressed') ? 1 : 0;
 }

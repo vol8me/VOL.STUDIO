@@ -66,6 +66,15 @@ export type {
   BenchmarkTaskV1,
   CheckOutcomeV1,
 } from './benchmark';
+export { deriveQualityMatrix, QUALITY_MATRIX_SCHEMA, qualityMatrix } from './capabilities';
+export type {
+  CapabilityEvidenceV1,
+  CapabilityLevel,
+  CapabilityListening,
+  CapabilityRowV1,
+  QualityMatrixInput,
+  QualityMatrixV1,
+} from './capabilities';
 export { buildContext, CONTEXT_SCHEMA } from './context';
 export type { ContextOptions } from './context';
 export { ProtocolError } from './errors';

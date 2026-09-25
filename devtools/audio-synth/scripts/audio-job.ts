@@ -36,7 +36,7 @@ import {
   text,
   type Parsed,
 } from './lib/args';
-import { runBenchmarkCommand } from './lib/benchmarkCommands';
+import { runBenchmarkCommand, runCapabilitiesCommand } from './lib/benchmarkCommands';
 import { runCanaryCommand } from './lib/canaryCommands';
 import { runFamilyCommand } from './lib/familyCommands';
 import { runMusicCommand } from './lib/musicCommands';
@@ -169,6 +169,8 @@ function runCommand(parsed: Parsed, repoRoot: string): number {
       return runCanaryCommand(parsed, repoRoot);
     case 'benchmark':
       return runBenchmarkCommand(parsed, repoRoot);
+    case 'capabilities':
+      return runCapabilitiesCommand(parsed, repoRoot);
     case 'family':
       return runFamilyCommand(parsed, repoRoot);
     case 'music':

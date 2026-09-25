@@ -706,6 +706,28 @@ durumu `benchmarks/reviews.json` (`BenchmarkReviewsV1`) içindedir, hepsi
 `pending-human`dır ve yalnız `benchmark review … --by human` ile değişir;
 görev sürümü artınca inceleme bayatlar.
 
+### Kalite matrisi (`audio:capabilities`)
+
+`QualityMatrixV1`, ontolojinin 31 mekanizmasının her biri için motorun
+KANITLANMIŞ seviyesini döker — registry'de sağlayıcı bulunması kanıt
+değildir. Kapsam elle yazılmış tablodan değil kayıttan türetilir: görev ya
+da canary, kaynak programında mekanizmanın `providers` kimliğini (ya da
+katman `mechanism` etiketini, ya da müzikte `pipeline:MusicProgramV1`'i)
+kullanıyorsa o mekanizmanın kanıtıdır; yeni görev ya da sağlayıcı matrise
+kendiliğinden düşer.
+
+Seviyeler: `production-ready` = geçen benchmark kanıtı; `canary` = yalnız
+geçen canary kanıtı; `regressed` = kanıt var ama tamamı düşüyor (komut
+çıkış kodu 1); `research` = sağlayıcı var, render kanıtı yok; `pipeline` =
+ayrı üretim hattı kanıtsız; `unsupported` = sağlayıcısız. İnsan dinleme
+durumu kanıt kayıtlarından toplanıp ayrı sütunda taşınır — mekanik seviye
+estetik onay demek değildir. `audio:job capabilities` taze rapor koşar;
+`--from-report <repo-göreli rapor.json>` kayıtlı `BenchmarkReportV1`'i
+render etmeden okur. Bugünkü taban (koşuyla doğrulanmış): 24
+production-ready, 3 canary (`vocal`, `fire`, `sampled`), 2 research
+(`tail`, `space` — hiçbir görev reverb/delay bus'ı kullanmıyor), 2
+unsupported (`speech`, `doppler-motion`).
+
 ### Dinleme aracı
 
 `search audition <id>` adayları programlarından yeniden render eder (PCM
