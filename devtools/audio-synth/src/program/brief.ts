@@ -1,6 +1,8 @@
 import type { AssetClass } from '../analysis/assetQa';
+import { layoutProblem, placementOf, PLACEMENTS, type Placement } from '../analysis/layout';
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
+import { STATE_AXES, type StateAxis } from '../family/vocabulary';
 import { checkMusicBrief, MUSIC_BRIEF_KEYS, type MusicBriefV1 } from '../music/brief';
 import { materialById } from './materials';
 import { mechanismById } from './ontology';
@@ -37,6 +39,16 @@ export interface AcousticBriefV1 extends BriefEnvelopeV1 {
   readonly assetClass: Exclude<AssetClass, 'music'>;
   readonly durationSeconds: { readonly min: number; readonly max: number };
   readonly channels: 1 | 2;
+  /**
+   * Çalınış biçimi (`analysis/layout.ts`); yazılmazsa sınıfın varsayılanı.
+   * Kanal sayısı yerleşimin izin verdiği sayılardan biri olmalıdır.
+   */
+  readonly placement?: Placement;
+  /**
+   * Açık oyun durumu anlamı (`family/vocabulary.ts` sıralı eksenleri): bu
+   * asset hangi durumu temsil ediyor. Tüketici domain nesnesini buna eşler.
+   */
+  readonly state?: Readonly<Partial<Record<StateAxis, string>>>;
   /** Serbest betimleyici etiketler (ör. `wet`, `short-tail`); DSP'ye çevrilmez. */
   readonly descriptors?: readonly string[];
   readonly loop?: boolean;
@@ -66,6 +78,15 @@ function checkProvenance(value: unknown): BriefProvenanceV1 {
   return o.by === undefined ? { author } : { author, by: checkText(o.by, 'provenance.by', 200) };
 }
 
+function checkState(value: unknown): Partial<Record<StateAxis, string>> {
+  const o = checkObject(value, 'state', Object.keys(STATE_AXES));
+  const axes = Object.keys(o).sort() as StateAxis[];
+  if (axes.length === 0) throw new AudioParamError('state', 'range', 'en az bir durum ekseni', 0);
+  return Object.fromEntries(
+    axes.map((axis) => [axis, checkChoice(o[axis], `state.${axis}`, STATE_AXES[axis])]),
+  );
+}
+
 function checkAcoustic(o: ParamObject, envelope: BriefEnvelopeV1): AcousticBriefV1 {
   const subtype = checkChoice(o.subtype, 'subtype', ['sfx', 'organic', 'ambience'] as const);
   const assetClass = checkChoice(o.assetClass, 'assetClass', ['ui', 'sfx', 'ambience'] as const);
@@ -75,6 +96,10 @@ function checkAcoustic(o: ParamObject, envelope: BriefEnvelopeV1): AcousticBrief
   if (o.channels !== 1 && o.channels !== 2) {
     throw new AudioParamError('channels', 'type', '1 ya da 2 olmalı', o.channels);
   }
+  const placement =
+    o.placement === undefined ? undefined : checkChoice(o.placement, 'placement', PLACEMENTS);
+  const layout = layoutProblem(assetClass, placementOf(assetClass, placement), o.channels);
+  if (layout) throw new AudioParamError('channels', 'combination', layout, o.channels);
   const descriptors =
     o.descriptors === undefined
       ? undefined
@@ -96,6 +121,7 @@ function checkAcoustic(o: ParamObject, envelope: BriefEnvelopeV1): AcousticBrief
   if (o.style !== undefined && !STYLE_PROFILES.some((p) => p.id === o.style)) {
     throw new AudioParamError('style', 'unknown-id', 'stil profili yok', o.style);
   }
+  const state = o.state === undefined ? undefined : checkState(o.state);
   if (o.material !== undefined && (typeof o.material !== 'string' || !materialById(o.material))) {
     throw new AudioParamError('material', 'unknown-id', 'materyal profili yok', o.material);
   }
@@ -106,6 +132,8 @@ function checkAcoustic(o: ParamObject, envelope: BriefEnvelopeV1): AcousticBrief
     assetClass,
     durationSeconds: { min, max },
     channels: o.channels,
+    ...(placement ? { placement } : {}),
+    ...(state ? { state } : {}),
     ...(descriptors ? { descriptors } : {}),
     ...(o.loop === undefined ? {} : { loop: o.loop }),
     ...(mechanisms ? { mechanisms } : {}),
@@ -120,6 +148,8 @@ const ACOUSTIC_KEYS = [
   'assetClass',
   'durationSeconds',
   'channels',
+  'placement',
+  'state',
   'descriptors',
   'loop',
   'mechanisms',

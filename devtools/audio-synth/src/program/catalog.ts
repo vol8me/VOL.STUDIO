@@ -9,6 +9,7 @@ import { MACHINE } from './primitives/machine';
 import { BLAST, PRESSURE_WAVE } from './primitives/pressure';
 import { SAMPLING } from './primitives/sampling';
 import { SFX_ARCHETYPES } from './primitives/sfxArchetypes';
+import { SPATIAL } from './primitives/spatial';
 import { ARCHETYPES } from './primitives/archetypes';
 import { WAVE1_PRIMITIVES } from './primitives/basic';
 import { CONTROLS } from './primitives/controls';
@@ -43,6 +44,7 @@ export const PROGRAM_REGISTRY = new Registry<ProgramEntry>([
   GLOTTAL,
   TUBE,
   ...PROCESSORS,
+  ...SPATIAL,
   CONTACT,
   PRESSURE_WAVE,
   BLAST,

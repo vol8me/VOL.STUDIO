@@ -1,0 +1,236 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -0.0005193522101031552
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 2,
+        "frames": 96000,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -2.8662713973025102
+        ],
+        "channelRmsDbfs": [
+          -12.872086182974458
+        ],
+        "crestFactorDb": 10.005814785671948,
+        "integratedLufs": -16.967604360437893,
+        "maxMomentaryLufs": -16.644345437973083,
+        "rmsDbfs": -12.872086182974458,
+        "samplePeakDbfs": -2.8662713973025102,
+        "truePeakDbtp": -2.865951454567451
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -58.79059157728715,
+          "high": -52.881956133313196,
+          "low": -20.569484433250764,
+          "mid": -28.515916417303583,
+          "sub": -13.877382559142362
+        },
+        "centroidHz": 99.16023345424449,
+        "flatness": 0.000003951113385918616,
+        "peakHz": 23.4375,
+        "rolloff85Hz": 164.0625
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 2,
+        "attackSeconds": 0.04,
+        "decay40Seconds": 0.36,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 1.63,
+        "temporalCentroidSeconds": 0.98631657828621,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:4b474ce52fbadee7bc6a6d0866ca89db5e251f4cca092caa3d6122115a6365a5"
+  },
+  "asset": {
+    "bytes": 28458,
+    "encodedHash": "sha256:14d4b86ad55a40a366d55fdae590cb59aad2b84fa88749e8dbebb9221019bb59",
+    "format": "ogg-vorbis",
+    "path": "devtools/audio-synth/reference/production/assets/sfx/families/reference-engine-states/idle.ogg"
+  },
+  "assetId": "reference-engine-states-idle",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "descriptors": [
+        "energy:idle",
+        "integrity:intact"
+      ],
+      "durationSeconds": {
+        "max": 2.5,
+        "min": 1.5
+      },
+      "id": "reference-engine-states-idle",
+      "intent": "Tek motor programından türeyen oyun durumu ailesi: enerji (rölanti, normal, yüksek devir) ve bütünlük (sağlam, hasarlı) sıralı eksenleri. Varyant idle (energy:idle, integrity:intact).",
+      "kind": "acoustic",
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "sound-family"
+      },
+      "schema": "AudioBriefV1",
+      "state": {
+        "energy": "idle",
+        "integrity": "intact"
+      },
+      "subtype": "sfx",
+      "title": "Referans motor durumları — idle"
+    },
+    "hash": "sha256:5fa33e3cd2d8b08e62bd815e39b9910dc4a91f84897117041dd290a012dbafb6",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:060f26f4dfd1fa0ba7212288b2dae964c6da674de752b5fe9fbcffc7be84e217",
+    "libraries": {
+      "libavcodec": "62.28.102",
+      "libavformat": "62.12.102",
+      "libavutil": "60.26.102"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:4995c93a1714f448fc486b3365eea0d041ecc778f26b7b5b30935a46ec028376",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "packageVersion": "0.1.0",
+    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
+    "renderSurface": {
+      "hash": "sha256:2379d26e30fa877c4d407bf0a3e857821df561f848d84c993bb5bb4289102fdb",
+      "nodes": [
+        {
+          "hash": "sha256:378e408dfec3d4bb8f618707b3f2427556203baa54b5a4100742edf14a2c0995",
+          "id": "source.machine",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 1,
+    "runtime": {
+      "node": "v22.23.1"
+    },
+    "sourceCommit": "8f0dd383e980e59123138a39163659cf61f73998",
+    "sourceTreeDirty": true
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/audio-synth",
+    "runtimeDeclaration": null,
+    "runtimeKey": "reference-engine-states/idle",
+    "targetKind": "reference"
+  },
+  "job": {
+    "jobId": "idle",
+    "path": "devtools/audio-synth/audio-families/reference-engine-states/jobs/idle",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "durationSeconds": 2,
+      "layers": [
+        {
+          "name": "engine",
+          "source": {
+            "params": {
+              "bearing": 0.035384,
+              "count": 4,
+              "harmonics": 24,
+              "imbalance": 0.038174,
+              "load": 0.173069,
+              "mechanism": "engine",
+              "noise": 0.0845488,
+              "rpm": 917.802,
+              "tilt": 0.45
+            },
+            "primitive": "source.machine",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "fadeInSeconds": 0.05,
+        "fadeOutSeconds": 0.1,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 21
+    },
+    "hash": "sha256:fdadd2f90968817233096b526b567741d934105df34928f779da39f1ffea8dac",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 96000,
+      "hash": "sha256:1473ce38dbf3aa1e0cfb57d65d22da56ac46f2940b9ab1e0582cee86dd90ee74",
+      "sampleRate": 48000
+    },
+    "renderId": "r-21c1fd09dac6302b",
+    "rendererVersion": 1,
+    "seed": 21
+  },
+  "schema": "AudioAssetManifestV1"
+}

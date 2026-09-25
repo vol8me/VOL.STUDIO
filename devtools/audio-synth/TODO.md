@@ -158,34 +158,10 @@ yayın kanıtı `audio-music/reference-arcade`.
 
 ### Dalga 12 — Oyun için teslim biçimleri
 
-- [ ] **[P2] Aynı source programdan near/mid/far ses varyantı
-      üretilebilsin.** Distance profile yalnız gain düşürmez; high-frequency
-      absorption, transient softening, direct/reverb relation ve
-      mono/stereo davranışını değiştirebilir. Kapanır: weapon/impact
-      fixture'ın near ve far varyantları aynı source kimliğini taşır fakat
-      ölçülen centroid/transient/directness beklenen yönde değişir.
-- [ ] **[P2] Occluded/behind-wall/underwater/radio vb. delivery
-      profile'ları kaynak sesten ayrı processing katmanı olsun.** Sound
-      designer her variantı elle baştan üretmez. Kapanır: aynı published
-      source'tan deterministic delivery variants çıkabilir ve provenance
-      source→profile ilişkisini tutar.
-- [ ] **[P2] Channel/layout policy asset türüne göre açık olsun.** UI ve
-      positional SFX mono source tercih edebilir; ambience/music stereo
-      olabilir; stereo widening mono compatibility'yi bozuyorsa QA görür.
-      Kapanır: publish profile mono/stereo beklentisini belirtir ve yanlış
-      channel count validation'da yakalanır.
-- [ ] **[P2] Encode profili asset sınıfına göre seçilsin.** Kısa UI/SFX,
-      ambience, music ve stem için aynı bitrate/quality körlemesine
-      kullanılmaz; decoded kalite ve paket boyutu birlikte baseline edilir.
-      Kapanır: encode quality policy machine-readable olur; değişiklik
-      boyut + decoded QA ölçümü olmadan yapılmaz.
-- [ ] **[P2] Gameplay-state ses aileleri tek programdan üretilebilsin.**
-      Weapon `normal/charged/damaged`, engine `idle/load/highRPM`, creature
-      `calm/alert/hurt`, UI `normal/warning/critical` gibi ilişkili
-      assetler ayrı rastgele presetler değil aynı family/program
-      identity'sinden türetilebilir. Kapanır: family varyantları ortak
-      timbral identity raporunu geçer ve her varyantın explicit gameplay
-      semantic'i manifest'te bulunur.
+Dalga 12'nin beş maddesi kapandı; kısa kanıtları `## Kapatılanlar`da,
+gerekçe ve ölçümler DESIGN "Teslim biçimleri (Dalga 12)". Uçtan uca yayın
+kanıtı `audio-jobs/reference-impact` + yedi teslim varyantı ve
+`audio-families/reference-engine-states`.
 
 ### Dalga 13 — Agent üretim hızını ve güvenilirliğini artırma
 
@@ -280,6 +256,39 @@ yayın kanıtı `audio-music/reference-arcade`.
       `auto` register kararı, yönlendirici görev bantları. Kanıt:
       `tests/music/orchestration.test.ts` — iki palette yazılı nota/armoni
       kimliği aynı, PCM farklı. (Dalga 11)
+- [x] **[P2] Kanal/yerleşim politikası asset türüne göre açık.**
+      `placement` (positional, screen, bed) sınıf başına izinli kanal
+      sayısını belirler; yanlış sayı brief doğrulamasında düşer. Stereo kodek
+      sonrası mono katlamaya dayanır (tavan 4 LU; referanslar 0.004–1.40 LU),
+      mono'ya izin verilen yerde dual-mono ihlaldir; manifest `layout`
+      kaydeder, verify yeniden sınar. Kanıt: `tests/protocol/layout.test.ts`.
+      (Dalga 12)
+- [x] **[P2] Encode profili asset sınıfına göre.** Vorbis kalitesi ölçülerek
+      seçildi (ui q6, sfx q7, ambience/music/stem q4; taban q4, düşürmek
+      dinleme ister); 22 öğelik korpusta q0–q10 bayt + kodek sonrası sadakat
+      taraması `encode-profiles.lock.json`da. Tablo ölçümden ayrışırsa
+      `audio:encode-baseline` kilidi yazmaz. Kanıt:
+      `tests/governance/encodeProfiles.test.ts` (seçilen kalitelerde ölçüm
+      yeniden üretilir). (Dalga 12)
+- [x] **[P2] Aynı kaynaktan near/mid/far varyantı.** Program `treatment`
+      katmanı + ISO 9613-1 hava soğurması (`effect.air-absorption`, ISO
+      9613-2 Tablo 2 ile doğrulandı) + atak, yansıma, genişlik; seviye
+      kaynağa göreli. Kanıt: `reference-impact` near/mid/far aynı kaynak
+      kimliğini taşır; centroid 1442/1368/1016 Hz, atak oranı
+      −7.22/−7.78/−9.20 dB, doğrudanlık −4.87/−7.46/−21.63 dB kodek sonrası
+      (`tests/protocol/deliveryReference.test.ts`). (Dalga 12)
+- [x] **[P2] Teslim profilleri kaynaktan ayrı işleme katmanı.** occluded,
+      behind-wall, underwater, radio (+ üç mesafe) `audio:job derive` ile
+      aynı yayımlanmış kaynaktan deterministik türer; manifest `derivation`
+      kaynağın program/PCM özetini ve profil kimliğini taşır, verify bağı
+      yeniden sınar. Kanıt: `tests/protocol/treatments.test.ts`,
+      `tests/program/treatment.test.ts`. (Dalga 12)
+- [x] **[P2] Oyun durumu aileleri tek programdan.** Sıralı genel eksenler
+      (`energy`, `urgency`, `integrity`); aile yön iddialarını kontrollü
+      çiftlerde ve ortak tını kimliğini (`timbre-envelope-v1`) ölçer;
+      varyant manifest'i yapılandırılmış `state` taşır. Kanıt:
+      `reference-engine-states` (kimlik 12.27 ≤ 13, yedi yabancı ses ≥ 13.9;
+      üç iddia ihlalsiz), `tests/family/states.test.ts`. (Dalga 12)
 - [x] **[P3] Tuning sistemi 12-TET'e gömülü değil.** `equal`, `cents`,
       `ratios` ve nota başına cent sapması. Kanıt:
       `tests/music/tuning.test.ts` — ayarsız yol `midiToHz` ile birebir, saf

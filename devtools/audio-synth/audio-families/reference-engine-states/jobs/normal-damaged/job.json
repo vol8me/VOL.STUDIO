@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-06ce021c544d4b90": {
+        "hash": "sha256:30cd50cb0f7d05b92b58796fd64ece9c1d4e628a046b70a20c623fe0589cc688",
+        "path": "analyses/r-06ce021c544d4b90.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:3b637cc2b384eedf197c099b9a66065b950f6288dbfc8f03f06f53648052c590",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:3b637cc2b384eedf197c099b9a66065b950f6288dbfc8f03f06f53648052c590",
+      "hash": "sha256:b0ea2cb385927da40c4314307bebe8c70563ac11a6cbefba9592331af9902579",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:250cca4312575b7f39f27f64da81f51ec907f4b60266091b044fdb1e237e38d8",
+      "path": "devtools/audio-synth/reference/production/manifests/sfx/families/reference-engine-states/normal-damaged.json"
+    },
+    "renders": {
+      "r-06ce021c544d4b90": {
+        "hash": "sha256:987cd2a21cf28041c0c115b5dc83f5c780a954f5259fe7973ced0dec2af538ee",
+        "path": "renders/r-06ce021c544d4b90.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:736b3e46dcee32a45812035879d82182aa1e7b5896643ed795d5c07eaa3cf6d0",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "normal-damaged",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/sfx/families/reference-engine-states/normal-damaged.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "reference-engine-states/normal-damaged"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

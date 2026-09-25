@@ -14,6 +14,13 @@ import {
   measurementOf,
   type AudioAnalysisReportV1,
 } from '../analysis/report';
+import {
+  layoutViolations,
+  LAYOUT_POLICY,
+  measureStereoImage,
+  placementOf,
+  type Placement,
+} from '../analysis/layout';
 import { validateBrief, type AudioBriefV1 } from '../program/brief';
 import { recordedInstrumentSurface } from '../music/instrumentResolve';
 import { instrumentRegistryHash } from '../music/instruments';
@@ -69,12 +76,10 @@ import { measureLoopSeam, type LoopSeamV1 } from '../analysis/seam';
 import { repoSampleResolver } from './samples';
 import { sameSources, sourcesOf } from './sources';
 import { jobStatus } from './status';
-import {
-  decodeWithFfmpeg,
-  OGG_ENCODER_SETTINGS,
-  readEncoderToolchain,
-  type EncoderToolchain,
-} from './toolchain';
+import { derivationCheck, derivationOf } from './derivation';
+import { ENCODE_POLICY, encodePolicyHash, encodeQualityOf } from './encodeProfiles';
+import { readOrigin } from './origin';
+import { decodeWithFfmpeg, readEncoderToolchain } from './toolchain';
 import { resolveDestination, surveyTargets, type ResolvedDestination } from './targets';
 
 const PACKAGE_NAME = '@volstudio/audio-synth';
@@ -139,8 +144,8 @@ interface EncodedCandidate {
 }
 
 /** Kodla → baytları özetle → FFmpeg ile ÇÖZ → kodek sonrası ölç. Dosya çağıranındır. */
-function encodeAndMeasure(file: string, rendered: KindRender): EncodedCandidate {
-  writeOgg(file, rendered, { quality: OGG_ENCODER_SETTINGS.quality });
+function encodeAndMeasure(file: string, rendered: KindRender, quality: number): EncodedCandidate {
+  writeOgg(file, rendered, { quality });
   const bytes = readFileSync(file);
   const decoded = decodeWithFfmpeg(file, 'staging');
   return {
@@ -150,6 +155,11 @@ function encodeAndMeasure(file: string, rendered: KindRender): EncodedCandidate 
     report: analyzeAudio(decoded.channels, decoded.sampleRate, 'decoded-encoded'),
     decoded,
   };
+}
+
+/** Akustik brief'in beyan ettiği ya da sınıf varsayılanı yerleşim; müzik her zaman zemin. */
+function placementFor(brief: AudioBriefV1, assetClass: AssetClass): Placement {
+  return brief.kind === 'acoustic' ? placementOf(assetClass, brief.placement) : 'bed';
 }
 
 /** Akustik loop asset'i kodek SONRASI dikiş QA'sından geçmeli; diğerlerinde ölçüm yok. */
@@ -302,12 +312,13 @@ export function publishJob(loc: JobLocation): PublishOutcome {
     const assetId = assetIdOf(job.kind, brief, programDocument);
     guardOverwrite(assetFile, manifestFile, assetId, job.jobId, destination.assetPath);
 
-    const toolchain = readEncoderToolchain();
+    const quality = encodeQualityOf(assetClass);
+    const toolchain = readEncoderToolchain(quality);
     const revision = sourceRevision(loc.repoRoot);
     mkdirSync(dirname(assetFile), { recursive: true });
     const staging = join(dirname(assetFile), `.tmp-publish-${process.pid}-${Date.now()}.ogg`);
     try {
-      const encoded = encodeAndMeasure(staging, rendered);
+      const encoded = encodeAndMeasure(staging, rendered, quality);
       const verdict = evaluateAssetPolicy(measurementOf(encoded.report), assetClass);
       if (verdict.violations.length > 0) {
         throw new ProtocolError(
@@ -316,6 +327,26 @@ export function publishJob(loc: JobLocation): PublishOutcome {
           destination.assetPath,
         );
       }
+      const placement = placementFor(brief, assetClass);
+      const image = measureStereoImage(encoded.decoded.channels, encoded.decoded.sampleRate);
+      const layoutIssues = layoutViolations(
+        assetClass,
+        placement,
+        encoded.decoded.channels.length,
+        image,
+      );
+      if (layoutIssues.length > 0) {
+        throw new ProtocolError(
+          'policy',
+          `kodek sonrası yerleşim (${placement}): ${layoutIssues.join('; ')}`,
+          destination.assetPath,
+        );
+      }
+      const origin = readOrigin(loc)?.source;
+      const derivation =
+        origin?.kind === 'treatment'
+          ? derivationOf(loc.repoRoot, programDocument, origin, encoded.decoded)
+          : null;
       const seam = loopSeamOf(brief, encoded.decoded);
       if (seam && !seam.pass) {
         throw new ProtocolError(
@@ -369,6 +400,7 @@ export function publishJob(loc: JobLocation): PublishOutcome {
           runtime: { node: process.version },
         },
         encoder: toolchain,
+        encoding: { scheme: ENCODE_POLICY.scheme, policyHash: encodePolicyHash(), quality },
         analysis: {
           analyzerVersion: ANALYZER_VERSION,
           sourceRecordHash: job.artifacts.analyses[record.renderId].hash,
@@ -387,8 +419,15 @@ export function publishJob(loc: JobLocation): PublishOutcome {
           loop: job.target.integration.loop,
           runtimeDeclaration: destination.target.runtime?.declaredIn ?? null,
         },
+        layout: {
+          scheme: LAYOUT_POLICY.scheme,
+          placement,
+          channels: encoded.decoded.channels.length,
+          image,
+        },
         ...(sources ? { sources } : {}),
         ...(seam ? { seam } : {}),
+        ...(derivation ? { derivation } : {}),
       };
       asProtocol('manifest', () => validateManifest(JSON.parse(canonicalJson(manifest))));
       renameSync(staging, assetFile);
@@ -442,6 +481,24 @@ function surfaceCheck(manifest: AudioAssetManifestV1, pcmSame: boolean): Verific
   };
 }
 
+/**
+ * Kayıtlı kodlama kalitesi sınıfın BUGÜNKÜ profiliyle aynı mı (bilgi).
+ * Yeniden üretim kayıtlı kaliteyle sınanır; profil değiştiyse ses de dosya
+ * da geçerlidir, yalnız yeniden yayın önerilir.
+ */
+function profileCheck(manifest: AudioAssetManifestV1): VerificationCheck {
+  const recorded = manifest.encoder.quality;
+  const current = encodeQualityOf(manifest.policy.assetClass);
+  return {
+    name: 'encode-profile',
+    ok: true,
+    detail:
+      recorded === current
+        ? `q${recorded} = ${manifest.policy.assetClass} profili`
+        : `${manifest.policy.assetClass} profili q${current}, kayıt q${recorded}: yeniden publish önerilir (bilgi)`,
+  };
+}
+
 function decodeOrNull(file: string, label: string) {
   try {
     return decodeWithFfmpeg(file, label);
@@ -481,14 +538,11 @@ export interface AssetVerificationV1 {
  * yeniden render edilir (PCM kimliği), repo'daki dosya çözülüp politikaya
  * tabi tutulur, güncel araç zinciriyle yeniden kodlanıp fark SINIFLANIR.
  */
-export function verifyManifest(
-  repoRoot: string,
-  manifestPath: string,
-  toolchain: EncoderToolchain = readEncoderToolchain(),
-): AssetVerificationV1 {
+export function verifyManifest(repoRoot: string, manifestPath: string): AssetVerificationV1 {
   const manifest = asProtocol(manifestPath, () =>
     validateManifest(readJsonFile(resolveInside(repoRoot, manifestPath, 'manifest'), manifestPath)),
   );
+  const toolchain = readEncoderToolchain(manifest.encoder.quality);
   const checks: VerificationCheck[] = [];
   const assetFile = resolveInside(repoRoot, manifest.asset.path, 'asset');
   const bytes = existsSync(assetFile) ? readFileSync(assetFile) : null;
@@ -527,6 +581,19 @@ export function verifyManifest(
       ok: true,
       detail: same ? 'kayıtla aynı' : 'çözücü çıktısı kayıttan farklı (bilgi)',
     });
+    if (manifest.layout) {
+      const issues = layoutViolations(
+        manifest.policy.assetClass,
+        manifest.layout.placement,
+        decoded.channels.length,
+        measureStereoImage(decoded.channels, decoded.sampleRate),
+      );
+      checks.push({
+        name: 'layout',
+        ok: issues.length === 0,
+        detail: issues.join('; ') || 'geçti',
+      });
+    }
     if (manifest.seam) {
       const seam = measureLoopSeam(decoded.channels, decoded.sampleRate);
       checks.push({
@@ -536,6 +603,8 @@ export function verifyManifest(
       });
     }
   }
+  const derivation = derivationCheck(repoRoot, manifest);
+  if (derivation) checks.push({ name: 'derivation', ...derivation });
   if (manifest.sources || kind === 'acoustic') {
     const current = sourcesOf(kind, manifest.program.document, repoRoot);
     if (manifest.sources || current) {
@@ -551,7 +620,7 @@ export function verifyManifest(
   const dir = mkdtempSync(join(tmpdir(), 'audio-verify-'));
   let encodedHash: Sha256;
   try {
-    encodedHash = encodeAndMeasure(join(dir, 'reencode.ogg'), rendered).hash;
+    encodedHash = encodeAndMeasure(join(dir, 'reencode.ogg'), rendered, toolchain.quality).hash;
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -562,6 +631,7 @@ export function verifyManifest(
   };
   const current = { pcmHash, encodedHash, encoderFingerprint: toolchain.fingerprint };
   const change = classifyAssetChange(recorded, current);
+  checks.push(profileCheck(manifest));
   checks.push({
     name: 'reproduction',
     ok: change === 'identical' || change === 'encoder-only',

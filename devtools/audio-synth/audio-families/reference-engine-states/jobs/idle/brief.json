@@ -1,0 +1,27 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "energy:idle",
+    "integrity:intact"
+  ],
+  "durationSeconds": {
+    "max": 2.5,
+    "min": 1.5
+  },
+  "id": "reference-engine-states-idle",
+  "intent": "Tek motor programından türeyen oyun durumu ailesi: enerji (rölanti, normal, yüksek devir) ve bütünlük (sağlam, hasarlı) sıralı eksenleri. Varyant idle (energy:idle, integrity:intact).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "state": {
+    "energy": "idle",
+    "integrity": "intact"
+  },
+  "subtype": "sfx",
+  "title": "Referans motor durumları — idle"
+}

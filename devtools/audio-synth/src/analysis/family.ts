@@ -1,5 +1,15 @@
 import { AudioParamError } from '../guard/errors';
 import { checkNumber, checkObject } from '../guard/read';
+import {
+  assessIdentity,
+  assessStateClaims,
+  validateIdentityPolicy,
+  validateStateClaims,
+  type FamilyIdentityPolicyV1,
+  type FamilyIdentityReportV1,
+  type StateClaimReportV1,
+  type StateClaimV1,
+} from './familyStates';
 import type { DescriptorSummaryV1 } from './summary';
 
 export const FAMILY_QUALITY_SCHEMA = 'SoundFamilyQualityReportV1';
@@ -38,6 +48,10 @@ export interface FamilyQualityPolicyV1 {
     readonly maxPitchRatio?: number;
     readonly maxLoudnessSpreadDb?: number;
   };
+  /** Oyun durumu ailesi: ortak tını kimliği eşiği (`familyStates.ts`). */
+  readonly identity?: FamilyIdentityPolicyV1;
+  /** Oyun durumu ailesi: sıralı eksenlerde ölçülen yön iddiaları. */
+  readonly states?: readonly StateClaimV1[];
 }
 
 export const DEFAULT_FAMILY_QUALITY_POLICY: FamilyQualityPolicyV1 = {
@@ -50,6 +64,10 @@ export interface FamilyMemberInput {
   readonly key: string;
   readonly pcmHash: string;
   readonly descriptors: DescriptorSummaryV1;
+  /** Varyantın rolleri (durum iddiaları için); yoksa boş. */
+  readonly roles?: Readonly<Record<string, string>>;
+  /** `timbre-envelope-v1` zarfı (kimlik raporu için). */
+  readonly timbre?: readonly number[] | null;
 }
 
 type CoherenceDescriptor = 'activeSeconds' | 'centroidHz' | 'maxMomentaryLufs' | 'pitchHz';
@@ -68,7 +86,9 @@ export type FamilyFailure =
   | 'collapsed'
   | 'near-identical'
   | 'outlier'
-  | 'ratio';
+  | 'ratio'
+  | 'identity'
+  | 'state-claim';
 
 export interface SoundFamilyQualityReportV1 {
   readonly schema: typeof FAMILY_QUALITY_SCHEMA;
@@ -106,6 +126,10 @@ export interface SoundFamilyQualityReportV1 {
       readonly limit: number;
     }[];
   };
+  /** Yalnız politika `identity` beyan ederse. */
+  readonly identity?: FamilyIdentityReportV1;
+  /** Yalnız politika `states` beyan ederse. */
+  readonly states?: readonly StateClaimReportV1[];
   readonly verdict: { readonly pass: boolean; readonly failures: readonly FamilyFailure[] };
 }
 
@@ -167,7 +191,13 @@ const COHERENCE: Readonly<
 };
 
 export function validateFamilyQualityPolicy(value: unknown, path: string): FamilyQualityPolicyV1 {
-  const o = checkObject(value, path, ['minMembers', 'diversity', 'coherence']);
+  const o = checkObject(value, path, [
+    'minMembers',
+    'diversity',
+    'coherence',
+    'identity',
+    'states',
+  ]);
   const d = checkObject(o.diversity, `${path}.diversity`, [
     'minNearestDistance',
     'minMedianDistance',
@@ -214,6 +244,10 @@ export function validateFamilyQualityPolicy(value: unknown, path: string): Famil
       ...optional('maxPitchRatio', { min: 1 }),
       ...optional('maxLoudnessSpreadDb', { min: 0 }),
     },
+    ...(o.identity === undefined
+      ? {}
+      : { identity: validateIdentityPolicy(o.identity, `${path}.identity`) }),
+    ...(o.states === undefined ? {} : { states: validateStateClaims(o.states, `${path}.states`) }),
   };
 }
 
@@ -306,6 +340,16 @@ export function assessFamily(
   }
   if (outliers.length > 0 && policy.coherence.outliers === 'fail') failures.add('outlier');
   if (ratioViolations.length > 0) failures.add('ratio');
+  const stateMembers = members.map((m) => ({
+    key: m.key,
+    roles: m.roles ?? {},
+    descriptors: m.descriptors,
+    timbre: m.timbre ?? null,
+  }));
+  const identity = policy.identity ? assessIdentity(stateMembers, policy.identity) : undefined;
+  if (identity && !identity.pass) failures.add('identity');
+  const states = policy.states ? assessStateClaims(stateMembers, policy.states) : undefined;
+  if (states?.some((claim) => !claim.pass)) failures.add('state-claim');
 
   const order: FamilyFailure[] = [
     'too-few-members',
@@ -314,6 +358,8 @@ export function assessFamily(
     'near-identical',
     'outlier',
     'ratio',
+    'identity',
+    'state-claim',
   ];
   return {
     schema: FAMILY_QUALITY_SCHEMA,
@@ -336,6 +382,8 @@ export function assessFamily(
       collapsed,
     },
     coherence: { distributions, outliers, ratioViolations },
+    ...(identity ? { identity } : {}),
+    ...(states ? { states } : {}),
     verdict: { pass: failures.size === 0, failures: order.filter((f) => failures.has(f)) },
   };
 }

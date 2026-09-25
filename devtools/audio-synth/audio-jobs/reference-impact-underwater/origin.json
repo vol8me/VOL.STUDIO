@@ -1,0 +1,19 @@
+{
+  "programHash": "sha256:5adff7f8992d5b4e50a6b8c92bd299254519493ca9d790aeaab12607962bb484",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "kind": "treatment",
+    "profile": {
+      "hash": "sha256:c5ba6332a0db83ad73c2b8026fc1abe3fd3080a8d49143c2d140036ffd92ce86",
+      "id": "underwater",
+      "version": 1
+    },
+    "source": {
+      "assetId": "reference-impact",
+      "manifest": "devtools/audio-synth/reference/production/manifests/sfx/reference-impact.json",
+      "pcmHash": "sha256:510345c94cff800483f08e4df9d86a52b540d49f79bf6c8cd1f22269d8392996",
+      "programHash": "sha256:f782650efb653ff8c3c682aa85a9b0c83cf935814f8666b4488bf694f5136371",
+      "seed": 2550812508
+    }
+  }
+}

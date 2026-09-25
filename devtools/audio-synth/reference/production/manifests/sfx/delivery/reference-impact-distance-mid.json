@@ -1,0 +1,458 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          0.000015058531030347445
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 2.6,
+        "frames": 124800,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -4.350242440090342
+        ],
+        "channelRmsDbfs": [
+          -25.583427216731707
+        ],
+        "crestFactorDb": 21.233184776641366,
+        "integratedLufs": -22.427057631130285,
+        "maxMomentaryLufs": -18.367323089205087,
+        "rmsDbfs": -25.583427216731707,
+        "samplePeakDbfs": -4.350242440090342,
+        "truePeakDbtp": -4.328371723161463
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -45.43436051799068,
+          "high": -32.55577394187743,
+          "low": -31.462156120556457,
+          "mid": -29.99954403397709,
+          "sub": -33.31453129494155
+        },
+        "centroidHz": 1368.247139033249,
+        "flatness": 0.000020774115198046358,
+        "peakHz": 328.125,
+        "rolloff85Hz": 2859.375
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 2.25,
+        "attackSeconds": 0,
+        "decay40Seconds": 1.64,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.05,
+        "temporalCentroidSeconds": 0.37852345742763355,
+        "trailingSilenceSeconds": 0.75
+      }
+    },
+    "sourceRecordHash": "sha256:d3a8a19959c818b45af1330acce0328a083fd929be850d371d52a342b133d75f"
+  },
+  "asset": {
+    "bytes": 24297,
+    "encodedHash": "sha256:59aa94230adfd274ce18a858b431dab556e72850d272b29c3498abc1abe54a7d",
+    "format": "ogg-vorbis",
+    "path": "devtools/audio-synth/reference/production/assets/sfx/delivery/reference-impact-distance-mid.ogg"
+  },
+  "assetId": "reference-impact-distance-mid",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "descriptors": [
+        "dry",
+        "weapon",
+        "treatment:distance-mid"
+      ],
+      "durationSeconds": {
+        "max": 2.6,
+        "min": 0.8
+      },
+      "id": "reference-impact-distance-mid",
+      "intent": "Kuru, konumsal bir silah atışı: yakın/orta/uzak ve engel/ortam/cihaz teslim varyantlarının ortak kaynağı. Kuyruk ve yansıma kaynağa değil teslim profiline aittir. Teslim profili distance-mid: 30 m: ISO 9613-1 hava soğurması, atak -6 dB, yansıma payı 0.3, görüntü ×0.6. 1/r zayıflaması çalışma zamanınındır.",
+      "kind": "acoustic",
+      "mechanisms": [
+        "impact",
+        "pressure"
+      ],
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "treatment-profile"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "Referans silah atışı — distance-mid"
+    },
+    "hash": "sha256:ded96a419c94302aea560523ef0ff448fb393c649567cae14cdf8056be336210",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "derivation": {
+    "cues": {
+      "derived": {
+        "attackRatioDb": -7.779,
+        "centroidHz": 1368.247,
+        "directnessDb": -7.462,
+        "maxMomentaryLufs": -18.367,
+        "method": "treatment-cues-v1"
+      },
+      "source": {
+        "attackRatioDb": -7.223,
+        "centroidHz": 1484.73,
+        "directnessDb": -4.965,
+        "maxMomentaryLufs": -15.419,
+        "method": "treatment-cues-v1"
+      }
+    },
+    "profile": {
+      "hash": "sha256:335fd48ff0371298f6a086d796e0e8bd503f7581e326889585afa9a0bd09c69f",
+      "id": "distance-mid",
+      "kind": "distance",
+      "model": {
+        "distanceM": 30,
+        "inverseSquareDb": -15.56,
+        "referenceM": 5
+      },
+      "version": 1
+    },
+    "scheme": "treatment-derivation-v1",
+    "source": {
+      "assetId": "reference-impact",
+      "manifest": "devtools/audio-synth/reference/production/manifests/sfx/reference-impact.json",
+      "pcmHash": "sha256:510345c94cff800483f08e4df9d86a52b540d49f79bf6c8cd1f22269d8392996",
+      "programHash": "sha256:f782650efb653ff8c3c682aa85a9b0c83cf935814f8666b4488bf694f5136371"
+    }
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:060f26f4dfd1fa0ba7212288b2dae964c6da674de752b5fe9fbcffc7be84e217",
+    "libraries": {
+      "libavcodec": "62.28.102",
+      "libavformat": "62.12.102",
+      "libavutil": "60.26.102"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:4995c93a1714f448fc486b3365eea0d041ecc778f26b7b5b30935a46ec028376",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "packageVersion": "0.1.0",
+    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
+    "renderSurface": {
+      "hash": "sha256:7a4a57ba5376975e3937e555eaf5502134b194df83909370448a8e6e502312dd",
+      "nodes": [
+        {
+          "hash": "sha256:3755b6610772d4f31fd4b40851b6cd76a4b9e239377b701477c595c1eed6e7e8",
+          "id": "effect.air-absorption",
+          "version": 1
+        },
+        {
+          "hash": "sha256:7e3ae986781771d633de1f73e9d814b4e9f542fdb2e0ce6eed209e20dd989fe0",
+          "id": "effect.reverb",
+          "version": 1
+        },
+        {
+          "hash": "sha256:833a0646377dd6e64bb5b83910f1f854d0aa583f5e821f8232d38543c1190e0e",
+          "id": "effect.transient-shaper",
+          "version": 1
+        },
+        {
+          "hash": "sha256:2d25f495767a63d04e80fed8ea47099ec7d88975d68211494c04e75f51880d68",
+          "id": "effect.width",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:120526b0267fdae5963c04e9a06513ae45c6a2f96215f243c43f4d5f6b0dfdd4",
+          "id": "resonator.material",
+          "version": 1
+        },
+        {
+          "hash": "sha256:c6024f3c97f874355c28191b70112a85a7e6828c80eb34ed9c26d93ae29a94d5",
+          "id": "source.blast",
+          "version": 1
+        },
+        {
+          "hash": "sha256:409d5e0697cf0e2444ca3ba4939b5fcb01c58f4fabbf07c1294b73b02ce9a52d",
+          "id": "source.contact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:2356f7e48539c60b39edfbd3ca1287f94e8902e6d4bbda072d5476c6ca7e02a3",
+          "id": "source.pressure-wave",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 1,
+    "runtime": {
+      "node": "v22.23.1"
+    },
+    "sourceCommit": "8f0dd383e980e59123138a39163659cf61f73998",
+    "sourceTreeDirty": true
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/audio-synth",
+    "runtimeDeclaration": null,
+    "runtimeKey": "reference/impact/distance-mid",
+    "targetKind": "reference"
+  },
+  "job": {
+    "jobId": "reference-impact-distance-mid",
+    "path": "devtools/audio-synth/audio-jobs/reference-impact-distance-mid",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Referans silah atışı (fırlatıcı archetype, kuru): teslim profillerinin ortak kaynağı.",
+      "durationSeconds": 1.2,
+      "layers": [
+        {
+          "gainDb": -16,
+          "mechanism": "mechanical",
+          "name": "trigger",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0,
+              "mass": 0.02,
+              "materialA": "metal",
+              "materialB": "metal",
+              "size": 0.08,
+              "velocity": 2.2
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.005
+        },
+        {
+          "mechanism": "pressure",
+          "name": "muzzle",
+          "role": "transient",
+          "source": {
+            "params": {
+              "body": 0.42,
+              "bodyDecay": 0.36,
+              "bodyHz": 94.230767,
+              "decay": 1.4,
+              "positive": 0.004911,
+              "rise": 0.0002
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 0.05
+        },
+        {
+          "gainDb": -12.8,
+          "mechanism": "explosion",
+          "name": "blast",
+          "role": "body",
+          "source": {
+            "params": {
+              "brightness": 0.69,
+              "crackle": 0.15,
+              "darkening": 0.6,
+              "decay": 0.310991
+            },
+            "primitive": "source.blast",
+            "version": 1
+          },
+          "startSeconds": 0.05
+        },
+        {
+          "gainDb": -8,
+          "mechanism": "impact",
+          "name": "body",
+          "resonators": [
+            {
+              "params": {
+                "material": "metal",
+                "modes": 16,
+                "size": 0.576837,
+                "thickness": 0.04
+              },
+              "primitive": "resonator.material",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "contactTime": 0.0006,
+              "roughness": 0.3
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.05
+        },
+        {
+          "gainDb": -13.6,
+          "mechanism": "mechanical",
+          "name": "bolt",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0.05,
+              "mass": 0.22,
+              "materialA": "metal",
+              "materialB": "metal",
+              "size": 0.21,
+              "velocity": 2.7
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.22
+        },
+        {
+          "gainDb": -23,
+          "mechanism": "debris",
+          "name": "shell",
+          "role": "detail",
+          "source": {
+            "params": {
+              "debris": 0.58,
+              "mass": 0.05,
+              "materialA": "metal",
+              "materialB": "stone",
+              "size": 0.1,
+              "velocity": 2.5
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.44
+        }
+      ],
+      "master": {
+        "fadeOutSeconds": 0.05,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 2550812508,
+      "treatment": {
+        "chain": [
+          {
+            "params": {
+              "attackDb": -6,
+              "sustainDb": 0
+            },
+            "primitive": "effect.transient-shaper",
+            "version": 1
+          },
+          {
+            "params": {
+              "amount": 0.3,
+              "damp": 0.6,
+              "decay": 1.6,
+              "preDelay": 0.03,
+              "roomSize": 0.8
+            },
+            "primitive": "effect.reverb",
+            "version": 1
+          },
+          {
+            "params": {
+              "distance": 30,
+              "humidity": 0.5
+            },
+            "primitive": "effect.air-absorption",
+            "version": 1
+          },
+          {
+            "params": {
+              "width": 0.6
+            },
+            "primitive": "effect.width",
+            "version": 1
+          }
+        ],
+        "channels": 1,
+        "levelLu": -3,
+        "limiter": {
+          "ceilingDbtp": -1.5
+        },
+        "tailSeconds": 1.4
+      }
+    },
+    "hash": "sha256:531526660a784645eab2ba77eab9d83db566040e8021749f81b44aaf098a07ef",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 124800,
+      "hash": "sha256:031dcaeaa9213e10b7ce5404061e15c81b81d7106c4a93ed8c92eab8dc664b2e",
+      "sampleRate": 48000
+    },
+    "renderId": "r-2c565ce9dbac4bd4",
+    "rendererVersion": 1,
+    "seed": 2550812508
+  },
+  "schema": "AudioAssetManifestV1"
+}

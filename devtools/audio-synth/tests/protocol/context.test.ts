@@ -29,6 +29,25 @@ describe('audio:job context', () => {
     expect(Object.keys(context.music.commands)).toContain('publish');
   });
 
+  it('teslim bölümü: yerleşim, kodlama profili ve teslim profilleri koddaki veriden', () => {
+    const { delivery, family, protocol } = buildContext(REPO);
+    expect(delivery.layout.policy.scheme).toBe('channel-layout-v1');
+    expect(delivery.encoding.policy.classes.sfx.quality).toBeGreaterThanOrEqual(
+      delivery.encoding.policy.minQuality,
+    );
+    expect(delivery.treatments.profiles.map((p) => p.id)).toEqual([
+      'distance-near',
+      'distance-mid',
+      'distance-far',
+      'occluded',
+      'behind-wall',
+      'underwater',
+      'radio',
+    ]);
+    expect(Object.keys(family.states.axes)).toEqual(['energy', 'urgency', 'integrity']);
+    expect(protocol.commands.derive).toMatch(/--profile/);
+  });
+
   it('arama sözleşmesi çalışan koddan: şemalar, strateji, aranabilir boyutlar, bütçe, komutlar', () => {
     const { search, canaries } = buildContext(REPO);
     expect(search.schemas).toEqual({

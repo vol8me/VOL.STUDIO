@@ -1,0 +1,480 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -0.00009585277956084517
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 1.2,
+        "frames": 57600,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -1.471914090908542
+        ],
+        "channelRmsDbfs": [
+          -18.120663503565723
+        ],
+        "crestFactorDb": 16.648749412657182,
+        "integratedLufs": -17.16580119919319,
+        "maxMomentaryLufs": -15.728699092094619,
+        "rmsDbfs": -18.120663503565723,
+        "samplePeakDbfs": -1.471914090908542,
+        "truePeakDbtp": -1.4637054252043118
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -60.4097708287479,
+          "high": -26.954567880239665,
+          "low": -27.79156989777807,
+          "mid": -19.22410172292912,
+          "sub": -56.13045226763891
+        },
+        "centroidHz": 1250.6050404806292,
+        "flatness": 0.000002926746102046017,
+        "peakHz": 1148.4375,
+        "rolloff85Hz": 1664.0625
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 1.2,
+        "attackSeconds": 0,
+        "decay40Seconds": null,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.05,
+        "temporalCentroidSeconds": 0.5339257498558615,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:95f8c7391d2fd1fc48402b664bd6bec927501e48ab8385d4bed425df3bcda0d1"
+  },
+  "asset": {
+    "bytes": 17154,
+    "encodedHash": "sha256:cccf4d2dcd22598d8893aa9a44db205bad4657bfdbb4d9b7eaa352efbdfab318",
+    "format": "ogg-vorbis",
+    "path": "devtools/audio-synth/reference/production/assets/sfx/delivery/reference-impact-radio.ogg"
+  },
+  "assetId": "reference-impact-radio",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "descriptors": [
+        "dry",
+        "weapon",
+        "treatment:radio"
+      ],
+      "durationSeconds": {
+        "max": 1.5,
+        "min": 0.8
+      },
+      "id": "reference-impact-radio",
+      "intent": "Kuru, konumsal bir silah atışı: yakın/orta/uzak ve engel/ortam/cihaz teslim varyantlarının ortak kaynağı. Kuyruk ve yansıma kaynağa değil teslim profiline aittir. Teslim profili radio: Telsiz: 350–3200 Hz bant (24 dB/oktav), 1.8 kHz varlık tepesi, tanh sürüş ve ağır sıkıştırma; mono.",
+      "kind": "acoustic",
+      "mechanisms": [
+        "impact",
+        "pressure"
+      ],
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "treatment-profile"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "Referans silah atışı — radio"
+    },
+    "hash": "sha256:077537f6d14e17b4a33d0535ad0c79d94bc56a80b91f031c89dc5743ef0566a0",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "derivation": {
+    "cues": {
+      "derived": {
+        "attackRatioDb": -5.205,
+        "centroidHz": 1250.605,
+        "directnessDb": -11.089,
+        "maxMomentaryLufs": -15.729,
+        "method": "treatment-cues-v1"
+      },
+      "source": {
+        "attackRatioDb": -7.223,
+        "centroidHz": 1484.73,
+        "directnessDb": -4.965,
+        "maxMomentaryLufs": -15.419,
+        "method": "treatment-cues-v1"
+      }
+    },
+    "profile": {
+      "hash": "sha256:746ef33323fd1cbcfac8f7eabedcd3978a3df95281436d7611b46d99c2fe5897",
+      "id": "radio",
+      "kind": "device",
+      "model": {
+        "highHz": 3200,
+        "lowHz": 350
+      },
+      "version": 1
+    },
+    "scheme": "treatment-derivation-v1",
+    "source": {
+      "assetId": "reference-impact",
+      "manifest": "devtools/audio-synth/reference/production/manifests/sfx/reference-impact.json",
+      "pcmHash": "sha256:510345c94cff800483f08e4df9d86a52b540d49f79bf6c8cd1f22269d8392996",
+      "programHash": "sha256:f782650efb653ff8c3c682aa85a9b0c83cf935814f8666b4488bf694f5136371"
+    }
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:060f26f4dfd1fa0ba7212288b2dae964c6da674de752b5fe9fbcffc7be84e217",
+    "libraries": {
+      "libavcodec": "62.28.102",
+      "libavformat": "62.12.102",
+      "libavutil": "60.26.102"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:4995c93a1714f448fc486b3365eea0d041ecc778f26b7b5b30935a46ec028376",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "packageVersion": "0.1.0",
+    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
+    "renderSurface": {
+      "hash": "sha256:a7bd662295a7bb04483c346d0aa863debf0e4bf2b8122ac727fce6c9ca58677f",
+      "nodes": [
+        {
+          "hash": "sha256:b215e9dc2aee21a070909ad3b24f97ba5a7c6c500500c7cc9ced765073ee9fd8",
+          "id": "effect.compressor",
+          "version": 1
+        },
+        {
+          "hash": "sha256:73c932af5fb3389065aa8cf48494308d8bd2e21e5df0e7dda63201f24c11c42b",
+          "id": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "hash": "sha256:a8c80efe417630e7e3195525fd6fdefdca9ad4d0edb3981c35e8092715f7f722",
+          "id": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f1618b5458b7b327a4415cc22bede9a5976a0e37c57273b6dd7b2712acd16e07",
+          "id": "effect.saturation",
+          "version": 1
+        },
+        {
+          "hash": "sha256:2d25f495767a63d04e80fed8ea47099ec7d88975d68211494c04e75f51880d68",
+          "id": "effect.width",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:120526b0267fdae5963c04e9a06513ae45c6a2f96215f243c43f4d5f6b0dfdd4",
+          "id": "resonator.material",
+          "version": 1
+        },
+        {
+          "hash": "sha256:c6024f3c97f874355c28191b70112a85a7e6828c80eb34ed9c26d93ae29a94d5",
+          "id": "source.blast",
+          "version": 1
+        },
+        {
+          "hash": "sha256:409d5e0697cf0e2444ca3ba4939b5fcb01c58f4fabbf07c1294b73b02ce9a52d",
+          "id": "source.contact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:2356f7e48539c60b39edfbd3ca1287f94e8902e6d4bbda072d5476c6ca7e02a3",
+          "id": "source.pressure-wave",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 1,
+    "runtime": {
+      "node": "v22.23.1"
+    },
+    "sourceCommit": "8f0dd383e980e59123138a39163659cf61f73998",
+    "sourceTreeDirty": true
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/audio-synth",
+    "runtimeDeclaration": null,
+    "runtimeKey": "reference/impact/radio",
+    "targetKind": "reference"
+  },
+  "job": {
+    "jobId": "reference-impact-radio",
+    "path": "devtools/audio-synth/audio-jobs/reference-impact-radio",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Referans silah atışı (fırlatıcı archetype, kuru): teslim profillerinin ortak kaynağı.",
+      "durationSeconds": 1.2,
+      "layers": [
+        {
+          "gainDb": -16,
+          "mechanism": "mechanical",
+          "name": "trigger",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0,
+              "mass": 0.02,
+              "materialA": "metal",
+              "materialB": "metal",
+              "size": 0.08,
+              "velocity": 2.2
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.005
+        },
+        {
+          "mechanism": "pressure",
+          "name": "muzzle",
+          "role": "transient",
+          "source": {
+            "params": {
+              "body": 0.42,
+              "bodyDecay": 0.36,
+              "bodyHz": 94.230767,
+              "decay": 1.4,
+              "positive": 0.004911,
+              "rise": 0.0002
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 0.05
+        },
+        {
+          "gainDb": -12.8,
+          "mechanism": "explosion",
+          "name": "blast",
+          "role": "body",
+          "source": {
+            "params": {
+              "brightness": 0.69,
+              "crackle": 0.15,
+              "darkening": 0.6,
+              "decay": 0.310991
+            },
+            "primitive": "source.blast",
+            "version": 1
+          },
+          "startSeconds": 0.05
+        },
+        {
+          "gainDb": -8,
+          "mechanism": "impact",
+          "name": "body",
+          "resonators": [
+            {
+              "params": {
+                "material": "metal",
+                "modes": 16,
+                "size": 0.576837,
+                "thickness": 0.04
+              },
+              "primitive": "resonator.material",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "contactTime": 0.0006,
+              "roughness": 0.3
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.05
+        },
+        {
+          "gainDb": -13.6,
+          "mechanism": "mechanical",
+          "name": "bolt",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0.05,
+              "mass": 0.22,
+              "materialA": "metal",
+              "materialB": "metal",
+              "size": 0.21,
+              "velocity": 2.7
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.22
+        },
+        {
+          "gainDb": -23,
+          "mechanism": "debris",
+          "name": "shell",
+          "role": "detail",
+          "source": {
+            "params": {
+              "debris": 0.58,
+              "mass": 0.05,
+              "materialA": "metal",
+              "materialB": "stone",
+              "size": 0.1,
+              "velocity": 2.5
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.44
+        }
+      ],
+      "master": {
+        "fadeOutSeconds": 0.05,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 2550812508,
+      "treatment": {
+        "chain": [
+          {
+            "params": {
+              "frequency": 350,
+              "order": 2,
+              "response": "highpass"
+            },
+            "primitive": "effect.eq-pass",
+            "version": 1
+          },
+          {
+            "params": {
+              "frequency": 3200,
+              "order": 2,
+              "response": "lowpass"
+            },
+            "primitive": "effect.eq-pass",
+            "version": 1
+          },
+          {
+            "params": {
+              "frequency": 1800,
+              "gainDb": 4,
+              "q": 1
+            },
+            "primitive": "effect.eq-bell",
+            "version": 1
+          },
+          {
+            "params": {
+              "character": "tanh",
+              "driveDb": 12,
+              "mix": 1,
+              "outputDb": -6
+            },
+            "primitive": "effect.saturation",
+            "version": 1
+          },
+          {
+            "params": {
+              "attackSeconds": 0.002,
+              "ratio": 6,
+              "releaseSeconds": 0.12,
+              "thresholdDb": -24
+            },
+            "primitive": "effect.compressor",
+            "version": 1
+          },
+          {
+            "params": {
+              "width": 0
+            },
+            "primitive": "effect.width",
+            "version": 1
+          }
+        ],
+        "channels": 1,
+        "limiter": {
+          "ceilingDbtp": -1.5
+        }
+      }
+    },
+    "hash": "sha256:17f3ad3533cb4e26d3afe37082bc4bdded764f076b7db84a404ee409312db777",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 57600,
+      "hash": "sha256:2ad4739043e0c3af09f7b048572ebf0c16ca93fa3376c008554ed9af6b8f33fd",
+      "sampleRate": 48000
+    },
+    "renderId": "r-c29da3f393c10ca2",
+    "rendererVersion": 1,
+    "seed": 2550812508
+  },
+  "schema": "AudioAssetManifestV1"
+}

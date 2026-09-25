@@ -1,4 +1,6 @@
 import { FAMILY_QUALITY_SCHEMA, DEFAULT_FAMILY_QUALITY_POLICY } from '../analysis/family';
+import { STATE_DESCRIPTORS } from '../analysis/familyStates';
+import { TIMBRE_MAX_SHIFT_OCTAVES, TIMBRE_METHOD } from '../analysis/timbre';
 import { BANK_CHOICE_METHOD, BANK_LOOKUP_CONTRACT, SOUND_FAMILY_BANK_SCHEMA } from '../family/bank';
 import {
   FAMILY_VARIATION_POLICY,
@@ -6,6 +8,7 @@ import {
   MIN_VARIANTS,
   ROLE_AXES,
   SOUND_FAMILY_SCHEMA,
+  STATE_AXES,
 } from '../family/program';
 import {
   DEFAULT_FAMILIES_ROOT,
@@ -27,6 +30,21 @@ export function familyContext(cli: string) {
     variationPolicy: FAMILY_VARIATION_POLICY,
     variants: { min: MIN_VARIANTS, max: MAX_VARIANTS },
     roleAxes: ROLE_AXES,
+    states: {
+      axes: STATE_AXES,
+      rule: 'durum eksenleri SIRALI ve geneldir; domain nesnesini (silah şarjı, motor devri, yaralı yaratık, kritik uyarı) eksen değerine tüketici eşler',
+      brief: 'durum eksenli varyantın brief’i (ve manifest’i) yapılandırılmış `state` taşır',
+      claims: {
+        field: 'quality.states: [{ axis, descriptor, direction: 1 | -1 }]',
+        descriptors: STATE_DESCRIPTORS,
+        rule: 'yalnız o eksende farklı, diğer rolleri aynı çiftlerde KESİN yön; sınanabilir çifti olmayan iddia geçmez',
+      },
+      identity: {
+        field: 'quality.identity: { maxTimbreDistance }',
+        method: TIMBRE_METHOD,
+        rule: `her üye medoide eşik içinde; zarf 1/6 oktav, seviye çıkarılır, ±${TIMBRE_MAX_SHIFT_OCTAVES} oktav kaydırmanın en iyisi`,
+      },
+    },
     dimensions:
       'search ile aynı boyut sözlüğü (archetype-param | control | node-param) + scope: all | role; rol, boyutun alt aralığını/seçenek alt kümesini seçer',
     substream: 'family:<familyId>/variant:<key>/<boyut> — dizi sırası rastgeleliği belirlemez',

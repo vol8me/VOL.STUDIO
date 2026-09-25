@@ -93,6 +93,10 @@
       "version": 1,
       "hash": "sha256:b83100e5fa1f18861391b43418fca446831ade306071d160a6bb0de7a8839bdd"
     },
+    "effect.air-absorption": {
+      "version": 1,
+      "hash": "sha256:3755b6610772d4f31fd4b40851b6cd76a4b9e239377b701477c595c1eed6e7e8"
+    },
     "effect.bitcrush": {
       "version": 1,
       "hash": "sha256:f64d3660d61c426bee62e18ccbb14697c5abf74d480bc4538117bc48f0f481b5"
@@ -136,6 +140,10 @@
     "effect.transient-shaper": {
       "version": 1,
       "hash": "sha256:833a0646377dd6e64bb5b83910f1f854d0aa583f5e821f8232d38543c1190e0e"
+    },
+    "effect.width": {
+      "version": 1,
+      "hash": "sha256:2d25f495767a63d04e80fed8ea47099ec7d88975d68211494c04e75f51880d68"
     },
     "exciter.impact": {
       "version": 1,

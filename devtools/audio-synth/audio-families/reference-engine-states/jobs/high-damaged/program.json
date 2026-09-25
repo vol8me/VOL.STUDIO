@@ -1,0 +1,33 @@
+{
+  "channels": 1,
+  "durationSeconds": 2,
+  "layers": [
+    {
+      "name": "engine",
+      "source": {
+        "params": {
+          "bearing": 0.338078,
+          "count": 4,
+          "harmonics": 24,
+          "imbalance": 0.530101,
+          "load": 0.89238,
+          "mechanism": "engine",
+          "noise": 0.255058,
+          "rpm": 3213.04,
+          "tilt": 0.45
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 0.1,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 21
+}

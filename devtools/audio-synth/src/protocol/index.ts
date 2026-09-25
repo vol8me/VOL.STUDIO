@@ -179,5 +179,25 @@ export type { ManifestSampleV1, ManifestSelectionV1, ManifestSourcesV1 } from '.
 export { soundDesignContext } from './contextSound';
 export { resolveDestination, surveyTargets } from './targets';
 export type { PublishTarget, TargetRuntime, TargetSurvey } from './targets';
-export { readEncoderToolchain, OGG_ENCODER_SETTINGS } from './toolchain';
+export { readEncoderToolchain, vorbisArguments, OGG_CODEC } from './toolchain';
+export {
+  ENCODE_BASELINE_FILE,
+  ENCODE_POLICY,
+  encodePolicyHash,
+  encodeQualityOf,
+  validateBaseline,
+  type EncodeBaselineV1,
+} from './encodeProfiles';
 export type { EncoderToolchain } from './toolchain';
+export {
+  deriveTreatment,
+  derivedDocuments,
+  type DeriveOptions,
+  type DeriveOutcome,
+} from './treatments';
+export {
+  DERIVATION_SCHEME,
+  derivationCheck,
+  TREATMENT_CEILING_DBTP,
+  type ManifestDerivationV1,
+} from './derivation';

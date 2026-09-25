@@ -1,4 +1,5 @@
 import { validateFamilyQualityPolicy, type FamilyQualityPolicyV1 } from '../analysis/family';
+import { layoutProblem, placementOf, PLACEMENTS, type Placement } from '../analysis/layout';
 import { DEFAULT_BATCH_BUDGET, type BatchBudget } from '../guard/batch';
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
@@ -14,7 +15,8 @@ import {
   type ProgramBaseV1,
 } from '../program/dimensions';
 import { substream } from '../program/random';
-import { resolveProgram, type AcousticProgramV1 } from '../program/schema';
+import { ROLE_AXES, type RoleAxis } from './vocabulary';
+import { outputChannels, resolveProgram, type AcousticProgramV1 } from '../program/schema';
 import { hashCanonical, type Sha256 } from '../protocol/canonical';
 
 export const SOUND_FAMILY_SCHEMA = 'SoundFamilyProgramV1';
@@ -29,19 +31,11 @@ export const FAMILY_VARIATION_POLICY = 'role-subrange-v1';
  * Dizi sırası rastgeleliği belirlemez; yeni bir varyant, rol ya da yalnız
  * rolle kapsanan yeni bir boyut eski varyantların programını değiştirmez.
  *
- * Roller GENEL bir sözlükten gelir; oyun alanı kavramı (düşman türü,
- * organizma, silah durumu, boss evresi, oyuncu sınıfı) şemada YOKTUR.
+ * Roller GENEL bir sözlükten gelir (`vocabulary.ts`); oyun alanı kavramı
+ * (düşman türü, organizma, silah durumu, boss evresi, oyuncu sınıfı) şemada
+ * YOKTUR. Oyun durumu eksenleri sıralı ve geneldir; eşlemeyi tüketici yapar.
  */
-export const ROLE_AXES = {
-  intensity: ['soft', 'medium', 'hard'],
-  weight: ['light', 'medium', 'heavy'],
-  length: ['short', 'long'],
-  speed: ['slow', 'medium', 'fast'],
-  wetness: ['dry', 'wet'],
-  rarity: ['common', 'alternate', 'rare'],
-  onset: ['soft', 'sharp'],
-} as const;
-export type RoleAxis = keyof typeof ROLE_AXES;
+export { ROLE_AXES, STATE_AXES, type RoleAxis, type StateAxis } from './vocabulary';
 
 export type FamilyDimensionV1 = DimensionV1 & {
   /** `all`: her varyanta uygulanır; `role`: yalnız bir rolü onu kısıtlayan varyanta. */
@@ -64,6 +58,8 @@ export interface FamilyDeliveryV1 {
   readonly assetDir: string;
   readonly subtype: 'sfx' | 'organic' | 'ambience';
   readonly assetClass: 'ui' | 'sfx' | 'ambience';
+  /** Çalınış biçimi; yazılmazsa sınıfın varsayılanı (`analysis/layout.ts`). */
+  readonly placement?: Placement;
   readonly durationSeconds: { readonly min: number; readonly max: number };
 }
 
@@ -218,6 +214,7 @@ function checkDelivery(value: unknown): FamilyDeliveryV1 {
     'assetDir',
     'subtype',
     'assetClass',
+    'placement',
     'durationSeconds',
   ]);
   const d = checkObject(o.durationSeconds, 'delivery.durationSeconds', ['min', 'max']);
@@ -243,6 +240,9 @@ function checkDelivery(value: unknown): FamilyDeliveryV1 {
       'sfx',
       'ambience',
     ] as const),
+    ...(o.placement === undefined
+      ? {}
+      : { placement: checkChoice(o.placement, 'delivery.placement', PLACEMENTS) }),
     durationSeconds: {
       min,
       max: checkNumber(d.max, 'delivery.durationSeconds.max', { min, max: 600 }),
@@ -272,6 +272,22 @@ function checkFamilyDimensions(value: unknown, base: ProgramBaseV1): FamilyDimen
     ...d,
     scope: scopes.get(d.name) as 'all' | 'role',
   }));
+}
+
+/** Durum iddiasının ekseni ailenin beyan ettiği bir rol olmalı; yoksa iddia sınanamaz. */
+function checkQuality(value: unknown, roles: SoundFamilyProgramV1['roles']): FamilyQualityPolicyV1 {
+  const quality = validateFamilyQualityPolicy(value, 'quality');
+  quality.states?.forEach((claim, i) => {
+    if (!roles[claim.axis]) {
+      throw new AudioParamError(
+        `quality.states[${i}].axis`,
+        'combination',
+        'iddia ekseni ailenin rolleri arasında yok',
+        claim.axis,
+      );
+    }
+  });
+  return quality;
 }
 
 /** Aile tanımını doğrular ve normalize eder (boyutlar, roller, varyantlar ada göre). */
@@ -321,9 +337,7 @@ export function validateFamilyProgram(value: unknown): SoundFamilyProgramV1 {
     dimensions,
     roles,
     variants: checkVariants(o.variants, roles),
-    ...(o.quality === undefined
-      ? {}
-      : { quality: validateFamilyQualityPolicy(o.quality, 'quality') }),
+    ...(o.quality === undefined ? {} : { quality: checkQuality(o.quality, roles) }),
     ...(budget
       ? {
           budget: Object.fromEntries(
@@ -429,7 +443,8 @@ export function expandFamily(family: SoundFamilyProgramV1): ExpandedVariant[] {
       values[dim.name] = valueAt(restricted, u, integer.get(dim.name));
     }
     const program = materialize(family.base, dims, values);
-    const duration = resolveProgram(program).durationSeconds;
+    const resolved = resolveProgram(program);
+    const duration = resolved.durationSeconds;
     const { min, max } = family.delivery.durationSeconds;
     if (duration < min || duration > max) {
       throw new AudioParamError(
@@ -439,6 +454,13 @@ export function expandFamily(family: SoundFamilyProgramV1): ExpandedVariant[] {
         duration,
       );
     }
+    const { assetClass, placement } = family.delivery;
+    const layout = layoutProblem(
+      assetClass,
+      placementOf(assetClass, placement),
+      outputChannels(resolved),
+    );
+    if (layout) throw new AudioParamError(`variants.${variant.key}`, 'combination', layout, 0);
     const programHash = hashCanonical(program);
     return {
       key: variant.key,

@@ -13,6 +13,7 @@ import {
   buildContext,
   checkRepoRelative,
   DEFAULT_JOBS_ROOT,
+  deriveTreatment,
   initJob,
   jobStatus,
   listJobs,
@@ -146,6 +147,17 @@ function runCommand(parsed: Parsed, repoRoot: string): number {
       });
       return 0;
     }
+    case 'derive':
+      print(
+        deriveTreatment({
+          repoRoot,
+          job: loc(),
+          source: checkRepoRelative(required(parsed.flags, 'from'), '--from'),
+          profile: required(parsed.flags, 'profile'),
+          asset: required(parsed.flags, 'asset'),
+        }),
+      );
+      return 0;
     case 'verify':
       return runVerifyCommand(parsed, repoRoot);
     case 'search':

@@ -136,6 +136,7 @@ export function programNodeIds(program: ResolvedProgram, document: unknown): str
   }
   for (const bus of program.buses) ids.push(...bus.effects.map((effect) => effect.entry.id));
   ids.push(...program.effects.map((effect) => effect.entry.id));
+  ids.push(...(program.treatment?.chain ?? []).map((effect) => effect.entry.id));
   ids.push(...program.modulators.map((node) => node.entry.id));
   const controls = (document as { controls?: readonly { control?: unknown }[] }).controls ?? [];
   for (const control of controls) {

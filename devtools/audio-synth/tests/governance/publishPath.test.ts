@@ -18,6 +18,8 @@ const ALLOWED: Readonly<Record<string, string>> = {
     'TEK kanonik publish kapısı (staging + doğrulama)',
   'devtools/audio-synth/src/protocol/audition.ts':
     'TEK dinleme kopyası yazıcısı (job/arama/canary); yalnız git-dışı export/ altına',
+  'devtools/audio-synth/src/protocol/encodeBaseline.ts':
+    'kodlama profili taban çizgisi: geçici dizinde kodla-çöz ölçümü, asset yazmaz',
   'devtools/audio-synth/scripts/audio-reference-check.ts': 'geçici dizinde ölçüm fixture’ı',
   'devtools/audio-synth/scripts/render-budget-bench.ts': 'geçici dizinde kıyas ölçümü',
   'devtools/audio-synth/scripts/archetype-audition.ts': 'git-dışı export/ dinleme paketi',

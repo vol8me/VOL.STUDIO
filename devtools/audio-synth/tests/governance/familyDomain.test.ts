@@ -56,6 +56,9 @@ describe('aile/arama kodu oyun alanından bağımsız', () => {
   });
 
   it('rol sözlüğü kapalı ve genel: eksen listesi bilinçli bir karar olmadan değişmez', () => {
+    // Dalga 12 kararı: üç SIRALI oyun durumu ekseni eklendi. Genel anlamdır
+    // (enerji, aciliyet, bütünlük); silah/motor/yaratık gibi domain nesnesi
+    // değildir, eşleme tüketicidedir.
     expect(ROLE_AXES).toEqual({
       intensity: ['soft', 'medium', 'hard'],
       weight: ['light', 'medium', 'heavy'],
@@ -64,6 +67,9 @@ describe('aile/arama kodu oyun alanından bağımsız', () => {
       wetness: ['dry', 'wet'],
       rarity: ['common', 'alternate', 'rare'],
       onset: ['soft', 'sharp'],
+      energy: ['idle', 'low', 'normal', 'high', 'peak'],
+      urgency: ['calm', 'alert', 'warning', 'critical'],
+      integrity: ['intact', 'worn', 'damaged', 'broken'],
     });
   });
 });

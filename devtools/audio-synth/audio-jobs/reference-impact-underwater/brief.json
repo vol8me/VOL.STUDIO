@@ -1,0 +1,28 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "dry",
+    "weapon",
+    "treatment:underwater"
+  ],
+  "durationSeconds": {
+    "max": 2.1,
+    "min": 0.8
+  },
+  "id": "reference-impact-underwater",
+  "intent": "Kuru, konumsal bir silah atışı: yakın/orta/uzak ve engel/ortam/cihaz teslim varyantlarının ortak kaynağı. Kuyruk ve yansıma kaynağa değil teslim profiline aittir. Teslim profili underwater: Su altı: 600 Hz, 24 dB/oktav alçak geçiren; 220 Hz’te gövde rezonansı (+5 dB); yoğun, kısa, koyu yankı; atak kaybı.",
+  "kind": "acoustic",
+  "mechanisms": [
+    "impact",
+    "pressure"
+  ],
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "treatment-profile"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Referans silah atışı — underwater"
+}

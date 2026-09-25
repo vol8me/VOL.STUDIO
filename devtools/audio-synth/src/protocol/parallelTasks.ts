@@ -1,3 +1,4 @@
+import { timbreEnvelope } from '../analysis/timbre';
 import type { MessagePort } from 'node:worker_threads';
 import { analyzeAudio } from '../analysis/report';
 import { summarizeAudio, type DescriptorSummaryV1 } from '../analysis/summary';
@@ -37,6 +38,8 @@ export interface FamilyMemberOutput {
   readonly key: string;
   readonly pcmHash: Sha256;
   readonly descriptors: DescriptorSummaryV1;
+  /** `timbre-envelope-v1`; kimlik raporu beyan edilirse kullanılır. */
+  readonly timbre: number[] | null;
 }
 
 export interface SearchCandidateInput {
@@ -73,6 +76,7 @@ function familyMember(input: FamilyMemberInput, ctx: TaskContext): TaskResult {
     key: input.key,
     pcmHash: hashPcm(r.channels, r.sampleRate),
     descriptors: summarizeAudio(r.channels, r.sampleRate, report),
+    timbre: timbreEnvelope(r.channels, r.sampleRate),
   };
   return { output, transfer: [] };
 }

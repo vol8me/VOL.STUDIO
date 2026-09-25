@@ -13,7 +13,7 @@ import {
   type JobKind,
 } from './kinds';
 import { documentPlayback, validateMusicStemProgram } from '../music/stem';
-import { outputSeconds, resolveProgram } from '../program/schema';
+import { outputChannels, outputSeconds, resolveProgram } from '../program/schema';
 import { writeAuditionCopy } from './audition';
 import { hashCanonical, hashPcm, type Sha256 } from './canonical';
 import { ProtocolError } from './errors';
@@ -122,11 +122,12 @@ function checkAcousticAgainstBrief(brief: AudioBriefV1, document: unknown): void
   if (brief.kind !== 'acoustic') return;
   const program = resolveProgram(document);
   const seconds = outputSeconds(program);
-  if (program.channels !== brief.channels) {
+  const channels = outputChannels(program);
+  if (channels !== brief.channels) {
     throw new ProtocolError(
       'invalid',
-      `program ${program.channels} kanal, brief ${brief.channels} istiyor`,
-      'program.channels',
+      `program ${channels} kanal çıkarıyor, brief ${brief.channels} istiyor`,
+      program.treatment ? 'program.treatment.channels' : 'program.channels',
     );
   }
   const { min, max } = brief.durationSeconds;

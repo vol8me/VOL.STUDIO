@@ -14,17 +14,23 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
   sentez çekirdeği (retro araç seti dahil), fiziksel modeller, parametrik
   davul modelleri ve preset kataloğu
 - `src/effects/` — efekt ve işleme çekirdekleri: reverb/delay/modülasyon,
-  RBJ EQ, kompresör, 4× true-peak sınırlayıcı, doygunluk, konvolüsyon
+  RBJ EQ, kompresör, 4× true-peak sınırlayıcı, doygunluk, konvolüsyon,
+  ISO 9613-1 hava soğurması ve orta/yan genişlik
 - `src/program/` — kanonik `AudioBriefV1`/`AcousticProgramV1`, yapı taşı
   registry'si ve render'ı; SoundGraph yönlendirmesi (bus/send/sidechain),
   stil ve materyal profilleri, ses ontolojisi ve planlayıcı, sample
-  bildirimleri, render yüzeyi kaydı
+  bildirimleri, render yüzeyi kaydı; teslim işleme katmanı (`treatment`) ve
+  teslim profilleri (uzaklık, engel, ortam, cihaz)
 - `src/analysis/` — kanonik ölçüm çekirdeği (BS.1770, true peak, betimleyiciler,
-  dikiş, transient/gövde ayrıştırması, stem hizası)
+  dikiş, transient/gövde ayrıştırması, stem hizası, stereo görüntü ve
+  yerleşim, kodek sonrası sadakat, teslim yön ölçüleri, tını zarfı ve durum
+  iddiaları)
 - `src/protocol/` — `AudioJobV1`, manifest, TEK publish kapısı, arama/aile/
-  müzik/sample protokolleri (Node-only)
+  müzik/sample protokolleri, kodlama profili ve teslim varyantı türetme
+  (Node-only)
 - `src/search/` — deterministik aday arama laboratuvarı
-- `src/family/` — genel ses ailesi programı, rol sözlüğü ve bank sözleşmesi
+- `src/family/` — genel ses ailesi programı, rol ve oyun durumu sözlüğü, bank
+  sözleşmesi
 - `src/music/` — müzik sözleşmesi: `MusicBriefV1`, `MusicThemeBookV1`,
   `MusicProgramV1` → `MusicScoreV1`, `InstrumentDefinitionV1` (preset,
   sampler, davul kiti, retro, katman), artikülasyon ve velocity, orkestrasyon
@@ -43,12 +49,14 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
   manifest'leri, aile bank'ı ve müzik bundle'ları
 - `render-surface.lock.json` — registry render yüzeyi kilidi
   (`pnpm audio:surface-lock`; aynı sürümde değişen sözleşmeyi reddeder)
+- `encode-profiles.lock.json` — sınıf bazlı kodlama profilinin ölçülmüş taban
+  çizgisi (`pnpm audio:encode-baseline`; tablo ölçümden ayrışırsa yazılmaz)
 - `tests/` — birim, özellik, yönetişim (`tests/governance/`) ve protokol
   testleri
 - `scripts/` — `audio-job` CLI'ı ve alt komutları (`scripts/lib/`), QA
   (`audio-qa`, `audio-reference-check`), karakterizasyon (`fm-alias-report`,
   `render-budget-bench`, `resonator-bench`), sample fixture üreticisi,
-  render yüzeyi kilidi, dinleme paketi ve dönüştürücü
+  render yüzeyi kilidi, kodlama taban çizgisi, dinleme paketi ve dönüştürücü
 - `export/` — yerel üretim ve dinleme çıktısı (izlenmez)
 
 ## Doktrin
@@ -58,7 +66,8 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 - Bozuk parametre ve aşırı kaynak isteği tampon ayrılmadan, adıyla reddedilir
   (`AudioParamError`, `RenderBudgetError`).
 - Gönderilen ses kodek SONRASI ölçülür (BS.1770 LUFS, true peak, kanal bazlı
-  kırpma; sınıf politikası).
+  kırpma; sınıf politikası, kanal/yerleşim ve mono uyumu). Vorbis kalitesi
+  asset sınıfının ölçülmüş profilinden gelir.
 - Runtime playback bu pakette değil, `@volstudio/core/audio/music`'te yapılır.
   Müzik asset'inin çalma sözleşmesi (`MusicAssetSpecV1`) da orada yaşar: ölçü→kare
   dönüşümü ve `toMusicTrack` tek kaynaktır, üretim ile runtime ayrışamaz.
@@ -96,7 +105,15 @@ programına terfi eder ve aynı akıştan yayımlanır. Sözdizimi context
 
 İlişkili varyant setleri `family` alt komutlarıyla üretilir: her varyant
 aynı akıştan yayımlanır, en son çalışma zamanının yalnız JSON ile okuyacağı
-bir bank yazılır. Sözdizimi `family.commands` alanındadır.
+bir bank yazılır. Oyun durumu aileleri (`energy`, `urgency`, `integrity`
+sıralı eksenleri) yön iddialarını ve ortak tını kimliğini ölçerek geçer;
+`reference-engine-states` örneğidir. Sözdizimi `family.commands` alanındadır.
+
+Aynı yayımlanmış kaynaktan uzaklık, engel, ortam ve cihaz varyantları
+`derive` ile türer: program kaynağın kendisi + teslim profilidir, manifest
+kaynağa ve profile bağını taşır. `reference-impact` ve yedi varyantı
+örneğidir; kurallar ve profiller context çıktısındaki `delivery`
+alanındadır.
 
 Müzik `music` alt komutlarıyla üretilir (`plan | analyze | check | render |
 publish | status | verify | list | search`): sembolik analiz ses render

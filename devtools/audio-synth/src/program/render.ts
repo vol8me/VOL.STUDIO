@@ -33,7 +33,9 @@ import {
   type ProgramKeys,
 } from './renderKeys';
 import { applyStyleChain } from './style';
+import { applyTreatment, treatmentFrames } from './treatment';
 import {
+  masterFrames,
   resolveProgram,
   type ResolvedLayer,
   type ResolvedNode,
@@ -205,15 +207,42 @@ export function estimateProgramCost(program: ResolvedProgram): RenderCost {
   let sampleBytes = 0;
   for (const decl of program.samples.values())
     sampleBytes += decl.frames * decl.channels * FLOAT32_BYTES;
+  const treatment = treatmentCost(program);
   return {
     peakBytes:
       (1 + graphBuffers) * channels * frames * FLOAT32_BYTES +
       modulatorBytes +
       heaviestLayer +
       Math.max(effectBytes, limiterBytes) +
-      sampleBytes,
-    workUnits: work,
+      sampleBytes +
+      treatment.bytes,
+    workUnits: work + treatment.work,
   };
+}
+
+/** İşleme katmanı: kendi tamponu (loop'ta iki tur) + zincir düğümleri + sınırlayıcı. */
+function treatmentCost(program: ResolvedProgram): { work: number; bytes: number } {
+  const treatment = program.treatment;
+  if (!treatment) return { work: 0, bytes: 0 };
+  const width = treatment.channels;
+  const frames = treatmentFrames(
+    treatment,
+    masterFrames(program),
+    program.sampleRate,
+    program.master.loop !== null,
+  );
+  let work = frames * width;
+  let state = 0;
+  for (const node of treatment.chain) {
+    const cost = nodeCost(node, frames, program.sampleRate, program);
+    work += cost.work * width;
+    state = Math.max(state, cost.bytes * width);
+  }
+  if (treatment.ceilingDbtp !== null) {
+    work += frames * width * LIMITER_WORK_PER_FRAME;
+    state = Math.max(state, frames * width * LIMITER_BYTES_PER_FRAME);
+  }
+  return { work, bytes: frames * width * FLOAT32_BYTES + state };
 }
 
 interface SharedSignals {
@@ -551,9 +580,10 @@ function finish(
   cost: RenderCost,
   channels: Float32Array[],
 ): ProgramRender {
-  const duration = program.master.loop
-    ? channels[0].length / program.sampleRate
-    : program.durationSeconds;
+  const duration =
+    program.master.loop || program.treatment
+      ? channels[0].length / program.sampleRate
+      : program.durationSeconds;
   return { channels, sampleRate: program.sampleRate, duration, seed, cost };
 }
 
@@ -580,9 +610,18 @@ function renderInSession(value: unknown, options: ProgramRenderOptions): Program
   if (program.style) applyStyleChain(mix.channels, sampleRate, program.style.controls);
   applyMaster(program, mix.channels);
   const loop = program.master.loop;
-  const channels = loop
+  const mastered = loop
     ? foldLoop(mix.channels, sampleRate, loop.crossfadeSeconds)
     : [...mix.channels];
+  const treatment = program.treatment;
+  const channels = treatment
+    ? applyTreatment(treatment, mastered, sampleRate, loop !== null, (node, buffers) => {
+        const length = buffers[0].length;
+        const signals: SignalContext = { ...shared, frames: length, offset: 0 };
+        const ctx = contextFor(seed, node.streamPath, sampleRate, length, shared);
+        node.entry.process(buffers, materialize(node, signals), ctx);
+      })
+    : mastered;
   if (cache && rootKey) cache.write(rootKey, channels);
   return finish(program, seed, cost, channels);
 }

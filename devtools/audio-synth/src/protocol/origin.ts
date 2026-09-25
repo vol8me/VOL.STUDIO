@@ -42,10 +42,23 @@ export interface FamilyOriginV1 {
   readonly variantId: string;
 }
 
+/** Yayımlanmış bir kaynağa teslim profili uygulanarak türeyen program. */
+export interface TreatmentOriginV1 {
+  readonly kind: 'treatment';
+  readonly source: {
+    readonly manifest: string;
+    readonly assetId: string;
+    readonly programHash: Sha256;
+    readonly pcmHash: Sha256;
+    readonly seed: number;
+  };
+  readonly profile: { readonly id: string; readonly version: number; readonly hash: Sha256 };
+}
+
 export interface ProgramOriginV1 {
   readonly schema: typeof PROGRAM_ORIGIN_SCHEMA;
   readonly programHash: Sha256;
-  readonly source: SearchOriginV1 | FamilyOriginV1;
+  readonly source: SearchOriginV1 | FamilyOriginV1 | TreatmentOriginV1;
 }
 
 function hashField(o: ParamObject, key: string, path: string): Sha256 {
@@ -73,6 +86,7 @@ export function validateOrigin(value: unknown): ProgramOriginV1 {
   const kind = checkChoice(head.kind, 'source.kind', [
     'search-candidate',
     'family-variant',
+    'treatment',
   ] as const);
   if (kind === 'search-candidate') {
     const s = checkObject(o.source, 'source', [
@@ -97,6 +111,8 @@ export function validateOrigin(value: unknown): ProgramOriginV1 {
     textField(strategy, 'id', 'source.strategy');
     checkNumber(strategy.version, 'source.strategy.version', { min: 1, integer: true });
     checkChoice(decision.by, 'source.decision.by', ['human', 'agent'] as const);
+  } else if (kind === 'treatment') {
+    validateTreatmentOrigin(o.source);
   } else {
     const s = checkObject(o.source, 'source', [
       'kind',
@@ -112,6 +128,30 @@ export function validateOrigin(value: unknown): ProgramOriginV1 {
   }
   hashField(o, 'programHash', 'origin');
   return value as ProgramOriginV1;
+}
+
+function validateTreatmentOrigin(value: unknown): void {
+  const s = checkObject(value, 'source', ['kind', 'source', 'profile']);
+  const from = checkObject(s.source, 'source.source', [
+    'manifest',
+    'assetId',
+    'programHash',
+    'pcmHash',
+    'seed',
+  ]);
+  for (const key of ['programHash', 'pcmHash']) hashField(from, key, 'source.source');
+  for (const key of ['manifest', 'assetId']) textField(from, key, 'source.source');
+  checkNumber(from.seed, 'source.source.seed', { min: 0, max: 0xffff_ffff, integer: true });
+  const profile = checkObject(s.profile, 'source.profile', ['id', 'version', 'hash']);
+  textField(profile, 'id', 'source.profile');
+  checkNumber(profile.version, 'source.profile.version', { min: 1, integer: true });
+  hashField(profile, 'hash', 'source.profile');
+}
+
+/** Geçerli bir köken belgesi varsa onu okur (yoksa `null`); durum denetimi `originState`tedir. */
+export function readOrigin(loc: JobLocation): ProgramOriginV1 | null {
+  const file = artifactFile(loc, 'origin.json');
+  return existsSync(file) ? validateOrigin(readJsonFile(file, 'origin.json')) : null;
 }
 
 export type OriginStateName = 'none' | 'valid' | 'stale' | 'corrupt';

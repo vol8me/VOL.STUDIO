@@ -269,7 +269,11 @@ export function jobStatus(loc: JobLocation): JobStatusV1 {
       : null,
   );
 
-  const publication = publicationState(loc, job, selection, programHash, chosen?.renderId ?? null);
+  const publication = publicationState(loc, job, selection, {
+    briefHash: brief.hash,
+    programHash,
+    selectedRender: chosen?.renderId ?? null,
+  });
   const origin = originState(loc, programHash);
   const artifacts = { brief, program, renders, analyses, selection, publication, origin };
   return {
@@ -286,12 +290,20 @@ export function jobStatus(loc: JobLocation): JobStatusV1 {
   };
 }
 
+/**
+ * Yayın, yayımlandığı brief + program + seçimle hâlâ eşleşiyor mu. Brief
+ * yayın politikasını da taşır (sınıf, yerleşim, süre): brief değişip program
+ * aynı kalsa bile manifest eski beyanı anlatır ve bayattır.
+ */
 function publicationState(
   loc: JobLocation,
   job: AudioJobV1,
   selection: ArtifactState,
-  programHash: Sha256 | null,
-  selectedRender: string | null,
+  current: {
+    readonly briefHash: Sha256 | null;
+    readonly programHash: Sha256 | null;
+    readonly selectedRender: string | null;
+  },
 ): ArtifactState {
   const ref = job.artifacts.publication;
   if (!ref) return state('missing', '—');
@@ -307,8 +319,10 @@ function publicationState(
   const manifest = validateManifest(result.loaded.doc);
   let reason: string | null = null;
   if (selection.state !== 'valid') reason = `selection ${selection.state}`;
-  else if (manifest.program.hash !== programHash) reason = 'yayımlanan program güncel değil';
-  else if (manifest.render.renderId !== selectedRender)
+  else if (manifest.brief.hash !== current.briefHash) reason = 'yayımlanan brief güncel değil';
+  else if (manifest.program.hash !== current.programHash)
+    reason = 'yayımlanan program güncel değil';
+  else if (manifest.render.renderId !== current.selectedRender)
     reason = 'yayımlanan render seçimle aynı değil';
   else {
     const asset = resolveInside(loc.repoRoot, manifest.asset.path, 'asset');

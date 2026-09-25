@@ -5,6 +5,7 @@ import {
   DEFAULT_FAMILY_QUALITY_POLICY,
   type SoundFamilyQualityReportV1,
 } from '../analysis/family';
+import { stateOf } from '../analysis/familyStates';
 import { ANALYZER_VERSION } from '../analysis/report';
 import type { DescriptorSummaryV1 } from '../analysis/summary';
 import {
@@ -34,7 +35,7 @@ import {
 } from '../family/program';
 import type { AudioBriefV1 } from '../program/brief';
 import { estimateProgramCost, PROGRAM_RENDERER_VERSION } from '../program/render';
-import { resolveProgram } from '../program/schema';
+import { outputChannels, resolveProgram } from '../program/schema';
 import { hashCanonical, prettyCanonicalJson, sha256Bytes, type Sha256 } from './canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
@@ -179,15 +180,18 @@ export function checkFamily(
     preview.variants.map((v) => ({ key: v.key, program: v.program })),
     batchWorkers(preview.estimate, options.workers),
   );
+  const roles = new Map(preview.variants.map((v) => [v.key, v.roles as Record<string, string>]));
+  const withRoles = members.map((m) => ({ ...m, roles: roles.get(m.key) ?? {} }));
   return {
     ...preview,
     members,
-    quality: assessFamily(members, preview.family.quality ?? DEFAULT_FAMILY_QUALITY_POLICY),
+    quality: assessFamily(withRoles, preview.family.quality ?? DEFAULT_FAMILY_QUALITY_POLICY),
   };
 }
 
 function variantBrief(family: SoundFamilyProgramV1, v: ExpandedVariant): AudioBriefV1 {
   const roles = Object.entries(v.roles).map(([axis, value]) => `${axis}:${value}`);
+  const state = stateOf(v.roles as Record<string, string>);
   return {
     schema: 'AudioBriefV1',
     kind: 'acoustic',
@@ -200,7 +204,9 @@ function variantBrief(family: SoundFamilyProgramV1, v: ExpandedVariant): AudioBr
     subtype: family.delivery.subtype,
     assetClass: family.delivery.assetClass,
     durationSeconds: family.delivery.durationSeconds,
-    channels: v.program.channels,
+    channels: outputChannels(resolveProgram(v.program)),
+    ...(family.delivery.placement ? { placement: family.delivery.placement } : {}),
+    ...(Object.keys(state).length > 0 ? { state } : {}),
     ...(roles.length + v.tags.length > 0 ? { descriptors: [...roles, ...v.tags] } : {}),
   };
 }

@@ -59,12 +59,15 @@ export function ffmpegVersion(): string {
   return (versionOutput()?.split('\n')[0] ?? 'bilinmiyor').trim();
 }
 
-/** Vorbis kodlamasının manifest'e yazılan argümanları — `writeOgg` ile aynı olmalı. */
-export const OGG_ENCODER_SETTINGS = {
-  codec: 'libvorbis',
-  quality: 4,
-  arguments: ['-f', 'f32le', '-c:a', 'libvorbis', '-q:a', '4', '-bitexact'],
-} as const;
+export const OGG_CODEC = 'libvorbis';
+
+/**
+ * Vorbis kodlamasının manifest'e yazılan argümanları — `writeOgg` ile aynı
+ * olmalı. Kalite asset sınıfının profilinden gelir (`encodeProfiles.ts`).
+ */
+export function vorbisArguments(quality: number): string[] {
+  return ['-f', 'f32le', '-c:a', OGG_CODEC, '-q:a', String(quality), '-bitexact'];
+}
 
 export interface EncoderToolchain {
   readonly tool: 'ffmpeg';
@@ -82,8 +85,12 @@ export interface EncoderToolchain {
   readonly fingerprint: Sha256;
 }
 
-/** Çalışan araç zincirini okur; FFmpeg yoksa `toolchain` hatası. */
-export function readEncoderToolchain(): EncoderToolchain {
+/**
+ * Çalışan araç zincirini verilen kaliteyle okur; FFmpeg yoksa `toolchain`
+ * hatası. Parmak izi kaliteyi içerir: aynı FFmpeg ile farklı profil farklı
+ * bir kodlayıcıdır.
+ */
+export function readEncoderToolchain(quality: number): EncoderToolchain {
   const output = versionOutput();
   if (output === null) throw new ProtocolError('toolchain', 'FFmpeg bulunamadı');
   const lines = output.split('\n');
@@ -96,9 +103,9 @@ export function readEncoderToolchain(): EncoderToolchain {
     tool: 'ffmpeg' as const,
     version: (lines[0] ?? '').trim(),
     libraries,
-    codec: OGG_ENCODER_SETTINGS.codec,
-    quality: OGG_ENCODER_SETTINGS.quality,
-    arguments: [...OGG_ENCODER_SETTINGS.arguments],
+    codec: OGG_CODEC,
+    quality,
+    arguments: vorbisArguments(quality),
     unreported: ['libvorbis'],
   };
   return { ...base, fingerprint: hashCanonical(base) };

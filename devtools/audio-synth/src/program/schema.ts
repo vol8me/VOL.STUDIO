@@ -1,3 +1,4 @@
+import { resolveTreatment, type ResolvedTreatment, type TreatmentV1 } from './treatment';
 import { AudioParamError } from '../guard/errors';
 import {
   checkArray,
@@ -51,6 +52,7 @@ import {
 } from './style';
 
 export type { ResolvedGesture, ResolvedNode, ResolvedSignal, ResolvedValue } from './bindings';
+export type { ResolvedTreatment, TreatmentV1 } from './treatment';
 
 export const ACOUSTIC_PROGRAM_SCHEMA = 'AcousticProgramV1';
 
@@ -175,6 +177,8 @@ export interface AcousticProgramV1 {
   readonly effects?: readonly EffectNodeV1[];
   readonly style?: StyleRefV1;
   readonly master?: ProgramMasterV1;
+  /** Master SONRASI teslim işlemi (uzaklık, engel, ortam, cihaz); bkz. `treatment.ts`. */
+  readonly treatment?: TreatmentV1;
 }
 
 export interface ResolvedLayer {
@@ -238,6 +242,7 @@ export interface ResolvedProgram {
   readonly samples: ReadonlyMap<string, SampleDeclV1>;
   readonly banks: ReadonlyMap<string, readonly ResolvedZone[]>;
   readonly master: ResolvedMaster;
+  readonly treatment: ResolvedTreatment | null;
 }
 
 const SEED_RULE = { min: 0, max: 0xffff_ffff, integer: true } as const;
@@ -512,12 +517,25 @@ function resolveMaster(value: unknown, duration: number): ResolvedMaster {
   };
 }
 
-/** Programın ÇIKTI süresi (loop katlamasında `durationSeconds − crossfade`). */
-export function outputSeconds(program: ResolvedProgram): number {
+/** Master çıktısının kare sayısı (loop katlamasında `kare − crossfade`), işleme katmanı öncesi. */
+export function masterFrames(program: ResolvedProgram): number {
   const fold = program.master.loop
     ? Math.round(program.master.loop.crossfadeSeconds * program.sampleRate)
     : 0;
-  return (program.frames - fold) / program.sampleRate;
+  return program.frames - fold;
+}
+
+/** Programın ÇIKTI süresi: loop katlaması düşülür, işleme katmanının kuyruğu eklenir. */
+export function outputSeconds(program: ResolvedProgram): number {
+  const tail = program.treatment
+    ? Math.round(program.treatment.tailSeconds * program.sampleRate)
+    : 0;
+  return (masterFrames(program) + tail) / program.sampleRate;
+}
+
+/** Programın ÇIKTI kanal sayısı: işleme katmanı katlayabilir ya da çoğaltabilir. */
+export function outputChannels(program: ResolvedProgram): 1 | 2 {
+  return program.treatment?.channels ?? program.channels;
 }
 
 const TOP_KEYS = [
@@ -537,6 +555,7 @@ const TOP_KEYS = [
   'effects',
   'style',
   'master',
+  'treatment',
 ];
 
 /** Katman adlarını çözümden ÖNCE toplar (sidechain ve send hedefleri için). */
@@ -660,6 +679,8 @@ export function resolveProgram(value: unknown): ResolvedProgram {
     limit: PROGRAM_LIMITS.effects,
   });
   const buses = resolveBuses(o.buses, scope, names, layers, style?.controls.spaceDb ?? 0);
+  const master = resolveMaster(o.master, duration);
+  const treatment = resolveTreatment(o.treatment, channels, master.loop !== null, scope, names);
   checkUsage(scope);
   const depth = scope.controls.find((c) => c.entry.modulationDepth);
   return {
@@ -678,6 +699,7 @@ export function resolveProgram(value: unknown): ResolvedProgram {
     style,
     samples,
     banks,
-    master: resolveMaster(o.master, duration),
+    master,
+    treatment,
   };
 }

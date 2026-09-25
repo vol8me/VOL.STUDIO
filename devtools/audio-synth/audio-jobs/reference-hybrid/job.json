@@ -11,16 +11,16 @@
       }
     },
     "brief": {
-      "hash": "sha256:b08764b9c92033d3aa25b9e8b188bba227603585733622ba269348a208faf69a",
+      "hash": "sha256:9665731c3046194ef04ffc5c07e4828ba21504c221523f2576c782ea85f47165",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:b08764b9c92033d3aa25b9e8b188bba227603585733622ba269348a208faf69a",
+      "brief": "sha256:9665731c3046194ef04ffc5c07e4828ba21504c221523f2576c782ea85f47165",
       "hash": "sha256:16a43718925890ab9c2f83f527635738769d87f6c16db01a385aa469be0d463d",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:4d32129b16d900aa88f904966ad7fa447dd17c7ccf382bc4367675c42da833f6",
+      "hash": "sha256:acb695077b21a79b03ba791826b99a2d8e023e0504e00adbd45df199f6c193ef",
       "path": "devtools/audio-synth/reference/production/manifests/sfx/reference-hybrid.json"
     },
     "renders": {
@@ -41,7 +41,7 @@
   "jobId": "reference-hybrid",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 11,
+  "revision": 15,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

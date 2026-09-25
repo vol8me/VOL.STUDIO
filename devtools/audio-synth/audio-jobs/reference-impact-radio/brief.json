@@ -1,0 +1,28 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "dry",
+    "weapon",
+    "treatment:radio"
+  ],
+  "durationSeconds": {
+    "max": 1.5,
+    "min": 0.8
+  },
+  "id": "reference-impact-radio",
+  "intent": "Kuru, konumsal bir silah atışı: yakın/orta/uzak ve engel/ortam/cihaz teslim varyantlarının ortak kaynağı. Kuyruk ve yansıma kaynağa değil teslim profiline aittir. Teslim profili radio: Telsiz: 350–3200 Hz bant (24 dB/oktav), 1.8 kHz varlık tepesi, tanh sürüş ve ağır sıkıştırma; mono.",
+  "kind": "acoustic",
+  "mechanisms": [
+    "impact",
+    "pressure"
+  ],
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "treatment-profile"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Referans silah atışı — radio"
+}

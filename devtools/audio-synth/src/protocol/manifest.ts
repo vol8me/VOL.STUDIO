@@ -1,4 +1,5 @@
 import type { AssetClass } from '../analysis/assetQa';
+import { LAYOUT_POLICY, PLACEMENTS, type Placement, type StereoImageV1 } from '../analysis/layout';
 import { AUDIO_ANALYSIS_SCHEMA, type AudioAnalysisReportV1 } from '../analysis/report';
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read';
@@ -6,6 +7,7 @@ import { RENDER_SURFACE_SCHEME, type RenderSurfaceV1 } from '../program/surface'
 import { hashCanonical, type Sha256 } from './canonical';
 import { checkHash } from './records';
 import type { LoopSeamV1 } from '../analysis/seam';
+import type { ManifestDerivationV1 } from './derivation';
 import { validateSources, type ManifestSourcesV1 } from './sources';
 import type { EncoderToolchain } from './toolchain';
 
@@ -62,6 +64,12 @@ export interface AudioAssetManifestV1 {
     readonly runtime: { readonly node: string };
   };
   readonly encoder: EncoderToolchain;
+  /** Kodlama profili (`encode-profile-v1`): politika özeti ve seçilen kalite; eski manifest'te yok. */
+  readonly encoding?: {
+    readonly scheme: 'encode-profile-v1';
+    readonly policyHash: Sha256;
+    readonly quality: number;
+  };
   readonly analysis: {
     readonly analyzerVersion: number;
     readonly sourceRecordHash: Sha256;
@@ -81,10 +89,23 @@ export interface AudioAssetManifestV1 {
     /** Çalışma zamanı beyanının yeri; referans hedefte `null` (hiçbir oyun çalmaz). */
     readonly runtimeDeclaration: string | null;
   };
+  /**
+   * Kanal/yerleşim kaydı: beyan edilen (ya da sınıf varsayılanı) yerleşim,
+   * kodlanmış kanal sayısı ve kodek sonrası stereo görüntü. Bu alandan önce
+   * yayımlanan manifest'te yoktur; varsa `verify` yerleşimi yeniden sınar.
+   */
+  readonly layout?: {
+    readonly scheme: typeof LAYOUT_POLICY.scheme;
+    readonly placement: Placement;
+    readonly channels: number;
+    readonly image: StereoImageV1 | null;
+  };
   /** Yalnız sample/IR kullanan programda: kayıt provenance'ı ve sampler seçim gerekçesi. */
   readonly sources?: ManifestSourcesV1;
   /** Yalnız loop brief'inde: kodek sonrası dikiş ölçümü (`loop-seam-v1`). */
   readonly seam?: LoopSeamV1;
+  /** Yalnız teslim varyantında: kaynağa ve profile bağ (`treatment-derivation-v1`). */
+  readonly derivation?: ManifestDerivationV1;
 }
 
 const TOP_KEYS = [
@@ -97,11 +118,14 @@ const TOP_KEYS = [
   'render',
   'engine',
   'encoder',
+  'encoding',
   'analysis',
   'policy',
   'integration',
+  'layout',
   'sources',
   'seam',
+  'derivation',
 ];
 
 /**
@@ -211,6 +235,20 @@ export function validateManifest(value: unknown): AudioAssetManifestV1 {
     'runtime',
   ]);
   if (engine.renderSurface !== undefined) validateRenderSurface(engine.renderSurface);
+  if (o.encoding !== undefined) {
+    const encoding = checkObject(o.encoding, 'encoding', ['scheme', 'policyHash', 'quality']);
+    checkChoice(encoding.scheme, 'encoding.scheme', ['encode-profile-v1'] as const);
+    checkHash(encoding.policyHash, 'encoding.policyHash');
+    if (encoding.quality !== encoder.quality) {
+      throw new AudioParamError(
+        'encoding.quality',
+        'combination',
+        'profil kalitesi kodlayıcı kaydıyla aynı olmalı',
+        encoding.quality,
+      );
+    }
+  }
+  if (o.layout !== undefined) validateLayout(o.layout);
   if (o.sources !== undefined) validateSources(o.sources);
   if (o.seam !== undefined) {
     const seam = checkObject(o.seam, 'seam', [
@@ -230,6 +268,27 @@ export function validateManifest(value: unknown): AudioAssetManifestV1 {
       );
     }
   }
+  if (o.derivation !== undefined) {
+    const d = checkObject(o.derivation, 'derivation', ['scheme', 'source', 'profile', 'cues']);
+    checkChoice(d.scheme, 'derivation.scheme', ['treatment-derivation-v1'] as const);
+    const source = checkObject(d.source, 'derivation.source', [
+      'manifest',
+      'assetId',
+      'programHash',
+      'pcmHash',
+    ]);
+    checkHash(source.programHash, 'derivation.source.programHash');
+    checkHash(source.pcmHash, 'derivation.source.pcmHash');
+    const profile = checkObject(d.profile, 'derivation.profile', [
+      'id',
+      'version',
+      'hash',
+      'kind',
+      'model',
+    ]);
+    checkHash(profile.hash, 'derivation.profile.hash');
+    checkObject(d.cues, 'derivation.cues', ['source', 'derived']);
+  }
   checkObject(o.integration, 'integration', [
     'package',
     'targetKind',
@@ -238,6 +297,22 @@ export function validateManifest(value: unknown): AudioAssetManifestV1 {
     'runtimeDeclaration',
   ]);
   return value as AudioAssetManifestV1;
+}
+
+function validateLayout(value: unknown): void {
+  const o = checkObject(value, 'layout', ['scheme', 'placement', 'channels', 'image']);
+  checkChoice(o.scheme, 'layout.scheme', [LAYOUT_POLICY.scheme] as const);
+  checkChoice(o.placement, 'layout.placement', PLACEMENTS);
+  checkNumber(o.channels, 'layout.channels', { min: 1, max: 2, integer: true });
+  if (o.image === null) return;
+  const image = checkObject(o.image, 'layout.image', [
+    'method',
+    'correlation',
+    'sideDb',
+    'monoFoldLossDb',
+    'dualMono',
+  ]);
+  checkChoice(image.method, 'layout.image.method', ['stereo-image-v1'] as const);
 }
 
 function validateRenderSurface(value: unknown): void {

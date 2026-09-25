@@ -219,14 +219,14 @@ etkin aşamayı ve `next.action`ı YALNIZ dosyalardan hesaplar. Özetler kanonik
 JSON'un SHA-256'sıdır (sıralı anahtar, `-0 → 0`, NaN/undefined/typed array
 reddedilir); zaman damgası hiçbir belgeye girmez.
 
-| Kenar                 | Taşıyan                                         | Bozulunca                         |
-| --------------------- | ----------------------------------------------- | --------------------------------- |
-| brief → program       | job kaydı (`program.brief`)                     | program `stale`                   |
-| program → render      | render kaydı `programHash`                      | render `stale`                    |
-| render → analiz       | analiz kaydı `renderHash`                       | analiz `stale`                    |
-| render/analiz → seçim | seçim kaydı (iki özet)                          | seçim `stale`, publish reddedilir |
-| seçim/program → yayın | manifest (program özeti, renderId, asset baytı) | yayın `stale`                     |
-| program → köken       | `origin.json` `programHash`                     | köken `stale`, publish reddedilir |
+| Kenar                       | Taşıyan                                                  | Bozulunca                         |
+| --------------------------- | -------------------------------------------------------- | --------------------------------- |
+| brief → program             | job kaydı (`program.brief`)                              | program `stale`                   |
+| program → render            | render kaydı `programHash`                               | render `stale`                    |
+| render → analiz             | analiz kaydı `renderHash`                                | analiz `stale`                    |
+| render/analiz → seçim       | seçim kaydı (iki özet)                                   | seçim `stale`, publish reddedilir |
+| brief/seçim/program → yayın | manifest (brief ve program özeti, renderId, asset baytı) | yayın `stale`                     |
+| program → köken             | `origin.json` `programHash`                              | köken `stale`, publish reddedilir |
 
 Protokol dışında düzenlenen dosya `modified`, okunamayan/yarım yazılmış
 dosya `corrupt` görünür; geçerli sayılmaz. Yazımlar atomiktir (aynı dizinde
@@ -281,8 +281,9 @@ artırır, eski programlar eski sürümü adıyla ister.
 ### Publish kapısı
 
 `publishJob` TEK kanonik yoldur: özet zinciri → belgeler → hedef/yol/sınıf →
-yeniden render + PCM kimliği → aynı dizinde staging kodlama → çözme +
-kodek sonrası analiz + sınıf politikası → manifest doğrulaması → iki atomik
+yeniden render + PCM kimliği → aynı dizinde staging kodlama (sınıfın kodlama
+profiliyle) → çözme + kodek sonrası analiz + sınıf politikası + yerleşim →
+teslim varyantında kaynağa bağ → manifest doğrulaması → iki atomik
 rename → job kaydı. Politika düşerse hiçbir dosya yazılmaz; kapı ihlali
 DÜZELTMEZ. True-peak sınırlama programın kendi kararıdır (`master.limiter`,
 isteğe bağlı): kapı onu ne açar ne de onun yerine sinyali ezer. Manifest'siz ya da başka işe ait
@@ -1260,6 +1261,197 @@ baytlarının özetidir (`SampleAssetV1`); kütüphanedeki kayıtlar motorla
   AYRI ayrı kontrol edilir (ölçülen düzeltme: tek zarf bırakması iki
   davranışı birbirine bağlıyordu).
 
+## Teslim biçimleri (Dalga 12)
+
+Bir sesin nasıl ÇALINDIĞI (konumlu mu, ekranda mı, zeminde mi), hangi
+kalitede KODLANDIĞI, aynı kaynağın uzaktan ya da bir engelin ardından nasıl
+DUYULDUĞU ve oyun durumuna göre nasıl DEĞİŞTİĞİ ayrı kararlardır. Dördü de
+makine-okunur politikadır ve ölçülerek kapanır.
+
+### Kanal ve yerleşim
+
+`placement` (brief'te, yazılmazsa sınıf varsayılanı) çalınış biçimidir:
+`positional` dünyada bir yayıcıdır ve motor onu konumlandırır, bu yüzden mono
+olmalıdır. `screen` konumsuz arayüz/HUD sesidir, mono ya da stereo olur.
+`bed` konumsuz zemindir (ambiyans yatağı, müzik). `LAYOUT_POLICY`
+(`channel-layout-v1`) sınıf başına izinli yerleşimi ve kanal sayısını tutar
+(ui: screen 1|2; sfx: positional 1, screen 1|2; ambience: positional 1,
+bed 1|2; music ve music-stem: bed 2). Yanlış kanal sayısı brief
+doğrulamasında adıyla düşer.
+
+Stereo kodek SONRASI mono katlamaya dayanmalıdır (`stereo-image-v1`): mono
+katlama kaybı = stereo yükseklik − (L+R)/2 çift-mono yüksekliği. Tam ilintili
+stereo 0 LU, ilintisiz eşit kanallar ve sert panlı mono kaynak ≈3 LU verir,
+ters faz bunun üstüne çıkar. Tavan 4 LU'dur; eşit seviyede bu ≈ −0.2
+ilintiye denk gelir. Referans stereo asset'ler 0.004–1.40 LU ölçüldü; yan
+kanalı ×3 genişletilen bir müzik 5.41 LU verdi. Mono'ya izin verilen yerde
+özdeş iki kanal (dual-mono, yan/orta < −50 dB) boşa bayttır ve ihlaldir.
+Manifest `layout` bloğu yerleşimi ve görüntüyü kaydeder, `verify` yeniden
+sınar. Bu alandan önce yayımlanan manifest'te blok yoktur ve değerlendirilmez.
+`reference-hybrid` (stereo oda kuyruklu darbe) yeni kuralda `placement:
+screen` beyan ederek yeniden yayımlandı; PCM aynı.
+
+### Kodlama profili
+
+Vorbis kalitesi asset sınıfından gelir (`ENCODE_POLICY`, `encode-profile-v1`).
+Seçim ölçülür: korpus (referans manifest'lerin yeniden render'ı + UI
+presetleri + stereo ambiyans programları, 22 öğe) q0–q10 ile kodlanıp FFmpeg
+ile çözülür; bayt ve kodek sonrası sadakat (`decoded-fidelity-v1`)
+kaydedilir. Sadakat: karenin en güçlü bandının 30 dB altına kadar 1/3 oktav
+hücrelerinde |10·log10(çözülmüş/kaynak)| ortalaması ve 95. yüzdeliği,
+korunan bant genişliği, ΔLUFS ve Δtrue peak. Ölçüt: ortalama ≤ 1.5 dB,
+p95 ≤ 1.5 dB, |ΔLU| ≤ 0.5, ΔTP ≤ 0.5 dB, sınıfın HER öğesinde.
+
+Kural: ölçütü geçen en düşük kalite, ama `minQuality` (4, önceden yayımlanan
+kalite) altına inilmez. Ölçü algısal şeffaflığı kanıtlamaz, yalnız bozulmayı
+yakalar: kaliteyi yükseltebilir, daha önce yayımlanmış kalitenin altına inmek
+kayıtlı bir dinleme kararı ister.
+
+| Sınıf      | Öğe | Ölçütü geçen en düşük | Seçilen | Bayt (q4 → seçilen) | kbps  | Seçilende en kötü öğe         |
+| ---------- | --- | --------------------- | ------- | ------------------- | ----- | ----------------------------- |
+| ui         | 4   | q6                    | q6      | 17815 → 20449       | 240.6 | ort. 1.32, p95 0.19 dB        |
+| sfx        | 7   | q7                    | q7      | 60963 → 78444       | 87.2  | ort. 0.33, p95 0.86 dB        |
+| ambience   | 3   | q3                    | q4      | 524277              | 131.1 | ort. 0.41, p95 1.09, ΔLU 0.43 |
+| music      | 4   | q2                    | q4      | 374495              | 76.0  | ort. 0.25, p95 0.75 dB        |
+| music-stem | 4   | q3                    | q4      | 138456              | 44.9  | ort. 0.30, p95 1.16 dB        |
+
+q4'te 60 ms'lik UI blip'inde ortalama bant hatası 4.31 dB, lazer sfx'te p95
+3.97 dB ölçüldü; profil bu yüzden yükseldi. Kısa seste boyutu Vorbis başlığı
+belirler: 10 ms sessizlik mono 3639 B, stereo 4322 B. UI korpusunda q4 → q8
+baytı yalnız ≈%24 büyütür, gürültülü ambiyansta ≈3.3 kat.
+
+`encode-profiles.lock.json` politika özetini, korpusu, taramanın tamamını ve
+kuralın seçimini taşır; `pnpm audio:encode-baseline` onu yeniden ÖLÇEREK
+yazar ve koddaki tablo ölçümün seçiminden farklıysa yazmayı reddeder.
+`tests/governance/encodeProfiles.test.ts` kilidin bugünkü politikayı
+ölçtüğünü, seçimin ve başarısızlık listelerinin taramadan türediğini ister ve
+seçilen kalitelerde ölçümü yeniden üretir (aynı araç zincirinde bayt bayt).
+Yayın profilin kalitesiyle kodlar; manifest `encoding` bloğu politika özetini
+ve kaliteyi kaydeder. `verify` KAYITLI kaliteyle yeniden kodlar (eski q4
+manifest'ler `identical` kalır) ve profil değiştiyse bilgi olarak yeniden
+yayın önerir.
+
+### İşleme katmanı ve teslim profilleri
+
+`AcousticProgramV1.treatment`, kaynağın BİTMİŞ çıktısına (master + loop
+katlaması sonrası) uygulanan teslim işlemidir: kanal dönüşümü (katlama ya da
+çoğaltma) → süre → sabit parametreli efekt zinciri → seviye → isteğe bağlı
+true-peak sınırı → kuyruğun son 20 ms'lik sönümü. `treatment` çıkarılınca
+kalan belge kaynağın kendisidir; aynı program + tohum aynı kaynak PCM'ini
+verir, işleme onun üstüne deterministik bir zincirdir. Boş zincir kaynağı bit
+bit korur.
+
+- **Seviye kaynağa göredir** (`levelLu`): işlenmiş sesin en yüksek momentary
+  yüksekliği kaynağınkinin `levelLu` kadar altına getirilir. İlk tasarımdaki
+  sabit kazanç kaynağın spektrumuna göre farklı sonuç verdi: duvar ardı
+  −38 LUFS'e indi ve sfx politikasının altında kaldı.
+- **Loop dairesel işlenir:** zincir iki turun üstünde çalışır, ikinci tur
+  alınır; zamana yayılan efektin kuyruğu başa sarar ve dikiş sürekli kalır.
+- **Parametreler sabittir:** gesture ve modülasyon kaynağın zamanına aittir.
+
+İki yeni düğüm: `effect.air-absorption` ISO 9613-1 atmosferik soğurmasını
+(20 °C, 101.325 kPa, bağıl nem parametre) minimum fazlı FIR (homomorfik
+tasarım, 1024 dal) ile uygular. Katsayı ISO 9613-2 Tablo 2'nin 20 °C/%70
+satırını tam bant merkezlerinde tablonun yuvarlaması içinde verir (ör.
+1 kHz 4.98/5.0, 8 kHz 76.62/76.6 dB/km). FIR genliği hedefi 0.05 dB içinde
+uygular (120 dB tabana kadar), enerjinin %99.9'u ilk 64 daldadır.
+`effect.width` orta/yan genişliğidir.
+
+Profiller (`treatment-profile-v1`) adlı, sürümlü düğüm zincirleridir;
+fiziksel modeli olan yerde model uygulanır, olmayan yerde seçim adıyla
+yazılır ve yönü ölçülür. Mesafe profilleri 1/r zayıflamasını PİŞİRMEZ: oyun
+motoru onu çalışma zamanında uygular, pişmiş varyant ikinci kez uygularsa ses
+iki kez söner; 1/r değeri `model.inverseSquareDb` olarak bildirilir.
+
+| Profil        | Zincir (kısaca)                                             | levelLu | Görüntü |
+| ------------- | ----------------------------------------------------------- | ------- | ------- |
+| distance-near | yansıma 0.06 → hava 5 m → genişlik 1                        | 0       | koru    |
+| distance-mid  | atak −6 dB → yansıma 0.3 → hava 30 m → genişlik 0.6         | −3      | koru    |
+| distance-far  | atak −15 dB → yansıma 0.55 → hava 150 m → genişlik 0.25     | −6      | koru    |
+| occluded      | 1.8 kHz alçak geçiren → atak −6 → yansıma 0.25              | −5      | koru    |
+| behind-wall   | 350 Hz 24 dB/okt → atak −12 → kısa oda → genişlik 0         | −9      | mono    |
+| underwater    | 600 Hz 24 dB/okt → 220 Hz +5 dB → atak −10 → koyu yankı     | −5      | koru    |
+| radio         | 350–3200 Hz → 1.8 kHz tepe → tanh sürüş → sıkıştırma → mono | 0       | mono    |
+
+Yansımalar da aynı yolu gider: mesafe profillerinde soğurma yankıdan SONRA
+uygulanır (önce uygulandığında centroid mesafeyle monoton düşmedi). `mono`
+görüntü yalnız yerleşim mono'ya izin veriyorsa kanalı katlar; müzik zemininde
+kanal sayısı korunur, genişlik düğümü daraltır. Türetilmiş sesin tavanı
+−1.5 dBTP'dir (kodek payı).
+
+**Türetme** (`audio:job derive`): kaynak manifest'ten brief ve program
+türetilir (program = kaynak + profilin genişletilmesi), köken `treatment`
+olarak yazılır ve varyant kanonik job akışından geçer. Manifest `derivation`
+bloğu kaynağın manifest yolunu, asset kimliğini, program ve PCM özetini,
+profilin kimliğini/sürümünü/özetini ve yön ölçülerini (`treatment-cues-v1`)
+taşır. Bağın kanıtı üç eşitliktir: işleme dışındaki program kaynağın
+programıdır, kaynak manifest hâlâ o program ve PCM'dir, işleme profilin o
+kaynağa genişletilmesidir. `verify` üçünü de bugünkü kaynak ve katalogla
+yeniden sınar; kaynak değişirse bağ adıyla kopar.
+
+Yön ölçüleri: centroid, atak oranı (başlangıçtan sonraki ilk 5 ms'nin
+enerjisi / sonraki 95 ms) ve doğrudanlık (ilk 50 ms / geri kalan; C50 benzeri
+netlik, sinyalin kendisinden). Crest ve 50 ms'lik tepe/RMS atak yumuşamasını
+göstermedi (8.5 → 8.4 dB), bu yüzden atak oranı seçildi. `reference-impact`
+(fırlatıcı archetype'ı, kuru, konumlu mono) ve yedi varyantı kodek SONRASI:
+
+| Varyant       | Centroid (Hz) | Atak oranı (dB) | Doğrudanlık (dB) | LU (kaynağa göre) |
+| ------------- | ------------- | --------------- | ---------------- | ----------------- |
+| kaynak        | 1485          | −7.22           | −4.96            | 0                 |
+| distance-near | 1442          | −7.22           | −4.87            | 0.0               |
+| distance-mid  | 1368          | −7.78           | −7.46            | −3.0              |
+| distance-far  | 1016          | −9.20           | −21.63           | −6.0              |
+| occluded      | 799           | −7.89           | −8.24            | −5.0              |
+| behind-wall   | 244           | −9.09           | −6.46            | −9.0              |
+| underwater    | 316           | −9.65           | −7.27            | −5.0              |
+| radio         | 1251          | −5.21           | −11.09           | −0.3              |
+
+Yakın → orta → uzak üç ölçüde de kesin monotondur. Telsizin sub ve air
+bantları orta bandın 20 dB'den fazla altındadır. Telsizde atak oranı
+sıkıştırma nedeniyle kaynaktan yüksektir; cihaz profilinin yön iddiası bant
+sınırıdır, uzaklık değil. Test ortamındaki sessiz bir kaynağın (−26.9 LUFS)
+uzak varyantı sfx politikasının altına düştü ve kapı onu reddetti: seviye
+göreli olduğu için sessiz kaynaktan uzak varyant türemez, kaynak düzeltilir.
+
+### Oyun durumu aileleri
+
+Rol sözlüğüne üç SIRALI ve genel oyun durumu ekseni eklendi
+(`family/vocabulary.ts`): `energy` (idle < low < normal < high < peak),
+`urgency` (calm < alert < warning < critical), `integrity` (intact < worn <
+damaged < broken). Bunlar domain kavramı değildir: silah şarjı, motor devri,
+yaralı yaratık ya da kritik uyarı tüketici paketinde bu değerlere eşlenir.
+Durum eksenli varyantın brief'i ve manifest'i yapılandırılmış `state` taşır
+(ör. `{ energy: high, integrity: damaged }`); bank rolleri de taşır, arama
+sözleşmesi (`sound-family-lookup-v1`) değişmez.
+
+Aile iki kanıtı beyan eder ve kapı ölçer (beyan edilmezse rapor bölümü
+yoktur; `reference-shell-hits` raporu değişmedi):
+
+- **Yön iddiaları** (`quality.states`): `{ axis, descriptor, direction }`.
+  İddia yalnız o eksende farklı, diğer bütün rolleri aynı üye çiftlerinde
+  sınanır (kontrollü karşılaştırma); betimleyici sıra yönünde KESİN
+  değişmelidir. Sınanabilir çifti olmayan iddia geçmez; ailede rol olmayan
+  eksene iddia yazılamaz.
+- **Ortak tını kimliği** (`quality.identity`, `timbre-envelope-v1`): her
+  üye medoide beyan edilen eşik içindedir. Zarf 1/6 oktav uzun dönem
+  spektrumudur (25 Hz – 16 kHz); uzaklık, ortalaması çıkarılmış farkın
+  log-frekansta ±3 oktav kaydırmanın en iyisindeki RMS'idir. Böylece seviye
+  ve mekanizmanın hızlanması (devir, perde) kimliği değiştirmez. İlk deneme
+  MFCC (c1–c12, alt kümeleri dahil) aileyi yabancı seslerden AYIRMADI (üye
+  medoide 57–96, yabancılar 46–67); kaydırmasız zarf da ayırmadı. Formant
+  gibi sabit rezonansla tanınan kaynaklarda (konuşma) kaydırma serbestliği
+  fazla hoşgörülüdür; o aileler bu ölçüyle beyan edilmemelidir.
+
+`reference-engine-states`: tek motor programı (`source.machine`), `energy`
+idle/normal/high × `integrity` intact/damaged, altı varyant. Kimlik: medoid
+`high`, üyeler en çok 12.27 (eşik 13; rölanti −1.83 oktav kayar, devir
+oranından beklenen −1.92). Yedi yabancı referans ses (darbe, uzak darbe, iki
+kabuk, tık, hybrid, sample) medoide 13.9 ve üstü: pay küçüktür ve öyle
+raporlanır. İddialar: enerji→centroid ve enerji→yükseklik (6 çift),
+bütünlük→düzlük (3 çift) ihlalsiz. `high` varyantının perdesi sağlam z 4.9
+ile aykırı olarak RAPORLANIR (`outliers: report`): devir farkı bilerek
+büyüktür.
+
 ## Hızlı Başlangıç — yeni bir oyun için ses
 
 Gönderilen ses TEK kapıdan geçer (`publishJob`); oyun betiğinde `writeOgg`
@@ -2021,6 +2213,7 @@ pnpm --filter @volstudio/audio-synth test:coverage    # signoff'ta coverage-audi
 pnpm --filter @volstudio/audio-synth audio:reference-check
 pnpm --filter @volstudio/audio-synth audio:production-check  # manifest'ler, aramalar, aile bank'ları, müzik bundle'ları ve sample kayıtları yalnız kendilerinden
 pnpm --filter @volstudio/audio-synth audio:surface-lock      # registry render yüzeyi kilidi (aynı sürümde değişeni reddeder)
+pnpm --filter @volstudio/audio-synth audio:encode-baseline   # kodlama profili taban çizgisi (ölçerek; tablo ayrışırsa yazmaz)
 pnpm --filter @volstudio/audio-synth audio:job canary run  # organik canary mekanik beklentileri
 pnpm --filter @volstudio/audio-synth audio:job context --json
 pnpm --filter @volstudio/audio-synth bench:budget     # kaynak bütçesi referans ölçümü

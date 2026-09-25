@@ -1,0 +1,28 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "dry",
+    "weapon",
+    "treatment:distance-far"
+  ],
+  "durationSeconds": {
+    "max": 3.2,
+    "min": 0.8
+  },
+  "id": "reference-impact-distance-far",
+  "intent": "Kuru, konumsal bir silah atışı: yakın/orta/uzak ve engel/ortam/cihaz teslim varyantlarının ortak kaynağı. Kuyruk ve yansıma kaynağa değil teslim profiline aittir. Teslim profili distance-far: 150 m: ISO 9613-1 hava soğurması, atak -15 dB, yansıma payı 0.55, görüntü ×0.25. 1/r zayıflaması çalışma zamanınındır.",
+  "kind": "acoustic",
+  "mechanisms": [
+    "impact",
+    "pressure"
+  ],
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "treatment-profile"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Referans silah atışı — distance-far"
+}

@@ -15,6 +15,7 @@
     "pressure",
     "space"
   ],
+  "placement": "screen",
   "provenance": {
     "author": "agent",
     "by": "claude-code"

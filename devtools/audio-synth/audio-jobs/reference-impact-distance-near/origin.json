@@ -1,0 +1,19 @@
+{
+  "programHash": "sha256:51a174b336e71d17329d5094a4da3c7a0d11089ed46511d8fa3f754e2bd624ab",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "kind": "treatment",
+    "profile": {
+      "hash": "sha256:bec5217c8159e58e97b1a3e257385e616071df8a55951459a1fd588919b54473",
+      "id": "distance-near",
+      "version": 1
+    },
+    "source": {
+      "assetId": "reference-impact",
+      "manifest": "devtools/audio-synth/reference/production/manifests/sfx/reference-impact.json",
+      "pcmHash": "sha256:510345c94cff800483f08e4df9d86a52b540d49f79bf6c8cd1f22269d8392996",
+      "programHash": "sha256:f782650efb653ff8c3c682aa85a9b0c83cf935814f8666b4488bf694f5136371",
+      "seed": 2550812508
+    }
+  }
+}

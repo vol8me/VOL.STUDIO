@@ -20,6 +20,7 @@ import {
   CANARY_SCHEMA,
   canaryReviews,
 } from './canary';
+import { deliveryContext } from './contextDelivery';
 import { familyContext } from './contextFamily';
 import { soundDesignContext } from './contextSound';
 import { musicContext } from './contextMusic';
@@ -68,6 +69,7 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
         analyze: `${CLI} analyze <jobId> [--render <renderId>]`,
         select: `${CLI} select <jobId> [--render <renderId>] --reason <metin>`,
         publish: `${CLI} publish <jobId>`,
+        derive: `${CLI} derive <jobId> --from <kaynak manifest> --profile <teslim profili> --asset <paket-göreli .ogg>`,
         verify: `${CLI} verify <manifest> [--json] | --all`,
       },
       rules: [
@@ -132,6 +134,7 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
       target: { id: AUDIO_TARGET_SCHEMA },
     },
     soundDesign: soundDesignContext(CLI),
+    delivery: deliveryContext(CLI),
     ...(brief
       ? {
           briefPlan:

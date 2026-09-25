@@ -282,19 +282,16 @@ describe('manifest doğrulaması ve fark sınıfı', () => {
     expect(jobStatus(repo.loc()).artifacts.publication.state).toBe('modified');
   });
 
-  it('YALNIZ kodlayıcı değişirse (kalite 5 ile üretilmiş kayıt) encoder-only: ses aynı', () => {
+  it('YALNIZ kodlayıcı değişirse (başka FFmpeg ile üretilmiş kayıt) encoder-only: ses aynı', () => {
     publishJob(prepare());
     const manifest = readManifest();
     const file = join(repo.root, referenceAsset);
+    // Eski araç zincirinin farklı baytlarını taklit etmek için başka kaliteyle kodlanır.
     writeOgg(file, renderProgram(manifest.program.document, { seed: manifest.render.seed }), {
       quality: 5,
     });
-    const { fingerprint: _old, ...current } = readEncoderToolchain();
-    const older = {
-      ...current,
-      quality: 5,
-      arguments: current.arguments.map((a) => (a === '4' ? '5' : a)),
-    };
+    const { fingerprint: _old, ...current } = readEncoderToolchain(manifest.encoder.quality);
+    const older = { ...current, version: 'ffmpeg version 0.0-eski' };
     const bytes = readFileSync(file);
     const recorded = {
       ...manifest,

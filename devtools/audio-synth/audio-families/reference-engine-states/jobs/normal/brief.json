@@ -1,0 +1,27 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "energy:normal",
+    "integrity:intact"
+  ],
+  "durationSeconds": {
+    "max": 2.5,
+    "min": 1.5
+  },
+  "id": "reference-engine-states-normal",
+  "intent": "Tek motor programından türeyen oyun durumu ailesi: enerji (rölanti, normal, yüksek devir) ve bütünlük (sağlam, hasarlı) sıralı eksenleri. Varyant normal (energy:normal, integrity:intact).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "state": {
+    "energy": "normal",
+    "integrity": "intact"
+  },
+  "subtype": "sfx",
+  "title": "Referans motor durumları — normal"
+}
