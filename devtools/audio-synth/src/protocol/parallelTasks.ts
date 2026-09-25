@@ -10,6 +10,7 @@ import type { MusicProgramV1 } from '../music/program';
 import { expandProgram } from '../music/score';
 import { renderProgram, type ProgramRender } from '../program/render';
 import { evaluateCandidate, type SearchCandidateV1, type SearchPlan } from '../search';
+import { renderForKind, type JobKind } from './kinds';
 import { hashCanonical, hashPcm, type Sha256 } from './canonical';
 import { repoRenderCache } from './renderCacheStore';
 import { repoSampleResolver } from './samples';
@@ -20,7 +21,12 @@ import { repoSampleResolver } from './samples';
  * vermesinin yapısal güvencesi budur. Görevler saftır: çıktıyı yalnız girdi,
  * render kalitesi ve depo içeriği belirler.
  */
-export type TaskName = 'family-member' | 'search-candidate' | 'music-raw' | 'benchmark-part';
+export type TaskName =
+  | 'family-member'
+  | 'search-candidate'
+  | 'music-raw'
+  | 'benchmark-part'
+  | 'regression-part';
 
 export interface TaskContext {
   readonly repoRoot: string;
@@ -80,6 +86,23 @@ export interface BenchmarkPartOutput {
     readonly measured: unknown;
     readonly reason: string | null;
   }[];
+  readonly channels: Float32Array[] | null;
+  readonly sampleRate: number | null;
+}
+
+export interface RegressionPartInput {
+  readonly key: string;
+  readonly kind: JobKind;
+  readonly document: unknown;
+  readonly seed: number;
+  /** Kimlik değişirse delta ölçümü için kanallar da döner. */
+  readonly expectedPcmHash: Sha256;
+}
+
+export interface RegressionPartOutput {
+  readonly key: string;
+  readonly programHash: Sha256;
+  readonly pcmHash: Sha256;
   readonly channels: Float32Array[] | null;
   readonly sampleRate: number | null;
 }
@@ -148,6 +171,23 @@ function benchmarkPart(input: BenchmarkPartInput, ctx: TaskContext): TaskResult 
   return { output, transfer: input.withPcm ? buffersOf(render.channels) : [] };
 }
 
+function regressionPart(input: RegressionPartInput, ctx: TaskContext): TaskResult {
+  const rendered = renderForKind(input.kind, input.document, {
+    seed: input.seed,
+    samples: repoSampleResolver(ctx.repoRoot),
+  });
+  const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
+  const changed = pcmHash !== input.expectedPcmHash;
+  const output: RegressionPartOutput = {
+    key: input.key,
+    programHash: hashCanonical(input.document),
+    pcmHash,
+    channels: changed ? rendered.channels : null,
+    sampleRate: changed ? rendered.sampleRate : null,
+  };
+  return { output, transfer: changed ? buffersOf(rendered.channels) : [] };
+}
+
 function dispatch(name: TaskName, input: unknown, ctx: TaskContext): TaskResult {
   switch (name) {
     case 'family-member':
@@ -158,6 +198,8 @@ function dispatch(name: TaskName, input: unknown, ctx: TaskContext): TaskResult 
       return musicRaw(input as MusicRawInput, ctx);
     case 'benchmark-part':
       return benchmarkPart(input as BenchmarkPartInput, ctx);
+    case 'regression-part':
+      return regressionPart(input as RegressionPartInput, ctx);
   }
 }
 

@@ -28,6 +28,7 @@ import {
   canaryReviews,
 } from './canary';
 import { QUALITY_MATRIX_SCHEMA } from './capabilities';
+import { regressionCorpus, regressionDecisions } from './regression';
 import { deliveryContext } from './contextDelivery';
 import { familyContext } from './contextFamily';
 import { soundDesignContext } from './contextSound';
@@ -193,6 +194,18 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
       command: `${CLI} capabilities [--json] [--from-report <rapor.json>]`,
       levels: ['production-ready', 'canary', 'regressed', 'research', 'pipeline', 'unsupported'],
       rule: 'Seviye görev/canary kaydından türetilir; registry’de sağlayıcı bulunması kanıt değildir. "production-ready" mekanik düzeydir, insan dinleme onayı ayrı sütundadır.',
+    },
+    regression: {
+      schema: 'RegressionReportV1',
+      decisionsSchema: 'RegressionDecisionsV1',
+      corpus: regressionCorpus(repoRoot).map((e) => ({ id: e.id, assetClass: e.assetClass })),
+      decisions: Object.keys(regressionDecisions(repoRoot).decisions).length,
+      commands: {
+        corpus: `${CLI} regression corpus`,
+        run: `${CLI} regression run [--json] [--ids a,b]`,
+        decide: `${CLI} regression decide <id> --status accepted-change|rejected-regression --pcm sha256:… --note <metin> --by human`,
+      },
+      rule: 'PCM hash değişimi otomatik gerileme sayılmaz; değişen satır "audition-required" olur ve yalnız insan kararıyla (tam o hash’e bağlı) kapanır.',
     },
     registry: { hash: hashCanonical(registry), entries: registry },
     policy: { assetClasses: ASSET_CLASS_POLICIES, renderBudget: DEFAULT_RENDER_BUDGET },

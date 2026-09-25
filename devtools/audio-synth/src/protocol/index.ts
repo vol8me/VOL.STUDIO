@@ -75,6 +75,29 @@ export type {
   QualityMatrixInput,
   QualityMatrixV1,
 } from './capabilities';
+export {
+  decideRegression,
+  DECISIONS_FILE,
+  MANIFESTS_ROOT,
+  descriptorDeltas,
+  regressionCorpus,
+  regressionDecisions,
+  REGRESSION_DECISIONS_SCHEMA,
+  REGRESSION_REPORT_SCHEMA,
+  REGRESSION_ROOT,
+  runRegression,
+} from './regression';
+export type {
+  DescriptorDeltaV1,
+  RegressionDecisionStatus,
+  RegressionDecisionsV1,
+  RegressionDecisionV1,
+  RegressionEntryV1,
+  RegressionReportV1,
+  RegressionRowV1,
+  RegressionRunOptions,
+  RegressionStatus,
+} from './regression';
 export { buildContext, CONTEXT_SCHEMA } from './context';
 export type { ContextOptions } from './context';
 export { ProtocolError } from './errors';

@@ -1,0 +1,58 @@
+{
+  "channels": 2,
+  "description": "Referans ambiyans: rüzgar tabanı + hafif düzenli yağmur; dikişsiz döngü.",
+  "durationSeconds": 16,
+  "layers": [
+    {
+      "durationSeconds": 16,
+      "gainDb": -7,
+      "mechanism": "wind",
+      "name": "wind-bed",
+      "pan": -0.2,
+      "role": "texture",
+      "source": {
+        "params": {
+          "gustScale": 1.4,
+          "gustiness": 0.6,
+          "speed": 9,
+          "whistle": 0.18
+        },
+        "primitive": "source.wind",
+        "version": 1
+      }
+    },
+    {
+      "durationSeconds": 16,
+      "gainDb": -14,
+      "mechanism": "rain",
+      "name": "rain-patter",
+      "pan": 0.18,
+      "role": "texture",
+      "source": {
+        "params": {
+          "dropSize": 1.8,
+          "hiss": 0.35,
+          "intensity": 950,
+          "surface": 0.55,
+          "variability": 0.45
+        },
+        "primitive": "source.rain",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 12,
+    "limiter": {
+      "ceilingDbtp": -1
+    },
+    "loop": {
+      "crossfadeSeconds": 4
+    },
+    "normalize": "peak",
+    "peakDbfs": -9
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 4107
+}

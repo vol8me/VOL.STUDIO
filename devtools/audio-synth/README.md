@@ -52,6 +52,11 @@ list|run [--audition] [--json]|review` — 19 canary + görevler tek raporda
   matrisi (`QualityMatrixV1`): seviye görev/canary kaydından türetilir,
   "primitive mevcut" sayılmaz; `production-ready` mekanik düzeydir, insan
   dinleme onayı ayrı sütundadır
+- `audio:job regression run|decide|corpus|decisions` — estetik regresyon
+  hafızası: bütün production manifest'lerini güncel motorla yeniden render
+  eder; PCM değişen satır `audition-required` olur (otomatik gerileme
+  sayılmaz), betimleyici farkı yayımlanmış asset çözümüyle ölçülür; insan
+  kararı `regression/decisions.json`'a o PCM hash'ine bağlı yazılır
 - `reference/production/` — referans fixture'ların yayımlanan asset'leri,
   manifest'leri, aile bank'ı ve müzik bundle'ları
 - `render-surface.lock.json` — registry render yüzeyi kilidi

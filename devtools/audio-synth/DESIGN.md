@@ -728,6 +728,29 @@ production-ready, 3 canary (`vocal`, `fire`, `sampled`), 2 research
 (`tail`, `space` — hiçbir görev reverb/delay bus'ı kullanmıyor), 2
 unsupported (`speech`, `doppler-motion`).
 
+### Estetik regresyon hafızası (`audio:job regression`)
+
+`RegressionReportV1`, `reference/production/manifests/**` altındaki bütün
+yayımlanmış manifestleri korpus sayar — üyelik elle beyan edilmez, yeni
+referans publish'i kendiliğinden korpusa düşer. `regression run` her
+girdiyi güncel motorla (`regression-part` görevi, batch bütçesiyle paralel)
+yeniden render eder: PCM kimliği aynıysa satır `unchanged`; değiştiyse
+yayımlanmış `.ogg` FFmpeg ile çözülüp betimleyici farkı ölçülür ve satır
+`audition-required` olur. Hash değişimi tek başına gerileme sayılmaz —
+bilinçli iyileştirme de hash değiştirir; ayrım ancak insan kararıyla yapılır.
+
+`regression decide <id> --status accepted-change|rejected-regression --pcm
+sha256:… --note <metin> --by human`, kararı `regression/decisions.json`
+(`RegressionDecisionsV1`) içine makine-okunur yazar. Karar tam o PCM
+hash'ine bağlıdır: sonraki koşu aynı hash'i üretirse satır kararın
+durumunu taşır, farklı hash üretirse karar bayatlar ve satır yeniden
+`audition-required` olur. Rapor motor sürümlerini (program/music renderer,
+analizör, registry özeti) taşır; böylece büyük DSP değişikliğinde etkilenen
+accepted asset'ler tek komutla listelenir.
+
+Bugünkü taban: 36 manifest (25 sfx, 1 ambience, 10 music/stem) güncel
+motorla bit-bit aynı ürüyor (`unchanged=36`).
+
 ### Dinleme aracı
 
 `search audition <id>` adayları programlarından yeniden render eder (PCM

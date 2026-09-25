@@ -198,7 +198,7 @@ kanıtı `audio-jobs/reference-impact` + yedi teslim varyantı ve
       sayılmaz. `--from-report` kayıtlı raporu render'sız okur; `regressed`
       satırı çıkış kodu 1 verir. `tests/governance/capabilities.test.ts`
       seviye kurallarını ve kanıt dürüstlüğünü kilitler.
-- [ ] **[P2] Reference/audition korpusu motorun estetik regresyon
+- [x] **[P2] Reference/audition korpusu motorun estetik regresyon
       hafızası olsun.** Otomatik unit/spectral testlerin yakalayamadığı
       fakat kullanıcı tarafından daha önce kabul edilmiş ses karakterindeki
       büyük değişimler görünür hale gelsin. Referans kayıt "PCM sonsuza dek
@@ -212,6 +212,15 @@ kanıtı `audio-jobs/reference-impact` + yedi teslim varyantı ve
       durumunu raporlar; bilinçli ses iyileştirmesi sırf PCM hash değişti
       diye otomatik regression sayılmaz ve insan audition kararı chat
       metninde değil machine-readable kayıtla saklanır.
+      **Kapandı (F5c):** korpus = `reference/production/manifests/**`
+      tamamı (36 manifest: 25 sfx, 1 ambience — canonical publish ile
+      `reference-ambience` eklendi — 10 music/stem); `audio:job regression
+run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
+      (yayımlanmış asset FFmpeg çözümüyle) ve `audition-required` durumunu
+      raporlar; insan kararı `regression/decisions.json`'a tam o PCM
+      hash'ine bağlı yazılır, yeni hash kararı bayatlatır; `regression-part`
+      görevi paralel koşar; `tests/regression/` 6 test (mutasyon zinciri
+      dâhil). (Dalga F5)
 
 ### Araştırma kuyruğu — isteğe bağlı AI değerlendirmesi
 
