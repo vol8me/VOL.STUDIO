@@ -665,6 +665,47 @@ resample'a dönünce beklenti düşer). İnsan dinleme durumu `canaries/reviews.
 `canary review … --by human` ile değişir; canary sürümü artınca inceleme
 bayatlar. Mekanik geçiş sesin "organik" olduğunu kanıtlamaz.
 
+### Yetenek benchmark derlemi
+
+`benchmarks/<id>.json` (`BenchmarkTaskV1`): canary'nin **kardeş şemasıdır,
+V2'si değildir** — canary tek kaynaklı organik yapı taşı görevidir;
+benchmark görevi birden çok parça (UI onay/hata), yetenek kategorisi
+(`audio:capabilities` bu anahtarla gruplar), gömülü müzik kaynağı ve
+kodek-sonrası/QA kriterleri taşır. İki şema ayrı sürümlenir: görev eklemek
+organik derlemi, canary sürümü görev raporunu etkilemez.
+
+14 görev (v1): `tank-fire`, `heavy-impact`, `snake-hiss`, `steam`,
+`metal-scrape`, `motor-acceleration`, `electrical-charge`, `water-splash`,
+`creature-vocal`, `ui-feedback` (iki parça), `retro-arcade-sfx`,
+`arcade-theme`, `ambience-loop`, `music-cue`. Parça kaynağı `program`,
+`archetype` ya da `music` (gömülü `MusicProgramV1`+brief; repo ThemeBook
+başvurusu yasaktır — görev kendi belgesini taşır). Kriterler
+`MechanicalCheckV1` + dört genişletilmiş türdür: `codec-loop-seam` ve
+`codec-stem-sync` geçici dizinde gerçek OGG kodla-çöz üzerinden ölçülür
+(sınıfının kodlama kalitesinde; metrik kodek davranışı isterken kodeği
+atlamak yasak), `music-qa` ve `bar-align` `checkMusic`'in QA kararı ile
+spec kare sayılarından okunur. Her parçada tam bir `asset-policy`,
+`clipping` ve `clicks` kriteri zorunludur.
+
+Koşu (`benchmark run`): akustik parçalar `benchmark-part` göreviyle
+`runTasks` üzerinde — seri ve worker yolu aynı saf işlevdir ve çıktı girdi
+sırasıyla döner; müzik parçaları ana iş parçacığında `checkMusic` ile
+koşar (kendi içinde paralel). 19 canary aynı rapora girer; tek komut
+bütün motor sağlığını döker. `--audition` PCM'i `export/benchmarks/`
+altına `writeAuditionCopy` ile yazar.
+
+Kriterler ölçülen davranışa yazılır, tahmin edilmez ve ayırt edicilikleri
+testle kilitlenir: motor rpm eğrisini düzleştirmek `pitch-contour`'u, hata
+sesinin eğrisini ters çevirmek pencereli `pitch`'i, gövde vuruşunu zil
+modeline çevirmek `descriptor`+`band-dominance`'i düşürür; `snake-hiss`
+kriterleri `steam` render'ını, `tank-fire` kriterleri `metal-scrape`
+render'ını reddeder. Amaçlı dokuların sınırları da kayıtlıdır: blast
+crackle'ı tık sayacında aday üretir (tank-fire crackle 0), elektrik
+arcları seyrek tutulur (arcs 0.1 → 16 aday, sınır 20). İnsan dinleme
+durumu `benchmarks/reviews.json` (`BenchmarkReviewsV1`) içindedir, hepsi
+`pending-human`dır ve yalnız `benchmark review … --by human` ile değişir;
+görev sürümü artınca inceleme bayatlar.
+
 ### Dinleme aracı
 
 `search audition <id>` adayları programlarından yeniden render eder (PCM

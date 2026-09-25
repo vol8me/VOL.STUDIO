@@ -1,0 +1,99 @@
+{
+  "schema": "BenchmarkTaskV1",
+  "id": "retro-arcade-sfx",
+  "version": 1,
+  "title": "Retro arcade SFX",
+  "purpose": "source.retro coin arpej + yükselen frekans: iki adımlı chip tınılı kısa ödül sesi.",
+  "category": "retro-sfx",
+  "parts": [
+    {
+      "id": "main",
+      "source": {
+        "kind": "program",
+        "program": {
+          "schema": "AcousticProgramV1",
+          "sampleRate": 48000,
+          "channels": 1,
+          "durationSeconds": 0.5,
+          "seed": 67,
+          "master": {
+            "normalize": "peak",
+            "peakDbfs": -6,
+            "fadeOutSeconds": 0.08
+          },
+          "layers": [
+            {
+              "name": "coin",
+              "source": {
+                "primitive": "source.retro",
+                "version": 1,
+                "params": {
+                  "waveform": "pulse",
+                  "duty": 0.125,
+                  "frequency": 988,
+                  "arpeggio": "coin",
+                  "arpRate": 12,
+                  "bits": 12,
+                  "rate": 8000
+                }
+              },
+              "articulation": {
+                "primitive": "articulation.envelope",
+                "version": 1,
+                "params": {
+                  "attack": 0.002,
+                  "decay": 0.08,
+                  "sustainLevel": 0.5,
+                  "release": 0.12
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expectations": [
+        {
+          "kind": "asset-policy",
+          "assetClass": "ui"
+        },
+        {
+          "kind": "clipping"
+        },
+        {
+          "kind": "clicks",
+          "max": 2
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "durationSeconds",
+          "max": 0.8
+        },
+        {
+          "kind": "pitch",
+          "min": 300,
+          "max": 3000,
+          "minConfidence": 0.5
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "attackSeconds",
+          "max": 0.02
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "centroidHz",
+          "min": 1500
+        },
+        {
+          "kind": "onset-rate",
+          "min": 1,
+          "max": 20
+        }
+      ]
+    }
+  ],
+  "listeningGuide": [
+    "İki adımlı parlak chip blip (coin); temiz kenarlar, lo-fi karakter yalnız kuantizasyondan.",
+    "Hata belirtileri: uzun şarkı gibi çalma, metalik gürültü, kayan perdeyle sürekli yükselme."
+  ]
+}

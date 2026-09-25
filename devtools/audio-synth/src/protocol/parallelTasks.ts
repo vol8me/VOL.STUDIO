@@ -2,7 +2,7 @@ import { timbreEnvelope } from '../analysis/timbre';
 import type { MessagePort } from 'node:worker_threads';
 import { analyzeAudio } from '../analysis/report';
 import { summarizeAudio, type DescriptorSummaryV1 } from '../analysis/summary';
-import type { MechanicalCheckV1 } from '../analysis/checks';
+import { evaluateChecks, type MechanicalCheckV1 } from '../analysis/checks';
 import { withRenderSession, type RenderQuality } from '../engine/session';
 import type { MusicRenderV1 } from '../music/render';
 import { renderMusicRaw } from '../music/stem';
@@ -10,7 +10,7 @@ import type { MusicProgramV1 } from '../music/program';
 import { expandProgram } from '../music/score';
 import { renderProgram, type ProgramRender } from '../program/render';
 import { evaluateCandidate, type SearchCandidateV1, type SearchPlan } from '../search';
-import { hashPcm, type Sha256 } from './canonical';
+import { hashCanonical, hashPcm, type Sha256 } from './canonical';
 import { repoRenderCache } from './renderCacheStore';
 import { repoSampleResolver } from './samples';
 
@@ -20,7 +20,7 @@ import { repoSampleResolver } from './samples';
  * vermesinin yapısal güvencesi budur. Görevler saftır: çıktıyı yalnız girdi,
  * render kalitesi ve depo içeriği belirler.
  */
-export type TaskName = 'family-member' | 'search-candidate' | 'music-raw';
+export type TaskName = 'family-member' | 'search-candidate' | 'music-raw' | 'benchmark-part';
 
 export interface TaskContext {
   readonly repoRoot: string;
@@ -57,6 +57,31 @@ export interface SearchCandidateOutput {
 export interface MusicRawInput {
   readonly program: MusicProgramV1;
   readonly stem: string | null;
+}
+
+export interface BenchmarkPartInput {
+  /** `görev/parça` — çıktıyı girdiye bağlayan anahtar. */
+  readonly key: string;
+  /** Doğrulanmış `AcousticProgramV1` belgesi. */
+  readonly program: unknown;
+  /** Yalnız mekanik kriterler; kodek/QA kriterleri ana iş parçacığında ölçülür. */
+  readonly checks: readonly MechanicalCheckV1[];
+  /** Dinleme kopyası ya da kodek ölçümü için PCM de dönsün mü. */
+  readonly withPcm: boolean;
+}
+
+export interface BenchmarkPartOutput {
+  readonly key: string;
+  readonly programHash: Sha256;
+  readonly pcmHash: Sha256;
+  readonly checks: readonly {
+    readonly kind: string;
+    readonly pass: boolean;
+    readonly measured: unknown;
+    readonly reason: string | null;
+  }[];
+  readonly channels: Float32Array[] | null;
+  readonly sampleRate: number | null;
 }
 
 interface TaskResult {
@@ -103,6 +128,26 @@ function musicRaw(input: MusicRawInput, ctx: TaskContext): TaskResult {
   return { output, transfer: buffersOf(output.channels) };
 }
 
+function benchmarkPart(input: BenchmarkPartInput, ctx: TaskContext): TaskResult {
+  const render = renderProgram(input.program, { samples: repoSampleResolver(ctx.repoRoot) });
+  const report = analyzeAudio(render.channels, render.sampleRate, 'source-pcm');
+  const checks = evaluateChecks(input.checks, render, report).map((r) => ({
+    kind: r.check.kind,
+    pass: r.pass,
+    measured: r.measured,
+    reason: r.reason,
+  }));
+  const output: BenchmarkPartOutput = {
+    key: input.key,
+    programHash: hashCanonical(input.program),
+    pcmHash: hashPcm(render.channels, render.sampleRate),
+    checks,
+    channels: input.withPcm ? render.channels : null,
+    sampleRate: input.withPcm ? render.sampleRate : null,
+  };
+  return { output, transfer: input.withPcm ? buffersOf(render.channels) : [] };
+}
+
 function dispatch(name: TaskName, input: unknown, ctx: TaskContext): TaskResult {
   switch (name) {
     case 'family-member':
@@ -111,6 +156,8 @@ function dispatch(name: TaskName, input: unknown, ctx: TaskContext): TaskResult 
       return searchCandidate(input as SearchCandidateInput, ctx);
     case 'music-raw':
       return musicRaw(input as MusicRawInput, ctx);
+    case 'benchmark-part':
+      return benchmarkPart(input as BenchmarkPartInput, ctx);
   }
 }
 

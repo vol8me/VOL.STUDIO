@@ -1,0 +1,108 @@
+{
+  "schema": "BenchmarkTaskV1",
+  "id": "ambience-loop",
+  "version": 1,
+  "title": "Ambience loop'u",
+  "purpose": "source.wind + source.rain katmanları, master.loop katlamasıyla dikişsiz dönen atmosfer yatağı — kodek sonrası da sürekli.",
+  "category": "ambience",
+  "parts": [
+    {
+      "id": "main",
+      "source": {
+        "kind": "program",
+        "program": {
+          "schema": "AcousticProgramV1",
+          "sampleRate": 48000,
+          "channels": 2,
+          "durationSeconds": 18,
+          "seed": 71,
+          "master": {
+            "normalize": "peak",
+            "peakDbfs": -8,
+            "loop": {
+              "crossfadeSeconds": 5
+            }
+          },
+          "layers": [
+            {
+              "name": "wind",
+              "source": {
+                "primitive": "source.wind",
+                "version": 1,
+                "params": {
+                  "speed": 9,
+                  "gustiness": 0.55,
+                  "gustScale": 1.3,
+                  "whistle": 0.15
+                }
+              }
+            },
+            {
+              "name": "rain",
+              "gainDb": -14,
+              "source": {
+                "primitive": "source.rain",
+                "version": 1,
+                "params": {
+                  "intensity": 450,
+                  "dropSize": 2,
+                  "hiss": 0.3,
+                  "surface": 0.35,
+                  "variability": 0.45
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expectations": [
+        {
+          "kind": "asset-policy",
+          "assetClass": "ambience"
+        },
+        {
+          "kind": "clipping"
+        },
+        {
+          "kind": "clicks",
+          "max": 4
+        },
+        {
+          "kind": "codec-loop-seam"
+        },
+        {
+          "kind": "codec-stem-sync"
+        },
+        {
+          "kind": "aperiodic",
+          "maxConfidence": 0.35
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "durationSeconds",
+          "min": 10,
+          "max": 18
+        },
+        {
+          "kind": "onset-rate",
+          "max": 8
+        },
+        {
+          "kind": "band-dominance",
+          "dominant": "low",
+          "over": "air"
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "integratedLufs",
+          "min": -34,
+          "max": -14
+        }
+      ]
+    }
+  ],
+  "listeningGuide": [
+    "Kesintisiz bir rüzgâr yatağı; loop noktasında tık, seviye sıçraması ya da tekrar hissi olmamalı.",
+    "Hata belirtileri: dikişte boşluk, periyodik motor uğultusu, yağmurun rüzgârı bastırması."
+  ]
+}

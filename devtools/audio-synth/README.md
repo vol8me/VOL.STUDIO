@@ -45,6 +45,9 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 - `audio-samples/` — `SampleAssetV1` kayıtları (sentetik fixture'lar; WAV
   git-dışı üretilir, JSON repodadır)
 - `canaries/` — sürümlü canary görevleri ve insan dinleme durumu
+- `benchmarks/` — 14 yetenek görevi (canary'nin kardeş şeması; parça,
+  kategori, kodek/QA kriterleri ve dinleme rehberi): `audio:job benchmark
+list|run [--audition] [--json]|review` — 19 canary + görevler tek raporda
 - `reference/production/` — referans fixture'ların yayımlanan asset'leri,
   manifest'leri, aile bank'ı ve müzik bundle'ları
 - `render-surface.lock.json` — registry render yüzeyi kilidi

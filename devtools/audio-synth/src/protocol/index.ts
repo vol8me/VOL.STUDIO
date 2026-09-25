@@ -39,6 +39,33 @@ export type {
   CanaryReviewsV1,
   OrganicCanaryV1,
 } from './canary';
+export {
+  BENCHMARK_AUDITION_ROOT,
+  BENCHMARK_REPORT_SCHEMA,
+  BENCHMARK_REVIEWS_SCHEMA,
+  BENCHMARK_SCHEMA,
+  BENCHMARKS_ROOT,
+  benchmarkReviews,
+  loadBenchmarkTasks,
+  recordBenchmarkReview,
+  runBenchmarks,
+  validateBenchmarkTask,
+} from './benchmark';
+export type {
+  BenchmarkCanaryEntryV1,
+  BenchmarkCheckV1,
+  BenchmarkPartResultV1,
+  BenchmarkPartV1,
+  BenchmarkReportV1,
+  BenchmarkReviewState,
+  BenchmarkReviewStatus,
+  BenchmarkReviewsV1,
+  BenchmarkRunOptions,
+  BenchmarkSourceV1,
+  BenchmarkTaskResultV1,
+  BenchmarkTaskV1,
+  CheckOutcomeV1,
+} from './benchmark';
 export { buildContext, CONTEXT_SCHEMA } from './context';
 export type { ContextOptions } from './context';
 export { ProtocolError } from './errors';

@@ -1,0 +1,111 @@
+{
+  "schema": "BenchmarkTaskV1",
+  "id": "water-splash",
+  "version": 1,
+  "title": "Su / akışkan olayı",
+  "purpose": "source.bubbles kümeleri + su gövdesi: çok olaylı, perdesiz, kısa ve orta süreli damlacık bulutu.",
+  "category": "fluid",
+  "parts": [
+    {
+      "id": "main",
+      "source": {
+        "kind": "program",
+        "program": {
+          "schema": "AcousticProgramV1",
+          "sampleRate": 48000,
+          "channels": 1,
+          "durationSeconds": 1.6,
+          "seed": 53,
+          "master": {
+            "normalize": "peak",
+            "peakDbfs": -3,
+            "fadeOutSeconds": 0.2
+          },
+          "layers": [
+            {
+              "name": "bubbles",
+              "source": {
+                "primitive": "source.bubbles",
+                "version": 1,
+                "params": {
+                  "rate": 28,
+                  "clustering": 0.7,
+                  "radius": 1.4,
+                  "damping": 1.4,
+                  "rise": 0.5,
+                  "sizeSpread": 0.8,
+                  "regularity": 0.3,
+                  "levelSpread": 6
+                }
+              }
+            },
+            {
+              "name": "splash",
+              "gainDb": -9,
+              "source": {
+                "primitive": "source.noise",
+                "version": 1,
+                "params": {
+                  "color": "pink"
+                }
+              },
+              "resonators": [
+                {
+                  "primitive": "resonator.biquad",
+                  "version": 1,
+                  "params": {
+                    "mode": "bandpass",
+                    "frequency": 1800,
+                    "q": 1.2
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectations": [
+        {
+          "kind": "asset-policy",
+          "assetClass": "sfx"
+        },
+        {
+          "kind": "clipping"
+        },
+        {
+          "kind": "clicks",
+          "max": 24
+        },
+        {
+          "kind": "aperiodic",
+          "maxConfidence": 0.4
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "durationSeconds",
+          "min": 0.8,
+          "max": 2.2
+        },
+        {
+          "kind": "onset-rate",
+          "min": 8
+        },
+        {
+          "kind": "band-dominance",
+          "dominant": "mid",
+          "over": "sub"
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "centroidHz",
+          "min": 800,
+          "max": 4500
+        }
+      ]
+    }
+  ],
+  "listeningGuide": [
+    "Suya düşen ya da çalkalanan sıvının kabarcıklı sesi; tek damla değil olay bulutu.",
+    "Hata belirtileri: makineli tıkırtı, perdeli düdük, yağmur gibi homojen gürültü."
+  ]
+}

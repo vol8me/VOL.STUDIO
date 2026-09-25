@@ -1,0 +1,38 @@
+{
+  "schema": "BenchmarkTaskV1",
+  "id": "creature-vocal",
+  "version": 1,
+  "title": "Yaratık vokali",
+  "purpose": "archetype.vocal-tube: glottal kaynak + tüp/formant gövde — yükselip düşen perdeli hayvan çağrısı.",
+  "category": "creature-voice",
+  "parts": [
+    {
+      "id": "main",
+      "source": {
+        "kind": "archetype",
+        "request": {
+          "schema": "ArchetypeRequestV1",
+          "archetype": "archetype.vocal-tube",
+          "version": 1,
+          "variation": 0,
+          "seed": 11,
+          "params": { "durationSeconds": 1.8 }
+        }
+      },
+      "expectations": [
+        { "kind": "asset-policy", "assetClass": "sfx" },
+        { "kind": "clipping" },
+        { "kind": "clicks", "max": 0 },
+        { "kind": "pitch", "min": 80, "max": 700, "minConfidence": 0.5 },
+        { "kind": "pitch-contour", "shape": "rise-fall", "minRatio": 1.3 },
+        { "kind": "descriptor", "descriptor": "durationSeconds", "min": 1.0, "max": 2.6 },
+        { "kind": "descriptor", "descriptor": "centroidHz", "min": 400, "max": 4000 },
+        { "kind": "onset-rate", "max": 8 }
+      ]
+    }
+  ],
+  "listeningGuide": [
+    "Tek nefeste yükselip inen organik bir çağrı; sentetik sirene değil boru/diyafram tınısına benzemeli.",
+    "Hata belirtileri: alarm sireni, robotik vibrato, nefessiz ve diyaframsız saf sinüs."
+  ]
+}

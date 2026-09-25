@@ -14,6 +14,13 @@ import { PROGRAM_RENDERER_VERSION } from '../program/render';
 import { ACOUSTIC_PROGRAM_SCHEMA, PROGRAM_LIMITS } from '../program/schema';
 import { hashCanonical } from './canonical';
 import {
+  BENCHMARK_AUDITION_ROOT,
+  BENCHMARK_REVIEWS_SCHEMA,
+  BENCHMARK_SCHEMA,
+  BENCHMARKS_ROOT,
+  benchmarkReviews,
+} from './benchmark';
+import {
   CANARIES_ROOT,
   CANARY_AUDITION_ROOT,
   CANARY_REVIEWS_SCHEMA,
@@ -162,6 +169,23 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
         review: `${CLI} canary review <id> --status pending-human|heard-acceptable|heard-problem --note <metin> --by human`,
       },
       rule: 'Mekanik beklentiler motor gerilemesini yakalar, "organik" kanıtı değildir; dinleme durumu yalnız insan beyanıyla değişir.',
+    },
+    benchmark: {
+      schema: BENCHMARK_SCHEMA,
+      reviewsSchema: BENCHMARK_REVIEWS_SCHEMA,
+      root: BENCHMARKS_ROOT,
+      auditionRoot: BENCHMARK_AUDITION_ROOT,
+      entries: benchmarkReviews(repoRoot).map((r) => ({
+        id: r.id,
+        version: r.version,
+        review: r.status,
+      })),
+      commands: {
+        list: `${CLI} benchmark list`,
+        run: `${CLI} benchmark run [--audition] [--json]  — 19 canary + görevler tek sürümlü raporda`,
+        review: `${CLI} benchmark review <id> --status pending-human|heard-acceptable|heard-problem --note <metin> --by human`,
+      },
+      rule: 'Görev kriterleri gerçek davranışı ayırt eder (diğer görevlerin render’ını reddeder); dinleme durumu yalnız insan beyanıyla değişir.',
     },
     registry: { hash: hashCanonical(registry), entries: registry },
     policy: { assetClasses: ASSET_CLASS_POLICIES, renderBudget: DEFAULT_RENDER_BUDGET },

@@ -169,7 +169,7 @@ kanıtı `audio-jobs/reference-impact` + yedi teslim varyantı ve
 > sistemi (Dalga 1) vardır — aksi hâlde graph-cache anahtarları güvenilir
 > değildir.
 
-- [ ] **[P1] Genel audio benchmark/canary korpusu genişletilsin.** En az:
+- [x] **[P1] Genel audio benchmark/canary korpusu genişletilsin.** En az:
       stylized tank fire, heavy realistic-ish impact, snake-like hiss,
       steam, metal scrape, motor acceleration, electrical charge,
       water/fluid event, creature vocal, UI confirm/error, retro arcade
@@ -177,6 +177,13 @@ kanıtı `audio-jobs/reference-impact` + yedi teslim varyantı ve
       sürümlü görevler olur. Kapanır: her görev mekanik/QA kriterleri ve
       gerekiyorsa audition kaydı taşır; yeni motor sürümü bütün canary'lerin
       durumunu tek raporda gösterir.
+      **Kapandı (F5a):** `benchmarks/` altında 14 `BenchmarkTaskV1` görevi
+      (13 akustik/archetype + 2 gömülü müzik; ui-feedback iki parçalı).
+      `audio:job benchmark list|run|review` 19 canary + 14 görevi tek
+      `BenchmarkReportV1`'de döker; kodek-sonrası dikiş/hiza, müzik QA ve
+      bar hizası kriterleri ölçülür, seri/worker eşitliği ve mutasyon
+      ayırt ediciliği `tests/benchmark/` ile kilitli. Dinleme durumları
+      `reviews.json`da `pending-human`.
 - [ ] **[P2] `audio:capabilities` kalite matrisi oluşsun.** Motor yalnız
       "primitive mevcut" demez; sürümlü benchmark görevlerinde hangi ses
       ailelerinin production-ready/canary/research seviyesinde olduğunu

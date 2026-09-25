@@ -1,0 +1,106 @@
+{
+  "schema": "BenchmarkTaskV1",
+  "id": "tank-fire",
+  "version": 1,
+  "title": "Stilize tank ateşi",
+  "purpose": "source.blast + source.drum: basınç patlaması üzerine sub gövde vuruşu — tek vuruşlu, sub ağırlıklı, kısa ataklı SFX.",
+  "category": "weapon-fire",
+  "parts": [
+    {
+      "id": "main",
+      "source": {
+        "kind": "program",
+        "program": {
+          "schema": "AcousticProgramV1",
+          "sampleRate": 48000,
+          "channels": 1,
+          "durationSeconds": 2.2,
+          "seed": 23,
+          "master": {
+            "normalize": "peak",
+            "peakDbfs": -3,
+            "fadeOutSeconds": 0.08,
+            "limiter": {
+              "ceilingDbtp": -1.5
+            }
+          },
+          "layers": [
+            {
+              "name": "blast",
+              "source": {
+                "primitive": "source.blast",
+                "version": 1,
+                "params": {
+                  "decay": 1.5,
+                  "brightness": 0.4,
+                  "crackle": 0,
+                  "darkening": 0.5
+                }
+              }
+            },
+            {
+              "name": "thump",
+              "gainDb": -3,
+              "source": {
+                "primitive": "source.drum",
+                "version": 1,
+                "params": {
+                  "model": "kick",
+                  "tune": -8,
+                  "decay": 0.9,
+                  "drive": 0.5,
+                  "velocity": 1,
+                  "attack": 0.8,
+                  "noise": 0.3
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expectations": [
+        {
+          "kind": "asset-policy",
+          "assetClass": "sfx"
+        },
+        {
+          "kind": "clipping"
+        },
+        {
+          "kind": "clicks",
+          "max": 2
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "durationSeconds",
+          "min": 1.5,
+          "max": 2.8
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "attackSeconds",
+          "max": 0.03
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "decay40Seconds",
+          "max": 2.0
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "centroidHz",
+          "max": 1800
+        },
+        {
+          "kind": "band-dominance",
+          "dominant": "sub",
+          "over": "mid"
+        }
+      ]
+    }
+  ],
+  "listeningGuide": [
+    "Derin, tek vuruşlu bir patlama ve arkasında ağır bir gövde beklenir; mermi değil top.",
+    "Hata belirtileri: zayıf sine düşüşü, patlamada yankı, gürültüsü olmayan saf ton, çift vuruş."
+  ]
+}
