@@ -1,3 +1,4 @@
+import type { WaveSampleFn } from '../../synthesis/waveforms';
 import {
   addBody,
   addFiltered,
@@ -221,12 +222,13 @@ function clap(out: Float32Array, rate: number, d: ResolvedDrum): void {
   });
 }
 
-function hat(out: Float32Array, rate: number, d: ResolvedDrum): void {
+function hat(out: Float32Array, rate: number, d: ResolvedDrum, wave?: WaveSampleFn): void {
   const tau = hatTau(d);
   const metal = metallic(
     out.length,
     rate,
     HAT_RATIOS.map((f) => f * semis(d.tune)),
+    wave,
   );
   const envelope = (t: number) => Math.min(1, t / 0.0005) * Math.exp(-t / tau);
   addFiltered(
@@ -253,12 +255,13 @@ function hat(out: Float32Array, rate: number, d: ResolvedDrum): void {
   addNoise(out, rate, click(d, d.seed + 1, 8000, 0.0015, 0.6 * d.attack));
 }
 
-function cymbal(out: Float32Array, rate: number, d: ResolvedDrum): void {
+function cymbal(out: Float32Array, rate: number, d: ResolvedDrum, wave?: WaveSampleFn): void {
   const tau = span(d.decay, 0.25, 1.6);
   const metal = metallic(
     out.length,
     rate,
     CYMBAL_RATIOS.map((f) => f * semis(d.tune)),
+    wave,
   );
   addFiltered(
     out,
@@ -311,5 +314,5 @@ function perc(out: Float32Array, rate: number, d: ResolvedDrum): void {
 }
 
 export const DRUM_RENDERERS: Readonly<
-  Record<DrumModel, (out: Float32Array, rate: number, d: ResolvedDrum) => void>
+  Record<DrumModel, (out: Float32Array, rate: number, d: ResolvedDrum, wave?: WaveSampleFn) => void>
 > = { kick, tom, snare, clap, hat, cymbal, perc };

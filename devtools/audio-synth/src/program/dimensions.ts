@@ -252,9 +252,13 @@ function specOf(
 }
 
 function controlEntry(id: string, path: string): ControlEntry {
-  const entry = PROGRAM_REGISTRY.entries().find((e) => e.id === id);
-  if (entry?.kind !== 'control')
+  if (!PROGRAM_REGISTRY.has(id)) {
     throw new AudioParamError(path, 'unknown-id', 'registry makrosu değil', id);
+  }
+  const entry = PROGRAM_REGISTRY.get(id);
+  if (entry.kind !== 'control') {
+    throw new AudioParamError(path, 'unknown-id', 'registry makrosu değil', id);
+  }
   return entry;
 }
 

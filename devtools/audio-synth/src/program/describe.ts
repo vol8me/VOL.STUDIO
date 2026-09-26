@@ -102,5 +102,8 @@ export function describeEntry(entry: ProgramEntry): RegistryEntryDescription {
 }
 
 export function describeRegistry(): RegistryEntryDescription[] {
-  return PROGRAM_REGISTRY.entries().map(describeEntry);
+  // Bağlam yeni programlar yazan agent'a görünür: kimlik başına en yeni
+  // sürüm listelenir; eski (dondurulmuş) sürümler çözülebilir ama buraya
+  // girmez.
+  return PROGRAM_REGISTRY.latest().map(describeEntry);
 }

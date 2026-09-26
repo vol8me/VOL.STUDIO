@@ -98,7 +98,7 @@ describe('işleme katmanı: sözleşme', () => {
     expect(estimateProgramCost(treated).workUnits).toBeGreaterThan(
       estimateProgramCost(plain).workUnits,
     );
-    expect(programNodeIds(treated, hit())).toContain('effect.reverb');
+    expect(programNodeIds(treated, hit()).map((ref) => ref.id)).toContain('effect.reverb');
   });
 });
 

@@ -91,16 +91,30 @@ export function renderProjection(entry: ProgramEntry): Record<string, unknown> {
   };
 }
 
-export function nodeSurface(id: string): NodeSurfaceV1 {
-  const entry = PROGRAM_REGISTRY.get(id);
+/** Program yüzeyine yazılan düğüm başvurusu: kimlik + pin'lenmiş sürüm. */
+export interface NodeRef {
+  readonly id: string;
+  readonly version: number;
+}
+
+/** Bir düğümün (kimlik, sürüm) çiftinin yüzey kaydı; `version` verilmezse en yenisi. */
+export function nodeSurface(id: string, version?: number): NodeSurfaceV1 {
+  const entry = PROGRAM_REGISTRY.get(id, version);
   return { id, version: entry.version, hash: hashCanonical(renderProjection(entry)) };
 }
 
 export function surfaceOf(
-  ids: Iterable<string>,
+  refs: Iterable<string | NodeRef>,
   instruments?: readonly InstrumentSurfaceV1[],
 ): RenderSurfaceV1 {
-  const nodes = [...new Set(ids)].sort().map(nodeSurface);
+  const unique = new Map<string, NodeSurfaceV1>();
+  for (const ref of refs) {
+    const surface = typeof ref === 'string' ? nodeSurface(ref) : nodeSurface(ref.id, ref.version);
+    unique.set(`${surface.id}@${surface.version}`, surface);
+  }
+  const nodes = [...unique.values()].sort((a, b) =>
+    a.id < b.id ? -1 : a.id > b.id ? 1 : a.version - b.version,
+  );
   const sortedInstruments = instruments
     ? [...instruments].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
     : undefined;
@@ -126,23 +140,33 @@ export function registryRenderHash(): Sha256 {
  * Çözülmüş programın dokunduğu her düğüm: katman zinciri, bus ve master
  * efektleri, modülatörler ve (belgede yazılı) makro kontroller.
  */
-export function programNodeIds(program: ResolvedProgram, document: unknown): string[] {
-  const ids: string[] = [];
+export function programNodeIds(program: ResolvedProgram, document: unknown): NodeRef[] {
+  const refs: NodeRef[] = [];
+  const push = (entry: ProgramEntry) => refs.push({ id: entry.id, version: entry.version });
   for (const layer of program.layers) {
-    ids.push(layer.source.entry.id);
-    ids.push(...layer.resonators.map((node) => node.entry.id));
-    if (layer.articulation) ids.push(layer.articulation.entry.id);
-    ids.push(...layer.inserts.map((effect) => effect.entry.id));
+    push(layer.source.entry);
+    for (const node of layer.resonators) push(node.entry);
+    if (layer.articulation) push(layer.articulation.entry);
+    for (const effect of layer.inserts) push(effect.entry);
   }
-  for (const bus of program.buses) ids.push(...bus.effects.map((effect) => effect.entry.id));
-  ids.push(...program.effects.map((effect) => effect.entry.id));
-  ids.push(...(program.treatment?.chain ?? []).map((effect) => effect.entry.id));
-  ids.push(...program.modulators.map((node) => node.entry.id));
-  const controls = (document as { controls?: readonly { control?: unknown }[] }).controls ?? [];
+  for (const bus of program.buses) for (const effect of bus.effects) push(effect.entry);
+  for (const effect of program.effects) push(effect.entry);
+  for (const effect of program.treatment?.chain ?? []) push(effect.entry);
+  for (const node of program.modulators) push(node.entry);
+  const controls =
+    (document as { controls?: readonly { control?: unknown; version?: unknown }[] }).controls ?? [];
   for (const control of controls) {
-    if (typeof control.control === 'string') ids.push(control.control);
+    if (typeof control.control === 'string' && PROGRAM_REGISTRY.has(control.control)) {
+      refs.push({
+        id: control.control,
+        version:
+          typeof control.version === 'number'
+            ? control.version
+            : PROGRAM_REGISTRY.get(control.control).version,
+      });
+    }
   }
-  return ids;
+  return refs;
 }
 
 export interface SurfaceChangeV1 {
@@ -173,16 +197,18 @@ export function compareSurface(
       changes.push({ id: node.id, change: 'removed', detail: 'registry’de yok' });
       continue;
     }
-    const entry = PROGRAM_REGISTRY.get(node.id);
-    if (entry.version !== node.version) {
+    const versions = PROGRAM_REGISTRY.versions(node.id);
+    if (!versions.includes(node.version)) {
       changes.push({
         id: node.id,
         change: 'version',
-        detail: `sürüm ${node.version} → ${entry.version}`,
+        detail: `kayıtlı sürüm ${node.version} registry’de yok (mevcut: ${versions.join(', ')})`,
       });
       continue;
     }
-    if (hashCanonical(renderProjection(entry)) !== node.hash) {
+    if (
+      hashCanonical(renderProjection(PROGRAM_REGISTRY.get(node.id, node.version))) !== node.hash
+    ) {
       changes.push({
         id: node.id,
         change: 'changed',

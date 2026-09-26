@@ -39,7 +39,7 @@ import { DEFAULT_SEARCHES_ROOT, SEARCH_AUDITION_ROOT, SEARCH_STATUS_SCHEMA } fro
  * bağlı olmadıkça), çünkü hangi düğümün var olduğu programa bağlıdır.
  */
 export function searchContext(cli: string) {
-  const entries = PROGRAM_REGISTRY.entries();
+  const entries = PROGRAM_REGISTRY.latest();
   const archetypes = entries
     .filter((e) => e.kind === 'archetype')
     .map((e) => ({

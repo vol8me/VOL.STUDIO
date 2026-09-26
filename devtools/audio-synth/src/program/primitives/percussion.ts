@@ -7,6 +7,9 @@ import {
   waveformFields,
   type RetroWaveform,
 } from '../../synthesis/retro';
+import { renderRetroV1 } from '../../synthesis/retro-v1';
+import { getWaveSampleWithPhaseV1 } from '../../synthesis/waveforms-v1';
+import type { WaveSampleFn } from '../../synthesis/waveforms';
 import { choiceOf, numberOf, sampleAt, signalOf, type NumberParamSpec } from '../params';
 import type { SourceEntry } from '../registry';
 
@@ -14,7 +17,8 @@ import type { SourceEntry } from '../registry';
  * Müzik ve SFX'in paylaştığı iki kaynak: parametrik davul ve retro
  * osilatör. Müzikteki kit parçası ya da retro enstrüman ile akustik
  * programdaki UI/arcade sesi AYNI çekirdeği çalar; ikinci bir sentez yolu
- * yazılmaz.
+ * yazılmaz. Her ikisinin v1 girdisi `2cd8b45` anlığındaki PolyBLEP
+ * çekirdeğine bağlanır; v2 güncel bant sınırlı rezidüeli kullanır.
  */
 const unit = (description: string, fallback: number): NumberParamSpec => ({
   type: 'number',
@@ -32,7 +36,7 @@ function writeInto(out: Float32Array, source: Float32Array): void {
 export const DRUM: SourceEntry = {
   id: 'source.drum',
   kind: 'source',
-  version: 1,
+  version: 2,
   description:
     'Parametrik davul: kick, tom, snare, clap, hat, cymbal ya da perc. Perde zarflı gövde, ' +
     'süzülmüş gürültü, vuruş tıkı ve metalik küme; velocity tınıyı açar, tepe 0.9’a getirilir.',
@@ -81,20 +85,41 @@ export const DRUM: SourceEntry = {
   resource: { model: 'O(kare·bileşen)', workPerFrame: () => 60, stateBytes: () => 0 },
   probe: { params: { model: 'hat' } },
   render(out, params, ctx) {
-    const model = choiceOf(params, 'model');
-    const drum = resolveDrum({
-      model,
-      velocity: numberOf(params, 'velocity'),
-      tune: numberOf(params, 'tune'),
-      decay: numberOf(params, 'decay'),
-      tone: numberOf(params, 'tone'),
-      attack: numberOf(params, 'attack'),
-      noise: numberOf(params, 'noise'),
-      drive: numberOf(params, 'drive'),
-      ...(model === 'hat' ? { open: numberOf(params, 'open') } : {}),
-      seed: ctx.seed('noise'),
-    });
-    writeInto(out, renderDrum(drum, ctx.sampleRate));
+    renderDrumInto(out, params, ctx);
+  },
+};
+
+function renderDrumInto(
+  out: Float32Array,
+  params: Parameters<SourceEntry['render']>[1],
+  ctx: Parameters<SourceEntry['render']>[2],
+  wave?: WaveSampleFn,
+): void {
+  const model = choiceOf(params, 'model');
+  const drum = resolveDrum({
+    model,
+    velocity: numberOf(params, 'velocity'),
+    tune: numberOf(params, 'tune'),
+    decay: numberOf(params, 'decay'),
+    tone: numberOf(params, 'tone'),
+    attack: numberOf(params, 'attack'),
+    noise: numberOf(params, 'noise'),
+    drive: numberOf(params, 'drive'),
+    ...(model === 'hat' ? { open: numberOf(params, 'open') } : {}),
+    seed: ctx.seed('noise'),
+  });
+  writeInto(out, renderDrum(drum, ctx.sampleRate, undefined, wave));
+}
+
+/** `source.drum` v1 — metalik kümede PolyBLEP kare (dondurulmuş çekirdek). */
+export const DRUM_V1: SourceEntry = {
+  ...DRUM,
+  version: 1,
+  description:
+    'Parametrik davul (v1, PolyBLEP kare metalik): kick, tom, snare, clap, hat, cymbal ya ' +
+    'da perc. Eski programların bit-eşit PCM çıktısı bu sürümle üretilir.',
+  render(out, params, ctx) {
+    renderDrumInto(out, params, ctx, getWaveSampleWithPhaseV1);
   },
 };
 
@@ -112,7 +137,7 @@ export const RETRO_ARPEGGIOS: Readonly<Record<string, readonly number[]>> = {
 export const RETRO: SourceEntry = {
   id: 'source.retro',
   kind: 'source',
-  version: 1,
+  version: 2,
   description:
     'Retro/arcade osilatör: darbe (duty), düz ya da 4-bit üçgen, testere, uzun/kısa LFSR, ' +
     '4-bit wavetable; hard sync, arpej, bit ve örnek-tutma. Kenarlar BLEP’li, lo-fi ' +
@@ -206,43 +231,66 @@ export const RETRO: SourceEntry = {
   resource: { model: 'O(kare·kenar)', workPerFrame: () => 12, stateBytes: () => 0 },
   probe: { params: { arpeggio: 'fifth', bits: 12, rate: 16000 } },
   render(out, params, ctx) {
-    const frequency = signalOf(params, 'frequency');
-    const duty = signalOf(params, 'duty');
-    const at = (signal: typeof frequency) => (t: number) =>
-      sampleAt(signal, Math.min(out.length - 1, Math.floor(t * ctx.sampleRate)));
-    const semitones = RETRO_ARPEGGIOS[choiceOf(params, 'arpeggio')];
-    const oversample = qualityProfile().voiceOversample;
-    const rendered = renderRetro(
-      {
-        ...waveformFields(choiceOf(params, 'waveform') as RetroWaveform),
-        duty: 0.25,
-        dutyTrack: at(duty),
-        dutyTo: 0.25,
-        dutySeconds: 0,
-        noiseClockHz: null,
-        interpolate: false,
-        syncRatio: numberOf(params, 'sync'),
-        bits: numberOf(params, 'bits'),
-        holdHz: numberOf(params, 'rate'),
-      },
-      {
-        frequencyHz: 440,
-        track: at(frequency),
-        arpeggio: semitones.length ? { semitones, rateHz: numberOf(params, 'arpRate') } : null,
-        sweep: null,
-        vibrato: null,
-      },
-      { attack: 0, decay: 0, sustain: 1, release: 0, steps: 0 },
-      {
-        seconds: out.length / ctx.sampleRate,
-        sampleRate: ctx.sampleRate,
-        oversample,
-        gain: 1,
-        decimate: (buffer) => downsample2x(buffer, ctx.sampleRate * 2, ctx.sampleRate),
-      },
-    );
-    writeInto(out, rendered);
+    renderRetroInto(out, params, ctx, renderRetro);
   },
 };
 
-export const CHIP_AND_DRUM = [DRUM, RETRO] as const;
+function renderRetroInto(
+  out: Float32Array,
+  params: Parameters<SourceEntry['render']>[1],
+  ctx: Parameters<SourceEntry['render']>[2],
+  renderCore: typeof renderRetro,
+): void {
+  const frequency = signalOf(params, 'frequency');
+  const duty = signalOf(params, 'duty');
+  const at = (signal: typeof frequency) => (t: number) =>
+    sampleAt(signal, Math.min(out.length - 1, Math.floor(t * ctx.sampleRate)));
+  const semitones = RETRO_ARPEGGIOS[choiceOf(params, 'arpeggio')];
+  const oversample = qualityProfile().voiceOversample;
+  const rendered = renderCore(
+    {
+      ...waveformFields(choiceOf(params, 'waveform') as RetroWaveform),
+      duty: 0.25,
+      dutyTrack: at(duty),
+      dutyTo: 0.25,
+      dutySeconds: 0,
+      noiseClockHz: null,
+      interpolate: false,
+      syncRatio: numberOf(params, 'sync'),
+      bits: numberOf(params, 'bits'),
+      holdHz: numberOf(params, 'rate'),
+    },
+    {
+      frequencyHz: 440,
+      track: at(frequency),
+      arpeggio: semitones.length ? { semitones, rateHz: numberOf(params, 'arpRate') } : null,
+      sweep: null,
+      vibrato: null,
+    },
+    { attack: 0, decay: 0, sustain: 1, release: 0, steps: 0 },
+    {
+      seconds: out.length / ctx.sampleRate,
+      sampleRate: ctx.sampleRate,
+      oversample,
+      gain: 1,
+      decimate: (buffer) => downsample2x(buffer, ctx.sampleRate * 2, ctx.sampleRate),
+    },
+  );
+  writeInto(out, rendered);
+}
+
+/** `source.retro` v1 — iki-örneklik PolyBLEP düzeltmeli dondurulmuş çekirdek. */
+export const RETRO_V1: SourceEntry = {
+  ...RETRO,
+  version: 1,
+  description:
+    'Retro/arcade osilatör (v1, iki-örneklik PolyBLEP): darbe (duty), düz ya da 4-bit ' +
+    'üçgen, testere, uzun/kısa LFSR, 4-bit wavetable; hard sync, arpej, bit ve ' +
+    'örnek-tutma. Eski programların bit-eşit PCM çıktısı bu sürümle üretilir.',
+  capabilities: ['pitched', 'periodic', 'retro', 'chip', 'noise', 'polyblep'],
+  render(out, params, ctx) {
+    renderRetroInto(out, params, ctx, renderRetroV1);
+  },
+};
+
+export const CHIP_AND_DRUM = [DRUM, RETRO, DRUM_V1, RETRO_V1] as const;

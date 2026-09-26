@@ -9,7 +9,7 @@ import {
   renderProjection,
   surfaceOf,
 } from '../../src/program/surface';
-import { RENDER_SURFACE_LOCK_PATH, type RenderSurfaceLockV1 } from '../../src/program/surfaceLock';
+import { RENDER_SURFACE_LOCK_PATH, type RenderSurfaceLockV2 } from '../../src/program/surfaceLock';
 import { resolveProgram } from '../../src/program/schema';
 
 /**
@@ -17,11 +17,12 @@ import { resolveProgram } from '../../src/program/schema';
  * ya da yönlendirmesi SÜRÜM ARTMADAN değişirse bu test düşer: aynı program
  * + tohum + sürüm artık başka PCM verir ve manifest'lerin "aynı sürüm"
  * iddiası yalan olur. Kilidi `pnpm audio:surface-lock` yazar ve aynı sürümde
- * değişen bir sözleşmeyi yazmayı reddeder.
+ * değişen bir sözleşmeyi yazmayı reddeder. Kilit anahtarı `id@version`'dir:
+ * dondurulmuş eski sürümler de ayrıca izlenir.
  */
 const lock = JSON.parse(
   readFileSync(new URL(`../../${RENDER_SURFACE_LOCK_PATH}`, import.meta.url), 'utf8'),
-) as RenderSurfaceLockV1;
+) as RenderSurfaceLockV2;
 
 const PROBE = {
   schema: 'AcousticProgramV1',
@@ -42,20 +43,38 @@ describe('render yüzeyi kilidi', () => {
   it('kilit bugünkü registry ile birebir aynı; aynı sürümde sözleşme değişmemiş', () => {
     const problems: string[] = [];
     for (const entry of PROGRAM_REGISTRY.entries()) {
-      const locked = lock.nodes[entry.id];
-      const current = nodeSurface(entry.id);
+      const key = `${entry.id}@${entry.version}`;
+      const locked = lock.nodes[key];
+      const current = nodeSurface(entry.id, entry.version);
       if (!locked) {
-        problems.push(`${entry.id}: kilitte yok (pnpm audio:surface-lock)`);
-      } else if (locked.version !== current.version) {
-        problems.push(`${entry.id}: sürüm ${locked.version} → ${current.version} (kilidi yenile)`);
+        problems.push(`${key}: kilitte yok (pnpm audio:surface-lock)`);
       } else if (locked.hash !== current.hash) {
-        problems.push(`${entry.id}@${current.version}: sözleşme değişti ama sürüm artmadı`);
+        problems.push(`${key}: sözleşme değişti ama sürüm artmadı`);
       }
     }
-    for (const id of Object.keys(lock.nodes)) {
-      if (!PROGRAM_REGISTRY.has(id)) problems.push(`${id}: registry’de yok (kilidi yenile)`);
+    for (const key of Object.keys(lock.nodes)) {
+      const [id, version] = key.split('@');
+      if (!PROGRAM_REGISTRY.versions(id).includes(Number(version))) {
+        problems.push(`${key}: registry’de yok (kilidi yenile)`);
+      }
     }
     expect(problems).toEqual([]);
+  });
+
+  it('çok sürümlü düğümler her iki sürümü de adıyla çözer', () => {
+    expect(PROGRAM_REGISTRY.versions('source.oscillator')).toEqual([1, 2]);
+    expect(PROGRAM_REGISTRY.get('source.oscillator').version).toBe(2);
+    expect(PROGRAM_REGISTRY.get('source.oscillator', 1).version).toBe(1);
+    // v1 ve v2 aynı parametre alanını taşır; fark yalnız DSP çekirdeğinde
+    // (yüzey özeti sürüm numarasını da içerdiğinden eşit değildir).
+    expect(nodeSurface('source.oscillator', 1).hash).not.toBe(
+      nodeSurface('source.oscillator', 2).hash,
+    );
+    expect(PROGRAM_REGISTRY.versions('source.wind')).toEqual([1, 2]);
+    expect(PROGRAM_REGISTRY.versions('source.rain')).toEqual([1, 2]);
+    expect(PROGRAM_REGISTRY.versions('source.fire')).toEqual([1, 2]);
+    expect(PROGRAM_REGISTRY.versions('source.retro')).toEqual([1, 2]);
+    expect(PROGRAM_REGISTRY.versions('source.drum')).toEqual([1, 2]);
   });
 
   it('belge alanları izdüşüme girmez: açıklama değişince özet değişmez', () => {

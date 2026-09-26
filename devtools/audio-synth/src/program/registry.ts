@@ -218,36 +218,71 @@ const ENTRY_ID =
 export class Registry<
   E extends { readonly id: string; readonly version: number; readonly kind: RegistryKind },
 > {
-  private readonly byId = new Map<string, E>();
+  /** Kimlik → sürümleri (artan sürüm sıralı). Aynı kimliğin birden çok sürümü tutulabilir. */
+  private readonly byId = new Map<string, E[]>();
 
   constructor(entries: readonly E[]) {
     for (const entry of entries) {
       if (!ENTRY_ID.test(entry.id) || !entry.id.startsWith(`${entry.kind}.`)) {
         throw new Error(`registry: kimlik türüyle eşleşmiyor: ${entry.id} (${entry.kind})`);
       }
-      if (this.byId.has(entry.id)) throw new Error(`registry: yinelenen kimlik ${entry.id}`);
-      this.byId.set(entry.id, entry);
+      const versions = this.byId.get(entry.id);
+      if (versions) {
+        if (versions.some((e) => e.version === entry.version)) {
+          throw new Error(`registry: yinelenen kimlik ${entry.id}@${entry.version}`);
+        }
+        versions.push(entry);
+        versions.sort((a, b) => a.version - b.version);
+      } else {
+        this.byId.set(entry.id, [entry]);
+      }
     }
   }
 
+  /** Her (kimlik, sürüm) çifti — önce kimlik, sonra sürüm sıralı. */
   entries(): E[] {
-    return [...this.byId.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    return [...this.byId.entries()]
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .flatMap(([, versions]) => versions);
+  }
+
+  /** Kimlik başına EN YENİ sürüm — üreteçler ve `audio:job context` bunu görür. */
+  latest(): E[] {
+    return [...this.byId.entries()]
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([, versions]) => versions[versions.length - 1]);
   }
 
   has(id: string): boolean {
     return this.byId.has(id);
   }
 
-  /** Var olduğu bilinen kimliğin girdisi; yoksa hata (çağıran `has` ile sormuş olmalı). */
-  get(id: string): E {
-    const entry = this.byId.get(id);
-    if (!entry) throw new Error(`registry: bilinmeyen kimlik ${id}`);
+  /** Kimliğin kayıtlı sürümleri (artan sıra). Yoksa boş dizi. */
+  versions(id: string): readonly number[] {
+    return (this.byId.get(id) ?? []).map((e) => e.version);
+  }
+
+  /** Var olduğu bilinen kimliğin girdisi; `version` verilirse o sürüm, yoksa en yenisi. */
+  get(id: string, version?: number): E {
+    const versions = this.byId.get(id);
+    if (!versions) throw new Error(`registry: bilinmeyen kimlik ${id}`);
+    if (version === undefined) return versions[versions.length - 1];
+    const entry = versions.find((e) => e.version === version);
+    if (!entry) {
+      throw new Error(
+        `registry: bilinmeyen sürüm ${id}@${version} (mevcut: ${versions
+          .map((e) => e.version)
+          .join(',')})`,
+      );
+    }
     return entry;
   }
 
   /**
    * Programdaki bir başvuruyu çözer. Kimlik yoksa `unknown-id`, sürüm
-   * farklıysa `version`, tür beklenmiyorsa `type` — hepsi render'dan önce.
+   * kayıtlı değilse `version`, tür beklenmiyorsa `type` — hepsi render'dan
+   * önce. Programın istediği sürüm AYNEN döner: eski program eski
+   * (dondurulmuş) sürümü adıyla ister, yeniler güncel sürümü alır.
    */
   resolve<K extends E['kind']>(
     id: unknown,
@@ -256,16 +291,19 @@ export class Registry<
     path: string,
   ): Extract<E, { kind: K }> {
     if (typeof id !== 'string') throw new AudioParamError(path, 'type', 'kimlik metni olmalı', id);
-    const entry = this.byId.get(id);
-    if (!entry) throw new AudioParamError(path, 'unknown-id', "registry'de yok", id);
-    if (!(kinds as readonly string[]).includes(entry.kind)) {
+    const versions = this.byId.get(id);
+    if (!versions) throw new AudioParamError(path, 'unknown-id', "registry'de yok", id);
+    if (!(kinds as readonly string[]).includes(versions[0].kind)) {
       throw new AudioParamError(path, 'type', `beklenen tür: ${kinds.join(' | ')}`, id);
     }
-    if (version !== entry.version) {
+    const entry =
+      typeof version === 'number' ? versions.find((e) => e.version === version) : undefined;
+    if (!entry) {
       throw new AudioParamError(
         `${path}@version`,
         'version',
-        `${id} registry sürümü ${entry.version}; program başka bir sürümü istiyor`,
+        `${id} registry sürümleri ${versions.map((e) => e.version).join(', ')}; ` +
+          'program kayıtlı olmayan bir sürümü istiyor',
         version,
       );
     }

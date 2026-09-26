@@ -278,6 +278,16 @@ kilidin bugünkü registry ile birebir eşleşmesini ister. Kilidi
 yazmayı REDDEDER: parametre alanı ya da varsayılanı değişen düğüm sürümünü
 artırır, eski programlar eski sürümü adıyla ister.
 
+**Registry çok sürümlüdür (K2).** Bir düğüm kimliği birden çok sürümü
+yan yana tutar: `get(id)` en güncel sürümü verir (katalog/üretim yolu),
+`resolve(id, version)` kesin sürümü çözümler ve sürüm uyuşmazlığı açık
+`AudioParamError`'dır; tip denetimi sürüm denetiminden önce gelir. Kilit
+anahtarı `id@version`'dır — iki sürüm aynı anda kilitlenir. Eski davranış
+dondurulmuş modülde yaşar (`synthesis/waveforms-v1.ts`,
+`synthesis/retro-v1.ts`, `program/primitives/environmentV1.ts`) ve eski
+programlar bit-eşit render edilir (`tests/governance/legacyV1.test.ts`,
+2cd8b45 manifestlerinin PCM özetleri); güncel davranış v2'dir.
+
 ### Publish kapısı
 
 `publishJob` TEK kanonik yoldur: özet zinciri → belgeler → hedef/yol/sınıf →

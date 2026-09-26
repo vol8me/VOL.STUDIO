@@ -29,12 +29,12 @@ const envelope = (attack: number, decay: number, release = 0.02) => ({
 
 const retro = (params: Record<string, unknown>) => ({
   primitive: 'source.retro',
-  version: 1,
+  version: 2,
   params,
 });
 const drum = (params: Record<string, unknown>) => ({
   primitive: 'source.drum',
-  version: 1,
+  version: 2,
   params,
 });
 

@@ -3,6 +3,7 @@ import { Envelope } from '../../synthesis/envelope';
 import { BiquadFilter } from '../../synthesis/filter';
 import { createNoiseSource } from '../../synthesis/noise';
 import { getWaveSampleWithPhase } from '../../synthesis/waveforms';
+import { getWaveSampleWithPhaseV1 } from '../../synthesis/waveforms-v1';
 import type { Curve, FilterType } from '../../types';
 import { choiceOf, numberOf, sampleAt, signalOf, type NumberParamSpec } from '../params';
 import type { EffectEntry, ProcessorEntry, SourceEntry } from '../registry';
@@ -45,10 +46,52 @@ const unit = (description: string, fallback: number): NumberParamSpec => ({
 
 type TonalWave = 'sine' | 'triangle' | 'sawtooth' | 'square';
 
-export const OSCILLATOR: SourceEntry = {
+/**
+ * `source.oscillator` v1 — PolyBLEP kenar düzeltmeli dondurulmuş çekirdek
+ * (`waveforms-v1.ts`, `2cd8b45` anlığı). Eski programların bit-eşit PCM'i
+ * bununla üretilir; yeni programlar v2'yi alır.
+ */
+export const OSCILLATOR_V1: SourceEntry = {
   id: 'source.oscillator',
   kind: 'source',
   version: 1,
+  description:
+    'Faz biriktirmeli periyodik osilatör (sinüs tablosu, bant sınırlı üçgen tablosu, ' +
+    'PolyBLEP testere/kare). Program oranında çalışır; iç aşırı örnekleme yoktur.',
+  capabilities: ['pitched', 'periodic', 'polyblep'],
+  params: {
+    waveform: {
+      type: 'choice',
+      choices: ['sine', 'triangle', 'sawtooth', 'square'],
+      default: 'sine',
+      description: 'Dalga biçimi; kenarlı biçimler PolyBLEP ile düzeltilir.',
+    },
+    frequency: frequencyParam('Temel frekans.', 440),
+  },
+  causal: [{ param: 'frequency', dimension: 'pitch', direction: 1, note: 'f0 doğrudan.' }],
+  determinism: DETERMINISTIC,
+  resource: {
+    model: 'O(kare)',
+    workPerFrame: () => 3,
+    stateBytes: () => 0,
+  },
+  render(out, params, ctx) {
+    const wave = choiceOf(params, 'waveform') as TonalWave;
+    const frequency = signalOf(params, 'frequency');
+    let phase = 0;
+    for (let i = 0; i < out.length; i++) {
+      const inc = sampleAt(frequency, i) / ctx.sampleRate;
+      out[i] = getWaveSampleWithPhaseV1(wave, phase, 0.5, inc);
+      phase += inc;
+      if (phase >= 1) phase -= 1;
+    }
+  },
+};
+
+export const OSCILLATOR: SourceEntry = {
+  id: 'source.oscillator',
+  kind: 'source',
+  version: 2,
   description:
     'Faz biriktirmeli periyodik osilatör (sinüs tablosu, bant sınırlı üçgen tablosu, ' +
     'BLEP testere/kare). Program oranında çalışır; iç aşırı örnekleme yoktur.',
@@ -277,4 +320,11 @@ export const REVERB: EffectEntry = {
   },
 };
 
-export const WAVE1_PRIMITIVES = [OSCILLATOR, NOISE, BIQUAD, ENVELOPE, REVERB] as const;
+export const WAVE1_PRIMITIVES = [
+  OSCILLATOR,
+  OSCILLATOR_V1,
+  NOISE,
+  BIQUAD,
+  ENVELOPE,
+  REVERB,
+] as const;

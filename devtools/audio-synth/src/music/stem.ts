@@ -189,7 +189,11 @@ function musicSamples(
 export function musicStemSurface(value: unknown): RenderSurfaceV1 {
   const document = validateMusicStemProgram(value);
   const mix = mixOf(document.music);
-  const ids = mix ? mix.buses.flatMap((bus) => bus.effects.map((effect) => effect.entry.id)) : [];
+  const ids = mix
+    ? mix.buses.flatMap((bus) =>
+        bus.effects.map((effect) => ({ id: effect.entry.id, version: effect.entry.version })),
+      )
+    : [];
   return surfaceOf(ids, programInstrumentSurfaces(document.music));
 }
 

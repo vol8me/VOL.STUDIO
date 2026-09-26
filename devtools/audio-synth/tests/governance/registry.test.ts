@@ -102,7 +102,7 @@ function baseParams(entry: ProgramEntry, params: Record<string, unknown>): Recor
 }
 
 function node(id: string, params: Record<string, unknown> = {}) {
-  const entry = PROGRAM_REGISTRY.entries().find((e) => e.id === id) as ProgramEntry;
+  const entry = PROGRAM_REGISTRY.get(id);
   return { primitive: id, version: entry.version, params };
 }
 
@@ -283,7 +283,9 @@ describe('registry governance', () => {
     const repo = createTestRepo();
     try {
       const context = buildContext(repo.root);
-      expect(context.registry.entries.map((e) => e.id)).toEqual(entries.map((e) => e.id));
+      expect(context.registry.entries.map((e) => e.id)).toEqual(
+        PROGRAM_REGISTRY.latest().map((e) => e.id),
+      );
       expect(context.registry.entries).toEqual(describeRegistry());
     } finally {
       repo.cleanup();

@@ -1,6 +1,6 @@
 import { createRandom } from '@volstudio/core/random';
 import { StateVariableFilter } from '../../synthesis/svf';
-import { getWaveSampleWithPhase } from '../../synthesis/waveforms';
+import { getWaveSampleWithPhase, type WaveSampleFn } from '../../synthesis/waveforms';
 
 /**
  * Davul modellerinin yapı taşları: perde zarflı gövde, süzülmüş gürültü,
@@ -99,6 +99,7 @@ export function metallic(
   length: number,
   rate: number,
   frequencies: readonly number[],
+  wave: WaveSampleFn = getWaveSampleWithPhase,
 ): Float32Array {
   const out = new Float32Array(length);
   const phases = frequencies.map((_, i) => (i * 0.137) % 1);
@@ -106,7 +107,7 @@ export function metallic(
     let sum = 0;
     for (let k = 0; k < frequencies.length; k++) {
       const inc = frequencies[k] / rate;
-      sum += getWaveSampleWithPhase('square', phases[k], 0.5, inc);
+      sum += wave('square', phases[k], 0.5, inc);
       phases[k] = (phases[k] + inc) % 1;
     }
     out[i] = sum / frequencies.length;
