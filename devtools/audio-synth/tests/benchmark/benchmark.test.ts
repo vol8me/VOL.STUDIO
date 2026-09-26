@@ -32,7 +32,7 @@ import { repoSampleResolver } from '../../src/protocol/samples';
 import { withRenderSession } from '../../src/engine/session';
 import { edited } from '../support/json';
 import { createTestRepo, type TestRepo } from '../protocol/repo';
-import { PIPELINE_TIMEOUT, RENDER_TIMEOUT } from '../support/timeouts';
+import { CORPUS_TIMEOUT, PIPELINE_TIMEOUT, RENDER_TIMEOUT } from '../support/timeouts';
 
 /**
  * Sürümlü benchmark derlemi: 14 görev + 19 canary tek raporda. Mekanik
@@ -124,7 +124,7 @@ describe('benchmark görev derlemi (gerçek depo)', () => {
           }
         }
       }),
-    PIPELINE_TIMEOUT,
+    CORPUS_TIMEOUT,
   );
 
   it.each(['ui-feedback', 'retro-arcade-sfx', 'water-splash'])(

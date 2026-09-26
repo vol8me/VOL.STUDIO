@@ -66,7 +66,7 @@ function checkStrategy(value: unknown): AcousticSearchSpecV1['strategy'] {
   return { id, version: SEARCH_STRATEGIES[id].version };
 }
 
-function checkBudget(value: unknown): Partial<BatchBudget> {
+export function checkBudget(value: unknown): Partial<BatchBudget> {
   const keys = Object.keys(DEFAULT_BATCH_BUDGET) as (keyof BatchBudget)[];
   const o = checkObject(value, 'budget', keys);
   const out: Partial<Record<keyof BatchBudget, number>> = {};

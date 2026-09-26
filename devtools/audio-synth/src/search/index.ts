@@ -32,3 +32,46 @@ export { effectiveBudget, SEARCH_ID, SEARCH_SPEC_SCHEMA, validateSearchSpec } fr
 export type { AcousticSearchSpecV1, ExcludeRuleV1 } from './spec';
 export { SEARCH_STRATEGIES, strategyPoints } from './strategy';
 export type { SearchStrategyId } from './strategy';
+export {
+  buildFitReport,
+  descriptorDelta,
+  descriptorDistance,
+  fitBox,
+  FIT_DESCRIPTOR_NAMES,
+  FIT_DESCRIPTOR_SCALES,
+  FIT_MANIFEST_FIELDS,
+  FIT_REPORT_SCHEMA,
+  FIT_SPEC_SCHEMA,
+  MAX_FIT_CANDIDATES,
+  MAX_FIT_ROUNDS,
+  validateFitReport,
+  validateFitSpec,
+} from './fit';
+export type {
+  AcousticFitReportV1,
+  AcousticFitSpecV1,
+  FitDescriptorName,
+  FitRoundV1,
+  FitTargetEntryV1,
+  FitVerdict,
+} from './fit';
+export {
+  buildSemanticDocument,
+  checkSemanticTerms,
+  MAX_SEMANTIC_TERM_CHARS,
+  MAX_SEMANTIC_TERMS,
+  rankedOrder,
+  SEMANTIC_REQUEST_SCHEMA,
+  SEMANTIC_RESPONSE_SCHEMA,
+  SEMANTIC_SCHEMA,
+  SEMANTIC_SCORER_ENV,
+  semanticRequest,
+  validateSemanticResponse,
+} from './semantic';
+export type {
+  SearchSemanticV1,
+  SemanticRequestItem,
+  SemanticScoreEntryV1,
+  SemanticScoreRequestV1,
+  SemanticTermsV1,
+} from './semantic';

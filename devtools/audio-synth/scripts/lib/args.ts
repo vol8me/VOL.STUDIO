@@ -13,7 +13,7 @@ export interface Parsed {
   readonly flags: ReadonlyMap<string, string | true>;
 }
 
-const BOOLEAN_FLAGS = new Set(['json', 'loop', 'audition', 'all', 'serve', 'draft']);
+const BOOLEAN_FLAGS = new Set(['json', 'loop', 'audition', 'all', 'serve', 'draft', 'semantic']);
 
 export function parse(argv: readonly string[]): Parsed {
   const [command = 'help', ...rest] = argv;

@@ -202,27 +202,66 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       görevi paralel koşar; `tests/regression/` 6 test (mutasyon zinciri
       dâhil). (Dalga F5)
 
-### Araştırma kuyruğu — isteğe bağlı AI değerlendirmesi
-
-> Bu bölüm core authoring/publish sisteminin prerequisite'i değildir.
-> Hiçbir production workflow bu araçlar olmadan eksik sayılmaz.
-
-- [ ] **[P3] Semantic audio scorer isteğe bağlı laboratuvar aracı olsun.**
-      Text-audio embedding veya audio-capable model core `audio-synth`
-      bağımlılığı yapılmaz; pozitif ve negatif brief terimleriyle candidate
-      ranking için yalnız yardımcı sinyal olur. Kapanır: scorer devre
-      dışıyken bütün üretim pipeline'ı eksiksiz çalışır; semantic skor
-      hiçbir production asset'i tek başına kabul/reddetmez.
-- [ ] **[P3] Reference fitting / inverse synthesis araştırma kapısı
-      açılsın.** Bir referans sesin pitch-envelope/spectral-envelope/temporal
-      descriptor hedeflerine göre macro parametrelerini arayan offline
-      optimizer prototipi yapılır. Kapanır: bilinen sentetik bir "gizli hedef"
-      render'ından parametrelerin veya descriptor sonucunun tekrar
-      yaklaştırılabildiği kontrollü deney vardır; neural bağımlılık zorunlu
-      değildir.
-
 ## Kapatılanlar
 
+- [x] **[P2] Referans yayınları kanonik yoldan tazelendi (F7a).** 12
+      akustik job `render → analyze → select → publish`, 4 müzik
+      lokasyonu `music publish`, 2 aile `family publish` — hepsi
+      renderer v2 ile yeniden yayımlandı; `regression run` 36/36
+      `unchanged` (yeni manifestler güncel motorla bit-eşit).
+      `audio-searches/reference-shell` arama kanıtı da v1 PCM'leriyle
+      bayatlamıştı; aynı spec'ten v2 motoruyla yeniden koşuldu
+      (`search verify reference-shell` → `ok`).
+- [x] **[P3] Tek-komut dinleme paketi (F7b).** `pnpm audio:listen`
+      (`scripts/listening-package.ts` → `src/protocol/listening.ts`):
+      `export/listening/` altında 19 canary kanonik render + rehber +
+      `reviews.json` durumu, 36 referans gönderilen OGG çözümü +
+      manifest/`decisions.json` durumu (`undecided` | karar
+      hash-eşleşmeli); `listening.json` envanteri + statik
+      `index.html`. Kanıt: `tests/protocol/listening.test.ts` (3),
+      üretilmiş paket 55 WAV (~23 MB). Beğeni beyanı yalnız
+      `canary review`/`regression decide` ile yazılır.
+- [x] **[P2] Temizlik ve sağlamlaştırma denetimi (F7c+F8).** `verify --all`
+      tam yeşil (36 manifest, 2 arama, 2 bank, 4 bundle, 8 sample).
+      Denetim bulguları: semantic skor publish/select yoluna girmiyor;
+      bütün yazmalar `resolveInside`+atomik+kilit altında; fit/search
+      tamamlanmış dizin üzerine yazmayı reddeder; scorer hataları
+      `toolchain`; dinleme sunucusu yalnız loopback + Host/Origin
+      allowlist; dinleme sayfası bütün alanları HTML-escape eder; yeni
+      runtime bağımlılığı ve sır/PII yok; kaynak dosyalar <1000 satır;
+      frozen oyun ağaçları temiz. Kapsam altında ~4.5× yavaşlayan iki
+      korpus süpürme testi 120 sn'lik `PIPELINE_TIMEOUT`'u aşıyordu —
+      ayrı `CORPUS_TIMEOUT` (480 sn) eklendi, iki dosya coverage
+      altında doğrulandı.
+- [x] **[P3] Semantic audio scorer isteğe bağlı laboratuvar aracı olsun.**
+      `search run --semantic` harici scorer süreci koşturur
+      (`--scorer "<cmd>"` ya da `AUDIO_SYNTH_SEMANTIC_SCORER`; terimler
+      `--positive`/`--negative`): aday WAV'ları `export/` altına düşer,
+      `SemanticScoreRequestV1` stdin'e, `SemanticScoreResponseV1`
+      stdout'tan; bilinmeyen kimlik, JSON dışı çıktı ya da sıfır-olmayan
+      çıkış `toolchain` hatasıdır (`src/search/semantic.ts`,
+      `src/protocol/semantic.ts`). Sonuç `<search>/semantic.json`
+      (`SearchSemanticV1` skorlar + `ranked`) ve CLI sıralaması —
+      danışmandır; aynı spec'in skorlu/skorsuz raporu birebir aynıdır
+      (test kilitli), skorer yokken bütün pipeline eksiksiz çalışır,
+      skor hiçbir kapıyı açmaz. Kanıt:
+      `tests/protocol/semantic.test.ts` (13) +
+      `audio-searches/semantic-demo/semantic.json`. (Dalga F6)
+- [x] **[P3] Reference fitting / inverse synthesis araştırma kapısı.**
+      `AcousticFitSpecV1` + `audio:job fit run|show|list`
+      (`src/search/fit.ts`, `src/protocol/fit.ts`): hedef betimleyici
+      vektörüne (perde/spektral/zamansal alanlar, genişlik tablosuyla
+      normalize, ağırlıklı RMS) deterministik zoom taraması — tam küp
+      Halton + görev sahibi etrafında `shrink` oranında daralan kutu,
+      elit taşıma ve program-özeti önbelleğiyle. `target.manifest`
+      manifest `analysis.encoded`'ından değer okur. Kapanış kanıtı
+      `audio-fits/`: gizli hedef `hidden-tone-660` 3 turda `converged`
+      (uzaklık 0.071 ≤ 0.2; frekans 660→644.99 Hz, %2.3 hata; waveform
+      sine doğru) ve aynı hedefe perdesiz taban `exhausted`
+      (uzaklık 4.04 — yanlış topoloji başarı sayılmaz). Testler
+      `tests/protocol/fit.test.ts` (12): determinizm, overwrite reddi,
+      manifest hedefi, uzaklık matematiği. Sinirsel bağımlılık yok;
+      `converged` kalite yargısı değildir, publish kapısı açmaz. (Dalga F6)
 - [x] **[P1] Percussion/drum synthesis genel instrument ailesi.** Yedi
       parametrik model (kick, tom, snare, clap, hat, cymbal, perc); gövde,
       gürültü, tık ve metalik bileşenler; velocity tınıyı açar. Müzikte

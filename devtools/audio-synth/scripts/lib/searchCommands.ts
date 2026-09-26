@@ -92,8 +92,22 @@ export function runSearchCommand(parsed: Parsed, repoRoot: string): number {
     case 'run': {
       const document = readInput(required(parsed.flags, 'file'));
       const started = performance.now();
+      const terms = (flag: string) =>
+        (text(parsed.flags, flag) ?? '')
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean);
       const outcome = runSearch(repoRoot, root, document, {
         audition: parsed.flags.has('audition'),
+        semantic: parsed.flags.has('semantic')
+          ? {
+              command: text(parsed.flags, 'scorer') ?? undefined,
+              terms: {
+                positive: terms('positive'),
+                negative: terms('negative'),
+              },
+            }
+          : undefined,
       });
       const elapsed = performance.now() - started;
       print({
@@ -102,6 +116,12 @@ export function runSearchCommand(parsed: Parsed, repoRoot: string): number {
         summary: outcome.report.summary,
         preflight: outcome.report.preflight,
         auditions: outcome.auditions,
+        semantic: outcome.semantic
+          ? {
+              file: outcome.semantic.file,
+              ranked: outcome.semantic.document.ranked,
+            }
+          : null,
         evidence: {
           wallMs: Number(elapsed.toFixed(1)),
           reportBytes: statSync(`${repoRoot}/${outcome.location}/report.json`).size,

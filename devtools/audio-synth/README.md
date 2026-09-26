@@ -42,6 +42,10 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 - `audio-searches/`, `audio-families/`, `audio-music/`, `audio-themebooks/` —
   arama, aile, müzik ve müzik kitabı kayıtları; her birinde bir referans
   fixture yaşar
+- `audio-fits/` — referans-uydurma (inverse synthesis) deney kayıtları:
+  `audio:job fit run --file <spec>` | `fit show|list`; hedef betimleyici
+  vektörüne deterministik zoom taraması, araştırma kanıtıdır (production
+  kaydı değil)
 - `audio-samples/` — `SampleAssetV1` kayıtları (sentetik fixture'lar; WAV
   git-dışı üretilir, JSON repodadır)
 - `canaries/` — sürümlü canary görevleri ve insan dinleme durumu
@@ -113,8 +117,11 @@ toplu iş" bölümündedir.
 
 Tek bir değer tahmin etmek yerine aralık aramak için `search` alt komutları
 vardır (spec → plan → run → audition/decide → promote); onaylı aday job
-programına terfi eder ve aynı akıştan yayımlanır. Sözdizimi context
-çıktısındaki `search.commands` alanındadır.
+programına terfi eder ve aynı akıştan yayımlanır. `search run --semantic`
+isteğe bağlı harici scorer süreci koşturur (`--scorer` ya da
+`AUDIO_SYNTH_SEMANTIC_SCORER`); skorlar `semantic.json` danışman
+sıralamasıdır, hiçbir kapıyı etkilemez. Sözdizimi context çıktısındaki
+`search.commands` ve `search.semantic` alanlarındadır.
 
 İlişkili varyant setleri `family` alt komutlarıyla üretilir: her varyant
 aynı akıştan yayımlanır, en son çalışma zamanının yalnız JSON ile okuyacağı

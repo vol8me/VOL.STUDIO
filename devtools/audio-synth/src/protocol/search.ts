@@ -22,6 +22,7 @@ import { ProtocolError } from './errors';
 import { runTasks } from './parallel';
 import type { SearchCandidateOutput } from './parallelTasks';
 import { repoSampleResolver } from './samples';
+import { runSemanticScoring, type SemanticRunConfig, type SemanticRunOutcome } from './semantic';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 import { storeProgram } from './job';
 import type { JobLocation } from './location';
@@ -75,12 +76,19 @@ export interface SearchRunOutcome {
   readonly report: AcousticSearchReportV1;
   readonly reportHash: Sha256;
   readonly auditions: readonly string[];
+  /** `--semantic` ile istendiyse skorlama sonucu; kapalıysa `null`. */
+  readonly semantic: SemanticRunOutcome | null;
 }
 
 export interface SearchRunOptions {
   readonly audition?: boolean;
   /** Worker sayısı; verilmezse toplu tahminden (`batchWorkers`). Sonuç aynıdır. */
   readonly workers?: number;
+  /**
+   * Verilirse rapor yazıldıktan sonra harici semantic scorer koşar (F6c).
+   * Danışman sinyaldir: raporu, kararları ve publish kapısını etkilemez.
+   */
+  readonly semantic?: SemanticRunConfig;
 }
 
 function evaluatePlan(
@@ -122,13 +130,23 @@ export function runSearch(
         searchLabel(loc),
       );
     }
-    const outputs = evaluatePlan(repoRoot, plan, options.audition === true, options.workers);
+    const withPcm = options.audition === true || options.semantic !== undefined;
+    const outputs = evaluatePlan(repoRoot, plan, withPcm, options.workers);
     const candidates = outputs.map((output) => output.result);
-    const auditions = outputs.flatMap(({ result, render }) =>
-      render && result.candidateId
-        ? [writeAuditionCopy(repoRoot, auditionPath(loc.searchId, result.candidateId), render)]
-        : [],
-    );
+    const auditions =
+      options.audition === true
+        ? outputs.flatMap(({ result, render }) =>
+            render && result.candidateId
+              ? [
+                  writeAuditionCopy(
+                    repoRoot,
+                    auditionPath(loc.searchId, result.candidateId),
+                    render,
+                  ),
+                ]
+              : [],
+          )
+        : [];
     writeFileAtomic(searchFile(loc, 'spec.json'), prettyCanonicalJson(plan.spec));
     for (const candidate of plan.candidates) {
       if (candidate.candidateId && candidate.program) {
@@ -140,7 +158,11 @@ export function runSearch(
     }
     const report = buildSearchReport(plan, candidates);
     writeFileAtomic(searchFile(loc, 'report.json'), prettyCanonicalJson(report));
-    return { location: searchLabel(loc), report, reportHash: hashCanonical(report), auditions };
+    const reportHash = hashCanonical(report);
+    const semantic = options.semantic
+      ? runSemanticScoring(loc, plan.spec, reportHash, outputs, options.semantic)
+      : null;
+    return { location: searchLabel(loc), report, reportHash, auditions, semantic };
   });
 }
 

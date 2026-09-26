@@ -1,0 +1,35 @@
+{
+  "channels": 1,
+  "durationSeconds": 0.3,
+  "layers": [
+    {
+      "name": "body",
+      "resonators": [
+        {
+          "params": {
+            "decay": 0.3,
+            "frequency": 906.704,
+            "layout": "bar",
+            "modes": 6
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        }
+      ],
+      "source": {
+        "params": {
+          "contactTime": 0.002
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "normalize": "peak",
+    "peakDbfs": -6
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 9
+}

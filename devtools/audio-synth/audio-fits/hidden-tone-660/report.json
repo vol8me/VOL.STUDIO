@@ -1,0 +1,101 @@
+{
+  "base": {
+    "hash": "sha256:29106cec51ba67cbebbfa58caa297168b7ac2187155ccad771b357575b54080e",
+    "kind": "program"
+  },
+  "best": {
+    "candidateId": "c-f46afc9b0a9217ce",
+    "deltas": {
+      "activeSeconds": 0,
+      "integratedLufs": 0.00332202703351984,
+      "pitchHz": 0.1333861352077364,
+      "spectralPeakHz": 0
+    },
+    "distance": 0.07131999705405805,
+    "point": [
+      0.6222387313842773,
+      0.15978634191440497
+    ],
+    "programHash": "sha256:ade5ac127afd3c81d14c885a16423fb141eff72f564177847ab4020cf3eb5627",
+    "values": {
+      "frequency": 644.987,
+      "waveform": "sine"
+    }
+  },
+  "dimensions": [
+    "frequency",
+    "waveform"
+  ],
+  "engine": {
+    "analyzerVersion": 1,
+    "checksVersion": 1,
+    "descriptorMethods": {
+      "onsets": "energy-jump-v1",
+      "pitch": "yin-v1"
+    },
+    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
+    "rendererVersion": 2,
+    "substreamScheme": "substream-v1"
+  },
+  "evaluated": 30,
+  "fitId": "hidden-tone-660",
+  "rounds": [
+    {
+      "bestDistance": 0.32320325116297727,
+      "bestPoint": [
+        0.6589822769165039,
+        0.28931966734469733
+      ],
+      "evaluated": 10,
+      "round": 0,
+      "span": 1
+    },
+    {
+      "bestDistance": 0.22725315119865755,
+      "bestPoint": [
+        0.6087080001831054,
+        0.23680446183113452
+      ],
+      "evaluated": 10,
+      "round": 1,
+      "span": 0.4
+    },
+    {
+      "bestDistance": 0.07131999705405805,
+      "bestPoint": [
+        0.6222387313842773,
+        0.15978634191440497
+      ],
+      "evaluated": 10,
+      "round": 2,
+      "span": 0.16000000000000003
+    }
+  ],
+  "schema": "AcousticFitReportV1",
+  "seed": 23,
+  "specHash": "sha256:1f4eefe8172a0a441460eee525369fb6d7e76ed2d82c846ed825b4f7bdafd0aa",
+  "target": {
+    "descriptors": {
+      "activeSeconds": {
+        "value": 0.33,
+        "weight": 0.5
+      },
+      "integratedLufs": {
+        "value": -14.429972840739582,
+        "weight": 1
+      },
+      "pitchHz": {
+        "value": 660.5122992586043,
+        "weight": 1
+      },
+      "spectralPeakHz": {
+        "value": 656.25,
+        "weight": 1
+      }
+    },
+    "hash": "sha256:acba9777817e9b1dbea49b963ede23ea54b96b6d3bdffc0f410ca286eec5cced",
+    "source": "descriptors"
+  },
+  "tolerance": 0.2,
+  "verdict": "converged"
+}

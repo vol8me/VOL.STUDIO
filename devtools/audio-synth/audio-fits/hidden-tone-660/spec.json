@@ -1,0 +1,104 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "durationSeconds": 0.4,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.01,
+              "decay": 0.08,
+              "release": 0.1,
+              "sustain": 0.15,
+              "sustainLevel": 0.7
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "name": "tone",
+          "source": {
+            "params": {
+              "frequency": 440,
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -6
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 11
+    }
+  },
+  "description": "F6b kapanış kanıtı: 660 Hz sine + AHDSR gizli hedefinin betimleyici vektörüne uydurma. Hedef değerler reference ölçümünden alınmıştır (pitchHz 660.51, spectralPeakHz 656.25).",
+  "dimensions": [
+    {
+      "name": "frequency",
+      "range": {
+        "max": 2000,
+        "min": 100,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "target": {
+        "kind": "node-param",
+        "layer": "tone",
+        "param": "frequency",
+        "primitive": "source.oscillator",
+        "slot": "source"
+      }
+    },
+    {
+      "name": "waveform",
+      "options": [
+        "sine",
+        "triangle",
+        "sawtooth",
+        "square"
+      ],
+      "target": {
+        "kind": "node-param",
+        "layer": "tone",
+        "param": "waveform",
+        "primitive": "source.oscillator",
+        "slot": "source"
+      }
+    }
+  ],
+  "fitId": "hidden-tone-660",
+  "schema": "AcousticFitSpecV1",
+  "search": {
+    "candidates": 10,
+    "rounds": 4,
+    "shrink": 0.4
+  },
+  "seed": 23,
+  "target": {
+    "descriptors": {
+      "activeSeconds": {
+        "value": 0.33,
+        "weight": 0.5
+      },
+      "integratedLufs": {
+        "value": -14.429972840739582,
+        "weight": 1
+      },
+      "pitchHz": {
+        "value": 660.5122992586043,
+        "weight": 1
+      },
+      "spectralPeakHz": {
+        "value": 656.25,
+        "weight": 1
+      }
+    }
+  },
+  "tolerance": 0.2
+}

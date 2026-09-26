@@ -481,7 +481,15 @@ glottal pürüz kaynakları sıfırlanır ve kontur sabitlenir — perde YOLU
 (gesture + makro) değişmez, yalnız ölçümü bozan düzensizlik çıkar.
 Dinleme paketi: `pnpm --filter @volstudio/audio-synth audio:audition` →
 git-dışı `export/audition/` (48 archetype varyasyonu + 3 vokal aile, ölçüm
-tablosu `audition.json`; öznel yargı içermez).
+tablosu `audition.json`; öznel yargı içermez). Tek-komut insan incelemesi
+paketi `pnpm --filter @volstudio/audio-synth audio:listen` →
+`export/listening/`: bütün canary'ler kanonik render'dan WAV + dinleme
+rehberi + `reviews.json` durumu, bütün production referansları gönderilen
+OGG baytının FFmpeg çözümünden WAV + manifest ve `decisions.json` durumu
+(kararın bağlı olduğu PCM hash manifestle eşleşiyorsa geçerli, yoksa
+`undecided`); `listening.json` envanter ve statik `index.html`. Paket
+yalnız dosya ve kayıtlı durum taşır — beğeni beyanı `canary review` /
+`regression decide` ile insan tarafından yazılır.
 
 ## Arama laboratuvarı
 
@@ -631,6 +639,59 @@ rezonans frekansı olarak açıkça öyle adlandırılır. `MechanicalCheckV1`
 `pulse-rate`, `pitch`, `pitch-contour`, `aperiodic`, `band-dominance`) arama
 filtreleri ve canary beklentileri için tek bildirimsel dildir; ölçülen değeri
 ve eşiği raporlar, birleşik kalite puanı üretmez.
+
+### Referans uydurma (inverse synthesis) — araştırma kapısı
+
+`AcousticFitSpecV1` + `audio:job fit` (`src/search/fit.ts`,
+`src/protocol/fit.ts`). Hedef bir sesin mekanik betimleyici vektörüdür:
+`DescriptorSummaryV1` alanlarından seçilenler (pitch/zarf/spektral/zamansal)
+`FIT_DESCRIPTOR_SCALES` tablosuyla normalize edilir — frekanslar ve süreler
+log2 genişliğiyle (oktav/ikileme başına 1 birim), dB'ler doğrusal — ve
+ağırlıklı RMS uzaklığı en aza indirilir. `target.manifest` verilince değerler
+manifest `analysis.encoded`'ından okunur (`FIT_MANIFEST_FIELDS`; `pitchHz`
+ile `onsetsPerSecond` manifestte yoktur). `null`↔sayı uyuşmazlığı (ör. hedef
+perdeli, aday perdesiz) alan başına 1 birim cezadır.
+
+Algoritma deterministik zoom taramasıdır: tur 0 tam birim küpü karışık Halton
+ile tarar; sonraki her tur görev sahibi nokta etrafında `shrink` oranında
+daralan kutuyu örnekler ve görev sahibi elit taşınır — rapordaki
+`bestDistance` monoton azalmaz. Aday inşası `planCandidate`i, değerlendirme
+`search-candidate` görevini paylaşır: seri/worker eşitliği, render bütçesi ve
+materialize reddi aynı tek kaynaktan gelir; aynı program özeti turlar arasında
+yeniden render edilmez. Sinirsel bağımlılık yoktur.
+
+Kapanış kanıtı (`audio-fits/`): 660 Hz sine + AHDSR gizli hedefi
+`hidden-tone-660` — 30 değerlendirme / 3 turda `converged` (uzaklık 0.071 ≤
+tolerans 0.2; geri yakalanan frekans 644.99 Hz = %2.3 hata, FFT tepe
+çözünürlüğü 46.875 Hz/bin taban; `waveform: sine` doğru). Negatif kanıt
+`hidden-tone-wrong-topology`: aynı hedefe perdesiz `source.noise` tabanı
+`exhausted` (uzaklık 4.04 ≫ tolerans; `pitchHz` cezası 1) — yanlış topoloji
+sessizce "başarı" sayılmaz. `verdict: converged` yalnız "betimleyici uzaklığı
+eşik altında" demektir; ses benzerliği ya da kalite yargısı değildir, fit
+çıktısı hiçbir publish kapısını açmaz ve production'a tek giriş kanonik iş
+akışıdır.
+
+### Semantic scorer — isteğe bağlı laboratuvar adaptörü
+
+`search run --semantic --scorer "<cmd>" --positive "a,b" [--negative "c,d"]`
+(`src/search/semantic.ts`, `src/protocol/semantic.ts`). Metin-ses gömücüsü
+ya da benzeri bir model core bağımlılığı YAPILMAZ: skorer kullanıcının
+verdiği harici süreçtir (komut `--scorer` ya da `AUDIO_SYNTH_SEMANTIC_SCORER`
+ile gelir). Rapor ve aday programları yazıldıktan sonra her render edilmiş
+adayın WAV kopyası `export/` altına düşer, `SemanticScoreRequestV1`
+(searchId, spec/report özeti, terimler, `{candidateId, wav, descriptors}`
+listesi) sürecin stdin'ine yazılır ve `SemanticScoreResponseV1` stdout'tan
+okunur; bilinmeyen/tekrarlanan aday kimliği, sonlu-olmayan skor ya da JSON
+dışı çıktı `toolchain` hatasıdır. Sonuç `<search>/semantic.json`
+(`SearchSemanticV1`: skorlar + azalan `ranked` sırası) ve CLI sıralamasıdır.
+
+Sınır dürüstlüğü: skorlar **danışmandır** — aday durumunu
+(`passed`/`filtered`/…), insan kararını, promote ve publish kapılarını
+etkilemez; aynı spec'in skorlu ve skorsuz koşusu birebir aynı mekanik raporu
+verir. Skorer yoksa ya da düşerse arama tamamlanmış kalır: rapor önce
+yazılır, hata sonra yüzeye çıkar; `--semantic` verilmedikçe hiçbir süreç
+koşmaz. Çevrimdışı deterministik üretim akışı hiçbir modele ya da ağa
+bağlı değildir.
 
 ### Aile kalite ölçüsü
 

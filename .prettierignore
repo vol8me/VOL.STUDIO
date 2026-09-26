@@ -32,6 +32,7 @@ coverage/
 # Biçimi `prettyCanonicalJson` belirler ve her yazımda aynı baytları verir;
 # elle biçimlendirmek özeti değiştirmez ama bir sonraki yazımda boş diff üretir.
 devtools/audio-synth/audio-families/
+devtools/audio-synth/audio-fits/
 devtools/audio-synth/audio-jobs/
 devtools/audio-synth/audio-samples/
 devtools/audio-synth/audio-searches/

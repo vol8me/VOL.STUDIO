@@ -34,6 +34,7 @@
     "audio:production-check": "tsx scripts/audio-job.ts verify --all",
     "audio:capabilities": "tsx scripts/audio-job.ts capabilities",
     "audio:audition": "tsx scripts/archetype-audition.ts",
+    "audio:listen": "tsx scripts/listening-package.ts",
     "bench:resonators": "tsx scripts/resonator-bench.ts",
     "convert:ios": "tsx scripts/convert-audio.ts",
     "audio:samples": "tsx scripts/sample-fixtures.ts"

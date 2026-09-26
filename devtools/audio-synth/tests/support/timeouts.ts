@@ -13,5 +13,12 @@ export const RENDER_TIMEOUT = 60_000;
 /** Kodlama + çözme içeren yayın hattı, birden çok süreç ya da çok aşamalı üretim. */
 export const PIPELINE_TIMEOUT = 120_000;
 
+/**
+ * Bütün korpusu tek raporda süren testler (benchmark derlemi, kodlama
+ * profili yeniden ölçümü). Kapsamsız ~40 sn süren bu süpürmeler kapsam
+ * altında ~4.5 kat yavaşlayarak 120 sn'yi aşar; sınır buna göre ayrıdır.
+ */
+export const CORPUS_TIMEOUT = 480_000;
+
 export const RENDER_BLOCK = { timeout: RENDER_TIMEOUT } as const;
 export const PIPELINE_BLOCK = { timeout: PIPELINE_TIMEOUT } as const;

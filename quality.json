@@ -1,5 +1,12 @@
 {
   "$comment": [
+    "2026-09-26: audio-synth F5–F7 dalgası (benchmark korpusu, regresyon hafızası,",
+    "PolyBLEP v2, fit/semantic araştırma kapıları, dinleme paketi) ve renderer v2",
+    "republish sonrası ölçülen kapsam satır 96.41 / ifade 95.67 / dal 88.28 /",
+    "fonksiyon 97.04 (115 dosya, 2090 test, ~1830 sn). Eşikler 95/94/88/95",
+    "bantta korunuyor; değişmedi. Korpus süpürme testleri için CORPUS_TIMEOUT",
+    "(480 sn) eklendi — kapsam altındaki ~4.5x yavaşlama 120 sn'yi aşıyordu.",
+    "",
     "2026-09-24: audio-synth Dalga 6–10 (müzik hattı, SoundGraph, planner, sample kütüphanesi,",
     "canary korpusu) ve render yüzeyi kaydı sonrası ölçülen kapsam satır 96.89 / ifade 96.14 /",
     "dal 89.03 / fonksiyon 97.33 (85 dosya, 1831 test, 944 sn). Eşikler 95/94/88/95 zaten",

@@ -12,7 +12,24 @@ import { SEARCH_REPORT_SCHEMA } from '../search/report';
 import { SEARCH_SELECTION_SCHEMA } from '../search/selection';
 import { MAX_CANDIDATES, SEARCH_SPEC_SCHEMA } from '../search/spec';
 import { SEARCH_STRATEGIES } from '../search/strategy';
+import {
+  FIT_DESCRIPTOR_NAMES,
+  FIT_MANIFEST_FIELDS,
+  FIT_REPORT_SCHEMA,
+  FIT_SPEC_SCHEMA,
+  MAX_FIT_CANDIDATES,
+  MAX_FIT_ROUNDS,
+} from '../search/fit';
+import {
+  MAX_SEMANTIC_TERM_CHARS,
+  MAX_SEMANTIC_TERMS,
+  SEMANTIC_REQUEST_SCHEMA,
+  SEMANTIC_RESPONSE_SCHEMA,
+  SEMANTIC_SCHEMA,
+  SEMANTIC_SCORER_ENV,
+} from '../search/semantic';
 import { PROGRAM_ORIGIN_SCHEMA } from './origin';
+import { DEFAULT_FITS_ROOT } from './fit';
 import { DEFAULT_SEARCHES_ROOT, SEARCH_AUDITION_ROOT, SEARCH_STATUS_SCHEMA } from './search';
 
 /**
@@ -123,7 +140,7 @@ export function searchContext(cli: string) {
     ],
     commands: {
       plan: `${cli} search plan --file <spec.json>`,
-      run: `${cli} search run --file <spec.json> [--audition]`,
+      run: `${cli} search run --file <spec.json> [--audition] [--semantic --scorer "<cmd>" --positive "a,b" [--negative "c,d"]]`,
       status: `${cli} search status <searchId> [--json]`,
       list: `${cli} search list`,
       verify: `${cli} search verify <searchId>  (verify --all bütün aramaları da doğrular)`,
@@ -137,5 +154,43 @@ export function searchContext(cli: string) {
       'Onay/ret beyandır (by: human|agent); agent insan dinlemesi uyduramaz.',
       'Dinleme sunucusu yalnız 127.0.0.1/::1’e bağlanır ve yalnız selection.json yazar.',
     ],
+    fit: {
+      schemas: { spec: FIT_SPEC_SCHEMA, report: FIT_REPORT_SCHEMA },
+      root: DEFAULT_FITS_ROOT,
+      descriptors: FIT_DESCRIPTOR_NAMES,
+      manifestFields: Object.keys(FIT_MANIFEST_FIELDS),
+      limits: { candidatesPerRound: MAX_FIT_CANDIDATES, rounds: MAX_FIT_ROUNDS },
+      method:
+        'Deterministik zoom taraması: tur 0 tam birim küp (karışık Halton), sonra görev sahibi ' +
+        'nokta etrafında `shrink` oranında daralan kutu; görev sahibi elit taşınır. Uzaklık = ' +
+        'betimleyici başına normalize edilmiş, ağırlıklı RMS. Estetik puan ve sinirsel bağımlılık yoktur.',
+      commands: {
+        run: `${cli} fit run --file <spec.json>`,
+        show: `${cli} fit show <fitId>`,
+        list: `${cli} fit list`,
+      },
+      rules: [
+        'Hedef betimleyici vektörüdür: target.descriptors alanları değer+ağırlık taşır; target.manifest verilince eksik değerler manifest analizinden okunur.',
+        'Çıktı araştırma kanıtıdır: production kaydı değildir ve hiçbir publish kapısını açmaz.',
+        "verdict 'converged' yalnız normalize uzaklık ≤ tolerance demektir; ses benzerliği ya da kalite yargısı DEĞİLDİR.",
+      ],
+    },
+    semantic: {
+      schemas: {
+        document: SEMANTIC_SCHEMA,
+        request: SEMANTIC_REQUEST_SCHEMA,
+        response: SEMANTIC_RESPONSE_SCHEMA,
+      },
+      env: SEMANTIC_SCORER_ENV,
+      limits: { terms: MAX_SEMANTIC_TERMS, termChars: MAX_SEMANTIC_TERM_CHARS },
+      contract:
+        'İsteğe bağlı harici süreç adaptörü (F6c): `--scorer` ya da ortam değişkeni ile verilen komut ' +
+        "çalıştırılır; request JSON stdin'e yazılır, response JSON stdout'tan okunur. " +
+        "Aday WAV'ları export ağacına (`audio-searches/<id>/semantic/`) yazılır; git'e girmez. " +
+        'Core hiçbir model bağımlılığı taşımaz; scorer yokken bütün akış eksiksiz çalışır.',
+      rule:
+        'Skorlar danışmandır: `semantic.json` + CLI sıralaması dışında hiçbir şeyi etkilemez; ' +
+        'aday durumu, karar, promote ve publish kapıları mekanik rapora bağlıdır.',
+    },
   };
 }

@@ -13,7 +13,7 @@ import {
   type EncodeBaselineV1,
 } from '../../src/protocol/encodeProfiles';
 import { readEncoderToolchain } from '../../src/protocol/toolchain';
-import { PIPELINE_TIMEOUT } from '../support/timeouts';
+import { CORPUS_TIMEOUT } from '../support/timeouts';
 
 /**
  * Kodlama profili ölçüm olmadan değişemez: koddaki tablo ve ölçüt, kilidin
@@ -83,6 +83,6 @@ describe('kodlama profili taban çizgisi', () => {
         }
       }
     },
-    PIPELINE_TIMEOUT,
+    CORPUS_TIMEOUT,
   );
 });

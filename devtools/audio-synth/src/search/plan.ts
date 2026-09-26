@@ -119,83 +119,97 @@ function rejection(
     : { stage, code: error.resource, path: null, message: error.message };
 }
 
+/**
+ * Tek birim-küp noktasını adaya çevirir: boyut değerleri → dışlama →
+ * materialize → maliyet → bütçe → kimlik. `seen` program özetinden ilk
+ * kimliğe eşler; ikinci aynı program `duplicate` sayılır. `runSearch` ve
+ * `runFit` AYNI inşayı paylaşır.
+ */
+export function planCandidate(
+  spec: AcousticSearchSpecV1,
+  integer: readonly boolean[],
+  seen: Map<Sha256, string>,
+  point: readonly number[],
+  ordinal: number,
+): PlannedCandidate {
+  const values = Object.fromEntries(
+    spec.dimensions.map((dim, d) => [dim.name, valueAt(dim, point[d], integer[d])]),
+  );
+  const empty = {
+    ordinal,
+    point,
+    values,
+    program: null,
+    programHash: null,
+    candidateId: null,
+    cost: null,
+    risks: [] as string[],
+  };
+  const rule = excludedBy(spec, values);
+  if (rule !== null) {
+    const reason = (spec.constraints ?? [])[rule].reason;
+    return {
+      ...empty,
+      invalid: {
+        stage: 'constraint',
+        code: 'exclude',
+        path: `constraints[${rule}]`,
+        message: reason,
+      },
+    };
+  }
+  let program: AcousticProgramV1;
+  try {
+    program = materialize(spec.base, spec.dimensions, values);
+  } catch (error) {
+    if (!(error instanceof AudioParamError)) throw error;
+    return { ...empty, invalid: rejection('materialize', error) };
+  }
+  const programHash = hashCanonical(program);
+  const resolved = resolveProgram(program);
+  const cost = estimateProgramCost(resolved);
+  const samples = resolved.frames * resolved.channels;
+  const planned = {
+    ...empty,
+    program,
+    programHash,
+    cost: {
+      renderWorkUnits: cost.workUnits,
+      analysisWorkUnits: samples * ANALYSIS_WORK_PER_SAMPLE,
+      peakBytes: cost.peakBytes,
+      samples,
+    },
+    risks: [],
+  };
+  const twin = seen.get(programHash);
+  if (twin !== undefined) {
+    return {
+      ...planned,
+      invalid: {
+        stage: 'duplicate',
+        code: 'duplicate-program',
+        path: null,
+        message: `${twin} ile aynı program`,
+      },
+    };
+  }
+  try {
+    assertRenderBudget(cost, `aday ${ordinal}`);
+  } catch (error) {
+    if (!(error instanceof RenderBudgetError)) throw error;
+    return { ...planned, invalid: rejection('render-budget', error) };
+  }
+  const candidateId = candidateIdOf(programHash, spec);
+  seen.set(programHash, candidateId);
+  return { ...planned, candidateId, invalid: null };
+}
+
 export function planSearch(spec: AcousticSearchSpecV1): SearchPlan {
   const integer = spec.dimensions.map((dim) => isIntegerDimension(dim, spec.base));
   const seen = new Map<Sha256, string>();
   const names = spec.dimensions.map((d) => d.name);
-  const candidates = strategyPoints(spec.seed, names, spec.candidates).map(
-    (point, ordinal): PlannedCandidate => {
-      const values = Object.fromEntries(
-        spec.dimensions.map((dim, d) => [dim.name, valueAt(dim, point[d], integer[d])]),
-      );
-      const empty = {
-        ordinal,
-        point,
-        values,
-        program: null,
-        programHash: null,
-        candidateId: null,
-        cost: null,
-        risks: [],
-      };
-      const rule = excludedBy(spec, values);
-      if (rule !== null) {
-        const reason = (spec.constraints ?? [])[rule].reason;
-        return {
-          ...empty,
-          invalid: {
-            stage: 'constraint',
-            code: 'exclude',
-            path: `constraints[${rule}]`,
-            message: reason,
-          },
-        };
-      }
-      let program: AcousticProgramV1;
-      try {
-        program = materialize(spec.base, spec.dimensions, values);
-      } catch (error) {
-        if (!(error instanceof AudioParamError)) throw error;
-        return { ...empty, invalid: rejection('materialize', error) };
-      }
-      const programHash = hashCanonical(program);
-      const resolved = resolveProgram(program);
-      const cost = estimateProgramCost(resolved);
-      const samples = resolved.frames * resolved.channels;
-      const planned = {
-        ...empty,
-        program,
-        programHash,
-        cost: {
-          renderWorkUnits: cost.workUnits,
-          analysisWorkUnits: samples * ANALYSIS_WORK_PER_SAMPLE,
-          peakBytes: cost.peakBytes,
-          samples,
-        },
-        risks: [],
-      };
-      const twin = seen.get(programHash);
-      if (twin !== undefined) {
-        return {
-          ...planned,
-          invalid: {
-            stage: 'duplicate',
-            code: 'duplicate-program',
-            path: null,
-            message: `${twin} ile aynı program`,
-          },
-        };
-      }
-      try {
-        assertRenderBudget(cost, `aday ${ordinal}`);
-      } catch (error) {
-        if (!(error instanceof RenderBudgetError)) throw error;
-        return { ...planned, invalid: rejection('render-budget', error) };
-      }
-      const candidateId = candidateIdOf(programHash, spec);
-      seen.set(programHash, candidateId);
-      return { ...planned, candidateId, invalid: null };
-    },
+  const candidates = strategyPoints(spec.seed, names, spec.candidates).map((point, ordinal) =>
+    planCandidate(spec, integer, seen, point, ordinal),
   );
   const costs = candidates.flatMap((c) => (c.invalid === null && c.cost ? [c.cost] : []));
   const estimate = estimateBatch(

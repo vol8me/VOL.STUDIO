@@ -1,0 +1,34 @@
+{
+  "channels": 1,
+  "durationSeconds": 0.4,
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0464104,
+          "decay": 0.08,
+          "release": 0.1,
+          "sustain": 0.15,
+          "sustainLevel": 0.7
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "name": "tone",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "normalize": "peak",
+    "peakDbfs": -6
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 11
+}

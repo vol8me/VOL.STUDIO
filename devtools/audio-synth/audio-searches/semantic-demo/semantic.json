@@ -1,0 +1,46 @@
+{
+  "ranked": [
+    "c-a6c5eb76b6e58321",
+    "c-c5fe6ffdf7259624",
+    "c-7c7fbe701d9d50bd",
+    "c-14d4d52c185e53bd"
+  ],
+  "reportHash": "sha256:84e5587edae729d68a695653dcd07d15a59c7158be3ed43cf75540313b70353c",
+  "schema": "SearchSemanticV1",
+  "scorer": {
+    "command": "node tests/fixtures/fakeScorer.mjs"
+  },
+  "scores": [
+    {
+      "candidateId": "c-7c7fbe701d9d50bd",
+      "note": "kukla",
+      "score": 0.328125
+    },
+    {
+      "candidateId": "c-a6c5eb76b6e58321",
+      "note": "kukla",
+      "score": 0.9140625
+    },
+    {
+      "candidateId": "c-14d4d52c185e53bd",
+      "note": "kukla",
+      "score": 0.2578125
+    },
+    {
+      "candidateId": "c-c5fe6ffdf7259624",
+      "note": "kukla",
+      "score": 0.703125
+    }
+  ],
+  "searchId": "semantic-demo",
+  "specHash": "sha256:316c0dfcc065328b2ebb606cbb653386564fe1b18138552a8b780a645d22459f",
+  "terms": {
+    "negative": [
+      "dull"
+    ],
+    "positive": [
+      "metallic",
+      "bright"
+    ]
+  }
+}

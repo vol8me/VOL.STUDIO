@@ -189,6 +189,8 @@ export { JOB_STAGES, PROTOCOL_VERSION } from './records';
 export type { AudioJobV1, JobStage, JobTargetV1 } from './records';
 export { jobStatus, JOB_STATUS_SCHEMA } from './status';
 export type { ArtifactState, JobStatusV1, NextAction } from './status';
+export { DEFAULT_FITS_ROOT, listFits, readFitReport, runFit } from './fit';
+export type { FitRunOutcome } from './fit';
 export {
   auditionPath,
   DEFAULT_SEARCHES_ROOT,
@@ -211,6 +213,10 @@ export type {
   SearchStatusV1,
   SearchVerificationV1,
 } from './search';
+export { runSemanticScoring } from './semantic';
+export type { SemanticRunConfig, SemanticRunOutcome } from './semantic';
+export { buildListeningPackage, LISTENING_ROOT, LISTENING_SCHEMA } from './listening';
+export type { ListeningItemV1, ListeningPackageV1, ReferenceListenStatus } from './listening';
 export {
   decodeSample,
   DEFAULT_SAMPLES_ROOT,

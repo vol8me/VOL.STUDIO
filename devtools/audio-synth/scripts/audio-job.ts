@@ -39,6 +39,7 @@ import {
 import { runBenchmarkCommand, runCapabilitiesCommand } from './lib/benchmarkCommands';
 import { runCanaryCommand } from './lib/canaryCommands';
 import { runFamilyCommand } from './lib/familyCommands';
+import { runFitCommand } from './lib/fitCommands';
 import { runMusicCommand } from './lib/musicCommands';
 import { runPromoteCommand, runSearchCommand } from './lib/searchCommands';
 import { runRegressionCommand } from './lib/regressionCommands';
@@ -164,6 +165,8 @@ function runCommand(parsed: Parsed, repoRoot: string): number {
       return runVerifyCommand(parsed, repoRoot);
     case 'search':
       return runSearchCommand(parsed, repoRoot);
+    case 'fit':
+      return runFitCommand(parsed, repoRoot);
     case 'promote':
       return runPromoteCommand(parsed, loc(), repoRoot);
     case 'canary':
