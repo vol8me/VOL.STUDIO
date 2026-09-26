@@ -333,3 +333,23 @@ describe('registry governance', () => {
     }
   });
 });
+
+describe('çok-sürümlü registry', () => {
+  it('latest() ve get(id) varsayılanı EN YENİ sürümü verir', () => {
+    // source.oscillator v1(dondurulmuş PolyBLEP)+v2(BLAMP) — varsayılan çözüm v2 olmalı.
+    const multi = PROGRAM_REGISTRY.entries()
+      .map((e) => e.id)
+      .filter((id, i, all) => all.indexOf(id) !== i);
+    expect(multi).toContain('source.oscillator');
+    for (const id of multi) {
+      const versions = PROGRAM_REGISTRY.entries()
+        .filter((e) => e.id === id)
+        .map((e) => e.version);
+      const max = Math.max(...versions);
+      expect(PROGRAM_REGISTRY.get(id).version, `get(${id})`).toBe(max);
+      expect(PROGRAM_REGISTRY.latest().find((e) => e.id === id)?.version, `latest(${id})`).toBe(
+        max,
+      );
+    }
+  });
+});

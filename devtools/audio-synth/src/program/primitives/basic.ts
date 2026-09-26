@@ -292,7 +292,9 @@ export const REVERB: EffectEntry = {
   determinism: DETERMINISTIC,
   resource: {
     model: 'O(kare) + comb durumu',
-    workPerFrame: () => 8,
+    // Stereo kanal-kare başına ~130 ns ölçüldü (R8, prog-treatment-reverb
+    // deltası): 8 birim gerçek maliyeti ~1.6× küçümsüyordu.
+    workPerFrame: () => 14,
     // İki kanal × sekiz comb (en uzun oda ölçeğinde ≈0.53 sn) + allpass + ön gecikme.
     stateBytes: (params, sampleRate) => 4 * sampleRate * (2 * Number(params.preDelay) + 1.2),
   },

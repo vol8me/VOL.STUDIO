@@ -72,7 +72,9 @@ export const WIND: SourceEntry = {
     { param: 'whistle', dimension: 'roughness', direction: 1, note: 'Tonal ıslık.' },
   ],
   determinism: { stochastic: true, substreams: ['air', 'gust'] },
-  resource: { model: 'O(kare) — 4 SVF + 3 OU', workPerFrame: () => 24, stateBytes: () => 256 },
+  // 5 SVF bandpass + 3 OU + pink noise: 10 sn bench'te ~400 ns/kare ölçüldü
+  // (R8, `prog-addburst-wind`); 24 birim ~1.5× küçümsüyordu.
+  resource: { model: 'O(kare) — 5 SVF + 3 OU', workPerFrame: () => 36, stateBytes: () => 256 },
   render(out, params, ctx) {
     const sr = ctx.sampleRate;
     const speed = signalOf(params, 'speed');

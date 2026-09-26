@@ -211,6 +211,27 @@ aynı kapıyı kayıt anında da uygular — bütçeyi aşan program job'a girem
 ALTINDA, yani program tahmini gerçek maliyeti küçümsemez (en muhafazakâr:
 tık olaylı `chitin-clicker`, 0.7 ns/birim).
 
+R8'deki ikinci ölçüm turu (`bench:budget` `prog-*` senaryoları, 10 sn
+programlar; kısa senaryoda JIT/çözüm sabitleri ns/birim oranını şişirir)
+üç küçümseme buldu ve modeli ölçümle kalibre etti:
+
+| Senaryo                          | Eski ns/birim | Yeni ns/birim | Değişiklik                                     |
+| -------------------------------- | ------------: | ------------: | ---------------------------------------------- |
+| BLEP osilatör + zarf             |           8.6 |           9.0 | — (model tutucuydu)                            |
+| + `effect.air-absorption`        |          12.1 |          12.0 | FIR tasarımı ilk çağrıda sabit ~20–30 ms;      |
+|                                  |               |               | steady-state ~5.5 birim/kare → 8 tutucu kalır  |
+| + `effect.width` (stereo)        |           8.3 |           6.8 | — (mono'da etkisiz; stereo'da da ~0.3 ns/kare) |
+| treatment: tek `eq-pass`         |          14.7 |           9.3 | `treatmentCost` tabanı 1 → 10 birim/kare:      |
+|                                  |               |               | loop'un ikinci turu + seviye ölçümü            |
+|                                  |               |               | modellenmemişti (~10× küçümseme)               |
+| treatment: `reverb`              |          15.5 |           9.3 | `effect.reverb` 8 → 14 birim/kare              |
+| treatment: occluded (3 düğüm)    |          13.5 |           8.9 | iki düzeltmenin toplamı                        |
+| `source.wind@2` + gust patlaması |          13.6 |           9.2 | `workPerFrame` 24 → 36 (5 SVF + OU + noise)    |
+
+Kalibrasyon ilkesi: küçümseyen sabit ölçülen değere yuvarlanır; tutucu
+sabitlere dokunulmaz (parametre-ölçekli olanlar — `addBurst`ün
+`rate·clustering` terimi, `eq-pass`in `order` terimi — aynen kalır).
+
 ### Job, özet zinciri ve bayatlık
 
 `AudioJobV1` aşamaları: `created → briefed → programmed → rendered → analyzed

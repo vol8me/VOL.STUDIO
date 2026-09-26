@@ -77,6 +77,17 @@ describe('render yüzeyi kilidi', () => {
     expect(PROGRAM_REGISTRY.versions('source.drum')).toEqual([1, 2]);
   });
 
+  it("açık sürüm pinli düğüm ref'i o sürümün yüzeyini taşır", () => {
+    // {id,version} ref'leri sürümü ONUR eder: v2 pinliyse v2 yüzeyi kaydedilir.
+    const v2 = surfaceOf([{ id: 'source.oscillator', version: 2 }]);
+    const v1 = surfaceOf([{ id: 'source.oscillator', version: 1 }]);
+    expect(v2.nodes[0].version).toBe(2);
+    expect(v1.nodes[0].version).toBe(1);
+    expect(v2.hash).not.toBe(v1.hash);
+    expect(v2.nodes[0].hash).toBe(nodeSurface('source.oscillator', 2).hash);
+    expect(v1.nodes[0].hash).toBe(nodeSurface('source.oscillator', 1).hash);
+  });
+
   it('belge alanları izdüşüme girmez: açıklama değişince özet değişmez', () => {
     const entry = PROGRAM_REGISTRY.get('source.oscillator');
     const renamed = {

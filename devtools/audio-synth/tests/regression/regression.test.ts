@@ -31,6 +31,9 @@ import {
 } from '../../src/protocol';
 import { ProtocolError } from '../../src/protocol/errors';
 import { hashCanonical, type Sha256 } from '../../src/protocol/canonical';
+import { withRenderSession } from '../../src/engine/session';
+import { repoRenderCache } from '../../src/protocol/renderCacheStore';
+import { CORPUS_TIMEOUT } from '../support/timeouts';
 
 const REPO = fileURLToPath(new URL('../../../..', import.meta.url));
 const IMPACT = 'sfx/reference-impact';
@@ -108,6 +111,26 @@ describe('regresyon korpusu', () => {
     }
     expect(report.counts['audition-required']).toBe(0);
   }, 120_000);
+
+  it(
+    'R8d — önbellek/işçi eşitliği: bütün korpus cache-kapalı seri == cache-açık 4 işçi',
+    () => {
+      const sweep = (workers: number, cacheOn: boolean) =>
+        withRenderSession(
+          { quality: 'final', cache: cacheOn ? repoRenderCache(REPO) : null },
+          () => runRegression(REPO, { workers }).rows,
+        );
+      const serial = sweep(1, false);
+      const parallel = sweep(4, true);
+      // En uç iki konfigürasyon: sonuçlar satır satır eşit olmalı.
+      expect(parallel.map((r) => [r.id, r.current.pcmHash, r.status])).toEqual(
+        serial.map((r) => [r.id, r.current.pcmHash, r.status]),
+      );
+      expect(serial.length).toBeGreaterThanOrEqual(30);
+      expect(serial.every((r) => r.status === 'unchanged')).toBe(true);
+    },
+    CORPUS_TIMEOUT,
+  );
 
   it('bilinmeyen manifest kimliği reddedilir', () => {
     expect(() => runRegression(REPO, { ids: ['sfx/yok'] })).toThrow(ProtocolError);

@@ -239,6 +239,21 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       korpus süpürme testi 120 sn'lik `PIPELINE_TIMEOUT`'u aşıyordu —
       ayrı `CORPUS_TIMEOUT` (480 sn) eklendi, iki dosya coverage
       altında doğrulandı.
+      R8 sağlamlaştırması: tohumlu sınır fuzz'ı
+      (`tests/protocol/fuzz.test.ts` — `validate*`/`resolve*` bozuk
+      girdileri yalnız `AudioParamError`/`ProtocolError`/
+      `CanonicalJsonError` fırlatır, `TypeError` yok); mutasyon
+      kampanyası `scripts/mutation-campaign.ts` — 12 kritik iddia
+      bilerek bozuldu, 12/12 testler öldürdü (kanonik sıralama,
+      sürüm çözümü, encode kalitesi, BLEP, manifest şeması, worker
+      önbelleği/sırası, canary varsayılanı, yüzey pinleme, fit
+      seçimi, scorer argv, bellek bütçesi); korpus PCM eşitliği
+      önbellek± × 1/4 işçi süpürmesiyle kilitli
+      (`tests/regression/regression.test.ts`); maliyet modeli
+      ölçümle kalibre edildi — `treatmentCost` tabanı (loop ikinci
+      turu, ~10× küçümsemeydi), `effect.reverb` 8→14,
+      `source.wind` 24→36 birim/kare (`bench:budget` `prog-*`
+      senaryoları, DESIGN'daki tablo).
 - [x] **[P3] Semantic audio scorer isteğe bağlı laboratuvar aracı olsun.**
       `search run --semantic` harici scorer süreci koşturur
       (`--scorer '["<exe>",…]'` ya da `AUDIO_SYNTH_SEMANTIC_SCORER`; terimler
