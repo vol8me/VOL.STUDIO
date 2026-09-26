@@ -26,7 +26,7 @@
               "name": "coin",
               "source": {
                 "primitive": "source.retro",
-                "version": 1,
+                "version": 2,
                 "params": {
                   "waveform": "pulse",
                   "duty": 0.125,

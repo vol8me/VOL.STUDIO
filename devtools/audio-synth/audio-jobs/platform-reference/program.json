@@ -93,7 +93,7 @@
           "waveform": "sine"
         },
         "primitive": "source.oscillator",
-        "version": 1
+        "version": 2
       }
     }
   ],

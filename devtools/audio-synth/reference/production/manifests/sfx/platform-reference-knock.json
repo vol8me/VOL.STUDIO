@@ -67,7 +67,7 @@
         "trailingSilenceSeconds": 0.7773333333333333
       }
     },
-    "sourceRecordHash": "sha256:7124e85b23f2d669d119faf62e4c81533c6afe91f85e0a2ecfddd52b5e811f4d"
+    "sourceRecordHash": "sha256:07f772abfdddbcfa1c389a9ee1454d0dad6e567232f6ad0b244921eb02047336"
   },
   "asset": {
     "bytes": 5963,
@@ -129,16 +129,16 @@
     "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
   },
   "encoding": {
-    "policyHash": "sha256:4995c93a1714f448fc486b3365eea0d041ecc778f26b7b5b30935a46ec028376",
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
     "quality": 7,
     "scheme": "encode-profile-v1"
   },
   "engine": {
     "package": "@volstudio/audio-synth",
     "packageVersion": "0.1.0",
-    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
+    "registryHash": "sha256:97303e7ca61ffd4fd75419342441be2278970b0b213dd1f99f738111aff4da1a",
     "renderSurface": {
-      "hash": "sha256:cf364040e73451cf20ad064011e1ebcdbff46009e97a7f86b359c9bc66c5bf85",
+      "hash": "sha256:a97106fb46cac5e84149144df14a0caab015a981e08f4bfd8d4a247de0c4d145",
       "nodes": [
         {
           "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
@@ -156,9 +156,9 @@
           "version": 1
         },
         {
-          "hash": "sha256:d096d002f9a53f2dcfb7d7cfcc252b523fa03362b2f72af4c80f250a1efe4b03",
+          "hash": "sha256:b0c800b997b33e21c77db26196fffeb7162495c77939084b2b3eb1fd4639561b",
           "id": "source.oscillator",
-          "version": 1
+          "version": 2
         }
       ],
       "scheme": "render-surface-v1"
@@ -167,7 +167,7 @@
     "runtime": {
       "node": "v22.23.1"
     },
-    "sourceCommit": "17e4841efc7b0a3ae3a92bd5aa7e87e8d8044baf",
+    "sourceCommit": "5bb245fb5d74b09c4ad1e24d3497907204cc3180",
     "sourceTreeDirty": true
   },
   "integration": {
@@ -290,7 +290,7 @@
               "waveform": "sine"
             },
             "primitive": "source.oscillator",
-            "version": 1
+            "version": 2
           }
         }
       ],
@@ -303,7 +303,7 @@
       "schema": "AcousticProgramV1",
       "seed": 20260922
     },
-    "hash": "sha256:43973f331952af2c5564dfc388a6bc5b87322a12f14e6a85e36c7381c6edd7d8",
+    "hash": "sha256:ab770f0d753e4068c4b8591ad78c3358daf1e7956467b8f138d65b0b438a0944",
     "schema": "AcousticProgramV1"
   },
   "render": {
@@ -314,7 +314,7 @@
       "hash": "sha256:7c1be899b5ea42e634d56e51e759bfe6619f7639164182294c7699ebdeeb93b9",
       "sampleRate": 48000
     },
-    "renderId": "r-0d2cf75eded80865",
+    "renderId": "r-ae620648cbf226fd",
     "rendererVersion": 2,
     "seed": 20260922
   },

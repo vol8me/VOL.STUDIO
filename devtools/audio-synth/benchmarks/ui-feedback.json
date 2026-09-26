@@ -37,7 +37,7 @@
               "name": "blip",
               "source": {
                 "primitive": "source.oscillator",
-                "version": 1,
+                "version": 2,
                 "params": {
                   "waveform": "triangle",
                   "frequency": {
@@ -135,7 +135,7 @@
               "name": "drop",
               "source": {
                 "primitive": "source.oscillator",
-                "version": 1,
+                "version": 2,
                 "params": {
                   "waveform": "square",
                   "frequency": {
@@ -159,7 +159,7 @@
               "gainDb": -9,
               "source": {
                 "primitive": "source.oscillator",
-                "version": 1,
+                "version": 2,
                 "params": {
                   "waveform": "square",
                   "frequency": {

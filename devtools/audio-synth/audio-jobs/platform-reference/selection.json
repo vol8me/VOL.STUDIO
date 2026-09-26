@@ -1,8 +1,8 @@
 {
-  "analysisHash": "sha256:7124e85b23f2d669d119faf62e4c81533c6afe91f85e0a2ecfddd52b5e811f4d",
+  "analysisHash": "sha256:07f772abfdddbcfa1c389a9ee1454d0dad6e567232f6ad0b244921eb02047336",
   "pcmHash": "sha256:7c1be899b5ea42e634d56e51e759bfe6619f7639164182294c7699ebdeeb93b9",
-  "reason": "F7a kanonik tazeleme (renderer v2)",
-  "renderHash": "sha256:6ca6dd5b2fc93bed31090f335f56be0cec3af87c5d7ffa425a4f1b8adf1a6aad",
-  "renderId": "r-0d2cf75eded80865",
+  "reason": "R2: source.oscillator pin'i v2'ye taşındı (K2: yeni referanslar güncel çekirdeği alır); PCM aynı, yüzey kaydı güncellendi",
+  "renderHash": "sha256:75d47857ea7f4910e9f010be54c7246edc88c0baa7161de443ef064440dfd352",
+  "renderId": "r-ae620648cbf226fd",
   "schema": "AudioSelectionV1"
 }

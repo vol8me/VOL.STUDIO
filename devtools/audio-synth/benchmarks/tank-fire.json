@@ -43,7 +43,7 @@
               "gainDb": -3,
               "source": {
                 "primitive": "source.drum",
-                "version": 1,
+                "version": 2,
                 "params": {
                   "model": "kick",
                   "tune": -8,
