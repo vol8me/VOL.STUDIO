@@ -8,33 +8,6 @@ for (let i = 0; i < TABLE_SIZE; i++) {
   SINE_TABLE[i] = Math.sin((2 * Math.PI * i) / TABLE_SIZE);
 }
 
-/**
- * Bandlimited triangle tablosu — 200 tek harmonik (1/n² amplitüd).
- * İlk triangle isteğinde bir kez üretilir (tembel başlatma).
- *
- * NOT: "aliasing yok" değil, "naive triangle'a göre çok daha az aliasing".
- * Sabit harmonik sayılı bir tablo yalnızca tabloya göre bant sınırlıdır;
- * yüksek f0'da üst harmonikler yine katlanır.
- */
-let triangleTable: Float32Array | null = null;
-
-function getTriangleTable(): Float32Array {
-  if (triangleTable) return triangleTable;
-
-  const table = new Float32Array(TABLE_SIZE);
-  for (let i = 0; i < TABLE_SIZE; i++) {
-    const phase = i / TABLE_SIZE;
-    let s = 0;
-    for (let n = 1; n <= 200; n += 2) {
-      s += Math.sin(2 * Math.PI * n * phase) / (n * n);
-    }
-    // 8/π² normalizasyon → [-1, 1]
-    table[i] = (s * 8) / (Math.PI * Math.PI);
-  }
-  triangleTable = table;
-  return table;
-}
-
 /** Lookup table'dan linear interpolasyon ile örnek okur. */
 function tableLookup(table: Float32Array, phase: number): number {
   const idx = phase * table.length;
@@ -133,6 +106,59 @@ export function blepResidual(d: number): number {
   return bandStep(d) - (d >= 0 ? 1 : 0);
 }
 
+let blampTable: Float32Array | null = null;
+
+/**
+ * Bant sınırlı ramp rezidüeli (BLAMP): `∫ blepResidual` — eğim
+ * süreksizliğinde (üçgen köşesi) naif kırığa eklenince bant sınırlı
+ * rampayı verir. Çekirdek simetrik olduğundan rezidüel her iki uçta
+ * sıfıra sönümlenir; tablo ilk kullanımda bir kez üretilir.
+ */
+function getBlampTable(): Float32Array {
+  if (blampTable) return blampTable;
+  const steps = getBandStepTable();
+  const len = steps.length;
+  const dx = 1 / BLEP_SUBSTEPS;
+  const table = new Float32Array(len);
+  // ∫ blepResidual = ∫ bandStep − ∫ u: basamak terimi analitik çıkarılır,
+  // bandStep parçalı doğrusal olduğundan yamuk toplamı tamdır — pencere
+  // simetrisi sayesinde uç değer tam sıfıra döner, kenarda basamak kalmaz.
+  let acc = 0;
+  for (let i = 1; i < len; i++) {
+    acc += ((steps[i - 1] + steps[i]) / 2) * dx;
+    table[i] = acc - Math.max(0, -BLEP_RADIUS + i * dx);
+  }
+  blampTable = table;
+  return table;
+}
+
+/** `d` örnek cinsinden köşeye uzaklık; |d| ≥ `BLEP_RADIUS` ise katkı sıfırdır. */
+export function blampResidual(d: number): number {
+  if (d <= -BLEP_RADIUS || d >= BLEP_RADIUS) return 0;
+  const table = getBlampTable();
+  const pos = (d + BLEP_RADIUS) * BLEP_SUBSTEPS;
+  const i = Math.min(Math.floor(pos), table.length - 2);
+  const frac = pos - i;
+  return table[i] + (table[i + 1] - table[i]) * frac;
+}
+
+/**
+ * Eğim süreksizliği düzeltmesi: faz ekseninde `at + k` konumlarındaki,
+ * örnek başına `jump` büyüklüğündeki eğim sıçramalarının bu örneğe BLAMP
+ * katkısı. `inc` örnek başına faz artışı; pencere içine düşen bütün
+ * periyotların köşeleri toplanır.
+ */
+function slopeCorrection(phase: number, at: number, jump: number, inc: number): number {
+  const span = BLEP_RADIUS * inc;
+  let sum = 0;
+  const first = Math.ceil(phase - at - span);
+  const last = Math.floor(phase - at + span);
+  for (let k = first; k <= last; k++) {
+    sum += jump * inc * blampResidual((phase - at - k) / inc);
+  }
+  return sum;
+}
+
 /**
  * Faz ekseninde `at + k` konumlarındaki `h` genlikli sıçramaların bu örneğe
  * rezidüel katkısı. `inc` örnek başına faz artışıdır; pencere içine düşen
@@ -179,14 +205,20 @@ export function getWaveSampleWithPhase(
   switch (wave) {
     case 'sine':
       return tableLookup(SINE_TABLE, phase);
-    case 'triangle':
-      // Düşük frekanslarda (LFO vb.) naive triangle — hesaplama daha ucuz
+    case 'triangle': {
+      // Naif üçgen + köşe eğim sıçramalarına BLAMP (0.25'te −8, 0.75'te
+      // +8 faz-eğimi). Sabit harmonik tablosunun yüksek f0 katlanmasını
+      // taşımaz; `phaseInc ≤ 0` (LFO) ucuz naif yolda kalır.
       if (phaseInc <= 0) {
         if (phase < 0.25) return 4 * phase;
         if (phase < 0.75) return 2 - 4 * phase;
         return -4 + 4 * phase;
       }
-      return tableLookup(getTriangleTable(), phase);
+      let sample = phase < 0.25 ? 4 * phase : phase < 0.75 ? 2 - 4 * phase : -4 + 4 * phase;
+      sample += slopeCorrection(phase, 0.25, -8, phaseInc);
+      sample += slopeCorrection(phase, 0.75, 8, phaseInc);
+      return sample;
+    }
     case 'sawtooth': {
       let sample = 2 * phase - 1;
       if (phaseInc > 0) {
@@ -202,6 +234,13 @@ export function getWaveSampleWithPhase(
       return 0;
   }
 }
+
+/**
+ * Periyodik dalga örnekleyicisinin tipi — v1 (`waveforms-v1`) ve v2
+ * (`waveforms`) çekirdekleri aynı imzayı taşır; davul gibi çekirdeği
+ * parametrik seçen yollar bu tip üzerinden enjekte edilir.
+ */
+export type WaveSampleFn = typeof getWaveSampleWithPhase;
 
 /**
  * SABİT frekanslı bir dalga için örnek döner (faz mutlak zamandan türetilir).

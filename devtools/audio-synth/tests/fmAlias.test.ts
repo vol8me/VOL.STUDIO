@@ -49,8 +49,8 @@ const CASES: Case[] = [
   ['square', 880, { index: 1, ratio: 2 }],
   // Üçgen taşıyıcı (sınıf-ayrımı regresyonu): kenarlı modülatör üçgen
   // taşıyıcıda "edge"e değil carrier-triangle-feedback'e düşer — ölçüm
-  // Δf=27.5'te bile −30 dB'yi aşar; 5 kHz'te üçgen modülatörle Δf=10 kHz
-  // −30'u kırar. Bunlar tam ızgaranın eski yanlış-"güvenli" noktalarıdır.
+  // Δf=27.5'te bile −30 dB'yi aşar. Bunlar tam ızgaranın eski
+  // yanlış-"güvenli" noktalarıdır.
   ['triangle', 110, { modulatorWave: 'sawtooth', index: 0.5, ratio: 0.5, feedback: 0.3 }],
   ['triangle', 440, { modulatorWave: 'square', index: 2, ratio: 1 }],
   ['triangle', 5000, { modulatorWave: 'triangle', index: 2, ratio: 1 }],

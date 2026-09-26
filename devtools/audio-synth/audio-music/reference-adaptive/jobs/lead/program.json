@@ -2,7 +2,7 @@
   "mastering": {
     "ceiling": null,
     "fadeOutSeconds": 0,
-    "gainDb": 0.71,
+    "gainDb": 1.084,
     "limiter": null,
     "path": "stem-linear",
     "schema": "MusicMasteringPlanV1",
@@ -101,7 +101,12 @@
     "description": "Üç stem'li dikey katmanlama: zemin her zaman çalar, nabız orta yoğunlukta girer, ezgi yalnız tepe yoğunlukta duyulur. Stem hizası, toplam pariteli ve state QA'sının kanıtı.",
     "grooves": [
       {
-        "accents": [1, 0.75, 0.9, 0.75],
+        "accents": [
+          1,
+          0.75,
+          0.9,
+          0.75
+        ],
         "id": "drive",
         "swing": 0,
         "timingJitter": 0.005,
@@ -146,7 +151,10 @@
     "mastering": {
       "integratedLufs": -16
     },
-    "meter": [4, 4],
+    "meter": [
+      4,
+      4
+    ],
     "motifs": [
       {
         "id": "hook",
@@ -175,7 +183,10 @@
     "schema": "MusicProgramV1",
     "sections": [
       {
-        "bars": [0, 4],
+        "bars": [
+          0,
+          4
+        ],
         "harmony": {
           "chords": [
             {
@@ -209,13 +220,20 @@
           ],
           "voicing": {
             "maxMovement": 7,
-            "register": [48, 74],
+            "register": [
+              48,
+              74
+            ],
             "spread": "close",
             "voices": 3
           }
         },
         "id": "body",
-        "lanes": ["pad", "pluck", "melody"],
+        "lanes": [
+          "pad",
+          "pluck",
+          "melody"
+        ],
         "parts": [
           {
             "lane": "pad",

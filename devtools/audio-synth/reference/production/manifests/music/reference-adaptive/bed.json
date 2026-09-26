@@ -5,8 +5,8 @@
       "analyzerVersion": 1,
       "dc": {
         "channelOffset": [
-          5.355775750962371e-7,
-          2.832605620379051e-7
+          5.794310057573949e-7,
+          4.3858104046570683e-7
         ]
       },
       "defects": {
@@ -31,38 +31,38 @@
       },
       "level": {
         "channelPeakDbfs": [
-          -4.835394983233473,
-          -5.667455419741226
+          -4.50777579978596,
+          -5.438561646084105
         ],
         "channelRmsDbfs": [
-          -19.903729631597873,
-          -20.389104233603476
+          -19.52889906457579,
+          -20.01606380724146
         ],
-        "crestFactorDb": 15.30424469322536,
-        "integratedLufs": -16.007214780483526,
-        "maxMomentaryLufs": -13.05316483897039,
-        "rmsDbfs": -20.139639676458835,
-        "samplePeakDbfs": -4.835394983233473,
-        "truePeakDbtp": -4.83087390253527
+        "crestFactorDb": 15.25787832276993,
+        "integratedLufs": -15.633195918524203,
+        "maxMomentaryLufs": -12.680818229066404,
+        "rmsDbfs": -19.76565412255589,
+        "samplePeakDbfs": -4.50777579978596,
+        "truePeakDbtp": -4.507211053418007
       },
       "measuredFrom": "decoded-encoded",
       "schema": "AudioAnalysisReportV1",
       "spectral": {
         "bandsDb": {
-          "air": -161.90268234002463,
-          "high": -124.82178913241299,
-          "low": -22.078707507667247,
-          "mid": -26.296186306485644,
-          "sub": -61.64594884312514
+          "air": -161.5146677612508,
+          "high": -124.3980009781782,
+          "low": -21.702766175644417,
+          "mid": -25.92293419842531,
+          "sub": -61.238285343012066
         },
-        "centroidHz": 452.87113855427475,
-        "flatness": 9.964061866124683e-13,
+        "centroidHz": 452.81337405627477,
+        "flatness": 9.993804166706375e-13,
         "peakHz": 258.3984375,
         "rolloff85Hz": 796.728515625
       },
       "stereo": {
-        "correlation": 0.7644415724916922,
-        "width": 0.36642786228106783
+        "correlation": 0.7647072888812573,
+        "width": 0.3662026746255326
       },
       "temporal": {
         "activeSeconds": 8.31,
@@ -70,15 +70,15 @@
         "decay40Seconds": 1.52,
         "leadingSilenceSeconds": 0,
         "peakTimeSeconds": 6.68,
-        "temporalCentroidSeconds": 3.567881228361114,
-        "trailingSilenceSeconds": 0.22142857142857153
+        "temporalCentroidSeconds": 3.5687114512444413,
+        "trailingSilenceSeconds": 0.1914285714285704
       }
     },
-    "sourceRecordHash": "sha256:70dc5dd037fc1988f7256d851ab80599963cfcb47a918165c6ab8f5a7f703689"
+    "sourceRecordHash": "sha256:ea0075c5e20450d2183ca77ad9a20489cc63df4e6344e675dfaa3366b351bdc4"
   },
   "asset": {
-    "bytes": 47996,
-    "encodedHash": "sha256:ed49c436896455a62fa8dbcce86279dcad0b9c1e9ff8ed63c4ab217cec4f17a5",
+    "bytes": 48063,
+    "encodedHash": "sha256:fae239a5546bda461bb5e1adcb3a372d59efea991713ec373a39509a9a799174",
     "format": "ogg-vorbis",
     "path": "devtools/audio-synth/reference/production/assets/music/reference-adaptive/bed.ogg"
   },
@@ -187,7 +187,7 @@
     "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
   },
   "encoding": {
-    "policyHash": "sha256:4995c93a1714f448fc486b3365eea0d041ecc778f26b7b5b30935a46ec028376",
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
     "quality": 4,
     "scheme": "encode-profile-v1"
   },
@@ -218,7 +218,7 @@
     "runtime": {
       "node": "v22.23.1"
     },
-    "sourceCommit": "17e4841efc7b0a3ae3a92bd5aa7e87e8d8044baf",
+    "sourceCommit": "5bb245fb5d74b09c4ad1e24d3497907204cc3180",
     "sourceTreeDirty": true
   },
   "integration": {
@@ -236,11 +236,11 @@
   "layout": {
     "channels": 2,
     "image": {
-      "correlation": 0.764,
+      "correlation": 0.765,
       "dualMono": false,
       "method": "stereo-image-v1",
       "monoFoldLossDb": 0.548,
-      "sideDb": -8.72
+      "sideDb": -8.726
     },
     "placement": "bed",
     "scheme": "channel-layout-v1"
@@ -256,7 +256,7 @@
       "mastering": {
         "ceiling": null,
         "fadeOutSeconds": 0,
-        "gainDb": 0.71,
+        "gainDb": 1.084,
         "limiter": null,
         "path": "stem-linear",
         "schema": "MusicMasteringPlanV1",
@@ -653,7 +653,7 @@
       "schema": "MusicStemProgramV1",
       "stem": "bed"
     },
-    "hash": "sha256:b7dda0818ed7ecd25149cd1391a8ee0abd454b45a372094a86bf1b385c1739b0",
+    "hash": "sha256:94ce1454d312f5f125d32e45b1c24e35061e2e4cb9fb996ed84a1b4f9a57b2dc",
     "schema": "MusicStemProgramV1"
   },
   "render": {
@@ -661,10 +661,10 @@
       "channels": 2,
       "format": "f32le-interleaved-clamped",
       "frames": 378000,
-      "hash": "sha256:167b71e980b7c8f92f2890558d3fdffaa538ce80f628f172a31c58882b866ff1",
+      "hash": "sha256:15bdf3f21651ec20966b3f981cf5121c83ba1912023a8ccbf4b8ccb5ed365ce2",
       "sampleRate": 44100
     },
-    "renderId": "r-bd5647cac1f13d41",
+    "renderId": "r-9b1b305fa28ed855",
     "rendererVersion": 2,
     "seed": 4242
   },

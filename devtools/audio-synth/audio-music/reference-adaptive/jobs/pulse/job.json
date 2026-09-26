@@ -1,6 +1,10 @@
 {
   "artifacts": {
     "analyses": {
+      "r-33f3340f7b5b5673": {
+        "hash": "sha256:58ee9f67469bf06f9e5968b71baf141bc1bc3a18f0030aa3713b295a80c9d06f",
+        "path": "analyses/r-33f3340f7b5b5673.json"
+      },
       "r-a3b0b6af90efd26a": {
         "hash": "sha256:842b1eb6df3d136e81005ab75db9e4ea38989e4216c63e7dd5855554d9404bd6",
         "path": "analyses/r-a3b0b6af90efd26a.json"
@@ -16,14 +20,18 @@
     },
     "program": {
       "brief": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
-      "hash": "sha256:2572740767d048bddb1cbaad7c5c6bda156521423313c806520a5106f402541f",
+      "hash": "sha256:2428e5e4fdc368132320dee64e8875b075999744f3be1becd18f64e449df3bd4",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:e373bc60c071cdc60b42dd1da37de8d96a58adb502761d1f24193149e3050819",
+      "hash": "sha256:1e8e1d7a7de66be840182d3361352855e8b71e95a29f3acea9df071c2c82c1e0",
       "path": "devtools/audio-synth/reference/production/manifests/music/reference-adaptive/pulse.json"
     },
     "renders": {
+      "r-33f3340f7b5b5673": {
+        "hash": "sha256:4caa3026bd25e18583134b581b031bbfcb6620917920f33368863b088af14437",
+        "path": "renders/r-33f3340f7b5b5673.json"
+      },
       "r-a3b0b6af90efd26a": {
         "hash": "sha256:771ac9c003e72c850dabeb7f0bb853c22c0d68c0199582c28165f734a2a64aaf",
         "path": "renders/r-a3b0b6af90efd26a.json"
@@ -34,14 +42,14 @@
       }
     },
     "selection": {
-      "hash": "sha256:13ca4060d585e85537e0ab579128a276a33d38b197e8c86cf48100bab4552b8e",
+      "hash": "sha256:435cbb7c1add44c129aac0d8b333d1dc121863883d6c8ff499ccaeb99c508b4c",
       "path": "selection.json"
     }
   },
   "jobId": "pulse",
   "kind": "music",
   "protocolVersion": 1,
-  "revision": 10,
+  "revision": 15,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

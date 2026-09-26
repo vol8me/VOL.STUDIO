@@ -8,6 +8,10 @@
       "r-130d72d37f7a05b3": {
         "hash": "sha256:f27123bd313654385046e162709ddc6da7e26e8509120152e592e578da5204a0",
         "path": "analyses/r-130d72d37f7a05b3.json"
+      },
+      "r-f958ab95d0459175": {
+        "hash": "sha256:2622717d33bb6c77d638c1309f252d840633e445c1e0a7a3ed49412dc80b0822",
+        "path": "analyses/r-f958ab95d0459175.json"
       }
     },
     "brief": {
@@ -16,11 +20,11 @@
     },
     "program": {
       "brief": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
-      "hash": "sha256:80dfdf380bbdf61f7e5803509c67f22cd90e91d086281774529d4ed8e42bd6dd",
+      "hash": "sha256:8ab39004701d770c5485643baebb78c1cea24c9797f5ec863107459e783b6c49",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:955ac5281d5ade4984f6538775705c70962ea23f0f9728fb7b2be5ec814134d3",
+      "hash": "sha256:3797f66c0f88994f1fbb3f4f75bacab09174cfe05cacab46f7426a242d20d1ff",
       "path": "devtools/audio-synth/reference/production/manifests/music/reference-adaptive/lead.json"
     },
     "renders": {
@@ -31,17 +35,21 @@
       "r-130d72d37f7a05b3": {
         "hash": "sha256:3e370d5a1461a4741fe0b95905b736005785d4e98e2a4b3be4862c13de2d6fd0",
         "path": "renders/r-130d72d37f7a05b3.json"
+      },
+      "r-f958ab95d0459175": {
+        "hash": "sha256:fb2599101602afe4ce3745a962abf1062f7f044decbf9de5a5caa93e705e8446",
+        "path": "renders/r-f958ab95d0459175.json"
       }
     },
     "selection": {
-      "hash": "sha256:d8c56f4a44046a379b254affa57ede3094b56eeed1355fbda6136c51da8bfd58",
+      "hash": "sha256:0aff1524539ef5d40576321b8a8b291792b2ea3a2371b11b62ff353168221494",
       "path": "selection.json"
     }
   },
   "jobId": "lead",
   "kind": "music",
   "protocolVersion": 1,
-  "revision": 10,
+  "revision": 15,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

@@ -401,6 +401,35 @@ sınırlı basamak rezidüeline geçti (`waveforms.ts` `blepResidual`), ölçül
 alias 3.6 kHz testerede −88.3 dB'ye indi ve `polyblep-alias` sınırlaması
 ölçüm karşısında yanlış pozitif verdiği için emekliye ayrıldı.
 
+### Bant sınırlama yöntemi seçimi (R2e)
+
+Dört aday aynı testere ızgarasında ölçüldü
+(`scripts/antialias-method-report.ts`; kafes-dışı alias + bant içi
+harmonik genlik hatası + örnek başına CPU, 44.1 kHz):
+
+| Yöntem                                                        | 917 Hz alias | 3.6 kHz alias | 8 kHz alias | harmonik hata | ns/örnek (8 kHz) |
+| ------------------------------------------------------------- | ------------ | ------------- | ----------- | ------------- | ---------------- |
+| minBLEP (aynı Kaiser büyüklüğü → kepstrum min-faz, [−16,+64]) | −31.8 dB     | −7.4 dB       | −29.1 dB    | 0.2–0.7 dB    | ~180             |
+| Yüksek dereceli polinom BLEP (3. derece B-spline, ±2)         | −14.0 dB     | −7.5 dB       | −6.3 dB     | 7.9–11.0 dB   | ~22              |
+| Yerel 4× aşırı örnekleme + 2× halfband                        | −29.1 dB     | −88.3 dB      | −18.6 dB    | 0.2–0.7 dB    | ~370             |
+| **Pencereli-sinc BLEP rezidüeli (R=16)** — mevcut             | −68.8 dB     | −68.6 dB      | −88.6 dB    | 0.2–0.7 dB    | ~105             |
+
+Sonuç: polinom BLEP dar desteğiyle yetersiz; minBLEP'in min-faz
+dispersiyonu kenar sonrası uzun salınım üretir ve kafes metriğinde alias
+olarak sayılır (çevrimdışı render'da düşük gecikme avantajı yok); aşırı
+örnekleme decimator geçiş bandında frekansa bağlı dalgalanır ve ~4× daha
+pahalıdır. Pencereli-sinc rezidüel hem alias hem maliyette baskındır.
+
+Üçgen taşıyıcı (eğim süreksizliği) için basamak rezidüeli yetmez; köşe
+düzeltmesi rezidüelin kümülatif integralidir (BLAMP). `blampResidual`
+`bandStep` tablosunun yamuk integraliyle kurulur — parçalı doğrusal
+integrande yamuk tamdır, pencere simetrisi uç değeri tam sıfıra döndürür
+(ilk orta-nokta birikmesi uçta ~8e-3 kalıntı ve kenarda basamak
+üretiyordu; ölçülüp düzeltildi). Naif üçgen + iki köşe BLAMP'i ile 5 kHz
+üçgen kafes-dışı tabanı −43.3 dB'den −60.4 dB'ye, ham çekirdekte
+−72.1 dB'ye indi; ızgara −72…−91.5 dB (`tests/oscillatorAlias.test.ts`
+kilitleri, motor yolunda ≤ −58 dB).
+
 ## Biyolojik yapı taşları
 
 Dalga 3 ilkelleri de Dalga 1 program sözleşmesinin içindedir; her biri
@@ -2004,7 +2033,7 @@ eşiklerini `FM_ALIAS_LIMITS`e (makine-okunur) yazar; `Analysis.assessFmAlias()`
 bir ayarı render etmeden değerlendirir. Seviye: güvenli ≤ −60 dB, dikkat ≤
 −30 dB alias/sinyal. Index korumasının Δf=0'a sıkıştırdığı noktalar ölçümde
 yalnız taşıyıcının kendi kafes-dışı tabanını verir (ör. üçgen @ 5 kHz'de
-−43.3 dB); değerlendirme yalnız FM kaynaklı katlanmayı iddia ettiği için bu
+−87.6 dB); değerlendirme yalnız FM kaynaklı katlanmayı iddia ettiği için bu
 satırlar sınır türetmeye ve yanlış-"güvenli" sayımına girmez.
 
 **Sinüs taşıyıcı:**
@@ -2014,8 +2043,8 @@ satırlar sınır türetmeye ve yanlış-"güvenli" sayımına girmez.
 | sinüs, feedback 0           |              sınırsız |    sınırsız |           −82.2 dB |
 | sinüs, 0 < feedback ≤ 0.1   |              10000 Hz |    24690 Hz |           −11.4 dB |
 | sinüs, feedback > 0.1       |               27.5 Hz |      275 Hz |            −1.9 dB |
-| üçgen                       |               1250 Hz |    24690 Hz |           −19.2 dB |
-| üçgen + feedback            |               27.5 Hz |      440 Hz |            −3.4 dB |
+| üçgen                       |              24690 Hz |    sınırsız |           −38.3 dB |
+| üçgen + feedback            |               27.5 Hz |      110 Hz |            +6.1 dB |
 | testere / kare / pulse      |                110 Hz |      550 Hz |            −4.8 dB |
 | testere / kare / pulse + fb |               27.5 Hz |     27.5 Hz |           +13.9 dB |
 
@@ -2025,18 +2054,19 @@ dB hatayla yerleşir. Sinüs taşıyıcılı kenarlı modülatörden daha sıkı
 
 | Modülatör              | Güvenli Δf < | Dikkat Δf < | Izgaradaki en kötü |
 | ---------------------- | -----------: | ----------: | -----------------: |
-| sinüs / üçgen, fb 0    |      27.5 Hz |      220 Hz |            −2.9 dB |
+| sinüs / üçgen, fb 0    |        55 Hz |      275 Hz |            −2.6 dB |
 | kenarlı mod. veya fb>0 |      27.5 Hz |     27.5 Hz |           +10.8 dB |
 
-**Üçgen taşıyıcı:** tablo basamakları PM altında kendi rezidüel hatasını
-verir; 5 kHz'de üçgen modülatörle Δf=10 kHz'te −30 dB kırılır, kenarlı
-modülatör ya da feedback birleşimi en küçük ölçülmüş sapmada (27.5 Hz)
-bile −30 dB'yi aşar.
+**Üçgen taşıyıcı:** BLAMP düzeltmesi kenar zamanlamasını sabit faz adımıyla
+hesaplar; PM kenarı kaydırınca katkı birkaç dB hatayla yerleşir — sinüs
+taşıyıcılı kenarlı modülatörden daha sıkıdır. Kenarlı modülatör ya da
+feedback birleşimi en küçük ölçülmüş sapmada (27.5 Hz) bile −30 dB'yi
+aşar.
 
 | Modülatör              | Güvenli Δf < | Dikkat Δf < | Izgaradaki en kötü |
 | ---------------------- | -----------: | ----------: | -----------------: |
-| sinüs / üçgen, fb 0    |       440 Hz |    10000 Hz |           −15.5 dB |
-| kenarlı mod. veya fb>0 |      27.5 Hz |     27.5 Hz |           +12.9 dB |
+| sinüs / üçgen, fb 0    |      1760 Hz |    17600 Hz |           −14.6 dB |
+| kenarlı mod. veya fb>0 |      27.5 Hz |     27.5 Hz |           +14.4 dB |
 
 Motorun index koruması yan bantları (Carson) iç Nyquist'in altında tutar;
 yeni decimator'la sinüs modülatör + feedback 0 bütün ızgarada −82 dB'nin

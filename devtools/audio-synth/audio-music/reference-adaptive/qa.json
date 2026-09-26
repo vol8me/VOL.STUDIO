@@ -12,13 +12,13 @@
         "lead": 0,
         "pulse": 0
       },
-      "integratedLufs": -17.422,
+      "integratedLufs": -17.048,
       "intensity": 0,
       "ok": true,
       "problems": [],
-      "samplePeak": 0.493,
+      "samplePeak": 0.514691,
       "state": "calm",
-      "truePeakDbtp": -6.141
+      "truePeakDbtp": -5.767
     },
     {
       "gains": {
@@ -26,13 +26,13 @@
         "lead": 0,
         "pulse": 0
       },
-      "integratedLufs": -16.735,
+      "integratedLufs": -16.361,
       "intensity": 0.35,
       "ok": true,
       "problems": [],
-      "samplePeak": 0.533599,
+      "samplePeak": 0.557077,
       "state": "threshold-0.35",
-      "truePeakDbtp": -5.454
+      "truePeakDbtp": -5.08
     },
     {
       "gains": {
@@ -40,13 +40,13 @@
         "lead": 0,
         "pulse": 0.6374999999999998
       },
-      "integratedLufs": -16.374,
+      "integratedLufs": -16,
       "intensity": 0.5,
       "ok": true,
       "problems": [],
-      "samplePeak": 0.580198,
+      "samplePeak": 0.605726,
       "state": "active",
-      "truePeakDbtp": -4.721
+      "truePeakDbtp": -4.347
     },
     {
       "gains": {
@@ -54,13 +54,13 @@
         "lead": 0,
         "pulse": 0.85
       },
-      "integratedLufs": -16.585,
+      "integratedLufs": -16.211,
       "intensity": 0.55,
       "ok": true,
       "problems": [],
-      "samplePeak": 0.592951,
+      "samplePeak": 0.61904,
       "state": "threshold-0.55",
-      "truePeakDbtp": -4.531
+      "truePeakDbtp": -4.157
     },
     {
       "gains": {
@@ -68,13 +68,13 @@
         "lead": 0,
         "pulse": 0.8666666666666666
       },
-      "integratedLufs": -16.663,
+      "integratedLufs": -16.289,
       "intensity": 0.6,
       "ok": true,
       "problems": [],
-      "samplePeak": 0.596638,
+      "samplePeak": 0.622889,
       "state": "threshold-0.6",
-      "truePeakDbtp": -4.477
+      "truePeakDbtp": -4.103
     },
     {
       "gains": {
@@ -82,13 +82,13 @@
         "lead": 0.75,
         "pulse": 0.9333333333333333
       },
-      "integratedLufs": -16.482,
+      "integratedLufs": -16.532,
       "intensity": 0.8,
       "ok": true,
       "problems": [],
-      "samplePeak": 0.611384,
+      "samplePeak": 0.638284,
       "state": "threshold-0.8",
-      "truePeakDbtp": -4.266
+      "truePeakDbtp": -3.892
     },
     {
       "gains": {
@@ -96,13 +96,13 @@
         "lead": 1,
         "pulse": 1
       },
-      "integratedLufs": -16,
+      "integratedLufs": -16.118,
       "intensity": 1,
       "ok": true,
       "problems": [],
-      "samplePeak": 0.62613,
+      "samplePeak": 0.653679,
       "state": "peak",
-      "truePeakDbtp": -4.06
+      "truePeakDbtp": -3.686
     }
   ],
   "verdict": {

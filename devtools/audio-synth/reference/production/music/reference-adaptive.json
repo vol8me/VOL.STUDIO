@@ -18,7 +18,7 @@
   },
   "package": "@volstudio/audio-synth",
   "qa": {
-    "hash": "sha256:1bf0f803849761381b167f1b954815dd5d53f1aff7fddf76f4fe449f059a4eda",
+    "hash": "sha256:1c49c0d42c12762d41b280d66c56c7c4401b3694c969af6ff10c3933023b3514",
     "pass": true,
     "path": "devtools/audio-synth/audio-music/reference-adaptive/qa.json"
   },
@@ -40,10 +40,10 @@
       "startBar": 0
     },
     "mastering": {
-      "gainDb": 0.71,
-      "integratedLufs": -16.016,
+      "gainDb": 1.084,
+      "integratedLufs": -16.132,
       "path": "stem-linear",
-      "truePeakDbtp": -4.188
+      "truePeakDbtp": -3.814
     },
     "meter": [
       4,
@@ -150,67 +150,67 @@
   "stems": [
     {
       "asset": {
-        "bytes": 47996,
-        "encodedHash": "sha256:ed49c436896455a62fa8dbcce86279dcad0b9c1e9ff8ed63c4ab217cec4f17a5",
+        "bytes": 48063,
+        "encodedHash": "sha256:fae239a5546bda461bb5e1adcb3a372d59efea991713ec373a39509a9a799174",
         "path": "reference/production/assets/music/reference-adaptive/bed.ogg"
       },
       "frames": 378000,
       "id": "bed",
-      "integratedLufs": -16.007214780483526,
+      "integratedLufs": -15.633195918524203,
       "manifest": {
-        "hash": "sha256:6693e8b63b312425c3c101f44273a2cb2e210884c5741c9f2c380947d95886e0",
+        "hash": "sha256:8e0b3158ad842c588c61a4930ffca8471a2570ec6c5a0cababda6a2055a3a916",
         "path": "reference/production/manifests/music/reference-adaptive/bed.json"
       },
-      "pcmHash": "sha256:167b71e980b7c8f92f2890558d3fdffaa538ce80f628f172a31c58882b866ff1",
-      "truePeakDbtp": -4.83087390253527
+      "pcmHash": "sha256:15bdf3f21651ec20966b3f981cf5121c83ba1912023a8ccbf4b8ccb5ed365ce2",
+      "truePeakDbtp": -4.507211053418007
     },
     {
       "asset": {
-        "bytes": 16466,
-        "encodedHash": "sha256:687f2164b9ea44a4ee07866be4ae4c9e004bd442fd2bb16b7404f7c228f85a6a",
+        "bytes": 16537,
+        "encodedHash": "sha256:a1d048512d99ef5084b1f913370f32377ef5948d850542c6ad999aa7ca4a48b1",
         "path": "reference/production/assets/music/reference-adaptive/pulse.ogg"
       },
       "frames": 378000,
       "id": "pulse",
-      "integratedLufs": -28.0263912349976,
+      "integratedLufs": -27.650966022515632,
       "manifest": {
-        "hash": "sha256:e373bc60c071cdc60b42dd1da37de8d96a58adb502761d1f24193149e3050819",
+        "hash": "sha256:1e8e1d7a7de66be840182d3361352855e8b71e95a29f3acea9df071c2c82c1e0",
         "path": "reference/production/manifests/music/reference-adaptive/pulse.json"
       },
-      "pcmHash": "sha256:7ef9e33f884140a89bc3e721142842fa7c99513b2c67159279148859c9daec73",
-      "truePeakDbtp": -10.0969716614609
+      "pcmHash": "sha256:59a5423b260dea556faa36b3a702382e998345a6292d42813841ce53c1b3b82a",
+      "truePeakDbtp": -9.53256840148086
     },
     {
       "asset": {
-        "bytes": 20121,
-        "encodedHash": "sha256:1a2d2be21f4d046b8a48e4e77fcccf296518fe0ebc5347c183cd972d28a9ffff",
+        "bytes": 20021,
+        "encodedHash": "sha256:0f3e6d0462495de47f213a0b38a116c31c523dee06e385c6b17f8e9777ab2787",
         "path": "reference/production/assets/music/reference-adaptive/lead.ogg"
       },
       "frames": 378000,
       "id": "lead",
-      "integratedLufs": -18.619066917578454,
+      "integratedLufs": -20.531015517141675,
       "manifest": {
-        "hash": "sha256:955ac5281d5ade4984f6538775705c70962ea23f0f9728fb7b2be5ec814134d3",
+        "hash": "sha256:3797f66c0f88994f1fbb3f4f75bacab09174cfe05cacab46f7426a242d20d1ff",
         "path": "reference/production/manifests/music/reference-adaptive/lead.json"
       },
-      "pcmHash": "sha256:f5862d9c19e74691b73147fccce12c4b6d7d9c09b83be4ba59c3bf981b2b243f",
-      "truePeakDbtp": -11.116174326248963
+      "pcmHash": "sha256:7f5785ba2124a1abd59e00ba227bbb790d7b2926d89c6bf7037a020321afa97c",
+      "truePeakDbtp": -11.01178881265687
     },
     {
       "asset": {
-        "bytes": 56426,
-        "encodedHash": "sha256:8b63a4c8ebd632f0b3e003969cd8337ac1bca8e0cabec8f863769dd594b27298",
+        "bytes": 56221,
+        "encodedHash": "sha256:306be9be1bac1fa42cc247261161acfcda7724a245cb5088edf9929f031affba",
         "path": "reference/production/assets/music/reference-adaptive/mix.ogg"
       },
       "frames": 378000,
       "id": "mix",
-      "integratedLufs": -15.942359749035752,
+      "integratedLufs": -16.119799806752294,
       "manifest": {
-        "hash": "sha256:e650f3a138e8e891104a37209abdc2c2b451ef0a9cdbf528d25e2d34de5d6521",
+        "hash": "sha256:323c31e509e0b6c71bc165f897b80e1a0e642d43fbb70bd1e555471c148a5485",
         "path": "reference/production/manifests/music/reference-adaptive/mix.json"
       },
-      "pcmHash": "sha256:5759cb511b6b9bebb9b3af431ac66d576e1241e2e465570430d5a8ea6bfe3c35",
-      "truePeakDbtp": -4.199908085452419
+      "pcmHash": "sha256:c0d37d78c61fed2f269a6a27157817de17c950342e6a905621db2ac0f2d480f7",
+      "truePeakDbtp": -3.775982046300039
     }
   ],
   "sync": {
@@ -248,32 +248,32 @@
     "ok": true,
     "seams": [
       {
-        "detail": "dikiş sürekli (adım 0.0001 ≤ 2×0.0428)",
+        "detail": "dikiş sürekli (adım 0.0001 ≤ 2×0.0446)",
         "id": "bed",
-        "jump": 0.000114,
+        "jump": 0.000116,
         "ok": true,
-        "typicalStep": 0.04275
+        "typicalStep": 0.044563
       },
       {
-        "detail": "dikiş sürekli (adım 0.0101 ≤ 2×0.0357)",
+        "detail": "dikiş sürekli (adım 0.0032 ≤ 2×0.0378)",
         "id": "pulse",
-        "jump": 0.010088,
+        "jump": 0.003189,
         "ok": true,
-        "typicalStep": 0.035706
+        "typicalStep": 0.037836
       },
       {
-        "detail": "dikiş sürekli (adım 0.0000 ≤ 2×0.0172)",
+        "detail": "dikiş sürekli (adım 0.0000 ≤ 2×0.0132)",
         "id": "lead",
         "jump": 0,
         "ok": true,
-        "typicalStep": 0.017235
+        "typicalStep": 0.013177
       },
       {
-        "detail": "dikiş sürekli (adım 0.0159 ≤ 2×0.0480)",
+        "detail": "dikiş sürekli (adım 0.0125 ≤ 2×0.0498)",
         "id": "mix",
-        "jump": 0.015909,
+        "jump": 0.012494,
         "ok": true,
-        "typicalStep": 0.04802
+        "typicalStep": 0.049817
       }
     ]
   },

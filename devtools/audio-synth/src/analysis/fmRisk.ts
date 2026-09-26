@@ -37,28 +37,30 @@ export type FmModulatorClass =
  * kalibrasyonu).
  */
 export const FM_ALIAS_LIMITS = {
-  version: 1,
+  version: 2,
   referenceSampleRate: 44100,
   levels: { safeMaxDb: -60, cautionMaxDb: -30 },
   classes: {
     sine: { safeBelowHz: null, cautionBelowHz: null },
     'sine-light-feedback': { safeBelowHz: 10000, cautionBelowHz: 24690 },
     'sine-heavy-feedback': { safeBelowHz: 27.5, cautionBelowHz: 275 },
-    triangle: { safeBelowHz: 1250, cautionBelowHz: 24690 },
-    'triangle-feedback': { safeBelowHz: 27.5, cautionBelowHz: 440 },
+    // BLAMP'li üçgen modülatör: güvenli bölge tüm ızgarayı kaplar.
+    triangle: { safeBelowHz: 24690, cautionBelowHz: null },
+    'triangle-feedback': { safeBelowHz: 27.5, cautionBelowHz: 110 },
     edge: { safeBelowHz: 110, cautionBelowHz: 550 },
     'edge-feedback': { safeBelowHz: 27.5, cautionBelowHz: 27.5 },
-    // Kenarlı taşıyıcı (sawtooth/square/pulse): ölçülen ilk kırılım
-    // güvenli bölge için ızgaranın en küçük sapması, dikkat için Δf=220;
-    // kenarlı modülatör ya da feedback birleşince 27.5'te bozuluyor.
-    'carrier-edge': { safeBelowHz: 27.5, cautionBelowHz: 220 },
+    // Kenarlı taşıyıcı (sawtooth/square/pulse): güvenli kırılım Δf=55.
+    // Dikkat bandı engebeli: ızgarada ilk >−30 kırılımı 550'de görülür ama
+    // ızgara dışı bir nokta (sawtooth fc=220, I=2 → Δf=440) −30'u aşar;
+    // sınır son grid-doğrulanmış bölgede tutulur.
+    'carrier-edge': { safeBelowHz: 55, cautionBelowHz: 275 },
     'carrier-edge-feedback': { safeBelowHz: 27.5, cautionBelowHz: 27.5 },
-    // Üçgen taşıyıcı: tablo basamakları PM altında kendi rezidüel hatasını
-    // verir; sinüs taşıyıcılı üçgen modülatörden daha erken bozulur.
-    // 5 kHz'de üçgen modülatörle Δf=10 kHz'te −30 dB sınırı kırılır
-    // (en küçük kırılım); kenarlı modülatör ya da feedback birleşiminde
-    // ızgaranın en küçük sapması (27.5) zaten −30'u aşar.
-    'carrier-triangle': { safeBelowHz: 440, cautionBelowHz: 10000 },
+    // Üçgen taşıyıcı: BLAMP düzeltmesi kenar zamanlamasını sabit faz
+    // adımıyla hesaplar, PM kenarı kaydırınca katkı birkaç dB hatayla
+    // yerleşir. Ölçülen ilk kırılım güvenli için Δf=1760, dikkat için
+    // Δf=17600; kenarlı modülatör ya da feedback birleşiminde ızgaranın
+    // en küçük sapması (27.5) zaten −30'u aşar.
+    'carrier-triangle': { safeBelowHz: 1760, cautionBelowHz: 17600 },
     'carrier-triangle-feedback': { safeBelowHz: 27.5, cautionBelowHz: 27.5 },
   } satisfies Record<
     FmModulatorClass,
@@ -89,7 +91,7 @@ function classify(fm: FmParams, carrierWave: Waveform): FmModulatorClass {
   if (carrierWave !== 'sine' && carrierWave !== 'triangle') {
     return feedback > 0 || modEdge ? 'carrier-edge-feedback' : 'carrier-edge';
   }
-  // Üçgen taşıyıcının tablo basamakları PM altında kendi ölçülmüş
+  // Üçgen taşıyıcının BLAMP köşe düzeltmesi PM altında kendi ölçülmüş
   // sınırlarını verir; kenarlı modülatör birleşimi feedback'e denk sayılır.
   if (carrierWave === 'triangle') {
     return feedback > 0 || modEdge ? 'carrier-triangle-feedback' : 'carrier-triangle';

@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { powerSpectrum } from '../src/analysis/spectrum';
 import { synthesize } from '../src/engine/synthesize';
+import { blampResidual, BLEP_RADIUS } from '../src/synthesis/waveforms';
 import { RENDER_BLOCK } from './support/timeouts';
 
 const RATE = 44100;
 
-function sample(wave: 'sawtooth' | 'square', f: number): Float32Array {
+function sample(wave: 'sawtooth' | 'square' | 'triangle', f: number): Float32Array {
   return synthesize({
     sampleRate: RATE,
     duration: 0.7,
@@ -63,5 +64,47 @@ describe('motor osilatör alias kilidi', RENDER_BLOCK, () => {
 
   it('F6a sözleşme hedefi: 3.6 kHz testere < −70 dB', () => {
     expect(aliasDb(sample('sawtooth', 3600), 3600)).toBeLessThan(-70);
+  });
+});
+
+/**
+ * R2e üçgen taşıyıcı: sabit harmonik tablosu yerini naif üçgen + BLAMP
+ * (BLEP rezidüelinin integrali) eğim-düzeltmesine bıraktı. 5 kHz'de tablo
+ * yolu ~−43.3 dB ölçülüyordu; BLAMP ile −60.4 dB. Sınır ölçülenin 2 dB
+ * üstündedir.
+ */
+describe('üçgen BLAMP alias kilidi', RENDER_BLOCK, () => {
+  const limits: [f: number, limit: number][] = [
+    [917, -58],
+    [3600, -58],
+    [5000, -58],
+    [8000, -58],
+  ];
+  it.each(limits)('triangle @ %d Hz ≤ %d dB', (f, limit) => {
+    expect(aliasDb(sample('triangle', f), f)).toBeLessThanOrEqual(limit);
+  });
+
+  it('K2 sözleşme hedefi: 5 kHz üçgen < −55 dB', () => {
+    expect(aliasDb(sample('triangle', 5000), 5000)).toBeLessThan(-55);
+  });
+});
+
+describe('blampResidual özellikleri', () => {
+  it('pencere dışında sıfırdır', () => {
+    expect(blampResidual(-BLEP_RADIUS - 1)).toBe(0);
+    expect(blampResidual(BLEP_RADIUS)).toBe(0);
+    expect(blampResidual(BLEP_RADIUS + 3)).toBe(0);
+  });
+
+  it('pencere içinde sonlu ve sınırlıdır', () => {
+    for (let d = -BLEP_RADIUS + 0.5; d < BLEP_RADIUS; d += 0.5) {
+      expect(Number.isFinite(blampResidual(d))).toBe(true);
+      expect(Math.abs(blampResidual(d))).toBeLessThanOrEqual(BLEP_RADIUS);
+    }
+  });
+
+  it('uçlara sürekli sönümlenir (rezidüel sıfıra döner)', () => {
+    expect(Math.abs(blampResidual(BLEP_RADIUS - 0.5))).toBeLessThan(1e-3);
+    expect(Math.abs(blampResidual(-BLEP_RADIUS + 0.5))).toBeLessThan(1e-3);
   });
 });
