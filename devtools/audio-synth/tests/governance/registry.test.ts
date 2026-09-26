@@ -5,6 +5,7 @@ import { describeRegistry } from '../../src/program/describe';
 import type { NumberParamSpec } from '../../src/program/params';
 import type { ProgramEntry } from '../../src/program/registry';
 import { renderProgram } from '../../src/program/render';
+import { TREATMENT_PROFILES } from '../../src/program/treatmentProfiles';
 import { buildContext } from '../../src/protocol/context';
 import { createTestRepo } from '../protocol/repo';
 import { probeResolver, probeSample } from '../support/samples';
@@ -293,5 +294,40 @@ describe('registry governance', () => {
     const ids = describeRegistry().map((e) => e.id);
     expect(ids).toEqual([...ids].sort());
     expect(() => JSON.stringify(describeRegistry())).not.toThrow();
+  });
+
+  /**
+   * Üreteç çıktıları registry'nin GÜNCEL sürümünü pinler: archetype
+   * genişletmeleri ve teslim profili zincirleri. Bayat bir pin
+   * `resolveProgram`'da düşer — bu test düşüşü beklemeyip doğrudan denetler.
+   */
+  it('üretilen programlar güncel registry sürümlerini pinler', () => {
+    const walk = (value: unknown, path: string): void => {
+      if (Array.isArray(value)) {
+        for (const [i, item] of value.entries()) walk(item, `${path}[${i}]`);
+        return;
+      }
+      if (value === null || typeof value !== 'object') return;
+      const o = value as Record<string, unknown>;
+      if (typeof o.primitive === 'string' && typeof o.version === 'number') {
+        expect(o.version, `${path}.primitive`).toBe(PROGRAM_REGISTRY.get(o.primitive).version);
+      }
+      for (const [key, item] of Object.entries(o)) walk(item, `${path}.${key}`);
+    };
+    for (const entry of entries) {
+      if (entry.kind !== 'archetype') continue;
+      walk(
+        expandArchetype({
+          schema: 'ArchetypeRequestV1',
+          archetype: entry.id,
+          version: entry.version,
+          variation: 0,
+        }),
+        entry.id,
+      );
+    }
+    for (const profile of TREATMENT_PROFILES) {
+      walk(profile.chain, `treatment:${profile.id}`);
+    }
   });
 });

@@ -178,6 +178,49 @@ describe('ProgramPlanner', () => {
     expect(canonicalJson(planBrief(tank))).toBe(canonicalJson(planBrief(tank)));
     for (const layer of planBrief(tank).layers) expect(layer.rationale).toMatch(/\(term:/);
   });
+
+  /**
+   * Regresyon (planner sürüm sabiti): iskelet düğümleri registry'nin GÜNCEL
+   * sürümünü pinler — bir yapı taşı sürüm atlarsa planlayıcı çökmez.
+   * Her mekanizma tek tek değil döngüyle sınanır.
+   */
+  it('ontolojideki her mekanizmanın iskeleti güncel sürümlerle resolveProgram’dan geçer', () => {
+    interface SkeletonLayer {
+      source?: { primitive: string; version: number };
+      resonators?: { primitive: string; version: number }[];
+      articulation?: { primitive: string; version: number };
+    }
+    interface Skeleton {
+      layers: SkeletonLayer[];
+      buses?: Record<string, { effects?: { primitive: string; version: number }[] }>;
+    }
+    for (const mechanism of MECHANISMS) {
+      const plan = planBrief(brief({ mechanisms: [mechanism.id] }));
+      const skeleton = plan.skeleton as Skeleton | null;
+      if (skeleton === null) {
+        // Sadece bus efekti taşıyan tarifler tek başına katman üretmez.
+        expect(
+          mechanism.recipe === null || mechanism.recipe.source === undefined,
+          mechanism.id,
+        ).toBe(true);
+        continue;
+      }
+      const pins: { primitive: string; version: number }[] = [
+        ...skeleton.layers.flatMap((layer) =>
+          [layer.source, ...(layer.resonators ?? []), layer.articulation].filter(
+            (n): n is { primitive: string; version: number } => n !== undefined,
+          ),
+        ),
+        ...Object.values(skeleton.buses ?? {}).flatMap((bus) => bus.effects ?? []),
+      ];
+      for (const pin of pins) {
+        expect(pin.version, `${mechanism.id}: ${pin.primitive}`).toBe(
+          PROGRAM_REGISTRY.get(pin.primitive).version,
+        );
+      }
+      resolveProgram(skeleton);
+    }
+  });
 });
 
 describe('brief ses tasarımı alanları', () => {

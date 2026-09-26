@@ -23,6 +23,7 @@ import { PROCESSORS } from './primitives/processing';
 import { RESONATORS } from './primitives/resonance';
 import { GLOTTAL } from './primitives/voice';
 import { TUBE } from './primitives/waveguide';
+import { recordNodeVersion } from './nodeVersions';
 import { Registry, type ProgramEntry } from './registry';
 
 /**
@@ -59,3 +60,7 @@ export const PROGRAM_REGISTRY = new Registry<ProgramEntry>([
   ...ARCHETYPES,
   ...SFX_ARCHETYPES,
 ]);
+
+// Üreteçlerin (archetype expand gövdeleri) düğümlere yazacağı sürüm köprüsü;
+// kayıt burada tek seferde yapılır, ayrıntı `nodeVersions.ts`de.
+for (const entry of PROGRAM_REGISTRY.entries()) recordNodeVersion(entry.id, entry.version);

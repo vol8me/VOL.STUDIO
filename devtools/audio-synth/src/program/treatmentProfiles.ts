@@ -1,4 +1,5 @@
 import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { PROGRAM_REGISTRY } from './catalog';
 import type { TreatmentV1 } from './treatment';
 
 /**
@@ -39,9 +40,11 @@ export interface TreatmentProfileV1 {
   readonly chain: TreatmentV1['chain'];
 }
 
+// Güncel registry sürümü yazılır; bilinmeyen kimlik burada, modül
+// başlatımında düşer — zincir kullanılana dek bekletilmez.
 const node = (primitive: string, params: Record<string, number | string>) => ({
   primitive,
-  version: 1,
+  version: PROGRAM_REGISTRY.get(primitive).version,
   params,
 });
 const REFERENCE_METERS = 5;

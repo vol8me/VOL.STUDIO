@@ -1,4 +1,5 @@
 import type { AcousticBriefV1 } from './brief';
+import { PROGRAM_REGISTRY } from './catalog';
 import { materialById } from './materials';
 import {
   MATERIAL_TERMS,
@@ -11,6 +12,7 @@ import {
 } from './ontology';
 import type { LayerRole } from './roles';
 import { resolveProgram } from './schema';
+import { STYLE_PROFILES } from './styles';
 
 /**
  * ProgramPlanner — brief'i ontoloji mekanizmalarına ayırır ve registry'den
@@ -137,7 +139,8 @@ function layerParams(mechanism: MechanismV1, material: string | null): Record<st
 
 const node = (primitive: string, params: Record<string, unknown> = {}) => ({
   primitive,
-  version: 1,
+  // Güncel registry sürümü yazılır; bilinmeyen kimlikte hatayı resolveProgram verir.
+  version: PROGRAM_REGISTRY.has(primitive) ? PROGRAM_REGISTRY.get(primitive).version : 1,
   ...(Object.keys(params).length > 0 ? { params } : {}),
 });
 
@@ -190,7 +193,14 @@ function skeletonOf(
           },
         }
       : {}),
-    ...(style ? { style: { profile: style, version: 1 } } : {}),
+    ...(style
+      ? {
+          style: {
+            profile: style,
+            version: STYLE_PROFILES.find((p) => p.id === style)?.version ?? 1,
+          },
+        }
+      : {}),
     master: brief.loop
       ? { normalize: 'peak', peakDbfs: -3, loop: { crossfadeSeconds: crossfade } }
       : { normalize: 'peak', peakDbfs: -3, fadeOutSeconds: 0.02 },

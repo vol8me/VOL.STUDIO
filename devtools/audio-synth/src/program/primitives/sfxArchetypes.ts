@@ -1,4 +1,5 @@
 import type { Random } from '@volstudio/core/random';
+import { latestNodeVersion } from '../nodeVersions';
 import type { AcousticDimension, NumberParamSpec } from '../params';
 import type { ArchetypeEntry, ArchetypeLayer, ArchetypeProfiles } from '../registry';
 
@@ -31,9 +32,11 @@ const duration = (fallback: number): NumberParamSpec => ({
   description: 'Program süresi.',
 });
 
+// Güncel registry sürümü (köprü; catalog çevrimi yasak): bilinmeyen kimlikte
+// `resolveProgram` adlandırılmış hatayı verir, sessizce bayat pin yazılmaz.
 const node = (primitive: string, params: Record<string, unknown> = {}) => ({
   primitive,
-  version: 1,
+  version: latestNodeVersion(primitive) ?? 1,
   params,
 });
 const vary = (random: Random, spread: number) => Math.pow(2, spread * random.bipolar());
