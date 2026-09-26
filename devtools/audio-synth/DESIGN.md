@@ -818,17 +818,25 @@ katman `mechanism` etiketini, ya da müzikte `pipeline:MusicProgramV1`'i)
 kullanıyorsa o mekanizmanın kanıtıdır; yeni görev ya da sağlayıcı matrise
 kendiliğinden düşer.
 
-Seviyeler: `production-ready` = geçen benchmark kanıtı; `canary` = yalnız
-geçen canary kanıtı; `regressed` = kanıt var ama tamamı düşüyor (komut
-çıkış kodu 1); `research` = sağlayıcı var, render kanıtı yok; `pipeline` =
-ayrı üretim hattı kanıtsız; `unsupported` = sağlayıcısız. İnsan dinleme
-durumu kanıt kayıtlarından toplanıp ayrı sütunda taşınır — mekanik seviye
-estetik onay demek değildir. `audio:job capabilities` taze rapor koşar;
-`--from-report <repo-göreli rapor.json>` kayıtlı `BenchmarkReportV1`'i
-render etmeden okur. Bugünkü taban (koşuyla doğrulanmış): 24
-production-ready, 3 canary (`vocal`, `fire`, `sampled`), 2 research
-(`tail`, `space` — hiçbir görev reverb/delay bus'ı kullanmıyor), 2
-unsupported (`speech`, `doppler-motion`).
+Seviyeler: `production-ready` = geçen benchmark kanıtı VE kategoriyi
+kapsayan doğrulanmış yayımlanmış manifest (`reference/production/
+manifests/**`; `asset` + `analysis.encoded` kaydı yalnız kanonik yayın
+kapısının çıktısıdır) VE güncel görev sürümü için insan
+`heard-acceptable` beyanı; `benchmarked` = geçen benchmark kanıtı var ama
+yayın ya da kabul kanıtı eksik — mekanik geçiştir, üretim onayı değildir;
+`canary` = yalnız geçen canary kanıtı; `regressed` = kanıt var ama tamamı
+düşüyor (komut çıkış kodu 1); `research` = sağlayıcı var, render kanıtı
+yok; `pipeline` = ayrı üretim hattı kanıtsız; `unsupported` =
+sağlayıcısız. Görev sürümü artınca eski sürüme yapılmış kabul bayatlar ve
+raporda `pending-human` görünür — production-ready statüsü kendiliğinden
+düşer. İnsan dinleme durumu kanıt kayıtlarından toplanıp ayrı sütunda
+taşınır. `audio:job capabilities` taze rapor koşar; `--from-report
+<repo-göreli rapor.json>` kayıtlı `BenchmarkReportV1`'i render etmeden
+okur. Bugünkü taban (koşuyla doğrulanmış): 0 production-ready
+(benchmarks/reviews.json boş — insan kabulü yok), 24 benchmarked, 3
+canary (`vocal`, `fire`, `sampled`), 2 research (`tail`, `space` —
+hiçbir görev reverb/delay bus'ı kullanmıyor), 2 unsupported (`speech`,
+`doppler-motion`).
 
 ### Estetik regresyon hafızası (`audio:job regression`)
 

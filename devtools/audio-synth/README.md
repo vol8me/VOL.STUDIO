@@ -54,8 +54,10 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 list|run [--audition] [--json]|review` — 19 canary + görevler tek raporda
 - `audio:capabilities` — ontoloji mekanizmalarının kanıtlanmış kalite
   matrisi (`QualityMatrixV1`): seviye görev/canary kaydından türetilir,
-  "primitive mevcut" sayılmaz; `production-ready` mekanik düzeydir, insan
-  dinleme onayı ayrı sütundadır
+  "primitive mevcut" sayılmaz; `production-ready` üç koşul ister — geçen
+  görev + kategoriyi kapsayan doğrulanmış yayımlanmış manifest + güncel
+  görev sürümünde insan `heard-acceptable`. `benchmarked` yalnız mekanik
+  geçiştir; dinleme durumu ayrı sütundadır
 - `audio:job regression run|decide|corpus|decisions` — estetik regresyon
   hafızası: bütün production manifest'lerini güncel motorla yeniden render
   eder; PCM değişen satır `audition-required` olur (otomatik gerileme

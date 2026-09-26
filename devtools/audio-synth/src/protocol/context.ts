@@ -192,8 +192,16 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
     capabilities: {
       schema: QUALITY_MATRIX_SCHEMA,
       command: `${CLI} capabilities [--json] [--from-report <rapor.json>]`,
-      levels: ['production-ready', 'canary', 'regressed', 'research', 'pipeline', 'unsupported'],
-      rule: 'Seviye görev/canary kaydından türetilir; registry’de sağlayıcı bulunması kanıt değildir. "production-ready" mekanik düzeydir, insan dinleme onayı ayrı sütundadır.',
+      levels: [
+        'production-ready',
+        'benchmarked',
+        'canary',
+        'regressed',
+        'research',
+        'pipeline',
+        'unsupported',
+      ],
+      rule: 'Seviye görev/canary kaydından türetilir; registry’de sağlayıcı bulunması kanıt değildir. "production-ready" üç koşul ister: geçen görev + kategoriyi kapsayan doğrulanmış yayımlanmış manifest + güncel görev sürümünde insan heard-acceptable. "benchmarked" yalnız mekanik geçiştir.',
     },
     regression: {
       schema: 'RegressionReportV1',

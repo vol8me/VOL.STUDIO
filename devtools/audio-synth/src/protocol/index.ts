@@ -66,12 +66,18 @@ export type {
   BenchmarkTaskV1,
   CheckOutcomeV1,
 } from './benchmark';
-export { deriveQualityMatrix, QUALITY_MATRIX_SCHEMA, qualityMatrix } from './capabilities';
+export {
+  deriveQualityMatrix,
+  loadPublishedReferences,
+  QUALITY_MATRIX_SCHEMA,
+  qualityMatrix,
+} from './capabilities';
 export type {
   CapabilityEvidenceV1,
   CapabilityLevel,
   CapabilityListening,
   CapabilityRowV1,
+  PublishedRefV1,
   QualityMatrixInput,
   QualityMatrixV1,
 } from './capabilities';

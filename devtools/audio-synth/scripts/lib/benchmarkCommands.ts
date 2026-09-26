@@ -119,6 +119,7 @@ export function runCapabilitiesCommand(parsed: Parsed, repoRoot: string): number
   } else {
     const order = [
       'production-ready',
+      'benchmarked',
       'canary',
       'regressed',
       'research',
@@ -135,11 +136,15 @@ export function runCapabilitiesCommand(parsed: Parsed, repoRoot: string): number
             (e) => `${e.pass ? '✓' : '✗'} ${e.kind === 'benchmark' ? 'görev' : 'canary'}:${e.id}`,
           )
           .join('  ');
-        console.log(`  ${r.mechanism.padEnd(18)} dinleme: ${r.listening.padEnd(16)} ${evidence}`);
+        const pubs = r.published.length > 0 ? `  yayın: ${r.published.length}` : '';
+        console.log(
+          `  ${r.mechanism.padEnd(18)} dinleme: ${r.listening.padEnd(16)} ${evidence}${pubs}`,
+        );
       }
     }
     console.log(
-      `Seviyeler mekanik kanıttan türetilir; "production-ready" estetik onay demek değildir (dinleme sütununa bakın).`,
+      `"production-ready" = geçen görev + doğrulanmış yayın kanıtı + güncel sürümde insan ` +
+        `heard-acceptable. "benchmarked" yalnız mekanik geçiştir; kabul ya da yayın eksiktir.`,
     );
   }
   return matrix.rows.some((r) => r.level === 'regressed') ? 1 : 0;

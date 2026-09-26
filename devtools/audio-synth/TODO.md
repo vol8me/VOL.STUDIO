@@ -173,11 +173,13 @@ kanıtı `audio-jobs/reference-impact` + yedi teslim varyantı ve
       `QualityMatrixV1` satırlarına döker; kanıt, fixture kaynaklarındaki
       gerçek `providers`/pipeline kullanımı ile `BenchmarkReportV1` geçiş
       kayıtlarının birleşiminden türetilir (elle tablo yok). Seviyeler:
-      production-ready/canary/regressed/research/pipeline/unsupported;
-      insan dinleme durumu ayrı sütundur, mekanik seviye estetik onay
-      sayılmaz. `--from-report` kayıtlı raporu render'sız okur; `regressed`
-      satırı çıkış kodu 1 verir. `tests/governance/capabilities.test.ts`
-      seviye kurallarını ve kanıt dürüstlüğünü kilitler.
+      production-ready/benchmarked/canary/regressed/research/pipeline/
+      unsupported; `production-ready` üç kanıt ister — geçen görev +
+      kategoriyi kapsayan doğrulanmış yayımlanmış manifest + güncel görev
+      sürümünde insan `heard-acceptable` (R3). `--from-report` kayıtlı
+      raporu render'sız okur; `regressed` satırı çıkış kodu 1 verir.
+      `tests/governance/capabilities.test.ts` seviye kurallarını ve kanıt
+      dürüstlüğünü kilitler.
 - [x] **[P2] Reference/audition korpusu motorun estetik regresyon
       hafızası olsun.** Otomatik unit/spectral testlerin yakalayamadığı
       fakat kullanıcı tarafından daha önce kabul edilmiş ses karakterindeki
