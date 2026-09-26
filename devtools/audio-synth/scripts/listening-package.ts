@@ -1,8 +1,10 @@
 /**
- * `pnpm audio:listen` — tek-komut dinleme paketi (F7b). İnsan incelemesi
- * bekleyen her ses `export/listening/` altına toplanır: canary'ler kanonik
- * render'dan, referanslar gönderilen OGG baytının çözümünden WAV olur;
- * `listening.json` envanter + `index.html` statik sayfa yazılır.
+ * `pnpm audio:listen` — tek-komut dinleme paketi (F7b + R7). İnsan
+ * incelemesi bekleyen her ses `export/listening/` altına toplanır:
+ * canary kanonik render'ı, benchmark kaynak+teslim+loop2x+overlay
+ * varyantları, referans kaynak/gönderim çiftleri ve v1↔v2 karşılaştırma
+ * çiftleri WAV olur; `listening.json` envanter + `index.html` statik
+ * sayfa yazılır. Karar komutları öğede görünür; beğeni insanınındır.
  */
 import { buildListeningPackage, LISTENING_ROOT } from '../src/protocol';
 import { findRepoRoot } from './lib/args';

@@ -214,15 +214,19 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       `audio-searches/reference-shell` arama kanıtı da v1 PCM'leriyle
       bayatlamıştı; aynı spec'ten v2 motoruyla yeniden koşuldu
       (`search verify reference-shell` → `ok`).
-- [x] **[P3] Tek-komut dinleme paketi (F7b).** `pnpm audio:listen`
+- [x] **[P3] Tek-komut dinleme paketi (F7b + R7).** `pnpm audio:listen`
       (`scripts/listening-package.ts` → `src/protocol/listening.ts`):
-      `export/listening/` altında 19 canary kanonik render + rehber +
-      `reviews.json` durumu, 36 referans gönderilen OGG çözümü +
-      manifest/`decisions.json` durumu (`undecided` | karar
-      hash-eşleşmeli); `listening.json` envanteri + statik
-      `index.html`. Kanıt: `tests/protocol/listening.test.ts` (3),
-      üretilmiş paket 55 WAV (~23 MB). Beğeni beyanı yalnız
-      `canary review`/`regression decide` ile yazılır.
+      `export/listening/` altında dört bölüm — 19 canary (kanonik render +
+      rehber + `reviews.json` durumu), 36 benchmark öğesi (parça başına
+      `source` + kodek çözümü `delivery`, loop taşıyanlara `loop2x`,
+      stinger'lara yatak üstü `overlay`; karar `benchmark review`),
+      79 referans öğesi (kaynak render + gönderilen OGG çözümü +
+      `integration.loop`'a göre `loop2x`; `decisions.json` PCM-hash
+      bağlı, yoksa `undecided`), 4 v1/v2 anti-aliasing karşılaştırması.
+      Varyantlar `group` ile yan yana; karar komutu öğede görünür.
+      `listening.json` envanteri + statik `index.html`. Kanıt:
+      `tests/protocol/listening.test.ts` (4). Beğeni beyanı yalnız
+      insan komutuyla yazılır.
 - [x] **[P2] Temizlik ve sağlamlaştırma denetimi (F7c+F8).** `verify --all`
       tam yeşil (36 manifest, 2 arama, 2 bank, 4 bundle, 8 sample).
       Denetim bulguları: semantic skor publish/select yoluna girmiyor;

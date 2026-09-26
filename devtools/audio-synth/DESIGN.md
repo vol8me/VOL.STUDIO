@@ -522,13 +522,20 @@ Dinleme paketi: `pnpm --filter @volstudio/audio-synth audio:audition` →
 git-dışı `export/audition/` (48 archetype varyasyonu + 3 vokal aile, ölçüm
 tablosu `audition.json`; öznel yargı içermez). Tek-komut insan incelemesi
 paketi `pnpm --filter @volstudio/audio-synth audio:listen` →
-`export/listening/`: bütün canary'ler kanonik render'dan WAV + dinleme
-rehberi + `reviews.json` durumu, bütün production referansları gönderilen
-OGG baytının FFmpeg çözümünden WAV + manifest ve `decisions.json` durumu
-(kararın bağlı olduğu PCM hash manifestle eşleşiyorsa geçerli, yoksa
-`undecided`); `listening.json` envanter ve statik `index.html`. Paket
-yalnız dosya ve kayıtlı durum taşır — beğeni beyanı `canary review` /
-`regression decide` ile insan tarafından yazılır.
+`export/listening/` (R7): dört bölüm — **canary** (kanonik render +
+rehber + `reviews.json` durumu), **benchmark** (her görev parçası
+`source` + kodekten çözülmüş `delivery` varyantı; `codec-loop-seam`
+taşıyanlar iki ardışık tur `loop2x`; müzik parçalarının stinger'ları döngü
+yatağı üzerine `overlay`), **reference** (manifest başına kaynak yeniden
+render + gönderilen OGG'nin FFmpeg çözümü; `integration.loop` taşıyanlar
+`loop2x`; karar `decisions.json`'daki PCM-hash bağlı beyanla sınırlı, yoksa
+`undecided`), **comparison** (sabit v1↔v2 anti-aliasing çiftleri:
+PolyBLEP → BLAMP/blepR16; dinleme öğesi, karar komutu yok). Varyantlar
+`group` alanıyla yan yana gruplanır; her karar bekleyen öğenin sayfasında
+kaydettirme komutu (`canary review` / `benchmark review` /
+`regression decide`) görünür. `listening.json` envanter ve statik
+`index.html` yazılır; paket yalnız dosya ve kayıtlı durum taşır — beğeni
+beyanı yalnız insan tarafından yazılır.
 
 ## Arama laboratuvarı
 

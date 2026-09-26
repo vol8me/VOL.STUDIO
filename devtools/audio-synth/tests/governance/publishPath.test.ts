@@ -22,6 +22,8 @@ const ALLOWED: Readonly<Record<string, string>> = {
     'kodlama profili taban çizgisi: geçici dizinde kodla-çöz ölçümü, asset yazmaz',
   'devtools/audio-synth/src/protocol/benchmark.ts':
     'benchmark kodek-sonrası dikiş/hiza ölçümü: geçici dizinde kodla-çöz, asset yazmaz',
+  'devtools/audio-synth/src/protocol/listening.ts':
+    'dinleme paketi teslim varyantı: geçici dizinde kodla-çöz, asset yazmaz',
   'devtools/audio-synth/scripts/audio-reference-check.ts': 'geçici dizinde ölçüm fixture’ı',
   'devtools/audio-synth/scripts/render-budget-bench.ts': 'geçici dizinde kıyas ölçümü',
   'devtools/audio-synth/scripts/archetype-audition.ts': 'git-dışı export/ dinleme paketi',
