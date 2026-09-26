@@ -575,34 +575,34 @@
           "channels": 2,
           "id": "music/reference-loop/mix",
           "origin": "devtools/audio-synth/reference/production/manifests/music/reference-loop/mix.json",
-          "pcmHash": "sha256:baa932bcac899429836ae380fb1298c3051ff2277bcc67001e4841881c5d1843",
+          "pcmHash": "sha256:75ca185b66d985c66e02de3df2ce57ad2d3e3b0e6ab08a26c32ce97fa1e751ff",
           "sampleRate": 44100,
           "seconds": 10,
           "sweep": [
             {
-              "bytes": 40125,
+              "bytes": 40131,
               "failures": [
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 0.54,
+                "bandErrorMeanDb": 0.548,
                 "bandErrorP95Db": 1.785,
                 "cutoffHz": 6350,
                 "loudnessDeltaLu": -0.055,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 6350,
-                "truePeakDeltaDb": -0.058
+                "truePeakDeltaDb": -0.057
               },
               "quality": 0
             },
             {
-              "bytes": 47123,
+              "bytes": 47130,
               "failures": [
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 0.477,
-                "bandErrorP95Db": 1.632,
+                "bandErrorMeanDb": 0.463,
+                "bandErrorP95Db": 1.625,
                 "cutoffHz": 6350,
                 "loudnessDeltaLu": -0.053,
                 "method": "decoded-fidelity-v1",
@@ -612,11 +612,11 @@
               "quality": 1
             },
             {
-              "bytes": 54765,
+              "bytes": 54791,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.375,
-                "bandErrorP95Db": 1.129,
+                "bandErrorMeanDb": 0.366,
+                "bandErrorP95Db": 1.143,
                 "cutoffHz": 6350,
                 "loudnessDeltaLu": -0.023,
                 "method": "decoded-fidelity-v1",
@@ -626,13 +626,13 @@
               "quality": 2
             },
             {
-              "bytes": 62042,
+              "bytes": 62056,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.308,
+                "bandErrorMeanDb": 0.298,
                 "bandErrorP95Db": 0.893,
                 "cutoffHz": 6350,
-                "loudnessDeltaLu": -0.018,
+                "loudnessDeltaLu": -0.017,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 6350,
                 "truePeakDeltaDb": -0.088
@@ -640,13 +640,13 @@
               "quality": 3
             },
             {
-              "bytes": 68047,
+              "bytes": 68051,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.249,
-                "bandErrorP95Db": 0.652,
+                "bandErrorMeanDb": 0.24,
+                "bandErrorP95Db": 0.655,
                 "cutoffHz": 6350,
-                "loudnessDeltaLu": -0.003,
+                "loudnessDeltaLu": -0.002,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 6350,
                 "truePeakDeltaDb": -0.108
@@ -654,11 +654,11 @@
               "quality": 4
             },
             {
-              "bytes": 78071,
+              "bytes": 78066,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.224,
-                "bandErrorP95Db": 0.53,
+                "bandErrorMeanDb": 0.223,
+                "bandErrorP95Db": 0.536,
                 "cutoffHz": 6350,
                 "loudnessDeltaLu": 0.019,
                 "method": "decoded-fidelity-v1",
@@ -668,7 +668,7 @@
               "quality": 5
             },
             {
-              "bytes": 86375,
+              "bytes": 86417,
               "failures": [],
               "fidelity": {
                 "bandErrorMeanDb": 0.116,
@@ -682,11 +682,11 @@
               "quality": 6
             },
             {
-              "bytes": 94739,
+              "bytes": 94799,
               "failures": [],
               "fidelity": {
                 "bandErrorMeanDb": 0.11,
-                "bandErrorP95Db": 0.329,
+                "bandErrorP95Db": 0.325,
                 "cutoffHz": 6350,
                 "loudnessDeltaLu": 0.027,
                 "method": "decoded-fidelity-v1",
@@ -696,11 +696,11 @@
               "quality": 7
             },
             {
-              "bytes": 102785,
+              "bytes": 102842,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.089,
-                "bandErrorP95Db": 0.272,
+                "bandErrorMeanDb": 0.088,
+                "bandErrorP95Db": 0.273,
                 "cutoffHz": 6350,
                 "loudnessDeltaLu": 0.035,
                 "method": "decoded-fidelity-v1",
@@ -710,11 +710,11 @@
               "quality": 8
             },
             {
-              "bytes": 124334,
+              "bytes": 124464,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.086,
-                "bandErrorP95Db": 0.236,
+                "bandErrorMeanDb": 0.087,
+                "bandErrorP95Db": 0.239,
                 "cutoffHz": 6350,
                 "loudnessDeltaLu": 0.038,
                 "method": "decoded-fidelity-v1",
@@ -724,13 +724,13 @@
               "quality": 9
             },
             {
-              "bytes": 160911,
+              "bytes": 161373,
               "failures": [],
               "fidelity": {
                 "bandErrorMeanDb": 0.072,
                 "bandErrorP95Db": 0.163,
                 "cutoffHz": 6350,
-                "loudnessDeltaLu": 0.049,
+                "loudnessDeltaLu": 0.048,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 6350,
                 "truePeakDeltaDb": 0.057
@@ -1077,165 +1077,165 @@
           "channels": 2,
           "id": "music/reference-arcade/mix",
           "origin": "devtools/audio-synth/reference/production/manifests/music/reference-arcade/mix.json",
-          "pcmHash": "sha256:0e0134283dbba25419f3be599971fbd61ecd6ad43e7159feea829698faab402c",
+          "pcmHash": "sha256:ab46e49fbf1ca7f01797d53df3061bf39336d2ced137120730fdf8dca0c8aab7",
           "sampleRate": 44100,
           "seconds": 12.8,
           "sweep": [
             {
-              "bytes": 88694,
+              "bytes": 88391,
               "failures": [
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 0.695,
-                "bandErrorP95Db": 2.512,
+                "bandErrorMeanDb": 0.711,
+                "bandErrorP95Db": 2.654,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.041,
+                "loudnessDeltaLu": -0.043,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.012
+                "truePeakDeltaDb": 0.041
               },
               "quality": 0
             },
             {
-              "bytes": 111619,
+              "bytes": 111412,
               "failures": [
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 0.493,
-                "bandErrorP95Db": 1.739,
+                "bandErrorMeanDb": 0.513,
+                "bandErrorP95Db": 1.841,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.036,
+                "loudnessDeltaLu": -0.035,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.033
+                "truePeakDeltaDb": -0.151
               },
               "quality": 1
             },
             {
-              "bytes": 134004,
+              "bytes": 133776,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.367,
-                "bandErrorP95Db": 1.27,
+                "bandErrorMeanDb": 0.378,
+                "bandErrorP95Db": 1.361,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.017,
+                "loudnessDeltaLu": -0.019,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.085
+                "truePeakDeltaDb": -0.104
               },
               "quality": 2
             },
             {
-              "bytes": 161866,
+              "bytes": 161832,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.263,
-                "bandErrorP95Db": 0.847,
+                "bandErrorMeanDb": 0.269,
+                "bandErrorP95Db": 0.858,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.009,
+                "loudnessDeltaLu": -0.013,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.054
+                "truePeakDeltaDb": -0.06
               },
               "quality": 3
             },
             {
-              "bytes": 196560,
+              "bytes": 197442,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.193,
-                "bandErrorP95Db": 0.581,
+                "bandErrorMeanDb": 0.194,
+                "bandErrorP95Db": 0.584,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.005,
+                "loudnessDeltaLu": 0.003,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.199
+                "truePeakDeltaDb": -0.034
               },
               "quality": 4
             },
             {
-              "bytes": 242491,
+              "bytes": 244242,
               "failures": [],
               "fidelity": {
                 "bandErrorMeanDb": 0.163,
-                "bandErrorP95Db": 0.512,
+                "bandErrorP95Db": 0.514,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.017,
+                "loudnessDeltaLu": 0.015,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.214
+                "truePeakDeltaDb": 0.179
               },
               "quality": 5
             },
             {
-              "bytes": 286546,
+              "bytes": 288614,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.136,
-                "bandErrorP95Db": 0.427,
+                "bandErrorMeanDb": 0.134,
+                "bandErrorP95Db": 0.419,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.028,
+                "loudnessDeltaLu": 0.026,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.016
+                "truePeakDeltaDb": -0.077
               },
               "quality": 6
             },
             {
-              "bytes": 328815,
+              "bytes": 331795,
               "failures": [],
               "fidelity": {
                 "bandErrorMeanDb": 0.117,
-                "bandErrorP95Db": 0.372,
+                "bandErrorP95Db": 0.37,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.031,
+                "loudnessDeltaLu": 0.029,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.042
+                "truePeakDeltaDb": 0.013
               },
               "quality": 7
             },
             {
-              "bytes": 376152,
+              "bytes": 378635,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.094,
+                "bandErrorMeanDb": 0.093,
                 "bandErrorP95Db": 0.3,
                 "cutoffHz": 16000,
                 "loudnessDeltaLu": 0.04,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.025
+                "truePeakDeltaDb": -0.015
               },
               "quality": 8
             },
             {
-              "bytes": 469879,
+              "bytes": 473902,
               "failures": [],
               "fidelity": {
                 "bandErrorMeanDb": 0.073,
-                "bandErrorP95Db": 0.226,
+                "bandErrorP95Db": 0.228,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.046,
+                "loudnessDeltaLu": 0.047,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.001
+                "truePeakDeltaDb": 0.022
               },
               "quality": 9
             },
             {
-              "bytes": 621933,
+              "bytes": 625864,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.058,
-                "bandErrorP95Db": 0.128,
+                "bandErrorMeanDb": 0.059,
+                "bandErrorP95Db": 0.129,
                 "cutoffHz": 16000,
                 "loudnessDeltaLu": 0.063,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.065
+                "truePeakDeltaDb": 0.079
               },
               "quality": 10
             }
@@ -1246,58 +1246,58 @@
       "selected": 4,
       "totals": [
         {
-          "bytes": 201550,
-          "kbps": 40.9,
+          "bytes": 201253,
+          "kbps": 40.8,
           "quality": 0
         },
         {
-          "bytes": 239945,
-          "kbps": 48.7,
+          "bytes": 239745,
+          "kbps": 48.6,
           "quality": 1
         },
         {
-          "bytes": 281994,
+          "bytes": 281792,
           "kbps": 57.2,
           "quality": 2
         },
         {
-          "bytes": 325615,
+          "bytes": 325595,
           "kbps": 66.1,
           "quality": 3
         },
         {
-          "bytes": 374495,
-          "kbps": 76,
+          "bytes": 375381,
+          "kbps": 76.2,
           "quality": 4
         },
         {
-          "bytes": 442306,
-          "kbps": 89.7,
+          "bytes": 444052,
+          "kbps": 90.1,
           "quality": 5
         },
         {
-          "bytes": 505092,
-          "kbps": 102.5,
+          "bytes": 507202,
+          "kbps": 102.9,
           "quality": 6
         },
         {
-          "bytes": 565528,
-          "kbps": 114.7,
+          "bytes": 568568,
+          "kbps": 115.3,
           "quality": 7
         },
         {
-          "bytes": 631380,
-          "kbps": 128.1,
+          "bytes": 633920,
+          "kbps": 128.6,
           "quality": 8
         },
         {
-          "bytes": 771331,
-          "kbps": 156.5,
+          "bytes": 775484,
+          "kbps": 157.3,
           "quality": 9
         },
         {
-          "bytes": 996671,
-          "kbps": 202.2,
+          "bytes": 1001064,
+          "kbps": 203.1,
           "quality": 10
         }
       ]
@@ -1646,165 +1646,165 @@
           "channels": 2,
           "id": "music/reference-arcade/intro",
           "origin": "devtools/audio-synth/reference/production/manifests/music/reference-arcade/intro.json",
-          "pcmHash": "sha256:651486dcea16cf7b1d48de637a17996c355fd80410d4027767ac984cbd8ca002",
+          "pcmHash": "sha256:b5639086b719e4625163409b9a019157b0aeed4bb97accfbe8846765540019d1",
           "sampleRate": 44100,
           "seconds": 3.525,
           "sweep": [
             {
-              "bytes": 24655,
+              "bytes": 24649,
               "failures": [
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 0.728,
-                "bandErrorP95Db": 2.917,
+                "bandErrorMeanDb": 0.741,
+                "bandErrorP95Db": 3.05,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.146,
+                "loudnessDeltaLu": -0.141,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.008
+                "truePeakDeltaDb": 0.352
               },
               "quality": 0
             },
             {
-              "bytes": 29819,
+              "bytes": 29859,
               "failures": [
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 0.494,
-                "bandErrorP95Db": 1.669,
+                "bandErrorMeanDb": 0.498,
+                "bandErrorP95Db": 1.753,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.222,
+                "loudnessDeltaLu": -0.23,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.045
+                "truePeakDeltaDb": -0.045
               },
               "quality": 1
             },
             {
-              "bytes": 35580,
+              "bytes": 35685,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.387,
-                "bandErrorP95Db": 1.337,
+                "bandErrorMeanDb": 0.389,
+                "bandErrorP95Db": 1.39,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.193,
+                "loudnessDeltaLu": -0.19,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.011
+                "truePeakDeltaDb": -0.034
               },
               "quality": 2
             },
             {
-              "bytes": 42963,
+              "bytes": 42991,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.297,
-                "bandErrorP95Db": 0.945,
+                "bandErrorMeanDb": 0.299,
+                "bandErrorP95Db": 0.943,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.161,
+                "loudnessDeltaLu": -0.162,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.122
+                "truePeakDeltaDb": -0.114
               },
               "quality": 3
             },
             {
-              "bytes": 53358,
+              "bytes": 53515,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.245,
-                "bandErrorP95Db": 0.732,
+                "bandErrorMeanDb": 0.243,
+                "bandErrorP95Db": 0.716,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.118,
+                "loudnessDeltaLu": -0.12,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.057
+                "truePeakDeltaDb": -0.121
               },
               "quality": 4
             },
             {
-              "bytes": 63466,
+              "bytes": 63888,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.195,
-                "bandErrorP95Db": 0.564,
+                "bandErrorMeanDb": 0.196,
+                "bandErrorP95Db": 0.571,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.062,
+                "loudnessDeltaLu": -0.059,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.27
+                "truePeakDeltaDb": 0.463
               },
               "quality": 5
             },
             {
-              "bytes": 75910,
+              "bytes": 76414,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.153,
+                "bandErrorMeanDb": 0.151,
                 "bandErrorP95Db": 0.447,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.028,
+                "loudnessDeltaLu": -0.024,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.166
+                "truePeakDeltaDb": 0.284
               },
               "quality": 6
             },
             {
-              "bytes": 88414,
+              "bytes": 89298,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.126,
-                "bandErrorP95Db": 0.392,
+                "bandErrorMeanDb": 0.124,
+                "bandErrorP95Db": 0.369,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.016,
+                "loudnessDeltaLu": -0.012,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.117
+                "truePeakDeltaDb": 0.105
               },
               "quality": 7
             },
             {
-              "bytes": 101640,
+              "bytes": 102223,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.099,
-                "bandErrorP95Db": 0.296,
+                "bandErrorMeanDb": 0.098,
+                "bandErrorP95Db": 0.275,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.021,
+                "loudnessDeltaLu": 0.016,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.015
+                "truePeakDeltaDb": 0.032
               },
               "quality": 8
             },
             {
-              "bytes": 123922,
+              "bytes": 125276,
               "failures": [],
               "fidelity": {
                 "bandErrorMeanDb": 0.066,
-                "bandErrorP95Db": 0.182,
+                "bandErrorP95Db": 0.188,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.032,
+                "loudnessDeltaLu": 0.022,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.173
+                "truePeakDeltaDb": 0.077
               },
               "quality": 9
             },
             {
-              "bytes": 158544,
+              "bytes": 160134,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.057,
-                "bandErrorP95Db": 0.126,
+                "bandErrorMeanDb": 0.059,
+                "bandErrorP95Db": 0.128,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.05,
+                "loudnessDeltaLu": 0.049,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.055
+                "truePeakDeltaDb": 0.032
               },
               "quality": 10
             }
@@ -1814,167 +1814,167 @@
           "channels": 2,
           "id": "music/reference-arcade/power-up",
           "origin": "devtools/audio-synth/reference/production/manifests/music/reference-arcade/power-up.json",
-          "pcmHash": "sha256:609a79c2a3f07fdae7ec1f17a64b54d63c867cf3ac3bc044e2de244e65b2b280",
+          "pcmHash": "sha256:5843615b10253dbd21fc98ff00a9066be269aacf3a43ebb9b0ac5413ecf6761e",
           "sampleRate": 44100,
           "seconds": 3.9808,
           "sweep": [
             {
-              "bytes": 25107,
+              "bytes": 25090,
               "failures": [
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 0.727,
-                "bandErrorP95Db": 2.419,
+                "bandErrorMeanDb": 0.726,
+                "bandErrorP95Db": 2.346,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.166,
+                "loudnessDeltaLu": -0.186,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.248
+                "truePeakDeltaDb": 0.336
               },
               "quality": 0
             },
             {
-              "bytes": 30923,
+              "bytes": 30887,
               "failures": [
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 0.531,
-                "bandErrorP95Db": 1.871,
+                "bandErrorMeanDb": 0.526,
+                "bandErrorP95Db": 1.819,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.142,
+                "loudnessDeltaLu": -0.147,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.392
+                "truePeakDeltaDb": -0.744
               },
               "quality": 1
             },
             {
-              "bytes": 35647,
+              "bytes": 35643,
               "failures": [
                 "truePeakDeltaDb"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 0.382,
-                "bandErrorP95Db": 1.132,
+                "bandErrorMeanDb": 0.385,
+                "bandErrorP95Db": 1.145,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.112,
+                "loudnessDeltaLu": -0.124,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 1.06
+                "truePeakDeltaDb": 0.948
               },
               "quality": 2
             },
             {
-              "bytes": 40731,
+              "bytes": 40821,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.299,
-                "bandErrorP95Db": 0.829,
+                "bandErrorMeanDb": 0.307,
+                "bandErrorP95Db": 0.81,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.133,
+                "loudnessDeltaLu": -0.15,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.441
+                "truePeakDeltaDb": 0.416
               },
               "quality": 3
             },
             {
-              "bytes": 48511,
+              "bytes": 48697,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.255,
-                "bandErrorP95Db": 0.747,
+                "bandErrorMeanDb": 0.262,
+                "bandErrorP95Db": 0.715,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.121,
+                "loudnessDeltaLu": -0.131,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.129
+                "truePeakDeltaDb": -0.102
               },
               "quality": 4
             },
             {
-              "bytes": 55526,
+              "bytes": 55761,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.218,
-                "bandErrorP95Db": 0.641,
+                "bandErrorMeanDb": 0.214,
+                "bandErrorP95Db": 0.662,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.093,
+                "loudnessDeltaLu": -0.097,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.188
+                "truePeakDeltaDb": -0.217
               },
               "quality": 5
             },
             {
-              "bytes": 68347,
+              "bytes": 68538,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.195,
-                "bandErrorP95Db": 0.567,
+                "bandErrorMeanDb": 0.19,
+                "bandErrorP95Db": 0.543,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.04,
+                "loudnessDeltaLu": -0.038,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.303
+                "truePeakDeltaDb": -0.36
               },
               "quality": 6
             },
             {
-              "bytes": 77352,
+              "bytes": 77304,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.176,
-                "bandErrorP95Db": 0.53,
+                "bandErrorMeanDb": 0.181,
+                "bandErrorP95Db": 0.543,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.034,
+                "loudnessDeltaLu": -0.039,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.056
+                "truePeakDeltaDb": 0.017
               },
               "quality": 7
             },
             {
-              "bytes": 88607,
+              "bytes": 88830,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.146,
-                "bandErrorP95Db": 0.418,
+                "bandErrorMeanDb": 0.145,
+                "bandErrorP95Db": 0.401,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.031,
+                "loudnessDeltaLu": -0.028,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.09
+                "truePeakDeltaDb": -0.109
               },
               "quality": 8
             },
             {
-              "bytes": 116280,
+              "bytes": 115849,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.094,
-                "bandErrorP95Db": 0.273,
+                "bandErrorMeanDb": 0.098,
+                "bandErrorP95Db": 0.294,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0,
+                "loudnessDeltaLu": -0.003,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.082
+                "truePeakDeltaDb": -0.096
               },
               "quality": 9
             },
             {
-              "bytes": 171964,
+              "bytes": 170929,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.046,
-                "bandErrorP95Db": 0.093,
+                "bandErrorMeanDb": 0.048,
+                "bandErrorP95Db": 0.101,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.053,
+                "loudnessDeltaLu": 0.055,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.061
+                "truePeakDeltaDb": 0.117
               },
               "quality": 10
             }
@@ -1985,58 +1985,58 @@
       "selected": 4,
       "totals": [
         {
-          "bytes": 76660,
+          "bytes": 76637,
           "kbps": 24.9,
           "quality": 0
         },
         {
-          "bytes": 89838,
+          "bytes": 89842,
           "kbps": 29.2,
           "quality": 1
         },
         {
-          "bytes": 103665,
-          "kbps": 33.6,
+          "bytes": 103766,
+          "kbps": 33.7,
           "quality": 2
         },
         {
-          "bytes": 118031,
+          "bytes": 118149,
           "kbps": 38.3,
           "quality": 3
         },
         {
-          "bytes": 138456,
-          "kbps": 44.9,
+          "bytes": 138799,
+          "kbps": 45,
           "quality": 4
         },
         {
-          "bytes": 158654,
-          "kbps": 51.5,
+          "bytes": 159311,
+          "kbps": 51.7,
           "quality": 5
         },
         {
-          "bytes": 187231,
-          "kbps": 60.8,
+          "bytes": 187926,
+          "kbps": 61,
           "quality": 6
         },
         {
-          "bytes": 212713,
-          "kbps": 69,
+          "bytes": 213549,
+          "kbps": 69.3,
           "quality": 7
         },
         {
-          "bytes": 240733,
-          "kbps": 78.1,
+          "bytes": 241539,
+          "kbps": 78.4,
           "quality": 8
         },
         {
-          "bytes": 301060,
-          "kbps": 97.7,
+          "bytes": 301983,
+          "kbps": 98,
           "quality": 9
         },
         {
-          "bytes": 406127,
-          "kbps": 131.8,
+          "bytes": 406682,
+          "kbps": 132,
           "quality": 10
         }
       ]
@@ -3051,182 +3051,182 @@
           "channels": 1,
           "id": "sfx-laser",
           "origin": "preset:sfx-laser",
-          "pcmHash": "sha256:d35dd39a881d7b2d2794d38eb3f22c49011cedee35e62508b463c250198b1bed",
+          "pcmHash": "sha256:95729e071a489fb18ff5d2c603a5d42e1b183cc2d9ba86756c19dd9d651204a4",
           "sampleRate": 44100,
           "seconds": 0.15,
           "sweep": [
             {
-              "bytes": 3979,
+              "bytes": 3981,
               "failures": [
                 "bandErrorMeanDb",
                 "bandErrorP95Db",
                 "truePeakDeltaDb"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 3.599,
-                "bandErrorP95Db": 7.561,
+                "bandErrorMeanDb": 3.91,
+                "bandErrorP95Db": 7.513,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.086,
+                "loudnessDeltaLu": 0.101,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 1.074
+                "truePeakDeltaDb": 1.03
               },
               "quality": 0
             },
             {
-              "bytes": 3724,
+              "bytes": 3726,
               "failures": [
                 "bandErrorMeanDb",
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 2.333,
-                "bandErrorP95Db": 4.468,
+                "bandErrorMeanDb": 2.555,
+                "bandErrorP95Db": 4.972,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.256,
+                "loudnessDeltaLu": -0.2,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.355
+                "truePeakDeltaDb": 0.398
               },
               "quality": 1
             },
             {
-              "bytes": 3837,
+              "bytes": 3838,
               "failures": [
                 "bandErrorMeanDb",
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 2.218,
-                "bandErrorP95Db": 4.656,
+                "bandErrorMeanDb": 2.512,
+                "bandErrorP95Db": 4.94,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.126,
+                "loudnessDeltaLu": -0.06,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.138
+                "truePeakDeltaDb": -0.082
               },
               "quality": 2
             },
             {
-              "bytes": 4012,
+              "bytes": 4018,
               "failures": [
                 "bandErrorMeanDb",
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 2.023,
-                "bandErrorP95Db": 3.867,
+                "bandErrorMeanDb": 2.337,
+                "bandErrorP95Db": 4.252,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.105,
+                "loudnessDeltaLu": -0.06,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.124
+                "truePeakDeltaDb": -0.153
               },
               "quality": 3
             },
             {
-              "bytes": 4306,
+              "bytes": 4317,
               "failures": [
                 "bandErrorMeanDb",
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 2.026,
-                "bandErrorP95Db": 3.97,
+                "bandErrorMeanDb": 2.199,
+                "bandErrorP95Db": 4.254,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.255,
+                "loudnessDeltaLu": -0.23,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.458
+                "truePeakDeltaDb": -0.365
               },
               "quality": 4
             },
             {
-              "bytes": 4683,
+              "bytes": 4681,
               "failures": [
                 "bandErrorMeanDb",
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 1.623,
-                "bandErrorP95Db": 3.23,
+                "bandErrorMeanDb": 1.945,
+                "bandErrorP95Db": 4.55,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.17,
+                "loudnessDeltaLu": -0.154,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.389
+                "truePeakDeltaDb": -0.36
               },
               "quality": 5
             },
             {
-              "bytes": 4840,
+              "bytes": 4844,
               "failures": [
                 "bandErrorP95Db"
               ],
               "fidelity": {
-                "bandErrorMeanDb": 1.14,
-                "bandErrorP95Db": 3.275,
+                "bandErrorMeanDb": 1.313,
+                "bandErrorP95Db": 3.413,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": -0.099,
+                "loudnessDeltaLu": -0.087,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": -0.188
+                "truePeakDeltaDb": -0.165
               },
               "quality": 6
             },
             {
-              "bytes": 4885,
+              "bytes": 4889,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.144,
+                "bandErrorMeanDb": 0.164,
                 "bandErrorP95Db": 0.366,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.041,
+                "loudnessDeltaLu": 0.043,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.024
+                "truePeakDeltaDb": -0.002
               },
               "quality": 7
             },
             {
-              "bytes": 5398,
+              "bytes": 5406,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.076,
-                "bandErrorP95Db": 0.126,
+                "bandErrorMeanDb": 0.079,
+                "bandErrorP95Db": 0.182,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.058,
+                "loudnessDeltaLu": 0.023,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.087
+                "truePeakDeltaDb": 0.015
               },
               "quality": 8
             },
             {
-              "bytes": 5696,
+              "bytes": 5706,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.06,
+                "bandErrorMeanDb": 0.051,
                 "bandErrorP95Db": 0.107,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.063,
+                "loudnessDeltaLu": 0.026,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.079
+                "truePeakDeltaDb": 0.038
               },
               "quality": 9
             },
             {
-              "bytes": 6273,
+              "bytes": 6290,
               "failures": [],
               "fidelity": {
-                "bandErrorMeanDb": 0.043,
-                "bandErrorP95Db": 0.067,
+                "bandErrorMeanDb": 0.045,
+                "bandErrorP95Db": 0.07,
                 "cutoffHz": 16000,
-                "loudnessDeltaLu": 0.063,
+                "loudnessDeltaLu": 0.061,
                 "method": "decoded-fidelity-v1",
                 "sourceCutoffHz": 16000,
-                "truePeakDeltaDb": 0.082
+                "truePeakDeltaDb": 0.079
               },
               "quality": 10
             }
@@ -3237,57 +3237,57 @@
       "selected": 7,
       "totals": [
         {
-          "bytes": 46120,
+          "bytes": 46122,
           "kbps": 51.2,
           "quality": 0
         },
         {
-          "bytes": 49365,
-          "kbps": 54.8,
+          "bytes": 49367,
+          "kbps": 54.9,
           "quality": 1
         },
         {
-          "bytes": 53465,
+          "bytes": 53466,
           "kbps": 59.4,
           "quality": 2
         },
         {
-          "bytes": 57525,
+          "bytes": 57531,
           "kbps": 63.9,
           "quality": 3
         },
         {
-          "bytes": 60963,
+          "bytes": 60974,
           "kbps": 67.7,
           "quality": 4
         },
         {
-          "bytes": 68251,
+          "bytes": 68249,
           "kbps": 75.8,
           "quality": 5
         },
         {
-          "bytes": 74035,
+          "bytes": 74039,
           "kbps": 82.3,
           "quality": 6
         },
         {
-          "bytes": 78444,
+          "bytes": 78448,
           "kbps": 87.2,
           "quality": 7
         },
         {
-          "bytes": 85813,
-          "kbps": 95.3,
+          "bytes": 85821,
+          "kbps": 95.4,
           "quality": 8
         },
         {
-          "bytes": 101421,
+          "bytes": 101431,
           "kbps": 112.7,
           "quality": 9
         },
         {
-          "bytes": 123983,
+          "bytes": 124000,
           "kbps": 137.8,
           "quality": 10
         }

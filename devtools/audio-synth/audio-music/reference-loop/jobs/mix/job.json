@@ -8,6 +8,10 @@
       "r-5c5194533ec711c1": {
         "hash": "sha256:a82a16698b58300e069e937cbfe3a2f5f112df2f2354defac6dbf635d9733752",
         "path": "analyses/r-5c5194533ec711c1.json"
+      },
+      "r-bff469a76ea17cb4": {
+        "hash": "sha256:ee0b7702793ddc4bf73a4d190d598f9bdf3a3c50cda4c81051825efa9171aef6",
+        "path": "analyses/r-bff469a76ea17cb4.json"
       }
     },
     "brief": {
@@ -20,7 +24,7 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:88bb9258619d74a2858c3f9bd8d8e2390f83f2bbfb9caba2c840c426d5ebd234",
+      "hash": "sha256:daa8c04aa97b88eb27ff52e9f61bd848a08f0154b9c220f3ec0d8af9f5d0cc91",
       "path": "devtools/audio-synth/reference/production/manifests/music/reference-loop/mix.json"
     },
     "renders": {
@@ -31,17 +35,21 @@
       "r-5c5194533ec711c1": {
         "hash": "sha256:c7703ab4125db4fb39b3d8234582285a6de8439144032f3932421c4ac2e30d81",
         "path": "renders/r-5c5194533ec711c1.json"
+      },
+      "r-bff469a76ea17cb4": {
+        "hash": "sha256:60026d54613b173ee68cede6b1e3838f8058ab5d970a2cf4606c85f930c39558",
+        "path": "renders/r-bff469a76ea17cb4.json"
       }
     },
     "selection": {
-      "hash": "sha256:133efd56b988ccf9bdddfd4a6ad168b2019547d07dd9b1b868e26854cafa3403",
+      "hash": "sha256:75c82b71d7837441e87ab9a65f2a4bd92b069934eadfad3dc708450e3abc3895",
       "path": "selection.json"
     }
   },
   "jobId": "mix",
   "kind": "music",
   "protocolVersion": 1,
-  "revision": 11,
+  "revision": 15,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

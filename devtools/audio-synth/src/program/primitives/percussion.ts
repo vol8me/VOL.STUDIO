@@ -115,9 +115,9 @@ export const RETRO: SourceEntry = {
   version: 1,
   description:
     'Retro/arcade osilatör: darbe (duty), düz ya da 4-bit üçgen, testere, uzun/kısa LFSR, ' +
-    '4-bit wavetable; hard sync, arpej, bit ve örnek-tutma. Kenarlar PolyBLEP’li, lo-fi ' +
+    '4-bit wavetable; hard sync, arpej, bit ve örnek-tutma. Kenarlar BLEP’li, lo-fi ' +
     'karakter yalnız bits/rate aşamasından gelir. Donanım öykünmesi iddiası yoktur.',
-  capabilities: ['pitched', 'periodic', 'retro', 'chip', 'noise', 'polyblep'],
+  capabilities: ['pitched', 'periodic', 'retro', 'chip', 'noise', 'blep'],
   params: {
     waveform: {
       type: 'choice',

@@ -5,13 +5,13 @@
       "analyzerVersion": 1,
       "dc": {
         "channelOffset": [
-          0.00003367103333493457,
-          0.00005331416840016953
+          0.000036069119160709914,
+          0.000052477122786586426
         ]
       },
       "defects": {
         "clicks": {
-          "count": 1,
+          "count": 0,
           "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
         },
         "clips": {
@@ -31,38 +31,38 @@
       },
       "level": {
         "channelPeakDbfs": [
-          -8.809805792539912,
-          -8.916334737508105
+          -8.863886548865137,
+          -9.014208044931909
         ],
         "channelRmsDbfs": [
-          -27.75373710409886,
-          -27.9732460660759
+          -27.75651499280094,
+          -27.97249241802478
         ],
-        "crestFactorDb": 19.052299087836985,
-        "integratedLufs": -26.970919854498707,
-        "maxMomentaryLufs": -20.794750347758953,
-        "rmsDbfs": -27.862104880376897,
-        "samplePeakDbfs": -8.809805792539912,
-        "truePeakDbtp": -8.78117817986396
+        "crestFactorDb": 18.999274707927896,
+        "integratedLufs": -26.959217000255606,
+        "maxMomentaryLufs": -20.796002387132273,
+        "rmsDbfs": -27.863161256793035,
+        "samplePeakDbfs": -8.863886548865137,
+        "truePeakDbtp": -8.849058768947586
       },
       "measuredFrom": "decoded-encoded",
       "schema": "AudioAnalysisReportV1",
       "spectral": {
         "bandsDb": {
-          "air": -45.19728726863743,
-          "high": -42.949129756122,
-          "low": -35.13297115651045,
-          "mid": -37.447410693269084,
-          "sub": -30.11870861880491
+          "air": -45.039699312188404,
+          "high": -42.89637731717917,
+          "low": -35.15455278557913,
+          "mid": -37.453242142055466,
+          "sub": -30.115611808337626
         },
-        "centroidHz": 630.9473402951305,
-        "flatness": 0.009633772553142985,
+        "centroidHz": 642.0170945432728,
+        "flatness": 0.009781672029912253,
         "peakHz": 64.599609375,
         "rolloff85Hz": 667.529296875
       },
       "stereo": {
-        "correlation": 0.9972699090339691,
-        "width": 0.03907123397635478
+        "correlation": 0.9972716485536841,
+        "width": 0.0389947948760797
       },
       "temporal": {
         "activeSeconds": 3.2,
@@ -70,15 +70,15 @@
         "decay40Seconds": 3.19,
         "leadingSilenceSeconds": 0,
         "peakTimeSeconds": 0,
-        "temporalCentroidSeconds": 0.9784290356323024,
+        "temporalCentroidSeconds": 0.9787550411378526,
         "trailingSilenceSeconds": 0.334965986394558
       }
     },
-    "sourceRecordHash": "sha256:36d02a41e0a563e6b04e997c9b2f2941a32ec02f8424f3b1f97d9bb7b673c171"
+    "sourceRecordHash": "sha256:310b9f637cf10fa03b116d472307abf02871f60f61b66620fdd1876e35468ed7"
   },
   "asset": {
-    "bytes": 53358,
-    "encodedHash": "sha256:f7180ec6ce41ecd3acc850dbad70de37cdc0acc9059f01716ff7a14103c3db5d",
+    "bytes": 53515,
+    "encodedHash": "sha256:a5509566583be3288925a42adb5b48590f09bd3cf5221a03bc3adde6864821fe",
     "format": "ogg-vorbis",
     "path": "devtools/audio-synth/reference/production/assets/music/reference-arcade/intro.ogg"
   },
@@ -173,6 +173,11 @@
     ],
     "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
   },
+  "encoding": {
+    "policyHash": "sha256:4995c93a1714f448fc486b3365eea0d041ecc778f26b7b5b30935a46ec028376",
+    "quality": 4,
+    "scheme": "encode-profile-v1"
+  },
   "engine": {
     "package": "@volstudio/audio-synth",
     "packageVersion": "0.1.0",
@@ -192,11 +197,11 @@
       "nodes": [],
       "scheme": "render-surface-v1"
     },
-    "rendererVersion": 1,
+    "rendererVersion": 2,
     "runtime": {
       "node": "v22.23.1"
     },
-    "sourceCommit": "1d2fe6fb3274d26f3877d6450d0d994c1eb54914",
+    "sourceCommit": "58384bbf73712a07a3829787a1daa6dc9fbeec46",
     "sourceTreeDirty": true
   },
   "integration": {
@@ -211,6 +216,18 @@
     "path": "devtools/audio-synth/audio-music/reference-arcade/jobs/intro",
     "protocolVersion": 1
   },
+  "layout": {
+    "channels": 2,
+    "image": {
+      "correlation": 0.997,
+      "dualMono": false,
+      "method": "stereo-image-v1",
+      "monoFoldLossDb": 0.014,
+      "sideDb": -28.18
+    },
+    "placement": "bed",
+    "scheme": "channel-layout-v1"
+  },
   "policy": {
     "assetClass": "music-stem",
     "policyVersion": 1,
@@ -222,7 +239,7 @@
       "mastering": {
         "ceiling": 0.95,
         "fadeOutSeconds": 0.04,
-        "gainDb": -11.008,
+        "gainDb": -11.019,
         "limiter": {
           "knee": 0.28,
           "threshold": 0.7
@@ -1581,7 +1598,7 @@
       "schema": "MusicStemProgramV1",
       "stem": "intro"
     },
-    "hash": "sha256:d60895ba352d13c746b5a0ff5eea3ecc4b421165110643c9011ef16daf467b00",
+    "hash": "sha256:bfb00f69940f82294299d4464a8992852d35f3e2f4c9e2968533d41d4f153f2e",
     "schema": "MusicStemProgramV1"
   },
   "render": {
@@ -1589,11 +1606,11 @@
       "channels": 2,
       "format": "f32le-interleaved-clamped",
       "frames": 155451,
-      "hash": "sha256:651486dcea16cf7b1d48de637a17996c355fd80410d4027767ac984cbd8ca002",
+      "hash": "sha256:b5639086b719e4625163409b9a019157b0aeed4bb97accfbe8846765540019d1",
       "sampleRate": 44100
     },
-    "renderId": "r-d593df15cee2ec32",
-    "rendererVersion": 1,
+    "renderId": "r-2f07d6c16604712c",
+    "rendererVersion": 2,
     "seed": 20260924
   },
   "schema": "AudioAssetManifestV1"

@@ -152,7 +152,7 @@ describe('arama planı (ön-denetim, render yok)', () => {
     expect(plan(shellSpec()).verdict.withinBudget).toBe(true);
   });
 
-  it('PolyBLEP riskli bölgesindeki aday işaretlenir, altındaki işaretlenmez', () => {
+  it('adaylar risk işareti taşımaz (kayıtlı mekanik sınırlama kalmadı)', () => {
     const p = plan(
       programSpec({
         base: {
@@ -192,9 +192,7 @@ describe('arama planı (ön-denetim, render yok)', () => {
       }),
     );
     for (const c of p.candidates) {
-      expect(c.risks, `f=${c.values.f}`).toEqual(
-        (c.values.f as number) > 1000 ? ['polyblep-alias'] : [],
-      );
+      expect(c.risks, `f=${c.values.f}`).toEqual([]);
     }
   });
 

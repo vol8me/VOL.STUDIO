@@ -1,5 +1,5 @@
 import { crush } from '../effects/saturation';
-import { getWaveSampleWithPhase } from './waveforms';
+import { BLEP_RADIUS, blepResidual, getWaveSampleWithPhase } from './waveforms';
 
 /**
  * Retro/arcade ses çekirdeği: darbe (duty), üçgen (düz ya da 4-bit
@@ -9,10 +9,11 @@ import { getWaveSampleWithPhase } from './waveforms';
  * ise ideal bant sınırlı bir DAC gibi davranır.
  *
  * Her süreksizlik (darbe kenarı, testere sarması, tablo basamağı, LFSR
- * saati, sync sıfırlaması) iki örneklik PolyBLEP ile düzeltilir: basamaklı
- * bir dalganın 44.1 kHz'te çıplak üretimi harmonik olmayan bir alias
- * üretir ve bu "8-bit" değil "bozuk" duyulur. Bilinçli alias yalnız
- * `bits`/`holdHz` aşamasından gelir ve çıkış oranında uygulanır.
+ * saati, sync sıfırlaması) ±`BLEP_RADIUS` örneklik bant sınırlı rezidüelle
+ * düzeltilir (`waveforms.ts` `blepResidual`): basamaklı bir dalganın 44.1
+ * kHz'te çıplak üretimi harmonik olmayan bir alias üretir ve bu "8-bit"
+ * değil "bozuk" duyulur. Bilinçli alias yalnız `bits`/`holdHz`
+ * aşamasından gelir ve çıkış oranında uygulanır.
  */
 export const RETRO_WAVES = ['pulse', 'triangle', 'sawtooth', 'noise', 'wavetable'] as const;
 export type RetroWave = (typeof RETRO_WAVES)[number];
@@ -163,15 +164,31 @@ export function retroLengthSeconds(envelope: RetroEnvelopeV1, seconds: number): 
 }
 
 interface Blep {
-  /** Yazılmakta olan örneğe eklenecek düzeltme (önceki örnek doğrudan düzeltilir). */
-  pending: number;
+  /** Gelecekteki örneklere dağıtılan rezidüel katkılar; `pending[0]` şu anki örnek. */
+  readonly pending: Float32Array;
 }
 
-/** `t` (0–1): süreksizlikten bu yana geçen örnek. Sıçrama `h`. */
-function addBlep(out: Float32Array, index: number, t: number, h: number, blep: Blep): void {
-  const half = h / 2;
-  if (index > 0) out[index - 1] += half * t * t;
-  blep.pending += -half * (1 - t) * (1 - t);
+/** Ring'i bir örnek ilerletir. */
+function shiftBlep(blep: Blep): void {
+  blep.pending.copyWithin(0, 1);
+  blep.pending[blep.pending.length - 1] = 0;
+}
+
+/**
+ * `edge` (örnek cinsinden gerçek zaman): genliği `h` olan sıçrama anı.
+ * Rezidüel ±`BLEP_RADIUS` örnek pencereye dağıtılır: `index`'ten önceki
+ * örnekler `out`'a doğrudan eklenir (birikimli tampon), sonrakiler ring'de
+ * bekler (`pending[m − index]`).
+ */
+function addBlep(out: Float32Array, index: number, edge: number, h: number, blep: Blep): void {
+  const lo = Math.max(0, Math.ceil(edge - BLEP_RADIUS));
+  const hi = Math.floor(edge + BLEP_RADIUS);
+  for (let m = lo; m <= hi; m++) {
+    const r = h * blepResidual(m - edge);
+    if (r === 0) continue;
+    if (m < index) out[m] += r;
+    else if (m - index < blep.pending.length) blep.pending[m - index] += r;
+  }
 }
 
 function envelopeAt(env: RetroEnvelopeV1, t: number, gate: number): number {
@@ -281,7 +298,7 @@ function crossJumps(
 ): void {
   for (const jump of jumps) {
     for (let c = Math.floor(a - jump.at) + 1 + jump.at; c <= b; c += 1) {
-      addBlep(out, n, lead + (b - c) / inc, jump.h, blep);
+      addBlep(out, n, n - (lead + (b - c) / inc), jump.h, blep);
     }
   }
 }
@@ -292,7 +309,7 @@ function renderPeriodic(
   pitch: RetroPitchV1,
   rate: number,
 ): void {
-  const blep: Blep = { pending: 0 };
+  const blep: Blep = { pending: new Float32Array(2 * BLEP_RADIUS + 2) };
   let master = 0;
   let slave = 0;
   for (let n = 0; n < out.length; n++) {
@@ -313,7 +330,7 @@ function renderPeriodic(
       const cross = slave + inc * (1 - since);
       crossJumps(out, n, slave, cross, inc, jumps, since, blep);
       const before = naive(osc, cross - Math.floor(cross), duty, inc);
-      addBlep(out, n, since, naive(osc, 0, duty, inc) - before, blep);
+      addBlep(out, n, n - since, naive(osc, 0, duty, inc) - before, blep);
       const restart = inc * since;
       crossJumps(out, n, 0, restart, inc, jumps, 0, blep);
       slave = restart - Math.floor(restart);
@@ -323,8 +340,8 @@ function renderPeriodic(
       crossJumps(out, n, slave, next, inc, jumps, 0, blep);
       slave = next - Math.floor(next);
     }
-    out[n] += naive(osc, slave, duty, inc) + blep.pending;
-    blep.pending = 0;
+    out[n] += naive(osc, slave, duty, inc) + blep.pending[0];
+    shiftBlep(blep);
   }
 }
 
@@ -338,7 +355,7 @@ function renderNoise(
   pitch: RetroPitchV1,
   rate: number,
 ): void {
-  const blep: Blep = { pending: 0 };
+  const blep: Blep = { pending: new Float32Array(2 * BLEP_RADIUS + 2) };
   let register = 1;
   let phase = 0;
   let value = 1;
@@ -353,11 +370,11 @@ function renderNoise(
       register = (register >> 1) | (feedback << 14);
       const next = register & 1 ? -1 : 1;
       if (next !== value)
-        addBlep(out, n, Math.min(1, phase / Math.max(inc, 1e-9)), next - value, blep);
+        addBlep(out, n, n + 1 - Math.min(1, phase / Math.max(inc, 1e-9)), next - value, blep);
       value = next;
     }
-    out[n] += value + blep.pending;
-    blep.pending = 0;
+    out[n] += value + blep.pending[0];
+    shiftBlep(blep);
   }
 }
 

@@ -2,7 +2,7 @@
   "mastering": {
     "ceiling": 0.95,
     "fadeOutSeconds": 0.04,
-    "gainDb": -15.008,
+    "gainDb": -15.019,
     "limiter": {
       "knee": 0.28,
       "threshold": 0.7

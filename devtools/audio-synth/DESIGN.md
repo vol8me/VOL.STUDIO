@@ -385,9 +385,11 @@ perde sapması).
 
 Dalga 2/3 ilkelleri kenarlı osilatöre dayanmaz (faz döndürücü rezonatörler,
 gürültü/türbülans, zar tık dizisi; Dalga 3'ün ses kaynağı bant sınırlı
-darbe dizisidir). Kabul testleri PolyBLEP'in riskli bölgesini kullanmadığı
-için P3 maddesi açık kalır; sınır `audio:job context` içinde
-`polyblep-alias` sınırlaması olarak agent'a açıktır.
+darbe dizisidir). Kabul testlerinin eski PolyBLEP'in riskli bölgesini
+kullanmaması P3'ü uzun süre açık tuttu; F6a'da osilatör çekirdeği bant
+sınırlı basamak rezidüeline geçti (`waveforms.ts` `blepResidual`), ölçülen
+alias 3.6 kHz testerede −88.3 dB'ye indi ve `polyblep-alias` sınırlaması
+ölçüm karşısında yanlış pozitif verdiği için emekliye ayrıldı.
 
 ## Biyolojik yapı taşları
 
@@ -999,14 +1001,15 @@ kapısını geçer (`tests/program/chip.test.ts`).
 4-bit üçgen, testere, uzun/kısa LFSR (kısa kip 93 adımlık dizi; saat =
 perde × 93), 4-bit wavetable'lar ve özel tablo, hard sync, arpej, perde
 süpürmesi, gecikmeli vibrato, 16 basamaklı ses zarfı. Her süreksizlik (kenar,
-sarma, tablo basamağı, LFSR saati, sync sıfırlaması) iki örneklik PolyBLEP'le
-düzeltilir; bilinçli alias yalnız `bits`/`holdHz` aşamasından ve çıkış
-oranında gelir. Ölçülen alias (kafes yöntemi, 2× iç oran): darbe %25 233 Hz
-−64.3 dB, 3.6 kHz −53.5 dB; testere 917 Hz −56.3 dB (motorun PolyBLEP'iyle
-birebir aynı), 3.6 kHz −51.1 dB; 4-bit üçgen 917 Hz −83.2 dB; org tablosu
-3.6 kHz −59.3 dB; sync'li testere 917 Hz −51.7 dB. Sınırlar ölçülenin 2 dB
-üstünde kilitlidir (`tests/retro.test.ts`); daha yüksek dereceli bant
-sınırlama TODO'daki PolyBLEP maddesinin işidir. Müzikte `retro` kaynağı,
+sarma, tablo basamağı, LFSR saati, sync sıfırlaması) motorla aynı bant
+sınırlı basamak rezidüeliyle düzeltilir (`waveforms.ts` `blepResidual`);
+bilinçli alias yalnız `bits`/`holdHz` aşamasından ve çıkış oranında gelir.
+Ölçülen alias (kafes yöntemi, 2× iç oran, F6a çekirdeği): darbe %25
+233 Hz −90.7 dB, 3.6 kHz −90.7 dB; testere 917 Hz −89.0 dB, 3.6 kHz
+−88.3 dB; 4-bit üçgen 917 Hz −88.7 dB; org tablosu 3.6 kHz −88.6 dB;
+sync'li testere 917 Hz −89.3 dB. Sınırlar ölçülenin 2 dB üstünde
+kilitlidir (`tests/retro.test.ts`); tam ızgara
+`scripts/polyblep-alias-report.ts`. Müzikte `retro` kaynağı,
 akustik programda `source.retro` düğümüdür (UI, arcade SFX, gürültü).
 
 **Orkestrasyon** (`music/orchestration.ts`): şeridin görevi (`bass`,
@@ -1922,10 +1925,15 @@ en büyük örnek farkı 0.043.
 modülasyonu yalnız `fc + k·fm` çizgilerinde enerji taşır; işitilir bantta
 kafes dışında kalan güç / kafes gücü = alias (ölçülmüş alt sınır). Izgara
 (`pnpm --filter @volstudio/audio-synth exec tsx scripts/fm-alias-report.ts`,
-1200 nokta, taşıyıcı sinüs, 44.1 kHz) risk sınıflarını ve eşiklerini
-`FM_ALIAS_LIMITS`e (makine-okunur) yazar; `Analysis.assessFmAlias()` bir
-ayarı render etmeden değerlendirir. Seviye: güvenli ≤ −60 dB, dikkat ≤ −30 dB
-alias/sinyal.
+4800 nokta, dört taşıyıcı dalga × 110–5000 Hz, 44.1 kHz) risk sınıflarını ve
+eşiklerini `FM_ALIAS_LIMITS`e (makine-okunur) yazar; `Analysis.assessFmAlias()`
+bir ayarı render etmeden değerlendirir. Seviye: güvenli ≤ −60 dB, dikkat ≤
+−30 dB alias/sinyal. Index korumasının Δf=0'a sıkıştırdığı noktalar ölçümde
+yalnız taşıyıcının kendi kafes-dışı tabanını verir (ör. üçgen @ 5 kHz'de
+−43.3 dB); değerlendirme yalnız FM kaynaklı katlanmayı iddia ettiği için bu
+satırlar sınır türetmeye ve yanlış-"güvenli" sayımına girmez.
+
+**Sinüs taşıyıcı:**
 
 | Modülatör                   | Güvenli Δf (= I·fm) < | Dikkat Δf < | Izgaradaki en kötü |
 | --------------------------- | --------------------: | ----------: | -----------------: |
@@ -1934,16 +1942,36 @@ alias/sinyal.
 | sinüs, feedback > 0.1       |               27.5 Hz |      275 Hz |            −1.9 dB |
 | üçgen                       |               1250 Hz |    24690 Hz |           −19.2 dB |
 | üçgen + feedback            |               27.5 Hz |      440 Hz |            −3.4 dB |
-| testere / kare / pulse      |                110 Hz |      550 Hz |            −4.7 dB |
-| testere / kare / pulse + fb |               27.5 Hz |     27.5 Hz |            +3.4 dB |
+| testere / kare / pulse      |                110 Hz |      550 Hz |            −4.8 dB |
+| testere / kare / pulse + fb |               27.5 Hz |     27.5 Hz |           +13.9 dB |
+
+**Kenarlı taşıyıcı** (sawtooth/square/pulse): BLEP rezidüeli kenar
+zamanlamasını sabit faz adımıyla hesaplar; PM kenarı kaydırınca katkı birkaç
+dB hatayla yerleşir. Sinüs taşıyıcılı kenarlı modülatörden daha sıkıdır.
+
+| Modülatör              | Güvenli Δf < | Dikkat Δf < | Izgaradaki en kötü |
+| ---------------------- | -----------: | ----------: | -----------------: |
+| sinüs / üçgen, fb 0    |      27.5 Hz |      220 Hz |            −2.9 dB |
+| kenarlı mod. veya fb>0 |      27.5 Hz |     27.5 Hz |           +10.8 dB |
+
+**Üçgen taşıyıcı:** tablo basamakları PM altında kendi rezidüel hatasını
+verir; 5 kHz'de üçgen modülatörle Δf=10 kHz'te −30 dB kırılır, kenarlı
+modülatör ya da feedback birleşimi en küçük ölçülmüş sapmada (27.5 Hz)
+bile −30 dB'yi aşar.
+
+| Modülatör              | Güvenli Δf < | Dikkat Δf < | Izgaradaki en kötü |
+| ---------------------- | -----------: | ----------: | -----------------: |
+| sinüs / üçgen, fb 0    |       440 Hz |    10000 Hz |           −15.5 dB |
+| kenarlı mod. veya fb>0 |      27.5 Hz |     27.5 Hz |           +12.9 dB |
 
 Motorun index koruması yan bantları (Carson) iç Nyquist'in altında tutar;
 yeni decimator'la sinüs modülatör + feedback 0 bütün ızgarada −82 dB'nin
 altındadır (eski decimator'da fc 917 Hz / I 25 → −20.8 dB, fc 3572 Hz / I 8 →
 −22.4 dB). Risk sinüs olmayan modülatörde (sonsuz harmonik; koruma yalnız
-temeli sayar) ve feedback'te (modülatör harmonik kazanır; ≳ 0.3 döngüde
-periyodikliği kaybeder, kafes dışı enerji kaosu da içerir) kalır.
-Oversampling'i körlemesine artırmak bu iki kaynağı çözmez; kural onları
+temeli sayar), feedback'te (modülatör harmonik kazanır; ≳ 0.3 döngüde
+periyodikliği kaybeder, kafes dışı enerji kaosu da içerir) ve sinüs olmayan
+taşıyıcıda (PM'in taşıyıcı kenarına / tablo basamağına etkisi) kalır.
+Oversampling'i körlemesine artırmak bu kaynakları çözmez; kural onları
 görünür ve deterministik yapar. `tests/fmAlias.test.ts` her koşuda sınıf
 sınırlarını ölçer ve tahminin ölçümden iyimser olmadığını doğrular
 (tam ızgarada yanlış "güvenli" 0, iyimser "dikkat" 0).
@@ -2143,11 +2171,11 @@ envelope: { attack: 0.002, hold: 0.02, decay: 0.03, sustain: 0, release: 0.1, su
 ### Kısa seslerde dalga şekli
 
 Karanlık, profesyonel UI / SFX için `sine` tek başına en temiz ve en kontrollü
-seçenektir. `sawtooth`, `square` ve `pulse` PolyBLEP ile bant sınırlıdır ve tüm
-sentez 2x oversampling + halfband FIR ile decimate edilir (bkz. "Örnekleme ve
-alias"); yine de PolyBLEP'in kendi katlanması kalır — ölçülen: 917 Hz testere
-−54 dB, 3.6 kHz −47 dB (alias/sinyal). Parlak yüksek notalarda `lowpass` ile
-kesilmelidir.
+seçenektir. `sawtooth`, `square` ve `pulse` bant sınırlı basamak
+rezidüeliyle düzeltilir ve tüm sentez 2x oversampling + halfband FIR ile
+decimate edilir (bkz. "Örnekleme ve alias"); ölçülen alias 3.6 kHz
+testerede −88.3 dB, kareda −87.3 dB'dir
+(`scripts/polyblep-alias-report.ts`).
 
 ```typescript
 // Koyu, yumuşak UI blip
@@ -2225,8 +2253,10 @@ elle yazılmaz, çalışan koddan okunur (`audio:job context --json` →
 
 Ölçülmüş, bilinen sınırlar:
 
-- Kenarlı osilatörlerin (PolyBLEP) kendi katlanması: 917 Hz testere −54 dB,
-  3.6 kHz −47 dB alias/sinyal.
+- Kenarlı osilatörlerin katlanması F6a'da ölçülen marjın altına indi:
+  3.6 kHz testere −88.3 dB alias/sinyal (eski iki örneklik PolyBLEP'te
+  −47 dB idi); artık pratik bir sınırlama değil, karakterizasyon kaydıdır
+  (`scripts/polyblep-alias-report.ts`).
 - Paralel comb reverb tonal girdide renklenir (saf sinüste wet ±4 dB).
 - Master tavanları örnek tepesidir; kodek sonrası true peak onu aşabilir.
   4× true-peak sınırlayıcı `master.limiter` ile OPT-İNDİR; varsayılan zincir

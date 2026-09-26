@@ -11,9 +11,7 @@ import {
 } from '../../src/analysis/family';
 import { analyzeAudio } from '../../src/analysis/report';
 import { AudioParamError } from '../../src/guard/errors';
-import { limitationRisks } from '../../src/program/limitations';
 import { renderProgram } from '../../src/program/render';
-import { resolveProgram } from '../../src/program/schema';
 import { startAuditionServer } from '../../src/protocol/auditionServer';
 import { validateCanary, validateReviews } from '../../src/protocol/canary';
 import { prettyCanonicalJson } from '../../src/protocol/canonical';
@@ -215,40 +213,6 @@ describe('köken, canary ve inceleme belgeleri', () => {
 });
 
 describe('sınırlama riski, betimleyici ve denetim kenarları', () => {
-  const tone = (params: unknown, extra: Record<string, unknown> = {}) =>
-    resolveProgram({
-      schema: 'AcousticProgramV1',
-      sampleRate: 48000,
-      channels: 1,
-      durationSeconds: 0.2,
-      seed: 1,
-      ...extra,
-      layers: [{ name: 't', source: { primitive: 'source.oscillator', version: 1, params } }],
-    });
-  it('PolyBLEP riski: kare dalga, eşik altı sabit frekans ve sürülen frekans', () => {
-    expect(limitationRisks(tone({ waveform: 'square', frequency: 2000 }))).toEqual([
-      'polyblep-alias',
-    ]);
-    expect(limitationRisks(tone({ waveform: 'square', frequency: 500 }))).toEqual([]);
-    expect(limitationRisks(tone({ waveform: 'sine', frequency: 5000 }))).toEqual([]);
-    const driven = tone(
-      { waveform: 'sawtooth', frequency: { gesture: 'f' } },
-      {
-        gestures: {
-          f: {
-            curve: 'curve.linear',
-            version: 1,
-            points: [
-              [0, 200],
-              [0.2, 300],
-            ],
-          },
-        },
-      },
-    );
-    expect(limitationRisks(driven)).toEqual(['polyblep-alias']);
-  });
-
   it('betimleyiciler: 16 kHz girdi, sessizlik, boş sinyal ve 50 Hz sınır perdesi', () => {
     const sr = 16000;
     const x = Float32Array.from({ length: sr / 2 }, (_, i) =>

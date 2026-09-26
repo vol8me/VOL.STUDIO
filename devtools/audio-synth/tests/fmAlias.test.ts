@@ -9,7 +9,7 @@ import type { FmParams, Waveform } from '../src/types';
  *
  * Sözleşme "yanlış güvenli yok": kuralın `safe` dediği yerde ölçülen alias
  * güvenli eşiğin, `caution` dediği yerde dikkat eşiğinin üstüne çıkmaz. Tam
- * ızgara (1200 nokta) `scripts/fm-alias-report.ts` ile koşulur; burada sınıf
+ * ızgara (4800 nokta) `scripts/fm-alias-report.ts` ile koşulur; burada sınıf
  * sınırlarını ve bilinen en kötü noktaları taşıyan alt küme ölçülür.
  */
 
@@ -47,6 +47,13 @@ const CASES: Case[] = [
   // Sinüs olmayan taşıyıcı: kural onu kenarlı modülatör kadar riskli sayar.
   ['sawtooth', 220, { index: 2, ratio: 1 }],
   ['square', 880, { index: 1, ratio: 2 }],
+  // Üçgen taşıyıcı (sınıf-ayrımı regresyonu): kenarlı modülatör üçgen
+  // taşıyıcıda "edge"e değil carrier-triangle-feedback'e düşer — ölçüm
+  // Δf=27.5'te bile −30 dB'yi aşar; 5 kHz'te üçgen modülatörle Δf=10 kHz
+  // −30'u kırar. Bunlar tam ızgaranın eski yanlış-"güvenli" noktalarıdır.
+  ['triangle', 110, { modulatorWave: 'sawtooth', index: 0.5, ratio: 0.5, feedback: 0.3 }],
+  ['triangle', 440, { modulatorWave: 'square', index: 2, ratio: 1 }],
+  ['triangle', 5000, { modulatorWave: 'triangle', index: 2, ratio: 1 }],
 ];
 
 describe('FM alias — ölçülmüş risk sınırları', () => {

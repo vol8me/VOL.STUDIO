@@ -9,26 +9,6 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
 
 ## Açık
 
-- [ ] **[P3] Kenarlı osilatörlerin (PolyBLEP) kendi alias'ı ölçüldü; üst
-      notalarda duyulabilir bölgede.** Dalga 0 FM karakterizasyonu sırasında
-      FM'siz testere/kare de kafes yöntemiyle ölçüldü (halfband decimator
-      sonrası, 44.1 kHz): 233 Hz ≈ −69 dB, 917 Hz −54 dB, 3.6 kHz −47 dB
-      alias/sinyal. Decimator artık iç Nyquist altını katlamıyor; kalan pay
-      2 örneklik PolyBLEP düzeltmesinin iç örnek oranında bıraktığı
-      katlanmadır. Kapanır: kenarlı dalgalarda daha yüksek dereceli bant
-      sınırlama (ör. minBLEP/BLAMP ya da osilatör düzeyinde yerel aşırı
-      örnekleme) ölçülerek seçilir; 3.6 kHz testere alias'ı −70 dB altına
-      iner ve `scripts/fm-alias-report.ts` benzeri bir ızgarayla kilitlenir.
-      _Dalga 2/3 bağımlılık denetimi (2026-09-22): yeni ilkeller kenarlı
-      osilatöre dayanmıyor — perdeli organik kaynak `source.glottal` BLIT'tir
-      (1234.5 Hz'te harmonik dışı taban < −60 dB ölçüldü). Kabul testleri
-      riskli bölgeyi kullanmadığı için madde bilinçli olarak açık; sınır
-      agent'a `audio:job context` içindeki `polyblep-alias` ile açık._
-      _Dalga 11: retro çekirdek (`synthesis/retro.ts`) aynı iki örneklik
-      PolyBLEP sınıfındadır (testere birebir aynı ölçüldü); daha yüksek
-      dereceli çekirdek ona da uygulanır ve `tests/retro.test.ts` kilitleri
-      yeniden ölçülür._
-
 ## Yol haritası — agent-first genel amaçlı audio-authoring platformu
 
 > **Dalga 0**, yukarıdaki `## Açık` bölümündeki mevcut motor doğruluğu ve
@@ -874,3 +854,28 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       `Analysis.assessFmAlias`; paket "yanlış güvenli yok" sözleşmesini her
       koşuda ölçer. Ölçülmüş motor iyileştirmesi: halfband decimator (sinüs
       modülatör + feedback 0 tüm ızgarada ≤ −82 dB). (4d12cb1)
+- [x] **[P3] Kenarlı osilatörlerin (PolyBLEP) kendi alias'ı.** İki örneklik
+      PolyBLEP yerine durumsuz bant sınırlı basamak rezidüeli
+      (`waveforms.ts` `blepResidual`: ±16 örneklik Kaiser pencereli sinc
+      integrali) hem motor osilatörüne hem retro çekirdeğe uygulandı;
+      retro tarafında kenar-zamanı semantiği düzeltildi. Ölçüm ızgarası
+      `scripts/polyblep-alias-report.ts`: 3.6 kHz testere motor ve retro
+      −88.3 dB (F6a hedefi −70; eski çekirdek −47 idi), bütün ızgara
+      ≤ −87 dB. Kilitler `tests/oscillatorAlias.test.ts` (motor) ve
+      `tests/retro.test.ts` (retro), ölçülenin 2 dB üstünde.
+      `polyblep-alias` sınırlaması ve `limitationRisks` emekliye ayrıldı — >1 kHz risk bayrağı ölçülen değerlerle yanlış pozitif üretiyordu.
+      Bilinçli retro kırıntısı (`bits`/`holdHz`, çıkış oranında) korunuyor.
+      PM altında rezidüel kenar-zamanı hatası FM alias'ını kenarlı
+      taşıyıcıda ~3 dB kötüleştirdi; `FM_ALIAS_LIMITS`'e ölçülmüş
+      `carrier-edge`/`carrier-triangle` sınıfları eklendi. FM ızgarası
+      4800 noktaya (dört taşıyıcı dalga) genişletildi: üçgen taşıyıcı +
+      kenarlı modülatör sınıfı `carrier-triangle-feedback`'e ayrıldı,
+      `carrier-triangle` dikkat sınırı ölçülen ilk kırılıma (Δf=10 kHz)
+      indirildi; korumada Δf=0'a sıkışan noktalar taşıyıcı tabanı olarak
+      ayrı raporlanır (değerlendirme yalnız FM kaynaklı katlanmayı iddia
+      eder). Son ızgara: 4500 FM noktasında yanlış "güvenli" 0, iyimser
+      "dikkat" 0. `PROGRAM_RENDERER_VERSION`/`MUSIC_RENDERER_VERSION`
+      1→2; `reference-loop/mix` ve `reference-arcade` (mix, intro, ending,
+      power-up) kanonik `music publish` ile yeniden yayımlandı,
+      `encode-profiles.lock.json` yeniden ölçüldü; kalan 31 manifest
+      bit-eşit. (Dalga F6)

@@ -16,7 +16,6 @@ import {
   valueAt,
   type DimensionValue,
 } from '../program/dimensions';
-import { limitationRisks } from '../program/limitations';
 import { estimateProgramCost, PROGRAM_RENDERER_VERSION } from '../program/render';
 import { resolveProgram, type AcousticProgramV1 } from '../program/schema';
 import { hashCanonical, type Sha256 } from '../protocol/canonical';
@@ -173,7 +172,7 @@ export function planSearch(spec: AcousticSearchSpecV1): SearchPlan {
           peakBytes: cost.peakBytes,
           samples,
         },
-        risks: limitationRisks(resolved),
+        risks: [],
       };
       const twin = seen.get(programHash);
       if (twin !== undefined) {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { synth, limitBuffer, applyGlobalEffects } from '../src/engine';
 import { StereoWidener, Distortion, estimateDelayTail } from '../src/effects';
-import { getWaveSampleWithPhase } from '../src/synthesis/waveforms';
+import { blepResidual, getWaveSampleWithPhase } from '../src/synthesis/waveforms';
 import { Envelope } from '../src/synthesis/envelope';
 import { createRandom } from '@volstudio/core/random';
 import { writeWav } from '../src/writer';
@@ -92,13 +92,26 @@ describe('S3 — dikdörtgen dalga PolyBLEP', () => {
     }
   });
 
-  it('çıktı [-1, 1] aralığını aşmaz', () => {
+  it('çıktı bant sınırlı taşma payıyla sınırlı kalır', () => {
     for (const wave of ['square', 'pulse', 'sawtooth', 'sine', 'triangle'] as const) {
       for (let i = 0; i < 1000; i++) {
         const value = getWaveSampleWithPhase(wave, i / 1000, 0.3, 0.02);
-        // Dalga çıktısı [-1, 1] aralığında kalmalı.
-        expect(Math.abs(value), `${wave} @ ${i / 1000}`).toBeLessThanOrEqual(1.0001);
+        // BLEP basamağı kenar çevresinde ±~9% Gibbs lobu taşır; bunun
+        // ötesinde bir aşım düzeltme hatası olurdu.
+        expect(Math.abs(value), `${wave} @ ${i / 1000}`).toBeLessThanOrEqual(1.2);
       }
+    }
+  });
+
+  it('BLEP tablosunun üst hücre sınırında sonlu kalır', () => {
+    // `pos` kayan nokta hatasıyla tam son hücrenin üst kenarına düşünce
+    // `table[i+1]` taşar ve NaN üretirdi (subBass@81 Hz yakaladı).
+    expect(Number.isFinite(blepResidual(15.999999999999998))).toBe(true);
+    const inc = 81.61666305356016 / 44100;
+    let phase = 0;
+    for (let i = 0; i < 44100; i++) {
+      expect(Number.isFinite(getWaveSampleWithPhase('sawtooth', phase, 0.5, inc))).toBe(true);
+      phase = (phase + inc) % 1;
     }
   });
 });

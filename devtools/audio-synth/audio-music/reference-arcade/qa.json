@@ -8,39 +8,39 @@
   "segments": [
     {
       "id": "intro",
-      "integratedLufs": -26.853,
+      "integratedLufs": -26.839,
       "kind": "intro",
       "ok": true,
       "overlay": {
         "positions": 1,
-        "worstTruePeakDbtp": -3.782
+        "worstTruePeakDbtp": -3.742
       },
       "problems": [],
-      "samplePeak": 0.363987,
-      "truePeakDbtp": -8.724
+      "samplePeak": 0.364846,
+      "truePeakDbtp": -8.728
     },
     {
       "id": "ending",
-      "integratedLufs": -15.81,
+      "integratedLufs": -15.811,
       "kind": "outro",
       "ok": true,
       "overlay": null,
       "problems": [],
-      "samplePeak": 0.60663,
-      "truePeakDbtp": -4.215
+      "samplePeak": 0.60757,
+      "truePeakDbtp": -4.218
     },
     {
       "id": "power-up",
-      "integratedLufs": -24.344,
+      "integratedLufs": -24.293,
       "kind": "stinger",
       "ok": true,
       "overlay": {
         "positions": 32,
-        "worstTruePeakDbtp": -1.517
+        "worstTruePeakDbtp": -1.488
       },
       "problems": [],
-      "samplePeak": 0.212513,
-      "truePeakDbtp": -13.452
+      "samplePeak": 0.213849,
+      "truePeakDbtp": -13.398
     }
   ],
   "states": [
@@ -48,13 +48,13 @@
       "gains": {
         "main": 1
       },
-      "integratedLufs": -15.069,
+      "integratedLufs": -15.068,
       "intensity": 1,
       "ok": true,
       "problems": [],
-      "samplePeak": 0.633942,
+      "samplePeak": 0.633278,
       "state": "fixed",
-      "truePeakDbtp": -3.782
+      "truePeakDbtp": -3.742
     }
   ],
   "verdict": {

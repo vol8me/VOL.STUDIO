@@ -1,5 +1,3 @@
-import type { ResolvedProgram } from './schema';
-
 /**
  * Bilinen sınırlamalar — agent'a `context` çıktısıyla açılır. Her kayıt
  * ölçülmüş bir durumdur ya da bilinçli bir kapsam kararıdır; "yakında"
@@ -13,14 +11,6 @@ export interface KnownLimitation {
 }
 
 export const KNOWN_LIMITATIONS: readonly KnownLimitation[] = [
-  {
-    id: 'polyblep-alias',
-    affects: ['source.oscillator'],
-    description:
-      'Testere/kare PolyBLEP (2 örnek) ile düzeltilir ve program oranında aşırı örneklemesiz ' +
-      'çalışır; 44.1 kHz iç oranda ölçülen alias/sinyal 917 Hz −54 dB, 3.6 kHz −47 dB. Parlak ' +
-      'perdeli içerikte 1 kHz üstünde sinüs/üçgen ya da bant sınırlı bir kaynak tercih edilir.',
-  },
   {
     id: 'true-peak-limiter-opt-in',
     affects: ['master'],
@@ -185,33 +175,3 @@ export const KNOWN_LIMITATIONS: readonly KnownLimitation[] = [
       'olarak kesilir. Olay maliyeti render öncesi bütçeden geçer.',
   },
 ];
-
-/** PolyBLEP alias'ının ölçülüp duyulabilir bulunduğu bölge (bkz. `polyblep-alias`). */
-export const POLYBLEP_RISK_HZ = 1000;
-
-/**
- * Programın bilinen bir sınırlamanın ölçülmüş riskli bölgesine girip
- * girmediği. Muhafazakârdır: gesture/makro/modülasyona bağlı frekans en kötü
- * durumda eşiği aşabileceği için riskli sayılır. Riskli bir aday reddedilmez
- * ama raporda işaretlenir; hiçbir çıktı onu "production-safe" diye etiketlemez.
- */
-export function limitationRisks(program: ResolvedProgram): string[] {
-  const risks = new Set<string>();
-  for (const layer of program.layers) {
-    const { entry, params } = layer.source;
-    if (entry.id !== 'source.oscillator') continue;
-    if (params.waveform !== 'sawtooth' && params.waveform !== 'square') continue;
-    const f = params.frequency;
-    const fixed =
-      typeof f === 'number'
-        ? f
-        : typeof f === 'object' &&
-          typeof f.base === 'number' &&
-          f.controls.length === 0 &&
-          f.modulations.length === 0
-        ? f.base
-        : Infinity;
-    if (fixed > POLYBLEP_RISK_HZ) risks.add('polyblep-alias');
-  }
-  return [...risks].sort();
-}

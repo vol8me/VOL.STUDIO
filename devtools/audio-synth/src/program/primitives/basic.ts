@@ -51,14 +51,14 @@ export const OSCILLATOR: SourceEntry = {
   version: 1,
   description:
     'Faz biriktirmeli periyodik osilatör (sinüs tablosu, bant sınırlı üçgen tablosu, ' +
-    'PolyBLEP testere/kare). Program oranında çalışır; iç aşırı örnekleme yoktur.',
-  capabilities: ['pitched', 'periodic', 'polyblep'],
+    'BLEP testere/kare). Program oranında çalışır; iç aşırı örnekleme yoktur.',
+  capabilities: ['pitched', 'periodic', 'blep'],
   params: {
     waveform: {
       type: 'choice',
       choices: ['sine', 'triangle', 'sawtooth', 'square'],
       default: 'sine',
-      description: 'Dalga biçimi; kenarlı biçimler PolyBLEP ile düzeltilir.',
+      description: 'Dalga biçimi; kenarlı biçimler bant sınırlı basamak rezidüeliyle düzeltilir.',
     },
     frequency: frequencyParam('Temel frekans.', 440),
   },

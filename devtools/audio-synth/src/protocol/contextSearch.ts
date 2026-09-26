@@ -7,7 +7,7 @@ import {
 } from '../guard/batch';
 import { PROGRAM_REGISTRY } from '../program/catalog';
 import { MAX_DIMENSIONS, MAX_OPTIONS } from '../program/dimensions';
-import { POLYBLEP_RISK_HZ } from '../program/limitations';
+
 import { SEARCH_REPORT_SCHEMA } from '../search/report';
 import { SEARCH_SELECTION_SCHEMA } from '../search/selection';
 import { MAX_CANDIDATES, SEARCH_SPEC_SCHEMA } from '../search/spec';
@@ -109,9 +109,7 @@ export function searchContext(cli: string) {
         'filter',
       ],
     },
-    risks: {
-      'polyblep-alias': `testere/kare osilatör > ${POLYBLEP_RISK_HZ} Hz (ya da sürülen frekans); aday işaretlenir, production-safe denmez`,
-    },
+    risks: {},
     workflow: [
       'search plan',
       'search run',

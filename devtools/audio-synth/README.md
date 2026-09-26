@@ -67,7 +67,8 @@ list|run [--audition] [--json]|review` — 19 canary + görevler tek raporda
   testleri
 - `scripts/` — `audio-job` CLI'ı ve alt komutları (`scripts/lib/`), QA
   (`audio-qa`, `audio-reference-check`), karakterizasyon (`fm-alias-report`,
-  `render-budget-bench`, `resonator-bench`), sample fixture üreticisi,
+  `polyblep-alias-report`, `render-budget-bench`, `resonator-bench`),
+  sample fixture üreticisi,
   render yüzeyi kilidi, kodlama taban çizgisi, dinleme paketi ve dönüştürücü
 - `export/` — yerel üretim ve dinleme çıktısı (izlenmez)
 

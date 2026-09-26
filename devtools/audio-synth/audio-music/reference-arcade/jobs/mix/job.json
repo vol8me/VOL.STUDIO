@@ -1,6 +1,10 @@
 {
   "artifacts": {
     "analyses": {
+      "r-f0782e15f39e295a": {
+        "hash": "sha256:84c726f95e46e4d94c84fc2ef37a7cf19740bc78c3ebd846430aead37bcc8c77",
+        "path": "analyses/r-f0782e15f39e295a.json"
+      },
       "r-f9f884d6b5e629f2": {
         "hash": "sha256:9e4123d140e288e96f4f723d135f3efaaf12ce6396143403a40ffdec64aab5b6",
         "path": "analyses/r-f9f884d6b5e629f2.json"
@@ -12,28 +16,32 @@
     },
     "program": {
       "brief": "sha256:f7fdffa29c18db46f58dc1519daf1e7497a5aed6e5947f7f30699e9b79e60070",
-      "hash": "sha256:4f663ab960a08c3fb6d67566082346518ef5a1d5df88bf91b63cec1e069978ae",
+      "hash": "sha256:589b7ac05e44a782da6ded390784c9b5d11bd153b867511b313988a031f57dbe",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:bbede703b72cb74bb7bdd3b0ae17095cf556fdeb227f141d1a961faa33fc2cea",
+      "hash": "sha256:4b95232475b1fd2f56db7f4c9c34000cfe2c2d8db5707190b6b09addd06509be",
       "path": "devtools/audio-synth/reference/production/manifests/music/reference-arcade/mix.json"
     },
     "renders": {
+      "r-f0782e15f39e295a": {
+        "hash": "sha256:cb0ecaf49177ea5e437690bb1c8bbc9762898b2e60c0ee34a0efa3bf80295c6b",
+        "path": "renders/r-f0782e15f39e295a.json"
+      },
       "r-f9f884d6b5e629f2": {
         "hash": "sha256:467a34a845d0e253924b1db52b51e349f2cc87beadec907c2a1a28b082be40e7",
         "path": "renders/r-f9f884d6b5e629f2.json"
       }
     },
     "selection": {
-      "hash": "sha256:7b38137943f8361deee63b8606f1c06263e44ba98f94e0e5f32f46a4ade6faf1",
+      "hash": "sha256:61f0e18bc734a17df312d16c8d17abc753d81c2842ff73dcb5942e968691caac",
       "path": "selection.json"
     }
   },
   "jobId": "mix",
   "kind": "music",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 11,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

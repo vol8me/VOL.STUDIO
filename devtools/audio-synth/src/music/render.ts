@@ -14,7 +14,7 @@ import { planVoices, voiceSecondsBound, type VoiceContext } from './voices';
  * kadar sürer ve taşan kuyruk başa sarılır (dikişsiz), tek seferlik cue
  * kuyruk payı alır ve sonradan kırpılır.
  */
-export const MUSIC_RENDERER_VERSION = 1;
+export const MUSIC_RENDERER_VERSION = 2;
 
 /** Tek seferlik cue'da son notadan sonra bırakılan pay. */
 export const ONE_SHOT_TAIL_SECONDS = 3;

@@ -45,21 +45,108 @@ function tableLookup(table: Float32Array, phase: number): number {
 }
 
 /**
- * PolyBLEP düzeltmesi — bir süreksizlik noktasındaki aliasing'i azaltır.
- * Yükselen kenarda EKLENİR, düşen kenarda ÇIKARILIR.
+ * Bant sınırlı basamak düzeltmesi (BLEP rezidüeli) — süreksizliğin ±`BLEP_RADIUS`
+ * örnek komşuluğuna Kaiser pencereli sinc integraliyle dağıtılır. İki örneklik
+ * PolyBLEP'in iç oranda bıraktığı katlanmayı ≈90 dB durdurma bandına indirir
+ * (ölçüm: `scripts/polyblep-alias-report.ts` ızgarası).
+ *
+ * Çekirdek durumsuzdur: her örnek, penceresi içine düşen bütün kenarların
+ * rezidüel katkısını toplar — durum nesnesi gerekmez, tek örneklik çağrılar
+ * (`getWaveSampleWithPhase`) ile birikimli mimari (`retro.ts` `addBlep`) aynı
+ * çekirdeği paylaşır.
  */
-function polyblep(phase: number, inc: number): number {
-  // Süreksizlikten hemen sonra
-  if (phase < inc) {
-    const t = phase / inc;
-    return t + t - t * t - 1;
+export const BLEP_RADIUS = 16;
+const BLEP_SUBSTEPS = 64;
+const BLEP_BETA = 8.6;
+
+let bandStepTable: Float32Array | null = null;
+
+/** Düzenli terimli Bessel I0 — sinc'in hangi deterministik ortamda aynı değeri verir. */
+function besselI0(x: number): number {
+  let sum = 1;
+  let term = 1;
+  const y = (x * x) / 4;
+  for (let k = 1; k < 64; k++) {
+    term *= y / (k * k);
+    sum += term;
+    if (term < 1e-12 * sum) break;
   }
-  // Süreksizlikten hemen önce (faz sarmadan)
-  if (phase > 1 - inc) {
-    const t = (phase - 1) / inc;
-    return t * t + t + t + 1;
+  return sum;
+}
+
+/** Kaiser penceresi, `u ∈ [-1, 1]`. */
+function kaiser(u: number): number {
+  const a = Math.abs(u);
+  if (a >= 1) return 0;
+  return besselI0(BLEP_BETA * Math.sqrt(1 - a * a)) / besselI0(BLEP_BETA);
+}
+
+/**
+ * Bant sınırlı birim basamak `b(Δ)` tablosu (Δ örnek cinsinden uzaklık):
+ * `∫ sinc·Kaiser` kümülatif integrali, `b(−K)=0`, `b(K)=1` normalize.
+ * İlk kullanımda bir kez üretilir; tamamen kapalı biçim — deterministiktir.
+ */
+function getBandStepTable(): Float32Array {
+  if (bandStepTable) return bandStepTable;
+  const len = 2 * BLEP_RADIUS * BLEP_SUBSTEPS + 1;
+  const table = new Float32Array(len);
+  const dx = 1 / (BLEP_SUBSTEPS * 8);
+  const kernel = (u: number) =>
+    (u === 0 ? 1 : Math.sin(Math.PI * u) / (Math.PI * u)) * kaiser(u / BLEP_RADIUS);
+  let total = 0;
+  for (let u = -BLEP_RADIUS + dx / 2; u < BLEP_RADIUS; u += dx) total += kernel(u) * dx;
+  let acc = 0;
+  let cursor = -BLEP_RADIUS;
+  for (let i = 0; i < len; i++) {
+    const target = -BLEP_RADIUS + i / BLEP_SUBSTEPS;
+    while (cursor < target) {
+      acc += kernel(cursor + dx / 2) * dx;
+      cursor += dx;
+    }
+    table[i] = acc / total;
   }
-  return 0;
+  table[len - 1] = 1;
+  bandStepTable = table;
+  return table;
+}
+
+/** Bant sınırlı birim basamağın değeri (`Δ` örnek cinsinden, lineer ara değer). */
+function bandStep(delta: number): number {
+  if (delta <= -BLEP_RADIUS) return 0;
+  if (delta >= BLEP_RADIUS) return 1;
+  const table = getBandStepTable();
+  const pos = (delta + BLEP_RADIUS) * BLEP_SUBSTEPS;
+  // `pos` kayan nokta hatasıyla son hücrenin üst kenarına düşebilir;
+  // `i+1`'in tablo dışına taşmaması için üstten kelepçelenir.
+  const i = Math.min(Math.floor(pos), table.length - 2);
+  const frac = pos - i;
+  return table[i] + (table[i + 1] - table[i]) * frac;
+}
+
+/**
+ * Birim basamak rezidüeli: `b(Δ) − u(Δ)` — naif basamağa eklenince bant
+ * sınırlı basamağı verir. `d` örnek cinsinden kenara uzaklık (negatif = kenar
+ * öncesi). |d| ≥ `BLEP_RADIUS` ise katkı sıfırdır.
+ */
+export function blepResidual(d: number): number {
+  if (d <= -BLEP_RADIUS || d >= BLEP_RADIUS) return 0;
+  return bandStep(d) - (d >= 0 ? 1 : 0);
+}
+
+/**
+ * Faz ekseninde `at + k` konumlarındaki `h` genlikli sıçramaların bu örneğe
+ * rezidüel katkısı. `inc` örnek başına faz artışıdır; pencere içine düşen
+ * bütün periyotlar toplanır (yüksek inc'te komşu kenarlar üst üste biner).
+ */
+function edgeCorrection(phase: number, at: number, h: number, inc: number): number {
+  const span = BLEP_RADIUS * inc;
+  let sum = 0;
+  const first = Math.ceil(phase - at - span);
+  const last = Math.floor(phase - at + span);
+  for (let k = first; k <= last; k++) {
+    sum += h * blepResidual((phase - at - k) / inc);
+  }
+  return sum;
 }
 
 /**
@@ -71,10 +158,9 @@ function rectangleSample(phase: number, pulseWidth: number, phaseInc: number): n
   let sample = phase < pulseWidth ? 1 : -1;
 
   if (phaseInc > 0) {
-    // 0'da yükselen kenar (+2 sıçrama) → BLEP eklenir.
-    sample += polyblep(phase, phaseInc);
-    // pulseWidth'te düşen kenar (-2 sıçrama) → BLEP çıkarılır.
-    sample -= polyblep((phase - pulseWidth + 1) % 1, phaseInc);
+    // 0'da yükselen kenar (+2 sıçrama), pulseWidth'te düşen kenar (−2).
+    sample += edgeCorrection(phase, 0, 2, phaseInc);
+    sample += edgeCorrection(phase, pulseWidth, -2, phaseInc);
   }
 
   return sample;
@@ -104,7 +190,7 @@ export function getWaveSampleWithPhase(
     case 'sawtooth': {
       let sample = 2 * phase - 1;
       if (phaseInc > 0) {
-        sample -= polyblep(phase, phaseInc);
+        sample += edgeCorrection(phase, 0, -2, phaseInc);
       }
       return sample;
     }

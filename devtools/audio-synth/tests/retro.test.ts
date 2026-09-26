@@ -132,7 +132,13 @@ describe('retro çekirdek', RENDER_BLOCK, () => {
 
   it('4-bit zarf seviyesi 16 basamaktır', () => {
     const stepped: RetroEnvelopeV1 = { attack: 0, decay: 0.5, sustain: 0, release: 0, steps: 16 };
-    const x = render(osc('table-square-4bit', { interpolate: false }), pitch(55), 0.5, stepped, 1);
+    // Kenarsız kaynak: sabit tabloda |x| = zarf değeridir; BLEP kenar lobu
+    // basamak sayımına karışmaz.
+    const flat = {
+      ...osc('table-square-4bit', { interpolate: false }),
+      table: [1, 1, 1, 1, 1, 1, 1, 1],
+    };
+    const x = render(flat, pitch(55), 0.5, stepped, 1);
     const envelope = new Set<number>();
     for (let i = 0; i < x.length; i += 401) envelope.add(Math.round(Math.abs(x[i]) * 1e4));
     expect(envelope.size).toBeLessThanOrEqual(17);
@@ -176,19 +182,19 @@ describe('retro çekirdek', RENDER_BLOCK, () => {
 
 /**
  * Kenar alias'ı ÖLÇÜLEREK kilitlenir (kafes yöntemi, 2× iç oran): ölçülen
- * değerin 2 dB üstü sınırdır. Kenarlı dalgalar motorun PolyBLEP'iyle aynı
- * sınıftadır (testere birebir aynı ölçüldü); daha yüksek dereceli bant
- * sınırlama TODO'daki PolyBLEP maddesinin işidir.
+ * değerin 2 dB üstü sınırdır. PolyBLEP kenar-zamanı düzeltmesi sonrası tüm
+ * ızgara −87 dB altına indi; güncel ızgara `scripts/polyblep-alias-report.ts`
+ * ile koşulur. F6a hedefi 3.6 kHz testerede −70 dB idi; ölçülen −88.3 dB.
  */
 describe('retro alias kilidi', RENDER_BLOCK, () => {
   const limits: [RetroWaveform, Partial<RetroOscillatorV1>, number, number][] = [
-    ['pulse', { duty: 0.25 }, 233, -62],
-    ['pulse', { duty: 0.25 }, 3600, -51],
-    ['sawtooth', {}, 917, -54],
-    ['sawtooth', {}, 3600, -49],
-    ['triangle-4bit', {}, 917, -81],
-    ['table-organ', {}, 3600, -57],
-    ['sawtooth', { syncRatio: 2.5 }, 917, -49],
+    ['pulse', { duty: 0.25 }, 233, -88],
+    ['pulse', { duty: 0.25 }, 3600, -88],
+    ['sawtooth', {}, 917, -87],
+    ['sawtooth', {}, 3600, -86],
+    ['triangle-4bit', {}, 917, -86],
+    ['table-organ', {}, 3600, -86],
+    ['sawtooth', { syncRatio: 2.5 }, 917, -87],
   ];
   it.each(limits)('%s %j @ %d Hz ≤ %d dB', (waveform, over, f, limit) => {
     expect(aliasDb(render(osc(waveform, over), pitch(f)), f)).toBeLessThanOrEqual(limit);

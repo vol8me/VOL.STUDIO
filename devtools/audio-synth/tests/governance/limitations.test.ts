@@ -3,11 +3,7 @@ import { MUSIC_ASSET_SPEC_SCHEMA } from '@volstudio/core/audio/music';
 import { instrumentIds, INSTRUMENT_PREFIX } from '../../src/music/instruments';
 import { MUSIC_PROGRAM_SCHEMA } from '../../src/music/program';
 import { PROGRAM_REGISTRY } from '../../src/program/catalog';
-import {
-  KNOWN_LIMITATIONS,
-  limitationRisks,
-  type KnownLimitation,
-} from '../../src/program/limitations';
+import { KNOWN_LIMITATIONS, type KnownLimitation } from '../../src/program/limitations';
 import { PROGRAM_PLAN_SCHEMA } from '../../src/program/planner';
 import { ACOUSTIC_PROGRAM_SCHEMA, resolveProgram } from '../../src/program/schema';
 import { STYLE_PROFILES, type StyleProfileV1 } from '../../src/program/styles';
@@ -99,12 +95,8 @@ describe('bilinen sınırlamaların kimlikleri', () => {
     expect(resolved.master.peakDbfs).toBeDefined();
   });
 
-  it('kimlikler tekil; limitationRisks yalnız kayıtlı sınırlamaya işaret eder', () => {
+  it('kimlikler tekil', () => {
     const ids = KNOWN_LIMITATIONS.map((l: KnownLimitation) => l.id);
     expect(new Set(ids).size).toBe(ids.length);
-    const risky = limitationRisks(program('sawtooth', 1500));
-    expect(risky).toEqual(['polyblep-alias']);
-    for (const risk of risky) expect(ids).toContain(risk);
-    expect(limitationRisks(program('sine', 200))).toEqual([]);
   });
 });

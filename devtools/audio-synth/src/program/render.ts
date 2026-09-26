@@ -48,7 +48,7 @@ import {
  * aynı PCM'i verir. Render yolunda çıktıyı değiştiren bir değişiklik bu
  * sayıyı artırır; manifest onu kaydeder.
  */
-export const PROGRAM_RENDERER_VERSION = 1;
+export const PROGRAM_RENDERER_VERSION = 2;
 
 const FLOAT32_BYTES = 4;
 const MASTER_WORK_PER_FRAME = 6;

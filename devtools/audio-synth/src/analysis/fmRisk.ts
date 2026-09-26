@@ -10,18 +10,31 @@ export type FmModulatorClass =
   | 'triangle'
   | 'triangle-feedback'
   | 'edge'
-  | 'edge-feedback';
+  | 'edge-feedback'
+  | 'carrier-edge'
+  | 'carrier-edge-feedback'
+  | 'carrier-triangle'
+  | 'carrier-triangle-feedback';
 
 /**
  * Ölçülmüş FM alias sınırları — makine-okunur.
  *
- * Kaynak: `scripts/fm-alias-report.ts` ızgarası (taşıyıcı sinüs; modülatör
+ * Kaynak: `scripts/fm-alias-report.ts` ızgarası (taşıyıcı
+ * sine/triangle/sawtooth/square × 110–5000 Hz; modülatör
  * sine/triangle/sawtooth/square/pulse; index 0.5–20; oran 0.5–3.5; feedback
- * 0/0.1/0.3; taşıyıcı 110–5000 Hz; 44.1 kHz; 1200 nokta). Ölçü: işitilir
+ * 0/0.1/0.3; 44.1 kHz; 4800 nokta). Ölçü: işitilir
  * bantta (≤ 0.4535·fs) `fc + k·fm` kafesi dışındaki güç / kafes gücü.
  * Eşik, o sınıfta seviyeyi ilk bozan ölçülmüş tepe sapmasıdır (Δf = I·fm);
  * altında kalan her ızgara noktası o seviyede ölçüldü; `null` sınırsız
  * demektir. Başka örnek oranlarında sapma eşiği oranla ölçeklenir.
+ * Korumada Δf=0'a sıkışan noktalar FM'siz taşıyıcı tabanını ölçer;
+ * değerlendirmenin kapsamı dışındadır, sınır türetmede kullanılmaz.
+ *
+ * `carrier-*` sınıfları PM'in taşıyıcı kenarına etkisini taşır: BLEP
+ * rezidüeli kenar-zamanlamasını sabit faz adımıyla hesaplar, faz modülasyonu
+ * kenarı kaydırınca rezidüel katkısı birkaç dB hatayla yerleşir — kenarlı
+ * taşıyıcı, kenarlı modülatörden daha sıkı sınırlara sahiptir (F6a
+ * kalibrasyonu).
  */
 export const FM_ALIAS_LIMITS = {
   version: 1,
@@ -35,6 +48,18 @@ export const FM_ALIAS_LIMITS = {
     'triangle-feedback': { safeBelowHz: 27.5, cautionBelowHz: 440 },
     edge: { safeBelowHz: 110, cautionBelowHz: 550 },
     'edge-feedback': { safeBelowHz: 27.5, cautionBelowHz: 27.5 },
+    // Kenarlı taşıyıcı (sawtooth/square/pulse): ölçülen ilk kırılım
+    // güvenli bölge için ızgaranın en küçük sapması, dikkat için Δf=220;
+    // kenarlı modülatör ya da feedback birleşince 27.5'te bozuluyor.
+    'carrier-edge': { safeBelowHz: 27.5, cautionBelowHz: 220 },
+    'carrier-edge-feedback': { safeBelowHz: 27.5, cautionBelowHz: 27.5 },
+    // Üçgen taşıyıcı: tablo basamakları PM altında kendi rezidüel hatasını
+    // verir; sinüs taşıyıcılı üçgen modülatörden daha erken bozulur.
+    // 5 kHz'de üçgen modülatörle Δf=10 kHz'te −30 dB sınırı kırılır
+    // (en küçük kırılım); kenarlı modülatör ya da feedback birleşiminde
+    // ızgaranın en küçük sapması (27.5) zaten −30'u aşar.
+    'carrier-triangle': { safeBelowHz: 440, cautionBelowHz: 10000 },
+    'carrier-triangle-feedback': { safeBelowHz: 27.5, cautionBelowHz: 27.5 },
   } satisfies Record<
     FmModulatorClass,
     { safeBelowHz: number | null; cautionBelowHz: number | null }
@@ -56,11 +81,20 @@ export interface FmAliasAssessment {
 function classify(fm: FmParams, carrierWave: Waveform): FmModulatorClass {
   const feedback = Math.abs(fm.feedback ?? 0);
   const wave = fm.modulatorWave ?? 'sine';
-  // Sinüs olmayan taşıyıcı PM altında PolyBLEP varsayımını (sabit faz adımı)
-  // bozar; kenarlı modülatör kadar riskli sayılır.
-  if (carrierWave !== 'sine' || wave === 'sawtooth' || wave === 'square' || wave === 'pulse') {
-    return feedback > 0 ? 'edge-feedback' : 'edge';
+  const modEdge = wave === 'sawtooth' || wave === 'square' || wave === 'pulse';
+  // Kenarlı ya da periyodik olmayan taşıyıcı PM altında BLEP'in sabit faz
+  // adımı varsayımını bozar; ölçüm sinüs taşıyıcılı kenarlı modülatörden
+  // daha kötüdür, kendi sınıfı vardır. Kenarlı modülatör ya da feedback
+  // birleşimi en kötü duruma sayılır.
+  if (carrierWave !== 'sine' && carrierWave !== 'triangle') {
+    return feedback > 0 || modEdge ? 'carrier-edge-feedback' : 'carrier-edge';
   }
+  // Üçgen taşıyıcının tablo basamakları PM altında kendi ölçülmüş
+  // sınırlarını verir; kenarlı modülatör birleşimi feedback'e denk sayılır.
+  if (carrierWave === 'triangle') {
+    return feedback > 0 || modEdge ? 'carrier-triangle-feedback' : 'carrier-triangle';
+  }
+  if (modEdge) return feedback > 0 ? 'edge-feedback' : 'edge';
   if (wave === 'triangle') return feedback > 0 ? 'triangle-feedback' : 'triangle';
   if (feedback === 0) return 'sine';
   return feedback <= LIGHT_FEEDBACK ? 'sine-light-feedback' : 'sine-heavy-feedback';
