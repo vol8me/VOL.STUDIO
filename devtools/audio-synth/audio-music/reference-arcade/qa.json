@@ -21,26 +21,26 @@
     },
     {
       "id": "ending",
-      "integratedLufs": -15.811,
+      "integratedLufs": -16.422,
       "kind": "outro",
       "ok": true,
       "overlay": null,
       "problems": [],
-      "samplePeak": 0.60757,
-      "truePeakDbtp": -4.218
+      "samplePeak": 0.596563,
+      "truePeakDbtp": -4.471
     },
     {
       "id": "power-up",
-      "integratedLufs": -24.293,
+      "integratedLufs": -24.379,
       "kind": "stinger",
       "ok": true,
       "overlay": {
         "positions": 32,
-        "worstTruePeakDbtp": -1.488
+        "worstTruePeakDbtp": -1.457
       },
       "problems": [],
-      "samplePeak": 0.213849,
-      "truePeakDbtp": -13.398
+      "samplePeak": 0.216619,
+      "truePeakDbtp": -13.286
     }
   ],
   "states": [

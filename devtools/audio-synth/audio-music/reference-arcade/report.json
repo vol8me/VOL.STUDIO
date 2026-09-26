@@ -45,10 +45,10 @@
       "value": 0.2825
     },
     {
-      "detail": "hedef sırayla uyum 1",
+      "detail": "hedef sırayla uyum 0.8333",
       "name": "section-contrast",
       "ok": true,
-      "value": 1
+      "value": 0.8333
     }
   ],
   "lanes": [
@@ -134,7 +134,7 @@
     9
   ],
   "policyVersion": 1,
-  "programHash": "sha256:943f2916d8a87882bf10fc51de8407230eb5a027f660f47a4371f1720b5ffae8",
+  "programHash": "sha256:0fc4a5a617043741ced6fa1e0bd6bed5f5e2b36e9506cfe25bfbb2bbc49bf209",
   "roles": [
     {
       "density": {
@@ -220,7 +220,7 @@
   ],
   "rules": [],
   "schema": "MusicSymbolicReportV1",
-  "scoreHash": "sha256:caa02b69f28f20e485d23719e1a716dc015faf04915ea277c833e936453f83cd",
+  "scoreHash": "sha256:ff2def5bb9b8917a5f26f24c38ff272b7c1dcef5d7f0bcad17aca16709eb9419",
   "sections": [
     {
       "activeLanes": 2,
@@ -262,7 +262,7 @@
       "measuredEnergy": 0.3268,
       "notesPerBar": 15,
       "role": "outro",
-      "targetEnergy": 0.55
+      "targetEnergy": 0.42
     },
     {
       "activeLanes": 2,

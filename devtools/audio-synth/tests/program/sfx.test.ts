@@ -3,6 +3,7 @@ import { estimatePitch } from '../../src/analysis/descriptors';
 import { analyzeAudio } from '../../src/analysis/report';
 import { measureLoopSeam } from '../../src/analysis/seam';
 import { expandArchetype } from '../../src/program/archetype';
+import { PROGRAM_REGISTRY } from '../../src/program/catalog';
 import { renderProgram } from '../../src/program/render';
 import { soundGraph } from '../../src/program/soundGraph';
 import { hashPcm } from '../../src/protocol/canonical';
@@ -15,7 +16,7 @@ import { centroid, envelopeRate, peakFrequency } from '../support/measure';
  */
 const node = (primitive: string, params: Record<string, unknown> = {}) => ({
   primitive,
-  version: 1,
+  version: PROGRAM_REGISTRY.get(primitive).version,
   params,
 });
 function single(

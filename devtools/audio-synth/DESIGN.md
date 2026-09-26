@@ -1461,12 +1461,15 @@ kayıtlı bir dinleme kararı ister.
 | ---------- | --- | --------------------- | ------- | ------------------- | ----- | ----------------------------- |
 | ui         | 4   | q6                    | q6      | 17815 → 20449       | 240.6 | ort. 1.32, p95 0.19 dB        |
 | sfx        | 7   | q7                    | q7      | 60963 → 78444       | 87.2  | ort. 0.33, p95 0.86 dB        |
-| ambience   | 3   | q3                    | q4      | 524277              | 131.1 | ort. 0.41, p95 1.09, ΔLU 0.43 |
+| ambience   | 3   | q6                    | q6      | 970436              | 242.6 | ort. 0.33, p95 0.81, ΔLU 0.34 |
 | music      | 4   | q2                    | q4      | 374495              | 76.0  | ort. 0.25, p95 0.75 dB        |
 | music-stem | 4   | q3                    | q4      | 138456              | 44.9  | ort. 0.30, p95 1.16 dB        |
 
 q4'te 60 ms'lik UI blip'inde ortalama bant hatası 4.31 dB, lazer sfx'te p95
-3.97 dB ölçüldü; profil bu yüzden yükseldi. Kısa seste boyutu Vorbis başlığı
+3.97 dB ölçüldü; profil bu yüzden yükseldi. Ambiyans korpusu v2
+wind/rain/fire primitifleriyle yeniden ölçüldüğünde keskin genişbant
+transientler (`addBurst`) q4 ölçütünü aşamadı → ambience q6'ya çekildi
+(dinleme turu 2 sonrası). Kısa seste boyutu Vorbis başlığı
 belirler: 10 ms sessizlik mono 3639 B, stereo 4322 B. UI korpusunda q4 → q8
 baytı yalnız ≈%24 büyütür, gürültülü ambiyansta ≈3.3 kat.
 

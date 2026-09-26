@@ -28,7 +28,7 @@
               "name": "wind",
               "source": {
                 "primitive": "source.wind",
-                "version": 1,
+                "version": 2,
                 "params": {
                   "speed": 9,
                   "gustiness": 0.55,
@@ -42,7 +42,7 @@
               "gainDb": -14,
               "source": {
                 "primitive": "source.rain",
-                "version": 1,
+                "version": 2,
                 "params": {
                   "intensity": 450,
                   "dropSize": 2,

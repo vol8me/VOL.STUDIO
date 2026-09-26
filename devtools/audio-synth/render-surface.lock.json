@@ -230,8 +230,8 @@
       "hash": "sha256:65aabc71b9f6a460f0abf189dbf93fdbabbce25fa8f91606f71b95585888acf9"
     },
     "source.fire": {
-      "version": 1,
-      "hash": "sha256:51d75c3c15e111addb0de26fd81e67d8a5353f430874f4b75e7aea8e9fbc1b00"
+      "version": 2,
+      "hash": "sha256:33da18406450b5eba8586e81fccdf24f3e94ff5ac1680b104b40b69414f01a27"
     },
     "source.friction": {
       "version": 1,
@@ -270,8 +270,8 @@
       "hash": "sha256:2356f7e48539c60b39edfbd3ca1287f94e8902e6d4bbda072d5476c6ca7e02a3"
     },
     "source.rain": {
-      "version": 1,
-      "hash": "sha256:dda56b4814e695e00dd50f7ad7c22c3eef3dfb444a133e603beb005f9d3309ee"
+      "version": 2,
+      "hash": "sha256:3a70cf47244175c5f7606c35b7d920ce90ceccbad122500d60ff4a00ce2b3f50"
     },
     "source.retro": {
       "version": 1,
@@ -286,8 +286,8 @@
       "hash": "sha256:a2c1d4bbb8c3e5f2293b9cb58cfbf3e91e49c068b12c9620636a460022169f3a"
     },
     "source.wind": {
-      "version": 1,
-      "hash": "sha256:53d347128be7b5d796265ec0e401624161c30a97a195eb98fd149b362a6e8ca5"
+      "version": 2,
+      "hash": "sha256:82c80f31f31c0bdc8ccbcded5512331ec14b4f56d074e33f00719d4ad41a071e"
     }
   }
 }

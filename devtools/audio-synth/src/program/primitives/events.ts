@@ -152,6 +152,41 @@ export function scheduleFrom(
 }
 
 /**
+ * Genişbant basınç darbesi TOPLAR: tohumlu beyaz gürültü × tek-kutuplu
+ * HP/LP şekli × asimetrik zarf. Tonal sönümlü sinüsün (`addGrain`) aksine
+ * kalıcı rezonansı yoktur — ateş çatırtısı ve sert yüzey damla tıkı gibi
+ * "şak/tık" karakterli fiziksel darbeler içindir. `body` Hz HP köşesidir
+ * (patlamanın kütle merkezi); üst uç `body·topRatio` ile yumuşatılır.
+ * Sınır: olay tamponun sonunda kesilir.
+ */
+export function addBurst(
+  out: Float32Array,
+  start: number,
+  gain: number,
+  bodyHz: number,
+  decaySeconds: number,
+  random: Random,
+  sampleRate: number,
+  topRatio = 6,
+): number {
+  const length = Math.min(out.length - start, Math.ceil(decaySeconds * sampleRate));
+  const k = Math.log(1000) / (decaySeconds * sampleRate);
+  const hp = Math.exp((-2 * Math.PI * bodyHz) / sampleRate);
+  const lp = Math.exp((-2 * Math.PI * Math.min(bodyHz * topRatio, 0.4 * sampleRate)) / sampleRate);
+  const attack = Math.max(1, Math.round(0.0014 * sampleRate));
+  let low = 0;
+  let top = 0;
+  for (let n = 0; n < length; n++) {
+    const w = random.bipolar();
+    low += (1 - hp) * (w - low);
+    top += (1 - lp) * (w - low - top);
+    const env = (n < attack ? n / attack : 1) * Math.exp(-k * n);
+    out[start + n] += gain * env * top;
+  }
+  return Math.max(0, length);
+}
+
+/**
  * Tek olayı tampona TOPLAR: sönümlü sinüs `f` Hz, `decay` T60, başlangıçta
  * perde `chirp` oranında kayar. Sınır: olay tamponun sonunda kesilir.
  */

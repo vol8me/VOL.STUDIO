@@ -10,11 +10,11 @@
       "gains": {
         "main": 1
       },
-      "integratedLufs": -16.259,
+      "integratedLufs": -16.487,
       "intensity": 1,
       "ok": true,
       "problems": [],
-      "samplePeak": 0.7975,
+      "samplePeak": 0.79741,
       "state": "fixed",
       "truePeakDbtp": -1.96
     }

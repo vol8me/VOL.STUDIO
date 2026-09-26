@@ -308,7 +308,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       kaydeder, verify yeniden sınar. Kanıt: `tests/protocol/layout.test.ts`.
       (Dalga 12)
 - [x] **[P2] Encode profili asset sınıfına göre.** Vorbis kalitesi ölçülerek
-      seçildi (ui q6, sfx q7, ambience/music/stem q4; taban q4, düşürmek
+      seçildi (ui q6, sfx q7, ambience q6, music/stem q4; taban q4, düşürmek
       dinleme ister); 22 öğelik korpusta q0–q10 bayt + kodek sonrası sadakat
       taraması `encode-profiles.lock.json`da. Tablo ölçümden ayrışırsa
       `audio:encode-baseline` kilidi yazmaz. Kanıt:

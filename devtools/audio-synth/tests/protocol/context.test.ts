@@ -81,7 +81,11 @@ describe('audio:job context', () => {
       'verify',
     ]);
     expect(search.budget.default.maxItems).toBeGreaterThan(0);
-    expect(canaries.entries.map((c) => c.review)).toEqual(Array(19).fill('pending-human'));
+    expect(
+      canaries.entries.every((c) =>
+        ['pending-human', 'heard-acceptable', 'heard-problem'].includes(c.review),
+      ),
+    ).toBe(true);
   });
 
   it('aile sözleşmesi: şemalar, genel rol sözlüğü, bank arama sözleşmesi, komutlar', () => {

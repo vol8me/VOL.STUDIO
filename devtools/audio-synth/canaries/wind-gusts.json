@@ -1,7 +1,7 @@
 {
   "schema": "OrganicCanaryV1",
   "id": "wind-gusts",
-  "version": 1,
+  "version": 2,
   "title": "Rüzgar esintisi",
   "purpose": "source.wind: çok ölçekli esinti zarfı + hızla ölçeklenen spektral hareket.",
   "source": {
@@ -22,8 +22,13 @@
           "name": "wind",
           "source": {
             "primitive": "source.wind",
-            "version": 1,
-            "params": {}
+            "version": 2,
+            "params": {
+              "speed": 9,
+              "gustiness": 0.6,
+              "gustScale": 1.3,
+              "whistle": 0.35
+            }
           }
         }
       ]

@@ -9,21 +9,21 @@
     "rendererVersion": 2
   },
   "music": {
-    "hash": "sha256:943f2916d8a87882bf10fc51de8407230eb5a027f660f47a4371f1720b5ffae8",
+    "hash": "sha256:0fc4a5a617043741ced6fa1e0bd6bed5f5e2b36e9506cfe25bfbb2bbc49bf209",
     "musicId": "reference-arcade",
     "path": "devtools/audio-synth/audio-music/reference-arcade/music.json",
     "playback": "loop",
     "seed": 20260924,
-    "version": 1
+    "version": 2
   },
   "package": "@volstudio/audio-synth",
   "qa": {
-    "hash": "sha256:1890c1de113755e6e98ab274095a0da0c48975bd59371ec5ead0fba610fcfe59",
+    "hash": "sha256:10362dc4d850ec1efd93e34787ba6264a68fa4fd9c648dfc5260036cf69378cd",
     "pass": true,
     "path": "devtools/audio-synth/audio-music/reference-arcade/qa.json"
   },
   "report": {
-    "hash": "sha256:e01d72f9377b8b93c71ae26475740e473b0975c723e837a2685f072a8ca5eaf5",
+    "hash": "sha256:6745624235b5605d04fa5e76a05a8eb0aceff4af4adc7d4c43ae9349f3c56206",
     "pass": true,
     "path": "devtools/audio-synth/audio-music/reference-arcade/report.json"
   },
@@ -42,7 +42,7 @@
       {
         "bars": 2,
         "file": "reference/production/assets/music/reference-arcade/ending.ogg",
-        "frames": 228580,
+        "frames": 261852,
         "id": "ending",
         "kind": "outro"
       },
@@ -50,7 +50,7 @@
         "align": "beat",
         "bars": 1,
         "file": "reference/production/assets/music/reference-arcade/power-up.ogg",
-        "frames": 175554,
+        "frames": 191528,
         "id": "power-up",
         "kind": "stinger"
       }
@@ -105,7 +105,7 @@
       "id": "mix",
       "integratedLufs": -15.064670803138965,
       "manifest": {
-        "hash": "sha256:4b95232475b1fd2f56db7f4c9c34000cfe2c2d8db5707190b6b09addd06509be",
+        "hash": "sha256:83eca729e481d3c4dd4aa2864f26e9be45848dd822b5e26edb9fc378015aaa34",
         "path": "reference/production/manifests/music/reference-arcade/mix.json"
       },
       "pcmHash": "sha256:ab46e49fbf1ca7f01797d53df3061bf39336d2ced137120730fdf8dca0c8aab7",
@@ -121,7 +121,7 @@
       "id": "intro",
       "integratedLufs": -26.959217000255606,
       "manifest": {
-        "hash": "sha256:905511de0126708f29d66f00860f07d556891033a120c123d53971fe93939dac",
+        "hash": "sha256:79a681de2df82f4a877819245a7b89708a6801fa6b2e1f5dffd927ca46049605",
         "path": "reference/production/manifests/music/reference-arcade/intro.json"
       },
       "pcmHash": "sha256:b5639086b719e4625163409b9a019157b0aeed4bb97accfbe8846765540019d1",
@@ -129,35 +129,35 @@
     },
     {
       "asset": {
-        "bytes": 75244,
-        "encodedHash": "sha256:47d07c5e6c725eb2afc10c7d5fb8120764b19f27c789d1e498051dd939279bf9",
+        "bytes": 81219,
+        "encodedHash": "sha256:14246b63e9a57e7506ca4732f773567bc1a07b79bc09afb6b88c987e9dd29da2",
         "path": "reference/production/assets/music/reference-arcade/ending.ogg"
       },
-      "frames": 228580,
+      "frames": 261852,
       "id": "ending",
-      "integratedLufs": -15.811367022710405,
+      "integratedLufs": -16.41429864846112,
       "manifest": {
-        "hash": "sha256:c9cfbc74a29a3a3aa1cf92e89f7a80b684b11e3cccbd0e0352f5364fc02ca5c4",
+        "hash": "sha256:2ae5ef6c735403691c5dbcb12fa251fc061a4f4f66d298583983d62294bcbb5a",
         "path": "reference/production/manifests/music/reference-arcade/ending.json"
       },
-      "pcmHash": "sha256:6c8651409314dc0bef52f417aede03a7b0c252c5dccf897c5115af1f8b1b0a8d",
-      "truePeakDbtp": -4.266255961525883
+      "pcmHash": "sha256:ef9751bd6e92bdc259b979c8828a99234e267c4187e6d930ba7fe32285238cd6",
+      "truePeakDbtp": -4.489305012966888
     },
     {
       "asset": {
-        "bytes": 48697,
-        "encodedHash": "sha256:be44b6cdb091c63d48eeed6bd5f4c76e5f970a37fb15f4f09cb7cfdd68b6a85e",
+        "bytes": 53478,
+        "encodedHash": "sha256:23ce9753fede3690d91cffc7fc4c127412a8dfc5db8fb2eb0d57ac2b64ff4479",
         "path": "reference/production/assets/music/reference-arcade/power-up.ogg"
       },
-      "frames": 175554,
+      "frames": 191528,
       "id": "power-up",
-      "integratedLufs": -24.424138027552015,
+      "integratedLufs": -24.50527919419693,
       "manifest": {
-        "hash": "sha256:6d142b675b78e652860bdb07a4746f25acac2e3fcf18f39fae05851793aa9505",
+        "hash": "sha256:2508268ee2e53c042c2423802d16f90df43a02319876838f177e79a67a8c7d5e",
         "path": "reference/production/manifests/music/reference-arcade/power-up.json"
       },
-      "pcmHash": "sha256:5843615b10253dbd21fc98ff00a9066be269aacf3a43ebb9b0ac5413ecf6761e",
-      "truePeakDbtp": -13.49980228483709
+      "pcmHash": "sha256:fec90cb91280d8d6ac509bec64cabfcc1aac1d0d995d8454ddb445ae1c35452e",
+      "truePeakDbtp": -13.573544111031783
     }
   ],
   "sync": {

@@ -33,16 +33,16 @@
       "ok": true
     },
     {
-      "detail": "8.75 nota/ölçü, \"moderate\" bandı [3, 10]",
+      "detail": "9.5 nota/ölçü, \"moderate\" bandı [3, 10]",
       "name": "rhythmic-density",
       "ok": true,
-      "value": 8.75
+      "value": 9.5
     },
     {
-      "detail": "ölçülen 0.2, beyan 0.2",
+      "detail": "ölçülen 0.1842, beyan 0.2",
       "name": "melodic-salience",
       "ok": true,
-      "value": 0.2
+      "value": 0.1842
     },
     {
       "detail": "hedef sırayla uyum 1",
@@ -59,14 +59,14 @@
   ],
   "lanes": [
     {
-      "events": 9,
+      "events": 13,
       "highMidi": 45,
       "id": "bass",
       "instrument": "preset:subBass",
-      "lowMidi": 38,
+      "lowMidi": 36,
       "maxPolyphony": 1,
-      "meanMidi": 42.33,
-      "notesPerBar": 2.25,
+      "meanMidi": 41.69,
+      "notesPerBar": 3.25,
       "role": "bass"
     },
     {
@@ -81,42 +81,48 @@
       "role": "keys"
     },
     {
-      "events": 8,
+      "events": 7,
       "highMidi": 79,
       "id": "lead",
       "instrument": "preset:harp",
       "lowMidi": 60,
       "maxPolyphony": 2,
-      "meanMidi": 69.75,
-      "notesPerBar": 2,
+      "meanMidi": 70.29,
+      "notesPerBar": 1.75,
       "role": "pluck"
     }
   ],
   "motifs": [
     {
       "chain": "transpose",
-      "instances": 8,
+      "instances": 4,
       "motif": "call",
       "variationId": "m-023dac070ceb"
+    },
+    {
+      "chain": "kaynak",
+      "instances": 3,
+      "motif": "answer",
+      "variationId": "m-8711cb8c9a66"
     }
   ],
   "musicId": "reference-loop",
   "pitchClasses": [
-    6,
+    7,
     0,
     2,
     0,
-    8,
-    6,
-    0,
-    3,
-    0,
     9,
+    7,
+    0,
+    2,
+    0,
+    10,
     0,
     1
   ],
   "policyVersion": 1,
-  "programHash": "sha256:856643a6e01c4815166b9caab341105b0f6d0c7105fc64fbe4b39c9ddcc1af79",
+  "programHash": "sha256:a752885006ec7b02bba56aab43a40db882bb3eb3e9d47a7dbdddbf4a7988d102",
   "rules": [
     {
       "detail": "6 eşzamanlı",
@@ -126,7 +132,7 @@
       "ruleId": "max-polyphony"
     },
     {
-      "detail": "8.75 nota/ölçü",
+      "detail": "9.5 nota/ölçü",
       "ok": true,
       "overridden": false,
       "rule": "parça başına en çok 24 nota/ölçü",
@@ -162,7 +168,7 @@
     }
   ],
   "schema": "MusicSymbolicReportV1",
-  "scoreHash": "sha256:dedf77d8e57a74dadd570c13ac5bfd950ad03b3c35045ba0638c0a5c85076e2f",
+  "scoreHash": "sha256:c9f4a823118b6f53946b7d6e652f8b872798dc658b808eda5c38f4083874d9a6",
   "sections": [
     {
       "activeLanes": 2,
@@ -170,13 +176,13 @@
         0,
         2
       ],
-      "events": 10,
+      "events": 12,
       "harmonicChangesPerBar": 1,
       "id": "intro",
       "measuredEnergy": 0,
-      "notesPerBar": 5,
+      "notesPerBar": 6,
       "role": "intro",
-      "targetEnergy": 0.35
+      "targetEnergy": 0.45
     },
     {
       "activeLanes": 3,
@@ -184,24 +190,24 @@
         2,
         4
       ],
-      "events": 25,
+      "events": 26,
       "harmonicChangesPerBar": 2,
       "id": "body",
       "measuredEnergy": 1,
-      "notesPerBar": 12.5,
+      "notesPerBar": 13,
       "role": "body",
       "targetEnergy": 0.85
     }
   ],
   "totals": {
     "bars": 4,
-    "events": 35,
+    "events": 38,
     "maxPolyphony": 6,
-    "melodicSalience": 0.2,
-    "motifInstances": 8,
-    "notesPerBar": 8.75,
+    "melodicSalience": 0.1842,
+    "motifInstances": 7,
+    "notesPerBar": 9.5,
     "outOfSystemRatio": 0,
-    "uniqueVariations": 1
+    "uniqueVariations": 2
   },
   "transitions": [],
   "unchecked": [

@@ -74,7 +74,7 @@
         "trailingSilenceSeconds": 0.334965986394558
       }
     },
-    "sourceRecordHash": "sha256:310b9f637cf10fa03b116d472307abf02871f60f61b66620fdd1876e35468ed7"
+    "sourceRecordHash": "sha256:1ae92b425299658e70e85c93aaaf4577374602be7ada81bbea3f3593f974802e"
   },
   "asset": {
     "bytes": 53515,
@@ -201,7 +201,7 @@
     "runtime": {
       "node": "v22.23.1"
     },
-    "sourceCommit": "58384bbf73712a07a3829787a1daa6dc9fbeec46",
+    "sourceCommit": "9d1f89d367377a14321836ba5de6a8a75a76c05a",
     "sourceTreeDirty": true
   },
   "integration": {
@@ -438,10 +438,10 @@
                   "note": "A#2"
                 },
                 {
-                  "gainDb": -5,
+                  "gainDb": -9,
                   "macros": {
-                    "decay": 0.55,
-                    "tone": 0.6
+                    "decay": 0.85,
+                    "tone": 0.45
                   },
                   "model": "cymbal",
                   "note": "C#3"
@@ -662,7 +662,7 @@
               },
               {
                 "note": "C#3",
-                "steps": "X... .... .... ...."
+                "steps": "x... .... .... ...."
               }
             ],
             "stepBeats": 0.25,
@@ -1452,9 +1452,6 @@
                     "beats": 1.5
                   },
                   {
-                    "articulations": [
-                      "accent"
-                    ],
                     "bar": 1,
                     "beat": 0,
                     "beats": 3.5
@@ -1498,7 +1495,7 @@
               }
             ],
             "role": "outro",
-            "targetEnergy": 0.55
+            "targetEnergy": 0.42
           },
           {
             "bars": [
@@ -1593,12 +1590,12 @@
             "seconds": 0.05
           }
         ],
-        "version": 1
+        "version": 2
       },
       "schema": "MusicStemProgramV1",
       "stem": "intro"
     },
-    "hash": "sha256:bfb00f69940f82294299d4464a8992852d35f3e2f4c9e2968533d41d4f153f2e",
+    "hash": "sha256:6ae1d974a36735e49296eb7f0f703dea7469a5177310ca9db0ad0d2d1535b1cc",
     "schema": "MusicStemProgramV1"
   },
   "render": {
@@ -1609,7 +1606,7 @@
       "hash": "sha256:b5639086b719e4625163409b9a019157b0aeed4bb97accfbe8846765540019d1",
       "sampleRate": 44100
     },
-    "renderId": "r-2f07d6c16604712c",
+    "renderId": "r-a94054685741bb8b",
     "rendererVersion": 2,
     "seed": 20260924
   },

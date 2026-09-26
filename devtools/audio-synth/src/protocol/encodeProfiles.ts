@@ -35,7 +35,7 @@ export const ENCODE_POLICY = {
   classes: {
     ui: { quality: 6 },
     sfx: { quality: 7 },
-    ambience: { quality: 4 },
+    ambience: { quality: 6 },
     music: { quality: 4 },
     'music-stem': { quality: 4 },
   } satisfies Record<AssetClass, { readonly quality: number }>,

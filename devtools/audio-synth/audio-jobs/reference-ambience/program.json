@@ -1,6 +1,6 @@
 {
   "channels": 2,
-  "description": "Referans ambiyans: rüzgar tabanı + hafif düzenli yağmur; dikişsiz döngü.",
+  "description": "Referans ambiyans: esintili rüzgar tabanı + seyrek çeşitli damla; dikişsiz döngü.",
   "durationSeconds": 16,
   "layers": [
     {
@@ -12,32 +12,32 @@
       "role": "texture",
       "source": {
         "params": {
-          "gustScale": 1.4,
-          "gustiness": 0.6,
-          "speed": 9,
-          "whistle": 0.18
+          "gustScale": 1.6,
+          "gustiness": 0.55,
+          "speed": 8,
+          "whistle": 0.3
         },
         "primitive": "source.wind",
-        "version": 1
+        "version": 2
       }
     },
     {
       "durationSeconds": 16,
-      "gainDb": -14,
+      "gainDb": -13,
       "mechanism": "rain",
       "name": "rain-patter",
       "pan": 0.18,
       "role": "texture",
       "source": {
         "params": {
-          "dropSize": 1.8,
-          "hiss": 0.35,
-          "intensity": 950,
-          "surface": 0.55,
-          "variability": 0.45
+          "dropSize": 2.4,
+          "hiss": 0.15,
+          "intensity": 240,
+          "surface": 0.22,
+          "variability": 0.65
         },
         "primitive": "source.rain",
-        "version": 1
+        "version": 2
       }
     }
   ],

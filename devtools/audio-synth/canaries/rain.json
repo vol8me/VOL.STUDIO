@@ -1,7 +1,7 @@
 {
   "schema": "OrganicCanaryV1",
   "id": "rain",
-  "version": 1,
+  "version": 2,
   "title": "Yağmur",
   "purpose": "source.rain: damla nüfusu (Minnaert kabarcıkları) + zemin hışırtısı.",
   "source": {
@@ -22,8 +22,14 @@
           "name": "rain",
           "source": {
             "primitive": "source.rain",
-            "version": 1,
-            "params": {}
+            "version": 2,
+            "params": {
+              "intensity": 170,
+              "dropSize": 2.2,
+              "surface": 0.3,
+              "hiss": 0.18,
+              "variability": 0.55
+            }
           }
         }
       ]

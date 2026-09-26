@@ -9,21 +9,21 @@
     "rendererVersion": 2
   },
   "music": {
-    "hash": "sha256:856643a6e01c4815166b9caab341105b0f6d0c7105fc64fbe4b39c9ddcc1af79",
+    "hash": "sha256:a752885006ec7b02bba56aab43a40db882bb3eb3e9d47a7dbdddbf4a7988d102",
     "musicId": "reference-loop",
     "path": "devtools/audio-synth/audio-music/reference-loop/music.json",
     "playback": "loop",
     "seed": 20260922,
-    "version": 1
+    "version": 2
   },
   "package": "@volstudio/audio-synth",
   "qa": {
-    "hash": "sha256:5325a0777390d20e86866ec09f813b98424aa4a24a00466961c212ab0186f5bd",
+    "hash": "sha256:6225a3006f34df8cee453e904a1db1c016d959c555356300394b16ebcea7a809",
     "pass": true,
     "path": "devtools/audio-synth/audio-music/reference-loop/qa.json"
   },
   "report": {
-    "hash": "sha256:ae51f6da3a7484d128f5cae34663c6c72a101b6fc1bd0d26dcca771fa88ef7ad",
+    "hash": "sha256:edfb901ddb3a3b804cbfa9f26419850979f4b69621da6cda5be9c006866aef29",
     "pass": true,
     "path": "devtools/audio-synth/audio-music/reference-loop/report.json"
   },
@@ -40,8 +40,8 @@
       "startBar": 0
     },
     "mastering": {
-      "gainDb": -3.249,
-      "integratedLufs": -16.259,
+      "gainDb": -2.947,
+      "integratedLufs": -16.487,
       "path": "loop-cyclic",
       "truePeakDbtp": -1.96
     },
@@ -66,19 +66,19 @@
   "stems": [
     {
       "asset": {
-        "bytes": 68051,
-        "encodedHash": "sha256:8ef529a32fc6ed1197b1e06b31272ed8161bad9f220e4c0aca059acf844fdd2b",
+        "bytes": 69801,
+        "encodedHash": "sha256:5f25ddc9ca78ff68b6b4ab5cd9d09cd786ec00526221a2d002b8ee9d6f9b910f",
         "path": "reference/production/assets/music/reference-loop/mix.ogg"
       },
       "frames": 441000,
       "id": "mix",
-      "integratedLufs": -16.26125653958082,
+      "integratedLufs": -16.47310901483837,
       "manifest": {
-        "hash": "sha256:daa8c04aa97b88eb27ff52e9f61bd848a08f0154b9c220f3ec0d8af9f5d0cc91",
+        "hash": "sha256:531de4236a66e10f46ab62458677d65eee63a14293c6f526587cb7e03db0b0db",
         "path": "reference/production/manifests/music/reference-loop/mix.json"
       },
-      "pcmHash": "sha256:75ca185b66d985c66e02de3df2ce57ad2d3e3b0e6ab08a26c32ce97fa1e751ff",
-      "truePeakDbtp": -2.067996193244295
+      "pcmHash": "sha256:78c586b94ed47ea06a62d07eb3d71399b53f4adf5e5e43e9569f3e0b146f2b37",
+      "truePeakDbtp": -2.1359423401793247
     }
   ],
   "sync": {
@@ -95,11 +95,11 @@
     "ok": true,
     "seams": [
       {
-        "detail": "dikiş sürekli (adım 0.0032 ≤ 2×0.0464)",
+        "detail": "dikiş sürekli (adım 0.0022 ≤ 2×0.0418)",
         "id": "mix",
-        "jump": 0.003249,
+        "jump": 0.002186,
         "ok": true,
-        "typicalStep": 0.04642
+        "typicalStep": 0.041834
       }
     ]
   },

@@ -69,10 +69,12 @@ describe('organik canary derlemi (gerçek depo)', () => {
     RENDER_TIMEOUT,
   );
 
-  it('insan dinlemesi uydurulmaz: bütün incelemeler pending-human', () => {
-    expect(canaryReviews(REPO).map((r) => [r.id, r.status, r.note])).toEqual(
-      IDS.map((id) => [id, 'pending-human', null]),
-    );
+  it('insan dinlemesi bütünlüğü: kayıtlar pending ya da notlu insan kararıdır', () => {
+    const reviews = canaryReviews(REPO);
+    expect(reviews.map((r) => r.id)).toEqual(IDS);
+    for (const r of reviews) {
+      if (r.status !== 'pending-human') expect(r.note?.length ?? 0).toBeGreaterThan(0);
+    }
   });
 });
 

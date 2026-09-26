@@ -5,13 +5,13 @@
       "analyzerVersion": 1,
       "dc": {
         "channelOffset": [
-          0.000014644123038866358,
-          0.000025214010500507
+          0.00002160302591515833,
+          -0.000017017527636708014
         ]
       },
       "defects": {
         "clicks": {
-          "count": 4,
+          "count": 0,
           "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
         },
         "clips": {
@@ -31,54 +31,54 @@
       },
       "level": {
         "channelPeakDbfs": [
-          -10.67488142806896,
-          -10.341633713959652
+          -8.91845935913102,
+          -10.675650288453657
         ],
         "channelRmsDbfs": [
-          -25.853879835197855,
-          -26.818057848426943
+          -22.967631056131044,
+          -24.713919126987697
         ],
-        "crestFactorDb": 15.967632730619513,
-        "integratedLufs": -22.613808563824552,
-        "maxMomentaryLufs": -20.224998937988843,
-        "rmsDbfs": -26.309266444579166,
-        "samplePeakDbfs": -10.341633713959652,
-        "truePeakDbtp": -10.341633713959652
+        "crestFactorDb": 14.835128438643782,
+        "integratedLufs": -20.523649765910946,
+        "maxMomentaryLufs": -17.54571570678982,
+        "rmsDbfs": -23.753587797774802,
+        "samplePeakDbfs": -8.91845935913102,
+        "truePeakDbtp": -8.91845935913102
       },
       "measuredFrom": "decoded-encoded",
       "schema": "AudioAnalysisReportV1",
       "spectral": {
         "bandsDb": {
-          "air": -48.40572456546795,
-          "high": -34.51251015917548,
-          "low": -31.20022540439759,
-          "mid": -29.81392210667994,
-          "sub": -39.42750133837138
+          "air": -45.09329083214004,
+          "high": -34.93517495604748,
+          "low": -28.172259427686882,
+          "mid": -26.801876090384702,
+          "sub": -37.28696942661552
         },
-        "centroidHz": 1273.8093107696027,
-        "flatness": 0.0006525024213349535,
-        "peakHz": 257.8125,
-        "rolloff85Hz": 2625
+        "centroidHz": 1027.5897065423733,
+        "flatness": 0.021245655164031044,
+        "peakHz": 398.4375,
+        "rolloff85Hz": 1546.875
       },
       "stereo": {
-        "correlation": 0.9649089495891859,
-        "width": 0.14467873593434688
+        "correlation": 0.9938307743686497,
+        "width": 0.11459153678455432
       },
       "temporal": {
         "activeSeconds": 12,
-        "attackSeconds": 6.23,
+        "attackSeconds": 6.36,
         "decay40Seconds": null,
         "leadingSilenceSeconds": 0,
-        "peakTimeSeconds": 6.92,
-        "temporalCentroidSeconds": 5.944373155445478,
+        "peakTimeSeconds": 7.03,
+        "temporalCentroidSeconds": 5.9850519856085524,
         "trailingSilenceSeconds": 0
       }
     },
-    "sourceRecordHash": "sha256:81d16d32a85f0d33f1bec3403af1ab44a22b82cbdacfd23906b4d5347596875c"
+    "sourceRecordHash": "sha256:3656a6ee58769e82893681a1461f9ee07ed892c805d7b7aae457b390e480fd8e"
   },
   "asset": {
-    "bytes": 145021,
-    "encodedHash": "sha256:6b7f62f4da54db6d70cb27a7c3d672634bad6aa04fe72de858def101fc5b9444",
+    "bytes": 215881,
+    "encodedHash": "sha256:8e8eb07618100d5ecb76dd0ae6c9dc5b484c7486b6490803f8777ea86f34cd0d",
     "format": "ogg-vorbis",
     "path": "devtools/audio-synth/reference/production/assets/ambience/reference-ambience.ogg"
   },
@@ -124,17 +124,17 @@
       "-c:a",
       "libvorbis",
       "-q:a",
-      "4",
+      "6",
       "-bitexact"
     ],
     "codec": "libvorbis",
-    "fingerprint": "sha256:88fd7a2ee7fa953241bd18f901647268901215fb58debd913cb9dfd26ef43998",
+    "fingerprint": "sha256:b00d7604f9b7b8a7ac20149aa9906f77744dc75347ed9b13bf49b57ffd48ca6e",
     "libraries": {
       "libavcodec": "62.28.102",
       "libavformat": "62.12.102",
       "libavutil": "60.26.102"
     },
-    "quality": 4,
+    "quality": 6,
     "tool": "ffmpeg",
     "unreported": [
       "libvorbis"
@@ -142,26 +142,26 @@
     "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
   },
   "encoding": {
-    "policyHash": "sha256:4995c93a1714f448fc486b3365eea0d041ecc778f26b7b5b30935a46ec028376",
-    "quality": 4,
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 6,
     "scheme": "encode-profile-v1"
   },
   "engine": {
     "package": "@volstudio/audio-synth",
     "packageVersion": "0.1.0",
-    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
+    "registryHash": "sha256:b0dcc627132330d93102c80c6660a6ead77341063bd88dc539fa5829b56921dc",
     "renderSurface": {
-      "hash": "sha256:916327dbbecb1b7e9da366c044911d33100454cffcf2ca1215b37706262273a0",
+      "hash": "sha256:ee9c05baf33233d6f5f9d23b9cf7dab2d3f81dd4bb209cecdaeebe0e17ac58e3",
       "nodes": [
         {
-          "hash": "sha256:dda56b4814e695e00dd50f7ad7c22c3eef3dfb444a133e603beb005f9d3309ee",
+          "hash": "sha256:3a70cf47244175c5f7606c35b7d920ce90ceccbad122500d60ff4a00ce2b3f50",
           "id": "source.rain",
-          "version": 1
+          "version": 2
         },
         {
-          "hash": "sha256:53d347128be7b5d796265ec0e401624161c30a97a195eb98fd149b362a6e8ca5",
+          "hash": "sha256:82c80f31f31c0bdc8ccbcded5512331ec14b4f56d074e33f00719d4ad41a071e",
           "id": "source.wind",
-          "version": 1
+          "version": 2
         }
       ],
       "scheme": "render-surface-v1"
@@ -170,7 +170,7 @@
     "runtime": {
       "node": "v22.23.1"
     },
-    "sourceCommit": "17e4841efc7b0a3ae3a92bd5aa7e87e8d8044baf",
+    "sourceCommit": "9d1f89d367377a14321836ba5de6a8a75a76c05a",
     "sourceTreeDirty": true
   },
   "integration": {
@@ -188,11 +188,11 @@
   "layout": {
     "channels": 2,
     "image": {
-      "correlation": 0.965,
+      "correlation": 0.994,
       "dualMono": false,
       "method": "stereo-image-v1",
-      "monoFoldLossDb": 0.108,
-      "sideDb": -16.792
+      "monoFoldLossDb": 0.063,
+      "sideDb": -18.817
     },
     "placement": "bed",
     "scheme": "channel-layout-v1"
@@ -206,7 +206,7 @@
   "program": {
     "document": {
       "channels": 2,
-      "description": "Referans ambiyans: rüzgar tabanı + hafif düzenli yağmur; dikişsiz döngü.",
+      "description": "Referans ambiyans: esintili rüzgar tabanı + seyrek çeşitli damla; dikişsiz döngü.",
       "durationSeconds": 16,
       "layers": [
         {
@@ -218,32 +218,32 @@
           "role": "texture",
           "source": {
             "params": {
-              "gustScale": 1.4,
-              "gustiness": 0.6,
-              "speed": 9,
-              "whistle": 0.18
+              "gustScale": 1.6,
+              "gustiness": 0.55,
+              "speed": 8,
+              "whistle": 0.3
             },
             "primitive": "source.wind",
-            "version": 1
+            "version": 2
           }
         },
         {
           "durationSeconds": 16,
-          "gainDb": -14,
+          "gainDb": -13,
           "mechanism": "rain",
           "name": "rain-patter",
           "pan": 0.18,
           "role": "texture",
           "source": {
             "params": {
-              "dropSize": 1.8,
-              "hiss": 0.35,
-              "intensity": 950,
-              "surface": 0.55,
-              "variability": 0.45
+              "dropSize": 2.4,
+              "hiss": 0.15,
+              "intensity": 240,
+              "surface": 0.22,
+              "variability": 0.65
             },
             "primitive": "source.rain",
-            "version": 1
+            "version": 2
           }
         }
       ],
@@ -262,7 +262,7 @@
       "schema": "AcousticProgramV1",
       "seed": 4107
     },
-    "hash": "sha256:02bfc2231cb0f6046189c4ebf7b27661dd8d999d0faaec5de6949d91d60c1a08",
+    "hash": "sha256:a333149f8f27332e910d1a8e52bb8d67fef77385e22caf70a9a40ae8220d1234",
     "schema": "AcousticProgramV1"
   },
   "render": {
@@ -270,20 +270,20 @@
       "channels": 2,
       "format": "f32le-interleaved-clamped",
       "frames": 576000,
-      "hash": "sha256:9e491be9ba272483b0fb1a14b757952e8d8e172c06e39046fe0a1d11df325693",
+      "hash": "sha256:27f9b0775236529ac2edd7b909108885fe5729f432513b7d877ce404d1f9d343",
       "sampleRate": 48000
     },
-    "renderId": "r-ef5cc0526c51f20a",
+    "renderId": "r-78ba971c32578df7",
     "rendererVersion": 2,
     "seed": 4107
   },
   "schema": "AudioAssetManifestV1",
   "seam": {
-    "jumpRatio": 0.3349,
-    "levelStepDb": -0.385,
+    "jumpRatio": 0.0557,
+    "levelStepDb": -0.554,
     "method": "loop-seam-v1",
     "pass": true,
     "reasons": [],
-    "spectralStepDb": -2.369
+    "spectralStepDb": 1.195
   }
 }

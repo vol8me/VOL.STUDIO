@@ -1,16 +1,16 @@
 {
   "schema": "OrganicCanaryV1",
   "id": "cat-like-gesture",
-  "version": 1,
+  "version": 2,
   "title": "Kedimsi jest",
-  "purpose": "Glottal kaynak + formant; perde eğrisi yükselip düşer (420 → 720 → 380 Hz).",
+  "purpose": "Glottal kaynak + dinamik formant (F1/F2 gesture): yükselip düşen perde eğrisi üzerinde /i/→/a/→/u/ formant kayması — “meeoow” konturu.",
   "source": {
     "kind": "program",
     "program": {
       "schema": "AcousticProgramV1",
       "sampleRate": 48000,
       "channels": 1,
-      "durationSeconds": 1,
+      "durationSeconds": 1.1,
       "seed": 17,
       "master": {
         "normalize": "peak",
@@ -22,9 +22,12 @@
           "curve": "curve.spline",
           "version": 1,
           "points": [
-            [0, 420],
-            [0.45, 720],
-            [1, 380]
+            [0, 320],
+            [0.132, 430],
+            [0.418, 640],
+            [0.682, 660],
+            [0.902, 480],
+            [1.1, 290]
           ]
         },
         "env": {
@@ -32,9 +35,33 @@
           "version": 1,
           "points": [
             [0, -40],
-            [0.08, 0],
-            [0.8, -3],
-            [1, -40]
+            [0.055, 0],
+            [0.44, -1.5],
+            [0.682, -5],
+            [0.88, -8],
+            [1.1, -40]
+          ]
+        },
+        "f1": {
+          "curve": "curve.spline",
+          "version": 1,
+          "points": [
+            [0, 380],
+            [0.165, 750],
+            [0.495, 880],
+            [0.825, 600],
+            [1.1, 330]
+          ]
+        },
+        "f2": {
+          "curve": "curve.spline",
+          "version": 1,
+          "points": [
+            [0, 900],
+            [0.22, 2300],
+            [0.55, 1600],
+            [0.88, 950],
+            [1.1, 750]
           ]
         }
       },
@@ -48,10 +75,10 @@
               "frequency": {
                 "gesture": "pitch"
               },
-              "tension": 0.6,
-              "jitter": 0.008,
-              "shimmer": 0.4,
-              "breath": 0.12
+              "tension": 0.5,
+              "jitter": 0.012,
+              "shimmer": 0.55,
+              "breath": 0.16
             }
           },
           "resonators": [
@@ -59,11 +86,15 @@
               "primitive": "resonator.formant",
               "version": 1,
               "params": {
-                "f1": 800,
-                "f2": 1700,
+                "f1": {
+                  "gesture": "f1"
+                },
+                "f2": {
+                  "gesture": "f2"
+                },
                 "f3": 2900,
                 "f4": 3900,
-                "bandwidth": 1.2
+                "bandwidth": 1
               }
             }
           ],

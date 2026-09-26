@@ -54,9 +54,10 @@ describe('sembolik analiz', RENDER_BLOCK, () => {
     const report = analyze(
       referenceProgram('reference-loop') as unknown as Record<string, unknown>,
     );
-    expect(report.motifs).toHaveLength(1);
-    expect(report.motifs[0].instances).toBe(report.totals.motifInstances);
+    expect(report.motifs.map((m) => m.motif)).toEqual(['call', 'answer']);
+    expect(report.motifs.reduce((s, m) => s + m.instances, 0)).toBe(report.totals.motifInstances);
     expect(report.motifs[0].chain).toBe('transpose');
+    expect(report.motifs[1].chain).toBe('kaynak');
   });
 
   it('bölüm ölçümleri hedef enerji sırasını izler', () => {

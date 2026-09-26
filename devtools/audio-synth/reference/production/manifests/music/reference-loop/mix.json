@@ -5,13 +5,13 @@
       "analyzerVersion": 1,
       "dc": {
         "channelOffset": [
-          -0.000015633035417088252,
-          -0.000018093250825136073
+          0.00002025224852835886,
+          0.00003295579255511057
         ]
       },
       "defects": {
         "clicks": {
-          "count": 1,
+          "count": 2,
           "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
         },
         "clips": {
@@ -31,54 +31,54 @@
       },
       "level": {
         "channelPeakDbfs": [
-          -2.068355009872305,
-          -2.349587142070889
+          -2.1359423401793247,
+          -2.2333076869010475
         ],
         "channelRmsDbfs": [
-          -19.690815785480282,
-          -20.2039233620677
+          -18.89010224568029,
+          -19.22853896071814
         ],
-        "crestFactorDb": 17.871441177330677,
-        "integratedLufs": -16.26125653958082,
-        "maxMomentaryLufs": -12.631590483333008,
-        "rmsDbfs": -19.939796187202983,
-        "samplePeakDbfs": -2.068355009872305,
-        "truePeakDbtp": -2.067996193244295
+        "crestFactorDb": 16.920082387626756,
+        "integratedLufs": -16.47310901483837,
+        "maxMomentaryLufs": -12.872548817401265,
+        "rmsDbfs": -19.05602472780608,
+        "samplePeakDbfs": -2.1359423401793247,
+        "truePeakDbtp": -2.1359423401793247
       },
       "measuredFrom": "decoded-encoded",
       "schema": "AudioAnalysisReportV1",
       "spectral": {
         "bandsDb": {
-          "air": -83.74908348859749,
-          "high": -47.04014457861404,
-          "low": -22.681895858585833,
-          "mid": -28.38847614526764,
-          "sub": -25.064568462822265
+          "air": -83.75155236211668,
+          "high": -47.76282508453435,
+          "low": -21.611141756714773,
+          "mid": -29.1526888210718,
+          "sub": -23.838555191592175
         },
-        "centroidHz": 306.56546159775314,
-        "flatness": 2.75867581568707e-7,
+        "centroidHz": 255.9127885835549,
+        "flatness": 2.4478378314545595e-7,
         "peakHz": 86.1328125,
-        "rolloff85Hz": 452.197265625
+        "rolloff85Hz": 322.998046875
       },
       "stereo": {
-        "correlation": 0.9764832145877866,
-        "width": 0.1130047928640973
+        "correlation": 0.9825859779060016,
+        "width": 0.09572309074936826
       },
       "temporal": {
-        "activeSeconds": 7.26,
+        "activeSeconds": 8.33,
         "attackSeconds": 0.02,
-        "decay40Seconds": 0.69,
+        "decay40Seconds": 0.7,
         "leadingSilenceSeconds": 0,
         "peakTimeSeconds": 0.02,
-        "temporalCentroidSeconds": 4.900965788235272,
-        "trailingSilenceSeconds": 0.41000000000000014
+        "temporalCentroidSeconds": 4.7429824550424415,
+        "trailingSilenceSeconds": 0.4399999999999995
       }
     },
-    "sourceRecordHash": "sha256:ee0b7702793ddc4bf73a4d190d598f9bdf3a3c50cda4c81051825efa9171aef6"
+    "sourceRecordHash": "sha256:3ff3066c7e256349a328a29232f828fd38baae789f7768ab648ee265f545eb2a"
   },
   "asset": {
-    "bytes": 68051,
-    "encodedHash": "sha256:8ef529a32fc6ed1197b1e06b31272ed8161bad9f220e4c0aca059acf844fdd2b",
+    "bytes": 69801,
+    "encodedHash": "sha256:5f25ddc9ca78ff68b6b4ab5cd9d09cd786ec00526221a2d002b8ee9d6f9b910f",
     "format": "ogg-vorbis",
     "path": "devtools/audio-synth/reference/production/assets/music/reference-loop/mix.ogg"
   },
@@ -216,7 +216,7 @@
     "runtime": {
       "node": "v22.23.1"
     },
-    "sourceCommit": "58384bbf73712a07a3829787a1daa6dc9fbeec46",
+    "sourceCommit": "9d1f89d367377a14321836ba5de6a8a75a76c05a",
     "sourceTreeDirty": true
   },
   "integration": {
@@ -234,11 +234,11 @@
   "layout": {
     "channels": 2,
     "image": {
-      "correlation": 0.976,
+      "correlation": 0.983,
       "dualMono": false,
       "method": "stereo-image-v1",
-      "monoFoldLossDb": 0.067,
-      "sideDb": -18.938
+      "monoFoldLossDb": 0.049,
+      "sideDb": -20.38
     },
     "placement": "bed",
     "scheme": "channel-layout-v1"
@@ -254,7 +254,7 @@
       "mastering": {
         "ceiling": 0.95,
         "fadeOutSeconds": 0,
-        "gainDb": -3.249,
+        "gainDb": -2.947,
         "limiter": {
           "knee": 0.28,
           "threshold": 0.7
@@ -351,6 +351,26 @@
                 "degree": 2
               }
             ]
+          },
+          {
+            "id": "answer",
+            "notes": [
+              {
+                "beat": 0,
+                "beats": 0.5,
+                "degree": 5
+              },
+              {
+                "beat": 0.5,
+                "beats": 0.5,
+                "degree": 4
+              },
+              {
+                "beat": 1,
+                "beats": 2,
+                "degree": 2
+              }
+            ]
           }
         ],
         "musicId": "reference-loop",
@@ -403,13 +423,13 @@
                     "bar": 0,
                     "beat": 0,
                     "beats": 3.5,
-                    "gain": 0.9
+                    "gain": 0.95
                   },
                   {
                     "bar": 1,
                     "beat": 0,
                     "beats": 3.5,
-                    "gain": 0.9
+                    "gain": 0.8
                   }
                 ],
                 "source": "chord"
@@ -420,33 +440,45 @@
                   {
                     "bar": 0,
                     "beat": 0,
-                    "beats": 1.5,
+                    "beats": 1,
+                    "note": "A2"
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 1.5,
+                    "beats": 0.5,
                     "note": "A2"
                   },
                   {
                     "bar": 0,
                     "beat": 2,
-                    "beats": 1,
+                    "beats": 1.5,
                     "note": "A2"
                   },
                   {
                     "bar": 1,
                     "beat": 0,
-                    "beats": 1.5,
+                    "beats": 1,
                     "note": "F2"
                   },
                   {
                     "bar": 1,
-                    "beat": 2,
-                    "beats": 1,
+                    "beat": 1.5,
+                    "beats": 0.5,
                     "note": "F2"
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 2.5,
+                    "beats": 1.25,
+                    "note": "E2"
                   }
                 ],
                 "source": "notes"
               }
             ],
             "role": "intro",
-            "targetEnergy": 0.35
+            "targetEnergy": 0.45
           },
           {
             "bars": [
@@ -507,22 +539,26 @@
                   {
                     "bar": 0,
                     "beat": 0,
-                    "beats": 1.75
+                    "beats": 1.75,
+                    "gain": 1
                   },
                   {
                     "bar": 0,
                     "beat": 2,
-                    "beats": 1.75
+                    "beats": 1.75,
+                    "gain": 0.8
                   },
                   {
                     "bar": 1,
                     "beat": 0,
-                    "beats": 1.75
+                    "beats": 1.75,
+                    "gain": 0.9
                   },
                   {
                     "bar": 1,
                     "beat": 2,
-                    "beats": 1.75
+                    "beats": 1.75,
+                    "gain": 0.7
                   }
                 ],
                 "source": "chord"
@@ -533,31 +569,43 @@
                   {
                     "bar": 0,
                     "beat": 0,
-                    "beats": 1,
+                    "beats": 0.75,
                     "note": "A2"
                   },
                   {
                     "bar": 0,
                     "beat": 1.5,
-                    "beats": 0.5,
+                    "beats": 0.4,
                     "note": "A2"
                   },
                   {
                     "bar": 0,
                     "beat": 2,
-                    "beats": 1,
+                    "beats": 0.75,
                     "note": "D2"
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 3.5,
+                    "beats": 0.4,
+                    "note": "E2"
                   },
                   {
                     "bar": 1,
                     "beat": 0,
-                    "beats": 1,
+                    "beats": 0.75,
                     "note": "F2"
                   },
                   {
                     "bar": 1,
+                    "beat": 1.5,
+                    "beats": 0.4,
+                    "note": "C2"
+                  },
+                  {
+                    "bar": 1,
                     "beat": 2,
-                    "beats": 1.5,
+                    "beats": 1.75,
                     "note": "E2"
                   }
                 ],
@@ -571,11 +619,6 @@
                   {
                     "bar": 0,
                     "beat": 0
-                  },
-                  {
-                    "bar": 1,
-                    "beat": 0,
-                    "octave": -1
                   }
                 ],
                 "source": "motif",
@@ -585,6 +628,20 @@
                     "op": "transpose"
                   }
                 ]
+              },
+              {
+                "beats": 1,
+                "lane": "lead",
+                "motif": "answer",
+                "placements": [
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "octave": -1
+                  }
+                ],
+                "source": "motif",
+                "transforms": []
               }
             ],
             "role": "body",
@@ -610,12 +667,12 @@
           "root": "A2",
           "system": "minor"
         },
-        "version": 1
+        "version": 2
       },
       "schema": "MusicStemProgramV1",
       "stem": "mix"
     },
-    "hash": "sha256:a91aff93bff261760c8d4c32324d0fe78c9369cbc98c51747d71eb3862a76d94",
+    "hash": "sha256:3dc907ccd85b67998a7a0a1785d9cc837c2a73839d1bf37c7abc67da2c78f63d",
     "schema": "MusicStemProgramV1"
   },
   "render": {
@@ -623,10 +680,10 @@
       "channels": 2,
       "format": "f32le-interleaved-clamped",
       "frames": 441000,
-      "hash": "sha256:75ca185b66d985c66e02de3df2ce57ad2d3e3b0e6ab08a26c32ce97fa1e751ff",
+      "hash": "sha256:78c586b94ed47ea06a62d07eb3d71399b53f4adf5e5e43e9569f3e0b146f2b37",
       "sampleRate": 44100
     },
-    "renderId": "r-bff469a76ea17cb4",
+    "renderId": "r-a3dc1f7eff712966",
     "rendererVersion": 2,
     "seed": 20260922
   },

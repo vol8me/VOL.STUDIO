@@ -1,7 +1,7 @@
 {
   "schema": "MusicProgramV1",
   "musicId": "reference-arcade",
-  "version": 1,
+  "version": 2,
   "title": "Referans arcade teması",
   "description": "Giriş + dikişsiz loop + bitiş + güçlenme stinger'ı: retro darbe ezgisi, 4-bit üçgen bas, oktav titreşimli arp ve parametrik davul kiti; tracker desenleri ve palet görevleriyle. Dalga 11'in uçtan uca yayın kanıtı.",
   "seed": 20260924,
@@ -158,10 +158,10 @@
             "note": "C#3",
             "model": "cymbal",
             "macros": {
-              "decay": 0.55,
-              "tone": 0.6
+              "decay": 0.85,
+              "tone": 0.45
             },
-            "gainDb": -5
+            "gainDb": -9
           }
         ]
       }
@@ -342,7 +342,7 @@
         },
         {
           "note": "C#3",
-          "steps": "X... .... .... ...."
+          "steps": "x... .... .... ...."
         }
       ]
     },
@@ -1049,7 +1049,7 @@
       "id": "outro",
       "role": "outro",
       "bars": [10, 12],
-      "targetEnergy": 0.55,
+      "targetEnergy": 0.42,
       "lanes": ["lead", "bass", "arp", "drums"],
       "harmony": {
         "voicing": {
@@ -1110,8 +1110,7 @@
             {
               "bar": 1,
               "beat": 0,
-              "beats": 3.5,
-              "articulations": ["accent"]
+              "beats": 3.5
             }
           ]
         },

@@ -3,6 +3,7 @@ import { synth } from '../engine/synthesize';
 import { explosion, laser } from '../presets/combat';
 import { blip, pause, restart, resume } from '../presets/ui';
 import { renderProgram } from '../program/render';
+import { PROGRAM_REGISTRY } from '../program/catalog';
 import type { SynthParams } from '../types';
 import { hashPcm, type Sha256 } from './canonical';
 import { ProtocolError } from './errors';
@@ -59,7 +60,7 @@ function bed(primitive: string, params: Record<string, number>, seconds: number,
   const layer = (name: string, pan: number) => ({
     name,
     pan,
-    source: { primitive, version: 1, params },
+    source: { primitive, version: PROGRAM_REGISTRY.get(primitive).version, params },
   });
   return {
     schema: 'AcousticProgramV1',

@@ -1,16 +1,16 @@
 {
   "schema": "OrganicCanaryV1",
   "id": "breath",
-  "version": 1,
+  "version": 2,
   "title": "Nefes",
-  "purpose": "Türbülans exciter + formant süzgeci + basınç gesture’ı: perdesiz, orta bantta yoğun, yükselip sönen hava akışı.",
+  "purpose": "Türbülans exciter + formant süzgeci + basınç gesture’ı: perdesiz, orta bantta yoğun, yavaş yükselip uzun sönen hava akışı (nefes çevrimi).",
   "source": {
     "kind": "program",
     "program": {
       "schema": "AcousticProgramV1",
       "sampleRate": 48000,
       "channels": 1,
-      "durationSeconds": 0.9,
+      "durationSeconds": 1.7,
       "seed": 11,
       "master": {
         "normalize": "peak",
@@ -22,9 +22,10 @@
           "curve": "curve.cosine",
           "version": 1,
           "points": [
-            [0, 0.15],
-            [0.35, 0.8],
-            [0.9, 0.1]
+            [0, 0.12],
+            [0.72, 0.85],
+            [1.45, 0.3],
+            [1.7, 0.05]
           ]
         },
         "env": {
@@ -32,8 +33,9 @@
           "version": 1,
           "points": [
             [0, -40],
-            [0.3, 0],
-            [0.9, -40]
+            [0.6, 0],
+            [1.45, -7],
+            [1.7, -40]
           ]
         }
       },
@@ -47,7 +49,7 @@
               "pressure": {
                 "gesture": "press"
               },
-              "brightness": 0.75,
+              "brightness": 0.6,
               "color": "white"
             }
           },
@@ -56,7 +58,7 @@
               "primitive": "resonator.formant",
               "version": 1,
               "params": {
-                "f1": 600,
+                "f1": 500,
                 "f2": 1400,
                 "f3": 2600,
                 "f4": 3600,
@@ -90,8 +92,8 @@
     {
       "kind": "descriptor",
       "descriptor": "activeSeconds",
-      "min": 0.5,
-      "max": 0.9
+      "min": 1,
+      "max": 1.75
     },
     {
       "kind": "clipping"

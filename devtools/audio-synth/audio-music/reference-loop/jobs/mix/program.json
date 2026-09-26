@@ -2,7 +2,7 @@
   "mastering": {
     "ceiling": 0.95,
     "fadeOutSeconds": 0,
-    "gainDb": -3.249,
+    "gainDb": -2.947,
     "limiter": {
       "knee": 0.28,
       "threshold": 0.7
@@ -21,7 +21,12 @@
     "description": "Dört ölçülük dikişsiz loop: bas, akor yatağı ve motifli arp. Loop yolunun (dikiş, döngüsel yükseklik, tek asset) uçtan uca kanıtı.",
     "grooves": [
       {
-        "accents": [1, 0.82, 0.92, 0.78],
+        "accents": [
+          1,
+          0.82,
+          0.92,
+          0.78
+        ],
         "id": "gentle",
         "swing": 0.12,
         "timingJitter": 0.008,
@@ -65,7 +70,10 @@
     "mastering": {
       "integratedLufs": -16
     },
-    "meter": [4, 4],
+    "meter": [
+      4,
+      4
+    ],
     "motifs": [
       {
         "id": "call",
@@ -91,6 +99,26 @@
             "degree": 2
           }
         ]
+      },
+      {
+        "id": "answer",
+        "notes": [
+          {
+            "beat": 0,
+            "beats": 0.5,
+            "degree": 5
+          },
+          {
+            "beat": 0.5,
+            "beats": 0.5,
+            "degree": 4
+          },
+          {
+            "beat": 1,
+            "beats": 2,
+            "degree": 2
+          }
+        ]
       }
     ],
     "musicId": "reference-loop",
@@ -99,7 +127,10 @@
     "schema": "MusicProgramV1",
     "sections": [
       {
-        "bars": [0, 2],
+        "bars": [
+          0,
+          2
+        ],
         "harmony": {
           "chords": [
             {
@@ -119,13 +150,19 @@
           ],
           "voicing": {
             "maxMovement": 7,
-            "register": [52, 76],
+            "register": [
+              52,
+              76
+            ],
             "spread": "close",
             "voices": 3
           }
         },
         "id": "intro",
-        "lanes": ["bass", "keys"],
+        "lanes": [
+          "bass",
+          "keys"
+        ],
         "parts": [
           {
             "lane": "keys",
@@ -134,13 +171,13 @@
                 "bar": 0,
                 "beat": 0,
                 "beats": 3.5,
-                "gain": 0.9
+                "gain": 0.95
               },
               {
                 "bar": 1,
                 "beat": 0,
                 "beats": 3.5,
-                "gain": 0.9
+                "gain": 0.8
               }
             ],
             "source": "chord"
@@ -151,36 +188,51 @@
               {
                 "bar": 0,
                 "beat": 0,
-                "beats": 1.5,
+                "beats": 1,
+                "note": "A2"
+              },
+              {
+                "bar": 0,
+                "beat": 1.5,
+                "beats": 0.5,
                 "note": "A2"
               },
               {
                 "bar": 0,
                 "beat": 2,
-                "beats": 1,
+                "beats": 1.5,
                 "note": "A2"
               },
               {
                 "bar": 1,
                 "beat": 0,
-                "beats": 1.5,
+                "beats": 1,
                 "note": "F2"
               },
               {
                 "bar": 1,
-                "beat": 2,
-                "beats": 1,
+                "beat": 1.5,
+                "beats": 0.5,
                 "note": "F2"
+              },
+              {
+                "bar": 1,
+                "beat": 2.5,
+                "beats": 1.25,
+                "note": "E2"
               }
             ],
             "source": "notes"
           }
         ],
         "role": "intro",
-        "targetEnergy": 0.35
+        "targetEnergy": 0.45
       },
       {
-        "bars": [2, 4],
+        "bars": [
+          2,
+          4
+        ],
         "harmony": {
           "chords": [
             {
@@ -214,13 +266,20 @@
           ],
           "voicing": {
             "maxMovement": 9,
-            "register": [50, 84],
+            "register": [
+              50,
+              84
+            ],
             "spread": "open",
             "voices": 3
           }
         },
         "id": "body",
-        "lanes": ["bass", "keys", "lead"],
+        "lanes": [
+          "bass",
+          "keys",
+          "lead"
+        ],
         "parts": [
           {
             "lane": "keys",
@@ -228,22 +287,26 @@
               {
                 "bar": 0,
                 "beat": 0,
-                "beats": 1.75
+                "beats": 1.75,
+                "gain": 1
               },
               {
                 "bar": 0,
                 "beat": 2,
-                "beats": 1.75
+                "beats": 1.75,
+                "gain": 0.8
               },
               {
                 "bar": 1,
                 "beat": 0,
-                "beats": 1.75
+                "beats": 1.75,
+                "gain": 0.9
               },
               {
                 "bar": 1,
                 "beat": 2,
-                "beats": 1.75
+                "beats": 1.75,
+                "gain": 0.7
               }
             ],
             "source": "chord"
@@ -254,31 +317,43 @@
               {
                 "bar": 0,
                 "beat": 0,
-                "beats": 1,
+                "beats": 0.75,
                 "note": "A2"
               },
               {
                 "bar": 0,
                 "beat": 1.5,
-                "beats": 0.5,
+                "beats": 0.4,
                 "note": "A2"
               },
               {
                 "bar": 0,
                 "beat": 2,
-                "beats": 1,
+                "beats": 0.75,
                 "note": "D2"
+              },
+              {
+                "bar": 0,
+                "beat": 3.5,
+                "beats": 0.4,
+                "note": "E2"
               },
               {
                 "bar": 1,
                 "beat": 0,
-                "beats": 1,
+                "beats": 0.75,
                 "note": "F2"
               },
               {
                 "bar": 1,
+                "beat": 1.5,
+                "beats": 0.4,
+                "note": "C2"
+              },
+              {
+                "bar": 1,
                 "beat": 2,
-                "beats": 1.5,
+                "beats": 1.75,
                 "note": "E2"
               }
             ],
@@ -292,11 +367,6 @@
               {
                 "bar": 0,
                 "beat": 0
-              },
-              {
-                "bar": 1,
-                "beat": 0,
-                "octave": -1
               }
             ],
             "source": "motif",
@@ -306,6 +376,20 @@
                 "op": "transpose"
               }
             ]
+          },
+          {
+            "beats": 1,
+            "lane": "lead",
+            "motif": "answer",
+            "placements": [
+              {
+                "bar": 1,
+                "beat": 0,
+                "octave": -1
+              }
+            ],
+            "source": "motif",
+            "transforms": []
           }
         ],
         "role": "body",
@@ -331,7 +415,7 @@
       "root": "A2",
       "system": "minor"
     },
-    "version": 1
+    "version": 2
   },
   "schema": "MusicStemProgramV1",
   "stem": "mix"

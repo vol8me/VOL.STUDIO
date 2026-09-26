@@ -5,6 +5,10 @@
         "hash": "sha256:310b9f637cf10fa03b116d472307abf02871f60f61b66620fdd1876e35468ed7",
         "path": "analyses/r-2f07d6c16604712c.json"
       },
+      "r-a94054685741bb8b": {
+        "hash": "sha256:1ae92b425299658e70e85c93aaaf4577374602be7ada81bbea3f3593f974802e",
+        "path": "analyses/r-a94054685741bb8b.json"
+      },
       "r-d593df15cee2ec32": {
         "hash": "sha256:36d02a41e0a563e6b04e997c9b2f2941a32ec02f8424f3b1f97d9bb7b673c171",
         "path": "analyses/r-d593df15cee2ec32.json"
@@ -16,11 +20,11 @@
     },
     "program": {
       "brief": "sha256:e65531690e2e66e7b692aac45f4556eeace7cfe53bed27d602e595c3583dfa2b",
-      "hash": "sha256:bfb00f69940f82294299d4464a8992852d35f3e2f4c9e2968533d41d4f153f2e",
+      "hash": "sha256:6ae1d974a36735e49296eb7f0f703dea7469a5177310ca9db0ad0d2d1535b1cc",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:905511de0126708f29d66f00860f07d556891033a120c123d53971fe93939dac",
+      "hash": "sha256:79a681de2df82f4a877819245a7b89708a6801fa6b2e1f5dffd927ca46049605",
       "path": "devtools/audio-synth/reference/production/manifests/music/reference-arcade/intro.json"
     },
     "renders": {
@@ -28,20 +32,24 @@
         "hash": "sha256:d7adf0555edc3946f26fbb98169b87db051b732457d910c340924df6cc6f7983",
         "path": "renders/r-2f07d6c16604712c.json"
       },
+      "r-a94054685741bb8b": {
+        "hash": "sha256:04928cc6b02496e4bcdaccbdfce4ca9a4ea025ce6740964cae23d10c8c986a8c",
+        "path": "renders/r-a94054685741bb8b.json"
+      },
       "r-d593df15cee2ec32": {
         "hash": "sha256:2d84b454d88048ff7d8f61c7f7d8c351e0f3a1298e8ca2ce872597f2b5a94a9c",
         "path": "renders/r-d593df15cee2ec32.json"
       }
     },
     "selection": {
-      "hash": "sha256:ffbec90e872bfa63ae4ab1d8083395d9f682c8d52f2db391bdb51649bfb7a490",
+      "hash": "sha256:521c5e7f4c90998f689ecad6f4cb121a97921a2b8fdfd58f75864fba63ca0b2f",
       "path": "selection.json"
     }
   },
   "jobId": "intro",
   "kind": "music",
   "protocolVersion": 1,
-  "revision": 11,
+  "revision": 16,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

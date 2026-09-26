@@ -1,9 +1,9 @@
 {
   "schema": "OrganicCanaryV1",
   "id": "campfire",
-  "version": 1,
+  "version": 2,
   "title": "Kamp ateşi",
-  "purpose": "source.fire: çatırtı olayları + alçak uğultu + tıslama katmanları.",
+  "purpose": "source.fire: seyrek genişbant çatırtı darbeleri + alçak uğultu + hafif tıslama katmanları.",
   "source": {
     "kind": "program",
     "program": {
@@ -22,8 +22,14 @@
           "name": "fire",
           "source": {
             "primitive": "source.fire",
-            "version": 1,
-            "params": {}
+            "version": 2,
+            "params": {
+              "intensity": 0.6,
+              "crackle": 0.85,
+              "roar": 0.55,
+              "hiss": 0.08,
+              "flicker": 0.6
+            }
           }
         }
       ]

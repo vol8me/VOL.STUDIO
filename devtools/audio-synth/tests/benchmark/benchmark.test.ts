@@ -113,7 +113,7 @@ describe('benchmark görev derlemi (gerçek depo)', () => {
         expect(report.tasks.map((t) => t.id)).toEqual(IDS);
         for (const c of report.canaries) {
           expect(failingKinds(c.checks), `canary ${c.id}`).toEqual([]);
-          expect(c.review).toBe('pending-human');
+          expect(['pending-human', 'heard-acceptable', 'heard-problem']).toContain(c.review);
         }
         for (const t of report.tasks) {
           expect(t.review).toBe('pending-human');

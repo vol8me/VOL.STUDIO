@@ -1,7 +1,7 @@
 {
   "schema": "OrganicCanaryV1",
   "id": "granular-breath",
-  "version": 1,
+  "version": 2,
   "title": "Granular nefes bulutu",
   "purpose": "source.granular: texture-breath fixture’ından tanecik bulutu (konum, yayılım, yoğunluk varsayılan).",
   "source": {
@@ -33,7 +33,12 @@
             "primitive": "source.granular",
             "version": 1,
             "params": {
-              "sample": "breath"
+              "sample": "breath",
+              "position": 0.25,
+              "spread": 0.35,
+              "grainSeconds": 0.14,
+              "density": 16,
+              "pitchSpread": 0.5
             }
           }
         }
