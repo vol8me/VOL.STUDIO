@@ -140,7 +140,7 @@ export function searchContext(cli: string) {
     ],
     commands: {
       plan: `${cli} search plan --file <spec.json>`,
-      run: `${cli} search run --file <spec.json> [--audition] [--semantic --scorer "<cmd>" --positive "a,b" [--negative "c,d"]]`,
+      run: `${cli} search run --file <spec.json> [--audition] [--semantic --scorer '["<exe>","arg",…]' --positive "a,b" [--negative "c,d"]]`,
       status: `${cli} search status <searchId> [--json]`,
       list: `${cli} search list`,
       verify: `${cli} search verify <searchId>  (verify --all bütün aramaları da doğrular)`,
@@ -184,8 +184,10 @@ export function searchContext(cli: string) {
       env: SEMANTIC_SCORER_ENV,
       limits: { terms: MAX_SEMANTIC_TERMS, termChars: MAX_SEMANTIC_TERM_CHARS },
       contract:
-        'İsteğe bağlı harici süreç adaptörü (F6c): `--scorer` ya da ortam değişkeni ile verilen komut ' +
-        "çalıştırılır; request JSON stdin'e yazılır, response JSON stdout'tan okunur. " +
+        'İsteğe bağlı harici süreç adaptörü (F6c): `--scorer` ya da ortam değişkeni bir argv ' +
+        'dizisi taşır (JSON dizi ya da tek çalıştırılabilir yol); kabuk yoktur — argv[0] ' +
+        "doğrudan başlatılır, `;`/`$()`/`&&` literal argümandır. Request JSON stdin'e yazılır, " +
+        "response JSON stdout'tan okunur. " +
         "Aday WAV'ları export ağacına (`audio-searches/<id>/semantic/`) yazılır; git'e girmez. " +
         'Core hiçbir model bağımlılığı taşımaz; scorer yokken bütün akış eksiksiz çalışır.',
       rule:

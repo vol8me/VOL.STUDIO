@@ -1,8 +1,8 @@
 /**
  * Semantic scorer test kuklası (F6c) — bağımlılıksız Node süreci.
  *
- * `search run --semantic --scorer "node tests/fixtures/fakeScorer.mjs"` ile
- * koşulur. stdin'den SemanticScoreRequestV1 okur, stdout'a
+ * `search run --semantic --scorer '["node","tests/fixtures/fakeScorer.mjs"]'`
+ * ile koşulur. stdin'den SemanticScoreRequestV1 okur, stdout'a
  * SemanticScoreResponseV1 yazar. Skorlar adayın `spectralPeakHz`
  * betimleyicisinden türetilir: deterministiktir ve boyutlar değiştikçe
  * gerçekten farklılaşır.

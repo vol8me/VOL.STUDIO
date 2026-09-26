@@ -1,7 +1,9 @@
 import { spawnSync } from 'node:child_process';
 import {
   buildSemanticDocument,
+  checkScorerArgv,
   checkSemanticTerms,
+  parseScorerArgv,
   semanticRequest,
   validateSemanticResponse,
   SEMANTIC_SCORER_ENV,
@@ -28,10 +30,15 @@ import type { SearchLocation } from './search';
  * SINIR: skorlar yalnız `semantic.json` ve CLI sıralamasıdır. Aday durumunu,
  * kararları, terfiyi, manifest'i ya da publish kapısını etkilemez — bu
  * fonksiyon hiçbir production belgesi okumaz/yazmaz.
+ *
+ * GÜVENLİK: komut bir argv dizisidir ve kabuk ASLA araya girmez —
+ * `spawnSync(argv[0], argv.slice(1))`. `;`, `$()`, `&&` gibi metakarakterler
+ * yalnız literal argüman olarak taşınır; yapılandırmada kabuk metni yazmak
+ * artık çalıştırılabilir yolu olmayan bir argv üretir ve `toolchain` olur.
  */
 export interface SemanticRunConfig {
-  /** Scorer komutu; verilmezse `AUDIO_SYNTH_SEMANTIC_SCORER` okunur. */
-  readonly command?: string;
+  /** Scorer argv'si; verilmezse `AUDIO_SYNTH_SEMANTIC_SCORER` okunur. */
+  readonly argv?: readonly string[];
   readonly terms: SemanticTermsV1;
 }
 
@@ -57,11 +64,14 @@ export function runSemanticScoring(
   config: SemanticRunConfig,
 ): SemanticRunOutcome {
   const terms = checkSemanticTerms(config.terms, 'semantic.terms');
-  const command = config.command ?? process.env[SEMANTIC_SCORER_ENV];
-  if (command === undefined || command.trim() === '') {
+  const argv =
+    config.argv !== undefined
+      ? checkScorerArgv(config.argv, 'semantic.argv')
+      : parseScorerArgv(process.env[SEMANTIC_SCORER_ENV] ?? '');
+  if (argv.length === 0) {
     throw new ProtocolError(
       'invalid',
-      `scorer komutu yok — --scorer <cmd> ya da ${SEMANTIC_SCORER_ENV}=<cmd> gerekir`,
+      `scorer komutu yok — --scorer '["<exe>","arg",…]' ya da ${SEMANTIC_SCORER_ENV}=<argv-json> gerekir`,
       undefined,
     );
   }
@@ -91,7 +101,7 @@ export function runSemanticScoring(
   }
   const specHash = hashCanonical(spec);
   const request = semanticRequest(loc.searchId, specHash, reportHash, terms, items);
-  const spawned = spawnSync('sh', ['-c', command], {
+  const spawned = spawnSync(argv[0], argv.slice(1), {
     input: JSON.stringify(request),
     encoding: 'utf8',
     timeout: SCORER_TIMEOUT_MS,
@@ -129,14 +139,7 @@ export function runSemanticScoring(
     if (!(error instanceof AudioParamError)) throw error;
     throw new ProtocolError('toolchain', `scorer yanıtı geçersiz: ${error.message}`, loc.searchId);
   }
-  const document = buildSemanticDocument(
-    loc.searchId,
-    specHash,
-    reportHash,
-    command,
-    terms,
-    scores,
-  );
+  const document = buildSemanticDocument(loc.searchId, specHash, reportHash, argv, terms, scores);
   const file = `${loc.searchesRoot}/${loc.searchId}/semantic.json`;
   writeFileAtomic(
     resolveInside(loc.repoRoot, file, 'semantic.json'),

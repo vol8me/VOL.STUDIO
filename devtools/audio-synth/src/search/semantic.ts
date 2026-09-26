@@ -18,7 +18,13 @@ export const SEMANTIC_SCHEMA = 'SearchSemanticV1';
 export const SEMANTIC_REQUEST_SCHEMA = 'SemanticScoreRequestV1';
 export const SEMANTIC_RESPONSE_SCHEMA = 'SemanticScoreResponseV1';
 
-/** Scorer komutu için ortam değişkeni (`--scorer` bayrağı bunu geçersiz kılar). */
+/**
+ * Scorer argv'si için ortam değişkeni (`--scorer` bayrağı bunu geçersiz
+ * kılar). Değer bir JSON argv dizisidir (`["node","scorer.mjs","--opt"]`);
+ * köşeli ayraçla başlamayan düz metin tek elemanlı argv (çalıştırılabilir
+ * yolu, argüman yok) sayılır. Kabuk asla araya girmez: argv[0] doğrudan
+ * `spawnSync`'e verilir, `;`/`$()`/`&&` gibi karakterler yorumlanmaz.
+ */
 export const SEMANTIC_SCORER_ENV = 'AUDIO_SYNTH_SEMANTIC_SCORER';
 
 export const MAX_SEMANTIC_TERMS = 16;
@@ -66,6 +72,37 @@ export function checkSemanticTerms(value: unknown, path: string): SemanticTermsV
   return { positive, negative };
 }
 
+/**
+ * Scorer argv doğrulaması: boş olmayan metin parçalarından oluşan dizi.
+ * Boş dizi geçerlidir ve "yapılandırılmamış" anlamı taşır.
+ */
+export function checkScorerArgv(value: unknown, path: string): string[] {
+  const list = checkArray(value, path);
+  return list.map((a, i) => {
+    if (typeof a !== 'string' || a.trim().length === 0) {
+      throw new AudioParamError(`${path}[${i}]`, 'type', 'boş olmayan komut parçası', a);
+    }
+    return a;
+  });
+}
+
+/**
+ * Metin yapılandırmasını argv'ye çevirir. `[` ile başlayan değer JSON argv
+ * dizisidir; aksi halde tek elemanlı argv sayılır. Boş metin boş dizidir.
+ */
+export function parseScorerArgv(text: string): string[] {
+  const trimmed = text.trim();
+  if (trimmed === '') return [];
+  if (!trimmed.startsWith('[')) return [trimmed];
+  let value: unknown;
+  try {
+    value = JSON.parse(trimmed);
+  } catch {
+    throw new AudioParamError('scorer', 'type', 'JSON argv dizisi', trimmed.slice(0, 80));
+  }
+  return checkScorerArgv(value, 'scorer');
+}
+
 /** Skorer sürecine giden istek öğesi: WAV yolu + ölçülmüş betimleyiciler. */
 export interface SemanticRequestItem {
   readonly candidateId: string;
@@ -94,7 +131,7 @@ export interface SearchSemanticV1 {
   readonly searchId: string;
   readonly specHash: Sha256;
   readonly reportHash: Sha256;
-  readonly scorer: { readonly command: string };
+  readonly scorer: { readonly argv: readonly string[] };
   readonly terms: SemanticTermsV1;
   readonly scores: readonly SemanticScoreEntryV1[];
   /** Skora göre azalan sıralama (eşitlikte candidateId); sunum içindir. */
@@ -176,7 +213,7 @@ export function buildSemanticDocument(
   searchId: string,
   specHash: Sha256,
   reportHash: Sha256,
-  command: string,
+  argv: readonly string[],
   terms: SemanticTermsV1,
   scores: readonly SemanticScoreEntryV1[],
 ): SearchSemanticV1 {
@@ -185,7 +222,7 @@ export function buildSemanticDocument(
     searchId,
     specHash,
     reportHash,
-    scorer: { command },
+    scorer: { argv },
     terms,
     scores,
     ranked: rankedOrder(scores),

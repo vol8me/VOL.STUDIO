@@ -57,9 +57,11 @@ export type {
 } from './fit';
 export {
   buildSemanticDocument,
+  checkScorerArgv,
   checkSemanticTerms,
   MAX_SEMANTIC_TERM_CHARS,
   MAX_SEMANTIC_TERMS,
+  parseScorerArgv,
   rankedOrder,
   SEMANTIC_REQUEST_SCHEMA,
   SEMANTIC_RESPONSE_SCHEMA,

@@ -712,11 +712,15 @@ akışıdır.
 
 ### Semantic scorer — isteğe bağlı laboratuvar adaptörü
 
-`search run --semantic --scorer "<cmd>" --positive "a,b" [--negative "c,d"]`
+`search run --semantic --scorer '["<exe>","arg",…]' --positive "a,b" [--negative "c,d"]`
 (`src/search/semantic.ts`, `src/protocol/semantic.ts`). Metin-ses gömücüsü
 ya da benzeri bir model core bağımlılığı YAPILMAZ: skorer kullanıcının
 verdiği harici süreçtir (komut `--scorer` ya da `AUDIO_SYNTH_SEMANTIC_SCORER`
-ile gelir). Rapor ve aday programları yazıldıktan sonra her render edilmiş
+ile gelir ve bir **argv dizisidir**: JSON dizi; köşeli ayraçsız düz metin
+tek elemanlı argv sayılır). Başlatma kabuksuzdur —
+`spawnSync(argv[0], argv.slice(1))`; `;`, `$()`, `&&` gibi metakarakterler
+yorumlanmaz, literal argüman olarak sürece geçer (R5; kabuk-quoted eski
+dizi tek argv[0] olduğundan `toolchain` olarak düşer). Rapor ve aday programları yazıldıktan sonra her render edilmiş
 adayın WAV kopyası `export/` altına düşer, `SemanticScoreRequestV1`
 (searchId, spec/report özeti, terimler, `{candidateId, wav, descriptors}`
 listesi) sürecin stdin'ine yazılır ve `SemanticScoreResponseV1` stdout'tan

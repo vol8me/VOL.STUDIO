@@ -237,7 +237,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       altında doğrulandı.
 - [x] **[P3] Semantic audio scorer isteğe bağlı laboratuvar aracı olsun.**
       `search run --semantic` harici scorer süreci koşturur
-      (`--scorer "<cmd>"` ya da `AUDIO_SYNTH_SEMANTIC_SCORER`; terimler
+      (`--scorer '["<exe>",…]'` ya da `AUDIO_SYNTH_SEMANTIC_SCORER`; terimler
       `--positive`/`--negative`): aday WAV'ları `export/` altına düşer,
       `SemanticScoreRequestV1` stdin'e, `SemanticScoreResponseV1`
       stdout'tan; bilinmeyen kimlik, JSON dışı çıktı ya da sıfır-olmayan

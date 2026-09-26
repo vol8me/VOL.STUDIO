@@ -14,7 +14,9 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ProtocolError, runSearch } from '../../src/protocol';
 import {
+  checkScorerArgv,
   checkSemanticTerms,
+  parseScorerArgv,
   rankedOrder,
   SEMANTIC_REQUEST_SCHEMA,
   SEMANTIC_SCHEMA,
@@ -29,7 +31,8 @@ import { createTestRepo, type TestRepo } from './repo';
 
 const ROOT = 'devtools/audio-synth/audio-searches';
 const SCORER = fileURLToPath(new URL('../fixtures/fakeScorer.mjs', import.meta.url));
-const scorerCmd = `"${process.execPath}" "${SCORER}"`;
+const scorerArgv = [process.execPath, SCORER];
+const scorerJson = JSON.stringify(scorerArgv);
 
 let repo: TestRepo | undefined;
 afterEach(() => {
@@ -97,6 +100,17 @@ describe('semantic terimleri ve yanıt şeması', () => {
     ).toThrow(AudioParamError);
   });
 
+  it('scorer argv metni: JSON dizi ya da tek yol; kabuk metni yorumlanmaz', () => {
+    expect(parseScorerArgv('  ')).toEqual([]);
+    expect(parseScorerArgv('/opt/scorer')).toEqual(['/opt/scorer']);
+    expect(parseScorerArgv('["node","a b.mjs","--x"]')).toEqual(['node', 'a b.mjs', '--x']);
+    // Metakarakterli parçalar literal argümandır; kabuk genişletmesi YAPILMAZ.
+    expect(parseScorerArgv('["sh","-c","rm -rf x"]')).toEqual(['sh', '-c', 'rm -rf x']);
+    expect(() => parseScorerArgv('["a",5]')).toThrow(AudioParamError);
+    expect(() => parseScorerArgv('["unclosed"')).toThrow(AudioParamError);
+    expect(() => checkScorerArgv(['ok', ''], 's')).toThrow(AudioParamError);
+  });
+
   it('sıralama: skor azalan, eşitlikte kimlik', () => {
     expect(
       rankedOrder([
@@ -111,7 +125,7 @@ describe('semantic terimleri ve yanıt şeması', () => {
 describe('semantic scorer koşusu', () => {
   it('kapalıyken süreç koşmaz: semantic null, semantic.json yok', () => {
     repo = createTestRepo();
-    process.env[SEMANTIC_SCORER_ENV] = scorerCmd;
+    process.env[SEMANTIC_SCORER_ENV] = scorerJson;
     process.env.FAKE_SCORER_DUMP = join(repo.root, 'dump.json');
     const outcome = runSearch(repo.root, ROOT, programSpec({ searchId: 'sem-off' }));
     expect(outcome.semantic).toBeNull();
@@ -123,7 +137,7 @@ describe('semantic scorer koşusu', () => {
     repo = createTestRepo();
     const plain = runSearch(repo.root, ROOT, programSpec({ searchId: 'sem-plain' }));
     const scored = runSearch(repo.root, ROOT, programSpec({ searchId: 'sem-on' }), {
-      semantic: { command: scorerCmd, terms: TERMS },
+      semantic: { argv: scorerArgv, terms: TERMS },
     });
     expect(scored.semantic).not.toBeNull();
     // Danışman sınırı: aynı spec'in aday durumları skorlama ile birebir aynı.
@@ -136,7 +150,7 @@ describe('semantic scorer koşusu', () => {
     expect(doc.schema).toBe(SEMANTIC_SCHEMA);
     expect(doc.reportHash).toBe(scored.reportHash);
     expect(doc.terms).toEqual(TERMS);
-    expect(doc.scorer.command).toBe(scorerCmd);
+    expect(doc.scorer.argv).toEqual(scorerArgv);
     const scoredIds = scored.report.candidates
       .map((c) => c.candidateId)
       .filter((id): id is string => id !== null);
@@ -162,7 +176,7 @@ describe('semantic scorer koşusu', () => {
     repo = createTestRepo();
     process.env.FAKE_SCORER_DUMP = join(repo.root, 'dump.json');
     const outcome = runSearch(repo.root, ROOT, programSpec({ searchId: 'sem-req' }), {
-      semantic: { command: scorerCmd, terms: TERMS },
+      semantic: { argv: scorerArgv, terms: TERMS },
     });
     const request = JSON.parse(
       readFileSync(join(repo.root, 'dump.json'), 'utf8'),
@@ -181,7 +195,7 @@ describe('semantic scorer koşusu', () => {
 
   it('scorer komutu ortam değişkeninden de okunur', () => {
     repo = createTestRepo();
-    process.env[SEMANTIC_SCORER_ENV] = scorerCmd;
+    process.env[SEMANTIC_SCORER_ENV] = scorerJson;
     const outcome = runSearch(repo.root, ROOT, programSpec({ searchId: 'sem-env' }), {
       semantic: { terms: TERMS },
     });
@@ -211,7 +225,7 @@ describe('semantic scorer koşusu', () => {
     expect(
       codeOf(() =>
         runSearch(repo!.root, ROOT, programSpec({ searchId: `sem-${mode}` }), {
-          semantic: { command: scorerCmd, terms: TERMS },
+          semantic: { argv: scorerArgv, terms: TERMS },
         }),
       ),
     ).toBe(code);
@@ -223,9 +237,45 @@ describe('semantic scorer koşusu', () => {
     repo = createTestRepo();
     expect(() =>
       runSearch(repo!.root, ROOT, programSpec({ searchId: 'sem-noterms' }), {
-        semantic: { command: scorerCmd, terms: { positive: [], negative: [] } },
+        semantic: { argv: scorerArgv, terms: { positive: [], negative: [] } },
       }),
     ).toThrow(AudioParamError);
     expect(existsSync(join(repo.root, ROOT, 'sem-noterms', 'report.json'))).toBe(true);
+  });
+});
+
+describe('kabuksuz başlatma (R5)', () => {
+  it('argv içindeki ; $() && kabuk tarafından yorumlanmaz', () => {
+    repo = createTestRepo();
+    const marker = join(repo.root, 'pwnd');
+    // Kabuklu eski düzende bu argümanlar `sh -c` içinde komut olarak koşardı.
+    const hostile = [
+      process.execPath,
+      SCORER,
+      `;touch ${marker}`,
+      `$(touch ${marker}2)`,
+      `&& touch ${marker}3`,
+    ];
+    const outcome = runSearch(repo.root, ROOT, programSpec({ searchId: 'sem-inject' }), {
+      semantic: { argv: hostile, terms: TERMS },
+    });
+    expect(outcome.semantic?.document.scores.length).toBeGreaterThan(0);
+    expect(existsSync(marker)).toBe(false);
+    expect(existsSync(`${marker}2`)).toBe(false);
+    expect(existsSync(`${marker}3`)).toBe(false);
+    // Belge argümanları aynen kaydeder — kabuk metni asla derlenmez.
+    expect(outcome.semantic?.document.scorer.argv).toEqual(hostile);
+  });
+
+  it('eski kabuk-quoted komut metni çalıştırılabilir değildir (toolchain)', () => {
+    repo = createTestRepo();
+    // `"node" "script"` gibi kabuk dizisi artık tek argv[0] sayılır ve yoktur.
+    expect(
+      codeOf(() =>
+        runSearch(repo!.root, ROOT, programSpec({ searchId: 'sem-shell' }), {
+          semantic: { argv: [`"${process.execPath}" "${SCORER}"`], terms: TERMS },
+        }),
+      ),
+    ).toBe('toolchain');
   });
 });

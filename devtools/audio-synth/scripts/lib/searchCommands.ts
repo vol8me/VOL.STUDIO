@@ -23,6 +23,7 @@ import {
   type SearchLocation,
 } from '../../src/protocol';
 import { validateDecision } from '../../src/search/selection';
+import { parseScorerArgv } from '../../src/search/semantic';
 import { positional, print, readInput, required, text, type Parsed } from './args';
 
 function searchesRoot(parsed: Parsed): string {
@@ -101,7 +102,10 @@ export function runSearchCommand(parsed: Parsed, repoRoot: string): number {
         audition: parsed.flags.has('audition'),
         semantic: parsed.flags.has('semantic')
           ? {
-              command: text(parsed.flags, 'scorer') ?? undefined,
+              argv:
+                text(parsed.flags, 'scorer') !== undefined
+                  ? parseScorerArgv(text(parsed.flags, 'scorer') as string)
+                  : undefined,
               terms: {
                 positive: terms('positive'),
                 negative: terms('negative'),

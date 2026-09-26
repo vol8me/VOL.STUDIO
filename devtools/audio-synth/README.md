@@ -121,7 +121,8 @@ Tek bir değer tahmin etmek yerine aralık aramak için `search` alt komutları
 vardır (spec → plan → run → audition/decide → promote); onaylı aday job
 programına terfi eder ve aynı akıştan yayımlanır. `search run --semantic`
 isteğe bağlı harici scorer süreci koşturur (`--scorer` ya da
-`AUDIO_SYNTH_SEMANTIC_SCORER`); skorlar `semantic.json` danışman
+`AUDIO_SYNTH_SEMANTIC_SCORER` bir argv dizisi taşır; kabuk yoktur); skorlar
+`semantic.json` danışman
 sıralamasıdır, hiçbir kapıyı etkilemez. Sözdizimi context çıktısındaki
 `search.commands` ve `search.semantic` alanlarındadır.
 
