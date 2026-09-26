@@ -710,6 +710,51 @@ eşik altında" demektir; ses benzerliği ya da kalite yargısı değildir, fit
 çıktısı hiçbir publish kapısını açmaz ve production'a tek giriş kanonik iş
 akışıdır.
 
+#### Çok-hedefli kurtarma deneyi (R6)
+
+`pnpm audio:fit-experiment` (`scripts/fit-experiment.ts`) dört gizli hedefi
+üç tohumla koşturur; optimize ediciye parametre değerleri asla gösterilmez —
+yalnız hedef PCM'den ölçülen betimleyici vektörü (`pcm`) ya da manifest'in
+`analysis.encoded` alanları (`manifest`) verilir. Boyut hatası aralığa
+normalize edilir: log boyutlarda oktav payı, doğrusalda aralık payı,
+seçeneklerde 0/1 eşleşme. Kanıt `export/audio-fits/` + `export/fit-experiment/
+results.json` (git dışı, yeniden üretilebilir). Bütçe: 12 aday × 5 tur,
+`shrink` 0.4, tolerans 0.2; boyut başına kurtarma eşiği 0.15.
+
+| hedef        | tohum | giriş    | verdict   | uzaklık | boyut hataları                                         |
+| ------------ | ----- | -------- | --------- | ------- | ------------------------------------------------------ |
+| hidden-tone  | 23    | pcm      | converged | 0.124   | frequency 0.007, waveform 0, attack 0.132, decay 0.302 |
+| hidden-tone  | 5001  | pcm      | exhausted | 0.419   | frequency 0.004, waveform 0, attack 0.373, decay 0.258 |
+| hidden-tone  | 90210 | pcm      | exhausted | 0.418   | frequency 0.002, waveform 0, attack 0.338, decay 0.315 |
+| hidden-noise | 23    | pcm      | converged | 0.002   | color 0, attack 0.013, decay 0.040                     |
+| hidden-noise | 5001  | pcm      | converged | 0.130   | color 0, attack 0.167, decay 0.289                     |
+| hidden-noise | 90210 | pcm      | converged | 0.030   | color 0, attack 0.028, decay 0.016                     |
+| hidden-drum  | 23    | pcm      | converged | 0.057   | tune 0.160, decay 0.062, noise 0.112                   |
+| hidden-drum  | 5001  | pcm      | converged | 0.015   | tune 0.064, decay 0.047, noise 0.151                   |
+| hidden-drum  | 90210 | pcm      | converged | 0.064   | tune 0.138, decay 0.049, noise 0.445                   |
+| hidden-muted | 23    | pcm      | converged | 0.041   | frequency 0.004, ghost-freq 0.205                      |
+| hidden-muted | 5001  | pcm      | converged | 0.028   | frequency 0.003, ghost-freq 0.046                      |
+| hidden-muted | 90210 | pcm      | converged | 0.112   | frequency 0.009, ghost-freq 0.347                      |
+| hidden-drum  | 23    | manifest | converged | 0.057   | pcm koşusuyla birebir (aynı betimleyici kaynağı)       |
+
+Dürüst okuma:
+
+- `hidden-muted.ghost-freq` **tanımlanamaz**: `ghost` katmanı
+  `gainDb: -120` ile suskun; parametre hiçbir hedef betimleyicisini
+  etkilemiyor ve kurtarılan değer tohumdan tohuma savruluyor
+  (0.046/0.205/0.347) — `frequency` aynı koşularda 0.003…0.009 ile
+  izleniyor. Bu parametre "bulunamadı" değil "ölçülemiyor"dur; deney
+  bunu uydurmak yerine raporlar.
+- `hidden-tone.decay` **zayıf tanımlanır**: standart bütçede 0.26–0.32
+  hata; 32×7=224 değerlendirmelik yükseltilmiş probe'da da fit
+  `exhausted` (0.263) ve decay 0.18 yerine 0.05'e oturuyor —
+  `decay40Seconds` AHDSR'de esas olarak sustain/release tarafından
+  sürülür, `decay` parametresi betimleyiciye zayıf bağlanır. Başarısızlık
+  eniyileme değil gözlenebilirlik sınırıdır.
+- Başarı oranı (converged + tanımlanabilir boyutlar ≤0.15):
+  tone 0/3, noise 2/3, drum 0/3, muted 3/3. Bütçe artışı tabloyu
+  iyileştirir ama `decay`/`ghost-freq` gözlenebilirlik duvarını aşamaz.
+
 ### Semantic scorer — isteğe bağlı laboratuvar adaptörü
 
 `search run --semantic --scorer '["<exe>","arg",…]' --positive "a,b" [--negative "c,d"]`
