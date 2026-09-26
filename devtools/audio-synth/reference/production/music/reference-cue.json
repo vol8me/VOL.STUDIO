@@ -6,7 +6,7 @@
   "engine": {
     "analyzerVersion": 1,
     "instrumentRegistryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
-    "rendererVersion": 1
+    "rendererVersion": 2
   },
   "music": {
     "hash": "sha256:b5eea6bd151b713404e8c7fe563ecb44d0a458889f66e32a3b4c0ac958030393",
@@ -78,7 +78,7 @@
       "id": "mix",
       "integratedLufs": -18.09397044916698,
       "manifest": {
-        "hash": "sha256:6d48514ee7e9687e38504641c1ef744df69b6430ccc6c2abc21c773ebce3c172",
+        "hash": "sha256:246b7e65cf014538896534f1d7db7af3a57b11a2f0469a3664d600886591394d",
         "path": "reference/production/manifests/music/reference-cue/mix.json"
       },
       "pcmHash": "sha256:fe126c14917ad1005fd55d321f44f7542884b5930d53daab3af0808f56906073",

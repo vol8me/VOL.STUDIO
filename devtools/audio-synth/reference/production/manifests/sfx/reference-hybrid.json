@@ -74,7 +74,7 @@
         "trailingSilenceSeconds": 0.020000000000000018
       }
     },
-    "sourceRecordHash": "sha256:7e1b40ce3e6124d901cda32f9b693149db3c31fba0ced2fecba8776ed0ba4303"
+    "sourceRecordHash": "sha256:c5f12a36d087f62166612bb2e83c65ca5155f927cd1eaf2f8c3120f92165dd72"
   },
   "asset": {
     "bytes": 26710,
@@ -146,7 +146,7 @@
   "engine": {
     "package": "@volstudio/audio-synth",
     "packageVersion": "0.1.0",
-    "registryHash": "sha256:bc9ccd65d10ee51dcbacb7998acf7d2064a5b8f68b8d7a5c158a8465e5e6a457",
+    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
     "renderSurface": {
       "hash": "sha256:2c220e6f68c3b8f4736b9fb422417a26024962a362a130901806972c024a3157",
       "nodes": [
@@ -183,11 +183,11 @@
       ],
       "scheme": "render-surface-v1"
     },
-    "rendererVersion": 1,
+    "rendererVersion": 2,
     "runtime": {
       "node": "v22.23.1"
     },
-    "sourceCommit": "8f0dd383e980e59123138a39163659cf61f73998",
+    "sourceCommit": "17e4841efc7b0a3ae3a92bd5aa7e87e8d8044baf",
     "sourceTreeDirty": true
   },
   "integration": {
@@ -355,8 +355,8 @@
       "hash": "sha256:145e9da41a2adc2f7e2d48a808ff73cc30ddf2d76cfd000af434cd67bab0fe7d",
       "sampleRate": 48000
     },
-    "renderId": "r-2c35b43cbdfdc07e",
-    "rendererVersion": 1,
+    "renderId": "r-e1c9be3a8ae28135",
+    "rendererVersion": 2,
     "seed": 11
   },
   "schema": "AudioAssetManifestV1",

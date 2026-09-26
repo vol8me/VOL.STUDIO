@@ -74,7 +74,7 @@
         "trailingSilenceSeconds": 0.33142857142857096
       }
     },
-    "sourceRecordHash": "sha256:842b1eb6df3d136e81005ab75db9e4ea38989e4216c63e7dd5855554d9404bd6"
+    "sourceRecordHash": "sha256:82659073ca363e5f1f715cb52bc619f4ae9b4610f31e42a3f4de4ef3a4e8bc2b"
   },
   "asset": {
     "bytes": 16466,
@@ -186,15 +186,39 @@
     ],
     "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
   },
+  "encoding": {
+    "policyHash": "sha256:4995c93a1714f448fc486b3365eea0d041ecc778f26b7b5b30935a46ec028376",
+    "quality": 4,
+    "scheme": "encode-profile-v1"
+  },
   "engine": {
     "package": "@volstudio/audio-synth",
     "packageVersion": "0.1.0",
     "registryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
-    "rendererVersion": 1,
+    "renderSurface": {
+      "hash": "sha256:5c2d71373067a62ff09785f078bb7ca6f17b917750073448ca03107b0bc983b5",
+      "instruments": [
+        {
+          "hash": "sha256:ce3194058602250cfd60ea6b956be6919aa5a875a483e737b875701cbb1d3a5a",
+          "id": "preset:additivePad"
+        },
+        {
+          "hash": "sha256:cf03079a7a8e82f91665303a08fdcf83cc344997a362190b26037db9f3225f95",
+          "id": "preset:metalPluck"
+        },
+        {
+          "hash": "sha256:541d6120a8394a18e29bc62759bf6197b5f61d63dc35e989fe4e20e7ae4cae32",
+          "id": "preset:softLead"
+        }
+      ],
+      "nodes": [],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
     "runtime": {
       "node": "v22.23.1"
     },
-    "sourceCommit": "19f0f194b32d956475082aa10fc821ff468f1080",
+    "sourceCommit": "17e4841efc7b0a3ae3a92bd5aa7e87e8d8044baf",
     "sourceTreeDirty": true
   },
   "integration": {
@@ -208,6 +232,18 @@
     "jobId": "pulse",
     "path": "devtools/audio-synth/audio-music/reference-adaptive/jobs/pulse",
     "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 2,
+    "image": {
+      "correlation": 0.999,
+      "dualMono": false,
+      "method": "stereo-image-v1",
+      "monoFoldLossDb": 0.047,
+      "sideDb": -19.783
+    },
+    "placement": "bed",
+    "scheme": "channel-layout-v1"
   },
   "policy": {
     "assetClass": "music-stem",
@@ -628,8 +664,8 @@
       "hash": "sha256:7ef9e33f884140a89bc3e721142842fa7c99513b2c67159279148859c9daec73",
       "sampleRate": 44100
     },
-    "renderId": "r-a3b0b6af90efd26a",
-    "rendererVersion": 1,
+    "renderId": "r-b76e4703c809f200",
+    "rendererVersion": 2,
     "seed": 4242
   },
   "schema": "AudioAssetManifestV1"

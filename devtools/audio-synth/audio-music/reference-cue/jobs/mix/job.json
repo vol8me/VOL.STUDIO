@@ -8,6 +8,10 @@
       "r-8ae09bfe2373e67f": {
         "hash": "sha256:9f07ebd0f6eb40e9f9577a52093bc642ae64f736b39d7cc8d3f568fdfc420a54",
         "path": "analyses/r-8ae09bfe2373e67f.json"
+      },
+      "r-a763357346194206": {
+        "hash": "sha256:4a4de99bef229f2da82e938c3484f90abb02966cfebd2b947823651d14bee67d",
+        "path": "analyses/r-a763357346194206.json"
       }
     },
     "brief": {
@@ -20,7 +24,7 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:6d48514ee7e9687e38504641c1ef744df69b6430ccc6c2abc21c773ebce3c172",
+      "hash": "sha256:246b7e65cf014538896534f1d7db7af3a57b11a2f0469a3664d600886591394d",
       "path": "devtools/audio-synth/reference/production/manifests/music/reference-cue/mix.json"
     },
     "renders": {
@@ -31,17 +35,21 @@
       "r-8ae09bfe2373e67f": {
         "hash": "sha256:8bc968a020ace1ab75a7a8e44fa5928d2c0817cd1b1dedab2416e76cbaa46550",
         "path": "renders/r-8ae09bfe2373e67f.json"
+      },
+      "r-a763357346194206": {
+        "hash": "sha256:fdadf51d97ce0ff91e3366dd582adf828e94ee626652a1ce1d46d15ce709ac15",
+        "path": "renders/r-a763357346194206.json"
       }
     },
     "selection": {
-      "hash": "sha256:b449f3be167c36237aac1391f67f407189927d313169c7c53c44010ee38ef7ec",
+      "hash": "sha256:11bd2cff6c4204ee4332210f8d728d36986c447ca5dffdf62a7b845c32cfe47a",
       "path": "selection.json"
     }
   },
   "jobId": "mix",
   "kind": "music",
   "protocolVersion": 1,
-  "revision": 10,
+  "revision": 14,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

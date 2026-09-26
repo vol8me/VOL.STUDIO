@@ -1,6 +1,10 @@
 {
   "artifacts": {
     "analyses": {
+      "r-2e5a20a7c8c0d805": {
+        "hash": "sha256:0f309c800b7ce4c205d8a1f17339b197d87dff493ce159a76c0557fecb2df101",
+        "path": "analyses/r-2e5a20a7c8c0d805.json"
+      },
       "r-c3d6989581142b7b": {
         "hash": "sha256:75bf8af6faa45c95c2c5e06c013e3889128001908b55ed4c9bf4939431fb89b4",
         "path": "analyses/r-c3d6989581142b7b.json"
@@ -16,24 +20,28 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:3472da1d85afa9ffd0f1e5c80b03149f2c5141fb4edd975386653105a23bf4d0",
+      "hash": "sha256:0555de4c2aa6395b0f090a308386610853dcf9319128bc940dbcc4e92f82e8d4",
       "path": "devtools/audio-synth/reference/production/manifests/sfx/families/reference-engine-states/high.json"
     },
     "renders": {
+      "r-2e5a20a7c8c0d805": {
+        "hash": "sha256:052f96fa756f3d43498bf1452f30ebccc48bfb9638ad44766cb5ae6bdee9de79",
+        "path": "renders/r-2e5a20a7c8c0d805.json"
+      },
       "r-c3d6989581142b7b": {
         "hash": "sha256:df9cebc0308fc57ca836d5ffdb82b8ee2dc93a1f218d541a12923cca752d4899",
         "path": "renders/r-c3d6989581142b7b.json"
       }
     },
     "selection": {
-      "hash": "sha256:5804fb44252efd10de5d247f393b719872fcd93578ef335c652078bf20962e14",
+      "hash": "sha256:e3a8901b515273f32479521ce3faadecb6a1d8fa185daa94bd71898d95ce265f",
       "path": "selection.json"
     }
   },
   "jobId": "high",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 10,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

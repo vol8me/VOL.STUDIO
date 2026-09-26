@@ -4,6 +4,10 @@
       "r-5b8c10a48fd3beaf": {
         "hash": "sha256:d0f92a713667abbc168c373dc59bad3d346d1695a2d0749bd5c1b2c33bb6b459",
         "path": "analyses/r-5b8c10a48fd3beaf.json"
+      },
+      "r-93b02083404e2506": {
+        "hash": "sha256:efc3684670b2bb667e45fa669be76aaef5846dead6b8f04f82b8d58d5718f89e",
+        "path": "analyses/r-93b02083404e2506.json"
       }
     },
     "brief": {
@@ -16,24 +20,28 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:99eb0f5d919bf607478e276d4fb9bab38c96546571c8a543724c722d20c20ecc",
+      "hash": "sha256:2d63e5f2615c376eac6c2af4a2d28e7480ea2eb596f29890b643c04113f5bcee",
       "path": "devtools/audio-synth/reference/production/manifests/sfx/families/reference-shell-hits/soft-light.json"
     },
     "renders": {
       "r-5b8c10a48fd3beaf": {
         "hash": "sha256:7e120608dcf62aea7b18a43a7c5b1fd534da53b9a2db94e35c8a1190470782cf",
         "path": "renders/r-5b8c10a48fd3beaf.json"
+      },
+      "r-93b02083404e2506": {
+        "hash": "sha256:d4e689a1cbd23cd6b481743c94d4a872604dd94302f3bc8cc8d889ab46d957a2",
+        "path": "renders/r-93b02083404e2506.json"
       }
     },
     "selection": {
-      "hash": "sha256:cc2c64dd53fb6dbba1a571182c78589ab3d3fff4d9bfb8c4f8fc1e2165f85cf7",
+      "hash": "sha256:365c6ca6a8b7f36ab98b11473faef8c9d6a6cf681b5122799aff4536039a67ab",
       "path": "selection.json"
     }
   },
   "jobId": "soft-light",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 10,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

@@ -4,6 +4,10 @@
       "r-535058deb0bf8ee8": {
         "hash": "sha256:a8f8051a98966a9e6c482729c30ad6f15a63bb406a383a22d67add1951b5ee68",
         "path": "analyses/r-535058deb0bf8ee8.json"
+      },
+      "r-c6ea489fc53b6cd5": {
+        "hash": "sha256:47c5b08d9cc032a0211121eb56501753a1d838c74c0f87173bcef5a4afbed84e",
+        "path": "analyses/r-c6ea489fc53b6cd5.json"
       }
     },
     "brief": {
@@ -16,24 +20,28 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:263c28c2927ee416570ed43b64f01f692385b5f33b9170ccd438ca9371ba40e2",
+      "hash": "sha256:b73e3a267f47afa547d3b3b5fa58606f9876aa4bad6915a81b8396431b4291cc",
       "path": "devtools/audio-synth/reference/production/manifests/sfx/delivery/reference-impact-underwater.json"
     },
     "renders": {
       "r-535058deb0bf8ee8": {
         "hash": "sha256:193fb3902ce04a2fc1d32807accf3069390ba7717e60b6d94f84332c203edc0b",
         "path": "renders/r-535058deb0bf8ee8.json"
+      },
+      "r-c6ea489fc53b6cd5": {
+        "hash": "sha256:956b57cd9f806488f9edefae4a883450535ddb15345dc0f8ce5f12544b2369a6",
+        "path": "renders/r-c6ea489fc53b6cd5.json"
       }
     },
     "selection": {
-      "hash": "sha256:fe935133c6c828887047af896819c73e97baf443029b5f4febf0e2aaaae88b3f",
+      "hash": "sha256:454ac607d570c831ce14b9fbf6cd3a48bad0025522691b114ac0b4ac63b83997",
       "path": "selection.json"
     }
   },
   "jobId": "reference-impact-underwater",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 10,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

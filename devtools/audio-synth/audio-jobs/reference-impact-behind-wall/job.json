@@ -1,6 +1,10 @@
 {
   "artifacts": {
     "analyses": {
+      "r-0c521391a07e28f7": {
+        "hash": "sha256:e708e3b473b220afec899233dab0c01775ffbb09361b084d4a0201d98f686298",
+        "path": "analyses/r-0c521391a07e28f7.json"
+      },
       "r-4c5607fe737158ba": {
         "hash": "sha256:a297ec05a62b6bde5730683bbbaff5e326f28236cd1dd024056e9046e6c35db8",
         "path": "analyses/r-4c5607fe737158ba.json"
@@ -16,24 +20,28 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:5fc8c73d626b5202423326f0d0e88aa2df812f13a02c5932411c723c9351cbc4",
+      "hash": "sha256:6b411da9ff6957c4d296a282d7e049274e77ac884bc56716c0de9b1aae133cdc",
       "path": "devtools/audio-synth/reference/production/manifests/sfx/delivery/reference-impact-behind-wall.json"
     },
     "renders": {
+      "r-0c521391a07e28f7": {
+        "hash": "sha256:822b1412daa3441d34cfaec7c0cf8f51c4d9612fe98033ab28d8aab7245d2c97",
+        "path": "renders/r-0c521391a07e28f7.json"
+      },
       "r-4c5607fe737158ba": {
         "hash": "sha256:b94c7efe251b153c3c7800aa6c2368742de5a4dd56af8cf41bb36a6db5e1e0e8",
         "path": "renders/r-4c5607fe737158ba.json"
       }
     },
     "selection": {
-      "hash": "sha256:7cf8bcf2352517116ed348f70d89a71409a82cd342debc5fddba65793730ca4a",
+      "hash": "sha256:c88b186b9609a48e785199dfb0adfec6e4d1aa54d2858d4caf1843f156fe3e35",
       "path": "selection.json"
     }
   },
   "jobId": "reference-impact-behind-wall",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 10,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

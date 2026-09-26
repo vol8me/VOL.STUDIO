@@ -5,7 +5,7 @@
       "analyzerVersion": 1,
       "dc": {
         "channelOffset": [
-          -0.0000634603768719492
+          -0.00001738261509734337
         ]
       },
       "defects": {
@@ -29,30 +29,30 @@
       },
       "level": {
         "channelPeakDbfs": [
-          -3.240291190259523
+          -3.014967451464189
         ],
         "channelRmsDbfs": [
-          -17.299663770227447
+          -17.276240154443002
         ],
-        "crestFactorDb": 14.059372579967924,
-        "integratedLufs": -18.79527957790192,
-        "maxMomentaryLufs": -14.410737367225877,
-        "rmsDbfs": -17.299663770227447,
-        "samplePeakDbfs": -3.240291190259523,
-        "truePeakDbtp": -3.219251773015776
+        "crestFactorDb": 14.261272702978813,
+        "integratedLufs": -18.774298680178436,
+        "maxMomentaryLufs": -14.387472664311407,
+        "rmsDbfs": -17.276240154443002,
+        "samplePeakDbfs": -3.014967451464189,
+        "truePeakDbtp": -2.9905335109537807
       },
       "measuredFrom": "decoded-encoded",
       "schema": "AudioAnalysisReportV1",
       "spectral": {
         "bandsDb": {
-          "air": -74.0298815681082,
-          "high": -59.59077393230071,
-          "low": -60.330676217054474,
-          "mid": -17.701727266602543,
-          "sub": -58.51724647849311
+          "air": -74.50096997982547,
+          "high": -59.520137380437106,
+          "low": -60.26838387673038,
+          "mid": -17.67768345148696,
+          "sub": -59.2125667966587
         },
-        "centroidHz": 612.8356227544856,
-        "flatness": 9.494700577269172e-11,
+        "centroidHz": 612.8379531412593,
+        "flatness": 5.378854263787824e-10,
         "peakHz": 609.375,
         "rolloff85Hz": 632.8125
       },
@@ -63,15 +63,15 @@
         "decay40Seconds": 0.82,
         "leadingSilenceSeconds": 0,
         "peakTimeSeconds": 0,
-        "temporalCentroidSeconds": 0.08845718415816116,
+        "temporalCentroidSeconds": 0.08835634118255736,
         "trailingSilenceSeconds": 0.007333333333333303
       }
     },
-    "sourceRecordHash": "sha256:0181adfd66dc0995c5faa615adb927bc024162159e0f00f03d16a599d060b542"
+    "sourceRecordHash": "sha256:8344554a1443890f525735adc4d330fa41d0f40361d826d04237998f7424489d"
   },
   "asset": {
-    "bytes": 5825,
-    "encodedHash": "sha256:f60e9d418b41b0b2bb160dda1eb866120397821506e68221fea705bae9851835",
+    "bytes": 6621,
+    "encodedHash": "sha256:9b3f73b34e6e681c545f5d6ae9340539e99a0836e52308234cb0dd1debb38f62",
     "format": "ogg-vorbis",
     "path": "devtools/audio-synth/reference/production/assets/sfx/families/reference-shell-hits/medium-light.ogg"
   },
@@ -112,32 +112,78 @@
       "-c:a",
       "libvorbis",
       "-q:a",
-      "4",
+      "7",
       "-bitexact"
     ],
     "codec": "libvorbis",
-    "fingerprint": "sha256:88fd7a2ee7fa953241bd18f901647268901215fb58debd913cb9dfd26ef43998",
+    "fingerprint": "sha256:060f26f4dfd1fa0ba7212288b2dae964c6da674de752b5fe9fbcffc7be84e217",
     "libraries": {
       "libavcodec": "62.28.102",
       "libavformat": "62.12.102",
       "libavutil": "60.26.102"
     },
-    "quality": 4,
+    "quality": 7,
     "tool": "ffmpeg",
     "unreported": [
       "libvorbis"
     ],
     "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
   },
+  "encoding": {
+    "policyHash": "sha256:4995c93a1714f448fc486b3365eea0d041ecc778f26b7b5b30935a46ec028376",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
   "engine": {
     "package": "@volstudio/audio-synth",
     "packageVersion": "0.1.0",
-    "registryHash": "sha256:9c42f6a2904548abbd724c29bd80573b04644ef296381e335aa9f7feff7969fd",
-    "rendererVersion": 1,
+    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
+    "renderSurface": {
+      "hash": "sha256:2749e17fe685aa80f40acc5d54864e35094d1123a92b45933e4128bbe96cdc15",
+      "nodes": [
+        {
+          "hash": "sha256:a4e744aa41285d06324f8898045f2250df8684764f90dc8e2ebed939917a0146",
+          "id": "control.body-size",
+          "version": 1
+        },
+        {
+          "hash": "sha256:35228f057d6a249c1a6195198d4a66709609bcad326ed9e6b75fe061b53878bb",
+          "id": "control.roughness",
+          "version": 1
+        },
+        {
+          "hash": "sha256:08c072b664bf7c4f4e72f91a3ed0a352ec7b797433cd8563f37d5a1a20aa1078",
+          "id": "control.viscosity",
+          "version": 1
+        },
+        {
+          "hash": "sha256:7e3ae986781771d633de1f73e9d814b4e9f542fdb2e0ce6eed209e20dd989fe0",
+          "id": "effect.reverb",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:ade86fbd3a23e7fcdf99f84204e2ebdb0948dbdce66cf54334a11ad1f05489c1",
+          "id": "resonator.cavity",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f24fa5c87c6aecf74eab9406650b96dcbc6c29891df1676fc98b15871c4d251c",
+          "id": "resonator.modal",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
     "runtime": {
       "node": "v22.23.1"
     },
-    "sourceCommit": "4cfa27c24cfba9252804673c0cf75dc4ba1e5cdc",
+    "sourceCommit": "17e4841efc7b0a3ae3a92bd5aa7e87e8d8044baf",
     "sourceTreeDirty": true
   },
   "integration": {
@@ -151,6 +197,12 @@
     "jobId": "medium-light",
     "path": "devtools/audio-synth/audio-families/reference-shell-hits/jobs/medium-light",
     "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
   },
   "policy": {
     "assetClass": "sfx",
@@ -244,8 +296,8 @@
       "hash": "sha256:cecea4e00ef96ff7e334fa0fc17eb3ac7a024f3717dac50f68f6924df305f065",
       "sampleRate": 48000
     },
-    "renderId": "r-cf4b27398c1e5937",
-    "rendererVersion": 1,
+    "renderId": "r-d57f29cc554015d6",
+    "rendererVersion": 2,
     "seed": 3730083200
   },
   "schema": "AudioAssetManifestV1"

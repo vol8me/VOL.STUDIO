@@ -74,7 +74,7 @@
         "trailingSilenceSeconds": 0.43149659863945633
       }
     },
-    "sourceRecordHash": "sha256:1ad623963e60bd7f3adfb72159566be2ec4b34e3daca0271def1bcb2ebba7b9a"
+    "sourceRecordHash": "sha256:4a4de99bef229f2da82e938c3484f90abb02966cfebd2b947823651d14bee67d"
   },
   "asset": {
     "bytes": 53462,
@@ -173,15 +173,39 @@
     ],
     "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
   },
+  "encoding": {
+    "policyHash": "sha256:4995c93a1714f448fc486b3365eea0d041ecc778f26b7b5b30935a46ec028376",
+    "quality": 4,
+    "scheme": "encode-profile-v1"
+  },
   "engine": {
     "package": "@volstudio/audio-synth",
     "packageVersion": "0.1.0",
     "registryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
-    "rendererVersion": 1,
+    "renderSurface": {
+      "hash": "sha256:80c6c97f50493eb94cd60875c45f55c7aa1db1cfc55a6efe1f4405669fe9ace0",
+      "instruments": [
+        {
+          "hash": "sha256:cec6db202a6ab245bf34898593d0c6a67195d5a97c47c63b61012d327bfb08b6",
+          "id": "preset:cello"
+        },
+        {
+          "hash": "sha256:b2c825991cf4cb98a678e12c91f23a49eb1d9ffe46a1f63a74e78b54d84789b3",
+          "id": "preset:mellowKeys"
+        },
+        {
+          "hash": "sha256:37c960ed935e82a3a7baeff7a4858b1abff099c0a6884c77c7b71a97da0683b7",
+          "id": "preset:vibraphone"
+        }
+      ],
+      "nodes": [],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
     "runtime": {
       "node": "v22.23.1"
     },
-    "sourceCommit": "19f0f194b32d956475082aa10fc821ff468f1080",
+    "sourceCommit": "17e4841efc7b0a3ae3a92bd5aa7e87e8d8044baf",
     "sourceTreeDirty": true
   },
   "integration": {
@@ -195,6 +219,18 @@
     "jobId": "mix",
     "path": "devtools/audio-synth/audio-music/reference-cue/jobs/mix",
     "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 2,
+    "image": {
+      "correlation": 0.606,
+      "dualMono": false,
+      "method": "stereo-image-v1",
+      "monoFoldLossDb": 0.965,
+      "sideDb": -6.071
+    },
+    "placement": "bed",
+    "scheme": "channel-layout-v1"
   },
   "policy": {
     "assetClass": "music",
@@ -559,8 +595,8 @@
       "hash": "sha256:fe126c14917ad1005fd55d321f44f7542884b5930d53daab3af0808f56906073",
       "sampleRate": 44100
     },
-    "renderId": "r-0c67bd75be70ef59",
-    "rendererVersion": 1,
+    "renderId": "r-a763357346194206",
+    "rendererVersion": 2,
     "seed": 77120
   },
   "schema": "AudioAssetManifestV1"

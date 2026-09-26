@@ -67,7 +67,7 @@
         "trailingSilenceSeconds": 0.3900000000000001
       }
     },
-    "sourceRecordHash": "sha256:966e4c0b2552ccd3236d67a1347f670168d93146bb87f4fedefda24701fc145f"
+    "sourceRecordHash": "sha256:f136b93155a15d93b64c79a09b07320829289ab12fb124e3f7156ed168607544"
   },
   "asset": {
     "bytes": 22279,
@@ -224,11 +224,11 @@
       ],
       "scheme": "render-surface-v1"
     },
-    "rendererVersion": 1,
+    "rendererVersion": 2,
     "runtime": {
       "node": "v22.23.1"
     },
-    "sourceCommit": "8f0dd383e980e59123138a39163659cf61f73998",
+    "sourceCommit": "17e4841efc7b0a3ae3a92bd5aa7e87e8d8044baf",
     "sourceTreeDirty": true
   },
   "integration": {
@@ -436,8 +436,8 @@
       "hash": "sha256:793f74bba8eec14cb241bc12abb610c40cbb47af6830f76e114a6a9c54b74a4d",
       "sampleRate": 48000
     },
-    "renderId": "r-1078fc8607f3c4eb",
-    "rendererVersion": 1,
+    "renderId": "r-c42d54b614b5b9cb",
+    "rendererVersion": 2,
     "seed": 2550812508
   },
   "schema": "AudioAssetManifestV1"

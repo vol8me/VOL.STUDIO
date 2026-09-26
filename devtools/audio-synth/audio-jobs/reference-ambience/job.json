@@ -4,6 +4,10 @@
       "r-7bc2ab5cde956109": {
         "hash": "sha256:bd0927d00c5b03d1c1f058d2bdf4c5f3bda12f5601f36a44fadf73708e009f78",
         "path": "analyses/r-7bc2ab5cde956109.json"
+      },
+      "r-ef5cc0526c51f20a": {
+        "hash": "sha256:81d16d32a85f0d33f1bec3403af1ab44a22b82cbdacfd23906b4d5347596875c",
+        "path": "analyses/r-ef5cc0526c51f20a.json"
       }
     },
     "brief": {
@@ -16,24 +20,28 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:81e98de5b3e267074fc0c5c664f2251b46bdced3a2c30cfbc9580b00a717294d",
+      "hash": "sha256:ca8ab6a186b05ccc528e8d052005b1bb5c3ee125c145d683711ef2f176a1f7e9",
       "path": "devtools/audio-synth/reference/production/manifests/ambience/reference-ambience.json"
     },
     "renders": {
       "r-7bc2ab5cde956109": {
         "hash": "sha256:be0f6da4110b99ab822e58f286c619efaa18cd3364bf2774accedf41d661bc5b",
         "path": "renders/r-7bc2ab5cde956109.json"
+      },
+      "r-ef5cc0526c51f20a": {
+        "hash": "sha256:df8e689e3ed32ed1fd1849e2a51d25a6df68cc03886f3687eae66c87e8f44a37",
+        "path": "renders/r-ef5cc0526c51f20a.json"
       }
     },
     "selection": {
-      "hash": "sha256:56c3065b5c0008d777b6b683d471b56826e2ce09545c09aac7f4d7b816bc4512",
+      "hash": "sha256:60ab3379111bedc0b6d718cb9253e5091b54cf623d75451c15d394c52e5eb0d5",
       "path": "selection.json"
     }
   },
   "jobId": "reference-ambience",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 10,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

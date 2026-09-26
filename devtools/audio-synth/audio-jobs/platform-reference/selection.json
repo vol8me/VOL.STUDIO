@@ -1,8 +1,8 @@
 {
-  "analysisHash": "sha256:892c9badcb135ef33a8f7dc38d669b2c55bfd654bec33d07663a2ef431ac2ea2",
+  "analysisHash": "sha256:7124e85b23f2d669d119faf62e4c81533c6afe91f85e0a2ecfddd52b5e811f4d",
   "pcmHash": "sha256:7c1be899b5ea42e634d56e51e759bfe6619f7639164182294c7699ebdeeb93b9",
-  "reason": "Tek aday; kaynak PCM ölçümü sfx aralığında (en yüksek momentary ≈ −24 LUFS, true peak ≈ −4 dBTP).",
-  "renderHash": "sha256:cc017d4f8a378fad6935abd903817ae3c167bbc22257ebbdc22a842ab1997334",
-  "renderId": "r-1ac52f262344696c",
+  "reason": "F7a kanonik tazeleme (renderer v2)",
+  "renderHash": "sha256:6ca6dd5b2fc93bed31090f335f56be0cec3af87c5d7ffa425a4f1b8adf1a6aad",
+  "renderId": "r-0d2cf75eded80865",
   "schema": "AudioSelectionV1"
 }

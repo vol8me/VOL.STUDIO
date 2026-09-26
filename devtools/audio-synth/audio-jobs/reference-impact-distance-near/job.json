@@ -4,6 +4,10 @@
       "r-1078fc8607f3c4eb": {
         "hash": "sha256:966e4c0b2552ccd3236d67a1347f670168d93146bb87f4fedefda24701fc145f",
         "path": "analyses/r-1078fc8607f3c4eb.json"
+      },
+      "r-c42d54b614b5b9cb": {
+        "hash": "sha256:f136b93155a15d93b64c79a09b07320829289ab12fb124e3f7156ed168607544",
+        "path": "analyses/r-c42d54b614b5b9cb.json"
       }
     },
     "brief": {
@@ -16,24 +20,28 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:9d460890767d1d9a2271a1d0368775cafdc61469923a5e7b23e09cea21a28573",
+      "hash": "sha256:16b64a1a4039083613c3aac0114bcd89ca7c172bd8a30b849f8153cba6fbbde4",
       "path": "devtools/audio-synth/reference/production/manifests/sfx/delivery/reference-impact-distance-near.json"
     },
     "renders": {
       "r-1078fc8607f3c4eb": {
         "hash": "sha256:542567492237788ba62f494ce348c22e37ce94059b70d0fd388535694ddeb78a",
         "path": "renders/r-1078fc8607f3c4eb.json"
+      },
+      "r-c42d54b614b5b9cb": {
+        "hash": "sha256:14be5ed4b9143c441ae8eaa3fdf0d6d58b0e61217b491ad391d5c61581c937a3",
+        "path": "renders/r-c42d54b614b5b9cb.json"
       }
     },
     "selection": {
-      "hash": "sha256:92153e38b35776acc162e80e40295b462b3f67ee9d9d7c420f72a84635158c3e",
+      "hash": "sha256:815c94722aa7d670e92729ff95b84349cfadb0b68de803e686bfd9876ae6f455",
       "path": "selection.json"
     }
   },
   "jobId": "reference-impact-distance-near",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 10,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

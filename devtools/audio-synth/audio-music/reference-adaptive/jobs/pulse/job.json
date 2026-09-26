@@ -4,6 +4,10 @@
       "r-a3b0b6af90efd26a": {
         "hash": "sha256:842b1eb6df3d136e81005ab75db9e4ea38989e4216c63e7dd5855554d9404bd6",
         "path": "analyses/r-a3b0b6af90efd26a.json"
+      },
+      "r-b76e4703c809f200": {
+        "hash": "sha256:82659073ca363e5f1f715cb52bc619f4ae9b4610f31e42a3f4de4ef3a4e8bc2b",
+        "path": "analyses/r-b76e4703c809f200.json"
       }
     },
     "brief": {
@@ -16,24 +20,28 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:60799636eba26653b78fd7f261c84e1d6b6346dc41013bf908bff5271e765a80",
+      "hash": "sha256:e373bc60c071cdc60b42dd1da37de8d96a58adb502761d1f24193149e3050819",
       "path": "devtools/audio-synth/reference/production/manifests/music/reference-adaptive/pulse.json"
     },
     "renders": {
       "r-a3b0b6af90efd26a": {
         "hash": "sha256:771ac9c003e72c850dabeb7f0bb853c22c0d68c0199582c28165f734a2a64aaf",
         "path": "renders/r-a3b0b6af90efd26a.json"
+      },
+      "r-b76e4703c809f200": {
+        "hash": "sha256:c89e82e4a1d3cc4ebeda7099258c36bbd3a08e3bb74da6510675f182b15cda98",
+        "path": "renders/r-b76e4703c809f200.json"
       }
     },
     "selection": {
-      "hash": "sha256:16d377e623ddc0fe5aabfc84c62edcef629b8d81169d6fde91accd693b0b61ee",
+      "hash": "sha256:13ca4060d585e85537e0ab579128a276a33d38b197e8c86cf48100bab4552b8e",
       "path": "selection.json"
     }
   },
   "jobId": "pulse",
   "kind": "music",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 10,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

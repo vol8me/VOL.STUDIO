@@ -4,6 +4,10 @@
       "r-83dba5f2d11e6699": {
         "hash": "sha256:51485adaf07276c3decd39a10d3aab68c99a090b1f8b19ebca71069eb22f37fe",
         "path": "analyses/r-83dba5f2d11e6699.json"
+      },
+      "r-874d984fe9454fa5": {
+        "hash": "sha256:4afd31ecf26cb6edef7b55d2a725b3332b3b8afe7b3a0729c501afd2b799f929",
+        "path": "analyses/r-874d984fe9454fa5.json"
       }
     },
     "brief": {
@@ -16,24 +20,28 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:71e3793a838e31e53d8ca69e23511023ca932e043c536926003f7c6e6929e230",
+      "hash": "sha256:7594d709ec39cd611fb9354b7dd5933bc43bf0daf52ed933fcaf8c3b273193a2",
       "path": "devtools/audio-synth/reference/production/manifests/sfx/families/reference-shell-hits/soft-heavy.json"
     },
     "renders": {
       "r-83dba5f2d11e6699": {
         "hash": "sha256:8003d970e4a43425c06cf56ab14f2a510d0c87d2905b46816e0722d07e83f14c",
         "path": "renders/r-83dba5f2d11e6699.json"
+      },
+      "r-874d984fe9454fa5": {
+        "hash": "sha256:cbf38dc9f4a772c0b69a7ef5d16d5f0151383b4384df04d78e8a4609a54877d8",
+        "path": "renders/r-874d984fe9454fa5.json"
       }
     },
     "selection": {
-      "hash": "sha256:3e963c32a678a599527da77b112c7ee53778a9a86f0409927f2e21ec0bd95952",
+      "hash": "sha256:85412f4cc4256a319e00211d7ab788135bbb74de125ea48541c26a921a4a0a4a",
       "path": "selection.json"
     }
   },
   "jobId": "soft-heavy",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 10,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

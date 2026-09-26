@@ -1,6 +1,10 @@
 {
   "artifacts": {
     "analyses": {
+      "r-b876231d523e0ad8": {
+        "hash": "sha256:7f7b20cd6bed4cecd3d7f81dd0a1a91bfab86510bc0cddfa7995d8e9d5c30cac",
+        "path": "analyses/r-b876231d523e0ad8.json"
+      },
       "r-c29da3f393c10ca2": {
         "hash": "sha256:95f8c7391d2fd1fc48402b664bd6bec927501e48ab8385d4bed425df3bcda0d1",
         "path": "analyses/r-c29da3f393c10ca2.json"
@@ -16,24 +20,28 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:61fee61f21cd9fdb5e17565bfd00463a8b4b2b9b883ff8328b3e93ecd15fd10a",
+      "hash": "sha256:fb5e9f6fa66ae3f9d2013610da2ca3b1e1c0c1edb3a95e7651d2df3990065d41",
       "path": "devtools/audio-synth/reference/production/manifests/sfx/delivery/reference-impact-radio.json"
     },
     "renders": {
+      "r-b876231d523e0ad8": {
+        "hash": "sha256:ceea7c8870e1667ca118aed967fe258c4e058f1417ed6344ed1f0fecfef89e5b",
+        "path": "renders/r-b876231d523e0ad8.json"
+      },
       "r-c29da3f393c10ca2": {
         "hash": "sha256:417bc57738156fc58264d9e427293e2d7680c46fcaa5d402db790951aec0acec",
         "path": "renders/r-c29da3f393c10ca2.json"
       }
     },
     "selection": {
-      "hash": "sha256:e90d2db0105850c2a52bca6a243ab6bf39418d9428fcd340054354db90e62b6a",
+      "hash": "sha256:af6193cd6ade5061c5e26360f475991c41231ea7f345d2f97cedb8866535e04e",
       "path": "selection.json"
     }
   },
   "jobId": "reference-impact-radio",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 10,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

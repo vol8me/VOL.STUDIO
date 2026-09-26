@@ -1,8 +1,8 @@
 {
-  "analysisHash": "sha256:bd0927d00c5b03d1c1f058d2bdf4c5f3bda12f5601f36a44fadf73708e009f78",
+  "analysisHash": "sha256:81d16d32a85f0d33f1bec3403af1ab44a22b82cbdacfd23906b4d5347596875c",
   "pcmHash": "sha256:9e491be9ba272483b0fb1a14b757952e8d8e172c06e39046fe0a1d11df325693",
-  "reason": "ambience/texture sınıfı regresyon referansı: dikişsiz döngü, stereo bed",
-  "renderHash": "sha256:be0f6da4110b99ab822e58f286c619efaa18cd3364bf2774accedf41d661bc5b",
-  "renderId": "r-7bc2ab5cde956109",
+  "reason": "F7a kanonik tazeleme (renderer v2)",
+  "renderHash": "sha256:df8e689e3ed32ed1fd1849e2a51d25a6df68cc03886f3687eae66c87e8f44a37",
+  "renderId": "r-ef5cc0526c51f20a",
   "schema": "AudioSelectionV1"
 }

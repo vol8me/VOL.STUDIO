@@ -5,7 +5,7 @@
   },
   "candidates": [
     {
-      "candidateId": "c-39fdbf608dfeb239",
+      "candidateId": "c-c7b4e3aefd02458e",
       "checks": [
         {
           "filter": 0,
@@ -79,7 +79,7 @@
       }
     },
     {
-      "candidateId": "c-10f88d758efe1bdb",
+      "candidateId": "c-0d39db932fae595d",
       "checks": [
         {
           "filter": 0,
@@ -153,7 +153,7 @@
       }
     },
     {
-      "candidateId": "c-6788900dde288cae",
+      "candidateId": "c-492ed506f85a37d0",
       "checks": [
         {
           "filter": 0,
@@ -232,7 +232,7 @@
       }
     },
     {
-      "candidateId": "c-5019267aedae887b",
+      "candidateId": "c-d8b6fada33dcaada",
       "checks": [
         {
           "filter": 0,
@@ -306,7 +306,7 @@
       }
     },
     {
-      "candidateId": "c-bd3781771b0aaa34",
+      "candidateId": "c-bca790f063ce6f5d",
       "checks": [
         {
           "filter": 0,
@@ -380,7 +380,7 @@
       }
     },
     {
-      "candidateId": "c-b855b30c75a6801c",
+      "candidateId": "c-b34a3fa39dfdb41c",
       "checks": [
         {
           "filter": 0,
@@ -454,7 +454,7 @@
       }
     },
     {
-      "candidateId": "c-5ccfefdd4cf0eb78",
+      "candidateId": "c-c332253780df2925",
       "checks": [
         {
           "filter": 0,
@@ -528,7 +528,7 @@
       }
     },
     {
-      "candidateId": "c-eb7f507c554efba9",
+      "candidateId": "c-07756a170cfd45be",
       "checks": [
         {
           "filter": 0,
@@ -607,7 +607,7 @@
       }
     },
     {
-      "candidateId": "c-51165d6e6236e202",
+      "candidateId": "c-5363fa9fe10eaf43",
       "checks": [
         {
           "filter": 0,
@@ -681,7 +681,7 @@
       }
     },
     {
-      "candidateId": "c-89b29d40e69565d7",
+      "candidateId": "c-af41e0f27262f9bb",
       "checks": [
         {
           "filter": 0,
@@ -755,7 +755,7 @@
       }
     },
     {
-      "candidateId": "c-d067e2f394829a88",
+      "candidateId": "c-f7025a5d59543daa",
       "checks": [
         {
           "filter": 0,
@@ -829,7 +829,7 @@
       }
     },
     {
-      "candidateId": "c-e324a40601d9e6fd",
+      "candidateId": "c-983bd34a1c95fa27",
       "checks": [
         {
           "filter": 0,
@@ -903,7 +903,7 @@
       }
     },
     {
-      "candidateId": "c-2315d4fbc22ea481",
+      "candidateId": "c-eb74074d8938154b",
       "checks": [
         {
           "filter": 0,
@@ -977,7 +977,7 @@
       }
     },
     {
-      "candidateId": "c-039f39f6d2ff75fd",
+      "candidateId": "c-ec6226f90a587536",
       "checks": [
         {
           "filter": 0,
@@ -1080,7 +1080,7 @@
       }
     },
     {
-      "candidateId": "c-98f6d5656f5c323f",
+      "candidateId": "c-103bd7f2889dd3f2",
       "checks": [
         {
           "filter": 0,
@@ -1167,8 +1167,8 @@
       "onsets": "energy-jump-v1",
       "pitch": "yin-v1"
     },
-    "registryHash": "sha256:9c42f6a2904548abbd724c29bd80573b04644ef296381e335aa9f7feff7969fd",
-    "rendererVersion": 1,
+    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
+    "rendererVersion": 2,
     "substreamScheme": "substream-v1"
   },
   "preflight": {

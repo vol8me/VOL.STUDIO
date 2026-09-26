@@ -8,6 +8,10 @@
       "r-2c35b43cbdfdc07e": {
         "hash": "sha256:7e1b40ce3e6124d901cda32f9b693149db3c31fba0ced2fecba8776ed0ba4303",
         "path": "analyses/r-2c35b43cbdfdc07e.json"
+      },
+      "r-e1c9be3a8ae28135": {
+        "hash": "sha256:c5f12a36d087f62166612bb2e83c65ca5155f927cd1eaf2f8c3120f92165dd72",
+        "path": "analyses/r-e1c9be3a8ae28135.json"
       }
     },
     "brief": {
@@ -20,7 +24,7 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:acb695077b21a79b03ba791826b99a2d8e023e0504e00adbd45df199f6c193ef",
+      "hash": "sha256:e45544615f21a7a0af5e9369be4f0922c8bc84d0b9caf9984c8826d9cccc396e",
       "path": "devtools/audio-synth/reference/production/manifests/sfx/reference-hybrid.json"
     },
     "renders": {
@@ -31,17 +35,21 @@
       "r-2c35b43cbdfdc07e": {
         "hash": "sha256:4fdf5959f52b015dba695dca90bb08588cfc95dd8a79bd926c7723fbabdf1fd5",
         "path": "renders/r-2c35b43cbdfdc07e.json"
+      },
+      "r-e1c9be3a8ae28135": {
+        "hash": "sha256:3b790874f1453a4fe9020249f24162109f9d01abcde9b762e3888cfac31089dc",
+        "path": "renders/r-e1c9be3a8ae28135.json"
       }
     },
     "selection": {
-      "hash": "sha256:cf3f1843e93642535a6a4668e8cac1d9ca8200749e505d0a900d4998955ed07a",
+      "hash": "sha256:d9145a50976262ad3dc5283ea988d137a9bd6bd3d827740ba16f0ded2fda178c",
       "path": "selection.json"
     }
   },
   "jobId": "reference-hybrid",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 15,
+  "revision": 19,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

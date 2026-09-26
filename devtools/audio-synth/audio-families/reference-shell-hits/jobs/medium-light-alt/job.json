@@ -4,6 +4,10 @@
       "r-79c5a76f6d17910e": {
         "hash": "sha256:eb1b374603f4be913bc7c68dab7b81c3d75ad1bada66f6deec4aff9d1a27b937",
         "path": "analyses/r-79c5a76f6d17910e.json"
+      },
+      "r-d5e1a6b75eba8b80": {
+        "hash": "sha256:b8a7b26a7b51fef4b6cc547b4a93918ce8555b67318027aa5f4f854593dcac77",
+        "path": "analyses/r-d5e1a6b75eba8b80.json"
       }
     },
     "brief": {
@@ -16,24 +20,28 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:159938e210c248d3c23092f79620bfa7a39e81b7e8703bfb4bb92a31e6d1bac4",
+      "hash": "sha256:870629fd559565c7e47e4df16b3f8c394ae43822dc343854e21dd7a38c42c9b8",
       "path": "devtools/audio-synth/reference/production/manifests/sfx/families/reference-shell-hits/medium-light-alt.json"
     },
     "renders": {
       "r-79c5a76f6d17910e": {
         "hash": "sha256:f166381d44de35dcb70c18a3874d985b08a47202920c90015b2c8e7ef8fee644",
         "path": "renders/r-79c5a76f6d17910e.json"
+      },
+      "r-d5e1a6b75eba8b80": {
+        "hash": "sha256:a0e2caf55f96da8b91bbd3c23bd85c5144aa43f24971334507b79269aa6fa12b",
+        "path": "renders/r-d5e1a6b75eba8b80.json"
       }
     },
     "selection": {
-      "hash": "sha256:e56f86a93a927d8faca3740eaa85f289fdf81e3b35f727c126ce4042d4503852",
+      "hash": "sha256:9a4f293338ce9073b09b4462243af26dd3ec2681532a4072e902e89fe30e3f77",
       "path": "selection.json"
     }
   },
   "jobId": "medium-light-alt",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 10,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

@@ -4,6 +4,10 @@
       "r-21c1fd09dac6302b": {
         "hash": "sha256:4b474ce52fbadee7bc6a6d0866ca89db5e251f4cca092caa3d6122115a6365a5",
         "path": "analyses/r-21c1fd09dac6302b.json"
+      },
+      "r-c5b4dcdf5e096ff3": {
+        "hash": "sha256:aa42a6ab74e83195afa0c75337429986ba77ae4154a21525a43d8dcc2af55d62",
+        "path": "analyses/r-c5b4dcdf5e096ff3.json"
       }
     },
     "brief": {
@@ -16,24 +20,28 @@
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:ab3a4ac295351ca2ce99bc20be29cd4be5b9c57583b53516fd663a5e6720cede",
+      "hash": "sha256:1b9d7ebbd6eba89a1c6e171cd0ea68fd94d45422425003c920d420592c461028",
       "path": "devtools/audio-synth/reference/production/manifests/sfx/families/reference-engine-states/idle.json"
     },
     "renders": {
       "r-21c1fd09dac6302b": {
         "hash": "sha256:f098e24e93781fb8ce0103f7624c3da12b38e701e7cd9645e8aae820793e6c5d",
         "path": "renders/r-21c1fd09dac6302b.json"
+      },
+      "r-c5b4dcdf5e096ff3": {
+        "hash": "sha256:027a2607ae87263d1942c7d50ec174eafcdf36a0b9fff728d6f7d739c5eeba35",
+        "path": "renders/r-c5b4dcdf5e096ff3.json"
       }
     },
     "selection": {
-      "hash": "sha256:fc8fac3140665da61635182c043ef7a39a3832f177d89c6b6dc6d10b5f2f59bb",
+      "hash": "sha256:aa009277feb5b87331be8c53e4598d2ed68809a91b327e813e5b91fca8edd674",
       "path": "selection.json"
     }
   },
   "jobId": "idle",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 10,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {
