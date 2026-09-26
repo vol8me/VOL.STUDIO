@@ -1,7 +1,7 @@
 {
   "schema": "BenchmarkTaskV1",
   "id": "arcade-theme",
-  "version": 1,
+  "version": 2,
   "title": "Dikişsiz arcade teması",
   "purpose": "Gömülü MusicProgramV1: segmentli loop tema — kodek sonrası dikiş, stem hizası, bar hizası ve QA tek görevde.",
   "category": "music-theme",
@@ -1056,7 +1056,7 @@
           "kind": "descriptor",
           "descriptor": "durationSeconds",
           "min": 6,
-          "max": 16
+          "max": 8
         },
         {
           "kind": "pitch",

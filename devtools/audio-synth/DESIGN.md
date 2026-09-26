@@ -808,6 +808,29 @@ durumu `benchmarks/reviews.json` (`BenchmarkReviewsV1`) içindedir, hepsi
 `pending-human`dır ve yalnız `benchmark review … --by human` ile değişir;
 görev sürümü artınca inceleme bayatlar.
 
+**Açıklık matrisi (R4).** `scripts/distinctiveness-report.ts`
+(`measureDistinctiveness`) bütün görev parçalarını bir kez render eder —
+akustik `renderProgram`, müzik `checkMusic` referans mix'i — sonra her
+(değerlendirici, aday) çiftinde adayın bütün parça render'larını
+değerlendiricinin bütün parça kriter kümelerine karşı sınar. Çapraz
+sınama yalnız `CHECK_KINDS` mekanik kriterlerini kullanır (kodek ve
+müzik-özgü türler yabancı render'a uygulanmaz). Aday tek bir
+(kriter kümesi, render) eşleşmesini bile bütünüyle karşılıyorsa
+"reddedilemez"dir ve çift adıyla raporlanır. Kural: her görev diğer 13
+görevin en az 11'ini reddeder; reddedilemeyen çiftler
+`tests/benchmark/distinctiveness.test.ts` içinde `DOCUMENTED_PAIRS`
+olarak adıyla kilitlenir ve burada gerekçelendirilir.
+
+İlk ölçüm iki çifti yakaladı ve kriterler gerçekten ayırt edici hâle
+getirildi (eşik gevşetilmedi): `arcade-theme→music-cue` — iki müzik
+görevinin mekanik kriterleri aynı profildeydi, tema süre üst sınırı
+16 sn'den ölçülen 6.4 sn döngüye göre 8 sn'ye indi (cue 12.8 sn →
+reddedilir); `metal-scrape→snake-hiss` — ikisi de parlak gürültü dokusu,
+scrape'e rezonans sırtlı `flatness ≤ 0.05` kriteri eklendi (ölçüm 0.0095;
+hiss 0.163 → reddedilir). Güncel matris 14×13 = 182 çiftin tamamını
+reddediyor; `DOCUMENTED_PAIRS` boş — yeni bir reddedilemeyen çift testte
+ismiyle düşer.
+
 ### Kalite matrisi (`audio:capabilities`)
 
 `QualityMatrixV1`, ontolojinin 31 mekanizmasının her biri için motorun
