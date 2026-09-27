@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { SaveManager } from '@volstudio/core';
+import type { ScopedSaveManager } from '@volstudio/core';
 import { VideoSettings } from '@/app/VideoSettings';
 import { VideoSettingsController } from '@/app/VideoSettingsController';
 
@@ -7,7 +7,7 @@ function makeSettings(): VideoSettings {
   return new VideoSettings({
     load: vi.fn().mockResolvedValue({}),
     save: vi.fn().mockResolvedValue(undefined),
-  } as unknown as SaveManager);
+  } as unknown as ScopedSaveManager);
 }
 
 function makeNativeAdapter() {

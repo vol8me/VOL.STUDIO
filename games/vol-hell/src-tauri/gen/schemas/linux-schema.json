@@ -2383,6 +2383,198 @@
           "type": "string",
           "const": "store:deny-values",
           "markdownDescription": "Denies the values command without any pre-configured scope."
+        },
+        {
+          "description": "Ölçüm sondası kaydına satır yazma ve izin listeli ortam dökümü izni.\n#### This default permission set includes:\n\n- `allow-report`\n- `allow-env-info`\n- `allow-flush-done`",
+          "type": "string",
+          "const": "vol-diagnostics:default",
+          "markdownDescription": "Ölçüm sondası kaydına satır yazma ve izin listeli ortam dökümü izni.\n#### This default permission set includes:\n\n- `allow-report`\n- `allow-env-info`\n- `allow-flush-done`"
+        },
+        {
+          "description": "Enables the env_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-diagnostics:allow-env-info",
+          "markdownDescription": "Enables the env_info command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the flush_done command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-diagnostics:allow-flush-done",
+          "markdownDescription": "Enables the flush_done command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the report command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-diagnostics:allow-report",
+          "markdownDescription": "Enables the report command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the env_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-diagnostics:deny-env-info",
+          "markdownDescription": "Denies the env_info command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the flush_done command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-diagnostics:deny-flush-done",
+          "markdownDescription": "Denies the flush_done command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the report command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-diagnostics:deny-report",
+          "markdownDescription": "Denies the report command without any pre-configured scope."
+        },
+        {
+          "description": "İsteğe bağlı Steamworks köprüsü: durum, Steam Input manifestosu ve aksiyon seti, kol listesi, glif, metin girişi, bağlama paneli ve Steam Cloud dosyaları.\n#### This default permission set includes:\n\n- `allow-status`\n- `allow-set-input-manifest`\n- `allow-activate-action-set`\n- `allow-controllers`\n- `allow-action-glyph`\n- `allow-show-text-input`\n- `allow-show-floating-input`\n- `allow-show-binding-panel`\n- `allow-cloud-list`\n- `allow-cloud-read`\n- `allow-cloud-write`\n- `allow-cloud-delete`",
+          "type": "string",
+          "const": "vol-steamworks:default",
+          "markdownDescription": "İsteğe bağlı Steamworks köprüsü: durum, Steam Input manifestosu ve aksiyon seti, kol listesi, glif, metin girişi, bağlama paneli ve Steam Cloud dosyaları.\n#### This default permission set includes:\n\n- `allow-status`\n- `allow-set-input-manifest`\n- `allow-activate-action-set`\n- `allow-controllers`\n- `allow-action-glyph`\n- `allow-show-text-input`\n- `allow-show-floating-input`\n- `allow-show-binding-panel`\n- `allow-cloud-list`\n- `allow-cloud-read`\n- `allow-cloud-write`\n- `allow-cloud-delete`"
+        },
+        {
+          "description": "Enables the action_glyph command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-action-glyph",
+          "markdownDescription": "Enables the action_glyph command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the activate_action_set command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-activate-action-set",
+          "markdownDescription": "Enables the activate_action_set command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the cloud_delete command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-cloud-delete",
+          "markdownDescription": "Enables the cloud_delete command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the cloud_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-cloud-list",
+          "markdownDescription": "Enables the cloud_list command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the cloud_read command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-cloud-read",
+          "markdownDescription": "Enables the cloud_read command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the cloud_write command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-cloud-write",
+          "markdownDescription": "Enables the cloud_write command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the controllers command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-controllers",
+          "markdownDescription": "Enables the controllers command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_input_manifest command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-set-input-manifest",
+          "markdownDescription": "Enables the set_input_manifest command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the show_binding_panel command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-show-binding-panel",
+          "markdownDescription": "Enables the show_binding_panel command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the show_floating_input command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-show-floating-input",
+          "markdownDescription": "Enables the show_floating_input command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the show_text_input command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-show-text-input",
+          "markdownDescription": "Enables the show_text_input command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the status command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:allow-status",
+          "markdownDescription": "Enables the status command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the action_glyph command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-action-glyph",
+          "markdownDescription": "Denies the action_glyph command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the activate_action_set command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-activate-action-set",
+          "markdownDescription": "Denies the activate_action_set command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the cloud_delete command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-cloud-delete",
+          "markdownDescription": "Denies the cloud_delete command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the cloud_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-cloud-list",
+          "markdownDescription": "Denies the cloud_list command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the cloud_read command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-cloud-read",
+          "markdownDescription": "Denies the cloud_read command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the cloud_write command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-cloud-write",
+          "markdownDescription": "Denies the cloud_write command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the controllers command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-controllers",
+          "markdownDescription": "Denies the controllers command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_input_manifest command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-set-input-manifest",
+          "markdownDescription": "Denies the set_input_manifest command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the show_binding_panel command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-show-binding-panel",
+          "markdownDescription": "Denies the show_binding_panel command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the show_floating_input command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-show-floating-input",
+          "markdownDescription": "Denies the show_floating_input command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the show_text_input command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-show-text-input",
+          "markdownDescription": "Denies the show_text_input command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the status command without any pre-configured scope.",
+          "type": "string",
+          "const": "vol-steamworks:deny-status",
+          "markdownDescription": "Denies the status command without any pre-configured scope."
         }
       ]
     },

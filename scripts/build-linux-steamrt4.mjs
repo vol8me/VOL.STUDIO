@@ -41,7 +41,8 @@ if (!existsSync(confPath)) {
   );
   process.exit(2);
 }
-const { productName } = JSON.parse(readFileSync(confPath, 'utf8'));
+const conf = JSON.parse(readFileSync(confPath, 'utf8'));
+const { productName } = conf;
 
 const record = loadRepoLifecycle(ROOT)?.workspaces.find((w) => w.path === workspace);
 if (record?.status === 'frozen') {
@@ -50,6 +51,24 @@ if (record?.status === 'frozen') {
       "yeniden paketleme freezeTag worktree'sindedir.",
   );
   process.exit(2);
+}
+
+// Kapta node/pnpm yoktur: `beforeBuildCommand` taşıyan uygulamaların ön
+// yüzünü host'ta derleriz ve kaba `VOL_FRONTEND_PREBUILT=1` geçeriz ki
+// `tauri build` o komutu `--config` ile sussun (bkz. steamrt4-build.sh).
+const { beforeBuildCommand, frontendDist } = conf.build ?? {};
+let frontendPrebuilt = false;
+if (beforeBuildCommand) {
+  console.log(`[steamrt4] ön yüz host'ta derleniyor: ${beforeBuildCommand}`);
+  execFileSync('sh', ['-c', beforeBuildCommand], { cwd: ROOT, stdio: 'inherit' });
+  const distDir = join(ROOT, workspace, String(frontendDist ?? '').replace(/^(\.\.\/)+/, ''));
+  if (!existsSync(distDir)) {
+    console.error(
+      `${workspace}: beforeBuildCommand koştu ama ${frontendDist} üretmedi — derleme iptal.`,
+    );
+    process.exit(1);
+  }
+  frontendPrebuilt = true;
 }
 
 /** Sonda index.html'inde `vendor/` başvurusu varsa node_modules'den kopyala. */
@@ -95,6 +114,9 @@ function findBannedDriverLibs(dir) {
 
 /** OGG çözümleme zinciri gerçek bir dosya ister; yoksa küçük bir ses üretilir. */
 function ensureProbeAudio() {
+  // Yalnız sonda uygulaması bu dosyayı tüketir (web/ dizini ona özgüdür);
+  // gerçek oyunlarda üretilmiş artık bırakmaz.
+  if (!existsSync(join(ROOT, workspace, 'web'))) return;
   const audioDir = join(ROOT, workspace, 'public', 'assets', 'audio');
   const probe = join(audioDir, 'probe.ogg');
   if (existsSync(probe)) return;
@@ -166,6 +188,8 @@ execFileSync(
     ...(process.env.VOL_CARGO_FEATURES
       ? ['-e', `VOL_CARGO_FEATURES=${process.env.VOL_CARGO_FEATURES}`]
       : []),
+    // Ön yüz host'ta derlendiyse kap `beforeBuildCommand`'i `--config` ile sussun.
+    ...(frontendPrebuilt ? ['-e', 'VOL_FRONTEND_PREBUILT=1'] : []),
     BUILD_IMAGE_TAG,
     'bash',
     'scripts/steamrt4-build.sh',

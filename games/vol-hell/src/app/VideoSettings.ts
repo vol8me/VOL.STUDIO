@@ -1,4 +1,4 @@
-import { PersistedObservableState, type SaveManager } from '@volstudio/core';
+import { PersistedObservableState, type ScopedSaveManager, type ScopedKey } from '@volstudio/core';
 import { reportPersistenceFailure } from '@/app/settingsPersistence';
 import { GraphicsQuality } from '@volstudio/core';
 import {
@@ -31,7 +31,7 @@ const LEGACY_QUALITY_ALIASES: Readonly<Record<string, GraphicsQualityLevel>> = {
   ultra: 'high',
 };
 
-const STORAGE_KEY = 'vol-hell:video-settings';
+const STORAGE_KEY: ScopedKey = 'device.vol-hell:video-settings';
 
 function isDisplayMode(value: unknown): value is DisplayMode {
   return value === 'windowed' || value === 'fullscreen';
@@ -78,7 +78,7 @@ export class VideoSettings {
   private readonly listeners = new Set<(data: VideoSettingsData) => void>();
   private disposed = false;
 
-  constructor(saveManager: SaveManager) {
+  constructor(saveManager: ScopedSaveManager) {
     const initial = mergeWithDefaults(undefined);
     this.quality = new GraphicsQuality<GraphicsQualityLevel, GraphicsQualityProfile>({
       levels: videoConfig.quality,

@@ -18,7 +18,6 @@ tauri-v2/plugins/*/permissions/schemas/
 # Frozen ürün ağaçları (workspace-lifecycle.json): immutable — rutin format
 # kapısı onları taramaz. Yeni frozen paket eklendiğinde buraya da yazılır
 # (scripts/quality/tests/frozenToolSelection.test.mjs bunu kilitler).
-games/vol-hell/**
 games/vol-arachnid/**
 
 # Test coverage raporlari

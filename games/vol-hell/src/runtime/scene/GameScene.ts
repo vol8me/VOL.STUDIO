@@ -23,6 +23,7 @@ import {
   HELL_ACTIONS,
   HELL_AIM_STICK_ACTION,
   HELL_AIM_STICK_ACTIVATES_ON_TOUCH,
+  HELL_GAMEPAD_BINDINGS,
   HELL_MOVE_KEYS,
   HELL_PC_BINDINGS,
   type HellAction,
@@ -33,6 +34,8 @@ import { physicsConfig } from '@/config/physics';
 import { sfxVolumes } from '@/config';
 import { BOSS_ENEMY_ID, getMaxEnemyRadius } from '@/config/enemies/catalog';
 import { diagnostics, gameAudio, audioSettings, keyBindings, videoSettings } from '@/app/services';
+import { initialInputMode } from '@/app/platform';
+import { setGamepadNavDelegate } from '@/app/gamepadNav';
 import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
 import { EffectManager } from '@/runtime/systems/EffectManager';
 import { TelegraphManager } from '@/runtime/systems/TelegraphManager';
@@ -251,6 +254,10 @@ export class GameScene extends BaseScene {
          */
         pcActionBindings: keyBindings?.getAll() ?? HELL_PC_BINDINGS,
         moveKeys: HELL_MOVE_KEYS,
+        // Kol sağlayıcısı: sol çubuk hareket, sağ çubuk nişan; RT=fire, A=dash.
+        gamepad: { actionBindings: HELL_GAMEPAD_BINDINGS },
+        // gamescope oturumunda ilk kareden kol kipinde başlanır.
+        inputMode: { initial: initialInputMode() },
         aimStickAction: HELL_AIM_STICK_ACTION,
         aimStickActivatesOnTouch: HELL_AIM_STICK_ACTIVATES_ON_TOUCH,
         actionSource: this.mobileControls.actionSource,
@@ -394,6 +401,17 @@ export class GameScene extends BaseScene {
     this.border.refresh();
     runtimeScope.addSubscription(this.screens.hud.observeLayout(() => this.border.refresh()));
     this.bindKeys(runtimeScope);
+
+    // Menu/Start düğmesi ve Steam overlay açılışı bu sahne aktifken pause'a
+    // bağlanır. Gezinme katmanı (FocusNavController) uygulama ömürlüdür;
+    // delege kaydı sahne kapanırken geri alınır ki menüde Menu basımı
+    // sahipsiz kalmasın diye değil — eylemsiz kalması GEREKTİĞİ için.
+    setGamepadNavDelegate({
+      onMenu: () => this.pauseCtl.toggle(),
+      onOverlayOpen: () => this.pauseCtl.pauseForMenu(),
+    });
+    runtimeScope.add({ dispose: () => setGamepadNavDelegate(null) });
+
     this.run.start();
 
     // Yükleme tamamlandı — %100 yapıp gizle
@@ -494,9 +512,7 @@ export class GameScene extends BaseScene {
 
     this.keyboardBindings = runtimeScope.addDestroyable(
       new GameKeyboardBindings(keyboard, {
-        pauseKeyCode: Phaser.Input.Keyboard.KeyCodes.ESC,
         abilityKeys: SLOT_KEYS,
-        onPause: () => this.pauseCtl.toggle(),
         isAbilityBlocked: () => this.pauseCtl.isPaused || this.screens?.cards.isOpen() === true,
         onAbility: (slot) => this.abilities.tryActivate(slot),
       }),

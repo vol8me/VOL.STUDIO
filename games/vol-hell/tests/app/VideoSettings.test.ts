@@ -1,16 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { videoConfig } from '@/config/video';
-import type { SaveManager } from '@volstudio/core';
+import type { ScopedSaveManager } from '@volstudio/core';
 import { VideoSettings } from '@/app/VideoSettings';
 
 function makeStore(initial?: unknown): {
-  manager: SaveManager;
+  manager: ScopedSaveManager;
   load: ReturnType<typeof vi.fn>;
   save: ReturnType<typeof vi.fn>;
 } {
   const load = vi.fn().mockResolvedValue(initial ?? {});
   const save = vi.fn().mockResolvedValue(undefined);
-  return { manager: { load, save } as unknown as SaveManager, load, save };
+  return { manager: { load, save } as unknown as ScopedSaveManager, load, save };
 }
 
 afterEach(() => {

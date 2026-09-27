@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { GameStats } from '@/app/GameStats';
-import { SaveManager, type IStorageAdapter } from '@volstudio/core';
+import { type IStorageAdapter } from '@volstudio/core';
+import { scopedManager } from '../helpers/scopedManager';
 
 class MemoryAdapter implements IStorageAdapter {
   private readonly store = new Map<string, unknown>();
@@ -34,8 +35,8 @@ class FailingAdapter implements IStorageAdapter {
   }
 }
 
-function createSaveManager(): SaveManager {
-  return new SaveManager(new MemoryAdapter());
+function createSaveManager() {
+  return scopedManager(new MemoryAdapter());
 }
 
 describe('GameStats', () => {
@@ -104,7 +105,7 @@ describe('GameStats', () => {
   });
 
   it('save başarısız olursa hafıza durumu değişmez ve hata fırlatır', async () => {
-    const failingStats = new GameStats(new SaveManager(new FailingAdapter()));
+    const failingStats = new GameStats(scopedManager(new FailingAdapter()));
     await failingStats.load();
     await expect(failingStats.submitRun(100, 1000, 1)).rejects.toThrow('storage full');
 
@@ -126,8 +127,8 @@ describe('GameStats', () => {
 
   it('K5: kısmi kayıt NaN üretmez, eksik alanlar varsayılana düşer', async () => {
     const adapter = new MemoryAdapter();
-    await adapter.set('vol-hell:game-stats', { bestScore: 5 });
-    const partial = new GameStats(new SaveManager(adapter));
+    await adapter.set('synced.vol-hell:game-stats', { bestScore: 5 });
+    const partial = new GameStats(scopedManager(adapter));
     await partial.load();
 
     expect(partial.getBestScore()).toBe(5);
@@ -140,13 +141,13 @@ describe('GameStats', () => {
 
   it('K5: geçersiz tipler ve NaN reddedilir', async () => {
     const adapter = new MemoryAdapter();
-    await adapter.set('vol-hell:game-stats', {
+    await adapter.set('synced.vol-hell:game-stats', {
       bestScore: 'çok',
       bestTimeMs: Number.NaN,
       bestKills: -5,
       totalKills: null,
     });
-    const corrupt = new GameStats(new SaveManager(adapter));
+    const corrupt = new GameStats(scopedManager(adapter));
     await corrupt.load();
 
     expect(corrupt.getBestScore()).toBe(0);

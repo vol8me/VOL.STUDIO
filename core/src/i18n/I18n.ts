@@ -1,16 +1,16 @@
 import i18next from 'i18next';
 import coreTr from './tr.json';
 import coreEn from './en.json';
-import type { SaveManager } from '../persistence/SaveManager';
+import type { PersistenceStore } from '../persistence/PersistedObservableState';
 
 export { i18next };
 
 export interface I18nOptions {
   /** Bulunamayan key'lerde düşülecek yedek dil. Varsayılan 'tr'. */
   fallbackLocale?: string;
-  /** SaveManager ile dil tercihini persist etmek için. Verilmezse localStorage kullanılır. */
-  saveManager?: SaveManager | null;
-  /** SaveManager'da dil tercihinin kaydedileceği key. Varsayılan 'vol-locale'. */
+  /** Dil tercihini persist eden depo (SaveManager ya da ScopedSaveManager). Verilmezse localStorage kullanılır. */
+  saveManager?: PersistenceStore | null;
+  /** Depoda dil tercihinin kaydedileceği key. Varsayılan 'vol-locale'. */
   saveKey?: string;
   /** detectLocale()'in tanıyacağı ek dil kodları. Resource yüklemez — sadece dil tespiti için. */
   preloadLocales?: string[];
@@ -22,7 +22,7 @@ export interface I18nOptions {
 export class I18n {
   private initialized = false;
   private fallbackLocale = 'tr';
-  private saveManager: SaveManager | null = null;
+  private saveManager: PersistenceStore | null = null;
   private saveKey = 'vol-locale';
   private locales = new Set<string>(['tr', 'en']);
   /** Devam eden init'in promise'i — eşzamanlı çağrılarda ikinci init()'i engeller. */
@@ -83,7 +83,7 @@ export class I18n {
      * kilitlenmez.
      */
     const stored = this.saveManager
-      ? await this.saveManager.load<unknown>(this.saveKey, undefined)
+      ? await this.saveManager.load(this.saveKey, undefined)
       : undefined;
     const initialLocale =
       typeof stored === 'string' && this.locales.has(stored) ? stored : this.detectLocale();

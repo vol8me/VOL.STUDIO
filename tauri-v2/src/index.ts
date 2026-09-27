@@ -25,6 +25,13 @@ export type { SessionKind, SessionKindProbe } from './platform/sessionKind';
 export { registerShutdownFlush } from './platform/shutdownFlush';
 export type { ShutdownFlushHook, ShutdownFlushProbe } from './platform/shutdownFlush';
 
+export {
+  getDiagnosticsEnv,
+  isDeckMeasureRequested,
+  reportDiagnostics,
+} from './platform/diagnostics';
+export type { DiagnosticsProbe } from './platform/diagnostics';
+
 export { TauriHapticsDriver } from './platform/TauriHapticsDriver';
 
 export {

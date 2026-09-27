@@ -167,6 +167,19 @@ ağaçları ancak lifecycle yeniden aktifleştirmesiyle değişir (D7).
       4.0'da hiçbir ayar değiştirilmeden baştan sona kolla oynanır; 60 FPS
       hedefi ölçüm kaydıyla karşılanır; Verified kriterleri madde madde
       işaretlenir; kullanıcı onayıyla yeni annotated freeze etiketi atılır.
+      **Durum (2026-09-27):** D7a–d uygulandı — yaşam döngüsü aktif
+      (kapsam eşiği 82/80/73/77), `synced`/`device` kapsamları ve doğrulamalı
+      legacy taşıma (`storage.ts`, 5/5 test), kol eşlemesi ve odak
+      gezinmesi (`GameKeyboardBindings`'in ESC'i tek geri zincirine
+      indirgendi), gamescope'ta görüntü ayarları gizli. src-tauri'ye
+      `vol-steamworks` (feature'lı) + `vol-diagnostics` eklentileri girdi;
+      Deck turu ölçüldü: `available`/`manifestOk`/`inputReady` true,
+      `pad-connected` "Steam Deck"/`standard`, ilk fiziksel basım
+      `pad-input` kaydı düştü, gerçek dalga 9 pencerede 58–59,4 FPS
+      (p95 ≤ 21 ms), SIGTERM→flush→temiz çıkış kanıtlı, `device.*` store
+      dosyası doğdu. **Kalan:** kolla menü gezinme/pause/nişan hissi ve
+      overlay diyalogları insan turunda; ardından Verified işaretleri ve
+      kullanıcı onayıyla freeze.
 - [ ] **[P2] D8 — Yeni oyun rehberi Deck listesini taşır.**
       `games/docs/new-game.md`: oyuna özgü kimlik, kayıt kapsamları, kol
       eylem bağları, glif, `deck:*` adaylığı, okunabilirlik kapısı. Kapanır:

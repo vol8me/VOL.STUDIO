@@ -38,20 +38,18 @@ function makeKeyboard(): {
 describe('GameKeyboardBindings', () => {
   it('restart sonrası eski key closure’larını bırakır', () => {
     const { keyboard, keys } = makeKeyboard();
-    const onPause = vi.fn();
     const onAbility = vi.fn();
     let blocked = false;
     const bindings = new GameKeyboardBindings(keyboard as never, {
-      pauseKeyCode: 27,
       abilityKeys: { primary: 81, secondary: 69 },
-      onPause,
       isAbilityBlocked: () => blocked,
       onAbility,
     });
 
-    keys.get(27)?.emitDown();
+    // ESC burada bağlı DEĞİL — pause ortak geri yığınına taşındı
+    // (FocusNavController → pushBackHandler zinciri).
+    expect(keys.has(27)).toBe(false);
     keys.get(81)?.emitDown();
-    expect(onPause).toHaveBeenCalledTimes(1);
     expect(onAbility).toHaveBeenCalledWith('primary');
 
     blocked = true;
@@ -59,39 +57,34 @@ describe('GameKeyboardBindings', () => {
     expect(onAbility).toHaveBeenCalledTimes(1);
 
     bindings.destroy();
-    expect(keyboard.removeKey).toHaveBeenCalledTimes(3);
-    keys.get(27)?.emitDown();
+    expect(keyboard.removeKey).toHaveBeenCalledTimes(2);
     keys.get(81)?.emitDown();
-    expect(onPause).toHaveBeenCalledTimes(1);
     expect(onAbility).toHaveBeenCalledTimes(1);
 
     // Idempotent cleanup: SHUTDOWN'ın iki kez gelmesi key'i yeniden silmez.
     bindings.destroy();
-    expect(keyboard.removeKey).toHaveBeenCalledTimes(3);
+    expect(keyboard.removeKey).toHaveBeenCalledTimes(2);
   });
 
   it('kurulum ikinci tuşta patlarsa daha önce bağlanan tuşu geri bırakır', () => {
     const { keyboard, keys } = makeKeyboard();
     const originalAddKey = keyboard.addKey;
     keyboard.addKey = vi.fn((code: number) => {
-      if (code === 81) throw new Error('keyboard unavailable');
+      if (code === 69) throw new Error('keyboard unavailable');
       return originalAddKey(code);
     });
-    const onPause = vi.fn();
 
     expect(
       () =>
         new GameKeyboardBindings(keyboard as never, {
-          pauseKeyCode: 27,
           abilityKeys: { primary: 81, secondary: 69 },
-          onPause,
           isAbilityBlocked: () => false,
           onAbility: vi.fn(),
         }),
     ).toThrow('keyboard unavailable');
 
+    // İlk tuş (81) bağlanmıştı — yarım kurulum onu geri bırakır.
     expect(keyboard.removeKey).toHaveBeenCalledOnce();
-    keys.get(27)?.emitDown();
-    expect(onPause).not.toHaveBeenCalled();
+    keys.get(81)?.emitDown();
   });
 });

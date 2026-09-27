@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SaveManager, type IStorageAdapter } from '@volstudio/core';
+import type { IStorageAdapter } from '@volstudio/core';
+import { scopedManager } from '../helpers/scopedManager';
 import { AudioSettings, type AudioSettingsData } from '@/app/AudioSettings';
 import { audioConfig } from '@/config/audio';
 
@@ -37,7 +38,7 @@ describe('AudioSettings', () => {
   });
 
   it('load — boş depoda varsayılan değerleri kullanır', async () => {
-    const settings = new AudioSettings(new SaveManager(makeAdapter()));
+    const settings = new AudioSettings(scopedManager(makeAdapter()));
     await settings.load();
 
     expect(settings.getMasterVolume()).toBe(audioConfig.masterVolume);
@@ -50,9 +51,9 @@ describe('AudioSettings', () => {
 
   it('load — eksik alanları varsayılanlarla tamamlar', async () => {
     const settings = new AudioSettings(
-      new SaveManager(
+      scopedManager(
         makeAdapter({
-          'vol-hell:audio-settings': { masterVolume: 0.2 },
+          'device.vol-hell:audio-settings': { masterVolume: 0.2 },
         }),
       ),
     );
@@ -64,9 +65,9 @@ describe('AudioSettings', () => {
 
   it('load — kayıtlı snapshotı ses dinleyicilerine yayınlar', async () => {
     const settings = new AudioSettings(
-      new SaveManager(
+      scopedManager(
         makeAdapter({
-          'vol-hell:audio-settings': { masterVolume: 0, musicVolume: 0, muted: true },
+          'device.vol-hell:audio-settings': { masterVolume: 0, musicVolume: 0, muted: true },
         }),
       ),
     );
@@ -82,7 +83,7 @@ describe('AudioSettings', () => {
   });
 
   it('setMasterVolume — 0-1 aralığına kısar ve değişiklik bildirimi gönderir', async () => {
-    const settings = new AudioSettings(new SaveManager(makeAdapter()));
+    const settings = new AudioSettings(scopedManager(makeAdapter()));
     await settings.load();
 
     const listener = vi.fn();
@@ -100,7 +101,7 @@ describe('AudioSettings', () => {
   });
 
   it('setMuted — durumu değiştirir ve persist eder', async () => {
-    const settings = new AudioSettings(new SaveManager(makeAdapter()));
+    const settings = new AudioSettings(scopedManager(makeAdapter()));
     await settings.load();
 
     await settings.setMuted(true);
@@ -108,7 +109,7 @@ describe('AudioSettings', () => {
   });
 
   it('setScreenShakeIntensity — değeri 0-1 aralığına kısar', async () => {
-    const settings = new AudioSettings(new SaveManager(makeAdapter()));
+    const settings = new AudioSettings(scopedManager(makeAdapter()));
     await settings.load();
 
     await settings.setScreenShakeIntensity(-0.5);
@@ -119,7 +120,7 @@ describe('AudioSettings', () => {
   });
 
   it('setter — NaN ve Infinity ses zincirine sızmaz', async () => {
-    const settings = new AudioSettings(new SaveManager(makeAdapter()));
+    const settings = new AudioSettings(scopedManager(makeAdapter()));
     await settings.load();
     const original = settings.getMasterVolume();
 
@@ -135,7 +136,7 @@ describe('AudioSettings', () => {
 
   it('persist hatası — bildirimi engellemez ve rejection fırlatmaz', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const settings = new AudioSettings(new SaveManager(makeFailingAdapter()));
+    const settings = new AudioSettings(scopedManager(makeFailingAdapter()));
     await settings.load();
 
     const listener = vi.fn();
@@ -149,9 +150,9 @@ describe('AudioSettings', () => {
 
   it('K5: geçersiz tipler ve aralık dışı değerler varsayılana/kelepçeye düşer', async () => {
     const settings = new AudioSettings(
-      new SaveManager(
+      scopedManager(
         makeAdapter({
-          'vol-hell:audio-settings': {
+          'device.vol-hell:audio-settings': {
             masterVolume: 'yüksek',
             sfxVolume: Number.NaN,
             musicVolume: 5,
@@ -174,7 +175,7 @@ describe('AudioSettings', () => {
 
   it('K8: hızlı ardışık yazmalar tek bir depo yazmasında birleşir', async () => {
     const adapter = makeAdapter();
-    const settings = new AudioSettings(new SaveManager(adapter));
+    const settings = new AudioSettings(scopedManager(adapter));
     await settings.load();
 
     const setSpy = vi.mocked(adapter.set);
@@ -200,7 +201,7 @@ describe('AudioSettings', () => {
           releaseWrite = resolve;
         }),
     );
-    const settings = new AudioSettings(new SaveManager(adapter));
+    const settings = new AudioSettings(scopedManager(adapter));
     await settings.load();
 
     const setter = settings.setMasterVolume(0.42);

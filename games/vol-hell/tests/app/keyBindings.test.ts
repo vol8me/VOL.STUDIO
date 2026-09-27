@@ -4,7 +4,7 @@ import { HELL_PC_BINDINGS } from '@/config/input';
 
 function fakeSaveManager(initial: unknown = {}) {
   const store = new Map<string, unknown>();
-  if (initial !== undefined) store.set('vol-hell:key-bindings', initial);
+  if (initial !== undefined) store.set('device.vol-hell:key-bindings', initial);
   return {
     saved: store,
     load: vi.fn((key: string, fallback: unknown) => Promise.resolve(store.get(key) ?? fallback)),
@@ -60,7 +60,7 @@ describe('KeyBindings', () => {
     await bindings.rebind('dash', { source: 'key', keyCode: 81 });
 
     expect(bindings.getAll().dash).toEqual({ source: 'key', keyCode: 81 });
-    expect(manager.save).toHaveBeenCalledWith('vol-hell:key-bindings', bindings.getAll());
+    expect(manager.save).toHaveBeenCalledWith('device.vol-hell:key-bindings', bindings.getAll());
   });
 
   it('dönen ve yayınlanan nested bağlar iç statei değiştiremez', async () => {

@@ -2,14 +2,15 @@ import {
   PersistedObservableState,
   findBindingConflicts,
   type PCActionBinding,
-  type SaveManager,
+  type ScopedSaveManager,
+  type ScopedKey,
 } from '@volstudio/core';
 import { reportPersistenceFailure } from '@/app/settingsPersistence';
 import { HELL_ACTIONS, HELL_PC_BINDINGS, type HellAction } from '@/config/input';
 
 export type HellBindings = Readonly<Record<HellAction, PCActionBinding>>;
 
-const STORAGE_KEY = 'vol-hell:key-bindings';
+const STORAGE_KEY: ScopedKey = 'device.vol-hell:key-bindings';
 
 /**
  * Kayıttan gelen tek bir bağı doğrular.
@@ -86,7 +87,7 @@ export class KeyBindings {
   private readonly persisted: PersistedObservableState<HellBindings>;
   private readonly listeners = new Set<(data: HellBindings) => void>();
 
-  constructor(saveManager: SaveManager) {
+  constructor(saveManager: ScopedSaveManager) {
     this.persisted = new PersistedObservableState<HellBindings>({
       store: saveManager,
       key: STORAGE_KEY,

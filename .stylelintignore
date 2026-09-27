@@ -9,5 +9,4 @@ target/
 devtools/*/export/
 
 # Frozen ürün ağaçları (workspace-lifecycle.json): rutin stil kapısı dışında.
-games/vol-hell/**
 games/vol-arachnid/**

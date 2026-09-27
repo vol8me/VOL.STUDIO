@@ -39,6 +39,7 @@
   },
   "bundle": {
     "active": true,
+    "resources": ["steam_input_manifest.vdf"],
     "targets": ["nsis", "msi"],
     "linux": {
       "appimage": {

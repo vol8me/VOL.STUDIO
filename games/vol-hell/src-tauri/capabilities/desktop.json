@@ -9,6 +9,8 @@
     "core:window:allow-set-fullscreen",
     "core:window:allow-set-size",
     "log:default",
-    "store:default"
+    "store:default",
+    "vol-diagnostics:default",
+    "vol-steamworks:default"
   ]
 }

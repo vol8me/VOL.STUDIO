@@ -1,14 +1,15 @@
-import { DEFAULT_MOVE_KEYS, type MoveKeyBindings, type PCActionBinding } from '@volstudio/core';
+import {
+  DEFAULT_MOVE_KEYS,
+  GAMEPAD_BUTTON,
+  type GamepadActionBinding,
+  type MoveKeyBindings,
+  type PCActionBinding,
+} from '@volstudio/core';
 
 /**
- * VOL.HELL'in eylem SÖZLÜĞÜ ve tuş eşlemesi.
- *
- * `InputManager` motoru CORE'da yaşar ve hiçbir eylem adı bilmez; hangi
- * eylemlerin var olduğu ve neye bağlandığı oyunun kararıdır ve bu dosyada
- * durur — yani bir eylem eklemek ya da tuş değiştirmek VERİ değişikliğidir.
- *
- * - `fire` — mermi ateşleme (sürekli; basılı tutuldukça ateş eder).
- * - `dash` — kısa mesafeli sıçrama (tek tetik).
+ * VOL.HELL eylem sözlüğü ve tuş eşlemesi — `InputManager` eylem adı bilmez;
+ * eylem eklemek ya da tuş değiştirmek VERİ değişikliğidir ve burada durur.
+ * `fire` mermi ateşleme (basılı tutulabilir), `dash` kısa sıçrama (tek tetik).
  */
 export type HellAction = 'fire' | 'dash';
 
@@ -16,11 +17,8 @@ export type HellAction = 'fire' | 'dash';
 export const HELL_ACTIONS: readonly HellAction[] = ['fire', 'dash'];
 
 /**
- * Klavye/fare eşlemesi.
- *
- * `fire` fare sol düğmesine bağlıdır: CORE bu bağlantıda pointer'ın son
- * olayı bir DOKUNUŞ ise eylemi basılı saymaz, yani dokunmatikte sağ
- * joystick ile fare tıklaması birbirine karışmaz.
+ * `fire` fare sol düğmesinde: CORE, pointer'ın son olayı dokunuşsa eylemi
+ * basılı saymaz — dokunmatikte sağ joystick ile fare tıklaması karışmaz.
  */
 export const HELL_PC_BINDINGS: Readonly<Record<HellAction, PCActionBinding>> = {
   fire: { source: 'pointerButton', button: 'left' },
@@ -33,14 +31,18 @@ export const HELL_PC_BINDINGS: Readonly<Record<HellAction, PCActionBinding>> = {
 export const HELL_MOVE_KEYS: MoveKeyBindings = DEFAULT_MOVE_KEYS;
 
 /**
- * Dokunmatikte sağ joystick'in ürettiği eylem. Dokunmanın deadzone içinde
- * de eylem sayılıp sayılmayacağı aşağıdaki ayrı veriyle belirlenir; CORE'un
- * dokunmatik katmanı kendi başına hiçbir eylem adı bilmez.
+ * Kol eşlemesi (W3C `standard` dizinleri). Sol çubuk hareket, sağ çubuk
+ * nişan — eksenleri `gamepad` sağlayıcısı okur; burada yalnız eylem
+ * düğmeleri var: `fire` sağ tetikte (RT), `dash` A/✕'te. Menu/Start
+ * bilerek yoktur: gezinme katmanına aittir (`FocusNavController.onMenu`).
  */
+export const HELL_GAMEPAD_BINDINGS: Readonly<Record<HellAction, GamepadActionBinding>> = {
+  fire: { source: 'button', button: GAMEPAD_BUTTON.rightTrigger },
+  dash: { source: 'button', button: GAMEPAD_BUTTON.primary },
+};
+
+/** Dokunmatikte sağ joystick'in ürettiği eylem; CORE dokunma katmanı eylem adı bilmez. */
 export const HELL_AIM_STICK_ACTION: HellAction = 'fire';
 
-/**
- * Sağ ateş çubuğuna yalnız basmak otomatik hedeflemeyi başlatır; sürüklemek
- * manuel nişana geçer. CORE varsayılanı false'tur, bu VOL.HELL tercihidir.
- */
+/** Sağ çubuğa basmak otomatik nişanı başlatır; sürüklemek manuel nişandır. */
 export const HELL_AIM_STICK_ACTIVATES_ON_TOUCH = true;

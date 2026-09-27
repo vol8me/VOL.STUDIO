@@ -1,4 +1,4 @@
-import { PersistedObservableState, type SaveManager } from '@volstudio/core';
+import { PersistedObservableState, type ScopedSaveManager, type ScopedKey } from '@volstudio/core';
 import { reportPersistenceFailure } from '@/app/settingsPersistence';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { audioConfig } from '@/config/audio';
@@ -15,7 +15,7 @@ export interface AudioSettingsData {
   screenShakeIntensity: number;
 }
 
-const STORAGE_KEY = 'vol-hell:audio-settings';
+const STORAGE_KEY: ScopedKey = 'device.vol-hell:audio-settings';
 
 /** Ayar yazımlarının depoya en fazla bu sıklıkta inmesi sağlanır (ms). */
 const PERSIST_DEBOUNCE_MS = 120;
@@ -64,7 +64,7 @@ export class AudioSettings {
   private disposed = false;
   private readonly boundFlush = (): void => void this.flush();
 
-  constructor(saveManager: SaveManager) {
+  constructor(saveManager: ScopedSaveManager) {
     this.persisted = new PersistedObservableState<AudioSettingsData>({
       store: saveManager,
       key: STORAGE_KEY,

@@ -4,7 +4,7 @@ import {
   isDiagnosticsEnabled,
   setHapticsEnabled,
   type Diagnostics,
-  type SaveManager,
+  type ScopedSaveManager,
 } from '@volstudio/core';
 import { createSaveManager } from '@/app/storage';
 import { setDiagnostics } from '@/app/settingsPersistence';
@@ -23,7 +23,7 @@ import { KeyBindings } from '@/app/KeyBindings';
  * sayesinde tüm tüketicilerde görünür. Sahne metotları modül değerlendirmesinden
  * sonra çalıştığı için güvenlidir.
  */
-export let saveManager: SaveManager;
+export let saveManager: ScopedSaveManager;
 export let audioSettings: AudioSettings;
 export let gameStats: GameStats;
 export let gameAudio: GameAudio;

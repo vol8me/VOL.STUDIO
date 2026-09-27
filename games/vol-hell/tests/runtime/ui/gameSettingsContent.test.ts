@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { i18n, i18next, type SaveManager } from '@volstudio/core';
+import { i18n, i18next, type ScopedSaveManager } from '@volstudio/core';
 import { AudioSettings } from '@/app/AudioSettings';
 import { VideoSettings } from '@/app/VideoSettings';
 import { GameSettingsContent } from '@/runtime/ui/GameSettingsContent';
@@ -9,11 +9,11 @@ import enResources from '@/i18n/en.json';
 const playSfx = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 vi.mock('@/app/services', () => ({ gameAudio: { playSfx } }));
 
-function makeSaveManager(): SaveManager {
+function makeSaveManager(): ScopedSaveManager {
   return {
     load: vi.fn().mockResolvedValue({}),
     save: vi.fn().mockResolvedValue(undefined),
-  } as unknown as SaveManager;
+  } as unknown as ScopedSaveManager;
 }
 
 describe('GameSettingsContent', () => {

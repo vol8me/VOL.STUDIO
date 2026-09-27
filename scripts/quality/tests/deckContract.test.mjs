@@ -128,3 +128,47 @@ test('summarizeReport: fazlar, sinyaller, sanal kol ve runtime ayrışır', () =
   assert.equal(s.gamepads[0].id, 'Microsoft X-Box 360 pad 0');
   assert.equal(s.total, 6);
 });
+
+test('summarizeReport: oyun perf pencereleri, pad-input ve steamworks ayrışır', () => {
+  const lines = [
+    JSON.stringify({ src: 'js', type: 'info', env: { STEAM_GAMESCOPE: '1' } }),
+    JSON.stringify({
+      src: 'js',
+      type: 'steamworks',
+      available: true,
+      manifestOk: true,
+      appId: 480,
+      deck: true,
+    }),
+    JSON.stringify({ src: 'js', type: 'pad-connected', id: 'Steam Deck', mapping: 'standard' }),
+    JSON.stringify({ src: 'js', type: 'pad-input', button: 9, axis: null, t: 1234 }),
+    JSON.stringify({
+      src: 'js',
+      type: 'perf',
+      phase: 'vol-hell oyun',
+      window: 0,
+      fps: 59.9,
+      p95: 17.2,
+      over20ms: 2,
+      over34ms: 0,
+    }),
+    JSON.stringify({
+      src: 'js',
+      type: 'perf',
+      phase: 'vol-hell oyun',
+      window: 1,
+      fps: 60.0,
+      p95: 16.9,
+      over20ms: 0,
+      over34ms: 0,
+      final: true,
+    }),
+  ];
+  const s = summarizeReport(lines);
+  // İki pencere aynı faz adını taşır — window anahtarıyla ayrışmalı.
+  assert.equal(s.phases.length, 2);
+  assert.equal(s.phases[0].window, 0);
+  assert.equal(s.phases[1].fps, 60.0);
+  assert.deepEqual(s.padInputs, [{ button: 9, axis: null }]);
+  assert.deepEqual(s.steamworks, { available: true, manifestOk: true, appId: 480, deck: true });
+});

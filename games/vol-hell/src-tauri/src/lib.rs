@@ -9,5 +9,16 @@
 pub fn run() {
     // Bağlam BU crate'te üretilir: kimlik, pencere ve gömülü ön yüz buradan
     // gelir. Paylaşılan kabuk yalnız eklentileri ve platform ayarlarını kurar.
-    volstudio_tauri_lib::run_with_context(tauri::generate_context!())
+    volstudio_tauri_lib::run_with_context_and(tauri::generate_context!(), |builder| {
+        // 480 = Valve'ın ortak geliştirme/test App ID'si (Spacewar). Gerçek
+        // Steamworks bağlantısı yalnız `steamworks` feature'ıyla derlenir;
+        // stub yapıda eklenti dürüst "kullanılamıyor" bildirir ve manifesto
+        // Steam'e hiç ulaşmaz.
+        builder
+            .plugin(tauri_plugin_vol_diagnostics::init())
+            .plugin(tauri_plugin_vol_steamworks::init(
+                480,
+                Some("steam_input_manifest.vdf"),
+            ))
+    })
 }

@@ -1,5 +1,9 @@
 {
   "$comment": [
+    "2026-10-02: vol-hell yeniden aktifleştirme (D7) — donmuş ağaçta ölçülen",
+    "kapsam satır 84.45 / ifade 82.21 / dal 75.54 / fonksiyon 79.44 (v8, 761",
+    "test). Eşikler ölçülenin ~2 puan altındaki bantta ratchet'li: 82/80/73/77.",
+    "",
     "2026-09-27: audio-synth R10 kapsam turu — v1 çekirdek smoke dizgileri,",
     "sample/fit/listening dal kapsamı ve serveTasks in-process testi sonrası",
     "ölçülen kapsam satır 96.88 / dal 88.82 / fonksiyon 97.55 (lcov; ifade",
@@ -131,6 +135,12 @@
       "statements": 93,
       "branches": 90,
       "functions": 100
+    },
+    "@volstudio/vol-hell": {
+      "lines": 82,
+      "statements": 80,
+      "branches": 73,
+      "functions": 77
     }
   },
   "bundles": {},

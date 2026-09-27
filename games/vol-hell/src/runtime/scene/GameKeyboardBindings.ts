@@ -3,9 +3,7 @@ import { DisposableScope } from '@volstudio/core';
 import type { AbilitySlot } from '@/runtime/ability/types';
 
 export interface GameKeyboardBindingOptions {
-  pauseKeyCode: number;
   abilityKeys: Readonly<Record<AbilitySlot, number>>;
-  onPause: () => void;
   isAbilityBlocked: () => boolean;
   onAbility: (slot: AbilitySlot) => void;
 }
@@ -15,8 +13,13 @@ export interface GameKeyboardBindingOptions {
  *
  * Phaser sahne örneğini restart'ta yeniden kullanır. Key nesneleri sahne
  * kapanırken kaldırılmazsa eski closure'lar yaşamaya devam eder ve sonraki
- * koşuda ESC/Q/E birden fazla kez çalışır. Bu sınıf bağlama ve kaldırmayı
+ * koşuda Q/E birden fazla kez çalışır. Bu sınıf bağlama ve kaldırmayı
  * birlikte taşır; sahne yalnızca `destroy()` çağırır.
+ *
+ * ESC'nin burada OLMAMASI bilinçlidir: duraklatma ortak geri yığınına
+ * bağlıdır (`pushBackHandler` → `onPauseToggle`); Escape `FocusNavController`
+ * üzerinden aynı zincire düşer. İki yol aynı anda dinlerse tek basış iki
+ * kez toggle üretirdi.
  */
 export class GameKeyboardBindings {
   private readonly scope = new DisposableScope();
@@ -26,8 +29,6 @@ export class GameKeyboardBindings {
     options: GameKeyboardBindingOptions,
   ) {
     try {
-      this.bind(options.pauseKeyCode, options.onPause);
-
       for (const slot of ['primary', 'secondary'] as const) {
         this.bind(options.abilityKeys[slot], () => {
           if (options.isAbilityBlocked()) return;

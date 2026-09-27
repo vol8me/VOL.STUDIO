@@ -1,6 +1,15 @@
+import { isTauri } from '@tauri-apps/api/core';
 import { createVolGame, showFatalStartupError, VOL_COLORS, i18n } from '@volstudio/core';
-import { TauriWindowAdapter } from '@volstudio/tauri-v2';
-import { hasNativeWindow } from '@/app/platform';
+import {
+  TauriWindowAdapter,
+  getSessionKind,
+  onSteamOverlay,
+  registerLinuxHaptics,
+} from '@volstudio/tauri-v2';
+import { hasNativeWindow, setSessionKind } from '@/app/platform';
+import { startDeckMeasure } from '@/app/deckMeasure';
+import { notifyGamepadOverlayOpen, startGamepadNavigation } from '@/app/gamepadNav';
+import { migrateLegacySave } from '@/app/storage';
 import {
   diagnostics,
   gameAudio,
@@ -56,9 +65,36 @@ try {
   i18n.addResources('tr', 'volhell', volhellTr);
   i18n.addResources('en', 'volhell', volhellEn);
 
-  // Dil tercihi oyun ayarlarıyla aynı depoya yazılır — servislerin kurduğu
-  // SaveManager paylaşılır, ikinci bir adapter örneği yaratılmaz.
-  await i18n.init({ saveManager });
+  // Oturum sınıfı kabuk bildirimidir (web/desktop/gamescope); görüntü
+  // yetenekleri ve başlangıç girdi kipi buna bağlanır. Oyun ömrünce sabit.
+  setSessionKind(await getSessionKind());
+
+  // Kol gezinmesi uygulama ömürlüdür: sahneler değişse de FocusNavController'ın
+  // dinleyicileri ve kol yoklaması sabit kalır; sahne niyetleri delege
+  // kaydıyla yönlenir (bkz. app/gamepadNav).
+  startGamepadNavigation();
+
+  if (isTauri()) {
+    // hidraw öncelikli native titreşim sürücüsü; aygıt yoksa kayıt sessizdir.
+    void registerLinuxHaptics();
+    // Steam overlay açılınca aktif sahnenin delegesi oyunu duraklatır.
+    void onSteamOverlay((active) => {
+      if (active) notifyGamepadOverlayOpen();
+    });
+    // VOL_DECK_MEASURE=1 olmadan hiçbir şey kurulmaz (bkz. app/deckMeasure).
+    void startDeckMeasure();
+  }
+
+  // Tek dosyalı eski kayıt, hiçbir tüketici okumadan önce kapsamlı
+  // store'lara taşınır — i18n dil tercihini de bu dosyadan okur.
+  const migration = await migrateLegacySave(saveManager);
+  if (migration.moved.length > 0 || migration.unknownLeftBehind) {
+    console.info('[bootstrap] Kayıt taşıması:', migration);
+  }
+
+  // Dil tercihi `device` kapsamındadır: cihazın yerel tercihidir ve Steam
+  // Cloud'a yazılmaz (aynı sözleşme ayarların tamamında geçerlidir).
+  await i18n.init({ saveManager, saveKey: 'device.vol-locale' });
   await loadPersistedState();
   document.title = gameConfig.title;
 

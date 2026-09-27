@@ -1,7 +1,15 @@
-import { Button, DisposableScope, IconButton, Panel, Text, i18next } from '@volstudio/core';
+import {
+  Button,
+  DisposableScope,
+  IconButton,
+  Panel,
+  Text,
+  i18next,
+  pushBackHandler,
+} from '@volstudio/core';
 import type { AudioSettings } from '@/app/AudioSettings';
 import type { VideoSettings } from '@/app/VideoSettings';
-import { hasNativeWindow, supportsDisplaySettings } from '@/app/platform';
+import { displayCapabilities, hasNativeWindow, supportsDisplaySettings } from '@/app/platform';
 import { gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
 import { GameSettingsContent } from '@/runtime/ui/GameSettingsContent';
@@ -21,6 +29,8 @@ export class PauseScreen {
   private readonly settingsContent: GameSettingsContent;
   private readonly settingsBackButton: Button;
   private readonly settingsCloseButton: IconButton;
+  /** Ayarlar paneli açıkken geri yığınını tutan kayıt; kapalıyken `null`. */
+  private settingsBackStop: (() => void) | null = null;
   private readonly onLanguageChanged = (): void => {
     this.titleText.setContent(i18next.t('volhell:pause.title'));
     this.resumeButton.setLabel(i18next.t('volhell:pause.resume'));
@@ -80,6 +90,7 @@ export class PauseScreen {
       audioSettings,
       videoSettings,
       showVideoSettings: supportsDisplaySettings(),
+      display: displayCapabilities(),
       canResizeWindow: hasNativeWindow(),
     });
     this.settingsBackButton = new Button(i18next.t('volhell:settings.back'), {
@@ -132,15 +143,26 @@ export class PauseScreen {
     void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
     this.panel.hide();
     this.settingsPanel.show();
+    // B/Escape bu katmandayken oyunu devam ettirmemeli — önce ayarlar
+    // paneli kapanır. İşleyici panel kapanınca kayıttan düşer.
+    this.settingsBackStop?.();
+    this.settingsBackStop = pushBackHandler(() => {
+      this.hideSettings();
+      return true;
+    });
   }
 
   private hideSettings(): void {
     void gameAudio.playSfx('back', { volume: sfxVolumes.back });
     this.settingsPanel.hide();
     this.panel.show();
+    this.settingsBackStop?.();
+    this.settingsBackStop = null;
   }
 
   destroy(): void {
+    this.settingsBackStop?.();
+    this.settingsBackStop = null;
     this.scope.dispose();
     this.overlay.remove();
   }

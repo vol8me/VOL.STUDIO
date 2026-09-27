@@ -39,6 +39,10 @@ export const ACKNOWLEDGED = {
   'core/src/ui/cards/ShopPickerTypes.ts': 'Tip bildirimi — seçenek sözleşmesi.',
   'devtools/audio-synth/src/types.ts':
     'Sentez parametrelerinin tip bildirimi; her alan birimini ve varsayılanını taşır.',
+  'games/vol-hell/src/config/cards/types.ts':
+    'Kart kataloğunun tip bildirimi; nadirlik/koşul alanlarının tasarım sözleşmesi alan başına yazılır.',
+  'games/vol-hell/src/config/enemies/types.ts':
+    'Düşman kataloğunun tip bildirimi; arketip ve davranış parametrelerinin anlamı alan başına yazılır.',
 };
 
 /**

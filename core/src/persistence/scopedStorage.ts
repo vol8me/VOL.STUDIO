@@ -102,6 +102,9 @@ export async function migrateLegacyStore(options: {
   const moved: string[] = [];
   const defaulted: string[] = [];
   for (const key of keys) {
+    // Tarayıcı yolunda eski ve yeni kayıtlar aynı localStorage'ı paylaşır;
+    // kapsamlı anahtarlar zaten hedef düzendir, `device.device.x` üretilemez.
+    if (isScopedKey(key)) continue;
     const value = await options.legacy.get<unknown>(key);
     if (value === undefined) continue; // hiç yazılmamış ya da zaten taşınmış
     const scope = table.get(key) ?? defaultScope;

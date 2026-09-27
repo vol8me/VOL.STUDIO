@@ -165,18 +165,27 @@ export function summarizeReport(lines) {
       }
     })
     .filter(Boolean);
-  const phases = records.filter((r) => r.type === 'phase' || r.type === 'phase-raf');
+  // Sonda faz kaydı (`phase`/`phase-raf`) üretir; gerçek oyun (vol-hell) ise
+  // faz değil duvar-saati penceresi koşar — `perf` kayıtları aynı alanları
+  // taşır ve burada aynı tabloya girer.
+  const phases = records.filter(
+    (r) => r.type === 'phase' || r.type === 'phase-raf' || r.type === 'perf',
+  );
   // Sayfa yeniden yüklenirse aynı faz iki kez yazılır — son kayıt günceldir.
-  const byPhase = new Map(phases.map((p) => [p.phase, p]));
+  // `perf` pencereleri aynı faz adını taşıdığı için `window` anahtarla ayrılır.
+  const byPhase = new Map(phases.map((p) => [`${p.phase}#${p.window ?? ''}`, p]));
   const info = [...records].reverse().find((r) => r.type === 'info');
   const signals = records.filter((r) => r.type === 'signal');
   const suspendGaps = records.filter((r) => r.type === 'suspend-gap');
   const pads = records.filter((r) => r.type === 'pad-connected');
+  const padInputs = records.filter((r) => r.type === 'pad-input');
+  const steamworks = [...records].reverse().find((r) => r.type === 'steamworks');
   return {
     env: info?.env ?? null,
     runtime: info?.env?.PRESSURE_VESSEL_RUNTIME ?? 'host',
     phases: [...byPhase.values()].map((p) => ({
       phase: p.phase,
+      window: p.window ?? null,
       sprites: p.sprites ?? null,
       fps: p.fps,
       p95: p.p95,
@@ -186,6 +195,18 @@ export function summarizeReport(lines) {
     signals: signals.map((s) => s.signal),
     suspendGaps: suspendGaps.map((s) => s.seconds),
     gamepads: pads.map((p) => ({ id: p.id, mapping: p.mapping })),
+    // Oyun kaydı fiziksel ilk kol basımını `pad-input` olarak yazar; listede
+    // olması "kol girdisi WebView'a ulaştı" demektir.
+    padInputs: padInputs.map((p) => ({ button: p.button ?? null, axis: p.axis ?? null })),
+    // Oyunun bildirdiği Steamworks durumu — eklenti yoksa kayıt hiç olmaz.
+    steamworks: steamworks
+      ? {
+          available: steamworks.available ?? false,
+          manifestOk: steamworks.manifestOk ?? steamworks.manifest_ok ?? null,
+          appId: steamworks.appId ?? steamworks.app_id ?? null,
+          deck: steamworks.deck ?? null,
+        }
+      : null,
     total: records.length,
   };
 }

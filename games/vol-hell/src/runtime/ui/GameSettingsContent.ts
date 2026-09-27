@@ -9,6 +9,7 @@ import {
   i18n,
   i18next,
   observeHapticsCapability,
+  type SessionDisplayCapabilities,
 } from '@volstudio/core';
 import type { AudioSettings, AudioSettingsData } from '@/app/AudioSettings';
 import type { VideoSettings, VideoSettingsData } from '@/app/VideoSettings';
@@ -23,6 +24,14 @@ export interface GameSettingsContentOptions {
   videoSettings: VideoSettings;
   /** Android/dokunmatik yüzeyde native masaüstü seçenekleri gösterilmez. */
   showVideoSettings: boolean;
+  /**
+   * Oturumun görüntü yetenekleri (`displayCapabilities()`). gamescope'ta
+   * `windowMode`/`resolution` false döner ve o satırlar SUNULMAZ —
+   * gamescope çerçeve arabelleğini sahiplenir, içeriden pencere ya da
+   * render çözünürlüğü seçilemez. Verilmezse masaüstü varsayımıyla ikisi
+   * de gösterilir.
+   */
+  display?: SessionDisplayCapabilities;
   /**
    * Pencere boyutunu gerçekten uygulayabilen bir native pencere var mı.
    *
@@ -148,39 +157,46 @@ export class GameSettingsContent {
     this.element.appendChild(audioSection);
 
     if (options.showVideoSettings) {
+      // Satır düzeyinde yetenek: gamescope'ta pencere/çözünürlük satırı
+      // sunulmaz, kalite geçerlidir (bkz. `sessionDisplay` sözleşmesi).
+      const display = options.display ?? { windowMode: true, resolution: true };
       this.videoText = new Text(i18next.t('volhell:settings.video'), { variant: 'heading' });
-      this.displayModeText = new Text(i18next.t('volhell:settings.displayMode'), {
-        variant: 'muted',
-      });
-      this.resolutionText = new Text(i18next.t('volhell:settings.resolution'), {
-        variant: 'muted',
-      });
+      this.displayModeText = display.windowMode
+        ? new Text(i18next.t('volhell:settings.displayMode'), { variant: 'muted' })
+        : null;
+      this.resolutionText = display.resolution
+        ? new Text(i18next.t('volhell:settings.resolution'), { variant: 'muted' })
+        : null;
       this.graphicsQualityText = new Text(i18next.t('volhell:settings.graphicsQuality'), {
         variant: 'muted',
       });
-      this.displayModeSelect = new Select({
-        options: [
-          { value: 'windowed', label: i18next.t('volhell:settings.windowed') },
-          { value: 'fullscreen', label: i18next.t('volhell:settings.fullscreen') },
-        ],
-        value: options.videoSettings.getDisplayMode(),
-        onCommit: (value) => {
-          void options.videoSettings.setDisplayMode(value as 'windowed' | 'fullscreen');
-          this.playCommitSound();
-        },
-      });
-      this.resolutionSelect = new Select({
-        options: videoConfig.resolutions.map((preset) => ({
-          value: preset.id,
-          label: `${preset.width} × ${preset.height}`,
-        })),
-        value: options.videoSettings.getResolutionId(),
-        disabled: this.isResolutionDisabled(options.videoSettings.getDisplayMode()),
-        onCommit: (value) => {
-          void options.videoSettings.setResolution(value);
-          this.playCommitSound();
-        },
-      });
+      this.displayModeSelect = display.windowMode
+        ? new Select({
+            options: [
+              { value: 'windowed', label: i18next.t('volhell:settings.windowed') },
+              { value: 'fullscreen', label: i18next.t('volhell:settings.fullscreen') },
+            ],
+            value: options.videoSettings.getDisplayMode(),
+            onCommit: (value) => {
+              void options.videoSettings.setDisplayMode(value as 'windowed' | 'fullscreen');
+              this.playCommitSound();
+            },
+          })
+        : null;
+      this.resolutionSelect = display.resolution
+        ? new Select({
+            options: videoConfig.resolutions.map((preset) => ({
+              value: preset.id,
+              label: `${preset.width} × ${preset.height}`,
+            })),
+            value: options.videoSettings.getResolutionId(),
+            disabled: this.isResolutionDisabled(options.videoSettings.getDisplayMode()),
+            onCommit: (value) => {
+              void options.videoSettings.setResolution(value);
+              this.playCommitSound();
+            },
+          })
+        : null;
       this.graphicsQualitySelect = new Select({
         options: this.graphicsLevels.map((quality) => ({
           value: quality,
@@ -194,15 +210,14 @@ export class GameSettingsContent {
       });
 
       const videoSection = this.makeSection('vol-game-settings__video');
-      videoSection.append(
-        this.videoText.element,
-        this.displayModeText.element,
-        this.displayModeSelect.element,
-        this.resolutionText.element,
-        this.resolutionSelect.element,
-        this.graphicsQualityText.element,
-        this.graphicsQualitySelect.element,
-      );
+      videoSection.append(this.videoText.element);
+      if (this.displayModeText && this.displayModeSelect) {
+        videoSection.append(this.displayModeText.element, this.displayModeSelect.element);
+      }
+      if (this.resolutionText && this.resolutionSelect) {
+        videoSection.append(this.resolutionText.element, this.resolutionSelect.element);
+      }
+      videoSection.append(this.graphicsQualityText.element, this.graphicsQualitySelect.element);
       this.element.appendChild(videoSection);
     } else {
       this.videoText = null;

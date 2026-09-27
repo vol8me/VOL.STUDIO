@@ -1,4 +1,4 @@
-import type { SaveManager } from '@volstudio/core';
+import type { ScopedSaveManager, ScopedKey } from '@volstudio/core';
 import { MAX_RUNTIME_VALUE, saturatingAdd } from '@/runtime/utils/numeric';
 
 export interface GameStatsData {
@@ -8,7 +8,7 @@ export interface GameStatsData {
   totalKills: number;
 }
 
-const STORAGE_KEY = 'vol-hell:game-stats';
+const STORAGE_KEY: ScopedKey = 'synced.vol-hell:game-stats';
 
 const DEFAULTS: GameStatsData = {
   bestScore: 0,
@@ -57,7 +57,7 @@ export interface RunResult extends GameStatsData {
 export class GameStats {
   private data: GameStatsData = { ...DEFAULTS };
 
-  constructor(private readonly saveManager: SaveManager) {}
+  constructor(private readonly saveManager: ScopedSaveManager) {}
 
   async load(): Promise<void> {
     this.data = sanitize(await this.saveManager.load<unknown>(STORAGE_KEY, DEFAULTS));

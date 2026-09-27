@@ -53,6 +53,9 @@ const ENV_ALLOWLIST: &[&str] = &[
     "wayland_display",
     "xdg_session",
     "sdl_enable_steam_screen_keyboard",
+    // Repo-içi ölçüm bayrakları (`VOL_DECK_MEASURE` vb.) — kendi ad alanımız;
+    // sır taşıyan değişkenler bu önekle adlandırılmaz.
+    "vol_deck",
     "pressure_vessel_runtime",
     "pressure_vessel_architectures",
     "srt_urlopen_prefer_steam",

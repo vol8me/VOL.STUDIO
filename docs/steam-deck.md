@@ -418,38 +418,66 @@ referanstır.
 
 ## VOL.HELL referans tüketici olarak
 
-VOL.HELL `frozen`'dır. Deck desteğinin uçtan uca kanıtı için yeniden
-aktifleştirilir (prosedür: [games/docs/new-game.md](../games/docs/new-game.md)).
-Kabulden sonra yeni bir annotated freeze etiketiyle yeniden dondurulur;
-eski etiketler değişmez. VOL.ARACHNID dondurulmuş kalır.
+VOL.HELL D7 turunda yeniden aktifleştirildi (`workspace-lifecycle.json`:
+active; kapsam eşiği 82/80/73/77 ratchet'li). Kabul turu bitince yeni bir
+annotated freeze etiketiyle yeniden dondurulur; eski etiketler değişmez.
+VOL.ARACHNID dondurulmuş kalır.
 
-**2026-09-23'te güncel `core`'a karşı ölçülen hazırlık:**
+**D7 kapsamı (2026-09-27):**
 
-- `tsc`: hata yok.
-- ESLint: temiz.
-- 69 test dosyası / 761 test geçiyor.
-- 1000 satırı aşan dosya yok.
-- Prettier uyarıları yalnız üretilmiş `src-tauri/gen/schemas` dosyalarında.
+- **Kayıt kapsamları:** `synced` → `vol-hell-synced.json` (Steam Cloud
+  Auto-Cloud kalıbı), `device` → `vol-hell-device.json` (ayarlar, dil).
+  Tek dosyalı eski kayıt `migrateLegacySave` ile yaz-oku-doğrula-sil
+  düzeniyle, idempotent taşınır; `isScopedKey` anahtarları atlanır.
+- **Kol ve gezinme:** `InputManager` `gamepad` sağlayıcısı (sol çubuk
+  hareket, sağ çubuk nişan, RT `fire`, A `dash`); `FocusNavController`
+  belge ömürlü; Menu → pause delegesi, B/Escape/Android-geri tek geri
+  yığını; gamescope'ta pencere/çözünürlük satırları sunulmaz.
+- **Native:** `vol-steamworks` (`steamworks` feature'ı) + `vol-diagnostics`
+  eklentileri `run_with_context_and` üzerinden; manifesto
+  `steam_input_manifest.vdf` `bundle.resources`'ta; AppRun
+  `libsteam_api.so`'yu Steam istemcisinden çözer.
+- **Ölçüm yüzeyi:** `src/app/deckMeasure.ts` yalnız `VOL_DECK_MEASURE=1`
+  (`deck.mjs mode`) ile çalışır — 10 saniyelik `perf` pencereleri,
+  `pad-connected`/`pad-input` ve `steamworks` durum kayıtları JSONL'e
+  düşer; `summarizeReport` bunları faz tablosunda toplar
+  (`measure --seconds <n>` duvar-saati kipi).
 
-**Deck'e özgü değişecekler:**
+**Deck'te ölçülenler (2026-09-27, devkit `run-game`, gamescope):**
 
-- Oyuna özgü uygulama kimliği ve kayıt geçişi; bugünkü kimlik `com.volstudio.game`.
-- `linux.AppRun`'daki sabit önbellek adı ürün adından türer.
-- Kayıtların `synced` ve `device` kapsamlarına bölünmesi.
-- Gamescope altında görüntü ayarları.
-- Duraklatmanın Menu'ye, nişanın sağ çubuğa bağlanması.
-- Bütün ekranların kolla gezilmesi.
+- Steamworks: `available`, `deck`, `bigPicture`, `overlayEnabled`,
+  `cloudEnabled`, `inputReady`, `manifestOk` → tümü true, appId 480.
+- Kol: `pad-connected` `"Steam Deck"`/`standard`; ilk fiziksel basım
+  `pad-input` kaydıyla kanıtlı (t≈12,7 s).
+- Gerçek oynanış (DALGA 1): 9 pencerede 58,0–59,4 FPS, p95 ≤ 21 ms,
+  > 34 ms kare oranı pencere başına ≤ %1; ekran görüntüsü HUD ve dalga
+  > dövüşünü doğrular.
+- Kapanış: SIGTERM → `vol:terminate` → son pencere `final:true` ile
+  diske düştü → `flushed:true` temiz çıkış.
+- Kayıt: `device.*` store dosyası (`vol-hell-device.json`) dil ve ses
+  ayarlarıyla doğdu; `synced` dosyası istatistik ilk yazıldığında
+  oluşacak — turda yazılmadı.
+
+**İnsan turunda kalacaklar:** kolla menü gezintisi hissi, pause/nişanın
+oynanışta doğrulanması, overlay açılışı ve metin girişi diyalogları,
+titreşimin elle hissedilmesi.
 
 ## Açık ölçümler
 
 Aşağıdakiler insan eliyle, cihaz başında ölçülür. Ölçüldükçe tarih ve
 cihazla yukarıdaki bölümlere taşınır.
 
-- **Gamepad API:** standart eşleme, tuş ve eksen sırası; arka tuşlar; sanal kol yuvası ↔ Gamepad sırası.
+- **Gamepad API:** sanal kol `"Steam Deck"`/`standard` olarak görünür ve
+  ilk fiziksel basım oyuna ulaştı (2026-09-27, vol-hell `pad-connected` +
+  `pad-input` kayıtları). Detay kalanlar: arka tuşlar; sanal kol yuvası ↔
+  Gamepad sırası; eksen ölü bölgesinin hissi.
 - **Trackpad ve dokunmatik:** hangi olay türünü ürettiği (`pointerType`); oyun bunları nasıl görüyor.
 - **Steam ve Quick Access düğmesi:** WebView'da `blur` ya da `visibilitychange` üretip üretmediği.
 - **Uyku ve uyanma:** `requestAnimationFrame` sürekliliği, AudioContext durumu, saat sıçramaları.
-- **Steam'den çıkış:** Steam'in "Oyundan çık" komutunun gönderdiği sinyal sırası ve tanıdığı süre.
+- **Steam'den çıkış:** `devkit run-game` sürecine SIGTERM → JS
+  `vol:terminate` dinleyicisi flush'ını tamamladı → `flushed:true`
+  temiz çıkış (2026-09-27 ölçüldü). Steam arayüzündeki "Oyundan çık"
+  düğmesinin gönderdiği sıra insan turunda ayrıca sınanır.
 - **Titreşimin hissedilmesi:** hidraw raporu `rc=65` ile kabul edildi
   (ölçüldü) ama motorların gerçekten döndüğü ancak elde tutularak doğrulanır.
 - **Pil:** 60 FPS ve 30 FPS'te güç tüketimi (sayaçlar okunabilir; kontrollü yük D1 sondasını ister).

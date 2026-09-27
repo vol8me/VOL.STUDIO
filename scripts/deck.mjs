@@ -13,7 +13,10 @@
  *   log      <workspace>          diagnostics.jsonl kaydını yazdırır
  *   shot     <ad>                 gamescopectl ekran görüntüsü → .claude/deck-olcum/
  *   power    [saniye]             Güç sayaçları örneği (RAPL enerjisi + hwmon)
- *   measure  <workspace> <etiket> run → fazları bekle → rapor+güç+görüntü → kayıt
+ *   measure  <workspace> <etiket> [--until <işaret>] [--seconds <n>]
+ *                                   run → bekle → rapor+güç+görüntü → kayıt
+ *                                   (varsayılan işaret prob fazı; oyunda
+ *                                   --seconds ya da kendi işareti)
  *   mode     <workspace> A=B ...  Bir sonraki run'da etkili ortam dosyası yazar
  *   clean    <workspace>          Kısayolu ve yüklenen dosyaları siler
  *   full     <workspace> <etiket> build → deploy → measure → stop (tek komut)
@@ -331,7 +334,7 @@ function cmdClean(root, workspace, host) {
   console.log(`[clean] ${gameid} silindi`);
 }
 
-async function cmdMeasure(root, workspace, host, label) {
+async function cmdMeasure(root, workspace, host, label, opts = {}) {
   const shell = readShell(root, workspace);
   const { gameid, remoteLog } = shell;
   const stamp = new Date().toISOString().replaceAll(/[:.]/g, '-').slice(0, 19);
@@ -342,15 +345,25 @@ async function cmdMeasure(root, workspace, host, label) {
   cmdRun(root, workspace, host);
   const powerBefore = powerSample(host, 2);
 
-  // Fazlar: saf rAF (~4sn) + boş (6) + 1000 (10) + 4000 (10) → ~30 sn + başlangıç.
-  // Beklenen işaret son ölçülen fazın kaydıdır — sayfa yeniden yüklenirse faz
-  // sayısı şişer, bu yüzden ad sayılmaz, son fazın kendisi beklenir.
+  // İki bekleme kipi: işaret (`--until`, sondanın kendini bitiren fazları) ya
+  // da duvar saati (`--seconds`, gerçek oyun turu — oyun kendini durdurmaz).
+  // İşaret varsayılanı prob sözleşmesidir: son ölçülen fazın kaydı.
+  const catLog = () => optional('ssh', [...SSH_OPTS, `deck@${host}`, `cat ${remoteLog}`]) ?? '';
   let lines = '';
-  const deadline = Date.now() + 150_000;
-  while (Date.now() < deadline) {
-    await new Promise((r) => setTimeout(r, 3000));
-    lines = optional('ssh', [...SSH_OPTS, `deck@${host}`, `cat ${remoteLog}`]) ?? '';
-    if (lines.includes('"phase":"4000 sprite"')) break;
+  if (opts.seconds) {
+    const deadline = Date.now() + opts.seconds * 1000;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 3000));
+      lines = catLog();
+    }
+  } else {
+    const marker = opts.until ?? '"phase":"4000 sprite"';
+    const deadline = Date.now() + 150_000;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 3000));
+      lines = catLog();
+      if (lines.includes(marker)) break;
+    }
   }
   const powerAfter = powerSample(host, 2);
 
@@ -421,9 +434,15 @@ try {
     case 'power':
       cmdPower(host, Number(positional[0] ?? 8));
       break;
-    case 'measure':
-      await cmdMeasure(ROOT, positional[0], host, positional[1] ?? 'measure');
+    case 'measure': {
+      const untilIdx = positional.indexOf('--until');
+      const secIdx = positional.indexOf('--seconds');
+      await cmdMeasure(ROOT, positional[0], host, positional[1] ?? 'measure', {
+        until: untilIdx >= 0 ? positional[untilIdx + 1] : undefined,
+        seconds: secIdx >= 0 ? Number(positional[secIdx + 1]) : undefined,
+      });
       break;
+    }
     case 'mode':
       cmdMode(ROOT, positional[0], host, positional.slice(1));
       break;
