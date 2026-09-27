@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { analyzeAudio } from '../../src/analysis/report';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 import { AudioParamError, type AudioParamIssue } from '../../src/guard/errors';
 import { PROGRAM_REGISTRY } from '../../src/program/catalog';
 import { describeEntry } from '../../src/program/describe';
@@ -140,16 +141,20 @@ describe('makro akustik kontroller — yön ilişkileri registry’deki gibi', (
     expect(Object.keys(PROBES).sort()).toEqual(relations.map(([key]) => key).sort());
   });
 
-  it.each(relations)('%s', (key, entry, direction) => {
-    const probe = PROBES[key];
-    const values = POSITIONS.map((c) =>
-      probe.measure(renderProgram(program(entry.id, c, probe.layers, probe.extra)).channels[0]),
-    );
-    expect(
-      isStrictlyMonotone(values, direction),
-      `${key}: ${values.map((v) => v.toFixed(3)).join(' → ')}`,
-    ).toBe(true);
-  });
+  it.each(relations)(
+    '%s',
+    (key, entry, direction) => {
+      const probe = PROBES[key];
+      const values = POSITIONS.map((c) =>
+        probe.measure(renderProgram(program(entry.id, c, probe.layers, probe.extra)).channels[0]),
+      );
+      expect(
+        isStrictlyMonotone(values, direction),
+        `${key}: ${values.map((v) => v.toFixed(3)).join(' → ')}`,
+      ).toBe(true);
+    },
+    RENDER_TIMEOUT,
+  );
 
   it('0.5 nötrdür: makrolu ve makrosuz program aynı PCM’i verir', () => {
     const layers = bodyProbe.layers;

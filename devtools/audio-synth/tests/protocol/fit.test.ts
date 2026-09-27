@@ -10,6 +10,13 @@ import { ProtocolError } from '../../src/protocol/errors';
 import { readJsonFile } from '../../src/protocol/fs';
 import { listFits, readFitReport, runFit } from '../../src/protocol/fit';
 import { descriptorDelta, descriptorDistance, fitBox, validateFitSpec } from '../../src/search/fit';
+import {
+  buildFitReport,
+  FIT_DESCRIPTOR_NAMES,
+  validateFitReport,
+  type AcousticFitReportV1,
+} from '../../src/search/fit';
+import type { Sha256 } from '../../src/protocol/canonical';
 import { createTestRepo, type TestRepo } from './repo';
 import { RENDER_TIMEOUT } from '../support/timeouts';
 
@@ -188,6 +195,104 @@ describe('fit spec şeması', () => {
   });
 });
 
+describe('fit spec — hedef ve rapor hata dalları', () => {
+  const validSpec = () =>
+    fitSpec('f-ok', toneProgram(440), { pitchHz: { value: 440 } }, TONE_DIMENSIONS);
+
+  it('manifest yolu: tip, boşluk ve uzunluk reddedilir', () => {
+    for (const manifest of [42, '', 'x'.repeat(401)]) {
+      const spec = validSpec();
+      (spec.target as Record<string, unknown>).manifest = manifest;
+      expect(() => validateFitSpec(spec), String(manifest).slice(0, 12)).toThrowError(
+        AudioParamError,
+      );
+    }
+  });
+
+  it('descriptors nesne/boş/izinli-anahtar-sayısı denetlenir', () => {
+    for (const descriptors of [null, [], 5]) {
+      const spec = validSpec();
+      (spec.target as Record<string, unknown>).descriptors = descriptors;
+      expect(() => validateFitSpec(spec)).toThrowError(AudioParamError);
+    }
+    const empty = validSpec();
+    (empty.target as Record<string, unknown>).descriptors = {};
+    expect(() => validateFitSpec(empty)).toThrowError(/betimleyici/);
+    // İzinli betimleyici sayısından fazla anahtar: aralık denetimi adlandırmadan önce düşer.
+    const tooMany = validSpec();
+    (tooMany.target as Record<string, unknown>).descriptors = Object.fromEntries(
+      [...FIT_DESCRIPTOR_NAMES, 'bogus'].map((n) => [n, { value: 1 }]),
+    );
+    expect(() => validateFitSpec(tooMany)).toThrowError(/betimleyici/);
+  });
+
+  it('değer tipi, ağırlık ve filtre sınırı denetlenir', () => {
+    // Manifestli hedef + manifest alanında olmayan betimleyici → value tip denetimi.
+    const badValue = validSpec();
+    (badValue.target as Record<string, unknown>).manifest = 'x/y.json';
+    (badValue.target as Record<string, unknown>).descriptors = {
+      centroidHz: { value: 'abc' },
+    };
+    expect(() => validateFitSpec(badValue)).toThrowError(/sayı ya da null/);
+    // Ağırlık aralığı: 0 ve üst sınır üstü reddedilir.
+    const badWeight = validSpec();
+    (badWeight.target as Record<string, unknown>).descriptors = {
+      pitchHz: { value: 440, weight: 0 },
+    };
+    expect(() => validateFitSpec(badWeight)).toThrowError(AudioParamError);
+    // Filtreler: 32'den fazla reddedilir; geçerli filtre doğrulayıcıdan geçer.
+    const tooManyFilters = validSpec();
+    tooManyFilters.filters = Array.from({ length: 33 }, () => ({ kind: 'clipping' }));
+    expect(() => validateFitSpec(tooManyFilters)).toThrowError(/en çok 32/);
+    const withFilter = validSpec();
+    withFilter.filters = [{ kind: 'clipping' }, { kind: 'clicks', max: 0 }];
+    expect(validateFitSpec(withFilter).filters).toHaveLength(2);
+    const badFilter = validSpec();
+    badFilter.filters = [{ kind: 'ufo' }];
+    expect(() => validateFitSpec(badFilter)).toThrowError(AudioParamError);
+  });
+
+  it('şema, fitId ve açıklama denetlenir', () => {
+    const badSchema = validSpec();
+    badSchema.schema = 'WrongSchema';
+    expect(() => validateFitSpec(badSchema)).toThrowError(AudioParamError);
+    const badId = validSpec();
+    badId.fitId = 'Büyük Harf!';
+    expect(() => validateFitSpec(badId)).toThrowError(AudioParamError);
+    const longDesc = validSpec();
+    longDesc.description = 'd'.repeat(2001);
+    expect(() => validateFitSpec(longDesc)).toThrowError(/2000/);
+  });
+
+  it('rapor doğrulaması: şema, özet ve karar reddedilir', () => {
+    const report = buildFitReport(
+      validateFitSpec(validSpec()),
+      ('sha256:' + 'a'.repeat(64)) as Sha256,
+      ('sha256:' + 'b'.repeat(64)) as Sha256,
+      { pitchHz: { value: 440, weight: 1 } },
+      'descriptors',
+      [],
+      [],
+    );
+    // Boş skor → no-evaluable; en-iyi alanları null kalır.
+    expect(report.verdict).toBe('no-evaluable');
+    expect(report.best.candidateId).toBeNull();
+    expect(report.best.distance).toBeNull();
+    expect(validateFitReport(report).verdict).toBe('no-evaluable');
+    const badSchema = { ...report, schema: 'X' } as unknown as AcousticFitReportV1;
+    expect(() => validateFitReport(badSchema)).toThrowError(AudioParamError);
+    const badHash = { ...report, specHash: 'kısa' } as unknown as AcousticFitReportV1;
+    expect(() => validateFitReport(badHash)).toThrowError(/sha256/);
+    const badTargetHash = {
+      ...report,
+      target: { ...report.target, hash: 'bozuk' },
+    } as unknown as AcousticFitReportV1;
+    expect(() => validateFitReport(badTargetHash)).toThrowError(/sha256/);
+    const badVerdict = { ...report, verdict: 'tweaked' } as unknown as AcousticFitReportV1;
+    expect(() => validateFitReport(badVerdict)).toThrowError(AudioParamError);
+  });
+});
+
 describe('uzaklık ve kutu matematiği', () => {
   it('null↔sayı uyuşmazlığı 1 birim cezadır; log2 genişliği uygulanır', () => {
     expect(descriptorDelta('pitchHz', null, 440)).toBe(1);
@@ -195,6 +300,9 @@ describe('uzaklık ve kutu matematiği', () => {
     expect(descriptorDelta('pitchHz', 440, 440)).toBe(0);
     // pitchHz genişliği 0.25 oktav: 880↔440 tam bir oktav = 4 birim.
     expect(descriptorDelta('pitchHz', 880, 440)).toBeCloseTo(4, 6);
+    // İki taraf da ölçülemediyse fark yok; sonlu olmayan fark tavana kırpılır.
+    expect(descriptorDelta('pitchHz', null, null)).toBe(0);
+    expect(descriptorDelta('pitchHz', Number.POSITIVE_INFINITY, 440)).toBe(16);
   });
 
   it('descriptorDistance ağırlıklı RMS verir', () => {
@@ -213,6 +321,9 @@ describe('uzaklık ve kutu matematiği', () => {
     expect(b.hi[0]).toBeCloseTo(0.25, 9);
     expect(b.lo[1]).toBeCloseTo(0.7, 9);
     expect(b.hi[1]).toBe(1);
+    // Sıfır genişlikte kutu: lo==hi olursa lo bir adım geri çekilir.
+    const degenerate = fitBox([0.5], [0]);
+    expect(degenerate.lo[0]).toBeLessThan(degenerate.hi[0]);
   });
 });
 

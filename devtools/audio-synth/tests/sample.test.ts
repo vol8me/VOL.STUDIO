@@ -9,6 +9,7 @@ import {
   resample,
   trimSamples,
 } from '@volstudio/audio-synth';
+import { decodeWavChannels } from '../src/synthesis/sample';
 
 function createTestWav(frequency: number, duration: number, sampleRate: number): Uint8Array {
   const sampleCount = Math.floor(sampleRate * duration);
@@ -167,6 +168,244 @@ describe('Sample utils', () => {
     expect(target[2]).toBe(2);
     expect(target[3]).toBe(3);
     expect(target[4]).toBe(4);
+  });
+});
+
+/** Minimal WAV üretici: biçim, bit ve veri doğrudan verilir (hata yolları için). */
+function rawWav(opts: {
+  format?: number;
+  channels?: number;
+  rate?: number;
+  bits?: number;
+  data: Uint8Array;
+  fmtBody?: Uint8Array;
+}): Uint8Array {
+  const { format = 1, channels = 1, rate = 8000, bits = 16, data, fmtBody } = opts;
+  const bytesPer = bits / 8;
+  const fmtSize = fmtBody ? fmtBody.length : 16;
+  const total = 12 + 8 + fmtSize + 8 + data.length;
+  const out = new Uint8Array(total);
+  const view = new DataView(out.buffer);
+  const text = (at: number, s: string) => {
+    for (let i = 0; i < s.length; i++) out[at + i] = s.charCodeAt(i);
+  };
+  text(0, 'RIFF');
+  view.setUint32(4, total - 8, true);
+  text(8, 'WAVE');
+  text(12, 'fmt ');
+  view.setUint32(16, fmtSize, true);
+  if (fmtBody) out.set(fmtBody, 20);
+  else {
+    view.setUint16(20, format, true);
+    view.setUint16(22, channels, true);
+    view.setUint32(24, rate, true);
+    view.setUint32(28, rate * channels * bytesPer, true);
+    view.setUint16(32, channels * bytesPer, true);
+    view.setUint16(34, bits, true);
+  }
+  const dataAt = 20 + fmtSize;
+  text(dataAt, 'data');
+  view.setUint32(dataAt + 4, data.length, true);
+  out.set(data, dataAt + 8);
+  return out;
+}
+
+describe('decodeWav — hata ve biçim dalları', () => {
+  it('RIFF/WAVE imzası, RIFF boyutu ve eksik chunk reddedilir', () => {
+    const wav = createTestWav(440, 0.01, 8000);
+    const badMagic = wav.slice();
+    badMagic[0] = 0x58;
+    expect(() => decodeWav(badMagic)).toThrow(/Geçersiz WAV/);
+    const badSize = wav.slice();
+    new DataView(badSize.buffer).setUint32(4, badSize.byteLength, true); // sınırı aşar
+    expect(() => decodeWav(badSize)).toThrow(/RIFF boyutu/);
+    // Yalnız fmt chunk'ı: data yok.
+    const fmtOnly = wav.slice(0, 36);
+    new DataView(fmtOnly.buffer).setUint32(4, fmtOnly.byteLength - 8, true);
+    expect(() => decodeWav(fmtOnly)).toThrow(/fmt veya data/);
+    // fmt chunk 16'dan kısa.
+    const shortFmt = rawWav({ fmtBody: new Uint8Array(8), data: new Uint8Array(2) });
+    expect(() => decodeWav(shortFmt)).toThrow(/fmt chunk çok kısa/);
+  });
+
+  it('kesik chunk başlığı ve padding eksikliği reddedilir', () => {
+    const wav = createTestWav(440, 0.01, 8000);
+    // riffEnd=40: fmt chunk tam okunur, 'data' başlığının ortasında kesilir.
+    const cutHeader = wav.slice();
+    new DataView(cutHeader.buffer).setUint32(4, 32, true);
+    expect(() => decodeWav(cutHeader)).toThrow(/chunk başlığı kesik/);
+    // Tek baytlık chunk + padding baytı eksik: RIFF sonu pad'i kapsamaz.
+    const odd = new Uint8Array(12 + 8 + 3 + 8 + 4);
+    const v = new DataView(odd.buffer);
+    const t = (at: number, s: string) => {
+      for (let i = 0; i < s.length; i++) odd[at + i] = s.charCodeAt(i);
+    };
+    t(0, 'RIFF');
+    v.setUint32(4, odd.byteLength - 8, true);
+    t(8, 'WAVE');
+    t(12, 'JUNK');
+    v.setUint32(16, 3, true);
+    // JUNK verisi 20..23; padding 23'te olmalı ama riffEnd'i 23'e çekiyoruz.
+    v.setUint32(4, 23 - 8, true);
+    expect(() => decodeWav(odd)).toThrow(/boyutu dosya sınırını aşıyor|padding/);
+  });
+
+  it('desteklenmeyen format etiketi ve float derinliği reddedilir', () => {
+    expect(() => decodeWav(rawWav({ format: 6, data: new Uint8Array(4) }))).toThrow(
+      /Desteklenmeyen WAV formatı/,
+    );
+    // Float biçim 16-bit: desteklenmez.
+    expect(() => decodeWav(rawWav({ format: 3, bits: 16, data: new Uint8Array(4) }))).toThrow(
+      /32\/64-bit/,
+    );
+  });
+
+  it('float32 ve float64 örnekler çözülür; sonlu olmayan reddedilir', () => {
+    const f32 = new Uint8Array(8);
+    new DataView(f32.buffer).setFloat32(0, 0.5, true);
+    new DataView(f32.buffer).setFloat32(4, -0.25, true);
+    const r32 = decodeWav(rawWav({ format: 3, bits: 32, data: f32 }));
+    expect(r32.samples[0]).toBeCloseTo(0.5, 7);
+    const f64 = new Uint8Array(8);
+    new DataView(f64.buffer).setFloat64(0, 0.25, true);
+    const r64 = decodeWav(rawWav({ format: 3, bits: 64, data: f64 }));
+    expect(r64.samples[0]).toBeCloseTo(0.25, 9);
+    const nan = new Uint8Array(4);
+    new DataView(nan.buffer).setFloat32(0, Number.NaN, true);
+    expect(() => decodeWav(rawWav({ format: 3, bits: 32, data: nan }))).toThrow(/sonlu değil/);
+  });
+
+  it('8-bit ve 32-bit PCM çözülür', () => {
+    const eight = decodeWav(rawWav({ bits: 8, data: new Uint8Array([128, 255, 0, 64]) }));
+    expect(eight.samples[0]).toBe(0);
+    expect(eight.samples[1]).toBeCloseTo(127 / 128, 5);
+    const i32 = new Uint8Array(8);
+    new DataView(i32.buffer).setInt32(0, 2147483647, true);
+    new DataView(i32.buffer).setInt32(4, -2147483648, true);
+    const thirtyTwo = decodeWav(rawWav({ bits: 32, data: i32 }));
+    expect(thirtyTwo.samples[0]).toBeCloseTo(1, 5);
+    expect(thirtyTwo.samples[1]).toBe(-1);
+  });
+});
+
+describe('decodeWavChannels — çok kanallı çözümleme ve hata dalları', () => {
+  it('stereo 24-bit PCM kanalları koruyarak çözer', () => {
+    // İki kanal × iki çerçeve × 3 bayt.
+    const data = new Uint8Array([0, 0, 32, 0, 0, 0, 0, 64, 0, 0, 0, 0]); // L1=0x002000, R1=0, L2=0x004000, R2=0
+    const r = decodeWavChannels(rawWav({ channels: 2, bits: 24, data }));
+    expect(r.channels).toHaveLength(2);
+    expect(r.channels[0][0]).toBeCloseTo(0x200000 / 8388608, 9);
+    expect(r.channels[0][1]).toBeCloseTo(0x4000 / 8388608, 9);
+    expect(r.channels[1][0]).toBe(0);
+  });
+
+  it('float32 stereo ve 8-bit mono kanalları döner', () => {
+    const f = new Uint8Array(16);
+    const fv = new DataView(f.buffer);
+    fv.setFloat32(0, 0.5, true);
+    fv.setFloat32(4, -0.5, true);
+    fv.setFloat32(8, 0.25, true);
+    fv.setFloat32(12, -0.25, true);
+    const rs = decodeWavChannels(rawWav({ format: 3, bits: 32, channels: 2, data: f }));
+    expect(rs.channels[0][0]).toBeCloseTo(0.5, 7);
+    expect(rs.channels[1][1]).toBeCloseTo(-0.25, 7);
+    const u8 = decodeWavChannels(rawWav({ bits: 8, data: new Uint8Array([192]) }));
+    expect(u8.channels[0][0]).toBeCloseTo((192 - 128) / 128, 7);
+  });
+
+  it('bozuk RIFF, eksik chunk ve frame hizasızlığı reddedilir', () => {
+    expect(() => decodeWavChannels(new Uint8Array(8))).toThrow(/Geçersiz WAV/);
+    // fmt yok: yalnız data chunk'ı.
+    const onlyData = new Uint8Array(12 + 8 + 4);
+    const v = new DataView(onlyData.buffer);
+    const t = (at: number, s: string) => {
+      for (let i = 0; i < s.length; i++) onlyData[at + i] = s.charCodeAt(i);
+    };
+    t(0, 'RIFF');
+    v.setUint32(4, onlyData.byteLength - 8, true);
+    t(8, 'WAVE');
+    t(12, 'data');
+    v.setUint32(16, 4, true);
+    expect(() => decodeWavChannels(onlyData)).toThrow(/fmt veya data/);
+    // Stereo 16-bit ama data tek frame değil (3 bayt).
+    expect(() =>
+      decodeWavChannels(rawWav({ channels: 2, bits: 16, data: new Uint8Array(6) })),
+    ).toThrow(/tam örnek frame/);
+  });
+
+  it('extensible fmt çok kısa ve float/geçerli-bit uyuşmazlığı reddedilir', () => {
+    // format 0xfffe ama fmtSize<40 → "çok kısa"; fmt gövdesi geçerli alanlar taşır.
+    const fmtBody = new Uint8Array(18);
+    const fv = new DataView(fmtBody.buffer);
+    fv.setUint16(0, 0xfffe, true);
+    fv.setUint16(2, 1, true);
+    fv.setUint32(4, 48000, true);
+    fv.setUint32(8, 96000, true);
+    fv.setUint16(12, 2, true);
+    fv.setUint16(14, 16, true);
+    const shortFmt = rawWav({ fmtBody, data: new Uint8Array(4) });
+    expect(() => decodeWavChannels(shortFmt)).toThrow(/çok kısa/);
+    // float alt biçimde validBits≠bits.
+    expect(() =>
+      decodeWavChannels(
+        extensibleWav({
+          channels: 1,
+          container: 32,
+          valid: 24,
+          mask: 0x4,
+          float: true,
+          frames: [[0.1]],
+        }),
+      ),
+    ).toThrow(/geçerli bit/);
+  });
+});
+
+describe('kenar dallar — resample / trim / loop / processSample', () => {
+  it('resample factor=1 kopya döner; boş kaynak boş döner', () => {
+    const src = new Float32Array([1, 2, 3]);
+    expect(resample(src, 1)).toEqual(src);
+    expect(resample(new Float32Array(0), 2).length).toBe(0);
+  });
+
+  it('trimSamples end=0 boş döner; geçersiz giriş reddedilir', () => {
+    const data = new Float32Array(10);
+    expect(trimSamples(data, { start: 0, end: 0 }, 10).length).toBe(0);
+    expect(() => trimSamples(data, { start: -1 }, 10)).toThrow();
+    expect(() => trimSamples(data, {}, 0)).toThrow();
+  });
+
+  it('loopSamples negatif/tamsayısız hedefi ve boş kaynağı işler', () => {
+    const data = new Float32Array([1, 2, 3]);
+    expect(() => loopSamples(data, -1)).toThrow(/negatif\/tamsayı/);
+    expect(() => loopSamples(data, 2.5)).toThrow(/negatif\/tamsayı/);
+    expect(loopSamples(new Float32Array(0), 4).length).toBe(4);
+  });
+
+  it('loopSamples kısa kaynakta crossfade istenirse fade=0 yoluna düşer', () => {
+    // crossfadeSamples > length/2 → fade sınırlanır; yine de geçiş uygulanır.
+    const data = new Float32Array(8).fill(0.5);
+    const out = loopSamples(data, 20, true, true, 100);
+    expect(out.length).toBe(20);
+    // Tek örneklik kaynak: fade=0, mod döngüsü.
+    const one = loopSamples(new Float32Array([0.75]), 5, true, true);
+    expect(one.every((v) => v === 0.75)).toBe(true);
+  });
+
+  it('processSample trim + envelope uygular; kısa kaynakta pad eder', () => {
+    const data = new Float32Array(8000).fill(0.5); // 1 sn @8kHz
+    const out = processSample(
+      {
+        data,
+        trim: { start: 0.2, end: 0.6 },
+        envelope: { attack: 0, hold: 0, decay: 0.01, sustain: 0.01, release: 0, sustainLevel: 0.5 },
+        loop: false,
+      },
+      8000,
+      4000,
+    );
+    expect(out.length).toBe(4000);
+    expect(Math.max(...out.map(Math.abs))).toBeLessThanOrEqual(0.5);
   });
 });
 

@@ -1,5 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { once } from 'node:events';
 import { join } from 'node:path';
+import { MessageChannel, type MessagePort } from 'node:worker_threads';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { BatchEstimate } from '../../src/guard/batch';
 import { withRenderSession } from '../../src/engine/session';
@@ -8,6 +10,7 @@ import { hashCanonical } from '../../src/protocol/canonical';
 import { checkFamily } from '../../src/protocol/family';
 import { checkMusic, loadMusicDocuments } from '../../src/protocol/music';
 import { ParallelTaskError, runTasks } from '../../src/protocol/parallel';
+import { serveTasks } from '../../src/protocol/parallelTasks';
 import { RENDER_CACHE_ROOT, repoRenderCache } from '../../src/protocol/renderCacheStore';
 import { runSearch } from '../../src/protocol/search';
 import { shellFamily } from '../family/fixtures';
@@ -128,6 +131,81 @@ describe('paralel toplu iş seri ile aynı sonucu aynı sırayla verir', () => {
     },
     PIPELINE_TIMEOUT,
   );
+});
+
+describe('serveTasks — worker döngüsü (süreç içi kanal)', () => {
+  let repo: TestRepo | undefined;
+  afterEach(() => repo?.cleanup());
+
+  /**
+   * Worker gövdesi gerçek worker_thread içinde koşunca kapsam araçlamasına
+   * girmez; aynı kod yolu in-process MessageChannel üzerinden sürülür.
+   */
+  async function request(port: MessagePort, message: unknown): Promise<Record<string, unknown>> {
+    const pending = once(port, 'message');
+    port.postMessage(message);
+    const [response] = (await pending) as [Record<string, unknown>];
+    return response;
+  }
+
+  it('hazır bildirimi, başarılı görev ve hata yanıtı üretir; her istek sinyal üretir', async () => {
+    repo = createTestRepo();
+    const { port1, port2 } = new MessageChannel();
+    const signal = new Int32Array(new SharedArrayBuffer(4));
+    try {
+      serveTasks({ port: port2, signal });
+      const ready = (await once(port1, 'message'))[0] as { ready: boolean };
+      expect(ready.ready).toBe(true);
+      expect(Atomics.load(signal, 0)).toBe(1);
+      const ctx = { repoRoot: repo.root, quality: 'draft', cache: false };
+      const ok = await request(port1, {
+        id: 1,
+        name: 'family-member',
+        input: { key: 'k', program: testProgram({ seed: 9 }) },
+        ctx,
+      });
+      expect(ok.ok).toBe(true);
+      expect(ok.id).toBe(1);
+      expect((ok.output as { pcmHash: string }).pcmHash).toMatch(/^sha256:/);
+      expect(Atomics.load(signal, 0)).toBe(2);
+      // Bozuk belge → catch dalı: hata adı ana tarafa taşınır.
+      const bad = await request(port1, {
+        id: 2,
+        name: 'family-member',
+        input: { key: 'b', program: { schema: 'AcousticProgramV1' } },
+        ctx,
+      });
+      expect(bad.ok).toBe(false);
+      expect(bad.id).toBe(2);
+      expect((bad.error as { name: string }).name).toMatch(/Error/);
+      expect(Atomics.load(signal, 0)).toBe(3);
+    } finally {
+      port1.close();
+      port2.close();
+    }
+  });
+
+  it('ctx.cache=true worker içinde depo disk önbelleğini açar', async () => {
+    repo = createTestRepo();
+    const { port1, port2 } = new MessageChannel();
+    const signal = new Int32Array(new SharedArrayBuffer(4));
+    try {
+      serveTasks({ port: port2, signal });
+      await once(port1, 'message');
+      const ok = await request(port1, {
+        id: 1,
+        name: 'family-member',
+        input: { key: 'k', program: testProgram({ seed: 4 }) },
+        ctx: { repoRoot: repo.root, quality: 'draft', cache: true },
+      });
+      expect(ok.ok).toBe(true);
+      // Disk önbelleği worker oturumu tarafından açıldı.
+      expect(existsSync(join(repo.root, RENDER_CACHE_ROOT))).toBe(true);
+    } finally {
+      port1.close();
+      port2.close();
+    }
+  });
 });
 
 describe('worker’lar ana oturumun önbellek kararını izler', () => {

@@ -1,5 +1,12 @@
 {
   "$comment": [
+    "2026-09-27: audio-synth R10 kapsam turu — v1 çekirdek smoke dizgileri,",
+    "sample/fit/listening dal kapsamı ve serveTasks in-process testi sonrası",
+    "ölçülen kapsam satır 96.88 / dal 88.82 / fonksiyon 97.55 (lcov; ifade",
+    "özeti bu koşuda kalıcı yazılmadı). Eşikler 95/94/88/95 bantta korunuyor;",
+    "değişmedi. Ağır ölçüm testlerine RENDER_TIMEOUT verildi — 5000 ms",
+    "varsayılanı kapsam altındaki ~4.5x yavaşlama ile sınırda dalgalanıyordu.",
+    "",
     "2026-09-26: audio-synth F5–F7 dalgası (benchmark korpusu, regresyon hafızası,",
     "PolyBLEP v2, fit/semantic araştırma kapıları, dinleme paketi) ve renderer v2",
     "republish sonrası ölçülen kapsam satır 96.41 / ifade 95.67 / dal 88.28 /",

@@ -7,6 +7,7 @@ import { renderProgram, renderProgramLayers } from '../../src/program/render';
 import type { AcousticProgramV1 } from '../../src/program/schema';
 import { hashPcm } from '../../src/protocol/canonical';
 import { clone } from '../support/json';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 import {
   envelopeRate,
   harmonicPitch,
@@ -107,6 +108,7 @@ describe('AcousticArchetype — yapısal sözleşme ve deterministik varyasyon',
       const otherRoot = expandArchetype({ ...request(id, 0), seed: 99 });
       expect(JSON.stringify(otherRoot)).not.toBe(JSON.stringify(expandArchetype(request(id, 0))));
     },
+    RENDER_TIMEOUT,
   );
 });
 
@@ -115,54 +117,78 @@ describe('aile değişmezleri (8 varyasyonun HER birinde)', () => {
     for (let k = 0; k < 8; k++) check(expandArchetype(request(id, k)));
   };
 
-  it('fluid-creature: kabarcık katmanı olaylı, ses katmanı pes (f₀ < 200 Hz)', () => {
-    each('archetype.fluid-creature', (program) => {
-      const parts = layers(program);
-      expect(onsets(parts.get('bubbles') as Float32Array)).toBeGreaterThan(5);
-      const highest = layers(steadyVoice(program, maxOf)).get('voice') as Float32Array;
-      expect(harmonicPitch(highest, RATE, 30, 400)).toBeLessThan(200);
-    });
-  });
+  it(
+    'fluid-creature: kabarcık katmanı olaylı, ses katmanı pes (f₀ < 200 Hz)',
+    () => {
+      each('archetype.fluid-creature', (program) => {
+        const parts = layers(program);
+        expect(onsets(parts.get('bubbles') as Float32Array)).toBeGreaterThan(5);
+        const highest = layers(steadyVoice(program, maxOf)).get('voice') as Float32Array;
+        expect(harmonicPitch(highest, RATE, 30, 400)).toBeLessThan(200);
+      });
+    },
+    RENDER_TIMEOUT,
+  );
 
-  it('membrane-creature: timbal katmanı periyodik tık dizisi (≥ 10 tık/sn)', () => {
-    each('archetype.membrane-creature', (program) => {
-      const tymbal = layers(program).get('tymbal') as Float32Array;
-      expect(envelopeRate(tymbal, RATE, 5, 400)).toBeGreaterThan(10);
-    });
-  });
+  it(
+    'membrane-creature: timbal katmanı periyodik tık dizisi (≥ 10 tık/sn)',
+    () => {
+      each('archetype.membrane-creature', (program) => {
+        const tymbal = layers(program).get('tymbal') as Float32Array;
+        expect(envelopeRate(tymbal, RATE, 5, 400)).toBeGreaterThan(10);
+      });
+    },
+    RENDER_TIMEOUT,
+  );
 
-  it('air-sac-creature: çağrı pes (f₀ < 160 Hz), enerji alt/alçak bantta', () => {
-    each('archetype.air-sac-creature', (program) => {
-      const highest = layers(steadyVoice(program, maxOf)).get('call') as Float32Array;
-      expect(harmonicPitch(highest, RATE, 30, 300)).toBeLessThan(160);
-      const bands = report(renderProgram(program).channels[0]).spectral.bandsDb;
-      expect(Math.max(bands.sub ?? -200, bands.low ?? -200)).toBeGreaterThan(bands.high ?? -200);
-    });
-  });
+  it(
+    'air-sac-creature: çağrı pes (f₀ < 160 Hz), enerji alt/alçak bantta',
+    () => {
+      each('archetype.air-sac-creature', (program) => {
+        const highest = layers(steadyVoice(program, maxOf)).get('call') as Float32Array;
+        expect(harmonicPitch(highest, RATE, 30, 300)).toBeLessThan(160);
+        const bands = report(renderProgram(program).channels[0]).spectral.bandsDb;
+        expect(Math.max(bands.sub ?? -200, bands.low ?? -200)).toBeGreaterThan(bands.high ?? -200);
+      });
+    },
+    RENDER_TIMEOUT,
+  );
 
-  it('chitin-clicker: çok sayıda tık, parlak (ağırlık merkezi > 1.5 kHz)', () => {
-    each('archetype.chitin-clicker', (program) => {
-      const x = renderProgram(program).channels[0];
-      expect(onsets(x)).toBeGreaterThan(3);
-      expect(report(x).spectral.centroidHz ?? 0).toBeGreaterThan(1500);
-    });
-  });
+  it(
+    'chitin-clicker: çok sayıda tık, parlak (ağırlık merkezi > 1.5 kHz)',
+    () => {
+      each('archetype.chitin-clicker', (program) => {
+        const x = renderProgram(program).channels[0];
+        expect(onsets(x)).toBeGreaterThan(3);
+        expect(report(x).spectral.centroidHz ?? 0).toBeGreaterThan(1500);
+      });
+    },
+    RENDER_TIMEOUT,
+  );
 
-  it('resonant-shell: tek vuruş başta, çınlama −40 dB’ye 0.2 sn’den uzun sürede iner', () => {
-    each('archetype.resonant-shell', (program) => {
-      const temporal = report(renderProgram(program).channels[0]).temporal;
-      expect(temporal.peakTimeSeconds ?? 1).toBeLessThan(0.05);
-      expect(temporal.decay40Seconds ?? 10).toBeGreaterThan(0.2);
-    });
-  });
+  it(
+    'resonant-shell: tek vuruş başta, çınlama −40 dB’ye 0.2 sn’den uzun sürede iner',
+    () => {
+      each('archetype.resonant-shell', (program) => {
+        const temporal = report(renderProgram(program).channels[0]).temporal;
+        expect(temporal.peakTimeSeconds ?? 1).toBeLessThan(0.05);
+        expect(temporal.decay40Seconds ?? 10).toBeGreaterThan(0.2);
+      });
+    },
+    RENDER_TIMEOUT,
+  );
 
-  it('vocal-tube: sesli (f₀ 80–450 Hz aralığında)', () => {
-    each('archetype.vocal-tube', (program) => {
-      const f0 = voicePitch(program, 'voice', 50, 600);
-      expect(f0).toBeGreaterThan(80);
-      expect(f0).toBeLessThan(450);
-    });
-  });
+  it(
+    'vocal-tube: sesli (f₀ 80–450 Hz aralığında)',
+    () => {
+      each('archetype.vocal-tube', (program) => {
+        const f0 = voicePitch(program, 'voice', 50, 600);
+        expect(f0).toBeGreaterThan(80);
+        expect(f0).toBeLessThan(450);
+      });
+    },
+    RENDER_TIMEOUT,
+  );
 });
 
 type Measure = (program: AcousticProgramV1) => number;
@@ -244,18 +270,22 @@ describe('archetype yön iddiaları (registry → ölçüm)', () => {
     expect(Object.keys(CLAIMS).sort()).toEqual(claims.map(([key]) => key).sort());
   });
 
-  it.each(claims)('%s', (key, entry, param, direction) => {
-    const spec = entry.params[param];
-    const values =
-      param === 'durationSeconds' ? [2, 2.5, 3] : spec.type === 'number' ? [0.2, 0.5, 0.8] : [];
-    const measured = values.map((value) =>
-      CLAIMS[key](expandArchetype(request(entry.id, 0, { [param]: value }))),
-    );
-    expect(
-      isStrictlyMonotone(measured, direction),
-      `${key}: ${measured.map((v) => v.toFixed(3)).join(' → ')}`,
-    ).toBe(true);
-  });
+  it.each(claims)(
+    '%s',
+    (key, entry, param, direction) => {
+      const spec = entry.params[param];
+      const values =
+        param === 'durationSeconds' ? [2, 2.5, 3] : spec.type === 'number' ? [0.2, 0.5, 0.8] : [];
+      const measured = values.map((value) =>
+        CLAIMS[key](expandArchetype(request(entry.id, 0, { [param]: value }))),
+      );
+      expect(
+        isStrictlyMonotone(measured, direction),
+        `${key}: ${measured.map((v) => v.toFixed(3)).join(' → ')}`,
+      ).toBe(true);
+    },
+    RENDER_TIMEOUT,
+  );
 });
 
 describe('archetype isteği doğrulaması (render öncesi)', () => {
