@@ -3,7 +3,8 @@
     "title": "VOL.UI",
     "language": "Türkçe",
     "fullscreen": "Enter fullscreen",
-    "leaveFullscreen": "Leave fullscreen"
+    "leaveFullscreen": "Leave fullscreen",
+    "paused": "Paused"
   },
   "tabs": {
     "buttons": "BUTTONS",
@@ -658,6 +659,12 @@
     "swipeGestureZone": "Swipe Gesture Zone",
     "multiTouchZone": "Multi-Touch Zone",
     "swipeableCardStack": "Swipeable Card Stack",
+    "gamepad": "Gamepad",
+    "gamepadNone": "No pad connected",
+    "gamepadPad": "Pad: {{id}}",
+    "gamepadMode": "Input mode: {{mode}}",
+    "gamepadPressed": "Pressed: {{actions}}",
+    "gamepadHint": "Connect a pad or press a button; watch the input mode switch as you use keyboard/mouse.",
     "released": "Released",
     "fire": "Fire",
     "pressedFire": "Pressed: Fire",

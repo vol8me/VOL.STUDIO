@@ -83,6 +83,28 @@ kodu ortamı **izin listesiyle** okur; `Steam*` önekiyle toptan kayıt yapılma
 
 **Güç:** logind bir uygulamaya uykudan önce en çok 5 sn gecikme kilidi tanır (`InhibitDelayMaxUSec`).
 
+**Girdi düğümü haritası (2026-09-27, LCD Deck):**
+
+| Düğüm         | Aygıt                               | Yetenek                                                                                                         |
+| ------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `event4`      | Steam Deck Controller               | Yalnız KEY+MSC+REP; ~tüm klavye tuşları. **ABS yok** — çubuklar ve tuşlar evdev'e düşmez (lizard klavye yüzeyi) |
+| `event12`     | Steam Deck Controller               | REL_X/Y + yüksek çözünürlüklü teker + BTN_LEFT/RIGHT (lizard/trackpad fare yüzeyi)                              |
+| `event14`     | `Microsoft X-Box 360 pad 0`         | Steam Input'un sanal kolu; **oyun yokken de hazır.** ABS X/Y/Z/RX/RY/RZ + HAT0X/Y; **EV_FF + FF_RUMBLE (0x50)** |
+| `event18`     | FTS3528 dokunmatik                  | ABS_MT çoklu dokunma                                                                                            |
+| `event19`     | FTS3528 ikincil düğüm               | ABS_X/Y                                                                                                         |
+| `event21`     | `steamos-manager`                   | Yalnız KEY — Steam/QAM gibi sistem tuşlarını enjekte eder                                                       |
+| `hidraw0/2/4` | Steam Deck Controller (`28de:1205`) | Gerçek pad verisinin ve haptik komutlarının geçtiği HID yolu                                                    |
+
+- Fiziksel kol düğümlerinde (`event4`, `event12`) **force-feedback biti yoktur**.
+  Titreşim ya sanal kolun evdev FF'ine yazılır ya da hidraw/Steam Input üzerinden
+  gönderilir; fiziksel düğüme FF yazmak mümkün değildir.
+- `rtcwake` yüklüdür; betikli uyku-uyanma turu uzaktan kurulabilir. Turun rAF/AudioContext
+  yarısı D1 sondasını ister.
+- Güç sayaçları uzaktan okunur: BAT1 `charge_now`/`voltage_now`/`status`,
+  `steamdeck_hwmon` (pil sıcaklığı, PD sözleşmesi), `amdgpu/slowPPT` ve `edge`
+  sıcaklığı, RAPL `energy_uj` (package-0, core). 60/30 FPS güç ölçümü için eksik
+  tek parça kontrollü yük üreten sondadır (D1).
+
 ## Dağıtım yolu
 
 **Karar:**
@@ -122,12 +144,20 @@ yüzden eski yoldan tek seferlik, yedekli bir geçiş gerekir.
 
 **Ölçüm koşulları:** 1280×800, Phaser 4 WebGL. Fazlar sırayla: saf `requestAnimationFrame`, boş sahne, 1000 ve 4000 hareketli sprite. Her fazda kare süresi dağılımı ölçüldü.
 
-| Yol                                                | Saf rAF   | 4000 sprite (10 sn) | p50 / p95 / p99 | Web süreci CPU |
-| -------------------------------------------------- | --------- | ------------------- | --------------- | -------------- |
-| WebKit varsayılanı (DMA-BUF açık, DRM vblank)      | 50,2 FPS  | 50 FPS, 500 kare    | 20 / 21 / 21 ms | ~%30           |
-| DMA-BUF kapalı                                     | ölçülmedi | 49,9 FPS, 499 kare  | 20 / 20 / 25 ms | ~%76           |
-| DMA-BUF açık + `WEBKIT_FORCE_VBLANK_TIMER=1`, host | 62,3 FPS  | 59,5 FPS, 595 kare  | 16 / 20 / 26 ms | ölçülmedi      |
-| Aynısı, Steam Linux Runtime 4.0                    | 62,2 FPS  | 59,9 FPS, 599 kare  | 17 / 18 / 19 ms | ölçülmedi      |
+| Yol                                                | Saf rAF       | 4000 sprite (10 sn) | p50 / p95 / p99     | Web süreci CPU |
+| -------------------------------------------------- | ------------- | ------------------- | ------------------- | -------------- |
+| WebKit varsayılanı (DMA-BUF açık, DRM vblank)      | 50,2 FPS      | 50 FPS, 500 kare    | 20 / 21 / 21 ms     | ~%30           |
+| DMA-BUF kapalı                                     | ölçülmedi     | 49,9 FPS, 499 kare  | 20 / 20 / 25 ms     | ~%76           |
+| DMA-BUF açık + `WEBKIT_FORCE_VBLANK_TIMER=1`, host | 62,3 FPS      | 59,5 FPS, 595 kare  | 16 / 20 / 26 ms     | ölçülmedi      |
+| Aynısı, Steam Linux Runtime 4.0                    | 62,2 FPS      | 59,9 FPS, 599 kare  | 17 / 18 / 19 ms     | ölçülmedi      |
+| Kabuk kuralı (otomatik, `env` yok), SLR4           | 62,2–62,4 FPS | 58,9–59,2 FPS       | 17 / 19–20 / 21+ ms | ölçülmedi      |
+
+> İki temiz turda (v2+v3) kabuk kuralı `env` dosyası olmadan kendiliğinden
+> uygulandı (`session_kind` = `gamescope`, `WEBKIT_FORCE_VBLANK_TIMER=1`,
+> `WEBKIT_DISABLE_DMABUF_RENDERER=0` kayıtta okundu). FPS eşiği (≥59)
+> sınırda tutuyor; p95 ≤ 18 ms eşiği ise 4000 sprite'ta karşılanmadı —
+> zamanlayıcının panelden serbest koşması ara sıra kaçan kare üretiyor
+> (bkz. açık zamanlama soruları). D2'nin bu alt maddesi bu yüzden açık kalır.
 
 CPU değerleri 200 sprite'lık etkileşim fazında `top`'tan okundu. XWayland süreci DMA-BUF açıkken ~%13, kapalıyken ~%16 idi. Boş sahnede ve 1000 sprite'ta kare hızları aynı yolun 4000 sprite değerinden ±0,5 FPS içindeydi.
 
@@ -139,12 +169,14 @@ CPU değerleri 200 sprite'lık etkileşim fazında `top`'tan okundu. XWayland s�
 - Tempo yükten bağımsız: boş sahne de 4000 sprite da aynı 50 FPS'te kalıyor.
 - Zamanlayıcı izleyicisine zorlamak 60'ı geri getiriyor.
 
-**Kural:**
+**Kural (uygulandı — `tauri-v2/src-tauri/src/lib.rs` `linux_webview_plan`):**
 
-- Gamescope oturumunda (`GAMESCOPE_WAYLAND_DISPLAY` var) kabuk `WEBKIT_FORCE_VBLANK_TIMER=1` verir ve DMA-BUF çizicisini açık bırakır.
-- Bugünkü `configure_linux_webview` Deck'te çiziciyi kapatır; bu ölçümle çelişir. Aynı kare hızında 2,5 kat CPU harcatır.
-- NVIDIA kuralı ([android.md](android.md#webview-çizim-yolu)) korunur.
-- Dışarıdan verilen değişken ezilmez.
+- Gamescope oturumunda (`GAMESCOPE_WAYLAND_DISPLAY` ya da `GAMESCOPE_STATS` var) kabuk `WEBKIT_FORCE_VBLANK_TIMER=1` verir ve DMA-BUF çizicisini açık bırakır. Birim testi kural tablosunu üç oturum için kilitler.
+- NVIDIA kuralı ([android.md](android.md#webview-çizim-yolu)) korunur: tek başına NVIDIA'nın sürdüğü yerel Wayland'da çizici açık + `__NV_DISABLE_EXPLICIT_SYNC=1`; zamanlayıcı oraya verilmez.
+- Diğer her oturumda çizici güvenli (kapalı) yolda kalır.
+- Dışarıdan verilen değişken ezilmez (`set_env_default`).
+- Kabuk oturumu JS'e `session_kind` komutuyla bildirir (`gamescope`/`desktop`); ön yüz `getSessionKind()` ile okur — D5'in "gamescope'ta pencere ayarını gizle" kancası budur.
+- Deck'te 4000 sprite'ta DMA-BUF kapalı 49,9 FPS/p95 21 ms; açık+zamanlayıcı 59,6 FPS/p95 19 ms ölçüldü — aynı hızda ~2,5 kat CPU tasarrufu.
 
 **Açık kalan zamanlama soruları:**
 
@@ -154,12 +186,26 @@ CPU değerleri 200 sprite'lık etkileşim fazında `top`'tan okundu. XWayland s�
 
 ## Girdi
 
-**Bugünkü durum:**
+**Bugünkü durum (2026-09-28 itibarıyla kurulmuş):**
 
-- `core`'da gamepad sağlayıcısı yok.
-- `InputManager` aktif sağlayıcıyı "dokunmatik her zaman önce" kuralıyla seçiyor.
-- Fare `providesRestingState` ile sürekli nişan sinyali veriyor.
-- Deck'te dokunmatik, kol ve trackpad aynı anda mevcuttur.
+- `core`'da `GamepadController` var: standart eşleme, ölü bölge, analog
+  hareket ve nişan; eylem → düğme bağı `GamepadActionBinding` verisidir.
+- Kip politikası `InputModeArbiter`'dadır: kenar-zamanı yeniliğiyle "son
+  anlamlı girdi kazanır", eşit kenarda görevli üstünlüğü histerezis verir.
+  `InputManager`'ın eski "dokunmatik her zaman önce" kuralı bu hakeme
+  taşındı; eylemler sağlayıcılar üzerinden birleşir ve durağan fare nişanı
+  kol nişanı serbestken yaşar — kimse kimseyi kilitlemez.
+- `inputModeForSession('gamescope')` başlangıç kipini kola kurar; Gamepad
+  API'nin "ilk tuşa basılana dek kolu göstermeme" kuralına bağlanmaz.
+- Arayüzde `FocusNavController`: D-pad ve çubuk uzamsal odak taşır
+  (`pickDirectionalTarget`), A tıklar, Menu `onMenu` geri çağrısı,
+  LB/RB sekme geçişi. Odak halkası `vol-focusnav-current` sınıfıyla yalnız
+  kol/klavye kipinde görünür; işaretçi basışı sınıfı siler.
+- Geri yığını tektir: `triggerBack` Android geri, Escape ve kolun B'sini
+  aynı yığına bağlar; `Modal` açıkken kendini aynı yığına kaydeder.
+- Kanıt: core birim testleri (sağlayıcı 11, politika 10, odak 16) ve
+  `devtools/vol-ui` sanal-kol E2E'si (6/6) — ilk basışta halka, uzamsal
+  gezinme, A etkinleştirme, LB/RB sekme, Menu→dialog→B zinciri.
 
 **Deck'in verdiği:**
 
@@ -226,9 +272,31 @@ CPU değerleri 200 sprite'lık etkileşim fazında `top`'tan okundu. XWayland s�
 ## Titreşim
 
 - `core` haptik katmanının `gamepad` arka ucu `vibrationActuator`'a dayanır. Bu Deck'teki WebKitGTK 2.52'de yoktur; Debian 13'ün bugünkü sürümü 2.52.6'dır.
-- **Karar:** `tauri-v2`'ye native bir Linux haptik sürücüsü eklenir.
-  - Steamworks varsa Steam Input titreşimi kullanılır.
-  - Yoksa sanal kola evdev force-feedback gönderilir; Deck ve Steam Controller bu titreşimi kendi haptik motorlarıyla öykünür.
+- **Ölçülen (2026-09-27):**
+  - Fiziksel kolun evdev düğümleri (`event4`, `event12`) FF yeteneği taşımaz.
+  - Steam Input'un sanal kolu `Microsoft X-Box 360 pad 0` (`event14`) **EV_FF +
+    FF_RUMBLE** taşır ve oturumda oyun yokken de hazırdır.
+  - Kolun üç `hidraw` düğümü (`28de:1205`) doğrudan açılabilir; Deck'in gerçek
+    haptik motorlarına giden HID protokolü bu yoldadır.
+- **Ölçülen (2026-09-27, oyun süreci içinden):** sonda AppImage'ından tarama
+  `nodes:21 opened:11 rumbleCapable:1 uploadFailed:1` — sanal kol
+  `EVIOCSFF`'te **EFAULT** verir: uinput yüklemesi yaratıcı (steamos-manager)
+  tarafından devkit oyununda servis edilmiyor. `hidraw2` (input2 uç noktası)
+  `ID_TRIGGER_RUMBLE_CMD` (0xEB) feature raporunu `rc=65` ile kabul etti
+  (SDL `hidapi_steamdeck` biçimi). Fiziksel titreşim insan eliyle
+  doğrulanacak — motor akımı `steamdeck_hwmon` çözünürlüğünde görünmedi.
+- **Ölçülen (2026-09-27, uçtan uca uygulama içi):** hidraw arka ucu eklendikten
+  sonra sonda AppImage'ı `vol_haptics_status` → `backend:"hidraw",
+device:"hidraw2"` ve `vol_haptics_rumble` → `ok` döndürdü — yani HID rumble
+  raporu süreç içinden, kendi sürücümüzle kabul edildi. Aynı koşuda kare
+  zamanlaması bozulmadı (4000 sprite 58,8 FPS, p95 18 ms). Motorun elle
+  hissedilmesi yine insan doğrulaması ister.
+- **Karar (ölçüme göre güncellendi):** `tauri-v2` Linux sürücüsünün öncelik
+  sırası:
+  1. Steamworks katmanı varsa Steam Input titreşimi (D6, isteğe bağlı).
+  2. `hidraw` üzerinden Deck HID rumble raporu (0xEB) — ölçülmüş yol.
+  3. evdev `FF_RUMBLE` — yalnız upload'ı kabul eden ortamlar (masaüstü
+     Linux'ta gerçek FF'li kollar); Deck'te sanal kola yazılamaz.
 - Paketlenen WebKit ≥ 2.54 olduğunda tarayıcı yolu kendiliğinden devreye girer.
 
 ## Yaşam döngüsü: uyku, kapatma, kayıt
@@ -243,17 +311,18 @@ CPU değerleri 200 sprite'lık etkileşim fazında `top`'tan okundu. XWayland s�
 
 **Bulgular:**
 
-- `tauri-plugin-store` 2.4.4'ün `save()`'i doğrudan `fs::write` yapar: geçici dosya, `fsync` ya da `rename` yok. Yazma sırasında süreç öldürülür ya da güç kesilirse dosya yarım kalır.
+- `tauri-plugin-store` 2.4.4'ün `save()`'i doğrudan `fs::write` yapar: geçici dosya, `fsync` ya da `rename` yok. Yazma sırasında süreç öldürülür ya da güç kesilirse dosya yarım kalır. Bu yüzden `TauriStoreAdapter` artık paylaşılan kabuğun `vol_store_read`/`vol_store_write` komutlarını kullanır (`tauri-v2/src-tauri/src/store.rs`) — plugin-store bağımlılığı `tauri-v2`'den kalktı.
 - VOL.HELL ilerlemeyi ve cihaz ayarlarını (ses, tuş, video) tek bir dosyada tutar.
 
-**Kararlar:**
+**Kararlar (uygulandı):**
 
-- **Atomik yazıcı:** geçici dosya → `fsync` → `rename` → dizin `fsync`. Bir önceki nesil yedek olarak kalır. Bozuk kayıt okunursa yedeğe dönülür ve durum raporlanır.
+- **Atomik yazıcı:** geçici dosya → `fsync` → yedek değişimi → `rename` → dizin `fsync` — birim testi `store.rs`'te; her adım sınavlı.
+- **Kurtarma:** güncel dosya bozuksa `.bak` okunur, `recovered` işareti adapter'in `onRecovered` kancasına düşer; ikisi de bozuksa okuma hata verir, sessizce boş kayıt yutturulmaz.
 - **Boşaltma protokolü:**
-  - SIGTERM, SIGINT, SIGHUP ve logind `PrepareForSleep` bir "şimdi boşalt" olayı üretir.
-  - `core` bekleyen yazıları boşaltır ve onaylar; süre sınırlıdır.
+  - Diagnostics eklentisi SIGTERM/SIGINT/SIGHUP'ı yakalayıp `vol:terminate` yayınlar; JS `registerShutdownFlush` kancaları çalıştırır ve `flush_done` komutu izleyiciyi erken çıkarır (süre sınırı 1,5 sn).
+  - logind `PrepareForSleep` aboneliği dbus bağımlılığı gerektirir — bu turda eklenmedi; askı boşluğu zaten `suspend-gap` kaydıyla ölçülüyor.
   - SIGKILL'e karşı güvence boşaltma değil, atomikliktir.
-- **Kalıcılık kapsamları:** `synced` (ilerleme; Cloud'a gider) ve `device` (grafik, pencere, cihaz ses ayarları; gitmez). Kapsamlar ayrı dosyalardır.
+- **Kalıcılık kapsamları:** `synced` (ilerleme; Cloud'a gider) ve `device` (grafik, pencere, cihaz ses ayarları; gitmez). Kapsamlar ayrı dosyalardır — core tarafı bu turun kalan işi.
 - **Zaman:** `performance.now()` monoton saattir ve uyku süresini saymaz. `Date.now()` uykudan sonra sıçrar. Duvar saatine bağlı mantık bu farkla yazılır; simülasyon adımı sınırlanır.
 
 ## Görüntü ayarları gamescope altında
@@ -348,6 +417,7 @@ cihazla yukarıdaki bölümlere taşınır.
 - **Steam ve Quick Access düğmesi:** WebView'da `blur` ya da `visibilitychange` üretip üretmediği.
 - **Uyku ve uyanma:** `requestAnimationFrame` sürekliliği, AudioContext durumu, saat sıçramaları.
 - **Steam'den çıkış:** Steam'in "Oyundan çık" komutunun gönderdiği sinyal sırası ve tanıdığı süre.
-- **Evdev titreşimi:** sanal kola evdev force-feedback'in Steam Linux Runtime 4.0 kabı içinden çalışıp çalışmadığı.
-- **Pil:** 60 FPS ve 30 FPS'te güç tüketimi (`/sys/class/power_supply`).
+- **Titreşimin hissedilmesi:** hidraw raporu `rc=65` ile kabul edildi
+  (ölçüldü) ama motorların gerçekten döndüğü ancak elde tutularak doğrulanır.
+- **Pil:** 60 FPS ve 30 FPS'te güç tüketimi (sayaçlar okunabilir; kontrollü yük D1 sondasını ister).
 - **OLED Deck ve Steam Machine:** kare zamanlaması (90 Hz; TV çıkışı).

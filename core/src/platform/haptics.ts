@@ -86,6 +86,39 @@ const GAMEPAD_INTENSITY: Readonly<Record<HapticPattern, { strong: number; weak: 
   error: { strong: 0.85, weak: 0.6 },
 };
 
+/**
+ * Native sürücüye giden tek darbe. `gapAfterMs` sonraki darbeye dek bekleme.
+ *
+ * `PATTERNS` + `GAMEPAD_INTENSITY`'nin birleşik görünümüdür: JS sürücüleri
+ * tek `playEffect` çağrısına çökerken evdev/HD Rumble gibi motorları doğrudan
+ * süren kabuklar darbe dizisini sırayla oynatır. İki okuma aynı tablodan
+ * türer; birini değiştiren diğerini de değiştirir.
+ */
+export interface RumblePulse {
+  /** Büyük (düşük frekanslı) motor şiddeti, 0–1. */
+  readonly strong: number;
+  /** Küçük (yüksek frekanslı) motor şiddeti, 0–1. */
+  readonly weak: number;
+  readonly durationMs: number;
+  readonly gapAfterMs: number;
+}
+
+/** Deseni native sürücülerin oynatacağı darbe dizisine çevirir. */
+export function planRumblePulses(pattern: HapticPattern): readonly RumblePulse[] {
+  const durations = PATTERNS[pattern];
+  const intensity = GAMEPAD_INTENSITY[pattern];
+  const pulses: RumblePulse[] = [];
+  for (let i = 0; i < durations.length; i += 2) {
+    pulses.push({
+      strong: intensity.strong,
+      weak: intensity.weak,
+      durationMs: durations[i],
+      gapAfterMs: durations[i + 1] ?? 0,
+    });
+  }
+  return pulses;
+}
+
 const lastFiredAt = new Map<HapticPattern, number>();
 const capabilityListeners = new Set<(capability: HapticsCapability) => void>();
 let capabilityWatchers: (() => void) | null = null;

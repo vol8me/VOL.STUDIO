@@ -13,6 +13,7 @@
 @import url('./data-boards.css');
 @import url('./cards.css');
 @import url('./workbench.css');
+@import url('./glyphs.css');
 
 /* RENKLER — colors.ts'ten generate edilir (pnpm gen:theme). Manuel düzenleme yapma. */
 :root {

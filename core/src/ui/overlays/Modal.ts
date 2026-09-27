@@ -1,5 +1,6 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { pushBackHandler } from '../../platform/backNavigation';
+import { FOCUSABLE_SELECTOR } from '../focus/focusable';
 
 export interface ModalOptions {
   /** Scrim'e (arka plan karartması) tıklayınca kapat. Varsayılan true. */
@@ -8,9 +9,6 @@ export interface ModalOptions {
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
 }
-
-const FOCUSABLE_SELECTOR =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const BODY_LOCK_CLASS = 'vol-modal__body-locked';
 

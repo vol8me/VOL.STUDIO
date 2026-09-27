@@ -34,6 +34,27 @@ async fn window_fullscreen_state(window: tauri::WebviewWindow) -> Result<bool, S
     read_fullscreen_state(window)
 }
 
+/// Oturum sınıfı JS'e yetenek olarak bildirilir: ön yüz gamescope'ta
+/// işe yaramayan pencere/çözünürlük ayarlarını gizlemek ister (D5) ve
+/// kol-kipi varsayılanı buna bağlanır (D3).
+#[tauri::command]
+fn session_kind() -> &'static str {
+    session_kind_inner()
+}
+
+#[cfg(target_os = "linux")]
+fn session_kind_inner() -> &'static str {
+    match LinuxSession::detect() {
+        LinuxSession::Gamescope => "gamescope",
+        LinuxSession::NvidiaWayland | LinuxSession::Other => "desktop",
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+fn session_kind_inner() -> &'static str {
+    "desktop"
+}
+
 #[cfg(target_os = "linux")]
 fn read_fullscreen_state(window: tauri::WebviewWindow) -> Result<bool, String> {
     let (sender, receiver) = std::sync::mpsc::channel();
@@ -103,7 +124,13 @@ where
     let builder = tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             exit_application,
-            window_fullscreen_state
+            window_fullscreen_state,
+            session_kind,
+            store::vol_store_read,
+            store::vol_store_write,
+            haptics::vol_haptics_status,
+            haptics::vol_haptics_rumble,
+            haptics::vol_haptics_stop
         ])
         // Log seviyesi acikca sinirlanir; varsayilan builder release build'de de
         // her seviyeyi yazar.
@@ -143,22 +170,100 @@ where
 /// çizici kapalıyken yerel Wayland'da 18 FPS ve bir çekirdek dolu; açıkken
 /// Wayland'da explicit sync protokol hatasıyla açılışta çöküş, XWayland'da boş
 /// pencere; açık ve `__NV_DISABLE_EXPLICIT_SYNC=1` ile yerel Wayland'da 60 FPS.
-/// Çizici yalnız ölçülen durumda, ekranı tek başına NVIDIA sürücüsünün sürdüğü
-/// yerel Wayland oturumunda açık kalır; başka her yerde güvenli yol sürer.
+///
+/// Gamescope ölçüldü (Steam Deck LCD / Jupiter, SteamOS 3.8.16, SLR4
+/// 4.0.20260805.254769, WebKitGTK 2.52.6, 1280×800, 4000 sprite): DMA-BUF
+/// kapalıyken 49.9 FPS / p95 21 ms; açık + `WEBKIT_FORCE_VBLANK_TIMER=1`
+/// iken 59.6 FPS / p95 19 ms. Gamescope'ta compositor vsync'i WebKit'e
+/// ulaşmadığı için zamanlayıcı şarttır — yalnız DMA-BUF açmak yetmez
+/// (aynı turda 50.0/21 ölçüldü).
+///
+/// Çizici yalnız ölçülen iki durumda açık kalır: gamescope oturumu ve
+/// NVIDIA'nın tek başına sürdüğü yerel Wayland; başka her yerde güvenli yol.
+mod haptics;
+mod store;
+
 #[cfg(target_os = "linux")]
 fn configure_linux_webview() {
-    let accelerated = is_native_wayland() && display_is_nvidia_only();
-    set_env_default(
-        "WEBKIT_DISABLE_DMABUF_RENDERER",
-        if accelerated { "0" } else { "1" },
-    );
+    let plan = linux_webview_plan(LinuxSession::detect());
+    set_env_default("WEBKIT_DISABLE_DMABUF_RENDERER", plan.dmabuf_disable);
+    if let Some(value) = plan.vblank_timer {
+        set_env_default("WEBKIT_FORCE_VBLANK_TIMER", value);
+    }
     // Explicit sync yalnız çizici gerçekten açıkken kapatılır; çiziciyi dışarıdan
     // kapatan kullanıcının sürücü ayarına dokunulmaz.
     let dmabuf_enabled =
         std::env::var("WEBKIT_DISABLE_DMABUF_RENDERER").is_ok_and(|value| value == "0");
-    if accelerated && dmabuf_enabled {
+    if plan.nv_explicit_sync_off && dmabuf_enabled {
         set_env_default("__NV_DISABLE_EXPLICIT_SYNC", "1");
     }
+}
+
+/// Linux oturum sınıfı — karar tablosunun girdisi ve JS'e bildirilen yetenek.
+#[cfg(target_os = "linux")]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum LinuxSession {
+    /// Steam gamescope oturumu (Deck oyun kipi, Steam'in kompozitörü).
+    Gamescope,
+    /// Yerel Wayland, ekranı tek başına NVIDIA sürücüsü sürüyor.
+    NvidiaWayland,
+    /// Diğer her şey: X11, Wayland+Intel/AMD masaüstü, hibrit.
+    Other,
+}
+
+#[cfg(target_os = "linux")]
+impl LinuxSession {
+    fn detect() -> Self {
+        if is_gamescope() {
+            Self::Gamescope
+        } else if is_native_wayland() && display_is_nvidia_only() {
+            Self::NvidiaWayland
+        } else {
+            Self::Other
+        }
+    }
+}
+
+/// Gamescope oturumu: SLR4 oyun kabı gamescope soketini ve istatistik
+/// borusunu ortama koyar (2026-09-27 Deck env dökümünde ikisi de vardı).
+/// `SteamDeck=1` tek başına yeterli değildir: masaüstü kipinde de durur.
+#[cfg(target_os = "linux")]
+fn is_gamescope() -> bool {
+    std::env::var_os("GAMESCOPE_WAYLAND_DISPLAY").is_some()
+        || std::env::var_os("GAMESCOPE_STATS").is_some()
+}
+
+/// Çizim kuralının saf tablosu — oturumdan ortam kararlarına. Birim testi
+/// bunu sınar; `configure_linux_webview` yalnız uygular.
+#[cfg(target_os = "linux")]
+fn linux_webview_plan(session: LinuxSession) -> LinuxWebviewPlan {
+    match session {
+        LinuxSession::Gamescope => LinuxWebviewPlan {
+            dmabuf_disable: "0",
+            vblank_timer: Some("1"),
+            nv_explicit_sync_off: false,
+        },
+        LinuxSession::NvidiaWayland => LinuxWebviewPlan {
+            dmabuf_disable: "0",
+            vblank_timer: None,
+            nv_explicit_sync_off: true,
+        },
+        LinuxSession::Other => LinuxWebviewPlan {
+            dmabuf_disable: "1",
+            vblank_timer: None,
+            nv_explicit_sync_off: false,
+        },
+    }
+}
+
+#[cfg(target_os = "linux")]
+struct LinuxWebviewPlan {
+    /// `WEBKIT_DISABLE_DMABUF_RENDERER` değeri: "0" çizici açık.
+    dmabuf_disable: &'static str,
+    /// `WEBKIT_FORCE_VBLANK_TIMER` — yalnız gamescope'ta verilir.
+    vblank_timer: Option<&'static str>,
+    /// `__NV_DISABLE_EXPLICIT_SYNC=1` — yalnız NVIDIA Wayland ölçüm yolu.
+    nv_explicit_sync_off: bool,
 }
 
 #[cfg(target_os = "linux")]
@@ -202,4 +307,33 @@ fn display_is_nvidia_only() -> bool {
         })
         .peekable();
     drivers.peek().is_some() && drivers.all(|driver| driver == "nvidia")
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod tests {
+    use super::{linux_webview_plan, LinuxSession};
+
+    #[test]
+    fn gamescope_cizici_acik_vblank_zorunlu() {
+        let plan = linux_webview_plan(LinuxSession::Gamescope);
+        assert_eq!(plan.dmabuf_disable, "0");
+        assert_eq!(plan.vblank_timer, Some("1"));
+        assert!(!plan.nv_explicit_sync_off);
+    }
+
+    #[test]
+    fn nvidia_wayland_kurali_korunur() {
+        let plan = linux_webview_plan(LinuxSession::NvidiaWayland);
+        assert_eq!(plan.dmabuf_disable, "0");
+        assert_eq!(plan.vblank_timer, None);
+        assert!(plan.nv_explicit_sync_off);
+    }
+
+    #[test]
+    fn diger_oturumlar_guvenli_yolda_kalir() {
+        let plan = linux_webview_plan(LinuxSession::Other);
+        assert_eq!(plan.dmabuf_disable, "1");
+        assert_eq!(plan.vblank_timer, None);
+        assert!(!plan.nv_explicit_sync_off);
+    }
 }

@@ -1,0 +1,19 @@
+{
+  "name": "@volstudio/deck-probe",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deck'te cihaz gerçeklerini ölçen sonda — paylaşılan kabuğun ilk aktif tüketicisi",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@volstudio/core": "workspace:*",
+    "phaser": "^4.2.1",
+    "typescript": "^6.0.3",
+    "vitest": "4.1.11"
+  }
+}

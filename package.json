@@ -25,7 +25,9 @@
     "benchmark:core": "pnpm --filter @volstudio/core benchmark",
     "build:linux-appimage": "node scripts/build-linux-appimage.mjs",
     "contract": "node scripts/workspace-contract.mjs",
-    "benchmark:device": "node scripts/device-benchmark.mjs"
+    "benchmark:device": "node scripts/device-benchmark.mjs",
+    "build:linux-steamrt4": "node scripts/build-linux-steamrt4.mjs",
+    "deck": "node scripts/deck.mjs"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "4.1.11",

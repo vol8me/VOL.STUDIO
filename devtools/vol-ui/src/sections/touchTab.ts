@@ -27,6 +27,7 @@ import {
 } from '@volstudio/core/ui';
 import { i18n, i18next } from '@volstudio/core/i18n';
 import { findBindingConflicts } from '@volstudio/core/input/bindings';
+import { buildGamepadDemo } from './touchGamepadDemo';
 import { card, cardGrid, svgIcon } from './shared';
 import {
   ICON_DASH,
@@ -875,6 +876,7 @@ export function buildTouchTab(): { element: HTMLElement; destroy: () => void } {
     card(i18next.t('volui:touch.swipeableCardStack'), buildSwipeableCardStackDemo(disposables), {
       spanAll: true,
     }),
+    card(i18next.t('volui:touch.gamepad'), buildGamepadDemo(disposables), { span: 2 }),
   ];
 
   container.appendChild(cardGrid(cards));

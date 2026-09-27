@@ -1,4 +1,4 @@
-import { FullscreenController, Tabs } from '@volstudio/core/ui';
+import { FocusNavController, FullscreenController, Tabs, showConfirm } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { buildAdvancedTab } from './sections/advancedTab';
@@ -43,7 +43,9 @@ export class ShowcaseApp {
   private renderScope: DisposableScope | null = null;
   private readonly lifecycle = new DisposableScope();
   private readonly fullscreen: FullscreenController;
+  private readonly focusNav: FocusNavController;
   private activeTabId: ShowcaseTabId = 'buttons';
+  private tabOrder: ShowcaseTabId[] = [];
   private destroyed = false;
   private readonly onLangButtonClick = (): void => {
     void i18next.changeLanguage(i18next.language === 'tr' ? 'en' : 'tr');
@@ -65,7 +67,26 @@ export class ShowcaseApp {
     );
     i18next.on('languageChanged', this.onLanguageChanged);
     this.lifecycle.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
+    // Kol gezinmesi vitrin genelinde yaşar: rebuild sekmeleri yeniden kurar
+    // ama controller'ın document dinleyicileri ve rAF'ı sabit kalır.
+    this.focusNav = this.lifecycle.addDestroyable(
+      new FocusNavController({
+        onMenu: () => {
+          void showConfirm({ title: i18next.t('volui:app.paused') });
+        },
+        onPrevTab: () => this.stepTab(-1),
+        onNextTab: () => this.stepTab(1),
+      }),
+    );
+    this.focusNav.start();
     this.rebuild();
+  }
+
+  private stepTab(delta: number): void {
+    if (this.tabOrder.length === 0 || !this.tabs) return;
+    const index = this.tabOrder.indexOf(this.activeTabId);
+    const next = this.tabOrder[(index + delta + this.tabOrder.length) % this.tabOrder.length];
+    this.tabs.select(next);
   }
 
   destroy(): void {
@@ -111,6 +132,7 @@ export class ShowcaseApp {
     header.appendChild(actions);
 
     const specs: TabSpec[] = [
+      // LB/RB sekme geçişinin sıra kaynağı — liste tek yerden türetilir.
       { id: 'buttons', labelKey: 'buttons', builder: () => buildButtonsTab(this.element) },
       { id: 'text', labelKey: 'text', builder: buildTextTab },
       { id: 'panels', labelKey: 'panels', builder: () => buildPanelsTab(this.element) },
@@ -129,6 +151,7 @@ export class ShowcaseApp {
       label: i18next.t(`volui:tabs.${spec.labelKey}`),
       content: spec.builder(),
     }));
+    this.tabOrder = specs.map((spec) => spec.id);
     const tabs = new Tabs(entries, {
       orientation: 'vertical',
       listHeader: header,

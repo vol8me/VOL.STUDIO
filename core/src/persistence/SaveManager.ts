@@ -94,4 +94,18 @@ export class LocalStorageAdapter implements IStorageAdapter {
     }
     return Promise.resolve();
   }
+
+  /** Tüm anahtarlar — tek-dosyadan kapsamlı store'a kayıpsız taşımada kullanılır. */
+  keys(): Promise<readonly string[]> {
+    try {
+      const all: string[] = [];
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (key !== null) all.push(key);
+      }
+      return Promise.resolve(all);
+    } catch {
+      return Promise.resolve([]);
+    }
+  }
 }

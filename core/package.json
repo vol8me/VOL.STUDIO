@@ -26,6 +26,10 @@
       "import": "./src/collections/index.ts",
       "types": "./src/collections/index.ts"
     },
+    "./input/gamepad": {
+      "import": "./src/input/gamepad.ts",
+      "types": "./src/input/gamepad.ts"
+    },
     "./input/bindings": {
       "import": "./src/input/bindingLabels.ts",
       "types": "./src/input/bindingLabels.ts"

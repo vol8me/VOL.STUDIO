@@ -1,0 +1,5 @@
+{
+  "identifier": "default",
+  "windows": ["main"],
+  "permissions": ["core:default", "vol-diagnostics:default"]
+}

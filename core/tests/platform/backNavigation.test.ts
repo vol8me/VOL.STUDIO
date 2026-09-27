@@ -73,7 +73,7 @@ describe('Android geri navigasyonu', () => {
     expect(upper).toHaveBeenCalledOnce();
     expect(lower).toHaveBeenCalledOnce();
     expect(error).toHaveBeenCalledWith(
-      '[backNavigation] Android geri işleyicisi başarısız:',
+      '[backNavigation] Geri işleyicisi başarısız:',
       expect.any(Error),
     );
     error.mockRestore();

@@ -118,3 +118,61 @@ bir kuyruğa toplar; kapanışta `flushAndDispose()` ile son yazımı bekletir.
 bırakırken abonelik, debounce ve seri yazımı ortaklaştırır.
 `showFatalStartupError`, i18n kurulumu da başarısız olabildiği açılış sınırında
 metni tüketiciden alıp erişilebilir bir hata yüzeyi kurar.
+
+### 236 → 240
+
+Kapsamlı kalıcılık — dört ÇALIŞMA ZAMANI export'u. `ScopedSaveManager` her
+kaydı `synced.*`/`device.*` önekiyle ayrı adapter'a yöneltir; kapsamsız
+anahtar tip olarak yazılamaz (`ScopedKey`). `migrateLegacyStore` tek dosyalı
+eski kaydı iki dosyaya kayıpsız taşır: yaz → geri oku → doğrula → eskiden sil
+sırası yarım taşımayı tekrar denenebilir bırakır. `isScopedKey`/`scopeOfKey`
+öneki tek yerde tanımlar. Steam Deck işinin kalbi: yalnız `synced` dosyası
+Steam Cloud'a gider, cihaz ayarları yerel kalır (D2).
+
+### 240 → 241
+
+`observeWakeGaps`. Uyku/uyanma algısı: zamanlayıcı kalp atışının duvar
+saatiyle karşılaştırılması uyku süresini verir (`suspend-gap` native
+kaydının JS karşılığı). Oyun uyanışta duraklamayı ve kuyrukları toparlar;
+Deck'te `rtcwake` ya da güç tuşuyla uyutulan cihazda `Date.now` sıçraması
+bununla yakalanır. Birim testi sahte saatle sıçramayı sınar (D2).
+
+### 241 → 250
+
+Kol girdisi ve kip hakemi — dokuz ÇALIŞMA ZAMANI export'u (D3).
+`GamepadController`, tarayıcı Gamepad API'sini `InputProvider`'a bağlar;
+`navigator` enjekte edilebilir olduğu için test sahte kol listesiyle çalışır.
+`GAMEPAD_BUTTON` standard eşlemenin düğme dizinleridir; `PadLike` DOM tipinin
+yapısal alt kümesidir. `computeGamepadInput`/`resolveGamepadActions`/
+`isGamepadInputActive`/`readStick` saf mantıktır — eylem→düğme bağı veridir.
+`InputModeArbiter` kip politikasını taşır: kenar-zamanı yeniliğiyle "son
+anlamlı girdi kazanır", eşit kenarda görevli/liste sırası histerezis verir,
+kimse etkin değilken kip yapışık kalır. `inputModeForSession` kabuk
+oturumunu (`'gamescope'`) başlangıç kipine çevirir; ürün kodu platform
+algılaması yazmaz. `InputManager`'ın kodlanmış "dokunmatik önce" kuralı bu
+hakeme taşındı; eylemler artık sağlayıcılar üzerinden birleşir, nişan
+durağan kaynaktan birikir.
+
+### 588 → 600
+
+Girdi glif sistemi ve haptik darbe planı — on iki sembol (D4, runtime + tip).
+`Glyph` DOM bileşeni mantıksal slotu (`GlyphName`: `faceDown`, `start`,
+`trackpadLeft`…) aileye çözer; `resolveGlyphFamily` + `GlyphFamilyContext`
+etkin sağlayıcı kimliğinden aileyi çıkarır (Steamworks tipi → `gamepadId`
+kalıbı → Deck oturumu → `xbox` varsayımı). `glyphFile`/`glyphUrl`/
+`keyboardKeyFile`/`glyphNameForButton` eşleme yardımcılarıdır; dosya adları
+`core/public/assets/glyphs/` altındaki Kenney (CC0) alt kümesine işaret
+eder. `RumblePulse` ile `planRumblePulses` desen→darbe planını native
+sürücülere veri olarak taşır.
+
+### 563 → 588
+
+Kol gezinmesi ve odak altyapısı — yirmi beş sembol (D3, runtime + tip).
+`FocusNavController` + `FOCUS_NAV_CLASS` uzamsal odak sürücüsüdür: D-pad ve
+çubuk kenarıyla aday seçer (`pickDirectionalTarget`, `DirectionalCandidate`,
+`NavDirection`, `RectLike`), A tıklar, B paylaşılan geri yığınına düşer,
+Menu isteğe bağlı duraklatma çağırır, L1/R1 sekme gezintisi yapar.
+`FOCUSABLE_SELECTOR` + `listFocusable` odaklanabilir öğe tanımını Modal ile
+paylaşır; `inert` ve modal sınırları sayar. `triggerBack` Android geri,
+Escape ve kol B'sini aynı yığına bağlar. Geri kalan semboller tip tarafıdır:
+`FocusNavOptions`, `Gamepad*` tipleri, `PadLike`, `InputModePolicyOptions`.

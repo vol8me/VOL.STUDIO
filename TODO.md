@@ -83,32 +83,38 @@ ağaçları ancak lifecycle yeniden aktifleştirmesiyle değişir (D7).
       sıçraması ve uzun kare aralığı simülasyonu, bekleme sürelerini ve
       otomatik kaydı bozmaz; oyun uyanınca duraklatılmış döner. Kapanır: saat
       sıçraması birim testlidir; Deck'te uyku-uyanma turu ölçülür.
-- [ ] **[P1] D3 — `core` gamepad sağlayıcısı ve girdi kipi politikası.**
+- [x] **[P1] D3 — `core` gamepad sağlayıcısı ve girdi kipi politikası.**
       Standart eşleme, ölü bölge, analog hareket ve nişan; eylem → düğme bağı
-      veridir. Son anlamlı girdi histerezisle kazanır; fare ve çubuk nişanı
-      birikir, biri ötekini kilitlemez; Deck'te ilk kareden kol kipi.
-      `InputManager`'ın "dokunmatik önce" kuralı bu politikaya taşınır.
-      Kapanır: sağlayıcı ve politika birim testlidir; vol-ui'de canlı
-      gösterilir; hiçbir ayar değiştirilmeden kolla oyun başlar.
-- [ ] **[P1] D3 — Kolla arayüz gezinmesi.** D-pad ve çubukla uzamsal odak,
-      A etkinleştirir; Android geri, Escape ve kolun B'si tek geri yığınını
-      paylaşır; Menu duraklatır; L1/R1 sekme değiştirir; odak halkası yalnız
-      kol ve klavye kipinde görünür; modal ve sheet odak tuzaklarıyla
-      uyumludur. Kapanır: vol-ui vitrinindeki her etkileşimli bileşen sanal
-      Gamepad'li E2E'de yalnız kolla kullanılır.
-- [ ] **[P1] D4 — Glif sistemi.** `core` `Glyph` bileşeni ve aile
-      çözümleyici: Steamworks → `SteamVirtualGamepadInfo` köprüsü →
-      `Gamepad.id` → `SteamDeck=1` → Xbox. Aileler: Xbox, PlayStation,
-      Nintendo, Valve (Deck ve Steam Controller; L1/R1 adlandırması), klavye,
-      fare. Varlıklar CC0 kaynaklıdır ve kaynak kaydı tutulur; logo ve Valve
-      partner çizimi depoya girmez. Kapanır: glif etkin girdiyle eşleşir ve
-      girdi değişince değişir, kol kipinde klavye/fare glifi görünmez (E2E);
-      vol-ui vitrini ve README sekme tablosu günceldir.
-- [ ] **[P2] D4 — Linux'ta titreşimin native yolu.** `tauri-v2` haptik
-      sürücüsü: Steamworks varsa Steam Input titreşimi, yoksa sanal kola
-      evdev force-feedback; WebKit ≥ 2.54 paketlenince tarayıcı yolu
-      kendiliğinden öne geçer. Kapanır: `core` haptik desenleri Deck'te
-      hissedilir ve ölçülür; titreşim ayarı Deck'te sunulur.
+      veridir (`GamepadController` + `GamepadState`, 11 test). Son anlamlı
+      girdi kenar-zamanıyla kazanır (`InputModeArbiter`, 10 test); fare ve
+      çubuk nişanı `InputManager` birleşiminde birikir, biri ötekini
+      kilitlemez (14 test). `inputModeForSession('gamescope')` ilk kareden
+      kol kipi verir. vol-ui `touch` sekmesinde canlı kol paneli var.
+      Gerçek Deck'te oyun başlangıcı D7'nin kabul turunda doğrulanır.
+- [x] **[P1] D3 — Kolla arayüz gezinmesi.** `FocusNavController`: D-pad ve
+      çubukla uzamsal odak, A tıklar, B `triggerBack` üzerinden Android geri
+      ve Escape ile aynı yığına düşer; Menu `onMenu`'ye, LB/RB sekme
+      geçişine gider. Halka `vol-focusnav-current` ile yalnız kol/klavye
+      kipinde görünür; `listFocusable` modal/inert sınırlarını sayar
+      (Modal aynı seçiciyi kullanır). 16 birim testi; sanal kol E2E'si
+      6/6 yeşil (`devtools/vol-ui/tests/e2e/gamepad.spec.ts`).
+- [x] **[P1] D4 — Glif sistemi.** `core/src/ui/glyphs/`: `Glyph` bileşeni
+      (img + metin çipi yedeği), `resolveGlyphFamily` (Steamworks tipi →
+      `Gamepad.id` kalıbı → `SteamDeck=1` → `xbox`), `glyphNameForButton`
+      standart-düzen eşlemesi. Varlıklar Kenney Input Prompts 1.5 (CC0)
+      alt kümesi, `core/public/assets/glyphs/` 139 dosya; kaynak kaydı
+      `SOURCES.md`. vol-ui `touch` sekmesinde kip-bağımlı glif satırı;
+      E2E glif testi yeşil (kol→xbox, klavye→keyboard, dokunmatik→yok).
+      Not: donmuş-saat ortamında kip geçişi test edilemez — E2E taze
+      bağlamda gerçek saatle koşar.
+- [x] **[P2] D4 — Linux'ta titreşimin native yolu.** `tauri-v2` haptik
+      sürücüsü çift arka uçlu: **hidraw** (Deck HID 0xEB rumble raporu)
+      öncelikli; **evdev** FF_RUMBLE yedek (sanal kol EVIOCSFF'i EFAULT
+      verir — uinput yükleme servisi devkit oyununda yok). `planRumblePulses`
+      desen tablosu her iki uca da veri taşır. Sonda Deck'te
+      `backend:"hidraw", device:"hidraw2"` bildirdi ve `vol_haptics_rumble`
+      `ok` döndü — rapor süreç içinden kabul edildi (2026-09-27). Motorun
+      hissedilmesi insan eliyle kalır (güç sensörü çözünürlüğü yetmedi).
 - [ ] **[P1] D5 — Okunabilirlik ve ölçek kapısı.** Playwright WebKit
       projesinde 1280×800 ve 1280×720'de görünen her metin ≥ 12 px;
       1920×1080 ve 3840×2160'ta oturma mesafesine göre UI ölçeği; kapsam

@@ -26,6 +26,23 @@ export {
   type TouchInputSnapshot,
   type TouchStickSnapshot,
 } from './InputSnapshot';
+export {
+  GAMEPAD_BUTTON,
+  GAMEPAD_DEFAULT_DEAD_ZONE,
+  computeGamepadInput,
+  isGamepadInputActive,
+  resolveGamepadActions,
+  readStick,
+  type GamepadActionBinding,
+  type GamepadInputOptions,
+  type PadLike,
+} from './GamepadState';
+export {
+  GamepadController,
+  type GamepadControllerOptions,
+  type GamepadInputSnapshot,
+} from './GamepadController';
+export { InputModeArbiter, inputModeForSession, type InputModePolicyOptions } from './inputMode';
 export { InputManager } from '../phaser/input/InputManager';
 export { VirtualActionSource } from './VirtualActionSource';
 export * as InputUtils from './InputUtils';

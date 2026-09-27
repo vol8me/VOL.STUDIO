@@ -65,8 +65,10 @@ function acts(engage = false, boost = false): Record<TestAction, boolean> {
 // Test için `providers` enjekte edildiğinde hiç dokunulmaz.
 const fakeScene = {} as unknown as Phaser.Scene;
 
-describe('InputManager provider seçim önceliği', () => {
-  it('touch (providers[0]) aktifken diğer provider aktif olsa bile touch kazanır', () => {
+describe('InputManager provider birleştirme', () => {
+  it('iki sağlayıcı aynı karede etkinken hareket kip sahibinden, eylemler birleşir', () => {
+    // Kip politikası: eş kenar zamanlarında liste sırası kazanır → touch.
+    // Ama pc'nin eylemi KAYBOLMAZ; eylemler sağlayıcılar üzerinden VEYALANIR.
     const touchState: InputState<TestAction> = {
       move: new Vector2(1, 0),
       aim: Vector2.zero(),
@@ -78,16 +80,21 @@ describe('InputManager provider seçim önceliği', () => {
       actions: acts(true, false),
     };
 
-    const touch = makeProvider(true, touchState);
-    const pc = makeProvider(true, pcState);
+    const touch = makeProvider(true, touchState, 'touch');
+    const pc = makeProvider(true, pcState, 'pc');
     const manager = makeManager([touch, pc]);
+    manager.update(16);
 
-    expect(manager.getState(Vector2.zero())).toBe(touchState);
+    const state = manager.getState(Vector2.zero());
+    expect(state.move.x).toBe(1);
+    expect(state.move.y).toBe(0);
+    expect(state.actions.engage).toBe(true);
+    expect(manager.inputMode).toBe('touch');
   });
 
-  it('touch aktif değilse ilk aktif provider (ör. PC) kazanır', () => {
+  it('kip sahibinin hareketi boşsa diğer etkin sağlayıcınınki kullanılır', () => {
     const touchState: InputState<TestAction> = {
-      move: new Vector2(1, 0),
+      move: Vector2.zero(),
       aim: Vector2.zero(),
       actions: acts(false, false),
     };
@@ -97,11 +104,14 @@ describe('InputManager provider seçim önceliği', () => {
       actions: acts(true, false),
     };
 
-    const touch = makeProvider(false, touchState);
-    const pc = makeProvider(true, pcState);
+    const touch = makeProvider(true, touchState, 'touch');
+    const pc = makeProvider(true, pcState, 'pc');
     const manager = makeManager([touch, pc]);
+    manager.update(16);
 
-    expect(manager.getState(Vector2.zero())).toBe(pcState);
+    const state = manager.getState(Vector2.zero());
+    expect(state.move.y).toBe(1);
+    expect(state.actions.engage).toBe(true);
   });
 
   it('hiçbir provider aktif değilse sıfır InputState döner', () => {
@@ -320,6 +330,34 @@ describe('Diagnostics snapshot sağlayıcı kümesi AÇIK', () => {
 
       expect(state.aim.y).toBe(1);
       expect(state.actions.engage).toBe(true);
+      manager.destroy();
+    });
+
+    it('etkin sağlayıcının nişanı boşken durağan nişan BİRİKİR', () => {
+      // "Fare ve çubuk nişanı birikir, biri ötekini kilitlemez": kol elde
+      // ama sağ çubuk serbest — fare konumunun ürettiği yön kaybolmaz.
+      const gamepad = {
+        id: 'gamepad',
+        isActive: true,
+        providesRestingState: false,
+        getState: () => ({
+          move: new Vector2(0.5, 0),
+          aim: Vector2.zero(),
+          actions: createIdleActions(TEST_ACTIONS),
+        }),
+        update: () => {},
+        destroy: () => {},
+      };
+      const manager = makeManager([
+        makeIdleTouch() as never,
+        makeRestingPc({ x: -1, y: 0 }) as never,
+        gamepad as never,
+      ]);
+
+      const state = manager.getState(new Vector2(0, 0));
+
+      expect(state.move.x).toBe(0.5);
+      expect(state.aim.x).toBe(-1);
       manager.destroy();
     });
   });

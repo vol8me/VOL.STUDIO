@@ -8,6 +8,8 @@ import { createIdleActions, type InputState } from '../../input/InputState';
 import { createIdleSnapshot, type InputSnapshot } from '../../input/InputSnapshot';
 import { TouchController, type TouchControllerOptions } from './TouchController';
 import type { VirtualActionSource } from '../../input/VirtualActionSource';
+import { InputModeArbiter, type InputModePolicyOptions } from '../../input/inputMode';
+import { GamepadController, type GamepadControllerOptions } from '../../input/GamepadController';
 
 export interface InputManagerOptions<TAction extends string> {
   /**
@@ -19,6 +21,13 @@ export interface InputManagerOptions<TAction extends string> {
   pcActionBindings: Readonly<Record<TAction, PCActionBinding>>;
   /** Hareket tuşları; verilmezse WASD (bkz. `DEFAULT_MOVE_KEYS`). */
   moveKeys?: MoveKeyBindings;
+  /**
+   * Eylem → kol düğmesi eşlemesi. Varsayılan sağlayıcılar kurulurken bir
+   * `GamepadController` da listeye eklenir; bu eşleme verilmezse kol yalnız
+   * hareket/nişan ve kip algısı üretir (düğmeler eylemsiz kalır).
+   * `padIndex`, `getGamepads` ve deadzone seçenekleri de buradan geçer.
+   */
+  gamepad?: Omit<GamepadControllerOptions<TAction>, 'actions'>;
   /** Sağ joystick deadzone'u aştığında basılı sayılacak eylem (dokunmatik). */
   aimStickAction?: TAction;
   /** Sağ joystick dokunulduğu anda, deadzone aşılmadan da eylemi etkinleştirir. */
@@ -33,21 +42,27 @@ export interface InputManagerOptions<TAction extends string> {
    */
   actionSource?: VirtualActionSource<TAction>;
   /**
+   * Girdi kipi politikası. `initial` ile ilk kareden kip seçilir (ör.
+   * gamescope oturumunda `'gamepad'`); ayrıntılar `InputModeArbiter`'de.
+   */
+  inputMode?: InputModePolicyOptions;
+  /**
    * Provider'lar testler için enjekte edilebilir. Verilmezse gerçek
-   * TouchController/PCController kurulur; ilk eleman her zaman "touch"
-   * sağlayıcı kabul edilir.
+   * TouchController/PCController/GamepadController kurulur; liste sırası
+   * eş zamanlı etkinlikteki öncelik sırasıdır (dokunmatik önce gelir).
    */
   providers?: InputProvider<TAction>[];
 }
 
 export class InputManager<TAction extends string> {
   private readonly providers: InputProvider<TAction>[];
-  private readonly touch: InputProvider<TAction>;
   private readonly actions: readonly TAction[];
   private readonly lifecycle = new DisposableScope();
+  private readonly arbiter: InputModeArbiter;
 
   constructor(scene: Phaser.Scene, options: InputManagerOptions<TAction>) {
     this.actions = options.actions;
+    this.arbiter = new InputModeArbiter(options.inputMode);
     if (options.providers) {
       // Çağıranın diziyi sonradan değiştirmesi update/cleanup kümelerini
       // birbirinden ayırmamalı; manager kurulduğu andaki sahipliği sabitler.
@@ -70,23 +85,25 @@ export class InputManager<TAction extends string> {
             moveKeys: options.moveKeys,
           }),
         );
-        this.providers = [touch, pc];
+        const gamepad = this.lifecycle.addDestroyable(
+          new GamepadController<TAction>({
+            actions: options.actions,
+            ...options.gamepad,
+          }),
+        );
+        this.providers = [touch, pc, gamepad];
       } catch (error) {
-        // İkinci provider kurulurken hata oluşursa ilk provider'ın Phaser
+        // Geç provider kurulurken hata oluşursa erken provider'ların Phaser
         // listener'ları constructor tamamlanamadı diye sahnede kalmamalı.
         this.lifecycle.dispose();
         throw error;
       }
     }
 
-    const touch = this.providers[0];
-    // noUncheckedIndexedAccess kapalı olduğu için TS boş diziyi yakalamıyor;
-    // guard olmadan getState() ilk satırda anlamsız bir TypeError atardi.
-    if (!touch) {
+    if (this.providers.length === 0) {
       this.lifecycle.dispose();
       throw new Error('InputManager: en az bir InputProvider gerekli (providers boş olamaz)');
     }
-    this.touch = touch;
 
     // Varsayılan provider'lar kurulum sırasında zaten kaydedildi. Enjekte
     // edilen provider'lar da aynı sahiplik sözleşmesine alınır.
@@ -96,57 +113,101 @@ export class InputManager<TAction extends string> {
   }
 
   /**
-   * Aktif sağlayıcıyı seçer. getState() ve getDebugSnapshot() AYNI seçimi
-   * kullanmalı — aksi halde debug overlay 'pc' gosterirken oyun touch state'i
-   * kullanır ve hata ayıklama araci yanıltır.
-   *
-   * Öncelik: touch her zaman PC'den öncelikli (hibrit cihazlarda dokunmatik
-   * aktifken fare/klavye ikincil). PC provider'lar arasında `find()` ilk
-   * aktif olanı döner; sıra `providers` dizisindeki tanım sırasına bağlıdır.
+   * Geçerli girdi kipi — son anlamlı girdinin sağlayıcı kimliği.
+   * Glif/odak halkası gibi GÖRÜNTÜ kararları bunu okur; `InputModeArbiter`
+   * histerezisi sayesinde gürültüyle gidip gelmez. Hiç girdi olmadıysa
+   * `inputMode.initial` ya da `undefined`.
    */
-  private resolveActiveProvider(): InputProvider<TAction> | undefined {
-    if (this.touch.isActive) return this.touch;
-    const active = this.providers.find((provider) => provider.isActive);
-    if (active) return active;
-    // Hiçbir sağlayıcı "aktif" değil demek, GİRDİ YOK demek DEĞİLDİR.
-    //
-    // Nişan SÜREKLİ bir sinyaldir: fare her zaman bir yerdedir. Burada sıfır
-    // durum uydurulunca duran bir oyuncunun nişanı (0,0) oluyordu ve nişana
-    // bağlı her mekanik kendi yedeğine düşüyordu — çoklu atış hep SAĞA
-    // ateşliyor, ateş alanı oyuncunun ayağının dibine düşüyordu. Sorun
-    // yalnızca fare ile nişan alıp WASD'ye ya da fare düğmesine dokunmayan
-    // oyuncuda görünüyordu, çünkü bunların hepsi sağlayıcıyı "aktif" yapıyor.
-    return this.providers.find((provider) => provider.providesRestingState === true);
+  get inputMode(): string | undefined {
+    return this.arbiter.mode;
   }
 
   update(delta: number): void {
     for (const provider of this.providers) {
       provider.update(delta);
     }
+    this.arbiter.observe(
+      this.providers.map((provider) => ({ id: provider.id, active: provider.isActive })),
+    );
   }
 
   /**
-   * Touch her zaman PC'den önce kontrol edilir: stale bir `activePointer`
-   * (dokunuştan miras kalan) PC'ye yanlışlıkla öncelik verdirmemeli.
+   * Bu karenin girdi durumunu üretir.
+   *
+   * Sağlayıcılar artık BİRLEŞTİRİLİR, tek kazanan seçilmez:
+   *
+   * - **Eylemler** tüm etkin sağlayıcılar üzerinden VEYALANIR — kol düğmesi
+   *   WASD basılıyken de çalışır; hiçbir kip ötekini kilitlemez.
+   * - **Hareket ve nişan** önce kip sahibinden, o boşsa sırayla diğer etkin
+   *   sağlayıcılardan alınır ("son anlamlı girdi kazanır").
+   * - **Nişan birikir:** etkin sağlayıcının nişanı sıfırsa (çubuk serbest)
+   *   `providesRestingState` taşıyan sağlayıcının durağan nişanı kullanılır
+   *   — kol etkinken fare konumu kaybolmaz, miras dokunuş ise
+   *   `wasTouch` koruması zaten o sağlayıcıyı devre dışı bırakır.
+   * - Hiçbir sağlayıcı etkin değilken durağan-nişan sağlayıcısının TAM
+   *   durumu döner (nişan sıfır uydurulmaz).
    */
   getState(playerPosition: Vector2): InputState<TAction> {
-    const active = this.resolveActiveProvider();
-    if (active) {
-      return active.getState(playerPosition);
+    const active = this.providers.filter((provider) => provider.isActive);
+
+    if (active.length === 0) {
+      const resting = this.providers.find((provider) => provider.providesRestingState === true);
+      if (resting) return resting.getState(playerPosition);
+      return {
+        move: Vector2.zero(),
+        aim: Vector2.zero(),
+        actions: createIdleActions(this.actions),
+      };
+    }
+
+    const order = this.arbiter.priorityOrder(active.map((provider) => provider.id));
+    const byId = new Map(active.map((provider) => [provider.id, provider] as const));
+    const ordered = order
+      .map((id) => byId.get(id))
+      .filter((provider): provider is InputProvider<TAction> => provider !== undefined);
+    const states = new Map(
+      ordered.map((provider) => [provider.id, provider.getState(playerPosition)] as const),
+    );
+
+    const actions = createIdleActions(this.actions);
+    for (const state of states.values()) {
+      for (const action of this.actions) {
+        actions[action] = actions[action] || state.actions[action];
+      }
+    }
+
+    const pick = (field: 'move' | 'aim'): Vector2 | undefined => {
+      for (const provider of ordered) {
+        const value = states.get(provider.id)?.[field];
+        if (value && value.length() > 0) return value;
+      }
+      return undefined;
+    };
+
+    let aim = pick('aim');
+    if (!aim) {
+      const resting = this.providers.find(
+        (provider) => provider.providesRestingState === true && provider.isActive === false,
+      );
+      const restingAim = resting?.getState(playerPosition).aim;
+      if (restingAim && restingAim.length() > 0) aim = restingAim;
     }
 
     return {
-      move: Vector2.zero(),
-      aim: Vector2.zero(),
-      actions: createIdleActions(this.actions),
+      move: pick('move') ?? Vector2.zero(),
+      aim: aim ?? Vector2.zero(),
+      actions,
     };
   }
 
   /** Aktif input provider'ın ham durum snapshot'ını döner. */
   getDebugSnapshot(): InputSnapshot {
-    const active = this.resolveActiveProvider();
-    if (active?.getDebugSnapshot) {
-      return active.getDebugSnapshot();
+    const mode = this.arbiter.mode;
+    const provider =
+      this.providers.find((candidate) => candidate.id === mode && candidate.isActive) ??
+      this.providers.find((candidate) => candidate.isActive);
+    if (provider?.getDebugSnapshot) {
+      return provider.getDebugSnapshot();
     }
     return createIdleSnapshot();
   }

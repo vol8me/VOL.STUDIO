@@ -1,0 +1,5 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = "Ölçüm sondası kaydına satır yazma ve izin listeli ortam dökümü izni."
+permissions = ["allow-report", "allow-env-info", "allow-flush-done"]

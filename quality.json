@@ -98,7 +98,9 @@
     "branches": 50,
     "functions": 40
   },
-  "exempt": {},
+  "exempt": {
+    "@volstudio/deck-probe": "Cihaz ölçüm sondası: kanıtı Deck üzerindeki çalıştırmadır (kayıt kanalı, fazlar, girdi gözlemi). web/ ön yüzü tarayıcı + Tauri IPC'ye bağlıdır; birim kapsamı oranı burada anlamlı değildir. Sözleşmesi probe-contract.test.ts ile kilitlidir."
+  },
   "packages": {
     "@volstudio/core": {
       "lines": 90,
@@ -142,7 +144,7 @@
   },
   "coverageRuns": {
     "coverage": {
-      "exclude": ["@volstudio/audio-synth"]
+      "exclude": ["@volstudio/audio-synth", "@volstudio/deck-probe"]
     },
     "coverage-audio": {
       "only": ["@volstudio/audio-synth"]

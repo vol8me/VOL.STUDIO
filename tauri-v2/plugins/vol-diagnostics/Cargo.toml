@@ -1,0 +1,25 @@
+[package]
+name = "tauri-plugin-vol-diagnostics"
+version = "0.1.0"
+description = "VOL.STUDIO ölçüm sondası köprüsü — ortam/env, sinyal ve uyku gözlemi JSONL kaydına yazılır"
+authors = ["VOL.STUDIO"]
+edition = "2021"
+links = "tauri-plugin-vol-diagnostics"
+
+[lib]
+name = "tauri_plugin_vol_diagnostics"
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-plugin = { version = "2.6", features = ["build"] }
+
+[dependencies]
+tauri = { version = "2.11", features = ["rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Diagnostics kanalı yalnız masaüstü Linux'ta sinyal/uyku izler; diğer
+# platformlarda komutlar yine de çalışır ama izleyici kurulmaz.
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"
+signal-hook = "0.3"

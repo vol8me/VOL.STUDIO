@@ -27,7 +27,16 @@ interface BackHandlerEntry {
 const handlers: BackHandlerEntry[] = [];
 let listening = false;
 
-function onAndroidBack(): void {
+/**
+ * Geri yığınını en üstten dener; ilk `true` dönen işleyici olayı tüketir.
+ *
+ * Android geri tuşu (`vol:androidback`), klavye `Escape`'i ve kolun B
+ * düğmesi bu TEK yığını paylaşır — `FocusNavController` ve native kabuk
+ * ayrı zincir kurmaz.
+ *
+ * @returns Bir işleyici olayı sahiplendiyse `true`.
+ */
+export function triggerBack(): boolean {
   // İşleyici kendi kaydını veya alttaki bir kaydı kaldırabilir. Canlı dizi
   // üzerinde geriye yürümek bu durumda aynı handler'ı iki kez çağırabiliyor;
   // tek geri olayı başlangıçtaki yığının değişmez snapshot'ını görür.
@@ -36,12 +45,17 @@ function onAndroidBack(): void {
     // Snapshot alındıktan sonra kaldırılmış bir handler artık sahip değildir.
     if (!handlers.includes(entry)) continue;
     try {
-      if (entry.handler()) return;
+      if (entry.handler()) return true;
     } catch (error) {
       // Bozuk bir üst yüzey, alttaki güvenli navigasyon kapısını kilitlemesin.
-      console.error('[backNavigation] Android geri işleyicisi başarısız:', error);
+      console.error('[backNavigation] Geri işleyicisi başarısız:', error);
     }
   }
+  return false;
+}
+
+function onAndroidBack(): void {
+  triggerBack();
 }
 
 function ensureListening(): void {

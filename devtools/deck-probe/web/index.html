@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>vol-deck-probe</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #0b0d12;
+        color: #dfe6f0;
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+      }
+      #hud {
+        position: fixed;
+        top: 8px;
+        left: 8px;
+        z-index: 10;
+        background: rgb(0 0 0 / 70%);
+        border: 1px solid #334;
+        border-radius: 6px;
+        padding: 10px 12px;
+        white-space: pre-wrap;
+        font-family: ui-monospace, monospace;
+        font-size: 13px;
+      }
+      #status {
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+      #game {
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="hud">
+      <div id="status">sonda başlıyor…</div>
+      <div id="detail"></div>
+    </div>
+    <div id="game"></div>
+    <script src="vendor/phaser.min.js"></script>
+    <script src="probe.js"></script>
+  </body>
+</html>

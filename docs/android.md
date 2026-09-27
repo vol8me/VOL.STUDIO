@@ -99,12 +99,14 @@ dağıtımı için derleme steamrt4 SDK kabında yapılır; ayrıntı
 
 ### WebView çizim yolu
 
-Paylaşılan kabuk (`configure_linux_webview`) WebView yaratılmadan önce çizim
-yolunu seçer ve dışarıdan verilen değişkeni ezmez. WebKit'in DMA-BUF çizicisi
-bazı sürücülerde boş WebView bıraktığı için güvenli yol onu kapatmaktır, ama o
-yolda her kare CPU üzerinden kopyalanır. Tek istisna ölçülen durumdur: ekranı
-tek başına NVIDIA sürücüsü sürüyorsa ve oturum yerel Wayland ise çizici açık
-kalır ve `__NV_DISABLE_EXPLICIT_SYNC=1` verilir. Ölçüm (RTX 3050 / 610.57,
+Paylaşılan kabuk (`configure_linux_webview`, kural tablosu
+`linux_webview_plan`) WebView yaratılmadan önce çizim yolunu seçer ve
+dışarıdan verilen değişkeni ezmez. WebKit'in DMA-BUF çizicisi bazı
+sürücülerde boş WebView bıraktığı için güvenli yol onu kapatmaktır, ama o
+yolda her kare CPU üzerinden kopyalanır. İki ölçülen istisna vardır: ekranı
+tek başına NVIDIA sürücüsü sürdüğü yerel Wayland'da çizici açık kalır ve
+`__NV_DISABLE_EXPLICIT_SYNC=1` verilir; gamescope oturumunda ise çizici
+açık + `WEBKIT_FORCE_VBLANK_TIMER=1` verilir. Ölçüm (RTX 3050 / 610.57,
 KDE Plasma 6.7, WebKitGTK 2.52, 1920×1080, boş sahne):
 
 | Yol                                          | Sonuç                        |
@@ -123,7 +125,7 @@ görmeden `WEBKIT_DISABLE_DMABUF_RENDERER=0` ve
 `__NV_DISABLE_EXPLICIT_SYNC=1` ile çalışır; `GDK_BACKEND=x11` verilerek
 XWayland yoluna da çizdirilebilir.
 
-Gamescope oturumu (Steam Deck) bu tablonun dışındadır. Kural orada çiziciyi
-kapatır; Deck'te bu yol aynı kare hızında yaklaşık 2,5 kat CPU harcadı. Kare
-temposunu belirleyen de çizici değil, WebKit'in vblank izleyicisiydi. Gamescope
-ölçümü ve kuralı: [steam-deck.md](steam-deck.md#çizim-ve-kare-zamanlaması).
+Gamescope oturumu (Steam Deck) bu tabloya eklendi: kural artık orada
+çiziciyi açık bırakır ve zamanlayıcıyı zorlar — önceki kapalı-yol davranışı
+aynı kare hızında yaklaşık 2,5 kat CPU harcıyordu. Ölçüm ve kural tablosu:
+[steam-deck.md](steam-deck.md#çizim-ve-kare-zamanlaması).

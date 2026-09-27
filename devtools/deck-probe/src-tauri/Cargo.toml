@@ -1,0 +1,34 @@
+[package]
+name = "vol-deck-probe"
+version = "0.1.0"
+description = "VOL.STUDIO Deck ölçüm sondası — paylaşılan kabuğun ilk aktif tüketicisi"
+authors = ["VOL.STUDIO"]
+edition = "2021"
+
+# Sonda masaüstü-native'dir: Android/iOS giriş noktası (lib/staticlib) yoktur.
+
+[build-dependencies]
+tauri-build = { version = "2.6", features = [] }
+
+[dependencies]
+# Native kabuk PAYLAŞILIR: sonda oyunların koştuğu aynı çizim/eklenti
+# kurulumunu test eder; kopyası olsa Deck'te ölçülen şey üründen ayrışırdı.
+volstudio-tauri = { path = "../../../tauri-v2/src-tauri", default-features = false }
+tauri-plugin-vol-diagnostics = { path = "../../../tauri-v2/plugins/vol-diagnostics" }
+tauri = { version = "2.11", features = ["rustls-tls"] }
+
+# İzin tanımları uygulama crate'inin bağımlılık ağacından toplanır (vol-hell
+# kalıbı): kabuğun kurduğu eklentiler burada da görünür olmalıdır.
+tauri-plugin-log = "2.9"
+tauri-plugin-store = "2.4"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol", "volstudio-tauri/custom-protocol"]
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

@@ -3,7 +3,8 @@
     "title": "VOL.UI",
     "language": "English",
     "fullscreen": "Tam ekranı aç",
-    "leaveFullscreen": "Tam ekrandan çık"
+    "leaveFullscreen": "Tam ekrandan çık",
+    "paused": "Duraklatıldı"
   },
   "tabs": {
     "buttons": "BUTONLAR",
@@ -658,6 +659,12 @@
     "swipeGestureZone": "Swipe Gesture Zone",
     "multiTouchZone": "Multi-Touch Zone",
     "swipeableCardStack": "Swipeable Card Stack",
+    "gamepad": "Gamepad",
+    "gamepadNone": "Bağlı kol yok",
+    "gamepadPad": "Kol: {{id}}",
+    "gamepadMode": "Girdi kipi: {{mode}}",
+    "gamepadPressed": "Basılı: {{actions}}",
+    "gamepadHint": "Kol bağla ya da düğmeye bas; klavye/fare hareketiyle girdi kipinin değiştiğini izle.",
     "released": "Bırakıldı",
     "fire": "Ateş Et",
     "pressedFire": "Basılı: Ateş",

@@ -94,3 +94,17 @@
   -webkit-user-select: none;
   user-select: none;
 }
+
+/*
+ * Kol/klavye gezinmesinin odak halkası.
+ *
+ * `FocusNavController` yalnız kendi taşıdığı odağa `vol-focusnav-current`
+ * koyar ve işaretçi etkileşiminde siler — fareyle tıklanan eleman halka
+ * GÖSTERMEZ. `:focus-visible`dan ayrıdır çünkü tarayıcı sezgisel kuralı
+ * programatik `focus()` çağrılarında güvenilir değildir (WebKitGTK dahil).
+ */
+.vol-focusnav-current {
+  outline: 2px solid var(--vol-ui-focus-ring) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--vol-ui-focus-halo);
+}

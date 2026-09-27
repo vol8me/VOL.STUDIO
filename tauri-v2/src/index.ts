@@ -4,6 +4,8 @@
 export { TauriStoreAdapter } from './adapters/TauriStoreAdapter';
 export type { TauriStoreAdapterOptions } from './adapters/TauriStoreAdapter';
 
+export { createScopedStores } from './adapters/scopedStores';
+
 export { TauriWindowAdapter } from './window/TauriWindowAdapter';
 export type { TauriWindowAdapterOptions } from './window/TauriWindowAdapter';
 
@@ -17,7 +19,20 @@ export type {
 export { getRuntimePlatform } from './platform/runtimePlatform';
 export type { RuntimePlatform, RuntimePlatformProbe } from './platform/runtimePlatform';
 
+export { getSessionKind } from './platform/sessionKind';
+export type { SessionKind, SessionKindProbe } from './platform/sessionKind';
+
+export { registerShutdownFlush } from './platform/shutdownFlush';
+export type { ShutdownFlushHook, ShutdownFlushProbe } from './platform/shutdownFlush';
+
 export { TauriHapticsDriver } from './platform/TauriHapticsDriver';
+
+export {
+  createLinuxHapticsDriver,
+  getLinuxHapticsStatus,
+  registerLinuxHaptics,
+} from './platform/linuxHaptics';
+export type { LinuxHapticsProbe, LinuxHapticsStatus } from './platform/linuxHaptics';
 
 export {
   androidScreenOrientation,

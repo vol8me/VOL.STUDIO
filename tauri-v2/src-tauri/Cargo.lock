@@ -3957,6 +3957,7 @@ name = "volstudio-tauri"
 version = "0.1.0"
 dependencies = [
  "gtk",
+ "libc",
  "log",
  "rustls",
  "serde",

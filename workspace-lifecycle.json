@@ -17,6 +17,11 @@
       "status": "active"
     },
     {
+      "packageName": "@volstudio/deck-probe",
+      "path": "devtools/deck-probe",
+      "status": "active"
+    },
+    {
       "packageName": "@volstudio/vol-ui",
       "path": "devtools/vol-ui",
       "status": "active"

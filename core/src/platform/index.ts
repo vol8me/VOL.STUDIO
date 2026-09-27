@@ -8,9 +8,16 @@ export {
   setHapticsEnabled,
   setHapticsDriver,
   vibrate,
+  planRumblePulses,
   type HapticPattern,
   type HapticsBackend,
   type HapticsCapability,
   type HapticsDriver,
+  type RumblePulse,
 } from './haptics';
-export { pushBackHandler, getBackHandlerCount, type BackHandler } from './backNavigation';
+export {
+  pushBackHandler,
+  getBackHandlerCount,
+  triggerBack,
+  type BackHandler,
+} from './backNavigation';

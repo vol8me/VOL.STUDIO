@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   cancelHaptics,
   isHapticsEnabled,
+  planRumblePulses,
   isHapticsSupported,
   setHapticsDriver,
   setHapticsEnabled,
@@ -140,5 +141,24 @@ describe('dokunsal geri bildirim', () => {
     });
     setHapticsEnabled(true);
     expect(() => vibrate('tap')).not.toThrow();
+  });
+});
+
+describe('planRumblePulses', () => {
+  it('tek darbeli desen tek darbe verir', () => {
+    const pulses = planRumblePulses('tap');
+    expect(pulses).toHaveLength(1);
+    expect(pulses[0].durationMs).toBe(12);
+    expect(pulses[0].gapAfterMs).toBe(0);
+    expect(pulses[0].weak).toBe(0.25);
+    expect(pulses[0].strong).toBe(0);
+  });
+
+  it('çift darbeli desen aralığı korur', () => {
+    const pulses = planRumblePulses('error');
+    expect(pulses).toHaveLength(2);
+    expect(pulses[0].gapAfterMs).toBe(50);
+    expect(pulses[1].durationMs).toBe(40);
+    expect(pulses[0].strong).toBe(0.85);
   });
 });

@@ -12,5 +12,7 @@ export * from './feedback';
 export * from './controls';
 export * from './hud';
 export * from './cards';
+export * from './focus';
+export * from './glyphs';
 export { VOL_COLORS, type VolColorToken } from './colors';
 export { Easing, animateValue, type AnimateValueOptions } from './animation';

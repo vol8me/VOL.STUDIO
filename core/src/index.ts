@@ -23,13 +23,24 @@ export {
   type AppVisibilityOptions,
   type AppVisibilityState,
 } from './lifecycle/appVisibility';
+export { observeWakeGaps, type WakeGapOptions } from './lifecycle/wakeGaps';
 export {
   AutosaveCoordinator,
+  isScopedKey,
+  migrateLegacyStore,
   PersistedObservableState,
+  scopeOfKey,
+  ScopedSaveManager,
   type AutosaveCoordinatorOptions,
+  type KeyEnumerable,
+  type LegacyKeyMapping,
+  type MigrationReport,
   type PersistedObservableStateOptions,
   type PersistenceOperation,
   type PersistenceStore,
+  type ScopedKey,
+  type ScopedStores,
+  type StorageScope,
 } from './persistence';
 
 /*
@@ -38,7 +49,7 @@ export {
  * farklıdır; bkz. `platform/capabilities.ts`.
  */
 export { canHover, hasTouchInput, isTouchPrimary, shouldUseTouchControls } from './platform';
-export { pushBackHandler, getBackHandlerCount, type BackHandler } from './platform';
+export { pushBackHandler, getBackHandlerCount, triggerBack, type BackHandler } from './platform';
 export {
   cancelHaptics,
   getHapticsCapability,
@@ -48,10 +59,12 @@ export {
   setHapticsEnabled,
   setHapticsDriver,
   vibrate,
+  planRumblePulses,
   type HapticPattern,
   type HapticsBackend,
   type HapticsCapability,
   type HapticsDriver,
+  type RumblePulse,
 } from './platform';
 
 /*
@@ -292,6 +305,8 @@ export * from './ui/feedback';
 export * from './ui/controls';
 export * from './ui/hud';
 export * from './ui/cards';
+export * from './ui/focus';
+export * from './ui/glyphs';
 export { VOL_COLORS, type VolColorToken } from './ui/colors';
 export { Easing, animateValue, type AnimateValueOptions } from './ui/animation';
 
