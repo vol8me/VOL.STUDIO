@@ -576,7 +576,7 @@
   -webkit-box-orient: vertical;
   margin-top: 2px;
   padding: 0 3px;
-  font-size: 8.5px;
+  font-size: var(--vol-text-label);
   font-weight: 600;
   line-height: 1.15;
   display: -webkit-box;

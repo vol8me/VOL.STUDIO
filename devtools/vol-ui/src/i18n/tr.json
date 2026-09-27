@@ -381,7 +381,17 @@
     "segmentedControlPassive": "Segmented Control — pasif",
     "orientation": "Ekran yönü",
     "portrait": "Dikey",
-    "landscape": "Yatay"
+    "landscape": "Yatay",
+    "displaySettings": "Görüntü ayarları (oturuma göre)",
+    "displaySession": "Oturum (simülasyon)",
+    "sessionWeb": "Web",
+    "sessionDesktop": "Masaüstü",
+    "sessionGamescope": "gamescope (Deck oyun kipi)",
+    "displayMode": "Pencere kipi",
+    "displayWindowed": "Pencere",
+    "displayFullscreen": "Tam ekran",
+    "displayResolution": "Çözünürlük",
+    "displayQuality": "Grafik kalitesi"
   },
   "palette": {
     "surface": "Surface",
@@ -665,6 +675,8 @@
     "gamepadMode": "Girdi kipi: {{mode}}",
     "gamepadPressed": "Basılı: {{actions}}",
     "gamepadHint": "Kol bağla ya da düğmeye bas; klavye/fare hareketiyle girdi kipinin değiştiğini izle.",
+    "gamepadTextLabel": "Kolla metin girişi",
+    "gamepadTextPlaceholder": "Kol kipindeyken odakla — ekran klavyesi açılır",
     "released": "Bırakıldı",
     "fire": "Ateş Et",
     "pressedFire": "Basılı: Ateş",

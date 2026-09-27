@@ -1,4 +1,5 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { requestTextEntryForElement } from '../textEntry/textEntry';
 
 export interface TextAreaOptions {
   placeholder?: string;
@@ -73,6 +74,18 @@ export class TextArea {
     };
     this.scope.addListener(this.textarea, 'input', boundInput);
     this.scope.addListener(this.textarea, 'change', boundChange);
+    // Kol kipinde native odak metin yazdıramaz; kolla klavye istenir
+    // (Input ile aynı kanca; `multiline` klavyeye satırsonu tuşu ekler).
+    this.scope.addListener(this.textarea, 'focus', () => {
+      requestTextEntryForElement(this.textarea, {
+        multiline: true,
+        apply: (value) => {
+          this.textarea.value = value.slice(0, this.maxLength);
+          boundInput();
+          boundChange();
+        },
+      });
+    });
 
     this.renderCounter();
 

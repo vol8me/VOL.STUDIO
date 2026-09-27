@@ -176,3 +176,21 @@ Menu isteğe bağlı duraklatma çağırır, L1/R1 sekme gezintisi yapar.
 paylaşır; `inert` ve modal sınırları sayar. `triggerBack` Android geri,
 Escape ve kol B'sini aynı yığına bağlar. Geri kalan semboller tip tarafıdır:
 `FocusNavOptions`, `Gamepad*` tipleri, `PadLike`, `InputModePolicyOptions`.
+
+### 600 → 612
+
+Kolla metin girişi ve gamescope görüntü yetenekleri — sekiz runtime + beş tip sembolü (D5).
+`displayCapabilitiesForSession`/`SessionDisplayCapabilities` oturum sınıfını
+görüntü kontrolü yeteneğine çevirir: gamescope'ta pencere kipi ve
+çözünürlük satırları sunulmaz, grafik kalitesi `device` kapsamında kalır.
+`requestTextEntryForElement` `Input`/`TextArea`'nın focus kancasıdır: kip
+probu "gamepad" derse native odak kaldırılır, klavye açılır, kapanınca
+odak suppress kümesiyle geri verilir (tekrar-açma döngüsü yok). Sağlayıcı
+kayıtlıysa platform klavyesi (`TextEntryProvider.open`), yoksa
+`OnScreenKeyboard` açılır — Türkçe Q düzeni, ortak geri yığınıyla iptal.
+`setTextEntryModeProbe`/`clearTextEntryModeProbe` kip sorusunun sahibini
+bağlar (`InputManager` kurulurken kaydeder); `setTextEntryProvider`
+platform klavyesini takar (D6 Steamworks dikişi).
+`requestGamepadTextEntry` doğrudan istek API'sidir; `isGamepadTextEntryActive`
+probu okur. Tipler: `TextEntryRequest`, `TextEntryResult`,
+`TextEntryProvider`, `ElementTextEntryOptions`.

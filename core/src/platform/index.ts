@@ -15,6 +15,7 @@ export {
   type HapticsDriver,
   type RumblePulse,
 } from './haptics';
+export { displayCapabilitiesForSession, type SessionDisplayCapabilities } from './sessionDisplay';
 export {
   pushBackHandler,
   getBackHandlerCount,

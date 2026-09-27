@@ -9,6 +9,16 @@
   inset: 0;
 
   /*
+   * Oturma mesafesi ölçeği (`--vol-ui-zoom`, theme.css). `zoom` kutunun
+   * kendisini de büyütür; karşılığında kökün CSS boyutu viewport/zoom'a
+   * çekilir — içerik hep 1280 CSS px genişliğinde yerleşir ve çizim
+   * büyütülür. zoom=1'de `inset:0` ile birebir aynı davranış.
+   */
+  zoom: var(--vol-ui-zoom);
+  width: calc(100vw / var(--vol-ui-zoom));
+  height: calc(100vh / var(--vol-ui-zoom));
+
+  /*
    * Mobil WebView'in KENDİ dokunma vurgusunu kapatır.
    *
    * Android WebView her dokunulabilir elemanın üstüne yarı saydam mavi bir

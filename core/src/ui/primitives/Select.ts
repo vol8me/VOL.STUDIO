@@ -188,6 +188,7 @@ export class Select {
         ? `vol-select__option vol-select__option--${item.tone}`
         : 'vol-select__option';
       optionButton.textContent = item.label;
+      optionButton.dataset.value = item.value;
       optionButton.setAttribute('role', 'option');
       optionButton.setAttribute('aria-selected', String(item.value === this.value));
       optionButton.tabIndex = -1;

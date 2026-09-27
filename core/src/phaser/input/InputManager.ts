@@ -9,6 +9,7 @@ import { createIdleSnapshot, type InputSnapshot } from '../../input/InputSnapsho
 import { TouchController, type TouchControllerOptions } from './TouchController';
 import type { VirtualActionSource } from '../../input/VirtualActionSource';
 import { InputModeArbiter, type InputModePolicyOptions } from '../../input/inputMode';
+import { clearTextEntryModeProbe, setTextEntryModeProbe } from '../../ui/textEntry/textEntry';
 import { GamepadController, type GamepadControllerOptions } from '../../input/GamepadController';
 
 export interface InputManagerOptions<TAction extends string> {
@@ -59,10 +60,14 @@ export class InputManager<TAction extends string> {
   private readonly actions: readonly TAction[];
   private readonly lifecycle = new DisposableScope();
   private readonly arbiter: InputModeArbiter;
+  private readonly textEntryProbe = (): boolean => this.arbiter.mode === 'gamepad';
 
   constructor(scene: Phaser.Scene, options: InputManagerOptions<TAction>) {
     this.actions = options.actions;
     this.arbiter = new InputModeArbiter(options.inputMode);
+    // Input/TextArea focus kancası bu probu okur: kol kipindeyse native
+    // odak yerine ekran klavyesi (ya da kayıtlı sağlayıcı) açılır.
+    setTextEntryModeProbe(this.textEntryProbe);
     if (options.providers) {
       // Çağıranın diziyi sonradan değiştirmesi update/cleanup kümelerini
       // birbirinden ayırmamalı; manager kurulduğu andaki sahipliği sabitler.
@@ -218,6 +223,7 @@ export class InputManager<TAction extends string> {
   }
 
   destroy(): void {
+    clearTextEntryModeProbe(this.textEntryProbe);
     this.lifecycle.dispose();
   }
 }

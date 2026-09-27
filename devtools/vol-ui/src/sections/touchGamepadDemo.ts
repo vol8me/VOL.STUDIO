@@ -1,4 +1,11 @@
-import { Glyph, Text, resolveGlyphFamily } from '@volstudio/core/ui';
+import {
+  Glyph,
+  Input,
+  Text,
+  clearTextEntryModeProbe,
+  resolveGlyphFamily,
+  setTextEntryModeProbe,
+} from '@volstudio/core/ui';
 import type { DisposableScope } from '@volstudio/core/lifecycle';
 import { i18next } from '@volstudio/core/i18n';
 import { GAMEPAD_BUTTON, GamepadController, InputModeArbiter } from '@volstudio/core/input/gamepad';
@@ -50,7 +57,20 @@ export function buildGamepadDemo(disposables: DisposableScope): HTMLElement {
   });
   disposables.addDestroyables(pad);
 
+  // Kolla metin girişi: kol kipinde bu alan odaklanınca ekran klavyesi
+  // açılır (Steamworks sağlayıcısı kayıtlıysa o). Input'un kendi focus
+  // kancası probu okur; burada yalnız alan ve etiketi durur.
+  const textLabel = new Text(i18next.t('volui:touch.gamepadTextLabel'), { variant: 'muted' });
+  const textField = new Input({
+    placeholder: i18next.t('volui:touch.gamepadTextPlaceholder'),
+  });
+  disposables.addDestroyables(textLabel, textField);
+
   const arbiter = new InputModeArbiter();
+  // Demoda InputManager yok; "kol kipi mi?" probunu bu kartın arbiter'ı sağlar.
+  const probe = (): boolean => arbiter.mode === 'gamepad';
+  setTextEntryModeProbe(probe);
+  disposables.addSubscription(() => clearTextEntryModeProbe(probe));
   let pcEdgeAt = -Infinity;
   let touchEdgeAt = -Infinity;
   disposables.addListener(window, 'keydown', () => {
@@ -111,6 +131,8 @@ export function buildGamepadDemo(disposables: DisposableScope): HTMLElement {
   wrap.appendChild(moveReadout.element);
   wrap.appendChild(actionReadout.element);
   wrap.appendChild(glyphRow);
+  wrap.appendChild(textLabel.element);
+  wrap.appendChild(textField.element);
   wrap.appendChild(hint.element);
   return wrap;
 }

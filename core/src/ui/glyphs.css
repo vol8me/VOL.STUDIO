@@ -30,7 +30,7 @@
   padding: 0 0.35em;
   border: 1px solid var(--vol-ui-border-strong);
   border-radius: 0.3em;
-  font-size: 0.75em;
+  font-size: max(0.75em, var(--vol-text-micro));
   font-weight: 600;
   color: var(--vol-ui-text);
   background: var(--vol-ui-surface-2);

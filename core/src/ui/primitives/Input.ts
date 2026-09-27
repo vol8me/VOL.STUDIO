@@ -1,4 +1,5 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { requestTextEntryForElement } from '../textEntry/textEntry';
 
 export interface InputOptions {
   placeholder?: string;
@@ -53,6 +54,18 @@ export class Input {
     this.scope.addListener(this.element, 'input', boundInput);
     this.scope.addListener(this.element, 'change', boundChange);
     this.scope.addListener(this.element, 'keydown', boundKeydown as EventListener);
+    // Kol kipinde native odak metin yazdıramaz; kolla klavye istenir.
+    // Kip kapalıysa yardımcı hiçbir şey yapmaz ve native davranış sürer.
+    this.scope.addListener(this.element, 'focus', () => {
+      requestTextEntryForElement(this.element, {
+        purpose: this.element.type === 'password' ? 'password' : 'default',
+        apply: (value) => {
+          this.element.value = value;
+          this.onInputHandler?.(value);
+          this.commitUserValue();
+        },
+      });
+    });
 
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;

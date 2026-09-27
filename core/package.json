@@ -90,6 +90,10 @@
     "./stats": {
       "import": "./src/stats/StatBlock.ts",
       "types": "./src/stats/StatBlock.ts"
+    },
+    "./platform": {
+      "import": "./src/platform/index.ts",
+      "types": "./src/platform/index.ts"
     }
   },
   "scripts": {

@@ -31,9 +31,15 @@ body {
 
 .vol-showcase-root {
   pointer-events: auto;
-  width: 100%;
-  height: 100%;
   overflow: hidden;
+  /*
+   * Oturma mesafesi ölçeği (`--vol-ui-zoom`, core theme.css). Oyun tarafı
+   * bunu `.vol-ui-root`ta alır; vitrin kendi kökünde aynısını uygular ki
+   * readability kapısı (webkit, 1080p/2160p) gerçek davranışı ölçsün.
+   */
+  zoom: var(--vol-ui-zoom);
+  width: calc(100% / var(--vol-ui-zoom));
+  height: calc(100% / var(--vol-ui-zoom));
 }
 
 .vol-showcase-root > .vol-tabs {
@@ -190,7 +196,7 @@ body {
 }
 
 .vol-showcase-icon-button-group__title {
-  font-size: 11px;
+  font-size: var(--vol-text-label);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--vol-ui-text-muted);
@@ -444,7 +450,7 @@ body {
 }
 
 .vol-palette-swatch__name {
-  font-size: 11px;
+  font-size: var(--vol-text-label);
   text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -452,7 +458,7 @@ body {
 }
 
 .vol-palette-swatch__hex {
-  font-size: 10px;
+  font-size: var(--vol-text-label);
   text-align: left;
   text-transform: uppercase;
 }

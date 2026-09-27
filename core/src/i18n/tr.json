@@ -4,6 +4,12 @@
     "next": "Sonraki",
     "page": "Sayfa {{n}}"
   },
+  "keyboard": {
+    "shift": "⇧",
+    "backspace": "⌫",
+    "space": "Boşluk",
+    "done": "Bitti"
+  },
   "dpad": {
     "up": "Yukarı",
     "down": "Aşağı",

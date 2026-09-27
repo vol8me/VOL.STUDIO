@@ -1,5 +1,11 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import {
+  LocalStorageAdapter,
+  ScopedSaveManager,
+  type ScopedKey,
+} from '@volstudio/core/persistence';
+import { displayCapabilitiesForSession } from '@volstudio/core/platform';
+import {
   Button,
   Checkbox,
   ColorPicker,
@@ -59,6 +65,96 @@ function buildSettingsFormDemo(disposables: DisposableScope): HTMLElement {
     fpsRow,
     form,
   );
+  return form.element;
+}
+
+/**
+ * D5c vitrini — oturum → görüntü yeteneği → görünen satırlar zinciri.
+ * Oturum seçici bir SİMÜLASYONDUR: vitrin web oturumunda koşar, gamescope
+ * seçimi `displayCapabilitiesForSession` tablosunun davranışını gösterir.
+ * Kalite `device` kapsamına kaydeder (ekran başına tercih); pencere kipi
+ * ve çözünürlük satırları gamescope'ta sunulmaz.
+ */
+function buildDisplaySettingsDemo(disposables: DisposableScope): HTMLElement {
+  const stores = new ScopedSaveManager({
+    synced: new LocalStorageAdapter(),
+    device: new LocalStorageAdapter(),
+  });
+  const QUALITY_KEY: ScopedKey = 'device.volui:display-quality';
+
+  const quality = new Select({
+    options: [
+      { value: 'low', label: i18next.t('volui:forms.low') },
+      { value: 'high', label: i18next.t('volui:forms.high') },
+    ],
+    value: 'high',
+    onCommit: (value) => {
+      void stores.save(QUALITY_KEY, value);
+    },
+  });
+  void stores.load<string>(QUALITY_KEY, 'high').then((value) => quality.setValue(value));
+
+  const session = new Select({
+    options: [
+      { value: 'web', label: i18next.t('volui:forms.sessionWeb') },
+      { value: 'desktop', label: i18next.t('volui:forms.sessionDesktop') },
+      { value: 'gamescope', label: i18next.t('volui:forms.sessionGamescope') },
+    ],
+    value: 'web',
+    onCommit: applySession,
+  });
+  const mode = new Select({
+    options: [
+      { value: 'windowed', label: i18next.t('volui:forms.displayWindowed') },
+      { value: 'fullscreen', label: i18next.t('volui:forms.displayFullscreen') },
+    ],
+    value: 'fullscreen',
+  });
+  const resolution = new Select({
+    options: ['1280x800', '1920x1080', '2560x1440', '3840x2160'].map((value) => ({
+      value,
+      label: value.replace('x', '×'),
+    })),
+    value: '1280x800',
+  });
+
+  const sessionRow = new SettingsRow({
+    label: i18next.t('volui:forms.displaySession'),
+    control: session,
+  });
+  const modeRow = new SettingsRow({
+    label: i18next.t('volui:forms.displayMode'),
+    control: mode,
+  });
+  const resolutionRow = new SettingsRow({
+    label: i18next.t('volui:forms.displayResolution'),
+    control: resolution,
+  });
+  const qualityRow = new SettingsRow({
+    label: i18next.t('volui:forms.displayQuality'),
+    control: quality,
+  });
+  const form = new SettingsForm({ className: 'vol-display-settings' });
+  form.add(sessionRow).add(modeRow).add(resolutionRow).add(qualityRow);
+  disposables.addDestroyables(
+    session,
+    mode,
+    resolution,
+    quality,
+    sessionRow,
+    modeRow,
+    resolutionRow,
+    qualityRow,
+    form,
+  );
+
+  // Oturum değişimi yetenek tablosuna bağlanır: anlamsız satır gizlenir
+  // (devre dışı bırakılmaz — "seçilemeyen" değil "sunulmayan" kontroldür).
+  function applySession(kind: string): void {
+    const caps = displayCapabilitiesForSession(kind);
+    modeRow.element.hidden = !caps.windowMode;
+    resolutionRow.element.hidden = !caps.resolution;
+  }
   return form.element;
 }
 
@@ -440,6 +536,9 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:forms.segmentedControl'), qualitySegmented.element),
     card(i18next.t('volui:forms.segmentedControlPassive'), buildPassiveSegmentedDemo(disposables)),
     card(i18next.t('volui:forms.settingsForm'), buildSettingsFormDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:forms.displaySettings'), buildDisplaySettingsDemo(disposables), {
+      span: 2,
+    }),
     card(i18next.t('volui:forms.numberStepper'), unitStepper.element, { center: true }),
     card(i18next.t('volui:forms.timerBarVariations'), buildTimerBarVariationsDemo(disposables)),
     card(i18next.t('volui:forms.timerBar'), buildTimerBarDemo(disposables), { span: 2 }),

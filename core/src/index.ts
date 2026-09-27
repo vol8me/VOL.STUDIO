@@ -50,6 +50,7 @@ export {
  */
 export { canHover, hasTouchInput, isTouchPrimary, shouldUseTouchControls } from './platform';
 export { pushBackHandler, getBackHandlerCount, triggerBack, type BackHandler } from './platform';
+export { displayCapabilitiesForSession, type SessionDisplayCapabilities } from './platform';
 export {
   cancelHaptics,
   getHapticsCapability,
@@ -306,6 +307,7 @@ export * from './ui/controls';
 export * from './ui/hud';
 export * from './ui/cards';
 export * from './ui/focus';
+export * from './ui/textEntry';
 export * from './ui/glyphs';
 export { VOL_COLORS, type VolColorToken } from './ui/colors';
 export { Easing, animateValue, type AnimateValueOptions } from './ui/animation';

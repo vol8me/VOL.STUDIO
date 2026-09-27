@@ -4,6 +4,12 @@
     "next": "Next",
     "page": "Page {{n}}"
   },
+  "keyboard": {
+    "shift": "⇧",
+    "backspace": "⌫",
+    "space": "Space",
+    "done": "Done"
+  },
   "dpad": {
     "up": "Up",
     "down": "Down",

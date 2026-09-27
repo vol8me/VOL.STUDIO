@@ -381,7 +381,17 @@
     "segmentedControlPassive": "Segmented Control — passive",
     "orientation": "Screen orientation",
     "portrait": "Portrait",
-    "landscape": "Landscape"
+    "landscape": "Landscape",
+    "displaySettings": "Display settings (per session)",
+    "displaySession": "Session (simulated)",
+    "sessionWeb": "Web",
+    "sessionDesktop": "Desktop",
+    "sessionGamescope": "gamescope (Deck game mode)",
+    "displayMode": "Window mode",
+    "displayWindowed": "Windowed",
+    "displayFullscreen": "Fullscreen",
+    "displayResolution": "Resolution",
+    "displayQuality": "Graphics quality"
   },
   "palette": {
     "surface": "Surface",
@@ -665,6 +675,8 @@
     "gamepadMode": "Input mode: {{mode}}",
     "gamepadPressed": "Pressed: {{actions}}",
     "gamepadHint": "Connect a pad or press a button; watch the input mode switch as you use keyboard/mouse.",
+    "gamepadTextLabel": "Text entry with pad",
+    "gamepadTextPlaceholder": "Focus while in gamepad mode — on-screen keyboard opens",
     "released": "Released",
     "fire": "Fire",
     "pressedFire": "Pressed: Fire",

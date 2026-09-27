@@ -50,7 +50,19 @@ export default defineConfig({
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 1,
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      // Okunabilirlik kapısı Deck'in motoru WebKit'te koşar (webkit projesi).
+      testIgnore: /readability\.spec\.ts/,
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'], deviceScaleFactor: 1 },
+      testMatch: /readability\.spec\.ts/,
+    },
+  ],
   webServer: {
     // `--host 127.0.0.1` AÇIKÇA: varsayılan `localhost` IPv6 öncelikli bir
     // makinede yalnız `::1`e oturur ve yoklama cevap alamaz.

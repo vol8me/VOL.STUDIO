@@ -115,20 +115,34 @@ ağaçları ancak lifecycle yeniden aktifleştirmesiyle değişir (D7).
       `backend:"hidraw", device:"hidraw2"` bildirdi ve `vol_haptics_rumble`
       `ok` döndü — rapor süreç içinden kabul edildi (2026-09-27). Motorun
       hissedilmesi insan eliyle kalır (güç sensörü çözünürlüğü yetmedi).
-- [ ] **[P1] D5 — Okunabilirlik ve ölçek kapısı.** Playwright WebKit
+- [x] **[P1] D5 — Okunabilirlik ve ölçek kapısı.** Playwright WebKit
       projesinde 1280×800 ve 1280×720'de görünen her metin ≥ 12 px;
       1920×1080 ve 3840×2160'ta oturma mesafesine göre UI ölçeği; kapsam
       `core` bileşenleri ve aktif oyunlar. Kapanır: kapı `high`da koşar ve
       ihlali dosya ve seçiciyle bildirir; mevcut ihlaller giderilmiştir.
-- [ ] **[P2] D5 — Kolla metin girişi.** `core` metin girişi isteği sözleşmesi;
+      Kapı `devtools/vol-ui/tests/e2e/readability.spec.ts`'te (webkit
+      projesi, 4/4 yeşil); `--vol-text-micro` 12px tabanına çıkarıldı,
+      `--vol-ui-zoom` medya sorgularıyla 1080p→1.5×/2160p→3× ölçeklenir
+      (2026-09-27).
+- [x] **[P2] D5 — Kolla metin girişi.** `core` metin girişi isteği sözleşmesi;
       Steamworks varsa kayan klavye, yoksa `core`'un yalnız kolla kullanılan,
       Türkçe karakterli ekran klavyesi. Kapanır: `Input` ve `TextArea` kol
       kipinde odaklanınca klavye kendiliğinden açılır; vol-ui vitrinindedir.
-- [ ] **[P2] D5 — Gamescope altında görüntü ayarları.** Pencere kipi ve
+      `core/src/ui/textEntry/`: `requestTextEntryForElement` focus kancası +
+      `TextEntryProvider` sağlayıcı dikişi (D6 Steamworks buraya takılır) +
+      `OnScreenKeyboard` Türkçe Q düzeni (İ/ı dahil), ortak geri yığınıyla
+      iptal. `InputManager` kip probunu kurulumda kaydeder. Birim 6/6, E2E
+      1/1 yeşil (2026-09-27).
+- [x] **[P2] D5 — Gamescope altında görüntü ayarları.** Pencere kipi ve
       çözünürlük seçenekleri gamescope oturumunda sunulmaz; Deck'in
       varsayılan grafik kalitesi `device` kapsamında tutulur. Kapanır: Deck'te
       ayar ekranında etkisiz seçenek yoktur; ilk açılışta hiçbir ayarı
       değiştirmek gerekmez.
+      `displayCapabilitiesForSession` (`core/platform`) yetenek tablosudur;
+      vol-ui forms sekmesinde oturum simülasyonuyla görünür (satır gizlenir,
+      devre dışı kalmaz), kalite `device.` kapsamına kaydeder. Deck
+      doğrulaması D7 oyun entegrasyonunda. Birim 2/2, E2E 2/2 yeşil
+      (2026-09-27).
 - [ ] **[P2] D6 — İsteğe bağlı Steamworks katmanı.** `tauri-v2` eklentisi
       (`steamworks` crate): Steam Input aksiyon seti ve aksiyon manifesti,
       glif yolu, Deck algılama, kayan klavye, overlay açılınca duraklatma,

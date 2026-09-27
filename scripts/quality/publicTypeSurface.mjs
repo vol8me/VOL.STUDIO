@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import ts from 'typescript';
 
 export const CORE_TYPE_SURFACE_SHA256 =
-  '8396176ef020f21297902bf937ff18b31b6c939f514ab866592afdf51e4df7d3';
+  '931383cd5f903806070f50bcc5bb4ad143356f671b92df2627ad892e6c37c319';
 
 export function loadCoreTypeSurfaceSnapshot(root) {
   const snapshotPath = resolve(root, 'scripts/quality/coreTypeSurface.snapshot.json');
@@ -15,7 +15,8 @@ export function corePublicTypeNames(root) {
   const coreRoot = resolve(root, 'core');
   const configPath = resolve(coreRoot, 'tsconfig.json');
   const config = ts.readConfigFile(configPath, ts.sys.readFile);
-  if (config.error) throw new Error(ts.flattenDiagnosticMessageText(config.error.messageText, '\n'));
+  if (config.error)
+    throw new Error(ts.flattenDiagnosticMessageText(config.error.messageText, '\n'));
   const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, coreRoot);
   const program = ts.createProgram(parsed.fileNames, parsed.options);
   const index = program.getSourceFile(resolve(coreRoot, 'src/index.ts'));
@@ -50,12 +51,16 @@ export function validateCoreTypeSurface(root, expected = CORE_TYPE_SURFACE_SHA25
     const parts = [];
     if (added.length > 0) {
       parts.push(
-        `eklenen (+${added.length}): [${added.slice(0, 10).join(', ')}${added.length > 10 ? '...' : ''}]`,
+        `eklenen (+${added.length}): [${added.slice(0, 10).join(', ')}${
+          added.length > 10 ? '...' : ''
+        }]`,
       );
     }
     if (removed.length > 0) {
       parts.push(
-        `kaldırılan (-${removed.length}): [${removed.slice(0, 10).join(', ')}${removed.length > 10 ? '...' : ''}]`,
+        `kaldırılan (-${removed.length}): [${removed.slice(0, 10).join(', ')}${
+          removed.length > 10 ? '...' : ''
+        }]`,
       );
     }
     if (parts.length > 0) {

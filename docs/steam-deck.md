@@ -264,10 +264,16 @@ CPU değerleri 200 sprite'lık etkileşim fazında `top`'tan okundu. XWayland s�
 
 ## Metin girişi
 
-- VOL.HELL'de bugün metin girişi yok. `core`'un `Input` ve `TextArea` bileşenleri var.
-- `core` bir metin girişi isteği sözleşmesi taşır. Kol kipinde giriş alanı odaklanınca klavye kendiliğinden açılır.
-- Steamworks katmanı varsa `ShowFloatingGamepadTextInput` kullanılır. Bu çağrı yalnız Deck arayüzünde uygulanmıştır.
-- Katman yoksa `core`'un yalnız kolla kullanılan ekran klavyesi açılır. Klavye Türkçe karakterleri taşır (ç, ğ, ı, İ, ö, ş, ü).
+- **Uygulandı (2026-09-27, D5):** `core/src/ui/textEntry/` sözleşmesi.
+  `Input`/`TextArea` odaklanınca `requestTextEntryForElement` çalışır; kip
+  probu `gamepad` diyorsa native odak kaldırılır ve klavye açılır. Probu
+  `InputManager` kurulumda `arbiter.mode === 'gamepad'` olarak kaydeder.
+- Sağlayıcı kayıtlıysa (`setTextEntryProvider` — D6 Steamworks dikişi)
+  platform klavyesi açılır; yoksa `OnScreenKeyboard`: Türkçe Q düzeni,
+  ı/İ/ğ/ü/ş/ö/ç birinci sınıf tuş, shift tek tuşluk, B/Escape ortak geri
+  yığınından iptal eder, Bitti commit eder ve odak alana geri döner.
+- Steamworks katmanında hedef `ShowFloatingGamepadTextInput` olacaktır.
+  Bu çağrı yalnız Deck arayüzünde uygulanmıştır.
 
 ## Titreşim
 
@@ -328,17 +334,22 @@ device:"hidraw2"` ve `vol_haptics_rumble` → `ok` döndürdü — yani HID rumb
 ## Görüntü ayarları gamescope altında
 
 - Gamescope pencereyi çıkış çözünürlüğünde tam ekrana zorlar. Pencere kipi ve çözünürlük seçenekleri orada etkisizdir.
-- VOL.HELL bu seçenekleri `getRuntimePlatform() === 'desktop'` ile açar. Deck de `desktop` sayıldığı için etkisiz seçenekler görünür.
-- **Karar:** Kabuk gamescope oturumunu ayrı bir yetenek olarak bildirir; bu seçenekler orada sunulmaz.
-- Deck'in varsayılan grafik kalitesi cihaz kapsamında tutulur. Oyuncu hiçbir ayarı değiştirmek zorunda kalmaz.
+- **Uygulandı (2026-09-27, D5):** `displayCapabilitiesForSession`
+  (`core/platform`) oturum sınıfını yeteneğe çevirir — gamescope'ta
+  `{ windowMode: false, resolution: false }`. Ayar ekranı bu tabloya
+  bağlanır: etkisiz satır GİZLENİR (devre dışı kalmaz). vol-ui forms
+  sekmesinde oturum simülasyonuyla görünür; kalite seçimi
+  `device.volui:display-quality` kapsamına kaydeder (ekran başına tercih).
+- Deck doğrulaması D7'de VOL.HELL entegrasyonuyla yapılır.
 
 ## Okunabilirlik ve ölçek
 
 - 1280×800'de 9 px metin Deck ekranında zar zor seçilir, 12 px okunur (sonda ekran görüntüsü). Taban 12 px'tir.
-- Denetim Playwright'ın WebKit projesinde yapılır; Deck'teki motor WebKitGTK'dır. E2E bugün yalnız Chromium'da koşar.
-- Ölçülen boyutlar:
-  - 1280×800 ve 1280×720.
-  - Steam Machine için 1920×1080 ve 3840×2160, oturma mesafesi için bir UI ölçeğiyle.
+- **Uygulandı (2026-09-27, D5):** `devtools/vol-ui/tests/e2e/readability.spec.ts`
+  WebKit projesinde koşar — 1280×800 ve 1280×720'de görünen her metin
+  ≥ 12px; 1920×1080'de UI 1.5×, 3840×2160'ta 3× ölçeklenir
+  (`--vol-ui-zoom` medya sorgularıyla, `zoom` üzerinden sanal çözünürlük).
+  `--vol-text-micro` 12px tabanına çıkarıldı; kapı `high` zincirindedir.
 - 16:10 birincil orandır. 16:9 ve geniş oranlar letterbox ile doğru yerleşir.
 
 ## Steamworks katmanı (oyun başına isteğe bağlı)

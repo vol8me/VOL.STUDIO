@@ -14,6 +14,7 @@
 @import url('./cards.css');
 @import url('./workbench.css');
 @import url('./glyphs.css');
+@import url('./keyboard.css');
 
 /* RENKLER — colors.ts'ten generate edilir (pnpm gen:theme). Manuel düzenleme yapma. */
 :root {
@@ -99,7 +100,13 @@
    *   heading bölüm başlığı
    *   display ekran başlığı, hasar sayısı
    */
-  --vol-text-micro: 10px;
+  /*
+   * micro/label alt sınırı 12 px'tir: Steam Deck okunabilirlik rehberinin
+   * tabanı (1280×800'de ölçülür, vol-ui readability kapısı). Altına düşen
+   * bir token elde taşmaz değil OKUNMAZ üretir — eşik tüm boyutlar için
+   * uygulanır çünkü 10 px masaüstünde de kötü okunur.
+   */
+  --vol-text-micro: 12px;
   --vol-text-label: 12px;
   --vol-text-body: 14px;
   --vol-text-lead: 16px;
@@ -203,5 +210,38 @@
      * `max()` sayesinde gerçek çentik daha büyükse o kazanır.
      */
     --vol-safe-area-base: 12px;
+  }
+}
+
+/*
+ * OTURMA MESAFESİ ÖLÇEĞİ — "ten-foot UI".
+ *
+ * Tasarım tabanı 1280 CSS px'dir (Deck elde ~0,4 m). Bir televizyonda piksel
+ * açısal boyutu çok daha küçülür: 55" 1080p'de px ≈ Deck px'inin ~0,7 katı
+ * (~1,4 kat büyütme gerekir), aynı panelde 2160p'de px dörtte birine düşer
+ * (~2,9 kat). Katsayılar genişlik/1280 oranından türetilir; ara basamak
+ * (2560→2) aynı orantının sürekliliğidir.
+ *
+ * Kökler (`UIRoot` `.vol-ui-root`, vol-ui vitrini `.vol-showcase-root`) bu
+ * token'ı `zoom` + `width: 100vw / zoom` ile uygular: UI her zaman 1280
+ * CSS px genişliğinde yerleşir, zoom çizimi büyütür — metin, boşluk ve
+ * dokunma hedefleri TEK seferde ve tutarlı ölçeklenir.
+ */
+:root {
+  --vol-ui-zoom: 1;
+}
+@media (min-width: 1920px) {
+  :root {
+    --vol-ui-zoom: 1.5;
+  }
+}
+@media (min-width: 2560px) {
+  :root {
+    --vol-ui-zoom: 2;
+  }
+}
+@media (min-width: 3200px) {
+  :root {
+    --vol-ui-zoom: 3;
   }
 }

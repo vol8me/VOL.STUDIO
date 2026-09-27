@@ -148,3 +148,66 @@ test('glifler kiple eşleşir: kol kipinde pad glifi görünür, klavye glifi gi
   await expect(visiblePads).toHaveCount(0);
   await context.close();
 });
+
+test('kol kipinde metin alanı odaklanınca ekran klavyesi açılır; yazılan değer işlenir', async ({
+  browser,
+}) => {
+  /*
+   * Glif testiyle aynı sebep: `openShowcase`'in `freezeEnvironment`'ı
+   * `performance.now`'u dondurur, kip hakemi ölü saatte çalışamaz. Kip
+   * geçişi gerçek saatle sınanır.
+   */
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await installVirtualPad(page);
+  await page.goto('/');
+  await page.waitForSelector('[role="tablist"]');
+  await selectTab(page, 'touch');
+  await page.waitForTimeout(300);
+
+  // Kol kenarı → hakem 'gamepad' kipine geçer (basılı tutma gerekmez; son
+  // anlamlı girdi kazanır ve başka kaynak kenar üretmedikçe kip kalır).
+  await pressButton(page, PAD.primary);
+
+  const input = page.locator(
+    '.vol-showcase-panel-demo:has(.vol-showcase-gamepad-glyphs) input.vol-input',
+  );
+  await expect(input).toBeVisible();
+  // FocusNavController'ın A'sı `.click()` çağırır ve odak focus olayı üretir;
+  // burada odak doğrudan verilir — iddia "focus → klavye" zinciridir.
+  await input.evaluate((el: HTMLInputElement) => el.focus());
+
+  const osk = page.locator('.vol-osk');
+  await expect(osk).toBeVisible();
+  await expect(input).not.toBeFocused(); // klavye açıkken native caret durur
+
+  // Kolla tuş yazımı: D-pad ilk halkayı kurar, A odaktaki tuşu basar.
+  await pressButton(page, PAD.dpadDown);
+  await expect(osk.locator(RING)).toHaveCount(1);
+  await pressButton(page, PAD.dpadDown); // '1' → 'q' satırı
+  await pressButton(page, PAD.primary); // odaktaki harfi yaz
+  await expect(osk.locator('.vol-osk__value')).not.toHaveText('');
+
+  // B = iptal: ortak geri yığını klavyeyi kapatır, değer uygulanmaz.
+  await pressButton(page, PAD.secondary);
+  await expect(osk).toHaveCount(0);
+  await expect(input).toHaveValue('');
+
+  // Tekrar aç → yaz → 'Bitti' ye in: son satırdaki tek geniş tuş.
+  // İptalde klavye odağı alana geri vermişti; odaklı elemana focus() olay
+  // üretmez, önce blur gerekir.
+  await input.evaluate((el: HTMLInputElement) => {
+    el.blur();
+    el.focus();
+  });
+  await expect(osk).toBeVisible();
+  await pressButton(page, PAD.dpadDown);
+  await pressButton(page, PAD.dpadDown);
+  await pressButton(page, PAD.primary);
+  for (let i = 0; i < 4; i += 1) await pressButton(page, PAD.dpadDown);
+  await pressButton(page, PAD.primary); // odak 'Bitti'de → commit
+  await expect(osk).toHaveCount(0);
+  const typed = await input.inputValue();
+  expect(typed.length).toBe(1); // ilk tur iptal edildi; ikinci tur tek harf
+  await context.close();
+});

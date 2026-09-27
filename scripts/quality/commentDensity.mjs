@@ -39,10 +39,6 @@ export const ACKNOWLEDGED = {
   'core/src/ui/cards/ShopPickerTypes.ts': 'Tip bildirimi — seçenek sözleşmesi.',
   'devtools/audio-synth/src/types.ts':
     'Sentez parametrelerinin tip bildirimi; her alan birimini ve varsayılanını taşır.',
-  'devtools/vol-ui/playwright.config.ts':
-    'Görsel kapının KENDİ sözleşmesi: sıfır toleransın neden ölçüme dayandığı ' +
-    've temellerin neden makine ailesine bağlı olduğu yazılı olmazsa ilk ' +
-    'kırılmada tolerans açılır ve kapı ölür.',
 };
 
 /**
