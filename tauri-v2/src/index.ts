@@ -41,3 +41,27 @@ export {
   waitForViewportOrientation,
 } from './platform/screenOrientation';
 export type { ScreenOrientation, ScreenOrientationState } from './platform/screenOrientation';
+
+export {
+  activateSteamActionSet,
+  cloudFileKey,
+  cloudFileName,
+  createSteamCloudAdapter,
+  createSteamworksTextEntryProvider,
+  onSteamFloatingKeyboardDismissed,
+  onSteamOverlay,
+  setSteamInputManifest,
+  setSteamworksProbe,
+  showSteamBindingPanel,
+  showSteamFloatingKeyboard,
+  steamActionGlyph,
+  steamControllers,
+  steamworksGlyphContext,
+  steamworksStatus,
+} from './platform/steamworks';
+export type {
+  SteamControllerInfo,
+  SteamGlyphOrigin,
+  SteamworksProbe,
+  SteamworksStatus,
+} from './platform/steamworks';

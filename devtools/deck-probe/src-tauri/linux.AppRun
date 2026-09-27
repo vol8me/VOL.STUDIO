@@ -38,4 +38,23 @@ export GST_PLUGIN_SYSTEM_PATH_1_0="$gst_plugin_dir"
 export GST_PLUGIN_SCANNER_1_0="$gst_scanner"
 export GST_REGISTRY_1_0="$gst_cache_root/gstreamer-registry.bin"
 
+# İsteğe bağlı Steamworks katmanı: `libsteam_api.so` pakete GİRMEZ; Steam
+# istemcisinin kendi kurulumundan çözülür. Sıralama SteamOS önce (steamrt64),
+# masaüstü düzeni (linux64) sonra. `VOL_STEAM_LIB_DIR` dışarıdan verilirse
+# taramayı ezer. Eklenti stub derlendiyse bu blok yalnızca boş gezer.
+if [ -n "${VOL_STEAM_LIB_DIR:-}" ]; then
+  export LD_LIBRARY_PATH="${VOL_STEAM_LIB_DIR}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+else
+  for steam_lib in \
+    "$HOME/.local/share/Steam/steamrt64" \
+    "$HOME/.steam/steam/linux64" \
+    "$HOME/.steam/root/linux64"
+  do
+    if [ -f "$steam_lib/libsteam_api.so" ]; then
+      export LD_LIBRARY_PATH="$steam_lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+      break
+    fi
+  done
+fi
+
 exec "$this_dir/AppRun.wrapped" "$@"

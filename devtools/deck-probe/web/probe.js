@@ -97,6 +97,51 @@ async function start() {
   } else {
     show('haptics', `haptik: ${haptics.backend}`);
   }
+  // D6 kanıtı: eklenti kayıtlıdır; `available` ancak Steam istemcisi
+  // bağlantısı kurulabildiyse true. Devkit lansmanında overlay takılı
+  // olmayabilir — o zaman diyalog çağrısı `false` döner ve raporda durur.
+  const sw = await invoke('plugin:vol-steamworks|status').catch((e) => ({ error: String(e) }));
+  await log('steamworks-status', { status: sw });
+  show('steam', `steamworks: ${sw.available ? `bağlı appId ${sw.appId}` : `kapalı (${sw.error ?? 'stub'})`}`);
+  if (sw.available) {
+    // Manifesto init sırasında (ilk RunFrame'den önce) Steam'e geçirilir;
+    // sonuç status.manifestOk alanında. Komut yeniden geçirmeyi de dener —
+    // geç çağrının reddi manifestonun yüklenmediği anlamına gelmez.
+    const manifest = await invoke('plugin:vol-steamworks|set_input_manifest', {
+      path: 'steam_input_manifest.vdf',
+    })
+      .then((ok) => ({ ok }))
+      .catch((error) => ({ ok: false, error: String(error) }));
+    await log('steamworks-manifest', { initOk: sw.manifestOk, late: manifest });
+    const sets = await invoke('plugin:vol-steamworks|activate_action_set', {
+      name: 'ProbeControls',
+    }).catch((e) => String(e));
+    await log('steamworks-actionset', { applied: sets });
+    const ctrls = await invoke('plugin:vol-steamworks|controllers').catch(() => []);
+    await log('steamworks-controllers', { controllers: ctrls });
+    const glyph = await invoke('plugin:vol-steamworks|action_glyph', {
+      actionSet: 'ProbeControls',
+      action: 'menu_confirm',
+    }).catch((e) => String(e));
+    await log('steamworks-glyph', { glyph });
+    // Steam Cloud: yalnız uygulama bulutu açıksa yaz/oku turu.
+    if (sw.cloudEnabled) {
+      const name = 'v2_cHJvYmU'; // 'probe' anahtarının base64url karşılığı
+      const w = await invoke('plugin:vol-steamworks|cloud_write', {
+        name,
+        dataBase64: btoa(JSON.stringify({ ping: 1 })),
+      }).catch((e) => String(e));
+      const r = await invoke('plugin:vol-steamworks|cloud_read', { name }).catch((e) =>
+        String(e),
+      );
+      await invoke('plugin:vol-steamworks|cloud_delete', { name }).catch(() => {});
+      await log('steamworks-cloud', { write: w, read: r });
+    }
+    listen('vol-steamworks:overlay', (e) =>
+      log('steamworks-overlay', { active: e.payload.active }),
+    );
+    listen('vol-steamworks:floating-dismissed', () => log('steamworks-floating', {}));
+  }
   const info = {
     env,
     sessionKind,

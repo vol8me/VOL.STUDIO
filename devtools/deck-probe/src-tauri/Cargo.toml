@@ -15,6 +15,9 @@ tauri-build = { version = "2.6", features = [] }
 # kurulumunu test eder; kopyası olsa Deck'te ölçülen şey üründen ayrışırdı.
 volstudio-tauri = { path = "../../../tauri-v2/src-tauri", default-features = false }
 tauri-plugin-vol-diagnostics = { path = "../../../tauri-v2/plugins/vol-diagnostics" }
+# Steamworks köprüsü hep bağımlılıktır ama istemci SDK'sı ancak `steamworks`
+# feature'ı ile derlenir; stub yapıda eklenti "kullanılamıyor" bildirir.
+tauri-plugin-vol-steamworks = { path = "../../../tauri-v2/plugins/vol-steamworks" }
 tauri = { version = "2.11", features = ["rustls-tls"] }
 
 # İzin tanımları uygulama crate'inin bağımlılık ağacından toplanır (vol-hell
@@ -25,6 +28,9 @@ tauri-plugin-store = "2.4"
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol", "volstudio-tauri/custom-protocol"]
+# Gerçek Steamworks istemci bağlantısı yalnız bu feature'la derlenir —
+# `tauri build --features steamworks`. Stub yapıda SDK'ya hiç dokunulmaz.
+steamworks = ["tauri-plugin-vol-steamworks/steamworks"]
 
 [profile.release]
 codegen-units = 1

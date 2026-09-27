@@ -1,0 +1,33 @@
+[package]
+name = "tauri-plugin-vol-steamworks"
+version = "0.1.0"
+description = "VOL.STUDIO isteğe bağlı Steamworks köprüsü — Steam Input, kayan klavye, overlay ve Steam Cloud"
+authors = ["VOL.STUDIO"]
+edition = "2021"
+# tauri-plugin build betiği izin tanımlarını bu ada bağlar.
+links = "tauri-plugin-vol-steamworks"
+
+[lib]
+name = "tauri_plugin_vol_steamworks"
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-plugin = { version = "2.6", features = ["build"] }
+
+[dependencies]
+tauri = { version = "2.11", features = ["rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+
+# `steamworks` feature'ı olmadan eklenti STUB derlenir: tüm komutlar mevcut ve
+# dürüst bir "kullanılamıyor" yanıtı döner, istemci SDK'sına hiç dokunulmaz.
+# Feature açıkken `steamworks` crate'i SDK ikililerini kendi paketinden
+# (`lib/steam/…`) bağlar — depoya SDK dosyası girmez. Runtime'da
+# `libsteam_api.so` Steam istemcisinin kurulumundan bulunur.
+[features]
+default = []
+steamworks = ["dep:steamworks"]
+
+[dependencies.steamworks]
+version = "0.13"
+optional = true

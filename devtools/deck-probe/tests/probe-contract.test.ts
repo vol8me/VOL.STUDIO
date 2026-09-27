@@ -12,6 +12,7 @@ interface TauriConf {
   identifier: string;
   build: { frontendDist: string };
   app: { windows: { width: number; height: number; fullscreen: boolean }[] };
+  bundle?: { resources?: string[] };
 }
 
 interface Capabilities {
@@ -103,5 +104,34 @@ describe('paketleme sözleşmesi', () => {
     const assignment = appRun.split('\n').find((line) => line.startsWith('product='));
     expect(assignment).toBeDefined();
     expect(assignment).not.toMatch(/product="[a-z]/);
+  });
+
+  it('linux.AppRun Steam istemci kütüphanesini paket dışından çözer', () => {
+    // libsteam_api.so pakete girmez: AppRun Steam'in kendi kurulumunu tarar.
+    expect(appRun).toContain('libsteam_api.so');
+    expect(appRun).toContain('steamrt64');
+    expect(appRun).toContain('VOL_STEAM_LIB_DIR');
+  });
+});
+
+describe('steamworks katmanı (D6)', () => {
+  it('sonda manifestoyu resource olarak paketler ve komutlarını çağırır', () => {
+    expect(tauriConf.bundle?.resources).toContain('steam_input_manifest.vdf');
+    for (const cmd of [
+      'plugin:vol-steamworks|status',
+      'plugin:vol-steamworks|set_input_manifest',
+      'plugin:vol-steamworks|activate_action_set',
+      'plugin:vol-steamworks|controllers',
+      'plugin:vol-steamworks|action_glyph',
+    ]) {
+      expect(probeJs).toContain(cmd);
+    }
+  });
+
+  it("steamworks izni capability'de ve geliştirme App ID 480 manifestodan bağımsızdır", () => {
+    expect(capabilities.permissions).toContain('vol-steamworks:default');
+    // Aksiyon seti manifestodaki adla birebir aynıdır — yazım sürçmesi
+    // Deck turunda sessiz "0 kol" sonucuna döner.
+    expect(probeJs).toContain("'ProbeControls'");
   });
 });

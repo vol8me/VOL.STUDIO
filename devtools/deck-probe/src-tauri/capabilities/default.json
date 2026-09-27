@@ -1,5 +1,5 @@
 {
   "identifier": "default",
   "windows": ["main"],
-  "permissions": ["core:default", "vol-diagnostics:default"]
+  "permissions": ["core:default", "vol-diagnostics:default", "vol-steamworks:default"]
 }

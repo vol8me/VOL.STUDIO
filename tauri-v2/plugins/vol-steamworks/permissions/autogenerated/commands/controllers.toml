@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-controllers"
+description = "Enables the controllers command without any pre-configured scope."
+commands.allow = ["controllers"]
+
+[[permission]]
+identifier = "deny-controllers"
+description = "Denies the controllers command without any pre-configured scope."
+commands.deny = ["controllers"]

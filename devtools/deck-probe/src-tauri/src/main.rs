@@ -13,6 +13,14 @@ fn main() {
     // Bağlam BU crate'te üretilir: kimlik, pencere ve gömülü ön yüz buradan
     // gelir; paylaşılan kabuk eklenti kurulumunu ve platform ayarlarını kurar.
     volstudio_tauri_lib::run_with_context_and(tauri::generate_context!(), |builder| {
-        builder.plugin(tauri_plugin_vol_diagnostics::init())
+        builder
+            .plugin(tauri_plugin_vol_diagnostics::init())
+            // 480 = Valve'ın ortak geliştirme/test App ID'si (Spacewar).
+            // Gerçek Steamworks bağlantısı yalnız `steamworks` feature'ıyla
+            // derlenir; stub yapıda eklenti dürüst "kapalı" bildirir.
+            .plugin(tauri_plugin_vol_steamworks::init(
+                480,
+                Some("steam_input_manifest.vdf"),
+            ))
     })
 }

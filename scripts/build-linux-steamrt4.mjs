@@ -162,6 +162,10 @@ execFileSync(
     // SELinux etiketi (z) gerekli: etiketsiz host dizini kabin içinde
     // yazılamaz ve `tauri build` AppRun indirmesinde EACCES ile düşer.
     `${process.env.HOME}/.cache/tauri:/root/.cache/tauri:z`,
+    // İsteğe bağlı cargo feature'ları (örn. steamworks) kabıa geçer.
+    ...(process.env.VOL_CARGO_FEATURES
+      ? ['-e', `VOL_CARGO_FEATURES=${process.env.VOL_CARGO_FEATURES}`]
+      : []),
     BUILD_IMAGE_TAG,
     'bash',
     'scripts/steamrt4-build.sh',

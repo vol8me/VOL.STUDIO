@@ -354,18 +354,40 @@ device:"hidraw2"` ve `vol_haptics_rumble` → `ok` döndürdü — yani HID rumb
 
 ## Steamworks katmanı (oyun başına isteğe bağlı)
 
-- **Kütüphane:** `steamworks` crate 0.13.1 (Temmuz 2026) şunları sağlar:
-  - Steam Input: aksiyon setleri, aksiyon origin'leri, glif yolu.
-  - `is_steam_running_on_steam_deck`.
-  - Kayan ve Big Picture klavyesi.
-  - Remote Storage, UserStats ve `GameOverlayActivated`.
-- Titreşim ve boyutlu PNG/SVG glif çağrıları güvenli API'de yoktur; `steamworks-sys` ile tamamlanır.
-- **Overlay:** Masaüstünde Steam overlay'i WebView'ın üstüne çizilmez. Overlay süreç içi bir swapchain'e kanca atar; WebView süreç dışında çizer. Deck'in Game Mode'unda overlay'i gamescope birleştirir.
-- **App ID ve SDK:**
-  - Katman bir App ID ister; geliştirme test kimliği 480'dir.
-  - `steam_appid.txt` yalnız geliştirmededir.
-  - SDK'nın dağıtılabilir kütüphanesi oyunla gider, depoya girmez.
-- Katmanı taşımayan oyun, yukarıdaki kol, glif ve klavye yollarıyla eksiksiz çalışır.
+D6 uygulandı. Eklenti `tauri-v2/plugins/vol-steamworks`, JS adaptörü
+`tauri-v2/src/platform/steamworks.ts`; `steamworks` cargo feature'ı
+olmadan da derlenir (komutlar stub döner, `status.compiled:false`).
+Sonda `devtools/deck-probe` feature'ı `VOL_CARGO_FEATURES=steamworks`
+ile açar ve manifestoyu `bundle.resources` üzerinden paketler.
+
+- **Deck'te ölçülenler (devkit sondası, 2026-09-27):**
+  `available`, `deck`, `bigPicture`, `overlayEnabled`, `cloudEnabled`,
+  `inputReady` → tümü true; `manifestOk` → true; aksiyon seti aktivasyonu
+  ve kontrolcü listesi (`steamworksType:"steamdeck"`) döner; Steam Cloud
+  yaz/oku/sil turu doğrulandı; eklenti açıkken kare zamanlaması
+  değişmedi (59,4–60,1 FPS, p95 ≤ 20 ms).
+- **Manifesto disiplini:** `SetInputActionManifestFilePath` ilk
+  `RunFrame`den önce çağrılmalıdır — eklenti init sırasında pompayı
+  başlatmadan geçirir; dosya `"Action Manifest"` köklü .vdf'dir.
+  Sonuç `status.manifestOk` alanında raporlanır.
+- **Glif:** `GetDigitalActionOrigins` yalnız aktif konfigürasyonda
+  bağlanmış origin döndürür; manifesto tek başına `[]` üretir (appId 480
+  altında resmi bağlama yok). Gerçek App ID + manifesto
+  `configurations` bölümündeki resmi konfigürasyonlarla dolmalı — oyun
+  tarafının işi.
+- **Metin girişi:** `ShowGamepadTextInput` modal diyalog `core`'un
+  `TextEntryProvider` sözleşmesine birebir oturur (sonuç
+  `vol-steamworks:text-input` olayıyla döner; overlay yoksa `false` →
+  yerel klavye). `ShowFloatingGamepadTextInput` ayrı komuttur; metni
+  odaklı alana doğrudan yazar, blur/refocus akışına girmez.
+- **Overlay:** `GameOverlayActivated` olayı `vol-steamworks:overlay`
+  olarak JS'e taşınır; duraklatma kararı oyunundur. Masaüstünde overlay
+  WebView üstüne çizilmez; Game Mode'da gamescope birleştirir.
+- **App ID ve SDK:** geliştirme kimliği 480 (Spacewar); `init_app` env'e
+  yazar, `steam_appid.txt` gerekmez. `libsteam_api.so` `steamworks-sys`
+  derleme çıktısından linuxdeploy'a verilir — depoya binary girmez,
+  `steamrt4-build.sh` mutlak yolu `LD_LIBRARY_PATH`'e ekler.
+- Katmanı taşımayan oyun, kol/glif/klavye yollarıyla eksiksiz çalışır.
 
 ## Devkit sözleşmesi ve otomasyon
 

@@ -1,0 +1,49 @@
+"Action Manifest"
+{
+	"configurations"
+	{
+	}
+	"actions"
+	{
+		"ProbeControls"
+		{
+			"title"		"#Set_ProbeControls"
+			"StickPadGyro"
+			{
+				"menu_nav"
+				{
+					"title"			"#Action_MenuNav"
+					"input_mode"	"absolute_mouse"
+				}
+			}
+			"Button"
+			{
+				"menu_confirm"	"#Action_MenuConfirm"
+				"menu_cancel"	"#Action_MenuCancel"
+				"open_text"		"#Action_OpenText"
+				"rumble_test"	"#Action_RumbleTest"
+			}
+		}
+	}
+	"localization"
+	{
+		"english"
+		{
+			"Set_ProbeControls"		"Probe Controls"
+			"Action_MenuNav"		"Navigate"
+			"Action_MenuConfirm"	"Confirm"
+			"Action_MenuCancel"		"Cancel"
+			"Action_OpenText"		"Open Text Entry"
+			"Action_RumbleTest"		"Rumble Test"
+		}
+		"turkish"
+		{
+			"Set_ProbeControls"		"Sonda Denetimleri"
+			"Action_MenuNav"		"Gezin"
+			"Action_MenuConfirm"	"Onayla"
+			"Action_MenuCancel"		"Vazgeç"
+			"Action_OpenText"		"Metin Girişi Aç"
+			"Action_RumbleTest"		"Titreşim Testi"
+		}
+	}
+}

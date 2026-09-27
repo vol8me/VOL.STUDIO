@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-action-glyph"
+description = "Enables the action_glyph command without any pre-configured scope."
+commands.allow = ["action_glyph"]
+
+[[permission]]
+identifier = "deny-action-glyph"
+description = "Denies the action_glyph command without any pre-configured scope."
+commands.deny = ["action_glyph"]

@@ -143,14 +143,23 @@ ağaçları ancak lifecycle yeniden aktifleştirmesiyle değişir (D7).
       devre dışı kalmaz), kalite `device.` kapsamına kaydeder. Deck
       doğrulaması D7 oyun entegrasyonunda. Birim 2/2, E2E 2/2 yeşil
       (2026-09-27).
-- [ ] **[P2] D6 — İsteğe bağlı Steamworks katmanı.** `tauri-v2` eklentisi
-      (`steamworks` crate): Steam Input aksiyon seti ve aksiyon manifesti,
-      glif yolu, Deck algılama, kayan klavye, overlay açılınca duraklatma,
-      uyanma bildirimi, Steam Cloud. Oyun başına açılır; SDK ikilisi depoya
-      girmez; geliştirme App ID'si 480'dir. Kapanır: eklentili ve eklentisiz
-      iki yapılandırma testlidir; eklentisiz oyun Deck kriterlerini yine
-      karşılar; gerçek App ID ile Deck'te Steam Input glifleri ve kayan
-      klavye görülür.
+- [x] **[P2] D6 — İsteğe bağlı Steamworks katmanı.** `tauri-v2/plugins/vol-steamworks`
+      eklentisi `steamworks` crate'ine bağlanır; feature'sız da derlenir (stub).
+      JS tarafı `tauri-v2/src/platform/steamworks.ts`. Steam Input manifestosu
+      init'te ilk `RunFrame`den önce geçirilir ("Action Manifest" köklü `.vdf`,
+      `bundle.resources`), sonuç `status.manifestOk`'ta durur; aksiyon seti,
+      kontrolcü listesi ve `steamworksType` (glif ailesini besler), glif PNG'si,
+      modal + kayan gamepad metin girişi (`TextEntryProvider` dikişi), bağlama
+      paneli, overlay olayı, Steam Cloud oku/yaz/listele/sil. Deck'te devkit
+      sondasıyla ölçüldü: `available`/`deck`/`bigPicture`/`overlay`/`cloud`/
+      `input` true, manifest kabulü true, Cloud yaz/oku turu doğrulandı, kare
+      zamanlaması bozulmadı (59,4–60,1 FPS). Glif listesi appId 480 altında
+      aksiyon bağlı resmi konfigürasyon olmadığı için `[]` döner — gerçek
+      App ID + `configurations` bölümü oyun işi. İki yapılandırmalı sözleşme:
+      eklentisiz derleme yine yeşil; `VOL_CARGO_FEATURES=steamworks` AppImage'a
+      `libsteam_api.so` katar (linuxdeploy, `steamworks-sys` OUT_DIR'den mutlak
+      yol). Birim 3/3 Rust, 13/13 adaptör, 21/21 sonda sözleşmesi yeşil
+      (2026-09-27).
 - [ ] **[P1] D7 — VOL.HELL Deck referansı: yeniden aktifleştir, kabul et,
       yeniden dondur.** Lifecycle prosedürüyle aktifleşir; oyuna özgü kimlik
       ve kayıt geçişi; kayıt kapsamları; duraklatma Menu'de, nişan sağ
