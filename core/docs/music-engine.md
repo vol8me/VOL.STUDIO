@@ -272,9 +272,9 @@ VOL.HELL'in Arcade seti 38 SFX ve sekiz tek-`main` mix (menü, savaş, boss,
 bitiş, ambiyans) gönderir. Eski ayrı combat stem/cue dosyaları bu sette yoktur.
 Kaynaklar `games/vol-hell/scripts/audio-v2/` ve
 `devtools/audio-synth/audio-jobs/` ile `audio-music/` altındadır.
-`pnpm --filter @volstudio/audio-synth audio:production-check` manifestleri
-kaynak programdan yeniden render ederek PCM kimliğini ve gönderilen OGG
-ilişkisini doğrular. `games/vol-hell/tests/config/audioIntegration.test.ts`
+`pnpm exec just audio-verify` (signoff) manifestleri kaynak programdan yeniden
+render ederek PCM kimliğini ve gönderilen OGG ilişkisini doğrular.
+`games/vol-hell/tests/config/audioIntegration.test.ts`
 parça sürelerini ve runtime eşlemesini denetler.
 
 ## VOL.HELL Kullanımı
