@@ -60,6 +60,24 @@ describe('VideoSettingsController', () => {
     window.removeEventListener('resize', resize);
   });
 
+  it('gamescope penceresi kabuk tarafından yönetilir; kayıtlı windowed 720p oyunu daraltmaz', async () => {
+    const settings = makeSettings();
+    const native = makeNativeAdapter();
+    const resize = vi.fn();
+    window.addEventListener('resize', resize);
+    const controller = new VideoSettingsController(settings, {
+      windowAdapter: native.adapter as never,
+      managedBySession: true,
+    });
+    await controller.start();
+    expect(native.adapter.setFullscreen).not.toHaveBeenCalled();
+    expect(native.adapter.setResolution).not.toHaveBeenCalled();
+    await settings.setGraphicsQuality('low');
+    expect(resize).toHaveBeenCalledTimes(2);
+    controller.destroy();
+    window.removeEventListener('resize', resize);
+  });
+
   it('ayar değişikliklerinde fullscreen, çözünürlük ve kaliteyi canlı uygular', async () => {
     const settings = makeSettings();
     const native = makeNativeAdapter();

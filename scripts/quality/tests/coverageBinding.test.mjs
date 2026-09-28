@@ -14,7 +14,7 @@ test('eşik kaldırma, yanlış paket ve dolaylı override gerçek yüklemede re
       'valid',
       `const thresholds = ${JSON.stringify(
         expected,
-      )}; export default { test: { coverage: { thresholds } } };`,
+      )}; export default { test: { coverage: { thresholds, include: ['src/**/*.ts'], exclude: [] } } };`,
       true,
     ],
     ['missing', 'export default { test: { coverage: {} } };', false],
@@ -38,4 +38,21 @@ test('eşik kaldırma, yanlış paket ve dolaylı override gerçek yüklemede re
     const problems = await validateCoverageBinding(path, expected);
     assert.equal(problems.length === 0, valid, `${name}: ${problems}`);
   }
+});
+
+test('çalıştırılabilir kaynağı kapsamdan saklayan seçim reddedilir', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'vol-coverage-selection-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const expected = { lines: 80 };
+  const path = join(root, 'hidden.mts');
+  writeFileSync(
+    path,
+    `export default { test: { coverage: { thresholds: { lines: 80 }, include: ['src/**/*.ts'], exclude: ['src/runtime/**'] } } };`,
+  );
+  assert.match((await validateCoverageBinding(path, expected)).join('\n'), /coverage.exclude/);
+  writeFileSync(
+    path,
+    `export default { test: { coverage: { thresholds: { lines: 80 }, include: ['tests/**/*.ts'], exclude: [] } } };`,
+  );
+  assert.match((await validateCoverageBinding(path, expected)).join('\n'), /coverage.include/);
 });

@@ -124,8 +124,9 @@ metni tüketiciden alıp erişilebilir bir hata yüzeyi kurar.
 Kapsamlı kalıcılık — dört ÇALIŞMA ZAMANI export'u. `ScopedSaveManager` her
 kaydı `synced.*`/`device.*` önekiyle ayrı adapter'a yöneltir; kapsamsız
 anahtar tip olarak yazılamaz (`ScopedKey`). `migrateLegacyStore` tek dosyalı
-eski kaydı iki dosyaya kayıpsız taşır: yaz → geri oku → doğrula → eskiden sil
-sırası yarım taşımayı tekrar denenebilir bırakır. `isScopedKey`/`scopeOfKey`
+eski kaydı iki dosyaya kayıpsız taşır: yaz → geri oku → doğrula;
+`retainSource` seçildiğinde eski anahtar da korunur ve var olan hedef yeniden
+yazılmaz. `isScopedKey`/`scopeOfKey`
 öneki tek yerde tanımlar. Steam Deck işinin kalbi: yalnız `synced` dosyası
 Steam Cloud'a gider, cihaz ayarları yerel kalır (D2).
 
@@ -188,9 +189,22 @@ probu "gamepad" derse native odak kaldırılır, klavye açılır, kapanınca
 odak suppress kümesiyle geri verilir (tekrar-açma döngüsü yok). Sağlayıcı
 kayıtlıysa platform klavyesi (`TextEntryProvider.open`), yoksa
 `OnScreenKeyboard` açılır — Türkçe Q düzeni, ortak geri yığınıyla iptal.
-`setTextEntryModeProbe`/`clearTextEntryModeProbe` kip sorusunun sahibini
-bağlar (`InputManager` kurulurken kaydeder); `setTextEntryProvider`
+`registerTextEntryModeProbe` kip sorusunun sahibini yaşam döngüsüyle bağlar;
+`setTextEntryModeProbe`/`clearTextEntryModeProbe` yalnız kayıtlı sahip yokken
+başvurulan geriye uyumlu tekil probu yönetir. `setTextEntryProvider`
 platform klavyesini takar (D6 Steamworks dikişi).
 `requestGamepadTextEntry` doğrudan istek API'sidir; `isGamepadTextEntryActive`
 probu okur. Tipler: `TextEntryRequest`, `TextEntryResult`,
 `TextEntryProvider`, `ElementTextEntryOptions`.
+
+### 612 → 620
+
+Deck girdisi için sekiz bilinçli sembol eklendi. `selectGamepad` ve
+`GamepadSelectionOptions` aynı bağlı kolun indeks ve hotplug kararını
+`GamepadController`, odak gezinmesi ve sanal imleç arasında paylaşır.
+`GamepadPointerController`/`GamepadPointerOptions` sağ çubuğu yalnız UI
+bağlamında işaretçiye çevirir; VOL.HELL ve vol-ui aynı mekanizmayı tüketir.
+`InputPresentationController`/`InputPresentationOptions` ile
+`ControlGlyphBinding` klavye, kol ve dokunma gliflerini canlı yeniler.
+`registerTextEntryModeProbe` kip probuna yaşam döngüsüyle geri alınabilen
+sahiplik ekler; bir sahne kapanınca başka sahnenin metin girişini susturmaz.

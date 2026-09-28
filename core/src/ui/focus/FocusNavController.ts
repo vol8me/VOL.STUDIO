@@ -3,6 +3,8 @@ import { triggerBack } from '../../platform/backNavigation';
 import { GAMEPAD_BUTTON, readStick, type PadLike } from '../../input/GamepadState';
 import { pickDirectionalTarget, type NavDirection } from './directional';
 import { listFocusable } from './focusable';
+import { activateWithIntent } from './activationIntent';
+import { selectGamepad } from '../../input/selectGamepad';
 
 /**
  * Kol (ve ok tuşları) ile arayüz gezinmesi.
@@ -18,7 +20,7 @@ import { listFocusable } from './focusable';
  * ve klavye kipinde görünür — fareyle tıklanan eleman halka göstermez.
  * Görsel kural CSS'tedir, sınıf burada yalnız işaretçidir.
  *
- * Metin alanında (`input`/`textarea`/`contenteditable`) ok tuşları ve
+ * Metin alanında ok tuşları ve
  * Escape gezinmeyi devralmaz — düzenleme davranışı kazansın.
  */
 export interface FocusNavOptions {
@@ -31,12 +33,20 @@ export interface FocusNavOptions {
   onNextTab?: () => void;
   /** Kol listesi; varsayılan `navigator.getGamepads`. */
   getGamepads?: () => readonly (PadLike | null)[];
+  /** Yön ve A gezinmesi; B/Escape/Menu ortak geri yolunu kullanmayı sürdürür. */
+  isNavigationActive?: () => boolean;
+  /** Çubuk tekrarının monoton saati; varsayılan `performance.now`. */
+  now?: () => number;
+  /** true dönerse A niyetini tüketir; ör. sanal pointer down/up sahibidir. */
+  onActivate?: () => boolean;
 }
 
 /** Nav sürücülü odağın taşıdığı sınıf — CSS halkası bunu okur. */
 export const FOCUS_NAV_CLASS = 'vol-focusnav-current';
 
 const STICK_NAV_THRESHOLD = 0.6;
+const STICK_REPEAT_DELAY_MS = 280;
+const STICK_REPEAT_INTERVAL_MS = 105;
 const DIR_BY_BUTTON: Readonly<Record<number, NavDirection>> = {
   [GAMEPAD_BUTTON.dpadUp]: 'up',
   [GAMEPAD_BUTTON.dpadDown]: 'down',
@@ -52,7 +62,43 @@ const KEY_BY_DIR: Readonly<Record<string, NavDirection>> = {
 
 function isEditingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
-  return Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
+  const editable = target.closest('[contenteditable]');
+  if (editable && editable.getAttribute('contenteditable') !== 'false') return true;
+  const input = target.closest('input, textarea');
+  if (!input) return false;
+  return (
+    !(input instanceof HTMLInputElement) ||
+    !['range', 'checkbox', 'radio', 'button', 'submit', 'reset', 'image', 'file', 'color'].includes(
+      input.type,
+    )
+  );
+}
+
+function adjustRange(input: HTMLInputElement, direction: NavDirection): boolean {
+  const style = getComputedStyle(input);
+  const vertical = /^(vertical|sideways)-/.test(style.writingMode);
+  if (
+    vertical
+      ? direction === 'left' || direction === 'right'
+      : direction === 'up' || direction === 'down'
+  ) {
+    return false;
+  }
+  const forward = vertical ? direction === 'down' : direction === 'right';
+  const increase = style.direction === 'rtl' ? !forward : forward;
+  const previous = input.value;
+  if (input.step === 'any') {
+    input.value = String(input.valueAsNumber + (increase ? 1 : -1));
+  } else if (increase) {
+    input.stepUp();
+  } else {
+    input.stepDown();
+  }
+  if (input.value !== previous) {
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  return true;
 }
 
 export class FocusNavController {
@@ -61,7 +107,13 @@ export class FocusNavController {
   private readonly root: ParentNode;
   private prevButtons = new Set<number>();
   private stickDir: NavDirection | null = null;
+  private nextStickMoveAt = 0;
+  private escapeHeld = false;
+  private padBackHeld = false;
+  private navWasActive = true;
+  private activationArmed = true;
   private started = false;
+  private previousPad: PadLike | null = null;
 
   constructor(options: FocusNavOptions = {}) {
     this.options = options;
@@ -73,6 +125,12 @@ export class FocusNavController {
     if (this.started) return;
     this.started = true;
     this.scope.addListener(document, 'keydown', (event: KeyboardEvent) => this.onKeydown(event));
+    this.scope.addListener(document, 'keyup', (event: KeyboardEvent) => {
+      if (event.key === 'Escape') this.escapeHeld = false;
+    });
+    this.scope.addListener(window, 'blur', () => {
+      this.escapeHeld = false;
+    });
     // İşaretçiyle odaklanınca nav halkasını temizle: halka yalnız kol/klavye
     // gezinmesinin işaretidir.
     this.scope.addListener(document, 'pointerdown', () => this.clearRing());
@@ -93,9 +151,18 @@ export class FocusNavController {
 
   /** Yön tuşu/çubuk hareketi: odak yoksa ilk adaya, varsa uzamsal komşuya. */
   move(direction: NavDirection): void {
+    if (this.options.isNavigationActive?.() === false) return;
     const candidates = listFocusable(this.root);
     if (candidates.length === 0) return;
     const current = this.focused;
+    if (
+      current instanceof HTMLInputElement &&
+      current.type === 'range' &&
+      candidates.includes(current) &&
+      adjustRange(current, direction)
+    ) {
+      return;
+    }
     const next =
       current && candidates.includes(current)
         ? pickDirectionalTarget(
@@ -111,11 +178,20 @@ export class FocusNavController {
 
   /** Odaktaki elemanı etkinleştirir (A / Enter). */
   activate(): void {
-    this.focused?.click();
+    if (this.options.isNavigationActive?.() === false) return;
+    if (this.options.onActivate?.()) return;
+    const candidates = listFocusable(this.root);
+    const current = this.focused;
+    if (current && candidates.includes(current)) {
+      activateWithIntent(current);
+    } else {
+      this.focusElement(candidates[0] ?? null);
+    }
   }
 
   /** Geri yığınına düşürür (B / Escape / Android geri). */
   back(): boolean {
+    if (isEditingTarget(this.focused)) return false;
     this.clearRing();
     return triggerBack();
   }
@@ -123,7 +199,8 @@ export class FocusNavController {
   private focusElement(element: HTMLElement | null): void {
     if (!element) return;
     this.clearRing();
-    element.focus({ preventScroll: false });
+    element.focus({ preventScroll: true });
+    element.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     element.classList.add(FOCUS_NAV_CLASS);
   }
 
@@ -135,13 +212,28 @@ export class FocusNavController {
   }
 
   private onKeydown(event: KeyboardEvent): void {
-    if (isEditingTarget(event.target)) return;
     if (event.key === 'Escape') {
-      if (this.back()) event.preventDefault();
+      if (event.defaultPrevented || isEditingTarget(event.target)) {
+        this.escapeHeld = true;
+        return;
+      }
+      if (event.repeat || this.escapeHeld) {
+        this.escapeHeld = true;
+        event.preventDefault();
+        return;
+      }
+      this.escapeHeld = true;
+      const pad = this.selectPad();
+      if (pad && !pad.buttons[GAMEPAD_BUTTON.secondary]?.pressed) this.padBackHeld = false;
+      const handledByPad = this.padBackHeld;
+      if (pad?.buttons[GAMEPAD_BUTTON.secondary]?.pressed) this.padBackHeld = true;
+      if (handledByPad || this.back()) event.preventDefault();
       return;
     }
+    if (event.defaultPrevented || isEditingTarget(event.target)) return;
+    if (event.target instanceof HTMLElement && event.target.closest('select')) return;
     const dir = KEY_BY_DIR[event.key];
-    if (dir) {
+    if (dir && this.options.isNavigationActive?.() !== false) {
       event.preventDefault();
       this.move(dir);
     }
@@ -154,10 +246,8 @@ export class FocusNavController {
         typeof navigator !== 'undefined' && typeof navigator.getGamepads === 'function'
           ? (navigator.getGamepads() as readonly (PadLike | null)[])
           : []);
-    for (const pad of getter()) {
-      if (pad?.connected && pad.mapping === 'standard') return pad;
-    }
-    return null;
+    this.previousPad = selectGamepad(getter(), this.previousPad);
+    return this.previousPad?.mapping === 'standard' ? this.previousPad : null;
   }
 
   /** Kolu yokla: kenar basımları ve çubuk yön değişimi tek karede işlenir. */
@@ -167,17 +257,39 @@ export class FocusNavController {
       pad.buttons.forEach((button, index) => {
         if (button.pressed) pressed.add(index);
       });
+      const active = this.options.isNavigationActive?.() !== false;
+      if (active && !this.navWasActive) this.activationArmed = false;
+      if (!pressed.has(GAMEPAD_BUTTON.primary)) this.activationArmed = true;
       for (const index of pressed) {
         if (this.prevButtons.has(index)) continue;
-        this.onPadButton(index);
+        if (
+          index === GAMEPAD_BUTTON.start ||
+          index === GAMEPAD_BUTTON.secondary ||
+          index === GAMEPAD_BUTTON.leftBumper ||
+          index === GAMEPAD_BUTTON.rightBumper ||
+          active
+        ) {
+          this.onPadButton(index);
+        }
       }
-      const stick = readStick(pad, [0, 1]);
-      const dir = this.dominantStickDir(stick.x, stick.y);
-      if (dir && dir !== this.stickDir) this.move(dir);
-      this.stickDir = dir;
+      if (active) {
+        const stick = readStick(pad, [0, 1]);
+        const dir = this.dominantStickDir(stick.x, stick.y);
+        const now = this.options.now?.() ?? performance.now();
+        if (dir && (dir !== this.stickDir || now >= this.nextStickMoveAt)) {
+          this.move(dir);
+          this.nextStickMoveAt =
+            now + (dir === this.stickDir ? STICK_REPEAT_INTERVAL_MS : STICK_REPEAT_DELAY_MS);
+        }
+        this.stickDir = dir;
+      } else {
+        this.stickDir = null;
+      }
+      this.navWasActive = active;
     } else {
       this.stickDir = null;
     }
+    this.padBackHeld = pressed.has(GAMEPAD_BUTTON.secondary);
     this.prevButtons = pressed;
   }
 
@@ -191,9 +303,10 @@ export class FocusNavController {
     if (dir) return this.move(dir);
     switch (index) {
       case GAMEPAD_BUTTON.primary:
-        return this.activate();
+        if (this.activationArmed) this.activate();
+        return;
       case GAMEPAD_BUTTON.secondary:
-        this.back();
+        if (!this.escapeHeld && !this.padBackHeld) this.back();
         return;
       case GAMEPAD_BUTTON.start:
         this.options.onMenu?.();

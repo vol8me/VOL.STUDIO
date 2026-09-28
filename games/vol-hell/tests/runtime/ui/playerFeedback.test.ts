@@ -10,6 +10,12 @@ import {
 } from '@/runtime/utils/direction';
 
 describe('oyuncu yön geri bildirimi', () => {
+  it('otomatik nişan seçilince eski fare veya sağ çubuk nişanı hedef seçimini değiştirmez', () => {
+    const out = { x: 0, y: 0 };
+    expect(writeFireDirection(out, 0, 0, 0, -2, [{ x: 10, y: 0, isAlive: true }], true)).toBe(true);
+    expect(out).toEqual({ x: 1, y: 0 });
+  });
+
   it('hareket vektörünü sekiz yöne sabitler', () => {
     expect(quantizeEightDirection(0, -1)).toBe(-Math.PI / 2);
     expect(quantizeEightDirection(1, 1)).toBe(Math.PI / 4);
@@ -32,14 +38,28 @@ describe('oyuncu yön geri bildirimi', () => {
     expect(out).toEqual({ x: 0, y: -1 });
   });
 
-  it('aim yoksa en yakın canlı ve sonlu hedefi seçer', () => {
+  it('otomatik nişan kapalıyken aim yoksa hedefe kendiliğinden dönmez', () => {
     const out = { x: 9, y: 9 };
-    writeFireDirection(out, 0, 0, 0, 0, [
-      { x: 1, y: 0, isAlive: false },
-      { x: Number.NaN, y: 0, isAlive: true },
-      { x: 0, y: 20, isAlive: true },
-      { x: 5, y: 0, isAlive: true },
-    ]);
+    expect(writeFireDirection(out, 0, 0, 0, 0, [{ x: 5, y: 0, isAlive: true }])).toBe(false);
+    expect(out).toEqual({ x: 0, y: 0 });
+  });
+
+  it('otomatik nişanda en yakın canlı ve sonlu hedefi seçer', () => {
+    const out = { x: 9, y: 9 };
+    writeFireDirection(
+      out,
+      0,
+      0,
+      0,
+      0,
+      [
+        { x: 1, y: 0, isAlive: false },
+        { x: Number.NaN, y: 0, isAlive: true },
+        { x: 0, y: 20, isAlive: true },
+        { x: 5, y: 0, isAlive: true },
+      ],
+      true,
+    );
 
     expect(out.x).toBeCloseTo(1, 6);
     expect(out.y).toBeCloseTo(0, 6);
@@ -47,16 +67,32 @@ describe('oyuncu yön geri bildirimi', () => {
 
   it('eşit uzaklıkta ilk hedefi ve tam çakışmada deterministik yedeği kullanır', () => {
     const out = { x: 0, y: 0 };
-    writeFireDirection(out, 0, 0, 0, 0, [
-      { x: 0, y: 0, isAlive: true },
-      { x: -1, y: 0, isAlive: true },
-    ]);
+    writeFireDirection(
+      out,
+      0,
+      0,
+      0,
+      0,
+      [
+        { x: 0, y: 0, isAlive: true },
+        { x: -1, y: 0, isAlive: true },
+      ],
+      true,
+    );
     expect(out).toEqual({ x: 1, y: 0 });
 
-    writeFireDirection(out, 0, 0, 0, 0, [
-      { x: 1, y: 0, isAlive: true },
-      { x: 0, y: 1, isAlive: true },
-    ]);
+    writeFireDirection(
+      out,
+      0,
+      0,
+      0,
+      0,
+      [
+        { x: 1, y: 0, isAlive: true },
+        { x: 0, y: 1, isAlive: true },
+      ],
+      true,
+    );
     expect(out).toEqual({ x: 1, y: 0 });
   });
 
@@ -68,6 +104,15 @@ describe('oyuncu yön geri bildirimi', () => {
 });
 
 describe('CustomCursor', () => {
+  it('oyunda gizlenen imleç pointer hareketiyle geri açılmaz; menüde yeniden görünür', () => {
+    const cursor = new CustomCursor(document.body, { enabled: true });
+    cursor.setVisible(false);
+    document.dispatchEvent(new Event('pointermove'));
+    expect(cursor.element.hidden).toBe(true);
+    cursor.setVisible(true);
+    expect(cursor.element.hidden).toBe(false);
+    cursor.destroy();
+  });
   afterEach(() => {
     document.documentElement.classList.remove('vol-custom-cursor-enabled');
     document.body.replaceChildren();

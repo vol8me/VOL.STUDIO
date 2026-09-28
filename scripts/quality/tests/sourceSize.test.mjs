@@ -4,7 +4,16 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { test } from 'node:test';
-import { validateSourceSize, ACKNOWLEDGED, LINE_THRESHOLD } from '../sourceSize.mjs';
+import {
+  validateSourceSize,
+  ACKNOWLEDGED,
+  LINE_THRESHOLD,
+  SOURCE_PATTERNS,
+} from '../sourceSize.mjs';
+
+test('TSX, MTS ve CJS de kaynak boyutu sınırındadır', () => {
+  for (const pattern of ['*.tsx', '*.mts', '*.cjs']) assert.ok(SOURCE_PATTERNS.includes(pattern));
+});
 
 function repo(t, files) {
   const root = mkdtempSync(join(tmpdir(), 'vol-size-'));

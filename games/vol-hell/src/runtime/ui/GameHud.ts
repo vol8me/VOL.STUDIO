@@ -1,5 +1,6 @@
 import { Bar, DisposableScope, i18next } from '@volstudio/core';
 import { uiConfig } from '@/config/ui';
+import { controlGlyph } from '@/app/controlGlyph';
 import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import type { Player } from '@/runtime/entity/Player';
 import type { RunEconomy } from '@/runtime/systems/RunEconomy';
@@ -33,6 +34,7 @@ export class GameHud {
   private readonly abilityHud: AbilityHud | null;
   private readonly waveBanner: WaveBanner;
   private readonly topStrip: HTMLDivElement;
+  private readonly controlHints: HTMLDivElement | null;
   private prevHealth: number;
   private prevMaxHealth: number;
   private prevDashCharge = 1;
@@ -92,6 +94,28 @@ export class GameHud {
     // iki yuvayı ikinci kez çizer ve dokunmatikte karşılığı olmayan Q/E yazardı.
     this.abilityHud =
       options.abilitySlots === false ? null : this.scope.addDestroyable(new AbilityHud(parent));
+
+    const fireGlyph = controlGlyph('rightTrigger', i18next.t('volhell:settings.action.fire'));
+    const dashGlyph = controlGlyph('faceDown', i18next.t('volhell:settings.action.dash'));
+    const menuGlyph = controlGlyph('start', i18next.t('volhell:pause.title'));
+    if (fireGlyph && dashGlyph && menuGlyph) {
+      this.controlHints = document.createElement('div');
+      this.controlHints.className = 'vol-gamepad-hints';
+      for (const [glyph, label] of [
+        [fireGlyph, i18next.t('volhell:settings.action.fire')],
+        [dashGlyph, i18next.t('volhell:settings.action.dash')],
+        [menuGlyph, i18next.t('volhell:pause.title')],
+      ] as const) {
+        const hint = document.createElement('span');
+        hint.className = 'vol-gamepad-hints__item';
+        hint.append(glyph, label);
+        this.controlHints.appendChild(hint);
+      }
+      parent.appendChild(this.controlHints);
+      this.scope.add({ dispose: () => this.controlHints?.remove() });
+    } else {
+      this.controlHints = null;
+    }
   }
 
   /** Yeni dalga başladı — ortada duyuru belirir. */
@@ -200,6 +224,14 @@ export class GameHud {
     this.dashBar.setLabel(i18next.t('volhell:hud.dash'));
     this.sparkBar.refreshLabel();
     this.abilityHud?.refreshLabels();
+    const labels = [
+      i18next.t('volhell:settings.action.fire'),
+      i18next.t('volhell:settings.action.dash'),
+      i18next.t('volhell:pause.title'),
+    ];
+    this.controlHints?.querySelectorAll('.vol-gamepad-hints__item').forEach((hint, index) => {
+      if (hint.lastChild) hint.lastChild.textContent = labels[index] ?? '';
+    });
     this.waveBanner.refreshLabels();
   }
 

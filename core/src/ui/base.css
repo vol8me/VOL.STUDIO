@@ -9,14 +9,14 @@
   inset: 0;
 
   /*
-   * Oturma mesafesi ölçeği (`--vol-ui-zoom`, theme.css). `zoom` kutunun
+   * Oturma mesafesi ölçeği (`--vol-layout-zoom`, theme.css). `zoom` kutunun
    * kendisini de büyütür; karşılığında kökün CSS boyutu viewport/zoom'a
    * çekilir — içerik hep 1280 CSS px genişliğinde yerleşir ve çizim
    * büyütülür. zoom=1'de `inset:0` ile birebir aynı davranış.
    */
-  zoom: var(--vol-ui-zoom);
-  width: calc(100vw / var(--vol-ui-zoom));
-  height: calc(100vh / var(--vol-ui-zoom));
+  zoom: var(--vol-layout-zoom);
+  width: calc(100vw / var(--vol-layout-zoom));
+  height: calc(100vh / var(--vol-layout-zoom));
 
   /*
    * Mobil WebView'in KENDİ dokunma vurgusunu kapatır.
@@ -114,7 +114,13 @@
  * programatik `focus()` çağrılarında güvenilir değildir (WebKitGTK dahil).
  */
 .vol-focusnav-current {
-  outline: 2px solid var(--vol-ui-focus-ring) !important;
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px var(--vol-ui-focus-halo);
+  outline: 3px solid var(--vol-ui-focus-ring) !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px var(--vol-ui-focus-halo);
+}
+
+.vol-button.vol-focusnav-current,
+.vol-card__action.vol-focusnav-current {
+  background: var(--vol-ui-accent-subtle);
+  border-color: var(--vol-ui-focus-ring);
 }

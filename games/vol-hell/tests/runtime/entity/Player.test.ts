@@ -191,6 +191,14 @@ describe('Player', () => {
     expect(player.isAlive()).toBe(false);
   });
 
+  it('heal — ölümcül hasardan sonra canı üst sınırda geri getirir', () => {
+    const player = makePlayer(0, 0);
+    player.takeDamage(playerConfig.maxHealth + 50);
+    player.heal(playerConfig.maxHealth * 2);
+    expect(player.getHealth()).toBe(playerConfig.maxHealth);
+    expect(player.isAlive()).toBe(true);
+  });
+
   it('tryDash — ilk çağrıda true döner (şarj dolu)', () => {
     const player = makePlayer(0, 0);
     expect(player.tryDash(new Vector2(1, 0))).toBe(true);

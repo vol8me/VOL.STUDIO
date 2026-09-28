@@ -33,7 +33,14 @@ import { gameConfig } from '@/config/game';
 import { physicsConfig } from '@/config/physics';
 import { sfxVolumes } from '@/config';
 import { BOSS_ENEMY_ID, getMaxEnemyRadius } from '@/config/enemies/catalog';
-import { diagnostics, gameAudio, audioSettings, keyBindings, videoSettings } from '@/app/services';
+import {
+  diagnostics,
+  gameAudio,
+  audioSettings,
+  keyBindings,
+  videoSettings,
+  controlSettings,
+} from '@/app/services';
 import { initialInputMode } from '@/app/platform';
 import { setGamepadNavDelegate } from '@/app/gamepadNav';
 import { SpatialGrid } from '@/runtime/systems/SpatialGrid';
@@ -59,6 +66,12 @@ import { releasePointerLatch } from '@/runtime/input/pointerLatch';
 import { PlayerAimIndicator } from '@/runtime/ui/PlayerAimIndicator';
 import { PlayerDirectionIndicator } from '@/runtime/ui/PlayerDirectionIndicator';
 import { writeFireDirection } from '@/runtime/utils/direction';
+import type { DeckMeasureState } from '@/app/deckMeasure';
+import {
+  keepDeckScenarioAlive,
+  sampleDeckScenarioInput,
+  type DeckScenarioConfig,
+} from '@/app/DeckScenario';
 
 /** Q ve E — ability slotlarının klavye karşılığı. */
 const SLOT_KEYS: Record<AbilitySlot, number> = {
@@ -105,6 +118,8 @@ export class GameScene extends BaseScene {
   private aimIndicator!: PlayerAimIndicator;
 
   private runSeed = 0;
+  private deckScenario: DeckScenarioConfig | null = null;
+  private deckRevives = 0;
   /**
    * Bu frame'in zorluk durumu. Koşu yöneticisi (boss ölçeklemesi, minion
    * doğurma) bunu frame içinde birden çok kez okur; her okumada yeniden
@@ -201,13 +216,18 @@ export class GameScene extends BaseScene {
     // yeni alan eklendiğinde unutulmasın.
     this.resetSceneState();
     this.touchControlsEnabled = shouldUseTouchControls();
-    const { loadingScreen } = (data ?? {}) as { loadingScreen?: LoadingScreen };
+    const { loadingScreen, deckScenario } = (data ?? {}) as {
+      loadingScreen?: LoadingScreen;
+      deckScenario?: DeckScenarioConfig;
+    };
+    this.deckScenario = deckScenario ?? null;
+    this.deckRevives = 0;
     this.loadingScreen = loadingScreen ?? null;
     if (this.loadingScreen) runtimeScope.addDestroyable(this.loadingScreen);
 
     // Koşu PRNG'si — spawn, kart çekimi ve davranışlardaki tüm rastgelelik
     // buradan gelir. Seed kaydedilir: bir koşu aynı seed ile tekrar oynatılabilir.
-    this.runSeed = Date.now() & 0x7fffffff;
+    this.runSeed = this.deckScenario?.seed ?? Date.now() & 0x7fffffff;
     this.runRandom = createRandom(this.runSeed);
     diagnostics?.recordEvent('runSeed', { seed: this.runSeed });
 
@@ -285,6 +305,7 @@ export class GameScene extends BaseScene {
         entityVisuals,
       ),
     );
+    if (this.deckScenario) this.enemyManager.setScenarioPopulation(this.deckScenario.enemyCount);
 
     this.abilities = runtimeScope.addDestroyable(
       new AbilityRuntime({
@@ -326,6 +347,7 @@ export class GameScene extends BaseScene {
           // sırayla sunulur.
           onLevelUp: (level) => {
             void gameAudio.playSfx('levelUp', { volume: sfxVolumes.levelUp });
+            this.audio.onLevelUp();
             this.screens?.cards.queueLevelUp(level);
           },
           onShopOpen: (wave) => {
@@ -335,6 +357,7 @@ export class GameScene extends BaseScene {
           onWaveStart: (wave) => {
             this.resetForWave();
             void gameAudio.playSfx('waveStart', { volume: sfxVolumes.waveStart });
+            this.audio.onWaveStart();
             this.screens?.hud.announceWave(wave);
           },
           onRunComplete: () => void this.onRunComplete(),
@@ -378,6 +401,7 @@ export class GameScene extends BaseScene {
         economy: this.run.economy,
         audioSettings,
         videoSettings,
+        controlSettings,
         abilitySlots: !this.touchControlsEnabled,
         onPauseForCard: () => this.pauseCtl.pauseForScreen(),
         onResumeAfterCard: () => this.pauseCtl.resumeAfterScreen(),
@@ -409,6 +433,16 @@ export class GameScene extends BaseScene {
     setGamepadNavDelegate({
       onMenu: () => this.pauseCtl.toggle(),
       onOverlayOpen: () => this.pauseCtl.pauseForMenu(),
+      onLeftBumper: () => {
+        if (!this.pauseCtl.isPaused) this.abilities.tryActivate('primary');
+      },
+      onRightBumper: () => {
+        if (!this.pauseCtl.isPaused) this.abilities.tryActivate('secondary');
+      },
+      isNavigationActive: () =>
+        this.screens?.pause.isVisible() === true ||
+        this.screens?.cards.isOpen() === true ||
+        this.screens?.death.isVisible() === true,
     });
     runtimeScope.add({ dispose: () => setGamepadNavDelegate(null) });
 
@@ -444,7 +478,13 @@ export class GameScene extends BaseScene {
 
     // Input state frame başına BIR kez okunur. Iki ayri getState() cagrisi hem
     // gereksiz Vector2 üretiyor hem de iki farklı anlik görüntü yaratiyordu.
-    const inputState = this.inputManager.getState(this.player.getPosition());
+    const inputState = this.deckScenario
+      ? sampleDeckScenarioInput(
+          this.scoreboard.getElapsedMs(),
+          this.border.bounds,
+          this.player.getPosition(),
+        )
+      : this.inputManager.getState(this.player.getPosition());
 
     // Girdi anlık görüntüsü frame başına BİR kez okunur ve bütün adımlara
     // aynı nesne verilir. Bugün tüketilen eylemlerin hepsi seviye tetikli
@@ -460,9 +500,54 @@ export class GameScene extends BaseScene {
     this.reportDiagnostics();
     const blocker = this.run.getBlocker();
     this.audio.setBossActive(blocker?.definition.id === BOSS_ENEMY_ID);
+    diagnostics?.startStage('audioUpdate');
     this.audio.update(realDelta, this.enemyManager.getEnemies().length, !this.finisher.isFinishing);
+    diagnostics?.endStage('audioUpdate');
 
     diagnostics?.endFrame();
+  }
+
+  protected override cursorVisibility(): () => boolean {
+    return () => this.pauseCtl.isPaused || !controlSettings?.isAutoAimEnabled();
+  }
+
+  getMeasurementState(): DeckMeasureState {
+    if (!this.enemyManager || !this.effects) return { phase: 'loading', metrics: {} };
+    const phase = this.screens?.death.isVisible()
+      ? 'death'
+      : this.screens?.cards.isOpen()
+      ? 'cards'
+      : this.pauseCtl.isPaused
+      ? 'pause'
+      : 'gameplay';
+    return {
+      phase,
+      metrics: {
+        enemies: this.enemyManager.getEnemies().length,
+        bullets: this.bulletManager.getBullets().length,
+        particles: this.effects.getActiveParticleCount(),
+        wave: this.run.getCurrentWave(),
+        seed: this.runSeed,
+        ...(this.deckScenario
+          ? {
+              scenarioEnemies: this.deckScenario.enemyCount,
+              scenarioSeed: this.deckScenario.seed,
+              scenarioRevives: this.deckRevives,
+            }
+          : {}),
+      },
+    };
+  }
+
+  getSteamInputContext(): 'Gameplay' | 'Menu' {
+    if (
+      !this.screens ||
+      this.screens.death.isVisible() ||
+      this.screens.cards.isOpen() ||
+      this.pauseCtl.isPaused
+    )
+      return 'Menu';
+    return 'Gameplay';
   }
 
   private advanceSimulation(dt: number, inputState: InputState<HellAction>): void {
@@ -547,6 +632,7 @@ export class GameScene extends BaseScene {
         this.aimDirBuf.x,
         this.aimDirBuf.y,
         this.enemyManager.getEnemies(),
+        this.deckScenario !== null || controlSettings.isAutoAimEnabled(),
       )
     ) {
       if (this.bulletManager.tryFire(playerPos, this.fireDirBuf)) {
@@ -586,7 +672,16 @@ export class GameScene extends BaseScene {
 
     // Koşu yöneticisi Elite/Boss'u sürdüğü için grid HAZIR olmalı: özel
     // düşmanlar da separation hesabı yapar.
-    this.run.update(delta, playerPos, this.spatialGrid);
+    if (this.deckScenario) {
+      this.enemyManager.fillScenarioPopulation(
+        this.border,
+        playerPos,
+        difficulty,
+        this.spatialGrid,
+      );
+    } else {
+      this.run.update(delta, playerPos, this.spatialGrid);
+    }
 
     this.bulletManager.update(delta, this.border);
     this.enemyManager.update(delta, playerPos, this.border, time, this.spatialGrid, difficulty, {
@@ -689,7 +784,7 @@ export class GameScene extends BaseScene {
    */
   private onEnemyKilled(enemy: Enemy): void {
     this.scoreboard.addKill(enemy.scoreValue);
-    this.run.onEnemyKilled(enemy);
+    if (!this.deckScenario) this.run.onEnemyKilled(enemy);
     void gameAudio.playSfx('enemyDeath', {
       volume: sfxVolumes.enemyDeath,
       stopEvents: ['enemyHit'],
@@ -699,6 +794,10 @@ export class GameScene extends BaseScene {
   // --- Duraklatma / ekranlar ------------------------------------------------
 
   private checkDeath(): void {
+    if (keepDeckScenarioAlive(this.deckScenario, this.player)) {
+      this.deckRevives++;
+      return;
+    }
     if (!this.player.isAlive()) {
       void this.onPlayerDeath();
     }

@@ -3,9 +3,11 @@
 > **Durum:** Hiçbir aktif oyun henüz Steam Deck'e gönderilmiyor. Bu belge
 > platformun ölçülmüş gerçeklerini, bunlardan çıkan kararları ve Deck'e
 > özgü sözleşmeleri tutar. Yapılacak işler kök [TODO.md](../TODO.md)dedir.
-> Ölçümler 2026-09-23'te bir Deck üzerinde, amaca özel bir Tauri sondasıyla
-> yapıldı (Phaser 4 WebGL + Gamepad + ses + yaşam döngüsü kaydı). Belgedeki
-> her sayı o ölçümdendir; ölçülmemiş olan "Açık ölçümler" bölümündedir.
+> İlk platform ölçümleri 2026-09-23'te bir Deck üzerinde, amaca özel bir
+> Tauri sondasıyla yapıldı (Phaser 4 WebGL + Gamepad + ses + yaşam döngüsü
+> kaydı). VOL.HELL'in ayrı D7 turu aşağıda açıkça adlandırılır. Bu iki sonda,
+> gerçek Steam App ID ile yayımlanmış Steam Input düzeni veya Valve onayı
+> yerine geçmez.
 
 Hedef tek bir cihaz değil, Valve'ın ortak uyumluluk programıdır. Verified
 incelemesi 2026'dan beri Steam Deck, Steam Machine (29 Haziran 2026) ve
@@ -312,23 +314,28 @@ device:"hidraw2"` ve `vol_haptics_rumble` → `ok` döndürdü — yani HID rumb
 - SIGTERM'i Rust yakalar; JS olayı 2 ms içinde alır.
 - Süreç tanınan süre sonunda düzgün kapanır. Bu hem host'ta hem Steam Linux Runtime 4.0'da ölçüldü.
 - Uykudan önce logind gecikme kilidi 5 sn'dir.
-- Uyku sırasında Wi-Fi kesilir. Steam Cloud'un dinamik eşitlemesi dosyaları uyku anında yukarı gönderir.
+- Uyku sırasında Wi-Fi kesilir. Steam Cloud'un eşitlemesi gerçek App ID ve
+  Auto-Cloud ayarı varsa dosyaları gönderebilir; VOL.HELL için iki cihazlı tur
+  yapılmadı.
 - Steamworks'te uyanma bildirimi `AppResumingFromSuspend_t`'dir.
 
 **Bulgular:**
 
 - `tauri-plugin-store` 2.4.4'ün `save()`'i doğrudan `fs::write` yapar: geçici dosya, `fsync` ya da `rename` yok. Yazma sırasında süreç öldürülür ya da güç kesilirse dosya yarım kalır. Bu yüzden `TauriStoreAdapter` artık paylaşılan kabuğun `vol_store_read`/`vol_store_write` komutlarını kullanır (`tauri-v2/src-tauri/src/store.rs`) — plugin-store bağımlılığı `tauri-v2`'den kalktı.
-- VOL.HELL ilerlemeyi ve cihaz ayarlarını (ses, tuş, video) tek bir dosyada tutar.
+- VOL.HELL'in eski sürümü ilerlemeyi ve cihaz ayarlarını tek dosyada tutuyordu;
+  güncel oyun bunları `synced` ve `device` dosyalarına ayırıyor.
 
 **Kararlar (uygulandı):**
 
 - **Atomik yazıcı:** geçici dosya → `fsync` → yedek değişimi → `rename` → dizin `fsync` — birim testi `store.rs`'te; her adım sınavlı.
 - **Kurtarma:** güncel dosya bozuksa `.bak` okunur, `recovered` işareti adapter'in `onRecovered` kancasına düşer; ikisi de bozuksa okuma hata verir, sessizce boş kayıt yutturulmaz.
 - **Boşaltma protokolü:**
-  - Diagnostics eklentisi SIGTERM/SIGINT/SIGHUP'ı yakalayıp `vol:terminate` yayınlar; JS `registerShutdownFlush` kancaları çalıştırır ve `flush_done` komutu izleyiciyi erken çıkarır (süre sınırı 1,5 sn).
+  - Diagnostics eklentisi SIGTERM/SIGINT/SIGHUP'ı yakalayıp `vol:terminate` yayınlar; JS bütün `registerShutdownFlush` kancaları bitince tek `flush_done` gönderir (süre sınırı 1,5 sn).
   - logind `PrepareForSleep` aboneliği dbus bağımlılığı gerektirir — bu turda eklenmedi; askı boşluğu zaten `suspend-gap` kaydıyla ölçülüyor.
   - SIGKILL'e karşı güvence boşaltma değil, atomikliktir.
-- **Kalıcılık kapsamları:** `synced` (ilerleme; Cloud'a gider) ve `device` (grafik, pencere, cihaz ses ayarları; gitmez). Kapsamlar ayrı dosyalardır — core tarafı bu turun kalan işi.
+- **Kalıcılık kapsamları:** `synced` (ilerleme; gerçek App ID'de Auto-Cloud
+  yapılandırılırsa eşitlenebilir) ve `device` (grafik, pencere, cihaz ses
+  ayarları; Cloud'a konmaz). Kapsamlar ayrı dosyalardır.
 - **Zaman:** `performance.now()` monoton saattir ve uyku süresini saymaz. `Date.now()` uykudan sonra sıçrar. Duvar saatine bağlı mantık bu farkla yazılır; simülasyon adımı sınırlanır.
 
 ## Görüntü ayarları gamescope altında
@@ -348,7 +355,7 @@ device:"hidraw2"` ve `vol_haptics_rumble` → `ok` döndürdü — yani HID rumb
 - **Uygulandı (2026-09-27, D5):** `devtools/vol-ui/tests/e2e/readability.spec.ts`
   WebKit projesinde koşar — 1280×800 ve 1280×720'de görünen her metin
   ≥ 12px; 1920×1080'de UI 1.5×, 3840×2160'ta 3× ölçeklenir
-  (`--vol-ui-zoom` medya sorgularıyla, `zoom` üzerinden sanal çözünürlük).
+  (`--vol-layout-zoom` medya sorgularıyla, `zoom` üzerinden sanal çözünürlük).
   `--vol-text-micro` 12px tabanına çıkarıldı; kapı `high` zincirindedir.
 - 16:10 birincil orandır. 16:9 ve geniş oranlar letterbox ile doğru yerleşir.
 
@@ -419,16 +426,17 @@ referanstır.
 ## VOL.HELL referans tüketici olarak
 
 VOL.HELL D7 turunda yeniden aktifleştirildi (`workspace-lifecycle.json`:
-active; kapsam eşiği 82/80/73/77 ratchet'li). Kabul turu bitince yeni bir
-annotated freeze etiketiyle yeniden dondurulur; eski etiketler değişmez.
+active; kapsam eşiği 82/80/73/77 ratchet'li). Oynanabilirlik ve ses kabulünden
+sonra active/frozen kararını kullanıcı verecek; kendiliğinden freeze yapılmaz.
 VOL.ARACHNID dondurulmuş kalır.
 
 **D7 kapsamı (2026-09-27):**
 
 - **Kayıt kapsamları:** `synced` → `vol-hell-synced.json` (Steam Cloud
-  Auto-Cloud kalıbı), `device` → `vol-hell-device.json` (ayarlar, dil).
-  Tek dosyalı eski kayıt `migrateLegacySave` ile yaz-oku-doğrula-sil
-  düzeniyle, idempotent taşınır; `isScopedKey` anahtarları atlanır.
+  Auto-Cloud için aday), `device` → `vol-hell-device.json` (ayarlar, dil).
+  Tek dosyalı eski kayıt `migrateLegacySave` ile hedefe yazılıp geri
+  okunarak doğrulanır; eski kaynak korunur ve var olan kapsamlı kayıt
+  yeniden yazılmaz. Gerçek App ID Cloud eşitlemesi henüz kanıtlanmadı.
 - **Kol ve gezinme:** `InputManager` `gamepad` sağlayıcısı (sol çubuk
   hareket, sağ çubuk nişan, RT `fire`, A `dash`); `FocusNavController`
   belge ömürlü; Menu → pause delegesi, B/Escape/Android-geri tek geri
@@ -437,8 +445,9 @@ VOL.ARACHNID dondurulmuş kalır.
   eklentileri `run_with_context_and` üzerinden; manifesto
   `steam_input_manifest.vdf` `bundle.resources`'ta; AppRun
   `libsteam_api.so`'yu Steam istemcisinden çözer.
-- **Ölçüm yüzeyi:** `src/app/deckMeasure.ts` yalnız `VOL_DECK_MEASURE=1`
-  (`deck.mjs mode`) ile çalışır — 10 saniyelik `perf` pencereleri,
+- **Ölçüm yüzeyi:** `src/app/deckMeasure.ts` ve native `vol-diagnostics`
+  kayıt/izleyicisi yalnız `VOL_DECK_MEASURE=1` (`deck.mjs mode`) ile çalışır;
+  normal üretim açılışında JSONL veya sinyal izleyicisi başlamaz. Ölçümde 10 saniyelik `perf` pencereleri,
   `pad-connected`/`pad-input` ve `steamworks` durum kayıtları JSONL'e
   düşer; `summarizeReport` bunları faz tablosunda toplar
   (`measure --seconds <n>` duvar-saati kipi).
@@ -449,9 +458,10 @@ VOL.ARACHNID dondurulmuş kalır.
   `cloudEnabled`, `inputReady`, `manifestOk` → tümü true, appId 480.
 - Kol: `pad-connected` `"Steam Deck"`/`standard`; ilk fiziksel basım
   `pad-input` kaydıyla kanıtlı (t≈12,7 s).
-- Gerçek oynanış (DALGA 1): 9 pencerede 58,0–59,4 FPS, p95 ≤ 21 ms,
-  > 34 ms kare oranı pencere başına ≤ %1; ekran görüntüsü HUD ve dalga
-  > dövüşünü doğrular.
+- Eski ölçüm kaydında 9 pencere 58,0–59,4 FPS, p95 ≤ 21 ms,
+  > 34 ms kare oranı pencere başına ≤ %1 idi. Pencereler sahne ve yükle
+  > etiketlenmediği için bunların tamamı gerçek oynanış sonucu sayılamaz;
+  > ayrı ekran görüntüsü DALGA 1 HUD ve dövüş yüzeyini doğrular.
 - Kapanış: SIGTERM → `vol:terminate` → son pencere `final:true` ile
   diske düştü → `flushed:true` temiz çıkış.
 - Kayıt: `device.*` store dosyası (`vol-hell-device.json`) dil ve ses
@@ -461,6 +471,29 @@ VOL.ARACHNID dondurulmuş kalır.
 **İnsan turunda kalacaklar:** kolla menü gezintisi hissi, pause/nişanın
 oynanışta doğrulanması, overlay açılışı ve metin girişi diyalogları,
 titreşimin elle hissedilmesi.
+
+### D7 sağlamlaştırma başlangıç matrisi (2026-09-27)
+
+Burada “bildirim” kullanıcı deneyimini, “kaynak” depoda yeniden okunan kodu,
+“hipotez” henüz kanıtlanmamış nedeni söyler. Test sütunu hedef doğrulamadır;
+yeşil olduğu ayrıca yazılmadıkça koşulmuş sayılmaz. 2026-09-27 ön denemesinde
+eski Deck paketi Steam kütüphanesine döndü: süreç SIGSEGV ile kapandı,
+`libmanette-0.2` yığını görüldü. Bu yüzden bu tablodaki hiçbir oyun ekranı
+yeniden Deck'te kabul edilmiş değildir.
+
+| Konu            | Gerçek gözlem                                                                                   | Henüz hipotez                                                      | Tekrar üretim ve ürün etkisi                                                                                      | Sahip                                 | Gerekli test                      | Deck kanıtı                                | İnsan kabulü                        |
+| --------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------- | --------------------------------- | ------------------------------------------ | ----------------------------------- |
+| A Glif          | Bildirim: gerekli yerlerde yok; kaynakta `controlGlyph` aileyi bir kez seçiyor.                 | Hot-plug ve kip geçişi bayat glif bırakabilir.                     | Menü, ayar, pause, kart, dükkân ve HUD'da kol/klavye/dokunma değiştir; yanlış eylem ve erişilebilir etiket riski. | CORE glif mekanizması, oyun yerleşimi | DOM + WebKit ekran matrisi        | Her ekranın gerçek görüntüsü bekliyor.     | Yerleşim ve okunabilirlik bekliyor. |
+| B Görüntü       | Bildirim: siyah bant; kaynakta oyun penceresi 1280×720, panel 1280×800.                         | Gamescope fullscreen yaması 16:10'u düzeltebilir.                  | Panel, OS pencere, canvas client/backing ve DOM sınırlarını 16:10/16:9/TV'de ölç; kullanılabilir alan kaybı.      | tauri-v2 kabuk, oyun ölçek            | Boyut/safe-area DOM + WebKit      | Yeni build görüntüsü bekliyor.             | TV/dock ergonomisi bekliyor.        |
+| C Metin         | Bildirim: OS klavyesi touchpad ile çalışıyor; oyunda Steam provider çağrısı kaynakta bulunmadı. | Yalnız kol başlangıcında AudioContext/metin girişi kilitlenebilir. | Modal/kayan klavye, yerleşik klavye ve OS klavyesini ayrı dene; metin girişinin kesilmesi.                        | CORE sağlayıcı, oyun entegrasyonu     | Sağlayıcı + gerçek WebKit         | Fiziksel giriş bekliyor.                   | Klavye kullanımı bekliyor.          |
+| D Titreşim      | Bildirim: hissedilmiyor; native aygıt/`None` tek sefer önbellekte.                              | Hotplug, uyku veya bozuk FD; `ok` motor hissi değildir.            | Durum, komut ve fiziksel motoru ayrı ölç; geri bildirimin yokluğu.                                                | tauri-v2 sürücü, oyun ayarı           | Yeniden keşif ve hata enjeksiyonu | Yeni statü/komut bekliyor.                 | Fiziksel his bekliyor.              |
+| E Gezinme       | Bildirim: stick, D-pad, touchpad ve slider zor; 220 ms geri engeli kaynakta.                    | Odak sınırı ve çift olaylar etkili olabilir.                       | Art arda geri, stick tekrar, slider, modal, scroll; menü erişimini engeller.                                      | CORE odak, vol-ui, oyun ekranı        | Saf + DOM + WebKit; fiziksel kol  | Ekran/olay kaydı bekliyor.                 | Ergonomi bekliyor.                  |
+| F Geri/pause    | Bildirim: B anlık durup dönebiliyor; `GameMobileControls` geri handler'ı toggle yapıyor.        | Tek fiziksel basım iki API olayına dönüşebilir; ölçülmedi.         | Kısa/uzun B, Menu, Escape; oyun, pause, ayar, kart, ölüm; yanlış unpause.                                         | CORE olay sınırı, oyun eylemi         | Tek/çift olay regresyonu + WebKit | Fiziksel olay dizisi bekliyor.             | Doğal basım hissi bekliyor.         |
+| G Otomatik ateş | Bildirim: Android benzeri seçilebilir ateş; dokunma sağ çubuğu temasla `fire` üretiyor.         | Deck seçiminin anlamı kullanıcı kararı gerektiriyor.               | Sağ çubuk/RT, pause/kart ve cooldown; istemsiz ateş.                                                              | Oyun ayarı ve eylemi                  | Saf + oyun sahnesi                | Fiziksel nişan/tetik bekliyor.             | Ürün seçimi ve ergonomi bekliyor.   |
+| H Sağ çubuk UI  | Bildirim: cursor hareket etmiyor; `CustomCursor` pointer olaylarından besleniyor.               | UI için sanal pointer köprüsü gerekebilir.                         | Oyun AIM, UI odak/cursor, hover, click, scroll, touchpad; yanlış kart seçimi.                                     | CORE mekanizma, oyun eşleme           | Pointer semantiği + WebKit        | Fiziksel cursor bekliyor.                  | Hız ve kontrol bekliyor.            |
+| I FPS           | Bildirim: 10–20 düşmanda yavaşlıyor; D7'de 9 pencere 58–59,4 FPS, p95 en çok 21 ms.             | Mevcut rAF kaydı sahne/yük ayırmadığından neden bilinmiyor.        | Tohumla 0/10/20/30+ düşman, kart ve boss; 60 FPS ve p95 ≤18 ms hedefi.                                            | scripts ölçüm, oyun profil            | Yük/evre kimlikli örnekleme       | Aynı pencerede CPU/GC/kare kaydı bekliyor. | Oynanabilirlik bekliyor.            |
+| J Kart          | Bildirim: açılır açılmaz yanlış seçim; `CardPicker.show()` ilk action'a odaklanıyor.            | UI→UI geçişte basım devri ve pointer-up yarışabilir.               | Çoklu level-up, shop, Enter ve sanal mouse; ilerleme seçimi geri alınamaz.                                        | CORE güvenli niyet sınırı, oyun akışı | Saf + DOM + WebKit                | Gerçek ardışık kart bekliyor.              | Seçim rahatlığı bekliyor.           |
+| K Sol touchpad  | Bildirim: Undo/Print tarayıcı davranışı.                                                        | Steam Input eşlemesi, native klavye veya WebKit kısayolu olabilir. | İçerik kaydetmeden olay türü/bağlamı ölç; yanlış tarayıcı eylemi.                                                 | scripts sonda, oyun bağlamı           | Olay sınıflama + WebKit           | Fiziksel olay izi bekliyor.                | Touchpad kullanımı bekliyor.        |
 
 ## Açık ölçümler
 

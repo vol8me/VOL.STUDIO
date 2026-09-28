@@ -1,13 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { tsImport } from 'tsx/esm/api';
-import {
-  activeWorkspacePaths,
-  loadRepoLifecycle,
-} from '../workspaceLifecycle.mjs';
+import { activeWorkspacePaths, loadRepoLifecycle } from '../workspaceLifecycle.mjs';
 
 const root = resolve(import.meta.dirname, '../../..');
 
@@ -25,6 +22,15 @@ test('yerel E2E yalnız seçilmiş teste veya açık geliştirme sunucusuna güv
     if (!existsSync(configPath)) continue;
     const config = (await tsImport(pathToFileURL(configPath).href, import.meta.url)).default;
     assert.equal(config.forbidOnly, true, directory);
+    if ((config.projects?.length ?? 0) > 1) {
+      const manifest = JSON.parse(readFileSync(resolve(directory, 'package.json'), 'utf8'));
+      assert.ok(manifest.scripts?.['test:e2e'], `${directory}: test:e2e eksik`);
+      assert.doesNotMatch(
+        manifest.scripts['test:e2e'],
+        /--project(?:=|\s)/,
+        `${directory}: ek projeler rutin E2E kapısından dışlanamaz`,
+      );
+    }
     for (const server of [config.webServer].flat()) {
       assert.equal(server.reuseExistingServer, false, directory);
       assert.match(

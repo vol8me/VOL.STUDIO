@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import {
   validateQualityConfig,
   validateQualityWorkspaceParity,
+  validateActiveGameBudgets,
   COVERAGE_KEYS,
 } from '../../../scripts/quality/config.mjs';
 
@@ -131,6 +132,43 @@ describe('quality.json şema doğrulaması', () => {
     brokenAck.coverageShape = { acknowledged: { 'some/file.ts': '   ' } };
     expect(
       validateQualityConfig(brokenAck).some((p: string) => p.includes('Sessiz muafiyet yok')),
+    ).toBe(true);
+  });
+
+  it('bundle bütçesinde yanlış metrik sessizce atlanmaz', () => {
+    const broken = validConfig();
+    broken.bundles = { 'games/vol-hell': { app: 140, vendor: 370, cs: 25 } };
+    const problems = validateQualityConfig(broken);
+    expect(problems.some((p: string) => p.includes('bundles') && p.includes('cs'))).toBe(true);
+    expect(problems.some((p: string) => p.includes('css'))).toBe(true);
+  });
+
+  it('aktif oyunun boş performans kapıları reddedilir', () => {
+    const config = validConfig();
+    expect(validateActiveGameBudgets(config, ['games/vol-hell'])).toEqual([
+      'games/vol-hell: aktif oyun için bundle bütçesi yok',
+      'games/vol-hell: aktif oyun için scaling bütçesi yok',
+    ]);
+  });
+
+  it('ölçekleme tarifi ve oranı geçerli olmalı', () => {
+    const config = validConfig();
+    config.scaling = { 'games/vol-hell': { snapshot40Over10: 0 } };
+    const problems = validateQualityConfig(config);
+    expect(problems.some((problem: string) => problem.includes('$measure'))).toBe(true);
+    expect(problems.some((problem: string) => problem.includes('snapshot40Over10'))).toBe(true);
+  });
+
+  it('kapsam koşularının birleşimi her eşikli aktif paketi ölçer', () => {
+    const broken = validConfig();
+    broken.coverageRuns = {
+      coverage: { exclude: ['@volstudio/core'] },
+      'coverage-audio': { only: ['@volstudio/yeni'] },
+    };
+    expect(
+      validateQualityWorkspaceParity(broken, ['@volstudio/core']).some((p: string) =>
+        p.includes('@volstudio/core: hiçbir kapsam koşusu'),
+      ),
     ).toBe(true);
   });
 

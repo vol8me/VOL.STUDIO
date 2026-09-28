@@ -67,9 +67,7 @@ describe('izlenen olaylar', () => {
 describe('yük fazları', () => {
   it('sprite fazları ve özet metrikleri tanımlıdır', () => {
     expect(probeJs).toContain('4000 sprite');
-    for (const metric of ['fps', 'p95', 'p99', 'over20ms', 'over34ms']) {
-      expect(probeJs).toContain(metric);
-    }
+    expect(probeJs).toContain('summarizeFrameIntervals as summarize');
   });
 
   it('Phaser yoksa fazlar atlanır ama sonda çalışmaya devam eder', () => {

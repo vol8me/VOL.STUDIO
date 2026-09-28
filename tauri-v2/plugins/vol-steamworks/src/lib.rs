@@ -23,8 +23,8 @@ mod service;
 
 pub use service::{CloudFileInfo, ControllerInfo, GlyphOrigin, Status};
 
-use service::imp::Service;
 use serde::Serialize;
+use service::imp::Service;
 use tauri::{
     plugin::{Builder, TauriPlugin},
     AppHandle, Manager, Runtime,
@@ -80,10 +80,7 @@ fn set_input_manifest<R: Runtime>(app: AppHandle<R>, path: String) -> Result<boo
 }
 
 #[tauri::command]
-fn activate_action_set<R: Runtime>(
-    app: AppHandle<R>,
-    name: String,
-) -> Result<u32, Error> {
+fn activate_action_set<R: Runtime>(app: AppHandle<R>, name: String) -> Result<u32, Error> {
     service(&app).activate_action_set(&name).map_err(Error)
 }
 
@@ -150,7 +147,9 @@ fn cloud_write<R: Runtime>(
     name: String,
     data_base64: String,
 ) -> Result<bool, Error> {
-    service(&app).cloud_write(&name, &data_base64).map_err(Error)
+    service(&app)
+        .cloud_write(&name, &data_base64)
+        .map_err(Error)
 }
 
 #[tauri::command]

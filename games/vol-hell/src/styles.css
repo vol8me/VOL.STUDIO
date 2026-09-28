@@ -536,6 +536,31 @@
 }
 
 /* Ability slotları — masaüstünde sol altta Q ve E göstergeleri. */
+.vol-gamepad-hints {
+  position: absolute;
+  bottom: var(--vol-space-md);
+  left: 50%;
+  z-index: var(--vol-z-root);
+  display: flex;
+  gap: var(--vol-space-md);
+  align-items: center;
+  padding: var(--vol-space-xs) var(--vol-space-sm);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: 12px;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.vol-gamepad-hints__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vol-space-xs);
+}
+
 .vol-ability-hud {
   gap: var(--vol-space-sm);
   display: flex;
@@ -569,7 +594,7 @@
   letter-spacing: 0.1em;
   color: var(--vol-ui-text-muted);
   font-family: var(--vol-font-family);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -638,7 +663,7 @@
 .vol-loadout__hint {
   color: var(--vol-ui-text-muted);
   font-family: var(--vol-font-family-body);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .vol-loadout__slots {

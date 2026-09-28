@@ -17,6 +17,7 @@
   width: 1.5em;
   height: 1.5em;
   display: block;
+
   /* Kenney glifleri koyu zemin için açık dolgulu gelir; tema rengiyle
      karışmasın diye boyanmaz, yalnız boyutlanır. */
 }

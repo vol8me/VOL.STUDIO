@@ -674,7 +674,7 @@
     "gamepadPad": "Pad: {{id}}",
     "gamepadMode": "Input mode: {{mode}}",
     "gamepadPressed": "Pressed: {{actions}}",
-    "gamepadHint": "Connect a pad or press a button; watch the input mode switch as you use keyboard/mouse.",
+    "gamepadHint": "Move the cursor with the right stick and select with A; watch the input mode switch as you use keyboard/mouse.",
     "gamepadTextLabel": "Text entry with pad",
     "gamepadTextPlaceholder": "Focus while in gamepad mode — on-screen keyboard opens",
     "released": "Released",

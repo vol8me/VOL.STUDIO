@@ -7,9 +7,9 @@
  *   node scripts/deck.mjs <komut> [seçenekler]
  *
  *   discover                      Deck'i bulur (→ --host / DECK_HOST / mDNS / Avahi)
- *   deploy   <workspace>          AppDir'i Deck'e yükler ve Steam kısayolunu kaydeder
- *   run      <workspace>          Kayıtlı oyunu başlatır
- *   stop     <workspace>          Sürece SIGTERM gönderir
+ *   deploy   <workspace>          Yeni release yükler; önceki dosyaları korur
+ *   run      <workspace> [--release=<kayıt>]  Seçilen kısayolu başlatır
+ *   stop     <workspace> [--release=<kayıt>] Seçilen sürece SIGTERM gönderir
  *   log      <workspace>          diagnostics.jsonl kaydını yazdırır
  *   shot     <ad>                 gamescopectl ekran görüntüsü → .claude/deck-olcum/
  *   power    [saniye]             Güç sayaçları örneği (RAPL enerjisi + hwmon)
@@ -18,26 +18,41 @@
  *                                   (varsayılan işaret prob fazı; oyunda
  *                                   --seconds ya da kendi işareti)
  *   mode     <workspace> A=B ...  Bir sonraki run'da etkili ortam dosyası yazar
- *   clean    <workspace>          Kısayolu ve yüklenen dosyaları siler
- *   full     <workspace> <etiket> build → deploy → measure → stop (tek komut)
+ *   clean    <workspace> --confirm-delete=<gameid>  Açık kimlik onayıyla siler
+ *   full     <workspace> <etiket> [--seconds <n>] build → yeni release mode → measure
  *
  * Ortam: DECK_HOST, DECK_SSH_KEY (varsayılan ~/.config/steamos-devkit/devkit_rsa)
  */
 import { execFileSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import {
-  buildShortcutParms,
+  assertCleanConfirmation,
+  assertInventoryPreserved,
+  buildReleaseShortcutParms,
+  buildRsyncArgs,
+  fullMeasurementPlan,
+  validateMeasureSeconds,
   HWMON_FIELDS,
   hwmonByName,
   parseAvahiBrowse,
   POWER_COUNTERS,
   hwmonWatts,
   renderLauncher,
+  renderAtomicWriteCommand,
+  renderInventoryCommand,
+  renderLogReadCommand,
+  renderPrepareReleaseCommand,
+  renderReleaseStopCommand,
   renderModeEnv,
   resolveDeckHost,
   summarizeReport,
+  releaseDirectory,
+  sanitizeReport,
+  shortcutRegistrationSucceeded,
+  shellQuote,
   toDeckGameId,
 } from './deck-contract.mjs';
 import { loadRepoLifecycle } from './quality/workspaceLifecycle.mjs';
@@ -61,6 +76,7 @@ function usage() {
 function runOut(command, args, opts = {}) {
   return execFileSync(command, args, {
     encoding: 'utf8',
+    maxBuffer: 128 * 1024 * 1024,
     stdio: ['ignore', 'pipe', 'inherit'],
     ...opts,
   }).trim();
@@ -103,22 +119,55 @@ function ssh(host, remote, { quiet = false } = {}) {
   });
 }
 
-function scp(host, local, remote) {
-  execFileSync('scp', ['-q', '-i', SSH_KEY, local, `deck@${host}:${remote}`], {
-    stdio: 'inherit',
-  });
+function recordDirectory(label) {
+  const safe =
+    String(label)
+      .replaceAll(/[^A-Za-z0-9_-]/g, '_')
+      .slice(0, 80) || 'record';
+  const stamp = new Date().toISOString().replaceAll(/[:.]/g, '-');
+  const parent = join(RECORDS, stamp.slice(0, 10));
+  mkdirSync(parent, { recursive: true, mode: 0o700 });
+  const directory = join(parent, `${safe}-${stamp}-${randomUUID()}`);
+  mkdirSync(directory, { mode: 0o700 });
+  return directory;
 }
 
-/** Uzak → yerel kopya (ekran görüntüsü, kayıt dosyası indirme). */
-function scpFrom(host, remote, local) {
-  execFileSync('scp', ['-q', '-i', SSH_KEY, `deck@${host}:${remote}`, local], {
-    stdio: 'inherit',
-  });
+function privateFile(path, data) {
+  writeFileSync(path, data, { flag: 'wx', mode: 0o600 });
+}
+
+function readLog(host, path, baseline = null) {
+  return JSON.parse(ssh(host, renderLogReadCommand(path, baseline), { quiet: true }));
+}
+
+function readDeployment(workspace, baseGameid, records) {
+  if (!records) return null;
+  let deployment;
+  try {
+    deployment = JSON.parse(
+      readFileSync(join(resolve(records), 'deployment.private.json'), 'utf8'),
+    );
+  } catch {
+    throw new Error('Release kaydı okunamadı');
+  }
+  if (deployment.workspace !== workspace || deployment.baseGameid !== baseGameid) {
+    throw new Error('Release kaydı seçilen workspace ile eşleşmiyor');
+  }
+  buildReleaseShortcutParms({ gameid: deployment.gameid, release: deployment.directory });
+  releaseDirectory(deployment.directory, 'validation');
+  return deployment;
 }
 
 /* ---------- workspace çözümü ---------- */
 
 function readShell(root, workspace) {
+  if (
+    typeof workspace !== 'string' ||
+    workspace.startsWith('/') ||
+    workspace.split('/').includes('..')
+  ) {
+    throw new Error('Workspace depo içindeki göreli paket yolu olmalı');
+  }
   const dir = join(root, workspace);
   const confPath = join(dir, 'src-tauri', 'tauri.conf.json');
   if (!existsSync(confPath)) {
@@ -131,7 +180,10 @@ function readShell(root, workspace) {
       `${workspace} frozen (${record.freezeTag}) — Deck ölçümü rutin adaylara uygulanır.`,
     );
   }
+  if (record?.status !== 'active') throw new Error('Workspace lifecycle içinde active olmalı');
   const conf = JSON.parse(readFileSync(confPath, 'utf8'));
+  if (!/^[A-Za-z0-9_.-]+$/.test(conf.identifier))
+    throw new Error('Kabuk kimliği güvenli dosya adı değil');
   const productName = conf.productName;
   return {
     dir,
@@ -167,87 +219,121 @@ function cmdDeploy(root, workspace, host, { compat } = {}) {
     );
   }
 
-  const prepJson = ssh(
+  const records = recordDirectory('deploy');
+  const gameid = `${shell.gameid}_${randomUUID().replaceAll('-', '')}`;
+  const prepJson = ssh(host, renderPrepareReleaseCommand(gameid), { quiet: true });
+  const { directory: previousDirectory } = JSON.parse(prepJson);
+  const release = `${new Date().toISOString().replaceAll(/[^A-Za-z0-9]/g, '-')}-${randomUUID()}`;
+  const directory = releaseDirectory(previousDirectory, release);
+  const before = JSON.parse(ssh(host, renderInventoryCommand(previousDirectory), { quiet: true }));
+  privateFile(join(records, 'inventory-before.private.json'), JSON.stringify(before));
+  privateFile(
+    join(records, 'release.private.json'),
+    JSON.stringify({ previousDirectory, directory }),
+  );
+  ssh(host, `mkdir -- ${shellQuote(directory)}`, { quiet: true });
+
+  execFileSync('rsync', buildRsyncArgs({ host, key: SSH_KEY, source: shell.appDir, directory }), {
+    stdio: 'inherit',
+  });
+
+  ssh(host, renderAtomicWriteCommand(`${directory}/run.sh`, renderLauncher(gameid), randomUUID()), {
+    quiet: true,
+  });
+  ssh(
     host,
-    `python3 ~/devkit-utils/steamos-prepare-upload --gameid ${shell.gameid}`,
+    `chmod +x -- ${shellQuote(`${directory}/run.sh`)} ${shellQuote(`${directory}/AppRun`)}`,
     { quiet: true },
   );
-  const { directory } = JSON.parse(prepJson);
-  console.log(`[deploy] hedef dizin: ${directory}`);
-
-  execFileSync(
-    'rsync',
-    [
-      '-a',
-      '--delete',
-      '-e',
-      `ssh -i ${SSH_KEY} -o BatchMode=yes`,
-      `${shell.appDir}/`,
-      `deck@${host}:${directory}/`,
-    ],
-    { stdio: 'inherit' },
+  const after = JSON.parse(
+    ssh(host, renderInventoryCommand(previousDirectory, directory.split('/').at(-1)), {
+      quiet: true,
+    }),
   );
+  privateFile(join(records, 'inventory-after.private.json'), JSON.stringify(after));
+  assertInventoryPreserved(before, after);
 
-  const launcher = renderLauncher(shell.gameid);
-  const tmp = join(RECORDS, 'tmp', 'run.sh');
-  mkdirSync(join(RECORDS, 'tmp'), { recursive: true });
-  writeFileSync(tmp, launcher, { mode: 0o755 });
-  scp(host, tmp, `${directory}/run.sh`);
-  ssh(host, `chmod +x ${directory}/run.sh ${directory}/AppRun`, { quiet: true });
-
-  const parms = buildShortcutParms({
-    gameid: shell.gameid,
-    directory,
-    argv: ['./run.sh'],
+  const parms = buildReleaseShortcutParms({
+    gameid,
+    release: directory,
     settings: compat ? { compat_tool: compat } : {},
   });
   const out = ssh(
     host,
-    `python3 ~/devkit-utils/steam-client-create-shortcut --parms ${JSON.stringify(
+    `python3 ~/devkit-utils/steam-client-create-shortcut --parms ${shellQuote(
       JSON.stringify(parms),
     )}`,
     { quiet: true },
   );
-  console.log(`[deploy] kısayol kaydedildi: ${shell.gameid}${out ? ` — ${out}` : ''}`);
-  return { directory, gameid: shell.gameid };
+  privateFile(join(records, 'shortcut-result.private.txt'), out);
+  let result;
+  try {
+    result = JSON.parse(out);
+  } catch {
+    throw new Error('Kısayol yanıtı JSON değil; mevcut kısayol korunuyor');
+  }
+  if (!shortcutRegistrationSucceeded(result))
+    throw new Error('Yeni kısayol kaydedilemedi; mevcut kısayol korunuyor');
+  privateFile(
+    join(records, 'deployment.private.json'),
+    JSON.stringify({ baseGameid: shell.gameid, gameid, directory, workspace }),
+  );
+  console.log(`[deploy] ${shell.gameid}: ayrı yeni kısayol kaydedildi; mevcut kısayol korundu`);
+  console.log(`[deploy] kayıt: ${relative(ROOT, records)}`);
+  return { directory, gameid, records };
 }
 
-function cmdRun(root, workspace, host) {
-  const { gameid } = readShell(root, workspace);
-  const out = ssh(host, `python3 ~/devkit-utils/steam-devkit-rpc run-game gameid=${gameid}`);
-  console.log(out || `[run] ${gameid} başlatıldı`);
+function cmdRun(root, workspace, host, records) {
+  const shell = readShell(root, workspace);
+  const gameid = readDeployment(workspace, shell.gameid, records)?.gameid ?? shell.gameid;
+  ssh(host, `python3 ~/devkit-utils/steam-devkit-rpc run-game ${shellQuote(`gameid=${gameid}`)}`, {
+    quiet: true,
+  });
+  console.log(`[run] ${gameid} başlatma isteği gönderildi`);
 }
 
-function cmdStop(root, workspace, host) {
-  const { productName } = readShell(root, workspace);
-  ssh(host, `pkill -TERM -x ${productName} || true`, { quiet: true });
+function cmdStop(root, workspace, host, records) {
+  const { productName, gameid } = readShell(root, workspace);
+  const deployment = readDeployment(workspace, gameid, records);
+  if (deployment) {
+    ssh(host, renderReleaseStopCommand(deployment.directory), { quiet: true });
+  } else {
+    ssh(host, `pkill -TERM -x -- ${shellQuote(productName)} || true`, { quiet: true });
+  }
   console.log(`[stop] ${productName} için SIGTERM gönderildi`);
 }
 
 function cmdLog(root, workspace, host) {
   const { remoteLog } = readShell(root, workspace);
   try {
-    process.stdout.write(ssh(host, `cat ${remoteLog}`) + '\n');
+    const log = readLog(host, remoteLog);
+    process.stdout.write(sanitizeReport(Buffer.from(log.dataBase64, 'base64').toString('utf8')));
   } catch {
     console.log(`[log] ${remoteLog} henüz yok — sonda hiç koşmadı mı?`);
   }
 }
 
 function cmdShot(host, name) {
-  const safe = name.replaceAll(/[^A-Za-z0-9_-]/g, '_');
-  const dir = join(RECORDS, new Date().toISOString().slice(0, 10));
-  mkdirSync(dir, { recursive: true });
-  const remote = `/tmp/vol-shot-${safe}.png`;
-  ssh(host, `gamescopectl screenshot ${remote} >/dev/null 2>&1; sleep 1`, { quiet: true });
-  const local = join(dir, `deck-${safe}.png`);
-  scpFrom(host, remote, local);
-  ssh(host, `rm -f ${remote}`, { quiet: true });
-  console.log(`[shot] ${local}`);
+  const dir = recordDirectory(`shot-${name}`);
+  const remote = `/tmp/vol-shot-${randomUUID()}.png`;
+  ssh(host, `gamescopectl screenshot ${shellQuote(remote)} >/dev/null 2>&1 && sleep 1`, {
+    quiet: true,
+  });
+  const local = join(dir, 'screen.png');
+  const bytes = execFileSync('ssh', [...SSH_OPTS, `deck@${host}`, `cat -- ${shellQuote(remote)}`], {
+    maxBuffer: 128 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+  privateFile(local, bytes);
+  privateFile(join(dir, 'remote-path.private.txt'), remote);
+  console.log(`[shot] ${relative(ROOT, local)}`);
   return local;
 }
 
 /** Uzaktan tek örnek: isimle bulunan hwmon alanları (µW) + pil sayaçları. */
 function powerSample(host, seconds = 8) {
+  if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 600)
+    throw new Error('Güç penceresi 0–600 saniye arasında olmalı');
   const scan = ssh(
     host,
     'for h in /sys/class/hwmon/hwmon*; do echo "$h $(cat $h/name 2>/dev/null)"; done',
@@ -256,7 +342,7 @@ function powerSample(host, seconds = 8) {
   const reads = [];
   for (const [name, fields] of Object.entries(HWMON_FIELDS)) {
     const node = hwmonByName(scan, name);
-    if (!node) continue;
+    if (!node || !/^\/sys\/class\/hwmon\/hwmon\d+$/.test(node)) continue;
     for (const field of fields) reads.push(`${name}.${field}=${node}/${field}`);
   }
   const script = `
@@ -307,8 +393,9 @@ function cmdPower(host, seconds) {
   return sample;
 }
 
-function cmdMode(root, workspace, host, pairs) {
-  const { gameid } = readShell(root, workspace);
+function cmdMode(root, workspace, host, pairs, records) {
+  const shell = readShell(root, workspace);
+  const gameid = readDeployment(workspace, shell.gameid, records)?.gameid ?? shell.gameid;
   const entries = Object.fromEntries(
     pairs.map((pair) => {
       const idx = pair.indexOf('=');
@@ -317,38 +404,53 @@ function cmdMode(root, workspace, host, pairs) {
     }),
   );
   const body = renderModeEnv(entries);
-  // İçerik base64 ile taşınır: SSH argümanlarından geçen çift kaçış
-  // tırnak/\n'ı bozuyordu; base64 kabuk için nördür.
-  const b64 = Buffer.from(`${body}\n`).toString('base64');
-  const out = ssh(
-    host,
-    `mkdir -p ~/.vol-studio/deck && echo ${b64} | base64 -d > ~/.vol-studio/deck/${gameid}.env && cat ~/.vol-studio/deck/${gameid}.env`,
+  const path = `~/.vol-studio/deck/${gameid}.env`;
+  const previous = readLog(host, path);
+  const bytes = Buffer.from(previous.dataBase64, 'base64');
+  if (previous.exists && bytes.toString('utf8') === `${body}\n`) {
+    console.log(`[mode] ${gameid}: ortam zaten aynı`);
+    return;
+  }
+  const modeRecords = recordDirectory('mode');
+  privateFile(join(modeRecords, 'previous-mode.private.env'), bytes);
+  privateFile(
+    join(modeRecords, 'previous-mode.private.json'),
+    JSON.stringify({ exists: previous.exists, sha256: previous.sha256 }),
   );
-  console.log(out);
+  ssh(host, renderAtomicWriteCommand(path, `${body}\n`, randomUUID()), { quiet: true });
+  console.log(`[mode] ${gameid}: izinli ölçüm ortamı atomik yazıldı; önceki kopya korundu`);
 }
 
-function cmdClean(root, workspace, host) {
+function cmdClean(root, workspace, host, confirmation) {
   const { gameid } = readShell(root, workspace);
-  ssh(host, `python3 ~/devkit-utils/steamos-delete --delete-title ${gameid} || true`);
-  ssh(host, `rm -f ~/.vol-studio/deck/${gameid}.env`, { quiet: true });
+  assertCleanConfirmation(gameid, confirmation);
+  ssh(host, `python3 ~/devkit-utils/steamos-delete --delete-title ${shellQuote(gameid)}`, {
+    quiet: true,
+  });
   console.log(`[clean] ${gameid} silindi`);
 }
 
 async function cmdMeasure(root, workspace, host, label, opts = {}) {
   const shell = readShell(root, workspace);
   const { gameid, remoteLog } = shell;
-  const stamp = new Date().toISOString().replaceAll(/[:.]/g, '-').slice(0, 19);
-  const dir = join(RECORDS, new Date().toISOString().slice(0, 10), `${label}-${stamp}`);
-  mkdirSync(dir, { recursive: true });
-
-  ssh(host, `rm -f ${remoteLog}`, { quiet: true });
-  cmdRun(root, workspace, host);
+  validateMeasureSeconds(opts.seconds);
+  const dir = recordDirectory(label);
+  const original = readLog(host, remoteLog);
+  privateFile(join(dir, 'previous-log.private.jsonl'), Buffer.from(original.dataBase64, 'base64'));
+  const baseline = {
+    size: original.size,
+    sha256: original.sha256,
+    endsWithNewline: original.endsWithNewline,
+  };
+  privateFile(join(dir, 'log-boundary.private.json'), JSON.stringify(baseline));
+  cmdRun(root, workspace, host, opts.release);
   const powerBefore = powerSample(host, 2);
 
   // İki bekleme kipi: işaret (`--until`, sondanın kendini bitiren fazları) ya
   // da duvar saati (`--seconds`, gerçek oyun turu — oyun kendini durdurmaz).
   // İşaret varsayılanı prob sözleşmesidir: son ölçülen fazın kaydı.
-  const catLog = () => optional('ssh', [...SSH_OPTS, `deck@${host}`, `cat ${remoteLog}`]) ?? '';
+  const catLog = () =>
+    Buffer.from(readLog(host, remoteLog, baseline).dataBase64, 'base64').toString('utf8');
   let lines = '';
   if (opts.seconds) {
     const deadline = Date.now() + opts.seconds * 1000;
@@ -369,26 +471,32 @@ async function cmdMeasure(root, workspace, host, label, opts = {}) {
 
   // Görüntü oyun açıkken alınır; sonra SIGTERM gönderilir ve son kayıt
   // sinyal/flush satırlarını da içerir (Steam "Quit Game" yolunun kanıtı).
-  const shot = cmdShot(host, `${label}-${stamp}`);
-  cmdStop(root, workspace, host);
+  const shot = cmdShot(host, label);
+  cmdStop(root, workspace, host, opts.release);
   await new Promise((r) => setTimeout(r, 2000));
-  const finalLines = optional('ssh', [...SSH_OPTS, `deck@${host}`, `cat ${remoteLog}`]) ?? lines;
+  const finalLines = catLog();
   if (finalLines.length >= lines.length) lines = finalLines;
 
-  writeFileSync(join(dir, 'report.jsonl'), lines);
+  privateFile(join(dir, 'new-log.private.jsonl'), lines);
+  const sharedLines = sanitizeReport(lines);
+  privateFile(join(dir, 'report.jsonl'), sharedLines);
   const summary = {
     v: 1,
-    label,
+    label: String(label)
+      .replaceAll(/[^A-Za-z0-9_-]/g, '_')
+      .slice(0, 80),
     workspace,
     gameid,
     measuredAt: new Date().toISOString(),
-    device: optional('ssh', [...SSH_OPTS, `deck@${host}`, 'uname -nr']),
-    ...summarizeReport(lines.split('\n')),
+    kernel: optional('ssh', [...SSH_OPTS, `deck@${host}`, 'uname -r']),
+    ...summarizeReport(sharedLines.split('\n')),
     power: { before: powerBefore, after: powerAfter },
   };
-  writeFileSync(join(dir, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
+  privateFile(join(dir, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
+  if (summary.phases.length === 0)
+    throw new Error('Yeni kare ölçümü gelmedi; özel ham kayıtlar korundu');
 
-  console.log(`[measure] kayıt: ${dir}`);
+  console.log(`[measure] kayıt: ${relative(ROOT, dir)}`);
   console.log(`[measure] fazlar:`);
   for (const p of summary.phases) {
     console.log(
@@ -403,9 +511,31 @@ async function cmdMeasure(root, workspace, host, label, opts = {}) {
 const [command, ...rest] = process.argv.slice(2);
 if (!command) usage();
 
+const cleanConfirmation = rest
+  .find((arg) => arg.startsWith('--confirm-delete='))
+  ?.slice('--confirm-delete='.length);
+if (command === 'clean') {
+  try {
+    assertCleanConfirmation(readShell(ROOT, rest[0]).gameid, cleanConfirmation);
+  } catch (error) {
+    console.error(`[deck] ${error.message}`);
+    process.exit(1);
+  }
+}
+
 const hostFlag = rest.indexOf('--host');
+const releaseFlag = rest.indexOf('--release');
+const releaseRecords =
+  rest.find((arg) => arg.startsWith('--release='))?.slice('--release='.length) ??
+  (releaseFlag >= 0 ? rest[releaseFlag + 1] : undefined);
 const host = discoverHost(hostFlag >= 0 ? rest[hostFlag + 1] : undefined).host;
-const positional = rest.filter((_, i) => hostFlag < 0 || (i !== hostFlag && i !== hostFlag + 1));
+const positional = rest.filter(
+  (arg, i) =>
+    (hostFlag < 0 || (i !== hostFlag && i !== hostFlag + 1)) &&
+    (releaseFlag < 0 || (i !== releaseFlag && i !== releaseFlag + 1)) &&
+    !arg.startsWith('--release=') &&
+    !arg.startsWith('--confirm-delete='),
+);
 
 try {
   switch (command) {
@@ -420,10 +550,10 @@ try {
       });
       break;
     case 'run':
-      cmdRun(ROOT, positional[0], host);
+      cmdRun(ROOT, positional[0], host, releaseRecords);
       break;
     case 'stop':
-      cmdStop(ROOT, positional[0], host);
+      cmdStop(ROOT, positional[0], host, releaseRecords);
       break;
     case 'log':
       cmdLog(ROOT, positional[0], host);
@@ -440,22 +570,37 @@ try {
       await cmdMeasure(ROOT, positional[0], host, positional[1] ?? 'measure', {
         until: untilIdx >= 0 ? positional[untilIdx + 1] : undefined,
         seconds: secIdx >= 0 ? Number(positional[secIdx + 1]) : undefined,
+        release: releaseRecords,
       });
       break;
     }
     case 'mode':
-      cmdMode(ROOT, positional[0], host, positional.slice(1));
+      cmdMode(ROOT, positional[0], host, positional.slice(1), releaseRecords);
       break;
     case 'clean':
-      cmdClean(ROOT, positional[0], host);
+      cmdClean(ROOT, positional[0], host, cleanConfirmation);
       break;
     case 'full': {
       const [ws, label = 'full'] = positional;
+      const secIdx = positional.indexOf('--seconds');
+      const selectedSeconds = secIdx >= 0 ? Number(positional[secIdx + 1]) : undefined;
+      validateMeasureSeconds(selectedSeconds);
       execFileSync('node', [join(ROOT, 'scripts', 'build-linux-steamrt4.mjs'), ws], {
         stdio: 'inherit',
       });
-      cmdDeploy(ROOT, ws, host);
-      await cmdMeasure(ROOT, ws, host, label);
+      const deployment = cmdDeploy(ROOT, ws, host);
+      const plan = fullMeasurementPlan(ws, deployment.records, selectedSeconds);
+      cmdMode(
+        ROOT,
+        ws,
+        host,
+        Object.entries(plan.flags).map(([key, value]) => `${key}=${value}`),
+        plan.release,
+      );
+      await cmdMeasure(ROOT, ws, host, label, {
+        release: plan.release,
+        seconds: plan.seconds,
+      });
       break;
     }
     default:

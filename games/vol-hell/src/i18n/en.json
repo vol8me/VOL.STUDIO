@@ -86,7 +86,8 @@
     "action": {
       "fire": "Fire",
       "dash": "Dash"
-    }
+    },
+    "autoAim": "Automatic aim (nearest target while firing)"
   },
   "pause": {
     "title": "PAUSED",

@@ -30,6 +30,33 @@ function probe(tauri: boolean): ShutdownFlushProbe & { fire: () => Promise<void>
 }
 
 describe('registerShutdownFlush', () => {
+  it('bütün kancalar bitmeden flush_done göndermez ve geç kurulan dinleyiciyi temizler', async () => {
+    const handlers: Array<() => void> = [];
+    let finish: (() => void) | undefined;
+    const unlisten = vi.fn();
+    const listen = vi.fn((_event: string, callback: () => void) => {
+      handlers.push(callback);
+      return Promise.resolve(unlisten);
+    });
+    const p = { isTauri: () => true, listen, invoke: vi.fn(() => Promise.resolve()) };
+    const stopFirst = registerShutdownFlush(() => undefined, p);
+    const stopLast = registerShutdownFlush(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+      p,
+    );
+    handlers.forEach((handler) => handler());
+    await vi.waitFor(() => expect(finish).toBeDefined());
+    expect(p.invoke).not.toHaveBeenCalled();
+    finish?.();
+    await vi.waitFor(() => expect(p.invoke).toHaveBeenCalledOnce());
+    expect(listen).toHaveBeenCalledOnce();
+    stopFirst();
+    stopLast();
+    expect(unlisten).toHaveBeenCalledOnce();
+  });
   it('Tauri dışında dinleme kurulmaz', () => {
     const p = probe(false);
     registerShutdownFlush(vi.fn(), p);

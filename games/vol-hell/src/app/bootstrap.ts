@@ -1,13 +1,30 @@
 import { isTauri } from '@tauri-apps/api/core';
-import { createVolGame, showFatalStartupError, VOL_COLORS, i18n } from '@volstudio/core';
+import {
+  createVolGame,
+  showFatalStartupError,
+  VOL_COLORS,
+  i18n,
+  setTextEntryProvider,
+} from '@volstudio/core';
 import {
   TauriWindowAdapter,
   getSessionKind,
   onSteamOverlay,
-  registerLinuxHaptics,
+  observeLinuxHaptics,
+  getDiagnosticsEnv,
+  isDeckMeasureRequested,
+  registerShutdownFlush,
+  createSteamworksTextEntryProvider,
+  steamworksStatus,
+  activateSteamActionSet,
+  reportDiagnostics,
 } from '@volstudio/tauri-v2';
-import { hasNativeWindow, setSessionKind } from '@/app/platform';
+import { getSessionKindValue, hasNativeWindow, setSessionKind } from '@/app/platform';
 import { startDeckMeasure } from '@/app/deckMeasure';
+import { DeckFrameSource } from '@/app/DeckFrameSource';
+import { launchDeckScenario, parseDeckScenario } from '@/app/DeckScenario';
+import { SteamInputActionSets } from '@/app/steamInputActionSets';
+import { startControlGlyphs } from '@/app/controlGlyph';
 import { notifyGamepadOverlayOpen, startGamepadNavigation } from '@/app/gamepadNav';
 import { migrateLegacySave } from '@/app/storage';
 import {
@@ -17,6 +34,9 @@ import {
   loadPersistedState,
   saveManager,
   videoSettings,
+  controlSettings,
+  audioSettings,
+  enableDeckDiagnostics,
 } from '@/app/services';
 import { VideoSettingsController } from '@/app/VideoSettingsController';
 import { MainMenuScene } from '@/runtime/scene/MainMenuScene';
@@ -72,17 +92,17 @@ try {
   // Kol gezinmesi uygulama ömürlüdür: sahneler değişse de FocusNavController'ın
   // dinleyicileri ve kol yoklaması sabit kalır; sahne niyetleri delege
   // kaydıyla yönlenir (bkz. app/gamepadNav).
-  startGamepadNavigation();
+  const stopGamepadNavigation = startGamepadNavigation();
+  const stopControlGlyphs = startControlGlyphs();
+  const stopHaptics = isTauri() ? observeLinuxHaptics() : () => undefined;
 
   if (isTauri()) {
+    setTextEntryProvider(createSteamworksTextEntryProvider());
     // hidraw öncelikli native titreşim sürücüsü; aygıt yoksa kayıt sessizdir.
-    void registerLinuxHaptics();
     // Steam overlay açılınca aktif sahnenin delegesi oyunu duraklatır.
     void onSteamOverlay((active) => {
       if (active) notifyGamepadOverlayOpen();
     });
-    // VOL_DECK_MEASURE=1 olmadan hiçbir şey kurulmaz (bkz. app/deckMeasure).
-    void startDeckMeasure();
   }
 
   // Tek dosyalı eski kayıt, hiçbir tüketici okumadan önce kapsamlı
@@ -98,6 +118,13 @@ try {
   await loadPersistedState();
   document.title = gameConfig.title;
 
+  const diagnosticsEnv = await getDiagnosticsEnv();
+  const measureRequested = isDeckMeasureRequested(diagnosticsEnv);
+  const deckScenario = parseDeckScenario(diagnosticsEnv);
+  let frameSource: DeckFrameSource | undefined;
+  if (measureRequested)
+    enableDeckDiagnostics((snapshot) => frameSource?.captureStages(snapshot.stages));
+
   const game = await createVolGame({
     backgroundColor: VOL_COLORS.uiBg,
     strategy: gameConfig.viewport.strategy,
@@ -109,15 +136,70 @@ try {
     diagnostics: diagnostics ?? undefined,
   });
 
+  if (isTauri()) {
+    const actionSets = new SteamInputActionSets({
+      status: steamworksStatus,
+      activate: activateSteamActionSet,
+    });
+    const updateActionSet = (): void => {
+      const scene = game.scene.getScene('Game') as GameScene;
+      const context =
+        scene?.sys.isActive() || scene?.sys.isPaused() ? scene.getSteamInputContext() : 'Menu';
+      actionSets.tick(context, performance.now());
+    };
+    game.events.on('postrender', updateActionSet);
+    const onPadChange = (): void => actionSets.invalidate();
+    window.addEventListener('gamepadconnected', onPadChange);
+    window.addEventListener('gamepaddisconnected', onPadChange);
+    game.events.once('destroy', () => {
+      game.events.off('postrender', updateActionSet);
+      window.removeEventListener('gamepadconnected', onPadChange);
+      window.removeEventListener('gamepaddisconnected', onPadChange);
+      actionSets.dispose();
+    });
+    updateActionSet();
+  }
+
   // Mobil Tauri penceresinde masaüstü çözünürlük API'leri anlamlı değildir.
   // Masaüstünde ise tek controller F11, native fullscreen ve Phaser DPR'ını
   // uygulama ömrü boyunca senkron tutar.
   const videoController = new VideoSettingsController(videoSettings, {
     target: game.canvas.parentElement ?? document.documentElement,
     windowAdapter: new TauriWindowAdapter({ enabled: hasNativeWindow() }),
+    managedBySession: getSessionKindValue() === 'gamescope',
   });
   await videoController.start();
   game.events.once('destroy', () => videoController.destroy());
+  game.events.once('destroy', () => controlSettings.dispose());
+  game.events.once('destroy', stopGamepadNavigation);
+  game.events.once('destroy', stopControlGlyphs);
+  game.events.once('destroy', stopHaptics);
+  game.events.once('destroy', () => setTextEntryProvider(null));
+  const stopFlush = registerShutdownFlush(async () => {
+    await Promise.all([audioSettings.flush(), videoSettings.flush(), controlSettings.flush()]);
+  });
+  game.events.once('destroy', stopFlush);
+
+  if (measureRequested) {
+    frameSource = new DeckFrameSource({
+      events: game.events,
+      canvas: game.canvas,
+      readScene: () => {
+        const scene = game.scene.getScene('Game') as GameScene;
+        if (scene?.sys.isActive() || scene?.sys.isPaused()) return scene.getMeasurementState();
+        return { phase: game.scene.isActive('Settings') ? 'settings' : 'menu', metrics: {} };
+      },
+      readAudio: () => gameAudio.context.state,
+      onShortcut: (shortcut) => {
+        void reportDiagnostics({ type: 'deck-shortcut', ...shortcut });
+      },
+    });
+    const source = frameSource;
+    game.events.once('destroy', () => source.destroy());
+    await startDeckMeasure({ readState: () => source.read() });
+  }
+
+  if (deckScenario) launchDeckScenario(game.scene, deckScenario);
 
   // Native WebView'larda GStreamer/codec kurulumu yavaş veya kısmi olabilir.
   // SFX ön-yüklemesi oyun yüzeyinin açılmasını asla bloke etmez; SfxBank zaten

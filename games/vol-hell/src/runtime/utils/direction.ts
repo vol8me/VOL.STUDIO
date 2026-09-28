@@ -23,9 +23,9 @@ export interface MutableDirection {
 }
 
 /**
- * Manuel aim varsa onu, yoksa en yakın canlı hedefi normalize edip `out`a
- * yazar. Eşit uzaklıkta dizi sırası kazanır; replay/düşük FPS davranışı
- * kararlıdır. Her kare çağrılabildiği için yeni nesne üretmez.
+ * Manuel kipte aim vektörünü, otomatik kipte en yakın canlı hedefi normalize
+ * edip `out`a yazar. Eşit uzaklıkta dizi sırası kazanır; replay/düşük FPS
+ * davranışı kararlıdır. Her kare çağrılabildiği için yeni nesne üretmez.
  */
 export function writeFireDirection(
   out: MutableDirection,
@@ -34,12 +34,18 @@ export function writeFireDirection(
   manualX: number,
   manualY: number,
   targets: readonly FireDirectionTarget[],
+  autoAim = false,
 ): boolean {
   const manualLength = Math.hypot(manualX, manualY);
-  if (Number.isFinite(manualLength) && manualLength > 0.0001) {
+  if (!autoAim && Number.isFinite(manualLength) && manualLength > 0.0001) {
     out.x = manualX / manualLength;
     out.y = manualY / manualLength;
     return true;
+  }
+  if (!autoAim) {
+    out.x = 0;
+    out.y = 0;
+    return false;
   }
 
   let nearest: FireDirectionTarget | null = null;

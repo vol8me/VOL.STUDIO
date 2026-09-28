@@ -89,15 +89,16 @@ describe('storage', () => {
     expect([...report.moved].sort()).toEqual(
       ['vol-hell:audio-settings', 'vol-hell:game-stats'].sort(),
     );
-    // İlerleme synced'e, ayar device'a taşındı; eski anahtarlar silindi.
+    // İlerleme synced'e, ayar device'a taşınır; kaynak geri dönüş için kalır.
     await expect(scoped.load('synced.vol-hell:game-stats', null)).resolves.toEqual({
       bestScore: 42,
     });
     await expect(scoped.load('device.vol-hell:audio-settings', null)).resolves.toEqual({
       muted: true,
     });
-    expect(localStorage.getItem('vol-hell:game-stats')).toBeNull();
-    expect(localStorage.getItem('vol-hell:audio-settings')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('vol-hell:game-stats')!)).toEqual({ bestScore: 42 });
+    expect(JSON.parse(localStorage.getItem('vol-hell:audio-settings')!)).toEqual({ muted: true });
+    expect((await migrateLegacySave(scoped)).moved).toEqual([]);
   });
 
   it('migrateLegacySave kapsamlı anahtarları ve ikinci çağrıyı atlar (idempotent)', async () => {

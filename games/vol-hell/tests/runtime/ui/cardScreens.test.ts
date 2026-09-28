@@ -39,6 +39,15 @@ function makeScene(): never {
   } as never;
 }
 
+function pointerClick(button: HTMLButtonElement): void {
+  for (const type of ['pointerdown', 'pointerup']) {
+    button.dispatchEvent(
+      new PointerEvent(type, { pointerId: 1, button: 0, bubbles: true, cancelable: true }),
+    );
+  }
+  button.dispatchEvent(new MouseEvent('click', { detail: 1, bubbles: true, cancelable: true }));
+}
+
 /**
  * Dalga arası akış: seviye atlamaları dövüşü KESMEZ, dalga sonunda sırayla
  * sunulur, ardından dükkan gelir.
@@ -145,6 +154,46 @@ describe('CardScreens — dalga arası akış', () => {
     expect(screens.getPendingLevelUpCount()).toBe(2);
   });
 
+  it('level-up ve shop modal sınırı kurar', () => {
+    screens.queueLevelUp(2);
+    screens.openIntermission(1);
+    expect(root.querySelector('.vol-card-picker--levelup')?.getAttribute('aria-modal')).toBe(
+      'true',
+    );
+    pointerClick(levelUpButtons()[0]);
+    expect(root.querySelector('.vol-card-picker--shop')?.getAttribute('aria-modal')).toBe('true');
+  });
+
+  it('kart açılmadan başlayan pointer jesti seçim harcamaz, yeni kısa jest harcar', () => {
+    document.body.dispatchEvent(
+      new PointerEvent('pointerdown', { pointerId: 1, button: 0, bubbles: true }),
+    );
+    screens.queueLevelUp(2);
+    screens.openIntermission(1);
+    const action = levelUpButtons()[0];
+    action.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, button: 0, bubbles: true }));
+    action.dispatchEvent(new MouseEvent('click', { detail: 1, bubbles: true, cancelable: true }));
+    expect(cards.getOwned()).toHaveLength(0);
+    expect(levelUpVisible()).toBe(true);
+    pointerClick(action);
+    expect(cards.getOwned()).toHaveLength(1);
+  });
+
+  it('bir level-up seçiminin aynı click jesti sıradaki hakkı harcamaz', () => {
+    screens.queueLevelUp(2);
+    screens.queueLevelUp(3);
+    screens.openIntermission(1);
+    pointerClick(levelUpButtons()[0]);
+    levelUpButtons()[0].dispatchEvent(
+      new MouseEvent('click', { detail: 1, bubbles: true, cancelable: true }),
+    );
+    expect(cards.getOwned()).toHaveLength(1);
+    expect(levelUpVisible()).toBe(true);
+    pointerClick(levelUpButtons()[0]);
+    expect(cards.getOwned()).toHaveLength(2);
+    expect(shopVisible()).toBe(true);
+  });
+
   it('dalga sonunda bekleyen haklar sırayla sunulur, sonra dükkan gelir', () => {
     screens.queueLevelUp(2);
     screens.queueLevelUp(3);
@@ -156,12 +205,12 @@ describe('CardScreens — dalga arası akış', () => {
     expect(onShopVisibilityChange).not.toHaveBeenCalled();
 
     // İlk kart seçilir → ikinci hak açılır.
-    levelUpButtons()[0].click();
+    pointerClick(levelUpButtons()[0]);
     expect(levelUpVisible()).toBe(true);
     expect(screens.getPendingLevelUpCount()).toBe(0);
 
     // İkinci kart seçilir → dükkan.
-    levelUpButtons()[0].click();
+    pointerClick(levelUpButtons()[0]);
     expect(levelUpVisible()).toBe(false);
     expect(shopVisible()).toBe(true);
     expect(onShopVisibilityChange).toHaveBeenLastCalledWith(true);
@@ -187,12 +236,14 @@ describe('CardScreens — dalga arası akış', () => {
       root.querySelector('.vol-stats-panel-modal')?.classList.contains('vol-modal--visible'),
     ).toBe(false);
 
-    button.click();
+    pointerClick(button);
     expect(
       root.querySelector('.vol-stats-panel-modal')?.classList.contains('vol-modal--visible'),
     ).toBe(true);
 
-    root.querySelector<HTMLButtonElement>('.vol-card-picker__grid .vol-card__action')!.click();
+    pointerClick(
+      root.querySelector<HTMLButtonElement>('.vol-card-picker__grid .vol-card__action')!,
+    );
     expect(root.textContent).toContain('Kule Canı');
     expect(root.querySelector('.vol-card-shop__balance')?.textContent).not.toBe('Flux: 100');
   });
@@ -200,7 +251,7 @@ describe('CardScreens — dalga arası akış', () => {
   it('seçilen kart envantere girer', () => {
     screens.queueLevelUp(2);
     screens.openIntermission(1);
-    levelUpButtons()[0].click();
+    pointerClick(levelUpButtons()[0]);
 
     expect(cards.getOwned()).toHaveLength(1);
   });
@@ -208,7 +259,7 @@ describe('CardScreens — dalga arası akış', () => {
   it('DEVAM ET akışı bitirir ve oyunu sürdürür', () => {
     vi.useFakeTimers({ toFake: ['setTimeout'] });
     screens.openIntermission(2);
-    root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!.click();
+    pointerClick(root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!);
 
     vi.advanceTimersByTime(240);
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -224,7 +275,7 @@ describe('CardScreens — dalga arası akış', () => {
     const buyButton = root.querySelector<HTMLButtonElement>(
       '.vol-card-picker--shop .vol-card-picker__grid .vol-card__action',
     )!;
-    buyButton.click();
+    pointerClick(buyButton);
 
     expect(economy.getFlux()).toBeLessThan(before);
     expect(root.querySelector('.vol-card-shop__balance')?.textContent).toBe(
@@ -244,11 +295,11 @@ describe('CardScreens — dalga arası akış', () => {
     screens.openIntermission(3);
 
     const balance = root.querySelector<HTMLElement>('.vol-card-shop__balance')!;
-    root
-      .querySelector<HTMLButtonElement>(
+    pointerClick(
+      root.querySelector<HTMLButtonElement>(
         '.vol-card-picker--shop .vol-card-picker__grid .vol-card__action',
-      )!
-      .click();
+      )!,
+    );
 
     expect(balance.classList.contains('vol-card-shop__balance--changed')).toBe(true);
     expect(balance.classList.contains('vol-card-shop__balance--decrease')).toBe(true);
@@ -263,7 +314,7 @@ describe('CardScreens — dalga arası akış', () => {
     const sellButton = root.querySelector<HTMLButtonElement>(
       '.vol-card-shop__passives .vol-card__action',
     )!;
-    sellButton.click();
+    pointerClick(sellButton);
 
     expect(balance.classList.contains('vol-card-shop__balance--increase')).toBe(true);
     expect(balance.classList.contains('vol-card-shop__balance--decrease')).toBe(false);
@@ -294,7 +345,7 @@ describe('CardScreens — dalga arası akış', () => {
     const sellButton = root.querySelector<HTMLButtonElement>(
       '.vol-card-shop__passives .vol-card__action',
     )!;
-    sellButton.click();
+    pointerClick(sellButton);
 
     expect(cards.getOwned()).toHaveLength(0);
     expect(economy.getFlux()).toBeGreaterThan(0);
@@ -334,7 +385,7 @@ describe('CardScreens — dalga arası akış', () => {
     screens.openIntermission(7);
 
     const clear = root.querySelector<HTMLButtonElement>('.vol-loadout__slot-clear')!;
-    clear.click();
+    pointerClick(clear);
 
     expect(cards.getEquipped('primary')).toBeNull();
   });
@@ -371,7 +422,7 @@ describe('CardScreens — dalga arası akış', () => {
     const lockButton = root.querySelector<HTMLButtonElement>('.vol-card__action--secondary')!;
     expect(lockButton.textContent).toBe(i18next.t('volhell:cards.ui.lock'));
 
-    lockButton.click();
+    pointerClick(lockButton);
 
     const after = root.querySelector<HTMLButtonElement>('.vol-card__action--secondary')!;
     expect(after.textContent).toBe(i18next.t('volhell:cards.ui.unlock'));
@@ -385,7 +436,7 @@ describe('CardScreens — dalga arası akış', () => {
     const buyButton = root.querySelector<HTMLButtonElement>(
       '.vol-card-picker--shop .vol-card-picker__grid .vol-card__action',
     )!;
-    buyButton.click();
+    pointerClick(buyButton);
 
     const tile = root.querySelector('.vol-card-picker--shop .vol-card-picker__grid .vol-card')!;
     expect(tile.querySelector('.vol-card__action--secondary')).toBeNull();
@@ -401,9 +452,9 @@ describe('CardScreens — dalga arası akış', () => {
     const equipButtons = root.querySelectorAll<HTMLButtonElement>(
       '.vol-card-shop__abilities .vol-card__action--secondary',
     );
-    equipButtons[0].click();
-    equipButtons[1].click();
-    equipButtons[2].click();
+    pointerClick(equipButtons[0]);
+    pointerClick(equipButtons[1]);
+    pointerClick(equipButtons[2]);
 
     await vi.waitFor(() => expect(document.body.querySelector('.vol-toast')).not.toBeNull());
   });
@@ -422,7 +473,7 @@ describe('CardScreens — dalga arası akış', () => {
     const buyButton = root.querySelector<HTMLButtonElement>(
       '.vol-card-picker--shop .vol-card-picker__grid .vol-card__action',
     )!;
-    buyButton.click();
+    pointerClick(buyButton);
 
     const equipped = cards.getEquipped('primary');
     expect(equipped).not.toBeNull();
@@ -442,13 +493,13 @@ describe('CardScreens — dalga arası akış', () => {
     const buyButton = root.querySelector<HTMLButtonElement>(
       '.vol-card-picker--shop .vol-card-picker__grid .vol-card__action',
     )!;
-    buyButton.click();
+    pointerClick(buyButton);
 
     // Sat.
     const sellButton = root.querySelector<HTMLButtonElement>(
       '.vol-card-shop__abilities .vol-card__action',
     )!;
-    sellButton.click();
+    pointerClick(sellButton);
 
     // Aynı teklif artık ALINDI değil; yeniden satın alınabilir.
     const afterBuy = root.querySelector<HTMLButtonElement>(
@@ -471,7 +522,7 @@ describe('CardScreens — dalga arası akış', () => {
       '.vol-card-picker--shop .vol-card-picker__grid .vol-card',
     )!;
     const lockButton = firstTile.querySelector<HTMLButtonElement>('.vol-card__action--secondary')!;
-    lockButton.click();
+    pointerClick(lockButton);
 
     expect(firstTile.classList.contains('vol-card--locked')).toBe(true);
     expect(
@@ -480,7 +531,7 @@ describe('CardScreens — dalga arası akış', () => {
 
     // Dükkanı kapat.
     vi.useFakeTimers({ toFake: ['setTimeout'] });
-    root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!.click();
+    pointerClick(root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!);
     vi.advanceTimersByTime(240);
     expect(screens.isOpen()).toBe(false);
     vi.useRealTimers();
@@ -543,7 +594,7 @@ describe('CardScreens — dalga arası akış', () => {
       // 1. ziyaret: vitrin dolu — keskinUc + cardFireZone.
       draw.mockReturnValueOnce([CARD_CATALOG.keskinUc, CARD_CATALOG.cardFireZone]);
       screens.openIntermission(20);
-      root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!.click();
+      pointerClick(root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!);
 
       // 2. ziyaret: havuz yalnızca TEK yeni kart verebiliyor.
       draw.mockReturnValue([CARD_CATALOG.keskinUc]);
@@ -564,7 +615,7 @@ describe('CardScreens — dalga arası akış', () => {
       const draw = vi.spyOn(cards, 'drawOffer');
       draw.mockReturnValueOnce([CARD_CATALOG.keskinUc, CARD_CATALOG.cardFireZone]);
       screens.openIntermission(22);
-      root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!.click();
+      pointerClick(root.querySelector<HTMLButtonElement>('.vol-card-shop__close')!);
 
       draw.mockReturnValue([]);
       screens.openIntermission(23);

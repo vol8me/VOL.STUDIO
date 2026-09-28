@@ -43,6 +43,16 @@ export interface TextEntryProvider {
 
 let provider: TextEntryProvider | null = null;
 let modeProbe: (() => boolean) | null = null;
+const modeOwners: Array<() => boolean> = [];
+
+export function registerTextEntryModeProbe(probe: () => boolean): () => void {
+  const owner = () => probe();
+  modeOwners.push(owner);
+  return () => {
+    const index = modeOwners.indexOf(owner);
+    if (index >= 0) modeOwners.splice(index, 1);
+  };
+}
 
 /** Platform katmanı kendi klavyesini kaydeder; `null` yerel klavyeye döner. */
 export function setTextEntryProvider(next: TextEntryProvider | null): void {
@@ -50,10 +60,9 @@ export function setTextEntryProvider(next: TextEntryProvider | null): void {
 }
 
 /**
- * "Kol kipi etkin mi?" sorusunun sahibi kaydeder — tipik olarak
- * `InputManager` kurulurken `() => arbiter.mode === 'gamepad'` verir.
- * İki kaynak üst üste kaydederse sonuncu kazanır; `clear` yalnızca kendi
- * fonksiyonunu kaldırır.
+ * Geriye uyumlu tekil kip probu. `registerTextEntryModeProbe` ile bir sahip
+ * kayıtlıysa o önceliklidir; bu prob yalnız sahip kalmadığında kullanılır.
+ * `clear` yalnız kendi fonksiyonunu kaldırır.
  */
 export function setTextEntryModeProbe(fn: (() => boolean) | null): void {
   modeProbe = fn;
@@ -65,7 +74,7 @@ export function clearTextEntryModeProbe(fn: () => boolean): void {
 
 /** Kol kipi etkin mi? Probu kaydeden yoksa `false` — klavye hiç açılmaz. */
 export function isGamepadTextEntryActive(): boolean {
-  return modeProbe?.() === true;
+  return (modeOwners.at(-1) ?? modeProbe)?.() === true;
 }
 
 /**

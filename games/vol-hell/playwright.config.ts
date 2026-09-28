@@ -26,7 +26,14 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 15_000 },
   use: { baseURL: BASE_URL, trace: 'retain-on-failure' },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'], deviceScaleFactor: 1 },
+      testMatch: /deckControls\.spec\.ts/,
+    },
+  ],
   webServer: {
     // `--host 127.0.0.1` AÇIKÇA verilir: varsayılan bağlama `localhost`tur ve
     // IPv6 önceliği olan bir makinede yalnız `::1`e oturur.

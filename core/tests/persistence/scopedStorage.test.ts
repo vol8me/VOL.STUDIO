@@ -66,6 +66,27 @@ describe('ScopedSaveManager', () => {
 });
 
 describe('migrateLegacyStore', () => {
+  it('retainSource eski kaydı ve mevcut hedefi değiştirmeden yeni hedefi doğrular', async () => {
+    const legacy = new MemoryAdapter();
+    legacy.data.set('progress', { level: 5 });
+    legacy.data.set('video', { vsync: false });
+    const manager = new ScopedSaveManager(scopedPair());
+    await manager.save('device.video', { vsync: true });
+    const options = {
+      legacy,
+      scoped: manager,
+      retainSource: true,
+      mappings: [
+        { key: 'progress', scope: 'synced' as const },
+        { key: 'video', scope: 'device' as const },
+      ],
+    };
+    expect((await migrateLegacyStore(options)).moved).toEqual(['progress']);
+    expect(await manager.load('synced.progress', null)).toEqual({ level: 5 });
+    expect(await manager.load('device.video', null)).toEqual({ vsync: true });
+    expect(legacy.data.size).toBe(2);
+    expect((await migrateLegacyStore(options)).moved).toEqual([]);
+  });
   it('eşlenen anahtarları doğru kapsama taşır ve eskisini siler', async () => {
     const legacy = new MemoryAdapter();
     legacy.data.set('progress', { level: 5 });

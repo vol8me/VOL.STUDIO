@@ -102,7 +102,10 @@ async function start() {
   // olmayabilir — o zaman diyalog çağrısı `false` döner ve raporda durur.
   const sw = await invoke('plugin:vol-steamworks|status').catch((e) => ({ error: String(e) }));
   await log('steamworks-status', { status: sw });
-  show('steam', `steamworks: ${sw.available ? `bağlı appId ${sw.appId}` : `kapalı (${sw.error ?? 'stub'})`}`);
+  show(
+    'steam',
+    `steamworks: ${sw.available ? `bağlı appId ${sw.appId}` : `kapalı (${sw.error ?? 'stub'})`}`,
+  );
   if (sw.available) {
     // Manifesto init sırasında (ilk RunFrame'den önce) Steam'e geçirilir;
     // sonuç status.manifestOk alanında. Komut yeniden geçirmeyi de dener —
@@ -131,9 +134,7 @@ async function start() {
         name,
         dataBase64: btoa(JSON.stringify({ ping: 1 })),
       }).catch((e) => String(e));
-      const r = await invoke('plugin:vol-steamworks|cloud_read', { name }).catch((e) =>
-        String(e),
-      );
+      const r = await invoke('plugin:vol-steamworks|cloud_read', { name }).catch((e) => String(e));
       await invoke('plugin:vol-steamworks|cloud_delete', { name }).catch(() => {});
       await log('steamworks-cloud', { write: w, read: r });
     }
@@ -208,23 +209,6 @@ const PHASES = [
   { name: '4000 sprite', sprites: 4000, seconds: 10 },
   { name: 'etkileşim (200 sprite)', sprites: 200, seconds: Infinity },
 ];
-
-function summarize(deltas) {
-  if (deltas.length === 0) return null;
-  const sorted = [...deltas].sort((a, b) => a - b);
-  const pick = (p) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))];
-  const mean = deltas.reduce((a, b) => a + b, 0) / deltas.length;
-  return {
-    frames: deltas.length,
-    fps: Math.round(10000 / mean) / 10,
-    meanMs: Math.round(mean * 100) / 100,
-    p50: Math.round(pick(0.5) * 100) / 100,
-    p95: Math.round(pick(0.95) * 100) / 100,
-    p99: Math.round(pick(0.99) * 100) / 100,
-    over20ms: deltas.filter((d) => d > 20).length,
-    over34ms: deltas.filter((d) => d > 34).length,
-  };
-}
 
 // Sprite yükü fazları oyun motoruyla ölçülür (Phaser — oyunların motoru).
 // vendor/phaser.min.js yalnız `deck build`'te kopyalanır; yoksa fazlar
@@ -420,3 +404,4 @@ listen('vol:terminate', async (event) => {
 });
 
 start();
+import { summarizeFrameIntervals as summarize } from './vendor/frame-summary.js';

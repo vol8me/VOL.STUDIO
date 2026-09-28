@@ -272,6 +272,12 @@ export class Player extends MovableController {
     return true;
   }
 
+  heal(amount: number): void {
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    this.syncMaxHealth();
+    this.health = Math.min(this.getMaxHealth(), this.health + amount);
+  }
+
   getHealth(): number {
     return this.health;
   }

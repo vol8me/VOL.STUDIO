@@ -11,12 +11,45 @@ function candidates(path) {
   if (extension === '.js') return [path.slice(0, -3) + '.ts', path.slice(0, -3) + '.tsx', path];
   if (extension === '.mjs') return [path.slice(0, -4) + '.mts', path];
   if (extension === '.cjs') return [path.slice(0, -4) + '.cts', path];
-  if (extension !== '') return [path];
+  if (EXTENSIONS.includes(extension)) return [path];
   return [
     path,
     ...EXTENSIONS.map((ext) => path + ext),
     ...EXTENSIONS.map((ext) => `${path}/index${ext}`),
   ];
+}
+
+function generatedProbeImport(root, available, file, specifier, path) {
+  if (
+    file !== 'devtools/deck-probe/web/probe.js' ||
+    specifier !== './vendor/frame-summary.js' ||
+    relative(root, path) !== 'devtools/deck-probe/web/vendor/frame-summary.js'
+  )
+    return false;
+  const source = resolve(root, 'core/src/time/frameSummary.ts');
+  const generator = resolve(root, 'scripts/probe-metrics.mjs');
+  const builder = resolve(root, 'scripts/build-linux-steamrt4.mjs');
+  if (![source, generator, builder].every((entry) => available.has(entry))) return false;
+  try {
+    const generatedBy = readFileSync(generator, 'utf8');
+    const builtBy = readFileSync(builder, 'utf8');
+    return (
+      /readFileSync\s*\(\s*join\s*\(\s*root\s*,\s*['"]core\/src\/time\/frameSummary\.ts['"]\s*\)/.test(
+        generatedBy,
+      ) &&
+      /\bts\.transpileModule\s*\(/.test(generatedBy) &&
+      /\bdirectory\s*=\s*join\s*\(\s*webDir\s*,\s*['"]vendor['"]\s*\)/.test(generatedBy) &&
+      /writeFileSync\s*\(\s*join\s*\(\s*directory\s*,\s*['"]frame-summary\.js['"]\s*\)\s*,\s*result\.outputText/.test(
+        generatedBy,
+      ) &&
+      sourceImports(builtBy, builder).includes('./probe-metrics.mjs') &&
+      /\bsyncProbeMetrics\s*\(\s*ROOT\s*,\s*join\s*\(\s*ROOT\s*,\s*workspace\s*,\s*['"]web['"]\s*\)\s*\)/.test(
+        builtBy,
+      )
+    );
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -59,6 +92,7 @@ export function validateTrackedImports(root) {
         }
       });
       if (target && available.has(target)) continue;
+      if (generatedProbeImport(root, available, file, specifier, path)) continue;
       problems.push(
         `${file}: "${specifier}" klonda bulunamaz (${
           target ? `git dışında: ${relative(root, target)}` : 'dosya yok'

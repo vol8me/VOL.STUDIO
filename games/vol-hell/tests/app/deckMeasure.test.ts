@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   env: {} as Record<string, string>,
   invoke: vi.fn<(command: string, args?: Record<string, unknown>) => Promise<unknown>>(),
   records: [] as Record<string, unknown>[],
+  flushHook: null as null | (() => void | Promise<void>),
+  finalReport: null as null | Promise<void>,
 }));
 
 vi.mock('@tauri-apps/api/core', () => ({
@@ -16,12 +18,16 @@ vi.mock('@tauri-apps/api/core', () => ({
 
 vi.mock('@volstudio/tauri-v2', () => ({
   getDiagnosticsEnv: () => Promise.resolve(mocks.env),
+  getLinuxHapticsStatus: () => Promise.resolve({ backend: 'hidraw' }),
   isDeckMeasureRequested: (env: Record<string, string>) => env.VOL_DECK_MEASURE === '1',
   reportDiagnostics: (record: Record<string, unknown>) => {
     mocks.records.push(record);
-    return Promise.resolve();
+    return record.final ? mocks.finalReport ?? Promise.resolve() : Promise.resolve();
   },
-  registerShutdownFlush: () => () => undefined,
+  registerShutdownFlush: (hook: () => void | Promise<void>) => {
+    mocks.flushHook = hook;
+    return () => undefined;
+  },
 }));
 
 function stubClock() {
@@ -82,6 +88,8 @@ describe('startDeckMeasure', () => {
     mocks.invoke.mockReset();
     mocks.isTauri = true;
     mocks.env = {};
+    mocks.flushHook = null;
+    mocks.finalReport = null;
   });
 
   it('tarayıcıda hiçbir şey kurmaz', async () => {
@@ -108,6 +116,7 @@ describe('startDeckMeasure', () => {
     const types = mocks.records.map((r) => r.type);
     expect(types).toContain('info');
     expect(types).toContain('steamworks');
+    expect(mocks.records.find((r) => r.type === 'haptics')).toMatchObject({ backend: 'hidraw' });
     const sw = mocks.records.find((r) => r.type === 'steamworks');
     expect(sw).toMatchObject({ available: true, manifestOk: true, appId: 480 });
     expect(mocks.invoke).toHaveBeenCalledWith('plugin:vol-steamworks|status');
@@ -126,7 +135,7 @@ describe('startDeckMeasure', () => {
     vi.stubGlobal('navigator', { ...navigator, getGamepads: () => [pad] });
 
     const { startDeckMeasure } = await import('@/app/deckMeasure');
-    await startDeckMeasure();
+    await startDeckMeasure({ readState: () => ({ phase: 'menu', metrics: { enemies: 0 } }) });
 
     // Bağlı kol başlangıçta raporlanır.
     expect(mocks.records.some((r) => r.type === 'pad-connected')).toBe(true);
@@ -134,10 +143,32 @@ describe('startDeckMeasure', () => {
     clock.pump(610, 16.7); // ~10,2 sn → bir pencere kapanır
     const perf = mocks.records.filter((r) => r.type === 'perf');
     expect(perf.length).toBeGreaterThanOrEqual(1);
-    expect(perf[0]).toMatchObject({ phase: 'vol-hell oyun', window: 0 });
+    expect(perf[0]).toMatchObject({
+      phase: 'menu',
+      window: 0,
+      metrics: { enemies: { min: 0, max: 0 } },
+    });
     expect(perf[0].fps).toBeGreaterThan(50);
 
     const input = mocks.records.find((r) => r.type === 'pad-input');
     expect(input).toMatchObject({ button: 0 });
+  });
+
+  it('kapanışta son pencerenin IPC yazımını flush_done öncesinde bekletir', async () => {
+    mocks.env = { VOL_DECK_MEASURE: '1' };
+    mocks.invoke.mockResolvedValue({ available: false });
+    const clock = stubClock();
+    const { startDeckMeasure } = await import('@/app/deckMeasure');
+    await startDeckMeasure({ readState: () => ({ phase: 'game', metrics: { enemies: 10 } }) });
+    clock.pump(10, 16.7);
+    let resolveReport: () => void = () => undefined;
+    mocks.finalReport = new Promise<void>((resolve) => {
+      resolveReport = resolve;
+    });
+    const pending = mocks.flushHook?.();
+    expect(mocks.records.at(-1)).toMatchObject({ type: 'perf', final: true });
+    expect(pending).toBe(mocks.finalReport);
+    resolveReport();
+    await pending;
   });
 });

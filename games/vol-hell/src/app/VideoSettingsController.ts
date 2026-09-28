@@ -4,6 +4,7 @@ import type { VideoSettings, VideoSettingsData } from './VideoSettings';
 export interface VideoSettingsControllerOptions {
   target?: Element;
   windowAdapter?: DisplayWindow;
+  managedBySession?: boolean;
   onError?: (error: unknown) => void;
 }
 
@@ -15,6 +16,7 @@ export interface VideoSettingsControllerOptions {
  */
 export class VideoSettingsController {
   private readonly displayMode: DisplayModeController;
+  private readonly managedBySession: boolean;
   private stopSettings: (() => void) | null = null;
   private lastGraphicsQuality: string | null = null;
   private started = false;
@@ -24,6 +26,7 @@ export class VideoSettingsController {
     private readonly settings: VideoSettings,
     options: VideoSettingsControllerOptions = {},
   ) {
+    this.managedBySession = options.managedBySession ?? false;
     this.displayMode = new DisplayModeController({
       getMode: () => settings.getDisplayMode(),
       setMode: (mode) => settings.setDisplayMode(mode),
@@ -42,7 +45,7 @@ export class VideoSettingsController {
     this.started = true;
     this.stopSettings = this.settings.onChange((data) => this.applyGraphics(data));
     this.applyGraphics(this.settings.getData());
-    await this.displayMode.start();
+    if (!this.managedBySession) await this.displayMode.start();
   }
 
   /** Test/release kapanışı için bekleyen native uygulamaları tüketir. */

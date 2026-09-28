@@ -14,6 +14,9 @@ export interface QualityConfig {
   floor: Record<string, number>;
   packages: Record<string, Record<string, number>>;
   exempt?: Record<string, string>;
+  bundles?: Record<string, { app: number; vendor: number; css: number }>;
+  scaling?: Record<string, Record<string, unknown>>;
+  coverageRuns?: Record<string, { only?: string[]; exclude?: string[] }>;
   coverageShape?: {
     minLines?: number;
     floorPct?: number;
@@ -31,6 +34,12 @@ export declare function validateQualityConfig(raw: unknown): string[];
 export declare function validateQualityWorkspaceParity(
   raw: unknown,
   workspacePackageNames: readonly string[],
+): string[];
+
+/** Aktif oyunların gönderim ve ölçekleme bütçelerinin varlığını doğrular. */
+export declare function validateActiveGameBudgets(
+  raw: unknown,
+  activeGamePaths: readonly string[],
 ): string[];
 
 /**

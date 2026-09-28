@@ -97,6 +97,62 @@ export function validateQualityConfig(raw) {
     }
   }
 
+  if (raw.bundles !== undefined) {
+    if (!isPlainObject(raw.bundles)) {
+      problems.push('bundles: nesne olmalı (paket yolu → app/vendor/css bütçesi)');
+    } else {
+      for (const [path, budget] of Object.entries(raw.bundles)) {
+        if (path.startsWith('$')) continue;
+        const where = `bundles[${JSON.stringify(path)}]`;
+        if (!isPlainObject(budget)) {
+          problems.push(`${where}: nesne olmalı`);
+          continue;
+        }
+        for (const key of ['app', 'vendor', 'css']) {
+          if (!Number.isFinite(budget[key]) || budget[key] <= 0) {
+            problems.push(`${where}.${key}: pozitif sayı olmalı`);
+          }
+        }
+        for (const key of Object.keys(budget)) {
+          if (!['app', 'vendor', 'css'].includes(key) && !key.startsWith('$')) {
+            problems.push(`${where}.${key}: tanınmayan bundle metriği`);
+          }
+        }
+      }
+    }
+  }
+
+  if (raw.scaling !== undefined) {
+    if (!isPlainObject(raw.scaling)) {
+      problems.push('scaling: nesne olmalı (paket yolu → ölçüm tarifi ve oran bütçesi)');
+    } else {
+      for (const [path, budget] of Object.entries(raw.scaling)) {
+        if (path.startsWith('$')) continue;
+        const where = `scaling[${JSON.stringify(path)}]`;
+        if (!isPlainObject(budget)) {
+          problems.push(`${where}: nesne olmalı`);
+          continue;
+        }
+        const measure = budget.$measure;
+        if (
+          !isPlainObject(measure) ||
+          ['script', 'series', 'input', 'value'].some(
+            (key) => typeof measure[key] !== 'string' || !measure[key].trim(),
+          )
+        ) {
+          problems.push(`${where}.$measure: script/series/input/value dizgileri zorunlu`);
+        }
+        const ratios = Object.entries(budget).filter(([key]) => !key.startsWith('$'));
+        if (ratios.length === 0) problems.push(`${where}: ölçülecek oran bütçesi yok`);
+        for (const [key, ceiling] of ratios) {
+          if (!/\d+Over\d+$/.test(key) || !Number.isFinite(ceiling) || ceiling <= 0) {
+            problems.push(`${where}.${key}: pozitif oran tavanı ve NOverM adı gerekli`);
+          }
+        }
+      }
+    }
+  }
+
   if (raw.coverageShape !== undefined) {
     if (!isPlainObject(raw.coverageShape)) {
       problems.push('coverageShape: nesne olmalı');
@@ -108,13 +164,20 @@ export function validateQualityConfig(raw) {
         }
       }
       if (floorPct !== undefined) {
-        if (typeof floorPct !== 'number' || !Number.isFinite(floorPct) || floorPct < 0 || floorPct > 100) {
+        if (
+          typeof floorPct !== 'number' ||
+          !Number.isFinite(floorPct) ||
+          floorPct < 0 ||
+          floorPct > 100
+        ) {
           problems.push('coverageShape.floorPct: yüzde olmalı, 0-100 aralığında');
         }
       }
       if (acknowledged !== undefined) {
         if (!isPlainObject(acknowledged)) {
-          problems.push('coverageShape.acknowledged: nesne olmalı (dosya yolu → { reason, evidence })');
+          problems.push(
+            'coverageShape.acknowledged: nesne olmalı (dosya yolu → { reason, evidence })',
+          );
         } else {
           for (const [file, entry] of Object.entries(acknowledged)) {
             const where = `coverageShape.acknowledged[${JSON.stringify(file)}]`;
@@ -149,7 +212,10 @@ export function validateQualityConfig(raw) {
           continue;
         }
         const names = spec[lists[0]];
-        if (!Array.isArray(names) || names.some((name) => typeof name !== 'string' || !name.trim())) {
+        if (
+          !Array.isArray(names) ||
+          names.some((name) => typeof name !== 'string' || !name.trim())
+        ) {
           problems.push(`${where}.${lists[0]}: paket adı listesi olmalı.`);
         } else if (lists[0] === 'only' && names.length === 0) {
           problems.push(`${where}.only: boş — koşu hiçbir paketi ölçmez.`);
@@ -195,10 +261,26 @@ export function validateQualityWorkspaceParity(raw, workspacePackageNames) {
     }
   }
 
+  if (isPlainObject(raw.coverageRuns)) {
+    for (const name of packages) {
+      if (!workspace.has(name)) continue;
+      const measured = Object.values(raw.coverageRuns).some((spec) =>
+        Array.isArray(spec.only)
+          ? spec.only.includes(name)
+          : Array.isArray(spec.exclude) && !spec.exclude.includes(name),
+      );
+      if (!measured) {
+        problems.push(`${name}: hiçbir kapsam koşusu bu eşikli aktif paketi ölçmüyor.`);
+      }
+    }
+  }
+
   for (const [run, spec] of Object.entries(raw.coverageRuns ?? {})) {
     for (const name of [...(spec.only ?? []), ...(spec.exclude ?? [])]) {
       if (!workspace.has(name)) {
-        problems.push(`coverageRuns[${JSON.stringify(run)}]: "${name}" bir workspace paketi değil.`);
+        problems.push(
+          `coverageRuns[${JSON.stringify(run)}]: "${name}" bir workspace paketi değil.`,
+        );
       }
     }
   }
@@ -211,6 +293,16 @@ export function validateQualityWorkspaceParity(raw, workspacePackageNames) {
     }
   }
 
+  return problems;
+}
+
+/** Aktif oyun build'inin performans kapıları boş veriyle yeşile dönemez. */
+export function validateActiveGameBudgets(raw, activeGamePaths) {
+  const problems = [];
+  for (const path of activeGamePaths) {
+    if (!raw.bundles?.[path]) problems.push(`${path}: aktif oyun için bundle bütçesi yok`);
+    if (!raw.scaling?.[path]) problems.push(`${path}: aktif oyun için scaling bütçesi yok`);
+  }
   return problems;
 }
 

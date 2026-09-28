@@ -1,6 +1,13 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import {
+  FrameWindow,
+  summarizeFrameIntervals,
+  type FrameWindowSummary,
+  type FrameIntervalSummary,
+} from '@volstudio/core/time';
+import {
   getDiagnosticsEnv,
+  getLinuxHapticsStatus,
   isDeckMeasureRequested,
   registerShutdownFlush,
   reportDiagnostics,
@@ -20,34 +27,20 @@ import {
 const WINDOW_MS = 10_000;
 
 /** Tek pencerenin kare-aralığı özeti — probe faz kaydıyla aynı alan adları. */
-export interface PerfWindowSummary {
-  frames: number;
-  fps: number;
-  meanMs: number;
-  p50: number;
-  p95: number;
-  p99: number;
-  over20ms: number;
-  over34ms: number;
-}
+export type PerfWindowSummary = FrameIntervalSummary;
 
 /** rAF aralıklarını (ms) özetler; boş pencere `null` verir. */
 export function summarizeDeltas(deltas: readonly number[]): PerfWindowSummary | null {
-  if (deltas.length === 0) return null;
-  const sorted = [...deltas].sort((a, b) => a - b);
-  const pick = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))];
-  const mean = deltas.reduce((a, b) => a + b, 0) / deltas.length;
-  const round = (n: number) => Math.round(n * 100) / 100;
-  return {
-    frames: deltas.length,
-    fps: Math.round(10000 / mean) / 10,
-    meanMs: round(mean),
-    p50: round(pick(0.5)),
-    p95: round(pick(0.95)),
-    p99: round(pick(0.99)),
-    over20ms: deltas.filter((d) => d > 20).length,
-    over34ms: deltas.filter((d) => d > 34).length,
-  };
+  return summarizeFrameIntervals(deltas);
+}
+
+export interface DeckMeasureState {
+  phase: string;
+  metrics: Readonly<Record<string, number>>;
+}
+
+export interface DeckMeasureOptions {
+  readState?: () => DeckMeasureState;
 }
 
 let running = false;
@@ -61,7 +54,7 @@ function pads(): Gamepad[] {
  * `VOL_DECK_MEASURE=1` varsa ölçüm döngüsünü kurar. Dönen `true` ölçümün
  * başladığını söyler; bootstrap sonucu beklemeden devam eder.
  */
-export async function startDeckMeasure(): Promise<boolean> {
+export async function startDeckMeasure(options: DeckMeasureOptions = {}): Promise<boolean> {
   if (running || !isTauri()) return running;
   const env = await getDiagnosticsEnv();
   if (!isDeckMeasureRequested(env)) return false;
@@ -78,6 +71,8 @@ export async function startDeckMeasure(): Promise<boolean> {
     type: 'steamworks',
     ...(typeof status === 'object' && status !== null ? status : { status }),
   });
+  const haptics = await getLinuxHapticsStatus();
+  void reportDiagnostics({ v: 1, src: 'js', type: 'haptics', ...haptics });
 
   // Sanal/fiziksel kol görünürlüğü — Steam Input sanal kolu takmışsa ilk
   // yoklamada listededir; sonra takılanlar olayla gelir.
@@ -98,21 +93,17 @@ export async function startDeckMeasure(): Promise<boolean> {
   // Fiziksel ilk düğme basımı — "kol girdisi oyuna ulaştı"nın mekanik kanıtı.
   // Gamepad API olay değil yoklama tabanlıdır; kare döngüsünde okunur.
   let padInputSeen = false;
-  const deltas: number[] = [];
-  let prev = 0;
-  let windowStart = 0;
+  const samples = new FrameWindow(WINDOW_MS);
   let windowIndex = 0;
   let raf = 0;
 
-  const emitWindow = (final: boolean) => {
-    const summary = summarizeDeltas(deltas);
-    deltas.length = 0;
-    if (!summary) return;
-    void reportDiagnostics({
+  const emitWindow = (summary: FrameWindowSummary | null, final: boolean) => {
+    if (!summary) return Promise.resolve();
+    return reportDiagnostics({
       v: 1,
       src: 'js',
       type: 'perf',
-      phase: 'vol-hell oyun',
+      phase: summary.context,
       window: windowIndex++,
       final,
       ...summary,
@@ -120,12 +111,8 @@ export async function startDeckMeasure(): Promise<boolean> {
   };
 
   const tick = (now: number) => {
-    if (prev > 0) deltas.push(now - prev);
-    prev = now;
-    if (now - windowStart >= WINDOW_MS) {
-      emitWindow(false);
-      windowStart = now;
-    }
+    const state = options.readState?.() ?? { phase: 'unclassified', metrics: {} };
+    void emitWindow(samples.push(now, state.phase, state.metrics), false);
     if (!padInputSeen) {
       for (const pad of pads()) {
         const button = pad.buttons.findIndex((b) => b.pressed);
@@ -154,7 +141,9 @@ export async function startDeckMeasure(): Promise<boolean> {
     cancelAnimationFrame(raf);
     window.removeEventListener('gamepadconnected', onConnect);
     window.removeEventListener('gamepaddisconnected', onDisconnect);
-    emitWindow(true);
+    const finalReport = emitWindow(samples.flush(), true);
+    running = false;
+    return finalReport;
   });
   return true;
 }

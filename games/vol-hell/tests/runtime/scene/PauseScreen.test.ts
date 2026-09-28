@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
-import { i18n, i18next } from '@volstudio/core';
+import {
+  FocusNavController,
+  getBackHandlerCount,
+  i18n,
+  i18next,
+  type PadLike,
+} from '@volstudio/core';
 import { PauseScreen } from '@/runtime/scene/PauseScreen';
 import { AudioSettings } from '@/app/AudioSettings';
 import { VideoSettings } from '@/app/VideoSettings';
@@ -118,6 +124,35 @@ describe('PauseScreen', () => {
     await Promise.resolve();
     expect(settingsPanel?.inert).toBe(true);
     expect(screen.isVisible()).toBe(true);
+  });
+
+  it('açık pause ayarları tek kol B basımında kapanır', () => {
+    screen.show();
+    const settingsButton = [
+      ...parent.querySelectorAll<HTMLButtonElement>('.pause-panel button'),
+    ].find((button) => button.textContent?.includes(trResources.pause.settings));
+    settingsButton?.focus();
+    const pressed = (index?: number) =>
+      ({
+        id: 'test-pad',
+        index: 0,
+        connected: true,
+        mapping: 'standard',
+        axes: [0, 0, 0, 0],
+        buttons: Array.from({ length: 17 }, (_, button) => ({
+          pressed: button === index,
+          value: button === index ? 1 : 0,
+        })),
+      }) as PadLike;
+    const nav = new FocusNavController({ getGamepads: () => [pressed()] });
+    settingsButton?.click();
+    const settingsPanel = parent.querySelector<HTMLElement>('.pause-settings-panel');
+    expect(settingsPanel?.inert).toBe(false);
+    expect(getBackHandlerCount()).toBeGreaterThan(0);
+    nav.pollPad(pressed(1));
+    expect(settingsPanel?.inert).toBe(true);
+    expect(screen.isVisible()).toBe(true);
+    nav.destroy();
   });
 
   it('destroy overlay ve dil aboneliğini temizler', () => {

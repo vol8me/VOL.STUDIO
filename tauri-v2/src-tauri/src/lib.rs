@@ -18,7 +18,14 @@
 /// ve mobilde aynı kesin semantiği sağlar.
 #[tauri::command]
 fn exit_application(app: tauri::AppHandle) {
+    stop_haptics();
     app.exit(0);
+}
+
+fn stop_haptics() {
+    if let Err(error) = haptics::halt() {
+        log::warn!("Haptik durdurulamadı: {error}");
+    }
 }
 
 /// Pencerenin GERÇEK tam ekran durumu.
@@ -122,6 +129,14 @@ where
     }
 
     let builder = tauri::Builder::default()
+        .on_window_event(|_window, event| {
+            if matches!(
+                event,
+                tauri::WindowEvent::Focused(false) | tauri::WindowEvent::Destroyed
+            ) {
+                stop_haptics();
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             exit_application,
             window_fullscreen_state,
@@ -148,7 +163,14 @@ where
         // sismesiydi. Ek native eklenti gereken oyun onu `configure` icinde
         // kendi cagrisinda kaydeder (or. vol-orientation).
         .plugin(tauri_plugin_store::Builder::default().build())
-        .setup(|_app| {
+        .setup(|app| {
+            #[cfg(target_os = "linux")]
+            if is_gamescope() {
+                use tauri::Manager;
+                if let Some(window) = app.get_webview_window("main") {
+                    window.set_fullscreen(true)?;
+                }
+            }
             log::info!("VOL.STUDIO Tauri app starting");
             Ok(())
         });
@@ -157,8 +179,16 @@ where
     // işleyicisi burada tanımlıdır: uygulama `invoke_handler` çağırırsa
     // `exit_application` sessizce kaybolur.
     configure(builder)
-        .run(context)
-        .expect("error while running tauri application");
+        .build(context)
+        .expect("error while building tauri application")
+        .run(|_app, event| {
+            if matches!(
+                event,
+                tauri::RunEvent::Exit | tauri::RunEvent::ExitRequested { .. }
+            ) {
+                stop_haptics();
+            }
+        });
 }
 
 /// WebView'ın çizim yolunu seçer; WebView yaratılmadan ÖNCE çağrılır, değişkenler

@@ -12,7 +12,7 @@ import { openShowcase, selectTab, SHOWCASE_TABS } from './support/determinism';
  *    hesaplanan = çizilen).
  *
  * 2. OTURMA MESAFESİ: 1920×1080 ve 3840×2160'ta UI bütün olarak ölçeklenir
- *    (`--vol-ui-zoom` medya sorgusu → `.vol-showcase-root` zoom). İddia hem
+ *    (`--vol-layout-zoom` medya sorgusu → `.vol-showcase-root` zoom). İddia hem
  *    zoom katsayısı hem de gerçekten BÜYÜYEN bir metin kutusuyla yapılır —
  *    katsayı yalan söyleyemez çünkü kutu yüksekliği de ölçülür.
  *
@@ -129,9 +129,9 @@ test.describe('oturma mesafesi ölçeği (1080p / 2160p)', () => {
 
       await page.setViewportSize({ width: size.width, height: size.height });
       const zoomVar = await page.evaluate(() =>
-        getComputedStyle(document.documentElement).getPropertyValue('--vol-ui-zoom').trim(),
+        getComputedStyle(document.documentElement).getPropertyValue('--vol-layout-zoom').trim(),
       );
-      expect(zoomVar, `beklenen --vol-ui-zoom ${size.zoom}`).toBe(String(size.zoom));
+      expect(zoomVar, `beklenen --vol-layout-zoom ${size.zoom}`).toBe(String(size.zoom));
 
       const scaledHeight = await page
         .locator('[role="tab"]')

@@ -16,7 +16,17 @@ import { workingTreeFiles } from './gitFiles.mjs';
 import { excludingFrozenPaths, loadRepoLifecycle } from './workspaceLifecycle.mjs';
 
 /** Satır sınırının uygulandığı kaynak türleri. */
-export const SOURCE_PATTERNS = ['*.ts', '*.mjs', '*.js', '*.css', '*.rs', '*.kt'];
+export const SOURCE_PATTERNS = [
+  '*.ts',
+  '*.tsx',
+  '*.mts',
+  '*.mjs',
+  '*.cjs',
+  '*.js',
+  '*.css',
+  '*.rs',
+  '*.kt',
+];
 
 /** Sert sınır: bunun üstünde bir dosya bölünür, gerekçe kabul edilmez. */
 export const LINE_THRESHOLD = 1000;

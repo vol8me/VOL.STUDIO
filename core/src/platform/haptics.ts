@@ -16,10 +16,10 @@
 /**
  * Titreşimi gerçekten üretebilen katman.
  *
- * - `native` — kabuğun kaydettiği mobil platform sürücüsü.
+ * - `native` — kabuğun kaydettiği Android veya Linux sürücüsü.
  * - `vibration` — `navigator.vibrate`. Mobil tarayıcılar.
- * - `gamepad` — bağlı bir oyun kolunun `vibrationActuator`'ı. Masaüstünde ve
- *   Steam Deck'te titreşimin TEK gerçek kaynağı budur; klavye/fare titremez.
+ * - `gamepad` — native sürücü yoksa bağlı kolun `vibrationActuator`'ı;
+ *   klavye/fare titremez.
  * - `none` — hiçbir kaynak yok. Ayarın sunulması anlamsızdır.
  */
 export type HapticsBackend = 'native' | 'vibration' | 'gamepad' | 'none';

@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test --project=chromium",
+    "test:e2e": "playwright test",
     "test:e2e:update": "playwright test --project=chromium --update-snapshots"
   },
   "dependencies": {

@@ -98,6 +98,15 @@ describe('EnemyManager', () => {
     expect(ENEMY_CATALOG[manager.getEnemies()[0].definition.id]).toBeDefined();
   });
 
+  it.each([20, 40])('ölçüm nüfusu %i gerçek katalog düşmanıyla sabitlenir', (count) => {
+    manager.setScenarioPopulation(count);
+    manager.fillScenarioPopulation(border, playerPos, difficulty, grid);
+    expect(manager.getEnemies()).toHaveLength(count);
+    expect(manager.getEnemies().every((enemy) => ENEMY_CATALOG[enemy.definition.id])).toBe(true);
+    tick(difficulty.spawnIntervalMs * 3);
+    expect(manager.getEnemies()).toHaveLength(count);
+  });
+
   it('uzun frame içinde geçen birden fazla spawn aralığını kaybetmez', () => {
     tick(difficulty.spawnIntervalMs * 3);
 

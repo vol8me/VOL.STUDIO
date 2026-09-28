@@ -130,7 +130,7 @@ export class Diagnostics {
     const start = this.stageStarts.get(name);
     if (start === undefined) return;
     this.stageStarts.delete(name);
-    this.stageTimes.set(name, performance.now() - start);
+    this.stageTimes.set(name, (this.stageTimes.get(name) ?? 0) + performance.now() - start);
   }
 
   /** Sayısal metrik ekle. */

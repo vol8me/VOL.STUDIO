@@ -1,11 +1,5 @@
-//! Linux titreşim sürücüsü — sanal kolun evdev FF_RUMBLE'ı.
-//!
-//! WebKitGTK 2.52'de `vibrationActuator` yok; Deck'te çalışan yol Steam
-//! Input'un sanal kolu (`Microsoft X-Box 360 pad N`, her oturumda hazır)
-//! üzerinden çekirdek force-feedback'dir. Ölçüm (2026-09-27, LCD Deck):
-//! `event14` düğümü `deck` kullanıcısına yazılabilir ve EV_FF + FF_RUMBLE
-//! taşır. Efekt çekirdekte kalır; `replay.length` dolunca kendiliğinden
-//! durur — zamanlamayı JS değil sürücü bilir.
+//! Linux titreşim sürücüsü: Deck HID raporu ve evdev FF_RUMBLE.
+//! Komut kabulü fiziksel his kanıtı değildir; kabul sınırı docs/steam-deck.md'dedir.
 //!
 //! Üç komut: `vol_haptics_status` (teşhis), `vol_haptics_rumble`,
 //! `vol_haptics_stop`. Linux dışında hepsi `none` döner: komut yüzeyi
@@ -36,14 +30,6 @@ mod imp {
         delay: u16,
     }
     #[repr(C)]
-    #[derive(Default)]
-    struct FfEnvelope {
-        attack_length: u16,
-        attack_level: u16,
-        fade_length: u16,
-        fade_level: u16,
-    }
-    #[repr(C)]
     #[derive(Clone, Copy, Default)]
     struct FfRumble {
         strong: u16,
@@ -72,7 +58,6 @@ mod imp {
         trigger: FfTrigger,
         replay: FfReplay,
         u: FfData,
-        envelope: FfEnvelope,
     }
     #[repr(C)]
     struct InputEvent {
@@ -118,7 +103,8 @@ mod imp {
     /// EV_FF yetenek bitset'inde FF_RUMBLE biti duruyor mu.
     pub(crate) fn supports_rumble(bits: &[u8]) -> bool {
         let index = (FF_RUMBLE / 8) as usize;
-        bits.get(index).is_some_and(|byte| byte & (1 << (FF_RUMBLE % 8)) != 0)
+        bits.get(index)
+            .is_some_and(|byte| byte & (1 << (FF_RUMBLE % 8)) != 0)
     }
 
     /// Aygıt seçimi: FF_RUMBLE taşıyan her düğüm adaydır; Steam Input'un
@@ -146,8 +132,17 @@ mod imp {
         ioc(3, b'H' as u64, 0x06, len)
     }
 
-    /// Valve VID'si — sysfs `HID_ID` alanında `000028DE` olarak görülür.
-    const VALVE_VID_TAG: &str = ":000028DE:";
+    fn is_deck_device(uevent: &str) -> bool {
+        uevent.lines().any(|line| {
+            line.strip_prefix("HID_ID=").is_some_and(|id| {
+                let mut fields = id.split(':');
+                fields.next().is_some()
+                    && fields.next() == Some("000028DE")
+                    && fields.next() == Some("00001205")
+                    && fields.next().is_none()
+            })
+        })
+    }
 
     /// Sürekli rumble üst sınırı — iş parçacığı durdurucu süreyi sınırlar.
     const MAX_RUMBLE_MS: u32 = 1000;
@@ -172,7 +167,7 @@ mod imp {
 
     /// Keşif sayaçları — `backend:none` halinde NEDEN bulunamadığını
     /// tanılama dökümüne yazar (açıldı ama FF yok / açılamadı ayrımı).
-    #[derive(Default)]
+    #[derive(Clone, Default)]
     pub(crate) struct ScanStats {
         pub nodes: u32,
         pub opened: u32,
@@ -190,7 +185,11 @@ mod imp {
         let mut buf = [0u8; 64];
         for _ in 0..10 {
             let n = unsafe {
-                libc::read(file.as_raw_fd(), buf.as_mut_ptr().cast::<libc::c_void>(), buf.len())
+                libc::read(
+                    file.as_raw_fd(),
+                    buf.as_mut_ptr().cast::<libc::c_void>(),
+                    buf.len(),
+                )
             };
             if n > 0 {
                 return true;
@@ -236,7 +235,7 @@ mod imp {
             let Ok(uevent) = fs::read_to_string(&uevent_path) else {
                 continue;
             };
-            if !uevent.contains(VALVE_VID_TAG) {
+            if !is_deck_device(&uevent) {
                 continue;
             }
             stats.hidraw_valve += 1;
@@ -277,8 +276,14 @@ mod imp {
             stats.opened += 1;
             let fd = file.as_raw_fd();
             let mut bits = [0u8; 16];
-            if unsafe { ioctl(fd, eviocgbit(EV_FF as u64, bits.len() as u64), bits.as_mut_ptr()) }
-                .is_err()
+            if unsafe {
+                ioctl(
+                    fd,
+                    eviocgbit(EV_FF as u64, bits.len() as u64),
+                    bits.as_mut_ptr(),
+                )
+            }
+            .is_err()
                 || !supports_rumble(&bits)
             {
                 continue;
@@ -322,10 +327,7 @@ mod imp {
         best
     }
 
-    /// Sıra ölçümlü gerçekle gider: Deck'te hidraw HID raporu kanıtlı çalışır;
-    /// sanal kolun evdev FF'si EVIOCSFF'de EFAULT verir (uinput yüklemesi
-    /// yaratıcı tarafından servis edilmiyor). evdev diğer Linux PC'lerde
-    /// gerçek FF'li kollar için yedek kalır.
+    /// Deck'in HID yolu önceliklidir; evdev FF_RUMBLE diğer kollara yedektir.
     fn open_backend() -> (Option<Backend>, ScanStats) {
         let mut stats = ScanStats::default();
         if let Some(device) = open_hidraw_device(&mut stats) {
@@ -335,8 +337,14 @@ mod imp {
     }
 
     fn read_bits(fd: i32, ev: u16, bits: &mut [u8]) -> io::Result<()> {
-        unsafe { ioctl(fd, eviocgbit(ev as u64, bits.len() as u64), bits.as_mut_ptr()) }
-            .map(|_| ())
+        unsafe {
+            ioctl(
+                fd,
+                eviocgbit(ev as u64, bits.len() as u64),
+                bits.as_mut_ptr(),
+            )
+        }
+        .map(|_| ())
     }
 
     /// FF_STATUS bitset'i — tanılama `status` komutunda okunur.
@@ -348,31 +356,123 @@ mod imp {
         }
     }
 
-    static DEVICE: Mutex<Option<(Option<Backend>, ScanStats)>> = Mutex::new(None);
-
-    /// Aygıtı bir kez çözer ve önbelleğe alır; `None` uygun düğüm yok demektir.
-    fn with_device<R>(f: impl FnOnce(&Backend) -> R) -> Option<R> {
-        let mut guard = DEVICE.lock().ok()?;
-        if guard.is_none() {
-            *guard = Some(open_backend());
-        }
-        guard.as_ref()?.0.as_ref().map(f)
+    struct DeviceCache<T> {
+        device: Option<T>,
+        scan: Option<ScanStats>,
+        last_scan_ms: Option<u64>,
+        last_error: Option<String>,
+        generation: u64,
     }
 
-    fn last_scan() -> Option<ScanStats> {
-        DEVICE
-            .lock()
-            .ok()
-            .and_then(|g| {
-                g.as_ref().map(|(_, s)| ScanStats {
-                    nodes: s.nodes,
-                    opened: s.opened,
-                    rumble_capable: s.rumble_capable,
-                    upload_failed: s.upload_failed,
-                    hidraw_nodes: s.hidraw_nodes,
-                    hidraw_valve: s.hidraw_valve,
-                })
-            })
+    impl<T> DeviceCache<T> {
+        const fn new() -> Self {
+            Self {
+                device: None,
+                scan: None,
+                last_scan_ms: None,
+                last_error: None,
+                generation: 0,
+            }
+        }
+
+        fn discover(&mut self, now_ms: u64, mut scan: impl FnMut() -> (Option<T>, ScanStats)) {
+            if self.device.is_none()
+                && self
+                    .last_scan_ms
+                    .is_none_or(|last| now_ms.saturating_sub(last) >= 1000)
+            {
+                let (device, stats) = scan();
+                self.device = device;
+                self.scan = Some(stats);
+                self.last_scan_ms = Some(now_ms);
+            }
+        }
+
+        fn refresh(
+            &mut self,
+            now_ms: u64,
+            scan: impl FnMut() -> (Option<T>, ScanStats),
+            check: impl FnOnce(&T) -> Result<(), String>,
+        ) {
+            if let Some(device) = self.device.as_ref() {
+                if let Err(error) = check(device) {
+                    self.device = None;
+                    self.last_scan_ms = None;
+                    self.last_error = Some(error);
+                    self.generation = self.generation.wrapping_add(1);
+                }
+            }
+            self.discover(now_ms, scan);
+        }
+
+        fn run<R>(
+            &mut self,
+            now_ms: u64,
+            mut scan: impl FnMut() -> (Option<T>, ScanStats),
+            mut action: impl FnMut(&T) -> Result<R, String>,
+        ) -> Result<R, String> {
+            self.discover(now_ms, &mut scan);
+            let Some(device) = self.device.as_ref() else {
+                let error = String::from("titreşim aygıtı yok");
+                self.last_error = Some(error.clone());
+                return Err(error);
+            };
+            match action(device) {
+                Ok(value) => {
+                    self.last_error = None;
+                    Ok(value)
+                }
+                Err(first_error) => {
+                    self.device = None;
+                    self.last_scan_ms = None;
+                    self.discover(now_ms, scan);
+                    let result = match self.device.as_ref() {
+                        Some(device) => action(device),
+                        None => Err(first_error),
+                    };
+                    self.last_error = result.as_ref().err().cloned();
+                    if result.is_err() {
+                        self.device = None;
+                    }
+                    result
+                }
+            }
+        }
+
+        fn begin<R>(
+            &mut self,
+            now_ms: u64,
+            scan: impl FnMut() -> (Option<T>, ScanStats),
+            action: impl FnMut(&T) -> Result<R, String>,
+        ) -> Result<(u64, R), String> {
+            self.generation = self.generation.wrapping_add(1);
+            self.run(now_ms, scan, action)
+                .map(|result| (self.generation, result))
+        }
+
+        fn finish(
+            &mut self,
+            generation: u64,
+            now_ms: u64,
+            scan: impl FnMut() -> (Option<T>, ScanStats),
+            stop: impl FnMut(&T) -> Result<(), String>,
+        ) -> Result<(), String> {
+            if self.generation == generation {
+                self.run(now_ms, scan, stop)
+            } else {
+                Ok(())
+            }
+        }
+    }
+
+    static DEVICE: Mutex<DeviceCache<Backend>> = Mutex::new(DeviceCache::new());
+
+    fn now_ms() -> u64 {
+        static START: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+        START
+            .get_or_init(std::time::Instant::now)
+            .elapsed()
+            .as_millis() as u64
     }
 
     /// Parametre değişince etkisi yeniden yükler, sonra başlatır/durdurur.
@@ -381,7 +481,7 @@ mod imp {
             kind: FF_RUMBLE,
             id: device.effect_id,
             replay: FfReplay {
-                length: ms.min(u16::MAX as u32) as u16,
+                length: ms.min(MAX_RUMBLE_MS) as u16,
                 delay: 0,
             },
             u: FfData {
@@ -400,18 +500,10 @@ mod imp {
         }
     }
 
-    /// hidraw basit rumble: rapor "aç" komutudur ve süre taşımaz — süreyi
-    /// sürücü tutar; ms kadar bekleyip sıfır raporu gönderir. Tauri komutu
-    /// zaten kendi iş parçacığında koşar; bekleyiş ≤ MAX_RUMBLE_MS'dir.
-    fn play_hidraw(device: &HidrawDevice, strong: f32, weak: f32, ms: u32) -> Result<(), String> {
+    fn play_hidraw(device: &HidrawDevice, strong: f32, weak: f32) -> Result<(), String> {
         let left = (strong.clamp(0.0, 1.0) * u16::MAX as f32) as u16;
         let right = (weak.clamp(0.0, 1.0) * u16::MAX as f32) as u16;
-        hidraw_send_rumble(device, left, right)?;
-        let hold = ms.min(MAX_RUMBLE_MS);
-        if hold > 0 {
-            std::thread::sleep(std::time::Duration::from_millis(hold as u64));
-        }
-        hidraw_send_rumble(device, 0, 0)
+        hidraw_send_rumble(device, left, right)
     }
 
     fn stop(backend: &Backend) -> Result<(), String> {
@@ -421,6 +513,23 @@ mod imp {
                 write_event(device.file.as_raw_fd(), device.effect_id, 0)
             },
         }
+    }
+
+    fn check_device(backend: &Backend) -> Result<(), String> {
+        let mut info = [0u8; 8];
+        let (fd, request) = match backend {
+            Backend::Hidraw(device) => (
+                device.file.as_raw_fd(),
+                ioc(_IOC_READ, b'H' as u64, 0x03, 8),
+            ),
+            Backend::Evdev(device) => (
+                device.file.as_raw_fd(),
+                ioc(_IOC_READ, b'E' as u64, 0x01, 4),
+            ),
+        };
+        unsafe { ioctl(fd, request, info.as_mut_ptr()) }
+            .map(|_| ())
+            .map_err(|error| format!("titreşim aygıtı bağlantısı kesildi: {error}"))
     }
 
     impl Drop for HidrawDevice {
@@ -445,7 +554,10 @@ mod imp {
             )
         };
         if written < 0 {
-            return Err(format!("FF olayı yazılamadı: {}", io::Error::last_os_error()));
+            return Err(format!(
+                "FF olayı yazılamadı: {}",
+                io::Error::last_os_error()
+            ));
         }
         Ok(())
     }
@@ -464,22 +576,34 @@ mod imp {
     }
 
     pub fn status() -> serde_json::Value {
-        let result = with_device(|b| match b {
+        let mut cache = match DEVICE.lock() {
+            Ok(cache) => cache,
+            Err(_) => return serde_json::json!({ "backend": "none", "error": "lock" }),
+        };
+        cache.refresh(now_ms(), open_backend, check_device);
+        let result = cache.device.as_ref().map(|b| match b {
             Backend::Hidraw(d) => serde_json::json!({
                 "backend": "hidraw",
+                "platformSupported": true,
                 "device": d.name,
             }),
             Backend::Evdev(d) => serde_json::json!({
                 "backend": "evdev",
+                "platformSupported": true,
                 "device": d.name,
                 "statusBits": status_bits(d).len(),
             }),
         });
-        let scan = last_scan();
+        let scan = cache.scan.as_ref();
         match result {
-            Some(value) => value,
+            Some(mut value) => {
+                value["lastError"] = serde_json::json!(cache.last_error);
+                value
+            }
             None => serde_json::json!({
                 "backend": "none",
+                "platformSupported": true,
+                "lastError": cache.last_error,
                 "scan": scan.map(|s| serde_json::json!({
                     "nodes": s.nodes,
                     "opened": s.opened,
@@ -493,15 +617,135 @@ mod imp {
     }
 
     pub fn rumble(strong: f32, weak: f32, ms: u32) -> Result<(), String> {
-        with_device(|b| match b {
-            Backend::Hidraw(d) => play_hidraw(d, strong, weak, ms),
-            Backend::Evdev(d) => play_evdev(d, strong, weak, ms),
-        })
-        .ok_or_else(|| String::from("titreşim aygıtı yok"))?
+        let (generation, ()) = DEVICE
+            .lock()
+            .map_err(|_| "titreşim kilidi bozuldu")?
+            .begin(now_ms(), open_backend, |b| match b {
+                Backend::Hidraw(d) => play_hidraw(d, strong, weak),
+                Backend::Evdev(d) => play_evdev(d, strong, weak, ms),
+            })?;
+        // Bekleme kilit dışında kalır: stop ve yeni darbe gecikmeden işlenir.
+        std::thread::sleep(std::time::Duration::from_millis(
+            ms.min(MAX_RUMBLE_MS) as u64
+        ));
+        DEVICE
+            .lock()
+            .map_err(|_| "titreşim kilidi bozuldu")?
+            .finish(generation, now_ms(), open_backend, stop)
     }
 
-    pub fn halt() {
-        let _ = with_device(stop);
+    pub fn halt() -> Result<(), String> {
+        DEVICE
+            .lock()
+            .map_err(|_| "titreşim kilidi bozuldu")?
+            .begin(now_ms(), open_backend, stop)
+            .map(|_| ())
+    }
+
+    #[cfg(test)]
+    mod abi_tests {
+        use super::*;
+
+        #[test]
+        #[cfg(target_pointer_width = "64")]
+        fn ff_effect_linux_abi_ile_eslesir() {
+            assert_eq!(std::mem::size_of::<FfEffect>(), 48);
+            assert_eq!(std::mem::offset_of!(FfEffect, u), 16);
+            assert_eq!(eviocsff(), 0x40304580);
+        }
+
+        #[test]
+        fn gec_baglanan_aygit_yeniden_kesfedilir() {
+            let mut cache = DeviceCache::new();
+            cache.discover(0, || (None, ScanStats::default()));
+            cache.discover(1000, || (Some(7), ScanStats::default()));
+            assert_eq!(cache.device, Some(7));
+        }
+
+        #[test]
+        fn bozuk_fd_bir_kez_yeniden_acilir() {
+            let mut cache = DeviceCache::new();
+            cache.discover(0, || (Some(1), ScanStats::default()));
+            let result = cache.run(
+                5,
+                || (Some(2), ScanStats::default()),
+                |device| {
+                    if *device == 1 {
+                        Err("ENODEV".into())
+                    } else {
+                        Ok(*device)
+                    }
+                },
+            );
+            assert_eq!(result, Ok(2));
+        }
+
+        #[test]
+        fn kalici_hata_sonrasi_bozuk_fd_tutulmaz() {
+            let mut cache = DeviceCache::new();
+            cache.discover(0, || (Some(1), ScanStats::default()));
+            let mut scans = 0;
+            let result: Result<(), String> = cache.run(
+                5,
+                || {
+                    scans += 1;
+                    (Some(2), ScanStats::default())
+                },
+                |_| Err("EPIPE".into()),
+            );
+            assert!(result.is_err());
+            assert_eq!(scans, 1);
+            assert!(cache.device.is_none());
+        }
+
+        #[test]
+        fn eski_sure_bitis_yeni_darbeyi_durdurmaz() {
+            let mut cache = DeviceCache::new();
+            let scan = || (Some(1), ScanStats::default());
+            let (old, ()) = cache.begin(0, scan, |_| Ok(())).unwrap();
+            cache.begin(5, scan, |_| Ok(())).unwrap();
+            let mut stopped = false;
+            cache
+                .finish(old, 20, scan, |_| {
+                    stopped = true;
+                    Ok(())
+                })
+                .unwrap();
+            assert!(!stopped);
+        }
+
+        #[test]
+        fn durum_sorgusu_cikarilmis_aygiti_canli_gostermez() {
+            let mut cache = DeviceCache::new();
+            cache.discover(0, || (Some(1), ScanStats::default()));
+            cache.refresh(5, || (None, ScanStats::default()), |_| Err("ENODEV".into()));
+            assert!(cache.device.is_none());
+            assert_eq!(cache.last_error.as_deref(), Some("ENODEV"));
+        }
+
+        #[test]
+        fn aygit_yoklugu_sik_yoklamada_tekrar_taranmaz() {
+            let mut cache: DeviceCache<u8> = DeviceCache::new();
+            let mut scans = 0;
+            for now in [0, 1, 50, 999, 1000] {
+                cache.discover(now, || {
+                    scans += 1;
+                    (None, ScanStats::default())
+                });
+            }
+            assert_eq!(scans, 2);
+        }
+
+        #[test]
+        fn deck_olmayan_valve_hid_aygiti_secilmez() {
+            assert!(is_deck_device(
+                "HID_ID=0003:000028DE:00001205\nHID_NAME=Deck\n"
+            ));
+            assert!(!is_deck_device("HID_ID=0003:000028DE:00001102\n"));
+            assert!(!is_deck_device(
+                "HID_ID=0003:00000001:00001205\nHID_NAME=:000028DE:\n"
+            ));
+        }
     }
 }
 
@@ -510,28 +754,36 @@ pub use imp::{halt, rumble, status};
 
 #[cfg(not(target_os = "linux"))]
 pub fn status() -> serde_json::Value {
-    serde_json::json!({ "backend": "none" })
+    serde_json::json!({ "backend": "none", "platformSupported": false })
 }
 #[cfg(not(target_os = "linux"))]
 pub fn rumble(_strong: f32, _weak: f32, _ms: u32) -> Result<(), String> {
     Err("platform desteklemiyor".into())
 }
 #[cfg(not(target_os = "linux"))]
-pub fn halt() {}
-
-#[tauri::command]
-pub fn vol_haptics_status() -> serde_json::Value {
-    status()
+pub fn halt() -> Result<(), String> {
+    Ok(())
 }
 
 #[tauri::command]
-pub fn vol_haptics_rumble(strong: f32, weak: f32, duration_ms: u32) -> Result<(), String> {
-    rumble(strong, weak, duration_ms)
+pub async fn vol_haptics_status() -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(status)
+        .await
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
-pub fn vol_haptics_stop() {
-    halt();
+pub async fn vol_haptics_rumble(strong: f32, weak: f32, duration_ms: u32) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || rumble(strong, weak, duration_ms))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+pub async fn vol_haptics_stop() -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(halt)
+        .await
+        .map_err(|error| error.to_string())?
 }
 
 #[cfg(all(test, target_os = "linux"))]

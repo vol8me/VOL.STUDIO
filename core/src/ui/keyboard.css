@@ -2,7 +2,7 @@
  * tabanı), tuşlar dokunma için de yeterli (>=44px) yüksekliktedir. */
 .vol-osk {
   position: fixed;
-  inset: auto 0 0 0;
+  inset: auto 0 0;
   z-index: var(--vol-z-dialog);
   display: flex;
   flex-direction: column;
@@ -41,7 +41,8 @@
 }
 
 .vol-osk__key {
-  min-width: 44px;
+  min-width: var(--vol-hit-target-min, 44px);
+  min-height: var(--vol-hit-target-min, 44px);
   height: 44px;
   padding: 0 var(--vol-space-sm);
   border: 1px solid var(--vol-ui-border-soft);

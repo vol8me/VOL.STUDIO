@@ -4,6 +4,7 @@ import {
   isGamepadTextEntryActive,
   requestTextEntryForElement,
   setTextEntryModeProbe,
+  registerTextEntryModeProbe,
   setTextEntryProvider,
   type TextEntryRequest,
 } from '../../src/ui/textEntry/textEntry';
@@ -41,6 +42,20 @@ describe('textEntry — kolla metin girişi', () => {
   const focus = () => {
     requestTextEntryForElement(input, { apply: (v) => applied.push(v) });
   };
+
+  it('sahne kapanınca önceki kip sahibi geri gelir; eski sahibin sökülmesi yeniyi silmez', () => {
+    const stopMenu = registerTextEntryModeProbe(() => false);
+    const stopGame = registerTextEntryModeProbe(() => true);
+    expect(isGamepadTextEntryActive()).toBe(true);
+    stopMenu();
+    expect(isGamepadTextEntryActive()).toBe(true);
+    stopGame();
+    expect(isGamepadTextEntryActive()).toBe(true);
+    probe.mockReturnValue(false);
+    const stopScene = registerTextEntryModeProbe(() => true);
+    stopScene();
+    expect(isGamepadTextEntryActive()).toBe(false);
+  });
 
   it('probu yoksa ya da kip kapalıysa klavye açmaz', async () => {
     clearTextEntryModeProbe(probe);

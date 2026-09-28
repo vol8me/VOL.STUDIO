@@ -39,7 +39,13 @@ describe('AbilityHud', () => {
     hud.refresh(fakeRuntime('turretSiege', 'chainStorm'));
 
     const keys = [...parent.querySelectorAll<HTMLElement>('.vol-ability-slot__key')];
-    expect(keys.map((key) => key.textContent)).toEqual(['Q', 'E']);
+    expect(keys.map((key) => key.querySelector('img')?.getAttribute('src'))).toEqual([
+      'assets/glyphs/keyboard/keyboard_q.svg',
+      'assets/glyphs/keyboard/keyboard_e.svg',
+    ]);
+    expect(
+      keys.map((key) => key.querySelector('[aria-label]')?.getAttribute('aria-label')),
+    ).toEqual(['Q', 'E']);
 
     expect(parent.querySelector('.vol-ability-slot__icon')).toBeNull();
   });

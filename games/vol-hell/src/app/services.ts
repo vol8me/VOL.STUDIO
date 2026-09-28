@@ -5,6 +5,7 @@ import {
   setHapticsEnabled,
   type Diagnostics,
   type ScopedSaveManager,
+  type DiagnosticsSnapshot,
 } from '@volstudio/core';
 import { createSaveManager } from '@/app/storage';
 import { setDiagnostics } from '@/app/settingsPersistence';
@@ -13,6 +14,7 @@ import { GameAudio } from '@/app/GameAudio';
 import { GameStats } from '@/app/GameStats';
 import { VideoSettings } from '@/app/VideoSettings';
 import { KeyBindings } from '@/app/KeyBindings';
+import { ControlSettings } from '@/app/ControlSettings';
 
 /**
  * Uygulama genelindeki tekil servisler.
@@ -31,6 +33,7 @@ export let videoSettings: VideoSettings;
 
 /** Oyuncunun tuş eşlemesi — varsayılanlar `config/input.ts`te. */
 export let keyBindings: KeyBindings;
+export let controlSettings: ControlSettings;
 
 /**
  * Ölçüm örneği — `?debug`/`?perf` yoksa `null`.
@@ -42,6 +45,17 @@ export let keyBindings: KeyBindings;
 export let diagnostics: Diagnostics | null = null;
 
 let initialized = false;
+
+export function enableDeckDiagnostics(onFrame: (snapshot: DiagnosticsSnapshot) => void): void {
+  diagnostics?.destroy();
+  diagnostics = createDiagnostics({
+    gameId: 'vol-hell',
+    sampleEvery: 1,
+    overlay: false,
+    transport: { send: onFrame },
+  });
+  setDiagnostics(diagnostics);
+}
 
 /**
  * Servisleri kurar. Yalnızca açılışta (bootstrap) çağrılır; tekrar çağrılması
@@ -55,6 +69,7 @@ export function initServices(): void {
   gameStats = new GameStats(saveManager);
   videoSettings = new VideoSettings(saveManager);
   keyBindings = new KeyBindings(saveManager);
+  controlSettings = new ControlSettings(saveManager);
   gameAudio = new GameAudio(audioSettings);
   diagnostics = isDiagnosticsEnabled()
     ? createDiagnostics({
@@ -76,6 +91,7 @@ export async function loadPersistedState(): Promise<void> {
     gameStats.load(),
     videoSettings.load(),
     keyBindings.load(),
+    controlSettings.load(),
   ]);
 
   // CORE'un titreşim anahtarı varsayılan olarak KAPALIDIR; oyunun kayıtlı

@@ -43,6 +43,7 @@ export {
   type GamepadInputSnapshot,
 } from './GamepadController';
 export { InputModeArbiter, inputModeForSession, type InputModePolicyOptions } from './inputMode';
+export { selectGamepad, type GamepadSelectionOptions } from './selectGamepad';
 export { InputManager } from '../phaser/input/InputManager';
 export { VirtualActionSource } from './VirtualActionSource';
 export * as InputUtils from './InputUtils';

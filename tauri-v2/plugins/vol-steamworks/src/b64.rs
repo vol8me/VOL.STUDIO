@@ -4,8 +4,7 @@
 //! değildir; padding'siz URL-güvenli alfabesi KULLANILMAZ, standart
 //! `+/` alfabesi ve `=` padding uygulanır.
 
-const ALPHABET: &[u8; 64] =
-    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 pub fn encode(data: &[u8]) -> String {
     let mut out = String::with_capacity(data.len().div_ceil(3) * 4);
@@ -43,18 +42,15 @@ fn value_of(byte: u8) -> Option<u32> {
 
 /// Geçersiz girdi `None` döner — çağıran "bozuk kayıt" kararını verir.
 pub fn decode(text: &str) -> Option<Vec<u8>> {
-    let bytes: Vec<u8> = text
-        .bytes()
-        .filter(|b| !b.is_ascii_whitespace())
-        .collect();
-    if bytes.len() % 4 != 0 || bytes.is_empty() && !text.trim().is_empty() {
+    let bytes: Vec<u8> = text.bytes().filter(|b| !b.is_ascii_whitespace()).collect();
+    if !bytes.len().is_multiple_of(4) || bytes.is_empty() && !text.trim().is_empty() {
         return None;
     }
     let mut out = Vec::with_capacity(bytes.len() / 4 * 3);
     for (i, chunk) in bytes.chunks(4).enumerate() {
         let last = i == bytes.len() / 4 - 1;
         let pad = chunk.iter().filter(|&&b| b == b'=').count();
-        if pad > 0 && (!last || pad > 2 || !chunk.ends_with(&[b'='].repeat(pad))) {
+        if pad > 0 && (!last || pad > 2 || !chunk.ends_with(&b"=="[..pad])) {
             return None;
         }
         let mut n: u32 = 0;

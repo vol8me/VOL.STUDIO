@@ -46,5 +46,10 @@ export function createLegacyStore(): IStorageAdapter & Partial<KeyEnumerable> {
  * idempotent'tir; ikinci çağrı eksik anahtarı tamamlar, taşınmışı atlar.
  */
 export function migrateLegacySave(scoped: ScopedSaveManager): Promise<MigrationReport> {
-  return migrateLegacyStore({ legacy: createLegacyStore(), scoped, mappings: LEGACY_KEY_SCOPES });
+  return migrateLegacyStore({
+    legacy: createLegacyStore(),
+    scoped,
+    mappings: LEGACY_KEY_SCOPES,
+    retainSource: true,
+  });
 }

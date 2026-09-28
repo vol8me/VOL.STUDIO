@@ -6,7 +6,11 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadQualityConfig, validateQualityWorkspaceParity } from './quality/config.mjs';
+import {
+  loadQualityConfig,
+  validateQualityWorkspaceParity,
+  validateActiveGameBudgets,
+} from './quality/config.mjs';
 import { validateBlobSizes } from './quality/blobSize.mjs';
 import { validateLayerBoundaries } from './quality/layers.mjs';
 import { validateTrackedImports } from './quality/trackedImports.mjs';
@@ -68,6 +72,12 @@ problems.push(
   ),
 );
 problems.push(...validateWorkspaceLifecycle(root, lifecycle, packages));
+problems.push(
+  ...validateActiveGameBudgets(
+    quality,
+    activePackages.filter((pkg) => pkg.dir.startsWith('games/')).map((pkg) => pkg.dir),
+  ),
+);
 
 // Katman sınırları: oyun/devtool/core bağımlılık yönü.
 // Lifecycle'ı DIŞARI veren bekçiler ürün kalitesidir ve frozen ağaçları

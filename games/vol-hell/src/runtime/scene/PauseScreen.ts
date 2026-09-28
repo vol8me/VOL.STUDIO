@@ -9,8 +9,10 @@ import {
 } from '@volstudio/core';
 import type { AudioSettings } from '@/app/AudioSettings';
 import type { VideoSettings } from '@/app/VideoSettings';
+import type { ControlSettings } from '@/app/ControlSettings';
 import { displayCapabilities, hasNativeWindow, supportsDisplaySettings } from '@/app/platform';
 import { gameAudio } from '@/app/services';
+import { controlGlyph } from '@/app/controlGlyph';
 import { sfxVolumes } from '@/config/audio';
 import { GameSettingsContent } from '@/runtime/ui/GameSettingsContent';
 
@@ -51,6 +53,7 @@ export class PauseScreen {
       onRestart: () => void;
       onMainMenu: () => void;
     },
+    controlSettings?: ControlSettings,
   ) {
     this.overlay = document.createElement('div');
     this.overlay.className = 'vol-pause-overlay';
@@ -58,6 +61,7 @@ export class PauseScreen {
     this.titleText = new Text(i18next.t('volhell:pause.title'), { variant: 'title', tag: 'h1' });
     this.resumeButton = new Button(i18next.t('volhell:pause.resume'), {
       variant: 'primary',
+      iconLeft: controlGlyph('faceDown', i18next.t('volhell:pause.resume')),
       onClick: () => this.callbacks.onResume(),
     });
     this.restartButton = new Button(i18next.t('volhell:pause.restart'), {
@@ -89,12 +93,14 @@ export class PauseScreen {
     this.settingsContent = new GameSettingsContent({
       audioSettings,
       videoSettings,
+      controlSettings,
       showVideoSettings: supportsDisplaySettings(),
       display: displayCapabilities(),
       canResizeWindow: hasNativeWindow(),
     });
     this.settingsBackButton = new Button(i18next.t('volhell:settings.back'), {
       variant: 'primary',
+      iconLeft: controlGlyph('faceRight', i18next.t('volhell:settings.back')),
       onClick: () => this.hideSettings(),
     });
     this.settingsPanel = new Panel({ className: 'pause-panel pause-settings-panel' })

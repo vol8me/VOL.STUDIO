@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createLinuxHapticsDriver,
   getLinuxHapticsStatus,
+  observeLinuxHaptics,
   registerLinuxHaptics,
 } from '../../src/platform/linuxHaptics';
 
@@ -19,6 +20,9 @@ const fakes = vi.hoisted(() => ({
 }));
 
 vi.mock('@volstudio/core', () => fakes);
+
+beforeEach(() => vi.clearAllMocks());
+afterEach(() => vi.useRealTimers());
 
 function probe(status: unknown, record?: { calls: [string, unknown?][] }) {
   return {
@@ -71,6 +75,127 @@ describe('createLinuxHapticsDriver', () => {
     const driver = createLinuxHapticsDriver(probe({ backend: 'evdev' }, record));
     await driver.cancel?.();
     expect(record.calls).toEqual([['vol_haptics_stop', undefined]]);
+  });
+
+  it('aralikta iptal edilen desen ikinci darbeyi baslatmaz', async () => {
+    const record = { calls: [] as [string, unknown?][] };
+    const p = probe({ backend: 'hidraw' }, record);
+    let finishGap!: () => void;
+    p.sleep.mockImplementation(() => new Promise<void>((resolve) => (finishGap = resolve)));
+    const driver = createLinuxHapticsDriver(p);
+    const playing = driver.play('error');
+    await Promise.resolve();
+    await driver.cancel?.();
+    finishGap();
+    await playing;
+    expect(record.calls.filter(([command]) => command === 'vol_haptics_rumble')).toHaveLength(1);
+  });
+
+  it('yeni desen eski desenin kalan darbelerini gecersiz kilar', async () => {
+    const record = { calls: [] as [string, unknown?][] };
+    const p = probe({ backend: 'hidraw' }, record);
+    let finishGap!: () => void;
+    p.sleep.mockImplementationOnce(() => new Promise<void>((resolve) => (finishGap = resolve)));
+    const driver = createLinuxHapticsDriver(p);
+    const old = driver.play('error');
+    await Promise.resolve();
+    await driver.play('warning');
+    finishGap();
+    await old;
+    expect(record.calls.filter(([command]) => command === 'vol_haptics_rumble')).toHaveLength(3);
+  });
+});
+
+describe('observeLinuxHaptics', () => {
+  it('acilista olmayan aygit sonradan kaydedilir ve cikarma kaydi kaldirir', async () => {
+    vi.useFakeTimers();
+    let backend = 'none';
+    const p = { ...probe(null), invoke: vi.fn(() => Promise.resolve({ backend })) };
+    const dispose = observeLinuxHaptics(p);
+    try {
+      await vi.advanceTimersByTimeAsync(0);
+      expect(fakes.setHapticsDriver).not.toHaveBeenCalled();
+      backend = 'hidraw';
+      await vi.advanceTimersByTimeAsync(1000);
+      const driver = fakes.setHapticsDriver.mock.calls.at(-1)?.[0] as { play?: unknown };
+      expect(typeof driver.play).toBe('function');
+      backend = 'none';
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(fakes.setHapticsDriver).toHaveBeenLastCalledWith(null);
+    } finally {
+      dispose();
+    }
+    const calls = p.invoke.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(p.invoke.mock.calls.length).toBe(calls);
+  });
+
+  it('gec durum cevabi destroy sonrasinda surucu kaydetmez', async () => {
+    let reply!: (value: unknown) => void;
+    const p = { ...probe(null), invoke: vi.fn(() => new Promise((resolve) => (reply = resolve))) };
+    const dispose = observeLinuxHaptics(p);
+    dispose();
+    reply({ backend: 'hidraw' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(fakes.setHapticsDriver).not.toHaveBeenCalled();
+  });
+
+  it('uykudan donus olayinda hemen yeniler, destroy dinleyiciyi kaldirir', async () => {
+    vi.useFakeTimers();
+    const events = new EventTarget();
+    let visible = false;
+    const p = { ...probe({ backend: 'hidraw' }), events, visible: () => visible };
+    const dispose = observeLinuxHaptics(p);
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(p.invoke).not.toHaveBeenCalled();
+    visible = true;
+    events.dispatchEvent(new Event('pageshow'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(fakes.setHapticsDriver).toHaveBeenCalledTimes(1);
+    dispose();
+    const commands = p.invoke.mock.calls.length;
+    events.dispatchEvent(new Event('gamepadconnected'));
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(p.invoke.mock.calls.length).toBe(commands);
+  });
+
+  it('Linux disindaki native kabugu yoklamayi surdurmez', async () => {
+    vi.useFakeTimers();
+    const p = probe({ backend: 'none', platformSupported: false });
+    const dispose = observeLinuxHaptics(p);
+    try {
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(p.invoke).toHaveBeenCalledTimes(1);
+      expect(fakes.setHapticsDriver).not.toHaveBeenCalled();
+    } finally {
+      dispose();
+    }
+  });
+
+  it('pencere odagi kaybolunca kalan darbeyi iptal eder', async () => {
+    vi.useFakeTimers();
+    const events = new EventTarget();
+    const record = { calls: [] as [string, unknown?][] };
+    const p = { ...probe({ backend: 'hidraw' }, record), events };
+    let finishGap!: () => void;
+    p.sleep.mockImplementation(() => new Promise<void>((resolve) => (finishGap = resolve)));
+    const dispose = observeLinuxHaptics(p);
+    try {
+      await vi.advanceTimersByTimeAsync(0);
+      const driver = fakes.setHapticsDriver.mock.calls.at(-1)?.[0] as {
+        play(pattern: 'error'): Promise<void>;
+      };
+      const playing = driver.play('error');
+      await Promise.resolve();
+      events.dispatchEvent(new Event('blur'));
+      await vi.advanceTimersByTimeAsync(0);
+      finishGap();
+      await playing;
+      expect(record.calls.filter(([command]) => command === 'vol_haptics_rumble')).toHaveLength(1);
+    } finally {
+      dispose();
+    }
   });
 });
 

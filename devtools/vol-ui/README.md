@@ -20,7 +20,7 @@ pnpm --filter @volstudio/vol-ui dev     # :5174
 | PALETTE         | `theme.css`                                          |
 | ADVANCED        | `layout/`, `data/`, `hud/`, `overlays/`              |
 | SCROLL          | `layout/`                                            |
-| TOUCH           | `controls/` (dünya kamerası dâhil), `hud/`           |
+| TOUCH           | `controls/` (dünya kamerası dâhil), `hud/`, `focus/` |
 
 ## Görsel sözleşme kapısı
 

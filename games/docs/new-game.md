@@ -26,7 +26,7 @@ kırar ya da — daha kötüsü — testlerinizin sessizce hiç koşmamasına yo
    `status: "active"` olarak kaydedilmelidir. Rutin kapılar (`quick`, `high`,
    `signoff`) dinamik olarak yalnız `active` durumdaki paketleri çalıştırır.
 3. **Dondurulmuş (Frozen) Paket Bağımlılığı Yasağı:** Yeni aktif bir oyun asla
-   `frozen` statüsündeki bir pakete (`vol-hell`, `vol-arachnid` vb.) bağımlı olamaz.
+   `frozen` statüsündeki `vol-arachnid` gibi bir pakete bağımlı olamaz.
 4. **Frozen İmmutability:** Dondurulan oyun paketleri mevcut `HEAD` üzerinde
    kesinlikle değiştirilemez (immutable); doğrulamaları annotated Git etiketi
    (`freezeTag`) ve commit hash'i (`freezeCommit`) üzerinden kilitlenir.
@@ -64,6 +64,29 @@ kırar ya da — daha kötüsü — testlerinizin sessizce hiç koşmamasına yo
 **Geliştirme portu seçerken çakışmayı kapı sınar** (`scripts/quality/devPorts.mjs`):
 iki AYRI paket aynı portu bildiremez. Kendi preview portunuzla kendi e2e portunuz
 aynı olabilir.
+
+## Deck ve Valve donanımı kabul listesi
+
+Bu liste yeni oyunun kendi kabulüdür; VOL.HELL D7 ölçümü veya devkit App ID 480
+bir başka oyunun cihaz sonucunu kanıtlamaz. Ölçüm koşulları ve sınırlar
+`docs/steam-deck.md` belgesindedir. Cihaz deneyi kalite kapısı değildir.
+
+| İş                                                                          | Otomatik kapı veya kanıt                                                               |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Oyuna özgü Tauri kimliği, ikon ve SteamRT4 AppDir; host glibc sızıntısı yok | `productIcons.mjs`, SteamRT4 paket bekçisi; taze AppDir başlatma ve ekran görüntüsü    |
+| 1280×800 panelde canvas/client/backing, DOM safe-area ve 16:9/dock düzeni   | Oyun WebKit ekran testi ve gerçek Deck/harici ekran ölçümü                             |
+| Kısa/uzun B, Menu, A, RT; menu, pause, kart, ayar, ölüm odak ve glifleri    | CORE odak birim/DOM testleri, oyun E2E ve fiziksel Steam Input olay izi                |
+| Metin girişinde Steam modal/kayan klavye, OS klavyesi ve fallback           | `TextEntryProvider` birim testi ve Deck'te gerçek giriş                                |
+| Ses/müzik: kanonik program, publish manifest, codec/loop/peak doğrulaması   | `audio:production-check`, `audio-verify`, Deck WebKit decode ve insan dinlemesi        |
+| Titreşim sürücüsü, kalıcı tercih, olay gücü ve uyku/hotplug                 | `tauri-v2` testleri, Deck statü/komut izi ve fiziksel his onayı                        |
+| İlerleme ve cihaz ayarı ayrı store; eski kayıt ve kapatma yazıları korunur  | kalıcılık regresyonları, SIGTERM/uyku deneyi ve gerçek App ID Cloud turu               |
+| Tohumlu 0/10/20/30+ düşman, kart ve boss kare pencereleri                   | faz/yoğunluk etiketli oyun ölçümü; 800p hedefi 60 FPS, p95 ≤18 ms                      |
+| Aktif Tauri oyununun cihaz adayı ve güvenli yeni release ölçümü             | `deviceBenchmarkCandidates`, `node scripts/deck.mjs full <oyun>`; eski release korunur |
+
+Gerçek App ID ve yayımlanmış Steam Input düzeni, Cloud'un iki cihazda
+offline→online deneyi, Valve Verified kararı ve bulunmayan OLED Deck/Steam
+Machine ölçümleri ayrı kabul hücreleridir. Bunlar yapılmadıysa “ölçülmedi”
+olarak yazılır; VDF kabulü veya App ID 480 bunların yerine geçmez.
 
 ## Sıra
 

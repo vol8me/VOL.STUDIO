@@ -5,6 +5,7 @@ let lastPointerPosition: { x: number; y: number } | null = null;
 export interface CustomCursorOptions {
   /** Headless test ve erişilebilirlik durumlarında açıkça devre dışı bırakılabilir. */
   readonly enabled?: boolean;
+  readonly isVisible?: () => boolean;
 }
 
 /** VOL.HELL masaüstü/web pointer'ını oyun üstü VOL crosshair'i ile değiştirir. */
@@ -51,6 +52,17 @@ export class CustomCursor {
     this.scope.addListener(this.document, 'pointercancel', this.handlePointerUp);
     this.scope.addListener(this.document, 'click', this.handleConfirm);
     this.scope.addListener(window, 'blur', this.handlePointerLeave);
+    if (options.isVisible) {
+      const tick = (): void => {
+        this.setVisible(options.isVisible!());
+        this.scope.addAnimationFrame(tick);
+      };
+      tick();
+    }
+  }
+
+  setVisible(visible: boolean): void {
+    this.element.hidden = !this.enabled || !visible;
   }
 
   destroy(): void {

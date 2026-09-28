@@ -15,7 +15,7 @@ pub fn run() {
         // stub yapıda eklenti dürüst "kullanılamıyor" bildirir ve manifesto
         // Steam'e hiç ulaşmaz.
         builder
-            .plugin(tauri_plugin_vol_diagnostics::init())
+            .plugin(tauri_plugin_vol_diagnostics::init_for_measurement())
             .plugin(tauri_plugin_vol_steamworks::init(
                 480,
                 Some("steam_input_manifest.vdf"),

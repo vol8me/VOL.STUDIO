@@ -99,7 +99,8 @@
    *   title   panel/kart başlığı
    *   heading bölüm başlığı
    *   display ekran başlığı, hasar sayısı
-   */
+  */
+
   /*
    * micro/label alt sınırı 12 px'tir: Steam Deck okunabilirlik rehberinin
    * tabanı (1280×800'de ölçülür, vol-ui readability kapısı). Altına düşen
@@ -227,21 +228,24 @@
  * CSS px genişliğinde yerleşir, zoom çizimi büyütür — metin, boşluk ve
  * dokunma hedefleri TEK seferde ve tutarlı ölçeklenir.
  */
-:root {
-  --vol-ui-zoom: 1;
+html {
+  --vol-layout-zoom: 1;
 }
-@media (min-width: 1920px) {
+
+@media (width >= 1920px) {
   :root {
-    --vol-ui-zoom: 1.5;
+    --vol-layout-zoom: 1.5;
   }
 }
-@media (min-width: 2560px) {
+
+@media (width >= 2560px) {
   :root {
-    --vol-ui-zoom: 2;
+    --vol-layout-zoom: 2;
   }
 }
-@media (min-width: 3200px) {
+
+@media (width >= 3200px) {
   :root {
-    --vol-ui-zoom: 3;
+    --vol-layout-zoom: 3;
   }
 }

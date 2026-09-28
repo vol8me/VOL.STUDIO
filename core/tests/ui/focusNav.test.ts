@@ -126,6 +126,44 @@ describe('FocusNavController', () => {
     expect(list).toHaveLength(1);
   });
 
+  it('açık Select listesinde tabindex -1 seçenekleri kolla gezilir ve seçilir', () => {
+    const listbox = document.createElement('div');
+    listbox.setAttribute('role', 'listbox');
+    listbox.className = 'vol-popup--visible';
+    place(listbox, 0, 0, 120, 100);
+    const first = document.createElement('button');
+    const second = document.createElement('button');
+    for (const [index, option] of [first, second].entries()) {
+      option.setAttribute('role', 'option');
+      option.tabIndex = -1;
+      place(option, 0, index * 35);
+      listbox.appendChild(option);
+    }
+    document.body.appendChild(listbox);
+    let clicks = 0;
+    second.addEventListener('click', () => clicks++);
+    first.focus();
+    nav.move('down');
+    expect(document.activeElement).toBe(second);
+    nav.activate();
+    expect(clicks).toBe(1);
+  });
+
+  it('Select kendi yön tuşunu işlediyse FocusNav ikinci hareket yapmaz', () => {
+    const first = makeButton(0, 0);
+    const second = makeButton(0, 35);
+    makeButton(0, 70);
+    first.addEventListener('keydown', (event) => {
+      event.preventDefault();
+      second.focus();
+    });
+    first.focus();
+    first.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+    );
+    expect(document.activeElement).toBe(second);
+  });
+
   it('açık modal varken adaylar diyalog içeriğiyle sınırlanır', () => {
     makeButton(0, 0);
     const dialog = document.createElement('div');
@@ -189,6 +227,132 @@ describe('FocusNavController', () => {
     off();
   });
 
+  it('oynanışta hareket ve dash arayüz düğmelerini tetiklemez; Menu yine ulaşır', () => {
+    const button = makeButton(0, 0);
+    let clicks = 0;
+    let menus = 0;
+    let active = false;
+    button.addEventListener('click', () => clicks++);
+    const gameNav = new FocusNavController({
+      isNavigationActive: () => active,
+      onMenu: () => menus++,
+    });
+    gameNav.pollPad(makePad([GAMEPAD_BUTTON.primary], [1, 0]));
+    expect(clicks).toBe(0);
+    expect(document.activeElement).not.toBe(button);
+    gameNav.pollPad(makePad([GAMEPAD_BUTTON.start]));
+    expect(menus).toBe(1);
+    active = true;
+    gameNav.pollPad(makePad());
+    gameNav.pollPad(makePad([GAMEPAD_BUTTON.primary]));
+    expect(clicks).toBe(0);
+    expect(document.activeElement).toBe(button);
+    gameNav.pollPad(makePad());
+    gameNav.pollPad(makePad([GAMEPAD_BUTTON.primary]));
+    expect(clicks).toBe(1);
+    gameNav.destroy();
+  });
+
+  it('oynanıştan kart ekranına geçerken tutulan A yeni seçimi otomatik onaylamaz', () => {
+    let active = false;
+    const button = makeButton(0, 0);
+    let clicks = 0;
+    button.addEventListener('click', () => clicks++);
+    const gameNav = new FocusNavController({ isNavigationActive: () => active });
+    gameNav.pollPad(makePad());
+    active = true;
+    button.focus();
+    gameNav.pollPad(makePad([GAMEPAD_BUTTON.primary]));
+    expect(clicks).toBe(0);
+    gameNav.pollPad(makePad());
+    gameNav.pollPad(makePad([GAMEPAD_BUTTON.primary]));
+    expect(clicks).toBe(1);
+    gameNav.destroy();
+  });
+
+  it('B oynanışta da arayüzde de aynı geri yığınına gider', () => {
+    let active = false;
+    let backs = 0;
+    const off = pushBackHandler(() => {
+      backs++;
+      return true;
+    });
+    const gameNav = new FocusNavController({ isNavigationActive: () => active });
+    gameNav.pollPad(makePad([GAMEPAD_BUTTON.secondary]));
+    expect(backs).toBe(1);
+    gameNav.pollPad(makePad());
+    active = true;
+    gameNav.pollPad(makePad([GAMEPAD_BUTTON.secondary]));
+    expect(backs).toBe(2);
+    gameNav.destroy();
+    off();
+  });
+
+  it('sol çubuğun basılı tutulması kontrollü bir hızla yeni seçeneklere ilerler', () => {
+    const a = makeButton(0, 0);
+    const b = makeButton(100, 0);
+    const c = makeButton(200, 0);
+    let now = 0;
+    const gameNav = new FocusNavController({ now: () => now });
+    gameNav.pollPad(makePad([], [1, 0]));
+    expect(document.activeElement).toBe(a);
+    now = 100;
+    gameNav.pollPad(makePad([], [1, 0]));
+    expect(document.activeElement).toBe(a);
+    now = 300;
+    gameNav.pollPad(makePad([], [1, 0]));
+    expect(document.activeElement).toBe(b);
+    now = 410;
+    gameNav.pollPad(makePad([], [1, 0]));
+    expect(document.activeElement).toBe(c);
+    gameNav.destroy();
+  });
+
+  it('oynanışta LB/RB yetenek delegelerine gider', () => {
+    const calls: string[] = [];
+    const gameNav = new FocusNavController({
+      isNavigationActive: () => false,
+      onPrevTab: () => calls.push('left'),
+      onNextTab: () => calls.push('right'),
+    });
+    gameNav.pollPad(makePad([GAMEPAD_BUTTON.leftBumper, GAMEPAD_BUTTON.rightBumper]));
+    expect(calls).toEqual(['left', 'right']);
+    gameNav.destroy();
+  });
+
+  it('Steam Input B düğmesini Escape olarak da üretince geri iki kez çalışmaz', () => {
+    nav.destroy();
+    let backs = 0;
+    let pad = makePad();
+    const off = pushBackHandler(() => {
+      backs++;
+      return true;
+    });
+    const gameNav = new FocusNavController({ getGamepads: () => [pad] });
+    gameNav.start();
+    pad = makePad([GAMEPAD_BUTTON.secondary]);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+    gameNav.pollPad(pad);
+    expect(backs).toBe(1);
+    gameNav.destroy();
+    off();
+  });
+
+  it('odaklanan slider sağ/sol kol yönüyle değeri değiştirir ve odağı tutar', () => {
+    const range = document.createElement('input');
+    range.type = 'range';
+    range.min = '0';
+    range.max = '1';
+    range.step = '0.1';
+    range.value = '0.5';
+    place(range, 0, 0);
+    document.body.appendChild(range);
+    nav.move('right');
+    nav.pollPad(makePad([GAMEPAD_BUTTON.dpadRight]));
+    expect(Number(range.value)).toBeCloseTo(0.6);
+    expect(document.activeElement).toBe(range);
+  });
+
   it('işaretçi basımı nav halkasını siler', () => {
     const a = makeButton(0, 0);
     nav.move('right');
@@ -204,7 +368,7 @@ describe('FocusNavController', () => {
     input.focus();
     makeButton(100, 0);
     nav.start();
-    document.dispatchEvent(
+    input.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
     );
     // Olay input'un içinden kabarır; odak değişmemeli.

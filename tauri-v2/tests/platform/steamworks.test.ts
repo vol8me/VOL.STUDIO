@@ -48,6 +48,8 @@ function afterEach(probe: SteamworksProbe) {
   return () => setSteamworksProbe(null);
 }
 
+const nextTurn = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
 describe('steamworksStatus', () => {
   it('Tauri dışında dürüst "yok" gövdesi döner', async () => {
     const restore = afterEach({ ...fakeProbe({}).probe, isTauri: () => false });
@@ -87,6 +89,174 @@ describe('steamworksStatus', () => {
 });
 
 describe('createSteamworksTextEntryProvider', () => {
+  it('show sırasında gelen hızlı kapanışı kaçırmaz ve aboneliği kaldırır', async () => {
+    const { probe, events } = fakeProbe({
+      show_text_input: () => {
+        events.get('vol-steamworks:text-input')?.({ submitted: true, text: 'hızlı' });
+        return true;
+      },
+    });
+    const restore = afterEach(probe);
+    let result: unknown;
+    const opened = createSteamworksTextEntryProvider().open({ value: 'ilk' });
+    void opened.then((value) => (result = value));
+    try {
+      await nextTurn();
+      expect(result).toEqual({ value: 'hızlı', canceled: false });
+      expect(events.size).toBe(0);
+    } finally {
+      events.get('vol-steamworks:text-input')?.({ submitted: false });
+      await opened;
+      restore();
+    }
+  });
+
+  it('ilk await öncesindeki ikinci open da iptal olur', async () => {
+    const { probe, events } = fakeProbe({ show_text_input: true });
+    const handlers: Array<(payload: unknown) => void> = [];
+    const listen = probe.listen;
+    const restore = afterEach({
+      ...probe,
+      listen: (event, handler) => {
+        handlers.push(handler);
+        return listen(event, handler);
+      },
+    });
+    const provider = createSteamworksTextEntryProvider();
+    const first = provider.open({ value: 'a' });
+    const second = provider.open({ value: 'b' });
+    let result: unknown;
+    void second.then((value) => (result = value));
+    try {
+      await nextTurn();
+      expect(result).toEqual({ value: 'b', canceled: true });
+      expect(probe.invoke).toHaveBeenCalledTimes(1);
+    } finally {
+      for (const handler of handlers) handler({ submitted: false });
+      await Promise.all([first, second]);
+      expect(events.size).toBe(0);
+      restore();
+    }
+  });
+
+  it('yerel klavye tamamlanana dek ikinci open iptal olur', async () => {
+    let complete!: (value: { value: string; canceled: boolean }) => void;
+    fakes.OnScreenKeyboard.open.mockImplementationOnce(
+      () => new Promise((resolve) => (complete = resolve)),
+    );
+    fakes.OnScreenKeyboard.open.mockResolvedValue({ value: 'ikinci', canceled: false });
+    const { probe } = fakeProbe({ show_text_input: false });
+    const restore = afterEach(probe);
+    const provider = createSteamworksTextEntryProvider();
+    const first = provider.open({ value: 'a' });
+    try {
+      await nextTurn();
+      expect(await provider.open({ value: 'b' })).toEqual({ value: 'b', canceled: true });
+    } finally {
+      complete({ value: 'yerel', canceled: false });
+      await first;
+      restore();
+    }
+  });
+
+  it('abonelik reddedilirse show çağırmadan yerel klavyeye düşer', async () => {
+    fakes.OnScreenKeyboard.open.mockResolvedValue({ value: 'yerel', canceled: false });
+    const { probe } = fakeProbe({ show_text_input: true });
+    const restore = afterEach({
+      ...probe,
+      listen: () => Promise.reject(new Error('abonelik yok')),
+    });
+    try {
+      const provider = createSteamworksTextEntryProvider();
+      expect(await provider.open({ value: 'ilk' })).toEqual({ value: 'yerel', canceled: false });
+      expect(probe.invoke).not.toHaveBeenCalled();
+      expect(await provider.open({ value: 'sonraki' })).toEqual({
+        value: 'yerel',
+        canceled: false,
+      });
+    } finally {
+      restore();
+    }
+  });
+
+  it('abonelik tutuşu çözülmeden gelen olayın dinleyicisini de kaldırır', async () => {
+    const unlisten = vi.fn();
+    const { probe } = fakeProbe({ show_text_input: true });
+    const restore = afterEach({
+      ...probe,
+      listen: async (_, handler) => {
+        handler({ submitted: true, text: 'erken' });
+        await Promise.resolve();
+        return unlisten;
+      },
+    });
+    try {
+      expect(await createSteamworksTextEntryProvider().open({ value: 'ilk' })).toEqual({
+        value: 'erken',
+        canceled: false,
+      });
+      expect(unlisten).toHaveBeenCalledTimes(1);
+    } finally {
+      restore();
+    }
+  });
+
+  it('show çözülmeden gelen kapanışı saklar', async () => {
+    let show!: (value: boolean) => void;
+    const { probe, events } = fakeProbe({
+      show_text_input: () => new Promise<boolean>((resolve) => (show = resolve)),
+    });
+    const restore = afterEach(probe);
+    const opened = createSteamworksTextEntryProvider().open({ value: 'ilk' });
+    try {
+      await nextTurn();
+      events.get('vol-steamworks:text-input')?.({ submitted: true, text: 'beklenen' });
+      show(true);
+      expect(await opened).toEqual({ value: 'beklenen', canceled: false });
+      expect(events.size).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+
+  it.each([false, new Error('show reddi')])(
+    'show reddinde yerel klavye açılmadan abonelik temizlenir (%s)',
+    async (show) => {
+      const { probe, events } = fakeProbe({ show_text_input: show });
+      const restore = afterEach(probe);
+      fakes.OnScreenKeyboard.open.mockImplementationOnce(() => {
+        expect(events.size).toBe(0);
+        return Promise.resolve({ value: 'yerel', canceled: false });
+      });
+      try {
+        expect(await createSteamworksTextEntryProvider().open({ value: 'ilk' })).toEqual({
+          value: 'yerel',
+          canceled: false,
+        });
+      } finally {
+        restore();
+      }
+    },
+  );
+
+  it('yerel klavye reddinden sonra pending sıfırlanır', async () => {
+    const { probe, events } = fakeProbe({ show_text_input: false });
+    const restore = afterEach(probe);
+    fakes.OnScreenKeyboard.open.mockRejectedValueOnce(new Error('yerel reddi'));
+    fakes.OnScreenKeyboard.open.mockResolvedValue({ value: 'tekrar', canceled: false });
+    try {
+      const provider = createSteamworksTextEntryProvider();
+      await expect(provider.open({ value: 'ilk' })).rejects.toThrow('yerel reddi');
+      expect(await provider.open({ value: 'sonraki' })).toEqual({
+        value: 'tekrar',
+        canceled: false,
+      });
+      expect(events.size).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+
   it('diyalog açılırsa sonuç olaydan döner', async () => {
     const { probe, events } = fakeProbe({ show_text_input: true });
     const restore = afterEach(probe);
@@ -108,7 +278,7 @@ describe('createSteamworksTextEntryProvider', () => {
     const provider = createSteamworksTextEntryProvider();
     const promise = provider.open({ value: 'eskisi' });
     await Promise.resolve();
-    events.get('vol-steamworks:text-input')?.({ submitted: false });
+    events.get('vol-steamworks:text-input')?.({ submitted: false, text: 'iptal metni' });
     const result = await promise;
     expect(result).toEqual({ value: 'eskisi', canceled: true });
     restore();

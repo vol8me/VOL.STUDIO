@@ -39,7 +39,7 @@ export abstract class BaseScene extends Phaser.Scene {
     // HER sahnede kurulur: yalnız oyun sahnesinde olsaydı imleç ekranlar
     // arasında değişirdi. (F11 bunun AKSİNE bootstrap'te uygulama ömürlüdür;
     // sahne başına listener geçişlerde iki kez toggle üretirdi.)
-    scope.addDestroyable(new CustomCursor(document.body));
+    scope.addDestroyable(new CustomCursor(document.body, { isVisible: this.cursorVisibility() }));
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
     scope.add({
@@ -69,6 +69,10 @@ export abstract class BaseScene extends Phaser.Scene {
    * Dil değiştiğinde metinleri tazeler. Metni olmayan sahneler override etmez.
    */
   protected onLanguageChanged(): void {}
+
+  protected cursorVisibility(): (() => boolean) | undefined {
+    return undefined;
+  }
 
   /**
    * Alt sınıfa ait kaynakların temizliği. Taban temizliğinden ÖNCE çalışır;

@@ -181,35 +181,48 @@ export function createSteamworksTextEntryProvider(): TextEntryProvider {
   return {
     async open(request: TextEntryRequest): Promise<TextEntryResult> {
       if (pending) return { value: request.value, canceled: true };
-      let shown = false;
-      try {
-        shown = (await probe.invoke('show_text_input', {
-          description: '',
-          existingText: request.value,
-          maxCharacters: 4096,
-          multiline: request.multiline ?? false,
-        })) as boolean;
-      } catch {
-        shown = false;
-      }
-      if (!shown) return OnScreenKeyboard.open(request);
       pending = true;
+      const currentProbe = probe;
+      let unlisten: UnlistenFn | undefined;
+      const cleanup = () => {
+        const remove = unlisten;
+        unlisten = undefined;
+        remove?.();
+      };
       try {
-        const payload = await new Promise<TextInputPayload>((resolve) => {
-          let unlisten: UnlistenFn | undefined;
-          void probe
-            .listen('vol-steamworks:text-input', (p) => {
-              resolve(p as TextInputPayload);
-              unlisten?.();
-            })
-            .then((u) => (unlisten = u));
-        });
+        let dismiss!: (payload: TextInputPayload) => void;
+        const dismissed = new Promise<TextInputPayload>((resolve) => (dismiss = resolve));
+        let shown = false;
+        try {
+          unlisten = await currentProbe.listen('vol-steamworks:text-input', (payload) => {
+            dismiss((payload ?? {}) as TextInputPayload);
+          });
+          shown =
+            (await currentProbe.invoke('show_text_input', {
+              description: '',
+              existingText: request.value,
+              maxCharacters: 4096,
+              multiline: request.multiline ?? false,
+            })) === true;
+        } catch {
+          shown = false;
+        }
+        if (!shown) {
+          cleanup();
+          return await OnScreenKeyboard.open(request);
+        }
+        const payload = await dismissed;
+        const submitted = payload.submitted === true;
         return {
-          value: payload.text ?? request.value,
-          canceled: !payload.submitted,
+          value: submitted && typeof payload.text === 'string' ? payload.text : request.value,
+          canceled: !submitted,
         };
       } finally {
-        pending = false;
+        try {
+          cleanup();
+        } finally {
+          pending = false;
+        }
       }
     },
   };

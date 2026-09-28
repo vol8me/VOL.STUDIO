@@ -28,8 +28,8 @@ tauri-plugin-store = "2.4"
 # feature'ı ile derlenir; stub yapıda eklenti "kullanılamıyor" bildirir.
 tauri-plugin-vol-steamworks = { path = "../../../tauri-v2/plugins/vol-steamworks" }
 # Ölçüm sondası köprüsü: Deck turunda `report`/`env_info`/`flush_done`
-# komutlarını ve sinyal/uyku izleyiciyi verir; `VOL_DECK_MEASURE` olmadan
-# JS tarafı hiçbir kayıt üretmez.
+# komutlarını verir; sinyal/uyku izleyici yalnız `VOL_DECK_MEASURE=1` iken
+# başlar. Normal üretim açılışında JSONL ölçümü üretilmez.
 tauri-plugin-vol-diagnostics = { path = "../../../tauri-v2/plugins/vol-diagnostics" }
 
 # `custom-protocol` yalnız bu özellikten açılır. Bağımlılık satırında sabit

@@ -62,7 +62,7 @@ export interface LegacyKeyMapping {
 }
 
 export interface MigrationReport {
-  /** Taşınan anahtar adları (kayıpsız: okunan değer doğrulandıktan sonra silinir). */
+  /** Hedefte yazılıp doğrulanan anahtar adları. */
   readonly moved: readonly string[];
   /** Kapsam eşlemesi olmayıp varsayılan kapsama giden anahtarlar. */
   readonly defaulted: readonly string[];
@@ -72,9 +72,9 @@ export interface MigrationReport {
 
 /**
  * Tek dosyalı eski kaydı kapsamlı store'lara kayıpsız taşır. Sıra: her
- * anahtar önce hedefe yazılır, geri okunup doğrulanır, ancak sonra eski
- * dosyadan silinir — yarım kalan taşıma tekrar çalıştırılabilir kalır
- * (aynı değer iki kez yazılsa da idempotent'tir).
+ * anahtar önce hedefe yazılır, geri okunup doğrulanır; `retainSource` yoksa
+ * eski kaynak anahtar kaldırılır. Kaynağı koruma kipi mevcut hedef değeri
+ * yeniden yazmaz; yarım kalan taşıma tekrar çalıştırılabilir kalır.
  *
  * Eski dosyanın kendisi native tarafta `.bak` jenerasyonuyla korunur
  * (`store.rs`); ek kopya alınmaz.
@@ -86,6 +86,8 @@ export async function migrateLegacyStore(options: {
   readonly mappings: readonly LegacyKeyMapping[];
   /** Eşlemede olmayan ama sayımla bulunan anahtarların gideceği kapsam. */
   readonly defaultScope?: StorageScope;
+  /** Kaynağı saklar; mevcut hedef anahtarları yeniden yazmaz. */
+  readonly retainSource?: boolean;
 }): Promise<MigrationReport> {
   const defaultScope = options.defaultScope ?? 'device';
   const table = new Map(options.mappings.map((m) => [m.key, m.scope]));
@@ -110,12 +112,14 @@ export async function migrateLegacyStore(options: {
     const scope = table.get(key) ?? defaultScope;
     if (!table.has(key)) defaulted.push(key);
     const target: ScopedKey = `${scope}.${key}`;
+    if (options.retainSource && (await options.scoped.load(target, undefined)) !== undefined)
+      continue;
     await options.scoped.save(target, value);
     const back = await options.scoped.load(target, undefined);
     if (JSON.stringify(back) !== JSON.stringify(value)) {
       throw new Error(`Taşıma doğrulanamadı: ${key}`);
     }
-    await options.legacy.remove(key);
+    if (!options.retainSource) await options.legacy.remove(key);
     moved.push(key);
   }
   return { moved, defaulted, unknownLeftBehind };

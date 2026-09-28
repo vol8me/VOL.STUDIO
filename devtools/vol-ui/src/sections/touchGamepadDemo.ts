@@ -1,19 +1,18 @@
 import {
-  Glyph,
+  InputPresentationController,
+  GamepadPointerController,
+  Button,
   Input,
   Text,
   clearTextEntryModeProbe,
-  resolveGlyphFamily,
   setTextEntryModeProbe,
 } from '@volstudio/core/ui';
 import type { DisposableScope } from '@volstudio/core/lifecycle';
 import { i18next } from '@volstudio/core/i18n';
-import { GAMEPAD_BUTTON, GamepadController, InputModeArbiter } from '@volstudio/core/input/gamepad';
+import { GAMEPAD_BUTTON, GamepadController } from '@volstudio/core/input/gamepad';
 
 type DemoAction = 'fire' | 'dash';
 const DEMO_ACTIONS: readonly DemoAction[] = ['fire', 'dash'];
-/** DOM kenarının "etkin" sayıldığı pencere — gerçek isActive sözleşmesinin vitrin karşılığı. */
-const MODE_WINDOW_MS = 250;
 
 function axisReadout(x: number, y: number): string {
   return i18next.t('volui:touch.axisReadout', { x: x.toFixed(2), y: y.toFixed(2) });
@@ -27,6 +26,7 @@ function axisReadout(x: number, y: number): string {
 export function buildGamepadDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
+  wrap.classList.add('vol-showcase-gamepad-demo');
   wrap.style.alignItems = 'center';
 
   const padStatus = new Text(i18next.t('volui:touch.gamepadNone'), { variant: 'muted' });
@@ -39,14 +39,19 @@ export function buildGamepadDemo(disposables: DisposableScope): HTMLElement {
   // Glif satırı: kip kiminse onun glifi görünür (pad↔klavye/fare karşılıklı gizlenir).
   const glyphRow = document.createElement('div');
   glyphRow.className = 'vol-showcase-gamepad-glyphs';
-  const fireGlyph = new Glyph({ name: 'rightTrigger', label: 'RT' });
-  const dashGlyph = new Glyph({ name: 'faceDown', label: 'A' });
-  const fireKeyGlyph = new Glyph({ name: 'mouseLeft', label: 'LMB' });
-  const dashKeyGlyph = new Glyph({ name: 'key', key: 'space', label: 'Space' });
+  const presentation = disposables.addDestroyable(new InputPresentationController());
+  presentation.start();
+  const fireGlyph = presentation.createGlyph({ padName: 'rightTrigger', label: 'RT' });
+  const dashGlyph = presentation.createGlyph({ padName: 'faceDown', label: 'A' });
+  const fireKeyGlyph = presentation.createGlyph({ keyboardName: 'mouseLeft', label: 'LMB' });
+  const dashKeyGlyph = presentation.createGlyph({
+    keyboardName: 'key',
+    key: 'space',
+    label: 'Space',
+  });
   for (const g of [fireGlyph, dashGlyph, fireKeyGlyph, dashKeyGlyph]) {
-    glyphRow.appendChild(g.element);
+    glyphRow.appendChild(g);
   }
-  disposables.addDestroyables(fireGlyph, dashGlyph, fireKeyGlyph, dashKeyGlyph);
 
   const pad = new GamepadController<DemoAction>({
     actions: DEMO_ACTIONS,
@@ -66,45 +71,56 @@ export function buildGamepadDemo(disposables: DisposableScope): HTMLElement {
   });
   disposables.addDestroyables(textLabel, textField);
 
-  const arbiter = new InputModeArbiter();
-  // Demoda InputManager yok; "kol kipi mi?" probunu bu kartın arbiter'ı sağlar.
-  const probe = (): boolean => arbiter.mode === 'gamepad';
+  const probe = (): boolean => presentation.mode === 'gamepad';
   setTextEntryModeProbe(probe);
   disposables.addSubscription(() => clearTextEntryModeProbe(probe));
-  let pcEdgeAt = -Infinity;
-  let touchEdgeAt = -Infinity;
-  disposables.addListener(window, 'keydown', () => {
-    pcEdgeAt = performance.now();
-  });
-  disposables.addListener<PointerEvent>(window, 'pointerdown', (event) => {
-    const at = performance.now();
-    if (event.pointerType === 'touch') touchEdgeAt = at;
-    else pcEdgeAt = at;
-  });
-  disposables.addListener<PointerEvent>(window, 'pointermove', (event) => {
-    if (event.pointerType === 'touch') return;
-    pcEdgeAt = performance.now();
+
+  let selected = false;
+  const action = disposables.addDestroyable(
+    new Button(i18next.t('volui:touch.dash'), {
+      fullWidth: false,
+      onClick: () => {
+        selected = !selected;
+        action.element.setAttribute('aria-pressed', String(selected));
+        action.setLabel(i18next.t(selected ? 'volui:touch.pressedDash' : 'volui:touch.dash'));
+      },
+    }),
+  );
+  action.element.setAttribute('aria-pressed', 'false');
+  const cursor = document.createElement('div');
+  cursor.className = 'vol-showcase-gamepad-cursor';
+  cursor.setAttribute('aria-hidden', 'true');
+  cursor.hidden = true;
+  const pointer = disposables.addDestroyable(
+    new GamepadPointerController({ root: wrap, isActive: () => wrap.isConnected }),
+  );
+  pointer.start();
+  disposables.addListener(
+    document,
+    'vol:focusactivate',
+    (event) => {
+      if (pointer.ownsPointer) event.preventDefault();
+    },
+    true,
+  );
+  disposables.addListener(wrap, 'pointermove', (event: PointerEvent) => {
+    if (event.pointerType !== 'gamepad') return;
+    const rect = wrap.getBoundingClientRect();
+    const scaleX = rect.width > 0 && wrap.offsetWidth > 0 ? wrap.offsetWidth / rect.width : 1;
+    const scaleY = rect.height > 0 && wrap.offsetHeight > 0 ? wrap.offsetHeight / rect.height : 1;
+    cursor.style.left = `${(event.clientX - rect.left) * scaleX}px`;
+    cursor.style.top = `${(event.clientY - rect.top) * scaleY}px`;
   });
 
   const tick = (): void => {
-    const now = performance.now();
     pad.update(16);
-    arbiter.observe([
-      { id: 'touch', active: now - touchEdgeAt < MODE_WINDOW_MS },
-      { id: 'pc', active: now - pcEdgeAt < MODE_WINDOW_MS },
-      { id: 'gamepad', active: pad.isActive },
-    ]);
+    presentation.poll();
+    cursor.hidden = !pointer.ownsPointer;
 
     const snapshot = pad.getDebugSnapshot().providers?.gamepad;
     const padId = typeof snapshot?.padId === 'string' ? snapshot.padId : '';
 
-    const mode = arbiter.mode;
-    const padFamily =
-      mode === 'gamepad' ? resolveGlyphFamily('gamepad', { gamepadId: padId }) : null;
-    fireGlyph.setFamily(padFamily);
-    dashGlyph.setFamily(padFamily);
-    fireKeyGlyph.setFamily(mode === 'pc' ? 'keyboard' : null);
-    dashKeyGlyph.setFamily(mode === 'pc' ? 'keyboard' : null);
+    const mode = presentation.mode;
 
     padStatus.setContent(
       padId !== ''
@@ -131,8 +147,10 @@ export function buildGamepadDemo(disposables: DisposableScope): HTMLElement {
   wrap.appendChild(moveReadout.element);
   wrap.appendChild(actionReadout.element);
   wrap.appendChild(glyphRow);
+  wrap.appendChild(action.element);
   wrap.appendChild(textLabel.element);
   wrap.appendChild(textField.element);
   wrap.appendChild(hint.element);
+  wrap.appendChild(cursor);
   return wrap;
 }

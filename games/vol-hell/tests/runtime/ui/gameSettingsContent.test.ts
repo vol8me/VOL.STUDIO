@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { i18n, i18next, type ScopedSaveManager } from '@volstudio/core';
 import { AudioSettings } from '@/app/AudioSettings';
 import { VideoSettings } from '@/app/VideoSettings';
+import { ControlSettings } from '@/app/ControlSettings';
 import { GameSettingsContent } from '@/runtime/ui/GameSettingsContent';
 import trResources from '@/i18n/tr.json';
 import enResources from '@/i18n/en.json';
@@ -37,6 +38,24 @@ describe('GameSettingsContent', () => {
     audio.dispose();
     video.dispose();
     document.body.replaceChildren();
+  });
+
+  it('otomatik nişan seçimini modele yazar ve dış değişikliği canlı gösterir', async () => {
+    const controls = new ControlSettings(makeSaveManager());
+    content = new GameSettingsContent({
+      audioSettings: audio,
+      videoSettings: video,
+      controlSettings: controls,
+      showVideoSettings: false,
+    });
+    const input = content.element.querySelector<HTMLInputElement>('.vol-game-settings__aim input');
+    expect(input).not.toBeNull();
+    input!.checked = true;
+    input!.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(controls.isAutoAimEnabled()).toBe(true);
+    await controls.setAutoAimEnabled(false);
+    expect(input!.checked).toBe(false);
+    controls.dispose();
   });
 
   it('masaüstünde dil, tüm ses kontrolleri ve üç görüntü seçimini sunar', () => {

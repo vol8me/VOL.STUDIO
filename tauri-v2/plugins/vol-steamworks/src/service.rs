@@ -89,8 +89,10 @@ pub(crate) mod imp {
         use std::sync::atomic::{AtomicBool, Ordering};
         use std::sync::{Arc, Mutex};
         use std::time::Duration;
-        use steamworks::{Client, FloatingGamepadTextInputMode, GameOverlayActivated,
-            GamepadTextInputLineMode, GamepadTextInputMode, InputType};
+        use steamworks::{
+            Client, FloatingGamepadTextInputMode, GameOverlayActivated, GamepadTextInputLineMode,
+            GamepadTextInputMode, InputType,
+        };
         use tauri::{AppHandle, Emitter, Runtime};
 
         /// Metin girişi sonucu JS'e bu olayla döner; `submitted` false ise
@@ -155,11 +157,8 @@ pub(crate) mod imp {
                 match Client::init_app(app_id) {
                     Ok(client) => {
                         client.input().init(false);
-                        let manifest_ok = manifest.map(|path| {
-                            client
-                                .input()
-                                .set_input_action_manifest_file_path(&path)
-                        });
+                        let manifest_ok = manifest
+                            .map(|path| client.input().set_input_action_manifest_file_path(&path));
                         self.register_callbacks(&client);
                         self.spawn_pump(client.clone());
                         *self.state.lock().unwrap() = State::Up {
@@ -226,7 +225,8 @@ pub(crate) mod imp {
                         error: Some(error.clone()),
                     },
                     State::Up {
-                        client, manifest_ok,
+                        client,
+                        manifest_ok,
                     } => {
                         let utils = client.utils();
                         let remote = client.remote_storage();
@@ -285,10 +285,8 @@ pub(crate) mod imp {
                     .into_iter()
                     .map(|handle| ControllerInfo {
                         handle,
-                        steamworks_type: input_type_name(
-                            input.get_input_type_for_handle(handle),
-                        )
-                        .into(),
+                        steamworks_type: input_type_name(input.get_input_type_for_handle(handle))
+                            .into(),
                     })
                     .collect())
             }
@@ -312,9 +310,7 @@ pub(crate) mod imp {
                 let action_handle = input.get_digital_action_handle(action);
                 let mut origins = Vec::new();
                 for handle in input.get_connected_controllers() {
-                    for origin in
-                        input.get_digital_action_origins(handle, set, action_handle)
-                    {
+                    for origin in input.get_digital_action_origins(handle, set, action_handle) {
                         let path = input.get_glyph_for_action_origin(origin);
                         origins.push(GlyphOrigin {
                             name: input.get_string_for_action_origin(origin),
@@ -350,9 +346,7 @@ pub(crate) mod imp {
                     max_characters,
                     Some(existing_text),
                     move |dismissed| {
-                        let text = cb_client
-                            .utils()
-                            .get_entered_gamepad_text_input(&dismissed);
+                        let text = cb_client.utils().get_entered_gamepad_text_input(&dismissed);
                         let _ = app.emit(
                             TEXT_INPUT_EVENT,
                             TextInputPayload {
@@ -428,8 +422,8 @@ pub(crate) mod imp {
             }
 
             pub fn cloud_write(&self, name: &str, data_base64: &str) -> Result<bool, String> {
-                let bytes = b64_decode(data_base64)
-                    .ok_or_else(|| "bozuk base64 verisi".to_string())?;
+                let bytes =
+                    b64_decode(data_base64).ok_or_else(|| "bozuk base64 verisi".to_string())?;
                 let client = self.client()?;
                 let file = client.remote_storage().file(name);
                 use std::io::Write;
@@ -463,9 +457,7 @@ pub(crate) mod imp {
                 InputType::PS4Controller => "ps4",
                 InputType::PS5Controller => "ps5",
                 InputType::SwitchProController => "switch_pro",
-                InputType::SwitchJoyConPair | InputType::SwitchJoyConSingle => {
-                    "switch_joycon"
-                }
+                InputType::SwitchJoyConPair | InputType::SwitchJoyConSingle => "switch_joycon",
                 InputType::GenericGamepad => "generic",
                 InputType::MobileTouch => "mobile_touch",
                 InputType::AndroidController => "android",
@@ -514,9 +506,7 @@ pub(crate) mod imp {
                     cloud_enabled: None,
                     input_ready: false,
                     manifest_ok: None,
-                    error: Some(
-                        "vol-steamworks `steamworks` feature'ı olmadan derlendi".into(),
-                    ),
+                    error: Some("vol-steamworks `steamworks` feature'ı olmadan derlendi".into()),
                 }
             }
 

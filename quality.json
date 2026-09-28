@@ -1,6 +1,6 @@
 {
   "$comment": [
-    "2026-10-02: vol-hell yeniden aktifleştirme (D7) — donmuş ağaçta ölçülen",
+    "2026-09-28: vol-hell yeniden aktifleştirme (D7) — donmuş ağaçta ölçülen",
     "kapsam satır 84.45 / ifade 82.21 / dal 75.54 / fonksiyon 79.44 (v8, 761",
     "test). Eşikler ölçülenin ~2 puan altındaki bantta ratchet'li: 82/80/73/77.",
     "",
@@ -143,9 +143,21 @@
       "functions": 77
     }
   },
-  "bundles": {},
+  "bundles": {
+    "$comment": "2026-09-28: VOL.HELL bundle kapısı (gzip seviye 9) app 129.5, vendor 345.1, css 19.7 KB ölçtü. App 145, vendor 365, css 24 KB tavanları son gönderim için dar büyüme payıdır.",
+    "games/vol-hell": { "app": 145, "vendor": 365, "css": 24 }
+  },
   "scaling": {
-    "$comment": "Algoritmik ÖLÇEKLEME tavanı. Mutlak süre donanıma bağlı olduğu için kapı değildir; dört kat girdideki süre oranı doğrusal davranışı karesel sızmadan ayırır. Her paket kendi ölçülen tabanına pay bırakan tavanı taşır."
+    "$comment": "2026-09-28: VOL.HELL render snapshot 10→40 düşman oranı yerelde 2.93 ölçüldü. Ortam oynaklığına pay ile tavan 5.0; dört kat girdide karesel büyüme (~16) reddedilir.",
+    "games/vol-hell": {
+      "$measure": {
+        "script": "scripts/snapshot-scaling.ts",
+        "series": "snapshots",
+        "input": "enemies",
+        "value": "ms"
+      },
+      "snapshot40Over10": 5.0
+    }
   },
   "coverageShape": {
     "minLines": 100,

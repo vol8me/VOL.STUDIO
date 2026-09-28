@@ -89,7 +89,8 @@
   align-items: flex-start;
 }
 
-.vol-button:hover {
+.vol-button:hover,
+.vol-button.vol-gamepad-hover {
   background: var(--vol-ui-hover-fill);
   border-color: var(--vol-ui-border-strong);
   color: var(--vol-ui-text);
@@ -120,7 +121,8 @@
   color: var(--vol-ui-on-brand);
 }
 
-.vol-button--primary:hover {
+.vol-button--primary:hover,
+.vol-button--primary.vol-gamepad-hover {
   background: var(--vol-ui-brand-hover);
   border-color: var(--vol-ui-brand-hover);
   color: var(--vol-ui-on-brand);
@@ -138,7 +140,8 @@
   color: var(--vol-ui-on-danger);
 }
 
-.vol-button--danger:hover {
+.vol-button--danger:hover,
+.vol-button--danger.vol-gamepad-hover {
   background: var(--vol-ui-danger-border);
   border-color: var(--vol-ui-danger-border);
   color: var(--vol-ui-on-danger);
@@ -233,7 +236,8 @@
   height: 100%;
 }
 
-.vol-icon-button:hover {
+.vol-icon-button:hover,
+.vol-icon-button.vol-gamepad-hover {
   background: var(--vol-ui-hover-fill);
   border-color: var(--vol-ui-border-strong);
 }
@@ -261,7 +265,8 @@
   color: var(--vol-ui-on-brand);
 }
 
-.vol-icon-button--primary:hover {
+.vol-icon-button--primary:hover,
+.vol-icon-button--primary.vol-gamepad-hover {
   background: var(--vol-ui-brand-hover);
 }
 
@@ -275,7 +280,8 @@
   color: var(--vol-ui-on-success);
 }
 
-.vol-icon-button--success:hover {
+.vol-icon-button--success:hover,
+.vol-icon-button--success.vol-gamepad-hover {
   background: var(--vol-ui-success-border);
 }
 
@@ -290,7 +296,8 @@
   color: var(--vol-ui-on-danger);
 }
 
-.vol-icon-button--danger:hover {
+.vol-icon-button--danger:hover,
+.vol-icon-button--danger.vol-gamepad-hover {
   background: var(--vol-ui-danger-border);
 }
 
@@ -328,7 +335,8 @@
   color: var(--vol-ui-text-disabled);
 }
 
-.vol-input:hover {
+.vol-input:hover,
+.vol-input.vol-gamepad-hover {
   border-color: var(--vol-ui-border-strong);
 }
 
@@ -371,7 +379,8 @@
   color: var(--vol-ui-text-disabled);
 }
 
-.vol-textarea__input:hover {
+.vol-textarea__input:hover,
+.vol-textarea__input.vol-gamepad-hover {
   border-color: var(--vol-ui-border-strong);
 }
 
@@ -524,6 +533,12 @@
   right: auto;
   min-width: var(--vol-hit-target-min, auto);
   transform: translateX(-50%);
+}
+
+.vol-slider__track:has(.vol-slider__input:is(:focus-visible, .vol-focusnav-current)) {
+  outline: 3px solid var(--vol-ui-focus-ring);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px var(--vol-ui-focus-halo);
 }
 
 .vol-slider__track:has(.vol-slider__input:focus-visible) .vol-slider__handle {

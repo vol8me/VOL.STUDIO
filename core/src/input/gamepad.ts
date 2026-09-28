@@ -20,6 +20,7 @@ export {
   type GamepadInputSnapshot,
 } from './GamepadController';
 export { InputModeArbiter, inputModeForSession, type InputModePolicyOptions } from './inputMode';
+export { selectGamepad, type GamepadSelectionOptions } from './selectGamepad';
 export type { InputProvider } from './InputProvider';
 export { createIdleActions, type InputState } from './InputState';
 export {

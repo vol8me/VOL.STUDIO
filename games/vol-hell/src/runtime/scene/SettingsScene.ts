@@ -8,9 +8,16 @@ import {
   shouldUseTouchControls,
 } from '@volstudio/core';
 import { BaseScene } from './BaseScene';
+import { controlGlyph } from '@/app/controlGlyph';
 import { pushBackHandler } from '@volstudio/core';
 import { displayCapabilities, hasNativeWindow, supportsDisplaySettings } from '@/app/platform';
-import { audioSettings, gameAudio, keyBindings, videoSettings } from '@/app/services';
+import {
+  audioSettings,
+  gameAudio,
+  keyBindings,
+  videoSettings,
+  controlSettings,
+} from '@/app/services';
 import { sfxVolumes } from '@/config';
 import { GameSettingsContent } from '@/runtime/ui/GameSettingsContent';
 
@@ -36,6 +43,7 @@ export class SettingsScene extends BaseScene {
 
   protected createScene(): void {
     this.backButton = new Button(i18next.t('volhell:settings.back'), {
+      iconLeft: controlGlyph('faceRight', i18next.t('volhell:settings.back')),
       onClick: () => this.goBack(),
     });
     this.closeButton = new IconButton('✕', {
@@ -57,6 +65,7 @@ export class SettingsScene extends BaseScene {
     this.content = new GameSettingsContent({
       audioSettings,
       videoSettings,
+      controlSettings,
       showVideoSettings: supportsDisplaySettings(),
       display: displayCapabilities(),
       canResizeWindow: hasNativeWindow(),

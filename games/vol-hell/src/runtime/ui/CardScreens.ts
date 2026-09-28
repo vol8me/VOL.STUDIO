@@ -100,12 +100,16 @@ export class CardScreens {
     this.toasts = new ToastManager(parent.ownerDocument?.body ?? parent);
 
     this.levelUp = new LevelUpPicker({
+      modal: true,
+      requireFreshActivation: true,
       selectLabel: i18next.t('volhell:cards.ui.select'),
       onSelect: (cardId) => this.handleLevelUpSelect(cardId),
     });
     this.container.appendChild(this.levelUp.element);
 
     this.shop = new ShopPicker({
+      modal: true,
+      requireFreshActivation: true,
       labels: {
         buy: i18next.t('volhell:cards.ui.buy'),
         owned: i18next.t('volhell:cards.ui.owned'),

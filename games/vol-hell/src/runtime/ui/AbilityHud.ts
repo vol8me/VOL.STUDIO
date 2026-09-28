@@ -2,6 +2,7 @@ import { i18next } from '@volstudio/core';
 import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
 import { ABILITY_SLOTS, type AbilitySlot } from '@/runtime/ability/types';
 import { getAbilityDisplayName } from './abilityPresentation';
+import { controlGlyph } from '@/app/controlGlyph';
 
 /** Slotların klavye karşılığı — HUD'da ve loadout panelinde aynı harfler görünür. */
 export const SLOT_KEY_LABELS: Record<AbilitySlot, string> = {
@@ -38,7 +39,12 @@ export class AbilityHud {
 
       const key = document.createElement('span');
       key.className = 'vol-ability-slot__key';
-      key.textContent = SLOT_KEY_LABELS[slot];
+      const glyph = controlGlyph(
+        slot === 'primary' ? 'leftBumper' : 'rightBumper',
+        SLOT_KEY_LABELS[slot],
+      );
+      if (glyph) key.appendChild(glyph);
+      else key.textContent = SLOT_KEY_LABELS[slot];
       root.appendChild(key);
 
       const name = document.createElement('span');

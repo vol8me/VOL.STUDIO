@@ -16,6 +16,7 @@ import {
   type ProviderSnapshot,
 } from './InputSnapshot';
 import { Vector2 } from '../math/Vector2';
+import { selectGamepad } from './selectGamepad';
 
 /** Gamepad sağlayıcısının diagnostics gövdesi — CORE yorumlamaz. */
 export interface GamepadInputSnapshot extends ProviderSnapshot {
@@ -44,8 +45,7 @@ export interface GamepadControllerOptions<TAction extends string> extends Gamepa
    */
   getGamepads?: () => readonly (PadLike | null)[];
   /**
-   * Hangi kolu okuyacağı. Verilmezse ilk bağlı `standard` kol seçilir;
-   * standard eşleme taşımayan tek kol varsa o da kullanılır.
+   * Sabit kol dizini. Verilmezse son etkin standart kol, nötrken de korunur.
    */
   padIndex?: number;
   /** Diagnostics'teki sağlayıcı kimliği; varsayılan `'gamepad'`. */
@@ -89,18 +89,10 @@ export class GamepadController<TAction extends string> implements InputProvider<
   }
 
   private selectPad(): PadLike | null {
-    const pads = this.getGamepads();
-    if (this.padIndex !== undefined) {
-      const pad = pads[this.padIndex];
-      return pad?.connected ? pad : null;
-    }
-    let firstConnected: PadLike | null = null;
-    for (const pad of pads) {
-      if (!pad || !pad.connected) continue;
-      if (pad.mapping === 'standard') return pad;
-      firstConnected ??= pad;
-    }
-    return firstConnected;
+    return selectGamepad(this.getGamepads(), this.pad, {
+      padIndex: this.padIndex,
+      deadZone: this.options.moveDeadZone,
+    });
   }
 
   update(_delta: number): void {

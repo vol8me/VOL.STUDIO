@@ -47,6 +47,7 @@ export class EnemyManager {
   private spawnSequence = 0;
   private spawnTimer = 0;
   private currentWave = 1;
+  private scenarioPopulation: 0 | 10 | 20 | 30 | 40 | null = null;
   /**
    * Hareketi DIŞARIDAN sürülen düşmanlar (Elite/Boss). Normal davranış
    * döngüsünden muaf tutulur; çarpışma ve temizlik için listede kalır.
@@ -73,6 +74,28 @@ export class EnemyManager {
     this.spawnTimer = 0;
   }
 
+  setScenarioPopulation(count: number): void {
+    if (count !== 0 && count !== 10 && count !== 20 && count !== 30 && count !== 40) {
+      throw new Error('Geçersiz ölçüm nüfusu');
+    }
+    this.scenarioPopulation = count;
+    this.spawnTimer = 0;
+  }
+
+  fillScenarioPopulation(
+    border: Border,
+    playerPos: Vector2,
+    difficulty: DifficultyState,
+    grid?: SpatialGrid,
+  ): void {
+    const target = this.scenarioPopulation;
+    if (this.destroyed || target === null) return;
+    let attempts = 0;
+    while (this.enemies.length < target && attempts++ < target * 4) {
+      this.spawnFromCatalog(border, playerPos, difficulty, grid);
+    }
+  }
+
   update(
     delta: number,
     playerPos: Vector2,
@@ -89,7 +112,7 @@ export class EnemyManager {
     const maxEnemies = Number.isFinite(difficulty.maxEnemies)
       ? Math.max(0, Math.floor(difficulty.maxEnemies))
       : 0;
-    if (spawnInterval > 0 && this.enemies.length < maxEnemies) {
+    if (this.scenarioPopulation === null && spawnInterval > 0 && this.enemies.length < maxEnemies) {
       let attempts = 0;
       while (
         this.spawnTimer >= spawnInterval &&

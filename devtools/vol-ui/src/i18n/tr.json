@@ -674,7 +674,7 @@
     "gamepadPad": "Kol: {{id}}",
     "gamepadMode": "Girdi kipi: {{mode}}",
     "gamepadPressed": "Basılı: {{actions}}",
-    "gamepadHint": "Kol bağla ya da düğmeye bas; klavye/fare hareketiyle girdi kipinin değiştiğini izle.",
+    "gamepadHint": "Sağ çubukla imleci taşı, A ile seç; klavye/fare hareketiyle girdi kipinin değiştiğini izle.",
     "gamepadTextLabel": "Kolla metin girişi",
     "gamepadTextPlaceholder": "Kol kipindeyken odakla — ekran klavyesi açılır",
     "released": "Bırakıldı",

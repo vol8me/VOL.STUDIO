@@ -86,7 +86,8 @@
     "action": {
       "fire": "Ateş",
       "dash": "Atılım"
-    }
+    },
+    "autoAim": "Otomatik nişan (ateş ederken en yakın hedef)"
   },
   "pause": {
     "title": "DURAKLATILDI",

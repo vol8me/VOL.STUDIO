@@ -122,7 +122,7 @@ ağaçları ancak lifecycle yeniden aktifleştirmesiyle değişir (D7).
       ihlali dosya ve seçiciyle bildirir; mevcut ihlaller giderilmiştir.
       Kapı `devtools/vol-ui/tests/e2e/readability.spec.ts`'te (webkit
       projesi, 4/4 yeşil); `--vol-text-micro` 12px tabanına çıkarıldı,
-      `--vol-ui-zoom` medya sorgularıyla 1080p→1.5×/2160p→3× ölçeklenir
+      `--vol-layout-zoom` medya sorgularıyla 1080p→1.5×/2160p→3× ölçeklenir
       (2026-09-27).
 - [x] **[P2] D5 — Kolla metin girişi.** `core` metin girişi isteği sözleşmesi;
       Steamworks varsa kayan klavye, yoksa `core`'un yalnız kolla kullanılan,
@@ -160,13 +160,14 @@ ağaçları ancak lifecycle yeniden aktifleştirmesiyle değişir (D7).
       `libsteam_api.so` katar (linuxdeploy, `steamworks-sys` OUT_DIR'den mutlak
       yol). Birim 3/3 Rust, 13/13 adaptör, 21/21 sonda sözleşmesi yeşil
       (2026-09-27).
-- [ ] **[P1] D7 — VOL.HELL Deck referansı: yeniden aktifleştir, kabul et,
-      yeniden dondur.** Lifecycle prosedürüyle aktifleşir; oyuna özgü kimlik
+- [ ] **[P1] D7 — VOL.HELL Deck referansı: yeniden aktifleştir ve kabul et.**
+      Lifecycle prosedürüyle aktifleşir; oyuna özgü kimlik
       ve kayıt geçişi; kayıt kapsamları; duraklatma Menu'de, nişan sağ
       çubukta, bütün ekranlar kolla gezilir. Kapanır: Steam Linux Runtime
       4.0'da hiçbir ayar değiştirilmeden baştan sona kolla oynanır; 60 FPS
       hedefi ölçüm kaydıyla karşılanır; Verified kriterleri madde madde
-      işaretlenir; kullanıcı onayıyla yeni annotated freeze etiketi atılır.
+      işaretlenir; oynanabilirlik/ses kabulünü ve sonraki lifecycle kararını
+      kullanıcı verir, kendiliğinden freeze yapılmaz.
       **Durum (2026-09-27):** D7a–d uygulandı — yaşam döngüsü aktif
       (kapsam eşiği 82/80/73/77), `synced`/`device` kapsamları ve doğrulamalı
       legacy taşıma (`storage.ts`, 5/5 test), kol eşlemesi ve odak
@@ -175,20 +176,24 @@ ağaçları ancak lifecycle yeniden aktifleştirmesiyle değişir (D7).
       `vol-steamworks` (feature'lı) + `vol-diagnostics` eklentileri girdi;
       Deck turu ölçüldü: `available`/`manifestOk`/`inputReady` true,
       `pad-connected` "Steam Deck"/`standard`, ilk fiziksel basım
-      `pad-input` kaydı düştü, gerçek dalga 9 pencerede 58–59,4 FPS
+      `pad-input` kaydı düştü, fazı ayrılmamış 9 pencerede 58–59,4 FPS
       (p95 ≤ 21 ms), SIGTERM→flush→temiz çıkış kanıtlı, `device.*` store
       dosyası doğdu. **Kalan:** kolla menü gezinme/pause/nişan hissi ve
       overlay diyalogları insan turunda; ardından Verified işaretleri ve
-      kullanıcı onayıyla freeze.
-- [ ] **[P2] D8 — Yeni oyun rehberi Deck listesini taşır.**
-      `games/docs/new-game.md`: oyuna özgü kimlik, kayıt kapsamları, kol
-      eylem bağları, glif, `deck:*` adaylığı, okunabilirlik kapısı. Kapanır:
-      rehberdeki her Deck maddesi onu zorlayan kapıya bağlıdır.
+      kullanıcı kararıyla lifecycle değişikliği.
 - [ ] **[P3] OLED Deck ve Steam Machine'de kare zamanlaması.** 90 Hz panelde
       ve TV çıkışında vblank zamanlayıcısı kuralı ölçülür. Kapanır: cihaz
       bulunduğunda ölçüm `docs/steam-deck.md`ye girer.
 
 ## Kapatılanlar
+
+### 2026-09-28 — Deck yeni oyun listesi
+
+- [x] **[P2] D8 — Yeni oyun rehberi Deck listesini taşır.**
+      `games/docs/new-game.md` oyuna özgü kimlik, kayıt/Cloud ayrımı,
+      kol/glif/metin, ses, okunabilirlik, SteamRT4, fazlı ölçüm ve insan
+      kabulünü ilgili otomatik kapı veya cihaz kanıtına bağlar. D7 oyununun
+      kendi kabulü bundan ayrıdır.
 
 ### 2026-09-20 — deneysel paketleri emekliye ayırma ve CORE kazanımları
 

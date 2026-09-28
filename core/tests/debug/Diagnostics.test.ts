@@ -21,6 +21,32 @@ function recordingTransport(): DiagnosticsTransport & { sent: DiagnosticsSnapsho
 }
 
 describe('Diagnostics', () => {
+  afterEach(() => vi.restoreAllMocks());
+  it('aynı render karesindeki simülasyon aşamalarını toplar, sonraki karede sıfırlar', () => {
+    const transport = recordingTransport();
+    const diagnostics = new Diagnostics({
+      gameId: 'test',
+      sampleEvery: 1,
+      overlay: false,
+      transport,
+    });
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    diagnostics.beginFrame();
+    diagnostics.startStage('entities');
+    now = 2;
+    diagnostics.endStage('entities');
+    diagnostics.endStage('entities');
+    diagnostics.startStage('entities');
+    now = 5;
+    diagnostics.endStage('entities');
+    diagnostics.endFrame();
+    expect(transport.sent[0].stages.entities).toBe(5);
+    diagnostics.beginFrame();
+    diagnostics.endFrame();
+    expect(transport.sent[1].stages.entities).toBeUndefined();
+    diagnostics.destroy();
+  });
   it('iki örnek yan yana yaşayabilir', () => {
     // Aynı process'te birden fazla Diagnostics örneği çalışabilmeli.
     const first = createDiagnostics({ gameId: 'a', overlay: false });

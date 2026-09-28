@@ -18,6 +18,7 @@ import { dirname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { checkGlibcCap } from './glibc-cap.mjs';
 import { loadRepoLifecycle } from './quality/workspaceLifecycle.mjs';
+import { syncProbeMetrics } from './probe-metrics.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
@@ -157,6 +158,9 @@ function imageExists(tag) {
 }
 
 syncVendorAssets();
+if (existsSync(join(ROOT, workspace, 'web', 'probe.js'))) {
+  syncProbeMetrics(ROOT, join(ROOT, workspace, 'web'));
+}
 ensureProbeAudio();
 
 if (!imageExists(BUILD_IMAGE_TAG)) {

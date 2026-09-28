@@ -31,38 +31,38 @@ use tauri::{
 /// şemayı ayırt edebilsin.
 pub const RECORD_VERSION: u32 = 1;
 
-/// `env_info` yanıtına dahil edilen değişken önekleri. Toptan `Steam*` kaydı
-/// bilerek yoktur: oturum belirteçleri de aynı öneki taşır.
+/// Kimlik, yol ve oturum belirteci taşımayan tam değişken adları.
 const ENV_ALLOWLIST: &[&str] = &[
     "steamdeck",
     "steamos",
     "steamgamepadui",
     "steamtenfoot",
-    "steamappid",
-    "steamgameid",
-    "steamoverlaygameid",
-    "steamvirtualgamepadinfo",
     "steam_client_launch",
-    "steamenv",
     "steam_display_refresh_limits",
     "steam_gamescope",
-    "webkit",
-    "gamescope",
+    "webkit_disable_dmabuf_renderer",
+    "webkit_force_vblank_timer",
+    "webkit_display_refresh_throttle_fps",
+    "__nv_disable_explicit_sync",
     "gdk_backend",
-    "display",
-    "wayland_display",
-    "xdg_session",
+    "xdg_session_type",
     "sdl_enable_steam_screen_keyboard",
-    // Repo-içi ölçüm bayrakları (`VOL_DECK_MEASURE` vb.) — kendi ad alanımız;
-    // sır taşıyan değişkenler bu önekle adlandırılmaz.
-    "vol_deck",
-    "pressure_vessel_runtime",
+    "vol_deck_measure",
+    "vol_deck_haptics_probe",
+    "vol_deck_scenario",
+    "vol_deck_seed",
     "pressure_vessel_architectures",
     "srt_urlopen_prefer_steam",
-    "appdir",
-    "home",
     "lang",
 ];
+
+fn allowed_env_name(key: &str) -> bool {
+    ENV_ALLOWLIST.contains(&key.to_lowercase().as_str())
+}
+
+fn measurement_requested(value: Option<&str>) -> bool {
+    value == Some("1")
+}
 
 fn log_path(dir: &std::path::Path) -> PathBuf {
     let _ = std::fs::create_dir_all(dir);
@@ -125,13 +125,50 @@ fn report<R: Runtime>(app: AppHandle<R>, line: String) {
 fn env_info() -> serde_json::Value {
     let mut map = serde_json::Map::new();
     for (key, value) in std::env::vars() {
-        let lower = key.to_lowercase();
-        if ENV_ALLOWLIST.iter().any(|prefix| lower.starts_with(prefix)) {
+        if allowed_env_name(&key) {
             map.insert(key, value.into());
         }
     }
     map.insert("pid".into(), std::process::id().into());
     serde_json::Value::Object(map)
+}
+
+#[cfg(test)]
+mod privacy_tests {
+    use super::{allowed_env_name, measurement_requested};
+
+    #[test]
+    fn game_recording_requires_exact_measurement_flag() {
+        for value in [None, Some(""), Some("0"), Some("true"), Some("01")] {
+            assert!(!measurement_requested(value));
+        }
+        assert!(measurement_requested(Some("1")));
+    }
+
+    #[test]
+    fn environment_does_not_admit_paths_ids_or_prefix_secrets() {
+        for key in [
+            "HOME",
+            "APPDIR",
+            "SteamAppId",
+            "SteamEnv",
+            "SteamVirtualGamepadInfo",
+            "VOL_DECK_TOKEN",
+            "WEBKIT_SESSION_TOKEN",
+            "XDG_SESSION_ID",
+        ] {
+            assert!(!allowed_env_name(key));
+        }
+        for key in [
+            "VOL_DECK_MEASURE",
+            "VOL_DECK_SCENARIO",
+            "VOL_DECK_SEED",
+            "STEAM_GAMESCOPE",
+            "WEBKIT_FORCE_VBLANK_TIMER",
+        ] {
+            assert!(allowed_env_name(key));
+        }
+    }
 }
 
 /// Kayıt dizini bir kez çözülür ve state olarak saklanır.
@@ -170,15 +207,14 @@ fn flush_done<R: Runtime>(#[allow(unused_variables)] app: AppHandle<R>) {
 /// raporda bırakır.
 #[cfg(target_os = "linux")]
 fn watch_signals<R: Runtime>(app: AppHandle<R>, dir: PathBuf) {
-    use signal_hook::consts::{SIGHUP, SIGINT, SIGTERM, SIGUSR1};
-    let Ok(mut signals) = signal_hook::iterator::Signals::new([SIGTERM, SIGINT, SIGHUP, SIGUSR1])
-    else {
+    use signal_hook::consts::{SIGHUP, SIGINT, SIGTERM};
+    let Ok(mut signals) = signal_hook::iterator::Signals::new([SIGTERM, SIGINT, SIGHUP]) else {
         return;
     };
     let (sender, receiver) = std::sync::mpsc::channel::<()>();
     app.manage(FlushGate(sender));
     std::thread::spawn(move || {
-        for signal in signals.forever() {
+        if let Some(signal) = signals.forever().next() {
             native(&dir, "signal", serde_json::json!({ "signal": signal }));
             let _ = app.emit("vol:terminate", signal);
             let flushed = receiver
@@ -216,9 +252,23 @@ fn watch_suspend(dir: PathBuf) {
 }
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
+    build(true)
+}
+
+/// Oyunda komut yüzeyini korur; kayıt, uyku ve sinyal izleyicileri yalnız
+/// açık Deck ölçümünde kurulur. Sonda uygulaması `init()` ile sürekli kayıt alır.
+pub fn init_for_measurement<R: Runtime>() -> TauriPlugin<R> {
+    let enabled = measurement_requested(std::env::var("VOL_DECK_MEASURE").ok().as_deref());
+    build(enabled)
+}
+
+fn build<R: Runtime>(enabled: bool) -> TauriPlugin<R> {
     Builder::new("vol-diagnostics")
         .invoke_handler(tauri::generate_handler![report, env_info, flush_done])
-        .setup(|app, _api| {
+        .setup(move |app, _api| {
+            if !enabled {
+                return Ok(());
+            }
             let dir = diagnostics_dir(app);
             #[cfg(target_os = "linux")]
             {

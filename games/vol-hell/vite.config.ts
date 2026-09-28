@@ -9,13 +9,23 @@ const host = process.env.TAURI_DEV_HOST;
 // normalizePath: Windows'ta \ yerine / gerekli (tinyglobby \ escape olarak yorumlar).
 // stripBase: true: dizin yapısını korumaz, sadece dosya adlarını hedefe koyar.
 const coreFontsDir = normalizePath(resolve(import.meta.dirname, '../../core/public/assets/fonts'));
+const coreGlyphsDir = normalizePath(
+  resolve(import.meta.dirname, '../../core/public/assets/glyphs'),
+);
 
 export default defineConfig({
   base: './',
   clearScreen: false,
   plugins: [
     viteStaticCopy({
-      targets: [{ src: `${coreFontsDir}/*`, dest: 'assets/fonts', rename: { stripBase: true } }],
+      targets: [
+        { src: `${coreFontsDir}/*`, dest: 'assets/fonts', rename: { stripBase: true } },
+        ...['valve', 'xbox', 'playstation', 'nintendo', 'keyboard'].map((family) => ({
+          src: `${coreGlyphsDir}/${family}/*.svg`,
+          dest: `assets/glyphs/${family}`,
+          rename: { stripBase: true },
+        })),
+      ],
     }),
   ],
   server: {

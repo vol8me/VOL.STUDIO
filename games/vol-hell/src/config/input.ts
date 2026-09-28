@@ -2,6 +2,7 @@ import {
   DEFAULT_MOVE_KEYS,
   GAMEPAD_BUTTON,
   type GamepadActionBinding,
+  type GamepadPointerOptions,
   type MoveKeyBindings,
   type PCActionBinding,
 } from '@volstudio/core';
@@ -39,6 +40,19 @@ export const HELL_MOVE_KEYS: MoveKeyBindings = DEFAULT_MOVE_KEYS;
 export const HELL_GAMEPAD_BINDINGS: Readonly<Record<HellAction, GamepadActionBinding>> = {
   fire: { source: 'button', button: GAMEPAD_BUTTON.rightTrigger },
   dash: { source: 'button', button: GAMEPAD_BUTTON.primary },
+};
+
+export const HELL_GAMEPAD_POINTER: Readonly<
+  Pick<
+    GamepadPointerOptions,
+    'deadZone' | 'speed' | 'acceleration' | 'scrollEdgeSize' | 'scrollSpeed'
+  >
+> = {
+  deadZone: 0.2,
+  speed: 760,
+  acceleration: 2800,
+  scrollEdgeSize: 24,
+  scrollSpeed: 600,
 };
 
 /** Dokunmatikte sağ joystick'in ürettiği eylem; CORE dokunma katmanı eylem adı bilmez. */

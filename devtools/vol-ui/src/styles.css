@@ -32,14 +32,15 @@ body {
 .vol-showcase-root {
   pointer-events: auto;
   overflow: hidden;
+
   /*
-   * Oturma mesafesi ölçeği (`--vol-ui-zoom`, core theme.css). Oyun tarafı
+   * Oturma mesafesi ölçeği (`--vol-layout-zoom`, core theme.css). Oyun tarafı
    * bunu `.vol-ui-root`ta alır; vitrin kendi kökünde aynısını uygular ki
    * readability kapısı (webkit, 1080p/2160p) gerçek davranışı ölçsün.
    */
-  zoom: var(--vol-ui-zoom);
-  width: calc(100% / var(--vol-ui-zoom));
-  height: calc(100% / var(--vol-ui-zoom));
+  zoom: var(--vol-layout-zoom);
+  width: calc(100% / var(--vol-layout-zoom));
+  height: calc(100% / var(--vol-layout-zoom));
 }
 
 .vol-showcase-root > .vol-tabs {
@@ -848,4 +849,19 @@ body {
 .vol-showcase-fatal-preview {
   position: absolute;
   z-index: 0;
+}
+
+.vol-showcase-gamepad-demo {
+  position: relative;
+}
+
+.vol-showcase-gamepad-cursor {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--vol-ui-focus-ring);
+  background: var(--vol-ui-bg);
+  pointer-events: none;
+  z-index: var(--vol-z-dialog-content);
 }

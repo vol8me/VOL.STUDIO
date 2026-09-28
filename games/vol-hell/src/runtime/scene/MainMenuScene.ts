@@ -3,6 +3,7 @@ import { TauriWindowAdapter } from '@volstudio/tauri-v2';
 import { BaseScene } from './BaseScene';
 import { LoadingTransition } from './LoadingTransition';
 import { gameAudio } from '@/app/services';
+import { controlGlyph } from '@/app/controlGlyph';
 import { sfxVolumes } from '@/config';
 import { startMenuMusic, stopMenuMusic } from '@/app/menuMusic';
 import { gameStats } from '@/app/services';
@@ -54,18 +55,21 @@ export class MainMenuScene extends BaseScene {
 
     this.startButton = new Button(i18next.t('volhell:menu.start'), {
       variant: 'primary',
+      iconLeft: controlGlyph('faceDown', i18next.t('volhell:menu.start')),
       onClick: () => {
         void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
         this.startGame();
       },
     });
     this.exitButton = new Button(i18next.t('volhell:menu.exit'), {
+      iconLeft: controlGlyph('faceRight', i18next.t('volhell:menu.exit')),
       onClick: () => {
         void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
         void this.exitGame();
       },
     });
     this.settingsButton = new Button(i18next.t('volhell:menu.settings'), {
+      iconLeft: controlGlyph('faceDown', i18next.t('volhell:menu.settings')),
       onClick: () => {
         void gameAudio.playSfx('menuBlip', { volume: sfxVolumes.menuBlip });
         this.nextScene = 'Settings';

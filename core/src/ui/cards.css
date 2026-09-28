@@ -211,7 +211,8 @@
   animation: vol-card-in 0.36s ease-out both;
 }
 
-.vol-card:not(.vol-card--disabled):hover {
+.vol-card:not(.vol-card--disabled):hover,
+.vol-card:not(.vol-card--disabled).vol-gamepad-hover {
   background: var(--vol-ui-surface-2);
   transform: translateY(-2px);
 }
@@ -307,7 +308,8 @@
   border-color: var(--vol-ui-disabled-border);
 }
 
-.vol-card__action:hover:not(:disabled) {
+.vol-card__action:hover:not(:disabled),
+.vol-card__action.vol-gamepad-hover:not(:disabled) {
   background: var(--vol-ui-brand-solid);
   border-color: var(--vol-ui-brand-border);
 }
@@ -324,7 +326,8 @@
   border-color: var(--vol-ui-border-soft);
 }
 
-.vol-card__action--secondary:hover:not(:disabled) {
+.vol-card__action--secondary:hover:not(:disabled),
+.vol-card__action--secondary.vol-gamepad-hover:not(:disabled) {
   color: var(--vol-ui-text);
   background: var(--vol-ui-hover-fill);
   border-color: var(--vol-ui-border-strong);
@@ -450,7 +453,8 @@
   border-color: var(--vol-ui-disabled-border);
 }
 
-.vol-card-shop__reroll:hover:not(:disabled) {
+.vol-card-shop__reroll:hover:not(:disabled),
+.vol-card-shop__reroll.vol-gamepad-hover:not(:disabled) {
   background: var(--vol-ui-hover-fill);
   border-color: var(--vol-ui-accent-solid);
 }
@@ -553,7 +557,8 @@
   min-width: var(--vol-hit-target-min, auto);
 }
 
-.vol-card-shop__close:hover {
+.vol-card-shop__close:hover,
+.vol-card-shop__close.vol-gamepad-hover {
   background: var(--vol-ui-brand-hover);
 }
 

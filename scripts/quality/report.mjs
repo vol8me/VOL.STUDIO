@@ -34,7 +34,17 @@ import { pathToFileURL } from 'node:url';
 const GATES = {
   quick: ['contract', 'format-check', 'typecheck', 'lint'],
   fast: ['quick', 'test'],
-  high: ['quick', 'rust', 'lint-css', 'coverage', 'coverage-shape', 'build', 'bundle', 'scaling', 'e2e'],
+  high: [
+    'quick',
+    'rust',
+    'lint-css',
+    'coverage',
+    'coverage-shape',
+    'build',
+    'bundle',
+    'scaling',
+    'e2e',
+  ],
   signoff: ['high', 'coverage-audio', 'audio-verify', 'security-js', 'security-rust'],
 };
 
@@ -65,7 +75,7 @@ function tailLines(output, limit = 5) {
  * Üçüncü parti kalıpları araç biçimine bağlıdır ve bir sürüm yükseltmesinde
  * eşleşmeyi bırakabilir. Bu KAPIYI bozmaz — geçer/kalır kararı çıkış
  * kodundan gelir, buradan değil; yalnızca teşhis `unknown`a düşer ve
- * `tail` alanı devreye girer. Kalıplar `report.test.mjs` içinde gerçek
+ * `tail` alanı devreye girer. Kalıplar `core/tests/governance/qualityReport.test.ts` içinde gerçek
  * çıktı örnekleriyle kilitlidir.
  */
 export function classify(stage, output) {

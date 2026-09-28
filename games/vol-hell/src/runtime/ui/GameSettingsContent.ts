@@ -13,6 +13,7 @@ import {
 } from '@volstudio/core';
 import type { AudioSettings, AudioSettingsData } from '@/app/AudioSettings';
 import type { VideoSettings, VideoSettingsData } from '@/app/VideoSettings';
+import type { ControlSettings } from '@/app/ControlSettings';
 import type { HellBindings, KeyBindings } from '@/app/KeyBindings';
 import { HELL_ACTIONS, type HellAction } from '@/config/input';
 import { gameAudio } from '@/app/services';
@@ -22,6 +23,7 @@ import { videoConfig, type GraphicsQualityLevel } from '@/config/video';
 export interface GameSettingsContentOptions {
   audioSettings: AudioSettings;
   videoSettings: VideoSettings;
+  controlSettings?: ControlSettings;
   /** Android/dokunmatik yüzeyde native masaüstü seçenekleri gösterilmez. */
   showVideoSettings: boolean;
   /**
@@ -73,12 +75,34 @@ export class GameSettingsContent {
   private readonly graphicsQualitySelect: Select | null;
   private readonly canResizeWindow: boolean;
   private readonly graphicsLevels: readonly GraphicsQualityLevel[];
+  private readonly autoAimCheckbox: Checkbox | null;
 
   constructor(options: GameSettingsContentOptions) {
     this.canResizeWindow = options.canResizeWindow ?? false;
     this.graphicsLevels = options.videoSettings.getGraphicsLevels();
     this.element = document.createElement('div');
     this.element.className = 'vol-game-settings';
+    this.autoAimCheckbox = options.controlSettings
+      ? this.scope.addDestroyable(
+          new Checkbox({
+            label: i18next.t('volhell:settings.autoAim'),
+            checked: options.controlSettings.isAutoAimEnabled(),
+            onCommit: (checked) => {
+              void options.controlSettings!.setAutoAimEnabled(checked);
+              this.playCommitSound();
+            },
+          }),
+        )
+      : null;
+    if (this.autoAimCheckbox && options.controlSettings) {
+      this.autoAimCheckbox.element.classList.add('vol-game-settings__aim');
+      this.element.appendChild(this.autoAimCheckbox.element);
+      this.scope.addSubscription(
+        options.controlSettings.onChange((data) => {
+          this.autoAimCheckbox?.setChecked(data.autoAim);
+        }),
+      );
+    }
 
     this.languageText = new Text(i18next.t('volhell:settings.language'), { variant: 'muted' });
     this.languageSelect = new Select({
@@ -344,6 +368,7 @@ export class GameSettingsContent {
   }
 
   private refreshLabels(): void {
+    this.autoAimCheckbox?.setLabel(i18next.t('volhell:settings.autoAim'));
     this.languageText.setContent(i18next.t('volhell:settings.language'));
     this.languageSelect.setOptions(
       i18n.getLocales().map((locale) => ({ value: locale, label: this.localeLabel(locale) })),

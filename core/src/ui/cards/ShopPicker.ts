@@ -176,6 +176,10 @@ export class ShopPicker extends CardPicker {
     this.flushEnterAnimations();
   }
 
+  protected override handleModalBack(): void {
+    this.handleClose();
+  }
+
   /**
    * Paneli açık tutarak içeriği tazeler — satın alma/satış sonrası bakiye ve
    * kart durumları değiştiğinde çağrılır. Yalnızca gerçekten DEĞİŞEN kartları

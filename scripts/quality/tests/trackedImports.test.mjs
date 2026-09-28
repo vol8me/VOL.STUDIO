@@ -51,3 +51,60 @@ test('NodeNext .js importu kaynak .ts dosyasına çözülür', (t) => {
   writeFileSync(join(root, 'b.ts'), 'export {};');
   assert.deepEqual(validateTrackedImports(root), []);
 });
+
+test('noktalı modül adı uzantısız import olarak çözülür', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'vol-dotted-module-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync('git', ['init', '-q', root]);
+  writeFileSync(join(root, 'a.ts'), 'import "./definitions.arcade";');
+  writeFileSync(join(root, 'definitions.arcade.ts'), 'export {};');
+  assert.deepEqual(validateTrackedImports(root), []);
+});
+
+test('sonda generated importu yalnız kaynak, generator ve build çağrısı tamken geçer', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'vol-generated-import-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync('git', ['init', '-q', root]);
+  const write = (file, source) => {
+    mkdirSync(dirname(join(root, file)), { recursive: true });
+    writeFileSync(join(root, file), source);
+  };
+  write('.gitignore', 'devtools/deck-probe/web/vendor/\n');
+  write(
+    'devtools/deck-probe/web/probe.js',
+    "import { summarizeFrameIntervals } from './vendor/frame-summary.js';",
+  );
+  write('core/src/time/frameSummary.ts', 'export const summarizeFrameIntervals = () => null;');
+  const generator = `
+    import { readFileSync, writeFileSync } from 'node:fs';
+    import { join } from 'node:path';
+    import ts from 'typescript';
+    export function syncProbeMetrics(root, webDir) {
+      const source = readFileSync(join(root, 'core/src/time/frameSummary.ts'), 'utf8');
+      const result = ts.transpileModule(source, {});
+      const directory = join(webDir, 'vendor');
+      writeFileSync(join(directory, 'frame-summary.js'), result.outputText);
+    }
+  `;
+  const build = `
+    import { syncProbeMetrics } from './probe-metrics.mjs';
+    syncProbeMetrics(ROOT, join(ROOT, workspace, 'web'));
+  `;
+  write('scripts/probe-metrics.mjs', generator);
+  write('scripts/build-linux-steamrt4.mjs', build);
+  assert.deepEqual(validateTrackedImports(root), []);
+  write('scripts/build-linux-steamrt4.mjs', build.replace('syncProbeMetrics(ROOT', 'missing(ROOT'));
+  assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
+  write('scripts/build-linux-steamrt4.mjs', build);
+  write('scripts/probe-metrics.mjs', generator.replace('ts.transpileModule', 'ts.unrelated'));
+  assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
+  write('scripts/probe-metrics.mjs', generator);
+  rmSync(join(root, 'core/src/time/frameSummary.ts'));
+  assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
+  write('core/src/time/frameSummary.ts', 'export const summarizeFrameIntervals = () => null;');
+  write(
+    'devtools/deck-probe/web/probe.js',
+    "import { missing } from './vendor/other-generated.js';",
+  );
+  assert.match(validateTrackedImports(root).join('\n'), /other-generated\.js/);
+});

@@ -1,6 +1,7 @@
 import { DisposableScope } from '@volstudio/core';
 import type { AudioSettings } from '@/app/AudioSettings';
 import type { VideoSettings } from '@/app/VideoSettings';
+import type { ControlSettings } from '@/app/ControlSettings';
 import { gameAudio } from '@/app/services';
 import { sfxVolumes } from '@/config/audio';
 import type { AbilityRuntime } from '@/runtime/ability/AbilityRuntime';
@@ -22,6 +23,7 @@ export interface GameScreenStackOptions {
   economy: RunEconomy;
   audioSettings: AudioSettings;
   videoSettings: VideoSettings;
+  controlSettings?: ControlSettings;
   /** Dokunmatik yüzey yetenekleri çiziyorsa masaüstü Q/E HUD'u kurulmaz. */
   abilitySlots: boolean;
   onPauseForCard: () => void;
@@ -82,17 +84,23 @@ export class GameScreenStack {
       );
 
       this.pause = this.scope.addDestroyable(
-        new PauseScreen(parent, audioSettings, videoSettings, {
-          onResume: options.onResumeFromMenu,
-          onRestart: () => {
-            void gameAudio.playSfx('restart', { volume: sfxVolumes.restart });
-            options.onRestart();
+        new PauseScreen(
+          parent,
+          audioSettings,
+          videoSettings,
+          {
+            onResume: options.onResumeFromMenu,
+            onRestart: () => {
+              void gameAudio.playSfx('restart', { volume: sfxVolumes.restart });
+              options.onRestart();
+            },
+            onMainMenu: () => {
+              void gameAudio.playSfx('back', { volume: sfxVolumes.back });
+              options.onMainMenu();
+            },
           },
-          onMainMenu: () => {
-            void gameAudio.playSfx('back', { volume: sfxVolumes.back });
-            options.onMainMenu();
-          },
-        }),
+          options.controlSettings,
+        ),
       );
 
       this.death = this.scope.addDestroyable(

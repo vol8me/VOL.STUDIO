@@ -37,6 +37,7 @@ export { TauriHapticsDriver } from './platform/TauriHapticsDriver';
 export {
   createLinuxHapticsDriver,
   getLinuxHapticsStatus,
+  observeLinuxHaptics,
   registerLinuxHaptics,
 } from './platform/linuxHaptics';
 export type { LinuxHapticsProbe, LinuxHapticsStatus } from './platform/linuxHaptics';
