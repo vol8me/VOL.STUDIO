@@ -44,7 +44,7 @@ body {
   -webkit-touch-callout: none;
 }
 
-:not(input):not(textarea) {
+:not(input, textarea) {
   -webkit-user-select: none;
   user-select: none;
 }

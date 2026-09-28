@@ -56,7 +56,7 @@ describe('native_menus.js — WebView yerel menüsü', () => {
     const styles = document.querySelectorAll('#vol-native-menu-block');
     expect(styles).toHaveLength(1);
     expect(styles[0].textContent).toContain('user-select:none');
-    expect(styles[0].textContent).toContain(':not(input):not(textarea)');
+    expect(styles[0].textContent).toContain(':not(input, textarea)');
     expect(styles[0].textContent).toContain('-webkit-touch-callout:none');
   });
 

@@ -28,7 +28,7 @@
     style.id = 'vol-native-menu-block';
     style.textContent =
       'html,body{-webkit-touch-callout:none}' +
-      '*:not(input):not(textarea){-webkit-user-select:none;user-select:none}';
+      '*:not(input, textarea){-webkit-user-select:none;user-select:none}';
     var parent = document.head || document.documentElement;
     if (parent) parent.appendChild(style);
   }
