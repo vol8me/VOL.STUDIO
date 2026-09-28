@@ -208,3 +208,13 @@ bağlamında işaretçiye çevirir; VOL.HELL ve vol-ui aynı mekanizmayı tüket
 `ControlGlyphBinding` klavye, kol ve dokunma gliflerini canlı yeniler.
 `registerTextEntryModeProbe` kip probuna yaşam döngüsüyle geri alınabilen
 sahiplik ekler; bir sahne kapanınca başka sahnenin metin girişini susturmaz.
+
+### 620 → 621
+
+`suppressNativeMenus`. WebView'un yerel menülerini (bağlam menüsü, uzun basış
+balonu, resim/bağlantı sürükleme hayaleti) tek çağrıyla kapatır. Karar testle
+sabitlenir: metin alanlarında menü de kapanır, seçim yalnız `base.css`teki
+UA kurallarıyla `input`/`textarea`da korunur. Tauri kabuğu aynı davranışı
+eklenti betiğiyle her pencereye enjekte eder
+(`tauri-v2/src-tauri/src/native_menus.rs`); yeni oyun ek bir çağrı yapmadan
+alır.

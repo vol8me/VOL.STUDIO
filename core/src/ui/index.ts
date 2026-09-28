@@ -15,5 +15,6 @@ export * from './cards';
 export * from './focus';
 export * from './textEntry';
 export * from './glyphs';
+export { suppressNativeMenus } from './nativeMenus';
 export { VOL_COLORS, type VolColorToken } from './colors';
 export { Easing, animateValue, type AnimateValueOptions } from './animation';

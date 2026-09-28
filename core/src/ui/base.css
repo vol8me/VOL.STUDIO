@@ -32,6 +32,23 @@
   -webkit-touch-callout: none;
 }
 
+/*
+ * WebView'un KENDİ menüleri oyun yüzeyinde karşılıksızdır: bağlam menüsü,
+ * uzun basış balonu, resim sürükleme hayaleti. Bağlam menüsü ve sürükleme
+ * `suppressNativeMenus` ile olay düzeyinde kapatılır; burada UA'nın kalan
+ * iki davranışı kapatılır. Seçim yalnız `input`/`textarea` DIŞINDA kapanır:
+ * kullanıcı yazdığı metni seçebilmelidir, kopyala menüsüne ihtiyaç yoktur.
+ */
+html,
+body {
+  -webkit-touch-callout: none;
+}
+
+:not(input):not(textarea) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /**
  * `hidden` attribute'unu KORUR.
  *

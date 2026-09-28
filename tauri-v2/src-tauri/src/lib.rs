@@ -163,6 +163,10 @@ where
         // sismesiydi. Ek native eklenti gereken oyun onu `configure` icinde
         // kendi cagrisinda kaydeder (or. vol-orientation).
         .plugin(tauri_plugin_store::Builder::default().build())
+        // Yerel WebView menusu (sag tik / uzun bas / surukleme hayaleti)
+        // her webview'a sayfa yuklenmeden once enjekte edilir; yeni oyun
+        // bunu kendiliginden alir (bkz. native_menus.rs).
+        .plugin(native_menus::plugin())
         .setup(|app| {
             #[cfg(target_os = "linux")]
             if is_gamescope() {
@@ -211,6 +215,7 @@ where
 /// Çizici yalnız ölçülen iki durumda açık kalır: gamescope oturumu ve
 /// NVIDIA'nın tek başına sürdüğü yerel Wayland; başka her yerde güvenli yol.
 mod haptics;
+mod native_menus;
 mod store;
 
 #[cfg(target_os = "linux")]

@@ -284,6 +284,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'showConfirm',
   'showFatalStartupError',
   'solveTwoBoneIk',
+  'suppressNativeMenus',
   'triggerBack',
   'validateRigMetadata',
   'vibrate',

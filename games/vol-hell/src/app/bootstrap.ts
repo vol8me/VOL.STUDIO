@@ -2,6 +2,7 @@ import { isTauri } from '@tauri-apps/api/core';
 import {
   createVolGame,
   showFatalStartupError,
+  suppressNativeMenus,
   VOL_COLORS,
   i18n,
   setTextEntryProvider,
@@ -135,6 +136,8 @@ try {
     scenes: [MainMenuScene, GameScene, SettingsScene],
     diagnostics: diagnostics ?? undefined,
   });
+  const stopContextMenu = suppressNativeMenus(document);
+  game.events.once('destroy', stopContextMenu);
 
   if (isTauri()) {
     const actionSets = new SteamInputActionSets({

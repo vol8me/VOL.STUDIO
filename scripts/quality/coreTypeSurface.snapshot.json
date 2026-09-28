@@ -615,6 +615,7 @@
   "showConfirm",
   "showFatalStartupError",
   "solveTwoBoneIk",
+  "suppressNativeMenus",
   "triggerBack",
   "validateRigMetadata",
   "vibrate",
