@@ -342,7 +342,7 @@ device:"hidraw2"` ve `vol_haptics_rumble` → `ok` döndürdü — yani HID rumb
 
 - Gamescope pencereyi çıkış çözünürlüğünde tam ekrana zorlar. Pencere kipi ve çözünürlük seçenekleri orada etkisizdir.
 - **Uygulandı (2026-09-27, D5):** `displayCapabilitiesForSession`
-  (`core/platform`) oturum sınıfını yeteneğe çevirir — gamescope'ta
+  (`core/src/platform`) oturum sınıfını yeteneğe çevirir — gamescope'ta
   `{ windowMode: false, resolution: false }`. Ayar ekranı bu tabloya
   bağlanır: etkisiz satır GİZLENİR (devre dışı kalmaz). vol-ui forms
   sekmesinde oturum simülasyonuyla görünür; kalite seçimi
@@ -429,6 +429,15 @@ VOL.HELL D7 turunda yeniden aktifleştirildi (`workspace-lifecycle.json`:
 active; kapsam eşiği 82/80/73/77 ratchet'li). Oynanabilirlik ve ses kabulünden
 sonra active/frozen kararını kullanıcı verecek; kendiliğinden freeze yapılmaz.
 VOL.ARACHNID dondurulmuş kalır.
+
+**Kullanıcı turu (2026-09-28):** Son build kullanıcı tarafından Deck'e yüklenip
+denendi. Bulgu: oyun içinde tıklama ve uzun basış WebKitGTK'nın varsayılan
+bağlam menüsünü ("Yazdır / Geri / Yenile") açıyordu. Düzeltme tek oyuna değil
+paylaşılan kabuğa taşındı (`tauri-v2/src-tauri/src/native_menus.rs` eklentisi +
+`suppressNativeMenus`); cihazda yeniden doğrulama bekliyor. Kullanıcı
+VOL.HELL'in kabul turundan sonra dondurulacağını bildirdi; freeze
+`workspace-lifecycle.json` ve etiket değişikliği ayrı, kullanıcı onaylı bir
+turun işidir — bu turda yapılmadı.
 
 **D7 kapsamı (2026-09-27):**
 

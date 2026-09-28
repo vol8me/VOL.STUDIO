@@ -139,9 +139,6 @@ Ayrım pratikte şu soruya iner: **çağıran bir hesap ısmarladı mı?** Ismar
 opsiyonel alanlar ve `?.` hep onu üretir. Sınırda `?? null` yazmak zorunda kalan
 bir tüketici, sözleşmenin kaydığının işaretidir.
 
-`core/tests/governance/absenceContract.test.ts` `null` dönen public üyeleri
-sayılı tutar: listeye yeni bir ad eklemek bilinçli bir düzenleme gerektirir.
-
 ## CORE'un üç katmanı
 
 | Katman        | Ne yapar                                     | Örnek                                       |

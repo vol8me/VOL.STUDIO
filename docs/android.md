@@ -1,10 +1,10 @@
 # Android
 
-> **Freeze notu:** Bu belgenin konusu olan iki oyun kabuğu da `frozen`'dır
-> (`workspace-lifecycle.json`). Derleme komutları tarihsel reçetidir; ağaçlar
-> `vol-hell/final-*` ve `vol-arachnid/final-*` etiketleriyle kilitlidir ve
-> rutin kapılar onlara üretim/test koşmaz. Yeni bir `active` kabuk aynı
-> düzeni kendi paketinde kurar.
+> **Lifecycle notu:** `games/vol-arachnid` `frozen`'dır ve
+> `vol-arachnid/final-*` etiketiyle kilitlidir; rutin kapılar ona üretim/test
+> koşmaz. `games/vol-hell` D7 ile yeniden `active`'tir (freeze kararı kullanıcı
+> onayında), bu yüzden VOL.HELL derleme komutları günceldir. Yeni bir `active`
+> kabuk aynı düzeni kendi paketinde kurar.
 
 Her oyunun native projesi AYRIDIR ve KENDİ paketinin altındadır:
 `games/<oyun>/src-tauri/gen/android`. Ortak Rust kabuğu
@@ -61,6 +61,17 @@ VOL.HELL ve VOL.ARACHNID yatay yöne KİLİTLİDİR (`sensorLandscape`). WebView
 `screen.orientation.lock()`u Android'de desteklenmediği için yön uygulama
 sözleşmesi `vol-orientation` eklentisinde (`tauri-v2/plugins/vol-orientation`)
 yaşar. Yön değişimi Activity'yi yeniden yaratmaz (`configChanges`).
+
+### Yerel WebView menüleri
+
+WebView'ın KENDİ menüleri oyun yüzeyinde karşılıksızdır: WebKitGTK sağ tıkta
+ve uzun basışta "Yazdır / Geri / Yenile" menüsünü açar, resim ya da bağlantı
+sürüklemesinde hayalet gösterir. Paylaşılan kabuk bunları her pencereye sayfa
+yüklenmeden önce enjekte edilen bir betikle kapatır
+(`tauri-v2/src-tauri/src/native_menus.rs`); yeni oyun ek çağrı yapmadan alır.
+Web hedefinde aynı davranışı `suppressNativeMenus` (`@volstudio/core`) verir.
+Metin alanlarında menü yine kapalıdır ama seçim korunur (`base.css`); cihaz
+turunda tıklama ve uzun basışın menü açmadığı ayrıca doğrulanır.
 
 İki manifest de `android:appCategory="game"` taşır: Android 16, en dar kenarı
 600dp ve üstü ekranlarda yön kilidini ve yön isteklerini yok sayar; oyun

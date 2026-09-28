@@ -138,7 +138,7 @@ ağaçları ancak lifecycle yeniden aktifleştirmesiyle değişir (D7).
       varsayılan grafik kalitesi `device` kapsamında tutulur. Kapanır: Deck'te
       ayar ekranında etkisiz seçenek yoktur; ilk açılışta hiçbir ayarı
       değiştirmek gerekmez.
-      `displayCapabilitiesForSession` (`core/platform`) yetenek tablosudur;
+      `displayCapabilitiesForSession` (`core/src/platform`) yetenek tablosudur;
       vol-ui forms sekmesinde oturum simülasyonuyla görünür (satır gizlenir,
       devre dışı kalmaz), kalite `device.` kapsamına kaydeder. Deck
       doğrulaması D7 oyun entegrasyonunda. Birim 2/2, E2E 2/2 yeşil
@@ -181,6 +181,13 @@ ağaçları ancak lifecycle yeniden aktifleştirmesiyle değişir (D7).
       dosyası doğdu. **Kalan:** kolla menü gezinme/pause/nişan hissi ve
       overlay diyalogları insan turunda; ardından Verified işaretleri ve
       kullanıcı kararıyla lifecycle değişikliği.
+      **Tur (2026-09-28):** Son build kullanıcı tarafından Deck'te denendi;
+      bulgu: oyun içinde tıklama/uzun basış WebKitGTK bağlam menüsünü
+      açıyordu. Düzeltme paylaşılan kabuğa alındı (`native_menus` eklentisi +
+      core `suppressNativeMenus`) ve birim testlerle kilitlendi; Deck'te
+      yeniden doğrulama ile oynanabilirlik/ses kabulü bekliyor. Kullanıcı
+      VOL.HELL'in kabul turundan sonra dondurulacağını bildirdi; lifecycle ve
+      freeze etiketi değişikliği ayrı kullanıcı onaylı tura bırakıldı.
 - [ ] **[P3] OLED Deck ve Steam Machine'de kare zamanlaması.** 90 Hz panelde
       ve TV çıkışında vblank zamanlayıcısı kuralı ölçülür. Kapanır: cihaz
       bulunduğunda ölçüm `docs/steam-deck.md`ye girer.

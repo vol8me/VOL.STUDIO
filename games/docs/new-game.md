@@ -77,6 +77,7 @@ bir başka oyunun cihaz sonucunu kanıtlamaz. Ölçüm koşulları ve sınırlar
 | 1280×800 panelde canvas/client/backing, DOM safe-area ve 16:9/dock düzeni   | Oyun WebKit ekran testi ve gerçek Deck/harici ekran ölçümü                             |
 | Kısa/uzun B, Menu, A, RT; menu, pause, kart, ayar, ölüm odak ve glifleri    | CORE odak birim/DOM testleri, oyun E2E ve fiziksel Steam Input olay izi                |
 | Metin girişinde Steam modal/kayan klavye, OS klavyesi ve fallback           | `TextEntryProvider` birim testi ve Deck'te gerçek giriş                                |
+| WebView yerel bağlam menüsü, uzun basış balonu ve sürükleme hayaleti kapalı | `nativeMenus` birim testleri (core + `tauri-v2`); Deck'te tıklama/uzun basış deneyi    |
 | Ses/müzik: kanonik program, publish manifest, codec/loop/peak doğrulaması   | `audio:production-check`, `audio-verify`, Deck WebKit decode ve insan dinlemesi        |
 | Titreşim sürücüsü, kalıcı tercih, olay gücü ve uyku/hotplug                 | `tauri-v2` testleri, Deck statü/komut izi ve fiziksel his onayı                        |
 | İlerleme ve cihaz ayarı ayrı store; eski kayıt ve kapatma yazıları korunur  | kalıcılık regresyonları, SIGTERM/uyku deneyi ve gerçek App ID Cloud turu               |
